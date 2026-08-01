@@ -1,8 +1,8 @@
 title: 主页
 
-# [OpenHUTB Page 模板](https://github.com/OpenHUTB/template)
+# [模拟器的 ROS2 教程]([https://github.com/OpenHUTB/template](https://github.com/OpenHUTB/ros2))
 
-欢迎使用 OpenHUTB 的 Github Page 模板文档 [@he2024dynsyn]。
+欢迎使用 OpenHUTB 的  ROS2 教程 [@he2024dynsyn]。
 
 
 
@@ -14,7 +14,15 @@ title: 主页
 ---
 
 
-## 1. 简介 <span id="list"></span>
+## 1. 入门 <span id="list"></span>
+
+ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
+
+* 教材：ROS教材.pdf
+* 课件和视频：ROS资料.zip
+* 安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova
+* Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe
+
 
 [__播放视频__](introduction.md) <span id="introduction"></span>
 
