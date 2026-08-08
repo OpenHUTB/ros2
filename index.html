@@ -45,11 +45,7 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#1">1. 入门 </a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#2">2. 表格</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#21">2.1 跨越多行和多列</a>
-    </li>
-        </ul>
+    <li class="toctree-l2"><a class="reference internal" href="#2-ros">2. ROS 桥接器</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
     </li>
@@ -76,7 +72,7 @@
     <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
       <li class="breadcrumb-item active">首页</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/template/edit/master/docs/index.md" class="icon icon-github"> 在 GitHub 上编辑</a>
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/index.md"> 编辑页面</a>
     </li>
   </ul>
   <hr/>
@@ -101,85 +97,10 @@
 <li>安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova</li>
 <li>Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe</li>
 </ul>
-<p><a href="introduction/"><strong>播放视频</strong></a> <span id="introduction"></span></p>
-<h2 id="2">2. 表格</h2>
-<h3 id="21">2.1 跨越多行和多列</h3>
-<div class="highlight"><pre><span></span><code>+-------+----------+------+
-| Table Headings   | Here |
-+-------+----------+------+
-| Sub   | Headings | Too  |
-+=======+==========+======+
-| cell  | column spanning |
-+ spans +----------+------+
-| rows  | normal   | cell |
-+-------+----------+------+
-| multi | cells can be    |
-| line  | *formatted*     |
-|       | **paragraphs**  |
-| cells |                 |
-| too   |                 |
-+-------+-----------------+
-</code></pre></div>
-<p>渲染为：</p>
-<table>
-<thead>
-<tr>
-<th colspan="2" rowspan="1">
-<p>Table Headings</p>
-</th>
-<th colspan="1" rowspan="1">
-<p>Here</p>
-</th>
-</tr>
-<tr>
-<th colspan="1" rowspan="1">
-<p>Sub</p>
-</th>
-<th colspan="1" rowspan="1">
-<p>Headings</p>
-</th>
-<th colspan="1" rowspan="1">
-<p>Too</p>
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td colspan="1" rowspan="2">
-<p>cell<br>
-spans<br>
-rows</p>
-</td>
-<td colspan="2" rowspan="1">
-<p>column spanning</p>
-</td>
-</tr>
-<tr>
-<td colspan="1" rowspan="1">
-<p>normal</p>
-</td>
-<td colspan="1" rowspan="1">
-<p>cell</p>
-</td>
-</tr>
-<tr>
-<td colspan="1" rowspan="1">
-<p>multi<br>
-line<br>
-<br>
-cells<br>
-too</p>
-</td>
-<td colspan="2" rowspan="1">
-<p>cells can be<br>
-<em>formatted</em><br>
-<strong>paragraphs</strong><br>
-<br>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
+<h2 id="2-ros">2. ROS 桥接器</h2>
+<ul>
+<li><a href="set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a></li>
+</ul>
 <hr>
 <p>如果对文档中的任何问题可以在 <a href="https://github.com/OpenHUTB/templte">本文档的源码仓库</a> 中的 <a href="https://github.com/OpenHUTB/templte/issues">问题</a> 页面讨论或者提交 <a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">拉取请求</a> 直接修改文档。</p>
 <h2 id="_1">参考文献</h2>
@@ -218,7 +139,7 @@ too</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
         <span>
-          <a href="https://github.com/OpenHUTB/template" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
         </span>
     
     
@@ -249,6 +170,6 @@ too</p>
 </html>
 
 <!--
-MkDocs version : 1.5.8
-Build Date UTC : 2026-08-01 08:33:36.348602+00:00
+MkDocs version : 1.5.9
+Build Date UTC : 2026-08-08 09:57:55.395138+00:00
 -->
