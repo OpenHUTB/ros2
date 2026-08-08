@@ -24,49 +24,11 @@ ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2X
 * Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe
 
 
-[__播放视频__](introduction.md) <span id="introduction"></span>
-
-## 2. 表格
-
-### 2.1 跨越多行和多列
-
-```text
-+-------+----------+------+
-| Table Headings   | Here |
-+-------+----------+------+
-| Sub   | Headings | Too  |
-+=======+==========+======+
-| cell  | column spanning |
-+ spans +----------+------+
-| rows  | normal   | cell |
-+-------+----------+------+
-| multi | cells can be    |
-| line  | *formatted*     |
-|       | **paragraphs**  |
-| cells |                 |
-| too   |                 |
-+-------+-----------------+
-```
-
-渲染为：
-
-+-------+----------+------+
-| Table Headings   | Here |
-+-------+----------+------+
-| Sub   | Headings | Too  |
-+=======+==========+======+
-| cell  | column spanning |
-+ spans +----------+------+
-| rows  | normal   | cell |
-+-------+----------+------+
-| multi | cells can be    |
-| line  | *formatted*     |
-|       | **paragraphs**  |
-| cells |                 |
-| too   |                 |
-+-------+-----------------+
+## 2. ROS 桥接器
 
 
+
+* [设置并连接到 Carla 模拟器](./set_up_and_connect_to_carla.md)
 
 
 
