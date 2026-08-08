@@ -50,19 +50,26 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host
 
 ## 使用 rviz 进行可视化
 
-查看主题
-```shell
-rostopic list
-```
-![](./img/ros_topic.png)
+* 查看主题
+    ```shell
+    rostopic list
+    ```
+    ![](./img/ros_topic.png)
 
-启动 RVIZ
-```shell
-rosrun rviz rviz
-```
+* 启动 RVIZ
+    ```shell
+    rosrun rviz rviz
+    ```
 
-在 RVIZ 中按主题添加相机，即可在左下角看到模拟器的实时相机数据
-![](./img/rviz_add_camera.png)
+* 在 RVIZ 中按主题添加相机，即可在左下角看到模拟器的实时相机数据
+    ![](./img/rviz_add_camera.png)
+
+* 可视化雷达
+    ![](./img/rviz_lidar.png)
+
+* Marker Topic（标记话题）：显示发出的 3D 图形 
+
+    ![](./img/marker_topic.png)
 
 
 
