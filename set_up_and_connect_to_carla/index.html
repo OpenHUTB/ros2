@@ -103,15 +103,31 @@
 <p>您宿主机windows的IP地址通过<code>ipconfig</code>命令进行查看，一般和这里<code>172.18.226.60</code>的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象</p>
 </div>
 <h2 id="rviz">使用 rviz 进行可视化</h2>
+<ul>
+<li>
 <p>查看主题
-</p><div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
+    </p><div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
 </code></pre></div>
-<img alt="" src="../img/ros_topic.png">
+    <img alt="" src="../img/ros_topic.png">
+</li>
+<li>
 <p>启动 RVIZ
-</p><div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>rviz<span class="w"> </span>rviz
+    </p><div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>rviz<span class="w"> </span>rviz
 </code></pre></div>
+</li>
+<li>
 <p>在 RVIZ 中按主题添加相机，即可在左下角看到模拟器的实时相机数据
-<img alt="" src="../img/rviz_add_camera.png"></p>
+    <img alt="" src="../img/rviz_add_camera.png"></p>
+</li>
+<li>
+<p>可视化雷达
+    <img alt="" src="../img/rviz_lidar.png"></p>
+</li>
+<li>
+<p>Marker Topic（标记话题）：显示发出的 3D 图形 </p>
+<p><img alt="" src="../img/marker_topic.png"></p>
+</li>
+</ul>
 <!-- 
 ## Python 验证 Carla ROS 连接
 
