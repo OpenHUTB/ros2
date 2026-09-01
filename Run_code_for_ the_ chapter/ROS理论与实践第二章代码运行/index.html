@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>ROS理论与实践第二章代码运行 - OpenHUTB 文档模板</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "ROS\u7406\u8bba\u4e0e\u5b9e\u8df5\u7b2c\u4e8c\u7ae0\u4ee3\u7801\u8fd0\u884c";
+        var mkdocs_page_input_path = "Run_code_for_ the_ chapter/ROS\u7406\u8bba\u4e0e\u5b9e\u8df5\u7b2c\u4e8c\u7ae0\u4ee3\u7801\u8fd0\u884c.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> OpenHUTB 文档模板
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../introduction/">播放视频</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">OpenHUTB 文档模板</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">ROS理论与实践第二章代码运行</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/Run_code_for_ the_ chapter/ROS理论与实践第二章代码运行.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="ros">ROS理论与实践第二章代码运行</h1>
+<hr>
+<h2 id="vmware">第一步：装 VMware + 打开虚拟机</h2>
+<ol>
+<li>双击 <code>VMware_16_...exe</code> 安装，激活码填 <code>ZF3R0-FHED2-M80TY-8QYGC-NPKYF</code>。</li>
+<li>装好后 <strong>VMware → 文件 → 打开虚拟机</strong>，选这个文件：<code>ros\ros_noetic_humble_gazebov11_linux_win_v1\ros_noetic_humble_gazebov11_linux_win_v1\ros-noetic-humble-gazebo11-linux-win-v1.vmx</code></li>
+<li><strong>先别急着开机</strong>，看下配置：这个虚拟机默认分配了 <strong>6 核 CPU / 8.78 GB 内存 / 768MB 显存</strong>。如果你电脑没那么强，在「虚拟机设置」里把 CPU 和内存调低（比如 4 核 / 4GB），否则会卡或抢资源。</li>
+</ol>
+<h2 id="_1">第二步：把代码共享至虚拟机</h2>
+<ol>
+<li>虚拟机--&gt;设置 → 选项 → 共享文件夹 → 总是启用，添加主机的 <code>ros</code>文件夹。</li>
+<li>在虚拟机 Ubuntu 里，它出现在 <code>/mnt/hgfs/</code> 下，如果没有出现，输入<code>sudo vmware-hgfsclient</code>（密码为：<code>password</code>）列出有哪些共享随后执行<code>echo ".host:/ros    /mnt/hgfs    fuse.vmhgfs-fuse    defaults,allow_other    0    0" | sudo tee -a /etc/fstab</code>然后再看<code>ls /mnt/hgfs/</code>就可以看到挂载文件中的内容了。</li>
+</ol>
+<h2 id="workspace">第三步：把第二章代码拷进 workspace</h2>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/"</span>
+</code></pre></div>
+<p>确认能看到 <code>learning_communication</code> 和 <code>learning_tf</code> 两个文件夹，然后拷：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros_ws/src
+cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/learning_communication"</span><span class="w"> </span>~/ros_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/learning_tf"</span><span class="w"> </span>~/ros_ws/src/
+</code></pre></div>
+<p>一定要 <code>cp</code> 到 <code>~/catkin_ws/src</code> 再编，不要直接在 <code>/mnt/hgfs</code> 里编（共享目录编译会出符号链接问题）。</p>
+<h2 id="_2">第四步：编译</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"source /opt/ros/noetic/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"source ~/ros_ws/devel/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
+<span class="nb">cd</span><span class="w"> </span>~/ros_ws/src
+catkin_make
+</code></pre></div>
+<h2 id="_3">第五步：运行</h2>
+<p><strong>①话题（发布/订阅）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
+roscore
+<span class="c1"># 终端2</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>talker<span class="w">        </span><span class="c1"># 看到 hello world 0,1,2...</span>
+<span class="c1"># 终端3</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>listener<span class="w">      </span><span class="c1"># 看到 I heard: [hello world N]</span>
+</code></pre></div>
+<p><strong>② 服务（请求/应答）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
+roscore
+<span class="c1"># 终端2</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>server<span class="w">        </span><span class="c1"># Ready to add two ints.</span>
+<span class="c1"># 终端3</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>client<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="m">6</span><span class="w">    </span><span class="c1"># Sum: 11</span>
+</code></pre></div>
+<p><strong>③ 动作（Action）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
+roscore
+<span class="c1"># 终端2</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>DoDishes_server
+<span class="c1"># 终端3</span>
+rosrun<span class="w"> </span>learning_communication<span class="w"> </span>DoDishes_client<span class="w">   </span><span class="c1"># 进度 10~100，最后 Yay!</span>
+</code></pre></div>
+<p><strong>④ 验证自定义消息/服务</strong></p>
+<div class="highlight"><pre><span></span><code>rosmsg<span class="w"> </span>show<span class="w"> </span>learning_communication/Person
+rossrv<span class="w"> </span>show<span class="w"> </span>learning_communication/AddTwoInts
+</code></pre></div>
+<p><strong>⑤ 海龟跑动</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
+roscore
+<span class="c1"># 终端2</span>
+rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtlesim_node
+<span class="c1"># 终端3</span>
+rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtle_teleop_key
+<span class="c1"># 鼠标点进键盘控制的那个终端，按方向键移动 turtle1，turtle2 会追着跑</span>
+</code></pre></div>
+<p><strong>6.海龟跟随</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
+roscore
+<span class="c1"># 终端2</span>
+roslaunch<span class="w"> </span>learning_tf<span class="w"> </span>start_demo_with_listener.launch
+<span class="c1"># 鼠标点进键盘控制的那个终端，按方向键移动 turtle1，turtle2 会追着跑</span>
+</code></pre></div></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
