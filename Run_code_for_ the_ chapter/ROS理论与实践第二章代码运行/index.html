@@ -86,20 +86,21 @@
 <li>在虚拟机 Ubuntu 里，它出现在 <code>/mnt/hgfs/</code> 下，如果没有出现，输入<code>sudo vmware-hgfsclient</code>（密码为：<code>password</code>）列出有哪些共享随后执行<code>echo ".host:/ros    /mnt/hgfs    fuse.vmhgfs-fuse    defaults,allow_other    0    0" | sudo tee -a /etc/fstab</code>然后再看<code>ls /mnt/hgfs/</code>就可以看到挂载文件中的内容了。</li>
 </ol>
 <h2 id="workspace">第三步：把第二章代码拷进 workspace</h2>
-<div class="highlight"><pre><span></span><code>ls<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/"</span>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2"</span>
 </code></pre></div>
 <p>确认能看到 <code>learning_communication</code> 和 <code>learning_tf</code> 两个文件夹，然后拷：</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros_ws/src
-cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/learning_communication"</span><span class="w"> </span>~/ros_ws/src/
-cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/ROS资料/ppt/2：ROS基础/ROS理论与实践_2.ROS基础_代码/learning_tf"</span><span class="w"> </span>~/ros_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2/learning_communication"</span><span class="w"> </span>~/ros_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2/learning_tf"</span><span class="w"> </span>~/ros_ws/src/
 </code></pre></div>
-<p>一定要 <code>cp</code> 到 <code>~/catkin_ws/src</code> 再编，不要直接在 <code>/mnt/hgfs</code> 里编（共享目录编译会出符号链接问题）。</p>
+<p>一定要 <code>cp</code> 到 <code>~/ros_ws/src</code> 再编，不要直接在 <code>/mnt/hgfs</code> 里编（共享目录编译会出符号链接问题）。</p>
 <h2 id="_2">第四步：编译</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"source /opt/ros/noetic/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
+<span class="nb">cd</span><span class="w"> </span>~/ros_ws<span class="w">          </span><span class="c1"># 在 ros_ws 根目录，不是 src 里</span>
+catkin_make
 <span class="nb">echo</span><span class="w"> </span><span class="s2">"source ~/ros_ws/devel/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 <span class="nb">source</span><span class="w"> </span>~/.bashrc
-<span class="nb">cd</span><span class="w"> </span>~/ros_ws/src
-catkin_make
 </code></pre></div>
 <h2 id="_3">第五步：运行</h2>
 <p><strong>①话题（发布/订阅）</strong></p>
@@ -110,6 +111,8 @@ rosrun<span class="w"> </span>learning_communication<span class="w"> </span>talk
 <span class="c1"># 终端3</span>
 rosrun<span class="w"> </span>learning_communication<span class="w"> </span>listener<span class="w">      </span><span class="c1"># 看到 I heard: [hello world N]</span>
 </code></pre></div>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903171401950" src="../../img/code/chap2/Topic%20%28PublishSubscribe%29.png"></p>
 <p><strong>② 服务（请求/应答）</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
 roscore
@@ -118,6 +121,8 @@ rosrun<span class="w"> </span>learning_communication<span class="w"> </span>serv
 <span class="c1"># 终端3</span>
 rosrun<span class="w"> </span>learning_communication<span class="w"> </span>client<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="m">6</span><span class="w">    </span><span class="c1"># Sum: 11</span>
 </code></pre></div>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903171517835" src="../../img/code/chap2/Service%20%28RequestResponse%29.png"></p>
 <p><strong>③ 动作（Action）</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
 roscore
@@ -126,10 +131,14 @@ rosrun<span class="w"> </span>learning_communication<span class="w"> </span>DoDi
 <span class="c1"># 终端3</span>
 rosrun<span class="w"> </span>learning_communication<span class="w"> </span>DoDishes_client<span class="w">   </span><span class="c1"># 进度 10~100，最后 Yay!</span>
 </code></pre></div>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903172643660" src="../../img/code/chap2/Action.png"></p>
 <p><strong>④ 验证自定义消息/服务</strong></p>
 <div class="highlight"><pre><span></span><code>rosmsg<span class="w"> </span>show<span class="w"> </span>learning_communication/Person
 rossrv<span class="w"> </span>show<span class="w"> </span>learning_communication/AddTwoInts
 </code></pre></div>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903172720338" src="../../img/code/chap2/Verify%20custom%20messagesservices.png"></p>
 <p><strong>⑤ 海龟跑动</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
 roscore
@@ -139,13 +148,17 @@ rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtlesim_node
 rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtle_teleop_key
 <span class="c1"># 鼠标点进键盘控制的那个终端，按方向键移动 turtle1，turtle2 会追着跑</span>
 </code></pre></div>
-<p><strong>6.海龟跟随</strong></p>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903172818555" src="../../img/code/chap2/The%20turtle%20is%20running.png">
+<strong>6.海龟跟随</strong></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端1</span>
 roscore
 <span class="c1"># 终端2</span>
 roslaunch<span class="w"> </span>learning_tf<span class="w"> </span>start_demo_with_listener.launch
 <span class="c1"># 鼠标点进键盘控制的那个终端，按方向键移动 turtle1，turtle2 会追着跑</span>
-</code></pre></div></div>
+</code></pre></div>
+<p>结果如下图所示：</p>
+<p><img alt="image-20260903181216668" src="../../img/code/chap2/The%20turtle%20follows.png"></p></div>
               
             </div>
           </div><footer>

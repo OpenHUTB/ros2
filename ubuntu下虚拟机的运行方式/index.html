@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Ubuntu下虚拟机的运行方式 - OpenHUTB 文档模板</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Ubuntu\u4e0b\u865a\u62df\u673a\u7684\u8fd0\u884c\u65b9\u5f0f";
+        var mkdocs_page_input_path = "ubuntu\u4e0b\u865a\u62df\u673a\u7684\u8fd0\u884c\u65b9\u5f0f.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> OpenHUTB 文档模板
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../introduction/">播放视频</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">OpenHUTB 文档模板</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Ubuntu下虚拟机的运行方式</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/ubuntu下虚拟机的运行方式.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="ubuntu"><a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">Ubuntu 下虚拟机的运行方式</a></h1>
+<p>本页面介绍 Robotics System Toolbox™ 和 ROS Toolbox™ 配套虚拟机的安装说明。您可以使用 MATLAB® 和 Simulink® 配合 <a href="https://gazebosim.org/">Gazebo</a> 机器人模拟器，以及与外部 <a href="https://www.ros.org/">ROS</a>（Robot Operating System，机器人操作系统）和 <a href="https://docs.ros.org/en/rolling/">ROS 2</a> 网络协同工作。</p>
+<p>Ubuntu® Focal 20.04 虚拟机可运行于多种平台（Windows®、Mac 和 Linux®），其中包含以下内容：</p>
+<ul>
+<li><a href="https://docs.ros.org/en/humble/Installation.html">ROS 2 Humble</a> 桌面版安装</li>
+<li><a href="https://wiki.ros.org/noetic">ROS Noetic</a> 桌面版安装</li>
+<li><a href="https://gazebosim.org/">Gazebo</a> 机器人模拟器 11.0.0</li>
+<li>用于模拟 <a href="http://turtlebot3.robotis.com/">TurtleBot® 3</a> 的示例 Gazebo 世界</li>
+</ul>
+<p>支持 64 位 Windows、64 位 Linux 和 64 位 Mac OS X 平台。安装说明按您的主机平台列出。</p>
+<h2 id="_1">特定平台的安装说明</h2>
+<h3 id="windows64">Windows（64 位）</h3>
+<ol>
+<li>访问 <a href="https://www.broadcom.com/">broadcom.com</a>。</li>
+<li>在右上角，单击 “Support Portal”（支持门户）。</li>
+<li>通过单击 “Go To Portal”（进入门户）登录，或 “Register”（注册）一个基本的 Broadcom 账户。</li>
+<li>登录后，找到 “Software”（软件）下拉菜单。从中选择 VMware Cloud Foundation 部门，并单击 “My Downloads”（我的下载）。</li>
+<li>选择 VMware Workstation，并选择所需版本。</li>
+<li>下载并安装 VMware Player。</li>
+<li>下载包含虚拟机的<a href="https://ssd.mathworks.com/supportfiles/ros/virtual_machines/v9/ros_noetic_humble_gazebov11_linux_win_v1.zip">压缩包</a>。</li>
+<li>将压缩包解压到硬盘上的某个位置。</li>
+<li>启动 VMware Player。</li>
+<li>在 VMware Player 中，按下 <em>Open a Virtual Machine</em>（打开虚拟机）。</li>
+<li>浏览到 Ubuntu 镜像所在位置，选择 <code>ros_noetic_foxy_gazebov11.vmx</code> 文件，然后按下 <em>OK</em>（确定）。</li>
+<li>虚拟机现已添加到您的库中。</li>
+<li>在 VMware Player 中，启动虚拟机。</li>
+<li>如果弹出窗口询问您是否复制或移动了虚拟机，请按下 <em>I copied it</em>（我已复制它）。</li>
+</ol>
+<h3 id="linux64">Linux（64 位）</h3>
+<ol>
+<li>访问 <a href="https://www.broadcom.com/">broadcom.com</a>。</li>
+<li>在右上角，单击 “Support Portal”（支持门户）。</li>
+<li>通过单击 “Go To Portal”（进入门户）登录，或 “Register”（注册）一个基本的 Broadcom 账户。</li>
+<li>登录后，找到 “Software”（软件）下拉菜单。从中选择 VMware Cloud Foundation 部门，并单击 “My Downloads”（我的下载）。</li>
+<li>选择 VMware Workstation，并选择所需版本。</li>
+<li>以管理员权限执行 bundle 安装程序来安装 VMware Player。</li>
+<li>下载包含虚拟机的<a href="https://ssd.mathworks.com/supportfiles/ros/virtual_machines/v9/ros_noetic_humble_gazebov11_linux_win_v1.zip">压缩包</a>。</li>
+<li>将压缩包解压到硬盘上的某个位置。</li>
+<li>启动 VMware Player。</li>
+<li>在 VMware Player 中，按下 <em>Open a Virtual Machine</em>（打开虚拟机）。</li>
+<li>浏览到 Ubuntu 镜像所在位置，选择 <code>ros_noetic_foxy_gazebov11.vmx</code> 文件，然后按下 <em>OK</em>（确定）。</li>
+<li>虚拟机现已添加到您的库中。</li>
+<li>在 VMware Player 中，启动虚拟机。</li>
+<li>如果弹出窗口询问您是否复制或移动了虚拟机，请按下 <em>I copied it</em>（我已复制它）。</li>
+</ol>
+<h3 id="mac-os-x64">Mac OS X（64 位）</h3>
+<p>由于 VMware Player 不适用于 Mac，此平台使用 <a href="https://download.virtualbox.org/virtualbox/6.1.26/VirtualBox-6.1.26-145957-OSX.dmg">VirtualBox®</a> 运行虚拟机。如果您拥有 <a href="https://www.vmware.com/products/fusion/fusion-evaluation.html">VMware Fusion®</a> 的有效许可证，则可以改按 Windows 的安装说明操作。</p>
+<ol>
+<li>为 OS X 主机下载并安装 <a href="https://download.virtualbox.org/virtualbox/6.1.26/VirtualBox-6.1.26-145957-OSX.dmg">VirtualBox®</a>（<a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">许可证</a>）。</li>
+<li>将<a href="https://ssd.mathworks.com/supportfiles/ros/virtual_machines/v9/ros_noetic_humble_gazebov11_mac_v1.ova">虚拟机</a>下载到硬盘上的某个文件夹中。</li>
+<li>启动 VirtualBox。</li>
+<li>在 VirtualBox 中，选择 <em>File</em>（文件）菜单中的 <em>Import Appliance</em>（导入虚拟机）条目。</li>
+<li>选择您刚刚下载的文件，然后按下 <em>Next</em>（下一步）。</li>
+<li>确认虚拟机设置，然后按下 <em>Import</em>（导入）。导入过程可能需要几分钟。</li>
+<li>虚拟机现已添加到您的库中。</li>
+<li>在 VirtualBox 中，启动虚拟机。</li>
+<li>根据主机的网络配置，您可能需要调整虚拟机的网络设置。如果首次启动时虚拟机提示未找到网络接口，请按下 <em>Change Network Settings</em>（更改网络设置），并选择您主机主网络适配器的 <em>Name</em>（名称）。</li>
+</ol>
+<h2 id="_2">使用虚拟机</h2>
+<p>请参阅 <a href="/help/ros/examples.html">ROS Toolbox 示例</a>和 <a href="/help/robotics/examples.html">Robotics System Toolbox 示例</a>，了解如何使用此虚拟机。</p>
+<h2 id="_3">故障排查</h2>
+<ul>
+<li>要运行虚拟机，必须在 BIOS 中启用处理器的虚拟化扩展（有关更多信息，请参阅<a href="https://www.howtogeek.com/213795/how-to-enable-intel-vt-x-in-your-computers-bios-or-uefi-firmware/">此文章</a>）。</li>
+<li>默认情况下，虚拟机使用 2 个 CPU 核心，并最多分配 4096 MB 内存。如果您的计算机不支持这些默认设置，则必须在启动虚拟机之前修改虚拟机设置。</li>
+<li>要在 MATLAB 与虚拟机之间启用 ROS 通信，您可能需要禁用防火墙或杀毒软件。ROS 会为节点任意分配端口号，因此根据您的防火墙配置，节点之间的通信可能会被阻止。</li>
+</ul>
+<h2 id="_4">参考</h2>
+<ul>
+<li><a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">ROS Noetic and ROS 2 Humble and Gazebo — MATLAB &amp; Simulink</a></li>
+<li><a href="../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a></li>
+</ul></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../js/umlconvert.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
