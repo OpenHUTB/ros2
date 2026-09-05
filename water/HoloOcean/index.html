@@ -114,7 +114,7 @@
 <p><strong>注意：</strong> 请避免在 ROS 2 和 HoloOcean 中使用 Python 虚拟环境（如 Conda），因为这可能导致运行时及依赖项问题。</p>
 <h2 id="_3">安装</h2>
 <h3 id="docker">Docker（推荐）</h3>
-<p>请参阅 <a href="../docker/">docker/README.md</a> 获取设置说明。提供<a href="../docker_dev/">开发</a>和<a href="../docker_runtime/">运行时</a>两种配置。</p>
+<p>请参阅 <a href="../docker/">Docker 开发环境</a> 获取设置说明。提供<a href="../docker/">开发</a>和<a href="../docker_runtime/">运行时</a>两种配置。</p>
 <h3 id="_4">从源码安装</h3>
 <p>安装 HoloOcean 后，将此仓库克隆到您的 ROS 2 工作空间中：
 </p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>ros2_ws/src
@@ -132,7 +132,7 @@ colcon<span class="w"> </span>build
 <p>使用 <code>Joy_linux</code> 包通过操纵杆控制 HoloOcean 中的代理。</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
 </code></pre></div>
-<p>请参阅 <a href="../holoocean_examples/">holoocean_examples.md</a>，获取完整的设置说明、按键映射及配置参考。</p>
+<p>请参阅<a href="../holoocean_examples/">水域载具示例</a>，获取完整的设置说明、按键映射及配置参考。</p>
 <p><img alt="Joystick multi-agent control" src="../../img/water/MultiAgentJoystick.png"></p>
 <h3 id="_8">航点跟踪</h3>
 <p>根据预设的航点列表控制水面船舶。</p>
@@ -158,32 +158,32 @@ colcon<span class="w"> </span>build
 <tr>
 <td><code>command/agent</code></td>
 <td><code>AgentCommand</code></td>
-<td>Thruster/actuator commands for all agents (for Fossen agents, messages with <code>frame_id</code> set to <code>body</code> are routed to the Fossen <code>set_u_control</code> interface)</td>
+<td>针对所有代理的推进器/执行器指令（对于福森代理，<code>frame_id</code> 设为 <code>body</code> 的消息会被路由至福森的 <code>set_u_control</code> 接口）</td>
 </tr>
 <tr>
 <td><code>command/sensor</code></td>
 <td><code>SensorCommand</code></td>
-<td>Sensor configuration commands (e.g. camera rotation)</td>
+<td>传感器配置指令（例如：摄像头旋转）</td>
 </tr>
 <tr>
 <td><code>depth</code></td>
 <td><code>DesiredCommand</code></td>
-<td>Depth setpoint for autopilot mode</td>
+<td>自动驾驶模式的深度设定值</td>
 </tr>
 <tr>
 <td><code>heading</code></td>
 <td><code>DesiredCommand</code></td>
-<td>Heading setpoint for autopilot mode</td>
+<td>自动驾驶模式的航向设定值</td>
 </tr>
 <tr>
 <td><code>speed</code></td>
 <td><code>DesiredCommand</code></td>
-<td>Speed setpoint for autopilot mode</td>
+<td>自动驾驶模式的速度设定值</td>
 </tr>
 <tr>
 <td><code>debug/points</code></td>
 <td><code>visualization_msgs/Marker</code></td>
-<td>Debug points to draw in the simulation</td>
+<td>在仿真中绘制的调试点</td>
 </tr>
 </tbody>
 </table>
@@ -200,12 +200,12 @@ colcon<span class="w"> </span>build
 <tr>
 <td><code>&lt;agent&gt;/&lt;SensorName&gt;</code></td>
 <td>varies</td>
-<td>Sensor data for each agent (see below)</td>
+<td>每个代理的传感器数据（见下文）</td>
 </tr>
 <tr>
 <td><code>/clock</code></td>
 <td><code>rosgraph_msgs/Clock</code></td>
-<td>Simulation time</td>
+<td>模拟时间</td>
 </tr>
 </tbody>
 </table>
@@ -214,21 +214,21 @@ colcon<span class="w"> </span>build
 <table>
 <thead>
 <tr>
-<th>Service</th>
-<th>Type</th>
-<th>Description</th>
+<th>服务</th>
+<th>类型</th>
+<th>描述</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>reset</code></td>
 <td><code>std_srvs/Trigger</code></td>
-<td>Reset the simulation environment</td>
+<td>重置模拟环境</td>
 </tr>
 <tr>
 <td><code>control_mode</code></td>
 <td><code>SetControlMode</code></td>
-<td>Change an agent's control mode</td>
+<td>更改代理的控制模式</td>
 </tr>
 </tbody>
 </table>
@@ -236,10 +236,10 @@ colcon<span class="w"> </span>build
 <table>
 <thead>
 <tr>
-<th>Parameter</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
+<th>参数</th>
+<th>类型</th>
+<th>默认值</th>
+<th>描述</th>
 </tr>
 </thead>
 <tbody>
@@ -247,37 +247,37 @@ colcon<span class="w"> </span>build
 <td><code>scenario_path</code></td>
 <td>string</td>
 <td><code>""</code></td>
-<td>Path to the scenario JSON file</td>
+<td>场景 JSON 文件的路径</td>
 </tr>
 <tr>
 <td><code>relative_path</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>Resolve <code>scenario_path</code> relative to the package share directory</td>
+<td>相对于包的共享目录解析 <code>scenario_path</code></td>
 </tr>
 <tr>
 <td><code>show_viewport</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>Show the Unreal Engine viewport window</td>
+<td>显示虚幻引擎视窗</td>
 </tr>
 <tr>
 <td><code>draw_arrow</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>Draw a heading arrow for each Fossen agent in the simulation</td>
+<td>在模拟中为每个福森代理绘制一个朝向箭头。</td>
 </tr>
 <tr>
 <td><code>render_quality</code></td>
 <td>int</td>
 <td><code>-1</code></td>
-<td>Render quality: 0 = low, 1 = normal, 2 = high. -1 = default</td>
+<td>渲染质量：0 = 低，1 = 普通，2 = 高。-1 = 默认</td>
 </tr>
 <tr>
 <td><code>publish_commands</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>Publish computed control surface commands back to ROS</td>
+<td>将计算出的控制面指令发布回 ROS</td>
 </tr>
 </tbody>
 </table>
@@ -291,14 +291,10 @@ colcon<span class="w"> </span>build
 </ul>
 <h2 id="_16">参考</h2>
 <ul>
-<li>
-<p><a href="https://github.com/byu-holoocean/holoocean-ros">byu-holoocean/holoocean-ros</a></p>
-</li>
-<li>
-<p><a href="https://github.com/byu-holoocean/HoloOcean">HoloOcean repository</a></p>
-</li>
-<li><a href="https://byu-holoocean.github.io/holoocean-docs/">HoloOcean documentation</a></li>
-<li><a href="https://docs.ros.org/en/humble/index.html">ROS 2 documentation</a></li>
+<li><a href="https://github.com/byu-holoocean/holoocean-ros">holoocean-ros</a></li>
+<li><a href="https://github.com/byu-holoocean/HoloOcean">HoloOcean 仓库</a></li>
+<li><a href="https://byu-holoocean.github.io/holoocean-docs/">HoloOcean 文档</a></li>
+<li><a href="https://docs.ros.org/en/humble/index.html">ROS 2 文档</a></li>
 </ul></div>
               
             </div>

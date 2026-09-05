@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>holoocean_examples - OpenHUTB 文档模板</title>
+    <title>水域载具示例 - OpenHUTB 文档模板</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,7 +13,7 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "holoocean_examples";
+        var mkdocs_page_name = "\u6c34\u57df\u8f7d\u5177\u793a\u4f8b";
         var mkdocs_page_input_path = "water/holoocean_examples.md";
         var mkdocs_page_url = null;
       </script>
@@ -62,7 +62,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">holoocean_examples</li>
+      <li class="breadcrumb-item active">水域载具示例</li>
     <li class="wy-breadcrumbs-aside">
           <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/holoocean_examples.md"> 编辑页面</a>
     </li>
@@ -72,105 +72,105 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h1 id="holoocean_examples">holoocean_examples</h1>
-<p>Example nodes for interacting with the HoloOcean ROS 2 interface.</p>
-<h2 id="examples">Examples</h2>
+                <div><h1 id="_1">水域载具示例</h1>
+<p>用于与 HoloOcean ROS 2 接口交互的示例节点。</p>
+<h2 id="_2">示例</h2>
 <table>
 <thead>
 <tr>
-<th>Launch file</th>
-<th>Description</th>
+<th>Launch 文件</th>
+<th>描述</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>joy_launch.py</code></td>
-<td>Single-controller joystick teleoperation with optional camera HUD</td>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/holoocean_examples/joy_holoocean.py">joy_launch.py</a></td>
+<td>支持可选摄像头 HUD 的单手柄遥操作</td>
 </tr>
 <tr>
-<td><code>multi_joy_launch.py</code></td>
-<td>Same as above but supports a wired and wireless controller simultaneously</td>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/multi_joy_launch.py">multi_joy_launch.py</a></td>
+<td>与上文相同，但支持同时使用有线和无线手柄。</td>
 </tr>
 <tr>
-<td><code>waypoint_launch.py</code></td>
-<td>Waypoint following for a surface vessel</td>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/waypoint_launch.py">waypoint_launch.py</a></td>
+<td>水面船舶的航路点跟踪</td>
 </tr>
 <tr>
-<td><code>command_launch.py</code></td>
-<td>Direct depth/heading/speed commanding via the Fossen autopilot</td>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/command_launch.py">command_launch.py</a></td>
+<td>通过福森自动驾驶仪直接指令深度、航向和速度</td>
 </tr>
 </tbody>
 </table>
 <hr>
-<h2 id="joystick-example">Joystick Example</h2>
-<h3 id="prerequisites">Prerequisites</h3>
-<p>Install the <code>joy_linux</code> ROS 2 package if not already present:</p>
+<h2 id="_3">游戏手柄示例</h2>
+<h3 id="_4">前提条件</h3>
+<p>如果尚未安装 <code>joy_linux</code> ROS 2 软件包，请进行安装：</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-<span class="nv">$ROS_DISTRO</span>-joy-linux
 </code></pre></div>
-<p>Connect your controller. Verify the device shows up:</p>
+<p>连接您的控制器。确认设备已显示：</p>
 <p></p><div class="highlight"><pre><span></span><code>ls<span class="w"> </span>/dev/input/js*
 </code></pre></div>
-You can setup udev rules to map specific controllers to specific paths. 
-<p>The config files default to <code>js0</code>. Adjust <code>dev</code> under <code>joy_node</code> (or <code>joy_node_wired</code>in multi agent) in the config YAML if your device path differs.</p>
-<h3 id="running">Running</h3>
+您可以设置 udev 规则，将特定控制器映射到特定路径。
+<p>配置文件默认指向 <code>js0</code>。如果您的设备路径不同，请在 config YAML 文件中的 <code>joy_node</code>（或在多代理中的<code>joy_node_wired</code>）下调整 <code>dev</code>。</p>
+<h3 id="_5">运行</h3>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
 </code></pre></div>
-<p>For multiple agents and multiple controllers simultaneously:</p>
+<p>针对多个代理和多个控制器同时进行：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>multi_joy_launch.py
 </code></pre></div>
-<h3 id="how-agents-are-loaded">How agents are loaded</h3>
-<p>The node reads <code>scenario_path</code> from the config (same value used by <code>holoocean_node</code>) and parses the scenario JSON to get the agent list. You do <strong>not</strong> need to list agents in the YAML — only the button assignments.</p>
-<p><code>agents.buttons</code> is a parallel array where index <code>i</code> maps to the i-th agent in the scenario file. For example, if the scenario defines <code>[auv0, auv1, auv2]</code> in order:</p>
+<h3 id="agent">Agent（代理）的加载方式</h3>
+<p>节点从配置中读取 <code>scenario_path</code>（该值与 <code>holoocean_node</code> 使用的值相同），并解析场景 JSON 文件以获取代理列表。您<strong>无需</strong>在 YAML 文件中列出代理，只需指定按钮映射即可。</p>
+<p><code>agents.buttons</code> 是一个并行数组，其索引 <code>i</code> 对应于场景文件中的第 <code>i</code> 个代理。例如，如果场景中定义的代理顺序为 <code>[auv0, auv1, auv2]</code>：</p>
 <div class="highlight"><pre><span></span><code><span class="nt">agents.buttons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># auv0=A, auv1=B, auv2=Y</span>
 <span class="nt">agents.default</span><span class="p">:</span><span class="w"> </span><span class="s">'auv0'</span>
 </code></pre></div>
-<p><code>agents.default</code> sets which agent is active at startup.</p>
+<p><code>agents.default</code> 用于设定启动时处于活动状态的代理。</p>
 <hr>
-<h3 id="finding-your-button-and-axis-mapping">Finding your button and axis mapping</h3>
-<p>The easiest way to find the indices for your specific controller is to echo the joy topic while pressing buttons:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Run with only one controller connected</span>
+<h3 id="_6">查找按钮与轴的映射关系</h3>
+<p>查找特定控制器索引的最简单方法是：在按下按钮的同时，输出（echo） joy 话题（topic）的内容：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 仅连接一个控制器时运行</span>
 ros2<span class="w"> </span>run<span class="w"> </span>joy_linux<span class="w"> </span>joy_linux_node
 
-<span class="c1"># In another terminal run:</span>
+<span class="c1"># 在另一个终端中运行：</span>
 ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/joy
 </code></pre></div>
-<p>The <code>buttons</code> array shows <code>1</code> for any button currently held. The <code>axes</code> array shows the current value of each analog input (sticks and triggers).</p>
-<p>The <a href="https://wiki.ros.org/joy">ROS joy wiki page</a> also has mapping tables for common controllers.</p>
-<h3 id="default-mapping-xbox-controller-via-joy_linux">Default mapping (Xbox controller via joy_linux)</h3>
-<p>The values below match the defaults in <code>joy_config.yaml</code> (wired controller) and <code>multi_joy_config.yaml</code>.</p>
-<h4 id="buttons">Buttons</h4>
+<p><code>buttons</code> 数组显示当前被按下的按钮状态（按下为 <code>1</code>）。<code>axes</code> 数组显示每个模拟输入（摇杆和扳机键）的当前值。</p>
+<p><a href="https://wiki.ros.org/joy">ROS joy 维基页面</a>也提供了常见控制器的映射表。</p>
+<h3 id="joy_linux-xbox">默认映射（通过 joy_linux 使用 Xbox 控制器）</h3>
+<p>以下数值与 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a>（有线控制器）及 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/multi_joy_config.yaml">multi_joy_config.yaml</a> 中的默认设置一致。</p>
+<h4 id="_7">按钮</h4>
 <table>
 <thead>
 <tr>
-<th>Index</th>
-<th>Xbox button</th>
-<th>Function</th>
+<th>索引</th>
+<th>Xbox 按钮</th>
+<th>功能</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0</td>
 <td>A</td>
-<td>Select agent 0</td>
+<td>选择代理 0</td>
 </tr>
 <tr>
 <td>1</td>
 <td>B</td>
-<td>Select agent 1 (if present)</td>
+<td>如果存在，选择代理 1</td>
 </tr>
 <tr>
 <td>2</td>
 <td>X</td>
-<td>Select agent 2 (if present)</td>
+<td>如果存在，选择代理 2</td>
 </tr>
 <tr>
 <td>3</td>
 <td>Y</td>
-<td>Select agent 3 (if present)</td>
+<td>如果存在，选择代理 3</td>
 </tr>
 <tr>
 <td>6</td>
-<td>Back / Select</td>
+<td>Back / 选择</td>
 <td>Disarm</td>
 </tr>
 <tr>
@@ -181,128 +181,124 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <tr>
 <td>8</td>
 <td>Guide (Xbox logo)</td>
-<td>Reset simulation</td>
+<td>重置模拟</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p>The wireless Xbox config in <code>joy_config.yaml</code> uses buttons 6/7/8. Some controllers or drivers report these at different indices — use <code>ros2 topic echo /joy</code> to confirm.</p>
-</blockquote>
-<h4 id="axes">Axes</h4>
+<p><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a> 中的无线 Xbox 配置使用了 6、7、8 号按键。某些手柄或驱动程序报告的索引可能不同——请使用 <code>ros2 topic echo /joy</code> 进行确认。</p>
+<h4 id="axes">轴（Axes）</h4>
 <table>
 <thead>
 <tr>
-<th>Index</th>
-<th>Xbox input</th>
-<th>Function</th>
+<th>索引</th>
+<th>Xbox 输入</th>
+<th>功能</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0</td>
-<td>Left stick X</td>
-<td>Lateral (strafe)</td>
+<td>左摇杆 X</td>
+<td>横向移动（平移）</td>
 </tr>
 <tr>
 <td>1</td>
-<td>Left stick Y</td>
-<td>Forward / Pitch (torpedo)</td>
+<td>左摇杆 Y</td>
+<td>前进 / 俯仰（鱼雷）</td>
 </tr>
 <tr>
 <td>2</td>
 <td>LT</td>
-<td>Tilt camera down</td>
+<td>相机向下倾斜</td>
 </tr>
 <tr>
 <td>3</td>
-<td>Right stick X</td>
-<td>Yaw (BlueROV) / Yaw (torpedo)</td>
+<td>右摇杆 X</td>
+<td>偏航（BlueROV）/ 偏航（鱼雷）</td>
 </tr>
 <tr>
 <td>4</td>
-<td>Right stick Y</td>
-<td>Vertical (BlueROV) / Speed (torpedo)</td>
+<td>右摇杆 Y</td>
+<td>垂直移动（BlueROV）/ 速度（鱼雷）</td>
 </tr>
 <tr>
 <td>5</td>
 <td>RT</td>
-<td>Tilt camera up</td>
+<td>相机向上倾斜</td>
 </tr>
 <tr>
 <td>6</td>
-<td>D-pad X</td>
-<td>Roll trim (BlueROV)</td>
+<td>方向键 X</td>
+<td>横滚微调（BlueROV）</td>
 </tr>
 <tr>
 <td>7</td>
-<td>D-pad Y</td>
-<td>Pitch trim (BlueROV)</td>
+<td>方向键 Y</td>
+<td>俯仰微调（BlueROV）</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p>Trigger axes rest at <code>1.0</code> and reach <code>-1.0</code> when fully pressed. This is the standard <code>joy_linux</code> convention.</p>
-</blockquote>
-<h3 id="per-agent-controls">Per-agent controls</h3>
-<h4 id="bluerov2-hoveringauv">BlueROV2 / HoveringAUV</h4>
+<p>扳机轴（Trigger axes）在静止状态下值为 <code>1.0</code>，完全按下时达到 <code>-1.0</code>。这是 <code>joy_linux</code> 的标准惯例。</p>
+<h3 id="_8">单代理控制</h3>
+<h4 id="bluerov2-auv">BlueROV2 / 悬停式AUV</h4>
 <table>
 <thead>
 <tr>
-<th>Input</th>
-<th>Effect</th>
+<th>输入</th>
+<th>效果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Left stick Y</td>
-<td>Forward thrust</td>
+<td>左摇杆 Y 轴</td>
+<td>前后推力</td>
 </tr>
 <tr>
-<td>Left stick X</td>
-<td>Lateral (strafe) thrust</td>
+<td>左摇杆 X 轴</td>
+<td>侧向（平移）推力</td>
 </tr>
 <tr>
-<td>Right stick Y</td>
-<td>Vertical thrust</td>
+<td>右摇杆 Y 轴</td>
+<td>垂直推力</td>
 </tr>
 <tr>
-<td>Right stick X</td>
-<td>Yaw</td>
+<td>右摇杆 X 轴</td>
+<td>偏航（Yaw）</td>
 </tr>
 <tr>
-<td>D-pad up/down</td>
-<td>Pitch trim (accumulates, resets on disarm)</td>
+<td>十字键 上/下</td>
+<td>俯仰微调（数值累加，解除待机状态时重置）</td>
 </tr>
 <tr>
-<td>D-pad left/right</td>
-<td>Roll trim (accumulates, resets on disarm)</td>
+<td>十字键 左/右</td>
+<td>横滚微调（数值累加，解除待机状态时重置）</td>
 </tr>
 <tr>
 <td>RT / LT</td>
-<td>Tilt camera up / down</td>
+<td>向上/向下倾斜摄像头</td>
 </tr>
 </tbody>
 </table>
-<h4 id="surfacevessel">SurfaceVessel</h4>
+<h4 id="surfacevessel">水面载具（SurfaceVessel）</h4>
 <table>
 <thead>
 <tr>
-<th>Input</th>
-<th>Effect</th>
+<th>输入</th>
+<th>效果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Left stick Y</td>
-<td>Left thruster</td>
+<td>左摇杆 Y 轴</td>
+<td>左侧推进器</td>
 </tr>
 <tr>
-<td>Right stick Y</td>
-<td>Right thruster</td>
+<td>右摇杆 Y 轴</td>
+<td>右侧推进器</td>
 </tr>
 <tr>
 <td>RT / LT</td>
-<td>Tilt camera up / down (if agent has a CameraSensor)</td>
+<td>向上/向下倾斜摄像机（若载具配备 CameraSensor）</td>
 </tr>
 </tbody>
 </table>
@@ -310,53 +306,52 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <table>
 <thead>
 <tr>
-<th>Input</th>
-<th>Effect</th>
+<th>输入</th>
+<th>效果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Left stick Y</td>
-<td>Pitch fins</td>
+<td>左摇杆 Y</td>
+<td>俯仰鳍（Pitch fins）</td>
 </tr>
 <tr>
-<td>Left stick X</td>
-<td>Yaw fins</td>
+<td>左摇杆 X</td>
+<td>偏航鳍（Yaw fins）</td>
 </tr>
 <tr>
-<td>Right stick Y</td>
-<td>Thruster speed</td>
+<td>右摇杆 Y</td>
+<td>推进器速度</td>
 </tr>
 <tr>
 <td>RT / LT</td>
-<td>Tilt camera up / down (if agent has a CameraSensor)</td>
+<td>向上/向下倾斜摄像机（若代理配备了摄像机传感器）</td>
 </tr>
 </tbody>
 </table>
 <hr>
-<h3 id="camera-hud">Camera HUD</h3>
-<p>The <code>camera_hud</code> node subscribes to a <code>CameraSensor</code> image and the <code>DynamicsSensorOdom</code> odometry topic for a given agent, overlays a pilot HUD, and republishes to <code>&lt;agent&gt;/CameraHUD</code>.</p>
-<p>View the output with:</p>
+<h3 id="hud">相机 HUD</h3>
+<p><code>camera_hud</code> 节点订阅指定代理的 <code>CameraSensor</code> 图像和 <code>DynamicsSensorOdom</code> 里程计话题，叠加显示驾驶员 HUD，并将结果重新发布至 <code>&lt;agent&gt;/CameraHUD</code>。</p>
+<p>查看输出：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>rqt_image_view<span class="w"> </span>rqt_image_view
 </code></pre></div>
-<p>Then select <code>/holoocean/&lt;agent&gt;/CameraHUD</code> (or whichever agent) from the topic dropdown.</p>
-<p>The <code>agent_name</code> parameter controls which agent the HUD follows. In <code>joy_config.yaml</code> and <code>multi_joy_config.yaml</code> this is set under the <code>camera_hud</code> node section.</p>
+<p>然后，从话题（topic）下拉菜单中选择 <code>/holoocean/&lt;agent&gt;/CameraHUD</code>（或相应的代理）。</p>
+<p><code>agent_name</code> 参数用于指定 HUD 跟随哪个代理。在 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a> 和 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/multi_joy_config.yaml">multi_joy_config.yaml</a> 文件中，该参数是在 <code>camera_hud</code> 节点部分进行设置的。</p>
 <hr>
-<h2 id="config-file-structure">Config file structure</h2>
+<h2 id="_9">配置文件结构</h2>
 <div class="highlight"><pre><span></span><code>config/
-  joy_config.yaml         Single controller, single or multi-agent scenario
-  multi_joy_config.yaml   Two controllers, multi-agent scenario
-  waypoint_config.yaml    Waypoint follower parameters
-  sv_waypoints.yaml       Waypoint list for the surface vessel example
+  joy_config.yaml         单控制器，单代理或多代理场景
+  multi_joy_config.yaml   双控制器、多代理场景
+  waypoint_config.yaml    航点跟随参数
+  sv_waypoints.yaml       水面舰艇示例的航路点列表
 </code></pre></div>
-<p>All YAML files follow the ROS 2 node parameter convention.
-The wildcard entry at the top of each file:</p>
+<p>所有 YAML 文件均遵循 ROS 2 节点参数规范。每个文件顶部的通配符条目：</p>
 <div class="highlight"><pre><span></span><code><span class="nt">/holoocean/**</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">ros__parameters</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">relative_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">    </span><span class="nt">scenario_path</span><span class="p">:</span><span class="w"> </span><span class="s">'config/my_scenario.json'</span>
 </code></pre></div>
-<p>applies <code>relative_path</code> and <code>scenario_path</code> to <strong>all</strong> nodes in the <code>holoocean</code> namespace, so you only need to set the scenario in one place.</p></div>
+<p>将 <code>relative_path</code> 和 <code>scenario_path</code> 应用于 <code>holoocean</code> 命名空间下的<strong>所有</strong>节点，因此您只需在一处设置场景。</p></div>
               
             </div>
           </div><footer>

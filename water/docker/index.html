@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Development Docker Environment - OpenHUTB 文档模板</title>
+    <title>Docker 开发环境 - OpenHUTB 文档模板</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,7 +13,7 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Development Docker Environment";
+        var mkdocs_page_name = "Docker \u5f00\u53d1\u73af\u5883";
         var mkdocs_page_input_path = "water/docker.md";
         var mkdocs_page_url = null;
       </script>
@@ -62,7 +62,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Development Docker Environment</li>
+      <li class="breadcrumb-item active">Docker 开发环境</li>
     <li class="wy-breadcrumbs-aside">
           <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/docker.md"> 编辑页面</a>
     </li>
@@ -72,49 +72,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h1 id="development-docker-environment">Development Docker Environment</h1>
-<p>Instructions for setting up a ROS 2 HoloOcean workspace in a development container environment on Ubuntu 22.04.</p>
-<h2 id="usage">Usage</h2>
+                <div><h1 id="docker">Docker 开发环境</h1>
+<p>关于在 Ubuntu 22.04 的开发容器环境中搭建 ROS 2 HoloOcean 工作空间的说明。</p>
+<h2 id="_1">使用方法</h2>
 <ol>
 <li>
-<p><strong>Unreal Engine Agreements</strong><br>
-   Ensure you have signed the Unreal Engine agreements.</p>
+<p><strong>虚幻引擎协议</strong><br>
+   请确保您已签署虚幻引擎相关协议。</p>
 </li>
 <li>
-<p><strong>Clone the Source Code</strong><br>
-   Clone the HoloOcean source code from GitHub:
+<p><strong>克隆源代码</strong><br>
+   从 GitHub 克隆 HoloOcean 源代码：
    </p><div class="highlight"><pre><span></span><code>git clone git@github.com:byu-holoocean/HoloOcean.git
 </code></pre></div>
 </li>
 <li>
-<p><strong>Clone ROS 2 Packages</strong><br>
-   Install the ROS 2 packages for HoloOcean into your ROS 2 workspace:
+<p><strong>克隆 ROS 2 软件包</strong><br>
+   将 HoloOcean 的 ROS 2 软件包安装到您的 ROS 2 工作空间中：
    </p><div class="highlight"><pre><span></span><code>git clone git@github.com:byu-holoocean/holoocean-ros.git
 </code></pre></div>
 </li>
 <li>
-<p><strong>Adjust File Paths</strong><br>
-    Before starting the container, update the file paths in the <code>docker-compose</code> file to point to the cloned HoloOcean repository (specifically the <code>client</code> folder) and the holoocean-ros package.</p>
+<p><strong>调整文件路径</strong><br>
+    在启动容器之前，请更新 <code>docker-compose</code> 文件中的文件路径，使其指向克隆的 HoloOcean 仓库（具体为 <code>client</code> 文件夹）以及 holoocean-ros 软件包。 </p>
 </li>
 <li>
-<p><strong>Run Setup Commands</strong><br>
-   Enter the following commands to configure the container and access the HoloOcean environment:</p>
+<p><strong>运行设置命令</strong><br>
+   输入以下命令以配置容器并进入 HoloOcean 环境：</p>
 </li>
 </ol>
-<div class="highlight"><pre><span></span><code>xhost<span class="w"> </span>+<span class="w">                             </span><span class="c1"># Grant container access to the screen</span>
+<div class="highlight"><pre><span></span><code>xhost<span class="w"> </span>+<span class="w">                             </span><span class="c1"># 授予容器访问屏幕的权限</span>
 
-<span class="c1"># OPTIONAL: </span>
-<span class="c1"># docker compose build  # Build container locally instead of pulling from docker hub</span>
+<span class="c1"># 可选: </span>
+<span class="c1"># docker compose build  # 在本地构建容器，而不是从 Docker Hub 拉取</span>
 
-docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w">                </span><span class="c1"># Create a container and setup based on the holoocean ros image</span>
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w">                </span><span class="c1"># 基于 HoloOcean ROS 镜像创建容器并进行配置。</span>
 
-docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>holoocean<span class="w"> </span>bash<span class="w">      </span><span class="c1"># Enter the container</span>
+docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>holoocean<span class="w"> </span>bash<span class="w">      </span><span class="c1"># 进入容器</span>
 </code></pre></div>
-<h2 id="notes">Notes</h2>
-<p><strong>Volume Mounts</strong><br>
-    Both the HoloOcean repository and ROS packages are mounted as volumes into the container. This allows you to edit code on your host machine and have changes reflected inside the container immediately.</p>
-<p><strong>Pre-built Image</strong><br>
-    The Docker image used here is available online and does <strong>not</strong> need to be built locally. Simply pull and run the image as described in the usage instructions. Docker will automatically try and pull from docker hub when you run <code>docker compose up -d</code> and the image is not on the device.</p></div>
+<h2 id="_2">注意事项</h2>
+<p><strong>卷挂载 (Volume Mounts)</strong><br>
+    HoloOcean 仓库和 ROS 软件包均以卷（volume）的形式挂载到容器中。这意味着您可以在宿主机上编辑代码，所做的更改会立即反映在容器内。</p>
+<p><strong>预构建镜像</strong><br>
+    此处使用的 Docker 镜像可在网上直接获取，<strong>无需</strong>在本地构建。只需按照使用说明拉取并运行该镜像即可。当您执行 <code>docker compose up -d</code> 且设备上尚无该镜像时，Docker 会自动尝试从 Docker Hub 拉取。</p></div>
               
             </div>
           </div><footer>
