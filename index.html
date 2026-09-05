@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" />
       <link rel="shortcut icon" href="img/favicon.ico" />
-    <title>OpenHUTB 文档模板</title>
+    <title>模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="css/theme.css" />
     <link rel="stylesheet" href="css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-          <a href="." class="icon icon-home"> OpenHUTB 文档模板
+          <a href="." class="icon icon-home"> 模拟器的 ROS 文档
         </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
       <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
@@ -49,7 +49,7 @@
     </li>
         </ul>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#2">2. 地面载具</a>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 地面载具  </a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#3">3. 空域载具</a>
     </li>
@@ -61,7 +61,15 @@
                 </li>
               </ul>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="introduction/">播放视频</a>
+                <li class="toctree-l1"><a class="reference internal" href="set_up_and_connect_to_carla/">地面载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="air/setup_and_connect/">空域载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="water/HoloOcean/">水域载具</a>
                 </li>
               </ul>
       </div>
@@ -71,7 +79,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
       <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href=".">OpenHUTB 文档模板</a>
+          <a href=".">模拟器的 ROS 文档</a>
         
       </nav>
       <div class="wy-nav-content">
@@ -88,8 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h1 id="ros2"><a href="[https://github.com/OpenHUTB/template](https://github.com/OpenHUTB/ros2)">模拟器的 ROS2 教程</a></h1>
-<p>欢迎使用 OpenHUTB 的  ROS2 教程 <sup id="fnref:he2024dynsyn"><a class="footnote-ref" href="#fn:he2024dynsyn">1</a></sup>。</p>
+                <div><h1 id="ros"><a href="https://github.com/OpenHUTB/ros2">模拟器的 ROS 文档</a></h1>
+<p>欢迎使用 OpenHUTB 的  ROS 文档 <sup id="fnref:macenski2022robot"><a class="footnote-ref" href="#fn:macenski2022robot">1</a></sup>。</p>
 <ul>
 <li><a href="#list">简介</a></li>
 <li><a href="#introduction">入门</a></li>
@@ -108,7 +116,7 @@
 <p><a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">下载</a>并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 <code>lsb_release -a</code>）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。</p>
 <p>ROS每章节运行代码:</p>
 <p><a href="Run_code_for_%20the_%20chapter/ROS%E7%90%86%E8%AE%BA%E4%B8%8E%E5%AE%9E%E8%B7%B5%E7%AC%AC%E4%BA%8C%E7%AB%A0%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C/">第二章</a></p>
-<h2 id="2">2. 地面载具</h2>
+<h2 id="2">2. 地面载具  <span id="ground_vehicle"></span></h2>
 <ul>
 <li><a href="set_up_and_connect_to_carla/">建立虚拟机和地面载具之间的连接</a></li>
 </ul>
@@ -134,8 +142,8 @@
 <div class="footnote">
 <hr>
 <ol>
-<li id="fn:he2024dynsyn">
-<p>He, K., Zuo, C., Ma, C. &amp; Sui, Y. DynSyn: Dynamical synergistic representation for efficient learning and control in overactuated embodied systems. <em>arXiv preprint arXiv:2407.11472</em> (2024). <a class="footnote-backref" href="#fnref:he2024dynsyn" title="Jump back to footnote 1 in the text">↩</a></p>
+<li id="fn:macenski2022robot">
+<p>Macenski, S., Foote, T., Gerkey, B., Lalancette, C. &amp; Woodall, W. Robot operating system 2: Design, architecture, and uses in the wild. <em>Science robotics</em> <strong>7</strong>, eabm6074 (2022). <a class="footnote-backref" href="#fnref:macenski2022robot" title="Jump back to footnote 1 in the text">↩</a></p>
 </li>
 </ol>
 </div></div>
@@ -143,7 +151,7 @@
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="introduction/" class="btn btn-neutral float-right" title="播放视频">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="set_up_and_connect_to_carla/" class="btn btn-neutral float-right" title="地面载具">后一页 <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -171,7 +179,7 @@
     
     
     
-      <span><a href="introduction/" style="color: #fcfcfc">后一页 &raquo;</a></span>
+      <span><a href="set_up_and_connect_to_carla/" style="color: #fcfcfc">后一页 &raquo;</a></span>
     
   </span>
 </div>
@@ -198,5 +206,5 @@
 
 <!--
 MkDocs version : 1.5.9
-Build Date UTC : 2026-09-05 03:20:16.561083+00:00
+Build Date UTC : 2026-09-05 04:43:29.665444+00:00
 -->

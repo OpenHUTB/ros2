@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>水域载具 ROS2 接口 - OpenHUTB 文档模板</title>
+    <title>水域载具 - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,7 +13,7 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "\u6c34\u57df\u8f7d\u5177 ROS2 \u63a5\u53e3";
+        var mkdocs_page_name = "\u6c34\u57df\u8f7d\u5177";
         var mkdocs_page_input_path = "water/HoloOcean.md";
         var mkdocs_page_url = null;
       </script>
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-          <a href="../.." class="icon icon-home"> OpenHUTB 文档模板
+          <a href="../.." class="icon icon-home"> 模拟器的 ROS 文档
         </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
       <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
@@ -45,7 +45,61 @@
                 </li>
               </ul>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../introduction/">播放视频</a>
+                <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">地面载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">空域载具</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">水域载具</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#holoocean-ros-001">HoloOcean ROS (0.0.1) 新特性</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_1">软件包</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">先决条件</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">安装</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#docker">Docker（推荐）</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_4">从源码安装</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_5">快速入门</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_6">示例</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_7">操纵杆控制</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_8">航点跟踪</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_9">深度、航向及速度指令</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#holoocean_node">节点引用：holoocean_node</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_10">订阅的话题</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_11">发布的话题</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_12">服务</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#_13">参数</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_14">记录传感器数据</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_15">注意</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_16">参考</a>
+    </li>
+    </ul>
                 </li>
               </ul>
       </div>
@@ -55,14 +109,14 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
       <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../..">OpenHUTB 文档模板</a>
+          <a href="../..">模拟器的 ROS 文档</a>
         
       </nav>
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">水域载具 ROS2 接口</li>
+      <li class="breadcrumb-item active">水域载具</li>
     <li class="wy-breadcrumbs-aside">
           <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/HoloOcean.md"> 编辑页面</a>
     </li>
@@ -299,6 +353,9 @@ colcon<span class="w"> </span>build
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../air/setup_and_connect/" class="btn btn-neutral float-left" title="空域载具"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+    </div>
 
   <hr/>
 
@@ -323,6 +380,8 @@ colcon<span class="w"> </span>build
           <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
         </span>
     
+    
+      <span><a href="../../air/setup_and_connect/" style="color: #fcfcfc">&laquo; 前一页</a></span>
     
     
   </span>
