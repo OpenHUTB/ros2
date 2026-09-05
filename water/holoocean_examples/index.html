@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>holoocean_examples - OpenHUTB 文档模板</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "holoocean_examples";
+        var mkdocs_page_input_path = "water/holoocean_examples.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> OpenHUTB 文档模板
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../introduction/">播放视频</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">OpenHUTB 文档模板</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">holoocean_examples</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/holoocean_examples.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="holoocean_examples">holoocean_examples</h1>
+<p>Example nodes for interacting with the HoloOcean ROS 2 interface.</p>
+<h2 id="examples">Examples</h2>
+<table>
+<thead>
+<tr>
+<th>Launch file</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>joy_launch.py</code></td>
+<td>Single-controller joystick teleoperation with optional camera HUD</td>
+</tr>
+<tr>
+<td><code>multi_joy_launch.py</code></td>
+<td>Same as above but supports a wired and wireless controller simultaneously</td>
+</tr>
+<tr>
+<td><code>waypoint_launch.py</code></td>
+<td>Waypoint following for a surface vessel</td>
+</tr>
+<tr>
+<td><code>command_launch.py</code></td>
+<td>Direct depth/heading/speed commanding via the Fossen autopilot</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="joystick-example">Joystick Example</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Install the <code>joy_linux</code> ROS 2 package if not already present:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-<span class="nv">$ROS_DISTRO</span>-joy-linux
+</code></pre></div>
+<p>Connect your controller. Verify the device shows up:</p>
+<p></p><div class="highlight"><pre><span></span><code>ls<span class="w"> </span>/dev/input/js*
+</code></pre></div>
+You can setup udev rules to map specific controllers to specific paths. 
+<p>The config files default to <code>js0</code>. Adjust <code>dev</code> under <code>joy_node</code> (or <code>joy_node_wired</code>in multi agent) in the config YAML if your device path differs.</p>
+<h3 id="running">Running</h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
+</code></pre></div>
+<p>For multiple agents and multiple controllers simultaneously:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>multi_joy_launch.py
+</code></pre></div>
+<h3 id="how-agents-are-loaded">How agents are loaded</h3>
+<p>The node reads <code>scenario_path</code> from the config (same value used by <code>holoocean_node</code>) and parses the scenario JSON to get the agent list. You do <strong>not</strong> need to list agents in the YAML — only the button assignments.</p>
+<p><code>agents.buttons</code> is a parallel array where index <code>i</code> maps to the i-th agent in the scenario file. For example, if the scenario defines <code>[auv0, auv1, auv2]</code> in order:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">agents.buttons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># auv0=A, auv1=B, auv2=Y</span>
+<span class="nt">agents.default</span><span class="p">:</span><span class="w"> </span><span class="s">'auv0'</span>
+</code></pre></div>
+<p><code>agents.default</code> sets which agent is active at startup.</p>
+<hr>
+<h3 id="finding-your-button-and-axis-mapping">Finding your button and axis mapping</h3>
+<p>The easiest way to find the indices for your specific controller is to echo the joy topic while pressing buttons:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run with only one controller connected</span>
+ros2<span class="w"> </span>run<span class="w"> </span>joy_linux<span class="w"> </span>joy_linux_node
+
+<span class="c1"># In another terminal run:</span>
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/joy
+</code></pre></div>
+<p>The <code>buttons</code> array shows <code>1</code> for any button currently held. The <code>axes</code> array shows the current value of each analog input (sticks and triggers).</p>
+<p>The <a href="https://wiki.ros.org/joy">ROS joy wiki page</a> also has mapping tables for common controllers.</p>
+<h3 id="default-mapping-xbox-controller-via-joy_linux">Default mapping (Xbox controller via joy_linux)</h3>
+<p>The values below match the defaults in <code>joy_config.yaml</code> (wired controller) and <code>multi_joy_config.yaml</code>.</p>
+<h4 id="buttons">Buttons</h4>
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Xbox button</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>A</td>
+<td>Select agent 0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>B</td>
+<td>Select agent 1 (if present)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>X</td>
+<td>Select agent 2 (if present)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Y</td>
+<td>Select agent 3 (if present)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Back / Select</td>
+<td>Disarm</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Start</td>
+<td>Arm</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Guide (Xbox logo)</td>
+<td>Reset simulation</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The wireless Xbox config in <code>joy_config.yaml</code> uses buttons 6/7/8. Some controllers or drivers report these at different indices — use <code>ros2 topic echo /joy</code> to confirm.</p>
+</blockquote>
+<h4 id="axes">Axes</h4>
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Xbox input</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Left stick X</td>
+<td>Lateral (strafe)</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Left stick Y</td>
+<td>Forward / Pitch (torpedo)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>LT</td>
+<td>Tilt camera down</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Right stick X</td>
+<td>Yaw (BlueROV) / Yaw (torpedo)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Right stick Y</td>
+<td>Vertical (BlueROV) / Speed (torpedo)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>RT</td>
+<td>Tilt camera up</td>
+</tr>
+<tr>
+<td>6</td>
+<td>D-pad X</td>
+<td>Roll trim (BlueROV)</td>
+</tr>
+<tr>
+<td>7</td>
+<td>D-pad Y</td>
+<td>Pitch trim (BlueROV)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Trigger axes rest at <code>1.0</code> and reach <code>-1.0</code> when fully pressed. This is the standard <code>joy_linux</code> convention.</p>
+</blockquote>
+<h3 id="per-agent-controls">Per-agent controls</h3>
+<h4 id="bluerov2-hoveringauv">BlueROV2 / HoveringAUV</h4>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Left stick Y</td>
+<td>Forward thrust</td>
+</tr>
+<tr>
+<td>Left stick X</td>
+<td>Lateral (strafe) thrust</td>
+</tr>
+<tr>
+<td>Right stick Y</td>
+<td>Vertical thrust</td>
+</tr>
+<tr>
+<td>Right stick X</td>
+<td>Yaw</td>
+</tr>
+<tr>
+<td>D-pad up/down</td>
+<td>Pitch trim (accumulates, resets on disarm)</td>
+</tr>
+<tr>
+<td>D-pad left/right</td>
+<td>Roll trim (accumulates, resets on disarm)</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>Tilt camera up / down</td>
+</tr>
+</tbody>
+</table>
+<h4 id="surfacevessel">SurfaceVessel</h4>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Left stick Y</td>
+<td>Left thruster</td>
+</tr>
+<tr>
+<td>Right stick Y</td>
+<td>Right thruster</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>Tilt camera up / down (if agent has a CameraSensor)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="torpedoauv-couguv">TorpedoAUV / CougUV</h4>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Left stick Y</td>
+<td>Pitch fins</td>
+</tr>
+<tr>
+<td>Left stick X</td>
+<td>Yaw fins</td>
+</tr>
+<tr>
+<td>Right stick Y</td>
+<td>Thruster speed</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>Tilt camera up / down (if agent has a CameraSensor)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="camera-hud">Camera HUD</h3>
+<p>The <code>camera_hud</code> node subscribes to a <code>CameraSensor</code> image and the <code>DynamicsSensorOdom</code> odometry topic for a given agent, overlays a pilot HUD, and republishes to <code>&lt;agent&gt;/CameraHUD</code>.</p>
+<p>View the output with:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>rqt_image_view<span class="w"> </span>rqt_image_view
+</code></pre></div>
+<p>Then select <code>/holoocean/&lt;agent&gt;/CameraHUD</code> (or whichever agent) from the topic dropdown.</p>
+<p>The <code>agent_name</code> parameter controls which agent the HUD follows. In <code>joy_config.yaml</code> and <code>multi_joy_config.yaml</code> this is set under the <code>camera_hud</code> node section.</p>
+<hr>
+<h2 id="config-file-structure">Config file structure</h2>
+<div class="highlight"><pre><span></span><code>config/
+  joy_config.yaml         Single controller, single or multi-agent scenario
+  multi_joy_config.yaml   Two controllers, multi-agent scenario
+  waypoint_config.yaml    Waypoint follower parameters
+  sv_waypoints.yaml       Waypoint list for the surface vessel example
+</code></pre></div>
+<p>All YAML files follow the ROS 2 node parameter convention.
+The wildcard entry at the top of each file:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">/holoocean/**</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">relative_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">scenario_path</span><span class="p">:</span><span class="w"> </span><span class="s">'config/my_scenario.json'</span>
+</code></pre></div>
+<p>applies <code>relative_path</code> and <code>scenario_path</code> to <strong>all</strong> nodes in the <code>holoocean</code> namespace, so you only need to set the scenario in one place.</p></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

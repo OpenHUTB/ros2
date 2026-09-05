@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Development Docker Environment - OpenHUTB 文档模板</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Development Docker Environment";
+        var mkdocs_page_input_path = "water/docker.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> OpenHUTB 文档模板
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../introduction/">播放视频</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">OpenHUTB 文档模板</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Development Docker Environment</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/docker.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="development-docker-environment">Development Docker Environment</h1>
+<p>Instructions for setting up a ROS 2 HoloOcean workspace in a development container environment on Ubuntu 22.04.</p>
+<h2 id="usage">Usage</h2>
+<ol>
+<li>
+<p><strong>Unreal Engine Agreements</strong><br>
+   Ensure you have signed the Unreal Engine agreements.</p>
+</li>
+<li>
+<p><strong>Clone the Source Code</strong><br>
+   Clone the HoloOcean source code from GitHub:
+   </p><div class="highlight"><pre><span></span><code>git clone git@github.com:byu-holoocean/HoloOcean.git
+</code></pre></div>
+</li>
+<li>
+<p><strong>Clone ROS 2 Packages</strong><br>
+   Install the ROS 2 packages for HoloOcean into your ROS 2 workspace:
+   </p><div class="highlight"><pre><span></span><code>git clone git@github.com:byu-holoocean/holoocean-ros.git
+</code></pre></div>
+</li>
+<li>
+<p><strong>Adjust File Paths</strong><br>
+    Before starting the container, update the file paths in the <code>docker-compose</code> file to point to the cloned HoloOcean repository (specifically the <code>client</code> folder) and the holoocean-ros package.</p>
+</li>
+<li>
+<p><strong>Run Setup Commands</strong><br>
+   Enter the following commands to configure the container and access the HoloOcean environment:</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>xhost<span class="w"> </span>+<span class="w">                             </span><span class="c1"># Grant container access to the screen</span>
+
+<span class="c1"># OPTIONAL: </span>
+<span class="c1"># docker compose build  # Build container locally instead of pulling from docker hub</span>
+
+docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w">                </span><span class="c1"># Create a container and setup based on the holoocean ros image</span>
+
+docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>holoocean<span class="w"> </span>bash<span class="w">      </span><span class="c1"># Enter the container</span>
+</code></pre></div>
+<h2 id="notes">Notes</h2>
+<p><strong>Volume Mounts</strong><br>
+    Both the HoloOcean repository and ROS packages are mounted as volumes into the container. This allows you to edit code on your host machine and have changes reflected inside the container immediately.</p>
+<p><strong>Pre-built Image</strong><br>
+    The Docker image used here is available online and does <strong>not</strong> need to be built locally. Simply pull and run the image as described in the usage instructions. Docker will automatically try and pull from docker hub when you run <code>docker compose up -d</code> and the image is not on the device.</p></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

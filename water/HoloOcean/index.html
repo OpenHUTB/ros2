@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>水域载具 ROS2 接口 - OpenHUTB 文档模板</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u6c34\u57df\u8f7d\u5177 ROS2 \u63a5\u53e3";
+        var mkdocs_page_input_path = "water/HoloOcean.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> OpenHUTB 文档模板
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../introduction/">播放视频</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">OpenHUTB 文档模板</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">水域载具 ROS2 接口</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/HoloOcean.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="ros2">水域载具 ROS2 接口</h1>
+<p>针对高保真海洋机器人模块 <a href="https://github.com/OpenHUTB/hutb/tree/hutb/Unreal/CarlaUE4/Plugins/HoloOcean">HoloOcean</a> 的 ROS 2 集成方案。该软件包将 HoloOcean Python API 与 ROS 2 网络连接起来，以 Topic（话题）形式发布传感器数据，并通过 Subscription（订阅）和 Service（服务）接收控制指令。</p>
+<h2 id="holoocean-ros-001">HoloOcean ROS (0.0.1) 新特性</h2>
+<ul>
+<li>改进了游戏手柄（joystick）示例</li>
+<li>新增多代理（multi-agent）游戏手柄示例</li>
+<li>简化了代理指令（弃用 <code>command/control</code> 话题，改用 <code>command/agent</code>）</li>
+<li>新增传感器旋转指令</li>
+<li>修复了少量错误并改进了 Docker 配置</li>
+<li>软件包</li>
+</ul>
+<h2 id="_1">软件包</h2>
+<table>
+<thead>
+<tr>
+<th>软件包</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>holoocean_main</code></td>
+<td>核心仿真节点：加载场景并施加环境更新节拍</td>
+</tr>
+<tr>
+<td><code>holoocean_interfaces</code></td>
+<td>自定义 ROS 2 消息与服务定义</td>
+</tr>
+<tr>
+<td><code>holoocean_examples</code></td>
+<td>示例节点：操纵杆控制、航点跟踪、深度/航向指令</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">先决条件</h2>
+<ul>
+<li>ROS 2（已在 Humble 和 Jazzy 版本上测试）</li>
+<li>HoloOcean Python 软件包 — <a href="https://github.com/OpenHUTB/hutb/tree/hutb/Unreal/CarlaUE4/Plugins/HoloOcean">源代码</a> / <a href="https://openhutb.github.io/mujoco_plugin/underwater/">文档</a></li>
+</ul>
+<p><strong>注意：</strong> 请避免在 ROS 2 和 HoloOcean 中使用 Python 虚拟环境（如 Conda），因为这可能导致运行时及依赖项问题。</p>
+<h2 id="_3">安装</h2>
+<h3 id="docker">Docker（推荐）</h3>
+<p>请参阅 <a href="../docker/">docker/README.md</a> 获取设置说明。提供<a href="../docker_dev/">开发</a>和<a href="../docker_runtime/">运行时</a>两种配置。</p>
+<h3 id="_4">从源码安装</h3>
+<p>安装 HoloOcean 后，将此仓库克隆到您的 ROS 2 工作空间中：
+</p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>ros2_ws/src
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/byu-holoocean/holoocean-ros.git
+<span class="nb">cd</span><span class="w"> </span>..
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<h2 id="_5">快速入门</h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_launch.py
+</code></pre></div>
+<h2 id="_6">示例</h2>
+<h3 id="_7">操纵杆控制</h3>
+<p>使用 <code>Joy_linux</code> 包通过操纵杆控制 HoloOcean 中的代理。</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
+</code></pre></div>
+<p>请参阅 <a href="../holoocean_examples/">holoocean_examples.md</a>，获取完整的设置说明、按键映射及配置参考。</p>
+<p><img alt="Joystick multi-agent control" src="../../img/water/MultiAgentJoystick.png"></p>
+<h3 id="_8">航点跟踪</h3>
+<p>根据预设的航点列表控制水面船舶。</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>waypoint_launch.py
+</code></pre></div>
+<p><img alt="Waypoint following" src="../../img/water/WAMV_Waypoints.png"></p>
+<h3 id="_9">深度、航向及速度指令</h3>
+<p>利用 Fossen 控制器向鱼雷型 AUV 发送深度、航向及速度指令。</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>command_launch.py
+</code></pre></div>
+<h2 id="holoocean_node">节点引用：<code>holoocean_node</code></h2>
+<p>加载场景 JSON 文件，启动 HoloOcean 环境，并在后台线程中驱动其运行（执行 tick 操作）。</p>
+<h3 id="_10">订阅的话题</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command/agent</code></td>
+<td><code>AgentCommand</code></td>
+<td>Thruster/actuator commands for all agents (for Fossen agents, messages with <code>frame_id</code> set to <code>body</code> are routed to the Fossen <code>set_u_control</code> interface)</td>
+</tr>
+<tr>
+<td><code>command/sensor</code></td>
+<td><code>SensorCommand</code></td>
+<td>Sensor configuration commands (e.g. camera rotation)</td>
+</tr>
+<tr>
+<td><code>depth</code></td>
+<td><code>DesiredCommand</code></td>
+<td>Depth setpoint for autopilot mode</td>
+</tr>
+<tr>
+<td><code>heading</code></td>
+<td><code>DesiredCommand</code></td>
+<td>Heading setpoint for autopilot mode</td>
+</tr>
+<tr>
+<td><code>speed</code></td>
+<td><code>DesiredCommand</code></td>
+<td>Speed setpoint for autopilot mode</td>
+</tr>
+<tr>
+<td><code>debug/points</code></td>
+<td><code>visualization_msgs/Marker</code></td>
+<td>Debug points to draw in the simulation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">发布的话题</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;agent&gt;/&lt;SensorName&gt;</code></td>
+<td>varies</td>
+<td>Sensor data for each agent (see below)</td>
+</tr>
+<tr>
+<td><code>/clock</code></td>
+<td><code>rosgraph_msgs/Clock</code></td>
+<td>Simulation time</td>
+</tr>
+</tbody>
+</table>
+<p>传感器话题名称遵循 <code>&lt;agent_name&gt;/&lt;sensor_name&gt;</code> 的格式。如果场景文件中未指定传感器名称，则默认使用传感器类型名称。</p>
+<h3 id="_12">服务</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reset</code></td>
+<td><code>std_srvs/Trigger</code></td>
+<td>Reset the simulation environment</td>
+</tr>
+<tr>
+<td><code>control_mode</code></td>
+<td><code>SetControlMode</code></td>
+<td>Change an agent's control mode</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">参数</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scenario_path</code></td>
+<td>string</td>
+<td><code>""</code></td>
+<td>Path to the scenario JSON file</td>
+</tr>
+<tr>
+<td><code>relative_path</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Resolve <code>scenario_path</code> relative to the package share directory</td>
+</tr>
+<tr>
+<td><code>show_viewport</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Show the Unreal Engine viewport window</td>
+</tr>
+<tr>
+<td><code>draw_arrow</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Draw a heading arrow for each Fossen agent in the simulation</td>
+</tr>
+<tr>
+<td><code>render_quality</code></td>
+<td>int</td>
+<td><code>-1</code></td>
+<td>Render quality: 0 = low, 1 = normal, 2 = high. -1 = default</td>
+</tr>
+<tr>
+<td><code>publish_commands</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Publish computed control surface commands back to ROS</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_14">记录传感器数据</h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/holoocean/auv0/RotationSensor<span class="w"> </span>/holoocean/auv0/LocationSensor
+</code></pre></div>
+<p>有关更多信息，请参阅 <a href="https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html">ROS 2 bag 文档</a>。</p>
+<h2 id="_15">注意</h2>
+<ul>
+<li>模拟时间可能比实际时间（wall time）运行得更快或更慢。请使用 <code>/clock</code> 话题将节点与仿真时间<a href="https://design.ros2.org/articles/clock_and_time.html">同步</a>。</li>
+</ul>
+<h2 id="_16">参考</h2>
+<ul>
+<li>
+<p><a href="https://github.com/byu-holoocean/holoocean-ros">byu-holoocean/holoocean-ros</a></p>
+</li>
+<li>
+<p><a href="https://github.com/byu-holoocean/HoloOcean">HoloOcean repository</a></p>
+</li>
+<li><a href="https://byu-holoocean.github.io/holoocean-docs/">HoloOcean documentation</a></li>
+<li><a href="https://docs.ros.org/en/humble/index.html">ROS 2 documentation</a></li>
+</ul></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
