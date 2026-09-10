@@ -62,6 +62,8 @@ nav:
 - 空域载具: 'air/setup_and_connect.md'
 - 水域载具: 'water/HoloOcean.md'
 
+- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
+
 # - mdx_math 用于行内公式显示
 markdown_extensions:
   - markdown_grid_tables
