@@ -120,15 +120,16 @@
 <h2 id="carla-ego-vehicle">使用 Carla 客户端启动 Ego Vehicle</h2>
 <p>在同一个终端中，运行 follow 命令以在您喜欢的 Carla 模拟器环境中启动 Ego 车辆。例如，您可以 follow 在 Carla 模拟器的 Town03 环境中运行命令以在加油站附近启动车辆。</p>
 <p>运行此下面这一段命令，将命令中的主机地址<strong>更改为您宿主机的IP主机地址</strong>。
-</p><div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge_with_example_ego_vehicle.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.18.226.60<span class="w"> </span>timeout:<span class="o">=</span><span class="m">60000</span><span class="w"> </span>town:<span class="o">=</span><span class="s1">'Town03'</span><span class="w"> </span>spawn_point:<span class="o">=</span>-25,-134,0.5,0,0,-90
+</p><div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge_with_example_ego_vehicle.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47<span class="w"> </span>timeout:<span class="o">=</span><span class="m">60000</span><span class="w"> </span>town:<span class="o">=</span><span class="s1">'Town03'</span><span class="w"> </span>spawn_point:<span class="o">=</span>-25,-134,0.5,0,0,-90
 </code></pre></div>
-<!-- 192.168.159.129 -->
-
+<p><strong>注意：</strong> 如果按<code>B</code>切换到手动驾驶后，按<code>W</code>、<code>A</code>、<code>S</code>、<code>D</code>没反应，需要将 numpy 的版本 从 1.24.4 降到 numpy 1.23.1，避免报错：AttributeError: module 'numpy' has no attribute 'bool'
+</p><div class="highlight"><pre><span></span><code>python -m pip install numpy==1.23.1
+</code></pre></div>
 <p><img alt="" src="../img/launch_vehicle.png"></p>
 <p>要手动驾驶车辆，请按“B”。按“H”查看说明。</p>
 <div class="admonition 注意">
 <p class="admonition-title">注意</p>
-<p>您宿主机windows的IP地址通过<code>ipconfig</code>命令进行查看，一般和这里<code>172.18.226.60</code>的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象</p>
+<p>您宿主机windows的IP地址通过<code>ipconfig</code>命令进行查看，一般和这里<code>172.21.108.47</code>的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象</p>
 </div>
 <h2 id="rviz">使用 rviz 进行可视化</h2>
 <ul>
