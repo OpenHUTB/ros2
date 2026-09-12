@@ -36,7 +36,10 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 
 运行此下面这一段命令，将命令中的主机地址**更改为您宿主机的IP主机地址**。
 ```shell
+# ROS 1
 roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=172.21.108.47 timeout:=60000 town:='Town03' spawn_point:=-25,-134,0.5,0,0,-90
+# ROS 2
+ros2 launch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch.py host:=172.21.108.47 timeout:=60000 town:='Town03' spawn_point:=-25,-134,0.5,0,0,-90
 ```
 
 **注意：** 如果按`B`切换到手动驾驶后，按`W`、`A`、`S`、`D`没反应，需要将 numpy 的版本 从 1.24.4 降到 numpy 1.23.1，避免报错：AttributeError: module 'numpy' has no attribute 'bool'
@@ -133,6 +136,7 @@ rostopic list
 
 ## 参考
 
+* [Carla 手动控制](https://openhutb.github.io/doc/carla_manual_control/)
 * [Set Up and Connect to CARLA Simulator](https://ww2.mathworks.cn/help/ros/ug/set-up-and-connect-to-carla-simulator.html)
 * [支持 0.9.16](https://github.com/carla-simulator/ros-bridge/issues/763)
 * [ROS rviz工具使用](https://smarttofdoc.readthedocs.io/en/latest/Tutorial/ROS/rosrviz.html)

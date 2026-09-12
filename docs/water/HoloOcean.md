@@ -40,12 +40,18 @@
 ### 从源码安装
 安装 HoloOcean 后，将此仓库克隆到您的 ROS 2 工作空间中：
 ```bash
-cd ros2_ws/src
-git clone https://github.com/byu-holoocean/holoocean-ros.git
-cd ..
+cd ~
+git clone https://github.com/OpenHUTB/ros2.git
+cd ~/ros2/src/water
 source /opt/ros/humble/setup.bash
+conda activate nn_3.8
 colcon build
 source install/setup.bash
+```
+
+colcon build 报错：ModuleNotFoundError: No module named 'catkin_pkg'
+```shell
+# sudo apt-get install python3-catkin-pkg
 ```
 
 ## 快速入门
