@@ -175,12 +175,16 @@
 <p>请参阅 <a href="../docker/">Docker 开发环境</a> 获取设置说明。提供<a href="../docker/">开发</a>和<a href="../docker_runtime/">运行时</a>两种配置。</p>
 <h3 id="_4">从源码安装</h3>
 <p>安装 HoloOcean 后，将此仓库克隆到您的 ROS 2 工作空间中：
-</p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>ros2_ws/src
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/byu-holoocean/holoocean-ros.git
-<span class="nb">cd</span><span class="w"> </span>..
+</p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+<span class="nb">cd</span><span class="w"> </span>~/ros2/src/water
 <span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+conda<span class="w"> </span>activate<span class="w"> </span>nn_3.8
 colcon<span class="w"> </span>build
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<p>colcon build 报错：ModuleNotFoundError: No module named 'catkin_pkg'
+</p><div class="highlight"><pre><span></span><code><span class="c1"># sudo apt-get install python3-catkin-pkg</span>
 </code></pre></div>
 <h2 id="_5">快速入门</h2>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_launch.py
