@@ -36,16 +36,20 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 
 运行此下面这一段命令，将命令中的主机地址**更改为您宿主机的IP主机地址**。
 ```shell
-roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=172.18.226.60 timeout:=60000 town:='Town03' spawn_point:=-25,-134,0.5,0,0,-90
+roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=172.21.108.47 timeout:=60000 town:='Town03' spawn_point:=-25,-134,0.5,0,0,-90
 ```
-<!-- 192.168.159.129 -->
+
+**注意：** 如果按`B`切换到手动驾驶后，按`W`、`A`、`S`、`D`没反应，需要将 numpy 的版本 从 1.24.4 降到 numpy 1.23.1，避免报错：AttributeError: module 'numpy' has no attribute 'bool'
+```
+python -m pip install numpy==1.23.1
+```
 
 ![](./img/launch_vehicle.png)
 
 要手动驾驶车辆，请按“B”。按“H”查看说明。
 
 !!! 注意
-    您宿主机windows的IP地址通过`ipconfig`命令进行查看，一般和这里`172.18.226.60`的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象
+    您宿主机windows的IP地址通过`ipconfig`命令进行查看，一般和这里`172.21.108.47`的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象
 
 
 ## 使用 rviz 进行可视化
