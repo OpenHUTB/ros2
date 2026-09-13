@@ -14,7 +14,7 @@ title: 主页
 
 ## 1. 入门 <span id="list"></span>
 
-ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
+ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
 
 * 教材：ROS教材.pdf
 * 课件和视频：ROS资料.zip
@@ -53,8 +53,9 @@ ROS每章节运行代码:
 * [自动驾驶示例](./ground/ad_demo.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [扭转控制](./ground/twist_to_control.md)
-
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
+* [RQT 插件](./ground/rviz_plugin.md)
+* [点云地图创建](./ground/rviz_plugin.md)
 
 
 ## 3. 空域载具 <span id='air_vehicle'></span>
@@ -74,5 +75,7 @@ ROS每章节运行代码:
 ___
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
+
+___
 
 ## 参考文献
