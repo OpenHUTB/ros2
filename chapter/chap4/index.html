@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Chap4 - 模拟器的 ROS 文档</title>
+    <title>4. 机器人仿真 - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,7 +13,7 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Chap4";
+        var mkdocs_page_name = "4. \u673a\u5668\u4eba\u4eff\u771f";
         var mkdocs_page_input_path = "chapter/chap4.md";
         var mkdocs_page_url = null;
       </script>
@@ -40,33 +40,69 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">入门</span></p>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
-                </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+                  </li>
               </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">Ubuntu20.04安装ROS</a>
-                </li>
+              <p class="caption"><span class="caption-text">ROS 教程</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../turtle_square/">1. 认识 ROS：小海龟画正方形</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap2/">2. ROS 基础 - ROS 基础</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap3/">3. 机器人系统设计</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">4. 机器人仿真</a>
+    <ul class="current">
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap5/">5. 机器人感知</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap7/">7. 机械臂控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap8/">8. ROS 机器人综合应用</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap9/">9. ROS 2</a>
+                  </li>
               </ul>
+              <p class="caption"><span class="caption-text">地面载具</span></p>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">地面载具</a>
-                </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../ground/twist_to_control.md">扭转控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+                  </li>
               </ul>
+              <p class="caption"><span class="caption-text">空域载具</span></p>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">空域载具</a>
-                </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+                  </li>
               </ul>
+              <p class="caption"><span class="caption-text">水域载具</span></p>
               <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
-                </li>
-              </ul>
-              <p class="caption"><span class="caption-text">ROS每章节运行代码</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="" href="../../Run_code_for_ the_ chapter/turtle_square.md">小海龟画正方形</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
                   </li>
               </ul>
       </div>
@@ -83,7 +119,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Chap4</li>
+          <li class="breadcrumb-item">ROS 教程</li>
+      <li class="breadcrumb-item active">4. 机器人仿真</li>
     <li class="wy-breadcrumbs-aside">
           <a href="https://github.com/OpenHUTB/template/edit/master/docs/chapter/chap4.md"> 编辑页面</a>
     </li>
@@ -97,6 +134,10 @@
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../chap3/" class="btn btn-neutral float-left" title="3. 机器人系统设计"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+        <a href="../chap5/" class="btn btn-neutral float-right" title="5. 机器人感知">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
   <hr/>
 
@@ -122,6 +163,10 @@
         </span>
     
     
+      <span><a href="../chap3/" style="color: #fcfcfc">&laquo; 前一页</a></span>
+    
+    
+      <span><a href="../chap5/" style="color: #fcfcfc">后一页 &raquo;</a></span>
     
   </span>
 </div>
