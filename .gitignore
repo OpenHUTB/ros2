@@ -3,6 +3,4 @@ site/
 
 # Python 缓存
 __pycache__/
-
-# hooks.py 构建时自动拷贝到 docs/ 下的文件
-docs/requirements.txt
+*.pyc

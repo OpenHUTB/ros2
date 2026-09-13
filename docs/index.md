@@ -5,7 +5,7 @@ title: 主页
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
 - [简介](#list)
-  - [入门](#introduction)
+  - [入门](#list)
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
 
