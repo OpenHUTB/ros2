@@ -1,6 +1,6 @@
 # git-ros-schoolwork
 # ROS1 Kinetic — 小海龟 turtlesim 作业
-姓名：吴泽鸿
+姓名：吴泽鸿-2535030072
 环境：Ubuntu16.04
  + ROS‑Kinetic
 功能：键盘 WASD 控制仿真小海龟移动
