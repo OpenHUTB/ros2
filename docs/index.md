@@ -5,7 +5,9 @@ title: 主页
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
 - [简介](#list)
-  - [入门](#introduction)
+  - [入门](#list)
+  - [地面载具](#ground_vehicle)
+  - [空域载具](#air_vehicle)
 
 ---
 
@@ -33,10 +35,11 @@ ROS每章节运行代码:
 
 ## 2. 地面载具  <span id='ground_vehicle'></span>
 
-* [建立虚拟机和地面载具之间的连接](./set_up_and_connect_to_carla.md)
+* [建立虚拟机和地面载具之间的连接：手动控制](./set_up_and_connect_to_carla.md)
+* [生成对象](./ground/carla_spawn_objects.md)
 
 
-## 3. 空域载具
+## 3. 空域载具 <span id='air_vehicle'></span>
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 

@@ -1,5 +1,13 @@
 venv/
+
+# mkdocs 构建产物
 site/
+
+# Python 缓存
 __pycache__/
 *.pyc
+
+# 构建时 hooks.py 自动生成
 docs/requirements.txt
+
+
