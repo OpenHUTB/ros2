@@ -30,6 +30,12 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 
 ![](./img/setup.bash.png)
 
+为了每次启动终端时不用每次都设置环境，可以将其加入到用户的初始化脚本中：
+```shell
+echo 'source ~/carla-ros-bridge/catkin_ws/devel/setup.bash' >> ~/.bashrc
+source ~/.bashrc
+```
+
 
 ## 使用 Carla 客户端启动 Ego Vehicle
 在同一个终端中，运行 follow 命令以在您喜欢的 Carla 模拟器环境中启动 Ego 车辆。例如，您可以 follow 在 Carla 模拟器的 Town03 环境中运行命令以在加油站附近启动车辆。
@@ -53,6 +59,16 @@ python -m pip install numpy==1.23.1
 
 !!! 注意
     您宿主机windows的IP地址通过`ipconfig`命令进行查看，一般和这里`172.21.108.47`的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象
+
+
+### 其他
+
+在默认的 Town10HD_Opt 地图上启动手动控制（只修改参数 `town`），
+```shell
+roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=172.21.108.47 timeout:=60000 town:='Carla/Maps/Town10HD_Opt' spawn_point:=-25,-134,0.5,0,0,-90
+```
+
+![](./img/ground/launch_vehicle_Town10_Opt.png)
 
 
 ## 使用 rviz 进行可视化
@@ -101,6 +117,16 @@ rosinit( 'http://172.18.226.233:11311' )
 ```shell
 rostopic list
 ```
+
+## 解析
+
+该 [carla_ros_bridge_with_example_ego_vehicle.launch](https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_ros_bridge/launch/carla_ros_bridge_with_example_ego_vehicle.launch) 文件包含 3 个启动步骤
+
+1. ROS 桥 [carla_ros_bridge.launch](https://github.com/OpenHUTB/ros2/tree/master/src/ground/ros-bridge/carla_ros_bridge/launch/carla_ros_bridge.launch) 用于连接模拟器
+
+2. 主车 [carla_example_ego_vehicle.launch](https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_spawn_objects/launch/carla_example_ego_vehicle.launch)
+
+3. 手动控制 [carla_manual_control.launch](https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_manual_control/launch/carla_manual_control.launch)
 
 
 ## 常见问题
