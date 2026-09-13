@@ -58,6 +58,7 @@ copyright: OpenHUTB 版权所有 &copy; {year}
 
 nav:
 - 首页: 'index.md'
+- Ubuntu20.04安装ROS: 'ubuntu20.04的Ros安装.md'
 - 地面载具: 'set_up_and_connect_to_carla.md'
 - 空域载具: 'air/setup_and_connect.md'
 - 水域载具: 'water/HoloOcean.md'
