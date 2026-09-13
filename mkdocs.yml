@@ -57,15 +57,37 @@ copyright: OpenHUTB 版权所有 &copy; {year}
 
 
 nav:
-- 首页: 'index.md'
-- Ubuntu20.04安装ROS: 'ubuntu20.04.md'
-- 地面载具: 'set_up_and_connect_to_carla.md'
-- 空域载具: 'air/setup_and_connect.md'
-- 水域载具: 'water/HoloOcean.md'
+- 入门:
+    - 首页: 'index.md'
+    - 安装 ROS: 'ubuntu20.04.md'
+- ROS 教程:
+    - 1. 认识 ROS：小海龟画正方形: 'chapter/turtle_square.md'
+    - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
+    - 3. 机器人系统设计: './chapter/chap3.md'
+    - 4. 机器人仿真: './chapter/chap4.md'
+    - 5. 机器人感知: './chapter/chap5.md'
+    - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
+    - 7. 机械臂控制: './chapter/chap7.md'
+    - 8. ROS 机器人综合应用: './chapter/chap8.md'
+    - 9. ROS 2: './chapter/chap9.md'
+- 地面载具:
+    - 手动控制: './set_up_and_connect_to_carla.md'
+    - 生成对象: './ground/carla_spawn_objects.md'
+    - 阿克曼控制: './ground/ackermann_control.md'
+    - 路径点发布器: './ground/waypoint.md'
+    - 自动驾驶代理: './ground/ad_agent.md'
+    - 自动驾驶示例: './ground/ad_demo.md'
+    - ROS Scenario Runner: './ground/ros_scenario_runner.md'
+    - 扭转控制: './ground/twist_to_control.md'
+    - RVIZ Carla 插件: './ground/rviz_plugin.md'
+- 空域载具:
+    - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
+    - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
+    - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
+- 水域载具: 
+    - 水域载具 ROS2 接口: './water/HoloOcean.md'
 
-- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
-- ROS每章节运行代码:
-    - 小海龟画正方形: 'Run_code_for_ the_ chapter/turtle_square.md'
+
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
