@@ -150,7 +150,7 @@ rostopic pub /turtle1/cmd_vel geometry_msgs/Twist -r 1 -- 'linear: {x: 2.0, y: 0
 
 （此处插入实验运行截图）
 
-![运行效果](截图.png)
+![ROS小海龟画圆运行效果](img/ros小海龟画圆.png)
 
 ## 六、拓展：调整圆的大小
 
