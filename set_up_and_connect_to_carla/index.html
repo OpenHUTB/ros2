@@ -52,14 +52,20 @@
     <li class="toctree-l2"><a class="reference internal" href="#carla-ros-bridge">设置 Carla ROS Bridge</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#carla-ego-vehicle">使用 Carla 客户端启动 Ego Vehicle</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#_1">其他</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#rviz">使用 rviz 进行可视化</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#matlab-carla-ros">Matlab 验证 Carla ROS 连接（可选）</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_1">常见问题</a>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">解析</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">常见问题</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_4">参考</a>
     </li>
     </ul>
                 </li>
@@ -134,6 +140,11 @@ ros2<span class="w"> </span>launch<span class="w"> </span>carla_ros_bridge<span 
 <p class="admonition-title">注意</p>
 <p>您宿主机windows的IP地址通过<code>ipconfig</code>命令进行查看，一般和这里<code>172.21.108.47</code>的不一致，IP地址不正确只能看到黑屏。从 Town10HD_Opt 切换到 Town03 需要一定的时间，也会出现黑屏，这是正常现象</p>
 </div>
+<h3 id="_1">其他</h3>
+<p>在默认的 Town10HD_Opt 地图上启动手动控制（只修改参数 <code>town</code>），
+</p><div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge_with_example_ego_vehicle.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47<span class="w"> </span>timeout:<span class="o">=</span><span class="m">60000</span><span class="w"> </span>town:<span class="o">=</span><span class="s1">'Carla/Maps/Town10HD_Opt'</span><span class="w"> </span>spawn_point:<span class="o">=</span>-25,-134,0.5,0,0,-90
+</code></pre></div>
+<p><img alt="" src="../img/ground/launch_vehicle_Town10_Opt.png"></p>
 <h2 id="rviz">使用 rviz 进行可视化</h2>
 <ul>
 <li>
@@ -176,7 +187,20 @@ rosinit<span class="o">(</span><span class="w"> </span><span class="s1">'http://
 <p>通过运行以下自省命令，验证您是否可以访问与 Carla 模拟器相关的 ROS 主题。
 </p><div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
 </code></pre></div>
-<h2 id="_1">常见问题</h2>
+<h2 id="_2">解析</h2>
+<p>该 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_ros_bridge/launch/carla_ros_bridge_with_example_ego_vehicle.launch">carla_ros_bridge_with_example_ego_vehicle.launch</a> 文件包含 3 个启动步骤</p>
+<ol>
+<li>
+<p>ROS 桥 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/ros-bridge/carla_ros_bridge/launch/carla_ros_bridge.launch">carla_ros_bridge.launch</a> 用于连接模拟器</p>
+</li>
+<li>
+<p>主车 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_spawn_objects/launch/carla_example_ego_vehicle.launch">carla_example_ego_vehicle.launch</a></p>
+</li>
+<li>
+<p>手动控制 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/ground/ros-bridge/carla_manual_control/launch/carla_manual_control.launch">carla_manual_control.launch</a></p>
+</li>
+</ol>
+<h2 id="_3">常见问题</h2>
 <ul>
 <li>
 <p>执行 roslaunch 报错</p>
@@ -201,7 +225,7 @@ AttributeError:<span class="w"> </span>module<span class="w"> </span><span class
 </code></pre></div>
 </li>
 </ul>
-<h2 id="_2">参考</h2>
+<h2 id="_4">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/carla_manual_control/">Carla 手动控制</a></li>
 <li><a href="https://ww2.mathworks.cn/help/ros/ug/set-up-and-connect-to-carla-simulator.html">Set Up and Connect to CARLA Simulator</a></li>
