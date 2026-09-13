@@ -5,9 +5,10 @@ title: 主页
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
 - [简介](#list)
-  - [入门](#introduction)
+  - [入门](#list)
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
+  - [水域载具](#water_vehicle)
 
 ---
 
@@ -20,22 +21,40 @@ ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2X
 * 安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova
 * Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe
 * 补充：[ubuntu下虚拟机的运行方式](ubuntu下虚拟机的运行方式.md)
+* [虚拟机环境介绍](./vm_introduction.md)
+* 补充：[Ubuntu 20.04 安装 ROS Noetic 详细教程](ubuntu20.04.md)
 
 
-### 1.1 Windows系统（通过虚拟机运行） 
 
 [下载](https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html)并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 `lsb_release -a`）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。
 
 
 ROS每章节运行代码:
 
-[第二章](<./Run_code_for_%20the_%20chapter/ROS理论与实践第二章代码运行.md>)
+* [第 1 章](./chapter/chap1.md) - 认识 ROS
+* [第 2 章](./chapter/chap2.md) - ROS 基础
+* [第 3 章](./chapter/chap3.md) - 机器人系统设计
+* [第 4 章](./chapter/chap4.md) - 机器人仿真
+* [第 5 章](./chapter/chap5.md) - 机器人感知
+* [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
+* [第 7 章](./chapter/chap7.md) - 机械臂控制
+* [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+* [第 9 章](./chapter/chap9.md) - ROS 2
+
 
 
 ## 2. 地面载具  <span id='ground_vehicle'></span>
 
-* [建立虚拟机和地面载具之间的连接：手动控制](./set_up_and_connect_to_carla.md)
+* [手动控制](./set_up_and_connect_to_carla.md)
 * [生成对象](./ground/carla_spawn_objects.md)
+* [阿克曼控制](./ground/ackermann_control.md)
+* [路径点发布器](./ground/waypoint.md)
+* [自动驾驶代理](./ground/ad_agent.md)
+* [自动驾驶示例](./ground/ad_demo.md)
+* [ROS Scenario Runner](./ground/ros_scenario_runner.md)
+* [扭转控制](./ground/twist_to_control.md)
+
+* [RVIZ Carla 插件](./ground/rviz_plugin.md)
 
 
 ## 3. 空域载具 <span id='air_vehicle'></span>
@@ -47,7 +66,8 @@ ROS每章节运行代码:
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
 
-## 4. 水域载具
+
+## 4. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
 

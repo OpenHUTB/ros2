@@ -30,6 +30,12 @@ source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
 
 ![](./img/setup.bash.png)
 
+为了每次启动终端时不用每次都设置环境，可以将其加入到用户的初始化脚本中：
+```shell
+echo 'source ~/carla-ros-bridge/catkin_ws/devel/setup.bash' >> ~/.bashrc
+source ~/.bashrc
+```
+
 
 ## 使用 Carla 客户端启动 Ego Vehicle
 在同一个终端中，运行 follow 命令以在您喜欢的 Carla 模拟器环境中启动 Ego 车辆。例如，您可以 follow 在 Carla 模拟器的 Town03 环境中运行命令以在加油站附近启动车辆。
