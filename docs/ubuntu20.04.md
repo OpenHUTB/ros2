@@ -36,7 +36,7 @@ sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31
 
 执行成功后终端会输出公钥导入信息，出现“已导入：1”即表示密钥添加成功，效果如图 1 所示。
 
-![图1 软件源密钥导入成功](./img/ros/01-key-import.png)
+![图1 软件源密钥导入成功](./img/ros/01_key_import.png)
 
 成功输出示例：
 
@@ -59,7 +59,7 @@ sudo apt update
 
 终端会依次列出各软件源的命中情况，结束时提示当前可升级的软件包数量，效果如图 2 所示。
 
-![图2 更新软件源成功](./img/ros/02-apt-update.png)
+![图2 更新软件源成功](./img/ros/02_apt_update.png)
 
 > **提示**：若无线网络下更新很慢、超时或失败，可尝试切换到手机热点后重新执行该命令。
 
@@ -69,7 +69,7 @@ sudo apt update
 
 更新软件源时若出现 `NO_PUBKEY` 签名验证错误，图形界面可能弹出“更新缓存时出错”提示框，提示因缺少公钥无法验证签名，如图 3 所示。
 
-![图3 NO_PUBKEY 签名错误提示](./img/ros/03-no-pubkey.png)
+![图3 NO_PUBKEY 签名错误提示](./img/ros/03_no_pubkey.png)
 
 根据错误提示中的公钥编号，执行以下命令重新导入公钥即可：
 
@@ -93,7 +93,7 @@ sudo apt install ros-noetic-desktop-full
 
 终端会先读取软件包列表、分析依赖关系，并列出本次将同时安装的全部软件包，如图 4 所示。确认无误后输入 `Y` 回车即开始下载安装。
 
-![图4 安装命令列出的待安装软件包](./img/ros/04-install-packages.png)
+![图4 安装命令列出的待安装软件包](./img/ros/04_install_packages.png)
 
 **安装过程注意事项：**
 
@@ -103,7 +103,7 @@ sudo apt install ros-noetic-desktop-full
 
 安装结束后，可再次执行一遍安装命令确认。若终端提示 `ros-noetic-desktop-full 已经是最新版`、新安装 0 个软件包，即说明安装完成，如图 5 所示。
 
-![图5 再次执行安装命令，提示已是最新版](./img/ros/05-already-newest.png)
+![图5 再次执行安装命令，提示已是最新版](./img/ros/05_already_newest.png)
 
 ## 6. 初始化 rosdep 工具
 
@@ -115,7 +115,7 @@ sudo rosdep init
 
 初始化成功后，终端会向 `/etc/ros/rosdep` 写入默认源列表文件，并提示下一步运行 `rosdep update`，如图 6 所示。
 
-![图6 rosdep 初始化成功](./img/ros/06-rosdep-init.png)
+![图6 rosdep 初始化成功](./img/ros/06_rosdep_init.png)
 
 按提示继续执行更新：
 
@@ -139,7 +139,7 @@ sudo apt install python3-rosdep2
 
 终端会列出待安装软件包及占用空间，输入 `Y` 回车继续，如图 7 所示。旧版本 Ubuntu 也可尝试 Python2 版本：`sudo apt install python-rosdep2`。
 
-![图7 安装 python3-rosdep2](./img/ros/07-install-rosdep2.png)
+![图7 安装 python3-rosdep2](./img/ros/07_install_rosdep2.png)
 
 安装完成后重新执行 `sudo rosdep init` 即可。
 
@@ -223,7 +223,7 @@ sudo apt install python3-rosinstall python3-rosinstall-generator python3-wstool
 
 系统会自动下载并配置相关依赖（含版本控制工具等），安装过程如图 8 所示，等待全部设置完成即可。
 
-![图8 安装 rosinstall 工具集](./img/ros/08-rosinstall.png)
+![图8 安装 rosinstall 工具集](./img/ros/08_rosinstall.png)
 
 ## 10. 验证 ROS 是否安装成功
 
@@ -239,7 +239,7 @@ roscore
 
 正常情况下，终端会依次输出日志检查、roslaunch 服务、版本信息，在 `SUMMARY` 中列出参数 `/rosdistro: noetic`，随后自动启动 master 与 rosout 进程，如图 9 所示。看到 `started core service [/rosout]` 且无红色报错，即说明 ROS 核心环境运行正常。
 
-![图9 roscore 成功启动](./img/ros/09-roscore.png)
+![图9 roscore 成功启动](./img/ros/09_roscore.png)
 
 ### 10.2 常见异常与处理
 
@@ -257,7 +257,7 @@ sudo apt install python3-roslaunch
 
 若终端出现红色的 `Resource not found: roslaunch` 报错，并提示异常已写入日志文件（如图 10），说明桌面版组件安装不完整，或当前终端未正确加载环境变量。
 
-![图10 Resource not found 报错及修复命令](./img/ros/10-resource-not-found.png)
+![图10 Resource not found 报错及修复命令](./img/ros/10_resource_not_found.png)
 
 先执行以下命令手动加载环境变量后重试：
 
@@ -295,7 +295,7 @@ rosrun turtlesim turtle_teleop_key
 
 终端输出 `Use arrow keys to move the turtle. 'q' to quit.` 后，用鼠标点击选中该终端使其获得焦点，再按 `↑` `↓` `←` `→` 方向键，即可控制小海龟移动，移动轨迹以白色线条绘制，整体效果如图 11 所示。
 
-![图11 小海龟仿真：roscore、仿真节点、键盘控制节点协同运行](./img/ros/11-turtlesim.png)
+![图11 小海龟仿真：roscore、仿真节点、键盘控制节点协同运行](./img/ros/11_turtlesim.png)
 
 > **结论**：若小海龟能正常响应方向键并绘制轨迹，说明 ROS 节点与话题通信机制工作正常，至此 ROS Noetic 在 Ubuntu 20.04 上的安装与配置全部成功。
 
@@ -318,17 +318,17 @@ rosrun turtlesim turtle_teleop_key
 
 也可点击“选择最佳服务器”，由系统自动测速推荐最快的服务器。选定后点击“选择服务器”，按提示输入开机密码认证，配置窗口如图 12 所示。
 
-![图12 “软件和更新”窗口中选择下载服务器](./img/ros/12-software-sources.jpg)
+![图12 “软件和更新”窗口中选择下载服务器](./img/ros/12_software_sources.jpg)
 
 下面的动图完整演示了“下载自 → 其他站点 → 选择最佳服务器 → 自动测速”的操作过程（GitHub 页面中会自动播放）：
 
-![图13 选择下载服务器并自动测速（动态演示）](./img/ros/13-select-best-server.gif)
+![图13 选择下载服务器并自动测速（动态演示）](./img/ros/13_select_best_server.gif)
 
 ### A.3 重新载入软件列表
 
 认证完成后关闭“软件和更新”窗口，系统会弹出“更新缓存”提示并自动重新载入软件列表，等待进度条走完、缓存更新完成，新源即生效，过程如图 14 动图所示。最后在终端执行 `sudo apt update` 确认软件源可正常访问。
 
-![图14 重新载入软件缓存（动态演示）](./img/ros/14-reload-cache.gif)
+![图14 重新载入软件缓存（动态演示）](./img/ros/14_reload_cache.gif)
 
 ---
 
