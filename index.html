@@ -44,16 +44,12 @@
                 <li class="toctree-l1 current"><a class="reference internal current" href="#">首页</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#1">1. 入门 </a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#11-windows">1.1 Windows系统（通过虚拟机运行）</a>
-    </li>
-        </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#2">2. 地面载具  </a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#3">3. 空域载具 </a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#4">4. 水域载具</a>
+    <li class="toctree-l2"><a class="reference internal" href="#4">4. 水域载具  </a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
     </li>
@@ -82,7 +78,7 @@
               </ul>
               <p class="caption"><span class="caption-text">ROS每章节运行代码</span></p>
               <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="Run_code_for_%20the_%20chapter/turtle_square/">小海龟画正方形</a>
+                  <li class="toctree-l1"><a class="" href="Run_code_for_ the_ chapter/turtle_square.md">小海龟画正方形</a>
                   </li>
               </ul>
       </div>
@@ -116,6 +112,7 @@
 <li><a href="#list">入门</a></li>
 <li><a href="#ground_vehicle">地面载具</a></li>
 <li><a href="#air_vehicle">空域载具</a></li>
+<li><a href="#water_vehicle">水域载具</a></li>
 </ul>
 <hr>
 <h2 id="1">1. 入门 <span id="list"></span></h2>
@@ -126,16 +123,37 @@
 <li>安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova</li>
 <li>Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe</li>
 <li>补充：<a href="ubuntu%E4%B8%8B%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E8%BF%90%E8%A1%8C%E6%96%B9%E5%BC%8F/">ubuntu下虚拟机的运行方式</a></li>
+<li><a href="vm_introduction/">虚拟机环境介绍</a></li>
 <li>补充：<a href="ubuntu20.04/">Ubuntu 20.04 安装 ROS Noetic 详细教程</a></li>
 </ul>
-<h3 id="11-windows">1.1 Windows系统（通过虚拟机运行）</h3>
 <p><a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">下载</a>并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 <code>lsb_release -a</code>）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。</p>
 <p>ROS每章节运行代码:</p>
-<p><a href="Run_code_for_%20the_%20chapter/ROS%E7%90%86%E8%AE%BA%E4%B8%8E%E5%AE%9E%E8%B7%B5%E7%AC%AC%E4%BA%8C%E7%AB%A0%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C/">第二章</a></p>
+<ul>
+<li><a href="chapter/chap1/">第 1 章</a> - 认识 ROS</li>
+<li><a href="chapter/chap2/">第 2 章</a> - ROS 基础</li>
+<li><a href="chapter/chap3/">第 3 章</a> - 机器人系统设计</li>
+<li><a href="chapter/chap4/">第 4 章</a> - 机器人仿真</li>
+<li><a href="chapter/chap5/">第 5 章</a> - 机器人感知</li>
+<li><a href="chapter/chap6/">第 6 章</a> - 机器人 SLAM 与自主导航</li>
+<li><a href="chapter/chap7/">第 7 章</a> - 机械臂控制</li>
+<li><a href="chapter/chap8/">第 8 章</a> - ROS 机器人综合应用</li>
+<li><a href="chapter/chap9/">第 9 章</a> - ROS 2</li>
+</ul>
 <h2 id="2">2. 地面载具  <span id="ground_vehicle"></span></h2>
 <ul>
-<li><a href="set_up_and_connect_to_carla/">建立虚拟机和地面载具之间的连接：手动控制</a></li>
+<li><a href="set_up_and_connect_to_carla/">手动控制</a></li>
 <li><a href="ground/carla_spawn_objects/">生成对象</a></li>
+<li><a href="ground/ackermann_control/">阿克曼控制</a></li>
+<li><a href="ground/waypoint/">路径点发布器</a></li>
+<li><a href="ground/ad_agent/">自动驾驶代理</a></li>
+<li><a href="ground/ad_demo/">自动驾驶示例</a></li>
+<li><a href="ground/ros_scenario_runner/">ROS Scenario Runner</a></li>
+<li>
+<p><a href="./ground/twist_to_control.md">扭转控制</a></p>
+</li>
+<li>
+<p><a href="ground/rviz_plugin/">RVIZ Carla 插件</a></p>
+</li>
 </ul>
 <h2 id="3">3. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
@@ -149,7 +167,7 @@
 <p><a href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a></p>
 </li>
 </ul>
-<h2 id="4">4. 水域载具</h2>
+<h2 id="4">4. 水域载具  <span id="water_vehicle"></span></h2>
 <ul>
 <li><a href="water/HoloOcean/">水域载具 ROS2 接口</a></li>
 </ul>
@@ -223,5 +241,5 @@
 
 <!--
 MkDocs version : 1.5.9
-Build Date UTC : 2026-09-13 10:55:41.510301+00:00
+Build Date UTC : 2026-09-13 12:17:12.048478+00:00
 -->

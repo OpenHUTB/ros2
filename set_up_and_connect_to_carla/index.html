@@ -88,7 +88,7 @@
               </ul>
               <p class="caption"><span class="caption-text">ROS每章节运行代码</span></p>
               <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../Run_code_for_%20the_%20chapter/turtle_square/">小海龟画正方形</a>
+                  <li class="toctree-l1"><a class="" href="../Run_code_for_ the_ chapter/turtle_square.md">小海龟画正方形</a>
                   </li>
               </ul>
       </div>
@@ -132,6 +132,10 @@
 <span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/devel/setup.bash
 </code></pre></div>
 <p><img alt="" src="../img/setup.bash.png"></p>
+<p>为了每次启动终端时不用每次都设置环境，可以将其加入到用户的初始化脚本中：
+</p><div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">'source ~/carla-ros-bridge/catkin_ws/devel/setup.bash'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre></div>
 <h2 id="carla-ego-vehicle">使用 Carla 客户端启动 Ego Vehicle</h2>
 <p>在同一个终端中，运行 follow 命令以在您喜欢的 Carla 模拟器环境中启动 Ego 车辆。例如，您可以 follow 在 Carla 模拟器的 Town03 环境中运行命令以在加油站附近启动车辆。</p>
 <p>运行此下面这一段命令，将命令中的主机地址<strong>更改为您宿主机的IP主机地址</strong>。
