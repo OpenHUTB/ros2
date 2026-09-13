@@ -70,15 +70,13 @@ entry_points={
 },
 
 五、编译 + 环境生效
-bash
-运行
 cd ~/catkin_ws
 colcon build
 source install/setup.bash
 
 六、运行测试（两个终端）
 终端 1，启动海龟窗口
-
+roscore
 运行
 ros2 run turtlesim turtlesim_node
 
