@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>水域载具示例 - 模拟器的 ROS 文档</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u6c34\u57df\u8f7d\u5177\u793a\u4f8b";
+        var mkdocs_page_input_path = "water\\holoocean_examples.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> 模拟器的 ROS 文档
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">地面载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">空域载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../Run_code_for_%20the_%20chapter/turtle_square/">小海龟画正方形</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">模拟器的 ROS 文档</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">水域载具示例</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/holoocean_examples.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="_1">水域载具示例</h1>
+<p>用于与 HoloOcean ROS 2 接口交互的示例节点。</p>
+<h2 id="_2">示例</h2>
+<table>
+<thead>
+<tr>
+<th>Launch 文件</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/holoocean_examples/joy_holoocean.py">joy_launch.py</a></td>
+<td>支持可选摄像头 HUD 的单手柄遥操作</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/multi_joy_launch.py">multi_joy_launch.py</a></td>
+<td>与上文相同，但支持同时使用有线和无线手柄。</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/waypoint_launch.py">waypoint_launch.py</a></td>
+<td>水面船舶的航路点跟踪</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/launch/command_launch.py">command_launch.py</a></td>
+<td>通过福森自动驾驶仪直接指令深度、航向和速度</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_3">游戏手柄示例</h2>
+<h3 id="_4">前提条件</h3>
+<p>如果尚未安装 <code>joy_linux</code> ROS 2 软件包，请进行安装：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-<span class="nv">$ROS_DISTRO</span>-joy-linux
+</code></pre></div>
+<p>连接您的控制器。确认设备已显示：</p>
+<p></p><div class="highlight"><pre><span></span><code>ls<span class="w"> </span>/dev/input/js*
+</code></pre></div>
+您可以设置 udev 规则，将特定控制器映射到特定路径。
+<p>配置文件默认指向 <code>js0</code>。如果您的设备路径不同，请在 config YAML 文件中的 <code>joy_node</code>（或在多代理中的<code>joy_node_wired</code>）下调整 <code>dev</code>。</p>
+<h3 id="_5">运行</h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
+</code></pre></div>
+<p>针对多个代理和多个控制器同时进行：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>multi_joy_launch.py
+</code></pre></div>
+<h3 id="agent">Agent（代理）的加载方式</h3>
+<p>节点从配置中读取 <code>scenario_path</code>（该值与 <code>holoocean_node</code> 使用的值相同），并解析场景 JSON 文件以获取代理列表。您<strong>无需</strong>在 YAML 文件中列出代理，只需指定按钮映射即可。</p>
+<p><code>agents.buttons</code> 是一个并行数组，其索引 <code>i</code> 对应于场景文件中的第 <code>i</code> 个代理。例如，如果场景中定义的代理顺序为 <code>[auv0, auv1, auv2]</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">agents.buttons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># auv0=A, auv1=B, auv2=Y</span>
+<span class="nt">agents.default</span><span class="p">:</span><span class="w"> </span><span class="s">'auv0'</span>
+</code></pre></div>
+<p><code>agents.default</code> 用于设定启动时处于活动状态的代理。</p>
+<hr>
+<h3 id="_6">查找按钮与轴的映射关系</h3>
+<p>查找特定控制器索引的最简单方法是：在按下按钮的同时，输出（echo） joy 话题（topic）的内容：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 仅连接一个控制器时运行</span>
+ros2<span class="w"> </span>run<span class="w"> </span>joy_linux<span class="w"> </span>joy_linux_node
+
+<span class="c1"># 在另一个终端中运行：</span>
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/joy
+</code></pre></div>
+<p><code>buttons</code> 数组显示当前被按下的按钮状态（按下为 <code>1</code>）。<code>axes</code> 数组显示每个模拟输入（摇杆和扳机键）的当前值。</p>
+<p><a href="https://wiki.ros.org/joy">ROS joy 维基页面</a>也提供了常见控制器的映射表。</p>
+<h3 id="joy_linux-xbox">默认映射（通过 joy_linux 使用 Xbox 控制器）</h3>
+<p>以下数值与 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a>（有线控制器）及 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/multi_joy_config.yaml">multi_joy_config.yaml</a> 中的默认设置一致。</p>
+<h4 id="_7">按钮</h4>
+<table>
+<thead>
+<tr>
+<th>索引</th>
+<th>Xbox 按钮</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>A</td>
+<td>选择代理 0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>B</td>
+<td>如果存在，选择代理 1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>X</td>
+<td>如果存在，选择代理 2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Y</td>
+<td>如果存在，选择代理 3</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Back / 选择</td>
+<td>Disarm</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Start</td>
+<td>Arm</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Guide (Xbox logo)</td>
+<td>重置模拟</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a> 中的无线 Xbox 配置使用了 6、7、8 号按键。某些手柄或驱动程序报告的索引可能不同——请使用 <code>ros2 topic echo /joy</code> 进行确认。</p>
+<h4 id="axes">轴（Axes）</h4>
+<table>
+<thead>
+<tr>
+<th>索引</th>
+<th>Xbox 输入</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>左摇杆 X</td>
+<td>横向移动（平移）</td>
+</tr>
+<tr>
+<td>1</td>
+<td>左摇杆 Y</td>
+<td>前进 / 俯仰（鱼雷）</td>
+</tr>
+<tr>
+<td>2</td>
+<td>LT</td>
+<td>相机向下倾斜</td>
+</tr>
+<tr>
+<td>3</td>
+<td>右摇杆 X</td>
+<td>偏航（BlueROV）/ 偏航（鱼雷）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>右摇杆 Y</td>
+<td>垂直移动（BlueROV）/ 速度（鱼雷）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>RT</td>
+<td>相机向上倾斜</td>
+</tr>
+<tr>
+<td>6</td>
+<td>方向键 X</td>
+<td>横滚微调（BlueROV）</td>
+</tr>
+<tr>
+<td>7</td>
+<td>方向键 Y</td>
+<td>俯仰微调（BlueROV）</td>
+</tr>
+</tbody>
+</table>
+<p>扳机轴（Trigger axes）在静止状态下值为 <code>1.0</code>，完全按下时达到 <code>-1.0</code>。这是 <code>joy_linux</code> 的标准惯例。</p>
+<h3 id="_8">单代理控制</h3>
+<h4 id="bluerov2-auv">BlueROV2 / 悬停式AUV</h4>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>左摇杆 Y 轴</td>
+<td>前后推力</td>
+</tr>
+<tr>
+<td>左摇杆 X 轴</td>
+<td>侧向（平移）推力</td>
+</tr>
+<tr>
+<td>右摇杆 Y 轴</td>
+<td>垂直推力</td>
+</tr>
+<tr>
+<td>右摇杆 X 轴</td>
+<td>偏航（Yaw）</td>
+</tr>
+<tr>
+<td>十字键 上/下</td>
+<td>俯仰微调（数值累加，解除待机状态时重置）</td>
+</tr>
+<tr>
+<td>十字键 左/右</td>
+<td>横滚微调（数值累加，解除待机状态时重置）</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>向上/向下倾斜摄像头</td>
+</tr>
+</tbody>
+</table>
+<h4 id="surfacevessel">水面载具（SurfaceVessel）</h4>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>左摇杆 Y 轴</td>
+<td>左侧推进器</td>
+</tr>
+<tr>
+<td>右摇杆 Y 轴</td>
+<td>右侧推进器</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>向上/向下倾斜摄像机（若载具配备 CameraSensor）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="torpedoauv-couguv">TorpedoAUV / CougUV</h4>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>左摇杆 Y</td>
+<td>俯仰鳍（Pitch fins）</td>
+</tr>
+<tr>
+<td>左摇杆 X</td>
+<td>偏航鳍（Yaw fins）</td>
+</tr>
+<tr>
+<td>右摇杆 Y</td>
+<td>推进器速度</td>
+</tr>
+<tr>
+<td>RT / LT</td>
+<td>向上/向下倾斜摄像机（若代理配备了摄像机传感器）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="hud">相机 HUD</h3>
+<p><code>camera_hud</code> 节点订阅指定代理的 <code>CameraSensor</code> 图像和 <code>DynamicsSensorOdom</code> 里程计话题，叠加显示驾驶员 HUD，并将结果重新发布至 <code>&lt;agent&gt;/CameraHUD</code>。</p>
+<p>查看输出：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>rqt_image_view<span class="w"> </span>rqt_image_view
+</code></pre></div>
+<p>然后，从话题（topic）下拉菜单中选择 <code>/holoocean/&lt;agent&gt;/CameraHUD</code>（或相应的代理）。</p>
+<p><code>agent_name</code> 参数用于指定 HUD 跟随哪个代理。在 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/joy_config.yaml">joy_config.yaml</a> 和 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/water/holoocean_examples/config/multi_joy_config.yaml">multi_joy_config.yaml</a> 文件中，该参数是在 <code>camera_hud</code> 节点部分进行设置的。</p>
+<hr>
+<h2 id="_9">配置文件结构</h2>
+<div class="highlight"><pre><span></span><code>config/
+  joy_config.yaml         单控制器，单代理或多代理场景
+  multi_joy_config.yaml   双控制器、多代理场景
+  waypoint_config.yaml    航点跟随参数
+  sv_waypoints.yaml       水面舰艇示例的航路点列表
+</code></pre></div>
+<p>所有 YAML 文件均遵循 ROS 2 节点参数规范。每个文件顶部的通配符条目：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">/holoocean/**</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">ros__parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">relative_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">scenario_path</span><span class="p">:</span><span class="w"> </span><span class="s">'config/my_scenario.json'</span>
+</code></pre></div>
+<p>将 <code>relative_path</code> 和 <code>scenario_path</code> 应用于 <code>holoocean</code> 命名空间下的<strong>所有</strong>节点，因此您只需在一处设置场景。</p></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>模拟器的 ROS 文档</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u9996\u9875";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> 模拟器的 ROS 文档
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">首页</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1">1. 入门</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#11-windows">1.1 Windows系统（通过虚拟机运行）</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 地面载具</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3">3. 空域载具</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4">4. 水域载具</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="set_up_and_connect_to_carla/">地面载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="air/setup_and_connect/">空域载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="water/HoloOcean/">水域载具</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="Run_code_for_%20the_%20chapter/turtle_square/">小海龟画正方形</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">模拟器的 ROS 文档</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">首页</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/index.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="ros"><a href="https://github.com/OpenHUTB/ros2">模拟器的 ROS 文档</a></h1>
+<p>欢迎使用 OpenHUTB 的  ROS 文档 <sup id="fnref:macenski2022robot"><a class="footnote-ref" href="#fn:macenski2022robot">1</a></sup>。</p>
+<ul>
+<li><a href="#list">简介</a></li>
+<li><a href="#introduction">入门</a></li>
+<li><a href="#ground_vehicle">地面载具</a></li>
+<li><a href="#air_vehicle">空域载具</a></li>
+</ul>
+<hr>
+<h2 id="1">1. 入门 <span id="list"></span></h2>
+<p>ROS相关资料（<a href="https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb">网盘下载地址</a>）：</p>
+<ul>
+<li>教材：ROS教材.pdf</li>
+<li>课件和视频：ROS资料.zip</li>
+<li>安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova</li>
+<li>Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe</li>
+<li>补充：<a href="ubuntu%E4%B8%8B%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9A%84%E8%BF%90%E8%A1%8C%E6%96%B9%E5%BC%8F/">ubuntu下虚拟机的运行方式</a></li>
+</ul>
+<h3 id="11-windows">1.1 Windows系统（通过虚拟机运行）</h3>
+<p><a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">下载</a>并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 <code>lsb_release -a</code>）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。</p>
+<p>ROS每章节运行代码:</p>
+<p><a href="Run_code_for_%20the_%20chapter/ROS%E7%90%86%E8%AE%BA%E4%B8%8E%E5%AE%9E%E8%B7%B5%E7%AC%AC%E4%BA%8C%E7%AB%A0%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C/">第二章</a></p>
+<h2 id="2">2. 地面载具  <span id="ground_vehicle"></span></h2>
+<ul>
+<li><a href="set_up_and_connect_to_carla/">建立虚拟机和地面载具之间的连接：手动控制</a></li>
+<li><a href="ground/carla_spawn_objects/">生成对象</a></li>
+</ul>
+<h2 id="3">3. 空域载具 <span id="air_vehicle"></span></h2>
+<ul>
+<li>
+<p><a href="air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a></p>
+</li>
+<li>
+<p><a href="air/ros_pkgs/">空域模拟器的 ROS 封装器</a></p>
+</li>
+<li>
+<p><a href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a></p>
+</li>
+</ul>
+<h2 id="4">4. 水域载具</h2>
+<ul>
+<li><a href="water/HoloOcean/">水域载具 ROS2 接口</a></li>
+</ul>
+<hr>
+<p>如果对文档中的任何问题可以在 <a href="https://github.com/OpenHUTB/ros2">本文档的源码仓库</a> 中的 <a href="https://github.com/OpenHUTB/ros2/issues">问题</a> 页面讨论或者提交 <a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">拉取请求</a> 直接修改文档。</p>
+<h2 id="_1">参考文献</h2>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn:macenski2022robot">
+<p>Macenski, S., Foote, T., Gerkey, B., Lalancette,
+ C. &amp; Woodall, W. Robot operating system 2: Design, architecture, and
+ uses in the wild. <em>Science robotics</em> <strong>7</strong>, eabm6074
+ (2022). <a class="footnote-backref" href="#fnref:macenski2022robot" title="Jump back to footnote 1 in the text">↩</a></p>
+</li>
+</ol>
+</div></div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="set_up_and_connect_to_carla/" class="btn btn-neutral float-right" title="地面载具">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/template" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+      <span><a href="set_up_and_connect_to_carla/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="js/umlconvert.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2026-09-13 03:17:10.389695+00:00
+-->
