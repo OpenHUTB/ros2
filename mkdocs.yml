@@ -89,9 +89,6 @@ nav:
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL跑通HoloOcean2的ROS2示例方法.md'
 
 
-- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
-- ROS每章节运行代码:
-    - 小海龟画正方形: 'chapter/turtle_square.md'
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
