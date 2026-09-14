@@ -86,6 +86,7 @@ nav:
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
 - 水域载具: 
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
+    - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL跑通HoloOcean2的ROS2示例方法.md'
 
 
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
