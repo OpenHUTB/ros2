@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>WSL跑通HoloOcean2的ROS2示例方法 - 模拟器的 ROS 文档</title>
+    <title>跑通HoloOcean2的ROS2示例方法（无头模式） - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,7 +13,7 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "WSL\u8dd1\u901aHoloOcean2\u7684ROS2\u793a\u4f8b\u65b9\u6cd5";
+        var mkdocs_page_name = "\u8dd1\u901aHoloOcean2\u7684ROS2\u793a\u4f8b\u65b9\u6cd5\uff08\u65e0\u5934\u6a21\u5f0f\uff09";
         var mkdocs_page_input_path = "water/WSL\u8dd1\u901aHoloOcean2\u7684ROS2\u793a\u4f8b\u65b9\u6cd5.md";
         var mkdocs_page_url = null;
       </script>
@@ -99,32 +99,10 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">水域载具</span></p>
-              <ul class="current">
+              <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具 ROS2 接口</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">WSL跑通HoloOcean2的ROS2示例方法</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#1-ros-2-jazzy">1. 安装 ROS 2 Jazzy</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#2-holoocean-python">2. 安装 HoloOcean Python 客户端库</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#3-ocean">3. 下载世界包（Ocean）</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#4-holoocean-ros">4. 编译 holoocean-ros 桥接包</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#5-nullrhi">5. 添加 -nullrhi 参数</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#6-ros-2-wsl">6. 运行 ROS 2 示例（WSL 无头模式）</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#1">1. 清理残留</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#2">2. 进入工作空间并激活环境</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#7">7. 运行示例</a>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
                   </li>
               </ul>
       </div>
@@ -141,8 +119,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">水域载具</li>
-      <li class="breadcrumb-item active">WSL跑通HoloOcean2的ROS2示例方法</li>
+      <li class="breadcrumb-item active">跑通HoloOcean2的ROS2示例方法（无头模式）</li>
     <li class="wy-breadcrumbs-aside">
           <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/WSL跑通HoloOcean2的ROS2示例方法.md"> 编辑页面</a>
     </li>
@@ -196,9 +173,6 @@ pkill<span class="w"> </span>-9<span class="w"> </span>holoocean_node
               
             </div>
           </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../HoloOcean/" class="btn btn-neutral float-left" title="水域载具 ROS2 接口"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-    </div>
 
   <hr/>
 
@@ -223,8 +197,6 @@ pkill<span class="w"> </span>-9<span class="w"> </span>holoocean_node
           <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
         </span>
     
-    
-      <span><a href="../HoloOcean/" style="color: #fcfcfc">&laquo; 前一页</a></span>
     
     
   </span>
