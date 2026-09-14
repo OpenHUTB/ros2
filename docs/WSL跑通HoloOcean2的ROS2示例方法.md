@@ -1,4 +1,4 @@
-# 跑通HoloOcean2的ROS2示例方法
+# 跑通HoloOcean2的ROS2示例方法（无头模式）
 
 ## 1. 安装 ROS 2 Jazzy
 
