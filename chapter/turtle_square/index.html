@@ -63,9 +63,9 @@
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#21">2.1 话题通信机制</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#22">2.2 时间开环控制</a>
+    <li class="toctree-l3"><a class="reference internal" href="#22">2.2 闭环反馈控制</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#23">2.3 防惯性滑动的停机处理</a>
+    <li class="toctree-l3"><a class="reference internal" href="#23">2.3 动作间隙的稳定处理</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#24">2.4 算法流程</a>
     </li>
@@ -180,9 +180,9 @@
 <h2 id="_2">一、实验目的与环境说明</h2>
 <h3 id="11">1.1 实验目的</h3>
 <ol>
-<li>掌握 ROS 话题通信机制：节点作为<strong>发布者</strong>向 <code>/turtle1/cmd_vel</code> 话题发布 <code>geometry_msgs/Twist</code> 速度消息；</li>
-<li>理解<strong>时间开环控制</strong>的原理：不依赖传感器反馈，利用 $t = s / v$ 与 $t = \theta / \omega$ 计算运动时长；</li>
-<li>通过 turtlesim 仿真器，让小海龟自主绘制一个边长 2 m 的正方形并回到起点。</li>
+<li>掌握 ROS 话题通信机制：节点作为发布者向 <code>/turtle1/cmd_vel</code> 话题发布 <code>geometry_msgs/Twist</code> 速度消息，同时作为订阅者接收 <code>/turtle1/pose</code> 话题的 <code>turtlesim/Pose</code> 位姿消息；</li>
+<li>利用实时位姿反馈判定到位——欧氏距离判定直行距离、朝向角差累计判定转弯角度；</li>
+<li>通过 turtlesim 仿真器，让小海龟自主精准绘制一个边长 2 m 的正方形并回到起点。</li>
 </ol>
 <h3 id="12">1.2 实验环境</h3>
 <table>
@@ -224,151 +224,191 @@
 </code></pre></div>
 <h2 id="_3">二、核心控制原理与算法解析</h2>
 <h3 id="21">2.1 话题通信机制</h3>
-<p>turtlesim 仿真器启动后，小海龟会一直订阅名为 <code>/turtle1/cmd_vel</code> 的话题。我们编写的节点 <code>turtle_square_node</code> 作为发布者，只要向该话题发布一条 <code>Twist</code> 消息，小海龟就会按照消息中指定的速度运动。</p>
+<p>turtlesim 仿真器启动后，小海龟会一直订阅名为 <code>/turtle1/cmd_vel</code> 的话题。我们编写的节点 <code>turtle_square_node</code> 作为发布者，向该话题发布 <code>Twist</code> 消息控制海龟运动；与此同时，海龟通过 <code>/turtle1/pose</code> 话题持续广播自己的位姿（<code>turtlesim.msg.Pose</code>，包含坐标 x、y 和朝向角 theta），本节点订阅该话题，实时读取位姿作为反馈。</p>
 <p><code>Twist</code> 消息中本实验只用到两个分量：</p>
 <ul>
 <li><code>linear.x</code>：线速度，控制海龟前进的快慢（单位 m/s）；</li>
-<li><code>angular.z</code>：角速度，控制海龟转头的快慢（单位 rad/s），取正值绕 z 轴逆时针旋转，即<strong>左转</strong>。</li>
+<li><code>angular.z</code>：角速度，控制海龟转头的快慢（单位 rad/s），取正值绕 z 轴逆时针旋转，即左转。</li>
 </ul>
-<h3 id="22">2.2 时间开环控制</h3>
-<p>本实验不订阅海龟的位姿话题（如 <code>/turtle1/pose</code>），属于<strong>开环控制</strong>：根据目标位移直接计算需要运动多长时间，时间一到就发零速度停机。</p>
+<p><code>Pose</code> 消息中用到三个分量：</p>
 <ul>
-<li>直行一条边：位移 $s$、线速度 $v$，则运动时间</li>
+<li><code>x</code>、<code>y</code>：海龟在平面上的坐标（单位 m）；</li>
+<li><code>theta</code>：海龟的朝向角（单位 rad，取值范围 <script type="math/tex">[-π, π]</script>）。</li>
+</ul>
+<p><strong>注意</strong>：turtlesim 内置 0.5 秒看门狗——只要超过 0.5 秒没有收到新的 <code>cmd_vel</code> 消息，它就会自动把海龟速度清零（强制刹车）。所以控制循环必须<strong>高频持续发布</strong>：本实验用 <code>rospy.Rate(50)</code> 以 50 Hz 的频率采样位姿并重发当前指令，直到动作到位。</p>
+<h3 id="22">2.2 闭环反馈控制</h3>
+<p>本实验订阅 <code>/turtle1/pose</code> 话题，用海龟的实时位姿作为反馈，边运动边判断什么时候到位，属于闭环控制：</p>
+<ul>
+<li>直行一条边：记录出发时的起点坐标 <script type="math/tex">(x_0, y_0)</script>，控制循环里实时计算已移动的欧氏距离</li>
 </ul>
 <p>
-<script type="math/tex; mode=display">t = \frac{s}{v}</script>
+<script type="math/tex; mode=display">d = \sqrt{(x - x_0)^2 + (y - y_0)^2}</script>
 </p>
-<p>例如边长 $s = 2\ \text{m}$、速度 $v = 1\ \text{m/s}$，走 2 秒即可停下。
-- 左转 90°：转角 $\theta = \pi / 2$、角速度 $\omega$，则运动时间</p>
-<p>
-<script type="math/tex; mode=display">t = \frac{\theta}{\omega}</script>
-</p>
-<p>例如角速度 $\omega = 1\ \text{rad/s}$，转 1.57 秒即可停下。</p>
-<h3 id="23">2.3 防惯性滑动的停机处理</h3>
-<p>海龟具有惯性，速度指令撤销后仍会滑行一段距离，导致边长不准、转角不是直角。因此：</p>
+<p>当 <script type="math/tex">d</script> 达到目标边长 <script type="math/tex">s = 2\ \text{m}</script> 时立刻发布零速度停车，不受实际速度波动影响。
+- 左转 90°：实时累计朝向角的变化量。由于 theta 的取值范围是 <script type="math/tex">[-π, π]</script>，跨过 ±π 边界时数值会突变（例如从 π 跳到 -π），所以每个控制周期的角度差要先<strong>跨界归一化</strong>到 <script type="math/tex">[-π, π]</script> 再累加；累计角度差达到 <script type="math/tex">\pi / 2</script> 时立刻停车，精确转满 90°。</p>
+<h3 id="23">2.3 动作间隙的稳定处理</h3>
+<p>每次直行或转弯结束后，海龟需要一段短暂的稳定时间，让位姿反馈完全收敛。因此：</p>
 <ol>
-<li>每次动作结束后，立即发布一条<strong>全零速度</strong>消息 <code>Twist()</code>，让海龟停下；</li>
-<li>两个动作之间再等待 0.5 秒，把残余惯性完全消掉，再进入下一个动作。</li>
+<li>每次动作到位后，立即发布一条全零速度消息 <code>Twist()</code>，让海龟停下；</li>
+<li>再以 50 Hz 持续发布空 <code>Twist</code> 停顿 0.3 秒，把上一次动作的距离与角度误差彻底清零，避免误差跨动作累计，再进入下一个动作。</li>
 </ol>
 <h3 id="24">2.4 算法流程</h3>
 <ol>
-<li>初始化节点 <code>turtle_square_node</code>，创建指向 <code>/turtle1/cmd_vel</code> 的发布者；</li>
-<li>等待 1 秒，保证发布者与 turtlesim 订阅端建立连接，避免第一条消息丢失；</li>
-<li>循环 4 次，每轮执行：直行一条边 → 停 0.5 秒 → 左转 90° → 停 0.5 秒；</li>
+<li>初始化节点 <code>turtle_square_node</code>，创建指向 <code>/turtle1/cmd_vel</code> 的发布者、订阅 <code>/turtle1/pose</code> 的订阅者，以及 <code>rospy.Rate(50)</code> 频率控制对象；</li>
+<li>等待第一帧位姿消息，保证反馈数据可用；50 Hz 的控制频率同时保证 <code>cmd_vel</code> 指令持续发布，不会触发 turtlesim 0.5 秒看门狗刹车；</li>
+<li>循环 4 次，每轮执行：闭环直行一条边（欧氏距离达到 2 m 停）→ 空速度停顿 0.3 秒 → 闭环左转 90°（累计角度差达到 π/2 停）→ 空速度停顿 0.3 秒；</li>
 <li>循环内外均通过 <code>rospy.is_shutdown()</code> 和 <code>try/except/finally</code> 做保护，节点被 <code>Ctrl+C</code> 中断时海龟也能安全停下。</li>
 </ol>
 <h2 id="_4">三、完整源码展示</h2>
 <h3 id="31-scriptssquare_drawpy">3.1 主程序 <code>scripts/square_draw.py</code></h3>
+<blockquote>
+<p>最新源码同步保存在本书仓库 <code>src/chap1/square_draw.py</code>，可直接查看与下载。</p>
+</blockquote>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
-<span class="c1"># 这个节点用来控制小海龟画一个正方形</span>
-<span class="c1"># 思路：直走一段距离 -&gt; 停一下 -&gt; 左转90度 -&gt; 再直走，循环4次就是正方形了</span>
-<span class="c1"># 节点名叫 turtle_square_node，速度指令都发到 /turtle1/cmd_vel 话题上</span>
+<span class="c1"># 小海龟画正方形节点（闭环反馈控制版）：turtle_square_node</span>
+<span class="c1"># 思路：直走一条边 -&gt; 停 0.3 秒 -&gt; 左转 90 度 -&gt; 停 0.3 秒，循环 4 次就是正方形</span>
+<span class="c1">#</span>
+<span class="c1"># 与开环版本的区别：订阅 /turtle1/pose 实时获取海龟位姿 (x, y, theta)，</span>
+<span class="c1"># 用反馈信息判断"走够了没有 / 转够了没有"，距离和角度一到位就立刻停下，</span>
+<span class="c1"># 不再依赖固定时长，从根上消除距离与角度的累计误差。</span>
 
 <span class="kn">import</span> <span class="nn">math</span>
 
 <span class="kn">import</span> <span class="nn">rospy</span>
 <span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
-
-<span class="c1"># 全局的发布者，下面几个函数都要用它来发消息</span>
-<span class="n">pub</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="kn">from</span> <span class="nn">turtlesim.msg</span> <span class="kn">import</span> <span class="n">Pose</span>
 
 
-<span class="k">def</span> <span class="nf">publish_stop</span><span class="p">():</span>
-    <span class="c1"># 发一个全0的速度，让海龟停下来，不然它会因为惯性再往前滑一段</span>
-    <span class="n">stop_msg</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
-    <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">stop_msg</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SquareDrawer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""闭环反馈控制：小海龟精准绘制边长 2 m 的正方形"""</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># 初始化节点</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'turtle_square_node'</span><span class="p">)</span>
+        <span class="c1"># 发布者：把速度指令发到 /turtle1/cmd_vel 话题</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle1/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="c1"># 订阅者：实时接收 /turtle1/pose 话题上的位姿</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s1">'/turtle1/pose'</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose_callback</span><span class="p">)</span>
+        <span class="c1"># 50 Hz 闭环控制频率：高频采样位姿并重发指令，防止 0.5s 看门狗刹车</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">move_forward</span><span class="p">(</span><span class="n">speed</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
-    <span class="c1"># 直走函数：speed 是速度（m/s），distance 是要走的距离（m）</span>
-    <span class="n">move_msg</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
-    <span class="n">move_msg</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">speed</span>      <span class="c1"># 只设置x方向的线速度</span>
-    <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">move_msg</span><span class="p">)</span>
+        <span class="c1"># 运动参数</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">side_length</span> <span class="o">=</span> <span class="mf">2.0</span>            <span class="c1"># 正方形边长 2 m</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span> <span class="o">=</span> <span class="mf">1.0</span>           <span class="c1"># 线速度 1.0 m/s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span> <span class="o">=</span> <span class="mf">1.0</span>          <span class="c1"># 角速度 1.0 rad/s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">turn_angle</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>     <span class="c1"># 左转 90 度</span>
 
-    <span class="c1"># 这里是时间开环控制：不用管海龟实际走了多远，</span>
-    <span class="c1"># 根据 t = s / v 算出时间，时间到了就停下来</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">speed</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pose_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""位姿回调：把最新位姿存下来，控制循环里随时读取"""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="o">=</span> <span class="n">msg</span>
 
-    <span class="c1"># 时间到了，发0速度停下来</span>
-    <span class="n">publish_stop</span><span class="p">()</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"直走完成，走了 </span><span class="si">%.2f</span><span class="s2"> 米，用了 </span><span class="si">%.2f</span><span class="s2"> 秒"</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">publish_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">angular</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""组装并发布一条速度指令"""</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">linear</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">angular</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">wait_for_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""等第一帧位姿消息到来，保证反馈数据可用"""</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo_throttle</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">"等待 /turtle1/pose 位姿数据..."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
 
-<span class="k">def</span> <span class="nf">rotate_90_degrees</span><span class="p">(</span><span class="n">angular_speed</span><span class="p">):</span>
-    <span class="c1"># 左转90度的函数：angular_speed 是角速度（rad/s）</span>
-    <span class="n">rotate_msg</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
-    <span class="n">rotate_msg</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">angular_speed</span>   <span class="c1"># 绕z轴正方向转，也就是逆时针</span>
-    <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">rotate_msg</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""持续发布空 Twist 停顿 0.3 秒，把上一次动作的误差彻底清零"""</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">end</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
 
-    <span class="c1"># 90度换成弧度就是 math.pi / 2，时间 = 角度 / 角速度</span>
-    <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">angular_speed</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">move_straight</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""闭环直行：从当前位姿出发，欧氏距离走满 distance 就精准停下"""</span>
+        <span class="n">start_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">moved</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="c1"># 实时计算已移动的欧氏距离</span>
+            <span class="n">moved</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">start_y</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">moved</span> <span class="o">&gt;=</span> <span class="n">distance</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># 没走够就继续前进，50 Hz 持续发布防看门狗刹车</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">(</span><span class="n">linear</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">()</span>   <span class="c1"># 到位立刻发零速度停车</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"直行完成，实际走了 </span><span class="si">%.3f</span><span class="s2"> 米（目标 </span><span class="si">%.2f</span><span class="s2"> 米）"</span><span class="p">,</span> <span class="n">moved</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
 
-    <span class="c1"># 时间到了，发0速度停下来</span>
-    <span class="n">publish_stop</span><span class="p">()</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"左转90度完成，用了 </span><span class="si">%.2f</span><span class="s2"> 秒"</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">turn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""闭环转向：实时累计朝向角差（±π 跨界归一化），转满 angle 就精准停下"""</span>
+        <span class="n">total_turned</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">prev_theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="c1"># 本周期转过的角度差，先归一化到 [-pi, pi] 再累加，防 ±π 跨界跳变</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span> <span class="o">-</span> <span class="n">prev_theta</span><span class="p">)</span>
+            <span class="n">total_turned</span> <span class="o">+=</span> <span class="n">delta</span>
+            <span class="n">prev_theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span>
+            <span class="k">if</span> <span class="n">total_turned</span> <span class="o">&gt;=</span> <span class="n">angle</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># 没转够就继续左转</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">(</span><span class="n">angular</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">()</span>   <span class="c1"># 到位立刻发零速度停车</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"转弯完成，实际转了 </span><span class="si">%.3f</span><span class="s2"> 弧度（目标 </span><span class="si">%.3f</span><span class="s2"> 弧度）"</span><span class="p">,</span>
+                      <span class="n">total_turned</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">normalize_angle</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""把角度差归一化到 [-pi, pi]，处理 ±π 附近的跨界跳变"""</span>
+        <span class="k">while</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">while</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">return</span> <span class="n">a</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># 等位姿数据就绪，然后停一下让海龟初始状态稳定</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_pose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"开始画正方形，边长 </span><span class="si">%.1f</span><span class="s2"> 米（闭环反馈控制）"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">side_length</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="c1"># 闭环直行一条边</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正在画第 </span><span class="si">%d</span><span class="s2"> 条边"</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">move_straight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">side_length</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+            <span class="c1"># 闭环左转 90 度</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正在转第 </span><span class="si">%d</span><span class="s2"> 个角"</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">turn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">turn_angle</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正方形画完啦！"</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
-    <span class="c1"># 初始化节点</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'turtle_square_node'</span><span class="p">)</span>
-
-    <span class="c1"># 创建发布者，往 /turtle1/cmd_vel 话题发 Twist 类型的消息</span>
-    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle1/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-
-    <span class="c1"># 先等1秒，让发布者和turtlesim连接好，不然第一条消息可能会收不到</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-
-    <span class="c1"># 运动参数，可以自己改着玩</span>
-    <span class="n">speed</span> <span class="o">=</span> <span class="mf">1.0</span>           <span class="c1"># 线速度 1 m/s</span>
-    <span class="n">distance</span> <span class="o">=</span> <span class="mf">2.0</span>        <span class="c1"># 正方形边长 2 m</span>
-    <span class="n">angular_speed</span> <span class="o">=</span> <span class="mf">1.0</span>   <span class="c1"># 角速度 1 rad/s</span>
-
+    <span class="n">node</span> <span class="o">=</span> <span class="n">SquareDrawer</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"开始画正方形，边长是 </span><span class="si">%.2f</span><span class="s2"> 米"</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
-
-        <span class="c1"># 正方形有4条边，所以循环4次</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
-            <span class="c1"># 检查一下节点有没有被关掉，关了就退出循环</span>
-            <span class="k">if</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
-                <span class="k">break</span>
-
-            <span class="c1"># 第1步：直走一条边</span>
-            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正在画第 </span><span class="si">%d</span><span class="s2"> 条边"</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">move_forward</span><span class="p">(</span><span class="n">speed</span><span class="p">,</span> <span class="n">distance</span><span class="p">)</span>
-
-            <span class="c1"># 第2步：停0.5秒，速度置0，把惯性消掉</span>
-            <span class="n">publish_stop</span><span class="p">()</span>
-            <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-
-            <span class="c1"># 第3步：逆时针转90度</span>
-            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正在转第 </span><span class="si">%d</span><span class="s2"> 个角"</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">rotate_90_degrees</span><span class="p">(</span><span class="n">angular_speed</span><span class="p">)</span>
-
-            <span class="c1"># 第4步：再停0.5秒，速度置0，把惯性消掉</span>
-            <span class="n">publish_stop</span><span class="p">()</span>
-            <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-
-        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"正方形画完啦！"</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
     <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
-        <span class="c1"># 按Ctrl+C或者节点被关闭的时候会走到这里</span>
+        <span class="c1"># 按 Ctrl+C 或者节点被关掉的时候走到这里</span>
         <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"节点被中断，让海龟停下来"</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="c1"># 不管正常画完还是中间出错，最后都再发一次0速度，保险一点</span>
-        <span class="k">if</span> <span class="n">pub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">publish_stop</span><span class="p">()</span>
+        <span class="c1"># 不管正常画完还是中间出错，最后都再发一次 0 速度，保险一点</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">()</span>
 </code></pre></div>
 <h3 id="32-cmakeliststxt">3.2 构建文件 <code>CMakeLists.txt</code></h3>
 <div class="highlight"><pre><span></span><code><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.0.2</span><span class="p">)</span>
 <span class="nb">project</span><span class="p">(</span><span class="s">turtle_motion</span><span class="p">)</span>
 
-<span class="c">## 查找catkin和我们用到的依赖（rospy和geometry_msgs）</span>
+<span class="c">## 查找catkin和我们用到的依赖（rospy、geometry_msgs和turtlesim）</span>
 <span class="nb">find_package</span><span class="p">(</span><span class="s">catkin</span><span class="w"> </span><span class="s">REQUIRED</span><span class="w"> </span><span class="s">COMPONENTS</span>
 <span class="w">  </span><span class="s">rospy</span>
 <span class="w">  </span><span class="s">geometry_msgs</span>
+<span class="w">  </span><span class="s">turtlesim</span>
 <span class="p">)</span>
 
 <span class="c">## 声明这个catkin包，因为包里面只有python代码，所以不用导出库</span>
@@ -397,10 +437,12 @@
 <span class="w">  </span><span class="cm">&lt;!-- 构建依赖 --&gt;</span>
 <span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>rospy<span class="nt">&lt;/build_depend&gt;</span>
 <span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>geometry_msgs<span class="nt">&lt;/build_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>turtlesim<span class="nt">&lt;/build_depend&gt;</span>
 
 <span class="w">  </span><span class="cm">&lt;!-- 运行依赖 --&gt;</span>
 <span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>rospy<span class="nt">&lt;/exec_depend&gt;</span>
 <span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>geometry_msgs<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>turtlesim<span class="nt">&lt;/exec_depend&gt;</span>
 
 <span class="w">  </span><span class="nt">&lt;export&gt;</span>
 <span class="w">  </span><span class="nt">&lt;/export&gt;</span>
@@ -426,12 +468,14 @@ rosrun<span class="w"> </span>turtle_motion<span class="w"> </span>square_draw.p
 </code></pre></div>
 <h3 id="43">4.3 话题订阅/发布验证</h3>
 <p>在节点运行的同时，另开终端依次执行：</p>
-<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list<span class="w">                        </span><span class="c1"># 查看所有话题，确认 /turtle1/cmd_vel 存在</span>
-rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/cmd_vel<span class="w">       </span><span class="c1"># 查看话题类型，应为 geometry_msgs/Twist</span>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list<span class="w">                        </span><span class="c1"># 查看所有话题，确认 /turtle1/cmd_vel 与 /turtle1/pose 存在</span>
+rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/cmd_vel<span class="w">       </span><span class="c1"># 查看速度话题类型，应为 geometry_msgs/Twist</span>
+rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/pose<span class="w">          </span><span class="c1"># 查看位姿话题类型，应为 turtlesim/Pose</span>
 rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/turtle1/cmd_vel<span class="w">       </span><span class="c1"># 实时打印发布者发出的速度消息</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/turtle1/pose<span class="w">          </span><span class="c1"># 实时打印海龟位姿（坐标 x、y 与朝向角 theta）</span>
 rosnode<span class="w"> </span>list<span class="w">                         </span><span class="c1"># 确认 turtle_square_node 已注册</span>
 </code></pre></div>
-<p>节点运行时 <code>rostopic echo</code> 的输出节选如下：直行阶段只有 <code>linear.x</code> 为 1.0，转弯阶段只有 <code>angular.z</code> 为 1.0，动作之间为全零停机消息。</p>
+<p>节点运行时 <code>rostopic echo /turtle1/cmd_vel</code> 的输出节选如下：直行阶段只有 <code>linear.x</code> 为 1.0，转弯阶段只有 <code>angular.z</code> 为 1.0，动作之间为全零停机消息。由于控制循环以 50 Hz 持续发布，同一动作期间会连续刷出内容相同的消息，直到动作到位；<code>rostopic echo /turtle1/pose</code> 则可以看到位姿实时变化。</p>
 <div class="highlight"><pre><span></span><code>linear:
   x: 1.0
   y: 0.0
@@ -443,9 +487,10 @@ angular:
 ---
 </code></pre></div>
 <h3 id="44">4.4 预期结果</h3>
-<p>节点运行后，在 turtlesim 窗口中可以看到小海龟沿直线行走 2 m、左转 90°，重复 4 次后回到起点，绘制出一个边长 2 m 的正方形，终端同步打印 <code>正在画第 N 条边</code>、<code>正在转第 N 个角</code> 等日志，最后输出 <code>正方形画完啦！</code>。</p>
+<p>节点运行后，在 turtlesim 窗口中可以看到小海龟沿直线行走 2 m、左转 90°，重复 4 次后回到起点，绘制出一个边长 2 m 的正方形；终端同步打印 <code>正在画第 N 条边</code>、<code>直行完成，实际走了 2.000 米</code>、<code>转弯完成，实际转了 1.571 弧度</code> 等日志，最后输出 <code>正方形画完啦！</code>。</p>
+<p><img alt="小海龟绘制正方形效果图" src="../images/turtle_square.png"></p>
 <h2 id="_6">五、总结</h2>
-<p>本实验通过编写发布者节点向 <code>/turtle1/cmd_vel</code> 话题发布 <code>Twist</code> 消息，实现了小海龟自主绘制正方形的任务。实验中掌握了 ROS 话题通信的基本用法，理解了时间开环控制的原理及其局限（海龟惯性带来的误差通过停机等待来抑制），并练习了 <code>rostopic</code> 等命令行工具的验证方法。后续可以把控制律替换为基于 <code>/turtle1/pose</code> 位姿反馈的闭环控制，使轨迹更加精确。</p></div>
+<p>本实验通过编写"发布者 + 订阅者"一体的节点，向 <code>/turtle1/cmd_vel</code> 话题发布 <code>Twist</code> 消息、订阅 <code>/turtle1/pose</code> 话题读取位姿，实现了小海龟自主精准绘制正方形的任务。实验中掌握了 ROS 话题通信的收发两端用法，理解了闭环反馈控制的原理——欧氏距离判定直行到位、朝向角差累计（含 ±π 跨界归一化）判定转弯到位，并练习了 50 Hz 高频循环规避 turtlesim 0.5 秒看门狗、动作间空速度停顿消除累计误差等工程技巧。相比时间开环控制，闭环方案不受实际速度波动影响，轨迹精度更高。</p></div>
               
             </div>
           </div><footer>
