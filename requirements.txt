@@ -7,3 +7,6 @@ pypandoc-binary
 mkdocs-video
 # 支持表格跨多行和多列
 markdown-grid-tables
+# 终端键盘遥控器（drone_teleop）
+pynput
+airsim

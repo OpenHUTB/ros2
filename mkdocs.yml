@@ -42,6 +42,8 @@ plugins:
   - bibtex:
       bib_file: refs.bib
       csl_file: nature.csl
+      # 关闭裸 @key 行内引用：避免代码块中的 @staticmethod 被误判为文献引用
+      enable_inline_citations: false
   - mkdocs-video:
       is_video: True
       video_autoplay: True
@@ -78,11 +80,11 @@ nav:
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
-    - 扭转控制: './ground/twist_to_control.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
 - 空域载具:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
+    - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
 - 水域载具: 
     - 水域载具 ROS2 接口: './water/HoloOcean.md'

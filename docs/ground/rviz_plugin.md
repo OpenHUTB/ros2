@@ -27,13 +27,9 @@ rosrun rviz rviz
     
     在左侧点击`Add`，在弹出的对话框中选中`rviz->Camera`，在左侧的相机话题下拉菜单中选择（Camera -> Image Topic）`/carla/ego_vehicle/rgb_front/image` 并回车，就会显示实时的相机数据
 
-    ![](../img/ground/rviz_RGB.png)
-
 * 显示 DVS、深度、语义分割相机
 
     和“显示 RGB 相机数据”一样，再次添加 3 个 Camera，选择的主题分别为：`/carla/ego_vehicle/dvs_front/image`、`/carla/ego_vehicle/depth_front/image`、`/carla/ego_vehicle/semantic_segmentation_front/image`
-
-    ![](../img/ground/rviz.png)
 
 
 ## 参考
