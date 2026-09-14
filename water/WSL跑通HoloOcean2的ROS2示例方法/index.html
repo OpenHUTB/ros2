@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Docker runtime - 模拟器的 ROS 文档</title>
+    <title>WSL跑通HoloOcean2的ROS2示例方法 - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,8 +13,8 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Docker runtime";
-        var mkdocs_page_input_path = "water/docker_runtime.md";
+        var mkdocs_page_name = "WSL\u8dd1\u901aHoloOcean2\u7684ROS2\u793a\u4f8b\u65b9\u6cd5";
+        var mkdocs_page_input_path = "water/WSL\u8dd1\u901aHoloOcean2\u7684ROS2\u793a\u4f8b\u65b9\u6cd5.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -99,10 +99,32 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">水域载具</span></p>
-              <ul>
+              <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具 ROS2 接口</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../WSL%E8%B7%91%E9%80%9AHoloOcean2%E7%9A%84ROS2%E7%A4%BA%E4%BE%8B%E6%96%B9%E6%B3%95/">WSL跑通HoloOcean2的ROS2示例方法</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">WSL跑通HoloOcean2的ROS2示例方法</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#1-ros-2-jazzy">1. 安装 ROS 2 Jazzy</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-holoocean-python">2. 安装 HoloOcean Python 客户端库</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-ocean">3. 下载世界包（Ocean）</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-holoocean-ros">4. 编译 holoocean-ros 桥接包</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5-nullrhi">5. 添加 -nullrhi 参数</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6-ros-2-wsl">6. 运行 ROS 2 示例（WSL 无头模式）</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1">1. 清理残留</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2">2. 进入工作空间并激活环境</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#7">7. 运行示例</a>
+    </li>
+    </ul>
                   </li>
               </ul>
       </div>
@@ -119,9 +141,10 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Docker runtime</li>
+          <li class="breadcrumb-item">水域载具</li>
+      <li class="breadcrumb-item active">WSL跑通HoloOcean2的ROS2示例方法</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/docker_runtime.md"> 编辑页面</a>
+          <a href="https://github.com/OpenHUTB/template/edit/master/docs/water/WSL跑通HoloOcean2的ROS2示例方法.md"> 编辑页面</a>
     </li>
   </ul>
   <hr/>
@@ -129,64 +152,53 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h2 id="holoocean-ros2-docker">HoloOcean ROS2 运行时 Docker 容器</h2>
-<p>受限于虚幻引擎的最终用户许可协议（EULA），该容器未打包发布至 DockerHub。</p>
-<h2 id="_1">使用方法</h2>
-<ol>
-<li>
-<p><strong>虚幻引擎协议</strong><br>
-   请确保您已签署虚幻引擎相关协议。</p>
-</li>
-<li>
-<p><strong>克隆仓库</strong> 并进入 <code>docker/runtime</code> 目录：</p>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:byu-holoocean/holoocean-ros.git
-<span class="nb">cd</span><span class="w"> </span>holoocean-ros/docker/runtime
+                <div><h1 id="holoocean2ros2">跑通HoloOcean2的ROS2示例方法（无头模式）</h1>
+<h2 id="1-ros-2-jazzy">1. 安装 ROS 2 Jazzy</h2>
+<p>在WSL终端中输入一下指令</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>curl<span class="w"> </span>-y
+sudo<span class="w"> </span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://raw.githubusercontent.com/ros/rosdistro/master/ros.key<span class="w"> </span>-o<span class="w"> </span>/usr/share/keyrings/ros-archive-keyring.gpg
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"deb [arch=</span><span class="k">$(</span>dpkg<span class="w"> </span>--print-architecture<span class="k">)</span><span class="s2"> signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu </span><span class="k">$(</span>.<span class="w"> </span>/etc/os-release<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$UBUNTU_CODENAME</span><span class="k">)</span><span class="s2"> main"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/apt/sources.list.d/ros2.list<span class="w"> </span>&gt;<span class="w"> </span>/dev/null
+sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-jazzy-desktop<span class="w"> </span>-y
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"source /opt/ros/jazzy/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
 </code></pre></div>
-<ol>
-<li><strong>构建容器：</strong></li>
-</ol>
-<div class="highlight"><pre><span></span><code>./build_container.sh
+<h2 id="2-holoocean-python">2. 安装 HoloOcean Python 客户端库</h2>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>/mnt/e/underwater/daima2/holoocean/client<span class="w"> </span>--break-system-packages
 </code></pre></div>
-<ul>
-<li>
-<p>该脚本将执行以下操作：</p>
-<ul>
-<li>检查 Docker 是否已安装</li>
-<li>提示确认最终用户许可协议 (EULA)</li>
-<li>引导您完成 X11 显示访问权限的设置</li>
-<li>将 HoloOcean 仓库克隆到临时文件夹（需要 SSH 访问权限）</li>
-<li>构建 Docker 镜像</li>
-<li>（可选）启动容器</li>
-</ul>
-</li>
-<li>
-<p><strong>显示访问权限（用于 GUI）：</strong></p>
-</li>
-<li>如果出现提示，请允许 Docker 访问您的 X11 显示：
-     <div class="highlight"><pre><span></span><code>xhost<span class="w"> </span>+local:docker
-</code></pre></div></li>
-<li><strong>注意：</strong> 每次重启后都必须重新运行此命令。</li>
-</ul>
-<h2 id="build_containersh"><strong>build_container.sh</strong></h2>
-<h4 id="_2"><strong>命令行选项</strong></h4>
-<ul>
-<li><code>-b</code>: 指定 HoloOcean 的 git 分支（默认：<code>develop</code>）</li>
-</ul>
-<h2 id="_3"><strong>使用提示</strong></h2>
-<ul>
-<li><strong>重新构建：</strong> 如果修改了 Dockerfile 或依赖项，请重新运行脚本以重建镜像。如果计划频繁进行重建，建议使用开发（dev）镜像，它更适合应对频繁的变更。</li>
-</ul>
-<h2 id="_4"><strong>安全须知</strong></h2>
-<blockquote>
-<p><strong>警告：</strong><br>
-该镜像包含专有软件，且受限于与 Epic Games 签署的最终用户许可协议（EULA），仅供内部使用。
-<strong>请勿在组织外部共享构建好的 Docker 镜像。</strong></p>
-</blockquote></div>
+<h2 id="3-ocean">3. 下载世界包（Ocean）</h2>
+<p>网盘的下载链接：https://openhutb.github.io/mujoco_plugin/underwater/usage/installation/</p>
+<h2 id="4-holoocean-ros">4. 编译 holoocean-ros 桥接包</h2>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-colcon-common-extensions<span class="w"> </span>-y
+<span class="nb">cd</span><span class="w"> </span>/mnt/e/underwater/daima2/holoocean-ros
+colcon<span class="w"> </span>build
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<h2 id="5-nullrhi">5. 添加 -nullrhi 参数</h2>
+<p>holoocean/client/src/holoocean/environments.py文件中在 <code>__linux_start_process__</code> 方法的 arguments 列表末尾添加：</p>
+<p></p><div class="highlight"><pre><span></span><code><span class="s2">"-nullrhi"</span><span class="p">,</span>
+</code></pre></div>
+！<a href="img/wmx0001.png">具体放入地址</a>
+<h2 id="6-ros-2-wsl">6. 运行 ROS 2 示例（WSL 无头模式）</h2>
+<h3 id="1">1. 清理残留</h3>
+<div class="highlight"><pre><span></span><code>rm<span class="w"> </span>-f<span class="w"> </span>/dev/shm/sem.HOLODECK_LOADING_SEM*
+pkill<span class="w"> </span>-9<span class="w"> </span>Holodeck
+pkill<span class="w"> </span>-9<span class="w"> </span>holoocean_node
+</code></pre></div>
+<h3 id="2">2. 进入工作空间并激活环境</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>到holoocean-ros文件夹
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+<span class="nb">export</span><span class="w"> </span><span class="nv">HOLODECKPATH</span><span class="o">=</span>指向世界包文件夹地址
+</code></pre></div>
+<h2 id="7">7. 运行示例</h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>/mnt/e/underwater/daima2/holoocean-ros/install/holoocean_examples/share/holoocean_examples/launch/command_launch.py<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div></div>
               
             </div>
           </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../HoloOcean/" class="btn btn-neutral float-left" title="水域载具 ROS2 接口"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+    </div>
 
   <hr/>
 
@@ -211,6 +223,8 @@
           <a href="https://github.com/OpenHUTB/template" style="color: #fcfcfc">OpenHUTB</a>
         </span>
     
+    
+      <span><a href="../HoloOcean/" style="color: #fcfcfc">&laquo; 前一页</a></span>
     
     
   </span>
