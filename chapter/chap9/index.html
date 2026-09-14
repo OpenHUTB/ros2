@@ -132,7 +132,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="_1"></h1>
+                <div><h1 id="ros2">ROS2</h1>
+<p>以下测试都是基于 Ubuntu 20.04 ROS Humble</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/chatter<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: Hello world"</span>
+<span class="c1"># 重新打开一个终端</span>
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/chatter
+</code></pre></div>
+<p><img alt="" src="../../img/ros/ros2_pub_echo.png"></p></div>
               
             </div>
           </div><footer>
