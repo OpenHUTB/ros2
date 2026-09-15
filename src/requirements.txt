@@ -1,0 +1,3 @@
+# 无人机终端键盘遥控器（drone_teleop）运行时依赖
+pynput
+airsim

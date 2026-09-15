@@ -1,6 +1,6 @@
 # 无人机终端键盘遥控器
 
-`drone_teleop` 是一个纯终端的无人机键盘遥控器，用于通过键盘遥控 CarlaAir / AirSim 仿真环境中的多旋翼无人机，无需图形界面。代码位于 `src/carla_teleop/drone_teleop.py`。
+`drone_teleop` 是一个纯终端的无人机键盘遥控器，用于通过键盘遥控 CarlaAir / AirSim 仿真环境中的多旋翼无人机，无需图形界面。代码位于 `src/air/air_teleop/drone_teleop.py`。
 
 运行效果如下图所示：
 
@@ -55,21 +55,21 @@
 **前置条件：** 已启动模拟器并完成与 AirSim 的连接（参见[建立虚拟机和空域载具之间的连接](./setup_and_connect.md)），且已安装 `airsim` Python 包。
 
 ```shell
-# 拉取仓库并进入遥控器目录
+# 拉取仓库并进入仓库根目录
 git clone https://github.com/OpenHUTB/ros2.git
-cd ros2/src/carla_teleop
+cd ros2
 
-# 安装模拟器客户端（如未安装）
-pip install airsim
+# 安装无人机运行所需依赖（如未安装）
+pip install -r src/requirements.txt
 
 # 启动遥控器
-python drone_teleop.py
+python src/air/air_teleop/drone_teleop.py
 ```
 
 如需连接非本机的仿真器，可通过命令行参数指定：
 
 ```shell
-python drone_teleop.py --ip 172.21.108.47 --port 41451 --vehicle ""
+python src/air/air_teleop/drone_teleop.py --ip 172.21.108.47 --port 41451 --vehicle ""
 ```
 
 | 参数 | 默认值 | 说明 |
