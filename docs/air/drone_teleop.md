@@ -4,7 +4,7 @@
 
 运行效果如下图所示：
 
-![](../teleop_demo.gif)
+![](../img/teleop_demo.gif)
 
 
 ## 通信原理
