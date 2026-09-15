@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_kinetic_turtlesim</name>
+  <version>1.0.0</version>
+  <description>
+    ROS Kinetic 小海龟自动画圆演示模块：一键 launch 启动 turtlesim，自动生成第二只海龟并控制其画出多色圆环（花瓣效果）。
+    配套文档见 docs/ros_kinetic_turtlesim/。
+  </description>
+  <maintainer email="openhutb@example.com">ros_kinetic_turtlesim contributor</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+</package>

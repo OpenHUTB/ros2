@@ -1,0 +1,7 @@
+<launch>
+  <!-- 启动小海龟仿真器 -->
+  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim" output="screen"/>
+
+  <!-- 启动画圆演示节点（本模块入口脚本 main.py） -->
+  <node pkg="ros_kinetic_turtlesim" type="main.py" name="turtle_circle_drawer" output="screen"/>
+</launch>
