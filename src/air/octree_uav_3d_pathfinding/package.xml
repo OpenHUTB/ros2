@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>octree_uav_3d_pathfinding</name>
+  <version>0.1.0</version>
+  <description>
+    空域载具（无人机）的八叉树三维寻路模块。
+    从传感器点云构建八叉树占用地图，在八叉树上执行 A* 全局寻路，
+    并进行安全裕度处理与路径平滑，最终实现无人机的三维路径跟踪。
+  </description>
+
+  <!-- 修改为你自己的署名与邮箱 -->
+  <maintainer email="user@todo.todo">user</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+  <depend>octomap_msgs</depend>
+  <depend>octomap_ros</depend>
+  <depend>pcl_ros</depend>
+  <depend>pcl_conversions</depend>
+
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <export>
+  </export>
+</package>

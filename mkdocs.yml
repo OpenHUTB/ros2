@@ -1,4 +1,4 @@
-site_name: 模拟器的 ROS 文档
+﻿site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
 
 #repo_url: https://github.com/carla-simulator/carla
@@ -85,11 +85,12 @@ nav:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
+    - 空域载具八叉树三维寻路:
+        - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
-- 水域载具: 
+- 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
-
 
 
 # - mdx_math 用于行内公式显示

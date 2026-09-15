@@ -62,6 +62,8 @@ ROS每章节运行代码:
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
+* [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
+
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)

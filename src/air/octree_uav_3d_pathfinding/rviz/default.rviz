@@ -1,0 +1,47 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Cell Size: 1
+      Plane Cell Count: 20
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+      Show Names: true
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: SensorCloud
+      Topic: /cloud_in
+      Style: Points
+      Size (m): 0.01
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Octomap
+      Topic: /occupied_cells_vis_array
+    - Class: rviz/Path
+      Enabled: true
+      Name: PlannedPath
+      Topic: /planned_path
+      Color: 25; 255; 0
+      Line Width: 0.03
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 20
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 2
+      Pitch: 0.5
+      Yaw: 0.8
+Window Geometry:
+  Height: 800
+  Width: 1200

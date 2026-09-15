@@ -1,0 +1,13 @@
+# 空域载具八叉树三维寻路 —— 模块参数配置
+#
+# 本文件由 launch/main.launch 通过 <rosparam command="load"> 载入。
+
+uav_env_check:
+  # 自检运行时长（秒）。launch 中的 duration 参数会覆盖此值。
+  check_duration: 10.0
+  # 等待 /clock 开始发布的超时时间（秒）
+  clock_timeout: 30.0
+  # 等待 Gazebo 服务就绪的超时时间（秒）
+  service_timeout: 30.0
+  # 心跳话题名
+  status_topic: /uav_status
