@@ -1,3 +1,3 @@
-# 无人机终端键盘遥控器（drone_teleop）运行时依赖
+# 无人机终端键盘遥控器（drone_teleop）与空域载具 ROS 遥控（drone_ros_node / drone_ros_teleop）运行时依赖
 pynput
 airsim
