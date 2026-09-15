@@ -31,7 +31,7 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 
 ROS每章节运行代码:
 
-* [第 1 章](./chapter/turtle_square.md) - 认识 ROS
+* [第 1 章](./chapter/chap1/turtle_square.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
