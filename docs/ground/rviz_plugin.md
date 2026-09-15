@@ -33,8 +33,6 @@ rosrun rviz rviz
 
     和“显示 RGB 相机数据”一样，再次添加 3 个 Camera，选择的主题分别为：`/carla/ego_vehicle/dvs_front/image`、`/carla/ego_vehicle/depth_front/image`、`/carla/ego_vehicle/semantic_segmentation_front/image`
 
-    ![](../img/ground/rviz.png)
-
 ## 参考
 
 * [RVIZ Carla 插件](https://openhutb.github.io/doc/rviz_plugin/)
