@@ -12,7 +12,14 @@
 
 [进入小海龟画正方形实验](turtle_square.md)
 
-### 2. 小海龟绘制 OpenHUTB
+### 2. 小海龟绘制圆形
+
+同时向 `/turtle1/cmd_vel` 发布线速度和角速度，
+并通过 `/turtle1/pose` 的位姿反馈判断是否完成一圈。
+
+[进入小海龟画圆实验](turtle_circle.md)
+
+### 3. 小海龟绘制 OpenHUTB
 
 订阅 `/turtle1/pose` 获取实时位姿，并结合 `/turtle1/cmd_vel`、
 `/turtle1/set_pen` 和 `/turtle1/teleport_absolute`，
