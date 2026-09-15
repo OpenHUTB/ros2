@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>空域模拟器的 ROS 封装器 - 模拟器的 ROS 文档</title>
+    <title>无人机终端键盘遥控器 - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,8 +13,8 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "\u7a7a\u57df\u6a21\u62df\u5668\u7684 ROS \u5c01\u88c5\u5668";
-        var mkdocs_page_input_path = "air/ros_pkgs.md";
+        var mkdocs_page_name = "\u65e0\u4eba\u673a\u7ec8\u7aef\u952e\u76d8\u9065\u63a7\u5668";
+        var mkdocs_page_input_path = "air/drone_teleop.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -91,13 +91,19 @@
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">空域模拟器的 ROS 封装器</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">无人机终端键盘遥控器</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_1">参考</a>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">通信原理</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">按键映射表</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_4">启动命令</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_5">参考</a>
     </li>
     </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
                   </li>
                   <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
                   </li>
@@ -124,9 +130,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">空域载具</li>
-      <li class="breadcrumb-item active">空域模拟器的 ROS 封装器</li>
+      <li class="breadcrumb-item active">无人机终端键盘遥控器</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/ros_pkgs.md"> 编辑页面</a>
+          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/drone_teleop.md"> 编辑页面</a>
     </li>
   </ul>
   <hr/>
@@ -134,23 +140,145 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h1 id="ros">空域模拟器的 ROS 封装器</h1>
-<p>具体请参考<a href="https://openhutb.github.io/air_doc/airsim_ros_pkgs/">空域载具文档</a></p>
-<h2 id="_1">参考</h2>
+                <div><h1 id="_1">无人机终端键盘遥控器</h1>
+<p><code>drone_teleop</code> 是一个纯终端的无人机键盘遥控器，用于通过键盘遥控 CarlaAir / AirSim 仿真环境中的多旋翼无人机，无需图形界面。代码位于 <code>src/air/air_teleop/drone_teleop.py</code>。</p>
+<p>运行效果如下图所示：</p>
+<p><img alt="" src="../../img/teleop_demo.gif"></p>
+<h2 id="_2">通信原理</h2>
+<p>遥控器与仿真器之间采用 <strong>客户端-服务器</strong> 模式通信：</p>
 <ul>
-<li>
-<p><a href="https://microsoft.github.io/AirSim/airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2">AirSim C++客户端库上的ROS封装</a></p>
+<li><strong>服务端</strong>：AirSim 仿真器内置的 RPC（远程过程调用）服务，默认监听 <code>127.0.0.1:41451</code> 端口；</li>
+<li><strong>客户端</strong>：脚本通过 <code>airsim.MultirotorClient</code> 连接 RPC 服务，调用 <code>confirmConnection()</code> 完成握手确认。</li>
+</ul>
+<p>指令与状态的具体交互流程如下：</p>
+<ol>
+<li><strong>速度指令下发</strong>：主循环以 10 Hz 的频率，在<strong>机体坐标系（Body Frame）</strong>下调用 <code>moveByVelocityBodyFrameAsync</code> 周期性下发速度指令，并传入偏航角速度（<code>YawMode(is_rate=True)</code>）。指令采用异步方式下发，不阻塞控制循环；每条指令的持续时间设为控制周期的 2 倍，保证相邻指令之间不断档。</li>
+<li><strong>按键松开即归零</strong>：每个控制周期都会重新扫描当前按住的按键集合，重新计算三轴速度。因此松开按键后，对应轴的速度在下一个周期自动归零。</li>
+<li><strong>状态回读</strong>：以 5 Hz 的频率调用 <code>getMultirotorState</code> 读取 <code>kinematics_estimated</code>（位置与线速度），换算成相对起飞点的高度后，在终端上用单行 HUD 原地刷新显示。</li>
+<li><strong>安全机制</strong>：<ul>
+<li><strong>看门狗</strong>：若控制循环停顿超过 0.5 s，自动触发悬停保底；</li>
+<li><strong>安全退出</strong>：收到退出信号（ESC 或 Ctrl+C）后，依次执行悬停 → 降落 → 切断电机（<code>armDisarm(False)</code>）→ 释放 API 控制权，并还原终端属性。</li>
+</ul>
 </li>
-<li>
-<p><a href="https://microsoft.github.io/AirSim/airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2">airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2</a></p>
-</li>
+</ol>
+<p><strong>注意：</strong> AirSim 使用 <strong>NED 坐标系</strong>（x 前、y 右、z 指向地面），因此上升对应 <code>vz &lt; 0</code>，下降对应 <code>vz &gt; 0</code>。</p>
+<p>按键读取采用跨平台方案：Windows 下使用 <code>msvcrt</code> 无缓冲读取按键，Linux / macOS 下使用 <code>termios</code> + <code>select</code> 切换终端模式后读取。</p>
+<h2 id="_3">按键映射表</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">按键</th>
+<th style="text-align: center;">功能</th>
+<th>指令说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>W</code> / <code>S</code></td>
+<td style="text-align: center;">前进 / 后退</td>
+<td>机体 x 轴 ±3.0 m/s</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>A</code> / <code>D</code></td>
+<td style="text-align: center;">左移 / 右移</td>
+<td>机体 y 轴 ±3.0 m/s</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>Space</code></td>
+<td style="text-align: center;">上升</td>
+<td>NED 下 <code>vz = -2.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>Ctrl+P</code></td>
+<td style="text-align: center;">下降</td>
+<td>NED 下 <code>vz = +2.0 m/s</code>（终端无法单独捕获 Shift 修饰键）</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>J</code> / <code>L</code></td>
+<td style="text-align: center;">原地左偏航 / 右偏航</td>
+<td>偏航角速度 ±30 度/秒</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>T</code></td>
+<td style="text-align: center;">起飞</td>
+<td>解锁电机并爬升到安全高度</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>G</code></td>
+<td style="text-align: center;">降落</td>
+<td>先悬停再垂直降落</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>H</code></td>
+<td style="text-align: center;">紧急悬停</td>
+<td>三轴速度立即归零，原地保持高度</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>ESC</code></td>
+<td style="text-align: center;">安全退出</td>
+<td>悬停 → 降落 → 释放控制权</td>
+</tr>
+</tbody>
+</table>
+<p><strong>提示：</strong></p>
+<ul>
+<li>起飞前请先按 <code>T</code> 解锁电机；</li>
+<li>按键松开后对应轴速度自动归零；</li>
+<li>紧急悬停后，按任意方向键（<code>W/A/S/D</code>、<code>J/L</code>、<code>Space</code>、<code>Ctrl+P</code>）即可解除悬停继续操控；</li>
+<li><code>Ctrl+C</code> 与 <code>ESC</code> 一样走安全退出流程。</li>
+</ul>
+<h2 id="_4">启动命令</h2>
+<p><strong>前置条件：</strong> 已启动模拟器并完成与 AirSim 的连接（参见<a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>），且已安装 <code>airsim</code> Python 包。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 拉取仓库并进入仓库根目录</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+<span class="nb">cd</span><span class="w"> </span>ros2
+
+<span class="c1"># 安装无人机运行所需依赖（如未安装）</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/requirements.txt
+
+<span class="c1"># 启动遥控器</span>
+python<span class="w"> </span>src/air/air_teleop/drone_teleop.py
+</code></pre></div>
+<p>如需连接非本机的仿真器，可通过命令行参数指定：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>src/air/air_teleop/drone_teleop.py<span class="w"> </span>--ip<span class="w"> </span><span class="m">172</span>.21.108.47<span class="w"> </span>--port<span class="w"> </span><span class="m">41451</span><span class="w"> </span>--vehicle<span class="w"> </span><span class="s2">""</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--ip</code></td>
+<td><code>127.0.0.1</code></td>
+<td>AirSim 服务地址</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td><code>41451</code></td>
+<td>AirSim RPC 端口</td>
+</tr>
+<tr>
+<td><code>--vehicle</code></td>
+<td>空字符串</td>
+<td>载具名称，默认取仿真器中的第一架无人机</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">参考</h2>
+<ul>
+<li><a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a></li>
+<li><a href="../ros_pkgs/">空域模拟器的 ROS 封装器</a></li>
 </ul></div>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../setup_and_connect/" class="btn btn-neutral float-left" title="建立虚拟机和空域载具之间的连接"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-        <a href="../drone_teleop/" class="btn btn-neutral float-right" title="无人机终端键盘遥控器">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../ros_pkgs/" class="btn btn-neutral float-left" title="空域模拟器的 ROS 封装器"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+        <a href="../../water/HoloOcean/" class="btn btn-neutral float-right" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -177,10 +305,10 @@
         </span>
     
     
-      <span><a href="../setup_and_connect/" style="color: #fcfcfc">&laquo; 前一页</a></span>
+      <span><a href="../ros_pkgs/" style="color: #fcfcfc">&laquo; 前一页</a></span>
     
     
-      <span><a href="../drone_teleop/" style="color: #fcfcfc">后一页 &raquo;</a></span>
+      <span><a href="../../water/HoloOcean/" style="color: #fcfcfc">后一页 &raquo;</a></span>
     
   </span>
 </div>

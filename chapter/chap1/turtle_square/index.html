@@ -84,8 +84,6 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
                   </li>
-                  <li class="toctree-l1"><a class="" href="../../../ground/twist_to_control.md">扭转控制</a>
-                  </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
                   </li>
               </ul>
@@ -94,6 +92,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
                   </li>
                   <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
                   </li>
@@ -441,7 +441,7 @@ angular:
 </code></pre></div>
 <h3 id="44">4.4 预期结果</h3>
 <p>节点运行后，在 turtlesim 窗口中可以看到小海龟沿直线行走 2 m、左转 90°，重复 4 次后回到起点，绘制出一个边长 2 m 的正方形；终端同步打印 <code>正在画第 N 条边</code>、<code>直行完成，实际走了 2.000 米</code>、<code>转弯完成，实际转了 1.571 弧度</code> 等日志，最后输出 <code>正方形画完啦！</code>。</p>
-<p><img alt="小海龟绘制正方形效果图" src="images/turtle_square.png"></p>
+<p><img alt="小海龟绘制正方形效果图" src="../../images/turtle_square.png"></p>
 <h2 id="_6">五、总结</h2>
 <p>本实验通过编写"发布者 + 订阅者"一体的节点，向 <code>/turtle1/cmd_vel</code> 话题发布 <code>Twist</code> 消息、订阅 <code>/turtle1/pose</code> 话题读取位姿，实现了小海龟自主精准绘制正方形的任务。实验中掌握了 ROS 话题通信的收发两端用法，理解了闭环反馈控制的原理——欧氏距离判定直行到位、朝向角差累计（含 ±π 跨界归一化）判定转弯到位，并练习了 50 Hz 高频循环规避 turtlesim 0.5 秒看门狗、动作间空速度停顿消除累计误差等工程技巧。相比时间开环控制，闭环方案不受实际速度波动影响，轨迹精度更高。</p></div>
               
