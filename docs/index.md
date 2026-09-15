@@ -53,7 +53,6 @@ ROS每章节运行代码:
 * [自动驾驶示例](./ground/ad_demo.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
-* [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 
