@@ -63,7 +63,7 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
 - ROS 教程:
-    - 1. 认识 ROS：小海龟画正方形: 'chapter/turtle_square.md'
+    - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
