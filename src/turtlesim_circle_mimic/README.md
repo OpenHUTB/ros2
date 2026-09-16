@@ -1,4 +1,4 @@
-# 两只海龟画圆与跟随
+# 双海龟画圆
 
 通过 ROS1 自带的 turtlesim、rostopic 和 mimic 节点，观察速度话题、命名空间和话题重映射。模块来自原始 beginner_tutorials 作业，保留两组画圆速度，并整理为独立 ROS 包。
 
