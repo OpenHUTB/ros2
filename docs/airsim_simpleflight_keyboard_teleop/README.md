@@ -40,8 +40,15 @@ cmd /c .\main.bat
 ### Ubuntu
 
 1. 安装 ROS Noetic。
-2. 解压离线 AirSim 源码到 `~/AirSim`。
-3. 安装依赖。
+2. 从本仓库的 `Releases` 页面下载 `AirSim_ros_offline_src.zip`。
+3. 把压缩包放到 Ubuntu 的 `~/Downloads`，然后解压：
+
+```bash
+cd ~
+unzip -q ~/Downloads/AirSim_ros_offline_src.zip
+```
+
+4. 安装依赖。
 
 ```bash
 sudo apt update
@@ -56,7 +63,7 @@ sudo apt install -y \
   libyaml-cpp-dev gcc g++ cmake git rsync wget unzip
 ```
 
-4. 修复离线源码权限并编译。
+5. 修复离线源码权限并编译。
 
 ```bash
 cd ~/AirSim
