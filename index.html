@@ -46,11 +46,15 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#1">1. 入门 </a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#2">2. 地面载具  </a>
+    <li class="toctree-l2"><a class="reference internal" href="#2">2. 人形机器人 </a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#3">3. 空域载具 </a>
+    <li class="toctree-l2"><a class="reference internal" href="#3">3. 肌肉骨骼人 </a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#4">4. 水域载具  </a>
+    <li class="toctree-l2"><a class="reference internal" href="#4">4. 地面载具  </a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#5">5. 空域载具 </a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#6">6. 水域载具  </a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
     </li>
@@ -78,6 +82,16 @@
                   <li class="toctree-l1"><a class="reference internal" href="chapter/chap8/">8. ROS 机器人综合应用</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="chapter/chap9/">9. ROS 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">人形机器人</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_basics/">人形机器人基础</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">地面载具</span></p>
@@ -149,6 +163,8 @@
 <ul>
 <li><a href="#list">简介</a></li>
 <li><a href="#list">入门</a></li>
+<li><a href="#humanoid">人形机器人</a></li>
+<li><a href="#musculoskeletal">肌肉骨骼人</a></li>
 <li><a href="#ground_vehicle">地面载具</a></li>
 <li><a href="#air_vehicle">空域载具</a></li>
 <li><a href="#water_vehicle">水域载具</a></li>
@@ -178,7 +194,15 @@
 <li><a href="chapter/chap8/">第 8 章</a> - ROS 机器人综合应用</li>
 <li><a href="chapter/chap9/">第 9 章</a> - ROS 2</li>
 </ul>
-<h2 id="2">2. 地面载具  <span id="ground_vehicle"></span></h2>
+<h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
+<ul>
+<li><a href="humanoid/humanoid_basics/">人形机器人基础</a></li>
+</ul>
+<h2 id="3">3. 肌肉骨骼人 <span id="musculoskeletal"></span></h2>
+<ul>
+<li><a href="musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a></li>
+</ul>
+<h2 id="4">4. 地面载具  <span id="ground_vehicle"></span></h2>
 <ul>
 <li><a href="set_up_and_connect_to_carla/">手动控制</a></li>
 <li><a href="ground/carla_spawn_objects/">生成对象</a></li>
@@ -192,7 +216,7 @@
 <li><a href="ground/rqt_plugin/">RQT 插件</a></li>
 <li><a href="ground/pcl_recorder/">点云地图创建</a></li>
 </ul>
-<h2 id="3">3. 空域载具 <span id="air_vehicle"></span></h2>
+<h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
 <ul>
 <li>
 <p><a href="air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a></p>
@@ -204,10 +228,13 @@
 <p><a href="air/drone_teleop/">无人机终端键盘遥控器</a></p>
 </li>
 <li>
+<p><a href="air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a></p>
+</li>
+<li>
 <p><a href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a></p>
 </li>
 </ul>
-<h2 id="4">4. 水域载具  <span id="water_vehicle"></span></h2>
+<h2 id="6">6. 水域载具  <span id="water_vehicle"></span></h2>
 <ul>
 <li><a href="water/HoloOcean/">水域载具 ROS2 接口</a></li>
 </ul>
