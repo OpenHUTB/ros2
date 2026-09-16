@@ -72,6 +72,7 @@ nav:
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
+    - 10. ROS2 Service 小海龟距离控制: './service_demo/move_forward.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'

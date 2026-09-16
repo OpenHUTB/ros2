@@ -40,6 +40,7 @@ ROS每章节运行代码:
 * [第 7 章](./chapter/chap7.md) - 机械臂控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
 * [第 9 章](./chapter/chap9.md) - ROS 2
+* [第 10 章](./service_demo/move_forward.md) - ROS2 Service 小海龟距离控制
 
 
 
