@@ -27,6 +27,8 @@ ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2X
 
 ROS每章节运行代码:
 
+[第一章：两只海龟画圆与跟随](turtlesim_circle_mimic/README.md)
+
 [第二章](<./Run_code_for_%20the_%20chapter/ROS理论与实践第二章代码运行.md>)
 
 

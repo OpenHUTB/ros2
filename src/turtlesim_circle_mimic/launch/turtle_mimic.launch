@@ -1,0 +1,20 @@
+<launch>
+  <arg name="auto_drive" default="true"/>
+
+  <!-- Separate namespaces allow both simulators to use the node name sim. -->
+  <group ns="turtlesim1">
+    <node pkg="turtlesim" type="turtlesim_node" name="sim" output="screen"/>
+    <node if="$(arg auto_drive)" pkg="rostopic" type="rostopic" name="circle_cmd"
+          output="screen"
+          args="pub -r 10 /turtlesim1/turtle1/cmd_vel geometry_msgs/Twist '{linear: {x: 2.0}, angular: {z: 1.8}}'"/>
+  </group>
+  <group ns="turtlesim2">
+    <node pkg="turtlesim" type="turtlesim_node" name="sim" output="screen"/>
+  </group>
+
+  <!-- mimic tracks the input pose and commands the output turtle. -->
+  <node pkg="turtlesim" type="mimic" name="mimic" output="screen">
+    <remap from="input" to="/turtlesim1/turtle1"/>
+    <remap from="output" to="/turtlesim2/turtle1"/>
+  </node>
+</launch>
