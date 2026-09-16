@@ -65,6 +65,8 @@ ROS每章节运行代码:
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
+* [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
+* [AirSim SimpleFlight 键盘遥控](./airsim_simpleflight_keyboard_teleop/README.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 

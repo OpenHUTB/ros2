@@ -1,0 +1,21 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "LocalHostIp": "0.0.0.0",
+  "ApiServerPort": 41451,
+  "EnableRpc": true,
+  "ViewMode": "FlyWithMe",
+  "Vehicles": {
+    "SimpleFlight": {
+      "VehicleType": "SimpleFlight",
+      "DefaultVehicleState": "Armed",
+      "AutoCreate": true,
+      "EnableCollisions": true,
+      "AllowAPIAlways": true,
+      "RC": {
+        "RemoteControlID": 0,
+        "AllowAPIWhenDisconnected": true
+      }
+    }
+  }
+}
