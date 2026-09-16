@@ -10,3 +10,13 @@ ros2 topic echo /chatter
 ```
 
 ![](../img/ros/ros2_pub_echo.png)
+
+
+## 运行 talker 和 listener 示例
+
+```shell
+ros2 run demo_nodes_cpp talker
+ros2 run demo_nodes_cpp listener
+```
+
+![](../img/ros/ros2_talker_listener.png)

@@ -327,14 +327,8 @@ angular:
 
 节点运行后，在 turtlesim 窗口中可以看到小海龟沿直线行走 2 m、左转 90°，重复 4 次后回到起点，绘制出一个边长 2 m 的正方形；终端同步打印 `正在画第 N 条边`、`直行完成，实际走了 2.000 米`、`转弯完成，实际转了 1.571 弧度` 等日志，最后输出 `正方形画完啦！`。
 
-![小海龟绘制正方形效果图](images/turtle_square.png)
+![小海龟绘制正方形效果图](../../img/chapter/turtle_square.png)
 
 ## 五、总结
 
 本实验通过编写"发布者 + 订阅者"一体的节点，向 `/turtle1/cmd_vel` 话题发布 `Twist` 消息、订阅 `/turtle1/pose` 话题读取位姿，实现了小海龟自主精准绘制正方形的任务。实验中掌握了 ROS 话题通信的收发两端用法，理解了闭环反馈控制的原理——欧氏距离判定直行到位、朝向角差累计（含 ±π 跨界归一化）判定转弯到位，并练习了 50 Hz 高频循环规避 turtlesim 0.5 秒看门狗、动作间空速度停顿消除累计误差等工程技巧。相比时间开环控制，闭环方案不受实际速度波动影响，轨迹精度更高。
-
-## 六、扩展实验：小海龟键盘控制与 ROS 命令实践
-
-在本实验的基础上，我们补充了一套面向初学者的扩展实验：从手动启动小海龟例程、用键盘控制小海龟运动（`cmd_vel` 话题与 `Twist` 控制原理）开始，逐个练习 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令（含用 `rostopic pub` 画圆、用 `/spawn` 服务生成第二只海龟、用 `rosparam` 改背景色、`rqt_graph` 查看节点关系等），最后提供一个可 `roslaunch` 一键启动的小海龟自动画花瓣演示模块（源码在 [src/chap1/turtle_sim_experiment](https://github.com/OpenHUTB/ros2/tree/master/src/chap1/turtle_sim_experiment)），作为闭环控制之外的"服务调用 + 话题发布"综合练习。实验适配 Ubuntu 20.04 + ROS Noetic，同时兼容 Ubuntu 16.04 + Kinetic。
-
-详细过程见 [小海龟仿真实验报告](turtle_sim_experiment.md)；按附加题要求整理的 [Carla 的 ROS 桥学习笔记（含 C++ 实现注释）](carla_ros_bridge_cpp_notes.md) 也一并附上。

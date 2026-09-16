@@ -31,7 +31,7 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 
 ROS每章节运行代码:
 
-* [第 1 章](./chapter/chap1.md) - 认识 ROS
+* [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
@@ -52,10 +52,10 @@ ROS每章节运行代码:
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
-* [扭转控制](./ground/twist_to_control.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
-* [RQT 插件](./ground/rviz_plugin.md)
-* [点云地图创建](./ground/rviz_plugin.md)
+* [扭转控制](./ground/twist_to_control.md)
+* [RQT 插件](./ground/rqt_plugin.md)
+* [点云地图创建](./ground/pcl_recorder.md)
 
 
 ## 3. 空域载具 <span id='air_vehicle'></span>
@@ -63,6 +63,8 @@ ROS每章节运行代码:
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
+
+* [无人机终端键盘遥控器](./air/drone_teleop.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 

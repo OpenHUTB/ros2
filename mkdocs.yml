@@ -7,7 +7,7 @@ site_name: 模拟器的 ROS 文档
 
 
 # 设置编译页面的链接的前缀
-repo_url: https://github.com/OpenHUTB/template
+repo_url: https://github.com/OpenHUTB/ros2
 
 # 页面右上角添加直接编辑页面的按钮
 edit_uri: edit/master/docs/
@@ -42,6 +42,8 @@ plugins:
   - bibtex:
       bib_file: refs.bib
       csl_file: nature.csl
+      # 关闭裸 @key 行内引用：避免代码块中的 @staticmethod 被误判为文献引用
+      enable_inline_citations: false
   - mkdocs-video:
       is_video: True
       video_autoplay: True
@@ -61,7 +63,7 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
 - ROS 教程:
-    - 1. 认识 ROS：小海龟画正方形: 'chapter/turtle_square.md'
+    - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
@@ -78,11 +80,12 @@ nav:
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
-    - 扭转控制: './ground/twist_to_control.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
 - 空域载具:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
+    - 无人机终端键盘遥控器: './air/drone_teleop.md'
+    - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
 - 水域载具: 
     - 水域载具 ROS2 接口: './water/HoloOcean.md'

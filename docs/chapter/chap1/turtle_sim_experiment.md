@@ -23,7 +23,7 @@
 
 开始前先用 lsb_release 和 rosversion 确认系统版本和 ROS 版本，确保环境无误：
 
-![系统与 ROS 版本确认](images/environment_check.png)
+![系统与 ROS 版本确认](../../img/chapter/turtle_sim_experiment_environment_check.png)
 
 ## 三、实验步骤
 
@@ -47,11 +47,11 @@ rosrun turtlesim turtle_teleop_key     # 终端 3：启动键盘控制节点
 
 roscore 是 ROS 的节点注册中心（Master），所有节点通信前都要先在这里登记，所以能够通过输出里的 /rosdistro 字段确认当前环境版本：
 
-![roscore 启动成功](images/roscore.png)
+![roscore 启动成功](../../img/chapter/turtle_sim_experiment_roscore.png)
 
 rosrun 的用法是 `rosrun 包名 可执行文件名`，它会自己去 ROS_PACKAGE_PATH 里找程序，所以我们就可以不用关心程序装在哪个目录里。
 
-![turtlesim 启动成功](images/turtlesim_start.png)
+![turtlesim 启动成功](../../img/chapter/turtle_sim_experiment_turtlesim_start.png)
 
 #### 2. 键盘控制小海龟
 
@@ -68,7 +68,7 @@ rosrun 的用法是 `rosrun 包名 可执行文件名`，它会自己去 ROS_PAC
 
 下图中的白色轨迹就是用方向键画出来的：
 
-![键盘控制小海龟画出轨迹](images/turtle_keyboard_control.png)
+![键盘控制小海龟画出轨迹](../../img/chapter/turtle_sim_experiment_turtle_keyboard_control.png)
 
 #### 3. 查看小海龟的实时位姿
 
@@ -80,7 +80,7 @@ rostopic echo /turtle1/pose
 
 其中 x、y 是坐标，theta 是朝向角，linear_velocity 和 angular_velocity 是当前速度。
 
-![查看 /turtle1/pose 实时位姿](images/rostopic_echo_pose.png)
+![查看 /turtle1/pose 实时位姿](../../img/chapter/turtle_sim_experiment_rostopic_echo_pose.png)
 
 ### （二）通过小海龟熟悉 ROS 常用命令
 
@@ -95,7 +95,7 @@ rosnode info /turtlesim   # 查看某个节点的详细信息
 
 列表里有三个节点：/rosout 是 roscore 自带的日志节点，/teleop_turtle 是键盘控制，/turtlesim 是仿真器。rosnode info /turtlesim 可以看到它订阅了 /turtle1/cmd_vel（接收速度指令），发布了 /turtle1/pose（对外广播位姿），和上一节的控制过程正好对得上；输出最后还列出了它提供的 /clear、/spawn 等服务，下面马上会用到。
 
-![rosnode list 与 rosnode info 的输出](images/rosnode_list_info.png)
+![rosnode list 与 rosnode info 的输出](../../img/chapter/turtle_sim_experiment_rosnode_list_info.png)
 
 #### 2. 话题：rostopic
 
@@ -116,7 +116,7 @@ rostopic pub /turtle1/cmd_vel geometry_msgs/Twist -r 10 -- '[1.0, 0.0, 0.0]' '[0
 
 linear.x = 1.0 m/s、angular.z = 1.0 rad/s，海龟画出的圆半径正好是 v/ω = 1 米。-r 10 表示以 10 Hz 持续发布，因为看门狗的存在，只发一条的话海龟动 0.5 秒就停了。按 Ctrl+C 结束。
 
-![用 rostopic pub 控制小海龟画圆](images/topic_pub_circle.png)
+![用 rostopic pub 控制小海龟画圆](../../img/chapter/turtle_sim_experiment_topic_pub_circle.png)
 
 #### 3. 服务：rosservice
 
@@ -128,7 +128,7 @@ rosservice call /spawn 2.0 2.0 0.0 'turtle2'   # 在 (2,2) 处再生成一只海
 
 和话题的"广播"不同，服务是请求-应答式的：发出调用后会等仿真器返回结果，这里返回的是新海龟的名字 name: "turtle2"，右侧仿真窗口里也能看到 turtle1 和 turtle2 两只海龟：
 
-![用 /spawn 服务生成第二只海龟](images/rosservice_spawn.png)
+![用 /spawn 服务生成第二只海龟](../../img/chapter/turtle_sim_experiment_rosservice_spawn.png)
 
 小海龟还有画笔和画面控制类的服务，set_pen 的参数依次是 r、g、b、线宽、是否抬笔：
 
@@ -138,7 +138,7 @@ rosservice call /reset                          # 重置仿真器
 rosservice call /turtle1/set_pen 255 0 0 3 0   # 换成线宽 3 的红色画笔
 ```
 
-![set_pen 换红色画笔并 clear/reset 后的效果](images/rosservice_set_pen.png)
+![set_pen 换红色画笔并 clear/reset 后的效果](../../img/chapter/turtle_sim_experiment_rosservice_set_pen.png)
 
 #### 4. 参数：rosparam
 
@@ -157,7 +157,7 @@ rosservice call /clear    # 改完参数要调用 /clear 让仿真器重绘才�
 
 参数服务器相当于一个全局的配置表，所有节点都能读写，适合放背景色、速度上限这类配置项。
 
-![修改背景色的效果](images/rosparam_bg.png)
+![修改背景色的效果](../../img/chapter/turtle_sim_experiment_rosparam_bg.png)
 
 #### 5. 消息结构：rosmsg 和 rossrv
 
@@ -168,7 +168,7 @@ rossrv show turtlesim/Spawn       # 查看服务的数据结构
 
 可以看到 Twist 由 linear 和 angular 两个 Vector3 组成，每个 Vector3 里有 x、y、z 三个分量，前面用到的速度指令、位姿消息对应的就是这些字段；下面的 rossrv 输出则是 Spawn 服务的数据结构。
 
-![rosmsg show 与 rossrv show 的输出](images/rosmsg_rossrv_show.png)
+![rosmsg show 与 rossrv show 的输出](../../img/chapter/turtle_sim_experiment_rosmsg_rossrv_show.png)
 
 #### 6. rqt_graph 查看节点关系
 
@@ -178,7 +178,7 @@ rqt_graph
 
 图里 teleop_turtle 经 /turtle1/cmd_vel 指向 turtlesim 的箭头，这样就把前面几条命令查到的关系画成了一张图，让人很直观地了解它们之间的关系。
 
-![rqt_graph 节点关系图](images/rqt_graph_nodes.png)
+![rqt_graph 节点关系图](../../img/chapter/turtle_sim_experiment_rqt_graph_nodes.png)
 
 ## 四、实验拓展：小海龟自动画花瓣模块
 
@@ -256,7 +256,7 @@ roslaunch turtle_sim_experiment main.launch   # roslaunch 会自动启动 Master
 
 运行效果：
 
-![自动画花瓣模块运行效果](images/launch_demo.png)
+![自动画花瓣模块运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
 
 ## 五、遇到的问题及解决方法
 
