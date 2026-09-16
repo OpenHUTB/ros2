@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>基于 ROS 消息解耦的无人机键盘遥控 - 模拟器的 ROS 文档</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u57fa\u4e8e ROS \u6d88\u606f\u89e3\u8026\u7684\u65e0\u4eba\u673a\u952e\u76d8\u9065\u63a7";
+        var mkdocs_page_input_path = "air/drone_ros_teleop.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> 模拟器的 ROS 文档
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">入门</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">ROS 教程</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">地面载具</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">空域载具</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">基于 ROS 消息解耦的无人机键盘遥控</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#_1">双节点架构</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_2">坐标系约定</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_3">安装依赖</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#rospy">安装 rospy 运行环境</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_4">启动步骤</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-airsim">1. 启动宿主机上的 AirSim 模拟器</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-ros">2. 在虚拟机中启动 ROS 主控</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3">3. 启动桥接控制节点</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4">4. 启动键盘发布节点</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_5">实飞效果</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_6">参数配置</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_7">键位映射</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_8">安全机制</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_9">验证话题</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_10">常见问题</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#_11">参考</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">水域载具</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">模拟器的 ROS 文档</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">空域载具</li>
+      <li class="breadcrumb-item active">基于 ROS 消息解耦的无人机键盘遥控</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/drone_ros_teleop.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="ros">基于 ROS 消息解耦的无人机键盘遥控</h1>
+<p>本文介绍如何通过键盘遥控 Windows 宿主机上 AirSim 仿真环境中的多旋翼无人机。与直接在脚本中调用
+AirSim 客户端不同，本方案将<strong>键盘输入</strong>与<strong>仿真器控制</strong>拆分为两个独立的 ROS 节点，二者之间只通过
+<code>/drone/cmd_vel</code> 话题（<code>geometry_msgs/Twist</code>）交换数据，从而实现消息层面的解耦。</p>
+<p>代码位于 <code>src/air/air_teleop/</code> 目录：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>节点名</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>drone_ros_teleop.py</code></td>
+<td><code>drone_ros_teleop</code></td>
+<td>用 <code>pynput</code> 监听键盘，按 10 Hz 把当前按键状态发布为 <code>Twist</code> 消息</td>
+</tr>
+<tr>
+<td><code>drone_ros_node.py</code></td>
+<td><code>drone_ros_node</code></td>
+<td>订阅 <code>/drone/cmd_vel</code>，经 AirSim RPC 驱动无人机</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">双节点架构</h2>
+<pre class="mermaid"><code>graph LR
+    K[键盘输入] --&gt;|pynput 监听| T[drone_ros_teleop 键盘发布节点]
+    T --&gt;|/drone/cmd_vel Twist 10 Hz| B[drone_ros_node 桥接控制节点]
+    B --&gt;|AirSim RPC 41451| A[Windows 宿主机 AirSim 模拟器]</code></pre>
+<p>两个节点都运行在虚拟机的 ROS 主控上，只有桥接节点与宿主机上的 AirSim 发生网络通信。解耦带来的好处：</p>
+<ul>
+<li>键盘节点不关心仿真器细节，桥接节点不关心输入设备；</li>
+<li>更换输入方式（摇杆、路径规划器等）时，只需向 <code>/drone/cmd_vel</code> 发布同格式的消息；</li>
+<li>任一节点异常退出都不影响另一节点的安全收尾（详见下文安全机制一节）。</li>
+</ul>
+<h2 id="_2">坐标系约定</h2>
+<p>AirSim 使用 <strong>NED 坐标系</strong>：x 轴指向前方、y 轴指向右侧、z 轴指向地面。因此 <code>/drone/cmd_vel</code>
+中的消息内容按 NED 机体坐标系解释：</p>
+<table>
+<thead>
+<tr>
+<th>Twist 字段</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>linear.x</code></td>
+<td>机体 x 轴线速度（m/s）</td>
+<td>正值前进</td>
+</tr>
+<tr>
+<td><code>linear.y</code></td>
+<td>机体 y 轴线速度（m/s）</td>
+<td>正值右移</td>
+</tr>
+<tr>
+<td><code>linear.z</code></td>
+<td>机体 z 轴线速度（m/s）</td>
+<td><strong>负值上升、正值下降</strong></td>
+</tr>
+<tr>
+<td><code>angular.z</code></td>
+<td>偏航角速度（rad/s）</td>
+<td>正值右偏航（顺时针，从上方看）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">安装依赖</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 拉取仓库并进入仓库根目录</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+<span class="nb">cd</span><span class="w"> </span>ros2
+<span class="c1"># 安装两个节点运行所需的依赖（airsim、pynput）</span>
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/requirements.txt
+</code></pre></div>
+<h3 id="rospy">安装 rospy 运行环境</h3>
+<p>两个节点均基于 <code>rospy</code> 编写，若新环境中仅按上述步骤安装依赖，运行节点时可能报错：</p>
+<div class="highlight"><pre><span></span><code>ModuleNotFoundError: No module named 'rospy'
+</code></pre></div>
+<p>此时需补齐 ROS 的 Python 运行环境，依次执行：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>python3-roslib
+pip<span class="w"> </span>install<span class="w"> </span>rospkg
+pip<span class="w"> </span>install<span class="w"> </span>catkin-tools
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import rospy"</span><span class="w">   </span><span class="c1"># 无报错即表示 rospy 可用</span>
+</code></pre></div>
+<p>若 AirSim 客户端连接报 numpy 相关错误，请参考<a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+安装兼容版本的 <code>numpy</code> 与 <code>msgpack-rpc-python</code>。</p>
+<h2 id="_4">启动步骤</h2>
+<h3 id="1-airsim">1. 启动宿主机上的 AirSim 模拟器</h3>
+<p>在 Windows 宿主机上运行（以 AbandonedPark 场景为例）：</p>
+<div class="highlight"><pre><span></span><code><span class="k">cd</span> AbandonedPark\WindowsNoEditor\
+AbandonedPark.exe
+</code></pre></div>
+<p><img alt="" src="../../img/air/abandoned_park.png"></p>
+<h3 id="2-ros">2. 在虚拟机中启动 ROS 主控</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+roscore
+</code></pre></div>
+<h3 id="3">3. 启动桥接控制节点</h3>
+<p>另开一个终端，<code>--host</code> 后面填宿主机（Windows）的 IP 地址（通过 <code>ipconfig</code> 查看）：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py<span class="w"> </span>--host<span class="w"> </span><span class="m">172</span>.21.108.47
+</code></pre></div>
+<div class="admonition 注意">
+<p class="admonition-title">注意</p>
+<p>桥接节点必须能访问宿主机 AirSim RPC 服务的 41451 端口。连接失败时请检查：
+宿主机防火墙是否放行 41451 端口；虚拟机网络模式（NAT/桥接）下能否 <code>ping</code> 通宿主机 IP。
+宿主机 IP 一般和这里的 <code>172.21.108.47</code> 不一致，以 <code>ipconfig</code> 实际输出为准。</p>
+</div>
+<h3 id="4">4. 启动键盘发布节点</h3>
+<p>再开一个终端：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>src/air/air_teleop/drone_ros_teleop.py
+</code></pre></div>
+<p>桥接节点收到第一条速度指令后会自动解锁、起飞并进入遥控状态，模拟器窗口中可以看到无人机起飞：</p>
+<p><img alt="" src="../../img/air/hello_drone.png"></p>
+<h2 id="_5">实飞效果</h2>
+<p>按上述步骤启动后，在键盘节点窗口中按住 <code>W</code>/<code>A</code>/<code>S</code>/<code>D</code> 等按键即可遥控无人机，
+完整实飞演示见下方动图：</p>
+<p><img alt="键盘遥控无人机实飞演示" src="../../img/air/demo.gif"></p>
+<p>实飞过程中的模拟器画面截图：</p>
+<p><img alt="实飞画面截图" src="../../img/air/test.png"></p>
+<h2 id="_6">参数配置</h2>
+<p>桥接节点同时支持命令行参数与 ROS 私有参数，<strong>命令行参数优先级更高</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>命令行参数</th>
+<th>私有参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--host</code></td>
+<td><code>~host</code></td>
+<td><code>127.0.0.1</code></td>
+<td>宿主机（AirSim 服务）IP 地址</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td><code>~port</code></td>
+<td><code>41451</code></td>
+<td>AirSim RPC 端口</td>
+</tr>
+<tr>
+<td><code>--vehicle</code></td>
+<td><code>~vehicle</code></td>
+<td><code>""</code></td>
+<td>载具名称，空串表示仿真器中的第一架无人机</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>~timeout</code></td>
+<td><code>0.5</code></td>
+<td>无指令超时时间（s），超时自动悬停</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>~rate</code></td>
+<td><code>10.0</code></td>
+<td>控制频率（Hz）</td>
+</tr>
+</tbody>
+</table>
+<p>通过参数服务器设置私有参数的示例（效果与 <code>--host</code> 相同）：</p>
+<div class="highlight"><pre><span></span><code>rosparam<span class="w"> </span><span class="nb">set</span><span class="w"> </span>/drone_ros_node/host<span class="w"> </span><span class="m">172</span>.21.108.47
+python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py
+</code></pre></div>
+<h2 id="_7">键位映射</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">按键</th>
+<th style="text-align: center;">功能</th>
+<th>NED 指令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>W</code> / <code>S</code></td>
+<td style="text-align: center;">前进 / 后退</td>
+<td><code>linear.x = ±3.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>A</code> / <code>D</code></td>
+<td style="text-align: center;">左移 / 右移</td>
+<td><code>linear.y = ∓3.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>Space</code></td>
+<td style="text-align: center;">上升</td>
+<td><code>linear.z = -2.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>Ctrl+P</code></td>
+<td style="text-align: center;">下降</td>
+<td><code>linear.z = +2.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>J</code> / <code>L</code></td>
+<td style="text-align: center;">左偏航 / 右偏航</td>
+<td><code>angular.z = ∓30 度/秒</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>ESC</code></td>
+<td style="text-align: center;">退出键盘遥控</td>
+<td>停止发布，桥接节点超时后自动悬停</td>
+</tr>
+</tbody>
+</table>
+<p><strong>提示：</strong></p>
+<ul>
+<li>按键松开后对应轴速度立即归零（键盘节点每个周期按当前按键集合重新计算）；</li>
+<li>无任何按键时持续发布全零指令，无人机原地保持；</li>
+<li>键盘节点需要运行在带图形桌面的终端中，SSH 纯命令行环境下 <code>pynput</code> 无法监听键盘。</li>
+</ul>
+<h2 id="_8">安全机制</h2>
+<ul>
+<li><strong>自动起飞</strong>：桥接节点收到第一条速度指令时解锁电机并爬升到安全高度；</li>
+<li><strong>超时悬停</strong>：连续 0.5 s 未收到任何指令（键盘节点退出、网络中断等）时自动悬停；</li>
+<li><strong>安全退出</strong>：桥接节点退出（<code>Ctrl+C</code> 或 <code>rosnode kill</code>）时，通过 <code>rospy.on_shutdown</code>
+  回调先悬停、再调用 <code>enableApiControl(False)</code> 释放 AirSim API 控制权；</li>
+<li>键盘节点按 <code>ESC</code> 退出后，桥接节点因超时自动悬停，无需手工干预。</li>
+</ul>
+<h2 id="_9">验证话题</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+rostopic<span class="w"> </span>list<span class="w">                 </span><span class="c1"># 应能看到 /drone/cmd_vel</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/drone/cmd_vel<span class="w">  </span><span class="c1"># 按住 W 键可看到 linear.x = 3.0</span>
+</code></pre></div>
+<h2 id="_10">常见问题</h2>
+<ul>
+<li><strong>连接宿主机失败</strong>：检查 <code>--host</code> 是否为宿主机 IP、宿主机防火墙是否放行 41451 端口；</li>
+<li><strong>键盘无响应</strong>：确认键盘节点运行在虚拟机桌面的终端窗口中，且该窗口获得焦点；</li>
+<li><strong>无人机无动作</strong>：用 <code>rostopic echo /drone/cmd_vel</code> 确认话题有消息，并确认桥接节点日志中已打印“已连接 AirSim 服务”。</li>
+</ul>
+<h2 id="_11">参考</h2>
+<ul>
+<li><a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a></li>
+<li><a href="../ros_pkgs/">空域模拟器的 ROS 封装器</a></li>
+<li><a href="https://microsoft.github.io/AirSim/airsim_ros_pkgs/">AirSim 官方 ROS 封装（airsim_ros_pkgs）</a></li>
+</ul></div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../drone_teleop/" class="btn btn-neutral float-left" title="无人机终端键盘遥控器"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+        <a href="../../water/HoloOcean/" class="btn btn-neutral float-right" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+      <span><a href="../drone_teleop/" style="color: #fcfcfc">&laquo; 前一页</a></span>
+    
+    
+      <span><a href="../../water/HoloOcean/" style="color: #fcfcfc">后一页 &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../js/umlconvert.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
