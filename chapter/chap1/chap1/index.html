@@ -55,7 +55,9 @@
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#1">1. 小海龟绘制正方形</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#2-openhutb">2. 小海龟绘制 OpenHUTB</a>
+    <li class="toctree-l3"><a class="reference internal" href="#2">2. 小海龟绘制圆形</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-openhutb">3. 小海龟绘制 OpenHUTB</a>
     </li>
         </ul>
     </li>
@@ -150,7 +152,11 @@
 <p>通过向 <code>/turtle1/cmd_vel</code> 发布 <code>geometry_msgs/Twist</code> 消息，
 控制小海龟完成直线运动和转向，从而自主绘制正方形。</p>
 <p><a href="../turtle_square/">进入小海龟画正方形实验</a></p>
-<h3 id="2-openhutb">2. 小海龟绘制 OpenHUTB</h3>
+<h3 id="2">2. 小海龟绘制圆形</h3>
+<p>同时向 <code>/turtle1/cmd_vel</code> 发布线速度和角速度，
+并通过 <code>/turtle1/pose</code> 的位姿反馈判断是否完成一圈。</p>
+<p><a href="../turtle_circle/">进入小海龟画圆实验</a></p>
+<h3 id="3-openhutb">3. 小海龟绘制 OpenHUTB</h3>
 <p>订阅 <code>/turtle1/pose</code> 获取实时位姿，并结合 <code>/turtle1/cmd_vel</code>、
 <code>/turtle1/set_pen</code> 和 <code>/turtle1/teleport_absolute</code>，
 控制小海龟自动绘制 OpenHUTB 字样。</p>

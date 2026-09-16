@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../../../img/favicon.ico" />
+    <title>小海龟画圆实验 - 模拟器的 ROS 文档</title>
+    <link rel="stylesheet" href="../../../css/theme.css" />
+    <link rel="stylesheet" href="../../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../../extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "\u5c0f\u6d77\u9f9f\u753b\u5706\u5b9e\u9a8c";
+        var mkdocs_page_input_path = "chapter/chap1/turtle_circle.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../.." class="icon icon-home"> 模拟器的 ROS 文档
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">入门</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">ROS 教程</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap1/">1. 认识 ROS</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap2/">2. ROS 基础 - ROS 基础</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">地面载具</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">空域载具</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">水域载具</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../..">模拟器的 ROS 文档</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">小海龟画圆实验</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/turtle_circle.md"> 编辑页面</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <div><h1 id="_1">小海龟画圆实验</h1>
+<h2 id="_2">一、实验目的与环境说明</h2>
+<h3 id="11">1.1 实验目的</h3>
+<ol>
+<li>掌握 ROS 话题通信机制：节点作为发布者向 <code>/turtle1/cmd_vel</code> 话题发布 <code>geometry_msgs/Twist</code> 速度消息，同时作为订阅者接收 <code>/turtle1/pose</code> 话题的 <code>turtlesim/Pose</code> 位姿消息；</li>
+<li>掌握线速度和角速度的组合控制，理解圆周运动半径与速度的关系；</li>
+<li>利用实时位姿反馈累计海龟的转角，当累计转角达到 2π 时自动停止；</li>
+<li>通过 turtlesim 仿真器，让小海龟自主绘制一个半径约为 2 m 的完整圆形。</li>
+</ol>
+<h3 id="12">1.2 实验环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04（VMware 虚拟机）</td>
+</tr>
+<tr>
+<td>ROS 发行版</td>
+<td>ROS Noetic</td>
+</tr>
+<tr>
+<td>仿真器</td>
+<td>turtlesim</td>
+</tr>
+<tr>
+<td>编程语言</td>
+<td>Python 3（rospy）</td>
+</tr>
+<tr>
+<td>功能包</td>
+<td>turtle_motion</td>
+</tr>
+</tbody>
+</table>
+<p>功能包目录结构如下：</p>
+<div class="highlight"><pre><span></span><code>turtle_motion/
+├── package.xml         # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
+├── CMakeLists.txt      # 编译配置，安装 Python 脚本
+└── scripts/
+    └── circle_draw.py # 主程序：控制小海龟画圆
+</code></pre></div>
+<h2 id="_3">二、核心控制原理与算法解析</h2>
+<h3 id="21-ros">2.1 ROS 话题通信</h3>
+<p>turtlesim 启动后，小海龟会订阅 <code>/turtle1/cmd_vel</code> 话题。本实验编写的 <code>turtle_circle_node</code> 向该话题发布 <code>Twist</code> 消息，控制小海龟的线速度和角速度。</p>
+<p>同时，节点订阅 <code>/turtle1/pose</code> 话题，实时获取小海龟的位姿：</p>
+<ul>
+<li><code>x</code>、<code>y</code>：小海龟在平面中的坐标；</li>
+<li><code>theta</code>：小海龟的朝向角，取值范围为 [−π, π]。</li>
+</ul>
+<p><code>Twist</code> 消息中使用两个分量：</p>
+<ul>
+<li><code>linear.x</code>：前进线速度，单位为 m/s；</li>
+<li><code>angular.z</code>：绕 z 轴旋转的角速度，单位为 rad/s。正值表示逆时针旋转，负值表示顺时针旋转。</li>
+</ul>
+<p>控制循环使用 <code>rospy.Rate(50)</code> 以 50 Hz 持续发布速度指令，避免超过 0.5 秒没有新速度消息时，turtlesim 看门狗自动将小海龟停下。</p>
+<h3 id="22">2.2 圆周运动原理</h3>
+<p>当小海龟同时具有非零线速度 v 和非零角速度 ω 时，它会沿圆弧运动。圆的半径为：</p>
+<blockquote>
+<p><strong>R = |v| / |ω|</strong></p>
+</blockquote>
+<p>本实验设置：</p>
+<blockquote>
+<p><strong>v = 1.0 m/s，ω = 0.5 rad/s</strong></p>
+</blockquote>
+<p>因此理论圆半径为：</p>
+<blockquote>
+<p><strong>R = 1.0 / 0.5 = 2.0 m</strong></p>
+</blockquote>
+<p>完成一圈需要累计旋转 2π 弧度，理论运动时间为：</p>
+<blockquote>
+<p><strong>T = 2π / |ω| = 2π / 0.5 ≈ 12.57 s</strong></p>
+</blockquote>
+<h3 id="23">2.3 闭环转角累计</h3>
+<p>如果只让节点按照理论时间运行，实际速度误差会导致圆形不能准确闭合。因此，本实验订阅 <code>/turtle1/pose</code>，对相邻两帧位姿的朝向角变化量进行累加。</p>
+<p>每个控制周期的角度变化量为：</p>
+<blockquote>
+<p><strong>Δθ = θ_current − θ_previous</strong></p>
+</blockquote>
+<p>由于 <code>theta</code> 的取值范围为 [−π, π]，当角度跨越 π 或 −π 时会出现数值跳变。程序使用 <code>normalize_angle()</code> 将每次角度差归一化到 [−π, π]，然后再累加。当累计转角达到 2π 时，立即发布零速度停车。</p>
+<h3 id="24">2.4 算法流程</h3>
+<ol>
+<li>初始化 <code>turtle_circle_node</code> 节点；</li>
+<li>创建 <code>/turtle1/cmd_vel</code> 发布者和 <code>/turtle1/pose</code> 订阅者；</li>
+<li>等待第一帧位姿数据，记录起点坐标与初始朝向角；</li>
+<li>以 50 Hz 频率同时发布线速度和角速度；</li>
+<li>实时计算相邻位姿消息的角度差，归一化后累加；</li>
+<li>累计转角达到 2π 后发布零速度；</li>
+<li>计算终点与起点之间的距离，作为圆形闭合误差；</li>
+<li>通过 <code>rospy.on_shutdown()</code>、<code>try/except/finally</code> 保证节点中断时小海龟也能安全停下。</li>
+</ol>
+<h2 id="_4">三、完整源码展示</h2>
+<h3 id="31-scriptscircle_drawpy">3.1 主程序 <code>scripts/circle_draw.py</code></h3>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">"""ROS turtlesim 小海龟画圆节点（闭环位姿反馈版）。"""</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
+<span class="kn">from</span> <span class="nn">turtlesim.msg</span> <span class="kn">import</span> <span class="n">Pose</span>
+
+
+<span class="k">class</span> <span class="nc">CircleDrawer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""持续发布线速度和角速度，让小海龟精确绘制一个完整的圆。"""</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s2">"turtle_circle_node"</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s2">"/turtle1/cmd_vel"</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">"/turtle1/pose"</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose_callback</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+
+        <span class="c1"># 圆半径 R = v / w = 1.0 / 0.5 = 2.0 m</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_angle</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">on_shutdown</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pose_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""保存小海龟的最新位姿。"""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="o">=</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="nf">publish_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">angular</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""组装并发布速度指令。"""</span>
+        <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">linear</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">angular</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">wait_for_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""等待第一帧位姿数据。"""</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo_throttle</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="s2">"等待 /turtle1/pose 位姿数据..."</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">normalize_angle</span><span class="p">(</span><span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""将角度差归一化到 [-pi, pi]。"""</span>
+        <span class="k">while</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">angle</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">while</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">angle</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">return</span> <span class="n">angle</span>
+
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""发布全零速度，让小海龟停下。"""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">draw_circle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""根据实时朝向角累计旋转量，达到 2π 后停止。"""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_pose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="n">start_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">previous_theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span>
+        <span class="n">total_angle</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span><span class="p">)</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span>
+            <span class="s2">"开始画圆：半径 </span><span class="si">%.2f</span><span class="s2"> 米，线速度 </span><span class="si">%.2f</span><span class="s2"> m/s，角速度 </span><span class="si">%.2f</span><span class="s2"> rad/s"</span><span class="p">,</span>
+            <span class="n">radius</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">total_angle</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_angle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="c1"># 线速度和角速度同时不为零时，小海龟沿圆弧运动</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">publish_velocity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_speed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">angular_speed</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+
+            <span class="n">current_theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_angle</span><span class="p">(</span><span class="n">current_theta</span> <span class="o">-</span> <span class="n">previous_theta</span><span class="p">)</span>
+            <span class="n">previous_theta</span> <span class="o">=</span> <span class="n">current_theta</span>
+
+            <span class="c1"># 只累计期望方向上的角度变化</span>
+            <span class="n">total_angle</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">direction</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+        <span class="n">endpoint_error</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">start_x</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">start_y</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span>
+            <span class="s2">"圆形绘制完成！累计旋转 </span><span class="si">%.3f</span><span class="s2"> 弧度，终点与起点距离 </span><span class="si">%.3f</span><span class="s2"> 米"</span><span class="p">,</span>
+            <span class="n">total_angle</span><span class="p">,</span>
+            <span class="n">endpoint_error</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">CircleDrawer</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">draw_circle</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"节点被中断，让小海龟停下来"</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="32-cmakeliststxt">3.2 构建文件 <code>CMakeLists.txt</code></h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.0.2</span><span class="p">)</span>
+<span class="nb">project</span><span class="p">(</span><span class="s">turtle_motion</span><span class="p">)</span>
+
+<span class="nb">find_package</span><span class="p">(</span><span class="s">catkin</span><span class="w"> </span><span class="s">REQUIRED</span><span class="w"> </span><span class="s">COMPONENTS</span>
+<span class="w">  </span><span class="s">rospy</span>
+<span class="w">  </span><span class="s">geometry_msgs</span>
+<span class="w">  </span><span class="s">turtlesim</span>
+<span class="p">)</span>
+
+<span class="nb">catkin_package</span><span class="p">()</span>
+
+<span class="nb">catkin_install_python</span><span class="p">(</span><span class="s">PROGRAMS</span>
+<span class="w">  </span><span class="s">scripts/circle_draw.py</span>
+<span class="w">  </span><span class="s">DESTINATION</span><span class="w"> </span><span class="o">${</span><span class="nv">CATKIN_PACKAGE_BIN_DESTINATION</span><span class="o">}</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>如果功能包中已有 <code>square_draw.py</code>，可以将两个脚本一起安装：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">catkin_install_python</span><span class="p">(</span><span class="s">PROGRAMS</span>
+<span class="w">  </span><span class="s">scripts/square_draw.py</span>
+<span class="w">  </span><span class="s">scripts/circle_draw.py</span>
+<span class="w">  </span><span class="s">DESTINATION</span><span class="w"> </span><span class="o">${</span><span class="nv">CATKIN_PACKAGE_BIN_DESTINATION</span><span class="o">}</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="33-packagexml">3.3 包清单 <code>package.xml</code></h3>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
+<span class="cm">&lt;!-- turtle_motion 功能包：小海龟自主绘制圆形轨迹 --&gt;</span>
+<span class="nt">&lt;package</span><span class="w"> </span><span class="na">format=</span><span class="s">"2"</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>turtle_motion<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;version&gt;</span>0.0.0<span class="nt">&lt;/version&gt;</span>
+<span class="w">  </span><span class="nt">&lt;description&gt;</span>turtle_motion:<span class="w"> </span>小海龟自主绘制圆形轨迹功能包<span class="nt">&lt;/description&gt;</span>
+<span class="w">  </span><span class="nt">&lt;maintainer</span><span class="w"> </span><span class="na">email=</span><span class="s">"your_email@example.com"</span><span class="nt">&gt;</span>your_name<span class="nt">&lt;/maintainer&gt;</span>
+<span class="w">  </span><span class="nt">&lt;license&gt;</span>TODO<span class="nt">&lt;/license&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;buildtool_depend&gt;</span>catkin<span class="nt">&lt;/buildtool_depend&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>rospy<span class="nt">&lt;/build_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>geometry_msgs<span class="nt">&lt;/build_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>turtlesim<span class="nt">&lt;/build_depend&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>rospy<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>geometry_msgs<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>turtlesim<span class="nt">&lt;/exec_depend&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;export&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/export&gt;</span>
+<span class="nt">&lt;/package&gt;</span>
+</code></pre></div>
+<h2 id="_5">四、运行与验证</h2>
+<h3 id="41">4.1 编译功能包</h3>
+<p>将 <code>turtle_motion</code> 功能包放入 Catkin 工作空间的 <code>src</code> 目录，然后执行：</p>
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>~/catkin_ws/src/turtle_motion/scripts/circle_draw.py
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<h3 id="42">4.2 启动节点</h3>
+<p>需要打开三个终端。</p>
+<p>终端 1：启动 ROS 主节点。</p>
+<div class="highlight"><pre><span></span><code>roscore
+</code></pre></div>
+<p>ROS 主节点启动成功后，终端会显示 <code>started core service [/rosout]</code>。</p>
+<p><img alt="启动 ROS 主节点" src="../../../img/chapter/turtle_circle_roscore.png"></p>
+<p>终端 2：启动 turtlesim 仿真器。</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtlesim_node
+</code></pre></div>
+<p>启动成功后，屏幕上会出现 TurtleSim 窗口和初始小海龟。</p>
+<p><img alt="启动 turtlesim 仿真器" src="../../../img/chapter/turtle_circle_turtlesim.png"></p>
+<p>终端 3：运行画圆节点。</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+rosrun<span class="w"> </span>turtle_motion<span class="w"> </span>circle_draw.py
+</code></pre></div>
+<h3 id="43">4.3 话题和节点验证</h3>
+<p>可以另开终端执行以下命令：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
+rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/cmd_vel
+rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/pose
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/turtle1/cmd_vel
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/turtle1/pose
+rosnode<span class="w"> </span>list
+</code></pre></div>
+<p><code>rostopic echo /turtle1/cmd_vel</code> 的主要输出如下：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">linear</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">  </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">  </span><span class="nt">z</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="nt">angular</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">  </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">  </span><span class="nt">z</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="nn">---</span>
+</code></pre></div>
+<p>这表明小海龟在持续前进的同时向左旋转，因此会形成逆时针圆形轨迹。</p>
+<h3 id="44">4.4 预期结果</h3>
+<p>节点运行后，小海龟以 1.0 m/s 的线速度和 0.5 rad/s 的角速度逆时针运动，绘制一个半径约为 2 m 的圆。</p>
+<p>当累计转角达到 2π 弧度后，节点立即发布零速度使小海龟停下。终端会输出类似日志：</p>
+<div class="highlight"><pre><span></span><code>开始画圆：半径 2.00 米，线速度 1.00 m/s，角速度 0.50 rad/s
+圆形绘制完成！累计旋转 6.28x 弧度，终点与起点距离 0.xxx 米
+</code></pre></div>
+<p>由于 turtlesim 的采样周期和停车延迟，实际轨迹可能存在轻微的闭合误差，属于正常现象。</p>
+<p><img alt="小海龟绘制圆形运行效果" src="../../../img/chapter/turtle_circle.png"></p>
+<h2 id="_6">五、参数调整</h2>
+<p>通过修改线速度和角速度，可以改变圆的大小和运动方向。</p>
+<table>
+<thead>
+<tr>
+<th>参数设置</th>
+<th>运动效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>linear_speed = 1.0</code>，<code>angular_speed = 0.5</code></td>
+<td>逆时针画半径 2 m 的圆</td>
+</tr>
+<tr>
+<td><code>linear_speed = 1.0</code>，<code>angular_speed = 1.0</code></td>
+<td>逆时针画半径 1 m 的圆</td>
+</tr>
+<tr>
+<td><code>linear_speed = 0.5</code>，<code>angular_speed = 0.5</code></td>
+<td>逆时针画半径 1 m 的圆</td>
+</tr>
+<tr>
+<td><code>linear_speed = 1.0</code>，<code>angular_speed = -0.5</code></td>
+<td>顺时针画半径 2 m 的圆</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意</strong>：<code>angular_speed</code> 不能为 0，否则小海龟只会直线前进，且程序在计算半径时会出现除零错误。</p>
+<h2 id="_7">六、总结</h2>
+<p>本实验通过向 <code>/turtle1/cmd_vel</code> 话题同时发布线速度和角速度，实现了小海龟的圆周运动。程序订阅 <code>/turtle1/pose</code> 话题获取实时朝向角，对跨越 ±π 边界的角度差进行归一化和累加，当累计旋转量达到 2π 时自动停车。</p>
+<p>通过本实验，可以掌握 ROS 话题的发布与订阅、<code>Twist</code> 速度消息的使用、圆周运动的速度关系，以及利用位姿反馈实现闭环终止判断的基本方法。</p></div>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p>OpenHUTB 版权所有 &copy; 2026</p>
+  </div>
+
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="../../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../../..";</script>
+    <script src="../../../js/theme_extra.js"></script>
+    <script src="../../../js/theme.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+      <script src="../../../js/umlconvert.js"></script>
+      <script src="../../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
