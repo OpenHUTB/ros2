@@ -1,4 +1,4 @@
-# ROS2 Service 控制小海龟移动
+kk# ROS2 Service 控制小海龟移动
 
 ## 功能介绍
 
@@ -70,14 +70,16 @@
 
 ## 运行环境
 
-- Ubuntu 22.04
+- Ubuntu 20.04.6 LTS
 - ROS 2 Humble
-- Python 3
+- Python 3.8.10
 - turtlesim
 
 ## 编译
 
-在工作空间中执行：
+在 ROS 2 工作空间中执行：
+
+    cd ~/ros2_ws
 
     colcon build --packages-select service_interfaces service_demo
 
@@ -94,9 +96,9 @@
 重新打开一个终端，并加载 ROS 2 环境：
 
     source /opt/ros/humble/setup.bash
-    source ~/OpenHUTB_ros2/install/local_setup.bash
+    source ~/ros2_ws/install/local_setup.bash
 
-发送移动请求，例如移动 1.0 米：
+发送移动请求，例如移动 1.0 个距离单位：
 
     ros2 run service_demo client 1.0
 

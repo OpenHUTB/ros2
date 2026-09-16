@@ -20,4 +20,8 @@
 
 [进入小海龟绘制 OpenHUTB 实验](turtle_hutb.md)
 
-- [ROS2 Service 小海龟距离控制](move_forward.md)
+### 3. ROS2 Service 小海龟距离控制
+
+通过 ROS2 Service 控制 turtlesim 小海龟按照指定距离移动，并根据 `/turtle1/pose` 的位置反馈判断实际移动距离。
+
+[进入 ROS2 Service 小海龟距离控制实验](move_forward.md)
