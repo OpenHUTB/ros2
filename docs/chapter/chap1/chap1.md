@@ -19,3 +19,5 @@
 控制小海龟自动绘制 OpenHUTB 字样。
 
 [进入小海龟绘制 OpenHUTB 实验](turtle_hutb.md)
+
+- [ROS2 Service 小海龟距离控制](move_forward.md)
