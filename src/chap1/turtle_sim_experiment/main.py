@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""小海龟自动画花瓣演示节点（配套文档：docs/ros_kinetic_turtlesim/ros_kinetic_turtlesim.md）
+"""小海龟自动画花瓣演示节点（配套文档：docs/chapter/turtle_sim_experiment.md）
 
 工作流程：
   1. 等待 turtlesim 的 /spawn 服务上线；

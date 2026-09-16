@@ -60,8 +60,6 @@ nav:
 - 入门:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
-    - 实验报告：小海龟仿真与 ROS 命令实践（Ubuntu 16.04）: './ros_kinetic_turtlesim/ros_kinetic_turtlesim.md'
-    - Carla 的 ROS 桥学习笔记（C++ 实现注释）: './ros_kinetic_turtlesim/carla_ros_bridge_cpp_notes.md'
 - ROS 教程:
     - 1. 认识 ROS：小海龟画正方形: 'chapter/turtle_square.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'

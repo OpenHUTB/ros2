@@ -21,7 +21,6 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 * 安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova
 * Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe
 * 补充：[ubuntu下虚拟机的运行方式](ubuntu下虚拟机的运行方式.md)
-* 补充：[Ubuntu 16.04 小海龟仿真实验报告（键盘控制、常用命令练习、自动画花瓣模块）](./ros_kinetic_turtlesim/ros_kinetic_turtlesim.md)
 * [虚拟机环境介绍](./vm_introduction.md)
 * 补充：[Ubuntu 20.04 安装 ROS Noetic 详细教程](ubuntu20.04.md)
 

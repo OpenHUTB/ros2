@@ -1,6 +1,8 @@
-# 小海龟仿真实验报告（Ubuntu 16.04 + ROS Kinetic）
+# 小海龟仿真实验报告（Ubuntu 20.04 + ROS Noetic）
 
-本实验在 Ubuntu 16.04 虚拟机中完成，内容按作业要求分为两部分：运行小海龟例程并用键盘控制其运动、通过小海龟仿真器练习常用的 ROS 命令。在完成这两项任务的基础上，把手动执行的过程整理成了一个可以 roslaunch 一键启动的小海龟自动画花瓣模块（源码在 src/ros_kinetic_turtlesim），并按附加题要求学习了 Carla 的 ROS 桥，笔记放在附录。文中所有命令都在虚拟机里实际执行过，配图均为实验时的截图。
+本实验是第一章"认识 ROS：小海龟画正方形"的扩展，在 Ubuntu 20.04 + ROS Noetic 环境下完成，内容分为两部分：运行小海龟例程并用键盘控制其运动、通过小海龟仿真器练习常用的 ROS 命令。在完成这两项任务的基础上，把手动执行的过程整理成了一个可以 roslaunch 一键启动的小海龟自动画花瓣模块（源码在 src/chap1/turtle_sim_experiment），并按附加题要求学习了 Carla 的 ROS 桥，笔记放在附录。文中所有命令都在虚拟机里实际执行过，配图均为实验时的截图。
+
+除 Noetic 外，本实验的全部命令也在 Ubuntu 16.04 + ROS Kinetic 上验证通过，两个环境的操作步骤完全一致，仅功能包前缀不同（`ros-noetic-*` 与 `ros-kinetic-*`），使用 16.04 的同学把前缀替换即可。
 
 ## 一、实验目的
 
@@ -13,11 +15,11 @@
 | ---- | ---- |
 | 宿主机 | Windows 11 |
 | 虚拟化平台 | VMware Workstation 17.6 |
-| 虚拟机系统 | Ubuntu 16.04.7 LTS（Xenial）desktop-amd64 |
-| ROS 版本 | ROS Kinetic（ros 1.12.17） |
-| 仿真器 | turtlesim |
-| 键盘控制包 | ros-kinetic-teleop-twist-keyboard |
-| 编程语言 | Python 2.7（拓展模块代码采用 2/3 兼容写法） |
+| 虚拟机系统 | Ubuntu 20.04 LTS（Focal）desktop-amd64 |
+| ROS 版本 | ROS Noetic（主环境，同时兼容 Ubuntu 16.04 + Kinetic） |
+| 仿真器 | turtlesim（desktop-full 自带） |
+| 键盘控制包 | ros-noetic-teleop-twist-keyboard |
+| 编程语言 | Python 3（Noetic）/ Python 2.7（Kinetic），拓展模块代码采用 2/3 兼容写法 |
 
 开始前先用 lsb_release 和 rosversion 确认系统版本和 ROS 版本，确保环境无误：
 
@@ -32,7 +34,7 @@
 先安装键盘控制包：
 
 ```bash
-sudo apt install ros-kinetic-teleop-twist-keyboard
+sudo apt install ros-noetic-teleop-twist-keyboard   # 16.04 用户把 noetic 换成 kinetic
 ```
 
 然后开三个终端，分别执行：
@@ -43,7 +45,7 @@ rosrun turtlesim turtlesim_node        # 终端 2：启动小海龟仿真窗口
 rosrun turtlesim turtle_teleop_key     # 终端 3：启动键盘控制节点
 ```
 
-roscore 是 ROS 的节点注册中心（Master），所有节点通信前都要先在这里登记，所以能够通过输出里的 /rosdistro: kinetic 确认当前环境是 Kinetic：
+roscore 是 ROS 的节点注册中心（Master），所有节点通信前都要先在这里登记，所以能够通过输出里的 /rosdistro 字段确认当前环境版本：
 
 ![roscore 启动成功](images/roscore.png)
 
@@ -180,12 +182,12 @@ rqt_graph
 
 ## 四、实验拓展：小海龟自动画花瓣模块
 
-因为上面的命令手动一条条敲比较费力，于是就写了一个小模块把过程串起来，使得roslaunch 一键启动后，可以自动生成第二只海龟，并画出 6 个两两相扣的彩色花瓣圆。（源码按仓库约定放在 src/ros_kinetic_turtlesim，文档放在 docs/ros_kinetic_turtlesim。）
+因为上面的命令手动一条条敲比较费力，于是就写了一个小模块把过程串起来，使得roslaunch 一键启动后，可以自动生成第二只海龟，并画出 6 个两两相扣的彩色花瓣圆。（源码按仓库约定放在 src/chap1/turtle_sim_experiment，文档放在 docs/chapter。）
 
 ### 1. 目录结构
 
 ```text
-src/ros_kinetic_turtlesim/
+src/chap1/turtle_sim_experiment/
 ├── main.py           # 入口脚本：生成第二只海龟并控制其画花瓣
 ├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
 ├── package.xml       # catkin 包清单
@@ -200,7 +202,7 @@ main.launch 的内容很简单，就是同时拉起 turtlesim_node 和画花瓣�
 ```xml
 <launch>
   <node pkg="turtlesim" type="turtlesim_node" name="turtlesim" output="screen"/>
-  <node pkg="ros_kinetic_turtlesim" type="main.py" name="turtle_circle_drawer" output="screen"/>
+  <node pkg="turtle_sim_experiment" type="main.py" name="turtle_circle_drawer" output="screen"/>
 </launch>
 ```
 
@@ -236,20 +238,20 @@ for i in range(petals):
         rate.sleep()
 ```
 
-画笔颜色通过 /turtle2/set_pen 服务设置，起点和朝向用 /turtle2/teleport_absolute 服务调整，瞬移前先抬笔，避免划出一条直线。完整代码见 src/ros_kinetic_turtlesim/main.py，写法上兼容 Python 2 和 Python 3。
+画笔颜色通过 /turtle2/set_pen 服务设置，起点和朝向用 /turtle2/teleport_absolute 服务调整，瞬移前先抬笔，避免划出一条直线。完整代码见 src/chap1/turtle_sim_experiment/main.py，写法上兼容 Python 2 和 Python 3。
 
 ### 3. 运行方法
 
 ```bash
 # 方式一：roslaunch 一键启动（推荐）
 mkdir -p ~/catkin_ws/src
-cp -r <仓库路径>/src/ros_kinetic_turtlesim ~/catkin_ws/src/
-chmod +x ~/catkin_ws/src/ros_kinetic_turtlesim/main.py
+cp -r <仓库路径>/src/chap1/turtle_sim_experiment ~/catkin_ws/src/
+chmod +x ~/catkin_ws/src/turtle_sim_experiment/main.py
 cd ~/catkin_ws && catkin_make
 source devel/setup.bash
-roslaunch ros_kinetic_turtlesim main.launch   # roslaunch 会自动启动 Master，不用单独开 roscore
+roslaunch turtle_sim_experiment main.launch   # roslaunch 会自动启动 Master，不用单独开 roscore
 
-# 方式二：手动开三个终端（roscore、turtlesim_node），最后直接运行 python main.py
+# 方式二：手动开三个终端（roscore、turtlesim_node），最后直接运行 python3 main.py（16.04 下为 python main.py）
 ```
 
 运行效果：
@@ -265,11 +267,11 @@ roslaunch ros_kinetic_turtlesim main.launch   # roslaunch 会自动启动 Master
 
 ## 六、实验总结
 
-本次实验在 Ubuntu 16.04 虚拟机上跑通了小海龟例程，用键盘控制小海龟运动，练习了 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，最后把用到的服务调用和话题发布写成了一个自动画花瓣的小模块。
+本次实验在虚拟机上跑通了小海龟例程，用键盘控制小海龟运动，练习了 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，最后把用到的服务调用和话题发布写成了一个自动画花瓣的小模块。
 
 通过这次实验，对 ROS 的通信机制有了直观的认识：节点是运行中的程序，节点之间用话题做异步广播（比如速度指令、位姿），用服务做同步的请求-应答（比如生成海龟、改画笔颜色），全局配置放在参数服务器上；rqt_graph 能把节点和话题的关系画成一张图，调试时很有用。印象最深的是 turtlesim 的 0.5 秒看门狗：控制节点必须持续发布指令，这一点在写 main.py 时体会尤其明显。
 
-实验中也留下了可以继续深入的方向，比如用 RViz 查看 TF 坐标系、写一个订阅 /turtle1/pose 的闭环控制节点，以及附录里学习的 Carla ROS 桥这类把完整仿真器接入 ROS 的工程实践。
+实验中也留下了可以继续深入的方向，比如用 RViz 查看 TF 坐标系、写一个订阅 /turtle1/pose 的闭环控制节点（仓库里的小海龟画正方形实验就是这么做的），以及附录里学习的 Carla ROS 桥这类把完整仿真器接入 ROS 的工程实践。
 
 ## 附录：Carla 的 ROS 桥学习笔记
 
