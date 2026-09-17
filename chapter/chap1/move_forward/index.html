@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../../img/favicon.ico" />
-    <title>1. 认识 ROS - 模拟器的 ROS 文档</title>
+    <title>Move forward - 模拟器的 ROS 文档</title>
     <link rel="stylesheet" href="../../../css/theme.css" />
     <link rel="stylesheet" href="../../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
@@ -13,8 +13,8 @@
     
       <script>
         // Current page data
-        var mkdocs_page_name = "1. \u8ba4\u8bc6 ROS";
-        var mkdocs_page_input_path = "chapter/chap1/chap1.md";
+        var mkdocs_page_name = "Move forward";
+        var mkdocs_page_input_path = "chapter/chap1/move_forward.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -48,22 +48,8 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">ROS 教程</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">1. 认识 ROS</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#_1">实验内容</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#1">1. 小海龟绘制正方形</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#2">2. 小海龟绘制圆形</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-openhutb">3. 小海龟绘制 OpenHUTB</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#3-ros2-service">3. ROS2 Service 小海龟距离控制</a>
-    </li>
-        </ul>
-    </li>
-    </ul>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../chap1/">1. 认识 ROS</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../chap2/">2. ROS 基础 - ROS 基础</a>
                   </li>
@@ -145,10 +131,9 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">ROS 教程</li>
-      <li class="breadcrumb-item active">1. 认识 ROS</li>
+      <li class="breadcrumb-item active">Move forward</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/chap1.md"> 编辑页面</a>
+          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/move_forward.md"> 编辑页面</a>
     </li>
   </ul>
   <hr/>
@@ -156,33 +141,115 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div><h1 id="1-ros">第1章 认识 ROS</h1>
-<p>本章通过 ROS Noetic 中的 turtlesim 小海龟仿真学习 ROS 的基本使用方法，
-包括话题通信、速度控制、位姿反馈以及服务调用。</p>
-<h2 id="_1">实验内容</h2>
-<h3 id="1">1. 小海龟绘制正方形</h3>
-<p>通过向 <code>/turtle1/cmd_vel</code> 发布 <code>geometry_msgs/Twist</code> 消息，
-控制小海龟完成直线运动和转向，从而自主绘制正方形。</p>
-<p><a href="../turtle_square/">进入小海龟画正方形实验</a></p>
-<h3 id="2">2. 小海龟绘制圆形</h3>
-<p>同时向 <code>/turtle1/cmd_vel</code> 发布线速度和角速度，
-并通过 <code>/turtle1/pose</code> 的位姿反馈判断是否完成一圈。</p>
-<p><a href="../turtle_circle/">进入小海龟画圆实验</a></p>
-<h3 id="3-openhutb">3. 小海龟绘制 OpenHUTB</h3>
-<p>订阅 <code>/turtle1/pose</code> 获取实时位姿，并结合 <code>/turtle1/cmd_vel</code>、
-<code>/turtle1/set_pen</code> 和 <code>/turtle1/teleport_absolute</code>，
-控制小海龟自动绘制 OpenHUTB 字样。</p>
-<p><a href="../turtle_hutb/">进入小海龟绘制 OpenHUTB 实验</a></p>
-<h3 id="3-ros2-service">3. ROS2 Service 小海龟距离控制</h3>
-<p>通过 ROS2 Service 控制 turtlesim 小海龟按照指定距离移动，并根据 <code>/turtle1/pose</code> 的位置反馈判断实际移动距离。</p>
-<p><a href="../move_forward/">进入 ROS2 Service 小海龟距离控制实验</a></p></div>
+                <div><p>kk# ROS2 Service 控制小海龟移动</p>
+<h2 id="_1">功能介绍</h2>
+<p>本示例使用 ROS2 Service 实现对 turtlesim 小海龟的距离控制。</p>
+<p>客户端向 <code>/move_forward</code> 服务发送需要前进的距离，服务端收到请求后，通过发布 <code>/turtle1/cmd_vel</code> 控制小海龟运动，同时订阅 <code>/turtle1/pose</code> 获取小海龟当前位置。</p>
+<p>当小海龟实际移动距离达到目标距离后，服务端停止运动，并向客户端返回执行结果。</p>
+<h2 id="_2">系统结构</h2>
+<pre><code>Service Client
+    |
+    | /move_forward
+    | distance
+    v
+Service Server
+    |
+    | /turtle1/cmd_vel
+    v
+turtlesim
+    |
+    | /turtle1/pose
+    v
+Service Server
+</code></pre>
+<h2 id="service">自定义 Service 接口</h2>
+<p>接口文件：</p>
+<p><code>service_interfaces/srv/MoveForward.srv</code></p>
+<pre><code>float64 distance
+---
+bool success
+string message
+</code></pre>
+<p>参数说明：</p>
+<ul>
+<li><code>distance</code>：请求小海龟移动的距离</li>
+<li><code>success</code>：移动是否成功</li>
+<li><code>message</code>：执行结果说明</li>
+</ul>
+<h2 id="_3">实现特点</h2>
+<p>本示例不是简单按照固定时间控制小海龟移动，而是结合 <code>/turtle1/pose</code> 的位置反馈，根据实际移动距离判断是否达到目标距离。</p>
+<p>因此，控制逻辑形成了：</p>
+<pre><code>发送目标距离
+      ↓
+Service Server 接收请求
+      ↓
+读取小海龟当前位置
+      ↓
+发布速度控制指令
+      ↓
+持续获取 /turtle1/pose
+      ↓
+计算实际移动距离
+      ↓
+达到目标距离
+      ↓
+停止小海龟
+      ↓
+返回 Service 执行结果
+</code></pre>
+<p>这种方式可以作为后续实现闭环控制、机器人运动控制等功能的基础。</p>
+<h2 id="_4">运行环境</h2>
+<ul>
+<li>Ubuntu 20.04.6 LTS</li>
+<li>ROS 2 Humble</li>
+<li>Python 3.8.10</li>
+<li>turtlesim</li>
+</ul>
+<h2 id="_5">编译</h2>
+<p>在 ROS 2 工作空间中执行：</p>
+<pre><code>cd ~/ros2_ws
+
+colcon build --packages-select service_interfaces service_demo
+</code></pre>
+<p>编译完成后：</p>
+<pre><code>source install/local_setup.bash
+</code></pre>
+<h2 id="_6">启动示例</h2>
+<p>启动 turtlesim 和 Service Server：</p>
+<pre><code>ros2 launch service_demo move_forward.launch.py
+</code></pre>
+<p>重新打开一个终端，并加载 ROS 2 环境：</p>
+<pre><code>source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/local_setup.bash
+</code></pre>
+<p>发送移动请求，例如移动 1.0 个距离单位：</p>
+<pre><code>ros2 run service_demo client 1.0
+</code></pre>
+<p>也可以修改移动距离，例如：</p>
+<pre><code>ros2 run service_demo client 2.0
+</code></pre>
+<h2 id="service_1">查看 Service 接口</h2>
+<p>执行：</p>
+<pre><code>ros2 interface show service_interfaces/srv/MoveForward
+</code></pre>
+<p>可以看到：</p>
+<pre><code>float64 distance
+---
+bool success
+string message
+</code></pre>
+<h2 id="_7">运行效果</h2>
+<p>启动 turtlesim 后，通过 Service Client 发送移动距离，小海龟会按照请求的距离向当前朝向移动。</p>
+<p>服务端会根据 <code>/turtle1/pose</code> 获取实际位置，并计算实际移动距离。</p>
+<p>达到目标距离后，小海龟停止运动，客户端获得执行结果。</p>
+<p><img alt="ROS2 Service 小海龟距离控制运行效果" src="../images/move_forward_effect.png"></p>
+<h2 id="ai">AI 使用声明</h2>
+<p>本项目开发过程中使用了 OpenAI GPT-5.6 Luna 作为 AI 辅助工具，用于代码结构分析、ROS 2 API 使用建议、问题排查和文档整理。</p>
+<p>模型信息：<a href="https://openai.com/index/gpt-5-6/">https://openai.com/index/gpt-5-6/</a></p>
+<p>最终代码由提交者自行修改、测试和验证。</p></div>
               
             </div>
           </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../../ubuntu20.04/" class="btn btn-neutral float-left" title="安装 ROS"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-        <a href="../../chap2/" class="btn btn-neutral float-right" title="2. ROS 基础 - ROS 基础">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
 
   <hr/>
 
@@ -208,10 +275,6 @@
         </span>
     
     
-      <span><a href="../../../ubuntu20.04/" style="color: #fcfcfc">&laquo; 前一页</a></span>
-    
-    
-      <span><a href="../../chap2/" style="color: #fcfcfc">后一页 &raquo;</a></span>
     
   </span>
 </div>
