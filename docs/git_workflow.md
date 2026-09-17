@@ -182,6 +182,10 @@ git diff --staged
 git commit -m "docs: add installation guide"
 ```
 
+提交成功后，Git 会显示当前分支、commit 缩写编号、提交信息，以及变更的文件和行数。下图中的 `5e2a069` 是这次 commit 的短编号，`8 files changed` 表示文档和 7 张图片已经被记录。
+
+![成功创建 Git commit](img/git_workflow/08_git_commit.png)
+
 常见的提交信息格式：
 
 ```text
@@ -205,6 +209,10 @@ git log -1 --oneline
 git push -u origin docs/my-new-change
 ```
 
+首次推送时，Git 会压缩并上传本地对象。出现 `[new branch]` 和 `set up to track` 表示远程分支已成功创建，且本地分支已与它建立跟踪关系。GitHub 还会在终端中给出创建 Pull Request 的地址。
+
+![首次推送任务分支](img/git_workflow/09_push_branch.png)
+
 `-u` 会建立本地分支和远程分支的跟踪关系。以后继续更新该分支时，只需要执行：
 
 ```powershell
@@ -214,6 +222,10 @@ git push
 ## 9. 创建 Pull Request
 
 分支推送成功后，在 GitHub 中创建 Pull Request，并确认：
+
+GitHub 仓库页面会识别刚刚推送的新分支，并显示黄色提示条。点击 **Compare & pull request** 即可进入 PR 创建页面。
+
+![GitHub 提示创建 Pull Request](img/git_workflow/10_create_pull_request.png)
 
 - Base repository：原项目仓库；
 - Base branch：`master`；
