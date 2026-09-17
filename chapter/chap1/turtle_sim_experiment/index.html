@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>小海龟画花瓣实验 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5c0f\u6d77\u9f9f\u753b\u82b1\u74e3\u5b9e\u9a8c";
+        var mkdocs_page_input_path = "chapter/chap1/turtle_sim_experiment.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item active">小海龟画花瓣实验</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/turtle_sim_experiment.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">小海龟画花瓣实验</h1>
+<h2 id="_2">一、实验目的与环境说明</h2>
+<h3 id="11">1.1 实验目的</h3>
+<ol>
+<li>掌握 turtlesim 的服务调用：用 <code>/set_pen</code> 设置画笔颜色、用 <code>/teleport_absolute</code> 瞬移海龟；</li>
+<li>掌握花瓣图案的几何构造：让 6 个圆心均匀分布于公共中心四周、圆心距等于半径的圆依次绘制，形成两两相扣的花瓣；</li>
+<li>通过 <code>roslaunch</code> 一键启动仿真器与控制节点，完成彩色花瓣的自动绘制。</li>
+</ol>
+<h3 id="12">1.2 实验环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04（VMware 虚拟机）</td>
+</tr>
+<tr>
+<td>ROS 发行版</td>
+<td>ROS Noetic</td>
+</tr>
+<tr>
+<td>仿真器</td>
+<td>turtlesim</td>
+</tr>
+<tr>
+<td>编程语言</td>
+<td>Python 3（rospy）</td>
+</tr>
+<tr>
+<td>功能包</td>
+<td>turtle_sim_experiment</td>
+</tr>
+</tbody>
+</table>
+<p>功能包目录结构如下：</p>
+<div class="highlight"><pre><span></span><code>turtle_sim_experiment/
+├── main.py           # 主程序：控制小海龟画花瓣
+├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
+├── package.xml       # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
+├── CMakeLists.txt    # 编译配置，安装 Python 脚本
+└── README.md         # 运行说明
+</code></pre></div>
+<h2 id="_3">二、核心控制原理与算法解析</h2>
+<h3 id="21">2.1 花瓣的几何构造</h3>
+<p>本实验控制小海龟从公共中心 (5.5, 5.5) 出发，连续画 6 个圆组成花瓣，关键在圆的布置方式：</p>
+<p><strong>6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。</strong> 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣（不同颜色代表不同花瓣，最终效果见 4.4 节）。</p>
+<p>第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 <code>/turtle2/teleport_absolute</code> 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 <code>/turtle2/set_pen</code> 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。</p>
+<h3 id="22">2.2 圆周运动参数</h3>
+<p>画每个圆时，向 <code>/turtle2/cmd_vel</code> 同时发布线速度 <code>linear.x = 1.5</code> 与角速度 <code>angular.z = 1.0</code>，海龟做逆时针圆周运动：</p>
+<ul>
+<li>圆的半径 r = v/ω = 1.5/1.0 = 1.5 米；</li>
+<li>画一个整圆的用时 T = 2π/ω ≈ 6.28 秒。</li>
+</ul>
+<p>turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令海龟就会刹停，所以控制循环以 <code>rospy.Rate(50)</code> 的 50 Hz 频率持续发布速度指令，直到本瓣画满整圆。</p>
+<h3 id="23">2.3 服务等待</h3>
+<p>用 <code>roslaunch</code> 一键启动时，仿真器和画花瓣节点是同时拉起的，谁先准备好并不确定。如果画花瓣节点跑得快、仿真器还没就绪，一开始的服务调用就会失败。所以程序开头先执行 <code>rospy.wait_for_service('/spawn')</code>，停下来等仿真器的服务上线，等到了再继续往下走，这样无论两个节点谁先谁后，程序都不会出错。</p>
+<h3 id="24">2.4 算法流程</h3>
+<ol>
+<li>初始化节点 <code>turtle_circle_drawer</code>，读取花瓣数、线速度、角速度参数；</li>
+<li>等待服务上线，将小海龟放到公共中心 (5.5, 5.5)；</li>
+<li>循环 6 次，每轮执行：抬笔 → 瞬移到该花瓣起点并转到切线方向 → 换色落笔 → 50 Hz 持续发布速度指令画满 T = 2π/ω 秒（一个整圆）→ 抬笔；</li>
+<li>6 个花瓣全部完成后输出结束日志。</li>
+</ol>
+<h2 id="_4">三、完整源码展示</h2>
+<blockquote>
+<p>最新源码同步保存在本书仓库 <code>src/chap1/turtle_sim_experiment/</code>，可直接查看与下载。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># 小海龟画花瓣节点：控制小海龟连续画 6 个</span>
+<span class="c1"># 圆心均匀分布、两两相扣的彩色圆（花瓣）。代码兼容 Python 2/3。</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
+<span class="kn">from</span> <span class="nn">turtlesim.srv</span> <span class="kn">import</span> <span class="n">Spawn</span><span class="p">,</span> <span class="n">SetPen</span><span class="p">,</span> <span class="n">TeleportAbsolute</span>
+
+<span class="n">PETAL_COLORS</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
+                <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)]</span>
+<span class="n">CENTER_X</span><span class="p">,</span> <span class="n">CENTER_Y</span> <span class="o">=</span> <span class="mf">5.5</span><span class="p">,</span> <span class="mf">5.5</span>   <span class="c1"># 公共中心：所有花瓣圆的交点</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'turtle_circle_drawer'</span><span class="p">)</span>
+
+    <span class="n">petals</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">'~petals'</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">linear_speed</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">'~linear_speed'</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">angular_speed</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">'~angular_speed'</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="n">linear_speed</span> <span class="o">/</span> <span class="n">angular_speed</span>          <span class="c1"># r = v / w</span>
+    <span class="n">circle_period</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">angular_speed</span>  <span class="c1"># 画整圆用时 T = 2π / w</span>
+
+    <span class="c1"># 等待 turtlesim 的服务上线（launch 一键启动时仿真器可能稍后就绪）</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">'/spawn'</span><span class="p">)</span>
+    <span class="n">spawn</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/spawn'</span><span class="p">,</span> <span class="n">Spawn</span><span class="p">)</span>
+    <span class="n">set_pen</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle2/set_pen'</span><span class="p">,</span> <span class="n">SetPen</span><span class="p">)</span>
+    <span class="n">teleport</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle2/teleport_absolute'</span><span class="p">,</span> <span class="n">TeleportAbsolute</span><span class="p">)</span>
+
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">spawn</span><span class="p">(</span><span class="n">CENTER_X</span><span class="p">,</span> <span class="n">CENTER_Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'turtle2'</span><span class="p">)</span>  <span class="c1"># 将小海龟放到公共中心</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">'小海龟就位: </span><span class="si">%s</span><span class="s1">'</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle2/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>                 <span class="c1"># 50 Hz，远高于 0.5 秒看门狗阈值</span>
+    <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+    <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">linear_speed</span>
+    <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">angular_speed</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">petals</span><span class="p">):</span>
+            <span class="c1"># 第 i 个花瓣：起点在公共中心外 2r 处，朝向取圆的切线方向</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">i</span> <span class="o">/</span> <span class="n">petals</span>
+            <span class="n">start_x</span> <span class="o">=</span> <span class="n">CENTER_X</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">start_y</span> <span class="o">=</span> <span class="n">CENTER_Y</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+            <span class="n">heading</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+            <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">PETAL_COLORS</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">PETAL_COLORS</span><span class="p">)]</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">'开始画第 </span><span class="si">%d</span><span class="s1"> 个花瓣，画笔 RGB=(</span><span class="si">%d</span><span class="s1">, </span><span class="si">%d</span><span class="s1">, </span><span class="si">%d</span><span class="s1">)'</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+            <span class="n">set_pen</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>               <span class="c1"># 抬笔，瞬移过程不画线</span>
+            <span class="n">teleport</span><span class="p">(</span><span class="n">start_x</span><span class="p">,</span> <span class="n">start_y</span><span class="p">,</span> <span class="n">heading</span><span class="p">)</span>  <span class="c1"># 瞬移到该花瓣的起点</span>
+            <span class="n">set_pen</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>               <span class="c1"># 落笔开画</span>
+
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="n">circle_period</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">end_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+                <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+                <span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+
+            <span class="n">set_pen</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>               <span class="c1"># 本瓣完成，抬笔</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">'演示完成：小海龟共画出 </span><span class="si">%d</span><span class="s1"> 个半径 </span><span class="si">%.2f</span><span class="s1"> 米的花瓣圆'</span><span class="p">,</span> <span class="n">petals</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="_5">四、运行与验证</h2>
+<h3 id="41">4.1 编译功能包</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;仓库路径&gt;/src/chap1/turtle_sim_experiment<span class="w"> </span>~/catkin_ws/src/
+chmod<span class="w"> </span>+x<span class="w"> </span>~/catkin_ws/src/turtle_sim_experiment/main.py
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<h3 id="42">4.2 启动节点</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>turtle_sim_experiment<span class="w"> </span>main.launch
+</code></pre></div>
+<p><code>roslaunch</code> 会自动完成两件事：启动 ROS Master（无需单独运行 roscore），并按 <code>main.launch</code> 先后拉起 turtlesim 仿真器和画花瓣节点。启动后终端依次输出：</p>
+<div class="highlight"><pre><span></span><code>process[turtlesim-1]: started with pid [xxxx]
+process[turtle_circle_drawer-2]: started with pid [xxxx]
+[INFO] [...]: 等待 /spawn 服务上线 ...
+[INFO] [...]: 小海龟就位
+[INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
+</code></pre></div>
+<h3 id="43">4.3 服务与节点验证</h3>
+<p>程序运行期间，另开终端可以查看系统的运行状态：</p>
+<div class="highlight"><pre><span></span><code>rosnode<span class="w"> </span>list<span class="w">                 </span><span class="c1"># 可看到 /turtlesim 与 /turtle_circle_drawer 两个节点</span>
+rosservice<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle2<span class="w">   </span><span class="c1"># 可看到 /turtle2/... 系列服务</span>
+rostopic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle2<span class="w">     </span><span class="c1"># 可看到 /turtle2/cmd_vel、/turtle2/pose 等话题</span>
+</code></pre></div>
+<h3 id="44">4.4 预期结果</h3>
+<p>节点运行后，小海龟从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：</p>
+<div class="highlight"><pre><span></span><code>[INFO] [...]: 开始画第 6 个花瓣，画笔 RGB=(0, 255, 255)
+[INFO] [...]: 演示完成：小海龟共画出 6 个半径 1.50 米的花瓣圆
+</code></pre></div>
+<p>最终窗口中呈现 6 个两两相扣的彩色花瓣：</p>
+<p><img alt="小海龟绘制花瓣运行效果" src="../../../img/chapter/turtle_sim_experiment_launch_demo.png"/></p>
+<p>由于 turtlesim 的采样周期和瞬移误差，个别花瓣的起止点可能存在轻微缝隙，属于正常现象。</p>
+<h2 id="_6">五、参数调整</h2>
+<p>通过修改花瓣数、线速度和角速度，可以改变花瓣图案的形态：</p>
+<table>
+<thead>
+<tr>
+<th>参数设置</th>
+<th>运行效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>petals = 6</code>，<code>linear_speed = 1.5</code>，<code>angular_speed = 1.0</code></td>
+<td>6 瓣，花瓣圆半径 1.5 m</td>
+</tr>
+<tr>
+<td><code>petals = 4</code>，<code>linear_speed = 1.5</code>，<code>angular_speed = 1.0</code></td>
+<td>4 瓣（四叶草图案）</td>
+</tr>
+<tr>
+<td><code>petals = 8</code>，<code>linear_speed = 1.0</code>，<code>angular_speed = 1.0</code></td>
+<td>8 瓣，花瓣圆半径 1 m，图案更密</td>
+</tr>
+<tr>
+<td><code>petals = 6</code>，<code>linear_speed = 1.5</code>，<code>angular_speed = -1.0</code></td>
+<td>顺时针画瓣，花瓣朝向相反</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注意</strong>：花瓣数不宜过大——花瓣圆半径 r = v/ω 需满足 2r &lt; 5.5，否则瞬移起点会超出 turtlesim 的 11×11 画布边界，画出的圆会被截断。</p>
+<h2 id="_7">六、总结</h2>
+<p>本实验综合 <code>/set_pen</code> 画笔服务、<code>/teleport_absolute</code> 瞬移服务与 <code>/turtle2/cmd_vel</code> 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。</p>
+<p>通过本实验，可以掌握 ROS 服务调用的方法，比如用 <code>/set_pen</code> 换画笔、用 <code>/teleport_absolute</code> 瞬移海龟；也可以体会服务与话题两类通信方式各自的分工——像换画笔、瞬移这种做一次就要一个明确结果的操作适合用服务，而持续控制海龟运动的速度指令适合用话题发布；此外还熟悉了用 <code>roslaunch</code> 一键组织多个节点同时启动的方法。</p></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>

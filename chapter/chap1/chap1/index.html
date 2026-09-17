@@ -55,7 +55,9 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#3-openhutb">3. 小海龟绘制 OpenHUTB</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#3-ros2-service">3. ROS2 Service 小海龟距离控制</a>
+<li class="toctree-l3"><a class="reference internal" href="#4-ros2-service">4. ROS2 Service 小海龟距离控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 小海龟画花瓣</a>
 </li>
 </ul>
 </li>
@@ -166,9 +168,13 @@
 <code>/turtle1/set_pen</code> 和 <code>/turtle1/teleport_absolute</code>，
 控制小海龟自动绘制 OpenHUTB 字样。</p>
 <p><a href="../turtle_hutb/">进入小海龟绘制 OpenHUTB 实验</a></p>
-<h3 id="3-ros2-service">3. ROS2 Service 小海龟距离控制</h3>
+<h3 id="4-ros2-service">4. ROS2 Service 小海龟距离控制</h3>
 <p>通过 ROS2 Service 控制 turtlesim 小海龟按照指定距离移动，并根据 <code>/turtle1/pose</code> 的位置反馈判断实际移动距离。</p>
-<p><a href="../move_forward/">进入 ROS2 Service 小海龟距离控制实验</a></p></div>
+<p><a href="../move_forward/">进入 ROS2 Service 小海龟距离控制实验</a></p>
+<h3 id="5">5. 小海龟画花瓣</h3>
+<p>综合 <code>/set_pen</code> 画笔服务、<code>/teleport_absolute</code> 瞬移服务与速度话题发布，
+控制小海龟画出 6 个圆心均匀分布、两两相扣的彩色花瓣。</p>
+<p><a href="../turtle_sim_experiment/">进入小海龟画花瓣实验</a></p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
