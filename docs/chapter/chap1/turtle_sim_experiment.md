@@ -1,6 +1,6 @@
 # 小海龟仿真实验报告（Ubuntu 20.04 + ROS Noetic）
 
-本实验是第一章"认识 ROS：小海龟画正方形"的扩展，在 Ubuntu 20.04 + ROS Noetic 环境下完成，内容分为两部分：运行小海龟例程并用键盘控制其运动、通过小海龟仿真器练习常用的 ROS 命令。在完成这两项任务的基础上，把手动执行的过程整理成了一个可以 roslaunch 一键启动的小海龟自动画花瓣模块（源码在 src/chap1/turtle_sim_experiment），并按附加题要求学习了 Carla 的 ROS 桥，笔记放在附录。文中所有命令都在虚拟机里实际执行过，配图均为实验时的截图。
+本实验是第一章"认识 ROS：小海龟画正方形"的扩展，在 Ubuntu 20.04 + ROS Noetic 环境下完成，内容分为两部分：运行小海龟例程并用键盘控制其运动、通过小海龟仿真器练习常用的 ROS 命令。在完成这两项任务的基础上，把手动执行的过程整理成了一个可以 roslaunch 一键启动的小海龟自动画花瓣模块（源码在 src/chap1/turtle_sim_experiment）。文中所有命令都在虚拟机里实际执行过，配图均为实验时的截图。
 
 除 Noetic 外，本实验的全部命令也在 Ubuntu 16.04 + ROS Kinetic 上验证通过，两个环境的操作步骤完全一致，仅功能包前缀不同（`ros-noetic-*` 与 `ros-kinetic-*`），使用 16.04 的同学把前缀替换即可。
 
@@ -271,17 +271,11 @@ roslaunch turtle_sim_experiment main.launch   # roslaunch 会自动启动 Master
 
 通过这次实验，对 ROS 的通信机制有了直观的认识：节点是运行中的程序，节点之间用话题做异步广播（比如速度指令、位姿），用服务做同步的请求-应答（比如生成海龟、改画笔颜色），全局配置放在参数服务器上；rqt_graph 能把节点和话题的关系画成一张图，调试时很有用。印象最深的是 turtlesim 的 0.5 秒看门狗：控制节点必须持续发布指令，这一点在写 main.py 时体会尤其明显。
 
-实验中也留下了可以继续深入的方向，比如用 RViz 查看 TF 坐标系、写一个订阅 /turtle1/pose 的闭环控制节点（仓库里的小海龟画正方形实验就是这么做的），以及附录里学习的 Carla ROS 桥这类把完整仿真器接入 ROS 的工程实践。
-
-## 附录：Carla 的 ROS 桥学习笔记
-
-按照作业附加题的要求，学习并注释了 Carla 的 ROS 桥及其 C++ 实现，完整笔记见 [Carla 的 ROS 桥学习笔记](./carla_ros_bridge_cpp_notes.md)。主要内容包括：Python 版 ros-bridge 的包结构和话题体系；C++ 实现（LibCarla/source/carla/ros2）的目录结构和 ROS2 单例类的关键代码逐段中文注释；早期文档中 RosUtils、RosSink、RosAction、RosSubscriber、RosPublisher 五个类与当前版本结构的对照。
+实验中也留下了可以继续深入的方向，比如用 RViz 查看 TF 坐标系、写一个订阅 /turtle1/pose 的闭环控制节点（仓库里的小海龟画正方形实验就是这么做的）。
 
 ## 参考资料
 
-1. ROS Wiki：turtlesim 及命令行工具教程（http://wiki.ros.org/turtlesim）
-2. carla-simulator/ros-bridge（https://github.com/carla-simulator/ros-bridge）
-3. CARLA 文档：RosBridge 以 C++ 实现（OpenHUTB 中文镜像，https://carla-openhutb.readthedocs.io/zh-cn/latest/ros/bridge_cpp/）
+1. [ROS Wiki：turtlesim 及命令行工具教程](http://wiki.ros.org/turtlesim)
 
 ## 声明
 
