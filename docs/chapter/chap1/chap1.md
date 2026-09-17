@@ -27,7 +27,13 @@
 
 [进入小海龟绘制 OpenHUTB 实验](turtle_hutb.md)
 
-### 4. 小海龟画花瓣
+### 4. ROS2 Service 小海龟距离控制
+
+通过 ROS2 Service 控制 turtlesim 小海龟按照指定距离移动，并根据 `/turtle1/pose` 的位置反馈判断实际移动距离。
+
+[进入 ROS2 Service 小海龟距离控制实验](move_forward.md)
+
+### 5. 小海龟画花瓣
 
 综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与速度话题发布，
 控制小海龟画出 6 个圆心均匀分布、两两相扣的彩色花瓣。

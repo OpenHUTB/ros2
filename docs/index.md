@@ -6,6 +6,8 @@ title: 主页
 
 - [简介](#list)
   - [入门](#list)
+  - [人形机器人](#humanoid)
+  - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
@@ -42,8 +44,15 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 
+## 2. 人形机器人 <span id='humanoid'></span>
 
-## 2. 地面载具  <span id='ground_vehicle'></span>
+* [人形机器人基础](./humanoid/humanoid_basics.md)
+
+## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
+
+* [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+
+## 4. 地面载具  <span id='ground_vehicle'></span>
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [生成对象](./ground/carla_spawn_objects.md)
@@ -58,7 +67,7 @@ ROS每章节运行代码:
 * [点云地图创建](./ground/pcl_recorder.md)
 
 
-## 3. 空域载具 <span id='air_vehicle'></span>
+## 5. 空域载具 <span id='air_vehicle'></span>
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
@@ -66,11 +75,13 @@ ROS每章节运行代码:
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
+* [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
+
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
 
 
-## 4. 水域载具  <span id='water_vehicle'></span>
+## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
 

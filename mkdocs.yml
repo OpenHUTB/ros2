@@ -26,7 +26,7 @@ extra_css: [extra.css]
 extra_javascript:
   # - extra.js
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
-  - https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
   - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
@@ -48,6 +48,7 @@ plugins:
       is_video: True
       video_autoplay: True
       video_loop: True
+  - mermaid2
 
 extra:
   generator: false
@@ -72,6 +73,10 @@ nav:
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
+- 人形机器人:
+    - 人形机器人基础: './humanoid/humanoid_basics.md'
+- 肌肉骨骼人:
+    - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
@@ -100,9 +105,8 @@ markdown_extensions:
   - admonition
   - mdx_math
   - pymdownx.superfences:
-      custom_fences: [
-         { name: flow, class: uml-flowchart }
-        ,{ name: sequence, class: uml-sequence-diagram }
-        ,{ name: mermaid, class: mermaid }
-      ]
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid
 
