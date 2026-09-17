@@ -1,210 +1,203 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+
+<html class="writer-html5" lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>安装 ROS - 模拟器的 ROS 文档</title>
-    <link rel="stylesheet" href="../css/theme.css" />
-    <link rel="stylesheet" href="../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
-        <link href="../extra.css" rel="stylesheet" />
-    
-      <script>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../img/favicon.ico" rel="shortcut icon"/>
+<title>安装 ROS - 模拟器的 ROS 文档</title>
+<link href="../css/theme.css" rel="stylesheet"/>
+<link href="../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../extra.css" rel="stylesheet"/>
+<script>
         // Current page data
         var mkdocs_page_name = "\u5b89\u88c5 ROS";
         var mkdocs_page_input_path = "ubuntu20.04.md";
         var mkdocs_page_url = null;
       </script>
-    
-    <!--[if lt IE 9]>
+<!--[if lt IE 9]>
       <script src="../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-      <script>hljs.highlightAll();</script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 </head>
-
 <body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-    <div class="wy-side-scroll">
-      <div class="wy-side-nav-search">
-          <a href=".." class="icon icon-home"> 模拟器的 ROS 文档
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href=".."> 模拟器的 ROS 文档
         </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
-  </form>
+<form action="../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
 </div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">入门</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="..">首页</a>
-                  </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">安装 ROS</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#1-ros">1. 添加 ROS 软件源</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#2">2. 添加软件源密钥</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#3">3. 更新本地软件源</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#4">4. 软件源错误处理与优化</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#41-no_pubkey">4.1 NO_PUBKEY 签名错误</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#42">4.2 下载速度优化</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#5-ros-noetic">5. 安装 ROS Noetic 桌面完整版</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#6-rosdep">6. 初始化 rosdep 工具</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#7-rosdep">7. rosdep 初始化常见错误处理</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#71-rosdep">7.1 错误一：找不到 rosdep 命令</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#72">7.2 错误二：无法下载默认源列表</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#73">7.3 错误三：默认源文件已存在</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#8-ros">8. 设置 ROS 环境变量</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#9-rosinstall">9. 安装 rosinstall 工具集</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#10-ros">10. 验证 ROS 是否安装成功</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#101-roscore">10.1 启动 roscore 核心节点</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#102">10.2 常见异常与处理</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#11">11. 小海龟仿真功能验证</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#111">11.1 启动小海龟仿真节点</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#112">11.2 启动键盘控制节点</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#aubuntu">附录 A：Ubuntu 更换国内软件源</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#a1">A.1 打开“软件和更新”设置</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#a2">A.2 选择下载服务器</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#a3">A.3 重新载入软件列表</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_1">常见问题速查</a>
-    </li>
-    </ul>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">ROS 教程</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap1/chap1/">1. 认识 ROS</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap3/">3. 机器人系统设计</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap4/">4. 机器人仿真</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap5/">5. 机器人感知</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap7/">7. 机械臂控制</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap8/">8. ROS 机器人综合应用</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap9/">9. ROS 2</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">人形机器人</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../humanoid/humanoid_basics/">人形机器人基础</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">地面载具</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../set_up_and_connect_to_carla/">手动控制</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/carla_spawn_objects/">生成对象</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ackermann_control/">阿克曼控制</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/waypoint/">路径点发布器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ad_agent/">自动驾驶代理</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ad_demo/">自动驾驶示例</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ros_scenario_runner/">ROS Scenario Runner</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/rviz_plugin/">RVIZ Carla 插件</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">空域载具</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/drone_teleop/">无人机终端键盘遥控器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
-                  </li>
-                  <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">水域载具</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../water/HoloOcean/">水域载具 ROS2 接口</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
-                  </li>
-              </ul>
-      </div>
-    </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="..">模拟器的 ROS 文档</a>
-        
-      </nav>
-      <div class="wy-nav-content">
-        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">入门</li>
-      <li class="breadcrumb-item active">安装 ROS</li>
-    <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ubuntu20.04.md"> 编辑页面</a>
-    </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-            <div class="section" itemprop="articleBody">
-              
-                <div><h1 id="ubuntu-2004-ros-noetic">Ubuntu 20.04 安装 ROS Noetic 详细教程</h1>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="..">首页</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">安装 ROS</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1-ros">1. 添加 ROS 软件源</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 添加软件源密钥</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 更新本地软件源</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 软件源错误处理与优化</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-no_pubkey">4.1 NO_PUBKEY 签名错误</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 下载速度优化</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-ros-noetic">5. 安装 ROS Noetic 桌面完整版</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6-rosdep">6. 初始化 rosdep 工具</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7-rosdep">7. rosdep 初始化常见错误处理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-rosdep">7.1 错误一：找不到 rosdep 命令</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 错误二：无法下载默认源列表</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 错误三：默认源文件已存在</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8-ros">8. 设置 ROS 环境变量</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9-rosinstall">9. 安装 rosinstall 工具集</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10-ros">10. 验证 ROS 是否安装成功</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101-roscore">10.1 启动 roscore 核心节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 常见异常与处理</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 小海龟仿真功能验证</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#111">11.1 启动小海龟仿真节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#112">11.2 启动键盘控制节点</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#aubuntu">附录 A：Ubuntu 更换国内软件源</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#a1">A.1 打开“软件和更新”设置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#a2">A.2 选择下载服务器</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#a3">A.3 重新载入软件列表</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">常见问题速查</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href=".."></a></li>
+<li class="breadcrumb-item">入门</li>
+<li class="breadcrumb-item active">安装 ROS</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ubuntu20.04.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="ubuntu-2004-ros-noetic">Ubuntu 20.04 安装 ROS Noetic 详细教程</h1>
 <blockquote>
 <p>本文完整记录在 <strong>Ubuntu 20.04</strong> 系统中安装 <strong>ROS Noetic</strong> 桌面完整版的全部步骤，涵盖软件源配置、密钥导入、软件包安装、rosdep 初始化、环境变量配置、roscore 与小海龟仿真验证，并汇总安装全过程中的常见报错及解决方法。按照本文步骤依次操作，即可完成一套可用的 ROS Noetic 开发环境搭建。</p>
 </blockquote>
@@ -246,7 +239,7 @@
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-key<span class="w"> </span>adv<span class="w"> </span>--keyserver<span class="w"> </span><span class="s1">'hkp://keyserver.ubuntu.com:80'</span><span class="w"> </span>--recv-key<span class="w"> </span>C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 </code></pre></div>
 <p>执行成功后终端会输出公钥导入信息，出现“已导入：1”即表示密钥添加成功，效果如图 1 所示。</p>
-<p><img alt="图1 软件源密钥导入成功" src="../img/ros/01_key_import.png"></p>
+<p><img alt="图1 软件源密钥导入成功" src="../img/ros/01_key_import.png"/></p>
 <p>成功输出示例：</p>
 <div class="highlight"><pre><span></span><code>Executing: /tmp/apt-key-gpghome.xxx/gpg.1.sh --keyserver hkp://keyserver.ubuntu.com:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 gpg: 密钥 F42ED6FBAB17C654：公钥 "Open Robotics &lt;info@osrfoundation.org&gt;" 已导入
@@ -261,14 +254,14 @@ gpg:               已导入：1
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
 </code></pre></div>
 <p>终端会依次列出各软件源的命中情况，结束时提示当前可升级的软件包数量，效果如图 2 所示。</p>
-<p><img alt="图2 更新软件源成功" src="../img/ros/02_apt_update.png"></p>
+<p><img alt="图2 更新软件源成功" src="../img/ros/02_apt_update.png"/></p>
 <blockquote>
 <p><strong>提示</strong>：若无线网络下更新很慢、超时或失败，可尝试切换到手机热点后重新执行该命令。</p>
 </blockquote>
 <h2 id="4">4. 软件源错误处理与优化</h2>
 <h3 id="41-no_pubkey">4.1 NO_PUBKEY 签名错误</h3>
 <p>更新软件源时若出现 <code>NO_PUBKEY</code> 签名验证错误，图形界面可能弹出“更新缓存时出错”提示框，提示因缺少公钥无法验证签名，如图 3 所示。</p>
-<p><img alt="图3 NO_PUBKEY 签名错误提示" src="../img/ros/03_no_pubkey.png"></p>
+<p><img alt="图3 NO_PUBKEY 签名错误提示" src="../img/ros/03_no_pubkey.png"/></p>
 <p>根据错误提示中的公钥编号，执行以下命令重新导入公钥即可：</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-key<span class="w"> </span>adv<span class="w"> </span>--keyserver<span class="w"> </span>keyserver.ubuntu.com<span class="w"> </span>--recv-keys<span class="w"> </span>F42ED6FBAB17C654
 </code></pre></div>
@@ -280,7 +273,7 @@ gpg:               已导入：1
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-desktop-full
 </code></pre></div>
 <p>终端会先读取软件包列表、分析依赖关系，并列出本次将同时安装的全部软件包，如图 4 所示。确认无误后输入 <code>Y</code> 回车即开始下载安装。</p>
-<p><img alt="图4 安装命令列出的待安装软件包" src="../img/ros/04_install_packages.png"></p>
+<p><img alt="图4 安装命令列出的待安装软件包" src="../img/ros/04_install_packages.png"/></p>
 <p><strong>安装过程注意事项：</strong></p>
 <ul>
 <li>桌面完整版总体积约 <strong>568MB</strong>，耗时取决于网络速度，请保持网络稳定。</li>
@@ -288,13 +281,13 @@ gpg:               已导入：1
 <li>若提示部分软件包无法下载，多为网络波动所致，重新执行一次安装命令即可。</li>
 </ul>
 <p>安装结束后，可再次执行一遍安装命令确认。若终端提示 <code>ros-noetic-desktop-full 已经是最新版</code>、新安装 0 个软件包，即说明安装完成，如图 5 所示。</p>
-<p><img alt="图5 再次执行安装命令，提示已是最新版" src="../img/ros/05_already_newest.png"></p>
+<p><img alt="图5 再次执行安装命令，提示已是最新版" src="../img/ros/05_already_newest.png"/></p>
 <h2 id="6-rosdep">6. 初始化 rosdep 工具</h2>
 <p><code>rosdep</code> 是 ROS 的依赖管理工具，可在编译源码前自动安装功能包依赖的系统库。安装完成后先进行初始化：</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>rosdep<span class="w"> </span>init
 </code></pre></div>
 <p>初始化成功后，终端会向 <code>/etc/ros/rosdep</code> 写入默认源列表文件，并提示下一步运行 <code>rosdep update</code>，如图 6 所示。</p>
-<p><img alt="图6 rosdep 初始化成功" src="../img/ros/06_rosdep_init.png"></p>
+<p><img alt="图6 rosdep 初始化成功" src="../img/ros/06_rosdep_init.png"/></p>
 <p>按提示继续执行更新：</p>
 <div class="highlight"><pre><span></span><code>rosdep<span class="w"> </span>update
 </code></pre></div>
@@ -308,7 +301,7 @@ gpg:               已导入：1
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-rosdep2
 </code></pre></div>
 <p>终端会列出待安装软件包及占用空间，输入 <code>Y</code> 回车继续，如图 7 所示。旧版本 Ubuntu 也可尝试 Python2 版本：<code>sudo apt install python-rosdep2</code>。</p>
-<p><img alt="图7 安装 python3-rosdep2" src="../img/ros/07_install_rosdep2.png"></p>
+<p><img alt="图7 安装 python3-rosdep2" src="../img/ros/07_install_rosdep2.png"/></p>
 <p>安装完成后重新执行 <code>sudo rosdep init</code> 即可。</p>
 <h3 id="72">7.2 错误二：无法下载默认源列表</h3>
 <p>若出现如下错误，提示无法从 <code>raw.githubusercontent.com</code> 下载默认源列表，通常是当前网络无法访问 GitHub 原始资源导致：</p>
@@ -365,7 +358,7 @@ Please delete if you wish to re-initialize
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-rosinstall<span class="w"> </span>python3-rosinstall-generator<span class="w"> </span>python3-wstool
 </code></pre></div>
 <p>系统会自动下载并配置相关依赖（含版本控制工具等），安装过程如图 8 所示，等待全部设置完成即可。</p>
-<p><img alt="图8 安装 rosinstall 工具集" src="../img/ros/08_rosinstall.png"></p>
+<p><img alt="图8 安装 rosinstall 工具集" src="../img/ros/08_rosinstall.png"/></p>
 <h2 id="10-ros">10. 验证 ROS 是否安装成功</h2>
 <p>完成以上步骤后，通过启动 ROS 核心节点检验安装是否完整、环境是否正确。</p>
 <h3 id="101-roscore">10.1 启动 roscore 核心节点</h3>
@@ -373,7 +366,7 @@ Please delete if you wish to re-initialize
 <div class="highlight"><pre><span></span><code>roscore
 </code></pre></div>
 <p>正常情况下，终端会依次输出日志检查、roslaunch 服务、版本信息，在 <code>SUMMARY</code> 中列出参数 <code>/rosdistro: noetic</code>，随后自动启动 master 与 rosout 进程，如图 9 所示。看到 <code>started core service [/rosout]</code> 且无红色报错，即说明 ROS 核心环境运行正常。</p>
-<p><img alt="图9 roscore 成功启动" src="../img/ros/09_roscore.png"></p>
+<p><img alt="图9 roscore 成功启动" src="../img/ros/09_roscore.png"/></p>
 <h3 id="102">10.2 常见异常与处理</h3>
 <p><strong>异常一：roscore 命令未找到</strong></p>
 <p>若提示 <code>Command 'roscore' not found</code>，说明缺少 roslaunch 组件，按终端提示执行：</p>
@@ -382,7 +375,7 @@ Please delete if you wish to re-initialize
 <p>安装完成后重新执行 <code>roscore</code> 验证。</p>
 <p><strong>异常二：Resource not found: roslaunch</strong></p>
 <p>若终端出现红色的 <code>Resource not found: roslaunch</code> 报错，并提示异常已写入日志文件（如图 10），说明桌面版组件安装不完整，或当前终端未正确加载环境变量。</p>
-<p><img alt="图10 Resource not found 报错及修复命令" src="../img/ros/10_resource_not_found.png"></p>
+<p><img alt="图10 Resource not found 报错及修复命令" src="../img/ros/10_resource_not_found.png"/></p>
 <p>先执行以下命令手动加载环境变量后重试：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 </code></pre></div>
@@ -401,11 +394,11 @@ Please delete if you wish to re-initialize
 <div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtle_teleop_key
 </code></pre></div>
 <p>终端输出 <code>Use arrow keys to move the turtle. 'q' to quit.</code> 后，用鼠标点击选中该终端使其获得焦点，再按 <code>↑</code> <code>↓</code> <code>←</code> <code>→</code> 方向键，即可控制小海龟移动，移动轨迹以白色线条绘制，整体效果如图 11 所示。</p>
-<p><img alt="图11 小海龟仿真：roscore、仿真节点、键盘控制节点协同运行" src="../img/ros/11_turtlesim.png"></p>
+<p><img alt="图11 小海龟仿真：roscore、仿真节点、键盘控制节点协同运行" src="../img/ros/11_turtlesim.png"/></p>
 <blockquote>
 <p><strong>结论</strong>：若小海龟能正常响应方向键并绘制轨迹，说明 ROS 节点与话题通信机制工作正常，至此 ROS Noetic 在 Ubuntu 20.04 上的安装与配置全部成功。</p>
 </blockquote>
-<hr>
+<hr/>
 <h2 id="aubuntu">附录 A：Ubuntu 更换国内软件源</h2>
 <p>安装 ROS 时若软件包下载很慢，往往是因为 Ubuntu 默认源服务器在国外，更换为国内镜像源可显著提速，步骤如下。</p>
 <h3 id="a1">A.1 打开“软件和更新”设置</h3>
@@ -417,13 +410,13 @@ Please delete if you wish to re-initialize
 <li><strong>校园网络</strong>：推荐带 <code>.edu</code> 后缀的高校镜像源，如中科大、清华、北外等。</li>
 </ul>
 <p>也可点击“选择最佳服务器”，由系统自动测速推荐最快的服务器。选定后点击“选择服务器”，按提示输入开机密码认证，配置窗口如图 12 所示。</p>
-<p><img alt="图12 “软件和更新”窗口中选择下载服务器" src="../img/ros/12_software_sources.jpg"></p>
+<p><img alt="图12 “软件和更新”窗口中选择下载服务器" src="../img/ros/12_software_sources.jpg"/></p>
 <p>下面的动图完整演示了“下载自 → 其他站点 → 选择最佳服务器 → 自动测速”的操作过程（GitHub 页面中会自动播放）：</p>
-<p><img alt="图13 选择下载服务器并自动测速（动态演示）" src="../img/ros/13_select_best_server.gif"></p>
+<p><img alt="图13 选择下载服务器并自动测速（动态演示）" src="../img/ros/13_select_best_server.gif"/></p>
 <h3 id="a3">A.3 重新载入软件列表</h3>
 <p>认证完成后关闭“软件和更新”窗口，系统会弹出“更新缓存”提示并自动重新载入软件列表，等待进度条走完、缓存更新完成，新源即生效，过程如图 14 动图所示。最后在终端执行 <code>sudo apt update</code> 确认软件源可正常访问。</p>
-<p><img alt="图14 重新载入软件缓存（动态演示）" src="../img/ros/14_reload_cache.gif"></p>
-<hr>
+<p><img alt="图14 重新载入软件缓存（动态演示）" src="../img/ros/14_reload_cache.gif"/></p>
+<hr/>
 <h2 id="_1">常见问题速查</h2>
 <table>
 <thead>
@@ -471,64 +464,49 @@ Please delete if you wish to re-initialize
 </tr>
 </tbody>
 </table>
-<hr>
+<hr/>
 <p><em>本文环境：Ubuntu 20.04 LTS + ROS Noetic Ninjemys。</em></p></div>
-              
-            </div>
-          </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href=".." class="btn btn-neutral float-left" title="首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-        <a href="../chapter/chap1/chap1/" class="btn btn-neutral float-right" title="1. 认识 ROS">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-      <p>OpenHUTB 版权所有 &copy; 2026</p>
-  </div>
-
-</footer>
-          
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-
-  <div class="rst-versions" role="note" aria-label="Versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    
-        <span>
-          <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
-        </span>
-    
-    
-      <span><a href=".." style="color: #fcfcfc">&laquo; 前一页</a></span>
-    
-    
-      <span><a href="../chapter/chap1/chap1/" style="color: #fcfcfc">后一页 &raquo;</a></span>
-    
-  </span>
 </div>
-    <script src="../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "..";</script>
-    <script src="../js/theme_extra.js"></script>
-    <script src="../js/theme.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
-      <script src="../js/umlconvert.js"></script>
-      <script src="../search/main.js"></script>
-    <script>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href=".." title="首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../chapter/chap1/chap1/" title="1. 认识 ROS">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href=".." style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../chapter/chap1/chap1/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "..";</script>
+<script src="../js/theme_extra.js"></script>
+<script src="../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../js/umlconvert.js"></script>
+<script src="../search/main.js"></script>
+<script>
         jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
         });
     </script>
-
 </body>
 </html>

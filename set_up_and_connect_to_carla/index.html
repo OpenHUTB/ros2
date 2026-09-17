@@ -1,177 +1,170 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+
+<html class="writer-html5" lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>手动控制 - 模拟器的 ROS 文档</title>
-    <link rel="stylesheet" href="../css/theme.css" />
-    <link rel="stylesheet" href="../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
-        <link href="../extra.css" rel="stylesheet" />
-    
-      <script>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../img/favicon.ico" rel="shortcut icon"/>
+<title>手动控制 - 模拟器的 ROS 文档</title>
+<link href="../css/theme.css" rel="stylesheet"/>
+<link href="../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../extra.css" rel="stylesheet"/>
+<script>
         // Current page data
         var mkdocs_page_name = "\u624b\u52a8\u63a7\u5236";
         var mkdocs_page_input_path = "set_up_and_connect_to_carla.md";
         var mkdocs_page_url = null;
       </script>
-    
-    <!--[if lt IE 9]>
+<!--[if lt IE 9]>
       <script src="../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-      <script>hljs.highlightAll();</script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 </head>
-
 <body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-    <div class="wy-side-scroll">
-      <div class="wy-side-nav-search">
-          <a href=".." class="icon icon-home"> 模拟器的 ROS 文档
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href=".."> 模拟器的 ROS 文档
         </a><div role="search">
-  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-      <input type="text" name="q" placeholder="搜索文档" aria-label="Search docs" title="Type search term here" />
-  </form>
+<form action="../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
 </div>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">入门</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="..">首页</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ubuntu20.04/">安装 ROS</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">ROS 教程</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap1/chap1/">1. 认识 ROS</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap3/">3. 机器人系统设计</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap4/">4. 机器人仿真</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap5/">5. 机器人感知</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap7/">7. 机械臂控制</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap8/">8. ROS 机器人综合应用</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../chapter/chap9/">9. ROS 2</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">人形机器人</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../humanoid/humanoid_basics/">人形机器人基础</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">地面载具</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">手动控制</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#carla_1">启动 Carla 服务器</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#carla-ros-bridge">设置 Carla ROS Bridge</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#carla-ego-vehicle">使用 Carla 客户端启动 Ego Vehicle</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#_1">其他</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#rviz">使用 rviz 进行可视化</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#matlab-carla-ros">Matlab 验证 Carla ROS 连接（可选）</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_2">解析</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_3">常见问题</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#_4">参考</a>
-    </li>
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/carla_spawn_objects/">生成对象</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ackermann_control/">阿克曼控制</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/waypoint/">路径点发布器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ad_agent/">自动驾驶代理</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ad_demo/">自动驾驶示例</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/ros_scenario_runner/">ROS Scenario Runner</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../ground/rviz_plugin/">RVIZ Carla 插件</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">空域载具</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/drone_teleop/">无人机终端键盘遥控器</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
-                  </li>
-                  <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">水域载具</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../water/HoloOcean/">水域载具 ROS2 接口</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
-                  </li>
-              </ul>
-      </div>
-    </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="..">模拟器的 ROS 文档</a>
-        
-      </nav>
-      <div class="wy-nav-content">
-        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">地面载具</li>
-      <li class="breadcrumb-item active">手动控制</li>
-    <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/set_up_and_connect_to_carla.md"> 编辑页面</a>
-    </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-            <div class="section" itemprop="articleBody">
-              
-                <div><h1 id="carla"><a href="https://www.mathworks.com/help/ros/ug/set-up-and-connect-to-carla-simulator.html">设置并连接到 Carla 模拟器</a></h1>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal current" href="#">手动控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#carla_1">启动 Carla 服务器</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#carla-ros-bridge">设置 Carla ROS Bridge</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#carla-ego-vehicle">使用 Carla 客户端启动 Ego Vehicle</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">其他</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rviz">使用 rviz 进行可视化</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#matlab-carla-ros">Matlab 验证 Carla ROS 连接（可选）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">解析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">参考</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href=".."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">手动控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/set_up_and_connect_to_carla.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla"><a href="https://www.mathworks.com/help/ros/ug/set-up-and-connect-to-carla-simulator.html">设置并连接到 Carla 模拟器</a></h1>
 <p>此示例展示如何设置并连接到 Carla 模拟器来模拟自动驾驶应用程序。</p>
 <p>您可以利用 Carla 模拟器复制从城市到高速公路的各种驾驶场景，并在受控虚拟环境中评估其自动驾驶算法的有效性。该模拟器包括各种传感器模型、车辆动力学和交通状况，使用户可以模拟真实世界的设置。您可以向车辆控制发布者发送转向、制动和油门控制信号，并控制 Carla Ego 车辆并研究自动驾驶的各种元素。</p>
 <p>从 <a href="https://github.com/carla-simulator/carla/releases">链接</a> 中下载 Carla 0.9.13 版本的模拟器。如果您使用的是 Windows 机器，请同时<a href="https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html">下载</a>并安装好 ROS 的虚拟机。此虚拟机基于 Ubuntu Linux 操作系统，并已预先配置为支持使用 ROS 构建的应用程序。</p>
 <p>此示例在 Windows 主机上演示。</p>
 <h2 id="carla_1">启动 Carla 服务器</h2>
 <p>要在 Windows 主机上启动 Carla 服务器，请导航到 Carla 的安装位置并单击应用程序可执行文件<code>CarlaUE4.exe</code>。</p>
-<p><img alt="" src="../img/carla_scenario.png"></p>
+<p><img alt="" src="../img/carla_scenario.png"/></p>
 <h2 id="carla-ros-bridge">设置 Carla ROS Bridge</h2>
 <p>1.启动虚拟机。</p>
 <p>2.在 Ubuntu 桌面上，单击 <code>ROS Noetic Core Terminal</code> 快捷方式以启动 ROS 主控。主控启动后，记下 <code>ROS_MASTER_URI</code>。</p>
@@ -180,7 +173,7 @@
 <span class="c1"># 或者运行</span>
 <span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/devel/setup.bash
 </code></pre></div>
-<p><img alt="" src="../img/setup.bash.png"></p>
+<p><img alt="" src="../img/setup.bash.png"/></p>
 <p>为了每次启动终端时不用每次都设置环境，可以将其加入到用户的初始化脚本中：
 </p><div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s1">'source ~/carla-ros-bridge/catkin_ws/devel/setup.bash'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 <span class="nb">source</span><span class="w"> </span>~/.bashrc
@@ -196,7 +189,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>carla_ros_bridge<span 
 <p><strong>注意：</strong> 如果按<code>B</code>切换到手动驾驶后，按<code>W</code>、<code>A</code>、<code>S</code>、<code>D</code>没反应，需要将 numpy 的版本 从 1.24.4 降到 numpy 1.23.1，避免报错：AttributeError: module 'numpy' has no attribute 'bool'
 </p><div class="highlight"><pre><span></span><code>python -m pip install numpy==1.23.1
 </code></pre></div>
-<p><img alt="" src="../img/launch_vehicle.png"></p>
+<p><img alt="" src="../img/launch_vehicle.png"/></p>
 <p>要手动驾驶车辆，请按“B”。按“H”查看说明。</p>
 <div class="admonition 注意">
 <p class="admonition-title">注意</p>
@@ -206,14 +199,14 @@ ros2<span class="w"> </span>launch<span class="w"> </span>carla_ros_bridge<span 
 <p>在默认的 Town10HD_Opt 地图上启动手动控制（只修改参数 <code>town</code>），
 </p><div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge_with_example_ego_vehicle.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47<span class="w"> </span>timeout:<span class="o">=</span><span class="m">60000</span><span class="w"> </span>town:<span class="o">=</span><span class="s1">'Carla/Maps/Town10HD_Opt'</span><span class="w"> </span>spawn_point:<span class="o">=</span>-25,-134,0.5,0,0,-90
 </code></pre></div>
-<p><img alt="" src="../img/ground/launch_vehicle_Town10_Opt.png"></p>
+<p><img alt="" src="../img/ground/launch_vehicle_Town10_Opt.png"/></p>
 <h2 id="rviz">使用 rviz 进行可视化</h2>
 <ul>
 <li>
 <p>查看主题
     </p><div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
 </code></pre></div>
-    <img alt="" src="../img/ros_topic.png">
+<img alt="" src="../img/ros_topic.png"/>
 </li>
 <li>
 <p>启动 RVIZ
@@ -222,15 +215,15 @@ ros2<span class="w"> </span>launch<span class="w"> </span>carla_ros_bridge<span 
 </li>
 <li>
 <p>在 RVIZ 中按主题添加相机，即可在左下角看到模拟器的实时相机数据
-    <img alt="" src="../img/rviz_add_camera.png"></p>
+    <img alt="" src="../img/rviz_add_camera.png"/></p>
 </li>
 <li>
 <p>可视化雷达
-    <img alt="" src="../img/rviz_lidar.png"></p>
+    <img alt="" src="../img/rviz_lidar.png"/></p>
 </li>
 <li>
 <p>Marker Topic（标记话题）：显示发出的 3D 图形 </p>
-<p><img alt="" src="../img/marker_topic.png"></p>
+<p><img alt="" src="../img/marker_topic.png"/></p>
 </li>
 </ul>
 <!-- 
@@ -240,7 +233,6 @@ rclpy 是 ROS 2（Robot Operating System 2）的 Python 接口
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>rosdepc
 </code></pre></div>
 -->
-
 <h2 id="matlab-carla-ros">Matlab 验证 Carla ROS 连接（可选）</h2>
 <p>将 Matlab 连接到在 VM Ware 中运行的 ROS 主机的 11311 端口。
 </p><div class="highlight"><pre><span></span><code><span class="c1"># 注意命令中的IP地址需要改为虚拟机中的地址，通过ifconfig查看</span>
@@ -294,62 +286,47 @@ AttributeError:<span class="w"> </span>module<span class="w"> </span><span class
 <li><a href="https://github.com/carla-simulator/ros-bridge/issues/763">支持 0.9.16</a></li>
 <li><a href="https://smarttofdoc.readthedocs.io/en/latest/Tutorial/ROS/rosrviz.html">ROS rviz工具使用</a></li>
 </ul></div>
-              
-            </div>
-          </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../musculoskeletal/musculoskeletal_basics/" class="btn btn-neutral float-left" title="肌肉骨骼人基础"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-        <a href="../ground/carla_spawn_objects/" class="btn btn-neutral float-right" title="生成对象">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-      <p>OpenHUTB 版权所有 &copy; 2026</p>
-  </div>
-
-</footer>
-          
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-
-  <div class="rst-versions" role="note" aria-label="Versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    
-        <span>
-          <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
-        </span>
-    
-    
-      <span><a href="../musculoskeletal/musculoskeletal_basics/" style="color: #fcfcfc">&laquo; 前一页</a></span>
-    
-    
-      <span><a href="../ground/carla_spawn_objects/" style="color: #fcfcfc">后一页 &raquo;</a></span>
-    
-  </span>
 </div>
-    <script src="../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "..";</script>
-    <script src="../js/theme_extra.js"></script>
-    <script src="../js/theme.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-      <script src="https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
-      <script src="../js/umlconvert.js"></script>
-      <script src="../search/main.js"></script>
-    <script>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../musculoskeletal/musculoskeletal_basics/" title="肌肉骨骼人基础"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ground/carla_spawn_objects/" title="生成对象">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../musculoskeletal/musculoskeletal_basics/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ground/carla_spawn_objects/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "..";</script>
+<script src="../js/theme_extra.js"></script>
+<script src="../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../js/umlconvert.js"></script>
+<script src="../search/main.js"></script>
+<script>
         jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
         });
     </script>
-
 </body>
 </html>
