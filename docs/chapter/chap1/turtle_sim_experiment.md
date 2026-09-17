@@ -35,9 +35,7 @@ turtle_sim_experiment/
 
 前面的画正方形、画圆实验都只控制 turtle1 一只海龟。本实验先用 `/spawn` 服务在公共中心 (5.5, 5.5) 处生成第二只海龟 turtle2，再让它连续画 6 个圆，关键在圆的布置方式：
 
-**6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。** 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣，如下图所示（不同颜色代表不同花瓣）：
-
-![自动画花瓣模块运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
+**6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。** 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣（不同颜色代表不同花瓣，最终效果见 4.4 节）。
 
 第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 `/turtle2/teleport_absolute` 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 `/turtle2/set_pen` 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。
 
@@ -165,8 +163,6 @@ process[turtle_circle_drawer-2]: started with pid [xxxx]
 [INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
 ```
 
-![roscore 启动成功](../../img/chapter/turtle_sim_experiment_roscore.png)
-
 ### 4.3 服务与节点验证
 
 程序运行期间，另开终端可以查看多海龟系统的状态：
@@ -177,10 +173,6 @@ rosservice list | grep turtle2   # 可看到 /turtle2/... 系列服务
 rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose 等话题
 ```
 
-生成 turtle2 前后仿真窗口的对比（左侧为手动用 rosservice call /spawn 2.0 2.0 0.0 'turtle2' 演示的效果）：
-
-![用 /spawn 服务生成第二只海龟](../../img/chapter/turtle_sim_experiment_rosservice_spawn.png)
-
 ### 4.4 预期结果
 
 节点运行后，turtle2 从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
@@ -190,7 +182,11 @@ rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose �
 [INFO] [...]: 演示完成：turtle2 共画出 6 个半径 1.50 米的花瓣圆
 ```
 
-最终窗口中呈现 6 个两两相扣的彩色花瓣（见 2.1 节效果图）。由于 turtlesim 的采样周期和瞬移误差，个别花瓣的起止点可能存在轻微缝隙，属于正常现象。
+最终窗口中呈现 6 个两两相扣的彩色花瓣：
+
+![小海龟绘制花瓣运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
+
+由于 turtlesim 的采样周期和瞬移误差，个别花瓣的起止点可能存在轻微缝隙，属于正常现象。
 
 ## 五、参数调整
 
