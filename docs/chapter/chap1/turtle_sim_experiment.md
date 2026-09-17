@@ -4,9 +4,9 @@
 
 ### 1.1 实验目的
 
-1. 掌握 turtlesim 的服务调用：用 `/spawn` 生成第二只海龟、用 `/set_pen` 设置画笔颜色、用 `/teleport_absolute` 瞬移海龟；
+1. 掌握 turtlesim 的服务调用：用 `/set_pen` 设置画笔颜色、用 `/teleport_absolute` 瞬移海龟；
 2. 掌握花瓣图案的几何构造：让 6 个圆心均匀分布于公共中心四周、圆心距等于半径的圆依次绘制，形成两两相扣的花瓣；
-3. 通过 `roslaunch` 一键启动仿真器与控制节点，完成多海龟协作的彩色花瓣绘制。
+3. 通过 `roslaunch` 一键启动仿真器与控制节点，完成彩色花瓣的自动绘制。
 
 ### 1.2 实验环境
 
@@ -22,7 +22,7 @@
 
 ```text
 turtle_sim_experiment/
-├── main.py           # 主程序：生成第二只海龟并控制其画花瓣
+├── main.py           # 主程序：控制小海龟画花瓣
 ├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
 ├── package.xml       # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
 ├── CMakeLists.txt    # 编译配置，安装 Python 脚本
@@ -33,7 +33,7 @@ turtle_sim_experiment/
 
 ### 2.1 花瓣的几何构造
 
-本实验通过 `/spawn` 服务在公共中心 (5.5, 5.5) 处生成第二只海龟 turtle2，由它连续画 6 个圆组成花瓣，关键在圆的布置方式：
+本实验控制小海龟从公共中心 (5.5, 5.5) 出发，连续画 6 个圆组成花瓣，关键在圆的布置方式：
 
 **6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。** 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣（不同颜色代表不同花瓣，最终效果见 4.4 节）。
 
@@ -50,12 +50,12 @@ turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令
 
 ### 2.3 服务等待
 
-画花瓣节点必须先于 turtlesim_node 启动时（例如通过 launch 一键启动），`/spawn` 等服务可能尚未上线。程序开头用 `rospy.wait_for_service('/spawn')` 同步等待服务可用后再创建 `ServiceProxy`，避免调用失败。
+通过 launch 一键启动时，画花瓣节点可能先于 turtlesim_node 就绪，`/set_pen` 等服务尚未上线。程序开头用 `rospy.wait_for_service('/spawn')` 同步等待服务可用后再创建 `ServiceProxy`，避免调用失败。
 
 ### 2.4 算法流程
 
 1. 初始化节点 `turtle_circle_drawer`，读取花瓣数、线速度、角速度参数；
-2. 等待 `/spawn` 服务上线，在公共中心 (5.5, 5.5) 生成 turtle2；
+2. 等待服务上线，将小海龟放到公共中心 (5.5, 5.5)；
 3. 循环 6 次，每轮执行：抬笔 → 瞬移到该花瓣起点并转到切线方向 → 换色落笔 → 50 Hz 持续发布速度指令画满 T = 2π/ω 秒（一个整圆）→ 抬笔；
 4. 6 个花瓣全部完成后输出结束日志。
 
@@ -66,7 +66,7 @@ turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令
 ```python
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# 小海龟画花瓣节点：先 /spawn 生成 turtle2，再让它连续画 6 个
+# 小海龟画花瓣节点：控制小海龟连续画 6 个
 # 圆心均匀分布、两两相扣的彩色圆（花瓣）。代码兼容 Python 2/3。
 
 import math
@@ -95,8 +95,8 @@ def main():
     set_pen = rospy.ServiceProxy('/turtle2/set_pen', SetPen)
     teleport = rospy.ServiceProxy('/turtle2/teleport_absolute', TeleportAbsolute)
 
-    resp = spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')  # 生成第二只海龟
-    rospy.loginfo('已生成小海龟: %s', resp.name)
+    resp = spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')  # 将小海龟放到公共中心
+    rospy.loginfo('小海龟就位: %s', resp.name)
 
     pub = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
     rate = rospy.Rate(50)                 # 50 Hz，远高于 0.5 秒看门狗阈值
@@ -128,7 +128,7 @@ def main():
     except rospy.ROSInterruptException:
         pass
 
-    rospy.loginfo('演示完成：turtle2 共画出 %d 个半径 %.2f 米的花瓣圆', petals, radius)
+    rospy.loginfo('演示完成：小海龟共画出 %d 个半径 %.2f 米的花瓣圆', petals, radius)
 
 
 if __name__ == '__main__':
@@ -159,13 +159,13 @@ roslaunch turtle_sim_experiment main.launch
 process[turtlesim-1]: started with pid [xxxx]
 process[turtle_circle_drawer-2]: started with pid [xxxx]
 [INFO] [...]: 等待 /spawn 服务上线 ...
-[INFO] [...]: 已生成小海龟: turtle2
+[INFO] [...]: 小海龟就位
 [INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
 ```
 
 ### 4.3 服务与节点验证
 
-程序运行期间，另开终端可以查看多海龟系统的状态：
+程序运行期间，另开终端可以查看系统的运行状态：
 
 ```bash
 rosnode list                 # 可看到 /turtlesim 与 /turtle_circle_drawer 两个节点
@@ -175,11 +175,11 @@ rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose �
 
 ### 4.4 预期结果
 
-节点运行后，turtle2 从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
+节点运行后，小海龟从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
 
 ```text
 [INFO] [...]: 开始画第 6 个花瓣，画笔 RGB=(0, 255, 255)
-[INFO] [...]: 演示完成：turtle2 共画出 6 个半径 1.50 米的花瓣圆
+[INFO] [...]: 演示完成：小海龟共画出 6 个半径 1.50 米的花瓣圆
 ```
 
 最终窗口中呈现 6 个两两相扣的彩色花瓣：
@@ -203,6 +203,6 @@ rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose �
 
 ## 六、总结
 
-本实验通过 `/spawn` 服务生成第二只海龟，综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与 `/turtle2/cmd_vel` 速度话题发布，让 turtle2 自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。
+本实验综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与 `/turtle2/cmd_vel` 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。
 
-通过本实验，可以掌握 ROS 服务调用的方法（生成海龟、设置画笔、瞬移）、服务与话题两类通信方式的分工（"做一件事要一个结果"的操作走服务，持续的控制量走话题），以及 `roslaunch` 一键组织多节点启动的方法。
+通过本实验，可以掌握 ROS 服务调用的方法（设置画笔、瞬移）、服务与话题两类通信方式的分工（"做一件事要一个结果"的操作走服务，持续的控制量走话题），以及 `roslaunch` 一键组织多节点启动的方法。

@@ -1,6 +1,6 @@
 # turtle_sim_experiment — 小海龟自动画花瓣演示模块（第一章扩展实验）
 
-`roslaunch` 一键启动小海龟仿真器，并自动生成第二只海龟 `turtle2`，控制它画出 6 个两两相扣的彩色花瓣圆。配套详细教程见 [docs/chapter/turtle_sim_experiment](../../docs/chapter/turtle_sim_experiment.md)。
+`roslaunch` 一键启动小海龟仿真器，控制小海龟画出 6 个两两相扣的彩色花瓣圆。配套详细教程见 [docs/chapter/turtle_sim_experiment](../../docs/chapter/turtle_sim_experiment.md)。
 
 ## 运行环境
 
@@ -48,4 +48,4 @@ python3 main.py          # 直接运行入口脚本（16.04 下为 python main.p
 
 ## 预期效果
 
-仿真窗口中出现第二只小海龟 `turtle2`，以公共中心 (5.5, 5.5) 为交点依次画出 6 个半径 1.5 m、两两相扣的彩色花瓣圆；终端输出每个花瓣的画笔颜色和完成日志。
+仿真窗口中小海龟以公共中心 (5.5, 5.5) 为交点依次画出 6 个半径 1.5 m、两两相扣的彩色花瓣圆；终端输出每个花瓣的画笔颜色和完成日志。
