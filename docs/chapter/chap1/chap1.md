@@ -27,11 +27,10 @@
 
 [进入小海龟绘制 OpenHUTB 实验](turtle_hutb.md)
 
-### 4. 小海龟画花瓣（服务调用与 ROS 命令实践）
+### 4. 小海龟画花瓣
 
-先用键盘遥控和 rosnode、rostopic、rosservice、rosparam 等命令
-熟悉小海龟系统的操作与调试，再通过 `/spawn` 服务生成第二只海龟，
-综合 `/set_pen`、`/teleport_absolute` 服务与话题发布，
-让 turtle2 自动画出 6 个两两相扣的彩色花瓣。
+通过 `/spawn` 服务生成第二只海龟 turtle2，
+综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与速度话题发布，
+让 6 个圆心均匀分布、两两相扣的彩色圆组成花瓣图案。
 
 [进入小海龟画花瓣实验](turtle_sim_experiment.md)

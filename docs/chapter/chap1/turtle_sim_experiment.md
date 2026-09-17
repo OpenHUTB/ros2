@@ -1,241 +1,212 @@
-# 小海龟画花瓣实验（服务调用与 ROS 命令实践）
+# 小海龟画花瓣实验
 
-本实验是第一章小海龟系列实验的扩展。前面的画正方形、画圆、绘制 OpenHUTB 实验都是通过一个控制节点向 `/turtle1/cmd_vel` 发布速度指令完成的，本实验补充它们没有覆盖的内容：先用键盘遥控和命令行工具熟悉小海龟的操作与调试，再通过 `/spawn` 服务生成**第二只海龟**，综合 `/spawn`、`/set_pen`、`/teleport_absolute` 服务与话题发布，让两只海龟中的 turtle2 自动画出 6 个两两相扣的彩色花瓣。实验在 Ubuntu 20.04 + ROS Noetic 环境下完成，全部命令也在 Ubuntu 16.04 + Kinetic 上验证通过（仅功能包前缀不同）。
+## 一、实验目的与环境说明
 
-## 一、实验目的
+### 1.1 实验目的
 
-1. 掌握 turtlesim 的服务调用：用 `/spawn` 生成第二只海龟、用 `/set_pen` 设置画笔、用 `/teleport_absolute` 变换海龟位置；
-2. 通过小海龟练习 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，学会用命令行查看和调试一个运行中的 ROS 系统；
-3. 综合服务与话题两类通信方式，控制多只海龟协作画出花瓣图案，理解花瓣的几何构造方法。
+1. 掌握 turtlesim 的服务调用：用 `/spawn` 生成第二只海龟、用 `/set_pen` 设置画笔颜色、用 `/teleport_absolute` 瞬移海龟；
+2. 掌握花瓣图案的几何构造：让 6 个圆心均匀分布于公共中心四周、圆心距等于半径的圆依次绘制，形成两两相扣的花瓣；
+3. 通过 `roslaunch` 一键启动仿真器与控制节点，完成多海龟协作的彩色花瓣绘制。
 
-## 二、实验环境
+### 1.2 实验环境
 
 | 项目 | 配置 |
 | ---- | ---- |
-| 操作系统 | Ubuntu 20.04 LTS（VMware 虚拟机） |
-| ROS 发行版 | ROS Noetic（兼容 Ubuntu 16.04 + Kinetic） |
+| 操作系统 | Ubuntu 20.04（VMware 虚拟机） |
+| ROS 发行版 | ROS Noetic |
 | 仿真器 | turtlesim |
-| 键盘控制包 | ros-noetic-teleop-twist-keyboard |
-| 编程语言 | Python 3（Noetic），代码兼容 Python 2.7（Kinetic） |
+| 编程语言 | Python 3（rospy） |
+| 功能包 | turtle_sim_experiment |
 
-开始前先用 lsb_release 和 rosversion 确认系统版本和 ROS 版本，确保环境无误：
-
-![系统与 ROS 版本确认](../../img/chapter/turtle_sim_experiment_environment_check.png)
-
-## 三、准备：启动仿真器并键盘遥控
-
-开三个终端，分别执行：
-
-```bash
-roscore                                # 终端 1：启动 Master
-rosrun turtlesim turtlesim_node        # 终端 2：启动小海龟仿真窗口
-rosrun turtlesim turtle_teleop_key     # 终端 3：启动键盘控制节点
-```
-
-其中键盘控制包需要先安装：`sudo apt install ros-noetic-teleop-twist-keyboard`（16.04 把 noetic 换成 kinetic）。注意鼠标焦点必须放在 turtle_teleop_key 所在的终端上按键才有效，`i/j/k/l/,` 等按键分别控制前进、转向和停止。
-
-![roscore 启动成功](../../img/chapter/turtle_sim_experiment_roscore.png)
-
-![turtlesim 启动成功](../../img/chapter/turtle_sim_experiment_turtlesim_start.png)
-
-用方向键遥控海龟画出的轨迹：
-
-![键盘控制小海龟画出轨迹](../../img/chapter/turtle_sim_experiment_turtle_keyboard_control.png)
-
-再开一个终端可以实时查看小海龟的位姿（x、y 坐标和 theta 朝向角）：
-
-```bash
-rostopic echo /turtle1/pose
-```
-
-![查看 /turtle1/pose 实时位姿](../../img/chapter/turtle_sim_experiment_rostopic_echo_pose.png)
-
-## 四、用命令行调试小海龟系统
-
-这部分练习 ROS 的命令行工具，它们是调试任何 ROS 系统的通用手段。
-
-### 1. 节点：rosnode
-
-```bash
-rosnode list              # 列出所有运行中的节点
-rosnode info /turtlesim   # 查看某个节点的详细信息
-```
-
-列表里有三个节点：/rosout 是 roscore 自带的日志节点，/teleop_turtle 是键盘控制，/turtlesim 是仿真器。rosnode info /turtlesim 可以看到它订阅了 /turtle1/cmd_vel（接收速度指令），发布了 /turtle1/pose（对外广播位姿），和上一节的控制过程正好对得上；输出最后还列出了它提供的 /clear、/spawn 等服务，下面马上会用到。
-
-![rosnode list 与 rosnode info 的输出](../../img/chapter/turtle_sim_experiment_rosnode_list_info.png)
-
-### 2. 话题：rostopic
-
-```bash
-rostopic list                   # 列出所有话题
-rostopic info /turtle1/cmd_vel  # 查看消息类型、发布者和订阅者
-rostopic type /turtle1/cmd_vel  # 只查看消息类型
-```
-
-rostopic info /turtle1/cmd_vel 显示这条话题的类型是 geometry_msgs/Twist，发布者是 /teleop_turtle，订阅者是 /turtlesim。发布者和订阅者只通过话题名联系，互相不需要知道对方是谁，这就是 ROS 的发布/订阅通信模型。也可以不经过 teleop 节点，直接用 rostopic pub 向话题发消息控制海龟（速度分量的含义与画正方形实验中相同）。
-
-### 3. 服务：rosservice
-
-```bash
-rosservice list                # 列出所有服务
-rosservice type /spawn         # 查看服务类型：turtlesim/Spawn
-rosservice call /spawn 2.0 2.0 0.0 'turtle2'   # 在 (2,2) 处再生成一只海龟
-```
-
-和话题的"广播"不同，服务是请求-应答式的：发出调用后会等仿真器返回结果，这里返回的是新海龟的名字 name: "turtle2"，右侧仿真窗口里也能看到 turtle1 和 turtle2 两只海龟。生成第二只海龟正是后面画花瓣实验的基础。
-
-![用 /spawn 服务生成第二只海龟](../../img/chapter/turtle_sim_experiment_rosservice_spawn.png)
-
-画笔服务 set_pen 的参数依次是 r、g、b、线宽、是否抬笔：
-
-```bash
-rosservice call /clear                          # 清空轨迹
-rosservice call /reset                          # 重置仿真器
-rosservice call /turtle1/set_pen 255 0 0 3 0   # 换成线宽 3 的红色画笔
-```
-
-![set_pen 换红色画笔并 clear/reset 后的效果](../../img/chapter/turtle_sim_experiment_rosservice_set_pen.png)
-
-### 4. 参数：rosparam
-
-```bash
-rosparam list    # 列出参数服务器上的所有参数
-```
-
-参数列表里能看到两组背景色参数：一组在根命名空间下（/background_r、/background_g、/background_b），另一组挂在 /turtlesim/ 的私有命名空间下，改哪一组都可以。把背景改成墨绿色：
-
-```bash
-rosparam set /background_r 25
-rosparam set /background_g 86
-rosparam set /background_b 25
-rosservice call /clear    # 改完参数要调用 /clear 让仿真器重绘才生效
-```
-
-参数服务器相当于一个全局的配置表，所有节点都能读写，适合放背景色、速度上限这类配置项。
-
-![修改背景色的效果](../../img/chapter/turtle_sim_experiment_rosparam_bg.png)
-
-### 5. 消息结构：rosmsg 和 rossrv
-
-```bash
-rosmsg show geometry_msgs/Twist   # 查看话题消息的结构
-rossrv show turtlesim/Spawn       # 查看服务的数据结构
-```
-
-可以看到 Twist 由 linear 和 angular 两个 Vector3 组成；下面的 rossrv 输出则是 Spawn 服务的数据结构（x、y、theta 是请求参数，string name 是返回值），与前面 rosservice call /spawn 的输入输出一一对应。
-
-![rosmsg show 与 rossrv show 的输出](../../img/chapter/turtle_sim_experiment_rosmsg_rossrv_show.png)
-
-### 6. rqt_graph 查看节点关系
-
-```bash
-rqt_graph
-```
-
-图里 teleop_turtle 经 /turtle1/cmd_vel 指向 turtlesim 的箭头，这样就把前面几条命令查到的关系画成了一张图，让人很直观地了解它们之间的关系。
-
-![rqt_graph 节点关系图](../../img/chapter/turtle_sim_experiment_rqt_graph_nodes.png)
-
-## 五、小海龟自动画花瓣模块
-
-### 5.1 花瓣的几何构造
-
-前面画正方形、画圆实验都只用一只海龟、一支画笔。花瓣图案的关键在几何设计：让 turtle2 画 6 个半径相同的圆，**每个圆的圆心均匀分布在公共中心 (5.5, 5.5) 四周，且圆心到公共中心的距离正好等于圆的半径**。这样每个圆都经过公共中心，相邻的圆两两相交，6 个圆叠在一起就是一圈互相扣住的花瓣。每个花瓣换一种画笔颜色，图案更直观。
-
-画每个圆之前，先用 `/turtle2/teleport_absolute` 把海龟瞬移到该圆的起点（公共中心外 2r 处、朝向取圆的切线方向），瞬移前先抬笔避免画出直线——这是 set_pen 的 off 参数的另一个用途。
-
-### 5.2 目录结构
+功能包目录结构如下：
 
 ```text
-src/chap1/turtle_sim_experiment/
-├── main.py           # 入口脚本：生成第二只海龟并控制其画花瓣
+turtle_sim_experiment/
+├── main.py           # 主程序：生成第二只海龟并控制其画花瓣
 ├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
-├── package.xml       # catkin 包清单
-├── CMakeLists.txt    # catkin 编译配置
-└── README.md         # 运行环境与步骤说明
+├── package.xml       # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
+├── CMakeLists.txt    # 编译配置，安装 Python 脚本
+└── README.md         # 运行说明
 ```
 
-### 5.3 实现思路
+## 二、核心控制原理与算法解析
 
-main.launch 同时拉起 turtlesim_node 和画花瓣节点：
+### 2.1 花瓣的几何构造
 
-```xml
-<launch>
-  <node pkg="turtlesim" type="turtlesim_node" name="turtlesim" output="screen"/>
-  <node pkg="turtle_sim_experiment" type="main.py" name="turtle_circle_drawer" output="screen"/>
-</launch>
-```
+前面的画正方形、画圆实验都只控制 turtle1 一只海龟。本实验先用 `/spawn` 服务在公共中心 (5.5, 5.5) 处生成第二只海龟 turtle2，再让它连续画 6 个圆，关键在圆的布置方式：
 
-main.py 的流程是：先等 /spawn 服务上线，在公共中心 (5.5, 5.5) 处生成 turtle2；然后以 50 Hz 的频率向 /turtle2/cmd_vel 发布 linear.x = 1.5、angular.z = 1.0 的速度指令（圆的半径 r = v/ω = 1.5 米，画一个整圆用时 T = 2π/ω ≈ 6.28 秒）；每画完一个花瓣就换一种画笔颜色，瞬移到下一个花瓣的起点再画。核心代码如下：
+**6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。** 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣，如下图所示（不同颜色代表不同花瓣）：
+
+![自动画花瓣模块运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
+
+第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 `/turtle2/teleport_absolute` 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 `/turtle2/set_pen` 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。
+
+### 2.2 圆周运动参数
+
+与画圆实验相同，向 `/turtle2/cmd_vel` 同时发布线速度 `linear.x = 1.5` 与角速度 `angular.z = 1.0`，海龟做逆时针圆周运动：
+
+- 圆的半径 r = v/ω = 1.5/1.0 = 1.5 米；
+- 画一个整圆的用时 T = 2π/ω ≈ 6.28 秒。
+
+turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令海龟就会刹停，所以控制循环以 `rospy.Rate(50)` 的 50 Hz 频率持续发布速度指令，直到本瓣画满整圆。
+
+### 2.3 服务等待
+
+画花瓣节点必须先于 turtlesim_node 启动时（例如通过 launch 一键启动），`/spawn` 等服务可能尚未上线。程序开头用 `rospy.wait_for_service('/spawn')` 同步等待服务可用后再创建 `ServiceProxy`，避免调用失败。
+
+### 2.4 算法流程
+
+1. 初始化节点 `turtle_circle_drawer`，读取花瓣数、线速度、角速度参数；
+2. 等待 `/spawn` 服务上线，在公共中心 (5.5, 5.5) 生成 turtle2；
+3. 循环 6 次，每轮执行：抬笔 → 瞬移到该花瓣起点并转到切线方向 → 换色落笔 → 50 Hz 持续发布速度指令画满 T = 2π/ω 秒（一个整圆）→ 抬笔；
+4. 6 个花瓣全部完成后输出结束日志。
+
+## 三、完整源码展示
+
+> 最新源码同步保存在本书仓库 `src/chap1/turtle_sim_experiment/`，可直接查看与下载。
 
 ```python
-# 等待 turtlesim 的 spawn 服务上线，避免节点比仿真器先启动导致调用失败
-rospy.wait_for_service('/spawn')
-spawn = rospy.ServiceProxy('/spawn', Spawn)
-spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')   # 在公共中心生成第二只海龟
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 小海龟画花瓣节点：先 /spawn 生成 turtle2，再让它连续画 6 个
+# 圆心均匀分布、两两相扣的彩色圆（花瓣）。代码兼容 Python 2/3。
 
-# 以 50 Hz 持续发布速度指令（远高于 0.5 秒看门狗的阈值）
-pub = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
-rate = rospy.Rate(50)
-twist = Twist()
-twist.linear.x = 1.5
-twist.angular.z = 1.0
+import math
 
-for i in range(petals):
-    # 第 i 个花瓣：起点在公共中心外 2r 处，朝向取圆的切线方向
-    theta = 2.0 * math.pi * i / petals
-    start_x = CENTER_X + 2.0 * radius * math.cos(theta)
-    start_y = CENTER_Y + 2.0 * radius * math.sin(theta)
-    heading = theta + math.pi / 2.0
+import rospy
+from geometry_msgs.msg import Twist
+from turtlesim.srv import Spawn, SetPen, TeleportAbsolute
 
-    set_pen(r, g, b, 3, 1)                  # 先抬笔，瞬移过程不画线
-    teleport(start_x, start_y, heading)     # 瞬移到该花瓣的起点
-    set_pen(r, g, b, 3, 0)                  # 落笔开画
+PETAL_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
+                (255, 255, 0), (255, 0, 255), (0, 255, 255)]
+CENTER_X, CENTER_Y = 5.5, 5.5   # 公共中心：所有花瓣圆的交点
 
-    end_time = rospy.Time.now() + rospy.Duration(circle_period)
-    while rospy.Time.now() < end_time and not rospy.is_shutdown():
-        pub.publish(twist)
-        rate.sleep()
+
+def main():
+    rospy.init_node('turtle_circle_drawer')
+
+    petals = rospy.get_param('~petals', 6)
+    linear_speed = rospy.get_param('~linear_speed', 1.5)
+    angular_speed = rospy.get_param('~angular_speed', 1.0)
+    radius = linear_speed / angular_speed          # r = v / w
+    circle_period = 2.0 * math.pi / angular_speed  # 画整圆用时 T = 2π / w
+
+    # 等待 turtlesim 的服务上线（launch 一键启动时仿真器可能稍后就绪）
+    rospy.wait_for_service('/spawn')
+    spawn = rospy.ServiceProxy('/spawn', Spawn)
+    set_pen = rospy.ServiceProxy('/turtle2/set_pen', SetPen)
+    teleport = rospy.ServiceProxy('/turtle2/teleport_absolute', TeleportAbsolute)
+
+    resp = spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')  # 生成第二只海龟
+    rospy.loginfo('已生成小海龟: %s', resp.name)
+
+    pub = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
+    rate = rospy.Rate(50)                 # 50 Hz，远高于 0.5 秒看门狗阈值
+    twist = Twist()
+    twist.linear.x = linear_speed
+    twist.angular.z = angular_speed
+
+    try:
+        for i in range(petals):
+            # 第 i 个花瓣：起点在公共中心外 2r 处，朝向取圆的切线方向
+            theta = 2.0 * math.pi * i / petals
+            start_x = CENTER_X + 2.0 * radius * math.cos(theta)
+            start_y = CENTER_Y + 2.0 * radius * math.sin(theta)
+            heading = theta + math.pi / 2.0
+
+            r, g, b = PETAL_COLORS[i % len(PETAL_COLORS)]
+            rospy.loginfo('开始画第 %d 个花瓣，画笔 RGB=(%d, %d, %d)', i + 1, r, g, b)
+
+            set_pen(r, g, b, 3, 1)               # 抬笔，瞬移过程不画线
+            teleport(start_x, start_y, heading)  # 瞬移到该花瓣的起点
+            set_pen(r, g, b, 3, 0)               # 落笔开画
+
+            end_time = rospy.Time.now() + rospy.Duration(circle_period)
+            while rospy.Time.now() < end_time and not rospy.is_shutdown():
+                pub.publish(twist)
+                rate.sleep()
+
+            set_pen(r, g, b, 3, 1)               # 本瓣完成，抬笔
+    except rospy.ROSInterruptException:
+        pass
+
+    rospy.loginfo('演示完成：turtle2 共画出 %d 个半径 %.2f 米的花瓣圆', petals, radius)
+
+
+if __name__ == '__main__':
+    main()
 ```
 
-完整代码见 src/chap1/turtle_sim_experiment/main.py，写法上兼容 Python 2 和 Python 3。
+## 四、运行与验证
 
-### 5.4 运行方法
+### 4.1 编译功能包
 
 ```bash
-# 方式一：roslaunch 一键启动（推荐）
 mkdir -p ~/catkin_ws/src
 cp -r <仓库路径>/src/chap1/turtle_sim_experiment ~/catkin_ws/src/
 chmod +x ~/catkin_ws/src/turtle_sim_experiment/main.py
 cd ~/catkin_ws && catkin_make
 source devel/setup.bash
-roslaunch turtle_sim_experiment main.launch   # roslaunch 会自动启动 Master，不用单独开 roscore
-
-# 方式二：手动开三个终端（roscore、turtlesim_node），最后直接运行 python3 main.py（16.04 下为 python main.py）
 ```
 
-运行效果：
+### 4.2 启动节点
 
-![自动画花瓣模块运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
+```bash
+roslaunch turtle_sim_experiment main.launch
+```
 
-## 六、遇到的问题及解决方法
+`roslaunch` 会自动完成两件事：启动 ROS Master（无需单独运行 roscore），并按 `main.launch` 先后拉起 turtlesim 仿真器和画花瓣节点。启动后终端依次输出：
 
-1. 键盘按了海龟不动：原因是鼠标焦点不在 turtle_teleop_key 所在的终端上，点一下那个终端再按方向键就正常了；
-2. rostopic pub 发一条指令海龟只动 0.5 秒：turtlesim 的看门狗把速度清零了，需要加 -r 参数循环发布；
-3. 克隆 GitHub 仓库报 SSL certificate problems：开了加速器的缘故，关掉加速器再克隆就正常了；
-4. 虚拟机画面卡顿：关闭 3D 加速、安装 open-vm-tools 后有明显改善。
+```text
+process[turtlesim-1]: started with pid [xxxx]
+process[turtle_circle_drawer-2]: started with pid [xxxx]
+[INFO] [...]: 等待 /spawn 服务上线 ...
+[INFO] [...]: 已生成小海龟: turtle2
+[INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
+```
 
-## 七、实验总结
+![roscore 启动成功](../../img/chapter/turtle_sim_experiment_roscore.png)
 
-本实验补充了前面小海龟系列实验没有覆盖的内容：键盘遥控与命令行调试（rosnode、rostopic、rosservice、rosparam、rosmsg、rqt_graph），多海龟的生成与控制（/spawn、/set_pen、/teleport_absolute 服务的综合使用），以及花瓣图案的几何构造——通过让 6 个圆心均匀分布、半径等于圆心距的圆依次绘制，得到两两相扣的花瓣。
+### 4.3 服务与节点验证
 
-实验中体会最深的有两点：一是服务与话题的分工——速度这类持续控制走话题，生成海龟、换笔、瞬移这类"做一件事、要一个结果"的操作走服务；二是参数修改后必须触发重绘（/clear）才生效，这类细节只有实际操作过才能注意到。
+程序运行期间，另开终端可以查看多海龟系统的状态：
 
-## 参考资料
+```bash
+rosnode list                 # 可看到 /turtlesim 与 /turtle_circle_drawer 两个节点
+rosservice list | grep turtle2   # 可看到 /turtle2/... 系列服务
+rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose 等话题
+```
 
-1. [ROS Wiki：turtlesim 及命令行工具教程](http://wiki.ros.org/turtlesim)
+生成 turtle2 前后仿真窗口的对比（左侧为手动用 rosservice call /spawn 2.0 2.0 0.0 'turtle2' 演示的效果）：
 
-## 声明
+![用 /spawn 服务生成第二只海龟](../../img/chapter/turtle_sim_experiment_rosservice_spawn.png)
 
-本报告使用GLM辅助代码调试、语言润色。所有实验操作、数据、图表、分析和结论均由本人独立完成并核验。本人对提交内容负全部责任。
+### 4.4 预期结果
+
+节点运行后，turtle2 从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
+
+```text
+[INFO] [...]: 开始画第 6 个花瓣，画笔 RGB=(0, 255, 255)
+[INFO] [...]: 演示完成：turtle2 共画出 6 个半径 1.50 米的花瓣圆
+```
+
+最终窗口中呈现 6 个两两相扣的彩色花瓣（见 2.1 节效果图）。由于 turtlesim 的采样周期和瞬移误差，个别花瓣的起止点可能存在轻微缝隙，属于正常现象。
+
+## 五、参数调整
+
+通过修改花瓣数、线速度和角速度，可以改变花瓣图案的形态：
+
+| 参数设置 | 运行效果 |
+| ---- | ---- |
+| `petals = 6`，`linear_speed = 1.5`，`angular_speed = 1.0` | 6 瓣，花瓣圆半径 1.5 m |
+| `petals = 4`，`linear_speed = 1.5`，`angular_speed = 1.0` | 4 瓣（四叶草图案） |
+| `petals = 8`，`linear_speed = 1.0`，`angular_speed = 1.0` | 8 瓣，花瓣圆半径 1 m，图案更密 |
+| `petals = 6`，`linear_speed = 1.5`，`angular_speed = -1.0` | 顺时针画瓣，花瓣朝向相反 |
+
+**注意**：花瓣数不宜过大——花瓣圆半径 r = v/ω 需满足 2r < 5.5，否则瞬移起点会超出 turtlesim 的 11×11 画布边界，画出的圆会被截断。
+
+## 六、总结
+
+本实验通过 `/spawn` 服务生成第二只海龟，综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与 `/turtle2/cmd_vel` 速度话题发布，让 turtle2 自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。
+
+通过本实验，可以掌握 ROS 服务调用的方法（生成海龟、设置画笔、瞬移）、服务与话题两类通信方式的分工（"做一件事要一个结果"的操作走服务，持续的控制量走话题），以及 `roslaunch` 一键组织多节点启动的方法。
