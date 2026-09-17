@@ -51,9 +51,9 @@
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#vmware">第一步：装 VMware + 打开虚拟机</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_1">第二步：把代码共享至虚拟机</a>
+<li class="toctree-l2"><a class="reference internal" href="#_1">第二步：获取代码</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#workspace">第三步：把第二章代码拷进 workspace</a>
+<li class="toctree-l2"><a class="reference internal" href="#workspace">第三步：把第二章代码拷贝到 workspace</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_2">第四步：编译</a>
 </li>
@@ -155,27 +155,42 @@
 <li>装好后 <strong>VMware → 文件 → 打开虚拟机</strong>，选这个文件：<code>ros\ros_noetic_humble_gazebov11_linux_win_v1\ros_noetic_humble_gazebov11_linux_win_v1\ros-noetic-humble-gazebo11-linux-win-v1.vmx</code></li>
 <li><strong>先别急着开机</strong>，看下配置：这个虚拟机默认分配了 <strong>6 核 CPU / 8.78 GB 内存 / 768MB 显存</strong>。如果你电脑没那么强，在「虚拟机设置」里把 CPU 和内存调低（比如 4 核 / 4GB），否则会卡或抢资源。</li>
 </ol>
-<h2 id="_1">第二步：把代码共享至虚拟机</h2>
+<h2 id="_1">第二步：获取代码</h2>
+<p>在虚拟机的用户主目录下运行以下命令：
+</p><div class="highlight"><pre><span></span><code>cd ~
+git clone https://github.com/OpenHUTB/ros2.git
+cd ros2
+</code></pre></div>
+<p>如果代码在宿主机，则执行下列操作将代码共享至虚拟机：</p>
 <ol>
 <li>虚拟机--&gt;设置 → 选项 → 共享文件夹 → 总是启用，添加主机的 <code>ros</code>文件夹。</li>
 <li>在虚拟机 Ubuntu 里，它出现在 <code>/mnt/hgfs/</code> 下，如果没有出现，输入<code>sudo vmware-hgfsclient</code>（密码为：<code>password</code>）列出有哪些共享随后执行<code>echo ".host:/ros    /mnt/hgfs    fuse.vmhgfs-fuse    defaults,allow_other    0    0" | sudo tee -a /etc/fstab</code>然后再看<code>ls /mnt/hgfs/</code>就可以看到挂载文件中的内容了。</li>
 </ol>
-<h2 id="workspace">第三步：把第二章代码拷进 workspace</h2>
-<div class="highlight"><pre><span></span><code>ls<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2"</span>
+<h2 id="workspace">第三步：把第二章代码拷贝到 workspace</h2>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>~/ros2/src/chap2/
+<span class="c1"># 代码位于宿主机</span>
+<span class="c1"># ls "/mnt/hgfs/src/chap2"</span>
 </code></pre></div>
 <p>确认能看到 <code>learning_communication</code> 和 <code>learning_tf</code> 两个文件夹，然后拷：</p>
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros_ws/src
-cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2/learning_communication"</span><span class="w"> </span>~/ros_ws/src/
-cp<span class="w"> </span>-r<span class="w"> </span><span class="s2">"/mnt/hgfs/src/chap2/learning_tf"</span><span class="w"> </span>~/ros_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros2/src/chap2/learning_communication<span class="w"> </span>~/ros_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros2/src/chap2/learning_tf<span class="w"> </span>~/ros_ws/src/
+<span class="c1"># 代码位于宿主机</span>
+<span class="c1"># cp -r "/mnt/hgfs/src/chap2/learning_communication" ~/ros_ws/src/</span>
+<span class="c1"># cp -r "/mnt/hgfs/src/chap2/learning_tf" ~/ros_ws/src/</span>
 </code></pre></div>
 <p>一定要 <code>cp</code> 到 <code>~/ros_ws/src</code> 再编，不要直接在 <code>/mnt/hgfs</code> 里编（共享目录编译会出符号链接问题）。</p>
 <h2 id="_2">第四步：编译</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"source /opt/ros/noetic/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
-<span class="nb">source</span><span class="w"> </span>~/.bashrc
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="c1"># 避免每次打开命令行终端需要再次运行 source 命令</span>
+<span class="c1"># echo "source /opt/ros/noetic/setup.bash" &gt;&gt; ~/.bashrc</span>
+<span class="c1"># source ~/.bashrc</span>
 <span class="nb">cd</span><span class="w"> </span>~/ros_ws<span class="w">          </span><span class="c1"># 在 ros_ws 根目录，不是 src 里</span>
 catkin_make
-<span class="nb">echo</span><span class="w"> </span><span class="s2">"source ~/ros_ws/devel/setup.bash"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
-<span class="nb">source</span><span class="w"> </span>~/.bashrc
+<span class="nb">source</span><span class="w"> </span>~/ros_ws/devel/setup.bash
+<span class="c1"># 避免每次打开命令行终端需要再次运行 source 命令</span>
+<span class="c1"># echo "source ~/ros_ws/devel/setup.bash" &gt;&gt; ~/.bashrc</span>
+<span class="c1"># source ~/.bashrc</span>
 </code></pre></div>
 <h2 id="_3">第五步：运行</h2>
 <p><strong>①话题（发布/订阅）</strong></p>
