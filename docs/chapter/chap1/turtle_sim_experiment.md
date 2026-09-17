@@ -1,43 +1,30 @@
-# 小海龟仿真实验报告（Ubuntu 20.04 + ROS Noetic）
+# 小海龟画花瓣实验（服务调用与 ROS 命令实践）
 
-本实验是第一章"认识 ROS：小海龟画正方形"的扩展，在 Ubuntu 20.04 + ROS Noetic 环境下完成，内容分为两部分：运行小海龟例程并用键盘控制其运动、通过小海龟仿真器练习常用的 ROS 命令。在完成这两项任务的基础上，把手动执行的过程整理成了一个可以 roslaunch 一键启动的小海龟自动画花瓣模块（源码在 src/chap1/turtle_sim_experiment）。文中所有命令都在虚拟机里实际执行过，配图均为实验时的截图。
-
-除 Noetic 外，本实验的全部命令也在 Ubuntu 16.04 + ROS Kinetic 上验证通过，两个环境的操作步骤完全一致，仅功能包前缀不同（`ros-noetic-*` 与 `ros-kinetic-*`），使用 16.04 的同学把前缀替换即可。
+本实验是第一章小海龟系列实验的扩展。前面的画正方形、画圆、绘制 OpenHUTB 实验都是通过一个控制节点向 `/turtle1/cmd_vel` 发布速度指令完成的，本实验补充它们没有覆盖的内容：先用键盘遥控和命令行工具熟悉小海龟的操作与调试，再通过 `/spawn` 服务生成**第二只海龟**，综合 `/spawn`、`/set_pen`、`/teleport_absolute` 服务与话题发布，让两只海龟中的 turtle2 自动画出 6 个两两相扣的彩色花瓣。实验在 Ubuntu 20.04 + ROS Noetic 环境下完成，全部命令也在 Ubuntu 16.04 + Kinetic 上验证通过（仅功能包前缀不同）。
 
 ## 一、实验目的
 
-1. 学会运行小海龟例程，用键盘控制小海龟运动，理解控制背后的话题通信机制；
-2. 通过小海龟仿真器练习 rosnode、rostopic、rosservice、rosparam 等常用命令，建立对 ROS 节点、话题、服务、参数的直观认识。
+1. 掌握 turtlesim 的服务调用：用 `/spawn` 生成第二只海龟、用 `/set_pen` 设置画笔、用 `/teleport_absolute` 变换海龟位置；
+2. 通过小海龟练习 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，学会用命令行查看和调试一个运行中的 ROS 系统；
+3. 综合服务与话题两类通信方式，控制多只海龟协作画出花瓣图案，理解花瓣的几何构造方法。
 
 ## 二、实验环境
 
 | 项目 | 配置 |
 | ---- | ---- |
-| 宿主机 | Windows 11 |
-| 虚拟化平台 | VMware Workstation 17.6 |
-| 虚拟机系统 | Ubuntu 20.04 LTS（Focal）desktop-amd64 |
-| ROS 版本 | ROS Noetic（主环境，同时兼容 Ubuntu 16.04 + Kinetic） |
-| 仿真器 | turtlesim（desktop-full 自带） |
+| 操作系统 | Ubuntu 20.04 LTS（VMware 虚拟机） |
+| ROS 发行版 | ROS Noetic（兼容 Ubuntu 16.04 + Kinetic） |
+| 仿真器 | turtlesim |
 | 键盘控制包 | ros-noetic-teleop-twist-keyboard |
-| 编程语言 | Python 3（Noetic）/ Python 2.7（Kinetic），拓展模块代码采用 2/3 兼容写法 |
+| 编程语言 | Python 3（Noetic），代码兼容 Python 2.7（Kinetic） |
 
 开始前先用 lsb_release 和 rosversion 确认系统版本和 ROS 版本，确保环境无误：
 
 ![系统与 ROS 版本确认](../../img/chapter/turtle_sim_experiment_environment_check.png)
 
-## 三、实验步骤
+## 三、准备：启动仿真器并键盘遥控
 
-### （一）运行小海龟并用键盘控制
-
-#### 1. 启动仿真器
-
-先安装键盘控制包：
-
-```bash
-sudo apt install ros-noetic-teleop-twist-keyboard   # 16.04 用户把 noetic 换成 kinetic
-```
-
-然后开三个终端，分别执行：
+开三个终端，分别执行：
 
 ```bash
 roscore                                # 终端 1：启动 Master
@@ -45,48 +32,29 @@ rosrun turtlesim turtlesim_node        # 终端 2：启动小海龟仿真窗口
 rosrun turtlesim turtle_teleop_key     # 终端 3：启动键盘控制节点
 ```
 
-roscore 是 ROS 的节点注册中心（Master），所有节点通信前都要先在这里登记，所以能够通过输出里的 /rosdistro 字段确认当前环境版本：
+其中键盘控制包需要先安装：`sudo apt install ros-noetic-teleop-twist-keyboard`（16.04 把 noetic 换成 kinetic）。注意鼠标焦点必须放在 turtle_teleop_key 所在的终端上按键才有效，`i/j/k/l/,` 等按键分别控制前进、转向和停止。
 
 ![roscore 启动成功](../../img/chapter/turtle_sim_experiment_roscore.png)
 
-rosrun 的用法是 `rosrun 包名 可执行文件名`，它会自己去 ROS_PACKAGE_PATH 里找程序，所以我们就可以不用关心程序装在哪个目录里。
-
 ![turtlesim 启动成功](../../img/chapter/turtle_sim_experiment_turtlesim_start.png)
 
-#### 2. 键盘控制小海龟
-
-通过实验我发现鼠标焦点必须放在 turtle_teleop_key 所在的那个终端上，按键才会起作用。一开始我焦点停在仿真窗口上，海龟一直不动，查了资料才发现是这个问题。
-
-| 按键 | 作用 | 按键 | 作用 |
-| :--- | :--- | :--- | :--- |
-| `i` | 前进 | `,` | 后退 |
-| `j` | 原地左转 | `l` | 原地右转 |
-| `u` / `o` | 前进加左/右转（画弧线） | `k` | 停止 |
-| `q` / `z` | 增大 / 减小速度档位 | | |
-
-控制原理：teleop_turtle 节点把按键翻译成 geometry_msgs/Twist 类型的速度消息，发到 /turtle1/cmd_vel 话题上。Twist 里主要用到两个分量：linear.x 是线速度（正为前进，负为后退），angular.z 是绕 z 轴的角速度（正为逆时针左转）。两个速度同时不为零时海龟走圆弧。另外 turtlesim 有一个 0.5 秒的看门狗，超过 0.5 秒收不到新指令就会把海龟刹停，所以遥控时 teleop 节点是持续发送指令的，后面自己写控制节点时也必须循环发布。
-
-下图中的白色轨迹就是用方向键画出来的：
+用方向键遥控海龟画出的轨迹：
 
 ![键盘控制小海龟画出轨迹](../../img/chapter/turtle_sim_experiment_turtle_keyboard_control.png)
 
-#### 3. 查看小海龟的实时位姿
-
-再开一个终端订阅位姿话题：
+再开一个终端可以实时查看小海龟的位姿（x、y 坐标和 theta 朝向角）：
 
 ```bash
 rostopic echo /turtle1/pose
 ```
 
-其中 x、y 是坐标，theta 是朝向角，linear_velocity 和 angular_velocity 是当前速度。
-
 ![查看 /turtle1/pose 实时位姿](../../img/chapter/turtle_sim_experiment_rostopic_echo_pose.png)
 
-### （二）通过小海龟熟悉 ROS 常用命令
+## 四、用命令行调试小海龟系统
 
-ROS 的命令行工具按操作对象大致分五类：节点（rosnode）、话题（rostopic）、服务（rosservice）、参数（rosparam）、消息结构（rosmsg / rossrv）。下面在小海龟上逐个练习。
+这部分练习 ROS 的命令行工具，它们是调试任何 ROS 系统的通用手段。
 
-#### 1. 节点：rosnode
+### 1. 节点：rosnode
 
 ```bash
 rosnode list              # 列出所有运行中的节点
@@ -97,28 +65,17 @@ rosnode info /turtlesim   # 查看某个节点的详细信息
 
 ![rosnode list 与 rosnode info 的输出](../../img/chapter/turtle_sim_experiment_rosnode_list_info.png)
 
-#### 2. 话题：rostopic
+### 2. 话题：rostopic
 
 ```bash
 rostopic list                   # 列出所有话题
 rostopic info /turtle1/cmd_vel  # 查看消息类型、发布者和订阅者
 rostopic type /turtle1/cmd_vel  # 只查看消息类型
-rostopic echo /turtle1/pose     # 实时打印话题内容
 ```
 
-rostopic info /turtle1/cmd_vel 显示这条话题的类型是 geometry_msgs/Twist，发布者是 /teleop_turtle，订阅者是 /turtlesim。发布者和订阅者只通过话题名联系，互相不需要知道对方是谁，这就是 ROS 的发布/订阅通信模型。
+rostopic info /turtle1/cmd_vel 显示这条话题的类型是 geometry_msgs/Twist，发布者是 /teleop_turtle，订阅者是 /turtlesim。发布者和订阅者只通过话题名联系，互相不需要知道对方是谁，这就是 ROS 的发布/订阅通信模型。也可以不经过 teleop 节点，直接用 rostopic pub 向话题发消息控制海龟（速度分量的含义与画正方形实验中相同）。
 
-不按键盘，直接用命令发速度指令也能控制海龟：
-
-```bash
-rostopic pub /turtle1/cmd_vel geometry_msgs/Twist -r 10 -- '[1.0, 0.0, 0.0]' '[0.0, 0.0, 1.0]'
-```
-
-linear.x = 1.0 m/s、angular.z = 1.0 rad/s，海龟画出的圆半径正好是 v/ω = 1 米。-r 10 表示以 10 Hz 持续发布，因为看门狗的存在，只发一条的话海龟动 0.5 秒就停了。按 Ctrl+C 结束。
-
-![用 rostopic pub 控制小海龟画圆](../../img/chapter/turtle_sim_experiment_topic_pub_circle.png)
-
-#### 3. 服务：rosservice
+### 3. 服务：rosservice
 
 ```bash
 rosservice list                # 列出所有服务
@@ -126,11 +83,11 @@ rosservice type /spawn         # 查看服务类型：turtlesim/Spawn
 rosservice call /spawn 2.0 2.0 0.0 'turtle2'   # 在 (2,2) 处再生成一只海龟
 ```
 
-和话题的"广播"不同，服务是请求-应答式的：发出调用后会等仿真器返回结果，这里返回的是新海龟的名字 name: "turtle2"，右侧仿真窗口里也能看到 turtle1 和 turtle2 两只海龟：
+和话题的"广播"不同，服务是请求-应答式的：发出调用后会等仿真器返回结果，这里返回的是新海龟的名字 name: "turtle2"，右侧仿真窗口里也能看到 turtle1 和 turtle2 两只海龟。生成第二只海龟正是后面画花瓣实验的基础。
 
 ![用 /spawn 服务生成第二只海龟](../../img/chapter/turtle_sim_experiment_rosservice_spawn.png)
 
-小海龟还有画笔和画面控制类的服务，set_pen 的参数依次是 r、g、b、线宽、是否抬笔：
+画笔服务 set_pen 的参数依次是 r、g、b、线宽、是否抬笔：
 
 ```bash
 rosservice call /clear                          # 清空轨迹
@@ -140,13 +97,13 @@ rosservice call /turtle1/set_pen 255 0 0 3 0   # 换成线宽 3 的红色画笔
 
 ![set_pen 换红色画笔并 clear/reset 后的效果](../../img/chapter/turtle_sim_experiment_rosservice_set_pen.png)
 
-#### 4. 参数：rosparam
+### 4. 参数：rosparam
 
 ```bash
 rosparam list    # 列出参数服务器上的所有参数
 ```
 
-参数列表里能看到两组背景色参数：一组在根命名空间下（/background_r、/background_g、/background_b），另一组挂在 /turtlesim/ 的私有命名空间下，改哪一组都可以，下面用根命名空间这组演示。把背景改成墨绿色：
+参数列表里能看到两组背景色参数：一组在根命名空间下（/background_r、/background_g、/background_b），另一组挂在 /turtlesim/ 的私有命名空间下，改哪一组都可以。把背景改成墨绿色：
 
 ```bash
 rosparam set /background_r 25
@@ -159,18 +116,18 @@ rosservice call /clear    # 改完参数要调用 /clear 让仿真器重绘才�
 
 ![修改背景色的效果](../../img/chapter/turtle_sim_experiment_rosparam_bg.png)
 
-#### 5. 消息结构：rosmsg 和 rossrv
+### 5. 消息结构：rosmsg 和 rossrv
 
 ```bash
 rosmsg show geometry_msgs/Twist   # 查看话题消息的结构
 rossrv show turtlesim/Spawn       # 查看服务的数据结构
 ```
 
-可以看到 Twist 由 linear 和 angular 两个 Vector3 组成，每个 Vector3 里有 x、y、z 三个分量，前面用到的速度指令、位姿消息对应的就是这些字段；下面的 rossrv 输出则是 Spawn 服务的数据结构。
+可以看到 Twist 由 linear 和 angular 两个 Vector3 组成；下面的 rossrv 输出则是 Spawn 服务的数据结构（x、y、theta 是请求参数，string name 是返回值），与前面 rosservice call /spawn 的输入输出一一对应。
 
 ![rosmsg show 与 rossrv show 的输出](../../img/chapter/turtle_sim_experiment_rosmsg_rossrv_show.png)
 
-#### 6. rqt_graph 查看节点关系
+### 6. rqt_graph 查看节点关系
 
 ```bash
 rqt_graph
@@ -180,11 +137,15 @@ rqt_graph
 
 ![rqt_graph 节点关系图](../../img/chapter/turtle_sim_experiment_rqt_graph_nodes.png)
 
-## 四、实验拓展：小海龟自动画花瓣模块
+## 五、小海龟自动画花瓣模块
 
-因为上面的命令手动一条条敲比较费力，于是就写了一个小模块把过程串起来，使得roslaunch 一键启动后，可以自动生成第二只海龟，并画出 6 个两两相扣的彩色花瓣圆。（源码按仓库约定放在 src/chap1/turtle_sim_experiment，文档放在 docs/chapter。）
+### 5.1 花瓣的几何构造
 
-### 1. 目录结构
+前面画正方形、画圆实验都只用一只海龟、一支画笔。花瓣图案的关键在几何设计：让 turtle2 画 6 个半径相同的圆，**每个圆的圆心均匀分布在公共中心 (5.5, 5.5) 四周，且圆心到公共中心的距离正好等于圆的半径**。这样每个圆都经过公共中心，相邻的圆两两相交，6 个圆叠在一起就是一圈互相扣住的花瓣。每个花瓣换一种画笔颜色，图案更直观。
+
+画每个圆之前，先用 `/turtle2/teleport_absolute` 把海龟瞬移到该圆的起点（公共中心外 2r 处、朝向取圆的切线方向），瞬移前先抬笔避免画出直线——这是 set_pen 的 off 参数的另一个用途。
+
+### 5.2 目录结构
 
 ```text
 src/chap1/turtle_sim_experiment/
@@ -195,9 +156,9 @@ src/chap1/turtle_sim_experiment/
 └── README.md         # 运行环境与步骤说明
 ```
 
-### 2. 实现思路
+### 5.3 实现思路
 
-main.launch 的内容很简单，就是同时拉起 turtlesim_node 和画花瓣节点：
+main.launch 同时拉起 turtlesim_node 和画花瓣节点：
 
 ```xml
 <launch>
@@ -206,7 +167,7 @@ main.launch 的内容很简单，就是同时拉起 turtlesim_node 和画花瓣�
 </launch>
 ```
 
-main.py 的流程是：先等服务 /spawn 上线，在公共中心 (5.5, 5.5) 处生成 turtle2；然后以 50 Hz 的频率向 /turtle2/cmd_vel 发布 linear.x = 1.5、angular.z = 1.0 的速度指令（圆的半径 r = v/ω = 1.5 米，画一个整圆用时 T = 2π/ω ≈ 6.28 秒）；每画完一个花瓣就换一种画笔颜色，瞬移到下一个花瓣的起点再画。6 个花瓣的圆心均匀分布在公共中心四周，圆心到公共中心的距离正好等于圆的半径，所以每个圆都经过公共中心，画出来就是一圈两两相扣的花瓣。核心代码如下：
+main.py 的流程是：先等 /spawn 服务上线，在公共中心 (5.5, 5.5) 处生成 turtle2；然后以 50 Hz 的频率向 /turtle2/cmd_vel 发布 linear.x = 1.5、angular.z = 1.0 的速度指令（圆的半径 r = v/ω = 1.5 米，画一个整圆用时 T = 2π/ω ≈ 6.28 秒）；每画完一个花瓣就换一种画笔颜色，瞬移到下一个花瓣的起点再画。核心代码如下：
 
 ```python
 # 等待 turtlesim 的 spawn 服务上线，避免节点比仿真器先启动导致调用失败
@@ -238,9 +199,9 @@ for i in range(petals):
         rate.sleep()
 ```
 
-画笔颜色通过 /turtle2/set_pen 服务设置，起点和朝向用 /turtle2/teleport_absolute 服务调整，瞬移前先抬笔，避免划出一条直线。完整代码见 src/chap1/turtle_sim_experiment/main.py，写法上兼容 Python 2 和 Python 3。
+完整代码见 src/chap1/turtle_sim_experiment/main.py，写法上兼容 Python 2 和 Python 3。
 
-### 3. 运行方法
+### 5.4 运行方法
 
 ```bash
 # 方式一：roslaunch 一键启动（推荐）
@@ -258,20 +219,18 @@ roslaunch turtle_sim_experiment main.launch   # roslaunch 会自动启动 Master
 
 ![自动画花瓣模块运行效果](../../img/chapter/turtle_sim_experiment_launch_demo.png)
 
-## 五、遇到的问题及解决方法
+## 六、遇到的问题及解决方法
 
 1. 键盘按了海龟不动：原因是鼠标焦点不在 turtle_teleop_key 所在的终端上，点一下那个终端再按方向键就正常了；
 2. rostopic pub 发一条指令海龟只动 0.5 秒：turtlesim 的看门狗把速度清零了，需要加 -r 参数循环发布；
 3. 克隆 GitHub 仓库报 SSL certificate problems：开了加速器的缘故，关掉加速器再克隆就正常了；
 4. 虚拟机画面卡顿：关闭 3D 加速、安装 open-vm-tools 后有明显改善。
 
-## 六、实验总结
+## 七、实验总结
 
-本次实验在虚拟机上跑通了小海龟例程，用键盘控制小海龟运动，练习了 rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，最后把用到的服务调用和话题发布写成了一个自动画花瓣的小模块。
+本实验补充了前面小海龟系列实验没有覆盖的内容：键盘遥控与命令行调试（rosnode、rostopic、rosservice、rosparam、rosmsg、rqt_graph），多海龟的生成与控制（/spawn、/set_pen、/teleport_absolute 服务的综合使用），以及花瓣图案的几何构造——通过让 6 个圆心均匀分布、半径等于圆心距的圆依次绘制，得到两两相扣的花瓣。
 
-通过这次实验，对 ROS 的通信机制有了直观的认识：节点是运行中的程序，节点之间用话题做异步广播（比如速度指令、位姿），用服务做同步的请求-应答（比如生成海龟、改画笔颜色），全局配置放在参数服务器上；rqt_graph 能把节点和话题的关系画成一张图，调试时很有用。印象最深的是 turtlesim 的 0.5 秒看门狗：控制节点必须持续发布指令，这一点在写 main.py 时体会尤其明显。
-
-实验中也留下了可以继续深入的方向，比如用 RViz 查看 TF 坐标系、写一个订阅 /turtle1/pose 的闭环控制节点（仓库里的小海龟画正方形实验就是这么做的）。
+实验中体会最深的有两点：一是服务与话题的分工——速度这类持续控制走话题，生成海龟、换笔、瞬移这类"做一件事、要一个结果"的操作走服务；二是参数修改后必须触发重绘（/clear）才生效，这类细节只有实际操作过才能注意到。
 
 ## 参考资料
 

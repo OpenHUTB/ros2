@@ -27,11 +27,11 @@
 
 [进入小海龟绘制 OpenHUTB 实验](turtle_hutb.md)
 
-### 4. 小海龟键盘控制与 ROS 命令实践
+### 4. 小海龟画花瓣（服务调用与 ROS 命令实践）
 
-从手动启动小海龟例程、用键盘控制小海龟运动开始，逐个练习
-rosnode、rostopic、rosservice、rosparam、rosmsg 等常用命令，
-并提供一个可 `roslaunch` 一键启动的自动画花瓣演示模块。
-适配 Ubuntu 20.04 + ROS Noetic，兼容 Ubuntu 16.04 + Kinetic。
+先用键盘遥控和 rosnode、rostopic、rosservice、rosparam 等命令
+熟悉小海龟系统的操作与调试，再通过 `/spawn` 服务生成第二只海龟，
+综合 `/set_pen`、`/teleport_absolute` 服务与话题发布，
+让 turtle2 自动画出 6 个两两相扣的彩色花瓣。
 
-[进入小海龟键盘控制与 ROS 命令实践实验](turtle_sim_experiment.md)
+[进入小海龟画花瓣实验](turtle_sim_experiment.md)
