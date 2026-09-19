@@ -13,9 +13,9 @@ title: AP-CPP 主动感知覆盖路径规划
 - [7. 关于大体积数据文件](#large-files)
 - [8. 参考文献](#references)
 
-> 完整工程源码在 [`src/ap_cpp_overfomo/`](https://github.com/OpenHUTB/ros2/tree/master/src/ap_cpp_overfomo)，
+> 完整工程源码在 [`src/air/ap_cpp_overfomo/`](https://github.com/OpenHUTB/ros2/tree/master/src/air/ap_cpp_overfomo)，
 > 包含核心规划源码、ROS 包 `ap_cpp_ros`、演示脚本、测试与实验数据；
-> 完整说明见该目录下的 [README](https://github.com/OpenHUTB/ros2/blob/master/src/ap_cpp_overfomo/README.md)。
+> 完整说明见该目录下的 [README](https://github.com/OpenHUTB/ros2/blob/master/src/air/ap_cpp_overfomo/README.md)。
 > 本页是面向课程文档的导读，细节以该 README 为准。
 
 ---
@@ -96,11 +96,11 @@ title: AP-CPP 主动感知覆盖路径规划
 代码不依赖这两个包的特定版本，较新的版本均可运行。
 
 ```sh
-cd src/ap_cpp_overfomo
+cd src/air/ap_cpp_overfomo
 python -m pip install -r requirements-core.txt
 ```
 
-> `src/ap_cpp_overfomo/requirements.txt` 是**完整 OverFOMO 仿真流程**（AirSim + 语义分割 + 正射影像）的依赖，
+> `src/air/ap_cpp_overfomo/requirements.txt` 是**完整 OverFOMO 仿真流程**（AirSim + 语义分割 + 正射影像）的依赖，
 > 对应 **Python 3.6 / 3.7**（TensorFlow 1.15 的最高支持版本），在 Python 3.8 以上装不上。
 > 其中的 GDAL 不在 PyPI 上以源码分发，需按自己的 Python 版本单独下载预编译 wheel 安装。
 > **只跑本模块的规划器、演示与测试不需要这个文件。**
@@ -108,7 +108,7 @@ python -m pip install -r requirements-core.txt
 ### 4.2 运行演示（无需仿真器）
 
 ```sh
-cd src/ap_cpp_overfomo
+cd src/air/ap_cpp_overfomo
 
 # 自带的合成地块（不依赖仓库数据）
 python demos/run_ap_cpp_demo.py
@@ -125,7 +125,7 @@ python demos/run_ap_cpp_demo.py --compare
 ### 4.3 运行测试
 
 ```sh
-cd src/ap_cpp_overfomo
+cd src/air/ap_cpp_overfomo
 python -m pytest tests/ -q
 # 或者
 python -m unittest discover -s tests -v
@@ -143,7 +143,7 @@ python demos/run_ap_cpp_demo.py --source geojson --field 002 --prior anomaly --p
 
 ## 5. 复现说明与实测数据 <span id="metrics"></span>
 
-本节数值由 `demos/run_ap_cpp_demo.py --compare` 在不依赖仿真器的 Python 环境下生成，与 `src/ap_cpp_overfomo/results/` 中提交的图片一一对应。ROS 节点在 `roslaunch` 下运行时另有一组指标，两次运行不可混用。
+本节数值由 `demos/run_ap_cpp_demo.py --compare` 在不依赖仿真器的 Python 环境下生成，与 `src/air/ap_cpp_overfomo/results/` 中提交的图片一一对应。ROS 节点在 `roslaunch` 下运行时另有一组指标，两次运行不可混用。
 
 **合成地块（864 步，默认参数）**
 
@@ -169,7 +169,7 @@ python demos/run_ap_cpp_demo.py --source geojson --field 002 --prior anomaly --p
 
 ## 6. 在 RViz 中运行 <span id="rviz"></span>
 
-`src/ap_cpp_overfomo/ros/` 是一个 catkin 工作空间，内含一个包 `ap_cpp_ros`。节点无头运行规划器并把结果发布给 RViz，**不需要 AirSim、Unreal，也不需要 TensorFlow / GDAL**，只需要 source 过的 ROS 1 环境和 NumPy。
+`src/air/ap_cpp_overfomo/ros/` 是一个 catkin 工作空间，内含一个包 `ap_cpp_ros`。节点无头运行规划器并把结果发布给 RViz，**不需要 AirSim、Unreal，也不需要 TensorFlow / GDAL**，只需要 source 过的 ROS 1 环境和 NumPy。
 
 > **不要跳过这一节直接执行 `roslaunch`，会报错。** `ap_cpp_ros` 是 ROS 1 的 catkin 包，
 > 必须先 `catkin_make` 编译并 `source devel/setup.bash`，`roslaunch` 才能找到它；
@@ -217,7 +217,7 @@ python demos/run_ap_cpp_demo.py --source geojson --field 002 --prior anomaly --p
 source /opt/ros/noetic/setup.bash
 
 # 2. 进入本模块的 catkin 工作空间
-cd src/ap_cpp_overfomo/ros
+cd src/air/ap_cpp_overfomo/ros
 
 # 3. 编译
 catkin_make
@@ -267,13 +267,13 @@ rviz -d $(rospack find ap_cpp_ros)/config/rviz_demo.rviz
 
 > **获取方式**：完整大体积权重与数据集可联系作者获取，或见 Release 附件。
 
-放置方式：`weights0500.hdf5`、`gif/demo.gif` 与 `AP_CPP_Assignment_Submission.zip` 放在 `src/ap_cpp_overfomo/` 根目录下（动图放回 `gif/` 子目录）；`viewpoints_map.jpg` 分别放回 `CPP/000/` 至 `CPP/004/`。
+放置方式：`weights0500.hdf5`、`gif/demo.gif` 与 `AP_CPP_Assignment_Submission.zip` 放在 `src/air/ap_cpp_overfomo/` 根目录下（动图放回 `gif/` 子目录）；`viewpoints_map.jpg` 分别放回 `CPP/000/` 至 `CPP/004/`。
 
 **本模块的核心部分（`ap_cpp/` 规划源码、演示、测试与 ROS 包）不依赖上述任何文件，可直接运行**，见第 4 节与第 6 节。
 
 ## 8. 参考文献 <span id="references"></span>
 
-关于 OverFOMO 的原始方法与引用格式，见 `src/ap_cpp_overfomo/README.md` 的引用一节。
+关于 OverFOMO 的原始方法与引用格式，见 `src/air/ap_cpp_overfomo/README.md` 的引用一节。
 
 ## 人工智能使用声明
 
