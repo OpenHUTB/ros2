@@ -8,16 +8,17 @@ AirSim 客户端不同，本方案将**键盘输入**与**仿真器控制**拆�
 
 | 文件 | 节点名 | 职责 |
 | --- | --- | --- |
-| `drone_ros_teleop.py` | `drone_ros_teleop` | 用 `pynput` 监听键盘，按 10 Hz 把当前按键状态发布为 `Twist` 消息 |
-| `drone_ros_node.py` | `drone_ros_node` | 订阅 `/drone/cmd_vel`，经 AirSim RPC 驱动无人机 |
+| `drone_ros_teleop.py` | `drone_ros_teleop` | 用 `termios` 原始模式监听键盘（`tty.setraw`），按 10 Hz 把当前按键状态发布为 `Twist` 消息 |
+| `drone_ros_node.py` | `drone_ros_node` | 订阅 `/drone/cmd_vel`，经 AirSim RPC 驱动无人机；另以独立后台线程抓取前置相机图像，缩放后发布 `/drone/front_camera/image_raw` |
 
 ## 双节点架构
 
 ```mermaid
 graph LR
-    K[键盘输入] -->|pynput 监听| T[drone_ros_teleop 键盘发布节点]
+    K[键盘输入] -->|termios 原始模式监听| T[drone_ros_teleop 键盘发布节点]
     T -->|/drone/cmd_vel Twist 10 Hz| B[drone_ros_node 桥接控制节点]
     B -->|AirSim RPC 41451| A[Windows 宿主机 AirSim 模拟器]
+    B -->|/drone/front_camera/image_raw 10 Hz| C[record_dataset 数据采集节点]
 ```
 
 两个节点都运行在虚拟机的 ROS 主控上，只有桥接节点与宿主机上的 AirSim 发生网络通信。解耦带来的好处：
@@ -44,7 +45,7 @@ AirSim 使用 **NED 坐标系**：x 轴指向前方、y 轴指向右侧、z 轴�
 # 拉取仓库并进入仓库根目录
 git clone https://github.com/OpenHUTB/ros2.git
 cd ros2
-# 安装两个节点运行所需的依赖（airsim、pynput）
+# 安装两个节点运行所需的依赖（airsim）
 python -m pip install -r src/requirements.txt
 ```
 
@@ -135,9 +136,17 @@ python src/air/air_teleop/drone_ros_teleop.py
 | --- | --- | --- | --- |
 | `--host` | `~host` | `127.0.0.1` | 宿主机（AirSim 服务）IP 地址 |
 | `--port` | `~port` | `41451` | AirSim RPC 端口 |
-| `--vehicle` | `~vehicle` | `""` | 载具名称，空串表示仿真器中的第一架无人机 |
+| `--vehicle` | `~vehicle` | `""` | 载具名称，空串表示通过 `listVehicles()` 自动获取第一架载具（失败回退 `SimpleFlight`） |
 | — | `~timeout` | `0.5` | 无指令超时时间（s），超时自动悬停 |
 | — | `~rate` | `10.0` | 控制频率（Hz） |
+| — | `~camera` | `front_center` | 前置相机名称 |
+| — | `~camera_rate` | `10.0` | 图像发布频率（Hz，推荐 8~10） |
+| `--camera-width` | `~camera_width` | `320` | 发布图像最大宽度（像素），原图超限时缩小 |
+| `--camera-height` | `~camera_height` | `180` | 发布图像最大高度（像素），原图超限时缩小 |
+
+桥接节点另以**独立后台线程**抓取前置相机图像（默认 10 Hz），抓图使用独立的 AirSim
+客户端，耗时 RPC 不会阻塞 10 Hz 的飞行控制循环；原图超过 320×180 时会先缩小再发布到
+`/drone/front_camera/image_raw`，降低跨机网络传输与内存开销（供任务四数据采集使用）。
 
 通过参数服务器设置私有参数的示例（效果与 `--host` 相同）：
 
@@ -150,18 +159,22 @@ python src/air/air_teleop/drone_ros_node.py
 
 | 按键 | 功能 | NED 指令 |
 | :---: | :---: | --- |
-| `W` / `S` | 前进 / 后退 | `linear.x = ±3.0 m/s` |
-| `A` / `D` | 左移 / 右移 | `linear.y = ∓3.0 m/s` |
-| `Space` | 上升 | `linear.z = -2.0 m/s` |
-| `Ctrl+P` | 下降 | `linear.z = +2.0 m/s` |
-| `J` / `L` | 左偏航 / 右偏航 | `angular.z = ∓30 度/秒` |
-| `ESC` | 退出键盘遥控 | 停止发布，桥接节点超时后自动悬停 |
+| `W` / `S` | 前进 / 后退 | `vx = ±3.0 m/s` |
+| `A` / `D` | 左移 / 右移 | `vy = ∓3.0 m/s` |
+| `Q` / `E` | 左前方 / 右前方 | `vx = +3.0, vy = ∓2.5 m/s` |
+| `Z` / `C` | 左后方 / 右后方 | `vx = -3.0, vy = ∓2.5 m/s` |
+| `J` / `L` | 左偏航 / 右偏航 | `angular.z = ∓0.5 rad/s` |
+| `Space` / `X` | 上升 / 下降 | `vz = -2.0 / +2.0 m/s` |
+| `K` | 强制急刹 | 全 0 速度 |
+| `ESC` / `Ctrl+C` | 退出键盘遥控 | 停止发布，桥接节点超时后自动悬停 |
 
 **提示：**
 
-* 按键松开后对应轴速度立即归零（键盘节点每个周期按当前按键集合重新计算）；
+* 键盘节点通过 `tty.setraw` 进入原始模式：关闭字符回显、单字符非阻塞监听（无需按 Enter，即按即发）；
+* 终端按键无法多键并发，斜向飞行由复合按键 `Q`/`E`/`Z`/`C` 直接给出整组速度指令；
+* 原始模式下探测不到按键松开事件，改为“按住窗口”：每次按下刷新最近按键时刻，0.4 s 无新按键即以最后指令速度为起点线性衰减 0.5 s 至 0（平滑悬停，避免硬刹触发飞控制动阻尼），等效于松开按键；
 * 无任何按键时持续发布全零指令，无人机原地保持；
-* 键盘节点需要运行在带图形桌面的终端中，SSH 纯命令行环境下 `pynput` 无法监听键盘。
+* 按键监听基于标准输入（stdin），虚拟机桌面终端与 SSH 终端均可运行，不再依赖 `pynput`。
 
 ## 安全机制
 
@@ -182,7 +195,7 @@ rostopic echo /drone/cmd_vel  # 按住 W 键可看到 linear.x = 3.0
 ## 常见问题
 
 * **连接宿主机失败**：检查 `--host` 是否为宿主机 IP、宿主机防火墙是否放行 41451 端口；
-* **键盘无响应**：确认键盘节点运行在虚拟机桌面的终端窗口中，且该窗口获得焦点；
+* **键盘无响应**：确认键盘节点在终端中直接运行（SSH 或虚拟机桌面终端均可），stdin 未被重定向，且该窗口获得焦点；若屏幕回显按键字符说明原始模式未生效，请确认在 Linux/macOS 环境运行；
 * **无人机无动作**：用 `rostopic echo /drone/cmd_vel` 确认话题有消息，并确认桥接节点日志中已打印“已连接 AirSim 服务”。
 
 ## 参考

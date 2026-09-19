@@ -2,6 +2,14 @@
 
 该仓库包含环境搭建、教程、人和载具的ROS/ROS2示例。
 
+## 系统演示
+
+### 无人机端到端单目视觉自主巡航避障
+
+![自主巡航演示](docs/drone_cruise_demo.gif)
+
+基于 CarlaAir (UE4 + AirSim) 与 ROS 架构的端到端单目视觉自主巡航避障验证。
+
 ## 环境配置
 
 运行 [`serve.bat`](https://github.com/OpenHUTB/ros2/blob/master/serve.bat)（即运行`mkdocs serve`，所做的修改同样需要运行该脚本验证[网页中](http://127.0.0.1:8000/)所修改内容的正确性），会打开浏览器显示主页，详情请参考[serve.bat](https://github.com/OpenHUTB/.github/blob/master/serve.bat)，文档撰写的约定请参考 [doc](https://github.com/OpenHUTB/doc) 仓库首页。
