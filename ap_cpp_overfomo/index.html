@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../img/favicon.ico" rel="shortcut icon"/>
+<title>AP-CPP 主动感知覆盖路径规划 - 模拟器的 ROS 文档</title>
+<link href="../css/theme.css" rel="stylesheet"/>
+<link href="../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "AP-CPP \u4e3b\u52a8\u611f\u77e5\u8986\u76d6\u8def\u5f84\u89c4\u5212";
+        var mkdocs_page_input_path = "ap_cpp_overfomo.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href=".."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">AP-CPP 主动感知覆盖路径规划</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 要解决的问题 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 方法 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 运行效果 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31-rviz">3.1 RViz 中的实时规划</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 消融对比</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 快速开始 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 环境要求</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 运行演示（无需仿真器）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 运行测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 真实地块的农学先验</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 复现说明与实测数据 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6-rviz">6. 在 RViz 中运行 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61-ros-1">6.1 先决条件：安装 ROS 1</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62-source">6.2 编译并 source 工作空间</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63">6.3 启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 关于大体积数据文件 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 参考文献 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">人工智能使用声明</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href=".."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">AP-CPP 主动感知覆盖路径规划</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ap_cpp_overfomo.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="ap-cpp">AP-CPP：主动感知覆盖路径规划</h1>
+<p>本模块把 OverFOMO 的自适应覆盖路径规划（Adaptive Coverage Path Planning）扩展为<strong>主动感知</strong>规划：不只是决定<strong>飞多快</strong>，还要决定<strong>该去哪里看</strong>。</p>
+<ul>
+<li><a href="#problem">1. 要解决的问题</a></li>
+<li><a href="#method">2. 方法</a></li>
+<li><a href="#results">3. 运行效果</a></li>
+<li><a href="#quickstart">4. 快速开始</a></li>
+<li><a href="#metrics">5. 复现说明与实测数据</a></li>
+<li><a href="#rviz">6. 在 RViz 中运行</a></li>
+<li><a href="#large-files">7. 关于大体积数据文件</a></li>
+<li><a href="#references">8. 参考文献</a></li>
+</ul>
+<blockquote>
+<p>完整工程源码在 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ap_cpp_overfomo"><code>src/ap_cpp_overfomo/</code></a>，
+包含核心规划源码、ROS 包 <code>ap_cpp_ros</code>、演示脚本、测试与实验数据；
+完整说明见该目录下的 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/ap_cpp_overfomo/README.md">README</a>。
+本页是面向课程文档的导读，细节以该 README 为准。</p>
+</blockquote>
+<hr/>
+<h2 id="1">1. 要解决的问题 <span id="problem"></span></h2>
+<p>原论文的方法预先算好一条往复式（boustrophedon）航带，开环飞行，并根据图像语义调节地速：识别得越确定就越快，冠层越密或越模糊就越慢。</p>
+<p>它回答的是「<strong>飞过这条航带时该飞多快</strong>」，但没有回答「<strong>这条航带是否值得消耗电量</strong>」。一块田里各个位置的信息价值并不相同——上一季的产量图、粗分辨率过飞得到的 NDVI 异常、农户报告的病害地块、上一次飞行留下的空洞，都会把不确定性集中到少数几个区域。一个不能偏离航线的机器人，会把续航花在已经看明白的地方，最后带着「唯一重要那块区域仍然没搞清」的地图返航。</p>
+<p><strong>AP-CPP 补上的就是这一个自由度。</strong></p>
+<h2 id="2">2. 方法 <span id="method"></span></h2>
+<p>规划器维护一个对作业区域的显式<strong>信念</strong>（占据栅格 + 逐格信息熵），并用<strong>滚动时域（receding horizon）</strong>对剩余航线反复重规划。每个候选动作的评分同时权衡<strong>航程代价</strong>和<strong>期望信息增益</strong>。</p>
+<p>由此得到的规划器是<strong>构造性安全</strong>的：当农田中没有任何已知信息时，一个横向偏离惩罚项会把它牢牢压回原有的往复式航带，与已发表的结果逐点一致；只有当某处存在显著的信息热点时，它才会主动绕行。</p>
+<table>
+<thead>
+<tr>
+<th>组成</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ap_cpp/grid_model.py</code></td>
+<td>占据 + 熵信念栅格</td>
+</tr>
+<tr>
+<td><code>ap_cpp/sensor.py</code></td>
+<td>传感器视场与观测模型</td>
+</tr>
+<tr>
+<td><code>ap_cpp/utility.py</code></td>
+<td>航程代价 / 信息增益效用函数</td>
+</tr>
+<tr>
+<td><code>ap_cpp/planner.py</code></td>
+<td>滚动时域规划器（核心算法）</td>
+</tr>
+<tr>
+<td><code>ap_cpp/control.py</code></td>
+<td>地速控制器</td>
+</tr>
+<tr>
+<td><code>ap_cpp/mission.py</code></td>
+<td>任务循环与终止条件</td>
+</tr>
+<tr>
+<td><code>ap_cpp/geo_bridge.py</code></td>
+<td>经纬度 ↔ 局部 NED 坐标转换</td>
+</tr>
+<tr>
+<td><code>ap_cpp/airsim_driver.py</code></td>
+<td>AirSim 实飞驱动（可选）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3">3. 运行效果 <span id="results"></span></h2>
+<h3 id="31-rviz">3.1 RViz 中的实时规划</h3>
+<p>规划器可以脱离 AirSim / Unreal 独立运行，直接发布 <code>nav_msgs/Path</code> 与 <code>visualization_msgs/MarkerArray</code> 供 RViz 显示。下图为 ROS 环境中的实际运行截图（<code>roslaunch ap_cpp_ros rviz_demo.launch</code>）：</p>
+<p><img alt="AP-CPP 在 RViz 中的规划结果" src="../img/ap_cpp_overfomo/rviz_demo.png"/></p>
+<p>覆盖航迹绘制为 <code>nav_msgs/Path</code>，信念栅格与信息热点绘制为 <code>visualization_msgs/MarkerArray</code>；地块几何取自本仓库的 <code>CPP/002</code> 定义。运行步骤见<a href="#rviz">第 6 节</a>。</p>
+<h3 id="32">3.2 消融对比</h3>
+<p>在相同地块与相同先验下，对比「主动感知」与「仅按参考航带飞」两种策略。下图左侧主动感知版本会主动离开航带以消除异常热点，随后重新并回参考航带；右侧基线则始终被约束在已发表的往复式航带上，从不偏离。</p>
+<table>
+<tr>
+<th align="center">AP-CPP（主动感知）</th>
+<th align="center">Reference-only 基线</th>
+</tr>
+<tr>
+<td align="center"><img alt="AP-CPP 主动感知任务" src="./img/ap_cpp_overfomo/ap_cpp_active.png" width="430"/></td>
+<td align="center"><img alt="仅参考航带基线任务" src="./img/ap_cpp_overfomo/ap_cpp_baseline.png" width="430"/></td>
+</tr>
+<tr>
+<td align="center"><em>主动离开航带以消除异常热点，<br/>随后重新并回参考航带。</em></td>
+<td align="center"><em>被约束在已发表的往复式航带上，<br/>从不偏离。</em></td>
+</tr>
+</table>
+<p>消融曲线（信息增益 / 覆盖率随步数变化）：</p>
+<p><img alt="消融曲线" src="../img/ap_cpp_overfomo/ablation_curve.png"/></p>
+<h2 id="4">4. 快速开始 <span id="quickstart"></span></h2>
+<h3 id="41">4.1 环境要求</h3>
+<p>规划器与演示脚本只依赖 NumPy 与 Matplotlib，<strong>不需要 AirSim、不需要 TensorFlow、不需要 GDAL</strong>。</p>
+<p>本节所有数值与图片在以下环境中实测产生：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Windows 11</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12.7（Anaconda base）</td>
+</tr>
+<tr>
+<td>NumPy</td>
+<td>1.26.4</td>
+</tr>
+<tr>
+<td>Matplotlib</td>
+<td>3.9.2</td>
+</tr>
+</tbody>
+</table>
+<p>代码不依赖这两个包的特定版本，较新的版本均可运行。</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-core.txt
+</code></pre></div>
+<blockquote>
+<p><code>src/ap_cpp_overfomo/requirements.txt</code> 是<strong>完整 OverFOMO 仿真流程</strong>（AirSim + 语义分割 + 正射影像）的依赖，
+对应 <strong>Python 3.6 / 3.7</strong>（TensorFlow 1.15 的最高支持版本），在 Python 3.8 以上装不上。
+其中的 GDAL 不在 PyPI 上以源码分发，需按自己的 Python 版本单独下载预编译 wheel 安装。
+<strong>只跑本模块的规划器、演示与测试不需要这个文件。</strong></p>
+</blockquote>
+<h3 id="42">4.2 运行演示（无需仿真器）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+
+<span class="c1"># 自带的合成地块（不依赖仓库数据）</span>
+python<span class="w"> </span>demos/run_ap_cpp_demo.py
+
+<span class="c1"># 使用仓库中的真实地块（Polygon002.geojson + 预生成 TurnWPs.txt 航线）</span>
+python<span class="w"> </span>demos/run_ap_cpp_demo.py<span class="w"> </span>--source<span class="w"> </span>geojson<span class="w"> </span>--field<span class="w"> </span><span class="m">002</span>
+
+<span class="c1"># 同时运行消融基线，量化主动感知带来的收益</span>
+python<span class="w"> </span>demos/run_ap_cpp_demo.py<span class="w"> </span>--compare
+</code></pre></div>
+<p>每次运行会输出一份 JSON 任务报告与一组四联诊断图（信念熵前后对比、累计覆盖率、地块上的规划航迹、任务收敛过程）。</p>
+<h3 id="43">4.3 运行测试</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
+<span class="c1"># 或者</span>
+python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
+</code></pre></div>
+<p>43 个测试全部通过，覆盖栅格化、信念融合、传感器几何、效用函数正向模型、A* 与航带重采样、速度律一致性、任务不变量以及 WGS84 往返转换。</p>
+<h3 id="44">4.4 真实地块的农学先验</h3>
+<p>演示支持注入任意 <code>[0, 1]</code> 风险图层（上一季产量图、NDVI 异常、巡田报告、上次飞行的空洞），通过 <code>--prior</code> 与 <code>--prior-weight</code> 控制：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>demos/run_ap_cpp_demo.py<span class="w"> </span>--source<span class="w"> </span>geojson<span class="w"> </span>--field<span class="w"> </span><span class="m">002</span><span class="w"> </span>--prior<span class="w"> </span>anomaly<span class="w"> </span>--prior-weight<span class="w"> </span><span class="m">0</span>.6
+</code></pre></div>
+<h2 id="5">5. 复现说明与实测数据 <span id="metrics"></span></h2>
+<p>本节数值由 <code>demos/run_ap_cpp_demo.py --compare</code> 在不依赖仿真器的 Python 环境下生成，与 <code>src/ap_cpp_overfomo/results/</code> 中提交的图片一一对应。ROS 节点在 <code>roslaunch</code> 下运行时另有一组指标，两次运行不可混用。</p>
+<p><strong>合成地块（864 步，默认参数）</strong></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>AP-CPP</th>
+<th>参考基线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>飞行步数</td>
+<td>864</td>
+<td>864</td>
+</tr>
+<tr>
+<td>重规划次数</td>
+<td>432</td>
+<td>—</td>
+</tr>
+<tr>
+<td>飞行距离</td>
+<td>5183.1 m</td>
+<td>—</td>
+</tr>
+<tr>
+<td>平均地速</td>
+<td>2.17 m/s</td>
+<td>—</td>
+</tr>
+<tr>
+<td>平均信念熵</td>
+<td>0.2084（初值 1.0000）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>覆盖率</td>
+<td>0.5805</td>
+<td>—</td>
+</tr>
+<tr>
+<td>累计信息量</td>
+<td>122.327</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>真实地块（<code>CPP/002</code>，<code>--source geojson</code>）</strong></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>飞行距离</td>
+<td>572.7 m</td>
+</tr>
+<tr>
+<td>平均地速</td>
+<td>2.63 m/s</td>
+</tr>
+<tr>
+<td>平均信念熵</td>
+<td>0.2143（初值 1.0000）</td>
+</tr>
+<tr>
+<td>覆盖率</td>
+<td>0.5605</td>
+</tr>
+<tr>
+<td>累计信息量</td>
+<td>10.987</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-rviz">6. 在 RViz 中运行 <span id="rviz"></span></h2>
+<p><code>src/ap_cpp_overfomo/ros/</code> 是一个 catkin 工作空间，内含一个包 <code>ap_cpp_ros</code>。节点无头运行规划器并把结果发布给 RViz，<strong>不需要 AirSim、Unreal，也不需要 TensorFlow / GDAL</strong>，只需要 source 过的 ROS 1 环境和 NumPy。</p>
+<blockquote>
+<p><strong>不要跳过这一节直接执行 <code>roslaunch</code>，会报错。</strong> <code>ap_cpp_ros</code> 是 ROS 1 的 catkin 包，
+必须先 <code>catkin_make</code> 编译并 <code>source devel/setup.bash</code>，<code>roslaunch</code> 才能找到它；
+否则会提示找不到包或找不到 launch 文件。</p>
+</blockquote>
+<h3 id="61-ros-1">6.1 先决条件：安装 ROS 1</h3>
+<p>本页截图运行在 <strong>Ubuntu 22.04（VMware 虚拟机）+ ROS Noetic（<code>rosversion 1.16.0</code>）</strong>，
+仓库检出在 <code>/home/user/catkin_ws/src/OverFOMO</code>。</p>
+<p><strong>Ubuntu 22.04 上 ROS Noetic 不是原生支持的</strong>——Noetic 只发布到 20.04（Focal），
+在 22.04 上执行 <code>sudo apt install ros-noetic-desktop-full</code> 找不到候选包。按优先级有几种做法：</p>
+<ol>
+<li><strong>使用 20.04，或 <code>ros:noetic</code> 容器</strong>（后者基于 20.04）。这是受支持的路径，不需要任何取巧手段，<strong>推荐</strong>。</li>
+<li><strong>改用 22.04 + ROS 2 Humble</strong>（Jammy 原生支持）。但本包是 ROS 1 的 catkin 工作空间，需要先移植，不能直接替换。</li>
+<li><strong>把 Focal 的 ROS 1 源加到 Jammy 上并做 apt pin。</strong> 实践中可行，但属于不受支持的混装：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">'echo "deb http://packages.ros.org/ros/ubuntu focal main" \</span>
+<span class="s1">  &gt; /etc/apt/sources.list.d/ros1-latest.list'</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>curl
+curl<span class="w"> </span>-sSL<span class="w"> </span>https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>apt-key<span class="w"> </span>add<span class="w"> </span>-
+
+<span class="c1"># 压低该源优先级，让 apt 在其它包上优先选 Jammy 自带的版本。</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>/etc/apt/preferences.d/ros1-pin<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
+<span class="s">Package: *</span>
+<span class="s">Pin: release n=focal</span>
+<span class="s">Pin-Priority: 1</span>
+<span class="s">EOF</span>
+
+sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-desktop-full<span class="w"> </span>python3-numpy
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+</code></pre></div>
+<p>pin 不是可选项：不加 pin，Focal 源会让 apt 在 Jammy 机器上考虑无关系统库的 Focal 版本。压到优先级 1 之后，apt 只会到 Focal 取 Jammy 完全没有提供的包名，也就是 <code>ros-noetic-*</code> 这一组。</p>
+<h3 id="62-source">6.2 编译并 source 工作空间</h3>
+<p>在 source 过 ROS 环境的终端中，<strong>从仓库根目录</strong>出发，依次执行：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. source ROS 1</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+
+<span class="c1"># 2. 进入本模块的 catkin 工作空间</span>
+<span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo/ros
+
+<span class="c1"># 3. 编译</span>
+catkin_make
+
+<span class="c1"># 4. source 编译产物（每开一个新终端都要做一次）</span>
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>节点是纯 Python 的，<code>catkin_make</code> 只是把脚本装到 catkin 的 bin 路径并注册这个包，不会真正编译代码。但<strong>第 4 步必须执行</strong>，否则 <code>roslaunch</code> 会报找不到包。</p>
+<h3 id="63">6.3 启动</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>ap_cpp_ros<span class="w"> </span>rviz_demo.launch<span class="w">                              </span><span class="c1"># AP-CPP</span>
+roslaunch<span class="w"> </span>ap_cpp_ros<span class="w"> </span>rviz_demo.launch<span class="w"> </span>reference_only:<span class="o">=</span><span class="nb">true</span><span class="w">         </span><span class="c1"># 消融（仅参考航带）</span>
+roslaunch<span class="w"> </span>ap_cpp_ros<span class="w"> </span>rviz_demo.launch<span class="w"> </span>source:<span class="o">=</span>geojson<span class="w"> </span>field:<span class="o">=</span><span class="m">002</span><span class="w">   </span><span class="c1"># 真实地块</span>
+roslaunch<span class="w"> </span>ap_cpp_ros<span class="w"> </span>rviz_demo.launch<span class="w"> </span>rviz:<span class="o">=</span><span class="nb">false</span><span class="w">                  </span><span class="c1"># 只跑节点，不开 RViz</span>
+</code></pre></div>
+<p>也可以直接运行节点、自行启动 RViz：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>ap_cpp_ros<span class="w"> </span>ap_cpp_rviz_node.py<span class="w"> </span>--source<span class="w"> </span>geojson<span class="w"> </span>--field<span class="w"> </span><span class="m">002</span>
+rviz<span class="w"> </span>-d<span class="w"> </span><span class="k">$(</span>rospack<span class="w"> </span>find<span class="w"> </span>ap_cpp_ros<span class="k">)</span>/config/rviz_demo.rviz
+</code></pre></div>
+<p>发布的话题：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/ap_cpp_rviz/path</code></td>
+<td><code>nav_msgs/Path</code></td>
+<td>实际飞行的观测航迹</td>
+</tr>
+<tr>
+<td><code>/ap_cpp_rviz/markers</code></td>
+<td><code>visualization_msgs/MarkerArray</code></td>
+<td>覆盖栅格、障碍物、参考航带、端点、汇总标签</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>把仓库搬进虚拟机。</strong> ROS 那台机器只需要仓库本身——<code>ap_cpp/</code>、<code>CPP/</code> 和 <code>ros/</code>。
+这条路径不会 import <code>airsim</code>，不需要装 AirSim。</p>
+</blockquote>
+<h2 id="7">7. 关于大体积数据文件 <span id="large-files"></span></h2>
+<p>仓库约定「尽量保存文本文件，大体积数据通过永久网盘链接提供」，因此以下文件<strong>未</strong>纳入版本库，需要时请按下方说明获取并放置：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>大小</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>weights0500.hdf5</code></td>
+<td>51 MB</td>
+<td>OverFOMO 原始语义分割模型权重，供 <code>main.py</code> 配套流程使用</td>
+</tr>
+<tr>
+<td><code>CPP/00{0..4}/viewpoints_map.jpg</code></td>
+<td>共 52 MB</td>
+<td>原始 OverFOMO 流程生成的可视化底图，仅 <code>plot_vwps_on_field.py</code> 使用</td>
+</tr>
+<tr>
+<td><code>gif/demo.gif</code></td>
+<td>10 MB</td>
+<td>上游仓库的演示动图（本模块文档未引用）</td>
+</tr>
+<tr>
+<td><code>AP_CPP_Assignment_Submission.zip</code></td>
+<td>9 MB</td>
+<td>最终作业提交包（内容与本节目录高度重复）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>获取方式</strong>：完整大体积权重与数据集可联系作者获取，或见 Release 附件。</p>
+</blockquote>
+<p>放置方式：<code>weights0500.hdf5</code>、<code>gif/demo.gif</code> 与 <code>AP_CPP_Assignment_Submission.zip</code> 放在 <code>src/ap_cpp_overfomo/</code> 根目录下（动图放回 <code>gif/</code> 子目录）；<code>viewpoints_map.jpg</code> 分别放回 <code>CPP/000/</code> 至 <code>CPP/004/</code>。</p>
+<p><strong>本模块的核心部分（<code>ap_cpp/</code> 规划源码、演示、测试与 ROS 包）不依赖上述任何文件，可直接运行</strong>，见第 4 节与第 6 节。</p>
+<h2 id="8">8. 参考文献 <span id="references"></span></h2>
+<p>关于 OverFOMO 的原始方法与引用格式，见 <code>src/ap_cpp_overfomo/README.md</code> 的引用一节。</p>
+<h2 id="_1">人工智能使用声明</h2>
+<p>本模块的代码与文档编写过程中使用了大型语言模型进行辅助（代码整理、文档撰写与英文翻译）。作者已对提交的全部内容进行复核，并对其正确性负责。</p>
+<hr/>
+<ul>
+<li>返回 <a href="../">首页</a></li>
+<li>查看 <a href="../air/ros_pkgs/">空域载具</a> 的其他内容</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../air/drone_ros_teleop/" title="基于 ROS 消息解耦的无人机键盘遥控"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../water/HoloOcean/" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../air/drone_ros_teleop/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../water/HoloOcean/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "..";</script>
+<script src="../js/theme_extra.js"></script>
+<script src="../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../js/umlconvert.js"></script>
+<script src="../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
