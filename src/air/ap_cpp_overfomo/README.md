@@ -509,7 +509,7 @@ Unreal，也不需要 TensorFlow / GDAL 那一套，只需要一个 source 过�
 source /opt/ros/noetic/setup.bash
 
 # 2. 进入本模块的 catkin 工作空间
-cd src/ap_cpp_overfomo/ros
+cd src/air/ap_cpp_overfomo/ros
 
 # 3. 编译
 catkin_make
