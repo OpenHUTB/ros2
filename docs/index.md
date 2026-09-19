@@ -9,6 +9,7 @@ title: 主页
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [课程作业](#assignment)
 
 ---
 
@@ -71,6 +72,11 @@ ROS每章节运行代码:
 ## 4. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+
+
+## 5. 课程作业  <span id='assignment'></span>
+
+* [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— OverFOMO 的自适应覆盖规划扩展，决定「该去哪里看」而非仅「该飞多快」
 
 ___
 
