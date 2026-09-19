@@ -1,3 +1,17 @@
+# OverFOMO 完整仿真流程的依赖（AirSim + 语义分割 + 正射影像）。
+#
+# 这套依赖对应 Python 3.6 / 3.7：TensorFlow 1.15 最高只支持到 3.7，
+# 且 numpy 被钉在 1.19.5，在 Python 3.8+ 上装不上。
+#
+# 只想跑 AP-CPP 的规划器、演示和测试，不需要这个文件，
+# 请改用只依赖 NumPy / Matplotlib 的 requirements-core.txt。
+#
+# GDAL 不在 PyPI 上以源码分发。请按自己的 Python 版本下载对应的预编译
+# wheel（例如 https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal ），
+# 再执行 `python -m pip install 下载的whl文件`；Anaconda 用户直接用
+# `conda install -c conda-forge gdal` 即可。
+# 这里不写 wheel 的绝对路径，否则换一台机器必然安装失败。
+
 absl-py==0.15.0
 airsim==1.5.0
 astor==0.8.1
@@ -14,7 +28,6 @@ decorator==4.4.2
 efficientnet==1.0.0
 flatbuffers==1.12
 gast==0.2.2
-GDAL @ file:///C:/Users/emmarapt/Downloads/GDAL-3.1.4-cp36-cp36m-win_amd64.whl
 geographiclib==1.52
 geopy==2.2.0
 google-auth==1.35.0
