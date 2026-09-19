@@ -142,7 +142,7 @@ python demos/run_ap_cpp_demo.py --source geojson --prior anomaly --prior-weight 
 
 ## 6. 关于大体积数据文件
 
-仓库约定「尽量保存文本文件，大体积数据通过永久网盘链接提供」，因此以下文件**未**纳入版本库，需要时请从网盘获取并按下述说明放置：
+仓库约定「尽量保存文本文件，大体积数据通过永久网盘链接提供」，因此以下文件**未**纳入版本库，需要时请按下方说明获取并放置：
 
 | 文件 | 大小 | 用途 |
 |---|---|---|
@@ -151,7 +151,7 @@ python demos/run_ap_cpp_demo.py --source geojson --prior anomaly --prior-weight 
 | `gif/demo.gif` | 10 MB | 上游仓库的演示动图（本模块文档未引用） |
 | `AP_CPP_Assignment_Submission.zip` | 9 MB | 最终作业提交包（内容与本节目录高度重复） |
 
-> **网盘下载地址**：`<待补充>`
+> **获取方式**：完整大体积权重与数据集可联系作者获取，或见 Release 附件。
 
 放置方式：`weights0500.hdf5`、`gif/demo.gif` 与 `AP_CPP_Assignment_Submission.zip` 放在 `src/ap_cpp_overfomo/` 根目录下（动图放回 `gif/` 子目录）；`viewpoints_map.jpg` 分别放回 `CPP/000/` 至 `CPP/004/`。
 
