@@ -59,6 +59,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#5">5. 小海龟画花瓣</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 小海龟画五角星</a>
+</li>
 </ul>
 </li>
 </ul>
@@ -178,7 +180,10 @@
 <h3 id="5">5. 小海龟画花瓣</h3>
 <p>综合 <code>/set_pen</code> 画笔服务、<code>/teleport_absolute</code> 瞬移服务与速度话题发布，
 控制小海龟画出 6 个圆心均匀分布、两两相扣的彩色花瓣。</p>
-<p><a href="../turtle_sim_experiment/">进入小海龟画花瓣实验</a></p></div>
+<p><a href="../turtle_sim_experiment/">进入小海龟画花瓣实验</a></p>
+<h3 id="6">6. 小海龟画五角星</h3>
+<p>使用发布器向<code>/turtle1/cmd_vel</code>话题发布速度指令，使用<code>/turtle1/set_pen</code>服务动态修改画笔RGB颜色，实现彩色绘图，通过定时方式控制海龟直行距离与旋转角度，完成五角星轨迹绘制，使用<code>rosnode</code>、<code>rostopic</code>、<code>rosservice</code>工具查看节点、话题、服务，验证ROS通信。</p>
+<p><a href="../turtle_star/">进入小海龟画五角星实验</a></p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
