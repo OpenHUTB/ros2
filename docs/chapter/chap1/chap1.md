@@ -39,3 +39,9 @@
 控制小海龟画出 6 个圆心均匀分布、两两相扣的彩色花瓣。
 
 [进入小海龟画花瓣实验](turtle_sim_experiment.md)
+
+### 5. 小海龟画五角星
+
+使用发布器向`/turtle1/cmd_vel`话题发布速度指令，使用`/turtle1/set_pen`服务动态修改画笔RGB颜色，实现彩色绘图，通过定时方式控制海龟直行距离与旋转角度，完成五角星轨迹绘制，使用`rosnode`、`rostopic`、`rosservice`工具查看节点、话题、服务，验证ROS通信。
+
+[进入小海龟画五角星实验](turtle_star.md)
