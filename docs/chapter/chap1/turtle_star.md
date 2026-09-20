@@ -166,7 +166,8 @@ source ~/catkin_ws/devel/setup.bash
 rosrun turtle_motion star_draw.py
 ```
 程序启动后，海龟将依次绘制5条不同颜色的线条，形成彩色五角星。
-
+![小海龟绘制五角星效果](../../img/chapter/turtle_star.png)
+ 
 ### 4.3 话题和节点验证
 保持程序运行状态，新开终端执行以下命令验证ROS通信。
 1. 查看当前运行节点
