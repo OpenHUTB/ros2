@@ -216,10 +216,13 @@
 <h2 id="2">2. 数学物理模型与计算原理</h2>
 <p>水下航行体的空间动力学计算采用 <strong>Fossen 水下航行体理论模型</strong> 与 <strong>Newton-Euler 空间运动学方程</strong>。</p>
 <h3 id="21">2.1 空间运动学与坐标系定义</h3>
-<p>定义地球固定坐标系（NED 惯性系）与航行体固定坐标系（Body-fixed 系）：
-- 空间位置与姿态角：<script type="math/tex">\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^T</script>
-- 体坐标系下线速度与角速度：<script type="math/tex">\boldsymbol{\nu} = [u, v, w, p, q, r]^T</script>
-</p>
+<p>定义地球固定坐标系（NED 惯性系）与航行体固定坐标系（Body-fixed 系）：</p>
+<ul>
+<li>空间位置与姿态角：<script type="math/tex">\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^T</script>
+</li>
+<li>体坐标系下线速度与角速度：<script type="math/tex">\boldsymbol{\nu} = [u, v, w, p, q, r]^T</script>
+</li>
+</ul>
 <p>坐标转换关系为：
 <script type="math/tex; mode=display">
 \dot{\boldsymbol{\eta}} = \boldsymbol{J}(\boldsymbol{\eta}) \boldsymbol{\nu}
@@ -253,11 +256,13 @@ V = 8 d_x d_y d_z
 \boldsymbol{v}_{rel} = \boldsymbol{v}_{robot} - \boldsymbol{v}_{current}
 </script>
 </p>
-<p>阻力系数向量 <script type="math/tex">\boldsymbol{C}_{fluid} = [c_{x}, c_{y}, c_{z}, c_{\phi}, c_{\theta}, c_{\psi}]</script>：
-- 迎水端面阻力系数 <script type="math/tex">c_x = 0.40</script>（端面流线型迎水，阻力小）
-- 侧面迎水阻力系数 <script type="math/tex">c_y = 7.79</script>（侧面迎水截面大，阻力大）
-- 垂直迎水阻力系数 <script type="math/tex">c_z = 2.81</script>
-</p>
+<p>阻力系数向量 <script type="math/tex">\boldsymbol{C}_{fluid} = [c_{x}, c_{y}, c_{z}, c_{\phi}, c_{\theta}, c_{\psi}]</script>：</p>
+<ul>
+<li>迎水端面阻力系数 <script type="math/tex">c_x = 0.40</script>（端面流线型迎水，阻力小）</li>
+<li>侧面迎水阻力系数 <script type="math/tex">c_y = 7.79</script>（侧面迎水截面大，阻力大）</li>
+<li>垂直迎水阻力系数 <script type="math/tex">c_z = 2.81</script>
+</li>
+</ul>
 <h3 id="24">2.4 三层级联海洋洋流模型</h3>
 <p>水下环境叠加三层级联非平稳洋流扰动：
 <script type="math/tex; mode=display">
@@ -463,33 +468,40 @@ V = 8 d_x d_y d_z
 <thead>
 <tr>
 <th style="text-align: left;">配置项</th>
-<th style="text-align: left;">推荐基准环境</th>
-<th style="text-align: left;">兼容支持环境</th>
+<th style="text-align: left;">Ubuntu 20.04（官方教学虚拟机）</th>
+<th style="text-align: left;">Ubuntu 22.04 / WSL2</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align: left;"><strong>操作系统</strong></td>
-<td style="text-align: left;"><strong>Ubuntu 20.04 LTS</strong>（课程官方配套教学虚拟机）</td>
-<td style="text-align: left;"><strong>Ubuntu 22.04 LTS</strong> / WSL2</td>
+<td style="text-align: left;">Ubuntu 20.04 LTS</td>
+<td style="text-align: left;">Ubuntu 22.04 LTS</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>ROS 2 版本</strong></td>
-<td style="text-align: left;"><strong>ROS 2 Humble</strong>（官方虚拟机预装）</td>
-<td style="text-align: left;">ROS 2 Humble / Iron</td>
+<td style="text-align: left;">ROS 2 Humble（虚拟机预装）</td>
+<td style="text-align: left;">ROS 2 Humble</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Python 版本</strong></td>
-<td style="text-align: left;"><strong>Python 3.10</strong></td>
-<td style="text-align: left;"><strong>Python 3.8 ~ 3.11</strong>（已消除高版本专有语法，向下兼容 3.8）</td>
+<td style="text-align: left;"><strong>Python 3.8</strong>（系统默认，严格要求）</td>
+<td style="text-align: left;"><strong>Python 3.10</strong>（系统原生默认）</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>图形渲染</strong></td>
-<td style="text-align: left;">本地 OpenGL 3.3+ / 虚拟机 3D 加速</td>
-<td style="text-align: left;">亦支持纯终端 Headless 无图形界面完整复现</td>
+<td style="text-align: left;">虚拟机 3D 加速 / 纯终端模式</td>
+<td style="text-align: left;">本地 OpenGL 3.3+ / 终端模式</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition warning">
+<p class="admonition-title">Python 版本与 ROS 2 底层 ABI 绑定提醒</p>
+<ul>
+<li><strong>Ubuntu 20.04 虚拟机</strong>：ROS 2 Humble 的底层 C 语言扩展库（<code>_rclpy_pybind11</code>）是针对系统默认的 <strong>Python 3.8</strong> 编译链接的。因此在虚拟机中<strong>必须使用 Python 3.8</strong> 运行（系统原生 <code>python3</code> 或 <code>conda activate &lt;py38&gt;</code>）。若在 20.04 下切换为 Python 3.10 环境运行，解释器将因找不到对应 ABI 动态库而报错退出。</li>
+<li><strong>Ubuntu 22.04 系统</strong>：系统原生搭载的 ROS 2 Humble 对应为 <strong>Python 3.10</strong>。</li>
+</ul>
+</div>
 <hr/>
 <h3 id="52-0-prerequisites">5.2 步骤 0：环境准备与依赖安装 (Prerequisites)</h3>
 <p>在运行仿真或执行测试前，必须确保安装了 MuJoCo 物理引擎及科学计算依赖库，否则将提示 <code>ModuleNotFoundError: No module named 'mujoco'</code>：</p>
@@ -505,11 +517,13 @@ pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </
 <span class="c1"># 注：若国内网络下载较慢，推荐使用清华大学镜像源加速：</span>
 <span class="c1"># pip3 install -r src/water/rov_mujoco/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple</span>
 </code></pre></div>
-<p><code>requirements.txt</code> 声明的核心依赖项如下：
-- <code>mujoco&gt;=3.0.0</code>：DeepMind MuJoCo 高保真多体动力学与流体物理引擎；
-- <code>numpy&gt;=1.20.0</code>：空间坐标转换与洋流向量解算；
-- <code>scipy&gt;=1.7.0</code>：三维空间旋转（Rotation）与插值运算；
-- <code>pyyaml</code>：仿真参数解析。</p>
+<p><code>requirements.txt</code> 声明的核心依赖项如下：</p>
+<ul>
+<li><code>mujoco&gt;=3.0.0</code>：DeepMind MuJoCo 高保真多体动力学与流体物理引擎；</li>
+<li><code>numpy&gt;=1.20.0</code>：空间坐标转换与洋流向量解算；</li>
+<li><code>scipy&gt;=1.7.0</code>：三维空间旋转（Rotation）与插值运算；</li>
+<li><code>pyyaml</code>：仿真参数解析。</li>
+</ul>
 <hr/>
 <h3 id="53-1">5.3 步骤 1：编译与配置工作空间</h3>
 <p>在 Ubuntu 20.04 / 22.04 终端中执行编译，并加载环境变量：</p>
@@ -625,6 +639,17 @@ python3<span class="w"> </span>src/water/rov_mujoco/main.py<span class="w"> </sp
 <ul>
 <li><strong>原因</strong>：未加载 ROS 2 基础环境变量。</li>
 <li><strong>解决</strong>：执行 <code>source /opt/ros/humble/setup.bash</code>。</li>
+</ul>
+<h4 id="q5-cannot-import-name-_rclpy_pybind11-the-c-extension-cpython-310-x86_64-linux-gnuso-isnt-present">Q5: 运行提示 <code>cannot import name '_rclpy_pybind11' ... The C extension '...cpython-310-x86_64-linux-gnu.so' isn't present</code></h4>
+<ul>
+<li><strong>原因</strong>：在 Ubuntu 20.04 虚拟机中激活了 Python 3.10 环境（如 Conda <code>nn_3.10</code>）。由于 Ubuntu 20.04 教学镜像中的 ROS 2 Humble 底层 C 语言扩展库仅针对系统默认的 Python 3.8 编译（文件名为 <code>cpython-38</code> 结尾），无法在 Python 3.10 解释器中被加载。</li>
+<li><strong>解决</strong>：在 Ubuntu 20.04 虚拟机中必须切换至 <strong>Python 3.8</strong> 环境运行：
+  <div class="highlight"><pre><span></span><code><span class="c1"># 退出高版本 Python 环境，使用系统原生默认的 Python 3.8</span>
+conda<span class="w"> </span>deactivate
+<span class="c1"># 或切换激活 Python 3.8 虚拟环境</span>
+conda<span class="w"> </span>activate<span class="w"> </span>nn_3.8
+python3<span class="w"> </span>src/water/rov_mujoco/test/test_sim_teleop.py
+</code></pre></div></li>
 </ul>
 <hr/>
 <h2 id="6-gif">6. 实验结果与动图演示 (GIF)</h2>
