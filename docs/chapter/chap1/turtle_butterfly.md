@@ -448,7 +448,7 @@ if \_\_name\_\_ == '\_\_main\_\_':
 
 </launch>
 
-![小海龟绘制蝴蝶效果图](../img/chapter/turtle_butterfly.png)
+![小海龟绘制蝴蝶效果图](../../img/chapter/turtle_butterfly.png)
 
 四、运行与验证
 
