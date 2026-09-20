@@ -39,3 +39,9 @@
 控制小海龟画出 6 个圆心均匀分布、两两相扣的彩色花瓣。
 
 [进入小海龟画花瓣实验](turtle_sim_experiment.md)
+
+### 6. 小海龟画蝴蝶
+
+综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与速度话题发布，采用贝塞尔曲线（Bezier Curve）与分段绘制策略，控制小海龟画出对称、平滑的白色蝴蝶。
+
+[进入小海龟画蝴蝶实验](turtle_butterfly_experiment.md)
