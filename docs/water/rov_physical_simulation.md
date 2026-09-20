@@ -21,6 +21,7 @@
 ### 2.1 空间运动学与坐标系定义
 
 定义地球固定坐标系（NED 惯性系）与航行体固定坐标系（Body-fixed 系）：
+
 - 空间位置与姿态角：\(\boldsymbol{\eta} = [x, y, z, \phi, \theta, \psi]^T\)
 - 体坐标系下线速度与角速度：\(\boldsymbol{\nu} = [u, v, w, p, q, r]^T\)
 
@@ -62,6 +63,7 @@ V = 8 d_x d_y d_z
 \]
 
 阻力系数向量 \(\boldsymbol{C}_{fluid} = [c_{x}, c_{y}, c_{z}, c_{\phi}, c_{\theta}, c_{\psi}]\)：
+
 - 迎水端面阻力系数 \(c_x = 0.40\)（端面流线型迎水，阻力小）
 - 侧面迎水阻力系数 \(c_y = 7.79\)（侧面迎水截面大，阻力大）
 - 垂直迎水阻力系数 \(c_z = 2.81\)
@@ -195,12 +197,16 @@ def _get_key(self, timeout=0.05):
 
 为确保所有开发者在不同系统与设备上均能稳定复现实验效果，功能包经过了跨平台严格测试：
 
-| 配置项 | 推荐基准环境 | 兼容支持环境 |
+| 配置项 | Ubuntu 20.04（官方教学虚拟机） | Ubuntu 22.04 / WSL2 |
 | :--- | :--- | :--- |
-| **操作系统** | **Ubuntu 20.04 LTS**（课程官方配套教学虚拟机） | **Ubuntu 22.04 LTS** / WSL2 |
-| **ROS 2 版本** | **ROS 2 Humble**（官方虚拟机预装） | ROS 2 Humble / Iron |
-| **Python 版本** | **Python 3.10** | **Python 3.8 ~ 3.11**（已消除高版本专有语法，向下兼容 3.8） |
-| **图形渲染** | 本地 OpenGL 3.3+ / 虚拟机 3D 加速 | 亦支持纯终端 Headless 无图形界面完整复现 |
+| **操作系统** | Ubuntu 20.04 LTS | Ubuntu 22.04 LTS |
+| **ROS 2 版本** | ROS 2 Humble（虚拟机预装） | ROS 2 Humble |
+| **Python 版本** | **Python 3.8**（系统默认，严格要求） | **Python 3.10**（系统原生默认） |
+| **图形渲染** | 虚拟机 3D 加速 / 纯终端模式 | 本地 OpenGL 3.3+ / 终端模式 |
+
+!!! warning "Python 版本与 ROS 2 底层 ABI 绑定提醒"
+    - **Ubuntu 20.04 虚拟机**：ROS 2 Humble 的底层 C 语言扩展库（`_rclpy_pybind11`）是针对系统默认的 **Python 3.8** 编译链接的。因此在虚拟机中**必须使用 Python 3.8** 运行（系统原生 `python3` 或 `conda activate <py38>`）。若在 20.04 下切换为 Python 3.10 环境运行，解释器将因找不到对应 ABI 动态库而报错退出。
+    - **Ubuntu 22.04 系统**：系统原生搭载的 ROS 2 Humble 对应为 **Python 3.10**。
 
 ---
 
@@ -223,6 +229,7 @@ pip3 install -r src/water/rov_mujoco/requirements.txt
 ```
 
 `requirements.txt` 声明的核心依赖项如下：
+
 - `mujoco>=3.0.0`：DeepMind MuJoCo 高保真多体动力学与流体物理引擎；
 - `numpy>=1.20.0`：空间坐标转换与洋流向量解算；
 - `scipy>=1.7.0`：三维空间旋转（Rotation）与插值运算；
@@ -366,6 +373,17 @@ python3 src/water/rov_mujoco/main.py --gui
 #### Q4: 提示 `ModuleNotFoundError: No module named 'rclpy'`
 - **原因**：未加载 ROS 2 基础环境变量。
 - **解决**：执行 `source /opt/ros/humble/setup.bash`。
+
+#### Q5: 运行提示 `cannot import name '_rclpy_pybind11' ... The C extension '...cpython-310-x86_64-linux-gnu.so' isn't present`
+- **原因**：在 Ubuntu 20.04 虚拟机中激活了 Python 3.10 环境（如 Conda `nn_3.10`）。由于 Ubuntu 20.04 教学镜像中的 ROS 2 Humble 底层 C 语言扩展库仅针对系统默认的 Python 3.8 编译（文件名为 `cpython-38` 结尾），无法在 Python 3.10 解释器中被加载。
+- **解决**：在 Ubuntu 20.04 虚拟机中必须切换至 **Python 3.8** 环境运行：
+  ```bash
+  # 退出高版本 Python 环境，使用系统原生默认的 Python 3.8
+  conda deactivate
+  # 或切换激活 Python 3.8 虚拟环境
+  conda activate nn_3.8
+  python3 src/water/rov_mujoco/test/test_sim_teleop.py
+  ```
 
 ---
 
