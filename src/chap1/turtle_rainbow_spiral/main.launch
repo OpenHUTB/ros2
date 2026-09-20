@@ -1,0 +1,7 @@
+<launch>
+    <!-- 启动 turtlesim 仿真器 -->
+    <node name="turtlesim" pkg="turtlesim" type="turtlesim_node" output="screen"/>
+
+    <!-- 启动彩虹螺旋绘制节点 -->
+    <node name="turtle_rainbow_spiral_node" pkg="turtle_rainbow_spiral" type="rainbow_spiral.py" output="screen"/>
+</launch>
