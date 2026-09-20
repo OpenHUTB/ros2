@@ -40,7 +40,7 @@ holoocean/client/src/holoocean/environments.py文件中在 `__linux_start_proces
 ```python
 "-nullrhi",
 ```
-！[具体放入地址](img/wmx0001.png)
+![具体放入地址](../img/wmx0001.png)
 
 ## 6. 运行 ROS 2 示例（WSL 无头模式）
 
