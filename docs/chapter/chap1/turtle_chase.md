@@ -16,17 +16,18 @@
 
 | 项目 | 配置 |
 | --- | --- |
-| 操作系统 | Ubuntu 18.04(VMware 虚拟机,兼容 20.04) |
-| ROS 发行版 | ROS Melodic(兼容 Noetic) |
+| 操作系统 | Ubuntu 18.04(VMware 虚拟机) |
+| ROS 发行版 | ROS Melodic(实测) |
 | 仿真器 | turtlesim |
-| 编程语言 | Python(rospy;脚本 shebang 用 `env python`,代码兼容 Python 2/3,Noetic 下改为 `env python3` 即可) |
+| 编程语言 | Python 2.7.17(Ubuntu 18.04 + Melodic 的 rospy 默认解释器,实测可运行);代码未使用 Python 2 专有语法,兼容 Python 3.6 及以上(已通过 Python 3.14 语法检查),在 Noetic(Ubuntu 20.04,Python 3.8)下仅需把脚本 shebang 改为 `#!/usr/bin/env python3` 即可运行 |
 | 功能包 | turtle_chase |
 
 功能包目录结构如下:
 
 ```
 turtle_chase/
-├── main.py            # 一键启动入口:自动检测 roscore、启动仿真器与两个节点
+├── main.sh            # 一键运行脚本: 自动拷贝/编译/启动, 一条命令跑通整个实验
+├── main.py            # 一键启动入口: 自动检测 roscore、启动仿真器与两个节点
 ├── package.xml        # 包清单,声明依赖 rospy、std_srvs、geometry_msgs、turtlesim
 ├── CMakeLists.txt     # 编译配置,把脚本安装到 bin 目录
 ├── README.md          # 运行环境与运行步骤说明
@@ -53,7 +54,7 @@ Twist 消息中本实验只用到两个分量:
 Pose 消息中用到三个分量:
 
 - `x`、`y`:海龟在平面上的坐标(单位 m);
-- `theta`:海龟的朝向角(单位 rad,取值范围 [-π, π])。
+- `theta`:海龟的朝向角(单位 rad,取值范围 \([-\pi, \pi]\))。
 
 注意:turtlesim 内置 0.5 秒看门狗——只要超过 0.5 秒没有收到新的 cmd_vel 消息,它就会自动把海龟速度清零(强制刹车)。所以两个节点的控制循环都以 `rospy.Rate(50)` 以 50 Hz 的频率采样位姿并重发当前指令,直到动作到位。
 
@@ -61,7 +62,7 @@ Pose 消息中用到三个分量:
 
 与单海龟实验不同,本实验的第二只海龟不是仿真器自带的,而是追逐者节点启动时调用 `/spawn` 服务动态生成的:
 
-- `/spawn`(类型 `turtlesim/Spawn`):在指定坐标 (2.0, 2.0) 以指定朝向 π/4 生成名为 turtle2 的海龟,服务响应返回实际海龟名;
+- `/spawn`(类型 `turtlesim/Spawn`):在指定坐标 \((2.0,\ 2.0)\) 以指定朝向 \(\pi/4\) 生成名为 turtle2 的海龟,服务响应返回实际海龟名;
 - `/turtleN/set_pen`(类型 `turtlesim/SetPen`):设置画笔的 r、g、b 颜色、线宽 width 和 off 开关。本实验把逃亡者画笔设为绿色 (0,255,0)、追逐者设为红色 (255,0,0),抓住后换成洋红色粗笔 (255,0,255, 线宽 6) 标记跟随轨迹;
 - `/clear`(类型 `std_srvs/Empty`):清空画布上的历史轨迹,逃亡者节点启动时调用一次,保证每次实验从干净的画布开始。
 
@@ -69,37 +70,39 @@ Pose 消息中用到三个分量:
 
 ### 2.3 逃亡者:纯跟踪法画圆逃跑
 
-逃亡者的目标是沿画布中心 (5.544, 5.544)(turtlesim 画布为 11×11)半径 R=2.5 m 的圆周匀速逃跑。采用纯跟踪思想:在圆周上放置一个匀速转动的"虚拟目标点"(carrot point),相位 φ(t)=φ₀+ω·t,其中初始相位 φ₀ 由海龟当前所在方位角确定,保证启动瞬间目标点就在前方附近;角速度 ω=0.42 rad/s 与线速度 v=1.2 m/s 匹配,使虚拟点"跑得动、追得上"。
+逃亡者的目标是沿画布中心 \((c_x, c_y) = (5.544,\ 5.544)\)(turtlesim 画布为 \(11 \times 11\))半径 \(R = 2.5\ \mathrm{m}\) 的圆周匀速逃跑。采用纯跟踪思想:在圆周上放置一个匀速转动的"虚拟目标点"(carrot point),相位 \(\varphi(t) = \varphi_0 + \omega t\),其中初始相位 \(\varphi_0\) 由海龟当前所在方位角确定,保证启动瞬间目标点就在前方附近;角速度 \(\omega = 0.42\ \mathrm{rad/s}\) 与线速度 \(v = 1.2\ \mathrm{m/s}\) 相匹配,使虚拟点"跑得动、追得上"。
 
 每个控制周期(50 Hz)执行:
 
-1. 计算虚拟目标点坐标:t_x = cx + R·cos φ,t_y = cy + R·sin φ;
-2. 计算期望航向:θ_d = atan2(t_y − y, t_x − x);
-3. 航向误差 Δθ = θ_d − theta,先归一化到 [-π, π] 再做 P 控制:ω = k_ω·Δθ(k_ω = 5.0);
-4. 偏差较小时全速逃跑(v = 1.2 m/s);偏差过大(|Δθ| > 0.8 rad)时减速到 0.4 倍,先把车头摆正再加速,保证轨迹平滑收敛。
+1. 计算虚拟目标点坐标:\(t_x = c_x + R\cos\varphi\),\(t_y = c_y + R\sin\varphi\);
+2. 计算期望航向:\(\theta_d = \operatorname{atan2}(t_y - y,\ t_x - x)\);
+3. 航向误差 \(\Delta\theta = \theta_d - \theta\),先归一化到 \([-\pi, \pi]\) 再做 P 控制:\(\omega = k_\omega \Delta\theta\)(\(k_\omega = 5.0\));
+4. 偏差较小时全速逃跑(\(v = 1.2\ \mathrm{m/s}\));偏差过大(\(|\Delta\theta| > 0.8\ \mathrm{rad}\))时减速到 0.4 倍,先把车头摆正再加速,保证轨迹平滑收敛。
 
 由于虚拟目标点始终在圆周前方,海龟会自然地沿圆形轨迹稳定"逃跑",无需显式计算圆弧。
 
 ### 2.4 追逐者:双闭环 P 控制与状态机
 
-追逐者同时订阅两只海龟的位姿,把逃亡者位置换算到自己的极坐标系下:距离 d = √((x₁−x₂)² + (y₁−y₂)²),方位差 Δθ = atan2(y₁−y₂, x₁−x₂) − theta(归一化到 [-π, π])。控制器分为两个闭环:
+追逐者同时订阅两只海龟的位姿,把逃亡者位置 \((x_1, y_1)\) 换算到自己的极坐标系下:距离 \(d = \sqrt{(x_1 - x_2)^2 + (y_1 - y_2)^2}\),方位差 \(\Delta\theta = \operatorname{atan2}(y_1 - y_2,\ x_1 - x_2) - \theta_2\)(归一化到 \([-\pi, \pi]\))。控制器分为两个闭环:
 
-- **转向环(角度 P 控制)**:ω = k_ω·Δθ(k_ω = 6.0),始终把车头对准逃亡者当前位置,这是"追得上"的前提;
-- **速度环(距离 P 控制)**:追逐阶段全速 v = 1.7 m/s(偏差过大时先降速转向);抓住后切换为跟随模式,v = clamp(k_v·(d − d₀), 0, v_max),其中 d₀ = 0.5 m 为期望跟随距离,k_v = 4.0——距离越远追得越快,恰好保持 0.5 m 时自然停下,实现稳定"尾随"而不冲过。
+- **转向环(角度 P 控制)**:\(\omega = k_\omega \Delta\theta\)(\(k_\omega = 6.0\)),始终把车头对准逃亡者当前位置,这是"追得上"的前提;
+- **速度环(距离 P 控制)**:追逐阶段全速 \(v = 1.7\ \mathrm{m/s}\)(偏差过大时先降速转向);抓住后切换为跟随模式,\(v = \operatorname{clamp}\left(k_v (d - d_0),\ 0,\ v_{\max}\right)\),其中 \(d_0 = 0.5\ \mathrm{m}\) 为期望跟随距离,\(k_v = 4.0\)——距离越远追得越快,恰好保持 \(d_0\) 时自然停下,实现稳定"尾随"而不冲过。
 
 抓捕判定构成一个三态状态机:
 
-1. **追逐**(d ≥ 0.6 m):全速接近;
-2. **抓捕**(d < 0.6 m,只触发一次):终端打印 `>>> 抓住逃亡者! 用时 X s, 抓捕点 (x, y)`,画笔换成洋红色粗线;
-3. **跟随**(抓住之后):按速度环保持 0.5 m 距离,随逃亡者一起沿圆周环绕。
+1. **追逐**(\(d \ge 0.6\ \mathrm{m}\)):全速接近;
+2. **抓捕**(\(d < 0.6\ \mathrm{m}\),只触发一次):终端打印 `>>> 抓住逃亡者! 用时 X s, 抓捕点 (x, y)`,画笔换成洋红色粗线;
+3. **跟随**(抓住之后):按速度环保持 \(d_0\) 距离,随逃亡者一起沿圆周环绕。
 
 工程细节:两个位姿回调在不同线程执行,共享位姿数据用 `threading.Lock` 加锁保护;节点退出时(`rospy.on_shutdown`)再发一次零速度,保证 Ctrl+C 后海龟立即停住。
 
 ### 2.5 算法流程
 
+一键运行脚本 main.sh:自动把功能包拷贝到 `~/catkin_ws/src/` → `catkin_make` 编译 → source 工作空间 → 检测并启动 roscore → 启动 turtlesim 仿真器 → 依次拉起逃亡者与追逐者节点;Ctrl+C 时统一清理全部子进程;
+
 一键启动入口 main.py:探测 roscore(解析 ROS_MASTER_URI 并试连端口)→ 未运行则先启动 roscore → 启动 turtlesim 仿真器 → 依次拉起逃亡者与追逐者节点;Ctrl+C 时按进程组清理全部子进程;
 
-逃亡者 runner.py:初始化节点、发布者、订阅者、50 Hz 频率对象 → 调用 /clear 清屏、/turtle1/set_pen 设绿色画笔 → 等待第一帧位姿,由当前方位角确定虚拟目标点初始相位 φ₀ → 循环:计算目标点 → 纯跟踪 P 控制发布速度;
+逃亡者 runner.py:初始化节点、发布者、订阅者、50 Hz 频率对象 → 调用 /clear 清屏、/turtle1/set_pen 设绿色画笔 → 等待第一帧位姿,由当前方位角确定虚拟目标点初始相位 \(\varphi_0\) → 循环:计算目标点 → 纯跟踪 P 控制发布速度;
 
 追逐者 chaser.py:初始化节点与话题 → 调用 /spawn 生成 turtle2、设红色画笔 → 等待双方位姿 → 循环:极坐标解算距离与方位差 → 抓捕判定(触发一次打印与换笔)→ 转向环 + 速度环发布控制指令;
 
@@ -107,7 +110,71 @@ Pose 消息中用到三个分量:
 
 ## 三、完整源码展示
 
-### 3.1 一键启动入口 main.py
+### 3.1 一键运行脚本 main.sh
+
+最新源码同步保存在本书仓库 `src/chap1/turtle_chase/main.sh`,可直接查看与下载。
+
+```bash
+#!/usr/bin/env bash
+# 双海龟"追逐—逃亡"协同控制实验 —— 一键运行脚本 main.sh
+#
+# 用法: bash main.sh    (在本模块目录 src/chap1/turtle_chase/ 下执行)
+# 功能: 自动拷贝功能包到 catkin 工作空间、编译并 source, 检测并启动
+#       roscore 与 turtlesim 仿真器, 再拉起逃亡者 runner.py 和追逐者
+#       chaser.py; 按 Ctrl+C 退出时自动清理全部子进程。
+
+set -u
+
+MODULE_DIR="$(cd "$(dirname "$0")" && pwd)"
+WS_DIR="$HOME/catkin_ws"
+
+# 0. ROS 环境未加载时自动 source
+if [ -z "${ROS_DISTRO:-}" ]; then
+    source /opt/ros/*/setup.bash
+fi
+
+# 1. 拷贝功能包到工作空间(从工作空间内部运行时跳过, 避免目录自拷贝)
+if [ "$MODULE_DIR" != "$WS_DIR/src/turtle_chase" ]; then
+    mkdir -p "$WS_DIR/src"
+    echo "[main.sh] 拷贝功能包到 $WS_DIR/src/"
+    cp -r "$MODULE_DIR" "$WS_DIR/src/"
+fi
+
+# 2. 编译并 source
+echo "[main.sh] 编译工作空间..."
+(cd "$WS_DIR" && catkin_make) || { echo "[main.sh] catkin_make 失败, 请检查报错"; exit 1; }
+source "$WS_DIR/devel/setup.bash"
+
+# 3. 检测 roscore, 没有就启动一个
+if ! rostopic list >/dev/null 2>&1; then
+    echo "[main.sh] 启动 roscore..."
+    roscore &
+    sleep 3
+fi
+
+# 4. 启动仿真器与两个节点
+rosrun turtlesim turtlesim_node &
+TURTLE_PID=$!
+sleep 2
+rosrun turtle_chase runner.py &
+RUNNER_PID=$!
+sleep 1
+rosrun turtle_chase chaser.py &
+CHASER_PID=$!
+
+cleanup() {
+    echo "[main.sh] 正在退出, 清理全部子进程..."
+    kill $CHASER_PID $RUNNER_PID $TURTLE_PID 2>/dev/null
+    wait 2>/dev/null
+    echo "[main.sh] 已退出"
+}
+trap cleanup EXIT INT TERM
+
+echo "[main.sh] 实验运行中, 按 Ctrl+C 一键退出"
+wait
+```
+
+### 3.2 一键启动入口 main.py
 
 最新源码同步保存在本书仓库 `src/chap1/turtle_chase/main.py`,可直接查看与下载。
 
@@ -192,7 +259,7 @@ if __name__ == '__main__':
     main()
 ```
 
-### 3.2 逃亡者节点 scripts/runner.py
+### 3.3 逃亡者节点 scripts/runner.py
 
 最新源码同步保存在本书仓库 `src/chap1/turtle_chase/scripts/runner.py`,可直接查看与下载。
 
@@ -288,7 +355,7 @@ if __name__ == '__main__':
         pass
 ```
 
-### 3.3 追逐者节点 scripts/chaser.py
+### 3.4 追逐者节点 scripts/chaser.py
 
 最新源码同步保存在本书仓库 `src/chap1/turtle_chase/scripts/chaser.py`,可直接查看与下载。
 
@@ -419,7 +486,7 @@ if __name__ == '__main__':
         pass
 ```
 
-### 3.4 构建文件 CMakeLists.txt
+### 3.5 构建文件 CMakeLists.txt
 
 ```cmake
 cmake_minimum_required(VERSION 3.0.2)
@@ -446,7 +513,7 @@ catkin_install_python(PROGRAMS
 )
 ```
 
-### 3.5 包清单 package.xml
+### 3.6 包清单 package.xml
 
 ```xml
 <?xml version="1.0"?>
@@ -474,24 +541,30 @@ catkin_install_python(PROGRAMS
 
 ### 4.1 编译功能包
 
-把 `turtle_chase` 放到工作空间 `src` 目录下(不要放在共享目录里编译),然后:
-
 ```bash
+cp -r src/chap1/turtle_chase/ ~/catkin_ws/src/
 cd ~/catkin_ws              # 进入工作空间根目录
 catkin_make                 # 编译
 source devel/setup.bash     # 刷新环境
-chmod +x src/turtle_chase/main.py src/turtle_chase/scripts/*.py   # 确保可执行权限
+chmod +x ~/catkin_ws/src/turtle_chase/main.sh ~/catkin_ws/src/turtle_chase/main.py ~/catkin_ws/src/turtle_chase/scripts/*.py   # 确保可执行权限
 ```
 
 ### 4.2 启动节点
 
-推荐方式:一条命令一键启动(main.py 自动检测 roscore、启动仿真器并拉起两个节点):
+推荐方式:运行一键脚本 main.sh,自动完成拷贝、编译、source,并检测启动 roscore、turtlesim 与两个节点,一条命令跑通整个实验:
+
+```bash
+cd ~/catkin_ws/src/turtle_chase
+bash main.sh
+```
+
+也可以在编译完成后用一键启动入口 main.py(不再重复拷贝与编译):
 
 ```bash
 rosrun turtle_chase main.py
 ```
 
-也可以分四个终端手动启动(注意先启动逃亡者再启动追逐者,因为逃亡者启动时会清空画布并设置画笔):
+还可以分四个终端手动启动(注意先启动逃亡者再启动追逐者,因为逃亡者启动时会清空画布并设置画笔):
 
 ```bash
 # 终端1:启动 ROS 主节点
@@ -540,18 +613,18 @@ angular:
 
 ### 4.4 预期结果
 
-节点运行后,在 turtlesim 窗口中可以依次看到:海龟 1 沿绿色圆形轨迹匀速逃跑;左下角自动出现海龟 2(由 /spawn 服务生成),拖着红色轨迹直线冲刺追赶;约 4~5 秒后追上,追逐者终端同步打印 `已生成追逐者: turtle2`、`追逐者就绪: 最大速度 1.7 m/s`、`>>> 抓住逃亡者! 用时 4.5 s, 抓捕点 (7.94, 5.66)`(实测数据);随后海龟 2 轨迹变为洋红色粗线,以约 0.5 m 的距离稳定跟随海龟 1 沿圆周环绕,直到按 Ctrl+C 退出。
+节点运行后,在 turtlesim 窗口中可以依次看到:海龟 1 沿绿色圆形轨迹匀速逃跑;左下角自动出现海龟 2(由 /spawn 服务生成),拖着红色轨迹直线冲刺追赶;约 4~5 秒后追上,追逐者终端同步打印 `已生成追逐者: turtle2`、`追逐者就绪: 最大速度 1.7 m/s`、`>>> 抓住逃亡者! 用时 4.5 s, 抓捕点 (7.94, 5.66)`(实测数据);随后海龟 2 轨迹变为洋红色粗线,以约 \(d_0 = 0.5\ \mathrm{m}\) 的距离稳定跟随海龟 1 沿圆周环绕,直到按 Ctrl+C 退出。
 
 小海龟追逐实验效果图(红色轨迹为追逐过程,洋红色为抓捕后的跟随轨迹,绿色为逃亡者的圆周轨迹):
 
-![小海龟追逐实验效果图](images/turtle_chase.png)
+![小海龟追逐实验效果图](../../img/chapter/turtle_chase.png)
 
-结果分析:抓捕用时约 4.5 s,主要取决于追逐者与逃亡者的速度差(1.7 − 1.2 = 0.5 m/s)以及追逐者的出生点 (2.0, 2.0) 到逃亡圆周的直线距离。若用 `_max_speed:=1.3` 把追逐者降速到与逃亡者接近,可观察到抓捕用时明显变长,验证速度差决定抓捕时间的分析;跟随阶段洋红轨迹与绿色圆周基本重合,说明距离 P 控制的速度环收敛良好。
+结果分析:抓捕用时约 4.5 s,主要取决于追逐者与逃亡者的速度差(\(1.7 - 1.2 = 0.5\ \mathrm{m/s}\))以及追逐者的出生点 \((2.0,\ 2.0)\) 到逃亡圆周的直线距离。若用 `_max_speed:=1.3` 把追逐者降速到与逃亡者接近,可观察到抓捕用时明显变长,验证速度差决定抓捕时间的分析;跟随阶段洋红轨迹与绿色圆周基本重合,说明距离 P 控制的速度环收敛良好。
 
 ## 五、总结
 
-本实验通过编写逃亡者、追逐者两个节点,综合运用了 ROS 的话题通信(双海龟的 cmd_vel 发布与 pose 订阅)和服务通信(/spawn 动态生成海龟、/set_pen 设置画笔、/clear 清屏),实现了双海龟"追逐—逃亡—跟随"的协同对抗任务。实验中掌握了纯跟踪法轨迹跟踪与"转向 P 控制 + 速度 P 控制"双闭环的设计方法,理解了抓捕判定的三态状态机,并练习了 50 Hz 高频循环规避 turtlesim 0.5 秒看门狗、角度差 ±π 跨界归一化、多线程回调加锁、服务调用容错、一键启动入口与进程组清理等工程技巧。与画正方形等单海龟实验相比,本实验更贴近真实机器人系统中"多节点分布式协作 + 对抗性任务"的场景,加深了对 ROS 分布式通信架构和闭环反馈控制的理解。
+本实验通过编写逃亡者、追逐者两个节点,综合运用了 ROS 的话题通信(双海龟的 cmd_vel 发布与 pose 订阅)和服务通信(/spawn 动态生成海龟、/set_pen 设置画笔、/clear 清屏),实现了双海龟"追逐—逃亡—跟随"的协同对抗任务。实验中掌握了纯跟踪法轨迹跟踪与"转向 P 控制 + 速度 P 控制"双闭环的设计方法,理解了抓捕判定的三态状态机,并练习了 50 Hz 高频循环规避 turtlesim 0.5 秒看门狗、角度差 ±π 跨界归一化、多线程回调加锁、服务调用容错、main.sh 一键运行脚本与进程清理等工程技巧。与画正方形等单海龟实验相比,本实验更贴近真实机器人系统中"多节点分布式协作 + 对抗性任务"的场景,加深了对 ROS 分布式通信架构和闭环反馈控制的理解。
 
 ## 六、声明
 
-本实验的代码与文档在 ZCode 大模型辅助下编写,本人已逐一测试验证全部内容可正常运行(运行环境:Ubuntu 18.04 + ROS Melodic),并对提交内容负全部责任。
+本实验的代码与文档在 ZCode 智能体辅助下编写,本人已逐一测试验证全部内容可正常运行(运行环境:Ubuntu 18.04 + ROS Melodic),并对提交内容负全部责任。
