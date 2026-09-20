@@ -9,3 +9,6 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
+
+# 行为克隆数据集（图像与标签，体积大不入库）
+data/
