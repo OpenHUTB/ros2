@@ -233,6 +233,7 @@ rosservice info /turtle1/set_pen
 
 ## 五、参数调整
 修改`star_draw.py`内参数，可调整图形效果：
+
 |参数|作用|
 | ---- | ---- |
 |`line_len = 2.0`|五角星每条边的长度，数值越大图形越大|
@@ -244,8 +245,10 @@ rosservice info /turtle1/set_pen
 
 ## 六、实验总结
 本次实验结合ROS话题通信与ROS服务调用，控制turtlesim小海龟绘制彩色五角星。
+
 1. 通过`/turtle1/cmd_vel`话题发布Twist速度消息，实现海龟前进与原地旋转。
 2. 调用`/turtle1/set_pen`服务动态修改画笔RGB色彩，实现每条边不同颜色，是本实验的特色。
 3. 采用定时控制策略，循环5次完成五角星轨迹绘制。
 4. 使用`rosnode`、`rostopic`、`rosservice`工具，验证节点、话题、服务通信正常。
+
 实验发现定时方案会积累微小误差，图形末端存在轻微闭合偏差，后续可以使用pose订阅的闭环方式优化。
