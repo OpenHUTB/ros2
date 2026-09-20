@@ -196,9 +196,9 @@
 <li><a href="#references">8. 参考文献</a></li>
 </ul>
 <blockquote>
-<p>完整工程源码在 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ap_cpp_overfomo"><code>src/ap_cpp_overfomo/</code></a>，
+<p>完整工程源码在 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/ap_cpp_overfomo"><code>src/air/ap_cpp_overfomo/</code></a>，
 包含核心规划源码、ROS 包 <code>ap_cpp_ros</code>、演示脚本、测试与实验数据；
-完整说明见该目录下的 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/ap_cpp_overfomo/README.md">README</a>。
+完整说明见该目录下的 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/air/ap_cpp_overfomo/README.md">README</a>。
 本页是面向课程文档的导读，细节以该 README 为准。</p>
 </blockquote>
 <hr/>
@@ -305,17 +305,17 @@
 </tbody>
 </table>
 <p>代码不依赖这两个包的特定版本，较新的版本均可运行。</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/ap_cpp_overfomo
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-core.txt
 </code></pre></div>
 <blockquote>
-<p><code>src/ap_cpp_overfomo/requirements.txt</code> 是<strong>完整 OverFOMO 仿真流程</strong>（AirSim + 语义分割 + 正射影像）的依赖，
+<p><code>src/air/ap_cpp_overfomo/requirements.txt</code> 是<strong>完整 OverFOMO 仿真流程</strong>（AirSim + 语义分割 + 正射影像）的依赖，
 对应 <strong>Python 3.6 / 3.7</strong>（TensorFlow 1.15 的最高支持版本），在 Python 3.8 以上装不上。
 其中的 GDAL 不在 PyPI 上以源码分发，需按自己的 Python 版本单独下载预编译 wheel 安装。
 <strong>只跑本模块的规划器、演示与测试不需要这个文件。</strong></p>
 </blockquote>
 <h3 id="42">4.2 运行演示（无需仿真器）</h3>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/ap_cpp_overfomo
 
 <span class="c1"># 自带的合成地块（不依赖仓库数据）</span>
 python<span class="w"> </span>demos/run_ap_cpp_demo.py
@@ -328,7 +328,7 @@ python<span class="w"> </span>demos/run_ap_cpp_demo.py<span class="w"> </span>--
 </code></pre></div>
 <p>每次运行会输出一份 JSON 任务报告与一组四联诊断图（信念熵前后对比、累计覆盖率、地块上的规划航迹、任务收敛过程）。</p>
 <h3 id="43">4.3 运行测试</h3>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/ap_cpp_overfomo
 python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-q
 <span class="c1"># 或者</span>
 python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
@@ -339,7 +339,7 @@ python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w">
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>demos/run_ap_cpp_demo.py<span class="w"> </span>--source<span class="w"> </span>geojson<span class="w"> </span>--field<span class="w"> </span><span class="m">002</span><span class="w"> </span>--prior<span class="w"> </span>anomaly<span class="w"> </span>--prior-weight<span class="w"> </span><span class="m">0</span>.6
 </code></pre></div>
 <h2 id="5">5. 复现说明与实测数据 <span id="metrics"></span></h2>
-<p>本节数值由 <code>demos/run_ap_cpp_demo.py --compare</code> 在不依赖仿真器的 Python 环境下生成，与 <code>src/ap_cpp_overfomo/results/</code> 中提交的图片一一对应。ROS 节点在 <code>roslaunch</code> 下运行时另有一组指标，两次运行不可混用。</p>
+<p>本节数值由 <code>demos/run_ap_cpp_demo.py --compare</code> 在不依赖仿真器的 Python 环境下生成，与 <code>src/air/ap_cpp_overfomo/results/</code> 中提交的图片一一对应。ROS 节点在 <code>roslaunch</code> 下运行时另有一组指标，两次运行不可混用。</p>
 <p><strong>合成地块（864 步，默认参数）</strong></p>
 <table>
 <thead>
@@ -419,7 +419,7 @@ python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w">
 </tbody>
 </table>
 <h2 id="6-rviz">6. 在 RViz 中运行 <span id="rviz"></span></h2>
-<p><code>src/ap_cpp_overfomo/ros/</code> 是一个 catkin 工作空间，内含一个包 <code>ap_cpp_ros</code>。节点无头运行规划器并把结果发布给 RViz，<strong>不需要 AirSim、Unreal，也不需要 TensorFlow / GDAL</strong>，只需要 source 过的 ROS 1 环境和 NumPy。</p>
+<p><code>src/air/ap_cpp_overfomo/ros/</code> 是一个 catkin 工作空间，内含一个包 <code>ap_cpp_ros</code>。节点无头运行规划器并把结果发布给 RViz，<strong>不需要 AirSim、Unreal，也不需要 TensorFlow / GDAL</strong>，只需要 source 过的 ROS 1 环境和 NumPy。</p>
 <blockquote>
 <p><strong>不要跳过这一节直接执行 <code>roslaunch</code>，会报错。</strong> <code>ap_cpp_ros</code> 是 ROS 1 的 catkin 包，
 必须先 <code>catkin_make</code> 编译并 <code>source devel/setup.bash</code>，<code>roslaunch</code> 才能找到它；
@@ -459,7 +459,7 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 <span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 
 <span class="c1"># 2. 进入本模块的 catkin 工作空间</span>
-<span class="nb">cd</span><span class="w"> </span>src/ap_cpp_overfomo/ros
+<span class="nb">cd</span><span class="w"> </span>src/air/ap_cpp_overfomo/ros
 
 <span class="c1"># 3. 编译</span>
 catkin_make
@@ -540,10 +540,10 @@ rviz<span class="w"> </span>-d<span class="w"> </span><span class="k">$(</span>r
 <blockquote>
 <p><strong>获取方式</strong>：完整大体积权重与数据集可联系作者获取，或见 Release 附件。</p>
 </blockquote>
-<p>放置方式：<code>weights0500.hdf5</code>、<code>gif/demo.gif</code> 与 <code>AP_CPP_Assignment_Submission.zip</code> 放在 <code>src/ap_cpp_overfomo/</code> 根目录下（动图放回 <code>gif/</code> 子目录）；<code>viewpoints_map.jpg</code> 分别放回 <code>CPP/000/</code> 至 <code>CPP/004/</code>。</p>
+<p>放置方式：<code>weights0500.hdf5</code>、<code>gif/demo.gif</code> 与 <code>AP_CPP_Assignment_Submission.zip</code> 放在 <code>src/air/ap_cpp_overfomo/</code> 根目录下（动图放回 <code>gif/</code> 子目录）；<code>viewpoints_map.jpg</code> 分别放回 <code>CPP/000/</code> 至 <code>CPP/004/</code>。</p>
 <p><strong>本模块的核心部分（<code>ap_cpp/</code> 规划源码、演示、测试与 ROS 包）不依赖上述任何文件，可直接运行</strong>，见第 4 节与第 6 节。</p>
 <h2 id="8">8. 参考文献 <span id="references"></span></h2>
-<p>关于 OverFOMO 的原始方法与引用格式，见 <code>src/ap_cpp_overfomo/README.md</code> 的引用一节。</p>
+<p>关于 OverFOMO 的原始方法与引用格式，见 <code>src/air/ap_cpp_overfomo/README.md</code> 的引用一节。</p>
 <h2 id="_1">人工智能使用声明</h2>
 <p>本模块的代码与文档编写过程中使用了大型语言模型进行辅助（代码整理、文档撰写与英文翻译）。作者已对提交的全部内容进行复核，并对其正确性负责。</p>
 <hr/>
