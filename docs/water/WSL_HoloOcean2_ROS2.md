@@ -65,3 +65,5 @@ export HOLODECKPATH=指向世界包文件夹地址
 ```bash
 ros2 launch /mnt/e/underwater/daima2/holoocean-ros/install/holoocean_examples/share/holoocean_examples/launch/command_launch.py headless:=true
 ```
+
+[HoloOcean Windows 搭建教程](HoloOcean-Windows-Setup.md)
