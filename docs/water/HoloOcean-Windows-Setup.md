@@ -70,10 +70,9 @@ echo $env:HOLODECKPATH
 
 ## 五、跑通第一个仿真
 
-前往官方文档 Getting Started 页面：
+前往已经整理好的正文文档：
 
-https://byu-holoocean.github.io/holoocean-docs/v2.2.0/usage/getting-started.html
-！[图片](img/wmx0002.png)
+[正文文档](https://openhutb.github.io/mujoco_plugin/underwater/getting_started/)
 
 找到可直接复制运行的最简示例代码，新建文件放入官方代码。文件可以放入 `.....\holoocean\client` 中。
 
