@@ -239,7 +239,7 @@ python src/air/air_teleop/drone_joy_teleop.py
 | 左摇杆前后 | `axes[1]` | 前进 / 后退 | `scale_vx = +2.5` |
 | 左摇杆左右 | `axes[0]` | 左偏航 / 右偏航 | `scale_yaw = -1.0` |
 | 右摇杆左右 | `axes[3]` | 左移 / 右移 | `scale_vy = -1.5` |
-| 右摇杆前后 | `axes[5]` | 上升 / 下降 | `scale_vz = +1.5` |
+| 右摇杆前后 | `axes[5]` | 上升 / 下降 | `scale_vz = -1.5` |
 
 **安全机制与约定：**
 
