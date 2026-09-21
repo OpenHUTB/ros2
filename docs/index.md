@@ -55,6 +55,7 @@ ROS每章节运行代码:
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
 * [手动控制](./set_up_and_connect_to_carla.md)
+* [仿真车选车与键盘遥控器](./ground/car_keyboard_teleop.md)
 * [生成对象](./ground/carla_spawn_objects.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [路径点发布器](./ground/waypoint.md)

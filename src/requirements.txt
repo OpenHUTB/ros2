@@ -1,3 +1,9 @@
 # 无人机终端键盘遥控器（drone_teleop）与空域载具 ROS 遥控（drone_ros_node / drone_ros_teleop）运行时依赖
 pynput
 airsim
+
+# 仿真车选车与键盘遥控器（src/ground/car_keyboard_teleop）运行时依赖
+pygame
+# 注意：car 键盘驾驶还需要 hutb（提供 carla 模块），且版本必须与模拟器一致（2.9.16）。
+# PyPI 上的 hutb 版本较旧，请安装模拟器自带的离线 wheel，例如：
+#   pip install <模拟器安装目录>/PythonAPI/carla/dist/hutb-2.9.16-cp311-cp311-win_amd64.whl
