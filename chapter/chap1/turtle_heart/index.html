@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>小海龟画爱心实验 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5c0f\u6d77\u9f9f\u753b\u7231\u5fc3\u5b9e\u9a8c";
+        var mkdocs_page_input_path = "chapter/chap1/turtle_heart.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item active">小海龟画爱心实验</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/turtle_heart.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">小海龟画爱心实验</h1>
+<h2 id="_2">一、实验目的与环境说明</h2>
+<h3 id="11">1.1 实验目的</h3>
+<ol>
+<li>掌握 ROS 话题通信机制。节点作为发布者发布 <code>/turtle1/cmd_vel</code> 话题，发送 <code>geometry_msgs/Twist</code> 消息控制海龟运动；同时作为订阅者订阅 <code>/turtle1/pose</code> 话题，接收海龟的位姿消息。</li>
+<li>掌握利用参数方程生成轨迹点的方法。利用爱心参数方程生成一系列密集的坐标点，控制小海龟依次跟踪这些点，从而绘制出爱心图案。</li>
+<li>通过 turtlesim 仿真器，体会闭环反馈控制中距离与角度误差的计算与修正。</li>
+</ol>
+<h3 id="12">1.2 实验环境</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">配置项</th>
+<th style="text-align: left;">版本/说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">操作系统</td>
+<td style="text-align: left;">Ubuntu 20.04 (VMware虚拟机)</td>
+</tr>
+<tr>
+<td style="text-align: left;">ROS 版本</td>
+<td style="text-align: left;">ROS Noetic</td>
+</tr>
+<tr>
+<td style="text-align: left;">仿真器</td>
+<td style="text-align: left;">turtlesim</td>
+</tr>
+<tr>
+<td style="text-align: left;">编程语言</td>
+<td style="text-align: left;">Python 3.8</td>
+</tr>
+<tr>
+<td style="text-align: left;">功能包</td>
+<td style="text-align: left;">turtle_heart</td>
+</tr>
+</tbody>
+</table>
+<p><strong>功能包目录结构如下：</strong>
+</p><div class="highlight"><pre><span></span><code>turtle_heart/
+├── package.xml             # 包清单
+├── CMakeLists.txt          # 构建文件
+├── scripts/
+│   └── main.py             # 主程序：控制小海龟绘制爱心
+└── README.md               # 运行环境和步骤说明
+</code></pre></div>
+<p>二、核心控制原理与算法解析</p>
+<p>2.1 话题通信机制</p>
+<p>turtlesim 仿真器启动后，小海龟会自动订阅 /turtle1/cmd_vel 话题。我们编写的节点脚本作为发布者向该话题发送 Twist 消息控制海龟运动，同时通过 /turtle1/pose 话题接收自身位姿（包含 x, y 坐标和 theta 朝向角）。本节点订阅该话题，实时读取当前位置。</p>
+<p>Twist 消息中本实验用到的两个分量：</p>
+<p>· linear.x：线速度，控制海龟前进的快慢（单位：m/s）
+· angular.z：角速度，控制海龟转动的快慢（单位：rad/s）</p>
+<p>Pose 消息中用到三个分量：</p>
+<p>· x, y：海龟在平面上的坐标（单位：m）
+· theta：海龟的朝向角（单位：rad）</p>
+<p>2.2 爱心参数方程与轨迹跟踪</p>
+<p>与画正方形走直线和转固定角度不同，爱心是一个复杂的曲线。本实验采用心形参数方程生成轨迹点：
+x = 16 * sin^3(t)
+y = 13 * cos(t) - 5 * cos(2t) - 2 * cos(3t) - cos(4t)</p>
+<p>其中 t 的取值范围是 [0, 2π]。代码中均匀采样 60 个点。为了适配 turtlesim 的 11.08×11.08 画布边界，对计算出的坐标进行了缩放（乘 0.25）和偏移（加 5.5），确保爱心能居中显示且不撞墙。</p>
+<p>闭环跟踪控制：
+对于每个目标点 (x_target, y_target)，计算当前点 (x_cur, y_cur) 的距离：
+d = sqrt((x_target - x_cur)^2 + (y_target - y_cur)^2)
+当 d &lt; 0.15 时，认为到达目标点，发布 0 速度停止海龟，然后转向下一个点。</p>
+<p>角度控制：
+计算目标点相对于当前点的期望角度 theta_target = atan2(y_target - y_cur, x_target - x_cur)。
+通过将角速度 angular.z 设为 4.0 * (theta_target - theta_cur)，使得海龟平滑地转向目标点。</p>
+<p>2.3 动作间隙的稳定处理</p>
+<p>由于小海龟具有物理惯性，每次到达一个目标点后，需要发布一次零速度指令，并 rospy.sleep(0.05) 短暂停歇，让海龟的动能消耗完毕，消除运动惯性带来的位置偏差，然后再向下一目标点移动。</p>
+<p>2.4 算法流程</p>
+<ol>
+<li>初始化节点，创建发布者发布 /turtle1/cmd_vel，创建订阅者订阅 /turtle1/pose，设置控制频率为 10Hz。</li>
+<li>等待第一帧位姿数据，确保连接建立。</li>
+<li>根据爱心参数方程，计算并存储 61 个目标坐标点。</li>
+<li>遍历目标点列表：
+   · 计算当前位置与目标点的距离 d。
+   · 如果 d &lt; 0.15，停止并等待 0.05s，切换到下一个目标点。
+   · 计算角度差，将角度归一化到 [-π, π]，发布线速度与角速度指令。</li>
+<li>循环结束后，发布停止指令，绘制完成。</li>
+</ol>
+<p>三、完整源码展示</p>
+<p>3.1 主程序 scripts/main.py</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
+<span class="kn">from</span> <span class="nn">turtlesim.msg</span> <span class="kn">import</span> <span class="n">Pose</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">current_pose</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">pose_callback</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">current_pose</span>
+    <span class="n">current_pose</span> <span class="o">=</span> <span class="n">msg</span>
+
+<span class="k">class</span> <span class="nc">TurtleDrawer</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">'draw_heart'</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle1/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s1">'/turtle1/pose'</span><span class="p">,</span> <span class="n">Pose</span><span class="p">,</span> <span class="n">pose_callback</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="c1"># 10Hz</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">move_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_x</span><span class="p">,</span> <span class="n">target_y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""让海龟平滑移动到目标点"""</span>
+        <span class="k">global</span> <span class="n">current_pose</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">current_pose</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">target_x</span> <span class="o">-</span> <span class="n">current_pose</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="n">target_y</span> <span class="o">-</span> <span class="n">current_pose</span><span class="o">.</span><span class="n">y</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># 距离小于 0.15 就算到达</span>
+            <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                <span class="k">break</span>
+
+            <span class="n">target_theta</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>
+            <span class="n">angle_diff</span> <span class="o">=</span> <span class="n">target_theta</span> <span class="o">-</span> <span class="n">current_pose</span><span class="o">.</span><span class="n">theta</span>
+
+            <span class="c1"># 角度归一化到 [-pi, pi]</span>
+            <span class="k">while</span> <span class="n">angle_diff</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span> <span class="n">angle_diff</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+            <span class="k">while</span> <span class="n">angle_diff</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span> <span class="n">angle_diff</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+
+            <span class="n">move_cmd</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+            <span class="c1"># 降低线速度，防止冲过头</span>
+            <span class="n">move_cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">distance</span><span class="p">)</span>
+            <span class="c1"># 提高转向灵敏度</span>
+            <span class="n">move_cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">angle_diff</span> 
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">move_cmd</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""停止海龟"""</span>
+        <span class="n">move_cmd</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+        <span class="n">move_cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">move_cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">move_cmd</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">draw_heart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"开始绘制爱心..."</span><span class="p">)</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">61</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>
+
+            <span class="c1"># 爱心参数方程</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mi">13</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="c1"># 缩放和平移，以适应 turtlesim 边界</span>
+            <span class="n">scaled_x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">x</span> <span class="o">*</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">5.5</span><span class="p">))</span>
+            <span class="n">scaled_y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">10.5</span><span class="p">,</span> <span class="n">y</span> <span class="o">*</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mf">5.5</span><span class="p">))</span>
+
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">scaled_x</span><span class="p">,</span> <span class="n">scaled_y</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"移动到: </span><span class="si">{</span><span class="n">point</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"爱心绘制完成！"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">drawer</span> <span class="o">=</span> <span class="n">TurtleDrawer</span><span class="p">()</span>
+        <span class="n">drawer</span><span class="o">.</span><span class="n">draw_heart</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
+        <span class="k">pass</span>
+</code></pre></div>
+<p>3.2 构建文件 CMakeLists.txt</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.0.2</span><span class="p">)</span>
+<span class="nb">project</span><span class="p">(</span><span class="s">turtle_heart</span><span class="p">)</span>
+
+<span class="nb">find_package</span><span class="p">(</span><span class="s">catkin</span><span class="w"> </span><span class="s">REQUIRED</span><span class="w"> </span><span class="s">COMPONENTS</span>
+<span class="w">  </span><span class="s">rospy</span>
+<span class="w">  </span><span class="s">geometry_msgs</span>
+<span class="w">  </span><span class="s">turtlesim</span>
+<span class="p">)</span>
+
+<span class="nb">catkin_package</span><span class="p">()</span>
+
+<span class="nb">catkin_install_python</span><span class="p">(</span><span class="s">PROGRAMS</span>
+<span class="w">  </span><span class="s">scripts/main.py</span>
+<span class="w">  </span><span class="s">DESTINATION</span><span class="w"> </span><span class="o">${</span><span class="nv">CATKIN_PACKAGE_BIN_DESTINATION</span><span class="o">}</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>3.3 包清单 package.xml</p>
+<div class="highlight"><pre><span></span><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
+<span class="nt">&lt;package</span><span class="w"> </span><span class="na">format=</span><span class="s">"2"</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>turtle_heart<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;version&gt;</span>0.0.0<span class="nt">&lt;/version&gt;</span>
+<span class="w">  </span><span class="nt">&lt;description&gt;</span>The<span class="w"> </span>turtle_heart<span class="w"> </span>package<span class="nt">&lt;/description&gt;</span>
+<span class="w">  </span><span class="nt">&lt;maintainer</span><span class="w"> </span><span class="na">email=</span><span class="s">"liming@todo.todo"</span><span class="nt">&gt;</span>liming<span class="nt">&lt;/maintainer&gt;</span>
+<span class="w">  </span><span class="nt">&lt;license&gt;</span>TODO<span class="nt">&lt;/license&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;buildtool_depend&gt;</span>catkin<span class="nt">&lt;/buildtool_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>rospy<span class="nt">&lt;/build_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>geometry_msgs<span class="nt">&lt;/build_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;build_depend&gt;</span>turtlesim<span class="nt">&lt;/build_depend&gt;</span>
+
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>rospy<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>geometry_msgs<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="w">  </span><span class="nt">&lt;exec_depend&gt;</span>turtlesim<span class="nt">&lt;/exec_depend&gt;</span>
+<span class="nt">&lt;/package&gt;</span>
+</code></pre></div>
+<p>四、运行与验证</p>
+<p>4.1 编译功能包</p>
+<p>在工作空间根目录下运行：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>4.2 启动节点</p>
+<p>需要打开三个终端，分别运行：</p>
+<ol>
+<li>终端 1 (ROS 核心)：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>roscore
+</code></pre></div>
+<ol>
+<li>终端 2 (仿真器)：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtlesim_node
+</code></pre></div>
+<ol>
+<li>终端 3 (运行画爱心脚本)：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>turtle_heart<span class="w"> </span>main.py
+</code></pre></div>
+<p>4.3 话题订阅与验证</p>
+<p>在节点运行时，另开终端依次执行：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>list
+rostopic<span class="w"> </span>info<span class="w"> </span>/turtle1/cmd_vel
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/turtle1/pose
+</code></pre></div>
+<p>预期可以看到 Twist 线速度 linear.x 在 0.0-1.0 之间不断变化，角速度 angular.z 频繁调整，表明程序正在实时计算并发布速度指令。</p>
+<p>4.4 预期结果</p>
+<p>节点启动后，在 turtle_win 窗口中可以看到小海龟先移动至起始点，然后平滑地画出一个完整的爱心图案。最后海龟停在爱心上</p>
+<p><img alt="小海龟画爱心运行效果" src="../images/turtle_heart.png"/></p>
+<p>五、总结</p>
+<p>本实验通过发布 /turtle1/cmd_vel 话题实现了对 turtlesim 小海龟的速度控制，并通过订阅 /turtle1/pose 位姿话题实现了闭环反馈。相较于走直线的几何图形，画爱心需要处理复杂的参数方程轨迹点。通过计算距离与角度差，结合速度比例控制，成功完成了爱心图案的绘制。实验深化了对 ROS 话题通信机制和闭环控制算法的理解。</p>
+<p>```</p></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
