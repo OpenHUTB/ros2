@@ -79,11 +79,14 @@ ROS每章节运行代码:
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
+* [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
+
 
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+* [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
 ___
 
