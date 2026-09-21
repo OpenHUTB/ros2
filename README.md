@@ -10,6 +10,7 @@
 ## 注意事项
 
 * 提交 Pull Request 前请检查：
+    * **一定**要用 **`mkdocs serve --livereload`** 检查网页的是否为想要的修改效果后再提交
     * Pull Request 的标题和提交信息不能随意，需要说明为什么修改，而不仅仅是修改了什么
     * Pull Request 页面的 File changed 下的内容是否为想要的修改
     * 检查 Pull Request 页面是否有红色的提示（有冲突），如果有请先合并仓库最新修改再新建 Pull Requst
@@ -18,6 +19,7 @@
     * 每次 Pull Request 都需要保证能够通过main脚本直接运行整个模块，在提交信息中提供运行效果图（动图可以用[ScreenToGif](https://github.com/NickeManarin/ScreenToGif)），README.md文档中提供运行环境和运行步骤的说明
     * 使用大模型需要在最后声明，并对提交内容负全部责
     * 约定 Markdown 文档放到 [docs](https://github.com/OpenHUTB/ros2/tree/master/docs) 目录和相应的模块文件夹内，源代码（.py、.cpp等）放到 [src](https://github.com/OpenHUTB/ros2/tree/master/src) 目录和相应的模块文件夹内
+    * 约定文件名命名方式为全英文，不能包含空格、中文和拼音，多个单词用下划线`_`分割
     * 每个模块的相关文件放在以模块命名的文件夹内，必须支持 launch 启动，入口为main.开头，比如：main.py、main.cpp、main.bat、main.sh等
     * 每个模块需要在导航栏和首页添加跳转的链接
     * 模块名不能宽泛，需要具体，不然就和其他人的容易重复
