@@ -9,6 +9,7 @@ AirSim 客户端不同，本方案将**键盘输入**与**仿真器控制**拆�
 | 文件 | 节点名 | 职责 |
 | --- | --- | --- |
 | `drone_ros_teleop.py` | `drone_ros_teleop` | 用 `termios` 原始模式监听键盘（`tty.setraw`），按 10 Hz 把当前按键状态发布为 `Twist` 消息 |
+| `drone_joy_teleop.py` | `drone_joy_teleop` | 订阅 `/joy`，把标准 Xbox 手柄摇杆轴值映射为 `Twist` 消息，按 20 Hz 发布（含死区滤波） |
 | `drone_ros_node.py` | `drone_ros_node` | 订阅 `/drone/cmd_vel`，经 AirSim RPC 驱动无人机；另以独立后台线程抓取前置相机图像，缩放后发布 `/drone/front_camera/image_raw` |
 
 ## 双节点架构
@@ -197,6 +198,57 @@ rostopic echo /drone/cmd_vel  # 按住 W 键可看到 linear.x = 3.0
 * **连接宿主机失败**：检查 `--host` 是否为宿主机 IP、宿主机防火墙是否放行 41451 端口；
 * **键盘无响应**：确认键盘节点在终端中直接运行（SSH 或虚拟机桌面终端均可），stdin 未被重定向，且该窗口获得焦点；若屏幕回显按键字符说明原始模式未生效，请确认在 Linux/macOS 环境运行；
 * **无人机无动作**：用 `rostopic echo /drone/cmd_vel` 确认话题有消息，并确认桥接节点日志中已打印“已连接 AirSim 服务”。
+
+## 手柄遥控（drone_joy_teleop）
+
+键盘遥控适合无图形界面的 SSH/终端场景，但要实现连续平滑的斜向飞行仍需复合按键。若接入手柄
+（如飞智冰原狼 4 / Xbox 协议手柄），可用 `drone_joy_teleop.py` 直接通过摇杆连续下发速度指令，
+手感与消费级无人机一致。该节点订阅 ROS 标准手柄话题 `/joy`，与键盘节点发布**完全相同格式**的
+`/drone/cmd_vel` 消息，桥接节点无需任何改动即可复用。
+
+### 1. 启动手柄驱动（joy 节点）
+
+先在虚拟机中安装并启动 ROS 的 `joy` 包，把物理手柄读成 `/joy` 话题：
+
+```shell
+sudo apt-get install ros-noetic-joy
+source /opt/ros/noetic/setup.bash
+rosparam set joy_node/dev "/dev/input/js0"   # 设备路径以实际为准（ls /dev/input/js*）
+rosrun joy joy_node
+```
+
+> 无线手柄经接收器连接后，可用 `ls /dev/input/js*` 确认设备节点；若出现多个，
+> 逐个用 `rostopic echo /joy` 观察轴值，找到对应你手柄的那一个。
+
+### 2. 启动手柄发布节点
+
+另开一个终端（保持桥接节点 `drone_ros_node` 已运行）：
+
+```shell
+source /opt/ros/noetic/setup.bash
+python src/air/air_teleop/drone_joy_teleop.py
+```
+
+### 摇杆映射
+
+节点按标准 Xbox 手感把摇杆轴值映射为 NED 速度指令：
+
+| 摇杆 | 轴 | 功能 | NED 指令 |
+| :---: | :---: | :---: | --- |
+| 左摇杆前后 | `axes[1]` | 前进 / 后退 | `vx = ±2.5 m/s` |
+| 左摇杆左右 | `axes[0]` | 左偏航 / 右偏航 | `angular.z = ±1.0 rad/s` |
+| 右摇杆前后 | `axes[4]` | 上升 / 下降 | `vz = ∓1.5 m/s` |
+| 右摇杆左右 | `axes[3]` | 左移 / 右移 | `vy = ±1.5 m/s` |
+
+**安全机制与约定：**
+
+* **死区滤波**：摇杆轴值绝对值小于 `0.1` 时置为 0，屏蔽摇杆机械虚位漂移，避免飞机无指令误动作；
+* **持续发布**：以 20 Hz 定时器持续发布当前速度，松杆时即发布全零指令，无人机原地悬停；
+* **轴索引自适应**：部分手柄不报扳机轴（共 4 轴），节点按轴数量自动把右摇杆回退为
+  `axes[3]`（前后）/ `axes[2]`（左右）；
+* **符号约定**：左摇杆前推在 `joy`/SDL 惯例下为负值，节点已取反使「前推 = 前进」；
+  若你的手柄或驱动前推报正（飞机会后飞），把脚本中的 `INVERT_VX` 改为 `False` 即可；
+* 无扳机轴手柄、手柄按钮索引等差异，先用 `rostopic echo /joy` 观察实际轴/按钮值再微调。
 
 ## 端到端视觉行为克隆自主巡航 (air_learning)
 
