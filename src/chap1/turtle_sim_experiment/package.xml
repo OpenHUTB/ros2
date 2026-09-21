@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtle_sim_experiment</name>
+  <version>1.0.0</version>
+  <description>
+    小海龟自动画花瓣演示模块（第一章扩展实验）：一键 launch 启动 turtlesim，自动生成第二只海龟并控制其画出多色花瓣圆环。
+    适配 Ubuntu 20.04 + ROS Noetic，兼容 Ubuntu 16.04 + Kinetic。配套文档见 docs/chapter/turtle_sim_experiment.md。
+  </description>
+  <maintainer email="openhutb@example.com">turtle_sim_experiment contributor</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+</package>

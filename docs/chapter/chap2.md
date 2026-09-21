@@ -8,23 +8,37 @@
 2. 装好后 **VMware → 文件 → 打开虚拟机**，选这个文件：`ros\ros_noetic_humble_gazebov11_linux_win_v1\ros_noetic_humble_gazebov11_linux_win_v1\ros-noetic-humble-gazebo11-linux-win-v1.vmx`
 3. **先别急着开机**，看下配置：这个虚拟机默认分配了 **6 核 CPU / 8.78 GB 内存 / 768MB 显存**。如果你电脑没那么强，在「虚拟机设置」里把 CPU 和内存调低（比如 4 核 / 4GB），否则会卡或抢资源。
 
-## 第二步：把代码共享至虚拟机
+## 第二步：获取代码
+
+在虚拟机的用户主目录下运行以下命令：
+```
+cd ~
+git clone https://github.com/OpenHUTB/ros2.git
+cd ros2
+```
+
+如果代码在宿主机，则执行下列操作将代码共享至虚拟机：
 
 1. 虚拟机-->设置 → 选项 → 共享文件夹 → 总是启用，添加主机的 `ros`文件夹。
 2. 在虚拟机 Ubuntu 里，它出现在 `/mnt/hgfs/` 下，如果没有出现，输入`sudo vmware-hgfsclient`（密码为：`password`）列出有哪些共享随后执行`echo ".host:/ros    /mnt/hgfs    fuse.vmhgfs-fuse    defaults,allow_other    0    0" | sudo tee -a /etc/fstab`然后再看`ls /mnt/hgfs/`就可以看到挂载文件中的内容了。
 
-## 第三步：把第二章代码拷进 workspace
+## 第三步：把第二章代码拷贝到 workspace
 
 ```bash
-ls "/mnt/hgfs/src/chap2"
+ls ~/ros2/src/chap2/
+# 代码位于宿主机
+# ls "/mnt/hgfs/src/chap2"
 ```
 
 确认能看到 `learning_communication` 和 `learning_tf` 两个文件夹，然后拷：
 
 ```sh
 mkdir -p ~/ros_ws/src
-cp -r "/mnt/hgfs/src/chap2/learning_communication" ~/ros_ws/src/
-cp -r "/mnt/hgfs/src/chap2/learning_tf" ~/ros_ws/src/
+cp -r ~/ros2/src/chap2/learning_communication ~/ros_ws/src/
+cp -r ~/ros2/src/chap2/learning_tf ~/ros_ws/src/
+# 代码位于宿主机
+# cp -r "/mnt/hgfs/src/chap2/learning_communication" ~/ros_ws/src/
+# cp -r "/mnt/hgfs/src/chap2/learning_tf" ~/ros_ws/src/
 ```
 
 一定要 `cp` 到 `~/ros_ws/src` 再编，不要直接在 `/mnt/hgfs` 里编（共享目录编译会出符号链接问题）。
@@ -32,12 +46,16 @@ cp -r "/mnt/hgfs/src/chap2/learning_tf" ~/ros_ws/src/
 ## 第四步：编译
 
 ```bash
-echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source /opt/ros/noetic/setup.bash
+# 避免每次打开命令行终端需要再次运行 source 命令
+# echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+# source ~/.bashrc
 cd ~/ros_ws          # 在 ros_ws 根目录，不是 src 里
 catkin_make
-echo "source ~/ros_ws/devel/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source ~/ros_ws/devel/setup.bash
+# 避免每次打开命令行终端需要再次运行 source 命令
+# echo "source ~/ros_ws/devel/setup.bash" >> ~/.bashrc
+# source ~/.bashrc
 ```
 
 ## 第五步：运行
