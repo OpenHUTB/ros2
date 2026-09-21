@@ -137,7 +137,19 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_10">常见问题</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_11">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#air_learning">端到端视觉行为克隆自主巡航 (air_learning)</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_11">效果展示</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_12">环境依赖</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_13">模型结构与原理</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">复现使用方法</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_15">参考</a>
 </li>
 </ul>
 </li>
@@ -194,20 +206,21 @@ AirSim 客户端不同，本方案将<strong>键盘输入</strong>与<strong>仿
 <tr>
 <td><code>drone_ros_teleop.py</code></td>
 <td><code>drone_ros_teleop</code></td>
-<td>用 <code>pynput</code> 监听键盘，按 10 Hz 把当前按键状态发布为 <code>Twist</code> 消息</td>
+<td>用 <code>termios</code> 原始模式监听键盘（<code>tty.setraw</code>），按 10 Hz 把当前按键状态发布为 <code>Twist</code> 消息</td>
 </tr>
 <tr>
 <td><code>drone_ros_node.py</code></td>
 <td><code>drone_ros_node</code></td>
-<td>订阅 <code>/drone/cmd_vel</code>，经 AirSim RPC 驱动无人机</td>
+<td>订阅 <code>/drone/cmd_vel</code>，经 AirSim RPC 驱动无人机；另以独立后台线程抓取前置相机图像，缩放后发布 <code>/drone/front_camera/image_raw</code></td>
 </tr>
 </tbody>
 </table>
 <h2 id="_1">双节点架构</h2>
 <div class="mermaid">graph LR
-    K[键盘输入] --&gt;|pynput 监听| T[drone_ros_teleop 键盘发布节点]
+    K[键盘输入] --&gt;|termios 原始模式监听| T[drone_ros_teleop 键盘发布节点]
     T --&gt;|/drone/cmd_vel Twist 10 Hz| B[drone_ros_node 桥接控制节点]
     B --&gt;|AirSim RPC 41451| A[Windows 宿主机 AirSim 模拟器]
+    B --&gt;|/drone/front_camera/image_raw 10 Hz| C[record_dataset 数据采集节点]
 </div>
 <p>两个节点都运行在虚拟机的 ROS 主控上，只有桥接节点与宿主机上的 AirSim 发生网络通信。解耦带来的好处：</p>
 <ul>
@@ -253,7 +266,7 @@ AirSim 客户端不同，本方案将<strong>键盘输入</strong>与<strong>仿
 <div class="highlight"><pre><span></span><code><span class="c1"># 拉取仓库并进入仓库根目录</span>
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
 <span class="nb">cd</span><span class="w"> </span>ros2
-<span class="c1"># 安装两个节点运行所需的依赖（airsim、pynput）</span>
+<span class="c1"># 安装两个节点运行所需的依赖（airsim）</span>
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/requirements.txt
 </code></pre></div>
 <h3 id="rospy">安装 rospy 运行环境</h3>
@@ -332,7 +345,7 @@ python<span class="w"> </span>src/air/air_teleop/drone_ros_teleop.py
 <td><code>--vehicle</code></td>
 <td><code>~vehicle</code></td>
 <td><code>""</code></td>
-<td>载具名称，空串表示仿真器中的第一架无人机</td>
+<td>载具名称，空串表示通过 <code>listVehicles()</code> 自动获取第一架载具（失败回退 <code>SimpleFlight</code>）</td>
 </tr>
 <tr>
 <td>—</td>
@@ -346,8 +359,35 @@ python<span class="w"> </span>src/air/air_teleop/drone_ros_teleop.py
 <td><code>10.0</code></td>
 <td>控制频率（Hz）</td>
 </tr>
+<tr>
+<td>—</td>
+<td><code>~camera</code></td>
+<td><code>front_center</code></td>
+<td>前置相机名称</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>~camera_rate</code></td>
+<td><code>10.0</code></td>
+<td>图像发布频率（Hz，推荐 8~10）</td>
+</tr>
+<tr>
+<td><code>--camera-width</code></td>
+<td><code>~camera_width</code></td>
+<td><code>320</code></td>
+<td>发布图像最大宽度（像素），原图超限时缩小</td>
+</tr>
+<tr>
+<td><code>--camera-height</code></td>
+<td><code>~camera_height</code></td>
+<td><code>180</code></td>
+<td>发布图像最大高度（像素），原图超限时缩小</td>
+</tr>
 </tbody>
 </table>
+<p>桥接节点另以<strong>独立后台线程</strong>抓取前置相机图像（默认 10 Hz），抓图使用独立的 AirSim
+客户端，耗时 RPC 不会阻塞 10 Hz 的飞行控制循环；原图超过 320×180 时会先缩小再发布到
+<code>/drone/front_camera/image_raw</code>，降低跨机网络传输与内存开销（供任务四数据采集使用）。</p>
 <p>通过参数服务器设置私有参数的示例（效果与 <code>--host</code> 相同）：</p>
 <div class="highlight"><pre><span></span><code>rosparam<span class="w"> </span><span class="nb">set</span><span class="w"> </span>/drone_ros_node/host<span class="w"> </span><span class="m">172</span>.21.108.47
 python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py
@@ -365,30 +405,40 @@ python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py
 <tr>
 <td style="text-align: center;"><code>W</code> / <code>S</code></td>
 <td style="text-align: center;">前进 / 后退</td>
-<td><code>linear.x = ±3.0 m/s</code></td>
+<td><code>vx = ±3.0 m/s</code></td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>A</code> / <code>D</code></td>
 <td style="text-align: center;">左移 / 右移</td>
-<td><code>linear.y = ∓3.0 m/s</code></td>
+<td><code>vy = ∓3.0 m/s</code></td>
 </tr>
 <tr>
-<td style="text-align: center;"><code>Space</code></td>
-<td style="text-align: center;">上升</td>
-<td><code>linear.z = -2.0 m/s</code></td>
+<td style="text-align: center;"><code>Q</code> / <code>E</code></td>
+<td style="text-align: center;">左前方 / 右前方</td>
+<td><code>vx = +3.0, vy = ∓2.5 m/s</code></td>
 </tr>
 <tr>
-<td style="text-align: center;"><code>Ctrl+P</code></td>
-<td style="text-align: center;">下降</td>
-<td><code>linear.z = +2.0 m/s</code></td>
+<td style="text-align: center;"><code>Z</code> / <code>C</code></td>
+<td style="text-align: center;">左后方 / 右后方</td>
+<td><code>vx = -3.0, vy = ∓2.5 m/s</code></td>
 </tr>
 <tr>
 <td style="text-align: center;"><code>J</code> / <code>L</code></td>
 <td style="text-align: center;">左偏航 / 右偏航</td>
-<td><code>angular.z = ∓30 度/秒</code></td>
+<td><code>angular.z = ∓0.5 rad/s</code></td>
 </tr>
 <tr>
-<td style="text-align: center;"><code>ESC</code></td>
+<td style="text-align: center;"><code>Space</code> / <code>X</code></td>
+<td style="text-align: center;">上升 / 下降</td>
+<td><code>vz = -2.0 / +2.0 m/s</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>K</code></td>
+<td style="text-align: center;">强制急刹</td>
+<td>全 0 速度</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>ESC</code> / <code>Ctrl+C</code></td>
 <td style="text-align: center;">退出键盘遥控</td>
 <td>停止发布，桥接节点超时后自动悬停</td>
 </tr>
@@ -396,9 +446,11 @@ python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py
 </table>
 <p><strong>提示：</strong></p>
 <ul>
-<li>按键松开后对应轴速度立即归零（键盘节点每个周期按当前按键集合重新计算）；</li>
+<li>键盘节点通过 <code>tty.setraw</code> 进入原始模式：关闭字符回显、单字符非阻塞监听（无需按 Enter，即按即发）；</li>
+<li>终端按键无法多键并发，斜向飞行由复合按键 <code>Q</code>/<code>E</code>/<code>Z</code>/<code>C</code> 直接给出整组速度指令；</li>
+<li>原始模式下探测不到按键松开事件，改为“按住窗口”：每次按下刷新最近按键时刻，0.4 s 无新按键即以最后指令速度为起点线性衰减 0.5 s 至 0（平滑悬停，避免硬刹触发飞控制动阻尼），等效于松开按键；</li>
 <li>无任何按键时持续发布全零指令，无人机原地保持；</li>
-<li>键盘节点需要运行在带图形桌面的终端中，SSH 纯命令行环境下 <code>pynput</code> 无法监听键盘。</li>
+<li>按键监听基于标准输入（stdin），虚拟机桌面终端与 SSH 终端均可运行，不再依赖 <code>pynput</code>。</li>
 </ul>
 <h2 id="_8">安全机制</h2>
 <ul>
@@ -416,10 +468,106 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 <h2 id="_10">常见问题</h2>
 <ul>
 <li><strong>连接宿主机失败</strong>：检查 <code>--host</code> 是否为宿主机 IP、宿主机防火墙是否放行 41451 端口；</li>
-<li><strong>键盘无响应</strong>：确认键盘节点运行在虚拟机桌面的终端窗口中，且该窗口获得焦点；</li>
+<li><strong>键盘无响应</strong>：确认键盘节点在终端中直接运行（SSH 或虚拟机桌面终端均可），stdin 未被重定向，且该窗口获得焦点；若屏幕回显按键字符说明原始模式未生效，请确认在 Linux/macOS 环境运行；</li>
 <li><strong>无人机无动作</strong>：用 <code>rostopic echo /drone/cmd_vel</code> 确认话题有消息，并确认桥接节点日志中已打印“已连接 AirSim 服务”。</li>
 </ul>
-<h2 id="_11">参考</h2>
+<h2 id="air_learning">端到端视觉行为克隆自主巡航 (air_learning)</h2>
+<p>本节介绍基于<strong>行为克隆（Behavior Cloning）</strong>的无人机端到端单目视觉自主巡航方案：用轻量级卷积
+神经网络直接建立「前视图像 → 飞控速度指令」的映射，替代手工设计的感知-规划-控制流水线。相关代码
+位于 <code>src/air/air_learning/</code> 目录，沿用上文的 <code>drone_ros_node</code> 桥接节点以及
+<code>/drone/front_camera/image_raw</code>、<code>/drone/cmd_vel</code> 两个话题。</p>
+<h3 id="_11">效果展示</h3>
+<p><img alt="自主巡航演示" src="../../img/air/drone_cruise_demo.gif"/></p>
+<h3 id="_12">环境依赖</h3>
+<table>
+<thead>
+<tr>
+<th>依赖</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PyTorch (<code>torch</code>)</td>
+<td>策略网络 <code>DronePolicyNet</code> 的定义、训练与 CPU/GPU 推理</td>
+</tr>
+<tr>
+<td>torchvision</td>
+<td>图像预处理与数据集加载（<code>src/requirements.txt</code> 中已声明）</td>
+</tr>
+<tr>
+<td>OpenCV (<code>opencv-python</code>) / <code>cv_bridge</code></td>
+<td>相机图像编解码，<code>/drone/front_camera/image_raw</code> 与 numpy 互转</td>
+</tr>
+<tr>
+<td>AirSim (<code>airsim</code>)</td>
+<td>与宿主机 AirSim 仿真器的 RPC 通信</td>
+</tr>
+<tr>
+<td>rospy（<code>geometry_msgs</code>/<code>sensor_msgs</code>）</td>
+<td>ROS 节点及 <code>Twist</code>、<code>Image</code> 消息收发</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/requirements.txt<span class="w">   </span><span class="c1"># 安装 airsim、opencv-python、torch、torchvision</span>
+</code></pre></div>
+<p><code>rospy</code> 运行环境与 <code>numpy</code>/<code>msgpack-rpc-python</code> 兼容问题请参照上文「安装依赖」一节补齐。</p>
+<h3 id="_13">模型结构与原理</h3>
+<p>策略网络 <code>DronePolicyNet</code> 是一个轻量级 CNN 回归网络：输入单目前视图像，直接回归输出 NED 机体
+坐标系下的 4 维动作向量 <code>[vx, vy, vz, yaw_rate]</code>（与 <code>/drone/cmd_vel</code> 同量纲，线速度 m/s、
+偏航角速度 rad/s），整体可概括为「<strong>CNN 提取前视特征 → 全连接层回归速度指令</strong>」：</p>
+<ol>
+<li><strong>卷积特征提取</strong>：4 层 <code>Conv2d</code> 逐层 <code>stride=2</code> 下采样（<code>224 → 112 → 56 → 28 → 14 → 7</code>），
+   每层后接 BatchNorm + ReLU；首层 7×7 大卷积核扩大感受野，捕获整帧纹理与障碍物边缘；</li>
+<li><strong>全局平均池化</strong>：<code>AdaptiveAvgPool2d(1)</code> 将 7×7×128 特征图压成 128 维全局特征向量，解耦输入
+   分辨率；</li>
+<li><strong>全连接回归头</strong>：<code>128 → 64 → 4</code> 两层线性层，中间 ReLU + Dropout；<strong>输出层不加激活函数</strong>，
+   因为速度与角速度均为有符号实数，直接线性回归。</li>
+</ol>
+<div class="mermaid">graph LR
+    I[前视图像 3×224×224] --&gt; C[4 层 Conv2d + BN + ReLU]
+    C --&gt; P[AdaptiveAvgPool2d 1×1 → 128 维]
+    P --&gt; F[FC 128 → 64 → 4]
+    F --&gt; O[vx, vy, vz, yaw_rate]
+</div>
+<ul>
+<li>模型网络结构见 <a href="../../src/air/air_learning/model.py">模型实现源码 (src/air/air_learning/model.py)</a>；</li>
+<li>训练入口见 <a href="../../src/air/air_learning/train.py">训练脚本 (src/air/air_learning/train.py)</a>。</li>
+</ul>
+<p>训练采用 <strong>MSE 损失 + Adam 优化器</strong>（默认 30 轮、学习率 1e-3、批大小 16），数据集按 8:2 固定种子
+划分训练/验证集，只在验证集 Loss 创新低时落盘 <code>models/best_drone_model.pth</code>，保证可复现。</p>
+<h3 id="_14">复现使用方法</h3>
+<p>完整闭环分为四步：<strong>采集专家示范 → 训练 → 仿真桥接 → 自主巡航推理</strong>。</p>
+<h4 id="1">1. 采集专家示范数据</h4>
+<p>按上文「启动步骤」先启动宿主机 AirSim、桥接节点与键盘节点，待无人机起飞后，再开一个终端启动
+数据采集节点，边遥控边录制：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>src/air/air_teleop/record_dataset.py
+</code></pre></div>
+<p>采集节点订阅 <code>/drone/front_camera/image_raw</code> 与 <code>/drone/cmd_vel</code>，收到图像即以当前缓存的速度指令
+为标签落盘到 <code>data/dataset/</code>（<code>images/*.png</code> + <code>labels.csv</code>），<code>Ctrl+C</code> 结束采集。</p>
+<h4 id="2">2. 训练策略网络</h4>
+<p>在仓库根目录运行训练脚本（自动检测 CUDA/CPU）：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>src/air/air_learning/train.py
+<span class="c1"># 或指定数据集目录与训练轮数</span>
+python<span class="w"> </span>src/air/air_learning/train.py<span class="w"> </span>--data<span class="w"> </span>data/dataset<span class="w"> </span>--epochs<span class="w"> </span><span class="m">20</span>
+</code></pre></div>
+<p>训练结束将验证集 Loss 最优权重保存到 <code>models/best_drone_model.pth</code>。</p>
+<h4 id="3_1">3. 启动仿真桥接</h4>
+<p>重新启动（或保持）宿主机 AirSim 与桥接节点，桥接节点负责起飞定高、以 10 Hz 发布前视图像并直通
+下发速度指令：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>src/air/air_teleop/drone_ros_node.py<span class="w"> </span>--host<span class="w"> </span><span class="m">172</span>.21.108.47
+</code></pre></div>
+<h4 id="4_1">4. 启动自主巡航推理</h4>
+<p>再开一个终端，启动自主节点：加载训练权重，订阅图像 → 前向推理 → 发布速度指令，闭环自主巡航：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+python<span class="w"> </span>src/air/air_learning/drone_autonomous_node.py
+</code></pre></div>
+<p>自主节点启动即加载 <code>models/best_drone_model.pth</code>，对每帧图像推理输出 <code>[vx, vy, vz, yaw_rate]</code>，
+其中 <code>vz</code> 锁死 0（定高巡航）、<code>vy</code> 与 <code>yaw_rate</code> 分别软限幅 ±0.2 m/s 与 ±0.1 rad/s 后经
+<code>/drone/cmd_vel</code> 下发。</p>
+<h2 id="_15">参考</h2>
 <ul>
 <li><a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a></li>
 <li><a href="../ros_pkgs/">空域模拟器的 ROS 封装器</a></li>
