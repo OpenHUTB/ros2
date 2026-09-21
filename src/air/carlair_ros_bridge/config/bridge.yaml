@@ -1,0 +1,34 @@
+# CarlaAir / AirSim 桥接配置
+# 模拟器跑在 Windows 宿主机（有显卡），ROS 侧跑在 Ubuntu 虚拟机里。
+# 从虚拟机连宿主机：下方 host 填宿主机在 VMware NAT 网段的地址（VMnet8 = 192.168.94.1）。
+
+sim:
+  host: "192.168.94.1"      # 运行 CarlaAir 的机器 IP；本机运行时填 127.0.0.1
+  airsim_port: 41451        # AirSim API（无人机、相机、激光雷达）
+  carla_port: 2000          # CARLA API（车辆、行人、天气、CARLA 原生 LiDAR）
+  vehicle_name: ""          # 多机时填具体名称，如 "Drone1"
+  connect_timeout: 10.0     # 连接等待秒数
+
+rate:
+  odom_hz: 20.0             # 位姿发布频率
+  image_hz: 20.0            # 相机发布频率
+  lidar_hz: 10.0            # 点云发布频率
+  cmd_timeout: 0.5          # 超过该时间没有新指令则悬停（安全保护）
+
+frame:
+  world: "world"            # 世界坐标系（ENU）
+  body: "base_link"         # 机体坐标系
+
+topic:
+  odom: "/uav/odom"
+  cmd_vel: "/uav/cmd_vel"
+  goal: "/uav/goal"
+  image: "/camera/image_raw"
+  depth: "/camera/depth"
+  lidar: "/lidar/points"
+  status: "/uav/status"
+
+control:
+  max_horiz_speed: 5.0      # 水平限速 m/s
+  max_vert_speed: 3.0       # 垂直限速 m/s
+  max_yaw_rate: 1.0         # 偏航角速度限幅 rad/s
