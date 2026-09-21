@@ -206,6 +206,8 @@ rostopic echo /drone/cmd_vel  # 按住 W 键可看到 linear.x = 3.0
 手感与消费级无人机一致。该节点订阅 ROS 标准手柄话题 `/joy`，与键盘节点发布**完全相同格式**的
 `/drone/cmd_vel` 消息，桥接节点无需任何改动即可复用。
 
+![手柄遥控真机测试演示](test_xbox.gif)
+
 ### 1. 启动手柄驱动（joy 节点）
 
 先在虚拟机中安装并启动 ROS 的 `joy` 包，把物理手柄读成 `/joy` 话题：
