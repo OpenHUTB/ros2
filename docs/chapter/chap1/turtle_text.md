@@ -37,7 +37,7 @@ turtle_text/
 
 └── scripts/
 
-&#x20;   └── draw_text.py       # 主程序：字形表、排版算法与闭环控制
+   └── draw_text.py       # 主程序：字形表、排版算法与闭环控制
 
 ```
 
@@ -60,15 +60,15 @@ turtle_text/
 
 RAW_LOWER_LETTERS = {
 
-&#x20;   "h": [[(3.0, 9.0), (3.0, 2.0)],
+   "h": [[(3.0, 9.0), (3.0, 2.0)],
 
-&#x20;         [(3.0, 5.9), (3.9, 6.7), (5.2, 6.9), (6.2, 6.2), (6.5, 5.0), (6.5, 2.0)]],
+         [(3.0, 5.9), (3.9, 6.7), (5.2, 6.9), (6.2, 6.2), (6.5, 5.0), (6.5, 2.0)]],
 
-&#x20;   "t": [[(4.4, 8.2), (4.4, 3.0), (5.1, 2.1), (6.2, 2.1)],
+   "t": [[(4.4, 8.2), (4.4, 3.0), (5.1, 2.1), (6.2, 2.1)],
 
-&#x20;         [(2.6, 6.3), (6.2, 6.3)]],
+         [(2.6, 6.3), (6.2, 6.3)]],
 
-&#x20;   ...
+   ...
 
 }
 
@@ -82,11 +82,11 @@ RAW_LOWER_LETTERS = {
 
 ```python
 
-&#x20;   scale_w = avail_w / max_units
+   scale_w = avail_w / max_units
 
-&#x20;   scale_h = avail_h / (1.0 + DESCENDER_RATIO + (count - 1) * (1.0 + LINE_RATIO))
+   scale_h = avail_h / (1.0 + DESCENDER_RATIO + (count - 1) * (1.0 + LINE_RATIO))
 
-&#x20;   return min(scale_w, scale_h, MAX_SCALE)
+   return min(scale_w, scale_h, MAX_SCALE)
 
 ```
 
@@ -98,13 +98,13 @@ RAW_LOWER_LETTERS = {
 
 ```python
 
-&#x20;           err = self.wrap(math.atan2(dy, dx) - self.pose.theta)
+           err = self.wrap(math.atan2(dy, dx) - self.pose.theta)
 
-&#x20;           cmd.angular.z = max(-w_max, min(w_max, 3.5 * err))
+           cmd.angular.z = max(-w_max, min(w_max, 3.5 * err))
 
-&#x20;           if abs(err) < 0.15:                # 对准方向后才前进
+           if abs(err) < 0.15:                # 对准方向后才前进
 
-&#x20;               cmd.linear.x = max(0.25, min(v_max, 2.0 * dist))
+               cmd.linear.x = max(0.25, min(v_max, 2.0 * dist))
 
 ```
 
@@ -116,13 +116,13 @@ turtlesim 没有真正的抬笔动作，靠 `/turtle1/set_pen` 服务的 `off` �
 
 ```python
 
-&#x20;   def set_pen(self, down, scale=2.0):
+   def set_pen(self, down, scale=2.0):
 
-&#x20;       width = int(max(2, round(PEN_RATIO * scale)))
+       width = int(max(2, round(PEN_RATIO * scale)))
 
-&#x20;       self.set_pen_srv(255, 220, 0, width, 0 if down else 1)
+       self.set_pen_srv(255, 220, 0, width, 0 if down else 1)
 
-&#x20;       time.sleep(0.05)
+       time.sleep(0.05)
 
 ```
 
