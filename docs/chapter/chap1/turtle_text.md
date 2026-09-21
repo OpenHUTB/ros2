@@ -65,9 +65,9 @@ RAW_LOWER_LETTERS = {
 画布固定为 11 x 11 且不能缩放，所以字号必须由内容长度决定。程序先按一行排，分别算出宽度允许的最大字高和高度允许的最大字高，取较小者：
 
 ```python
-   scale_w = avail_w / max_units
-   scale_h = avail_h / (1.0 + DESCENDER_RATIO + (count - 1) * (1.0 + LINE_RATIO))
-   return min(scale_w, scale_h, MAX_SCALE)
+scale_w = avail_w / max_units
+scale_h = avail_h / (1.0 + DESCENDER_RATIO + (count - 1) * (1.0 + LINE_RATIO))
+return min(scale_w, scale_h, MAX_SCALE)
 ```
 
 如果一行算出来的字高小于 1.6（字太小看不清），就改为按单词折成 2 到 3 行，取字高最大的那种方案。最后每一行水平居中、整块内容垂直居中，字距与行距都按字高的比例计算。
@@ -77,10 +77,10 @@ RAW_LOWER_LETTERS = {
 程序以约 10 毫秒为周期读取 `/turtle1/pose`，算出当前位置到目标点的方向误差。方向偏差较大时先原地转向，对准之后才前进，距离越近速度越低：
 
 ```python
-           err = self.wrap(math.atan2(dy, dx) - self.pose.theta)
-           cmd.angular.z = max(-w_max, min(w_max, 3.5 * err))
-           if abs(err) < 0.15:                # 对准方向后才前进
-               cmd.linear.x = max(0.25, min(v_max, 2.0 * dist))
+err = self.wrap(math.atan2(dy, dx) - self.pose.theta)
+cmd.angular.z = max(-w_max, min(w_max, 3.5 * err))
+if abs(err) < 0.15:  # 对准方向后才前进
+    cmd.linear.x = max(0.25, min(v_max, 2.0 * dist))
 ```
 
 `if abs(err) < 0.15` 这一句很关键：它是"先对准再直走"的门坎。早期版本让海龟边走边拐，速度快但每一笔的起笔都会带出弧线，画出的小写字母会变形。收紧到约 8.6 度之后线条才够直。
@@ -90,10 +90,10 @@ RAW_LOWER_LETTERS = {
 turtlesim 没有真正的抬笔动作，靠 `/turtle1/set_pen` 服务的 `off` 参数实现：笔画之间把 `off` 设为 1，移动到下一笔起点时不留痕迹；开始画之前再设为 0。另外线宽也随字号变化，大字用粗线、小字用细线：
 
 ```python
-   def set_pen(self, down, scale=2.0):
-       width = int(max(2, round(PEN_RATIO * scale)))
-       self.set_pen_srv(255, 220, 0, width, 0 if down else 1)
-       time.sleep(0.05)
+def set_pen(self, down, scale=2.0):
+    width = int(max(2, round(PEN_RATIO * scale)))
+    self.set_pen_srv(255, 220, 0, width, 0 if down else 1)
+    time.sleep(0.05)
 ```
 
 ## 四、编译
