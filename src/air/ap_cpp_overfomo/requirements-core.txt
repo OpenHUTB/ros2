@@ -1,0 +1,10 @@
+# AP-CPP 规划器 / 演示 / 测试的依赖。
+#
+# 只需要 NumPy，生成图片时额外需要 Matplotlib。
+# 不需要 AirSim、不需要 TensorFlow、不需要 GDAL。
+#
+# 实测环境：Python 3.12.7 + numpy 1.26.4 + matplotlib 3.9.2（Windows 11）。
+# 代码不依赖这两个包的特定版本，较新的版本都能跑。
+
+numpy>=1.20
+matplotlib>=3.4
