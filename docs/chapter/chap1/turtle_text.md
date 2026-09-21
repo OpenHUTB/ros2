@@ -143,14 +143,18 @@ rosrun turtle_text draw_text.py
 以 `Hello World` 为例，节点运行后终端依次输出：
 
 ```text
-[INFO] [...] 开始绘制「Hello World」：字高 2.16，2 行
-[INFO] [...] Clearing turtlesim.
-[INFO] [...] 绘制完成，用时 119.2 秒
+[INFO] [1789892134.210470]: 开始绘制「Hello World」：字高 2.16，2 行
+[INFO] [1789892134.224270309]: Clearing turtlesim.
+[INFO] [1789892253.431454]: 绘制完成，用时 119.2 秒
 ```
 
 画布上出现上下两排文字：程序判断一行放不下，自动折成两行，字号由宽度决定。以下是实际绘制效果：
 
 ![小海龟绘制 Hello World 运行效果](../../img/chapter/turtle_text_demo.png)
+
+下图为实际运行时终端与小海龟画布的同框截图：
+
+![运行时的终端输出与小海龟画布](../../img/chapter/turtle_text_run.png)
 
 由于 turtlesim 的采样周期与转向误差，个别笔画的起止点可能有零点几个单位的偏差，属于正常现象。
 
