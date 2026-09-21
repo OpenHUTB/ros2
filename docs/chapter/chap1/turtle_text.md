@@ -24,21 +24,13 @@
 功能包目录结构如下：
 
 ```text
-
 turtle_text/
-
 ├── CMakeLists.txt         # 编译配置，安装 Python 脚本与 launch 文件
-
 ├── package.xml            # 包清单，声明 rospy、geometry_msgs、turtlesim、std_srvs 依赖
-
 ├── launch/
-
 │   └── draw_text.launch   # roslaunch 入口：一键启动 turtlesim 与绘制节点
-
 └── scripts/
-
    └── draw_text.py       # 主程序：字形表、排版算法与闭环控制
-
 ```
 
 ## 三、实现原理
@@ -57,21 +49,13 @@ turtle_text/
 每个字母由若干笔画组成，每一笔是一串按顺序经过的点。所有字母共用同一把尺子：基线在 y = 2，大写字母高 7 个单位，小写的 x 高（a、c、e、o 的高度）约 4.9 个单位，上升部（b、h、l）到 y = 9，下降部（g、p、q、y）落到 y = 0.2。
 
 ```python
-
 RAW_LOWER_LETTERS = {
-
    "h": [[(3.0, 9.0), (3.0, 2.0)],
-
          [(3.0, 5.9), (3.9, 6.7), (5.2, 6.9), (6.2, 6.2), (6.5, 5.0), (6.5, 2.0)]],
-
    "t": [[(4.4, 8.2), (4.4, 3.0), (5.1, 2.1), (6.2, 2.1)],
-
          [(2.6, 6.3), (6.2, 6.3)]],
-
    ...
-
 }
-
 ```
 
 大写字形另有一张表。绘制时程序按目标字高**统一缩放**，并且**不用每个字母自己的外框**去归一化，否则小写字母的基线就会参差不齐。
@@ -81,13 +65,9 @@ RAW_LOWER_LETTERS = {
 画布固定为 11 x 11 且不能缩放，所以字号必须由内容长度决定。程序先按一行排，分别算出宽度允许的最大字高和高度允许的最大字高，取较小者：
 
 ```python
-
    scale_w = avail_w / max_units
-
    scale_h = avail_h / (1.0 + DESCENDER_RATIO + (count - 1) * (1.0 + LINE_RATIO))
-
    return min(scale_w, scale_h, MAX_SCALE)
-
 ```
 
 如果一行算出来的字高小于 1.6（字太小看不清），就改为按单词折成 2 到 3 行，取字高最大的那种方案。最后每一行水平居中、整块内容垂直居中，字距与行距都按字高的比例计算。
@@ -97,15 +77,10 @@ RAW_LOWER_LETTERS = {
 程序以约 10 毫秒为周期读取 `/turtle1/pose`，算出当前位置到目标点的方向误差。方向偏差较大时先原地转向，对准之后才前进，距离越近速度越低：
 
 ```python
-
            err = self.wrap(math.atan2(dy, dx) - self.pose.theta)
-
            cmd.angular.z = max(-w_max, min(w_max, 3.5 * err))
-
            if abs(err) < 0.15:                # 对准方向后才前进
-
                cmd.linear.x = max(0.25, min(v_max, 2.0 * dist))
-
 ```
 
 `if abs(err) < 0.15` 这一句很关键：它是"先对准再直走"的门坎。早期版本让海龟边走边拐，速度快但每一笔的起笔都会带出弧线，画出的小写字母会变形。收紧到约 8.6 度之后线条才够直。
@@ -115,29 +90,19 @@ RAW_LOWER_LETTERS = {
 turtlesim 没有真正的抬笔动作，靠 `/turtle1/set_pen` 服务的 `off` 参数实现：笔画之间把 `off` 设为 1，移动到下一笔起点时不留痕迹；开始画之前再设为 0。另外线宽也随字号变化，大字用粗线、小字用细线：
 
 ```python
-
    def set_pen(self, down, scale=2.0):
-
        width = int(max(2, round(PEN_RATIO * scale)))
-
        self.set_pen_srv(255, 220, 0, width, 0 if down else 1)
-
        time.sleep(0.05)
-
 ```
 
 ## 四、编译
 
 ```bash
-
 mkdir -p ~/catkin_ws/src
-
 cp -r <仓库路径>/src/chap1/turtle_text ~/catkin_ws/src/
-
 cd ~/catkin_ws && catkin_make
-
 source devel/setup.bash
-
 ```
 
 编译成功后可用 `rospack find turtle_text` 确认包已被识别。
@@ -147,9 +112,7 @@ source devel/setup.bash
 ### 5.1 一键启动并指定文字
 
 ```bash
-
 roslaunch turtle_text draw_text.launch text:="Hello World"
-
 ```
 
 `roslaunch` 会自动完成三件事：启动 ROS Master（无需单独运行 `roscore`）、拉起 turtlesim 仿真器、启动绘制节点，并把 `text` 参数传给节点。绘制完成后节点自动退出，小海龟窗口保留，便于查看结果；在终端按 `Ctrl+C` 结束本次 launch。
@@ -159,27 +122,18 @@ roslaunch turtle_text draw_text.launch text:="Hello World"
 需要三个终端，都先 `source devel/setup.bash`：
 
 ```bash
-
 # 终端 1
-
 roscore
-
 ```
 
 ```bash
-
 # 终端 2
-
 rosrun turtlesim turtlesim_node
-
 ```
 
 ```bash
-
 # 终端 3
-
 rosrun turtle_text draw_text.py
-
 ```
 
 终端 3 出现 `文字>` 提示符后输入内容并回车，例如 `hello`、`hutb`、`Hello World`，输入 `q` 退出。同一个单词可以反复输入，程序每次都会先清空画布再重新绘制。
@@ -189,13 +143,9 @@ rosrun turtle_text draw_text.py
 以 `Hello World` 为例，节点运行后终端依次输出：
 
 ```text
-
 [INFO] [...] 开始绘制「Hello World」：字高 2.16，2 行
-
 [INFO] [...] Clearing turtlesim.
-
 [INFO] [...] 绘制完成，用时 119.2 秒
-
 ```
 
 画布上出现上下两排文字：程序判断一行放不下，自动折成两行，字号由宽度决定。以下是实际绘制效果：
