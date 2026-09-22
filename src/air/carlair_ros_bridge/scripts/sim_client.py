@@ -172,6 +172,39 @@ def lidar_points_to_enu(cloud, pose=None, frame: str = "vehicle_inertial") -> np
     return np.ascontiguousarray(pts.dot(C_NED2ENU.T))
 
 
+# --------------------------------------------------------------------- 运行期兼容
+def _raise_msgpack_limits() -> None:
+    """放宽 msgpack 解包器的长度上限（兼容 msgpack >= 0.5）.
+
+    msgpack 0.6.x 的 ``Unpacker`` 默认 ``max_array_len = 131072``，而 AirSim 把
+    深度图以 float 数组返回（640x480 = 307200 个元素），解包时会抛出
+    ``ValueError: 307200 exceeds max_array_len(131072)``，导致取图连接被关闭、
+    ``/camera/image_raw`` 等话题永远没有消息（节点表现为"无输出、很慢"）。
+
+    这里在创建 AirSim 客户端之前，把相关上限放宽到 2^31-1。
+    msgpack < 0.5（如 0.4.x）没有这些参数，探测失败时直接跳过，不影响老环境。
+    """
+    try:
+        import msgpack  # noqa: WPS433 (运行期按需导入)
+    except ImportError:
+        return
+    if getattr(msgpack, "_carlair_patched", False):
+        return
+    orig = msgpack.Unpacker
+    try:
+        orig(max_array_len=2 ** 31 - 1)  # 探测该版本是否支持长度上限参数
+    except TypeError:
+        return  # 老版本没有上限，无需 patch
+    def _patched(*args, **kwargs):
+        kwargs.setdefault("max_array_len", 2 ** 31 - 1)
+        kwargs.setdefault("max_bin_len", 2 ** 31 - 1)
+        kwargs.setdefault("max_str_len", 2 ** 31 - 1)
+        kwargs.setdefault("max_map_len", 2 ** 31 - 1)
+        return orig(*args, **kwargs)
+    msgpack.Unpacker = _patched
+    msgpack._carlair_patched = True
+
+
 # --------------------------------------------------------------------- 客户端封装
 class SimClient(object):
     """CarlaAir / AirSim 客户端的薄封装（只依赖 airsim 包，缺失时给出清晰报错）."""
@@ -194,6 +227,7 @@ class SimClient(object):
             raise RuntimeError(
                 "未安装 airsim 包。请在 CarlaAir 的 conda 环境中执行: pip install airsim"
             ) from exc
+        _raise_msgpack_limits()  # 必须先于 MultirotorClient 创建，否则图像取不到
         self._airsim = airsim
         self.client = airsim.MultirotorClient(ip=self.host, port=self.port)
         self.client.confirmConnection()

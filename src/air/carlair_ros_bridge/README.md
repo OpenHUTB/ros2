@@ -23,8 +23,8 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 |---|---|---|---|
 | 发布 | `/uav/odom` | `nav_msgs/Odometry` | 位姿与速度（ENU），默认 20 Hz |
 | 发布 | `/tf` | `tf2_msgs/TFMessage` | `world → base_link` |
-| 发布 | `/camera/image_raw` | `sensor_msgs/Image` | 前视彩色图，`bgr8`，640×480，默认 20 Hz |
-| 发布 | `/camera/depth` | `sensor_msgs/Image` | 平面深度图，`32FC1`，单位米 |
+| 发布 | `/camera/image_raw` | `sensor_msgs/Image` | 前视彩色图，`bgr8`，640×480，实测约 7 Hz（上限 20 Hz） |
+| 发布 | `/camera/depth` | `sensor_msgs/Image` | 平面深度图，`32FC1`，单位米，实测约 7 Hz |
 | 发布 | `/camera/seg` | `sensor_msgs/Image` | 语义分割伪彩色图，`bgr8`（默认关闭） |
 | 发布 | `/lidar/points` | `sensor_msgs/PointCloud2` | XYZ float32 世界系（ENU）点云，默认 10 Hz |
 | 发布 | `/uav/status` | `std_msgs/String` | `READY / HOVER / VELOCITY / GOAL / GOAL_DONE` |
@@ -35,7 +35,8 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 
 **传感器说明**：
 
-- 三路相机图像合并为**一次** `simGetImages` RPC，避免每路一次网络往返，是 20 Hz 的关键；
+- 三路相机图像合并为**一次** `simGetImages` RPC，把网络往返开销压到最低；640×480 下
+  RGB+深度两路同发（约 2.4 MB/帧）实测吞吐约 **7.3 Hz**，瓶颈在 msgpack 解包 float 数组；
 - 解码只依赖 numpy：AirSim 返回的 `image_data_uint8` 是 BGRA 平面数组，去掉 alpha 即 BGR，
   正好对应 ROS 的 `bgr8`，因此虚拟机内不需要安装 OpenCV；
 - `DepthPlanar`(ImageType=1) 给出的是**沿光轴的平面深度**（米），与透视深度的关系为
@@ -103,8 +104,8 @@ rostopic echo /uav/status             # 看状态机（HOVER/VELOCITY/GOAL）
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/uav/cmd_vel
 
 # 传感器（任务②③的数据源）
-rostopic hz /camera/image_raw         # 应约 20 Hz
-rostopic hz /camera/depth             # 应约 20 Hz
+rostopic hz /camera/image_raw         # 应约 7 Hz（640×480 吞吐上限；要更快可降分辨率/关深度）
+rostopic hz /camera/depth             # 应约 7 Hz
 rostopic hz /lidar/points             # 应约 10 Hz
 rostopic echo -n1 /camera/image_raw/encoding    # bgr8
 rostopic echo -n1 /lidar/points/width           # 当前帧点数
@@ -130,6 +131,7 @@ rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 30.0, y: 10.0, z: -8.0}"
 |---|---|
 | `连接仿真器` 失败 | Windows 侧未启动 / 主机 IP 不对。`ping 192.168.94.1`；首次启动 CarlaAir 需等 2–5 分钟 |
 | 相机取帧失败 | `settings.json` 未放到 Windows 的 `Documents/AirSim/`，或相机名与配置不一致 |
+| 相机话题 `no new messages` | msgpack ≥0.5 默认 `max_array_len=131072` 装不下 640×480 深度图；本包已在 `sim_client` 里自动放宽上限（见 `_raise_msgpack_limits`），确认用的是本仓库最新代码 |
 | 点云为空 | `lidar1` 未启用；确认 settings.json 中 `SensorType: 6` 且 `Enabled: true` |
 | 点云与里程计错位 | `settings.json` 的 `DataFrame` 与 `sensor/lidar_frame` 不一致：`VehicleInertialFrame` ↔ `vehicle_inertial`，`SensorLocalFrame` ↔ `sensor_local` |
 | 图像/点云频率偏低 | 虚拟机 CPU 不足或分辨率过大；可 `voxel_leaf:=0.2` 降采样、`publish_seg:=false`，或降低 settings.json 的 Width/Height |
@@ -154,7 +156,7 @@ rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 30.0, y: 10.0, z: -8.0}"
 ```bash
 python3 tests/test_frames.py          # 坐标换算        7 项
 python3 tests/test_bridge_local.py    # 桥接状态机与工程文件  31 项
-python3 tests/test_sensors_local.py   # 图像/点云与工程文件   72 项
+python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
 ```
 
 `test_sensors_local.py` 用桩替代 `rospy` 与 `sensor_msgs`，覆盖：
@@ -163,4 +165,5 @@ python3 tests/test_sensors_local.py   # 图像/点云与工程文件   72 项
 - `sensor_msgs/Image` 的 `step = width × channels × itemsize` 与 `data` 长度；
 - NED→ENU 轴变换、`SensorLocalFrame` 位姿还原（世界点 → 雷达局部系 → 反解回世界系）；
 - 环形滤波、体素降采样、`PointCloud2` 字节布局（`point_step=12`、字段偏移 0/4/8、小端 float32）；
-- 两个节点 `step_once()` 的发布行为与参数一致性。
+- 两个节点 `step_once()` 的发布行为与参数一致性；
+- `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。

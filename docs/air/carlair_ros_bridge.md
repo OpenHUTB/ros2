@@ -112,7 +112,9 @@ resp = client.simGetImages([
 ```
 
 AirSim 的 RPC 是同步的，若三路各发一次调用，单帧耗时按往返次数线性增长；
-合并后一次往返即可拿到全部数据，是 20 Hz 的主要保证。
+合并成一次往返可拿到全部数据，把网络往返开销压到最低。实测在 640×480、RGB+深度
+两路同发（约 2.4 MB/帧）下，跨 VMware NAT 的吞吐约为 **7.3 Hz**（见 §7 实测），
+瓶颈在 msgpack 把深度图的 307200 个 float 解包成 Python 列表这一步，而非本模块的逻辑。
 
 解码只用 numpy，不需要 OpenCV。AirSim 在 `compress=False` 时返回
 `width × height × 4` 的 **BGRA** 平面数组，丢掉 alpha 后前三个通道正好是
@@ -191,9 +193,9 @@ is_dense   = 所有点均有限时为 True
 ```shell
 roslaunch carlair_ros_bridge main.launch            # 默认同时开启相机与雷达
 
-rostopic hz /camera/image_raw     # 预期 ≈20 Hz
-rostopic hz /camera/depth         # 预期 ≈20 Hz
-rostopic hz /lidar/points         # 预期 ≈10 Hz
+rostopic hz /camera/image_raw     # 实测 ≈7.3 Hz（640×480，RGB+深度同发）
+rostopic hz /camera/depth         # 实测 ≈7.4 Hz
+rostopic hz /lidar/points         # 实测 ≈10 Hz
 
 rostopic echo -n1 /camera/image_raw/encoding       # bgr8
 rostopic echo -n1 /camera/image_raw/step           # 1920 (=640×3)
@@ -207,7 +209,7 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false
 本地（无 ROS / 仿真器 / GPU）可先跑桩测试：
 
 ```shell
-python3 tests/test_sensors_local.py    # 72 项，全部通过
+python3 tests/test_sensors_local.py    # 80 项，全部通过
 ```
 
 ## 7. 运行验证
@@ -245,7 +247,22 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/uav/cmd_vel
 * 点云预处理：6343 → 环形滤波(0.3~60 m) 5959 → 体素 0.2 m 降采样 **2356 点（压缩 62.9%）**，
   `PointCloud2` 数据段 28272 字节 = 2356 × 12，与布局约定一致
 * 无人机控制：复位 / 起飞 / 爬升到 15 m / 悬停 均通过
-* 传感器桥接本地桩测试：**72/72 通过**（`tests/test_sensors_local.py`）
+* 传感器桥接本地桩测试：**80/80 通过**（`tests/test_sensors_local.py`）
+
+ROS 侧实测（虚拟机 Ubuntu 20.04 + ROS Noetic，经 `192.168.94.1` 连宿主机仿真器）：
+
+* `/uav/odom`：**20.004 Hz**（min 0.040 s / max 0.059 s，与 `rate/odom_hz: 20` 一致）
+* `/lidar/points`：**10.000 Hz**（min 0.095 s / max 0.103 s），单帧 **4838–4932 点**
+* `/camera/image_raw`：**7.285 Hz**，`encoding=bgr8`
+* `/camera/depth`：**7.424 Hz**
+
+相机为什么是 ~7.3 Hz 而不是配置的 20 Hz：`image_pub` 的上限由 `rate/image_hz: 20` 决定，
+但每帧要在一次 RPC 里取回 RGB（640×480×4 ≈ 1.2 MB）+ 深度（640×480 float32 ≈ 1.2 MB）
+共约 2.4 MB，跨 VMware NAT 传输并由 msgpack 把 307200 个 float 解包成 Python 列表，
+单帧实测约 137 ms，故吞吐被限制在 ~7.3 Hz。这是真实吞吐上限而非实现缺陷——
+位姿（20 Hz）与点云（10 Hz）的数据量小，都能跑满配置频率，恰好形成一个可对比的性能结论。
+需要更高帧率时，可把 `settings.json` 相机分辨率降到 320×240（约 4 倍数据量下降），
+或 `publish_depth:=false` 只发彩色图。
 
 > 上面这组数据由 `sim_client` 的解码函数直接跑出来（等价于 ROS 节点内部的每一步），
 > 因此可以在没有 ROS 的 Windows 侧独立复现，是"换一台机器验证"的证据之一。
@@ -262,6 +279,24 @@ valid = np.isfinite(depth) & (depth < 100.0)     # 去掉 65504 的无穷远哨�
 ```
 
 若直接对整幅深度图求均值或反投影，天空区域会把结果整体拉偏。
+
+### 7.2 msgpack 长度上限的坑（相机话题无消息）
+
+在虚拟机（msgpack 0.6.2）上运行时，`/camera/*` 一度完全没有消息、节点表现为"无输出、很慢"。
+日志显示：
+
+```text
+ValueError: 307200 exceeds max_array_len(131072)
+```
+
+原因：msgpack 0.6.x 的解包器默认 `max_array_len = 131072`，而 AirSim 把深度图以 float 数组
+返回（640×480 = 307200 个元素），超过上限后连接被关闭，取图请求永远等不到结果。
+老版 msgpack（0.4.x，Windows 侧 conda 环境）没有这个上限，所以同样代码在两边表现不同。
+
+修复：`sim_client` 在创建 AirSim 客户端之前调用 `_raise_msgpack_limits()`，把
+`max_array_len` / `max_bin_len` / `max_str_len` / `max_map_len` 放宽到 `2^31-1`；
+对不支持这些参数的 msgpack 老版本则探测后跳过。单元测试
+`tests/test_sensors_local.py` 的 F 组用桩 msgpack 覆盖了"新版注入 / 老版跳过 / 幂等"三条路径。
 
 ## 8. 效果图
 

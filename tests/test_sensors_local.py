@@ -394,12 +394,58 @@ def test_project_files():
               "相机 %s 的 ImageType=%d" % (cam, itype))
 
 
+# ================================================================= F. msgpack 补丁
+def test_msgpack_patch():
+    print("== F. msgpack 长度上限补丁 ==")
+    saved = sys.modules.get("msgpack")
+
+    # 情形 A：老版本（不支持 max_array_len，如 0.4.x）-> 跳过补丁
+    import types
+    old = types.ModuleType("msgpack")
+
+    class _OldUnpacker(object):
+        def __init__(self, **kw):
+            if "max_array_len" in kw:
+                raise TypeError("no max_array_len")
+
+    old.Unpacker = _OldUnpacker
+    sys.modules["msgpack"] = old
+    sim_client._raise_msgpack_limits()
+    check(not getattr(old, "_carlair_patched", False), "老版本 msgpack 跳过补丁")
+    check(old.Unpacker is _OldUnpacker, "老版本 Unpacker 未被替换")
+
+    # 情形 B：新版本（支持 max_array_len，如 0.6.x）-> 注入上限
+    new = types.ModuleType("msgpack")
+
+    class _NewUnpacker(object):
+        def __init__(self, **kw):
+            self.kw = kw
+
+    new.Unpacker = _NewUnpacker
+    sys.modules["msgpack"] = new
+    sim_client._raise_msgpack_limits()
+    check(getattr(new, "_carlair_patched", False) is True, "新版本 msgpack 打上补丁标记")
+    u = new.Unpacker()
+    check(u.kw.get("max_array_len") == 2 ** 31 - 1, "补丁注入 max_array_len")
+    check(u.kw.get("max_bin_len") == 2 ** 31 - 1, "补丁注入 max_bin_len")
+    check(u.kw.get("max_str_len") == 2 ** 31 - 1, "补丁注入 max_str_len")
+    check(u.kw.get("max_map_len") == 2 ** 31 - 1, "补丁注入 max_map_len")
+    sim_client._raise_msgpack_limits()
+    check(new.Unpacker is not _NewUnpacker, "补丁只应用一次（幂等）")
+
+    if saved is not None:
+        sys.modules["msgpack"] = saved
+    else:
+        sys.modules.pop("msgpack", None)
+
+
 def main():
     test_decode()
     test_image_msg()
     test_lidar()
     test_nodes()
     test_project_files()
+    test_msgpack_patch()
     print("\n==================== 结果 ====================")
     print("通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
     if FAIL:
