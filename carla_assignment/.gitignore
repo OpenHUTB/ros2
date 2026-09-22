@@ -19,3 +19,30 @@ models/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# ---- 后续任务模块（磁盘保留，逐个 PR 提交，故暂不入库）----
+# 本次 PR 只提交作业一；作业二三四五的代码/文档先在本地，做完后从下面移除对应行再提交
+02_perception/
+03_navigation/
+04_end_to_end/
+05_reports/
+docs/02_perception.md
+docs/03_navigation.md
+docs/04_end_to_end.md
+docs/05_reports.md
+docs/nn_models.md
+docs/delivery_notes.md
+docs/submission_guide.md
+docs/assets/placeholder_*.png
+nn_models.py
+tests/
+scripts/carla_run_checklist.sh
+scripts/gen_pr_branches.sh
+scripts/gen_train_loss.py
+scripts/self_check.py
+scripts/gen_placeholder_assets.py
+package.xml
+setup.py
+setup.cfg
+resource/
+requirements-core.txt
