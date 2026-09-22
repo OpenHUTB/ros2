@@ -86,7 +86,10 @@ ROS每章节运行代码:
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
+
+* [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 ___
 
