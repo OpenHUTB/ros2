@@ -39,7 +39,7 @@ ROS每章节运行代码:
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
 * [第 5 章](./chapter/chap5.md) - 机器人感知
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
-* [第 7 章](./chapter/chap7.md) - 机械臂控制
+* [第 7 章](./chapter/chap7.md) - Gazebo阿克曼四轮小车仿真
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
 * [第 9 章](./chapter/chap9.md) - ROS 2
 

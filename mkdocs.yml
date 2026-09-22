@@ -70,7 +70,7 @@ nav:
     - 4. 机器人仿真: './chapter/chap4.md'
     - 5. 机器人感知: './chapter/chap5.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
-    - 7. 机械臂控制: './chapter/chap7.md'
+    - 7. Gazebo阿克曼四轮小车仿真: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
