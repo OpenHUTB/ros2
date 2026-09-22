@@ -1,0 +1,21 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Virtual env
+.venv/
+venv/
+
+# Datasets & models (可能较大，不入库；运行端到端时生成)
+dataset/
+models/
+*.h5
+*.hdf5
+
+# 本地录屏原始视频不入库（截图/GIF 才作为运行效果证据入 docs/assets）
+*.mp4
+
+# OS / editor
+.DS_Store
+Thumbs.db

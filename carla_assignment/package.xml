@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!--
+  CARLA 0.9.16 无人车神经网络四次作业 · ROS2 package 描述。
+  用法（在装有 ROS2 Humble 的机器上，把本仓库软链/放进 src 并 colcon build）：
+      source /opt/ros/humble/setup.bash
+      mkdir -p ~/carla_ws/src && ln -s <本仓库>/carla_assignment ~/carla_ws/src/carla_assignment
+      cd ~/carla_ws && colcon build --symlink-install
+      source install/setup.bash
+      ros2 launch carla_assignment 02_perception_launch.py host:=127.0.0.1 port:=2000
+-->
+<package format="3">
+  <name>carla_assignment</name>
+  <version>0.1.0</version>
+  <description>
+    CARLA 0.9.16 unmanned-vehicle NN assignments: keyboard control,
+    sensor perception + trajectory tracking (NN), mapping &amp; navigation (NN),
+    end-to-end CNN. Each module ships a main.py and launch files.
+  </description>
+  <maintainer email="student@example.com">student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

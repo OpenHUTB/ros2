@@ -1,0 +1,19 @@
+# CARLA 0.9.16 无人车四次作业依赖
+# 安装：pip install -r requirements.txt
+#
+# 说明：
+#   * carla 模块需从 CARLA 发行包的 PythonAPI 安装（见 scripts/setup_env.sh / docs/setup_guide.md）。
+#     普通 pip 的 carla 包在部分版本不可用，推荐：pip install /path/to/Carla/PythonAPI/carla/dist/*.whl
+#   * tensorflow 仅作业四（端到端 CNN 训练）需要；作业二/三的神经网络用纯 numpy（nn_models.py）
+#     即可，无需 GPU。
+#   * Windows 原生：确保 python 在 PATH，直接 `pip install` 即可；若用 conda 建议 python 3.8-3.10。
+
+numpy>=1.21
+opencv-python-headless>=4.6
+pygame>=2.1
+tensorflow-cpu>=2.11        # 可选：仅作业四端到端训练需要（无 GPU 用 CPU 版）
+
+# 若需 mkdocs 文档构建
+mkdocs>=1.4
+mkdocs-material>=9.0
+pymdown-extensions>=10.0

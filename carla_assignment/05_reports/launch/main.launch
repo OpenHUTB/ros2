@@ -1,0 +1,11 @@
+<launch>
+  <!-- 作业五  CARLA 整合+性能评价（ROS1 Noetic）
+       用法： roslaunch carla_assignment 05_reports.launch            （默认跑 benchmark）
+              roslaunch carla_assignment 05_reports.launch target:=navigation -->
+  <arg name="target" default=""/>
+
+  <node name="carla_reports_node" pkg="carla_assignment" type="python3"
+        output="screen"
+        args="$(find carla_assignment)/05_reports/main.py
+              --target $(arg target)" />
+</launch>

@@ -1,0 +1,15 @@
+# CARLA 0.9.16 无人车四次作业 —— 运行必需的最低依赖（Windows / Ubuntu 通用）
+#
+# 一条命令装齐就能跑（作业一~四均可）：
+#   pip install -r requirements-core.txt
+#
+# 说明：
+#   * carla 模块不在此处，需从 CARLA 发行包 PythonAPI 单独安装：
+#        Windows: pip install <CARLA根目录>/PythonAPI/carla/dist/carla-0.9.16-*.whl
+#        Linux  : pip install /path/to/Carla/PythonAPI/carla/dist/*.whl
+#   * 作业二/三/四的神经网络全部用 `nn_models.py` 纯 numpy 实现，无需 tensorflow/GPU。
+#   * 只有当你确实要跑"tf 后端"端到端训练时才需另装 tensorflow-cpu（见 requirements.txt）。
+
+numpy>=1.21
+opencv-python-headless>=4.6
+pygame>=2.1
