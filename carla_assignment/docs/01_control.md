@@ -64,13 +64,19 @@ $$
     把 BGRA 重排成 RGB。
   - `apply_control()`：构造 `carla.VehicleControl`。
 - `01_control/main.py`：
-  - `_handle_event()`：把 pygame 键码映射成语义按键。
   - `keyboard_control()`：主循环，读键→控制→`world.tick()`→渲染 HUD。
+    控制量按**真实驾驶逻辑**生成：`S` 在有速度时刹车、静止时自动挂倒挡倒车；
+    `W` 加油门，`A/D` 转向：
     ```python
-    throttle = 0.6 if KEYS["fwd"] else 0.0
-    brake    = 0.8 if KEYS["rev"] else 0.0
-    steer    = (-0.6 if KEYS["left"] else 0.0) + (0.6 if KEYS["right"] else 0.0)
-    apply_control(vehicle, throttle=throttle, steer=steer, brake=brake)
+    speed = get_speed(vehicle)
+    if KEYS["fwd"]:
+        throttle = 0.6
+    elif KEYS["rev"]:
+        if speed < 0.5:           # 几乎停住 → 挂倒挡
+            reverse, throttle = True, 0.5
+        else:                     # 有速度 → 刹车
+            brake = 0.8
+    apply_control(vehicle, throttle=throttle, steer=steer, brake=brake, reverse=reverse)
     ```
 
 ## 6. 运行步骤
@@ -101,13 +107,37 @@ roslaunch carla_assignment 01_control.launch
 ## 7. 操作说明（录屏剧本）
 
 1. CARLA 服务端窗口出现小镇场景，弹出 pygame 小车操作窗口。
-2. W = 加速、A/D = 转向、S = 刹车、方向键等同，ESC 退出。
-3. 用 ScreenToGif 录制 10 秒操控过程。
+2. **W** = 加速、**A** / **D** = 转向、**S** = 刹车（静止时自动倒车）、方向键等同、**ESC** 退出。
 
-!!! note "运行效果（作业一实测截图）"
+!!! note "运行效果（Windows 原生实测截图）"
     ![](assets/shot_control_89.png)
     ![](assets/shot_control_149.png)
     ![](assets/shot_control_209.png)
+
+## 7.1 Ubuntu 20.04 虚拟机（ROS Noetic/Humble 环境）运行验证
+
+在老师提供的 Ubuntu 20.04 虚拟机（`ros_noetic_humble_gazebov11`，Python 3.10）
+上，仅安装 CARLA 0.9.16 的 **Python 客户端模块**（`carla` wheel）即可直接连接
+宿主机的 CARLA 服务端运行，无需在虚拟机内安装仿真器：
+
+```bash
+# ① 安装 Python 3.10 与客户端依赖
+sudo apt-get install -y python3.10 python3.10-venv
+python3.10 -m pip install numpy pygame
+# ② 安装 CARLA 0.9.16 客户端（Linux wheel）
+python3.10 -m pip install carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+# ③ 运行作业一，--host 指向宿主机 CARLA，--follow 让镜头跟随自车
+cd carla_assignment
+python3.10 main.py --task control --host <宿主机IP> --follow
+```
+
+> 连接验证：`python3.10 -c "import carla; c=carla.Client('<宿主机IP>',2000);
+> c.set_timeout(10); print(c.get_world().get_map().name)"` 输出
+> `Carla/Maps/Town10HD_Opt` 即表示虚拟机客户端已成功连上宿主机 CARLA。
+>
+> 该方法把 CARLA 服务端放在 Windows/宿主机（GPU 渲染），虚拟机仅作为
+> ROS/客户端环境，避免虚拟机内 3D 渲染卡顿，符合老师"Windows 原生 /
+> 虚拟机 / Ubuntu"多运行配置的要求。
 
 ## 8. 性能评价
 
