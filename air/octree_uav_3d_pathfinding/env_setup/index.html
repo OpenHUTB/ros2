@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>环境配置与前置准备 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u73af\u5883\u914d\u7f6e\u4e0e\u524d\u7f6e\u51c6\u5907";
+        var mkdocs_page_input_path = "air/octree_uav_3d_pathfinding/env_setup.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">空域载具八叉树三维寻路</a>
+<ul class="current">
+<li class="toctree-l2 current"><a class="reference internal current" href="#">环境配置与前置准备</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 环境一览</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 虚拟机配置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 系统配置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4-ros">4. ROS 环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5-airsim">5. 模拟器：AirSim 的启动与连接</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 建立工作空间与功能包</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 编译与运行验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">参考</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_3">附：大模型使用声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">空域载具八叉树三维寻路</li>
+<li class="breadcrumb-item active">环境配置与前置准备</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/octree_uav_3d_pathfinding/env_setup.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">空域载具八叉树三维寻路的环境配置与前置准备</h1>
+<p>本文说明在本项目中搭建<strong>空域载具三维寻路</strong>开发环境所需的完整配置流程，包括虚拟机环境、
+ROS 与 AirSim 模拟器的安装验证、octomap 三维地图依赖，以及工作空间的建立。</p>
+<p>本项目采用"<strong>模拟器在宿主 Windows、ROS 在客户机 Ubuntu</strong>"的分工 —— 模拟器是
+Windows/Unreal 程序，无法装进虚拟机。这一点决定了整个环境配置的形态，详见第 5 节。</p>
+<hr/>
+<h2 id="1">1. 环境一览</h2>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>类别</th>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主</td>
+<td>操作系统</td>
+<td>Windows</td>
+<td>11</td>
+</tr>
+<tr>
+<td>宿主</td>
+<td>虚拟化平台</td>
+<td>VMware Workstation</td>
+<td>17.6.4</td>
+</tr>
+<tr>
+<td>宿主</td>
+<td><strong>模拟器</strong></td>
+<td><strong>AirSim</strong>（随 OpenHUTB 发行版提供）</td>
+<td><strong>1.8.1</strong></td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>操作系统</td>
+<td>Ubuntu</td>
+<td>20.04.6 LTS（内核 5.15）</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>硬件配置</td>
+<td>6 vCPU / 8 GiB 内存 / 70 GB 磁盘</td>
+<td></td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>ROS</td>
+<td>Noetic（ROS 1）</td>
+<td>1.16.0</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>三维地图</td>
+<td>octomap</td>
+<td>1.9.8</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>点云库</td>
+<td>PCL</td>
+<td>1.10</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>构建工具</td>
+<td>catkin</td>
+<td>0.8.10</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>虚拟机可从零安装，也可使用预装 ROS 的镜像。本文以<strong>预装镜像 + 验证配置</strong>的方式说明。</p>
+</blockquote>
+<hr/>
+<h2 id="2">2. 虚拟机配置</h2>
+<h3 id="21">2.1 硬件配置建议</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>建议值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU</td>
+<td>≥ 4 核</td>
+<td>RViz 与点云处理同时运行时的下限</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>≥ 8 GB</td>
+<td>可视化 + 点云 + 八叉树</td>
+</tr>
+<tr>
+<td>磁盘</td>
+<td>≥ 40 GB 可用</td>
+<td>ROS 桌面版、octomap/PCL、catkin 编译产物</td>
+</tr>
+<tr>
+<td>显卡</td>
+<td>开启 3D 加速</td>
+<td>否则 RViz 退化为软件渲染，帧率很低</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>NAT</td>
+<td>与宿主共享网络，便于访问软件源，也是连模拟器的前提</td>
+</tr>
+</tbody>
+</table>
+<p>下图为 VMware 中该虚拟机的处理器与内存配置：</p>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/01_vm_spec.png"/></p>
+<blockquote>
+<p><strong>注意</strong>：模拟器本身不跑在虚拟机里，所以虚拟机的显卡性能只影响 RViz，不影响仿真质量。</p>
+</blockquote>
+<h3 id="22">2.2 虚拟网络与登录</h3>
+<p>虚拟机默认使用 NAT 模式，可通过 <code>ip</code> 命令查看地址：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 查看虚拟机 IP 地址</span>
+ip<span class="w"> </span>-4<span class="w"> </span>-br<span class="w"> </span>addr
+<span class="c1"># 输出示例：ens33  UP  192.168.198.128/24</span>
+</code></pre></div>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/02_ip_addr.png"/></p>
+<p><strong>记下你自己宿主机的 VMnet8 地址</strong> —— 后面连模拟器要用它，<strong>不能用 <code>127.0.0.1</code></strong>
+（在客户机里 <code>127.0.0.1</code> 指向客户机自己，不是宿主）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 查看默认网关，宿主的 VMnet8 地址就在这个网段里</span>
+ip<span class="w"> </span>route<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>default
+</code></pre></div>
+<blockquote>
+<p>本文档实测环境中宿主是 <code>192.168.198.1</code>，但这是 VMware 的网段分配结果，
+<strong>每台机器可能不同</strong>。下文出现的 <code>192.168.198.1</code> 请一律替换为你自己查到的地址。</p>
+</blockquote>
+<hr/>
+<h2 id="3">3. 系统配置</h2>
+<h3 id="31">3.1 时区与时间同步</h3>
+<p>虚拟机镜像的时区常常不是本地时区，且 VMware Tools 的时间同步可能被关闭。时间不准会导致日志时间戳混乱、多机通信异常，<strong>务必先修正</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 设置为东八区</span>
+sudo<span class="w"> </span>timedatectl<span class="w"> </span>set-timezone<span class="w"> </span>Asia/Shanghai
+<span class="c1"># 启用网络时间同步</span>
+sudo<span class="w"> </span>timedatectl<span class="w"> </span>set-ntp<span class="w"> </span><span class="nb">true</span>
+<span class="c1"># 确认：Time zone 为 Asia/Shanghai，System clock synchronized 为 yes</span>
+timedatectl
+</code></pre></div>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/04_time_sync.png"/></p>
+<h3 id="32">3.2 确认系统版本</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 确认发行版为 Ubuntu 20.04</span>
+lsb_release<span class="w"> </span>-a
+cat<span class="w"> </span>/etc/os-release<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+uname<span class="w"> </span>-r
+</code></pre></div>
+<hr/>
+<h2 id="4-ros">4. ROS 环境</h2>
+<h3 id="41-ros">4.1 确认 ROS 版本</h3>
+<p>本机同时存在两个 ROS 发行版，需明确各自路径：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 查看已安装的 ROS 发行版</span>
+ls<span class="w"> </span>-1<span class="w"> </span>/opt/ros/
+</code></pre></div>
+<p><strong>本项目使用 ROS 1 Noetic。</strong> 注意两套环境不可同时 <code>source</code>，否则环境变量互相覆盖，<code>rosversion</code>、<code>rospack</code> 等命令会失效。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 每次打开新终端后都要 source</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+
+<span class="c1"># 验证：应输出 noetic</span>
+rosversion<span class="w"> </span>-d
+<span class="c1"># 查看可用包数量</span>
+rospack<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</code></pre></div>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/05_ros_version.png"/></p>
+<h3 id="42">4.2 检查关键依赖包</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 逐个检查三维寻路所需的包是否存在</span>
+<span class="k">for</span><span class="w"> </span>p<span class="w"> </span><span class="k">in</span><span class="w"> </span>octomap<span class="w"> </span>octomap_msgs<span class="w"> </span>octomap_ros<span class="w"> </span>pcl_ros<span class="w"> </span>pcl_conversions<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>visualization_msgs<span class="w"> </span>rviz<span class="w"> </span>tf<span class="w"> </span>tf2_ros<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">printf</span><span class="w"> </span><span class="s1">'%-20s %s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$p</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="k">$(</span>rospack<span class="w"> </span>find<span class="w"> </span><span class="nv">$p</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span>MISSING<span class="k">)</span><span class="s2">"</span>
+<span class="k">done</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>包</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>octomap</code> / <code>octomap_msgs</code> / <code>octomap_ros</code></td>
+<td>八叉树地图核心库与 ROS 消息</td>
+</tr>
+<tr>
+<td><code>pcl_ros</code> / <code>pcl_conversions</code></td>
+<td>点云处理与格式转换</td>
+</tr>
+<tr>
+<td><code>visualization_msgs</code></td>
+<td>占用体素的可视化消息</td>
+</tr>
+<tr>
+<td><code>rviz</code></td>
+<td>三维可视化</td>
+</tr>
+<tr>
+<td><code>tf</code> / <code>tf2_ros</code></td>
+<td>坐标变换</td>
+</tr>
+</tbody>
+</table>
+<p>各包的实际检查结果：</p>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/06_ros_pkgs.png"/></p>
+<blockquote>
+<p>与早期方案相比，这里<strong>不再需要 <code>gazebo_ros</code> / <code>gazebo_plugins</code></strong> ——
+模拟器换成了宿主上的 AirSim，与 ROS 之间走的是 RPC 而不是 Gazebo 插件。</p>
+</blockquote>
+<hr/>
+<h2 id="5-airsim">5. 模拟器：AirSim 的启动与连接</h2>
+<p>这是本项目环境配置中最特殊的一步：<strong>模拟器不在虚拟机里</strong>。</p>
+<h3 id="51">5.1 为什么模拟器在宿主上</h3>
+<p>模拟器是 <strong>AirSim 1.8.1</strong>（随 <a href="https://openhutb.github.io/air_doc/">OpenHUTB 低空模拟器</a> 发行版提供），
+本质上是一个 Windows/Unreal 打包程序，<strong>无法安装到 Ubuntu 虚拟机内</strong>。</p>
+<p>AirSim 的架构是"<strong>一个 RPC 服务端 + 任意多个客户端</strong>"，所以天然适合这种分工：</p>
+<div class="highlight"><pre><span></span><code>宿主 Windows  ── RPC(41451) ──►  客户机 Ubuntu（ROS、我们的节点、RViz）
+</code></pre></div>
+<h3 id="52">5.2 启动模拟器（宿主侧）</h3>
+<p>模拟器是解压即用的绿色发行版，<strong>解压到哪个目录都可以</strong>，但有一个硬性要求：
+<strong>必须在模拟器的安装目录里启动它</strong> —— 因为模拟器要读<strong>同目录</strong>下的 <code>settings.json</code>，
+载具与激光雷达的配置就写在那里；从别处启动它会找不到配置文件，也就不会有激光雷达。</p>
+<p>在 Windows 上进入该目录后运行 <code>CarlaUE4.exe</code>（或在资源管理器里直接双击它）：</p>
+<div class="highlight"><pre><span></span><code><span class="k">cd</span> <span class="p">&lt;</span>模拟器安装目录&gt;
+CarlaUE4.exe
+</code></pre></div>
+<p>安装目录里应该能看到这几项，可以用来自查：</p>
+<div class="highlight"><pre><span></span><code>&lt;模拟器安装目录&gt;\
+    CarlaUE4.exe      ← 启动程序
+    settings.json     ← AirSim 配置（载具、激光雷达）
+    CarlaUE4\         ← 程序资源
+    Engine\           ← 引擎
+</code></pre></div>
+<blockquote>
+<p><strong>本文档不写死具体路径</strong>，因为每个人把发行版解压到哪里都不一样（放在哪个盘、
+哪个目录都可以，不必和本文一致）。请以你自己的安装位置为准 ——
+只要那个目录里有上面这几项就对了。</p>
+</blockquote>
+<p>首次启动、以及第一次加载城市地图时，画面可能要等 30~60 秒才逐渐渲染出来，这是正常的。
+启动完成后应能看到城市场景：</p>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/08_airsim_simulator.png"/></p>
+<p>确认 AirSim 的 RPC 端口已经在监听：</p>
+<div class="highlight"><pre><span></span><code>netstat -ano <span class="p">|</span> findstr 41451
+</code></pre></div>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/09_airsim_rpc.png"/></p>
+<blockquote>
+<p><strong>如果这个端口不监听</strong>：说明模拟器没有进入 AirSim 的多旋翼模式。
+需要检查模拟器包内的 <code>Config/DefaultEngine.ini</code>，把 <code>GlobalDefaultGameMode</code>
+指向 AirSim（该发行版里已定义别名 <code>AIR</code> → <code>/Script/AirSim.AirSimGameMode</code>）。
+若仍不生效，直接写 <code>/Script/AirSim.AirSimGameMode</code>。</p>
+</blockquote>
+<h3 id="53">5.3 放行防火墙（宿主侧）</h3>
+<p>Windows 防火墙默认拦截入站连接，必须显式放行 41451：</p>
+<div class="highlight"><pre><span></span><code><span class="c"># 管理员 PowerShell</span>
+<span class="nb">New-NetFirewallRule</span> <span class="n">-DisplayName</span> <span class="s2">"AirSim RPC 41451"</span> <span class="n">-Direction</span> <span class="n">Inbound</span> <span class="p">`</span>
+  <span class="n">-Protocol</span> <span class="n">TCP</span> <span class="n">-LocalPort</span> <span class="n">41451</span> <span class="n">-Action</span> <span class="n">Allow</span> <span class="n">-Profile</span> <span class="n">Any</span>
+</code></pre></div>
+<blockquote>
+<p><strong>一个很难查的坑</strong>：Windows 防火墙里<strong>显式 Block 规则优先于显式 Allow 规则</strong>。
+如果某个程序第一次监听时弹过"是否允许通信"的窗口并被点了取消，
+系统会自动建一条针对该程序的 Block 规则。此时按端口加 Allow <strong>完全无效</strong>，
+必须先把它禁用：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">Get-NetFirewallRule</span> <span class="p">|</span> <span class="nb">Where-Object</span> <span class="p">{</span> <span class="nv">$_</span><span class="p">.</span><span class="n">DisplayName</span> <span class="o">-match</span> <span class="s1">'Carla|hutb|AirSim|41451'</span> <span class="p">}</span> <span class="p">|</span>
+  <span class="nb">Select-Object</span> <span class="n">DisplayName</span><span class="p">,</span> <span class="n">Direction</span><span class="p">,</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Enabled</span> <span class="p">|</span> <span class="nb">Format-Table</span> <span class="n">-AutoSize</span>
+<span class="nb">Set-NetFirewallRule</span> <span class="n">-DisplayName</span> <span class="s2">"&lt;那条 Block 规则的名字&gt;"</span> <span class="n">-Enabled</span> <span class="n">False</span>
+</code></pre></div>
+</blockquote>
+<h3 id="54-python">5.4 安装 Python 客户端（客户机侧）</h3>
+<p>客户机要连 AirSim 的 RPC，需要装它的 Python 客户端：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 注意顺序不能反！</span>
+pip3<span class="w"> </span>install<span class="w"> </span>numpy
+pip3<span class="w"> </span>install<span class="w"> </span>msgpack-rpc-python
+pip3<span class="w"> </span>install<span class="w"> </span>airsim
+</code></pre></div>
+<blockquote>
+<p><strong>为什么顺序不能反</strong>：<code>airsim</code> 的 <code>setup.py</code> 会 <code>import airsim</code> 自己，
+而包内的 <code>types.py</code> 需要 <code>msgpackrpc</code>。如果先装 <code>airsim</code>，会在构建元数据阶段
+就报 <code>ModuleNotFoundError: No module named 'msgpackrpc'</code>。</p>
+</blockquote>
+<h3 id="55">5.5 验证连通性（客户机侧）</h3>
+<blockquote>
+<p><strong>⚠️ 先确认前置条件：模拟器的 <code>settings.json</code> 已经配好。</strong>
+本节的测试用到载具名 <code>Drone1</code> 与雷达名 <code>LidarSensor1</code>。
+如果 <code>settings.json</code> 还没按 <a href="../flight_control/">AirSim 载具与位置控制</a> 第 2 节配好，
+<strong>第 2 步会直接报错</strong>：<code>listVehicles()</code> 返回的是 <code>['SimpleFlight']</code> 这类默认名，
+紧接着 <code>getLidarData(lidar_name='LidarSensor1')</code> 就会抛 <code>RPCError</code>。
+请先配好再往下测。</p>
+</blockquote>
+<p><strong>第 1 步：测端口通不通</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 0 = 通</span>
+python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import socket;s=socket.socket();s.settimeout(2);print(s.connect_ex(('192.168.198.1',41451)))"</span>
+</code></pre></div>
+<p>返回值的含义<strong>必须分清</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>返回值</th>
+<th>含义</th>
+<th>处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0</strong></td>
+<td>连通</td>
+<td>继续第 2 步</td>
+</tr>
+<tr>
+<td><strong>11</strong></td>
+<td><strong>连接超时 / 包被丢弃</strong></td>
+<td>是<strong>防火墙</strong>问题，回到 5.3</td>
+</tr>
+<tr>
+<td><strong>111</strong></td>
+<td><strong>连接被拒绝</strong></td>
+<td>端口没人监听，模拟器没起来或没进 AirSim 模式</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第 2 步：测能不能取到激光数据</strong></p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
+<span class="s2">import airsim</span>
+<span class="s2">c = airsim.MultirotorClient(ip='192.168.198.1', port=41451)</span>
+<span class="s2">c.confirmConnection(); print('RPC OK', c.listVehicles())</span>
+<span class="s2">d = c.getLidarData(lidar_name='LidarSensor1')</span>
+<span class="s2">print('lidar points:', len(d.point_cloud)//3)</span>
+<span class="s2">"</span>
+</code></pre></div>
+<p><strong>期望输出</strong>：<code>RPC OK ['Drone1']</code>，以及一个正的点数（本项目实测约 9700）。</p>
+<p><strong>如果载具列表不是 <code>['Drone1']</code></strong>，说明载具名对不上 —— 回到<a href="#52-%E5%90%AF%E5%8A%A8%E6%A8%A1%E6%8B%9F%E5%99%A8%E5%AE%BF%E4%B8%BB%E4%BE%A7">第 2 节</a>
+核对：<code>settings.json</code> 是否放在<strong>模拟器安装目录</strong>下、里面的载具名与雷达名是否写对了。</p>
+<hr/>
+<h2 id="6">6. 建立工作空间与功能包</h2>
+<p>ROS 1 使用 catkin 构建系统。为避免与系统中已有的工作空间混杂，本项目建立独立工作空间：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 建立工作空间</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>~/uav_ws/src
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_init_workspace
+
+<span class="c1"># 首次编译</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+</code></pre></div>
+<p>本模块的功能包为 <code>octree_uav_3d_pathfinding</code>，把它放到工作空间里即可：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 将本模块放入 ~/uav_ws/src/</span>
+<span class="c1"># 编译</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>编译成功时，日志里会先列出工作空间中的包（<code>-- ~~ traversing 1 packages</code>），
+最后以 <code>Built target</code> 结束 —— 后者出现即表示编译完成：</p>
+<div class="highlight"><pre><span></span><code>[ 50%] Building CXX object octree_uav_3d_pathfinding/CMakeFiles/pointcloud_to_octomap.dir/src/pointcloud_to_octomap.cpp.o
+[100%] Linking CXX executable /home/user/uav_ws/devel/lib/octree_uav_3d_pathfinding/pointcloud_to_octomap
+[100%] Built target pointcloud_to_octomap
+</code></pre></div>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/10_catkin_workspace.png"/></p>
+<blockquote>
+<p>本包的 C++ 节点依赖 octomap 的头文件与库，若编译报找不到 <code>octomap/octomap.h</code>：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>liboctomap-dev
+</code></pre></div>
+</blockquote>
+<hr/>
+<h2 id="7">7. 编译与运行验证</h2>
+<p>环境就绪后，编译并运行本模块的主入口，即可一次验证<strong>模拟器层</strong>与 <strong>ROS 层</strong>的整条链路。</p>
+<blockquote>
+<p><strong>⚠️ 运行前必须先改一个参数</strong>：<code>config/params.yaml</code> 里的 <code>host</code>。
+它默认写的是本项目实测环境的地址，<strong>每台机器都不一样</strong>，不改就会连不上模拟器
+（表现是自检第 1 项报"无法连接 AirSim"）。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1) 先查你自己宿主机的 VMnet8 地址（见第 2.2 节）</span>
+ip<span class="w"> </span>route<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>default
+
+<span class="c1"># 2) 再改 config/params.yaml，两组里的 host 都要改：</span>
+<span class="c1">#      uav_env_check.host</span>
+<span class="c1">#      airsim_bridge.host</span>
+</code></pre></div>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="c1"># 载入工作空间环境</span>
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+
+<span class="c1"># 启动桥接、点云建图、环境自检与 RViz</span>
+roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>main.launch
+</code></pre></div>
+<p>主入口的自检节点会依次输出运行环境信息（ROS 发行版、Python 版本、AirSim 客户端版本、
+octomap 版本），并检查四项：<strong>AirSim RPC 连接</strong>、<strong>激光点云链路</strong>、<strong>TF 坐标变换</strong>、
+<strong>话题通信</strong>。自检节点在数秒后自动退出，而仿真与桥接节点继续运行，便于进一步观察点云与飞行器的运动；
+模块的完整说明与运行效果见源码目录下的 README.md。</p>
+<p>四项检查全部通过时的输出如下：</p>
+<div class="highlight"><pre><span></span><code>[INFO] 模块: octree_uav_3d_pathfinding  v0.2.0
+[INFO] ROS 发行版      : noetic
+[INFO] AirSim 客户端   : 1.8.1
+[INFO] octomap 版本    : 1.9.8
+[INFO] 模拟器地址      : 192.168.198.1:41451
+[INFO] [1/4] AirSim RPC 正常：载具列表 ['Drone1']
+[INFO] [2/4] 点云链路正常：已收到 1 帧，最新一帧 9669 个点，frame_id=lidar_link
+[INFO] [3/4] TF 正常：world -&gt; base_link，当前位置 (-1.77, 1.12, 0.00)
+[INFO] [4/4] 话题通信正常：/uav/status 收发成功（1 条），订阅者 1 个
+[INFO] 检查结果：
+[INFO]   [通过] AirSim RPC 连接
+[INFO]   [通过] 激光点云链路
+[INFO]   [通过] TF 坐标变换
+[INFO]   [通过] 话题通信
+[INFO] 环境与链路自检全部通过，模块可以开始后续开发。
+</code></pre></div>
+<p>四项的实际运行结果：</p>
+<p><img alt="" src="../../../img/air/octree_uav_3d_pathfinding/11_run_verify.png"/></p>
+<p>详细的编译步骤与参数说明见模块源码目录下的 <code>README.md</code>。</p>
+<hr/>
+<h2 id="_2">参考</h2>
+<ul>
+<li><a href="https://wiki.ros.org/noetic/Installation/Ubuntu">ROS Noetic 安装说明</a></li>
+<li><a href="https://microsoft.github.io/AirSim/lidar/">AirSim 激光雷达文档</a></li>
+<li><a href="https://openhutb.github.io/air_doc/">OpenHUTB 低空模拟器文档</a></li>
+<li><a href="https://octomap.github.io/">OctoMap 官网</a></li>
+<li><a href="https://wiki.ros.org/catkin">catkin 构建系统</a></li>
+</ul>
+<hr/>
+<h2 id="_3">附：大模型使用声明</h2>
+<p>本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、代码与文档起草、问题排查）。全部内容已经过实际运行验证：环境配置步骤在 Ubuntu 20.04.6 + ROS Noetic + AirSim 1.8.1 环境下逐条执行确认，模块通过 <code>roslaunch octree_uav_3d_pathfinding main.launch</code> 运行并输出上述自检结果。作者对提交内容的正确性与完整性负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../../../ap_cpp_overfomo/" title="AP-CPP 主动感知覆盖路径规划"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../flight_control/" title="AirSim 载具与位置控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../../../ap_cpp_overfomo/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../flight_control/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>

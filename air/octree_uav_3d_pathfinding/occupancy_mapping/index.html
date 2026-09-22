@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>点云转八叉树占用地图 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u70b9\u4e91\u8f6c\u516b\u53c9\u6811\u5360\u7528\u5730\u56fe";
+        var mkdocs_page_input_path = "air/octree_uav_3d_pathfinding/occupancy_mapping.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">空域载具八叉树三维寻路</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">点云转八叉树占用地图</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1-3d">1. 输入：3D 激光雷达点云</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 坐标变换：从传感器坐标系到世界坐标系</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 射线投射与概率更新</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4-pointcloud_to_octomap">4. 实现：pointcloud_to_octomap 节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 参数说明</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 运行方法与效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 主要话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">参考</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">空域载具八叉树三维寻路</li>
+<li class="breadcrumb-item active">点云转八叉树占用地图</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/octree_uav_3d_pathfinding/occupancy_mapping.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">点云转八叉树占用地图</h1>
+<p>本文介绍空域载具八叉树三维寻路项目中的<strong>建图环节</strong>：把 3D 激光雷达的原始点云，
+通过坐标变换与射线投射，增量地构建成一棵八叉树（octree）占用地图，
+为后续在八叉树上做 A* 全局寻路提供"哪里有障碍、哪里可以通过"的几何依据。</p>
+<p>对应总纲第 3 节「从传感器点云到占用地图」。</p>
+<hr/>
+<h2 id="1-3d">1. 输入：3D 激光雷达点云</h2>
+<p>输入话题是 <code>/cloud_in</code>，由桥接节点 <code>airsim_bridge</code> 从 AirSim 取回后发布
+（桥接节点见 <a href="../flight_control/">AirSim 载具与位置控制</a>）。雷达参数写在模拟器的
+<code>settings.json</code> 里：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>消息类型</td>
+<td><code>sensor_msgs/PointCloud2</code></td>
+</tr>
+<tr>
+<td>水平视场</td>
+<td>360 度</td>
+</tr>
+<tr>
+<td>垂直视场</td>
+<td>16 线，-40° ~ +10°</td>
+</tr>
+<tr>
+<td>量程</td>
+<td>由 <code>settings.json</code> 的 <code>Range</code> 决定；建图侧用 <code>max_range</code>（默认 30 m）截断</td>
+</tr>
+<tr>
+<td>频率</td>
+<td>10 Hz</td>
+</tr>
+<tr>
+<td>每帧点数</td>
+<td>约 9700（<code>PointsPerSecond ÷ RotationsPerSecond</code> = 100000 ÷ 10）</td>
+</tr>
+</tbody>
+</table>
+<p>每帧约 9700 个点、10 Hz，即每秒约 9.7 万个测量值。点云里的每个点都表示
+"这条射线打到了这里"，但<strong>没有打到任何东西的射线</strong>在消息里是无效值
+（NaN / inf），处理时必须先剔除。</p>
+<blockquote>
+<p><strong>为什么这里不用现成的 <code>octomap_server</code></strong>：本项目的重点是讲清三维寻路的完整原理。
+自己写插入逻辑，才能把"坐标变换 → 射线投射 → 概率更新"这条链路逐一展示出来；
+相应地，节点名也叫 <code>pointcloud_to_octomap</code> 而不是直接复用 <code>octomap_server</code>。</p>
+</blockquote>
+<hr/>
+<h2 id="2">2. 坐标变换：从传感器坐标系到世界坐标系</h2>
+<p>激光雷达的点坐标是在<strong>传感器坐标系</strong>下的（本项目中点云的 <code>frame_id</code> 为 <code>lidar_link</code>）：
+点 <code>(1.0, 0, 0)</code> 表示"正前方 1 m 处有障碍"。但地图必须是世界坐标系下的：
+飞行器飞到别处之后，同一个障碍物在世界系里的坐标不能变。</p>
+<p>因此每帧点云都要先做一次刚体变换：</p>
+<p>
+<script type="math/tex; mode=display">
+\boldsymbol{p}_{world} = \boldsymbol{R}\,\boldsymbol{p}_{sensor} + \boldsymbol{t}
+</script>
+</p>
+<p>其中 <script type="math/tex">\boldsymbol{R}</script>、<script type="math/tex">\boldsymbol{t}</script> 是 TF 树中 <code>world</code> ← <code>lidar_link</code> 的旋转与平移。
+这条 TF 链由桥接节点建立：<code>world → base_link</code> 由位姿动态广播，
+<code>base_link → lidar_link</code> 由雷达安装位置静态广播。旋转用四元数表示，
+节点里直接由四元数构造旋转矩阵：</p>
+<div class="highlight"><pre><span></span><code><span class="n">tf2</span><span class="o">::</span><span class="n">Quaternion</span><span class="w"> </span><span class="nf">rotation</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">w</span><span class="p">);</span>
+<span class="n">tf2</span><span class="o">::</span><span class="n">Matrix3x3</span><span class="w"> </span><span class="nf">rot_matrix</span><span class="p">(</span><span class="n">rotation</span><span class="p">);</span>
+<span class="n">tf2</span><span class="o">::</span><span class="n">Vector3</span><span class="w"> </span><span class="n">p_world</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rot_matrix</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">tf2</span><span class="o">::</span><span class="n">Vector3</span><span class="p">(</span><span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">origin</span><span class="p">;</span>
+</code></pre></div>
+<p><code>origin</code> 同时还有一个用途：它正是<strong>射线投射的原点</strong>——所有激光都从雷达位置射出去。</p>
+<blockquote>
+<p><strong>为什么点云用本体系而不是世界系</strong>：模拟器 <code>settings.json</code> 里的 <code>DataFrame</code> 选了
+<code>SensorLocalFrame</code>，点云直接在雷达本体系下输出。这样建图侧<strong>只需一次 TF 查询</strong>，
+就同时拿到"点云到世界的变换"和"射线原点"，不必再为点云单独传一份位姿；
+建图节点也因此与具体模拟器解耦。</p>
+</blockquote>
+<hr/>
+<h2 id="3">3. 射线投射与概率更新</h2>
+<h3 id="31">3.1 三个状态：占用、空闲、未知</h3>
+<p>一条激光射线的物理含义不只是"终点有东西"，还包含"这条线路上没有东西"。
+octomap 把这个信息利用起来，每个体素因此有三种状态：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>含义</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>占用（occupied）</td>
+<td>射线终点所在体素</td>
+<td>射线打到了障碍物</td>
+</tr>
+<tr>
+<td>空闲（free）</td>
+<td>射线途经的体素</td>
+<td>射线从机体一路穿过去，说明沿途是空的</td>
+</tr>
+<tr>
+<td>未知（unknown）</td>
+<td>从没有射线经过</td>
+<td>还没扫描到</td>
+</tr>
+</tbody>
+</table>
+<p>这一点是八叉树建图比"把点云体素化"更有价值的地方：<strong>空闲空间被显式清出来了</strong>。
+如果只把点标记为占用，那么"没有点"既可能是空地也可能是没扫到，规划器无法区分，
+就会把大片未知区域当成障碍，导致无解。</p>
+<h3 id="32-log-odds">3.2 概率占用模型与 log-odds</h3>
+<p>实际传感器有噪声，一次测量不足以定论，octomap 用概率来描述每个体素：</p>
+<ul>
+<li>命中一次，占用概率上调：<script type="math/tex">P(\text{hit}) = 0.7</script>（默认）</li>
+<li>射线穿过一次，占用概率下调：<script type="math/tex">P(\text{miss}) = 0.4</script>（默认）</li>
+</ul>
+<p>多个测量用 <strong>log-odds</strong> 形式累加，把乘法变成加法：</p>
+<p>
+<script type="math/tex; mode=display">
+L(n) = L(n-1) + \log\frac{P}{1 - P}
+</script>
+</p>
+<p>命中时加 <script type="math/tex">\log(0.7/0.3) \approx +0.85</script>，穿过时加 <script type="math/tex">\log(0.4/0.6) \approx -0.41</script>。
+概率被限制在 <script type="math/tex">[0.12,\ 0.97]</script> 之间（clamping），这样一方面避免"一次误检就永久占用"，
+另一方面也避免概率被反复累加到浮点饱和，导致后来的测量再也改不回来。</p>
+<h3 id="33-octomap">3.3 octomap 的接口</h3>
+<p>上面整套逻辑由 <code>octomap::OcTree::insertPointCloud()</code> 一次完成：</p>
+<div class="highlight"><pre><span></span><code><span class="n">tree_</span><span class="p">.</span><span class="n">insertPointCloud</span><span class="p">(</span><span class="n">cloud</span><span class="p">,</span><span class="w">                               </span><span class="c1">// 世界坐标系下的点云</span>
+<span class="w">                       </span><span class="n">octomap</span><span class="o">::</span><span class="n">point3d</span><span class="p">(</span><span class="n">ox</span><span class="p">,</span><span class="w"> </span><span class="n">oy</span><span class="p">,</span><span class="w"> </span><span class="n">oz</span><span class="p">),</span><span class="w">        </span><span class="c1">// 射线原点（雷达位置）</span>
+<span class="w">                       </span><span class="n">max_range_</span><span class="p">,</span><span class="w">                          </span><span class="c1">// 最大量程</span>
+<span class="w">                       </span><span class="nb">true</span><span class="p">,</span><span class="w">                                </span><span class="c1">// lazy_eval</span>
+<span class="w">                       </span><span class="nb">false</span><span class="p">);</span><span class="w">                              </span><span class="c1">// discretize</span>
+<span class="n">tree_</span><span class="p">.</span><span class="n">updateInnerOccupancy</span><span class="p">();</span>
+</code></pre></div>
+<ul>
+<li><code>lazy_eval = true</code>：插入时只更新叶节点，父节点的占用状态先不回溯；
+  一帧插完后统一调用 <code>updateInnerOccupancy()</code>。这样避免了每插一个点都往上爬树，
+  是 octomap 官方推荐的做法。</li>
+<li>八叉树的<strong>多分辨率</strong>特性在这里自然体现出来：大片空旷区域只用一个父节点表示，
+  只有障碍物附近才细分到 0.3 m 的叶节点。</li>
+</ul>
+<hr/>
+<h2 id="4-pointcloud_to_octomap">4. 实现：pointcloud_to_octomap 节点</h2>
+<p>节点源码：<code>src/air/octree_uav_3d_pathfinding/src/pointcloud_to_octomap.cpp</code></p>
+<p>每收到一帧点云的处理流程：</p>
+<ol>
+<li><strong>查 TF</strong>：取 <code>world</code> ← 点云 <code>frame_id</code> 的变换。优先用点云自带的时间戳；
+   若 TF 尚未更新到该时刻，退化为"取最新可用变换"并给出限频告警。</li>
+<li><strong>变换并过滤</strong>：逐点剔除 NaN/inf（未命中）与过近的点，再按 <code>point_stride</code> 抽稀，
+   最后乘上旋转矩阵、加上平移，得到世界坐标下的点云。</li>
+<li><strong>射线投射</strong>：调用 <code>insertPointCloud()</code>，命中点记为占用、途经体素记为空闲。</li>
+<li><strong>发布</strong>：定时把八叉树发布出去，并把占用叶节点转成彩色立方体 Marker。</li>
+</ol>
+<p>节点输出的两路结果：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/octomap_full</code></td>
+<td><code>octomap_msgs/Octomap</code></td>
+<td>完整八叉树（含每个节点的概率），latched 发布</td>
+</tr>
+<tr>
+<td><code>/occupied_cells_vis_array</code></td>
+<td><code>visualization_msgs/MarkerArray</code></td>
+<td>占用体素可视化，RViz 免插件直接显示</td>
+</tr>
+</tbody>
+</table>
+<p>关于可视化方式：RViz 显示八叉树本来需要额外的 <code>octomap_rviz_plugins</code> 插件，
+为了减少环境依赖，这里<strong>自己把占用叶节点转成 MarkerArray</strong>——每个占用叶节点一个
+边长等于分辨率的立方体，并按高度着色（低处偏蓝、高处偏红），于是高度层次一眼可见。
+<code>/octomap_full</code> 则留给后续的 A* 规划节点：它可以直接反序列化出同一棵八叉树。</p>
+<hr/>
+<h2 id="5">5. 参数说明</h2>
+<p>参数位于 <code>config/params.yaml</code> 的 <code>pointcloud_to_octomap</code> 组，由 <code>main.launch</code> 载入。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cloud_topic</td>
+<td>/cloud_in</td>
+<td>输入点云话题</td>
+</tr>
+<tr>
+<td>world_frame</td>
+<td>world</td>
+<td>世界坐标系，地图与可视化都建立在该坐标系下</td>
+</tr>
+<tr>
+<td>sensor_frame</td>
+<td>lidar_link</td>
+<td>点云 <code>frame_id</code> 为空时的兜底坐标系</td>
+</tr>
+<tr>
+<td>resolution</td>
+<td>0.3</td>
+<td>八叉树叶节点分辨率（m），<strong>最关键的一个参数</strong></td>
+</tr>
+<tr>
+<td>max_range</td>
+<td>30.0</td>
+<td>射线最大量程（m）</td>
+</tr>
+<tr>
+<td>min_range</td>
+<td>0.5</td>
+<td>最小量程（m），更近的点直接丢弃</td>
+</tr>
+<tr>
+<td>point_stride</td>
+<td>2</td>
+<td>抽稀：每隔 N 个点取一个做射线投射</td>
+</tr>
+<tr>
+<td>prob_hit</td>
+<td>0.7</td>
+<td>命中的占用概率</td>
+</tr>
+<tr>
+<td>prob_miss</td>
+<td>0.4</td>
+<td>未命中（穿过）的占用概率</td>
+</tr>
+<tr>
+<td>clamp_min / clamp_max</td>
+<td>0.12 / 0.97</td>
+<td>占用概率的上下限</td>
+</tr>
+<tr>
+<td>publish_rate</td>
+<td>1.0</td>
+<td>地图与可视化的发布频率（Hz）</td>
+</tr>
+<tr>
+<td>color_min_z / color_max_z</td>
+<td>0.0 / 25.0</td>
+<td>体素着色的高度范围（m）</td>
+</tr>
+<tr>
+<td>max_markers</td>
+<td>20000</td>
+<td>单帧可视化的最大体素个数，防止 RViz 卡顿</td>
+</tr>
+<tr>
+<td>status_period</td>
+<td>5.0</td>
+<td>状态日志周期（s）</td>
+</tr>
+<tr>
+<td>cloud_timeout</td>
+<td>15.0</td>
+<td>等不到首帧点云时的告警时间（s）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>调参建议</strong>：</p>
+<ul>
+<li><strong>性能是这里的主要矛盾</strong>。雷达一帧约一万个点，每个点一条射线，射线长度除以分辨率
+  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
+  量程收到 30 m。机器性能富裕时可以把 <code>point_stride</code> 调回 1、<code>resolution</code> 调到 0.2。</li>
+<li><code>resolution</code> 从 0.3 调到 0.15，体素数量约变为 8 倍，内存和耗时都会明显上升。</li>
+<li>障碍物被"吃掉"（明明有障碍却显示可通行）通常是分辨率过大导致的，
+  可以把 <code>resolution</code> 调小，或适当增大 <code>prob_hit</code>。</li>
+<li>体素全是同一个颜色，说明 <code>color_min_z</code> / <code>color_max_z</code> 与实际高度范围不匹配。</li>
+</ul>
+<hr/>
+<h2 id="6">6. 运行方法与效果</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 编译（本包从本节开始包含 C++ 节点）</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+
+<span class="c1"># 一条命令启动：桥接 + 点云建图 + 环境自检 + RViz</span>
+roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>main.launch
+</code></pre></div>
+<blockquote>
+<p><strong>前置条件</strong>：宿主上的模拟器必须已经启动（见<a href="../env_setup/">环境配置与前置准备</a> 第 5 节），
+并且 <code>config/params.yaml</code> 里的 <code>host</code> 已改成你自己宿主机的 VMnet8 地址，否则桥接节点连不上。</p>
+</blockquote>
+<p>只关心建图、不需要 RViz 时：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>main.launch<span class="w"> </span>rviz:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>飞行器起飞后开始扫描，RViz 中的彩色体素随扫描范围逐渐生长；
+再让飞行器飞到别处，就能看到地图沿着飞行轨迹不断扩展：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 需要一个新的终端。目标点是 ROS 世界系 ENU</span>
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/uav/goal<span class="w"> </span>geometry_msgs/Point<span class="w"> </span><span class="s2">"{x: 30.0, y: 0.0, z: 15.0}"</span>
+</code></pre></div>
+<p><img alt="RViz 中的八叉树占用地图" src="../../../img/air/octree_uav_3d_pathfinding/octomap_rviz.png"/></p>
+<p>飞行器移动过程中地图随时间生长：</p>
+<p><img alt="八叉树地图逐渐生长" src="../../../img/air/octree_uav_3d_pathfinding/octomap_growing.gif"/></p>
+<p>建图节点每 5 秒输出一次统计信息，可以看到点云在持续进来、占用体素在增长：</p>
+<p><img alt="终端统计输出" src="../../../img/air/octree_uav_3d_pathfinding/octomap_terminal.png"/></p>
+<hr/>
+<h2 id="7">7. 主要话题</h2>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>方向</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/cloud_in</td>
+<td>sensor_msgs/PointCloud2</td>
+<td>订阅</td>
+<td>激光雷达点云（<code>lidar_link</code> 系）</td>
+</tr>
+<tr>
+<td>/octomap_full</td>
+<td>octomap_msgs/Octomap</td>
+<td>发布</td>
+<td>完整八叉树地图（latched）</td>
+</tr>
+<tr>
+<td>/occupied_cells_vis_array</td>
+<td>visualization_msgs/MarkerArray</td>
+<td>发布</td>
+<td>占用体素可视化</td>
+</tr>
+<tr>
+<td>/tf</td>
+<td>tf2_msgs/TFMessage</td>
+<td>订阅</td>
+<td>由桥接节点广播，用于把点云变换到世界系</td>
+</tr>
+</tbody>
+</table>
+<p>排查用命令：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 确认点云话题的消息类型是 sensor_msgs/PointCloud2</span>
+rostopic<span class="w"> </span>info<span class="w"> </span>/cloud_in
+
+<span class="c1"># 看点云频率（应约 10 Hz）</span>
+rostopic<span class="w"> </span>hz<span class="w"> </span>/cloud_in
+
+<span class="c1"># 看八叉树地图消息的频率</span>
+rostopic<span class="w"> </span>hz<span class="w"> </span>/octomap_full
+</code></pre></div>
+<hr/>
+<h2 id="_2">参考</h2>
+<ul>
+<li><a href="https://octomap.github.io/">OctoMap 官网</a></li>
+<li>Hornung et al., <em>OctoMap: An Efficient Probabilistic 3D Mapping Framework Based on Octrees</em>, Autonomous Robots, 2013</li>
+<li><a href="http://docs.ros.org/en/noetic/api/octomap_msgs/html/index.html">octomap_msgs 消息定义</a></li>
+<li>模块源码：<code>src/air/octree_uav_3d_pathfinding/</code></li>
+</ul>
+<hr/>
+<p>本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（方案讨论、代码与文档起草、问题排查）。
+全部内容经过实际运行验证：模块在 Ubuntu 20.04.6 + ROS Noetic + AirSim 1.8.1 环境下
+通过 <code>roslaunch octree_uav_3d_pathfinding main.launch</code> 运行，并得到上述建图结果。
+作者对提交内容的正确性与完整性负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../flight_control/" title="AirSim 载具与位置控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../../water/HoloOcean/" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../flight_control/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../../water/HoloOcean/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
