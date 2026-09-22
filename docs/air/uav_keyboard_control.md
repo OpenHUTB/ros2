@@ -72,7 +72,13 @@ CarlaAir 视口**内置**键盘操控（任务①的「仿真」部分），本�
 本模块走 `键盘 → /uav/cmd_vel → 桥接 → 仿真器` 的完整 ROS 链路，正是后续
 规划器、神经网络控制器的通用入口。
 
-## 6. 参考
+## 6. 效果图
+
+键盘控制演示（录屏转 GIF，`W 前进 / A 左移 / D 右移 / R 上升 / Q 右转` 机动，第三人称视角）：
+
+![](../img/air/uav_keyboard_control/keyboard_demo.gif)
+
+## 7. 参考
 
 * [carlair_ros_bridge 桥接模块](../air/carlair_ros_bridge.md)
 * [AirSim 无人机 API 参考](https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient)
