@@ -1,0 +1,27 @@
+site_name: CARLA 0.9.16 作业一 · 无人车键盘运动控制文档
+site_description: 基于 CARLA 0.9.16 的无人车作业一：物理仿真 + 键盘运动控制
+repo_url: https://github.com/OpenHUTB/ros2
+repo_name: OpenHUTB/ros2
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.instant
+    - navigation.tracking
+
+nav:
+  - 首页: index.md
+  - 环境安装: setup_guide.md
+  - 作业一 · 键盘控制: 01_control.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.arithmatex
+  - attr_list
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - javascripts/mathjax.js

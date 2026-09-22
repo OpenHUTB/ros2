@@ -1,0 +1,11 @@
+# CARLA 0.9.16 作业一（键盘运动控制）运行依赖
+# 安装：pip install -r requirements.txt
+#
+# 说明：
+#   * carla 模块需从 CARLA 发行包的 PythonAPI 单独安装：
+#        pip install /path/to/Carla/PythonAPI/carla/dist/carla-0.9.16-*.whl
+#   * 作业一（键盘控制 + pygame 前视画面）仅需下列三个包，无需 tensorflow。
+
+numpy>=1.21
+opencv-python-headless>=4.6
+pygame>=2.1
