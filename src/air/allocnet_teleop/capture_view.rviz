@@ -1,0 +1,226 @@
+# capture_view.rviz —— 采集演示素材专用的 RViz 配置（README 6.4）
+#
+# 与 teleop_planner.rviz 的区别（都是为了"让轨迹看得见"）：
+#   1. MapCloud 用 FlatColor + 灰色，Alpha 0.22
+#      —— 默认的 AxisColor(Z) 彩虹点云会把 0.15m 宽的细蓝轨迹完全淹没
+#   2. 删掉了 Polytope 图层 —— 蓝色安全走廊会盖住轨迹
+#   3. 相机拉近并抬高俯视，让轨迹成为画面主体
+#
+# 用法：
+#   rviz -d $(find planner)/config/capture_view.rviz
+Panels:
+  - Class: rviz/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Map1
+        - /Teleop1
+        - /AllocNet1
+      Splitter Ratio: 0.5
+    Tree Height: 700
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Preferences:
+  PromptSaveOnExit: false
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    # ---------------------------------------------------------------
+    # 1. 地图 / 障碍物点云
+    #    订阅 map_republisher 转发的 **latched** 话题，
+    #    这样 RViz 无论何时启动都能立刻看到地图。
+    #    直接用 /structure_map/global_gridmap 会因非 latched 而错过。
+    # ---------------------------------------------------------------
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: MapCloud
+      Topic: /map/global_gridmap_vis
+      Queue Size: 5
+      Style: Squares
+      Size (Pixels): 3
+      Size (m): 0.05
+      Color Transformer: FlatColor
+      Color: 165; 165; 165
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Min Value: 0
+        Max Value: 5
+        Value: true
+      Use rainbow: true
+      Invert Rainbow: false
+      Position Transformer: XYZ
+      Selectable: true
+      Unreliable: false
+      Use Fixed Frame: true
+      Alpha: 0.22
+
+    - Class: rviz/PointCloud2
+      Enabled: false
+      Name: MapCloudFull
+      Topic: /map/global_gridmap
+      Queue Size: 2
+      Style: Points
+      Size (Pixels): 2
+      Color Transformer: FlatColor
+      Color: 130; 130; 130
+      Selectable: false
+      Unreliable: false
+      Use Fixed Frame: true
+      Alpha: 0.5
+
+    # ---------------------------------------------------------------
+    # 2. 键盘操控游标 (/teleop/cursor)
+    # ---------------------------------------------------------------
+    - Class: rviz/Marker
+      Enabled: true
+      Name: TeleopCursor
+      Marker Topic: /teleop/cursor
+      Queue Size: 20
+      Namespaces:
+        teleop_cursor: true
+
+    # ---------------------------------------------------------------
+    # 3. 起点与目标点标记 (/teleop/goal_markers)
+    # ---------------------------------------------------------------
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: GoalMarkers
+      Marker Topic: /teleop/goal_markers
+      Queue Size: 20
+      Namespaces:
+        teleop_goal_markers: true
+
+    # 键盘下发的航点折线（辅助图层）
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: TeleopWaypoints
+      Marker Topic: /teleop/waypoints
+      Queue Size: 20
+      Namespaces:
+        teleop_waypoints: true
+
+    # ---------------------------------------------------------------
+    # 4. 规划生成的 3D 轨迹
+    # ---------------------------------------------------------------
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Trajectory
+      Marker Topic: /visualizer/trajectory
+      Queue Size: 20
+      Namespaces:
+        trajectory: true
+
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Route
+      Marker Topic: /visualizer/route
+      Queue Size: 20
+      Namespaces:
+        route: true
+
+    # 飞行器实时位置 + 起终点球
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Spheres
+      Marker Topic: /visualizer/spheres
+      Queue Size: 20
+      Namespaces:
+        spheres: true
+        StartGoal: true
+
+    # 安全飞行走廊
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Waypoints
+      Marker Topic: /visualizer/waypoints
+      Queue Size: 20
+      Namespaces:
+        waypoints: true
+
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Cell Size: 1
+      Plane: XY
+      Plane Cell Count: 20
+      Color: 100; 100; 100
+      Alpha: 0.3
+      Reference Frame: <Fixed Frame>
+
+    - Class: rviz/Axes
+      Enabled: true
+      Name: Axes
+      Length: 2
+      Radius: 0.15
+      Reference Frame: <Fixed Frame>
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: odom
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Name: Current View
+      Distance: 11
+      Focal Point:
+        X: 0
+        Y: 0.5
+        Z: 1.4
+      Pitch: 0.95
+      Yaw: 2.4
+      Field of View: 0.9
+      Near Clip Distance: 0.05
+      Target Frame: <Fixed Frame>
+      Invert Z Axis: false
+      Focal Shape Fixed Size: false
+      Focal Shape Size: 0.05
+      Enable Stereo Rendering:
+        Value: false
+Window Geometry:
+  Height: 1000
+  Width: 1600
+  X: 0
+  Y: 0
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Displays:
+    collapsed: false
+  Selection:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: true
