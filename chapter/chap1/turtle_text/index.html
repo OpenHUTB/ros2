@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>小海龟绘制任意文字 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5c0f\u6d77\u9f9f\u7ed8\u5236\u4efb\u610f\u6587\u5b57";
+        var mkdocs_page_input_path = "chapter/chap1/turtle_text.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item active">小海龟绘制任意文字</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap1/turtle_text.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">小海龟绘制任意文字</h1>
+<h2 id="_2">一、实验目的</h2>
+<p>本实验在 <a href="../turtle_hutb/">小海龟自动绘制 OpenHUTB</a> 的基础上，把"绘制固定字形"扩展为"绘制任意文字"：</p>
+<ol>
+<li>在终端输入任意英文单词或短句，小海龟自动把它们绘制在画布上；</li>
+<li>掌握字形表的设计方法：把每个字母拆解为若干笔画，每一笔是一串按顺序经过的目标坐标；</li>
+<li>掌握简单的文字排版：根据内容长度自动计算字号，一行放不下时按单词折行；</li>
+<li>综合运用话题通信、服务调用与闭环控制完成绘制任务。</li>
+</ol>
+<p>与实验 3 的区别在于：实验 3 的字样是写死在程序里的，本实验的<strong>绘制内容由使用者输入决定</strong>，程序需要自己完成"输入 → 排版 → 生成路径 → 绘制"的完整流程。</p>
+<h2 id="_3">二、实验环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04（VMware 虚拟机）</td>
+</tr>
+<tr>
+<td>ROS 发行版</td>
+<td>ROS Noetic</td>
+</tr>
+<tr>
+<td>仿真器</td>
+<td>turtlesim</td>
+</tr>
+<tr>
+<td>编程语言</td>
+<td>Python 3（rospy）</td>
+</tr>
+<tr>
+<td>功能包</td>
+<td>turtle_text</td>
+</tr>
+</tbody>
+</table>
+<p>功能包目录结构如下：</p>
+<div class="highlight"><pre><span></span><code>turtle_text/
+├── CMakeLists.txt         # 编译配置，安装 Python 脚本与 launch 文件
+├── package.xml            # 包清单，声明 rospy、geometry_msgs、turtlesim、std_srvs 依赖
+├── launch/
+│   └── draw_text.launch   # roslaunch 入口：一键启动 turtlesim 与绘制节点
+└── scripts/
+   └── draw_text.py       # 主程序：字形表、排版算法与闭环控制
+</code></pre></div>
+<h2 id="_4">三、实现原理</h2>
+<h3 id="31">3.1 使用的接口</h3>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>类型</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/turtle1/pose</code></td>
+<td>话题（订阅）</td>
+<td>获取小海龟的实时位置与朝向</td>
+</tr>
+<tr>
+<td><code>/turtle1/cmd_vel</code></td>
+<td>话题（发布）</td>
+<td>发布速度指令，控制前进与转向</td>
+</tr>
+<tr>
+<td><code>/turtle1/set_pen</code></td>
+<td>服务</td>
+<td>抬起／落下画笔，设置颜色与线宽</td>
+</tr>
+<tr>
+<td><code>/clear</code></td>
+<td>服务</td>
+<td>绘制前清空画布</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 字形表：把字母拆成笔画</h3>
+<p>每个字母由若干笔画组成，每一笔是一串按顺序经过的点。所有字母共用同一把尺子：基线在 y = 2，大写字母高 7 个单位，小写的 x 高（a、c、e、o 的高度）约 4.9 个单位，上升部（b、h、l）到 y = 9，下降部（g、p、q、y）落到 y = 0.2。</p>
+<div class="highlight"><pre><span></span><code><span class="n">RAW_LOWER_LETTERS</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s2">"h"</span><span class="p">:</span> <span class="p">[[(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)],</span>
+         <span class="p">[(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">5.9</span><span class="p">),</span> <span class="p">(</span><span class="mf">3.9</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.2</span><span class="p">,</span> <span class="mf">6.9</span><span class="p">),</span> <span class="p">(</span><span class="mf">6.2</span><span class="p">,</span> <span class="mf">6.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)]],</span>
+   <span class="s2">"t"</span><span class="p">:</span> <span class="p">[[(</span><span class="mf">4.4</span><span class="p">,</span> <span class="mf">8.2</span><span class="p">),</span> <span class="p">(</span><span class="mf">4.4</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">5.1</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">),</span> <span class="p">(</span><span class="mf">6.2</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">)],</span>
+         <span class="p">[(</span><span class="mf">2.6</span><span class="p">,</span> <span class="mf">6.3</span><span class="p">),</span> <span class="p">(</span><span class="mf">6.2</span><span class="p">,</span> <span class="mf">6.3</span><span class="p">)]],</span>
+   <span class="o">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>大写字形另有一张表。绘制时程序按目标字高<strong>统一缩放</strong>，并且<strong>不用每个字母自己的外框</strong>去归一化，否则小写字母的基线就会参差不齐。</p>
+<h3 id="33">3.3 排版：字号自适应与自动折行</h3>
+<p>画布固定为 11 x 11 且不能缩放，所以字号必须由内容长度决定。程序先按一行排，分别算出宽度允许的最大字高和高度允许的最大字高，取较小者：</p>
+<div class="highlight"><pre><span></span><code><span class="n">scale_w</span> <span class="o">=</span> <span class="n">avail_w</span> <span class="o">/</span> <span class="n">max_units</span>
+<span class="n">scale_h</span> <span class="o">=</span> <span class="n">avail_h</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">DESCENDER_RATIO</span> <span class="o">+</span> <span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">LINE_RATIO</span><span class="p">))</span>
+<span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">scale_w</span><span class="p">,</span> <span class="n">scale_h</span><span class="p">,</span> <span class="n">MAX_SCALE</span><span class="p">)</span>
+</code></pre></div>
+<p>如果一行算出来的字高小于 1.6（字太小看不清），就改为按单词折成 2 到 3 行，取字高最大的那种方案。最后每一行水平居中、整块内容垂直居中，字距与行距都按字高的比例计算。</p>
+<h3 id="34">3.4 闭环控制：让海龟走直线</h3>
+<p>程序以约 10 毫秒为周期读取 <code>/turtle1/pose</code>，算出当前位置到目标点的方向误差。方向偏差较大时先原地转向，对准之后才前进，距离越近速度越低：</p>
+<div class="highlight"><pre><span></span><code><span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
+<span class="n">cmd</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">w_max</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">w_max</span><span class="p">,</span> <span class="mf">3.5</span> <span class="o">*</span> <span class="n">err</span><span class="p">))</span>
+<span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.15</span><span class="p">:</span>  <span class="c1"># 对准方向后才前进</span>
+    <span class="n">cmd</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">v_max</span><span class="p">,</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">dist</span><span class="p">))</span>
+</code></pre></div>
+<p><code>if abs(err) &lt; 0.15</code> 这一句很关键：它是"先对准再直走"的门坎。早期版本让海龟边走边拐，速度快但每一笔的起笔都会带出弧线，画出的小写字母会变形。收紧到约 8.6 度之后线条才够直。</p>
+<h3 id="35">3.5 抬笔与落笔</h3>
+<p>turtlesim 没有真正的抬笔动作，靠 <code>/turtle1/set_pen</code> 服务的 <code>off</code> 参数实现：笔画之间把 <code>off</code> 设为 1，移动到下一笔起点时不留痕迹；开始画之前再设为 0。另外线宽也随字号变化，大字用粗线、小字用细线：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">set_pen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">down</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.0</span><span class="p">):</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">PEN_RATIO</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">set_pen_srv</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">down</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="_5">四、编译</h2>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;仓库路径&gt;/src/chap1/turtle_text<span class="w"> </span>~/catkin_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>编译成功后可用 <code>rospack find turtle_text</code> 确认包已被识别。</p>
+<h2 id="_6">五、运行</h2>
+<h3 id="51">5.1 一键启动并指定文字</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>turtle_text<span class="w"> </span>draw_text.launch<span class="w"> </span>text:<span class="o">=</span><span class="s2">"Hello World"</span>
+</code></pre></div>
+<p><code>roslaunch</code> 会自动完成三件事：启动 ROS Master（无需单独运行 <code>roscore</code>）、拉起 turtlesim 仿真器、启动绘制节点，并把 <code>text</code> 参数传给节点。绘制完成后节点自动退出，小海龟窗口保留，便于查看结果；在终端按 <code>Ctrl+C</code> 结束本次 launch。</p>
+<h3 id="52">5.2 交互模式：手动输入任意文字</h3>
+<p>需要三个终端，都先 <code>source devel/setup.bash</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1</span>
+roscore
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 2</span>
+rosrun<span class="w"> </span>turtlesim<span class="w"> </span>turtlesim_node
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 3</span>
+rosrun<span class="w"> </span>turtle_text<span class="w"> </span>draw_text.py
+</code></pre></div>
+<p>终端 3 出现 <code>文字&gt;</code> 提示符后输入内容并回车，例如 <code>hello</code>、<code>hutb</code>、<code>Hello World</code>，输入 <code>q</code> 退出。同一个单词可以反复输入，程序每次都会先清空画布再重新绘制。</p>
+<h2 id="_7">六、实验结果</h2>
+<p>以 <code>Hello World</code> 为例，节点运行后终端依次输出：</p>
+<div class="highlight"><pre><span></span><code>[INFO] [1789892134.210470]: 开始绘制「Hello World」：字高 2.16，2 行
+[INFO] [1789892134.224270309]: Clearing turtlesim.
+[INFO] [1789892253.431454]: 绘制完成，用时 119.2 秒
+</code></pre></div>
+<p>画布上出现上下两排文字：程序判断一行放不下，自动折成两行，字号由宽度决定。以下是实际绘制效果：</p>
+<p><img alt="小海龟绘制 Hello World 运行效果" src="../../../img/chapter/turtle_text_demo.png"/></p>
+<p>由于 turtlesim 的采样周期与转向误差，个别笔画的起止点可能有零点几个单位的偏差，属于正常现象。</p>
+<h2 id="_8">七、参数调整</h2>
+<p>在 <code>scripts/draw_text.py</code> 顶部集中定义了几个可调参数：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>作用与效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SPEED</code></td>
+<td>1.0</td>
+<td>速度系数。调到 1.3 左右可明显缩短绘制时间，代价是转角变圆</td>
+</tr>
+<tr>
+<td><code>PEN_RATIO</code></td>
+<td>1.8</td>
+<td>线宽 = 字高 × 该系数（像素），最小 2 像素</td>
+</tr>
+<tr>
+<td><code>MARGIN</code></td>
+<td>1.0</td>
+<td>画布四周留白</td>
+</tr>
+<tr>
+<td><code>GAP_RATIO</code></td>
+<td>0.35</td>
+<td>字距，单位是字高</td>
+</tr>
+<tr>
+<td><code>LINE_RATIO</code></td>
+<td>0.7</td>
+<td>行距，单位是字高</td>
+</tr>
+<tr>
+<td><code>MAX_LINES</code></td>
+<td>3</td>
+<td>最多折成几行</td>
+</tr>
+<tr>
+<td><code>MAX_SCALE</code></td>
+<td>3.0</td>
+<td>字高上限，避免两个字母就占满整屏</td>
+</tr>
+</tbody>
+</table>
+<p>不同输入在默认参数下的实测结果：</p>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>字高</th>
+<th>行数</th>
+<th>用时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>g</code></td>
+<td>3.00</td>
+<td>1</td>
+<td>约 18 秒</td>
+</tr>
+<tr>
+<td><code>hello</code></td>
+<td>2.43</td>
+<td>1</td>
+<td>约 57 秒</td>
+</tr>
+<tr>
+<td><code>Hello World</code></td>
+<td>2.16</td>
+<td>2</td>
+<td>约 119 秒</td>
+</tr>
+</tbody>
+</table>
+<p>可以看到，字号越大、笔画越多，用时越长。想演示快一点，把 <code>SPEED</code> 调到 1.3 再跑一次，对比用时的变化，就能直观体会到速度与精度的取舍。</p>
+<h2 id="_9">八、常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Unable to register with master node ... master may not be running</code></td>
+<td>用 <code>rosrun</code> 方式时需要先运行 <code>roscore</code>；用 <code>roslaunch</code> 则不需要</td>
+</tr>
+<tr>
+<td><code>Package 'turtle_text' not found</code> 或 <code>rosrun</code> 找不到节点</td>
+<td>没有加载工作空间环境，执行 <code>source ~/catkin_ws/devel/setup.bash</code></td>
+</tr>
+<tr>
+<td>修改了 <code>draw_text.py</code> 但效果没变</td>
+<td>重新运行节点即可（devel 空间里脚本直接指向源文件，不用重新 <code>catkin_make</code>），但要先停掉正在运行的旧节点</td>
+</tr>
+<tr>
+<td>输入的字符没有被画出来</td>
+<td>字形表目前只定义了 A-Z 与 a-z，数字和符号会被自动跳过并提示</td>
+</tr>
+<tr>
+<td>线条弯曲、字母变形</td>
+<td>检查 <code>goto</code> 中的 <code>if abs(err) &lt; 0.15</code> 是否被改大；该值越大线条越不直</td>
+</tr>
+<tr>
+<td>绘制太慢</td>
+<td>适当调大 <code>SPEED</code>，或在 <code>draw_text.py</code> 中把 <code>time.sleep</code> 的周期调小</td>
+</tr>
+<tr>
+<td>画完之后小海龟窗口自动关闭</td>
+<td>launch 文件中绘制节点带了 <code>required="true"</code>，删掉该属性即可保留窗口</td>
+</tr>
+<tr>
+<td>切换输入内容后画布没有清空</td>
+<td><code>/clear</code> 服务调用失败，检查 turtlesim 是否正常运行</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_10">九、总结</h2>
+<p>本实验把"绘制固定图形"推进到"绘制任意文字"，核心是三件事：<strong>用统一的坐标尺度描述字形</strong>、<strong>按画布约束自动排版</strong>、<strong>用闭环控制把每一段路径走直</strong>。实验中用到的 <code>/turtle1/pose</code> 订阅、<code>/turtle1/cmd_vel</code> 发布、<code>/turtle1/set_pen</code> 与 <code>/clear</code> 服务调用，正是 ROS 中最基础的两类通信方式：需要持续控制量时用话题，需要一次性明确结果的操作（换笔、清屏）用服务。</p>
+<p>在此基础上还可以继续扩展：为数字和符号补充字形，实现画坐标轴、画公式；或者把笔画之间的"抬笔走过去"换成 <code>/turtle1/teleport_absolute</code> 瞬移，对比两者在速度与真实感上的差别。</p></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
