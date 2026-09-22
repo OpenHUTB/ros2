@@ -14,13 +14,6 @@ nav:
   - 首页: index.md
   - 环境安装: setup_guide.md
   - 作业一 · 键盘控制: 01_control.md
-  - 作业二 · 感知与轨迹: 02_perception.md
-  - 作业三 · 建图与导航: 03_navigation.md
-  - 作业四 · 端到端CNN: 04_end_to_end.md
-  - 作业五 · 整合与评价: 05_reports.md
-  - 神经网络库: nn_models.md
-  - 提交流程/PR次数: submission_guide.md
-  - 交付说明: delivery_notes.md
 
 markdown_extensions:
   - admonition

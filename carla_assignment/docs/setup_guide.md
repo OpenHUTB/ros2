@@ -45,8 +45,7 @@ bash scripts/setup_env.sh
 > pip install -r requirements-core.txt          # numpy + opencv + pygame，无需 big TF 包
 > pip install <CARLA>/PythonAPI/carla/dist/carla-*.whl
 > ```
-> 作业二/三/四的神经网络用 `nn_models.py` 纯 numpy 实现，**不需要 tensorflow**；
-> 仅当你确实要用 tf 后端训练端到端模型时才按 `requirements.txt`（含 tensorflow-cpu）。
+> 作业一仅需 numpy / opencv / pygame，**不需要 tensorflow**。
 
 ## 4. 手动安装（等价命令）
 
@@ -63,12 +62,6 @@ source .venv/bin/activate
 python -c "import carla; print(carla.__file__)"
 ```
 
-装好后可一键自检（依赖 / 神经网络离线训练 / 作业二三训练 / CARLA 连接）：
-
-```bash
-python scripts/self_check.py     # 输出各步骤 PASS/FAIL 与总结
-```
-
 ## 5.1 Windows 原生安装
 
 本包支持 **Windows 10/11 原生运行**（无需 WSL / Docker）：
@@ -78,12 +71,12 @@ python scripts/self_check.py     # 输出各步骤 PASS/FAIL 与总结
 cd carla_assignment
 python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-core.txt
 :: carla 模块从 CARLA 发行包 PythonAPI 安装
 pip install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-*.whl
 ```
 
-运行（`main.bat`）：`main.bat control` / `main.bat perception --mode train` 等。
+运行（`main.bat`）：`main.bat control`。
 
 > 注意：CARLA 服务端对 GPU 有要求；若虚拟机 / 无独显跑起来很卡，请改用同仓库
 > [MuJoCo 方案](../mujoco_assignment)。
