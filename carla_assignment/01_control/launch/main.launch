@@ -1,0 +1,17 @@
+<launch>
+  <!-- 任务1 · CARLA 键控无人车（ROS1 Noetic 语法）
+       用法： source /opt/ros/noetic/setup.bash
+              roslaunch carla_assignment 01_control.launch
+       需先启动 CARLA 服务端：./CarlaUE4.sh -carla-rpc-port=2000 -->
+
+  <arg name="host" default="127.0.0.1"/>
+  <arg name="port" default="2000"/>
+  <arg name="town" default="Town05"/>
+  <arg name="sim_time" default="0.0"/>
+
+  <node name="carla_control_node" pkg="carla_assignment" type="python3"
+        output="screen"
+        args="$(find carla_assignment)/01_control/main.py
+              --host $(arg host) --port $(arg port) --town $(arg town)
+              --sim_time $(arg sim_time)" />
+</launch>
