@@ -19,17 +19,31 @@
 
 ## 运行
 
+### 方式 A：roslaunch（会弹一个 xterm 窗口，作业要求的 launch 启动）
+
 ```bash
+# 一次性安装 xterm（键盘节点需要独立终端窗口来读键）
+sudo apt install -y xterm
+
 # 终端 1：先启动桥接（连仿真、执行指令、自动起飞悬停）
 source ~/bridge_ws/devel/setup.bash
 roslaunch carlair_ros_bridge main.launch
 
-# 终端 2：键盘控制
+# 终端 2：键盘控制（会弹出一个 xterm 小窗口）
 source ~/bridge_ws/devel/setup.bash
 roslaunch uav_keyboard_control main.launch
 ```
 
-把焦点放在**键盘控制这个终端**上，按 `W/A/S/D/R/F/Q/E` 即可操控无人机；松开即悬停，`ESC` 退出。
+把焦点放在**弹出来的 xterm 窗口**上，按 `W/A/S/D/R/F/Q/E` 操控；松开即悬停，`ESC` 退出。
+
+### 方式 B：rosrun 前台运行（不装 xterm 也能用）
+
+```bash
+source ~/bridge_ws/devel/setup.bash
+rosrun uav_keyboard_control main.py
+```
+
+直接在**当前终端**里按 WASD 即可（`rosrun` 会把终端 stdin 接给节点）。
 
 ## 参数（config/keyboard.yaml，可用 launch 参数覆盖）
 
@@ -48,6 +62,10 @@ roslaunch uav_keyboard_control main.launch horiz_speed:=3.0 vert_speed:=1.5 yaw_
 
 - 本模块**只发指令**，不直连仿真器；仿真/坐标换算/安全限幅都在桥接层。
   这样键盘、规划器、神经网络控制器可以共用同一条 `/uav/cmd_vel` 通道，互不耦合。
+- **roslaunch 的 stdin 坑**：`roslaunch` 启动的节点拿不到终端 stdin（节点被放进新的会话，
+  连 `/dev/tty` 都打不开），所以键盘输入读不到——这也是 `teleop_twist_keyboard` 通常用
+  `rosrun` 跑的原因。本模块的 launch 文件用 `launch-prefix="xterm -e"` 给键盘节点单独弹一个
+  xterm 终端来读键；节点内部同时优先读 `/dev/tty`、失败回退 `sys.stdin`，两种跑法都兼容。
 - CarlaAir 视口**内置** WASD 键盘操控（任务①的"仿真"部分）；本模块提供的是
   **ROS 侧**的键盘控制（任务①的"键盘控制"部分），两者可对比验证。
 

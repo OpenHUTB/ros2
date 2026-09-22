@@ -3,12 +3,18 @@
        uav_keyboard_control 统一启动入口（任务①）
          roslaunch uav_keyboard_control main.launch
          前置条件：先另开终端启动 carlair_ros_bridge（负责连仿真、执行指令）
+
+       【为什么用 xterm】roslaunch 启动的节点拿不到终端 stdin（ROS 已知限制，
+         键盘输入读不到）。用 launch-prefix="xterm -e" 给键盘节点单独弹一个
+         xterm 终端窗口，在该窗口里按 WASD。需要先 sudo apt install -y xterm。
+         不想装 xterm 就直接用 rosrun uav_keyboard_control main.py 前台运行。
        ============================================================ -->
 
   <arg name="cmd_vel_topic" default="/uav/cmd_vel" doc="速度指令话题，与桥接包保持一致"/>
   <arg name="horiz_speed"   default="2.0"         doc="水平速度 m/s"/>
   <arg name="vert_speed"    default="1.0"         doc="垂直速度 m/s"/>
   <arg name="yaw_rate"      default="1.0"         doc="偏航角速度 rad/s"/>
+  <arg name="use_xterm"     default="true"        doc="是否用 xterm 弹窗承载键盘输入（需安装 xterm）"/>
 
   <rosparam command="load" file="$(find uav_keyboard_control)/config/keyboard.yaml"/>
   <param name="topic/cmd_vel"          value="$(arg cmd_vel_topic)"/>
@@ -16,7 +22,10 @@
   <param name="control/vert_speed"     value="$(arg vert_speed)"/>
   <param name="control/yaw_rate"       value="$(arg yaw_rate)"/>
 
-  <!-- 键盘控制节点（入口 main.py；终端 raw 模式读键） -->
-  <node pkg="uav_keyboard_control" type="main.py" name="uav_keyboard_control"
-        output="screen" required="false"/>
+  <!-- 键盘控制节点（入口 main.py）。xterm 模式会弹出一个新终端窗口，
+       在该窗口里按 WASD；ESC 退出。 -->
+  <node if="$(arg use_xterm)" pkg="uav_keyboard_control" type="main.py"
+        name="uav_keyboard_control" output="screen" launch-prefix="xterm -e"/>
+  <node unless="$(arg use_xterm)" pkg="uav_keyboard_control" type="main.py"
+        name="uav_keyboard_control" output="screen"/>
 </launch>

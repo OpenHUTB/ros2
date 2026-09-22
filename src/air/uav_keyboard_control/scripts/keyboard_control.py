@@ -69,14 +69,19 @@ def key_to_cmd(key, horiz_speed=2.0, vert_speed=1.0, yaw_rate=1.0):
 class RawKeyReader(object):
     """Linux 终端原始模式按键读取（不回显、不需回车）.
 
-    用 ``with RawKeyReader() as reader:`` 保证退出时恢复终端设置，
-    即使 Ctrl-C 抛 KeyboardInterrupt 也会被 __exit__ 恢复。
+    roslaunch 启动的节点 stdin 指向 /dev/null（ROS 的已知限制，这也是
+    teleop_twist_keyboard 通常用 rosrun 跑的原因）。为满足"支持 launch 启动"，
+    这里优先直接打开控制终端 ``/dev/tty`` 读键；没有控制终端时回退到 stdin。
+    用 ``with RawKeyReader() as reader:`` 保证退出/异常时恢复终端设置。
     """
 
-    def __init__(self, stream=None):
-        self.stream = stream if stream is not None else sys.stdin
-        self._fd = self.stream.fileno()
-        self._old = None
+    def __init__(self):
+        self._close_fd = False
+        try:
+            self._fd = os.open("/dev/tty", os.O_RDONLY)
+            self._close_fd = True
+        except OSError:
+            self._fd = sys.stdin.fileno()
 
     def __enter__(self):
         import termios
@@ -88,10 +93,12 @@ class RawKeyReader(object):
     def __exit__(self, *exc):
         import termios
         termios.tcsetattr(self._fd, termios.TCSADRAIN, self._old)
+        if self._close_fd:
+            os.close(self._fd)
 
     def get_key(self, timeout=0.05):
         """非阻塞读一个字符；超时或无输入返回 None."""
-        r, _, _ = select.select([self.stream], [], [], timeout)
+        r, _, _ = select.select([self._fd], [], [], timeout)
         if not r:
             return None
         ch = os.read(self._fd, 1)
