@@ -98,6 +98,80 @@ def yaw_from_quat_xyzw(q) -> float:
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
+# --------------------------------------------------------------------- 图像解码
+def _to_uint8_array(data) -> np.ndarray:
+    """把 AirSim 返回的图像字节（bytes / list[int]）统一成 uint8 一维数组."""
+    if isinstance(data, (bytes, bytearray, memoryview)):
+        return np.frombuffer(bytes(data), dtype=np.uint8)
+    return np.asarray(data, dtype=np.uint8).ravel()
+
+
+def decode_rgb(resp) -> np.ndarray:
+    """ImageResponse(Scene / Segmentation) -> (H, W, 3) uint8，通道顺序 BGR.
+
+    AirSim 的 `image_data_uint8` 是 w*h*4 的 BGRA 平面数组（compress=False 时），
+    丢掉 alpha 后前三个通道正好是 B、G、R，可直接填 ROS 的 `bgr8` 编码，
+    因此本函数不依赖 OpenCV。若返回 3 通道则按 BGR 直接使用。
+    """
+    w, h = int(resp.width), int(resp.height)
+    if w <= 0 or h <= 0:
+        raise ValueError("图像尺寸非法: %sx%s" % (resp.width, resp.height))
+    buf = _to_uint8_array(resp.image_data_uint8)
+    pix = buf.size // (w * h)
+    if pix >= 4:
+        img = buf[:w * h * 4].reshape(h, w, 4)[:, :, :3]
+    elif pix == 3:
+        img = buf[:w * h * 3].reshape(h, w, 3)
+    else:
+        raise ValueError("无法解析的图像数据: %d 字节 / %dx%d" % (buf.size, w, h))
+    return np.ascontiguousarray(img)
+
+
+def decode_depth(resp) -> np.ndarray:
+    """ImageResponse(DepthPlanar) -> (H, W) float32，单位米（平面深度）.
+
+    require `pixels_as_float=True`，此时数据在 `image_data_float` 中。
+    """
+    w, h = int(resp.width), int(resp.height)
+    arr = np.asarray(resp.image_data_float, dtype=np.float32).ravel()
+    if w <= 0 or h <= 0 or arr.size != w * h:
+        raise ValueError("深度图尺寸不匹配: %d 个浮点数 / %dx%d" % (arr.size, w, h))
+    return arr.reshape(h, w)
+
+
+# --------------------------------------------------------------------- 点云解码
+def lidar_points_to_enu(cloud, pose=None, frame: str = "vehicle_inertial") -> np.ndarray:
+    """AirSim LiDAR 点云 -> ENU（N x 3）.
+
+    AirSim 的 `DataFrame` 设置决定点云所在坐标系（见 AirSim 官方 lidar 文档）：
+      * ``vehicle_inertial``（默认）：点已在**载具惯性系**（NED 世界系，单位米），
+        与 `/uav/odom` 同源，只需做 NED -> ENU 的轴变换；
+      * ``sensor_local``：点在**雷达局部系**，需先用雷达位姿
+        ``p_world = R(q_pose) · p_sensor + t_pose`` 变换到惯性系，再做轴变换。
+    雷达位姿 `LidarData.pose` 的语义为"雷达在载具惯性系中的位姿"（NED）。
+    """
+    pts = np.asarray(cloud, dtype=np.float64).ravel()
+    if pts.size == 0:
+        return np.zeros((0, 3), dtype=np.float64)
+    if pts.size % 3 != 0:
+        raise ValueError("点云长度 %d 不是 3 的整数倍" % pts.size)
+    pts = pts.reshape(-1, 3)
+
+    if frame == "sensor_local":
+        if pose is None:
+            raise ValueError("frame=sensor_local 时必须提供雷达位姿 pose")
+        q = [pose.orientation.w_val, pose.orientation.x_val,
+             pose.orientation.y_val, pose.orientation.z_val]
+        t = np.array([pose.position.x_val, pose.position.y_val, pose.position.z_val],
+                     dtype=np.float64)
+        # 传感器局部系 -> 载具惯性系（NED）
+        pts = pts.dot(quat_wxyz_to_matrix(q).T) + t
+    elif frame != "vehicle_inertial":
+        raise ValueError("未知的点云坐标系: %r" % (frame,))
+
+    return np.ascontiguousarray(pts.dot(C_NED2ENU.T))
+
+
 # --------------------------------------------------------------------- 客户端封装
 class SimClient(object):
     """CarlaAir / AirSim 客户端的薄封装（只依赖 airsim 包，缺失时给出清晰报错）."""
@@ -197,23 +271,43 @@ class SimClient(object):
         self.client.armDisarm(True, vehicle_name=self.vehicle_name)
 
     # ---------------------------------------------------------------- 传感器
-    def get_images(self, camera: str = "front_rgb", image_type: int = 0):
-        """取一帧图像；image_type: 0=RGB(Scene) 1=DepthPlanar 5=Segmentation."""
-        req = [self._airsim.ImageRequest(camera, image_type, False, False)]
+    def get_images(self, camera: str = "front_rgb", image_type: int = 0,
+                   pixels_as_float: bool = False):
+        """取一帧图像；image_type: 0=RGB(Scene) 1=DepthPlanar 3=DepthVis 5=Segmentation."""
+        req = [self._airsim.ImageRequest(camera, image_type, pixels_as_float, False)]
         resp = self.client.simGetImages(req, vehicle_name=self.vehicle_name)
         if not resp:
             return None
         return resp[0]
 
-    def get_lidar_points_enu(self, lidar_name: str = "lidar1") -> Optional[np.ndarray]:
-        """取一帧激光雷达点云并换算到 ENU（N x 3），无数据时返回 None."""
-        data = self.client.getLidarData(lidar_name=lidar_name,
+    def get_images_bundle(self, specs):
+        """一次 RPC 取多路图像。
+
+        specs: [(camera_name, image_type, pixels_as_float), ...]
+        返回 [(camera_name, ImageResponse), ...]，顺序与入参一致。
+        多路合并成一次调用可以避免每路一次网络往返，是保证 20 Hz 的关键。
+        """
+        req = [self._airsim.ImageRequest(cam, itype, as_float, False)
+               for cam, itype, as_float in specs]
+        resps = self.client.simGetImages(req, vehicle_name=self.vehicle_name)
+        return list(zip([s[0] for s in specs], resps))
+
+    def get_lidar_data(self, lidar_name: str = "lidar1"):
+        """取一帧原始雷达数据（含 point_cloud 与雷达位姿）."""
+        return self.client.getLidarData(lidar_name=lidar_name,
                                         vehicle_name=self.vehicle_name)
-        pts = np.asarray(data.point_cloud, dtype=np.float64)
-        if pts.size == 0:
-            return None
-        pts = pts.reshape(-1, 3)
-        return np.array([ned_to_enu(p) for p in pts])
+
+    def get_lidar_points_enu(self, lidar_name: str = "lidar1",
+                             frame: str = "vehicle_inertial") -> Optional[np.ndarray]:
+        """取一帧激光雷达点云并换算到 ENU（N x 3），无数据时返回 None.
+
+        frame 需与 settings.json 中该雷达的 `DataFrame` 保持一致：
+        `vehicle_inertial`（默认，世界系）或 `sensor_local`（雷达局部系）。
+        """
+        data = self.get_lidar_data(lidar_name)
+        pts = lidar_points_to_enu(data.point_cloud, pose=getattr(data, "pose", None),
+                                  frame=frame)
+        return None if pts.shape[0] == 0 else pts
 
 
 def self_check(host: str, port: int, vehicle_name: str = "") -> List[Tuple[str, bool, str]]:
@@ -254,8 +348,15 @@ def self_check(host: str, port: int, vehicle_name: str = "") -> List[Tuple[str, 
 
     try:
         pts = cli.get_lidar_points_enu("lidar1")
-        results.append(("激光雷达点云 lidar1", pts is not None,
-                        "点数 %d" % (0 if pts is None else pts.shape[0])))
+        if pts is None or pts.shape[0] == 0:
+            results.append(("激光雷达点云 lidar1", False, "无数据"))
+        else:
+            lo, hi = pts.min(axis=0), pts.max(axis=0)
+            # 打印 ENU 包围盒：既能确认点云有效，也能核对 DataFrame 语义
+            # （vehicle_inertial 时点云应与 /uav/odom 落在同一 world 系内）
+            results.append(("激光雷达点云 lidar1", True,
+                            "点数 %d, x∈[%.1f, %.1f] y∈[%.1f, %.1f] z∈[%.1f, %.1f]"
+                            % (pts.shape[0], lo[0], hi[0], lo[1], hi[1], lo[2], hi[2])))
     except Exception as exc:  # noqa: BLE001
         results.append(("激光雷达点云 lidar1", False, str(exc)))
     return results

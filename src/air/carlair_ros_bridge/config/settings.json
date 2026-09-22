@@ -46,7 +46,7 @@
           "HorizontalFOVEnd": 180,
           "X": 0, "Y": 0, "Z": -0.2,
           "DrawDebugPoints": false,
-          "DataFrame": "SensorLocalFrame"
+          "DataFrame": "VehicleInertialFrame"
         },
         "imu1": {
           "SensorType": 2,

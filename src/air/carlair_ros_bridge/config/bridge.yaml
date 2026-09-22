@@ -11,9 +11,26 @@ sim:
 
 rate:
   odom_hz: 20.0             # 位姿发布频率
-  image_hz: 20.0            # 相机发布频率
-  lidar_hz: 10.0            # 点云发布频率
+  image_hz: 20.0            # 相机发布频率（三路图像合并为一次 RPC）
+  lidar_hz: 10.0            # 点云发布频率（与 settings.json 的 RotationsPerSecond 一致）
   cmd_timeout: 0.5          # 超过该时间没有新指令则悬停（安全保护）
+
+sensor:
+  lidar_name: "lidar1"                        # settings.json 中的雷达名
+  lidar_frame: "vehicle_inertial"             # 与 settings.json 的 DataFrame 保持一致
+
+lidar:
+  min_range: 0.3            # 环形滤波最小距离 m（0 = 不启用）
+  max_range: 60.0           # 环形滤波最大距离 m（0 = 不启用）
+  voxel_leaf: 0.0           # 体素降采样边长 m（0 = 不降采样）
+
+camera:
+  rgb_name: "front_rgb"     # settings.json 中的相机名
+  depth_name: "front_depth"
+  seg_name: "front_seg"
+  publish_rgb: true
+  publish_depth: true
+  publish_seg: false        # 分割图默认关闭，需要做语义感知时再打开
 
 frame:
   world: "world"            # 世界坐标系（ENU）
@@ -25,6 +42,7 @@ topic:
   goal: "/uav/goal"
   image: "/camera/image_raw"
   depth: "/camera/depth"
+  seg: "/camera/seg"
   lidar: "/lidar/points"
   status: "/uav/status"
 

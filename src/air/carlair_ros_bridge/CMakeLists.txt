@@ -16,6 +16,8 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/odom_pub.py
   scripts/cmd_vel_sub.py
+  scripts/image_pub.py
+  scripts/lidar_pub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
