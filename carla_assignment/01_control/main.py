@@ -99,9 +99,19 @@ def keyboard_control(world, vehicle, sensor_cb, sim_time=0.0, dt=DT, follow=Fals
                 "right_fine": bool(ks[pygame.K_e]),
             })
 
-            # 按键 -> 控制量
-            throttle = 0.6 if KEYS["fwd"] else 0.0
-            brake = 0.8 if KEYS["rev"] else 0.0
+            # 按键 -> 控制量（真实驾驶逻辑：S 在有速度时刹车、低速/静止时倒车）
+            speed = get_speed(vehicle)
+            throttle = 0.0
+            brake = 0.0
+            reverse = False
+            if KEYS["fwd"]:
+                throttle = 0.6
+            elif KEYS["rev"]:
+                if speed < 0.5:
+                    reverse = True    # 几乎停住 → 挂倒挡
+                    throttle = 0.5
+                else:
+                    brake = 0.8       # 有速度 → 刹车减速
             steer = 0.0
             if KEYS["left"]:
                 steer -= 0.6
@@ -112,7 +122,7 @@ def keyboard_control(world, vehicle, sensor_cb, sim_time=0.0, dt=DT, follow=Fals
             if KEYS["right_fine"]:
                 steer += 0.15
 
-            apply_control(vehicle, throttle=throttle, steer=steer, brake=brake)
+            apply_control(vehicle, throttle=throttle, steer=steer, brake=brake, reverse=reverse)
             world.tick()  # 同步步进一帧
 
             # 可选：让 CARLA 大窗口镜头跟随自车
@@ -132,7 +142,7 @@ def keyboard_control(world, vehicle, sensor_cb, sim_time=0.0, dt=DT, follow=Fals
             font = pygame.font.Font(None, 28)
             screen.blit(font.render(f"x={x:.1f} y={y:.1f}  v={speed:.1f} m/s",
                                     True, (0, 255, 0)), (10, 10))
-            screen.blit(font.render(f"ctrl th={throttle:.1f} st={steer:.1f} br={brake:.1f}",
+            screen.blit(font.render(f"ctrl th={throttle:.1f} st={steer:.1f} br={brake:.1f} rev={int(reverse)}",
                                     True, (0, 255, 0)), (10, 40))
             # 按键诊断：实时显示各键是否被读到（用于排查“键盘没反应”）
             kd = " ".join(f"{k[0]}{int(v)}" for k, v in KEYS.items())
