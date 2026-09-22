@@ -1,0 +1,22 @@
+<launch>
+  <!-- ============================================================
+       uav_keyboard_control 统一启动入口（任务①）
+         roslaunch uav_keyboard_control main.launch
+         前置条件：先另开终端启动 carlair_ros_bridge（负责连仿真、执行指令）
+       ============================================================ -->
+
+  <arg name="cmd_vel_topic" default="/uav/cmd_vel" doc="速度指令话题，与桥接包保持一致"/>
+  <arg name="horiz_speed"   default="2.0"         doc="水平速度 m/s"/>
+  <arg name="vert_speed"    default="1.0"         doc="垂直速度 m/s"/>
+  <arg name="yaw_rate"      default="1.0"         doc="偏航角速度 rad/s"/>
+
+  <rosparam command="load" file="$(find uav_keyboard_control)/config/keyboard.yaml"/>
+  <param name="topic/cmd_vel"          value="$(arg cmd_vel_topic)"/>
+  <param name="control/horiz_speed"    value="$(arg horiz_speed)"/>
+  <param name="control/vert_speed"     value="$(arg vert_speed)"/>
+  <param name="control/yaw_rate"       value="$(arg yaw_rate)"/>
+
+  <!-- 键盘控制节点（入口 main.py；终端 raw 模式读键） -->
+  <node pkg="uav_keyboard_control" type="main.py" name="uav_keyboard_control"
+        output="screen" required="false"/>
+</launch>
