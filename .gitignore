@@ -10,10 +10,10 @@ __pycache__/
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
 
-
-
 # catkin 编译产物
 build/
 devel/
 install/
 src/CMakeLists.txt
+# 行为克隆数据集（图像与标签，体积大不入库）
+data/

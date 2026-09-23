@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="text" default="" />
+
+  <node
+    pkg="turtlesim"
+    type="turtlesim_node"
+    name="turtlesim"
+    output="screen"
+  />
+
+  <node
+    pkg="turtle_text"
+    type="draw_text.py"
+    name="draw_text_node"
+    output="screen"
+  >
+    <param name="text" value="$(arg text)" />
+  </node>
+
+</launch>
