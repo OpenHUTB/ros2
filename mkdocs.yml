@@ -7,7 +7,7 @@ site_name: 模拟器的 ROS 文档
 
 
 # 设置编译页面的链接的前缀
-repo_url: https://github.com/OpenHUTB/template
+repo_url: https://github.com/OpenHUTB/ros2
 
 # 页面右上角添加直接编辑页面的按钮
 edit_uri: edit/master/docs/
@@ -26,7 +26,7 @@ extra_css: [extra.css]
 extra_javascript:
   # - extra.js
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
-  - https://cdn.rawgit.com/knsv/mermaid/6.0.0/dist/mermaid.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
   - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
@@ -42,10 +42,13 @@ plugins:
   - bibtex:
       bib_file: refs.bib
       csl_file: nature.csl
+      # 关闭裸 @key 行内引用：避免代码块中的 @staticmethod 被误判为文献引用
+      enable_inline_citations: false
   - mkdocs-video:
       is_video: True
       video_autoplay: True
       video_loop: True
+  - mermaid2
 
 extra:
   generator: false
@@ -61,7 +64,7 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
 - ROS 教程:
-    - 1. 认识 ROS：小海龟画正方形: 'chapter/turtle_square.md'
+    - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
@@ -70,6 +73,10 @@ nav:
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
+- 人形机器人:
+    - 人形机器人基础: './humanoid/humanoid_basics.md'
+- 肌肉骨骼人:
+    - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
@@ -78,16 +85,21 @@ nav:
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
-    - 扭转控制: './ground/twist_to_control.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
 - 空域载具:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
-- 水域载具: 
+    - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - 空域载具八叉树三维寻路:
+        - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
+        - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
+        - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
+- 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
-    - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL跑通HoloOcean2的ROS2示例方法.md'
+    - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
+    - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
 
 
 
@@ -98,9 +110,7 @@ markdown_extensions:
   - admonition
   - mdx_math
   - pymdownx.superfences:
-      custom_fences: [
-         { name: flow, class: uml-flowchart }
-        ,{ name: sequence, class: uml-sequence-diagram }
-        ,{ name: mermaid, class: mermaid }
-      ]
-
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid

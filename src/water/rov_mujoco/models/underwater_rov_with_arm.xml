@@ -1,0 +1,345 @@
+<mujoco model="underwater_rov_base">
+  <compiler inertiafromgeom="true" angle="radian" autolimits="true" />
+  <option integrator="implicitfast" />
+
+  <visual>
+    <headlight ambient="0.35 0.42 0.52" diffuse="0.7 0.82 0.95" specular="0.2 0.2 0.2" />
+    <rgba haze="0.06 0.16 0.26 1" />
+    <global offwidth="1920" offheight="1080" />
+  </visual>
+
+  <worldbody>
+    <!-- 水下漫射环境光照 -->
+    <light directional="true" pos="0 0 6" dir="0 0 -1" diffuse="0.8 0.9 1.0" specular="0.3 0.3 0.3" />
+    <light directional="false" pos="4 4 2" diffuse="0.3 0.55 0.75" />
+
+    <!-- 水底海床网格参考地面 (深度 -3.5米，提供强烈的空间移动参照对比) -->
+    <geom name="seafloor" type="plane" size="35 35 0.1" pos="0 0 -3.5" material="mat_seafloor" contype="1" conaffinity="1" />
+
+    <!-- 水下人工环境特征标桩 (辅助观察三维航行位移与声呐探测) -->
+    <geom name="buoy_1" type="cylinder" size="0.12 1.5" pos="4.5 4.5 -2.0" rgba="0.9 0.25 0.1 1" />
+    <geom name="buoy_2" type="cylinder" size="0.12 1.5" pos="-4.5 4.5 -2.0" rgba="0.15 0.85 0.35 1" />
+    <geom name="buoy_3" type="cylinder" size="0.12 1.5" pos="4.5 -4.5 -2.0" rgba="0.95 0.85 0.15 1" />
+    <geom name="buoy_4" type="cylinder" size="0.12 1.5" pos="-4.5 -4.5 -2.0" rgba="0.15 0.65 0.95 1" />
+
+    <!-- 任务 3：水下立体管网与作业设施障碍区 (SLAM 建图与自主导航目标走廊) -->
+    <!-- 1. 海底主干油气管道与分支管道 -->
+    <geom name="pipeline_main" type="cylinder" size="0.25 4.5" pos="0 3.2 -2.6" quat="0.707 0 0.707 0" material="mat_thruster_duct" />
+    <geom name="pipeline_branch" type="cylinder" size="0.20 3.0" pos="3.0 1.0 -2.6" quat="0.707 0.707 0 0" material="mat_thruster_duct" />
+    <geom name="pipeline_junction" type="sphere" size="0.38" pos="3.0 3.2 -2.6" rgba="0.7 0.3 0.1 1" />
+
+    <!-- 2. 水下井口采油树与防护框架 (Subsea Wellhead Structure，坐落于 -3.5m 海床，顶高 -1.3m) -->
+    <geom name="wellhead_base" type="box" size="0.6 0.6 0.5" pos="1.8 -0.5 -3.0" rgba="0.85 0.55 0.15 1" />
+    <geom name="wellhead_tower" type="cylinder" size="0.22 0.6" pos="1.8 -0.5 -1.9" rgba="0.2 0.7 0.6 1" />
+
+    <!-- 3. 海上平台垂直导管架支撑桩 (Vertical Foundation Piles) -->
+    <geom name="pile_nw" type="cylinder" size="0.22 1.8" pos="-2.2 1.8 -1.8" rgba="0.4 0.45 0.55 1" />
+    <geom name="pile_sw" type="cylinder" size="0.22 1.8" pos="-2.2 -1.8 -1.8" rgba="0.4 0.45 0.55 1" />
+    <geom name="pile_crossbeam" type="cylinder" size="0.12 1.8" pos="-2.2 0.0 -3.0" quat="0.707 0.707 0 0" rgba="0.5 0.55 0.65 1" />
+
+    <!-- 4. 水下作业检修结构体与礁石障碍 -->
+    <geom name="structure_target" type="box" size="0.5 0.8 0.6" pos="0.0 -3.2 -2.4" rgba="0.25 0.55 0.45 1" />
+    <geom name="reef_obstacle" type="sphere" size="0.40" pos="-0.5 1.5 -3.1" rgba="0.5 0.4 0.35 1" />
+
+    <body name="rov" pos="0 0 -1.0">
+      <freejoint />
+      <!-- 主流体碰撞几何体 (设为流线型半透明底衬，保留原有质量与流体系数) -->
+      <geom name="rov_body" type="box" size="0.4 0.3 0.2" mass="150.0" rgba="0.2 0.4 0.8 0.15" fluidshape="ellipsoid" group="3" />
+
+      <!-- 1. ROV 上部明黄色工业浮力舱 (Buoyancy Foam Block) -->
+      <geom name="rov_top_foam" type="box" size="0.38 0.27 0.08" pos="0 0 0.11" material="mat_rov_buoyancy" group="2" />
+      <geom name="rov_top_foam_c1" type="cylinder" size="0.25 0.37" pos="0 0 0.11" quat="0.707 0 0.707 0" material="mat_rov_buoyancy" group="2" />
+
+      <!-- 2. ROV 下部深灰耐压主壳体与侧向框架 (Main Chassis & Frames) -->
+      <geom name="rov_chassis_center" type="cylinder" size="0.14 0.30" pos="0 0 -0.05" quat="0.707 0 0.707 0" material="mat_rov_chassis" group="2" />
+      <geom name="rov_frame_l" type="box" size="0.38 0.03 0.17" pos="0 0.27 -0.02" material="mat_rov_chassis" group="2" />
+      <geom name="rov_frame_r" type="box" size="0.38 0.03 0.17" pos="0 -0.27 -0.02" material="mat_rov_chassis" group="2" />
+
+      <!-- 3. 四个水下推进器导流罩 (Horizontal & Vertical Thrusters) -->
+      <geom name="thruster_l_duct" type="cylinder" size="0.065 0.09" pos="-0.26 0.21 0.0" quat="0.707 0 0.707 0" material="mat_thruster_duct" group="2" />
+      <geom name="thruster_l_prop" type="sphere" size="0.04" pos="-0.34 0.21 0.0" material="mat_thruster_prop" group="2" />
+      <geom name="thruster_r_duct" type="cylinder" size="0.065 0.09" pos="-0.26 -0.21 0.0" quat="0.707 0 0.707 0" material="mat_thruster_duct" group="2" />
+      <geom name="thruster_r_prop" type="sphere" size="0.04" pos="-0.34 -0.21 0.0" material="mat_thruster_prop" group="2" />
+      <geom name="thruster_v_f_l" type="cylinder" size="0.06 0.08" pos="0.16 0.17 0.08" material="mat_thruster_duct" group="2" />
+      <geom name="thruster_v_f_r" type="cylinder" size="0.06 0.08" pos="0.16 -0.17 0.08" material="mat_thruster_duct" group="2" />
+
+      <!-- 4. 前部探照灯与前视高清摄像头 -->
+      <geom name="headlight_l" type="cylinder" size="0.035 0.025" pos="0.39 0.13 0.05" quat="0.707 0 0.707 0" material="mat_headlight" group="2" />
+      <geom name="headlight_r" type="cylinder" size="0.035 0.025" pos="0.39 -0.13 0.05" quat="0.707 0 0.707 0" material="mat_headlight" group="2" />
+      <geom name="camera_pod" type="sphere" size="0.035" pos="0.39 0 0.05" material="mat_thruster_duct" group="2" />
+
+      <!-- 5. 传感器挂载基阵与摄像机 -->
+      <site name="sonar_head" pos="0.41 0 0.0" size="0.02 0.08 0.02" type="box" rgba="0.1 0.9 0.9 0.8" />
+      <camera name="forward_cam" pos="0.48 0 -0.02" xyaxes="0 -1 0 0.574 0 0.819" />
+      <camera name="track_cam" mode="trackcom" pos="1.5 -1.8 1.0" xyaxes="0.77 0.64 0 -0.25 0.3 0.92" />
+    <body name="base" quat="0 0 1 0" childclass="ur5e" pos="0.2 0 -0.2">
+      <inertial mass="4.0" pos="0 0 0" diaginertia="0.00443333156 0.00443333156 0.0072" />
+      <geom mesh="base_0" material="black" class="visual" />
+      <geom mesh="base_1" material="jointgray" class="visual" />
+      <body name="shoulder_link" pos="0 0 0.163">
+        <inertial mass="3.7" pos="0 0 0" diaginertia="0.0102675 0.0102675 0.00666" />
+        <joint name="shoulder_pan_joint" class="size3" axis="0 0 1" />
+        <geom mesh="shoulder_0" material="urblue" class="visual" />
+        <geom mesh="shoulder_1" material="black" class="visual" />
+        <geom mesh="shoulder_2" material="jointgray" class="visual" />
+        <geom class="collision" size="0.06 0.06" pos="0 0 -0.04" fluidshape="ellipsoid" />
+        <body name="upper_arm_link" pos="0 0.138 0" quat="1 0 1 0">
+          <inertial mass="8.393" pos="0 0 0.2125" diaginertia="0.133886 0.133886 0.0151074" />
+          <joint name="shoulder_lift_joint" class="size3" />
+          <geom mesh="upperarm_0" material="linkgray" class="visual" />
+          <geom mesh="upperarm_1" material="black" class="visual" />
+          <geom mesh="upperarm_2" material="jointgray" class="visual" />
+          <geom mesh="upperarm_3" material="urblue" class="visual" />
+          <geom class="collision" pos="0 -0.04 0" quat="1 1 0 0" size="0.06 0.06" fluidshape="ellipsoid" />
+          <geom class="collision" size="0.05 0.2" pos="0 0 0.2" fluidshape="ellipsoid" />
+          <body name="forearm_link" pos="0 -0.131 0.425">
+            <inertial mass="2.275" pos="0 0 0.196" diaginertia="0.0311796 0.0311796 0.004095" />
+            <joint name="elbow_joint" class="size3_limited" />
+            <geom mesh="forearm_0" material="urblue" class="visual" />
+            <geom mesh="forearm_1" material="linkgray" class="visual" />
+            <geom mesh="forearm_2" material="black" class="visual" />
+            <geom mesh="forearm_3" material="jointgray" class="visual" />
+            <geom class="collision" pos="0 0.08 0" quat="1 1 0 0" size="0.055 0.06" fluidshape="ellipsoid" />
+            <geom class="collision" size="0.038 0.19" pos="0 0 0.2" fluidshape="ellipsoid" />
+            <body name="wrist_1_link" pos="0 0 0.392" quat="1 0 1 0">
+              <inertial mass="1.219" pos="0 0.127 0" diaginertia="0.0025599 0.0025599 0.0021942" />
+              <joint name="wrist_1_joint" class="size1" />
+              <geom mesh="wrist1_0" material="black" class="visual" />
+              <geom mesh="wrist1_1" material="urblue" class="visual" />
+              <geom mesh="wrist1_2" material="jointgray" class="visual" />
+              <geom class="collision" pos="0 0.05 0" quat="1 1 0 0" size="0.04 0.07" fluidshape="ellipsoid" />
+              <body name="wrist_2_link" pos="0 0.127 0">
+                <inertial mass="1.219" pos="0 0 0.1" diaginertia="0.0025599 0.0025599 0.0021942" />
+                <joint name="wrist_2_joint" axis="0 0 1" class="size1" />
+                <geom mesh="wrist2_0" material="black" class="visual" />
+                <geom mesh="wrist2_1" material="urblue" class="visual" />
+                <geom mesh="wrist2_2" material="jointgray" class="visual" />
+                <geom class="collision" size="0.04 0.06" pos="0 0 0.04" fluidshape="ellipsoid" />
+                <geom class="collision" pos="0 0.02 0.1" quat="1 1 0 0" size="0.04 0.04" fluidshape="ellipsoid" />
+                <body name="wrist_3_link" pos="0 0 0.1">
+                  <inertial mass="0.1889" pos="0 0.0771683 0" quat="1 0 0 1" diaginertia="0.000132134 9.90863e-05 9.90863e-05" />
+                  <joint name="wrist_3_joint" class="size1" />
+                  <geom material="linkgray" mesh="wrist3" class="visual" />
+                  <geom class="eef_collision" pos="0 0.08 0" quat="1 1 0 0" size="0.04 0.02" fluidshape="ellipsoid" />
+                  <site name="attachment_site" pos="0 0.1 0" quat="-1 1 0 0" />
+                <body name="gripper_mount" pos="0 0.1 0" quat="-1 1 0 0"><body name="gripper_base_mount" pos="0 0 0.007" childclass="gripper_2f85">
+      <geom class="gripper_visual" mesh="gripper_base_mount" material="gripper_black" />
+      <geom class="gripper_collision" mesh="gripper_base_mount" fluidshape="ellipsoid" />
+      <body name="gripper_base" pos="0 0 0.0038" quat="1 0 0 -1">
+        <inertial mass="0.777441" pos="0 -2.70394e-05 0.0354675" quat="1 -0.00152849 0 0" diaginertia="0.000260285 0.000225381 0.000152708" />
+        <geom class="gripper_visual" mesh="gripper_base" material="gripper_black" />
+        <geom class="gripper_collision" mesh="gripper_base" fluidshape="ellipsoid" />
+        <site name="gripper_pinch" pos="0 0 0.145" type="sphere" group="5" rgba="0.9 0.9 0.9 1" size="0.005" />
+        
+        <body name="gripper_right_driver" pos="0 0.0306011 0.054904">
+          <inertial mass="0.00899563" pos="2.96931e-12 0.0177547 0.00107314" quat="0.681301 0.732003 0 0" diaginertia="1.72352e-06 1.60906e-06 3.22006e-07" />
+          <joint name="gripper_right_driver_joint" class="gripper_driver" />
+          <geom class="gripper_visual" mesh="gripper_driver" material="gripper_gray" />
+          <geom class="gripper_collision" mesh="gripper_driver" fluidshape="ellipsoid" />
+          <body name="gripper_right_coupler" pos="0 0.0315 -0.0041">
+            <inertial mass="0.0140974" pos="0 0.00301209 0.0232175" quat="0.705636 -0.0455904 0.0455904 0.705636" diaginertia="4.16206e-06 3.52216e-06 8.88131e-07" />
+            <joint name="gripper_right_coupler_joint" class="gripper_coupler" />
+            <geom class="gripper_visual" mesh="gripper_coupler" material="gripper_black" />
+            <geom class="gripper_collision" mesh="gripper_coupler" fluidshape="ellipsoid" />
+          </body>
+        </body>
+        <body name="gripper_right_spring_link" pos="0 0.0132 0.0609">
+          <inertial mass="0.0221642" pos="-8.65005e-09 0.0181624 0.0212658" quat="0.663403 -0.244737 0.244737 0.663403" diaginertia="8.96853e-06 6.71733e-06 2.63931e-06" />
+          <joint name="gripper_right_spring_link_joint" class="gripper_spring_link" />
+          <geom class="gripper_visual" mesh="gripper_spring_link" material="gripper_black" />
+          <geom class="gripper_collision" mesh="gripper_spring_link" fluidshape="ellipsoid" />
+          <body name="gripper_right_follower" pos="0 0.055 0.0375">
+            <inertial mass="0.0125222" pos="0 -0.011046 0.0124786" quat="1 0.1664 0 0" diaginertia="2.67415e-06 2.4559e-06 6.02031e-07" />
+            <joint name="gripper_right_follower_joint" class="gripper_follower" />
+            <geom class="gripper_visual" mesh="gripper_follower" material="gripper_black" />
+            <geom class="gripper_collision" mesh="gripper_follower" fluidshape="ellipsoid" />
+            <body name="gripper_right_pad" pos="0 -0.0189 0.01352">
+              <geom class="gripper_pad_box1" name="gripper_right_pad1" fluidshape="ellipsoid" />
+              <geom class="gripper_pad_box2" name="gripper_right_pad2" fluidshape="ellipsoid" />
+              <inertial mass="0.0035" pos="0 -0.0025 0.0185" quat="0.707107 0 0 0.707107" diaginertia="4.73958e-07 3.64583e-07 1.23958e-07" />
+              <geom class="gripper_visual" mesh="gripper_pad" />
+              <body name="gripper_right_silicone_pad">
+                <geom class="gripper_visual" mesh="gripper_silicone_pad" material="gripper_black" />
+              </body>
+            </body>
+          </body>
+        </body>
+        
+        <body name="gripper_left_driver" pos="0 -0.0306011 0.054904" quat="0 0 0 1">
+          <inertial mass="0.00899563" pos="0 0.0177547 0.00107314" quat="0.681301 0.732003 0 0" diaginertia="1.72352e-06 1.60906e-06 3.22006e-07" />
+          <joint name="gripper_left_driver_joint" class="gripper_driver" />
+          <geom class="gripper_visual" mesh="gripper_driver" material="gripper_gray" />
+          <geom class="gripper_collision" mesh="gripper_driver" fluidshape="ellipsoid" />
+          <body name="gripper_left_coupler" pos="0 0.0315 -0.0041">
+            <inertial mass="0.0140974" pos="0 0.00301209 0.0232175" quat="0.705636 -0.0455904 0.0455904 0.705636" diaginertia="4.16206e-06 3.52216e-06 8.88131e-07" />
+            <joint name="gripper_left_coupler_joint" class="gripper_coupler" />
+            <geom class="gripper_visual" mesh="gripper_coupler" material="gripper_black" />
+            <geom class="gripper_collision" mesh="gripper_coupler" fluidshape="ellipsoid" />
+          </body>
+        </body>
+        <body name="gripper_left_spring_link" pos="0 -0.0132 0.0609" quat="0 0 0 1">
+          <inertial mass="0.0221642" pos="-8.65005e-09 0.0181624 0.0212658" quat="0.663403 -0.244737 0.244737 0.663403" diaginertia="8.96853e-06 6.71733e-06 2.63931e-06" />
+          <joint name="gripper_left_spring_link_joint" class="gripper_spring_link" />
+          <geom class="gripper_visual" mesh="gripper_spring_link" material="gripper_black" />
+          <geom class="gripper_collision" mesh="gripper_spring_link" fluidshape="ellipsoid" />
+          <body name="gripper_left_follower" pos="0 0.055 0.0375">
+            <inertial mass="0.0125222" pos="0 -0.011046 0.0124786" quat="1 0.1664 0 0" diaginertia="2.67415e-06 2.4559e-06 6.02031e-07" />
+            <joint name="gripper_left_follower_joint" class="gripper_follower" />
+            <geom class="gripper_visual" mesh="gripper_follower" material="gripper_black" />
+            <geom class="gripper_collision" mesh="gripper_follower" fluidshape="ellipsoid" />
+            <body name="gripper_left_pad" pos="0 -0.0189 0.01352">
+              <geom class="gripper_pad_box1" name="gripper_left_pad1" fluidshape="ellipsoid" />
+              <geom class="gripper_pad_box2" name="gripper_left_pad2" fluidshape="ellipsoid" />
+              <inertial mass="0.0035" pos="0 -0.0025 0.0185" quat="1 0 0 1" diaginertia="4.73958e-07 3.64583e-07 1.23958e-07" />
+              <geom class="gripper_visual" mesh="gripper_pad" />
+              <body name="gripper_left_silicone_pad">
+                <geom class="gripper_visual" mesh="gripper_silicone_pad" material="gripper_black" />
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </body></body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </body>
+  </worldbody>
+  <sensor>
+    <framepos name="pos" objtype="body" objname="rov" />
+    <framelinvel name="vel" objtype="body" objname="rov" />
+    <framequat name="quat" objtype="body" objname="rov" />
+    <frameangvel name="gyro" objtype="body" objname="rov" />
+    <framelinacc name="accel" objtype="body" objname="rov" />
+  </sensor>
+<contact><exclude body1="rov" body2="base" /><exclude body1="rov" body2="shoulder_link" /><exclude body1="wrist_3_link" body2="gripper_base_mount" /><exclude body1="gripper_base" body2="gripper_left_driver" />
+    <exclude body1="gripper_base" body2="gripper_right_driver" />
+    <exclude body1="gripper_base" body2="gripper_left_spring_link" />
+    <exclude body1="gripper_base" body2="gripper_right_spring_link" />
+    <exclude body1="gripper_right_coupler" body2="gripper_right_follower" />
+    <exclude body1="gripper_left_coupler" body2="gripper_left_follower" />
+  </contact><asset>
+    <!-- 水下环境天空盒与海床网格纹理 -->
+    <texture type="skybox" builtin="gradient" rgb1="0.08 0.22 0.38" rgb2="0.01 0.04 0.1" width="512" height="512" />
+    <texture name="tex_seafloor" type="2d" builtin="checker" rgb1="0.12 0.26 0.35" rgb2="0.16 0.32 0.42" width="512" height="512" mark="edge" markrgb="0.35 0.65 0.85" />
+    <material name="mat_seafloor" texture="tex_seafloor" texrepeat="25 25" reflectance="0.15" />
+
+    <!-- ROV 专用高拟真工业材质 -->
+    <material name="mat_rov_buoyancy" rgba="0.96 0.76 0.08 1" specular="0.6" shininess="0.4" />
+    <material name="mat_rov_chassis" rgba="0.16 0.17 0.19 1" specular="0.4" shininess="0.3" />
+    <material name="mat_thruster_duct" rgba="0.22 0.23 0.26 1" specular="0.7" shininess="0.6" />
+    <material name="mat_thruster_prop" rgba="0.95 0.38 0.05 1" specular="0.8" shininess="0.7" />
+    <material name="mat_headlight" rgba="0.95 0.98 1.0 1" emission="1.5" />
+
+    <material class="ur5e" name="black" rgba="0.033 0.033 0.033 1" />
+    <material class="ur5e" name="jointgray" rgba="0.278 0.278 0.278 1" />
+    <material class="ur5e" name="linkgray" rgba="0.82 0.82 0.82 1" />
+    <material class="ur5e" name="urblue" rgba="0.49 0.678 0.8 1" />
+
+    <mesh file="meshes/ur5e/base_0.obj" />
+    <mesh file="meshes/ur5e/base_1.obj" />
+    <mesh file="meshes/ur5e/shoulder_0.obj" />
+    <mesh file="meshes/ur5e/shoulder_1.obj" />
+    <mesh file="meshes/ur5e/shoulder_2.obj" />
+    <mesh file="meshes/ur5e/upperarm_0.obj" />
+    <mesh file="meshes/ur5e/upperarm_1.obj" />
+    <mesh file="meshes/ur5e/upperarm_2.obj" />
+    <mesh file="meshes/ur5e/upperarm_3.obj" />
+    <mesh file="meshes/ur5e/forearm_0.obj" />
+    <mesh file="meshes/ur5e/forearm_1.obj" />
+    <mesh file="meshes/ur5e/forearm_2.obj" />
+    <mesh file="meshes/ur5e/forearm_3.obj" />
+    <mesh file="meshes/ur5e/wrist1_0.obj" />
+    <mesh file="meshes/ur5e/wrist1_1.obj" />
+    <mesh file="meshes/ur5e/wrist1_2.obj" />
+    <mesh file="meshes/ur5e/wrist2_0.obj" />
+    <mesh file="meshes/ur5e/wrist2_1.obj" />
+    <mesh file="meshes/ur5e/wrist2_2.obj" />
+    <mesh file="meshes/ur5e/wrist3.obj" />
+  <material name="gripper_metal" rgba="0.58 0.58 0.58 1" />
+    <material name="gripper_silicone" rgba="0.1882 0.1882 0.1882 1" />
+    <material name="gripper_gray" rgba="0.4627 0.4627 0.4627 1" />
+    <material name="gripper_black" rgba="0.149 0.149 0.149 1" />
+
+    <mesh class="gripper_2f85" file="meshes/robotiq/base_mount.stl" name="gripper_base_mount" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/base.stl" name="gripper_base" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/driver.stl" name="gripper_driver" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/coupler.stl" name="gripper_coupler" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/follower.stl" name="gripper_follower" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/pad.stl" name="gripper_pad" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/silicone_pad.stl" name="gripper_silicone_pad" />
+    <mesh class="gripper_2f85" file="meshes/robotiq/spring_link.stl" name="gripper_spring_link" />
+  </asset><actuator><general class="size3" name="shoulder_pan" joint="shoulder_pan_joint" />
+    <general class="size3" name="shoulder_lift" joint="shoulder_lift_joint" />
+    <general class="size3_limited" name="elbow" joint="elbow_joint" />
+    <general class="size1" name="wrist_1" joint="wrist_1_joint" />
+    <general class="size1" name="wrist_2" joint="wrist_2_joint" />
+    <general class="size1" name="wrist_3" joint="wrist_3_joint" />
+  <general class="gripper_2f85" name="gripper_fingers_actuator" tendon="gripper_split" forcerange="-5 5" ctrlrange="0 255" gainprm="0.3137255 0 0" biasprm="0 -100 -10" />
+  </actuator><tendon><fixed name="gripper_split">
+      <joint joint="gripper_right_driver_joint" coef="0.5" />
+      <joint joint="gripper_left_driver_joint" coef="0.5" />
+    </fixed>
+  </tendon><default><default class="ur5e">
+      <material specular="0.5" shininess="0.25" />
+      <joint axis="0 1 0" range="-6.28319 6.28319" armature="0.1" />
+      <general gaintype="fixed" biastype="affine" ctrlrange="-6.2831 6.2831" gainprm="2000" biasprm="0 -2000 -400" forcerange="-150 150" />
+      <default class="size3">
+        <default class="size3_limited">
+          <joint range="-3.1415 3.1415" />
+          <general ctrlrange="-3.1415 3.1415" />
+        </default>
+      </default>
+      <default class="size1">
+        <general gainprm="500" biasprm="0 -500 -100" forcerange="-28 28" />
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" fluidshape="ellipsoid" />
+      </default>
+      <default class="collision">
+        <geom type="capsule" group="3" fluidshape="ellipsoid" contype="0" conaffinity="0" />
+        <default class="eef_collision">
+          <geom type="cylinder" fluidshape="ellipsoid" contype="0" conaffinity="0" />
+        </default>
+      </default>
+      <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4" />
+    </default>
+  <default class="gripper_2f85">
+      <mesh scale="0.001 0.001 0.001" />
+      <general biastype="affine" />
+
+      <joint axis="1 0 0" />
+      <default class="gripper_driver">
+        <joint range="0 0.8" armature="0.005" damping="0.1" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+      </default>
+      <default class="gripper_follower">
+        <joint range="-0.872664 0.872664" armature="0.001" pos="0 -0.018 0.0065" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+      </default>
+      <default class="gripper_spring_link">
+        <joint range="-0.29670597283 0.8" armature="0.001" stiffness="0.05" springref="2.62" damping="0.00125" />
+      </default>
+      <default class="gripper_coupler">
+        <joint range="-1.57 0" armature="0.001" solimplimit="0.95 0.99 0.001" solreflimit="0.005 1" />
+      </default>
+
+      <default class="gripper_visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" fluidshape="ellipsoid" />
+      </default>
+      <default class="gripper_collision">
+        <geom type="mesh" group="3" fluidshape="ellipsoid" contype="0" conaffinity="0" />
+        <default class="gripper_pad_box1">
+          <geom mass="0" type="box" pos="0 -0.0026 0.028125" size="0.011 0.004 0.009375" friction="0.7" solimp="0.95 0.99 0.001" solref="0.004 1" priority="1" rgba="0.55 0.55 0.55 1" fluidshape="ellipsoid" contype="0" conaffinity="0" />
+        </default>
+        <default class="gripper_pad_box2">
+          <geom mass="0" type="box" pos="0 -0.0026 0.009375" size="0.011 0.004 0.009375" friction="0.6" solimp="0.95 0.99 0.001" solref="0.004 1" priority="1" rgba="0.45 0.45 0.45 1" fluidshape="ellipsoid" contype="0" conaffinity="0" />
+        </default>
+      </default>
+    </default>
+  </default><equality><connect anchor="0 0 0" body1="gripper_right_follower" body2="gripper_right_coupler" solimp="0.95 0.99 0.001" solref="0.005 1" />
+    <connect anchor="0 0 0" body1="gripper_left_follower" body2="gripper_left_coupler" solimp="0.95 0.99 0.001" solref="0.005 1" />
+    <joint joint1="gripper_right_driver_joint" joint2="gripper_left_driver_joint" polycoef="0 1 0 0 0" solimp="0.95 0.99 0.001" solref="0.005 1" />
+  </equality></mujoco>
