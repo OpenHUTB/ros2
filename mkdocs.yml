@@ -101,6 +101,7 @@ nav:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
+- 禁飞区检测: 'no_fly_zone_check/index.md'
 
 
 
