@@ -1,0 +1,31 @@
+<launch>
+  <!-- ============================================================
+       carlair_ros_bridge 统一启动入口
+         roslaunch carlair_ros_bridge main.launch
+         roslaunch carlair_ros_bridge main.launch host:=127.0.0.1      # 本机跑仿真
+         roslaunch carlair_ros_bridge main.launch auto_takeoff:=false  # 不自动起飞
+       ============================================================ -->
+
+  <arg name="host"          default="192.168.94.1" doc="运行 CarlaAir 的机器 IP"/>
+  <arg name="vehicle_name"  default=""             doc="多机时的载具名，如 Drone1"/>
+  <arg name="auto_takeoff"  default="true"         doc="启动后是否自动起飞并悬停"/>
+  <arg name="start_selfcheck" default="true"       doc="是否启动环境自检节点"/>
+  <arg name="body_frame"    default="true"         doc="速度指令是否按机体系解释"/>
+
+  <!-- 载入默认配置（话题名/频率/限速/坐标系），再用命令行参数覆盖 -->
+  <rosparam command="load" file="$(find carlair_ros_bridge)/config/bridge.yaml"/>
+  <param name="sim/host"            value="$(arg host)"/>
+  <param name="sim/vehicle_name"    value="$(arg vehicle_name)"/>
+  <param name="control/auto_takeoff" value="$(arg auto_takeoff)"/>
+  <param name="control/body_frame"  value="$(arg body_frame)"/>
+
+  <!-- 位姿发布：/uav/odom + TF world->base_link -->
+  <node pkg="carlair_ros_bridge" type="odom_pub.py" name="uav_odom_pub" output="screen"/>
+
+  <!-- 指令下发：/uav/cmd_vel（速度）与 /uav/goal（目标点），含超时悬停保护 -->
+  <node pkg="carlair_ros_bridge" type="cmd_vel_sub.py" name="uav_cmd_vel_sub" output="screen"/>
+
+  <!-- 环境自检（可选，一次性输出四项检查结果） -->
+  <node if="$(arg start_selfcheck)" pkg="carlair_ros_bridge" type="main.py"
+        name="uav_bridge_selfcheck" output="screen"/>
+</launch>
