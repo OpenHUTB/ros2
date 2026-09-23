@@ -1,0 +1,52 @@
+airsim_bridge:
+  ros__parameters:
+    airsim_ip: "127.0.0.1"
+    airsim_port: 41451
+    camera_name: "0"
+    image_hz: 5.0
+    state_hz: 20.0
+    enable_api_control: false
+    arm_on_start: false
+    auto_takeoff: false
+    command_duration: 0.15
+    command_timeout: 0.60
+    camera_topic: "/openhutb/camera/rgb"
+    odom_topic: "/openhutb/odom"
+    cmd_vel_topic: "/openhutb/cmd_vel"
+    capture_metric_topic: "/openhutb/metrics/airsim_capture_ms"
+
+yolo_detector:
+  ros__parameters:
+    # Override this with model_path:=/absolute/path/to/yolo11n.pt.
+    model_path: "yolo11n.pt"
+    confidence: 0.30
+    image_size: 640
+    input_image_topic: "/openhutb/camera/rgb"
+    detections_topic: "/openhutb/detections"
+    annotated_image_topic: "/openhutb/yolo/image"
+    capture_metric_topic: "/openhutb/metrics/airsim_capture_ms"
+    show_window: true
+    start_topmost: true
+    window_name: "OpenHUTB + YOLO"
+    output_dir: "output"
+
+trajectory_target:
+  ros__parameters:
+    flight_z: -8.0
+    figure8_scale: 10.0
+    figure8_points: 160
+    waypoint_tolerance: 0.35
+    max_waypoint_time: 3.0
+    odom_topic: "/openhutb/odom"
+    target_topic: "/openhutb/target"
+    done_topic: "/openhutb/trajectory_done"
+
+mlp_controller:
+  ros__parameters:
+    model_path: "mlp_controller.pth"
+    control_dt: 0.15
+    odom_topic: "/openhutb/odom"
+    target_topic: "/openhutb/target"
+    cmd_vel_topic: "/openhutb/cmd_vel"
+    done_topic: "/openhutb/trajectory_done"
+    result_dir: "results"

@@ -1,0 +1,13 @@
+# OpenHUTB YOLO + MLP 控制所需的非 ROS Python 依赖。
+# 请使用当前 ROS 2 发行版对应的 Python 解释器安装这些依赖。
+# rclpy、sensor_msgs、nav_msgs、geometry_msgs、std_msgs、vision_msgs、
+# launch 和 launch_ros 等 ROS 包由 ROS 2 环境提供，不要通过本文件安装。
+
+setuptools>=30.3.0,<80
+numpy>=1.26,<2.0
+msgpack>=1.0
+opencv-python>=4.8
+torch>=2.2
+ultralytics>=8.3
+pandas>=2.0
+matplotlib>=3.8
