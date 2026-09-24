@@ -12,3 +12,8 @@ docs/requirements.txt
 
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
+
+# colcon 构建产物
+build/
+install/
+log/
