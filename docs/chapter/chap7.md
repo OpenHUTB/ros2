@@ -1,4 +1,3 @@
-# [chap7.md](https://github.com/user-attachments/files/32517859/chap7.md)
 # Ubuntu 20.04 配置 Gazebo Classic 环境完整指南
 
 > **适用系统**：Ubuntu 20.04 LTS (Focal Fossa)  
