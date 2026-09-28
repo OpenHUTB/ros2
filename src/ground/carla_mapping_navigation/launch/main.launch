@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- CARLA 建图 + 导航（神经网络规划版） —— ROS 1 Noetic Launch 文件。
+
+     使用方式（先 source ROS 1 环境）：
+         roslaunch carla_mapping_navigation main.launch host:=192.168.8.1 goal:="20,8"
+
+     说明：
+       * 本模块核心为 CARLA Python API 直连，建图用激光雷达占用栅格、导航用规划神经网络；
+         Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法等**通用配置步骤**，
+         本模块不重复描述，详见：
+         https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
+<launch>
+  <arg name="host" default="127.0.0.1" doc="CARLA 服务端地址（虚拟机填宿主机 IP）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="town" default="Town05" doc="CARLA 地图名"/>
+  <arg name="goal" default="20,8" doc="导航目标 &quot;x,y&quot;"/>
+  <arg name="mode" default="run" doc="train=离线训练规划网络, run=建图+导航"/>
+  <arg name="model" default="models/nn_plan.json" doc="规划神经网络模型路径"/>
+  <arg name="sim_time" default="40.0" doc="仿真时长（秒）"/>
+
+  <node pkg="carla_mapping_navigation" type="main.py"
+        name="carla_mapping_navigation" output="screen"
+        args="--host $(arg host) --port $(arg port) --town $(arg town)
+              --mode $(arg mode) --model $(arg model)
+              --goal '$(arg goal)' --sim_time $(arg sim_time)"/>
+</launch>

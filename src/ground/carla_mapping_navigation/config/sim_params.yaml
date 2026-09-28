@@ -1,0 +1,29 @@
+# CARLA 建图 + 导航（神经网络规划）—— 仿真参数
+carla_mapping_navigation_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 道路与建筑丰富，适合建图与避障演示
+    town: "Town05"
+    # 自车蓝图
+    ego_blueprint: "vehicle.tesla.model3"
+    # 同步模式固定步长（秒）
+    fixed_delta_seconds: 0.05
+    # 规划神经网络模型路径（由 main.py --mode train 生成）
+    model_path: "models/nn_plan.json"
+    # 导航目标（世界坐标，米）
+    goal_x: 20.0
+    goal_y: 8.0
+    # 到达判定阈值（米）
+    goal_tol: 1.5
+    # 占用栅格参数
+    grid_resolution: 0.5      # 每格边长（米）
+    grid_size: 200            # 栅格边长（格）→ 覆盖 100 m × 100 m
+    log_odds_hit: 0.85        # 命中时的对数几率增量
+    log_odds_miss: -0.4       # 射线穿过时的对数几率增量
+    # 激光雷达参数
+    lidar_channels: 32
+    lidar_range: 40.0
+    # 地图话题发布周期（每 N 个 tick 发一次）
+    map_publish_period: 20
