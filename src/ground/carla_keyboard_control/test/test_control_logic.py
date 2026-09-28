@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """单元测试：不依赖 CARLA 服务端即可验证控制映射与相机解码逻辑。
 
-运行：
+两种运行方式都支持：
+    python3 test/test_control_logic.py          # 自带运行器，无需 pytest
     python3 -m pytest test/test_control_logic.py -v
 """
 
@@ -52,3 +53,23 @@ def test_requirement_files_exist():
     for name in ('main.py', 'main.sh', 'main.bat', 'package.xml', 'setup.py',
                  'setup.cfg', 'launch/main.launch.py', 'launch/main.launch'):
         assert os.path.exists(os.path.join(root, name)), f"缺少 {name}"
+
+
+def _run_all():
+    """自带运行器：不依赖 pytest 也能跑完所有 test_* 函数。"""
+    fns = sorted(k for k in list(globals()) if k.startswith('test_'))
+    passed, failed = 0, []
+    for fn in fns:
+        try:
+            globals()[fn]()
+            passed += 1
+            print(f"[PASS] {fn}")
+        except Exception as exc:  # noqa: BLE001
+            failed.append(fn)
+            print(f"[FAIL] {fn}: {exc}")
+    print(f"\n==== 测试结果：PASS={passed}  FAIL={len(failed)} ====")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(_run_all())
