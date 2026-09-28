@@ -18,9 +18,9 @@ from env import NavEnv
 from policy import extract_sb3_weights
 
 
-def _make_env(seed):
+def _make_env(seed, obstacles):
     def _f():
-        return NavEnv(seed=seed)
+        return NavEnv(num_obstacles=obstacles, seed=seed)
     return _f
 
 
@@ -34,8 +34,8 @@ def main():
     args = ap.parse_args()
 
     net_arch = [int(x) for x in args.net.split(",")]
-    env = DummyVecEnv([_make_env(args.seed)])
-    eval_env = DummyVecEnv([_make_env(args.seed + 1)])
+    env = DummyVecEnv([_make_env(args.seed, args.obstacles)])
+    eval_env = DummyVecEnv([_make_env(args.seed + 1, args.obstacles)])
 
     os.makedirs(args.out, exist_ok=True)
     eval_cb = EvalCallback(

@@ -52,6 +52,13 @@ vz = a[2] · 1.5        # 世界系天向速度 (m/s)
 roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
 ```
 
+> 节点启动时会**自动校验**桥接的 `control/body_frame` 参数：读到 `true` 会打印
+> `logerr` 明确报错，读不到会 `logwarn` 提示，避免出现"无人机会飞但方向不对、
+> 日志里却什么都没有"的隐蔽故障。
+>
+> 桥接的 `control/cmd_duration`（单条速度指令持续时长）默认 **0.1 s**，与本模块训练
+> 环境的 `dt = 0.1 s` 对齐；若设成 0.2 s，指令作用时间翻倍，会造成过冲震荡。
+
 ## 3. 训练
 
 训练环境 `scripts/env.py` 是**质点 + 速度环一阶滞后**模型：
@@ -71,9 +78,12 @@ pos += vel · dt
 ```shell
 pip install "stable-baselines3" "gymnasium" numpy
 cd src/air/uav_ppo_nav/scripts
-python3 main.py --train --total 400000 --obstacles 16
+python3 main.py --train --total 400000 --obstacles 16 --out ../models
 # 产出 models/policy_weights.npz（部署用）与 models/best_model.zip
 ```
+
+> 注意 `--out ../models`：训练脚本默认输出到当前目录下的 `models`，而部署时读的是
+> `$(find uav_ppo_nav)/models/policy_weights.npz`，所以要用 `--out ../models` 指回包内目录。
 
 环境规模（贴近 CarlaAir 城镇尺度）：场地 ±10 m、目标距离 2~8 m、16 个半径 0.6 m 的障碍、
 控制周期 `dt = 0.1 s`。训练评估见 §5。
@@ -109,7 +119,15 @@ a  = clip(W2·h1 + b2, -1, 1)
 ### 5.1 本地桩测试（无需 ROS / 仿真器）
 
 ```shell
-python3 tests/test_ppo_nav_local.py   # 68 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_local.py        # 68 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 17 项：部署节点（mock 掉 rospy 也能测）
+```
+
+另外可以校验「部署侧纯 numpy 推理」与训练框架（SB3）完全一致：
+
+```python
+from policy import MlpPolicy; from stable_baselines3 import PPO
+# 同一观测下 MlpPolicy.forward 与 model.predict 的最大绝对误差 < 1e-7
 ```
 
 ### 5.2 训练环境评估
@@ -149,6 +167,12 @@ python3 tests/test_ppo_nav_local.py   # 68 项：直方图/世界系变换/动�
 
 另外，CarlaAir 的仿真器在**高密度几何 + 大点云**场景下（楼群中激光雷达 9000+ 点）
 单步 RPC 可达数秒，属平台性能上限，与策略无关。
+
+**该限制已通过传感器配置缓解**：原先 `settings.json` 的雷达没设 `Range` 且
+`PointsPerSecond: 100000`，桥接又把滤波上限放到 60 m，而策略实际只用到 12 m ——
+等于每帧都传输并解包大量用不上的远点。现改为 `Range: 15.0`、`PointsPerSecond: 40000`，
+并把 `lidar/max_range` 收到 15 m，显著降低每帧射线投射与传输开销。
+若在楼群中仍偏慢，可继续下调这两项。
 
 ## 6. 效果图
 

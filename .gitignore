@@ -1,19 +1,34 @@
-venv/
-
-# mkdocs 构建产物
-site/
-
-# Python 缓存
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 
-# 构建时 hooks.py 自动生成
-docs/requirements.txt
-
-# catkin 编译产物
-build/
+# ROS / catkin
 devel/
-install/
-src/CMakeLists.txt
-# 行为克隆数据集（图像与标签，体积大不入库）
-data/
+build/
+logs/
+*.bag
+.catkin_workspace
+
+# 仿真与训练产物（二进制大文件不入库，改用网盘链接）
+*.mp4
+*.gif
+*.pth
+*.pt
+*.onnx
+*.ckpt
+*.bag.active
+models/weights/
+models/eval_log/
+models/*.zip
+trajectories/*.json
+
+# 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
+!docs/img/**/*.gif
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -28,10 +28,14 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 | 发布 | `/camera/seg` | `sensor_msgs/Image` | 语义分割伪彩色图，`bgr8`（默认关闭） |
 | 发布 | `/lidar/points` | `sensor_msgs/PointCloud2` | XYZ float32 世界系（ENU）点云，默认 10 Hz |
 | 发布 | `/uav/status` | `std_msgs/String` | `READY / HOVER / VELOCITY / GOAL / GOAL_DONE` |
-| 订阅 | `/uav/cmd_vel` | `geometry_msgs/Twist` | 速度指令，默认机体系（x 前, y 左, z 上） |
+| 订阅 | `/uav/cmd_vel` | `geometry_msgs/Twist` | 速度指令，默认机体系（x 前, y 左, z 上）；`body_frame:=false` 时按世界系 ENU 解释 |
 | 订阅 | `/uav/goal` | `geometry_msgs/Point` | 目标点（ENU 世界系），阻塞飞抵后悬停 |
 
 **安全保护**：速度指令自动限幅；超过 `rate/cmd_timeout`（默认 0.5 s）没有新指令即自动悬停。
+
+**控制周期**：`control/cmd_duration`（默认 0.1 s）是单条速度指令的持续时长，
+**应与上游控制器的周期一致**。若上游是神经网络策略（如 `uav_ppo_nav`，训练 `dt = 0.1 s`），
+这里设大了会让指令作用时间超过策略预期，导致过冲震荡。
 
 **传感器说明**：
 
@@ -46,6 +50,10 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   若改为 `SensorLocalFrame`，需把 `sensor/lidar_frame` 同步改为 `sensor_local`，
   桥接层会用 `LidarData.pose` 把点云变换到惯性系后再转 ENU；
 - 点云可选环形滤波（`lidar/min_range`、`max_range`）与体素降采样（`lidar/voxel_leaf`）。
+- **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
+  仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
+  （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
+  可继续下调这两个值。`lidar/max_range` 应与传感器 `Range` 保持一致，避免传输无用的远点。
 
 ## 依赖安装
 

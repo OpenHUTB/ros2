@@ -56,6 +56,17 @@ class PpoNavNode(object):
         self.cmd_topic = rospy.get_param("topic/cmd_vel", "/uav/cmd_vel")
         rospy.loginfo("ppo_nav: 目标点 ENU %s", self.goal)
 
+        # 安全校验：本节点发布的是【世界系 ENU】速度，桥接必须用 body_frame:=false。
+        # 若桥接按机体系解释，无人机会往错误方向飞，而且日志里看不出任何异常 —— 这里主动拦。
+        bridge_bf = rospy.get_param("control/body_frame", None)
+        if bridge_bf is None:
+            rospy.logwarn("ppo_nav: 未读到桥接参数 control/body_frame，"
+                          "请确认桥接已启动、且用的是 body_frame:=false")
+        elif bool(bridge_bf):
+            rospy.logerr("ppo_nav: 桥接当前 body_frame=true，但本节点发布的是【世界系】速度！"
+                         "请改用 roslaunch carlair_ros_bridge main.launch "
+                         "publish_image:=false body_frame:=false 重新启动桥接。")
+
         self.latest_odom = None
         self.latest_cloud = None
         self.pub = rospy.Publisher(self.cmd_topic, Twist, queue_size=1)

@@ -11,6 +11,12 @@
 > （即使命令 `yaw_rate=0`，机头仍以约 9°/s 漂移并 ±25° 摆动）。机体系速度控制会让
 > 前进方向随漂移的机头一起转，轨迹变成**绕圈**。改用世界系后机头怎么转都不影响轨迹。
 > **因此桥接必须用 `body_frame:=false` 启动。**
+>
+> 启动时节点会**自动校验**：若读到桥接参数 `control/body_frame=true`（或读不到），
+> 会打印明确的 `logerr` / `logwarn` 提示，而不是让你对着"乱飞"的无人机排查。
+>
+> 另外桥接的 `control/cmd_duration`（单条速度指令时长）默认已改为 **0.1 s**，
+> 与本模块训练环境的 `dt` 一致；设大了会造成过冲震荡。
 
 ## 运行架构
 
@@ -27,9 +33,12 @@
 ```bash
 pip install "stable-baselines3" "gymnasium" numpy
 cd scripts
-python3 main.py --train --total 400000 --obstacles 16
+python3 main.py --train --total 400000 --obstacles 16 --out ../models
 # 产出 models/policy_weights.npz（部署用）+ models/best_model.zip
 ```
+
+> `--out ../models` 不能省：训练脚本默认写当前目录下的 `models`，而部署读的是
+> 包内的 `models/policy_weights.npz`。
 
 ### 2. 评估（可选）
 
@@ -71,7 +80,8 @@ roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
 ## 本地测试（无需 ROS / 仿真器 / GPU）
 
 ```bash
-python3 tests/test_ppo_nav_local.py   # 68 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_local.py        # 68 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 17 项：部署节点（mock 掉 rospy）
 ```
 
 ## 实测结果
