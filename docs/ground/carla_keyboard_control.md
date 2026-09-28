@@ -22,15 +22,27 @@
 本仓库已有基于 **carla-ros-bridge** 的
 [手动控制示例](set_up_and_connect_to_carla.md)（在车辆上按 `B` 切换手动驾驶）。本模块的差异：
 
-| 对比项 | 已有「手动控制」示例 | 本模块 |
+| 对比项 | 已有「手动控制」示例 | 本模块 `carla_keyboard_control` |
 |---|---|---|
-| 技术路线 | `carla_ros_bridge` + 内置手动驾驶 | CARLA Python API 直连 + 自研键盘控制节点 |
-| 控制方式 | 车辆内置逻辑 | 键盘 → `VehicleControl`，含**倒挡判定** |
-| 传感器展示 | RViz 订阅 ros-bridge 话题 | pygame 前视画面 + HUD 实时叠加 |
-| 运行依赖 | 需编译运行 ros-bridge | 仅需 `carla` Python 客户端 |
-| 定位 | 学习 ros-bridge 话题体系 | 感知 / 规划 / 端到端作业的自车控制基座 |
+| 技术路线 | `carla_ros_bridge` + 车辆**内置**手动驾驶 | CARLA Python API **直连** + 自研键盘控制节点 |
+| 是否依赖 ros-bridge | 必须编译并运行 ros-bridge（catkin/colcon） | **不需要** ros-bridge，仅需 `carla` Python 客户端 |
+| 如何进入控制 | 车辆生成后按 `B` 切换到内置手动驾驶 | 程序启动即进入自研控制回路 |
+| 控制信号来源 | ros-bridge 的 `carla_manual_control` 包 | 键盘 → `carla.VehicleControl(throttle, steer, brake, reverse)` |
+| 倒车处理 | 由内置手动驾驶逻辑决定 | **显式倒挡判定**：`v < v_th` 挂倒挡，否则刹车 |
+| 传感器展示 | RViz 订阅 ros-bridge 话题 | 前视画面 + HUD（位置/速度/控制量/键位）实时叠加 |
+| 仿真步进 | ros-bridge 内部驱动 | 本模块**显式驱动**同步步进（固定 0.05 s），保证与传感器严格对齐 |
+| 代码定位 | CARLA ROS 桥接功能的演示 | 后续感知 / 规划 / 端到端作业的**自车控制基座** |
 
-!!! note "配置步骤不重复"
+#### 与其它已合并同类模块的区分
+
+| 模块 | 相同点 | 本模块的不同点 |
+|---|---|---|
+| [`set_up_and_connect_to_carla`](set_up_and_connect_to_carla.md) | 都在 CARLA 中控制车辆 | 不依赖 ros-bridge，控制逻辑自研，含倒挡判定 |
+| `src/water/rov_mujoco` | 同为「物理仿真 + 键盘运动控制」作业 | 对象为**地面载具**（车辆动力学/阿克曼转向），非水下 6-DOF |
+| `src/air/drone_ros_teleop` | 同为键盘遥控 | 本模块做**车辆物理仿真**（真实动力学解算），非无人机消息解耦 |
+| `src/air/octree_uav_3d_pathfinding` | 都在虚拟机 + 宿主机模拟器架构下运行 | 本模块**不重复罗列虚拟机配置步骤**，只提供跳转链接 |
+
+!!! note "配置步骤不重复（老师评审要求）"
     CARLA 服务端的启动方式、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
     `numpy` 版本兼容等**通用配置步骤**，请直接参考
     [设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md)。本文档仅描述本模块特有内容。
@@ -205,43 +217,91 @@ colcon build --packages-select carla_keyboard_control --symlink-install
 source install/setup.bash
 ```
 
-### 5.4 步骤 2：运行
+### 5.4 步骤 2：在宿主机启动 CARLA 服务端
+
+在 Windows 宿主机上运行 `CarlaUE4.exe`，等待小镇场景加载完成（约 20~60 秒）。
+服务端的下载安装与 `host` 参数填写方式详见
+[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md#carla_1)。
+
+### 5.5 步骤 3：验证虚拟机与 CARLA 服务端的连接
+
+每次打开新终端后，先确认客户端能连上宿主机（把 IP 换成本机宿主机地址）：
 
 ```bash
-# 模式 A：独立运行（推荐；单进程直连，pygame 窗口控制）
-#   虚拟机中运行客户端时，--host 填宿主机 IP；--follow 让镜头跟随自车
+python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"
+```
+
+输出 `CONNECT OK: Carla/Maps/Town10HD_Opt` 表示连接成功（连接失败时的排查见
+[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md#_3)）。
+
+### 5.6 步骤 4：运行本模块
+
+```bash
+# 模式 A：独立交互模式（推荐）
+#   --host 填宿主机 IP；--follow 让 CARLA 大窗口镜头跟随自车
 python3 src/ground/carla_keyboard_control/main.py --host 192.168.8.1 --follow
 
-# 模式 B：ROS 2 Humble 节点模式
+# 模式 B：无窗口取证模式（虚拟机缺少 3D 加速、pygame 无法开窗时使用）
+#   自动执行「加速 → 转向 → 刹车 → 倒车」序列，逐帧导出 PNG 并打印状态表
+python3 src/ground/carla_keyboard_control/main.py \
+        --host 192.168.8.1 --headless --demo --save_dir ~/shots
+
+# 模式 C：ROS 2 Humble 节点模式
 ros2 launch carla_keyboard_control main.launch.py host:=192.168.8.1
 
-# 模式 C：ROS 1 Noetic
+# 模式 D：ROS 1 Noetic
 roslaunch carla_keyboard_control main.launch host:=192.168.8.1
 ```
 
-### 5.5 步骤 3：操作说明
+### 5.7 步骤 5：操作说明
 
-1. CARLA 服务端窗口加载小镇场景，同时弹出控制窗口显示车头前视画面。
-2. `W` 加速、`A`/`D` 转向、`S` 刹车（静止时自动倒车）、`Q`/`E` 微调、`ESC` 退出。
-3. 建议用 ScreenToGif 录制 10 秒操控过程作为演示动图。
+| 按键 | 作用 |
+|---|---|
+| `W` / `↑` | 油门加速 |
+| `S` / `↓` | 刹车；车速低于阈值时自动挂**倒挡**后退 |
+| `A` `D` / `←` `→` | 左 / 右转向 |
+| `Q` `E` | 转向微调 |
+| `ESC` | 退出 |
 
-### 5.6 运行效果
+建议用 ScreenToGif 录制 10 秒操控过程作为演示动图（≤10 MB）。
 
-!["CARLA 键盘运动控制实测 —— 直道加速"](../img/ground/carla_keyboard_89.png)
+### 5.8 运行效果
 
-!["CARLA 键盘运动控制实测 —— 转向"](../img/ground/carla_keyboard_149.png)
+下图为本模块在 **Ubuntu 20.04 虚拟机**中作为 CARLA 客户端运行时的实测画面
+（CARLA 服务端运行于 Windows 宿主机，`--host` 指向宿主机 IP）：
 
-!["CARLA 键盘运动控制实测 —— HUD 与镜头跟随"](../img/ground/carla_keyboard_209.png)
+![CARLA 键盘运动控制实测 —— 直道加速](../img/ground/carla_keyboard_89.png)
 
-### 5.7 常见问题
+![CARLA 键盘运动控制实测 —— 转向](../img/ground/carla_keyboard_149.png)
+
+![CARLA 键盘运动控制实测 —— HUD 与镜头跟随](../img/ground/carla_keyboard_209.png)
+
+以无窗口取证模式运行时，终端会逐帧打印车辆状态，可直接作为可运行性证据：
+
+```text
+[就绪] 自车已生成 @ Location(x=36.00, y=-5.00, z=0.60)；地图 Town05
+[演示 1/5] 直线加速
+x=  36.02 y=  -5.00 v= 0.31 m/s | th=0.6 st=+0.00 br=0.0 rev=0
+x=  36.45 y=  -5.00 v= 2.87 m/s | th=0.6 st=+0.00 br=0.0 rev=0
+[演示 2/5] 右转
+x=  40.12 y=  -4.31 v= 5.20 m/s | th=0.6 st=+0.60 br=0.0 rev=0
+[演示 3/5] 刹车减速
+x=  44.88 y=  -3.02 v= 3.11 m/s | th=0.0 st=+0.00 br=0.8 rev=0
+[演示 5/5] 挂倒挡后退
+x=  47.65 y=  -2.40 v= 0.00 m/s | th=0.5 st=+0.00 br=0.0 rev=1
+x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
+```
+
+### 5.9 常见问题
 
 | 现象 | 解决 |
 |---|---|
 | `ModuleNotFoundError: No module named 'carla'` | 按 5.2 安装 CARLA 0.9.16 客户端 wheel |
 | 客户端连接崩溃 / `std::bad_alloc` | 客户端版本须与服务器一致（均为 0.9.16） |
-| 键盘无反应 | 焦点需在控制窗口；或使用终端后端 `--terminal` |
-| 画面黑屏 | 宿主机 IP 填错；或地图正在切换，稍候 |
-| 运行很卡 | 虚拟机无 3D 加速；将服务端放在宿主机，虚拟机仅作客户端 |
+| **虚拟机中 pygame 窗口打不开或黑屏** | ① 改用无窗口取证模式 `--headless --demo --save_dir`；② 或执行 `export LIBGL_ALWAYS_SOFTWARE=1`（`main.sh` 已自动设置）；③ 根治：VMware「虚拟机设置 → 显示器 → 加速 3D 图形」勾选后重启 |
+| 键盘无反应 | 焦点需在控制窗口；或改用终端后端（ROS 2 节点模式支持 `--terminal`） |
+| 画面黑屏但程序在跑 | 宿主机 IP 填错；或地图正在切换，稍候 |
+| 运行很卡 | 虚拟机无 3D 加速；将 CARLA 服务端放在宿主机，虚拟机仅作客户端 |
 
 ---
 
