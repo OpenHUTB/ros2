@@ -56,6 +56,7 @@ ROS每章节运行代码:
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [生成对象](./ground/carla_spawn_objects.md)
+* [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [路径点发布器](./ground/waypoint.md)
 * [自动驾驶代理](./ground/ad_agent.md)
@@ -65,7 +66,6 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
-* [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
