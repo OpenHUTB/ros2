@@ -12,49 +12,71 @@ CarlaAir/AirSim 仿真器（真实），两侧观测/动作接口完全一致，
 /uav/odom ─────┘   (策略推理)                     (坐标换算+执行)
 ```
 
-## 2. 观测与动作
+## 2. 观测与动作（全部使用世界系 ENU）
+
+> **为什么用世界系而不是机体系？** 实测 CarlaAir 里 SimpleFlight 的**偏航保持不生效**：
+> 即使命令 `yaw_rate = 0`，机头仍以约 9°/s 漂移并 ±25° 摆动。若用机体系速度控制，
+> 前进方向会随漂移的机头一起转，轨迹变成**绕圈**（实测半径 ≈ |v|/ω ≈ 0.8 m）。
+> 改用世界系后，机头怎么转都不影响轨迹，策略才稳定收敛。
 
 ### 2.1 观测（22 维）
 
 | 部分 | 维度 | 说明 |
 |---|---|---|
-| 激光雷达扇形直方图 | 16 | 360° 均分 16 个扇形（22.5°/个），每扇取最近障碍距离，归一化 `[0,1]`（1=无遮挡）。垂直方向只统计无人机高度 ±1.5 m 内的点，避免地面误报 |
-| 目标相对位置 | 3 | 目标点相对无人机的机体系坐标（前/左/上），除以 6 m 归一化 |
-| 机体系速度 | 3 | 前/左/上速度，分别除以 3 / 3 / 1.5 m/s 归一化 |
+| 激光雷达扇形直方图 | 16 | 360° 均分 16 个扇形（22.5°/个，**扇形 0 = 正东**，逆时针），每扇取最近障碍距离，归一化 `[0,1]`（1=无遮挡）。垂直方向只统计无人机高度 ±1.5 m 内的点，避免地面误报 |
+| 目标相对位置 | 3 | 目标点相对无人机的**世界系**偏移（东/北/天），除以 8 m 归一化 |
+| 世界系速度 | 3 | 东/北/天速度，分别除以 3 / 3 / 1.5 m/s 归一化 |
 
-扇形直方图公式（机体系点 `(x, y)` 为前/左）：
+扇形直方图公式（以无人机为原点，世界系点 `(x, y)` 为东/北）：
 
 ```text
 r   = sqrt(x² + y²)
-θ   = atan2(y, x)                    # -π..π，0 = 正前方
+θ   = atan2(y, x)                    # -π..π，0 = 正东
 i   = ⌊(θ + Δ/2) / Δ⌋ mod 16        # Δ = 2π/16
-h[i] = min over sector i of clip(r / R_max, 0, 1)
+h[i] = min over sector i of clip(r / R_max, 0, 1)      # R_max = 12 m
 ```
 
 ### 2.2 动作（4 维，`[-1,1]`）
 
 ```text
-vx = a[0] · 3.0        # 前进速度 (m/s)
-vy = a[1] · 3.0        # 左移速度 (m/s)
-vz = a[2] · 1.5        # 上升速度 (m/s)
-ω  = a[3] · 1.0        # 偏航角速度 (rad/s)
+vx = a[0] · 3.0        # 世界系东向速度 (m/s)
+vy = a[1] · 3.0        # 世界系北向速度 (m/s)
+vz = a[2] · 1.5        # 世界系天向速度 (m/s)
+ω  = a[3] · 1.0        # 偏航角速度 (rad/s，不影响轨迹)
 ```
 
-直接映射到 `geometry_msgs/Twist` 的 `linear.x/y/z` 与 `angular.z`，与桥接包的
-`/uav/cmd_vel` 机体系约定一致。
+映射到 `geometry_msgs/Twist` 的 `linear.x/y/z` 与 `angular.z`。
+**因为是世界系速度，桥接必须以 `body_frame:=false` 启动**（否则会被当成机体系）：
+
+```shell
+roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
+```
 
 ## 3. 训练
 
-训练环境 `scripts/env.py` 是**质点 + 速度环**模型：`yaw += ω·dt`，
-`pos += R(yaw)·[vx, -vy, vz]·dt`，随机摆放圆柱障碍物与随机目标，用射线求交生成
-合成激光雷达直方图。奖励为「向目标靠近的进度 − 动作平滑 − 时间惩罚」，到达 +20、撞障碍 −20。
+训练环境 `scripts/env.py` 是**质点 + 速度环一阶滞后**模型：
+
+```text
+vel += (cmd_vel − vel) · dt / τ          # τ = 0.45 s，模拟真实速度环滞后
+pos += vel · dt
+```
+
+随机摆放圆柱障碍物与随机目标，用射线-圆求交生成合成激光雷达直方图。
+奖励 = 「向目标靠近的进度 − 动作平滑 − 时间惩罚」，到达 +20、撞障碍/越界 −20。
+
+> **为什么要建模速度滞后？** 真实飞行器的速度环不是瞬时到达指令速度。早期版本
+> 用瞬时质点模型训练，策略在 CarlaAir 里会因惯量过冲而**来回震荡**；加入一阶滞后后
+> 明显改善。
 
 ```shell
 pip install "stable-baselines3" "gymnasium" numpy
 cd src/air/uav_ppo_nav/scripts
-python3 main.py --train --total 300000 --obstacles 6
+python3 main.py --train --total 400000 --obstacles 16
 # 产出 models/policy_weights.npz（部署用）与 models/best_model.zip
 ```
+
+环境规模（贴近 CarlaAir 城镇尺度）：场地 ±10 m、目标距离 2~8 m、16 个半径 0.6 m 的障碍、
+控制周期 `dt = 0.1 s`。训练评估见 §5。
 
 PPO 超参：`n_steps=2048, batch_size=256, lr=3e-4, gamma=0.99, gae_lambda=0.95,
 ent_coef=0.005, net_arch=[64,64]`。
@@ -65,13 +87,13 @@ ent_coef=0.005, net_arch=[64,64]`。
 因此虚拟机**不需要安装 torch / stable-baselines3**：
 
 ```shell
-# 终端 1：桥接
+# 终端 1：桥接（必须 body_frame:=false，因为策略输出世界系速度）
 source ~/bridge_ws/devel/setup.bash
-roslaunch carlair_ros_bridge main.launch
+roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
 
 # 终端 2：PPO 导航
 source ~/bridge_ws/devel/setup.bash
-roslaunch uav_ppo_nav main.launch goal_x:=30.0 goal_y:=10.0 goal_z:=-8.0
+roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
 ```
 
 推理前向（MLP `[64,64]`）：
@@ -84,27 +106,55 @@ a  = clip(W2·h1 + b2, -1, 1)
 
 ## 5. 验证
 
-本地（无 ROS / 仿真器 / GPU）可先跑桩测试：
+### 5.1 本地桩测试（无需 ROS / 仿真器）
 
 ```shell
-python3 tests/test_ppo_nav_local.py   # 53 项：直方图/坐标变换/动作映射/环境
+python3 tests/test_ppo_nav_local.py   # 68 项：直方图/世界系变换/动作映射/环境/策略
 ```
 
-训练评估（`main.py --eval --episodes 100 --obstacles 6`，30 万步训练）：
+### 5.2 训练环境评估
+
+`main.py --eval --episodes 100 --obstacles 16`（40 万步训练）：
 
 | 指标 | 数值 |
 |---|---|
-| 成功率 | **81/100（81.0%）** |
-| 失败（碰撞/越界） | 11 |
-| 超时 | 8 |
-| 平均步数 | 41.1 |
-| 平均奖励 | 15.6 |
+| 成功率 | **78/100（78.0%）** |
+| 失败（碰撞/越界） | 17 |
+| 超时 | 5 |
+| 平均步数 | 38.4 |
+| 平均奖励 | 16.5 |
 
-真机联调在 CarlaAir 中下发目标点后，无人机自主飞行并避障（GIF 见效果图）。
+### 5.3 CarlaAir 真机联调（同一策略、同一观测代码）
+
+把训练好的策略直接部署到 CarlaAir（Town01），从悬停点给出目标点，记录全程：
+
+| 目标距离 | 飞行用时 | 最终误差 | 说明 |
+|---|---|---|---|
+| 6.71 m | 3.4 s | 0.59 m | 开阔空域 |
+| 8.94 m | 4.2 s | 0.38 m | 楼群高度（z ≈ −10） |
+| 16.12 m | 6.4 s | **0.22 m** | 楼群高度，激光雷达 2567~3228 点 |
+| 11.00 m | 5.0 s | 0.35 m | 楼群高度 |
+
+**结论：训练环境（纯 numpy 质点模型）中学到的策略，可直接迁移到 CarlaAir 的
+真实六自由度无人机上完成自主导航，位置误差均在 0.6 m 以内。**
+
+### 5.4 工程经验（sim-to-real 差距）
+
+联调过程中定位到三个真实的落差来源，均已修正：
+
+1. **偏航不可控 → 改用世界系控制**。CarlaAir 的偏航保持不生效（漂移+摆动），
+   机体系控制会导致绕圈飞行。
+2. **速度环滞后 → 训练环境建模一阶滞后**。否则策略在真机上因惯量过冲震荡。
+3. **控制周期必须一致**。训练 `dt = 0.1 s`，部署也须用 0.1 s（用 0.25 s 会震荡）。
+
+另外，CarlaAir 的仿真器在**高密度几何 + 大点云**场景下（楼群中激光雷达 9000+ 点）
+单步 RPC 可达数秒，属平台性能上限，与策略无关。
 
 ## 6. 效果图
 
-（待补：PPO 导航演示 GIF + 成功率曲线）
+![PPO 自主导航演示](img/air/uav_ppo_nav/ppo_nav_demo.gif)
+
+上图：PPO 策略驱动 CarlaAir 无人机自主飞向目标点（第一视角，前视相机）。
 
 ## 7. 参考
 

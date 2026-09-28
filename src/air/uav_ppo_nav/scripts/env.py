@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""PPO 导航训练环境（纯 numpy 质点 + 速度环 + 随机障碍物）.
+"""PPO 导航训练环境（纯 numpy 质点 + 世界系速度 + 随机障碍物）.
 
-无人机简化为带速度环的质点，随机摆放圆柱障碍物与随机目标。观测用激光雷达扇形
-直方图（与 CarlaAir 部署节点完全一致），动作为机体系速度，因此训练出的策略
-可以直接迁移到真实仿真器。
+**坐标系**：全部世界系（ENU）。原因是 CarlaAir 里 SimpleFlight 的偏航保持不生效，
+无人机机头会自行漂移；若用机体系控制，轨迹会随偏航打转。改用世界系后，
+机头怎么转都不影响轨迹，策略才能稳定收敛。
 
-物理模型：
-    yaw += yaw_rate * dt
-    pos += R(yaw) · [vx, -vy, vz] * dt      （机体系 前/左/上 -> 世界系）
-
+物理模型（含速度环一阶滞后，贴近真实飞行器）：
+    vel += (cmd_vel - vel) * dt / vel_tau
+    pos += vel * dt
 任务：从随机起点飞到随机目标点，途中避开圆柱障碍物。
 """
 from __future__ import annotations
@@ -23,7 +22,7 @@ from gymnasium import spaces
 
 from policy import (ACT_DIM, MAX_HORIZ_SPEED, MAX_RANGE, MAX_VERT_SPEED,
                     N_SECTORS, OBS_DIM, action_to_velocity,
-                    build_observation, world_to_body)
+                    build_observation, lidar_points_to_histogram)
 
 
 class NavEnv(gym.Env):
@@ -31,18 +30,19 @@ class NavEnv(gym.Env):
 
     def __init__(
         self,
-        bounds: float = 3.0,                    # 场地半边长 (米), x/y ∈ [-bounds, bounds]
-        z_range: Tuple[float, float] = (0.3, 3.0),
-        goal_radius: float = 0.3,               # 到达判定半径 (米)
-        init_z: float = 1.0,
-        min_goal_dist: float = 1.5,
-        max_goal_dist: float = 3.5,
-        num_obstacles: int = 6,
-        obstacle_radius: float = 0.35,
+        bounds: float = 10.0,                   # 场地半边长 (米)，接近 CarlaAir 城镇尺度
+        z_range: Tuple[float, float] = (-4.0, 4.0),
+        goal_radius: float = 0.4,               # 到达判定半径 (米)
+        init_z: float = 1.5,
+        min_goal_dist: float = 2.0,
+        max_goal_dist: float = 8.0,
+        num_obstacles: int = 16,
+        obstacle_radius: float = 0.6,
         max_steps: int = 400,
         dt: float = 0.1,                        # 控制周期 (秒)
+        vel_tau: float = 0.45,                  # 速度环一阶响应时间常数 (秒)
         w_progress: float = 1.0,                # 向目标靠近的进度奖励（每米）
-        w_smooth: float = 0.02,                 # 动作平滑惩罚（抑制来回抖动）
+        w_smooth: float = 0.02,                 # 动作平滑惩罚
         w_step: float = 0.005,                  # 每步时间惩罚
         reward_success: float = 20.0,
         reward_crash: float = -20.0,
@@ -59,6 +59,7 @@ class NavEnv(gym.Env):
         self.obstacle_radius = obstacle_radius
         self.max_steps = max_steps
         self.dt = dt
+        self.vel_tau = vel_tau
         self.w_progress = w_progress
         self.w_smooth = w_smooth
         self.w_step = w_step
@@ -70,21 +71,20 @@ class NavEnv(gym.Env):
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(OBS_DIM,),
                                             dtype=np.float32)
 
-        # 回合内状态
-        self.pos = np.zeros(3)
-        self.yaw = 0.0
-        self.vel_body = np.zeros(3)              # 当前机体系速度（命令值）
+        self.pos = np.zeros(3)          # 世界系 ENU
+        self.vel = np.zeros(3)          # 世界系 ENU（实际速度）
+        self.yaw = 0.0                  # 不影响运动，仅用于保持接口一致
         self.prev_action = np.zeros(ACT_DIM)
         self.goal = np.zeros(3)
         self.start = np.zeros(3)
-        self.obstacles_xy = []                   # list[(ox, oy)]
+        self.obstacles_xy = []
         self.steps = 0
         self.dist_prev = 0.0
 
     # ------------------------------------------------------------------ 采样
     def _sample_task(self):
         bounds = self.bounds
-        r0 = float(self.rng.uniform(1.0, min(2.5, bounds * 0.8)))
+        r0 = float(self.rng.uniform(1.5, min(5.0, bounds * 0.8)))
         th0 = float(self.rng.uniform(0.0, 2.0 * math.pi))
         self.start = np.array([r0 * math.cos(th0), r0 * math.sin(th0), self.init_z])
 
@@ -93,7 +93,7 @@ class NavEnv(gym.Env):
             g = np.array([
                 float(self.rng.uniform(-bounds * 0.8, bounds * 0.8)),
                 float(self.rng.uniform(-bounds * 0.8, bounds * 0.8)),
-                float(self.rng.uniform(0.5, self.z_range[1] - 0.3)),
+                float(self.rng.uniform(self.z_range[0] * 0.5, self.z_range[1] * 0.5)),
             ])
             d = float(np.linalg.norm(g - self.start))
             if self.min_goal_dist <= d <= self.max_goal_dist:
@@ -103,7 +103,6 @@ class NavEnv(gym.Env):
             goal = np.array([-self.start[0], -self.start[1], self.init_z])
         self.goal = goal
 
-        # 障碍物：随机摆放，避开起点与目标（2D 距离 > 0.9）
         self.obstacles_xy = []
         for _ in range(self.num_obstacles):
             for _ in range(100):
@@ -111,14 +110,14 @@ class NavEnv(gym.Env):
                     float(self.rng.uniform(-bounds * 0.7, bounds * 0.7)),
                     float(self.rng.uniform(-bounds * 0.7, bounds * 0.7)),
                 ])
-                if (np.linalg.norm(o - self.start[:2]) > 0.9
-                        and np.linalg.norm(o - self.goal[:2]) > 0.9):
+                if (np.linalg.norm(o - self.start[:2]) > 1.2
+                        and np.linalg.norm(o - self.goal[:2]) > 1.2):
                     self.obstacles_xy.append((o[0], o[1]))
                     break
 
     # ------------------------------------------------------------------ 传感器仿真
     def _ray_dist(self, dirx: float, diry: float) -> float:
-        """从当前位置沿 (dirx,diry) 方向到最近障碍的距离（2D 射线-圆交点）."""
+        """从当前位置沿世界系方向 (dirx,diry) 到最近障碍的距离（2D 射线-圆交点）."""
         d = MAX_RANGE
         px, py = self.pos[0], self.pos[1]
         for (ox, oy) in self.obstacles_xy:
@@ -138,18 +137,17 @@ class NavEnv(gym.Env):
         return d
 
     def _histogram(self) -> np.ndarray:
+        """世界系固定方向的扇形直方图（用于与真实激光雷达对照）."""
         sector = 2.0 * math.pi / N_SECTORS
         hist = np.ones(N_SECTORS, dtype=np.float32)
         for i in range(N_SECTORS):
-            a_body = i * sector                        # 扇形中心角（机体系），0 = 正前方
-            a_world = a_body + self.yaw
-            d = self._ray_dist(math.cos(a_world), math.sin(a_world))
+            a = i * sector                      # 世界系角度，0 = 正东
+            d = self._ray_dist(math.cos(a), math.sin(a))
             hist[i] = float(np.clip(d / MAX_RANGE, 0.0, 1.0))
         return hist
 
     def _obs(self) -> np.ndarray:
-        goal_body = world_to_body(self.goal - self.pos, self.yaw)
-        return build_observation(self._histogram(), goal_body, self.vel_body)
+        return build_observation(self._histogram(), self.goal - self.pos, self.vel)
 
     # ------------------------------------------------------------------ 回合控制
     def reset(self, *, seed=None, options=None):
@@ -158,8 +156,8 @@ class NavEnv(gym.Env):
             self.rng = np.random.default_rng(seed)
         self._sample_task()
         self.pos = self.start.copy()
+        self.vel = np.zeros(3)
         self.yaw = float(self.rng.uniform(-math.pi, math.pi))
-        self.vel_body = np.zeros(3)
         self.prev_action = np.zeros(ACT_DIM)
         self.steps = 0
         self.dist_prev = float(np.linalg.norm(self.pos - self.goal))
@@ -170,17 +168,16 @@ class NavEnv(gym.Env):
                     -1.0, 1.0)
         vx, vy, vz, yaw_rate = action_to_velocity(a)
 
-        # 机体系速度 -> 世界系位移
-        self.yaw += yaw_rate * self.dt
-        c, s = math.cos(self.yaw), math.sin(self.yaw)
-        self.pos += self.dt * np.array([vx * c - vy * s,
-                                        vx * s + vy * c,
-                                        vz])
-        self.vel_body = np.array([vx, vy, vz], dtype=np.float64)
+        # 一阶速度响应：真实飞行器的速度环有滞后，指令速度不是瞬时达到的
+        cmd = np.array([vx, vy, vz], dtype=np.float64)
+        alpha = min(1.0, self.dt / max(self.vel_tau, 1e-3))
+        self.vel += alpha * (cmd - self.vel)
+
+        self.pos += self.dt * self.vel
+        self.yaw += yaw_rate * self.dt           # 不影响运动
 
         dist = float(np.linalg.norm(self.pos - self.goal))
 
-        # ---- 终止判定 ----
         crash_reason = None
         if dist < self.goal_radius:
             terminated, success = True, True
@@ -200,7 +197,6 @@ class NavEnv(gym.Env):
 
         truncated = (not terminated) and (self.steps >= self.max_steps - 1)
 
-        # ---- 奖励 ----
         progress = self.dist_prev - dist
         smooth = float(np.sum(np.square(a - self.prev_action)))
         reward = (self.w_progress * progress
