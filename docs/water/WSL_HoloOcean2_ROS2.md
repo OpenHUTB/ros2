@@ -1,6 +1,6 @@
 # 跑通HoloOcean2的ROS2示例方法（无头模式）
 
-在子系统Ubuntu26.04.4的环境下运行
+在子系统Ubuntu24.04.4的环境下运行
 
 ## 1. 安装 ROS 2 Jazzy
 
