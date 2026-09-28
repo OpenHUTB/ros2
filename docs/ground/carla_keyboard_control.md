@@ -20,7 +20,7 @@
 ### 与已有「手动控制」示例的区别
 
 本仓库已有基于 **carla-ros-bridge** 的
-[手动控制示例](set_up_and_connect_to_carla.md)（在车辆上按 `B` 切换手动驾驶）。本模块的差异：
+[手动控制示例](../set_up_and_connect_to_carla.md)（在车辆上按 `B` 切换手动驾驶）。本模块的差异：
 
 | 对比项 | 已有「手动控制」示例 | 本模块 `carla_keyboard_control` |
 |---|---|---|
@@ -37,7 +37,7 @@
 
 | 模块 | 相同点 | 本模块的不同点 |
 |---|---|---|
-| [`set_up_and_connect_to_carla`](set_up_and_connect_to_carla.md) | 都在 CARLA 中控制车辆 | 不依赖 ros-bridge，控制逻辑自研，含倒挡判定 |
+| [`set_up_and_connect_to_carla`](../set_up_and_connect_to_carla.md) | 都在 CARLA 中控制车辆 | 不依赖 ros-bridge，控制逻辑自研，含倒挡判定 |
 | `src/water/rov_mujoco` | 同为「物理仿真 + 键盘运动控制」作业 | 对象为**地面载具**（车辆动力学/阿克曼转向），非水下 6-DOF |
 | `src/air/drone_ros_teleop` | 同为键盘遥控 | 本模块做**车辆物理仿真**（真实动力学解算），非无人机消息解耦 |
 | `src/air/octree_uav_3d_pathfinding` | 都在虚拟机 + 宿主机模拟器架构下运行 | 本模块**不重复罗列虚拟机配置步骤**，只提供跳转链接 |
@@ -45,7 +45,7 @@
 !!! note "配置步骤不重复（老师评审要求）"
     CARLA 服务端的启动方式、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
     `numpy` 版本兼容等**通用配置步骤**，请直接参考
-    [设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md)。本文档仅描述本模块特有内容。
+    [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)。本文档仅描述本模块特有内容。
 
 ---
 
@@ -198,11 +198,11 @@ def _on_tick(self):
 
 CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
 `numpy` 版本兼容等**通用配置步骤与已有示例完全相同，本文不重复**，请参考
-[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md)：
+[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)：
 
 | 需要做的事 | 参考位置 |
 |---|---|
-| 启动 CARLA 服务端、选择地图 | [设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 |
+| 启动 CARLA 服务端、选择地图 | [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 |
 | 查看宿主机 IP、填写 `host` 参数 | 同上 →「使用 Carla 客户端启动 Ego Vehicle」 |
 | 连接失败、黑屏、`numpy` 报错排查 | 同上 →「常见问题」 |
 
