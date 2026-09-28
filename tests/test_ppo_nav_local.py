@@ -28,7 +28,14 @@ SCRIPTS = os.path.join(ROOT, "src", "air", "uav_ppo_nav", "scripts")
 sys.path.insert(0, SCRIPTS)
 
 import policy as P  # noqa: E402
-from env import NavEnv  # noqa: E402
+
+# NavEnv 需要 gymnasium；缺失时只跑 policy 部分（纯 numpy），并给出提示。
+try:
+    from env import NavEnv  # noqa: E402
+    ENV_SKIP = None
+except Exception as _exc:                       # noqa: BLE001
+    NavEnv = None
+    ENV_SKIP = str(_exc)
 
 
 # ================================================================= A. policy
@@ -123,14 +130,19 @@ def test_env():
 
 def main():
     test_policy()
-    test_env()
+    if NavEnv is None:
+        print("\n== B. NavEnv 训练环境 ==")
+        print("  [跳过] 需要 gymnasium（%s）" % ENV_SKIP)
+        print("         安装后可跑完整用例：pip3 install --user gymnasium")
+    else:
+        test_env()
     print("\n==================== 结果 ====================")
     print("通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
     if FAIL:
         for f in FAIL:
             print("  FAIL: %s" % f)
         return 1
-    print("全部通过")
+    print("全部通过" + ("（B 部分已跳过：缺 gymnasium）" if NavEnv is None else ""))
     return 0
 
 
