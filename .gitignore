@@ -32,3 +32,8 @@ trajectories/*.json
 .idea/
 .DS_Store
 Thumbs.db
+
+# catkin 在仓库根目录跑 catkin_make 时生成的杂物（不入库）
+src/CMakeLists.txt
+build/.built_by
+devel/.built_by
