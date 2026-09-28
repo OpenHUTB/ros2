@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_ppo_nav</name>
+  <version>0.1.0</version>
+  <description>
+    基于 PPO（近端策略优化）的无人机自主导航与避障模块。
+    用激光雷达扇形直方图 + 里程计构造观测，输出机体系速度指令，
+    训练在轻量质点环境完成，部署在 CarlaAir/AirSim 仿真器。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>rospkg</exec_depend>
+
+  <export/>
+</package>

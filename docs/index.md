@@ -76,6 +76,9 @@ ROS每章节运行代码:
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
+* [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机键盘控制](./air/uav_keyboard_control.md)
+* [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
