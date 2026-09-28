@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_tsr_ros</name>
+  <version>1.0.0</version>
+  <description>
+    Carla 交通标志识别 ROS 封装。使用 YOLOv8 神经网络对摄像头图像进行
+    实时交通标志检测，并基于检测结果发布车辆控制指令。
+    话题链路：/camera/image_raw → /perception/traffic_signs → /vehicle/control_cmd
+  </description>
+  <maintainer email="1687183895@qq.com">HaiLang47</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <export>
+  </export>
+</package>
