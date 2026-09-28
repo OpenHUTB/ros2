@@ -1,0 +1,6 @@
+# CARLA 0.9.16 地面载具键盘运动控制 —— 运行时依赖
+#
+# carla 客户端模块不在 PyPI 的 0.9.16 版本中，需从 CARLA 0.9.16 Linux 发行包安装：
+#   pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+numpy>=1.21
+pygame>=2.1

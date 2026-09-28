@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!-- CARLA 0.9.16 地面载具物理仿真与键盘运动控制 —— ROS 1 Noetic Launch 文件。
+
+     使用方式（先 source ROS 1 环境）：
+         roslaunch carla_keyboard_control main.launch host:=192.168.8.1 town:=Town05
+
+     说明：
+       * 本模块核心为 CARLA Python API 直连 + 键盘运动控制，逻辑本身不依赖 rospy，
+         Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法、ros-bridge 连接等
+         属于已有示例的**通用配置步骤**，本模块不重复描述，详见：
+         https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
+<launch>
+  <arg name="host" default="127.0.0.1" doc="CARLA 服务端地址（虚拟机填宿主机 IP）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="town" default="Town05" doc="CARLA 地图名"/>
+  <arg name="follow" default="false" doc="是否让镜头跟随自车（录屏用）"/>
+
+  <node pkg="carla_keyboard_control" type="main.py"
+        name="carla_keyboard_control" output="screen"
+        args="--host $(arg host) --port $(arg port) --town $(arg town)"/>
+</launch>
