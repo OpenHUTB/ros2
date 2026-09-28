@@ -6,14 +6,18 @@
                    订阅 /uav/cmd_vel 执行指令）
        ============================================================ -->
 
-  <arg name="goal_x" default="30.0" doc="目标点 ENU x (米)"/>
-  <arg name="goal_y" default="10.0" doc="目标点 ENU y (米)"/>
-  <arg name="goal_z" default="-8.0" doc="目标点 ENU z (米)"/>
+  <arg name="goal_x" default="4.0"  doc="目标点 ENU x (米)"/>
+  <arg name="goal_y" default="3.0"  doc="目标点 ENU y (米)"/>
+  <arg name="goal_z" default="-27.0" doc="目标点 ENU z (米)"/>
 
   <rosparam command="load" file="$(find uav_ppo_nav)/config/ppo_nav.yaml"/>
   <param name="nav/weights" value="$(find uav_ppo_nav)/models/policy_weights.npz"/>
   <param name="nav/goal" value="[$(arg goal_x), $(arg goal_y), $(arg goal_z)]"/>
 
-  <!-- PPO 导航节点（入口 main.py） -->
-  <node pkg="uav_ppo_nav" type="main.py" name="uav_ppo_nav" output="screen"/>
+  <!-- PPO 导航节点（入口 main.py）。
+       通过环境变量告知入口脚本「真实源码目录」，绕开 catkin wrapper 无法被
+       import 的问题（否则 `import ppo_nav_node` 拿到 wrapper，没有 main）。 -->
+  <node pkg="uav_ppo_nav" type="main.py" name="uav_ppo_nav" output="screen">
+    <env name="UAV_PPO_SCRIPT_DIR" value="$(find uav_ppo_nav)/scripts"/>
+  </node>
 </launch>

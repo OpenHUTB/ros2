@@ -8,7 +8,48 @@
 """
 from __future__ import annotations
 
+import os
 import sys
+
+
+def _prepare_import_path():
+    """让 `import ppo_nav_node` 拿到【源码】而不是 catkin 生成的 wrapper.
+
+    catkin_install_python 会给入口脚本包一层 wrapper（内容是 exec(compile(...))）。
+    若被 import 的模块也走 catkin_install_python，拿到的就是 wrapper，其命名空间里
+    没有 main 等函数，于是报 `module 'ppo_nav_node' has no attribute 'main'`。
+
+    这里按优先级收集候选目录，逐个检查里面是否有【真正的源码】
+    （判定标准：ppo_nav_node.py 里含 "class PpoNavNode"），找到就放到 sys.path 最前。
+    """
+    cands = [
+        os.environ.get("UAV_PPO_SCRIPT_DIR", ""),                 # launch 通过 <env> 传入
+        os.path.dirname(os.path.abspath(__file__)),               # 直接运行时的本文件目录
+    ]
+    if sys.argv and sys.argv[0]:
+        cands.append(os.path.dirname(os.path.abspath(sys.argv[0])))
+    for root in os.environ.get("ROS_PACKAGE_PATH", "").split(os.pathsep):
+        if root:
+            cands.append(os.path.join(root, "uav_ppo_nav", "scripts"))
+
+    for d in cands:
+        if not d or not os.path.isdir(d):
+            continue
+        f = os.path.join(d, "ppo_nav_node.py")
+        if not os.path.isfile(f):
+            continue
+        try:
+            with open(f, encoding="utf-8", errors="ignore") as fh:
+                if "class PpoNavNode" in fh.read():
+                    if d not in sys.path:
+                        sys.path.insert(0, d)
+                    return d
+        except OSError:
+            continue
+    return None
+
+
+_SOURCE_DIR = _prepare_import_path()
 
 
 def main():
