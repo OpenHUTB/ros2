@@ -65,6 +65,7 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
