@@ -194,7 +194,28 @@ def _on_tick(self):
 | Python | 3.10+（CARLA 0.9.16 客户端 wheel 为 cp310/cp311/cp312） |
 | ROS | ROS 1 Noetic 或 ROS 2 Humble（launch 封装） |
 
-### 5.2 步骤 0：环境准备（复用已有示例）
+### 5.2 新手路线：从已有示例到本模块，在哪一步切换
+
+如果您是第一次接触 CARLA，建议按下表顺序操作。**关键是在第 3 步之后切换到本模块**，
+不必把已有示例全部做完：
+
+| 序号 | 做什么 | 出处 | 说明 |
+|---|---|---|---|
+| 1 | 下载安装 CARLA 0.9.16，双击 `CarlaUE4.exe` 启动服务端 | [已有示例](../set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 | 两条路线的**共同前提** |
+| 2 | 用 `ipconfig` 查看宿主机 IP（如 `172.21.108.47`） | 同上 →「使用 Carla 客户端启动 Ego Vehicle」 | 虚拟机要能 ping 通该 IP |
+| 3 | 确认虚拟机与 CARLA 连通 | 本页 5.5 节 | 输出 `CONNECT OK` 即可 |
+| — | **★ 在此切换到本模块** | — | 以下步骤与已有示例不同 |
+| 4 | 装 `carla` Python 客户端与依赖 | 本页 5.3 节 | 已有示例用的是 ros-bridge，**不装这个用不了本模块** |
+| 5 | `colcon build` 编译本功能包 | 本页 5.4 节 | 已有示例用 `catkin_make`，路线不同 |
+| 6 | 运行 `main.py` 或 `ros2 launch` | 本页 5.6 节 | 本模块自研键盘控制 |
+
+!!! warning "不要从头到尾照做已有示例"
+    已有示例中的「设置 Carla ROS Bridge」「使用 Carla 客户端启动 Ego Vehicle（roslaunch）」
+    「使用 rviz 进行可视化」等小节属于 **ros-bridge 路线**（需要 catkin 编译 ros-bridge）。
+    本模块**不依赖 ros-bridge**，这些步骤可以跳过；只有上表第 1~2 步是两条路线共用的。
+    已有示例中其余内容仅建议作为背景了解，其连接排查经验可参考「常见问题」小节。
+
+### 5.3 步骤 0：环境准备
 
 CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
 `numpy` 版本兼容等**通用配置步骤与已有示例完全相同，本文不重复**，请参考
@@ -217,7 +238,7 @@ pip3 install -r src/ground/carla_keyboard_control/requirements.txt
 pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
 ```
 
-### 5.3 步骤 1：编译本功能包（ROS 2）
+### 5.4 步骤 1：编译本功能包（ROS 2）
 
 ```bash
 cd ~/ros2_ws
@@ -225,7 +246,7 @@ colcon build --packages-select carla_keyboard_control --symlink-install
 source install/setup.bash
 ```
 
-### 5.4 步骤 2：验证与 CARLA 服务端的连接
+### 5.5 步骤 2：验证与 CARLA 服务端的连接
 
 确认客户端能连上宿主机（IP 换成本机宿主机地址）：
 
@@ -235,7 +256,7 @@ python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10);
 
 输出 `CONNECT OK: Carla/Maps/Town10HD_Opt` 表示连接成功。
 
-### 5.5 步骤 3：运行本模块
+### 5.6 步骤 3：运行本模块
 
 ```bash
 # 模式 A：独立交互模式（推荐）
@@ -254,7 +275,7 @@ ros2 launch carla_keyboard_control main.launch.py host:=192.168.8.1
 roslaunch carla_keyboard_control main.launch host:=192.168.8.1
 ```
 
-### 5.6 步骤 4：操作说明
+### 5.7 步骤 4：操作说明
 
 | 按键 | 作用 |
 |---|---|
@@ -266,7 +287,7 @@ roslaunch carla_keyboard_control main.launch host:=192.168.8.1
 
 建议用 ScreenToGif 录制 10 秒操控过程作为演示动图（≤10 MB）。
 
-### 5.7 运行效果
+### 5.8 运行效果
 
 #### 交互模式运行画面
 
@@ -310,7 +331,7 @@ x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
 [完成] 已释放资源；共收到相机帧 88 张，导出截图 16 张
 ```
 
-### 5.8 常见问题
+### 5.9 常见问题
 
 | 现象 | 解决 |
 |---|---|
