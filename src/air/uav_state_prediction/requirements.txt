@@ -1,0 +1,8 @@
+# Python 3.8 validated. Install dependencies in this order; see README.
+numpy==1.24.4
+msgpack-rpc-python==0.4.1
+airsim==1.8.1
+matplotlib==3.7.5
+# Install CPU torch separately from the official CPU wheel index:
+# python -m pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+# ROS2 rclpy and messages are supplied by the ROS installation, not pip.
