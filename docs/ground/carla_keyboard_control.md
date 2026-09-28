@@ -221,7 +221,7 @@ source install/setup.bash
 
 在 Windows 宿主机上运行 `CarlaUE4.exe`，等待小镇场景加载完成（约 20~60 秒）。
 服务端的下载安装与 `host` 参数填写方式详见
-[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md#carla_1)。
+[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md) 一文的「启动 Carla 服务器」小节。
 
 ### 5.5 步骤 3：验证虚拟机与 CARLA 服务端的连接
 
@@ -232,7 +232,7 @@ python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10);
 ```
 
 输出 `CONNECT OK: Carla/Maps/Town10HD_Opt` 表示连接成功（连接失败时的排查见
-[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md#_3)）。
+[设置并连接到 Carla 模拟器](set_up_and_connect_to_carla.md) 一文的「常见问题」小节）。
 
 ### 5.6 步骤 4：运行本模块
 
