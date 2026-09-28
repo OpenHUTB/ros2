@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- 启动Gazebo空世界 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="worlds/empty.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <!-- 加载URDF模型参数 -->
+  <param name="robot_description" command="$(find xacro)/xacro $(find diff_robot)/urdf/diff_robot.urdf"/>
+
+  <!-- 发布机器人状态 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- 在Gazebo中生成小车 -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model diff_robot -x 0 -y 0 -z 0.1"/>
+
+</launch>
