@@ -128,6 +128,8 @@ def run_standalone(args):
     clock = pygame.time.Clock() if pygame else None
     start = time.time()
     shot = 0
+    frames_seen = 0
+    warned_no_frame = False
     demo_idx = -1
     demo_t0 = time.time()
     next_shot = 0.0
@@ -192,6 +194,14 @@ def run_standalone(args):
 
             # ---------------- 取证截图 ----------------
             frame = holder["frame"]
+            if frame is not None:
+                frames_seen += 1
+            elif not warned_no_frame and now - start > 3.0:
+                warned_no_frame = True
+                print("[警告] 3 秒内未收到任何相机帧。请确认：")
+                print("       ① CARLA 服务端窗口已完全加载（未在切换地图）；")
+                print("       ② --host 指向的是运行 CarlaUE4 的宿主机；")
+                print("       ③ 该地图上车辆出生点未被占用。")
             if args.save_dir and frame is not None and now >= next_shot:
                 shot += 1
                 name = os.path.join(args.save_dir, f"carla_run_{shot:02d}.png")
@@ -228,7 +238,7 @@ def run_standalone(args):
             sensor.stop()
             sensor.destroy()
         vehicle.destroy()
-        print(f"[完成] 已释放资源；共导出 {shot} 张截图")
+        print(f"[完成] 已释放资源；共收到相机帧 {frames_seen} 张，导出截图 {shot} 张")
     return 0
 
 

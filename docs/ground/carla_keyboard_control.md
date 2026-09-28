@@ -267,19 +267,35 @@ roslaunch carla_keyboard_control main.launch host:=192.168.8.1
 
 ### 5.8 运行效果
 
-下图为本模块在 **Ubuntu 20.04 虚拟机**中作为 CARLA 客户端运行时的实测画面
-（CARLA 服务端运行于 Windows 宿主机，`--host` 指向宿主机 IP）：
+#### 交互模式运行画面
+
+下图为运行交互模式（`--follow`，CARLA 镜头跟随自车）时从运行录屏中截取的画面：
 
 ![CARLA 键盘运动控制实测 —— 直道加速](../img/ground/carla_keyboard_89.png)
 
 ![CARLA 键盘运动控制实测 —— 转向](../img/ground/carla_keyboard_149.png)
 
-![CARLA 键盘运动控制实测 —— HUD 与镜头跟随](../img/ground/carla_keyboard_209.png)
+![CARLA 键盘运动控制实测 —— 镜头跟随](../img/ground/carla_keyboard_209.png)
 
-以无窗口取证模式运行时，终端会逐帧打印车辆状态，可直接作为可运行性证据：
+#### 无窗口取证模式导出的相机帧
+
+在**无 3D 加速的虚拟机**中，pygame 窗口可能无法开窗。此时用
+`--headless --demo --save_dir` 运行，程序会逐帧把相机数据导出为 PNG。
+以下为该模式直接导出的原始相机帧（未经窗口渲染，640×480）：
+
+| 阶段 | 画面 |
+|---|---|
+| 直线加速（`th=0.6`） | ![](../img/ground/carla_keyboard_accel.png) |
+| 转向（`st=+0.6`） | ![](../img/ground/carla_keyboard_turn.png) |
+| 挂倒挡后退（`rev=1`） | ![](../img/ground/carla_keyboard_reverse.png) |
+
+#### 终端状态输出（可运行性证据）
+
+无论是否开窗，程序都会逐帧打印车辆状态，可直接作为可运行性证据：
 
 ```text
 [就绪] 自车已生成 @ Location(x=36.00, y=-5.00, z=0.60)；地图 Town05
+[就绪] 控制键：W 前进 / S 刹车(静止时倒车) / A 左 / D 右 / ESC 退出
 [演示 1/5] 直线加速
 x=  36.02 y=  -5.00 v= 0.31 m/s | th=0.6 st=+0.00 br=0.0 rev=0
 x=  36.45 y=  -5.00 v= 2.87 m/s | th=0.6 st=+0.00 br=0.0 rev=0
@@ -290,6 +306,7 @@ x=  44.88 y=  -3.02 v= 3.11 m/s | th=0.0 st=+0.00 br=0.8 rev=0
 [演示 5/5] 挂倒挡后退
 x=  47.65 y=  -2.40 v= 0.00 m/s | th=0.5 st=+0.00 br=0.0 rev=1
 x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
+[完成] 已释放资源；共收到相机帧 88 张，导出截图 16 张
 ```
 
 ### 5.9 常见问题
