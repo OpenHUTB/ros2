@@ -1,0 +1,24 @@
+# CARLA 端到端神经网络（图像 → 控制）—— 仿真参数
+carla_end_to_end_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 车道线清晰，适合端到端视觉驾驶演示
+    town: "Town05"
+    # 自车蓝图
+    ego_blueprint: "vehicle.tesla.model3"
+    # 同步模式固定步长（秒）
+    fixed_delta_seconds: 0.05
+    # 端到端 CNN 模型路径（由 main.py --mode train 生成）
+    model_path: "models/cnn.json"
+    # 推理后端：numpy=纯 numpy SimpleCNN（默认，无需 TensorFlow）；tf=tf.keras
+    backend: "numpy"
+    # 相机图像分辨率（宽 × 高）——端到端网络输入尺寸
+    image_width: 80
+    image_height: 60
+    camera_fov: 90.0
+    # 固定油门（转向由 CNN 输出；此处油门保持恒定以便观察转向学习效果）
+    throttle: 0.45
+    # 是否把相机图像发布到话题
+    publish_image: true
