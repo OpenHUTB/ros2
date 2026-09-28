@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!-- CARLA 作业综合整合与性能评价 —— ROS 1 Noetic Launch 文件。
+
+     使用方式（先 source ROS 1 环境）：
+         roslaunch carla_benchmark_suite main.launch                        # 发布评测指标
+         roslaunch carla_benchmark_suite main.launch target:=perception     # 调度子模块
+         roslaunch carla_benchmark_suite main.launch benchmark:=true        # 运行基准评测
+
+     说明：
+       * 评测在**无 CARLA 服务端**时也能完成（离线训练 + 合成环境回放）。
+       * 需要连 CARLA 时（target 为 control/perception/navigation/end_to_end），
+         把 host 指向宿主机 IP。CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法等
+         **通用配置步骤**本模块不重复描述，详见：
+         https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
+<launch>
+  <arg name="target" default="" doc="调度哪个子模块；留空则只跑评测/打印总览"/>
+  <arg name="host" default="127.0.0.1" doc="CARLA 服务端地址（虚拟机填宿主机 IP）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="benchmark" default="false" doc="true=运行基准评测套件并导出指标"/>
+  <arg name="list" default="false" doc="true=只列出所有可调度模块"/>
+  <arg name="save_dir" default="shots" doc="对比图导出目录"/>
+  <arg name="out" default="report.json" doc="指标 JSON 导出路径"/>
+  <arg name="extra" default="" doc="透传给子模块的额外参数，如 &quot;--mode train&quot;"/>
+
+  <!-- 模式一：列出模块总览 -->
+  <node if="$(arg list)" pkg="carla_benchmark_suite" type="main.py"
+        name="carla_benchmark_list" output="screen" args="--list"/>
+
+  <!-- 模式二：运行基准评测套件 -->
+  <node if="$(arg benchmark)" pkg="carla_benchmark_suite" type="main.py"
+        name="carla_benchmark_run" output="screen"
+        args="--benchmark --save_dir $(arg save_dir) --out $(arg out)"/>
+
+  <!-- 模式三：调度指定子模块（target 非空且未在跑评测时启用） -->
+  <node pkg="carla_benchmark_suite" type="main.py"
+        name="carla_benchmark_dispatch" output="screen"
+        args="--target $(arg target) --host $(arg host) -- $(arg extra)"/>
+</launch>

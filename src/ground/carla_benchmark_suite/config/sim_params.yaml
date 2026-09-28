@@ -1,0 +1,21 @@
+# CARLA 作业综合整合与性能评价 —— 参数
+carla_benchmark_node:
+  ros__parameters:
+    # 调度模式：要拉起哪个子模块（control / perception / navigation / end_to_end）
+    # 留空则本节点只发布评测指标
+    target: ""
+    # 评测模式：已导出的评测结果 JSON（由 main.py --benchmark --out report.json 生成）
+    # 留空则在本节点内现场运行评测
+    metrics_file: ""
+    # 指标话题发布周期（秒）
+    publish_period: 5.0
+    # CARLA 服务端地址（仅调度需要连 CARLA 的子模块时使用）
+    host: "127.0.0.1"
+    port: 2000
+    # 评测时的训练轮数（越小越快，越大指标越好）
+    epochs: 60
+    # 端到端评测的合成样本数（纯 numpy CNN，样本数与耗时成正比）
+    samples: 60
+    # 对比图与指标导出目录
+    save_dir: "shots"
+    out: "report.json"
