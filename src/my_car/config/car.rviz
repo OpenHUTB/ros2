@@ -1,0 +1,23 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Views
+    Name: Views
+
+Visualization Manager:
+  Class: "Visualization Manager"
+  Displays:
+    - Class: "rviz/RobotModel"
+      Enabled: true
+      Name: "RobotModel"
+      Description Source: "Topic"
+      Description Topic: "/robot_description"
+    - Class: "rviz/TF"
+      Enabled: true
+      Name: "TF"
+  Fixed Frame: "base_link"
+  View Controller:
+    Class: "rviz/Orbit"
+    Distance: 2.0
+    Pitch: 0.5
+    Yaw: 0.5
