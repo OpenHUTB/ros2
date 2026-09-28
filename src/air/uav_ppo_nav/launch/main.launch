@@ -1,0 +1,19 @@
+<launch>
+  <!-- ============================================================
+       uav_ppo_nav 统一启动入口（PPO 自主导航避障）
+         roslaunch uav_ppo_nav main.launch
+         前置条件：先启动 carlair_ros_bridge（发布 /uav/odom、/lidar/points，
+                   订阅 /uav/cmd_vel 执行指令）
+       ============================================================ -->
+
+  <arg name="goal_x" default="30.0" doc="目标点 ENU x (米)"/>
+  <arg name="goal_y" default="10.0" doc="目标点 ENU y (米)"/>
+  <arg name="goal_z" default="-8.0" doc="目标点 ENU z (米)"/>
+
+  <rosparam command="load" file="$(find uav_ppo_nav)/config/ppo_nav.yaml"/>
+  <param name="nav/weights" value="$(find uav_ppo_nav)/models/policy_weights.npz"/>
+  <param name="nav/goal" value="[$(arg goal_x), $(arg goal_y), $(arg goal_z)]"/>
+
+  <!-- PPO 导航节点（入口 main.py） -->
+  <node pkg="uav_ppo_nav" type="main.py" name="uav_ppo_nav" output="screen"/>
+</launch>

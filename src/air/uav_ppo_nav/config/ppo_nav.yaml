@@ -1,0 +1,12 @@
+# PPO 导航部署参数（训练参数见 scripts/env.py 与 train.py 的命令行参数）
+nav:
+  goal: [30.0, 10.0, -8.0]   # 目标点（ENU 世界系，米）
+  weights: ""                # 策略权重路径；launch 里用 $(find uav_ppo_nav) 覆盖
+
+rate:
+  publish_hz: 10.0           # 策略推理 / 速度指令发布频率
+
+topic:
+  cmd_vel: "/uav/cmd_vel"    # 速度指令话题（与桥接包一致）
+  odom: "/uav/odom"
+  lidar: "/lidar/points"
