@@ -396,17 +396,23 @@ class SimpleCNN:
         return out.max(axis=(2, 4)), x
 
     def _pool_backward(self, dout, x):
-        """dout 下采样梯度 + 原输入，回传到池化前。"""
+        """maxpool 反向：梯度**只回传给窗口内取到最大值的那一个位置**。
+
+        早期实现把 `dout` 直接赋给窗口内全部 p×p 个位置，等价于把梯度放大 p² 倍
+        并错误地把梯度分给了未被选中的元素，导致网络无法学习
+        （表现为输出塌缩为常数、损失停在"恒输出 0"的水平）。
+        maxpool 的导数在最大值处为 1、其余处为 0，故此处按 argmax 掩码回传。
+        """
         p = self.pool
         N, Ho, Wo, C = dout.shape
         dx = np.zeros_like(x)
-        for i in range(Ho):
-            for j in range(Wo):
-                for di in range(p):
-                    for dj in range(p):
-                        idx = (i * p) + di
-                        jdx = (j * p) + dj
-                        dx[:, idx, jdx, :] = dout[:, i, j, :]
+        xc = x[:, :Ho * p, :Wo * p, :].reshape(N, Ho, p, Wo, p, C)
+        am = xc.max(axis=(2, 4), keepdims=True)
+        mask = (xc == am).astype(dx.dtype)
+        # 极端情况下窗口内有并列最大值，均分梯度以免重复计数
+        cnt = mask.sum(axis=(2, 4), keepdims=True)
+        contrib = mask * (dout[:, :, None, :, None, :] / cnt)
+        dx[:, :Ho * p, :Wo * p, :] = contrib.reshape(N, Ho * p, Wo * p, C)
         return dx
 
     # ---- 前向 ----
@@ -420,11 +426,15 @@ class SimpleCNN:
         a2 = relu(z2)
         p2, _ = self._pool(a2)                      # (N,H2,W2,C2)
         g = p2.mean(axis=(1, 2))                    # global avg pool (N,C2)
-        fc_out = g @ self.fc[0].T + self.fc[1]      # (N,out)
+        fc_out = g @ self.fc[0].T + self.fc[1]      # (N,out) 线性
+        # 训练时用 MSE 拟合的是 tanh 输出，推理必须做同样的 tanh，
+        # 否则输出无界且与训练目标不一致（曾出现预测值达 ±13 而真实标签在 [-1,1]）。
+        out = np.tanh(fc_out)
         cache = (xf, a1, p1, a2, p2, g)
-        return fc_out, cache
+        return out, cache
 
     def predict(self, x):
+        """单张或多张图像 → 转向角 ∈ [-1,1]（与训练输出一致）。"""
         if x.ndim == 3:
             x = x[None, ...]
         out, _ = self.forward(x)
