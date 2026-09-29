@@ -114,9 +114,19 @@ def main():
             k = a.type_id.split(".")[0]
             by[k] = by.get(k, 0) + 1
         print(f"    总数 {len(actors)}：{by}")
-        if len(actors) > 60:
-            print("    ⚠ actor 偏多（早期版本传感器被 GC 回收后会残留），"
-                  "建议重启服务端或 load_world 清理")
+
+        # 地图自带的对象（红绿灯/路牌/spectator）不算残留，
+        # 只有 vehicle / sensor / walker 才是脚本运行后应被销毁的。
+        map_native = {"traffic", "spectator", "static", "controller"}
+        ours = {k: v for k, v in by.items() if k not in map_native}
+        leftover = sum(ours.values())
+        if leftover:
+            print(f"    ⚠ 疑似脚本残留 {leftover} 个：{ours}")
+            print("      → 正常退出时应为 0。若不为 0，说明上次运行未正常清理"
+                  "（早期版本传感器被 GC 回收后会残留），建议 load_world 或重启服务端")
+        else:
+            print(f"    OK：无脚本残留（{sum(v for k, v in by.items() if k in map_native)} 个"
+                  "为地图自带的红绿灯/视角，属正常）")
     except Exception as e:
         print(f"    统计失败：{e}")
 

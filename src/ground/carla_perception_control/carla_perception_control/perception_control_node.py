@@ -219,6 +219,15 @@ class PerceptionControlNode(Node):
                 self.vehicle.destroy()
             except Exception:  # noqa: BLE001
                 pass
+        # 恢复异步模式：connect() 打开了 synchronous_mode，此时服务端只在
+        # 客户端 world.tick() 时推进。节点退出后没人再 tick，CARLA 窗口会
+        # 看起来「卡住不动」，后续再连也像死机。必须在这里交还给服务端自动运行。
+        if self.world is not None:
+            if cc.restore_async(self.world):
+                self.get_logger().info("已销毁传感器与自车，世界已恢复异步模式。")
+            else:
+                self.get_logger().warn(
+                    "已销毁传感器与自车；世界仍为同步模式，如需恢复可重启 CARLA 服务端。")
         super().destroy_node()
 
 

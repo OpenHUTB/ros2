@@ -537,89 +537,121 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
     # 原始路点加密，便于前视追踪与横向误差度量
     waypoints = interpolate_waypoints(waypoints, step=2.0)
 
-    client, world = cc.connect(host, port, town)
-    vehicle, tf = cc.spawn_vehicle(world)
-    holder = {"rgb": None, "depth": None, "lidar": None}
-    # 必须保留 sensor 对象的引用！否则 spawn_actor 返回的 sensor 无引用，
-    # 函数作用域结束后被 Python 垃圾回收，Actor 虽留在仿真里但回调不再触发，
-    # 表现为「共收到相机帧 0 张」、特征恒为默认值，并伴随 CARLA 警告：
-    #   sensor object went out of the scope but the sensor is still alive in the simulation
-    sensors = [
-        cc.make_rgb_camera(world, vehicle, lambda im: holder.__setitem__("rgb", im), tick=True),
-        cc.make_depth_camera(world, vehicle, lambda d: holder.__setitem__("depth", d), tick=True),
-        cc.make_lidar(world, vehicle, lambda pc: holder.__setitem__(
-            "lidar", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)), tick=True),
-    ]
+    try:
+        client, world = cc.connect(host, port, town)
+    except Exception as exc:  # noqa: BLE001
+        # 连不上时给可操作的提示，而不是抛一长串 traceback 让使用者无从下手。
+        print(f"\n[错误] 连接 CARLA 服务端失败：{exc}")
+        print(f"       目标 {host}:{port}，地图 {town}。按下面顺序排查：")
+        print("       1) 先跑连通性诊断，它会分步指出卡在哪一环：")
+        print(f"          python3 check_connection.py {host} {port} {town}")
+        print("       2) 宿主机 CARLA 服务端是否已启动（Windows 上运行 CarlaUE4-Win64-Shipping.exe）")
+        print("       3) 宿主机防火墙是否放行 2000 端口；host 是否填宿主机 VMnet8 地址")
+        print("       4) 只想验证算法可用离线模式（不需要 CARLA）：")
+        print("          python3 main.py --headless --demo --save_dir ~/shots")
+        return 1
 
-    print(f"[就绪] 自车@{tf.location}，NN 感知 + 控制，路点={len(waypoints)}（已加密）")
-    if follow:
-        # 先把镜头摆到位，避免第一帧还在默认视角
-        cc.set_spectator_follow(world, vehicle, dist=follow_dist, height=follow_height)
-        print(f"[镜头] 第三人称跟随已开启（后 {follow_dist:.0f} m、高 {follow_height:.1f} m）；"
-              "窗口焦点切到 CARLA 大窗口即可观察")
-    frames_seen = 0
-    shot = 0
-    lateral_errors = []
-    warned = False
-    n_ticks = int(sim_time / DT)
-    for k in range(n_ticks):
-        pos = cc.get_location(vehicle)
-        yaw = cc.get_yaw(vehicle)
-        feat, raw = extract_features(holder["rgb"], holder["depth"], holder["lidar"])
-        if holder["rgb"] is not None:
-            frames_seen += 1
-        elif not warned and k * DT > 3.0:
-            warned = True
-            print("[警告] 3 秒内未收到任何相机帧，请检查 CARLA 服务端与传感器回调。")
-        cls = int(sens.predict(feat[None, :])[0])
-        cls_name = {0: "无目标", 1: "偏左", 2: "偏右"}[cls]
+    # spawn / 主循环 / 清理全部包进 try-finally：
+    # 万一中途抛异常（例如连接超时），也要保证把传感器与自车销毁、
+    # 并把世界恢复为异步模式，不给下一个使用者留下残留 actor 和卡住的世界。
+    vehicle = None
+    sensors = []
+    try:
+        vehicle, tf = cc.spawn_vehicle(world)
+        holder = {"rgb": None, "depth": None, "lidar": None}
+        # 必须保留 sensor 对象的引用！否则 spawn_actor 返回的 sensor 无引用，
+        # 函数作用域结束后被 Python 垃圾回收，Actor 虽留在仿真里但回调不再触发，
+        # 表现为「共收到相机帧 0 张」、特征恒为默认值，并伴随 CARLA 警告：
+        #   sensor object went out of the scope but the sensor is still alive in the simulation
+        sensors = [
+            cc.make_rgb_camera(world, vehicle, lambda im: holder.__setitem__("rgb", im), tick=True),
+            cc.make_depth_camera(world, vehicle, lambda d: holder.__setitem__("depth", d), tick=True),
+            cc.make_lidar(world, vehicle, lambda pc: holder.__setitem__(
+                "lidar", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)), tick=True),
+        ]
 
-        # 终点判定：进入阈值范围则刹车停车，避免在终点附近绕圈
-        goal = waypoints[-1]
-        if math.hypot(goal[0] - pos[0], goal[1] - pos[1]) < GOAL_TOL:
-            cc.apply_control(vehicle, throttle=0.0, brake=1.0)
-            world.tick()
-            print(f"\n[到达] t={k * DT:.1f}s 抵达终点 ({goal[0]:.1f},{goal[1]:.1f})，停车。")
-            break
-
-        if use_nn_control:
-            throttle, steer = nn_control(pos, yaw, waypoints, model["ctrl"])
-        else:
-            throttle, steer = pure_pursuit(pos, yaw, waypoints)
-        cc.apply_control(vehicle, throttle=throttle, steer=steer)
-
-        lateral_errors.append(_dist_to_polyline(pos, waypoints))
-
-        # 取证：按间隔导出前视相机画面
-        if save_dir and holder["rgb"] is not None and k % 20 == 0:
-            shot += 1
-            _write_png(os.path.join(save_dir, f"percept_frame_{shot:02d}.png"), holder["rgb"])
-
-        world.tick()
+        print(f"[就绪] 自车@{tf.location}，NN 感知 + 控制，路点={len(waypoints)}（已加密）")
         if follow:
-            # 每帧把 spectator 摆到车后方，实现第三人称跟随
+            # 先把镜头摆到位，避免第一帧还在默认视角
             cc.set_spectator_follow(world, vehicle, dist=follow_dist, height=follow_height)
-        if k % 20 == 0:
-            off, d_, fn, fd = raw
-            print(f"[t={k * DT:.1f}] pos=({pos[0]:.1f},{pos[1]:.1f}) NN感知={cls_name} "
-                  f"steer={steer:+.2f} rgb={off:+.2f} depth={d_:.0f} lidar({fn},{fd}) "
-                  f"横向误差={lateral_errors[-1]:.2f}m")
+            print(f"[镜头] 第三人称跟随已开启（后 {follow_dist:.0f} m、高 {follow_height:.1f} m）；"
+                  "窗口焦点切到 CARLA 大窗口即可观察")
+        frames_seen = 0
+        shot = 0
+        lateral_errors = []
+        warned = False
+        n_ticks = int(sim_time / DT)
+        for k in range(n_ticks):
+            pos = cc.get_location(vehicle)
+            yaw = cc.get_yaw(vehicle)
+            feat, raw = extract_features(holder["rgb"], holder["depth"], holder["lidar"])
+            if holder["rgb"] is not None:
+                frames_seen += 1
+            elif not warned and k * DT > 3.0:
+                warned = True
+                print("[警告] 3 秒内未收到任何相机帧，请检查 CARLA 服务端与传感器回调。")
+            cls = int(sens.predict(feat[None, :])[0])
+            cls_name = {0: "无目标", 1: "偏左", 2: "偏右"}[cls]
 
-    rmse = float(np.sqrt(np.mean(np.square(lateral_errors))))
-    print(f"\n共收到相机帧 {frames_seen} 张，导出截图 {shot} 张")
-    print(f"轨迹跟踪完成：横向误差 RMSE = {rmse:.3f} m")
+            # 终点判定：进入阈值范围则刹车停车，避免在终点附近绕圈
+            goal = waypoints[-1]
+            if math.hypot(goal[0] - pos[0], goal[1] - pos[1]) < GOAL_TOL:
+                cc.apply_control(vehicle, throttle=0.0, brake=1.0)
+                world.tick()
+                print(f"\n[到达] t={k * DT:.1f}s 抵达终点 ({goal[0]:.1f},{goal[1]:.1f})，停车。")
+                break
 
-    if frames_seen == 0:
-        print("[警告] 全程未收到任何传感器数据，感知网络输入为默认值，"
-              "本轮的横向误差不具参考意义。")
-    # 销毁传感器与自车，避免反复运行在同一世界里堆积 Actor
-    for s in sensors:
-        try:
-            s.stop()
-            s.destroy()
-        except Exception:  # noqa: BLE001
-            pass
-    vehicle.destroy()
+            if use_nn_control:
+                throttle, steer = nn_control(pos, yaw, waypoints, model["ctrl"])
+            else:
+                throttle, steer = pure_pursuit(pos, yaw, waypoints)
+            cc.apply_control(vehicle, throttle=throttle, steer=steer)
+
+            lateral_errors.append(_dist_to_polyline(pos, waypoints))
+
+            # 取证：按间隔导出前视相机画面
+            if save_dir and holder["rgb"] is not None and k % 20 == 0:
+                shot += 1
+                _write_png(os.path.join(save_dir, f"percept_frame_{shot:02d}.png"), holder["rgb"])
+
+            world.tick()
+            if follow:
+                # 每帧把 spectator 摆到车后方，实现第三人称跟随
+                cc.set_spectator_follow(world, vehicle, dist=follow_dist, height=follow_height)
+            if k % 20 == 0:
+                off, d_, fn, fd = raw
+                print(f"[t={k * DT:.1f}] pos=({pos[0]:.1f},{pos[1]:.1f}) NN感知={cls_name} "
+                      f"steer={steer:+.2f} rgb={off:+.2f} depth={d_:.0f} lidar({fn},{fd}) "
+                      f"横向误差={lateral_errors[-1]:.2f}m")
+
+        rmse = float(np.sqrt(np.mean(np.square(lateral_errors))))
+        print(f"\n共收到相机帧 {frames_seen} 张，导出截图 {shot} 张")
+        print(f"轨迹跟踪完成：横向误差 RMSE = {rmse:.3f} m")
+
+        if frames_seen == 0:
+            print("[警告] 全程未收到任何传感器数据，感知网络输入为默认值，"
+                  "本轮的横向误差不具参考意义。")
+    finally:
+        # 1) 停掉并销毁传感器：必须显式 destroy，否则 actor 会留在世界里
+        for s in sensors:
+            try:
+                s.stop()
+                s.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        # 2) 销毁自车
+        if vehicle is not None:
+            try:
+                vehicle.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        # 3) 恢复异步模式：同步模式下服务端只在客户端 tick 时推进，
+        #    脚本退出后没人 tick，CARLA 窗口会看起来「停住不动」。
+        if cc.restore_async(world):
+            print('[清理] 已销毁传感器与自车，世界已恢复异步模式。')
+        else:
+            print('[清理] 已销毁传感器与自车；世界仍为同步模式，'
+                  '如需恢复可重启 CARLA 服务端。')
     return 0
 
 

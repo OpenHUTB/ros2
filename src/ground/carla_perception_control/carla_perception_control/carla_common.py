@@ -109,6 +109,26 @@ def reset_sync(world, dt=DT):
     world.apply_settings(settings)
 
 
+def restore_async(world):
+    """把世界恢复为异步模式（脚本退出前必须调用）。
+
+    为什么必须做：`connect()` 打开了 synchronous_mode，此时服务端**只在客户端
+    调用 world.tick() 时才推进一帧**。脚本一旦结束，没有客户端再 tick，
+    服务端就永久停在世界里——CARLA 窗口看起来"卡住不动"，
+    后来者连接同一个服务端也会像卡死。
+    因此凡是用过 connect() 的脚本，结束时都要调用本函数把世界交还给服务端自动运行。
+    """
+    _check_carla()
+    try:
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        settings.fixed_delta_seconds = None
+        world.apply_settings(settings)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def spawn_vehicle(world, blueprint=EGO_BLUEPRINT, transform=DEFAULT_SPAWN):
     """按蓝图生成自车，返回 (vehicle, transform)。出生点不可用时自动搜索最近路面点。"""
     _check_carla()

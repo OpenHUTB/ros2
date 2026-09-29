@@ -333,6 +333,72 @@ def test_follow_camera_is_wired():
         "set_spectator_follow 应初始化时调用一次、循环内每帧再调用"
 
 
+def test_run_carla_restores_async_mode():
+    """run_carla 退出前必须清理 actor 并恢复异步模式（回归测试）。
+
+    历史缺陷：connect() 打开了 synchronous_mode，此时服务端**只在客户端
+    world.tick() 时推进一帧**。脚本结束后没人再 tick，服务端就永久停住——
+    CARLA 窗口看起来"卡住不动"，后来者连接同一服务端也像死机。
+    且清理代码原先在函数末尾裸放，中途抛异常（如连接超时）会跳过清理，
+    留下满世界的残留 actor 和同步模式。
+
+    修复：整体包进 try/finally，finally 里销毁传感器+自车并 restore_async。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+
+    # 1) 必须调用 restore_async
+    assert "cc.restore_async(" in src, "退出时未恢复异步模式，服务端会卡住"
+
+    # 2) restore_async 必须在 finally 块内（异常路径也要清理）
+    assert "finally:" in src, "缺少 finally 块，异常时不会清理"
+    i_fin = src.index("finally:")
+    i_res = src.index("cc.restore_async(")
+    assert i_res > i_fin, "restore_async 不在 finally 块内"
+
+    # 3) 销毁逻辑也必须在 finally 内
+    for call in ("s.stop()", "s.destroy()", "vehicle.destroy()"):
+        assert src.index(call) > i_fin, f"{call} 不在 finally 块内"
+
+    # 4) carla_common 必须真的实现了 restore_async，且写入同步开关
+    common = open(os.path.join(_PKG, "carla_perception_control",
+                               "carla_common.py"), encoding="utf-8").read()
+    assert "def restore_async(" in common, "carla_common 未实现 restore_async"
+    i_fn = common.index("def restore_async(")
+    seg = common[i_fn:i_fn + 900]
+    assert "synchronous_mode = False" in seg, \
+        "restore_async 未把 synchronous_mode 置为 False"
+
+
+def test_ros_node_restores_async_mode():
+    """ROS 节点退出时同样要恢复异步模式（回归测试）。
+
+    历史缺陷：destroy_node 只销毁了 actor，没恢复异步模式，
+    导致 Ctrl+C 之后 CARLA 窗口同样卡住。
+    """
+    p = os.path.join(_PKG, "carla_perception_control", "perception_control_node.py")
+    src = open(p, encoding="utf-8").read()
+    i_dn = src.index("def destroy_node(")
+    seg = src[i_dn:i_dn + 1200]
+    assert "cc.restore_async(" in seg, \
+        "ROS 节点 destroy_node 未恢复异步模式，Ctrl+C 后 CARLA 会卡住"
+
+
+def test_diagnostic_script_ignores_map_native_actors():
+    """连通性诊断不应把地图自带的红绿灯/spectator 误报为残留（回归测试）。
+
+    历史缺陷：脚本用 `len(actors) > 60` 判定残留，而 Town05 自带 113 个
+    traffic（红绿灯）+ 1 个 spectator，正常情况也会误报"actor 偏多"。
+    """
+    p = os.path.join(_PKG, "check_connection.py")
+    assert os.path.isfile(p), "缺少连通性诊断脚本 check_connection.py"
+    src = open(p, encoding="utf-8").read()
+    assert "map_native" in src, "诊断脚本未区分地图自带对象与脚本残留"
+    assert "len(actors) > 60" not in src, \
+        "诊断脚本仍在用总数阈值判定残留，会误报地图自带对象"
+    for k in ("traffic", "spectator"):
+        assert k in src, f"诊断脚本未把 {k} 归入地图自带对象"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
