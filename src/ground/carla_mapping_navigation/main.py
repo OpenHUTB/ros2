@@ -477,7 +477,12 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     obstacles = [(26.0, 2.0, 2.5), (24.0, 12.0, 2.5), (32.0, 6.0, 2.0)]
 
     grid = OccupancyGrid(center=START)
-    x, y, yaw = START[0], START[1], 0.0
+    # 初始航向由「起点→目标」方向推导，不能写死为 0（+x）：
+    # 默认目标 (20,8) 位于起点 (36,-5) 的**左后方**（方位角约 +141°），
+    # 若车头朝 +x，自车会先背离目标行驶再掉头，既浪费里程又让
+    # "距目标最近距离"等指标被这段无效机动污染。
+    yaw = math.atan2(goal[1] - START[1], goal[0] - START[0])
+    x, y = START[0], START[1]
     v = 0.0
     path_pts = [(x, y)]
     snaps = []           # 渐进建图快照 [(tick, 概率图副本, 当时轨迹)]
@@ -560,79 +565,133 @@ def run_carla(host, port, town, model_path, goal, sim_time=30.0, save_dir=None):
         print("[错误] 缺少 carla 模块，run 模式需要 CARLA 服务端。")
         print("       离线验证可改用： python3 main.py --headless --demo --save_dir ~/shots")
         return 1
+
+    # 模型文件不存在时**现场训练并保存**，而不是直接崩掉。
+    # 与 ROS 节点（mapping_navigation_node.py）的行为保持一致：
+    # 那边在模型缺失时同样回退到现场训练，保证"节点总能运行"。
+    if not os.path.isfile(model_path):
+        print(f"[提示] 未找到模型文件 {model_path}，先现场训练（纯 numpy，约 1 分钟）...")
+        print("       也可单独训练： python3 main.py --mode train --out " + model_path)
+        # train_planning 内部会 synth_dataset + 训练 + save(out)
+        train_planning(epochs=300, out=model_path)
+
     net = MLPPolicy.load(model_path)
 
-    client, world = cc.connect(host, port, town)
-    vehicle, tf = cc.spawn_vehicle(world)
+    try:
+        client, world = cc.connect(host, port, town)
+    except Exception as exc:  # noqa: BLE001
+        print(f"\n[错误] 连接 CARLA 服务端失败：{exc}")
+        print(f"       目标 {host}:{port}，地图 {town}。按下面顺序排查：")
+        print("       1) 宿主机 CARLA 服务端是否已启动（Windows 上运行 CarlaUE4-Win64-Shipping.exe）")
+        print("       2) 宿主机防火墙是否放行 2000 端口；host 是否填宿主机 VMnet8 地址")
+        print("       3) 只想验证算法可用离线模式（不需要 CARLA）：")
+        print("          python3 main.py --headless --demo --save_dir ~/shots")
+        return 1
 
-    grid = OccupancyGrid(center=(tf.location.x, tf.location.y))
-    holder = {"pc": None}
-    cc.make_lidar(world, vehicle, lambda pc: holder.__setitem__(
-        "pc", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)), tick=True)
-    print(f"[就绪] 自车@({tf.location.x:.1f},{tf.location.y:.1f})，目标=({goal[0]},{goal[1]})，规划用 NN")
-    print(f"[栅格] 分辨率 {GRID_M} m/格，覆盖 {GRID_N * GRID_M:.0f}m × {GRID_N * GRID_M:.0f}m，中心=自车起点")
+    # spawn / 建图 / 导航 / 清理全部包进 try-finally：
+    # 万一中途抛异常，也要保证销毁传感器与自车、并把世界恢复为异步模式，
+    # 不给下一个使用者留下残留 actor 和卡住的世界。
+    vehicle = None
+    sensors = []
+    try:
+        vehicle, tf = cc.spawn_vehicle(world)
 
-    # ---- 建图阶段 ----
-    print("== 建图阶段（SLAM 边动边建图）==")
-    cc.apply_control(vehicle, throttle=0.4, steer=0.0)
-    for _ in range(int(4.0 / DT)):
-        pc = holder["pc"]
-        if pc is not None:
-            pos = cc.get_location(vehicle)
-            build_map_from_scan(grid, pc, pos[0], pos[1], cc.get_yaw(vehicle))
-        world.tick()
-    print(f"  建图完成：占据格={grid.occupied_count}，已知区域={grid.known_ratio * 100:.1f}%")
+        grid = OccupancyGrid(center=(tf.location.x, tf.location.y))
+        holder = {"pc": None}
+        # 必须保留 sensor 对象的引用！否则 spawn_actor 返回的 sensor 无引用，
+        # 函数作用域结束后被 Python 垃圾回收，Actor 虽留在仿真里但回调不再触发，
+        # 表现为"共收到雷达帧 0 张"、栅格恒为空，并伴随 CARLA 警告：
+        #   sensor object went out of the scope but the sensor is still alive in the simulation
+        sensors.append(cc.make_lidar(
+            world, vehicle, lambda pc: holder.__setitem__(
+                "pc", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)),
+            tick=True))
+        print(f"[就绪] 自车@({tf.location.x:.1f},{tf.location.y:.1f})，"
+              f"目标=({goal[0]},{goal[1]})，规划用 NN")
+        print(f"[栅格] 分辨率 {GRID_M} m/格，"
+              f"覆盖 {GRID_N * GRID_M:.0f}m × {GRID_N * GRID_M:.0f}m，中心=自车起点")
 
-    # ---- NN 导航阶段 ----
-    print("== 导航阶段（神经网络规划）==")
-    min_d = float("inf")
-    path_pts = []
-    shot = 0
-    steps = int(sim_time / DT)
-    for k in range(steps):
-        pos = cc.get_location(vehicle)
-        yaw = cc.get_yaw(vehicle)
-        path_pts.append(pos)
-        dx, dy = goal[0] - pos[0], goal[1] - pos[1]
-        d = math.hypot(dx, dy)
-        min_d = min(min_d, d)
-
-        pc = holder["pc"]
-        if pc is not None:
-            build_map_from_scan(grid, pc, pos[0], pos[1], yaw)
-
-        if d < GOAL_TOL:
-            cc.apply_control(vehicle, throttle=0.0, steer=0.0, brake=0.8)
+        # ---- 建图阶段 ----
+        print("== 建图阶段（SLAM 边动边建图）==")
+        cc.apply_control(vehicle, throttle=0.4, steer=0.0)
+        for _ in range(int(4.0 / DT)):
+            pc = holder["pc"]
+            if pc is not None:
+                pos = cc.get_location(vehicle)
+                build_map_from_scan(grid, pc, pos[0], pos[1], cc.get_yaw(vehicle))
             world.tick()
-            print(f"\n[到达] t={k * DT:.1f}s 抵达目标，停车。")
-            break
+        print(f"  建图完成：占据格={grid.occupied_count}，已知区域={grid.known_ratio * 100:.1f}%")
 
-        goal_ang = math.atan2(dy, dx)
-        diff = (goal_ang - yaw + math.pi) % (2 * math.pi) - math.pi
-        state, raw = obs_features(pc, diff)
-        out = net.predict(state[None, :])[0]
-        throttle = float(np.clip(out[0], 0.0, 1.0))
-        steer = float(np.clip(out[1], -1.0, 1.0))
-        cc.apply_control(vehicle, throttle=throttle, steer=steer)
-        world.tick()
+        # ---- NN 导航阶段 ----
+        print("== 导航阶段（神经网络规划）==")
+        min_d = float("inf")
+        path_pts = []
+        shot = 0
+        steps = int(sim_time / DT)
+        for k in range(steps):
+            pos = cc.get_location(vehicle)
+            yaw = cc.get_yaw(vehicle)
+            path_pts.append(pos)
+            dx, dy = goal[0] - pos[0], goal[1] - pos[1]
+            d = math.hypot(dx, dy)
+            min_d = min(min_d, d)
 
-        if save_dir and k % 60 == 0:
-            shot += 1
-            render_grid_png(grid, os.path.join(save_dir, f"map_step_{shot:02d}.png"),
-                            path_pts=path_pts, goal=goal)
+            pc = holder["pc"]
+            if pc is not None:
+                build_map_from_scan(grid, pc, pos[0], pos[1], yaw)
 
-        if k % 40 == 0:
-            _g, lc, rc, nearest = raw
-            print(f"[t={k * DT:.1f}] d={d:.1f} NN(th={throttle:.2f},st={steer:+.2f}) "
-                  f"obs(L{lc}/R{rc}, {nearest:.1f}m) 占据格={grid.occupied_count}")
+            if d < GOAL_TOL:
+                cc.apply_control(vehicle, throttle=0.0, steer=0.0, brake=0.8)
+                world.tick()
+                print(f"\n[到达] t={k * DT:.1f}s 抵达目标，停车。")
+                break
 
-    print(f"\n导航完成，距目标最近距离: {min_d:.3f} m")
-    print(f"建图结果：占据格={grid.occupied_count}，已知区域={grid.known_ratio * 100:.1f}%")
-    if save_dir:
-        p = render_grid_png(grid, os.path.join(save_dir, "occupancy_map_final.png"),
-                            path_pts=path_pts, goal=goal)
-        print("栅格地图已导出:", p)
-    vehicle.destroy()
+            goal_ang = math.atan2(dy, dx)
+            diff = (goal_ang - yaw + math.pi) % (2 * math.pi) - math.pi
+            state, raw = obs_features(pc, diff)
+            out = net.predict(state[None, :])[0]
+            throttle = float(np.clip(out[0], 0.0, 1.0))
+            steer = float(np.clip(out[1], -1.0, 1.0))
+            cc.apply_control(vehicle, throttle=throttle, steer=steer)
+            world.tick()
+
+            if save_dir and k % 60 == 0:
+                shot += 1
+                render_grid_png(grid, os.path.join(save_dir, f"map_step_{shot:02d}.png"),
+                                path_pts=path_pts, goal=goal)
+
+            if k % 40 == 0:
+                _g, lc, rc, nearest = raw
+                print(f"[t={k * DT:.1f}] d={d:.1f} NN(th={throttle:.2f},st={steer:+.2f}) "
+                      f"obs(L{lc}/R{rc}, {nearest:.1f}m) 占据格={grid.occupied_count}")
+
+        print(f"\n导航完成，距目标最近距离: {min_d:.3f} m")
+        print(f"建图结果：占据格={grid.occupied_count}，已知区域={grid.known_ratio * 100:.1f}%")
+        if save_dir:
+            p = render_grid_png(grid, os.path.join(save_dir, "occupancy_map_final.png"),
+                                path_pts=path_pts, goal=goal)
+            print("栅格地图已导出:", p)
+    finally:
+        # 停掉并销毁传感器：必须显式 destroy，否则 actor 会留在世界里
+        for s in sensors:
+            try:
+                s.stop()
+                s.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        # 销毁自车
+        if vehicle is not None:
+            try:
+                vehicle.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        # 恢复异步模式：同步模式下服务端只在客户端 tick 时推进，
+        # 脚本退出后没人 tick，CARLA 窗口会看起来「停住不动」。
+        if cc.restore_async(world):
+            print('[清理] 已销毁传感器与自车，世界已恢复异步模式。')
+        else:
+            print('[清理] 已销毁传感器与自车；世界仍为同步模式，'
+                  '如需恢复可重启 CARLA 服务端。')
     return 0
 
 

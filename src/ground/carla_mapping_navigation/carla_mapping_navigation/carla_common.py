@@ -35,7 +35,12 @@ DEFAULT_MAP = os.environ.get("CARLA_MAP", "Town05")
 EGO_BLUEPRINT = os.environ.get("CARLA_EGO_BP", "vehicle.tesla.model3")
 
 # 默认出生点：位于某条路面中央，yaw 沿路面方向
-DEFAULT_SPAWN = (36.0, -5.0, 0.6, 0.0, 0.0, 0.0)  # (x, y, z, roll, pitch, yaw)
+#
+# 注意 yaw 必须与该点车道的实际朝向一致，否则自车会**朝逆行方向**生成：
+# (36,-5) 处唯一可行驶车道的 yaw 实测为 -181.2°（即指向 -x），
+# 早期写成 0.0（指向 +x）导致自车朝向与车道相反，
+# 沿给定轨迹前进时会驶出路面撞上障碍物而卡死。
+DEFAULT_SPAWN = (36.0, -5.0, 0.6, 0.0, 0.0, 178.8)  # (x, y, z, roll, pitch, yaw)
 
 DT = 0.05  # 同步模式固定步长（秒）
 
@@ -51,22 +56,48 @@ def _check_carla():
 
 
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_MAP,
-           sync=True, dt=DT):
+           sync=True, dt=DT, timeout=60.0, force_reload=False):
     """连接 CARLA 服务端并加载地图，返回 (client, world)。
 
-    - 若 server 端口已有一个世界，load_world 会加载 town（同步阻塞）。
+    关于超时与地图重载（实测经验）：
+
+    * `load_world()` 是**重操作**：实测本机加载 Town05 需 7.1 s，
+      若服务端已有大量 actor 会更久；虚拟机经网络调用还要叠加传输开销。
+      早期把超时设为 20 s，虚拟机侧实测直接超时失败：
+          RuntimeError: time-out of 20000ms while waiting for the simulator
+      因此默认超时提高到 60 s。
+    * 若服务端**已经加载了目标地图**，则无需再 `load_world`（省下数秒且避免
+      重置世界）。此时直接 `get_world()` 即可；`force_reload=True` 可强制重载。
+
     - 开启同步模式（synchronous_mode），便于逐帧精确控制与传感器对齐。
     """
     _check_carla()
     client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.load_world(town)
+    client.set_timeout(timeout)
+
+    current = None
+    try:
+        current = client.get_world().get_map().name
+    except Exception:  # noqa: BLE001
+        current = None
+
+    # 地图名的比较：服务端返回形如 "Carla/Maps/Town05"，也接受 "Town05"
+    def _same(name, want):
+        return bool(name) and (name == want or name.endswith("/" + want))
+
+    if current and _same(current, town) and not force_reload:
+        world = client.get_world()
+        print(f"[连接] 服务端已在地图 {current}，跳过重载（force_reload=True 可强制重载）")
+    else:
+        print(f"[连接] 正在加载地图 {town}（当前 {current or '未知'}），可能需要数秒...")
+        world = client.load_world(town)
+        print(f"[连接] 地图 {town} 加载完成")
+
     if sync:
         settings = world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = dt
         world.apply_settings(settings)
-    # 清空已存在的天气、车辆以外的无关 actor 保留，便于稳定复现
     return client, world
 
 
@@ -76,6 +107,26 @@ def reset_sync(world, dt=DT):
     settings.synchronous_mode = True
     settings.fixed_delta_seconds = dt
     world.apply_settings(settings)
+
+
+def restore_async(world):
+    """把世界恢复为异步模式（脚本退出前必须调用）。
+
+    为什么必须做：`connect()` 打开了 synchronous_mode，此时服务端**只在客户端
+    调用 world.tick() 时才推进一帧**。脚本一旦结束，没有客户端再 tick，
+    服务端就永久停在世界里——CARLA 窗口看起来"卡住不动"，
+    后来者连接同一个服务端也会像卡死。
+    因此凡是用过 connect() 的脚本，结束时都要调用本函数把世界交还给服务端自动运行。
+    """
+    _check_carla()
+    try:
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        settings.fixed_delta_seconds = None
+        world.apply_settings(settings)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def spawn_vehicle(world, blueprint=EGO_BLUEPRINT, transform=DEFAULT_SPAWN):
