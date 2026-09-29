@@ -27,17 +27,23 @@
 
 ## 环境要求
 
-- Ubuntu 20.04 / 22.04（ROS 1 Noetic 或 ROS 2 Humble），或 Windows 10/11 原生
-- Python 3.10+（CARLA 0.9.16 客户端 wheel 提供 cp310 / cp311 / cp312）
 - CARLA 0.9.16（服务端运行于有 GPU 的宿主机）
+- 操作系统：Windows 10/11 原生；Ubuntu 20.04 / 22.04
+- Python **3.10+**（独立模式；与 CARLA 0.9.16 客户端 wheel 的 cp310/cp311/cp312 对应）
+- ROS（可选）：ROS 2 Humble（Ubuntu 22.04，Python 3.10）或 ROS 1 Noetic（Ubuntu 20.04，Python 3.8）
 - Python 依赖：`numpy`、`pygame`、`carla` 客户端（见 `requirements.txt`）
+
+> **Python 版本提示**：CARLA 0.9.16 的客户端 wheel 只提供 cp310/cp311/cp312。
+> ROS 2 Humble（Ubuntu 22.04）自带的 Python 3.10 可直接匹配；ROS 1 Noetic
+> （Ubuntu 20.04）自带 Python 3.8，需要另外指定 3.10+ 解释器，并保证 `pip` 与
+> 运行 `main.py` 用的是同一个解释器。
 
 ## 安装
 
 ```bash
 # 1. 安装 Python 依赖与 CARLA 客户端
 pip3 install -r src/ground/carla_keyboard_control/requirements.txt
-pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+pip3 install carla==0.9.16          # 自动匹配 Python 版本（也可用 CARLA 包内 wheel）
 
 # 2. 编译本功能包（ROS 2）
 cd ~/ros2_ws

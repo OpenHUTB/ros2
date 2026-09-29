@@ -7,6 +7,9 @@
      说明：
        * 本模块核心为 CARLA Python API 直连 + 键盘运动控制，逻辑本身不依赖 rospy，
          Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * 本 launch 声明的每个 <arg> 都必须透传给节点：roslaunch 会把「已声明但未使用」
+         的参数视为 unused args，只影响命令行传参的可用性；而漏传参数则会让
+         节点收不到用户设置的值（例如 follow:=true 不起作用）。
        * CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法、ros-bridge 连接等
          属于已有示例的**通用配置步骤**，本模块不重复描述，详见：
          https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
@@ -15,8 +18,12 @@
   <arg name="port" default="2000" doc="CARLA RPC 端口"/>
   <arg name="town" default="Town05" doc="CARLA 地图名"/>
   <arg name="follow" default="false" doc="是否让镜头跟随自车（录屏用）"/>
+  <arg name="headless" default="false" doc="不开图形窗口（无 3D 加速的虚拟机用）"/>
+  <arg name="save_dir" default="" doc="逐帧导出相机画面 PNG 的目录（取证用，空=不导出）"/>
 
   <node pkg="carla_keyboard_control" type="main.py"
         name="carla_keyboard_control" output="screen"
-        args="--host $(arg host) --port $(arg port) --town $(arg town)"/>
+        args="--host $(arg host) --port $(arg port) --town $(arg town)
+              --follow $(arg follow) --headless $(arg headless)
+              --save_dir $(arg save_dir)"/>
 </launch>

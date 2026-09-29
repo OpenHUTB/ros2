@@ -57,27 +57,16 @@ def _save_png(path, rgb):
 def compose_control(keys, speed, args):
     """按键 + 当前车速 → (throttle, steer, brake, reverse)。
 
-    真实驾驶逻辑：S 在有速度时刹车；车速低于阈值时挂**倒挡**后退。
+    逻辑实现集中在 `carla_common.compose_control`（纯函数），本函数只负责把
+    命令行参数转成对应标定值，保证 standalone 与 ROS 2 节点行为完全一致。
     """
-    throttle = brake = 0.0
-    reverse = False
-    if keys["fwd"]:
-        throttle = args.throttle_max
-    elif keys["rev"]:
-        if speed < args.rev_threshold:
-            reverse, throttle = True, args.throttle_max * 0.8
-        else:
-            brake = args.brake_max
-    steer = 0.0
-    if keys["left"]:
-        steer -= args.steer_max
-    if keys["right"]:
-        steer += args.steer_max
-    if keys["left_fine"]:
-        steer -= args.steer_max * 0.25
-    if keys["right_fine"]:
-        steer += args.steer_max * 0.25
-    return throttle, steer, brake, reverse
+    return cc.compose_control(
+        keys, speed,
+        throttle_max=args.throttle_max,
+        brake_max=args.brake_max,
+        steer_max=args.steer_max,
+        rev_threshold=args.rev_threshold,
+    )
 
 
 # 自动演示序列：(持续秒数, 说明, 按下的键)
@@ -91,8 +80,7 @@ DEMO_SEQUENCE = [
 
 
 def _blank_keys():
-    return {k: False for k in
-            ("fwd", "rev", "left", "right", "left_fine", "right_fine")}
+    return cc.blank_keys()
 
 
 # ------------------------------------------------------------------ 独立模式
@@ -268,10 +256,11 @@ def main():
                         help="仿真秒数，0=不限时直到 ESC")
     parser.add_argument("--follow", action="store_true",
                         help="让 CARLA 大窗口镜头跟随自车（便于录屏）")
-    parser.add_argument("--throttle_max", type=float, default=0.6)
-    parser.add_argument("--brake_max", type=float, default=0.8)
-    parser.add_argument("--steer_max", type=float, default=0.6)
-    parser.add_argument("--rev_threshold", type=float, default=0.5,
+    parser.add_argument("--throttle_max", type=float, default=cc.DEFAULT_THROTTLE_MAX)
+    parser.add_argument("--brake_max", type=float, default=cc.DEFAULT_BRAKE_MAX)
+    parser.add_argument("--steer_max", type=float, default=cc.DEFAULT_STEER_MAX)
+    parser.add_argument("--rev_threshold", type=float,
+                        default=cc.DEFAULT_REV_THRESHOLD,
                         help="低于该速度(m/s)按 S 视为挂倒挡")
     parser.add_argument("--headless", action="store_true",
                         help="不开图形窗口（虚拟机无 3D 加速时使用）")

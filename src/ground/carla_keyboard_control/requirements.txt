@@ -1,6 +1,13 @@
 # CARLA 0.9.16 地面载具键盘运动控制 —— 运行时依赖
 #
-# carla 客户端模块不在 PyPI 的 0.9.16 版本中，需从 CARLA 0.9.16 Linux 发行包安装：
-#   pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+# carla 客户端（Python API）：
+#   carla 的 0.9.16 版本已发布在 PyPI 上（含 cp310/cp311/cp312 的 Linux / Windows
+#   wheel），直接安装即可，会自动匹配当前解释器版本：
+#       pip3 install carla==0.9.16
+#   若无法访问 PyPI，也可使用 CARLA 发行包自带的 wheel（<CARLA> 替换为实际路径）：
+#       pip3 install "<CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl"
+#
+#   注意：pip 与运行 main.py 必须使用同一个解释器（Ubuntu 20.04 自带 Python 3.8，
+#   请用 python3.10 -m pip install ...）。
 numpy>=1.21
 pygame>=2.1

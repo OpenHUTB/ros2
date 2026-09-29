@@ -143,19 +143,32 @@ def decode_image(image):
     return arr[:, :, :3][:, :, ::-1].copy()      # BGRA → RGB
 ```
 
-### 4.2 `main.py` — 控制主循环（倒挡判定）
+### 4.2 `carla_common.compose_control()` — 控制合成（唯一实现）
+
+控制合成是**纯函数**，集中在 `carla_common.py` 中，由 standalone 主入口
+（`main.py`）与 ROS 2 键盘节点（`keyboard_teleop_node.py`）**共同调用**，
+从而保证两条运行路径的控制行为完全一致：
 
 ```python
-speed = cc.get_speed(vehicle)
-throttle = brake = 0.0
-reverse = False
-if keys['fwd']:
-    throttle = args.throttle_max
-elif keys['rev']:
-    if speed < args.rev_threshold:            # 低速 → 挂倒挡
-        reverse, throttle = True, args.throttle_max * 0.8
-    else:                                     # 有速度 → 刹车
-        brake = args.brake_max
+def compose_control(keys, speed, throttle_max=0.6, brake_max=0.8,
+                    steer_max=0.6, rev_threshold=0.5):
+    throttle = brake = 0.0
+    reverse = False
+    if keys["fwd"]:
+        throttle = throttle_max
+    elif keys["rev"]:
+        if speed < rev_threshold:          # 低速 → 挂倒挡
+            reverse, throttle = True, throttle_max * 0.8
+        else:                              # 有速度 → 刹车
+            brake = brake_max
+    ...
+    return throttle, steer, brake, reverse
+```
+
+`main.py` 只做参数适配（把 `--throttle_max` 等命令行值传进去）：
+
+```python
+throttle, steer, brake, reverse = compose_control(keys, speed, args)
 cc.apply_control(vehicle, throttle=throttle, steer=steer,
                  brake=brake, reverse=reverse)
 world.tick()
@@ -178,8 +191,30 @@ def _on_tick(self):
 
 提供两种键盘后端，自动按环境选择：
 
-- **pygame 后端**：有图形界面时逐帧直读按键状态（`pygame.key.get_pressed()`）。
+- **pygame 后端**：有图形界面（或 Windows 原生）时逐帧直读按键状态
+  （`pygame.key.get_pressed()`）。
 - **终端后端**：无图形环境（虚拟机 / SSH）时用 `termios` 原始模式读单键并按点动下发。
+
+!!! note "为什么 `termios` 要在函数内部导入"
+    `termios` / `tty` 是 **POSIX 专属**模块，Windows 上没有。ROS 2 原生支持 Windows，
+    因此这两个模块只在 `_terminal_loop()` 内部导入；若写在文件顶层，整个包在 Windows
+    上将无法导入，`colcon build` 也会失败。Windows 下会自动选择 pygame 后端，
+    也可显式 `--pygame`。
+
+### 4.5 单元测试
+
+`test/test_control_logic.py` 直接测试 `carla_common.compose_control` 这一
+**真实被两条路径共用**的实现，因此断言的行为就是实际运行的行为：
+
+```bash
+python3 test/test_control_logic.py          # 自带运行器，无需 pytest
+python3 -m pytest test/test_control_logic.py -v
+```
+
+覆盖点包括：低速挂倒挡 / 有速度刹车、阈值边界与可配置性、油门与刹车互斥、
+转向方向与饱和、微调幅度小于全转向、所有按键组合下控制量落在合法区间，
+以及「ROS 节点确实复用了同一份实现」「POSIX 模块确实在函数内导入」等约束。
+无需安装 CARLA 服务端即可运行。
 
 ---
 
@@ -189,10 +224,23 @@ def _on_tick(self):
 
 | 组件 | 版本 / 说明 |
 |---|---|
-| 操作系统 | Windows 10/11 原生；Ubuntu 20.04（Noetic）/ 22.04（Humble） |
 | 仿真器 | CARLA 0.9.16（服务端运行于有 GPU 的宿主机） |
-| Python | 3.10+（CARLA 0.9.16 客户端 wheel 为 cp310/cp311/cp312） |
-| ROS | ROS 1 Noetic 或 ROS 2 Humble（launch 封装） |
+| 操作系统 | Windows 10/11 原生；Ubuntu 20.04 / 22.04 |
+| ROS（可选） | ROS 2 Humble（Ubuntu 22.04，Python 3.10）或 ROS 1 Noetic（Ubuntu 20.04，Python 3.8） |
+| Python（独立模式） | 3.10 / 3.11 / 3.12 —— 与 CARLA 0.9.16 客户端 wheel 的 ABI 一致（cp310/cp311/cp312） |
+
+!!! warning "Python 版本由运行方式决定，不要混用"
+    CARLA 0.9.16 的客户端 wheel 只提供 **cp310 / cp311 / cp312** 三个版本。因此：
+
+    * **独立模式**（`main.py` / `main.sh` / `main.bat`）：用 Python **3.10+**，与 wheel 匹配。
+    * **ROS 1 Noetic 模式**：Ubuntu 20.04 自带 **Python 3.8**，**装不上** cp310 及以上的 wheel，
+      Noetic 下请让 `main.py` 在 Python 3.10+ 解释器中运行（本模块的控制逻辑是纯 Python，
+      不依赖 `rospy`，Noetic 的 launch 只是把 `main.py` 拉起来）。
+    * **ROS 2 Humble 模式**：Ubuntu 22.04 自带 **Python 3.10**，与 cp310 wheel 天然匹配，
+      是最省事的一条路线。
+
+    三条路线中，**独立模式**与 **ROS 2 Humble** 无需额外处理；只有 **ROS 1 Noetic**
+    需要额外准备一个 Python 3.10+ 解释器（详见 5.3 步骤①的备选命令）。
 
 ### 5.2 新手路线：从已有示例到本模块，在哪一步切换
 
@@ -228,15 +276,38 @@ CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看�
 | 连接失败、黑屏、`numpy` 报错排查 | 同上 →「常见问题」 |
 
 本模块**特有**、需要额外安装的只有 CARLA 0.9.16 的 Python 客户端
-（Linux wheel 随 CARLA Linux 发行包提供）与两个 Python 依赖：
+与两个 Python 依赖：
 
 ```bash
 # ① Python 依赖（numpy / pygame）
 pip3 install -r src/ground/carla_keyboard_control/requirements.txt
 
-# ② CARLA 0.9.16 客户端
-pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+# ② CARLA 0.9.16 客户端（方式一：从 PyPI 安装，推荐）
+pip3 install carla==0.9.16
 ```
+
+`carla` 的 0.9.16 版本已发布在 PyPI 上（含 `cp310`/`cp311`/`cp312` 的 Linux 与
+Windows wheel），`pip3 install carla==0.9.16` 会自动匹配当前解释器版本，**不需要**
+手工挑选 wheel 文件名。
+
+若课程环境不允许访问 PyPI，可改用 CARLA 发行包自带的 wheel（把 `<CARLA>` 换成本机
+解压目录的实际路径，`<cpXX>` 换成与解释器一致的标签）：
+
+```bash
+# ② 备选：使用 Windows 版 CARLA 发行包中的 Linux wheel（<CARLA> 替换为实际路径）
+pip3 install "<CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl"
+```
+
+!!! tip "Noetic（Ubuntu 20.04）用户"
+    系统默认解释器是 Python 3.8，装不上 cp310+ 的 wheel。请显式指定 3.10+ 解释器：
+
+    ```bash
+    python3.10 -m pip install carla==0.9.16
+    python3.10 src/ground/carla_keyboard_control/main.py --host <宿主机IP>
+    ```
+
+    注意 `pip3 install` 与运行 `main.py` 必须使用**同一个**解释器，否则会出现
+    「明明装了却 `ModuleNotFoundError: No module named 'carla'`」。
 
 ### 5.4 步骤 1：编译本功能包（ROS 2）
 
@@ -335,7 +406,7 @@ x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
 
 | 现象 | 解决 |
 |---|---|
-| `ModuleNotFoundError: No module named 'carla'` | 按 5.2 安装 CARLA 0.9.16 客户端 wheel |
+| `ModuleNotFoundError: No module named 'carla'` | 按 5.3 安装 CARLA 0.9.16 客户端；确认 `pip3` 与运行 `main.py` 用的是**同一个**解释器（Noetic 下用 `python3.10 -m pip`） |
 | 客户端连接崩溃 / `std::bad_alloc` | 客户端版本须与服务器一致（均为 0.9.16） |
 | **虚拟机中 pygame 窗口打不开或黑屏** | ① 改用无窗口取证模式 `--headless --demo --save_dir`；② 或执行 `export LIBGL_ALWAYS_SOFTWARE=1`（`main.sh` 已自动设置）；③ 根治：VMware「虚拟机设置 → 显示器 → 加速 3D 图形」勾选后重启 |
 | 键盘无反应 | 焦点需在控制窗口；或改用终端后端（ROS 2 节点模式支持 `--terminal`） |

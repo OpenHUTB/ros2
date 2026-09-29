@@ -16,12 +16,12 @@ ROS 2 接口（Humble）：
 import argparse
 import select
 import sys
-import termios
-import tty
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Float32MultiArray
+
+from carla_keyboard_control import carla_common as cc
 
 TOPIC = '/carla/ego_vehicle/vehicle_control_cmd'
 
@@ -40,10 +40,11 @@ class KeyboardTeleopNode(Node):
         super().__init__('keyboard_teleop_node')
 
         self.declare_parameter('publish_rate', 20.0)
-        self.declare_parameter('throttle_max', 0.6)
-        self.declare_parameter('brake_max', 0.8)
-        self.declare_parameter('steer_max', 0.6)
-        self.declare_parameter('reverse_speed_threshold', 0.5)
+        self.declare_parameter('throttle_max', cc.DEFAULT_THROTTLE_MAX)
+        self.declare_parameter('brake_max', cc.DEFAULT_BRAKE_MAX)
+        self.declare_parameter('steer_max', cc.DEFAULT_STEER_MAX)
+        self.declare_parameter('reverse_speed_threshold',
+                               cc.DEFAULT_REV_THRESHOLD)
         # 当前车速由仿真节点广播，这里订阅以判断是否挂倒挡
         self.declare_parameter('speed_topic', '/carla/ego_vehicle/speed')
 
@@ -55,8 +56,7 @@ class KeyboardTeleopNode(Node):
         rate = float(p('publish_rate').value)
 
         self.speed = 0.0
-        self.keys = {k: False for k in
-                     ('fwd', 'rev', 'left', 'right', 'left_fine', 'right_fine')}
+        self.keys = cc.blank_keys()
         self._quit = False
 
         self.pub = self.create_publisher(Float32MultiArray, TOPIC, 10)
@@ -77,27 +77,18 @@ class KeyboardTeleopNode(Node):
         self.speed = float(msg.data)
 
     def _publish_cmd(self):
-        """按真实驾驶逻辑合成控制量并发布。"""
-        throttle = brake = 0.0
-        reverse = False
+        """按真实驾驶逻辑合成控制量并发布。
 
-        if self.keys['fwd']:
-            throttle = self.throttle_max
-        elif self.keys['rev']:
-            if self.speed < self.rev_threshold:
-                reverse, throttle = True, self.throttle_max * 0.8  # 挂倒挡
-            else:
-                brake = self.brake_max                             # 刹车减速
-
-        steer = 0.0
-        if self.keys['left']:
-            steer -= self.steer_max
-        if self.keys['right']:
-            steer += self.steer_max
-        if self.keys['left_fine']:
-            steer -= self.steer_max * 0.25
-        if self.keys['right_fine']:
-            steer += self.steer_max * 0.25
+        控制合成复用 `carla_common.compose_control`，与 standalone 主入口
+        同源；ROS 2 已原生支持 Windows，因此这里必须避免任何平台专属导入。
+        """
+        throttle, steer, brake, reverse = cc.compose_control(
+            self.keys, self.speed,
+            throttle_max=self.throttle_max,
+            brake_max=self.brake_max,
+            steer_max=self.steer_max,
+            rev_threshold=self.rev_threshold,
+        )
 
         msg = Float32MultiArray()
         msg.data = [float(throttle), float(steer), float(brake), float(reverse)]
@@ -106,13 +97,32 @@ class KeyboardTeleopNode(Node):
 
 # ------------------------------------------------------------------ 键盘后端
 def _has_display():
-    """判断是否存在可用图形显示（决定是否用 pygame 窗口读键）。"""
+    """判断是否存在可用图形显示（决定是否用 pygame 窗口读键）。
+
+    DISPLAY / WAYLAND_DISPLAY 仅在 Linux 上存在；Windows 上两者都为空，
+    因此原生的 Windows 用户会自动落到终端后端。
+    """
     import os
+    if sys.platform.startswith('win'):
+        return True  # Windows 原生（ROS 2 支持）用 pygame 窗口读键
     return bool(os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY'))
 
 
 def _terminal_loop(node):
-    """termios 原始模式读单键：无需图形界面，适合虚拟机 / SSH。"""
+    """termios 原始模式读单键：无需图形界面，适合虚拟机 / SSH。
+
+    termios/tty 是 POSIX 专属模块，放在函数内部导入，使本模块在 Windows
+    上也能被正常导入与打包（ROS 2 原生支持 Windows）。
+    """
+    try:
+        import termios
+        import tty
+    except ImportError:  # pragma: no cover - Windows 原生
+        node.get_logger().error(
+            "当前平台不支持终端原始模式读键（缺少 termios）。"
+            "请改用 --pygame，或在 Linux 虚拟机中运行。")
+        return
+
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     try:
@@ -189,6 +199,8 @@ def main(argv=None):
     group.add_argument('--terminal', action='store_true', help="强制使用终端原始模式读键")
     args, _ = parser.parse_known_args(argv)
 
+    # 注意：传给 rclpy.init 的必须是 ROS 自己的参数（如 --ros-args），
+    # 不能把本节点的 --pygame / --terminal 混进去。argv 已单独用 argparse 解析。
     rclpy.init(args=None)
     use_pygame = True if args.pygame else (False if args.terminal else None)
     node = KeyboardTeleopNode(use_pygame=use_pygame)

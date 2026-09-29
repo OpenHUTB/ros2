@@ -202,11 +202,26 @@ rostopic list
 ### 运行本拓展模块
 
 除本文所需的 ros-bridge 环境外，只需补装 CARLA 0.9.16 的 Python 客户端
-（Linux wheel 随 CARLA Linux 发行包提供）：
+（`carla` 的 0.9.16 版本已发布在 PyPI，会自动匹配当前解释器版本）：
 
 ```shell
-pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+pip3 install carla==0.9.16
 ```
+
+若无法访问 PyPI，也可使用 CARLA 发行包自带的 wheel（`<CARLA>` 替换为实际解压路径）：
+
+```shell
+pip3 install "<CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl"
+```
+
+!!! tip "Ubuntu 20.04（Noetic）请用 Python 3.10+ 解释器"
+    系统默认 Python 3.8 装不上 cp310+ 的 wheel。请显式指定，并保证
+    `pip` 与运行 `main.py` 使用同一个解释器：
+
+    ```shell
+    python3.10 -m pip install carla==0.9.16
+    python3.10 src/ground/carla_keyboard_control/main.py --host 172.21.108.47 --follow
+    ```
 
 独立运行（`--host` 的填法与本文一致：填宿主机 IP）：
 

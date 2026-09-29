@@ -34,14 +34,73 @@ DEFAULT_EGO_BLUEPRINT = "vehicle.tesla.model3"
 DEFAULT_SPAWN = (36.0, -5.0, 0.6, 0.0, 0.0, 0.0)
 DT = 0.05  # 同步模式固定步长（秒）
 
+# 控制量标定（standalone / ROS 节点 / config 三处共用同一组默认值，避免漂移）
+DEFAULT_THROTTLE_MAX = 0.6
+DEFAULT_BRAKE_MAX = 0.8
+DEFAULT_STEER_MAX = 0.6
+DEFAULT_REV_THRESHOLD = 0.5  # m/s，低于该速率按 S 视为挂倒挡
+
+# 倒车油门相对 throttle_max 的比例
+REVERSE_THROTTLE_RATIO = 0.8
+# 微调转向相对 steer_max 的比例
+FINE_STEER_RATIO = 0.25
+
+# 键盘按键名（standalone 与 ROS 键盘节点共用）
+KEY_NAMES = ("fwd", "rev", "left", "right", "left_fine", "right_fine")
+
+# 安装提示：carla 0.9.16 已发布到 PyPI（含 cp310/cp311/cp312 与 win_amd64），
+# 无网络时也可改用随 CARLA 发行包附带的 wheel。
+CARLA_INSTALL_HINT = (
+    "未找到 carla 模块。请安装 CARLA 0.9.16 的 Python 客户端（二选一）：\n"
+    "  # 方式一：从 PyPI 安装（推荐，自动匹配当前 Python 版本）\n"
+    "  pip3 install carla==0.9.16\n"
+    "  # 方式二：使用 CARLA 发行包自带的 wheel（把 <CARLA> 换成解压目录）\n"
+    "  pip3 install \"<CARLA>/PythonAPI/carla/dist/"
+    "carla-0.9.16-<cpXX>-<cpXX>-<平台>.whl\""
+)
+
 
 def _check_carla():
     if carla is None:
-        raise RuntimeError(
-            "未找到 carla 模块。请安装 CARLA 0.9.16 的 Python 客户端：\n"
-            "  pip3 install <CARLA>/PythonAPI/carla/dist/"
-            "carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl"
-        )
+        raise RuntimeError(CARLA_INSTALL_HINT)
+
+
+# ------------------------------------------------------------------ 控制合成
+def blank_keys():
+    """返回全部为 False 的按键状态字典。"""
+    return {name: False for name in KEY_NAMES}
+
+
+def compose_control(keys, speed, throttle_max=DEFAULT_THROTTLE_MAX,
+                    brake_max=DEFAULT_BRAKE_MAX, steer_max=DEFAULT_STEER_MAX,
+                    rev_threshold=DEFAULT_REV_THRESHOLD):
+    """按键 + 当前车速 → (throttle, steer, brake, reverse)。
+
+    真实驾驶逻辑：S 在有速度时刹车；车速低于 rev_threshold 时挂**倒挡**后退。
+    本函数是纯函数（不触碰 carla），standalone 主入口与 ROS 2 键盘节点共用
+    同一份实现，避免两处各写一遍导致行为偏差。
+    """
+    throttle = brake = 0.0
+    reverse = False
+    if keys["fwd"]:
+        throttle = throttle_max
+    elif keys["rev"]:
+        if speed < rev_threshold:
+            reverse = True
+            throttle = throttle_max * REVERSE_THROTTLE_RATIO
+        else:
+            brake = brake_max
+
+    steer = 0.0
+    if keys["left"]:
+        steer -= steer_max
+    if keys["right"]:
+        steer += steer_max
+    if keys["left_fine"]:
+        steer -= steer_max * FINE_STEER_RATIO
+    if keys["right_fine"]:
+        steer += steer_max * FINE_STEER_RATIO
+    return throttle, steer, brake, reverse
 
 
 # ------------------------------------------------------------------ 连接与生成
@@ -158,6 +217,7 @@ def get_yaw(vehicle):
 # ------------------------------------------------------------------ 内部工具
 def make_transform(values):
     """由 (x, y, z, roll, pitch, yaw) 构造 carla.Transform（yaw 为角度）。"""
+    _check_carla()
     x, y, z, roll, pitch, yaw = values
     return carla.Transform(
         carla.Location(x=float(x), y=float(y), z=float(z)),
