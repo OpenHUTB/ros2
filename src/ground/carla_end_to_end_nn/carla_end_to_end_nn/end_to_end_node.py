@@ -84,10 +84,17 @@ class EndToEndNode(Node):
                 return net
             except Exception as exc:  # noqa: BLE001
                 self.get_logger().warn(f"模型加载失败({exc})，改为现场训练")
-        self.get_logger().info("未找到端到端模型，用合成道路图像现场训练（纯 numpy）...")
+        # 纯 numpy 的 CNN 训练较慢（实测约 15 s/epoch @400 样本）。
+        # 必须把预算压小并**打印进度**，否则节点静默好几分钟，使用者会以为卡死。
+        self.get_logger().info(
+            "未找到端到端模型，用合成道路图像现场训练（纯 numpy，120 样本 × 20 轮，约 1~2 分钟）...")
+        self.get_logger().info(
+            f"需要更高精度请先离线训练： python3 main.py --mode train --epochs 60 "
+            f"--samples 400 --model_path {model_path}")
         from carla_end_to_end_nn.main import synth_dataset, train_cnn
         X, Y = synth_dataset(n=120, seed=0)
-        net, _h = train_cnn(X, Y, model_path, epochs=40, backend=self.backend, verbose=0)
+        net, _h = train_cnn(X, Y, model_path, epochs=20, backend=self.backend, verbose=5)
+        self.get_logger().info("端到端 CNN 现场训练完成")
         return net
 
     # ------------------------------------------------------------------ 连接

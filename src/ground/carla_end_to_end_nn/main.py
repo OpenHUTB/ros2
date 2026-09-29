@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """作业四 · CARLA 端到端神经网络【图像 → 控制】。
 
@@ -393,36 +393,72 @@ def collect_carla(host, port, town, frames, out_dir, backend="numpy"):
         print("[错误] collect 模式需要 CARLA，请先启动服务端并安装 carla 客户端。")
         print("       离线验证可改用： python3 main.py --headless --demo --save_dir ~/shots")
         return 1
-    client, world = cc.connect(host, port, town)
-    vehicle, tf = cc.spawn_vehicle(world)
 
-    holder = {"img": None}
-    cc.make_rgb_camera(world, vehicle, lambda im: holder.update(img=im),
-                       width=IMG_W, height=IMG_H, tick=True)
-    os.makedirs(os.path.join(out_dir, "images"), exist_ok=True)
-    lbl_path = os.path.join(out_dir, "labels.txt")
+    try:
+        client, world = cc.connect(host, port, town)
+    except Exception as exc:  # noqa: BLE001
+        print(f"\n[错误] 连接 CARLA 服务端失败：{exc}")
+        print(f"       目标 {host}:{port}，地图 {town}。请确认服务端已启动、"
+              "防火墙放行 2000 端口、host 填宿主机 VMnet8 地址。")
+        return 1
 
-    saved = 0
-    with open(lbl_path, "w", encoding="utf-8") as f:
-        for i in range(frames):
-            world.tick()                      # 先推进：图像与位姿反映当前状态
-            img = holder["img"]
-            if img is None:
-                continue
-            pos = cc.get_location(vehicle)
-            yaw = cc.get_yaw(vehicle)
-            steer = carla_expert_steer(world, vehicle)     # 专家此刻该打的转向
-            _write_jpg_like(os.path.join(out_dir, "images", f"{saved:05d}.npy"), img)
-            f.write(f"{steer:.6f}\n")
-            cc.apply_control(vehicle, throttle=DEFAULT_THROTTLE, steer=steer)
-            saved += 1
-            if i % 50 == 0:
-                print(f"  collect {i}/{frames}  已保存 {saved}  专家 steer={steer:+.3f}")
+    # spawn / 采集 / 清理全部包进 try-finally：万一中途抛异常，
+    # 也要销毁传感器与自车并把世界恢复为异步模式。
+    vehicle = None
+    sensors = []
+    try:
+        vehicle, tf = cc.spawn_vehicle(world)
 
-    print(f"数据采集完成：{saved} 帧 → {out_dir}")
-    print(f"  图像: {os.path.join(out_dir, 'images')}（.npy，uint8 HWC）")
-    print(f"  标签: {lbl_path}")
-    vehicle.destroy()
+        holder = {"img": None}
+        # 必须保留 sensor 对象的引用！否则 spawn_actor 返回的 sensor 无引用，
+        # 函数作用域结束后被 Python 垃圾回收，Actor 虽留在仿真里但回调不再触发，
+        # 表现为「采集到 0 帧」并伴随 CARLA 警告：
+        #   sensor object went out of the scope but the sensor is still alive in the simulation
+        sensors.append(cc.make_rgb_camera(
+            world, vehicle, lambda im: holder.update(img=im),
+            width=IMG_W, height=IMG_H, tick=True))
+        os.makedirs(os.path.join(out_dir, "images"), exist_ok=True)
+        lbl_path = os.path.join(out_dir, "labels.txt")
+
+        saved = 0
+        with open(lbl_path, "w", encoding="utf-8") as f:
+            for i in range(frames):
+                world.tick()                  # 先推进：图像与位姿反映当前状态
+                img = holder["img"]
+                if img is None:
+                    continue
+                steer = carla_expert_steer(world, vehicle)  # 专家此刻该打的转向
+                _write_jpg_like(os.path.join(out_dir, "images", f"{saved:05d}.npy"), img)
+                f.write(f"{steer:.6f}\n")
+                cc.apply_control(vehicle, throttle=DEFAULT_THROTTLE, steer=steer)
+                saved += 1
+                if i % 50 == 0:
+                    print(f"  collect {i}/{frames}  已保存 {saved}  专家 steer={steer:+.3f}")
+
+        print(f"数据采集完成：{saved} 帧 → {out_dir}")
+        print(f"  图像: {os.path.join(out_dir, 'images')}（.npy，uint8 HWC）")
+        print(f"  标签: {lbl_path}")
+        if saved == 0:
+            print("[警告] 未采集到任何帧，请检查 CARLA 服务端与相机回调。")
+    finally:
+        for s in sensors:
+            try:
+                s.stop()
+                s.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        if vehicle is not None:
+            try:
+                vehicle.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        # 恢复异步模式：同步模式下服务端只在客户端 tick 时推进，
+        # 脚本退出后没人 tick，CARLA 窗口会看起来「停住不动」。
+        if cc.restore_async(world):
+            print("[清理] 已销毁传感器与自车，世界已恢复异步模式。")
+        else:
+            print("[清理] 已销毁传感器与自车；世界仍为同步模式，"
+                  "如需恢复可重启 CARLA 服务端。")
     return 0
 
 
@@ -458,28 +494,84 @@ def test_carla(host, port, town, model_path, sim_time=20.0, backend="numpy", sav
     if not _HAVE_CARLA:
         print("[错误] test 模式需要 CARLA。离线验证请用 --headless --demo")
         return 1
+
+    # 模型文件不存在时**现场训练并保存**，而不是直接崩掉。
+    # 与 ROS 节点（end_to_end_node.py）的行为保持一致：那边同样有
+    # os.path.isfile 守卫并回退到现场训练，保证"节点总能运行"。
+    #
+    # 注意预算：纯 numpy 的 CNN 训练较慢，实测约 15 s/epoch（400 样本）。
+    # 若沿用离线取证的 60 epochs，回退训练要十几分钟——使用者会以为程序卡死。
+    # 因此回退只用小样本 + 少轮次，并明确打印预计耗时。
+    if not os.path.isfile(model_path):
+        n_fb, ep_fb = 150, 20
+        print(f"[提示] 未找到模型文件 {model_path}，先现场训练一个可用的 CNN。")
+        print(f"       预算：{n_fb} 合成样本 × {ep_fb} 轮（纯 numpy 约 2 分钟）。")
+        print("       需要更高精度请先离线训练：")
+        print(f"         python3 main.py --mode train --epochs 60 --samples 400 "
+              f"--model_path {model_path}")
+        X, Y = synth_dataset(n=n_fb)
+        train_cnn(X, Y, model_path, epochs=ep_fb, backend="numpy")
+
     net = load_cnn(model_path, backend=backend)
-    client, world = cc.connect(host, port, town)
-    vehicle, tf = cc.spawn_vehicle(world)
 
-    holder = {"img": None}
-    cc.make_rgb_camera(world, vehicle, lambda im: holder.update(img=im),
-                       width=IMG_W, height=IMG_H, tick=True)
-    print(f"[就绪] 端到端 CNN 已加载：{model_path}")
-    print("[说明] 转向完全由相机图像经 CNN 得出，不含任何解析规划环节")
+    try:
+        client, world = cc.connect(host, port, town)
+    except Exception as exc:  # noqa: BLE001
+        print(f"\n[错误] 连接 CARLA 服务端失败：{exc}")
+        print(f"       目标 {host}:{port}，地图 {town}。请确认服务端已启动、"
+              "防火墙放行 2000 端口、host 填宿主机 VMnet8 地址。")
+        return 1
 
-    steer = 0.0
-    for k in range(int(sim_time / DT)):
-        world.tick()
-        img = holder["img"]
-        if img is not None:
-            steer = cnn_predict(net, img, backend=backend)
-            cc.apply_control(vehicle, throttle=DEFAULT_THROTTLE, steer=steer)
-        if k % 40 == 0:
-            x, y = cc.get_location(vehicle)
-            print(f"[t={k * DT:5.1f}s] CNN steer={steer:+.3f} pos=({x:7.2f},{y:7.2f})")
-    print("端到端自主驾驶完成")
-    vehicle.destroy()
+    # spawn / 推理 / 清理全部包进 try-finally：万一中途抛异常，
+    # 也要销毁传感器与自车并把世界恢复为异步模式。
+    vehicle = None
+    sensors = []
+    try:
+        vehicle, tf = cc.spawn_vehicle(world)
+
+        holder = {"img": None}
+        # 必须保留 sensor 对象的引用，否则会被 Python GC 回收、回调失效
+        # （表现为 steer 恒为 0、图像始终为 None）。
+        sensors.append(cc.make_rgb_camera(
+            world, vehicle, lambda im: holder.update(img=im),
+            width=IMG_W, height=IMG_H, tick=True))
+        print(f"[就绪] 端到端 CNN 已加载：{model_path}")
+        print("[说明] 转向完全由相机图像经 CNN 得出，不含任何解析规划环节")
+
+        steer = 0.0
+        frames_seen = 0
+        for k in range(int(sim_time / DT)):
+            world.tick()
+            img = holder["img"]
+            if img is not None:
+                frames_seen += 1
+                steer = cnn_predict(net, img, backend=backend)
+                cc.apply_control(vehicle, throttle=DEFAULT_THROTTLE, steer=steer)
+            if k % 40 == 0:
+                x, y = cc.get_location(vehicle)
+                print(f"[t={k * DT:5.1f}s] CNN steer={steer:+.3f} pos=({x:7.2f},{y:7.2f})")
+        print("端到端自主驾驶完成")
+        print(f"共收到相机帧 {frames_seen} 张")
+        if frames_seen == 0:
+            print("[警告] 全程未收到任何相机帧，转向输出恒为默认值，"
+                  "本轮结果不具参考意义。")
+    finally:
+        for s in sensors:
+            try:
+                s.stop()
+                s.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        if vehicle is not None:
+            try:
+                vehicle.destroy()
+            except Exception:  # noqa: BLE001
+                pass
+        if cc.restore_async(world):
+            print("[清理] 已销毁传感器与自车，世界已恢复异步模式。")
+        else:
+            print("[清理] 已销毁传感器与自车；世界仍为同步模式，"
+                  "如需恢复可重启 CARLA 服务端。")
     return 0
 
 

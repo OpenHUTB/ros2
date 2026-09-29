@@ -221,6 +221,80 @@ def test_offline_demo_runs():
             assert need in produced, f"缺少产物 {need}: {produced}"
 
 
+def test_test_carla_source_guards_missing_model():
+    """test_carla 必须在加载模型前检查文件是否存在（回归测试）。
+
+    历史缺陷：`net = load_cnn(model_path, ...)` 无存在性检查，模型缺失时
+    直接抛 FileNotFoundError；而 ROS 节点（end_to_end_node.py:80）本就有
+    os.path.isfile 守卫并回退现场训练，两者行为不一致。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_fn = src.index("def test_carla(")
+    seg = src[i_fn:i_fn + 3000]
+    i_guard = seg.index("if not os.path.isfile(model_path):")
+    i_load = seg.index("net = load_cnn(model_path")
+    assert i_guard < i_load, "模型存在性检查必须在 load_cnn 之前"
+    assert "train_cnn(" in seg, "模型缺失时未回退到现场训练"
+
+
+def test_fallback_training_budget_is_bounded():
+    """现场训练回退的预算必须受控（回归测试）。
+
+    历史缺陷：回退直接用 400 样本 × 60 轮，而纯 numpy CNN 实测约 15 s/epoch，
+    合计约 15 分钟——使用者会以为程序卡死（本机实测直接撞上 10 分钟超时）。
+    修复：回退改为小样本 + 少轮次，并打印预计耗时。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_fn = src.index("def test_carla(")
+    seg = src[i_fn:i_fn + 3000]
+    assert "epochs=60, backend=\"numpy\")" not in seg, \
+        "回退训练仍使用 60 轮，耗时会达到十几分钟"
+    assert "ep_fb" in seg, "回退训练未使用受控的轮次预算"
+
+    # ROS 节点的回退同样要压小预算且不能静默（verbose=0 会几分钟无输出）
+    node = open(os.path.join(_PKG, "carla_end_to_end_nn",
+                             "end_to_end_node.py"), encoding="utf-8").read()
+    assert "epochs=40" not in node, "ROS 节点回退仍是 40 轮，耗时过长"
+    assert "verbose=0)" not in node, \
+        "ROS 节点回退训练静默进行，几分钟无输出会被当成卡死"
+
+
+def test_carla_funcs_keep_sensor_references():
+    """collect_carla 与 test_carla 都必须保留相机句柄（回归测试）。
+
+    历史缺陷：`cc.make_rgb_camera(...)` 的返回值被丢弃，sensor 无引用被
+    Python 垃圾回收，Actor 留在仿真里但回调失效——表现为采集到 0 帧、
+    steer 恒为 0，并伴随 CARLA 警告：
+      sensor object went out of the scope but the sensor is still alive in the simulation
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    for fn in ("collect_carla", "test_carla"):
+        i_fn = src.index(f"def {fn}(")
+        seg = src[i_fn:i_fn + 3500]
+        assert "sensors.append(cc.make_rgb_camera(" in seg, \
+            f"{fn} 未保留相机句柄（会被 GC 回收）"
+        assert "for s in sensors:" in seg, f"{fn} 缺少传感器清理循环"
+        assert "cc.restore_async(" in seg, f"{fn} 退出未恢复异步模式"
+
+
+def test_carla_funcs_wrap_cleanup_in_finally():
+    """两个 CARLA 函数的清理都必须在 finally 内（回归测试）。
+
+    历史缺陷：清理裸放在函数末尾，中途抛异常（如连接超时）会被跳过，
+    留下残留 actor 与同步模式。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    for fn in ("collect_carla", "test_carla"):
+        i_fn = src.index(f"def {fn}(")
+        i_next = src.find("\ndef ", i_fn + 1)
+        seg = src[i_fn:i_next if i_next > 0 else len(src)]
+        assert "try:" in seg and "finally:" in seg, f"{fn} 缺少 try/finally"
+        i_fin = seg.index("finally:")
+        for call in ("s.stop()", "s.destroy()", "vehicle.destroy()",
+                     "cc.restore_async("):
+            assert seg.index(call) > i_fin, f"{fn}: {call} 不在 finally 内"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
