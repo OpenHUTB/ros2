@@ -123,6 +123,45 @@ def test_offline_demo_runs():
         assert "lateral_error.png" in produced, f"缺少横向误差曲线: {produced}"
 
 
+def test_run_carla_trains_when_model_missing():
+    """模型文件缺失时 run_carla 应现场训练而非直接崩溃（回归测试）。
+
+    历史缺陷：`run_carla` 一开始就无条件 load_model(model_path)，
+    没有模型文件时抛 FileNotFoundError，用户按文档顺序执行必然踩坑
+    （实测报错：FileNotFoundError: 'models/nn_percept.json'）。
+    ROS 节点在模型缺失时会回退到现场训练保证"节点总能运行"，
+    main.py 的在线模式应与之一致。
+
+    本测试只验证"缺模型 → 自动训练并落盘"这一步，
+    不连接 CARLA（连接部分在 load_model 之后，此处不会执行到）。
+    """
+    with tempfile.TemporaryDirectory() as d:
+        missing = os.path.join(d, "不会存在", "nn_percept.json")
+        assert not os.path.isfile(missing)
+        # 直接调用 run_carla 会因缺少 carla 模块而提前返回；这里改为验证
+        # "缺模型时先训练并保存" 这段前置逻辑本身可用。
+        feat_X, feat_Y, ctrl_X, ctrl_Y = main_mod.synth_dataset(60, seed=0)
+        sens, ctrl, _h = main_mod.train(feat_X, feat_Y, ctrl_X, ctrl_Y, epochs=20)
+        main_mod.save_model(missing, sens, ctrl)
+        assert os.path.isfile(missing), "缺模型时应能自动训练并落盘"
+        loaded = main_mod.load_model(missing)
+        assert loaded["sens"] is not None and loaded["ctrl"] is not None
+
+
+def test_run_carla_source_guards_missing_model():
+    """静态检查：run_carla 必须在 load_model 之前做存在性判断。
+
+    防止将来有人把这段"缺模型则现场训练"的保护逻辑删掉，
+    再次出现按文档顺序执行就崩溃的情况。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_guard = src.find("if not os.path.isfile(model_path)")
+    i_load = src.find("model = load_model(model_path)")
+    assert i_guard != -1, "run_carla 缺少“模型不存在则先训练”的保护逻辑"
+    assert i_load != -1, "未找到 load_model 调用"
+    assert i_guard < i_load, "存在性判断必须写在 load_model 之前"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []

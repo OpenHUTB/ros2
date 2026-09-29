@@ -493,6 +493,17 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
         print("[错误] 缺少 carla 模块，run 模式需要 CARLA 服务端。请安装 CARLA 0.9.16 客户端。")
         print("       离线验证可改用： python3 main.py --headless --demo --save_dir ~/shots")
         return 1
+
+    # 模型文件不存在时**现场训练并保存**，而不是直接崩掉。
+    # 与 ROS 节点（perception_control_node.py）的行为保持一致：
+    # 那边在模型缺失时同样回退到现场训练，保证“节点总能运行”。
+    if not os.path.isfile(model_path):
+        print(f"[提示] 未找到模型文件 {model_path}，先现场训练（纯 numpy，约 1 分钟）...")
+        print("       也可单独训练： python3 main.py --mode train --out " + model_path)
+        _feat_X, _feat_Y, _ctrl_X, _ctrl_Y = synth_dataset()
+        _sens, _ctrl, _hist = train(_feat_X, _feat_Y, _ctrl_X, _ctrl_Y, epochs=300)
+        save_model(model_path, _sens, _ctrl)
+
     model = load_model(model_path)
     sens = model["sens"]
 
