@@ -6,7 +6,12 @@
 #   bash main.sh --host <IP>              # 指定 CARLA 服务端（虚拟机填宿主机 IP）
 #   bash main.sh --headless --demo --save_dir ~/shots
 #                                         # 离线取证：训练+回放并导出曲线图（无 CARLA 也能跑）
+#   bash main.sh --host 192.168.8.1 --follow
+#                                         # 第三人称跟随镜头（观察/录屏用）
 #   bash main.sh --launch                 # 由 ROS 2 launch 启动
+#
+# 连不上 CARLA 时先做连通性诊断（分步打印耗时，指出卡在哪一环）：
+#   python3 check_connection.py <宿主机IP> 2000 Town05
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

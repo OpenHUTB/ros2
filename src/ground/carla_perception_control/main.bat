@@ -6,6 +6,10 @@ rem   main.bat --mode train                 离线训练两个神经网络（无
 rem   main.bat --headless --demo --save_dir shots
 rem                                         离线取证：导出曲线图（无 CARLA 也能跑）
 rem   main.bat --host 192.168.8.1           指定 CARLA 服务端地址
+rem   main.bat --host 192.168.8.1 --follow  第三人称跟随镜头（观察/录屏用）
+rem
+rem 连不上 CARLA 时先做连通性诊断：
+rem   python check_connection.py <宿主机IP> 2000 Town05
 setlocal
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
