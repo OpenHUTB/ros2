@@ -56,22 +56,48 @@ def _check_carla():
 
 
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_MAP,
-           sync=True, dt=DT):
+           sync=True, dt=DT, timeout=60.0, force_reload=False):
     """连接 CARLA 服务端并加载地图，返回 (client, world)。
 
-    - 若 server 端口已有一个世界，load_world 会加载 town（同步阻塞）。
+    关于超时与地图重载（实测经验）：
+
+    * `load_world()` 是**重操作**：实测本机加载 Town05 需 7.1 s，
+      若服务端已有大量 actor 会更久；虚拟机经网络调用还要叠加传输开销。
+      早期把超时设为 20 s，虚拟机侧实测直接超时失败：
+          RuntimeError: time-out of 20000ms while waiting for the simulator
+      因此默认超时提高到 60 s。
+    * 若服务端**已经加载了目标地图**，则无需再 `load_world`（省下数秒且避免
+      重置世界）。此时直接 `get_world()` 即可；`force_reload=True` 可强制重载。
+
     - 开启同步模式（synchronous_mode），便于逐帧精确控制与传感器对齐。
     """
     _check_carla()
     client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.load_world(town)
+    client.set_timeout(timeout)
+
+    current = None
+    try:
+        current = client.get_world().get_map().name
+    except Exception:  # noqa: BLE001
+        current = None
+
+    # 地图名的比较：服务端返回形如 "Carla/Maps/Town05"，也接受 "Town05"
+    def _same(name, want):
+        return bool(name) and (name == want or name.endswith("/" + want))
+
+    if current and _same(current, town) and not force_reload:
+        world = client.get_world()
+        print(f"[连接] 服务端已在地图 {current}，跳过重载（force_reload=True 可强制重载）")
+    else:
+        print(f"[连接] 正在加载地图 {town}（当前 {current or '未知'}），可能需要数秒...")
+        world = client.load_world(town)
+        print(f"[连接] 地图 {town} 加载完成")
+
     if sync:
         settings = world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = dt
         world.apply_settings(settings)
-    # 清空已存在的天气、车辆以外的无关 actor 保留，便于稳定复现
     return client, world
 
 
