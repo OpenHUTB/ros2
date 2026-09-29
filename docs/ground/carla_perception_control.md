@@ -420,28 +420,49 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
     `AttributeError`，这并不代表安装失败。判断是否装好请用能否连上服务端：
     `carla.Client(host, 2000).get_world().get_map().name`。
 
-**Q2：`--mode run` 报 `FileNotFoundError: models/nn_percept.json`？**
+**Q2：报 `RuntimeError: time-out ... while waiting for the simulator`？**
+先用模块自带的诊断脚本分步定位（它会打印每步耗时，区分"网络不通"与"服务端卡住"）：
+
+```bash
+python3.10 src/ground/carla_perception_control/check_connection.py 192.168.8.1 2000 Town05
+```
+
+该脚本依次检查：carla 模块导入 → TCP 端口可达 → `get_world` 瞬时连接 →
+当前地图与同步模式 → `load_world` 耗时 → 世界内 actor 数量。
+
+常见原因与对策：
+
+| 诊断结果 | 原因 | 对策 |
+|---|---|---|
+| 第 2 步失败 | 网络层不通 | 确认服务端已启动、宿主机防火墙放行 2000、`host` 填宿主机 VMnet8 地址 |
+| 第 2 步 OK 但第 3 步失败 | 服务端仍在初始化或已卡死 | 重启 CARLA 服务端 |
+| 第 5 步超时 | `load_world` 是重操作（实测本机 7 s 以上，虚拟机过网络更久） | 服务端已加载目标地图时本模块会自动跳过重载；否则把 `--town` 设为服务端**当前**地图名 |
+
+本模块的 `connect()` 默认超时已提高到 60 s，并且**服务端已在地图上时跳过重载**
+（早期版本每次无条件 `load_world`，20 s 超时在虚拟机侧实测必失败）。
+
+**Q3：`--mode run` 报 `FileNotFoundError: models/nn_percept.json`？**
 说明模型文件不存在且代码版本较旧。当前版本在模型缺失时会**现场训练并保存**后
 再加载（与 ROS 节点行为一致），不会崩溃。若仍报错请确认已更新到最新提交；
 也可先手动训练一次：`python3 main.py --mode train --out models/nn_percept.json`。
 
-**Q3：在线运行时车开到一半卡住不动？**
+**Q4：在线运行时车开到一半卡住不动？**
 先看日志里的 `lidar` 最近距离：若降到很小（如 0.04 m）并有大量命中点，
 说明**车撞上障碍物**了。两个常见原因：
 1. 给定轨迹的航点**不在可行驶车道上**——CARLA 中航点之间走直线，会开出路面；
 2. 转弯处**航点间距过大**——转弯被压缩到几米内完成，车辆转不过来。
 请用 5.7 节的约束校验轨迹，或直接省略 `--waypoints` 使用内置 `DEMO_ROUTE`。
 
-**Q4：车辆在终点附近绕圈不停？**
+**Q5：车辆在终点附近绕圈不停？**
 本模块已内置终点判定（进入 5 m 内刹车停车）。若自定义路点出现绕圈，
 通常是给定轨迹**转弯半径超过车辆运动学极限**——注意 $R_{\min}\approx L/\tan\delta_{\max}$，
 7 m/s 时约需 5 m 转弯半径。请把急弯改缓，或降低 `--throttle_max`。
 
-**Q5：横向误差偏大？**
+**Q6：横向误差偏大？**
 检查是否用了 `_dist_to_polyline()`（垂距）而非最近路点距离；并确认路点已加密
 （`interpolate_waypoints`）。稀疏路点会让前视追踪"跳点"。
 
-**Q6：感知类别一直显示"无目标"？**
+**Q7：感知类别一直显示"无目标"？**
 合成数据训练的感知器只区分"偏左/偏右/无目标"三类，用于演示感知链路；
 Town05 空旷路段确实无遮挡物，输出"无目标"属正常。真实场景需用采集数据训练，
 可替换 `synth_dataset()` 为实际数据集。
