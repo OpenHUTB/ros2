@@ -206,23 +206,130 @@ msg.pose.orientation.z = ratio
 
 ### 4.2 安装本模块
 
-```bash
-# 1. 准备 AllocNet 工作区（规划器需已编译通过）
-git clone https://github.com/KumarRobotics/AllocNet.git ~/allocnet_ws/src/AllocNet
-# ... 按上游 README 编译 planner 与 param_env ...
+安装分两步：**先把上游编译出来**（一次性），**再装本模块**。
 
-# 2. 把本模块装入工作区的 planner 包
+#### 4.2.1 编译上游（一次性）
+
+!!! warning "`planner` 与 `param_env` 来自两个不同的仓库"
+    `planner` 在 AllocNet 仓库内；`param_env` 在 **kr_param_map** 仓库内，
+    由 AllocNet 的 `src/utils.rosinstall` 单独拉取。
+    只克隆 AllocNet **不会**得到 `param_env` —— 这是 `main.py check`
+    报 `[缺] param_env` 的头号原因。
+
+**(1) 系统依赖**
+
+```bash
+sudo apt update
+sudo apt install -y \
+    libompl-dev libeigen3-dev \
+    libsdl1.2-dev libsdl-image1.2-dev \
+    libboost-all-dev cmake build-essential git wget unzip \
+    python3-pip python3-rosdep
+```
+
+`libsdl1.2-dev` / `libsdl-image1.2-dev` 是 `param_env` 独有的依赖
+（它的 `package.xml` 声明了 `sdl` / `sdl-image` 两个 rosdep 键）：
+缺了这两个包 `planner` 能编过、`param_env` 编不过。
+
+**(2) osqp 0.6.3 与 osqp-eigen（源码编译）**
+
+ROS 源里没有满足要求的 osqp，必须锁版本源码编译：
+
+```bash
+# osqp —— 版本必须是 release-0.6.3，新版 API 不兼容
+cd /tmp && git clone -b release-0.6.3 --depth 1 https://github.com/osqp/osqp.git
+cd osqp && git submodule update --init --recursive
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && sudo make install
+sudo ldconfig
+
+# osqp-eigen —— 规划器的 QP 封装 osqp_solver.hpp 依赖它
+cd /tmp && git clone --depth 1 https://github.com/robotology/osqp-eigen.git
+cd osqp-eigen && mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc) && sudo make install
+sudo ldconfig
+```
+
+**(3) libtorch（必须 CPU 版）**
+
+```bash
+cd /tmp
+wget -O libtorch.zip \
+  https://download.pytorch.org/libtorch/nightly/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.0.dev20230301%2Bcpu.zip
+unzip -q libtorch.zip -d /tmp/lt
+mkdir -p ~/allocnet_ws/src/AllocNet/src/planner
+mv /tmp/lt/libtorch ~/allocnet_ws/src/AllocNet/src/planner/libtorch
+```
+
+本模块运行在无 GPU 直通的虚拟机中，GPU 版 libtorch 会因找不到 CUDA 而加载失败。
+同时确认 `learning_planner.hpp` 里是 `device(torch::kCPU)`。
+
+**(4) 拉取两个上游仓库**
+
+```bash
+mkdir -p ~/allocnet_ws/src && cd ~/allocnet_ws/src
+
+# (1) AllocNet —— 提供 planner 包（本模块对应的分支）
+git clone -b feature-keyboard-teleop \
+    https://github.com/Xiangyuetang91/AllocNet.git
+
+# (2) kr_param_map —— 提供 param_env 包（★ 不在 AllocNet 仓库内）
+git clone --depth 1 https://github.com/KumarRobotics/kr_param_map.git
+```
+
+上游 `src/utils.rosinstall` 里 kr_param_map 用的是 SSH 地址
+`git@github.com:...`，没有配 SSH key 时 `wstool update` 会直接失败，
+因此这里显式用 HTTPS 克隆（本分支已把该地址改写为 HTTPS）。
+
+**(5) 编译**
+
+```bash
+cd ~/allocnet_ws
+catkin_make -DCMAKE_BUILD_TYPE=Release -D_GLIBCXX_USE_CXX11_ABI=1
+```
+
+!!! danger "不要加 `--pkg planner`"
+    单包构建**不会**构建 `param_env`；而 `param_env` 缺失时
+    `structure_map` 会因找不到可执行文件而瞬间退出，表现为
+    「没有地图、规划器毫无反应」，且不留任何日志。
+
+`_GLIBCXX_USE_CXX11_ABI=1` 必须与 libtorch 预编译包的 ABI 一致，
+否则链接期会报大量 `std::__cxx11` 符号缺失。
+
+产物校验：
+
+```bash
+ls devel/lib/planner/learning_planning   # 规划器
+ls devel/lib/param_env/structure_map     # 地图生成
+```
+
+**(6) source 环境**
+
+```bash
+source ~/allocnet_ws/devel/setup.bash
+```
+
+**每开一个新终端都要 source**。未 source 时 `ROS_PACKAGE_PATH` 里没有
+`~/allocnet_ws/src`，rospack 看不到工作区内的任何包，`main.py check` 会报缺包。
+
+#### 4.2.2 安装本模块
+
+```bash
+# 1. 把本模块装入工作区的 planner 包
 cd ros2/src/air/allocnet_teleop
 python3 main.py install --ws ~/allocnet_ws
 
-# 3. 重新编译（脚本需注册进 CMakeLists）
+# 2. 重新编译（脚本需注册进 CMakeLists）
 cd ~/allocnet_ws && catkin_make --pkg planner
 
-# 4. 环境自检
+# 3. 环境自检
 python3 main.py check
 ```
 
-`main.py check` 会逐项确认 ROS、工作区、上游包、本模块脚本、
+第 2 步此处**可以**用 `--pkg planner`：`param_env` 在上一步已经构建好了，
+这里只是把新增的 Python 脚本注册进 `planner`。
+
+`main.py check` 会逐项确认 ROS、工作区、上游包与编译产物、本模块脚本、
 launch 文件与可选工具是否就位，把「跑不起来」的原因提前暴露：
 
 ```
@@ -230,10 +337,22 @@ launch 文件与可选工具是否就位，把「跑不起来」的原因提前�
 [2] AllocNet 工作区 /home/user/allocnet_ws: 已构建
 [3] 上游 ROS 包:
      [OK] planner      /home/user/allocnet_ws/src/AllocNet/src/planner
-     [OK] param_env    /home/user/allocnet_ws/src/kr_param_env/param_env
-...
+     [OK] param_env    /home/user/allocnet_ws/src/kr_param_map/param_env
+
+     [3b] 包编译产物:
+     [OK] planner/learning_planning
+     [OK] param_env/structure_map
+[4] 本模块脚本:  teleop_keyboard.py / map_republisher.py / record_trajectory.py
+[5] launch 文件:  teleop_planning.launch
+[6] 可选工具:     rviz / import / Xvfb
  自检结果: 通过，可以运行 `main.py run`
 ```
+
+其中 `[3]` 与 `[3b]` 是两级独立检查：前者问 rospack「包在哪」，
+后者问「包编出来没有」。两者会分叉，因为 catkin 把 `<ws>/src` 整个加进
+`ROS_PACKAGE_PATH`，**没编译的包 rospack 照样找得到** —— 所以只查 rospack
+会漏掉「包在但没构建」这种状态，而它恰恰是 `structure_map` 启动即退的原因。
+报 `[缺]` 时 `check` 会直接打印该包的补救命令。
 
 键盘节点的核心逻辑另有单元测试覆盖，**不需要 ROS 环境**即可运行
 （测试内用 mock 的 `rospy` 打桩）：
@@ -263,9 +382,25 @@ python3 main.py run --no-gui
 
 # 不记录轨迹
 python3 main.py run --no-record
+
+# 用高对比配置启动（点云灰色，轨迹更醒目，适合截图）
+python3 main.py run --rviz-config capture_view.rviz
 ```
 
-启动后会在 RViz 中看到地图与游标，此时即可下发航点。
+启动后在 RViz 中会看到地图、游标与规划结果：
+
+![AllocNet 运行效果（RViz）](../img/allocnet_teleop/run_preview.png)
+
+界面自上而下依次是 RViz 工具条、左侧 Displays 面板（`Fixed Frame: odom`）
+与三维视图。图中：**蓝**色为 AllocNet 优化后的平滑轨迹，**红**色为 OMPL
+前端几何路径，**绿**色为安全飞行走廊边界，球形标记为键盘下发的起点（红）
+与终点（橙），灰色点云为真实障碍。本次运行规划耗时 206.01 ms、轨迹 968 点、
+记录 CSV 803 行。
+
+!!! tip "截图时换一套 RViz 配置"
+    默认的 `teleop_planner.rviz` 把障碍点云按高度着彩虹色，20×20 m 地图上
+    约 3 万点，密度很高，会把蓝/红/绿三条轨迹线**淹没**在背景里。
+    截图请改用 `capture_view.rviz`（点云统一灰色），轨迹才看得清。
 
 ### 4.4 键盘操作
 

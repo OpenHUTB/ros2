@@ -102,8 +102,9 @@ mv /tmp/lt/libtorch ~/allocnet_ws/src/AllocNet/src/planner/libtorch
 ```bash
 mkdir -p ~/allocnet_ws/src && cd ~/allocnet_ws/src
 
-# (1) AllocNet —— 提供 planner 包
-git clone https://github.com/KumarRobotics/AllocNet.git
+# (1) AllocNet —— 提供 planner 包（本模块对应的分支）
+git clone -b feature-keyboard-teleop \
+    https://github.com/Xiangyuetang91/AllocNet.git
 
 # (2) kr_param_map —— 提供 param_env 包（★ 关键：不在 AllocNet 仓库内）
 git clone --depth 1 https://github.com/KumarRobotics/kr_param_map.git
