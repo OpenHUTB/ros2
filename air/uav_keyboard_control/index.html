@@ -6,15 +6,15 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>空域模拟器的 ROS 封装器 - 模拟器的 ROS 文档</title>
+<title>无人机键盘控制 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u7a7a\u57df\u6a21\u62df\u5668\u7684 ROS \u5c01\u88c5\u5668";
-        var mkdocs_page_input_path = "air/ros_pkgs.md";
+        var mkdocs_page_name = "\u65e0\u4eba\u673a\u952e\u76d8\u63a7\u5236";
+        var mkdocs_page_input_path = "air/uav_keyboard_control.md";
         var mkdocs_page_url = null;
       </script>
 <!--[if lt IE 9]>
@@ -97,15 +97,35 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">空域模拟器的 ROS 封装器</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">参考</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">无人机键盘控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 按键映射</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 编译与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 实现要点</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-raw">4.1 终端 raw 模式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 按键 → 速度：纯函数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 松开即悬停</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-wasd">5. 与视口内置 WASD 的关系</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 效果图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 参考</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
 </li>
@@ -148,31 +168,110 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">空域载具</li>
-<li class="breadcrumb-item active">空域模拟器的 ROS 封装器</li>
+<li class="breadcrumb-item active">无人机键盘控制</li>
 <li class="wy-breadcrumbs-aside">
-<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/ros_pkgs.md"> 编辑页面</a>
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_keyboard_control.md"> 编辑页面</a>
 </li>
 </ul>
 <hr/>
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="ros">空域模拟器的 ROS 封装器</h1>
-<p>具体请参考<a href="https://openhutb.github.io/air_doc/airsim_ros_pkgs/">空域载具文档</a></p>
-<h2 id="_1">参考</h2>
+<div><h1 id="uav_keyboard_control">无人机键盘控制（uav_keyboard_control）</h1>
+<p>任务①「无人机仿真 + 键盘控制」的 ROS 侧实现：把终端按键转换为<strong>机体系速度指令</strong>，
+发布到 <code>/uav/cmd_vel</code>，由 <code>carlair_ros_bridge</code> 连仿真器执行。仿真/坐标换算/安全限幅
+集中在桥接层，键盘、规划器、神经网络控制器共用同一条指令通道。</p>
+<h2 id="1">1. 运行架构</h2>
+<div class="highlight"><pre><span></span><code>终端按键 ──► uav_keyboard_control ──/uav/cmd_vel──► carlair_ros_bridge ──► CarlaAir/AirSim
+            (raw 模式读键)        (geometry_msgs/Twist)   (坐标换算+执行)     (无人机)
+</code></pre></div>
+<h2 id="2">2. 按键映射</h2>
+<p>机体系（x 前 / y 左 / z 上）：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>动作</th>
+<th>Twist 分量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>W</code> / <code>S</code></td>
+<td>前进 / 后退</td>
+<td><code>linear.x = ±horiz_speed</code></td>
+</tr>
+<tr>
+<td><code>A</code> / <code>D</code></td>
+<td>左移 / 右移</td>
+<td><code>linear.y = ±horiz_speed</code></td>
+</tr>
+<tr>
+<td><code>R</code> / <code>F</code></td>
+<td>上升 / 下降</td>
+<td><code>linear.z = ±vert_speed</code></td>
+</tr>
+<tr>
+<td><code>Q</code> / <code>E</code></td>
+<td>右转 / 左转</td>
+<td><code>angular.z = ±yaw_rate</code></td>
+</tr>
+<tr>
+<td>松开</td>
+<td>悬停</td>
+<td>全零</td>
+</tr>
+<tr>
+<td><code>ESC</code></td>
+<td>退出</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><code>Q</code>/<code>E</code> 的方向遵循 AirSim 机体系 <code>yaw_rate</code> 约定（<code>Q=+yaw_rate</code> 机头右转）。</p>
+<h2 id="3">3. 编译与运行</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）</span>
+<span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
+roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch
+
+<span class="c1"># 终端 2：键盘控制</span>
+<span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
+roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
+</code></pre></div>
+<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控，松开即悬停，<code>ESC</code> 退出。</p>
+<h2 id="4">4. 实现要点</h2>
+<h3 id="41-raw">4.1 终端 raw 模式</h3>
+<p>Linux 终端默认行缓冲（要按回车），用 <code>termios</code>+<code>tty</code> 进入 raw 模式即可单键即时响应：</p>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">RawKeyReader</span><span class="p">()</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>        <span class="c1"># __enter__ 切 raw，__exit__ 恢复</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>  <span class="c1"># select 非阻塞读一个字符</span>
+</code></pre></div>
+<p><code>with</code> 语句保证 <code>Ctrl-C</code> 或异常退出时也能恢复终端设置，不会把用户的终端卡在 raw 模式。</p>
+<h3 id="42">4.2 按键 → 速度：纯函数</h3>
+<p><code>key_to_cmd(key, horiz, vert, yaw)</code> 把按键映射为 <code>(vx, vy, vz, wz)</code>，
+<code>step_once</code> 再打包成 <code>geometry_msgs/Twist</code>。两者都不依赖 ROS/终端，
+可在无 ROS 的机器上单元测试（<code>tests/test_keyboard_local.py</code>，35 项）。</p>
+<h3 id="43">4.3 松开即悬停</h3>
+<p>节点以 30 Hz 持续发布：按键按下发对应速度，松开/未知键发全零。桥接层的
+<code>cmd_vel_sub</code> 有「超过 <code>cmd_timeout</code> 无指令自动悬停」的安全保护，这里再叠加一层
+显式零速度，双保险防止无人机失控。</p>
+<h2 id="5-wasd">5. 与视口内置 WASD 的关系</h2>
+<p>CarlaAir 视口<strong>内置</strong>键盘操控（任务①的「仿真」部分），本模块提供 <strong>ROS 侧</strong>键盘控制
+（任务①的「键盘控制」部分）。两者可对比验证：视口 WASD 直接驱动仿真器，
+本模块走 <code>键盘 → /uav/cmd_vel → 桥接 → 仿真器</code> 的完整 ROS 链路，正是后续
+规划器、神经网络控制器的通用入口。</p>
+<h2 id="6">6. 效果图</h2>
+<p>键盘控制演示（录屏转 GIF，<code>W 前进 / A 左移 / D 右移 / R 上升 / Q 右转</code> 机动，第三人称视角）：</p>
+<p><img alt="" src="../../img/air/uav_keyboard_control/keyboard_demo.gif"/></p>
+<h2 id="7">7. 参考</h2>
 <ul>
-<li>
-<p><a href="https://microsoft.github.io/AirSim/airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2">AirSim C++客户端库上的ROS封装</a></p>
-</li>
-<li>
-<p><a href="https://microsoft.github.io/AirSim/airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2">airsim_ros_pkgs/#setting-up-the-build-environment-on-windows10-using-wsl1-or-wsl2</a></p>
-</li>
+<li><a href="../carlair_ros_bridge/">carlair_ros_bridge 桥接模块</a></li>
+<li><a href="https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient">AirSim 无人机 API 参考</a></li>
 </ul></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../setup_and_connect/" title="建立虚拟机和空域载具之间的连接"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../carlair_ros_bridge/" title="无人机与 ROS 的桥接模块">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../carlair_ros_bridge/" title="无人机与 ROS 的桥接模块"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../drone_teleop/" title="无人机终端键盘遥控器">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -189,8 +288,8 @@
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../setup_and_connect/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../carlair_ros_bridge/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../carlair_ros_bridge/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../drone_teleop/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
