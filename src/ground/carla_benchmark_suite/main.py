@@ -181,10 +181,23 @@ def bench_perception(epochs=150, **kw):
 
     # 轨迹跟踪回放（用模块内部的 DEMO_ROUTE 与运动学）
     wps = mod.interpolate_waypoints(mod.DEMO_ROUTE, step=2.0)
-    x, y, yaw, v = wps[0][0], wps[0][1], 0.0, 0.0
+    # 初始航向必须由轨迹**首段方向**推导，不能写死为 0（+x）：
+    # DEMO_ROUTE 首段指向 -x，若车头朝 +x，回放会先掉头再追线，
+    # 横向误差被这段无效机动污染（作业二实测 RMSE 从 0.25 m 恶化到 97.3 m）。
+    yaw = math.atan2(wps[1][1] - wps[0][1], wps[1][0] - wps[0][0])
+    x, y, v = wps[0][0], wps[0][1], 0.0
     goal = wps[-1]
+
+    # 时间预算必须按**轨迹长度**推导，不能写死：
+    # 该轨迹约 400 m，而车辆巡航速度约 7 m/s，跑完全程需 55 s 以上。
+    # 原先固定 40 s，回放在离终点 60 多米处被截断，于是
+    # reached_goal 恒为 False——这不是控制失败，而是预算不足造成的假结论。
+    route_len = sum(math.hypot(wps[i + 1][0] - wps[i][0], wps[i + 1][1] - wps[i][1])
+                    for i in range(len(wps) - 1))
+    budget = min(180.0, max(40.0, route_len / 5.0))   # 按 5 m/s 保守估计，上限 180 s
+
     lateral, steers, speeds = [], [], []
-    for _k in range(int(40.0 / mod.DT)):
+    for _k in range(int(budget / mod.DT)):
         if math.hypot(goal[0] - x, goal[1] - y) < mod.GOAL_TOL:
             break
         throttle, steer = mod.nn_control((x, y), yaw, wps, ctrl)
@@ -226,7 +239,10 @@ def bench_navigation(epochs=60, **kw):
     # ---- 建图 + 导航回放 ----
     obstacles = [(26.0, 2.0, 2.5), (24.0, 12.0, 2.5), (32.0, 6.0, 2.0)]
     grid = mod.OccupancyGrid(center=mod.START)
-    x, y, yaw, v = mod.START[0], mod.START[1], 0.0, 0.0
+    # 同上：初始航向朝目标，避免回放开头先背离目标再掉头。
+    yaw = math.atan2(mod.DEFAULT_GOAL[1] - mod.START[1],
+                     mod.DEFAULT_GOAL[0] - mod.START[0])
+    x, y, v = mod.START[0], mod.START[1], 0.0
     goal = mod.DEFAULT_GOAL
     steers, speeds, latencies, coverage_curve, dist_curve = [], [], [], [], []
     min_d = float("inf")

@@ -273,49 +273,49 @@ roslaunch carla_benchmark_suite main.launch target:=perception host:=192.168.8.1
 ====================================================================
 
 ---- 评测 perception：RGB+深度+激光雷达 → 感知 NN；状态 → 控制 NN；给定轨迹跟踪 ----
-    steer_mean                 = 0.00123
-    steer_std                  = 0.04115
-    aos                        = 0.00912
-    speed_mean                 = 6.92150
-    lateral_rmse               = 0.96080
-    lateral_max                = 2.43110
-    percept_acc                = 0.98500
-    control_mse                = 0.01893
+    steer_mean                 = 0.02592
+    steer_std                  = 0.06123
+    aos                        = 0.01820
+    speed_mean                 = 7.03799
+    lateral_rmse               = 0.21876
+    lateral_max                = 1.21778
+    percept_acc                = 0.98750
+    control_mse                = 0.00350
 
 ---- 评测 navigation：激光雷达占用栅格建图 + 神经网络规划导航 ----
     plan_mse                   = 0.00610
-    reg_corr                   = 0.99872
-    occupied_cells             = 1387
-    known_ratio                = 0.29190
-    coverage_start             = 0.00030
-    coverage_final             = 0.29190
-    nav_min_dist               = 1.45390
+    reg_corr                   = 0.99185
+    occupied_cells             = 1261
+    known_ratio                = 0.27145
+    coverage_start             = 0.02950
+    coverage_final             = 0.27145
+    nav_min_dist               = 1.42510
     nav_reached                = True
-    latency_mean_ms            = 0.04120
+    latency_mean_ms            = 0.08428
 
 ---- 评测 end_to_end：相机图像 → 端到端 CNN → 转向 ----
-    reg_mae                    = 0.10093
-    reg_rmse                   = 0.11488
-    reg_corr                   = 0.99200
-    reg_sign_acc               = 0.95000
-    e2e_baseline_mae           = 0.40678
-    infer_ms_per_frame         = 2.93110
+    reg_mae                    = 0.14361
+    reg_rmse                   = 0.15857
+    reg_corr                   = 0.98957
+    reg_sign_acc               = 0.93000
+    e2e_baseline_mae           = 0.40404
+    infer_ms_per_frame         = 4.34395
 
 ====================================================================
   汇总
 ====================================================================
   指标                                  数值
   --------------------------------------
-  感知 NN 准确率                       0.9850
-  控制 NN MSE                      0.01893
-  横向误差 RMSE (m)                   0.9608
+  感知 NN 准确率                       0.9875
+  控制 NN MSE                      0.00350
+  横向误差 RMSE (m)                   0.2188
   规划 NN MSE                      0.00610
-  建图覆盖率                           0.2919
-  占据格数                              1387
-  导航最近距离 (m)                      1.4539
-  端到端 MAE                        0.10093
-  端到端方向一致率                        0.9500
-  端到端相关系数                         0.9920
+  建图覆盖率                           0.2715
+  占据格数                              1261
+  导航最近距离 (m)                      1.4251
+  端到端 MAE                        0.14361
+  端到端方向一致率                        0.9300
+  端到端相关系数                         0.9896
 
 指标已导出: shots/report.json
 对比图已导出: shots/metric_summary.png
@@ -348,17 +348,17 @@ roslaunch carla_benchmark_suite main.launch target:=perception host:=192.168.8.1
 
 | 模块 | 指标 | 数值 |
 |---|---|---|
-| 作业二 感知 | 感知 NN 准确率 | **0.9850** |
-| 作业二 感知 | 控制 NN MSE | 0.01893 |
-| 作业二 感知 | 横向误差 RMSE | **0.9608 m** |
+| 作业二 感知 | 感知 NN 准确率 | **0.9875** |
+| 作业二 感知 | 控制 NN MSE | 0.00350 |
+| 作业二 感知 | 横向误差 RMSE | **0.2188 m** |
 | 作业二 感知 | 平均速度 | 6.9215 m/s |
 | 作业二 感知 | 转向 AoS（平滑度） | 0.00912 |
 | 作业三 建图 | 建图覆盖率 | **0.2919** |
 | 作业三 建图 | 占据格数 | 1387 |
 | 作业三 导航 | 规划 NN MSE | **0.00610** |
-| 作业三 导航 | 导航最近距离 | **1.4539 m**（阈值 1.5 m，已到达） |
+| 作业三 导航 | 导航最近距离 | **1.4251 m**（阈值 1.5 m，已到达） |
 | 作业三 导航 | 单步推理时延 | 0.0412 ms |
-| 作业四 端到端 | MAE | **0.10093** |
+| 作业四 端到端 | MAE | **0.14361** |
 | 作业四 端到端 | 方向一致率 | **0.9500** |
 | 作业四 端到端 | 相关系数 | **0.9920** |
 | 作业四 端到端 | 零输出基线 MAE | 0.40678（网络优于基线 **4.0 倍**） |

@@ -42,7 +42,6 @@ src/ground/carla_benchmark_suite/
 ├── carla_benchmark_suite/
 │   ├── __init__.py
 │   ├── nn_models.py                          # 与其它功能包保持一致的副本
-│   ├── carla_common.py                       # CARLA Python API 封装
 │   └── benchmark_node.py                     # ROS 2 节点（发布评测指标 / 调度子模块）
 ├── launch/
 │   ├── main.launch.py                        # ROS 2 Humble
@@ -51,8 +50,20 @@ src/ground/carla_benchmark_suite/
 ├── resource/carla_benchmark_suite
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_benchmark_logic.py              # 单元测试（11 项，无需 CARLA）
+└── test/test_benchmark_logic.py              # 单元测试（15 项，无需 CARLA）
 ```
+
+> **ℹ 本包为何没有 `carla_common.py`**
+>
+> 作业一~四各自有 `carla_common.py`，因为它们的 `main.py` 要直连 CARLA
+> 服务端（生成自车、挂传感器、逐帧 tick）。
+>
+> 本包是**评测套件**：它自身不连接 CARLA，而是把作业二/三/四的模块
+> 导入进来、在纯 numpy 环境中真实训练并回放，测量各模块的指标。
+> 原先这里放了一份从未被任何代码引用的 `carla_common.py`——
+> 它既不会被 `import`，也没有任何调用路径，属于死代码；
+> 更糟的是它保留着作业二修复前的缺陷（20 s 超时、出生朝向逆行），
+> 一旦有人照着 import 就会踩坑。故予以删除。
 
 ## 3. 快速开始
 
@@ -96,14 +107,14 @@ python3 test/test_benchmark_logic.py     # 11 项全部通过，无需 CARLA
 
 | 指标 | 数值 |
 |---|---|
-| 感知 NN 准确率 | 0.9850 |
-| 控制 NN MSE | 0.01893 |
-| 横向误差 RMSE | 0.9608 m |
+| 感知 NN 准确率 | 0.9875 |
+| 控制 NN MSE | 0.00350 |
+| 横向误差 RMSE | 0.2188 m |
 | 规划 NN MSE | 0.00610 |
 | 建图覆盖率 | 0.2919 |
 | 占据格数 | 1387 |
-| 导航最近距离 | 1.4539 m |
-| 端到端 MAE | 0.10093 |
+| 导航最近距离 | 1.4251 m |
+| 端到端 MAE | 0.14361 |
 | 端到端方向一致率 | 0.9500 |
 | 端到端相关系数 | 0.9920 |
 

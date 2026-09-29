@@ -175,6 +175,81 @@ def test_render_metric_bars_handles_empty():
         assert os.path.isfile(p), "空数据也应产出文件"
 
 
+def test_perception_replay_heading_matches_route():
+    """perception 基准的回放初始航向必须由轨迹首段推导（回归测试）。
+
+    历史缺陷：`x, y, yaw, v = wps[0][0], wps[0][1], 0.0, 0.0` 把车头写死为
+    +x，而 DEMO_ROUTE 首段指向 -x。回放先掉头再追线，横向误差被这段
+    无效机动污染——实测 lateral_rmse 达 44.59 m、reached_goal 恒为 False，
+    把"控制器完全失效"的假结论写进了评测报告。
+    修复：由 wps[0]→wps[1] 方向推导，修后 lateral_rmse 0.219 m、reached_goal True。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_fn = src.index("def bench_perception(")
+    seg = src[i_fn:i_fn + 3000]
+    assert "yaw = math.atan2(wps[1][1] - wps[0][1], wps[1][0] - wps[0][0])" in seg, \
+        "perception 回放未由轨迹首段推导初始航向"
+    assert "wps[0][1], 0.0, 0.0" not in seg, "初始航向仍被写死为 0"
+
+
+def test_navigation_replay_heading_faces_goal():
+    """navigation 基准的回放初始航向必须朝目标（回归测试）。
+
+    历史缺陷：`x, y, yaw, v = mod.START[0], mod.START[1], 0.0, 0.0`，
+    而默认目标在起点左后方，回放开头先背离目标再掉头。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_fn = src.index("def bench_navigation(")
+    seg = src[i_fn:i_fn + 4000]
+    assert "yaw = math.atan2(mod.DEFAULT_GOAL[1] - mod.START[1]," in seg, \
+        "navigation 回放未朝目标推导初始航向"
+    assert "mod.START[1], 0.0, 0.0" not in seg, "初始航向仍被写死为 0"
+
+
+def test_perception_time_budget_covers_route():
+    """perception 基准的时间预算必须按轨迹长度推导（回归测试）。
+
+    历史缺陷：回放固定 `range(int(40.0 / mod.DT))`，而 DEMO_ROUTE 长约 400 m、
+    车速约 7 m/s，跑完全程需 55 s 以上。回放在离终点 60 多米处被截断，
+    reached_goal 因此恒为 False——并非控制失败，而是预算不足造成的假结论。
+    修复：按轨迹长度推导预算（5 m/s 保守估计，上下限 40~180 s）。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    i_fn = src.index("def bench_perception(")
+    i_next = src.index("def bench_navigation(")
+    seg = src[i_fn:i_next]          # 只截取 bench_perception 本体
+    assert "route_len" in seg, "未按轨迹长度计算时间预算"
+    assert "budget" in seg, "未使用推导出的时间预算"
+    assert "range(int(40.0 / mod.DT))" not in seg, \
+        "perception 回放仍固定为 40 s，无法跑完约 400 m 的轨迹"
+
+
+def test_no_dead_carla_common():
+    """本包不应携带未被引用的 carla_common.py（回归测试）。
+
+    历史缺陷：包内有一份从未被任何代码 import 的 carla_common.py，
+    且它保留着作业二修复前的缺陷（20 s 超时、出生朝向逆行）。
+    本包自身不连接 CARLA（它评测兄弟包），留着这份死代码只会误导使用者。
+    """
+    p = os.path.join(_PKG, "carla_benchmark_suite", "carla_common.py")
+    assert not os.path.isfile(p), \
+        "包内仍存在无人引用的 carla_common.py（死代码）"
+    # 全包范围内也不应再有对它的引用（测试文件自身会提到该名字，故跳过 test/）
+    name = "carla_" + "common"      # 拼接以避免本文件被自己的检查命中
+    for root, _dirs, files in os.walk(_PKG):
+        if "__pycache__" in root or os.sep + "test" in root:
+            continue
+        for fn in files:
+            if not fn.endswith((".py", ".launch", ".yaml", ".xml")):
+                continue
+            fp = os.path.join(root, fn)
+            try:
+                txt = open(fp, encoding="utf-8").read()
+            except (OSError, UnicodeDecodeError):
+                continue
+            assert name not in txt, f"{fp} 仍引用已删除的 {name}"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
