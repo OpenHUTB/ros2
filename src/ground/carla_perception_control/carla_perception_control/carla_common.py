@@ -35,7 +35,12 @@ DEFAULT_MAP = os.environ.get("CARLA_MAP", "Town05")
 EGO_BLUEPRINT = os.environ.get("CARLA_EGO_BP", "vehicle.tesla.model3")
 
 # 默认出生点：位于某条路面中央，yaw 沿路面方向
-DEFAULT_SPAWN = (36.0, -5.0, 0.6, 0.0, 0.0, 0.0)  # (x, y, z, roll, pitch, yaw)
+#
+# 注意 yaw 必须与该点车道的实际朝向一致，否则自车会**朝逆行方向**生成：
+# (36,-5) 处唯一可行驶车道的 yaw 实测为 -181.2°（即指向 -x），
+# 早期写成 0.0（指向 +x）导致自车朝向与车道相反，
+# 沿给定轨迹前进时会驶出路面撞上障碍物而卡死。
+DEFAULT_SPAWN = (36.0, -5.0, 0.6, 0.0, 0.0, 178.8)  # (x, y, z, roll, pitch, yaw)
 
 DT = 0.05  # 同步模式固定步长（秒）
 

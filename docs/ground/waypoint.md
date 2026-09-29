@@ -70,12 +70,19 @@ pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_3
 python3 src/ground/carla_perception_control/main.py --mode train --epochs 300
 ```
 
-在线感知 + 沿给定轨迹跟踪（`--host` 的填法与本文一致：填宿主机 IP）：
+在线感知 + 沿给定轨迹跟踪（`--host` 的填法与本文一致：填宿主机 IP）。
+**省略 `--waypoints` 即使用模块内置的 `DEMO_ROUTE`**
+（26 个航点，已逐点校验在车道上，含两个约 90° 弯）：
 
 ```shell
 python3 src/ground/carla_perception_control/main.py --mode run \
-        --host 172.21.108.47 --waypoints "40,-8 40,12 25,20" --sim_time 30
+        --host 172.21.108.47 --sim_time 90 --save_dir ~/shots
 ```
+
+!!! warning "给定轨迹务必落在车道上、且弯道处加密"
+    航点之间是直线连接：航点若在路面外，车会开出路面撞停；
+    转弯处航点间距过大会让车来不及转弯（前视距离仅 6 m）。
+    详见 [传感器感知与给定轨迹跟踪（神经网络版）](./carla_perception_control.md) 5.7 节。
 
 使用 launch 启动（ROS 2 / ROS 1）：
 
@@ -88,13 +95,21 @@ roslaunch carla_perception_control main.launch host:=172.21.108.47
 
 ### 实测结果
 
-本机离线取证模式实测（`--epochs 300 --sim_time 60`，无需 CARLA）：
+离线取证模式实测（`--epochs 300 --sim_time 90`，无需 CARLA）：
 
 | 指标 | 数值 |
 |---|---|
 | 感知 NN 训练集准确率 | 0.995 |
 | 控制 NN 训练集 MSE | 0.00303 |
-| 横向误差 RMSE | 0.231 m |
+| 横向误差 RMSE | **0.249 m**（含两个约 90° 弯） |
+
+在线连接 CARLA 服务端实测（`--mode run --sim_time 90`，Town05）：
+
+| 指标 | 数值 |
+|---|---|
+| 横向误差 RMSE | **1.012 m** |
+| 是否到达终点 | 是（t=28.9 s） |
+| 相机帧数 / 导出截图 | 577 帧 / 28 张 |
 
 ![横向误差随时间的收敛曲线](../img/ground/carla_lateral_error.png)
 

@@ -121,11 +121,31 @@ LOOKAHEAD = 6.0       # 前视距离（m）
 GOAL_TOL = 5.0        # 终点判定阈值（m）：进入该范围视为到达并停车
 MAX_SPEED = 7.2       # 稳态速度（m/s）= throttle(0.6) × 12
 
-# 离线取证用的给定轨迹：起点与默认出生点一致（朝 +x），转弯均为缓弯。
-# 注意：转弯半径受车辆运动学限制（R_min ≈ L/tan(δ_max)），原始示例路点
-# (36,-5)→(40,-8)→(40,12) 要求 5 m 内转过 127°，物理上无法完成，故演示
-# 采用缓弯路线；在线运行时可用 --waypoints 传入任意给定轨迹。
-DEMO_ROUTE = [(36.0, -5.0), (80.0, -5.0), (120.0, -5.0), (150.0, 10.0), (160.0, 40.0)]
+# 离线取证用的给定轨迹。
+#
+# 两条重要约束（均由实测踩坑得出，勿随意改成"更简洁"的路点）：
+#
+# 1) **航点必须落在可行驶车道上**。CARLA 中航点之间是直线连接，若某个航点
+#    在路面之外，车辆会沿直线开出路面撞上障碍物后卡死。
+#    实测原路线 (36,-5)→(80,-5)→(120,-5)→(150,10)→(160,40) 中，
+#    (120,-5) 偏离车道 2.93 m、(160,40) 偏离 4.94 m，
+#    在线运行时车在 (140.1,4.9) 撞停（lidar 最近距离降到 1.32 m）。
+#
+# 2) **弯道处航点要加密**。前视距离 LOOKAHEAD=6 m；若转弯处航点间距达 50 m，
+#    车在两点间走直线，90° 转弯被压缩到航点附近几米内完成，
+#    所需半径远小于 R_min = L/tan(δ_max) ≈ 0.91 m 对应的可行范围，必然切出路面。
+#    实测稀疏版（间距 51 m）在 (-185,-15) 处撞停（lidar 0.037 m）；
+#    改为弯道 8~9 m、直道约 24 m 的自适应间距后顺利通过两个 90° 弯。
+#
+# 下面这条路线由 gen_route3 沿 Town05 车道生成并逐点校验：
+# 26 个航点，最大偏离车道 0.13 m，含两个约 90° 弯。
+DEMO_ROUTE = [
+    (36, -5), (9, -4), (-18, -4), (-45, -4), (-72, -4), (-96, -4),
+    (-120, -4), (-147, -4), (-162, -4), (-171, -4), (-180, -4),
+    (-185, -12), (-185, -21), (-185, -45), (-185, -63), (-185, -72),
+    (-184, -80), (-177, -85), (-168, -85), (-153, -85), (-144, -85),
+    (-136, -84), (-132, -75), (-132, -66), (-132, -39), (-132, -36),
+]
 
 
 def pure_pursuit_law(e_psi, dist, wheelbase=None, steer_gain=None):
@@ -431,7 +451,13 @@ def run_offline_demo(save_dir, epochs=200, sim_time=20.0, seed=0):
     # ---- 合成车辆运动学回放：沿路点用控制 NN 跟踪 ----
     # 车辆运动学与转向几何参数统一取自模块常量，保证"训练用的标签"与
     # "回放时车辆实际响应"出自同一套几何模型，横向误差才有意义。
-    x, y, yaw = waypoints[0][0], waypoints[0][1], 0.0
+    #
+    # 初始航向由轨迹**首段方向**决定，不能写死为 0（+x）：
+    # 若路线首段指向 -x 而车头朝 +x，车会先掉头再追线，
+    # 横向误差会被这个初始大偏差污染（实测 RMSE 从 0.2 m 恶化到 97 m）。
+    x, y = waypoints[0][0], waypoints[0][1]
+    _dx0, _dy0 = waypoints[1][0] - x, waypoints[1][1] - y
+    yaw = math.atan2(_dy0, _dx0)
     goal = waypoints[-1]
     v = 0.0
     lateral, steers, speeds = [], [], []
@@ -513,10 +539,16 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
     client, world = cc.connect(host, port, town)
     vehicle, tf = cc.spawn_vehicle(world)
     holder = {"rgb": None, "depth": None, "lidar": None}
-    cc.make_rgb_camera(world, vehicle, lambda im: holder.__setitem__("rgb", im), tick=True)
-    cc.make_depth_camera(world, vehicle, lambda d: holder.__setitem__("depth", d), tick=True)
-    cc.make_lidar(world, vehicle, lambda pc: holder.__setitem__(
-        "lidar", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)), tick=True)
+    # 必须保留 sensor 对象的引用！否则 spawn_actor 返回的 sensor 无引用，
+    # 函数作用域结束后被 Python 垃圾回收，Actor 虽留在仿真里但回调不再触发，
+    # 表现为「共收到相机帧 0 张」、特征恒为默认值，并伴随 CARLA 警告：
+    #   sensor object went out of the scope but the sensor is still alive in the simulation
+    sensors = [
+        cc.make_rgb_camera(world, vehicle, lambda im: holder.__setitem__("rgb", im), tick=True),
+        cc.make_depth_camera(world, vehicle, lambda d: holder.__setitem__("depth", d), tick=True),
+        cc.make_lidar(world, vehicle, lambda pc: holder.__setitem__(
+            "lidar", np.frombuffer(pc.raw_data, dtype=np.float32).reshape(-1, 4)), tick=True),
+    ]
 
     print(f"[就绪] 自车@{tf.location}，NN 感知 + 控制，路点={len(waypoints)}（已加密）")
     frames_seen = 0
@@ -567,6 +599,17 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
     rmse = float(np.sqrt(np.mean(np.square(lateral_errors))))
     print(f"\n共收到相机帧 {frames_seen} 张，导出截图 {shot} 张")
     print(f"轨迹跟踪完成：横向误差 RMSE = {rmse:.3f} m")
+
+    if frames_seen == 0:
+        print("[警告] 全程未收到任何传感器数据，感知网络输入为默认值，"
+              "本轮的横向误差不具参考意义。")
+    # 销毁传感器与自车，避免反复运行在同一世界里堆积 Actor
+    for s in sensors:
+        try:
+            s.stop()
+            s.destroy()
+        except Exception:  # noqa: BLE001
+            pass
     vehicle.destroy()
     return 0
 

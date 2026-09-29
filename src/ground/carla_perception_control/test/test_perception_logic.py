@@ -162,6 +162,130 @@ def test_run_carla_source_guards_missing_model():
     assert i_guard < i_load, "存在性判断必须写在 load_model 之前"
 
 
+def test_run_carla_keeps_sensor_references():
+    """静态检查：run_carla 必须持有 sensor 对象的引用（回归测试）。
+
+    历史缺陷：三个 make_*_camera/make_lidar 的返回值被直接丢弃，
+    Python 随即垃圾回收这些 sensor 对象。Actor 仍留在仿真里但回调不再触发，
+    实测表现为：
+        WARNING: sensor object went out of the scope but the sensor is still alive
+        共收到相机帧 0 张
+        NN感知=无目标 rgb=+0.00 depth=0 lidar(0,20.0)   ← 全是默认值
+    因此传感器句柄必须被收集到一个变量中并存活到循环结束。
+    """
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    assert "sensors = [" in src, "run_carla 未把传感器句柄收集到一个变量中"
+    # 每个 make_* 调用都必须出现在 sensors = [...] 之后，而不是被裸调用
+    i_sensors = src.find("sensors = [")
+    for call in ("cc.make_rgb_camera(", "cc.make_depth_camera(", "cc.make_lidar("):
+        assert call in src, f"未找到 {call}"
+        assert src.find(call) > i_sensors, f"{call} 必须在 sensors 列表内被引用"
+    # 收尾必须销毁传感器，避免 Actor 堆积
+    assert "for s in sensors:" in src, "退出前未销毁传感器"
+
+
+def test_demo_route_waypoints_are_lane_valid():
+    """DEMO_ROUTE 的每个航点必须落在可行驶车道上（回归测试）。
+
+    历史缺陷：原路线的 (120,-5) 偏离车道 2.93 m、(160,40) 偏离 4.94 m。
+    航点之间是直线连接，航点离路会让车开出路面撞上障碍物后卡死
+    （实测在线运行时在 (140.1,4.9) 撞停，lidar 最近距离降到 1.32 m）。
+
+    本测试用 CARLA 地图校验；无 CARLA 时跳过（打印提示）。
+    """
+    try:
+        import carla  # noqa: F401
+    except ImportError:
+        print("    （未安装 carla，跳过车道校验）")
+        return
+
+    try:
+        import carla
+        client = carla.Client(
+            os.environ.get("CARLA_HOST", "127.0.0.1"),
+            int(os.environ.get("CARLA_PORT", "2000")))
+        client.set_timeout(20.0)
+        cmap = client.load_world(os.environ.get("CARLA_MAP", "Town05")).get_map()
+    except Exception as exc:  # noqa: BLE001
+        print(f"    （连接 CARLA 失败：{exc}，跳过车道校验）")
+        return
+
+    import math as _m
+    worst = 0.0
+    bad = []
+    for x, y in main_mod.DEMO_ROUTE:
+        wp = cmap.get_waypoint(carla.Location(x=float(x), y=float(y), z=0.6),
+                               project_to_road=True,
+                               lane_type=carla.LaneType.Driving)
+        lp = wp.transform.location
+        d = _m.hypot(lp.x - x, lp.y - y)
+        worst = max(worst, d)
+        if d >= 2.0:
+            bad.append(f"({x},{y}) 偏离 {d:.2f} m")
+    assert not bad, ("DEMO_ROUTE 有航点不在可行驶车道上：\n  "
+                     + "\n  ".join(bad) + f"\n  最大偏离 {worst:.2f} m")
+
+
+def test_demo_route_has_curves():
+    """DEMO_ROUTE 必须包含真实转弯，且弯道处航点足够密（回归测试）。
+
+    两条约束：
+      1. 纯直道无法体现轨迹跟踪控制器的转向能力，必须含转弯；
+      2. 前视距离 LOOKAHEAD=6 m，若转弯处航点间距过大，车在两点间走直线，
+         转弯被压缩到航点附近几米内完成，必然切出路面
+         （实测间距 51 m 时在 (-185,-15) 撞停，lidar 0.037 m）。
+    """
+    import math as _m
+    r = main_mod.DEMO_ROUTE
+    assert len(r) >= 4, "示范路线路点过少"
+
+    # 1) 累计转角要够大，说明确实有弯
+    total_turn = 0.0
+    for i in range(1, len(r) - 1):
+        a1 = _m.atan2(r[i][1] - r[i - 1][1], r[i][0] - r[i - 1][0])
+        a2 = _m.atan2(r[i + 1][1] - r[i][1], r[i + 1][0] - r[i][0])
+        total_turn += abs((a2 - a1 + _m.pi) % (2 * _m.pi) - _m.pi)
+    assert _m.degrees(total_turn) > 90.0, \
+        f"示范路线转角仅 {_m.degrees(total_turn):.1f}°，不足以体现转向控制"
+
+    # 2) 每个转弯处的进/出航点间距都要小于安全上限
+    #    允许的最小转弯半径 R_min = L/tan(STEER_GAIN) ≈ 0.91 m；
+    #    取保守上限 30 m，保证前视追踪有足够余量。
+    LIMIT = 30.0
+    tight = []
+    for i in range(1, len(r) - 1):
+        a1 = _m.atan2(r[i][1] - r[i - 1][1], r[i][0] - r[i - 1][0])
+        a2 = _m.atan2(r[i + 1][1] - r[i][1], r[i + 1][0] - r[i][0])
+        turn = abs((a2 - a1 + _m.pi) % (2 * _m.pi) - _m.pi)
+        if _m.degrees(turn) < 10.0:
+            continue
+        g_in = _m.hypot(r[i][0] - r[i - 1][0], r[i][1] - r[i - 1][1])
+        g_out = _m.hypot(r[i + 1][0] - r[i][0], r[i + 1][1] - r[i][1])
+        if max(g_in, g_out) > LIMIT:
+            tight.append(f"路点{i}{r[i]} 转角{_m.degrees(turn):.0f}° "
+                         f"间距{g_in:.0f}/{g_out:.0f} m")
+    assert not tight, ("转弯处航点间距过大，车辆会切出路面：\n  "
+                       + "\n  ".join(tight))
+
+
+def test_offline_demo_starts_aligned_with_route():
+    """离线回放的初始航向应与轨迹首段方向一致（回归测试）。
+
+    历史缺陷：初始航向被写死为 0（+x）。当路线首段指向 -x 时，
+    车会先掉头再追线，横向误差被初始大偏差污染
+    （实测 RMSE 从 0.25 m 恶化到 97.3 m）。
+    """
+    import math as _m
+    r = main_mod.DEMO_ROUTE
+    a0 = _m.atan2(r[1][1] - r[0][1], r[1][0] - r[0][0])
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    assert "math.atan2(_dy0, _dx0)" in src, \
+        "离线回放未由轨迹首段方向推导初始航向"
+    # 该路线的首段确实不是 +x，因此这个修复是必要的
+    assert abs(_m.degrees(a0)) > 5.0, \
+        "示范路线首段接近 +x，本用例失去意义，请更换路线"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
