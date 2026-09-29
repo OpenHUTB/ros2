@@ -513,7 +513,8 @@ def run_offline_demo(save_dir, epochs=200, sim_time=20.0, seed=0):
 
 # ================================================================ 在线运行
 def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
-              use_nn_control=True, save_dir=None):
+              use_nn_control=True, save_dir=None, follow=False,
+              follow_dist=9.0, follow_height=4.5):
     """连 CARLA：三路传感器 → 感知 NN → 障碍类别；控制 NN / 纯跟踪 → 转向。"""
     if not _HAVE_CARLA:
         print("[错误] 缺少 carla 模块，run 模式需要 CARLA 服务端。请安装 CARLA 0.9.16 客户端。")
@@ -551,6 +552,11 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
     ]
 
     print(f"[就绪] 自车@{tf.location}，NN 感知 + 控制，路点={len(waypoints)}（已加密）")
+    if follow:
+        # 先把镜头摆到位，避免第一帧还在默认视角
+        cc.set_spectator_follow(world, vehicle, dist=follow_dist, height=follow_height)
+        print(f"[镜头] 第三人称跟随已开启（后 {follow_dist:.0f} m、高 {follow_height:.1f} m）；"
+              "窗口焦点切到 CARLA 大窗口即可观察")
     frames_seen = 0
     shot = 0
     lateral_errors = []
@@ -590,6 +596,9 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
             _write_png(os.path.join(save_dir, f"percept_frame_{shot:02d}.png"), holder["rgb"])
 
         world.tick()
+        if follow:
+            # 每帧把 spectator 摆到车后方，实现第三人称跟随
+            cc.set_spectator_follow(world, vehicle, dist=follow_dist, height=follow_height)
         if k % 20 == 0:
             off, d_, fn, fd = raw
             print(f"[t={k * DT:.1f}] pos=({pos[0]:.1f},{pos[1]:.1f}) NN感知={cls_name} "
@@ -621,7 +630,9 @@ def build_parser():
     p.add_argument("--host", default="127.0.0.1", help="CARLA 服务端地址（虚拟机填宿主机 IP）")
     p.add_argument("--port", type=int, default=2000)
     p.add_argument("--town", default="Town05")
-    p.add_argument("--waypoints", default="40,-8 40,12 25,20", help="给定轨迹路点 \"x,y x,y ...\"")
+    p.add_argument("--waypoints", default=None,
+                   help="给定轨迹路点 \"x,y x,y ...\"；省略则使用内置 DEMO_ROUTE"
+                        "（已逐点校验在可行驶车道上）")
     p.add_argument("--sim_time", type=float, default=20.0)
     p.add_argument("--epochs", type=int, default=300)
     p.add_argument("--out", default="models/nn_percept.json")
@@ -630,6 +641,12 @@ def build_parser():
     p.add_argument("--headless", action="store_true", help="无窗口模式（离线取证）")
     p.add_argument("--demo", action="store_true", help="运行内置演示序列")
     p.add_argument("--save_dir", default=None, help="取证图/截图导出目录")
+    p.add_argument("--follow", action="store_true",
+                   help="让 CARLA 大窗口以第三人称跟随自车（录屏/观察用）")
+    p.add_argument("--follow_dist", type=float, default=9.0,
+                   help="第三人称镜头在车后方的距离（米）")
+    p.add_argument("--follow_height", type=float, default=4.5,
+                   help="第三人称镜头相对车顶的高度（米）")
     p.add_argument("--launch", action="store_true", help="由 ROS launch 启动（等价 run）")
     return p
 
@@ -641,7 +658,14 @@ def main(argv=None):
         return run_offline_demo(args.save_dir or "shots", epochs=min(args.epochs, 200),
                                 sim_time=args.sim_time)
 
-    wps = [tuple(map(float, t.split(","))) for t in args.waypoints.split()]
+    # 省略 --waypoints 时使用内置 DEMO_ROUTE。默认值必须是这条已校验的路线，
+    # 不能沿用早期文档里那条（其中 (40,-8) 偏离车道 2.59 m、(40,12) 偏离 4.92 m），
+    # 否则用户不带参数运行就会开到路面外撞停。
+    if args.waypoints:
+        wps = [tuple(map(float, t.split(","))) for t in args.waypoints.split()]
+    else:
+        wps = list(DEMO_ROUTE)
+        print(f"[提示] 未指定 --waypoints，使用内置 DEMO_ROUTE（{len(wps)} 个路点）")
     if not wps:
         print("[错误] 至少需要 1 个路点")
         return 1
@@ -657,7 +681,8 @@ def main(argv=None):
         return 0
 
     return run_carla(args.host, args.port, args.town, args.model, wps, args.sim_time,
-                     use_nn_control=not args.no_nn_control, save_dir=args.save_dir)
+                     use_nn_control=not args.no_nn_control, save_dir=args.save_dir,
+                     follow=args.follow)
 
 
 if __name__ == "__main__":

@@ -294,6 +294,10 @@ python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10);
 python3 src/ground/carla_perception_control/main.py --mode run \
         --host 192.168.8.1 --sim_time 90 --save_dir ~/shots
 
+# 加 --follow 让 CARLA 大窗口以第三人称跟随自车（录屏/观察用）
+python3 src/ground/carla_perception_control/main.py --mode run \
+        --host 192.168.8.1 --sim_time 90 --follow --save_dir ~/shots
+
 # 也可显式传入给定轨迹（下面的 DEMO_ROUTE 含两个约 90° 弯）
 python3 src/ground/carla_perception_control/main.py --mode run \
         --host 192.168.8.1 --sim_time 90 \
@@ -308,6 +312,19 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
 ```
 
 也可用一键脚本：`bash main.sh --host 192.168.8.1`。
+
+!!! tip "第三人称跟随镜头"
+    `--follow` 会让 CARLA 大窗口（spectator）每帧移动到自车后方并看向自车，
+    便于观察与录屏。可调镜头位置：
+
+    ```bash
+    # 后 12 m、高 6 m（视野更远，适合看整条轨迹）
+    python3 ... --follow --follow_dist 12 --follow_height 6
+    ```
+
+    需要图形界面；纯 SSH 无窗口时该参数无效果（不影响仿真与控制）。
+    注意此镜头与车上的感知相机是两回事：感知相机是挂在车上的
+    `sensor.camera.rgb`（前视 1.6 m、高 1.4 m），跟随镜头只是观察视角。
 
 !!! warning "给定轨迹的两个约束（实测踩坑）"
     1. **航点必须落在可行驶车道上。** CARLA 中航点之间是直线连接，航点若在路面外，

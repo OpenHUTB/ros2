@@ -286,6 +286,53 @@ def test_offline_demo_starts_aligned_with_route():
         "示范路线首段接近 +x，本用例失去意义，请更换路线"
 
 
+def test_default_waypoints_use_demo_route():
+    """省略 --waypoints 时必须使用内置 DEMO_ROUTE（回归测试）。
+
+    历史缺陷：--waypoints 的默认值是早期文档里那条错误路线
+    "40,-8 40,12 25,20"（其中 (40,-8) 偏离车道 2.59 m、(40,12) 偏离 4.92 m）。
+    用户不带该参数运行时就会用坏路线，车开出路面撞停
+    （实测在 (41.4,7.9) 卡死、相机帧 0 张）。
+    """
+    # 1) 默认值不应是硬编码的错误路线
+    p = main_mod.build_parser()
+    ns = p.parse_args([])
+    assert ns.waypoints is None, (
+        f"--waypoints 默认值仍被写死为 {ns.waypoints!r}，应为 None 以回退到 DEMO_ROUTE")
+
+    # 2) 不带 --waypoints 时，解析结果应等于 DEMO_ROUTE
+    args = main_mod.build_parser().parse_args(["--mode", "train"])
+    wps = [tuple(map(float, t.split(","))) for t in args.waypoints.split()] \
+        if args.waypoints else list(main_mod.DEMO_ROUTE)
+    assert wps == [tuple(map(float, p_)) for p_ in main_mod.DEMO_ROUTE], \
+        "省略 --waypoints 时未使用内置 DEMO_ROUTE"
+
+    # 3) 错误路线不应再作为 add_argument 的 default 出现
+    #    注意：注释中引用该错误路线用于说明历史缺陷是允许的，
+    #    因此这里只检查 --waypoints 的参数定义行本身。
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    for line in src.splitlines():
+        if "add_argument" in line and "--waypoints" in line:
+            assert "40,-8" not in line, \
+                f"--waypoints 的默认值仍写死为错误路线：{line.strip()}"
+            assert "default=None" in line, \
+                f"--waypoints 应默认 None 以回退到 DEMO_ROUTE：{line.strip()}"
+
+
+def test_follow_camera_is_wired():
+    """第三人称跟随镜头应可通过 --follow 开启，并在主循环中逐帧更新（回归测试）。"""
+    p = main_mod.build_parser()
+    ns = p.parse_args(["--follow"])
+    assert ns.follow is True
+    assert ns.follow_dist > 0 and ns.follow_height > 0
+
+    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    assert "cc.set_spectator_follow(" in src, "未调用 set_spectator_follow"
+    # 循环内每帧都要更新，否则镜头只在开头摆一次、之后不跟随
+    assert src.count("cc.set_spectator_follow(") >= 2, \
+        "set_spectator_follow 应初始化时调用一次、循环内每帧再调用"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
