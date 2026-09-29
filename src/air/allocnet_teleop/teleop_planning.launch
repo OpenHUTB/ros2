@@ -191,7 +191,15 @@
         args="echo /visualizer/total_thrust" output="screen"/>
 
   <!-- ================= 7. RViz ================= -->
+  <!-- rviz_config 可选两套：
+         teleop_planner.rviz  默认。障碍点云按高度着彩虹色，三维层次清楚，
+                              适合交互操作时判断飞行高度。
+         capture_view.rviz    障碍点云统一为灰色，轨迹的蓝/红/绿对比强烈，
+                              适合截图与采集素材 —— 彩虹色点云很密，
+                              会把轨迹"淹没"在背景里。
+       capture_view.rviz 通过 `python3 main.py install` 装入 config/。 -->
+  <arg name="rviz_config" default="teleop_planner.rviz"/>
   <node if="$(arg use_gui)" name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find planner)/config/teleop_planner.rviz" output="screen"/>
+        args="-d $(find planner)/config/$(arg rviz_config)" output="screen"/>
 
 </launch>

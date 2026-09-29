@@ -194,6 +194,9 @@ Visualization Manager:
     Current:
       Class: rviz/Orbit
       Name: Current View
+      # 特写视角：轨迹只有几米长，拉远到能看全 20x20 m 地图时
+      # 轨迹会缩成一小段。这里贴近轨迹，障碍点云作为背景纹理，
+      # 蓝（AllocNet）/ 红（OMPL 前端）/ 绿（走廊）三条线才是主体。
       Distance: 11
       Focal Point:
         X: 0

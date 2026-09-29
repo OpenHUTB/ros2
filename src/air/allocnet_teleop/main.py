@@ -49,6 +49,37 @@ REQUIRED_PKGS = {
     "param_env": "地图生成包（structure_map / read_grid_map）",
 }
 
+# 包缺失时的排查指引。
+#
+# ⚠ 这两个包来自**两个不同的上游仓库**，缺哪个、怎么补完全不同：
+#   planner    在 AllocNet 主仓库里（src/planner）；
+#   param_env  在 **kr_param_map** 仓库里，由 src/utils.rosinstall 单独拉取。
+# 只克隆 AllocNet 是**不会有** param_env 的 —— 这是自检报 [缺] 最常见的原因。
+PKG_HINTS = {
+    "planner": [
+        "该包在 AllocNet 主仓库内，缺它通常是没克隆或克隆到了别处。",
+        "  git clone https://github.com/Xiangyuetang91/AllocNet.git "
+        "%(ws)s/src/AllocNet",
+    ],
+    "param_env": [
+        "该包**不在** AllocNet 仓库里，而在 kr_param_map 仓库中，",
+        "上游用 src/utils.rosinstall 单独拉取；只克隆 AllocNet 不会有它。",
+        "  cd %(ws)s/src && git clone "
+        "https://github.com/KumarRobotics/kr_param_map.git",
+    ],
+}
+
+# 各包编译后必须存在的可执行文件。
+# rospack 找得到包 ≠ 包已经编译过：catkin 会把 <ws>/src 整个加进
+# ROS_PACKAGE_PATH，所以源码在工作区里、但没编译的包，rospack 照样找得到。
+# 典型场景：`catkin_make --pkg planner` 不会构建 param_env，
+# 于是 /map 没有地图、规划器毫无反应（structure_map 找不到可执行文件，
+# 启动即退出且不留日志）。因此单独校验产物。
+PKG_ARTIFACTS = {
+    "planner": "learning_planning",
+    "param_env": "structure_map",
+}
+
 # 本模块自带的脚本
 OWN_SCRIPTS = [
     "teleop_keyboard.py",
@@ -176,22 +207,66 @@ def cmd_check(args):
     # 3. 上游包
     print("\n[3] 上游 ROS 包:")
     if ws_ok:
-        probe = "; ".join(
-            "echo \"%s=$(rospack find %s 2>/dev/null)\"" % (p, p)
-            for p in REQUIRED_PKGS)
-        rc, out = _ros_run(probe, ws)
-        found = {}
+        # 一次问出：各包的 rospack 解析路径 + 当前 shell 的 ROS_PACKAGE_PATH
+        probe = ["echo \"__PKGPATH__=$ROS_PACKAGE_PATH\""]
+        probe += ["echo \"%s=$(rospack find %s 2>/dev/null)\"" % (p, p)
+                  for p in REQUIRED_PKGS]
+        rc, out = _ros_run("; ".join(probe), ws)
+        found, pkg_path = {}, ""
         for line in out.splitlines():
-            if "=" in line:
-                k, v = line.split("=", 1)
-                found[k.strip()] = v.strip()
+            if "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k, v = k.strip(), v.strip()
+            if k == "__PKGPATH__":
+                pkg_path = v
+            else:
+                found[k] = v
+
+        # catkin 会把 <ws>/src 加进 ROS_PACKAGE_PATH，rospack 靠它找到工作区内的包。
+        # 没 source 的话 rospack 只看得到 /opt/ros/noetic/share，
+        # 是「明明编译过却报缺包」的一大原因，所以先单独点出来。
+        ws_src = os.path.join(ws, "src")
+        if ws_src not in pkg_path.split(":"):
+            print("     ⚠ 当前 shell 的 ROS_PACKAGE_PATH 不含 %s" % ws_src)
+            print("       工作区尚未 source，rospack 看不到工作区里的包。")
+            print("       修复： source %s/devel/setup.bash" % ws)
+            ok = False
+
+        missing = []
         for pkg, desc in REQUIRED_PKGS.items():
             path = found.get(pkg, "")
             if path and os.path.isdir(path):
                 print("     [OK] %-12s %s" % (pkg, path))
             else:
                 print("     [缺] %-12s %s" % (pkg, desc))
+                missing.append(pkg)
                 ok = False
+
+        # 缺包时给出**针对性**的补救命令（两个包来源不同，不能一概而论）
+        for pkg in missing:
+            print("")
+            for line in PKG_HINTS[pkg]:
+                print("         " + line % {"ws": ws})
+
+        if missing:
+            print("")
+            print("     补包后必须**整体**重新构建并 source —— 单包构建")
+            print("     （catkin_make --pkg planner）不会带上新加入的包：")
+            print("         cd %s && catkin_make" % ws)
+            print("         source %s/devel/setup.bash" % ws)
+
+        # 3b. 编译产物：rospack 找得到包 ≠ 包已经编译过
+        print("\n     [3b] 包编译产物:")
+        for pkg, exe in PKG_ARTIFACTS.items():
+            p = os.path.join(ws, "devel", "lib", pkg, exe)
+            if os.path.exists(p):
+                print("     [OK] %s/%s" % (pkg, exe))
+            else:
+                print("     [缺] %s/%s（包未编译或未构建到该包）" % (pkg, exe))
+                ok = False
+        print("          注：catkin_make --pkg planner 不会构建 param_env，")
+        print("              缺 structure_map 时用不带 --pkg 的 catkin_make 重建。")
     else:
         print("     （工作区未就绪，跳过）")
 
@@ -220,9 +295,19 @@ def cmd_check(args):
 
     # 6. 可选工具
     print("\n[6] 可选工具（仅采集素材时需要）:")
+    # rviz 装在 /opt/ros/noetic/bin 下，**不 source ROS 就不在 PATH 上**，
+    # 用 shutil.which() 查会误报缺失。改为在 source 好的 shell 里查。
+    rc, out = _ros_run(
+        "for t in rviz rostopic rosrun; do "
+        "printf '%s=%s\\n' \"$t\" \"$(command -v $t)\"; done", ws)
+    env_tools = {}
+    for line in out.splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            env_tools[k.strip()] = v.strip()
     for tool, why in [("rviz", "可视化"), ("import", "抓屏（ImageMagick）"),
                       ("Xvfb", "虚屏，无桌面环境时使用")]:
-        p = shutil.which(tool)
+        p = env_tools.get(tool) or shutil.which(tool)
         print("     [%s] %-8s %s" % ("OK" if p else "--", tool, why))
 
     print("\n" + "=" * 62)
@@ -262,14 +347,16 @@ def cmd_run(args):
     use_gui = "false" if args.no_gui else "true"
     rec = "false" if args.no_record else "true"
     print("启动: roslaunch planner teleop_planning.launch "
-          "use_gui:=%s record:=%s" % (use_gui, rec))
+          "use_gui:=%s record:=%s rviz_config:=%s"
+          % (use_gui, rec, args.rviz_config))
     print("提示：键盘操作需在独立终端 rosrun planner teleop_keyboard.py；")
     print("      或向 /teleop/key 话题注入按键（见 `main.py help`）。")
 
     setup = os.path.join(ws, "devel", "setup.bash")
     cmd = ("set +u; . /opt/ros/noetic/setup.bash; . %s; set -u; "
-           "roslaunch planner teleop_planning.launch use_gui:=%s record:=%s"
-           % (setup, use_gui, rec))
+           "roslaunch planner teleop_planning.launch use_gui:=%s record:=%s "
+           "rviz_config:=%s"
+           % (setup, use_gui, rec, args.rviz_config))
     return subprocess.call(cmd, shell=True, executable="/bin/bash")
 
 
@@ -330,6 +417,10 @@ def main():
     p_run = sub.add_parser("run", help="启动完整仿真")
     p_run.add_argument("--no-gui", action="store_true", help="不启动 RViz")
     p_run.add_argument("--no-record", action="store_true", help="不记录轨迹")
+    p_run.add_argument("--rviz-config", default="teleop_planner.rviz",
+                       choices=["teleop_planner.rviz", "capture_view.rviz"],
+                       help="RViz 配置：teleop_planner（默认，彩虹色点云）"
+                            "或 capture_view（灰色点云，轨迹更醒目，适合截图）")
     sub.add_parser("capture", help="采集演示素材")
     sub.add_parser("help", help="显示帮助")
 
