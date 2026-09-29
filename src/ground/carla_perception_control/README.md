@@ -19,6 +19,7 @@
 src/ground/carla_perception_control/
 ├── main.py                                   # 主入口（train / run / headless 三种模式）
 ├── main.sh / main.bat                        # 课程约定的 main.* 一键运行脚本
+├── check_connection.py                       # CARLA 连通性分步诊断（连不上时先跑它）
 ├── carla_perception_control/
 │   ├── __init__.py
 │   ├── nn_models.py                          # 纯 numpy 神经网络库
@@ -31,7 +32,7 @@ src/ground/carla_perception_control/
 ├── resource/carla_perception_control
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_perception_logic.py             # 单元测试（9 项，无需 CARLA）
+└── test/test_perception_logic.py             # 单元测试（20 项，无需 CARLA 即可跑）
 ```
 
 ## 3. 快速开始
@@ -42,34 +43,52 @@ python3 main.py --mode train --epochs 300 --out models/nn_percept.json
 #    预期：感知 NN 准确率 ≈ 0.995，控制 NN MSE ≈ 0.003
 
 # ② 离线取证（不需要 CARLA，也不需要图形界面）
-python3 main.py --headless --demo --epochs 300 --sim_time 60 --save_dir ~/shots
+python3 main.py --headless --demo --epochs 300 --sim_time 90 --save_dir ~/shots
 #    导出 4 张曲线图：感知损失 / 控制损失 / 横向误差 / 转向指令
 
 # ③ 在线感知 + 沿给定轨迹跟踪（需要 CARLA 服务端）
-python3 main.py --mode run --host <宿主机IP> --model models/nn_percept.json \
-        --waypoints "40,-8 40,12 25,20" --sim_time 30
+#    省略 --waypoints 即用内置 DEMO_ROUTE（26 个路点，已逐点校验在车道上）
+python3 main.py --mode run --host <宿主机IP> --sim_time 90 --save_dir ~/shots
+#    加 --follow 让 CARLA 大窗口以第三人称跟随自车
+python3 main.py --mode run --host <宿主机IP> --sim_time 90 --follow
 
-# ④ ROS 2 / ROS 1
+# ④ 连不上时先做连通性诊断（分步打印耗时，指出卡在哪一环）
+python3 check_connection.py <宿主机IP> 2000 Town05
+
+# ⑤ ROS 2 / ROS 1
 ros2 launch carla_perception_control main.launch.py host:=<宿主机IP>
 roslaunch carla_perception_control main.launch host:=<宿主机IP>
 ```
 
 一键脚本：`bash main.sh --host <宿主机IP>` 或 Windows `main.bat --mode train`。
 
+> **⚠ 给定轨迹的两个约束**
+>
+> 1. **航点必须落在可行驶车道上**：CARLA 中航点之间是直线连接，航点若在路面外，
+>    车辆会沿直线开出路面撞上障碍物后卡死。
+> 2. **弯道处航点要加密**：前视距离仅 6 m，转弯处航点间距过大会让车来不及转弯。
+>
+> 内置 `DEMO_ROUTE` 已满足这两点（26 航点、最大偏离车道 0.13 m、
+> 弯道间距 8~9 m、含两个约 90° 弯）。自定义轨迹请参考模块文档 5.7 节。
+
 ## 4. 测试
 
 ```bash
-python3 test/test_perception_logic.py     # 9 项全部通过，无需 CARLA
+python3 test/test_perception_logic.py     # 20 项全部通过，无需 CARLA
 ```
 
-## 5. 实测指标（离线取证模式）
+## 5. 实测指标
 
-| 指标 | 数值 |
-|---|---|
-| 感知 NN 训练集准确率 | 0.995 |
-| 控制 NN 训练集 MSE | 0.00303 |
-| 横向误差 RMSE | 0.231 m |
-| 平均速度 | 6.96 m/s |
+| 指标 | 离线取证 | 在线运行（Town05） |
+|---|---|---|
+| 感知 NN 训练集准确率 | 0.995 | 0.995 |
+| 控制 NN 训练集 MSE | 0.00303 | 0.00303 |
+| 横向误差 RMSE | **0.249 m** | **1.01 m** |
+| 是否到达终点 | 是（t=54.8 s） | 是（t=28.9 s） |
+| 传感器帧数 | — | 相机 577 帧 / 雷达约 500 点·帧 |
+
+离线回放使用理想自行车模型，无碰撞与轮胎滑移；在线受路面碰撞、转向执行延迟
+与同步步长影响，误差略高属正常差异。
 
 ## 6. 与已有示例的关系
 
