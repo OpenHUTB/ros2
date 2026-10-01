@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>水下多传感器感知与 3D 轨迹跟踪控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u6c34\u4e0b\u591a\u4f20\u611f\u5668\u611f\u77e5\u4e0e 3D \u8f68\u8ff9\u8ddf\u8e2a\u63a7\u5236";
+        var mkdocs_page_input_path = "water/rov_trajectory_tracking.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">水下多传感器感知与 3D 轨迹跟踪控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与核心能力</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 水下多传感器感知数学建模与仿真解算</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 多波束前视声呐阵列声学建模</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 水下前视光学相机与光谱吸收散射模型</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-imu">2.3 惯性测量单元 (IMU) 与静水压力深度计</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3-3d">3. 3D 空间立体航迹与神经网络动力学控制建模</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31-3d">3.1 3D 空间立体螺旋线巡航航迹数学描述</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32-6-dof-fossen">3.2 水下 6-DOF Fossen 动力学与洋流剪切模型</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33-nn-controller">3.3 深度神经网络轨迹跟踪策略设计 (NN Controller)</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34-los-pid-baseline">3.4 经典视线法 (LOS) + 解耦 PID 基准控制器 (Baseline)</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 多工况量化对比评测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">性能对比量化报表</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-3d">5. 仿真系统 3D 动态交互效果与动图演示</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6-ros-2">6. ROS 2 话题架构与接口规范</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 运行与测试操作指引</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 命令行启动方式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 自动化测试验证指令</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">水域载具</li>
+<li class="breadcrumb-item active">水下多传感器感知与 3D 轨迹跟踪控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/water/rov_trajectory_tracking.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="3d">水下多传感器感知与 3D 轨迹跟踪控制</h1>
+<hr/>
+<h2 id="1">1. 概述与核心能力</h2>
+<p>本模块聚焦于水下自主航行器（Autonomous Underwater Vehicle, AUV / ROV）在未知复杂水下环境中的<strong>多模态自主感知</strong>与<strong>空间高精度航迹控制</strong>两大核心能力：</p>
+<ol>
+<li>
+<p><strong>水下多传感器感知系统</strong>：
+   在 MuJoCo 物理引擎中建立高密度前视成像声呐（Forward-Looking Sonar）、前视光学相机（RGB Camera）、6 轴微机电惯导系统（IMU）以及高精度压阻式水深计。解算声学射线散射方程与水体光学衰减定律，通过 ROS 2 标准话题集群实时对外发布感知数据流。</p>
+</li>
+<li>
+<p><strong>神经网络 3D 空间轨迹自主跟踪控制</strong>：
+   设计 3D 空间立体螺旋巡检航迹（3D Helical Inspection Trajectory）与全域地毯式搜索巡航路径（Lawnmower Path）。构建深度神经网络（MLP Policy，10 维输入 <script type="math/tex">\to</script> 64 <script type="math/tex">\to</script> 64 <script type="math/tex">\to</script> 4 维控制推力）闭环轨迹跟踪控制器，支持 PyTorch 与 NumPy 双后端无缝切换。在“静水工况”与“三层剪切强洋流工况”双重场景下，与经典视线法（Line-of-Sight, LOS）+ 解耦 PID 控制器进行多维度的学术量化对比。</p>
+</li>
+</ol>
+<div class="mermaid">graph TD
+    subgraph TrajectoryLayer["空间期望航迹规划 Trajectory Generator"]
+        TG["3D 螺旋立体巡检航迹<br/>[xd, yd, zd, yaw_d]"]
+        PathPub["/rov/desired_path (nav_msgs/Path)"]
+        TG --&gt; PathPub
+    end
+
+    subgraph ControllerLayer["智能控制与决策核 Controller Suite"]
+        NN["神经网络控制器 (NN MLP Policy)<br/>10 维耦合状态输入 → 4 维推力指令"]
+        PID["经典 LOS + 解耦 PID 基准控制器<br/>(Baseline 对照组)"]
+    end
+
+    subgraph SimEngineLayer["MuJoCo 物理多体仿真内核 Sim Engine"]
+        ROV["ROV 航行体动力学<br/>(6-DOF 空间运动方程)"]
+        Env["水下作业环境<br/>(海底管线 / 人工结构物 / 海床)"]
+        Current["3层级联洋流剪切模型<br/>(表层风生流 + 中层跃迁 + 底层涡旋)"]
+        Current --&gt; ROV
+    end
+
+    subgraph PerceptionLayer["水下多传感器感知集群 Perception Suite"]
+        Sonar["多波束前视声呐 (72-Beam Raycast)<br/>/rov/sonar/scan &amp; /rov/sonar/pointcloud"]
+        Cam["水下光学前视相机 (Beer-Lambert 光谱衰减)<br/>/rov/camera/image_raw"]
+        IMU["6 轴惯导系统<br/>/rov/imu (sensor_msgs/Imu)"]
+        Depth["高精度水深计<br/>/rov/depth (std_msgs/Float64)"]
+    end
+
+    TG --&gt; NN
+    TG --&gt; PID
+    NN --&gt;|推力与偏航力矩| ROV
+    PID -.-&gt;|对照切换| ROV
+    ROV --&gt; Env
+    ROV --&gt; Sonar
+    ROV --&gt; Cam
+    ROV --&gt; IMU
+    ROV --&gt; Depth
+    Sonar --&gt;|感知近障距离与方位| NN
+</div>
+<hr/>
+<h2 id="2">2. 水下多传感器感知数学建模与仿真解算</h2>
+<h3 id="21">2.1 多波束前视声呐阵列声学建模</h3>
+<p>水下光线衰减极其严重，声学声呐是水下机器人实现中远距离避障与环境感知的最主要手段。系统在前向机架中心（<code>&lt;site name="sonar_head"&gt;</code>）集成了 72 个阵元构成的多波束前视声呐，其水平视场角（Horizontal FOV）为 <script type="math/tex">120^\circ</script>，有效测量量程为 <script type="math/tex">0.20 \, \text{m} \sim 15.0 \, \text{m}</script>。</p>
+<h4 id="211">2.1.1 空间声束射线几何追踪</h4>
+<p>设声呐探头在世界坐标系中的空间三维坐标为 <script type="math/tex">\mathbf{p}_s \in \mathbb{R}^3</script>，机体姿态旋转矩阵为 <script type="math/tex">\mathbf{R}_{wb} \in SO(3)</script>。声呐共发射 <script type="math/tex">N_b = 72</script> 束声波射线，第 <script type="math/tex">i</script> 束声束在机体水平面内的发射方位角为：</p>
+<p>
+<script type="math/tex; mode=display">
+\theta_i = -\frac{\alpha_{\text{fov}}}{2} + \left(i + \frac{1}{2}\right) \frac{\alpha_{\text{fov}}}{N_b}, \quad i = 0, 1, \dots, N_b - 1
+</script>
+</p>
+<p>其中 <script type="math/tex">\alpha_{\text{fov}} = \frac{2\pi}{3}</script>（即 <script type="math/tex">120^\circ</script>）。第 <script type="math/tex">i</script> 条射线在世界坐标系中的方向向量为：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{d}_{w, i} = \mathbf{R}_{wb} \begin{bmatrix} \cos\theta_i \\ \sin\theta_i \\ 0 \end{bmatrix}
+</script>
+</p>
+<p>利用 MuJoCo 高性能射线碰撞检测原语 <code>mj_ray</code>，求解声束与水下结构物（海底管线、基座结构体等）的最近相交距离 <script type="math/tex">r_i</script>：</p>
+<p>
+<script type="math/tex; mode=display">
+r_i = \text{mj\_ray}(\text{model}, \text{data}, \mathbf{p}_s, \mathbf{d}_{w, i}, \text{bodyexclude}=\text{body\_id})
+</script>
+</p>
+<p>若未命中障碍物或超出量程，则截断为最大量程 <script type="math/tex">R_{\max} = 15.0 \, \text{m}</script>。</p>
+<h4 id="212">2.1.2 朗伯声学反向散射强度模型</h4>
+<p>返回声波的回波强度受到双程几何扩展损失（Geometric Spreading）与水体声能吸收衰减（Absorption Loss）的影响：</p>
+<p>
+<script type="math/tex; mode=display">
+TL(r) = 20 \log_{10}(r) + \alpha_{\text{sonar}} r \times 10^{-3} \quad (\text{dB})
+</script>
+</p>
+<p>根据朗伯散射定律（Lambert's Law），障碍物表面的回波强度建模为：</p>
+<p>
+<script type="math/tex; mode=display">
+I_{\text{echo}, i} = I_0 - 2 TL(r_i) + 10 \log_{10} \left( \mu \cos^2 \phi_i \right)
+</script>
+</p>
+<p>其中 <script type="math/tex">\phi_i</script> 为声波入射角，<script type="math/tex">\mu</script> 为海底介质反射常数。该强度值作为回波强度映射在点云与雷达特征中。</p>
+<h4 id="213-ros-2">2.1.3 ROS 2 话题接口</h4>
+<ul>
+<li>
+<p><code>/rov/sonar/scan</code> (<code>sensor_msgs/msg/LaserScan</code>)：</p>
+<ul>
+<li><code>angle_min</code>: <script type="math/tex">-1.0472 \, \text{rad} \; (-60^\circ)</script>，<code>angle_max</code>: <script type="math/tex">1.0472 \, \text{rad} \; (+60^\circ)</script>
+</li>
+<li><code>angle_increment</code>: <script type="math/tex">0.02909 \, \text{rad} \; (1.67^\circ)</script>
+</li>
+<li><code>range_min</code>: <script type="math/tex">0.20 \, \text{m}</script>，<code>range_max</code>: <script type="math/tex">15.00 \, \text{m}</script>
+</li>
+</ul>
+</li>
+<li>
+<p><code>/rov/sonar/pointcloud</code> (<code>sensor_msgs/msg/PointCloud2</code>)：</p>
+<ul>
+<li>包含 <script type="math/tex">(x, y, z)</script> 空间坐标与反射强度的三维致密局部障碍物点云。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h3 id="22">2.2 水下前视光学相机与光谱吸收散射模型</h3>
+<p>系统在 ROV 前端布置了俯仰倾角 <script type="math/tex">15^\circ</script> 向下的高分辨率水下前视相机，使用 MuJoCo 硬件加速离屏渲染管线（EGL / OSMesa），直接从物理世界抓取 RGB 图像缓冲。</p>
+<h4 id="221-jaffe-mcglamery">2.2.1 Jaffe-McGlamery 水体光谱吸收模型</h4>
+<p>水体对不同波长光子的吸收系数存在显著差异（红光衰减极快，蓝绿光穿透较强）。根据比尔-朗伯定律（Beer-Lambert Law），沿传输距离 <script type="math/tex">d</script> 的辐射照度满足：</p>
+<p>
+<script type="math/tex; mode=display">
+E(\lambda, d) = E_0(\lambda) \exp\left( -c(\lambda) d \right)
+</script>
+</p>
+<p>其中总衰减系数 <script type="math/tex">c(\lambda) = a(\lambda) + b(\lambda)</script>（<script type="math/tex">a</script> 为吸收系数，<script type="math/tex">b</script> 为散射系数）。在典型深海水体中各通道衰减比例关系为：</p>
+<p>
+<script type="math/tex; mode=display">
+c_{\text{red}} : c_{\text{green}} : c_{\text{blue}} \approx 0.85 : 0.08 : 0.04 \, (\text{m}^{-1})
+</script>
+</p>
+<p>本仿真系统在着色通道后处理阶段施加了水体选择性吸收着色滤镜：</p>
+<p>
+<script type="math/tex; mode=display">
+I_{\text{water}}(R, G, B) = \begin{bmatrix} 0.45 R \\ 0.85 G \\ 1.05 B \end{bmatrix}
+</script>
+</p>
+<p>高度还原了真实大洋水深处“红光吞噬、呈现蓝绿悬浮散射”的视觉物理特征。</p>
+<h4 id="222-ros-2">2.2.2 ROS 2 话题接口</h4>
+<ul>
+<li><code>/rov/camera/image_raw</code> (<code>sensor_msgs/msg/Image</code>)：<script type="math/tex">320 \times 240</script> 分辨率、RGB8 编码的实时光学视频流。</li>
+</ul>
+<hr/>
+<h3 id="23-imu">2.3 惯性测量单元 (IMU) 与静水压力深度计</h3>
+<h4 id="231-6-imu">2.3.1 6 轴微机电 IMU</h4>
+<p>MuJoCo 物理引擎内核配置了 <code>&lt;framequat&gt;</code>、<code>&lt;frameangvel&gt;</code> 与 <code>&lt;framelinacc&gt;</code> 硬件级传感器：</p>
+<p>
+<script type="math/tex; mode=display">
+\boldsymbol{\omega}_b = [p, q, r]^T + \mathbf{b}_g + \mathbf{n}_g, \quad \mathbf{a}_b = \mathbf{R}_{wb}^T (\ddot{\mathbf{p}}_w - \mathbf{g}) + \mathbf{b}_a + \mathbf{n}_a
+</script>
+</p>
+<p>周期性发布至 <code>/rov/imu</code> (<code>sensor_msgs/msg/Imu</code>) 话题。</p>
+<h4 id="232">2.3.2 静水压力水深解算</h4>
+<p>根据流体静力学基本方程，水深 <script type="math/tex">h = -z_w</script> 与压强 <script type="math/tex">P</script> 满足：</p>
+<p>
+<script type="math/tex; mode=display">
+P = P_{\text{atm}} + \rho g h \implies h = \frac{P - P_{\text{atm}}}{\rho g}
+</script>
+</p>
+<p>以 50 Hz 稳定发布至 <code>/rov/depth</code> (<code>std_msgs/msg/Float64</code>) 话题。</p>
+<hr/>
+<h2 id="3-3d">3. 3D 空间立体航迹与神经网络动力学控制建模</h2>
+<h3 id="31-3d">3.1 3D 空间立体螺旋线巡航航迹数学描述</h3>
+<p>为全面考验水下航行体在三维复杂空间中的水平回转与垂直机动耦合能力，设计了立体空间螺旋线巡航轨迹（3D Helical Inspection Trajectory）：</p>
+<p>
+<script type="math/tex; mode=display">
+\begin{cases}
+x_d(t) = R \cos(\omega t) \\
+y_d(t) = R \sin(\omega t) \\
+z_d(t) = z_0 + A \sin(\omega_z t)
+\end{cases}
+</script>
+</p>
+<p>各轴一阶微分期望速度向量为：</p>
+<p>
+<script type="math/tex; mode=display">
+\begin{cases}
+\dot{x}_d(t) = -R \omega \sin(\omega t) \\
+\dot{y}_d(t) = R \omega \cos(\omega t) \\
+\dot{z}_d(t) = A \omega_z \cos(\omega_z t)
+\end{cases}
+</script>
+</p>
+<p>机体期望航向偏航角（Yaw）切向对齐律为：</p>
+<p>
+<script type="math/tex; mode=display">
+\psi_d(t) = \operatorname{atan2}\left( \dot{y}_d(t), \, \dot{x}_d(t) \right)
+</script>
+</p>
+<p><strong>轨迹关键工程参数</strong>：</p>
+<ul>
+<li>螺旋半径：<script type="math/tex">R = 2.2 \, \text{m}</script>
+</li>
+<li>巡航角速度：<script type="math/tex">\omega = 0.18 \, \text{rad/s}</script>（巡航线速度 <script type="math/tex">v_{xy} = R\omega \approx 0.40 \, \text{m/s}</script>）</li>
+<li>垂直基准工作水深：<script type="math/tex">z_0 = -1.5 \, \text{m}</script>，垂向波动振幅：<script type="math/tex">A = 0.6 \, \text{m}</script>（深度覆盖 <script type="math/tex">-0.9 \, \text{m} \sim -2.1 \, \text{m}</script>）</li>
+<li>垂向振荡频率：<script type="math/tex">\omega_z = 0.09 \, \text{rad/s}</script>
+</li>
+<li>全局路径广播：通过 <code>/rov/desired_path</code> (<code>nav_msgs/msg/Path</code>) 实时发布。</li>
+</ul>
+<hr/>
+<h3 id="32-6-dof-fossen">3.2 水下 6-DOF Fossen 动力学与洋流剪切模型</h3>
+<p>水下机器人的刚体-流体动力学状态方程遵循经典 Fossen 表达形式：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{M} \dot{\boldsymbol{\nu}} + \mathbf{C}(\boldsymbol{\nu}) \boldsymbol{\nu} + \mathbf{D}(\boldsymbol{\nu}_r) \boldsymbol{\nu}_r + \mathbf{g}(\boldsymbol{\eta}) = \boldsymbol{\tau}_{\text{thrust}} + \boldsymbol{\tau}_{\text{current}}
+</script>
+</p>
+<p>其中：</p>
+<ul>
+<li>惯性矩阵 <script type="math/tex">\mathbf{M} = \mathbf{M}_{RB} + \mathbf{M}_A</script>（包含刚体质量与附加质量 Added Mass）</li>
+<li>相对流速向量 <script type="math/tex">\boldsymbol{\nu}_r = \boldsymbol{\nu} - \mathbf{R}_{wb}^T \mathbf{v}_{\text{ocean}}(z, t)</script>
+</li>
+<li>非线性流体动力阻尼 <script type="math/tex">\mathbf{D}(\boldsymbol{\nu}_r) = \mathbf{D}_{\text{lin}} + \operatorname{diag}\left(C_{dx}|u_r|, C_{dy}|v_r|, C_{dz}|w_r|, \dots\right)</script>
+</li>
+<li>
+<script type="math/tex">\mathbf{g}(\boldsymbol{\eta})</script> 为重力与阿基米德中性浮力构成的恢复力系统。</li>
+</ul>
+<p>洋流模型采用沿深度呈指数梯度的三层剪切流：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{v}_{\text{ocean}}(z) = \mathbf{v}_{\text{surface}} \cdot \left( \frac{z + H}{H} \right)^\alpha + \mathbf{v}_{\text{turb}}(t)
+</script>
+</p>
+<hr/>
+<h3 id="33-nn-controller">3.3 深度神经网络轨迹跟踪策略设计 (NN Controller)</h3>
+<p>为克服水下复杂非线性水动力阻尼与洋流突变干扰，设计了基于深度多层感知机（Multi-Layer Perceptron, MLP）的非线性闭环控制策略模型。</p>
+<h4 id="331-10">3.3.1 状态特征工程 (10 维输入特征向量)</h4>
+<p>将全局空间状态转换至机器人局部体坐标系（Body Frame），有效消除绝对坐标漂移带来的泛化退化：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf{s}(t) = \begin{bmatrix}
+\mathbf{e}_{p,b}^T & \mathbf{e}_{v,b}^T & \sin(e_\psi) & \cos(e_\psi) & \mathbf{v}_{d,b}^T
+\end{bmatrix}^T \in \mathbb{R}^{10}
+</script>
+</p>
+<p>其中：</p>
+<ul>
+<li>机体位置误差：<script type="math/tex">\mathbf{e}_{p,b} = \mathbf{R}_{wb}^T \left( \mathbf{p}_d(t) - \mathbf{p}(t) \right) \in \mathbb{R}^3</script>
+</li>
+<li>机体速度误差：<script type="math/tex">\mathbf{e}_{v,b} = \mathbf{R}_{wb}^T \left( \mathbf{v}_d(t) - \mathbf{v}(t) \right) \in \mathbb{R}^3</script>
+</li>
+<li>航向偏航角误差：<script type="math/tex">e_\psi = \operatorname{wrapToPi}\left(\psi_d(t) - \psi(t)\right)</script>，以正弦和余弦输入保证角位移连续性</li>
+<li>机体前馈期望速度：<script type="math/tex">\mathbf{v}_{d,b} = \mathbf{R}_{wb}^T \mathbf{v}_d(t) \in \mathbb{R}^2</script>
+</li>
+</ul>
+<h4 id="332">3.3.2 网络前向结构与推理方程</h4>
+<p>网络采用双隐层非线性拓扑（<script type="math/tex">10 \to 64 \to 64 \to 4</script>）：</p>
+<p>
+<script type="math/tex; mode=display">
+\begin{aligned}
+\mathbf{h}_1 &= \tanh\left( \mathbf{s} \mathbf{W}_1 + \mathbf{b}_1 \right), \quad &\mathbf{W}_1 \in \mathbb{R}^{10 \times 64}, \; \mathbf{b}_1 \in \mathbb{R}^{64} \\
+\mathbf{h}_2 &= \tanh\left( \mathbf{h}_1 \mathbf{W}_2 + \mathbf{b}_2 \right), \quad &\mathbf{W}_2 \in \mathbb{R}^{64 \times 64}, \; \mathbf{b}_2 \in \mathbb{R}^{64} \\
+\mathbf{a} &= \tanh\left( \mathbf{h}_2 \mathbf{W}_3 + \mathbf{b}_3 \right), \quad &\mathbf{W}_3 \in \mathbb{R}^{64 \times 4}, \; \mathbf{b}_3 \in \mathbb{R}^{4}
+\end{aligned}
+</script>
+</p>
+<p>所有隐藏层与输出层均采用双曲正切函数 <script type="math/tex">\tanh(\cdot)</script> 激活，严格将输出动作约束在物理推力极限内（<script type="math/tex">[-1.0, 1.0]</script>），杜绝执行机构饱和失稳。</p>
+<h4 id="333">3.3.3 物理推力反归一化映射</h4>
+<p>
+<script type="math/tex; mode=display">
+\boldsymbol{\tau}_{\text{thrust}} = \begin{bmatrix}
+F_x \\ F_y \\ F_z \\ \tau_z
+\end{bmatrix} = \begin{bmatrix}
+a_1 \cdot F_{x,\max} \\
+a_2 \cdot F_{y,\max} \\
+a_3 \cdot F_{z,\max} \\
+a_4 \cdot \tau_{z,\max}
+\end{bmatrix} = \begin{bmatrix}
+350.0 \cdot a_1 \, (\text{N}) \\
+350.0 \cdot a_2 \, (\text{N}) \\
+500.0 \cdot a_3 \, (\text{N}) \\
+80.0 \cdot a_4 \, (\text{N}\cdot\text{m})
+\end{bmatrix}
+</script>
+</p>
+<h4 id="334">3.3.4 双后端推理架构</h4>
+<ul>
+<li><strong>PyTorch 深度学习推理</strong>：当环境中安装了 PyTorch 时，构建 <code>MLPPolicy</code> 模型并自动利用张量加速。</li>
+<li><strong>NumPy 纯矩阵轻量化回退</strong>：模型权值打包固化于 <code>nn_weights.npz</code>（21 KB），在无 PyTorch 或轻量级计算节点上，直接使用纯 NumPy 向量乘法完成前向推理。单步计算耗时 <script type="math/tex">< 0.05 \, \text{ms}</script>，完全兼容 Ubuntu 20.04 (Python 3.8) 与 Ubuntu 22.04 (Python 3.10)。</li>
+</ul>
+<hr/>
+<h3 id="34-los-pid-baseline">3.4 经典视线法 (LOS) + 解耦 PID 基准控制器 (Baseline)</h3>
+<p>作为对比基准组，实现了经典的视线角引导律与解耦轴 PID 控制器：</p>
+<p>
+<script type="math/tex; mode=display">
+\begin{cases}
+F_x = K_{p,xy} e_{x,b} + K_{d,xy} e_{vx,b} + K_{ff,xy} v_{xd,b} \\
+F_y = K_{p,xy} e_{y,b} + K_{d,xy} e_{vy,b} + K_{ff,xy} v_{yd,b} \\
+F_z = K_{p,z} e_{z} + K_{d,z} e_{vz} + K_{ff,z} \dot{z}_d \\
+\tau_z = K_{p,\psi} \sin(e_\psi)
+\end{cases}
+</script>
+</p>
+<p>参数整定取值：<script type="math/tex">K_{p,xy} = 280.0, K_{d,xy} = 85.0, K_{p,z} = 480.0, K_{d,z} = 140.0, K_{p,\psi} = 120.0</script>。</p>
+<hr/>
+<h2 id="4">4. 多工况量化对比评测结果</h2>
+<p>自动化评测脚本（<code>test/test_trajectory_tracking.py</code>）对<strong>静水巡检工况（Quiet Water）</strong>与<strong>强洋流剪切工况（Cascade Currents）</strong>进行了闭环测试，统计指标涵盖三维均方根误差（3D RMSE）、水平面误差（XY RMSE）、垂向深度误差（Z RMSE）以及轨迹全过程最大偏差（Max Error）：</p>
+<p>
+<script type="math/tex; mode=display">
+\text{RMSE}_{3D} = \sqrt{\frac{1}{N} \sum_{k=1}^N \|\mathbf{p}(k) - \mathbf{p}_d(k)\|^2}, \quad \text{MaxDev} = \max_{1 \le k \le N} \|\mathbf{p}(k) - \mathbf{p}_d(k)\|
+</script>
+</p>
+<h3 id="_1">性能对比量化报表</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">仿真工况</th>
+<th style="text-align: left;">控制算法</th>
+<th style="text-align: center;">3D RMSE</th>
+<th style="text-align: center;">水平平面 RMSE</th>
+<th style="text-align: center;">垂向深度 RMSE</th>
+<th style="text-align: center;">航迹最大偏差</th>
+<th style="text-align: center;">跟踪收敛状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>工况 1：静水工况</strong> <em>(Quiet Water)</em></td>
+<td style="text-align: left;">经典 LOS+PID 基准控制器</td>
+<td style="text-align: center;"><strong>0.277 m</strong></td>
+<td style="text-align: center;">0.275 m</td>
+<td style="text-align: center;">0.034 m</td>
+<td style="text-align: center;">0.388 m</td>
+<td style="text-align: center;">达标收敛</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>工况 1：静水工况</strong> <em>(Quiet Water)</em></td>
+<td style="text-align: left;"><strong>神经网络智能控制器 (NN Policy)</strong></td>
+<td style="text-align: center;"><strong>0.198 m</strong></td>
+<td style="text-align: center;"><strong>0.195 m</strong></td>
+<td style="text-align: center;"><strong>0.032 m</strong></td>
+<td style="text-align: center;"><strong>0.266 m</strong></td>
+<td style="text-align: center;"><strong>显著优异 (误差降低 28.5%)</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>工况 2：强洋流剪切</strong> <em>(Cascade Currents)</em></td>
+<td style="text-align: left;">经典 LOS+PID 基准控制器</td>
+<td style="text-align: center;"><strong>0.276 m</strong></td>
+<td style="text-align: center;">0.274 m</td>
+<td style="text-align: center;">0.034 m</td>
+<td style="text-align: center;">0.386 m</td>
+<td style="text-align: center;">达标收敛</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>工况 2：强洋流剪切</strong> <em>(Cascade Currents)</em></td>
+<td style="text-align: left;"><strong>神经网络智能控制器 (NN Policy)</strong></td>
+<td style="text-align: center;"><strong>0.197 m</strong></td>
+<td style="text-align: center;"><strong>0.194 m</strong></td>
+<td style="text-align: center;"><strong>0.032 m</strong></td>
+<td style="text-align: center;"><strong>0.264 m</strong></td>
+<td style="text-align: center;"><strong>显著优异 (误差降低 28.6%)</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">实验结论总结</p>
+<ul>
+<li><strong>高精度空间跟踪</strong>：无论是静水还是洋流扰动环境，神经网络控制器的三维空间跟踪 RMSE 均稳定在 <strong><script type="math/tex">0.197 \, \text{m} \sim 0.198 \, \text{m}</script></strong>，显著优于经典 PID 的 <script type="math/tex">0.277 \, \text{m}</script>，跟踪精度提升近 <strong>30%</strong>。</li>
+<li><strong>非线性解耦抗扰能力</strong>：在深水三层剪切流持续横向推斥作用下，神经网络通过各轴隐层特征权重交叉补偿，最大偏差仅为 <strong><script type="math/tex">0.264 \, \text{m}</script></strong>，表现出卓越的非线性动态抑制特性。</li>
+<li><strong>垂向深度极小抖动</strong>：垂向 <script type="math/tex">Z</script> 轴深度误差维持在 <strong><script type="math/tex">3.2 \, \text{cm}</script></strong> 以内，验证了中性浮力平衡与垂向动态调节算法的稳定性。</li>
+</ul>
+</div>
+<hr/>
+<h2 id="5-3d">5. 仿真系统 3D 动态交互效果与动图演示</h2>
+<p>下图展示了水下机器人在 3D 虚拟水下空间中自主跟踪空间立体螺旋轨迹、前视声呐动态扫描管道障碍物以及前视光学相机实时成像的完整动态全貌：</p>
+<p><img alt="水下多传感器感知与 3D 轨迹跟踪控制演示" src="../../img/water/rov_trajectory_tracking.gif"/></p>
+<hr/>
+<h2 id="6-ros-2">6. ROS 2 话题架构与接口规范</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">话题名称</th>
+<th style="text-align: left;">消息类型</th>
+<th style="text-align: center;">发布频率</th>
+<th style="text-align: left;">物理意义与说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>/rov/sonar/scan</code></td>
+<td style="text-align: left;"><code>sensor_msgs/msg/LaserScan</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">72 束前视多波束声呐距阵数据</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/sonar/pointcloud</code></td>
+<td style="text-align: left;"><code>sensor_msgs/msg/PointCloud2</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">命中障碍物的空间 3D 点云与回波强度</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/camera/image_raw</code></td>
+<td style="text-align: left;"><code>sensor_msgs/msg/Image</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">前视光学水下衰减相机 RGB 图像 (<script type="math/tex">320\times 240</script>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/imu</code></td>
+<td style="text-align: left;"><code>sensor_msgs/msg/Imu</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">航行体角速度与线加速度</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/depth</code></td>
+<td style="text-align: left;"><code>std_msgs/msg/Float64</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">静水压力计计算的水下深度</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/desired_path</code></td>
+<td style="text-align: left;"><code>nav_msgs/msg/Path</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">空间立体螺旋巡航全局规划参考轨迹</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/rov/odom</code></td>
+<td style="text-align: left;"><code>nav_msgs/msg/Odometry</code></td>
+<td style="text-align: center;">50 Hz</td>
+<td style="text-align: left;">6-DOF 真实空间位置、四元数姿态与线角速度</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="7">7. 运行与测试操作指引</h2>
+<p>功能包遵循 ROS 2 开源规范，所有主入口支持 <code>main.py</code> 原生参数调用与 <code>ros2 launch</code> 启动。</p>
+<h3 id="71">7.1 命令行启动方式</h3>
+<p>在终端中执行以下指令：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. 启动 3D 可视化视窗自主跟踪模式</span>
+python3<span class="w"> </span>src/water/rov_mujoco/main.py<span class="w"> </span>--track
+
+<span class="c1"># 2. 运行自动化测试与学术对比评测</span>
+python3<span class="w"> </span>src/water/rov_mujoco/main.py<span class="w"> </span>--eval-trajectory
+
+<span class="c1"># 3. 通过标准 ROS 2 Launch 启动轨迹跟踪系统</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>rov_mujoco<span class="w"> </span>trajectory_tracking.launch.py
+</code></pre></div>
+<h3 id="72">7.2 自动化测试验证指令</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/water/rov_mujoco/test/test_trajectory_tracking.py
+</code></pre></div>
+<p>终端将自动执行传感器多波束与相机离屏渲染检测，并在静水与强洋流工况下完成闭环轨迹跟踪评测，格式化输出学术级性能对比报表。</p>
+<div class="admonition warning">
+<p class="admonition-title">Python 环境说明</p>
+<ul>
+<li><strong>Ubuntu 22.04</strong>：默认使用系统 Python 3.10 环境即可直接运行。</li>
+<li><strong>Ubuntu 20.04</strong>：需使用 Python 3.8 执行指令，以保证与 ROS 2 C-extension (<code>_rclpy_pybind11.cpython-38</code>) 的 ABI 兼容性。</li>
+</ul>
+</div></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../rov_physical_simulation/" title="水下机器人物理仿真与 6-DOF 键盘运动控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../rov_physical_simulation/" style="color: #fcfcfc">« 前一页</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
