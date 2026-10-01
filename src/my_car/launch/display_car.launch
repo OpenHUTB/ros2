@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 加载URDF模型参数 -->
+  <param name="robot_description" textfile="$(find my_car)/urdf/car.urdf" />
+
+  <!-- 启动机器人状态发布节点 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <!-- 启动RViz并加载默认配置 -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find my_car)/config/car.rviz" />
+</launch>
