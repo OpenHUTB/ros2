@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="image_dir" default="$(find carla_pilotnet_ros)/assets" />
+  <arg name="model_path" default="$(find carla_pilotnet_ros)/pilotnet.pth" />
+  <arg name="publish_rate" default="2.0" />
+
+  <node pkg="carla_pilotnet_ros" type="image_publisher.py" name="image_publisher" output="screen">
+    <param name="image_dir" value="$(arg image_dir)" />
+    <param name="publish_rate" value="$(arg publish_rate)" />
+    <param name="loop" value="true" />
+  </node>
+
+  <node pkg="carla_pilotnet_ros" type="pilotnet_inference.py" name="pilotnet_inference" output="screen">
+    <param name="model_path" value="$(arg model_path)" />
+    <param name="input_h" value="66" />
+    <param name="input_w" value="200" />
+    <param name="infer_every_n" value="2" />
+  </node>
+
+  <node pkg="carla_pilotnet_ros" type="control_node.py" name="control_node" output="screen">
+    <param name="max_steer" value="1.0" />
+    <param name="max_throttle" value="1.0" />
+  </node>
+</launch>

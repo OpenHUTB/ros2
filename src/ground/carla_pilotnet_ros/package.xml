@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_pilotnet_ros</name>
+  <version>1.0.0</version>
+  <description>
+    基于 PyTorch PilotNet 的 Carla 端到端控制 ROS 封装。
+    订阅相机图像，经 CNN 推理输出转向与油门，发布车辆控制指令。
+  </description>
+  <maintainer email="1687183895@qq.com">HaiLang47</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <export>
+  </export>
+</package>
