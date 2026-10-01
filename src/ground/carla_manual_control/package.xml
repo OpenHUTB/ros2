@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_manual_control</name>
+  <version>1.0.0</version>
+  <description>
+    Carla 仿真环境下基于键盘的车辆手动控制模块。
+    通过 pygame 捕获键盘输入，实时控制 Carla 中自车的油门、刹车与转向，
+    并在 HUD 中显示速度、油门、转向、刹车等状态。
+  </description>
+  <maintainer email="1687183895@qq.com">HaiLang47</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+
+  <export>
+  </export>
+</package>
