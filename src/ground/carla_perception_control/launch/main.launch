@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- CARLA 传感器感知 + 给定轨迹跟踪（神经网络版） —— ROS 1 Noetic Launch 文件。
+
+     使用方式（先 source ROS 1 环境）：
+         roslaunch carla_perception_control main.launch host:=192.168.8.1 town:=Town05
+
+     说明：
+       * 本模块核心为 CARLA Python API 直连，感知与控制均为神经网络；
+         Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法等**通用配置步骤**，
+         本模块不重复描述，详见：
+         https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
+<launch>
+  <arg name="host" default="127.0.0.1" doc="CARLA 服务端地址（虚拟机填宿主机 IP）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="town" default="Town05" doc="CARLA 地图名"/>
+  <arg name="mode" default="run" doc="train=离线训练, run=在线感知+跟踪"/>
+  <arg name="model" default="models/nn_percept.json" doc="神经网络模型路径"/>
+  <arg name="waypoints" default="40,-8 40,12 25,20" doc="给定轨迹路点"/>
+  <arg name="sim_time" default="25.0" doc="仿真时长（秒）"/>
+
+  <node pkg="carla_perception_control" type="main.py"
+        name="carla_perception_control" output="screen"
+        args="--host $(arg host) --port $(arg port) --town $(arg town)
+              --mode $(arg mode) --model $(arg model)
+              --waypoints '$(arg waypoints)' --sim_time $(arg sim_time)"/>
+</launch>
