@@ -1,0 +1,14 @@
+<launch>
+  <!-- 加载URDF模型 -->
+  <param name="robot_description" textfile="$(find my_car)/urdf/car.urdf"/>
+
+  <!-- 启动关节状态发布器 -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+  <!-- 启动机器人TF状态发布 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <!-- 启动RViz可视化 -->
+  <node name="rviz" pkg="rviz" type="rviz" />
+</launch>
+
