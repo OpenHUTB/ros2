@@ -178,6 +178,7 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="holoocean2ros2">跑通HoloOcean2的ROS2示例方法（无头模式）</h1>
+<p>在子系统Ubuntu24.04.4的环境下运行</p>
 <h2 id="1-ros-2-jazzy">1. 安装 ROS 2 Jazzy</h2>
 <p>在WSL终端中输入一下指令</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>curl<span class="w"> </span>-y
@@ -189,13 +190,14 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 <span class="nb">source</span><span class="w"> </span>~/.bashrc
 </code></pre></div>
 <h2 id="2-holoocean-python">2. 安装 HoloOcean Python 客户端库</h2>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>/mnt/e/underwater/daima2/holoocean/client<span class="w"> </span>--break-system-packages
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/mnt/你的代码存放路径/holoocean
+sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>./client<span class="w"> </span>--break-system-packages
 </code></pre></div>
 <h2 id="3-ocean">3. 下载世界包（Ocean）</h2>
 <p>网盘的下载链接：https://openhutb.github.io/mujoco_plugin/underwater/usage/installation/</p>
 <h2 id="4-holoocean-ros">4. 编译 holoocean-ros 桥接包</h2>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-colcon-common-extensions<span class="w"> </span>-y
-<span class="nb">cd</span><span class="w"> </span>/mnt/e/underwater/daima2/holoocean-ros
+<span class="nb">cd</span><span class="w"> </span>/mnt/你的代码存放路径/holoocean-ros
 colcon<span class="w"> </span>build
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
 </code></pre></div>
