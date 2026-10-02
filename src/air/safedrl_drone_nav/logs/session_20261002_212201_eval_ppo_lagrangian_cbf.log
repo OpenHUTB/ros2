@@ -1,0 +1,73 @@
+
+==============================================================================
+== SESSION START  2026-10-02T21:22:01
+==============================================================================
+[21:22:01] host=LAPTOP-EKLUP56Q  os=Windows 10
+[21:22:01] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: EVALUATION  [ppo_lagrangian_cbf]
+==============================================================================
+[21:22:01] model      = checkpoints\ppo_lagrangian_final.zip
+[21:22:01] use_cbf    = True
+[21:22:01] episodes   = 24  seeds 20000..20023
+[21:22:01] deterministic = True
+[21:22:04] gates      = [[3.8, 0.0, 1.5], [7.4, 1.55, 1.95], [11.0, -1.55, 1.15]]
+[21:22:04] obstacles  = 11 (7 static, 4 dynamic)
+  ep  0 seed= 20000 COLLISION gates=0/3 t= 6.60s ret=  -33.08 min_margin=-0.203m min_clearance=+0.097m cost=1.00
+  ep  1 seed= 20001 COLLISION gates=0/3 t= 8.07s ret=  -27.44 min_margin=-0.115m min_clearance=+0.185m cost=1.00
+  ep  2 seed= 20002 COLLISION gates=0/3 t= 7.57s ret=  -29.52 min_margin=-0.230m min_clearance=+0.070m cost=1.00
+  ep  3 seed= 20003 COLLISION gates=0/3 t= 7.17s ret=  -37.52 min_margin=-0.275m min_clearance=+0.025m cost=1.00
+  ep  4 seed= 20004 COLLISION gates=0/3 t= 7.27s ret=  -36.33 min_margin=-0.026m min_clearance=+0.274m cost=1.00
+  ep  5 seed= 20005 COLLISION gates=0/3 t= 7.83s ret=  -27.92 min_margin=-0.141m min_clearance=+0.159m cost=1.00
+  ep  6 seed= 20006 COLLISION gates=0/3 t= 6.57s ret=  -26.94 min_margin=-0.096m min_clearance=+0.204m cost=1.00
+  ep  7 seed= 20007 COLLISION gates=0/3 t= 7.13s ret=  -27.33 min_margin=-0.059m min_clearance=+0.241m cost=1.00
+  ep  8 seed= 20008 COLLISION gates=0/3 t= 7.13s ret=  -27.93 min_margin=-0.154m min_clearance=+0.146m cost=1.00
+  ep  9 seed= 20009 COLLISION gates=0/3 t= 7.97s ret=  -38.71 min_margin=-0.155m min_clearance=+0.145m cost=1.00
+  ep 10 seed= 20010 COLLISION gates=0/3 t= 7.13s ret=  -31.24 min_margin=-0.112m min_clearance=+0.188m cost=1.00
+  ep 11 seed= 20011 COLLISION gates=0/3 t= 8.40s ret=  -30.85 min_margin=-0.114m min_clearance=+0.186m cost=1.00
+  ep 12 seed= 20012 COLLISION gates=0/3 t= 7.37s ret=  -31.55 min_margin=-0.188m min_clearance=+0.112m cost=1.00
+  ep 13 seed= 20013 COLLISION gates=0/3 t= 6.60s ret=  -26.48 min_margin=-0.016m min_clearance=+0.284m cost=1.00
+  ep 14 seed= 20014 COLLISION gates=0/3 t= 6.90s ret=  -27.83 min_margin=-0.173m min_clearance=+0.127m cost=1.00
+  ep 15 seed= 20015 COLLISION gates=0/3 t= 6.90s ret=  -27.71 min_margin=-0.177m min_clearance=+0.123m cost=1.00
+  ep 16 seed= 20016 COLLISION gates=0/3 t= 6.90s ret=  -32.71 min_margin=-0.131m min_clearance=+0.169m cost=1.00
+  ep 17 seed= 20017 COLLISION gates=0/3 t= 6.80s ret=  -27.83 min_margin=-0.081m min_clearance=+0.219m cost=1.00
+  ep 18 seed= 20018 COLLISION gates=0/3 t= 8.73s ret=  -27.43 min_margin=+0.399m min_clearance=+0.699m cost=1.00
+  ep 19 seed= 20019 COLLISION gates=0/3 t= 8.13s ret=  -28.25 min_margin=-0.220m min_clearance=+0.080m cost=1.00
+  ep 20 seed= 20020 COLLISION gates=0/3 t= 6.80s ret=  -27.29 min_margin=-0.180m min_clearance=+0.120m cost=1.00
+  ep 21 seed= 20021 COLLISION gates=0/3 t= 8.07s ret=  -28.57 min_margin=-0.198m min_clearance=+0.102m cost=1.00
+  ep 22 seed= 20022 COLLISION gates=0/3 t= 6.77s ret=  -27.25 min_margin=-0.214m min_clearance=+0.086m cost=1.00
+  ep 23 seed= 20023 COLLISION gates=0/3 t= 8.17s ret=  -27.88 min_margin=-0.095m min_clearance=+0.205m cost=1.00
+
+
+--------------------------------------------------------------
+  Evaluation summary  [ppo_lagrangian_cbf]   n=24
+--------------------------------------------------------------
+  n_episodes                       : 24
+  success_rate                     : 0.0
+  collision_rate                   : 1.0
+  timeout_rate                     : 0.0
+  mean_arrival_time_s              : None
+  std_arrival_time_s               : None
+  mean_min_safety_margin_m         : -0.123
+  worst_safety_margin_m            : -0.2748
+  mean_contact_clearance_m         : 0.177
+  worst_contact_clearance_m        : 0.0252
+  mean_episode_cost                : 1.0005
+  mean_gates_passed                : 0.0
+  mean_episode_energy              : 5.4876
+  mean_episode_return              : -29.8161
+  mean_cbf_intervention_rate       : 0.0526
+  mean_cbf_residual                : -0.383
+--------------------------------------------------------------
+
+[21:22:16] terminal snippet : D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\terminal_snippet_ppo_lagrangian_cbf.txt
+
+==============================================================================
+== Figures
+==============================================================================
+
+==============================================================================
+== SESSION END  2026-10-02T21:22:16
+==============================================================================
+[21:22:16] !! terminated with ValueError: 'vertices' must be 2D with shape (N, 2), but your input has shape (2, 3)

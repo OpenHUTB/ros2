@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  Launch the offline training / evaluation pipeline through roslaunch.
+
+  Training itself is a plain Python process (it does not need a ROS master),
+  but wrapping it in a launch file keeps the workflow uniform with the rest of
+  the package and lets a reviewer start everything from one place:
+
+      roslaunch safedrl_drone_nav train.launch mode:=train
+      roslaunch safedrl_drone_nav train.launch mode:=evaluate \\
+          model_path:=$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip
+-->
+<launch>
+  <arg name="mode"       default="train"/>
+  <arg name="run_name"   default="ppo_lag_cbf"/>
+  <arg name="timesteps"  default="120000"/>
+  <arg name="policy"     default="ppo_lag"/>
+  <arg name="use_cbf"    default="true"/>
+  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip"/>
+  <arg name="episodes"   default="20"/>
+  <arg name="init_from"  default="$(find safedrl_drone_nav)/checkpoints/bc_warmstart_cbf.zip"/>
+
+  <group if="$(eval arg('mode') == 'train')">
+    <node name="safedrl_train" pkg="safedrl_drone_nav" type="train.py"
+          output="screen" required="true"
+          args="--policy $(arg policy) --run-name $(arg run_name)
+                --timesteps $(arg timesteps) --init-from $(arg init_from)
+                --normalize-reward $(eval '--use-cbf' if arg('use_cbf') else '')"/>
+  </group>
+
+  <group if="$(eval arg('mode') == 'evaluate')">
+    <node name="safedrl_eval" pkg="safedrl_drone_nav" type="evaluate.py"
+          output="screen" required="true"
+          args="--model $(arg model_path) --run-name $(arg run_name)
+                --episodes $(arg episodes)
+                $(eval '--use-cbf' if arg('use_cbf') else '')"/>
+  </group>
+</launch>

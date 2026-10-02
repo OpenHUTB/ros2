@@ -1,0 +1,29 @@
+# Terminal output snippet (auto-captured)
+# title   : evaluation of ppo_baseline_cbf (24 episodes)
+# captured: 2026-10-02T21:30:22
+# host    : LAPTOP-EKLUP56Q (Windows 10)
+------------------------------------------------------------------------------
+  ep  0 seed= 20000 SUCCESS   gates=3/3 t= 7.40s ret=  +63.36 min_margin=+0.010m min_clearance=+0.310m cost=0.00
+  ep  1 seed= 20001 SUCCESS   gates=3/3 t= 7.43s ret=  +67.61 min_margin=+0.175m min_clearance=+0.475m cost=0.00
+  ep  2 seed= 20002 SUCCESS   gates=3/3 t= 7.63s ret=  +63.56 min_margin=+0.058m min_clearance=+0.358m cost=0.00
+  ep  3 seed= 20003 COLLISION gates=2/3 t= 7.27s ret=  -22.82 min_margin=-0.108m min_clearance=+0.192m cost=1.00
+  ep  4 seed= 20004 COLLISION gates=2/3 t= 6.47s ret=  -11.81 min_margin=-0.164m min_clearance=+0.136m cost=1.00
+  ep  5 seed= 20005 SUCCESS   gates=3/3 t= 7.10s ret=  +67.80 min_margin=+0.162m min_clearance=+0.462m cost=0.00
+  ep  6 seed= 20006 SUCCESS   gates=3/3 t= 7.47s ret=  +64.13 min_margin=+0.013m min_clearance=+0.313m cost=0.00
+  ep  7 seed= 20007 SUCCESS   gates=3/3 t= 7.03s ret=  +68.64 min_margin=+0.245m min_clearance=+0.545m cost=0.00
+  ep  8 seed= 20008 SUCCESS   gates=3/3 t= 8.33s ret=  +58.10 min_margin=+0.026m min_clearance=+0.326m cost=0.00
+  ep  9 seed= 20009 SUCCESS   gates=3/3 t= 7.20s ret=  +66.64 min_margin=+0.050m min_clearance=+0.350m cost=0.00
+  ep 10 seed= 20010 SUCCESS   gates=3/3 t= 7.10s ret=  +68.40 min_margin=+0.211m min_clearance=+0.511m cost=0.00
+  ep 11 seed= 20011 SUCCESS   gates=3/3 t= 7.20s ret=  +68.72 min_margin=+0.240m min_clearance=+0.540m cost=0.00
+  ep 12 seed= 20012 COLLISION gates=2/3 t= 6.50s ret=  -13.29 min_margin=-0.091m min_clearance=+0.209m cost=1.00
+  ep 13 seed= 20013 SUCCESS   gates=3/3 t= 7.20s ret=  +67.67 min_margin=+0.140m min_clearance=+0.440m cost=0.00
+  ep 14 seed= 20014 SUCCESS   gates=3/3 t= 7.77s ret=  +62.93 min_margin=+0.008m min_clearance=+0.308m cost=0.00
+  ep 15 seed= 20015 SUCCESS   gates=3/3 t= 7.13s ret=  +65.36 min_margin=+0.046m min_clearance=+0.346m cost=0.00
+  ep 16 seed= 20016 SUCCESS   gates=3/3 t= 6.90s ret=  +66.94 min_margin=+0.131m min_clearance=+0.431m cost=0.00
+  ep 17 seed= 20017 SUCCESS   gates=3/3 t= 9.43s ret=  +53.88 min_margin=-0.028m min_clearance=+0.272m cost=0.00
+  ep 18 seed= 20018 SUCCESS   gates=3/3 t= 7.83s ret=  +62.56 min_margin=+0.030m min_clearance=+0.330m cost=0.00
+  ep 19 seed= 20019 SUCCESS   gates=3/3 t= 7.53s ret=  +65.31 min_margin=+0.104m min_clearance=+0.404m cost=0.00
+  ep 20 seed= 20020 SUCCESS   gates=3/3 t= 8.50s ret=  +61.31 min_margin=-0.048m min_clearance=+0.252m cost=0.00
+  ep 21 seed= 20021 SUCCESS   gates=3/3 t= 6.77s ret=  +69.29 min_margin=+0.439m min_clearance=+0.739m cost=0.00
+  ep 22 seed= 20022 COLLISION gates=2/3 t= 6.10s ret=  -13.98 min_margin=-0.031m min_clearance=+0.269m cost=1.00
+  ep 23 seed= 20023 SUCCESS   gates=3/3 t=10.03s ret=  +53.26 min_margin=-0.039m min_clearance=+0.261m cost=0.00

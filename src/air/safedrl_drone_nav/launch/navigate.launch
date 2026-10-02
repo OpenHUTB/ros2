@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  SafeDRL-DroneNav-ROS : closed-loop inference.
+
+  Brings up the dummy plant (odometry + virtual lidar) and the DRL navigator,
+  so the full perceive -> infer -> safety-filter -> command loop runs inside a
+  plain ROS VM with no simulator and no flight controller.
+
+      roslaunch safedrl_drone_nav navigate.launch
+      roslaunch safedrl_drone_nav navigate.launch model_path:=.../ppo_lag_cbf_final.zip
+      roslaunch safedrl_drone_nav navigate.launch use_cbf:=false   # ablation
+
+  Inspect the result in separate terminals:
+
+      rostopic echo /drone/nav_status      # gate index, margin, CBF engaged
+      rostopic echo /drone/cmd_vel
+      rqt_plot /drone/odom/pose/pose/position/x
+-->
+<launch>
+  <!-- ---------------- arguments ---------------- -->
+  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip"/>
+  <arg name="use_cbf"    default="true"/>
+  <arg name="control_rate" default="30.0"/>
+  <arg name="gui_hint"   default="false"/>
+  <arg name="echo_cmd"   default="false"/>
+  <arg name="obstacles"  default="false"/>
+  <arg name="gates"      default="false"/>
+
+  <!-- ---------------- virtual drone (plant stand-in) ---------------- -->
+  <node name="dummy_state_publisher" pkg="safedrl_drone_nav" type="dummy_state_publisher.py"
+        output="screen" required="true">
+    <param name="publish_rate" value="$(arg control_rate)"/>
+    <param name="n_rays"       value="180"/>
+    <param name="scan_range"   value="3.0"/>
+    <param name="start"        value="[0.0, 0.0, 1.5]"/>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+
+  <!-- ---------------- DRL navigator ---------------- -->
+  <node name="drl_navigator" pkg="safedrl_drone_nav" type="drl_navigator_node.py"
+        output="screen" required="true">
+    <param name="model_path"    value="$(arg model_path)"/>
+    <param name="use_cbf"       value="$(arg use_cbf)"/>
+    <param name="control_rate"  value="$(arg control_rate)"/>
+    <param name="odom_topic"    value="/drone/odom"/>
+    <param name="scan_topic"    value="/drone/scan"/>
+    <param name="cmd_vel_topic" value="/drone/cmd_vel"/>
+    <param name="status_topic"  value="/drone/nav_status"/>
+    <param name="max_velocity"  value="2.6"/>
+    <param name="max_yaw_rate"  value="2.0"/>
+    <!-- the same slalom as the training environment -->
+    <rosparam param="gates" subst_value="true">
+      [3.8, 0.0, 1.50,
+       7.4, 1.55, 1.95,
+       11.0, -1.55, 1.15]
+    </rosparam>
+    <rosparam param="obstacles">
+      - {centre: [3.4,  1.1, 1.5], radius: 0.32}
+      - {centre: [5.9, -1.3, 1.4], radius: 0.38}
+      - {centre: [7.6,  1.4, 1.6], radius: 0.28}
+      - {centre: [9.8, -0.6, 1.5], radius: 0.35}
+    </rosparam>
+  </node>
+
+  <!-- optional: log the commanded velocity to the console -->
+  <node if="$(arg echo_cmd)" name="cmd_echo" pkg="rostopic" type="rostopic"
+        args="echo /drone/cmd_vel" output="screen"/>
+</launch>

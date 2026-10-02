@@ -1,0 +1,73 @@
+
+==============================================================================
+== SESSION START  2026-10-02T21:21:31
+==============================================================================
+[21:21:31] host=LAPTOP-EKLUP56Q  os=Windows 10
+[21:21:31] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: EVALUATION  [ppo_baseline]
+==============================================================================
+[21:21:31] model      = checkpoints\ppo_baseline_final.zip
+[21:21:31] use_cbf    = False
+[21:21:31] episodes   = 24  seeds 20000..20023
+[21:21:31] deterministic = True
+[21:21:34] gates      = [[3.8, 0.0, 1.5], [7.4, 1.55, 1.95], [11.0, -1.55, 1.15]]
+[21:21:34] obstacles  = 11 (7 static, 4 dynamic)
+  ep  0 seed= 20000 COLLISION gates=2/3 t= 5.63s ret=  -11.24 min_margin=-0.214m min_clearance=+0.086m cost=1.00
+  ep  1 seed= 20001 SUCCESS   gates=3/3 t= 7.43s ret=  +62.69 min_margin=-0.208m min_clearance=+0.092m cost=0.00
+  ep  2 seed= 20002 SUCCESS   gates=3/3 t= 7.10s ret=  +55.46 min_margin=-0.349m min_clearance=-0.049m cost=0.01
+  ep  3 seed= 20003 COLLISION gates=0/3 t= 1.60s ret=  -25.49 min_margin=-0.362m min_clearance=-0.062m cost=1.00
+  ep  4 seed= 20004 COLLISION gates=1/3 t= 2.90s ret=  -22.36 min_margin=-0.372m min_clearance=-0.072m cost=1.00
+  ep  5 seed= 20005 SUCCESS   gates=3/3 t= 6.97s ret=  +64.52 min_margin=-0.154m min_clearance=+0.146m cost=0.00
+  ep  6 seed= 20006 COLLISION gates=2/3 t= 5.77s ret=   -8.59 min_margin=-0.009m min_clearance=+0.291m cost=1.00
+  ep  7 seed= 20007 SUCCESS   gates=3/3 t= 6.97s ret=  +66.67 min_margin=+0.020m min_clearance=+0.320m cost=0.00
+  ep  8 seed= 20008 COLLISION gates=1/3 t= 2.70s ret=  -19.17 min_margin=-0.360m min_clearance=-0.060m cost=1.00
+  ep  9 seed= 20009 SUCCESS   gates=3/3 t= 6.93s ret=  +62.31 min_margin=-0.352m min_clearance=-0.052m cost=0.01
+  ep 10 seed= 20010 SUCCESS   gates=3/3 t= 7.07s ret=  +67.15 min_margin=+0.006m min_clearance=+0.306m cost=0.00
+  ep 11 seed= 20011 COLLISION gates=2/3 t= 5.73s ret=  -10.09 min_margin=-0.181m min_clearance=+0.119m cost=1.00
+  ep 12 seed= 20012 COLLISION gates=1/3 t= 3.63s ret=  -19.45 min_margin=-0.371m min_clearance=-0.071m cost=1.00
+  ep 13 seed= 20013 SUCCESS   gates=3/3 t= 7.07s ret=  +64.94 min_margin=-0.125m min_clearance=+0.175m cost=0.00
+  ep 14 seed= 20014 SUCCESS   gates=3/3 t= 7.07s ret=  +60.10 min_margin=-0.188m min_clearance=+0.112m cost=0.00
+  ep 15 seed= 20015 COLLISION gates=2/3 t= 5.73s ret=   -9.11 min_margin=-0.184m min_clearance=+0.116m cost=1.00
+  ep 16 seed= 20016 SUCCESS   gates=3/3 t= 6.93s ret=  +65.21 min_margin=-0.113m min_clearance=+0.187m cost=0.00
+  ep 17 seed= 20017 COLLISION gates=2/3 t= 6.47s ret=  -13.16 min_margin=-0.382m min_clearance=-0.082m cost=1.01
+  ep 18 seed= 20018 COLLISION gates=1/3 t= 3.47s ret=  -17.74 min_margin=-0.375m min_clearance=-0.075m cost=1.00
+  ep 19 seed= 20019 SUCCESS   gates=3/3 t= 7.17s ret=  +55.31 min_margin=-0.278m min_clearance=+0.022m cost=0.01
+  ep 20 seed= 20020 COLLISION gates=2/3 t= 5.27s ret=   -9.53 min_margin=-0.363m min_clearance=-0.063m cost=1.00
+  ep 21 seed= 20021 SUCCESS   gates=3/3 t= 6.93s ret=  +69.15 min_margin=+0.509m min_clearance=+0.809m cost=0.00
+  ep 22 seed= 20022 COLLISION gates=1/3 t= 3.03s ret=  -18.08 min_margin=-0.392m min_clearance=-0.092m cost=1.00
+  ep 23 seed= 20023 COLLISION gates=1/3 t= 3.03s ret=  -18.02 min_margin=-0.365m min_clearance=-0.065m cost=1.00
+
+
+--------------------------------------------------------------
+  Evaluation summary  [ppo_baseline]   n=24
+--------------------------------------------------------------
+  n_episodes                       : 24
+  success_rate                     : 0.4583
+  collision_rate                   : 0.5417
+  timeout_rate                     : 0.0
+  mean_arrival_time_s              : 7.0576
+  std_arrival_time_s               : 0.1408
+  mean_min_safety_margin_m         : -0.215
+  worst_safety_margin_m            : -0.3925
+  mean_contact_clearance_m         : 0.085
+  worst_contact_clearance_m        : -0.0925
+  mean_episode_cost                : 0.5449
+  mean_gates_passed                : 2.125
+  mean_episode_energy              : 4.1299
+  mean_episode_return              : 20.4776
+  mean_cbf_intervention_rate       : 0.4096
+  mean_cbf_residual                : -0.3556
+--------------------------------------------------------------
+
+[21:21:43] terminal snippet : D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\terminal_snippet_ppo_baseline.txt
+
+EVAL_RUN=ppo_baseline
+SUCCESS_RATE=0.4583
+COLLISION_RATE=0.5417
+WORST_CLEARANCE=-0.09248459470969922
+
+==============================================================================
+== SESSION END  2026-10-02T21:21:43
+==============================================================================
