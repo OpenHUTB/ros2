@@ -1,0 +1,67 @@
+[
+  {
+    "accuracy": 0.8142857142857143,
+    "macro_f1": 0.7756960408684547,
+    "model": "mlp_42",
+    "windows": 70,
+    "episodes": 5,
+    "accepted_coverage": 0.8714285714285714,
+    "accepted_accuracy": 0.9016393442622951,
+    "episode_accuracy": 0.8,
+    "inference_median_ms": 0.031613499999139094,
+    "inference_p95_ms": 0.06693754997399987
+  },
+  {
+    "accuracy": 0.8285714285714286,
+    "macro_f1": 0.79,
+    "model": "mlp_43",
+    "windows": 70,
+    "episodes": 5,
+    "accepted_coverage": 0.8714285714285714,
+    "accepted_accuracy": 0.9016393442622951,
+    "episode_accuracy": 0.8,
+    "inference_median_ms": 0.01732699999479337,
+    "inference_p95_ms": 0.022545949997265755
+  },
+  {
+    "accuracy": 0.8428571428571429,
+    "macro_f1": 0.8219533508099751,
+    "model": "mlp_44",
+    "windows": 70,
+    "episodes": 5,
+    "accepted_coverage": 0.8857142857142857,
+    "accepted_accuracy": 0.9193548387096774,
+    "episode_accuracy": 0.8,
+    "inference_median_ms": 0.020046999992473502,
+    "inference_p95_ms": 0.048657950037522824
+  },
+  {
+    "accuracy": 0.5857142857142857,
+    "macro_f1": 0.5027922077922078,
+    "model": "gru_42",
+    "windows": 70,
+    "episodes": 5,
+    "accepted_coverage": 0.4,
+    "accepted_accuracy": 0.9285714285714286,
+    "episode_accuracy": 0.6,
+    "inference_median_ms": 0.550620500007426,
+    "inference_p95_ms": 1.3746599999763016
+  },
+  {
+    "accuracy": 0.45714285714285713,
+    "macro_f1": 0.39952941176470586,
+    "model": "mlp_position_only_42",
+    "windows": 70,
+    "episodes": 5,
+    "accepted_coverage": 0.24285714285714285,
+    "accepted_accuracy": 0.9411764705882353,
+    "episode_accuracy": 0.4,
+    "inference_median_ms": 0.02129000000650194,
+    "inference_p95_ms": 0.02788294995923479
+  },
+  {
+    "accuracy": 0.9428571428571428,
+    "macro_f1": 0.9423412021587773,
+    "model": "nearest_centroid"
+  }
+]

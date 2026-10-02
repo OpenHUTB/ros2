@@ -1,0 +1,48 @@
+{
+  "variant": "gru",
+  "seed": 42,
+  "classes": [
+    "line",
+    "circle",
+    "figure_eight",
+    "climb",
+    "stop_go"
+  ],
+  "features": [
+    "horizontal_speed",
+    "vertical_speed",
+    "tangential_accel",
+    "signed_normal_accel",
+    "vertical_accel",
+    "horizontal_displacement",
+    "relative_height",
+    "path_efficiency"
+  ],
+  "mean": [
+    0.4744545519351959,
+    -0.003570093773305416,
+    0.008427178487181664,
+    -0.09455174952745438,
+    -0.0022558334749192,
+    1.0719443559646606,
+    0.006141364108771086,
+    0.8106553554534912
+  ],
+  "std": [
+    0.3215486407279968,
+    0.09730929136276245,
+    0.30178654193878174,
+    0.23780560493469238,
+    0.05218909680843353,
+    0.8823561668395996,
+    0.27488473057746887,
+    0.2524384558200836
+  ],
+  "confidence_threshold": 0.65,
+  "rejection_policy": "validation accuracy >=0.90 at maximum coverage >=0.20; fallback 0.80",
+  "best_validation_loss": 1.1236584186553955,
+  "history_s": 6.0,
+  "warmup_s": 7.0,
+  "inference_period_s": 0.5,
+  "stable_predictions": 3
+}

@@ -69,6 +69,8 @@ ROS每章节运行代码:
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/uav_flight_pattern_recognition.md)
+
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
