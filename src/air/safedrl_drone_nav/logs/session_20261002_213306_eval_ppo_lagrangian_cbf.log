@@ -1,0 +1,80 @@
+
+==============================================================================
+== SESSION START  2026-10-02T21:33:06
+==============================================================================
+[21:33:06] host=LAPTOP-EKLUP56Q  os=Windows 10
+[21:33:06] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: EVALUATION  [ppo_lagrangian_cbf]
+==============================================================================
+[21:33:06] model      = checkpoints\ppo_lagrangian_best.zip
+[21:33:06] use_cbf    = True
+[21:33:06] episodes   = 24  seeds 20000..20023
+[21:33:06] deterministic = True
+[21:33:10] gates      = [[3.8, 0.0, 1.5], [7.4, 1.55, 1.95], [11.0, -1.55, 1.15]]
+[21:33:10] obstacles  = 11 (7 static, 4 dynamic)
+  ep  0 seed= 20000 SUCCESS   gates=3/3 t=15.10s ret=  +43.31 min_margin=-0.024m min_clearance=+0.276m cost=0.00
+  ep  1 seed= 20001 SUCCESS   gates=3/3 t=15.00s ret=  +50.01 min_margin=+0.028m min_clearance=+0.328m cost=0.00
+  ep  2 seed= 20002 SUCCESS   gates=3/3 t=16.07s ret=  +38.55 min_margin=-0.037m min_clearance=+0.263m cost=0.00
+  ep  3 seed= 20003 SUCCESS   gates=3/3 t=20.50s ret=  +13.47 min_margin=-0.039m min_clearance=+0.261m cost=0.00
+  ep  4 seed= 20004 SUCCESS   gates=3/3 t=14.73s ret=  +56.50 min_margin=+0.002m min_clearance=+0.302m cost=0.00
+  ep  5 seed= 20005 SUCCESS   gates=3/3 t=14.70s ret=  +58.35 min_margin=+0.017m min_clearance=+0.317m cost=0.00
+  ep  6 seed= 20006 SUCCESS   gates=3/3 t=15.40s ret=  +56.82 min_margin=-0.002m min_clearance=+0.298m cost=0.00
+  ep  7 seed= 20007 SUCCESS   gates=3/3 t=14.47s ret=  +58.46 min_margin=+0.020m min_clearance=+0.320m cost=0.00
+  ep  8 seed= 20008 SUCCESS   gates=3/3 t=15.90s ret=  +39.26 min_margin=-0.020m min_clearance=+0.280m cost=0.00
+  ep  9 seed= 20009 SUCCESS   gates=3/3 t=16.03s ret=  +49.80 min_margin=-0.066m min_clearance=+0.234m cost=0.00
+  ep 10 seed= 20010 SUCCESS   gates=3/3 t=15.37s ret=  +48.81 min_margin=-0.001m min_clearance=+0.299m cost=0.00
+  ep 11 seed= 20011 SUCCESS   gates=3/3 t=15.03s ret=  +53.56 min_margin=-0.006m min_clearance=+0.294m cost=0.00
+  ep 12 seed= 20012 SUCCESS   gates=3/3 t=17.30s ret=  +31.91 min_margin=-0.080m min_clearance=+0.220m cost=0.00
+  ep 13 seed= 20013 SUCCESS   gates=3/3 t=15.30s ret=  +52.88 min_margin=+0.002m min_clearance=+0.302m cost=0.00
+  ep 14 seed= 20014 SUCCESS   gates=3/3 t=17.23s ret=  +41.24 min_margin=-0.027m min_clearance=+0.273m cost=0.00
+  ep 15 seed= 20015 SUCCESS   gates=3/3 t=15.37s ret=  +52.17 min_margin=-0.068m min_clearance=+0.232m cost=0.00
+  ep 16 seed= 20016 SUCCESS   gates=3/3 t=14.77s ret=  +58.96 min_margin=-0.030m min_clearance=+0.270m cost=0.00
+  ep 17 seed= 20017 SUCCESS   gates=3/3 t=16.70s ret=  +39.70 min_margin=-0.125m min_clearance=+0.175m cost=0.00
+  ep 18 seed= 20018 SUCCESS   gates=3/3 t=17.33s ret=  +32.20 min_margin=-0.034m min_clearance=+0.266m cost=0.00
+  ep 19 seed= 20019 SUCCESS   gates=3/3 t=15.13s ret=  +54.50 min_margin=+0.049m min_clearance=+0.349m cost=0.00
+  ep 20 seed= 20020 SUCCESS   gates=3/3 t=16.23s ret=  +49.68 min_margin=-0.045m min_clearance=+0.255m cost=0.00
+  ep 21 seed= 20021 SUCCESS   gates=3/3 t=14.67s ret=  +62.08 min_margin=+0.108m min_clearance=+0.408m cost=0.00
+  ep 22 seed= 20022 SUCCESS   gates=3/3 t=17.07s ret=  +43.76 min_margin=-0.034m min_clearance=+0.266m cost=0.00
+  ep 23 seed= 20023 SUCCESS   gates=3/3 t=16.80s ret=  +37.72 min_margin=-0.032m min_clearance=+0.268m cost=0.00
+
+
+--------------------------------------------------------------
+  Evaluation summary  [ppo_lagrangian_cbf]   n=24
+--------------------------------------------------------------
+  n_episodes                       : 24
+  success_rate                     : 1.0
+  collision_rate                   : 0.0
+  timeout_rate                     : 0.0
+  mean_arrival_time_s              : 15.925
+  std_arrival_time_s               : 1.3155
+  mean_min_safety_margin_m         : -0.0185
+  worst_safety_margin_m            : -0.1251
+  mean_contact_clearance_m         : 0.2815
+  worst_contact_clearance_m        : 0.1749
+  mean_episode_cost                : 0.0006
+  mean_gates_passed                : 3.0
+  mean_episode_energy              : 11.169
+  mean_episode_return              : 46.8208
+  mean_cbf_intervention_rate       : 0.1826
+  mean_cbf_residual                : -0.3165
+--------------------------------------------------------------
+
+[21:33:34] terminal snippet : D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\terminal_snippet_ppo_lagrangian_cbf.txt
+
+==============================================================================
+== Figures
+==============================================================================
+  [figure] D:\ClaudeProjects\SafeDRL-DroneNav-ROS\docs\figures\trajectory_3d_ppo_lagrangian_cbf.png
+  [figure] D:\ClaudeProjects\SafeDRL-DroneNav-ROS\docs\figures\state_response_ppo_lagrangian_cbf.png
+  [figure] D:\ClaudeProjects\SafeDRL-DroneNav-ROS\docs\figures\gate_progress_ppo_lagrangian_cbf.png
+
+EVAL_RUN=ppo_lagrangian_cbf
+SUCCESS_RATE=1.0000
+COLLISION_RATE=0.0000
+WORST_CLEARANCE=0.1748758288942879
+
+==============================================================================
+== SESSION END  2026-10-02T21:33:35
+==============================================================================

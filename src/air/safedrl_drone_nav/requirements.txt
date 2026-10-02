@@ -1,0 +1,45 @@
+# SafeDRL-DroneNav-ROS - Python dependencies
+#
+# Target: Ubuntu 20.04 + ROS Noetic (Python 3.8) or Ubuntu 22.04 + ROS 2
+#         (Python 3.10).  Developed and verified on Windows 11 / Python 3.10.22.
+#
+#     pip install -r requirements.txt
+#
+# NOTE ON PYBULLET
+# ----------------
+# PyBullet publishes NO Windows wheels on PyPI; `pip install pybullet` tries to
+# build from source and fails without MSVC build tools.  This is an upstream
+# packaging limitation and does not affect the target platform - on Ubuntu the
+# pip install works normally:
+#
+#     pip install pybullet                     # Ubuntu (recommended)
+#
+# Only if you are reproducing the artefacts on Windows, take the prebuilt
+# conda-forge package instead of building from source:
+#
+#     conda install -c conda-forge pybullet "numpy<2"
+#
+# (If conda-forge's numpy is installed, re-install the pip wheel afterwards -
+# `pip install --force-reinstall --no-deps numpy==1.26.4` - because the
+# conda-forge build linked against an MKL that makes `numpy.linalg.inv` abort
+# the process with a DLL delay-load error.)
+
+# --- simulation ---------------------------------------------------------
+pybullet>=3.2.5
+numpy>=1.21,<2.0          # <2: torch/SB3 that predate the numpy 2 ABI break
+
+# --- deep reinforcement learning ---------------------------------------
+torch>=2.0,<3.0
+stable-baselines3==2.3.2  # 2.x: gymnasium API + VecNormalize semantics we rely on
+gymnasium==0.29.1         # must match the bounds SB3 2.3.2 was built against
+
+# --- logging / evidence -------------------------------------------------
+tensorboard>=2.12         # writes logs/tb_logs/<run>/tfevents
+pandas>=2.0
+matplotlib>=3.6           # Agg backend; figures rendered headlessly
+
+# --- config -------------------------------------------------------------
+PyYAML>=6.0
+
+# --- ROS (installed by apt as part of your ROS distribution, not pip) ----
+# rospy, geometry_msgs, nav_msgs, sensor_msgs, std_msgs, rostopic

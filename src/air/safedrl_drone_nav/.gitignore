@@ -1,0 +1,32 @@
+# ---- Python caches -------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---- catkin build trees --------------------------------------------------
+build/
+devel/
+logs/*.log.bak
+
+# ---- editor / OS ---------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*~
+
+# NOTE: the evidence directories are deliberately NOT ignored.  logs/,
+# docs/figures/ and checkpoints/ are the run-trace chain that this project
+# exists to preserve, so they must be committed:
+#   logs/train_execution.log        full terminal transcript
+#   logs/session_*.log              per-run transcripts
+#   logs/terminal_snippet_*.txt     verbatim evaluation excerpts
+#   logs/eval_metrics_*.{json,csv}  structured metrics
+#   logs/traces/*.npz               raw per-step telemetry
+#   logs/tb_logs/                   TensorBoard event files
+#   docs/figures/*.png              report figures
+#   checkpoints/*.zip               trained weights
+#   dist/*.tar.gz                   packaged submission

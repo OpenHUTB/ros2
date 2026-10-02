@@ -1,0 +1,46 @@
+
+==============================================================================
+== SESSION START  2026-10-02T21:19:07
+==============================================================================
+[21:19:07] host=LAPTOP-EKLUP56Q  os=Windows 10
+[21:19:07] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: EVALUATION  [ppo_baseline_cbf]
+==============================================================================
+[21:19:07] model      = checkpoints\ppo_baseline_final.zip
+[21:19:07] use_cbf    = True
+[21:19:07] episodes   = 24  seeds 20000..20023
+[21:19:07] deterministic = True
+[21:19:10] gates      = [[3.8, 0.0, 1.5], [7.4, 1.55, 1.95], [11.0, -1.55, 1.15]]
+[21:19:10] obstacles  = 0 (0 static, 0 dynamic)
+  ep  0 seed= 20000 SUCCESS   gates=3/3 t= 7.70s ret=  +63.32 min_margin=+0.004m clearance=+0.524m cost=0.00
+  ep  1 seed= 20001 SUCCESS   gates=3/3 t= 7.83s ret=  +66.81 min_margin=+0.152m clearance=+0.510m cost=0.00
+  ep  2 seed= 20002 COLLISION gates=2/3 t= 5.93s ret=  -12.86 min_margin=-0.101m clearance=+0.199m cost=1.00
+  ep  3 seed= 20003 COLLISION gates=1/3 t= 5.27s ret=  -27.63 min_margin=-0.206m clearance=+0.094m cost=1.00
+  ep  4 seed= 20004 COLLISION gates=2/3 t= 6.13s ret=  -12.41 min_margin=-0.057m clearance=+0.243m cost=1.00
+  ep  5 seed= 20005 SUCCESS   gates=3/3 t= 7.33s ret=  +67.29 min_margin=+0.175m clearance=+0.759m cost=0.00
+  ep  6 seed= 20006 COLLISION gates=2/3 t= 5.67s ret=   -7.97 min_margin=-0.001m clearance=+0.299m cost=1.00
+  ep  7 seed= 20007 SUCCESS   gates=3/3 t= 7.17s ret=  +68.72 min_margin=+0.241m clearance=+1.116m cost=0.00
+  ep  8 seed= 20008 SUCCESS   gates=3/3 t= 8.50s ret=  +58.42 min_margin=+0.039m clearance=+1.128m cost=0.00
+  ep  9 seed= 20009 SUCCESS   gates=3/3 t= 7.50s ret=  +65.90 min_margin=+0.050m clearance=+1.066m cost=0.00
+  ep 10 seed= 20010 SUCCESS   gates=3/3 t= 7.20s ret=  +68.50 min_margin=+0.200m clearance=+0.943m cost=0.00
+  ep 11 seed= 20011 SUCCESS   gates=3/3 t= 7.30s ret=  +68.55 min_margin=+0.224m clearance=+1.123m cost=0.00
+  ep 12 seed= 20012 COLLISION gates=2/3 t= 6.30s ret=  -14.37 min_margin=-0.084m clearance=+0.216m cost=1.00
+  ep 13 seed= 20013 SUCCESS   gates=3/3 t= 7.43s ret=  +67.52 min_margin=+0.163m clearance=+0.960m cost=0.00
+  ep 14 seed= 20014 SUCCESS   gates=3/3 t= 8.30s ret=  +60.85 min_margin=-0.011m clearance=+1.164m cost=0.00
+  ep 15 seed= 20015 COLLISION gates=2/3 t= 5.77s ret=   -8.71 min_margin=-0.178m clearance=+0.122m cost=1.00
+  ep 16 seed= 20016 SUCCESS   gates=3/3 t= 7.30s ret=  +67.60 min_margin=+0.216m clearance=+0.711m cost=0.00
+  ep 17 seed= 20017 SUCCESS   gates=3/3 t= 8.57s ret=  +60.17 min_margin=-0.014m clearance=+0.545m cost=0.00
+  ep 18 seed= 20018 COLLISION gates=2/3 t= 6.67s ret=  -12.20 min_margin=-0.145m clearance=+0.155m cost=1.00
+  ep 19 seed= 20019 SUCCESS   gates=3/3 t= 7.67s ret=  +63.44 min_margin=+0.055m clearance=+0.838m cost=0.00
+  ep 20 seed= 20020 SUCCESS   gates=3/3 t= 8.27s ret=  +63.19 min_margin=-0.026m clearance=+1.127m cost=0.00
+  ep 21 seed= 20021 SUCCESS   gates=3/3 t= 6.93s ret=  +69.18 min_margin=+0.537m clearance=+1.175m cost=0.00
+  ep 22 seed= 20022 COLLISION gates=2/3 t= 6.67s ret=  -15.16 min_margin=-0.047m clearance=+0.253m cost=1.00
+  ep 23 seed= 20023 SUCCESS   gates=3/3 t= 9.20s ret=  +56.67 min_margin=-0.079m clearance=+0.598m cost=0.00
+
+
+==============================================================================
+== SESSION END  2026-10-02T21:19:22
+==============================================================================
+[21:19:22] !! terminated with AttributeError: 'RunLogger' object has no attribute 'print_summary'
