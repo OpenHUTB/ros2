@@ -1,0 +1,20 @@
+{
+  "source": "freshly extracted release ZIP",
+  "prepare": "passed; 70 legacy scenarios plus bundled development/final raw data",
+  "unit_tests": 13,
+  "training_entry": "1 epoch smoke retraining in a new output directory passed",
+  "evaluation": "final by_type.csv byte-identical to original results",
+  "colcon": "1 package passed",
+  "ros_replay": {
+    "telemetry_messages": 361,
+    "score_messages": 361,
+    "diagnostic_arrays": 361,
+    "alarm_messages": 122,
+    "reasons": [
+      "model_residual",
+      "normal",
+      "warming_up"
+    ],
+    "source": "Actual ROS2 subscribers, recorded AirSim data with software injection"
+  }
+}
