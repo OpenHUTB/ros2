@@ -1,0 +1,9 @@
+# ROS2 libraries come from the sourced system ROS installation.
+# CPU-only torch: the explicit +cpu version prevents selecting a CUDA build.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.4.1+cpu
+numpy==1.24.4
+matplotlib>=3.1.2,<3.8
+colcon-common-extensions==0.3.0
+# Required before optional AirSim's legacy setup.py is evaluated.
+msgpack-rpc-python==0.4.1

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>uav_flight_pattern_recognition</name>
+  <name>flight_pattern_recognition</name>
   <version>0.1.0</version>
   <description>Neural UAV flight pattern recognition and automatic task log</description>
   <maintainer email="2535030075@stu.hutb.edu.cn">zijuan xiao</maintainer>

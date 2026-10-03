@@ -1,3 +1,0 @@
-# Optional: only needed for collection / read-only live bridge.
-airsim==1.8.1
-msgpack-rpc-python==0.4.1

@@ -4,7 +4,7 @@
 
 主模型使用时序几何特征的均值/标准差加 MLP；GRU 为序列模型对照。任务属于**已知轨迹家族分类**，不预测未来状态，不做异常检测或路径规划。
 
-![实际 ROS2 运行窗口](results/dashboard_window.png)
+![实际 ROS2 运行窗口](flight_pattern_recognition/results/dashboard_window.png)
 
 该图是 Ubuntu 中订阅真实 ROS2 话题的窗口截图：回放 `episode_300`～`304` 的 1805 条实际仿真观测，得到 105 个预测和 5 条稳定事件。左下保留了短暂错误及低置信度预测。不是模拟绘制的成功界面，也不是直接订阅飞行指令标签。
 
@@ -21,31 +21,52 @@
 
 2026-10-02 核查 OpenHUTB 主分支目录及最近 100 个 PR 标题/范围，未发现相同轨迹分类与任务日志模块；这不代表其他仓库不存在相关研究。上游基线为 `c10e1331a5b24dd2d9a0d37bafe91cecdb5ae92b`。
 
-![系统架构](results/architecture.png)
+![系统架构](flight_pattern_recognition/results/architecture.png)
 
-## 2. 运行环境和最快演示
+## 环境安装、检查与构建
 
-实际验证环境：Windows AirSim Blocks / SimpleFlight + VMware Ubuntu 20.04.6，Python 3.8.10、已有 ROS2 Humble、PyTorch 2.4.1+cpu、NumPy 1.24.4、Matplotlib 3.1.2。完整版本记录见 `results/environment.json`。这是复用已有虚拟机的组合；未声称在新安装的 Ubuntu 或另一台机器上通过测试。
+在 Ubuntu 中先进入 `src/air/flight_pattern_recognition`。已有环境可跳过创建；首次安装需使用与系统 ROS2 匹配的 `/usr/bin/python3`，避免 Conda 的 `python3` 被误用：
 
-**回放演示不需要启动 AirSim、下载场景或重新训练。** 模型及约 2.65 MiB 的原始数据压缩包已附带。在模块目录运行：
+```bash
+source /opt/ros/humble/setup.bash
+/usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
+source ~/uav_prediction_env/bin/activate
+python -m pip install -r requirements.txt
+bash main.sh doctor
+bash main.sh build
+```
+
+`requirements.txt` 一次安装 CPU 版 PyTorch、NumPy、Matplotlib、colcon 构建插件和可选仿真客户端的前置依赖；不需要另装 CUDA。ROS2 的 `rclpy`/消息包和 Tk 来自系统 ROS/Python 安装，不能用 pip 安装 ROS2 代替。若创建 venv 报缺少 ensurepip，先安装系统 `python3-venv`；没有图形窗口时检查 `python3-tk`。
+
+已经由 Conda 创建且无法导入 ROS2 的环境，建议保留原环境，另建一个系统 Python venv（例如 `~/ros2_course_env`），激活后运行同一个 requirements 命令。`main.sh` 优先使用 `UAV_ENV` 指定的目录，其次使用当前已激活的 `VIRTUAL_ENV`，最后才使用 `~/uav_prediction_env`；`ROS_SETUP` 可指定 ROS setup 文件。每个新终端都要激活环境，或使用会加载环境的 `main.sh`。
+
+```bash
+source ~/uav_prediction_env/bin/activate
+```
+
+构建通过当前 Python 调用 `colcon_core.command.main`，不依赖非标准的 `python -m colcon` 兼容模块。`doctor` 检查 ROS2、神经网络库和构建插件，打印实际解释器并保存 `artifacts/environment.json`；该环境记录已随本 PR 提交。
+
+目录和 ROS 包已统一更名为 `flight_pattern_recognition`。请在新目录重新执行 build；旧路径生成的 `build/`、`install/`、`log/` 不要复制到新目录。回放使用随附模型和数据，**无需先启动或下载仿真器**：
 
 ```bash
 bash main.sh demo
 ```
 
-入口默认读取 `/opt/ros/humble/setup.bash` 和 `~/uav_prediction_env`，自动校验/准备数据，首次构建 ROS2 包，再回放五类新测试飞行。约 95 秒结束，并保存 `results/ros_predictions.jsonl`。运行前在另一个 Ubuntu 桌面终端打开界面：
+先在另一桌面终端运行 `bash main.sh dashboard`，再启动 demo；五类回放约 95 秒后正常结束。
+
+## 仿真器选择与实际验证范围
+
+新部署推荐使用维护者提供的 [OpenHUTB 模拟器发布页](https://github.com/OpenHUTB/hutb/releases)，选择支持无人机的场景及 AirSim 兼容接口。先使用现有场景和回放验证项目，再按需要下载对应平台版本。
+
+本提交的既有训练数据、曲线和截图来自 Windows Blocks / AirSim 的实际运行，**尚未将这些结果重新标为 OpenHUTB 模拟器实测**。可复用 AirSim RPC 客户端，但具体场景、车辆名、主机地址及端口需按实际配置检查。配置示例随代码保存在 `config/airsim_settings.json`；示例中的 `192.168.239.1` 和 `PredictionDrone` 不应在其他机器盲目照抄。
+
+只有重新采集或实时接入才需要额外安装仿真客户端。先完成核心 requirements，再运行：
 
 ```bash
-bash main.sh dashboard
+python -m pip install -r requirements_airsim.txt
 ```
 
-已有其他环境时，用环境变量指定，例如：
-
-```bash
-ROS_SETUP=/opt/ros/humble/setup.bash UAV_ENV=/path/to/existing/venv bash main.sh demo
-```
-
-需要的 Python 依赖在 `requirements.txt`；ROS2 的 `rclpy`、`std_msgs`、`launch_ros` 和 `colcon` 来自已有 ROS 安装，窗口需要 Tk 和图形桌面。新环境安装 PyTorch 时选择 CPU 发行包即可，模型训练不需要 CUDA。AirSim 依赖只用于重新采集/实时接入，见 `requirements_airsim.txt`。
+核心 requirements 已安装 `numpy` 与 `msgpack-rpc-python`，满足旧版 AirSim 安装脚本的前置导入要求；回放不导入 AirSim。重新采集程序会控制仿真无人机；回放、推理和只读桥接不下发飞控指令。
 
 ## 3. 数据、标签与防泄漏
 
@@ -95,10 +116,10 @@ ROS_SETUP=/opt/ros/humble/setup.bash UAV_ENV=/path/to/existing/venv bash main.sh
 
 整段多数投票准确率分别为旧测试 4/5、新测试 15/15；多数投票只用于离线统计，不是实时稳定事件的评分。CPU 模型单次前向耗时中位数约 0.021 ms、P95 约 0.029 ms，不含 ROS 传输、窗口计算和界面刷新。模型首次输出需约 7 秒历史，任务事件还需连续 3 次一致预测，通常再等待约 1 秒。
 
-![两组测试并列对比](results/test_set_comparison.png)
-![训练曲线](results/loss.png)
-![混淆矩阵](results/confusion_matrix.png)
-![预测与采集标签](results/prediction_timeline.png)
+![两组测试并列对比](flight_pattern_recognition/results/test_set_comparison.png)
+![训练曲线](flight_pattern_recognition/results/loss.png)
+![混淆矩阵](flight_pattern_recognition/results/confusion_matrix.png)
+![预测与采集标签](flight_pattern_recognition/results/prediction_timeline.png)
 
 旧测试的直线样本大多被判断为停走，八字样本部分被判断为圆形，说明短时间窗口内的运动模式存在重叠。新测试任务更长（约 18 秒，旧数据约 14 秒），参数、初始稳定过程也存在差异；两组结果应分别解释，不能用新测试高分覆盖旧测试低分。窗口彼此重叠，315 个窗口不能当作 315 次独立飞行。
 
@@ -137,7 +158,7 @@ python main.py train --variant mlp --seed 42 --output models/retrained_mlp_42
 
 所有字段定义可在 `ros_pattern.py`、`pattern_stream.py` 中查看。使用 JSON 是为了避免额外自定义消息构建；时间戳保持整数，不经过 float 转换。CSV 回放生成的 `segment_000` 等匿名标识仅用于重置历史，不包含真实任务标签。分段边界来自数据源，本模块不声称自动发现未知任务的真实起止边界。
 
-启动文件为 `launch/pattern.launch.py`，必填参数为 `files`（分号分隔的 CSV 路径）、`model`，可选 `log`。回放进程退出会触发识别节点退出，日志每行立即写入；`main.sh demo` 已封装此调用。
+启动文件为 `launch/pattern.launch.py`，必填参数为 `files`（分号分隔的 CSV 路径）、`model`，可选 `log`。回放进程退出会触发识别节点退出，日志每行立即写入；虚拟机停顿超过 150 ms 时延后回放墙钟起点，保留原始仿真时间戳并避免集中补发挤满消息队列；`main.sh demo` 已封装此调用。
 
 9 项单元测试覆盖因果性、不变性、采样间断、跨段重置、时钟回退、NaN 和防抖。真实 ROS2 集成检查另外验证 361 条消息、21 次预测、1 条事件、坏 JSON、NaN 和壁钟断流重置，结果见 `results/ros_integration.json`。重新执行：
 
@@ -168,12 +189,12 @@ python main.py live --ros-args -p host:=192.168.239.1 -p vehicle:=PredictionDron
 在另一个已加载 ROS 和包环境的终端启动识别节点：
 
 ```bash
-ros2 run uav_flight_pattern_recognition pattern_recognizer --ros-args -p model:="$PWD/models/mlp_42" -p log:="$PWD/results/live_predictions.jsonl"
+ros2 run flight_pattern_recognition pattern_recognizer --ros-args -p model:="$PWD/models/mlp_42" -p log:="$PWD/results/live_predictions.jsonl"
 ```
 
 飞行需要独立控制器。五类训练数据不覆盖起飞、降落、悬停、故障和任意复杂任务；这些阶段的输出没有准确性保证。当前提交的识别截图与指标来自真实仿真数据的 ROS2 回放，不冒充对新实时飞行完成了全流程精度验证。
 
-![实际采集时的 AirSim 相机帧](results/airsim_scene.png)
+![实际采集时的 AirSim 相机帧](flight_pattern_recognition/results/airsim_scene.png)
 
 此图为采集第 300 段时由 AirSim API 返回的原始相机帧（256×144）；不参与模型输入。两次采集程序都记录 `LANDED_VERIFIED True`，见 `results/pattern_collection.log` 和 `results/pattern_retry.log`。
 

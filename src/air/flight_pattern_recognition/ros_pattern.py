@@ -43,6 +43,12 @@ class Replay(Node):
             if now >= self.finish_time:
                 self.done = True
             return
+        # Resume after a VM pause without flooding the DDS queue with old samples.
+        # Move the replay wall-clock origin; recorded simulation timestamps stay exact.
+        if self.i < len(self.scheduled):
+            lag = now - self.start - self.scheduled[self.i][0]
+            if lag > .15:
+                self.start += lag
         while self.i < len(self.scheduled) and self.scheduled[self.i][0] <= now - self.start:
             self.pub.publish(String(data=json.dumps(self.scheduled[self.i][1], allow_nan=False)))
             self.i += 1

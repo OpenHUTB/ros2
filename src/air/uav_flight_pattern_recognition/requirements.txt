@@ -1,5 +1,0 @@
-# Tested in the existing Ubuntu 20.04 / Python 3.8 CPU environment.
-# Install ROS2 rclpy, std_msgs, launch and colcon through the ROS environment.
-numpy==1.24.4
-torch==2.4.1
-matplotlib>=3.1.2,<3.8
