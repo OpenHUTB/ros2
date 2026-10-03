@@ -81,7 +81,7 @@ ROS每章节运行代码:
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
-* [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/uav_state_prediction.md)
+* [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 

@@ -12,6 +12,7 @@ import time
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import ExternalShutdownException
 from rclpy.utilities import remove_ros_args
 from std_msgs.msg import String
 from nav_msgs.msg import Path as RosPath, Odometry
@@ -173,15 +174,18 @@ def source_main():
     p=argparse.ArgumentParser(); p.add_argument('--host',default='192.168.239.1'); p.add_argument('--vehicle',default='PredictionDrone'); p.add_argument('--csv',default=''); p.add_argument('--speed',type=float,default=1)
     args=p.parse_args(remove_ros_args()[1:]); rclpy.init(); node=StateSource(args)
     try: rclpy.spin(node)
-    except KeyboardInterrupt: pass
-    finally: node.destroy_node(); rclpy.shutdown()
+    except (KeyboardInterrupt, ExternalShutdownException): pass
+    finally:
+        node.destroy_node()
+        if rclpy.ok(): rclpy.shutdown()
 
 
 def predictor_main():
     p=argparse.ArgumentParser(); p.add_argument('--model',required=True); p.add_argument('--error-log',default='')
     args=p.parse_args(remove_ros_args()[1:]); rclpy.init(); node=ForecastNode(args)
     try: rclpy.spin(node)
-    except KeyboardInterrupt: pass
+    except (KeyboardInterrupt, ExternalShutdownException): pass
     finally:
         if node.error_file: node.error_file.close()
-        node.destroy_node(); rclpy.shutdown()
+        node.destroy_node()
+        if rclpy.ok(): rclpy.shutdown()

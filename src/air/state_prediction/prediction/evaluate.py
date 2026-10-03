@@ -54,12 +54,14 @@ def main():
     for variant in ['gru','no_acc_att','mlp']:
         for horizon in HORIZONS:
             rows=[r for r in records if r['model'].startswith(variant+'_') and r['horizon_s']==float(horizon)]
+            if not rows:
+                continue
             summary['seed_summary'].append(dict(variant=variant,horizon_s=float(horizon),seeds=len(rows),
                 position_rmse_mean=float(np.mean([r['position_rmse'] for r in rows])),
                 position_rmse_std=float(np.std([r['position_rmse'] for r in rows])),
                 velocity_rmse_mean=float(np.mean([r['velocity_rmse'] for r in rows]))))
     (a.output/'summary.json').write_text(json.dumps(summary,indent=2))
-    plt.style.use('seaborn-whitegrid')
+    plt.style.use('ggplot')
     loss=np.genfromtxt(a.models/chosen/'loss.csv',delimiter=',',names=True)
     fig,ax=plt.subplots(figsize=(7,4)); ax.plot(loss['epoch'],loss['train_normalized_mse'],label='Train'); ax.plot(loss['epoch'],loss['validation_normalized_mse'],label='Validation')
     ax.set(xlabel='Epoch',ylabel='Normalized residual MSE',title='GRU training: '+chosen); ax.legend(); fig.tight_layout(); fig.savefig(a.output/'loss.png',dpi=160); plt.close(fig)

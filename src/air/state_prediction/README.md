@@ -20,14 +20,69 @@
 
 `main.py` 为统一入口。`demo` 使用仓库内少量真实仿真数据 `data/sample/episode_026.csv` 回放，能展示完整的 **状态发布 → ROS2 → GRU → 预测发布 → 未来真实值到达 → 误差发布 → 绘图** 流程；`live` 直接从 Windows AirSim RPC 取状态。`collect` 才会控制仿真无人机；演示和实时状态桥接本身不下发飞控指令。
 
-## 环境与复现
+## 环境安装、检查与构建
 
-1. 在 Windows 运行 Blocks/AirSim，设置 `SimMode=Multirotor`、`VehicleType=SimpleFlight`、`ApiServerPort=41451`。虚拟机 NAT 时，把 `LocalHostIp` 设为 Windows VMware NAT 网卡 IP；本机是 `192.168.239.1`，不能在其他电脑照抄。`settings.json` 示例见项目交付目录中的 `airsim_settings.json`，或在 Windows 的 AirSim 用户设置中写入对应配置。
-2. Ubuntu 中已有 ROS2 Humble、Python 3.8 和 `colcon`。建立环境：`python3 -m venv --system-site-packages ~/uav_prediction_env`。在该环境中**先**安装 `numpy==1.24.4`、`msgpack-rpc-python==0.4.1`，再安装 `airsim==1.8.1`；AirSim 的旧版安装脚本要求先有 `msgpackrpc`。安装 `matplotlib==3.7.5` 和来自 [PyTorch 官方 CPU 索引](https://pytorch.org/get-started/previous-versions/)的 `torch==2.4.1`。已运行的精确环境记录在 `artifacts/environment_freeze.txt`。不需要下载 CUDA 包。
-3. 把整个模块放在上游仓库的 `src/air/uav_state_prediction/`，进入该目录。执行 `./main.sh build`，然后执行 `./main.sh demo`。若克隆代码后 `main.sh` 无执行位，用 `bash main.sh build` 和 `bash main.sh demo`。在有完整 Ogre 库的机器可用 `./main.sh demo --rviz` 打开 RViz。
-4. 要重新采集，先在仿真窗口确认无人机已落地，执行 `./main.sh collect --host <Windows-VMware-NAT-IP>`；采集完成后依次执行 `./main.sh prepare`、`./main.sh train`、`./main.sh evaluate`。采集约需数分钟，默认 30 个回合，每回合 14 秒。训练和测试完成后再次构建包并演示。
+在 Ubuntu 中先进入 `src/air/state_prediction`。已有环境可跳过创建；首次安装需使用与系统 ROS2 匹配的 `/usr/bin/python3`，避免 Conda 的 `python3` 被误用：
 
-当前虚拟机完整项目在 `/home/user/uav_state_prediction`，已用 `colcon build` 成功构建。Windows 交付目录有相同源代码、完整采集数据和结果。本机约 8.3 GiB 虚拟机内存，可用 CPU 训练，无需配置 GPU 透传。
+```bash
+source /opt/ros/humble/setup.bash
+/usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
+source ~/uav_prediction_env/bin/activate
+python -m pip install -r requirements.txt
+bash main.sh doctor
+bash main.sh build
+```
+
+`requirements.txt` 一次安装 CPU 版 PyTorch、NumPy、Matplotlib、colcon 构建插件和可选仿真客户端的前置依赖；不需要另装 CUDA。ROS2 的 `rclpy`/消息包和 Tk 来自系统 ROS/Python 安装，不能用 pip 安装 ROS2 代替。若创建 venv 报缺少 ensurepip，先安装系统 `python3-venv`；没有图形窗口时检查 `python3-tk`。
+
+已经由 Conda 创建且无法导入 ROS2 的环境，建议保留原环境，另建一个系统 Python venv（例如 `~/ros2_course_env`），激活后运行同一个 requirements 命令。`main.sh` 优先使用 `UAV_ENV` 指定的目录，其次使用当前已激活的 `VIRTUAL_ENV`，最后才使用 `~/uav_prediction_env`；`ROS_SETUP` 可指定 ROS setup 文件。每个新终端都要激活环境，或使用会加载环境的 `main.sh`。
+
+```bash
+source ~/uav_prediction_env/bin/activate
+```
+
+构建通过当前 Python 调用 `colcon_core.command.main`，不依赖非标准的 `python -m colcon` 兼容模块。`doctor` 检查 ROS2、神经网络库和构建插件，打印实际解释器并保存 `artifacts/environment.json`；该环境记录已随本 PR 提交。
+
+目录和 ROS 包已统一更名为 `state_prediction`。请在新目录重新执行 build；旧路径生成的 `build/`、`install/`、`log/` 不要复制到新目录。回放使用随附模型和数据，**无需先启动或下载仿真器**：
+
+```bash
+bash main.sh demo
+```
+
+回放结束后窗口保持显示，按 Ctrl+C 退出。需要完整 Ogre 依赖的 RViz2 时使用 `bash main.sh demo --rviz`。
+
+## 仿真器选择与实际验证范围
+
+新部署推荐使用维护者提供的 [OpenHUTB 模拟器发布页](https://github.com/OpenHUTB/hutb/releases)，选择支持无人机的场景及 AirSim 兼容接口。先使用现有场景和回放验证项目，再按需要下载对应平台版本。
+
+本提交的既有训练数据、曲线和截图来自 Windows Blocks / AirSim 的实际运行，**尚未将这些结果重新标为 OpenHUTB 模拟器实测**。可复用 AirSim RPC 客户端，但具体场景、车辆名、主机地址及端口需按实际配置检查。配置示例随代码保存在 `config/airsim_settings.json`；示例中的 `192.168.239.1` 和 `PredictionDrone` 不应在其他机器盲目照抄。
+
+只有重新采集或实时接入才需要额外安装仿真客户端。先完成核心 requirements，再运行：
+
+```bash
+python -m pip install -r requirements_airsim.txt
+```
+
+核心 requirements 已安装 `numpy` 与 `msgpack-rpc-python`，满足旧版 AirSim 安装脚本的前置导入要求；回放不导入 AirSim。重新采集程序会控制仿真无人机；回放、推理和只读桥接不下发飞控指令。
+
+## 重现训练与测试
+
+仓库附带原始 30 段真实仿真数据压缩包 `assets/flight_corpus.zip`（约 1.6 MiB），首次 prepare 自动解压并校验 CSV 哈希。先用随附的部署模型直接重算指标（此时只评估两个物理基线和 `gru_44`，不伪造缺失的消融模型）：
+
+```bash
+bash main.sh prepare
+bash main.sh evaluate --output results/checkpoint_check
+```
+
+完整三种子训练和消融使用新目录，保留发布模型：
+
+```bash
+bash main.sh prepare
+bash main.sh train --output models/retrained
+bash main.sh evaluate --models models/retrained --output results/retrained
+```
+
+随附部署模型仍为原验证集选择的 `gru_44`，现有结果来自原始实验。也可用 `bash main.sh collect --host <仿真主机IP>` 重新采集，但重新采集产生的新数据不保证逐值重复原始实验。
 
 ## 数据定义与方法
 
@@ -62,7 +117,7 @@
 ![真实与预测对比](results/prediction_comparison.png)
 ![消融实验](results/ablation.png)
 
-模型在同一 Blocks 场景、规则小范围轨迹与同一 SimpleFlight 控制器上训练和测试。未评估强风、碰撞、随机遥控、不同地图和真实无人机；数毫米误差只在本实验条件下成立。若未来控制动作不可知，复杂机动的 1 秒预测通常会更难。`data/raw`、数据清单、种子、全部训练检查点和环境记录随完整课程交付保存；提交上游时遵循仓库对二进制与大数据的限制，仅建议提交小样例和选定模型，完整数据另行提供。
+模型在同一 Blocks 场景、规则小范围轨迹与同一 SimpleFlight 控制器上训练和测试。未评估强风、碰撞、随机遥控、不同地图和真实无人机；数毫米误差只在本实验条件下成立。若未来控制动作不可知，复杂机动的 1 秒预测通常会更难。原始数据、种子、结果和部署模型随本模块保存；提交上游时遵循仓库对二进制与大数据的限制，附带原始数据压缩包和选定部署模型，其他训练权重可用上述入口重建。
 
 ## ROS2 话题与验证
 
@@ -72,6 +127,6 @@
 
 ## 仓库提交说明
 
-将本目录放入 `src/air/uav_state_prediction/`，将配套 `docs/air/uav_state_prediction.md` 加到 `mkdocs.yml` 空域载具导航和 `docs/index.md` 首页。按上游约定验证 `mkdocs serve --livereload`，提交前检查大文件与截图尺寸；上游要求另一台机器由其他人测试并同意才可合并。`data/raw`、`data/processed` 和所有实验检查点默认由 `.gitignore` 排除；选定小模型及样例数据可提交。维护者：zijuan xiao（2535030075@stu.hutb.edu.cn）。
+将本目录放入 `src/air/state_prediction/`，将配套 `docs/air/state_prediction.md` 加到 `mkdocs.yml` 空域载具导航和 `docs/index.md` 首页。按上游约定验证 `mkdocs serve --livereload`，提交前检查大文件与截图尺寸；上游要求另一台机器由其他人测试并同意才可合并。`data/raw`、`data/processed` 和所有实验检查点默认由 `.gitignore` 排除；选定小模型及样例数据可提交。
 
 本项目部分设计、代码与文档使用 OpenAI Codex 辅助生成与检查；测试数据、曲线和截图均来自本机实际运行。提交者需审核代码并对提交内容负责。

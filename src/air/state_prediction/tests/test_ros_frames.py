@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from uav_prediction.ros_nodes import enu,enu_flu_orientation,quat_product
+from prediction.ros_nodes import enu,enu_flu_orientation,quat_product
 
 
 class Frames(unittest.TestCase):

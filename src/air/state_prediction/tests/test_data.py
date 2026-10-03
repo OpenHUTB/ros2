@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from uav_prediction.data import features,baseline,HORIZONS
+from prediction.data import features,baseline,HORIZONS
 
 
 class DataSemantics(unittest.TestCase):

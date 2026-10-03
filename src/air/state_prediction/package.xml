@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>uav_state_prediction</name><version>0.1.0</version>
+  <name>state_prediction</name><version>0.1.0</version>
   <description>AirSim flight-state forecasting and ROS2 online error analysis</description>
   <maintainer email="2535030075@stu.hutb.edu.cn">zijuan xiao</maintainer>
   <license>Apache-2.0</license>
