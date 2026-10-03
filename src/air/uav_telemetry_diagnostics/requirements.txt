@@ -1,5 +1,0 @@
-numpy==1.24.4
-matplotlib==3.7.5
-torch==2.4.1
-# Install the official CPU wheel first (README); this version also accepts +cpu.
-# ROS2 rclpy/std_msgs/diagnostic_msgs are provided by the ROS installation.

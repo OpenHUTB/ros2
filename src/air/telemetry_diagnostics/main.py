@@ -22,8 +22,12 @@ def prepare():
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == 'doctor':
+        from course_environment import doctor
+        doctor(write=True)
+        return
     parser = argparse.ArgumentParser(description='UAV telemetry diagnostics course project')
-    parser.add_argument('command', choices=['prepare', 'train', 'evaluate', 'report', 'test', 'build', 'demo', 'live', 'dashboard'])
+    parser.add_argument('command', choices=['doctor', 'prepare', 'train', 'evaluate', 'report', 'test', 'build', 'demo', 'live', 'dashboard'])
     args, extra = parser.parse_known_args()
     if args.command == 'prepare':
         prepare(); return
@@ -32,9 +36,13 @@ def main():
     if args.command in scripts:
         cmd = [sys.executable, scripts[args.command]] + extra
     elif args.command == 'test':
+        if not (ROOT / 'data/prepared/manifest.json').exists():
+            prepare()
         cmd = [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v']
     elif args.command == 'build':
-        cmd = [sys.executable, '-m', 'colcon', 'build', '--base-paths', '.', '--packages-select', 'uav_telemetry_diagnostics']
+        from course_environment import build
+        build('telemetry_diagnostics',ROOT)
+        return
     else:
         cmd = ['bash', 'main.sh', 'demo'] + extra
     subprocess.run(cmd, cwd=ROOT, check=True)

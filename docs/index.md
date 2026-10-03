@@ -69,7 +69,7 @@ ROS每章节运行代码:
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
-* [无人机遥测异常检测与 ROS2 在线诊断](./air/uav_telemetry_diagnostics.md)
+* [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 

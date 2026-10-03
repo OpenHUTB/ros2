@@ -27,23 +27,50 @@
 - 本机 Humble/Ubuntu 20.04 是既有非标准组合；没有为此重装系统。其他系统尚未独立验证。
 - 可视化使用 Tk/matplotlib 的实际 ROS2 订阅窗口，无需本机缺少 Ogre 的 RViz2。
 
-在项目目录中，已有环境直接加载：
+## 环境安装、检查与构建
+
+在 Ubuntu 中先进入 `src/air/telemetry_diagnostics`。已有环境可跳过创建；首次安装需使用与系统 ROS2 匹配的 `/usr/bin/python3`，避免 Conda 的 `python3` 被误用：
 
 ```bash
 source /opt/ros/humble/setup.bash
+/usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
 source ~/uav_prediction_env/bin/activate
+python -m pip install -r requirements.txt
+bash main.sh doctor
+bash main.sh build
 ```
 
-新 Python 环境应继承已安装的 ROS2 Python 库。下列安装步骤只用于缺少依赖的环境，本机不需要重复下载：
+`requirements.txt` 一次安装 CPU 版 PyTorch、NumPy、Matplotlib、colcon 构建插件和可选仿真客户端的前置依赖；不需要另装 CUDA。ROS2 的 `rclpy`/消息包和 Tk 来自系统 ROS/Python 安装，不能用 pip 安装 ROS2 代替。若创建 venv 报缺少 ensurepip，先安装系统 `python3-venv`；没有图形窗口时检查 `python3-tk`。
+
+已经由 Conda 创建且无法导入 ROS2 的环境，建议保留原环境，另建一个系统 Python venv（例如 `~/ros2_course_env`），激活后运行同一个 requirements 命令。`main.sh` 优先使用 `UAV_ENV` 指定的目录，其次使用当前已激活的 `VIRTUAL_ENV`，最后才使用 `~/uav_prediction_env`；`ROS_SETUP` 可指定 ROS setup 文件。每个新终端都要激活环境，或使用会加载环境的 `main.sh`。
 
 ```bash
-python3 -m venv --system-site-packages ~/uav_prediction_env
 source ~/uav_prediction_env/bin/activate
-python -m pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -r requirements.txt
 ```
 
-ROS2 自身、colcon、Tk 由系统提供；运行实时 AirSim 接入时，再先安装 `msgpack-rpc-python==0.4.1`，后安装 `airsim==1.8.1`。回放不需要安装 AirSim Python 库。IP 与用户名不是通用配置，另一台机器需按实际环境设置。
+构建通过当前 Python 调用 `colcon_core.command.main`，不依赖非标准的 `python -m colcon` 兼容模块。`doctor` 检查 ROS2、神经网络库和构建插件，打印实际解释器并保存 `artifacts/environment.json`；该环境记录已随本 PR 提交。
+
+目录和 ROS 包已统一更名为 `telemetry_diagnostics`。请在新目录重新执行 build；旧路径生成的 `build/`、`install/`、`log/` 不要复制到新目录。回放使用随附模型和数据，**无需先启动或下载仿真器**：
+
+```bash
+bash main.sh demo
+```
+
+另一个已加载同一环境的桌面终端运行 `python main.py dashboard`。回放约 28 秒，检测节点随后退出。
+
+## 仿真器选择与实际验证范围
+
+新部署推荐使用维护者提供的 [OpenHUTB 模拟器发布页](https://github.com/OpenHUTB/hutb/releases)，选择支持无人机的场景及 AirSim 兼容接口。先使用现有场景和回放验证项目，再按需要下载对应平台版本。
+
+本提交的既有训练数据、曲线和截图来自 Windows Blocks / AirSim 的实际运行，**尚未将这些结果重新标为 OpenHUTB 模拟器实测**。可复用 AirSim RPC 客户端，但具体场景、车辆名、主机地址及端口需按实际配置检查。配置示例随代码保存在 `config/airsim_settings.json`；示例中的 `192.168.239.1` 和 `PredictionDrone` 不应在其他机器盲目照抄。
+
+只有重新采集或实时接入才需要额外安装仿真客户端。先完成核心 requirements，再运行：
+
+```bash
+python -m pip install -r requirements_airsim.txt
+```
+
+核心 requirements 已安装 `numpy` 与 `msgpack-rpc-python`，满足旧版 AirSim 安装脚本的前置导入要求；回放不导入 AirSim。重新采集程序会控制仿真无人机；回放、推理和只读桥接不下发飞控指令。
 
 ## 3. 最快演示
 
@@ -60,7 +87,7 @@ bash main.sh demo
 
 ```bash
 source install/setup.bash
-ros2 launch uav_telemetry_diagnostics main.launch.py model:="$PWD/models/consistency_42" csv:="$PWD/sample/observations.csv" plot:=true
+ros2 launch telemetry_diagnostics main.launch.py model:="$PWD/models/consistency_42" csv:="$PWD/sample/observations.csv" plot:=true
 ```
 
 演示仿真时间约 18 秒，加上启动等待约 21 秒，脚本自动退出并清理子进程。看板可保留曲线，关闭时导出图片。`sample/evaluation_only.csv` 不会送给诊断节点。
@@ -129,7 +156,7 @@ seed42 在最轻微 0.03 强度下，位置漂移平均检出延迟 0.323 秒、
 
 ```bash
 python main.py live --ros-args -p host:=192.168.239.1 -p vehicle:=PredictionDrone
-ros2 run uav_telemetry_diagnostics telemetry_diagnostics --ros-args -p model:="$PWD/models/consistency_42"
+ros2 run telemetry_diagnostics telemetry_diagnostics --ros-args -p model:="$PWD/models/consistency_42"
 ```
 
 本机实际验证了实时桥接读取已落地无人机；**最终异常展示采用真实飞行数据回放**，未宣称进行了在线飞行故障注入。安全边界：本模块不控制飞行；只有 `collect_holdout.py` 是明确的仿真飞行采集程序，需先确认使用仿真器且无人机已落地。

@@ -23,7 +23,7 @@ OpenHUTB 无人机状态预测项目，研究遥测可靠性，不执行导航�
 
 准备数据：
 ```text
-python telemetry_data.py --source ../uav_state_prediction/data --output data/prepared
+python telemetry_data.py --source ../state_prediction/data --output data/prepared
 python -m unittest discover -s tests -v
 ```
 

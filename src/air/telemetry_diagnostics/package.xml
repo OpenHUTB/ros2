@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>uav_telemetry_diagnostics</name>
+  <name>telemetry_diagnostics</name>
   <version>0.1.0</version>
   <description>Neural UAV telemetry anomaly detection and ROS2 diagnostics</description>
   <maintainer email="2535030075@stu.hutb.edu.cn">zijuan xiao</maintainer>

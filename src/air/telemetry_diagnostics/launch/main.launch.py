@@ -12,10 +12,10 @@ def generate_launch_description():
         DeclareLaunchArgument('model', description='Absolute model directory containing model.pt and config.json'),
         DeclareLaunchArgument('csv', description='Absolute observations.csv replay path'),
         DeclareLaunchArgument('plot', default_value='true'),
-        Node(package='uav_telemetry_diagnostics', executable='telemetry_diagnostics',
+        Node(package='telemetry_diagnostics', executable='telemetry_diagnostics',
              parameters=[{'model': LaunchConfiguration('model')}]),
-        Node(package='uav_telemetry_diagnostics', executable='telemetry_replay',
+        Node(package='telemetry_diagnostics', executable='telemetry_replay',
              parameters=[{'csv': LaunchConfiguration('csv'), 'startup_delay': 3.}]),
-        Node(package='uav_telemetry_diagnostics', executable='telemetry_dashboard',
+        Node(package='telemetry_diagnostics', executable='telemetry_dashboard',
              condition=IfCondition(LaunchConfiguration('plot'))),
     ])
