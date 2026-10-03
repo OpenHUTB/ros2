@@ -12,6 +12,28 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+try:
+    import yaml
+except ImportError:      # 极简环境里没有 pyyaml 时退回文档中的默认增益
+    yaml = None
+
+
+def default_gains():
+    """params.yaml 里的默认增益，用来挑出“默认增益那一次”的日志"""
+    kp, ki, kd = 1.0, 0.05, 0.2
+    if yaml is not None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "..", "config", "params.yaml")
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                pid = (yaml.safe_load(f) or {}).get("pid", {})
+            kp = float(pid.get("kp", kp))
+            ki = float(pid.get("ki", ki))
+            kd = float(pid.get("kd", kd))
+        except (OSError, ValueError, AttributeError):
+            pass
+    return kp, ki, kd
+
 
 def load(path):
     rows = []
@@ -56,6 +78,9 @@ def main():
     ap.add_argument("--log-dir",
                     default=os.path.expanduser("~/uav_waypoint_tracking_logs"))
     ap.add_argument("--out", default=".")
+    ap.add_argument("--pid-log", default=None,
+                    help="指定用作主曲线的 PID 日志；默认自动挑与 params.yaml "
+                         "默认增益一致的那一次运行")
     a = ap.parse_args()
 
     if not os.path.isdir(a.out):
@@ -71,7 +96,18 @@ def main():
         print("no pid log found:", os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))
         return
 
-    main_pid = max(pid_files, key=os.path.getmtime)
+    # 主曲线要取“默认增益”那一次运行：日志名里带 kp/ki/kd，若直接取最新的一份，
+    # 增益实验里最后跑的强增益组会把默认组顶掉，曲线就和文档表格（默认增益）对不上了。
+    default_tag = "kp%.2f_ki%.2f_kd%.2f" % default_gains()
+    if a.pid_log:
+        main_pid = a.pid_log
+    else:
+        preferred = [p for p in pid_files
+                     if os.path.basename(p).endswith(default_tag + ".csv")]
+        main_pid = max(preferred or pid_files, key=os.path.getmtime)
+        if not preferred:
+            print("警告：没有找到默认增益（%s）的日志，暂用 %s"
+                  % (default_tag, os.path.basename(main_pid)))
     pid = load(main_pid)
     bui = load(bfile) if os.path.exists(bfile) else None
     print("pid log :", main_pid)
