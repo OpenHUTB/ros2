@@ -3,7 +3,7 @@
 <package format="3">
   <name>rov_mujoco</name>
   <version>0.1.0</version>
-  <description>水下机器人 MuJoCo 仿真 ROS2 功能包 - 机器人操作系统及应用课程</description>
+  <description>水下机器人 MuJoCo 物理仿真与自主感知控制功能包</description>
   <maintainer email="syysean@github.com">shark</maintainer>
   <license>MIT</license>
 

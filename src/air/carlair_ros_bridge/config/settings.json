@@ -1,0 +1,58 @@
+{
+  "SettingsVersion": 2.0,
+  "SimMode": "Multirotor",
+  "ClockType": "SteppableClock",
+  "OriginGeopoint": {
+    "Latitude": 28.1464,
+    "Longitude": 112.9989,
+    "Altitude": 50
+  },
+  "Vehicles": {
+    "Drone1": {
+      "VehicleType": "SimpleFlight",
+      "AutoCreate": true,
+      "X": 0, "Y": 0, "Z": 0,
+      "Cameras": {
+        "front_rgb": {
+          "CaptureSettings": [
+            { "ImageType": 0, "Width": 640, "Height": 480, "FOV_Degrees": 90 }
+          ],
+          "X": 0.3, "Y": 0.0, "Z": -0.1,
+          "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+        },
+        "front_depth": {
+          "CaptureSettings": [
+            { "ImageType": 1, "Width": 640, "Height": 480, "FOV_Degrees": 90 }
+          ],
+          "X": 0.3, "Y": 0.0, "Z": -0.1
+        },
+        "front_seg": {
+          "CaptureSettings": [
+            { "ImageType": 5, "Width": 640, "Height": 480, "FOV_Degrees": 90 }
+          ],
+          "X": 0.3, "Y": 0.0, "Z": -0.1
+        }
+      },
+      "Sensors": {
+        "lidar1": {
+          "SensorType": 6,
+          "Enabled": true,
+          "NumberOfChannels": 16,
+          "RotationsPerSecond": 10,
+          "PointsPerSecond": 100000,
+          "VerticalFOVUpper": 15,
+          "VerticalFOVLower": -15,
+          "HorizontalFOVStart": -180,
+          "HorizontalFOVEnd": 180,
+          "X": 0, "Y": 0, "Z": -0.2,
+          "DrawDebugPoints": false,
+          "DataFrame": "VehicleInertialFrame"
+        },
+        "imu1": {
+          "SensorType": 2,
+          "Enabled": true
+        }
+      }
+    }
+  }
+}
