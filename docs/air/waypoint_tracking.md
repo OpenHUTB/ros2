@@ -228,9 +228,11 @@ t, wp, x_ref, y_ref, z_ref, x, y, z, ex, ey, ez, dist, phase
 
 轨迹 RMS 误差：总 0.198 m（水平 0.150 m，高度 0.128 m）。第 7 个航点是从 (1.25, -2.18, 5.50) 返回原点的长距离下降段，用时最长但超调最小——距离越远，减速时间越充足。
 
-轨迹对比与实际飞行画面：
+轨迹与误差（以螺旋任务为例），以及实际飞行画面：
 
-![矩形任务的轨迹与高度对比](../img/air/trajectory_rectangle.png)
+![螺旋任务的轨迹与高度对比](../img/air/trajectory_spiral.png)
+
+![螺旋任务的误差随时间变化（虚线为 0.25 m 的到达判据）](../img/air/error_spiral.png)
 
 ![OpenHUTB 模拟器（Town10HD 场景）中的四旋翼](../img/air/waypoint_tracking_flight.png)
 
@@ -303,6 +305,8 @@ python3 road_mission.py --xodr <hutb>/CarlaUE4/Content/Carla/Maps/OpenDrive/Town
 ![PID 与内置接口的轨迹与高度对比](../img/air/trajectory_rectangle.png)
 
 ![PID 与内置接口的误差曲线对比](../img/air/error_rectangle.png)
+
+![逐航点的到达时间与稳态误差对比（内置接口在第 4、5 个航点超时，没有柱子）](../img/air/metrics_rectangle.png)
 
 从高度子图可以看到关键差异：**内置接口在高度方向存在系统性偏差**（高度 RMS 误差 0.370 m，稳定后停在目标高度上方约 0.4 米处）。由于到达判据是三维距离小于 0.25 米，仅高度这一项偏差就使第 4、5 个航点在 20 秒超时时间内无法进入容差范围；而自研 PID 含积分项，能把恒定偏差压到 0.2 米以内（平均稳态误差 0.208 m）。
 
