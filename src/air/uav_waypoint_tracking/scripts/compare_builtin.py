@@ -53,20 +53,32 @@ class BuiltinTracker(object):
         self.t0 = None
         self.client = None
         self.landed = False
+        self.home_ned = None      # 起飞点（AirSim NED 世界坐标），作为坐标原点
 
     def connect(self):
         self.client = airsim.MultirotorClient(ip=self.ip, timeout_value=10.0)
         self.client.confirmConnection()
+
+        # 与 pid_tracker 一致：以起飞点为坐标原点，兼容 OpenHUTB/CarlaAir
+        # （其世界原点与地面不重合，用绝对高度会多爬升十几米）
+        home = self.client.getMultirotorState(
+            vehicle_name=self.vehicle).kinematics_estimated.position
+        self.home_ned = (home.x_val, home.y_val, home.z_val)
+
         self.client.enableApiControl(True, self.vehicle)
         self.client.armDisarm(True, self.vehicle)
         self.client.takeoffAsync(vehicle_name=self.vehicle).join()
-        self.client.moveToZAsync(-self.takeoff_alt, 1.0,
+        self.client.moveToZAsync(self.home_ned[2] - self.takeoff_alt, 1.0,
                                  vehicle_name=self.vehicle).join()
-        rospy.loginfo("已起飞到 %.1f 米（对照组：AirSim 内置接口）", self.takeoff_alt)
+        rospy.loginfo("已起飞到 %.1f 米（相对起飞点；对照组：AirSim 内置接口）",
+                      self.takeoff_alt)
 
     def pose(self):
+        """相对起飞点的 ENU 位置：x 向东、y 向北、z 向上"""
         st = self.client.getMultirotorState(vehicle_name=self.vehicle)
-        return ned_to_enu(st.kinematics_estimated.position)
+        pos = st.kinematics_estimated.position
+        hx, hy, hz = self.home_ned
+        return (pos.y_val - hy, pos.x_val - hx, hz - pos.z_val)
 
     def fly_to(self, target, index):
         start = self.pose()
@@ -75,7 +87,10 @@ class BuiltinTracker(object):
         seg_dir = [v / seg_len for v in seg]
 
         ned = enu_to_ned(target[0], target[1], target[2])
-        self.client.moveToPositionAsync(ned.x_val, ned.y_val, ned.z_val,
+        # ENU（相对起飞点）-> NED（绝对世界坐标）
+        self.client.moveToPositionAsync(ned.x_val + self.home_ned[0],
+                                        ned.y_val + self.home_ned[1],
+                                        ned.z_val + self.home_ned[2],
                                         self.speed, timeout_sec=self.wp_timeout,
                                         yaw_mode=airsim.YawMode(False, 0),
                                         vehicle_name=self.vehicle)

@@ -130,6 +130,7 @@ class WaypointTracker(object):
         self.t0 = None
         self.landed = False
         self.client = None
+        self.home_ned = None      # 起飞点（AirSim NED 世界坐标），作为坐标原点
 
     # -------------------------------------------------------------- 基础动作
     def connect(self):
@@ -137,16 +138,29 @@ class WaypointTracker(object):
             ip=self.ip, timeout_value=self.timeout_value)
         self.client.confirmConnection()
         rospy.loginfo("已连接 AirSim: %s (%s)", self.ip, self.vehicle)
+
+        # 以起飞点为坐标原点。不同模拟器的世界原点与地面的相对高度并不相同
+        # （AirSim Blocks 的原点基本在地面，OpenHUTB/CarlaAir 的原点在地面上方），
+        # 所以高度必须相对起飞点计算，否则"起飞 3 米"会变成"爬升十几米"。
+        home = self.client.getMultirotorState(
+            vehicle_name=self.vehicle).kinematics_estimated.position
+        self.home_ned = (home.x_val, home.y_val, home.z_val)
+        rospy.loginfo("起飞点（AirSim NED 世界坐标）: (%.2f, %.2f, %.2f)",
+                      self.home_ned[0], self.home_ned[1], self.home_ned[2])
+
         self.client.enableApiControl(True, self.vehicle)
         self.client.armDisarm(True, self.vehicle)
         self.client.takeoffAsync(vehicle_name=self.vehicle).join()
-        self.client.moveToZAsync(-self.takeoff_alt, 1.0,
+        self.client.moveToZAsync(self.home_ned[2] - self.takeoff_alt, 1.0,
                                  vehicle_name=self.vehicle).join()
-        rospy.loginfo("已起飞并稳定在 %.1f 米", self.takeoff_alt)
+        rospy.loginfo("已起飞并稳定在 %.1f 米（相对起飞点）", self.takeoff_alt)
 
     def pose_enu(self):
-        state = self.client.getMultirotorState(vehicle_name=self.vehicle)
-        return ned_to_enu(state.kinematics_estimated.position)
+        """相对起飞点的 ENU 位置：x 向东、y 向北、z 向上"""
+        pos = self.client.getMultirotorState(
+            vehicle_name=self.vehicle).kinematics_estimated.position
+        hx, hy, hz = self.home_ned
+        return (pos.y_val - hy, pos.x_val - hx, hz - pos.z_val)
 
     def send_velocity(self, v_enu):
         """把 ENU 速度指令发给 AirSim（内部转换为 NED 世界坐标系）"""

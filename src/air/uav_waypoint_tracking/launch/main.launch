@@ -39,6 +39,11 @@
   <arg name="log_dir" default="$(env HOME)/uav_waypoint_tracking_logs"
        doc="实验日志目录"/>
 
+  <!-- 载具名：OpenHUTB 模拟器（CarlaAir）默认是 SimpleFlight；
+       AirSim Blocks 场景下是 Drone1 -->
+  <arg name="vehicle" default="SimpleFlight"
+       doc="AirSim 载具名，需与模拟器 settings.json 中的名字一致"/>
+
   <!-- 是否同时启动对照组（AirSim 内置位置接口） -->
   <arg name="run_builtin" default="false"
        doc="true 时额外启动对照组节点 compare_builtin"/>
@@ -59,6 +64,7 @@
   <param name="pid/ki" value="$(arg ki)" type="double"/>
   <param name="pid/kd" value="$(arg kd)" type="double"/>
   <param name="log_dir" value="$(arg log_dir)" type="str"/>
+  <param name="airsim/vehicle_name" value="$(arg vehicle)" type="str"/>
 
   <!-- 3) 主节点：自研 PID 航点跟踪 -->
   <node if="$(arg run_pid)" pkg="uav_waypoint_tracking" type="pid_tracker.py"

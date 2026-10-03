@@ -61,7 +61,11 @@ def main():
     if not os.path.isdir(a.out):
         os.makedirs(a.out)
 
-    pid_files = sorted(glob.glob(os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission)))
+    # 注意：必须排除 *_metrics.csv —— 否则"指标汇总文件"会被当成轨迹日志读进来
+    # （它的第一列是文字，会报 could not convert string to float）
+    pid_files = sorted(
+        p for p in glob.glob(os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))
+        if not p.endswith("_metrics.csv"))
     bfile = os.path.join(a.log_dir, "builtin_%s.csv" % a.mission)
     if not pid_files:
         print("no pid log found:", os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))

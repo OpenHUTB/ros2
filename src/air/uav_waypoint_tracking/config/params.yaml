@@ -1,7 +1,8 @@
 # 与 AirSim 模拟器的连接参数
 airsim:
   ip: "192.168.237.1"        # 宿主机 VMnet8 地址，每台机器可能不同（用 ipconfig 查看）
-  vehicle_name: "Drone1"
+  vehicle_name: "SimpleFlight"   # OpenHUTB 模拟器（CarlaAir）里的默认载具名；
+                                 # AirSim Blocks 场景下是 "Drone1"，可用 launch 参数 vehicle:= 覆盖
   timeout: 10.0
 
 # 飞行参数（长度单位：米；高度按 ROS 习惯，Z 轴向上为正）
@@ -39,3 +40,14 @@ missions:
     - [-1.10, -1.91, 5.0]
     - [1.25, -2.18, 5.5]
     - [0.00,  0.00, 3.0]
+  # 沿道路飞行：由 scripts/road_mission.py 从 OpenHUTB 场景的 OpenDRIVE 地图
+  # （Town10HD.xodr，road_id=20）生成，航点相对起飞点、高度 3 米。
+  # 东向 +5 米是实测标定值（起飞点与地图原点之间的横向残差）。
+  # 重新生成：python3 road_mission.py --xodr <地图> --nearest-to-home ...
+  road_town10hd:
+    - [22.43, -2.78, 3.0]
+    - [22.42,  3.12, 3.0]
+    - [22.40,  9.03, 3.0]
+    - [22.38, 14.94, 3.0]
+    - [22.37, 20.84, 3.0]
+    - [22.35, 26.75, 3.0]
