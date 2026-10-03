@@ -2,7 +2,7 @@
 
 本文介绍空域载具的**航点轨迹跟踪**实验：用自研 PID 控制器驱动模拟器中的四旋翼依次飞过给定航点，记录真实轨迹，并与模拟器内置位置接口在**同一组航点、同一速度上限、同一到达判据**下对比，给出到达时间、稳态误差、超调量、轨迹均方根误差等量化指标。
 
-实验不需要激光雷达等额外传感器，模拟器自带场景即可复现；模拟器推荐优先使用 **OpenHUTB 模拟器**（兼容 AirSim 接口），控制算法运行在客户机的 ROS 节点中，与[建立虚拟机和空域载具之间的连接](./setup_and_connect.md)使用的是同一套连接方式。
+实验不需要激光雷达等额外传感器，模拟器自带场景即可复现；模拟器推荐优先使用 **OpenHUTB 模拟器**（兼容 AirSim 接口），控制算法运行在客户机的 ROS 节点中，与[建立虚拟机和空域载具之间的连接](./setup_and_connect.md)使用的是同一套连接方式。除人工给定的几何航点外，本文还给出一组取自 OpenHUTB 场景地图道路（OpenDRIVE 文件表示的道路）的航点，让四旋翼沿道路上方飞行，见第 9 节。
 
 ## 1. 实验目的
 
@@ -97,7 +97,6 @@ class PID(object):
 | `scripts/compare_builtin.py` | 对照组：改用模拟器内置位置接口 `moveToPositionAsync` 飞同样的航点 |
 | `scripts/plot_tracking.py` | 读取日志 CSV，绘制轨迹对比图、误差曲线、指标柱状图与增益对比图 |
 | `scripts/road_mission.py` | 解析 OpenDRIVE 地图（`.xodr`）生成“沿道路飞行”的航点 |
-| `scripts/road_probe.py` | 探路工具：列道路、打印无人机 NED 位置，辅助标定坐标换算 |
 | `config/params.yaml` | 连接参数、飞行参数、PID 增益、四套航点序列 |
 | `launch/main.launch` | 一键启动入口，支持命令行覆盖任务名、PID 增益与载具名 |
 
@@ -239,7 +238,7 @@ t, wp, x_ref, y_ref, z_ref, x, y, z, ex, ey, ez, dist, phase
 
 前几节的任务都是人工给定的几何航点。OpenHUTB 场景自带道路数据（每张地图都有对应的 `.xodr` 文件），把**道路中心线**取出来当航点，就能让四旋翼沿着街道上方飞行。
 
-**航点生成**：包里的 `scripts/road_mission.py` 直接解析 `.xodr`（只用 Python 标准库），支持 `line` 与 `arc` 两类几何，按固定间距采样中心线，再换算成本包的任务格式：
+**航点生成**：包里的 `scripts/road_mission.py` 直接解析 `.xodr`（只用 Python 标准库），支持 `line` 与 `arc` 两类几何，按固定间距采样中心线，再换算成本包的任务格式。之所以不用 CARLA 的 Python 客户端去问路网：本版 OpenHUTB 切到 AIR 游戏模式后没有可用的 CARLA episode，切回 CARLA 模式时响应里又混有非 UTF-8 字符串、客户端解码会失败；直接读地图文件既不需要额外依赖，结果也能稳定复现。
 
 ```bash
 python3 road_mission.py --xodr <hutb>/CarlaUE4/Content/Carla/Maps/OpenDrive/Town10HD.xodr \
