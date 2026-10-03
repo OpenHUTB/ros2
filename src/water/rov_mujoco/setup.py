@@ -19,6 +19,8 @@ setup(
         (os.path.join('share', package_name, 'models'), glob('models/*.xml') + glob('models/*.json')),
         (os.path.join('share', package_name, 'models', 'meshes', 'ur5e'), glob('models/meshes/ur5e/*')),
         (os.path.join('share', package_name, 'models', 'meshes', 'robotiq'), glob('models/meshes/robotiq/*')),
+        # 地图文件
+        (os.path.join('share', package_name, 'maps'), glob('maps/*')),
     ],
     package_data={
         package_name: ['*.npz'],
@@ -33,6 +35,8 @@ setup(
         'console_scripts': [
             'mujoco_sim_node = rov_mujoco.mujoco_sim_node:main',
             'keyboard_teleop_node = rov_mujoco.keyboard_teleop_node:main',
+            'sonar_slam_node = rov_mujoco.sonar_slam_node:main',
+            'autonomous_navigation_node = rov_mujoco.autonomous_navigation_node:main',
         ],
     },
 )

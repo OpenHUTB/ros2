@@ -73,10 +73,10 @@ graph TD
 \mathbf{d}_{w, i} = \mathbf{R}_{wb} \begin{bmatrix} \cos\theta_i \\ \sin\theta_i \\ 0 \end{bmatrix}
 \]
 
-利用 MuJoCo 高性能射线碰撞检测原语 `mj_ray`，求解声束与水下结构物（海底管线、基座结构体等）的最近相交距离 \(r_i\)：
+利用 MuJoCo 几何碰撞检测原语 `mj_ray`，传入声呐传感器空间坐标 \(\mathbf{p}_s\) 与波束方向 \(\mathbf{d}_{w, i}\)，排除 ROV 机体自身碰撞体（`bodyexclude`），求解声束与水下结构物（海底管线、基座结构等）几何表面的最近相交距离 \(r_i\)：
 
 \[
-r_i = \text{mj\_ray}(\text{model}, \text{data}, \mathbf{p}_s, \mathbf{d}_{w, i}, \text{bodyexclude}=\text{body\_id})
+r_i = \min \left\{ d > 0 \;\middle|\; \mathbf{p}_s + d \cdot \mathbf{d}_{w, i} \in \partial \mathcal{O}_{\text{env}} \right\}
 \]
 
 若未命中障碍物或超出量程，则截断为最大量程 \(R_{\max} = 15.0 \, \text{m}\)。
@@ -352,6 +352,17 @@ F_z = K_{p,z} e_{z} + K_{d,z} e_{vz} + K_{ff,z} \dot{z}_d \\
 ---
 
 ## 7. 运行与测试操作指引
+
+!!! tip "前置环境与依赖准备"
+    在运行本任务前，请先确保已完成 ROS 2 环境与基础功能包的安装与编译。如果您是初次运行该模块，请先阅读：
+    👉 [水下机器人物理仿真与键盘运动控制（任务一：环境配置与快速安装）](https://openhutb.github.io/ros2/water/rov_physical_simulation/)，完成核心依赖（MuJoCo 仿真库、NumPy、SciPy 等）的安装及工作空间构建：
+    ```bash
+    # 1. 安装核心 Python 依赖
+    pip3 install mujoco numpy scipy pyyaml
+    # 2. 编译 ROS 2 功能包并加载环境
+    colcon build --packages-select rov_mujoco --symlink-install
+    source install/setup.bash
+    ```
 
 功能包遵循 ROS 2 开源规范，所有主入口支持 `main.py` 原生参数调用与 `ros2 launch` 启动。
 
