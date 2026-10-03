@@ -1,0 +1,28 @@
+{
+  "python": "3.8.10 (default, Mar 18 2025, 20:04:55) \n[GCC 9.4.0]",
+  "executable": "/home/user/uav_prediction_env/bin/python",
+  "ros_distro": "humble",
+  "packages": {
+    "numpy": "1.24.4",
+    "torch": "2.4.1+cpu",
+    "matplotlib": "3.1.2",
+    "pip": "20.0.2",
+    "setuptools": "44.0.0",
+    "colcon-core": "0.12.1",
+    "colcon-common-extensions": "0.3.0"
+  },
+  "required_imports": [
+    "numpy",
+    "torch",
+    "matplotlib",
+    "rclpy",
+    "std_msgs",
+    "launch_ros",
+    "colcon_core",
+    "colcon_ros",
+    "colcon_python_setup_py",
+    "colcon_package_selection",
+    "colcon_recursive_crawl"
+  ],
+  "passed": true
+}

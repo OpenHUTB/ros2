@@ -1,0 +1,19 @@
+{
+  "episode_id": "episode_026",
+  "family": "circle",
+  "split": "test",
+  "seed": 20260954,
+  "amplitude": 0.8002027248947411,
+  "omega": 0.389519179218534,
+  "phase": 2.59258995441726,
+  "samples": 281,
+  "duration_sim_s": 13.989298432,
+  "median_dt_s": 0.051001088,
+  "max_dt_s": 0.054001152000000004,
+  "timestamps_strictly_increasing": true,
+  "collision_count": 0,
+  "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD",
+  "source": "Windows Blocks / AirSim RPC getMultirotorState",
+  "airsim_python_version": "1.8.1",
+  "sha256": "fecd7e6e50586cd2790aa071d22fd9beb8b3ed050e650110cf530464c3ad9bd4"
+}

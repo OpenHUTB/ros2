@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+build/
+install/
+log/
+data/processed/
+data/raw/
+data/live_demo/
+artifacts/*
+!artifacts/environment.json
+!artifacts/review_validation.json
+results/online_errors.jsonl
+# Keep the selected small model only after checking the upstream binary policy.
+models/*
+!models/gru_44/
+models/gru_44/*
+!models/gru_44/model.pt
+!models/gru_44/config.json
+
+# Upstream ignores every data/ directory; retain only the small replay sample.
+!data/
+data/*
+!data/sample/
+
+!models/gru_44/loss.csv
