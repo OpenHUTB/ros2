@@ -7,10 +7,12 @@
 本模块聚焦于水下自主航行器（Autonomous Underwater Vehicle, AUV / ROV）在未知复杂水下环境中的**多模态自主感知**与**空间高精度航迹控制**两大核心能力：
 
 1. **水下多传感器感知系统**：
-   在 MuJoCo 物理引擎中建立高密度前视成像声呐（Forward-Looking Sonar）、前视光学相机（RGB Camera）、6 轴微机电惯导系统（IMU）以及高精度压阻式水深计。解算声学射线散射方程与水体光学衰减定律，通过 ROS 2 标准话题集群实时对外发布感知数据流。
+
+    在 MuJoCo 物理引擎中建立高密度前视成像声呐（Forward-Looking Sonar）、前视光学相机（RGB Camera）、6 轴微机电惯导系统（IMU）以及高精度压阻式水深计。解算声学射线散射方程与水体光学衰减定律，通过 ROS 2 标准话题集群实时对外发布感知数据流。
 
 2. **神经网络 3D 空间轨迹自主跟踪控制**：
-   设计 3D 空间立体螺旋巡检航迹（3D Helical Inspection Trajectory）与全域地毯式搜索巡航路径（Lawnmower Path）。构建深度神经网络（MLP Policy，10 维输入 \(\to\) 64 \(\to\) 64 \(\to\) 4 维控制推力）闭环轨迹跟踪控制器，支持 PyTorch 与 NumPy 双后端无缝切换。在“静水工况”与“三层剪切强洋流工况”双重场景下，与经典视线法（Line-of-Sight, LOS）+ 解耦 PID 控制器进行多维度的学术量化对比。
+
+    设计 3D 空间立体螺旋巡检航迹（3D Helical Inspection Trajectory）与全域地毯式搜索巡航路径（Lawnmower Path）。构建深度神经网络（MLP Policy，10 维输入 \(\to\) 64 \(\to\) 64 \(\to\) 4 维控制推力）闭环轨迹跟踪控制器，支持 PyTorch 与 NumPy 双后端无缝切换。在“静水工况”与“三层剪切强洋流工况”双重场景下，与经典视线法（Line-of-Sight, LOS）+ 解耦 PID 控制器进行多维度的学术量化对比。
 
 ```mermaid
 graph TD
