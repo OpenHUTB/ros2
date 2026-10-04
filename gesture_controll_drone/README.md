@@ -15,3 +15,4 @@ cd ~/gesture_ws
 catkin_make
 source devel/setup.bash
 roslaunch gesture_controll_drone gesture_control.launch
+<img width="3072" height="4096" alt="199d7acf0b95f7b2028ecea3ed02bd36" src="https://github.com/user-attachments/assets/e3aa2a80-fed8-44a1-b763-c561d6401929" />
