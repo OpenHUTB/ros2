@@ -1,0 +1,7 @@
+<launch>
+  <!-- 任务4：端到端 深度图->速度 推理 -->
+  <arg name="ckpt" default="data/e2e_cnn.pt"/>
+  <arg name="seconds" default="30"/>
+  <node pkg="airsim_controller" type="task4_e2e_main.py" name="task4_e2e"
+        output="screen" args="--ckpt $(arg ckpt) --seconds $(arg seconds)"/>
+</launch>
