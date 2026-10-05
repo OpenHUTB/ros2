@@ -37,6 +37,7 @@ python3 car_move.py
 - 方式 2：终端按下 `Ctrl + C` 终止程序
 
 6. 使用 Peek 录屏工具，框选仿真窗口录制运动画面，保存为 car_demo.gif
-7. ## 五、原理简述
+7. ![小车往复运动仿真动图](car_demo.gif)
+8. ## 五、原理简述
 
 利用 pybullet 加载 URDF 机器人模型，通过`setJointMotorControl2`控制车轮关节速度；使用取余运算实现周期计时，分段设置车轮正 / 反向速度，实现往复运动，`stepSimulation()`持续推进物理仿真。
