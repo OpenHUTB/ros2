@@ -47,3 +47,9 @@ python3 main.py --text "HELLO"
 ## 效果演示
 
 ![书写演示](demo.gif)
+
+## 常见问题
+
+- **启动报错 "is not a valid package name"**：launch 路径要带 `./` 前缀：`ros2 launch ./launch/turtle_writer.launch.py`。
+- **中文写不出来/乱码**：确认已安装中文字体：`sudo apt install -y fonts-noto-cjk`。
+- **字太糊**：模块默认使用"轮廓描边"画法，笔画密集的汉字也能清晰显示；若文字过长会自动缩小字号。
