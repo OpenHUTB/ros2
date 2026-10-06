@@ -8,6 +8,7 @@ add_definitions(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
   roscpp
   rospy
   std_msgs
@@ -151,29 +152,50 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(tts_subscribe src/tts_subscribe.cpp)
-target_link_libraries(
-   tts_subscribe
-   ${catkin_LIBRARIES} 
-   libmsc.so -ldl -pthread
- )
+## ----------------------------------------------------------------
+## 讯飞语音 SDK C++ 节点（可选编译）
+## 依赖 libmsc.so（包内 libs/ 按架构提供）与 alsa。
+## - 默认自动检测：找不到 libmsc.so / alsa 时跳过对应节点，不报错；
+## - 可强制关闭：catkin_make -DROBOT_VOICE_BUILD_SDK=OFF
+## 纯 Python 节点 voice_control.py 不受影响。
+## ----------------------------------------------------------------
+option(ROBOT_VOICE_BUILD_SDK "Build iFlytek SDK C++ nodes (requires libmsc.so + alsa)" ON)
 
-add_executable(iat_publish 
-  src/iat_publish.cpp 
-  src/speech_recognizer.c 
-  src/linuxrec.c)
-target_link_libraries(
-   iat_publish
-   ${catkin_LIBRARIES} 
-   libmsc.so -ldl -lpthread -lm -lrt -lasound
- )
+if(ROBOT_VOICE_BUILD_SDK)
+  # 按目标架构选择包内自带的 libmsc.so
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(SDK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/x64)
+  else()
+    set(SDK_LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/x86)
+  endif()
 
-add_executable(voice_assistant src/voice_assistant.cpp)
-target_link_libraries(
-   voice_assistant
-   ${catkin_LIBRARIES} 
-   libmsc.so -ldl -pthread
- )
+  find_library(MSC_LIBRARY NAMES msc
+    PATHS ${SDK_LIB_DIR})
+  find_library(ASOUND_LIBRARY asound)
+
+  if(NOT MSC_LIBRARY)
+    message(WARNING "未找到讯飞 SDK libmsc.so，跳过 C++ 语音节点（tts_subscribe/iat_publish/voice_assistant）。"
+                    " 语音控制请使用纯 Python 节点 voice_control.py。")
+  else()
+    add_executable(tts_subscribe src/tts_subscribe.cpp)
+    target_link_libraries(tts_subscribe ${catkin_LIBRARIES} ${MSC_LIBRARY} -ldl -pthread)
+
+    add_executable(voice_assistant src/voice_assistant.cpp)
+    target_link_libraries(voice_assistant ${catkin_LIBRARIES} ${MSC_LIBRARY} -ldl -pthread)
+
+    if(ASOUND_LIBRARY)
+      add_executable(iat_publish
+        src/iat_publish.cpp
+        src/speech_recognizer.c
+        src/linuxrec.c)
+      target_link_libraries(iat_publish ${catkin_LIBRARIES} ${MSC_LIBRARY} -ldl -lpthread -lm -lrt ${ASOUND_LIBRARY})
+    else()
+      message(WARNING "未找到 alsa 库（libasound），跳过 iat_publish（语音识别）节点；tts_subscribe / voice_assistant 仍会编译。")
+    endif()
+  endif()
+else()
+  message(STATUS "ROBOT_VOICE_BUILD_SDK=OFF，已跳过讯飞 SDK C++ 节点。")
+endif()
 
 #############
 ## Install ##
@@ -184,10 +206,10 @@ target_link_libraries(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/voice_control.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
