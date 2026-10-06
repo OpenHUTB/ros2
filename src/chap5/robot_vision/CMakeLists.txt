@@ -9,6 +9,8 @@ project(robot_vision)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
+  gazebo_msgs
+  geometry_msgs
   image_transport
   roscpp
   rospy
@@ -162,10 +164,14 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(PROGRAMS
+  scripts/spawn_face_target.py
+  scripts/face_follower.py
+  scripts/face_detector.py
+  scripts/motion_detector.py
+  scripts/cv_bridge_test.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
