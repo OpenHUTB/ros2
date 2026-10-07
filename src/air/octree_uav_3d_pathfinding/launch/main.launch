@@ -7,6 +7,7 @@
          roslaunch octree_uav_3d_pathfinding main.launch
          roslaunch octree_uav_3d_pathfinding main.launch rviz:=false
          roslaunch octree_uav_3d_pathfinding main.launch mapping:=false
+         roslaunch octree_uav_3d_pathfinding main.launch planning:=false
 
        前置条件：
          宿主 Windows 上已经启动 OpenHUTB 模拟器（AirSim 多旋翼模式，RPC 41451）。
@@ -15,8 +16,9 @@
        运行内容：
          1) airsim_bridge          从 AirSim 取回点云与位姿，发 /cloud_in 与 TF
          2) pointcloud_to_octomap  点云 → 八叉树占用地图 + RViz 可视化
-         3) uav_env_check          环境与链路自检（跑完自动退出）
-         4) rviz                   显示点云与占用体素
+         3) astar_planner          八叉树上的 A* 全局寻路，发 /uav/path
+         4) uav_env_check          环境与链路自检（跑完自动退出）
+         5) rviz                   显示点云、占用体素与规划路径
        ============================================================ -->
 
   <!-- 是否启动 AirSim 桥接节点 -->
@@ -30,6 +32,15 @@
 
   <!-- 是否启动 RViz -->
   <arg name="rviz" default="true"/>
+
+  <!-- 是否启动 A* 规划节点 -->
+  <arg name="planning" default="true"/>
+
+  <!-- 规划节点取起点用的机体坐标系。
+       正常跑仿真时是 base_link（由 airsim_bridge 广播）；
+       用 mock_cloud_publisher.py 做离线验证时，它只广播 world -> lidar_link，
+       所以那时要传 body_frame:=lidar_link -->
+  <arg name="body_frame" default="base_link"/>
 
   <!-- 载入参数配置 -->
   <rosparam command="load"
@@ -48,6 +59,16 @@
         type="pointcloud_to_octomap"
         name="pointcloud_to_octomap"
         output="screen"/>
+
+  <!-- A* 规划节点：/octomap_full + /uav/goal → /uav/path
+       只做规划、不控制飞行；把路径喂给控制器是后续阶段的事 -->
+  <node if="$(arg planning)"
+        pkg="octree_uav_3d_pathfinding"
+        type="astar_planner"
+        name="astar_planner"
+        output="screen">
+    <param name="body_frame" value="$(arg body_frame)"/>
+  </node>
 
   <!-- 环境与链路自检节点
        依次检查 AirSim RPC、点云链路、TF 与话题通信，跑完自动退出，不影响仿真 -->

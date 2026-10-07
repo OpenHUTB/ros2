@@ -80,8 +80,13 @@ pointcloud_to_octomap:
   # 最小量程（m）：小于该距离的点视为机体自身或传感器噪声，直接丢弃
   min_range: 0.5
   # 抽稀：每隔 N 个点取一个做射线投射。AirSim 一帧约 1 万点，
-  # 在虚拟机上逐点投射跟不上，取 2~4 比较稳妥
-  point_stride: 2
+  # 在虚拟机上逐点投射跟不上。
+  #
+  # 但抽稀**不能超过采样间距与分辨率的关系**：射线是从一个点射向每个采样点的，
+  # 采样点之间留有缝，缝比体素大时就会"穿漏"——障碍物内部被误标成空闲、
+  # 地面看起来像有洞的网。所以这里取 1，让点云保持原始密度
+  # （离线 mock 场景的采样间距已按此设为 0.2 m，小于 0.3 m 的分辨率）。
+  point_stride: 1
   # 占用概率模型：命中/未命中的 log-odds 增量与概率上下限
   prob_hit: 0.7
   prob_miss: 0.4
@@ -98,3 +103,36 @@ pointcloud_to_octomap:
   status_period: 5.0
   # 等待首帧点云的超时时间（s），超时后输出排查提示
   cloud_timeout: 15.0
+
+# 八叉树上的 A* 全局寻路
+astar_planner:
+  # 输入：八叉树占用地图（由 pointcloud_to_octomap 以 latched 方式发布）
+  map_topic: /octomap_full
+  # 输入：目标点（世界系 ENU）。收到一次就规划一次
+  goal_topic: /uav/goal
+  # 输出：规划出的路径 nav_msgs/Path
+  path_topic: /uav/path
+  # 输出：A* 已展开节点的可视化，按节点尺寸着色 —— 偏蓝为小节点（障碍附近），
+  #       偏红为大节点（空旷区一步跨过）。这是观察跨分辨率行为最直观的一路输出
+  explored_topic: /uav/explored_markers
+
+  # 坐标系：起点由 TF 的 world <- base_link 得到，与建图节点保持一致
+  world_frame: world
+  body_frame: base_link
+
+  # 细侧邻居展开的上限：k = 自身边长 / 邻居边长，k 超过它就放弃该方向。
+  # 空旷处一个大空闲节点旁边可能紧挨着 0.3 m 的细碎结构，此时 k 可达上百，
+  # 面接触要采样上万个点，不可接受。放弃这种方向只会让路径绕远，
+  # 不会产生穿墙路径 —— 是一个保守的近似。
+  k_max: 4.0
+  # A* 最大展开次数，防止在大图上跑飞
+  max_iterations: 200000
+  # 启发权重：1.0 为最优 A*；大于 1 为加权 A*，更快但不再保证最优
+  heuristic_weight: 1.0
+  # 起终点落在障碍/未知区域时，在该半径（m）内螺旋搜索最近的可行节点。
+  # 注意该搜索只看距离、不看连通性
+  search_radius: 3.0
+  # 单次规划超时（s）
+  plan_timeout: 10.0
+  # 已展开节点可视化的最大个数，防止 RViz 卡顿
+  max_expanded_markers: 20000
