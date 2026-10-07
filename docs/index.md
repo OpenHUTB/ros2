@@ -76,6 +76,8 @@ ROS每章节运行代码:
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
+* [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
@@ -90,7 +92,10 @@ ROS每章节运行代码:
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
+
+* [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 ___
 
