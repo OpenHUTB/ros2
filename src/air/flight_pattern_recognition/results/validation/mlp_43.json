@@ -1,0 +1,113 @@
+{
+  "accuracy": 0.8285714285714286,
+  "macro_f1": 0.79,
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      0,
+      0,
+      12
+    ],
+    [
+      0,
+      14,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      14,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      14
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 1.0,
+      "recall": 0.14285714285714285,
+      "f1": 0.25
+    },
+    {
+      "class": "circle",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "figure_eight",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 0.5384615384615384,
+      "recall": 1.0,
+      "f1": 0.7000000000000001
+    }
+  ],
+  "model": "mlp_43",
+  "windows": 70,
+  "episodes": 5,
+  "accepted_coverage": 0.8714285714285714,
+  "accepted_accuracy": 0.9016393442622951,
+  "episode_results": [
+    {
+      "episode": "episode_020",
+      "truth": "line",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_021",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_022",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_023",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_024",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 0.8,
+  "inference_median_ms": 0.01732699999479337,
+  "inference_p95_ms": 0.022545949997265755
+}
