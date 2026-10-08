@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-MODULES = ['numpy', 'torch', 'matplotlib', 'rclpy', 'std_msgs', 'launch_ros',
+MODULES = ['numpy', 'torch', 'matplotlib', 'rclpy', 'std_msgs', 'lark', 'launch_ros',
            'colcon_core', 'colcon_ros', 'colcon_python_setup_py',
            'colcon_package_selection', 'colcon_recursive_crawl']
 
@@ -24,7 +24,7 @@ def doctor(write=False):
                          + '\nSource ROS2 and activate a /usr/bin/python3 venv created with --system-site-packages.'
                          + '\nThen run: python -m pip install -r requirements.txt')
     versions = {}
-    for name in ['numpy', 'torch', 'matplotlib', 'pip', 'setuptools', 'colcon-core', 'colcon-common-extensions']:
+    for name in ['numpy', 'torch', 'matplotlib', 'lark', 'pip', 'setuptools', 'colcon-core', 'colcon-common-extensions']:
         try:
             versions[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
