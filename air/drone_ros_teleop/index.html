@@ -218,9 +218,9 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="ros">基于 ROS 消息解耦的无人机键盘遥控</h1>
-<p>本文介绍如何通过键盘遥控 Windows 宿主机上 AirSim 仿真环境中的多旋翼无人机。与直接在脚本中调用
-AirSim 客户端不同，本方案将<strong>键盘输入</strong>与<strong>仿真器控制</strong>拆分为两个独立的 ROS 节点，二者之间只通过
-<code>/drone/cmd_vel</code> 话题（<code>geometry_msgs/Twist</code>）交换数据，从而实现消息层面的解耦。</p>
+<p>本文介绍如何通过键盘遥控 Windows 宿主机上 AirSim 仿真环境中的多旋翼无人机。有别于直接在脚本中调用
+AirSim 客户端，本方案将<strong>键盘输入</strong>与<strong>仿真器控制</strong>解耦为两个独立的 ROS 节点，二者之间只通过
+<code>/drone/cmd_vel</code> 话题（<code>geometry_msgs/Twist</code>）进行数据交互，从而实现消息层面的解耦。</p>
 <p>代码位于 <code>src/air/air_teleop/</code> 目录：</p>
 <table>
 <thead>
