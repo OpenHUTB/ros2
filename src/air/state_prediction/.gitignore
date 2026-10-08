@@ -23,3 +23,5 @@ data/*
 !data/sample/
 
 !models/gru_44/loss.csv
+!artifacts/review_oct08_validation.json
+!artifacts/ros_flow_oct08.json
