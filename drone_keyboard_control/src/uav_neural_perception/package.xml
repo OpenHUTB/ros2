@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_neural_perception</name>
+  <version>0.0.1</version>
+  <description>无人机机载前视RGB摄像头图像->CNN神经网络感知->运动控制。</description>
+  <maintainer email="enemy52@example.com">Enemy52</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>cv_bridge</depend>
+</package>

@@ -1,0 +1,14 @@
+<launch>
+  <!-- 第二次作业：无人机 CNN 神经网络感知 + 自主运动控制 -->
+  <arg name="model_path" default="$(find uav_neural_perception)/scripts/models/best_drone_model.pth"/>
+  <arg name="max_vx" default="2.0"/>
+  <arg name="max_vy" default="0.5"/>
+  <arg name="max_yaw" default="0.4"/>
+
+  <node pkg="uav_neural_perception" type="perception_node.py" name="uav_neural_perception" output="screen">
+    <param name="model_path" value="$(arg model_path)"/>
+    <param name="max_vx" value="$(arg max_vx)"/>
+    <param name="max_vy" value="$(arg max_vy)"/>
+    <param name="max_yaw" value="$(arg max_yaw)"/>
+  </node>
+</launch>
