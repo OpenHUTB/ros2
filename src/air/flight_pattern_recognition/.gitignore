@@ -10,3 +10,4 @@ data/retry_raw/
 data/prepared/
 models/retrained*/
 .venv/
+!artifacts/review_oct08_validation.json

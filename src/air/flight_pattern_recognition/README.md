@@ -25,9 +25,10 @@
 
 ## 环境安装、检查与构建
 
-在 Ubuntu 中先进入 `src/air/flight_pattern_recognition`。已有环境可跳过创建；首次安装需使用与系统 ROS2 匹配的 `/usr/bin/python3`，避免 Conda 的 `python3` 被误用：
+以下假设仓库位于 `~/ros2`；若克隆位置不同，请修改第一行路径。已有环境可跳过创建；首次安装需使用与系统 ROS2 匹配的 `/usr/bin/python3`，避免 Conda 的 `python3` 被误用：
 
 ```bash
+cd ~/ros2/src/air/flight_pattern_recognition
 source /opt/ros/humble/setup.bash
 /usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
 source ~/uav_prediction_env/bin/activate
@@ -36,7 +37,9 @@ bash main.sh doctor
 bash main.sh build
 ```
 
-`requirements.txt` 一次安装 CPU 版 PyTorch、NumPy、Matplotlib、colcon 构建插件和可选仿真客户端的前置依赖；不需要另装 CUDA。ROS2 的 `rclpy`/消息包和 Tk 来自系统 ROS/Python 安装，不能用 pip 安装 ROS2 代替。若创建 venv 报缺少 ensurepip，先安装系统 `python3-venv`；没有图形窗口时检查 `python3-tk`。
+`requirements.txt` 一次安装 CPU 版 PyTorch、NumPy、Matplotlib、colcon 构建插件、ROS launch 所需的 Lark 和可选仿真客户端的前置依赖；不需要另装 CUDA。ROS2 的 `rclpy`/消息包和 Tk 来自系统 ROS/Python 安装，不能用 pip 安装 ROS2 代替。若创建 venv 报缺少 ensurepip，先安装系统 `python3-venv`；没有图形窗口时检查 `python3-tk`。
+
+如果旧环境在 `doctor` 中报 `launch_ros: No module named 'lark'`，请在本模块目录、已激活的虚拟环境中重新运行 `python -m pip install -r requirements.txt`，再运行 `bash main.sh doctor`。依赖表已显式包含 `lark==1.1.9`，无需重建环境；不要用隐藏缺包错误或跳过 `launch_ros` 检查的方式继续构建。
 
 已经由 Conda 创建且无法导入 ROS2 的环境，建议保留原环境，另建一个系统 Python venv（例如 `~/ros2_course_env`），激活后运行同一个 requirements 命令。`main.sh` 优先使用 `UAV_ENV` 指定的目录，其次使用当前已激活的 `VIRTUAL_ENV`，最后才使用 `~/uav_prediction_env`；`ROS_SETUP` 可指定 ROS setup 文件。每个新终端都要激活环境，或使用会加载环境的 `main.sh`。
 
