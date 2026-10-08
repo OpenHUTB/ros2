@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>AllocNet 四旋翼避障规划与键盘遥操作 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "AllocNet \u56db\u65cb\u7ffc\u907f\u969c\u89c4\u5212\u4e0e\u952e\u76d8\u9065\u64cd\u4f5c";
+        var mkdocs_page_input_path = "air/allocnet_teleop.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">AllocNet 四旋翼避障规划与键盘遥操作</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 要解决的问题 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 方法 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 整体数据流</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22-orientationz">2.2 核心发现：高度被编码进 orientation.z</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-goal">2.3 两段式 Goal 语义</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 地图为什么要转发一层</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 运行效果 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31-rviz">3.1 RViz 中的实时规划</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 键盘遥操作动画</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 轨迹的三维与俯视视图</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34">3.4 速度曲线</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#35">3.5 实测数据</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 快速开始 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 环境要求</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 安装本模块</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 键盘操作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 数据记录与绘图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 话题清单 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 文件说明 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 已知问题 </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-launch-prefix-false">7.1 launch-prefix 不要设成 false</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-gpu-gnome">7.2 无 GPU 环境下 GNOME 桌面渲染会冻结</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-roslaunch">7.3 工作区被重复挂载会导致 roslaunch 拒绝启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 参考文献 </a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">人工智能使用声明</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">AllocNet 四旋翼避障规划与键盘遥操作</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/allocnet_teleop.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="allocnet">AllocNet 四旋翼避障轨迹规划与键盘遥操作</h1>
+<blockquote>
+<p>本模块在 <a href="https://github.com/KumarRobotics/AllocNet">AllocNet</a>（KumarRobotics，
+RA-L 2024）的基础上，补齐了<strong>人机交互层</strong>：用键盘精确下发航点、把一次性发布的
+地图转为常驻话题、记录轨迹数据、并采集演示素材。</p>
+<p>上游 AllocNet 提供规划算法；本模块解决「怎么方便地用它做实验」。</p>
+</blockquote>
+<h2 id="1">1. 要解决的问题 <span id="problem"></span></h2>
+<p>上游 AllocNet 通过 RViz 的 <strong>2D Nav Goal</strong> 工具下发起终点：鼠标在平面上点两下。
+用于教学和实验时，这个交互方式有三个不便：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无法精确控制高度</td>
+<td>鼠标只给出 x-y，高度靠约定，无法定量研究</td>
+</tr>
+<tr>
+<td>无法精确复现</td>
+<td>手点坐标每次不同，不利于对比实验</td>
+</tr>
+<tr>
+<td>无法连续操作</td>
+<td>想「走一段、停一下、再规划」很别扭</td>
+</tr>
+</tbody>
+</table>
+<p>本模块用键盘驱动的虚拟航点游标替代鼠标：坐标精确到步长（默认 0.5 m），
+每次下发的航点都可复现，并且支持<strong>无图形环境</strong>下的脚本化驱动。</p>
+<h2 id="2">2. 方法 <span id="method"></span></h2>
+<h3 id="21">2.1 整体数据流</h3>
+<div class="mermaid">graph TB
+    subgraph 地图层
+        SM["param_env/structure_map<br/>随机障碍地图生成"]
+    end
+    subgraph 人机交互层
+        KB["planner/teleop_keyboard.py<br/>键盘遥操作游标"]
+        MR["planner/map_republisher.py<br/>地图 latched 转发"]
+        RV["rviz<br/>可视化"]
+    end
+    subgraph 规划层
+        LP["planner/learning_planning<br/>AllocNet 推理 + QP 优化"]
+    end
+    subgraph 记录层
+        RC["planner/record_trajectory.py"]
+        CSV[("trajectory.csv")]
+    end
+    SM -- "/structure_map/global_gridmap<br/>非 latched，只发一次" --&gt; MR
+    MR -- "/map/global_gridmap<br/>latched" --&gt; LP
+    MR -- "/map/global_gridmap_vis<br/>latched，降采样" --&gt; RV
+    KB -- "/move_base_simple/goal" --&gt; LP
+    KB -- "/teleop/cursor<br/>/teleop/goal_markers" --&gt; RV
+    LP -- "/visualizer/trajectory<br/>/visualizer/route" --&gt; RV
+    LP -- "/visualizer/speed" --&gt; RC
+    RC --&gt; CSV
+</div>
+<h3 id="22-orientationz">2.2 核心发现：高度被编码进 <code>orientation.z</code></h3>
+<p>读上游 <code>learning_planning.cpp</code> 可以看到规划器<strong>忽略</strong> <code>pose.position.z</code>，
+真实高度由 <code>pose.orientation.z</code> 作为归一化比例决定：</p>
+<div class="highlight"><pre><span></span><code><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">zGoal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mapBound</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">dilateRadius</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                     </span><span class="n">fabs</span><span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">pose</span><span class="p">.</span><span class="n">orientation</span><span class="p">.</span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="o">*</span>
+<span class="w">                         </span><span class="p">(</span><span class="n">mapBound</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mapBound</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">dilateRadius</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3d</span><span class="w"> </span><span class="nf">goal</span><span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">pose</span><span class="p">.</span><span class="n">position</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">pose</span><span class="p">.</span><span class="n">position</span><span class="p">.</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">zGoal</span><span class="p">);</span>
+</code></pre></div>
+<p>代入本模块 launch 的参数（<code>z_origin=0, z_size=5, dilate=0.2</code>）：</p>
+<div class="highlight"><pre><span></span><code>z_goal = 0.2 + |orientation.z| × (5 − 0.4) = 0.2 + 4.6 × ratio
+</code></pre></div>
+<p>因此 <code>teleop_keyboard.py</code> 在 <code>altitude_to_orientation_z()</code> 里做了反向换算：</p>
+<div class="highlight"><pre><span></span><code><span class="n">span</span>  <span class="o">=</span> <span class="n">map_z_size</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dilate</span>              <span class="c1"># 4.6</span>
+<span class="n">ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">map_z_origin</span> <span class="o">-</span> <span class="n">dilate</span><span class="p">)</span> <span class="o">/</span> <span class="n">span</span>   <span class="c1"># 反解出归一化比例</span>
+<span class="n">msg</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">ratio</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">副作用</p>
+<p><code>orientation.z</code> 被高度占用了，所以<strong>偏航角无法通过该消息传给规划器</strong>。
+AllocNet 的 Goal 本身也不支持终端偏航约束，因此 <kbd>Q</kbd>/<kbd>E</kbd>
+只改变游标朝向，进而影响 <kbd>W</kbd>/<kbd>S</kbd>/<kbd>A</kbd>/<kbd>D</kbd>
+的推进方向。</p>
+</div>
+<h3 id="23-goal">2.3 两段式 Goal 语义</h3>
+<p>规划器要求收到<strong>两个</strong>目标点才触发规划（第一个当起点，第二个当终点）。
+因此 <kbd>G</kbd> 是两段式的：</p>
+<div class="highlight"><pre><span></span><code>  第 1 次 G ──▶ 记录 START ──▶ 等待
+  第 2 次 G ──▶ 记录 GOAL  ──▶ 立即触发 AllocNet 规划
+  第 3 次 G ──▶ 清空重来，作为新的 START
+</code></pre></div>
+<p>节点会在终端明确打印当前阶段，避免误操作：</p>
+<div class="highlight"><pre><span></span><code>  阶段: 已设起点 #1，等待第 2 次 G 触发规划
+</code></pre></div>
+<h3 id="24">2.4 地图为什么要转发一层</h3>
+<p><code>structure_map</code> 发布的 <code>/structure_map/global_gridmap</code> <strong>不是 latched 话题</strong>，
+点云只在生成时发一次。这带来两个后果：</p>
+<ul>
+<li><strong>RViz 看不到地图</strong> —— RViz 通常比地图节点晚几秒启动，订阅时那一帧早已过去；</li>
+<li><strong>规划器错过地图（更严重）</strong> —— 规划器要加载 Torch 模型，订阅建立得比地图
+  生成还晚，<code>mapInitialized</code> 永远是 <code>false</code>，此后<strong>所有目标点都被静默丢弃</strong>。</li>
+</ul>
+<p><code>map_republisher.py</code> 把地图接住后以 <strong>latched</strong> 方式重发。latched 话题会向
+<strong>任意时刻加入的订阅者补发最后一帧</strong>，因此无论 RViz 和规划器多晚启动都能拿到
+地图，也不需要反复去催 <code>structure_map</code> 重新生成地图。</p>
+<div class="highlight"><pre><span></span><code>/structure_map/global_gridmap  (非 latched，一次性)
+    ├─&gt; /map/global_gridmap      (latched) ──&gt; 规划器 MapTopic
+    └─&gt; /map/global_gridmap_vis  (latched，降采样) ──&gt; RViz
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">不要用 change_map 来「催」地图</p>
+<p>很多资料建议用 <code>/structure_map/change_map</code> 迫使地图重发，但它的语义是
+<strong>换一张新地图</strong>并<strong>重新随机化障碍比例</strong>，会把地图越堆越密，最终任何航点
+都不可规划。正确的唤醒方式是发<strong>相同分辨率</strong>的 <code>change_res</code>：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/structure_map/change_res<span class="w"> </span>std_msgs/Float32<span class="w"> </span><span class="s2">"data: 0.1"</span>
+</code></pre></div>
+<p>本模块的 <code>map_republisher</code> 内部就是这么做的，且有次数上限。</p>
+</div>
+<h2 id="3">3. 运行效果 <span id="results"></span></h2>
+<h3 id="31-rviz">3.1 RViz 中的实时规划</h3>
+<p>这是在 RViz 里<strong>实际跑出来的画面</strong>（非离屏渲染、非事后绘制）：</p>
+<p><img alt="AllocNet 在 RViz 中的规划结果" src="../../img/allocnet_teleop/rviz_planning.png"/></p>
+<table>
+<thead>
+<tr>
+<th>颜色</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span style="color:#1f77b4"><strong>蓝</strong></span></td>
+<td>AllocNet 优化后的平滑轨迹</td>
+</tr>
+<tr>
+<td><span style="color:#d62728"><strong>红</strong></span></td>
+<td>OMPL 前端几何路径（未做时间分配）</td>
+</tr>
+<tr>
+<td><span style="color:#2ca02c"><strong>绿</strong></span></td>
+<td>安全飞行走廊边界</td>
+</tr>
+<tr>
+<td>球体</td>
+<td>键盘下发的起点（红，带 START 标签）与终点（橙）</td>
+</tr>
+<tr>
+<td>灰点</td>
+<td>真实障碍点云（半透明，便于看清轨迹穿行）</td>
+</tr>
+</tbody>
+</table>
+<p>红蓝两条线的对比正是本算法的意义所在：红色折线是未经时间分配的前端路径，
+蓝色是 AllocNet 推理 + QP 优化后的轨迹，明显更平滑，且始终走在绿色走廊的中心。</p>
+<h3 id="32">3.2 键盘遥操作动画</h3>
+<p>从「键盘移动游标 → 下发起点 → 下发终点 → 轨迹生成」的完整过程：</p>
+<p><img alt="AllocNet 键盘遥操作演示" src="../../img/allocnet_teleop/teleop_demo.gif"/></p>
+<h3 id="33">3.3 轨迹的三维与俯视视图</h3>
+<p><img alt="三维轨迹" src="../../img/allocnet_teleop/trajectory_3d.png"/></p>
+<p>俯视图把轨迹叠加在<strong>真实地图点云</strong>（按飞行高度切片）之上，
+可以清楚看到轨迹如何在障碍之间穿行：</p>
+<p><img alt="俯视图" src="../../img/allocnet_teleop/trajectory_topdown.png"/></p>
+<h3 id="34">3.4 速度曲线</h3>
+<p><img alt="速度曲线" src="../../img/allocnet_teleop/speed_profile.png"/></p>
+<h3 id="35">3.5 实测数据</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规划起终点</td>
+<td>(0, −9, 1.5) → (9, 9, 1.5) m</td>
+</tr>
+<tr>
+<td>直线距离 / 实际航程</td>
+<td>20.1 m / 约 22 m（绕行）</td>
+</tr>
+<tr>
+<td><strong>规划耗时</strong></td>
+<td><strong>93.6 ms</strong>（AllocNet 推理 + QP 优化）</td>
+</tr>
+<tr>
+<td>规划轨迹采样点</td>
+<td>1065</td>
+</tr>
+<tr>
+<td>实飞跟踪采样点</td>
+<td>402</td>
+</tr>
+<tr>
+<td>峰值速度</td>
+<td>4.03 m/s（受 <code>MaxVelBox=4.0</code> 约束）</td>
+</tr>
+<tr>
+<td>起终点余隙</td>
+<td>2.40 m / 约 1.5 m（到最近障碍点）</td>
+</tr>
+</tbody>
+</table>
+<p>运行环境：Ubuntu 20.04.6 + ROS Noetic，CPU 推理（无 GPU 直通），
+地图 20×20×5 m / 0.1 m 分辨率，约 30 万点。</p>
+<div class="admonition note">
+<p class="admonition-title">关于规划成功率</p>
+<p>AllocNet 按固定 5 段推理时间分配。当起终点的几何构型让某段时长被推理为 0 时，
+规划器会打印 <code>time and seg does not fit</code> 并<strong>放弃本次规划</strong>（不报错、不出轨迹）。
+实测成功率约 1/5，且与方向、距离强相关。做实验时建议多试几组起终点。</p>
+</div>
+<h2 id="4">4. 快速开始 <span id="quickstart"></span></h2>
+<h3 id="41">4.1 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04（ROS Noetic）</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>Noetic（<code>rosversion 1.16.0</code>）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8（随 Noetic）</td>
+</tr>
+<tr>
+<td>规划器依赖</td>
+<td>libtorch (CPU)、OMPL、Eigen3、osqp + osqp-eigen</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition important">
+<p class="admonition-title">本模块不包含规划器本体</p>
+<p>AllocNet 的 C++ 规划器依赖 libtorch / OMPL / osqp-eigen，
+需要自行编译，<strong>不在本仓库内</strong>。本模块提供的是人机交互层，
+安装到你的 AllocNet 工作区后即可使用。</p>
+</div>
+<h3 id="42">4.2 安装本模块</h3>
+<p>安装分两步：<strong>先把上游编译出来</strong>（一次性），<strong>再装本模块</strong>。</p>
+<h4 id="421">4.2.1 编译上游（一次性）</h4>
+<div class="admonition warning">
+<p class="admonition-title"><code>planner</code> 与 <code>param_env</code> 来自两个不同的仓库</p>
+<p><code>planner</code> 在 AllocNet 仓库内；<code>param_env</code> 在 <strong>kr_param_map</strong> 仓库内，
+由 AllocNet 的 <code>src/utils.rosinstall</code> 单独拉取。
+只克隆 AllocNet <strong>不会</strong>得到 <code>param_env</code> —— 这是 <code>main.py check</code>
+报 <code>[缺] param_env</code> 的头号原因。</p>
+</div>
+<p><strong>(1) 系统依赖</strong></p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libompl-dev<span class="w"> </span>libeigen3-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libsdl1.2-dev<span class="w"> </span>libsdl-image1.2-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libboost-all-dev<span class="w"> </span>cmake<span class="w"> </span>build-essential<span class="w"> </span>git<span class="w"> </span>wget<span class="w"> </span>unzip<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>python3-pip<span class="w"> </span>python3-rosdep
+</code></pre></div>
+<p><code>libsdl1.2-dev</code> / <code>libsdl-image1.2-dev</code> 是 <code>param_env</code> 独有的依赖
+（它的 <code>package.xml</code> 声明了 <code>sdl</code> / <code>sdl-image</code> 两个 rosdep 键）：
+缺了这两个包 <code>planner</code> 能编过、<code>param_env</code> 编不过。</p>
+<p><strong>(2) osqp 0.6.3 与 osqp-eigen（源码编译）</strong></p>
+<p>ROS 源里没有满足要求的 osqp，必须锁版本源码编译：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># osqp —— 版本必须是 release-0.6.3，新版 API 不兼容</span>
+<span class="nb">cd</span><span class="w"> </span>/tmp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>release-0.6.3<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/osqp/osqp.git
+<span class="nb">cd</span><span class="w"> </span>osqp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+mkdir<span class="w"> </span>-p<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>..<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>install
+sudo<span class="w"> </span>ldconfig
+
+<span class="c1"># osqp-eigen —— 规划器的 QP 封装 osqp_solver.hpp 依赖它</span>
+<span class="nb">cd</span><span class="w"> </span>/tmp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/robotology/osqp-eigen.git
+<span class="nb">cd</span><span class="w"> </span>osqp-eigen<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>build<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>build
+cmake<span class="w"> </span>..<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>make<span class="w"> </span>install
+sudo<span class="w"> </span>ldconfig
+</code></pre></div>
+<p><strong>(3) libtorch（必须 CPU 版）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/tmp
+wget<span class="w"> </span>-O<span class="w"> </span>libtorch.zip<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>https://download.pytorch.org/libtorch/nightly/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.0.dev20230301%2Bcpu.zip
+unzip<span class="w"> </span>-q<span class="w"> </span>libtorch.zip<span class="w"> </span>-d<span class="w"> </span>/tmp/lt
+mkdir<span class="w"> </span>-p<span class="w"> </span>~/allocnet_ws/src/AllocNet/src/planner
+mv<span class="w"> </span>/tmp/lt/libtorch<span class="w"> </span>~/allocnet_ws/src/AllocNet/src/planner/libtorch
+</code></pre></div>
+<p>本模块运行在无 GPU 直通的虚拟机中，GPU 版 libtorch 会因找不到 CUDA 而加载失败。
+同时确认 <code>learning_planner.hpp</code> 里是 <code>device(torch::kCPU)</code>。</p>
+<p><strong>(4) 拉取两个上游仓库</strong></p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/allocnet_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/allocnet_ws/src
+
+<span class="c1"># (1) AllocNet —— 提供 planner 包（本模块对应的分支）</span>
+git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>feature-keyboard-teleop<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>https://github.com/Xiangyuetang91/AllocNet.git
+
+<span class="c1"># (2) kr_param_map —— 提供 param_env 包（★ 不在 AllocNet 仓库内）</span>
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/KumarRobotics/kr_param_map.git
+</code></pre></div>
+<p>上游 <code>src/utils.rosinstall</code> 里 kr_param_map 用的是 SSH 地址
+<code>git@github.com:...</code>，没有配 SSH key 时 <code>wstool update</code> 会直接失败，
+因此这里显式用 HTTPS 克隆（本分支已把该地址改写为 HTTPS）。</p>
+<p><strong>(5) 编译</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/allocnet_ws
+catkin_make<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>-D_GLIBCXX_USE_CXX11_ABI<span class="o">=</span><span class="m">1</span>
+</code></pre></div>
+<div class="admonition danger">
+<p class="admonition-title">不要加 <code>--pkg planner</code></p>
+<p>单包构建<strong>不会</strong>构建 <code>param_env</code>；而 <code>param_env</code> 缺失时
+<code>structure_map</code> 会因找不到可执行文件而瞬间退出，表现为
+「没有地图、规划器毫无反应」，且不留任何日志。</p>
+</div>
+<p><code>_GLIBCXX_USE_CXX11_ABI=1</code> 必须与 libtorch 预编译包的 ABI 一致，
+否则链接期会报大量 <code>std::__cxx11</code> 符号缺失。</p>
+<p>产物校验：</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>devel/lib/planner/learning_planning<span class="w">   </span><span class="c1"># 规划器</span>
+ls<span class="w"> </span>devel/lib/param_env/structure_map<span class="w">     </span><span class="c1"># 地图生成</span>
+</code></pre></div>
+<p><strong>(6) source 环境</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/allocnet_ws/devel/setup.bash
+</code></pre></div>
+<p><strong>每开一个新终端都要 source</strong>。未 source 时 <code>ROS_PACKAGE_PATH</code> 里没有
+<code>~/allocnet_ws/src</code>，rospack 看不到工作区内的任何包，<code>main.py check</code> 会报缺包。</p>
+<h4 id="422">4.2.2 安装本模块</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. 把本模块装入工作区的 planner 包</span>
+<span class="nb">cd</span><span class="w"> </span>ros2/src/air/allocnet_teleop
+python3<span class="w"> </span>main.py<span class="w"> </span>install<span class="w"> </span>--ws<span class="w"> </span>~/allocnet_ws
+
+<span class="c1"># 2. 重新编译（脚本需注册进 CMakeLists）</span>
+<span class="nb">cd</span><span class="w"> </span>~/allocnet_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make<span class="w"> </span>--pkg<span class="w"> </span>planner
+
+<span class="c1"># 3. 环境自检</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>check
+</code></pre></div>
+<p>第 2 步此处<strong>可以</strong>用 <code>--pkg planner</code>：<code>param_env</code> 在上一步已经构建好了，
+这里只是把新增的 Python 脚本注册进 <code>planner</code>。</p>
+<p><code>main.py check</code> 会逐项确认 ROS、工作区、上游包与编译产物、本模块脚本、
+launch 文件与可选工具是否就位，把「跑不起来」的原因提前暴露：</p>
+<div class="highlight"><pre><span></span><code>[1] ROS Noetic: 已安装
+[2] AllocNet 工作区 /home/user/allocnet_ws: 已构建
+[3] 上游 ROS 包:
+     [OK] planner      /home/user/allocnet_ws/src/AllocNet/src/planner
+     [OK] param_env    /home/user/allocnet_ws/src/kr_param_map/param_env
+
+     [3b] 包编译产物:
+     [OK] planner/learning_planning
+     [OK] param_env/structure_map
+[4] 本模块脚本:  teleop_keyboard.py / map_republisher.py / record_trajectory.py
+[5] launch 文件:  teleop_planning.launch
+[6] 可选工具:     rviz / import / Xvfb
+ 自检结果: 通过，可以运行 `main.py run`
+</code></pre></div>
+<p>其中 <code>[3]</code> 与 <code>[3b]</code> 是两级独立检查：前者问 rospack「包在哪」，
+后者问「包编出来没有」。两者会分叉，因为 catkin 把 <code>&lt;ws&gt;/src</code> 整个加进
+<code>ROS_PACKAGE_PATH</code>，<strong>没编译的包 rospack 照样找得到</strong> —— 所以只查 rospack
+会漏掉「包在但没构建」这种状态，而它恰恰是 <code>structure_map</code> 启动即退的原因。
+报 <code>[缺]</code> 时 <code>check</code> 会直接打印该包的补救命令。</p>
+<p>键盘节点的核心逻辑另有单元测试覆盖，<strong>不需要 ROS 环境</strong>即可运行
+（测试内用 mock 的 <code>rospy</code> 打桩）：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/allocnet_teleop
+python3<span class="w"> </span>test_teleop_keyboard.py
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>Ran 18 tests in 0.010s
+
+OK
+</code></pre></div>
+<p>覆盖高度与 <code>orientation.z</code> 的双向换算、W/S/A/D/Q/E/I/K/R/G 各按键对游标状态
+的影响、边界与高度裁剪，以及两段式 Goal 语义。</p>
+<h3 id="43">4.3 启动</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 含 RViz</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>run
+
+<span class="c1"># 无图形界面（服务器 / 虚屏）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>--no-gui
+
+<span class="c1"># 不记录轨迹</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>--no-record
+
+<span class="c1"># 用高对比配置启动（点云灰色，轨迹更醒目，适合截图）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>--rviz-config<span class="w"> </span>capture_view.rviz
+</code></pre></div>
+<p>启动后在 RViz 中会看到地图、游标与规划结果：</p>
+<p><img alt="AllocNet 运行效果（RViz）" src="../../img/allocnet_teleop/run_preview.png"/></p>
+<p>界面自上而下依次是 RViz 工具条、左侧 Displays 面板（<code>Fixed Frame: odom</code>）
+与三维视图。图中：<strong>蓝</strong>色为 AllocNet 优化后的平滑轨迹，<strong>红</strong>色为 OMPL
+前端几何路径，<strong>绿</strong>色为安全飞行走廊边界，球形标记为键盘下发的起点（红）
+与终点（橙），灰色点云为真实障碍。本次运行规划耗时 206.01 ms、轨迹 968 点、
+记录 CSV 803 行。</p>
+<div class="admonition tip">
+<p class="admonition-title">截图时换一套 RViz 配置</p>
+<p>默认的 <code>teleop_planner.rviz</code> 把障碍点云按高度着彩虹色，20×20 m 地图上
+约 3 万点，密度很高，会把蓝/红/绿三条轨迹线<strong>淹没</strong>在背景里。
+截图请改用 <code>capture_view.rviz</code>（点云统一灰色），轨迹才看得清。</p>
+</div>
+<h3 id="44">4.4 键盘操作</h3>
+<p><code>roslaunch</code> 启动的节点 <strong>stdin 是 <code>/dev/null</code></strong>，键盘节点读不到按键。
+但它<strong>不会因此退出</strong> —— 会常驻运行并持续发布 <code>/teleop/cursor</code>，
+所以 RViz 里始终能看到游标。真正用键盘有两种方式：</p>
+<p><strong>方式一：另开终端跑交互版</strong>（两个实例可共存）</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/allocnet_ws/devel/setup.bash
+rosrun<span class="w"> </span>planner<span class="w"> </span>teleop_keyboard.py
+</code></pre></div>
+<p><strong>方式二：往话题注入按键</strong>，不需要 TTY，便于脚本化复现</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 移动游标 + 下发航点（G = 发送）</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/teleop/key<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'wwwd'"</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/teleop/key<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'g'"</span>
+
+<span class="c1"># 也支持一次发整串按键，或写 "space"</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/teleop/key<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'aassddg'"</span>
+</code></pre></div>
+<p><strong>按键速查表</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">按键</th>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><kbd>W</kbd> / <kbd>S</kbd></td>
+<td>前进 / 后退</td>
+<td>沿当前偏航方向，步长 0.5 m</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>A</kbd> / <kbd>D</kbd></td>
+<td>向左 / 向右平移</td>
+<td>垂直于偏航方向</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>I</kbd> 或 <kbd>Space</kbd></td>
+<td>上升</td>
+<td>步长 0.25 m，自动裁剪到地图高度范围</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>K</kbd></td>
+<td>下降</td>
+<td>同上</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>Q</kbd> / <kbd>E</kbd></td>
+<td>偏航 −/+</td>
+<td>每次 10°，仅影响游标朝向</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>R</kbd></td>
+<td>重置初始状态</td>
+<td>游标回到初始位置，清空已下发航点</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong><kbd>G</kbd></strong></td>
+<td><strong>发送航点</strong></td>
+<td>两段式：第 1 次起点，第 2 次终点并触发规划</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>+</kbd> / <kbd>−</kbd></td>
+<td>调整平移步长</td>
+<td>范围 0.1 – 5.0 m</td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>H</kbd></td>
+<td>显示帮助</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align: center;"><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+<td>退出</td>
+<td>自动恢复终端属性</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45">4.5 数据记录与绘图</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 记录节点随 launch 自动启动；也可单独指定输出</span>
+rosrun<span class="w"> </span>planner<span class="w"> </span>record_trajectory.py<span class="w"> </span>_output:<span class="o">=</span><span class="nv">$HOME</span>/run1.csv
+
+<span class="c1"># 生成图表（plot_trajectory.py 随本模块 install 到工作区，无需额外下载）</span>
+python3<span class="w"> </span>src/planner/scripts/plot_trajectory.py<span class="w"> </span>--csv<span class="w"> </span><span class="nv">$HOME</span>/run1.csv<span class="w"> </span>--out-dir<span class="w"> </span>docs/assets
+</code></pre></div>
+<blockquote>
+<p>没有 ROS 环境也可以先验证整条绘图链路：<code>offline_demo.py</code> 会产出一份
+格式完全相同的 CSV（算法层离线复现，不作为实验证据），可直接喂给
+<code>plot_trajectory.py</code>。</p>
+</blockquote>
+<p>输出 CSV 格式：<code>time,x,y,z,v,source</code>，其中 <code>source</code> 区分
+<code>planned</code>（规划轨迹）/ <code>flight</code>（实飞跟踪）/ <code>goal</code> / <code>start</code>。</p>
+<h2 id="5">5. 话题清单 <span id="topics"></span></h2>
+<p><strong>订阅</strong></p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/structure_map/global_gridmap</code></td>
+<td><code>sensor_msgs/PointCloud2</code></td>
+<td><code>structure_map</code> 节点</td>
+</tr>
+<tr>
+<td><code>/move_base_simple/goal</code></td>
+<td><code>geometry_msgs/PoseStamped</code></td>
+<td>键盘节点 / RViz 2D Nav Goal</td>
+</tr>
+<tr>
+<td><code>/teleop/key</code></td>
+<td><code>std_msgs/String</code></td>
+<td>外部脚本（无 TTY 时注入按键）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>发布</strong></p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/map/global_gridmap</code></td>
+<td><code>PointCloud2</code></td>
+<td>地图 latched 转发（规划器订阅此话题）</td>
+</tr>
+<tr>
+<td><code>/map/global_gridmap_vis</code></td>
+<td><code>PointCloud2</code></td>
+<td>降采样版，供 RViz 流畅渲染</td>
+</tr>
+<tr>
+<td><code>/teleop/cursor</code></td>
+<td><code>Marker</code></td>
+<td>游标球 + 朝向箭头</td>
+</tr>
+<tr>
+<td><code>/teleop/waypoints</code></td>
+<td><code>MarkerArray</code></td>
+<td>已下发航点折线</td>
+</tr>
+<tr>
+<td><code>/teleop/goal_markers</code></td>
+<td><code>MarkerArray</code></td>
+<td>起终点标记（START/GOAL 标签）</td>
+</tr>
+<tr>
+<td><code>/visualizer/trajectory</code></td>
+<td><code>Marker</code></td>
+<td>优化后的多项式轨迹</td>
+</tr>
+<tr>
+<td><code>/visualizer/route</code></td>
+<td><code>Marker</code></td>
+<td>前端几何路径</td>
+</tr>
+<tr>
+<td><code>/visualizer/speed</code></td>
+<td><code>Float64</code></td>
+<td>当前速度</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 文件说明 <span id="files"></span></h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.py</code></td>
+<td>统一入口：<code>install</code> / <code>check</code> / <code>run</code> / <code>capture</code></td>
+</tr>
+<tr>
+<td><code>teleop_keyboard.py</code></td>
+<td>键盘遥操作节点（游标、航点下发）</td>
+</tr>
+<tr>
+<td><code>map_republisher.py</code></td>
+<td>地图 latched 转发（解决规划器错过地图）</td>
+</tr>
+<tr>
+<td><code>record_trajectory.py</code></td>
+<td>轨迹数据记录</td>
+</tr>
+<tr>
+<td><code>teleop_planning.launch</code></td>
+<td>一键启动：地图 + 转发 + 规划器 + 键盘 + 记录 + RViz</td>
+</tr>
+<tr>
+<td><code>teleop_planner.rviz</code></td>
+<td>RViz 配置（正常实验用）</td>
+</tr>
+<tr>
+<td><code>capture_view.rviz</code></td>
+<td>RViz 配置（采集素材用，灰底高对比）</td>
+</tr>
+<tr>
+<td><code>plot_trajectory.py</code></td>
+<td>由 CSV 生成三维轨迹 / 俯视图 / 速度曲线</td>
+</tr>
+<tr>
+<td><code>offline_demo.py</code></td>
+<td>无 ROS 环境时的算法层离线复现（不作为实验证据）</td>
+</tr>
+<tr>
+<td><code>test_teleop_keyboard.py</code></td>
+<td>单元测试（mock rospy，18 项，无需 ROS）</td>
+</tr>
+<tr>
+<td><code>capture_teleop_demo.py</code></td>
+<td>演示素材采集（Xvfb 虚屏 + 抓屏）</td>
+</tr>
+<tr>
+<td><code>make_assets.py</code></td>
+<td>把抓到的帧裁成静态图与 GIF</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>运行环境、步骤与文件说明</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7">7. 已知问题 <span id="known-issues"></span></h2>
+<h3 id="71-launch-prefix-false">7.1 <code>launch-prefix</code> 不要设成 <code>false</code></h3>
+<p><code>launch-prefix</code> 的值会作为<strong>命令前缀</strong>拼在可执行文件前执行，不是布尔开关。
+写成 <code>launch-prefix="false"</code> 会执行 <code>false &lt;节点&gt;</code> —— <code>false</code> 是立即返回
+退出码 1 的命令，节点<strong>注册进 master 后立刻死亡且不留任何日志</strong>，极难排查。
+不用前缀时留空字符串。</p>
+<h3 id="72-gpu-gnome">7.2 无 GPU 环境下 GNOME 桌面渲染会冻结</h3>
+<p>在 VMware 无 GPU 直通时，GNOME 桌面（<code>:0</code>）的渲染会<strong>静默冻结</strong>：进程都活着、
+<code>xdpyinfo</code> 正常、窗口树正常，但画面不再更新。表现极具迷惑性 —— <code>scrot</code>
+每次都能"成功"返回一张图，但<strong>永远是同一张陈旧帧</strong>。</p>
+<p>采集演示素材时请改用 <strong>Xvfb 虚屏</strong>：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>xvfb<span class="w"> </span>imagemagick
+Xvfb<span class="w"> </span>:99<span class="w"> </span>-screen<span class="w"> </span><span class="m">0</span><span class="w"> </span>1280x800x24<span class="w"> </span>-ac<span class="w"> </span>+extension<span class="w"> </span>GLX<span class="w"> </span>+render<span class="w"> </span>-noreset<span class="w"> </span><span class="p">&amp;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span>:99
+<span class="nb">export</span><span class="w"> </span><span class="nv">LIBGL_ALWAYS_SOFTWARE</span><span class="o">=</span><span class="m">1</span>
+rviz<span class="w"> </span>-d<span class="w"> </span><span class="k">$(</span>find<span class="w"> </span>planner<span class="k">)</span>/config/capture_view.rviz<span class="w"> </span><span class="p">&amp;</span>
+import<span class="w"> </span>-display<span class="w"> </span>:99<span class="w"> </span>-window<span class="w"> </span>root<span class="w"> </span>/tmp/f.png
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">不要把 xdotool 用在 RViz 上</p>
+<p>合成输入在虚屏/无焦点窗口上基本不生效，且反复操作后 RViz 会停止重绘。
+相机角度和图层开关请<strong>直接写进 <code>.rviz</code> 配置文件</strong>，重启 RViz 生效。</p>
+</div>
+<h3 id="73-roslaunch">7.3 工作区被重复挂载会导致 roslaunch 拒绝启动</h3>
+<p>若 <code>devel/.catkin</code> 记录了多个 source space，且其中一个是指向另一个的软链，
+同一份代码会被挂两遍，<code>roslaunch</code> 报：</p>
+<div class="highlight"><pre><span></span><code>RLException: multiple files named [xxx.launch] in package [planner]
+</code></pre></div>
+<p>修法：移走多余的挂载点，删除 <code>devel/.catkin</code>，然后<strong>完整重新构建</strong>
+（删掉 <code>.catkin</code> 后不重建，<code>ROS_PACKAGE_PATH</code> 会退化成只有 <code>/opt/ros/noetic/share</code>）。</p>
+<div class="admonition note">
+<p class="admonition-title">单包构建的陷阱</p>
+<p><code>catkin_make --pkg planner</code> <strong>不会</strong>构建 <code>param_env</code>。
+若 <code>devel/lib/param_env/</code> 是空的，<code>structure_map</code> 会因找不到可执行文件而
+瞬间退出，表现为"没有地图、规划器毫无反应"。请至少完整构建一次。</p>
+</div>
+<h2 id="8">8. 参考文献 <span id="references"></span></h2>
+<ol>
+<li>Wu Y, Sun X, Spasojevic I, et al. Deep Learning for Optimization of
+   Trajectories for Quadrotors[J]. IEEE Robotics and Automation Letters,
+   2024, 9(3): 2479-2486.
+   <a href="https://arxiv.org/pdf/2309.15191.pdf">arXiv:2309.15191</a></li>
+<li>上游仓库：<a href="https://github.com/KumarRobotics/AllocNet">KumarRobotics/AllocNet</a></li>
+<li>前端路径搜索使用 OMPL（Open Motion Planning Library）</li>
+</ol>
+<hr/>
+<h2 id="_1">人工智能使用声明</h2>
+<p>本模块的开发过程使用了 AI 编程助手（Claude）辅助代码编写、调试与文档撰写。
+所有提交内容由提交者本人审阅并对正确性负全部责任。实测数据与截图均来自
+在 Ubuntu 20.04 + ROS Noetic 虚拟机中的真实运行，未经合成或修改。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../octree_uav_3d_pathfinding/occupancy_mapping/" title="点云转八叉树占用地图"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../water/HoloOcean/" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../octree_uav_3d_pathfinding/occupancy_mapping/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../water/HoloOcean/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
