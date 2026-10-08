@@ -160,7 +160,7 @@
 <h2 id="_2">一、实验目的与环境说明</h2>
 <h3 id="11">1.1 实验目的</h3>
 <ol>
-<li>掌握 turtlesim 的服务调用：用 <code>/set_pen</code> 设置画笔颜色、用 <code>/teleport_absolute</code> 瞬移海龟；</li>
+<li>掌握 turtlesim 的服务调用：用 <code>/set_pen</code> 设置画笔颜色、用 <code>/teleport_absolute</code> 瞬移海龟、用 <code>/clear</code> 清空画布；</li>
 <li>掌握花瓣图案的几何构造：让 6 个圆心均匀分布于公共中心四周、圆心距等于半径的圆依次绘制，形成两两相扣的花瓣；</li>
 <li>通过 <code>roslaunch</code> 一键启动仿真器与控制节点，完成彩色花瓣的自动绘制。</li>
 </ol>
@@ -199,28 +199,29 @@
 <div class="highlight"><pre><span></span><code>turtle_sim_experiment/
 ├── main.py           # 主程序：控制小海龟画花瓣
 ├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
-├── package.xml       # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
+├── package.xml       # 包清单，声明 rospy、geometry_msgs、std_srvs 和 turtlesim 依赖
 ├── CMakeLists.txt    # 编译配置，安装 Python 脚本
 └── README.md         # 运行说明
 </code></pre></div>
 <h2 id="_3">二、核心控制原理与算法解析</h2>
 <h3 id="21">2.1 花瓣的几何构造</h3>
-<p>本实验控制小海龟从公共中心 (5.5, 5.5) 出发，连续画 6 个圆组成花瓣，关键在圆的布置方式：</p>
+<p>本实验控制小海龟连续画 6 个圆组成花瓣，关键在圆的布置方式：</p>
 <p><strong>6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。</strong> 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣（不同颜色代表不同花瓣，最终效果见 4.4 节）。</p>
-<p>第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 <code>/turtle2/teleport_absolute</code> 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 <code>/turtle2/set_pen</code> 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。</p>
+<p>第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 <code>/turtle1/teleport_absolute</code> 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 <code>/turtle1/set_pen</code> 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。</p>
 <h3 id="22">2.2 圆周运动参数</h3>
-<p>画每个圆时，向 <code>/turtle2/cmd_vel</code> 同时发布线速度 <code>linear.x = 1.5</code> 与角速度 <code>angular.z = 1.0</code>，海龟做逆时针圆周运动：</p>
+<p>画每个圆时，向 <code>/turtle1/cmd_vel</code> 同时发布线速度 <code>linear.x = 1.5</code> 与角速度 <code>angular.z = 1.0</code>，海龟做逆时针圆周运动：</p>
 <ul>
 <li>圆的半径 r = v/ω = 1.5/1.0 = 1.5 米；</li>
 <li>画一个整圆的用时 T = 2π/ω ≈ 6.28 秒。</li>
 </ul>
 <p>turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令海龟就会刹停，所以控制循环以 <code>rospy.Rate(50)</code> 的 50 Hz 频率持续发布速度指令，直到本瓣画满整圆。</p>
-<h3 id="23">2.3 服务等待</h3>
-<p>用 <code>roslaunch</code> 一键启动时，仿真器和画花瓣节点是同时拉起的，谁先准备好并不确定。如果画花瓣节点跑得快、仿真器还没就绪，一开始的服务调用就会失败。所以程序开头先执行 <code>rospy.wait_for_service('/spawn')</code>，停下来等仿真器的服务上线，等到了再继续往下走，这样无论两个节点谁先谁后，程序都不会出错。</p>
+<h3 id="23">2.3 服务等待与画布清空</h3>
+<p>用 <code>roslaunch</code> 一键启动时，仿真器和画花瓣节点是同时拉起的，谁先准备好并不确定。如果画花瓣节点跑得快、仿真器还没就绪，一开始的服务调用就会失败。所以程序开头先执行 <code>rospy.wait_for_service('/turtle1/teleport_absolute')</code>，停下来等仿真器的服务上线，等到了再继续往下走，这样无论两个节点谁先谁后，程序都不会出错。</p>
+<p>等到服务上线后，程序会先调用 <code>/clear</code> 服务把画布清空——上一次运行画的花瓣还在上面，擦掉再画，每次都从干净的画布开始，因此本实验可以反复运行。</p>
 <h3 id="24">2.4 算法流程</h3>
 <ol>
 <li>初始化节点 <code>turtle_circle_drawer</code>，读取花瓣数、线速度、角速度参数；</li>
-<li>等待服务上线，将小海龟放到公共中心 (5.5, 5.5)；</li>
+<li>等待服务上线，调用 <code>/clear</code> 清空画布；</li>
 <li>循环 6 次，每轮执行：抬笔 → 瞬移到该花瓣起点并转到切线方向 → 换色落笔 → 50 Hz 持续发布速度指令画满 T = 2π/ω 秒（一个整圆）→ 抬笔；</li>
 <li>6 个花瓣全部完成后输出结束日志。</li>
 </ol>
@@ -237,7 +238,8 @@
 
 <span class="kn">import</span> <span class="nn">rospy</span>
 <span class="kn">from</span> <span class="nn">geometry_msgs.msg</span> <span class="kn">import</span> <span class="n">Twist</span>
-<span class="kn">from</span> <span class="nn">turtlesim.srv</span> <span class="kn">import</span> <span class="n">Spawn</span><span class="p">,</span> <span class="n">SetPen</span><span class="p">,</span> <span class="n">TeleportAbsolute</span>
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">Empty</span>
+<span class="kn">from</span> <span class="nn">turtlesim.srv</span> <span class="kn">import</span> <span class="n">SetPen</span><span class="p">,</span> <span class="n">TeleportAbsolute</span>
 
 <span class="n">PETAL_COLORS</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
                 <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)]</span>
@@ -254,15 +256,15 @@
     <span class="n">circle_period</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">angular_speed</span>  <span class="c1"># 画整圆用时 T = 2π / w</span>
 
     <span class="c1"># 等待 turtlesim 的服务上线（launch 一键启动时仿真器可能稍后就绪）</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">'/spawn'</span><span class="p">)</span>
-    <span class="n">spawn</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/spawn'</span><span class="p">,</span> <span class="n">Spawn</span><span class="p">)</span>
-    <span class="n">set_pen</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle2/set_pen'</span><span class="p">,</span> <span class="n">SetPen</span><span class="p">)</span>
-    <span class="n">teleport</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle2/teleport_absolute'</span><span class="p">,</span> <span class="n">TeleportAbsolute</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">'/turtle1/teleport_absolute'</span><span class="p">)</span>
 
-    <span class="n">resp</span> <span class="o">=</span> <span class="n">spawn</span><span class="p">(</span><span class="n">CENTER_X</span><span class="p">,</span> <span class="n">CENTER_Y</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'turtle2'</span><span class="p">)</span>  <span class="c1"># 将小海龟放到公共中心</span>
-    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">'小海龟就位: </span><span class="si">%s</span><span class="s1">'</span><span class="p">,</span> <span class="n">resp</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="c1"># 清空画布，把上一次运行留下的轨迹擦掉</span>
+    <span class="n">clear</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/clear'</span><span class="p">,</span> <span class="n">Empty</span><span class="p">)</span>
+    <span class="n">clear</span><span class="p">()</span>
 
-    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle2/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">set_pen</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle1/set_pen'</span><span class="p">,</span> <span class="n">SetPen</span><span class="p">)</span>
+    <span class="n">teleport</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">'/turtle1/teleport_absolute'</span><span class="p">,</span> <span class="n">TeleportAbsolute</span><span class="p">)</span>
+    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">'/turtle1/cmd_vel'</span><span class="p">,</span> <span class="n">Twist</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>                 <span class="c1"># 50 Hz，远高于 0.5 秒看门狗阈值</span>
     <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
     <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">linear_speed</span>
@@ -312,18 +314,19 @@ chmod<span class="w"> </span>+x<span class="w"> </span>~/catkin_ws/src/turtle_si
 <p><code>roslaunch</code> 会自动完成两件事：启动 ROS Master（无需单独运行 roscore），并按 <code>main.launch</code> 先后拉起 turtlesim 仿真器和画花瓣节点。启动后终端依次输出：</p>
 <div class="highlight"><pre><span></span><code>process[turtlesim-1]: started with pid [xxxx]
 process[turtle_circle_drawer-2]: started with pid [xxxx]
-[INFO] [...]: 等待 /spawn 服务上线 ...
-[INFO] [...]: 小海龟就位
+[INFO] [...]: 等待 turtlesim 服务上线 ...
+[INFO] [...]: 画布已清空
 [INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
 </code></pre></div>
+<p><strong>重复运行</strong>：画完一次后不用做任何清理，直接再次运行同一条 roslaunch 命令即可。程序会先调用 /clear 服务把上一次画的花瓣擦掉，再从头重画，重复运行不会报错。</p>
 <h3 id="43">4.3 服务与节点验证</h3>
 <p>程序运行期间，另开终端可以查看系统的运行状态：</p>
 <div class="highlight"><pre><span></span><code>rosnode<span class="w"> </span>list<span class="w">                 </span><span class="c1"># 可看到 /turtlesim 与 /turtle_circle_drawer 两个节点</span>
-rosservice<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle2<span class="w">   </span><span class="c1"># 可看到 /turtle2/... 系列服务</span>
-rostopic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle2<span class="w">     </span><span class="c1"># 可看到 /turtle2/cmd_vel、/turtle2/pose 等话题</span>
+rosservice<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle1<span class="w">   </span><span class="c1"># 可看到 /turtle1/... 系列服务</span>
+rostopic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>turtle1<span class="w">     </span><span class="c1"># 可看到 /turtle1/cmd_vel、/turtle1/pose 等话题</span>
 </code></pre></div>
 <h3 id="44">4.4 预期结果</h3>
-<p>节点运行后，小海龟从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：</p>
+<p>节点运行后，小海龟依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：</p>
 <div class="highlight"><pre><span></span><code>[INFO] [...]: 开始画第 6 个花瓣，画笔 RGB=(0, 255, 255)
 [INFO] [...]: 演示完成：小海龟共画出 6 个半径 1.50 米的花瓣圆
 </code></pre></div>
@@ -360,8 +363,8 @@ rostopic<span class="w"> </span>list<span class="w"> </span><span class="p">|</s
 </table>
 <p><strong>注意</strong>：花瓣数不宜过大——花瓣圆半径 r = v/ω 需满足 2r &lt; 5.5，否则瞬移起点会超出 turtlesim 的 11×11 画布边界，画出的圆会被截断。</p>
 <h2 id="_7">六、总结</h2>
-<p>本实验综合 <code>/set_pen</code> 画笔服务、<code>/teleport_absolute</code> 瞬移服务与 <code>/turtle2/cmd_vel</code> 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。</p>
-<p>通过本实验，可以掌握 ROS 服务调用的方法，比如用 <code>/set_pen</code> 换画笔、用 <code>/teleport_absolute</code> 瞬移海龟；也可以体会服务与话题两类通信方式各自的分工——像换画笔、瞬移这种做一次就要一个明确结果的操作适合用服务，而持续控制海龟运动的速度指令适合用话题发布；此外还熟悉了用 <code>roslaunch</code> 一键组织多个节点同时启动的方法。</p></div>
+<p>本实验综合 <code>/set_pen</code> 画笔服务、<code>/teleport_absolute</code> 瞬移服务、<code>/clear</code> 画布清空服务与 <code>/turtle1/cmd_vel</code> 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。</p>
+<p>通过本实验，可以掌握 ROS 服务调用的方法，比如用 <code>/set_pen</code> 换画笔、用 <code>/teleport_absolute</code> 瞬移海龟、用 <code>/clear</code> 清空画布；也可以体会服务与话题两类通信方式各自的分工——像换画笔、瞬移、清画布这种做一次就要一个明确结果的操作适合用服务，而持续控制海龟运动的速度指令适合用话题发布；此外还熟悉了用 <code>roslaunch</code> 一键组织多个节点同时启动的方法。</p></div>
 </div>
 </div><footer>
 <hr/>
