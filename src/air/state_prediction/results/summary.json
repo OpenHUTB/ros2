@@ -1,0 +1,95 @@
+{
+  "deployment_model": "gru_44",
+  "selection_rule": "minimum validation normalized MSE among GRU seeds",
+  "metric_definition": "MAE/RMSE averaged over forecast windows and XYZ components; vector RMSE also reported",
+  "units": {
+    "position": "m",
+    "velocity": "m/s"
+  },
+  "test_episodes": [
+    "episode_025",
+    "episode_026",
+    "episode_027",
+    "episode_028",
+    "episode_029"
+  ],
+  "limitations": [
+    "Single Blocks scene; small pilot dataset",
+    "Overlapping windows are correlated; episode metrics supplied",
+    "No claim of real-flight generalization"
+  ],
+  "seed_summary": [
+    {
+      "variant": "gru",
+      "horizon_s": 0.25,
+      "seeds": 3,
+      "position_rmse_mean": 0.000426946838463967,
+      "position_rmse_std": 4.165930745973035e-05,
+      "velocity_rmse_mean": 0.003231372140968839
+    },
+    {
+      "variant": "gru",
+      "horizon_s": 0.5,
+      "seeds": 3,
+      "position_rmse_mean": 0.0016089201672002673,
+      "position_rmse_std": 0.00010048983097779267,
+      "velocity_rmse_mean": 0.007193508247534434
+    },
+    {
+      "variant": "gru",
+      "horizon_s": 1.0,
+      "seeds": 3,
+      "position_rmse_mean": 0.008991505640248457,
+      "position_rmse_std": 0.000302538466141685,
+      "velocity_rmse_mean": 0.029039762293299038
+    },
+    {
+      "variant": "no_acc_att",
+      "horizon_s": 0.25,
+      "seeds": 3,
+      "position_rmse_mean": 0.0027574808336794376,
+      "position_rmse_std": 0.00024221791265100086,
+      "velocity_rmse_mean": 0.022157095993558567
+    },
+    {
+      "variant": "no_acc_att",
+      "horizon_s": 0.5,
+      "seeds": 3,
+      "position_rmse_mean": 0.011160874428848425,
+      "position_rmse_std": 0.0010488343491201954,
+      "velocity_rmse_mean": 0.04615952695409457
+    },
+    {
+      "variant": "no_acc_att",
+      "horizon_s": 1.0,
+      "seeds": 3,
+      "position_rmse_mean": 0.047094920029242836,
+      "position_rmse_std": 0.0045323073787488346,
+      "velocity_rmse_mean": 0.1019677718480428
+    },
+    {
+      "variant": "mlp",
+      "horizon_s": 0.25,
+      "seeds": 3,
+      "position_rmse_mean": 0.0005306490347720683,
+      "position_rmse_std": 3.728775629579596e-05,
+      "velocity_rmse_mean": 0.004161445579181115
+    },
+    {
+      "variant": "mlp",
+      "horizon_s": 0.5,
+      "seeds": 3,
+      "position_rmse_mean": 0.002128191447506348,
+      "position_rmse_std": 6.950435242824919e-05,
+      "velocity_rmse_mean": 0.009664435870945454
+    },
+    {
+      "variant": "mlp",
+      "horizon_s": 1.0,
+      "seeds": 3,
+      "position_rmse_mean": 0.012028750653068224,
+      "position_rmse_std": 0.00034790544008712806,
+      "velocity_rmse_mean": 0.03634647155801455
+    }
+  ]
+}

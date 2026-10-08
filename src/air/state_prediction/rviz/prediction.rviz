@@ -1,0 +1,66 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Background Color: 24; 29; 40
+    Fixed Frame: map
+    Frame Rate: 30
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Ground grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 30
+    - Class: rviz_default_plugins/Path
+      Name: Measured flight - green
+      Enabled: true
+      Topic:
+        Value: /uav/truth_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Color: 70; 220; 130
+      Line Style: Billboards
+      Line Width: 0.06
+      Alpha: 1
+    - Class: rviz_default_plugins/Path
+      Name: GRU future path - orange
+      Enabled: true
+      Topic:
+        Value: /uav/predicted_path
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+      Color: 255; 130; 35
+      Line Style: Billboards
+      Line Width: 0.09
+      Alpha: 1
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Future positions and aligned errors
+      Enabled: true
+      Topic:
+        Value: /uav/prediction_markers
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Flight overview
+      Distance: 17
+      Pitch: 0.4
+      Yaw: 0.8
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 7
+Window Geometry:
+  Width: 1100
+  Height: 760
