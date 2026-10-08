@@ -1,0 +1,74 @@
+[
+  {
+    "method": "consistency_42",
+    "events": 200,
+    "detected": 200,
+    "precision": 0.6172839506172839,
+    "recall": 1.0,
+    "f1": 0.7633587786259541,
+    "clean_false_alarms_per_min": 2.66874477481123
+  },
+  {
+    "method": "consistency_43",
+    "events": 200,
+    "detected": 200,
+    "precision": 0.7662835249042146,
+    "recall": 1.0,
+    "f1": 0.8676789587852495,
+    "clean_false_alarms_per_min": 1.0007792905542112
+  },
+  {
+    "method": "consistency_44",
+    "events": 200,
+    "detected": 200,
+    "precision": 0.704225352112676,
+    "recall": 1.0,
+    "f1": 0.8264462809917354,
+    "clean_false_alarms_per_min": 3.3359309685140377
+  },
+  {
+    "method": "consistency_mlp_42",
+    "events": 200,
+    "detected": 200,
+    "precision": 0.8333333333333334,
+    "recall": 1.0,
+    "f1": 0.9090909090909091,
+    "clean_false_alarms_per_min": 2.3351516779598263
+  },
+  {
+    "method": "neural_only",
+    "events": 200,
+    "detected": 180,
+    "precision": 0.5921052631578947,
+    "recall": 0.9,
+    "f1": 0.7142857142857143,
+    "clean_false_alarms_per_min": 2.66874477481123
+  },
+  {
+    "method": "no_persistence",
+    "events": 200,
+    "detected": 200,
+    "precision": 0.4672897196261682,
+    "recall": 1.0,
+    "f1": 0.6369426751592356,
+    "clean_false_alarms_per_min": 5.33748954962246
+  },
+  {
+    "method": "timestamp_rules",
+    "events": 200,
+    "detected": 20,
+    "precision": 1.0,
+    "recall": 0.1,
+    "f1": 0.18181818181818182,
+    "clean_false_alarms_per_min": 0.0
+  },
+  {
+    "method": "trapezoid_rules",
+    "events": 200,
+    "detected": 140,
+    "precision": 1.0,
+    "recall": 0.7,
+    "f1": 0.8235294117647058,
+    "clean_false_alarms_per_min": 0.0
+  }
+]

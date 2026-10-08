@@ -1,0 +1,14 @@
+Connected!
+Client Ver:1 (Min Req: 1), Server Ver:1 (Min Req: 1)
+
+{"episode_id": "episode_100", "family": "chirp", "split": "test", "seed": 20261030, "amplitude": 1.1728298790310177, "omega": 0.5339121149660047, "phase": -1.9062397847722659, "samples": 361, "duration_sim_s": 17.988383744, "median_dt_s": 0.051001088, "max_dt_s": 0.057001216, "timestamps_strictly_increasing": true, "collision_count": 0, "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD", "source": "Windows Blocks / AirSim RPC getMultirotorState", "airsim_python_version": "1.8.1", "sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b"}
+{"episode_id": "episode_101", "family": "mixed_turns", "split": "test", "seed": 20261031, "amplitude": 1.0838498513926182, "omega": 0.5212917126682419, "phase": -2.3444403160144702, "samples": 361, "duration_sim_s": 17.997383936000002, "median_dt_s": 0.051001088, "max_dt_s": 0.057001216, "timestamps_strictly_increasing": true, "collision_count": 0, "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD", "source": "Windows Blocks / AirSim RPC getMultirotorState", "airsim_python_version": "1.8.1", "sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8"}
+{"episode_id": "episode_102", "family": "chirp", "split": "test", "seed": 20261032, "amplitude": 1.5207443630318505, "omega": 0.532401928124052, "phase": 2.562470257899782, "samples": 361, "duration_sim_s": 17.988383744, "median_dt_s": 0.051001088, "max_dt_s": 0.054001152000000004, "timestamps_strictly_increasing": true, "collision_count": 0, "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD", "source": "Windows Blocks / AirSim RPC getMultirotorState", "airsim_python_version": "1.8.1", "sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40"}
+{"episode_id": "episode_103", "family": "mixed_turns", "split": "test", "seed": 20261033, "amplitude": 1.4214162866062285, "omega": 0.4556470940469307, "phase": -1.1754525701996676, "samples": 361, "duration_sim_s": 17.988383744, "median_dt_s": 0.051001088, "max_dt_s": 0.057001216, "timestamps_strictly_increasing": true, "collision_count": 0, "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD", "source": "Windows Blocks / AirSim RPC getMultirotorState", "airsim_python_version": "1.8.1", "sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1"}
+LANDED_VERIFIED True
+Traceback (most recent call last):
+  File "collect_holdout.py", line 175, in <module>
+    main()
+  File "collect_holdout.py", line 118, in main
+    raise RuntimeError('Failed to reach episode start: '+str(pos))
+RuntimeError: Failed to reach episode start: [-1.30008388 -0.1690779  -8.11825466]
