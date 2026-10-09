@@ -71,6 +71,8 @@ class RooftopLandingNode(object):
         self.max_planes = int(g("perception/max_planes", 5))
         self.min_radius = float(g("perception/min_landing_radius", 0.6))
         self.prefer = g("perception/prefer", "highest")
+        self.cluster_cell = float(g("perception/cluster_cell", 1.0))
+        self.cluster_min_points = int(g("perception/cluster_min_points", 2))
 
         self.safe_alt = float(g("approach/safe_altitude", 5.0))
         self.goal_timeout = float(g("approach/goal_timeout", 60.0))
@@ -223,7 +225,9 @@ class RooftopLandingNode(object):
         roofs = rp.detect_rooftops(
             cloud, max_tilt_deg=self.max_tilt, dist_thresh=self.plane_tol,
             min_area=self.min_area, min_inliers=self.min_inliers,
-            max_planes=self.max_planes, min_height=self.min_height)
+            max_planes=self.max_planes, min_height=self.min_height,
+            cluster_cell=self.cluster_cell,
+            cluster_min_points=self.cluster_min_points)
         rospy.loginfo("[rooftop_landing] 点云 %d 点，检测到 %d 个候选水平面"
                       % (len(cloud), len(roofs)))
         if not roofs:

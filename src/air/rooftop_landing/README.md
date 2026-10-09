@@ -129,6 +129,8 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 | `perception/min_height` | 0.5 | 平面高度下限 (m)，用于滤掉地面 |
 | `perception/min_landing_radius` | 0.6 | 降落点最小安全半径 (m) |
 | `perception/prefer` | `highest` | 目标屋顶策略：`highest` / `closest` / `largest` |
+| `perception/cluster_cell` | 1.0 | 连通域聚类栅格边长 (m)：拆开平面上互不相连的点群 |
+| `perception/cluster_min_points` | 2 | 一个栅格至少几个点才算被占据（滤掉零星噪点） |
 | `approach/safe_altitude` | 5.0 | 高于屋顶的安全高度 (m) |
 | `approach/goal_timeout` | 60.0 | 等待 `GOAL_DONE` 超时 (s) |
 | `descend/speed` | 0.5 | 垂直下降速度 (m/s) |
@@ -169,16 +171,27 @@ roslaunch rooftop_landing main.launch z_up:=true          # 若高度是 ENU 上
    ▼
    │  ③ 只保留水平面（倾角 ≤ max_tilt_deg）          plane_tilt_deg
    ▼
-   │  ④ 平面内点投影 → 2D 凸包作为屋顶轮廓          convex_hull_2d
+   │  ④ 平面上互不相连的点群拆开（连通域聚类）        split_clusters_2d
+   │     滤掉零星噪声点；相邻的两栋楼各自成为候选
    ▼
-   │  ⑤ polylabel 求最大内切圆圆心 = 降落点          polylabel
+   │  ⑤ 每个连通块投影 → 2D 凸包作为屋顶轮廓         convex_hull_2d
    ▼
-   │  ⑥ 按高度/半径打分选最优屋顶                   select_landing_target
+   │  ⑥ polylabel 求最大内切圆圆心 = 降落点          polylabel
+   ▼
+   │  ⑦ 按高度/半径打分选最优屋顶                   select_landing_target
    ▼
 目标点(/uav/goal) → 桥接层飞抵悬停 → /uav/status = GOAL_DONE
    ▼
 垂直速度(/uav/cmd_vel) → 高度接近屋顶 → LANDED
 ```
+
+**为什么要先做连通域聚类**：平面内点里常混有零星离群点 —— 远处的杂点、以及
+**邻近楼顶**的点，都会落在同一个高度带里被 RANSAC 收进内点。而凸包对离群点
+极端敏感：实测 6900 个点里混进 4 个同高度的远处噪点（占 0.06%），就把 216 m²
+的屋顶撑成 1175 m²，「最大内切圆圆心」偏了 22 m，会落到楼外的街上。
+先按 1 m 栅格做八邻域连通域标记、丢掉点数不足的格子，再对每个连通块单独求凸包
+即可解决；副产品是**相邻但不相连的两栋楼会被拆成两个独立候选屋顶**，
+使 `prefer=closest/largest` 能真正在多栋楼之间做选择。
 
 **为什么用最大内切圆圆心而不是质心**：屋顶往往不是规则矩形，质心可能落在天窗、
 通风管或靠近边缘的位置；内切圆圆心是**离屋顶边界最远**的点，四周余量最大，
@@ -249,6 +262,7 @@ python3 tests/test_rooftop_landing_ros_sim.py
 |---|---|
 | `未找到合格屋顶，继续搜索` | 点云太少或阈值过严。先 `rostopic echo -n1 /lidar/points/width` 确认有数据；再放宽 `perception/min_plane_inliers`、`min_roof_area` |
 | 降落点选到了地面而不是屋顶 | `min_height` 太小。实测地面为 0 m，把 `perception/min_height` 提到 1.0 以上 |
+| 降落点落到了屋顶外面（像是在街上） | 平面上混进了远处同高度的噪点，把凸包撑开了。检查 `perception/cluster_cell`（默认 1.0 m）和 `perception/cluster_min_points`（默认 2）是不是被改得过小；点云很稀疏时可把 `cluster_cell` 调大一些 |
 | 目标点下发后无人机不动 | 桥接层没在跑或 `/uav/status` 不是 `GOAL_DONE`；先确认 `roslaunch carlair_ros_bridge main.launch` 已启动 |
 | 无人机往下飞变成了往上飞 | 高度约定反了。看日志里 `odom 原始高度` 的正负，然后 `z_up:=true` 或 `false` |
 | `接近超时，进入 ABORT` | 目标点太远或桥接限速。调大 `approach/goal_timeout` 或把 `safe_altitude` 调小 |

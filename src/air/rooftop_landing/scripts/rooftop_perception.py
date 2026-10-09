@@ -248,12 +248,86 @@ def polylabel(rings, precision=0.05):
     return (float(best.x), float(best.y)), max(0.0, float(best.d))
 
 
+def split_clusters_2d(points, cell=1.0, min_points=2):
+    """把（近似共面的）点集按水平面 2D 栅格做连通域聚类。
+
+    平面内点里常混有零星离群点：远处的杂点、以及**邻近楼顶**的点，都可能落在
+    同一个高度带里被 RANSAC 收进内点。凸包对离群点极端敏感 —— 少数几个远处的
+    点就能把轮廓撑开，使「最大内切圆圆心」跑到真实屋顶之外。实测：6900 个点里
+    混进 4 个离群点（占 0.06%），就把 216 m² 的屋顶撑成 1175 m²，降落点偏了 22 m。
+
+    这里先把点集栅格化，丢掉点数不足 ``min_points`` 的零星格子，再对剩余格子做
+    八邻域连通域标记，按点数从多到少返回各个连通块。这样既滤掉了零星噪点，
+    也顺带把「相邻但不相连的两栋楼」拆成两个独立的候选屋顶。
+
+    Args:
+        points: (N,3) 或 (N,2) 点集，只用前两维做聚类
+        cell: 栅格边长 (m)
+        min_points: 一个格子至少要有几个点才算被占据
+
+    Returns:
+        list of ndarray，每个元素是一个连通块的点（保持原始列数）；
+        输入为空或无法聚类时返回 ``[points]``。
+    """
+    pts = np.asarray(points, dtype=np.float64)
+    if pts.ndim != 2 or len(pts) == 0 or pts.shape[1] < 2:
+        return [pts]
+
+    ij = np.floor(pts[:, :2] / float(cell)).astype(np.int64)
+    uniq, inv, counts = np.unique(ij, axis=0, return_inverse=True,
+                                  return_counts=True)
+    inv = np.asarray(inv).ravel()
+    kept = np.where(counts >= int(min_points))[0]
+    if len(kept) == 0:
+        return [pts]
+
+    # 全量 uniq 下标 -> 保留格子下标 的映射，便于后面向量化取点
+    k_of_full = -np.ones(len(uniq), dtype=np.int64)
+    k_of_full[kept] = np.arange(len(kept))
+    occupied = {tuple(c): k for k, c in enumerate(uniq[kept])}
+
+    seen = set()
+    comps = []
+    for c0 in map(tuple, uniq[kept]):
+        if c0 in seen:
+            continue
+        seen.add(c0)
+        stack = [c0]
+        members = []
+        while stack:
+            cur = stack.pop()
+            members.append(occupied[cur])
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    nb = (cur[0] + dx, cur[1] + dy)
+                    if nb in occupied and nb not in seen:
+                        seen.add(nb)
+                        stack.append(nb)
+        comps.append(members)
+    if not comps:
+        return [pts]
+    comps.sort(key=len, reverse=True)
+
+    kk = k_of_full[inv]                 # 每个点对应的保留格子下标；-1 = 零星点
+    valid = kk >= 0
+    out = []
+    for members in comps:
+        flag = np.zeros(len(kept), dtype=bool)
+        flag[np.asarray(members, dtype=np.int64)] = True
+        sel = np.zeros(len(pts), dtype=bool)
+        sel[valid] = flag[kk[valid]]
+        if np.any(sel):
+            out.append(pts[sel])
+    return out if out else [pts]
+
+
 # --------------------------------------------------------------------------- #
 # 3. 屋顶检测主流程
 # --------------------------------------------------------------------------- #
 def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
                     min_area=8.0, min_inliers=120, max_planes=5,
-                    min_height=0.5, rng=None):
+                    min_height=0.5, rng=None,
+                    cluster_cell=1.0, cluster_min_points=2):
     """从点云中找出所有「水平候选面」，按高度从高到低返回列表。
 
     每个元素::
@@ -263,6 +337,10 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
           "area": float, "hull": (M,2) ndarray,
           "landing_point": (x, y), "radius": float, "inliers": (N,) bool,
         }
+
+    求凸包之前会先用 :func:`split_clusters_2d` 把平面上互不相连的点群拆开
+    （``cluster_cell`` / ``cluster_min_points``），因此**一个平面可能产生多个
+    候选屋顶** —— 既滤掉了零星离群点，也把相邻的两栋楼分成两个独立候选。
     """
     pts = np.asarray(points, dtype=np.float64)
     if pts.ndim != 2 or pts.shape[1] < 3:
@@ -288,17 +366,22 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
             continue
 
         plane_pts = remaining[plane["inliers"]]
-        hull = convex_hull_2d(plane_pts)
-        area = polygon_area(hull)
-        if len(hull) < 3 or area < min_area:
-            remaining = remaining[~plane["inliers"]]
-            continue
-
-        (lx, ly), radius = polylabel([hull], precision=0.05)
-        results.append({"normal": plane["normal"], "d": plane["d"],
-                        "height": float(height), "area": float(area),
-                        "hull": hull, "landing_point": (float(lx), float(ly)),
-                        "radius": float(radius), "inliers": plane["inliers"]})
+        # 鲁棒性：先把平面上互不相连的点群拆开，各自求凸包。
+        # 否则少数远处的高程噪点（或邻近楼顶）会把凸包撑开，
+        # 使「最大内切圆圆心」落到真实屋顶之外。
+        for cluster in split_clusters_2d(plane_pts, cell=cluster_cell,
+                                         min_points=cluster_min_points):
+            if len(cluster) < min_inliers:
+                continue
+            hull = convex_hull_2d(cluster)
+            area = polygon_area(hull)
+            if len(hull) < 3 or area < min_area:
+                continue
+            (lx, ly), radius = polylabel([hull], precision=0.05)
+            results.append({"normal": plane["normal"], "d": plane["d"],
+                            "height": float(height), "area": float(area),
+                            "hull": hull, "landing_point": (float(lx), float(ly)),
+                            "radius": float(radius), "inliers": plane["inliers"]})
         remaining = remaining[~plane["inliers"]]
 
     results.sort(key=lambda r: r["height"], reverse=True)
