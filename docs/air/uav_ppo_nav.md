@@ -119,20 +119,21 @@ a  = clip(W2·h1 + b2, -1, 1)
 ### 5.1 本地桩测试（无需 ROS / 仿真器）
 
 ```shell
-python3 tests/test_ppo_nav_local.py        # 68 项：直方图/世界系变换/动作映射/环境/策略
-python3 tests/test_ppo_nav_node_local.py   # 17 项：部署节点（mock 掉 rospy 也能测）
+python3 tests/test_ppo_nav_local.py        # 19 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy 也能测）
 ```
 
 另外可以校验「部署侧纯 numpy 推理」与训练框架（SB3）完全一致：
 
 ```python
 from policy import MlpPolicy; from stable_baselines3 import PPO
-# 同一观测下 MlpPolicy.forward 与 model.predict 的最大绝对误差 < 1e-7
+# 同一观测下 MlpPolicy.forward 与 model.predict 的最大绝对误差 < 1e-5
+# （两者都是 float32，实测量级 1e-8~1e-6，属正常舍入误差）
 ```
 
 ### 5.2 训练环境评估
 
-`main.py --eval --episodes 100 --obstacles 16`（40 万步训练）：
+`main.py --eval --episodes 100 --obstacles 16`：
 
 | 指标 | 数值 |
 |---|---|
@@ -141,6 +142,13 @@ from policy import MlpPolicy; from stable_baselines3 import PPO
 | 超时 | 5 |
 | 平均步数 | 38.4 |
 | 平均奖励 | 16.5 |
+
+> **必须显式带 `--obstacles 16`**：`--eval` 的 `--obstacles` 默认值是 6，不传会得到
+> 不同的成功率，容易误判。
+>
+> 训练共 40 万步，但 `train.py` 故意导出的是**评估集最优检查点** `best_model.zip`
+> （约 30 万步处）；已逐层比对确认 `policy_weights.npz` 与 best 权重完全一致
+> （与 final 差 1.04e-1）。只有 `policy_weights.npz` 入库，两个 `.zip` 训练产物不入库。
 
 ### 5.3 CarlaAir 真机联调（同一策略、同一观测代码）
 

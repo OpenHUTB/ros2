@@ -11,6 +11,12 @@ logs/
 *.bag
 .catkin_workspace
 
+# catkin 在仓库根目录跑 catkin_make 时生成的杂物（不入库）
+# 注意：含 "/" 的模式锚定到本文件所在目录，这三条只对仓库根生效
+src/CMakeLists.txt
+build/.built_by
+devel/.built_by
+
 # 仿真与训练产物（二进制大文件不入库，改用网盘链接）
 *.mp4
 *.gif
@@ -19,10 +25,17 @@ logs/
 *.onnx
 *.ckpt
 *.bag.active
-models/weights/
-models/eval_log/
-models/*.zip
 trajectories/*.json
+
+# 各功能包内的 models/ 目录：忽略体积大且可再生的训练产物
+# （必须写成 **/models/... —— 写成 models/... 会被锚定到仓库根，对
+#   src/air/<包>/models/ 完全无效，等于没写）
+**/models/weights/
+**/models/eval_log/
+**/models/*.zip
+**/models/*.ckpt
+# 但部署必需的权重文件要保留
+!**/models/*.npz
 
 # 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
 !docs/img/**/*.gif
@@ -32,8 +45,3 @@ trajectories/*.json
 .idea/
 .DS_Store
 Thumbs.db
-
-# catkin 在仓库根目录跑 catkin_make 时生成的杂物（不入库）
-src/CMakeLists.txt
-build/.built_by
-devel/.built_by

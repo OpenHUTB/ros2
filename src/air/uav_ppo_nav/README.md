@@ -80,22 +80,28 @@ roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
 ## 本地测试（无需 ROS / 仿真器 / GPU）
 
 ```bash
-python3 tests/test_ppo_nav_local.py        # 68 项：直方图/世界系变换/动作映射/环境/策略
-python3 tests/test_ppo_nav_node_local.py   # 17 项：部署节点（mock 掉 rospy）
+python3 tests/test_ppo_nav_local.py        # 19 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy）
 ```
 
 ## 实测结果
 
 | 场景 | 成功率 / 误差 |
 |---|---|
-| 训练环境评估（100 回合，16 障碍） | **78%** 成功，0 超时，平均 38.4 步 |
+| 训练环境评估（100 回合，16 障碍） | **78%** 成功（碰撞/越界 17、超时 5），平均 38.4 步 |
 | CarlaAir 真机（6.71 m 目标） | 3.4 s 到达，误差 0.59 m |
 | CarlaAir 真机（8.94 m 目标） | 4.2 s 到达，误差 0.38 m |
 | CarlaAir 真机（16.12 m 目标） | 6.4 s 到达，**误差 0.22 m** |
+
+> 评估须带 `--obstacles 16`：`--eval` 的默认值是 6，不传会得到不同的成功率。
 
 ## 说明
 
 - 训练环境是**质点 + 速度环一阶滞后**模型（`vel += (cmd−vel)·dt/τ`，τ = 0.45 s），
   接口（观测/动作）与真实部署完全一致；建模滞后是为了消除真机上的过冲震荡。
 - 部署侧只依赖 numpy（策略推理是纯 numpy 前向），避免在虚拟机上安装 torch。
+- **只提交部署必需的 `models/policy_weights.npz`（25 KB）**；`best_model.zip` /
+  `final_model.zip` 是 SB3 训练产物（各约 165 KB，pickle 压缩包），不入库，训练脚本可重新生成。
+- 训练总步数 40 万，但导出的是**验证集最优检查点**（`best_model.zip`，约 30 万步处）——
+  这是 `train.py` 的设计（评估集更优者胜出），`policy_weights.npz` 与 `best` 权重逐位一致。
 - 对比实验（同模型不同 RL 算法 / 同算法不同结构）见后续 PR。

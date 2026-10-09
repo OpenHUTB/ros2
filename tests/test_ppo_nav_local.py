@@ -101,13 +101,17 @@ def test_env():
     check(env.action_space.shape == (4,), "动作空间 4 维")
 
     # 随机动作跑几步，确认 step 返回 5 元组且不崩溃
+    # 注意：断言放在循环外，避免"靠重复执行灌水"把项数虚高
     terminated = truncated = False
+    steps = 0
+    r = 0.0
     for _ in range(50):
         obs, r, terminated, truncated, info = env.step(env.action_space.sample())
-        check(isinstance(r, float) and obs.shape == (22,), "step 返回合法奖励与观测")
+        steps += 1
         if terminated or truncated:
             break
-    check(terminated or truncated or True, "随机策略也能正常推进回合")
+    check(isinstance(r, float) and obs.shape == (22,), "step 返回合法奖励与观测")
+    check(steps >= 1, "随机策略能推进回合（实际推进 %d 步）" % steps)
 
     # 确定性：无障碍、目标就在前方，应能到达
     env2 = NavEnv(num_obstacles=0, seed=1)
