@@ -69,6 +69,9 @@ ROS每章节运行代码:
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [AirSim + ROS 1 Noetic + PPO 实际联调](./air/airsim_rl_planner_ros1.md) —— 面向 Ubuntu 虚拟机和 Python 3.8 的桥接与模型推理实验。
+
+
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
