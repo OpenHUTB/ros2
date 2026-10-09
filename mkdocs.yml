@@ -70,7 +70,7 @@ nav:
     - 4. 机器人仿真: './chapter/chap4.md'
     - 5. 机器人感知: './chapter/chap5.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
-    - 7. 机械臂控制: './chapter/chap7.md'
+    - 7. - 第七章 基于ubuntu20.04 ROS Noetic 配置Gazebo Classic环境完整指南: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
@@ -99,7 +99,6 @@ nav:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
-    - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
