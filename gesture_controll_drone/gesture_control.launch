@@ -1,0 +1,7 @@
+<launch>
+    <!-- 启动手势感知节点 -->
+    <node name="gesture_ros_node" pkg="your_pkg_name" type="gesture_ros_node.py" output="screen" />
+    
+    <!-- 启动无人机控制节点 -->
+    <node name="drone_control_node" pkg="your_pkg_name" type="drone_control_node.py" output="screen" />
+</launch>
