@@ -4,7 +4,7 @@
 
 ### 1.1 实验目的
 
-1. 掌握 turtlesim 的服务调用：用 `/set_pen` 设置画笔颜色、用 `/teleport_absolute` 瞬移海龟；
+1. 掌握 turtlesim 的服务调用：用 `/set_pen` 设置画笔颜色、用 `/teleport_absolute` 瞬移海龟、用 `/clear` 清空画布；
 2. 掌握花瓣图案的几何构造：让 6 个圆心均匀分布于公共中心四周、圆心距等于半径的圆依次绘制，形成两两相扣的花瓣；
 3. 通过 `roslaunch` 一键启动仿真器与控制节点，完成彩色花瓣的自动绘制。
 
@@ -24,7 +24,7 @@
 turtle_sim_experiment/
 ├── main.py           # 主程序：控制小海龟画花瓣
 ├── main.launch       # roslaunch 入口：一键启动 turtlesim + 画花瓣节点
-├── package.xml       # 包清单，声明 rospy、geometry_msgs 和 turtlesim 依赖
+├── package.xml       # 包清单，声明 rospy、geometry_msgs、std_srvs 和 turtlesim 依赖
 ├── CMakeLists.txt    # 编译配置，安装 Python 脚本
 └── README.md         # 运行说明
 ```
@@ -33,29 +33,31 @@ turtle_sim_experiment/
 
 ### 2.1 花瓣的几何构造
 
-本实验控制小海龟从公共中心 (5.5, 5.5) 出发，连续画 6 个圆组成花瓣，关键在圆的布置方式：
+本实验控制小海龟连续画 6 个圆组成花瓣，关键在圆的布置方式：
 
 **6 个圆的圆心均匀分布在公共中心四周，且每个圆心到公共中心的距离正好等于圆的半径。** 这样每个圆都经过公共中心，相邻圆两两相交，叠在一起就是一圈互相扣住的花瓣（不同颜色代表不同花瓣，最终效果见 4.4 节）。
 
-第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 `/turtle2/teleport_absolute` 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 `/turtle2/set_pen` 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。
+第 i 个花瓣对应圆心角 θ = 2πi/6。画每个圆之前，先用 `/turtle1/teleport_absolute` 把海龟瞬移到该圆的起点——公共中心外 2r 处（圆心再向外 r），起点处朝向取圆的切线方向（θ + π/2）；瞬移前通过 `/turtle1/set_pen` 抬笔（off=1），到位后落笔（off=0），避免瞬移过程画出直线。每画完一个花瓣换一种画笔颜色，6 个花瓣依次使用红、绿、蓝、黄、紫、青。
 
 ### 2.2 圆周运动参数
 
-画每个圆时，向 `/turtle2/cmd_vel` 同时发布线速度 `linear.x = 1.5` 与角速度 `angular.z = 1.0`，海龟做逆时针圆周运动：
+画每个圆时，向 `/turtle1/cmd_vel` 同时发布线速度 `linear.x = 1.5` 与角速度 `angular.z = 1.0`，海龟做逆时针圆周运动：
 
 - 圆的半径 r = v/ω = 1.5/1.0 = 1.5 米；
 - 画一个整圆的用时 T = 2π/ω ≈ 6.28 秒。
 
 turtlesim 内置 0.5 秒看门狗，超过 0.5 秒没有收到新的速度指令海龟就会刹停，所以控制循环以 `rospy.Rate(50)` 的 50 Hz 频率持续发布速度指令，直到本瓣画满整圆。
 
-### 2.3 服务等待
+### 2.3 服务等待与画布清空
 
-用 `roslaunch` 一键启动时，仿真器和画花瓣节点是同时拉起的，谁先准备好并不确定。如果画花瓣节点跑得快、仿真器还没就绪，一开始的服务调用就会失败。所以程序开头先执行 `rospy.wait_for_service('/spawn')`，停下来等仿真器的服务上线，等到了再继续往下走，这样无论两个节点谁先谁后，程序都不会出错。
+用 `roslaunch` 一键启动时，仿真器和画花瓣节点是同时拉起的，谁先准备好并不确定。如果画花瓣节点跑得快、仿真器还没就绪，一开始的服务调用就会失败。所以程序开头先执行 `rospy.wait_for_service('/turtle1/teleport_absolute')`，停下来等仿真器的服务上线，等到了再继续往下走，这样无论两个节点谁先谁后，程序都不会出错。
+
+等到服务上线后，程序会先调用 `/clear` 服务把画布清空——上一次运行画的花瓣还在上面，擦掉再画，每次都从干净的画布开始，因此本实验可以反复运行。
 
 ### 2.4 算法流程
 
 1. 初始化节点 `turtle_circle_drawer`，读取花瓣数、线速度、角速度参数；
-2. 等待服务上线，将小海龟放到公共中心 (5.5, 5.5)；
+2. 等待服务上线，调用 `/clear` 清空画布；
 3. 循环 6 次，每轮执行：抬笔 → 瞬移到该花瓣起点并转到切线方向 → 换色落笔 → 50 Hz 持续发布速度指令画满 T = 2π/ω 秒（一个整圆）→ 抬笔；
 4. 6 个花瓣全部完成后输出结束日志。
 
@@ -73,7 +75,8 @@ import math
 
 import rospy
 from geometry_msgs.msg import Twist
-from turtlesim.srv import Spawn, SetPen, TeleportAbsolute
+from std_srvs.srv import Empty
+from turtlesim.srv import SetPen, TeleportAbsolute
 
 PETAL_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
                 (255, 255, 0), (255, 0, 255), (0, 255, 255)]
@@ -90,15 +93,15 @@ def main():
     circle_period = 2.0 * math.pi / angular_speed  # 画整圆用时 T = 2π / w
 
     # 等待 turtlesim 的服务上线（launch 一键启动时仿真器可能稍后就绪）
-    rospy.wait_for_service('/spawn')
-    spawn = rospy.ServiceProxy('/spawn', Spawn)
-    set_pen = rospy.ServiceProxy('/turtle2/set_pen', SetPen)
-    teleport = rospy.ServiceProxy('/turtle2/teleport_absolute', TeleportAbsolute)
+    rospy.wait_for_service('/turtle1/teleport_absolute')
 
-    resp = spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')  # 将小海龟放到公共中心
-    rospy.loginfo('小海龟就位: %s', resp.name)
+    # 清空画布，把上一次运行留下的轨迹擦掉
+    clear = rospy.ServiceProxy('/clear', Empty)
+    clear()
 
-    pub = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
+    set_pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
+    teleport = rospy.ServiceProxy('/turtle1/teleport_absolute', TeleportAbsolute)
+    pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
     rate = rospy.Rate(50)                 # 50 Hz，远高于 0.5 秒看门狗阈值
     twist = Twist()
     twist.linear.x = linear_speed
@@ -158,10 +161,12 @@ roslaunch turtle_sim_experiment main.launch
 ```text
 process[turtlesim-1]: started with pid [xxxx]
 process[turtle_circle_drawer-2]: started with pid [xxxx]
-[INFO] [...]: 等待 /spawn 服务上线 ...
-[INFO] [...]: 小海龟就位
+[INFO] [...]: 等待 turtlesim 服务上线 ...
+[INFO] [...]: 画布已清空
 [INFO] [...]: 开始画第 1 个花瓣，画笔 RGB=(255, 0, 0)
 ```
+
+**重复运行**：画完一次后不用做任何清理，直接再次运行同一条 roslaunch 命令即可。程序会先调用 /clear 服务把上一次画的花瓣擦掉，再从头重画，重复运行不会报错。
 
 ### 4.3 服务与节点验证
 
@@ -169,13 +174,13 @@ process[turtle_circle_drawer-2]: started with pid [xxxx]
 
 ```bash
 rosnode list                 # 可看到 /turtlesim 与 /turtle_circle_drawer 两个节点
-rosservice list | grep turtle2   # 可看到 /turtle2/... 系列服务
-rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose 等话题
+rosservice list | grep turtle1   # 可看到 /turtle1/... 系列服务
+rostopic list | grep turtle1     # 可看到 /turtle1/cmd_vel、/turtle1/pose 等话题
 ```
 
 ### 4.4 预期结果
 
-节点运行后，小海龟从公共中心出发，依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
+节点运行后，小海龟依次画出 6 个半径 1.5 米、颜色各异的圆；每个圆用时约 6.28 秒，全部完成后终端输出：
 
 ```text
 [INFO] [...]: 开始画第 6 个花瓣，画笔 RGB=(0, 255, 255)
@@ -203,6 +208,6 @@ rostopic list | grep turtle2     # 可看到 /turtle2/cmd_vel、/turtle2/pose �
 
 ## 六、总结
 
-本实验综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务与 `/turtle2/cmd_vel` 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。
+本实验综合 `/set_pen` 画笔服务、`/teleport_absolute` 瞬移服务、`/clear` 画布清空服务与 `/turtle1/cmd_vel` 速度话题发布，控制小海龟自动画出 6 个两两相扣的彩色花瓣。花瓣图案的核心是几何构造：圆心均匀分布于公共中心四周、圆心距等于半径，使每个圆都经过公共中心、相邻圆两两相交。
 
-通过本实验，可以掌握 ROS 服务调用的方法，比如用 `/set_pen` 换画笔、用 `/teleport_absolute` 瞬移海龟；也可以体会服务与话题两类通信方式各自的分工——像换画笔、瞬移这种做一次就要一个明确结果的操作适合用服务，而持续控制海龟运动的速度指令适合用话题发布；此外还熟悉了用 `roslaunch` 一键组织多个节点同时启动的方法。
+通过本实验，可以掌握 ROS 服务调用的方法，比如用 `/set_pen` 换画笔、用 `/teleport_absolute` 瞬移海龟、用 `/clear` 清空画布；也可以体会服务与话题两类通信方式各自的分工——像换画笔、瞬移、清画布这种做一次就要一个明确结果的操作适合用服务，而持续控制海龟运动的速度指令适合用话题发布；此外还熟悉了用 `roslaunch` 一键组织多个节点同时启动的方法。
