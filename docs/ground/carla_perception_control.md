@@ -73,7 +73,7 @@ $$
 
 权重用 He 初始化 \(W \sim \mathcal N\!\big(0, \sqrt{2/n_{\text{in}}}\big)\)，保证梯度稳定。
 
-### 2.3 控制神经网络（策略网络）
+### 2.3 控制神经网络（策略网络） <span id="ctrl-net"></span>
 
 输入 2 维 → 隐藏 32 维（ReLU）→ tanh 单输出转向。
 
@@ -228,11 +228,11 @@ headless 模式（离线取证，无需 CARLA 与图形界面）：
 | 1 | 启动 CARLA 服务端 | [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 |
 | 2 | 查看宿主机 IP、确认虚拟机连通 | 同上 →「使用 Carla 客户端启动 Ego Vehicle」 |
 | — | **★ 在此切换到本模块** | 以下与本模块相关 |
-| 3 | 装 `carla` 客户端与 `numpy` | [本页 5.3 节](#53-0) |
-| 4 | 离线训练两个神经网络 | [本页 5.5 节](#55-2-carla)（无需 CARLA） |
-| 5 | 运行在线感知 + 轨迹跟踪 | [本页 5.7 节](#57-4) |
+| 3 | 装 `carla` 客户端与 `numpy` | [本页 5.3 节](#env-prep) |
+| 4 | 离线训练两个神经网络 | [本页 5.5 节](#offline-train)（无需 CARLA） |
+| 5 | 运行在线感知 + 轨迹跟踪 | [本页 5.7 节](#online-run) |
 
-### 5.3 步骤 0：环境准备
+### 5.3 步骤 0：环境准备 <span id="env-prep"></span>
 
 CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看、虚拟机网络设置、
 `numpy` 版本兼容等**通用步骤与已有示例完全相同，本文不重复**，请参考
@@ -285,14 +285,15 @@ source install/setup.bash
 > 若本仓库已克隆在别处，把上面的 `~/ros2_ws/src/ros2` 换成实际路径即可，
 > 只要保证执行 `colcon build` 的工作空间根目录下存在 `src/`。
 
-### 5.5 步骤 2：离线训练神经网络（无需 CARLA）
+### 5.5 步骤 2：离线训练神经网络（无需 CARLA） <span id="offline-train"></span>
 
 ```bash
 python3 src/ground/carla_perception_control/main.py --mode train \
         --epochs 300 --out models/nn_percept.json
 ```
 
-预期输出：感知 NN 准确率 \(A_{\text{准确率}}\approx 0.995\)，控制 NN MSE \(\mathcal L_{\text{MSE}}\approx 0.003\)（符号含义见 [6.1 节](#61)）。
+预期输出：感知 NN 准确率 \(A_{\text{准确率}}\approx 0.995\)，
+控制 NN MSE \(\mathcal L_{\text{MSE}}\approx 0.003\)（符号含义见 [6.1 节](#metrics)）。
 
 若只想在**无图形界面**的环境验证全链路（含轨迹跟踪回放），用离线取证模式：
 
@@ -310,7 +311,8 @@ python3 src/ground/carla_perception_control/main.py --headless --demo \
 在宿主机上执行 `ipconfig`，取 VMware 虚拟网卡（`VMnet8`）的 IPv4 地址即可
 （本机该地址为 `192.168.8.1`，虚拟机 `ens33` 为 `192.168.8.131`，两者同网段）。
 查看方式与已有示例一致，详见
-[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md) →「使用 Carla 客户端启动 Ego Vehicle」。
+[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)
+→「使用 Carla 客户端启动 Ego Vehicle」。
 
 ```bash
 # 把 192.168.8.1 换成你宿主机 ipconfig 查到的地址
@@ -325,9 +327,9 @@ CONNECT OK: Carla/Maps/Town10HD_Opt
 ```
 
 本模块的 `--town` 默认为 `Town05`，运行时会自动 `load_world` 切到该地图；
-若服务端已在该地图上则跳过重载（见 [5.7 节](#57-4)）。
+若服务端已在该地图上则跳过重载（见 [5.7 节](#online-run)）。
 
-### 5.7 步骤 4：运行在线感知 + 轨迹跟踪
+### 5.7 步骤 4：运行在线感知 + 轨迹跟踪 <span id="online-run"></span>
 
 ```bash
 # 模式 A：独立运行（--host 填宿主机 IP）
@@ -450,7 +452,7 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
 ### 5.9 常见问题
 
 **Q1：`--mode run` 报"缺少 carla 模块"？**
-需安装 CARLA 0.9.16 的 Python 客户端 wheel，见 [5.3 节](#53-0)。若只想验证算法，
+需安装 CARLA 0.9.16 的 Python 客户端 wheel，见 [5.3 节](#env-prep)。若只想验证算法，
 可改用 `--headless --demo`（不需要 CARLA）。
 
 !!! note "关于 `carla.__version__`"
@@ -529,7 +531,7 @@ Town05 空旷路段确实无遮挡物，输出"无目标"属正常。真实场�
 
 ## 6. 性能评价
 
-### 6.1 指标定义
+### 6.1 指标定义 <span id="metrics"></span>
 
 本节所有指标均以「符号 + 下标」给出，**下标标明该指标的具体含义**：
 
@@ -548,7 +550,7 @@ A_{\text{准确率}} = \frac{1}{N}\sum_{i=1}^{N}\mathbb 1\big[\hat y_i = y_i\big
 $$
 
 **控制 NN MSE** \(\mathcal L_{\text{MSE}}\)
-（即 [2.3 节](#23) 控制网络训练所用均方误差在数据集上的取值）：
+（即 [2.3 节](#ctrl-net) 控制网络训练所用均方误差在数据集上的取值）：
 
 $$
 \mathcal L_{\text{MSE}} = \frac{1}{N}\sum_{i=1}^{N}\big(\delta_i - \delta_i^*\big)^2
