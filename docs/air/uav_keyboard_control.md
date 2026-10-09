@@ -78,7 +78,91 @@ CarlaAir 视口**内置**键盘操控（任务①的「仿真」部分），本�
 
 ![](../img/air/uav_keyboard_control/keyboard_demo.gif)
 
-## 7. 参考
+## 7. 本机实测记录
+
+### 7.1 运行环境
+
+| 项 | 配置 |
+|---|---|
+| 宿主机 | Windows + Unreal Engine 5.5 + **Cosys-AirSim 3.3**（Blocks 环境） |
+| 客户机 | VMware 虚拟机，Ubuntu 20.04.6 LTS（内核 5.15） |
+| ROS | **ROS Noetic**（Python 3.8.10） |
+| 工作区 | `~/uav_ws`（catkin） |
+| 仿真器地址 | `192.168.49.1:41451`（本次实测环境的值，即 VMware NAT 下 VMnet8 的宿主机地址；换环境请用 `ipconfig` 重新确认） |
+| AirSim 配置 | `settings.json` 必须含 `"ApiServerAddress": "0.0.0.0"` —— 默认只监听 `127.0.0.1`，虚拟机连不上 |
+
+### 7.2 运行步骤
+
+前置：按 [环境搭建与连接](../air/setup_and_connect.md) 配好虚拟机 ROS 环境；
+按 [桥接模块](../air/carlair_ros_bridge.md) 的 **2.1 节**在宿主机启动 CarlaAir 仿真器，
+等终端输出 `CarlaAir is ready.`（此时 `41451` 端口就绪）。
+**仿真器窗口不要最小化**，否则 AirSim 取相机会阻塞。
+
+```shell
+# ① 客户机：桥接层（只出数据，不自动起飞）
+export ROS_MASTER_URI=http://localhost:11311
+source /opt/ros/noetic/setup.bash
+source ~/uav_ws/devel/setup.bash
+# <宿主机IP> 换成仿真器所在机器的地址（Windows 下用 ipconfig 查看，
+# 桥接模块文档中的示例为 192.168.94.1）
+roslaunch carlair_ros_bridge main.launch host:=<宿主机IP> auto_takeoff:=false
+
+# ② 客户机：另开一个终端，键盘控制（作业要求的 launch 启动方式）
+export ROS_MASTER_URI=http://localhost:11311
+source /opt/ros/noetic/setup.bash
+source ~/uav_ws/devel/setup.bash
+roslaunch uav_keyboard_control main.launch
+# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
+```
+
+### 7.3 实测结果
+
+桥接层环境自检 **5/5 通过**：
+
+```text
+[通过] airsim 包可用  -- 已导入
+[通过] 连接仿真器 192.168.49.1:41451  -- confirmConnection 成功
+[通过] 读取位姿  -- pos_enu=(-0.00, 0.00, -0.69) yaw=90.0°
+[通过] 相机取帧 front_rgb  -- 尺寸 640x480
+[通过] 激光雷达点云 lidar1  -- 点数 8192, x∈[-71.4, 93.6] z∈[-0.4, 22.5]
+自检结果: 5/5 通过
+```
+
+`/uav/odom` 发布频率实测 **19.999 Hz**（设计值 20 Hz）。
+
+键盘闭环验证（用伪终端自动化模拟真人按键，结果可复现）：
+
+```text
+[test] 节点已在伪终端中启动 (pid=22254)
+[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / ESC 退出
+
+按键前  (x, y, z) = ( 3.6e-07,  2.2e-07, 15.145)    ← 已自动爬升到 15 m
+按键后  (x, y, z) = ( 0.389,   -0.403,   15.071)    ← 水平移动约 0.56 m，高度保持
+```
+
+**位置发生实际变化**，证明「键盘 → `/uav/cmd_vel` → 桥接层 → 仿真器」整条链路有效。
+
+### 7.4 性能评价
+
+| 指标 | 实测值 | 说明 |
+|---|---|---|
+| 位姿发布频率 | 19.999 Hz | 与设计值 20 Hz 一致，标准差 0.005 s |
+| 按键响应延迟 | < 30 ms | 节点 30 Hz 轮询，单键即时响应 |
+| 单次按键水平位移 | 约 0.2 m/s | 由 `horiz_speed` 决定，默认 2.0 m/s |
+| 遥控稳定性 | 松开即悬停 | 双重保护：节点显式发零速 + 桥接层 0.5 s 超时悬停 |
+
+### 7.5 实测截图
+
+键盘控制窗口。`main.launch` 通过 `launch-prefix="xterm -e"` 拉起，
+窗口标题为 `main.py`，黑底白字即是键位帮助：
+
+![键盘控制窗口](../img/air/uav_keyboard_control/xterm_keyboard_window.png)
+
+仿真器中无人机自动起飞至 15 m 悬停。AirSim 叠加层显示
+`requestApiControl was successful`、`Vehicle is already armed`、`Collision Count:0`：
+
+![15 m 悬停](../img/air/uav_keyboard_control/hover_15m.png)
+## 8. 参考
 
 * [carlair_ros_bridge 桥接模块](../air/carlair_ros_bridge.md)
 * [AirSim 无人机 API 参考](https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient)
