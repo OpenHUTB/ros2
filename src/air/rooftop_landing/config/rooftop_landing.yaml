@@ -16,8 +16,7 @@ frame:
   # 且 /uav/goal 的 z=-8.0 表示飞到 8 m 高 —— 即「下为正」，故默认 false。
   # 节点启动后会打印原始 z 与换算结果；若发现方向不符，改这里或 launch 的 z_up 参数。
   z_up: false
-  world: world
-  base_link: base_link
+  world: world                # marker / 状态话题的 frame_id
 
 # ---- 感知 ----
 perception:

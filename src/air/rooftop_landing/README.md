@@ -122,11 +122,14 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 | 参数 | 默认 | 说明 |
 |---|---|---|
 | `frame/z_up` | `false` | 高度分量是否「上为正」。**实测桥接层为下为正**，故默认 false |
+| `frame/world` | `world` | marker 与状态话题的 `frame_id` |
+| `perception/accumulate_frames` | 3 | 累积多少帧点云后再做一次检测 |
 | `perception/max_tilt_deg` | 15.0 | 平面水平性阈值（度） |
 | `perception/plane_dist_thresh` | 0.15 | RANSAC 内点距离阈值 (m) |
 | `perception/min_plane_inliers` | 120 | 一个平面最少点数 |
 | `perception/min_roof_area` | 8.0 | 屋顶最小面积 (m²) |
 | `perception/min_height` | 0.5 | 平面高度下限 (m)，用于滤掉地面 |
+| `perception/max_planes` | 5 | 最多提取几个候选水平面 |
 | `perception/min_landing_radius` | 0.6 | 降落点最小安全半径 (m) |
 | `perception/prefer` | `highest` | 目标屋顶策略：`highest` / `closest` / `largest` |
 | `perception/cluster_cell` | 1.0 | 连通域聚类栅格边长 (m)：拆开平面上互不相连的点群 |
@@ -135,7 +138,18 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 | `approach/goal_timeout` | 60.0 | 等待 `GOAL_DONE` 超时 (s) |
 | `descend/speed` | 0.5 | 垂直下降速度 (m/s) |
 | `descend/tolerance` | 0.35 | 判定触地的高度容差 (m) |
+| `descend/rate_hz` | 20.0 | 下降阶段 `cmd_vel` 的发布频率 (Hz) |
 | `descend/timeout` | 60.0 | 下降超时 (s) |
+| `mission/autostart` | `true` | 启动后是否自动开始；`false` 则等 `/rooftop/start` |
+| `mission/start_topic` | `/rooftop/start` | 手动启动话题（`std_msgs/Bool`） |
+| `topic/lidar` | `/lidar/points` | 输入点云，需与桥接层一致 |
+| `topic/odom` | `/uav/odom` | 输入位姿 |
+| `topic/status` | `/uav/status` | 输入桥接层状态（`GOAL_DONE` 等） |
+| `topic/cmd_vel` | `/uav/cmd_vel` | 输出速度指令 |
+| `topic/goal` | `/uav/goal` | 输出目标点 |
+| `visualization/publish_markers` | `true` | 是否发布 RViz marker |
+| `visualization/marker_topic` | `/rooftop/markers` | 屋顶轮廓与降落点的 marker 话题 |
+| `visualization/landing_topic` | `/rooftop/landing_point` | 选中降落点的话题 |
 
 示例：
 
@@ -156,7 +170,7 @@ roslaunch rooftop_landing main.launch z_up:=true          # 若高度是 ENU 上
 | 订阅 | `/rooftop/start` | `std_msgs/Bool` | 手动开始一次任务（`autostart:=false` 时用） |
 | 发布 | `/uav/goal` | `geometry_msgs/Point` | 屋顶降落点上方的目标点 |
 | 发布 | `/uav/cmd_vel` | `geometry_msgs/Twist` | 降落阶段的垂直速度指令（机体系） |
-| 发布 | `/rooftop/landing_point` | `geometry_msgs/Point` | 选中的降落点（便于外部记录） |
+| 发布 | `/rooftop/landing_point` | `geometry_msgs/Point` | 选中的降落点，z = 屋顶高度（上为正），便于外部记录 |
 | 发布 | `/rooftop/markers` | `visualization_msgs/MarkerArray` | 屋顶轮廓线与降落点可视化 |
 
 ---

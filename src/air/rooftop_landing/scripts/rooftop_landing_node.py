@@ -186,6 +186,11 @@ class RooftopLandingNode(object):
             if not ready:
                 return
             if self.detect_runs < 1 or (time.time() - self.state_t0) > 1.0:
+                # 重置计时，保证最多 1 Hz 检测一次。
+                # 不重置的话，进入 DETECT 满 1 秒后这个条件恒为真，
+                # do_detect（RANSAC + polylabel）会跟着 tick 以 10 Hz 反复跑，
+                # 白白吃掉 CPU 还可能拖慢回调。
+                self.state_t0 = time.time()
                 self.do_detect()
 
         elif self.state == APPROACH:
@@ -263,7 +268,11 @@ class RooftopLandingNode(object):
         self.pub_goal.publish(msg)
         rospy.loginfo("[rooftop_landing] 下发目标点 (%.2f, %.2f, %.2f)，"
                       "即屋顶上方 %.1f m" % (msg.x, msg.y, msg.z, self.safe_alt))
-        self.pub_land.publish(Point(float(lx), float(ly), msg.z))
+        # 降落点话题统一报「屋顶高度（上为正）」，
+        # 与 publish_landing_marker 里发的那条保持一致（否则几毫秒内
+        # 同一个话题会出现两条 z 含义不同的消息，外部记录会歧义）
+        self.pub_land.publish(Point(float(lx), float(ly),
+                                    float(target["height"])))
 
     def publish_descend(self, alt):
         # 距离屋顶还有多高（上为正）
