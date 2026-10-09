@@ -17,7 +17,7 @@
     name="draw_text_node"
     output="screen"
   >
-    <param name="text" value="$(arg text)" />
+    <param name="text" value="$(arg text)" type="str" />
   </node>
 
 </launch>
