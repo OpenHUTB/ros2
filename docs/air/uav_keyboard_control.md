@@ -143,6 +143,17 @@ roslaunch uav_keyboard_control main.launch
 | 单次按键水平位移 | 约 0.2 m/s | 由 `horiz_speed` 决定，默认 2.0 m/s |
 | 遥控稳定性 | 松开即悬停 | 双重保护：节点显式发零速 + 桥接层 0.5 s 超时悬停 |
 
+### 7.5 实测截图
+
+键盘控制窗口。`main.launch` 通过 `launch-prefix="xterm -e"` 拉起，
+窗口标题为 `main.py`，黑底白字即是键位帮助：
+
+![键盘控制窗口](../img/air/uav_keyboard_control/xterm_keyboard_window.png)
+
+仿真器中无人机自动起飞至 15 m 悬停。AirSim 叠加层显示
+`requestApiControl was successful`、`Vehicle is already armed`、`Collision Count:0`：
+
+![15 m 悬停](../img/air/uav_keyboard_control/hover_15m.png)
 ## 8. 参考
 
 * [carlair_ros_bridge 桥接模块](../air/carlair_ros_bridge.md)
