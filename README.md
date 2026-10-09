@@ -1,7 +1,13 @@
-# ROS/ROS2 示例
+# ROS 小海龟运行作业
 
-该仓库包含环境搭建、教程、人和载具的ROS/ROS2示例。
+## 运行环境
+- Ubuntu 20.04
+- ROS Noetic
 
-## 环境配置
+## 运行步骤
+1. 打开终端，输入 `roscore`
+2. 另开终端，输入 `rosrun turtlesim turtlesim_node`
+3. 再开终端，输入 `rosrun turtlesim turtle_teleop_key`
+4. 点击控制终端，使用键盘方向键控制小海龟移动
 
-运行 [`serve.bat`](https://github.com/OpenHUTB/ros2/blob/master/serve.bat)（所做的修改同样需要运行该脚本验证所修改内容的正确性），会打开浏览器显示主页，详情请参考[serve.bat](https://github.com/OpenHUTB/.github/blob/master/serve.bat)。
+## 运行结果如图
