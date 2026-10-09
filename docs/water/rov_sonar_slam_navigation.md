@@ -66,7 +66,7 @@ graph TD
         Env["海底复合管网作业场<br/>(管线 / 井口采油树 / 支撑桩)"]
         Current["3层剪切洋流级联扰动"]
         
-        LocalPolicy -->|/cmd_vel (线速度 & 偏航角速度)| ROV
+        LocalPolicy -->|/cmd_vel 控制指令| ROV
         Current --> ROV
         ROV --> Env
         ROV --> Sonar
@@ -118,6 +118,7 @@ l_{\text{occ}}, & | \rho_i - r_k | \le \frac{\Delta r}{2} \quad \text{且} \quad
 \end{cases}
 \]
 系统标定参数设定：
+
 - 击中障碍物对数几率增益：\(l_{\text{occ}} = 1.20\)（单次命中概率跃升至 \(P \approx 0.77\)）
 - 射线穿透空闲对数几率惩罚：\(l_{\text{free}} = 0.35\)（单次穿透概率降至 \(P \approx 0.41\)）
 - 声波厚度扩展容差：\(\Delta r = 0.08 \, \text{m}\)
@@ -128,6 +129,7 @@ l_{\text{occ}}, & | \rho_i - r_k | \le \frac{\Delta r}{2} \quad \text{且} \quad
 \[
 \mathcal{P}_k = \left\{ (mx_0, my_0), (mx_1, my_1), \dots, (mx_N, my_N) \right\}
 \]
+
 - 对路径上的前 \(N-1\) 个空闲栅格执行：\(L_t(m) = L_{t-1}(m) - l_{\text{free}}\)；
 - 对末端命中障碍物栅格 \((mx_N, my_N)\) 执行：\(L_t(m) = L_{t-1}(m) + l_{\text{occ}}\)；
 - **自适应概率截断保护**：为防止过饱和导致无法响应动态场景变化，对几率实施对称限幅：
@@ -150,7 +152,7 @@ l_{\text{occ}}, & | \rho_i - r_k | \le \frac{\Delta r}{2} \quad \text{且} \quad
 graph LR
     Map["map<br/>(全局建图原点坐标系)"] -->|TF: 无漂移校准变换| Odom["odom<br/>(水下连续里程计基准)"]
     Odom -->|TF: 6-DOF 空间动态位姿| Base["rov_base<br/>(ROV 几何体中心)"]
-    Base -->|TF: 固定偏置安装基阵 [0.41, 0, 0]| Sonar["rov_sonar_link<br/>(多波束声呐探测相位中心)"]
+    Base -->|TF: 固定偏置安装基阵 0.41m| Sonar["rov_sonar_link<br/>(多波束声呐探测相位中心)"]
 ```
 
 ### 2.5 地图文件持久化存储
@@ -286,16 +288,24 @@ graph LR
 !!! tip "前置环境与依赖准备"
     运行本模块前，请确保已按照 [ROV 基础仿真环境配置](https://openhutb.github.io/ros2/water/rov_physical_simulation/) 完成基础物理仿真依赖安装与模型资源检查：
     ```bash
-    pip install mujoco numpy
+    # 1. 安装核心 Python 依赖
+    pip install mujoco numpy scipy
+
+    # 2. 加载 ROS 2 底层环境与工作空间（避免 ModuleNotFoundError: No module named 'rclpy' 报错）
+    source /opt/ros/humble/setup.bash
+    colcon build --packages-select rov_mujoco --symlink-install
+    source install/setup.bash
     ```
 
 ### 5.1 启动方式一览
 
 #### 模式 1：Python 入口拉起 3D 可视化视窗（声呐 SLAM 与自主巡检模式）
-在终端中运行：
+在终端中依次执行（需先加载 ROS 2 环境）：
 ```bash
+source /opt/ros/humble/setup.bash
 python3 src/water/rov_mujoco/main.py --task3
 ```
+
 - **视窗特性**：MuJoCo 3D 物理引擎实时渲染，动态视角自动聚焦锁定 ROV。
 - **监控终端**：以 1Hz 频率实时刷新建图与导航状态：
   ```
@@ -305,12 +315,15 @@ python3 src/water/rov_mujoco/main.py --task3
 
 #### 模式 2：标准 ROS 2 Launch 节点集群拉起
 ```bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
 ros2 launch rov_mujoco task3.launch.py
 ```
 一键同步拉起 `mujoco_sim_node`、`sonar_slam_node` 与 `autonomous_navigation_node` 三大节点，对外发布标准 ROS 2 话题集群与 TF2 坐标树。
 
 #### 模式 3：自动化综合测试评测脚本
 ```bash
+source /opt/ros/humble/setup.bash
 python3 src/water/rov_mujoco/main.py --test3
 # 或直接调用自动化测试脚本：
 python3 src/water/rov_mujoco/test/test_task3.py
@@ -322,8 +335,6 @@ python3 src/water/rov_mujoco/test/test_task3.py
 ## 6. 任务 3 巡检与建图演示实录
 
 > 演示视频实录展示了水下机器人从起点出发，在多波束声呐探测下实时进行占据栅格建图，通过 Neural A* 全局走廊规划与局部深度避障策略绕过水下油气管线、采油树与导管架立桩，精确停靠至终点对接基座的全过程。
-
-![任务3 水下多波束声呐 SLAM 建图与神经网络自主导航视窗实录封面](../img/water/rov_sonar_slam_navigation_cover.png)
 
 ![任务3 水下多波束声呐 SLAM 建图与神经网络自主导航动态演示](../img/water/rov_sonar_slam_navigation.gif)
 
