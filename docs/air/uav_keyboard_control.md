@@ -88,23 +88,31 @@ CarlaAir 视口**内置**键盘操控（任务①的「仿真」部分），本�
 | 客户机 | VMware 虚拟机，Ubuntu 20.04.6 LTS（内核 5.15） |
 | ROS | **ROS Noetic**（Python 3.8.10） |
 | 工作区 | `~/uav_ws`（catkin） |
-| 仿真器地址 | `192.168.49.1:41451`（VMware NAT，VMnet8 的宿主机地址） |
+| 仿真器地址 | `192.168.49.1:41451`（本次实测环境的值，即 VMware NAT 下 VMnet8 的宿主机地址；换环境请用 `ipconfig` 重新确认） |
 | AirSim 配置 | `settings.json` 必须含 `"ApiServerAddress": "0.0.0.0"` —— 默认只监听 `127.0.0.1`，虚拟机连不上 |
 
 ### 7.2 运行步骤
 
-```shell
-# ① 宿主机：启动仿真器，等待 41451 端口就绪（窗口不要最小化，相机取帧会卡住）
-start_sim.bat
+前置：按 [环境搭建与连接](../air/setup_and_connect.md) 配好虚拟机 ROS 环境；
+按 [桥接模块](../air/carlair_ros_bridge.md) 的 **2.1 节**在宿主机启动 CarlaAir 仿真器，
+等终端输出 `CarlaAir is ready.`（此时 `41451` 端口就绪）。
+**仿真器窗口不要最小化**，否则 AirSim 取相机会阻塞。
 
-# ② 客户机：桥接层（只出数据，不自动起飞）
+```shell
+# ① 客户机：桥接层（只出数据，不自动起飞）
+export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
-roslaunch carlair_ros_bridge main.launch host:=192.168.49.1 auto_takeoff:=false
+# <宿主机IP> 换成仿真器所在机器的地址（Windows 下用 ipconfig 查看，
+# 桥接模块文档中的示例为 192.168.94.1）
+roslaunch carlair_ros_bridge main.launch host:=<宿主机IP> auto_takeoff:=false
 
-# ③ 客户机：键盘控制（作业要求的 launch 启动方式）
+# ② 客户机：另开一个终端，键盘控制（作业要求的 launch 启动方式）
+export ROS_MASTER_URI=http://localhost:11311
+source /opt/ros/noetic/setup.bash
+source ~/uav_ws/devel/setup.bash
 roslaunch uav_keyboard_control main.launch
-# 在该终端按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
+# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
 ```
 
 ### 7.3 实测结果
