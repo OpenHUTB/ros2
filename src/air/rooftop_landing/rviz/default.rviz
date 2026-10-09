@@ -1,0 +1,58 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+    Tree Height: 700
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Plane Cell Count: 40
+      Reference Frame: <Fixed Frame>
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+      Show Names: true
+      Frame Timeout: 15
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: LiDAR(/lidar/points)
+      Topic: /lidar/points
+      Queue Size: 2
+      Style: Points
+      Size (Pixels): 2
+      Color Transformer: AxisColor
+      Axis: Z
+      Autocompute Value Bounds:
+        Min Value: -5
+        Max Value: 40
+      Position Transformer: XYZ
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: RoofMarker(/rooftop/markers)
+      Topic: /rooftop/markers
+      Queue Size: 2
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 60
+      Focal Point:
+        X: 10
+        Y: 10
+        Z: 5
+      Name: Current View
+      Pitch: 0.6
+      Yaw: 0.8
+Window Geometry:
+  Height: 900
+  Width: 1500

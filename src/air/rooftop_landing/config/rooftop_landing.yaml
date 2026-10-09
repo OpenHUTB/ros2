@@ -1,0 +1,55 @@
+# rooftop_landing 参数（可用 roslaunch 参数覆盖，见 launch/main.launch）
+
+# ---- 话题（与 carlair_ros_bridge 保持一致）----
+topic:
+  lidar: /lidar/points
+  odom: /uav/odom
+  status: /uav/status
+  cmd_vel: /uav/cmd_vel
+  goal: /uav/goal
+
+# ---- 坐标系 ----
+frame:
+  # true : 高度分量「上为正」（标准 ENU）
+  # false: 高度分量「下为正」（NED，AirSim 原始约定）
+  # 实测 carlair_ros_bridge 的 /uav/odom 在无人机悬停约 1.2 m 时输出 z=-1.20，
+  # 且 /uav/goal 的 z=-8.0 表示飞到 8 m 高 —— 即「下为正」，故默认 false。
+  # 节点启动后会打印原始 z 与换算结果；若发现方向不符，改这里或 launch 的 z_up 参数。
+  z_up: false
+  world: world
+  base_link: base_link
+
+# ---- 感知 ----
+perception:
+  accumulate_frames: 3        # 积累多少帧点云后再做一次检测
+  max_tilt_deg: 15.0          # 平面水平性阈值（度），超过则不算屋顶
+  plane_dist_thresh: 0.15     # RANSAC 内点距离阈值 (m)
+  min_plane_inliers: 120      # 一个平面至少要有多少点
+  min_roof_area: 8.0          # 屋顶最小面积 (m^2)，滤掉小块
+  min_height: 0.5             # 平面高度下限 (m)，滤掉地面
+  max_planes: 5               # 最多提取几个候选面
+  min_landing_radius: 0.6     # 降落点最小安全半径 (m)
+  prefer: highest             # 目标屋顶选择：highest | closest | largest
+
+# ---- 接近（飞到降落点上方）----
+approach:
+  safe_altitude: 5.0          # 高于屋顶的安全高度 (m)
+  goal_timeout: 60.0          # 等待 GOAL_DONE 的超时 (s)
+
+# ---- 降落（垂直下降）----
+descend:
+  speed: 0.5                  # 下降速度 (m/s)
+  tolerance: 0.35             # 判定触地的高度容差 (m)
+  rate_hz: 20.0               # cmd_vel 发布频率 (Hz)
+  timeout: 60.0               # 下降超时 (s)
+
+# ---- 任务 ----
+mission:
+  autostart: true             # 启动后自动开始（false 则等 /rooftop/start 话题）
+  start_topic: /rooftop/start
+
+# ---- 可视化 ----
+visualization:
+  publish_markers: true
+  marker_topic: /rooftop/markers
+  landing_topic: /rooftop/landing_point
