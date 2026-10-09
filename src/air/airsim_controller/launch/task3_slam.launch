@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+  task3_slam.launch —— task3_slam_nav 神经网络 SLAM 导航 launch 启动
+  用法:
+      roslaunch airsim_controller task3_slam.launch
+      roslaunch airsim_controller task3_slam.launch goal_x:=8 goal_y:=8
+-->
+<launch>
+  <!-- 目标点参数，可命令行覆盖 -->
+  <arg name="goal_x" default="8.0"/>
+  <arg name="goal_y" default="8.0"/>
+
+  <!-- 任务3主节点：main.py（入口必须为 main. 开头） -->
+  <node name="task3_slam_nav" pkg="airsim_controller"
+        type="main.py" output="screen"
+        args="$(arg goal_x) $(arg goal_y)"/>
+
+  <!-- 可选：rtabmap 同步建图（需在目标机安装 rtabmap_ros） -->
+  <!--
+  <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen">
+    <param name="frame_id" value="base_link"/>
+    <param name="subscribe_depth" value="false"/>
+    <param name="subscribe_scan" value="true"/>
+  </node>
+  -->
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+  <!-- 任务2-A：深度相机神经网络避障 -->
+  <arg name="seconds" default="30"/>
+  <arg name="v_fwd" default="1.5"/>
+  <node pkg="airsim_controller" type="task2_perception_main.py" name="task2_avoid"
+        output="screen" args="--mode avoid --seconds $(arg seconds) --v-fwd $(arg v_fwd)"/>
+</launch>

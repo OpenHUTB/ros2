@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>airsim_controller</name>
+  <version>2.1.0</version>
+  <description>基于 AirSim 的无人机键盘控制、神经网络感知/避障、SLAM 导航与端到端飞行（OpenHUTB 课程任务）。</description>
+  <maintainer email="you@example.com">thechaos16</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <exec_depend>airsim_ros_pkgs</exec_depend>
+  <exec_depend>rtabmap_ros</exec_depend>
+  <exec_depend>move_base</exec_depend>
+</package>
