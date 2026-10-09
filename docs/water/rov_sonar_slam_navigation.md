@@ -197,6 +197,7 @@ d_{\text{corridor}}(x, y) = \left( \|(x, y) - (sx, sy)\|_2 + \|(x, y) - (gx, gy)
 \[
 f(n) = g(n) + h_{\text{euclid}}(n) \cdot \left( 1.0 + \lambda_{\text{neural}} \cdot \left( 1.0 - \Phi(n) \right) \right)
 \]
+
 - 当节点位于高置信度神经引导走廊中（\(\Phi(n) \to 1.0\)）时，评估函数退化为理想的无偏欧氏启发式 \(f(n) = g(n) + h(n)\)，以极快速度直扑目标；
 - 当节点偏离最优走廊试图盲目横向扩散时（\(\Phi(n) \to 0\)），启发式代价值急剧倍增，压制无效节点扩展。
 - 标定超参数：\(\lambda_{\text{neural}} = 0.35\)。
