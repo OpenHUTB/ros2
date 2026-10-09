@@ -11,7 +11,7 @@
 | 环节 | 实现 | 神经网络 |
 |---|---|---|
 | 感知 | RGB 相机 + 深度相机 + 激光雷达三路传感器 → 4 维归一化特征 | **MLP 分类器**（4→12→3），输出障碍方向 |
-| 控制 | 状态 (航向差 $e_\psi$, 前视距离 $d$) → 转向角 | **MLP 策略网络**（2→32→1），输出 `steer` |
+| 控制 | 状态 (航向差 \(e_\psi\), 前视距离 \(d\)) → 转向角 | **MLP 策略网络**（2→32→1），输出 `steer` |
 
 代码位于 `src/ground/carla_perception_control/`。
 
@@ -43,7 +43,7 @@
 ### 2.1 特征提取与归一化
 
 三路传感器压缩为 4 维特征向量。**归一化是必需的**：各特征量纲差异极大
-（深度 $\bar G\in[0,255]$、横向偏移 $\in[-1,1]$、距离 $\in[0.5,20]$），
+（深度 \(\bar G\in[0,255]\)、横向偏移 \(\in[-1,1]\)、距离 \(\in[0.5,20]\)），
 不归一化会让大数值特征主导梯度，小量纲特征学不到。
 
 $$
@@ -53,8 +53,8 @@ $$
 \underbrace{\tfrac{D_{\min}}{20}}_{\text{最近距离}}\,\Big]^{\!\top}
 $$
 
-其中 $c_x$ 为 RGB 下半区亮色像素横向重心，$\bar G$ 为深度 ROI 均值，
-$N_{\text{front}}$ 为雷达前方点数，$D_{\min}$ 为最近距离。
+其中 \(c_x\) 为 RGB 下半区亮色像素横向重心，\(\bar G\) 为深度 ROI 均值，
+\(N_{\text{front}}\) 为雷达前方点数，\(D_{\min}\) 为最近距离。
 
 ### 2.2 感知神经网络（MLP 分类器）
 
@@ -71,7 +71,7 @@ $$
 \mathcal L_{\text{cls}} = -\frac{1}{N}\sum_{i}\sum_{k} y_{ik}\log p_{ik}
 $$
 
-权重用 He 初始化 $W \sim \mathcal N\!\big(0, \sqrt{2/n_{\text{in}}}\big)$，保证梯度稳定。
+权重用 He 初始化 \(W \sim \mathcal N\!\big(0, \sqrt{2/n_{\text{in}}}\big)\)，保证梯度稳定。
 
 ### 2.3 控制神经网络（策略网络）
 
@@ -82,14 +82,14 @@ $$
 \delta = \tanh(W_2 \mathbf h + b_2) \in [-1,1]
 $$
 
-其中 $\tilde{\mathbf s}$ 为**标准化后的状态**：
+其中 \(\tilde{\mathbf s}\) 为**标准化后的状态**：
 
 $$
 \tilde{\mathbf s} = \frac{\mathbf s - \boldsymbol\mu}{\boldsymbol\sigma},\qquad
 \mathbf s = [\,e_\psi,\; d\,]^\top
 $$
 
-标准化参数 $\boldsymbol\mu,\boldsymbol\sigma$ 在训练时由数据集统计得到，并随模型一起存盘，
+标准化参数 \(\boldsymbol\mu,\boldsymbol\sigma\) 在训练时由数据集统计得到，并随模型一起存盘，
 推理时必须沿用同一组值（否则训练/推理输入分布不一致，精度会大幅下降）。
 
 采用均方误差回归：
@@ -98,7 +98,7 @@ $$
 \mathcal L_{\text{ctrl}} = \frac{1}{N}\sum_i\big(\delta_i - \delta_i^*\big)^2
 $$
 
-反向传播用链式法则对 $W,b$ 求梯度，随机批量梯度下降更新。
+反向传播用链式法则对 \(W,b\) 求梯度，随机批量梯度下降更新。
 
 ### 2.4 监督标签：纯跟踪几何律
 
@@ -109,19 +109,19 @@ $$
 \text{steer}^* = \mathrm{clip}\!\Big(\frac{\delta^*}{g},\,-1,\,1\Big)
 $$
 
-其中 $L=2.5\,\text{m}$ 为轴距，$g=1.2217\,\text{rad}$ 为 CARLA `steer` 到前轮转角的折算系数
-（`steer=1` 对应前轮转角约 $70°$）。网络学会这一映射后，在线运行即可直接推理。
+其中 \(L=2.5\,\text{m}\) 为轴距，\(g=1.2217\,\text{rad}\) 为 CARLA `steer` 到前轮转角的折算系数
+（`steer=1` 对应前轮转角约 \(70°\)）。网络学会这一映射后，在线运行即可直接推理。
 
 !!! note "两个关键实现细节"
-    1. **折算系数必须取真实几何值**。若 $g$ 取 0.5 这类偏小值，约有 **26%** 的标签会被
-       `clip` 饱和到 $\pm1$，回归误差无法下降；取 $g=1.2217$ 后饱和率降为 **0%**，
+    1. **折算系数必须取真实几何值**。若 \(g\) 取 0.5 这类偏小值，约有 **26%** 的标签会被
+       `clip` 饱和到 \(\pm1\)，回归误差无法下降；取 \(g=1.2217\) 后饱和率降为 **0%**，
        训练 MSE 从 0.034 降到 **0.003**。
     2. **航向差为 0 时标签必须为 0**。若在标签中加入恒正的偏置项
-       （如 $+0.1\cdot(1-\frac{1}{1+d/8})$），网络会让车持续向一侧偏转、原地绕圈。
+       （如 \(+0.1\cdot(1-\frac{1}{1+d/8})\)），网络会让车持续向一侧偏转、原地绕圈。
 
 ### 2.5 前视追踪与横向误差度量
 
-**前视点选择**：不只取最近路点，而是沿路点序列向前找到第一个距车至少 $d_{\text{look}}=6\,\text{m}$
+**前视点选择**：不只取最近路点，而是沿路点序列向前找到第一个距车至少 \(d_{\text{look}}=6\,\text{m}\)
 的路点作为追踪目标。前视距离过短会让车在高速下"冲过"路点来回振荡，过长则切弯。
 
 **路点加密**：原始给定轨迹的路点可能相隔十几米，需线性插值到约 2 m 一个点：
@@ -146,7 +146,7 @@ $$
 \tau_{\text{eff}} = \tau \cdot \max\!\Big(0.25,\ 1 - \frac{0.75\,|e_\psi|}{\pi}\Big)
 $$
 
-正对目标时全油门，偏差达 $\pi$ 时降到 25%。
+正对目标时全油门，偏差达 \(\pi\) 时降到 25%。
 
 ## 3. 算法流程
 
@@ -228,9 +228,9 @@ headless 模式（离线取证，无需 CARLA 与图形界面）：
 | 1 | 启动 CARLA 服务端 | [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 |
 | 2 | 查看宿主机 IP、确认虚拟机连通 | 同上 →「使用 Carla 客户端启动 Ego Vehicle」 |
 | — | **★ 在此切换到本模块** | 以下与本模块相关 |
-| 3 | 装 `carla` 客户端与 `numpy` | 本页 5.3 节 |
-| 4 | 离线训练两个神经网络 | 本页 5.5 节（无需 CARLA） |
-| 5 | 运行在线感知 + 轨迹跟踪 | 本页 5.6 节 |
+| 3 | 装 `carla` 客户端与 `numpy` | [本页 5.3 节](#53-0) |
+| 4 | 离线训练两个神经网络 | [本页 5.5 节](#55-2-carla)（无需 CARLA） |
+| 5 | 运行在线感知 + 轨迹跟踪 | [本页 5.7 节](#57-4) |
 
 ### 5.3 步骤 0：环境准备
 
@@ -253,11 +253,37 @@ pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_3
 
 ### 5.4 步骤 1：编译本功能包（ROS 2）
 
+本模块的源代码位于**本仓库**（`OpenHUTB/ros2`）的
+`src/ground/carla_perception_control/`。ROS 2 要求功能包放在工作空间的 `src/`
+目录下，因此先把本仓库克隆到工作空间的 `src/`：
+
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone https://github.com/OpenHUTB/ros2.git     # 换成你自己的 fork 亦可
+```
+
+克隆后的目录关系如下，`colcon build` 必须在**工作空间根目录**执行：
+
+```
+~/ros2_ws/                                   <- 工作空间根目录，colcon 在这里运行
+└── src/
+    └── ros2/                                <- 本仓库（git clone 得到）
+        └── src/ground/
+            └── carla_perception_control/    <- 本模块源代码，即第 4 节解析的文件
+```
+
+因此后文命令中写的 `src/ground/carla_perception_control/...`，
+实际路径是 `~/ros2_ws/src/ros2/src/ground/carla_perception_control/...`。
+编译并激活环境：
+
 ```bash
 cd ~/ros2_ws
 colcon build --packages-select carla_perception_control --symlink-install
 source install/setup.bash
 ```
+
+> 若本仓库已克隆在别处，把上面的 `~/ros2_ws/src/ros2` 换成实际路径即可，
+> 只要保证执行 `colcon build` 的工作空间根目录下存在 `src/`。
 
 ### 5.5 步骤 2：离线训练神经网络（无需 CARLA）
 
@@ -266,7 +292,7 @@ python3 src/ground/carla_perception_control/main.py --mode train \
         --epochs 300 --out models/nn_percept.json
 ```
 
-预期输出：感知 NN 准确率 ≈ **0.995**，控制 NN MSE ≈ **0.003**。
+预期输出：感知 NN 准确率 \(A_{\text{准确率}}\approx 0.995\)，控制 NN MSE \(\mathcal L_{\text{MSE}}\approx 0.003\)（符号含义见 [6.1 节](#61)）。
 
 若只想在**无图形界面**的环境验证全链路（含轨迹跟踪回放），用离线取证模式：
 
@@ -280,11 +306,26 @@ python3 src/ground/carla_perception_control/main.py --headless --demo \
 
 ### 5.6 步骤 3：验证与 CARLA 服务端的连接
 
+命令里的 `192.168.8.1` 是**运行 CARLA 服务端的宿主机（Windows）IP**：
+在宿主机上执行 `ipconfig`，取 VMware 虚拟网卡（`VMnet8`）的 IPv4 地址即可
+（本机该地址为 `192.168.8.1`，虚拟机 `ens33` 为 `192.168.8.131`，两者同网段）。
+查看方式与已有示例一致，详见
+[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md) →「使用 Carla 客户端启动 Ego Vehicle」。
+
 ```bash
+# 把 192.168.8.1 换成你宿主机 ipconfig 查到的地址
 python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"
 ```
 
-输出 `CONNECT OK: Carla/Maps/Town05` 表示连接成功。
+CARLA 服务端**默认启动的地图是 `Town10HD_Opt`**（由 `CarlaUE4/Config/DefaultEngine.ini`
+的 `GameDefaultMap` 决定），因此不加 `-map` 参数直接启动服务端时，输出应为：
+
+```
+CONNECT OK: Carla/Maps/Town10HD_Opt
+```
+
+本模块的 `--town` 默认为 `Town05`，运行时会自动 `load_world` 切到该地图；
+若服务端已在该地图上则跳过重载（见 [5.7 节](#57-4)）。
 
 ### 5.7 步骤 4：运行在线感知 + 轨迹跟踪
 
@@ -349,13 +390,10 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
 离线取证模式导出的曲线（实测，`--epochs 300 --sim_time 90`，
 轨迹为含两个约 90° 弯的 `DEMO_ROUTE`）：
 
-![感知神经网络交叉熵损失下降曲线](../img/ground/carla_percept_loss.png)
-
-![控制神经网络 MSE 下降曲线](../img/ground/carla_ctrl_loss.png)
-
-![横向误差随时间的收敛曲线](../img/ground/carla_lateral_error.png)
-
-![控制神经网络输出的转向指令序列](../img/ground/carla_steer_cmd.png)
+|  |  |
+|---|---|
+| ![感知神经网络交叉熵损失下降曲线](../img/ground/carla_percept_loss.png) | ![控制神经网络 MSE 下降曲线](../img/ground/carla_ctrl_loss.png) |
+| ![横向误差随时间的收敛曲线](../img/ground/carla_lateral_error.png) | ![控制神经网络输出的转向指令序列](../img/ground/carla_steer_cmd.png) |
 
 终端状态输出示例（节选）：
 
@@ -400,9 +438,9 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
 
 | 指标 | 离线取证 | 在线运行 |
 |---|---|---|
-| 感知 NN 准确率 | 0.995 | 0.995 |
-| 控制 NN MSE | 0.00303 | 0.00303 |
-| 横向误差 RMSE | **0.249 m** | **1.012 m** |
+| 感知 NN 准确率 \(A_{\text{准确率}}\) | 0.995 | 0.995 |
+| 控制 NN MSE \(\mathcal L_{\text{MSE}}\) | 0.00303 | 0.00303 |
+| 横向误差 \(\mathrm{RMSE}_{y}\) | **0.249 m** | **1.012 m** |
 | 是否到达终点 | 是（t=54.8 s） | 是（t=28.9 s） |
 | 传感器帧数 | — | 相机 577 帧 / 雷达约 500 点·帧 |
 
@@ -412,7 +450,7 @@ roslaunch carla_perception_control main.launch host:=192.168.8.1
 ### 5.9 常见问题
 
 **Q1：`--mode run` 报"缺少 carla 模块"？**
-需安装 CARLA 0.9.16 的 Python 客户端 wheel，见 5.3 节。若只想验证算法，
+需安装 CARLA 0.9.16 的 Python 客户端 wheel，见 [5.3 节](#53-0)。若只想验证算法，
 可改用 `--headless --demo`（不需要 CARLA）。
 
 !!! note "关于 `carla.__version__`"
@@ -455,7 +493,7 @@ python3.10 src/ground/carla_perception_control/check_connection.py 192.168.8.1 2
 
 **Q5：车辆在终点附近绕圈不停？**
 本模块已内置终点判定（进入 5 m 内刹车停车）。若自定义路点出现绕圈，
-通常是给定轨迹**转弯半径超过车辆运动学极限**——注意 $R_{\min}\approx L/\tan\delta_{\max}$，
+通常是给定轨迹**转弯半径超过车辆运动学极限**——注意 \(R_{\min}\approx L/\tan\delta_{\max}\)，
 7 m/s 时约需 5 m 转弯半径。请把急弯改缓，或降低 `--throttle_max`。
 
 **Q6：横向误差偏大？**
@@ -493,10 +531,33 @@ Town05 空旷路段确实无遮挡物，输出"无目标"属正常。真实场�
 
 ### 6.1 指标定义
 
-**横向误差 RMSE**：
+本节所有指标均以「符号 + 下标」给出，**下标标明该指标的具体含义**：
+
+| 指标 | 符号 | 含义 |
+|---|---|---|
+| 感知 NN 准确率 | \(A_{\text{准确率}}\) | 分类正确的样本数占总样本数的比例 |
+| 控制 NN MSE | \(\mathcal L_{\text{MSE}}\) | 网络输出转向与标签转向的均方误差 |
+| 横向误差 | \(\mathrm{RMSE}_{y}\) | 车辆到给定轨迹折线的垂距均方根 |
+| 平均 / 最大速度 | \(\bar v\) / \(v_{\max}\) | 全程速度的均值与峰值 |
+| 转向平滑度 | \(\text{AoS}\) | 相邻两帧转向指令变化量的均值 |
+
+**感知 NN 准确率** \(A_{\text{准确率}}\)：
 
 $$
-\text{RMSE} = \sqrt{\frac{1}{N}\sum_{k} e_{y,k}^{2}}
+A_{\text{准确率}} = \frac{1}{N}\sum_{i=1}^{N}\mathbb 1\big[\hat y_i = y_i\big]
+$$
+
+**控制 NN MSE** \(\mathcal L_{\text{MSE}}\)
+（即 [2.3 节](#23) 控制网络训练所用均方误差在数据集上的取值）：
+
+$$
+\mathcal L_{\text{MSE}} = \frac{1}{N}\sum_{i=1}^{N}\big(\delta_i - \delta_i^*\big)^2
+$$
+
+**横向误差** \(\mathrm{RMSE}_{y}\)：
+
+$$
+\mathrm{RMSE}_{y} = \sqrt{\frac{1}{N}\sum_{k} e_{y,k}^{2}}
 $$
 
 **平均 / 最大速度**：
@@ -515,9 +576,9 @@ $$
 
 | 指标 | 数值 |
 |---|---|
-| 感知 NN 训练集准确率 | **0.995** |
-| 控制 NN 训练集 MSE | **0.00303** |
-| 横向误差 RMSE | **0.231 m** |
+| 感知 NN 训练集准确率 \(A_{\text{准确率}}\) | **0.995** |
+| 控制 NN 训练集 MSE \(\mathcal L_{\text{MSE}}\) | **0.00303** |
+| 横向误差 \(\mathrm{RMSE}_{y}\) | **0.231 m** |
 | 横向误差峰值 | 0.853 m |
 | 平均速度 | 6.96 m/s |
 | 最大速度 | 7.19 m/s |
@@ -528,7 +589,7 @@ $$
 | 优化项 | 优化前 | 优化后 | 说明 |
 |---|---|---|---|
 | 控制网络输入标准化 | MSE 0.0796 | MSE 0.0030 | 状态两维量纲差异大 |
-| 转向折算系数取真实几何值 | 标签饱和 26% | 饱和 0% | $g$ 由 0.5 改为 1.2217 |
+| 转向折算系数取真实几何值 | 标签饱和 26% | 饱和 0% | \(g\) 由 0.5 改为 1.2217 |
 | 标签去掉恒正偏置 | 车原地绕圈 | 直线可沿轨迹行驶 | 航向差 0 时应输出 0 转向 |
 | 横向误差改用折线垂距 | RMSE 虚高 | RMSE 真实 | 稀疏路点下的最近点距离偏大 |
 | 加入终点判定 | 终点绕圈不停 | 到点停车 | 进入 5 m 内刹车 |
