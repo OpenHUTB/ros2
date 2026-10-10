@@ -6,7 +6,12 @@
 
      说明：
        * 本模块核心为 CARLA Python API 直连 + 键盘运动控制，逻辑本身不依赖 rospy，
-         Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+         由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * 布尔量以文本透传（如 follow true / follow false），main.py 的开关两种写法
+         都认；save_dir 留空时末尾那个空的参数也会被正确接受。
+       * Noetic 注意：roslaunch 只能按 main.py 的 shebang 去执行它，而 Noetic 的
+         python3 是 3.8，装不上 CARLA 0.9.16 的 cp310+ wheel，会卡在 import carla。
+         Noetic 下请改用 bash main.sh（它会自动挑选 python3.10）。
        * 本 launch 声明的每个 <arg> 都必须透传给节点：roslaunch 会把「已声明但未使用」
          的参数视为 unused args，只影响命令行传参的可用性；而漏传参数则会让
          节点收不到用户设置的值（例如 follow:=true 不起作用）。

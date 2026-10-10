@@ -241,6 +241,31 @@ def run_launch(ros_version):
     return subprocess.call(cmd)
 
 
+def _parse_bool(value):
+    """Parse a boolean that arrives as text.
+
+    ROS 1 launch files can only pass arguments as plain text (e.g.
+    ``--follow true`` / ``--follow false``) -- unlike ROS 2, which passes a real
+    parameter and keeps the bool type.  Without this, ``--follow false`` makes
+    ``store_true`` set follow=True and the stray ``false`` is swallowed by
+    ``parse_known_args`` as an unknown positional.
+    """
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in ("1", "true", "yes", "on", "y", "t"):
+        return True
+    if text in ("0", "false", "no", "off", "n", "f", ""):
+        return False
+    raise argparse.ArgumentTypeError(f"无法识别的布尔值：{value!r}")
+
+
+def _add_bool(parser, name, help_text):
+    """Boolean switch: bare ``--follow`` or explicit ``--follow true|false``."""
+    parser.add_argument(name, type=_parse_bool, nargs="?", const=True,
+                        default=False, help=help_text)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="CARLA 0.9.16 地面载具物理仿真与键盘运动控制")
@@ -254,24 +279,25 @@ def main():
     parser.add_argument("--fov", type=float, default=90.0)
     parser.add_argument("--sim_time", type=float, default=0.0,
                         help="仿真秒数，0=不限时直到 ESC")
-    parser.add_argument("--follow", action="store_true",
-                        help="让 CARLA 大窗口镜头跟随自车（便于录屏）")
+    _add_bool(parser, "--follow",
+              "让 CARLA 大窗口镜头跟随自车（便于录屏）")
     parser.add_argument("--throttle_max", type=float, default=cc.DEFAULT_THROTTLE_MAX)
     parser.add_argument("--brake_max", type=float, default=cc.DEFAULT_BRAKE_MAX)
     parser.add_argument("--steer_max", type=float, default=cc.DEFAULT_STEER_MAX)
     parser.add_argument("--rev_threshold", type=float,
                         default=cc.DEFAULT_REV_THRESHOLD,
                         help="低于该速度(m/s)按 S 视为挂倒挡")
-    parser.add_argument("--headless", action="store_true",
-                        help="不开图形窗口（虚拟机无 3D 加速时使用）")
-    parser.add_argument("--demo", action="store_true",
-                        help="自动执行一段控制序列（加速/转向/刹车/倒车）")
-    parser.add_argument("--save_dir", default="",
-                        help="把相机画面逐帧存为 PNG 的目录（取证用）")
-    parser.add_argument("--launch", action="store_true",
-                        help="用 ros2 launch 启动 ROS 2 节点集群")
-    parser.add_argument("--ros1", action="store_true",
-                        help="用 roslaunch 启动 ROS 1 Noetic 节点集群")
+    _add_bool(parser, "--headless",
+              "不开图形窗口（虚拟机无 3D 加速时使用）")
+    _add_bool(parser, "--demo",
+              "自动执行一段控制序列（加速/转向/刹车/倒车）")
+    parser.add_argument("--save_dir", nargs="?", const="", default="",
+                        help="把相机画面逐帧存为 PNG 的目录"
+                             "（取证用；留空=不导出）")
+    _add_bool(parser, "--launch",
+              "用 ros2 launch 启动 ROS 2 节点集群")
+    _add_bool(parser, "--ros1",
+              "用 roslaunch 启动 ROS 1 Noetic 节点集群")
     args, _unknown = parser.parse_known_args()
 
     if args.launch or args.ros1:

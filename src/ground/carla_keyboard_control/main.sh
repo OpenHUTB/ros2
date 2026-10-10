@@ -18,10 +18,14 @@ if [ -z "${LIBGL_ALWAYS_SOFTWARE}" ]; then
     export LIBGL_ALWAYS_SOFTWARE=1
 fi
 
-# 加载 ROS 2 Humble 环境（若存在），供 --launch 模式使用
+# 加载 ROS 环境（若存在）：优先 Humble（ROS 2），否则 Noetic（ROS 1），
+# 分别供 --launch / --ros1 模式使用
 if [ -f /opt/ros/humble/setup.bash ]; then
     # shellcheck disable=SC1091
     source /opt/ros/humble/setup.bash
+elif [ -f /opt/ros/noetic/setup.bash ]; then
+    # shellcheck disable=SC1091
+    source /opt/ros/noetic/setup.bash
 fi
 
 echo "=================================================="

@@ -142,6 +142,89 @@ def test_requirements_lists_runtime_deps():
     assert 'numpy' in text and 'pygame' in text
 
 
+# ---------------------------------------------------------- 入口可执行位与参数透传
+def test_main_entries_are_executable():
+    """main.* 必须有可执行位。
+
+    launch/main.launch 里是 <node type="main.py"> —— roslaunch 会**直接执行**
+    该文件并依赖首行 shebang，没有可执行位就会失败（曾实测为 100644）。
+    """
+    import subprocess
+    names = ('main.py', 'main.sh', 'main.bat')
+    modes = {}
+    try:
+        out = subprocess.check_output(
+            ['git', 'ls-files', '-s', '--'] + list(names),
+            cwd=PKG_ROOT, stderr=subprocess.DEVNULL).decode()
+        for line in out.splitlines():
+            mode, _sha, _stage, path = line.split(None, 3)
+            modes[os.path.basename(path.strip())] = mode
+    except Exception:  # noqa: BLE001  非 git 检出（如 colcon 安装目录）时退回
+        for name in names:
+            assert os.access(os.path.join(PKG_ROOT, name), os.X_OK), \
+                f'{name} 缺少可执行位'
+        return
+    assert modes, 'git ls-files 没有返回 main.* 的信息'
+    for name in names:
+        assert modes.get(name, '') == '100755', (
+            f'{name} 的 git 模式是 {modes.get(name)}，应为 100755；'
+            '请执行 git update-index --chmod=+x <文件>')
+
+
+def test_launch_bool_args_accept_text_values():
+    """roslaunch 只能按文本透传布尔量，main.py 必须接受 `--follow true/false`。
+
+    否则 `--follow false` 会被 store_true 置为 True，而那个多余的 false 被
+    parse_known_args 当未知位置参数丢掉 —— follow:=false 反而生效为 true。
+    """
+    import argparse
+    import main as entry
+
+    def parse(argv):
+        p = argparse.ArgumentParser()
+        entry._add_bool(p, '--follow', '')
+        entry._add_bool(p, '--headless', '')
+        p.add_argument('--save_dir', nargs='?', const='', default='')
+        args, _unknown = p.parse_known_args(argv)
+        return args.follow, args.headless, args.save_dir
+
+    assert parse(['--follow', 'false', '--headless', 'false']) == \
+        (False, False, ''), 'launch 默认值应解析为 False'
+    assert parse(['--follow', 'true', '--headless', 'true']) == \
+        (True, True, ''), 'true 应解析为 True'
+    assert parse(['--follow', '--headless']) == (True, True, ''), \
+        '裸开关（命令行习惯写法）仍应可用'
+
+
+def test_launch_empty_save_dir_does_not_abort():
+    """save_dir 默认空串替换后末尾会剩一个光秃秃的 --save_dir。
+
+    原实现下 argparse 会以 "expected one argument" 直接退出，
+    导致按文档跑 roslaunch 必失败。
+    """
+    import argparse
+    import main as entry
+
+    p = argparse.ArgumentParser()
+    p.add_argument('--save_dir', nargs='?', const='', default='')
+    args, _unknown = p.parse_known_args(['--save_dir'])   # 不带值
+    assert args.save_dir == '', f'空 --save_dir 应得到空串，实际 {args.save_dir!r}'
+
+
+def test_main_launch_passes_declared_args_to_node():
+    """main.launch 声明的每个 <arg> 都必须出现在 <node args=...> 里。"""
+    import re
+    text = open(os.path.join(PKG_ROOT, 'launch', 'main.launch'),
+                encoding='utf-8').read()
+    declared = set(re.findall(r'<arg\s+name="([^"]+)"', text))
+    node = re.search(r'<node\b.*?/>', text, re.S)
+    assert node, 'main.launch 里没有找到 <node .../>'
+    passed = set(re.findall(r'\$\(arg\s+([^)]+)\)', node.group(0)))
+    assert declared <= passed, (
+        f'这些已声明的 arg 没有透传给节点：{sorted(declared - passed)}'
+        '（漏传会让 follow:=true 之类的设置不起作用）')
+
+
 def _run_all():
     """自带运行器：不依赖 pytest 也能跑完所有 test_* 函数。"""
     fns = sorted(k for k in list(globals()) if k.startswith('test_'))

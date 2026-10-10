@@ -55,13 +55,16 @@ source install/setup.bash
 
 ```bash
 # 独立模式（单进程直连 CARLA，pygame 窗口控制；虚拟机填宿主机 IP）
-python3 src/ground/carla_keyboard_control/main.py --host 192.168.8.1 --follow
+# 用 main.sh 作入口：它会自动挑 python3.10（CARLA wheel 的 ABI 版本）
+bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1 --follow
 
 # ROS 2 Humble 节点模式
 ros2 launch carla_keyboard_control main.launch.py host:=192.168.8.1
 
-# ROS 1 Noetic
-roslaunch carla_keyboard_control main.launch host:=192.168.8.1
+# ROS 1 Noetic：同样用 main.sh 作入口
+# （roslaunch 只能按 shebang 执行 main.py，而 Noetic 的 python3 是 3.8，
+#   装不上 CARLA 0.9.16 的 cp310+ wheel，会在 import carla 处失败）
+bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1 --follow
 ```
 
 ## 操作键位

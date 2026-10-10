@@ -59,8 +59,9 @@ $$
 \dot{v} = \frac{\tau \cdot F_{\max} - c_d v^2 - F_f - b \cdot B_{\max}}{m}
 $$
 
-其中 $\tau \in [0,1]$ 为油门，$B_{\max}$ 为刹车力上限，$b \in [0,1]$ 为刹车量，$F_{\max}$ 为最大驱动力，
-$c_d$ 为风阻系数，$F_f$ 为滚动摩擦阻力，$m$ 为车辆质量。CARLA 在 UE4 中按该动力学逐步积分。
+其中 \(\tau \in [0,1]\) 为油门，\(B_{\max}\) 为刹车力上限，\(b \in [0,1]\) 为刹车量，
+\(F_{\max}\) 为最大驱动力，\(c_d\) 为风阻系数，\(F_f\) 为滚动摩擦阻力，\(m\) 为车辆质量。
+CARLA 在 UE4 中按该动力学逐步积分。
 
 倒车时令 `reverse = True`，驱动力方向反向：
 
@@ -70,7 +71,7 @@ $$
 
 ### 2.2 阿克曼转向几何
 
-转向量 $s \in [-1,1]$ 映射为前轮转角 $\delta = s \cdot \delta_{\max}$。前后轴距 $L$ 时，
+转向量 \(s \in [-1,1]\) 映射为前轮转角 \(\delta = s \cdot \delta_{\max}\)。前后轴距 \(L\) 时，
 车辆航向角变化率满足自行车模型：
 
 $$
@@ -87,7 +88,7 @@ $$
 
 ### 2.4 倒挡判定（真实驾驶逻辑）
 
-设当前速率 $v$、倒挡阈值 $v_{\text{th}} = 0.5\,\text{m/s}$，则按 `S` 时：
+设当前速率 \(v\)、倒挡阈值 \(v_{\text{th}} = 0.5\,\text{m/s}\)，则按 `S` 时：
 
 $$
 (\text{throttle}, \text{brake}, \text{reverse}) =
@@ -233,9 +234,11 @@ python3 -m pytest test/test_control_logic.py -v
     CARLA 0.9.16 的客户端 wheel 只提供 **cp310 / cp311 / cp312** 三个版本。因此：
 
     * **独立模式**（`main.py` / `main.sh` / `main.bat`）：用 Python **3.10+**，与 wheel 匹配。
-    * **ROS 1 Noetic 模式**：Ubuntu 20.04 自带 **Python 3.8**，**装不上** cp310 及以上的 wheel，
-      Noetic 下请让 `main.py` 在 Python 3.10+ 解释器中运行（本模块的控制逻辑是纯 Python，
-      不依赖 `rospy`，Noetic 的 launch 只是把 `main.py` 拉起来）。
+    * **ROS 1 Noetic 模式**：Ubuntu 20.04 自带 **Python 3.8**，**装不上** cp310 及以上的
+      wheel。而 `roslaunch` 只能按 `main.py` 首行的 shebang（`#!/usr/bin/env python3`）
+      去执行它，没法替你换解释器，所以**光加可执行位也不够**。Noetic 下请用
+      `bash main.sh` 作入口 —— 它会自动挑选 `python3.10`（本模块的控制逻辑是纯 Python，
+      不依赖 `rospy`，launch 只是把主入口拉起来）。
     * **ROS 2 Humble 模式**：Ubuntu 22.04 自带 **Python 3.10**，与 cp310 wheel 天然匹配，
       是最省事的一条路线。
 
@@ -251,11 +254,11 @@ python3 -m pytest test/test_control_logic.py -v
 |---|---|---|---|
 | 1 | 下载安装 CARLA 0.9.16，双击 `CarlaUE4.exe` 启动服务端 | [已有示例](../set_up_and_connect_to_carla.md) →「启动 Carla 服务器」 | 两条路线的**共同前提** |
 | 2 | 用 `ipconfig` 查看宿主机 IP（如 `172.21.108.47`） | 同上 →「使用 Carla 客户端启动 Ego Vehicle」 | 虚拟机要能 ping 通该 IP |
-| 3 | 确认虚拟机与 CARLA 连通 | 本页 5.5 节 | 输出 `CONNECT OK` 即可 |
+| 3 | 确认虚拟机与 CARLA 连通 | [本页 5.5 节](#conn-check) | 输出 `CONNECT OK` 即可 |
 | — | **★ 在此切换到本模块** | — | 以下步骤与已有示例不同 |
-| 4 | 装 `carla` Python 客户端与依赖 | 本页 5.3 节 | 已有示例用的是 ros-bridge，**不装这个用不了本模块** |
-| 5 | `colcon build` 编译本功能包 | 本页 5.4 节 | 已有示例用 `catkin_make`，路线不同 |
-| 6 | 运行 `main.py` 或 `ros2 launch` | 本页 5.6 节 | 本模块自研键盘控制 |
+| 4 | 装 `carla` Python 客户端与依赖 | [本页 5.3 节](#env-prep) | 已有示例用的是 ros-bridge，**不装这个用不了本模块** |
+| 5 | `colcon build` 编译本功能包 | [本页 5.4 节](#build) | 已有示例用 `catkin_make`，路线不同 |
+| 6 | 运行 `main.sh` 或 `ros2 launch` | [本页 5.6 节](#run) | 本模块自研键盘控制 |
 
 !!! warning "不要从头到尾照做已有示例"
     已有示例中的「设置 Carla ROS Bridge」「使用 Carla 客户端启动 Ego Vehicle（roslaunch）」
@@ -263,7 +266,7 @@ python3 -m pytest test/test_control_logic.py -v
     本模块**不依赖 ros-bridge**，这些步骤可以跳过；只有上表第 1~2 步是两条路线共用的。
     已有示例中其余内容仅建议作为背景了解，其连接排查经验可参考「常见问题」小节。
 
-### 5.3 步骤 0：环境准备
+### 5.3 步骤 0：环境准备 <span id="env-prep"></span>
 
 CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
 `numpy` 版本兼容等**通用配置步骤与已有示例完全相同，本文不重复**，请参考
@@ -303,13 +306,36 @@ pip3 install "<CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_
 
     ```bash
     python3.10 -m pip install carla==0.9.16
-    python3.10 src/ground/carla_keyboard_control/main.py --host <宿主机IP>
+    bash src/ground/carla_keyboard_control/main.sh --host <宿主机IP>
     ```
 
-    注意 `pip3 install` 与运行 `main.py` 必须使用**同一个**解释器，否则会出现
+    注意 `pip3 install` 与运行必须使用**同一个**解释器，否则会出现
     「明明装了却 `ModuleNotFoundError: No module named 'carla'`」。
+    `main.sh` 会自动挑选 `python3.10`，Noetic 下推荐用它作入口。
 
-### 5.4 步骤 1：编译本功能包（ROS 2）
+### 5.4 步骤 1：编译本功能包（ROS 2）<span id="build"></span>
+
+本模块的源代码位于**本仓库**（`OpenHUTB/ros2`）的
+`src/ground/carla_keyboard_control/`。ROS 2 要求功能包放在工作空间的 `src/`
+目录下，因此先把本仓库克隆到工作空间的 `src/`：
+
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone https://github.com/OpenHUTB/ros2.git     # 换成你自己的 fork 亦可
+```
+
+克隆后的目录关系如下，`colcon build` 必须在**工作空间根目录**执行：
+
+```
+~/ros2_ws/                                   <- 工作空间根目录，colcon 在这里运行
+└── src/
+    └── ros2/                                <- 本仓库（git clone 得到）
+        └── src/ground/
+            └── carla_keyboard_control/      <- 本模块源代码，即第 4 节解析的文件
+```
+
+因此后文写的 `src/ground/carla_keyboard_control/...`，实际路径是
+`~/ros2_ws/src/ros2/src/ground/carla_keyboard_control/...`。编译并激活环境：
 
 ```bash
 cd ~/ros2_ws
@@ -317,9 +343,17 @@ colcon build --packages-select carla_keyboard_control --symlink-install
 source install/setup.bash
 ```
 
-### 5.5 步骤 2：验证与 CARLA 服务端的连接
+> 若本仓库已克隆在别处，把上面的 `~/ros2_ws/src/ros2` 换成实际路径即可，
+> 只要保证执行 `colcon build` 的工作空间根目录下存在 `src/`。
 
-确认客户端能连上宿主机（IP 换成本机宿主机地址）：
+### 5.5 步骤 2：验证与 CARLA 服务端的连接 <span id="conn-check"></span>
+
+命令里的 `192.168.8.1` 是**运行 CARLA 服务端的宿主机（Windows）IP**：
+在宿主机上执行 `ipconfig`，取 VMware 虚拟网卡（`VMnet8`）的 IPv4 地址即可
+（本机该地址为 `192.168.8.1`，虚拟机 `ens33` 为 `192.168.8.131`，两者同网段）。
+查看方式与已有示例一致，详见
+[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)
+→「使用 Carla 客户端启动 Ego Vehicle」。
 
 ```bash
 python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"
@@ -327,23 +361,28 @@ python3 -c "import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10);
 
 输出 `CONNECT OK: Carla/Maps/Town10HD_Opt` 表示连接成功。
 
-### 5.6 步骤 3：运行本模块
+### 5.6 步骤 3：运行本模块 <span id="run"></span>
 
 ```bash
 # 模式 A：独立交互模式（推荐）
 #   --host 填宿主机 IP；--follow 让 CARLA 大窗口镜头跟随自车
-python3 src/ground/carla_keyboard_control/main.py --host 192.168.8.1 --follow
+#   入口用 main.sh：它会自动挑 python3.10（CARLA wheel 的 ABI 版本）
+bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1 --follow
 
 # 模式 B：无窗口取证模式（虚拟机缺少 3D 加速、pygame 无法开窗时使用）
 #   自动执行「加速 → 转向 → 刹车 → 倒车」序列，逐帧导出 PNG 并打印状态表
-python3 src/ground/carla_keyboard_control/main.py \
+bash src/ground/carla_keyboard_control/main.sh \
         --host 192.168.8.1 --headless --demo --save_dir ~/shots
 
 # 模式 C：ROS 2 Humble 节点模式
 ros2 launch carla_keyboard_control main.launch.py host:=192.168.8.1
 
-# 模式 D：ROS 1 Noetic
-roslaunch carla_keyboard_control main.launch host:=192.168.8.1
+# 模式 D：ROS 1 Noetic —— 入口同样是 main.sh
+#   roslaunch 只能按 main.py 的 shebang 执行它，而 Noetic 的 python3 是 3.8，
+#   装不上 CARLA 0.9.16 的 cp310+ wheel，补了可执行位也会卡在 import carla。
+#   若系统 python3 本身已是 3.10+，也可以用：
+#   roslaunch carla_keyboard_control main.launch host:=192.168.8.1
+bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1
 ```
 
 ### 5.7 步骤 4：操作说明
