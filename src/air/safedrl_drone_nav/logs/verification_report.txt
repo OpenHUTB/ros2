@@ -1,0 +1,103 @@
+################################################################################
+#  SafeDRL-DroneNav-ROS  ::  AUTOMATED VERIFICATION REPORT
+#  generated : 2026-10-02T22:59:57+08:00
+#  host      : LAPTOP-EKLUP56Q
+#  python    : 3.10.22 D:\Anaconda\envs\safedrl\python.exe
+################################################################################
+
+=== [1/4] ROS node syntax verification (no ROS master required) ===
+  OK    scripts/drl_navigator_node.py
+  OK    scripts/dummy_state_publisher.py
+  OK    scripts/train.py
+  OK    scripts/evaluate.py
+  OK    scripts/safety.py
+  OK    scripts/safe_nav_env.py
+  OK    scripts/lagrangian_ppo.py
+  OK    scripts/pretrain_bc.py
+  OK    scripts/figures.py
+  OK    scripts/run_logging.py
+  OK    scripts/make_report_figures.py
+  OK    scripts/drone_dynamics.py
+
+=== [2/4] Mock plant closed-loop self-test (dummy_state_publisher --selftest) ===
+dummy_state_publisher selftest
+------------------------------------------------------------
+  final position      : [2.754, 0.0, 1.5]
+  final velocity      : [1.5, 0.0, 0.0]
+  min laser range     : 0.956 m
+  rays below 3 m      : 15/180
+  altitude after climb: 2.169 m
+------------------------------------------------------------
+OK - dummy drone model integrates commands and senses obstacles.
+
+=== [3/4] Full test suite (19 tests) ===
+--- 3a. analytic CBF / projection tests (expected 11) ---
+  PASS  test_feasible_command_is_untouched
+  PASS  test_filter_enforces_discrete_cbf_condition
+  PASS  test_filter_is_deterministic_and_stateless_across_calls
+  PASS  test_filter_never_exceeds_velocity_limit
+  PASS  test_inactive_constraint_respects_actuator_ball
+  PASS  test_infeasible_desire_clamped_into_ball
+  PASS  test_lagrange_rises_on_violation_and_decays_when_satisfied
+  PASS  test_minimum_intervention_is_not_axis_aligned
+  PASS  test_projection_lands_on_ball_boundary_when_plane_falls_outside
+  PASS  test_saturating_against_obstacle
+  PASS  test_unreachable_constraint_saturates_on_ball
+
+11/11 safety-filter tests passed.
+
+--- 3b. closed-loop integration tests (expected 8) ---
+pybullet build time: Oct 21 2025 12:15:52
+  PASS  test_cbf_never_permits_contact_with_an_obstacle
+  PASS  test_cbf_reduces_adversarial_penetration
+  PASS  test_cost_is_reported_and_bounded
+  PASS  test_episodes_are_reproducible_from_a_seed
+  PASS  test_gates_are_a_slalom_not_a_line
+  PASS  test_observation_and_action_spaces
+  PASS  test_pure_pursuit_solves_the_task
+  PASS  test_zero_action_hovers_for_a_full_episode
+
+8/8 environment tests passed.
+
+=== [4/4] Artifact integrity verification ===
+--- logs/ ---
+  train_execution.log      : 2018 lines, 136K
+  session transcripts      : 22 files
+  terminal snippets        : 4 files
+  eval_metrics JSON        : 4 files
+  eval episode CSV         : 4 files
+  traces (.npz)            : 8 files
+  tensorboard event dirs   : 2
+--- docs/figures/ ---
+  PNG figures              : 11 files
+      101815 B  docs/figures/ablation_ablation.png
+      133767 B  docs/figures/convergence_all.png
+      134590 B  docs/figures/convergence_ppo_baseline.png
+      140093 B  docs/figures/convergence_ppo_lagrangian.png
+       76280 B  docs/figures/gate_progress_ppo_lagrangian_cbf.png
+       71827 B  docs/figures/margins_ablation.png
+      207522 B  docs/figures/metrics_table_ablation.png
+      557382 B  docs/figures/state_response_ppo_lagrangian_cbf.png
+      124181 B  docs/figures/training_dashboard_ppo_baseline.png
+      126296 B  docs/figures/training_dashboard_ppo_lagrangian.png
+      334065 B  docs/figures/trajectory_3d_ppo_lagrangian_cbf.png
+--- checkpoints/ ---
+      212017 B  checkpoints/bc_warmstart_cbf.zip
+      608805 B  checkpoints/ppo_baseline_best.zip
+      608809 B  checkpoints/ppo_baseline_final.zip
+      610199 B  checkpoints/ppo_lagrangian_best.zip
+      610205 B  checkpoints/ppo_lagrangian_final.zip
+
+--- JSON well-formedness ---
+  valid JSON: logs/eval_metrics_ppo_baseline.json
+  valid JSON: logs/eval_metrics_ppo_baseline_cbf.json
+  valid JSON: logs/eval_metrics_ppo_lagrangian.json
+  valid JSON: logs/eval_metrics_ppo_lagrangian_cbf.json
+  valid JSON: logs/run_manifest.json
+  valid JSON: logs/ablation_table.json
+
+--- tarball integrity ---
+  archive   : /d/ClaudeProjects/SafeDRL-DroneNav-ROS_20261002_213708.tar.gz
+  size      : 11M (10824047 bytes)
+  members   : 109
+  gzip test : OK - archive not corrupted

@@ -1,0 +1,53 @@
+
+==============================================================================
+== SESSION START  2026-10-02T21:07:55
+==============================================================================
+[21:07:55] host=LAPTOP-EKLUP56Q  os=Windows 10
+[21:07:55] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: TRAINING  [ppo_baseline]
+==============================================================================
+[21:07:55] run_name       = ppo_baseline
+[21:07:55] policy         = ppo
+[21:07:55] use_cbf        = False
+[21:07:55] timesteps      = 90000
+[21:07:55] n_envs         = 4
+[21:07:55] cost_limit     = 0.6
+[21:07:55] seed           = 11
+[21:07:55] tensorboard dir = D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\tb_logs\ppo_baseline
+[21:07:58] vectorised environment : SubprocVecEnv + VecNormalize(norm_reward) x 4
+[21:07:58] observation space      : (53,)
+[21:07:58] action space           : (4,)
+[21:08:00] algorithm              : PPO (unconstrained baseline)
+[21:08:00] policy parameters      : 47,497
+[21:08:00] warm-started policy from: checkpoints/bc_warmstart_cbf.zip (13 tensors)
+[21:08:00]   (all ablation rows share this checkpoint, so the only difference between them is the safety mechanism)
+
+==============================================================================
+== Training
+==============================================================================
+[train] step=   20000  ep_rew_mean=  -23.088  ep_len_mean=   61.8  pg_loss=      nan  value_loss=      nan  entropy=     nan  lambda=    nan  cost=    nan  sps=   739  elapsed=  27.1s
+[eval ] step=   20000  success=0.000  collision=1.000  min_margin=-0.192m  arrival=n/a  cost=1.002
+[train] step=   40000  ep_rew_mean=  -22.733  ep_len_mean=   79.3  pg_loss=      nan  value_loss=      nan  entropy=     nan  lambda=    nan  cost=    nan  sps=   642  elapsed=  58.2s
+[eval ] step=   40000  success=0.167  collision=0.833  min_margin=-0.200m  arrival=6.38s  cost=0.836
+[train] step=   60000  ep_rew_mean=  -22.971  ep_len_mean=   74.0  pg_loss=      nan  value_loss=      nan  entropy=     nan  lambda=    nan  cost=    nan  sps=   638  elapsed=  89.6s
+[eval ] step=   60000  success=0.583  collision=0.417  min_margin=-0.265m  arrival=6.65s  cost=0.421
+[train] step=   80000  ep_rew_mean=  -19.536  ep_len_mean=   87.1  pg_loss=      nan  value_loss=      nan  entropy=     nan  lambda=    nan  cost=    nan  sps=   628  elapsed= 121.5s
+[eval ] step=   80000  success=0.667  collision=0.333  min_margin=-0.244m  arrival=6.84s  cost=0.337
+
+==============================================================================
+== Training finished
+==============================================================================
+[21:10:20] wall-clock training time : 140.3 s
+[21:10:20] throughput               : 641 steps/s
+[21:10:20] final lambda             : None
+[21:10:20] saved final model        : D:\ClaudeProjects\SafeDRL-DroneNav-ROS\checkpoints\ppo_baseline_final.zip
+
+RUN_NAME=ppo_baseline
+TB_DIR=D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\tb_logs\ppo_baseline
+MODEL=D:\ClaudeProjects\SafeDRL-DroneNav-ROS\checkpoints\ppo_baseline_final.zip
+
+==============================================================================
+== SESSION END  2026-10-02T21:10:20
+==============================================================================

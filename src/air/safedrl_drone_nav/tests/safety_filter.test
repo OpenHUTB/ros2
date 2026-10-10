@@ -1,0 +1,7 @@
+<launch>
+  <!-- Safety-filter unit tests.  Pure Python; no ROS master, nodes or topics
+       are required, but wrapping them in rostest makes them part of
+       `catkin_make run_tests`. -->
+  <test test-name="safety_filter_unit" pkg="safedrl_drone_nav"
+        type="test_safety_filter.py" time-limit="120" />
+</launch>

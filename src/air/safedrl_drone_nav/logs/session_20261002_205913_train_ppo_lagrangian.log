@@ -1,0 +1,57 @@
+
+==============================================================================
+== SESSION START  2026-10-02T20:59:13
+==============================================================================
+[20:59:13] host=LAPTOP-EKLUP56Q  os=Windows 10
+[20:59:13] python=3.10.22  executable=D:\Anaconda\envs\safedrl\python.exe
+
+==============================================================================
+== SafeDRL-DroneNav-ROS :: TRAINING  [ppo_lagrangian]
+==============================================================================
+[20:59:13] run_name       = ppo_lagrangian
+[20:59:13] policy         = ppo_lag
+[20:59:13] use_cbf        = False
+[20:59:13] timesteps      = 120000
+[20:59:13] n_envs         = 4
+[20:59:13] cost_limit     = 2.0
+[20:59:13] seed           = 12
+[20:59:13] tensorboard dir = D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\tb_logs\ppo_lagrangian
+[20:59:16] vectorised environment : SubprocVecEnv + VecNormalize(norm_reward) x 4
+[20:59:16] observation space      : (53,)
+[20:59:16] action space           : (4,)
+[20:59:17] algorithm              : PPO-Lagrangian (cost critic + dual ascent)
+[20:59:17] policy parameters      : 47,497
+[20:59:17] warm-started policy from: checkpoints/bc_warmstart_cbf.zip (13 tensors)
+[20:59:17]   (all ablation rows share this checkpoint, so the only difference between them is the safety mechanism)
+
+==============================================================================
+== Training
+==============================================================================
+[train] step=   20000  ep_rew_mean=  -25.434  ep_len_mean=   89.3  pg_loss=   0.2237  value_loss=    0.911  entropy= -1.6370  lambda=  0.031  cost=  1.119  sps=   725  elapsed=  27.6s
+[eval ] step=   20000  success=0.750  collision=0.250  min_margin=-0.210m  arrival=9.29s  cost=11.256
+[train] step=   40000  ep_rew_mean=  -27.957  ep_len_mean=  107.1  pg_loss=   0.0184  value_loss=    0.666  entropy= -1.5676  lambda=  0.206  cost=  1.526  sps=   588  elapsed=  61.6s
+[eval ] step=   40000  success=0.500  collision=0.500  min_margin=-0.175m  arrival=14.14s  cost=13.034
+[train] step=   60000  ep_rew_mean=  -29.845  ep_len_mean=  127.7  pg_loss=   0.0184  value_loss=    0.609  entropy= -1.4901  lambda=  0.412  cost=  1.116  sps=   548  elapsed=  98.1s
+[eval ] step=   60000  success=0.667  collision=0.333  min_margin=-0.233m  arrival=20.40s  cost=25.693
+[train] step=   80000  ep_rew_mean=  -29.951  ep_len_mean=  127.0  pg_loss=   0.0537  value_loss=    0.547  entropy= -1.4244  lambda=  0.539  cost=  1.731  sps=   509  elapsed= 137.4s
+[eval ] step=   80000  success=0.000  collision=1.000  min_margin=-0.211m  arrival=n/a  cost=8.376
+[train] step=  100000  ep_rew_mean=  -29.895  ep_len_mean=  139.4  pg_loss=   0.0353  value_loss=    0.431  entropy= -1.3536  lambda=  0.570  cost=  1.058  sps=   553  elapsed= 173.6s
+[eval ] step=  100000  success=0.000  collision=0.500  min_margin=-0.164m  arrival=n/a  cost=10.901
+[train] step=  120000  ep_rew_mean=  -30.859  ep_len_mean=  146.3  pg_loss=   1.4281  value_loss=    0.416  entropy= -1.2940  lambda=  0.568  cost=  1.416  sps=   449  elapsed= 218.1s
+[eval ] step=  120000  success=0.000  collision=1.000  min_margin=-0.007m  arrival=n/a  cost=1.023
+
+==============================================================================
+== Training finished
+==============================================================================
+[21:03:02] wall-clock training time : 224.3 s
+[21:03:02] throughput               : 535 steps/s
+[21:03:02] final lambda             : 0.5876922238356779
+[21:03:02] saved final model        : D:\ClaudeProjects\SafeDRL-DroneNav-ROS\checkpoints\ppo_lagrangian_final.zip
+
+RUN_NAME=ppo_lagrangian
+TB_DIR=D:\ClaudeProjects\SafeDRL-DroneNav-ROS\logs\tb_logs\ppo_lagrangian
+MODEL=D:\ClaudeProjects\SafeDRL-DroneNav-ROS\checkpoints\ppo_lagrangian_final.zip
+
+==============================================================================
+== SESSION END  2026-10-02T21:03:02
+==============================================================================
