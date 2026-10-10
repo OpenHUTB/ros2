@@ -1,3 +1,4 @@
+# 虚拟环境
 venv/
 
 # mkdocs 构建产物
@@ -6,6 +7,9 @@ site/
 # Python 缓存
 __pycache__/
 *.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
@@ -14,11 +18,46 @@ docs/requirements.txt
 build/
 devel/
 install/
+logs/
+*.bag
+.catkin_workspace
+# catkin 在仓库根目录跑 catkin_make 时生成的杂物（不入库）
+# 注意：含 "/" 的模式锚定到本文件所在目录，下面几条只对仓库根生效
 src/CMakeLists.txt
+build/.built_by
+devel/.built_by
+
+# colcon 构建产物
+log/
+
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
 
-# colcon 构建产物
-build/
-install/
-log/
+# 仿真与训练产物（二进制大文件不入库，改用网盘链接）
+*.mp4
+*.gif
+*.pth
+*.pt
+*.onnx
+*.ckpt
+*.bag.active
+trajectories/*.json
+
+# 各功能包内的 models/ 目录：忽略体积大且可再生的训练产物
+# （必须写成 **/models/... —— 写成 models/... 会被锚定到仓库根，对
+#   src/air/<包>/models/ 完全无效，等于没写）
+**/models/weights/
+**/models/eval_log/
+**/models/*.zip
+**/models/*.ckpt
+# 但部署必需的权重文件要保留
+!**/models/*.npz
+
+# 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
+!docs/img/**/*.gif
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
