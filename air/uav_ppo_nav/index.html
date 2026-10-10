@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>基于 PPO 的无人机导航避障 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u57fa\u4e8e PPO \u7684\u65e0\u4eba\u673a\u5bfc\u822a\u907f\u969c";
+        var mkdocs_page_input_path = "air/uav_ppo_nav.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">基于 PPO 的无人机导航避障</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2-enu">2. 观测与动作（全部使用世界系 ENU）</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-22">2.1 观测（22 维）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22-4-11">2.2 动作（4 维，[-1,1]）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 训练</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 部署</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 验证</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51-ros">5.1 本地桩测试（无需 ROS / 仿真器）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 训练环境评估</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53-carlaair">5.3 CarlaAir 真机联调（同一策略、同一观测代码）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54-sim-to-real">5.4 工程经验（sim-to-real 差距）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 效果图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 参考</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">基于 PPO 的无人机导航避障</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_ppo_nav.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="ppo-uav_ppo_nav">基于 PPO 的无人机自主导航与避障（uav_ppo_nav）</h1>
+<p>本模块用 <strong>PPO（近端策略优化，Proximal Policy Optimization）</strong> 训练一个神经网络策略，
+让无人机<strong>自主飞向目标点并避开障碍物</strong>。训练在轻量质点环境完成（快），部署在
+CarlaAir/AirSim 仿真器（真实），两侧观测/动作接口完全一致，策略可直接迁移。</p>
+<h2 id="1">1. 运行架构</h2>
+<div class="highlight"><pre><span></span><code>/lidar/points ─┐
+               ├─► uav_ppo_nav ──/uav/cmd_vel──► carlair_ros_bridge ──► CarlaAir/AirSim
+/uav/odom ─────┘   (策略推理)                     (坐标换算+执行)
+</code></pre></div>
+<h2 id="2-enu">2. 观测与动作（全部使用世界系 ENU）</h2>
+<blockquote>
+<p><strong>为什么用世界系而不是机体系？</strong> 实测 CarlaAir 里 SimpleFlight 的<strong>偏航保持不生效</strong>：
+即使命令 <code>yaw_rate = 0</code>，机头仍以约 9°/s 漂移并 ±25° 摆动。若用机体系速度控制，
+前进方向会随漂移的机头一起转，轨迹变成<strong>绕圈</strong>（实测半径 ≈ |v|/ω ≈ 0.8 m）。
+改用世界系后，机头怎么转都不影响轨迹，策略才稳定收敛。</p>
+</blockquote>
+<h3 id="21-22">2.1 观测（22 维）</h3>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>维度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>激光雷达扇形直方图</td>
+<td>16</td>
+<td>360° 均分 16 个扇形（22.5°/个，<strong>扇形 0 = 正东</strong>，逆时针），每扇取最近障碍距离，归一化 <code>[0,1]</code>（1=无遮挡）。垂直方向只统计无人机高度 ±1.5 m 内的点，避免地面误报</td>
+</tr>
+<tr>
+<td>目标相对位置</td>
+<td>3</td>
+<td>目标点相对无人机的<strong>世界系</strong>偏移（东/北/天），除以 8 m 归一化</td>
+</tr>
+<tr>
+<td>世界系速度</td>
+<td>3</td>
+<td>东/北/天速度，分别除以 3 / 3 / 1.5 m/s 归一化</td>
+</tr>
+</tbody>
+</table>
+<p>扇形直方图公式（以无人机为原点，世界系点 <code>(x, y)</code> 为东/北）：</p>
+<div class="highlight"><pre><span></span><code>r   = sqrt(x² + y²)
+θ   = atan2(y, x)                    # -π..π，0 = 正东
+i   = ⌊(θ + Δ/2) / Δ⌋ mod 16        # Δ = 2π/16
+h[i] = min over sector i of clip(r / R_max, 0, 1)      # R_max = 12 m
+</code></pre></div>
+<h3 id="22-4-11">2.2 动作（4 维，<code>[-1,1]</code>）</h3>
+<div class="highlight"><pre><span></span><code>vx = a[0] · 3.0        # 世界系东向速度 (m/s)
+vy = a[1] · 3.0        # 世界系北向速度 (m/s)
+vz = a[2] · 1.5        # 世界系天向速度 (m/s)
+ω  = a[3] · 1.0        # 偏航角速度 (rad/s，不影响轨迹)
+</code></pre></div>
+<p>映射到 <code>geometry_msgs/Twist</code> 的 <code>linear.x/y/z</code> 与 <code>angular.z</code>。
+<strong>因为是世界系速度，桥接必须以 <code>body_frame:=false</code> 启动</strong>（否则会被当成机体系）：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>body_frame:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<blockquote>
+<p>节点启动时会<strong>自动校验</strong>桥接的 <code>control/body_frame</code> 参数：读到 <code>true</code> 会打印
+<code>logerr</code> 明确报错，读不到会 <code>logwarn</code> 提示，避免出现"无人机会飞但方向不对、
+日志里却什么都没有"的隐蔽故障。</p>
+<p>桥接的 <code>control/cmd_duration</code>（单条速度指令持续时长）默认 <strong>0.1 s</strong>，与本模块训练
+环境的 <code>dt = 0.1 s</code> 对齐；若设成 0.2 s，指令作用时间翻倍，会造成过冲震荡。</p>
+</blockquote>
+<h2 id="3">3. 训练</h2>
+<p>训练环境 <code>scripts/env.py</code> 是<strong>质点 + 速度环一阶滞后</strong>模型：</p>
+<div class="highlight"><pre><span></span><code>vel += (cmd_vel − vel) · dt / τ          # τ = 0.45 s，模拟真实速度环滞后
+pos += vel · dt
+</code></pre></div>
+<p>随机摆放圆柱障碍物与随机目标，用射线-圆求交生成合成激光雷达直方图。
+奖励 = 「向目标靠近的进度 − 动作平滑 − 时间惩罚」，到达 +20、撞障碍/越界 −20。</p>
+<blockquote>
+<p><strong>为什么要建模速度滞后？</strong> 真实飞行器的速度环不是瞬时到达指令速度。早期版本
+用瞬时质点模型训练，策略在 CarlaAir 里会因惯量过冲而<strong>来回震荡</strong>；加入一阶滞后后
+明显改善。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"stable-baselines3"</span><span class="w"> </span><span class="s2">"gymnasium"</span><span class="w"> </span>numpy
+<span class="nb">cd</span><span class="w"> </span>src/air/uav_ppo_nav/scripts
+python3<span class="w"> </span>main.py<span class="w"> </span>--train<span class="w"> </span>--total<span class="w"> </span><span class="m">400000</span><span class="w"> </span>--obstacles<span class="w"> </span><span class="m">16</span><span class="w"> </span>--out<span class="w"> </span>../models
+<span class="c1"># 产出 models/policy_weights.npz（部署用）与 models/best_model.zip</span>
+</code></pre></div>
+<blockquote>
+<p>注意 <code>--out ../models</code>：训练脚本默认输出到当前目录下的 <code>models</code>，而部署时读的是
+<code>$(find uav_ppo_nav)/models/policy_weights.npz</code>，所以要用 <code>--out ../models</code> 指回包内目录。</p>
+</blockquote>
+<p>环境规模（贴近 CarlaAir 城镇尺度）：场地 ±10 m、目标距离 2~8 m、16 个半径 0.6 m 的障碍、
+控制周期 <code>dt = 0.1 s</code>。训练评估见 §5。</p>
+<p>PPO 超参：<code>n_steps=2048, batch_size=256, lr=3e-4, gamma=0.99, gae_lambda=0.95,
+ent_coef=0.005, net_arch=[64,64]</code>。</p>
+<h2 id="4">4. 部署</h2>
+<p>部署节点 <code>scripts/ppo_nav_node.py</code> 用训练导出的 MLP 权重做<strong>纯 numpy 前向</strong>，
+因此虚拟机<strong>不需要安装 torch / stable-baselines3</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（必须 body_frame:=false，因为策略输出世界系速度）</span>
+<span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
+roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>body_frame:<span class="o">=</span><span class="nb">false</span>
+
+<span class="c1"># 终端 2：PPO 导航</span>
+<span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
+roslaunch<span class="w"> </span>uav_ppo_nav<span class="w"> </span>main.launch<span class="w"> </span>goal_x:<span class="o">=</span><span class="m">16</span>.6<span class="w"> </span>goal_y:<span class="o">=</span><span class="m">5</span>.4<span class="w"> </span>goal_z:<span class="o">=</span>-10.0
+</code></pre></div>
+<p>推理前向（MLP <code>[64,64]</code>）：</p>
+<div class="highlight"><pre><span></span><code>h0 = tanh(W0·x + b0)
+h1 = tanh(W1·h0 + b1)
+a  = clip(W2·h1 + b2, -1, 1)
+</code></pre></div>
+<h2 id="5">5. 验证</h2>
+<h3 id="51-ros">5.1 本地桩测试（无需 ROS / 仿真器）</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_ppo_nav_local.py<span class="w">        </span><span class="c1"># 20 项：直方图/世界系变换/动作映射/环境/策略</span>
+python3<span class="w"> </span>tests/test_ppo_nav_node_local.py<span class="w">   </span><span class="c1"># 20 项：部署节点（mock 掉 rospy 也能测）</span>
+</code></pre></div>
+<blockquote>
+<p>项数是<strong>不同断言的个数</strong>。所有断言都写在循环外——写进循环会靠重复执行把计数灌水
+（早期版本就是这样把 19 条断言报成「68 项」的，已修正）。</p>
+<p>其中「终止判定」是一条<strong>可证伪</strong>的确定性断言：悬停不动 + <code>max_steps=20</code> 时，
+必须在<strong>正好第 20 步</strong>返回 <code>truncated=True, terminated=False</code>（实测 <code>max_steps</code>
+取 5/20/30 均精确命中，写成 <code>n == max_steps - 1</code> 会全部失败）。</p>
+</blockquote>
+<p>另外可以校验「部署侧纯 numpy 推理」与训练框架（SB3）完全一致：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">policy</span> <span class="kn">import</span> <span class="n">MlpPolicy</span><span class="p">;</span> <span class="kn">from</span> <span class="nn">stable_baselines3</span> <span class="kn">import</span> <span class="n">PPO</span>
+<span class="c1"># 同一观测下 MlpPolicy.forward 与 model.predict 的最大绝对误差 &lt; 1e-5</span>
+<span class="c1"># （两者都是 float32，实测量级 1e-8~1e-6，属正常舍入误差）</span>
+</code></pre></div>
+<h3 id="52">5.2 训练环境评估</h3>
+<p><code>main.py --eval --episodes 100 --obstacles 16</code>：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成功率</td>
+<td><strong>78/100（78.0%）</strong></td>
+</tr>
+<tr>
+<td>失败（碰撞/越界）</td>
+<td>17</td>
+</tr>
+<tr>
+<td>超时</td>
+<td>5</td>
+</tr>
+<tr>
+<td>平均步数</td>
+<td>38.4</td>
+</tr>
+<tr>
+<td>平均奖励</td>
+<td>16.5</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>必须显式带 <code>--obstacles 16</code></strong>：<code>--eval</code> 的 <code>--obstacles</code> 默认值是 6，不传会得到
+不同的成功率，容易误判。</p>
+<p>训练共 40 万步，但 <code>train.py</code> 故意导出的是<strong>评估集最优检查点</strong> <code>best_model.zip</code>
+（约 30 万步处）；已逐层比对确认 <code>policy_weights.npz</code> 与 best 权重完全一致
+（与 final 差 1.04e-1）。只有 <code>policy_weights.npz</code> 入库，两个 <code>.zip</code> 训练产物不入库。</p>
+</blockquote>
+<h3 id="53-carlaair">5.3 CarlaAir 真机联调（同一策略、同一观测代码）</h3>
+<p>把训练好的策略直接部署到 CarlaAir（Town01），从悬停点给出目标点，记录全程：</p>
+<table>
+<thead>
+<tr>
+<th>目标距离</th>
+<th>飞行用时</th>
+<th>最终误差</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.71 m</td>
+<td>3.4 s</td>
+<td>0.59 m</td>
+<td>开阔空域</td>
+</tr>
+<tr>
+<td>8.94 m</td>
+<td>4.2 s</td>
+<td>0.38 m</td>
+<td>楼群高度（z ≈ −10）</td>
+</tr>
+<tr>
+<td>16.12 m</td>
+<td>6.4 s</td>
+<td><strong>0.22 m</strong></td>
+<td>楼群高度，激光雷达 2567~3228 点</td>
+</tr>
+<tr>
+<td>11.00 m</td>
+<td>5.0 s</td>
+<td>0.35 m</td>
+<td>楼群高度</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论：训练环境（纯 numpy 质点模型）中学到的策略，可直接迁移到 CarlaAir 的
+真实六自由度无人机上完成自主导航，位置误差均在 0.6 m 以内。</strong></p>
+<h3 id="54-sim-to-real">5.4 工程经验（sim-to-real 差距）</h3>
+<p>联调过程中定位到三个真实的落差来源，均已修正：</p>
+<ol>
+<li><strong>偏航不可控 → 改用世界系控制</strong>。CarlaAir 的偏航保持不生效（漂移+摆动），
+   机体系控制会导致绕圈飞行。</li>
+<li><strong>速度环滞后 → 训练环境建模一阶滞后</strong>。否则策略在真机上因惯量过冲震荡。</li>
+<li><strong>控制周期必须一致</strong>。训练 <code>dt = 0.1 s</code>，部署也须用 0.1 s（用 0.25 s 会震荡）。</li>
+</ol>
+<p>另外，CarlaAir 的仿真器在<strong>高密度几何 + 大点云</strong>场景下（楼群中激光雷达 9000+ 点）
+单步 RPC 可达数秒，属平台性能上限，与策略无关。</p>
+<p><strong>该限制已通过传感器配置缓解</strong>：原先 <code>settings.json</code> 的雷达没设 <code>Range</code> 且
+<code>PointsPerSecond: 100000</code>，桥接又把滤波上限放到 60 m，而策略实际只用到 12 m ——
+等于每帧都传输并解包大量用不上的远点。现改为 <code>Range: 15.0</code>、<code>PointsPerSecond: 40000</code>，
+并把 <code>lidar/max_range</code> 收到 15 m，显著降低每帧射线投射与传输开销。
+若在楼群中仍偏慢，可继续下调这两项。</p>
+<h2 id="6">6. 效果图</h2>
+<p><img alt="PPO 自主导航演示" src="img/air/uav_ppo_nav/ppo_nav_demo.gif"/></p>
+<p>上图：PPO 策略驱动 CarlaAir 无人机自主飞向目标点（第一视角，前视相机）。</p>
+<h2 id="7">7. 参考</h2>
+<ul>
+<li><a href="../carlair_ros_bridge/">carlair_ros_bridge 桥接模块</a></li>
+<li><a href="https://arxiv.org/abs/1707.06347">Proximal Policy Optimization (Schulman et al., 2017)</a></li>
+<li><a href="https://stable-baselines3.readthedocs.io/">Stable-Baselines3 文档</a></li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../uav_keyboard_control/" title="无人机键盘控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../drone_teleop/" title="无人机终端键盘遥控器">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../uav_keyboard_control/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../drone_teleop/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
