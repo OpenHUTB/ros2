@@ -507,6 +507,23 @@ def test_main_launch_passes_declared_args_to_node():
     assert not missing, f"这些已声明的 arg 没有透传给节点：{missing}"
 
 
+def test_main_sh_launch_dispatches_per_ros_version():
+    """main.sh 的 --launch 分支要按 ROS 版本分别调 ros2 launch / roslaunch。
+
+    原写法 `exec ros2 launch <pkg> main.launch.py "${@/--launch/}"` 有两个坑：
+      1) 只传 --launch 时，${@/--launch/} 会留下一个**空字符串**参数，
+         `ros2 launch <pkg> main.launch.py ""` 会以 Invalid launch argument 失败；
+      2) 不管装的是 ROS 1 还是 ROS 2 都调 ros2，Noetic 上直接 command not found。
+    """
+    sh = open(os.path.join(_pkg_root(), "main.sh"), encoding="utf-8").read()
+    assert "${@/--launch/}" not in sh, \
+        "旧的 --launch 展开写法会留下空参数，应改成收集到数组再展开"
+    assert "ros2 launch" in sh, "main.sh 应支持 ROS 2 的 ros2 launch"
+    assert "roslaunch" in sh, "main.sh 应支持 ROS 1 的 roslaunch"
+    assert "ROS_VERSION" in sh, "应按 ROS_VERSION 选择 launch 命令"
+    assert "launch_args" in sh, "其余参数应原样透传给 launch"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
