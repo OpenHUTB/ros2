@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot name="smartcar" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find smartcar_description)/urdf/xacro/smartcar_body.xacro"/>
+  <xacro:include filename="$(find smartcar_description)/urdf/xacro/smartcar_sim.xacro"/>
+  <xacro:smartcar_body/>
+  <xacro:smartcar_sim/>
+</robot>
