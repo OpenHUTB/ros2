@@ -1,21 +1,37 @@
-# Python
+# 虚拟环境
+venv/
+
+# mkdocs 构建产物
+site/
+
+# Python 缓存
 __pycache__/
+*.pyc
 *.py[cod]
 *.egg-info/
 .pytest_cache/
 
-# ROS / catkin
-devel/
+# 构建时 hooks.py 自动生成
+docs/requirements.txt
+
+# catkin 编译产物
 build/
+devel/
+install/
 logs/
 *.bag
 .catkin_workspace
-
 # catkin 在仓库根目录跑 catkin_make 时生成的杂物（不入库）
-# 注意：含 "/" 的模式锚定到本文件所在目录，这三条只对仓库根生效
+# 注意：含 "/" 的模式锚定到本文件所在目录，下面几条只对仓库根生效
 src/CMakeLists.txt
 build/.built_by
 devel/.built_by
+
+# colcon 构建产物
+log/
+
+# 行为克隆数据集（图像与标签，体积大不入库）
+data/
 
 # 仿真与训练产物（二进制大文件不入库，改用网盘链接）
 *.mp4
