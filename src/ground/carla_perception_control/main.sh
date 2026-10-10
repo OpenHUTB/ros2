@@ -22,6 +22,9 @@ export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 if [ -f /opt/ros/humble/setup.bash ]; then
     # shellcheck disable=SC1091
     source /opt/ros/humble/setup.bash
+elif [ -f /opt/ros/noetic/setup.bash ]; then
+    # shellcheck disable=SC1091
+    source /opt/ros/noetic/setup.bash
 fi
 
 # --launch：交给 ros2 launch

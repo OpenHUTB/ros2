@@ -57,7 +57,7 @@ python3 check_connection.py <宿主机IP> 2000 Town05
 
 # ⑤ ROS 2 / ROS 1
 ros2 launch carla_perception_control main.launch.py host:=<宿主机IP>
-roslaunch carla_perception_control main.launch host:=<宿主机IP>
+bash main.sh --host <宿主机IP> --mode run
 ```
 
 一键脚本：`bash main.sh --host <宿主机IP>` 或 Windows `main.bat --mode train`。

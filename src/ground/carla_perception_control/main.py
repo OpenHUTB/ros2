@@ -669,18 +669,47 @@ def build_parser():
     p.add_argument("--epochs", type=int, default=300)
     p.add_argument("--out", default="models/nn_percept.json")
     p.add_argument("--model", default="models/nn_percept.json")
-    p.add_argument("--no_nn_control", action="store_true", help="改用纯跟踪作对比")
-    p.add_argument("--headless", action="store_true", help="无窗口模式（离线取证）")
-    p.add_argument("--demo", action="store_true", help="运行内置演示序列")
-    p.add_argument("--save_dir", default=None, help="取证图/截图导出目录")
-    p.add_argument("--follow", action="store_true",
-                   help="让 CARLA 大窗口以第三人称跟随自车（录屏/观察用）")
+    _add_bool(p, "--no_nn_control",
+              "改用纯跟踪作对比")
+    _add_bool(p, "--headless",
+              "无窗口模式（离线取证）")
+    _add_bool(p, "--demo",
+              "运行内置演示序列")
+    p.add_argument("--save_dir", nargs="?", const=None, default=None, help="取证图/截图导出目录")
+    _add_bool(p, "--follow",
+              "让 CARLA 大窗口以第三人称跟随自车（录屏/观察用）")
     p.add_argument("--follow_dist", type=float, default=9.0,
                    help="第三人称镜头在车后方的距离（米）")
     p.add_argument("--follow_height", type=float, default=4.5,
                    help="第三人称镜头相对车顶的高度（米）")
-    p.add_argument("--launch", action="store_true", help="由 ROS launch 启动（等价 run）")
+    _add_bool(p, "--launch",
+              "由 ROS launch 启动（等价 run）")
     return p
+
+
+def _parse_bool(value):
+    """Parse a boolean that arrives as text.
+
+    ROS 1 launch files can only pass arguments as plain text (e.g.
+    ``--follow true`` / ``--follow false``) -- unlike ROS 2, which passes a real
+    parameter and keeps the bool type.  Without this, ``--follow false`` makes
+    ``store_true`` set follow=True and the stray ``false`` is swallowed by
+    ``parse_known_args`` as an unknown positional.
+    """
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in ("1", "true", "yes", "on", "y", "t"):
+        return True
+    if text in ("0", "false", "no", "off", "n", "f", ""):
+        return False
+    raise argparse.ArgumentTypeError(f"无法识别的布尔值：{value!r}")
+
+
+def _add_bool(parser, name, help_text):
+    """Boolean switch: bare ``--flag`` or explicit ``--flag true|false``."""
+    parser.add_argument(name, type=_parse_bool, nargs="?", const=True,
+                        default=False, help=help_text)
 
 
 def main(argv=None):

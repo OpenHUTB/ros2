@@ -399,6 +399,114 @@ def test_diagnostic_script_ignores_map_native_actors():
         assert k in src, f"诊断脚本未把 {k} 归入地图自带对象"
 
 
+# ------------------------------------------------- 入口可执行位与 launch 参数透传
+def _pkg_root():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def test_main_entries_are_executable():
+    """main.* 必须有可执行位。
+
+    launch/main.launch 里是 <node type="main.py"> —— roslaunch 会直接执行该
+    文件并依赖首行 shebang；没有可执行位（实测曾为 100644）就会启动失败。
+    """
+    import subprocess
+    names = ("main.py", "main.sh", "main.bat")
+    modes = {}
+    try:
+        out = subprocess.check_output(
+            ["git", "ls-files", "-s", "--"] + list(names),
+            cwd=_pkg_root(), stderr=subprocess.DEVNULL).decode()
+        for line in out.splitlines():
+            mode, _sha, _stage, path = line.split(None, 3)
+            modes[os.path.basename(path.strip())] = mode
+    except Exception:  # noqa: BLE001  非 git 检出（如 colcon 安装目录）时退回
+        for name in names:
+            assert os.access(os.path.join(_pkg_root(), name), os.X_OK), \
+                f"{name} 缺少可执行位"
+        return
+    assert modes, "git ls-files 没有返回 main.* 的信息"
+    for name in names:
+        assert modes.get(name, "") == "100755", (
+            f"{name} 的 git 模式是 {modes.get(name)}，应为 100755；"
+            "请执行 git update-index --chmod=+x <文件>")
+
+
+def _parse_bool_from_source():
+    """从 main.py 取出 _parse_bool 来测，避免 import main 拉起 CARLA 依赖。"""
+    import ast
+    import argparse as _ap
+    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    tree = ast.parse(src)
+    fn = next(n for n in tree.body
+              if isinstance(n, ast.FunctionDef) and n.name == "_parse_bool")
+    ns = {"argparse": _ap}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), "<main.py>", "exec"), ns)
+    return ns["_parse_bool"]
+
+
+def test_launch_bool_args_accept_text_values():
+    """roslaunch 只能按文本透传参数，布尔开关必须接受 true / false。
+
+    否则 `--follow false` 会被 store_true 置为 True，那个多余的 false 又被
+    parse_known_args 当未知位置参数丢掉 —— follow:=false 反而生效为 true。
+    """
+    import argparse
+    parse_bool = _parse_bool_from_source()
+
+    def parse(argv):
+        p = argparse.ArgumentParser()
+        p.add_argument("--follow", type=parse_bool, nargs="?",
+                       const=True, default=False)
+        p.add_argument("--headless", type=parse_bool, nargs="?",
+                       const=True, default=False)
+        p.add_argument("--save_dir", nargs="?", const=None, default=None)
+        a, _unknown = p.parse_known_args(argv)
+        return a.follow, a.headless, a.save_dir
+
+    assert parse(["--follow", "false", "--headless", "false",
+                  "--save_dir"]) == (False, False, None), \
+        "launch 传来的 false 应解析为 False，空 save_dir 应解析为 None"
+    assert parse(["--follow", "true", "--headless", "true"]) == (True, True, None)
+    assert parse(["--follow", "--headless"]) == (True, True, None), \
+        "裸开关（命令行习惯写法）仍应可用"
+
+    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    assert "_add_bool(" in src, "main.py 应通过 _add_bool 注册布尔开关"
+    assert 'action="store_true"' not in src, (
+        'main.py 仍有 action="store_true"：launch 传来的 false 会被丢掉')
+
+
+def test_empty_optional_value_does_not_abort():
+    """$(arg save_dir) 为空时会剩一个光秃秃的 --save_dir。
+
+    argparse 原会以 "expected one argument" 直接退出，导致 launch 起不来。
+    """
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--save_dir", nargs="?", const=None, default=None)
+    a, _unknown = p.parse_known_args(["--save_dir"])
+    assert a.save_dir is None
+
+
+def test_main_launch_passes_declared_args_to_node():
+    """main.launch 声明的每个 <arg> 都必须被节点用到。
+
+    漏传会让 follow:=true 之类的设置不起作用。
+    """
+    import re
+    text = open(os.path.join(_pkg_root(), "launch", "main.launch"),
+                encoding="utf-8").read()
+    declared = set(re.findall(r'<arg\s+name="([^"]+)"', text))
+    nodes = re.findall(r"<node\b.*?/>", text, re.S)
+    assert nodes, "main.launch 里没有找到 <node .../>"
+    passed = set()
+    for n in nodes:
+        passed |= set(re.findall(r"\$\(arg\s+([^)]+)\)", n))
+    missing = sorted(declared - passed)
+    assert not missing, f"这些已声明的 arg 没有透传给节点：{missing}"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
