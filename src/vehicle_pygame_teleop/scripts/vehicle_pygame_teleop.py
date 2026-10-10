@@ -21,10 +21,20 @@ class TeleopCar:
         rospy.loginfo("车辆键盘控制节点已启动，使用方向键控制")
         rospy.loginfo("上/下：前进/后退，左/右：左转/右转，空格：急停")
 
+    def publish_zero(self):
+        """发布零速度指令并短暂等待，确保车辆可靠停车、指令成功送达"""
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+        self.pub.publish(twist)
+        self.pub.publish(twist)
+        rospy.sleep(0.1)
+
     def run(self):
         while not rospy.is_shutdown():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    self.publish_zero()
                     pygame.quit()
                     return
 
@@ -55,10 +65,14 @@ class TeleopCar:
             self.rate.sleep()
 
 if __name__ == '__main__':
+    teleop = None
     try:
         teleop = TeleopCar()
         teleop.run()
     except rospy.ROSInterruptException:
         pass
     finally:
+        # 节点异常退出或被中断时同样兜底停车
+        if teleop is not None:
+            teleop.publish_zero()
         pygame.quit()
