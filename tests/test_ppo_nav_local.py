@@ -100,18 +100,35 @@ def test_env():
     check(obs.shape == (22,), "reset 观测维度 22")
     check(env.action_space.shape == (4,), "动作空间 4 维")
 
-    # 随机动作跑几步，确认 step 返回 5 元组且不崩溃
-    # 注意：断言放在循环外，避免"靠重复执行灌水"把项数虚高
+    # 随机动作跑几步，确认 step 返回 5 元组、不抛异常
+    # 注意：断言一律放在循环外 —— 放进循环会靠重复执行把"项数"灌水
     terminated = truncated = False
     steps = 0
     r = 0.0
+    info = {}
     for _ in range(50):
         obs, r, terminated, truncated, info = env.step(env.action_space.sample())
         steps += 1
         if terminated or truncated:
             break
-    check(isinstance(r, float) and obs.shape == (22,), "step 返回合法奖励与观测")
-    check(steps >= 1, "随机策略能推进回合（实际推进 %d 步）" % steps)
+    check(isinstance(r, float) and np.isfinite(r) and obs.shape == (22,),
+          "随机策略 step 返回有限奖励与 22 维观测（跑满 %d 步无异常）" % steps)
+    check(set(info) >= {"success", "distance", "crash_reason"},
+          "info 含 success / distance / crash_reason")
+
+    # 终止判定必须真的能触发：悬停不动 + max_steps=20 -> 必须正好第 20 步 truncated
+    env3 = NavEnv(num_obstacles=0, max_steps=20, seed=2)
+    env3.reset()
+    n = 0
+    te = tr = False
+    while True:
+        obs3, _, te, tr, _ = env3.step([0.0, 0.0, 0.0, 0.0])
+        n += 1
+        if te or tr:
+            break
+    check(tr and not te and n == 20,
+          "悬停不动时在第 max_steps=20 步截断（实际第 %d 步）" % n)
+    env3.close()
 
     # 确定性：无障碍、目标就在前方，应能到达
     env2 = NavEnv(num_obstacles=0, seed=1)

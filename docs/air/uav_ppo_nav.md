@@ -119,9 +119,16 @@ a  = clip(W2·h1 + b2, -1, 1)
 ### 5.1 本地桩测试（无需 ROS / 仿真器）
 
 ```shell
-python3 tests/test_ppo_nav_local.py        # 19 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_local.py        # 20 项：直方图/世界系变换/动作映射/环境/策略
 python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy 也能测）
 ```
+
+> 项数是**不同断言的个数**。所有断言都写在循环外——写进循环会靠重复执行把计数灌水
+> （早期版本就是这样把 19 条断言报成「68 项」的，已修正）。
+>
+> 其中「终止判定」是一条**可证伪**的确定性断言：悬停不动 + `max_steps=20` 时，
+> 必须在**正好第 20 步**返回 `truncated=True, terminated=False`（实测 `max_steps`
+> 取 5/20/30 均精确命中，写成 `n == max_steps - 1` 会全部失败）。
 
 另外可以校验「部署侧纯 numpy 推理」与训练框架（SB3）完全一致：
 

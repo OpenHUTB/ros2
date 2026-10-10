@@ -80,9 +80,11 @@ roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
 ## 本地测试（无需 ROS / 仿真器 / GPU）
 
 ```bash
-python3 tests/test_ppo_nav_local.py        # 19 项：直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_local.py        # 20 项：直方图/世界系变换/动作映射/环境/策略
 python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy）
 ```
+
+> 项数 = **不同断言的个数**；断言一律写在循环外，不含靠循环重复执行灌水的计数。
 
 ## 实测结果
 
