@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>地面载具物理仿真与键盘运动控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5730\u9762\u8f7d\u5177\u7269\u7406\u4eff\u771f\u4e0e\u952e\u76d8\u8fd0\u52a8\u63a7\u5236";
+        var mkdocs_page_input_path = "ground/carla_keyboard_control.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 机械臂控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">地面载具物理仿真与键盘运动控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与目标</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">核心任务目标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">与已有「手动控制」示例的区别</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 车辆纵向动力学</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 阿克曼转向几何</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23">2.3 同步步进与时间对齐</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 倒挡判定（真实驾驶逻辑）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 算法流程</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-carla_commonpy-carla-api">4.1 carla_common.py — CARLA API 公共封装</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42-carla_commoncompose_control">4.2 carla_common.compose_control() — 控制合成（唯一实现）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43-carla_control_nodepy-ros-2">4.3 carla_control_node.py — ROS 2 仿真节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44-keyboard_teleop_nodepy">4.4 keyboard_teleop_node.py — 键盘遥控节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 单元测试</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 仿真运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 支持与测试环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 新手路线：从已有示例到本模块，在哪一步切换</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53-0">5.3 步骤 0：环境准备 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54-1ros-2">5.4 步骤 1：编译本功能包（ROS 2）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#55-2-carla">5.5 步骤 2：验证与 CARLA 服务端的连接 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#56-3">5.6 步骤 3：运行本模块 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#57-4">5.7 步骤 4：操作说明</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#58">5.8 运行效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#59">5.9 常见问题</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 性能评价</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">地面载具物理仿真与键盘运动控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_keyboard_control.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla">CARLA 地面载具物理仿真与键盘运动控制</h1>
+<blockquote>
+<p>对应课程任务（1）：<em>对人形机器人/肌肉骨骼人/车辆/水下机器人/无人机进行物理仿真，
+通过键盘对机器人进行运动控制</em>。本模块面向<strong>地面载具（车辆）</strong>。</p>
+</blockquote>
+<h2 id="1">1. 概述与目标</h2>
+<p>本模块在 <strong>CARLA 0.9.16</strong> 中加载地面载具（<code>vehicle.tesla.model3</code>）并进行物理仿真，
+通过键盘实时控制车辆运动，并在窗口内实时渲染车头前视 RGB 相机画面与运行状态 HUD。</p>
+<h3 id="_1">核心任务目标</h3>
+<ol>
+<li><strong>车辆物理仿真</strong>：由 CARLA 的 UE4 物理引擎解算车辆纵向动力学与阿克曼转向几何。</li>
+<li><strong>键盘运动控制</strong>：<code>W/S/A/D</code>（含方向键）映射为 <code>(throttle, steer, brake, reverse)</code>，
+   按<strong>真实驾驶逻辑</strong>处理——<code>S</code> 在有速度时刹车，车速低于阈值时自动挂倒挡后退。</li>
+<li><strong>感知画面回显</strong>：车头 RGB 相机数据经 BGRA→RGB 重排后显示，并叠加位置/速度/控制量 HUD。</li>
+<li><strong>一键启动</strong>：提供课程约定的主入口 <code>main.py</code> / <code>main.sh</code> / <code>main.bat</code>，
+   并同时提供 ROS 2 Humble（<code>main.launch.py</code>）与 ROS 1 Noetic（<code>main.launch</code>）的 launch 封装。</li>
+</ol>
+<h3 id="_2">与已有「手动控制」示例的区别</h3>
+<p>本仓库已有基于 <strong>carla-ros-bridge</strong> 的
+<a href="../../set_up_and_connect_to_carla/">手动控制示例</a>（在车辆上按 <code>B</code> 切换手动驾驶）。本模块的差异：</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>已有「手动控制」示例</th>
+<th>本模块 <code>carla_keyboard_control</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技术路线</td>
+<td><code>carla_ros_bridge</code> + 车辆<strong>内置</strong>手动驾驶</td>
+<td>CARLA Python API <strong>直连</strong> + 自研键盘控制节点</td>
+</tr>
+<tr>
+<td>是否依赖 ros-bridge</td>
+<td>必须编译并运行 ros-bridge（catkin/colcon）</td>
+<td><strong>不需要</strong> ros-bridge，仅需 <code>carla</code> Python 客户端</td>
+</tr>
+<tr>
+<td>如何进入控制</td>
+<td>车辆生成后按 <code>B</code> 切换到内置手动驾驶</td>
+<td>程序启动即进入自研控制回路</td>
+</tr>
+<tr>
+<td>控制信号来源</td>
+<td>ros-bridge 的 <code>carla_manual_control</code> 包</td>
+<td>键盘 → <code>carla.VehicleControl(throttle, steer, brake, reverse)</code></td>
+</tr>
+<tr>
+<td>倒车处理</td>
+<td>由内置手动驾驶逻辑决定</td>
+<td><strong>显式倒挡判定</strong>：<code>v &lt; v_th</code> 挂倒挡，否则刹车</td>
+</tr>
+<tr>
+<td>传感器展示</td>
+<td>RViz 订阅 ros-bridge 话题</td>
+<td>前视画面 + HUD（位置/速度/控制量/键位）实时叠加</td>
+</tr>
+<tr>
+<td>仿真步进</td>
+<td>ros-bridge 内部驱动</td>
+<td>本模块<strong>显式驱动</strong>同步步进（固定 0.05 s），保证与传感器严格对齐</td>
+</tr>
+<tr>
+<td>代码定位</td>
+<td>CARLA ROS 桥接功能的演示</td>
+<td>后续感知 / 规划 / 端到端作业的<strong>自车控制基座</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="_3">与其它已合并同类模块的区分</h4>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>相同点</th>
+<th>本模块的不同点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../set_up_and_connect_to_carla/"><code>set_up_and_connect_to_carla</code></a></td>
+<td>都在 CARLA 中控制车辆</td>
+<td>不依赖 ros-bridge，控制逻辑自研，含倒挡判定</td>
+</tr>
+<tr>
+<td><code>src/water/rov_mujoco</code></td>
+<td>同为「物理仿真 + 键盘运动控制」作业</td>
+<td>对象为<strong>地面载具</strong>（车辆动力学/阿克曼转向），非水下 6-DOF</td>
+</tr>
+<tr>
+<td><code>src/air/drone_ros_teleop</code></td>
+<td>同为键盘遥控</td>
+<td>本模块做<strong>车辆物理仿真</strong>（真实动力学解算），非无人机消息解耦</td>
+</tr>
+<tr>
+<td><code>src/air/octree_uav_3d_pathfinding</code></td>
+<td>都在虚拟机 + 宿主机模拟器架构下运行</td>
+<td>本模块<strong>不重复罗列虚拟机配置步骤</strong>，只提供跳转链接</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">配置步骤不重复（老师评审要求）</p>
+<p>CARLA 服务端的启动方式、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
+<code>numpy</code> 版本兼容等<strong>通用配置步骤</strong>，请直接参考
+<a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a>。本文档仅描述本模块特有内容。</p>
+</div>
+<hr/>
+<h2 id="2">2. 计算原理</h2>
+<h3 id="21">2.1 车辆纵向动力学</h3>
+<p>车辆沿车头方向的一维纵向运动可由下式近似描述：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot{v} = \frac{\tau \cdot F_{\max} - c_d v^2 - F_f - b \cdot B_{\max}}{m}
+</script>
+</p>
+<p>其中 <script type="math/tex">\tau \in [0,1]</script> 为油门，<script type="math/tex">B_{\max}</script> 为刹车力上限，<script type="math/tex">b \in [0,1]</script> 为刹车量，
+<script type="math/tex">F_{\max}</script> 为最大驱动力，<script type="math/tex">c_d</script> 为风阻系数，<script type="math/tex">F_f</script> 为滚动摩擦阻力，<script type="math/tex">m</script> 为车辆质量。
+CARLA 在 UE4 中按该动力学逐步积分。</p>
+<p>倒车时令 <code>reverse = True</code>，驱动力方向反向：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot{v} = \frac{-\tau \cdot F_{\max} - c_d v^2 - F_f}{m}, \qquad v < 0
+</script>
+</p>
+<h3 id="22">2.2 阿克曼转向几何</h3>
+<p>转向量 <script type="math/tex">s \in [-1,1]</script> 映射为前轮转角 <script type="math/tex">\delta = s \cdot \delta_{\max}</script>。前后轴距 <script type="math/tex">L</script> 时，
+车辆航向角变化率满足自行车模型：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot{\psi} = \frac{v}{L} \tan\delta
+</script>
+</p>
+<h3 id="23">2.3 同步步进与时间对齐</h3>
+<p>打开同步模式并固定步长，保证控制量与传感器帧严格对齐：</p>
+<p>
+<script type="math/tex; mode=display">
+t_{k+1} = t_k + \Delta t, \qquad \Delta t = 0.05\,\text{s}
+</script>
+</p>
+<h3 id="24">2.4 倒挡判定（真实驾驶逻辑）</h3>
+<p>设当前速率 <script type="math/tex">v</script>、倒挡阈值 <script type="math/tex">v_{\text{th}} = 0.5\,\text{m/s}</script>，则按 <code>S</code> 时：</p>
+<p>
+<script type="math/tex; mode=display">
+(\text{throttle}, \text{brake}, \text{reverse}) =
+\begin{cases}
+(0.8\tau_{\max},\ 0,\ \text{True}), & v < v_{\text{th}} \quad \text{（挂倒挡后退）}\\
+(0,\ b_{\max},\ \text{False}), & v \ge v_{\text{th}} \quad \text{（刹车减速）}
+\end{cases}
+</script>
+</p>
+<hr/>
+<h2 id="3">3. 算法流程</h2>
+<div class="highlight"><pre><span></span><code>主入口 main.py
+  │
+  ├── 独立模式（默认）
+  │     连接 CARLA → load_world(Town05) → 开同步模式
+  │     → spawn 自车 vehicle.tesla.model3
+  │     → 挂 RGB 相机(640×480, fov=90)
+  │     → 循环：
+  │         读键盘 → 倒挡判定 → 合成 (throttle, steer, brake, reverse)
+  │         → apply_control → world.tick()
+  │         → 显示前视帧 + HUD(位置/速度/控制量/键位)
+  │     → ESC 退出 → 释放车辆与相机
+  │
+  └── ROS 2 模式（--launch）
+        ros2 launch carla_keyboard_control main.launch.py
+          ├── carla_control_node     : 连接/生成/同步步进/广播 图像·里程计·速度
+          └── keyboard_teleop_node   : 读键盘 → 发布 vehicle_control_cmd
+</code></pre></div>
+<hr/>
+<h2 id="4">4. 源码解析</h2>
+<h3 id="41-carla_commonpy-carla-api">4.1 <code>carla_common.py</code> — CARLA API 公共封装</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>connect()</code></td>
+<td><code>carla.Client(host, port)</code> + <code>load_world(town)</code>，开启同步模式</td>
+</tr>
+<tr>
+<td><code>spawn_vehicle()</code></td>
+<td><code>try_spawn_actor</code>；出生点不可用时用 <code>map.get_waypoint()</code> 找最近路面点</td>
+</tr>
+<tr>
+<td><code>make_rgb_camera()</code></td>
+<td>挂载 RGB 相机，回调经 <code>decode_image()</code> 得到 <code>(H,W,3)</code> RGB</td>
+</tr>
+<tr>
+<td><code>apply_control()</code></td>
+<td>构造 <code>carla.VehicleControl</code>，各分量 <code>np.clip</code> 到合法区间</td>
+</tr>
+<tr>
+<td><code>set_spectator_follow()</code></td>
+<td>每帧把旁观镜头摆到自车后方，便于录屏</td>
+</tr>
+</tbody>
+</table>
+<p>相机原始数据为 BGRA，需重排通道：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">decode_image</span><span class="p">(</span><span class="n">image</span><span class="p">):</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">arr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">][:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>      <span class="c1"># BGRA → RGB</span>
+</code></pre></div>
+<h3 id="42-carla_commoncompose_control">4.2 <code>carla_common.compose_control()</code> — 控制合成（唯一实现）</h3>
+<p>控制合成是<strong>纯函数</strong>，集中在 <code>carla_common.py</code> 中，由 standalone 主入口
+（<code>main.py</code>）与 ROS 2 键盘节点（<code>keyboard_teleop_node.py</code>）<strong>共同调用</strong>，
+从而保证两条运行路径的控制行为完全一致：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compose_control</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">speed</span><span class="p">,</span> <span class="n">throttle_max</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">brake_max</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+                    <span class="n">steer_max</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">rev_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="n">throttle</span> <span class="o">=</span> <span class="n">brake</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">keys</span><span class="p">[</span><span class="s2">"fwd"</span><span class="p">]:</span>
+        <span class="n">throttle</span> <span class="o">=</span> <span class="n">throttle_max</span>
+    <span class="k">elif</span> <span class="n">keys</span><span class="p">[</span><span class="s2">"rev"</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">speed</span> <span class="o">&lt;</span> <span class="n">rev_threshold</span><span class="p">:</span>          <span class="c1"># 低速 → 挂倒挡</span>
+            <span class="n">reverse</span><span class="p">,</span> <span class="n">throttle</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">throttle_max</span> <span class="o">*</span> <span class="mf">0.8</span>
+        <span class="k">else</span><span class="p">:</span>                              <span class="c1"># 有速度 → 刹车</span>
+            <span class="n">brake</span> <span class="o">=</span> <span class="n">brake_max</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="n">throttle</span><span class="p">,</span> <span class="n">steer</span><span class="p">,</span> <span class="n">brake</span><span class="p">,</span> <span class="n">reverse</span>
+</code></pre></div>
+<p><code>main.py</code> 只做参数适配（把 <code>--throttle_max</code> 等命令行值传进去）：</p>
+<div class="highlight"><pre><span></span><code><span class="n">throttle</span><span class="p">,</span> <span class="n">steer</span><span class="p">,</span> <span class="n">brake</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="n">compose_control</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">speed</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+<span class="n">cc</span><span class="o">.</span><span class="n">apply_control</span><span class="p">(</span><span class="n">vehicle</span><span class="p">,</span> <span class="n">throttle</span><span class="o">=</span><span class="n">throttle</span><span class="p">,</span> <span class="n">steer</span><span class="o">=</span><span class="n">steer</span><span class="p">,</span>
+                 <span class="n">brake</span><span class="o">=</span><span class="n">brake</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+<span class="n">world</span><span class="o">.</span><span class="n">tick</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="43-carla_control_nodepy-ros-2">4.3 <code>carla_control_node.py</code> — ROS 2 仿真节点</h3>
+<p>订阅 <code>/carla/ego_vehicle/vehicle_control_cmd</code>，在<strong>定时器</strong>中驱动 <code>world.tick()</code>，
+避免键盘读取阻塞仿真步进；同时把相机帧发布为 <code>sensor_msgs/Image</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">_on_tick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">tick</span><span class="p">()</span>                          <span class="c1"># 物理步进（固定 0.05 s）</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">'rgb8'</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_latest_frame</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pub_image</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="44-keyboard_teleop_nodepy">4.4 <code>keyboard_teleop_node.py</code> — 键盘遥控节点</h3>
+<p>提供两种键盘后端，自动按环境选择：</p>
+<ul>
+<li><strong>pygame 后端</strong>：有图形界面（或 Windows 原生）时逐帧直读按键状态
+  （<code>pygame.key.get_pressed()</code>）。</li>
+<li><strong>终端后端</strong>：无图形环境（虚拟机 / SSH）时用 <code>termios</code> 原始模式读单键并按点动下发。</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">为什么 <code>termios</code> 要在函数内部导入</p>
+<p><code>termios</code> / <code>tty</code> 是 <strong>POSIX 专属</strong>模块，Windows 上没有。ROS 2 原生支持 Windows，
+因此这两个模块只在 <code>_terminal_loop()</code> 内部导入；若写在文件顶层，整个包在 Windows
+上将无法导入，<code>colcon build</code> 也会失败。Windows 下会自动选择 pygame 后端，
+也可显式 <code>--pygame</code>。</p>
+</div>
+<h3 id="45">4.5 单元测试</h3>
+<p><code>test/test_control_logic.py</code> 直接测试 <code>carla_common.compose_control</code> 这一
+<strong>真实被两条路径共用</strong>的实现，因此断言的行为就是实际运行的行为：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test/test_control_logic.py<span class="w">          </span><span class="c1"># 自带运行器，无需 pytest</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test/test_control_logic.py<span class="w"> </span>-v
+</code></pre></div>
+<p>覆盖点包括：低速挂倒挡 / 有速度刹车、阈值边界与可配置性、油门与刹车互斥、
+转向方向与饱和、微调幅度小于全转向、所有按键组合下控制量落在合法区间，
+以及「ROS 节点确实复用了同一份实现」「POSIX 模块确实在函数内导入」等约束。
+无需安装 CARLA 服务端即可运行。</p>
+<hr/>
+<h2 id="5">5. 仿真运行步骤</h2>
+<h3 id="51">5.1 支持与测试环境</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>仿真器</td>
+<td>CARLA 0.9.16（服务端运行于有 GPU 的宿主机）</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>Windows 10/11 原生；Ubuntu 20.04 / 22.04</td>
+</tr>
+<tr>
+<td>ROS（可选）</td>
+<td>ROS 2 Humble（Ubuntu 22.04，Python 3.10）或 ROS 1 Noetic（Ubuntu 20.04，Python 3.8）</td>
+</tr>
+<tr>
+<td>Python（独立模式）</td>
+<td>3.10 / 3.11 / 3.12 —— 与 CARLA 0.9.16 客户端 wheel 的 ABI 一致（cp310/cp311/cp312）</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Python 版本由运行方式决定，不要混用</p>
+<p>CARLA 0.9.16 的客户端 wheel 只提供 <strong>cp310 / cp311 / cp312</strong> 三个版本。因此：</p>
+<ul>
+<li><strong>独立模式</strong>（<code>main.py</code> / <code>main.sh</code> / <code>main.bat</code>）：用 Python <strong>3.10+</strong>，与 wheel 匹配。</li>
+<li><strong>ROS 1 Noetic 模式</strong>：Ubuntu 20.04 自带 <strong>Python 3.8</strong>，<strong>装不上</strong> cp310 及以上的
+  wheel。而 <code>roslaunch</code> 只能按 <code>main.py</code> 首行的 shebang（<code>#!/usr/bin/env python3</code>）
+  去执行它，没法替你换解释器，所以<strong>光加可执行位也不够</strong>。Noetic 下请用
+  <code>bash main.sh</code> 作入口 —— 它会自动挑选 <code>python3.10</code>（本模块的控制逻辑是纯 Python，
+  不依赖 <code>rospy</code>，launch 只是把主入口拉起来）。</li>
+<li><strong>ROS 2 Humble 模式</strong>：Ubuntu 22.04 自带 <strong>Python 3.10</strong>，与 cp310 wheel 天然匹配，
+  是最省事的一条路线。</li>
+</ul>
+<p>三条路线中，<strong>独立模式</strong>与 <strong>ROS 2 Humble</strong> 无需额外处理；只有 <strong>ROS 1 Noetic</strong>
+需要额外准备一个 Python 3.10+ 解释器（详见 5.3 步骤①的备选命令）。</p>
+</div>
+<h3 id="52">5.2 新手路线：从已有示例到本模块，在哪一步切换</h3>
+<p>如果您是第一次接触 CARLA，建议按下表顺序操作。<strong>关键是在第 3 步之后切换到本模块</strong>，
+不必把已有示例全部做完：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>做什么</th>
+<th>出处</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>下载安装 CARLA 0.9.16，双击 <code>CarlaUE4.exe</code> 启动服务端</td>
+<td><a href="../../set_up_and_connect_to_carla/">已有示例</a> →「启动 Carla 服务器」</td>
+<td>两条路线的<strong>共同前提</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>用 <code>ipconfig</code> 查看宿主机 IP（如 <code>172.21.108.47</code>）</td>
+<td>同上 →「使用 Carla 客户端启动 Ego Vehicle」</td>
+<td>虚拟机要能 ping 通该 IP</td>
+</tr>
+<tr>
+<td>3</td>
+<td>确认虚拟机与 CARLA 连通</td>
+<td><a href="#conn-check">本页 5.5 节</a></td>
+<td>输出 <code>CONNECT OK</code> 即可</td>
+</tr>
+<tr>
+<td>—</td>
+<td><strong>★ 在此切换到本模块</strong></td>
+<td>—</td>
+<td>以下步骤与已有示例不同</td>
+</tr>
+<tr>
+<td>4</td>
+<td>装 <code>carla</code> Python 客户端与依赖</td>
+<td><a href="#env-prep">本页 5.3 节</a></td>
+<td>已有示例用的是 ros-bridge，<strong>不装这个用不了本模块</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>colcon build</code> 编译本功能包</td>
+<td><a href="#build">本页 5.4 节</a></td>
+<td>已有示例用 <code>catkin_make</code>，路线不同</td>
+</tr>
+<tr>
+<td>6</td>
+<td>运行 <code>main.sh</code> 或 <code>ros2 launch</code></td>
+<td><a href="#run">本页 5.6 节</a></td>
+<td>本模块自研键盘控制</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">不要从头到尾照做已有示例</p>
+<p>已有示例中的「设置 Carla ROS Bridge」「使用 Carla 客户端启动 Ego Vehicle（roslaunch）」
+「使用 rviz 进行可视化」等小节属于 <strong>ros-bridge 路线</strong>（需要 catkin 编译 ros-bridge）。
+本模块<strong>不依赖 ros-bridge</strong>，这些步骤可以跳过；只有上表第 1~2 步是两条路线共用的。
+已有示例中其余内容仅建议作为背景了解，其连接排查经验可参考「常见问题」小节。</p>
+</div>
+<h3 id="53-0">5.3 步骤 0：环境准备 <span id="env-prep"></span></h3>
+<p>CARLA 服务端的下载安装与启动、宿主机 IP 与端口 2000 的查看、虚拟机网络（NAT/桥接）设置、
+<code>numpy</code> 版本兼容等<strong>通用配置步骤与已有示例完全相同，本文不重复</strong>，请参考
+<a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a>：</p>
+<table>
+<thead>
+<tr>
+<th>需要做的事</th>
+<th>参考位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动 CARLA 服务端、选择地图</td>
+<td><a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a> →「启动 Carla 服务器」</td>
+</tr>
+<tr>
+<td>查看宿主机 IP、填写 <code>host</code> 参数</td>
+<td>同上 →「使用 Carla 客户端启动 Ego Vehicle」</td>
+</tr>
+<tr>
+<td>连接失败、黑屏、<code>numpy</code> 报错排查</td>
+<td>同上 →「常见问题」</td>
+</tr>
+</tbody>
+</table>
+<p>本模块<strong>特有</strong>、需要额外安装的只有 CARLA 0.9.16 的 Python 客户端
+与两个 Python 依赖：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ① Python 依赖（numpy / pygame）</span>
+pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/ground/carla_keyboard_control/requirements.txt
+
+<span class="c1"># ② CARLA 0.9.16 客户端（方式一：从 PyPI 安装，推荐）</span>
+pip3<span class="w"> </span>install<span class="w"> </span><span class="nv">carla</span><span class="o">==</span><span class="m">0</span>.9.16
+</code></pre></div>
+<p><code>carla</code> 的 0.9.16 版本已发布在 PyPI 上（含 <code>cp310</code>/<code>cp311</code>/<code>cp312</code> 的 Linux 与
+Windows wheel），<code>pip3 install carla==0.9.16</code> 会自动匹配当前解释器版本，<strong>不需要</strong>
+手工挑选 wheel 文件名。</p>
+<p>若课程环境不允许访问 PyPI，可改用 CARLA 发行包自带的 wheel（把 <code>&lt;CARLA&gt;</code> 换成本机
+解压目录的实际路径，<code>&lt;cpXX&gt;</code> 换成与解释器一致的标签）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ② 备选：使用 Windows 版 CARLA 发行包中的 Linux wheel（&lt;CARLA&gt; 替换为实际路径）</span>
+pip3<span class="w"> </span>install<span class="w"> </span><span class="s2">"&lt;CARLA&gt;/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl"</span>
+</code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Noetic（Ubuntu 20.04）用户</p>
+<p>系统默认解释器是 Python 3.8，装不上 cp310+ 的 wheel。请显式指定 3.10+ 解释器：</p>
+<div class="highlight"><pre><span></span><code>python3.10<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">carla</span><span class="o">==</span><span class="m">0</span>.9.16
+bash<span class="w"> </span>src/ground/carla_keyboard_control/main.sh<span class="w"> </span>--host<span class="w"> </span>&lt;宿主机IP&gt;
+</code></pre></div>
+<p>注意 <code>pip3 install</code> 与运行必须使用<strong>同一个</strong>解释器，否则会出现
+「明明装了却 <code>ModuleNotFoundError: No module named 'carla'</code>」。
+<code>main.sh</code> 会自动挑选 <code>python3.10</code>，Noetic 下推荐用它作入口。</p>
+</div>
+<h3 id="54-1ros-2">5.4 步骤 1：编译本功能包（ROS 2）<span id="build"></span></h3>
+<p>本模块的源代码位于<strong>本仓库</strong>（<code>OpenHUTB/ros2</code>）的
+<code>src/ground/carla_keyboard_control/</code>。ROS 2 要求功能包放在工作空间的 <code>src/</code>
+目录下，因此先把本仓库克隆到工作空间的 <code>src/</code>：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros2_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git<span class="w">     </span><span class="c1"># 换成你自己的 fork 亦可</span>
+</code></pre></div>
+<p>克隆后的目录关系如下，<code>colcon build</code> 必须在<strong>工作空间根目录</strong>执行：</p>
+<div class="highlight"><pre><span></span><code>~/ros2_ws/                                   &lt;- 工作空间根目录，colcon 在这里运行
+└── src/
+    └── ros2/                                &lt;- 本仓库（git clone 得到）
+        └── src/ground/
+            └── carla_keyboard_control/      &lt;- 本模块源代码，即第 4 节解析的文件
+</code></pre></div>
+<p>因此后文写的 <code>src/ground/carla_keyboard_control/...</code>，实际路径是
+<code>~/ros2_ws/src/ros2/src/ground/carla_keyboard_control/...</code>。编译并激活环境：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_keyboard_control<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<blockquote>
+<p>若本仓库已克隆在别处，把上面的 <code>~/ros2_ws/src/ros2</code> 换成实际路径即可，
+只要保证执行 <code>colcon build</code> 的工作空间根目录下存在 <code>src/</code>。</p>
+</blockquote>
+<h3 id="55-2-carla">5.5 步骤 2：验证与 CARLA 服务端的连接 <span id="conn-check"></span></h3>
+<p>命令里的 <code>192.168.8.1</code> 是<strong>运行 CARLA 服务端的宿主机（Windows）IP</strong>：
+在宿主机上执行 <code>ipconfig</code>，取 VMware 虚拟网卡（<code>VMnet8</code>）的 IPv4 地址即可
+（本机该地址为 <code>192.168.8.1</code>，虚拟机 <code>ens33</code> 为 <code>192.168.8.131</code>，两者同网段）。
+查看方式与已有示例一致，详见
+<a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a>
+→「使用 Carla 客户端启动 Ego Vehicle」。</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import carla; c=carla.Client('192.168.8.1',2000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"</span>
+</code></pre></div>
+<p>输出 <code>CONNECT OK: Carla/Maps/Town10HD_Opt</code> 表示连接成功。</p>
+<h3 id="56-3">5.6 步骤 3：运行本模块 <span id="run"></span></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 模式 A：独立交互模式（推荐）</span>
+<span class="c1">#   --host 填宿主机 IP；--follow 让 CARLA 大窗口镜头跟随自车</span>
+<span class="c1">#   入口用 main.sh：它会自动挑 python3.10（CARLA wheel 的 ABI 版本）</span>
+bash<span class="w"> </span>src/ground/carla_keyboard_control/main.sh<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.8.1<span class="w"> </span>--follow
+
+<span class="c1"># 模式 B：无窗口取证模式（虚拟机缺少 3D 加速、pygame 无法开窗时使用）</span>
+<span class="c1">#   自动执行「加速 → 转向 → 刹车 → 倒车」序列，逐帧导出 PNG 并打印状态表</span>
+bash<span class="w"> </span>src/ground/carla_keyboard_control/main.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">        </span>--host<span class="w"> </span><span class="m">192</span>.168.8.1<span class="w"> </span>--headless<span class="w"> </span>--demo<span class="w"> </span>--save_dir<span class="w"> </span>~/shots
+
+<span class="c1"># 模式 C：ROS 2 Humble 节点模式</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_keyboard_control<span class="w"> </span>main.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.8.1
+
+<span class="c1"># 模式 D：ROS 1 Noetic —— 入口同样是 main.sh</span>
+<span class="c1">#   roslaunch 只能按 main.py 的 shebang 执行它，而 Noetic 的 python3 是 3.8，</span>
+<span class="c1">#   装不上 CARLA 0.9.16 的 cp310+ wheel，补了可执行位也会卡在 import carla。</span>
+<span class="c1">#   若系统 python3 本身已是 3.10+，也可以用：</span>
+<span class="c1">#   roslaunch carla_keyboard_control main.launch host:=192.168.8.1</span>
+bash<span class="w"> </span>src/ground/carla_keyboard_control/main.sh<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.8.1
+</code></pre></div>
+<h3 id="57-4">5.7 步骤 4：操作说明</h3>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>W</code> / <code>↑</code></td>
+<td>油门加速</td>
+</tr>
+<tr>
+<td><code>S</code> / <code>↓</code></td>
+<td>刹车；车速低于阈值时自动挂<strong>倒挡</strong>后退</td>
+</tr>
+<tr>
+<td><code>A</code> <code>D</code> / <code>←</code> <code>→</code></td>
+<td>左 / 右转向</td>
+</tr>
+<tr>
+<td><code>Q</code> <code>E</code></td>
+<td>转向微调</td>
+</tr>
+<tr>
+<td><code>ESC</code></td>
+<td>退出</td>
+</tr>
+</tbody>
+</table>
+<p>建议用 ScreenToGif 录制 10 秒操控过程作为演示动图（≤10 MB）。</p>
+<h3 id="58">5.8 运行效果</h3>
+<h4 id="_4">交互模式运行画面</h4>
+<p>下图为运行交互模式（<code>--follow</code>，CARLA 镜头跟随自车）时从运行录屏中截取的画面：</p>
+<p><img alt="CARLA 键盘运动控制实测 —— 直道加速" src="../../img/ground/carla_keyboard_89.png"/></p>
+<p><img alt="CARLA 键盘运动控制实测 —— 转向" src="../../img/ground/carla_keyboard_149.png"/></p>
+<p><img alt="CARLA 键盘运动控制实测 —— 镜头跟随" src="../../img/ground/carla_keyboard_209.png"/></p>
+<h4 id="_5">无窗口取证模式导出的相机帧</h4>
+<p>在<strong>无 3D 加速的虚拟机</strong>中，pygame 窗口可能无法开窗。此时用
+<code>--headless --demo --save_dir</code> 运行，程序会逐帧把相机数据导出为 PNG。
+以下为该模式直接导出的原始相机帧（未经窗口渲染，640×480）：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>画面</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>直线加速（<code>th=0.6</code>）</td>
+<td><img alt="" src="../../img/ground/carla_keyboard_accel.png"/></td>
+</tr>
+<tr>
+<td>转向（<code>st=+0.6</code>）</td>
+<td><img alt="" src="../../img/ground/carla_keyboard_turn.png"/></td>
+</tr>
+<tr>
+<td>挂倒挡后退（<code>rev=1</code>）</td>
+<td><img alt="" src="../../img/ground/carla_keyboard_reverse.png"/></td>
+</tr>
+</tbody>
+</table>
+<h4 id="_6">终端状态输出（可运行性证据）</h4>
+<p>无论是否开窗，程序都会逐帧打印车辆状态，可直接作为可运行性证据：</p>
+<div class="highlight"><pre><span></span><code>[就绪] 自车已生成 @ Location(x=36.00, y=-5.00, z=0.60)；地图 Town05
+[就绪] 控制键：W 前进 / S 刹车(静止时倒车) / A 左 / D 右 / ESC 退出
+[演示 1/5] 直线加速
+x=  36.02 y=  -5.00 v= 0.31 m/s | th=0.6 st=+0.00 br=0.0 rev=0
+x=  36.45 y=  -5.00 v= 2.87 m/s | th=0.6 st=+0.00 br=0.0 rev=0
+[演示 2/5] 右转
+x=  40.12 y=  -4.31 v= 5.20 m/s | th=0.6 st=+0.60 br=0.0 rev=0
+[演示 3/5] 刹车减速
+x=  44.88 y=  -3.02 v= 3.11 m/s | th=0.0 st=+0.00 br=0.8 rev=0
+[演示 5/5] 挂倒挡后退
+x=  47.65 y=  -2.40 v= 0.00 m/s | th=0.5 st=+0.00 br=0.0 rev=1
+x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
+[完成] 已释放资源；共收到相机帧 88 张，导出截图 16 张
+</code></pre></div>
+<h3 id="59">5.9 常见问题</h3>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'carla'</code></td>
+<td>按 5.3 安装 CARLA 0.9.16 客户端；确认 <code>pip3</code> 与运行 <code>main.py</code> 用的是<strong>同一个</strong>解释器（Noetic 下用 <code>python3.10 -m pip</code>）</td>
+</tr>
+<tr>
+<td>客户端连接崩溃 / <code>std::bad_alloc</code></td>
+<td>客户端版本须与服务器一致（均为 0.9.16）</td>
+</tr>
+<tr>
+<td><strong>虚拟机中 pygame 窗口打不开或黑屏</strong></td>
+<td>① 改用无窗口取证模式 <code>--headless --demo --save_dir</code>；② 或执行 <code>export LIBGL_ALWAYS_SOFTWARE=1</code>（<code>main.sh</code> 已自动设置）；③ 根治：VMware「虚拟机设置 → 显示器 → 加速 3D 图形」勾选后重启</td>
+</tr>
+<tr>
+<td>键盘无反应</td>
+<td>焦点需在控制窗口；或改用终端后端（ROS 2 节点模式支持 <code>--terminal</code>）</td>
+</tr>
+<tr>
+<td>画面黑屏但程序在跑</td>
+<td>宿主机 IP 填错；或地图正在切换，稍候</td>
+</tr>
+<tr>
+<td>运行很卡</td>
+<td>虚拟机无 3D 加速；将 CARLA 服务端放在宿主机，虚拟机仅作客户端</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="6">6. 性能评价</h2>
+<ul>
+<li><strong>控制响应</strong>：固定步长 0.05 s（20 Hz 物理步进）下，键盘输入到车辆响应的延迟 ≤ 1 帧。</li>
+<li><strong>运动平稳性</strong>：直道可稳定加速至目标速度，转向响应及时，刹车与倒挡切换无抖动。</li>
+<li><strong>同步一致性</strong>：同步模式下相机帧与物理状态严格对齐，为后续感知 / 端到端作业提供可靠数据源。</li>
+<li><strong>资源占用</strong>：客户端仅消费图像与位姿话题，GPU 负载集中于宿主机 CARLA 服务端。</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_spawn_objects/" title="生成对象"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ackermann_control/" title="阿克曼控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../carla_spawn_objects/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ackermann_control/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
