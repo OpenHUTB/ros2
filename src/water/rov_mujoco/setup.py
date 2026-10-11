@@ -20,6 +20,9 @@ setup(
         (os.path.join('share', package_name, 'models', 'meshes', 'ur5e'), glob('models/meshes/ur5e/*')),
         (os.path.join('share', package_name, 'models', 'meshes', 'robotiq'), glob('models/meshes/robotiq/*')),
     ],
+    package_data={
+        package_name: ['*.npz'],
+    },
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='shark',
