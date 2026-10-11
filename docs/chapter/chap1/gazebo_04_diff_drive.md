@@ -118,6 +118,10 @@ graph LR
 
 ## 5. 数据流验证 <span id="verify"></span>
 
+运行成功后的数据方向应与下图一致：
+
+![差速驱动 ROS 数据流效果示意](images/gazebo_platform/ros_graph_effect.png)
+
 启动系统后检查：
 
 ```bash

@@ -61,6 +61,8 @@ roslaunch mybot_gazebo mybot_gazebo.launch gui:=false
 
 如果模型出现但马上掉下去，先关闭 launch，调整生成位置和支撑轮高度，不要继续测试控制。
 
+![mybot 平台效果示意](images/gazebo_platform/robot_platform_preview.png)
+
 ## 4. 话题验证 <span id="topics"></span>
 
 ```bash
@@ -103,6 +105,8 @@ rosrun tf tf_echo base_link camera_link
 ```
 
 预期 TF：
+
+![TF 坐标树效果示意](images/gazebo_platform/tf_tree_effect.png)
 
 ```mermaid
 graph TD

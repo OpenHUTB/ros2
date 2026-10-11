@@ -143,6 +143,10 @@ graph LR
 
 ## 5. 数据流验证 <span id="verify"></span>
 
+传感器正确输出后，相机和激光的数据形态可参考下图：
+
+![相机与激光雷达效果示意](images/gazebo_platform/sensor_effect.png)
+
 启动仿真后：
 
 ```bash

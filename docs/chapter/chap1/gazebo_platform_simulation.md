@@ -63,6 +63,8 @@ Gazebo 的价值不是“画一个好看的机器人”，而是提供一个可�
 
 启动仿真后，ROS 图可以抽象为下面的结构。Gazebo 插件虽然不是普通 Python/C++ 节点，但在 ROS 名称系统里同样会提供发布者和订阅者，因此可以用 `rqt_graph` 观察。
 
+![ROS 图与数据方向效果示意](images/gazebo_platform/ros_graph_effect.png)
+
 ```mermaid
 graph LR
   CMD[cmd_vel 发布者] --> DD[diff_drive 插件]
@@ -176,15 +178,17 @@ rosrun tf tf_echo base_link laser_frame
 
 频率是设计目标。实际结果会受到电脑性能、Gazebo 实时因子和传感器分辨率影响。
 
-### 4.3 仿真结果截图放置建议
+### 4.3 效果示意
 
-为保持文档可复现，建议在本节后续加入以下三类截图：
+下面图片根据 `mybot.urdf.xacro` 的尺寸、Gazebo 插件和话题设计绘制，用于在运行前说明正确效果。它们是“效果示意”，不是真实 Gazebo 截图；维护者完成运行验证后，可以替换为实际环境截图。
 
-1. Gazebo 中模型生成成功的窗口截图；
-2. `rqt_graph` 或 `rqt_tf_tree` 的节点和坐标关系截图；
-3. `rqt_image_view` 与 `/scan` 可视化截图。
+![mybot 平台效果示意](images/gazebo_platform/robot_platform_preview.png)
 
-截图统一放入 `docs/chapter/chap1/images/gazebo_platform/`，并在步骤 7 中引用，避免总览页图片过多。
+![ROS 图与数据方向效果示意](images/gazebo_platform/ros_graph_effect.png)
+
+![相机与激光雷达效果示意](images/gazebo_platform/sensor_effect.png)
+
+![自动正方形轨迹效果示意](images/gazebo_platform/square_path_effect.png)
 
 ## 5. 快速开始 <span id="quickstart"></span>
 

@@ -114,6 +114,10 @@ rosrun tf tf_echo odom base_link
 
 ## 4. 结果分析 <span id="results"></span>
 
+预期轨迹如下。实际结果会受到车轮打滑、惯性和停车延迟影响，通常是近似正方形：
+
+![自动正方形轨迹效果示意](images/gazebo_platform/square_path_effect.png)
+
 预期结果：
 
 | 阶段 | 命令 | 观察现象 |
