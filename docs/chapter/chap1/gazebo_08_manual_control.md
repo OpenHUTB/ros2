@@ -113,7 +113,7 @@ rostopic pub -1 /cmd_vel geometry_msgs/Twist \
 | 现象 | 可能原因 | 处理 |
 | --- | --- | --- |
 | 前进变后退 | 左右轮轴向反 | 检查车轮 `axis` 和轮子朝向 |
-| 左转变右转 | 左右轮关节互换 | 交换 `left_joint` 和 `right_joint` |
+| 左转变右转 | 左右轮关节互换 | 交换 `leftJoint` 和 `rightJoint` |
 | 原地打滑 | 摩擦力不足或力矩过高 | 调整摩擦参数和力矩 |
 | 速度明显不符 | 轮径与插件不一致 | 统一 `wheel_diameter` 和模型 |
 | 停止很慢 | 加速度限制较大 | 降低 `max_wheel_acceleration` |

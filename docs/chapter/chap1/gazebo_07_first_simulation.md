@@ -77,7 +77,7 @@ rostopic list | sort
 | --- | --- | --- |
 | `/cmd_vel` | `geometry_msgs/Twist` | 控制节点或命令行 |
 | `/odom` | `nav_msgs/Odometry` | diff_drive 插件 |
-| `/joint_states` | `sensor_msgs/JointState` | 关节状态插件 |
+| `/joint_states` | `sensor_msgs/JointState` | 差速插件 |
 | `/scan` | `sensor_msgs/LaserScan` | 激光插件 |
 | `/camera/image_raw` | `sensor_msgs/Image` | 相机插件 |
 | `/camera/camera_info` | `sensor_msgs/CameraInfo` | 相机插件 |

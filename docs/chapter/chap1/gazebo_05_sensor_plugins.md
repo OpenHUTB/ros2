@@ -64,16 +64,15 @@ graph LR
         <resolution>0.01</resolution>
       </range>
     </ray>
-    <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
-      <ros>
-        <remapping>~/out:=scan</remapping>
-      </ros>
-      <output_type>sensor_msgs/LaserScan</output_type>
-      <frame_name>laser_frame</frame_name>
+    <plugin name="laser_controller" filename="libgazebo_ros_laser.so">
+      <topicName>/scan</topicName>
+      <frameName>laser_frame</frameName>
     </plugin>
   </sensor>
 </gazebo>
 ```
+
+> 本虚拟机或本仓库使用的 Gazebo ROS 版本没有安装 `libgazebo_ros_ray_sensor.so`，因此使用仓库现有示例中的 `libgazebo_ros_laser.so`。两种插件的功能相同，区别是参数名和输出类型配置方式不同。
 
 参数影响：
 
@@ -178,12 +177,12 @@ rosrun rqt_image_view rqt_image_view
 
 | 现象 | 原因 | 处理 |
 | --- | --- | --- |
-| 没有 `/scan` | 激光插件未加载或 topic 名错误 | 检查 Gazebo 日志与 remapping |
+| 没有 `/scan` | 激光插件未加载或 topic 名错误 | 检查 Gazebo 日志与 `<topicName>` |
 | `/scan` 无数据 | `range_min` 到 `range_max` 内没有障碍 | 在场景中添加墙体或靠近地面 |
 | `/scan` 频率低 | 点数或更新率过高 | 降低 `samples` 或 `update_rate` |
 | 相机没有图像 | 插件或话题名错误 | 检查 `/camera/image_raw` |
 | 图像卡顿 | 分辨率过高或 CPU 不足 | 降低分辨率与帧率 |
-| 激光建图错位 | `frame_name` 与 TF 不一致 | 统一起见使用 `laser_frame` |
+| 激光建图错位 | `frameName` 与 TF 不一致 | 统一起见使用 `laser_frame` |
 | 相机坐标错误 | 相机 TF 或安装方向错误 | 检查 `camera_joint` 的 origin 和 rpy |
 
 ## 7. 本步验收 <span id="acceptance"></span>

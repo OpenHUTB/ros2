@@ -86,11 +86,11 @@ rospack find gazebo_ros
 
 ```bash
 find /opt/ros/noetic -name "libgazebo_ros_diff_drive.so"
-find /opt/ros/noetic -name "libgazebo_ros_ray_sensor.so"
+find /opt/ros/noetic -name "libgazebo_ros_laser.so"
 find /opt/ros/noetic -name "libgazebo_ros_camera.so"
 ```
 
-三个库都应能找到。找不到时，优先补装 `gazebo_ros` 包。
+三个库都应能找到。找不到时，优先补装 `gazebo_ros` 包。部分 ROS Noetic 环境只提供 `libgazebo_ros_laser.so`，不提供 `libgazebo_ros_ray_sensor.so`，本教程按仓库现有插件版本使用前者。
 
 ## 4. 安装缺失依赖 <span id="install"></span>
 
@@ -100,7 +100,6 @@ sudo apt install \
   ros-noetic-gazebo-ros-pkgs \
   ros-noetic-xacro \
   ros-noetic-robot-state-publisher \
-  ros-noetic-joint-state-publisher \
   ros-noetic-rqt-graph \
   ros-noetic-rqt-tf-tree \
   ros-noetic-rqt-image-view

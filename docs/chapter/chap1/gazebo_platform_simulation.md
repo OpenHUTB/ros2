@@ -48,8 +48,8 @@ Gazebo 的价值不是“画一个好看的机器人”，而是提供一个可�
 |---|---|---|---|
 | 机器人模型 | `urdf/mybot.urdf.xacro` | 描述车体、车轮、激光、相机和关节 | 可检查的 URDF 模型 |
 | Gazebo 驱动 | `libgazebo_ros_diff_drive.so` | 把速度命令转换为左右轮运动 | `/cmd_vel`、`/odom`、里程计 TF |
-| 关节状态 | `libgazebo_ros_joint_state_publisher.so` | 发布车轮和支撑轮状态 | `/joint_states` |
-| 激光传感器 | `libgazebo_ros_ray_sensor.so` | 把射线扫描转换为激光消息 | `/scan` |
+| 关节状态 | 差速插件的 `publishWheelJointState` | 发布车轮关节状态 | `/joint_states` |
+| 激光传感器 | `libgazebo_ros_laser.so` | 把射线扫描转换为激光消息 | `/scan` |
 | 相机传感器 | `libgazebo_ros_camera.so` | 输出 RGB 图像和相机参数 | `/camera/image_raw`、`/camera/camera_info` |
 | 仿真世界 | `worlds/mybot_empty.world` | 提供地面、光照和物理参数 | 可重复的仿真环境 |
 | 启动组织 | `launch/mybot_gazebo.launch` | 一条命令启动世界、模型和 TF | 完整仿真系统 |
@@ -78,8 +78,8 @@ graph LR
   CAM --> IMG[camera/image_raw]
   CAM --> INFO[camera/camera_info]
 
-  JOINT_GAZ[Gazebo 关节状态] --> JSP[joint_state 插件]
-  JSP --> JS[joint_states]
+  JOINT_GAZ[Gazebo 关节状态] --> DD
+  DD --> JS[joint_states]
   JS --> RSP[robot_state_publisher]
   RSP --> TF2[TF: base_link -> 传感器和车轮]
 ```
@@ -97,7 +97,7 @@ graph LR
 |---|---|---|---|---|
 | `/cmd_vel` | `geometry_msgs/Twist` | 控制节点或命令行 | 差速插件 | 控制前进、后退和旋转 |
 | `/odom` | `nav_msgs/Odometry` | 差速插件 | 控制、导航、可视化 | 估计机器人位姿和速度 |
-| `/joint_states` | `sensor_msgs/JointState` | Gazebo 关节状态插件 | `robot_state_publisher` | 更新车轮等关节 TF |
+| `/joint_states` | `sensor_msgs/JointState` | 差速插件 | `robot_state_publisher` | 更新车轮等关节 TF |
 | `/scan` | `sensor_msgs/LaserScan` | 激光插件 | 建图、避障、rviz | 感知二维障碍 |
 | `/camera/image_raw` | `sensor_msgs/Image` | 相机插件 | 视觉节点、`rqt_image_view` | 获取仿真图像 |
 | `/camera/camera_info` | `sensor_msgs/CameraInfo` | 相机插件 | 视觉节点 | 获取相机内参 |
@@ -147,7 +147,7 @@ rosrun tf tf_echo base_link laser_frame
 5. Gazebo 驱动物理关节，机器人开始运动；
 6. 插件根据轮子运动计算 `/odom`；
 7. 插件发布 `odom -> base_link`；
-8. 关节状态插件发布 `/joint_states`；
+8. 差速插件通过 `publishWheelJointState` 发布 `/joint_states`；
 9. `robot_state_publisher` 更新车轮和传感器 TF；
 10. rviz 或导航节点通过 TF 和话题看到结果。
 
@@ -171,7 +171,7 @@ rosrun tf tf_echo base_link laser_frame
 | 话题 | 预期频率 | 验证命令 | 成功现象 |
 |---|---:|---|---|
 | `/odom` | 约 50 Hz | `rostopic hz /odom` | 位置随时间变化 |
-| `/joint_states` | 约 30 Hz | `rostopic hz /joint_states` | 车轮关节状态更新 |
+| `/joint_states` | 约 50 Hz | `rostopic hz /joint_states` | 车轮关节状态更新 |
 | `/scan` | 约 10 Hz | `rostopic hz /scan` | 有 360 个范围数据 |
 | `/camera/image_raw` | 约 30 Hz | `rostopic hz /camera/image_raw` | 图像持续发布 |
 | `/tf` | 不低于 30 Hz | `rostopic hz /tf` | 包含 `odom -> base_link` |
@@ -226,7 +226,7 @@ rosrun mybot_gazebo move_square.py
 | [1. 环境检查与 Gazebo 验证](gazebo_01_environment.md) | Ubuntu、ROS Noetic、Gazebo 11 和依赖检查 | 可以独立启动 Gazebo |
 | [2. 工作空间与功能包](gazebo_02_package.md) | 创建 catkin 工作空间并编译 `mybot_gazebo` | `rospack find` 能找到功能包 |
 | [3. URDF 与 xacro 建模](gazebo_03_urdf_model.md) | 车体、车轮、支撑轮、激光、相机和惯性 | `check_urdf` 通过 |
-| [4. 差速驱动与里程计](gazebo_04_diff_drive.md) | 配置差速插件和关节状态插件 | `/cmd_vel`、`/odom`、`odom -> base_link` 正常 |
+| [4. 差速驱动与里程计](gazebo_04_diff_drive.md) | 配置差速插件和车轮关节状态输出 | `/cmd_vel`、`/odom`、`odom -> base_link` 正常 |
 | [5. 激光与相机插件](gazebo_05_sensor_plugins.md) | 配置激光和 RGB 相机 | `/scan` 与相机话题正常 |
 | [6. 世界文件与 launch](gazebo_06_world_launch.md) | 组装世界、模型生成、TF 和启动参数 | 一条 launch 命令启动系统 |
 | [7. 首次启动与验证](gazebo_07_first_simulation.md) | 启动 Gazebo、检查话题、TF 和传感器 | 模型稳定、话题完整、TF 连通 |
@@ -280,7 +280,7 @@ rosrun mybot_gazebo move_square.py
 
 - ROS Wiki：URDF、TF、ros_control、Gazebo ROS 插件；
 - Gazebo Classic 官方文档：SDF、物理引擎、传感器模型；
-- ROS Noetic `gazebo_ros` 包中的 diff drive、ray sensor 和 camera 插件示例；
+- ROS Noetic `gazebo_ros` 包中的 diff drive、laser 和 camera 插件示例；
 - 本仓库第 1 章已有的 catkin 功能包与实验文档组织方式。
 
 ## 人工智能使用声明

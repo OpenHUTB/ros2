@@ -59,7 +59,7 @@ rostopic hz /scan
 | --- | --- | --- |
 | `linear_speed` | 运动更快 | 打滑、轨迹误差大 |
 | `angular_speed` | 转向更快 | 转弯过头、模型抖动 |
-| `max_wheel_torque` | 加速更强 | 抖动、能耗高 |
+| `wheelTorque` | 加速更强 | 抖动、能耗高 |
 | `max_wheel_acceleration` | 响应更猛 | 起步冲击 |
 | 控制发布频率 | 更平滑 | 计算开销增加 |
 

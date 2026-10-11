@@ -48,23 +48,27 @@ Gazebo 差速插件把 `/cmd_vel` 中的 `linear.x` 和 `angular.z` 转换成左
 ```xml
 <gazebo>
   <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
-    <update_rate>50</update_rate>
-    <left_joint>left_wheel_joint</left_joint>
-    <right_joint>right_wheel_joint</right_joint>
-    <wheel_separation>${wheel_separation}</wheel_separation>
-    <wheel_diameter>${2.0 * wheel_radius}</wheel_diameter>
-    <max_wheel_torque>20.0</max_wheel_torque>
-    <max_wheel_acceleration>1.0</max_wheel_acceleration>
-    <command_topic>cmd_vel</command_topic>
-    <odometry_topic>odom</odometry_topic>
-    <odometry_frame>odom</odometry_frame>
-    <robot_base_frame>base_link</robot_base_frame>
-    <publish_odom>true</publish_odom>
-    <publish_odom_tf>true</publish_odom_tf>
-    <publish_wheel_tf>false</publish_wheel_tf>
+    <updateRate>50.0</updateRate>
+    <leftJoint>left_wheel_joint</leftJoint>
+    <rightJoint>right_wheel_joint</rightJoint>
+    <wheelSeparation>${wheel_separation}</wheelSeparation>
+    <wheelDiameter>${2.0 * wheel_radius}</wheelDiameter>
+    <wheelTorque>20.0</wheelTorque>
+    <wheelAcceleration>1.0</wheelAcceleration>
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <odometryFrame>odom</odometryFrame>
+    <robotBaseFrame>base_link</robotBaseFrame>
+    <publishWheelJointState>true</publishWheelJointState>
+    <publishWheelTF>false</publishWheelTF>
+    <publishTf>1</publishTf>
+    <broadcastTF>1</broadcastTF>
+    <alwaysOn>true</alwaysOn>
   </plugin>
 </gazebo>
 ```
+
+> 本仓库现有 TurtleBot3/mbot 示例使用的是 CamelCase 参数。教程中的 URDF 与仓库版本保持一致；如果你在其他环境使用新版 `gazebo_ros` 插件，需要按该版本文档调整参数名。
 
 插件节点图：
 
@@ -81,37 +85,31 @@ graph LR
 
 | 参数 | 必须与什么保持一致 | 错误后现象 |
 | --- | --- | --- |
-| `left_joint` | URDF 左轮关节名 | 左轮不动 |
-| `right_joint` | URDF 右轮关节名 | 右轮不动 |
-| `wheel_separation` | 左右轮接触点距离 | 转向过大或过小 |
-| `wheel_diameter` | 2 x `wheel_radius` | 里程计速度比例错误 |
-| `max_wheel_torque` | 大于摩擦阻力 | 机器人不动或加速弱 |
-| `max_wheel_acceleration` | 合理平滑控制 | 起步过猛或响应过慢 |
-| `command_topic` | 控制话题 | 发布者存在但插件收不到 |
-| `robot_base_frame` | URDF 根 link | TF 树断裂 |
+| `leftJoint` | URDF 左轮关节名 | 左轮不动 |
+| `rightJoint` | URDF 右轮关节名 | 右轮不动 |
+| `wheelSeparation` | 左右轮接触点距离 | 转向过大或过小 |
+| `wheelDiameter` | 2 x `wheel_radius` | 里程计速度比例错误 |
+| `wheelTorque` | 大于摩擦阻力 | 机器人不动或加速弱 |
+| `wheelAcceleration` | 合理平滑控制 | 起步过猛或响应过慢 |
+| `commandTopic` | 控制话题 | 发布者存在但插件收不到 |
+| `robotBaseFrame` | URDF 根 link | TF 树断裂 |
 
-`wheel_separation` 不是车身宽度。如果车体宽 0.28 m、车轮厚 0.03 m，左右轮中心距不一定等于车体宽度，必须以 URDF 的关节 origin 为准。
+`wheelSeparation` 不是车身宽度。如果车体宽 0.28 m、车轮厚 0.03 m，左右轮中心距不一定等于车体宽度，必须以 URDF 的关节 origin 为准。
 
 ## 4. 关节状态发布 <span id="joint-state"></span>
 
-差速插件负责关节驱动，但还需要把关节状态发回 ROS，供 `robot_state_publisher` 更新 TF：
+本仓库当前 Gazebo 差速插件可以通过 `publishWheelJointState` 把车轮关节状态直接发到 `/joint_states`，供 `robot_state_publisher` 更新 TF：
 
 ```xml
-<plugin name="gazebo_joint_state_publisher"
-        filename="libgazebo_ros_joint_state_publisher.so">
-  <update_rate>30</update_rate>
-  <joint_name>left_wheel_joint</joint_name>
-  <joint_name>right_wheel_joint</joint_name>
-  <joint_name>caster_joint</joint_name>
-</plugin>
+<publishWheelJointState>true</publishWheelJointState>
 ```
 
 数据链：
 
 ```mermaid
 graph LR
-  G[Gazebo 关节] --> J[joint_state 插件]
-  J --> JS[/joint_states/]
+  G[Gazebo 关节] --> D[diff_drive 插件]
+  D --> JS[/joint_states/]
   JS --> R[robot_state_publisher]
   R --> TF[base_link -> wheels]
 ```
@@ -154,18 +152,18 @@ rostopic pub -r 10 /cmd_vel geometry_msgs/Twist \
 2. 正角速度使机器人左转；
 3. `/odom` 的位姿持续变化；
 4. `tf_echo odom base_link` 输出随时间变化；
-5. `rostopic hz /joint_states` 显示约 30 Hz。
+5. `rostopic hz /joint_states` 显示约 50 Hz。
 
 ## 6. 常见问题 <span id="debug"></span>
 
 | 现象 | 优先检查 | 处理 |
 | --- | --- | --- |
 | `/cmd_vel` 没有订阅者 | 插件是否加载 | 检查 Gazebo 启动日志 |
-| 有 `/cmd_vel` 但机器人不动 | 关节名、力矩、暂停状态 | 检查 `left_joint` 和 `right_joint` |
+| 有 `/cmd_vel` 但机器人不动 | 关节名、力矩、暂停状态 | 检查 `leftJoint` 和 `rightJoint` |
 | 机器人旋转方向相反 | 左右轮配置 | 交换左右轮或检查车轮朝向 |
 | 只原地转不走直线 | 轮距或左右轮镜像 | 检查关节 origin 和差速参数 |
-| 没有 `/odom` | `publish_odom` | 打开发布并检查插件版本 |
-| `odom -> base_link` 缺失 | `publish_odom_tf` | 打开 TF 发布，检查是否与其他节点冲突 |
+| 没有 `/odom` | `odometryTopic` 与插件加载 | 检查 Gazebo 启动日志中的参数警告 |
+| `odom -> base_link` 缺失 | `publishTf`、`robotBaseFrame` | 打开 TF 发布，检查 `base_link` 名称 |
 | TF 时间戳异常 | `use_sim_time` | 让所有节点使用 Gazebo 时间 |
 
 ## 7. 本步验收 <span id="acceptance"></span>
