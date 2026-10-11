@@ -1,0 +1,10 @@
+{
+  "purpose": "collector shutdown regression check after all training data and model selection were frozen",
+  "simulation_episode_id": "episode_033",
+  "samples": 60,
+  "duration_sim_s": 2.949062912,
+  "timestamps_strictly_increasing": true,
+  "collision_count": 0,
+  "landed_verified": true,
+  "included_in_training_or_test": false
+}

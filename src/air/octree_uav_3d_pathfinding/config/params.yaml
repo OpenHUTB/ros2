@@ -1,0 +1,100 @@
+# 空域载具八叉树三维寻路 —— 模块参数配置
+#
+# 本文件由 launch/main.launch 通过 <rosparam command="load"> 载入。
+# 参数按节点名分组，节点内可通过 ~参数名 读取。
+#
+# ⚠️ 换机器必须改的两项：
+#     · host —— 你自己宿主机的 VMnet8 地址（下面所有分组里的 host 都要改）
+#              查法：在客户机里执行 ip route | grep default，看默认网关所在网段
+#     · vehicle_name / lidar_name —— 要与你自己模拟器上的 settings.json 一致
+
+uav_env_check:
+  # 与 airsim_bridge 指向同一台模拟器，否则自检结果没有意义
+  host: 192.168.198.1
+  port: 41451
+  vehicle_name: Drone1
+  lidar_name: LidarSensor1
+  # 被检查的 ROS 话题与坐标系
+  cloud_topic: /cloud_in
+  world_frame: world
+  body_frame: base_link
+  # 自检运行时长（秒）
+  check_duration: 10.0
+  # 等待第一帧点云 / TF 的超时时间（秒）
+  cloud_timeout: 20.0
+  tf_timeout: 10.0
+  # 心跳话题名
+  status_topic: /uav_status
+
+# AirSim 桥接节点：把宿主 Windows 上跑的 AirSim 接成 ROS 话题
+#
+# 注意：模拟器跑在宿主 Windows 上（OpenHUTB，AirSim 1.8.1），
+#       本节点跑在客户机 Ubuntu 里，两者走 VMnet8 网络的 RPC 41451。
+airsim_bridge:
+  # 宿主机在 VMnet8 上的地址。
+  # 192.168.198.1 是本项目实测环境里的值，**每台机器可能不同**，请改成你自己的。
+  host: 192.168.198.1
+  # AirSim RPC 端口
+  port: 41451
+  # 载具名与激光雷达名，需与模拟器上的 settings.json 一致
+  vehicle_name: Drone1
+  lidar_name: LidarSensor1
+
+  # 坐标系
+  world_frame: world
+  body_frame: base_link
+  lidar_frame: lidar_link
+  # 雷达在机体系（AirSim NED/FRD）下的安装位置，需与 settings.json 一致
+  lidar_x: 0.0
+  lidar_y: 0.0
+  lidar_z: -1.0
+
+  # 世界系 z 偏移：AirSim 的 NED 原点不一定在地面。
+  # 本机 Town10HD 场景实测载具在 NED z=+24.94（即原点下方约 25 m），
+  # 加这个常量把地图挪到 RViz 网格附近。纯平移，不影响寻路结果。
+  world_z_offset: 24.94
+
+  # 状态与点云的发布频率（Hz）
+  state_rate: 20.0
+  cloud_rate: 10.0
+  # 状态日志周期（s）
+  status_period: 5.0
+  # 收到目标点后 AirSim 的飞行速度（m/s）
+  goal_velocity: 3.0
+  # 首次收到目标点时是否自动解锁起飞
+  auto_takeoff: true
+
+# 点云 → 八叉树占用地图
+pointcloud_to_octomap:
+  # 输入点云话题（由 airsim_bridge 发布）
+  cloud_topic: /cloud_in
+  # 世界坐标系：八叉树地图与可视化都建立在该坐标系下
+  world_frame: world
+  # 点云 header.frame_id 为空时的兜底坐标系
+  sensor_frame: lidar_link
+  # 八叉树叶节点分辨率（m）。调小地图更精细，但内存与耗时增长很快
+  resolution: 0.3
+  # 射线最大量程（m）：超过该距离的点被丢弃，同时限定向外清除空闲空间的范围。
+  # 调大能让地图更远，但射线更长、计算量线性上升
+  max_range: 30.0
+  # 最小量程（m）：小于该距离的点视为机体自身或传感器噪声，直接丢弃
+  min_range: 0.5
+  # 抽稀：每隔 N 个点取一个做射线投射。AirSim 一帧约 1 万点，
+  # 在虚拟机上逐点投射跟不上，取 2~4 比较稳妥
+  point_stride: 2
+  # 占用概率模型：命中/未命中的 log-odds 增量与概率上下限
+  prob_hit: 0.7
+  prob_miss: 0.4
+  clamp_min: 0.12
+  clamp_max: 0.97
+  # 地图与可视化的发布频率（Hz）
+  publish_rate: 1.0
+  # 体素按高度着色的范围（m）：低处偏蓝，高处偏红
+  color_min_z: 0.0
+  color_max_z: 25.0
+  # 单帧可视化的最大体素个数，防止 RViz 卡顿
+  max_markers: 20000
+  # 状态日志的输出周期（s）
+  status_period: 5.0
+  # 等待首帧点云的超时时间（s），超时后输出排查提示
+  cloud_timeout: 15.0
