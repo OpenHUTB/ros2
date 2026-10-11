@@ -9,13 +9,7 @@
 
 ## 运行
 
-推荐直接使用 `main.sh` 入口：
-
-```bash
-./main.sh
-```
-
-也可以手动启动：
+先编译功能包并加载工作空间：
 
 ```bash
 mkdir -p ~/catkin_ws/src
@@ -23,6 +17,18 @@ cp -r src/chap4/mybot_gazebo ~/catkin_ws/src/   # 在仓库根目录执行
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
+```
+
+编译后进入功能包目录，使用 `main.sh` 入口启动：
+
+```bash
+cd ~/catkin_ws/src/mybot_gazebo
+./main.sh
+```
+
+也可以直接调用 launch：
+
+```bash
 roslaunch mybot_gazebo mybot_gazebo.launch
 ```
 
