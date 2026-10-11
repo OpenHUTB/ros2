@@ -4,6 +4,8 @@
 
 功能包源码位于仓库的 `src/vehicle_pygame_teleop` 目录。
 
+![](../img/ground/vehicle_pygame_teleop.png)
+
 ## 功能特点
 
 - W/↑ 加速、S/↓ 刹车/倒车、A/← 与 D/→ 控制左右转向，加减速过程平滑
