@@ -124,6 +124,10 @@ graph LR
 
 ![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
 
+`rqt_graph` 中可以看到 Gazebo 节点、`robot_state_publisher`、`/joint_states` 和 `/odom` 的连接方向：
+
+![rqt_graph 真实运行截图](images/gazebo_platform/runtime/02_rqt_graph_runtime.png)
+
 启动系统后检查：
 
 ```bash

@@ -196,6 +196,10 @@ rosrun tf tf_echo base_link laser_frame
 
 ![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
 
+用 `rqt_graph` 观察运行中的节点和话题关系：
+
+![rqt_graph 真实运行截图](images/gazebo_platform/runtime/02_rqt_graph_runtime.png)
+
 ## 5. 快速开始 <span id="quickstart"></span>
 
 已熟悉 catkin 工作空间的读者可以直接执行：

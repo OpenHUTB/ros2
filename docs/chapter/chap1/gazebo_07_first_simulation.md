@@ -67,6 +67,10 @@ roslaunch mybot_gazebo mybot_gazebo.launch gui:=false
 
 ![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
 
+用 `rqt_graph` 可以确认 `/joint_states` 与 `/odom` 的连接关系：
+
+![rqt_graph 真实运行截图](images/gazebo_platform/runtime/02_rqt_graph_runtime.png)
+
 ## 4. 话题验证 <span id="topics"></span>
 
 ```bash
