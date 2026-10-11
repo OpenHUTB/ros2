@@ -1,0 +1,22 @@
+<mujoco model="balance_car">
+  <option timestep="0.01"/>
+  <worldbody>
+    <geom name="floor" type="plane" size="10 10 0.1" rgba="0.8 0.8 0.8 1"/>
+    <body name="cart" pos="0 0 0.2">
+      <!-- 滑块关节，增加阻尼 -->
+      <joint name="slider" type="slide" axis="1 0 0" damping="0.5"/>
+      <!-- 底座，显式指定mass=5kg -->
+      <geom name="cart_box" type="box" size="0.2 0.1 0.1" rgba="0.2 0.6 0.8 1" mass="5"/>
+      <body name="pole" pos="0 0 0.1">
+        <!-- 铰链关节增加阻尼 -->
+        <joint name="hinge" type="hinge" axis="0 1 0" damping="0.05"/>
+        <!-- cylinder + fromto，size只保留半径，显式mass=0.5kg -->
+        <geom name="pole_geom" type="cylinder" size="0.02" fromto="0 0 0 0 0 0.3" rgba="0.9 0.3 0.3 1" mass="0.5"/>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <!-- gear改为1，控制器输出直接等于作用力，不再有增益混淆 -->
+    <motor name="motor" joint="slider" gear="1"/>
+  </actuator>
+</mujoco>
