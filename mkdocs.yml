@@ -80,6 +80,7 @@ nav:
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
+    - 无人车物理仿真与键盘控制: 'ground/task1_autonomous_car.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
@@ -106,9 +107,13 @@ markdown_extensions:
   - footnotes
   - admonition
   - mdx_math
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
