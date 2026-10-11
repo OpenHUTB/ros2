@@ -108,7 +108,7 @@ def generate_launch_description():
     ])
 ```
 
-五、运行步骤
+## 五、运行步骤
 
 在终端中执行以下命令进行编译和运行：
 
@@ -119,7 +119,7 @@ source install/setup.bash
 ros2 launch image_recorder main.launch.py
 ```
 
-六、运行效果与验证
+## 六、运行效果与验证
 
 节点成功启动，终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示 ROS 2 节点已进入监听状态，底层通信机制运行正常。
 
@@ -127,7 +127,7 @@ ros2 launch image_recorder main.launch.py
 
 https://github.com/Rafaye-71-star/ros2/raw/master/run_result.png
 
-七、提交信息（Commit Message / PR 描述）
+## 七、提交信息（Commit Message / PR 描述）
 
 ```text
 feat(ground): 新增 Carla 图像捕获 ROS 2 封装模块
@@ -144,6 +144,5 @@ feat(ground): 新增 Carla 图像捕获 ROS 2 封装模块
 1. colcon build 编译通过
 2. ros2 launch image_recorder main.launch.py 正常运行
 3. 节点启动并进入等待图像状态
-
-备注：因本机环境未安装 Carla，无法实时获取仿真图像，但节点逻辑已通过运行验证。
 ```
+备注：因本机环境未安装 Carla，无法实时获取仿真图像，但节点逻辑已通过运行验证。
