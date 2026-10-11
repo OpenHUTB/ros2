@@ -47,6 +47,10 @@ class MappingNavigationNode(Node):
     def __init__(self):
         super().__init__("carla_mapping_navigation_node")
 
+        # 与 main.py 共用同一个目标解析函数，保证命令行、ROS 1/ROS 2 launch
+        # 三种入口对 "x,y" 的处理完全一致。
+        from carla_mapping_navigation.main import parse_goal
+
         # ---------------- 参数 ----------------
         self.declare_parameter("host", "127.0.0.1")
         self.declare_parameter("port", 2000)
@@ -54,6 +58,9 @@ class MappingNavigationNode(Node):
         self.declare_parameter("model_path", "models/nn_plan.json")
         self.declare_parameter("goal_x", 20.0)
         self.declare_parameter("goal_y", 8.0)
+        # goal 是 "x,y" 字符串，和 ROS 1 的 main.launch 以及命令行 --goal 写法一致。
+        # 非空时优先于 goal_x/goal_y，这样两种传法都能用。
+        self.declare_parameter("goal", "")
         self.declare_parameter("goal_tol", 1.5)
         self.declare_parameter("map_publish_period", 20)   # 每 N 个 tick 发一次地图
 
@@ -61,8 +68,12 @@ class MappingNavigationNode(Node):
         self.port = int(self.get_parameter("port").value)
         self.town = self.get_parameter("town").value
         model_path = self.get_parameter("model_path").value
-        self.goal = (float(self.get_parameter("goal_x").value),
-                     float(self.get_parameter("goal_y").value))
+        goal_text = str(self.get_parameter("goal").value or "").strip()
+        if goal_text:
+            self.goal = parse_goal(goal_text)
+        else:
+            self.goal = (float(self.get_parameter("goal_x").value),
+                         float(self.get_parameter("goal_y").value))
         self.goal_tol = float(self.get_parameter("goal_tol").value)
         self.map_period = int(self.get_parameter("map_publish_period").value)
 

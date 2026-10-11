@@ -47,7 +47,7 @@ CARLA 服务端的启动、宿主机 IP 与端口 2000 的查看、虚拟机网�
 1. **占用栅格建图**：把三维点云投影到 2D 占用栅格，用**对数几率**表达占据概率，
    命中标记占据、射线沿途标记空闲，输出可直接用于通行的地图。
 2. **SLAM 边动边建图**：车辆行驶过程中实时更新地图，并导出渐进建图快照
-   （实测已知区域从 0.2% 单调增长到 27.7%）。
+   （实测已知区域从 2.9% 单调增长到 27.2%）。
 3. **规划神经网络**：状态（目标方位 + 障碍左右分布 + 最近距离）→ (油门, 转向)，
    MLP 策略网络（5→64→2）。
 4. **避障解析标签**：训练标签由"朝目标 + 避障"规则生成，两侧障碍项符号相反且对称，
@@ -74,16 +74,16 @@ python3 src/ground/carla_mapping_navigation/main.py --mode train --epochs 300
 
 ```shell
 python3 src/ground/carla_mapping_navigation/main.py --mode run \
-        --host 172.21.108.47 --goal "20,8" --sim_time 40
+        --host 192.168.8.1 --goal "20,8" --sim_time 40
 ```
 
 使用 launch 启动（ROS 2 / ROS 1）：
 
 ```shell
 # ROS 2
-ros2 launch carla_mapping_navigation main.launch.py host:=172.21.108.47 goal:="20,8"
+ros2 launch carla_mapping_navigation main.launch.py host:=192.168.8.1 goal:="20,8"
 # ROS 1
-roslaunch carla_mapping_navigation main.launch host:=172.21.108.47 goal:="20,8"
+roslaunch carla_mapping_navigation main.launch host:=192.168.8.1 goal:="20,8"
 ```
 
 在 RViz 中查看占用栅格地图：
@@ -99,13 +99,14 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix carla_mapping_navigation)/share/carla_
 | 指标 | 数值 |
 |---|---|
 | 规划 NN 训练 MSE | 0.00596 |
-| 占据格数 / 空闲格数 | 1380 / 9786 |
-| 已知区域比例 | 29.1% |
-| 导航最近距离 | 1.458 m（阈值 1.5 m） |
+| 占据格数 / 空闲格数 | 1253 / 9127 |
+| 已知区域比例 | 27.2% |
+| 导航最近距离 | 1.437 m（阈值 1.5 m） |
+| 到达耗时 | 5.8 s |
 
 ![激光雷达占用栅格建图结果](../img/ground/carla_map_occupancy_map.png)
 
-渐进建图过程（体现"边动边建图"，已知区域 0.2% → 19.7% → 25.3%）：
+渐进建图过程（体现"边动边建图"，已知区域 2.9% → 18.9% → 24.9%）：
 
 ![建图进度 1](../img/ground/carla_map_map_progress_1.png)
 

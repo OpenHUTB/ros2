@@ -6,7 +6,7 @@
 #   bash main.sh --host <IP>           # 指定 CARLA 服务端（虚拟机填宿主机 IP）
 #   bash main.sh --headless --demo --save_dir ~/shots
 #                                      # 离线取证：合成环境建图+导航并导出地图（无 CARLA 也能跑）
-#   bash main.sh --launch [name:=value ...]   # 交给 ROS launch 启动
+#   bash main.sh --launch <参数>:=<值> ...   # 交给 ROS launch 启动
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,9 +22,10 @@ elif [ -f /opt/ros/noetic/setup.bash ]; then
 fi
 
 # --launch：交给 ROS launch 启动。ROS 2 走 ros2 launch，ROS 1 走 roslaunch，
-# 其余参数按 launch 的写法原样传递，例如：
+# 其余参数按 launch 的写法原样传递。注意只能用两个 launch 都声明过的参数
+# （host / port / town / goal / goal_x / goal_y），否则换一个 ROS 版本就不生效：
 #   bash main.sh --launch host:=192.168.8.1
-#   bash main.sh --launch mode:=test host:=192.168.8.1
+#   bash main.sh --launch host:=192.168.8.1 goal:="20,8"
 launch_args=()
 want_launch=0
 for a in "$@"; do

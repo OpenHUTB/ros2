@@ -13,6 +13,9 @@ carla_mapping_navigation_node:
     # 规划神经网络模型路径（由 main.py --mode train 生成）
     model_path: "models/nn_plan.json"
     # 导航目标（世界坐标，米）
+    # goal 是 "x,y" 字符串，非空时优先于下面的 goal_x/goal_y；留空即可用 goal_x/goal_y。
+    # 这样 ROS 1 的 main.launch、ROS 2 的 main.launch.py 和命令行 --goal 三种写法一致。
+    goal: ""
     goal_x: 20.0
     goal_y: 8.0
     # 到达判定阈值（米）

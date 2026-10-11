@@ -29,6 +29,10 @@ def generate_launch_description():
             description='CARLA 服务端地址（虚拟机运行客户端时填宿主机 IP）'),
         DeclareLaunchArgument('port', default_value='2000', description='CARLA RPC 端口'),
         DeclareLaunchArgument('town', default_value='Town05', description='CARLA 地图名'),
+        DeclareLaunchArgument(
+            'goal', default_value='',
+            description='导航目标 "x,y"（与 ROS 1 的 main.launch 写法一致）。'
+                        '留空则改用 goal_x/goal_y，因此两种传法都能用'),
         DeclareLaunchArgument('goal_x', default_value='20.0', description='导航目标 x（m）'),
         DeclareLaunchArgument('goal_y', default_value='8.0', description='导航目标 y（m）'),
         DeclareLaunchArgument(
@@ -43,6 +47,7 @@ def generate_launch_description():
                 'host': LaunchConfiguration('host'),
                 'port': LaunchConfiguration('port'),
                 'town': LaunchConfiguration('town'),
+                'goal': LaunchConfiguration('goal'),
                 'goal_x': LaunchConfiguration('goal_x'),
                 'goal_y': LaunchConfiguration('goal_y'),
             }],

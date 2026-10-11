@@ -12,6 +12,9 @@
   7. 规划神经网络能收敛
   8. 模型保存/加载往返一致
   9. 离线取证模式跑通并导出地图
+  10. 目标解析：命令行 / ROS 1 / ROS 2 三种 "x,y" 写法统一，非法输入回退默认值
+  11. 文档里出现的 launch 参数都必须在 launch 文件里真的声明过（回归测试：
+      ROS 2 的 main.launch.py 一度漏声明 goal，导致 goal:="x,y" 被静默忽略）
 
 运行：  python3 test/test_mapping_logic.py
        或 pytest test/
@@ -379,6 +382,79 @@ def test_main_sh_launch_dispatches_per_ros_version():
     assert "roslaunch" in sh, "main.sh 应支持 ROS 1 的 roslaunch"
     assert "ROS_VERSION" in sh, "应按 ROS_VERSION 选择 launch 命令"
     assert "launch_args" in sh, "其余参数应原样透传给 launch"
+
+
+def test_parse_goal_accepts_documented_forms():
+    """命令行 --goal、ROS 1 / ROS 2 launch 的 goal:="x,y" 走同一个解析函数。
+
+    解析失败必须**回退到默认值**而不是抛异常：launch 启动时因为一个笔误就
+    整个起不来，比直接用默认目标难排查得多。
+    """
+    assert main_mod.parse_goal("20,8") == (20.0, 8.0)
+    assert main_mod.parse_goal(" 30 , 5 ") == (30.0, 5.0)
+    assert main_mod.parse_goal("-1.5,2") == (-1.5, 2.0)
+    assert main_mod.parse_goal(None) == main_mod.DEFAULT_GOAL
+    for bad in ("", "abc", "1", "1,2,3", "x,y", "1;"):
+        assert main_mod.parse_goal(bad) == main_mod.DEFAULT_GOAL, \
+            f"{bad!r} 应回退到默认目标"
+
+
+def test_documented_launch_args_are_declared():
+    """文档里出现的每个 `name:=value` 都必须在对应 launch 文件里声明过。
+
+    回归测试：ROS 2 的 main.launch.py 一度只声明 goal_x/goal_y，而 6 处文档
+    都在教用户传 goal:="20,8"。ROS 2 对未声明的 launch 参数**不报错、直接忽略**，
+    又因为默认目标恰好就是 (20,8)，这个错误一直看不出来——换成别的目标就失效。
+    """
+    import re
+
+    ros2 = open(os.path.join(_pkg_root(), "launch", "main.launch.py"),
+                encoding="utf-8").read()
+    ros1 = open(os.path.join(_pkg_root(), "launch", "main.launch"),
+                encoding="utf-8").read()
+    decl2 = set(re.findall(r"DeclareLaunchArgument\(\s*'([^']+)'", ros2))
+    decl1 = set(re.findall(r'<arg\s+name="([^"]+)"', ros1))
+
+    assert "goal" in decl2, "ROS 2 launch 必须声明 goal（与 ROS 1 的接口对齐）"
+    assert "goal" in decl1, "ROS 1 launch 必须声明 goal"
+
+    sources = [os.path.join(_pkg_root(), "README.md"),
+               os.path.join(_pkg_root(), "main.sh"),
+               os.path.join(_pkg_root(), "launch", "main.launch.py"),
+               os.path.join(_pkg_root(), "launch", "main.launch")]
+    repo = os.path.abspath(os.path.join(_pkg_root(), "..", "..", ".."))
+    for rel in ("docs/ground/carla_mapping_navigation.md",
+                "docs/ground/pcl_recorder.md"):
+        path = os.path.join(repo, rel)
+        if os.path.exists(path):      # 单测在 colcon 安装目录下跑时没有 docs
+            sources.append(path)
+
+    problems = []
+    for path in sources:
+        for line in open(path, encoding="utf-8").read().splitlines():
+            # ros2 launch <pkg> <file> key:=value ...
+            m = re.search(r"ros2\s+launch\s+\S+\s+\S+(.*)", line)
+            if m:
+                for k in re.findall(r"([A-Za-z_]\w*):=", m.group(1)):
+                    if k not in decl2:
+                        problems.append(f"{os.path.basename(path)} 的 ros2 launch "
+                                        f"用了未声明的 {k}:=")
+            # roslaunch <pkg> <file> key:=value ...
+            m = re.search(r"(?<!ros2 )\broslaunch\s+\S+\s+\S+(.*)", line)
+            if m:
+                for k in re.findall(r"([A-Za-z_]\w*):=", m.group(1)):
+                    if k not in decl1:
+                        problems.append(f"{os.path.basename(path)} 的 roslaunch "
+                                        f"用了未声明的 {k}:=")
+            # bash main.sh --launch key:=value ...（两个 launch 都要认）
+            m = re.search(r"main\.sh\s+--launch\s+(.*)", line)
+            if m:
+                for k in re.findall(r"([A-Za-z_]\w*):=", m.group(1)):
+                    if k not in decl1 or k not in decl2:
+                        problems.append(f"{os.path.basename(path)} 的 main.sh --launch "
+                                        f"用了并非两个 launch 都声明的 {k}:=")
+
+    assert not problems, "；".join(sorted(set(problems)))
 
 
 def _run_all():

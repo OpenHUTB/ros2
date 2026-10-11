@@ -705,6 +705,28 @@ def run_carla(host, port, town, model_path, goal, sim_time=30.0, save_dir=None):
 
 
 # ==================================================================== CLI
+def parse_goal(text, default=DEFAULT_GOAL):
+    """把 ``"x,y"`` 形式的目标解析成 ``(x, y)``。
+
+    命令行 ``--goal``、ROS 1 的 ``main.launch`` 与 ROS 2 的 ``main.launch.py``
+    都用 ``"20,8"`` 这种写法传目标，因此统一在这里解析。格式非法时**回退到
+    *default* 并打印告警**，而不是抛异常——launch 启动时因为一个笔误就整个
+    起不来，排查成本比用默认目标高得多。
+    """
+    if text is None:
+        return default
+    parts = [p.strip() for p in str(text).strip().strip("[]()").split(",")]
+    if len(parts) != 2 or not all(parts):
+        print(f"[警告] 目标 {text!r} 不是 \"x,y\" 格式，改用默认 {default}",
+              file=sys.stderr)
+        return default
+    try:
+        return float(parts[0]), float(parts[1])
+    except ValueError:
+        print(f"[警告] 目标 {text!r} 含非数字，改用默认 {default}", file=sys.stderr)
+        return default
+
+
 def build_parser():
     p = argparse.ArgumentParser(description="CARLA 建图 + 导航（神经网络规划版）")
     p.add_argument("--mode", choices=["train", "run"], default="run")
@@ -755,11 +777,10 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
 
     if args.headless or args.demo:
-        gx, gy = map(float, args.goal.split(","))
         return run_offline_demo(args.save_dir or "shots", epochs=min(args.epochs, 200),
-                                sim_time=args.sim_time, goal=(gx, gy))
+                                sim_time=args.sim_time, goal=parse_goal(args.goal))
 
-    gx, gy = map(float, args.goal.split(","))
+    gx, gy = parse_goal(args.goal)
     if args.mode == "train":
         train_planning(args.epochs, args.out)
         return 0
