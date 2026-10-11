@@ -1,3 +1,7 @@
 <launch>
-    <node pkg="vehicle_pygame_teleop" type="vehicle_pygame_teleop.py" name="vehicle_pygame_teleop" output="screen"/>
+    <!-- 键盘遥操作节点：把平滑后的 Twist 指令发布到 CARLA 的 twist 话题。
+         完整链路：本节点 -> carla_twist_to_control -> CARLA 中的自车控制 -->
+    <node pkg="vehicle_pygame_teleop" type="vehicle_pygame_teleop.py" name="vehicle_pygame_teleop" output="screen">
+        <param name="twist_topic" value="/carla/ego_vehicle/twist"/>
+    </node>
 </launch>

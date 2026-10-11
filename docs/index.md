@@ -66,7 +66,7 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
-* [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [车辆键盘遥操作（Carla）](./ground/vehicle_pygame_teleop.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
