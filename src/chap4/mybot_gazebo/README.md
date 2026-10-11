@@ -1,6 +1,6 @@
 # mybot_gazebo
 
-本功能包用于第 1 章 Gazebo 机器人平台搭建实验，包含：
+本功能包用于第 4 章 Gazebo 机器人平台搭建实验，包含：
 
 - `urdf/mybot.urdf.xacro`：两轮差速移动机器人、激光雷达和 RGB 相机模型；
 - `worlds/mybot_empty.world`：最小 Gazebo 世界；
@@ -9,9 +9,17 @@
 
 ## 运行
 
+推荐直接使用 `main.sh` 入口：
+
+```bash
+./main.sh
+```
+
+也可以手动启动：
+
 ```bash
 mkdir -p ~/catkin_ws/src
-cp -r src/chap1/mybot_gazebo ~/catkin_ws/src/   # 在仓库根目录执行
+cp -r src/chap4/mybot_gazebo ~/catkin_ws/src/   # 在仓库根目录执行
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash

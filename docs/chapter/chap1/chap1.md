@@ -46,12 +46,12 @@
 
 [进入小海龟画五角星实验](turtle_star.md)
 
-### 7. Gazebo 机器人平台搭建与首次仿真
+### 7. Gazebo 入门
 
-使用 URDF 与 xacro 搭建一个包含差速驱动、激光雷达和 RGB 相机的移动机器人，
-并配置 Gazebo ROS 插件与 launch 文件，完成从模型生成、话题验证、TF 检查到机器人开始运动的完整仿真流程。
+本章先通过 turtlesim 理解 ROS 话题、服务和位姿反馈。掌握这些基础后，
+可以进入第 4 章“机器人仿真”，使用 URDF/xacro、Gazebo 插件和 launch 文件搭建完整移动机器人平台。
 
-[进入 Gazebo 机器人平台搭建与首次仿真分步教程](gazebo_platform_simulation.md)
+[进入第 4 章 Gazebo 机器人仿真](../chap4.md)
 
 ### 8. 小海龟画爱心
 

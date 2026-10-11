@@ -152,10 +152,10 @@ graph LR
 - ROS Wiki：URDF、TF、rqt 和 rosbag
 - Gazebo Classic 文档：SDF、物理引擎、传感器
 - ROS Noetic `gazebo_ros`：差速驱动、激光和相机插件
-- OpenHUTB/ros2 仓库：第 1 章实验文档与 catkin 功能包组织方式
+- OpenHUTB/ros2 仓库：catkin 功能包与实验文档组织方式
 
 ---
 
 - 上一步：[参数调整与故障排查](gazebo_10_tuning_debug.md)
 - 返回[教程总览](gazebo_platform_simulation.md)
-- 返回[第 1 章实验目录](chap1.md)
+- 返回[第 4 章机器人仿真](../chap4.md)

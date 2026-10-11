@@ -16,7 +16,7 @@ title: Gazebo 机器人平台搭建与首次仿真
 - [8. 常见问题总览](#debug)
 - [9. 参考文献与说明](#references)
 
-> 完整功能包在 [`src/chap1/mybot_gazebo/`](https://github.com/OpenHUTB/ros2/tree/master/src/chap1/mybot_gazebo)，
+> 完整功能包在 [`src/chap4/mybot_gazebo/`](https://github.com/OpenHUTB/ros2/tree/master/src/chap4/mybot_gazebo)，
 > 包含 URDF、Gazebo 插件、世界文件、launch 文件和最小运动控制脚本。
 > 本页负责路线总览；逐步操作请从第 6 节进入对应的子页面。
 
@@ -207,7 +207,7 @@ rosrun tf tf_echo base_link laser_frame
 ```bash
 source /opt/ros/noetic/setup.bash
 mkdir -p ~/catkin_ws/src
-cp -r src/chap1/mybot_gazebo ~/catkin_ws/src/   # 在仓库根目录执行
+cp -r src/chap4/mybot_gazebo ~/catkin_ws/src/   # 在仓库根目录执行
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
@@ -216,6 +216,13 @@ xacro src/mybot_gazebo/urdf/mybot.urdf.xacro > /tmp/mybot.urdf
 check_urdf /tmp/mybot.urdf
 
 roslaunch mybot_gazebo mybot_gazebo.launch
+```
+
+也可以使用包内统一入口：
+
+```bash
+cd ~/catkin_ws/src/mybot_gazebo
+./main.sh
 ```
 
 另开终端运行：
@@ -291,7 +298,7 @@ rosrun mybot_gazebo move_square.py
 - ROS Wiki：URDF、TF、ros_control、Gazebo ROS 插件；
 - Gazebo Classic 官方文档：SDF、物理引擎、传感器模型；
 - ROS Noetic `gazebo_ros` 包中的 diff drive、laser 和 camera 插件示例；
-- 本仓库第 1 章已有的 catkin 功能包与实验文档组织方式。
+- 本仓库已有的 catkin 功能包与实验文档组织方式。
 
 ## 人工智能使用声明
 
@@ -299,5 +306,5 @@ rosrun mybot_gazebo move_square.py
 
 ---
 
-- 返回[第 1 章实验目录](chap1.md)
+- 返回[第 4 章机器人仿真](../chap4.md)
 - 下一步：[环境检查与 Gazebo 验证](gazebo_01_environment.md)

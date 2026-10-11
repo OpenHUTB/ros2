@@ -36,7 +36,7 @@ check_urdf /tmp/mybot.urdf
 roslaunch mybot_gazebo mybot_gazebo.launch
 ```
 
-## 2. 传感器负载调整 <span name="sensor-params"></span>
+## 2. 传感器负载调整 <span id="sensor-params"></span>
 
 | 传感器 | 高质量设置 | 低负载设置 | 影响 |
 | --- | --- | --- | --- |
@@ -47,9 +47,19 @@ roslaunch mybot_gazebo mybot_gazebo.launch
 查看 Gazebo 实时因子：
 
 ```bash
-rostopic hz /clock
-rostopic hz /scan
+gz stats
 ```
+
+也可以直接观察 Gazebo 窗口左下角显示的 Real Time Factor。
+
+查看 ROS 话题消息频率：
+
+```bash
+rostopic hz /scan
+rostopic hz /camera/image_raw
+```
+
+`rostopic hz` 只表示消息发布频率，不等于 Gazebo 实时因子。
 
 如果 Gazebo 卡顿，先降低传感器负载，再检查物理步长。
 
@@ -60,7 +70,7 @@ rostopic hz /scan
 | `linear_speed` | 运动更快 | 打滑、轨迹误差大 |
 | `angular_speed` | 转向更快 | 转弯过头、模型抖动 |
 | `wheelTorque` | 加速更强 | 抖动、能耗高 |
-| `max_wheel_acceleration` | 响应更猛 | 起步冲击 |
+| `wheelAcceleration` | 响应更猛 | 起步冲击 |
 | 控制发布频率 | 更平滑 | 计算开销增加 |
 
 建议先用低速度确认方向，再逐步提高速度。

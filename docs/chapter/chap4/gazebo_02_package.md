@@ -50,7 +50,7 @@ source ~/.bashrc
 在仓库根目录中，把 `mybot_gazebo` 复制到工作空间：
 
 ```bash
-cp -r src/chap1/mybot_gazebo ~/catkin_ws/src/
+cp -r src/chap4/mybot_gazebo ~/catkin_ws/src/
 ```
 
 ## 3. 功能包目录结构 <span id="structure"></span>
@@ -59,6 +59,8 @@ cp -r src/chap1/mybot_gazebo ~/catkin_ws/src/
 mybot_gazebo/
 ├── package.xml
 ├── CMakeLists.txt
+├── LICENSE
+├── main.sh
 ├── README.md
 ├── launch/
 │   └── mybot_gazebo.launch
@@ -76,6 +78,7 @@ mybot_gazebo/
 | --- | --- |
 | `package.xml` | 声明依赖和包信息 |
 | `CMakeLists.txt` | 安装 Python 脚本，安装 launch、urdf、world 文件 |
+| `main.sh` | 仓库要求的统一入口，调用 launch 文件启动仿真 |
 | `launch/` | 组织 Gazebo、模型、TF 和参数 |
 | `urdf/` | 机器人结构和 Gazebo 插件 |
 | `worlds/` | Gazebo 世界文件 |
@@ -134,6 +137,13 @@ python3 -m py_compile ~/catkin_ws/src/mybot_gazebo/scripts/move_square.py
 ```
 
 `py_compile` 通过说明 Python 语法正确，但不会检查 ROS 话题和 Gazebo 连接。
+
+也可以使用包内统一入口启动：
+
+```bash
+cd ~/catkin_ws/src/mybot_gazebo
+./main.sh
+```
 
 ## 6. 常见问题 <span id="debug"></span>
 
