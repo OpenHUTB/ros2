@@ -70,13 +70,25 @@ class TeleopCar:
 
         rospy.loginfo("车辆键盘遥操作节点已启动（内置二维模拟）")
         rospy.loginfo("W/↑加速  S/↓刹车/倒车  A/←左转  D/→右转  空格手刹  ESC退出")
+        # 注册 rospy 关停回调：Ctrl+C 等外部关停时也要发布零速度，
+        # 否则最后一条 /cmd_vel 会停留在退出前的速度上
+        rospy.on_shutdown(self.on_ros_shutdown)
 
-    def publish_zero(self):
-        """发布零速度指令并短暂等待，确保停车指令可靠送达"""
+    def publish_zero(self, wait=True):
+        """发布零速度指令并短暂等待，确保停车指令可靠送达。
+
+        wait=False 用于 rospy 关停回调：关停阶段 rospy.sleep 会抛出
+        ROSInterruptException，不能再阻塞等待。
+        """
         twist = Twist()
         self.pub.publish(twist)
         self.pub.publish(twist)
-        rospy.sleep(0.1)
+        if wait:
+            rospy.sleep(0.1)
+
+    def on_ros_shutdown(self):
+        """rospy 关停回调（Ctrl+C / rosnode kill 等）：保证最后一条指令为零速度"""
+        self.publish_zero(wait=False)
 
     def update_physics(self, dt, keys):
         """根据按键更新车辆速度、航向与位置（差速底盘模型）"""
@@ -162,11 +174,12 @@ class TeleopCar:
         pygame.draw.rect(surf, COLOR_WHEEL, (6 + 2, 6 + CAR_W - 2, 10, 5))
         pygame.draw.rect(surf, COLOR_WHEEL, (6 + CAR_L - 12, 3, 10, 5))
         pygame.draw.rect(surf, COLOR_WHEEL, (6 + CAR_L - 12, 6 + CAR_W - 2, 10, 5))
-        # 车身
-        pygame.draw.rect(surf, COLOR_CAR_BODY, (6, 6, CAR_L, CAR_W), border_radius=5)
+        # 车身（不使用 border_radius 关键字参数：Ubuntu 20.04 apt 源的 pygame
+        # 1.9.6 不支持它，会报 TypeError: rect() takes no keyword arguments）
+        pygame.draw.rect(surf, COLOR_CAR_BODY, (6, 6, CAR_L, CAR_W))
         # 车头标识（前挡风玻璃）
         pygame.draw.rect(surf, COLOR_CAR_FRONT,
-                         (6 + CAR_L - 14, 6 + 4, 8, CAR_W - 8), border_radius=2)
+                         (6 + CAR_L - 14, 6 + 4, 8, CAR_W - 8))
         rotated = pygame.transform.rotate(surf, math.degrees(self.yaw))
         rect = rotated.get_rect(center=(WINDOW_W / 2.0, WINDOW_H / 2.0))
         self.screen.blit(rotated, rect)
@@ -229,8 +242,9 @@ def main():
     except rospy.ROSInterruptException:
         pass
     finally:
-        # Ctrl+C 或节点异常中断时兜底停车
-        if teleop is not None:
+        # 非关停的退出路径（如窗口关闭）兜底再补发一次零速度；
+        # Ctrl+C 等关停场景由 on_shutdown 回调负责（关停阶段不能再调 rospy.sleep）
+        if teleop is not None and not rospy.is_shutdown():
             teleop.publish_zero()
         pygame.quit()
 
