@@ -9,3 +9,4 @@ Ubuntu20.04 + Python3 + pybullet
 ```bash
 python3 car_sim.py
 ![仿真动图](sim.gif)
+
