@@ -8,4 +8,5 @@ Ubuntu20.04 + Python3 + pybullet
 
 ## 运行指令
 ```bash
-python3 car_sim.py
+![R2D2小车前进后退仿真](./sim.gif)
+
