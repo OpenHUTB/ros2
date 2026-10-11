@@ -200,10 +200,11 @@ class MappingNavigationNode(Node):
             self._publish_grid()
             self._publish_path()
         if self.tick_count % 100 == 0:
-            _g, lc, rc, nearest = raw
+            _g, lc, rc, nearest, bearing = raw
             self.get_logger().info(
                 f"距目标={d:.1f}m NN(油门={throttle:.2f},转向={steer:+.2f}) "
-                f"障碍(L{lc}/R{rc},{nearest:.1f}m) 占据格={self.grid.occupied_count}")
+                f"障碍(L{lc}/R{rc},{nearest:.1f}m,方位{math.degrees(bearing):+.0f}°) "
+                f"占据格={self.grid.occupied_count}")
 
     # ------------------------------------------------------------------ 广播
     def _publish_grid(self):

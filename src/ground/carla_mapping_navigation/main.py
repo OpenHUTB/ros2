@@ -182,53 +182,70 @@ def build_map_from_scan(grid, pc, x, y, yaw, max_range=35.0, ray_step=1.0):
 
 
 def obs_features(pc, goal_ang_diff, max_range=8.0):
-    """把「目标方位 + 前方障碍左右分布」压成规划 NN 的 5 维状态向量。
+    """把「目标方位 + 前方障碍分布」压成规划 NN 的 5 维状态向量。
 
     返回 (state, raw)。**所有维度都归一化到相近尺度**——早期版本把"最近距离"
     以原始米数（0.3~8.0）直接放进状态，与其余维（0~1）量纲差 8 倍，
     梯度被该维主导，网络学不好。
 
+    第 5 维是**最近障碍的方向角** \\(\\theta_{obs}\\)（传感器系，左为正）。
+    早期版本这一维误写成了第 4 维的副本，等于只有 4 维有效输入——网络分不清
+    "障碍在正前方"和"障碍在侧前方"，而这两种情况该往哪边打方向恰好相反。
+
     $$
     \\mathbf s = \\Big[\\frac{e_\\psi}{\\pi},\\ \\frac{N_L}{N_{max}},\\
     \\frac{N_R}{N_{max}},\\ \\frac{D_{\\min}}{D_{max}},\\
-    \\frac{D_{\\min}}{D_{max}}\\Big]^\\top
+    \\frac{\\theta_{obs}}{\\pi/2}\\Big]^\\top
     $$
     """
-    base = [goal_ang_diff / math.pi, 0.0, 0.0, 1.0, 1.0]
+    base = [goal_ang_diff / math.pi, 0.0, 0.0, 1.0, 0.0]
     if pc is None or len(pc) == 0:
-        return np.array(base, dtype=np.float32), (goal_ang_diff, 0, 0, max_range)
+        return np.array(base, dtype=np.float32), (goal_ang_diff, 0, 0, max_range, 0.0)
 
     x, y = pc[:, 0], pc[:, 1]
     near = (x > 0.3) & (x < max_range) & (np.abs(y) < 4.0)
     pts = pc[near]
     if len(pts) == 0:
-        return np.array(base, dtype=np.float32), (goal_ang_diff, 0, 0, max_range)
+        return np.array(base, dtype=np.float32), (goal_ang_diff, 0, 0, max_range, 0.0)
 
     left_cnt = int((pts[:, 1] > 0).sum())
     right_cnt = int((pts[:, 1] < 0).sum())
-    nearest = float(pts[:, 0].min())
+    k = int(np.argmin(pts[:, 0]))                          # 最近的那个障碍点
+    nearest = float(pts[k, 0])
+    bearing = float(math.atan2(pts[k, 1], pts[k, 0]))      # 左为正，范围 ±π/2
     dist_n = float(np.clip(nearest / max_range, 0.0, 1.0))
     state = np.array([goal_ang_diff / math.pi,
                       min(left_cnt / 50.0, 1.0),
                       min(right_cnt / 50.0, 1.0),
-                      dist_n, dist_n], dtype=np.float32)
-    return state, (goal_ang_diff, left_cnt, right_cnt, nearest)
+                      dist_n,
+                      bearing / (math.pi / 2.0)], dtype=np.float32)
+    return state, (goal_ang_diff, left_cnt, right_cnt, nearest, bearing)
 
 
 # ============================================================ 规划神经网络
-def planning_label(diff, obs_l, obs_r, nearest, max_range=8.0):
+def planning_label(diff, obs_l, obs_r, nearest, max_range=8.0, bearing=0.0):
     """规划网络的监督标签：由"朝目标 + 避障"解析生成 (throttle, steer)。
 
-    转向：朝目标方向转（$\\tanh e_\\psi$）叠加避障偏置——**左侧障碍多则右转**。
-    注意两侧障碍项符号相反且对称，因此无障碍时（$N_L=N_R$）不产生额外偏转，
-    这与"航向差为 0 应输出 0 转向"的物理直觉一致。
+    转向由三项叠加：
+
+    * **朝目标**：$\\tanh(1.2\\,e_\\psi)$；
+    * **左右障碍密度差**：$0.6(\\rho_R-\\rho_L)$，左侧障碍多则右转；
+    * **最近障碍的横向排斥**：$-0.5\\,(1-\\tilde D_{\\min})\\sin\\theta_{obs}$，
+      障碍偏在左侧（$\\theta_{obs}>0$）时产生向右的排斥，且越近越强。
+
+    前两项符号相反且对称，第三项在正前方（$\\theta_{obs}=0$）时为 0，
+    因此"正对目标且无障碍 → 转向为 0"，与物理直觉一致。
 
     前进：障碍越近越减速，映射到 $[0,1]$。
+
+    注：$bearing$ 放在 $max_range$ **之后**，这样早期的
+    ``planning_label(d, l, r, nearest, max_range)`` 位置调用不受影响。
     """
-    steer = math.tanh(1.2 * diff) + 0.6 * (obs_r - obs_l)
+    d_n = min(max(nearest / max_range, 0.0), 1.0)
+    avoid = -0.5 * (1.0 - d_n) * math.sin(bearing)
+    steer = math.tanh(1.2 * diff) + 0.6 * (obs_r - obs_l) + avoid
     steer = float(np.clip(steer, -1.0, 1.0))
     # 最近距离归一化后映射到油门：>=0.75（约6m）全速，越近越低
-    d_n = min(max(nearest / max_range, 0.0), 1.0)
     throttle = float(np.clip(0.25 + 0.75 * d_n, 0.0, 1.0))
     return throttle, steer
 
@@ -247,13 +264,16 @@ def synth_dataset(n=600, seed=0, max_range=8.0):
     obs_l = rng.uniform(0, 1, n)
     obs_r = rng.uniform(0, 1, n)
     nearest = rng.uniform(0.3, max_range, n)
+    bearing = rng.uniform(-math.pi / 2.0, math.pi / 2.0, n)   # 最近障碍方向角
 
     d_n = np.clip(nearest / max_range, 0.0, 1.0)
-    X = np.stack([diff / math.pi, obs_l, obs_r, d_n, d_n], axis=1).astype(np.float32)
+    X = np.stack([diff / math.pi, obs_l, obs_r, d_n,
+                  bearing / (math.pi / 2.0)], axis=1).astype(np.float32)
 
     Y = np.zeros((n, 2), dtype=np.float32)
     for i in range(n):
-        th, st = planning_label(diff[i], obs_l[i], obs_r[i], nearest[i], max_range)
+        th, st = planning_label(diff[i], obs_l[i], obs_r[i], nearest[i],
+                                max_range, bearing=bearing[i])
         Y[i, 0] = th
         Y[i, 1] = st
     return X, Y
@@ -440,7 +460,13 @@ def _fake_scan(x, y, yaw, goal, obstacles, max_range=35.0, n_rays=180, seed=0):
             c = fx * fx + fy * fy - orad * orad
             disc = b * b - c
             if disc >= 0:
-                t = -b - math.sqrt(disc)
+                sq = math.sqrt(disc)
+                t = -b - sq
+                if t <= 0.3:
+                    # 传感器已经在圆内（近交点落在自己身后），改用远交点。
+                    # 否则"车已经开进障碍物"这种最该报出来的情况反而会被完全
+                    # 漏掉，规划网络也就看不到这个障碍。
+                    t = -b + sq
                 if 0.3 < t < r:
                     r = t
         # 地图边界（±45 m）
@@ -473,8 +499,23 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     net, hist = train_planning(epochs=epochs, out=os.path.join(save_dir or ".", "nn_plan.json"))
     print(f"规划 NN 训练 MSE = {hist['mse']:.5f}")
 
-    # ---- 障碍物布局：目标附近放两个障碍，检验避障 ----
-    obstacles = [(26.0, 2.0, 2.5), (24.0, 12.0, 2.5), (32.0, 6.0, 2.0)]
+    # ---- 障碍物布局：按「沿路径 s 米、横向偏移 d 米」摆放 ----
+    # 早期布局把 (26,2) 放在「起点→目标」直线上（离直线只有 0.06 m），车必然
+    # 撞上去；而当时 _fake_scan 又漏掉了"传感器在圆内"的情况，连撞上都看不出来。
+    # 现在每个障碍的横向偏移都大于其半径，保证留出可通行的缝。
+    ux, uy = goal[0] - START[0], goal[1] - START[1]
+    _len = math.hypot(ux, uy)
+    ux, uy = ux / _len, uy / _len       # 沿路径方向的单位向量
+    nx, ny = -uy, ux                    # 路径左法向
+
+    def _place(s, lateral, radius):
+        """路径 s 米处、向左偏 lateral 米（负值向右）、半径 radius 的圆柱障碍。"""
+        return (START[0] + ux * s + nx * lateral,
+                START[1] + uy * s + ny * lateral, radius)
+
+    obstacles = [_place(10.0, +2.8, 1.6),   # 车需向右让（间隙 1.2 m）
+                 _place(16.0, -3.4, 2.0),   # 车需向左让（间隙 1.4 m）
+                 _place(19.5, +5.0, 2.5)]   # 目标附近建筑，主要贡献地图细节
 
     grid = OccupancyGrid(center=START)
     # 初始航向由「起点→目标」方向推导，不能写死为 0（+x）：
@@ -487,6 +528,7 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     path_pts = [(x, y)]
     snaps = []           # 渐进建图快照 [(tick, 概率图副本, 当时轨迹)]
     min_d = float("inf")
+    min_clear = float("inf")   # 与障碍物表面的最近距离（负值 = 撞上）
     reached_at = None
     n_ticks = int(sim_time / DT)
 
@@ -513,11 +555,16 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
 
         x, y, yaw, v = step_bicycle(x, y, yaw, v, throttle, steer)
         path_pts.append((x, y))
+        # 与障碍物表面的最近距离：把"避障"从说法变成可核对的数字（负值即撞上）
+        for (ox, oy, orad) in obstacles:
+            min_clear = min(min_clear, math.hypot(x - ox, y - oy) - orad)
 
-        if k % 100 == 0:
-            _g, lc, rc, nearest = raw
+        if k % 50 == 0:      # 每 2.5 s 打一行。原来按 5 s 打，而本演示约 4.5 s 就到达目标，
+                             # 会只剩 t=0 一行，看不出行驶过程
+            _g, lc, rc, nearest, bearing = raw
             print(f"[t={k * DT:5.1f}s] pos=({x:6.1f},{y:6.1f}) 距目标={d:5.2f}m "
-                  f"NN(油门={throttle:.2f}, 转向={steer:+.2f}) 障碍(L{lc}/R{rc}, {nearest:.1f}m) "
+                  f"NN(油门={throttle:.2f}, 转向={steer:+.2f}) "
+                  f"障碍(L{lc}/R{rc}, {nearest:.1f}m, 方位{math.degrees(bearing):+.0f}°) "
                   f"占据格={grid.occupied_count}")
 
         # ---- 渐进建图快照：体现"边动边建图"，地图随行驶逐步成形 ----
@@ -556,6 +603,8 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     print(f"栅格中心（起点）= {grid.center}")
     print(f"车辆最终位置    = ({x:.2f}, {y:.2f})，轨迹点数 {len(path_pts)}")
     print(f"距目标最近距离  = {min_d:.3f} m（判定阈值 {GOAL_TOL} m）")
+    print(f"与障碍最近距离  = {min_clear:.2f} m"
+          f"{'（未发生碰撞）' if min_clear > 0 else '★发生碰撞'}")
     if reached_at is not None:
         print(f"到达耗时        = {reached_at * DT:.1f} s")
     print("\n已导出取证图：")

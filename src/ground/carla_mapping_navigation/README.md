@@ -10,7 +10,7 @@
 | 环节 | 输入 | 算法 | 输出 |
 |---|---|---|---|
 | 建图 | 32 线激光雷达点云 | 占用栅格 + 贝叶斯对数几率更新 | `nav_msgs/OccupancyGrid` 2D 地图 |
-| 规划 | 目标方位 + 障碍左右分布 + 最近距离 | **神经网络** MLP `[5, 64, 2]` | (油门, 转向) |
+| 规划 | 目标方位 + 障碍左右分布 + 最近距离 + 最近障碍方向角 | **神经网络** MLP `[5, 64, 2]` | (油门, 转向) |
 
 建图体现 SLAM 的**边动边建图**理念：命中点标占据、射线沿途标空闲，实时更新地图。
 
@@ -34,7 +34,7 @@ src/ground/carla_mapping_navigation/
 ├── resource/carla_mapping_navigation
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_mapping_logic.py                # 单元测试（12 项，无需 CARLA）
+└── test/test_mapping_logic.py                # 单元测试（28 项，无需 CARLA）
 ```
 
 ## 3. 快速开始
@@ -42,7 +42,7 @@ src/ground/carla_mapping_navigation/
 ```bash
 # ① 离线训练规划神经网络（不需要 CARLA）
 python3 main.py --mode train --epochs 300 --out models/nn_plan.json
-#    预期：规划 NN 训练 MSE ≈ 0.006
+#    预期：规划 NN 训练 MSE ≈ 0.008
 
 # ② 离线取证（不需要 CARLA，也不需要图形界面）
 python3 main.py --headless --demo --epochs 300 --sim_time 60 --save_dir ~/shots
@@ -68,24 +68,35 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix carla_mapping_navigation)/share/carla_
 ## 4. 测试
 
 ```bash
-python3 test/test_mapping_logic.py     # 12 项全部通过，无需 CARLA
+python3 test/test_mapping_logic.py     # 28 项全部通过，无需 CARLA
 ```
 
 其中 `test_grid_contains_vehicle_start` 是**回归测试**：早期版本栅格固定以世界原点为中心、
 只覆盖 ±30 m，而车辆出生点在 (36,-5)，导致车辆落在栅格之外、建图结果恒为空。
 该测试确保这一缺陷不会复现。
 
+同类的回归测试还有：
+
+* `test_documented_launch_args_are_declared` —— 文档里出现的每个 `name:=` 都必须在
+  对应 launch 文件里真的声明过（ROS 2 对未声明的 launch 参数**不报错、直接忽略**，
+  曾导致 `goal:="x,y"` 静默失效）；
+* `test_state_bearing_dim_is_not_a_duplicate` —— 状态第 5 维必须是最近障碍方向角，
+  不能是第 4 维的副本；
+* `test_sim_params_keys_are_declared_by_node` —— `sim_params.yaml` 里的键都被节点
+  声明过，否则改了不生效。
+
 ## 5. 实测指标（离线取证模式）
 
 | 指标 | 数值 |
 |---|---|
-| 规划 NN 训练 MSE | 0.00596 |
-| 占据格数 / 空闲格数 | 1380 / 9786 |
-| 已知区域比例 | 29.1% |
-| 导航最近距离 | 1.458 m（阈值 1.5 m） |
-| 到达耗时 | 10.2 s |
+| 规划 NN 训练 MSE | 0.00751 |
+| 占据格数 / 空闲格数 | 1242 / 9288 |
+| 已知区域比例 | 27.6% |
+| 导航最近距离 | 1.424 m（阈值 1.5 m） |
+| 与障碍最近距离 | 0.72 m（未发生碰撞） |
+| 到达耗时 | 6.4 s |
 
-渐进建图实测：已知区域 0.2% → 19.7% → 25.3% → 27.7%。
+渐进建图实测：已知区域 3.4% → 18.1% → 26.8%（最终 27.6%）。
 
 ## 6. 与已有示例的关系
 

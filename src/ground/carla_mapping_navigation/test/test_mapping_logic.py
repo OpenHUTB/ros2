@@ -15,6 +15,10 @@
   10. 目标解析：命令行 / ROS 1 / ROS 2 三种 "x,y" 写法统一，非法输入回退默认值
   11. 文档里出现的 launch 参数都必须在 launch 文件里真的声明过（回归测试：
       ROS 2 的 main.launch.py 一度漏声明 goal，导致 goal:="x,y" 被静默忽略）
+  12. 状态第 5 维是最近障碍方向角，不是第 4 维（距离）的副本
+  13. 监督标签真的用到方向角：障碍偏左则右转、偏右则左转、正前方不偏转
+  14. 合成数据集的第 4、5 列不相同（第 5 维没有退化成距离副本）
+  15. sim_params.yaml 里的每个参数键都被节点声明过（否则改了不生效）
 
 运行：  python3 test/test_mapping_logic.py
        或 pytest test/
@@ -104,6 +108,54 @@ def test_state_features_normalized():
     state, _raw = main_mod.obs_features(pc, goal_ang_diff=0.5)
     assert state.shape == (5,), f"状态维度应为 5，实际 {state.shape}"
     assert np.all(np.abs(state) <= 1.5), f"状态存在未归一化的大数值: {state}"
+
+
+def test_state_bearing_dim_is_not_a_duplicate():
+    """第 5 维必须是最近障碍的方向角，不能是第 4 维的副本。
+
+    回归测试：早期 state = [..., d_n, d_n]，第 4、5 维完全相同，等于只有 4 维
+    有效输入——网络分不清"障碍在正前方"和"障碍在侧前方"，而这两种情况该往
+    哪边打方向恰好相反。
+    """
+    ahead = np.array([[2.0, 0.0, 0.0, 1.0]], dtype=np.float32)   # 正前方
+    left = np.array([[2.0, 2.0, 0.0, 1.0]], dtype=np.float32)    # 左前方
+    s_ahead, raw_ahead = main_mod.obs_features(ahead, 0.0)
+    s_left, raw_left = main_mod.obs_features(left, 0.0)
+
+    assert not np.allclose(s_ahead[3], s_ahead[4]), \
+        "第 4、5 维不应相同（第 5 维是方向角，不是距离的副本）"
+    assert abs(s_ahead[3] - s_left[3]) < 1e-6, "两点距离相同，第 4 维应一致"
+    assert abs(s_ahead[4]) < 1e-6, f"正前方障碍的方位角应为 0，实际 {s_ahead[4]}"
+    assert s_left[4] > 0, f"左侧障碍的方位角应为正（左为正），实际 {s_left[4]}"
+    assert abs(raw_ahead[4]) < 1e-6 and raw_left[4] > 0, "raw 第 5 项应是方向角（弧度）"
+
+
+def test_planning_label_uses_obstacle_bearing():
+    """最近障碍偏左 → 右转；偏右 → 左转；正前方 → 不额外偏转。
+
+    第 5 维（方向角）必须真的被监督标签用到，否则网络从这一维学不到东西，
+    加了等于没加。
+    """
+    import math
+    _th, st_left = main_mod.planning_label(0.0, 0.0, 0.0, 1.0, bearing=+math.pi / 4)
+    _th, st_right = main_mod.planning_label(0.0, 0.0, 0.0, 1.0, bearing=-math.pi / 4)
+    _th, st_ahead = main_mod.planning_label(0.0, 0.0, 0.0, 1.0, bearing=0.0)
+    _th, st_far = main_mod.planning_label(0.0, 0.0, 0.0, 8.0, bearing=+math.pi / 4)
+
+    assert st_left < 0, f"障碍在左应右转（负），实际 {st_left}"
+    assert st_right > 0, f"障碍在右应左转（正），实际 {st_right}"
+    assert abs(st_ahead) < 1e-9, f"障碍在正前方不应额外偏转，实际 {st_ahead}"
+    assert abs(st_left) > abs(st_far), "障碍越近，横向排斥应越强"
+
+
+def test_synth_dataset_uses_five_distinct_dims():
+    """合成数据集的第 5 列必须随方向角变化，不能是第 4 列的复制。"""
+    X, _Y = main_mod.synth_dataset(400, seed=0)
+    assert X.shape[1] == 5, f"状态应为 5 维，实际 {X.shape[1]}"
+    assert not np.allclose(X[:, 3], X[:, 4]), \
+        "第 4、5 列完全相同，说明第 5 维又退化成距离的副本了"
+    assert np.all(X[:, 4] >= -1.0) and np.all(X[:, 4] <= 1.0), \
+        f"方向角应归一化到 [-1,1]，实际 [{X[:, 4].min()}, {X[:, 4].max()}]"
 
 
 def test_planning_label_symmetry():
@@ -455,6 +507,35 @@ def test_documented_launch_args_are_declared():
                                         f"用了并非两个 launch 都声明的 {k}:=")
 
     assert not problems, "；".join(sorted(set(problems)))
+
+
+def test_sim_params_keys_are_declared_by_node():
+    """sim_params.yaml 里的每个参数键都必须被节点 declare_parameter 过。
+
+    回归测试：早期 yaml 里写了 16 个键，节点只声明 8 个，剩下的一半
+    （grid_size / log_odds_hit / lidar_channels / ego_blueprint ...）改了完全不生效，
+    却看起来像可配置项——rclpy 对未声明的参数覆盖项直接忽略。
+    """
+    import re
+
+    yaml_txt = open(os.path.join(_pkg_root(), "config", "sim_params.yaml"),
+                    encoding="utf-8").read()
+    node_txt = open(os.path.join(_pkg_root(), "carla_mapping_navigation",
+                                 "mapping_navigation_node.py"),
+                    encoding="utf-8").read()
+
+    keys = []
+    for line in yaml_txt.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        m = re.match(r"^\s+([a-z_]+):", line)
+        if m and m.group(1) != "ros__parameters":
+            keys.append(m.group(1))
+
+    declared = set(re.findall(r'declare_parameter\(\s*"([a-z_]+)"', node_txt))
+    dead = sorted(k for k in keys if k not in declared)
+    assert not dead, f"这些参数节点没声明，改了不生效：{dead}"
+    assert keys, "没解析出任何参数键，yaml 结构可能变了"
 
 
 def _run_all():
