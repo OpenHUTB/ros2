@@ -76,7 +76,7 @@ python src/air/air_teleop/drone_teleop.py --ip 172.21.108.47 --port 41451 --vehi
 | --- | --- | --- |
 | `--ip` | `127.0.0.1` | AirSim 服务地址 |
 | `--port` | `41451` | AirSim RPC 端口 |
-| `--vehicle` | 空字符串 | 载具名称，默认取仿真器中的第一架无人机 |
+| `--vehicle` | 空字符串 | 载具名称，空串表示通过 `listVehicles()` 自动获取第一架载具（失败回退 `SimpleFlight`） |
 
 
 ## 参考

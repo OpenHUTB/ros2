@@ -1,0 +1,13 @@
+# 键盘控制参数（任务①）
+# 本模块只发布机体系速度指令到 /uav/cmd_vel，真正的执行/坐标换算在 carlair_ros_bridge。
+
+control:
+  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D）
+  vert_speed: 1.0         # 垂直速度 m/s（R/F）
+  yaw_rate: 1.0           # 偏航角速度 rad/s（Q/E，正值=机头右转）
+
+rate:
+  publish_hz: 30.0        # 指令发布频率
+
+topic:
+  cmd_vel: "/uav/cmd_vel" # 与桥接包的 topic/cmd_vel 保持一致
