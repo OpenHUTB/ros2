@@ -80,23 +80,37 @@ nav:
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
+    - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
 - 空域载具:
+    - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
+    - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
+    - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
+    - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
+    - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - 空域载具八叉树三维寻路:
+        - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
+        - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
+        - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
+    - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
+    - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
 
 
 
@@ -111,4 +125,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
