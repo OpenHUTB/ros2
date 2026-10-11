@@ -8,3 +8,4 @@ Ubuntu20.04 + Python3 + pybullet
 ## 运行指令
 ```bash
 python3 car_sim.py
+![仿真动图](sim.gif)
