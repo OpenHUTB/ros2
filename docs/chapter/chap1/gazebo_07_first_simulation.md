@@ -63,6 +63,10 @@ roslaunch mybot_gazebo mybot_gazebo.launch gui:=false
 
 ![mybot 平台效果示意](images/gazebo_platform/robot_platform_preview.png)
 
+虚拟机实际运行效果：
+
+![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
+
 ## 4. 话题验证 <span id="topics"></span>
 
 ```bash

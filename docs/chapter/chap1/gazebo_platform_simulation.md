@@ -190,6 +190,12 @@ rosrun tf tf_echo base_link laser_frame
 
 ![自动正方形轨迹效果示意](images/gazebo_platform/square_path_effect.png)
 
+### 4.4 真实运行截图
+
+下面图片来自 Ubuntu 20.04 + ROS Noetic + Gazebo Classic 11 虚拟机的实际运行结果。Gazebo 中已经生成 `mybot`，右侧终端执行 `rostopic hz /odom`，平均频率稳定在 50 Hz，说明差速插件和里程计链路已经工作。
+
+![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
+
 ## 5. 快速开始 <span id="quickstart"></span>
 
 已熟悉 catkin 工作空间的读者可以直接执行：

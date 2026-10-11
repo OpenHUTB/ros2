@@ -120,6 +120,10 @@ graph LR
 
 ![差速驱动 ROS 数据流效果示意](images/gazebo_platform/ros_graph_effect.png)
 
+虚拟机实际运行效果：Gazebo 中已经生成 `mybot`，`rostopic hz /odom` 显示平均约 50 Hz。
+
+![Gazebo 中运行 mybot 并检查 odom 频率](images/gazebo_platform/runtime/01_gazebo_and_odom.png)
+
 启动系统后检查：
 
 ```bash
