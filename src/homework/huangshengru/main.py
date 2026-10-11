@@ -16,9 +16,9 @@ start_time = time.time()
 while True:
     t = (time.time() - start_time) % cycle_time
     if t < 3:
-        v = 8      # 0~3s ??
+        v = 8      # 0~3s 前进
     elif t < 6:
-        v = -8     # 3~6s ??
+        v = -8     # 3~6s 后退
 
     for joint in wheel_joints:
         p.setJointMotorControl2(robotId, joint, p.VELOCITY_CONTROL, targetVelocity=v, force=20)
