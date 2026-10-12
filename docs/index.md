@@ -47,6 +47,7 @@ ROS每章节运行代码:
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [Mujoco安装教程](./humanoid/mujoco_install_guide.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -65,6 +66,7 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
