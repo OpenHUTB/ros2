@@ -56,6 +56,7 @@ ROS每章节运行代码:
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [生成对象](./ground/carla_spawn_objects.md)
+* [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [路径点发布器](./ground/waypoint.md)
 * [自动驾驶代理](./ground/ad_agent.md)
@@ -65,12 +66,19 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+ 四旋翼无人机基于强化学习的路径规划
 * [AirSim + ROS 1 Noetic + PPO 实际联调](./air/airsim_rl_planner_ros1.md) —— 面向 Ubuntu 虚拟机和 Python 3.8 的桥接与模型推理实验。
 
+=======
+* [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
+
+* [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+ master
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
@@ -82,9 +90,13 @@ ROS每章节运行代码:
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
+* [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
+
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
+
+* [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
@@ -101,6 +113,8 @@ ROS每章节运行代码:
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
+
+* [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
 
 ___
 
