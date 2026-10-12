@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Standalone RViz demo for the AP-CPP planner.
+
+  Deliberately self-contained: it runs the planner headlessly against the
+  repository's field definition and publishes Path + MarkerArray for RViz.
+  There is no AirSim, no Unreal and no simulator connection anywhere in this
+  launch file, so it runs on any machine with a sourced ROS 1 environment.
+
+      roslaunch ap_cpp_ros rviz_demo.launch
+      roslaunch ap_cpp_ros rviz_demo.launch source:=geojson field:=002
+      roslaunch ap_cpp_ros rviz_demo.launch reference_only:=true
+-->
+<launch>
+  <arg name="source"         default="synthetic"
+       doc="field geometry source: synthetic | geojson"/>
+  <arg name="field"          default="002"
+       doc="field id, used when source:=geojson"/>
+  <arg name="resolution"     default="2.5"  doc="raster cell size [m]"/>
+  <arg name="altitude"       default="10.0" doc="flight altitude [m]"/>
+  <arg name="prior"          default="anomaly"
+       doc="uncertainty prior: none | anomaly | two_zones"/>
+  <arg name="reference_only" default="false"
+       doc="run the reference-only ablation instead of AP-CPP"/>
+  <arg name="decimate"       default="1"
+       doc="publish every Nth raster cell"/>
+  <arg name="republish"      default="0.0"
+       doc="seconds between republishes; 0 = publish once, latched"/>
+  <arg name="frame_id"       default="map" doc="RViz fixed frame"/>
+  <arg name="rviz"           default="true" doc="also start RViz"/>
+
+  <node pkg="ap_cpp_ros" type="ap_cpp_rviz_node.py" name="ap_cpp_rviz"
+        output="screen" required="true">
+    <param name="source"         value="$(arg source)"/>
+    <param name="field"          value="$(arg field)"/>
+    <param name="resolution"     value="$(arg resolution)"/>
+    <param name="altitude"       value="$(arg altitude)"/>
+    <param name="prior"          value="$(arg prior)"/>
+    <param name="decimate"       value="$(arg decimate)"/>
+    <param name="republish"      value="$(arg republish)"/>
+    <param name="frame_id"       value="$(arg frame_id)"/>
+    <param name="reference_only" value="$(arg reference_only)"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find ap_cpp_ros)/config/rviz_demo.rviz"/>
+</launch>
