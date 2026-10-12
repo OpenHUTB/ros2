@@ -1,0 +1,11 @@
+{
+  "package_location": "independent extracted submission directory in Ubuntu VM",
+  "unit_tests_passed": 4,
+  "colcon_packages_built": 1,
+  "sample_replay_state_messages": 281,
+  "forecast_messages": 100,
+  "delayed_error_messages": 274,
+  "horizons_seen_s": [0.25, 0.5, 1.0],
+  "median_inference_ms": 0.913644949958006,
+  "passed": true
+}
