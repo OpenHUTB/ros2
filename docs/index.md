@@ -112,6 +112,8 @@ ROS每章节运行代码:
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
 
+* [多智能体水域协同：领航-跟随编队控制](./water/rov_multi_agent_formation.md) —— 单场景多载具、按 `header.frame_id` 分发指令、编队误差量化与无仿真器回放验证
+
 ___
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
