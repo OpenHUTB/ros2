@@ -497,4 +497,3 @@ Gazebo 不会热加载模型，必须先 `killall gzserver gzclient`，再重新
 ---
 
 本章完成了阿克曼四轮小车从 xacro 建模、xacro 旧语法修复、ros_control 控制器配置、阿克曼运动解算与键盘遥控，到激光雷达自扫故障排查和三传感器数据验证的完整流程，全部实验结果均在 Ubuntu 20.04 + ROS Noetic 环境下复现通过，工程代码位于仓库 `src/chap7` 目录。
->>>>>>> 3059729b304e5e3fe43079d4fcefd559bbfb79a2
