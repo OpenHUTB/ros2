@@ -11,6 +11,16 @@
 # the run artefacts a reviewer would look for are missing, so a silent
 # `export_package.sh` is itself evidence that the pipeline was executed.
 #
+# The archive is written to ./dist/ , which is git-ignored along with
+# `logs/` and every checkpoint except `checkpoints/best_model.zip`.
+# Regenerate the whole thing from a clean clone with:
+#     pip install -r requirements.txt
+#     python scripts/pretrain_bc.py --use-cbf
+#     python scripts/train.py --policy ppo_lag --use-cbf \
+#         --init-from checkpoints/bc_warmstart_cbf.zip --normalize-reward
+#     python scripts/evaluate.py --model checkpoints/best_model.zip --use-cbf --figures
+#     ./export_package.sh
+#
 set -euo pipefail
 
 PKG_NAME="SafeDRL-DroneNav-ROS"
@@ -112,9 +122,13 @@ fi
 if [ "$MAKE_ARCHIVE" -eq 1 ]; then
   say "4. Building the submission archive"
   STAMP="$(date +%Y%m%d_%H%M%S)"
+  # The archive is written into ./dist/ , which is git-ignored on purpose:
+  # a packaged tarball is a build output, not source, and committing one is
+  # what bloated the repository in the first place.
+  mkdir -p "$HERE/dist"
   # Absolute path: the `tar` below runs inside $TMP, so a relative OUT would be
   # resolved against the temp directory and then deleted along with it.
-  OUT="$(cd .. && pwd)/${PKG_NAME}_${STAMP}.tar.gz"
+  OUT="$HERE/dist/${PKG_NAME}_${STAMP}.tar.gz"
   TMP="$(mktemp -d)"
   mkdir -p "$TMP/$PKG_NAME"
 
@@ -157,14 +171,14 @@ EOF
     echo "logs/eval_metrics_*_episodes.csv  per-episode detail"
     echo "logs/traces/*.npz                 raw per-step telemetry"
     echo "docs/figures/*.png                all report figures"
-    echo "checkpoints/*.zip                 trained weights"
+    echo "checkpoints/best_model.zip        best-scoring policy (the only weight in git)"
     echo
     echo "## Reproduce"
     echo "1. pip install -r requirements.txt"
     echo "2. python scripts/pretrain_bc.py --use-cbf           # warm start"
     echo "3. python scripts/train.py --policy ppo_lag --use-cbf \\"
     echo "       --init-from checkpoints/bc_warmstart_cbf.zip --normalize-reward"
-    echo "4. python scripts/evaluate.py --model checkpoints/ppo_lag_cbf_final.zip \\"
+    echo "4. python scripts/evaluate.py --model checkpoints/best_model.zip \\"
     echo "       --use-cbf --run-name ppo_lag_cbf --figures"
     echo "5. python scripts/make_report_figures.py --policy ppo_baseline \\"
     echo "       --policy ppo_lagrangian --policy ppo_lag_cbf"

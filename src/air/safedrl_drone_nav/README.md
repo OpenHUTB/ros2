@@ -209,6 +209,15 @@ At `lr = 3e-4` the 0.875-success warm start was destroyed within 20 k steps (suc
 Everything below is produced **automatically while the code runs** — nothing is
 hand-written afterwards.
 
+> **These artefacts are generated, not committed.** `logs/` (transcripts,
+> TensorBoard event files, `.npz` traces) is listed in `.gitignore`: it is
+> re-created by running the pipeline in §6, so shipping it in the repository
+> would only bloat clones with files that the next `train.py` run overwrites.
+> Only `checkpoints/best_model.zip` — the single best-scoring policy, kept so
+> the ROS node can be tested straight after a clone — is versioned. The full
+> original run artefacts are attached to the submission archive produced by
+> `export_package.sh` (see §6 and `docs/air/safedrl_drone_nav.md`).
+
 | Artefact | What it contains |
 |---|---|
 | `logs/train_execution.log` | Full terminal transcript (stdout **and** stderr), timestamped, including every rollout's `step / ep_rew_mean / ep_len_mean / pg_loss / value_loss / entropy / lambda / cost` |
@@ -272,7 +281,7 @@ training, so what is evaluated is what is deployed.
 ```bash
 # full loop: dummy plant + trained policy (one command)
 roslaunch safedrl_drone_nav navigate.launch \
-    model_path:=$(rospack find safedrl_drone_nav)/checkpoints/ppo_lagrangian_best.zip
+    model_path:=$(rospack find safedrl_drone_nav)/checkpoints/best_model.zip
 
 # communication smoke test - needs NO trained policy (falls back to pure pursuit)
 roslaunch safedrl_drone_nav smoke_test.launch
@@ -331,8 +340,8 @@ SafeDRL-DroneNav-ROS/
 │   ├── test_safety_filter.py   # 11 analytic tests of the projection maths
 │   ├── test_environment.py     # 8 closed-loop integration tests
 │   └── safety_filter.test      # rostest wiring
-├── checkpoints/                # trained weights (.zip)
-├── logs/                       # run traces: logs, TB, metrics, snippets
+├── checkpoints/                # ONLY best_model.zip is versioned (see §3)
+├── logs/                       # GENERATED, git-ignored: logs/TB/metrics/traces
 └── docs/figures/               # all report figures (200 dpi PNG)
 ```
 
@@ -359,7 +368,7 @@ python scripts/train.py --policy ppo_lag --use-cbf \
     --timesteps 90000 --run-name ppo_lagrangian --seed 12 --max-steps 700
 
 # 4. evaluation + figures
-python scripts/evaluate.py --model checkpoints/ppo_lagrangian_best.zip --use-cbf \
+python scripts/evaluate.py --model checkpoints/best_model.zip --use-cbf \
     --run-name ppo_lagrangian_cbf --episodes 24 --figures
 
 # 5. convergence + ablation figures from the artefacts
