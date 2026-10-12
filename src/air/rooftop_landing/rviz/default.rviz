@@ -23,12 +23,15 @@ Visualization Manager:
       Topic: /lidar/points
       Queue Size: 2
       Style: Points
-      Size (Pixels): 2
+      Size (Pixels): 3
       Color Transformer: AxisColor
       Axis: Z
+      # 让色标按实际点云的 z 范围自动计算：有的地图原点在地面之上几十米
+      # （实测点云 z≈−25），固定 −5~40 会让所有点挤在一端、几乎看不出高度差。
       Autocompute Value Bounds:
-        Min Value: -5
-        Max Value: 40
+        Min Value: -30
+        Max Value: 30
+        Value: true
       Position Transformer: XYZ
     - Class: rviz/MarkerArray
       Enabled: true
@@ -46,10 +49,11 @@ Visualization Manager:
     Current:
       Class: rviz/Orbit
       Distance: 60
+      # 对准地图原点（无人机起飞点），不假设「原点在地面高度上」
       Focal Point:
-        X: 10
-        Y: 10
-        Z: 5
+        X: 0
+        Y: 0
+        Z: 0
       Name: Current View
       Pitch: 0.6
       Yaw: 0.8

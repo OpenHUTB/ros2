@@ -7,10 +7,13 @@
 1. **RANSAC 拟合平面** —— 抗离群点，并在内点上做最小二乘精修；
 2. **水平性筛选** —— 只保留法向与竖直方向夹角 <= ``max_tilt_deg`` 的平面
    （屋顶、地面都属于水平面，靠高度与面积区分）；
-3. **屋顶轮廓** —— 把平面内点投影到水平面，取 2D 凸包；
-4. **降落点** —— 用 polylabel（**最大内切圆圆心**）求「离屋顶边缘最远」的点，
+3. **去掉地面** —— 默认按 ``min_height_mode="relative"``：以检出的最低水平面
+   （地面）为基准，丢掉与它高度差小于 ``ground_margin`` 的平面，因此**不要求
+   地图原点落在地面高度上**（换地图实测过的坑，详见 :func:`detect_rooftops`）；
+4. **屋顶轮廓** —— 把平面内点投影到水平面，取 2D 凸包；
+5. **降落点** —— 用 polylabel（**最大内切圆圆心**）求「离屋顶边缘最远」的点，
    这正是安全降落点：四周余量最大，最不容易撞到女儿墙或掉下去；
-5. **打分选优** —— 综合内切圆半径、面积、高度（越高越像屋顶而不是地面）排序。
+6. **打分选优** —— 综合内切圆半径、面积、高度（越高越像屋顶而不是地面）排序。
 
 本模块只有 numpy 依赖、不 ``import rospy``，因此可以在没有 ROS / 仿真器的
 机器上做完整回归测试，见仓库 ``tests/test_rooftop_landing_local.py``。
@@ -327,7 +330,8 @@ def split_clusters_2d(points, cell=1.0, min_points=2):
 def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
                     min_area=8.0, min_inliers=120, max_planes=5,
                     min_height=0.5, rng=None,
-                    cluster_cell=1.0, cluster_min_points=2):
+                    cluster_cell=1.0, cluster_min_points=2,
+                    min_height_mode="relative", ground_margin=1.0, info=None):
     """从点云中找出所有「水平候选面」，按高度从高到低返回列表。
 
     每个元素::
@@ -335,19 +339,41 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
         {
           "normal": (3,), "d": float, "height": float,
           "area": float, "hull": (M,2) ndarray,
-          "landing_point": (x, y), "radius": float, "inliers": (N,) bool,
+          "landing_point": (x, y), "radius": float,
         }
 
     求凸包之前会先用 :func:`split_clusters_2d` 把平面上互不相连的点群拆开
     （``cluster_cell`` / ``cluster_min_points``），因此**一个平面可能产生多个
     候选屋顶** —— 既滤掉了零星离群点，也把相邻的两栋楼分成两个独立候选。
+
+    **高度下限 ``min_height_mode``**（地面与屋顶都是水平面，只能靠高度区分）：
+
+    ``"relative"``（默认）
+        以**点云里检出的最低水平面（地面）**为基准，丢弃与它高度差小于
+        ``ground_margin`` 的平面。换地图、原点不在作业现场也能直接用。
+        实测教训：某地图的原点在地面之上约 25 m，所有平面高度都是 −25 左右，
+        固定阈值 ``min_height=0.5`` 会把**每一个**候选面都滤掉，日志表现为
+        「检测到 0 个候选水平面」，无人机一直不动；而把阈值放到 −1000 之后
+        **地面又被当成屋顶**，会在地面上"降落"。
+        只有提取到 **2 个及以上**水平面时才把最低的那个当基准 —— 只有一个
+        水平面时无从判断它是地面还是屋顶，此时不做高度过滤。
+    ``"absolute"``
+        直接用 ``min_height`` 作为绝对 ENU 高度下限（旧行为），
+        适合原点就在地面高度上的地图。
+
+    传入 ``info`` 字典（可选）可取出本次判定依据::
+
+        info["planes"]     提取到的水平面个数
+        info["floor_ref"]  地面参考高度（relative 模式下有效，否则 None）
+        info["threshold"]  实际生效的高度下限
     """
     pts = np.asarray(points, dtype=np.float64)
     if pts.ndim != 2 or pts.shape[1] < 3:
         return []
-    remaining = pts.copy()
-    results = []
 
+    # ---- 第一阶段：把水平面全部提出来（先不做高度过滤，好判断地面在哪）----
+    remaining = pts.copy()
+    planes = []
     for _ in range(int(max_planes)):
         if len(remaining) < min_inliers:
             break
@@ -355,21 +381,41 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
                                  min_inliers=min_inliers, rng=rng)
         if plane is None:
             break
-        if plane_tilt_deg(plane["normal"]) > max_tilt_deg:
-            # 非水平面：剔除其内点后继续找下一个平面
-            remaining = remaining[~plane["inliers"]]
-            continue
-
-        height = plane_height(plane["normal"], plane["d"])
-        if not math.isfinite(height) or height < min_height:
-            remaining = remaining[~plane["inliers"]]
-            continue
-
         plane_pts = remaining[plane["inliers"]]
+        remaining = remaining[~plane["inliers"]]
+        if plane_tilt_deg(plane["normal"]) > max_tilt_deg:
+            continue                      # 非水平面（墙、坡面、树冠）
+        height = plane_height(plane["normal"], plane["d"])
+        if not math.isfinite(height):
+            continue
+        planes.append({"normal": plane["normal"], "d": plane["d"],
+                       "height": float(height), "points": plane_pts})
+
+    # ---- 高度下限：相对地面 or 绝对 ----
+    floor_ref = None
+    if min_height_mode == "relative":
+        if len(planes) >= 2:
+            floor_ref = min(p["height"] for p in planes)
+            threshold = floor_ref + abs(ground_margin)
+        else:
+            # 只有一个水平面，无从判断它是地面还是屋顶 ⇒ 不做过高度滤
+            threshold = float("-inf")
+    else:
+        threshold = min_height
+    if info is not None:
+        info["planes"] = len(planes)
+        info["floor_ref"] = floor_ref
+        info["threshold"] = float(threshold)
+
+    # ---- 第二阶段：过滤 + 连通域拆分 + 凸包 + 最大内切圆 ----
+    results = []
+    for plane in planes:
+        if plane["height"] < threshold:
+            continue
         # 鲁棒性：先把平面上互不相连的点群拆开，各自求凸包。
         # 否则少数远处的高程噪点（或邻近楼顶）会把凸包撑开，
         # 使「最大内切圆圆心」落到真实屋顶之外。
-        for cluster in split_clusters_2d(plane_pts, cell=cluster_cell,
+        for cluster in split_clusters_2d(plane["points"], cell=cluster_cell,
                                          min_points=cluster_min_points):
             if len(cluster) < min_inliers:
                 continue
@@ -379,10 +425,9 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
                 continue
             (lx, ly), radius = polylabel([hull], precision=0.05)
             results.append({"normal": plane["normal"], "d": plane["d"],
-                            "height": float(height), "area": float(area),
+                            "height": plane["height"], "area": float(area),
                             "hull": hull, "landing_point": (float(lx), float(ly)),
-                            "radius": float(radius), "inliers": plane["inliers"]})
-        remaining = remaining[~plane["inliers"]]
+                            "radius": float(radius)})
 
     results.sort(key=lambda r: r["height"], reverse=True)
     return results
@@ -392,14 +437,20 @@ def select_landing_target(rooftops, current_xy=None, prefer="highest",
                           min_radius=0.6, max_distance=None):
     """从候选屋顶里选一个降落目标，返回元素或 None。
 
+    ``min_radius`` 是**硬性安全约束**：内切圆半径小于它的候选一律不用；
+    一个候选都不满足时返回 ``None``，由调用方继续搜索。早期版本在这种情况下
+    会**回退到全部候选**，等于让无人机落在一个四周余量不足的屋顶上，
+    与「安全半径」的初衷相反，已去掉。
+
     ``prefer``:
         ``"highest"``   —— 选最高的（最像「屋顶」而不是「地面」）
         ``"closest"``   —— 选离当前位置水平距离最近的
         ``"largest"``   —— 选内切圆半径最大的（最安全的）
+
+    ``max_distance`` 是**软约束**：只在存在满足者时用来缩小范围，都不满足时
+    仍在全部候选里挑，避免因为屋顶都偏远就彻底放弃降落。
     """
     cands = [r for r in rooftops if r["radius"] >= min_radius]
-    if not cands:
-        cands = list(rooftops)
     if not cands:
         return None
 

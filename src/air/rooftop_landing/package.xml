@@ -29,6 +29,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
+  <!-- launch/main.launch 默认 use_rviz:=true，会启动 rviz 节点 -->
+  <exec_depend>rviz</exec_depend>
 
   <export/>
 </package>

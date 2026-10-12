@@ -5,7 +5,8 @@
 假桥接层替代真实仿真器，负责：
   * 20 Hz 发布 /uav/odom      —— ENU（z 向上为正，与 carlair_ros_bridge 一致），初始 15 m 高度
   * 10 Hz 发布 /lidar/points  —— ENU（z 向上为正），8 m 高的 8x8 m 屋顶 + z=0 地面
-  * 收到 /uav/goal 后瞬移到目标点上方，并回报 /uav/status = GOAL_DONE
+  * 收到 /uav/goal 后瞬移到目标点上方，并回报 /uav/status =
+    "GOAL_DONE <x> <y> <z>"（**与真实 carlair_ros_bridge 的格式一致，带三个坐标**）
   * 把 /uav/cmd_vel.linear.z 积分进高度，于是节点真的能一层层降下去
 
 输出：节点状态机全过程（抓 /rosout）+ 最终高度，用来证明整条链路可用。
@@ -139,7 +140,14 @@ def main():
             sys.stdout.flush()
 
         if goal_at is not None and (now - goal_at) > 0.6:
-            pub_status.publish(String("GOAL_DONE"))
+            # ⚠️ 必须与真实 carlair_ros_bridge 完全一致：状态词后面带三个坐标
+            # （cmd_vel_sub.py 发的是 "GOAL_DONE %.2f %.2f %.2f" % target，其中
+            # target 就是**它收到的那个目标点**，不是到达后的实测位置）。
+            # 早期这里只发一个裸词 "GOAL_DONE"，于是掩盖了节点用
+            # `status == "GOAL_DONE"` 全串比较的 bug —— 假桥接测试通过、真机必挂；
+            # 而上报实测位置又会和节点下发的目标点对不上（节点靠坐标分辨
+            # 「这条到达状态是不是自己的目标点」）。
+            pub_status.publish(String("GOAL_DONE %.2f %.2f %.2f" % (g[0], g[1], g[2])))
 
         odo = Odometry()
         odo.header.stamp = rospy.Time.now()

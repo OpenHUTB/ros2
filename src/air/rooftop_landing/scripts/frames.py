@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""坐标与点云工具（纯函数，不依赖 ROS，可离线回归测试）。
+"""坐标、点云与桥接状态工具（纯函数，不依赖 ROS，可离线回归测试）。
 
 carlair_ros_bridge 发布的世界系点云与里程计为 ENU 约定：
     x 指向东, y 指向北, z 指向上（单位 m）
@@ -115,3 +115,63 @@ def to_altitude_frame(z_up_value, z_up=True):
     """把「上为正的高度」转换回该仿真器约定的原始分量，用于下发目标点。"""
     z = float(z_up_value)
     return z if z_up else -z
+
+
+# --------------------------------------------------------------------------- #
+# 桥接层状态字符串
+# --------------------------------------------------------------------------- #
+def status_token(text):
+    """从桥接层状态字符串里取出**状态词**（第一个空白分隔的词），大写。
+
+    ``carlair_ros_bridge`` 的 ``/uav/status`` 并不总是只发一个词：
+    ``cmd_vel_sub.py`` 到达目标点时发的是::
+
+        "GOAL_DONE %.2f %.2f %.2f" % target      # 例：GOAL_DONE -1.43 0.14 -20.08
+
+    即状态词后面还带三个坐标。所以判断状态必须取第一个词，
+    用 ``text == "GOAL_DONE"`` 这种全串比较在真机上永远不成立
+    （实测：目标点下发后一直等不到，直到 ``approach/goal_timeout`` 超时进 ABORT）。
+
+    空串、全空白、``None`` 都返回 ``""``，调用方不必再做保护。
+    """
+    if not text:
+        return ""
+    parts = str(text).strip().split()
+    return parts[0].upper() if parts else ""
+
+
+def status_values(text):
+    """取出状态字符串里状态词**后面的数字**（没有则返回空元组）。
+
+    ``carlair_ros_bridge`` 到达目标点时发的是::
+
+        "GOAL_DONE %.2f %.2f %.2f" % target
+
+    这三个数就是桥接**实际完成的那个目标点**。把它和本节点下发的目标点比对，
+    就能分辨这条 ``GOAL_DONE`` 到底是不是自己的 —— 实测踩过的坑：先手动
+    ``rostopic pub /uav/goal`` 让飞机爬升，再把本节点拉起来，本节点会把那次
+    爬升的 ``GOAL_DONE`` 当成「我到了」，于是**在错误的位置原地下降**，
+    直到 ``descend/timeout`` 超时才 ABORT。
+    """
+    out = []
+    for part in str(text or "").strip().split()[1:]:
+        try:
+            out.append(float(part))
+        except ValueError:
+            pass
+    return tuple(out)
+
+
+def goal_matches(status_values_xyz, sent_goal, tol=0.5):
+    """带坐标的 ``GOAL_DONE`` 是否对应本节点下发的目标点。
+
+    * 状态里**没有**坐标（旧版桥接只发一个裸词）-> 无从区分来源，返回 True，
+      保持兼容，行为与只看状态词一致；
+    * 有坐标 -> 三个分量都要落在 ``tol`` 米以内才算自己的。
+    """
+    if not status_values_xyz or sent_goal is None:
+        return True
+    if len(status_values_xyz) < 3 or len(sent_goal) < 3:
+        return True
+    return all(abs(float(a) - float(b)) <= abs(tol)
+               for a, b in zip(status_values_xyz[:3], sent_goal[:3]))
