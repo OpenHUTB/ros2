@@ -106,6 +106,14 @@ nav:
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 基于 AirSim 仿真环境，用神经网络实现无人机的四种控制:
+        - 总览: 'homework/getting-started/install.md'
+        - 任务1 键盘控制: 'air/airsim_controller/tasks/task1_keyboard.md'
+        - 任务2 感知与轨迹控制: 'air/airsim_controller/tasks/task2_perception.md'
+        - 任务3 SLAM 导航: 'air/airsim_controller/tasks/task3_slam_nav.md'
+        - 任务4 端到端模型: 'air/airsim_controller/tasks/task4_e2e.md'
+
+
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
