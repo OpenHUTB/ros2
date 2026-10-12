@@ -1,22 +1,22 @@
 
 # 空域载具 - 无人机飞行轨迹类型识别与 ROS2 自动任务日志
 
-## 一、作业概述与背景
+## 作业概述与背景
 本模块基于 ROS 2 实现了一套无人机飞行轨迹类型识别系统。系统通过发布节点模拟无人机飞行指令，接收节点实时订阅数据，并自动识别当前的飞行状态（直线、旋转、悬停），同时实时绘制飞行轨迹图并生成自动任务日志。
 
-## 二、运行环境
+## 运行环境
 * 操作系统：Ubuntu 22.04（虚拟机）
 * ROS 2 版本：Humble
 * 依赖库：rclpy, geometry_msgs, matplotlib
 
-## 三、核心代码文件清单
+## 核心代码文件清单
 本模块包含以下核心文件：
 * `trajectory_publisher.py`：模拟无人机飞行轨迹发布节点。
 * `trajectory_analyzer.py`：轨迹识别、绘图与日志记录节点。
 
-## 四、核心代码内容
+## 核心代码内容
 
-### 1. trajectory_publisher.py（发布节点）
+### 1.trajectory_publisher.py（发布节点）
 ```python
 import rclpy
 from rclpy.node import Node
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     main()
 ```
 
-2. trajectory_analyzer.py（识别与绘图节点）
+### 2. trajectory_analyzer.py（识别与绘图节点）
 
 ```python
 import rclpy
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     main()
 ```
 
-## 五、运行步骤
+## 运行步骤
 
 在终端中依次执行以下命令进行编译和运行：
 
@@ -133,13 +133,13 @@ cd ~/my_ws/src/drone_trajectory_logger
 python3 trajectory_analyzer.py
 ```
 
-六、运行效果与验证（截图）
+## 运行效果与验证（截图）
 
-https://github.com/Rafaye-71-star/ros2/blob/master/capture_2.png
+![运行效果图](./img/capture_2.png)
 
 效果说明：发布节点成功发送不同的飞行指令，识别节点成功解析并打印出对应的飞行状态日志，同时基于实时数据绘制了飞行轨迹图（椭圆），验证了轨迹识别与自动日志记录功能的正确性。
 
-## 七、提交信息（Commit Message / PR 描述）
+## 提交信息（Commit Message / PR 描述）
 
 ```text
 feat(air): 新增无人机飞行轨迹类型识别与自动任务日志模块
