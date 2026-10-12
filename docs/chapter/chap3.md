@@ -91,7 +91,7 @@ sed -n '1,220p' "$(ros2 pkg prefix --share ros_gz_sim_demos)/launch/camera.launc
 
 - Gazebo 窗口：左上角为世界视图（网格地面、红色方块、绿色小球、交通锥），右上角 Image display 插件实时显示 `/camera` 画面。
 
-![Gazebo 仿真相机场景（Image display 显示 /camera 实时画面）](img/stage1_camera_sim.png)
+![Gazebo 仿真中 /camera 话题实时画面显示效果](img/camera_sim.png)
 
 - RViz2 窗口自动打开，Camera 与 Image 两个显示面板均订阅 `/camera`，Status 显示 Ok，右下角帧率约 31 fps。
 
