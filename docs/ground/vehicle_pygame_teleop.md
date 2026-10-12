@@ -106,6 +106,24 @@ roslaunch vehicle_pygame_teleop main.launch
 > 的指令并给出 "Did not yet receive vehicle info." 警告，属正常现象，待 ros-bridge
 > 生成自车后自动开始工作。
 
+## 运行效果（CARLA 0.9.16 实测）
+
+以下画面为 CARLA 0.9.16（Town10HD_Opt）中的实机运行：自车（Tesla Model 3）
+由本功能包发出的键盘控制指令驱动，在城区道路行驶、停靠。
+
+![CARLA 实机运行](../img/ground/vehicle_pygame_teleop_carla.gif)
+
+![CARLA 实机运行静帧](../img/ground/vehicle_pygame_teleop_carla.png)
+
+实测数据：
+
+| 项 | 实测 |
+| --- | --- |
+| 速度指令上限 | 10 m/s（`/carla/ego_vehicle/twist`，30Hz） |
+| 自车实际峰值速度 | 14.6 m/s |
+| 加减速行为 | 平滑，无跳变（油门/刹车指令速率限制 4/8 m/s²） |
+| 急停与退出 | 零 Twist → CARLA 侧全力刹停 |
+
 ## 按键说明
 
 | 按键 | 作用 |
