@@ -30,7 +30,7 @@ import numpy as np
 
 # 让脚本在未 colcon build 的情况下也能 import 到包内模块
 _PACKAGE_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'src', 'carla_yolo_avoidance')
+    os.path.join(os.path.dirname(__file__), '..')
 )
 if _PACKAGE_ROOT not in sys.path:
     sys.path.insert(0, _PACKAGE_ROOT)

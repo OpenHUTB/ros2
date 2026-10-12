@@ -234,18 +234,42 @@ CarlaUE4.exe -carla-port=2000
 ### 5.3 步骤 1：安装依赖
 
 ```bash
-# ① Python 依赖
-pip3 install --user --break-system-packages ultralytics "numpy<2"
-# ② CARLA 0.9.16 客户端（PyPI 官方提供 cp310 wheel）
-python3 -m pip install --user --break-system-packages carla==0.9.16
-# ③ torch/torchvision 版本对（CPU 虚拟机）：
-#    出现 "operator torchvision::nn does not exist" 时按此重装
+# 0) 先升级 pip（Ubuntu 22.04 自带 pip 22.0.2 不支持 --break-system-packages，
+#    不升级会直接报 usage 错误）
+python3 -m pip install --user --upgrade pip
+
+# 1) torch/torchvision 版本对（必须先装：ultralytics 默认会拉最新 torch，
+#    与 torchvision 不匹配，运行时报 "operator torchvision::nn does not exist"）
 python3 -m pip install --user --break-system-packages torch==2.2.2 torchvision==0.17.2 --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cpu
+
+# 2) Python 依赖（numpy<2 与 torch 2.2.2 兼容）
+python3 -m pip install --user --break-system-packages ultralytics "numpy<2"
+
+# 3) CARLA 0.9.16 客户端（PyPI 官方提供 cp310 wheel，与 Python 3.10 匹配）
+python3 -m pip install --user --break-system-packages carla==0.9.16
 ```
 
 ### 5.4 步骤 2：编译本功能包（ROS 2）
 
-本仓库 `src/ground/carla_yolo_avoidance/` 即 ROS 2 功能包，克隆后在工作空间根目录编译：
+本仓库 `src/ground/carla_yolo_avoidance/` 即 ROS 2 功能包。先把仓库克隆到工作空间的 `src/` 下：
+
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone https://github.com/OpenHUTB/ros2.git      # 换成你自己的 fork 亦可
+```
+
+目录关系如下，`colcon build` 必须在**工作空间根目录**执行：
+
+```
+~/ros2_ws/                                   <- 工作空间根目录，colcon 在这里运行
+└── src/
+    └── ros2/                                <- 本仓库（git clone 得到）
+        └── src/ground/
+            └── carla_yolo_avoidance/        <- 本模块源代码
+```
+
+因此后文写的 `src/ground/carla_yolo_avoidance/...`，实际路径是
+`~/ros2_ws/src/ros2/src/ground/carla_yolo_avoidance/...`。编译并激活环境：
 
 ```bash
 cd ~/ros2_ws
@@ -260,7 +284,7 @@ source install/setup.bash
 ```yaml
 /carla_camera_node:
   ros__parameters:
-    carla_host: "<宿主机IP>"    # 虚拟机里填 Windows 宿主机 VMnet8 地址（ipconfig 查看）
+    carla_host: "<宿主机IP>"    # 客户端与 CARLA 不在同一台机器时，填运行 CARLA 那台机器的 IP（宿主机执行 ipconfig 查看）
     carla_port: 2000            # 与启动 CARLA 的 -carla-port 一致
 ```
 
@@ -278,7 +302,9 @@ python3 -c "import carla; c=carla.Client('<宿主机IP>',2000); c.set_timeout(10
 
 ```bash
 ros2 launch carla_yolo_avoidance carla_yolo_avoidance.launch.py
-# 同时可打开 RViz 查看原图与检测框
+# 虚拟机无 3D 加速、RViz 打不开时，可关闭 RViz（不影响感知-避障逻辑）：
+ros2 launch carla_yolo_avoidance carla_yolo_avoidance.launch.py use_rviz:=false
+# 需要单独看 RViz 时：
 rviz2 -d src/ground/carla_yolo_avoidance/rviz/carla_yolo.rviz
 ```
 
@@ -314,9 +340,9 @@ rviz2 -d src/ground/carla_yolo_avoidance/rviz/carla_yolo.rviz
 | 现象 | 解决 |
 |---|---|
 | `ModuleNotFoundError: No module named 'carla'` | 确认 `pip3 install carla==0.9.16` 与运行节点用**同一解释器** |
-| `operator torchvision::nn does not exist` | torch/torchvision 版本不匹配，按 5.3 ③ 重装版本对 |
+| `operator torchvision::nn does not exist` | torch/torchvision 版本不匹配，按 5.3 步骤 1 重装版本对 |
 | `Failed to initialize NumPy: _ARRAY_API not found` | numpy ≥ 2 与 torch 2.2.2 冲突，装 `numpy<2` |
-| 连接超时（`time-out`） | `params.yaml` 中 `carla_host` 填错：虚拟机的**网关 ≠ 宿主机**，应填 Windows VMnet8 地址（如 `192.168.211.1`） |
+| 连接超时（`time-out`） | `params.yaml` 中 `carla_host` 填错：应填**运行 CARLA 的宿主机**的 IP，而不是客户端机器的网关 IP；宿主机上执行 `ipconfig` 查看其 IP |
 | 一直刹停、日志报「检测数据超时」 | CPU 推理较慢导致超时时，适当调大 `config.py` 中 `DETECTION_STALE_TIMEOUT_S`（当前 5.0 s）后重新 `colcon build` |
 
 ---
