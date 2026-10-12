@@ -107,7 +107,7 @@ nav:
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 基于 AirSim 仿真环境，用神经网络实现无人机的四种控制:
-        - 总览: 'homework/getting-started/install.md'
+        - 总览: 'air/airsim_controller/getting-started/install.md'
         - 任务1 键盘控制: 'air/airsim_controller/tasks/task1_keyboard.md'
         - 任务2 感知与轨迹控制: 'air/airsim_controller/tasks/task2_perception.md'
         - 任务3 SLAM 导航: 'air/airsim_controller/tasks/task3_slam_nav.md'
