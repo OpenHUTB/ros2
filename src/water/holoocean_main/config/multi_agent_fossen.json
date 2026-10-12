@@ -1,0 +1,58 @@
+{
+    "name": "multi_agent_fossen",
+    "package_name": "TestWorlds",
+    "world": "TestWorld",
+    "main_agent": "auv0",
+    "ticks_per_sec": 30,
+    "frames_per_sec": 30,
+    "agents": [
+        {
+            "agent_name": "auv0",
+            "agent_type": "TorpedoAUV",
+            "sensors": [
+                {
+                    "sensor_type": "DynamicsSensor",
+                    "sensor_name": "DynamicsSensor",
+                    "configuration": {
+                        "UseCOM": true,
+                        "UseRPY": false
+                    },
+                    "ros_publish": true
+                },
+                {
+                    "sensor_type": "DepthSensor",
+                    "sensor_name": "DepthSensor",
+                    "ros_publish": true
+                }
+            ],
+            "fossen_model": "torpedo",
+            "control_scheme": 1,
+            "location": [0, 0, -10],
+            "rotation": [0, 0, 0]
+        },
+        {
+            "agent_name": "auv1",
+            "agent_type": "TorpedoAUV",
+            "sensors": [
+                {
+                    "sensor_type": "DynamicsSensor",
+                    "sensor_name": "DynamicsSensor",
+                    "configuration": {
+                        "UseCOM": true,
+                        "UseRPY": false
+                    },
+                    "ros_publish": true
+                },
+                {
+                    "sensor_type": "DepthSensor",
+                    "sensor_name": "DepthSensor",
+                    "ros_publish": true
+                }
+            ],
+            "fossen_model": "torpedo",
+            "control_scheme": 1,
+            "location": [-3, 0, -10],
+            "rotation": [0, 0, 0]
+        }
+    ]
+}
