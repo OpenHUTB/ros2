@@ -9,7 +9,7 @@
 
        可选参数示例：
          roslaunch rooftop_landing main.launch safe_altitude:=6.0 prefer:=closest
-         roslaunch rooftop_landing main.launch z_up:=false      # 若高度是 NED
+         roslaunch rooftop_landing main.launch z_up:=false      # 若桥接层高度是 NED 下为正
          roslaunch rooftop_landing main.launch use_rviz:=false  # 不开 RViz
        ============================================================ -->
 
@@ -17,7 +17,7 @@
   <arg name="descend_speed" default="0.5"     doc="垂直下降速度 (m/s)"/>
   <arg name="prefer"        default="highest" doc="目标屋顶策略 highest|closest|largest"/>
   <arg name="autostart"     default="true"    doc="启动后是否自动开始任务"/>
-  <arg name="z_up"          default="false"   doc="高度分量是否上为正（ENU）；实测桥接层为 NED 下为正，故默认 false"/>
+  <arg name="z_up"          default="true"    doc="高度分量是否上为正（ENU）；实测 carlair_ros_bridge 为 ENU，故默认 true"/>
   <arg name="use_rviz"      default="true"    doc="是否同时启动 RViz"/>
 
   <rosparam command="load" file="$(find rooftop_landing)/config/rooftop_landing.yaml"/>

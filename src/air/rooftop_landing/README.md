@@ -87,8 +87,8 @@ roslaunch rooftop_landing main.launch
 节点会依次输出：
 
 ```
-[INFO] [rooftop_landing] 已启动，状态=DETECT，高度约定 z_up=False
-[INFO] [rooftop_landing] odom 原始高度 z=-1.20 -> 换算高度 1.20 m（z_up=False）
+[INFO] [rooftop_landing] 已启动，状态=DETECT，高度约定 z_up=True
+[INFO] [rooftop_landing] odom 原始高度 z=1.20 -> 换算高度 1.20 m（z_up=True）
 [INFO] [rooftop_landing] 点云 9xxx 点，检测到 3 个候选水平面
 [INFO] [rooftop_landing] 选中屋顶：高度 15.xx m，面积 28x.x m^2，降落点 (20.1, 15.2)，内切圆半径 8.7 m
 [INFO] [rooftop_landing] 下发目标点 (20.10, 15.20, -20.30)，即屋顶上方 5.0 m
@@ -121,7 +121,7 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 
 | 参数 | 默认 | 说明 |
 |---|---|---|
-| `frame/z_up` | `false` | 高度分量是否「上为正」。**实测桥接层为下为正**，故默认 false |
+| `frame/z_up` | `true` | 高度分量是否「上为正」。**实测 carlair_ros_bridge 为 ENU（上为正）**，故默认 true；换用别的桥接层且方向不符时再改 |
 | `frame/world` | `world` | marker 与状态话题的 `frame_id` |
 | `perception/accumulate_frames` | 3 | 累积多少帧点云后再做一次检测 |
 | `perception/max_tilt_deg` | 15.0 | 平面水平性阈值（度） |
@@ -155,7 +155,7 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 
 ```bash
 roslaunch rooftop_landing main.launch safe_altitude:=6.0 prefer:=closest
-roslaunch rooftop_landing main.launch z_up:=true          # 若高度是 ENU 上为正
+roslaunch rooftop_landing main.launch z_up:=false         # 若桥接层高度是 NED 下为正
 ```
 
 ---
@@ -235,7 +235,7 @@ RANSAC 平面拟合精度、凸包与面积、polylabel 圆心与半径、点–
 ### 8.2 闭环仿真冒烟测试（有 ROS 即可，不需要仿真器）
 
 `tests/test_rooftop_landing_ros_sim.py` 自带一个**假桥接层**：它按 20 Hz 发 `/uav/odom`
-（NED，下为正）、按 10 Hz 发 `/lidar/points`（8 m 高的 8×8 m 屋顶 + 地面），收到
+（ENU，上为正）、按 10 Hz 发 `/lidar/points`（8 m 高的 8×8 m 屋顶 + 地面），收到
 `/uav/goal` 后瞬移到目标点上方并回报 `GOAL_DONE`，再把 `/uav/cmd_vel.linear.z`
 积分进高度 —— 于是节点能真的从 15 m 一层层降到屋顶，整条链路闭环。
 
@@ -252,7 +252,7 @@ python3 tests/test_rooftop_landing_ros_sim.py
 
 ```
 [bridge] 合成点云 2097 点（屋顶 1089 点 z=8.0 m，8x8 m；地面 1008 点 z=0）
-[node] odom 原始高度 z=-15.00 -> 换算高度 15.00 m（z_up=False）
+[node] odom 原始高度 z=15.00 -> 换算高度 15.00 m（z_up=True）
 [node] 点云 2097 点，检测到 1 个候选水平面
 [node] 选中屋顶：高度 8.00 m，面积 64.0 m^2，降落点 (8.00, 0.00)，内切圆半径 4.00 m
 [node] 下发目标点 (8.00, 0.00, -13.00)，即屋顶上方 5.0 m
@@ -278,10 +278,10 @@ python3 tests/test_rooftop_landing_ros_sim.py
 | 降落点选到了地面而不是屋顶 | `min_height` 太小。实测地面为 0 m，把 `perception/min_height` 提到 1.0 以上 |
 | 降落点落到了屋顶外面（像是在街上） | 平面上混进了远处同高度的噪点，把凸包撑开了。检查 `perception/cluster_cell`（默认 1.0 m）和 `perception/cluster_min_points`（默认 2）是不是被改得过小；点云很稀疏时可把 `cluster_cell` 调大一些 |
 | 目标点下发后无人机不动 | 桥接层没在跑或 `/uav/status` 不是 `GOAL_DONE`；先确认 `roslaunch carlair_ros_bridge main.launch` 已启动 |
-| 无人机往下飞变成了往上飞 | 高度约定反了。看日志里 `odom 原始高度` 的正负，然后 `z_up:=true` 或 `false` |
+| 无人机往下飞变成了往上飞 | 高度约定反了。看日志里 `odom 原始高度` 的正负：原始值为负说明桥接层是 NED，把 `frame/z_up` 改成 `false` |
 | `接近超时，进入 ABORT` | 目标点太远或桥接限速。调大 `approach/goal_timeout` 或把 `safe_altitude` 调小 |
 | 一直停在 `DESCEND` | 高度容差太严。调大 `descend/tolerance`；确认 `landing_alt` 与实际屋顶高度一致 |
-| 用 `rosrun ... _frame/z_up:=false` 覆盖不生效 | **实测**：`rosrun` 传这种**嵌套私有参数**不会覆盖 `frame/z_up`，节点仍按默认 `z_up=true` 运行，于是高度取反、`remain` 变成负数并瞬间误判 `LANDED`。请统一用 `roslaunch rooftop_landing main.launch` 启动，参数走 `config/rooftop_landing.yaml` |
+| 用 `rosrun ... _frame/z_up:=false` 覆盖不生效 | **实测**：`rosrun` 传这种**嵌套私有参数**不会覆盖 `frame/z_up`，节点只按 `config/rooftop_landing.yaml` 里的值运行。若桥接层的高度方向恰好与该值相反，就会出现高度取反、`remain` 变成负数并瞬间误判 `LANDED`。请统一用 `roslaunch rooftop_landing main.launch` 启动，参数走配置文件 |
 | 屋顶高度被识别成负数 | `frame/z_up` **只作用于 `/uav/odom` 与 `/uav/goal`**，点云始终按 ENU（z 向上为正）解析。若桥接层发出的点云是 NED，需要先在桥接层把点云转成 ENU |
 
 ---

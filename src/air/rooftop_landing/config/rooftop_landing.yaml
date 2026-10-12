@@ -12,10 +12,12 @@ topic:
 frame:
   # true : 高度分量「上为正」（标准 ENU）
   # false: 高度分量「下为正」（NED，AirSim 原始约定）
-  # 实测 carlair_ros_bridge 的 /uav/odom 在无人机悬停约 1.2 m 时输出 z=-1.20，
-  # 且 /uav/goal 的 z=-8.0 表示飞到 8 m 高 —— 即「下为正」，故默认 false。
-  # 节点启动后会打印原始 z 与换算结果；若发现方向不符，改这里或 launch 的 z_up 参数。
-  z_up: false
+  # carlair_ros_bridge 的 /uav/odom 与 /uav/goal 都是 ENU（上为正）：
+  #   · 桥接层源码用 move_to_position_enu()，日志也打印「收到目标点 ENU」；
+  #   · 实测：无人机在 13.3 m 高度时 /uav/odom 的 z = +13.3。
+  # 故默认 true。节点启动后会打印原始 z 与换算结果；
+  # 若换用别的桥接层且高度方向不符，再改这里或 launch 的 z_up 参数。
+  z_up: true
   world: world                # marker / 状态话题的 frame_id
 
 # ---- 感知 ----
