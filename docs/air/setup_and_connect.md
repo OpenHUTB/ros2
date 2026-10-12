@@ -78,4 +78,5 @@ python3 hello_drone.py --host<此处替换为你的宿主机IP>
 
 ## 参考
 
+* [配置 AirSim 客户端环境并连接模拟器](./airsim_client_setup.md)（Windows 本机直连、WSL2 安装、Miniconda 环境与 41451 端口配置）
 * [Airsim in Windows with WSL2-ubuntu-ROS](https://zhuanlan.zhihu.com/p/609326694)
