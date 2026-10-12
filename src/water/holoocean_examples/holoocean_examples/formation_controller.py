@@ -45,10 +45,16 @@ class FormationController(Node):
         self.declare_parameter('speed_gain', 120.0)       # 每米误差增加的 RPM
         self.declare_parameter('max_standoff', 12.0)      # 超过该距离只追不充
         self.declare_parameter('use_leader_feedforward', True)  # 用领航者速度做前馈
+        self.declare_parameter('max_rpm', 1525.0)               # Fossen 鱼雷模型的 RPM 上限
         self.declare_parameter('depth_min', 0.5)
         self.declare_parameter('depth_max', 20.0)
-        self.declare_parameter('yaw_sign', 1.0)
-        self.declare_parameter('depth_sign', 1.0)
+        # 实测标定（HoloOcean Fossen 鱼雷）：航向 0°=+x、90°=-y，即 y 轴取反；
+        # 深度指令为正值向下，而场景 z 向下为负，故两者都需要取反
+        self.declare_parameter('yaw_sign', -1.0)
+        self.declare_parameter('depth_sign', -1.0)
+        self.declare_parameter('leader_drive', False)      # 由本节点按脚本驱动领航者
+        self.declare_parameter('leader_depth', 10.0)       # 领航者深度指令（正值向下）
+        self.declare_parameter('leader_rpm', 900.0)
         self.declare_parameter('set_autopilot_on_start', True)
         self.declare_parameter('draw_targets', True)
 
@@ -67,6 +73,7 @@ class FormationController(Node):
         self.max_standoff = float(p('max_standoff').value)
         self.dmin = float(p('depth_min').value)
         self.dmax = float(p('depth_max').value)
+        self.max_rpm = float(p('max_rpm').value)
         self.yaw_sign = float(p('yaw_sign').value)
         self.depth_sign = float(p('depth_sign').value)
 
@@ -97,6 +104,7 @@ class FormationController(Node):
         self.get_logger().info(
             'formation_controller 就绪：leader=%s followers=%s offsets=%s'
             % (self.leader, self.followers, self.offsets))
+        self._t0 = None
 
     # ------------------------------------------------------------------ 回调
     def _odom_cb(self, name, msg):
@@ -110,21 +118,36 @@ class FormationController(Node):
             self.leader_speed = math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2)
 
     def _arm_once(self):
-        """把跟随者切到 depthHeadingAutopilot（mode=1）。"""
+        """把跟随者（以及需要本节点驱动的领航者）切到 depthHeadingAutopilot（mode=1）。"""
         if not self.cli.service_is_ready():
             return
-        for name in self.followers:
+        targets = list(self.followers)
+        if bool(self.get_parameter('leader_drive').value) and self.leader not in targets:
+            targets.append(self.leader)
+        for name in targets:
             req = SetControlMode.Request()
             req.vehicle_name = name
             req.mode = 1
             self.cli.call_async(req)
-        self.get_logger().info('已请求将跟随者切换为 depthHeadingAutopilot')
+        if self.cli.service_is_ready():
+            self.get_logger().info('已请求切换自动驾驶模式: %s' % targets)
 
     # ------------------------------------------------------------------ 主循环
     def _tick(self):
         if self.leader not in self.odom:
             self.get_logger().warn('尚未收到领航者里程计，等待中…', once=False)
             return
+
+        # 可选：由本节点驱动领航者，让实验可复现（0-20 s 直行 → 20-34 s 左转 → 之后直行）
+        if bool(self.get_parameter('leader_drive').value):
+            now = self.get_clock().now()
+            if self._t0 is None:
+                self._t0 = now
+            t = (now - self._t0).nanoseconds / 1e9
+            heading = 0.0 if t < 20.0 else 90.0
+            self._send(self.pub_heading, self.leader, heading)
+            self._send(self.pub_depth, self.leader, float(self.get_parameter('leader_depth').value))
+            self._send(self.pub_speed, self.leader, float(self.get_parameter('leader_rpm').value))
 
         lx, ly, lz, lyaw = self.odom[self.leader]
         targets = []
@@ -156,6 +179,8 @@ class FormationController(Node):
             if bool(self.get_parameter('use_leader_feedforward').value):
                 ff = self.k_speed * min(max(self.leader_speed, 0.0), self.max_standoff)
             speed = 0.0 if dist < 0.15 else ff + self.cruise + self.k_speed * min(dist, self.max_standoff)
+            # Fossen 接口会校验 RPM 区间（鱼雷模型 0-1525），超限会抛异常并让桥接节点退出
+            speed = max(0.0, min(speed, self.max_rpm))
 
             # 4) 下发（以 header.frame_id 指定目标载具）
             self._send(self.pub_heading, name, heading_deg)
