@@ -1,0 +1,45 @@
+{
+  "page_status": 200,
+  "home_link": true,
+  "old_and_new_test_results_visible": true,
+  "images": [
+    {
+      "path": "air/uav_flight_pattern_recognition/dashboard_window.png",
+      "status": 200,
+      "bytes": 99783
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/architecture.png",
+      "status": 200,
+      "bytes": 86605
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/test_set_comparison.png",
+      "status": 200,
+      "bytes": 69608
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/loss.png",
+      "status": 200,
+      "bytes": 95455
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/confusion_matrix.png",
+      "status": 200,
+      "bytes": 107167
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/prediction_timeline.png",
+      "status": 200,
+      "bytes": 121429
+    },
+    {
+      "path": "air/uav_flight_pattern_recognition/airsim_scene.png",
+      "status": 200,
+      "bytes": 50062
+    }
+  ],
+  "serve_mode": "mkdocs serve --livereload",
+  "desktop_browser_visual_review": true,
+  "date": "2026-10-03"
+}

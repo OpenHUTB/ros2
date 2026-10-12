@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-08",
+  "module": "state_prediction",
+  "lark_version": "1.1.9",
+  "lark_import_file": "/home/user/uav_prediction_env/lib/python3.8/site-packages/lark/__init__.py",
+  "doctor_passed": true,
+  "colcon_build_passed": true,
+  "unit_tests_passed": 4,
+  "requirements_install": "pip --no-index --find-links wheels -r requirements.txt; existing dependencies reused; only Lark wheel downloaded",
+  "missing_lark_failure_reproduced": true,
+  "scope": "existing Ubuntu VM; new source directories; not a clean OS installation",
+  "demo_passed": true,
+  "ros_flow": {
+    "state_count": 281,
+    "forecast_count": 78,
+    "error_count": 233,
+    "horizons_seen": [
+      1.0,
+      0.25,
+      0.5
+    ],
+    "median_inference_ms": 1.217186499957279,
+    "passed": true
+  },
+  "missing_lark_reproduction_method": "fresh subprocess with lark import deliberately blocked; actual host previously had system lark 0.8.1; repaired path verified with venv-installed 1.1.9"
+}
