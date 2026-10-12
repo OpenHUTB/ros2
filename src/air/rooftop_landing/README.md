@@ -248,7 +248,7 @@ roslaunch rooftop_landing main.launch use_rviz:=false
 python3 tests/test_rooftop_landing_ros_sim.py
 ```
 
-预期结尾（实测输出）：
+预期结尾：
 
 ```
 [bridge] 合成点云 2097 点（屋顶 1089 点 z=8.0 m，8x8 m；地面 1008 点 z=0）
