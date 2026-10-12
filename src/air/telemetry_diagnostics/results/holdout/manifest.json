@@ -1,0 +1,632 @@
+[
+  {
+    "episode": "episode_100",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_clean_0.0"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_freeze_0.0"
+  },
+  {
+    "episode": "episode_100",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "82f6ba0d15547b8d306fb04941e778d836d1f1d5ae6aaf69ef2b67b8a708836b",
+    "path": "data/holdout_scenarios/episode_100_dropout_0.0"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_clean_0.0"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_freeze_0.0"
+  },
+  {
+    "episode": "episode_101",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "cc49e424518ef5edcf79a66d756e9c24991366cba1ffcca8fcc56ac84eb3baa8",
+    "path": "data/holdout_scenarios/episode_101_dropout_0.0"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_clean_0.0"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_freeze_0.0"
+  },
+  {
+    "episode": "episode_102",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "59842403ca77a40f4c476430fb99fa37a4bbb85ea76b6663f55de49d93be1e40",
+    "path": "data/holdout_scenarios/episode_102_dropout_0.0"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_clean_0.0"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_freeze_0.0"
+  },
+  {
+    "episode": "episode_103",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "a99c70bf574a9ce6e1dae7b97ab8805e16d1a4fb8156521fcf6ec4e7e4720ed1",
+    "path": "data/holdout_scenarios/episode_103_dropout_0.0"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_clean_0.0"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_freeze_0.0"
+  },
+  {
+    "episode": "episode_104",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "4696c67c6a0e0b186e70634131731c3901d2ec1e556b82572439e473e4d912fd",
+    "path": "data/holdout_scenarios/episode_104_dropout_0.0"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_clean_0.0"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_freeze_0.0"
+  },
+  {
+    "episode": "episode_105",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "05c6087470be380d49e895a8ec27118558fcee073a055815962a698425f9d155",
+    "path": "data/holdout_scenarios/episode_105_dropout_0.0"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_clean_0.0"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_freeze_0.0"
+  },
+  {
+    "episode": "episode_106",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "aede0950343a6a778c861bed0043e7bab96826747ea4d235e829d140dc5535f8",
+    "path": "data/holdout_scenarios/episode_106_dropout_0.0"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_clean_0.0"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_freeze_0.0"
+  },
+  {
+    "episode": "episode_107",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "0e587c80165344c3e41bbbbef7432f50371152bf23c49689cd99172fe1a538f5",
+    "path": "data/holdout_scenarios/episode_107_dropout_0.0"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_clean_0.0"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_freeze_0.0"
+  },
+  {
+    "episode": "episode_108",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "a8acb752186b67c25568289471170231656834967f98b369fe9724a6b13f9241",
+    "path": "data/holdout_scenarios/episode_108_dropout_0.0"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "clean",
+    "severity": 0.0,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_clean_0.0"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "smooth_position_drift",
+    "severity": 0.03,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_smooth_position_drift_0.03"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "smooth_position_drift",
+    "severity": 0.1,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_smooth_position_drift_0.1"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "smooth_position_drift",
+    "severity": 0.3,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_smooth_position_drift_0.3"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "velocity_bias",
+    "severity": 0.03,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_velocity_bias_0.03"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "velocity_bias",
+    "severity": 0.1,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_velocity_bias_0.1"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "velocity_bias",
+    "severity": 0.3,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_velocity_bias_0.3"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "freeze",
+    "severity": 0.0,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_freeze_0.0"
+  },
+  {
+    "episode": "episode_109",
+    "kind": "dropout",
+    "severity": 0.0,
+    "source_sha256": "5b0757846274b911f5cd9c28b0ea3bf170534d3206894b026af13c478bc5888e",
+    "path": "data/holdout_scenarios/episode_109_dropout_0.0"
+  }
+]
