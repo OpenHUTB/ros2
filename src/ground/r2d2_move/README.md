@@ -21,7 +21,7 @@ pip install pybullet
 1. 打开 Ubuntu 终端，切换到代码目录
 
 ```bash
-cd src/homework/huangshengru
+cd src/ground/r2d2_move
 ```
 
 2. 执行程序

@@ -4,7 +4,7 @@
 
 ## 作业
 
-* [黄盛儒：R2D2小车 前进后退循环仿真](docs/homework/huangshengru/README.md)
+* [黄盛儒：R2D2小车 前进后退循环仿真](docs/ground/r2d2_move.md)
 
 ## 环境配置
 
@@ -32,4 +32,3 @@
 
 * 每次合并到主分支之前需要至少一名其他人 测试并同意（另一台机器修改部分的运行结果）
 * Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up).
-
