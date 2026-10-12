@@ -1,10 +1,9 @@
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist
+import rospy
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
+from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 
 class AvoidNet(nn.Module):
     def __init__(self):
@@ -17,31 +16,33 @@ class AvoidNet(nn.Module):
     def forward(self,x):
         return self.net(x)
 
-class NNAvoidNode(Node):
+class NNAvoidNode():
     def __init__(self):
-        super().__init__("nn_avoid_node")
-        self.pub = self.create_publisher(Twist,"/cmd_vel",10)
-        self.sub = self.create_subscription(LaserScan,"/scan",self.scan_cb,10)
+        # 加载模型
         self.model = AvoidNet()
         self.model.load_state_dict(torch.load("model.pth"))
         self.model.eval()
+        # 订阅激光雷达
+        self.sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
+        # 发布小车速度
+        self.pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
 
-    def scan_cb(self,msg):
-        scan = np.array(msg.ranges[::10])[:8]
+    def scan_cb(self, msg):
+        # 取8个激光点，和你原来逻辑保持一致
+        scan = np.array(msg.ranges[::10][:8])
         scan = np.clip(scan,0,10)
         tensor = torch.from_numpy(scan.astype(np.float32)).unsqueeze(0)
-        res = self.model(tensor).detach().numpy()[0]
+        with torch.no_grad():
+            res = self.model(tensor).detach().numpy()[0]
         twist = Twist()
         twist.linear.x = float(res[0])
         twist.angular.z = float(res[1])
         self.pub.publish(twist)
 
 def main():
-    rclpy.init()
+    rospy.init_node("nn_avoid_node")
     node = NNAvoidNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    rospy.spin()
 
 if __name__=="__main__":
     main()
