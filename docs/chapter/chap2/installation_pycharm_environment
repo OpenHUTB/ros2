@@ -1,0 +1,25 @@
+# 搭建 PyCharm 环境
+
+---
+
+## 一. 先更新系统 + 安装 Python 环境
+Ubuntu20.04 自带 Python3.8，但建议先装 pip。
+
+1.首先更新软件源，打开命令行输入`sudo apt update && sudo apt upgrade -y`
+
+2.安装python3、pip、开发依赖,打开命令行输入`sudo apt install python3 python3-pip python3-dev python3-venv git -y`
+
+3.查看版本，打开命令行输入`python3 --version`和`pip3 --version`
+
+结果如图：![查看版本结果](../../img/code/chap2/python_version_and_pip_version.png)
+## 二.官网下载 PyCharm
+1.打开官网：[https://www.jetbrains.com/pycharm/download/],选择 Community 社区版（免费开源），下载 `.tar.gz(linux)` 压缩包
+
+2.解压到 `opt`（系统软件目录）,假设下载到 `~/Downloads`,打开命令行输入：`cd ~/Downloads`,然后输入`sudo tar -zxvf *.tar.gz -C /opt/`,把*号替换为下载的版本名称。
+
+## 三.启动 PyCharm
+进入解压目录的bin文件夹,打开命令行输入:`cd /opt/*/bin/(把*号替换为下载的版本名称)`,然后输入`./pycharm.sh`
+
+第一次启动会弹出初始化窗口：1.导入设置选择 `Do not import settings`,2.同意协议，之后可以创建桌面快捷方式,在 PyCharm 界面内：`Tools -> Create Desktop Entry`，勾选即可
+
+结果如图：![运行画面](../../img/code/chap2/pycharm_running_screen_status.png)
