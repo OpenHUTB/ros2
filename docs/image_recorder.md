@@ -58,7 +58,7 @@ if __name__ == '__main__':
     main()
 ```
 
-2. setup.py（配置文件）
+### 2. setup.py（配置文件）
 
 ```python
 from setuptools import setup
@@ -91,7 +91,7 @@ setup(
 )
 ```
 
-3. main.launch.py（启动文件）
+### 3. main.launch.py（启动文件）
 
 ```python
 from launch import LaunchDescription
