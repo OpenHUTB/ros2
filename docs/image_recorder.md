@@ -36,7 +36,7 @@ class ImageRecorder(Node):
         self.bridge = CvBridge()
         self.get_logger().info('Node started, waiting for images...')
 
-    def listener_callback(self, msg):
+     def listener_callback(self, msg):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             cv2.imshow("Image Recorder", cv_image)
@@ -46,14 +46,14 @@ class ImageRecorder(Node):
                 self.get_logger().info('Saved as capture.jpg')
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
-def main(args=None):
-    rclpy.init(args=args)
-    image_recorder = ImageRecorder()
-    rclpy.spin(image_recorder)
-    image_recorder.destroy_node()
-    rclpy.shutdown()
-if __name__ == '__main__':
-    main()
+     def main(args=None):
+        rclpy.init(args=args)
+        image_recorder = ImageRecorder()
+        rclpy.spin(image_recorder)
+        image_recorder.destroy_node()
+        rclpy.shutdown()
+     if __name__ == '__main__':
+        main()
 ```
 
 ### 2. setup.py（配置文件）
