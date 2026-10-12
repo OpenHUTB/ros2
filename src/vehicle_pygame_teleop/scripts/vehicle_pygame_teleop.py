@@ -5,7 +5,7 @@
 键盘 → 指令平滑（30Hz）→ /carla/ego_vehicle/twist → carla_twist_to_control
      → /carla/ego_vehicle/vehicle_control_cmd → CARLA 0.9.16 中的自车。
 
-物理仿真由 CARLA 提供，本节点只生成控制指令（不含任何仿真）。
+物理仿真由 CARLA 提供，本节点只生成控制指令。
 
 按键：W/↑ 加速，S/↓ 刹车（静止后倒车），A/← 左转，D/→ 右转，
       空格 急停（零 Twist 在 CARLA 侧为全力刹车），ESC/关窗/Ctrl+C 退出并发布零速度。
@@ -52,7 +52,7 @@ class TeleopCar:
         self.speed = 0.0    # 速度指令，负值为倒车 (m/s)
         self.steer = 0.0    # 转向指令 (rad)
 
-        # 关停时（Ctrl+C 等）保证最后一条指令为零速度
+        # 关停时保证最后一条指令为零速度
         rospy.on_shutdown(self.on_ros_shutdown)
 
     def publish_zero(self, wait=True):
@@ -67,7 +67,7 @@ class TeleopCar:
         self.publish_zero(wait=False)
 
     def update_command(self, dt, keys):
-        """按按键更新速度/转向指令（带平滑；车辆运动本身由 CARLA 仿真）。"""
+        """按按键更新速度/转向指令（带平滑）。"""
         if keys[pygame.K_SPACE]:
             # 急停
             if self.speed > 0:
@@ -99,7 +99,7 @@ class TeleopCar:
             self.steer = max(target_steer, self.steer - STEER_RATE * dt)
 
     def draw_panel(self):
-        """状态面板：当前指令、话题与按键提示（本节点无仿真画面）。"""
+        """状态面板：当前指令、话题与按键提示。"""
         self.screen.fill(COLOR_BG)
         pygame.draw.rect(self.screen, COLOR_PANEL,
                          pygame.Rect(10, 10, WINDOW_W - 20, WINDOW_H - 20))

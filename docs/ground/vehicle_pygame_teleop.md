@@ -108,8 +108,7 @@ roslaunch vehicle_pygame_teleop main.launch
 
 ## 运行效果（CARLA 0.9.16 实测）
 
-以下画面为 CARLA 0.9.16（Town10HD_Opt）中的实机运行：自车（Tesla Model 3）
-由本功能包发出的键盘控制指令驱动，在城区道路行驶、停靠。
+CARLA 0.9.16（Town10HD_Opt）实机运行：自车由本功能包驱动，在城区道路行驶。
 
 ![CARLA 实机运行](../img/ground/vehicle_pygame_teleop_carla.gif)
 
