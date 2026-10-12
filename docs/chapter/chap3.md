@@ -95,7 +95,7 @@ sed -n '1,220p' "$(ros2 pkg prefix --share ros_gz_sim_demos)/launch/camera.launc
 
 - RViz2 窗口自动打开，Camera 与 Image 两个显示面板均订阅 `/camera`，Status 显示 Ok，右下角帧率约 31 fps。
 
-![RViz2 中 Camera 与 Image 面板显示 /camera 实时画面](img/stage1_rviz.png)
+![RViz2 显示 /camera 实时画面](img/rviz.png)
 
 ## 5. 实测结果
 
