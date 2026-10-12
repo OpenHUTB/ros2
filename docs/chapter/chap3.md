@@ -338,7 +338,7 @@ src/nn_avoidance
 │  ├─ test.py           # 模型测试脚本，校验网络输出
 │  └─ infer_node.py     # ROS核心节点，订阅雷达数据，推理输出小车速度
 └─ launch
-   └─ avoid.launch.py   # launch一键启动避障节点
+   └─ avoid.launch   # launch一键启动避障节点
 ```
 
 ### 11.2 额外环境依赖
@@ -346,7 +346,7 @@ src/nn_avoidance
 在原有 Gazebo‑ROS 仿真环境基础上，还需要安装深度学习库：
 
 pip3 install torch numpy
-
+sudo apt install python3-rospkg
 ### 11.3 操作步骤
 
 1. 编译功能包
@@ -365,9 +365,17 @@ python3 src/nn_avoidance/nn_avoidance/train.py
 
 python3 src/nn_avoidance/nn_avoidance/test.py
 
-5. Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
+5.新开终端启动Gazebo仿真环境，自动生成带激光雷达的Turtlebot3小车
 
-roslaunch nn_avoidance avoid.launch.py
+export TURTLEBOT3_MODEL=burger
+roslaunch turtlebot3_gazebo turtlebot3_world.launch
+Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
+
+6.在新开终端，刷新环境变量，运行避障节点。
+
+cd ~/catkin_ws
+source devel/setup.bash
+roslaunch nn_avoidance avoid.launch
 
 ### 11.4 代码功能说明
 
@@ -376,8 +384,8 @@ roslaunch nn_avoidance avoid.launch.py
 2. **test.py**
 加载已经训练好的模型权重，输入一组模拟雷达数据，打印网络输出速度，用来验证模型文件是否可以正常加载。
 3. **infer_node.py**
-ROS 业务节点：订阅激光雷达话题 `/scan`；截取 8 组雷达测距信息送入神经网络；网络输出线速度、角速度，发布到 `/cmd_vel`，控制仿真小车运动，实现自主避障。
-4. **avoid.launch.py**
+ROS 业务节点：订阅激光雷达话题 `/scan`；截取 8 组雷达测距信息送入神经网络；网络输出线速度、角速度，发布到 `/cmd_vel`，控制仿真小车运动，实现自主避障。使用rospkg库动态获取功能包路径，自动定位model.pth模型文件，不使用硬编码绝对路径，保证项目在不同电脑环境下均可运行。
+4. **avoid.launch**
 launch 启动文件，简化操作，一键启动神经网络避障推理节点。
 
 ### 11.5 项目原理
