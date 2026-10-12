@@ -91,6 +91,7 @@ nav:
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
 - 空域载具:
+    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
