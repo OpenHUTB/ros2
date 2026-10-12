@@ -170,7 +170,7 @@ d < 8 m ───► FULL_BRAKE   ── 油门 0 / 刹车 1.0
 | `main.py` | 入口 | 统一入口，按角色启动对应节点 |
 
 **设计要点**：测距、检测后处理、决策三块写成**不导入 rclpy 的纯函数**，既能在 ROS 节点中使用，
-也能被单元测试与离线自检工具（`tools/carla_yolo_smoke_test.py`）直接调用——**测过的就是跑着的**。
+也能被单元测试与离线自检工具（`src/ground/carla_yolo_avoidance/tools/carla_yolo_smoke_test.py`）直接调用——**测过的就是跑着的**。
 
 ---
 
@@ -220,7 +220,18 @@ python3 -m pytest src/ground/carla_yolo_avoidance/test -v
     本模块验证使用的组合为 **torch 2.2.2 + torchvision 0.17.2 + numpy 1.26.x**。
     numpy 必须 < 2，否则 torch 2.2.2 导入时报 `_ARRAY_API not found`。
 
-### 5.2 步骤 1：安装依赖
+### 5.2 步骤 0：启动 CARLA 服务端
+
+在运行 CARLA 服务端的机器（宿主机）上，进入 CARLA 0.9.16 解压目录，执行：
+
+```bash
+CarlaUE4.exe -carla-port=2000
+```
+
+端口参数 `-carla-port` 必须与 `config/params.yaml` 中的 `carla_port` 一致（本模块按仓库约定使用 **2000**）。
+服务端窗口出现 `Waiting for external commands...` 后，再继续后续步骤。
+
+### 5.3 步骤 1：安装依赖
 
 ```bash
 # ① Python 依赖
@@ -232,7 +243,7 @@ python3 -m pip install --user --break-system-packages carla==0.9.16
 python3 -m pip install --user --break-system-packages torch==2.2.2 torchvision==0.17.2 --index-url https://mirror.sjtu.edu.cn/pytorch-wheels/cpu
 ```
 
-### 5.3 步骤 2：编译本功能包（ROS 2）
+### 5.4 步骤 2：编译本功能包（ROS 2）
 
 本仓库 `src/ground/carla_yolo_avoidance/` 即 ROS 2 功能包，克隆后在工作空间根目录编译：
 
@@ -242,7 +253,7 @@ colcon build --packages-select carla_yolo_avoidance --symlink-install
 source install/setup.bash
 ```
 
-### 5.4 步骤 3：配置 CARLA 连接（唯一需要改的地方）
+### 5.5 步骤 3：配置 CARLA 连接（唯一需要改的地方）
 
 修改 `src/ground/carla_yolo_avoidance/config/params.yaml`：
 
@@ -250,20 +261,20 @@ source install/setup.bash
 /carla_camera_node:
   ros__parameters:
     carla_host: "<宿主机IP>"    # 虚拟机里填 Windows 宿主机 VMnet8 地址（ipconfig 查看）
-    carla_port: 3000            # 与启动 CARLA 的 -carla-port 一致
+    carla_port: 2000            # 与启动 CARLA 的 -carla-port 一致
 ```
 
 改完**无需修改任何 Python 源码、无需重新编译**。
 
-### 5.5 步骤 4：验证连接
+### 5.6 步骤 4：验证连接
 
 ```bash
-python3 -c "import carla; c=carla.Client('<宿主机IP>',3000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"
+python3 -c "import carla; c=carla.Client('<宿主机IP>',2000); c.set_timeout(10); print('CONNECT OK:', c.get_world().get_map().name)"
 ```
 
 输出 `CONNECT OK: Carla/Maps/Town10HD_Opt` 即连接成功。
 
-### 5.6 步骤 5：运行
+### 5.7 步骤 5：运行
 
 ```bash
 ros2 launch carla_yolo_avoidance carla_yolo_avoidance.launch.py
@@ -271,7 +282,7 @@ ros2 launch carla_yolo_avoidance carla_yolo_avoidance.launch.py
 rviz2 -d src/ground/carla_yolo_avoidance/rviz/carla_yolo.rviz
 ```
 
-### 5.7 运行效果
+### 5.8 运行效果
 
 下图为运行时的检测画面、避障过程与最终测试画面，截图存放于 `../img/ground/`：
 
@@ -298,15 +309,15 @@ rviz2 -d src/ground/carla_yolo_avoidance/rviz/carla_yolo.rviz
 [decision_control_node] 决策=SLOW_DOWN 油门 0.00 刹车 0.35 转向 0.00   ← 避障生效
 ```
 
-### 5.8 常见问题
+### 5.9 常见问题
 
 | 现象 | 解决 |
 |---|---|
 | `ModuleNotFoundError: No module named 'carla'` | 确认 `pip3 install carla==0.9.16` 与运行节点用**同一解释器** |
-| `operator torchvision::nn does not exist` | torch/torchvision 版本不匹配，按 5.2 ③ 重装版本对 |
+| `operator torchvision::nn does not exist` | torch/torchvision 版本不匹配，按 5.3 ③ 重装版本对 |
 | `Failed to initialize NumPy: _ARRAY_API not found` | numpy ≥ 2 与 torch 2.2.2 冲突，装 `numpy<2` |
 | 连接超时（`time-out`） | `params.yaml` 中 `carla_host` 填错：虚拟机的**网关 ≠ 宿主机**，应填 Windows VMnet8 地址（如 `192.168.211.1`） |
-| 一直刹停、日志报「检测数据超时」 | CPU 推理慢于 1.0 s 阈值：把 `config.py` 中 `DETECTION_STALE_TIMEOUT_S` 调大（如 5.0）后重新 `colcon build` |
+| 一直刹停、日志报「检测数据超时」 | CPU 推理较慢导致超时时，适当调大 `config.py` 中 `DETECTION_STALE_TIMEOUT_S`（当前 5.0 s）后重新 `colcon build` |
 
 ---
 

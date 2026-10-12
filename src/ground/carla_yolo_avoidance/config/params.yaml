@@ -25,8 +25,8 @@
     carla_host: "127.0.0.1"
 
     # CARLA 服务端端口，必须与启动 CARLA 时 -carla-port 指定的端口一致。
-    # 整数，不要写成 "3000" 这种带引号的字符串。
-    carla_port: 3000
+    # 整数，不要写成 "2000" 这种带引号的字符串。
+    carla_port: 2000
 
 /yolo_detect_node:
   ros__parameters:
