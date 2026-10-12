@@ -1,0 +1,19 @@
+running develop
+running egg_info
+creating uav_keyboard_control.egg-info
+writing uav_keyboard_control.egg-info/PKG-INFO
+writing dependency_links to uav_keyboard_control.egg-info/dependency_links.txt
+writing entry points to uav_keyboard_control.egg-info/entry_points.txt
+writing requirements to uav_keyboard_control.egg-info/requires.txt
+writing top-level names to uav_keyboard_control.egg-info/top_level.txt
+writing manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'
+reading manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'
+writing manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/sousa/ros2-old/install/uav_keyboard_control/lib/python3.8/site-packages/site.py
+Creating /home/sousa/ros2-old/install/uav_keyboard_control/lib/python3.8/site-packages/uav-keyboard-control.egg-link (link to .)
+Installing uav_key script to /home/sousa/ros2-old/install/uav_keyboard_control/bin
+
+Installed /home/sousa/ros2-old/build/uav_keyboard_control
+running symlink_data
+symbolically linking /home/sousa/ros2-old/build/uav_keyboard_control/package.xml -> /home/sousa/ros2-old/install/uav_keyboard_control/share/uav_keyboard_control

@@ -1,0 +1,112 @@
+[0.000000] (-) TimerEvent: {}
+[0.000259] (-) JobUnselected: {'identifier': 'ap_cpp_ros'}
+[0.000931] (-) JobUnselected: {'identifier': 'carla_ackermann_control'}
+[0.001019] (-) JobUnselected: {'identifier': 'carla_ackermann_msgs'}
+[0.001072] (-) JobUnselected: {'identifier': 'carla_ad_agent'}
+[0.001188] (-) JobUnselected: {'identifier': 'carla_ad_demo'}
+[0.001266] (-) JobUnselected: {'identifier': 'carla_common'}
+[0.001319] (-) JobUnselected: {'identifier': 'carla_manual_control'}
+[0.001372] (-) JobUnselected: {'identifier': 'carla_msgs'}
+[0.001569] (-) JobUnselected: {'identifier': 'carla_ros_bridge'}
+[0.001623] (-) JobUnselected: {'identifier': 'carla_ros_scenario_runner'}
+[0.001676] (-) JobUnselected: {'identifier': 'carla_ros_scenario_runner_types'}
+[0.001729] (-) JobUnselected: {'identifier': 'carla_spawn_objects'}
+[0.001782] (-) JobUnselected: {'identifier': 'carla_twist_to_control'}
+[0.001834] (-) JobUnselected: {'identifier': 'carla_walker_agent'}
+[0.001887] (-) JobUnselected: {'identifier': 'carla_waypoint_publisher'}
+[0.001940] (-) JobUnselected: {'identifier': 'carla_waypoint_types'}
+[0.002033] (-) JobUnselected: {'identifier': 'example_interfaces'}
+[0.002086] (-) JobUnselected: {'identifier': 'follower_velocity_smoother'}
+[0.002138] (-) JobUnselected: {'identifier': 'holoocean_examples'}
+[0.002203] (-) JobUnselected: {'identifier': 'holoocean_interfaces'}
+[0.002257] (-) JobUnselected: {'identifier': 'holoocean_main'}
+[0.002309] (-) JobUnselected: {'identifier': 'learning_communication'}
+[0.002361] (-) JobUnselected: {'identifier': 'learning_tf'}
+[0.002448] (-) JobUnselected: {'identifier': 'marm_description'}
+[0.002501] (-) JobUnselected: {'identifier': 'marm_description'}
+[0.002554] (-) JobUnselected: {'identifier': 'marm_gazebo'}
+[0.002606] (-) JobUnselected: {'identifier': 'marm_gazebo'}
+[0.002659] (-) JobUnselected: {'identifier': 'marm_moveit_config'}
+[0.002711] (-) JobUnselected: {'identifier': 'marm_moveit_config'}
+[0.002764] (-) JobUnselected: {'identifier': 'marm_planning'}
+[0.002816] (-) JobUnselected: {'identifier': 'marm_planning'}
+[0.002868] (-) JobUnselected: {'identifier': 'mbot_bringup'}
+[0.002940] (-) JobUnselected: {'identifier': 'mbot_description'}
+[0.003019] (-) JobUnselected: {'identifier': 'mbot_description'}
+[0.003072] (-) JobUnselected: {'identifier': 'mbot_description'}
+[0.003124] (-) JobUnselected: {'identifier': 'mbot_description'}
+[0.003177] (-) JobUnselected: {'identifier': 'mbot_follower'}
+[0.003230] (-) JobUnselected: {'identifier': 'mbot_gazebo'}
+[0.003282] (-) JobUnselected: {'identifier': 'mbot_gazebo'}
+[0.003334] (-) JobUnselected: {'identifier': 'mbot_gazebo'}
+[0.003387] (-) JobUnselected: {'identifier': 'mbot_navigation'}
+[0.003485] (-) JobUnselected: {'identifier': 'mbot_teleop'}
+[0.003538] (-) JobUnselected: {'identifier': 'mbot_teleop'}
+[0.003590] (-) JobUnselected: {'identifier': 'mbot_teleop'}
+[0.003645] (-) JobUnselected: {'identifier': 'mbot_with_arm_moveit_config'}
+[0.003705] (-) JobUnselected: {'identifier': 'octree_uav_3d_pathfinding'}
+[0.003758] (-) JobUnselected: {'identifier': 'pcl_recorder'}
+[0.003811] (-) JobUnselected: {'identifier': 'pr2_moveit_config'}
+[0.003899] (-) JobUnselected: {'identifier': 'robot_vision'}
+[0.004137] (-) JobUnselected: {'identifier': 'robot_voice'}
+[0.004193] (-) JobUnselected: {'identifier': 'ros2_demo'}
+[0.004246] (-) JobUnselected: {'identifier': 'ros_compatibility'}
+[0.004298] (-) JobUnselected: {'identifier': 'rov_mujoco'}
+[0.004351] (-) JobUnselected: {'identifier': 'rqt_carla_control'}
+[0.004403] (-) JobUnselected: {'identifier': 'rviz_carla_plugin'}
+[0.004477] (-) JobUnselected: {'identifier': 'service_demo'}
+[0.004530] (-) JobUnselected: {'identifier': 'service_interfaces'}
+[0.004586] (-) JobUnselected: {'identifier': 'turtle_hutb'}
+[0.004639] (-) JobUnselected: {'identifier': 'turtle_sim_experiment'}
+[0.004692] (-) JobUnselected: {'identifier': 'turtle_text'}
+[0.004746] (uav_keyboard_control) JobQueued: {'identifier': 'uav_keyboard_control', 'dependencies': OrderedDict()}
+[0.004801] (uav_keyboard_control) JobStarted: {'identifier': 'uav_keyboard_control'}
+[0.100001] (-) TimerEvent: {}
+[0.202285] (-) TimerEvent: {}
+[0.303281] (-) TimerEvent: {}
+[0.403833] (-) TimerEvent: {}
+[0.504883] (-) TimerEvent: {}
+[0.606214] (-) TimerEvent: {}
+[0.708085] (-) TimerEvent: {}
+[0.808993] (-) TimerEvent: {}
+[0.912107] (-) TimerEvent: {}
+[1.013143] (-) TimerEvent: {}
+[1.113714] (-) TimerEvent: {}
+[1.214871] (-) TimerEvent: {}
+[1.316085] (-) TimerEvent: {}
+[1.417841] (-) TimerEvent: {}
+[1.518453] (-) TimerEvent: {}
+[1.618865] (-) TimerEvent: {}
+[1.720304] (-) TimerEvent: {}
+[1.730786] (uav_keyboard_control) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/home/sousa/ros2-old/build/uav_keyboard_control/build', '--no-deps', 'symlink_data'], 'cwd': '/home/sousa/ros2-old/build/uav_keyboard_control', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:zh'), ('USER', 'sousa'), ('FONTCONFIG_PATH', '/etc/fonts'), ('GIO_MODULE_DIR', '/home/sousa/snap/code/common/.cache/gio-modules'), ('SSH_AGENT_PID', '1245'), ('ROS_PACKAGE_PATH', '/opt/ros/noetic/share'), ('XDG_SESSION_TYPE', 'x11'), ('GIT_ASKPASS', '/snap/code/268/usr/share/code/resources/app/extensions/git/dist/askpass.sh'), ('GTK_EXE_PREFIX_VSCODE_SNAP_ORIG', ''), ('GDK_BACKEND_VSCODE_SNAP_ORIG', ''), ('ROS_ETC_DIR', '/opt/ros/noetic/etc/ros'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib:/opt/ros/noetic/lib'), ('HOME', '/home/sousa'), ('CHROME_DESKTOP', 'code_code.desktop'), ('LOCPATH_VSCODE_SNAP_ORIG', ''), ('OLDPWD', '/home/sousa'), ('TERM_PROGRAM_VERSION', '1.141.0'), ('DESKTOP_SESSION', 'ubuntu'), ('GTK_PATH', '/snap/code/268/usr/lib/x86_64-linux-gnu/gtk-3.0'), ('GTK_IM_MODULE_FILE', '/home/sousa/snap/code/common/.cache/immodules/immodules.cache'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('GSETTINGS_SCHEMA_DIR_VSCODE_SNAP_ORIG', ''), ('VSCODE_GIT_ASKPASS_MAIN', '/snap/code/268/usr/share/code/resources/app/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/snap/code/268/usr/share/code/code'), ('MANAGERPID', '939'), ('VSCODE_PYTHON_AUTOACTIVATE_GUARD', '1'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('ROS_DISTRO', 'foxy'), ('LOGNAME', 'sousa'), ('JOURNAL_STREAM', '8:43349'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_CONFIG_DIRS_VSCODE_SNAP_ORIG', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('PKG_CONFIG_PATH', '/opt/ros/noetic/lib/pkgconfig'), ('XDG_SESSION_CLASS', 'user'), ('XDG_DATA_DIRS_VSCODE_SNAP_ORIG', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('USERNAME', 'sousa'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('FC_FONTATIONS', '1'), ('ROS_LOCALHOST_ONLY', '0'), ('WINDOWPATH', '2'), ('PATH', '/opt/ros/foxy/bin:/opt/ros/noetic/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('SESSION_MANAGER', 'local/sousa-virtual-machine:@/tmp/.ICE-unix/1281,unix/sousa-virtual-machine:/tmp/.ICE-unix/1281'), ('GTK_EXE_PREFIX', '/snap/code/268/usr'), ('INVOCATION_ID', '203daf5d843c4ba7a5cc14110e4834f0'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/8b3799a6_7cbf_4ebb_8856_83f39f58ddef'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LOCPATH', '/snap/code/268/usr/lib/locale'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('GIO_MODULE_DIR_VSCODE_SNAP_ORIG', ''), ('XMODIFIERS', '@im=ibus'), ('ROSLISP_PACKAGE_DIRECTORIES', ''), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/gdm/Xauthority'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-638ead39ae.sock'), ('GNOME_TERMINAL_SERVICE', ':1.85'), ('ROS_ROOT', '/opt/ros/noetic/share/ros'), ('TERM_PROGRAM', 'vscode'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('GSETTINGS_SCHEMA_DIR', '/home/sousa/snap/code/268/.local/share/glib-2.0/schemas'), ('AMENT_PREFIX_PATH', '/opt/ros/foxy'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('ROS_MASTER_URI', 'http://localhost:11311'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('GTK_PATH_VSCODE_SNAP_ORIG', ''), ('FONTCONFIG_FILE', '/etc/fonts/fonts.conf'), ('GTK_IM_MODULE_FILE_VSCODE_SNAP_ORIG', ''), ('GPG_AGENT_INFO', '/run/user/1000/gnupg/S.gpg-agent:0:1'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/sousa/ros2-old/build/uav_keyboard_control'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/home/sousa/snap/code/268/.local/share:/home/sousa/snap/code/268:/snap/code/268/usr/share:/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/sousa/ros2-old/build/uav_keyboard_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/sousa/ros2-old/install/uav_keyboard_control/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages:/opt/ros/noetic/lib/python3/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6003'), ('CMAKE_PREFIX_PATH', '/opt/ros/noetic')]), 'shell': False}
+[1.820960] (-) TimerEvent: {}
+[1.923234] (-) TimerEvent: {}
+[2.024956] (-) TimerEvent: {}
+[2.126101] (-) TimerEvent: {}
+[2.199856] (uav_keyboard_control) StdoutLine: {'line': b'running develop\n'}
+[2.226799] (-) TimerEvent: {}
+[2.327793] (-) TimerEvent: {}
+[2.429149] (-) TimerEvent: {}
+[2.502450] (uav_keyboard_control) StdoutLine: {'line': b'running egg_info\n'}
+[2.503123] (uav_keyboard_control) StdoutLine: {'line': b'creating uav_keyboard_control.egg-info\n'}
+[2.503946] (uav_keyboard_control) StdoutLine: {'line': b'writing uav_keyboard_control.egg-info/PKG-INFO\n'}
+[2.504945] (uav_keyboard_control) StdoutLine: {'line': b'writing dependency_links to uav_keyboard_control.egg-info/dependency_links.txt\n'}
+[2.505572] (uav_keyboard_control) StdoutLine: {'line': b'writing entry points to uav_keyboard_control.egg-info/entry_points.txt\n'}
+[2.506189] (uav_keyboard_control) StdoutLine: {'line': b'writing requirements to uav_keyboard_control.egg-info/requires.txt\n'}
+[2.506762] (uav_keyboard_control) StdoutLine: {'line': b'writing top-level names to uav_keyboard_control.egg-info/top_level.txt\n'}
+[2.509513] (uav_keyboard_control) StdoutLine: {'line': b"writing manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'\n"}
+[2.529667] (-) TimerEvent: {}
+[2.539475] (uav_keyboard_control) StdoutLine: {'line': b"reading manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'\n"}
+[2.540949] (uav_keyboard_control) StdoutLine: {'line': b"writing manifest file 'uav_keyboard_control.egg-info/SOURCES.txt'\n"}
+[2.607982] (uav_keyboard_control) StdoutLine: {'line': b'running build_ext\n'}
+[2.610292] (uav_keyboard_control) StdoutLine: {'line': b'Creating /home/sousa/ros2-old/install/uav_keyboard_control/lib/python3.8/site-packages/site.py\n'}
+[2.613652] (uav_keyboard_control) StdoutLine: {'line': b'Creating /home/sousa/ros2-old/install/uav_keyboard_control/lib/python3.8/site-packages/uav-keyboard-control.egg-link (link to .)\n'}
+[2.615045] (uav_keyboard_control) StdoutLine: {'line': b'Installing uav_key script to /home/sousa/ros2-old/install/uav_keyboard_control/bin\n'}
+[2.616024] (uav_keyboard_control) StdoutLine: {'line': b'\n'}
+[2.616201] (uav_keyboard_control) StdoutLine: {'line': b'Installed /home/sousa/ros2-old/build/uav_keyboard_control\n'}
+[2.616785] (uav_keyboard_control) StdoutLine: {'line': b'running symlink_data\n'}
+[2.617440] (uav_keyboard_control) StdoutLine: {'line': b'symbolically linking /home/sousa/ros2-old/build/uav_keyboard_control/package.xml -> /home/sousa/ros2-old/install/uav_keyboard_control/share/uav_keyboard_control\n'}
+[2.630223] (-) TimerEvent: {}
+[2.651038] (uav_keyboard_control) CommandEnded: {'returncode': 0}
+[2.686186] (uav_keyboard_control) JobEnded: {'identifier': 'uav_keyboard_control', 'rc': 0}
+[2.688594] (-) EventReactorShutdown: {}

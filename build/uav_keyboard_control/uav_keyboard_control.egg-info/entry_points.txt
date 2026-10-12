@@ -1,0 +1,3 @@
+[console_scripts]
+uav_key = uav_keyboard_control.uav_key:main
+
