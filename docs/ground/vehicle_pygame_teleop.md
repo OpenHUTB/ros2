@@ -5,20 +5,11 @@
 
 ![控制链路](../img/ground/vehicle_pygame_teleop_pipeline.png)
 
-## 功能特点
-
-- W/S/A/D（或方向键）控制油门、刹车/倒车与左右转向；指令经过平滑，车辆不会瞬间跳变
-- 空格键急停：发布零速度指令，CARLA 侧表现为全力刹车
-- ESC、关闭窗口或 Ctrl+C 退出时自动发布零速度，车辆可靠停车
-- 30Hz 稳定输出 Twist，话题名可用参数配置（默认 `/carla/ego_vehicle/twist`）
-- 只依赖标准消息 `geometry_msgs/Twist`，与既有控制链路即插即用
-
 ![键盘控制窗口](../img/ground/vehicle_pygame_teleop_ui.png)
 
 ## 控制原理
 
-键盘按键被转换为速度指令的目标值，再经一阶速率限制（指令平滑）逐步逼近，
-最后由 `carla_twist_to_control` 映射为 CARLA 车辆控制量。
+按键 → 指令目标值，经一阶速率限制逐步逼近（30Hz）：
 
 速度指令每帧（$\Delta t = 1/30\,\mathrm{s}$）按如下方式更新：
 
@@ -37,8 +28,6 @@ $$\delta_{k+1} = \mathrm{clamp}\big(\delta_k \pm \omega_r\,\Delta t,\; [-\delta_
 - $v>0$ → `throttle = min(10, v)/10`；$v<0$ → `reverse = True`；
 - `steer = -clamp(δ, ±δ_veh)/δ_veh`，其中 $δ_veh$ 为车辆最大前轮转角（由
   `/carla/ego_vehicle/vehicle_info` 获得）。
-
-即：空格急停与三种退出方式都通过"零 Twist = 全力刹车"这一约定停车。
 
 ## 环境准备
 
@@ -64,9 +53,6 @@ cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
 ```
-
-> 提示：若希望每个终端自动加载工作空间环境，可执行
-> `echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc`。
 
 ## 启动运行
 
@@ -94,13 +80,9 @@ roslaunch vehicle_pygame_teleop main.launch
 
 启动后点击窗口获取键盘焦点即可驾驶。
 
-> 提示：自车详情话题 `/carla/ego_vehicle/vehicle_info` 就绪前，转换节点会忽略收到
-> 的指令并给出 "Did not yet receive vehicle info." 警告，属正常现象，待 ros-bridge
-> 生成自车后自动开始工作。
+> 自车生成前，转换节点告警 `Did not yet receive vehicle info.` 并忽略指令。
 
 ## 运行效果（CARLA 0.9.16 实测）
-
-CARLA 0.9.16（Town10HD_Opt）实机运行：自车由本功能包驱动，在城区道路行驶。
 
 ![CARLA 实机运行](../img/ground/vehicle_pygame_teleop_carla.gif)
 
@@ -141,10 +123,3 @@ CARLA 0.9.16（Town10HD_Opt）实机运行：自车由本功能包驱动，在�
 | 指令平滑 | 无 | 加减速与转向均平滑，车辆不跳变 |
 | 退出行为 | - | ESC / 关闭窗口 / Ctrl+C 均自动发布零速度 |
 | 适用场景 | 日常体验 CARLA | 作为感知、规划、端到端任务的遥控与调试基座 |
-
-## 参考
-
-* [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)
-* [Carla 扭转控制（carla_twist_to_control）](twist_to_control.md)
-* [Carla ROS bridge 文档](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)
-* [pygame 官方文档](https://www.pygame.org/docs/)

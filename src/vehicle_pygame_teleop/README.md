@@ -12,15 +12,6 @@
      → CARLA 0.9.16 中的自车（物理仿真）
 ```
 
-## 功能
-
-- W/S/A/D（或方向键）控制油门、刹车/倒车与左右转向，指令经过平滑，车辆不会瞬间跳变
-- 空格键急停：立即回落并发布零速度指令（CARLA 侧表现为全力刹车）
-- ESC、关闭窗口或 Ctrl+C 退出时自动发布零速度，车辆可靠停车
-- 30Hz 稳定输出 Twist；话题名可配置（`~twist_topic`，默认 `/carla/ego_vehicle/twist`）
-- 只依赖标准消息 `geometry_msgs/Twist`，与 `carla_twist_to_control`、
-  `carla_ackermann_control` 等既有控制链路即插即用
-
 ## 与已有「手动控制」示例的区别
 
 | 对比项 | 已有「手动控制」示例 | 本模块 `vehicle_pygame_teleop` |
@@ -49,10 +40,8 @@ pip3 install pygame
 
 ## 2. 放入工作空间并构建
 
-将整个 `vehicle_pygame_teleop` 文件夹放入 ROS 工作空间的 `src` 目录
-（例如 `~/catkin_ws/src`），并确保 `src/ground/ros-bridge` 中的
-`carla_twist_to_control`、`carla_msgs`、`ros_compatibility` 也在工作空间中，
-然后编译：
+将本目录放入工作空间 `src/`（`src/ground/ros-bridge` 的 `carla_twist_to_control`、
+`carla_msgs`、`ros_compatibility` 需在同一工作空间），编译：
 
 ```bash
 cd ~/catkin_ws
@@ -61,18 +50,14 @@ catkin_make
 
 ## 3. 加载工作空间环境
 
-每个新终端使用本功能包前，先 source 工作空间环境（只需执行一次，建议写入 `~/.bashrc`）：
-
 ```bash
 source ~/catkin_ws/devel/setup.bash
 ```
 
 ## 4. 启动 CARLA 与 ROS bridge
 
-1. 在装有 GPU 的宿主机上启动 CARLA 0.9.16 服务端（Windows 双击 `CarlaUE4.exe`，
-   Linux 运行 `./CarlaUE4.sh`）；详细步骤参考课程文档
-   《设置并连接到 Carla 模拟器》（`docs/set_up_and_connect_to_carla.md`）。
-2. 在 ROS 终端启动 ros-bridge 并生成示例自车（`host` 改为宿主机 IP）：
+1. 在 GPU 宿主机启动 CARLA 0.9.16 服务端（步骤见 `docs/set_up_and_connect_to_carla.md`）；
+2. 启动 ros-bridge 与示例自车（`host` 改为宿主机 IP）：
 
 ```bash
 roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=192.168.8.1 timeout:=60000 town:='Town10HD_Opt'
@@ -90,12 +75,9 @@ roslaunch carla_twist_to_control carla_twist_to_control.launch
 roslaunch vehicle_pygame_teleop main.launch
 ```
 
-启动后弹出键盘控制窗口，**点击窗口使其获得键盘焦点**，即可开始驾驶；
-CARLA 窗口中的车辆随按键实时运动。
+点击窗口获取键盘焦点即可驾驶。
 
-> 提示：自车详情话题 `/carla/ego_vehicle/vehicle_info` 就绪前，转换节点会忽略
-> 收到的指令并给出 "Did not yet receive vehicle info." 警告，属正常现象，
-> 待 ros-bridge 生成自车后自动开始工作。
+> 自车生成前，转换节点告警 `Did not yet receive vehicle info.` 并忽略指令。
 
 ## 按键说明
 
@@ -114,8 +96,7 @@ CARLA 窗口中的车辆随按键实时运动。
 | --- | --- | --- | --- |
 | 发布 | `/carla/ego_vehicle/twist`（默认，可用参数 `~twist_topic` 修改） | `geometry_msgs/Twist` | `linear.x` 速度指令（m/s），`angular.z` 转向指令（rad），发布频率 30Hz |
 
-其中零 Twist 指令会被 `carla_twist_to_control` 解释为全力刹车（`throttle=0, brake=1`），
-因此 ESC/Ctrl+C 退出与空格急停都会让车辆可靠停车。
+零 Twist → `throttle=0, brake=1`（全力刹车）。
 
 ## 目录结构
 
