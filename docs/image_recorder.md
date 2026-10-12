@@ -18,13 +18,13 @@
 ## 核心代码内容
 
 ### 1. main.py（主程序）
+
 ```python
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
-
 class ImageRecorder(Node):
     def __init__(self):
         super().__init__('image_recorder_node')
@@ -46,14 +46,12 @@ class ImageRecorder(Node):
                 self.get_logger().info('Saved as capture.jpg')
         except Exception as e:
             self.get_logger().error(f'Error: {e}')
-
 def main(args=None):
     rclpy.init(args=args)
     image_recorder = ImageRecorder()
     rclpy.spin(image_recorder)
     image_recorder.destroy_node()
     rclpy.shutdown()
-
 if __name__ == '__main__':
     main()
 ```
@@ -64,9 +62,7 @@ if __name__ == '__main__':
 from setuptools import setup
 import os
 from glob import glob
-
 package_name = 'image_recorder'
-
 setup(
     name=package_name,
     version='0.0.0',
@@ -96,7 +92,6 @@ setup(
 ```python
 from launch import LaunchDescription
 from launch_ros.actions import Node
-
 def generate_launch_description():
     return LaunchDescription([
         Node(
