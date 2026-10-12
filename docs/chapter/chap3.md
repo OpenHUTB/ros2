@@ -1,4 +1,5 @@
-# Ubuntu 20.04 配置 Gazebo Classic 环境完整指南
+# Ubuntu 20.04 配置 Gazebo Classic并使用轮式小车避障
+本章聚焦于开发Gazebo环境并使用仿真小车进行可视化避障
 **适用系统**：Ubuntu 20.04 LTS (Focal Fossa)
 **ROS 版本**：ROS Noetic（ROS1 最终版本）
 **Gazebo 版本**：Gazebo Classic 11
