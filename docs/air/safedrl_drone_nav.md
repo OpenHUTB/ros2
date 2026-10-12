@@ -211,9 +211,15 @@ CBF 的正确用法是**冻结策略、只在推理时挂载**。消融实验据
 ### 3.7 实测数据来源
 
 上表数据由 `scripts/evaluate.py` 在 `seed0=20000` 起的 24 个**固定种子**上生成，
-逐回合明细见 `logs/eval_metrics_*_episodes.csv`，汇总见 `logs/eval_metrics_*.json`，
-逐步遥测原始数据（速度/姿态/转速/裕度/风场）见 `logs/traces/*.npz`。
-带时间戳的终端输出片段见 `logs/terminal_snippet_*.txt`。
+逐回合明细写入 `logs/eval_metrics_*_episodes.csv`，汇总写入 `logs/eval_metrics_*.json`，
+逐步遥测原始数据（速度/姿态/转速/裕度/风场）写入 `logs/traces/*.npz`，
+带时间戳的终端输出片段写入 `logs/terminal_snippet_*.txt`。
+
+以上产物均在运行时自动落盘到 `logs/`，**属于生成物而非源码**：`logs/` 已在
+`.gitignore` 中整体忽略，仓库里不保留任何日志与 TensorBoard 事件文件。这样做是
+为了避免把每次训练都会覆盖的中间产物塞进版本库、无谓地放大仓库体积。
+需要复现时按第 4.3 节顺序跑一遍脚本即可原地重建；**完整实验运行包与归档数据
+可通过脚本一键生成，或参考提供的大文件网盘链接**（见第 6 节）。
 
 ## 4. 快速开始 <span id="quickstart"></span>
 
@@ -266,12 +272,15 @@ python scripts/train.py --policy ppo_lag --use-cbf \
     --init-from checkpoints/bc_warmstart_cbf.zip --normalize-reward \
     --timesteps 90000 --run-name ppo_lagrangian --seed 12
 
-# 3. 评估并出图
-python scripts/evaluate.py --model checkpoints/ppo_lagrangian_best.zip \
+# 3. 评估并出图（best_model.zip 是仓库中唯一保留的权重，见第 6 节）
+python scripts/evaluate.py --model checkpoints/best_model.zip \
     --use-cbf --run-name ppo_lagrangian_cbf --episodes 24 --figures
 
 # 4. 查看 TensorBoard
 tensorboard --logdir logs/tb_logs
+
+# 5. 一键打包（产物落在被忽略的 dist/ 下，不入库）
+./export_package.sh
 ```
 
 ### 4.4 ROS 闭环
@@ -280,9 +289,9 @@ tensorboard --logdir logs/tb_logs
 # 一键跑通通信与推理（不需要训练好的策略，回退到内置纯追踪）
 roslaunch safedrl_drone_nav smoke_test.launch
 
-# 挂载训练好的策略
+# 挂载训练好的策略（仓库内置的唯一权重，克隆后即可直接测试）
 roslaunch safedrl_drone_nav navigate.launch \
-    model_path:=$(rospack find safedrl_drone_nav)/checkpoints/ppo_lagrangian_best.zip
+    model_path:=$(rospack find safedrl_drone_nav)/checkpoints/best_model.zip
 
 # 观察
 rostopic echo /drone/nav_status   # 门序号、安全裕度、CBF 是否介入
@@ -316,15 +325,16 @@ src/air/safedrl_drone_nav/
 │   ├── drl_navigator_node.py        # ROS 推理节点
 │   └── dummy_state_publisher.py     # ROS 假数据发布器（被控对象替代）
 ├── tests/                           # 19 项测试
-├── checkpoints/                     # 训练权重
-├── logs/                            # 运行痕迹（见下）
+├── .gitignore                       # 忽略 logs/、dist/、*.tar.gz、非最优权重
+├── checkpoints/best_model.zip       # 唯一入库的权重（效果最优，克隆即可测试）
+├── logs/                            # 运行痕迹：运行时生成，已被忽略，不入库
+├── dist/                            # 打包产物：脚本生成，已被忽略，不入库
 └── docs/figures/                    # 全部评测图
 ```
 
-## 6. 运行痕迹 <span id="evidence"></span>
+## 6. 运行痕迹与仓库体积 <span id="evidence"></span>
 
-本项目的一项要求是「保留全部运行痕迹」，因此 `logs/` 下的内容**全部由程序运行时
-自动生成**，无手工编造：
+`logs/` 下的内容**全部由程序运行时自动生成**，无手工编造：
 
 | 文件 | 内容 |
 |---|---|
@@ -335,7 +345,44 @@ src/air/safedrl_drone_nav/
 | `logs/traces/*.npz` | 逐步遥测原始数据 |
 | `logs/tb_logs/` | TensorBoard 事件文件 |
 | `logs/verification_report.txt` | 自动化验证报告（19/19 通过） |
-| `dist/*.tar.gz` | 11 MB 打包成果包 |
+
+### 6.1 哪些进了 Git，哪些没有
+
+**以上运行痕迹一律不入库。** 它们是生成物：每次 `train.py` / `evaluate.py` 运行都会
+覆盖同名文件，把它们提交进版本库既无法追溯，又会让仓库迅速膨胀（仅 TensorBoard
+事件文件与 `.npz` 遥测就有数 MB，打包 `.tar.gz` 归档更有 11 MB）。因此：
+
+| 路径 | 是否入库 | 说明 |
+|---|---|---|
+| `logs/`（含 `tb_logs/`、`traces/`） | ❌ 忽略 | 运行时生成，见上表 |
+| `dist/`、`*.tar.gz` | ❌ 忽略 | `export_package.sh` 一键生成的打包归档 |
+| `checkpoints/*.zip` | ❌ 忽略 | 热启动与中间权重，由 `pretrain_bc.py` / `train.py` 重新产出 |
+| `checkpoints/best_model.zip` | ✅ 保留 | **唯一入库的权重**：在 24 个固定种子上成功率 1.000、碰撞率 0.000、代价 0.0006，即上表第 3 行所用策略，保留它以便评审克隆后直接跑 ROS 闭环 |
+| `docs/figures/`、`docs/img/` | ✅ 保留 | 报告直接引用的图片，体积小且不便逐字节复现 |
+
+### 6.2 如何拿回完整运行包
+
+**完整实验运行包与归档数据可通过脚本一键生成，或参考提供的大文件网盘链接。**
+
+```bash
+cd src/air/safedrl_drone_nav
+
+# 方式一：从源码重新跑一遍，重建 logs/ 并顺带产出最新权重
+python scripts/pretrain_bc.py --use-cbf --episodes 200 --epochs 250
+python scripts/train.py --policy ppo_lag --use-cbf \
+    --init-from checkpoints/bc_warmstart_cbf.zip --normalize-reward \
+    --timesteps 90000 --run-name ppo_lagrangian --seed 12
+python scripts/evaluate.py --model checkpoints/best_model.zip --use-cbf \
+    --run-name ppo_lagrangian_cbf --episodes 24 --figures
+
+# 方式二：直接打包（脚本会校验证据链，缺件则报错退出）
+./export_package.sh             # 归档落在被忽略的 dist/ 下
+```
+
+> 说明：`export_package.sh` 刻意做了「证据链校验」——若 `logs/` 下的转录、指标、
+> 遥测等文件缺失，脚本会报错退出而不产出归档。因此**归档能成功生成**这件事本身，
+> 就是流水线确实跑通过的证据。`./export_package.sh --with-tb` 可把体积较大的
+> TensorBoard 事件文件一并打进去。
 
 ## 7. 已知限制 <span id="limitations"></span>
 

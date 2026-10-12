@@ -14,7 +14,7 @@ per-step trace, and writes every artefact the report needs:
 
 Usage::
 
-    python scripts/evaluate.py --model checkpoints/ppo_lag_cbf_final.zip --use-cbf \\
+    python scripts/evaluate.py --model checkpoints/best_model.zip --use-cbf \\
         --run-name ppo_lag_cbf --episodes 20 --figures
 """
 

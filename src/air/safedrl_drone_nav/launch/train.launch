@@ -8,7 +8,7 @@
 
       roslaunch safedrl_drone_nav train.launch mode:=train
       roslaunch safedrl_drone_nav train.launch mode:=evaluate \\
-          model_path:=$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip
+          model_path:=$(find safedrl_drone_nav)/checkpoints/best_model.zip
 -->
 <launch>
   <arg name="mode"       default="train"/>
@@ -16,7 +16,7 @@
   <arg name="timesteps"  default="120000"/>
   <arg name="policy"     default="ppo_lag"/>
   <arg name="use_cbf"    default="true"/>
-  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip"/>
+  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/best_model.zip"/>
   <arg name="episodes"   default="20"/>
   <arg name="init_from"  default="$(find safedrl_drone_nav)/checkpoints/bc_warmstart_cbf.zip"/>
 

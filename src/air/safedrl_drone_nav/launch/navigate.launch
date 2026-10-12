@@ -7,7 +7,7 @@
   plain ROS VM with no simulator and no flight controller.
 
       roslaunch safedrl_drone_nav navigate.launch
-      roslaunch safedrl_drone_nav navigate.launch model_path:=.../ppo_lag_cbf_final.zip
+      roslaunch safedrl_drone_nav navigate.launch model_path:=.../best_model.zip
       roslaunch safedrl_drone_nav navigate.launch use_cbf:=false   # ablation
 
   Inspect the result in separate terminals:
@@ -18,7 +18,7 @@
 -->
 <launch>
   <!-- ---------------- arguments ---------------- -->
-  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/ppo_lag_cbf_final.zip"/>
+  <arg name="model_path" default="$(find safedrl_drone_nav)/checkpoints/best_model.zip"/>
   <arg name="use_cbf"    default="true"/>
   <arg name="control_rate" default="30.0"/>
   <arg name="gui_hint"   default="false"/>
