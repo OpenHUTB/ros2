@@ -1,0 +1,365 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 颜色材质 -->
+  <material name="blue">
+    <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+  <material name="gray">
+    <color rgba="0.6 0.6 0.6 1.0"/>
+  </material>
+  <material name="white">
+    <color rgba="0.9 0.9 0.9 1.0"/>
+  </material>
+
+  <!-- 圆柱体惯性矩阵宏 -->
+  <xacro:macro name="cylinder_inertial_matrix" params="m r h">
+    <inertial>
+      <mass value="${m}" />
+      <inertia
+        ixx="${m*(3*r*r+h*h)/12}" ixy="0" ixz="0"
+        iyy="${m*(3*r*r+h*h)/12}" iyz="0"
+        izz="${m*r*r/2}" />
+    </inertial>
+  </xacro:macro>
+
+  <!-- 车轮宏（含外观、碰撞与惯性） -->
+  <xacro:macro name="wheel" params="prefix y_ref joint_name">
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.025" length="0.015"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.025" length="0.015"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.000041" ixy="0" ixz="0"
+                 iyy="0.000031" iyz="0"
+                 izz="0.000031"/>
+      </inertial>
+    </link>
+
+    <joint name="${joint_name}" type="continuous">
+      <parent link="${prefix}_bridge"/>
+      <child link="${prefix}_wheel"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="smartcar_body">
+
+    <!-- 底盘 -->
+    <link name="base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.11 0.015"/>
+        </geometry>
+        <material name="blue"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.11 0.015"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.5"/>
+        <inertia ixx="0.00065" ixy="0" ixz="0"
+                 iyy="0.00093" iyz="0"
+                 izz="0.00153"/>
+      </inertial>
+    </link>
+
+    <!-- 前桥 -->
+    <link name="front_bridge">
+      <visual>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.14"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.14"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.14"/>
+    </link>
+
+    <joint name="base_to_front_bridge" type="fixed">
+      <parent link="base_link"/>
+      <child link="front_bridge"/>
+      <origin xyz="0.09425 0 -0.015" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 后桥 -->
+    <link name="back_bridge">
+      <visual>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.14"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="1.57079632679 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.14"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.14"/>
+    </link>
+
+    <joint name="base_to_back_bridge" type="fixed">
+      <parent link="base_link"/>
+      <child link="back_bridge"/>
+      <origin xyz="-0.09425 0 -0.015" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 左前转向桥（revolute，主动转向） -->
+    <link name="left_front_bridge">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.025"/>
+    </link>
+
+    <joint name="left_bridge_to_bridge" type="revolute">
+      <parent link="front_bridge"/>
+      <child link="left_front_bridge"/>
+      <origin xyz="0 0.08 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.4" upper="0.4" effort="10" velocity="1"/>
+    </joint>
+
+    <!-- 右前转向桥（revolute，主动转向） -->
+    <link name="right_front_bridge">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.025"/>
+    </link>
+
+    <joint name="right_bridge_to_bridge" type="revolute">
+      <parent link="front_bridge"/>
+      <child link="right_front_bridge"/>
+      <origin xyz="0 -0.08 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-0.4" upper="0.4" effort="10" velocity="1"/>
+    </joint>
+
+    <!-- 左后桥座（固定） -->
+    <link name="left_back_bridge">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.025"/>
+    </link>
+
+    <joint name="back_to_left_back_bridge" type="fixed">
+      <parent link="back_bridge"/>
+      <child link="left_back_bridge"/>
+      <origin xyz="0 0.08 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 右后桥座（固定） -->
+    <link name="right_back_bridge">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.0125" length="0.025"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.0125" h="0.025"/>
+    </link>
+
+    <joint name="back_to_right_back_bridge" type="fixed">
+      <parent link="back_bridge"/>
+      <child link="right_back_bridge"/>
+      <origin xyz="0 -0.08 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 四个车轮 -->
+    <xacro:wheel prefix="left_front" y_ref="0.08" joint_name="left_front_wheel_to_bridge"/>
+    <xacro:wheel prefix="right_front" y_ref="-0.08" joint_name="right_front_wheel_to_bridge"/>
+    <xacro:wheel prefix="left_back" y_ref="0.08" joint_name="left_back_wheel_joint"/>
+    <xacro:wheel prefix="right_back" y_ref="-0.08" joint_name="right_back_wheel_joint"/>
+
+    <!-- 上层支架立柱 -->
+    <link name="standoff">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.005" length="0.02"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.005" length="0.02"/>
+        </geometry>
+      </collision>
+      <xacro:cylinder_inertial_matrix m="0.02" r="0.005" h="0.02"/>
+    </link>
+
+    <joint name="base_to_standoff" type="fixed">
+      <parent link="base_link"/>
+      <child link="standoff"/>
+      <origin xyz="0 0 0.0175" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 上层安装板（Raspberry Pi 安装板） -->
+    <link name="upper_block">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.08 0.012"/>
+        </geometry>
+        <material name="gray"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.06 0.08 0.012"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.00006" ixy="0" ixz="0"
+                 iyy="0.00005" iyz="0"
+                 izz="0.00008"/>
+      </inertial>
+    </link>
+
+    <joint name="Raspberry_Pi_joint" type="fixed">
+      <parent link="standoff"/>
+      <child link="upper_block"/>
+      <origin xyz="-0.01 0 0.016" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 激光雷达（无 collision，避免自扫） -->
+    <link name="laser_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.025" length="0.04"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <xacro:cylinder_inertial_matrix m="0.1" r="0.025" h="0.04"/>
+    </link>
+
+    <joint name="upper_to_laser" type="fixed">
+      <parent link="upper_block"/>
+      <child link="laser_link"/>
+      <origin xyz="0.025 0 0.026" rpy="0 0 0"/>
+    </joint>
+
+    <!-- 摄像头（车头） -->
+    <link name="camera_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.02 0.015 0.012"/>
+        </geometry>
+        <material name="white"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.02 0.015 0.012"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.02"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0"
+                 iyy="0.000001" iyz="0"
+                 izz="0.000001"/>
+      </inertial>
+    </link>
+
+    <joint name="upper_to_camera" type="fixed">
+      <parent link="upper_block"/>
+      <child link="camera_link"/>
+      <origin xyz="0.095 0 -0.0285" rpy="0 0 0"/>
+    </joint>
+
+    <!-- IMU（上层，无 collision） -->
+    <link name="imu_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.02 0.025 0.01"/>
+        </geometry>
+        <material name="white"/>
+      </visual>
+      <inertial>
+        <mass value="0.01"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0"
+                 iyy="0.000001" iyz="0"
+                 izz="0.000001"/>
+      </inertial>
+    </link>
+
+    <joint name="upper_to_imu" type="fixed">
+      <parent link="upper_block"/>
+      <child link="imu_link"/>
+      <origin xyz="-0.01 0 0.011" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>
