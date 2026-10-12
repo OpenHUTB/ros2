@@ -83,6 +83,7 @@ nav:
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - 阿克曼控制: './ground/ackermann_control.md'
+    - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
@@ -113,6 +114,8 @@ nav:
     - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
+
+
 
 
 
