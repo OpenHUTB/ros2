@@ -1,11 +1,7 @@
 # 车辆键盘遥操作（CARLA 0.9.16）
 
-`vehicle_pygame_teleop` 是一个基于键盘的车辆遥操作功能包：把键盘输入转换为平滑的
-速度指令（`geometry_msgs/Twist`，30Hz 发布），经 `carla_twist_to_control` 转换为
-车辆控制指令，控制 **CARLA 0.9.16** 模拟器中的自车运动。物理仿真（车辆动力学、
-场景、传感器）全部由 CARLA 提供，本功能包不含任何仿真器。
-
-功能包源码位于仓库的 `src/vehicle_pygame_teleop` 目录。
+键盘 → 平滑 Twist（`/carla/ego_vehicle/twist`，30Hz）→ `carla_twist_to_control` → CARLA 0.9.16 自车。
+物理仿真由 CARLA 提供；源码位于 `src/vehicle_pygame_teleop`。
 
 ![控制链路](../img/ground/vehicle_pygame_teleop_pipeline.png)
 
@@ -74,10 +70,7 @@ source devel/setup.bash
 
 ## 启动运行
 
-本功能包需要与 CARLA 服务端及 ros-bridge 配合运行。CARLA 服务端启动、宿主机 IP
-查看、ros-bridge 编译等通用步骤请参考
-[设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)，这里不再重复，仅给出
-完整链路：
+前置步骤见 [设置并连接到 Carla 模拟器](../set_up_and_connect_to_carla.md)。完整链路：
 
 1. 在装有 GPU 的宿主机上启动 CARLA 0.9.16 服务端（Windows 双击 `CarlaUE4.exe`；
    Linux 运行 `./CarlaUE4.sh`）；
@@ -99,8 +92,7 @@ roslaunch carla_twist_to_control carla_twist_to_control.launch
 roslaunch vehicle_pygame_teleop main.launch
 ```
 
-启动后弹出键盘控制窗口，点击窗口获取键盘焦点即可驾驶，CARLA 窗口中的车辆会随按键
-实时加速、转向、倒车；松开按键后速度指令逐渐回落，车辆随之减速并在指令归零后刹停。
+启动后点击窗口获取键盘焦点即可驾驶。
 
 > 提示：自车详情话题 `/carla/ego_vehicle/vehicle_info` 就绪前，转换节点会忽略收到
 > 的指令并给出 "Did not yet receive vehicle info." 警告，属正常现象，待 ros-bridge
