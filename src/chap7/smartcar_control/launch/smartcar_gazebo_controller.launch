@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- 键盘遥控与阿克曼运动解算节点 -->
+  <node name="smartcar_control_gazebo" pkg="smartcar_control"
+        type="smartcar_control_gazebo" output="screen"/>
+
+</launch>
