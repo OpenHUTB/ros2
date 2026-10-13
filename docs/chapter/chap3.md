@@ -420,4 +420,4 @@ catkin_make
 source devel/setup.bash
 python3 src/nn_avoidance/nn_avoidance/train.py
 python3 src/nn_avoidance/nn_avoidance/test.py
-roslaunch nn_avoidance avoid.launch.py
+roslaunch nn_avoidance avoid.launch
