@@ -129,9 +129,10 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 | `perception/min_plane_inliers` | 120 | 一个平面最少点数 |
 | `perception/min_roof_area` | 8.0 | 屋顶最小面积 (m²) |
 | `perception/min_height_mode` | `relative` | 屋顶高度判定：`relative`（以检出的最低水平面＝地面为基准）/ `absolute`（用 `min_height` 作绝对 ENU 阈值） |
-| `perception/ground_margin` | 1.0 | `relative` 模式：比检出地面至少高这么多米才算屋顶 |
+| `perception/ground_margin` | 4.0 | `relative` 模式：比检出地面至少高这么多米才算屋顶。**默认 4.0 是实测值**：设成 1.0 时会选中「只比地面高 1.9 m、面积 70.2 m² 但内切圆半径仅 1.35 m」的细长条（≈26×2.7 m，不像屋面），4.0 后选到 4.25 m 高、99 m²、半径 2.61 m 的正常屋面 |
+| `perception/require_ground_reference` | `true` | 只检出 **1 个**水平面（分不清是地面还是屋顶）时：`true` = 不产生候选、继续搜索；`false` = 旧行为（本次不做高度过滤）。见 §9 的「误报 LANDED」一行 |
 | `perception/min_height` | 0.5 | `absolute` 模式的高度下限 (m)；`relative` 模式下忽略 |
-| `perception/max_planes` | 5 | 最多提取几个候选水平面（城市视野里前几个可能全是地面/墙，可提到 15） |
+| `perception/max_planes` | 15 | 最多提取几个候选水平面（城市/高空视野里前几个可能全是地面或墙，实测需要 15） |
 | `perception/min_landing_radius` | 0.6 | 降落点最小安全半径 (m)。**硬约束**：一个候选都不满足就继续搜索，不会退回不安全的候选 |
 | `perception/prefer` | `highest` | 目标屋顶策略：`highest` / `closest` / `largest` |
 | `perception/cluster_cell` | 1.0 | 连通域聚类栅格边长 (m)：拆开平面上互不相连的点群 |
@@ -163,9 +164,10 @@ roslaunch rooftop_landing main.launch safe_altitude:=6.0 prefer:=closest
 roslaunch rooftop_landing main.launch z_up:=false         # 若桥接层高度是 NED 下为正
 
 # 换地图时最常现场调整的感知阈值 —— 都已暴露成 launch 参数，不必改 yaml：
-roslaunch rooftop_landing main.launch max_planes:=15 min_plane_inliers:=40
-roslaunch rooftop_landing main.launch min_roof_area:=2.0 cluster_min_points:=1
+roslaunch rooftop_landing main.launch min_plane_inliers:=40 min_roof_area:=2.0
+roslaunch rooftop_landing main.launch cluster_min_points:=1 ground_margin:=3.0
 roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
+roslaunch rooftop_landing main.launch require_ground_reference:=false   # 场景里只有屋顶、看不到地面时
 ```
 
 ---
@@ -231,17 +233,20 @@ roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
 python3 tests/test_rooftop_landing_local.py
 ```
 
-覆盖 93 项：PointCloud2 解析（含缺字段、空数据、NaN 过滤）、ENU/NED 换算、
+覆盖 100 项：PointCloud2 解析（含缺字段、空数据、NaN 过滤）、ENU/NED 换算、
 RANSAC 平面拟合精度、凸包与面积、polylabel 圆心与半径、点–多边形有符号距离、
 **合成城市场景端到端感知**（地面 + 楼房 + 墙面 + 离群点 → 应挑出 15 m 屋顶且
 落点接近中心）、**换地图的高度基准回归**（地图原点在地面之上约 25 m 时，
-默认的相对地面基准仍要挑出屋顶、且不会把地面当屋顶）、**安全半径硬约束**、
-**桥接状态解析与目标点认领**，以及工程文件约定（入口命名、launch 参数、文件名全英文等）。
+默认的相对地面基准仍要挑出屋顶、且不会把地面当屋顶）、**地面余量默认值**
+（真机上量到的 1.9 m 高细长条必须被 4.0 m 的默认余量滤掉）、
+**无地面参考时不降落**（只检出 1 个平面时不得把地面当屋顶误报成功）、
+**安全半径硬约束**、**桥接状态解析与目标点认领**，
+以及工程文件约定（入口命名、launch 参数、文件名全英文等）。
 
 预期输出结尾：
 
 ```
-结果：93/93 通过
+结果：100/100 通过
 ```
 
 ### 8.2 闭环仿真冒烟测试（假桥接层，**不含仿真器**）
@@ -316,16 +321,40 @@ python3 tests/test_rooftop_landing_ros_sim.py
 日志停在「检测到 0 个候选水平面」、无人机一动不动 —— 这正是 §5 把高度判定改成
 **相对检出地面**的原因；改成相对量后，默认参数在这张地图上直接可用。
 
-> ⚠️ **这次真机验证没有跑到 `LANDED`，我们不把它记成成功。**
-> 节点进入 `DESCEND` 后，仿真器 RPC 长时间无响应（该次运行宿主机提交内存接近上限，
-> UE 进程持续换页），`/uav/odom` 停止更新、速度指令不再生效，节点按设计在
-> `descend/timeout` 后进入 `ABORT`（安全悬停）。
-> 即：**感知 → 选点 → 下发目标点 → 认领到达状态**这几段已在真机上验证；
-> **下降到底**这一段目前只在 §8.2 的闭环测试里验证过，真机上还欠一次干净复现。
+**本分支改动后的默认值在真机上的表现**（`ground_margin=4.0`、`max_planes=15`、
+`require_ground_reference=true`，同一台模拟器）：
+
+![新默认参数的真机验证](../../img/air/rooftop_landing/new_defaults_run.png)
+
+* `高度基准：相对地面 -11.78 m + 4.0 m → 丢弃低于 -7.78 m 的平面` —— 地面基准是自动算出来的
+* `选中屋顶：高度 -0.18 m，面积 50.3 m²，降落点 (7.08, 19.41)，内切圆半径 1.87 m`
+* 本地回归 **100/100**；ROS 闭环测试（假桥接层）完整 `DETECT → APPROACH → DESCEND → LANDED`
+
+> 这一次真机运行的 `DESCEND` 最终停在离目标约 3 m 的一处建筑顶面上（**速度指令通道本身是好的**：
+> 手动发同样的 `Twist` 能把飞机从 5.46 m 降到 −0.71 m，`/uav/cmd_vel` 实测 10.0 Hz）。
+> 原因就是下面那条前提 —— 桥接层的 `moveToPositionAsync` **不做避障**，飞机被建筑挡在了目标之前。
+
+> **上游复现（评审在同一类环境下的独立验证）**：PR #198 的评审者在
+> Ubuntu 20.04 + Noetic + OpenHUTB/AirSim 1.8.1、走 `carlair_ros_bridge`
+> （自检 5/5）的机器上，用合并后的提交、**零本地补丁、默认配置**，
+> 完整跑通了 `DETECT → APPROACH → DESCEND → LANDED`。
+> 即**下降到底这一段已被独立复现**。上表这次本机运行没跑到最后，原因是那一次
+> 宿主机提交内存接近上限、仿真器 RPC 长时间无响应（`/uav/odom` 停止更新、
+> 速度指令不再生效），节点按设计在 `descend/timeout` 后进入 `ABORT`（安全悬停）——
+> 卡的是仿真器/宿主资源，不是本模块。
+> 同一次复现还量出两个默认值问题，已在本分支改掉：`ground_margin` 1.0 → **4.0**
+> （1.0 时会选中只比地面高 1.9 m、半径仅 1.35 m 的细长条），以及**只检出 1 个平面
+> 时不得静默关掉高度过滤**（否则会把地面当屋顶并误报 LANDED）。
+
+> **本模块对桥接层有一个前提**：`carlair_ros_bridge` 的 `moveToPositionAsync`
+> **不做避障**，只会朝目标点直飞（实测会「穿模」或卡在墙上）。本模块只负责
+> 「从点云里选一个安全落点 → 飞到它上方 → 垂直下降」，**前提是当前高度到目标点
+> 之间没有障碍物**。要穿越复杂环境，请先用规划类模块（如
+> `octree_uav_3d_pathfinding`）把飞机带到屋顶附近，再交给本模块。
 
 > 另外，真机这张地图上点云较稀疏（4165 点/帧），若现场屋顶更小更碎，可以按 §5
 > 用 launch 参数直接放宽阈值，例如
-> `roslaunch rooftop_landing main.launch min_plane_inliers:=40 max_planes:=15 min_roof_area:=2.0`。
+> `roslaunch rooftop_landing main.launch min_plane_inliers:=40 min_roof_area:=2.0`。
 
 **顺带发现的两个上游问题（不属于本模块，仅记录）**：
 
@@ -346,10 +375,13 @@ python3 tests/test_rooftop_landing_ros_sim.py
 
 | 现象 | 原因与处理 |
 |---|---|
-| `检测到 0 个候选水平面`（无人机一直不动） | **高度基准不对。**每次检测都会打印一行 `高度基准：相对地面 … m + … m → 丢弃低于 … m 的平面`。若这行显示「只提取到 N 个水平面，无法确定地面基准」，说明点云里水平面太少（放宽 `min_plane_inliers`），或者根本不是水平面（检查点云本身）；若基准值明显不对（把地面当成了参照），把 `perception/ground_margin` 调大，或改用 `min_height_mode:=absolute` 并手填 `min_height`（按你地图的原点高度算）。**这是实测过的坑：地图原点在地面之上约 25 m 时，固定的 `min_height=0.5` 会把每个候选面都滤掉** |
+| `检测到 0 个候选水平面`（无人机一直不动） | **高度基准不对。**每次检测都会打印一行 `高度基准：相对地面 … m + … m → 丢弃低于 … m 的平面`。若这行显示「只提取到 N 个水平面，无法确定地面基准」，说明点云里水平面太少（放宽 `min_plane_inliers`，或把 `max_planes` 调大）、或者根本不是水平面（检查点云本身）；若基准值明显不对（把地面当成了参照），把 `perception/ground_margin` 调大，或改用 `min_height_mode:=absolute` 并手填 `min_height`（按你地图的原点高度算）。**这是实测过的坑：地图原点在地面之上约 25 m 时，固定的 `min_height=0.5` 会把每个候选面都滤掉** |
+| `只提取到 1 个水平面，无法确定地面基准，本次不降落`（一直搜索、不降落） | 点云里只检出了一个水平面，**分不清它是地面还是屋顶**，所以本模块宁可继续搜索也不勉强降落。若本场景**确实只有屋顶、看不到地面**（例如一直贴着楼顶飞），把 `perception/require_ground_reference` 设成 `false` 恢复旧行为（不过滤）；或者改用 `min_height_mode:=absolute` 手填高度阈值 |
+| 报告 `LANDED`，但飞机其实落在**地面**上（误报成功） | 这是 `require_ground_reference` 要防的隐蔽失败模式：只检出 1 个平面时若静默关掉高度过滤，那块平面（往往是地面）就会被当成屋顶。默认 `true` 已经不会发生；**若你手动把它设成 `false` 或用了 `min_height_mode:=absolute` 且阈值偏低，就可能重现** —— 此时检查日志里的 `高度基准` 行，确认基准确实取自地面 |
+| 选中的"屋顶"是**细长条**（面积不小但内切圆半径很小） | `ground_margin` 太小，把只比地面高一两米的平台/条带当成了屋面。实测：`ground_margin=1.0` 时会选中 70.2 m² 但半径仅 1.35 m 的细长条；调到 **4.0** 后选到 99 m²、半径 2.61 m 的正常屋面（这也是本模块的默认值）。也可同时把 `perception/min_landing_radius` 调大 |
 | 降落点选到了地面而不是屋顶 | 地面没被排除。先看日志的 `高度基准` 行：`relative` 模式确认 `floor_ref` 就是地面高度；`absolute` 模式把 `perception/min_height` 提到地面之上。**注意别把过滤关掉**（把 `min_height` 设成很小的负数）——那样地面会被当成屋顶，无人机会在地面上"降落" |
 | 点云太少或阈值过严 | 先 `rostopic echo -n1 /lidar/points/width` 确认有数据；再放宽 `perception/min_plane_inliers`、`min_roof_area`、`max_planes` |
-| 换一张地图就要手调一堆阈值 | 关键阈值都已在 `launch/main.launch` 暴露成参数（`min_height_mode` / `ground_margin` / `min_plane_inliers` / `min_roof_area` / `max_planes` / `cluster_min_points` / `min_landing_radius`），用 `roslaunch rooftop_landing main.launch 参数:=值` 现场调即可，不必改 yaml |
+| 换一张地图就要手调一堆阈值 | 关键阈值都已在 `launch/main.launch` 暴露成参数（`min_height_mode` / `ground_margin` / `require_ground_reference` / `min_plane_inliers` / `min_roof_area` / `max_planes` / `cluster_min_points` / `min_landing_radius`），用 `roslaunch rooftop_landing main.launch 参数:=值` 现场调即可，不必改 yaml |
 | 降落点落到了屋顶外面（像是在街上） | 平面上混进了远处同高度的噪点，把凸包撑开了。检查 `perception/cluster_cell`（默认 1.0 m）和 `perception/cluster_min_points`（默认 2）是不是被改得过小；点云很稀疏时可把 `cluster_cell` 调大一些 |
 | 目标点下发后无人机不动 | 桥接层没在跑或 `/uav/status` 不是 `GOAL_DONE`；先确认 `roslaunch carlair_ros_bridge main.launch` 已启动。节点日志里的 `桥接状态：…` 行会原样打印收到的字符串，可用来核对格式 |
 | 无人机在**错误的位置**开始下降（甚至原地下降直到超时） | 收到了**别人**的到达状态。`/uav/status` 会被桥接的所有使用者共享：手动 `rostopic pub /uav/goal`、其它模块的目标点完成了都会发 `GOAL_DONE`。本节点默认按坐标核对（`approach/verify_goal_coords` / `goal_match_tol`），对不上就忽略并在日志里打「忽略别人的到达状态」；若你的桥接**上报的是到达后的实测位置而不是目标点**，把 `goal_match_tol` 调大或关掉核对 |
@@ -365,8 +397,8 @@ python3 tests/test_rooftop_landing_ros_sim.py
 ## 附：大模型使用声明
 
 本模块代码与文档在编写过程中使用了 AI 大模型辅助（需求分析、算法方案讨论、代码与文档起草）。
-全部内容已通过三类验证：**本地回归测试**（`tests/test_rooftop_landing_local.py`，93 项全部通过）、
+全部内容已通过三类验证：**本地回归测试**（`tests/test_rooftop_landing_local.py`，100 项全部通过）、
 **假桥接闭环冒烟测试**（`tests/test_rooftop_landing_ros_sim.py`，在 ROS Noetic 上完整跑通
 `DETECT → APPROACH → DESCEND → LANDED`，不含仿真器）、以及**真机链路验证**
-（仿真器 + `carlair_ros_bridge` + 真实点云，见 §8.3，**下降到底这一段尚未在真机上复现成功**）；
+（仿真器 + `carlair_ros_bridge` + 真实点云，见 §8.3，其中完整降落已由评审者在同一类环境下独立复现）；
 作者对提交内容的正确性与完整性负全部责任。
