@@ -80,6 +80,7 @@ nav:
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - 扭转控制: './ground/twist_to_control.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - MuJoCo小车倒立摆LQR控制: mujoco_inverted_pendulum_lqr.md
 - 空域载具:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
