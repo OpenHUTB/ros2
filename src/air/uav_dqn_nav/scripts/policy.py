@@ -30,30 +30,35 @@ OBS_DIM = N_SECTORS + 3 + 3   # 16 扇形 + 3 目标 + 3 速度 = 22
 # 连续动作维度（与 PPO 的 4 维世界系速度接口一致；DQN 通过离散表映射到同一接口）
 ACT_DIM = 4
 
-# ---- DQN 离散动作空间（11 个）----
-# 0-7  ：水平 8 方向（45° 间隔，速度 = MAX_HORIZ_SPEED*0.7，保持高度）
-# 8    ：上升（vz = +MAX_VERT_SPEED）
-# 9    ：下降（vz = -MAX_VERT_SPEED）
-# 10   ：悬停（全零）
-N_ACTIONS = 11
-_CRUISE = 0.7 * MAX_HORIZ_SPEED   # 巡航水平速度 (m/s)
-ACTION_NAMES = [
-    "东", "东北", "北", "西北", "西", "西南", "南", "东南",
-    "上升", "下降", "悬停",
-]
+# ---- DQN 离散动作空间（35 个）----
+# 演进：初版 11 个动作（8 方向巡航 + 升降 + 悬停）实测成功率低——无人机能避障但
+# 无法精确停靠目标（目标半径 0.4 m）。v2 加"慢速逼近"档（19 动作）仍不收敛，
+# 定位到根因是**方向离散精度**：8 方向（45° 间隔）在 2-8 m 目标距离上的横向误差
+# 0.85-3 m，远超到达半径，无人机只能在目标附近绕圈。v3 改为 **16 方向**
+# （22.5° 间隔，最大角误差 11.25°，2 m 距离横向误差 < 0.4 m），巡航 + 慢速双档：
+# 0-15 ：水平 16 方向巡航（速度 = MAX_HORIZ_SPEED*0.7，保持高度）
+# 16-31：水平 16 方向慢速逼近（速度 = MAX_HORIZ_SPEED*0.35）
+# 32   ：上升（vz = +MAX_VERT_SPEED）
+# 33   ：下降（vz = -MAX_VERT_SPEED）
+# 34   ：悬停（全零）
+N_ACTIONS = 35
+_CRUISE = 0.7 * MAX_HORIZ_SPEED       # 巡航水平速度 (m/s)
+_SLOW = 0.35 * MAX_HORIZ_SPEED        # 慢速逼近水平速度 (m/s)
+_DIRS = [(math.cos(i * math.pi / 8), math.sin(i * math.pi / 8))
+         for i in range(16)]          # 16 方向，0 = 正东，逆时针
+_DIR_NAMES = ["东", "东北偏东", "东北", "北东北", "北", "北西北", "西北", "西北偏西",
+              "西", "西南偏西", "西南", "南西南", "南", "南东南", "东南", "东东南"]
+ACTION_NAMES = _DIR_NAMES + [n + "(慢)" for n in _DIR_NAMES] + \
+    ["上升", "下降", "悬停"]
 # 世界系速度表 [vx, vy, vz, yaw_rate]（ENU，米/秒 + 弧度/秒）
 ACTION_VELOCITIES: List[Tuple[float, float, float, float]] = [
-    (_CRUISE, 0.0, 0.0, 0.0),                                   # 0 东
-    (_CRUISE * math.cos(math.pi / 4), _CRUISE * math.sin(math.pi / 4), 0.0, 0.0),  # 1 东北
-    (0.0, _CRUISE, 0.0, 0.0),                                   # 2 北
-    (-_CRUISE * math.cos(math.pi / 4), _CRUISE * math.sin(math.pi / 4), 0.0, 0.0),  # 3 西北
-    (-_CRUISE, 0.0, 0.0, 0.0),                                  # 4 西
-    (-_CRUISE * math.cos(math.pi / 4), -_CRUISE * math.sin(math.pi / 4), 0.0, 0.0),  # 5 西南
-    (0.0, -_CRUISE, 0.0, 0.0),                                  # 6 南
-    (_CRUISE * math.cos(math.pi / 4), -_CRUISE * math.sin(math.pi / 4), 0.0, 0.0),  # 7 东南
-    (0.0, 0.0, MAX_VERT_SPEED, 0.0),                            # 8 上升
-    (0.0, 0.0, -MAX_VERT_SPEED, 0.0),                           # 9 下降
-    (0.0, 0.0, 0.0, 0.0),                                       # 10 悬停
+    (_CRUISE * dx, _CRUISE * dy, 0.0, 0.0) for (dx, dy) in _DIRS
+] + [
+    (_SLOW * dx, _SLOW * dy, 0.0, 0.0) for (dx, dy) in _DIRS
+] + [
+    (0.0, 0.0, MAX_VERT_SPEED, 0.0),                            # 32 上升
+    (0.0, 0.0, -MAX_VERT_SPEED, 0.0),                           # 33 下降
+    (0.0, 0.0, 0.0, 0.0),                                       # 34 悬停
 ]
 
 _Z_BAND = 1.5           # 直方图只统计无人机高度 ± 该范围的障碍点，避免地面误报
