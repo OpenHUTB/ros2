@@ -364,6 +364,8 @@ sudo apt install python3-rospkg
 1. 编译功能包
 
 catkin_make
+注意： catkin_make  需要在catkin工作空间根目录（ ~/catkin_ws ）执行。如果直接在家目录运行，会提示  src does not exist 。
+工作空间目录结构： ~/catkin_ws/src/功能包名
 
 2. 刷新工作空间环境变量
 
