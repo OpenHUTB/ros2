@@ -338,7 +338,7 @@ chmod +x check_gazebo_ros.sh
 
 ## 十一、基于Gazebo仿真的神经网络小车避障实验 {#nn-obstacle-avoid}
 
-代码存放于仓库 `src/nn_avoidance` 功能包：
+代码存放于仓库 `src/chap3/nn_avoidance` 功能包：
 
 ```
 src/nn_avoidance
