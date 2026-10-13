@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""小海龟自动画花瓣演示节点（配套文档：docs/chapter/turtle_sim_experiment.md）
+"""小海龟画花瓣演示节点（配套文档：docs/chapter/chap1/turtle_sim_experiment.md）
 
 工作流程：
-  1. 等待 turtlesim 的 /spawn 服务上线；
-  2. 生成第二只海龟 turtle2；
-  3. 让 turtle2 依次画出 petals 个圆：每个圆的圆心均匀分布在公共中心四周，
+  1. 等待 turtlesim 的服务上线；
+  2. 调用 /clear 服务清空画布，擦掉上一次运行留下的轨迹；
+  3. 控制小海龟依次画出 petals 个圆：每个圆的圆心均匀分布在公共中心四周，
      且圆心到公共中心的距离正好等于圆的半径，所以每个圆都经过公共中心，
      画出来就是一圈两两相扣的"花瓣"；
   4. 每个花瓣换一种画笔颜色。
 
+说明：直接控制 turtlesim 启动时自带的小海龟，不需要额外生成新的海龟，
+     因此可以反复运行，不会出现重名冲突。
 兼容说明：采用 Python 2/3 兼容写法，ROS Kinetic（Python 2.7）与 Noetic（Python 3）均可运行。
 可调参数（rosrun/roslaunch 参数服务器）：~petals 花瓣数、~linear_speed 线速度、~angular_speed 角速度。
 """
@@ -19,7 +21,8 @@ import math
 
 import rospy
 from geometry_msgs.msg import Twist
-from turtlesim.srv import Spawn, SetPen, TeleportAbsolute
+from std_srvs.srv import Empty
+from turtlesim.srv import SetPen, TeleportAbsolute
 
 # 花瓣颜色表（r, g, b），按顺序循环取用
 PETAL_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
@@ -39,21 +42,19 @@ def main():
     circle_period = 2.0 * math.pi / angular_speed           # 画整圆用时 T = 2π / ω
 
     # 1. 同步等待 turtlesim 的服务上线，避免本节点早于仿真器启动而调用失败
-    rospy.loginfo('等待 /spawn 服务上线 ...')
-    rospy.wait_for_service('/spawn')
-    spawn = rospy.ServiceProxy('/spawn', Spawn)
-    set_pen = rospy.ServiceProxy('/turtle2/set_pen', SetPen)
-    teleport = rospy.ServiceProxy('/turtle2/teleport_absolute', TeleportAbsolute)
+    rospy.loginfo('等待 turtlesim 服务上线 ...')
+    rospy.wait_for_service('/turtle1/teleport_absolute')
 
-    # 2. 生成第二只海龟 turtle2（返回值里带回实际名字，默认不会重名）
-    resp = spawn(CENTER_X, CENTER_Y, 0.0, 'turtle2')
-    rospy.loginfo('已生成小海龟: %s', resp.name)
+    # 2. 清空画布，把上一次运行留下的轨迹擦掉，保证每次都从干净的画布开始
+    clear = rospy.ServiceProxy('/clear', Empty)
+    clear()
+    rospy.loginfo('画布已清空')
 
-    # 3. 以 50 Hz 向 /turtle2/cmd_vel 发布速度指令。
-    #    turtlesim 有 0.5 秒看门狗：超时收不到指令就会把海龟刹停，
-    #    因此必须用循环高频发布，而不能只发一条。
-    pub = rospy.Publisher('/turtle2/cmd_vel', Twist, queue_size=10)
-    rate = rospy.Rate(50)
+    # 3. 控制 turtlesim 自带的小海龟（turtle1）画花瓣
+    set_pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
+    teleport = rospy.ServiceProxy('/turtle1/teleport_absolute', TeleportAbsolute)
+    pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
+    rate = rospy.Rate(50)      # 50 Hz，远高于 0.5 秒看门狗阈值
     twist = Twist()
     twist.linear.x = linear_speed
     twist.angular.z = angular_speed
@@ -71,7 +72,7 @@ def main():
             r, g, b = PETAL_COLORS[i % len(PETAL_COLORS)]
             rospy.loginfo('开始画第 %d 个花瓣，画笔 RGB=(%d, %d, %d)', i + 1, r, g, b)
 
-            set_pen(r, g, b, 3, 1)               # 先抬笔，瞬移过程不画线
+            set_pen(r, g, b, 3, 1)               # 抬笔，瞬移过程不画线
             teleport(start_x, start_y, heading)
             set_pen(r, g, b, 3, 0)               # 落笔开画
 
@@ -84,7 +85,7 @@ def main():
     except rospy.ROSInterruptException:
         pass
 
-    rospy.loginfo('演示完成：turtle2 共画出 %d 个半径 %.2f 米的花瓣圆', petals, radius)
+    rospy.loginfo('演示完成：小海龟共画出 %d 个半径 %.2f 米的花瓣圆', petals, radius)
 
 
 if __name__ == '__main__':

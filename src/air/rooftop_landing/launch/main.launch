@@ -1,0 +1,65 @@
+<launch>
+  <!-- ============================================================
+       rooftop_landing 统一启动入口（作业要求的 launch 启动）
+
+         roslaunch rooftop_landing main.launch
+
+       前置条件（另开一个终端先启动桥接，否则收不到点云与里程计）：
+         roslaunch carlair_ros_bridge main.launch
+
+       可选参数示例：
+         roslaunch rooftop_landing main.launch safe_altitude:=6.0 prefer:=closest
+         roslaunch rooftop_landing main.launch z_up:=false      # 若桥接层高度是 NED 下为正
+         roslaunch rooftop_landing main.launch use_rviz:=false  # 不开 RViz
+
+       换地图时最常现场调整的是感知阈值（点云稀疏/屋顶较小/候选面被地面挤掉），
+       这些都已经暴露成 launch 参数，不必再改 config/rooftop_landing.yaml：
+         roslaunch rooftop_landing main.launch max_planes:=15 min_plane_inliers:=40
+         roslaunch rooftop_landing main.launch min_roof_area:=2.0 cluster_min_points:=1
+         roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
+       ============================================================ -->
+
+  <arg name="safe_altitude" default="5.0"     doc="高于屋顶的安全高度 (m)"/>
+  <arg name="descend_speed" default="0.5"     doc="垂直下降速度 (m/s)"/>
+  <arg name="prefer"        default="highest" doc="目标屋顶策略 highest|closest|largest"/>
+  <arg name="autostart"     default="true"    doc="启动后是否自动开始任务"/>
+  <arg name="z_up"          default="true"    doc="高度分量是否上为正（ENU）；实测 carlair_ros_bridge 为 ENU，故默认 true"/>
+  <arg name="use_rviz"      default="true"    doc="是否同时启动 RViz"/>
+
+  <!-- 感知阈值：换地图 / 换点云密度时最常调整的几个 -->
+  <arg name="min_height_mode"    default="relative" doc="屋顶高度判定：relative（以检出的地面为基准）| absolute（绝对 ENU 阈值）"/>
+  <arg name="ground_margin"      default="1.0"  doc="relative 模式：比检出地面至少高这么多米才算屋顶"/>
+  <arg name="min_height"         default="0.5"  doc="absolute 模式的高度下限 (m)"/>
+  <arg name="min_plane_inliers"  default="120"  doc="一个平面最少点数（点云稀疏时调小）"/>
+  <arg name="min_roof_area"      default="8.0"  doc="屋顶最小面积 (m^2)"/>
+  <arg name="max_planes"         default="5"    doc="最多提取几个候选水平面（城市视野可提到 15）"/>
+  <arg name="min_landing_radius" default="0.6"  doc="降落点最小安全半径 (m)；一个候选都不满足就继续搜索"/>
+  <arg name="cluster_min_points" default="2"    doc="连通域聚类：一个栅格至少几个点才算被占据"/>
+  <arg name="tick_rate_hz"       default="10.0" doc="主循环频率 (Hz)，下降阶段的 cmd_vel 也按此频率发布"/>
+
+  <rosparam command="load" file="$(find rooftop_landing)/config/rooftop_landing.yaml"/>
+  <param name="approach/safe_altitude" value="$(arg safe_altitude)"/>
+  <param name="descend/speed"          value="$(arg descend_speed)"/>
+  <param name="perception/prefer"      value="$(arg prefer)"/>
+  <param name="mission/autostart"      value="$(arg autostart)"/>
+  <param name="frame/z_up"             value="$(arg z_up)"/>
+  <param name="perception/min_height_mode"    value="$(arg min_height_mode)"/>
+  <param name="perception/ground_margin"      value="$(arg ground_margin)"/>
+  <param name="perception/min_height"         value="$(arg min_height)"/>
+  <param name="perception/min_plane_inliers"  value="$(arg min_plane_inliers)"/>
+  <param name="perception/min_roof_area"      value="$(arg min_roof_area)"/>
+  <param name="perception/max_planes"         value="$(arg max_planes)"/>
+  <param name="perception/min_landing_radius" value="$(arg min_landing_radius)"/>
+  <param name="perception/cluster_min_points" value="$(arg cluster_min_points)"/>
+  <param name="mission/tick_rate_hz"          value="$(arg tick_rate_hz)"/>
+
+  <!-- 主节点（入口 main.py） -->
+  <node pkg="rooftop_landing" type="main.py" name="rooftop_landing"
+        output="screen" required="true"/>
+
+  <!-- 可视化：RViz 显示点云、屋顶轮廓与降落点 -->
+  <group if="$(arg use_rviz)">
+    <node pkg="rviz" type="rviz" name="rooftop_landing_rviz"
+          args="-d $(find rooftop_landing)/rviz/default.rviz"/>
+  </group>
+</launch>
