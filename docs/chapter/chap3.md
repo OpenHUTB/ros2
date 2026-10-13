@@ -198,6 +198,8 @@ roslaunch your_package gazebo_test.launch
 
 ![ROS Gazebo 集成成功运行截图](../img/chapter/gazebo_ros_result.png)
 通过 `rosrun gazebo_ros gazebo` 命令成功启动 Gazebo Classic 11，界面完整显示 3D 视图、坐标轴与仿真控制栏。
+![唤出小车](../img/chapter/gazebo_ros_result2.png)
+![运行结果](../img/chapter/gazebo_ros_result3.png)
 
 ### 7.3 结果分析
 
