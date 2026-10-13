@@ -1,0 +1,14 @@
+# Python runtime dependencies for lidar_obstacle_nn.
+#
+# Install into the ROS 2 Python environment (not a separate venv) so
+# that rclpy is importable:
+#
+#     python3 -m pip install --user -r requirements.txt
+#
+# Use the CUDA build of torch that matches your toolkit. On Ubuntu
+# 22.04 with an NVIDIA RTX 5070 Ti, the cu121 wheel works well:
+#
+#     python3 -m pip install --user torch --index-url https://download.pytorch.org/whl/cu121
+
+numpy>=1.26,<2.0
+torch>=2.0,<3.0
