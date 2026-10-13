@@ -184,9 +184,9 @@ a  = argmax(q)
 
 ## 6. 效果图
 
-![DQN 训练曲线](img/air/uav_dqn_nav/training_curve.png)
+![DQN 训练曲线](../img/air/uav_dqn_nav/training_curve.png)
 
-![DQN 飞行轨迹（6 障碍）](img/air/uav_dqn_nav/trajectory.png)
+![DQN 飞行轨迹（6 障碍）](../img/air/uav_dqn_nav/trajectory.png)
 
 上两图：DQN 训练成功率/平均奖励曲线，以及训练后策略的飞行轨迹（能避开障碍、
 接近目标但无法进入 0.4 m 到达半径——离散动作精度限制的直观展示）。
