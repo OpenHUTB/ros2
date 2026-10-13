@@ -46,7 +46,7 @@ sudo apt update
 sudo apt install ros-noetic-desktop-full
 
 ### 2.3 初始化 rosdep
-
+sudo apt install python3-rosdep2
 sudo rosdep init
 rosdep update
 
