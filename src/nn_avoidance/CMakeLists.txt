@@ -2,12 +2,14 @@
 project(nn_avoidance)
 
 find_package(catkin REQUIRED COMPONENTS
-  rospy
   std_msgs
+  rospy
+  sensor_msgs
+  geometry_msgs
 )
 
 catkin_package(
-  CATKIN_DEPENDS rospy std_msgs
+  CATKIN_DEPENDS std_msgs rospy sensor_msgs geometry_msgs
 )
 
 include_directories(
@@ -15,9 +17,9 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS
-  infer_node.py
-  train.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+nn_avoidance/infer_node.py
+nn_avoidance/train.py
+DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY launch
