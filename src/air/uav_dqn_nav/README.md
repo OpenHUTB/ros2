@@ -48,11 +48,20 @@ uav_dqn_nav/
 - Python 3.8+，依赖：`numpy`、`gymnasium`、`torch`（仅训练需要）、`rospy` 等 ROS 标准包
 - CarlaAir / AirSim 仿真器（部署时），桥接包 `carlair_ros_bridge`
 
-安装训练依赖（在虚拟机内）：
+安装训练依赖（在虚拟机内，中国大陆网络建议加清华源加速）：
 
 ```bash
 sudo apt update && sudo apt install -y python3-pip
-pip install numpy gymnasium torch --index-url https://download.pytorch.org/whl/cpu
+pip install numpy gymnasium -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+验证环境（Ubuntu 20.04 / ROS Noetic）：
+
+```bash
+lsb_release -a                       # 确认 Ubuntu 20.04
+source /opt/ros/noetic/setup.bash && echo $ROS_DISTRO   # 确认 noetic
+python3 -c "import numpy, gymnasium, torch; print('deps ok')"
 ```
 
 > 说明：训练侧依赖 torch（CPU 版即可，网络很小）；部署节点只用 numpy，无 torch 依赖。
