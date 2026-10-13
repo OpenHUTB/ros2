@@ -1,4 +1,4 @@
-# TurtleBot3 Gazebo 自主导航
+# TurtleBot3仿真自主导航实现与避障参数优化
 
 本项目为基于 ROS Noetic 的 TurtleBot3 (Burger) 在 Gazebo 仿真环境下的自主导航项目配置记录。
 
