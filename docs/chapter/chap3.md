@@ -169,21 +169,32 @@ rostopic list | grep gazebo
 
 rosrun gazebo_ros spawn_model -database box -urdf -model test_box -x 1 -y 0
 
+```
 ### 6.4 使用 launch 文件启动（推荐方式）
-
-创建 `gazebo_test.launch`：
-
+在功能包内新建`launch/gazebo_test.launch`，写入：
+```xml
 <launch>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="paused" value="false" />
-    <arg name="use_sim_time" value="true" />
-    <arg name="gui" value="true" />
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
   </include>
 </launch>
+```
 
-运行：
+在`CMakeLists.txt`添加配置，保证 launch 文件能被 ROS 找到：
 
-roslaunch your_package gazebo_test.launch
+```
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+```
+
+编译后运行：
+
+```
+roslaunch any_avoidance gazebo_test.launch
+```
 
 ## 七、实验结果 {#experiment-result}
 
