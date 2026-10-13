@@ -149,6 +149,15 @@ def main():
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
 
+        # 指定中文字体，否则坐标轴与图例里的汉字会显示成方框。
+        # 这里列出常见发行版自带的中文字体，缺哪个用下一个。
+        plt.rcParams['font.sans-serif'] = [
+            'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Zen Hei',
+            'Microsoft YaHei', 'SimHei', 'PingFang SC', 'AR PL UMing CN',
+            'DejaVu Sans',
+        ]
+        plt.rcParams['axes.unicode_minus'] = False
+
         plt.figure(figsize=(8, 3.6))
         for f in followers:
             ts = [t for t, n, _x, _y, _z, _e in samples if n == f]

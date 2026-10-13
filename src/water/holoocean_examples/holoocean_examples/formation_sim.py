@@ -193,6 +193,14 @@ def main():
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
 
+        # 指定中文字体，否则坐标轴与图例里的汉字会显示成方框。
+        plt.rcParams['font.sans-serif'] = [
+            'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Zen Hei',
+            'Microsoft YaHei', 'SimHei', 'PingFang SC', 'AR PL UMing CN',
+            'DejaVu Sans',
+        ]
+        plt.rcParams['axes.unicode_minus'] = False
+
         plt.figure(figsize=(8, 3.6))
         plt.plot([r[0] for r in rows], errs, linewidth=1.4, label='编队误差（简化运动学模型）')
         plt.axhline(args.thresh, color='gray', linestyle='--', linewidth=1,
