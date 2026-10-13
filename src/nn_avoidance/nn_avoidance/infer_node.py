@@ -1,3 +1,4 @@
+import rospkg
 import rospy
 import numpy as np
 import torch
@@ -20,7 +21,10 @@ class NNAvoidNode():
     def __init__(self):
         # 加载模型
         self.model = AvoidNet()
-        self.model.load_state_dict(torch.load("model.pth"))
+        rospack = rospkg.RosPack()
+        pkg_path = rospack.get_path('nn_avoidance')
+        model_full_path = pkg_path + "/nn_avoidance/model.pth"
+        self.model.load_state_dict(torch.load(model_full_path))
         self.model.eval()
         # 订阅激光雷达
         self.sub = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
