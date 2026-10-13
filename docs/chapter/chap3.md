@@ -182,13 +182,7 @@ rosrun gazebo_ros spawn_model -database box -urdf -model test_box -x 1 -y 0
 </launch>
 ```
 
-在`CMakeLists.txt`添加配置，保证 launch 文件能被 ROS 找到：
-
-```
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-```
+CMakeLists.txt与package.xml文档在src/chap3代码中
 
 编译后运行：
 
