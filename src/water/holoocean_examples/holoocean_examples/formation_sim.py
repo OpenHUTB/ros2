@@ -22,12 +22,16 @@ import math
 import os
 import sys
 
-# ---------------------------------------------------------------- 模型参数
+# ------------------------------------------------------------------ 模型参数
 DT = 0.02                 # 仿真步长（50 Hz，与插件 updateRate 一致）
-V_CRUISE = 1.00           # 跟随者巡航速度 (m/s)
-K_SPEED = 0.35            # 位置误差 -> 速度增益 (1/s)
-STANDOFF_MAX = 10.0       # 速度增益上限对应的距离 (m)
-DEADBAND = 0.15           # 速度死区 (m)
+
+# ---- 外环参数：与 formation_controller.py 的默认值保持一致 ----
+K_POS = 0.25              # 位置比例增益 (1/s)
+K_DAMP = 0.8              # 相对速度阻尼增益
+LEADER_SPEED = 1.2        # 领航者前进速度 (m/s)
+TURN_START = 20.0         # 领航者开始转向的时刻 (s)
+TURN_RATE = 1.0           # 领航者转向角速率 (deg/s)，受被控对象转向能力上限约束（见章节 6.4）
+TURN_TOTAL = 90.0         # 领航者总转向角 (deg)
 
 K_PSI = 1.20              # 航向一阶响应 (1/s)
 K_V = 1.50                # 速度一阶响应 (1/s)
@@ -64,12 +68,16 @@ class Vehicle:
 
 
 def leader_command(t):
-    """领航者航迹脚本：直行 20 s -> 左转 90° -> 再直行（航向由自动驾驶跟踪）。"""
-    if t < 20.0:
-        return 0.0, 1.2
-    if t < 34.0:
-        return math.pi / 2, 1.2
-    return math.pi / 2, 1.2
+    """领航者航迹脚本：直行 -> 限角速率转向 90° -> 再直行。
+
+    角速率限制（TURN_RATE）来自被控对象的物理约束：鱼雷模型的 Nomoto 增益给出
+    约 3.75 deg/s 的最大偏航角速度，直接下发 90° 阶跃会让跟随者无法跟踪（见章节 6.4）。
+    """
+    if t < TURN_START:
+        psi = 0.0
+    else:
+        psi = math.radians(min(TURN_TOTAL, (t - TURN_START) * TURN_RATE))
+    return psi, LEADER_SPEED
 
 
 def main():
@@ -78,15 +86,18 @@ def main():
     ap.add_argument('--offset', type=float, nargs=3, default=[-3.0, 0.0, 0.0],
                     help='跟随者相对领航者的机体系偏移 [dx dy dz]')
     ap.add_argument('--thresh', type=float, default=0.3, help='收敛判据 (m)')
-    ap.add_argument('--hold', type=float, default=3.0, help='判据需连续满足的时长 (s)')
+    ap.add_argument('--hold', type=float, default=0.0, help='判据需连续满足的时长 (s)')
     ap.add_argument('--outdir', default='.')
     args = ap.parse_args()
 
     dx, dy, dz = args.offset
 
-    # 领航者从原点出发；跟随者初始与领航者重合，以便观察收敛过程
+    # 领航者从原点出发；跟随者从期望编队位置出发（初始编队误差 ≈ 0），与 6.3 节的实测条件一致
     leader = Vehicle(0.0, 0.0, -3.0)
-    follower = Vehicle(0.0, 0.0, -3.0)
+    follower = Vehicle(dx, dy, -3.0 + dz)
+
+    leader_yaw_rate = 0.0
+    prev_psi = leader.psi
 
     rows = []
     t = 0.0
@@ -94,7 +105,12 @@ def main():
         l_psi_cmd, l_v_cmd = leader_command(t)
         leader.step(l_psi_cmd, l_v_cmd, -3.0)
 
-        # ---- 与 formation_controller.py 相同的外环控制律 ----
+        # 领航者偏航角速率（低通估计），供目标点速度前馈使用
+        rate = wrap_pi(leader.psi - prev_psi) / DT
+        leader_yaw_rate = 0.8 * leader_yaw_rate + 0.2 * rate
+        prev_psi = leader.psi
+
+        # ---- 与 formation_controller.py 相同的外环控制律：速度矢量控制 ----
         c, s = math.cos(leader.psi), math.sin(leader.psi)
         tx = leader.x + (c * dx - s * dy)
         ty = leader.y + (s * dx + c * dy)
@@ -102,16 +118,23 @@ def main():
         ex, ey, ez = tx - follower.x, ty - follower.y, tz - follower.z
         dist = math.sqrt(ex * ex + ey * ey)
 
-        psi_cmd = math.atan2(ey, ex)
+        # 目标点速度 = 领航者平动速度 + 偏移点随领航者偏航旋转的切向速度
+        vtx = leader.speed * math.cos(leader.psi) - leader_yaw_rate * (ty - leader.y)
+        vty = leader.speed * math.sin(leader.psi) + leader_yaw_rate * (tx - leader.x)
+
+        # 期望速度矢量 = 目标点速度(前馈) + 位置误差反馈 − 相对速度阻尼
+        fvx = follower.speed * math.cos(follower.psi)
+        fvy = follower.speed * math.sin(follower.psi)
+        vdx = vtx + K_POS * ex - K_DAMP * (fvx - vtx)
+        vdy = vty + K_POS * ey - K_DAMP * (fvy - vty)
+
+        psi_cmd = math.atan2(vdy, vdx)
+        v_cmd = math.hypot(vdx, vdy)
 
         # 深度指令（正值向下的“深度”），再换算回模型里的 z 坐标
         dep_cmd = max(Z_MIN, min(Z_MAX, DEPTH_SIGN * tz))
         z_cmd = DEPTH_SIGN * dep_cmd
 
-        # 速度指令 = 前馈（领航者当前速度）+ 位置误差反馈
-        # 纯反馈律在 dist→0 时速度趋近 0，必然留下 (v_leader - V_CRUISE)/K_SPEED 的稳态误差，
-        # 加入前馈项后稳态误差趋近 0 —— 这一点由本回放实测暴露。
-        v_cmd = 0.0 if dist < DEADBAND else leader.speed + K_SPEED * max(0.0, min(dist - DEADBAND, STANDOFF_MAX))
         follower.step(psi_cmd, v_cmd, z_cmd)
 
         err = math.sqrt(ex * ex + ey * ey + ez * ez)
@@ -122,9 +145,12 @@ def main():
     rms = math.sqrt(sum(e * e for e in errs) / len(errs))
     emax = max(errs)
 
+    # 收敛时间：误差峰值之后首次回到阈值以内。
+    # 跟随者从期望队形出发、起点即在阈值内，直接取"首个低于阈值"会恒为 0，没有意义。
+    i_pk = max(range(len(errs)), key=lambda i: errs[i])
     conv = None
     need = int(args.hold / DT)
-    for i in range(len(errs) - need):
+    for i in range(i_pk, len(errs) - need):
         if all(e < args.thresh for e in errs[i:i + need]):
             conv = rows[i][0]
             break
@@ -157,7 +183,7 @@ def main():
     if conv is None:
         print('| 收敛时间（到 ±%.1f m 并保持 %.0f s） | 未在窗口内收敛 |' % (args.thresh, args.hold))
     else:
-        print('| 收敛时间（到 ±%.1f m 并保持 %.0f s） | %.2f s |' % (args.thresh, args.hold, conv))
+        print('| 峰值后收敛时间（回到 ±%.1f m 并保持 %.0f s） | %.2f s |' % (args.thresh, args.hold, conv))
     print('| 稳态误差（后 30%% 采样均值） | %.3f m |' % steady)
     if vstd is not None:
         print('| 收敛后速度指令波动（标准差） | %.3f m/s |' % vstd)

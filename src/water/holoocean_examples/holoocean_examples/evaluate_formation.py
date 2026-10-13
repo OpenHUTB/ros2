@@ -81,7 +81,10 @@ def stats(samples, follower, thresh):
         return None
     vals = [e for _t, e in errs]
     rms = math.sqrt(sum(v * v for v in vals) / len(vals))
-    conv = next((t for t, e in errs if e < thresh), None)
+    # 收敛时间：误差峰值之后首次回到 ±thresh 以内。
+    # 跟随者从期望队形出发，起点就在阈值内，直接取"首个低于阈值"会恒为 0，没有意义。
+    i_pk = max(range(len(vals)), key=lambda i: vals[i])
+    conv = next((errs[i][0] for i in range(i_pk, len(errs)) if errs[i][1] < thresh), None)
     # 收敛后再看稳态段（最后 30% 采样）
     tail = vals[int(len(vals) * 0.7):]
     steady = sum(tail) / len(tail) if tail else float('nan')
@@ -133,7 +136,7 @@ def main():
         conv = ('%.2f s' % st['conv']) if st['conv'] is not None else '未在采集窗口内收敛'
         print('| %s 编队误差 RMS | %.3f m |' % (f, st['rms']))
         print('| %s 最大瞬时误差 | %.3f m |' % (f, st['mx']))
-        print('| %s 收敛时间（到 ±%.1f m） | %s |' % (f, args.thresh, conv))
+        print('| %s 峰值后收敛时间（回到 ±%.1f m） | %s |' % (f, args.thresh, conv))
         print('| %s 稳态误差（后 30%% 采样均值） | %.3f m |' % (f, st['steady']))
         vs = node.vel.get(f) or []
         if vs:
