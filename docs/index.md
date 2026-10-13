@@ -103,6 +103,8 @@ ROS每章节运行代码:
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
+* [基于 CBF-PPO 的无人机安全导航](./air/safedrl_drone_nav.md) —— 基于控制屏障函数与拉格朗日 PPO 的无人机安全导航，在奖励约束下学习避障策略并用安全滤波器保证飞行安全
+
 
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
