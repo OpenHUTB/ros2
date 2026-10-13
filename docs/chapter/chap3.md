@@ -140,7 +140,7 @@ hash -r
 > source /opt/ros/noetic/setup.bash
 > ```
 ```bash
-rosrun gazebo_ros gazebo
+新开终端运行：rosrun gazebo_ros gazebo
 
 或使用 launch 文件（推荐）：
 
@@ -167,7 +167,7 @@ rostopic list | grep gazebo
 
 新开终端：
 
-rosrun gazebo_ros spawn_model -file `rospack find gazebo_ros`/worlds/empty.world -urdf -model test_box -x 1 -y 0
+rosrun gazebo_ros spawn_model -database box -urdf -model test_box -x 1 -y 0
 
 ### 6.4 使用 launch 文件启动（推荐方式）
 
