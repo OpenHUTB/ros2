@@ -1,4 +1,4 @@
-#本章聚焦于开发Gazebo环境并使用仿真小车进行可视化避障
+# 3.1本章聚焦于开发Gazebo环境并使用仿真小车进行可视化避障
 **适用系统**：Ubuntu 20.04 LTS (Focal Fossa)
 **ROS 版本**：ROS Noetic（ROS1 最终版本）
 **Gazebo 版本**：Gazebo Classic 11
@@ -17,7 +17,7 @@
 - [十、后续学习建议](#next-study)
 - [十一、基于Gazebo仿真的神经网络小车避障实验](#nn-obstacle-avoid)
 
-## 一、环境说明{#env-intro}
+## 一、环境说明 {#env-intro}
 | 项目 | 版本/说明 |
 |------|-----------|
 | 操作系统 | Ubuntu 20.04 LTS (Focal Fossa) |
@@ -87,7 +87,7 @@ gazebo --version
 
 Gazebo multi-robot simulator, version 11.15.1
 
-## 四、安装 gazebo_ros_pkgs（ROS 桥接包）{#install-gazebo-ros-pkgs}
+## 四、安装 gazebo_ros_pkgs（ROS 桥接包） {#install-gazebo-ros-pkgs}
 
 `gazebo_ros_pkgs` 是 **ROS 与 Gazebo 通信的桥梁**，提供 `gazebo_ros` 节点、传感器 / 执行器插件等。
 
