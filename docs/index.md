@@ -85,6 +85,7 @@ ROS每章节运行代码:
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
@@ -107,6 +108,16 @@ ROS每章节运行代码:
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+
+* [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
+
+* [WSL 跑通 HoloOcean2 的 ROS2 示例（无头模式）](./water/WSL_HoloOcean2_ROS2.md) —— 无 GPU 环境下用 `-nullrhi` 参数跑无头仿真
+
+* [Docker 开发环境](./water/docker.md) —— 开发容器与工作空间挂载
+
+* [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
+
+* [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
 
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
