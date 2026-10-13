@@ -6,19 +6,19 @@
 **文档说明**：本文档记录从零开始安装 ROS Noetic + Gazebo Classic 11 仿真环境的完整流程，包含排查与验证方法。
 
 ## 目录
-- [一、环境说明](#一环境说明)
-- [二、安装 ROS Noetic](#二安装-ros-noetic)
-- [三、安装 Gazebo Classic 11](#三安装-gazebo-classic-11)
-- [四、安装 gazebo_ros_pkgs（ROS 桥接包）](#四安装-gazebo_ros_pkgsros-桥接包)
-- [五、配置环境变量](#五配置环境变量)
-- [六、验证 ROS + Gazebo 集成](#六验证-ros--gazebo-集成)
-- [七、实验结果](#七实验结果)
-- [八、常见问题与解决方案](#八常见问题与解决方案)
-- [九、一键检查脚本](#九一键检查脚本)
-- [十、后续学习建议](#十后续学习建议)
-- [十一、基于Gazebo仿真的神经网络小车避障实验](#十一基于gazebo仿真的神经网络小车避障实验)
+- [一、环境说明](#env-intro)
+- [二、安装 ROS Noetic](#install-ros-noetic)
+- [三、安装 Gazebo Classic 11](#install-gazebo-classic11)
+- [四、安装 gazebo_ros_pkgs（ROS 桥接包）](#install-gazebo-ros-pkgs)
+- [五、配置环境变量](#config-env)
+- [六、验证 ROS + Gazebo 集成](#verify-ros-gazebo)
+- [七、实验结果](#experiment-result)
+- [八、常见问题与解决方案](#faq)
+- [九、一键检查脚本](#check-script)
+- [十、后续学习建议](#next-study)
+- [十一、基于Gazebo仿真的神经网络小车避障实验](#nn-obstacle-avoid)
 
-## 一、环境说明
+## 一、环境说明{#env-intro}
 | 项目 | 版本/说明 |
 |------|-----------|
 | 操作系统 | Ubuntu 20.04 LTS (Focal Fossa) |
@@ -30,8 +30,7 @@
 > - Gazebo Classic 已于 **2025 年 1 月停止维护**，但 ROS Noetic 仍然使用它，现有教程和项目完全兼容。
 > - Ubuntu 20.04 **必须搭配 Gazebo 11**，不要误装 `gazebo9`（那是 Ubuntu 18.04 + ROS Melodic 的标配）。
 > - 后续若需迁移，可考虑 Gazebo Sim（新版）/ Ignition，但 ROS1 生态目前仍以 Classic 为主。
-
-## 二、安装 ROS Noetic
+## 二、安装 ROS Noetic {#install-ros-noetic}
 ### 2.1 配置 ROS 软件源
 bash
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-noetic.list'
@@ -64,7 +63,7 @@ roscore
 
 终端输出 ROS master 启动信息即表示成功（按 `Ctrl+C` 退出）。
 
-## 三、安装 Gazebo Classic 11
+## 三、安装 Gazebo Classic 11 {#install-gazebo-classic11}
 
 > 若 `ros-noetic-desktop-full` 已安装成功，通常已包含 Gazebo 11。若终端输入 `gazebo` 提示 `Command not found`，则需要单独安装。
 
@@ -89,7 +88,7 @@ gazebo --version
 
 Gazebo multi-robot simulator, version 11.15.1
 
-## 四、安装 gazebo_ros_pkgs（ROS 桥接包）
+## 四、安装 gazebo_ros_pkgs（ROS 桥接包）{#install-gazebo-ros-pkgs}
 
 `gazebo_ros_pkgs` 是 **ROS 与 Gazebo 通信的桥梁**，提供 `gazebo_ros` 节点、传感器 / 执行器插件等。
 
@@ -112,7 +111,7 @@ rospack find gazebo_ros
 
 /opt/ros/noetic/share/gazebo_ros
 
-## 五、配置环境变量
+## 五、配置环境变量 {#config-env}
 
 ### 5.1 添加 Gazebo 模型路径
 
@@ -131,7 +130,7 @@ source ~/.bashrc
 
 hash -r
 
-## 六、验证 ROS + Gazebo 集成
+## 六、验证 ROS + Gazebo 集成 {#verify-ros-gazebo}
 
 ### 6.1 用 ROS 方式启动 Gazebo
 
@@ -180,7 +179,7 @@ rosrun gazebo_ros spawn_model -file `rospack find gazebo_ros`/worlds/empty.world
 
 roslaunch your_package gazebo_test.launch
 
-## 七、实验结果
+## 七、实验结果 {#experiment-result}
 
 ### 7.1 实验环境
 
@@ -238,7 +237,7 @@ This version of Gazebo reaches end-of-life in January 2025. Consider migrating t
 
 Steps: 1 - Real Time Factor: 1.00 - Sim Time: 00:00:05.01.214 - Real Time: 00:00:05.01.892 - Iterations: 301214 - FPS: 62.53
 
-## 八、常见问题与解决方案
+## 八、常见问题与解决方案 {#faq}
 
 ### 8.1 报错速查表
 
@@ -276,7 +275,7 @@ sudo apt install --reinstall gazebo11
 rosrun gazebo_ros gazebo
 ```
 
-## 九、一键检查脚本
+## 九、一键检查脚本 {#check-script}
 
 将以下内容保存为 `check_gazebo_ros.sh`：
 
@@ -304,7 +303,7 @@ chmod +x check_gazebo_ros.sh
 
 ## 十、后续学习建议
 
-### 10.1 建模与仿真
+## 十、后续学习建议 {#next-study}
 
 - **URDF/Xacro 建模**：学习用 XML 描述机器人结构，通过 `spawn_model` 加载到 Gazebo。
 - **传感器插件**：为机器人添加相机、激光雷达、IMU 等，参考 `gazebo_plugins` 包。
@@ -326,7 +325,7 @@ chmod +x check_gazebo_ros.sh
 
 本实验基于前面已经搭建完成的 Ubuntu20.04 + ROS Noetic + Gazebo Classic11 仿真环境，在仿真平台之上，实现全连接神经网络驱动小车自主避障。利用仿真环境激光雷达获取障碍物距离，神经网络推理输出速度指令，完成机器人感知‑推理‑控制流程。
 
-### 11.1 项目文件结构
+## 十一、基于Gazebo仿真的神经网络小车避障实验 {#nn-obstacle-avoid}
 
 代码存放于仓库 `src/nn_avoidance` 功能包：
 
