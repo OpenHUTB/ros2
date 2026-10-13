@@ -1,3 +1,0 @@
-<launch>
-    <node pkg="nn_avoidance" type="infer_node.py" name="nn_avoid_node" output="screen"/>
-</launch>
