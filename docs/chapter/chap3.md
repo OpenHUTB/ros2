@@ -133,7 +133,13 @@ hash -r
 ## 六、验证 ROS + Gazebo 集成 {#verify-ros-gazebo}
 
 ### 6.1 用 ROS 方式启动 Gazebo
-
+> ⚠️ 重要提醒：
+> 使用 `rosrun`、`rostopic` 这类ROS命令前，**必须加载ROS Noetic环境**。
+> 新开终端都需要执行下面这条命令（前面已经写入`.bashrc`的话，新开终端会自动加载，不用手动敲）：
+> ```bash
+> source /opt/ros/noetic/setup.bash
+> ```
+```bash
 rosrun gazebo_ros gazebo
 
 或使用 launch 文件（推荐）：
