@@ -1,0 +1,18 @@
+<launch>
+<!-- 任务①：无人机物理仿真 + 键盘控制 -->
+<arg name="gui" default="true"/>
+<!-- Gazebo 空世界（平地，便于自由飞行） -->
+<include file="$(find gazebo_ros)/launch/empty_world.launch">
+<arg name="use_sim_time" value="true"/>
+<arg name="gui" value="$(arg gui)"/>
+</include>
+<!-- 生成无人机（基础型号） -->
+<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+<arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor.gazebo.xacro"/>
+<arg name="x" value="0.0"/>
+<arg name="y" value="0.0"/>
+<arg name="z" value="0.3"/>
+</include>
+<!-- 键盘控制节点（独立终端运行，自动调用 /engage 解锁电机） -->
+<node pkg="uav_sim" type="keyboard_control.py" name="keyboard_control" output="screen" launch-prefix="xterm -e"/>
+</launch>
