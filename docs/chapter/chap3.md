@@ -312,36 +312,29 @@ echo "=========== 检查完成 ==========="
 chmod +x check_gazebo_ros.sh
 ./check_gazebo_ros.sh
 
-## 十、后续学习建议
-
 ## 十、后续学习建议 {#next-study}
 
-- **URDF/Xacro 建模**：学习用 XML 描述机器人结构，通过 `spawn_model` 加载到 Gazebo。
-- **传感器插件**：为机器人添加相机、激光雷达、IMU 等，参考 `gazebo_plugins` 包。
-- **世界文件（World）**：自定义仿真场景，添加地面、障碍物、光照等。
-
-### 10.2 控制与算法
+### 10.1 控制与算法
 
 - **ROS Control**：结合 `ros‑noetic‑gazebo‑ros‑control`，配置关节控制器（位置 / 速度 / 力矩）。
 - **MoveIt!**：配合 Gazebo 做机械臂运动规划仿真。
 - **SLAM / 导航**：在 Gazebo 中使用 `gmapping`、`cartographer`、`move_base` 做仿真测试。
 
-### 10.3 推荐参考资料
+### 10.2 推荐参考资料
 
 - [Gazebo Classic 官方文档](http://classic.gazebosim.org/tutorials)
 - [ROS Wiki ‑ gazebo_ros_pkgs](http://wiki.ros.org/gazebo_ros_pkgs)
 - [ROS Wiki ‑ URDF](http://wiki.ros.org/urdf)
 
-## 十一、基于 Gazebo 仿真的神经网络小车避障实验
-
+## 十一、基于Gazebo仿真的神经网络小车避障实验 {#nn-obstacle-avoid}
 本实验基于前面已经搭建完成的 Ubuntu20.04 + ROS Noetic + Gazebo Classic11 仿真环境，在仿真平台之上，实现全连接神经网络驱动小车自主避障。利用仿真环境激光雷达获取障碍物距离，神经网络推理输出速度指令，完成机器人感知‑推理‑控制流程。
 
-## 十一、基于Gazebo仿真的神经网络小车避障实验 {#nn-obstacle-avoid}
 
 代码存放于仓库 `src/chap3/nn_avoidance` 功能包：
 
 ```
 src/nn_avoidance
+├─ CMakeLists.txt 
 ├─ package.xml          # ROS功能包描述文件，声明依赖
 ├─ setup.py             # Python功能包编译配置文件
 ├─ nn_avoidance
@@ -385,7 +378,7 @@ export TURTLEBOT3_MODEL=burger
 roslaunch turtlebot3_gazebo turtlebot3_world.launch
 Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
 
-6.在新开终端，刷新环境变量，运行避障节点。
+6.先把训练出来的文件`model.pth`放入内层nn_avoidance文件夹中，再新开终端，刷新环境变量，运行避障节点。
 
 cd ~/catkin_ws
 source devel/setup.bash
