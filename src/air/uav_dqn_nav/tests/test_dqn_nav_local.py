@@ -9,7 +9,7 @@
 1. 激光雷达扇形直方图（正东点云 -> 扇区 0 距离正确）
 2. 观测构造（22 维）
 3. 连续动作映射（与 PPO 一致）
-4. DQN 离散动作表（11 个动作，边界裁剪）
+4. DQN 离散动作表（35 个动作：16 巡航 + 16 慢速 + 升降 + 悬停，边界裁剪）
 5. DqnPolicy 纯 numpy 推理（随机权重：动作索引与速度形状正确）
 6. 与 PPO 模块的接口一致性（常量逐一相等）
 """
@@ -85,28 +85,30 @@ def main():
     check("负北 -> 南向 3.0, 天向 1.5", abs(vy + 3.0) < 1e-4 and abs(vz - 1.5) < 1e-4)
 
     print("== 4. DQN 离散动作表 ==")
-    check("动作数=11", N_ACTIONS == 11)
-    check("动作名数=11", len(ACTION_NAMES) == 11)
+    check("动作数=35", N_ACTIONS == 35)
+    check("动作名数=35", len(ACTION_NAMES) == 35)
     v0 = act_index_to_velocity(0)
     check("动作0=正东巡航", abs(v0[0] - 2.1) < 1e-3 and abs(v0[1]) < 1e-3)
-    v10 = act_index_to_velocity(10)
-    check("动作10=悬停", all(abs(x) < 1e-6 for x in v10[:3]))
-    v9 = act_index_to_velocity(9)
-    check("动作9=下降", abs(v9[2] + 1.5) < 1e-4)
+    v16 = act_index_to_velocity(16)
+    check("动作16=正东慢速逼近", abs(v16[0] - 1.05) < 1e-3 and abs(v16[1]) < 1e-3)
+    v34 = act_index_to_velocity(34)
+    check("动作34=悬停", all(abs(x) < 1e-6 for x in v34[:3]))
+    v33 = act_index_to_velocity(33)
+    check("动作33=下降", abs(v33[2] + 1.5) < 1e-4)
     v_clip = act_index_to_velocity(99)
-    check("越界动作裁剪到 10", v_clip == v10)
+    check("越界动作裁剪到 34", v_clip == v34)
 
     print("== 5. DqnPolicy 纯 numpy 推理 ==")
     npz = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_tmp_policy.npz")
     make_random_policy_npz(npz)
     p = DqnPolicy.from_npz(npz)
     act = p.act(obs)
-    check("act 返回 0-10", 0 <= act < N_ACTIONS, "act=%d" % act)
+    check("act 返回 0-34", 0 <= act < N_ACTIONS, "act=%d" % act)
     vel = p.forward(obs)
     check("forward 返回 4 维速度", vel.shape == (4,) and vel.dtype == np.float32,
           "shape=%s" % (vel.shape,))
     q = p.q_values(obs)
-    check("q_values 长度=11", q.shape == (N_ACTIONS,))
+    check("q_values 长度=35", q.shape == (N_ACTIONS,))
     os.remove(npz)
 
     print("== 6. 与 PPO 模块接口一致性 ==")

@@ -12,9 +12,9 @@
 | 项目 | 说明 |
 | --- | --- |
 | 算法 | DQN（深度 Q 网络，Mnih et al., Nature 2015） |
-| 网络 | 双隐藏层 MLP（22 → 64 → 64 → 11），ReLU 激活 |
+| 网络 | 双隐藏层 MLP（22 → 64 → 64 → 35），ReLU 激活 |
 | 观测 | 22 维：16 扇区激光雷达直方图 + 目标相对位置(3) + 速度(3)（全部世界系 ENU） |
-| 动作 | 11 个离散动作：水平 8 方向 + 上升/下降 + 悬停 |
+| 动作 | 35 个离散动作：16 方向巡航 + 16 方向慢速逼近 + 上升/下降 + 悬停 |
 | 强化学习技巧 | 经验回放、目标网络（软更新 τ=0.005）、ε-greedy 线性衰减、梯度裁剪 |
 | 训练环境 | 纯 numpy 质点 + 速度环一阶滞后（与 PPO 完全相同） |
 | 部署 | ROS Noetic 节点，纯 numpy 推理（无需 torch） |
@@ -59,30 +59,31 @@ pip install numpy gymnasium torch --index-url https://download.pytorch.org/whl/c
 
 ## 4. 快速开始
 
-### 4.1 训练 DQN 策略（在虚拟机内，约 20 万步）
+### 4.1 训练 DQN 策略（在虚拟机内，40 万步与 PPO 对齐）
 
 ```bash
 cd ~/catkin_ws/src/uav_dqn_nav
-python3 main.py --train --total 200000 --obstacles 6 --seed 42
+python3 main.py --train --total 400000 --epsilon-decay 250000 --obstacles 16 --out models35
 ```
 
-训练过程每 10000 步评估一次成功率（贪心策略），最优模型与纯 numpy 权重自动保存到
-`models/`（`best_model.pt`、`policy_weights.npz`）。训练完成后屏幕会打印：
+训练过程每 15000 步评估一次成功率（贪心策略），最优模型与纯 numpy 权重自动保存到
+`--out` 指定目录（`best_model.pt`、`policy_weights.npz`）。训练完成后屏幕会打印
+类似输出（真实日志见 `models/train35.log`）：
 
 ```
-step=  10000 | eps=0.905 | eval成功=1/10 (10.0%) | ...
-step= 200000 | eps=0.050 | eval成功=9/10 (90.0%) | ...
-训练完成：best 成功率 = 9/10，权重已导出 models/policy_weights.npz
+step=  105000 | eps=0.601 | eval成功=1/20 (5.0%) | 失败=13 超时=6 | 平均奖励=-21.53 | 平均步数=183.9
+step=  390000 | eps=0.050 | eval成功=0/20 (0.0%) | 失败=2 超时=18 | 平均奖励=-22.79 | 平均步数=366.6
+训练完成：best 成功率 = 1/20，权重已导出 models35/policy_weights.npz
 ```
 
 ### 4.2 评估
 
 ```bash
-python3 main.py --eval --weights models/policy_weights.npz --episodes 100
+python3 main.py --eval --weights models35/policy_weights.npz --episodes 100 --obstacles 16
 ```
 
 输出口径与 uav_ppo_nav 一致（成功率 / 失败 / 超时 / 平均步数 / 平均奖励），
-可直接与 PPO 结果对比。
+可直接与 PPO 结果对比（见第 7 节）。
 
 ### 4.3 部署到 CarlaAir/AirSim（ROS Noetic）
 
@@ -141,14 +142,45 @@ L(θ) = E[( r + γ·max_a' Q_target(s', a'; θ⁻) - Q(s, a; θ) )²]
 
 ## 7. 与 PPO（uav_ppo_nav）的对比结果
 
-> 在虚拟机中分别完成训练后，将两模块的评估结果填入下表（口径完全一致，可直接对比）。
+> 两模块在同一虚拟机（Ubuntu 20.04 / ROS Noetic，6 核 8.6 GB）上分别完成训练，
+> 评估口径完全一致（100 回合 / 贪心策略 / 目标半径 0.4 m / 速度环一阶滞后），可直接对比。
+
+### 7.1 训练环境评估（16 障碍，DQN 与 PPO 默认设置）
 
 | 指标 | DQN (uav_dqn_nav) | PPO (uav_ppo_nav) |
 | --- | --- | --- |
-| 成功率（100 回合） | 待填写 | 待填写 |
-| 平均步数 | 待填写 | 待填写 |
-| 平均奖励 | 待填写 | 待填写 |
-| 训练步数 | 200000 | 300000（PPO 默认） |
+| 成功率（100 回合） | **4%**（4/100） | **78%**（78/100） |
+| 失败（碰撞/越界） | 8 | 17 |
+| 超时 | 88 | 5 |
+| 平均步数 | 363.2 | 38.4 |
+| 平均奖励 | -19.2 | — |
+| 训练步数 | 400000（ε 衰减 250000） | 400000（PPO 默认） |
+
+### 7.2 训练环境评估（6 障碍，压力更小的场景）
+
+| 指标 | DQN (uav_dqn_nav) | PPO (uav_ppo_nav) |
+| --- | --- | --- |
+| 成功率（100 回合） | 0%（0/100） | 待补跑 |
+| 失败（碰撞/越界） | 64 | — |
+| 超时 | 36 | — |
+| 平均步数 | 200.8 | — |
+| 平均奖励 | -27.0 | — |
+
+### 7.3 结果分析与结论
+
+DQN 能学会**安全避障**（16 障碍下 100 回合仅 8 次碰撞），但**无法精确停靠
+目标点**（超时占 88%）：离散动作（22.5° 方向网格 + 巡航/慢速两档）在接近目标时
+的横向误差（0.19-0.4 m）与到达半径（0.4 m）同量级，无人机常在目标附近绕圈。
+PPO 的连续动作空间可以输出任意方向速度，平滑逼近并停靠目标，因此成功率显著更高。
+这组对比直接展示了**动作空间离散化对精细控制任务（点目标到达）的性能影响**——
+这也是本作业"端到端模型/算法对比"的核心结论。
+
+![DQN 训练曲线](models/training_curve.png)
+
+![DQN 飞行轨迹（6 障碍）](models/trajectory.png)
+
+> 训练日志：`models/train35.log`（16 障碍）、`models/train6.log`（6 障碍）；
+> 权重：`models/models35/policy_weights.npz`、`models/models6/policy_weights.npz`。
 
 ## 8. 注意事项
 
