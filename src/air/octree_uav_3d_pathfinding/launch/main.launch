@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ============================================================
+       空域载具八叉树三维寻路 —— 模块统一入口
+
+       用法：
+         roslaunch octree_uav_3d_pathfinding main.launch
+         roslaunch octree_uav_3d_pathfinding main.launch rviz:=false
+         roslaunch octree_uav_3d_pathfinding main.launch mapping:=false
+
+       前置条件：
+         宿主 Windows 上已经启动 OpenHUTB 模拟器（AirSim 多旋翼模式，RPC 41451）。
+         它不在本 launch 里启动 —— 模拟器是 Windows 程序，跑在宿主上，不在虚拟机里。
+
+       运行内容：
+         1) airsim_bridge          从 AirSim 取回点云与位姿，发 /cloud_in 与 TF
+         2) pointcloud_to_octomap  点云 → 八叉树占用地图 + RViz 可视化
+         3) uav_env_check          环境与链路自检（跑完自动退出）
+         4) rviz                   显示点云与占用体素
+       ============================================================ -->
+
+  <!-- 是否启动 AirSim 桥接节点 -->
+  <arg name="bridge" default="true"/>
+
+  <!-- 是否启动点云建图节点 -->
+  <arg name="mapping" default="true"/>
+
+  <!-- 是否运行环境与链路自检节点 -->
+  <arg name="check" default="true"/>
+
+  <!-- 是否启动 RViz -->
+  <arg name="rviz" default="true"/>
+
+  <!-- 载入参数配置 -->
+  <rosparam command="load"
+            file="$(find octree_uav_3d_pathfinding)/config/params.yaml"/>
+
+  <!-- AirSim 桥接节点：订阅 /uav/goal，发布 /cloud_in、/ground_truth/odom 与 TF -->
+  <node if="$(arg bridge)"
+        pkg="octree_uav_3d_pathfinding"
+        type="airsim_bridge.py"
+        name="airsim_bridge"
+        output="screen"/>
+
+  <!-- 点云建图节点：/cloud_in → /octomap_full 与 /occupied_cells_vis_array -->
+  <node if="$(arg mapping)"
+        pkg="octree_uav_3d_pathfinding"
+        type="pointcloud_to_octomap"
+        name="pointcloud_to_octomap"
+        output="screen"/>
+
+  <!-- 环境与链路自检节点
+       依次检查 AirSim RPC、点云链路、TF 与话题通信，跑完自动退出，不影响仿真 -->
+  <node if="$(arg check)"
+        pkg="octree_uav_3d_pathfinding"
+        type="main.py"
+        name="uav_env_check"
+        output="screen"
+        required="false"/>
+
+  <!-- RViz：显示点云、八叉树地图与规划路径 -->
+  <node if="$(arg rviz)"
+        pkg="rviz"
+        type="rviz"
+        name="rviz"
+        output="screen"
+        args="-d $(find octree_uav_3d_pathfinding)/rviz/default.rviz"/>
+
+</launch>
