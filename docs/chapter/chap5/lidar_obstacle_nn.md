@@ -276,18 +276,6 @@ compatible with the current PyTorch installation.
 
 **解决**：训练后重新 `colcon build --packages-select lidar_obstacle_nn --symlink-install`，确保 `install/lidar_obstacle_nn/share/lidar_obstacle_nn/models/lidar_mlp.pt` 存在（symlink 指向 src 下的真实文件）。
 
-## 9. 与课程任务的对应关系
-
-| 课程任务 | 本模块覆盖情况 |
-| --- | --- |
-| (2) 传感器感知及运动控制 | ✅ 激光雷达感知 + 神经网络推理（运动控制部分留待后续 PR 扩展为感知-控制闭环） |
-| 神经网络要求 | ✅ 三层 MLP（PyTorch），训练 + 测试 + ROS 2 封装 |
-| launch 启动 | ✅ `ros2 launch lidar_obstacle_nn main.launch.py` |
-| `main.py` 入口 | ✅ `lidar_obstacle_nn/main.py` |
-| Ubuntu 20.04 ROS Noetic 或 Humble | ✅ Ubuntu 22.04 ROS 2 Humble |
-| 截图（不用拍照） | ✅ flameshot 截图 |
-| 不使用大模型声明 | ✅ 见本页底部 |
-
 ## 参考资料
 
 - [ROS Index：ros_gz_sim_demos](https://index.ros.org/p/ros_gz_sim_demos/)
