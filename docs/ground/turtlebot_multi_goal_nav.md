@@ -62,10 +62,9 @@ roslaunch turtlebot_multi_goal_nav turtlebot_multi_goal_nav.launch
 
 ## 运行效果
 
-> 运行效果截图待补充：请将你的真实运行截图（png，<3 MB）放置到
-> `docs/img/ground/turtlebot_multi_goal_nav.png` 后，更新下方图片链接。
+机器人在仿真中依次经过 5 个目标点并自动停车的运行效果（仿真录制动图）：
 
-![turtlebot_multi_goal_nav 运行效果](../img/ground/turtlebot_multi_goal_nav.png)
+![turtlebot_multi_goal_nav 运行效果](../img/ground/turtlebot_multi_goal_nav.gif)
 
 ## 使用的大模型声明
 
