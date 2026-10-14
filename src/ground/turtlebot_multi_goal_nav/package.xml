@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtlebot_multi_goal_nav</name>
+  <version>0.0.0</version>
+  <description>多目标点顺序导航模块：订阅 /odom 获取位姿，发布 /cmd_vel，依次到达多个目标点后停车（不含激光避障）</description>
+  <maintainer email="CHANGE_ME@example.com">Ri-kin08</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>roslaunch</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+
+  <export/>
+</package>

@@ -66,6 +66,7 @@ ROS每章节运行代码:
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [防卡死漫游](./ground/no_stuck_wander.md)
+* [多目标点导航](./ground/turtlebot_multi_goal_nav.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
