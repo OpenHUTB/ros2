@@ -271,3 +271,4 @@ q   退出程序
    - **解决**：在每个新终端中执行 `source ~/catkin_ws/devel/setup.bash`，或将其写入 `~/.bashrc`。
 
 ### 六、运行效果
+https://github.com/Tan-aaa/ros2/blob/2d29e8412ba5b4c09d5d085dd515e26a6c15c552/tests/%E6%9C%BA%E6%A2%B0%E8%87%82.gif
