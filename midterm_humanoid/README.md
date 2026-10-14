@@ -40,4 +40,5 @@ WARN] [...] [robot_state_publisher]: The root link base_link has an inertia spec
 代码文件在Windows环境下编写整理。受虚拟机显卡、网络限制，暂时无法完成RViz、Gazebo可视化。URDF语法完整，拷贝至Ubuntu环境可直接运行校验。
 ## 模型RViz预览图
 > URDF模型文件语法与结构已通过校验，虚拟机显卡环境暂时无法正常渲染，此处展示正确加载后的预期效果。
-![人形模型正确预览图](./images/correct_rviz.png)
+![人形模型正确预览图](pic/rviz_correct_preview.png)
+![虚拟机截图](pic/rviz_vm_screenshot.png)
