@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'cylinder_node = cylinder_detect.detect:main',
         ],
     },
 )
