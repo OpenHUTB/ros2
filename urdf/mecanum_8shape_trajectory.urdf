@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<robot name="mecanum_car">
+  <material name="white"><color rgba="0.9 0.9 0.9 1"/></material>
+  <material name="gray"><color rgba="0.2 0.2 0.2 1"/></material>
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.5 0.4 0.1"/></geometry>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.5 0.4 0.1"/></geometry>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="5.0"/>
+      <inertia ixx="0.05" iyy="0.08" izz="0.1" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="front_left_wheel_joint" type="continuous">
+    <parent link="base_link"/><child link="front_left_wheel"/>
+    <origin xyz="0.18 0.15 0.05" rpy="-1.5708 0 0"/><axis xyz="0 0 1"/>
+  </joint>
+  <link name="front_left_wheel">
+    <visual><geometry><cylinder radius="0.08" length="0.04"/></geometry><material name="gray"/></visual>
+    <collision><geometry><cylinder radius="0.08" length="0.04"/></geometry></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <joint name="front_right_wheel_joint" type="continuous">
+    <parent link="base_link"/><child link="front_right_wheel"/>
+    <origin xyz="0.18 -0.15 0.05" rpy="-1.5708 0 0"/><axis xyz="0 0 1"/>
+  </joint>
+  <link name="front_right_wheel">
+    <visual><geometry><cylinder radius="0.08" length="0.04"/></geometry><material name="gray"/></visual>
+    <collision><geometry><cylinder radius="0.08" length="0.04"/></geometry></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="base_link"/><child link="rear_left_wheel"/>
+    <origin xyz="-0.18 0.15 0.05" rpy="-1.5708 0 0"/><axis xyz="0 0 1"/>
+  </joint>
+  <link name="rear_left_wheel">
+    <visual><geometry><cylinder radius="0.08" length="0.04"/></geometry><material name="gray"/></visual>
+    <collision><geometry><cylinder radius="0.08" length="0.04"/></geometry></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <joint name="rear_right_wheel_joint" type="continuous">
+    <parent link="base_link"/><child link="rear_right_wheel"/>
+    <origin xyz="-0.18 -0.15 0.05" rpy="-1.5708 0 0"/><axis xyz="0 0 1"/>
+  </joint>
+  <link name="rear_right_wheel">
+    <visual><geometry><cylinder radius="0.08" length="0.04"/></geometry><material name="gray"/></visual>
+    <collision><geometry><cylinder radius="0.08" length="0.04"/></geometry></collision>
+    <inertial><mass value="0.5"/><inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <transmission name="front_left_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_left_wheel_joint"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface></joint>
+    <actuator name="front_left_motor"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface><mechanicalReduction>1</mechanicalReduction></actuator>
+  </transmission>
+
+  <transmission name="front_right_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_right_wheel_joint"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface></joint>
+    <actuator name="front_right_motor"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface><mechanicalReduction>1</mechanicalReduction></actuator>
+  </transmission>
+
+  <transmission name="rear_left_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="rear_left_wheel_joint"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface></joint>
+    <actuator name="rear_left_motor"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface><mechanicalReduction>1</mechanicalReduction></actuator>
+  </transmission>
+
+  <transmission name="rear_right_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="rear_right_wheel_joint"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface></joint>
+    <actuator name="rear_right_motor"><hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface><mechanicalReduction>1</mechanicalReduction></actuator>
+  </transmission>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+  </gazebo>
+</robot>
