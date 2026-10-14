@@ -1,0 +1,51 @@
+﻿<launch>
+  <!-- 8瀛楄建杩硅拷韪畬鏁村惎鍔紙浣庨€熺増锛屽尮閰嶅姩鍥炬晥鏋滐級 -->
+
+  <rosparam file="$(find mecanum_8shape_trajectory)/config/controllers.yaml" command="load"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+
+  <!-- 鐧借壊搴曠洏URDF -->
+  <param name="robot_description" textfile="$(find mecanum_8shape_trajectory)/urdf/mecanum_8shape_trajectory.urdf"/>
+
+  <node name="spawn_car" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model mecanum_robot -param robot_description -x 0 -y 0 -z 0.15"
+        output="screen"/>
+
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        args="mecanum_group_controller joint_state_controller"
+        respawn="false" output="screen"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher" output="screen"/>
+
+  <!-- 閲岀▼璁″彂甯?-->
+  <node name="odom_publisher" pkg="mecanum_car" type="odom_publisher.py" output="screen">
+    <param name="model_name" value="mecanum_robot"/>
+  </node>
+
+  <!-- 8瀛楄建杩圭敓鎴愶紙浣庨€熷皬鎸箙锛?-->
+  <node name="trajectory_generator" pkg="mecanum_car" type="trajectory_generator.py" output="screen">
+    <param name="amplitude" value="0.3"/>
+    <param name="omega" value="0.15"/>
+    <param name="duration" value="40.0"/>
+    <param name="rate" value="20.0"/>
+  </node>
+
+  <!-- PID杞ㄨ抗杩借釜锛堜綆閫熼檺骞咃級 -->
+  <node name="pid_tracker" pkg="mecanum_car" type="pid_tracker.py" output="screen">
+    <param name="kp_x" value="0.8"/>
+    <param name="kp_y" value="0.8"/>
+    <param name="kp_th" value="1.5"/>
+    <param name="kd_x" value="0.05"/>
+    <param name="kd_y" value="0.05"/>
+    <param name="kd_th" value="0.1"/>
+    <param name="max_vx" value="0.05"/>
+    <param name="max_vy" value="0.05"/>
+    <param name="max_wz" value="0.3"/>
+  </node>
+</launch>
