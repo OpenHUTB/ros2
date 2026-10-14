@@ -79,7 +79,7 @@ source ~/miniconda3/bin/activate
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
 ```
 
-```
+```bash
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 ```
 
