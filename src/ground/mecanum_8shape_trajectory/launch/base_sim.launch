@@ -1,0 +1,17 @@
+﻿<launch>
+  <rosparam file="$(find mecanum_8shape_trajectory)/config/controllers.yaml" command="load"/>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+  <param name="robot_description" textfile="$(find mecanum_8shape_trajectory)/urdf/mecanum_8shape_trajectory.urdf"/>
+  <node name="spawn_car" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model mecanum_robot -param robot_description -x 0 -y 0 -z 0.15"
+        output="screen"/>
+  <node name="controller_spawner" pkg="controller_manager" type="spawner"
+        args="mecanum_group_controller joint_state_controller"
+        respawn="false" output="screen"/>
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher" output="screen"/>
+</launch>
