@@ -429,8 +429,8 @@ python3 src/nn_avoidance/nn_avoidance/test.py
 ```bash
 export TURTLEBOT3_MODEL=burger
 roslaunch turtlebot3_gazebo turtlebot3_world.launch
-Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
 ```
+Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
 
 6.先把训练出来的文件`model.pth`放入内层nn_avoidance文件夹中，再新开终端，刷新环境变量，运行避障节点。
 
