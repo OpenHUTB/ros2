@@ -120,7 +120,7 @@ ros2 launch image_recorder main.launch.py
 
 验证结果说明：由于本机虚拟机环境未安装 Carla 仿真器，未能实时获取真实的图像数据，但图像订阅与节点启动逻辑已通过编译与运行验证。
 
-![运行效果](img/run_result.png)
+https://github.com/Rafaye-71-star/ros2/blob/master/docs/img/run_result.png
 
 ## 提交信息（Commit Message / PR 描述）
 
