@@ -1,5 +1,7 @@
 # 跑通HoloOcean2的ROS2示例方法（无头模式）
 
+在子系统Ubuntu24.04.4的环境下运行
+
 ## 1. 安装 ROS 2 Jazzy
 
 在WSL终端中输入一下指令
@@ -17,7 +19,8 @@ source ~/.bashrc
 ## 2. 安装 HoloOcean Python 客户端库
 
 ```bash
-sudo pip install -e /mnt/e/underwater/daima2/holoocean/client --break-system-packages
+cd /mnt/你的代码存放路径/holoocean
+sudo pip install -e ./client --break-system-packages
 ```
 
 ## 3. 下载世界包（Ocean）
@@ -28,7 +31,7 @@ sudo pip install -e /mnt/e/underwater/daima2/holoocean/client --break-system-pac
 
 ```bash
 sudo apt install python3-colcon-common-extensions -y
-cd /mnt/e/underwater/daima2/holoocean-ros
+cd /mnt/你的代码存放路径/holoocean-ros
 colcon build
 source install/setup.bash
 ```
