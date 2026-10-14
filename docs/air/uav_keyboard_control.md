@@ -331,3 +331,11 @@ print("----- 输出结束 -----")
 
 * [carlair_ros_bridge 桥接模块](../air/carlair_ros_bridge.md)
 * [AirSim 无人机 API 参考](https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient)
+
+---
+
+本文档在编写过程中使用了 AI 大模型辅助（资料核对、文档起草、问题排查）。
+文中运行环境、命令与**实测数据**均来自本机实际运行记录：桥接层环境自检 **5/5 通过**、
+`/uav/odom` 实测 **19.999 Hz**、键盘闭环位移 `(0, 0, 15.145) → (0.389, −0.403, 15.071)`，
+对应的终端输出与截图已随本页一并提交（第 7 节）并被评审逐条核对过；
+作者对提交内容的正确性与完整性负全部责任。
