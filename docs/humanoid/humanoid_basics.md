@@ -24,7 +24,7 @@ wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-L
 2、运行安装脚本
 
 输入下面的代码安装
-```
+```bash
 bash Miniconda3-latest-Linux-x86_64.sh
 ```
 出现以下提示证明已经在许可协议页面了，持续按空格翻页
@@ -43,7 +43,7 @@ by running conda init? [yes|no]
 [no] >>>
 ```
 最后输入以下代码激活conda环境
-```
+```bash
 source ~/miniconda3/bin/activate
 ```
 输入下面的代码确认是否安装成功
@@ -57,7 +57,7 @@ conda --version
 1、接受服务条款
 
 打开bash终端，输入代码激活conda环境
-```
+```bash
 source ~/miniconda3/bin/activate
 ```
 随后依次输入下面的代码进行授权
