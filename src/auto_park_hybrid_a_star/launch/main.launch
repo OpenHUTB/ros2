@@ -1,0 +1,6 @@
+<launch>
+  <node name="auto_park_hybrid_a_star"
+        pkg="auto_park_hybrid_a_star"
+        type="main.py"
+        output="screen"/>
+</launch>
