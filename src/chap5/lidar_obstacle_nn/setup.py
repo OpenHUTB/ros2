@@ -32,7 +32,10 @@ setup(
     ],
     install_requires=[
         'setuptools>=30.3.0,<80',
-        'numpy>=1.26,<2.0',
+        # Floor matches the numpy shipped with ROS 2 Humble (1.21.x) so
+        # installing this package never pulls a newer numpy into
+        # ~/.local that would shadow the one ROS 2 was built against.
+        'numpy>=1.21,<2.0',
     ],
     entry_points={
         'console_scripts': [

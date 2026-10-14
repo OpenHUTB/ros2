@@ -25,7 +25,7 @@ flowchart LR
 | ROS | ROS 2 Humble (`/opt/ros/humble`) |
 | 仿真器 | Gazebo Fortress 6.x（Ignition Gazebo） |
 | Python | 3.10（ROS 2 Humble 自带） |
-| GPU（可选） | NVIDIA GPU + CUDA 12.x（5070 Ti 等 Blackwell 架构需用 CPU 推理，详见下文） |
+| GPU（可选） | NVIDIA GPU + CUDA 12.x（纯 CPU 环境完全可用，5070 Ti 等 Blackwell 架构建议直接用 CPU 推理，详见 8.1 节） |
 
 加载 ROS 2 环境并安装 Python 依赖：
 
@@ -34,12 +34,25 @@ source /opt/ros/humble/setup.bash
 python3 -m pip install --user -r src/chap5/lidar_obstacle_nn/requirements.txt
 ```
 
-如需 CUDA 加速，按 [PyTorch 官网](https://pytorch.org/get-started/locally/) 选与显卡匹配的 wheel。**RTX 5070 Ti（Blackwell，sm_120）暂不被 PyTorch 2.5 稳定 wheel 支持，建议直接用 CPU 推理**——MLP 仅 ~50K 参数，CPU 推理也是亚毫秒级。
+**纯 CPU 环境（无 NVIDIA 显卡）**：PyPI 默认的 torch 即为 CPU 版，上面的命令已经足够，推理节点会自动跳过 CUDA 探测直接使用 CPU。
+
+**有 NVIDIA 显卡的环境**：按 [PyTorch 官网](https://pytorch.org/get-started/locally/) 选与驱动匹配的 CUDA wheel，例如：
+
+```bash
+python3 -m pip install --user torch --index-url https://download.pytorch.org/whl/cu121
+```
+
+**无显示器的机器（服务器/虚拟机/CI）**：GPU 激光雷达传感器需要渲染上下文才能产生回波，需安装 `xvfb` 并用虚拟显示启动（见 6.3 节）：
+
+```bash
+sudo apt install xvfb
+```
 
 验证安装：
 
 ```bash
 python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+# 纯 CPU 机器输出形如 2.3.1+cpu False，属预期且受支持
 ros2 pkg prefix ros_gz_sim_demos   # 应输出 /opt/ros/humble
 ```
 
@@ -137,15 +150,17 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[收到 /scan] --> B[重采样到 360 维]
-    B --> C[probe CUDA 是否可用]
-    C -->|可用| D[GPU 前向]
-    C -->|不可用| E[CPU 前向]
-    D --> F[softmax -> 类别 + 置信度]
-    E --> F
-    F --> G{置信度 >= 0.45?}
-    G -->|是| H[发布 NN 预测]
-    G -->|否| I[规则 fallback: 用 r_min 阈值]
-    I --> H
+    B --> C{请求了 CUDA 且可用?}
+    C -->|是| D[探测性 GPU 前向]
+    C -->|否| E[CPU 前向]
+    D -->|成功| F[GPU 前向]
+    D -->|失败| E
+    F --> G[softmax -> 类别 + 置信度]
+    E --> G
+    G --> H{置信度 >= 0.45?}
+    H -->|是| I[发布 NN 预测]
+    H -->|否| J[规则 fallback: 用 r_min 阈值]
+    J --> I
 ```
 
 ## 5. 源码解析
@@ -174,18 +189,28 @@ source install/setup.bash
 
 ### 6.2 首次运行前必须先生成模型权重
 
-`models/lidar_mlp.pt` 权重文件**不随仓库分发**（仓库 `.gitignore` 约定忽略 `*.pt` 二进制训练产物，保持仓库以文本为主），克隆后第一次运行前需要自己训练生成一次（约 2 分钟，详见 6.4 节；不训练的话推理节点会打印 `Model file not found` 警告并使用随机权重，输出无意义）。
+`models/lidar_mlp.pt` 权重文件**不随仓库分发**（仓库 `.gitignore` 约定忽略 `*.pt` 二进制训练产物，保持仓库以文本为主），克隆后第一次运行前需要自己训练生成一次（CPU 上约 1 分钟，详见 6.5 节；不训练的话推理节点会打印 `Model file not found` 警告并使用随机权重，输出无意义）。
 
 ### 6.3 一键启动（推荐）
 
+有显示器的环境：
+
 ```bash
 ros2 launch lidar_obstacle_nn main.launch.py
+```
+
+无显示器的环境（服务器、虚拟机、CI）用虚拟显示启动——`gpu_lidar` 传感器需要渲染上下文才能产生回波：
+
+```bash
+xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
 `main.launch.py` 同时启动：
 1. Gazebo Fortress 加载 `obstacle_world.sdf`
 2. `ros_gz_bridge` 把 Gazebo `/scan` 转发到 ROS 2 `/scan`
 3. `inference_node` 加载 `models/lidar_mlp.pt` 推理
+
+> **不要用 `ign gazebo -s --headless-rendering`**：该模式下 `gpu_lidar` 没有渲染上下文，360 束全部返回最大量程 30 m（实测见第 7 节对照表），采集与推理都失去意义。
 
 ### 6.4 检查输出
 
@@ -203,7 +228,7 @@ ros2 topic hz /scan
 ### 6.5 训练自己的模型
 
 ```bash
-# 1. 生成合成数据集（不依赖 Gazebo）
+# 1. 生成合成数据集（不依赖 Gazebo，三类均衡，本教程默认路径）
 python3 -m lidar_obstacle_nn.generate_synthetic_dataset \
     --output /tmp/lidar_dataset.npz --num-samples 1500
 
@@ -219,16 +244,20 @@ source install/setup.bash
 ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
+也可以从运行中的 Gazebo 采集真实扫描（`ros2 run lidar_obstacle_nn collect_data`），但要注意两点限制：
+
+- 世界里的 `lidar_box` 是 `static`、且没有速度/差速控制插件，机器人不会自己动。静止不动时每帧扫描看到同一个障碍物，自动标注只会得到单一类别（实测：默认场景静止时 20/20 帧全为 `near`）；要覆盖三类需在 GUI 中手动拖动/旋转模型，或先给机器人加一个控制插件。
+- 采集需要可用的渲染上下文（真实显示器或 `xvfb-run -a`），否则 `/scan` 全为最大量程。
+
 ## 7. 实测结果
 
-数据在 Ubuntu 22.04.5 LTS（GNOME Wayland 会话）与 ROS 2 Humble 环境下实测得到：
+数据在 Ubuntu 22.04.5 LTS 与 ROS 2 Humble 环境下实测得到：
 
 | 项目 | 实测结果 |
 | --- | --- |
 | OS / ROS 版本 | Ubuntu 22.04.5 LTS / ROS 2 Humble |
 | Gazebo 版本 | Gazebo Fortress 6.18.0 |
-| PyTorch 版本 | 2.5.1+cu121 |
-| GPU | NVIDIA RTX 5070 Ti Laptop（sm_120，CUDA 推理不可用，使用 CPU） |
+| PyTorch 版本 | 2.5.1+cu121（推理使用 CPU） |
 | 激光雷达 | 360 束 GPU LiDAR，5 Hz，0.05–30 m |
 | 模型参数量 | 约 62,272（360→128→128→3） |
 | 权重文件大小 | 249 KB |
@@ -238,6 +267,13 @@ ros2 launch lidar_obstacle_nn main.launch.py
 | 最终验证准确率 | 99.67 % |
 | `/scan` 发布频率 | 约 4.75 Hz |
 | `/obstacle_class` 实测输出 | `near`（场景含 0.6 m 红方块） |
+
+**无头渲染 vs 虚拟显示实测对照**（同一世界、同一版本代码）：
+
+| 启动方式 | 360 束中命中障碍数 | 最近距离 | 判定 |
+| --- | --- | --- | --- |
+| `ign gazebo -r -s --headless-rendering` | 0/360（全部 30.00 m） | 30.00 m | `free`（无回波，数据无效） |
+| `xvfb-run -a` + 正常 GUI 构建 | 76/360 | 0.40 m | `near`（与场景一致） |
 
 **Gazebo 仿真启动后效果**：
 
@@ -249,26 +285,21 @@ ros2 launch lidar_obstacle_nn main.launch.py
 
 ## 8. 排错
 
-### 8.1 RTX 5070 Ti（Blackwell sm_120）CUDA 报错
+### 8.1 CUDA 相关报错与回退机制
 
-PyTorch 2.5 稳定 wheel（cu121）不支持 sm_120，启动时会出现：
+推理节点默认 `use_gpu:=false`，直接使用 CPU（MLP 仅 ~50K 参数，CPU 推理亚毫秒级）。显式开启 `use_gpu:=true` 时的行为与 torch 构建版本有关：
 
-```
-NVIDIA GeForce RTX 5070 Ti Laptop GPU with CUDA capability sm_120 is not
-compatible with the current PyTorch installation.
-```
-
-并在推理时报 `CUDA error: no kernel image is available for execution on the device`。
-
-**解决**：`inference_node.py` 默认 `use_gpu:=false`，并在首次 forward 时探测 CUDA，失败自动 fallback 到 CPU。`main.launch.py` 也已设 `use_gpu` 默认 `false`。MLP 很小，CPU 推理仍为亚毫秒级。
+- **CUDA 版 torch**：节点在第一条 `/scan` 上做一次探测性前向；若失败（`RuntimeError`，例如显卡计算能力不被当前 wheel 支持——Blackwell sm_120 与 PyTorch 2.5 稳定版 cu121 wheel 即属此列，报错 `no kernel image is available for execution on the device`），自动回退 CPU 并继续运行。
+- **CPU 版 torch**：任何 CUDA 调用会抛 `AssertionError: Torch not compiled with CUDA enabled`（而非 `RuntimeError`）。节点已在探测前短路（`use_gpu` 为 false 或 `torch.cuda.is_available()` 为 False 时完全不触碰 CUDA），并将 `AssertionError` 一并纳入捕获，因此 CPU 版 torch 上节点不会崩溃。
 
 ### 8.2 激光雷达扫描不到障碍物
 
 如果 `/scan` 的 `ranges` 全是 30.0（最大值，无回波），检查：
 
-1. **机器人 z 高度**：`lidar_box` 的 `pose z` 必须让激光雷达在障碍物高度范围内。SDF 已设 `z=0.05`，激光在 `z=0.11 m`，落在所有障碍物（z=0–0.5 m）之内。
-2. **机器人是否 static**：非 static 物体会受重力影响掉到地面下。SDF 已设 `<static>true</static>`。
-3. **激光雷达类型**：Gazebo Fortress 用 `gpu_lidar`（不是 `ray`），需要 `sensors-system` 插件，已在 SDF 顶部加载。
+1. **启动方式**：`ign gazebo -s --headless-rendering` 下 `gpu_lidar` 没有渲染上下文，360 束必然全为最大量程（实测见第 7 节对照表）。无显示器环境必须用 `xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py`。
+2. **机器人 z 高度**：`lidar_box` 的 `pose z` 必须让激光雷达在障碍物高度范围内。SDF 已设 `z=0.05`，激光在 `z=0.11 m`，落在所有障碍物（z=0–0.5 m）之内。
+3. **机器人是否 static**：非 static 物体会受重力影响掉到地面下。SDF 已设 `<static>true</static>`。
+4. **激光雷达类型**：Gazebo Fortress 用 `gpu_lidar`（不是 `ray`），需要 `sensors-system` 插件，已在 SDF 顶部加载。
 
 ### 8.3 模型权重找不到
 
@@ -285,4 +316,4 @@ compatible with the current PyTorch installation.
 
 ---
 
-**大模型使用声明**：本模块的源代码、文档与训练脚本由大语言模型（GLM-5.2）协助生成，作者已逐文件审查并通过实测验证（构建、仿真、采集、训练、推理全流程跑通），对提交内容负全部责任。
+**大模型使用声明**：本模块的源代码、文档与训练脚本由大语言模型（GLM-5.2）协助生成，作者已逐文件审查并通过实测验证（构建、仿真、采集、训练、推理全流程跑通；其中采集与推理需要可用的图形渲染上下文，无显示器环境使用 `xvfb-run -a`），对提交内容负全部责任。

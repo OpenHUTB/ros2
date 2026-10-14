@@ -137,6 +137,7 @@ markdown_extensions:
   - footnotes
   - admonition
   - mdx_math
+  - attr_list
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

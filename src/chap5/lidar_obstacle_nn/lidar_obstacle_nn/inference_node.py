@@ -53,8 +53,8 @@ class LidarInferenceNode(Node):
         self.declare_parameter('device', 'cpu')
         # Default: do NOT use CUDA. The MLP is tiny (~50K params), CPU
         # inference is sub-millisecond, and avoiding CUDA avoids
-        # capability-mismatch issues (e.g. RTX 50-series Blackwell
-        # sm_120 not yet supported by the stable cu121 wheel).
+        # capability-mismatch issues (e.g. very recent GPUs whose
+        # compute capability is not yet supported by the stable wheels).
         self.declare_parameter('use_gpu', False)
 
         model_path = (
@@ -74,26 +74,31 @@ class LidarInferenceNode(Node):
         device_name = self.get_parameter('device').get_parameter_value().string_value
 
         # ---- Device selection -----------------------------------------
-        # We deliberately start on CPU. The first /scan callback will
-        # probe whether CUDA forward actually works (PyTorch may report
-        # cuda.is_available()==True even when the installed wheel lacks
-        # the kernel for the host GPU, e.g. RTX 5070 Ti sm_120).
+        # We deliberately start on CPU. Only when CUDA is explicitly
+        # requested (use_gpu:=true or device:=cuda*) will the first
+        # /scan callback probe whether a CUDA forward actually works
+        # (PyTorch may report cuda.is_available()==True even when the
+        # installed wheel lacks the kernel for the host GPU).
         self._device = torch.device('cpu')
         self._cuda_probe_done = False
         self._cuda_disabled_reason: Optional[str] = None
+        self._want_cuda = (
+            use_gpu or device_name.startswith('cuda')
+        ) and torch is not None
 
-        if use_gpu and torch is not None and torch.cuda.is_available():
+        if self._want_cuda and torch.cuda.is_available():
             self.get_logger().info(
                 'CUDA requested and torch.cuda.is_available()==True. '
                 'Probing forward compatibility on the first scan...'
             )
-            # Defer actual device switch to the first callback so a
-            # capability mismatch surfaces as a caught exception
-            # instead of crashing the node at startup.
-        elif device_name.startswith('cuda') and torch is not None and torch.cuda.is_available():
-            self.get_logger().info(
-                'CUDA device requested (%s). Probing on first scan...' % device_name
+        elif self._want_cuda:
+            # Requested but not usable (CPU-only torch build or no GPU):
+            # skip the probe entirely instead of crashing on it.
+            self.get_logger().warn(
+                'CUDA requested but torch.cuda.is_available()==False '
+                '(CPU-only torch build or no GPU). Running on CPU.'
             )
+            self._cuda_probe_done = True
         else:
             self.get_logger().info('Using CPU device.')
 
@@ -128,15 +133,21 @@ class LidarInferenceNode(Node):
         )
 
     def _maybe_probe_cuda(self, sample_tensor: torch.Tensor) -> torch.Tensor:
-        """Move the input to CUDA on the first call if possible.
+        """Move the input to CUDA on the first call if requested and possible.
 
-        On any CUDA RuntimeError (e.g. capability mismatch like
-        RTX 50-series sm_120 vs cu121 wheel), log a warning and keep
+        The probe only runs when CUDA was explicitly requested
+        (``use_gpu:=true`` or ``device:=cuda*``) AND
+        ``torch.cuda.is_available()`` is True, so machines with a
+        CPU-only torch build never touch ``torch.cuda`` at all (CPU-only
+        builds raise ``AssertionError`` on any CUDA call, not
+        ``RuntimeError``). On any CUDA failure, log a warning and keep
         running on CPU instead of crashing the node.
         """
         if self._cuda_probe_done:
             return sample_tensor.to(self._device)
         self._cuda_probe_done = True
+        if not self._want_cuda or not torch.cuda.is_available():
+            return sample_tensor.to(self._device)
         try:
             cuda_device = torch.device('cuda')
             probe = sample_tensor.to(cuda_device)
@@ -150,11 +161,13 @@ class LidarInferenceNode(Node):
                 % torch.cuda.get_device_name(0)
             )
             return sample_tensor.to(self._device)
-        except RuntimeError as exc:
+        except (RuntimeError, AssertionError) as exc:
+            # RuntimeError: CUDA wheel present but kernel/driver mismatch.
+            # AssertionError: CPU-only torch build ("Torch not compiled
+            # with CUDA enabled"). Both mean: stay on CPU.
             self._cuda_disabled_reason = str(exc)
             self.get_logger().warn(
-                'CUDA forward probe failed (%s). Falling back to CPU. '
-                'Set use_gpu:=false to silence this warning.'
+                'CUDA forward probe failed (%s). Falling back to CPU.'
                 % exc
             )
             # Move model back to CPU.
@@ -170,14 +183,15 @@ class LidarInferenceNode(Node):
             raw = np.interp(idx, np.arange(raw.size), raw)
         tensor = torch.from_numpy(raw).unsqueeze(0)
 
-        # Probe CUDA on the first scan; falls back to CPU on any error.
+        # Probe CUDA on the first scan (only if requested); falls back
+        # to CPU on any error.
         tensor = self._maybe_probe_cuda(tensor)
 
         try:
             probs = self._model.predict_proba(tensor)[0]
             cls_id = int(torch.argmax(probs).item())
             confidence = float(probs[cls_id].item())
-        except RuntimeError as exc:
+        except (RuntimeError, AssertionError) as exc:
             # Late CUDA failure: drop to CPU and re-run forward.
             self.get_logger().warn(
                 'Forward failed on %s (%s). Re-running on CPU.'

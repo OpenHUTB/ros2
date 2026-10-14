@@ -11,6 +11,11 @@ Brings up everything needed for a complete demonstration:
 Run with:
 
     ros2 launch lidar_obstacle_nn main.launch.py
+
+On a machine without a physical display, wrap it in a virtual X server
+(the gpu_lidar sensor needs a rendering context to produce echoes):
+
+    xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
 """
 
 from __future__ import annotations
@@ -63,6 +68,7 @@ def generate_launch_description() -> LaunchDescription:
                 'danger_distance': 1.0,
                 'far_distance': 3.0,
                 'use_gpu': use_gpu,
+                'use_sim_time': use_sim_time,
             },
         ],
         remappings=[
@@ -95,7 +101,7 @@ def generate_launch_description() -> LaunchDescription:
                     'Use CUDA for inference if available. Default false '
                     'because the MLP is small and CPU inference is fast; '
                     'also avoids CUDA capability-mismatch issues with '
-                    'very recent GPUs (e.g. RTX 50-series Blackwell).'
+                    'very recent GPUs.'
                 ),
             ),
             sim_launch,

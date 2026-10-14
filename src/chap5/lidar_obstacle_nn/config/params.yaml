@@ -19,6 +19,9 @@ lidar_obstacle_nn_inference:
     danger_distance: 1.0
     far_distance: 3.0
 
-    # Hardware acceleration. Falls back to CPU if CUDA is unavailable.
-    use_gpu: true
-    device: "auto"
+    # Hardware acceleration. Default false: the MLP is tiny and CPU
+    # inference is sub-millisecond. When true (and torch has working
+    # CUDA), the node probes a CUDA forward on the first scan and
+    # falls back to CPU on any failure.
+    use_gpu: false
+    device: "cpu"

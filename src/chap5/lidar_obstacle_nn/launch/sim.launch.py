@@ -9,6 +9,14 @@ It is wrapped by ``main.launch.py`` (which also starts the inference
 node) and is also runnable alone for simulation-only tests:
 
     ros2 launch lidar_obstacle_nn sim.launch.py
+
+About ``headless:=true``: a bare ``ign gazebo -s --headless-rendering``
+gives the ``gpu_lidar`` sensor NO rendering context, so every beam of
+``/scan`` comes back at max range (no echoes at all). The reliable way
+to run without a physical display is a virtual X server: this launch
+file therefore wraps the normal GUI build in ``xvfb-run -a`` so the
+GPU lidar renders and produces real echoes. Requires the ``xvfb``
+package (``sudo apt install xvfb``).
 """
 
 from __future__ import annotations
@@ -42,12 +50,13 @@ def generate_launch_description() -> LaunchDescription:
         ),
     )
 
-    # --- Gazebo Fortress headless (for CI / no-display runs) --------
+    # --- Gazebo Fortress on a virtual display (no physical screen) --
+    # `xvfb-run -a` picks a free display number and runs the normal GUI
+    # build on a virtual X server, so the gpu_lidar sensor still gets a
+    # rendering context and /scan contains real echoes. (The previous
+    # `-s --headless-rendering` variant produced all-max-range scans.)
     gz_sim_headless = ExecuteProcess(
-        cmd=[
-            'ign', 'gazebo', '-r', '-v', '2',
-            '--headless-rendering', world_path,
-        ],
+        cmd=['xvfb-run', '-a', 'ign', 'gazebo', '-r', '-v', '2', world_path],
         output='screen',
         condition=IfCondition(
             PythonExpression(["'", headless, "' == 'true'"])
@@ -80,7 +89,12 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument(
                 'headless',
                 default_value='false',
-                description='Run Gazebo without a GUI (for CI / headless runs).',
+                description=(
+                    'No physical display: run Gazebo on a virtual X '
+                    'server via xvfb-run (keeps the rendering context '
+                    'the gpu_lidar sensor needs). Requires the xvfb '
+                    'package.'
+                ),
             ),
             gz_sim_gui,
             gz_sim_headless,
