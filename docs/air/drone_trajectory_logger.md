@@ -135,7 +135,7 @@ python3 trajectory_analyzer.py
 
 ## 运行效果与验证（截图）
 
-![运行效果](img/capture_2.png)
+![运行效果](https://github.com/Rafaye-71-star/ros2/blob/feature/drone-trajectory-logger/docs/img/capture_2.png)
 
 效果说明：发布节点成功发送不同的飞行指令，识别节点成功解析并打印出对应的飞行状态日志，同时基于实时数据绘制了飞行轨迹图（椭圆），验证了轨迹识别与自动日志记录功能的正确性。
 
