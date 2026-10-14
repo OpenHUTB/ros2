@@ -36,7 +36,7 @@ src/ground/carla_end_to_end_nn/
 ├── resource/carla_end_to_end_nn
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_end_to_end_logic.py             # 单元测试（11 项，无需 CARLA）
+└── test/test_end_to_end_logic.py             # 单元测试（22 项，无需 CARLA）
 ```
 
 ## 3. 快速开始
@@ -65,18 +65,20 @@ bash main.sh --host <宿主机IP> --mode test
 ## 4. 测试
 
 ```bash
-python3 test/test_end_to_end_logic.py     # 11 项全部通过，无需 CARLA
+python3 test/test_end_to_end_logic.py     # 22 项全部通过，无需 CARLA
 ```
 
 其中两项是**回归测试**，卡住两个会让网络完全学不动的缺陷：
 
 - `test_maxpool_backward_only_max_position` —— 最大池化反向必须**只回传给窗口内最大值位置**。
-  早期实现把梯度均摊到窗口全部 $p^2$ 个位置，导致网络塌缩成常数输出
+  早期实现把梯度均摊到窗口全部 \(p^2\) 个位置，导致网络塌缩成常数输出
   （相关系数 +0.293、方向判对率 50%）。
-- `test_predict_output_in_tanh_range` —— 推理输出必须与训练目标同值域 $[-1,1]$。
-  早期 `predict()` 遗漏 tanh，预测值可达 $\pm13$，MAE 高达 13.47。
+- `test_predict_output_in_tanh_range` —— 推理输出必须与训练目标同值域 \([-1,1]\)。
+  早期 `predict()` 遗漏 tanh，预测值可达 \(\pm13\)，MAE 高达 13.47。
 
-另有 `test_pool_gradient_matches_finite_difference` 用有限差分校验梯度实现。
+另有 `test_pool_gradient_matches_finite_difference` 用有限差分校验梯度实现，
+以及 `test_main_sh_launch_dispatches_per_ros_version`、
+`test_documented_launch_args_are_declared` 等入口与文档一致性的回归测试。
 
 ## 5. 实测指标（离线取证模式，本机实测）
 

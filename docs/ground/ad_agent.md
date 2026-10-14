@@ -44,7 +44,7 @@ CARLA 服务端的启动、宿主机 IP 与端口 2000 的查看、虚拟机网�
 
 ### 本拓展新增的内容
 
-1. **端到端神经网络**：单个 CNN 直接把 $60\times80\times3$ 的相机图像映射为转向角，
+1. **端到端神经网络**：单个 CNN 直接把 \(60\times80\times3\) 的相机图像映射为转向角，
    中间不含人工的感知/规划环节。
 2. **行为克隆数据采集**：由专家控制器（沿车道前视的纯跟踪律）实际驾驶并记录
    (图像, 转向) 对，保证**图像与标签有因果关系**。
@@ -73,18 +73,18 @@ python3 src/ground/carla_end_to_end_nn/main.py --headless --demo --save_dir ~/sh
 行为克隆采集 → 训练 → 端到端驾驶（`--host` 的填法与本文一致：填宿主机 IP）：
 
 ```shell
-python3 src/ground/carla_end_to_end_nn/main.py --mode collect --host 172.21.108.47 --frames 300
+python3 src/ground/carla_end_to_end_nn/main.py --mode collect --host 192.168.8.1 --frames 300
 python3 src/ground/carla_end_to_end_nn/main.py --mode train --data_dir dataset --epochs 60
-python3 src/ground/carla_end_to_end_nn/main.py --mode test --host 172.21.108.47 --sim_time 20
+python3 src/ground/carla_end_to_end_nn/main.py --mode test --host 192.168.8.1 --sim_time 20
 ```
 
 使用 launch 启动（ROS 2 / ROS 1）：
 
 ```shell
 # ROS 2
-ros2 launch carla_end_to_end_nn main.launch.py host:=172.21.108.47
+ros2 launch carla_end_to_end_nn main.launch.py host:=192.168.8.1
 # ROS 1
-roslaunch carla_end_to_end_nn main.launch host:=172.21.108.47 mode:=test
+roslaunch carla_end_to_end_nn main.launch host:=192.168.8.1 mode:=test
 ```
 
 ### 实测结果

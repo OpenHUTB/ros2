@@ -6,7 +6,7 @@
 #   bash main.sh --mode train --epochs 60         # 训练 CNN（无需 CARLA）
 #   bash main.sh --headless --demo --save_dir ~/shots
 #                                                 # 离线取证：合成道路图像训练并导出图
-#   bash main.sh --launch [name:=value ...]   # 交给 ROS launch 启动
+#   bash main.sh --launch <参数>:=<值> ...       # 交给 ROS launch 启动
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,7 +24,11 @@ fi
 # --launch：交给 ROS launch 启动。ROS 2 走 ros2 launch，ROS 1 走 roslaunch，
 # 其余参数按 launch 的写法原样传递，例如：
 #   bash main.sh --launch host:=192.168.8.1
-#   bash main.sh --launch mode:=test host:=192.168.8.1
+#
+# 注意两个 launch 接受的参数**不完全一样**，传错了不会报错而是被静默忽略：
+#   ROS 2 main.launch.py : host, port, town, model_path, backend, config
+#   ROS 1 main.launch    : 上面这些（无 config）+ mode, sim_time
+# 例如 mode:= 只有 ROS 1 认；在 Humble 上传 mode:=test 不会报错，但也不起作用。
 launch_args=()
 want_launch=0
 for a in "$@"; do

@@ -12,6 +12,12 @@
   7. 预测在图像被加噪时稳定（不依赖单一像素）
   8. 专家控制器几何律正确
   9. 离线取证模式跑通并导出图
+ 10. CARLA 函数缺模型时有友好提示、回退训练预算有上限、传感器引用不被回收
+ 11. main.* 有可执行位（roslaunch 靠 shebang 执行 main.py）
+ 12. launch 的布尔参数接受文本值、空的可选值不会崩
+ 13. **入口与文档一致性**：sim_params.yaml 的键都被节点声明过；
+     文档/脚本里写的 `名字:=值` 都被对应 launch 声明过（回归测试：曾有 5 个
+     假开关与一个在 Humble 上无效的 `mode:=test`）
 
 运行：  python3 test/test_end_to_end_logic.py
 """
@@ -418,6 +424,97 @@ def test_main_sh_launch_dispatches_per_ros_version():
     assert "roslaunch" in sh, "main.sh 应支持 ROS 1 的 roslaunch"
     assert "ROS_VERSION" in sh, "应按 ROS_VERSION 选择 launch 命令"
     assert "launch_args" in sh, "其余参数应原样透传给 launch"
+
+
+def test_sim_params_keys_are_declared_by_node():
+    """config/sim_params.yaml 里的每个键，节点都必须 declare_parameter 过。
+
+    rclpy 对**未声明**的参数覆盖项是**静默忽略**的（不报错、不警告）。
+    所以 yaml 里写一个节点没声明的键，等于给使用者一个假开关：
+    改了它不会有任何效果，却会让人以为改了。实测该文件里曾有 5 个这样的键
+    （ego_blueprint / fixed_delta_seconds / image_width / image_height / camera_fov）。
+    """
+    import re
+    cfg = open(os.path.join(_PKG, "config", "sim_params.yaml"),
+               encoding="utf-8").read()
+    node = open(os.path.join(_PKG, "carla_end_to_end_nn", "end_to_end_node.py"),
+                encoding="utf-8").read()
+
+    # yaml：只取 ros__parameters: 之后、缩进更深的那一段里的 "key:"
+    body = cfg.split("ros__parameters:", 1)
+    assert len(body) == 2, "sim_params.yaml 里找不到 ros__parameters:"
+    keys = set()
+    for line in body[1].splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith("    "):        # 缩进退回到顶层 → 该段结束
+            break
+        m = re.match(r"\s+([A-Za-z_]\w*)\s*:", line)
+        if m:
+            keys.add(m.group(1))
+    assert keys, "没有从 sim_params.yaml 里解析出任何键"
+
+    declared = set(re.findall(r'declare_parameter\(\s*"([^"]+)"', node))
+    assert declared, "没有从 end_to_end_node.py 里解析出任何 declare_parameter"
+    undeclared = sorted(keys - declared)
+    assert not undeclared, (
+        f"sim_params.yaml 里这些键节点没有声明，改了不会生效：{undeclared}；"
+        f"节点实际声明的是 {sorted(declared)}")
+
+
+def test_documented_launch_args_are_declared():
+    """文档/脚本里出现的 `名字:=值`，必须真的被对应 launch 声明过。
+
+    ROS 2 对未声明的 launch 参数**不报错**，直接忽略；ROS 1 同理。
+    所以文档里写一个 launch 不认识的参数，使用者照抄后什么也没发生，
+    排查起来极其费劲。实测 main.sh 的示例里曾出现 `mode:=test`
+    ——它只有 ROS 1 的 main.launch 认，在 Humble 上是空操作。
+    """
+    import re
+
+    def declared(path):
+        text = open(path, encoding="utf-8").read()
+        if path.endswith(".py"):
+            return set(re.findall(r"DeclareLaunchArgument\(\s*['\"]([^'\"]+)", text))
+        return set(re.findall(r'<arg\s+name="([^"]+)"', text))
+
+    ros2 = declared(os.path.join(_PKG, "launch", "main.launch.py"))
+    ros1 = declared(os.path.join(_PKG, "launch", "main.launch"))
+    assert ros2 and ros1, "没有解析出 launch 参数"
+
+    targets = [
+        os.path.join(_PKG, "main.sh"),
+        os.path.join(_PKG, "launch", "main.launch.py"),
+        os.path.join(_PKG, "launch", "main.launch"),
+        os.path.join(_PKG, "README.md"),
+        os.path.join(_PKG, "..", "..", "..", "docs", "ground",
+                     "carla_end_to_end_nn.md"),
+        os.path.join(_PKG, "..", "..", "..", "docs", "ground", "ad_agent.md"),
+    ]
+
+    problems = []
+    for path in targets:
+        if not os.path.isfile(path):
+            continue
+        for lineno, line in enumerate(open(path, encoding="utf-8"), 1):
+            if ":=" not in line:
+                continue
+            # 只看真正的启动命令行；解释某个参数坑的注释行不算命令
+            if "ros2 launch" in line:
+                allowed, tag = ros2, "ROS 2"
+            elif "roslaunch" in line:
+                allowed, tag = ros1, "ROS 1"
+            elif "main.sh" in line and "--launch" in line:
+                # main.sh 按装的是 ROS 1 还是 ROS 2 分派，参数必须两边都认
+                allowed, tag = ros2 & ros1, "ROS 1 与 ROS 2 都"
+            else:
+                continue
+            for n in re.findall(r"([A-Za-z_]\w*):=", line):
+                if n not in allowed:
+                    problems.append(
+                        f"{os.path.basename(path)}:{lineno} 的 {n}:= "
+                        f"在 {tag} 未声明（可用的有 {sorted(allowed)}）")
+    assert not problems, "文档/脚本里的 launch 参数没被声明：\n  " + "\n  ".join(problems)
 
 
 def _run_all():
