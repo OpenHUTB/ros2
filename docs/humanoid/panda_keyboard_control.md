@@ -233,5 +233,5 @@ if __name__ == '__main__':
 
 ### 六、 运行效果
 
-https://github.com/Tan-aaa/ros2/blob/2d29e8412ba5b4c09d5d085dd515e26a6c15c552/tests/%E6%9C%BA%E6%A2%B0%E8%87%82.gif
+https://github.com/Tan-aaa/ros2/commit/f64e433074e057fce64420b491c5b50e07da05c6
 
