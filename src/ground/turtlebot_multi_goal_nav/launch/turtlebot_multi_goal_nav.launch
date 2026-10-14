@@ -1,0 +1,6 @@
+<launch>
+  <!-- turtlebot_multi_goal_nav：多目标点顺序导航节点，入口 main.py（不含激光避障）
+       订阅话题：/odom（nav_msgs/Odometry）
+       发布话题：/cmd_vel（geometry_msgs/Twist） -->
+  <node pkg="turtlebot_multi_goal_nav" type="main.py" name="multi_goal_nav_node" output="screen"/>
+</launch>
