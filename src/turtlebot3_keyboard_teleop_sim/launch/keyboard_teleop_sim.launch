@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch"/>
+  <node name="teleop_keyboard" pkg="turtlebot3_teleop" type="turtlebot3_teleop_key"
+        launch-prefix="xterm -e" output="screen"/>
+</launch>
