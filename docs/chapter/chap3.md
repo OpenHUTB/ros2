@@ -30,10 +30,13 @@
 > - Ubuntu 20.04 **必须搭配 Gazebo 11**，不要误装 `gazebo9`（那是 Ubuntu 18.04 + ROS Melodic 的标配）。
 > - 后续若需迁移，可考虑 Gazebo Sim（新版）/ Ignition，但 ROS1 生态目前仍以 Classic 为主。
 ## 二、安装 ROS Noetic {#install-ros-noetic}
+
 ### 2.1 配置 ROS 软件源
-bash
+
+```bash
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-noetic.list'
 sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+```
 
 > 若官方源访问慢，可改用清华、中科大等国内镜像源。
 
@@ -41,26 +44,35 @@ sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31
 
 **强烈建议安装 `ros-noetic-desktop-full`**，它已包含 Gazebo、RViz、rqt 等全套工具：
 
+```bash
 sudo apt update
 sudo apt install ros-noetic-desktop-full
+```
 
 ### 2.3 初始化 rosdep
+
+```bash
 sudo apt install python3-rosdep2
 sudo rosdep init
 rosdep update
+```
 
 > 若因网络问题失败，可使用 `fishros` 一键配置工具或手动替换 `rosdistro` 为国内镜像。
 
 ### 2.4 配置环境变量
 
+```bash
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+```
 
 ### 2.5 验证 ROS 安装
 
+```bash
 roscore
+```
 
-终端输出 ROS master 启动信息即表示成功（按 `Ctrl+C` 退出）。
+终端输出 `ROS master` 启动信息即表示成功（按 `Ctrl+C` 退出）。
 
 ## 三、安装 Gazebo Classic 11 {#install-gazebo-classic11}
 
@@ -68,24 +80,30 @@ roscore
 
 ### 3.1 安装 Gazebo 11 本体
 
+```bash
 sudo apt update
 sudo apt install gazebo11 libgazebo11-dev
+```
 
 > **关键点**：必须显式指定 `gazebo11`，不要只敲 `sudo apt install gazebo`，否则系统可能会提示安装 `gazebo9`（版本不匹配）。
 
 ### 3.2 验证 Gazebo 独立运行
 
+```bash
 gazebo
+```
 
-应弹出 Gazebo GUI 窗口，左侧有 `Insert` 标签，中央显示网格和坐标轴。
+应弹出 `Gazebo GUI` 窗口，左侧有 `Insert` 标签，中央显示网格和坐标轴。
 
 ### 3.3 查看版本
 
+```bash
 gazebo --version
+```
 
 期望输出类似：
 
-Gazebo multi-robot simulator, version 11.15.1
+`Gazebo multi-robot simulator, version 11.15.1`
 
 ## 四、安装 gazebo_ros_pkgs（ROS 桥接包） {#install-gazebo-ros-pkgs}
 
@@ -93,7 +111,9 @@ Gazebo multi-robot simulator, version 11.15.1
 
 ### 4.1 安装核心桥接包
 
+```bash
 sudo apt install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
+```
 
 表格
 
@@ -104,11 +124,13 @@ sudo apt install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
 
 ### 4.2 验证安装
 
+```bash
 rospack find gazebo_ros
+```
 
 期望输出：
 
-/opt/ros/noetic/share/gazebo_ros
+`/opt/ros/noetic/share/gazebo_ros`
 
 ## 五、配置环境变量 {#config-env}
 
@@ -116,18 +138,24 @@ rospack find gazebo_ros
 
 编辑 `~/.bashrc`，在末尾追加：
 
+```bash
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/noetic/share/gazebo-11/models
+```
 
 ### 5.2 source Gazebo 环境脚本
 
+```bash
 echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc
 source ~/.bashrc
+```
 
 ### 5.3 刷新命令缓存（可选）
 
 若之前输入过 `gazebo` 提示找不到，执行以下命令刷新 bash 哈希表：
 
+```bash
 hash -r
+```
 
 ## 六、验证 ROS + Gazebo 集成 {#verify-ros-gazebo}
 
@@ -138,12 +166,18 @@ hash -r
 > ```bash
 > source /opt/ros/noetic/setup.bash
 > ```
+
+新开终端运行：
+
 ```bash
-新开终端运行：rosrun gazebo_ros gazebo
+rosrun gazebo_ros gazebo
+```
 
 或使用 launch 文件（推荐）：
 
+```bash
 roslaunch gazebo_ros empty_world.launch
+```
 
 > **注意**：建议使用 ROS 命令启动 Gazebo，而不是直接敲 `gazebo`，这样能自动加载 ROS 插件、发布 `/clock`、`/gazebo/model_states` 等话题。
 
@@ -151,24 +185,27 @@ roslaunch gazebo_ros empty_world.launch
 
 新开终端：
 
+```bash
 rostopic list | grep gazebo
+```
 
 应能看到：
 
-/gazebo/link_states
-/gazebo/model_states
-/gazebo/parameter_descriptions
-/gazebo/parameter_updates
-/gazebo/set_link_state
-/gazebo/set_model_state
+`/gazebo/link_states`
+`/gazebo/model_states`
+`/gazebo/parameter_descriptions`
+`/gazebo/parameter_updates`
+`/gazebo/set_link_state`
+`/gazebo/set_model_state`
 
 ### 6.3 在 Gazebo 中生成测试模型
 
 新开终端：
 
+```bash
 rosrun gazebo_ros spawn_model -database box -urdf -model test_box -x 1 -y 0
-
 ```
+
 ### 6.4 使用 launch 文件启动（推荐方式）
 在功能包内新建`launch/gazebo_test.launch`，写入：
 ```xml
@@ -185,7 +222,7 @@ CMakeLists.txt与package.xml文档在src/chap3代码中
 
 编译后运行：
 
-```
+```bash
 roslaunch any_avoidance gazebo_test.launch
 ```
 
@@ -235,17 +272,19 @@ roslaunch any_avoidance gazebo_test.launch
 
 启动命令与输出：
 
+```bash
 $ rosrun gazebo_ros gazebo
 context mismatch in svga_surface_destroy
 context mismatch in svga_surface_destroy
+```
 
 GUI 顶部提示：
 
-This version of Gazebo reaches end-of-life in January 2025. Consider migrating to the new Gazebo.
+`This version of Gazebo reaches end-of-life in January 2025. Consider migrating to the new Gazebo.`
 
 底部状态栏信息：
 
-Steps: 1 - Real Time Factor: 1.00 - Sim Time: 00:00:05.01.214 - Real Time: 00:00:05.01.892 - Iterations: 301214 - FPS: 62.53
+`Steps: 1 - Real Time Factor: 1.00 - Sim Time: 00:00:05.01.214 - Real Time: 00:00:05.01.892 - Iterations: 301214 - FPS: 62.53`
 
 ## 八、常见问题与解决方案 {#faq}
 
@@ -308,8 +347,10 @@ echo "=========== 检查完成 ==========="
 
 赋予执行权限并运行：
 
+```bash
 chmod +x check_gazebo_ros.sh
 ./check_gazebo_ros.sh
+```
 
 ## 十、后续学习建议 {#next-study}
 
@@ -349,39 +390,55 @@ src/nn_avoidance
 
 在原有 Gazebo‑ROS 仿真环境基础上，还需要安装深度学习库：
 
+```bash
 pip3 install torch numpy
 sudo apt install python3-rospkg
+```
+
 ### 11.3 操作步骤
 
 1. 编译功能包
 
+```bash
 catkin_make
+```
+
 注意： catkin_make  需要在catkin工作空间根目录（ ~/catkin_ws ）执行。如果直接在家目录运行，会提示  src does not exist 。
 工作空间目录结构： ~/catkin_ws/src/功能包名
 
 2. 刷新工作空间环境变量
 
+```bash
 source devel/setup.bash
+```
 
 3. 执行训练脚本，生成模型权重文件 `model.pth`
 
+```bash
 python3 src/nn_avoidance/nn_avoidance/train.py
+```
 
 4. 加载权重，测试神经网络输出是否正常
 
+```bash
 python3 src/nn_avoidance/nn_avoidance/test.py
+```
 
 5.新开终端启动Gazebo仿真环境，自动生成带激光雷达的Turtlebot3小车
 
+```bash
 export TURTLEBOT3_MODEL=burger
 roslaunch turtlebot3_gazebo turtlebot3_world.launch
 Gazebo 仿真环境正常启动，小车激光雷达话题 `/scan` 正常发布后，运行避障节点
+```
 
 6.先把训练出来的文件`model.pth`放入内层nn_avoidance文件夹中，再新开终端，刷新环境变量，运行避障节点。
 
+```bash
 cd ~/catkin_ws
 source devel/setup.bash
 roslaunch nn_avoidance avoid.launch
+```
 
 ### 11.4 代码功能说明
 
@@ -405,25 +462,35 @@ Gazebo 仿真环境中小车搭载激光雷达传感器，可以获取四周障�
 ## 附录：快速命令速查
 
 # --- 安装 ---
+```bash
 sudo apt install ros-noetic-desktop-full
 sudo apt install gazebo11 libgazebo11-dev
 sudo apt install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
+```
 # --- 环境配置 ---
+```bash
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc
 source ~/.bashrc
 hash -r
+```
 # --- 启动 ---
+```bash
 gazebo                                              # 独立启动
 rosrun gazebo_ros gazebo                            # ROS 方式启动
 roslaunch gazebo_ros empty_world.launch             # Launch 启动
+```
 # --- 验证 ---
+```bash
 rostopic list | grep gazebo
 rospack find gazebo_ros
 gazebo --version
+```
 # ---神经网络避障实验---
+```bash
 catkin_make
 source devel/setup.bash
 python3 src/nn_avoidance/nn_avoidance/train.py
 python3 src/nn_avoidance/nn_avoidance/test.py
 roslaunch nn_avoidance avoid.launch
+```
