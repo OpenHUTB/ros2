@@ -1,0 +1,4 @@
+<launch>
+    <!-- 启动 YOLOv8 视觉感知节点 -->
+    <node name="yolo_detector" pkg="yolo_detect" type="yolo_detector.py" output="screen" />
+</launch>
