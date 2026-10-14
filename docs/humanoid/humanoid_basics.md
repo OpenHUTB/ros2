@@ -31,7 +31,7 @@ bash Miniconda3-latest-Linux-x86_64.sh
 
 出现以下提示证明已经在许可协议页面了，持续按空格翻页
 
-```text
+``` 
 Welcome to Miniconda3 ...
 In order to continue the installation process, please review the license agreement.
 Please, press ENTER to continue
@@ -43,7 +43,7 @@ Please, press ENTER to continue
 
 **接下来是最关键的一步，如果你的电脑已经安装过其他版本的Mujoco或ros，在下面的选项一定要填no**
 
-```text
+```
 Do you wish the installer to initialize Miniconda3
 by running conda init? [yes|no]
 ```
