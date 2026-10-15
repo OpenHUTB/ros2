@@ -7,14 +7,14 @@
 ### 二、 项目目录结构
 
 ```text
-panda_ros_project/
-└── catkin_ws/
-    └── src/
-        └── panda_keyboard_control/
-            ├── CMakeLists.txt               # 编译配置文件
-            ├── package.xml                  # 包依赖声明文件
-            └── scripts/
-                └── panda_keyboard_control.py  # 键盘控制核心 Python 脚本
+panda_keyboard_control/
+├── CMakeLists.txt                # 编译与安装配置文件
+├── package.xml                   # 包依赖声明文件
+├── launch/
+│   └── panda_keyboard_demo.launch # 一键启动配置文件
+└── scripts/
+    ├── panda_keyboard_control.py  # 键盘控制核心 Python 脚本
+    └── main.py                    # 主程序启动入口脚本
 ```
 
 ### 三、 核心配置文件内容
