@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>humanoid_walk_sim</name>
+  <version>1.0.0</version>
+  <description>人形机器人行走仿真功能包:控制器发布cmd_vel->里程计仿真订阅并发布odom->可视化节点画出人形机器人走路,无需真实机器人即可演示ROS最小通信闭环</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-tk</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>
