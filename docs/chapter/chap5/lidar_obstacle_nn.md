@@ -2,8 +2,6 @@
 
 本文介绍一个基于 ROS 2 Humble、Gazebo Fortress 与 PyTorch 的激光雷达感知模块。模块订阅仿真环境中 2D 激光雷达发布的 `/scan`（`sensor_msgs/LaserScan`，360 束），由一个三层 MLP 将每条扫描分为 `near`（近障）、`far`（远障）、`free`（无障）三类，并通过 `/obstacle_class`、`/obstacle_confidence` 话题发布分类结果与置信度。
 
-本模块对应课程任务「传感器感知及运动控制」中的神经网络感知部分：感知决策由神经网络完成，规则阈值仅在模型低置信度时作为兜底。
-
 ## 1. 系统组成
 
 ```mermaid
