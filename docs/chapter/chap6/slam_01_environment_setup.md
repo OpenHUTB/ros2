@@ -112,7 +112,9 @@ chmod -R 777 ~/.gazebo/models
 
 先不要直接点 Exit，否则模型不会保存。菜单 **File → Save As**，确认 **Model Name** 为 `my_room`，**Location** 选 `~/building_editor_models`，点 **Save**。保存成功后再 **File → Exit Building Editor**，退出时弹出确认框：
 
+```
 > Once you exit the Building Editor, your building will no longer be editable. Are you ready to exit?
+```
 
 确认点 **Exit**。
 
