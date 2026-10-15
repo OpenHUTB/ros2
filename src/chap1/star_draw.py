@@ -1,61 +1,146 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# 小海龟绘制彩色五角星 ROS Noetic
+
+# 小海龟绘制彩色五角星节点（闭环反馈控制版）：turtle_star_node
+# 思路：闭环直行一条边 -> 换颜色 -> 闭环左转 144 度 -> 停 0.3 秒，循环 5 次就是五角星
+#
+# 与开环版本的区别：订阅 /turtle1/pose 实时获取海龟位姿 (x, y, theta)，
+# 用反馈信息判断"走够了没有 / 转够了没有"，距离和角度一到位就立刻停下，
+# 不再依赖固定时长，从根上消除距离与角度的累计误差。
+
 import math
+
 import rospy
 from geometry_msgs.msg import Twist
+from turtlesim.msg import Pose
 from turtlesim.srv import SetPen
 
 # 5种颜色，5条边
-COLORS = [(255,0,0),(0,255,0),(0,0,255),(255,255,0),(255,0,255)]
+COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
 
-def main():
-    rospy.init_node('draw_star_node')
-    # 等待画笔服务
-    rospy.wait_for_service('/turtle1/set_pen')
-    set_pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
-    # 速度发布器
-    pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
-    rate = rospy.Rate(50)
-    twist = Twist()
 
-    # 参数
-    line_len = 2.0
-    turn_angle_rad = 144 * math.pi / 180
-    lin_speed = 1.0
-    ang_speed = 1.0
+class StarDrawer:
+    """闭环反馈控制：小海龟精准绘制边长 2 m 的彩色五角星"""
 
-    rospy.loginfo("开始绘制彩色五角星")
-    for i in range(5):
-        # 设置当前边颜色
-        r,g,b = COLORS[i]
-        set_pen(r,g,b,3,0)
+    def __init__(self):
+        # 初始化节点
+        rospy.init_node('turtle_star_node')
+        # 发布者：把速度指令发到 /turtle1/cmd_vel 话题
+        self.pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
+        # 订阅者：实时接收 /turtle1/pose 话题上的位姿
+        self.pose = None
+        rospy.Subscriber('/turtle1/pose', Pose, self.pose_callback)
+        # 50 Hz 闭环控制频率：高频采样位姿并重发指令，防止 0.5s 看门狗刹车
+        self.rate = rospy.Rate(50)
 
-        # 前进画边
-        twist.linear.x = lin_speed
-        twist.angular.z = 0.0
-        end_time = rospy.Time.now() + rospy.Duration(line_len / lin_speed)
-        while rospy.Time.now() < end_time and not rospy.is_shutdown():
-            pub.publish(twist)
-            rate.sleep()
-        # 停下
-        twist.linear.x = 0.0
-        pub.publish(twist)
-        rospy.sleep(0.2)
+        # 画笔服务
+        rospy.wait_for_service('/turtle1/set_pen')
+        self.set_pen = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
 
-        # 转弯144度
-        twist.angular.z = ang_speed
-        end_time = rospy.Time.now() + rospy.Duration(turn_angle_rad / ang_speed)
-        while rospy.Time.now() < end_time and not rospy.is_shutdown():
-            pub.publish(twist)
-            rate.sleep()
-        # 停止转弯
-        twist.angular.z = 0.0
-        pub.publish(twist)
-        rospy.sleep(0.2)
-        rospy.loginfo(f"第{i+1}条边绘制完成")
+        # 运动参数
+        self.side_length = 2.0            # 五角星边长 2 m
+        self.linear_speed = 1.0           # 线速度 1.0 m/s
+        self.angular_speed = 1.0        # 角速度 1.0 rad/s
+        self.turn_angle = 144 * math.pi / 180  # 左转 144 度
 
-    rospy.loginfo("五角星绘制完毕！")
+    def pose_callback(self, msg):
+        """位姿回调：把最新位姿存下来，控制循环里随时读取"""
+        self.pose = msg
+
+    def publish_velocity(self, linear=0.0, angular=0.0):
+        """组装并发布一条速度指令"""
+        twist = Twist()
+        twist.linear.x = linear
+        twist.angular.z = angular
+        self.pub.publish(twist)
+
+    def wait_for_pose(self):
+        """等第一帧位姿消息到来，保证反馈数据可用"""
+        while self.pose is None and not rospy.is_shutdown():
+            rospy.loginfo_throttle(1.0, "等待 /turtle1/pose 位姿数据...")
+            self.rate.sleep()
+
+    def pause(self, duration=0.3):
+        """持续发布空 Twist 停顿 0.3 秒，把上一次动作的误差彻底清零"""
+        end = rospy.Time.now() + rospy.Duration(duration)
+        while rospy.Time.now() < end and not rospy.is_shutdown():
+            self.publish_velocity()
+            self.rate.sleep()
+
+    def move_straight(self, distance):
+        """闭环直行：从当前位姿出发，欧氏距离走满 distance 就精准停下"""
+        start_x = self.pose.x
+        start_y = self.pose.y
+        moved = 0.0
+        while not rospy.is_shutdown():
+            # 实时计算已移动的欧氏距离
+            moved = math.hypot(self.pose.x - start_x, self.pose.y - start_y)
+            if moved >= distance:
+                break
+            # 没走够就继续前进，50 Hz 持续发布防看门狗刹车
+            self.publish_velocity(linear=self.linear_speed)
+            self.rate.sleep()
+        self.publish_velocity()   # 到位立刻发零速度停车
+        rospy.loginfo("直行完成，实际走了 %.3f 米（目标 %.2f 米）", moved, distance)
+
+    def turn(self, angle):
+        """闭环转向：实时累计朝向角差（±π 跨界归一化），转满 angle 就精准停下"""
+        total_turned = 0.0
+        prev_theta = self.pose.theta
+        while not rospy.is_shutdown():
+            # 本周期转过的角度差，先归一化到 [-pi, pi] 再累加，防 ±π 跨界跳变
+            delta = self.normalize_angle(self.pose.theta - prev_theta)
+            total_turned += delta
+            prev_theta = self.pose.theta
+            if total_turned >= angle:
+                break
+            # 没转够就继续左转
+            self.publish_velocity(angular=self.angular_speed)
+            self.rate.sleep()
+        self.publish_velocity()   # 到位立刻发零速度停车
+        rospy.loginfo("转弯完成，实际转了 %.3f 弧度（目标 %.3f 弧度）",
+                      total_turned, angle)
+
+    @staticmethod
+    def normalize_angle(a):
+        """把角度差归一化到 [-pi, pi]，处理 ±π 附近的跨界跳变"""
+        while a > math.pi:
+            a -= 2 * math.pi
+        while a < -math.pi:
+            a += 2 * math.pi
+        return a
+
+    def run(self):
+        # 等位姿数据就绪，然后停一下让海龟初始状态稳定
+        self.wait_for_pose()
+        self.pause()
+
+        rospy.loginfo("开始绘制彩色五角星，边长 %.1f 米（闭环反馈控制）", self.side_length)
+        for i in range(5):
+            # 设置当前边颜色
+            r, g, b = COLORS[i]
+            self.set_pen(r, g, b, 3, 0)
+            rospy.loginfo("正在画第 %d 条边（颜色 %d,%d,%d）", i + 1, r, g, b)
+
+            # 闭环直行一条边
+            self.move_straight(self.side_length)
+            self.pause()
+
+            # 闭环左转 144 度
+            self.turn(self.turn_angle)
+            self.pause()
+
+        rospy.loginfo("五角星画完啦！")
+
 
 if __name__ == '__main__':
-    main()
+    node = StarDrawer()
+    try:
+        node.run()
+    except rospy.ROSInterruptException:
+        # 按 Ctrl+C 或者节点被关掉的时候走到这里
+        rospy.loginfo("节点被中断，让海龟停下来")
+    finally:
+        # 不管正常画完还是中间出错，最后都再发一次 0 速度，保险一点
+        if not rospy.is_shutdown():
+            node.publish_velocity()
