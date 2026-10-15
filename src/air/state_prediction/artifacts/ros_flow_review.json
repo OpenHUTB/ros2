@@ -1,0 +1,12 @@
+{
+  "state_count": 279,
+  "forecast_count": 78,
+  "error_count": 233,
+  "horizons_seen": [
+    0.5,
+    0.25,
+    1.0
+  ],
+  "median_inference_ms": 1.178372000026684,
+  "passed": true
+}
