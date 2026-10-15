@@ -69,7 +69,9 @@ nav:
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
-    - 5. 机器人感知: './chapter/chap5.md'
+    - 5. 机器人感知:
+        - 章节首页: './chapter/chap5.md'
+        - 激光雷达 NN 障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
