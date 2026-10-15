@@ -2,7 +2,7 @@
 
 ### 一、 项目概述
 
-本项目基于 ROS Noetic 与 MoveIt! 框架，实现 Franka Emika Panda 机械臂的 RViz 仿真与键盘运动控制。通过编写 Python 脚本，实现通过键盘按键控制机械臂各关节转动、姿态复位等功能。项目采用 Catkin 工作空间进行编译管理。
+本项目基于 ROS Noetic 与 MoveIt!，在 RViz 中实现 Panda 机械臂的运动规划与轨迹执行演示。未接入 Gazebo 等动力学模拟器，因此不涉及重力、摩擦、接触力等物理动力学验证。
 
 ### 二、 项目目录结构
 
