@@ -1,0 +1,429 @@
+<?xml version="1.0"?>
+<!--
+  car.xacro —— OpenHUTB 无人车机器人模型
+  =========================================
+  坐标系约定 (REP-103)：
+    x 轴指向车头正前方，y 轴指向左侧，z 轴指向上方。
+    基座标 base_footprint 位于地面，base_link 位于车体中心。
+
+  车体几何（参考 Pioneer 3DX 差速底盘尺寸）：
+    车长 0.44m，车宽 0.38m，车高 0.22m
+    轮半径 0.0975m，轮间距 0.335m
+
+  传感器布局：
+    - 2D 激光雷达 (Hokuyo URG-04LX 风格)：车顶前方，360° 水平扫描
+    - RGB-D 深度相机：车头正前方，水平视角 80°，垂直 60°
+-->
+<robot name="openhutb_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ==================== 可调参数 ==================== -->
+  <xacro:property name="PI" value="3.14159265359"/>
+
+  <!-- 底盘几何 -->
+  <xacro:property name="chassis_length" value="0.44"/>
+  <xacro:property name="chassis_width"  value="0.38"/>
+  <xacro:property name="chassis_height" value="0.22"/>
+
+  <!-- 车轮几何 -->
+  <xacro:property name="wheel_radius"   value="0.0975"/>
+  <xacro:property name="wheel_width"    value="0.05"/>
+  <xacro:property name="wheel_separation" value="0.335"/> <!-- 左右轮中心距 -->
+
+  <!-- 车轮安装位置 -->
+  <xacro:property name="wheel_x" value="0.10"/>
+  <xacro:property name="wheel_y" value="${wheel_separation/2}"/>
+  <xacro:property name="wheel_z" value="${wheel_radius}"/>
+
+  <!-- 万向轮（前后支撑） -->
+  <xacro:property name="caster_radius" value="0.03"/>
+
+  <!--
+    车体离地高度（关键几何参数）
+    ==================================================================
+    车轮半径 0.0975 m，因此车体底面必须高于地面，否则底盘碰撞体
+    会与地面直接接触，摩擦力将整车「钉死」，表现为车轮空转但车辆不动。
+
+    这里令车体中心位于 z = wheel_radius + chassis_height/2，
+    使车体底面恰好与车轮顶部齐平，底盘离地间隙 = 车轮半径 = 0.0975 m。
+  -->
+  <xacro:property name="chassis_z" value="${wheel_radius + chassis_height/2}"/>
+
+  <!-- 激光雷达安装高度：车体顶面之上 -->
+  <xacro:property name="laser_z" value="${chassis_z + chassis_height/2 + 0.03}"/>
+
+  <!-- 深度相机安装高度：车体上部 -->
+  <xacro:property name="camera_z" value="${chassis_z + chassis_height/2 - 0.01}"/>
+
+  <!-- 质量与惯量 -->
+  <xacro:property name="chassis_mass" value="5.0"/>
+  <xacro:property name="wheel_mass"   value="0.3"/>
+
+  <!-- ==================== 材质 ==================== -->
+  <material name="dark_grey">
+    <color rgba="0.25 0.25 0.28 1.0"/>
+  </material>
+  <material name="blue">
+    <color rgba="0.15 0.35 0.75 1.0"/>
+  </material>
+  <material name="black">
+    <color rgba="0.08 0.08 0.08 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="0.85 0.15 0.15 1.0"/>
+  </material>
+
+  <!-- ==================== 惯量计算宏 ==================== -->
+  <xacro:macro name="box_inertia" params="m x y z">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m*(x*x+z*z)/12.0}" iyz="0.0"
+               izz="${m*(x*x+y*y)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertia" params="m r l">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(3*r*r+l*l)/12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m*(3*r*r+l*l)/12.0}" iyz="0.0"
+               izz="${m*r*r/2.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ==================== base_footprint ==================== -->
+  <!-- 地面投影点，作为整车的 TF 根节点 -->
+  <link name="base_footprint"/>
+
+  <!-- ==================== base_link（车体） ==================== -->
+  <!-- 车体中心位于 chassis_z 高度，保证底盘离地、不与地面摩擦 -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 ${chassis_z}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${chassis_z}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+    <xacro:box_inertia m="${chassis_mass}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}"/>
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== 左驱动轮 ==================== -->
+  <link name="left_wheel_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <xacro:cylinder_inertia m="${wheel_mass}" r="${wheel_radius}" l="${wheel_width}"/>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <origin xyz="${wheel_x} ${wheel_y} ${wheel_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== 右驱动轮 ==================== -->
+  <link name="right_wheel_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+      <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+    </collision>
+    <xacro:cylinder_inertia m="${wheel_mass}" r="${wheel_radius}" l="${wheel_width}"/>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <origin xyz="${wheel_x} ${-wheel_y} ${wheel_z}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.1" friction="0.0"/>
+  </joint>
+
+  <!-- ==================== 前万向轮（被动支撑） ====================
+       说明：万向轮在 URDF 中为 fixed joint，Gazebo 会将其视为与地面
+       持续接触的刚体，产生额外的滑动摩擦，导致差速底盘转向迟滞甚至卡死。
+       工程上的处理方式有两种：
+         (1) 使用真实的万向球关节（URDF 难以表达，需 SDF 或自定义插件）；
+         (2) 将其保留为视觉件，不参与碰撞计算，由底盘碰撞盒与地面保持
+             离地间隙，整车靠两个驱动轮 + 车体接触支撑。
+       本模型采用方案 (2)，这是 ROS 差速小车仿真中的常见做法。 -->
+  <link name="front_caster_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><sphere radius="${caster_radius}"/></geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+  </link>
+
+  <joint name="front_caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="front_caster_link"/>
+    <origin xyz="${chassis_length/2 - 0.05} 0 ${caster_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== 后万向轮（被动支撑） ==================== -->
+  <link name="rear_caster_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><sphere radius="${caster_radius}"/></geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+  </link>
+
+  <joint name="rear_caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_caster_link"/>
+    <origin xyz="${-chassis_length/2 + 0.05} 0 ${caster_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== 激光雷达 ======================================== -->
+  <!-- 采用 Hokuyo URG-04LX 风格：360° 扫描，量程 0.12~5.6m
+       安装位置说明：雷达需置于车体轮廓之外，否则激光会扫到自身车体，
+       在正前方产生虚假的近距离回波（自遮挡）。此处将雷达前移至车头
+       前方 0.06m 处，略超出车体边界，避免自遮挡。 -->
+  <link name="laser_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.06"/></geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="0.06"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.16"/>
+      <inertia ixx="1.6e-4" ixy="0" ixz="0" iyy="1.6e-4" iyz="0" izz="2.5e-4"/>
+    </inertial>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+    <!-- 前移：车体半长 0.22 + 0.06 余量 = 0.28 -->
+    <origin xyz="${chassis_length/2 + 0.06} 0 ${laser_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== RGB-D 深度相机 ==================== -->
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.03 0.12 0.03"/></geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.03 0.12 0.03"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <!-- 相机略前移，避免被车体边缘遮挡视野 -->
+    <origin xyz="${chassis_length/2 + 0.02} 0 ${camera_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- 相机光学坐标系：z 轴向前，x 轴向右，y 轴向下（REP-103 光学约定） -->
+  <link name="camera_optical_link"/>
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_link"/>
+    <origin xyz="0 0 0" rpy="${-PI/2} 0 ${-PI/2}"/>
+  </joint>
+
+  <!-- ==================== Gazebo 插件 ==================== -->
+  <gazebo>
+    <!-- 差速驱动控制器：订阅 /cmd_vel，发布 /odom -->
+    <plugin name="diff_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <updateRate>50.0</updateRate>
+      <leftJoint>left_wheel_joint</leftJoint>
+      <rightJoint>right_wheel_joint</rightJoint>
+      <wheelSeparation>${wheel_separation}</wheelSeparation>
+      <wheelDiameter>${wheel_radius*2}</wheelDiameter>
+      <wheelAcceleration>1.5</wheelAcceleration>
+      <wheelTorque>20</wheelTorque>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometrySource>1</odometrySource>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishWheelTF>false</publishWheelTF>
+      <publishOdomTF>true</publishOdomTF>
+      <publishWheelJointState>true</publishWheelJointState>
+      <legacyMode>false</legacyMode>
+    </plugin>
+
+    <!-- 关节状态发布（供 robot_state_publisher 使用） -->
+    <plugin name="joint_state_publisher_plugin" filename="libgazebo_ros_joint_state_publisher.so">
+      <updateRate>50</updateRate>
+      <jointName>left_wheel_joint</jointName>
+      <jointName>right_wheel_joint</jointName>
+    </plugin>
+  </gazebo>
+
+  <!-- 激光雷达插件 -->
+  <gazebo reference="laser_link">
+    <sensor type="ray" name="laser_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>5.6</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <frameName>laser_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- RGB-D 深度相机
+       ==========================================================================
+       插件选择说明（重要）：
+         Gazebo 提供两个可用于深度感知的 ROS 插件：
+
+         (1) libgazebo_ros_openni_kinect.so
+             模拟 Kinect/OpenNI 设备，同时输出 RGB、深度图与点云。
+             但其深度图会经过 pointCloudCutoff / pointCloudCutoffMax 截断，
+             超出范围的部分被压成固定值，导致深度图读数失真
+             （实测所有像素退化为 1.000 m），不适合做精确测距。
+
+         (2) libgazebo_ros_depth_camera.so
+             直接发布原始深度图（32FC1，单位米，无截断），
+             测距准确，正是本任务「深度相机感知」所需的传感器。
+
+       本模型采用 (2)，以保证深度数据的真实性与算法有效性。
+       RGB 图像由独立的相机插件发布（见下方 camera_sensor）。
+  -->
+  <gazebo reference="camera_link">
+    <sensor type="depth" name="depth_camera_sensor">
+      <update_rate>15</update_rate>
+      <camera>
+        <horizontal_fov>1.3962634</horizontal_fov>  <!-- 80 deg -->
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>30.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="gazebo_ros_depth_camera_controller"
+              filename="libgazebo_ros_depth_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>15.0</updateRate>
+        <cameraName>camera</cameraName>
+        <imageTopicName>rgb/image_raw</imageTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <frameName>camera_optical_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- 材料颜色微调（reference 必须指向真实存在的 link 名） -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Blue</material>
+    <!-- 车体与地面摩擦：略低，避免车体接触地面时把整车拖住 -->
+    <mu1>0.05</mu1>
+    <mu2>0.05</mu2>
+  </gazebo>
+  <gazebo reference="laser_link">
+    <material>Gazebo/Red</material>
+  </gazebo>
+  <gazebo reference="camera_link">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <!-- 驱动轮摩擦：必须足够高，否则车轮打滑空转、车辆无法前进。
+       这是差速驱动机器人仿真的关键参数。 -->
+  <gazebo reference="left_wheel_link">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.0</maxVel>
+  </gazebo>
+  <gazebo reference="right_wheel_link">
+    <material>Gazebo/Black</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.0</maxVel>
+  </gazebo>
+
+</robot>

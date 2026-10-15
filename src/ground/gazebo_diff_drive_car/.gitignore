@@ -1,0 +1,57 @@
+# =============================================================================
+# gazebo_diff_drive_car —— Git 忽略规则
+# =============================================================================
+
+# ---- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ---- catkin / ROS ----------------------------------------------------------
+# devel 与 build 通常位于工作区根目录，此处列出以防模块内误建
+devel/
+build/
+logs/
+.ros/
+*.log
+rosbag/
+
+# ---- 运行时产物 ------------------------------------------------------------
+# 轨迹记录输出目录（由 odom_recorder.py 生成）
+openhutb_car_results/
+trajectory_*.csv
+speed_plot_*.png
+trajectory_plot.png
+metrics_report.txt
+
+# ---- 编辑器 / IDE ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ---- 操作系统 --------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

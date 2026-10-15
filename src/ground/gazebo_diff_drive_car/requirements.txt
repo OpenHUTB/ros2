@@ -1,0 +1,52 @@
+# =============================================================================
+# gazebo_diff_drive_car —— Python 依赖
+# =============================================================================
+#
+# 说明：
+#   本模块运行于 ROS Noetic 环境。以下依赖中，ROS 相关的 Python 包
+#   （rospy、tf 等）随 ROS Noetic 桌面版一同安装，无需通过 pip 单独安装；
+#   这里列出的是纯 Python 第三方依赖，以及对应的 ROS 系统包名，
+#   便于一键配置环境。
+#
+# 一键安装（推荐）：
+#     sudo apt install -y \
+#         ros-noetic-gazebo-ros \
+#         ros-noetic-gazebo-plugins \
+#         ros-noetic-gazebo-ros-control \
+#         ros-noetic-robot-state-publisher \
+#         ros-noetic-joint-state-publisher \
+#         ros-noetic-teleop-twist-keyboard \
+#         ros-noetic-xacro \
+#         ros-noetic-rviz \
+#         python3-numpy \
+#         python3-matplotlib
+#
+# 或使用 pip（仅第三方库）：
+#     pip3 install -r requirements.txt
+# =============================================================================
+
+# ---- 数值计算 --------------------------------------------------------------
+# 深度图像处理（ROI 统计、直方图、百分位数）依赖 numpy 的向量化运算
+numpy>=1.17.4
+
+# ---- 数据可视化 ------------------------------------------------------------
+# 轨迹绘制与算法对比（analyze_trajectory.py / plot_trajectory.py）
+matplotlib>=3.1.2
+
+# =============================================================================
+# 对应的 ROS 系统依赖（通过 apt 安装，不通过 pip）
+# =============================================================================
+# rospy                     # ROS Python 客户端库
+# sensor_msgs               # LaserScan / Image 消息类型
+# geometry_msgs             # Twist 消息类型
+# nav_msgs                  # Odometry 消息类型
+# visualization_msgs        # Marker 消息类型
+# tf                        # 坐标变换
+# gazebo_ros                # Gazebo 与 ROS 的桥接
+# gazebo_plugins            # diff_drive / laser / depth_camera 插件
+# gazebo_ros_control        # ros_control 集成
+# robot_state_publisher     # TF 发布
+# joint_state_publisher     # 关节状态发布
+# teleop_twist_keyboard     # 键盘遥控（备用）
+# xacro                     # URDF 宏展开
+# rviz                      # 可视化
