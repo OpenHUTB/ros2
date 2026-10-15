@@ -1,0 +1,22 @@
+<launch>
+  <!-- humanoid_walk_sim 一键启动: 控制器 + 里程计仿真 + 可视化
+       入口约定: launch 以 main 开头
+       用法:  roslaunch humanoid_walk_sim main.launch
+       验证:  另开终端
+                 rostopic echo /odom/pose/pose/position/x  看坐标不断变化
+                 rqt_graph                                  看节点/话题关系
+  -->
+
+  <!-- 节点1: 控制器, 周期发布速度指令 cmd_vel (沿方形路径行走) -->
+  <node pkg="humanoid_walk_sim" type="cmd_vel_publisher.py"
+        name="cmd_vel_publisher" output="screen"/>
+
+  <!-- 节点2: 里程计仿真, 订阅 cmd_vel 积分出位姿并发布 /odom 与 TF -->
+  <node pkg="humanoid_walk_sim" type="odom_sim.py"
+        name="odom_sim" output="screen"/>
+
+  <!-- 节点3: 可视化, 订阅 /odom 画出人形机器人走路, 并保存 GIF -->
+  <node pkg="humanoid_walk_sim" type="robot_visualizer.py"
+        name="robot_visualizer" output="screen"/>
+
+</launch>
