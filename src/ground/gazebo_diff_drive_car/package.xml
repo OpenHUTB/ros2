@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>gazebo_diff_drive_car</name>
+  <version>1.0.0</version>
+  <description>
+    OpenHUTB ROS 机器人任务 —— 地面载具（Ground Vehicle）方向。
+
+    基于 ROS Noetic + Gazebo 11 的差速驱动无人车物理仿真，
+    实现任务书要求的：
+      (1) 物理仿真环境下的键盘运动控制；
+      (2) 激光雷达感知 → 运动控制闭环避障；
+      (3) RGB-D 深度相机感知 → 运动控制闭环避障。
+
+    与同目录下的 carla_keyboard_control（Carla 平台）构成
+    「多仿真平台 / 多传感器 / 多算法」的横向对比，
+    对应任务书「支持多种路径规划与控制算法的对比」的要求。
+
+    所有功能通过统一入口启动：
+        roslaunch gazebo_diff_drive_car main.launch mode:=[teleop|laser|camera|idle]
+  </description>
+
+  <maintainer email="xjm666god@users.noreply.github.com">OpenHUTB Ground Vehicle Team</maintainer>
+  <license>MIT</license>
+
+  <url type="website">https://openhub.github.io/doc/used_by/#ros</url>
+  <url type="repository">https://github.com/OpenHUTB/ros2</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf</depend>
+
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>gazebo_ros_control</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+  </export>
+</package>

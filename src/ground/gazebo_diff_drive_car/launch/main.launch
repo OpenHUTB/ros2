@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!--
+  main.launch 鈥斺€?OpenHUBB 鏃犱汉杞︿换鍔＄粺涓€鍚姩鍏ュ彛
+  ================================================
+
+  銆愪换鍔′功瑕佹眰銆?    銆屾瘡涓ā鍧楀繀椤绘敮鎸?launch 鍚姩锛屽叆鍙ｄ负 main.xxx锛屾瘮濡傦細main.py銆乵ain.cpp銆?      main.bat銆乵ain.sh 绛夈€?    銆屾墍鏈夌▼搴忓繀椤绘敮鎸?launch 鍚姩锛屽湪 Ubuntu 20.04 ROS Noetic 鎴?Humble 涓婅兘澶熻繍琛岄€氳繃銆?
+  鏈枃浠跺嵆涓鸿瑕佹眰鐨勭粺涓€鍏ュ彛锛氫竴鏉?roslaunch 鍛戒护鍗冲彲鍚姩
+  Gazebo 浠跨湡鐜銆佸姞杞芥棤浜鸿溅妯″瀷銆佸惎鍔ㄤ紶鎰熷櫒锛屽苟鎸夋寚瀹氭ā寮忚繍琛屾帶鍒剁畻娉曘€?
+  ===========================================================================
+  銆愮敤娉曘€?
+    # 1) 閿洏閬ユ帶妯″紡锛堜换鍔′功绗?1 椤癸細鐗╃悊浠跨湡 + 閿洏杩愬姩鎺у埗锛?    roslaunch gazebo_diff_drive_car main.launch
+
+    # 2) 婵€鍏夐浄杈鹃伩闅滄ā寮忥紙浠诲姟涔︾ 2 椤癸細闆疯揪鎰熺煡鈫掓帶鍒堕棴鐜級
+    roslaunch gazebo_diff_drive_car main.launch mode:=laser
+
+    # 3) 娣卞害鐩告満閬块殰妯″紡锛堜换鍔′功绗?2 椤癸細娣卞害鐩告満鎰熺煡鈫掓帶鍒堕棴鐜級
+    roslaunch gazebo_diff_drive_car main.launch mode:=camera
+
+    # 4) 浠呭姞杞戒豢鐪熺幆澧冿紝涓嶅惎鍔ㄦ帶鍒剁畻娉曪紙浜哄伐骞查/璋冭瘯鐢級
+    roslaunch gazebo_diff_drive_car main.launch mode:=idle
+
+    # 5) 鏃犲浘褰㈢晫闈㈣繍琛岋紙鏈嶅姟鍣?CI 鐜锛?    roslaunch gazebo_diff_drive_car main.launch gui:=false
+
+  ===========================================================================
+  銆愬弬鏁拌鏄庛€?    mode        杩愯妯″紡锛歵eleop | laser | camera | idle锛堥粯璁?teleop锛?    gui         鏄惁鍚姩 Gazebo 鍥惧舰鐣岄潰锛堥粯璁?true锛?    rviz        鏄惁鍚姩 RViz 鍙鍖栵紙榛樿 false锛?    paused      鏄惁浠ユ殏鍋滅姸鎬佸惎鍔ㄤ豢鐪燂紙榛樿 false锛?    x, y, yaw   杞﹁締鍒濆浣嶅Э锛堥粯璁?0 0 0锛?    record      鏄惁璁板綍閲岀▼璁¤建杩瑰苟杈撳嚭鎬ц兘鎶ュ憡锛堥粯璁?true锛?
+  銆愪綔鑰呫€慜penHUTB Car Team
+-->
+<launch>
+
+  <!-- ==================== 鍙傛暟瀹氫箟 ==================== -->
+
+  <!-- 杩愯妯″紡锛歵eleop / laser / camera / idle -->
+  <arg name="mode" default="teleop"
+       doc="杩愯妯″紡锛歵eleop(閿洏) | laser(闆疯揪閬块殰) | camera(鐩告満閬块殰) | idle(绌洪棽)"/>
+
+  <!-- Gazebo 鍥惧舰鐣岄潰 -->
+  <arg name="gui" default="true"
+       doc="鏄惁鍚姩 Gazebo 鍥惧舰鐣岄潰"/>
+
+  <!-- Gazebo 鐗╃悊寮曟搸寮€鍏筹紙gui=false 鏃朵粛闇€瑕佺墿鐞嗕豢鐪燂級 -->
+  <arg name="headless" default="false"/>
+
+  <!-- 鏄惁鏆傚仠鍚姩 -->
+  <arg name="paused" default="false"/>
+
+  <!-- 鏄惁浣跨敤浠跨湡鏃堕棿 -->
+  <arg name="use_sim_time" default="true"/>
+
+  <!-- 鏄惁鍚姩 RViz -->
+  <arg name="rviz" default="false"/>
+
+  <!-- 杞﹁締鍒濆浣嶅Э
+       榛樿 (-5.0, -4.0, 0.0)锛氫綅浜庡満鏅タ鍗椾晶绌烘椃鍖猴紙瑙?world 涓殑
+       spawn_marker 鏍囪锛夛紝姝ｅ墠鏂圭害 10 m 鍐呮棤闅滅鐗╋紝
+       渚夸簬寮€灞曠洿绾胯椹躲€佽浆鍚戜笌閬块殰娴嬭瘯銆?-->
+  <arg name="x"   default="-5.0"/>
+  <arg name="y"   default="-4.0"/>
+  <arg name="yaw" default="0.0"/>
+
+  <!-- 鏄惁璁板綍杞ㄨ抗骞惰緭鍑烘€ц兘璇勪环 -->
+  <arg name="record" default="true"/>
+
+  <!-- 涓栫晫鏂囦欢 -->
+  <arg name="world_file"
+       default="$(find gazebo_diff_drive_car)/worlds/car_world.world"/>
+
+  <!-- 鏈哄櫒浜烘ā鍨嬫弿杩版枃浠?-->
+  <arg name="urdf_file"
+       default="$(find gazebo_diff_drive_car)/urdf/car.xacro"/>
+
+  <!-- Gazebo 璋冭瘯杈撳嚭 -->
+  <arg name="debug" default="false"/>
+  <arg name="verbose" default="false"/>
+
+  <!-- ==================================================================
+       涓€銆佸惎鍔?Gazebo 浠跨湡鐜锛堢墿鐞嗕豢鐪燂級
+       ================================================================== -->
+
+  <!-- 灏?xacro 灞曞紑涓?URDF 骞惰浇鍏ュ弬鏁版湇鍔″櫒 -->
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(arg urdf_file)" />
+
+  <!-- 鍚姩绌轰笘鐣屽苟鍔犺浇鑷畾涔夊満鏅?-->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name"   value="$(arg world_file)"/>
+    <arg name="paused"       value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui"          value="$(arg gui)"/>
+    <arg name="headless"     value="$(arg headless)"/>
+    <arg name="debug"        value="$(arg debug)"/>
+    <arg name="verbose"      value="$(arg verbose)"/>
+  </include>
+
+  <!-- ==================================================================
+       浜屻€佸湪 Gazebo 涓敓鎴愭棤浜鸿溅妯″瀷
+       ================================================================== -->
+
+  <!-- 鐢熸垚楂樺害 z 鍙栬溅杞崐寰勭暐涓婃柟锛?.12 m锛夛紝
+       浣胯溅杈嗚惤鍦版椂椹卞姩杞伆濂芥帴瑙﹀湴闈紝閬垮厤鍒濆绌块€忔垨鎮┖涓嬪潬銆?-->
+  <node name="spawn_car" pkg="gazebo_ros" type="spawn_model"
+        respawn="false" output="screen"
+        args="-urdf
+              -model openhutb_car
+              -param robot_description
+              -x $(arg x)
+              -y $(arg y)
+              -z 0.12
+              -Y $(arg yaw)" />
+
+  <!-- ==================================================================
+       涓夈€佺姸鎬佸彂甯冿紙TF 鏍戜笌鍏宠妭鐘舵€侊級
+       ================================================================== -->
+
+  <!-- 灏嗗叧鑺傝搴﹁浆鎹负 TF 鍙樻崲 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+        type="robot_state_publisher" output="screen">
+    <param name="publish_frequency" value="50.0"/>
+  </node>
+
+  <!-- 鍙戝竷闈為┍鍔ㄥ叧鑺傦紙涓囧悜杞級鐨勭姸鎬?-->
+  <node name="joint_state_publisher" pkg="joint_state_publisher"
+        type="joint_state_publisher" output="screen">
+    <param name="rate" value="50"/>
+  </node>
+
+  <!-- ==================================================================
+       鍥涖€佸惎鍔ㄦ帶鍒剁畻娉曪紙缁熶竴鍏ュ彛 main.py锛?       ================================================================== -->
+
+  <!--
+    浠诲姟涔﹁姹傘€屽叆鍙ｄ负 main.xxx銆嶃€傛澶勫惎鍔ㄧ殑 main.py 鍗充负缁熶竴鍏ュ彛锛?    瀹冩牴鎹?mode 鍙傛暟鍔ㄦ€佸姞杞?teleop / laser / camera 瀵瑰簲鐨勭畻娉曟ā鍧椼€?  -->
+  <node name="gazebo_diff_drive_car_main" pkg="gazebo_diff_drive_car" type="main.py"
+        output="screen" required="true">
+    <param name="mode" value="$(arg mode)"/>
+  </node>
+
+  <!-- ==================================================================
+       浜斻€佽建杩硅褰曚笌鎬ц兘璇勪环锛堝彲閫夛級
+       ================================================================== -->
+
+  <node if="$(arg record)"
+        name="odom_recorder" pkg="gazebo_diff_drive_car" type="odom_recorder.py"
+        output="screen">
+  </node>
+
+  <!-- ==================================================================
+       鍏€丷Viz 鍙鍖栵紙鍙€夛級
+       ================================================================== -->
+
+  <node if="$(arg rviz)"
+        name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find gazebo_diff_drive_car)/rviz/car.rviz"
+        output="screen">
+  </node>
+
+</launch>

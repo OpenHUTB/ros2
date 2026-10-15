@@ -69,6 +69,7 @@ ROS每章节运行代码:
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [Gazebo 差速驱动小车物理仿真与多传感器闭环控制](./ground/gazebo_diff_drive_car.md) —— 在 Gazebo 11 中构建差速驱动无人车，实现键盘运动控制、激光雷达避障与深度相机视觉避障三套闭环，含性能评价与多传感器对比
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>

@@ -1,0 +1,66 @@
+# 无人车任务 —— 环境配置参考
+# ==========================================
+# 本文件记录各功能模式下的关键参数，便于复现实验与参数对比。
+
+# ---------------------- 通用 ----------------------
+common:
+  #: 控制回路频率 (Hz)
+  control_rate: 20.0
+  #: 速度指令超时时间 (s)，超时后自动停车（安全机制）
+  command_timeout: 1.0
+
+# ---------------------- 车辆几何 ----------------------
+# 与 urdf/car.xacro 中的参数保持一致
+robot:
+  chassis_length: 0.44      # 车长 (m)
+  chassis_width: 0.38       # 车宽 (m)
+  chassis_height: 0.22      # 车高 (m)
+  wheel_radius: 0.0975      # 车轮半径 (m)
+  wheel_separation: 0.335   # 左右轮中心距 (m)
+  wheel_width: 0.05         # 轮宽 (m)
+  chassis_mass: 5.0         # 车体质量 (kg)
+
+# ---------------------- 激光雷达避障 ----------------------
+laser_avoid:
+  d_safe: 1.0               # 进入避障的距离阈值 (m)
+  d_clear: 1.4              # 退出避障的阈值 (m)，形成滞回
+  d_danger: 0.45            # 紧急后退阈值 (m)
+  v_cruise: 0.35            # 巡航线速度 (m/s)
+  v_avoid: 0.18             # 避障线速度 (m/s)
+  v_back: -0.12             # 紧急后退速度 (m/s)
+  w_min: 0.45               # 最小角速度 (rad/s)
+  w_max: 1.30               # 最大角速度 (rad/s)
+  k_omega: 1.8              # 侧向距离差 → 角速度 增益
+  emergency_hold: 0.8       # 紧急状态保持时长 (s)
+  self_occlusion_range: 0.30  # 自遮挡过滤半径 (m)
+  min_close_hits: 5         # 判定真实近距障碍的最少光束数
+
+# ---------------------- 深度相机避障 ----------------------
+depth_camera_avoid:
+  d_safe: 1.2               # 中区避障阈值 (m)
+  d_clear: 1.6              # 退出阈值 (m)
+  d_danger: 0.5             # 紧急阈值 (m)
+  v_cruise: 0.30            # 巡航线速度 (m/s)
+  v_avoid: 0.15             # 避障线速度 (m/s)
+  v_back: -0.10             # 紧急后退速度 (m/s)
+  w_min: 0.40               # 最小角速度 (rad/s)
+  w_max: 1.20               # 最大角速度 (rad/s)
+  k_omega: 1.6              # 增益
+  depth_percentile: 15.0    # 深度统计百分位数
+  roi_left:  [0.00, 0.25]   # 左区列范围比例
+  roi_mid:   [0.37, 0.62]   # 中区列范围比例
+  roi_right: [0.75, 1.00]   # 右区列范围比例
+  roi_rows:  [0.25, 0.75]   # 竖直取样范围比例
+  emergency_hold: 0.8       # 紧急保持时长 (s)
+
+# ---------------------- 键盘遥控 ----------------------
+teleop:
+  linear_step: 0.1          # 单次按键线速度增量 (m/s)
+  angular_step: 0.2         # 单次按键角速度增量 (rad/s)
+  linear_max: 0.8           # 线速度上限 (m/s)
+  angular_max: 1.2          # 角速度上限 (rad/s)
+
+# ---------------------- 轨迹记录 ----------------------
+odom_recorder:
+  min_sample_distance: 0.02 # 轨迹抽稀距离阈值 (m)
+  result_dir: "~/openhutb_car_results"   # 结果输出目录
