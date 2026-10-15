@@ -78,7 +78,7 @@ class WaypointFollower(Node):
     def timer_callback(self):
         distance = np.linalg.norm(self.current_position - self.waypoint_locations[self.waypoint_idx])
         # self.get_logger().info(f"Distance to waypoint: {distance:.2f} meters")
-        if np.linalg.norm(self.current_position - self.waypoint_locations[self.waypoint_idx]) < self.waypoint_threshold:
+        if distance < self.waypoint_threshold:
             self.get_logger().info(f"Reached waypoint {self.waypoint_idx}")
             if self.waypoint_idx < len(self.waypoint_locations) -1:
                 self.waypoint_idx += 1
