@@ -38,6 +38,7 @@ data/
 *.gif
 *.pth
 *.pt
+*.pt.json
 *.onnx
 *.ckpt
 *.bag.active
