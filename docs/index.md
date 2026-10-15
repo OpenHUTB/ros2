@@ -61,6 +61,7 @@ ROS每章节运行代码:
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [路径点发布器](./ground/waypoint.md)
+* [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
