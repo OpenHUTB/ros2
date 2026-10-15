@@ -1,18 +1,33 @@
 # vehicle_pygame_teleop
 
-基于 pygame 的 ROS 车辆键盘遥操作功能包，**内置俯视二维驾驶模拟**：键盘输入实时驱动画面中的车辆运动，同时以 30Hz 向 `/cmd_vel` 发布 `geometry_msgs/Twist` 速度指令，无需启动外部仿真器即可验证手动控制效果。
+物理仿真由 CARLA 0.9.16 提供；本包只生成控制指令（键盘 → 平滑 Twist，30Hz）。
 
-## 功能
+## 控制链路
 
-- 方向键 / WASD 控制车辆油门、刹车/倒车与左右转向，加减速过程平滑
-- 空格键手刹急停；ESC、关闭窗口或 Ctrl+C 退出时自动发布零速度，车辆可靠停车
-- 内置俯视二维模拟：网格地图、车身与车头朝向随动、实时线速度/角速度显示
-- 30Hz 稳定输出 `/cmd_vel`，接口格式与 Carla 等仿真器的遥控接口一致
+```text
+键盘 → vehicle_pygame_teleop（指令平滑，30Hz）
+     → /carla/ego_vehicle/twist                (geometry_msgs/Twist)
+     → carla_twist_to_control                  (本仓库 src/ground/ros-bridge)
+     → /carla/ego_vehicle/vehicle_control_cmd  (carla_msgs/CarlaEgoVehicleControl)
+     → CARLA 0.9.16 中的自车（物理仿真）
+```
+
+## 与已有「手动控制」示例的区别
+
+| 对比项 | 已有「手动控制」示例 | 本模块 `vehicle_pygame_teleop` |
+| --- | --- | --- |
+| 控制入口 | ros-bridge 内置手动驾驶（在 CARLA 窗口按 `B`） | 独立 ROS 节点，键盘窗口操作 |
+| 指令接口 | 无对外接口 | 发布标准 `/carla/ego_vehicle/twist`，可编程、可复用 |
+| 指令平滑 | 无 | 加减速与转向均平滑，车辆不跳变 |
+| 退出行为 | - | ESC / 关闭窗口 / Ctrl+C 均自动发布零速度 |
+| 适用场景 | 日常体验 CARLA | 作为感知、规划、端到端任务的遥控与调试基座 |
 
 ## 运行环境
 
 - Ubuntu 20.04 + ROS Noetic（Python 3）
 - pygame
+- CARLA 0.9.16（运行在有 GPU 的宿主机上）
+- carla ROS bridge（本仓库 `src/ground/ros-bridge`，含 `carla_twist_to_control`）
 
 ## 1. 安装依赖
 
@@ -25,7 +40,8 @@ pip3 install pygame
 
 ## 2. 放入工作空间并构建
 
-将整个 `vehicle_pygame_teleop` 文件夹放入 ROS 工作空间的 `src` 目录（例如 `~/catkin_ws/src`），然后编译：
+将本目录放入工作空间 `src/`（`src/ground/ros-bridge` 的 `carla_twist_to_control`、
+`carla_msgs`、`ros_compatibility` 需在同一工作空间），编译：
 
 ```bash
 cd ~/catkin_ws
@@ -34,37 +50,53 @@ catkin_make
 
 ## 3. 加载工作空间环境
 
-每个新终端使用本功能包前，先 source 工作空间环境（只需执行一次，建议写入 `~/.bashrc`）：
-
 ```bash
 source ~/catkin_ws/devel/setup.bash
 ```
 
-## 4. 运行
+## 4. 启动 CARLA 与 ROS bridge
+
+1. 在 GPU 宿主机启动 CARLA 0.9.16 服务端（步骤见 `docs/set_up_and_connect_to_carla.md`）；
+2. 启动 ros-bridge 与示例自车（`host` 改为宿主机 IP）：
+
+```bash
+roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch host:=192.168.8.1 timeout:=60000 town:='Town10HD_Opt'
+```
+
+3. 启动 Twist→车辆控制转换节点：
+
+```bash
+roslaunch carla_twist_to_control carla_twist_to_control.launch
+```
+
+## 5. 启动键盘遥操作
 
 ```bash
 roslaunch vehicle_pygame_teleop main.launch
 ```
 
-启动后弹出二维模拟窗口，**点击窗口使其获得键盘焦点**，即可开始控制车辆。
+点击窗口获取键盘焦点即可驾驶。
+
+> 自车生成前，转换节点告警 `Did not yet receive vehicle info.` 并忽略指令。
 
 ## 按键说明
 
 | 按键 | 功能 |
 | --- | --- |
-| W 或 ↑ | 油门加速 |
-| S 或 ↓ | 前进时刹车，静止时倒车 |
-| A 或 ← | 左转（`angular.z` 为正） |
-| D 或 → | 右转（`angular.z` 为负） |
-| 空格 | 手刹急停 |
-| ESC / 关闭窗口 | 发布零速度后退出 |
+| W 或 ↑ | 油门加速（速度指令上限 10 m/s） |
+| S 或 ↓ | 前进时刹车，静止时倒车（倒车指令上限 5 m/s） |
+| A 或 ← | 左转 |
+| D 或 → | 右转 |
+| 空格 | 急停（发布零速度指令） |
+| ESC / 关闭窗口 / Ctrl+C | 发布零速度后退出 |
 
 ## 话题接口
 
-- 发布话题：`/cmd_vel`（`geometry_msgs/Twist`）
-  - `linear.x`：纵向线速度，前进为正、倒车为负（m/s）
-  - `angular.z`：偏航角速度，左转为正、右转为负（rad/s）
-- 发布频率：30Hz
+| 方向 | 话题 | 消息类型 | 说明 |
+| --- | --- | --- | --- |
+| 发布 | `/carla/ego_vehicle/twist`（默认，可用参数 `~twist_topic` 修改） | `geometry_msgs/Twist` | `linear.x` 速度指令（m/s），`angular.z` 转向指令（rad），发布频率 30Hz |
+
+零 Twist → `throttle=0, brake=1`（全力刹车）。
 
 ## 目录结构
 

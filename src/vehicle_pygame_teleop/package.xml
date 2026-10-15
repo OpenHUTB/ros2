@@ -2,7 +2,7 @@
 <package format="2">
   <name>vehicle_pygame_teleop</name>
   <version>1.0.0</version>
-  <description>基于pygame的车辆键盘遥操作功能包</description>
+  <description>基于键盘的车辆遥操作功能包：把平滑的速度指令（Twist，30Hz）接入 CARLA 0.9.16 的车辆控制链路</description>
   <maintainer email="user@example.com">user</maintainer>
   <license>MIT</license>
 
