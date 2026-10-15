@@ -252,5 +252,5 @@ roslaunch panda_keyboard_control panda_keyboard_demo.launch
 
 ### 六、 运行效果
 
-https://github.com/Tan-aaa/ros2/commit/f64e433074e057fce64420b491c5b50e07da05c6
+![演示动画](rohotic-arm.gif)
 
