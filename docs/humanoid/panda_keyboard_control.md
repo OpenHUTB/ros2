@@ -13,7 +13,6 @@ panda_ros_project/
         └── panda_keyboard_control/
             ├── CMakeLists.txt               # 编译配置文件
             ├── package.xml                  # 包依赖声明文件
-            ├── setup.py                     # Python 脚本安装配置
             └── scripts/
                 └── panda_keyboard_control.py  # 键盘控制核心 Python 脚本
 ```
