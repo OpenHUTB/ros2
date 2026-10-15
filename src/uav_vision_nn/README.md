@@ -17,3 +17,8 @@
 2. 虚拟机运行: python3 src/uav_vision_nn/collect_data.py
 3. 训练: python3 src/uav_vision_nn/train.py
 4. launch 启动: ros2 launch src/uav_vision_nn/launch/uav_vision.launch.py
+
+## 演示素材
+- demo.gif: 神经网络实时控制飞行演示（382KB）
+- collect_data.gif: 数据收集（预设矩形轨迹）演示（452KB）
+- track.png: 神经网络控制飞行轨迹图（80 个轨迹点）
