@@ -35,5 +35,5 @@ roslaunch pr2_gazebo pr2_empty_world.launch
 ```
 ## 4. 运行结果
 启动成功后，Gazebo 窗口将弹出，并加载 PR2 机器人模型。
-![ROS2机器人仿真图](image/ros2_robot_sim_demo.png)
+![ROS2机器人仿真图](image/ros2_robot_sim_demo.jpg)
 ## 5.运用了千问的大模型。

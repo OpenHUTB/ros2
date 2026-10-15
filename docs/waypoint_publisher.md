@@ -83,8 +83,8 @@ rviz2
 点击 Add，添加 `Path` 可视化插件
 Path 插件的 Topic 填写 `/plan`
 此时即可看到发布出来的路径折线
-![节点运行截图](image/node_run.png)
-![话题数据截图](image/echo_topic.png)
+![节点运行截图](image/node_run.jpg)
+![话题数据截图](image/echo_topic.jpg)
 
 ## 7.验证消息
 新开终端查看话题消息
