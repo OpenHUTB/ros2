@@ -9,10 +9,10 @@
 ```mermaid
 flowchart LR
     A[Gazebo GPU LiDAR] -->|Gazebo Transport| B[ros_gz_bridge]
-    B -->|sensor_msgs/LaserScan| C[/scan]
+    B -->|sensor_msgs/LaserScan| C["/scan"]
     C --> D[LidarMLP 推理节点]
-    D -->|std_msgs/String| E[/obstacle_class]
-    D -->|std_msgs/Float32| F[/obstacle_confidence]
+    D -->|std_msgs/String| E["/obstacle_class"]
+    D -->|std_msgs/Float32| F["/obstacle_confidence"]
 ```
 
 仿真激光雷达生成 360 束 2D 扫描，`ros_gz_bridge` 把 Gazebo 消息转换为 ROS 2 `sensor_msgs/LaserScan`，`inference_node` 加载训练好的 MLP 权重做推理，发布类别字符串和置信度。
