@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-15",
+  "tests_passed": 8,
+  "ros_observations": 720,
+  "ros_predictions": 663,
+  "subscriber_predictions": 663,
+  "scope": "MuJoCo vertical flights and actual ROS2 replay; no real aircraft or OpenHUTB Unreal validation",
+  "sha256": {
+    "payload_mass_estimation/simulation.py": "cd356395964f0c5ea1d4f188d12b09ac9f422568018eae00f6c5e6ea6b009bf7",
+    "payload_mass_estimation/experiment.py": "d53d313251eb7e268934fcb00d0c449b29f3d2de12663373c23cab232f343818",
+    "payload_mass_estimation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "payload_mass_estimation/data.py": "63a665da0e3c30ebae66ef75517bff58dc64216b56bd8c2a22f67ab4d81413e3",
+    "payload_mass_estimation/ros_nodes.py": "a720430900e4cf83aa7eb28c555e192f3465a8fcc691454a199a62d16e0fa64f",
+    "payload_mass_estimation/dashboard.py": "0aa4516ce661265b26bbdc7ad3318c58cf234c226ccec2ac1dc2a5d42975ce2b",
+    "models/mlp_42/model.pt": "01fd3db6b931841f5b88749c13779c2e574ae2c898260110b59aa7f5d81dfbc6",
+    "models/mlp_44/model.pt": "3a361b8c9f59af6fdb580f729f40f4d33e3419eb8282f90c945fea5cec43b094",
+    "models/mlp_43/model.pt": "1880db9ca009c48f8ab17b61e49d1655e9ea2ec4ef1e7a6dafad98c977851b10",
+    "models/no_thrust_42/model.pt": "0ece9ae0bbe9f035414c96cce554c663a359cb71bdc1f20f40fce951b9cf15e7",
+    "models/mlp_42/meta.json": "d973276009477b8be95a9fb28770e86a533975fd6a22e1d4364dcbc969759f27",
+    "models/mlp_44/meta.json": "034db2e73e5af99c0760171638f4053139c080bb4fc4bec5915d06514c0a2874",
+    "models/mlp_43/meta.json": "e814906240efcbb602787ebfd25668485e98d11a23efc1570008ae61923d2669",
+    "models/no_thrust_42/meta.json": "7ede2b6400ef87fed0f72695eecd04edd9957b717a142d28c790627048cdf36e"
+  }
+}
