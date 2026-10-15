@@ -14,8 +14,11 @@
 - 依赖包：`rclpy`、`nav_msgs`、`geometry_msgs`
 
 安装依赖（如果缺少）：
-```bash sudo apt update sudo apt install ros-humble-nav-msgs ros-humble-geometry-msgs```
-## 3.创建Ros2功能包
+```bash
+sudo apt update
+sudo apt install ros-humble-nav-msgs ros-humble-geometry-msgs
+```
+## 3. 创建 ROS2 功能包
 cd ~/ros2_ws/src
 ros2 pkg create --build-type ament_python waypoint_publisher
 cd waypoint_publisher/waypoint_publisher
