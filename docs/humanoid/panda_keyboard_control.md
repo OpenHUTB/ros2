@@ -252,5 +252,5 @@ roslaunch panda_keyboard_control panda_keyboard_demo.launch
 
 ### 六、 运行效果
 
-![演示动画](rohotic-arm.gif)
+![运行效果演示](rohotic-arm.gif)
 
