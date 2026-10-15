@@ -195,18 +195,29 @@ if __name__ == '__main__':
 
 ### 四、 编译与启动步骤
 
-1. **安装依赖**
-打开终端，安装 MoveIt 和 Panda 相关功能包：
-2. **编译工作空间**
-3. **添加执行权限**
-4. **配置环境**
-在终端中输入以下命令并回车：
-5. **启动仿真**
-环境配置成功后，打开**第一个终端**，启动 MoveIt 演示环境：
-6. **运行控制节点**
-保持第一个终端运行，打开**第二个终端**：
-7. **操作说明**
-在第二个终端中按以下按键控制：
+### 快速开始
+
+请在终端中依次运行以下命令：
+
+1. 创建 ROS 工作空间
+mkdir -p ~/panda_ros_project/catkin_ws/src
+cd ~/panda_ros_project/catkin_ws/src
+
+2. 克隆项目源码到工作空间
+git clone -b main https://github.com/Tan-aaa/ros2.git panda_keyboard_control
+
+3. 编译工作空间
+cd ~/panda_ros_project/catkin_ws
+catkin_make
+
+4. 配置环境变量
+source devel/setup.bash
+
+5. 运行项目
+roslaunch panda_keyboard_control panda_keyboard_demo.launch
+
+6. 操作说明
+程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
 
 | 按键 | 功能 | 按键 | 功能 |
 | ------ |------ |------ |------ |
