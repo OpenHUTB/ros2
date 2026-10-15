@@ -11,6 +11,12 @@ model = mujoco.MjModel.from_xml_path(model_path)
 data = mujoco.MjData(model)
 
 cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, 'front_camera')
+if cam_id < 0:
+    raise RuntimeError(
+        "模型里找不到名为 'front_camera' 的相机，请检查 models/car.xml 中的 <camera> 定义。"
+        "注意：mj_name2id 查不到时会返回 -1，若直接把它传给 update_scene，"
+        "MuJoCo 会当作自由相机渲染，画面看似正常但视角完全不对。"
+    )
 renderer = mujoco.Renderer(model, height=480, width=640)
 
 print("W/上 = 前进    S/下 = 后退")
