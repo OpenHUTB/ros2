@@ -1,0 +1,9 @@
+<launch>
+    <!-- 启动 Panda MoveIt 演示环境 -->
+    <include file="$(find panda_moveit_config)/launch/demo.launch" />
+
+    <!-- 启动键盘控制节点 (使用 xterm 提供独立交互终端) -->
+    <node pkg="panda_keyboard_control" type="panda_keyboard_control.py"
+          name="panda_keyboard_control" output="screen"
+          launch-prefix="xterm -e" />
+</launch>
