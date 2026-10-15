@@ -16,7 +16,7 @@
 
 运行效果:
 
-![humanoid_walk_sim 运行效果](../../img/humanoid/humanoid_walk_sim.gif)
+![humanoid_walk_sim 运行效果](../../docs/img/humanoid/humanoid_walk_sim.gif)
 
 ## 运行环境
 
