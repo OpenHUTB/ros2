@@ -203,19 +203,19 @@ mkdir -p ~/panda_ros_project/catkin_ws/src
 cd ~/panda_ros_project/catkin_ws/src
 
 2. 克隆项目源码到工作空间
-git clone -b main https://github.com/Tan-aaa/ros2.git panda_keyboard_control
+git clone -b rohotic-arm https://github.com/Tan-aaa/ros2.git panda_keyboard_control
 
-3. 编译工作空间
+4. 编译工作空间
 cd ~/panda_ros_project/catkin_ws
 catkin_make
 
-4. 配置环境变量
+5. 配置环境变量
 source devel/setup.bash
 
-5. 运行项目
+6. 运行项目
 roslaunch panda_keyboard_control panda_keyboard_demo.launch
 
-6. 操作说明
+7. 操作说明
 程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
 
 | 按键 | 功能 | 按键 | 功能 |
