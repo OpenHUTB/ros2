@@ -1,4 +1,4 @@
-# lidar_obstacle_nn：基于激光雷达扫描的神经网络障碍物分类
+# 基于激光雷达扫描的神经网络障碍物分类
 
 本文介绍一个基于 ROS 2 Humble、Gazebo Fortress 与 PyTorch 的激光雷达感知模块。模块订阅仿真环境中 2D 激光雷达发布的 `/scan`（`sensor_msgs/LaserScan`，360 束），由一个三层 MLP 将每条扫描分为 `near`（近障）、`far`（远障）、`free`（无障）三类，并通过 `/obstacle_class`、`/obstacle_confidence` 话题发布分类结果以及置信度。
 
