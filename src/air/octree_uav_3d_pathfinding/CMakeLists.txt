@@ -64,6 +64,20 @@ add_dependencies(pointcloud_to_octomap
   ${catkin_EXPORTED_TARGETS}
 )
 
+## C++ 节点：八叉树上的 A* 全局寻路
+##
+## 核心算法在同目录的 include/octree_uav_3d_pathfinding/astar.h（header-only），
+## 本目标只是它的 ROS 外壳：订阅 /octomap_full 与 /uav/goal，发布 /uav/path。
+add_executable(astar_planner src/astar_planner.cpp)
+target_link_libraries(astar_planner
+  ${catkin_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+)
+add_dependencies(astar_planner
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
 #############
 ## Install ##
 #############
@@ -72,11 +86,12 @@ add_dependencies(pointcloud_to_octomap
 catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/airsim_bridge.py
+  scripts/mock_cloud_publisher.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## C++ 节点
-install(TARGETS pointcloud_to_octomap
+install(TARGETS pointcloud_to_octomap astar_planner
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -89,4 +104,14 @@ install(DIRECTORY launch config rviz
 #############
 ## Testing ##
 #############
-## 测试规则后续补充
+
+## A* 核心算法的离线单元测试
+##
+## 刻意只依赖 octomap 与 STL：不引入 gtest、不需要 ROS 运行时、不需要模拟器。
+## 测试自己在内存里搭几棵小八叉树，因此编译一次就能跑几百个用例，
+## 是调试寻路算法的主战场。
+##
+## 运行方式：~/uav_ws/devel/lib/octree_uav_3d_pathfinding/test_astar
+## （退出码 0 = 全部通过）
+add_executable(test_astar tests/test_astar.cpp)
+target_link_libraries(test_astar ${OCTOMAP_LIBRARIES})
