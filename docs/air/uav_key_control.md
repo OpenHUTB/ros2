@@ -1,4 +1,3 @@
-  
 # uav_key_control 使用说明
 无人机键盘速度控制ROS2功能包
 
@@ -16,38 +15,54 @@
 ```text
 src/
 └── uav_key_control/
-    ├── main_uav_track.py       # 无人机轨迹跟踪ROS2节点主程序
+    ├── main_uav_track.py       # 无人机键盘速度控制节点
     ├── setup.py                # ROS 2 功能包配置文件
     ├── package.xml             # ROS2功能包描述文件
+    └── resource/
+        └── uav_key_control    # resource资源标识文件
     └── launch/
         └── uav_track.launch.py # 节点一键启动文件
 ```
-  
+## 核心代码内容
+
+本模块的核心代码已上传至仓库 `src/air/uav_key_control/` 目录下。
+
+完整代码请点击下方链接查看：
+
+* [查看 main_key_control.py 代码](../../src/air/uav_key_control/main_key_control.py)
+* [查看 package.xml 代码](../../src/air/uav_key_control/package.xml)
+* [查看 setup.py 代码](../../src/air/uav_key_control/setup.py)
+* [查看 key_control.launch.py 代码](../../src/air/uav_key_control/launch/key_control.launch.py)  
 ## 启动步骤
 
-1. 编译功能包
+1.进入ROS2工作空间
+```bash
+cd ~/ros2-cc
+```
+2.编译功能包
 ```bash
 colcon build --packages-select uav_key_control
 source install/setup.bash
 ```
-2. 启动键盘控制节点
+3. 启动键盘控制节点
 ```bash 
 ros2 run uav_key_control main_key_control
 ```
-3. 新开终端，监听话题查看输出的速度指令
+4. 新开一个终端窗口，同样进入工作空间并加载环境，监听速度话题  /cmd_vel ，查看节点发布的Twist速度指令 
 ```bash
+cd ~/ros2-cc
+source install/setup.bash
 ros2 topic echo /cmd_vel
 ```
-4.按键映射
- 
+5.按键映射
 - W：向前，X方向线速度正向
 - S：向后，X方向线速度反向
 - A：原地左转，Z方向角速度正向
 - D：原地右转，Z方向角速度反向
 - 空格：急停，所有速度置0
- 
-5.运行效果
- 
+- 
+6.运行效果
+  
 节点成功启动后，选中节点所在终端，按下W/A/S/D按键，监听终端可以实时打印Twist速度消息，验证速度指令正常发布。
 ![运行效果图片](../img/_uav_key_control_package_build.png)
 ![运行效果图片](../img/_uav_key_control_topic_test.png)
