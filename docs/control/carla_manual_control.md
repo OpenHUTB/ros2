@@ -255,13 +255,10 @@ for v in vehicles:
 
 以下是实际运行截图：
 
-![CARLA 服务器窗口](images/04925efc8308b365169c7fad3c7014f4.png)
-
-![ROS Bridge 启动日志](images/465a5d65260905200b04ea33eb1a2018.png)
-
-![spawn objects 输出](images/6f1c034cd4ced47e1bab9c74e9f7c8ff.png)
-
-![carla_manual_control 控制窗口](images/a6f77f9a6f7ad495036d0edf228eea8e.png)
+![CARLA 服务器窗口](images/carla_server.jpg)
+![ROS Bridge 启动日志](images/ros_bridge.jpg)
+![spawn objects 输出](images/spawn_objects.jpg)
+![carla_manual_control 控制窗口](images/manual_control.jpg)
 六、总结
 项目	状态
 ROS Bridge 编译	
