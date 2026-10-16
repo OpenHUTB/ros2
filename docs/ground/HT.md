@@ -98,7 +98,32 @@ def generate_launch_description():
         )
     ])
 ```
-3.setup.py
+3. car.urdf
+```python
+<?xml version="1.0"?>
+<robot name="simple_car">
+  <!-- 车体 -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.4 0.2 0.15"/></geometry>
+      <material name="blue"><color rgba="0 0 1 1"/></material>
+    </visual>
+  </link>
+  <!-- 超声波传感器 -->
+  <link name="ultrasonic_link">
+    <visual>
+      <geometry><box size="0.05 0.05 0.05"/></geometry>
+      <material name="red"><color rgba="1 0 0 1"/></material>
+    </visual>
+  </link>
+  <joint name="ultra_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ultrasonic_link"/>
+    <origin xyz="0.2 0 0.075" rpy="0 0 0"/>
+  </joint>
+</robot>
+```
+4.setup.py
 ```python
 from setuptools import setup
 package_name = 'ultra_avoid'
@@ -127,7 +152,7 @@ setup(
     },
 )
 ```
-4.package.xml
+5.package.xml
 ```python
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
