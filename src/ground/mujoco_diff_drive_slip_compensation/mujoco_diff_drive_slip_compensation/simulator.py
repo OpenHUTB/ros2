@@ -89,7 +89,7 @@ class MujocoSimulation:
             self._mujoco.mjtObj.mjOBJ_BODY,
             self._chassis_body_id,
             velocity,
-            0,
+            1,
         )
         return SimulationState(
             time=float(self.data.time),

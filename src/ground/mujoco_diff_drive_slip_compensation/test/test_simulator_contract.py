@@ -71,3 +71,23 @@ def test_mujoco_model_loads_and_steps():
     assert simulation.timestep == pytest.approx(0.005)
     assert state.time == pytest.approx(0.1)
     assert np.isfinite([state.x, state.y, state.yaw]).all()
+
+
+def test_planar_state_reports_velocity_in_chassis_frame():
+    mujoco = pytest.importorskip('mujoco')
+    simulation = MujocoSimulation(PACKAGE_ROOT / 'models' / 'diff_drive.xml')
+
+    half_angle = np.pi / 4.0
+    simulation.data.qpos[3:7] = [
+        np.cos(half_angle),
+        0.0,
+        0.0,
+        np.sin(half_angle),
+    ]
+    simulation.data.qvel[:3] = [0.0, 2.0, 0.0]
+    mujoco.mj_forward(simulation.model, simulation.data)
+
+    state = simulation.planar_state()
+
+    assert state.yaw == pytest.approx(np.pi / 2.0)
+    assert state.linear_velocity == pytest.approx(2.0)
