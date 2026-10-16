@@ -1,0 +1,4 @@
+<launch>
+    <node name="yolo_detector" pkg="yolo_detect" type="yolo_detector.py" output="screen" />
+    <node name="target_follower" pkg="yolo_detect" type="target_follower.py" output="screen" />
+</launch>
