@@ -196,6 +196,8 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
 
 如图所示，运行之后会弹出一个窗口，内容是一个小球从高处坠落，运行10秒后自动关闭。
 ![示例](../img/humanoid/falling_ball.png)
+成功事例截图：
+![alt text](../img/mujoco1.png)
 
 ## 参考
 
