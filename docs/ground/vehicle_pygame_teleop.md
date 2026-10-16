@@ -4,7 +4,7 @@
 
 功能包源码位于仓库的 `src/vehicle_pygame_teleop` 目录。
 
-![](../../img/ground/vehicle_pygame_teleop.png)
+![](../img/ground/vehicle_pygame_teleop.png)
 
 ## 功能特点
 
@@ -74,7 +74,7 @@ rosrun vehicle_pygame_teleop main.py
 | 空格  | 手刹急停 |
 | ESC / 关闭窗口 | 发布零速度后退出 |
 
-按键与 `<cmd_vel` 语义的对应关系：左转时 `angular.z` 为正，右转时为负；前进时 `linear.x` 为正，倒车时为负。倒车过程中左右转向的效果会整体反向（差速底盘特性），该行为可用参数 `vehicle/reverse_steer_invert` 关闭。
+按键与 `/cmd_vel` 语义的对应关系：左转时 `angular.z` 为正，右转时为负；前进时 `linear.x` 为正，倒车时为负。倒车过程中左右转向的效果会整体反向（差速底盘特性），该行为可用参数 `vehicle/reverse_steer_invert` 关闭。
 
 ## 话题接口
 
