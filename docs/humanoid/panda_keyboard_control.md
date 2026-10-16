@@ -96,19 +96,6 @@ setup(**d)
 ```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-键盘控制 Panda 机械臂节点（任务②）。
-
-功能：
-  1. 初始化 ROS 节点并连接 MoveIt move_group；
-  2. 读取键盘输入，控制机械臂 7 个关节分别转动；
-  3. 支持复位到初始姿态和安全退出。
-
-按键说明：
-  1-7  分别控制 7 个关节转动
-  r    复位到初始姿态
-  q    退出程序
-"""
 import sys
 import tty
 import termios
@@ -141,7 +128,6 @@ class PandaKeyboardControl(object):
         return key
 
     def _move_joint(self, joint_index, delta):
-        """对指定关节施加增量并规划执行。"""
         joint_values = self.group.get_current_joint_values()
         joint_values[joint_index] += delta
         self.group.set_joint_value_target(joint_values)
