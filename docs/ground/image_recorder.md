@@ -8,16 +8,15 @@
 * ROS 2 版本：Humble
 * 依赖库：rclpy, sensor_msgs, cv_bridge, opencv-python
 
-## 三、项目文件结构
+## 核心代码文件清单
 
-```text
-image_recorder/
-├── image_recorder/
-│   └── main.py                  # 图像订阅与录制主程序
-├── launch/
-│   └── main.launch.py           # 一键启动文件
-└── setup.py                     # ROS 2 功能包配置文件
-```
+本模块包含以下核心文件，均已提交至仓库：
+
+* `docs/image_recorder.md`：模块说明文档（即本文档）。
+* `image_recorder/main.py`：图像订阅与录制主程序。
+* `image_recorder/setup.py`：ROS 2 功能包配置文件。
+* `image_recorder/launch/main.launch.py`：一键启动文件。
+
 ## 核心代码内容
 
 ### 1. main.py（主程序）
