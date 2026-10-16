@@ -7,9 +7,7 @@
 ### 二、 项目目录结构
 
 ```text
-drone_ros_project/
-└── catkin_ws/
-    └── src/
+       src/
         └── uav_sim/
             ├── CMakeLists.txt               # 编译配置文件
             ├── package.xml                  # 包依赖声明文件
