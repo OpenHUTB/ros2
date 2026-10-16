@@ -17,10 +17,6 @@ src/
     ├── main.py                 # 轨迹发布节点（入口）
     └── trajectory_analyzer.py  # 轨迹识别与绘图节点
 ```
-完整代码请点击下方链接查看：
-
-* [查看 main.py 代码](../../src/drone_trajectory_logger/main.py)
-* [查看 trajectory_analyzer.py 代码](../../src/drone_trajectory_logger/trajectory_analyzer.py)
 ## 运行步骤
 
 1. 新建标准工作空间并进入 src 目录：
