@@ -40,8 +40,12 @@ src/yolov8-target-tracking/
 ```
 ## 4. 运行说明
 
-1. 启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_simulation.launch
-2. 启动完整项目：roslaunch yolo_detect yolov8_tracking.launch
+1.启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_simulation.launch
+
+2.启动完整项目：roslaunch yolov8-target-tracking yolov8_tracking.launch
+
+注意： 请将 yolov8n.pt 权重文件下载后，放置在 src/yolov8-target-tracking/src/ 目录下，与 main.py 放在同一文件夹内。（权重文件较大，未随仓库上传）
+
 
 ## 5. 运行效果
 
