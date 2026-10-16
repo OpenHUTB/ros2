@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hutb_grid_slam_nav</name>
+  <version>0.1.0</version>
+  <description>
+    自研贝叶斯栅格 SLAM 建图与导航同步仿真: log-odds 占用栅格+scan-to-map ICP 定位+move_base 导航
+    运行环境: Ubuntu 20.04 + ROS Noetic + Gazebo 11
+  </description>
+  <maintainer email="lb@hutb.edu.cn">lb</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>xacro</build_depend>
+  <build_depend>turtlebot3_description</build_depend>
+  <build_depend>turtlebot3_navigation</build_depend>
+  <build_depend>move_base</build_depend>
+  <build_depend>map_server</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+  <exec_depend>turtlebot3_navigation</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>map_server</exec_depend>
+</package>
