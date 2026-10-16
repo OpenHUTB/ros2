@@ -109,36 +109,37 @@ def generate_launch_description():
 ```
 ## 运行步骤
 
-### 1.新建标准工作空间并进入 src 目录：
+1. 新建存放代码的工作空间目录并进入：
 
 ```bash
-mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
+mkdir -p ~/ros2_ws/ground_image_recorder
+cd ~/ros2_ws/ground_image_recorder
 ```
-### 2.从 ros2 仓库拷贝模块代码到工作空间：
+
+2. 从 ros2 仓库的 ground 目录拷贝模块代码到当前工作空间：
+
 ```bash
-cp -r ~/OpenHUTB/ros2/src/image_recorder ~/ros2_ws/src/
-cd ~/ros2_ws
+cp -r ~/OpenHUTB/ros2/ground/image_recorder ./
 ```
-### 3.编译并运行：
-```
-bash
+
+3. 编译工作空间并部署环境：
+
+```bash
 colcon build --packages-select image_recorder
 source install/setup.bash
-ros2 launch image_recorder main.launch.pybash
 ```
 
-## 运行效果与验证
+4. 运行图像录制节点：
 
-节点成功启动，终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示 ROS 2 节点已进入监听状态，底层通信机制运行正常。
+```bash
+ros2 launch image_recorder main.launch.py
+```
+
+5. 验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
 
 验证结果说明：由于本机虚拟机环境未安装 Carla 仿真器，未能实时获取真实的图像数据，但图像订阅与节点启动逻辑已通过编译与运行验证。
 
 ![运行效果图片](../img/run_result.png)
-
-## 运行效果与验证
-
-节点成功启动，终端输出 `[INFO] [image_recorder_node]: Node started, waiting for images...`，表示 ROS 2 节点已进入监听状态。
 
 ### 补充：连接 Carla 仿真器获取实际图像
 
