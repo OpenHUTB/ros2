@@ -1,6 +1,6 @@
 <launch>
     <!-- 1. 启动 YOLOv8 视觉感知节点 -->
-    <node name="yolo_detector" pkg="yolo_detect" type="yolo_detector.py" output="screen" />
+    <node name="yolo_detector" pkg="yolo_detect" type="main.py" output="screen" />
 
     <!-- 2. 启动 目标跟随 控制节点 -->
     <node name="target_follower" pkg="yolo_detect" type="target_follower.py" output="screen" />
