@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>r2d2_search_collect</name>
+  <version>0.1.0</version>
+  <description>PyBullet R2D2 autonomous search & collect simulation</description>
+  <maintainer email="kkkk-huang469@users.noreply.github.com">Huang Shengru</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>
