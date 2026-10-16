@@ -70,6 +70,7 @@ ROS每章节运行代码:
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
+* [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
@@ -83,6 +84,8 @@ ROS每章节运行代码:
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
+
+* [八叉树上的 A* 全局寻路](./air/octree_uav_3d_pathfinding/astar_planning.md)
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)

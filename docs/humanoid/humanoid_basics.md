@@ -146,6 +146,8 @@ python -c "import mujoco; print(mujoco.__version__)"
 source ~/miniconda3/bin/activate
 conda activate mujoco-grasp
 ```
+成功事例截图：
+![alt text](../img/mujoco1.png)
 
 ## 参考
 

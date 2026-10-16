@@ -69,7 +69,9 @@ nav:
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
-    - 5. 机器人感知: './chapter/chap5.md'
+    - 5. 机器人感知:
+        - 章节首页: './chapter/chap5.md'
+        - 激光雷达 NN 障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
@@ -91,6 +93,7 @@ nav:
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
+    - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
@@ -110,6 +113,7 @@ nav:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
+        - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
