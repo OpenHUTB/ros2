@@ -22,7 +22,16 @@ def _load_ros_dependencies() -> dict[str, Any]:
         raise RuntimeError(
             '缺少 ROS 2 Humble Python 依赖 / ROS 2 Humble Python dependencies are required'
         ) from exc
-    return locals()
+    return {
+        'rclpy': rclpy,
+        'get_package_share_directory': get_package_share_directory,
+        'TransformStamped': TransformStamped,
+        'Twist': Twist,
+        'Odometry': Odometry,
+        'Node': Node,
+        'Clock': Clock,
+        'TransformBroadcaster': TransformBroadcaster,
+    }
 
 
 def _build_node_class(deps: dict[str, Any]) -> type:

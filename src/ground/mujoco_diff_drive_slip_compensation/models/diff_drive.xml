@@ -1,10 +1,10 @@
 <mujoco model="differential_drive_slip_compensation">
   <compiler angle="radian" coordinate="local"/>
-  <option timestep="0.01" gravity="0 0 -9.81" integrator="RK4"/>
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="implicitfast"/>
 
   <default>
     <joint damping="0.02" armature="0.002"/>
-    <geom condim="4" friction="0.8 0.01 0.001" solref="0.01 1"/>
+    <geom condim="4" friction="0.8 0.01 0.001" solref="0.02 1"/>
     <motor ctrllimited="true" ctrlrange="-20 20"/>
   </default>
 
@@ -38,9 +38,9 @@
   </worldbody>
 
   <actuator>
-    <velocity name="left_front" joint="left_front_joint" kv="10"/>
-    <velocity name="left_rear" joint="left_rear_joint" kv="10"/>
-    <velocity name="right_front" joint="right_front_joint" kv="10"/>
-    <velocity name="right_rear" joint="right_rear_joint" kv="10"/>
+    <velocity name="left_front" joint="left_front_joint" kv="2"/>
+    <velocity name="left_rear" joint="left_rear_joint" kv="2"/>
+    <velocity name="right_front" joint="right_front_joint" kv="2"/>
+    <velocity name="right_rear" joint="right_rear_joint" kv="2"/>
   </actuator>
 </mujoco>
