@@ -179,4 +179,4 @@ ros2 run ultra_avoid ultra_node
 ```
 ### 6.5 查看运行结果
 
-![运行效果演示](
+![运行效果演示](../img/ROS Noetic Humble Gazebo 11-2026-10-16-21-34-30.png)
