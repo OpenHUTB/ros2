@@ -10,140 +10,46 @@
 * 依赖库：rclpy, geometry_msgs, matplotlib
 
 ## 核心代码文件清单
-本模块包含以下核心文件：
-* `trajectory_publisher.py`：模拟无人机飞行轨迹发布节点。
-  
-* `trajectory_analyzer.py`：轨迹识别、绘图与日志记录节点。
-
+本模块包含以下核心文件，均已提交至仓库：
+```text
+src/
+└── drone_trajectory_logger/
+    ├── main.py                 # 轨迹发布节点（入口）
+    └── trajectory_analyzer.py  # 轨迹识别与绘图节点
+```
 ## 核心代码内容
 
-### 1.trajectory_publisher.py（发布节点）
-```python
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
+完整代码请点击下方链接查看：
 
-class TrajectoryPublisher(Node):
-    def __init__(self):
-        super().__init__('trajectory_publisher')
-        self.publisher_ = self.create_publisher(Twist, '/drone/pose', 10)
-        self.timer = self.create_timer(1.0, self.timer_callback)
-        self.state = 0
-        self.get_logger().info('轨迹发布节点已启动。')
-
-    def timer_callback(self):
-        msg = Twist()
-        self.state += 1
-        if self.state % 3 == 1:
-            msg.linear.x = 1.0
-            self.get_logger().info('发布: 前进指令')
-        elif self.state % 3 == 2:
-            msg.angular.z = 1.0
-            self.get_logger().info('发布: 旋转指令')
-        else:
-            msg.linear.x = 0.0
-            msg.angular.z = 0.0
-            self.get_logger().info('发布: 悬停指令')
-        self.publisher_.publish(msg)
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = TrajectoryPublisher()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()
-```
-
-### 2. trajectory_analyzer.py（识别与绘图节点）
-
-```python
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
-import matplotlib.pyplot as plt
-import math
-
-class TrajectoryAnalyzer(Node):
-    def __init__(self):
-        super().__init__('trajectory_analyzer')
-        self.subscription = self.create_subscription(Twist, '/drone/pose', self.listener_callback, 10)
-        self.get_logger().info('轨迹识别节点已启动，等待飞行数据...')
-        
-        self.x = 0.0
-        self.y = 0.0
-        self.theta = 0.0
-        
-        plt.ion()
-        self.fig, self.ax = plt.subplots()
-        self.line, = self.ax.plot([], [], 'b-', label='Drone Path')
-        self.ax.set_xlim(-10, 10)
-        self.ax.set_ylim(-10, 10)
-        self.ax.set_title('UAV Flight Trajectory')
-        self.ax.set_xlabel('X')
-        self.ax.set_ylabel('Y')
-        self.ax.legend()
-        self.ax.grid(True)
-        self.xs, self.ys = [], []
-
-    def listener_callback(self, msg):
-        if msg.linear.x > 0:
-            self.get_logger().info('【轨迹识别】当前飞行状态：直线前进')
-            self.x += 0.5 * math.cos(self.theta)
-            self.y += 0.5 * math.sin(self.theta)
-        elif msg.angular.z > 0:
-            self.get_logger().info('【轨迹识别】当前状态：原地旋转')
-            self.theta += 0.2
-        else:
-            self.get_logger().info('【轨迹识别】当前状态：悬停等待')
-
-        self.xs.append(self.x)
-        self.ys.append(self.y)
-        self.line.set_data(self.xs, self.ys)
-        self.ax.relim()
-        self.ax.autoscale_view()
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = TrajectoryAnalyzer()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-if __name__ == '__main__':
-    main()
-```
+* [查看 main.py 代码](src/drone_trajectory_logger/main.py)
+* [查看 trajectory_analyzer.py 代码](src/drone_trajectory_logger/trajectory_analyzer.py)
 
 ## 运行步骤
 
-1. 新建存放代码的目录并进入：
+1. 新建标准工作空间并进入 src 目录：
 
 ```bash
-mkdir -p ~/my_ws/drone_trajectory_logger
-cd ~/my_ws/drone_trajectory_logger
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
 ```
-2.从 ros2 仓库拷贝模块代码到当前目录：
-```
-bash
-cp -r ~/OpenHUTB/ros2/src/drone_trajectory_logger/* ./
-```
-3.运行发布节点：
+2.从 ros2 仓库拷贝模块代码到工作空间：
 ```
 bash
-python3 trajectory_publisher.py
+cp -r ~/OpenHUTB/ros2/src/drone_trajectory_logger ~/ros2_ws/src/
+cd ~/ros2_ws
 ```
-4.在另一个终端中运行识别与绘图节点：
+3.编译工作空间并部署环境：
 ```
 bash
-cd ~/my_ws/drone_trajectory_logger
-python3 trajectory_analyzer.py
+colcon build --packages-select drone_trajectory_logger
+source install/setup.bash
 ```
-## 运行效果与验证（截图）
-
+4.运行发布节点（在第一个终端）：
+```
+bash
+python3 src/drone_trajectory_logger/drone_trajectory_logger/main.py
+```
+5.运行效果：
 ![运行效果图片](../img/capture_2.png)
 
 效果说明：发布节点成功发送不同的飞行指令，识别节点成功解析并打印出对应的飞行状态日志，同时基于实时数据绘制了飞行轨迹图（椭圆），验证了轨迹识别与自动日志记录功能的正确性。
