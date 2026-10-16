@@ -1,0 +1,142 @@
+<sdf version='1.6'>
+  <world name='default'>
+    <!-- 全局光照 -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- 地面 -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 物理参数 -->
+    <physics type="ode">
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>100</real_time_update_rate>
+    </physics>
+
+    <!-- ========== 自建障碍物场景（内嵌 SDF，不依赖外部模型） ========== -->
+    <!-- 中心方块障碍 -->
+    <model name='block_center'>
+      <pose>1.2 1.0 0.25 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <box><size>0.8 0.8 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <box><size>0.8 0.8 0.5</size></box>
+          </geometry>
+          <material><ambient>0.8 0.3 0.2 1</ambient><diffuse>0.8 0.3 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 左侧墙壁 1 -->
+    <model name='wall_left1'>
+      <pose>-1.5 2.0 0.25 0 0 0.3</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <box><size>2.5 0.3 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <box><size>2.5 0.3 0.5</size></box>
+          </geometry>
+          <material><ambient>0.3 0.3 0.8 1</ambient><diffuse>0.3 0.3 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 右侧墙壁 2 -->
+    <model name='wall_right2'>
+      <pose>2.8 -1.2 0.25 0 0 -0.4</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <box><size>2.0 0.3 0.5</size></box>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <box><size>2.0 0.3 0.5</size></box>
+          </geometry>
+          <material><ambient>0.2 0.7 0.3 1</ambient><diffuse>0.2 0.7 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 圆柱障碍 1 -->
+    <model name='cyl_1'>
+      <pose>0.5 -1.5 0.3 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <cylinder><radius>0.35</radius><length>0.6</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <cylinder><radius>0.35</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material><ambient>0.9 0.7 0.2 1</ambient><diffuse>0.9 0.7 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 圆柱障碍 2 -->
+    <model name='cyl_2'>
+      <pose>-1.8 -1.8 0.3 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <cylinder><radius>0.4</radius><length>0.6</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <cylinder><radius>0.4</radius><length>0.6</length></cylinder>
+          </geometry>
+          <material><ambient>0.4 0.7 0.7 1</ambient><diffuse>0.4 0.7 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 圆柱障碍 3 -->
+    <model name='cyl_3'>
+      <pose>2.2 -0.2 0.25 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='col'>
+          <geometry>
+            <cylinder><radius>0.3</radius><length>0.5</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name='vis'>
+          <geometry>
+            <cylinder><radius>0.3</radius><length>0.5</length></cylinder>
+          </geometry>
+          <material><ambient>0.7 0.4 0.7 1</ambient><diffuse>0.7 0.4 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 相机视角 -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>0.8 0.0 8.0 0 1.5708 0</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+  </world>
+</sdf>
