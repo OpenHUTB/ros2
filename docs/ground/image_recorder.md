@@ -13,8 +13,11 @@
 本模块包含以下核心文件，均已提交至仓库：
 
 * `docs/image_recorder.md`：模块说明文档（即本文档）。
+  
 * `image_recorder/main.py`：图像订阅与录制主程序。
+  
 * `image_recorder/setup.py`：ROS 2 功能包配置文件。
+  
 * `image_recorder/launch/main.launch.py`：一键启动文件。
 
 ## 核心代码内容
@@ -132,23 +135,29 @@ ros2 launch image_recorder main.launch.pybash
 验证结果说明：由于本机虚拟机环境未安装 Carla 仿真器，未能实时获取真实的图像数据，但图像订阅与节点启动逻辑已通过编译与运行验证。
 
 ![运行效果图片](../img/run_result.png)
+ markdown
+## 运行效果与验证
 
-## 提交信息（Commit Message / PR 描述）
+节点成功启动，终端输出 `[INFO] [image_recorder_node]: Node started, waiting for images...`，表示 ROS 2 节点已进入监听状态。
 
-```text
-feat(ground): 新增 Carla 图像捕获 ROS 2 封装模块
+### 补充：连接 Carla 仿真器获取实际图像
 
-基于 ROS 2 实现了一个图像录制节点，用于订阅仿真器发布的摄像头话题，并实现按下回车键单帧保存图片的功能。
+由于本机虚拟机未安装 Carla，为了获取真实的仿真图像，通过配置宿主机与虚拟机的网络连接，实现了从宿主机 Carla 仿真器获取图像的功能。具体操作步骤如下：
 
-主要文件：
-* docs/image_recorder.md: 模块说明文档
-* image_recorder/main.py: 订阅图像话题并保存图片
-* image_recorder/setup.py: ROS 2 包定义
-* image_recorder/launch/main.launch.py: launch 启动入口
+1.在 Windows 宿主机上启动 Carla 仿真器，并开启 ROS Bridge。
 
-已验证：
-1. colcon build 编译通过
-2. ros2 launch image_recorder main.launch.py 正常运行
-3. 节点启动并进入等待图像状态
+2.在虚拟机终端中执行以下命令，确认与宿主机通信正常：
+
+```bash
+ros2 topic list
 ```
-备注：因本机环境未安装 Carla，无法实时获取仿真图像，但节点逻辑已通过运行验证。
+3.确认终端中出现了 /carla/ego_vehicle/camera/rgb/front/image 话题。
+
+4.运行图像捕获节点：
+```
+bash
+ros2 launch image_recorder main.launch.py
+```
+5.节点启动成功后，即可获取到 Carla 仿真器的实时摄像头画面，效果如下图所示：
+![运行效果图片](../img/carla_demo.png)
+
