@@ -84,6 +84,9 @@ roslaunch mujoco_hopper_demo hopper.launch
 - 蓝色的腿一会儿伸长一会儿缩回去
 - 红色小脚一直接触地面，蹲的时候压下去，跳的时候弹起来
 
+成功运行的样子：
+![运行成功](/img/mujoco_hopper_success.png)
+
 终端会一直打印机器人当前的高度，录个10秒GIF就行。
 
 ## 七、测试说明
