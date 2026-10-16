@@ -9,8 +9,20 @@
 - 操作系统：Ubuntu 20.04
 - ROS版本：ROS2 Foxy
 - Python版本：3.8.10
-  
+## 核心代码文件
 
+本模块包含以下核心文件，均已提交至仓库：
+
+```text
+src/
+└── uav_key_control/
+    ├── main_uav_track.py       # 无人机轨迹跟踪ROS2节点主程序
+    ├── setup.py                # ROS 2 功能包配置文件
+    ├── package.xml             # ROS2功能包描述文件
+    └── launch/
+        └── uav_track.launch.py # 节点一键启动文件
+```
+  
 ## 启动步骤
 
 1. 编译功能包
@@ -38,4 +50,4 @@ ros2 topic echo /cmd_vel
  
 节点成功启动后，选中节点所在终端，按下W/A/S/D按键，监听终端可以实时打印Twist速度消息，验证速度指令正常发布。
 ![运行效果图片](../img/_uav_key_control_package_build.png)
-
+![运行效果图片](../img/_uav_key_control_topic_test.png)
