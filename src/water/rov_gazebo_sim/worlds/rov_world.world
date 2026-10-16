@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="rov_world">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+
+    <!-- 水下红色目标柱（ROV要追踪的） -->
+    <model name="red_target">
+      <static>true</static>
+      <pose>3 0 -1.0 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder radius="0.2" length="1.5"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Red</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 绿色障碍物 -->
+    <model name="obstacle1">
+      <static>true</static>
+      <pose>2 1.5 -0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box size="0.5 0.5 1.0"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 蓝色障碍物 -->
+    <model name="obstacle2">
+      <static>true</static>
+      <pose>2 -1.5 -0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box size="0.5 0.5 1.0"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ROV本体 -->
+    <model name="rov">
+      <static>false</static>
+      <pose>0 0 -1.0 0 0 0</pose>
+      <link name="base_link">
+        <visual name="v">
+          <geometry><box size="0.5 0.3 0.2"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material>
+        </visual>
+        <collision name="c">
+          <geometry><box size="0.5 0.3 0.2"/></geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>
