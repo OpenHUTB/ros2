@@ -1,19 +1,18 @@
-<?xml version="1.0"?>
+﻿<?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>waypoint_publisher</name>
-  <version>0.0.0</version>
-  <description>ROS2 waypoint path publisher for nav2</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <version>0.0.1</version>
+  <description>ROS2 Humble 路径点发布节点，向Nav2发布Path消息</description>
+  <maintainer email="syq427@github.com">SYQ427</maintainer>
   <license>Apache-2.0</license>
-
-  <buildtool_depend>ament_python</buildtool_depend>
 
   <depend>rclpy</depend>
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
 
-  <test_depend>ament_pytest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
