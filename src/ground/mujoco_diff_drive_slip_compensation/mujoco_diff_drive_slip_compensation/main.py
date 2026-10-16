@@ -20,7 +20,7 @@ def _load_ros_dependencies() -> dict[str, Any]:
         from rclpy.node import Node
         from rosgraph_msgs.msg import Clock
         from sensor_msgs.msg import Imu, JointState
-        from std_msgs.msg import Float64
+        from std_msgs.msg import Float64, String
         from tf2_ros import TransformBroadcaster
     except ImportError as exc:
         raise RuntimeError(
@@ -37,6 +37,7 @@ def _load_ros_dependencies() -> dict[str, Any]:
         'Imu': Imu,
         'JointState': JointState,
         'Float64': Float64,
+        'String': String,
         'TransformBroadcaster': TransformBroadcaster,
     }
 
@@ -49,6 +50,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
     Imu = deps['Imu']
     JointState = deps['JointState']
     Float64 = deps['Float64']
+    String = deps['String']
     TransformStamped = deps['TransformStamped']
     TransformBroadcaster = deps['TransformBroadcaster']
     get_package_share_directory = deps['get_package_share_directory']
@@ -115,6 +117,8 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 self._noise_config, int(self.get_parameter('random_seed').value)
             )
             self._last_scenario_index = -1
+            self._last_episode_number = -1
+            self._elapsed_time = 0.0
 
             self._odom_publisher = self.create_publisher(
                 Odometry, 'ground_truth/odom', 10
@@ -126,6 +130,9 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self._imu_publisher = self.create_publisher(Imu, 'imu/data', 10)
             self._friction_publisher = self.create_publisher(
                 Float64, 'scenario/friction', 10
+            )
+            self._episode_publisher = self.create_publisher(
+                String, 'scenario/episode_id', 10
             )
             self._tf_broadcaster = TransformBroadcaster(self)
             self.create_subscription(Twist, 'cmd_vel', self._on_command, 10)
@@ -145,21 +152,31 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 )
 
         def _on_timer(self) -> None:
-            scenario = self._friction_schedule.at(float(self._simulation.data.time))
-            if scenario.index != self._last_scenario_index:
+            scenario = self._friction_schedule.at(self._elapsed_time)
+            if scenario.episode_number != self._last_episode_number:
+                self._simulation.reset(preserve_time=True)
                 self._simulation.set_ground_friction(scenario.coefficient)
                 self._last_scenario_index = scenario.index
+                self._last_episode_number = scenario.episode_number
                 self.get_logger().info(
                     '切换摩擦场景 / switched friction scenario: '
                     f'index={scenario.index}, coefficient={scenario.coefficient:.3f}'
                 )
+                self._publish_scenario(
+                    scenario.coefficient, scenario.episode_id
+                )
+                return
             linear, angular = self._watchdog.current()
             left, right = self._geometry.wheel_speeds(linear, angular)
             self._simulation.apply_wheel_speeds(left, right)
             self._simulation.step()
-            self._publish_state(scenario.coefficient)
+            self._elapsed_time += self._simulation.timestep
+            self._publish_state(scenario.coefficient, scenario.episode_id)
 
-        def _publish_state(self, friction_coefficient: float) -> None:
+        def _publish_state(
+            self, friction_coefficient: float, episode_id: str
+        ) -> None:
+            self._publish_scenario(friction_coefficient, episode_id)
             state = self._simulation.planar_state()
             quaternion = self._simulation.chassis_quaternion()
             timestamp = self.get_clock().now().to_msg()
@@ -220,10 +237,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 imu.angular_velocity_covariance[index] = angular_variance
             self._imu_publisher.publish(imu)
 
-            friction = Float64()
-            friction.data = friction_coefficient
-            self._friction_publisher.publish(friction)
-
             if self._publish_tf:
                 transform = TransformStamped()
                 transform.header = odometry.header
@@ -232,6 +245,16 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 transform.transform.translation.y = state.y
                 transform.transform.rotation = odometry.pose.pose.orientation
                 self._tf_broadcaster.sendTransform(transform)
+
+        def _publish_scenario(
+            self, friction_coefficient: float, episode_id: str
+        ) -> None:
+            friction = Float64()
+            friction.data = friction_coefficient
+            self._friction_publisher.publish(friction)
+            episode = String()
+            episode.data = episode_id
+            self._episode_publisher.publish(episode)
 
     return SimulationNode
 

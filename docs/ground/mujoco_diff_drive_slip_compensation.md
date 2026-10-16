@@ -28,6 +28,12 @@ MuJoCo 四轮执行器 / Four wheel actuators
 
 The package uses `ament_python`; its model, configuration, and launch files are installed into the package share directory. Runtime resource lookup uses the ROS 2 package index and does not depend on a user directory, a fixed workspace path, or a network address.
 
+## 编码器与 IMU / Encoders and IMU
+
+MJCF 在车体中心定义三轴加速度计和陀螺仪。节点同时读取四个轮关节的位置与角速度，并通过局部随机数生成器加入固定种子的高斯噪声。MuJoCo 内部传感器保持无噪真值，噪声只施加于发布消息，因此实验可重复且便于比较原始状态。
+
+The MJCF defines a three-axis accelerometer and gyroscope at the chassis centre. The node also reads position and angular velocity from all four wheel joints and applies seeded Gaussian noise through a local random generator. MuJoCo sensor values remain noise-free internally; noise is added only to published messages for reproducibility and comparison with the original state.
+
 ## 环境与构建 / Environment and Build
 
 目标环境为 Ubuntu 22.04、ROS 2 Humble、Python 3.10 和 MuJoCo 3.12.0。
@@ -68,6 +74,9 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | `max_wheel_speed` | `20.0` | 最大轮速，单位 rad/s / maximum wheel speed in rad/s |
 | `command_timeout` | `0.5` | 自动停车超时，单位 s / automatic stop timeout in seconds |
 | `publish_tf` | `true` | 是否发布坐标变换 / whether to publish transforms |
+| `random_seed` | `25012` | 传感器噪声随机种子 / sensor-noise random seed |
+| `friction_coefficients` | `[0.25, 0.55, 0.90]` | episode 摩擦序列 / episode friction sequence |
+| `scenario_duration` | `30.0` | 单个 episode 时长，单位 s / episode duration in seconds |
 
 ## 安全边界 / Safety Boundaries
 
@@ -75,6 +84,33 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 - 指令超时后轮速归零。 / Set wheel speeds to zero after command timeout.
 - 四轮目标速度按执行器上限等比例缩放。 / Scale all wheel targets proportionally to actuator limits.
 - 包资源路径经过边界检查。 / Validate package-resource paths against directory escape.
+
+## 数据采集 / Data Collection
+
+一条 launch 命令同时启动仿真、确定性激励指令和采集器：
+
+One launch command starts the simulation, deterministic excitation commands, and collector:
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation collect.launch.py \
+  output_directory:=data/raw
+```
+
+场景切换时车辆复位，新的 `episode_id` 与摩擦系数一起发布。采集器在编码器消息到达时组合最近的 IMU、指令、真实里程计和场景信息。每个 episode 独立写入 CSV，并在关闭时写入 JSON 清单。
+
+At each scenario transition, the vehicle is reset and a new `episode_id` is published with its friction coefficient. On each encoder message, the collector combines the latest IMU, command, ground-truth odometry, and scenario state. Each episode is written to its own CSV and receives a JSON manifest when closed.
+
+### 数据字段 / Data Fields
+
+- 时间戳、episode、数据集划分、摩擦系数。 / Timestamp, episode, dataset split, and friction coefficient.
+- 线速度与角速度指令。 / Linear and angular velocity commands.
+- 四轮位置与角速度。 / Four-wheel positions and angular velocities.
+- 三轴加速度与角速度。 / Three-axis acceleration and angular velocity.
+- 真实二维位姿与速度。 / Ground-truth planar pose and velocity.
+
+数据集使用固定种子和 episode 标识的稳定哈希执行 70%/15%/15% 划分。划分单位是完整 episode，而不是单帧，因此相邻帧不会跨越训练、验证和测试集合。
+
+Dataset assignment uses a stable hash of the fixed seed and episode identifier with 70%/15%/15% ratios. The assignment unit is a complete episode rather than an individual frame, so adjacent frames cannot cross train, validation, and test sets.
 
 ## 验证命令 / Verification Commands
 

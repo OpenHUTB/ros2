@@ -126,11 +126,14 @@ class MujocoSimulation:
     def step(self) -> None:
         self._mujoco.mj_step(self.model, self.data)
 
-    def reset(self) -> None:
+    def reset(self, preserve_time: bool = False) -> None:
+        current_time = float(self.data.time)
         self._mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[:] = self._initial_qpos
         self.data.qvel[:] = self._initial_qvel
         self.data.ctrl[:] = 0.0
+        if preserve_time:
+            self.data.time = current_time
         self._mujoco.mj_forward(self.model, self.data)
 
     def planar_state(self) -> SimulationState:

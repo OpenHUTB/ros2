@@ -11,6 +11,13 @@ class FrictionScenario:
 
     index: int
     coefficient: float
+    episode_number: int
+
+    @property
+    def episode_id(self) -> str:
+        """Return a filesystem-safe, coefficient-bearing episode identifier."""
+        coefficient = f'{self.coefficient:.3f}'.replace('.', 'p')
+        return f'episode_{self.episode_number:04d}_mu_{coefficient}'
 
 
 class FrictionSchedule:
@@ -33,4 +40,4 @@ class FrictionSchedule:
             raise ValueError('simulation_time must be finite and non-negative')
         absolute_index = int(simulation_time // self._duration_seconds)
         index = absolute_index % len(self._coefficients)
-        return FrictionScenario(index, self._coefficients[index])
+        return FrictionScenario(index, self._coefficients[index], absolute_index)

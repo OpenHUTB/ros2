@@ -2,9 +2,9 @@
 
 MuJoCo Differential-Drive Slip Perception and Trajectory Compensation
 
-本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础，用于后续接入编码器、惯性测量单元、轮滑感知与轨迹补偿。当前入口接收 `cmd_vel`，通过差速运动学计算四轮目标转速，并发布仿真时钟、真实里程计和坐标变换。
+本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础，并发布带可复现噪声的编码器和惯性测量单元数据。多摩擦采集入口按完整 episode 轮换场景、复位车辆、执行确定性激励指令，并把同步观测写入按 episode 隔离的数据文件。
 
-This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot. It is designed for subsequent encoder, inertial measurement unit, slip-perception, and trajectory-compensation work. The current entry point consumes `cmd_vel`, converts chassis commands to four wheel-speed targets, and publishes simulation time, ground-truth odometry, and transforms.
+This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot and publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
 
 ## 环境 / Environment
 
@@ -26,7 +26,12 @@ mujoco_diff_drive_slip_compensation/
 ├── mujoco_diff_drive_slip_compensation/
 │   ├── kinematics.py
 │   ├── main.py
+│   ├── collector.py
+│   ├── command_profile.py
+│   ├── dataset.py
 │   ├── resources.py
+│   ├── scenarios.py
+│   ├── sensors.py
 │   └── simulator.py
 ├── test/
 ├── package.xml
@@ -71,6 +76,10 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | MuJoCo 真实状态 / MuJoCo ground truth |
 | 发布 / Publish | `/clock` | `rosgraph_msgs/msg/Clock` | 仿真时钟 / simulation clock |
 | 发布 / Publish | `/tf` | `tf2_msgs/msg/TFMessage` | `odom` 到 `base_link` / `odom` to `base_link` |
+| 发布 / Publish | `/wheel/encoders` | `sensor_msgs/msg/JointState` | 四轮位置与速度 / four-wheel positions and velocities |
+| 发布 / Publish | `/imu/data` | `sensor_msgs/msg/Imu` | 三轴加速度与角速度 / three-axis acceleration and angular velocity |
+| 发布 / Publish | `/scenario/friction` | `std_msgs/msg/Float64` | 当前滑动摩擦系数 / active sliding-friction coefficient |
+| 发布 / Publish | `/scenario/episode_id` | `std_msgs/msg/String` | 当前完整 episode 标识 / active complete-episode identifier |
 
 速度指令超过 `command_timeout` 未更新时，节点将四轮目标速度清零。非有限数值和越出包资源目录的模型路径会被拒绝。
 
@@ -86,3 +95,22 @@ python3 -m compileall src/ground/mujoco_diff_drive_slip_compensation
 ROS 2 环境中的完整验收还应包含 `colcon test` 与启动后的话题检查。
 
 Full acceptance in a ROS 2 environment also includes `colcon test` and topic inspection after launch.
+
+## 多摩擦数据采集 / Multi-friction Data Collection
+
+默认场景使用 `0.25`、`0.55`、`0.90` 三个滑动摩擦系数，每个 episode 持续 30 秒。固定随机种子 `25012` 控制传感器噪声和数据集划分。
+
+The default scenarios use sliding-friction coefficients `0.25`, `0.55`, and `0.90`, with each episode lasting 30 seconds. The fixed random seed `25012` controls sensor noise and dataset assignment.
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation collect.launch.py \
+  output_directory:=data/raw
+```
+
+每个 episode 生成同名 `.csv` 和 `.json`。CSV 保存指令、四轮编码器、IMU、摩擦系数和真实位姿；JSON 记录数据格式版本、划分、行数、随机种子、Python、MuJoCo 和功能包版本。`data/` 默认被 Git 忽略。
+
+Each episode produces matching `.csv` and `.json` files. The CSV stores commands, four-wheel encoders, IMU measurements, friction, and ground-truth pose. The JSON records schema version, split, row count, random seed, and Python, MuJoCo, and package versions. `data/` is ignored by Git by default.
+
+训练、验证、测试划分由 `seed:episode_id` 的 SHA-256 哈希确定，默认比例为 70%/15%/15%。一个 episode 的全部相邻帧始终属于同一划分。
+
+Train, validation, and test assignment uses the SHA-256 hash of `seed:episode_id`, with default ratios of 70%/15%/15%. Every adjacent frame from one episode always remains in the same split.
