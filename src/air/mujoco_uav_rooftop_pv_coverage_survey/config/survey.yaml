@@ -11,3 +11,8 @@ edge_margin: 1.0
 image_width: 320
 image_height: 240
 seed: 20261016
+
+# Reproducible collection / 可复现采集
+frames_per_scene: 6
+cross_track_std: 0.35
+heading_std: 0.12
