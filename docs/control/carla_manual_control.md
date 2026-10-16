@@ -259,13 +259,14 @@ for v in vehicles:
 
 以下是实际运行截图：
 
-![CARLA 服务器窗口](images/04925efc8308b365169c7fad3c7014f4.jpg)
+<img width="1368" height="940" alt="a6f7f79a6f7ad495036d0edf228eea8e" src="https://github.com/user-attachments/assets/c4878df1-c34c-4dc9-adff-c468d3f5b4d5" />
+<img width="1368" height="940" alt="6f1c034cd4ced47e1bab9c74e9f7c8ff" src="https://github.com/user-attachments/assets/2df782ae-d37c-4090-83c0-96b13d504754" />
+<img width="1368" height="940" alt="04925efc8308b365169c7fad3c7014f4" src="https://github.com/user-attachments/assets/3aa3b9d7-9915-4ef4-ae78-51841b5b5752" />
+<img width="1368" height="940" alt="465a5d65260905200b94ea33eb1a2018" src="https://github.com/user-attachments/assets/c5d83adf-38f8-47a3-97e3-0bff78362fda" />
+<img width="1227" height="789" alt="c86dfd4297d1fa23c96555ff11376c43" src="https://github.com/user-attachments/assets/f71978dd-864b-4d38-8f8e-3a9fe21a6add" />
 
-![ROS Bridge 启动日志](images/465a5d65260905200b04ea33eb1a2018.jpg)
 
-![spawn objects 输出](images/6f1c034cd4ced47e1bab9c74e9f7c8ff.jpg)
 
-![carla_manual_control 控制窗口](images/a6f77f9a6f7ad495036d0edf228eea8e.jpg)
 六、总结
 项目	状态
 ROS Bridge 编译	
