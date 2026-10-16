@@ -1,0 +1,62 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+    Tree Height: 700
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Plane Cell Count: 40
+      Reference Frame: <Fixed Frame>
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+      Show Names: true
+      Frame Timeout: 15
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: LiDAR(/lidar/points)
+      Topic: /lidar/points
+      Queue Size: 2
+      Style: Points
+      Size (Pixels): 3
+      Color Transformer: AxisColor
+      Axis: Z
+      # 让色标按实际点云的 z 范围自动计算：有的地图原点在地面之上几十米
+      # （实测点云 z≈−25），固定 −5~40 会让所有点挤在一端、几乎看不出高度差。
+      Autocompute Value Bounds:
+        Min Value: -30
+        Max Value: 30
+        Value: true
+      Position Transformer: XYZ
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: RoofMarker(/rooftop/markers)
+      Topic: /rooftop/markers
+      Queue Size: 2
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 60
+      # 对准地图原点（无人机起飞点），不假设「原点在地面高度上」
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Name: Current View
+      Pitch: 0.6
+      Yaw: 0.8
+Window Geometry:
+  Height: 900
+  Width: 1500
