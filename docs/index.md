@@ -74,9 +74,14 @@ ROS每章节运行代码:
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+ 四旋翼无人机基于强化学习的路径规划
+* [AirSim + ROS 1 Noetic + PPO 实际联调](./air/airsim_rl_planner_ros1.md) —— 面向 Ubuntu 虚拟机和 Python 3.8 的桥接与模型推理实验。
+
+=======
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+ master
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
