@@ -12,6 +12,7 @@
 ## 核心代码文件清单
 本模块包含以下核心文件：
 * `trajectory_publisher.py`：模拟无人机飞行轨迹发布节点。
+  
 * `trajectory_analyzer.py`：轨迹识别、绘图与日志记录节点。
 
 ## 核心代码内容
@@ -119,41 +120,32 @@ if __name__ == '__main__':
 
 ## 运行步骤
 
-在终端中依次执行以下命令进行编译和运行：
+1. 新建存放代码的目录并进入：
 
 ```bash
-cd ~/my_ws/src/drone_trajectory_logger
+mkdir -p ~/my_ws/drone_trajectory_logger
+cd ~/my_ws/drone_trajectory_logger
+```
+2.从 ros2 仓库拷贝模块代码到当前目录：
+```
+bash
+cp -r ~/OpenHUTB/ros2/src/drone_trajectory_logger/* ./
+```
+3.运行发布节点：
+```
+bash
 python3 trajectory_publisher.py
 ```
-
-（在另一个终端中运行）
-
-```bash
-cd ~/my_ws/src/drone_trajectory_logger
+4.在另一个终端中运行识别与绘图节点：
+```
+bash
+cd ~/my_ws/drone_trajectory_logger
 python3 trajectory_analyzer.py
 ```
-
 ## 运行效果与验证（截图）
 
-![运行效果](https://github.com/Rafaye-71-star/ros2/blob/feature/drone-trajectory-logger/docs/img/capture_2.png)
+![运行效果图片](../img/capture_2.png)
 
 效果说明：发布节点成功发送不同的飞行指令，识别节点成功解析并打印出对应的飞行状态日志，同时基于实时数据绘制了飞行轨迹图（椭圆），验证了轨迹识别与自动日志记录功能的正确性。
-
-## 提交信息（Commit Message / PR 描述）
-
-```text
-feat(air): 新增无人机飞行日志与状态识别 ROS 2 封装模块
-
-基于 ROS 2 实现了无人机飞行轨迹的自动识别与实时绘图日志记录功能。
-
-主要文件：
-* drone_trajectory_logger/trajectory_publisher.py: 发布节点
-* drone_trajectory_logger/trajectory_analyzer.py: 识别与绘图节点
-
-已验证：
-1. 两个节点均正常启动
-2. 飞行指令成功发布与接收
-3. 轨迹识别日志输出正确，飞行轨迹图绘制成功
-
 备注：本模块使用模拟的飞行指令流进行验证，后续可接入真实的无人机仿真数据。
-```
+
