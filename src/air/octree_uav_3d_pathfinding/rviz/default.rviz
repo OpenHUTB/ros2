@@ -1,0 +1,83 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Cell Size: 1
+      Plane Cell Count: 50
+      Color: 160; 160; 164
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+      Show Names: true
+      Marker Scale: 1
+    # 3D 激光雷达点云：由 airsim_bridge 以 sensor_msgs/PointCloud2 发布
+    # 注意 Style 必须是 Squares：Points 走 OpenGL 的 GL_POINTS，
+    # 虚拟机显卡驱动会把点大小钳到 1 像素，看起来"什么都看不见"
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: SensorCloud
+      Topic: /cloud_in
+      Style: Squares
+      Size (Pixels): 3
+      Size (m): 0.3
+      Alpha: 1
+      Color Transformer: AxisColor
+      Axis: Z
+      Queue Size: 5
+    # 八叉树占用体素：由 pointcloud_to_octomap 发布，按高度着色
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: Octomap
+      Topic: /occupied_cells_vis_array
+      Queue Size: 5
+    # A* 规划出的路径：由 astar_planner 发布到 /uav/path
+    # 路径由八叉树叶节点中心串成，节点可能很大，所以线要够粗才看得清
+    - Class: rviz/Path
+      Enabled: true
+      Name: PlannedPath
+      Topic: /uav/path
+      Color: 25; 255; 0
+      Line Style: Lines
+      Line Width: 0.15
+      Alpha: 1
+      Queue Size: 5
+    # A* 实际展开过的节点：由 astar_planner 发布。
+    # 按节点尺寸着色 —— 偏蓝是小节点（障碍附近，需要细碎地走），
+    # 偏红是大节点（空旷区域一步跨过去）。
+    # 这一路输出能直接看出八叉树的跨分辨率邻接是否真的生效。
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: AStarExplored
+      Topic: /uav/explored_markers
+      Queue Size: 5
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 60
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Name: Current View
+      Pitch: 0.6
+      Yaw: 0.8
+Window Geometry:
+  Height: 800
+  Width: 1200
