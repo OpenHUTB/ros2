@@ -21,9 +21,9 @@ src/
 
 完整代码请点击下方链接查看：
 
-* [查看 main.py 代码](src/image_recorder/main.py)
-* [查看 setup.py 代码](src/image_recorder/setup.py)
-* [查看 main.launch.py 代码](src/image_recorder/main.launch.py)
+* [查看 main.py 代码](../../src/image_recorder/main.py)
+* [查看 setup.py 代码](../../src/image_recorder/setup.py)
+* [查看 main.launch.py 代码](../../src/image_recorder/main.launch.py)
 
 ## 运行步骤
 
