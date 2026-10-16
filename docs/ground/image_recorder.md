@@ -8,135 +8,49 @@
 * ROS 2 版本：Humble
 * 依赖库：rclpy, sensor_msgs, cv_bridge, opencv-python
 
-## 核心代码文件清单
-
-本模块包含以下核心文件，均已提交至仓库：
-
-* `docs/image_recorder.md`：模块说明文档（即本文档）。
-  
-* `image_recorder/main.py`：图像订阅与录制主程序。
-  
-* `image_recorder/setup.py`：ROS 2 功能包配置文件。
-  
-* `image_recorder/launch/main.launch.py`：一键启动文件。
-
 ## 核心代码内容
 
-### 1. main.py（主程序）
-
-```python
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import cv2
-class ImageRecorder(Node):
-    def __init__(self):
-        super().__init__('image_recorder_node')
-        self.subscription = self.create_subscription(
-            Image,
-            '/carla/ego_vehicle/camera/rgb/front/image', 
-            self.listener_callback,
-            10)
-        self.bridge = CvBridge()
-        self.get_logger().info('Node started, waiting for images...')
-
-     def listener_callback(self, msg):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            cv2.imshow("Image Recorder", cv_image)
-            key = cv2.waitKey(1)
-            if key == 13:
-                cv2.imwrite('capture.jpg', cv_image)
-                self.get_logger().info('Saved as capture.jpg')
-        except Exception as e:
-            self.get_logger().error(f'Error: {e}')
-     def main(args=None):
-        rclpy.init(args=args)
-        image_recorder = ImageRecorder()
-        rclpy.spin(image_recorder)
-        image_recorder.destroy_node()
-        rclpy.shutdown()
-     if __name__ == '__main__':
-        main()
+本模块包含以下核心文件，均已提交至仓库：
+```text
+src/
+└── image_recorder/
+    ├── main.py                  # 图像订阅与录制主程序
+    ├── setup.py                 # ROS 2 功能包配置文件
+    └── main.launch.py           # 一键启动文件
 ```
 
-### 2. setup.py（配置文件）
+完整代码请点击下方链接查看：
 
-```python
-from setuptools import setup
-import os
-from glob import glob
-package_name = 'image_recorder'
-setup(
-    name=package_name,
-    version='0.0.0',
-    packages=[package_name],
-    data_files=[
-        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
-    ],
-    install_requires=['setuptools'],
-    zip_safe=True,
-    maintainer='user',
-    maintainer_email='user@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
-    tests_require=['pytest'],
-    entry_points={
-        'console_scripts': [
-            'main = image_recorder.main:main',
-        ],
-    },
-)
-```
+* [查看 main.py 代码](src/image_recorder/main.py)
+* [查看 setup.py 代码](src/image_recorder/setup.py)
+* [查看 main.launch.py 代码](src/image_recorder/main.launch.py)
 
-### 3. main.launch.py（启动文件）
-
-```python
-from launch import LaunchDescription
-from launch_ros.actions import Node
-def generate_launch_description():
-    return LaunchDescription([
-        Node(
-            package='image_recorder',
-            executable='main',
-            name='image_recorder_node',
-            output='screen'
-        )
-    ])
-```
 ## 运行步骤
 
-1. 新建存放代码的工作空间目录并进入：
+1. 新建标准工作空间并进入 src 目录：
 
 ```bash
-mkdir -p ~/ros2_ws/ground_image_recorder
-cd ~/ros2_ws/ground_image_recorder
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
 ```
-
-2. 从 ros2 仓库将模块代码拷贝或创建到当前目录下（需要新建 main.py、setup.py、launch/main.launch.py 以及 resource/image_recorder 文件）。
-3. 编译工作空间：
-
-```bash
+2.从 ros2 仓库拷贝模块代码到工作空间：
+```
+bash
+cp -r ~/OpenHUTB/ros2/src/image_recorder ~/ros2_ws/src/
+cd ~/ros2_ws
+```
+3.编译工作空间并部署环境：
+```
+bash
 colcon build --packages-select image_recorder
-```
-
-4. 部署环境：
-
-```bash
-source /opt/ros/humble/setup.bash
 source install/setup.bash
 ```
-
-5. 运行图像录制节点：
-
-```bash
+4.运行图像录制节点：
+```
+bash
 ros2 launch image_recorder main.launch.py
 ```
-
-6. 验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
+5.验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
 
 ![运行效果图片](../img/run_result.png)
 
