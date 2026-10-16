@@ -116,28 +116,27 @@ mkdir -p ~/ros2_ws/ground_image_recorder
 cd ~/ros2_ws/ground_image_recorder
 ```
 
-2. 从 ros2 仓库的 ground 目录拷贝模块代码到当前工作空间：
-
-```bash
-cp -r ~/OpenHUTB/ros2/ground/image_recorder ./
-```
-
-3. 编译工作空间并部署环境：
+2. 从 ros2 仓库将模块代码拷贝或创建到当前目录下（需要新建 main.py、setup.py、launch/main.launch.py 以及 resource/image_recorder 文件）。
+3. 编译工作空间：
 
 ```bash
 colcon build --packages-select image_recorder
+```
+
+4. 部署环境：
+
+```bash
+source /opt/ros/humble/setup.bash
 source install/setup.bash
 ```
 
-4. 运行图像录制节点：
+5. 运行图像录制节点：
 
 ```bash
 ros2 launch image_recorder main.launch.py
 ```
 
-5. 验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
-
-验证结果说明：由于本机虚拟机环境未安装 Carla 仿真器，未能实时获取真实的图像数据，但图像订阅与节点启动逻辑已通过编译与运行验证。
+6. 验证运行结果：终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，表示节点编译部署成功，已进入监听状态。
 
 ![运行效果图片](../img/run_result.png)
 
