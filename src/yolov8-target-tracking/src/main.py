@@ -4,16 +4,16 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 from ultralytics import YOLO
-import rospkg
 import os
 
 class YoloDetector:
     def __init__(self):
         self.bridge = CvBridge()
         
-        rospack = rospkg.RosPack()
-        pkg_path = rospack.get_path('yolo_detect')
-        model_path = os.path.join(pkg_path, 'yolov8n.pt')
+        # 获取当前脚本所在的目录
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        # 在当前目录下找 yolov8n.pt
+        model_path = os.path.join(script_dir, 'yolov8n.pt')
         
         self.model = YOLO(model_path)
         self.sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback, queue_size=1)
