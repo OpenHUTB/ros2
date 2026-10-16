@@ -28,7 +28,7 @@ class WaypointPublisher(Node):
             pose.header.stamp = self.get_clock().now().to_msg()
             pose.pose.position.x = x
             pose.pose.position.y = y
-            pose.orientation.w = 1.0
+            pose.pose.orientation.w = 1.0
             path_msg.poses.append(pose)
 
         self.publisher_.publish(path_msg)
@@ -43,3 +43,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
