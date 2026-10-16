@@ -468,29 +468,47 @@ Gazebo 中激光射线在方块后方形成明显的楔形阴影区域：
 
 ## 10. 常见问题
 
-**Q1：启动后 Gazebo 中看不到射线或传感器没有数据？**
+**Q1：加载小车模型出现如下两个崩溃界面怎么办？**
+
+![警告1](../img/code/chap7/26_warning.png)
+
+![警告2](../img/code/chap7/27_warning.png)
+
+这不是崩溃，添加以下两个命令即可解决：
+```bash
+sed -i '155,156d' ~/catkin_ws/src/chap7/smartcar_control/CMakeLists.txt
+```
+
+```bash
+cd ~/catkin_ws
+catkin_make
+```
+
+编译末尾出现 `[100%]` 且无 error 即成功。
+
+**Q2：启动后 Gazebo 中看不到射线或传感器没有数据？**
 
 确认是通过 `roslaunch` 启动，而不是先手动运行 `gazebo`。手动启动的无插件实例会被 Gazebo 单例机制复用，导致 ROS 插件无法注册。先执行 `killall gzserver gzclient` 关闭所有实例，再使用启动文件。
 
-**Q2：修改 xacro 文件后效果没有变化？**
+**Q3：修改 xacro 文件后效果没有变化？**
 
 Gazebo 不会热加载模型，必须先 `killall gzserver gzclient`，再重新执行 roslaunch。
 
-**Q3：终端持续刷 `TF_REPEATED_DATA` 警告？**
+**Q4：终端持续刷 `TF_REPEATED_DATA` 警告？**
 
 官方 joint_state_publisher 与 Gazebo 同时发布主动关节状态。关闭该节点，改用工程提供的 `front_wheel_jsp.py` 只补全两个前轮关节。
 
-**Q4：Insert 选项卡中的在线模型库无法加载？**
+**Q5：Insert 选项卡中的在线模型库无法加载？**
 
 在线模型库在国内网络环境下经常无法访问，属于网络问题。本章使用 Gazebo 内置几何体（Box 等）即可完成验证，不影响实验。
 
 ![在线模型库无法访问](../img/code/chap7/07_insert_online_unavailable.png)
 
-**Q5：Rviz 中 LaserScan 显示项没有自动出现？**
+**Q6：Rviz 中 LaserScan 显示项没有自动出现？**
 
 功能包复制到已存在的同名目录时可能发生目录嵌套，导致加载的仍是旧配置。删除旧目录后重新复制，或在 Rviz 中手动 `Add` → `LaserScan`，话题选择 `/laser/scan`。
 
-**Q6：键盘节点按键后小车没有反应？**
+**Q7：键盘节点按键后小车没有反应？**
 
 检查运行键盘节点的终端窗口是否获取鼠标焦点，并确认系统处于英文输入法状态；待机时终端持续打印全 0 数据属于正常现象。
 
