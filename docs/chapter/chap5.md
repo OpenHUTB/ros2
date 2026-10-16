@@ -24,6 +24,7 @@ src/chap5/
 │   ├── package.xml
 │   ├── launch/
 │   │   ├── face_follower.launch      # 人脸追踪（P 控制）启动文件
+│   │   ├── spawn_face_target.launch  # 在 Gazebo 中生成人脸立牌目标
 │   │   ├── mbot_intelligence.launch  # 一键拉起视觉 + 语音
 │   │   ├── face_detector.launch      # 人脸检测（仅画框演示）
 │   │   ├── usb_cam.launch            # USB 相机驱动
@@ -141,95 +142,163 @@ src/chap5/
 
 ---
 
-## 运行与测试指南
+## 环境准备与工作空间配置
 
-### 0. 编译
+本章的视觉/语音实验依赖第四章的 mbot 仿真底盘，因此需在**同一个 catkin 工作空间**中同时挂载
+**第四章的 `mbot_description`、`mbot_gazebo`** 与**本章的 `robot_vision`、`robot_voice`**
+共 4 个功能包。缺失 `mbot_gazebo` 会导致 `roslaunch mbot_gazebo ...` 报
+`RLException: [xxx] is neither a launch file in package ...`（包名或 launch 文件不存在）。
+
+### 1. 克隆仓库并切换分支
 
 ```bash
-cd ~/catkin_ws        # 或你的工作空间
+git clone https://github.com/OpenHUTB/ros2.git ~/ros2
+cd ~/ros2
+git checkout feat/chap5-vision-voice   # 本章代码所在分支（若已合并主分支可跳过）
+```
+
+### 2. 创建 catkin 工作空间并软链接功能包
+
+```bash
+mkdir -p ~/catkin_ws/src
+
+# 第四章：mbot 仿真底盘（Gazebo 仿真环境由它提供，缺少则无法启动仿真小车）
+ln -s ~/ros2/src/chap4/mbot_description ~/catkin_ws/src/mbot_description
+ln -s ~/ros2/src/chap4/mbot_gazebo     ~/catkin_ws/src/mbot_gazebo
+
+# 第五章：视觉追踪 + 语音控制
+ln -s ~/ros2/src/chap5/robot_vision    ~/catkin_ws/src/robot_vision
+ln -s ~/ros2/src/chap5/robot_voice     ~/catkin_ws/src/robot_voice
+```
+
+> 若不想用软链接，也可 `cp -r` 复制到 `~/catkin_ws/src/`。软链接的好处是仓库更新后
+> 无需重新拷贝，`catkin_make` 直接编译最新代码。
+
+### 3. 编译并加载环境
+
+```bash
+cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
 ```
 
-### 1. 启动底盘与相机
+> 前置依赖：ROS1 桌面完整版（Melodic 或 Noetic）、`gazebo_ros_pkgs`、`cv_bridge`/OpenCV、
+> `rospkg` 等。若 `robot_voice` 的讯飞 SDK C++ 节点因缺少 `libmsc.so`/`libasound` 编译失败，
+> 可关闭可选编译 `catkin_make -DROBOT_VOICE_BUILD_SDK=OFF`（不影响纯 Python 的 `voice_control.py`）。
 
-**Gazebo 仿真（推荐，用于视觉追踪演示）**：启动带 Kinect 的 mbot 仿真环境
-（Kinect RGB 话题为 `/kinect/rgb/image_raw`）：
+### 4. 验证包与 launch 文件已就绪
 
 ```bash
+# 四个包都应能解析出路径（软链接对应 ~/catkin_ws/src/ 下的包目录）
+rospack find mbot_description mbot_gazebo robot_vision robot_voice
+
+# 确认本章要用到的 launch 文件真实存在
+ls $(rospack find mbot_gazebo)/launch/view_mbot_with_kinect_gazebo.launch
+ls $(rospack find robot_vision)/launch/face_follower.launch
+ls $(rospack find robot_voice)/launch/voice_control.launch
+```
+
+---
+
+## 运行与测试指南（闭环复现）
+
+以下每个终端在运行前都需执行一次 `source ~/catkin_ws/devel/setup.bash`（或已写入 `~/.bashrc`）。
+
+### 终端 1：启动带 Kinect 相机的 Gazebo 仿真小车
+
+```bash
+source ~/catkin_ws/devel/setup.bash
 roslaunch mbot_gazebo view_mbot_with_kinect_gazebo.launch
 ```
 
-**真实相机（freenect / usb_cam）**：
+Gazebo 中会出现带顶置 Kinect 的 mbot 小车。Kinect 的 RGB 图像话题为
+**`/kinect/rgb/image_raw`**（由 `mbot_description` 的 `kinect_gazebo.xacro` 以
+`prefix="kinect"` 生成，`cameraName` 即话题前缀）。
+
+### 终端 2：生成人脸立牌目标
 
 ```bash
-# Kinect（freenect）：RGB 话题为 /camera/rgb/image_raw
-roslaunch robot_vision freenect.launch
-
-# 或 USB 相机：RGB 话题为 /usb_cam/image_raw
-roslaunch robot_vision usb_cam.launch
+source ~/catkin_ws/devel/setup.bash
+roslaunch robot_vision spawn_face_target.launch
 ```
 
-### 2. 视觉追踪（第一部分）
+在小车正前方 `x=1.3 y=0.0 z=0.4` 处生成高对比度人脸立牌（标准 Gazebo 模型
+`models/face_board/`，脚本会自动加入 `GAZEBO_MODEL_PATH` 并改用 `file://` 绝对路径，
+保证纹理 100% 渲染）。键盘可微调立牌位置：
 
-**Gazebo 仿真人脸目标**：先在小车前方生成一个人脸立牌，再启动追踪：
+| 按键 | 作用 |
+| ---- | ---- |
+| `a` / `d` | 左移 / 右移 0.15 m |
+| `w` / `s` | 靠近 / 远离小车 0.10 m |
+| `r` | 复位到初始正前方 |
+| `q` | 退出控制 |
+
+### 终端 3：启动视觉人脸追踪
 
 ```bash
-# 生成人脸立牌（默认静止在 x=1.3 y=0.0 z=0.4 正前方；
-# 键盘手操：a 左移 / d 右移 / w 靠近 / s 远离 / r 复位 / q 退出）
-roslaunch robot_vision spawn_face_target.launch
-
-# 启动人脸追踪（Gazebo Kinect 话题为 /kinect/rgb/image_raw）
+source ~/catkin_ws/devel/setup.bash
 roslaunch robot_vision face_follower.launch cam_image_topic:=/kinect/rgb/image_raw
 ```
 
-立牌是一个标准 Gazebo 模型（`models/face_board/`，含 `model.config`/`model.sdf`/OGRE 材质
-脚本 + 高对比度人脸纹理），spawn 脚本会自动把模型目录加入 `GAZEBO_MODEL_PATH` 并改用
-`file://` 绝对路径，保证纹理 100% 渲染。
+> 必须显式指定 `cam_image_topic:=/kinect/rgb/image_raw`：`face_follower.launch` 的默认话题
+> `/camera/rgb/image_raw` 对应**真实 freenect Kinect**，而 Gazebo 仿真 Kinect 的前缀是 `/kinect`。
 
-**真实相机**：
+**预期现象**：
+
+- 弹出 OpenCV 调试窗口，用**绿色框**锁定人脸，叠加人脸中心（蓝点）、横向偏差、面积与
+  当前速度指令（`cmd: v=.. w=..`）。
+- 小车**原地转向**（默认 `only_turn=true` 纯转向模式），自动把车头对准立牌；在终端 2 中
+  用 `a`/`d` 左右移动立牌，小车会同步左右转向跟随，保持目标居中。
+- 需要“前进 + 保持距离”模式时改为
+  `roslaunch robot_vision face_follower.launch cam_image_topic:=/kinect/rgb/image_raw only_turn:=false`。
+
+**真实相机（freenect / usb_cam，非 Gazebo）**：
 
 ```bash
-# 默认订阅 /camera/rgb/image_raw（freenect Kinect）
+# Kinect（freenect）：RGB 话题为 /camera/rgb/image_raw（face_follower 默认值，无需覆盖）
+roslaunch robot_vision freenect.launch
 roslaunch robot_vision face_follower.launch
 
-# 或 USB 相机
+# 或 USB 相机：RGB 话题为 /usb_cam/image_raw
+roslaunch robot_vision usb_cam.launch
 roslaunch robot_vision face_follower.launch cam_image_topic:=/usb_cam/image_raw
 ```
 
-验证：让人脸出现在相机前，小车应自动转向面朝人脸并保持距离；
-弹出的窗口会显示人脸框、中心坐标与速度指令。
-
-### 3. 语音控制（第二部分）
+### 终端 4：启动语音控制节点
 
 ```bash
+source ~/catkin_ws/devel/setup.bash
 roslaunch robot_voice voice_control.launch
 ```
 
-三种触发方式任选：
+在交互式终端直接输入中文指令（回车触发），映射如下：
+
+| 语音命令 | 等价英文 | 动作 |
+| -------- | -------- | ---- |
+| 向前 / 前进 | forward | 前进 `linear.x = +0.35 m/s`，1.5 s 后自动停止 |
+| 向后 / 后退 | backward | 后退 |
+| 向左 / 左转 | left | 原地左转 `angular.z = +1.2 rad/s` |
+| 向右 / 右转 | right | 原地右转 |
+| 停止 / 停下 / 停 | stop | 立即停车 |
+
+每条指令执行后触发 TTS 反馈，默认播报文本「太阳当空照，花儿对我笑」；无声卡的虚拟机中
+`tts_backend=log`（默认），反馈以日志输出并发布到 `/voice_tts`。
+
+等价话题发布方式：
 
 ```bash
-# (a) 交互式终端：直接在终端输入命令
-向前
-停止
-
-# (b) 话题发布
 rostopic pub /voice_cmd std_msgs/String "data: '向前'"
 rostopic pub /voice_cmd std_msgs/String "data: '停止'"
-
-# (c) 真实语音识别 SDK：将 iat_publish 的识别结果接入 /voice_cmd
-rosrun robot_voice iat_publish
-# （识别结果经 voiceWords 重映射到 /voice_cmd 即可）
 ```
 
-### 4. 一键拉起（演示）
+### （可选）一键拉起
 
 ```bash
 roslaunch robot_vision mbot_intelligence.launch
 ```
 
-> ⚠️ 视觉与语音节点都发布 `/cmd_vel`，**实际运行请二选一**，
-> 避免速度指令互相冲突；一键启动仅用于验证两个节点均可正常拉起。
+> ⚠️ 视觉与语音节点都发布 `/cmd_vel`，**实际运行请二选一**，避免速度指令互相冲突；
+> 一键启动仅用于验证两个节点均可正常拉起。
 
 ---
 
