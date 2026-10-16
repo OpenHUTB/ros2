@@ -18,17 +18,23 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         drone_pos = data.body("drone").xpos
         obs_pos = data.geom("obstacle").xpos
         dist = np.linalg.norm(drone_pos - obs_pos)
+        vx = data.qvel[0]
 
         # 三段避障逻辑
         if dist > SAFE_FULL_DIST:
             thrust = base_thrust
             print(f"距离{dist:.2f}m >5m, 全速前进")
         elif SAFE_SLOW_DIST < dist <= SAFE_FULL_DIST:
-            thrust = base_thrust * 0.7
+            thrust = base_thrust * 0.3
             print(f"距离{dist:.2f}m, 减速前进")
         else:
-            thrust = 0
-            print(f"距离{dist:.2f}m <=2m, 紧急急停!")
+            if vx > 0.05:
+                thrust = -base_thrust
+                print(f"距离{dist:.2f}m <=2m, 紧急急停(制动中)!")
+            else:
+                thrust = 0
+                data.qvel[0] = 0
+                print(f"距离{dist:.2f}m <=2m, 已安全停止")
 
         # 获取无人机 body 索引并施加 X 方向推力
         drone_id = model.body("drone").id
