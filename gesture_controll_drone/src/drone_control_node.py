@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import airsim
 import rospy
 from std_msgs.msg import String
 
@@ -8,14 +9,26 @@ def gesture_callback(msg):
     
     # 在这里写对接 AirSim 的代码
     if gesture == "open":
-        # 起飞指令
-        rospy.loginfo("执行：起飞")
-    elif gesture == "fist":
-        # 降落指令
-        rospy.loginfo("执行：降落")
+    # 起飞指令
+       client = airsim.MultirotorClient()
+       client.confirmConnection()
+       client.enableApiControl(True)
+       client.takeoffAsync().join()
+       rospy.loginfo(">>> 无人机已真实起飞！ <<<")
+   elif gesture == "fist":
+    # 降落指令
+       client = airsim.MultirotorClient()
+       client.confirmConnection()
+       client.enableApiControl(True)
+       client.landAsync().join()
+       rospy.loginfo(">>> 无人机已真实降落！ <<<")
     elif gesture == "ok":
-        # 紧急停止
-        rospy.loginfo("执行：紧急停止")
+    # 紧急停止
+       client = airsim.MultirotorClient()
+       client.confirmConnection()
+       client.enableApiControl(True)
+       client.armDisarm(False)  # 紧急锁桨
+       rospy.loginfo(">>> 执行：紧急停止！ <<<")
 
 def main():
     rospy.init_node('drone_control_node', anonymous=True)
