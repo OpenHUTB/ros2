@@ -70,7 +70,8 @@ ROS每章节运行代码:
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
-
+* [地面载具 - 图像录制 ROS 2 封装模块](ground/image_recorder.md)
+ 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
