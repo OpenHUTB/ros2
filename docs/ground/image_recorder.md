@@ -135,7 +135,7 @@ ros2 launch image_recorder main.launch.pybash
 验证结果说明：由于本机虚拟机环境未安装 Carla 仿真器，未能实时获取真实的图像数据，但图像订阅与节点启动逻辑已通过编译与运行验证。
 
 ![运行效果图片](../img/run_result.png)
- markdown
+
 ## 运行效果与验证
 
 节点成功启动，终端输出 `[INFO] [image_recorder_node]: Node started, waiting for images...`，表示 ROS 2 节点已进入监听状态。
