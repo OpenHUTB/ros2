@@ -1,0 +1,6 @@
+<launch>
+  <!-- r2d2_search_collect 统一入口说明：
+       本模块为纯 PyBullet 仿真，不依赖 ROS 运行时，
+       launch 文件仅作为 ROS 包结构规范的一部分，不实际启动节点。 -->
+  <node pkg="r2d2_search_collect" type="main.py" name="r2d2_search_collect" output="screen"/>
+</launch>
