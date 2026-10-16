@@ -69,6 +69,7 @@ ROS每章节运行代码:
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
@@ -83,12 +84,16 @@ ROS每章节运行代码:
 
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
+* [八叉树上的 A* 全局寻路](./air/octree_uav_3d_pathfinding/astar_planning.md)
+
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
+
+* [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
