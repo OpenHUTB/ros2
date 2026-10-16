@@ -159,5 +159,5 @@ bash
 ros2 launch image_recorder main.launch.py
 ```
 5.节点启动成功后，即可获取到 Carla 仿真器的实时摄像头画面，效果如下图所示：
-![运行效果图片](../img/carla_demo.png)
+![运行效果图片](../img/run_2.png)
 
