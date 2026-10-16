@@ -3,7 +3,7 @@ import rospy
 from std_msgs.msg import String
 # 导入你原来的相机和手势检测代码
 import sys
-sys.path.append('/home/user/hutb_ws/src/nn/src/gesture_controll_drone')  # 虚拟机的路径，之后改
+
 from camera_utils import Camera
 from gesture_detection import GestureDetector  # 假设你的手势识别在这个文件里
 
