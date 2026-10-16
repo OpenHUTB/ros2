@@ -48,7 +48,7 @@ graph LR
    roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
    ```
    【操作截图】：启动成功后，在弹出的 Gazebo 窗口中央可以看到 3D 无人车模型，地面网格清晰可见。
-   ![键盘遥控无人车仿真演示](../img/task1_demo.gif)
+   ![键盘遥控无人车仿真演示](../img/car.png)
 
 2.3 启动自定义控制节点
 
@@ -56,8 +56,23 @@ graph LR
 
 ```shell
 source ~/hutb_ws/devel/setup.bash
-roslaunch hutb_robot task1_keyboard.launch
+roslaunch autonomous_car task1_keyboard.launch
 ```
+2.4 运行步骤
+   1. 将源码放入工作空间并编译：
+      ```bash
+      cd ~/hutb_ws/src
+      # 假设源码已经在这里
+      cd ~/hutb_ws
+      catkin_make
+      source devel/setup.bash
+   ```
+   2. 启动 ROS 核心与 Gazebo 环境...
+   3. 启动键盘控制节点：
+      ```bash
+      roslaunch autonomous_car task1_keyboard.launch
+      ```
+   ```
 
 3. 源代码解析
 

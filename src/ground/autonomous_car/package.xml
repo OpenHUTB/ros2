@@ -3,7 +3,7 @@
   <name>autonomous_car</name>
   <version>0.0.1</version>
   <description>The autonomous_car package for Task 1</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="user@liming202607">user</maintainer>
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
