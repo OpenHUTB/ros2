@@ -97,28 +97,28 @@ results/                   运行产物：效果图、GIF、指标 CSV/JSON、�
 
 ## 4. 效果与结果
 
-### 4.1 跟踪过程动图（直线场景，初始横向偏差 1.5 m + 航向偏差 5.7°）
+本模块**不在仓库中保存图片**，全部结果都由脚本现场生成，便于复核与复现：
 
-跟踪过程动图见在线文档：
-<https://openhutb.github.io/ros2/ground/autonomous_car_stanley_tracking/>
+```bash
+cd src/ground/autonomous_car_stanley_tracking
+python3 main.py --mode demo       # 生成轨迹图、误差曲线、指标柱状图与跟踪动图
+python3 main.py --mode compare    # 生成后轴/前轴控制点对比图与 CSV
+python3 main.py --mode sweep --parameter k --values 0.8,1.6,2.4,4.0 --scenario circle
+```
 
-> 说明：仓库根 `.gitignore` 忽略一切 `*.gif`，只为 `docs/img/**/*.gif` 开了例外，
-> 因此动图放在 `docs/img/ground/autonomous_car_stanley_tracking/tracking.gif`。
-> 本地跑 `python3 main.py --mode demo` 会重新生成 `results/tracking.gif`。
+生成物（目录 `results/`，均为可再生的运行产物）：
 
-### 4.2 轨迹对比（圆轨迹，半径 15 m）
+| 文件 | 内容 |
+|---|---|
+| `trajectory_<场景>.png` | 参考路径与三个控制器的轨迹对比 |
+| `error_<场景>.png` | 横向偏差与航向偏差随时间的变化 |
+| `metrics.png` | 四项指标的柱状图对比 |
+| `tracking.gif` | 跟踪过程动图（车辆位姿随时间推进） |
+| `metrics.csv` / `metrics.json` | 四场景 × 三控制器的 13 项指标 |
+| `control_point_compare.csv` | 后轴/前轴控制点对比 |
+| `trace_<场景>.csv` | 单条轨迹的逐步时序，可用 Excel 复现曲线 |
 
-![圆轨迹跟踪对比](results/trajectory_circle.png)
-
-### 4.3 横向偏差与航向偏差
-
-![误差曲线](results/error_circle.png)
-
-### 4.4 性能指标
-
-![指标对比](results/metrics.png)
-
-四场景 × 三控制器的完整指标（`results/metrics.csv`，速度 5 m/s，初始偏差 1.5 m / 0.1 rad）：
+四场景 × 三控制器的完整指标（速度 5 m/s，初始偏差 1.5 m / 0.1 rad）：
 
 | 控制器 | 场景 | 平均绝对横向偏差 / m | 最大偏差 / m | **稳态偏差 / m** | 收敛时间 / s |
 |---|---|---|---|---|---|
@@ -139,8 +139,6 @@ results/                   运行产物：效果图、GIF、指标 CSV/JSON、�
 因为有曲率前馈 `atan(L*kappa)`，稳态偏差比没有前馈的预瞄 PID 小 1～2 个数量级。
 
 ### 4.5 控制点对比：后轴（默认）vs 前轴（经典 Stanley）
-
-![控制点对比](results/control_point_compare.png)
 
 | 场景 | 后轴控制点稳态偏差 / m | 前轴控制点稳态偏差 / m | 改善 |
 |---|---|---|---|

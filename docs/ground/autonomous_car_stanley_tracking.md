@@ -109,8 +109,6 @@ $$
 两种控制点都保留在代码里（`control_point="rear_axle" | "front_axle"`），
 用 `python3 main.py --mode compare` 可一键复现上表。
 
-![控制点对比](../img/ground/autonomous_car_stanley_tracking/control_point_compare.png)
-
 ### 1.6 与两种基线的区别
 
 | 控制器 | 横向依据 | 前馈 | 特点 |
@@ -205,17 +203,19 @@ stanley_tracking/
 
 ## 5. 运行效果与性能评价
 
-### 5.1 跟踪过程（直线场景，初始横向偏差 1.5 m + 航向偏差 5.7°）
+本模块不在仓库中保存图片与动图，全部结果现场生成、可复现：
 
-![Stanley 跟踪过程](../img/ground/autonomous_car_stanley_tracking/tracking.gif)
+```bash
+cd src/ground/autonomous_car_stanley_tracking
+python3 main.py --mode demo      # 轨迹图、误差曲线、指标柱状图、跟踪动图
+python3 main.py --mode compare   # 后轴/前轴控制点对比图与 CSV
+```
 
-### 5.2 轨迹对比（圆轨迹 R=15 m）与误差曲线
+`results/` 下的产物：`trajectory_<场景>.png`（轨迹对比）、`error_<场景>.png`（偏差曲线）、
+`metrics.png`（指标柱状图）、`tracking.gif`（跟踪过程）、`metrics.csv`（13 项指标）、
+`control_point_compare.csv`（控制点对比）、`trace_<场景>.csv`（逐步时序，可用 Excel 复现曲线）。
 
-![圆轨迹跟踪对比](../img/ground/autonomous_car_stanley_tracking/trajectory_circle.png)
-
-![误差曲线](../img/ground/autonomous_car_stanley_tracking/error_circle.png)
-
-### 5.3 性能指标（速度 5 m/s，初始偏差 1.5 m / 0.1 rad）
+### 5.1 性能指标（速度 5 m/s，初始偏差 1.5 m / 0.1 rad）
 
 | 控制器 | 场景 | 平均绝对横向偏差 / m | 最大偏差 / m | 稳态偏差 / m | 收敛时间 / s |
 |---|---|---|---|---|---|
