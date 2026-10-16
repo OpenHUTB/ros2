@@ -34,3 +34,21 @@ The entry point reads a fixed YAML configuration and random seed, then writes th
 航线采用屋顶局部 ENU 坐标系，航点包含位置、偏航角、速度、预计到达时间、条带编号和转弯标记。相机固定名为 `downward_rgb`。后续 ROS 2 封装将保持该字段语义，并将航线映射为标准路径消息、将相机数据映射为图像消息。
 
 The route uses a rooftop-local ENU frame. Each waypoint contains position, yaw, speed, expected arrival time, strip index, and turn flag. The camera has the stable name `downward_rgb`. A later ROS 2 wrapper will preserve these semantics while mapping routes and images to standard ROS messages.
+
+## 同步标签与专家控制 / Synchronized Labels and Expert Control
+
+数据入口使用 MuJoCo 3.12.0 的几何体分割缓冲区，将 `pv_panel_*` 的可见像素转换为二值光伏掩码。RGB 与分割图使用相同模型状态、相机、分辨率和帧编号，因此遮挡关系与像素坐标保持一致。
+
+The data entry point uses the MuJoCo 3.12.0 geometry segmentation buffer and converts visible `pv_panel_*` pixels into a binary photovoltaic mask. RGB and segmentation share the same model state, camera, resolution, and frame identifier, preserving both occlusion and pixel coordinates.
+
+![同步 RGB 样例 / Synchronized RGB sample](../img/air/mujoco_uav_rooftop_pv_coverage_survey/sample_rgb.png)
+
+![光伏分割标签 / Photovoltaic segmentation label](../img/air/mujoco_uav_rooftop_pv_coverage_survey/sample_mask.png)
+
+确定性专家控制器接收横向偏差、航向误差和距转弯点距离，输出有限幅的前进速度与偏航角速度。接近转弯点时降低速度；横向或航向正误差产生负偏航修正，负误差产生正偏航修正。该输入输出模式作为后续神经航迹控制器的监督训练接口。
+
+The deterministic expert receives cross-track error, heading error, and distance to the next turn, then emits bounded forward speed and yaw rate. It slows near turns; positive lateral or heading error produces a negative yaw correction, while negative error produces a positive correction. This input-output schema is the supervised training interface for the later neural flight-line controller.
+
+固定种子 `20261016` 的小型采集生成 18 帧：三个场景各 6 帧，train、validation、test 各包含一个完整场景序列。质量报告核对文件存在性、RGB-mask 尺寸、二值标签、帧编号唯一性、序列划分隔离与内容重复项。
+
+The small collection with seed `20261016` contains 18 frames: six from each scene, with one complete scene sequence in each of train, validation, and test. The quality report checks file existence, RGB-mask dimensions, binary labels, unique frame identifiers, sequence-level split isolation, and duplicate content.

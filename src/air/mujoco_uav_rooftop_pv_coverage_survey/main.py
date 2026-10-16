@@ -14,6 +14,7 @@ import numpy as np
 import yaml
 
 from rooftop_pv.dataset import DatasetConfig, generate_dataset
+from rooftop_pv.quality import audit_dataset
 from rooftop_pv.rendering import render_rgb, save_rgb
 from rooftop_pv.route import RouteConfig, generate_lawnmower_route, route_length, save_route
 from rooftop_pv.scene import SCENARIOS, load_model, set_drone_pose
@@ -123,7 +124,14 @@ def main(argv: list[str] | None = None) -> int:
                 cross_track_std=float(config.get("cross_track_std", 0.35)),
                 heading_std=float(config.get("heading_std", 0.12)),
             )
-            summary = generate_dataset(args.output.resolve(), route_config, dataset_config)
+            output = args.output.resolve()
+            summary = generate_dataset(output, route_config, dataset_config)
+            quality = audit_dataset(output)
+            summary["quality_status"] = quality["status"]
+            summary["quality_report"] = "quality_report.json"
+            (output / "summary.json").write_text(
+                json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
     except (KeyError, TypeError, ValueError, OSError, RuntimeError) as exc:
         print(f"error / 错误: {exc}", file=sys.stderr)
         return 2
