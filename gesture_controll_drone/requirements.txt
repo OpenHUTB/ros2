@@ -1,0 +1,12 @@
+# 核心计算机视觉库
+opencv-python
+mediapipe
+
+# 数据处理和数学计算
+numpy
+
+# 图像处理（PIL）
+Pillow
+
+# 虚拟无人机
+pygame
