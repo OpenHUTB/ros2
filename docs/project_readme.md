@@ -27,19 +27,17 @@
 2. 采用规范的代码结构，代码放于 `src` 目录。
 3. 使用 Markdown 编写实验报告。
 
-## 3. 项目文件结构
+## 3.文件结构
 ```text
-yolov8-target-tracking/
-├── README.md                       # 项目说明文档
-├── src/                            # 核心代码模块
-│   ├── yolo_detector.py            # YOLOv8 视觉检测节点
-│   ├── target_follower.py          # 目标跟随控制节点
-│   └── yolov8_tracking.launch      # 一键启动文件
-└── docs/                           # 截图与文档
-    ├── turtlebot3_gazebo_simulation_world.png
-    └── yolov8_ros_gazebo_detection.png
+src/yolov8-target-tracking/
+├── src/
+│   ├── main.py                 # YOLOv8 视觉检测节点（入口）
+│   └── target_follower.py      # 目标跟随控制节点
+├── launch/
+│   └── yolov8_tracking.launch  # 一键启动文件
+├── CMakeLists.txt
+└── package.xml
 ```
-
 ## 4. 运行说明
 
 1. 启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_simulation.launch
