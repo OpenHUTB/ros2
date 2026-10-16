@@ -1,0 +1,28 @@
+# Stanley 横向跟踪模块运行参数
+# 由 launch/main.launch.py 读取并一次性传给节点，避免在代码里散落魔法数字。
+
+stanley_tracking_node:
+  ros__parameters:
+    # 控制器选择：stanley / pure_pursuit / lookahead_pid
+    controller: "stanley"
+    # 车辆轴距（米），同时用于横摆角速度折算 omega = v*tan(delta)/L
+    wheelbase: 2.7
+    # 横向增益 k：越大收敛越快，大到一定程度会出现转向振荡
+    k: 1.6
+    # 软化项 k_soft：低速时抑制 atan 项，避免低速蛇行
+    k_soft: 1.2
+    # 是否启用曲率前馈 atan(L*kappa)
+    feedforward: true
+    # 前轮最大转角与转向速率上限
+    max_steering_deg: 35.0
+    steering_rate_deg: 120.0
+    # 纵向速度：巡航速度、最低速度、侧向加速度约束（弯道限速）
+    target_speed: 5.0
+    min_speed: 1.5
+    a_lat_max: 2.5
+    # 控制频率
+    control_rate_hz: 50.0
+    # 内置参考路径场景：straight / circle / sine / double_lane_change
+    reference_scenario: "circle"
+    # 是否等待 /reference_path 话题（false 表示直接用内置场景）
+    wait_for_path: true
