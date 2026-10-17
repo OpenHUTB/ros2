@@ -160,7 +160,19 @@ Samples with encoder-derived linear speed below `0.15 m/s` receive a zero target
 
 低于 `0.15 m/s` 的编码器线速度样本标为零，因为静止附近比值条件数较差。时间窗口只在单个 manifest episode 内构造；归一化仅拟合训练 episode，验证集用于参数选择，隔离测试集用于最终 MAE、RMSE、轮滑 F1/准确率和推理中位耗时。模型与指标 JSON 写入 `data/models/`，不属于功能包源码。
 
-Held-out replay is available through `evaluate_slip_model`; it reports raw versus compensated velocity MAE by friction and records the evaluation scope in JSON. The command is intentionally separate from training so a test episode is never used for normalization or parameter selection.
+隔离测试集 replay 可通过 `evaluate_slip_model` 执行，按摩擦系数报告原始与补偿后的速度 MAE，并将评测范围写入 JSON。评测与训练命令分离，测试 episode 不参与归一化或参数选择。
+
+Held-out replay is available through `evaluate_slip_model`; it reports raw versus compensated velocity MAE by friction and records the evaluation scope in JSON. The command is separate from training so test episodes are never used for normalization or parameter selection.
+
+```bash
+evaluate_slip_model --data data/sample \
+  --model data/models/slip-v1/slip_model.json \
+  --output data/results/slip-evaluation.json
+```
+
+12-episode 样例的隔离测试集测得滑移 `MAE=0.02718`、`RMSE=0.04400`；原始速度 `MAE=0.03838`，模型直接修正后为 `0.05182`。这表明当前策略尚未改善该 replay 指标。
+
+On the 12-episode sample's held-out split, slip prediction measured `MAE=0.02718` and `RMSE=0.04400`; raw velocity `MAE=0.03838` increased to `0.05182` after direct model-based correction. The current policy therefore did not improve this replay metric.
 
 The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 hidden units, and 300 epochs measured `MAE 0.0272`, `RMSE 0.0440`, `F1 0.774`, `accuracy 0.969`, and `0.0103 ms` median inference per window on the local CPU. These values describe that generated held-out split; deployment data should be evaluated independently.
 
