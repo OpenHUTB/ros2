@@ -1,4 +1,4 @@
-# MuJoCo两自由度机械臂简单仿真
+﻿# MuJoCo两自由度机械臂简单仿真
 
 ## 一、实验目的与环境说明
 
@@ -110,10 +110,10 @@ roslaunch mujoco_two_dof_arm arm_control.launch
    Python没装mujoco库，直接 `pip3 install mujoco` 装一下就行，我最开始就忘装了。
 
    最开始报错的样子：
-   ![运行报错](/img/mujoco_arm_error.png)
+   ![运行报错](../../img/mujoco_arm_error.png)
 
    安装成功之后的样子：
-   ![安装成功](/img/mujoco_arm_install.png)
+   ![安装成功](../../img/mujoco_arm_install.png)
 
 3. **报IndexError: index out of bounds**
    就是我代码里读传感器数据的索引写错了，数了一下传感器顺序改对就好了。
@@ -130,7 +130,7 @@ roslaunch mujoco_two_dof_arm arm_control.launch
 - 末端红色小球在平面里画曲线
 
 成功弹出仿真窗口的样子：
-![运行成功](/img/mujoco_arm_success.png)
+![运行成功](../../img/mujoco_arm_success.png)
 
 终端会一直打印当前两个关节的角度和末端位置，用ScreenToGif录个10秒的GIF就行，大小也够。
 
