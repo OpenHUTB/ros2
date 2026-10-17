@@ -69,8 +69,10 @@ def estimate_distance_m(bbox_width_px, class_id, class_name='', focal_px=None,
     real_width = real_width_of_class(class_id, class_name)
     distance = float(focal_px) * real_width / float(bbox_width_px)
 
-    if distance < config.MIN_VALID_DISTANCE_M or distance > config.MAX_VALID_DISTANCE_M:
+    if distance > config.MAX_VALID_DISTANCE_M:
         return None
+    if distance < config.MIN_VALID_DISTANCE_M:
+        return config.MIN_VALID_DISTANCE_M
     return distance
 
 

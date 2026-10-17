@@ -56,6 +56,13 @@ def test_distance_returns_none_when_out_of_range():
     assert de.estimate_distance_m(width_px, 2, 'car', focal_px=400.0) is None
 
 
+def test_near_face_returns_min_not_none():
+    """贴脸（距离 < MIN_VALID_DISTANCE_M）不应返回 None，应返回最小值触发急刹。"""
+    # f=400, car 宽 1.8m, 框宽 800px -> 0.9m < 1.0m
+    result = de.estimate_distance_m(800.0, 2, 'car', focal_px=400.0)
+    assert result == config.MIN_VALID_DISTANCE_M
+
+
 def test_distance_with_image_params_instead_of_focal():
     """不传 focal_px 时，应能用图像宽度 + 视场角算出同样的结果。"""
     a = de.estimate_distance_m(80.0, 2, 'car', focal_px=400.0)
