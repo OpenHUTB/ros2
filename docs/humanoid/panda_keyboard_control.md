@@ -99,7 +99,7 @@ python3 keyboard_mujoco.py
 ```
 
 4.运行成功界面
-![运行效果演示](rohotic.gif)
+![运行效果演示](robotic.gif)
 
 5. 操作说明
 程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
@@ -115,5 +115,5 @@ python3 keyboard_mujoco.py
 
 ### 五、 运行效果
 
-![运行效果演示](rohotic2.gif)
+![运行效果演示](robotic2.gif)
 
