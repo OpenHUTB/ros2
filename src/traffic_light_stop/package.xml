@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>traffic_light_stop</name>
+  <version>0.0.1</version>
+  <description>
+    红绿灯启停（Traffic Light Stop）仿真。
+    车辆沿道路行驶，前方路口有红绿灯与停止线：
+    红灯/黄灯自动减速停在停止线前，绿灯自动起步通过。
+    提供 Pygame 无 ROS 演示与 ROS Noetic launch 入口。
+  </description>
+  <maintainer email="your_email@example.com">your_name</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+</package>
