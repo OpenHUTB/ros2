@@ -38,7 +38,12 @@ def main(argv: list[str] | None = None) -> int:
     class Controller(Node):
         def __init__(self) -> None:
             super().__init__("rooftop_pv_controller")
-            self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+            self.declare_parameter("image_topic", "/camera/image_raw")
+            self.declare_parameter("pose_topic", "/uav/pose")
+            self.declare_parameter("route_topic", "/uav/route")
+            self.declare_parameter("command_topic", "/cmd_vel")
+            command_topic = str(self.get_parameter("command_topic").value or "/cmd_vel")
+            self.publisher = self.create_publisher(Twist, command_topic, 10)
             self.timer = self.create_timer(0.1, self.publish_zero)
 
         def publish_zero(self) -> None:

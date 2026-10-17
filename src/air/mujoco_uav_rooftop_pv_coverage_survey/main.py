@@ -19,6 +19,7 @@ from rooftop_pv.rendering import render_rgb, save_rgb
 from rooftop_pv.route import RouteConfig, generate_lawnmower_route, route_length, save_route
 from rooftop_pv.scene import SCENARIOS, load_model, set_drone_pose
 from rooftop_pv.training import train_control, train_segmentation
+from rooftop_pv.evaluation import evaluate_scenarios
 
 
 MODULE_ROOT = Path(__file__).resolve().parent
@@ -96,7 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML configuration / YAML 配置")
     parser.add_argument("--output", type=Path, default=MODULE_ROOT / "artifacts" / "scene", help="output directory / 输出目录")
     parser.add_argument("--scenario", choices=SCENARIOS, help="override scenario / 覆盖场景名称")
-    parser.add_argument("--mode", choices=("scene", "dataset", "train-segmentation", "train-control"), default="scene", help="execution mode / 执行模式")
+    parser.add_argument("--mode", choices=("scene", "dataset", "evaluate", "train-segmentation", "train-control"), default="scene", help="execution mode / 执行模式")
     return parser
 
 
@@ -131,6 +132,12 @@ def main(argv: list[str] | None = None) -> int:
             summary["quality_status"] = quality["status"]
             summary["quality_report"] = "quality_report.json"
             (output / "summary.json").write_text(
+                json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+        elif args.mode == "evaluate":
+            output = args.output.resolve()
+            summary = evaluate_scenarios(output)
+            (output / "evaluation_metrics.json").write_text(
                 json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
             )
         elif args.mode == "train-segmentation":
