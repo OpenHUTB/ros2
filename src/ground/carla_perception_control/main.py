@@ -227,6 +227,29 @@ def train(feat_X, feat_Yc, ctrl_X, ctrl_Y, epochs=300, verbose=None):
     return sens, ctrl, {"sens": h1, "ctrl": h2}
 
 
+# 感知安全约束参数（雷达前方最近距离 → 油门/刹车修正）
+SAFE_DIST = 5.0    # 进入该距离开始线性收油门
+HARD_DIST = 2.5    # 进入该距离直接刹车停车
+
+
+def safety_override(front_d, throttle, safe_dist=SAFE_DIST, hard_dist=HARD_DIST):
+    """感知安全约束（纯函数）：雷达前方最近距离过近时收油门/刹车。
+
+    感知神经网络把 `front_d`（雷达前方最近距离，单位 m）作为输入特征之一，
+    这里用同一份特征做**安全约束层**：距离充足时不影响原控制；进入
+    [hard_dist, safe_dist) 区间按线性比例收油门；<= hard_dist 直接全力刹车。
+
+    返回 (throttle, brake)，brake ∈ {0.0, 1.0} 之外本函数不产生中间刹车量，
+    便于与下层 `apply_control` 的 (throttle, steer, brake) 接口直接衔接。
+    """
+    if front_d is None or front_d >= safe_dist:
+        return float(throttle), 0.0
+    if front_d <= hard_dist:
+        return 0.0, 1.0
+    ratio = (front_d - hard_dist) / (safe_dist - hard_dist)
+    return float(throttle * ratio), 0.0
+
+
 # ============================================================ 控制（NN / 对比）
 def pure_pursuit(pos, yaw, waypoints, lookahead=2.0, gain=1.5, base=0.6):
     """纯跟踪算法（作为 NN 控制器的对比基准）。返回 (throttle, steer)。"""
@@ -605,7 +628,9 @@ def run_carla(host, port, town, model_path, waypoints, sim_time=20.0,
                 throttle, steer = nn_control(pos, yaw, waypoints, model["ctrl"])
             else:
                 throttle, steer = pure_pursuit(pos, yaw, waypoints)
-            cc.apply_control(vehicle, throttle=throttle, steer=steer)
+            # 感知安全约束：雷达前方最近距离过近时收油门/刹车
+            throttle, brake = safety_override(raw[3], throttle)
+            cc.apply_control(vehicle, throttle=throttle, steer=steer, brake=brake)
 
             lateral_errors.append(_dist_to_polyline(pos, waypoints))
 

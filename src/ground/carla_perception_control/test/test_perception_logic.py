@@ -524,6 +524,62 @@ def test_main_sh_launch_dispatches_per_ros_version():
     assert "launch_args" in sh, "其余参数应原样透传给 launch"
 
 
+def test_safety_override_far_keeps_throttle():
+    """感知安全约束：前方距离充足时不应影响原控制（无刹车）。"""
+    th, br = main_mod.safety_override(20.0, 0.6)
+    assert th == 0.6 and br == 0.0, f"远距离不应收油门/刹车: ({th}, {br})"
+    th, br = main_mod.safety_override(None, 0.6)
+    assert th == 0.6 and br == 0.0, "传感器数据缺失时安全层应放行"
+
+
+def test_safety_override_linear_scaling():
+    """感知安全约束：距离进入 [HARD_DIST, SAFE_DIST) 时按线性比例收油门。"""
+    # 距离 = 3.75（SAFE=5, HARD=2.5 的中点）→ 油门应减半
+    th, br = main_mod.safety_override(3.75, 0.6)
+    assert abs(th - 0.3) < 1e-6, f"线性中点油门应为 0.3，实际 {th}"
+    assert br == 0.0, "未到硬刹车距离不应刹车"
+    # 边界：恰好 SAFE_DIST → 不修正
+    th, br = main_mod.safety_override(5.0, 0.6)
+    assert th == 0.6 and br == 0.0
+
+
+def test_safety_override_brakes_when_very_close():
+    """感知安全约束：距离 <= HARD_DIST 时必须全力刹车。"""
+    th, br = main_mod.safety_override(2.0, 0.6)
+    assert th == 0.0 and br == 1.0, f"极近距离应刹车停车，实际 ({th}, {br})"
+    th, br = main_mod.safety_override(2.5, 0.6)
+    assert th == 0.0 and br == 1.0, "HARD_DIST 边界处也应刹车"
+
+
+def test_ros_node_default_waypoints_use_demo_route():
+    """ROS 节点默认路点必须与 main.py 的 DEMO_ROUTE 一致（回归测试）。
+
+    历史缺陷：perception_control_node.py 的 DEFAULT_WAYPOINTS 仍是文档早期
+    那条错误路线 "36,-5 40,-8 40,12 25,20"，其中 (40,-8) 偏离车道 2.59 m、
+    (40,12) 偏离 4.92 m。main.py 已改用逐点校验的 DEMO_ROUTE，但 ROS 节点
+    不传路点时仍会用坏路线，车辆沿直线开出路面撞停。本测试防止两者漂移。
+    """
+    import ast
+    node_path = os.path.join(_PKG, "carla_perception_control",
+                             "perception_control_node.py")
+    src = open(node_path, encoding="utf-8").read()
+
+    tree = ast.parse(src)
+    assign_src = None
+    for n in tree.body:
+        if isinstance(n, ast.Assign):
+            for t in n.targets:
+                if isinstance(t, ast.Name) and t.id == "DEFAULT_WAYPOINTS":
+                    assign_src = ast.get_source_segment(src, n)
+    assert assign_src is not None, "未找到 DEFAULT_WAYPOINTS 定义"
+    assert "DEMO_ROUTE" in assign_src, \
+        "DEFAULT_WAYPOINTS 未由 DEMO_ROUTE 派生，两个路点源可能漂移"
+    # 坏路点不应再作为字面量写死在默认值里（注释中说明历史缺陷允许出现）
+    assert "40,-8" not in assign_src, \
+        f"DEFAULT_WAYPOINTS 仍写死旧错误路线：{assign_src}"
+
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []
