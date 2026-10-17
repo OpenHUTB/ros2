@@ -1,0 +1,31 @@
+seed: 25012
+output_directory: data/episodes
+episodes:
+  - id: step_load_0p0
+    trajectory: step
+    duration_s: 4.0
+    load_kg: 0.0
+    initial_angle_rad: 0.35
+    target_angle_rad: 1.20
+    step_time_s: 0.5
+  - id: step_load_0p5
+    trajectory: step
+    duration_s: 4.0
+    load_kg: 0.5
+    initial_angle_rad: 0.35
+    target_angle_rad: 1.20
+    step_time_s: 0.5
+  - id: sine_load_0p0
+    trajectory: sine
+    duration_s: 8.0
+    load_kg: 0.0
+    amplitude_rad: 0.45
+    offset_rad: 0.80
+    frequency_hz: 0.25
+  - id: sine_load_0p5
+    trajectory: sine
+    duration_s: 8.0
+    load_kg: 0.5
+    amplitude_rad: 0.45
+    offset_rad: 0.80
+    frequency_hz: 0.25
