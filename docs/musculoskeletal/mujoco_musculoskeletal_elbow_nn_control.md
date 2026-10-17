@@ -64,6 +64,29 @@ collect_episodes \
 
 The lightweight MLP input is \([q_d,q,\dot q,F_f,F_e]\), and its output is \([a_f,a_e]\). Training, validation, and testing use complete-episode splits with a fixed seed. Online inference reuses the activation limiter and safe-stop path. Evaluation covers angular RMSE, overshoot, settling time, and CPU inference latency, grouped by trajectory type and forearm load.
 
+### 算法流程 / Algorithm flow
+
+```text
+目标轨迹 + 关节状态 + 肌腱力 -> 训练集统计量标准化 -> tanh MLP
+-> sigmoid 输出 -> 有限值检查与 [0,1] 限幅 -> 肌肉激活命令
+```
+
+训练损失为 (L=\frac{1}{N}\sum_i\|\hat a_i-a_i^{PD}\|_2^2)。评价按完整 episode、轨迹类型和负载分组，报告 MAE、RMSE、末段稳态误差和单样本 CPU 推理耗时。PD 与神经控制器使用同一目标轨迹、初始状态和负载。
+
+The pipeline normalizes inputs with training-only statistics, predicts two sigmoid activations, and applies finite-value and `[0,1]` safety checks before publishing. The MSE objective is (L=\frac{1}{N}\sum_i\|\hat a_i-a_i^{PD}\|_2^2). Reports are grouped by episode, trajectory, and payload with MAE, RMSE, tail steady-state error, and per-sample CPU latency.
+
+## ROS 2 在线神经控制 / ROS 2 online neural control
+
+```bash
+ros2 launch mujoco_musculoskeletal_elbow_nn_control neural_controller.launch.py
+ros2 topic pub --once /target_angle std_msgs/msg/Float64 "{data: 1.2}"
+ros2 topic echo /muscle_activations
+```
+
+节点订阅 `/target_angle`、`/joint_states` 和 `/tendon_forces`，发布 `/muscle_activations`。任一输入缺失、超时或格式异常时输出 `[0,0]`。
+
+The node subscribes to `/target_angle`, `/joint_states`, and `/tendon_forces`, and publishes `/muscle_activations`. Missing, stale, or malformed input produces `[0,0]`.
+
 ## 验收 / Acceptance
 
 ```bash
