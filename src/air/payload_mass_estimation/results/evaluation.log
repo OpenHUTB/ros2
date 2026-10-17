@@ -1,0 +1,90 @@
+{
+  "test": {
+    "mlp_42": {
+      "window_mae_kg": 0.0035378974862396717,
+      "window_rmse_kg": 0.004436093848198652,
+      "flight_mean_mae_kg": 0.0014626889023929834,
+      "flights": 30,
+      "windows": 690
+    },
+    "mlp_43": {
+      "window_mae_kg": 0.002919411286711693,
+      "window_rmse_kg": 0.0037943737115710974,
+      "flight_mean_mae_kg": 0.0009725758573040366,
+      "flights": 30,
+      "windows": 690
+    },
+    "mlp_44": {
+      "window_mae_kg": 0.0028430232778191566,
+      "window_rmse_kg": 0.0036189863458275795,
+      "flight_mean_mae_kg": 0.0008492374327033758,
+      "flights": 30,
+      "windows": 690
+    },
+    "no_thrust_42": {
+      "window_mae_kg": 0.07982497662305832,
+      "window_rmse_kg": 0.10010962188243866,
+      "flight_mean_mae_kg": 0.07274360209703445,
+      "flights": 30,
+      "windows": 690
+    },
+    "physics_impulse": {
+      "window_mae_kg": 0.0036825405002647135,
+      "window_rmse_kg": 0.004635728447276343,
+      "flight_mean_mae_kg": 0.000709464454751386,
+      "flights": 30,
+      "windows": 690
+    },
+    "train_mean": {
+      "window_mae_kg": 0.08164093643426895,
+      "window_rmse_kg": 0.10099011659622192,
+      "flight_mean_mae_kg": 0.08164093643426895,
+      "flights": 30,
+      "windows": 690
+    }
+  },
+  "shift": {
+    "mlp_42": {
+      "window_mae_kg": 0.057360462844371796,
+      "window_rmse_kg": 0.05777270719408989,
+      "flight_mean_mae_kg": 0.057360462844371796,
+      "flights": 30,
+      "windows": 690
+    },
+    "mlp_43": {
+      "window_mae_kg": 0.055767722427845,
+      "window_rmse_kg": 0.05627823993563652,
+      "flight_mean_mae_kg": 0.055767722427845,
+      "flights": 30,
+      "windows": 690
+    },
+    "mlp_44": {
+      "window_mae_kg": 0.05688625946640968,
+      "window_rmse_kg": 0.05725282430648804,
+      "flight_mean_mae_kg": 0.05688625946640968,
+      "flights": 30,
+      "windows": 690
+    },
+    "no_thrust_42": {
+      "window_mae_kg": 0.08068516850471497,
+      "window_rmse_kg": 0.10191827267408371,
+      "flight_mean_mae_kg": 0.07283405214548111,
+      "flights": 30,
+      "windows": 690
+    },
+    "physics_impulse": {
+      "window_mae_kg": 0.05707299308812098,
+      "window_rmse_kg": 0.0575602309301934,
+      "flight_mean_mae_kg": 0.05707299308812098,
+      "flights": 30,
+      "windows": 690
+    },
+    "train_mean": {
+      "window_mae_kg": 0.07899855822324753,
+      "window_rmse_kg": 0.1002756878733635,
+      "flight_mean_mae_kg": 0.07899855822324753,
+      "flights": 30,
+      "windows": 690
+    }
+  }
+}
