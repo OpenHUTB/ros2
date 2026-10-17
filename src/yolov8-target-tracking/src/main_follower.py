@@ -32,6 +32,6 @@ class TargetFollower:
         self.cmd_pub.publish(twist)
 
 if __name__ == "__main__":
-    rospy.init_node("target_follower")
+    rospy.init_node("main_follower")
     node = TargetFollower()
     rospy.spin()
