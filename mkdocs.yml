@@ -69,13 +69,17 @@ nav:
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
-    - 5. 机器人感知: './chapter/chap5.md'
+    - 5. 机器人感知:
+        - 章节首页: './chapter/chap5.md'
+        - 激光雷达 NN 障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
+    - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
@@ -84,12 +88,17 @@ nav:
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
+    - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
+    - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
+    - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
 - 空域载具:
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
@@ -97,30 +106,40 @@ nav:
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
+    - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
+    - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 空域载具八叉树三维寻路:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
+        - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
-    - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
+    - 环境搭建:
+        - HoloOcean Windows 本机环境搭建: './water/HoloOcean-Windows-Setup.md'
+        - WSL跑通HoloOcean2的ROS2示例方法: './water/WSL_HoloOcean2_ROS2.md'
+        - Docker 开发环境: './water/docker.md'
+        - HoloOcean ROS2 运行时容器: './water/docker_runtime.md'
+    - 水域载具示例: './water/holoocean_examples.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
 
 
 
-
+- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
@@ -128,6 +147,7 @@ markdown_extensions:
   - footnotes
   - admonition
   - mdx_math
+  - attr_list
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

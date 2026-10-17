@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ============================================================
+       无人机航点轨迹跟踪 —— 启动入口（PID 控制器 + 可选对照组）
+
+       用法：
+         roslaunch uav_waypoint_tracking main.launch mission:=hover_step
+         roslaunch uav_waypoint_tracking main.launch mission:=rectangle
+         roslaunch uav_waypoint_tracking main.launch mission:=spiral kp:=1.0 ki:=0.05 kd:=0.2
+         roslaunch uav_waypoint_tracking main.launch mission:=rectangle run_pid:=false run_builtin:=true
+
+       前置条件：
+         宿主 Windows 上已经启动 OpenHUTB 模拟器（AirSim 多旋翼模式，RPC 41451），
+         并用 config/params.yaml 中的 airsim.ip 指向宿主机地址。
+         模拟器是 Windows 程序，不在这里启动。
+
+       运行内容：
+         1) 加载 config/params.yaml（airsim / flight / pid / missions）
+         2) 用命令行参数覆盖任务名与 PID 增益
+         3) pid_tracker        自研 PID 控制器跟踪航点，记录 CSV 并发布 RViz 轨迹
+         4) compare_builtin    可选对照组（AirSim 内置位置接口）
+
+       参考来源：本仓库 air 板块其他实验的启动文件写法
+       （src/air/octree_uav_3d_pathfinding/launch/main.launch、
+         src/air/uav_keyboard_control/launch/main.launch），
+       参数名与 config/params.yaml 及 scripts/*.py 里的 rospy.get_param 一一对应。
+       ============================================================ -->
+
+  <!-- 任务名：hover_step（单点阶跃）/ rectangle（矩形四角 + 返回原点）/ spiral（螺旋上升） -->
+  <arg name="mission" default="rectangle"
+       doc="航点任务名，取值见 config/params.yaml 的 missions 段"/>
+
+  <!-- PID 增益：覆盖 params.yaml 中的默认值，便于参数整定对比 -->
+  <arg name="kp" default="1.0" doc="比例增益"/>
+  <arg name="ki" default="0.05" doc="积分增益"/>
+  <arg name="kd" default="0.2" doc="微分增益"/>
+
+  <!-- 日志目录：轨迹 CSV 与指标文件写入位置 -->
+  <arg name="log_dir" default="$(env HOME)/uav_waypoint_tracking_logs"
+       doc="实验日志目录"/>
+
+  <!-- 载具名：OpenHUTB 模拟器（CarlaAir）默认是 SimpleFlight；
+       AirSim Blocks 场景下是 Drone1 -->
+  <arg name="vehicle" default="SimpleFlight"
+       doc="AirSim 载具名，需与模拟器 settings.json 中的名字一致"/>
+
+  <!-- 是否同时启动对照组（AirSim 内置位置接口） -->
+  <arg name="run_builtin" default="false"
+       doc="true 时额外启动对照组节点 compare_builtin"/>
+
+  <!-- 是否启动主节点（自研 PID 跟踪）：只跑对照组时可设为 false -->
+  <arg name="run_pid" default="true"
+       doc="false 时只启动对照组，便于单独复现对比数据"/>
+
+  <!-- 1) 参数文件：/airsim、/flight、/pid、/missions -->
+  <rosparam command="load"
+            file="$(find uav_waypoint_tracking)/config/params.yaml"/>
+
+  <!-- 2) 参数覆盖：显式声明类型。
+       roslaunch 的 <param value="..."> 会按 YAML 规则推断类型（true/false、数字都会被转换），
+       任务名是字符串，必须写成 type="str"；增益是浮点数，写成 type="double"，避免类型歧义。 -->
+  <param name="mission" value="$(arg mission)" type="str"/>
+  <param name="pid/kp" value="$(arg kp)" type="double"/>
+  <param name="pid/ki" value="$(arg ki)" type="double"/>
+  <param name="pid/kd" value="$(arg kd)" type="double"/>
+  <param name="log_dir" value="$(arg log_dir)" type="str"/>
+  <param name="airsim/vehicle_name" value="$(arg vehicle)" type="str"/>
+
+  <!-- 3) 主节点：自研 PID 航点跟踪 -->
+  <node if="$(arg run_pid)" pkg="uav_waypoint_tracking" type="pid_tracker.py"
+        name="pid_tracker" output="screen"/>
+
+  <!-- 4) 可选对照组：用 AirSim 内置位置接口飞同一组航点 -->
+  <node if="$(arg run_builtin)" pkg="uav_waypoint_tracking"
+        type="compare_builtin.py" name="compare_builtin" output="screen"/>
+
+</launch>
