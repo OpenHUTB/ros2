@@ -27,30 +27,25 @@ src/drone_trajectory_logger/
 ```
 ## 运行步骤
 
-1. 新建标准工作空间并进入 src 目录：
+1. 新建工作空间并拷贝代码：
 
 ```bash
 mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
-```
-2.从 ros2 仓库拷贝模块代码到工作空间：
-```
-bash
 cp -r ~/OpenHUTB/ros2/src/drone_trajectory_logger ~/ros2_ws/src/
 cd ~/ros2_ws
 ```
-3.编译工作空间并部署环境：
+2.编译并加载环境：
 ```
 bash
 colcon build --packages-select drone_trajectory_logger
 source install/setup.bash
 ```
-4.运行发布节点（在第一个终端）：
+3.一键启动发布节点和分析节点：
 ```
 bash
-python3 src/drone_trajectory_logger/drone_trajectory_logger/main.py
+ros2 launch drone_trajectory_logger main.launch.py
 ```
-5.运行效果：
+4.预期输出：终端会同时打印出“轨迹发布节点已启动”和“轨迹识别节点已启动”，并弹出一个绘图窗口。
 ![运行效果图片](../img/capture_2.png)
 
 效果说明：发布节点成功发送不同的飞行指令，识别节点成功解析并打印出对应的飞行状态日志，同时基于实时数据绘制了飞行轨迹图（椭圆），验证了轨迹识别与自动日志记录功能的正确性。
