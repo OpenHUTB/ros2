@@ -47,14 +47,13 @@ def render(data: Path, model_path: Path, output: Path, frames: int = 24) -> None
     limits = max(0.1, float(np.max(np.abs(np.concatenate((commands, actual, compensated))))))
     output.parent.mkdir(parents=True, exist_ok=True)
     images = []
-    for index in range(1, frames + 1):
+    for index in range(frames):
         image = np.full((240, 360, 3), 248, dtype=np.uint8)
         image[24:220, 30:350] = (255, 255, 255)
         for x in range(30, 351, 40):
             image[218:221, x:x + 1] = (210, 210, 210)
         for y in range(40, 220, 40):
             image[y:y + 1, 30:351] = (225, 225, 225)
-        end = max(2, int(len(seconds) * index / frames))
         span = max(float(seconds[-1]), 1e-9)
         series = (
             (actual, (45, 95, 180)),
@@ -67,12 +66,14 @@ def render(data: Path, model_path: Path, output: Path, frames: int = 24) -> None
                     30 + int(319 * seconds[i] / span),
                     120 - int(92 * values[i] / limits),
                 )
-                for i in range(end)
+                for i in range(len(seconds))
             ]
             _line(image, points, color)
         image[18:22, 45:80] = (45, 95, 180)
         image[18:22, 140:175] = (215, 145, 35)
         image[18:22, 235:270] = (200, 65, 55)
+        cursor_x = 30 + int(319 * index / max(frames - 1, 1))
+        image[25:219, cursor_x:cursor_x + 2] = (80, 80, 80)
         images.append(image)
     imageio.mimsave(output, images, duration=0.08, loop=0)
 
