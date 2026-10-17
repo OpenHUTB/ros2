@@ -25,6 +25,8 @@ setup(
         "console_scripts": [
             "elbow_sim_node = mujoco_musculoskeletal_elbow_nn_control.ros_node:main",
             "collect_episodes = mujoco_musculoskeletal_elbow_nn_control.collector:main",
+            "train_elbow_mlp = mujoco_musculoskeletal_elbow_nn_control.train:main",
+            "neural_elbow_controller = mujoco_musculoskeletal_elbow_nn_control.neural_node:main",
         ]
     },
 )
