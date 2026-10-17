@@ -32,7 +32,7 @@ src/ground/carla_perception_control/
 ├── resource/carla_perception_control
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_perception_logic.py             # 单元测试（20 项，无需 CARLA 即可跑）
+└── test/test_perception_logic.py             # 单元测试（29 项，无需 CARLA 即可跑）
 ```
 
 ## 3. 快速开始
@@ -71,10 +71,13 @@ bash main.sh --host <宿主机IP> --mode run
 > 内置 `DEMO_ROUTE` 已满足这两点（26 航点、最大偏离车道 0.13 m、
 > 弯道间距 8~9 m、含两个约 90° 弯）。自定义轨迹请参考模块文档 5.7 节。
 
+> **⚠ 感知安全约束**：雷达前方最近距离进入 5 m 内按比例收油门、2.5 m 内直接刹车
+> （`safety_override`，感知特征直接参与控制兜底，纯函数可单测）。
+
 ## 4. 测试
 
 ```bash
-python3 test/test_perception_logic.py     # 20 项全部通过，无需 CARLA
+python3 test/test_perception_logic.py     # 29 项全部通过，无需 CARLA
 ```
 
 ## 5. 实测指标

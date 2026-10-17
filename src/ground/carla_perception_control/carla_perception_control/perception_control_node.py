@@ -37,9 +37,13 @@ if _HERE not in sys.path:
 
 from carla_perception_control import carla_common as cc            # noqa: E402
 from carla_perception_control.nn_models import MLPClassifier, MLPPolicy  # noqa: E402
+from carla_perception_control.main import DEMO_ROUTE, safety_override  # noqa: E402
 
 DT = 0.05
-DEFAULT_WAYPOINTS = [36.0, -5.0, 40.0, -8.0, 40.0, 12.0, 25.0, 20.0]
+# 默认路点必须与 main.py 的内置 DEMO_ROUTE 一致（已逐点校验落在可行驶车道、
+# 弯道已加密）。早期曾沿用文档里的旧路线 (40,-8)/(40,12)，实测偏离车道
+# 2.59 m / 4.92 m，车辆会沿直线开出路面撞上障碍物卡死。
+DEFAULT_WAYPOINTS = [float(c) for xy in DEMO_ROUTE for c in xy]
 CLS_NAME = {0: "无目标", 1: "偏左", 2: "偏右"}
 
 
@@ -171,7 +175,9 @@ class PerceptionControlNode(Node):
             throttle, steer = nn_control(pos, yaw, self.waypoints, self.ctrl, self.throttle_max)
         else:
             throttle, steer = pure_pursuit(pos, yaw, self.waypoints)
-        cc.apply_control(self.vehicle, throttle=throttle, steer=steer)
+        # 感知安全约束：雷达前方最近距离过近时收油门/刹车（与 main.py 在线模式一致）
+        throttle, brake = safety_override(raw[3], throttle)
+        cc.apply_control(self.vehicle, throttle=throttle, steer=steer, brake=brake)
 
         # ---- 广播画面与状态 ----
         if self.holder["rgb"] is not None:
