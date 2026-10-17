@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>auto_park_hybrid_a_star</name>
+  <version>0.0.1</version>
+  <description>
+    基于 Hybrid A* 与 Reeds-Shepp 曲线的垂直自动泊车（APA）仿真。
+    在 Pygame 内置二维场景中演示：Hybrid A* 规划出揉库路径，
+    Pure Pursuit 跟踪控制小车自动倒入垂直车位。
+  </description>
+  <maintainer email="your_email@example.com">your_name</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+</package>
