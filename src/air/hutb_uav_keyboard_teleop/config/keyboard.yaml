@@ -1,0 +1,14 @@
+# 无人机键盘遥操作参数 (main.py 节点)
+rate: 20            # /joy 发布频率 Hz
+step: 0.06          # 滚转/俯仰杆量步进
+thrust_step: 0.04   # 油门杆量步进
+mapping:
+  roll_left: a
+  roll_right: d
+  pitch_forward: "\x1b[A"    # 上方向键
+  pitch_back: "\x1b[B"       # 下方向键
+  thrust_up: w
+  thrust_down: s
+  yaw_left: q
+  yaw_right: e
+  stop: c

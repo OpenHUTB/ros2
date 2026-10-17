@@ -1,0 +1,5 @@
+# 激光雷达 MLP 感知避障参数 (main.py 节点)
+model_path: models/lidar_mlp.npz   # 权重文件（相对包目录）
+linear_scale: 0.22                 # 线速度上限 m/s
+angular_scale: 1.5                 # 角速度上限 rad/s
+n_bins: 60                         # 激光角度分箱数（观测维数）
