@@ -1,5 +1,5 @@
 <launch>
-  <node name="mujoco_arm_control" pkg="mujoco_arm_demo" type="arm_control.py" output="screen">
-    <param name="model_path" value="$(find mujoco_arm_demo)/models/two_dof_arm.xml"/>
+  <node name="mujoco_arm_control" pkg="mujoco_two_dof_arm" type="main.py" output="screen" cwd="$(find mujoco_two_dof_arm)/scripts">
+    <param name="model_path" value="$(find mujoco_two_dof_arm)/models/two_dof_arm.xml"/>
   </node>
 </launch>

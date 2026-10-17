@@ -9,10 +9,12 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 import sys
+import rospy
 
 def main():
-    # 加载模型
-    model_path = sys.argv[1] if len(sys.argv) > 1 else "../models/two_dof_arm.xml"
+    # 优先读ROS私有参数里的模型路径，兼容roslaunch启动；没有参数就用默认路径
+    rospy.init_node("mujoco_arm", anonymous=True, disable_signals=True)
+    model_path = rospy.get_param("~model_path", "../models/two_dof_arm.xml")
     model = mujoco.MjModel.from_xml_path(model_path)
     data = mujoco.MjData(model)
     
