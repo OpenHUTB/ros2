@@ -1,0 +1,40 @@
+<mujoco model="two_dof_arm">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+  <option integrator="RK4" timestep="0.005"/>
+  
+  <default>
+    <joint armature="0.5" damping="0.2" limited="true"/>
+    <geom rgba="0.8 0.8 0.8 1"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="floor" type="plane" pos="0 0 0" size="2 2 0.1" rgba="0.9 0.9 0.9 1"/>
+    
+    <!-- 基座：灰色圆柱，放在地上 -->
+    <body name="base" pos="0 0 0.05">
+      <geom name="base_geom" type="cylinder" size="0.06 0.05" mass="0.5" rgba="0.3 0.3 0.3 1"/>
+      
+      <!-- 肩关节 -->
+      <body name="shoulder" pos="0 0 0.1">
+        <joint name="joint1" type="hinge" axis="0 1 0" range="-1.57 1.57"/>
+        <!-- 蓝色大臂，向上伸 -->
+        <geom name="link1" type="capsule" fromto="0 0 0 0 0 0.2" size="0.02" mass="0.3" rgba="0.2 0.5 0.8 1"/>
+        
+        <!-- 肘关节 -->
+        <body name="elbow" pos="0 0 0.2">
+          <joint name="joint2" type="hinge" axis="0 1 0" range="-1.57 1.57"/>
+          <!-- 橙色小臂，向上再伸一段 -->
+          <geom name="link2" type="capsule" fromto="0 0 0 0 0 0.15" size="0.015" mass="0.2" rgba="0.8 0.4 0.2 1"/>
+          <!-- 末端红色小球 -->
+          <geom name="ee_geom" type="sphere" pos="0 0 0.15" size="0.02" mass="0.05" rgba="0.8 0.2 0.2 1"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="motor1" joint="joint1" kp="50" ctrlrange="-1.57 1.57"/>
+    <position name="motor2" joint="joint2" kp="50" ctrlrange="-1.57 1.57"/>
+  </actuator>
+</mujoco>
