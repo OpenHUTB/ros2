@@ -88,6 +88,7 @@ ROS每章节运行代码:
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 
