@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist
 class TrajectoryPublisher(Node):
     def __init__(self):
         super().__init__('trajectory_publisher')
-        self.publisher_ = self.create_publisher(Twist, '/drone/pose', 10)
+        self.subscription = self.create_subscription(Twist, '/drone/cmd_vel', self.listener_callback, 10)
         self.timer = self.create_timer(1.0, self.timer_callback)
         self.state = 0
         self.get_logger().info('轨迹发布节点已启动。')
