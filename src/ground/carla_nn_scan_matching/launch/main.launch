@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="model_path" default="$(find carla_nn_scan_matching)/scan_match_model.pth" />
+
+  <group ns="carla_nn_scan_matching">
+    <!-- 1. 雷达模拟器 (生成虚拟环境与 scan 数据) -->
+    <node pkg="carla_nn_scan_matching" type="lidar_simulator.py" name="lidar_simulator" output="screen" />
+
+    <!-- 2. 神经网络里程计 (基于 1D CNN 匹配连续扫描) -->
+    <node pkg="carla_nn_scan_matching" type="nn_odometry.py" name="nn_odometry" output="screen">
+      <param name="model_path" value="$(arg model_path)" />
+    </node>
+
+    <!-- 3. 栅格建图 -->
+    <node pkg="carla_nn_scan_matching" type="mapper.py" name="grid_mapper" output="screen" />
+  </group>
+</launch>
