@@ -182,6 +182,14 @@ catkin_make
 source devel/setup.bash
 ```
 
+> **全新克隆后遇执行权限问题**：若 `roslaunch` 报
+> `Cannot locate node of type [voice_control.py] in package [robot_voice]`（或
+> `face_follower.py` / `spawn_face_target.py`），通常是脚本在 Git 中缺失可执行权限
+> （`git ls-files -s` 显示 `100644`）。请先执行
+> `chmod +x ~/ros2/src/chap5/robot_voice/scripts/*.py ~/ros2/src/chap5/robot_vision/scripts/*.py`
+> 后重新 `catkin_make`；`catkin_install_python` 安装的 Python 脚本需保留可执行位才能被
+> `rosrun` / `roslaunch` 定位并执行。
+
 > 前置依赖：ROS1 桌面完整版（Melodic 或 Noetic）、`gazebo_ros_pkgs`、`cv_bridge`/OpenCV、
 > `rospkg` 等。若 `robot_voice` 的讯飞 SDK C++ 节点因缺少 `libmsc.so`/`libasound` 编译失败，
 > 可关闭可选编译 `catkin_make -DROBOT_VOICE_BUILD_SDK=OFF`（不影响纯 Python 的 `voice_control.py`）。
@@ -204,7 +212,14 @@ ls $(rospack find robot_voice)/launch/voice_control.launch
 
 以下每个终端在运行前都需执行一次 `source ~/catkin_ws/devel/setup.bash`（或已写入 `~/.bashrc`）。
 
-### 终端 1：启动带 Kinect 相机的 Gazebo 仿真小车
+> ⚠️ **关于终端交互（stdin）**：`roslaunch` 会吞掉节点的标准输入（stdin），因此依赖
+> 键盘/控制台输入的两个脚本（`spawn_face_target.py`、`voice_control.py`）请在**独立终端用
+> `rosrun` 启动**，否则键盘指令无法送达。若坚持用 `roslaunch`，语音控制请改用话题发布方式
+> （见下文“方案二·方式二”）。
+
+### 方案一：仿真底座与视觉跟踪（人脸闭环）
+
+**终端 1 —— 启动带 Kinect 相机的 Gazebo 仿真小车**
 
 ```bash
 source ~/catkin_ws/devel/setup.bash
@@ -215,12 +230,17 @@ Gazebo 中会出现带顶置 Kinect 的 mbot 小车。Kinect 的 RGB 图像话�
 **`/kinect/rgb/image_raw`**（由 `mbot_description` 的 `kinect_gazebo.xacro` 以
 `prefix="kinect"` 生成，`cameraName` 即话题前缀）。
 
-### 终端 2：生成人脸立牌目标
+**终端 2 —— 独立终端生成人脸立牌目标（支持键盘手操）**
 
 ```bash
 source ~/catkin_ws/devel/setup.bash
-roslaunch robot_vision spawn_face_target.launch
+rosrun robot_vision spawn_face_target.py
 ```
+
+> 这里**必须用 `rosrun` 在独立终端运行**：脚本依赖 `termios` 读取 `stdin` 原始按键，
+> 用 `roslaunch` 启动会因无 TTY 而自动禁用键盘（脚本会告警“当前环境无 TTY，键盘手操不可用”）。
+> 若仅需立牌静止在正前方、无需键盘手操，也可用
+> `roslaunch robot_vision spawn_face_target.launch enable_keyboard:=false` 启动。
 
 在小车正前方 `x=1.3 y=0.0 z=0.4` 处生成高对比度人脸立牌（标准 Gazebo 模型
 `models/face_board/`，脚本会自动加入 `GAZEBO_MODEL_PATH` 并改用 `file://` 绝对路径，
@@ -233,7 +253,7 @@ roslaunch robot_vision spawn_face_target.launch
 | `r` | 复位到初始正前方 |
 | `q` | 退出控制 |
 
-### 终端 3：启动视觉人脸追踪
+**终端 3 —— 启动视觉人脸追踪**
 
 ```bash
 source ~/catkin_ws/devel/setup.bash
@@ -264,14 +284,21 @@ roslaunch robot_vision usb_cam.launch
 roslaunch robot_vision face_follower.launch cam_image_topic:=/usb_cam/image_raw
 ```
 
-### 终端 4：启动语音控制节点
+### 方案二：语音控制交互（解决 roslaunch 吞 stdin 问题）
+
+语音控制节点 `voice_control.py` 同时支持“控制台键盘输入”与“`/voice_cmd` 话题订阅”，
+提供两种启动方式，请按需选择。
+
+**方式一（推荐）：独立终端控制台交互**
 
 ```bash
 source ~/catkin_ws/devel/setup.bash
-roslaunch robot_voice voice_control.launch
+rosrun robot_voice voice_control.py
 ```
 
-在交互式终端直接输入中文指令（回车触发），映射如下：
+> 独立终端运行可正常接收 `stdin` 键盘输入，直接在控制台敲入指令（回车触发）即可。
+
+直接在控制台输入中文指令（回车触发），映射如下：
 
 | 语音命令 | 等价英文 | 动作 |
 | -------- | -------- | ---- |
@@ -284,12 +311,25 @@ roslaunch robot_voice voice_control.launch
 每条指令执行后触发 TTS 反馈，默认播报文本「太阳当空照，花儿对我笑」；无声卡的虚拟机中
 `tts_backend=log`（默认），反馈以日志输出并发布到 `/voice_tts`。
 
-等价话题发布方式：
+**方式二：标准 ROS 话题交互（配合 roslaunch）**
+
+若希望用 `roslaunch robot_voice voice_control.launch` 启动（此时 `stdin` 被吞、控制台输入不可用），
+另开一个终端下发话题指令即可：
 
 ```bash
-rostopic pub /voice_cmd std_msgs/String "data: '向前'"
-rostopic pub /voice_cmd std_msgs/String "data: '停止'"
+# 终端 A：roslaunch 启动语音控制节点
+source ~/catkin_ws/devel/setup.bash
+roslaunch robot_voice voice_control.launch
 ```
+
+```bash
+# 终端 B：通过话题发布指令（-1 表示发布一次即退出）
+rostopic pub -1 /voice_cmd std_msgs/String "data: '向前'"
+rostopic pub -1 /voice_cmd std_msgs/String "data: '停止'"
+```
+
+> 默认 `enable_terminal=true` 时节点仍会尝试读取终端输入，但在 roslaunch 下无 TTY，
+> 终端线程会自动静默退出，不影响话题订阅。
 
 ### （可选）一键拉起
 
