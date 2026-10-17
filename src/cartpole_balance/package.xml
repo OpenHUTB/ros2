@@ -3,15 +3,18 @@
   <name>cartpole_balance</name>
   <version>1.0.0</version>
   <description>倒立摆(cart-pole)平衡仿真功能包:LQR控制器订阅状态计算最优控制力->物理仿真节点积分动力学发布状态->可视化节点画出小车+摆杆并存GIF,演示一个完整的ROS发布/订阅闭环与最优控制</description>
-  <maintainer email="user@example.com">user</maintainer>
+  <maintainer email="zqhuang76@users.noreply.github.com">zqhuang76</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-scipy</exec_depend>
   <exec_depend>python3-matplotlib</exec_depend>
   <exec_depend>python3-pil</exec_depend>
+  <!-- 可视化 GIF 标题需要中文字体; Ubuntu 20.04 默认无中文字体, rosdep 自动安装 -->
+  <exec_depend>fonts-wqy-zenhei</exec_depend>
 </package>

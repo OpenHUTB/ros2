@@ -10,6 +10,11 @@
   订阅  /cartpole/state   std_msgs/Float64MultiArray   [x, x_dot, theta, theta_dot]
   发布  /cartpole/cmd     std_msgs/Float64             控制力 F (N)
 
+设计说明:
+  - 增益 K 与发布者 pub 都挂在 BalanceController 类上, 可在构造时注入,
+    脱离 rospy 即可对 compute_force() 做单元测试。
+  - 回调对消息长度/类型做校验, 畸形消息只告警跳过, 不会让节点崩溃。
+
 用法: roslaunch cartpole_balance main.launch
 """
 import math
@@ -24,6 +29,8 @@ F_MAX = 40.0
 # LQR 权重: 位置/速度/摆角/角速度, 控制代价 R=1
 Q = np.diag([5.0, 0.1, 100.0, 10.0])
 R = np.array([[1.0]])
+
+STATE_DIM = 4   # 状态向量维度 [x, x_dot, theta, theta_dot]
 
 
 def lqr_gain():
@@ -52,19 +59,51 @@ def lqr_gain():
         return np.array([-2.236, -3.649, -39.736, -10.326])  # 与上式计算一致
 
 
-def on_state(msg):
-    """收到状态 -> 计算并发布控制力"""
-    s = np.array(msg.data)                 # [x, x_dot, theta, theta_dot]
-    F = float(-(K @ s).item())
-    F = max(-F_MAX, min(F_MAX, F))
-    pub.publish(Float64(data=F))
+class BalanceController:
+    """LQR 反馈控制器。
+
+    K 与 pub 均为可注入成员, 测试时可传入伪 pub 与固定 K, 直接调用
+    ``callback`` / ``compute_force``, 无需 roscore。
+    """
+
+    def __init__(self, K=None, pub=None, f_max=F_MAX):
+        self.K = lqr_gain() if K is None else np.asarray(K, dtype=float)
+        self.pub = pub
+        self.f_max = f_max
+
+    def compute_force(self, state):
+        """纯函数: 输入四维状态 -> 限幅后的控制力 F (N)。"""
+        s = np.asarray(state, dtype=float)
+        F = float(-(self.K @ s).item())
+        return max(-self.f_max, min(self.f_max, F))
+
+    def callback(self, msg):
+        """rospy 回调: 校验消息长度, 畸形/异常消息告警跳过, 不崩溃。"""
+        try:
+            data = msg.data
+            if data is None or len(data) != STATE_DIM:
+                rospy.logwarn_throttle(
+                    5.0, "状态消息长度异常(len=%s, 期望 %d), 已跳过",
+                    None if data is None else len(data), STATE_DIM)
+                return
+            F = self.compute_force(data)
+        except (ValueError, TypeError, IndexError) as e:
+            rospy.logwarn_throttle(5.0, "状态消息解析失败(%s), 已跳过", e)
+            return
+        if self.pub is not None:
+            self.pub.publish(Float64(data=F))
 
 
-if __name__ == "__main__":
+def main():
     rospy.init_node("balance_controller")
     K = lqr_gain()
     rospy.loginfo("LQR 增益 K = %s", np.round(K, 3).tolist())
     pub = rospy.Publisher("/cartpole/cmd", Float64, queue_size=1)
-    rospy.Subscriber("/cartpole/state", Float64MultiArray, on_state)
+    controller = BalanceController(K=K, pub=pub)
+    rospy.Subscriber("/cartpole/state", Float64MultiArray, controller.callback)
     rospy.loginfo("balance_controller 已启动: 订阅 /cartpole/state, 发布 /cartpole/cmd")
     rospy.spin()
+
+
+if __name__ == "__main__":
+    main()
