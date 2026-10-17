@@ -1,4 +1,4 @@
-"""Generate reproducible MuJoCo episodes for local training and evaluation."""
+"""Generate reproducible MuJoCo sample episodes for training and evaluation."""
 
 import argparse
 import importlib.metadata
@@ -74,7 +74,7 @@ def generate_dataset(
             'python_version': platform.python_version(),
             'mujoco_version': importlib.metadata.version('mujoco'),
             'package_version': '0.1.0',
-            'generator': 'mujoco_diff_drive_slip_compensation.generate_demo_dataset',
+            'generator': 'mujoco_diff_drive_slip_compensation.generate_sample_dataset',
             'profile_phase_seconds': float(split_index % 4),
         }
         with EpisodeCsvWriter(
@@ -134,7 +134,7 @@ def generate_dataset(
 
 
 def main(args: list[str] | None = None) -> None:
-    """Generate compact example episodes without a ROS installation."""
+    """Generate compact sample episodes without a ROS installation."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('data/demo'))
     parser.add_argument(

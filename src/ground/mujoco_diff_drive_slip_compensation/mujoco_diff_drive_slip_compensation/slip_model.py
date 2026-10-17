@@ -167,9 +167,14 @@ def load_episodes(directory: Path, wheel_radius: float = 0.08) -> list[Episode]:
         raise ValueError(f'no episode CSV files found in {directory}')
     seen: dict[str, str] = {}
     for episode in episodes:
-        prior = seen.setdefault(episode.episode_id, episode.split)
-        if prior != episode.split:
-            raise ValueError(f'episode {episode.episode_id} appears in multiple splits')
+        prior = seen.get(episode.episode_id)
+        if prior is not None:
+            if prior != episode.split:
+                raise ValueError(
+                    f'episode {episode.episode_id} appears in multiple splits'
+                )
+            raise ValueError(f'duplicate episode ID: {episode.episode_id}')
+        seen[episode.episode_id] = episode.split
     return episodes
 
 
@@ -336,7 +341,7 @@ def train_model(
     output_directory: Path,
     window_size: int = 12,
     hidden_size: int = 24,
-    epochs: int = 100,
+    epochs: int = 300,
     seed: int = 25012,
     slip_threshold: float = 0.1,
 ) -> dict[str, Any]:
@@ -498,7 +503,7 @@ def main(args: list[str] | None = None) -> None:
     parser.add_argument('--output', type=Path, default=Path('data/models'))
     parser.add_argument('--window-size', type=int, default=12)
     parser.add_argument('--hidden-size', type=int, default=24)
-    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--seed', type=int, default=25012)
     options = parser.parse_args(args)
     metrics = train_model(

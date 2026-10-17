@@ -11,7 +11,7 @@ from mujoco_diff_drive_slip_compensation.dataset import (
     EpisodeCsvWriter,
     assign_episode_split,
 )
-from mujoco_diff_drive_slip_compensation.generate_demo_dataset import (
+from mujoco_diff_drive_slip_compensation.generate_sample_dataset import (
     generate_dataset,
 )
 from mujoco_diff_drive_slip_compensation.slip_model import (
@@ -125,6 +125,18 @@ def test_episode_reader_rejects_manifest_and_csv_split_mismatch(tmp_path: Path):
         read_episode(manifest_path.with_suffix('.csv'))
 
 
+def test_loader_rejects_duplicate_episode_ids(tmp_path: Path):
+    _write_episode(tmp_path, 'train', 41)
+    first_csv = next(tmp_path.glob('*.csv'))
+    duplicate_csv = tmp_path / 'duplicate.csv'
+    duplicate_json = duplicate_csv.with_suffix('.json')
+    duplicate_csv.write_bytes(first_csv.read_bytes())
+    duplicate_json.write_bytes(first_csv.with_suffix('.json').read_bytes())
+
+    with pytest.raises(ValueError, match='duplicate episode ID'):
+        load_episodes(tmp_path)
+
+
 def test_training_is_seeded_saves_loadable_model_and_metrics(tmp_path: Path):
     data_dir = tmp_path / 'episodes'
     data_dir.mkdir()
@@ -163,7 +175,7 @@ def test_mlp_rejects_wrong_window_shape():
         model.predict(np.zeros((3, len(FEATURE_NAMES))))
 
 
-def test_demo_generator_writes_episode_isolated_splits(tmp_path: Path):
+def test_sample_generator_writes_episode_isolated_splits(tmp_path: Path):
     model_path = Path(__file__).parents[1] / 'models' / 'diff_drive.xml'
 
     episode_ids = generate_dataset(

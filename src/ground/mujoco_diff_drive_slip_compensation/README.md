@@ -14,7 +14,7 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 | ROS 2 | Humble |
 | Python | 3.10 |
 | MuJoCo | 3.12.0 |
-| PyTorch | CPU build, required by later training work / 后续训练阶段使用 CPU 版本 |
+| 数组计算 / Array math | NumPy 1.24+，训练和推理均运行于 CPU / NumPy 1.24+, CPU-only training and inference |
 
 ## 目录 / Layout
 
@@ -29,10 +29,12 @@ mujoco_diff_drive_slip_compensation/
 │   ├── collector.py
 │   ├── command_profile.py
 │   ├── dataset.py
+│   ├── generate_sample_dataset.py
 │   ├── resources.py
 │   ├── scenarios.py
 │   ├── sensors.py
-│   └── simulator.py
+│   ├── simulator.py
+│   └── slip_model.py
 ├── test/
 ├── package.xml
 ├── requirements.txt
@@ -114,3 +116,32 @@ Each episode produces matching `.csv` and `.json` files. The CSV stores commands
 训练、验证、测试划分由 `seed:episode_id` 的 SHA-256 哈希确定，默认比例为 70%/15%/15%。一个 episode 的全部相邻帧始终属于同一划分。
 
 Train, validation, and test assignment uses the SHA-256 hash of `seed:episode_id`, with default ratios of 70%/15%/15%. Every adjacent frame from one episode always remains in the same split.
+
+## 滑移训练 / Slip Training
+
+Use the collected ROS 2 episode directory directly. The sample generator creates the same CSV/manifest schema through the MuJoCo model and is useful when collecting through ROS 2 is not available:
+
+直接使用 ROS 2 采集目录训练；样例生成器通过同一 MuJoCo 模型生成相同 CSV/manifest 格式的数据：
+
+```bash
+generate_slip_sample_data --output data/sample --episodes-per-split 4 --duration 12
+train_slip_model --data data/raw --output data/models/slip-v1 --epochs 300
+# For generated samples, replace data/raw with data/sample.
+```
+
+The temporal-window MLP uses four wheel rates, left/right wheel-rate aggregates, the velocity command, and six IMU axes. For the terminal frame of each window, the supervised longitudinal slip target is:
+
+窗口 MLP 输入四轮角速度、左右轮聚合量、速度指令和六轴 IMU；每个时间窗口末帧的纵向滑移率标签为：
+
+$$
+\hat{s}_t = \operatorname{clip}\left(1 - \frac{v^{truth}_t}{r\,\bar{\omega}_t}, -0.5, 0.5\right),\qquad
+\bar{\omega}_t = \frac{1}{4}\sum_{i=1}^{4}\omega_{i,t}.
+$$
+
+Samples with encoder-derived linear speed below `0.15 m/s` receive a zero target because the ratio is ill-conditioned near standstill. Windows are constructed independently inside each manifest-defined episode. Normalization is fitted only on train episodes; validation selects parameters and the held-out test split is used once for final MAE, RMSE, slip F1/accuracy, and median inference latency. The selected small model and metric JSON are written under `data/models/` and are not package source files.
+
+低于 `0.15 m/s` 的编码器线速度样本标为零，因为静止附近比值条件数较差。时间窗口只在单个 manifest episode 内构造；归一化仅拟合训练 episode，验证集用于参数选择，隔离测试集用于最终 MAE、RMSE、轮滑 F1/准确率和推理中位耗时。模型与指标 JSON 写入 `data/models/`，不属于功能包源码。
+
+The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 hidden units, and 300 epochs measured `MAE 0.0272`, `RMSE 0.0440`, `F1 0.774`, `accuracy 0.969`, and `0.0103 ms` median inference per window on the local CPU. These values describe that generated held-out split; deployment data should be evaluated independently.
+
+使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。

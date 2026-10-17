@@ -112,6 +112,60 @@ At each scenario transition, the vehicle is reset and a new `episode_id` is publ
 
 Dataset assignment uses a stable hash of the fixed seed and episode identifier with 70%/15%/15% ratios. The assignment unit is a complete episode rather than an individual frame, so adjacent frames cannot cross train, validation, and test sets.
 
+## 滑移感知训练 / Slip-Perception Training
+
+训练器读取第一天生成的 CSV 与 JSON manifest，逐 episode 验证格式版本、行数、时间戳单调性和 split 一致性。窗口长度默认为 12 帧；窗口只从一个 episode 内滑动，不在 episode 或 train/validation/test 边界连接样本。归一化均值和标准差只由 train episode 计算。
+
+The trainer reads the CSV and JSON manifests produced by the collection pipeline and validates schema version, row count, monotonic timestamps, and split consistency per episode. The default window contains 12 frames. Windows never cross episode or train/validation/test boundaries. Feature means and standard deviations are fitted only on train episodes.
+
+当前实现采用紧凑的 temporal-window MLP：tanh 隐藏层连接可训练线性输出头，使用 Huber 损失抑制极少数大滑移比例对常规样本的影响。纵向滑移率标签由编码器轮速与 MuJoCo 真实车体速度计算：
+
+The current model is a compact temporal-window MLP with a tanh hidden layer and a trainable linear skip head. Huber loss limits the influence of rare high-slip ratios. The longitudinal target is derived from encoder wheel speed and MuJoCo ground-truth chassis speed:
+
+$$
+\bar{\omega}_t = \frac{\omega_{LF,t}+\omega_{LR,t}+\omega_{RF,t}+\omega_{RR,t}}{4},\qquad
+s_t = \operatorname{clip}\left(1-\frac{v^{truth}_t}{r\bar{\omega}_t},-0.5,0.5\right).
+$$
+
+当 `|r ω̄| < 0.15 m/s` 时将标签置零，以避免低速除法放大噪声。训练按固定随机种子打乱 train 窗口，使用 validation MAE 选择模型；测试 episode 不参与归一化或参数选择。模型以轻量 JSON 参数文件保存，不提交权重文件。
+
+Targets are set to zero when `|r ω̄| < 0.15 m/s` to avoid amplifying noise through division near standstill. Train windows are shuffled with a fixed seed, validation MAE selects the model, and test episodes are excluded from normalization and parameter selection. The compact parameters are saved as JSON and no trained weights are committed.
+
+### 训练流程 / Training Workflow
+
+```text
+episode CSV + manifest
+        |
+validate schema / split / timestamps
+        |
+episode-local windows + slip labels
+        |
+train-only normalization -> MLP fitting
+        |
+validation selection -> held-out test metrics
+        |
+slip_model.json + training_metrics.json
+```
+
+生成同格式 MuJoCo 样例数据并训练： / Generate matching MuJoCo sample episodes and train:
+
+```bash
+generate_slip_sample_data --output data/sample --episodes-per-split 4 --duration 12
+train_slip_model --data data/sample --output data/models/slip-v1 --epochs 300
+```
+
+使用 ROS 2 收集数据训练： / Train from ROS 2 collected data:
+
+```bash
+train_slip_model --data data/raw --output data/models/slip-v1 --epochs 300
+ros2 launch mujoco_diff_drive_slip_compensation train.launch.py \
+  data_directory:=data/raw output_directory:=data/models/slip-v1
+```
+
+本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 `MAE=0.0272`、`RMSE=0.0440`、`F1=0.774`、`accuracy=0.969`，CPU 单窗口推理中位数为 `0.0103 ms`。该表仅代表样例测试，不代表其他摩擦和实机性能。
+
+The measured local run used 12 episodes (four complete episodes per split), a 12-frame window, 24 hidden units, and a 300-epoch maximum with early stopping on validation MAE. Its isolated test split contained 916 windows and measured `MAE=0.0272`, `RMSE=0.0440`, `F1=0.774`, `accuracy=0.969`, and `0.0103 ms` median CPU inference per window. These measurements apply only to this sample split, not other friction settings or physical hardware.
+
 ## 验证命令 / Verification Commands
 
 ```bash
