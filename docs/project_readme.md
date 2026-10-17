@@ -38,7 +38,21 @@ src/yolov8-target-tracking/
 ├── CMakeLists.txt
 └── package.xml
 ```
-## 4. 运行说明
+## 4. 环境搭建指引
+
+在运行本项目之前，请确保已配置好以下运行环境：
+
+1. **ROS 环境**：Ubuntu 20.04 + ROS Noetic。
+2. **安装系统级依赖 (OpenCV、TurtleBot3仿真包)**：
+   ```bash
+   sudo apt update
+   sudo apt install python3-opencv turtlebot3-gazebo
+3. **安装 Python 依赖 (YOLO库)**：
+   请运行以下命令安装 YOLOv8 运行所需的 Python 库：
+   ```bash
+   pip install ultralytics
+   
+## 5. 运行说明
 
 1.启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_simulation.launch
 
@@ -47,7 +61,7 @@ src/yolov8-target-tracking/
 注意： 请将 yolov8n.pt 权重文件下载后，放置在 src/yolov8-target-tracking/src/ 目录下，与 main.py 放在同一文件夹内。（权重文件较大，未随仓库上传）
 
 
-## 5. 运行效果
+## 6. 运行效果
 
 ![Gazebo仿真环境](turtlebot3_gazebo_simulation_world.png)
 ![YOLOv8检测效果](yolov8_ros_gazebo_detection.png)
