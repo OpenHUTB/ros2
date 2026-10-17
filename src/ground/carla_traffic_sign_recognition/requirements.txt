@@ -1,0 +1,12 @@
+# Carla Python API（无法通过 pip 直接下载，需从本地 Carla 安装目录安装）
+# Windows 示例：pip install D:\WWW\hutb_car_vr_air_mujoco\PythonAPI\carla\dist\hutb-2.9.16-cp310-cp310-win_amd64.whl
+# Linux 示例：pip install /mnt/hgfs/WWW/hutb-2.9.16-cp38-cp38-linux_x86_64.whl
+hutb==2.9.16
+
+# 神经网络与图像处理
+torch==2.14.0
+torchvision==0.29.0
+ultralytics==8.4.160
+opencv-python==5.0.0
+numpy==2.2.6
+pillow
