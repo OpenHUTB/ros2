@@ -1,0 +1,6 @@
+visual_steering_node:
+  ros__parameters:
+    checkpoint: "models/weights/lightweight_steering_cnn.pt"
+    image_topic: "/front_rgb/image_raw"
+    command_topic: "/cmd_vel"
+    steering_rate: 0.65
