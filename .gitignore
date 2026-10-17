@@ -64,3 +64,8 @@ Thumbs.db
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
+
+# 演示脚本生成的图片输出（由 tests/demo_*.py 生成，可随时重跑）
+# 覆盖 carla_speed_control 与 carla_lane_keeping 两个模块的输出目录
+demo_out/
+
