@@ -115,3 +115,11 @@ install(DIRECTORY launch config rviz
 ## （退出码 0 = 全部通过）
 add_executable(test_astar tests/test_astar.cpp)
 target_link_libraries(test_astar ${OCTOMAP_LIBRARIES})
+
+## P5 安全裕度与路径平滑的离线单元测试
+##
+## 同样只依赖 octomap 与 STL：覆盖"膨胀层"与"平滑层"两部分的纯算法逻辑 ——
+## 包括 r = 0 时退回 P4 的回归、曲率除零守卫、样条复检兜底、以及膨胀规模实测。
+## 运行方式：~/uav_ws/devel/lib/octree_uav_3d_pathfinding/test_smoothing
+add_executable(test_smoothing tests/test_smoothing.cpp)
+target_link_libraries(test_smoothing ${OCTOMAP_LIBRARIES})
