@@ -20,16 +20,25 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 
 ```text
 mujoco_diff_drive_slip_compensation/
-├── config/simulation.yaml
-├── launch/main.launch.py
+├── config/
+│   ├── compensation.yaml
+│   └── simulation.yaml
+├── launch/
+│   ├── collect.launch.py
+│   ├── compensate.launch.py
+│   ├── main.launch.py
+│   └── train.launch.py
 ├── models/diff_drive.xml
 ├── mujoco_diff_drive_slip_compensation/
 │   ├── kinematics.py
 │   ├── main.py
 │   ├── collector.py
 │   ├── command_profile.py
+│   ├── compensation.py
 │   ├── dataset.py
+│   ├── evaluate_slip_model.py
 │   ├── generate_sample_dataset.py
+│   ├── online_compensation.py
 │   ├── resources.py
 │   ├── scenarios.py
 │   ├── sensors.py
