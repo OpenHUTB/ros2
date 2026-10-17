@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypensis="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>drone_gazebo_sim</name>
+  <version>0.0.1</version>
+  <description>无人机Gazebo仿真：四旋翼键盘控制+摄像头神经网络感知目标跟踪</description>
+  <maintainer email="6lebron23@todo.todo">6lebron23</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>numpy</depend>
+  <depend>opencv-python</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

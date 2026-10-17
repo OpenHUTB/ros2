@@ -1,0 +1,14 @@
+# 无人机仿真配置
+drone:
+  vx_max: 0.5
+  vy_max: 0.5
+  vz_max: 0.3
+  yaw_max: 0.5
+  start_height: 1.0
+perception:
+  target_hsv_low: [0, 120, 70]
+  target_hsv_high: [10, 255, 255]
+  target_area: 0.15
+controller:
+  kp_yaw: 0.8
+  kp_forward: 0.5
