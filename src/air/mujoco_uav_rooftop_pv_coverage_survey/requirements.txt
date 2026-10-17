@@ -3,3 +3,4 @@ numpy>=1.26,<3
 Pillow>=10,<13
 PyYAML>=6,<7
 pytest>=8,<10
+torch>=2.0,<3
