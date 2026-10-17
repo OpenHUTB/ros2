@@ -56,8 +56,32 @@ def assign_splits(sequence_ids: Iterable[str], seed: int) -> dict[str, str]:
 
 
 def _sample_waypoints(route: list[Waypoint], count: int) -> list[Waypoint]:
-    indices = np.linspace(0, len(route) - 1, count, dtype=int)
-    return [route[int(index)] for index in indices]
+    """Interpolate along elapsed route time to avoid endpoint duplication."""
+    if count < 2:
+        return [route[0]]
+    times = np.linspace(route[0].arrival_time, route[-1].arrival_time, count)
+    samples: list[Waypoint] = []
+    for sample_index, target in enumerate(times):
+        right = next((i for i, point in enumerate(route) if point.arrival_time >= target), len(route) - 1)
+        if right == 0:
+            samples.append(route[0])
+            continue
+        left = route[right - 1]
+        upper = route[right]
+        span = max(upper.arrival_time - left.arrival_time, 1e-9)
+        ratio = (target - left.arrival_time) / span
+        samples.append(Waypoint(
+            index=sample_index,
+            x=left.x + ratio * (upper.x - left.x),
+            y=left.y + ratio * (upper.y - left.y),
+            z=left.z + ratio * (upper.z - left.z),
+            yaw=left.yaw if ratio < 0.5 else upper.yaw,
+            speed=left.speed,
+            arrival_time=float(target),
+            strip_index=left.strip_index if ratio < 0.5 else upper.strip_index,
+            is_turn=left.is_turn or upper.is_turn,
+        ))
+    return samples
 
 
 def _distance_to_turn(route: list[Waypoint], point: Waypoint) -> float:
