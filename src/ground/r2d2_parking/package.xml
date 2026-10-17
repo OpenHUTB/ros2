@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>r2d2_parking</name>
+  <version>0.0.1</version>
+  <description>R2D2 parking simulation</description>
+  <maintainer email="kinghuang2025@qq.com">huangshengru</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
