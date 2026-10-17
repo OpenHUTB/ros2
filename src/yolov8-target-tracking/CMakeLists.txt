@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(yolo_detect)
+project(yolov8-target-tracking)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
