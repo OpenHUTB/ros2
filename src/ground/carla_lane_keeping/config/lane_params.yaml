@@ -1,0 +1,103 @@
+# 车道线检测与车道保持参数
+#
+# 检测段（detection）的参数名与 lane_detection.LaneFitConfig 字段一一对应，
+# 节点会用 rosparam 自动读取，新增字段无需改节点代码。
+#
+# 标定提示：
+#   真实 CARLA 前视相机的路面纹理梯度中位数约 45、90 分位约 260，
+#   而车道标线边缘梯度在 236~740 区间。检测器默认采用「自适应阈值」
+#   （取该图像梯度分布的 sobel_auto_percentile 分位，且不低于 sobel_min），
+#   因此不必为不同地图反复调 sobel_min。
+
+# ---------------- 二值化 ----------------
+# 梯度幅值保底阈值；实际阈值 = max(该值, 图像梯度分位数)
+sobel_min: 100.0
+# 梯度幅值上限，过滤过曝/极端边缘
+sobel_max: 900.0
+# 自适应分位数：取图像梯度分布的这一分位作为阈值（越高越严格）
+sobel_auto_percentile: 98.5
+# 允许的最大梯度方向角（度）。竖直车道线的梯度角接近 0 度；
+# 该值越大越能容纳弯道，但也会引入更多斜向噪声
+angle_max_deg: 45.0
+# 是否叠加颜色阈值（白/黄车道线）
+use_color: true
+# 白色判定下界（三通道最小值）
+white_min: 190
+
+# ---------------- 透视变换 ----------------
+# 源梯形在图像中的范围。bottom_ratio 必须为 1.0，使「最近处」与图像底行对齐，
+# 否则横向偏差会对应到更远处，产生系统性误差
+bottom_ratio: 1.0
+top_ratio: 0.58
+# 梯形下边半宽（相对图像宽度）。太小会导致车辆偏移后车道线被裁掉
+bottom_half_width_ratio: 0.42
+# 梯形上边半宽。太小会导致远处车道线跑出视野
+top_half_width_ratio: 0.28
+# 鸟瞰图左右留白
+margin_ratio: 0.20
+# 鸟瞰图上下留白（防止近处像素映射到图像外被丢弃）
+vertical_margin_ratio: 0.02
+
+# ---------------- 车道线拟合 ----------------
+# 单侧最少车道像素数，低于此认为该侧未检出
+min_lane_pixels: 150
+# 滑动窗口（兜底算法）的窗口半宽
+window_margin_px: 100
+# 滑动窗口内至少多少像素才重新居中
+min_pixels_to_recenter: 40
+# 多项式阶数（2 = 二次，可表达弯道）
+poly_degree: 2
+
+# 连通域几何约束：真实车道线在鸟瞰图中是细长结构。
+# 缺少这组约束时，一块被误阈值化的路面会被当成车道线且不报错
+max_component_width_px: 90
+max_component_width_ratio: 0.18
+max_component_area_ratio: 0.18
+
+# ---------------- 物理标定 ----------------
+# 鸟瞰图一个像素对应的实际距离（米）。
+# 俯视相机可由「相机高度 + 视场角」推算：
+#     meters_per_pixel = 2 * 高度 * tan(水平FOV/2) / 图像宽度
+# 前视相机需要按车道宽度标定：量出鸟瞰图中车道线像素间距，除以真实车道宽（约 3.5 m）。
+# 该值直接决定输出的横向偏差，务必标定准确
+meters_per_pixel_x: 0.021
+meters_per_pixel_y: 0.05
+
+# ---------------- 节点运行 ----------------
+# 前视相机图像话题
+image_topic: /carla/ego_vehicle/rgb_front/image
+# 是否发布鸟瞰掩码（lane/mask）
+publish_debug: true
+# 每多少帧发一次调试掩码
+debug_every: 5
+# 横向偏差超过此值判定为偏离车道（米）
+departure_threshold_m: 1.0
+# 置信度低于此值不输出横向偏差（避免把误检当成有效测量）
+min_confidence: 0.5
+
+# ---------------- 车道保持控制 ----------------
+# 横向 PID 增益
+kp: 0.28
+ki: 0.02
+kd: 0.06
+# 航向偏差的比例增益
+k_psi: 0.9
+# 转向输出限幅（CARLA 的 steer 范围是 [-1, 1]）
+steering_limit: 0.7
+# 积分限幅，防积分饱和
+integral_limit: 2.0
+# 若实测转向方向相反，把这里改为 true（无需改代码）
+invert_steering: false
+
+# 目标速度（m/s）与油门增益
+target_speed: 6.0
+throttle_gain: 0.18
+# 偏差越大越减速的系数（保证修正余量）
+speed_correction_gain: 0.25
+
+# 控制输出频率（Hz）
+control_rate: 20.0
+# 感知数据超时（秒）：超过则认为感知失效，停止转向输出
+perception_timeout: 0.5
+# 判定偏离时是否主动刹车
+brake_on_departure: false

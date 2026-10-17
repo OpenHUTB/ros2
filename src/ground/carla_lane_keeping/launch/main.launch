@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  车道线检测与车道保持一键启动。
+
+  用法：
+    roslaunch carla_lane_keeping main.launch                      # 只检测
+    roslaunch carla_lane_keeping main.launch mode:=both           # 检测 + 车道保持
+    roslaunch carla_lane_keeping main.launch image_topic:=/camera/image_raw
+
+  前置条件：CARLA 已启动，且已有车辆在跑（可用 carla_ros_bridge 或本模块的
+  独立采集脚本）。本 launch 只负责拉起感知与控制节点。
+-->
+<launch>
+
+  <!-- 运行模式：detect=只检测 / control=只控制 / both=检测+控制闭环 -->
+  <arg name="mode" default="detect" />
+
+  <!-- 前视相机图像话题。carla_ros_bridge 默认发布在下面这个位置 -->
+  <arg name="image_topic" default="/carla/ego_vehicle/rgb_front/image" />
+
+  <!-- 是否发布鸟瞰掩码调试图像（在 rviz 里加 Image 显示 lane/mask 即可看到） -->
+  <arg name="publish_debug" default="true" />
+
+  <!-- 参数文件 -->
+  <arg name="params" default="$(find carla_lane_keeping)/config/lane_params.yaml" />
+
+  <!-- 载入检测参数到 /lane_detector 命名空间 -->
+  <rosparam command="load" file="$(arg params)" ns="lane_detector" />
+
+  <!-- 检测节点 -->
+  <node
+    pkg="carla_lane_keeping"
+    type="lane_detector.py"
+    name="lane_detector"
+    output="screen"
+    required="false"
+  >
+    <param name="image_topic" value="$(arg image_topic)" />
+    <param name="publish_debug" value="$(arg publish_debug)" />
+  </node>
+
+  <!-- 控制器节点（仅在 control / both 模式下启动） -->
+  <node
+    pkg="carla_lane_keeping"
+    type="lane_keeping_controller.py"
+    name="lane_keeping_controller"
+    output="screen"
+    if="$(eval arg('mode') in ('control', 'both'))"
+  />
+
+</launch>
