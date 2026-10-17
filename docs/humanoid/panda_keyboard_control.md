@@ -15,7 +15,10 @@ src/
         ├── panda_keyboard_control.py     # 键盘控制核心 Python 脚本
         ├── main.py                       # 主程序启动入口脚本
         ├── CMakeLists.txt                # 编译与安装配置文件
-        └── package.xml                   # 包依赖声明文件
+        ├── package.xml                   # 包依赖声明文件
+        └── mujoco_sim/                       # 【新增】MuJoCo 物理仿真模块
+             ├── mujoco_menagerie/             # 官方高精度模型库
+             └── keyboard_mujoco.py            # 接入 MuJoCo 的键盘控制核心脚本
 ```
 
 ### 三、 核心配置文件内容
@@ -36,6 +39,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 catkin_package()
+
 install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
@@ -45,8 +49,58 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 ```
+### 2. MuJoCo 键盘控制脚本
+该脚本通过 Python 多线程监听键盘，并结合 MuJoCo 的物理步进计算（mj_step），实现了带有重力效果的关节控制
+```python
+import mujoco
+import mujoco.viewer
+import time
+import os
+import sys
+import tty
+import termios
+import threading
 
-#### 2. package.xml
+# 加载 MuJoCo 官方的 Franka Panda 高精度模型
+xml_path = os.path.join(os.path.dirname(__file__), 'mujoco_menagerie/franka_emika_panda/scene.xml')
+model = mujoco.MjModel.from_xml_path(xml_path)
+data = mujoco.MjData(model)
+
+target_q = data.qpos[:7].copy()
+pressed_key = None
+
+def get_key():
+    global pressed_key
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        while True:
+            ch = sys.stdin.read(1)
+            pressed_key = ch
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+threading.Thread(target=get_key, daemon=True).start()
+
+with mujoco.viewer.launch_passive(model, data) as viewer:
+    while viewer.is_running():
+        if pressed_key:
+            if pressed_key == 'q':
+                break
+            elif pressed_key == 'r':
+                target_q = model.key_qpos[0].copy() if model.nkey > 0 else [0, 0, 0, -1.57, 0, 1.57, 0.78]
+            elif pressed_key in [str(i) for i in range(1, 8)]:
+                idx = int(pressed_key) - 1
+                target_q[idx] += 0.1
+            pressed_key = None
+
+        data.ctrl[:7] = target_q
+        mujoco.mj_step(model, data)
+        viewer.sync()
+        time.sleep(0.005)
+```
+#### 3. package.xml
 
 定义功能包在构建和运行时的依赖关系。
 
@@ -76,7 +130,7 @@ catkin_install_python(PROGRAMS
 </package>
 ```
 
-#### 3. setup.py
+#### 4. setup.py
 
 用于确保 Python 脚本能被正确安装到 catkin 工作空间中。
 
@@ -92,7 +146,7 @@ d = generate_distutils_setup(
 setup(**d)
 ```
 
-#### 4. panda_keyboard_control.py
+#### 5. panda_keyboard_control.py
 
 实现键盘输入读取，并通过 MoveIt Commander 控制机械臂关节运动。
 
@@ -188,33 +242,23 @@ if __name__ == '__main__':
 
 请在终端中依次运行以下命令：
 
-1. 创建 ROS 工作空间
+1. 配置 Python 环境：确保安装 MuJoCo
 ```
-mkdir -p ~/panda_ros_project/catkin_ws/src
-cd ~/panda_ros_project/catkin_ws/src
-```
-
-3. 克隆项目源码到工作空间
-```
-git clone -b rohotic-arm https://github.com/Tan-aaa/ros2.git panda_keyboard_control
+pip3 install mujoco
 ```
 
-5. 编译工作空间
+2. 下载机器人模型：
 ```
-cd ~/panda_ros_project/catkin_ws
-catkin_make
-```
-
-6. 配置环境变量
-```
-source devel/setup.bash
+cd ~/catkin_ws/src/panda_keyboard_control/mujoco_sim
+git clone https://github.com/google-deepmind/mujoco_menagerie.git
 ```
 
-7. 运行项目
+3.运行 MuJoCo 物理仿真控制：
 ```
-roslaunch panda_keyboard_control panda_keyboard_demo.launch
+python3 keyboard_mujoco.py
 ```
-8.运行成功界面
+
+4.运行成功界面
 ![运行效果演示](rohotic.gif)
 
 9. 操作说明
