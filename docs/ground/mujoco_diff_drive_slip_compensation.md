@@ -204,7 +204,9 @@ evaluate_slip_model \
 
 The 12-episode sample has 916 held-out windows. Slip prediction reached `MAE=0.02718` and `RMSE=0.04400` with `0.0104 ms` median inference. Raw linear-velocity MAE was `0.03838`; direct model-based correction produced `0.05182`, an improvement ratio of `-35.0%`. This means the current sample model and correction policy did not improve this replay metric; the result identifies calibration work for the control path rather than claiming closed-loop benefit.
 
-![隔离测试集轨迹对比 / Held-out replay comparison](../img/ground/slip-evaluation.gif)
+图中蓝线为 MuJoCo 记录的真实线速度，橙线为原始指令，红线为模型修正后的指令，展示一个隔离测试 episode 的实测时序。 / Blue is recorded MuJoCo ground-truth velocity, orange is the raw command, and red is the model-corrected command for one held-out test episode.
+
+![隔离测试集实测速度时序 / Measured held-out velocity series](../img/ground/slip-evaluation.gif)
 
 ## 验证命令 / Verification Commands
 
