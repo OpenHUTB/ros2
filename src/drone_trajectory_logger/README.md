@@ -26,5 +26,5 @@ colcon build --packages-select drone_trajectory_logger
 source install/setup.bash
 ros2 launch drone_trajectory_logger main.launch.py
 ```
+> 📖 **详细原理与实验步骤请参阅：** [点击查看主文档](../../docs/air/drone_trajectory_logger.md)
 
-(详细原理与实验步骤请参考仓库 docs/ 目录下的说明文档)
