@@ -55,6 +55,17 @@ ros2 topic list
 ros2 topic echo /ground_truth/odom
 ```
 
+键盘驾驶时，另开一个终端运行标准 ROS 2 键盘遥操作节点：
+
+For keyboard driving, run the standard ROS 2 teleoperation node in another terminal:
+
+```bash
+sudo apt install ros-humble-teleop-twist-keyboard
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+节点通过 `/cmd_vel` 控制 MuJoCo 车辆。 / The node controls the MuJoCo vehicle through `/cmd_vel`.
+
 另一个终端可发送速度指令：
 
 Send a velocity command from another terminal:
@@ -198,6 +209,11 @@ evaluate_slip_model \
   --data data/sample \
   --model data/models/slip-v1/slip_model.json \
   --output data/results/slip-evaluation.json
+
+ros2 launch mujoco_diff_drive_slip_compensation evaluate.launch.py \
+  data_directory:=data/sample \
+  model_file:=data/models/slip-v1/slip_model.json \
+  result_file:=data/results/slip-evaluation.json
 ```
 
 本次 12-episode 样例的测试集包含 916 个窗口。滑移预测为 `MAE=0.02718`、`RMSE=0.04400`，中位推理耗时 `0.0104 ms`；原始线速度 MAE 为 `0.03838`，按模型输出直接修正后的离线 MAE 为 `0.05182`，改善率为 `-35.0%`。这表示当前样例模型的补偿策略尚未改善该 replay 指标，结果用于暴露需要继续校准的控制方向，而不是宣称已达到闭环收益。

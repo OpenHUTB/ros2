@@ -26,6 +26,7 @@ mujoco_diff_drive_slip_compensation/
 ├── launch/
 │   ├── collect.launch.py
 │   ├── compensate.launch.py
+│   ├── evaluate.launch.py
 │   ├── main.launch.py
 │   └── train.launch.py
 ├── models/diff_drive.xml
@@ -69,6 +70,17 @@ source install/setup.bash
 ```bash
 ros2 launch mujoco_diff_drive_slip_compensation main.launch.py
 ```
+
+键盘遥操作需要另开终端启动标准 ROS 2 键盘节点：
+
+Keyboard driving uses the standard ROS 2 teleop node in a second terminal:
+
+```bash
+sudo apt install ros-humble-teleop-twist-keyboard
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+该节点向 `/cmd_vel` 发布速度指令，MuJoCo 节点订阅该话题并驱动车辆。 / It publishes velocity commands to `/cmd_vel`, which the MuJoCo node consumes to drive the robot.
 
 发送 0.4 m/s 的前进指令：
 
@@ -177,6 +189,8 @@ Held-out replay is available through `evaluate_slip_model`; it reports raw versu
 evaluate_slip_model --data data/sample \
   --model data/models/slip-v1/slip_model.json \
   --output data/results/slip-evaluation.json
+ros2 launch mujoco_diff_drive_slip_compensation evaluate.launch.py \
+  data_directory:=data/sample model_file:=data/models/slip-v1/slip_model.json
 ```
 
 12-episode 样例的隔离测试集测得滑移 `MAE=0.02718`、`RMSE=0.04400`；原始速度 `MAE=0.03838`，模型直接修正后为 `0.05182`。这表明当前策略尚未改善该 replay 指标。
