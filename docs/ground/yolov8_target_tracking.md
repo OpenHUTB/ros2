@@ -39,7 +39,7 @@
    请运行以下命令安装 YOLOv8 运行所需的 Python 库：
    ```bash
    pip install ultralytics
-   ```
+
 ##  四.文件结构
 ```text
 src/yolov8-target-tracking/
