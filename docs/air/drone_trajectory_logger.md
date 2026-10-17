@@ -12,14 +12,18 @@
 ## 核心代码文件清单
 本模块包含以下核心文件，均已提交至仓库：
 ```text
-src/
-└── drone_trajectory_logger/
-    ├── main.py                 # 轨迹发布节点（入口）
-    ├── trajectory_analyzer.py  # 轨迹识别与绘图节点
-    ├── setup.py                # ROS 2 功能包配置文件
-    ├── package.xml             # 依赖声明文件
-    └── launch/
-        └── main.launch.py      # 一键启动文件
+src/drone_trajectory_logger/
+├── drone_trajectory_logger/          <-- 新建的内层文件夹
+│   ├── __init__.py                   <-- 新建的空文件
+│   ├── main.py                       <-- 移进来的主程序
+│   └── trajectory_analyzer.py        <-- 移进来的分析程序
+├── resource/
+│   └── drone_trajectory_logger       <-- 新建的空文件
+├── launch/
+│   └── main.launch.py
+├── package.xml
+├── setup.py
+└── README.md
 ```
 ## 运行步骤
 
