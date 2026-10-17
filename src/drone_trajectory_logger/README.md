@@ -10,14 +10,18 @@
 本模块包含以下核心文件，均已提交至仓库：
 
 ```text
-src/
-└── drone_trajectory_logger/
-    ├── main.py                 # 轨迹发布节点（入口）
-    ├── trajectory_analyzer.py  # 轨迹识别与绘图节点
-    ├── setup.py                # ROS 2 功能包配置文件
-    ├── package.xml             # 依赖声明文件
-    └── launch/
-        └── main.launch.py      # 一键启动文件
+src/drone_trajectory_logger/
+├── drone_trajectory_logger/         
+│   ├── __init__.py                   空文件
+│   ├── main.py                       主程序
+│   └── trajectory_analyzer.py        分析程序
+├── resource/
+│   └── drone_trajectory_logger   
+├── launch/
+│   └── main.launch.py
+├── package.xml
+├── setup.py
+└── README.md
 ```
 
 ## 快速开始
