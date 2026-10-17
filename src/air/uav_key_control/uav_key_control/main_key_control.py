@@ -10,12 +10,9 @@ class KeyboardControlNode(Node):
         self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.get_logger().info("WASD控制：W前进 S后退 A左转 D右转，空格停止，Ctrl+C退出")
         self.msg = Twist()
-        self.linear = 0.2
-        self.angular = 0.3
-        # 单独开线程读取键盘，不阻塞ROS2
-        self.key_thread = threading.Thread(target=self.key_loop)
-        self.key_thread.daemon = True
-        self.key_thread.start()
+        # 定义速度上限（边界参数）
+        self.MAX_LINEAR = 0.2
+        self.MAX_ANGULAR = 0.3
 
     def get_key(self):
         fd = sys.stdin.fileno()
@@ -31,22 +28,33 @@ class KeyboardControlNode(Node):
         while True:
             key = self.get_key()
             if key == 'w':
-                self.msg.linear.x = self.linear
-                self.msg.angular.z = 0.0
+                linear_x = self.MAX_LINEAR
+                angular_z = 0.0
             elif key == 's':
-                self.msg.linear.x = -self.linear
-                self.msg.angular.z = 0.0
+                linear_x = -self.MAX_LINEAR
+                angular_z = 0.0
             elif key == 'a':
-                self.msg.linear.x = 0.0
-                self.msg.angular.z = self.angular
+                linear_x = 0.0
+                angular_z = self.MAX_ANGULAR
             elif key == 'd':
-                self.msg.linear.x = 0.0
-                self.msg.angular.z = -self.angular
+                linear_x = 0.0
+                angular_z = -self.MAX_ANGULAR
             elif key == ' ':
-                self.msg.linear.x = 0.0
-                self.msg.angular.z = 0.0
+                linear_x = 0.0
+                angular_z = 0.0
             elif key == '\x03':
                 break
+            else:
+                # 其他按键，保持静止
+                linear_x = 0.0
+                angular_z = 0.0
+
+            # 边界钳位保护
+            linear_x = max(-self.MAX_LINEAR, min(linear_x, self.MAX_LINEAR))
+            angular_z = max(-self.MAX_ANGULAR, min(angular_z, self.MAX_ANGULAR))
+
+            self.msg.linear.x = linear_x
+            self.msg.angular.z = angular_z
             self.pub.publish(self.msg)
 
 def main(args=None):
