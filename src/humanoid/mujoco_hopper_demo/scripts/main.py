@@ -26,8 +26,8 @@ def main():
         while viewer.is_running():
             t = data.time
             
-            # 正弦力控制：周期性压缩腿部然后弹开
-            force = 80 * np.sin(t * 4)
+            # 正弦力控制：周期性压缩腿部然后弹开，力调大一点真的能跳起来
+            force = 150 * np.sin(t * 3)
             data.ctrl[0] = force
             
             mujoco.mj_step(model, data)
