@@ -4,7 +4,7 @@
   <name>uav_key_control</name>
   <version>0.0.0</version>
   <description>UAV keyboard velocity control node</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="sousa0913@qq.com">Sousa-cc</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
@@ -12,7 +12,13 @@
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
 
-  <test_depend>ament_pytest</test_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
