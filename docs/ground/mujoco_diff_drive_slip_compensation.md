@@ -187,6 +187,25 @@ ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
 
 仿真器在 launch 组内接收 `/cmd_vel/compensated`，外部控制器仍向 `/cmd_vel` 发布原始指令；因此补偿节点不会把自己的输出再次作为输入。 / The simulator receives `/cmd_vel/compensated` inside the launch group while an external controller continues publishing raw `/cmd_vel`, so the node does not feed its own output back into its input.
 
+## 隔离评测 / Held-Out Evaluation
+
+`evaluate_slip_model` 只读取 manifest 标记为 `test` 的完整 episode，按窗口生成滑移预测，并将原始指令与补偿指令分别和记录的 MuJoCo 真实线速度比较。它是离线 replay 指标，不替代接入真实控制回路后的闭环实验。
+
+`evaluate_slip_model` reads only complete episodes marked `test` in their manifests, predicts slip per temporal window, and compares raw and compensated commands separately with recorded MuJoCo ground-truth linear velocity. It is an offline replay metric, not a substitute for a closed-loop experiment with the controller connected.
+
+```bash
+evaluate_slip_model \
+  --data data/sample \
+  --model data/models/slip-v1/slip_model.json \
+  --output data/results/slip-evaluation.json
+```
+
+本次 12-episode 样例的测试集包含 916 个窗口。滑移预测为 `MAE=0.02718`、`RMSE=0.04400`，中位推理耗时 `0.0104 ms`；原始线速度 MAE 为 `0.03838`，按模型输出直接修正后的离线 MAE 为 `0.05182`，改善率为 `-35.0%`。这表示当前样例模型的补偿策略尚未改善该 replay 指标，结果用于暴露需要继续校准的控制方向，而不是宣称已达到闭环收益。
+
+The 12-episode sample has 916 held-out windows. Slip prediction reached `MAE=0.02718` and `RMSE=0.04400` with `0.0104 ms` median inference. Raw linear-velocity MAE was `0.03838`; direct model-based correction produced `0.05182`, an improvement ratio of `-35.0%`. This means the current sample model and correction policy did not improve this replay metric; the result identifies calibration work for the control path rather than claiming closed-loop benefit.
+
+![隔离测试集轨迹对比 / Held-out replay comparison](../img/ground/slip-evaluation.gif)
+
 ## 验证命令 / Verification Commands
 
 ```bash

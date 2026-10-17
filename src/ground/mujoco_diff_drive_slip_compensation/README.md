@@ -160,6 +160,8 @@ Samples with encoder-derived linear speed below `0.15 m/s` receive a zero target
 
 低于 `0.15 m/s` 的编码器线速度样本标为零，因为静止附近比值条件数较差。时间窗口只在单个 manifest episode 内构造；归一化仅拟合训练 episode，验证集用于参数选择，隔离测试集用于最终 MAE、RMSE、轮滑 F1/准确率和推理中位耗时。模型与指标 JSON 写入 `data/models/`，不属于功能包源码。
 
+Held-out replay is available through `evaluate_slip_model`; it reports raw versus compensated velocity MAE by friction and records the evaluation scope in JSON. The command is intentionally separate from training so a test episode is never used for normalization or parameter selection.
+
 The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 hidden units, and 300 epochs measured `MAE 0.0272`, `RMSE 0.0440`, `F1 0.774`, `accuracy 0.969`, and `0.0103 ms` median inference per window on the local CPU. These values describe that generated held-out split; deployment data should be evaluated independently.
 
 使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。
