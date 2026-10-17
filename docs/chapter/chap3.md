@@ -273,7 +273,7 @@ roslaunch any_avoidance gazebo_test.launch
 启动命令与输出：
 
 ```bash
-$ rosrun gazebo_ros gazebo
+rosrun gazebo_ros gazebo
 context mismatch in svga_surface_destroy
 context mismatch in svga_surface_destroy
 ```
