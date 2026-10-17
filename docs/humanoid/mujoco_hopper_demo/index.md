@@ -61,7 +61,7 @@ data.ctrl[0] = force
 
 ## 四、运行方法
 ```bash
-cd ~/catkin_ws/src/humanoid/mujoco_hopper_demo/scripts
+cd ~/src/humanoid/mujoco_hopper_demo/scripts
 python3 main.py ../models/hopper.xml
 ```
 弹出来MuJoCo窗口就能看到绿色小机器人在灰色地上一蹦一蹦的。
