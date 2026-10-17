@@ -57,7 +57,7 @@ sudo rosdep init
 rosdep update
 ```
 
-> 若因网络问题失败，可使用 `fishros` 一键配置工具或手动替换 `rosdistro` 为国内镜像。
+若因网络问题失败，可使用 `fishros` 一键配置工具或手动替换 `rosdistro` 为国内镜像。
 
 ### 2.4 配置环境变量
 
