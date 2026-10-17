@@ -289,5 +289,5 @@ python3 keyboard_mujoco.py
 
 ### 六、 运行效果
 
-![运行效果演示](rohotic-arm.gif)
+![运行效果演示](rohotic2.gif)
 
