@@ -82,6 +82,11 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/imu/data` | `sensor_msgs/msg/Imu` | 三轴加速度与角速度 / three-axis acceleration and angular velocity |
 | 发布 / Publish | `/scenario/friction` | `std_msgs/msg/Float64` | 当前滑动摩擦系数 / active sliding-friction coefficient |
 | 发布 / Publish | `/scenario/episode_id` | `std_msgs/msg/String` | 当前完整 episode 标识 / active complete-episode identifier |
+| 订阅 / Subscribe | `/imu/data` | `sensor_msgs/msg/Imu` | 在线补偿的惯性输入 / IMU input for online compensation |
+| 订阅 / Subscribe | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | 时间同步与新鲜度检查 / freshness and synchronization check |
+| 发布 / Publish | `/cmd_vel/compensated` | `geometry_msgs/msg/Twist` | 滑移补偿后的速度指令 / slip-compensated velocity command |
+| 发布 / Publish | `/slip/estimate` | `std_msgs/msg/Float64` | 当前窗口滑移估计 / current window slip estimate |
+| 发布 / Publish | `/slip/status` | `std_msgs/msg/String` | 预热、停机或正常状态 / warm-up, stop, or ready status |
 
 速度指令超过 `command_timeout` 未更新时，节点将四轮目标速度清零。非有限数值和越出包资源目录的模型路径会被拒绝。
 
@@ -128,6 +133,19 @@ generate_slip_sample_data --output data/sample --episodes-per-split 4 --duration
 train_slip_model --data data/raw --output data/models/slip-v1 --epochs 300
 # For generated samples, replace data/raw with data/sample.
 ```
+
+启动在线补偿链路：
+
+Launch the online compensation path:
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
+  model_file:=data/models/slip-v1/slip_model.json
+```
+
+节点同时订阅编码器、IMU、里程计和原始 `/cmd_vel`。传感器时间戳过期、回退或窗口尚未填满时发布零速；窗口就绪后，模型输出限制在 `[-0.5, 0.5]`，线速度补偿比例与线/角加速度均受参数约束。
+
+The node subscribes to encoders, IMU, odometry, and raw `/cmd_vel`. It publishes zero velocity when timestamps are stale, move backwards, or the temporal window is not full. Once ready, the model output is bounded to `[-0.5, 0.5]`, and both the linear correction scale and linear/angular acceleration are parameter-limited.
 
 The temporal-window MLP uses four wheel rates, left/right wheel-rate aggregates, the velocity command, and six IMU axes. For the terminal frame of each window, the supervised longitudinal slip target is:
 

@@ -47,6 +47,10 @@ setup(
                 'generate_slip_sample_data = '
                 'mujoco_diff_drive_slip_compensation.generate_sample_dataset:main'
             ),
+            (
+                'online_slip_compensation = '
+                'mujoco_diff_drive_slip_compensation.online_compensation:main'
+            ),
         ],
     },
 )

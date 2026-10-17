@@ -166,6 +166,27 @@ ros2 launch mujoco_diff_drive_slip_compensation train.launch.py \
 
 The measured local run used 12 episodes (four complete episodes per split), a 12-frame window, 24 hidden units, and a 300-epoch maximum with early stopping on validation MAE. Its isolated test split contained 916 windows and measured `MAE=0.0272`, `RMSE=0.0440`, `F1=0.774`, `accuracy=0.969`, and `0.0103 ms` median CPU inference per window. These measurements apply only to this sample split, not other friction settings or physical hardware.
 
+## 在线补偿 / Online Compensation
+
+`online_slip_compensation` 使用与离线训练相同的 12 维特征顺序，订阅 `/wheel/encoders`、`/imu/data`、`/ground_truth/odom` 和原始 `/cmd_vel`。里程计在这里仅用于时间同步与新鲜度检查，不作为模型输入。模型窗口完整且所有消息时间戳在 `sensor_timeout_seconds` 内时，节点发布 `/cmd_vel/compensated`、`/slip/estimate` 和 `/slip/status`。
+
+The `online_slip_compensation` node keeps the offline 12-feature order and subscribes to `/wheel/encoders`, `/imu/data`, `/ground_truth/odom`, and raw `/cmd_vel`. Odometry is used for synchronization and freshness only, not as a model feature. When the window is full and all messages are fresh, it publishes `/cmd_vel/compensated`, `/slip/estimate`, and `/slip/status`.
+
+补偿策略为：
+
+The compensation policy is:
+
+1. 传感器或指令缺失、时间戳回退、时间差超过阈值、输入非有限时，清空窗口并发布零速。 / Missing data, timestamp rollback, stale data, or non-finite input clears the window and publishes zero velocity.
+2. `v_out = v_cmd / max(1-s, 0.5)`，再限制最大线速度比例。 / Compute `v_out = v_cmd / max(1-s, 0.5)` and then cap the linear scale.
+3. 对线速度和角速度应用独立加速度限幅，避免模型输出造成突变。 / Apply independent linear and angular acceleration limits to prevent abrupt commands.
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
+  model_file:=data/models/slip-v1/slip_model.json
+```
+
+仿真器在 launch 组内接收 `/cmd_vel/compensated`，外部控制器仍向 `/cmd_vel` 发布原始指令；因此补偿节点不会把自己的输出再次作为输入。 / The simulator receives `/cmd_vel/compensated` inside the launch group while an external controller continues publishing raw `/cmd_vel`, so the node does not feed its own output back into its input.
+
 ## 验证命令 / Verification Commands
 
 ```bash
