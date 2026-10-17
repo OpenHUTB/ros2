@@ -96,6 +96,7 @@ ROS每章节运行代码:
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 

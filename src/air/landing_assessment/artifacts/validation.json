@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-12",
+  "python": "3.8.10 (default, Mar 18 2025, 20:04:55) \n[GCC 9.4.0]",
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.29",
+  "torch": "2.4.1+cpu",
+  "mujoco": "3.1.6",
+  "numpy": "1.24.4",
+  "simulation_episodes": 144,
+  "training_episodes": 80,
+  "validation_episodes": 16,
+  "original_test_episodes": 24,
+  "post_freeze_final_episodes": 24,
+  "unit_tests_passed": 7,
+  "ros_observations_assessed": 207,
+  "precontact_impact_predictions": 3,
+  "phases_seen": [
+    "approach",
+    "descent",
+    "settled",
+    "touchdown"
+  ],
+  "ros_nodes_exited_cleanly": true,
+  "rendered_simulation_identical_to_recorded_episode": true,
+  "frozen_protocol_verified": true,
+  "scope": "actual MuJoCo 3.1.6 contact simulation, ROS2 replay on existing Ubuntu VM; not OpenHUTB Unreal simulator or real flight",
+  "github_publication": "not authorized yet; local review only"
+}
