@@ -1,0 +1,3 @@
+<launch>
+    <node name="hutb_keyboard_main" pkg="autonomous_car" type="main.py" output="screen" launch-prefix="xterm -e"/>
+</launch>

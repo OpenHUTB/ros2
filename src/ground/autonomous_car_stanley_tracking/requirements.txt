@@ -1,0 +1,10 @@
+# Stanley 横向跟踪模块的 Python 依赖
+#
+# 核心算法与仿真只依赖 numpy，不依赖 ROS、也不依赖任何外部仿真器：
+#   pip3 install -r requirements.txt
+#
+# 出效果图与动图需要额外的绘图库（只有 --mode demo/compare/sweep 会用到，
+# 加 --no-figures 或 --no-animation 即可跳过）：
+numpy>=1.21
+matplotlib>=3.5
+imageio>=2.20

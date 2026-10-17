@@ -83,6 +83,7 @@ nav:
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
+    - 无人车物理仿真与键盘控制: 'ground/task1_autonomous_car.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
@@ -96,6 +97,7 @@ nav:
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - 无人车横向控制（Stanley 前轴横向偏差跟踪）: './ground/autonomous_car_stanley_tracking.md'
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
@@ -144,9 +146,15 @@ markdown_extensions:
   - footnotes
   - admonition
   - mdx_math
+  - pymdownx.arithmatex:
+      generic: true
   - attr_list
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

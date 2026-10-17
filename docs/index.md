@@ -87,10 +87,11 @@ ROS每章节运行代码:
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [无人车物理仿真与键盘控制](./ground/task1_autonomous_car.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
-
+* [无人车横向控制（Stanley 前轴横向偏差跟踪）](./ground/autonomous_car_stanley_tracking.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
