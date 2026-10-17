@@ -2,6 +2,9 @@
 
 该仓库包含环境搭建、教程、人和载具的ROS/ROS2示例。
 
+## 作业
+* [黄盛儒：R2D2小车 键盘遥控仿真](docs/ground/r2d2_keyboard_control.md)
+
 ## 环境配置
 
 运行 [`serve.bat`](https://github.com/OpenHUTB/ros2/blob/master/serve.bat)（即运行`mkdocs serve`，所做的修改同样需要运行该脚本验证[网页中](http://127.0.0.1:8000/)所修改内容的正确性），会打开浏览器显示主页，详情请参考[serve.bat](https://github.com/OpenHUTB/.github/blob/master/serve.bat)，文档撰写的约定请参考 [doc](https://github.com/OpenHUTB/doc) 仓库首页。
