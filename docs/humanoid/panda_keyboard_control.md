@@ -214,7 +214,7 @@ roslaunch panda_keyboard_control panda_keyboard_demo.launch
 8.运行成功界面
 ![运行效果演示](rohotic.gif)
 
-8. 操作说明
+9. 操作说明
 程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
 
 | 按键 | 功能 | 按键 | 功能 |
@@ -227,16 +227,16 @@ roslaunch panda_keyboard_control panda_keyboard_demo.launch
 
 ### 五、 常见问题排查
 
-8. **报错 **`**Unable to connect to move_group action server**`
+1. **报错 **`**Unable to connect to move_group action server**`
     - **原因**：脚本启动时 `demo.launch` 尚未完成初始化，或者 `move_group` 节点崩溃。
     - **解决**：确保先运行 `demo.launch` 并看到 "Ready to take commands for planning group panda_arm." 提示后再运行脚本。检查是否有残留进程：`killall -9 roslaunch roscore` 后重试。
-9. `**robot_state_publisher**`** 循环重启或退出**
+2. `**robot_state_publisher**`** 循环重启或退出**
     - **原因**：缺少 URDF 描述文件或 Xacro 解析失败。
     - **解决**：重新安装描述包并刷新库缓存：
-10. **规划失败（Planning Failed）**
+3. **规划失败（Planning Failed）**
     - **原因**：目标关节角度超出限位或步长过大导致碰撞检测失败。
     - **解决**：在代码中减小 `self.joint_step`（例如从 0.1 改为 0.05），或降低速度缩放因子。
-11. **找不到功能包 **`**panda_keyboard_control**`
+4. **找不到功能包 **`**panda_keyboard_control**`
     - **原因**：当前终端未 source 工作空间。
     - **解决**：在每个新终端中执行 `source ~/panda_ros_project/catkin_ws/devel/setup.bash`，或将其写入 `~/.bashrc`。
 
