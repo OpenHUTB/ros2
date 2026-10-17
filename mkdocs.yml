@@ -1,3 +1,5 @@
+
+
 site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
 
@@ -78,6 +80,8 @@ nav:
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
+    - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
@@ -86,9 +90,11 @@ nav:
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
+    - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
+    - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
@@ -119,7 +125,6 @@ nav:
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
-
     - 新增无人机飞行日志与状态识别 ROS 2 封装模块: './air/drone_trajectory_logger.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
@@ -132,8 +137,7 @@ nav:
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
-
-
+    - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
 
 
 
@@ -151,3 +155,4 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
+

@@ -1,3 +1,4 @@
+
 title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
@@ -66,6 +67,8 @@ ROS每章节运行代码:
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
+* [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -78,9 +81,11 @@ ROS每章节运行代码:
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
+* [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
+* [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
@@ -128,10 +133,8 @@ ROS每章节运行代码:
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
-  
 
 * [新增无人机飞行日志与状态识别 ROS 2 封装模块](./air/drone_trajectory_logger.md)
-
 
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
@@ -153,6 +156,8 @@ ROS每章节运行代码:
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+  
+* [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 ___
 
@@ -161,3 +166,4 @@ ___
 ___
 
 ## 参考文献
+
