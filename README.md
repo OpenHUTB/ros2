@@ -29,3 +29,9 @@
 * 每次合并到主分支之前需要至少一名其他人 测试并同意（另一台机器修改部分的运行结果）
 * Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up).
 
+## 肌肉骨骼肘关节神经控制 / Musculoskeletal elbow neural control
+
+第二阶段提供轻量 MLP 训练、按轨迹和负载分组评价，以及 ROS 2 在线推理节点。模型参数由训练命令写入 JSON，运行时通过包共享目录加载。
+
+The second stage provides lightweight MLP training, grouped evaluation by trajectory and payload, and a ROS 2 online inference node. Training writes JSON parameters and the runtime loads them through the package share directory.
+
