@@ -16,13 +16,13 @@ English: Add UAV keyboard velocity control node. It reads keyboard inputs, gener
 ```text
 src/
 └── uav_key_control/
-    ├── main_uav_track.py       # 无人机键盘速度控制节点
+    ├── main_key_control.py       # 无人机键盘速度控制节点
     ├── setup.py                # ROS 2 功能包配置文件
     ├── package.xml             # ROS2功能包描述文件
     └── resource/
         └── uav_key_control    # resource资源标识文件
     └── launch/
-        └── uav_track.launch.py # 节点一键启动文件
+        └── key_control.launch.py # 节点一键启动文件
 ```
 ## 核心代码内容
 
