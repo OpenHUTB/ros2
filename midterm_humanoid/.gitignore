@@ -1,0 +1,16 @@
+# ROS2
+build/
+install/
+log/
+*.db
+__pycache__/
+*.pyc
+
+#编辑器
+.vscode/
+.idea/
+*.swp
+
+#系统垃圾文件
+.DS_Store
+Thumbs.db
