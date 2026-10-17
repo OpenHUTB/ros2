@@ -66,7 +66,6 @@ ROS每章节运行代码:
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
-* [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -80,7 +79,6 @@ ROS每章节运行代码:
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
-* [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
@@ -93,6 +91,7 @@ ROS每章节运行代码:
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
+* [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
