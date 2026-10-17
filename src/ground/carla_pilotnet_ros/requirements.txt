@@ -1,0 +1,24 @@
+# 依赖清单
+#
+# 重要：ROS Noetic 默认调用系统 Python 3.8。若依赖安装在 conda 环境中，
+# 直接 roslaunch 会报 ModuleNotFoundError。两种方式任选：
+#
+# 方式 A（推荐）：在 conda 环境中安装依赖后，通过 main.sh 启动
+#   conda activate carla38
+#   bash main.sh
+#
+# 方式 B：让 roslaunch 使用 conda Python
+#   export PYTHONPATH=/home/user/miniconda3/envs/carla38/lib/python3.8/site-packages:$PYTHONPATH
+#   roslaunch carla_pilotnet_ros main.launch
+
+# 神经网络
+torch==2.0.1
+torchvision==0.15.2
+
+# 图像处理
+opencv-python==5.0.0
+numpy==1.24.3
+pillow
+
+# ROS 依赖（已随 ROS Noetic 安装，此处列出便于核对）
+# rospy, sensor_msgs, std_msgs, geometry_msgs
