@@ -1,17 +1,12 @@
 site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
-
 #repo_url: https://github.com/carla-simulator/carla
 #docs_dir: Docs
 #edit_uri: 'edit/master/Docs/'
-
-
 # 设置编译页面的链接的前缀
 repo_url: https://github.com/OpenHUTB/ros2
-
 # 页面右上角添加直接编辑页面的按钮
 edit_uri: edit/master/docs/
-
 theme:
   name: readthedocs
   sticky_navigation: True
@@ -19,9 +14,6 @@ theme:
   features:
     - search.suggest # 在目录栏中的搜索框中输入一些字母时推荐补全整个单词
 extra_css: [extra.css]
-
-
-
 # mathjax用于单独公式展示
 extra_javascript:
   # - extra.js
@@ -32,7 +24,6 @@ extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
   - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
   - js/umlconvert.js
-
 plugins:
 #  - mkdocs-video
   - search:
@@ -49,18 +40,12 @@ plugins:
       video_autoplay: True
       video_loop: True
   - mermaid2
-
 extra:
   generator: false
-
 hooks:
   - hooks.py
-
 copyright: OpenHUTB 版权所有 &copy; {year}
-
-
 nav:
-
 - 入门:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
@@ -97,6 +82,7 @@ nav:
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
@@ -117,7 +103,7 @@ nav:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
-        - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
+        - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planner.md'
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
@@ -133,11 +119,7 @@ nav:
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
-
-
-
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
-
 # - mdx_math 用于行内公式显示
 markdown_extensions:
   - markdown_grid_tables
