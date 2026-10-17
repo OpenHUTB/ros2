@@ -62,6 +62,8 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
+ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
+
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
