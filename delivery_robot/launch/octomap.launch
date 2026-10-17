@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="use_sim_time" value="true"/>
+  <param name="use_sim_time" value="$(arg use_sim_time)"/>
+</launch>
+
