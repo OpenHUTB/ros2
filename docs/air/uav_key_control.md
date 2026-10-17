@@ -1,8 +1,9 @@
 # uav_key_control 使用说明
 无人机键盘速度控制ROS2功能包
 
-## 功能介绍
-该功能包实现无人机键盘速度遥控节点。激活终端后，通过W/A/S/D按键直接控制无人机运动速度，空格键实现急停；节点向  /cmd_vel  话题发布Twist速度指令，属于速度环控制。
+## 修改概述 / Overview
+中文：新增无人机键盘速度控制节点。读取键盘按键，生成并发布Twist类型速度指令；无人机订阅该话题，根据收到的速度指令完成运动。
+English: Add UAV keyboard velocity control node. It reads keyboard inputs, generates and publishes Twist velocity commands. The UAV subscribes to this topic and moves according to received commands.
 
 ## 运行环境
 - 操作系统：Ubuntu 20.04
@@ -32,7 +33,12 @@ src/
 * [查看 main_key_control.py 代码](../../src/air/uav_key_control/main_key_control.py)
 * [查看 package.xml 代码](../../src/air/uav_key_control/package.xml)
 * [查看 setup.py 代码](../../src/air/uav_key_control/setup.py)
-* [查看 key_control.launch.py 代码](../../src/air/uav_key_control/launch/key_control.launch.py)  
+* [查看 key_control.launch.py 代码](../../src/air/uav_key_control/launch/key_control.launch.py)
+## 边界行为说明 / Boundary behavior
+中文：节点预设最大线速度0.2 m/s、最大角速度0.3 rad/s。输出速度会被钳位在[-0.2, 0.2]、[-0.3, 0.3]区间，防止超速失控。按下空格键，速度立刻置零。
+
+English: The node sets max linear velocity 0.2 m/s and max angular velocity 0.3 rad/s. Output velocity is clamped within [-0.2, 0.2] and [-0.3, 0.3] to avoid overspeed. Press space key to set velocity to zero immediately.
+  
 ## 启动步骤
 
 1.进入ROS2工作空间
