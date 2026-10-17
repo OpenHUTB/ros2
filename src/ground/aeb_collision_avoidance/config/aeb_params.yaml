@@ -1,0 +1,6 @@
+aeb_collision_avoidance:
+  ros__parameters:
+    warning_ttc: 2.5
+    braking_ttc: 1.2
+    stop_distance: 1.0
+    max_brake: 8.0

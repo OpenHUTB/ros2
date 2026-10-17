@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>aeb_collision_avoidance</name>
+  <version>0.1.0</version>
+  <description>TTC-based autonomous emergency braking and collision warning for ground vehicles.</description>
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
