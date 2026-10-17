@@ -70,6 +70,7 @@ ROS每章节运行代码:
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
