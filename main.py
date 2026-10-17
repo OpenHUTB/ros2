@@ -1,20 +1,36 @@
-import time
-import random
+#!/usr/bin/env python3
+import rospy
+import torch
+import torch.nn as nn
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
 
-def get_front_distance():
-    return round(random.uniform(0.2, 1.5), 2)
+class AvoidNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+            nn.Linear(360, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 2)
+        )
 
-def robot_control(distance):
-    if distance > 0.5:
-        return "直行，线速度0.3m/s"
-    else:
-        return "转弯避障，角速度0.8rad/s"
+    def forward(self, x):
+        return self.layers(x)
 
-if __name__ == "__main__":
-    print("Win11轮式机器人核心避障启动")
-    for i in range(15):
-        dist = get_front_distance()
-        action = robot_control(dist)
-        print(f"第{i+1}步：前方距离{dist}m → {action}")
-        time.sleep(0.6)
-    print("核心控制流程结束")
+model = AvoidNet()
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+def scan_callback(msg):
+    global model, pub
+    ranges = torch.tensor(msg.ranges, dtype=torch.float32).nan_to_num(10.0)
+    v, w = model(ranges)
+    cmd = Twist()
+    cmd.linear.x = torch.clamp(v, 0.1, 0.3).item()
+    cmd.angular.z = torch.clamp(w, -2.0, 2.0).item()
+    pub.publish(cmd)
+
+rospy.init_node('nn_avoid')
+rospy.Subscriber('/scan', LaserScan, scan_callback)
+rospy.spin()
