@@ -8,7 +8,7 @@ def main():
     pkg = "panda_keyboard_control"
     # 自动定位到 launch 文件
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    launch_file = os.path.join(current_dir, "..", "launch", "panda_keyboard_demo.launch")
+    launch_file = os.path.join(current_dir, "..", "launch", "main.launch")
     
     cmd = ["roslaunch", pkg, os.path.basename(launch_file)]
     try:

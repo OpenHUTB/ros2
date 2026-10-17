@@ -9,72 +9,32 @@
 ```text
 src/
 └── panda_keyboard_control/
+    ├── CMakeLists.txt                  # 编译与安装配置文件
+    ├── package.xml                     # 包依赖声明文件
     ├── launch/
-    │   └── panda_keyboard_demo.launch    # 一键启动配置文件
-    └── scripts/
-        ├── panda_keyboard_control.py     # 键盘控制核心 Python 脚本
-        ├── main.py                       # 主程序启动入口脚本
-        ├── CMakeLists.txt                # 编译与安装配置文件
-        └──package.xml                   # 包依赖声明文件
-    └── mujoco_sim/                       # 【新增】MuJoCo 物理仿真模块
-             ├── mujoco_menagerie/             # 官方高精度模型库
-             └── keyboard_mujoco.py            # 接入 MuJoCo 的键盘控制核心脚本
+    │   └── main.launch                 # 一键启动配置文件
+    ├── scripts/
+    │   ├── panda_keyboard_control.py   # 键盘控制核心 Python 脚本（ROS MoveIt 版）
+    │   └── main.py                     # 主程序启动入口脚本
+    └── mujoco_sim/                     # MuJoCo 物理仿真模块
+        ├── README.md                   # MuJoCo 环境依赖说明
+        ├── keyboard_mujoco.py          # 接入 MuJoCo 的键盘控制核心脚本
+        └── mujoco_menagerie/           # 官方高精度模型库（需自行克隆，不入库）
 ```
 
-### 三、 核心配置文件内容
+### 三、 核心配置文件说明
 
-### MuJoCo 键盘控制脚本
-该脚本通过 Python 多线程监听键盘，并结合 MuJoCo 的物理步进计算（mj_step），实现了带有重力效果的关节控制
-```python
-import mujoco
-import mujoco.viewer
-import time
-import os
-import sys
-import tty
-import termios
-import threading
+#### MuJoCo 键盘控制脚本
 
-# 加载 MuJoCo 官方的 Franka Panda 高精度模型
-xml_path = os.path.join(os.path.dirname(__file__), 'mujoco_menagerie/franka_emika_panda/scene.xml')
-model = mujoco.MjModel.from_xml_path(xml_path)
-data = mujoco.MjData(model)
+[keyboard_mujoco.py](https://github.com/OpenHUTB/ros2/blob/master/src/panda_keyboard_control/mujoco_sim/keyboard_mujoco.py) 通过 Python 多线程监听键盘输入，并结合 MuJoCo 的物理步进计算（`mj_step`），将目标关节角写入 `data.ctrl` 位置伺服通道，实现了带有重力、摩擦力效果的关节实时控制。按键 `1-7` 控制对应关节正向转动，`Shift+1-7` 反向转动，`r` 复位到模型初始关键帧，`q` 退出程序。
 
-target_q = data.qpos[:7].copy()
-pressed_key = None
+#### ROS MoveIt 键盘控制脚本
 
-def get_key():
-    global pressed_key
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(fd)
-        while True:
-            ch = sys.stdin.read(1)
-            pressed_key = ch
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+[panda_keyboard_control.py](https://github.com/OpenHUTB/ros2/blob/master/src/panda_keyboard_control/scripts/panda_keyboard_control.py) 基于 `rospy` 与 `moveit_commander`，通过 `MoveGroupCommander` 对 `panda_arm` 规划组下发关节目标值，由 MoveIt 完成运动规划后在 RViz 中执行。
 
-threading.Thread(target=get_key, daemon=True).start()
+#### 一键启动配置
 
-with mujoco.viewer.launch_passive(model, data) as viewer:
-    while viewer.is_running():
-        if pressed_key:
-            if pressed_key == 'q':
-                break
-            elif pressed_key == 'r':
-                target_q = model.key_qpos[0].copy() if model.nkey > 0 else [0, 0, 0, -1.57, 0, 1.57, 0.78]
-            elif pressed_key in [str(i) for i in range(1, 8)]:
-                idx = int(pressed_key) - 1
-                target_q[idx] += 0.1
-            pressed_key = None
-
-        data.ctrl[:7] = target_q
-        mujoco.mj_step(model, data)
-        viewer.sync()
-        time.sleep(0.005)
-```
-
+[main.launch](https://github.com/OpenHUTB/ros2/blob/master/src/panda_keyboard_control/launch/main.launch) 加载 `franka_description` 的 Panda 机器人描述（xacro），启动 `panda_moveit_config` 的 move_group、RViz 以及键盘控制节点；[main.py](https://github.com/OpenHUTB/ros2/blob/master/src/panda_keyboard_control/scripts/main.py) 为该 launch 文件的启动入口。
 
 ### 四、 编译与启动步骤
 
@@ -93,27 +53,39 @@ cd ~/catkin_ws/src/panda_keyboard_control/mujoco_sim
 git clone https://github.com/google-deepmind/mujoco_menagerie.git
 ```
 
-3.运行 MuJoCo 物理仿真控制：
+3. 运行 MuJoCo 物理仿真控制：
 ```
 python3 keyboard_mujoco.py
 ```
 
-4.运行成功界面
-![运行效果演示](robotic.gif)
+4. 运行成功界面
+![运行效果演示](../img/humanoid/robotic.gif)
 
 5. 操作说明
 程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
 
 | 按键 | 功能 | 按键 | 功能 |
 | ------ |------ |------ |------ |
-| 1 | 关节1转动 | 5 | 关节5转动 |
-| 2 | 关节2转动 | 6 | 关节6转动 |
-| 3 | 关节3转动 | 7 | 关节7转动 |
-| 4 | 关节4转动 | r | 复位姿态 |
-| q | 退出程序 |  |  |
+| 1 | 关节1正向转动 | Shift+1 | 关节1反向转动 |
+| 2 | 关节2正向转动 | Shift+2 | 关节2反向转动 |
+| 3 | 关节3正向转动 | Shift+3 | 关节3反向转动 |
+| 4 | 关节4正向转动 | Shift+4 | 关节4反向转动 |
+| 5 | 关节5正向转动 | Shift+5 | 关节5反向转动 |
+| 6 | 关节6正向转动 | Shift+6 | 关节6反向转动 |
+| 7 | 关节7正向转动 | Shift+7 | 关节7反向转动 |
+| r | 复位姿态 | q | 退出程序 |
 
+6. （可选）运行 ROS MoveIt 版本：在工作空间编译后，通过主入口一键启动
+```
+cd ~/catkin_ws && catkin_make
+rosrun panda_keyboard_control main.py
+```
 
 ### 五、 运行效果
 
-![运行效果演示](robotic2.gif)
+![运行效果演示](../img/humanoid/robotic2.gif)
 
+### 六、 未验证项
+
+- MuJoCo 独立演示 ≠ ROS MoveIt 闭环：`keyboard_mujoco.py` 为直接读写 MuJoCo 物理引擎的独立脚本，未接入 ROS 话题/服务，与 `scripts/panda_keyboard_control.py` 的 MoveIt 规划回路相互独立，两者尚未联调为统一的闭环控制。
+- MuJoCo 侧关节目标角为开环递增，未做关节限位检查与碰撞检测，极端输入下的行为未验证。
