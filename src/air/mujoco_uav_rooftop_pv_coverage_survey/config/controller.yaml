@@ -1,0 +1,6 @@
+rooftop_pv_controller:
+  ros__parameters:
+    image_topic: /camera/image_raw
+    pose_topic: /uav/pose
+    route_topic: /uav/route
+    command_topic: /cmd_vel
