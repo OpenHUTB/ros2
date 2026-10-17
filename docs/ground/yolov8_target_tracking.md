@@ -40,7 +40,7 @@
    ```bash
    pip install ultralytics
 
-## 四.文件结构
+##  四.文件结构
 ```text
 src/yolov8-target-tracking/
 ├── src/
