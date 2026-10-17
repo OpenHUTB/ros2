@@ -99,6 +99,7 @@ nav:
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
@@ -124,6 +125,7 @@ nav:
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 无人机飞行日志与状态识别: './air/drone_trajectory_logger.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
@@ -136,6 +138,7 @@ nav:
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
+    
 
 
 
