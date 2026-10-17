@@ -14,9 +14,12 @@
 ```text
 src/
 └── image_recorder/
-    ├── main.py                  # 图像订阅与录制主程序
-    ├── setup.py                 # ROS 2 功能包配置文件
-    └── main.launch.py           # 一键启动文件
+    ├── main.py                 # 图像订阅与录制主程序
+    ├── setup.py                # ROS 2 功能包配置文件
+    ├── package.xml             # ROS 2 依赖声明文件
+    ├── README.md               # 模块说明文档
+    └── launch/
+        └── main.launch.py      # 一键启动文件
 ```
 
 ## 运行步骤
