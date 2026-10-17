@@ -1,3 +1,4 @@
+
 title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
@@ -126,7 +127,6 @@ ROS每章节运行代码:
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
-* [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
@@ -134,7 +134,7 @@ ROS每章节运行代码:
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
-
+* [无人机键盘速度控制节点](./air/uav_key_control.md)
 
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
