@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /workspace/ros2
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-pip python3-venv libgl1-mesa-glx libegl1 \
+    python3-pip python3-venv libgl1-mesa-glx libegl1 libosmesa6 libosmesa6-dev \
     && apt-get clean
 
 COPY requirements.txt /tmp/requirements.txt
