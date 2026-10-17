@@ -7,5 +7,6 @@ def generate_launch_description():
             package='uav_key_control',
             executable='keyboard_uav_control',
             output='screen',
+            emulate_tty=True,
         )
     ])
