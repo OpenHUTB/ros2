@@ -16,24 +16,28 @@ English: Add UAV keyboard velocity control node. It reads keyboard inputs, gener
 ```text
 src/
 └── uav_key_control/
-    ├── main_key_control.py       # 无人机键盘速度控制节点
-    ├── setup.py                # ROS 2 功能包配置文件
-    ├── package.xml             # ROS2功能包描述文件
-    └── resource/
-        └── uav_key_control    # resource资源标识文件
-    └── launch/
-        └── key_control.launch.py # 节点一键启动文件
+    ├── launch/
+    │   └── key_control.launch.py  # 节点一键启动文件
+    ├── resource/
+    │   └── uav_key_control        # resource 资源标识文件
+    ├── uav_key_control/           # 核心代码子目录
+    │   ├── __init__.py            # Python 包初始化文件
+    │   └── main_key_control.py    # 无人机键盘速度控制核心节点
+    ├── package.xml                # ROS 2 功能包描述文件
+    ├── setup.cfg                  # 节点安装路径配置文件
+    └── setup.py                   # ROS 2 功能包配置文件
 ```
 ## 核心代码内容
 
-本模块的核心代码已上传至仓库 `src/air/uav_key_control/` 目录下。
+本模块的核心代码已上传至仓库 `src/uav_key_control/` 目录下。
 
 完整代码请点击下方链接查看：
 
-* [查看 main_key_control.py 代码](../../src/air/uav_key_control/main_key_control.py)
-* [查看 package.xml 代码](../../src/air/uav_key_control/package.xml)
-* [查看 setup.py 代码](../../src/air/uav_key_control/setup.py)
-* [查看 key_control.launch.py 代码](../../src/air/uav_key_control/launch/key_control.launch.py)
+* [查看 main_key_control.py 代码](../../src/uav_key_control/uav_key_control/main_key_control.py)
+* [查看 setup.py 代码](../../src/uav_key_control/setup.py)
+* [查看 setup.cfg 代码](../../src/uav_key_control/setup.cfg)
+* [查看 package.xml 代码](../../src/uav_key_control/package.xml)
+* [查看 key_control.launch.py 代码](../../src/uav_key_control/launch/key_control.launch.py)
 ## 边界行为说明 / Boundary behavior
 中文：节点预设最大线速度0.2 m/s、最大角速度0.3 rad/s。输出速度会被钳位在[-0.2, 0.2]、[-0.3, 0.3]区间，防止超速失控。按下空格键，速度立刻置零。
 
@@ -50,10 +54,16 @@ cd ~/ros2-cc
 colcon build --packages-select uav_key_control
 source install/setup.bash
 ```
-3. 启动键盘控制节点
-```bash 
-ros2 run uav_key_control main_key_control
+3. 启动键盘控制节点（任选其一）
+   方式一（直接运行节点）：
+```bash
+ros2 run uav_key_control keyboard_uav_control
 ```
+方式二（使用 launch 文件一键启动）：
+```bash
+ros2 launch uav_key_control key_control.launch.py
+```
+
 4. 新开一个终端窗口，同样进入工作空间并加载环境，监听速度话题  /cmd_vel ，查看节点发布的Twist速度指令 
 ```bash
 cd ~/ros2-cc
