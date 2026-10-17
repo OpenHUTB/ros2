@@ -41,8 +41,7 @@
    pip install ultralytics
    
 ##  四.文件结构
-
-```text
+```
 src/yolov8-target-tracking/
 ├── src/
 │   ├── main.py                     # YOLOv8 视觉检测节点（入口）
