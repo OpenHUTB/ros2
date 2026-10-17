@@ -64,3 +64,6 @@ Thumbs.db
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
+
+# 车道线检测演示的输出图片（由 tests/demo_lane_detection.py 生成）
+demo_out/
