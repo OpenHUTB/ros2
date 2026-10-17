@@ -99,6 +99,7 @@ nav:
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - Gazebo 差速小车键盘控制: './ground/gazebo_diff_drive_teleop.md'
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'

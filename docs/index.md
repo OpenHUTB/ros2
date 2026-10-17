@@ -93,6 +93,7 @@ ROS每章节运行代码:
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
+* [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
