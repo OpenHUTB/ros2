@@ -8,7 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean
 
 COPY requirements.txt /tmp/requirements.txt
-RUN python3 -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN sed '/^torch/d' /tmp/requirements.txt > /tmp/requirements-docker.txt \
+    && python3 -m pip install --no-cache-dir -r /tmp/requirements-docker.txt \
+    && python3 -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==2.5.1+cpu
 
 COPY . /workspace/ros2/mujoco_uav_rooftop_pv_coverage_survey
 RUN python3 -m pip install --no-cache-dir -e /workspace/ros2/mujoco_uav_rooftop_pv_coverage_survey
