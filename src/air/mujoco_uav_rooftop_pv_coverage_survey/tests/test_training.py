@@ -3,13 +3,14 @@ import json
 
 import torch
 
-from rooftop_pv.models import TinyMLP, TinyUNet
+from rooftop_pv.models import TinyImageController, TinyMLP, TinyUNet
 from rooftop_pv.training import segmentation_loss, segmentation_metrics
 
 
 def test_models_have_expected_shapes():
     assert TinyUNet()(torch.zeros(2, 3, 120, 160)).shape == (2, 1, 120, 160)
     assert TinyMLP()(torch.zeros(4, 3)).shape == (4, 2)
+    assert TinyImageController()(torch.zeros(2, 3, 120, 160)).shape == (2, 2)
 
 
 def test_segmentation_loss_and_metrics_are_finite():

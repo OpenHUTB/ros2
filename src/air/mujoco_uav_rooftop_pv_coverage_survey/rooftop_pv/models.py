@@ -34,3 +34,20 @@ class TinyMLP(nn.Module):
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         return self.net(features)
+
+
+class TinyImageController(nn.Module):
+    """End-to-end RGB sensor to velocity command network / 图像到控制指令网络。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 8, 5, stride=2, padding=2), nn.ReLU(),
+            nn.Conv2d(8, 16, 3, stride=2, padding=1), nn.ReLU(),
+            nn.Conv2d(16, 24, 3, stride=2, padding=1), nn.ReLU(),
+            nn.AdaptiveAvgPool2d((1, 1)),
+        )
+        self.head = nn.Sequential(nn.Flatten(), nn.Linear(24, 16), nn.Tanh(), nn.Linear(16, 2))
+
+    def forward(self, images: torch.Tensor) -> torch.Tensor:
+        return self.head(self.encoder(images))

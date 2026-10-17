@@ -1,0 +1,9 @@
+services:
+  rooftop-pv:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./artifacts:/workspace/ros2/artifacts
+    environment:
+      MUJOCO_GL: "osmesa"

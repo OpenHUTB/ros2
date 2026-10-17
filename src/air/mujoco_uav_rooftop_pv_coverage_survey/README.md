@@ -69,3 +69,31 @@ Tests cover route boundaries, strip coverage, parameter validation, differences 
 场景坐标系采用屋顶局部 ENU，航点字段固定为 `x`、`y`、`z`、`yaw`、`speed` 与 `arrival_time`。该结构可直接映射到后续 ROS 2 Humble 的 `nav_msgs/Path`、`geometry_msgs/PoseStamped` 和控制话题，而不把 ROS 依赖引入数据生成层。
 
 The scene uses a rooftop-local ENU frame. Waypoints expose stable `x`, `y`, `z`, `yaw`, `speed`, and `arrival_time` fields. This schema maps directly to later ROS 2 Humble `nav_msgs/Path`, `geometry_msgs/PoseStamped`, and control topics without introducing ROS dependencies into the data-generation layer.
+
+## Docker / Docker 运行
+
+中文：在 Ubuntu 22.04 基础的 ROS 2 Humble 容器中运行完整第二天流程：
+
+English: Run the complete Day 2 workflow in an Ubuntu 22.04 based ROS 2 Humble container:
+
+```bash
+docker compose run --rm rooftop-pv
+```
+
+容器入口执行 `main.py --mode all`，输出写入挂载的 `artifacts/day2/`。The container entrypoint runs `main.py --mode all` and writes results to the mounted `artifacts/day2/` directory.
+
+本模块包含 `package.xml`、`setup.py` 和 launch 文件，可在 ROS 2 Humble 工作空间通过 `colcon build` 安装；The module includes an `ament_python` package with `package.xml`, `setup.py`, and a launch file for `colcon build` installation.
+
+## Docker / Docker 运行
+
+中文：在 Ubuntu 22.04 基础的 ROS 2 Humble 容器中运行完整第二天流程：
+
+English: Run the complete Day 2 workflow in an Ubuntu 22.04 based ROS 2 Humble container:
+
+```bash
+docker compose run --rm rooftop-pv
+```
+
+容器入口执行 `main.py --mode all`，输出写入挂载的 `artifacts/day2/`。The container entrypoint runs `main.py --mode all` and writes results to the mounted `artifacts/day2/` directory.
+
+本模块包含 `package.xml`、`setup.py` 和 launch 文件，可在 ROS 2 Humble 工作空间通过 `colcon build` 安装；The module includes an `ament_python` package with `package.xml`, `setup.py`, and a launch file for `colcon build` installation.

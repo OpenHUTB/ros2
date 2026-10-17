@@ -20,6 +20,9 @@ from rooftop_pv.route import RouteConfig, generate_lawnmower_route, route_length
 from rooftop_pv.scene import SCENARIOS, load_model, set_drone_pose
 from rooftop_pv.training import train_control, train_segmentation
 from rooftop_pv.evaluation import evaluate_scenarios
+from rooftop_pv.training import train_end_to_end
+from rooftop_pv.mapping import map_and_navigate
+from rooftop_pv.keyboard import run_keyboard_demo
 
 
 MODULE_ROOT = Path(__file__).resolve().parent
@@ -97,7 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="YAML configuration / YAML 配置")
     parser.add_argument("--output", type=Path, default=MODULE_ROOT / "artifacts" / "scene", help="output directory / 输出目录")
     parser.add_argument("--scenario", choices=SCENARIOS, help="override scenario / 覆盖场景名称")
-    parser.add_argument("--mode", choices=("scene", "dataset", "evaluate", "train-segmentation", "train-control"), default="scene", help="execution mode / 执行模式")
+    parser.add_argument("--mode", choices=("scene", "dataset", "evaluate", "map-nav", "keyboard-demo", "train-segmentation", "train-control", "train-end-to-end", "all"), default="scene", help="execution mode / 执行模式")
     return parser
 
 
@@ -140,12 +143,45 @@ def main(argv: list[str] | None = None) -> int:
             (output / "evaluation_metrics.json").write_text(
                 json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
             )
+        elif args.mode == "map-nav":
+            output = args.output.resolve()
+            summary = map_and_navigate(output)
+            (output / "mapping_metrics.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        elif args.mode == "keyboard-demo":
+            output = args.output.resolve()
+            summary = run_keyboard_demo(output, scenario=str(config.get("scenario", "sparse")))
+            (output / "keyboard_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         elif args.mode == "train-segmentation":
             summary = train_segmentation(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "segmentation_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-        else:
+        elif args.mode == "train-control":
             summary = train_control(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "control_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        elif args.mode == "train-end-to-end":
+            summary = train_end_to_end(args.output.resolve(), seed=int(config.get("seed", 20261016)))
+            (args.output.resolve() / "end_to_end_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        else:
+            output = args.output.resolve()
+            route_config = RouteConfig(
+                roof_width=float(config["roof_width"]), roof_depth=float(config["roof_depth"]), altitude=float(config["altitude"]),
+                strip_spacing=float(config["strip_spacing"]), speed=float(config["speed"]), edge_margin=float(config["edge_margin"]),
+            )
+            dataset_config = DatasetConfig(
+                frames_per_scene=int(config.get("frames_per_scene", 6)), image_width=int(config.get("image_width", 160)),
+                image_height=int(config.get("image_height", 120)), seed=int(config.get("seed", 20261016)),
+                cross_track_std=float(config.get("cross_track_std", 0.35)), heading_std=float(config.get("heading_std", 0.12)),
+            )
+            output.mkdir(parents=True, exist_ok=True)
+            summary = {"dataset": generate_dataset(output, route_config, dataset_config)}
+            quality = audit_dataset(output)
+            summary["dataset"]["quality_status"] = quality["status"]
+            summary["evaluation"] = evaluate_scenarios(output)
+            summary["mapping"] = map_and_navigate(output)
+            summary["segmentation"] = train_segmentation(output, seed=dataset_config.seed)
+            summary["control"] = train_control(output, seed=dataset_config.seed)
+            summary["end_to_end"] = train_end_to_end(output, seed=dataset_config.seed)
+            summary["keyboard"] = run_keyboard_demo(output, scenario=str(config.get("scenario", "sparse")))
+            (output / "day2_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except (KeyError, TypeError, ValueError, OSError, RuntimeError) as exc:
         print(f"error / 错误: {exc}", file=sys.stderr)
         return 2

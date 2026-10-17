@@ -12,7 +12,7 @@ from PIL import Image
 import torch
 from torch.nn import functional as F
 
-from .models import TinyMLP, TinyUNet
+from .models import TinyImageController, TinyMLP, TinyUNet
 
 
 def _records(dataset: Path, split: str) -> list[dict[str, Any]]:
@@ -98,3 +98,37 @@ def train_control(dataset: Path, epochs: int = 30, seed: int = 20261016) -> dict
     with torch.no_grad():
         predictions = model(test_features)
     return {"mse": float(F.mse_loss(predictions, test_targets)), "epochs": epochs, "train_frames": len(train_rows), "test_frames": len(test_rows)}
+
+
+def train_end_to_end(dataset: Path, epochs: int = 12, seed: int = 20261016) -> dict[str, Any]:
+    """Train RGB-to-command model and report held-out command MSE / 训练图像到控制网络并报告测试误差。"""
+    torch.manual_seed(seed)
+    model = TinyImageController()
+    optimizer = torch.optim.Adam(model.parameters(), lr=2e-3)
+    train_rows = _records(dataset, "train")
+    images = torch.stack([_image_tensor(dataset / row["rgb_path"]) for row in train_rows])
+    targets = torch.tensor(
+        [[row["expert_command"][key] for key in ("forward_speed", "yaw_rate")] for row in train_rows],
+        dtype=torch.float32,
+    )
+    for _ in range(epochs):
+        optimizer.zero_grad()
+        loss = F.mse_loss(model(images), targets)
+        loss.backward()
+        optimizer.step()
+    test_rows = _records(dataset, "test")
+    test_images = torch.stack([_image_tensor(dataset / row["rgb_path"]) for row in test_rows])
+    test_targets = torch.tensor(
+        [[row["expert_command"][key] for key in ("forward_speed", "yaw_rate")] for row in test_rows],
+        dtype=torch.float32,
+    )
+    with torch.no_grad():
+        predictions = model(test_images)
+    return {
+        "mse": float(F.mse_loss(predictions, test_targets)),
+        "epochs": epochs,
+        "train_frames": len(train_rows),
+        "test_frames": len(test_rows),
+        "input": "rgb_image",
+        "output": ["forward_speed", "yaw_rate"],
+    }
