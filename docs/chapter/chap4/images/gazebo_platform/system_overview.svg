@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+  <rect width="1200" height="560" fill="#f7f5ef"/>
+  <style>
+    .title { font: 700 26px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #172033; }
+    .subtitle { font: 400 15px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #4d586b; }
+    .box-title { font: 700 17px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #172033; }
+    .box-text { font: 400 14px "Microsoft YaHei", "Segoe UI", sans-serif; fill: #354158; }
+    .tag { font: 700 12px "Consolas", monospace; fill: #ffffff; }
+    .arrow { stroke: #315b91; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); }
+    .arrow2 { stroke: #b95d32; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead2); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#315b91"/>
+    </marker>
+    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b95d32"/>
+    </marker>
+  </defs>
+
+  <text x="42" y="54" class="title">Gazebo 移动机器人平台：从模型到 ROS 数据链</text>
+  <text x="42" y="82" class="subtitle">同一个 mybot 模型在 Gazebo 中完成物理与传感器仿真，通过 ROS 插件接入话题、里程计和 TF。</text>
+
+  <rect x="42" y="122" width="295" height="350" rx="10" fill="#172033"/>
+  <text x="66" y="160" class="title" fill="#ffffff">1. Gazebo 世界</text>
+  <text x="66" y="187" class="subtitle" fill="#c8d4e3">物理、碰撞、渲染、传感器</text>
+
+  <rect x="72" y="220" width="235" height="185" rx="8" fill="#22304a" stroke="#6b7c98"/>
+  <rect x="150" y="270" width="80" height="56" rx="8" fill="#315b91" stroke="#dbe8f8" stroke-width="2"/>
+  <text x="165" y="303" font-family="Microsoft YaHei, Segoe UI, sans-serif" font-size="15" font-weight="700" fill="#ffffff">mybot</text>
+  <circle cx="115" cy="333" r="13" fill="#0f1218"/>
+  <circle cx="265" cy="333" r="13" fill="#0f1218"/>
+  <circle cx="190" cy="360" r="9" fill="#8d949f"/>
+  <rect x="162" y="236" width="56" height="16" rx="8" fill="#b95d32"/>
+  <text x="175" y="248" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#ffffff">激光</text>
+  <rect x="230" y="246" width="50" height="16" rx="8" fill="#15756f"/>
+  <text x="242" y="258" font-family="Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#ffffff">相机</text>
+
+  <rect x="382" y="122" width="345" height="350" rx="10" fill="#ffffff" stroke="#d6cfbf"/>
+  <text x="406" y="160" class="box-title">2. ROS 计算图</text>
+  <text x="406" y="187" class="box-text">插件、节点、话题和 TF 的连接关系</text>
+
+  <rect x="412" y="222" width="130" height="54" rx="7" fill="#e6eef8" stroke="#9bb4d4"/>
+  <text x="436" y="255" class="box-title">控制节点</text>
+
+  <rect x="560" y="222" width="138" height="54" rx="7" fill="#e2f3f1" stroke="#82bbb4"/>
+  <text x="582" y="255" class="box-title">diff_drive</text>
+
+  <rect x="412" y="335" width="130" height="54" rx="7" fill="#f9e7dc" stroke="#d9a07e"/>
+  <text x="443" y="368" class="box-title">激光插件</text>
+
+  <rect x="560" y="335" width="138" height="54" rx="7" fill="#f7edce" stroke="#c8a94f"/>
+  <text x="583" y="368" class="box-title">相机插件</text>
+
+  <rect x="482" y="414" width="145" height="42" rx="7" fill="#e9e4d9" stroke="#c2b9a6"/>
+  <text x="511" y="441" class="box-title">robot_state_publisher</text>
+
+  <path d="M542 249 L560 249" class="arrow"/>
+  <path d="M482 389 L560 389" class="arrow2"/>
+  <path d="M613 249 C613 315 555 322 555 335" class="arrow"/>
+  <path d="M555 362 C530 362 525 400 535 414" class="arrow"/>
+
+  <rect x="772" y="122" width="386" height="350" rx="10" fill="#ffffff" stroke="#d6cfbf"/>
+  <text x="796" y="160" class="box-title">3. 输出的 ROS 接口</text>
+  <text x="796" y="187" class="box-text">运动、传感器和坐标变换</text>
+
+  <rect x="804" y="220" width="310" height="42" rx="7" fill="#e6eef8" stroke="#9bb4d4"/>
+  <text x="825" y="247" class="box-text">/cmd_vel  geometry_msgs/Twist</text>
+  <rect x="804" y="274" width="310" height="42" rx="7" fill="#e2f3f1" stroke="#82bbb4"/>
+  <text x="825" y="301" class="box-text">/odom  nav_msgs/Odometry</text>
+  <rect x="804" y="328" width="310" height="42" rx="7" fill="#f9e7dc" stroke="#d9a07e"/>
+  <text x="825" y="355" class="box-text">/scan  sensor_msgs/LaserScan</text>
+  <rect x="804" y="382" width="310" height="42" rx="7" fill="#f7edce" stroke="#c8a94f"/>
+  <text x="825" y="409" class="box-text">/camera/image_raw  sensor_msgs/Image</text>
+  <rect x="804" y="436" width="310" height="28" rx="7" fill="#e9e4d9" stroke="#c2b9a6"/>
+  <text x="825" y="456" class="box-text">TF: odom -> base_link -> sensors</text>
+
+  <path d="M700 249 L772 241" class="arrow"/>
+  <path d="M700 362 L772 349" class="arrow"/>
+  <path d="M700 362 L772 351" class="arrow2"/>
+
+  <rect x="42" y="500" width="1116" height="34" rx="7" fill="#e9e4d9" stroke="#c2b9a6"/>
+  <text x="62" y="523" class="box-text">验证顺序：话题存在 -> 有发布者和订阅者 -> 消息类型正确 -> 频率正常 -> TF 连通 -> 机器人方向正确 -> 传感器可视化正常</text>
+</svg>

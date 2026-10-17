@@ -1,0 +1,4 @@
+<launch>
+    <node name="auto_circle_sim" pkg="auto_circle_sim" type="main.py" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find auto_circle_sim)/rviz/auto_circle.rviz"/>
+</launch>

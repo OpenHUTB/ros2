@@ -1,0 +1,144 @@
+{
+  "split": "final",
+  "matching_windows": 315,
+  "max_allowed_probability_error": 2e-06,
+  "events": [
+    {
+      "timestamp_ns": 1790955089768823296,
+      "segment_id": "episode_300",
+      "previous": "unknown",
+      "label": "line",
+      "confidence": 0.9317823052406311,
+      "elapsed_s": 8.049171712
+    },
+    {
+      "timestamp_ns": 1790955109359241216,
+      "segment_id": "episode_301",
+      "previous": "unknown",
+      "label": "circle",
+      "confidence": 0.8906440734863281,
+      "elapsed_s": 8.097172736
+    },
+    {
+      "timestamp_ns": 1790955131973723648,
+      "segment_id": "episode_302",
+      "previous": "unknown",
+      "label": "figure_eight",
+      "confidence": 0.9887314438819885,
+      "elapsed_s": 8.157174016
+    },
+    {
+      "timestamp_ns": 1790955152722166272,
+      "segment_id": "episode_303",
+      "previous": "unknown",
+      "label": "climb",
+      "confidence": 0.9916292428970337,
+      "elapsed_s": 8.049171712
+    },
+    {
+      "timestamp_ns": 1790955173551610624,
+      "segment_id": "episode_304",
+      "previous": "unknown",
+      "label": "stop_go",
+      "confidence": 0.7937545776367188,
+      "elapsed_s": 9.144195072
+    },
+    {
+      "timestamp_ns": 1790955194840064768,
+      "segment_id": "episode_305",
+      "previous": "unknown",
+      "label": "line",
+      "confidence": 0.8816558718681335,
+      "elapsed_s": 8.097172736
+    },
+    {
+      "timestamp_ns": 1790955216065517568,
+      "segment_id": "episode_306",
+      "previous": "unknown",
+      "label": "circle",
+      "confidence": 0.966651201248169,
+      "elapsed_s": 8.148173824
+    },
+    {
+      "timestamp_ns": 1790955238752001536,
+      "segment_id": "episode_307",
+      "previous": "unknown",
+      "label": "figure_eight",
+      "confidence": 0.9996086955070496,
+      "elapsed_s": 8.049171712
+    },
+    {
+      "timestamp_ns": 1790955478019105792,
+      "segment_id": "episode_308",
+      "previous": "unknown",
+      "label": "climb",
+      "confidence": 0.974927544593811,
+      "elapsed_s": 8.142173696
+    },
+    {
+      "timestamp_ns": 1790955281193906944,
+      "segment_id": "episode_309",
+      "previous": "unknown",
+      "label": "stop_go",
+      "confidence": 0.6519210934638977,
+      "elapsed_s": 8.046171648
+    },
+    {
+      "timestamp_ns": 1790955282792941056,
+      "segment_id": "episode_309",
+      "previous": "stop_go",
+      "label": "line",
+      "confidence": 0.9556559920310974,
+      "elapsed_s": 9.64520576
+    },
+    {
+      "timestamp_ns": 1790955287539042304,
+      "segment_id": "episode_309",
+      "previous": "line",
+      "label": "stop_go",
+      "confidence": 0.7739775776863098,
+      "elapsed_s": 14.391307008
+    },
+    {
+      "timestamp_ns": 1790955303517383168,
+      "segment_id": "episode_310",
+      "previous": "unknown",
+      "label": "line",
+      "confidence": 0.8828777074813843,
+      "elapsed_s": 8.097172736
+    },
+    {
+      "timestamp_ns": 1790955322723792896,
+      "segment_id": "episode_311",
+      "previous": "unknown",
+      "label": "circle",
+      "confidence": 0.8536739945411682,
+      "elapsed_s": 8.097172736
+    },
+    {
+      "timestamp_ns": 1790955345149271296,
+      "segment_id": "episode_312",
+      "previous": "unknown",
+      "label": "figure_eight",
+      "confidence": 0.9952325224876404,
+      "elapsed_s": 8.082172416
+    },
+    {
+      "timestamp_ns": 1790955367892756480,
+      "segment_id": "episode_313",
+      "previous": "unknown",
+      "label": "climb",
+      "confidence": 0.9993534684181213,
+      "elapsed_s": 8.091172608
+    },
+    {
+      "timestamp_ns": 1790955388053186560,
+      "segment_id": "episode_314",
+      "previous": "unknown",
+      "label": "stop_go",
+      "confidence": 0.9846483469009399,
+      "elapsed_s": 8.14517376
+    }
+  ],
+  "event_count": 17
+}
