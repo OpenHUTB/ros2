@@ -211,6 +211,8 @@ source devel/setup.bash
 ```
 roslaunch panda_keyboard_control panda_keyboard_demo.launch
 ```
+8.运行成功界面
+
 8. 操作说明
 程序运行后，系统会自动弹出键盘控制窗口，请在该窗口中按以下按键控制：
 
