@@ -5,7 +5,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='uav_key_control',
-            executable='main_key_control.py',
+            executable='keyboard_uav_control',
             output='screen',
         )
     ])
