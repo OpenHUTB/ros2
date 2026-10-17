@@ -12,5 +12,9 @@ catkin_package()
 
 catkin_install_python(PROGRAMS
   scripts/panda_keyboard_control.py
+  scripts/main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+install(DIRECTORY humanoid/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/humanoid
 )
