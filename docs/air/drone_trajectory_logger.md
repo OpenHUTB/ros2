@@ -12,12 +12,12 @@
 本模块包含以下核心文件，均已提交至仓库：
 ```text
 src/drone_trajectory_logger/
-├── drone_trajectory_logger/          <-- 新建的内层文件夹
-│   ├── __init__.py                   <-- 新建的空文件
-│   ├── main.py                       <-- 移进来的主程序
-│   └── trajectory_analyzer.py        <-- 移进来的分析程序
+├── drone_trajectory_logger/          
+│   ├── __init__.py                   空文件
+│   ├── main.py                       主程序
+│   └── trajectory_analyzer.py        分析程序
 ├── resource/
-│   └── drone_trajectory_logger       <-- 新建的空文件
+│   └── drone_trajectory_logger       
 ├── launch/
 │   └── main.launch.py
 ├── package.xml
