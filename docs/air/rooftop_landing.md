@@ -111,11 +111,13 @@ RViz 中打开 `PointCloud2(/lidar/points)` 与 `MarkerArray(/rooftop/markers)`�
 python3 tests/test_rooftop_landing_local.py
 ```
 
-93 项全部通过。其中「端到端感知」用**合成城市场景**（地面 + 楼房 + 墙面 + 离群点）
+100 项全部通过。其中「端到端感知」用**合成城市场景**（地面 + 楼房 + 墙面 + 离群点）
 验证算法：应挑出 15 m 高的屋顶，落点接近屋顶中心，内切圆半径接近 9 m；
 「凸包鲁棒性回归」另外验证了少量同高度噪点不会把轮廓撑大、相邻但不相连的
-两栋楼会被拆成两个候选；「高度基准」则用**地图原点在地面之上约 25 m** 的场景
-回归「换地图后仍能挑出屋顶」。
+两栋楼会被拆成两个候选；「高度基准」用**地图原点在地面之上约 25 m** 的场景
+回归「换地图后仍能挑出屋顶」，并用真机上量到的两个场景做回归：
+**比地面高 1.9 m 的细长条必须被默认 4.0 m 的地面余量滤掉**、
+**只检出 1 个平面时必须不降落**（而不是把地面当屋顶报 LANDED 成功）。
 
 这套测试的意义在于：**在没有显卡、没有仿真器、甚至没有 ROS 的机器上也能回归**，
 方便在没有条件启动整套仿真的情况下先验证算法改动。
@@ -125,14 +127,14 @@ python3 tests/test_rooftop_landing_local.py
 （它只能证明「本节点 + 桥接协议」这一层是通的，不等价于真实链路）。
 
 真机链路（仿真器 + `carlair_ros_bridge` + 真实点云）的验证范围与结论见模块
-[`README.md`](https://github.com/OpenHUTB/ros2/blob/master/src/air/rooftop_landing/README.md) §8.3：
-感知、选点、下发目标点、认领到达状态已在真机上验证，**下降到底这一段尚未在真机上复现成功**。
+[`README.md`](https://github.com/OpenHUTB/ros2/blob/master/src/air/rooftop_landing/README.md) §8.3。
 
 ---
 
 本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、代码与文档起草、问题排查）。
 文中坐标约定、参数与话题接口已在 Ubuntu 20.04.6 + ROS Noetic + OpenHUTB/AirSim 1.8.1 环境下
-连同 `carlair_ros_bridge` 用**真实点云**实测确认（节点从真实 LiDAR 点云中检出屋顶并成功飞抵其上方，
-终端记录见模块 README §8.3）；`DETECT → APPROACH → DESCEND → LANDED` 全流程则是在
-ROS 闭环测试（自带假桥接层，不含仿真器）中完整跑通的；本地回归测试 93 项在无 ROS 环境下全部通过。
+连同 `carlair_ros_bridge` 用**真实点云**实测确认（节点从真实 LiDAR 点云中检出屋顶并成功飞抵其上方），
+并且在本模块合入主分支后，由评审者用**零本地补丁、默认配置**在同一类环境下
+独立复现了完整的 `DETECT → APPROACH → DESCEND → LANDED`；
+本地回归测试 100 项在无 ROS 环境下全部通过。
 作者对提交内容的正确性与完整性负全部责任。
