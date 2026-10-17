@@ -272,22 +272,8 @@ python3 keyboard_mujoco.py
 | 4 | 关节4转动 | r | 复位姿态 |
 | q | 退出程序 |  |  |
 
-### 五、 常见问题排查
 
-1. **报错 **`**Unable to connect to move_group action server**`
-    - **原因**：脚本启动时 `demo.launch` 尚未完成初始化，或者 `move_group` 节点崩溃。
-    - **解决**：确保先运行 `demo.launch` 并看到 "Ready to take commands for planning group panda_arm." 提示后再运行脚本。检查是否有残留进程：`killall -9 roslaunch roscore` 后重试。
-2. `**robot_state_publisher**`** 循环重启或退出**
-    - **原因**：缺少 URDF 描述文件或 Xacro 解析失败。
-    - **解决**：重新安装描述包并刷新库缓存：
-3. **规划失败（Planning Failed）**
-    - **原因**：目标关节角度超出限位或步长过大导致碰撞检测失败。
-    - **解决**：在代码中减小 `self.joint_step`（例如从 0.1 改为 0.05），或降低速度缩放因子。
-4. **找不到功能包 **`**panda_keyboard_control**`
-    - **原因**：当前终端未 source 工作空间。
-    - **解决**：在每个新终端中执行 `source ~/panda_ros_project/catkin_ws/devel/setup.bash`，或将其写入 `~/.bashrc`。
-
-### 六、 运行效果
+### 五、 运行效果
 
 ![运行效果演示](rohotic2.gif)
 
