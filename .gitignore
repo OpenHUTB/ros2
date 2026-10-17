@@ -64,3 +64,7 @@ Thumbs.db
 
 # 瀵规瘮瀹為獙鐨勯�愭璁粌浜х墿锛堟ā鍨嬪彲鍐嶈缁冧笉鍏ュ簱锛沞val_log.json / metrics.json 浠嶅叆搴擄級
 **/results/runs/**/*.zip
+
+# Stanley 横向控制模块：results 下的图片/动图属于可再生的运行产物，不入库
+src/ground/autonomous_car_stanley_tracking/results/*.png
+src/ground/autonomous_car_stanley_tracking/results/*.gif

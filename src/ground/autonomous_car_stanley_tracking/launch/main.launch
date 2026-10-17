@@ -1,0 +1,17 @@
+<launch>
+  <!-- 兼容 ROS 1 风格的 roslaunch/ros2 launch 调用；推荐使用 main.launch.py -->
+  <arg name="controller" default="stanley"/>
+  <arg name="scenario" default="circle"/>
+  <arg name="k" default="1.6"/>
+  <arg name="target_speed" default="5.0"/>
+
+  <node pkg="autonomous_car_stanley_tracking"
+        exec="stanley_tracking_node"
+        name="stanley_tracking_node"
+        output="screen">
+    <param name="controller" value="$(var controller)"/>
+    <param name="reference_scenario" value="$(var scenario)"/>
+    <param name="k" value="$(var k)"/>
+    <param name="target_speed" value="$(var target_speed)"/>
+  </node>
+</launch>
