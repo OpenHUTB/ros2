@@ -15,7 +15,11 @@
 src/
 └── drone_trajectory_logger/
     ├── main.py                 # 轨迹发布节点（入口）
-    └── trajectory_analyzer.py  # 轨迹识别与绘图节点
+    ├── trajectory_analyzer.py  # 轨迹识别与绘图节点
+    ├── setup.py                # ROS 2 功能包配置文件
+    ├── package.xml             # 依赖声明文件
+    └── launch/
+        └── main.launch.py      # 一键启动文件
 ```
 ## 运行步骤
 
