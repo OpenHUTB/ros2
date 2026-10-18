@@ -90,6 +90,8 @@ ROS每章节运行代码:
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 
+* [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
+
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
