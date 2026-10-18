@@ -37,14 +37,26 @@ Visualization Manager:
       Name: Octomap
       Topic: /occupied_cells_vis_array
       Queue Size: 5
-    # A* 规划出的路径（第 4 节实现后生效）
+    # A* 规划出的路径：由 astar_planner 发布到 /uav/path
+    # 路径由八叉树叶节点中心串成，节点可能很大，所以线要够粗才看得清
     - Class: rviz/Path
       Enabled: true
       Name: PlannedPath
-      Topic: /planned_path
+      Topic: /uav/path
       Color: 25; 255; 0
       Line Style: Lines
-      Line Width: 0.1
+      Line Width: 0.15
+      Alpha: 1
+      Queue Size: 5
+    # A* 实际展开过的节点：由 astar_planner 发布。
+    # 按节点尺寸着色 —— 偏蓝是小节点（障碍附近，需要细碎地走），
+    # 偏红是大节点（空旷区域一步跨过去）。
+    # 这一路输出能直接看出八叉树的跨分辨率邻接是否真的生效。
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: AStarExplored
+      Topic: /uav/explored_markers
+      Queue Size: 5
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: world

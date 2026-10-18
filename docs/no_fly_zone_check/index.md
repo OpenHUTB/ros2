@@ -1,56 +1,49 @@
-title: 主页
 
-# [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
+# 禁飞区检测模块
 
-欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
+## 功能说明
 
-- [简介](#list)
-  - [入门](#introduction)
-  - [地面载具](#ground_vehicle)
+本模块为无人机配送场景提供**禁飞区安全校验**功能。用户输入取货点和送货点的经纬度坐标，模块自动判断这两个点是否落在预设的禁飞区范围内。
 
----
+## 应用场景
 
-## 1. 入门 <span id="list"></span>
+在无人机执行配送任务前，需要确认航线起止点不会进入敏感区域（如机场、军事基地、学校上空）。本模块提供了一种基于球面距离的快速检测方法。
 
-ROS相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
+## 算法原理
 
-* 教材：ROS教材.pdf
-* 课件和视频：ROS资料.zip
-* 安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova
-* Windows虚拟机（密钥：ZF3R0-FHED2-M80TY-8QYGC-NPKYF）：*.exe
-* 补充：[ubuntu下虚拟机的运行方式](ubuntu下虚拟机的运行方式.md)
+使用 **Haversine 公式** 计算两个经纬度坐标之间的球面距离，公式如下：
 
+$$
+a = \sin^2\left(\frac{\Delta\varphi}{2}\right) + \cos\varphi_1 \cdot \cos\varphi_2 \cdot \sin^2\left(\frac{\Delta\lambda}{2}\right)
+$$
 
-### 1.1 Windows系统（通过虚拟机运行） 
+$$
+c = 2 \cdot atan2\left(\sqrt{a}, \sqrt{1-a}\right)
+$$
 
-[下载](https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html)并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 `lsb_release -a`）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。
+$$
+d = R \cdot c
+$$
 
+其中：
 
-ROS每章节运行代码:
+- φ₁、φ₂ 为两点的纬度（弧度）
+- Δφ、Δλ 为两点纬度和经度的差值
+- R 为地球平均半径，取值 6371000 米
+- d 为最终距离（米）
 
-[第二章](<./Run_code_for_%20the_%20chapter/ROS理论与实践第二章代码运行.md>)
+## 使用方法
 
+需要配合 AirSim 模拟器运行：
 
-## 2. 地面载具  <span id='ground_vehicle'></span>
+    cd src/no_fly_zone_check
+    python main.py
 
-* [建立虚拟机和地面载具之间的连接](./set_up_and_connect_to_carla.md)
+## 运行效果
 
+程序启动后会尝试连接 AirSim 模拟器。
 
-## 3. 空域载具
+![运行截图](../img/cha/no_fly_zone_check_airsim_result.png)
 
-* [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
+**说明**：上图为本地开发环境（未安装 AirSim 模拟器）的运行结果，程序正确执行了连接逻辑并给出了友好的错误提示。在已启动 AirSim 1.8.1 模拟器的环境中运行，将获取到无人机实时位置并完成禁飞区检测。
 
-* [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
-
-* [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
-
-
-## 4. 水域载具
-
-* [水域载具 ROS2 接口](./water/HoloOcean.md)
-
-___
-
-如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
-
-## 参考文献
