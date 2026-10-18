@@ -101,6 +101,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [行人过街 TTC 决策](./ground/pedestrian_crossing_policy.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
