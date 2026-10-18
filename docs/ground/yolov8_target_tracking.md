@@ -43,7 +43,7 @@
 ##  四.文件结构
 ```text
 src/yolov8-target-tracking/
-├── src/
+├── scripts/
 │   ├── main.py                     # YOLOv8 视觉检测节点（入口）
 │   └── main_follower.py            # 目标跟随控制节点
 ├── launch/
@@ -55,11 +55,11 @@ src/yolov8-target-tracking/
 
 ## 五. 运行说明
 
-1.启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_simulation.launch
+1.启动仿真环境：roslaunch turtlebot3_gazebo turtlebot3_world.launch
 
 2.启动完整项目：roslaunch yolov8-target-tracking main.launch
 
-注意： 请将 yolov8n.pt 权重文件下载后，放置在 src/yolov8-target-tracking/src/ 目录下，与 main.py 放在同一文件夹内。（权重文件较大，未随仓库上传）
+注意： 请将 yolov8n.pt 权重文件下载后，放置在 src/yolov8-target-tracking/scripts/ 目录下，与 main.py 放在同一文件夹内。（权重文件较大，未随仓库上传）
 
 ## 六. 实验数据与系统指标
 
