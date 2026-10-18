@@ -1,6 +1,4 @@
 from setuptools import setup
-import os
-from glob import glob
 
 package_name = 'image_recorder'
 
@@ -11,15 +9,13 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        ('share/' + package_name + '/launch', ['launch/main.launch.py']),
     ],
     install_requires=['setuptools'],
-    zip_safe=True,
-    maintainer='user',
-    maintainer_email='3523828193@qq.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
-    tests_require=['pytest'],
+    maintainer='student',
+    maintainer_email='3523828193@qq.com', 
+    description='ROS 2 Carla image recorder package',
+    license='MIT',
     entry_points={
         'console_scripts': [
             'main = image_recorder.main:main',
