@@ -37,7 +37,6 @@ class MujocoSimulation:
         'right_front_joint',
         'right_rear_joint',
     )
-
     def __init__(self, model_path: Path) -> None:
         try:
             import mujoco
@@ -132,10 +131,10 @@ class MujocoSimulation:
         self.data.qpos[:] = self._initial_qpos
         self.data.qvel[:] = self._initial_qvel
         self.data.ctrl[:] = 0.0
+
+        self._mujoco.mj_forward(self.model, self.data)
         if preserve_time:
             self.data.time = current_time
-        self._mujoco.mj_forward(self.model, self.data)
-
     def planar_state(self) -> SimulationState:
         position = self.data.xpos[self._chassis_body_id]
         quaternion = self.data.xquat[self._chassis_body_id]

@@ -2,9 +2,9 @@
 
 MuJoCo Differential-Drive Slip Perception and Trajectory Compensation
 
-本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础，并发布带可复现噪声的编码器和惯性测量单元数据。多摩擦采集入口按完整 episode 轮换场景、复位车辆、执行确定性激励指令，并把同步观测写入按 episode 隔离的数据文件。
+本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础：入口接收 `cmd_vel`，通过差速运动学计算四轮目标转速，并发布仿真时钟、真实里程计和坐标变换；同时发布带可复现噪声的编码器和惯性测量单元数据。多摩擦采集入口按完整 episode 轮换场景、复位车辆、执行确定性激励指令，并把同步观测写入按 episode 隔离的数据文件。
 
-This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot and publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
+This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot. The entry point consumes `cmd_vel`, converts chassis commands to four wheel-speed targets, and publishes simulation time, ground-truth odometry, and transforms. It also publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
 
 ## 环境 / Environment
 
@@ -78,6 +78,7 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | MuJoCo 真实状态 / MuJoCo ground truth |
 | 发布 / Publish | `/clock` | `rosgraph_msgs/msg/Clock` | 仿真时钟 / simulation clock |
 | 发布 / Publish | `/tf` | `tf2_msgs/msg/TFMessage` | `odom` 到 `base_link` / `odom` to `base_link` |
+
 | 发布 / Publish | `/wheel/encoders` | `sensor_msgs/msg/JointState` | 四轮位置与速度 / four-wheel positions and velocities |
 | 发布 / Publish | `/imu/data` | `sensor_msgs/msg/Imu` | 三轴加速度与角速度 / three-axis acceleration and angular velocity |
 | 发布 / Publish | `/scenario/friction` | `std_msgs/msg/Float64` | 当前滑动摩擦系数 / active sliding-friction coefficient |
@@ -87,6 +88,7 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/cmd_vel/compensated` | `geometry_msgs/msg/Twist` | 滑移补偿后的速度指令 / slip-compensated velocity command |
 | 发布 / Publish | `/slip/estimate` | `std_msgs/msg/Float64` | 当前窗口滑移估计 / current window slip estimate |
 | 发布 / Publish | `/slip/status` | `std_msgs/msg/String` | 预热、停机或正常状态 / warm-up, stop, or ready status |
+
 
 速度指令超过 `command_timeout` 未更新时，节点将四轮目标速度清零。非有限数值和越出包资源目录的模型路径会被拒绝。
 
@@ -102,6 +104,7 @@ python3 -m compileall src/ground/mujoco_diff_drive_slip_compensation
 ROS 2 环境中的完整验收还应包含 `colcon test` 与启动后的话题检查。
 
 Full acceptance in a ROS 2 environment also includes `colcon test` and topic inspection after launch.
+
 
 ## 多摩擦数据采集 / Multi-friction Data Collection
 

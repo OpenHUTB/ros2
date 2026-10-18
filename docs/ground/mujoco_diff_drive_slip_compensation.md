@@ -33,7 +33,6 @@ The package uses `ament_python`; its model, configuration, and launch files are 
 MJCF 在车体中心定义三轴加速度计和陀螺仪。节点同时读取四个轮关节的位置与角速度，并通过局部随机数生成器加入固定种子的高斯噪声。MuJoCo 内部传感器保持无噪真值，噪声只施加于发布消息，因此实验可重复且便于比较原始状态。
 
 The MJCF defines a three-axis accelerometer and gyroscope at the chassis centre. The node also reads position and angular velocity from all four wheel joints and applies seeded Gaussian noise through a local random generator. MuJoCo sensor values remain noise-free internally; noise is added only to published messages for reproducibility and comparison with the original state.
-
 ## 环境与构建 / Environment and Build
 
 目标环境为 Ubuntu 22.04、ROS 2 Humble、Python 3.10 和 MuJoCo 3.12.0。
@@ -186,6 +185,7 @@ ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
 ```
 
 仿真器在 launch 组内接收 `/cmd_vel/compensated`，外部控制器仍向 `/cmd_vel` 发布原始指令；因此补偿节点不会把自己的输出再次作为输入。 / The simulator receives `/cmd_vel/compensated` inside the launch group while an external controller continues publishing raw `/cmd_vel`, so the node does not feed its own output back into its input.
+
 
 ## 验证命令 / Verification Commands
 

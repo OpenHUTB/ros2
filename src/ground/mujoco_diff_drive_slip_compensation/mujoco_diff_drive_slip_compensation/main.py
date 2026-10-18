@@ -21,7 +21,7 @@ def _load_ros_dependencies() -> dict[str, Any]:
         from rosgraph_msgs.msg import Clock
         from sensor_msgs.msg import Imu, JointState
         from std_msgs.msg import Float64, String
-        from tf2_ros import TransformBroadcaster
+        import TransformBroadcaster
     except ImportError as exc:
         raise RuntimeError(
             '缺少 ROS 2 Humble Python 依赖 / ROS 2 Humble Python dependencies are required'
@@ -73,6 +73,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self.declare_parameter('encoder_velocity_noise_std', 0.005)
             self.declare_parameter('accelerometer_noise_std', 0.02)
             self.declare_parameter('gyroscope_noise_std', 0.002)
+
 
             package_share = Path(
                 get_package_share_directory(
@@ -200,7 +201,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             clock.clock.sec = seconds
             clock.clock.nanosec = int((state.time - seconds) * 1_000_000_000)
             self._clock_publisher.publish(clock)
-
             positions, velocities = self._simulation.wheel_state()
             noisy_positions, noisy_velocities = self._sensor_noise.encoders(
                 positions, velocities
@@ -255,7 +255,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             episode = String()
             episode.data = episode_id
             self._episode_publisher.publish(episode)
-
     return SimulationNode
 
 
