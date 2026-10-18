@@ -64,7 +64,7 @@
 ![训练和验证损失](payload_mass_estimation/results/loss.png)
 ![正常测试集：每次飞行平均估计与真实质量](payload_mass_estimation/results/comparison.png)
 
-详细指标见 `results/metrics.json`，逐窗口预测在同目录 CSV 中。结果来自当前的简化竖直飞行实验，尚未进行跨控制器、复杂机动、OpenHUTB Unreal 或实机验证。
+运行评估后，详细指标生成到本地 `results/metrics.json`，逐窗口预测生成到同目录 CSV 中。运行记录不随源码提交，文档保留实验汇总表和展示图片。结果来自当前的简化竖直飞行实验，尚未进行跨控制器、复杂机动、OpenHUTB Unreal 或实机验证。
 
 ## 运行
 
@@ -138,6 +138,8 @@ flowchart LR
 bash main.sh evaluate
 ```
 
+随附权重可直接评估，不需要训练过程日志。训练曲线图保留在本文中；重新训练后会生成本地 `models/*/loss.csv`，再次评估时可据此重绘损失曲线。
+
 如需重新采集、训练，请先复制项目目录，避免覆盖随附数据和模型。在副本中运行：
 
 ```bash
@@ -146,8 +148,8 @@ bash main.sh train
 bash main.sh evaluate
 ```
 
-在有图形环境的 Ubuntu 桌面运行 `python render_validation.py` 可重新渲染仿真图。
+在有图形环境的 Ubuntu 桌面运行 `python render_validation.py` 可重新渲染仿真图，输出到本地 `results/simulation.png`。
 
-8 项测试涵盖模型总质量、已知质量物理公式、时间对齐、在线与离线一致性、输入字段、异常值、采样间隔和飞行划分。环境版本及运行记录在 `artifacts/` 中。`validation.json` 的哈希是交付文件校验，不代表测试前预注册实验。
+8 项测试涵盖模型总质量、已知质量物理公式、时间对齐、在线与离线一致性、输入字段、异常值、采样间隔和飞行划分。`doctor` 生成本地环境记录 `artifacts/environment.json`；测试、评估和回放结果由运行命令生成。`results/`、`artifacts/`、构建目录、日志和训练过程 CSV 均不提交到仓库。
 
 代码、实验脚本和文档使用 OpenAI Codex 辅助编写。指标与图片来自程序运行。

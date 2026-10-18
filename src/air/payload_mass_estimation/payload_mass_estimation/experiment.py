@@ -70,7 +70,11 @@ def evaluate():
     (out/'metrics.json').write_text(json.dumps(results,indent=2));print(json.dumps(results,indent=2))
     import matplotlib;matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    fig,ax=plt.subplots();loss=np.loadtxt(ROOT/'models/mlp_42/loss.csv',delimiter=',',skiprows=1);ax.plot(loss[:,0],loss[:,1],label='train');ax.plot(loss[:,0],loss[:,2],label='validation');ax.set(xlabel='Epoch',ylabel='MSE (kg squared)');ax.legend();fig.tight_layout();fig.savefig(out/'loss.png',dpi=150);plt.close(fig)
+    loss_path=ROOT/'models/mlp_42/loss.csv'
+    if loss_path.exists():
+        fig,ax=plt.subplots();loss=np.loadtxt(ROOT/'models/mlp_42/loss.csv',delimiter=',',skiprows=1);ax.plot(loss[:,0],loss[:,1],label='train');ax.plot(loss[:,0],loss[:,2],label='validation');ax.set(xlabel='Epoch',ylabel='MSE (kg squared)');ax.legend();fig.tight_layout();fig.savefig(out/'loss.png',dpi=150);plt.close(fig)
+    else:
+        print('Training log not present; skipping loss plot. Run train to generate a new log.')
     fig,ax=plt.subplots()
     for name in ['mlp_42','physics_impulse']:
         a=np.loadtxt(out/f'test_{name}.csv',delimiter=',',skiprows=1);means=np.asarray([a[a[:,0]==i,1:].mean(0) for i in np.unique(a[:,0])]);ax.scatter(means[:,0],means[:,1],label=name,alpha=.7)
