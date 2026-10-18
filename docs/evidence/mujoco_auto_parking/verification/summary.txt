@@ -1,0 +1,6 @@
+task1 exit=0
+sensors exit=0
+networks exit=0
+trajectory exit=0
+task3 exit=0
+task4 exit=0
