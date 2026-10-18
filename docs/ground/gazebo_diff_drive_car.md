@@ -111,26 +111,26 @@ source devel/setup.bash
 
 ### 4.1 键盘运动控制
 
-![Gazebo 差速驱动小车键盘遥控模式](../img/ground/gazebo_car_teleop.png)
+![Gazebo 差速驱动小车键盘遥控模式](../img/ground/gazebo_diff_drive_car_teleop.png)
 
 *图 1：键盘遥控模式。蓝色车体、黑色驱动轮、车头红色激光雷达。*
 
 ### 4.2 激光雷达避障
 
-![激光雷达避障模式](../img/ground/gazebo_car_laser.png)
+![激光雷达避障模式](../img/ground/gazebo_diff_drive_car_laser.png)
 
 *图 2：激光雷达避障模式。可见激光束在圆柱、方块与墙面上的回波扇形，
 以及障碍物背后的扫描阴影区（激光被遮挡形成的盲区）。*
 
 ### 4.3 深度相机避障
 
-![深度相机避障模式](../img/ground/gazebo_car_camera.png)
+![深度相机避障模式](../img/ground/gazebo_diff_drive_car_camera.png)
 
 *图 3：深度相机避障模式。*
 
 ### 4.4 三种模式的轨迹对比
 
-![三种模式轨迹对比](../img/ground/gazebo_car_trajectory.png)
+![三种模式轨迹对比](../img/ground/gazebo_diff_drive_car_trajectory.png)
 
 *图 4：三种模式的轨迹对比。灰色为场地围墙（12×12 m），
 红色圆形与蓝色方块为障碍物，圆点 / 方块标记起点与终点。*
@@ -168,7 +168,7 @@ source devel/setup.bash
 
 ### 5.3 速度曲线
 
-![速度曲线对比](../img/ground/gazebo_car_speed.png)
+![速度曲线对比](../img/ground/gazebo_diff_drive_car_speed.png)
 
 *图 5：三种模式的瞬时速度曲线。避障模式下速度随障碍接近而衰减。*
 
