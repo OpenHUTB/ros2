@@ -8,8 +8,13 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package()
 
-# 如果你有其他的 Python 脚本，可以继续加
 catkin_install_python(PROGRAMS
-  cliff_brake.py
+  cliff_brake_sim.py
+  brake_controller.py
+  brake_monitor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
