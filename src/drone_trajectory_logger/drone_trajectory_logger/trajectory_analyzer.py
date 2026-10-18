@@ -7,7 +7,7 @@ import math
 class TrajectoryAnalyzer(Node):
     def __init__(self):
         super().__init__('trajectory_analyzer')
-        self.subscription = self.create_subscription(Twist, '/drone/cmd_vel', self.listener_callback, 10
+        self.subscription = self.create_subscription(Twist, '/drone/cmd_vel', self.listener_callback, 10)
         self.get_logger().info('轨迹识别节点已启动，等待飞行数据...')
         
         self.x = 0.0
