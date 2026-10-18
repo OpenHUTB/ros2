@@ -102,6 +102,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [无人机载荷质量估计](./air/payload_mass_estimation.md)
+
+
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
@@ -163,6 +166,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
   
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
+
+* [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
 
 ___
 

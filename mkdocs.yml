@@ -91,6 +91,7 @@ nav:
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 空域载具:
+    - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
@@ -126,8 +127,10 @@ nav:
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
+
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
