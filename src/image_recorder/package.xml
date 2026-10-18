@@ -3,7 +3,7 @@
   <name>image_recorder</name>
   <version>0.0.0</version>
   <description>ROS 2 Carla image recorder package</description>
-  <maintainer email="3523828193">user</maintainer>
+  <maintainer email="3523828193@qq.com">user</maintainer>
   <license>TODO: License declaration</license>
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
