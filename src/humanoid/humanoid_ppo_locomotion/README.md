@@ -170,7 +170,12 @@ PD 控制在数学上不可能让机器人站住**：踝刚度永远小于失稳
 
 把「不摔倒」从策略里剥离出来，做成解析的**平衡基元**；神经网络只输出**残差偏置**：
 
-$$\underbrace{q^{\text{target}} = q^\star + \Delta q_{\text{balance}}}_{\text{解析基元}} + \underbrace{s_r \cdot a}_{\text{神经网络残差}}$$
+$$
+\begin{aligned}
+q^{\text{target}} =\; &\underbrace{q^\star + \Delta q_{\text{balance}}}_{\text{解析基元}}
+  \;+\; \underbrace{s_r \cdot a}_{\text{神经网络残差}}
+\end{aligned}
+$$
 
 平衡基元用质心位置/速度反馈：
 
@@ -253,15 +258,25 @@ $K_p$、$K_d$ 按关节类型取值（髋 100/2、膝 150/3、踝 40/1）。
 
 ### 6.3 奖励
 
-$$r = \underbrace{1.5e^{-(v_x - v_x^\star)^2/0.25}}_{\text{线速度跟踪}}
-+ \underbrace{0.8e^{-(\omega_z - \omega_z^\star)^2/0.25}}_{\text{角速度跟踪}}
-+ \underbrace{0.5e^{-5\|\mathbf{g}_{xy}\|^2}}_{\text{姿态}}
-+ \underbrace{0.5e^{-20(h-h^\star)^2}}_{\text{高度}}
-+ 0.2 - 10^{-4}\|\boldsymbol\tau\|^2 - 0.01\|a_t - a_{t-1}\|^2 - 0.5|v_y| - 0.3\,e_{\text{com}}^2$$
+$$
+\begin{aligned}
+r =\;& \underbrace{1.5e^{-(v_x - v_x^\star)^2/0.25}}_{\text{线速度跟踪}}
+  + \underbrace{0.8e^{-(\omega_z - \omega_z^\star)^2/0.25}}_{\text{角速度跟踪}} \\
+&+ \underbrace{0.5e^{-5\|\mathbf{g}_{xy}\|^2}}_{\text{姿态}}
+  + \underbrace{0.5e^{-20(h-h^\star)^2}}_{\text{高度}} + 0.2 \\
+&- 10^{-4}\|\boldsymbol\tau\|^2 - 0.01\|a_t - a_{t-1}\|^2
+  - 0.5|v_y| - 0.3\,e_{\text{com}}^2
+\end{aligned}
+$$
 
 ### 6.4 PPO 目标
 
-$$L^{\text{CLIP}} = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat A_t,\ \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat A_t\right)\right]$$
+$$
+\begin{aligned}
+L^{\text{CLIP}} = \mathbb{E}_t\Big[\min\big(&r_t(\theta)\hat A_t,\\
+  &\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\,\hat A_t\big)\Big]
+\end{aligned}
+$$
 
 其中 $r_t(\theta) = \pi_\theta(a_t|s_t) / \pi_{\theta_{\text{old}}}(a_t|s_t)$，$\epsilon = 0.2$，
 优势估计采用 GAE($\lambda=0.95$)。

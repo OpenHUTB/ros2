@@ -149,9 +149,13 @@ $K_p/K_d$ 按关节类型取值：髋 100/2、膝 150/3、踝 40/1，力矩按�
 
 ### 4.5 奖励
 
-$$r = 1.5e^{-(v_x - v_x^\star)^2/0.25} + 0.8e^{-(\omega_z - \omega_z^\star)^2/0.25}
-+ 0.5e^{-5\|\mathbf{g}_{xy}\|^2} + 0.5e^{-20(h-h^\star)^2} + 0.2
-- 10^{-4}\|\boldsymbol\tau\|^2 - 0.01\|a_t - a_{t-1}\|^2 - 0.5|v_y| - 0.3 e_{\text{com}}^2$$
+$$
+\begin{aligned}
+r =\;& 1.5e^{-(v_x - v_x^\star)^2/0.25} + 0.8e^{-(\omega_z - \omega_z^\star)^2/0.25} \\
+&+ 0.5e^{-5\|\mathbf{g}_{xy}\|^2} + 0.5e^{-20(h-h^\star)^2} + 0.2 \\
+&- 10^{-4}\|\boldsymbol\tau\|^2 - 0.01\|a_t - a_{t-1}\|^2 - 0.5|v_y| - 0.3\,e_{\text{com}}^2
+\end{aligned}
+$$
 
 ## 五、编译与启动
 
