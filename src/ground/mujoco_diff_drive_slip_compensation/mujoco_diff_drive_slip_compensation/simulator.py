@@ -88,6 +88,7 @@ class MujocoSimulation:
             lower, upper = self.model.actuator_ctrlrange[actuator_id]
             self.data.ctrl[actuator_id] = float(np.clip(command, lower, upper))
 
+
     def set_ground_friction(self, coefficient: float) -> None:
         """Update sliding friction while preserving torsional/rolling values."""
         if not np.isfinite(coefficient) or coefficient <= 0.0:
@@ -128,6 +129,12 @@ class MujocoSimulation:
 
     def reset(self, preserve_time: bool = False) -> None:
         current_time = float(self.data.time)
+
+    def step(self) -> None:
+        self._mujoco.mj_step(self.model, self.data)
+
+    def reset(self) -> None:
+
         self._mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[:] = self._initial_qpos
         self.data.qvel[:] = self._initial_qvel

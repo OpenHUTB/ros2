@@ -1,0 +1,28 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Marker
+      Topic: /vehicle_marker
+      Queue Size: 100
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+  Global Options:
+    Fixed Frame: map
+    Frame Rate: 30
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 10
+      Name: Current View
+      Pitch: 0.5
+      Yaw: 0.5

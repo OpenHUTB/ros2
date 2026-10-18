@@ -28,6 +28,7 @@ MuJoCo 四轮执行器 / Four wheel actuators
 
 The package uses `ament_python`; its model, configuration, and launch files are installed into the package share directory. Runtime resource lookup uses the ROS 2 package index and does not depend on a user directory, a fixed workspace path, or a network address.
 
+
 ## 编码器与 IMU / Encoders and IMU
 
 MJCF 在车体中心定义三轴加速度计和陀螺仪。节点同时读取四个轮关节的位置与角速度，并通过局部随机数生成器加入固定种子的高斯噪声。MuJoCo 内部传感器保持无噪真值，噪声只施加于发布消息，因此实验可重复且便于比较原始状态。
@@ -85,6 +86,7 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 - 四轮目标速度按执行器上限等比例缩放。 / Scale all wheel targets proportionally to actuator limits.
 - 包资源路径经过边界检查。 / Validate package-resource paths against directory escape.
 
+
 ## 数据采集 / Data Collection
 
 一条 launch 命令同时启动仿真、确定性激励指令和采集器：
@@ -111,6 +113,7 @@ At each scenario transition, the vehicle is reset and a new `episode_id` is publ
 数据集使用固定种子和 episode 标识的稳定哈希执行 70%/15%/15% 划分。划分单位是完整 episode，而不是单帧，因此相邻帧不会跨越训练、验证和测试集合。
 
 Dataset assignment uses a stable hash of the fixed seed and episode identifier with 70%/15%/15% ratios. The assignment unit is a complete episode rather than an individual frame, so adjacent frames cannot cross train, validation, and test sets.
+
 
 ## 验证命令 / Verification Commands
 
