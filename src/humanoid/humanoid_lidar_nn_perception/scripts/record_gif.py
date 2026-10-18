@@ -89,6 +89,7 @@ def main():
     ap.add_argument("--model", default=r"D:\g1_run\scene_g1.xml")
     ap.add_argument("--onnx", default=r"D:\g1_run\g1_policy.onnx")
     ap.add_argument("--cnn", default=r"D:\g1_run\perception_cnn.pt")
+    ap.add_argument("--mlp", default=r"D:\g1_run\avoid_mlp.pt")
     ap.add_argument("--out-dir", default=str(PKG_ROOT.parent.parent.parent / "docs" / "img" / "humanoid" / "humanoid_lidar_nn_perception"))
     args = ap.parse_args()
 
@@ -103,10 +104,13 @@ def main():
     lidar = LiDAR2D(model, num_beams=360, max_range=MAX_RANGE)
     cnn = torch.jit.load(args.cnn)
     cnn.eval()
+    # load NN avoidance controller (behavior cloned MLP)
+    mlp = torch.jit.load(args.mlp, map_location="cpu")
+    mlp.eval()
 
     renderer = mujoco.Renderer(model, height=480, width=640)
 
-    # reactive avoidance: drive forward, slow/turn if front blocked
+    # NN avoidance: MLP takes CNN features + target heading -> (vx, wz)
     frames = []
     vx, wz = 0.3, 0.0
     scan_for_plot = None
@@ -121,15 +125,13 @@ def main():
             scan = lidar.scan(data)
             with torch.no_grad():
                 pred = cnn(torch.from_numpy(scan).unsqueeze(0))[0].numpy()
-            front = float(pred[1]) * MAX_RANGE
-            left = float(pred[2]) * MAX_RANGE
-            right = float(pred[3]) * MAX_RANGE
-            if front < 1.5:
-                vx = 0.0
-                wz = 0.6 if left > right else -0.6
-            else:
-                vx = 0.3
-                wz = 0.0
+            # obs: [nearest, front, left, right, cos(target), sin(target)]
+            obs = np.array([pred[0], pred[1], pred[2], pred[3],
+                            1.0, 0.0], dtype=np.float32)
+            with torch.no_grad():
+                act = mlp(torch.from_numpy(obs).unsqueeze(0))[0].numpy()
+            vx = float(np.clip(act[0], -1, 1)) * 0.225 + 0.175
+            wz = float(np.clip(act[1], -1, 1)) * 0.8
             if scan_for_plot is None:
                 scan_for_plot = scan.copy()
 

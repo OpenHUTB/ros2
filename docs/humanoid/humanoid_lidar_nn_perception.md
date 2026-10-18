@@ -2,14 +2,17 @@
 
 在 **MuJoCo** 物理仿真中为 **Unitree G1** 装配一个 360 束 2D 激光雷达，
 用 **1D-CNN** 从带噪声扫描中预测前/左/右三个方向的可通行距离，
-再用 **PPO** 学习"朝目标方向走同时避障"的高层速度策略。
+再用一个 **行为克隆 MLP**（神经网络）学习"朝目标方向走同时避障"的高层速度策略。
 
 > **范围说明**：
 > - 行走底座使用 [MuJoCo-LiDAR](https://github.com/discoververse/MuJoCo-LiDAR) 仓库自带的
 >   Unitree 官方 ONNX 行走策略（已验证可前进 0.38 m/s，10 s 前进 3.8 m，零跌倒）。
-> - 避障控制网当前为**规则避障兜底**（前向 < 1.5 m 即减速转向），PPO 权重已训练并随包提交
->   但因 20 万步内 value function 未收敛（explained_variance ≈ 0），默认不启用。
+> - **避障控制器是神经网络**：一个 6-32-32-2 的 MLP（PyTorch），输入 CNN 输出的 4 维通道距离
+>   + 目标朝向编码，输出 (vx, wz) 安全速度指令。通过行为克隆（BC）从反应式规则示范中训练，
+>   10,000 样本、30 epoch 后 MSE 收敛到 8e-5。
 > - 感知 CNN 已充分收敛：4 个通道距离预测 MAE < 1 cm。
+> - PPO 强化学习版本作为训练证据保留（`weights/avoid_ppo.zip`），但因 20 万步内 value function
+>   未收敛，默认未启用。
 
 ## 一、项目概览
 
@@ -19,7 +22,7 @@
 | 物理引擎 | MuJoCo 3.3.7（OSMesa 离屏渲染） |
 | 激光雷达 | 360 束水平扫描，量程 0.1–8 m，10 Hz，基于 `mujoco.mj_ray` |
 | 感知网络 | 1D-CNN（3 层 Conv1d，64 通道），输入 scan[360]，输出 [nearest, front, left, right] / 8 |
-| 控制网络 | PPO（SB3，20 万步），观测 6 维 → 动作 (vx, ωz) 2 维 |
+| 避障控制器 | BC-MLP（6-32-32-2），输入 CNN 特征，输出 (vx, wz)；PPO 训练证据保留但未启用 |
 | 行走底座 | Unitree 官方 ONNX 策略（Isaac Lab 导出），接受 [vx, vy, ωz] 速度指令 |
 | ROS | ROS 2 Humble |
 | 话题 | `/scan` (LaserScan), `/obstacle_info` (Float32MultiArray), `/cmd_vel`, `/cmd_vel_safe`, `/joint_states`, `/odom` |
@@ -54,8 +57,9 @@
 | 数据集规模 | 20,000 帧 / 980 episodes |
 | 数据采集速度 | ~180 帧/s（CPU） |
 | CNN 模型大小 | 89 KB（TorchScript） |
+| BC-MLP 控制器 | 6-32-32-2，10k 样本，30 epoch，MSE 8e-5 |
 | ONNX 行走策略验证 | 10 s 前进 3.8 m，实际 0.38 m/s，零跌倒 |
-| PPO 训练 | 20 万步，600 fps，已训练但未启用（见范围说明） |
+| PPO 训练证据 | 20 万步，600 fps，未收敛（保留 avoid_ppo.zip 供参考） |
 
 ## 五、运行
 

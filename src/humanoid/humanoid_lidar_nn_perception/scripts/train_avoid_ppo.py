@@ -57,26 +57,35 @@ class AvoidanceEnv(gym.Env):
         mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         x = self.rng.uniform(-4, 4)
         y = self.rng.uniform(-4, 4)
-        yaw = self.rng.uniform(-np.pi, np.pi)
+        self.start_yaw = self.rng.uniform(-np.pi, np.pi)
         self.data.qpos[0], self.data.qpos[1] = x, y
-        self.data.qpos[3:7] = [np.cos(yaw/2), 0, 0, np.sin(yaw/2)]
-        self.target_heading = self.rng.uniform(-np.pi/2, np.pi/2)  # relative target
+        self.data.qpos[3:7] = [np.cos(self.start_yaw/2), 0, 0, np.sin(self.start_yaw/2)]
+        # target heading is a fixed relative offset the robot must head toward
+        self.target_heading = self.rng.uniform(-np.pi/3, np.pi/3)
         mujoco.mj_forward(self.model, self.data)
         self.next_scan_t = 0.0
         self.episode_steps = 0
         self._update_obs()
 
+    def _current_yaw(self) -> float:
+        # yaw from quaternion qw,qx,qy,qz
+        qw, qx, qy, qz = self.data.qpos[3:7]
+        return float(np.arctan2(2*(qw*qz + qx*qy), 1 - 2*(qy*qy + qz*qz)))
+
     def _update_obs(self):
         scan = self.lidar.scan(self.data)
         with torch.no_grad():
             pred = self.cnn(torch.from_numpy(scan).unsqueeze(0))[0].numpy()
-        # pred = [nearest, front, left, right] normalized to [0,1]
         self._obs[0] = pred[0]
         self._obs[1] = pred[1]
         self._obs[2] = pred[2]
         self._obs[3] = pred[3]
-        self._obs[4] = np.cos(self.target_heading)
-        self._obs[5] = np.sin(self.target_heading)
+        # dynamic heading error: current yaw vs (start_yaw + target_heading)
+        desired_yaw = self.start_yaw + self.target_heading
+        err = desired_yaw - self._current_yaw()
+        err = (err + np.pi) % (2*np.pi) - np.pi
+        self._obs[4] = np.cos(err)
+        self._obs[5] = np.sin(err)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
@@ -84,7 +93,8 @@ class AvoidanceEnv(gym.Env):
         return self._obs.copy(), {}
 
     def step(self, action):
-        vx = float(np.clip(action[0], -1, 1)) * 0.2 + 0.2   # [0, 0.4]
+        # action in [-1,1] -> vx in [-0.05, 0.4], wz in [-1.0, 1.0]
+        vx = float(np.clip(action[0], -1, 1)) * 0.225 + 0.175
         wz = float(np.clip(action[1], -1, 1)) * 0.8
         self.policy.set_command(vx, 0.0, wz)
 
@@ -97,18 +107,27 @@ class AvoidanceEnv(gym.Env):
             self.next_scan_t += self.scan_period
             self._update_obs()
 
-        # reward
+        # reward shaping
         actual_vx = float(self.data.sensor("local_linvel_pelvis").data[0])
         front_clear = float(self._obs[1]) * MAX_RANGE
-        heading_err = self.target_heading  # simplified: target is relative
-        reward = 0.2 * actual_vx
+        left_clear = float(self._obs[2]) * MAX_RANGE
+        right_clear = float(self._obs[3]) * MAX_RANGE
+        cos_err = float(self._obs[4])
+
+        # 1) forward progress (stronger than before)
+        reward = 0.5 * actual_vx
+        # 2) heading alignment (dynamic)
+        reward += 0.2 * cos_err
+        # 3) obstacle proximity penalty (soft, not cliff)
         if front_clear < 1.5:
-            reward -= 2.0 * (1.5 - front_clear) / 1.5
-        reward += 0.1 * np.cos(heading_err)
+            reward -= 1.0 * (1.5 - front_clear) / 1.5
+        # 4) bonus for picking the clearer side when front is blocked
+        if front_clear < 1.5:
+            reward += 0.05 * (left_clear - right_clear) / MAX_RANGE * np.sign(wz)
 
         terminated = bool(self.policy.fell(self.data))
         if terminated:
-            reward -= 10.0
+            reward -= 2.0   # was -10, too harsh
         truncated = self.episode_steps >= self.max_steps
 
         return self._obs.copy(), reward, terminated, truncated, {}
@@ -120,7 +139,7 @@ def main():
     ap.add_argument("--onnx", default=r"D:\g1_run\g1_policy.onnx")
     ap.add_argument("--cnn", default=r"D:\g1_run\perception_cnn.pt")
     ap.add_argument("--out", default=r"D:\g1_run\avoid_ppo.zip")
-    ap.add_argument("--timesteps", type=int, default=200000)
+    ap.add_argument("--timesteps", type=int, default=1000000)
     args = ap.parse_args()
 
     from stable_baselines3 import PPO
