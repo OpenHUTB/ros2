@@ -12,16 +12,17 @@
 本模块包含以下核心文件，均已提交至仓库：
 ```text
 src/drone_trajectory_logger/
-├── drone_trajectory_logger/          
-│   ├── __init__.py                   空文件
-│   ├── main.py                       主程序
-│   └── trajectory_analyzer.py        分析程序
+├── drone_trajectory_logger/
+│   ├── __init__.py
+│   ├── main.py
+│   └── trajectory_analyzer.py
 ├── resource/
-│   └── drone_trajectory_logger       
+│   └── drone_trajectory_logger
 ├── launch/
 │   └── main.launch.py
 ├── package.xml
 ├── setup.py
+├── setup.cfg
 └── README.md
 ```
 ## 运行步骤
