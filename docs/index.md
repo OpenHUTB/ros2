@@ -136,7 +136,7 @@ ROS每章节运行代码:
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
-* [无人机飞行日志与状态识别](./air/drone_trajectory_logger.md)
+* [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 
 
