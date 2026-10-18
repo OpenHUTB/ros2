@@ -18,7 +18,7 @@ class image_converter:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
-            print e
+            print(e)
 
         # 在opencv的显示窗口中绘制一个圆，作为标记
         (rows,cols,channels) = cv_image.shape
@@ -33,7 +33,7 @@ class image_converter:
         try:
             self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
         except CvBridgeError as e:
-            print e
+            print(e)
 
 if __name__ == '__main__':
     try:
@@ -43,5 +43,5 @@ if __name__ == '__main__':
         image_converter()
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down cv_bridge_test node."
+        print("Shutting down cv_bridge_test node.")
         cv2.destroyAllWindows()

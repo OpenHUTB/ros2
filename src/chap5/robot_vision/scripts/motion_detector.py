@@ -29,8 +29,8 @@ class motionDetector:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")     
             frame = np.array(cv_image, dtype=np.uint8)
-        except CvBridgeError, e:
-            print e
+        except CvBridgeError as e:
+            print(e)
 
         # 创建灰度图像
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -64,7 +64,7 @@ class motionDetector:
         self.image_pub.publish(self.bridge.cv2_to_imgmsg(frame, "bgr8"))
 
     def cleanup(self):
-        print "Shutting down vision node."
+        print("Shutting down vision node.")
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
@@ -76,6 +76,6 @@ if __name__ == '__main__':
         motionDetector()
         rospy.spin()
     except KeyboardInterrupt:
-        print "Shutting down motion detector node."
+        print("Shutting down motion detector node.")
         cv2.destroyAllWindows()
 
