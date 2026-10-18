@@ -73,8 +73,8 @@ source devel/setup.bash
 > ⚠️ **不要**在本模块目录放置 `COLCON_IGNORE` 文件：
 > 该标记会被 catkin 一并识别，导致本包**被 catkin 完全跳过而不编译**
 > （表现为 `devel/share/` 下找不到本包，`devel/lib/<pkg>/` 不生成）。
-> 这是本项目实际踩过的坑，详见
-> `docs/ground/gazebo_diff_drive_car/troubleshooting.md`。
+> 这是本项目实际踩过的坑，详见 `docs/ground/gazebo_diff_drive_car.md`
+> 第 8 节第 8 项。
 
 ---
 
@@ -194,19 +194,19 @@ main.sh <mode>  →  main.launch  →  main.py（读取 mode）
 2. **深度图地板值**（无回波区域输出固定常数 1.005 m，占比 66%）
    → 直方图峰值检测并剔除
 
-详见 `docs/ground/gazebo_diff_drive_car/troubleshooting.md`。
+详见 `docs/ground/gazebo_diff_drive_car.md` 第 7 节。
 
 ---
 
 ## 相关文档
 
-完整技术文档位于仓库 `docs/ground/gazebo_diff_drive_car/`，包括：
+完整技术文档见仓库 `docs/ground/gazebo_diff_drive_car.md`，包括：
 
-- 算法原理与公式推导
-- 源码逐模块解析
-- 完整实验步骤与截图
-- 性能评价与算法对比
-- 工程问题排查记录
+- 运行环境、编译与启动参数
+- 三种模式的运行效果与实测性能
+- 差速运动学推导与避障算法原理
+- 传感器数据处理中的两个关键问题
+- 工程问题排查记录与参数汇总
 
 ---
 
