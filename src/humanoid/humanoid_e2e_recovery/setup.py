@@ -15,5 +15,10 @@ setup(
     maintainer='WZJ6666wudu', maintainer_email='WZJ6666wudu@users.noreply.github.com',
     description='人形机器人端到端视觉平衡控制（图像→关节角回归）',
     license='MIT',
-    entry_points={'console_scripts': []},
+    entry_points={
+        'console_scripts': [
+            'e2e_sim_node = humanoid_e2e_recovery.e2e_sim_node:main',
+            'e2e_predictor_node = humanoid_e2e_recovery.e2e_predictor_node:main',
+        ],
+    },
 )

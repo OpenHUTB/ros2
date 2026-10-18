@@ -26,14 +26,56 @@ WEIGHTS = os.path.join(HERE, "models_trained", "e2e_policy.npz")
 
 def run_check():
     print("="*66); print("  端到端视觉平衡控制 自检"); print("="*66)
+    ok = True
+
+    def check(name, passed, detail=""):
+        nonlocal ok
+        ok = ok and bool(passed)
+        print(f"[{'PASS' if passed else 'FAIL'}] {name} {detail}")
+
+    # 1. 模型加载
     sim = E2ESim(MODEL_PATH)
+    check("模型加载", sim.model.nq > 0 and sim.model.nu == 15,
+          f"(nq={sim.model.nq}, nu={sim.model.nu})")
+
+    # 2. 站姿稳定性
     sim.reset()
     for _ in range(300): sim.step()
-    print(f"[PASS] 模型加载, 站姿根高={sim.root_z:.3f}m")
-    img = sim.render_front()
-    print(f"[PASS] 相机渲染 shape={img.shape}")
+    stand_z = sim.root_z
+    check("站姿稳定", 0.9 < stand_z < 1.2, f"(根高={stand_z:.3f}m)")
+
+    # 3. 相机渲染
+    img = sim.render_front(gray=True)
+    check("相机渲染", img.shape == (64, 64), f"(shape={img.shape})")
+
+    # 4. 权重文件存在
+    check("权重文件存在", os.path.exists(WEIGHTS), f"({WEIGHTS})")
+
+    # 5. MLP 推理
+    predictor = E2EPredictor(WEIGHTS)
+    target = predictor.predict_from_image(img)
+    check("MLP 推理输出", target.shape == (15,), f"(shape={target.shape})")
+    check("推理输出范围", np.all(np.abs(target) < 2.0),
+          f"(max|t|={np.max(np.abs(target)):.3f} rad)")
+
+    # 6. 端到端控制效果（无外力，跑 2s 不跌倒）
+    sim.reset()
+    for _ in range(200): sim.step()
+    max_z_drop = 0
+    for _ in range(400):
+        img_g = sim.render_front(gray=True)
+        t = predictor.predict_from_image(img_g)
+        sim.step(target=t)
+        max_z_drop = max(max_z_drop, 1.05 - sim.root_z)
+    fell = sim.fallen()
+    check("端到端站立不跌倒", not fell, f"(2s 内{'跌倒' if fell else '未倒'})")
+    check("端到端根高稳定", max_z_drop < 0.3, f"(最大下降={max_z_drop:.3f}m，纯NumPy实现存在漂移)")
+
     sim.close()
-    return 0
+    print("="*66)
+    print(f"  自检结果: {'全部通过' if ok else '存在失败项'}")
+    print("="*66)
+    return 0 if ok else 1
 
 
 def run_demo(force=120, direction_deg=0):
