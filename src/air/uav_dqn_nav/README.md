@@ -186,15 +186,15 @@ PPO 的连续动作空间可以输出任意方向速度，平滑逼近并停靠�
 
 ### 7.4 运行演示（16 障碍，DQN 策略实时飞行）
 
-![DQN 运行演示 gif](models/dqn_demo.gif)
+![DQN 运行演示 gif](../../../docs/img/air/uav_dqn_nav/dqn_demo.gif)
 
 > 红色点为无人机（按 DQN 策略实时选动作），灰色圆为圆柱障碍，绿色圈为目标。
 > 本回合 219 步内成功避开全部障碍但停在目标附近（超时），直观复现
 > "能避障但无法精确停靠 0.4 m 点目标"的对比结论。
 
-![DQN 训练曲线](models/training_curve.png)
+![DQN 训练曲线](../../../docs/img/air/uav_dqn_nav/training_curve.png)
 
-![DQN 飞行轨迹（6 障碍）](models/trajectory.png)
+![DQN 飞行轨迹（6 障碍）](../../../docs/img/air/uav_dqn_nav/trajectory.png)
 
 > 权重：`models/models35/policy_weights.npz`、`models/models6/policy_weights.npz`（训练日志由 train.py 运行时 stdout 输出，不入库）。
 

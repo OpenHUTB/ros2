@@ -139,6 +139,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
+* [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
+
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
