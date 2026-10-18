@@ -50,7 +50,6 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
-    - 作业计划与进度: 'homework_plan.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
