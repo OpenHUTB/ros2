@@ -1,0 +1,34 @@
+﻿Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Plane Cell Count: 20
+      Cell Size: 1
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: LiDAR
+      Topic: /lidar/points
+      Style: Points
+      Size (Pixels): 2
+      Color Transformer: AxisColor
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: rooftop_nn
+      Topic: /rooftop_nn/markers
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+  Global Options:
+    Fixed Frame: world
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Value: true
+Window Geometry:
+  Height: 800
+  Width: 1200
