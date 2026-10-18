@@ -29,6 +29,7 @@ src/ground/carla_end_to_end_nn/
 │   ├── main.py                               # 实现：collect / train / test / headless
 │   ├── nn_models.py                          # 纯 numpy CNN（手写反向传播）
 │   ├── carla_common.py                       # CARLA Python API 封装
+│   ├── gif_writer.py                         # 纯 Python GIF 编码器（文档动图用）
 │   └── end_to_end_node.py                    # ROS 2 节点
 ├── launch/
 │   ├── main.launch.py                        # ROS 2 Humble
@@ -37,7 +38,7 @@ src/ground/carla_end_to_end_nn/
 ├── resource/carla_end_to_end_nn
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_end_to_end_logic.py             # 单元测试（23 项，无需 CARLA）
+└── test/test_end_to_end_logic.py             # 单元测试（26 项，无需 CARLA）
 ```
 
 > **为什么 `main.py` 有两份？** 课程要求入口叫 `main.*`，所以包根必须有 `main.py`；
@@ -73,7 +74,7 @@ bash main.sh --host <宿主机IP> --mode test
 ## 4. 测试
 
 ```bash
-python3 test/test_end_to_end_logic.py     # 23 项全部通过，无需 CARLA
+python3 test/test_end_to_end_logic.py     # 26 项全部通过，无需 CARLA
 ```
 
 其中两项是**回归测试**，卡住两个会让网络完全学不动的缺陷：

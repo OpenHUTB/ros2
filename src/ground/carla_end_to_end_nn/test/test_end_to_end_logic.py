@@ -566,6 +566,175 @@ def test_node_imports_resolve_inside_installed_package():
         "包根 main.py 应当只是转发到 carla_end_to_end_nn.main 的薄壳"
 
 
+def _lzw_decode(blob, min_code, npix):
+    """极简 GIF LZW 解码器，只用来验证我们自己编码器的输出。
+
+    码长增长用 `==`：解码端每读一个码才建一条表项、且第一个码不建表，所以比
+    编码端慢一条（编码端对应写 `>`）。两边不共用同一套假设，才能真判错。
+    """
+    clear = 1 << min_code
+    end = clear + 1
+    state = {"bits": 0, "code_size": min_code + 1}
+    table = {i: [i] for i in range(clear)}
+    next_code = end + 1
+    total = len(blob) * 8
+
+    def read():
+        v = 0
+        for k in range(state["code_size"]):
+            p = state["bits"] + k
+            v |= ((blob[p >> 3] >> (p & 7)) & 1) << k
+        state["bits"] += state["code_size"]
+        return v
+
+    out = []
+    prev = None
+    while state["bits"] + state["code_size"] <= total:
+        code = read()
+        if code == clear:
+            table = {i: [i] for i in range(clear)}
+            next_code = end + 1
+            state["code_size"] = min_code + 1
+            prev = None
+            continue
+        if code == end:
+            break
+        if code in table:
+            entry = table[code]
+        elif prev is not None:
+            entry = prev + [prev[0]]
+        else:
+            raise AssertionError(f"非法码 {code}")
+        out.extend(entry)
+        if prev is not None and next_code < 4096:
+            table[next_code] = prev + [entry[0]]
+            next_code += 1
+            if next_code == (1 << state["code_size"]) and state["code_size"] < 12:
+                state["code_size"] += 1
+        prev = entry
+    return np.array(out[:npix], dtype=np.uint8)
+
+
+def _gif_read(path):
+    """读回我们自己写的 GIF：返回 (调色板, [每帧索引数组], (宽, 高))。"""
+    import struct
+
+    data = open(path, "rb").read()
+    assert data[:6] in (b"GIF87a", b"GIF89a"), "文件头不是 GIF"
+    w, h, packed = struct.unpack("<HHB", data[6:11])
+    pos = 13
+    pal = []
+    if packed & 0x80:
+        ncol = 1 << ((packed & 0x07) + 1)
+        pal = [tuple(data[pos + 3 * i: pos + 3 * i + 3]) for i in range(ncol)]
+        pos += 3 * ncol
+    frames = []
+    while pos < len(data):
+        tag = data[pos]
+        if tag == 0x3B:
+            break
+        if tag == 0x21:
+            pos += 2
+            while data[pos]:
+                pos += data[pos] + 1
+            pos += 1
+            continue
+        assert tag == 0x2C, f"期望图像描述符，遇到 {tag:#x}"
+        _l, _t, fw, fh, ipacked = struct.unpack("<HHHHB", data[pos + 1: pos + 10])
+        pos += 10
+        if ipacked & 0x80:
+            pos += 3 * (1 << ((ipacked & 0x07) + 1))
+        min_code = data[pos]
+        pos += 1
+        blob = bytearray()
+        while data[pos]:
+            n = data[pos]
+            blob += data[pos + 1: pos + 1 + n]
+            pos += n + 1
+        pos += 1
+        frames.append(_lzw_decode(blob, min_code, fw * fh).reshape(fh, fw))
+    return pal, frames, (w, h)
+
+
+def test_gif_writer_roundtrip():
+    """GIF 编码必须能被独立解码器原样读回（像素级一致）。
+
+    文档要求放 gif 动图，而模块是纯 numpy 的、不装 Pillow，所以编码器是自己写的。
+    解码器按 GIF 规范实现（码长增长用 `==`，与编码端 `>` 相差一位），能独立判错。
+    该编码器写出的文件另外用 Pillow 验证过（纯色 / 渐长 / 噪声 / 两色 / 256 色 5 个用例）。
+    """
+    frames = []
+    for i in range(6):
+        f = np.zeros((30, 40), dtype=np.uint8)
+        f[:, : max(1, i * 6)] = 1
+        f[8:16, 4:4 + max(1, i * 5)] = 2
+        f[0, :] = 3
+        frames.append(f)
+    palette = [(30, 30, 30), (235, 235, 235), (220, 50, 50), (60, 120, 230)]
+
+    from carla_end_to_end_nn.gif_writer import write_gif
+
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "t.gif")
+        write_gif(p, frames, palette, delay_cs=12)
+        pal, got, size = _gif_read(p)
+
+    assert size == (40, 30), f"尺寸应保持 (40,30)，实际 {size}"
+    assert len(got) == len(frames), f"帧数应 {len(frames)}，实际 {len(got)}"
+    for i, (a, b) in enumerate(zip(got, frames)):
+        assert np.array_equal(a, b), f"第 {i} 帧像素不一致"
+    assert [tuple(c) for c in pal[:len(palette)]] == \
+        [tuple(c) for c in palette], "调色板被改动了"
+
+
+def test_e2e_gif_frames_stay_within_256_colors():
+    """动图每帧的颜色数必须 ≤256（GIF 是索引色），这也是合成时关掉相机噪声的原因。
+
+    `synth_road_image` 默认会加 σ=5 的高斯噪声，一帧就有上万种颜色，GIF 装不下；
+    所以导出动图时用 `noise=0` 重新合成。这条用例把「为什么必须关噪声」钉住：
+    一旦有人把默认噪声去掉，后半段断言会失败，提示这里可以简化。
+    """
+    rng = np.random.RandomState(0)
+    clean = main_mod.synth_road_image(0.4, rng, noise=0.0)
+    frame = main_mod.render_e2e_frame(clean, 0.4, 0.35, 0.5)
+    colors = {tuple(c) for c in frame.reshape(-1, 3)}
+    assert len(colors) <= 256, f"一帧用了 {len(colors)} 种颜色，GIF 索引化不了"
+
+    noisy = main_mod.synth_road_image(0.4, rng)
+    n_noisy = len({tuple(c) for c in noisy.reshape(-1, 3)})
+    assert n_noisy > 256, \
+        f"带噪声的图像只有 {n_noisy} 种颜色，说明默认噪声没了，动图可以直接用原图"
+
+
+def test_e2e_frame_layout_and_indicator():
+    """动图帧的版式与指示条位置：标签/预测越偏离中心，竖线离中间越远。"""
+    rng = np.random.RandomState(0)
+    clean = main_mod.synth_road_image(0.0, rng, noise=0.0)
+    f = main_mod.render_e2e_frame(clean, 0.0, 0.0, 0.0)
+    ih = clean.shape[0] * main_mod.GIF_SCALE
+    assert f.shape == (ih + main_mod.GIF_BAR_H + main_mod.GIF_PROG_H,
+                       clean.shape[1] * main_mod.GIF_SCALE, 3), f"帧尺寸不对: {f.shape}"
+
+    def tick_x(y_true, y_pred):
+        img = main_mod.render_e2e_frame(clean, y_true, y_pred, 1.0)
+        red = np.all(img == (220, 50, 50), axis=2)
+        wht = np.all(img == (240, 240, 240), axis=2)
+        return int(np.where(red)[1].mean()), int(np.where(wht)[1].mean())
+
+    cx = f.shape[1] // 2
+    r0, w0 = tick_x(0.0, 0.0)
+    assert abs(r0 - cx) <= 3 and abs(w0 - cx) <= 3, "零转向时两条竖线应贴着中间"
+
+    rl, wl = tick_x(-0.9, -0.9)
+    rr, wr = tick_x(0.9, 0.9)
+    assert rl < cx - 50 and rr > cx + 50, f"左/右转向的竖线位置不对: {rl} / {rr}"
+    assert wl < cx - 50 and wr > cx + 50, f"标签竖线位置不对: {wl} / {wr}"
+
+    # 预测与标签不同时，两条线要分开
+    rmix, wmix = tick_x(0.8, -0.8)
+    assert abs(rmix - wmix) > 100, f"预测与标签差异很大时应明显分开: {rmix} vs {wmix}"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []

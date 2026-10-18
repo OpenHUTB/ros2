@@ -33,6 +33,7 @@ import sys
 
 import numpy as np
 
+from carla_end_to_end_nn.gif_writer import rgb_frames_to_gif
 from carla_end_to_end_nn.nn_models import SimpleCNN
 
 try:
@@ -52,7 +53,7 @@ DEFAULT_THROTTLE = 0.45
 
 
 # ============================================================ 合成道路图像
-def synth_road_image(steer, rng, h=IMG_H, w=IMG_W):
+def synth_road_image(steer, rng, h=IMG_H, w=IMG_W, noise=5.0):
     """合成一张"前方道路"图像：透视车道线，**弯曲方向与弯曲量由 steer 决定**。
 
     这是端到端学习正确的数据构造方式：图像里必须**真的含有**"路往哪弯"的信息，
@@ -63,6 +64,9 @@ def synth_road_image(steer, rng, h=IMG_H, w=IMG_W):
 
     透视约定：行号 y 越小越远（近地平线），越大越近（画面底部）。
     车道线在半宽处收窄，并按 steer 产生二次弯曲，模拟转弯时的视角变化。
+
+    `noise` 是相机噪声的标准差（像素值）。导出文档动图时传 0：GIF 只有 256 色，
+    加了噪声后每张图会有上万种颜色，无法索引化，压缩率也会崩掉。
     """
     img = np.zeros((h, w, 3), dtype=np.float32)
     horizon = int(h * 0.38)
@@ -84,7 +88,8 @@ def synth_road_image(steer, rng, h=IMG_H, w=IMG_W):
             img[y, max(0, xi - 1):min(w, xi + 2)] = (235, 235, 238)
 
     # 传感器噪声：模拟真实相机的暗电流与颗粒
-    img += rng.normal(0.0, 5.0, img.shape)
+    if noise:
+        img += rng.normal(0.0, float(noise), img.shape)
     return np.clip(img, 0, 255).astype(np.uint8)
 
 
@@ -334,6 +339,43 @@ def render_samples_png(images, steers, preds, path, cols=4, scale=3):
 
 
 # ======================================================== 离线取证（无需 CARLA）
+GIF_SCALE = 4          # 动图里把 60×80 的相机图放大 4 倍
+GIF_BAR_H = 48         # 转向指示条高度
+GIF_PROG_H = 6         # 底部播放进度条高度
+
+
+def render_e2e_frame(img, y_true, y_pred, frac, scale=GIF_SCALE):
+    """把「相机图像 + 转向指示条」画成一帧 RGB，用于合成端到端演示动图。
+
+    指示条里白色竖线是专家标签（这条弯道应该打多少转向），红色竖线是 CNN 的
+    预测；中间灰线是零转向。两条线贴得越近，说明「看到的弯」与「打的方向」越一致。
+    最底部细条是播放进度。
+    """
+    h, w = img.shape[:2]
+    ih, iw = h * scale, w * scale
+    total_h = ih + GIF_BAR_H + GIF_PROG_H
+    canvas = np.full((total_h, iw, 3), 30, dtype=np.uint8)
+    canvas[:ih] = np.repeat(np.repeat(img[:, :, :3], scale, axis=0), scale, axis=1)
+
+    top = ih
+    cx = iw // 2
+    half = iw // 2 - 8
+    canvas[top:top + GIF_BAR_H] = (30, 30, 30)
+    canvas[top:top + GIF_BAR_H, cx - 1:cx + 1] = (90, 90, 90)     # 零转向参考线
+    # 两条竖线上下错开一点：预测正确时二者重合，若完全叠画就只剩红色，
+    # 看不出「标签在哪」。错开后上段是白（标签）、下段是红（预测），重合也都能看见。
+    for val, color, r0, r1 in ((y_true, (240, 240, 240), 4, GIF_BAR_H - 10),
+                               (y_pred, (220, 50, 50), 10, GIF_BAR_H - 4)):
+        x = int(round(cx + float(np.clip(val, -1.0, 1.0)) * half))
+        x = max(3, min(iw - 5, x))
+        canvas[top + r0:top + r1, x - 2:x + 2] = color
+
+    n = max(1, int(round(float(frac) * iw)))
+    canvas[total_h - GIF_PROG_H:] = (55, 55, 55)
+    canvas[total_h - GIF_PROG_H:, :n] = (60, 120, 230)
+    return canvas
+
+
 def run_offline_demo(save_dir, epochs=60, n_samples=150, seed=0):
     """离线自检：合成道路图像 → 训练端到端 CNN → 导出证据图。
 
@@ -372,9 +414,24 @@ def run_offline_demo(save_dir, epochs=60, n_samples=150, seed=0):
     p3 = render_samples_png(X[:4], Y.ravel()[:4], pred[:4],
                             os.path.join(save_dir, "road_samples.png"))
 
+    # ---- 动图：图像 → 转向（按真实转向从小到大扫一遍，看得清映射关系）----
+    # 用 noise=0 重新合成：GIF 只有 256 色，带噪声的图有上万种颜色，索引化不了。
+    n_gif = 24
+    pick = np.argsort(Y.ravel())[
+        np.linspace(0, len(X) - 1, n_gif).astype(int)]
+    gif_rng = np.random.RandomState(seed)
+    gif_frames = []
+    for i, k in enumerate(pick):
+        clean = synth_road_image(float(Y.ravel()[k]), gif_rng, noise=0.0)
+        gif_frames.append(render_e2e_frame(
+            clean, float(Y.ravel()[k]), float(pred[k]), (i + 1) / float(n_gif)))
+    p4 = rgb_frames_to_gif(os.path.join(save_dir, "e2e_demo.gif"),
+                           gif_frames, delay_cs=12)
+
     print("\n已导出取证图：")
-    for p in (p1, p2, p3):
+    for p in (p1, p2, p3, p4):
         print("   ", p)
+    print(f"    动图 {len(gif_frames)} 帧，{os.path.getsize(p4) / 1024:.0f} KB")
     return 0
 
 
