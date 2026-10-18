@@ -18,7 +18,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'main = image_recorder.main:main',
+            'main = image_recorder.main:main', 
         ],
     },
 )
