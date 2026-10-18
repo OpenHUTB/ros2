@@ -1,0 +1,55 @@
+# 人形机器人视觉跌倒预测模块参数
+# ======================================
+
+# 仿真
+sim:
+  model_path: "models/humanoid_camera.xml"
+  timestep: 0.002
+  camera_name: "front_camera"
+  image_height: 64
+  image_width: 64
+
+# 站姿 PD 控制（维持站立）
+standing:
+  # 目标关节角（弧度）：近似直立
+  qpos_target:
+    hip_pitch_l: 0.05
+    knee_l: -0.10
+    ankle_pitch_l: -0.05
+    hip_pitch_r: 0.05
+    knee_r: -0.10
+    ankle_pitch_r: -0.05
+  kp: 60.0
+  kd: 6.0
+
+# 数据采集
+collect:
+  # 推力范围 (N)
+  force_min: 80.0
+  force_max: 220.0
+  # 推力持续 (s)
+  push_duration: 0.08
+  # 每次试验最大步数
+  max_steps: 1500
+  # 每个类别的样本数
+  samples_per_class: 300
+  # 5 类标签：0=正常, 1=前倒, 2=后倒, 3=左倒, 4=右倒
+  labels: ["normal", "forward", "backward", "left", "right"]
+
+# 神经网络
+nn:
+  # 图像下采样后输入维度（16x16 灰度 = 256）
+  input_dim: 256
+  hidden1: 128
+  hidden2: 64
+  output_dim: 5
+  learning_rate: 0.01
+  epochs: 60
+  batch_size: 64
+
+# 推理与控制
+predict:
+  # 跌倒预测置信度阈值
+  confidence_threshold: 0.70
+  # 平衡修正力矩系数
+  balance_tau_gain: 0.6
