@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_vision_fall_prediction</name>
+  <version>0.1.0</version>
+  <description>人形机器人视觉跌倒预测与分级平衡控制（前视相机 + MLP 分类 + 踝/髋修正）</description>
+  <maintainer email="WZJ6666wudu@users.noreply.github.com">WZJ6666wudu</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+</package>
