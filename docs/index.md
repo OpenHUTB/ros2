@@ -69,7 +69,8 @@ ROS每章节运行代码:
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
-
+* [人形机器人关节轨迹录制与回放工具](./humanoid/humanoid_joint_tools.md)
+  
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
