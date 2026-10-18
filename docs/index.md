@@ -96,6 +96,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
+* [行人/骑行者数字孪生评价](./ground/vru_twin_metrics.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
