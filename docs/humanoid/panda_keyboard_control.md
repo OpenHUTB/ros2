@@ -1,4 +1,4 @@
-## 通过键盘操控仿真机械臂
+# 键盘操控仿真机械臂
 
 ### 一、 项目概述
 
@@ -38,23 +38,23 @@ src/
 
 ### 四、 编译与启动步骤
 
-### 快速开始
+#### 快速开始
 
 请在终端中依次运行以下命令：
 
 1. 配置 Python 环境：确保安装 MuJoCo
-```
+```bash
 pip3 install mujoco
 ```
 
 2. 下载机器人模型：
-```
+```bash
 cd ~/catkin_ws/src/panda_keyboard_control/mujoco_sim
 git clone https://github.com/google-deepmind/mujoco_menagerie.git
 ```
 
 3. 运行 MuJoCo 物理仿真控制：
-```
+```bash
 python3 keyboard_mujoco.py
 ```
 
@@ -76,7 +76,7 @@ python3 keyboard_mujoco.py
 | r | 复位姿态 | q | 退出程序 |
 
 6. （可选）运行 ROS MoveIt 版本：在工作空间编译后，通过主入口一键启动
-```
+```bash
 cd ~/catkin_ws && catkin_make
 rosrun panda_keyboard_control main.py
 ```
