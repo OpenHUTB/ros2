@@ -91,7 +91,7 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
 ## 四、运行方法
 ### 4.1 直接跑脚本
 ```bash
-cd ~/catkin_ws/src/humanoid/mujoco_two_dof_arm/scripts  # 进入项目脚本目录，和ROS标准工作区路径一致
+cd ~/src/humanoid/mujoco_two_dof_arm/scripts
 python3 main.py ../models/two_dof_arm.xml
 ```
 正常的话会弹出MuJoCo的仿真窗口，就能看到蓝色橙色的机械臂自己在那晃。
