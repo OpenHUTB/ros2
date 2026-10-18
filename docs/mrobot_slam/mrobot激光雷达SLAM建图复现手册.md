@@ -1,4 +1,4 @@
-# mrobot 激光雷达 SLAM 建图 · 完整复现手册
+# 6.2 mrobot 激光雷达 SLAM 建图 · 完整复现手册
 
 > **环境**：Ubuntu 20.04 + ROS Noetic + Gazebo 11
 **来源**：ROS 机器人开发实践（胡春旭）第六章 · 仿真环境搭建 + gmapping SLAM 建图
