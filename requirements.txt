@@ -1,3 +1,6 @@
+# 文档站本体：mkdocs.yml 使用了 hooks:（需要 mkdocs >= 1.4）
+mkdocs>=1.5,<2
+
 python-markdown-math
 pymdown-extensions
 imageio
