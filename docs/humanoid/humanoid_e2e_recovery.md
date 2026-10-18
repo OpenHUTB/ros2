@@ -50,6 +50,52 @@ $$
 | 关节角误差 | ~0.3° |
 | 推理耗时 | < 1 ms/帧 |
 
+## 5. 复现步骤
+
+### 5.1 环境安装
+
+```bash
+pip install -r requirements.txt
+# 依赖：mujoco >= 3.0, numpy >= 1.21
+```
+
+### 5.2 自检
+
+```bash
+cd src/humanoid/humanoid_e2e_recovery
+python3 main.py --check
+```
+
+### 5.3 采集专家数据
+
+```bash
+python3 main.py --collect --episodes 30
+# 输出：data/e2e_dataset.npz（约 8943 样本）
+```
+
+### 5.4 训练网络
+
+```bash
+python3 main.py --train
+# 输出：models_trained/e2e_policy.npz
+# 典型验证 MSE：2.8e-05 rad²
+```
+
+### 5.5 演示
+
+```bash
+python3 main.py --demo --force 100 --direction 0
+# 前向推扰 100 N，端到端网络直接输出关节目标角
+```
+
+### 5.6 ROS2 launch（Ubuntu 20.04 Humble）
+
+```bash
+colcon build --packages-select humanoid_e2e_recovery
+source install/setup.bash
+ros2 launch humanoid_e2e_recovery main.launch.py
+```
+
 ## 演示动图
 
 ![端到端视觉平衡控制](../img/humanoid/e2e_recovery_demo.gif)
