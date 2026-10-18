@@ -6,6 +6,8 @@
 
 ![任务④ 图像端到端控制 GIF](../../img/ground/mujoco_auto_parking/task4_end_to_end.gif)
 
+![任务④ 运行截图：CNN 只靠图像沿 S 曲线行驶](../../img/ground/mujoco_auto_parking/screenshots/task4_end_to_end.png)
+
 ## 1. 输入与输出
 
 - 输入：前视相机 RGB 图像 → 灰度 → 最近邻缩放到 \(84\times84\) → 训练集均值/方差归一化；

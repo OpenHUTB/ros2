@@ -98,6 +98,13 @@ mujoco_auto_parking/
 └── tools/                    # GIF、Word、回归脚本
 ```
 
+## 文档工具与提交说明
+
+- 本模块按仓库根 `mkdocs.yml` 构建，`mkdocs build --clean` 已在本地通过；GitHub Pages 由仓库的 `OpenHUTB/actions-mkdocs` 工作流构建（该工作流使用 OpenHUTB 的 `hutb-doc` 发行版）。
+- Word 导出使用 `markdown + htmldocx + python-docx`，脚本为 `tools/export_word.py`；如果课程提供了 `Markdown2Anything` 专用版本，提交前可以用课程版本再导出一次做格式对照。
+- GIF 和截图都来自真实 MuJoCo 渲染；`tools/make_gifs.py` 生成 GIF，`screenshots/` 下是从 GIF 提取的静态截图。
+- GitHub 的 commit message 不能直接嵌图；运行效果图放在 PR 正文和 `docs/img/ground/mujoco_auto_parking/`。如果老师要求 commit message 里也带图，推送前用 `git commit --amend` 在提交信息末尾补一行图片路径。
+
 ## 已知限制
 
 - 任务②感知依赖目标车位的绿色立柱/绿色区域；换停车场时需要重新采集和训练。

@@ -20,6 +20,8 @@
 
 ![任务② S 曲线跟踪 GIF](../../img/ground/mujoco_auto_parking/task2_s_curve.gif)
 
+![任务② 运行截图：神经网络沿 S 曲线行驶](../../img/ground/mujoco_auto_parking/screenshots/task2_s_curve.png)
+
 ## 2. 车位感知网络
 
 ### 2.1 输入与输出

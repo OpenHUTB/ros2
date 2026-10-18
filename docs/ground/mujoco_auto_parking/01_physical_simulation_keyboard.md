@@ -15,6 +15,8 @@
 
 ![任务① 键盘运动 GIF](../../img/ground/mujoco_auto_parking/task1_teleop.gif)
 
+![任务① 运行截图：车在停车场中前进](../../img/ground/mujoco_auto_parking/screenshots/task1_teleop.png)
+
 ## 2. 差速运动学
 
 设左右轮角速度为 \(\omega_L,\omega_R\)，车轮半径 \(r\)，轮距 \(b\)，则车体线速度 \(v\) 和角速度 \(\omega\) 为：

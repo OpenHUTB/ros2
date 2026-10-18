@@ -10,6 +10,8 @@
 
 ![任务③ 建图与 Neural A* 导航 GIF](../../img/ground/mujoco_auto_parking/task3_navigation.gif)
 
+![任务③ 运行截图：建图并规划到目标车位](../../img/ground/mujoco_auto_parking/screenshots/task3_navigation.png)
+
 ## 1. 占据栅格建图
 
 地图参数：
