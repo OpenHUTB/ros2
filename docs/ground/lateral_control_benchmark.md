@@ -193,7 +193,23 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
    Stanley 与 LQR 的稳态偏差随速度基本不变，纯跟踪的稳态偏差随速度略有上升
    （8 m/s 时 0.022 m，15 m/s 时 0.041 m）。
 
-## 6. 问题记录（开发中的实际缺陷）
+## 6. 与仓库已有模块的区别
+
+仓库里已经出现过"纯跟踪 / 横向控制"这些词，为避免与既有模块混淆，这里把定位说清楚：
+
+| 已有模块 | 它做了什么 | 与本模块的关系 |
+|---|---|---|
+| `carla_perception_control` | 在 CARLA 中做**感知 + 给定轨迹跟踪**，横向用纯跟踪作为其中一个构件 | 纯跟踪只是它的一环；本模块把三种算法并列做基准对比 |
+| `carla_nn_car_following` | 在 CARLA 中做**自适应跟车（ACC）**，横向用纯追踪 / 面包屑跟踪 | 同上；本模块不做 ACC，只比横向算法 |
+| `car_2d_target_tracker` | 2D 平面内的**目标追踪** | 任务是"追目标"，不是"跟轨迹" |
+| `carla_keyboard_control` / `mujoco_car_project` | 仿真器内的**键盘遥控演示** | 本模块无遥控、无仿真器 |
+
+本模块的定位是**"横向控制算法之间的对比基准"**：不新增一个纯跟踪实现，
+也不做一个新的跟车任务，而是回答"在相同车辆模型、相同轨迹、相同指标下，
+这三种横向算法究竟差多少、差在哪里"。它同时是仓库里目前唯一一个
+**不依赖 CARLA / Gazebo 等外部仿真器**即可完整复现的地面载具模块。
+
+## 7. 问题记录（开发中的实际缺陷）
 
 | # | 现象 | 根因 | 修复 |
 |---|---|---|---|
@@ -204,7 +220,7 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
 | 5 | 轨迹图被 `axis("equal")` 压成一条直线 | 横向变化远小于纵向长度，等比例不可读 | 去掉等比例约束 |
 | 6 | 曲率前馈在低速出现 0/0 | $L\kappa v/v$ 在 $v\to0$ 时未定义 | 控制量改为期望横摆角速度，转角换算处对 $v$ 取下限 |
 
-## 7. 常见问题排查
+## 8. 常见问题排查
 
 | 现象 | 解决 |
 |---|---|
@@ -214,7 +230,7 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
 | 节点启动但话题没有数据 | 检查 `rostopic list` 是否有 `/lateral_control/styles`；确认 `rate_hz` 参数有效 |
 | 图中中文显示为方块 | 安装中文字体（Noto Sans CJK / 微软雅黑），绘图会自动匹配 |
 
-## 8. 大模型使用声明
+## 9. 大模型使用声明
 
 本模块的代码、文档与实验脚本在编写过程中使用了 AI 编程助手（DeepSeek）辅助生成与调试；
 文中所有指标均来自本机实际运行结果（`results/metrics.csv`），提交内容由提交者负责。
