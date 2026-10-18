@@ -1,6 +1,6 @@
 # turtle_sim_experiment — 小海龟自动画花瓣演示模块（第一章扩展实验）
 
-`roslaunch` 一键启动小海龟仿真器，控制小海龟画出 6 个两两相扣的彩色花瓣圆。配套详细教程见 [docs/chapter/turtle_sim_experiment](../../docs/chapter/turtle_sim_experiment.md)。
+`roslaunch` 一键启动小海龟仿真器，控制小海龟画出 6 个两两相扣的彩色花瓣圆。配套详细教程见 [docs/chapter/turtle_sim_experiment](../../../docs/chapter/chap1/turtle_sim_experiment.md)。
 
 ## 运行环境
 

@@ -4,7 +4,7 @@
 作业的完整工程。它在 OverFOMO 的自适应覆盖路径规划方法之上，补上了**去哪看**这一
 个自由度；原有的**飞多快**控制器被完整保留。
 
-对应的课程文档页：[`docs/ap_cpp_overfomo.md`](../../docs/ap_cpp_overfomo.md)。
+对应的课程文档页：[`docs/ap_cpp_overfomo.md`](../../../docs/ap_cpp_overfomo.md)。
 
 - [1. 这个作业做了什么](#1-这个作业做了什么)
 - [2. 快速开始](#2-快速开始)
