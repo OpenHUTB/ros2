@@ -55,8 +55,7 @@ ros2 launch image_recorder main.launch.py
 1.在 Windows 宿主机上启动 Carla 仿真器，并开启 ROS Bridge。
 
 2.在虚拟机终端中执行以下命令，确认与宿主机通信正常：
-
-``
+```
 ros2 topic list
 ```
 3.确认终端中出现了 /carla/ego_vehicle/camera/rgb/front/image 话题。
@@ -66,5 +65,6 @@ ros2 topic list
 ros2 launch image_recorder main.launch.py
 ```
 5.节点启动成功后，即可获取到 Carla 仿真器的实时摄像头画面，效果如下图所示：
+
 ![运行效果图片](../img/run_2.png)
 
