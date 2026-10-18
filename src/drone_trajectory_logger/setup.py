@@ -13,10 +13,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='user',
-    maintainer_email='user@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='student',
+    maintainer_email='12345678@qq.com',
+    description='Drone flight status recognition and trajectory plotting module',
+    license='MIT',
     entry_points={
         'console_scripts': [
             'main = drone_trajectory_logger.main:main',
