@@ -1,0 +1,14 @@
+<launch>
+  <arg name="host" default="127.0.0.1"/>
+  <arg name="policy_path" default=""/>
+  <arg name="yolo_path" default=""/>
+  <arg name="run_planner" default="false"/>
+  <rosparam command="load" file="$(find airsim_rl_planner_ros1)/config/params.yaml"/>
+  <node pkg="airsim_rl_planner_ros1" type="bridge_node.py" name="airsim_bridge" output="screen" required="true">
+    <param name="host" value="$(arg host)" type="str"/>
+  </node>
+  <node if="$(arg run_planner)" pkg="airsim_rl_planner_ros1" type="ppo_planner_node.py" name="ppo_planner" output="screen" required="true">
+    <param name="policy_path" value="$(arg policy_path)" type="str"/>
+    <param name="yolo_path" value="$(arg yolo_path)" type="str"/>
+  </node>
+</launch>
