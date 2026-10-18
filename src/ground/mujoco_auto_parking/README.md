@@ -116,8 +116,32 @@ cd src/ground/mujoco_auto_parking
 
 权值文件：`models/perception.npz`、`models/trajectory.npz`；训练脚本：`train/train_perception.py`、`train/train_trajectory.py`。
 
+## 任务③：建图 + Neural A* + 导航闭环
+
+```bash
+./main.sh --task3
+# 或指定目标（上排/下排车位入口）：
+ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
+```
+
+| 节点 | 输入 | 输出 |
+| --- | --- | --- |
+| `simulation_node` | `/cmd_vel` | `/odom`、`/scan`、`/clock`、`/tf`、相机话题 |
+| `navigation_node` | `/odom`、`/scan` | `/map`、`/global_path`、`/cmd_vel` |
+
+- `navigation_node` 用 log-odds 占据栅格建图，Neural A* 规划到目标车位入口，再用任务②的神经网络跟踪路径；
+- 训练引导网络：`./main.sh --train-planning`；
+- 测试：`./main.sh --test3`。
+
+实测（2026-10-18）：
+
+- 上/下两个车位入口目标都在约 14.3 s 到达，终点误差约 0.34 m；
+- 建图覆盖率约 55%，Neural A* 单次规划约 300 ms，展开节点约 420；
+- 引导场训练验证相关系数 0.99993。
+
 ## 当前范围 / Scope
 
 PR1：任务①物理仿真、停车场场景、键盘控制和基础 ROS 接口。
 PR2：任务②相机/深度/激光雷达、视觉车位感知网络、给定 S 曲线的神经网络控制、训练和零权值消融。
-后续 PR：任务③建图/Neural A*/导航，任务④图像端到端泊车，以及 MkDocs/GIF/Word 文档。
+PR3：任务③log-odds 占据栅格建图、Neural A* 规划、神经网络路径跟踪和导航闭环。
+后续 PR：任务④图像端到端泊车，以及 MkDocs/GIF/Word 文档。

@@ -39,6 +39,7 @@ setup(
             'keyboard_teleop_node = mujoco_auto_parking.keyboard_teleop_node:main',
             'perception_node = mujoco_auto_parking.perception_node:main',
             'trajectory_control_node = mujoco_auto_parking.trajectory_control_node:main',
+            'navigation_node = mujoco_auto_parking.navigation_node:main',
         ],
     },
 )
