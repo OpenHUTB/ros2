@@ -1,0 +1,15 @@
+{
+  "altitude_m": 119.3891,
+  "gsd_m": 0.012,
+  "footprint_width_m": 65.664,
+  "footprint_height_m": 43.776,
+  "line_spacing_m": 19.6992,
+  "shot_spacing_m": 8.7552,
+  "line_count": 10,
+  "image_count": 378,
+  "flight_distance_m": 3456.358,
+  "flight_time_s": 450.045,
+  "coverage_ratio": 1.0,
+  "waypoint_count": 20,
+  "warnings": []
+}

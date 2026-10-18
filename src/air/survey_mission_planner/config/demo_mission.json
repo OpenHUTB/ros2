@@ -1,0 +1,25 @@
+{
+  "camera": {
+    "sensor_width_mm": 13.2,
+    "sensor_height_mm": 8.8,
+    "focal_length_mm": 24.0,
+    "image_width_px": 5472,
+    "image_height_px": 3648
+  },
+  "target_gsd_m": 0.012,
+  "forward_overlap": 0.8,
+  "side_overlap": 0.7,
+  "speed_mps": 8.0,
+  "turn_time_s": 2.0,
+  "max_flight_time_s": 1500.0,
+  "origin_lat": 28.22,
+  "origin_lon": 112.94,
+  "polygon": [
+    [0, 0],
+    [320, 0],
+    [360, 80],
+    [300, 200],
+    [40, 220],
+    [-20, 120]
+  ]
+}
