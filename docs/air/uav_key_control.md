@@ -27,7 +27,16 @@ src/
     ├── setup.cfg                  # 节点安装路径配置文件
     └── setup.py                   # ROS 2 功能包配置文件
 ```
+## 核心代码内容
 
+本模块的核心代码已上传至仓库 `src/air/uav_key_control/` 目录下。
+
+完整代码请点击下方链接查看：
+
+* [查看 main_key_control.py 代码](../../src/air/uav_key_control/main_key_control.py)
+* [查看 package.xml 代码](../../src/air/uav_key_control/package.xml)
+* [查看 setup.py 代码](../../src/air/uav_key_control/setup.py)
+* [查看 key_control.launch.py 代码](../../src/air/uav_key_control/launch/key_control.launch.py)
 
 ## 边界行为说明 / Boundary behavior
 中文：节点预设最大线速度0.2 m/s、最大角速度0.3 rad/s。输出速度会被钳位在[-0.2, 0.2]、[-0.3, 0.3]区间，防止超速失控。按下空格键，速度立刻置零。
