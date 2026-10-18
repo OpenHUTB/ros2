@@ -1,24 +1,28 @@
-# AirSim 无人机视觉端到端控制（行为克隆）
+# uav_vision_nn - AirSim 端到端视觉控制（行为克隆 + MLP）
 
-## 功能
-- AirSim Blocks 场景多旋翼仿真
-- MLP 神经网络：输入前视灰度图 (64x64) -> 输出速度控制 (vx, vy)
-- 行为克隆：先人工/预设轨迹收集数据 -> 训练神经网络 -> 神经网络自主控制
+基于 AirSim Blocks 仿真的无人机视觉端到端控制模块（ROS 课程任务4）。
 
-## 文件结构
-- collect_data.py: 数据收集（无人机飞预设矩形轨迹，自动拍前视图+记录控制量）
-- train.py: MLP 训练脚本（100 轮，MSE loss）
-- main.py: 推理节点（加载 model.pth，实时拍图 -> 神经网络 -> 控制无人机）
-- launch/uav_vision.launch.py: launch 启动入口
-- model.pth: 训练好的神经网络权重
+## 与已有 #113 的区别（创新点）
 
-## 运行
-1. Windows 启动 AirSim Blocks.exe
-2. 虚拟机运行: python3 src/uav_vision_nn/collect_data.py
-3. 训练: python3 src/uav_vision_nn/train.py
-4. launch 启动: ros2 launch src/uav_vision_nn/launch/uav_vision.launch.py
+#113 是 YOLO 目标检测 + 八字轨迹控制（先检测后规划）。本模块是纯端到端行为克隆：
+- 输入：单张前视灰度图（64x64），无目标检测、无显式规划
+- 输出：直接速度控制量 (vx, vy)
+- 学习方式：神经网络直接从图像映射到控制
 
-## 演示素材
-- demo.gif: 神经网络实时控制飞行演示（382KB）
-- collect_data.gif: 数据收集（预设矩形轨迹）演示（452KB）
-- track.png: 神经网络控制飞行轨迹图（80 个轨迹点）
+## 模型权重获取（model.pth）
+
+仓库不提交权重文件，按以下步骤复现：
+
+    python3 collect_data.py     # 采集数据
+    python3 train.py            # 训练 100 轮
+    python3 main.py             # 实时控制
+
+## ROS2 启动
+
+    ros2 launch uav_vision_nn uav_vision.launch.py
+
+## 演示
+
+![采集](../../img/uav_vision_nn_collect.gif)
+![控制](../../img/uav_vision_nn_demo.gif)
+![轨迹](../../img/uav_vision_nn_track.png)
