@@ -178,6 +178,13 @@ headless --demo（无需 CARLA / 无图形界面 / 无 TensorFlow）：
 
 ### 4.1 `main.py` — 主入口
 
+包根的 `main.py` 只是转发壳，实现放在 `carla_end_to_end_nn/main.py`。原因是
+`setup.py` 里写的是 `packages=[package_name]`，`colcon build` 只会把
+`carla_end_to_end_nn/` 这个目录装进 site-packages，包根的文件不会被安装；而
+ROS 2 节点是按 `carla_end_to_end_nn.main` 导入的。若实现留在包根，`ros2 launch`
+一启动就会 `ModuleNotFoundError: No module named 'carla_end_to_end_nn.main'`
+（这一条由单元测试 `test_node_imports_resolve_inside_installed_package` 守住）。
+
 | 函数 | 作用 |
 |---|---|
 | `synth_road_image()` | 合成带透视车道线的道路图像，弯曲量由 steer 决定 |
@@ -463,12 +470,13 @@ $$
 | 零输出基线 MAE | 0.40268（网络 MAE 比基线低 **4.3 倍**） |
 | 训练损失（60 epoch） | 0.5415 → 0.00654 |
 | 预测/标签相关系数 | **+0.992** |
-| 单元测试 | **22 PASS / 0 FAIL** |
+| 单元测试 | **23 PASS / 0 FAIL** |
 
 ### 6.3 调优过程记录
 
 | 优化项 | 优化前 | 优化后 | 说明 |
 |---|---|---|---|
+| **实现移进 Python 包** | `ros2 launch` 启动即 `ModuleNotFoundError: No module named 'carla_end_to_end_nn.main'` | 节点正常启动 | `setup.py` 只装 `packages=[package_name]`，包根的 `main.py` 不会被安装 |
 | **maxpool 梯度按 argmax 回传** | 输出标准差 0.00062，相关系数 +0.293，方向判对率 50% | 标准差 0.516，相关系数 +0.992，判对率 98% | 最严重缺陷；原实现把梯度均摊到窗口全部位置 |
 | **推理补上 tanh** | MAE 13.47（输出无界） | MAE 0.0936 | 训练/推理输出不一致 |
 | **标签改为行为克隆** | 标签由帧序号正弦信号生成，与图像无因果关系 | 专家沿车道驾驶产生标签 | 图像与标签天然相关 |

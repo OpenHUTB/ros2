@@ -22,10 +22,11 @@ $$
 
 ```
 src/ground/carla_end_to_end_nn/
-├── main.py                                   # 主入口（collect / train / test / headless）
+├── main.py                                   # 课程约定的入口（薄壳，转发到包内实现）
 ├── main.sh / main.bat                        # 课程约定的 main.* 一键运行脚本
 ├── carla_end_to_end_nn/
 │   ├── __init__.py
+│   ├── main.py                               # 实现：collect / train / test / headless
 │   ├── nn_models.py                          # 纯 numpy CNN（手写反向传播）
 │   ├── carla_common.py                       # CARLA Python API 封装
 │   └── end_to_end_node.py                    # ROS 2 节点
@@ -36,8 +37,15 @@ src/ground/carla_end_to_end_nn/
 ├── resource/carla_end_to_end_nn
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_end_to_end_logic.py             # 单元测试（22 项，无需 CARLA）
+└── test/test_end_to_end_logic.py             # 单元测试（23 项，无需 CARLA）
 ```
+
+> **为什么 `main.py` 有两份？** 课程要求入口叫 `main.*`，所以包根必须有 `main.py`；
+> 但 `setup.py` 是 `packages=[package_name]`，`colcon build` 只会把
+> `carla_end_to_end_nn/` 这个目录装进 site-packages，包根的文件不会被安装。
+> ROS 2 节点是按 `carla_end_to_end_nn.main` 导入的，因此实现必须放在包内，
+> 包根那份只做转发。否则 `ros2 launch` 一启动就是
+> `ModuleNotFoundError: No module named 'carla_end_to_end_nn.main'`。
 
 ## 3. 快速开始
 
@@ -65,7 +73,7 @@ bash main.sh --host <宿主机IP> --mode test
 ## 4. 测试
 
 ```bash
-python3 test/test_end_to_end_logic.py     # 22 项全部通过，无需 CARLA
+python3 test/test_end_to_end_logic.py     # 23 项全部通过，无需 CARLA
 ```
 
 其中两项是**回归测试**，卡住两个会让网络完全学不动的缺陷：

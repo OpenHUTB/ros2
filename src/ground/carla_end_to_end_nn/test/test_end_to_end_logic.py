@@ -33,6 +33,11 @@ _PKG = os.path.dirname(_HERE)
 if _PKG not in sys.path:
     sys.path.insert(0, _PKG)
 
+# 实现放在 Python 包里（节点按 carla_end_to_end_nn.main 导入，见
+# test_node_imports_resolve_inside_installed_package）；包根的 main.py 只是薄壳。
+# 读源码做静态检查的用例一律看 _IMPL，不看去包根那个转发壳。
+_IMPL = os.path.join(_PKG, "carla_end_to_end_nn", "main.py")
+
 import importlib.util  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("e2e_main", os.path.join(_PKG, "main.py"))
@@ -234,7 +239,7 @@ def test_test_carla_source_guards_missing_model():
     直接抛 FileNotFoundError；而 ROS 节点（end_to_end_node.py:80）本就有
     os.path.isfile 守卫并回退现场训练，两者行为不一致。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     i_fn = src.index("def test_carla(")
     seg = src[i_fn:i_fn + 3000]
     i_guard = seg.index("if not os.path.isfile(model_path):")
@@ -250,7 +255,7 @@ def test_fallback_training_budget_is_bounded():
     合计约 15 分钟——使用者会以为程序卡死（本机实测直接撞上 10 分钟超时）。
     修复：回退改为小样本 + 少轮次，并打印预计耗时。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     i_fn = src.index("def test_carla(")
     seg = src[i_fn:i_fn + 3000]
     assert "epochs=60, backend=\"numpy\")" not in seg, \
@@ -273,7 +278,7 @@ def test_carla_funcs_keep_sensor_references():
     steer 恒为 0，并伴随 CARLA 警告：
       sensor object went out of the scope but the sensor is still alive in the simulation
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     for fn in ("collect_carla", "test_carla"):
         i_fn = src.index(f"def {fn}(")
         seg = src[i_fn:i_fn + 3500]
@@ -289,7 +294,7 @@ def test_carla_funcs_wrap_cleanup_in_finally():
     历史缺陷：清理裸放在函数末尾，中途抛异常（如连接超时）会被跳过，
     留下残留 actor 与同步模式。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     for fn in ("collect_carla", "test_carla"):
         i_fn = src.index(f"def {fn}(")
         i_next = src.find("\ndef ", i_fn + 1)
@@ -338,7 +343,7 @@ def _parse_bool_from_source():
     """从 main.py 取出 _parse_bool 来测，避免 import main 拉起 CARLA 依赖。"""
     import ast
     import argparse as _ap
-    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     tree = ast.parse(src)
     fn = next(n for n in tree.body
               if isinstance(n, ast.FunctionDef) and n.name == "_parse_bool")
@@ -373,7 +378,7 @@ def test_launch_bool_args_accept_text_values():
     assert parse(["--follow", "--headless"]) == (True, True, None), \
         "裸开关（命令行习惯写法）仍应可用"
 
-    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     assert "_add_bool(" in src, "main.py 应通过 _add_bool 注册布尔开关"
     assert 'action="store_true"' not in src, (
         'main.py 仍有 action="store_true"：launch 传来的 false 会被丢掉')
@@ -515,6 +520,50 @@ def test_documented_launch_args_are_declared():
                         f"{os.path.basename(path)}:{lineno} 的 {n}:= "
                         f"在 {tag} 未声明（可用的有 {sorted(allowed)}）")
     assert not problems, "文档/脚本里的 launch 参数没被声明：\n  " + "\n  ".join(problems)
+
+
+def test_node_imports_resolve_inside_installed_package():
+    """ROS 2 节点 import 的每个模块，都必须真的在 Python 包目录里。
+
+    `setup.py` 是 `packages=[package_name]`，`colcon build` 之后装进
+    site-packages 的**只有 `carla_end_to_end_nn/` 这一个目录**，包根的文件
+    （main.py、config/、launch/ 等）不会被装进去。
+
+    实测曾把实现留在包根的 main.py 里，节点又写
+    `from carla_end_to_end_nn.main import ...` —— 源码目录下因为 sys.path
+    里有包根，看着能跑；但 `ros2 launch` 加载的是安装后的包，一启动就是
+    ModuleNotFoundError，ROS 2 入口 100% 失败。
+    """
+    import re
+    pkg_dir = os.path.join(_PKG, "carla_end_to_end_nn")
+    assert os.path.isfile(os.path.join(pkg_dir, "main.py")), \
+        "实现必须放在 carla_end_to_end_nn/main.py 里，节点才能按包名导入到"
+
+    problems = []
+    for name in sorted(os.listdir(pkg_dir)):
+        if not name.endswith(".py"):
+            continue
+        text = open(os.path.join(pkg_dir, name), encoding="utf-8").read()
+        needed = set(re.findall(
+            r"from\s+carla_end_to_end_nn\.(\w+)\s+import", text))
+        # 也覆盖 `from carla_end_to_end_nn import xxx as yyy` 这种写法
+        for group in re.findall(
+                r"from\s+carla_end_to_end_nn\s+import\s+([\w,\s]+)", text):
+            for g in group.split(","):
+                g = g.strip()
+                if g:
+                    # `carla_common as cc` 只关心模块名
+                    needed.add(g.split()[0])
+        for mod in sorted(needed):
+            if not os.path.isfile(os.path.join(pkg_dir, mod + ".py")):
+                problems.append(
+                    f"{name} 里 import 了 carla_end_to_end_nn.{mod}，"
+                    f"但包内没有 {mod}.py（安装后不会被找到）")
+    assert not problems, "节点导入的模块不在安装范围内：\n  " + "\n  ".join(problems)
+
+    shim = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    assert "from carla_end_to_end_nn.main import" in shim, \
+        "包根 main.py 应当只是转发到 carla_end_to_end_nn.main 的薄壳"
 
 
 def _run_all():
