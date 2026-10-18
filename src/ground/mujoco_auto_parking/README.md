@@ -155,6 +155,15 @@ ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
 - 零权值消融：RMSE 0.684 m，最大误差 1.001 m；
 - 与专家动作相关系数：v 0.9978、wz 0.9994。
 
+## 文档 / Documentation
+
+- 模块文档：`docs/ground/mujoco_auto_parking/index.md`（仓库内 MkDocs 页面）；
+- 本地构建：在仓库根执行 `mkdocs build --clean`；
+- 一键回归：`bash tools/verify_all.sh`；
+- GIF 生成：`python3 tools/make_gifs.py`；
+- Word 导出：`python3 tools/export_word.py`；
+- 实测证据：`docs/evidence/mujoco_auto_parking/`。
+
 ## 当前范围 / Scope
 
 PR1：任务①物理仿真、停车场场景、键盘控制和基础 ROS 接口。
