@@ -11,7 +11,8 @@
   1. 底盘增加 z 方向平移关节 —— 越过悬崖边缘会真实坠落（旧版 z 被锁死，跌落不可能发生）
   2. 距离基于车头 sensor_site 计算（旧版用车身中心，且 site 定义后从未使用）
   3. 制动力 = -K*vx 经饱和限幅，通过执行器施加；不再直接改写 qvel（数值刹车）
-  4. 控制按仿真时间 100Hz 定频；无 sleep 空转；实时率(RTF)实测打印，不预设"高实时"
+  4. 控制按仿真时间 100Hz 定频；仿真按墙钟节流到 RTF≈1.0（否则 ROS 话题的
+     毫秒级传输延迟在高速仿真下会放大成致命的控制滞后）；实时率(RTF)实测打印
 
 注意：本脚本需要图形界面（mujoco.viewer）。无显示环境请只运行 brake_test.py。
 """
@@ -29,6 +30,7 @@ CTRL_DT = 0.01       # 控制/发布周期（仿真时间，s），对应 100 Hz
 DRIVE_FORCE = 15.0   # 巡航驱动力（N）
 KV_BRAKE = 150.0     # 制动力速度增益（N/(m/s)），力与速度反向、成比例
 FMAX_BRAKE = 100.0   # 制动力饱和上限（N），须不超过 actuator ctrlrange
+TARGET_RTF = 1.0     # 目标实时率：仿真按墙钟节流到 1x（见 run() 内注释）
 RTF_PRINT_DT = 5.0   # 实时率打印间隔（仿真时间，s）
 
 XML_MODEL = """
@@ -70,7 +72,7 @@ class CliffSimNode:
         self.brake_cmd = False
         # 订阅决策节点的制动指令 —— 决策与执行分离
         rospy.Subscriber('/brake_cmd', Bool, self._on_brake_cmd, queue_size=10)
-        print("仿真节点已启动：物理步长 2ms，控制频率 100Hz（仿真时间）")
+        print("仿真节点已启动：物理步长 2ms，控制频率 100Hz，实时节流 RTF=%.1f" % TARGET_RTF)
 
     def _on_brake_cmd(self, msg):
         self.brake_cmd = msg.data
@@ -109,6 +111,16 @@ class CliffSimNode:
                     print("sim_t=%.1fs  RTF=%.2f  x=%.2f  z=%.2f" % (
                         self.data.time, rtf, self.data.qpos[0], self.data.qpos[1]))
                     next_rtf += RTF_PRINT_DT
+
+                # 5) 实时节流：把仿真限制在 RTF≈1.0。
+                #    若放任 RTF 远大于 1（本模型可到 ~28），车辆穿过触发区的
+                #    仿真时间窗口被压缩成几毫秒真实时间，与 ROS 话题的毫秒级
+                #    传输延迟同量级，制动指令会迟到、车辆冲出边缘坠落；
+                #    节流到 1x 后 ROS 延迟折算回仿真时间仅数毫秒，制动可靠。
+                #    软件渲染过慢时该 sleep 不生效，RTF 自然低于 1。
+                sleep_need = self.data.time / TARGET_RTF - (time.time() - wall_t0)
+                if sleep_need > 0:
+                    time.sleep(sleep_need)
 
 
 if __name__ == '__main__':
