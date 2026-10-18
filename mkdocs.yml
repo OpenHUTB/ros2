@@ -117,6 +117,7 @@ nav:
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
+    - 多无人机空域监测（多边形禁飞区与机间冲突）: './air/multi_uav_airspace_monitor.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
