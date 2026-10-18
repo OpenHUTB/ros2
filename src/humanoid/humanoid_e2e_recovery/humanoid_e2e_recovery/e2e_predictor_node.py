@@ -3,47 +3,56 @@
 """
 e2e_predictor_node.py —— 端到端视觉平衡：MLP 推理节点
 =====================================================
-订阅：/front_camera/image  (sensor_msgs/msg/Image)
-发布：/joint_targets        (std_msgs/msg/Float64MultiArray)
+订阅：front_camera/image  (sensor_msgs/msg/Image, mono8)
+发布：joint_targets        (std_msgs/msg/Float64MultiArray, 15 维)
 """
 from __future__ import annotations
-import os, sys
+import os
 import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
+from ament_index_python.packages import get_package_share_directory
 
 from humanoid_e2e_recovery.predictor import E2EPredictor
+
+
+def _weights_path() -> str:
+    try:
+        share = get_package_share_directory("humanoid_e2e_recovery")
+        p = os.path.join(share, "models_trained", "e2e_policy.npz")
+        if os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "..", "..", "..", "models_trained", "e2e_policy.npz")
 
 
 class E2EPredictorNode(Node):
     def __init__(self):
         super().__init__('e2e_predictor_node')
 
-        self.declare_parameter('weights_path', '')
-        weights = self.get_parameter('weights_path').value
+        weights = self.declare_parameter('weights_path', '').value
         if not weights:
-            weights = os.path.join(HERE, 'models_trained', 'e2e_policy.npz')
+            weights = _weights_path()
 
         self.predictor = E2EPredictor(weights)
-        self.target_pub = self.create_publisher(Float64MultiArray, '/joint_targets', 10)
+        self.target_pub = self.create_publisher(Float64MultiArray, 'joint_targets', 10)
 
-        self.create_subscription(Image, '/front_camera/image', self._img_cb, 10)
+        self.create_subscription(Image, 'front_camera/image', self._img_cb, 10)
         self.get_logger().info(f'e2e_predictor_node 启动, weights={weights}')
 
     def _img_cb(self, msg: Image):
-        # 解码 mono8 图像
-        w, h = msg.width, msg.height
+        h, w = msg.height, msg.width
         arr = np.frombuffer(msg.data, dtype=np.uint8).reshape(h, w)
         if arr.shape != (64, 64):
             return
-
-        # MLP 推理
-        target = self.predictor.predict_from_image(arr)
+        # uint8 [0,255] → float [0,1]，与训练数据一致
+        img_float = arr.astype(np.float32) / 255.0
+        target = self.predictor.predict_from_image(img_float)
 
         out = Float64MultiArray()
         out.data = target.tolist()

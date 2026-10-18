@@ -10,6 +10,9 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'models'), glob('models/*.xml')),
+        # 训练好的权重必须随包安装
+        (os.path.join('share', package_name, 'models_trained'),
+         glob('models_trained/*.npz')),
     ],
     install_requires=['setuptools'], zip_safe=True,
     maintainer='WZJ6666wudu', maintainer_email='WZJ6666wudu@users.noreply.github.com',
