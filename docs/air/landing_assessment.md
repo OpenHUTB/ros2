@@ -2,13 +2,13 @@
 
 本项目研究无人机着陆时的两个问题：当前处于哪个阶段，以及接地时会产生多大的载荷。模型使用最近 0.4 秒的位置、速度和姿态等数据，识别接近、下降、接地过渡和稳定四个阶段，并在足端高度首次降至 18 cm 时预测接地峰值载荷。
 
-实验数据由 MuJoCo 仿真采集。项目包含数据处理、神经网络训练与测试、ROS2 节点和可视化程序，随附数据和训练好的模型，可以直接运行回放。
+实验数据由 MuJoCo 仿真采集。项目包含数据处理、神经网络训练与测试、ROS2 节点和可视化程序，数据、模型和运行记录在本地生成，不随源码提交；按下述步骤采集、训练后即可运行回放。
 
 项目沿用 OpenHUTB 已有 [carlair_ros_bridge](https://github.com/OpenHUTB/ros2/tree/master/src/air/carlair_ros_bridge) 的 `/uav/odom` 里程计接口，增加着陆分析功能。仿真四旋翼 XML 原样复用社区 [PR #178](https://github.com/OpenHUTB/ros2/pull/178)，运行时添加起落架与地面接触。该 PR 在本项目开发时尚未合并。模型版本和许可见 [来源记录](landing_assessment/models/source.json) 与 [第三方说明](landing_assessment/THIRD_PARTY_NOTICES.md)。本项目不依赖该 PR 安装成功。
 
 ![MuJoCo 着陆仿真场景](landing_assessment/docs/simulation_render.png)
 
-上图为 MuJoCo 仿真场景，使用随附实验的相同参数和随机种子重新渲染。
+上图为此前实际运行的 MuJoCo 仿真场景；文档图片保存在 docs/，本地生成文件不存入 Git。
 
 ## 1. 数据和目标
 
@@ -21,7 +21,7 @@
 - 神经网络输入为 最近 8 个采样点：足端估计高度、ENU 速度、后向差分加速度、横滚/俯仰、机体系角速度，共 12 通道。
 - 每次着陆仅在首次低于 18 cm 的接地前观测处产生一次载荷预测样本。原始测试和最终测试均各有 24 个独立载荷预测样本；阶段窗口存在重叠，不能当作同等数量的独立飞行。
 
-`assets/landing_corpus.zip` 随附全部原始观测和清单。清单含参数、划分、接触真值、载荷目标与 SHA256；数据准备验证校验和。完整着陆不会跨划分，归一化和基线拟合只使用训练集。
+`bash main.sh prepare` 使用固定种子在本地生成原始观测和清单。清单含参数、划分、接触真值、载荷目标与 SHA256。数据集不存入 Git。完整着陆不会跨划分，归一化和基线拟合只使用训练集。
 
 ## 2. 方法与实验结果
 
@@ -65,7 +65,7 @@
 ![接地前载荷预测与真实值](landing_assessment/results/impact_comparison.png)
 ![着陆阶段预测与真实标签](landing_assessment/results/phase_comparison.png)
 
-全部数值见 `results/metrics.json`、`results/final/metrics.json` 和对应逐次预测 CSV。`final_protocol.json` 保存最终测试前冻结的模型和实验源代码哈希；模型未根据最终测试结果重新训练。
+以上表格和图片保留此前实验结果，不代表每次重训都会逐位相同。重新运行后，数值写入本地 `results/metrics.json`、`results/final/metrics.json` 和逐次预测 CSV；`freeze_final.py` 在采集最终测试前记录当次模型和源码哈希。上述生成文件均不提交。
 
 ## 3. 环境与快速运行
 
@@ -81,6 +81,7 @@ source ~/uav_prediction_env/bin/activate
 python -m pip install -r requirements.txt
 bash main.sh doctor
 bash main.sh prepare
+bash main.sh train
 bash main.sh build
 ```
 
@@ -133,13 +134,16 @@ flowchart LR
 
 ```bash
 bash main.sh prepare
+bash main.sh train
 bash main.sh test
-python freeze_final.py
 bash main.sh evaluate
 bash main.sh report
+python freeze_final.py
+bash main.sh collect --final --output data/final
+bash main.sh evaluate --data data/final --output results/final
 ```
 
-从头训练请使用新目录，保留随附冻结模型：
+需要另一次训练时可使用新目录，保留本地已有模型：
 
 ```bash
 bash main.sh train --models models/retrained
@@ -152,15 +156,15 @@ bash main.sh evaluate --models models/retrained --output results/retrained
 bash main.sh collect --output data/new_raw
 ```
 
-查看独立最终测试的随附模型结果：
+完成模型冻结和最终测试数据采集后，可重新评估：
 
 ```bash
 bash main.sh evaluate --data data/final --output results/final_check
 ```
 
-在桌面环境运行 `python render_validation.py` 可重新生成仿真场景图片。脚本重跑相同随机种子的实验，并检查数据是否与随附记录一致。
+在桌面环境运行 `python render_validation.py` 可重新生成仿真场景图片。脚本重跑相同随机种子的实验，并检查数据是否与本地采集记录一致；图片写入本地 `results/simulation_render.png`。
 
-已完成 7 项针对性测试：标签/接触力不进入特征、因果性、整次划分不交叉、离线与在线逐帧一致且预测先于接触、非法输入重置、时间倒退重置、ROS 坐标变换往返。实际 ROS2 演示处理 207 条观测、3 次接地前载荷预测，覆盖四阶段且正常退出。环境和验证记录见 `artifacts/environment.json`、`artifacts/validation.json`。
+已完成 7 项针对性测试：标签/接触力不进入特征、因果性、整次划分不交叉、离线与在线逐帧一致且预测先于接触、非法输入重置、时间倒退重置、ROS 坐标变换往返。实际 ROS2 演示处理 207 条观测、3 次接地前载荷预测，覆盖四阶段且正常退出。这些是此前实际运行的记录；本次运行的环境检查由 `bash main.sh doctor` 写入本地 `artifacts/`，不提交日志与生成记录。
 
 ## 6. 目前的不足
 

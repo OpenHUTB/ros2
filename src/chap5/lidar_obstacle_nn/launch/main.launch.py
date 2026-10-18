@@ -2,7 +2,8 @@
 
 Brings up everything needed for a complete demonstration:
 
-    1. The Gazebo Fortress simulation world (obstacle_world.sdf)
+    1. The Gazebo Fortress simulation world (static obstacle_world.sdf
+       by default, or world:=dynamic for the controllable slide world)
        exposing a robot with a 2D LiDAR.
     2. The ros_gz bridge forwarding Gazebo /scan to ROS 2 /scan.
     3. The lidar_obstacle_nn inference node that loads the trained MLP
@@ -36,12 +37,11 @@ PACKAGE_SHARE = get_package_share_directory(PACKAGE)
 
 def generate_launch_description() -> LaunchDescription:
     # --- Arguments ----------------------------------------------------
-    world_path = LaunchConfiguration('world_path')
+    world = LaunchConfiguration('world')
     model_path = LaunchConfiguration('model_path')
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_gpu = LaunchConfiguration('use_gpu')
 
-    default_world = os.path.join(PACKAGE_SHARE, 'worlds', 'obstacle_world.sdf')
     default_model = os.path.join(PACKAGE_SHARE, 'models', 'lidar_mlp.pt')
 
     # --- Gazebo + bridge (delegated to sim.launch.py) ----------------
@@ -50,7 +50,7 @@ def generate_launch_description() -> LaunchDescription:
             os.path.join(PACKAGE_SHARE, 'launch', 'sim.launch.py')
         ),
         launch_arguments={
-            'world_path': world_path,
+            'world': world,
             'use_sim_time': use_sim_time,
         }.items(),
     )
@@ -80,9 +80,9 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                'world_path',
-                default_value=default_world,
-                description='Path to the Gazebo SDF world file.',
+                'world',
+                default_value='static',
+                description="Simulation world: 'static' or 'dynamic'.",
             ),
             DeclareLaunchArgument(
                 'model_path',

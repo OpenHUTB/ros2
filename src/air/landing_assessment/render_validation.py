@@ -18,7 +18,7 @@ def closer_view(self,data,camera=-1,**kwargs):
         camera.elevation=-18
     return original_update(self,data,camera=camera,**kwargs)
 simulation.mujoco.Renderer.update_scene=closer_view
-Path('docs').mkdir(exist_ok=True)
-raw,info=simulation.episode(1096,Path('docs/simulation_render.png'))
+Path('results').mkdir(exist_ok=True)
+raw,info=simulation.episode(1096,Path('results/simulation_render.png'))
 np.testing.assert_array_equal(raw,np.load('data/raw/episode_1096.npz')['raw'])
 print('Actual MuJoCo rendering saved; rerun matches recorded physics samples exactly.')
