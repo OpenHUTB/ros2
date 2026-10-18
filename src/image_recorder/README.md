@@ -6,13 +6,18 @@
 
 ```text
 src/
-└── image_recorder/
-    ├── main.py                 # 图像订阅与录制主程序
-    ├── setup.py                # ROS 2 功能包配置文件
-    ├── package.xml             # ROS 2 依赖声明文件
-    ├── README.md               # 模块说明文档 (本文件)
-    └── launch/
-        └── main.launch.py      # 一键启动文件
+└── image_recorder/               # 包名根目录
+    ├── image_recorder/           # 核心代码同名子文件夹
+    │   ├── __init__.py           # 空文件（标识 Python 包）
+    │   └── main.py               # 主程序
+    ├── resource/                 # 资源目录
+    │   └── image_recorder        # 无后缀空文件（供 ament 索引识别）
+    ├── launch/                   # 启动文件目录
+    │   └── main.launch.py        # 一键启动节点
+    ├── package.xml               # 依赖声明
+    ├── setup.py                  # 构建配置
+    ├── setup.cfg                 # 新增文件
+    └── README.md             
 ```
 
 ## 运行步骤
