@@ -49,6 +49,7 @@ nav:
 - 入门:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
+    - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
@@ -63,8 +64,10 @@ nav:
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
+    - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
@@ -83,8 +86,10 @@ nav:
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 空域载具:
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
@@ -125,6 +130,7 @@ nav:
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
+
 # - mdx_math 用于行内公式显示
 markdown_extensions:
   - markdown_grid_tables
