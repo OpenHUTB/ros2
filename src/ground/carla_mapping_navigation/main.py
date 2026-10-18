@@ -32,6 +32,7 @@ import sys
 
 import numpy as np
 
+from carla_mapping_navigation.gif_writer import write_gif
 from carla_mapping_navigation.nn_models import MLPPolicy
 
 try:
@@ -370,6 +371,24 @@ def render_prob_png(prob, grid, path, path_pts=None, goal=None, scale=3, title_t
     因此可以还原出"地图在 t 秒时只有这么大"的中间状态。
     左上角画一条进度条表示该快照对应的仿真时刻，便于对比。
     """
+    return _write_png(path, prob_canvas(prob, grid, path_pts, goal, scale, title_t))
+
+
+# 快照渲染用的固定调色板。GIF 只支持索引色，而快照本身的颜色是固定的 6 种，
+# 所以直接把 RGB 映射成下标，既能出 PNG 也能出 GIF。
+MAP_PALETTE = [(128, 128, 128),   # 未知区域
+               (235, 235, 235),   # 空闲区域
+               (30, 30, 30),      # 占据区域
+               (230, 40, 40),     # 车辆轨迹
+               (40, 200, 60),     # 目标点
+               (60, 120, 230)]    # 时刻进度条
+
+
+def prob_canvas(prob, grid, path_pts=None, goal=None, scale=3, title_t=None):
+    """把概率图副本画成 (H,W,3) uint8 的 RGB 数组（不写盘）。
+
+    拆出来是为了让离线演示能逐帧收集画面、最后合成 GIF。
+    """
     p = np.asarray(prob)
     img = np.full((grid.n, grid.n, 3), 128, dtype=np.uint8)
     img[p < 0.4] = (235, 235, 235)
@@ -394,7 +413,15 @@ def render_prob_png(prob, grid, path, path_pts=None, goal=None, scale=3, title_t
     img = img[::-1]
     if scale > 1:
         img = np.repeat(np.repeat(img, scale, axis=0), scale, axis=1)
-    return _write_png(path, img)
+    return img
+
+
+def rgb_to_indices(img, palette=MAP_PALETTE):
+    """把固定调色板的 RGB 图转成 GIF 需要的索引图（调色板外的颜色记 0）。"""
+    out = np.zeros(img.shape[:2], dtype=np.uint8)
+    for i, (r, g, b) in enumerate(palette):
+        out[(img[:, :, 0] == r) & (img[:, :, 1] == g) & (img[:, :, 2] == b)] = i
+    return out
 
 
 def render_train_loss_png(losses, path, width=640, height=360):
@@ -532,6 +559,13 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     reached_at = None
     n_ticks = int(sim_time / DT)
 
+    # 动图：每 0.25 s 采一帧（DT=0.05 → 每 5 拍），最后合成 GIF。
+    # 栅格本身 200×200，放大 2 倍到 400×400；快照只有 6 种颜色，
+    # 经 LZW 压缩后整个动图通常只有几百 KB，远低于 10 MB 的要求。
+    gif_every = max(1, int(0.25 / DT))
+    gif_scale = 2
+    gif_frames = []
+
     for k in range(n_ticks):
         # ---- 建图：本帧雷达 → 占用栅格 ----
         pc = _fake_scan(x, y, yaw, goal, obstacles, seed=k)
@@ -573,10 +607,21 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
         if save_dir and k % max(1, int(1.0 / DT)) == 0:
             snaps.append((k, grid.probability().copy(), list(path_pts)))
 
+        # 动图帧：与上面 3 张进度图同源，但采得更密，合成后能看出地图一格格长出来
+        if save_dir and k % gif_every == 0:
+            gif_frames.append(rgb_to_indices(prob_canvas(
+                grid.probability().copy(), grid, path_pts=list(path_pts),
+                goal=goal, scale=gif_scale, title_t=k * DT)))
+
     os.makedirs(save_dir, exist_ok=True)
     p1 = render_grid_png(grid, os.path.join(save_dir, "occupancy_map.png"),
                          path_pts=path_pts, goal=goal)
     p2 = render_train_loss_png(hist["loss"], os.path.join(save_dir, "plan_loss.png"))
+    # 动图：把逐帧采集的建图快照合成 GIF（文档里要求放 gif 演示）
+    p_gif = None
+    if len(gif_frames) >= 2:
+        p_gif = write_gif(os.path.join(save_dir, "map_progress.gif"),
+                          gif_frames, MAP_PALETTE, delay_cs=8)
     # 渐进建图序列图（3 张，展示地图从空白到成形）
     prog_paths = []
     if len(snaps) >= 3:
@@ -608,8 +653,11 @@ def run_offline_demo(save_dir, epochs=200, sim_time=40.0, goal=None, seed=0):
     if reached_at is not None:
         print(f"到达耗时        = {reached_at * DT:.1f} s")
     print("\n已导出取证图：")
-    for p in (p1, p2) + tuple(prog_paths):
+    for p in (p1, p2) + tuple(prog_paths) + ((p_gif,) if p_gif else ()):
         print("   ", p)
+    if p_gif:
+        print(f"    动图 {len(gif_frames)} 帧，"
+              f"{os.path.getsize(p_gif) / 1024:.0f} KB")
     return 0
 
 

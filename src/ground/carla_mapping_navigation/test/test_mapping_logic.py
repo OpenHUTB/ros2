@@ -538,6 +538,152 @@ def test_sim_params_keys_are_declared_by_node():
     assert keys, "没解析出任何参数键，yaml 结构可能变了"
 
 
+def _lzw_decode(blob, min_code, npix):
+    """极简 GIF LZW 解码器，只用来验证我们自己编码器的输出。
+
+    注意码长增长用 `==`：解码端每读一个码才建一条表项、且第一个码不建表，
+    所以它比编码端慢一条；编码端那边对应的写法是 `>`。
+    """
+    clear = 1 << min_code
+    end = clear + 1
+    state = {"bits": 0, "code_size": min_code + 1}
+    table = {i: [i] for i in range(clear)}
+    next_code = end + 1
+    total = len(blob) * 8
+
+    def read():
+        v = 0
+        for k in range(state["code_size"]):
+            p = state["bits"] + k
+            v |= ((blob[p >> 3] >> (p & 7)) & 1) << k
+        state["bits"] += state["code_size"]
+        return v
+
+    out = []
+    prev = None
+    while state["bits"] + state["code_size"] <= total:
+        code = read()
+        if code == clear:
+            table = {i: [i] for i in range(clear)}
+            next_code = end + 1
+            state["code_size"] = min_code + 1
+            prev = None
+            continue
+        if code == end:
+            break
+        if code in table:
+            entry = table[code]
+        elif prev is not None:
+            entry = prev + [prev[0]]
+        else:
+            raise AssertionError(f"非法码 {code}")
+        out.extend(entry)
+        if prev is not None and next_code < 4096:
+            table[next_code] = prev + [entry[0]]
+            next_code += 1
+            if next_code == (1 << state["code_size"]) and state["code_size"] < 12:
+                state["code_size"] += 1
+        prev = entry
+    return np.array(out[:npix], dtype=np.uint8)
+
+
+def _gif_read(path):
+    """读回我们自己写的 GIF：返回 (调色板, [每帧索引数组], (宽, 高))。"""
+    import struct
+
+    data = open(path, "rb").read()
+    assert data[:6] in (b"GIF87a", b"GIF89a"), "文件头不是 GIF"
+    w, h, packed = struct.unpack("<HHB", data[6:11])
+    pos = 13
+    pal = []
+    if packed & 0x80:
+        ncol = 1 << ((packed & 0x07) + 1)
+        pal = [tuple(data[pos + 3 * i: pos + 3 * i + 3]) for i in range(ncol)]
+        pos += 3 * ncol
+    frames = []
+    while pos < len(data):
+        tag = data[pos]
+        if tag == 0x3B:                       # trailer
+            break
+        if tag == 0x21:                       # 扩展块
+            pos += 2
+            while data[pos]:
+                pos += data[pos] + 1
+            pos += 1
+            continue
+        assert tag == 0x2C, f"期望图像描述符，遇到 {tag:#x}"
+        _l, _t, fw, fh, ipacked = struct.unpack("<HHHHB", data[pos + 1: pos + 10])
+        pos += 10
+        if ipacked & 0x80:                    # 局部色表
+            pos += 3 * (1 << ((ipacked & 0x07) + 1))
+        min_code = data[pos]
+        pos += 1
+        blob = bytearray()
+        while data[pos]:
+            n = data[pos]
+            blob += data[pos + 1: pos + 1 + n]
+            pos += n + 1
+        pos += 1
+        frames.append(_lzw_decode(blob, min_code, fw * fh).reshape(fh, fw))
+    return pal, frames, (w, h)
+
+
+def test_gif_writer_roundtrip():
+    """GIF 编码必须能被独立解码器原样读回（像素级一致）。
+
+    文档要求放 gif 动图，而模块是纯 numpy 的、不装 Pillow，所以编码器是自己写的。
+    自己写的编码器 + 自己写的解码器一起测会「互相迁就」，所以这里的解码器按
+    GIF 规范实现（码长增长用 `==`，与编码端的 `>` 相差一位），能独立判错。
+    已验证它写出的文件 Pillow 也能正确读回。
+    """
+    frames = []
+    for i in range(6):
+        f = np.zeros((40, 50), dtype=np.uint8)
+        f[:, : max(1, i * 8)] = 1
+        f[10:20, 5:5 + max(1, i * 6)] = 2
+        f[0, :] = 5
+        frames.append(f)
+
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "t.gif")
+        main_mod.write_gif(p, frames, main_mod.MAP_PALETTE, delay_cs=8)
+        pal, got, size = _gif_read(p)
+
+    assert size == (50, 40), f"尺寸应保持 (50,40)，实际 {size}"
+    assert len(got) == len(frames), f"帧数应 {len(frames)}，实际 {len(got)}"
+    for i, (a, b) in enumerate(zip(got, frames)):
+        assert np.array_equal(a, b), f"第 {i} 帧像素不一致"
+
+    # 调色板前 6 项必须与 MAP_PALETTE 完全相同，否则颜色会变
+    assert [tuple(c) for c in pal[:len(main_mod.MAP_PALETTE)]] == \
+        [tuple(c) for c in main_mod.MAP_PALETTE], "调色板被改动了"
+
+
+def test_prob_canvas_colors_are_all_in_palette():
+    """快照画面的每种颜色都必须在 MAP_PALETTE 里，否则转索引时会丢像素。
+
+    GIF 只有索引色，`rgb_to_indices` 把调色板外的颜色记成 0（未知灰）。
+    如果渲染函数以后加了新颜色却忘了进调色板，动图会悄悄变色。
+    """
+    grid = main_mod.OccupancyGrid(center=main_mod.START)
+    prob = grid.probability()
+    # 造出全部 4 种状态 + 轨迹 + 目标 + 进度条
+    prob[10:20, 10:20] = 0.1
+    prob[30:40, 30:40] = 0.9
+    pts = [(main_mod.START[0] + i * 0.5, main_mod.START[1]) for i in range(5)]
+    img = main_mod.prob_canvas(prob, grid, path_pts=pts,
+                               goal=main_mod.DEFAULT_GOAL, scale=1, title_t=6.0)
+    colors = {tuple(c) for c in img.reshape(-1, 3)}
+    allowed = {tuple(c) for c in main_mod.MAP_PALETTE}
+    extra = sorted(colors - allowed)
+    assert not extra, f"这些颜色不在 MAP_PALETTE 里：{extra}"
+
+    idx = main_mod.rgb_to_indices(img)
+    # 每个下标都要能反查回原色，说明没有像素被误判成「未知」
+    back = np.array(main_mod.MAP_PALETTE, dtype=np.uint8)[idx]
+    assert np.array_equal(back, img), "rgb_to_indices 有像素映射错了"
+
+
 def _run_all():
     fns = sorted(k for k in list(globals()) if k.startswith("test_"))
     passed, failed = 0, []

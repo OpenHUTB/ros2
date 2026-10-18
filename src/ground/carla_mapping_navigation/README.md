@@ -24,6 +24,7 @@ src/ground/carla_mapping_navigation/
 │   ├── __init__.py
 │   ├── nn_models.py                          # 纯 numpy 神经网络库
 │   ├── carla_common.py                       # CARLA Python API 封装
+│   ├── gif_writer.py                         # 纯 Python GIF 编码器（文档动图用）
 │   └── mapping_navigation_node.py            # ROS 2 节点（建图 + NN 规划）
 ├── launch/
 │   ├── main.launch.py                        # ROS 2 Humble
@@ -34,7 +35,7 @@ src/ground/carla_mapping_navigation/
 ├── resource/carla_mapping_navigation
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_mapping_logic.py                # 单元测试（28 项，无需 CARLA）
+└── test/test_mapping_logic.py                # 单元测试（30 项，无需 CARLA）
 ```
 
 ## 3. 快速开始
@@ -68,7 +69,7 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix carla_mapping_navigation)/share/carla_
 ## 4. 测试
 
 ```bash
-python3 test/test_mapping_logic.py     # 28 项全部通过，无需 CARLA
+python3 test/test_mapping_logic.py     # 30 项全部通过，无需 CARLA
 ```
 
 其中 `test_grid_contains_vehicle_start` 是**回归测试**：早期版本栅格固定以世界原点为中心、

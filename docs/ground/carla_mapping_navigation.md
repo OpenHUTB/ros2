@@ -374,6 +374,11 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix carla_mapping_navigation)/share/carla_
 |---|---|---|
 | ![建图进度 1：起始阶段地图几乎空白](../img/ground/carla_map_map_progress_1.png) | ![建图进度 2：行驶途中地图扩展到中途范围](../img/ground/carla_map_map_progress_2.png) | ![建图进度 3：接近目标时地图基本成形](../img/ground/carla_map_map_progress_3.png) |
 
+**动图：建图与导航全过程**（26 帧，每帧间隔 0.25 s，96 KB。地图随车辆行驶逐帧长出来，
+红色轨迹与绿色目标点同步推进，左上角蓝色进度条对应该帧的仿真时刻）：
+
+![激光雷达建图与神经网络规划导航动态演示](../img/ground/carla_map_progress.gif)
+
 已知区域占比随时间增长（实测）：**3.4% → 18.1% → 26.8%**，最终 **27.6%**。
 
 **规划神经网络训练损失曲线**：
@@ -478,7 +483,7 @@ $$
 | 与障碍最近距离 | **0.72 m**（未发生碰撞） |
 | 到达耗时 | 6.4 s |
 | 轨迹点数 | 128 |
-| 单元测试 | **28 PASS / 0 FAIL** |
+| 单元测试 | **30 PASS / 0 FAIL** |
 
 ### 6.3 调优过程记录
 
