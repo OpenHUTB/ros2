@@ -73,6 +73,8 @@ class LateralControlNode:
         self.memory = {"vy": 0.0, "r": 0.0}
         self.dt = config.dt
         self.errors = []
+        self.loop_path = bool(rospy.get_param("~loop_path", True))
+        self.laps = 0
 
         self.pub_odom = rospy.Publisher("/lateral_control/odom", Odometry, queue_size=1)
         self.pub_cmd = rospy.Publisher("/lateral_control/cmd", Twist, queue_size=1)
@@ -147,6 +149,24 @@ class LateralControlNode:
                 self.state, delta, accel, self.dt, self.memory)
         else:
             self.state = self.sim.model.step(self.state, delta, accel, self.dt)
+
+        # 到达非闭合轨迹终点：默认重置回起点，让演示可以持续观察
+        # （否则车辆会沿末段切向一直直行，横向偏差冻结在某个常数值，看起来像"卡住"）
+        if self._reached_end(projection.s):
+            if self.loop_path:
+                self.laps += 1
+                self.state = self.sim.initial_state()
+                self.memory = {"vy": 0.0, "r": 0.0}
+                self.controller.reset()
+                self.errors.clear()
+                rospy.loginfo("已到达轨迹终点，重置回起点（第 %d 次）", self.laps)
+            else:
+                rospy.loginfo_throttle(5.0, "已到达轨迹终点（loop_path=false，继续直行）")
+
+    def _reached_end(self, s: float) -> bool:
+        if self.path.closed:
+            return False
+        return s >= self.path.total_length - 1.0
 
 
 def main() -> None:

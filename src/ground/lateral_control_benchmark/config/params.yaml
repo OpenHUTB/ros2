@@ -15,3 +15,5 @@ lateral_control_node:
   initial_heading_error: 0.10
   # 控制与仿真频率（Hz）
   rate_hz: 50.0
+  # 到达非闭合轨迹终点后是否重置回起点（true=持续演示；false=继续沿末段直行）
+  loop_path: true

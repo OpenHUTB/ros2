@@ -11,7 +11,12 @@
   <arg name="scenario" default="sine" doc="straight / arc / sine / lane_change"/>
   <arg name="model" default="kinematic" doc="kinematic / dynamic"/>
   <arg name="cruise_speed" default="8.0" doc="巡航速度 m/s"/>
+  <arg name="loop_path" default="true" doc="到达非闭合轨迹终点后是否重置回起点"/>
   <arg name="rviz" default="false" doc="是否同时打开 RViz 观察参考路径"/>
+
+  <!-- 先加载参数文件（根键即节点名，因此会落在该节点的私有命名空间下），
+       再用 <arg>/<param> 覆盖，做到"文件给默认值、命令行给临时值" -->
+  <rosparam command="load" file="$(find lateral_control_benchmark)/config/params.yaml"/>
 
   <node pkg="lateral_control_benchmark" type="lateral_control_node.py"
         name="lateral_control_node" output="screen">
@@ -19,6 +24,7 @@
     <param name="scenario" value="$(arg scenario)"/>
     <param name="model" value="$(arg model)"/>
     <param name="cruise_speed" value="$(arg cruise_speed)"/>
+    <param name="loop_path" value="$(arg loop_path)"/>
   </node>
 
   <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" output="screen"/>
