@@ -347,3 +347,66 @@ PPO 训练 300 万步（8 并行环境、50 Hz、CPU 约 19 分钟）。回合�
    这正是需要神经网络残差学习步态的原因。
 7. **上半身指令不能跳变**：一次性把肩前抬从 0 跳到 1.5 rad 会在 1.3 s 内跌倒，同样的目标用
    0.8 s 过渡就稳。键盘每次 0.20 rad 属于准平滑，安全；用话题直接下发大角度时需自行加过渡。
+
+## 八、部署与运行常见问题与排坑（FAQ）
+
+在实际部署（如 Ubuntu 24.04 / ROS 2 Jazzy / WSL2 环境）中，可能会遇到以下环境配置与运行问题：
+
+### 8.1 安装 Python 依赖报 `externally-managed-environment` (PEP 668)
+* **报错现象**：
+  在已激活虚拟环境 `(.venv)` 下执行 `pip3 install ...` 时报错：`error: externally-managed-environment`，提示当前环境被外部系统托管。
+* **原因分析**：
+  Ubuntu 24.04+ / Python 3.12+ 遵循 PEP 668 规范以保护系统库安全。在终端直接输入 `pip3` 容易被 PATH 优先级解析为系统的 `/usr/bin/pip3`，而不是虚拟环境内部的 pip。
+* **解决方法**：
+  使用当前激活环境的 Python 解释器模块形式运行 pip，强制绑定虚拟环境：
+  ```bash
+  python -m pip install "mujoco==3.3.7" "numpy<2" gymnasium "stable-baselines3==2.3.2" torch
+  ```
+
+### 8.2 启动 launch 报 `FileNotFoundError: [Errno 2] No such file or directory: 'xterm'`
+* **报错现象**：
+  执行 `ros2 launch humanoid_ppo_locomotion main.launch.py` 时，`[xterm-3]` 报错退出。
+* **原因分析**：
+  `main.launch.py` 中为 `keyboard_teleop` 键盘节点配置了 `prefix="xterm -e"`，用于弹出独立的交互式终端窗口捕获按键。若系统（如 WSL2 或纯净版 Linux）未预装 `xterm` 软件包则会触发此异常。
+* **解决方法**：
+  - **安装 xterm（推荐，可开启独立键盘交互窗口）**：
+    ```bash
+    sudo apt update && sudo apt install -y xterm
+    ```
+  - **无图形界面 / Docker 容器环境**：添加参数关闭键盘弹窗节点，改用 ROS 话题控制：
+    ```bash
+    ros2 launch humanoid_ppo_locomotion main.launch.py teleop:=false
+    ```
+
+### 8.3 ROS 2 节点启动报 `ModuleNotFoundError: No module named 'torch' / 'gymnasium'`
+* **报错现象**：
+  在终端中执行 `python -c "import torch, gymnasium"` 测试通过，但在 `ros2 launch` 时 `policy_node` 或 `sim_node` 崩溃，报错找不到 `torch` 或 `gymnasium`。
+* **原因分析**：
+  - ROS 2 的 Python 节点经 `colcon build` 生成的封装脚本（`install/.../lib/humanoid_ppo_locomotion/policy_node`）第一行 Shebang 默认固定为系统解释器：`#!/usr/bin/python3`。
+  - ROS 2 派生子进程调用系统 Python 时，默认不会主动检索用户家目录下的虚拟环境包（`~/.venv/lib/python3.12/site-packages`）。若在新终端中未激活虚拟环境运行，也会发生该问题。
+* **解决方法**：
+  将虚拟环境的第三方库路径显式加入 `PYTHONPATH` 环境变量中：
+  ```bash
+  export PYTHONPATH="$HOME/.venv/lib/python3.12/site-packages:$PYTHONPATH"
+  source ~/ros2_ws/install/setup.bash
+  ros2 launch humanoid_ppo_locomotion main.launch.py
+  ```
+  *(注：若需永久生效，可将 `export PYTHONPATH="$HOME/.venv/lib/python3.12/site-packages:$PYTHONPATH"` 追加至 `~/.bashrc`)*
+
+### 8.4 `ros2 launch` 启动后为什么没有弹出 3D 机器人仿真界面？
+* **现象说明**：
+  `ros2 launch` 成功启动、策略持续推理，但桌面上只有键盘交互小黑窗，看不到类似演示动图中的 3D 机器人。
+* **原因分析**：
+  - `sim_node` 为 ROS 2 **无头后台仿真（Headless）** 设计，专注进行 50 Hz 物理积分并发布 `/joint_states`、`/odom` 等话题，便于在无显卡服务器或 Docker 中稳定运行，节点本身不包含图形渲染视窗。
+  - 文档中的演示动图（GIF）是通过离屏渲染脚本 `record_gif.py` 逐帧合成导出的。
+* **解决方法**：
+  - **查看实时原生 3D 交互仿真视窗（带模型渲染与鼠标视角拖拽）**：
+    ```bash
+    cd ~/ros2_ws/src/humanoid_ppo_locomotion
+    python3 main.py --play --weights weights/policy_g1.pt
+    ```
+  - **离屏录制并导出演示动图（与文档动图同源）**：
+    ```bash
+    cd ~/ros2_ws/src/humanoid_ppo_locomotion
+    python3 main.py --gif --weights weights/policy_g1.pt --upper-demo --out demo.gif
+    ```
