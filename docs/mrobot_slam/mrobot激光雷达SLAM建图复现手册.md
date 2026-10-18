@@ -1,4 +1,4 @@
-# 6.2 mrobot 激光雷达 SLAM 建图 · 完整复现手册
+# mrobot 激光雷达 SLAM 建图 · 完整复现手册
 
 > **环境**：Ubuntu 20.04 + ROS Noetic + Gazebo 11
 **来源**：ROS 机器人开发实践（胡春旭）第六章 · 仿真环境搭建 + gmapping SLAM 建图
@@ -43,7 +43,7 @@ sudo apt install -y ros-noetic-gmapping ros-noetic-map-server \
 
 终端完整记录：`rosversion -d` 输出 `noetic` → 复制三个功能包 → `chmod +x` 加执行权限 → `sudo apt update`（密码连输错 3 次后成功，提示 190 个软件包可升级）。
 
-!\[第0~2步：环境确认+工作空间+依赖更新]([https://aka.doubaocdn.com/s/tOoVjHF0Nl](https://aka.doubaocdn.com/s/tOoVjHF0Nl))
+!\[第0~2步：环境确认+工作空间+依赖更新](img/20261018-164316.png)
 
 ***
 
@@ -75,13 +75,13 @@ sed -i 's#  </export>#    <gazebo_ros gazebo_model_path="${prefix}/models"/>\n  
 
 ### 📷 坑③ 踩坑实录（执行 `cd ~/catkin_ws/src/mrobot_gazebo/package.xml`，终端报错 `bash: cd: ...: 不是目录` —— package.xml 是文件，不是目录，必须用编辑器打开。
 
-!\[坑③：误用 cd 打开 package.xml 报"不是目录"]([https://aka.doubaocdn.com/s/crOqBgagej](https://aka.doubaocdn.com/s/crOqBgagej))
-
+!\[坑③：误用 cd 打开 package.xml 报"不是目录"](img/5105458b3bb746b8b5fe34809cffb0bc.png~tplv-a9rns2rl98-image.png
+)
 ### 📷 坑③ 修复完成（16:17）
 
 用文本编辑器打开 `package.xml`，在 `<export>` 标签内已成功加入 `<gazebo_ros gazebo_model_path="${prefix}/models"/>`（第 58 行附近）。
 
-!\[坑③修复：package.xml 已加入 gazebo_model_path]([https://aka.doubaocdn.com/s/SFwWvfz8qt](https://aka.doubaocdn.com/s/SFwWvfz8qt))
+!\[坑③修复：package.xml 已加入 gazebo_model_path](img/20261018-164424.png)
 
 ***
 
@@ -126,7 +126,7 @@ PYEOF
 
 终端中执行 Python3 批处理脚本，依次替换 `print msg`、`print vels(...)`、`print e` 三处 Py2 写法，输出 `fixed` 表示修复成功；随后进入 `catkin_make` 编译阶段。
 
-!\[坑⑤修复：teleop 脚本 Py2→Py3 替换完成，开始编译]([https://aka.doubaocdn.com/s/bsNE2V5IE2](https://aka.doubaocdn.com/s/bsNE2V5IE2))
+!\[坑⑤修复：teleop 脚本 Py2→Py3 替换完成，开始编译](img/20261018-164508.png)
 
 ***
 
@@ -146,7 +146,7 @@ source devel/setup.bash
 
 > 注：日志中的 gazebo\_\* 包 deprecation 警告（Gazebo classic 11 已于 2025 年 1 月停止维护）仅为提示，不影响本次仿真使用。
 
-!\[第4步：catkin_make 编译成功并 source 环境]([https://aka.doubaocdn.com/s/0htrDPV9v6](https://aka.doubaocdn.com/s/0htrDPV9v6))
+!\[第4步：catkin_make 编译成功并 source 环境](img/20261018-164522.png)
 
 ***
 
@@ -179,25 +179,25 @@ DiffDrive 差速驱动节点正常加载：订阅 `cmd_vel`、发布 `odom` / `j
 
 > 日志中的 `missing <publishOdomTF>`、`missing <odometrySource>` 仅为 urdf 参数标签缺省提示，不影响运行，可忽略。
 
-!\[终端1：Gazebo 启动，DiffDrive 差速驱动加载成功]([https://aka.doubaocdn.com/s/MsiPJzFcYm](https://aka.doubaocdn.com/s/MsiPJzFcYm))
+!\[终端1：Gazebo 启动，DiffDrive 差速驱动加载成功](img/4bfdd5bd6c884122b35dbef90719ad36.png~tplv-a9rns2rl98-image.png)
 
 ### 📷 终端1：Gazebo 仿真世界视图
 
 Gazebo 3D 视窗：灰色地面网格上搭建 `my_room` 白色迷宫墙体，mrobot 小车位于迷宫内部；左侧模型树展开 mrobot 结构（LINKS：base_footprint、wheel_left_link、wheel_right_link；JOINTS：base_to_wheel_left_joint、base_to_wheel_right_joint；PLUGINS：differential_drive_control），底部显示仿真运行参数（FPS 32.07）。
 
-!\[Gazebo 仿真世界：my_room 迷宫 + mrobot 小车]([https://aka.doubaocdn.com/s/WyNQ3nkwvR](https://aka.doubaocdn.com/s/WyNQ3nkwvR))
+!\[Gazebo 仿真世界：my_room 迷宫 + mrobot 小车](img/20261018-165836.png)
 
 ### 📷 终端2：RViz 建图画面
 
 左侧终端为 Gazebo 启动日志，右侧 RViz 显示 `gmapping.rviz`：Displays 面板勾选 Grid / Odometry / Odometry EKF / RobotModel / Map / LaserScan，可视化区域中**红色激光扫描点 + 栅格地图逐渐生长**，帧率 31fps，一切正常。
 
-!\[终端2：RViz 中激光雷达扫描 + 栅格地图生成]([https://aka.doubaocdn.com/s/kndIUcv38Q](https://aka.doubaocdn.com/s/kndIUcv38Q))
+!\[终端2：RViz 中激光雷达扫描 + 栅格地图生成](img/b2e2af45c0b345e2957faba11542a6b2.png~tplv-a9rns2rl98-image.png)
 
 ### 📷 终端3：键盘遥控节点启动
 
 `mrobot_teleop.launch` 启动成功，打印 `Control mrobot!` 操作说明与当前速度参数 `currently: speed 0.2 turn 1`，等待键盘指令控制小车运动。
 
-!\[终端3：键盘遥控节点启动成功]([https://aka.doubaocdn.com/s/7HGDoXCwUI](https://aka.doubaocdn.com/s/7HGDoXCwUI))
+!\[终端3：键盘遥控节点启动成功](img/52bb9af95bfb47ca96b21181c617079b.png~tplv-a9rns2rl98-image.png)
 
 ***
 
@@ -220,7 +220,7 @@ Gazebo 3D 视窗：灰色地面网格上搭建 `my_room` 白色迷宫墙体，mr
 
 Gazebo 与 RViz 同屏：RViz 中红色激光扫描轨迹勾勒出迷宫墙体轮廓，栅格地图实时生长（31 fps）；左侧终端为键盘遥控节点 `mrobot_teleop`（Control mrobot!），通过按键控制小车贴墙遍历环境。
 
-!\[第6步：RViz 激光建图 + 键盘遥控终端同屏]([https://aka.doubaocdn.com/s/XiXduEb8WG](https://aka.doubaocdn.com/s/XiXduEb8WG))
+!\[第6步：RViz 激光建图 + 键盘遥控终端同屏](img/20261018-165859.png)
 
 ***
 
@@ -245,7 +245,7 @@ rosrun map_server map_saver -f mymap
 
 > 注：实测分辨率为 608 × 480（以截图为准），像素精度 0.050 m/pix。
 
-!\[第7步：map_saver 保存地图成功]([https://aka.doubaocdn.com/s/W4T4jonZMU](https://aka.doubaocdn.com/s/W4T4jonZMU))
+!\[第7步：map_saver 保存地图成功](img/20261018-180438.png)
 
 ***
 
