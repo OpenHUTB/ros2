@@ -111,6 +111,7 @@ nav:
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
