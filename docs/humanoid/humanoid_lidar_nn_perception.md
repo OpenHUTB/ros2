@@ -11,8 +11,6 @@
 >   + 目标朝向编码，输出 (vx, wz) 安全速度指令。通过行为克隆（BC）从反应式规则示范中训练，
 >   10,000 样本、30 epoch 后 MSE 收敛到 8e-5。
 > - 感知 CNN 已充分收敛：4 个通道距离预测 MAE < 1 cm。
-> - PPO 强化学习版本作为训练证据保留（`weights/avoid_ppo.zip`），但因 20 万步内 value function
->   未收敛，默认未启用。
 
 ## 一、项目概览
 
@@ -22,7 +20,7 @@
 | 物理引擎 | MuJoCo 3.3.7（OSMesa 离屏渲染） |
 | 激光雷达 | 360 束水平扫描，量程 0.1–8 m，10 Hz，基于 `mujoco.mj_ray` |
 | 感知网络 | 1D-CNN（3 层 Conv1d，64 通道），输入 scan[360]，输出 [nearest, front, left, right] / 8 |
-| 避障控制器 | BC-MLP（6-32-32-2），输入 CNN 特征，输出 (vx, wz)；PPO 训练证据保留但未启用 |
+| 避障控制器 | BC-MLP（6-32-32-2），输入 CNN 特征，输出 (vx, wz) |
 | 行走底座 | Unitree 官方 ONNX 策略（Isaac Lab 导出），接受 [vx, vy, ωz] 速度指令 |
 | ROS | ROS 2 Humble |
 | 话题 | `/scan` (LaserScan), `/obstacle_info` (Float32MultiArray), `/cmd_vel`, `/cmd_vel_safe`, `/joint_states`, `/odom` |
@@ -59,7 +57,6 @@
 | CNN 模型大小 | 89 KB（TorchScript） |
 | BC-MLP 控制器 | 6-32-32-2，10k 样本，30 epoch，MSE 8e-5 |
 | ONNX 行走策略验证 | 10 s 前进 3.8 m，实际 0.38 m/s，零跌倒 |
-| PPO 训练证据 | 20 万步，600 fps，未收敛（保留 avoid_ppo.zip 供参考） |
 
 ## 五、运行
 
@@ -93,11 +90,11 @@ humanoid_lidar_nn_perception/
 ├── models/g1/                  # G1 MJCF + STL + 场景 mesh
 ├── weights/
 │   ├── g1_policy.onnx          # Unitree 行走策略
-│   ├── perception_cnn.pt       # 训练好的 CNN
-│   └── avoid_ppo.zip            # PPO 训练证据（未默认启用）
+│   ├── perception_cnn.pt       # 训练好的 CNN 感知网
+│   └── avoid_mlp.pt            # BC 训练的避障控制器
 └── scripts/
     ├── collect_data.py          # 数据采集
     ├── train_perception_cnn.py  # CNN 训练
-    ├── train_avoid_ppo.py       # PPO 训练
+    ├── train_bc_avoidance.py    # BC-MLP 避障控制器训练
     └── record_gif.py           # gif / png 渲染
 ```
