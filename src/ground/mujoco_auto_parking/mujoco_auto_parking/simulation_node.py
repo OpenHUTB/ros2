@@ -3,7 +3,9 @@
 from pathlib import Path
 from typing import Any
 
+from .camera_sensor import CameraSensor
 from .kinematics import CommandWatchdog, DriveGeometry
+from .lidar_sensor import Lidar2D
 from .resources import resolve_package_file
 from .simulator import MujocoSimulation
 
@@ -18,6 +20,8 @@ def _load_ros_dependencies() -> dict[str, Any]:
         from nav_msgs.msg import Odometry
         from rclpy.node import Node
         from rosgraph_msgs.msg import Clock
+        from sensor_msgs.msg import Image, LaserScan
+        from std_msgs.msg import Header
         from tf2_ros import TransformBroadcaster
     except ImportError as exc:
         raise RuntimeError(
@@ -32,6 +36,9 @@ def _load_ros_dependencies() -> dict[str, Any]:
         'Odometry': Odometry,
         'Node': Node,
         'Clock': Clock,
+        'Image': Image,
+        'LaserScan': LaserScan,
+        'Header': Header,
         'TransformBroadcaster': TransformBroadcaster,
     }
 
@@ -42,6 +49,9 @@ def _build_node_class(deps: dict[str, Any]) -> type:
     Odometry = deps['Odometry']
     Clock = deps['Clock']
     Time = deps['Time']
+    Image = deps['Image']
+    LaserScan = deps['LaserScan']
+    Header = deps['Header']
     TransformStamped = deps['TransformStamped']
     TransformBroadcaster = deps['TransformBroadcaster']
     get_package_share_directory = deps['get_package_share_directory']
@@ -59,6 +69,13 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self.declare_parameter('publish_tf', True)
             self.declare_parameter('sim_rate', 500.0)
             self.declare_parameter('publish_rate', 50.0)
+            self.declare_parameter('enable_camera', True)
+            self.declare_parameter('camera_width', 320)
+            self.declare_parameter('camera_height', 240)
+            self.declare_parameter('enable_depth', True)
+            self.declare_parameter('lidar_beams', 120)
+            self.declare_parameter('lidar_range', 8.0)
+            self.declare_parameter('sensor_publish_divider', 5)
 
             package_share = Path(
                 get_package_share_directory('mujoco_auto_parking')
@@ -79,6 +96,28 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             )
             self._simulation = MujocoSimulation(model_path)
             self._publish_tf = bool(self.get_parameter('publish_tf').value)
+            self._camera = CameraSensor(
+                self._simulation.model,
+                self._simulation.data,
+                camera_name='front_camera',
+                width=int(self.get_parameter('camera_width').value),
+                height=int(self.get_parameter('camera_height').value),
+                enable=bool(self.get_parameter('enable_camera').value),
+            )
+            self._enable_depth = bool(
+                self.get_parameter('enable_depth').value
+            )
+            self._lidar = Lidar2D(
+                self._simulation.model,
+                self._simulation.data,
+                body_name='chassis',
+                num_beams=int(self.get_parameter('lidar_beams').value),
+                max_range=float(self.get_parameter('lidar_range').value),
+            )
+            self._sensor_publish_divider = max(
+                1, int(self.get_parameter('sensor_publish_divider').value)
+            )
+            self._sensor_counter = 0
 
             sim_rate = float(self.get_parameter('sim_rate').value)
             publish_rate = float(self.get_parameter('publish_rate').value)
@@ -90,6 +129,15 @@ def _build_node_class(deps: dict[str, Any]) -> type:
 
             self._odom_publisher = self.create_publisher(Odometry, '/odom', 10)
             self._clock_publisher = self.create_publisher(Clock, '/clock', 10)
+            self._image_publisher = self.create_publisher(
+                Image, '/camera/image_raw', 10
+            )
+            self._depth_publisher = self.create_publisher(
+                Image, '/camera/depth', 10
+            )
+            self._scan_publisher = self.create_publisher(
+                LaserScan, '/scan', 10
+            )
             self._tf_broadcaster = TransformBroadcaster(self)
             self.create_subscription(Twist, '/cmd_vel', self._on_command, 10)
             self.create_timer(1.0 / publish_rate, self._on_timer)
@@ -97,6 +145,10 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 'MuJoCo 自动泊车仿真已启动 / auto-parking simulation started '
                 f'(sim {sim_rate:.0f} Hz, publish {publish_rate:.0f} Hz)'
             )
+
+        def destroy_node(self) -> None:
+            self._camera.close()
+            super().destroy_node()
 
         def _on_command(self, message: Any) -> None:
             try:
@@ -115,6 +167,38 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 self._simulation.apply_wheel_speeds(left, right)
                 self._simulation.step()
             self._publish_state()
+            self._sensor_counter += 1
+            if self._sensor_counter % self._sensor_publish_divider == 0:
+                self._publish_sensors()
+
+        def _stamp(self) -> Any:
+            state = self._simulation.planar_state()
+            seconds = int(state.time)
+            timestamp = Time()
+            timestamp.sec = seconds
+            timestamp.nanosec = int((state.time - seconds) * 1_000_000_000)
+            return timestamp
+
+        def _publish_sensors(self) -> None:
+            header = Header()
+            header.stamp = self._stamp()
+            header.frame_id = 'front_camera'
+            rgb = self._camera.render_rgb()
+            self._image_publisher.publish(
+                self._camera.create_image_msg(header, rgb)
+            )
+            if self._enable_depth:
+                depth = self._camera.render_depth()
+                self._depth_publisher.publish(
+                    self._camera.create_depth_msg(header, depth)
+                )
+            scan = self._lidar.scan()
+            scan_header = Header()
+            scan_header.stamp = header.stamp
+            scan_header.frame_id = 'laser_link'
+            self._scan_publisher.publish(
+                self._lidar.create_laserscan_msg(scan_header)
+            )
 
         def _publish_state(self) -> None:
             state = self._simulation.planar_state()
