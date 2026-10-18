@@ -12,7 +12,7 @@
 """
 import struct
 
-__all__ = ["lzw_encode", "write_gif"]
+__all__ = ["lzw_encode", "write_gif", "rgb_frames_to_gif"]
 
 
 def lzw_encode(indices, min_code_size):
@@ -143,3 +143,30 @@ def write_gif(path, frames, palette, delay_cs=8, loop=0, transparent=None):
     with open(path, "wb") as f:
         f.write(gif)
     return path
+
+
+def rgb_frames_to_gif(path, frames, delay_cs=8, loop=0):
+    """把一组 RGB 帧（(H,W,3) uint8）直接写成 GIF，调色板按实际用色自动生成。
+
+    适合颜色数不多的合成图像。实现上把 RGB 打包成一个整数再做 unique，
+    比逐像素查字典快两个数量级。
+    """
+    import numpy as np
+
+    packed = [((f[:, :, 0].astype(np.int32) << 16) |
+               (f[:, :, 1].astype(np.int32) << 8) |
+               f[:, :, 2].astype(np.int32)) for f in frames]
+    flat = np.concatenate([p.ravel() for p in packed])
+    uniq, inv = np.unique(flat, return_inverse=True)
+    if len(uniq) > 256:
+        raise ValueError(f"这组帧用了 {len(uniq)} 种颜色，超过 GIF 的 256 色上限")
+
+    palette = [((int(v) >> 16) & 255, (int(v) >> 8) & 255, int(v) & 255)
+               for v in uniq]
+    idx = np.asarray(inv).ravel().astype(np.uint8)
+    out, off = [], 0
+    for p in packed:
+        n = p.size
+        out.append(idx[off:off + n].reshape(p.shape))
+        off += n
+    return write_gif(path, out, palette, delay_cs=delay_cs, loop=loop)
