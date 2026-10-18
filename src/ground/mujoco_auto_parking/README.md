@@ -84,6 +84,40 @@ cd src/ground/mujoco_auto_parking
 
 测试内容：模型对象（差速车、前视相机、激光雷达安装点、目标车位）、前进/后退/转向位移、键盘映射、Watchdog 超时。
 
+## 任务②：相机感知 + 给定轨迹控制
+
+启动仿真、视觉感知节点和神经网络轨迹控制节点：
+
+```bash
+./main.sh --task2
+```
+
+| 节点 | 输入 | 输出 |
+| --- | --- | --- |
+| `simulation_node` | `/cmd_vel` | `/odom`、`/clock`、`/tf`、`/camera/image_raw`、`/camera/depth`、`/scan` |
+| `perception_node` | `/camera/image_raw` | `/parking/perception` = `[dx, dy, dtheta, confidence]` |
+| `trajectory_control_node` | `/odom` | `/cmd_vel`，沿给定 S 曲线跟踪 |
+
+训练与测试：
+
+```bash
+./main.sh --train            # 重新训练感知网络和轨迹控制网络
+./main.sh --test-sensors     # 相机/深度/激光雷达/感知网络
+./main.sh --test-nn          # 感知精度、控制网络精度、零权值消融
+./main.sh --eval-trajectory  # 闭环 S 曲线跟踪评估
+```
+
+实测（2026-10-18，WSL Ubuntu 22.04 + ROS2 Humble + MuJoCo 3.12）：
+
+- 视觉感知（80 个测试位姿）：MAE dx 0.34 m、dy 0.20 m、dtheta 0.05 rad；
+- 视觉感知零权值消融：dtheta 误差 2.58 rad；
+- 轨迹控制网络与几何专家相关系数：v 0.9989、wz 0.9995；
+- 闭环 S 曲线：训练网络 RMSE 0.359 m 并到达终点；零权值 RMSE 0.704 m 且未到达。
+
+权值文件：`models/perception.npz`、`models/trajectory.npz`；训练脚本：`train/train_perception.py`、`train/train_trajectory.py`。
+
 ## 当前范围 / Scope
 
-PR1 只包含任务①：物理仿真、停车场场景、键盘控制和基础 ROS 接口。相机/激光雷达数据发布、车位感知、神经网络规划与控制、建图导航和端到端泊车在后续 PR 中加入。
+PR1：任务①物理仿真、停车场场景、键盘控制和基础 ROS 接口。
+PR2：任务②相机/深度/激光雷达、视觉车位感知网络、给定 S 曲线的神经网络控制、训练和零权值消融。
+后续 PR：任务③建图/Neural A*/导航，任务④图像端到端泊车，以及 MkDocs/GIF/Word 文档。

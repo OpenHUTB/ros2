@@ -44,6 +44,45 @@ def run_task1_test() -> None:
     )
 
 
+def run_task2() -> None:
+    _run_launch('task2.launch.py', '任务②感知与轨迹控制')
+
+
+def run_sensor_test() -> None:
+    _run_script(
+        os.path.join(PACKAGE_ROOT, 'test', 'test_sensors.py'),
+        '任务②传感器测试',
+    )
+
+
+def run_nn_test() -> None:
+    _run_script(
+        os.path.join(PACKAGE_ROOT, 'test', 'test_task2_nn.py'),
+        '任务②神经网络测试',
+    )
+
+
+def run_eval_trajectory() -> None:
+    _run_script(
+        os.path.join(PACKAGE_ROOT, 'test', 'test_trajectory_tracking.py'),
+        '任务②轨迹跟踪评估',
+    )
+
+
+def run_training() -> None:
+    env = os.environ.copy()
+    env.setdefault('MUJOCO_GL', 'osmesa')
+    for relative in (
+        os.path.join('train', 'train_perception.py'),
+        os.path.join('train', 'train_trajectory.py'),
+    ):
+        script = os.path.join(PACKAGE_ROOT, relative)
+        print(f'[INFO] 训练: {relative}')
+        result = subprocess.run([sys.executable, script], env=env)
+        if result.returncode != 0:
+            sys.exit(result.returncode)
+
+
 def run_pytest() -> None:
     result = subprocess.run(
         [sys.executable, '-m', 'pytest', os.path.join(PACKAGE_ROOT, 'test'), '-q']
@@ -75,8 +114,13 @@ def check_model() -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='MuJoCo 无人车自动泊车')
-    parser.add_argument('--launch', action='store_true', help='启动 ROS2 launch')
+    parser.add_argument('--launch', action='store_true', help='启动任务①仿真与键盘')
+    parser.add_argument('--task2', action='store_true', help='启动任务②感知与轨迹控制')
     parser.add_argument('--test', action='store_true', help='运行任务①测试')
+    parser.add_argument('--test-sensors', action='store_true', help='运行任务②传感器测试')
+    parser.add_argument('--test-nn', action='store_true', help='运行任务②神经网络测试')
+    parser.add_argument('--eval-trajectory', action='store_true', help='评估轨迹跟踪')
+    parser.add_argument('--train', action='store_true', help='重新训练任务②网络')
     parser.add_argument('--pytest', action='store_true', help='运行全部 pytest')
     parser.add_argument('--check-model', action='store_true', help='检查 MuJoCo 模型')
     return parser
@@ -85,17 +129,27 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    if args.test:
+    if args.launch:
+        _run_launch('main.launch.py', '自动泊车仿真')
+    elif args.task2:
+        run_task2()
+    elif args.test:
         run_task1_test()
+    elif args.test_sensors:
+        run_sensor_test()
+    elif args.test_nn:
+        run_nn_test()
+    elif args.eval_trajectory:
+        run_eval_trajectory()
+    elif args.train:
+        run_training()
     elif args.pytest:
         run_pytest()
     elif args.check_model:
         check_model()
-    elif args.launch:
-        _run_launch('main.launch.py', '自动泊车仿真')
     else:
         parser.print_help()
-        print('\n提示：没有参数时请用 ./main.sh --launch 启动仿真。')
+        print('\n提示：任务①用 ./main.sh --launch；任务②用 ./main.sh --task2。')
 
 
 if __name__ == '__main__':
