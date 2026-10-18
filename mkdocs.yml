@@ -77,6 +77,7 @@ nav:
     - 阿克曼控制: './ground/ackermann_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
+    - R2D2小车 自动避障: './ground/r2d2_obstacle_avoid.md'
     - 路径点发布器: './ground/waypoint.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
