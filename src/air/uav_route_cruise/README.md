@@ -50,13 +50,14 @@ python3 scripts/compare.py --model models/route_ppo.npz --seeds 0,1,2 --episodes
 ```bash
 # ① 先起桥接 —— 必须加 body_frame:=false
 #    本节点输出的是【世界系 ENU】速度，桥接默认按机体系解释会导致乱飞
-roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
+roslaunch carlair_ros_bridge main.launch host:=192.168.94.1 vehicle_name:=Drone1 \
+    body_frame:=false publish_image:=false publish_lidar:=true auto_takeoff:=true
 
-# ② 再起巡航节点
-roslaunch uav_route_cruise main.launch
+# ② 先干跑检查观测（只算不发指令）
+python3 scripts/route_node.py _dry_run:=true
 
-# 想先地面检查观测是否正常（只算不发指令）：
-roslaunch uav_route_cruise main.launch dry_run:=true
+# ③ 再正式飞
+python3 scripts/route_node.py _dry_run:=false
 ```
 
 统一入口是 `main.py`（作业要求入口为 `main.*`）：
@@ -67,6 +68,29 @@ python3 scripts/main.py --train ...   # 训练
 python3 scripts/main.py --eval ...    # 评估
 python3 scripts/main.py --compare ... # 对照
 ```
+
+#### CarlaAir 实飞验证结果
+
+已在 **CarlaAir v0.1.7（Town10HD）+ ROS Noetic + AirSim `Drone1`** 上实飞过：
+
+| 项 | 实测 |
+| --- | --- |
+| `/uav/odom` 频率 | **20.005 Hz** |
+| `/lidar/points` 频率 | 9.996 Hz |
+| 连续飞行 | 41 秒，x 跨度 13.71 m、y 跨度 12.43 m |
+| 高度稳定性 | −28.22 ~ −27.48 m（**波动 0.74 m**）|
+| 累计路程 | **174.3 m ≈ 3 圈**（航线 58 m）|
+
+![CarlaAir 实测轨迹](../../../docs/img/air/uav_route_cruise/carlaair_flight_trace.png)
+
+**已验证**：节点能起、能订阅真实 odom、能算航线几何、能发 `/uav/cmd_vel`、无人机真的沿矩形航线绕圈。
+
+**未验证**（如实说明）：
+
+* **避障** —— 桥接发出的 `/lidar/points` 是空点云（AirSim 侧 `getLidarData('lidar1')`
+  有 1785 个点，但桥接的坐标转换返回空），这次飞的是「全程无障碍」的纯循迹；
+  障碍绕避仍只有离线结论。
+* **转弯过冲** —— 四个角都甩出去 1~2 m，观测里只有一个 4 m 前视点，看不到弯道走向。
 
 ## 话题
 

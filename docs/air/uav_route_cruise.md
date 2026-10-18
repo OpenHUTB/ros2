@@ -451,7 +451,7 @@ def frac(self, num_timesteps):
 
 ### 运行效果动图
 
-![运行效果](../img/air/uav_route_cruise/route_cruise_demo.gif)
+![运行效果](uav_route_cruise/route_cruise_demo.gif)
 
 同一场景下两个策略的逐帧对比（scripts/make_gif.py 生成，90 帧 / 0.8 MB）：
 
@@ -476,6 +476,72 @@ python3 scripts/make_gif.py --model models/route_ppo_s0.npz --seed 5 --fps 12 --
 
 左图：灰色是目标航线，红色圆是压在航线上的障碍（必须绕行），灰圆是旁侧障碍；
 蓝线是 30 个回合的 PPO 轨迹，红色虚线是纯跟踪的轨迹，红叉是它的碰撞点。
+
+## 在 CarlaAir 里实飞验证
+
+> 上面所有指标都来自**质点环境**。这一节是**真实仿真器**里的验证，两者要分开看。
+
+### 环境与连接
+
+| 项 | 值 |
+| --- | --- |
+| 仿真器 | CarlaAir v0.1.7（Windows 11，`Town10HD`，Low 质量，1280×720） |
+| 端口 | CARLA RPC `2000`，AirSim RPC `41451` |
+| 载具 | AirSim `Drone1`（`SimpleFlight`，settings 里配了 `lidar1` 16 线 / 15 m） |
+| ROS | Noetic（Ubuntu 20.04 虚拟机，桥接跑在虚拟机里） |
+| 桥接 | `roslaunch carlair_ros_bridge main.launch host:=192.168.94.1 vehicle_name:=Drone1 body_frame:=false publish_image:=false publish_lidar:=true auto_takeoff:=true` |
+
+启动顺序（缺一不可）：
+
+```shell
+# ① Windows 宿主机：起 CarlaAir（自带 AirSim）
+StartCarlaAir.bat            # 等价于 CarlaAir.ps1 Town10HD --quality Low
+
+# ② 虚拟机：起桥接（注意 body_frame:=false，本节点输出世界系速度）
+roslaunch carlair_ros_bridge main.launch host:=192.168.94.1 vehicle_name:=Drone1 \
+    body_frame:=false publish_image:=false publish_lidar:=true auto_takeoff:=true
+
+# ③ 虚拟机：先干跑检查观测，再正式飞
+python3 scripts/route_node.py _dry_run:=true
+python3 scripts/route_node.py _dry_run:=false
+```
+
+### 实测结果
+
+桥接起来后的话题频率（真实数据，非桩）：
+
+| 话题 | 频率 |
+| --- | --- |
+| `/uav/odom` | **20.005 Hz** |
+| `/lidar/points` | 9.996 Hz |
+
+节点启动后 `/rosnode list` 里能看到 `/uav_route_cruise`，
+`/rostopic list` 里能看到 `/uav/cmd_vel` 与 `/uav_route_cruise/lap_done`。
+
+连续飞 **41 秒**，按 1 Hz 采样记录 `/uav/odom`：
+
+| 指标 | 实测值 |
+| --- | --- |
+| x 范围 | −6.55 ~ 7.17 m（跨度 **13.71 m**）|
+| y 范围 | −6.28 ~ 6.15 m（跨度 **12.43 m**）|
+| 高度 | −28.22 ~ −27.48 m（**波动仅 0.74 m**）|
+| 累计路程 | **174.3 m** ≈ 3 圈（航线 58 m）|
+
+![CarlaAir 实测轨迹](../img/air/uav_route_cruise/carlaair_flight_trace.png)
+
+上图是 41 秒的实测轨迹（蓝线）与目标航线（灰线）。可以看出：
+**无人机确实沿矩形航线绕圈飞行，高度稳定在 ±0.4 m 内，41 秒飞了约 3 圈**。
+但**转弯处过冲明显**（四个角都甩出去 1~2 m），原因是观测里只有一个 4 m 前视点、
+看不到弯道走向 —— 这与「加 3 个前视点反而更难训练」的实测结论一起，说明这块还没调好。
+
+### 这次实飞**没有**验证到的部分（如实说明）
+
+1. **避障没在仿真器里验证**。桥接发布的 `/lidar/points` 是**空点云**（AirSim 侧
+   `getLidarData('lidar1')` 有 1785 个点，但桥接的坐标转换返回空），所以策略拿到的是
+   「全程无障碍」的观测。因此这次飞的是**纯循迹**，障碍绕避仍只有离线结论。
+2. **转弯过冲**：见上文，四个角都甩出去了。
+3. **gif 的可读性有限**：CarlaAir 是追尾相机 + 大片同色地面，录屏看不出明显位移，
+   所以主要证据用上面这张**实测轨迹图**，而不是录屏 gif。
 
 ## 已知限制
 
