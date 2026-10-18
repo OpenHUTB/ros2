@@ -10,7 +10,8 @@
   <arg name="vehicle_name"  default=""             doc="多机时的载具名，如 Drone1"/>
   <arg name="auto_takeoff"  default="true"         doc="启动后是否自动起飞并悬停"/>
   <arg name="start_selfcheck" default="true"       doc="是否启动环境自检节点"/>
-  <arg name="body_frame"    default="true"         doc="速度指令是否按机体系解释"/>
+  <arg name="body_frame"    default="true"         doc="速度指令是否按机体系解释（uav_ppo_nav 是机体系=false）"/>
+  <arg name="cmd_duration"  default="0.1"          doc="单条速度指令持续时长 s，应与上游控制周期一致"/>
   <arg name="publish_image" default="true"         doc="是否启动相机（RGB/深度/分割）发布节点"/>
   <arg name="publish_lidar" default="true"         doc="是否启动激光雷达点云发布节点"/>
   <arg name="voxel_leaf"    default="0.0"          doc="点云体素降采样边长 m，0 表示不降采样"/>
@@ -21,6 +22,7 @@
   <param name="sim/vehicle_name"    value="$(arg vehicle_name)"/>
   <param name="control/auto_takeoff" value="$(arg auto_takeoff)"/>
   <param name="control/body_frame"  value="$(arg body_frame)"/>
+  <param name="control/cmd_duration" value="$(arg cmd_duration)"/>
   <param name="lidar/voxel_leaf"    value="$(arg voxel_leaf)"/>
 
   <!-- 位姿发布：/uav/odom + TF world->base_link -->
