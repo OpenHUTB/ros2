@@ -46,7 +46,7 @@ mujoco_two_dof_arm/
 
 ### 3.2 建ROS功能包
 ```bash
-cd ~/catkin_ws/src
+cd ~/src
 catkin_create_pkg mujoco_two_dof_arm rospy std_msgs
 cd ..
 catkin_make
