@@ -77,7 +77,7 @@ python3 main.py --train --total 400000 --epsilon-decay 250000 --obstacles 16 --o
 
 训练过程每 15000 步评估一次成功率（贪心策略），最优模型与纯 numpy 权重自动保存到
 `--out` 指定目录（`best_model.pt`、`policy_weights.npz`）。训练完成后屏幕会打印
-类似输出（真实日志见 `models/train35.log`）：
+类似输出（训练时 stdout 即完整日志）：
 
 ```
 step=  105000 | eps=0.601 | eval成功=1/20 (5.0%) | 失败=13 超时=6 | 平均奖励=-21.53 | 平均步数=183.9
@@ -196,8 +196,7 @@ PPO 的连续动作空间可以输出任意方向速度，平滑逼近并停靠�
 
 ![DQN 飞行轨迹（6 障碍）](models/trajectory.png)
 
-> 训练日志：`models/train35.log`（16 障碍）、`models/train6.log`（6 障碍）；
-> 权重：`models/models35/policy_weights.npz`、`models/models6/policy_weights.npz`。
+> 权重：`models/models35/policy_weights.npz`、`models/models6/policy_weights.npz`（训练日志由 train.py 运行时 stdout 输出，不入库）。
 
 ## 8. 注意事项
 
