@@ -2,11 +2,20 @@
 
 
 if not exist "ros2" (
-    git clone https://OpenHUTB:T8w6TYB_r71gGTP3A02B@git.code.tencent.com/OpenHUTB/ros2.git   &&  cd ros2  && git lfs pull
+    rem 不要在此内嵌账号口令：请先配置 git 凭据，或改用 GitHub 源
+    rem   git clone https://github.com/OpenHUTB/ros2.git
+    git clone https://git.code.tencent.com/OpenHUTB/ros2.git
+    if errorlevel 1 (
+        echo [ERROR] 克隆失败，请检查网络或 git 凭据后重试
+        exit /b 1
+    )
+    cd ros2
+    git lfs pull
 ) else (
     cd ros2
     git reset --hard HEAD
-    git clean -fdx
+    rem 用 -fd 而不是 -fdx：-x 会连 .gitignore 忽略的模型、数据集和截图一起删除
+    git clean -fd
     git pull
     git lfs pull
 )
