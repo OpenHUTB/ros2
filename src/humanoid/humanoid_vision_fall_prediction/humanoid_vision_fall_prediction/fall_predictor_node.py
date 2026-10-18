@@ -2,7 +2,7 @@
 fall_predictor_node.py —— ROS2 节点：MLP 推理 + 平衡控制
 =========================================================
 
-订阅前视图像，运行 FallPredictor，根据预测类别发布 balance_cmd。
+订阅 /front_image，运行 FallPredictor，根据预测类别发布 /balance_cmd。
 """
 
 from __future__ import annotations
@@ -15,22 +15,36 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
 
+from ament_index_python.packages import get_package_share_directory
+
 from humanoid_vision_fall_prediction.predictor import FallPredictor
 from humanoid_vision_fall_prediction.controller import BalanceController
 
-WEIGHTS = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                       "..", "models_trained", "fall_predictor.npz")
+
+def _weights_path() -> str:
+    """优先从 colcon install 的 share/models_trained 找权重；否则回退源码目录。"""
+    try:
+        share = get_package_share_directory("humanoid_vision_fall_prediction")
+        p = os.path.join(share, "models_trained", "fall_predictor.npz")
+        if os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "..", "..", "..", "models_trained", "fall_predictor.npz")
 
 
 class FallPredictorNode(Node):
     def __init__(self):
         super().__init__("fall_predictor_node")
-        self.predictor = FallPredictor(WEIGHTS)
+        self.predictor = FallPredictor(_weights_path())
         self.ctrl = BalanceController()
-        self.pub = self.create_publisher(Float32MultiArray, "~/balance_cmd", 10)
+        # 全局话题，与 vision_sim_node 直接对接
+        self.pub = self.create_publisher(Float32MultiArray, "balance_cmd", 10)
         self.sub = self.create_subscription(
-            Image, "~/front_image", self._on_image, 10)
-        self.get_logger().info("fall_predictor_node started")
+            Image, "front_image", self._on_image, 10)
+        self.get_logger().info(
+            f"fall_predictor_node started, weights={_weights_path()}")
 
     def _on_image(self, msg: Image):
         img = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width)

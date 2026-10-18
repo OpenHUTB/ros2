@@ -2,12 +2,16 @@
 controller.py —— 基于预测结果的平衡控制
 =========================================
 
-策略：
+策略（标签语义：推力方向 = 即将跌倒的方向）：
   * normal   → 站姿 PD（不额外修正）
-  * forward  → 踝背屈（ankle_pitch 增大）+ 髋前倾（hip_pitch 增大），抵消前倒
-  * backward → 踝跖屈（ankle_pitch 减小）+ 髋后倾
-  * left     → 踝外翻（ankle_roll 增大）+ 髋侧倾
-  * right    → 踝内翻（ankle_roll 减小）+ 髋侧倾
+  * forward  （向前推/前倒）→ 踝背屈（ankle_pitch 增大，脚尖抬起，重心后移）
+              + 髋后倾（hip_pitch 增大，大腿前摆、躯干后仰，把重心拉回）
+  * backward （向后推/后倒）→ 踝跖屈（ankle_pitch 减小，重心前移）
+              + 髋前倾（hip_pitch 减小，大腿后摆、躯干前压）
+  * left     （向左推/左倒）→ 踝外翻（ankle_roll 增大，右脚外压）
+              + 右髋外展（hip_roll 右正左负）
+  * right    （向右推/右倒）→ 踝内翻（ankle_roll 减小）
+              + 左髋外展
 
 修正叠加在站姿目标之上，修正量随置信度线性缩放。
 """

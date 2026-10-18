@@ -19,8 +19,10 @@ import numpy as np
 
 try:
     import mujoco
-except ImportError:  # pragma: no cover
-    mujoco = None  # 允许在无 mujoco 环境下 import 本模块做语法检查
+except (ImportError, OSError, RuntimeError):  # pragma: no cover
+    # mujoco 可能因 OpenGL / 驱动问题抛 OSError/RuntimeError；
+    # 此处置 None，让只依赖常量表的模块（controller / dataset 标签）仍可 import。
+    mujoco = None
 
 
 # 关节名顺序（与 XML <actuator> 一致）

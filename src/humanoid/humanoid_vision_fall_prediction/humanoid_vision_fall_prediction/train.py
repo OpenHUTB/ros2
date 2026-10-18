@@ -17,7 +17,7 @@ from .nn import FallPredictorMLP
 
 def train_model(dataset_path: str, out_weight_path: str,
                 input_dim: int = 256, hidden1: int = 128, hidden2: int = 64,
-                output_dim: int = 5, epochs: int = 60, batch_size: int = 64,
+                output_dim: int = 5, epochs: int = 80, batch_size: int = 64,
                 lr: float = 0.01, val_ratio: float = 0.2,
                 seed: int = 0, verbose: bool = True) -> dict:
     """训练并返回训练日志。"""
