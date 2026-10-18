@@ -5,12 +5,11 @@
 
 ## 二.项目目录结构
 ```text
-src/
-└── cliff_brake_sim/
-    ├── CMakeLists.txt                  # 编译与安装配置文件
-    ├── package.xml                     # 包依赖声明文件
-    └── scripts/
-        └── cliff_brake.py              # 仿真与ROS控制核心脚本
+ src/
+    └── ground/
+        ├── CMakeLists.txt            # 编译配置文件
+        ├── package.xml               # 依赖声明
+        └── cliff_brake.py            # 核心代码
 ```
 
 ## 三.环境依赖
