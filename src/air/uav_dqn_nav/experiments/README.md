@@ -3,8 +3,7 @@
 本目录存放 uav_dqn_nav 训练/评估实验的可复现产物：
 - `eval_results.csv` —— 100 回合正式评估汇总（16 障碍 / 6 障碍）
 - `training_curve.png`、`trajectory.png` —— 学习曲线与飞行轨迹图
-  （绘图脚本见 `../scripts/plot_results.py`）
-- `train35.log`、`train6.log` —— 40 万步训练完整日志
+  （绘图脚本见 `../scripts/plot_results.py`，运行时生成）
 
 ## 复现步骤（Ubuntu 20.04 / ROS Noetic 虚拟机）
 

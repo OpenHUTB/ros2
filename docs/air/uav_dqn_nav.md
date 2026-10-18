@@ -249,15 +249,7 @@ a  = argmax(q)
 | 平均奖励        | -19.2       | -27.0       |
 
 > 评估口径与 PPO 完全一致，可直接对比两种算法在同一环境上的表现。
-> 训练日志见 
->
-> `models/train35.log`
->
-> 、
->
-> `models/train6.log`
->
-> ，权重见
+> 权重见
 > `models/models35/policy_weights.npz`
 >
 > 、
