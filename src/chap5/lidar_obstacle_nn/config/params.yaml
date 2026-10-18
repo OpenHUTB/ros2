@@ -1,0 +1,27 @@
+# Default ROS 2 parameters for lidar_obstacle_nn.
+#
+# Override at runtime with:
+#   ros2 run lidar_obstacle_nn inference_node --ros-args --params-file config/params.yaml
+
+lidar_obstacle_nn_inference:
+  ros__parameters:
+    # Path to the trained MLP weights. Empty string uses the package
+    # share directory's models/lidar_mlp.pt by default.
+    model_path: ""
+
+    # Number of beams the MLP expects. The inference node resamples
+    # the raw scan to this size.
+    input_size: 360
+
+    # Distance thresholds (metres) used as both a sanity-check fallback
+    # for low-confidence predictions and as the labelling rule for
+    # collect_data.py.
+    danger_distance: 1.0
+    far_distance: 3.0
+
+    # Hardware acceleration. Default false: the MLP is tiny and CPU
+    # inference is sub-millisecond. When true (and torch has working
+    # CUDA), the node probes a CUDA forward on the first scan and
+    # falls back to CPU on any failure.
+    use_gpu: false
+    device: "cpu"
