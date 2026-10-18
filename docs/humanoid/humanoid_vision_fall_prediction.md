@@ -131,3 +131,8 @@ ros2 launch humanoid_vision_fall_prediction main.launch.py
 | `humanoid_vision_fall_prediction/train.py` | 训练脚本 |
 | `humanoid_vision_fall_prediction/controller.py` | 分级平衡控制器 |
 | `launch/main.launch.py` | ROS2 launch 启动文件 |
+
+## 演示动图
+
+![视觉跌倒预测演示](../img/humanoid/vision_fall_demo.gif)
+
