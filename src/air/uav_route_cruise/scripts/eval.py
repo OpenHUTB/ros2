@@ -169,7 +169,7 @@ def pure_pursuit_factory(env, lookahead: float = 4.0):
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="评估无人机固定路线巡航策略")
-    ap.add_argument("--model", default="models/route_ppo.npz")
+    ap.add_argument("--model", default="models/route_ppo_s0.npz")
     ap.add_argument("--episodes", type=int, default=20)
     ap.add_argument("--seed", type=int, default=1000)
     ap.add_argument("--route", default="rect", choices=["rect", "figure8"])

@@ -77,7 +77,7 @@ def eval_with(act_factory, seeds, episodes_per_seed=10, **env_kw):
 def main(argv=None) -> int:
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="models/route_ppo.npz")
+    ap.add_argument("--model", default="models/route_ppo_s0.npz")
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--episodes", type=int, default=10)
     ap.add_argument("--obstacles", type=int, default=14)

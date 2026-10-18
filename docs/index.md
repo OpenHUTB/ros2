@@ -116,6 +116,8 @@ ROS每章节运行代码:
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 
+* [基于 PPO 的无人机固定路线巡航](./air/uav_route_cruise.md) —— 沿给定闭合航线巡航，遇压在航线上的障碍时临时偏离绕行
+
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)

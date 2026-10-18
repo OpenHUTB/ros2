@@ -121,7 +121,7 @@ def evaluate(act_fn, episodes: int = 20, seed: int = 1000, **env_kw) -> dict:
             "route_length": float(env.route.length)}
 
 
-def train(steps: int = 200000, seed: int = 0, out: str = "models/route_ppo.npz",
+def train(steps: int = 200000, seed: int = 0, out: str = "models/route_ppo_s0.npz",
           eval_episodes: int = 20, verbose: int = 1, **env_kw) -> dict:
     """训练一个 PPO 策略并导出 .npz；返回评估指标。"""
     try:
@@ -163,7 +163,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="PPO 训练：无人机固定航线巡航")
     ap.add_argument("--steps", type=int, default=200000)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default="models/route_ppo.npz")
+    ap.add_argument("--out", default="models/route_ppo_s0.npz")
     ap.add_argument("--eval-episodes", type=int, default=20)
     ap.add_argument("--route", default="rect", choices=["rect", "figure8"])
     ap.add_argument("--obstacles", type=int, default=14)

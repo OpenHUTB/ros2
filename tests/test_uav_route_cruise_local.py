@@ -144,7 +144,7 @@ def test_env_detects_lap_completion():
 
 
 # ============================================================ 3. 策略
-@pytest.mark.parametrize("fname", ["route_ppo.npz"])
+@pytest.mark.parametrize("fname", ["route_ppo_s0.npz"])
 def test_policy_weights_match_dims(fname):
     import policy as P
     import route_env as RE
@@ -212,7 +212,8 @@ def test_no_undefined_module_level_names():
 
     problems = []
     for fname in ("route_node.py", "main.py", "policy.py", "route.py",
-                  "route_env.py", "train.py", "eval.py", "compare.py"):
+                  "route_env.py", "train.py", "eval.py", "compare.py",
+                  "multiseed_eval.py", "make_gif.py"):
         path = os.path.join(SCRIPTS, fname)
         tree = ast.parse(_read(path), filename=path)
 

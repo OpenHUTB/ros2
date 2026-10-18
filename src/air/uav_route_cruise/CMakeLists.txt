@@ -17,6 +17,8 @@ catkin_install_python(PROGRAMS
   scripts/train.py
   scripts/eval.py
   scripts/compare.py
+  scripts/multiseed_eval.py
+  scripts/make_gif.py
   scripts/route_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -57,7 +57,7 @@ class RouteCruiseNode(object):
     """把训练好的 PPO 策略接到 ROS 上：观测 -> 策略 -> 速度指令。"""
 
     def __init__(self):
-        self.weights = rospy.get_param("~weights", "models/route_ppo.npz")
+        self.weights = rospy.get_param("~weights", "models/route_ppo_s0.npz")
         self.rate_hz = float(rospy.get_param("~rate", 20.0))
         self.speed_scale = float(rospy.get_param("~speed_scale", 1.0))
         self.cmd_timeout = float(rospy.get_param("~cmd_timeout", 0.5))

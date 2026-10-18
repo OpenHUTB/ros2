@@ -18,7 +18,7 @@
   <arg name="route" default="rect" doc="内置航线：rect 或 figure8"/>
 
   <rosparam command="load" file="$(find uav_route_cruise)/config/route_cruise.yaml"/>
-  <param name="route_cruise/weights" value="$(find uav_route_cruise)/models/route_ppo.npz"/>
+  <param name="route_cruise/weights" value="$(find uav_route_cruise)/models/route_ppo_s0.npz"/>
   <param name="route_cruise/route" value="$(arg route)"/>
   <param name="route_cruise/rate" value="$(arg rate)"/>
   <param name="route_cruise/speed_scale" value="$(arg speed_scale)"/>

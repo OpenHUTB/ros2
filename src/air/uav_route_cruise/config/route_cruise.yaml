@@ -5,7 +5,7 @@
 
 route_cruise:
   # 策略权重（由 train.py 训练并导出；纯 numpy，部署侧不需要 torch/sb3）
-  weights: "models/route_ppo.npz"
+  weights: "models/route_ppo_s0.npz"
 
   # 控制频率（Hz）。桥接的 odom 发布频率是 20 Hz，这里保持一致。
   rate: 20.0
