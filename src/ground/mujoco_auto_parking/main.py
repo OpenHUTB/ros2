@@ -80,6 +80,24 @@ def run_task3_test() -> None:
     )
 
 
+def run_task4() -> None:
+    _run_launch('task4.launch.py', '任务④图像端到端控制')
+
+
+def run_task4_test() -> None:
+    _run_script(
+        os.path.join(PACKAGE_ROOT, 'test', 'test_task4_e2e.py'),
+        '任务④端到端测试',
+    )
+
+
+def run_train_e2e() -> None:
+    _run_script(
+        os.path.join(PACKAGE_ROOT, 'train', 'train_e2e.py'),
+        '端到端 CNN 训练',
+    )
+
+
 def run_train_planning() -> None:
     _run_script(
         os.path.join(PACKAGE_ROOT, 'train', 'train_neural_astar.py'),
@@ -135,13 +153,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument('--launch', action='store_true', help='启动任务①仿真与键盘')
     parser.add_argument('--task2', action='store_true', help='启动任务②感知与轨迹控制')
     parser.add_argument('--task3', action='store_true', help='启动任务③建图与导航')
+    parser.add_argument('--task4', action='store_true', help='启动任务④端到端控制')
     parser.add_argument('--test', action='store_true', help='运行任务①测试')
     parser.add_argument('--test-sensors', action='store_true', help='运行任务②传感器测试')
     parser.add_argument('--test-nn', action='store_true', help='运行任务②神经网络测试')
     parser.add_argument('--test3', action='store_true', help='运行任务③建图与导航测试')
+    parser.add_argument('--test4', action='store_true', help='运行任务④端到端测试')
     parser.add_argument('--eval-trajectory', action='store_true', help='评估轨迹跟踪')
     parser.add_argument('--train', action='store_true', help='重新训练任务②网络')
     parser.add_argument('--train-planning', action='store_true', help='训练 Neural A*')
+    parser.add_argument('--train-e2e', action='store_true', help='训练端到端 CNN')
     parser.add_argument('--pytest', action='store_true', help='运行全部 pytest')
     parser.add_argument('--check-model', action='store_true', help='检查 MuJoCo 模型')
     return parser
@@ -156,6 +177,8 @@ def main() -> None:
         run_task2()
     elif args.task3:
         run_task3()
+    elif args.task4:
+        run_task4()
     elif args.test:
         run_task1_test()
     elif args.test_sensors:
@@ -164,12 +187,16 @@ def main() -> None:
         run_nn_test()
     elif args.test3:
         run_task3_test()
+    elif args.test4:
+        run_task4_test()
     elif args.eval_trajectory:
         run_eval_trajectory()
     elif args.train:
         run_training()
     elif args.train_planning:
         run_train_planning()
+    elif args.train_e2e:
+        run_train_e2e()
     elif args.pytest:
         run_pytest()
     elif args.check_model:

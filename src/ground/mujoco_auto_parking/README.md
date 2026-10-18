@@ -139,9 +139,26 @@ ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
 - 建图覆盖率约 55%，Neural A* 单次规划约 300 ms，展开节点约 420；
 - 引导场训练验证相关系数 0.99993。
 
+## 任务④：图像端到端控制
+
+```bash
+./main.sh --task4
+```
+
+- `end_to_end_node` 只订阅 `/camera/image_raw`，直接发布 `/cmd_vel`，不读取里程计或任何手工特征；
+- 训练：`./main.sh --train-e2e`（用任务②的神经网络专家采集 5 条 S 曲线演示，训练小 CNN）；
+- 测试：`./main.sh --test4`。
+
+实测（2026-10-18，闭环 S 曲线）：
+
+- 图像→控制 CNN：RMSE 0.355 m，最大误差 0.549 m，到达终点，推理约 1.9 ms；
+- 零权值消融：RMSE 0.684 m，最大误差 1.001 m；
+- 与专家动作相关系数：v 0.9978、wz 0.9994。
+
 ## 当前范围 / Scope
 
 PR1：任务①物理仿真、停车场场景、键盘控制和基础 ROS 接口。
 PR2：任务②相机/深度/激光雷达、视觉车位感知网络、给定 S 曲线的神经网络控制、训练和零权值消融。
 PR3：任务③log-odds 占据栅格建图、Neural A* 规划、神经网络路径跟踪和导航闭环。
-后续 PR：任务④图像端到端泊车，以及 MkDocs/GIF/Word 文档。
+PR4：任务④前视图像→`[速度, 转向]` 端到端 CNN、训练/测试/ROS 封装和闭环消融。
+后续 PR：MkDocs/GitHub Pages、四篇任务文档、GIF 和 Word 导出。

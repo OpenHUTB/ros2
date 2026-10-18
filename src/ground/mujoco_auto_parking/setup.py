@@ -40,6 +40,7 @@ setup(
             'perception_node = mujoco_auto_parking.perception_node:main',
             'trajectory_control_node = mujoco_auto_parking.trajectory_control_node:main',
             'navigation_node = mujoco_auto_parking.navigation_node:main',
+            'end_to_end_node = mujoco_auto_parking.end_to_end_node:main',
         ],
     },
 )
