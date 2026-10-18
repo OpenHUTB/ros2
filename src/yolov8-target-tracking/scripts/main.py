@@ -13,6 +13,7 @@ class YoloDetector:
         script_dir = os.path.dirname(os.path.realpath(__file__))
         model_path = os.path.join(script_dir, 'yolov8n.pt')
         self.model = YOLO(model_path)
+        self.model.to('cpu')
         
         # 核心改动：创建一个 Publisher，话题名叫 /target_position，用来发坐标
         self.pub = rospy.Publisher('/target_position', Float32MultiArray, queue_size=1)
