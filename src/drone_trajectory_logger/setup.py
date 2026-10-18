@@ -14,7 +14,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='student',
-    maintainer_email='12345678@qq.com',
+    maintainer_email='3523828193@qq.com',
     description='Drone flight status recognition and trajectory plotting module',
     license='MIT',
     entry_points={
