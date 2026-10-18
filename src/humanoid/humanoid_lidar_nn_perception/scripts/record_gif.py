@@ -114,6 +114,7 @@ def main():
     frames = []
     vx, wz = 0.3, 0.0
     scan_for_plot = None
+    avoid_frame = None  # capture the moment G1 is actively avoiding
 
     for step in range(400):  # ~8 s at 0.02 s ctrl
         policy.set_command(vx, 0.0, wz)
@@ -121,10 +122,12 @@ def main():
             mujoco.mj_step(model, data)
         policy.step(data)
 
+        front_clear = 99.0
         if step % 2 == 0:
             scan = lidar.scan(data)
             with torch.no_grad():
                 pred = cnn(torch.from_numpy(scan).unsqueeze(0))[0].numpy()
+            front_clear = float(pred[1]) * MAX_RANGE
             # obs: [nearest, front, left, right, cos(target), sin(target)]
             obs = np.array([pred[0], pred[1], pred[2], pred[3],
                             1.0, 0.0], dtype=np.float32)
@@ -137,9 +140,19 @@ def main():
 
         if step % 5 == 0:
             mujoco.mj_forward(model, data)
-            renderer.update_scene(data)
+            # fixed camera: close-up side view so G1 and obstacles are visible
+            cam = mujoco.MjvCamera()
+            cam.distance = 3.5
+            cam.azimuth = -90
+            cam.elevation = -25
+            cam.lookat[:] = data.body("pelvis").xpos
+            renderer.update_scene(data, camera=cam)
             pixels = renderer.render()
-            frames.append(Image.fromarray(pixels))
+            img = Image.fromarray(pixels)
+            frames.append(img)
+            # capture avoidance moment: front blocked AND robot turning (|wz| > 0.3)
+            if front_clear < 1.5 and abs(wz) > 0.3 and avoid_frame is None:
+                avoid_frame = img.copy()
 
     # save gif
     gif_path = out_dir / "demo_avoid.gif"
@@ -147,11 +160,13 @@ def main():
                    duration=80, loop=0, optimize=True)
     print(f"gif: {gif_path}  ({gif_path.stat().st_size//1024} KB, {len(frames)} frames)")
 
-    # save sim_running.png (middle frame)
-    mid = len(frames) // 2
-    png_path = out_dir / "sim_running.png"
-    frames[mid].save(png_path)
-    print(f"png: {png_path}")
+    # save sim_running.png: avoidance moment (or middle frame as fallback)
+    avoid_png = out_dir / "sim_running.png"
+    if avoid_frame is not None:
+        avoid_frame.save(avoid_png)
+    else:
+        frames[len(frames) // 2].save(avoid_png)
+    print(f"png: {avoid_png}")
 
     # scan plot
     if scan_for_plot is not None:

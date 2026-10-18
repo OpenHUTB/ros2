@@ -72,7 +72,104 @@ ros2 topic echo /scan --field ranges
 ros2 topic echo /obstacle_info
 ```
 
-## 六、文件结构
+## 六、复现指南
+
+审核人员按以下步骤可从零复现全部结果。所有训练产物（权重）已随包提交，
+步骤 6.2–6.4 可选跑（用于复现训练过程），直接跳到 6.5 即可运行已训好的模型。
+
+### 6.1 环境搭建
+
+**宿主机**（数据采集 / 训练 / 渲染）：
+
+```bash
+# Python 3.10+
+python -m venv venv_lidar
+source venv_lidar/bin/activate  # Windows: venv_lidar\Scripts\activate
+pip install mujoco==3.3.7 onnxruntime torch stable-baselines3 scipy matplotlib pillow etils
+```
+
+**容器**（ROS2 Humble）：
+
+```bash
+# 使用本仓库的 hutb-humble:dev 镜像
+docker run -it --rm -v $PWD:/ws hutb-humble:dev
+pip install onnxruntime  # 镜像已含 mujoco/torch, 但 onnxruntime 需补装
+```
+
+### 6.2 数据采集（约 2 分钟）
+
+```bash
+cd /ws/src/humanoid/humanoid_lidar_nn_perception
+python scripts/collect_data.py \
+    --model models/g1/scene_g1.xml \
+    --onnx weights/g1_policy.onnx \
+    --out data/scan_dataset.npz \
+    --frames 20000
+```
+
+输出：`data/scan_dataset.npz`（20,000 帧 × (scan[360] + labels[5])）。
+约 113 秒，980 个 episodes。
+
+### 6.3 训练感知 CNN（约 90 秒）
+
+```bash
+python scripts/train_perception_cnn.py \
+    --data data/scan_dataset.npz \
+    --out weights/perception_cnn.pt \
+    --epochs 30
+```
+
+验证指标：4 通道距离预测 MAE < 1 cm（nearest 0.002, front 0.005, left 0.005, right 0.003）。
+
+### 6.4 训练避障 BC-MLP（约 60 秒）
+
+```bash
+python scripts/train_bc_avoidance.py \
+    --model models/g1/scene_g1.xml \
+    --onnx weights/g1_policy.onnx \
+    --cnn weights/perception_cnn.pt \
+    --out weights/avoid_mlp.pt \
+    --samples 10000
+```
+
+验证指标：30 epoch 后 MSE 收敛到 ~8e-5。
+
+### 6.5 ROS2 运行（容器内）
+
+```bash
+cd /tmp/ws
+colcon build --packages-select humanoid_lidar_nn_perception
+source install/setup.bash
+ros2 launch humanoid_lidar_nn_perception main.launch.py teleop:=false
+```
+
+### 6.6 验证功能正常
+
+另开三个终端：
+
+```bash
+# 终端 1: 雷达话题（360 束 ranges 在发布）
+ros2 topic echo /scan --field ranges --once
+# 预期: 360 个浮点数, 范围 0.1–8.0
+
+# 终端 2: CNN 感知输出（4 维: nearest, front, left, right, 单位米）
+ros2 topic echo /obstacle_info --once
+# 预期: [0.87, 1.23, 3.45, 3.42] 类似的 4 维数组
+
+# 终端 3: 避障后速度指令
+ros2 topic echo /cmd_vel_safe --once
+# 预期: linear.x > 0 且 angular.z 非零（G1 在转向避障）
+```
+
+### 6.7 渲染演示素材（可选）
+
+```bash
+python scripts/record_gif.py
+```
+
+输出：`docs/img/humanoid/humanoid_lidar_nn_perception/` 下的 gif + 3 张 PNG。
+
+## 七、文件结构
 
 ```
 humanoid_lidar_nn_perception/
