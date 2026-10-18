@@ -33,7 +33,7 @@ roscore
 python3 cliff_brake.py
 ```
 4.运行成功界面
-
+![运行效果演示](../img/ground/car1.gif)
 
 ## 五.核心逻辑
 1.物理仿真：利用 MuJoCo 构建带悬崖的地形与滑动底盘模型。
@@ -52,6 +52,6 @@ python3 cliff_brake.py
 4.待联调（未验证）：目前传感器为纯数学计算模拟，后续可接入 MuJoCo 内部的 raycast 射线检测接口，模拟真实激光雷达的物理反射。
 
 ## 七.运行效果
-
+![运行效果演示](../img/ground/car2.gif)
 
 
