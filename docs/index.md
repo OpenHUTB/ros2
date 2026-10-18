@@ -27,7 +27,7 @@ title: 主页
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
-  - [禁飞区检测模块](no_fly_zone_check/index.md)
+  - [禁飞区检测模块](./air/no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
 
@@ -62,13 +62,10 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
-ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
-
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
-* [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 
@@ -94,10 +91,10 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
-* [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
+
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
