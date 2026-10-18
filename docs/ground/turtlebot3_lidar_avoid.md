@@ -22,7 +22,7 @@
 | 机器人 | TurtleBot3 Waffle |
 | 开发语言 | Python 3.10 |
 
-![TurtleBot3 迷宫场景](../img/ground/turtlebot3_lidar_avoid_gazebo.png)
+![TurtleBot3 迷宫场景](../img/ground/turtlebot3_lidar_avoid.png)
 
 *图 1：Gazebo 中的 TurtleBot3 迷宫场景（右下角为 Waffle 机器人）。*
 
