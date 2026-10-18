@@ -1,0 +1,50 @@
+{
+  "status": "critical",
+  "uav_count": 4,
+  "zone_count": 1,
+  "minimum_separation_m": 0.0,
+  "alerts": [
+    {
+      "kind": "geofence",
+      "severity": "critical",
+      "uav_id": "uav_alpha",
+      "time_s": 23.0,
+      "message": "uav_alpha entered no-fly zone city_center_restricted",
+      "distance_m": 0.0,
+      "zone": "city_center_restricted"
+    },
+    {
+      "kind": "geofence",
+      "severity": "critical",
+      "uav_id": "uav_beta",
+      "time_s": 10.0,
+      "message": "uav_beta entered no-fly zone city_center_restricted",
+      "distance_m": 0.0,
+      "zone": "city_center_restricted"
+    },
+    {
+      "kind": "geofence",
+      "severity": "critical",
+      "uav_id": "uav_gamma",
+      "time_s": 25.5,
+      "message": "uav_gamma entered no-fly zone city_center_restricted",
+      "distance_m": 0.0,
+      "zone": "city_center_restricted"
+    }
+  ],
+  "conflicts": [
+    {
+      "uav_a": "uav_alpha",
+      "uav_b": "uav_beta",
+      "time_s": 20.0,
+      "separation_m": 0.0,
+      "severity": "critical",
+      "position": [
+        0.0,
+        0.0,
+        60.0
+      ],
+      "advisory": "uav_beta: climb 15 m and reduce speed by 20%; uav_alpha: keep heading and monitor separation"
+    }
+  ]
+}
