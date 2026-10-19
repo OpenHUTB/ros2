@@ -23,15 +23,17 @@ $$
 ## 3. 运行步骤
 
 ```bash
-cd src/air/airlib_message_regression
-python3 main.py
+PYTHONPATH=src/air/airlib_message_regression \
+  python3 -m airlib_message_regression.main
 ```
 
 使用 ROS 2 launch：
 
 ```bash
 source /opt/ros/humble/setup.bash
-ros2 launch "$(pwd)/launch/main.launch.py"
+colcon build --packages-select airlib_message_regression
+source install/setup.bash
+ros2 launch airlib_message_regression main.launch.py
 ```
 
 ## 4. 预期结果
@@ -49,7 +51,8 @@ PASS: validated 4 AirLib messages
 ## 5. 测试
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=src/air/airlib_message_regression python3 -m unittest discover \
+  -s src/air/airlib_message_regression/tests -v
 ```
 
 ## AI 使用声明

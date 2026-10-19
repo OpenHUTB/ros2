@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from importlib.resources import files
 import json
 import math
 import time
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 
-DEFAULT_INPUT = Path(__file__).resolve().parent / "sample_data" / "sample_messages.json"
+DEFAULT_INPUT = files(__package__).joinpath("sample_data", "sample_messages.json")
 
 
 def _finite_number(value: Any) -> bool:

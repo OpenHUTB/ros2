@@ -12,10 +12,11 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         (
             "share/" + package_name + "/sample_data",
-            ["sample_data/sample_messages.json"],
+            [package_name + "/sample_data/sample_messages.json"],
         ),
         ("share/" + package_name + "/launch", ["launch/main.launch.py"]),
     ],
+    package_data={package_name: ["sample_data/*.json"]},
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="useruseruser452",

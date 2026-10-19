@@ -20,17 +20,20 @@ an independent ROS-side regression gate that can run without a GPU or simulator.
 
 ## Run
 
-From this directory:
+From the `llm` workspace containing `src/air`:
 
 ```bash
-python3 main.py
+PYTHONPATH=src/air/airlib_message_regression \
+  python3 -m airlib_message_regression.main
 ```
 
 From a sourced ROS 2 environment:
 
 ```bash
 source /opt/ros/humble/setup.bash
-ros2 launch "$(pwd)/launch/main.launch.py"
+colcon build --packages-select airlib_message_regression
+source install/setup.bash
+ros2 launch airlib_message_regression main.launch.py
 ```
 
 ## Expected output
@@ -46,7 +49,8 @@ PASS: validated 4 AirLib messages
 ## Test
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=src/air/airlib_message_regression python3 -m unittest discover \
+  -s src/air/airlib_message_regression/tests -v
 ```
 
 ## AI assistance disclosure
