@@ -1,0 +1,15 @@
+dataset:
+  seed: 250102
+  episodes: 9
+  frames_per_episode: 36
+  capture_interval_steps: 2
+  initial_lateral_offsets_m: [-1.3, -0.9, -0.45, 0.0, 0.45, 0.9, 1.3]
+  steering_threshold: 0.18
+  stop_margin_m: 0.12
+  path_end_y_m: 33.0
+  split_ratios:
+    train: 0.67
+    validation: 0.22
+    test: 0.11
+
+
