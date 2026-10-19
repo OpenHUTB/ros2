@@ -19,10 +19,13 @@ sudo apt update
 sudo apt install ros-humble-nav-msgs ros-humble-geometry-msgs
 ```
 ## 3. 创建 ROS2 功能包
+在工作空间src目录下创建功能包：
+```bash
 cd ~/ros2_ws/src
 ros2 pkg create --build-type ament_python waypoint_publisher
 cd waypoint_publisher/waypoint_publisher
-新建waypoint_pub.py文件，写入路径发布代码
+```
+新建`waypoint_pub.py`文件，写入路径发布代码。
 ## 4.核心代码
 ```python
 import rclpy
@@ -72,30 +75,37 @@ if __name__ == '__main__':
     main()
 ```
 ## 5.编译与运行
+```bash
 cd ~/ros2_ws
 colcon build --packages-select waypoint_publisher
 source install/setup.bash
 ros2 run waypoint_publisher waypoint_pub
+```
 ## 6.RViz2配置
-新开终端，启动rviz
-rviz2
-全局坐标系 `Fixed Frame` 设置为 `map`
-点击 Add，添加 `Path` 可视化插件
-Path 插件的 Topic 填写 `/plan`
-此时即可看到发布出来的路径折线
+按以下步骤完成可视化配置：
+1.  新开终端，启动RViz2：
+    ```bash
+    rviz2
+    ```
+2.  将全局坐标系 `Fixed Frame` 设置为 `map`
+3.  点击 Add，添加 `Path` 可视化插件
+4.  在 Path 插件的 Topic 下拉框中选择 `/plan` 话题
+5.  此时即可在RViz2中看到节点发布的路径折线
+
 ![节点运行截图](image/node_run.jpg)
 ![话题数据截图](image/echo_topic.jpg)
 
 ## 7.验证消息
-新开终端查看话题消息
+新开终端，执行以下命令查看话题消息：
+```bash
 ros2 topic echo /plan
-打印出路径消息，代表节点正常发布
+```
+终端打印出路径消息内容，即代表节点正常发布。
 ## 8.总结
-本节点可以自定义waypoint数组，修改坐标即可更改机器人目标路径，发布的Path消息可直接供给Nav2导航栈使用，在RViz2中实现可视化路径,运用了豆包大模型。
+本节点可以自定义waypoint数组，修改坐标即可更改机器人目标路径，发布的Path消息可直接供给Nav2导航栈使用，在RViz2中实现可视化路径。
 
 ---
 # 附录：ROS Noetic PR2人形机器人仿真部署指南
-## ROS Noetic 人形机器人（PR2）部署指南
 ## 一.环境概览
 - 操作系统: Ubuntu 20.04 LTS
 - ROS 版本: ROS Noetic Ninjemys
@@ -110,7 +120,7 @@ ros2 topic echo /plan
 - Anaconda: Python 环境管理工具（本次部署中需暂时退出以避免冲突）。
 - Git / GitHub: 用于版本控制和文档管理。
 ## 三.部署步骤
-第一步：安装 PR2 功能包 **
+第一步：安装 PR2 功能包
 ```bash
 sudo apt update 
 sudo apt install ros-noetic-pr2-simulator
@@ -120,12 +130,12 @@ sudo apt install ros-noetic-pr2-simulator
 ```bash
 conda deactivate
 ```
-第三步：加载 ROS 环境 **
+第三步：加载 ROS 环境
 确保当前终端已 sourced ROS 的环境变量：
 ```bash
 source /opt/ros/noetic/setup.bash
 ```
-第四步：启动 PR2 仿真 **
+第四步：启动 PR2 仿真
 使用 roslaunch 启动 PR2 在空世界中的仿真：
 ```bash
 roslaunch pr2_gazebo pr2_empty_world.launch
@@ -133,5 +143,3 @@ roslaunch pr2_gazebo pr2_empty_world.launch
 ## 4. 运行结果
 启动成功后，Gazebo 窗口将弹出，并加载 PR2 机器人模型。
 ![ROS2机器人仿真图](image/ros2_robot_sim_demo.jpg)
-## 5.运用了千问的大模型。
-
