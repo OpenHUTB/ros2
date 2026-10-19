@@ -1,0 +1,60 @@
+<mujoco model="abandoned_park_uav_visual_steering">
+  <compiler angle="degree" autolimits="true"/>
+  <option timestep="0.01" gravity="0 0 -9.81" integrator="RK4"/>
+  <visual>
+    <global offwidth="640" offheight="360"/>
+    <quality shadowsize="2048"/>
+    <map znear="0.02" zfar="80" fogstart="18" fogend="55"/>
+  </visual>
+
+  <asset>
+    <texture name="sky" type="skybox" builtin="gradient"
+             rgb1="0.38 0.48 0.55" rgb2="0.78 0.79 0.72" width="512" height="3072"/>
+    <texture name="ground_tex" type="2d" builtin="checker"
+             rgb1="0.16 0.22 0.12" rgb2="0.20 0.27 0.15" width="256" height="256"/>
+    <material name="ground" texture="ground_tex" texrepeat="18 40" reflectance="0.05"/>
+    <material name="path" rgba="0.36 0.34 0.30 1" roughness="0.95"/>
+    <material name="bark" rgba="0.23 0.14 0.08 1" roughness="1"/>
+    <material name="leaf" rgba="0.16 0.29 0.12 1" roughness="1"/>
+    <material name="metal" rgba="0.12 0.15 0.17 1" metallic="0.45" roughness="0.35"/>
+    <material name="rotor" rgba="0.05 0.05 0.05 0.85"/>
+  </asset>
+
+  <worldbody>
+    <light pos="-4 -8 16" dir="0.25 0.35 -1" diffuse="0.85 0.82 0.72" castshadow="true"/>
+    <geom name="park_ground" type="plane" size="22 36 0.1" material="ground"/>
+    <geom name="walkway" type="box" pos="0 7 0.025" size="1.4 27 0.025" material="path" contype="1" conaffinity="1"/>
+    <geom name="left_edge" type="box" pos="-1.46 7 0.07" size="0.06 27 0.07" rgba="0.46 0.44 0.38 1"/>
+    <geom name="right_edge" type="box" pos="1.46 7 0.07" size="0.06 27 0.07" rgba="0.46 0.44 0.38 1"/>
+
+    <body name="left_tree_0" pos="-3.2 -3 0"><geom type="cylinder" size="0.28 2.4" pos="0 0 2.4" material="bark"/><geom type="sphere" size="1.25" pos="0 0 5" material="leaf"/></body>
+    <body name="right_tree_0" pos="3.0 -1 0"><geom type="cylinder" size="0.32 2.7" pos="0 0 2.7" material="bark"/><geom type="sphere" size="1.4" pos="0 0 5.5" material="leaf"/></body>
+    <body name="left_tree_1" pos="-3.5 5 0"><geom type="cylinder" size="0.35 3.0" pos="0 0 3" material="bark"/><geom type="sphere" size="1.5" pos="0 0 6.1" material="leaf"/></body>
+    <body name="right_tree_1" pos="3.4 7 0"><geom type="cylinder" size="0.30 2.5" pos="0 0 2.5" material="bark"/><geom type="sphere" size="1.35" pos="0 0 5.2" material="leaf"/></body>
+    <body name="left_tree_2" pos="-3.0 14 0"><geom type="cylinder" size="0.30 2.8" pos="0 0 2.8" material="bark"/><geom type="sphere" size="1.35" pos="0 0 5.7" material="leaf"/></body>
+    <body name="right_tree_2" pos="3.6 16 0"><geom type="cylinder" size="0.38 3.1" pos="0 0 3.1" material="bark"/><geom type="sphere" size="1.55" pos="0 0 6.3" material="leaf"/></body>
+    <body name="left_tree_3" pos="-3.4 23 0"><geom type="cylinder" size="0.33 2.6" pos="0 0 2.6" material="bark"/><geom type="sphere" size="1.45" pos="0 0 5.4" material="leaf"/></body>
+    <body name="right_tree_3" pos="3.1 25 0"><geom type="cylinder" size="0.31 2.9" pos="0 0 2.9" material="bark"/><geom type="sphere" size="1.4" pos="0 0 5.9" material="leaf"/></body>
+
+    <body name="uav" pos="0 -7 1.4">
+      <freejoint name="uav_freejoint"/>
+      <geom name="fuselage" type="box" size="0.20 0.16 0.07" mass="0.55" material="metal"/>
+      <geom name="arm_left" type="capsule" fromto="-0.42 0 0 0.42 0 0" size="0.025" mass="0.04" material="metal"/>
+      <geom name="arm_right" type="capsule" fromto="0 -0.42 0 0 0.42 0" size="0.025" mass="0.04" material="metal"/>
+      <geom name="rotor_front" type="cylinder" pos="0 0.42 0.035" size="0.15 0.008" mass="0.01" material="rotor"/>
+      <geom name="rotor_rear" type="cylinder" pos="0 -0.42 0.035" size="0.15 0.008" mass="0.01" material="rotor"/>
+      <geom name="rotor_left" type="cylinder" pos="-0.42 0 0.035" size="0.15 0.008" mass="0.01" material="rotor"/>
+      <geom name="rotor_right" type="cylinder" pos="0.42 0 0.035" size="0.15 0.008" mass="0.01" material="rotor"/>
+      <site name="imu_site" size="0.01" pos="0 0 0"/>
+      <camera name="front_rgb" pos="0 0.18 0.02" xyaxes="1 0 0 0 0.08 1" fovy="78"/>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <framepos name="uav_position" objtype="body" objname="uav"/>
+    <framequat name="uav_orientation" objtype="body" objname="uav"/>
+    <velocimeter name="uav_linear_velocity" site="imu_site"/>
+    <gyro name="uav_angular_velocity" site="imu_site"/>
+  </sensor>
+</mujoco>
+
