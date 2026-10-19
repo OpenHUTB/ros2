@@ -1,0 +1,37 @@
+<launch>
+  <!-- 任务4: 图像端到端运动控制 (输入图像 -> 输出控制指令)
+       模型: NVIDIA PilotNet 风格 CNN (5 Conv + 4 FC)
+       输入: /camera/rgb/image_raw (160x96x3)
+       输出: /cmd_vel (steer, speed)
+       模式: mode:=inference 实时推理; mode:=collect 数据采集 -->
+  <env name="TURTLEBOT3_MODEL" value="waffle_pi"/>
+  <arg name="weights" default="$(find hutb_pilotnet_e2e)/models/pilotnet.pt"/>
+  <arg name="mode" default="inference" doc="inference: 实时端到端控制; collect: 数据采集"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find hutb_pilotnet_e2e)/worlds/task3_world.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(env TURTLEBOT3_MODEL).urdf.xacro"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"
+        args="-urdf -model turtlebot3_$(env TURTLEBOT3_MODEL) -x 0.0 -y 0.0 -z 0.05 -param robot_description"/>
+
+  <group if="$(eval arg('mode') == 'collect')">
+    <node name="data_collector" pkg="hutb_pilotnet_e2e" type="data_collector.py" output="screen">
+      <param name="image_topic" value="/camera/rgb/image_raw"/>
+      <param name="save_dir" value="$(find hutb_pilotnet_e2e)/data/training"/>
+    </node>
+  </group>
+
+  <node name="end2end_inference" pkg="hutb_pilotnet_e2e" type="main.py"
+        output="screen" if="$(eval arg('mode') == 'inference')">
+    <param name="weights" value="$(arg weights)"/>
+    <param name="image_topic" value="/camera/rgb/image_raw"/>
+  </node>
+</launch>
