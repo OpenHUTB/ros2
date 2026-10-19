@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>airlib_message_regression</name>
+  <version>0.1.0</version>
+  <description>Deterministic AirLib sensor payload contract checks.</description>
+  <maintainer email="useruseruser452@users.noreply.github.com">useruseruser452</maintainer>
+  <license>MIT</license>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -105,6 +105,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
+* [AirLib 传感器消息回归](./air/airlib_message_regression.md) —— 在 ROS 桥接前校验 IMU、GPS、LiDAR 和里程计数据契约
 
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
