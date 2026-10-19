@@ -16,6 +16,7 @@ import math
 
 import rospy
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Empty
 
 from traj_eval import OdomErrorModel, make_ground_truth, simulate_odometry
 
@@ -62,6 +63,9 @@ class SimOdomPublisher:
 
         self.pub_gt = rospy.Publisher("/ground_truth", Odometry, queue_size=10)
         self.pub_est = rospy.Publisher("/odom", Odometry, queue_size=10)
+        # 循环回放时通知评估节点清空缓冲：否则两圈轨迹会攒在一起，
+        # 循环处的"瞬间跳回起点"会被当成真实运动，把 RPE 抬高好几倍
+        self.pub_reset = rospy.Publisher("/traj_eval/reset", Empty, queue_size=1)
         self.index = 0
 
         rospy.loginfo("sim_odom_publisher: kind=%s speed=%.2f m/s wheel_scale=%.3f，"
@@ -74,7 +78,8 @@ class SimOdomPublisher:
                 rospy.loginfo("轨迹回放结束（loop=false），可 Ctrl+C 退出")
                 return
             self.index = 0
-            rospy.loginfo("轨迹回放循环到起点")
+            self.pub_reset.publish(Empty())
+            rospy.loginfo("轨迹回放循环到起点，已通知评估节点重置")
 
         g = self.gt[self.index]
         e = self.est[self.index]

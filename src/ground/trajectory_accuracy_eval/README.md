@@ -117,6 +117,7 @@ rostopic echo /traj_eval/metrics    # [ATE_RMSE, ATE_MAX, RPE_RMSE, 配对数]
 |---|---|---|
 | 订阅 | `/ground_truth` | `nav_msgs/Odometry` |
 | 订阅 | `/odom` | `nav_msgs/Odometry` |
+| 订阅 | `/traj_eval/reset` | `std_msgs/Empty`（清空缓冲，开始新一轮评估） |
 | 发布 | `/traj_eval/metrics` | `std_msgs/Float64MultiArray` |
 
 换成自己的数据源，只要把 `/ground_truth` 与 `/odom` 接上即可，

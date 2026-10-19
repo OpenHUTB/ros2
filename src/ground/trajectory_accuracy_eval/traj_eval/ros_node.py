@@ -29,7 +29,7 @@ import os
 import numpy as np
 import rospy
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Empty, Float64MultiArray
 
 from traj_eval import Pose, ate, rpe, save_trajectory
 
@@ -71,6 +71,8 @@ class TrajEvalNode:
         self.pub = rospy.Publisher("/traj_eval/metrics", Float64MultiArray, queue_size=1)
         rospy.Subscriber("/ground_truth", Odometry, self._on_gt, queue_size=50)
         rospy.Subscriber("/odom", Odometry, self._on_est, queue_size=50)
+        # 演示用的循环回放会发这个信号：清空缓冲，从新一轮开始重新评估
+        rospy.Subscriber("/traj_eval/reset", Empty, self._on_reset, queue_size=1)
 
         rospy.loginfo("traj_eval_node 已启动: 订阅 /ground_truth 与 /odom，配对容差 %.3f s",
                       self.match_tol)
@@ -90,6 +92,20 @@ class TrajEvalNode:
         self.est_buf.append((t, _pose_of(msg)))
         self.est_stamps.append(t)
         self._try_pair()
+
+    def _on_reset(self, _msg: Empty) -> None:
+        """收到重置信号：清空缓冲，从新一轮轨迹重新开始评估。
+
+        典型场景是演示数据源循环回放——若不清空，两圈轨迹会攒在同一个缓冲区里，
+        循环处"瞬间跳回起点"会被当成真实运动，使 RPE 偏大数倍、ATE 也不再从 0 增长。
+        """
+        n = len(self.gt_buf)
+        self.gt_buf.clear()
+        self.est_buf.clear()
+        self.gt_stamps.clear()
+        self.est_stamps.clear()
+        self.last_report = rospy.get_time()
+        rospy.loginfo("收到重置信号，已清空 %d 组缓存，重新开始评估", n)
 
     def _try_pair(self) -> None:
         """把已到达的两侧消息按时间戳排序，用最近邻配对。"""

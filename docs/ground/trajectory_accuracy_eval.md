@@ -151,6 +151,15 @@ roslaunch trajectory_accuracy_eval main.launch
 [INFO] 配对 401 组 | ATE RMSE 0.1665 m (max 0.2845) | RPE(10) 0.0152 m
 ```
 
+跑满一圈后演示数据源会回到起点，并向 `/traj_eval/reset` 发一次信号，
+评估节点随即清空缓冲、从新一轮重新统计（否则两圈轨迹会攒在一起，
+循环处的"跳回起点"会被误当成真实运动，把 RPE 抬高数倍）：
+
+```
+[INFO] 轨迹回放循环到起点，已通知评估节点重置
+[INFO] 收到重置信号，已清空 801 组缓存，重新开始评估
+```
+
 ### 5.1 换场景
 
 ```bash
@@ -173,6 +182,7 @@ rostopic echo /traj_eval/metrics
 |---|---|---|
 | 订阅 | `/ground_truth` | `nav_msgs/Odometry` |
 | 订阅 | `/odom` | `nav_msgs/Odometry` |
+| 订阅 | `/traj_eval/reset` | `std_msgs/Empty`（清空缓冲，开始新一轮评估） |
 | 发布 | `/traj_eval/metrics` | `std_msgs/Float64MultiArray` |
 
 把 `rosbag play` 或真实定位输出接到这两个话题即可。Ctrl+C 退出后，
