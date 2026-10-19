@@ -1,6 +1,6 @@
 # MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比
 
-> 状态：规划器对比数据已实测；RViz 截图和单任务截图待补。正式 PR 前删除本行。
+> 状态：规划器对比数据和 RViz 截图已加入；单任务截图待补。正式 PR 前删除本行。
 
 本实验在 ROS Noetic 下使用 MoveIt 1 对六自由度机械臂进行运动规划，覆盖正运动学、逆运动学、笛卡尔路径、障碍物避让和抓取五类任务，并在同一组目标位姿上比较 OMPL 的 RRTConnect、RRT*、PRM 三种规划器。实验只使用 MoveIt 的 fake controller 和 RViz 可视化，**不启动 Gazebo、MuJoCo 或任何物理引擎**。
 
@@ -346,9 +346,9 @@ FK demo 已在 Noetic + MoveIt 下跑通：机械臂回到 `home`，夹爪动作
 
 图 8-1：三种规划器的成功率、平均耗时（对数坐标）和平均关节路径长度。
 
-<!--
 ![RViz 中的机械臂初始位姿](../../img/chap8/moveit_arm_planning/rviz_home.png)
--->
+
+图 8-2：RViz 中机械臂处于 home 位姿，Global Status 和 MotionPlanning 均为 Ok。
 
 ## 9. 常见问题
 
