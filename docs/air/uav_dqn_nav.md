@@ -59,11 +59,11 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
 
 ## 3. 算法原理（DQN）
 
-DQN 用神经网络近似最优动作价值函数 $Q^*(s, a)$，通过最小化**时序差分（TD）误差**学习：
+DQN 用神经网络近似最优动作价值函数 Q*(s, a)，通过最小化**时序差分（TD）误差**学习：
 
 $$L(\theta) = \mathbb{E}\left[ \left( r + \gamma \max_{a'} Q_{\text{target}}(s', a'; \theta^-) - Q(s, a; \theta) \right)^2 \right]$$
 
-其中 $\theta^-$ 是**目标网络**参数（软更新 $\theta^- \leftarrow \tau\theta + (1-\tau)\theta^-$，$\tau = 0.005$），$\gamma = 0.99$ 为折扣因子。
+其中 θ⁻ 是**目标网络**参数（软更新 θ⁻ ← τ·θ + (1−τ)·θ⁻，τ = 0.005），γ = 0.99 为折扣因子。
 
 ### 3.1 网络结构
 
