@@ -2,6 +2,35 @@
 
 `drone_teleop.py` 用于通过终端键盘控制 CarlaAir / AirSim 无人机。
 
+## OpenHUTB 模拟器下载与启动
+
+### Windows
+
+使用以下命令快捷下载模拟器：
+
+```powershell
+curl -fsSL -o dl.bat https://openhutb.github.io/dl.bat && dl.bat
+```
+
+下载完成后：
+
+- 运行 `StartOpenHUTB.bat` 启动模拟器；
+- 运行 `StopOpenHUTB.bat` 停止模拟器。
+
+### Ubuntu
+
+使用以下命令快捷下载模拟器：
+
+```bash
+curl -fsSL -o dl.sh https://openhutb.github.io/dl.sh && chmod +x dl.sh && ./dl.sh
+```
+
+下载完成后，运行以下脚本启动模拟器：
+
+```bash
+./CarlaUE4.sh
+```
+
 ## 运行方式
 
 ```bash
