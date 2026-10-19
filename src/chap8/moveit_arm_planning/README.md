@@ -36,6 +36,9 @@ moveit_arm_planning/
 ├── scripts/
 │   ├── plan_eval.py
 │   └── pick_place_task.py
+├── results/
+│   ├── plan_attempts.csv
+│   └── plan_summary.csv
 ├── CMakeLists.txt
 ├── package.xml
 ├── main.sh
@@ -58,12 +61,18 @@ catkin_make
 source devel/setup.bash
 ```
 
-编译前先按 `docs/chapter/chap8/moveit_arm_planning.md` 第 5 节修复 Noetic 下的 `xacro --inorder` 和 `state_publisher`。
+编译前先按 `docs/chapter/chap8/moveit_arm_planning.md` 第 5 节修复 Noetic 下的 `xacro --inorder`、`state_publisher` 和 xacro 宏调用前缀。
 
 `marm_planning/scripts/` 下的 demo 没有可执行位，第一次运行前执行：
 
 ```bash
 chmod +x ~/catkin_ws/src/chap8/marm_planning/scripts/*.py
+```
+
+如果从 Windows 工作区直接 scp 后在虚拟机里报 `python\r`，执行：
+
+```bash
+sed -i 's/\r$//' ~/catkin_ws/src/chap8/marm_planning/scripts/*.py
 ```
 
 ## 运行
@@ -91,6 +100,20 @@ roslaunch moveit_arm_planning eval.launch \
 ```
 
 结果写入 `~/moveit_arm_results/`，包括逐次规划记录 CSV 和汇总 CSV。
+
+本仓库的 `config/targets.yaml` 已经放入 3 个通过 FK/命名状态确认可达的位姿。首版对比使用 3 个目标 × 3 次重复；扩展时先用 FK 或命名状态确认新位姿可达，再写入 YAML。
+
+## 规划器对比结果
+
+3 个可达目标 × 3 次重复，共 27 次规划，全部成功：
+
+| 规划器 | 成功率 | 平均耗时（s） | P95 耗时（s） | 平均关节路径（rad） | 平均位置误差（m） |
+| --- | --- | --- | --- | --- | --- |
+| RRTConnect | 100% | 0.0169 | 0.0228 | 2.474 | 8.06e-05 |
+| RRT* | 100% | 5.0031 | 5.0063 | 1.825 | 7.02e-05 |
+| PRM | 100% | 0.0297 | 0.0522 | 2.926 | 7.59e-05 |
+
+RRT* 会跑满 5 秒规划时限做优化，因此耗时明显高于另外两种；它的路径也最短。
 
 ## 实验内容
 

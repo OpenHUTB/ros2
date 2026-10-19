@@ -1,6 +1,6 @@
 # MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比
 
-> 状态：初稿。代码、截图和实测数据待补；标有“待实测”的单元格在正式提交前必须替换为真实结果。正式 PR 前删除本行。
+> 状态：规划器对比数据已实测；RViz 截图和单任务截图待补。正式 PR 前删除本行。
 
 本实验在 ROS Noetic 下使用 MoveIt 1 对六自由度机械臂进行运动规划，覆盖正运动学、逆运动学、笛卡尔路径、障碍物避让和抓取五类任务，并在同一组目标位姿上比较 OMPL 的 RRTConnect、RRT*、PRM 三种规划器。实验只使用 MoveIt 的 fake controller 和 RViz 可视化，**不启动 Gazebo、MuJoCo 或任何物理引擎**。
 
@@ -62,6 +62,9 @@ src/chap8/
     ├── scripts/
     │   ├── plan_eval.py     # 批量规划与指标记录
     │   └── pick_place_task.py
+    ├── results/
+    │   ├── plan_attempts.csv
+    │   └── plan_summary.csv
     ├── CMakeLists.txt
     ├── package.xml
     ├── main.sh
@@ -114,7 +117,17 @@ Noetic 的 xacro 已删除 `--inorder` 选项，改为：
 chmod +x ~/catkin_ws/src/chap8/marm_planning/scripts/*.py
 ```
 
-本模块的 `main.sh` 和 `eval.launch` 统一用 `python3` 调用脚本，避免依赖文件模式；如果 PR 里一并修正这些脚本的可执行位，评审时说明这是 Noetic 下的复现修复。
+本模块的脚本在 Git 索引里是 LF。如果从 Windows 工作区直接 scp 后在虚拟机里报 `python\r`，先执行 `sed -i 's/\r$//'` 转回 LF。
+
+### 5.4 xacro 宏调用前缀
+
+Noetic 的 xacro 要求宏调用带 `xacro:` 前缀。旧文件里的 `<arm_base .../>`、`<cylinder_inertial_matrix .../>`、`<box_inertial_matrix .../>` 不会展开，导致 `base_link` 缺失，`robot_state_publisher` 报：
+
+```text
+Failed to build tree: parent link [base_link] of joint [kinect_joint] not found
+```
+
+本 PR 已改为 `<xacro:arm_base .../>`、`<xacro:cylinder_inertial_matrix .../>` 和 `<xacro:box_inertial_matrix .../>`。
 
 ## 6. 编译与启动
 
@@ -241,7 +254,7 @@ roslaunch moveit_arm_planning eval.launch \
   out_dir:="$HOME/moveit_arm_results"
 ```
 
-建议先准备 10 个手工确认可达的目标位姿，跑通后再扩展到 20 个。每个目标位姿重复 3 次，规划超时设为 5 秒。
+首版使用 3 个通过 `moveit_fk_demo` 和 `forward` 命名状态确认可达的目标位姿，每个目标重复 3 次，规划超时设为 5 秒。RRT* 会跑满 5 秒规划时限做优化，这是它的正常行为，不是卡死。扩展时先用 FK 或命名状态确认新位姿可达，再写入 YAML。
 
 指标定义：
 
@@ -256,19 +269,22 @@ roslaunch moveit_arm_planning eval.launch \
 
 ### 7.7 参数文件
 
-`config/targets.yaml` 保存末端目标位姿，每个目标包含位置和四元数姿态：
+`config/targets.yaml` 保存末端目标位姿。下面是本实验实际使用的 3 个可达位姿，由 `moveit_fk_demo` 和 `forward` 命名状态实测得到：
 
 ```yaml
 targets:
-  - name: target_01
-    position: [0.35, 0.00, 0.35]
-    orientation: [0.0, 0.7071, 0.0, 0.7071]
-  - name: target_02
-    position: [0.40, 0.10, 0.30]
-    orientation: [0.0, 0.7071, 0.0, 0.7071]
+  - name: forward
+    position: [0.411057, -0.000009, 0.256801]
+    orientation: [-0.999667, 0.000012, 0.025811, 0.000015]
+  - name: forward_left
+    position: [0.392692, 0.121510, 0.256785]
+    orientation: [0.988435, 0.149427, -0.025577, 0.003797]
+  - name: forward_right
+    position: [0.392700, -0.121503, 0.256797]
+    orientation: [-0.988437, 0.149421, 0.025482, 0.003937]
 ```
 
-上面的数值只是格式示例，不代表该机械臂一定可达。首版请先在 RViz 的 MotionPlanning 面板里手工确认 10 个可达位姿，再写入 YAML；跑通后再扩展到 20 个。
+扩展时不要直接抄没有验证过的位姿；先用 FK 或命名状态让机械臂实际到达，再读取 `get_current_pose()` 写入 YAML。
 
 `config/planners.yaml` 保存规划器名称、重复次数和超时：
 
@@ -289,42 +305,49 @@ timeout: 5.0
 
 1. `roslaunch marm_moveit_config demo.launch use_gui:=false`，确认机械臂和 MotionPlanning 面板正常。
 2. 依次运行 FK、IK、笛卡尔、障碍物、抓取五个 demo，记录终端输出并截图。
-3. 在 RViz 里确认 10 个可达目标位姿，写入 `config/targets.yaml`。
+3. 用 FK demo 或命名状态确认 3 个可达目标位姿，写入 `config/targets.yaml`。
 4. 运行 `eval.launch`，得到三种规划器的逐次记录和汇总 CSV。
-5. 用真实结果替换第 8 节的“待实测”，补齐配图，再删除文首的初稿状态说明。
+5. 把真实结果写入第 8 节，补齐配图，再删除文首的状态说明。
 
 ## 8. 实验结果
 
-> 以下数据全部待实测。正式提交前必须用真实运行结果替换，不能保留“待实测”。
-
 ### 8.1 单次任务
 
-| 任务 | 是否成功 | 规划耗时（s） | 位置误差（m） | 姿态误差（rad） | 备注 |
-| --- | --- | --- | --- | --- | --- |
-| FK | 待实测 | 待实测 | 待实测 | 待实测 |  |
-| IK | 待实测 | 待实测 | 待实测 | 待实测 |  |
-| 笛卡尔路径 | 待实测 | 待实测 | 待实测 | 待实测 |  |
-| 障碍物避让 | 待实测 | 待实测 | 待实测 | 待实测 |  |
-| 抓取 | 待实测 | 待实测 | 待实测 | 待实测 |  |
+FK demo 已在 Noetic + MoveIt 下跑通：机械臂回到 `home`，夹爪动作，再运动到一组目标关节角。IK、笛卡尔、障碍物和抓取四个 demo 沿用 `marm_planning` 原有入口，运行命令见 7.2–7.5；本文的量化对比集中在 8.2 的规划器对比。
+
+| 任务 | 入口 | 本次状态 |
+| --- | --- | --- |
+| FK | `moveit_fk_demo.py` | 已运行 |
+| IK | `moveit_ik_demo.py` | 沿用原有入口，未在本 PR 中量化 |
+| 笛卡尔路径 | `moveit_cartesian_demo.py` | 沿用原有入口，未在本 PR 中量化 |
+| 障碍物避让 | `moveit_obstacles_demo.py` | 沿用原有入口，未在本 PR 中量化 |
+| 抓取 | `moveit_pick_and_place_demo.py` | 沿用原有入口，未在本 PR 中量化 |
 
 ### 8.2 OMPL 规划器对比
 
-| 规划器 | 尝试次数 | 成功次数 | 成功率 | 平均耗时（s） | P95 耗时（s） | 平均末端路径（m） | 平均位置误差（m） |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| RRTConnect | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
-| RRT* | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
-| PRM | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 | 待实测 |
+3 个可达目标 × 3 次重复，共 27 次规划：
+
+| 规划器 | 尝试次数 | 成功次数 | 成功率 | 平均耗时（s） | P95 耗时（s） | 平均关节路径（rad） | 平均位置误差（m） | 平均姿态误差（rad） |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| RRTConnect | 9 | 9 | 100% | 0.0169 | 0.0228 | 2.474 | 8.06e-05 | 7.23e-04 |
+| RRT* | 9 | 9 | 100% | 5.0031 | 5.0063 | 1.825 | 7.02e-05 | 6.34e-04 |
+| PRM | 9 | 9 | 100% | 0.0297 | 0.0522 | 2.926 | 7.59e-05 | 6.77e-04 |
+
+结论：
+
+- 三种规划器在本组目标上都达到 100% 成功率。
+- RRTConnect 最快，但关节路径不是最短；PRM 也很快，路径略长。
+- RRT* 跑满 5 秒时限做优化，路径最短，适合对路径质量要求更高、可以接受较长规划时间的场景。
+- 末端位置误差都在 0.1 mm 量级，姿态误差都在 0.001 rad 量级，说明 FK 校验与目标位姿一致。
 
 ### 8.3 配图
 
-图片待运行后补充，统一放在 `docs/img/chap8/moveit_arm_planning/`，PNG 小于 3 MB。
+![三种 OMPL 规划器对比](../../img/chap8/moveit_arm_planning/planner_comparison.png)
+
+图 8-1：三种规划器的成功率、平均耗时（对数坐标）和平均关节路径长度。
 
 <!--
-![RViz 中的机械臂初始位姿](../img/chap8/moveit_arm_planning/rviz_home.png)
-
-![规划场景中的障碍物](../img/chap8/moveit_arm_planning/planning_scene.png)
-
-![三种 OMPL 规划器对比](../img/chap8/moveit_arm_planning/planner_comparison.png)
+![RViz 中的机械臂初始位姿](../../img/chap8/moveit_arm_planning/rviz_home.png)
 -->
 
 ## 9. 常见问题
@@ -361,7 +384,7 @@ export LIBGL_ALWAYS_SOFTWARE=1
 
 ### 9.6 `rosdep` 报 `manipulation_msgs` 找不到
 
-`marm_planning/package.xml` 里有未使用的旧依赖。本模块的脚本不依赖 `manipulation_msgs`，可以先直接 `catkin_make`；如果后续清理依赖，再单独提交一个小改动。
+`marm_planning` 的旧 `CMakeLists.txt` 和 `package.xml` 声明了未使用的 `manipulation_msgs`，标准 MoveIt 安装不包含它。本 PR 已移除这两处依赖；如果使用旧版本，删除对应行，或安装 `ros-noetic-manipulation-msgs`。
 
 ## 10. AI 使用声明
 

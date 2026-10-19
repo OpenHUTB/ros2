@@ -1,17 +1,19 @@
-# 末端目标位姿模板。
+# 末端目标位姿。
 #
 # 坐标系：base_link
 # position: [x, y, z]，单位米
 # orientation: [x, y, z, w]，单位四元数
 #
-# 下面的示例只是为了说明格式，不代表机械臂一定可达。
-# 首版请先在 RViz 的 MotionPlanning 面板里手工确认 10 个可达位姿，
-# 再写入本文件；跑通后再扩展到 20 个。
+# 以下三个位姿由 moveit_fk_demo / forward 命名状态实测得到，go_ok=True，
+# 可作为第一批可达目标。后续可继续用 dump_targets 脚本扩展。
 
 targets:
-  - name: target_01
-    position: [0.35, 0.00, 0.35]
-    orientation: [0.0, 0.7071, 0.0, 0.7071]
-  - name: target_02
-    position: [0.40, 0.10, 0.30]
-    orientation: [0.0, 0.7071, 0.0, 0.7071]
+  - name: forward
+    position: [0.411057, -0.000009, 0.256801]
+    orientation: [-0.999667, 0.000012, 0.025811, 0.000015]
+  - name: forward_left
+    position: [0.392692, 0.121510, 0.256785]
+    orientation: [0.988435, 0.149427, -0.025577, 0.003797]
+  - name: forward_right
+    position: [0.392700, -0.121503, 0.256797]
+    orientation: [-0.988437, 0.149421, 0.025482, 0.003937]
