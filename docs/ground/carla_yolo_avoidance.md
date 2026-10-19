@@ -180,7 +180,7 @@ d < 8 m ───► FULL_BRAKE   ── 油门 0 / 刹车 1.0
 
 - 从 ROS 参数读取 `carla_host` / `carla_port`（`params.yaml`），连接 CARLA；
 - 生成自车与前方障碍车（**不启用 autopilot**，完全由控制话题驱动），挂载前视 RGB 相机（800×600, fov=90°）；
-- 以 20 Hz 发布 `/carla/camera/image_raw`，并订阅 `/carla/vehicle/control_cmd` 将油门/刹车写入 CARLA；
+- 在 CARLA 图像回调中按配置上限 `CAMERA_PUBLISH_FPS=20.0`（节流上限，非实际帧率）发布 `/carla/camera/image_raw`；受仿真帧率与回调速度限制，实测该话题约 **6.6 Hz**（YOLO 推理结果 `/carla/yolo/detections` 约 0.83 Hz）。同时订阅 `/carla/vehicle/control_cmd` 将油门/刹车写入 CARLA（该话题由决策节点以 20 Hz 定时器发布，实测约 20 Hz）；
 - 初始控制量为「刹车 1.0」安全兜底，收到决策指令后才前进；退出时销毁自车/障碍车/相机，不残留车辆。
 
 ### 4.2 `yolo_detect_node.py` — YOLO 检测节点（节点②）
