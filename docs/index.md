@@ -110,6 +110,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+* [全景相机投影](./air/panoramic_camera_projection.md) —— 将六路同步立方体面图像拼接为等距柱状全景
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
