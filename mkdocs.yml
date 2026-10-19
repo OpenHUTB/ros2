@@ -84,6 +84,7 @@ nav:
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
@@ -93,6 +94,7 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 图像录制 ROS 2 封装模块: './ground/image_recorder.md'
 - 空域载具:
+    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
