@@ -321,33 +321,25 @@ python3 tests/test_rooftop_landing_ros_sim.py
 日志停在「检测到 0 个候选水平面」、无人机一动不动 —— 这正是 §5 把高度判定改成
 **相对检出地面**的原因；改成相对量后，默认参数在这张地图上直接可用。
 
-**本分支改动后的默认值在真机上的表现**（`ground_margin=4.0`、`max_planes=15`、
-`require_ground_reference=true`，同一台模拟器）：
+> ⚠️ 这一次真机运行只走到 `DESCEND`，**没有跑到底，本文不把它记成成功**：那一轮宿主机提交内存接近上限，
+> 仿真器 RPC 长时间无响应（`/uav/odom` 停止更新、速度指令不再生效），节点按设计在 `descend/timeout`
+> 后进入 `ABORT`（安全悬停）。卡住的是仿真器/宿主资源，不是本模块的控制逻辑；但也要说清楚：
+> **本 PR 没有提供「真机全流程成功」的可复现证据**，可复现的验证只有 §8 的两条命令。
 
-![新默认参数的真机验证](../../img/air/rooftop_landing/new_defaults_run.png)
+**本分支为什么要收紧这几个默认值**（依据来自代码与阈值分析，可复现的验证见 §8）：
 
-* `高度基准：相对地面 -11.78 m + 4.0 m → 丢弃低于 -7.78 m 的平面` —— 地面基准是自动算出来的
-* `选中屋顶：高度 -0.18 m，面积 50.3 m²，降落点 (7.08, 19.41)，内切圆半径 1.87 m`
-* 本地回归 **100/100**；ROS 闭环测试（假桥接层）完整 `DETECT → APPROACH → DESCEND → LANDED`
+* `ground_margin` 1.0 → **4.0**：1 m 的余量会把「仅略高于地面的薄平台」（雨棚、矮墙顶、
+  裙楼檐口）也当成屋顶，选出来的落点四周余量不足；4.0 m 要求候选面明显高于地面。
+  现场若确实要在低矮平台上降落，用 `roslaunch rooftop_landing main.launch ground_margin:=1.5` 覆盖即可。
+* `max_planes` 5 → **15**：城市视野里前几个水平面可能全是地面/裙楼，提取太少会把真屋顶挤掉。
+* **只检出 1 个平面时不再静默关闭高度过滤**（缺陷修复）：旧逻辑在「只有一个水平面」时
+  把阈值设成 `-inf`，等于把唯一那个面无条件当屋顶；若点云里只扫到地面，就会在地面上
+  报 `LANDED`。现在加 `require_ground_reference`（默认 `true`）：拿不到地面参照就不降落，
+  宁可停在 `DETECT` 等人调参，也不给出假的成功。该行为由
+  `tests/test_rooftop_landing_local.py` 的回归用例覆盖。
 
-> 这一次真机运行的 `DESCEND` 最终停在离目标约 3 m 的一处建筑顶面上（**速度指令通道本身是好的**：
-> 手动发同样的 `Twist` 能把飞机从 5.46 m 降到 −0.71 m，`/uav/cmd_vel` 实测 10.0 Hz）。
-> 原因就是下面那条前提 —— 桥接层的 `moveToPositionAsync` **不做避障**，飞机被建筑挡在了目标之前。
-
-> **上游复现（评审在同一类环境下的独立验证）**：PR #198 的评审者在
-> Ubuntu 20.04 + Noetic + OpenHUTB/AirSim 1.8.1、走 `carlair_ros_bridge`
-> （自检 5/5）的机器上，用合并后的提交、**零本地补丁、默认配置**，
-> 完整跑通了 `DETECT → APPROACH → DESCEND → LANDED`。
-> 即**下降到底这一段已被独立复现**。上表这次本机运行没跑到最后，原因是那一次
-> 宿主机提交内存接近上限、仿真器 RPC 长时间无响应（`/uav/odom` 停止更新、
-> 速度指令不再生效），节点按设计在 `descend/timeout` 后进入 `ABORT`（安全悬停）——
-> 卡的是仿真器/宿主资源，不是本模块。
-> 同一次复现还量出两个默认值问题，已在本分支改掉：`ground_margin` 1.0 → **4.0**
-> （1.0 时会选中只比地面高 1.9 m、半径仅 1.35 m 的细长条），以及**只检出 1 个平面
-> 时不得静默关掉高度过滤**（否则会把地面当屋顶并误报 LANDED）。
-
-> **本模块对桥接层有一个前提**：`carlair_ros_bridge` 的 `moveToPositionAsync`
-> **不做避障**，只会朝目标点直飞（实测会「穿模」或卡在墙上）。本模块只负责
+> **本模块对桥接层有一个前提**：`carlair_ros_bridge` 的目标点接口（`moveToPositionAsync`）
+> **不做避障**：从 `cmd_vel_sub.py` 的实现看，它只是朝目标点做点到点直飞，没有绕障逻辑。本模块只负责
 > 「从点云里选一个安全落点 → 飞到它上方 → 垂直下降」，**前提是当前高度到目标点
 > 之间没有障碍物**。要穿越复杂环境，请先用规划类模块（如
 > `octree_uav_3d_pathfinding`）把飞机带到屋顶附近，再交给本模块。
@@ -396,9 +388,19 @@ python3 tests/test_rooftop_landing_ros_sim.py
 
 ## 附：大模型使用声明
 
-本模块代码与文档在编写过程中使用了 AI 大模型辅助（需求分析、算法方案讨论、代码与文档起草）。
-全部内容已通过三类验证：**本地回归测试**（`tests/test_rooftop_landing_local.py`，100 项全部通过）、
-**假桥接闭环冒烟测试**（`tests/test_rooftop_landing_ros_sim.py`，在 ROS Noetic 上完整跑通
-`DETECT → APPROACH → DESCEND → LANDED`，不含仿真器）、以及**真机链路验证**
-（仿真器 + `carlair_ros_bridge` + 真实点云，见 §8.3，其中完整降落已由评审者在同一类环境下独立复现）；
-作者对提交内容的正确性与完整性负全部责任。
+本模块代码与文档的修改使用 AI 大模型辅助起草，作者对提交内容的正确性与完整性负全部责任。
+
+**可复现的验证命令与预期输出**：
+
+```bash
+# 1) 本地回归：不需要 ROS / 仿真器 / GPU，只依赖 numpy
+python3 tests/test_rooftop_landing_local.py
+#    预期结尾：结果：100/100 通过
+
+# 2) 闭环冒烟：需要 ROS Noetic；脚本自带假桥接层，不需要仿真器
+roslaunch rooftop_landing main.launch use_rviz:=false   # 终端 1
+python3 tests/test_rooftop_landing_ros_sim.py           # 终端 2
+#    预期结尾：出现过 LANDED : 是
+```
+
+除上面两条命令覆盖的范围外，本文档不再断言其它运行环境下的结果。

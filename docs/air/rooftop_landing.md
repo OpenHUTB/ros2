@@ -131,10 +131,19 @@ python3 tests/test_rooftop_landing_local.py
 
 ---
 
-本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、代码与文档起草、问题排查）。
-文中坐标约定、参数与话题接口已在 Ubuntu 20.04.6 + ROS Noetic + OpenHUTB/AirSim 1.8.1 环境下
-连同 `carlair_ros_bridge` 用**真实点云**实测确认（节点从真实 LiDAR 点云中检出屋顶并成功飞抵其上方），
-并且在本模块合入主分支后，由评审者用**零本地补丁、默认配置**在同一类环境下
-独立复现了完整的 `DETECT → APPROACH → DESCEND → LANDED`；
-本地回归测试 100 项在无 ROS 环境下全部通过。
-作者对提交内容的正确性与完整性负全部责任。
+本文档的修改使用 AI 大模型辅助起草，作者对提交内容的正确性与完整性负全部责任。
+
+**可复现的验证方式**（命令 + 预期输出，详见模块 README §8）：
+
+```bash
+# 1) 本地回归：不需要 ROS / 仿真器 / GPU，只依赖 numpy
+python3 tests/test_rooftop_landing_local.py
+#    预期结尾：结果：100/100 通过
+
+# 2) 闭环冒烟：需要 ROS Noetic；自带假桥接层，不需要仿真器
+roslaunch rooftop_landing main.launch use_rviz:=false   # 终端 1
+python3 tests/test_rooftop_landing_ros_sim.py           # 终端 2
+#    预期结尾：出现过 LANDED : 是
+```
+
+本页不再引用任何没有给出复现步骤的环境结论。
