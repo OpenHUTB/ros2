@@ -84,9 +84,9 @@ $$
 L = \lambda_{box} \cdot L_{CIoU} + \lambda_{cls} \cdot L_{BCE} + \lambda_{dfl} \cdot L_{DFL}
 $$
 
-- \(L_{CIoU}\)：边界框回归损失（Complete IoU）
-- \(L_{BCE}\)：分类损失（二元交叉熵）
-- \(L_{DFL}\)：分布焦点损失
+- $L_{CIoU}$：边界框回归损失（Complete IoU）
+- $L_{BCE}$：分类损失（二元交叉熵）
+- $L_{DFL}$：分布焦点损失
 
 推理输出：对输入图像 I，网络输出 N 个检测结果，每个包含 (cx, cy, w, h, confidence, class_prob)。
 

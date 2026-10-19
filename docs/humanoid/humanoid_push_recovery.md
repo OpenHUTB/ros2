@@ -167,10 +167,10 @@ standalone 演示与 `ros2 launch` **默认都会打开 MuJoCo 可视化窗口**
 
 每个关节的驱动力矩为 PD 控制，目标姿态为直立位（全 0）：
 
-\[
+$$
 \tau_i = k_p (q_i^{ref} - q_i) - k_d \dot{q}_i,\qquad
 i \in \{\text{髋/膝/踝/肩/肘/颈}\}
-\]
+$$
 
 其中 `kp=120`、`kd=6`；髋/踝 roll 关节取 `kp_roll=400` 抗侧倾；力矩限幅
 `±300 N·m`。**只有站姿 PD 时机器人会因倒立摆本质而逐渐前倾并跌倒**，这正是需要
@@ -180,12 +180,12 @@ i \in \{\text{髋/膝/踝/肩/肘/颈}\}
 
 - **支撑多边形**：取双脚底面 8 个角点，用 Andrew 单调链求凸包；
 - **ZMP（零矩点）**：采用线性倒立摆近似
-  \[
+  $$
   \mathrm{ZMP} = \mathrm{CoM}_{xy} - \frac{z_{\mathrm{com}}}{g}\,\ddot{\mathrm{CoM}}_{xy}
-  \]
+  $$
   质心加速度由质心速度的有限差分求得（并做一阶低通抑制差分噪声）；
-- **捕获点**：\(\xi = \mathrm{CoM}_{xy} + \mathbf{v}_{\mathrm{com}}/\omega\)，
-  \(\omega=\sqrt{g/h}\)；**稳定裕度**定义为捕获点到支撑多边形边界的有符号距离，
+- **捕获点**：$\xi = \mathrm{CoM}_{xy} + \mathbf{v}_{\mathrm{com}}/\omega$，
+  $\omega=\sqrt{g/h}$；**稳定裕度**定义为捕获点到支撑多边形边界的有符号距离，
   裕度 > 0 表示仅靠踝/髋策略仍可停下，< 0 表示必须跨步。
 
 > 实现注记：实测在 MuJoCo 3.16 中 `data.subtree_linvel[0]` 恒为 0，
@@ -209,21 +209,21 @@ i \in \{\text{髋/膝/踝/肩/肘/颈}\}
 
 **踝策略（主力）**：倾角 PD 项（来自上游实现）+ 质心反馈项：
 
-\[
+$$
 \tau^{\mathrm{ankle}} = \underbrace{k_p^{l}\,\theta + k_d^{l}\,\dot\theta}_{\text{上游倾角 PD}}
 + \underbrace{k_p^{a}\,(x_{\mathrm{com}}-x_{\mathrm{ref}}) + k_d^{a}\,v_{\mathrm{com},x}}_{\text{本站质心反馈}},
 \qquad |\tau^{\mathrm{ankle}}| \le \tau^{a}_{\max}
-\]
+$$
 
-其中 \(\theta\) 为躯干轴相对竖直方向的前倾量（`lean_x`）。侧向 roll 轴同构，
+其中 $\theta$ 为躯干轴相对竖直方向的前倾量（`lean_x`）。侧向 roll 轴同构，
 符号取反（见 3.5）。
 
 **髋策略（增强）**：踝策略饱和后，通过摆动上半身产生角动量继续把质心拉回：
 
-\[
+$$
 \tau^{\mathrm{hip}} = -k_p^{h}\,(x_{\mathrm{com}}-x_{\mathrm{ref}}) - k_d^{h}\,v_{\mathrm{com},x},
 \qquad |\tau^{\mathrm{hip}}| \le \tau^{h}_{\max}
-\]
+$$
 
 力矩由 `sim_core.step()` 叠加到站姿 PD 力矩上，再一并限幅到 `torque_limit`。
 （髋策略可开关：`hip_enable` / `--no-hip`，用于「仅踝 vs 踝+髋」对照实验。）
@@ -264,8 +264,8 @@ i \in \{\text{髋/膝/踝/肩/肘/颈}\}
 - 本模块的恢复能力**完全来自踝/髋关节力矩，未实现跨步恢复（stepping）**。
   当扰动超过临界冲量时机器人会跌倒——这是**由脚掌几何与关节力矩权限决定的物理上限**，
   不是控制器参数没调好。以踝策略的静态权限估算：踝关节可提供的最大恢复力矩
-  约为 \(F_z \cdot l_{\text{foot}} \approx 35 \times 9.81 / 2 \times 0.11 \approx 187\ \mathrm{N\cdot m}\)
-  每只脚，而倒立摆的倾覆力矩为 \(mg\,x_{\mathrm{com}}\)，由此给出的可恢复质心偏移
+  约为 $F_z \cdot l_{\text{foot}} \approx 35 \times 9.81 / 2 \times 0.11 \approx 187\ \mathrm{N\cdot m}$
+  每只脚，而倒立摆的倾覆力矩为 $mg\,x_{\mathrm{com}}$，由此给出的可恢复质心偏移
   已接近实测临界值；
 - 模型为自建简化双足，连杆长度、质量分布与摩擦均与真实人形机器人不同，
   临界冲量的**绝对值不可外推到实机**，但「扰动力—偏移—跌倒」的定性规律与

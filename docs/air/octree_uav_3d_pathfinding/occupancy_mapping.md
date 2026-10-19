@@ -41,11 +41,11 @@
 
 因此每帧点云都要先做一次刚体变换：
 
-\[
+$$
 \boldsymbol{p}_{world} = \boldsymbol{R}\,\boldsymbol{p}_{sensor} + \boldsymbol{t}
-\]
+$$
 
-其中 \(\boldsymbol{R}\)、\(\boldsymbol{t}\) 是 TF 树中 `world` ← `lidar_link` 的旋转与平移。
+其中 $\boldsymbol{R}$、$\boldsymbol{t}$ 是 TF 树中 `world` ← `lidar_link` 的旋转与平移。
 这条 TF 链由桥接节点建立：`world → base_link` 由位姿动态广播，
 `base_link → lidar_link` 由雷达安装位置静态广播。旋转用四元数表示，
 节点里直接由四元数构造旋转矩阵：
@@ -86,17 +86,17 @@ octomap 把这个信息利用起来，每个体素因此有三种状态：
 
 实际传感器有噪声，一次测量不足以定论，octomap 用概率来描述每个体素：
 
-* 命中一次，占用概率上调：\(P(\text{hit}) = 0.7\)（默认）
-* 射线穿过一次，占用概率下调：\(P(\text{miss}) = 0.4\)（默认）
+* 命中一次，占用概率上调：$P(\text{hit}) = 0.7$（默认）
+* 射线穿过一次，占用概率下调：$P(\text{miss}) = 0.4$（默认）
 
 多个测量用 **log-odds** 形式累加，把乘法变成加法：
 
-\[
+$$
 L(n) = L(n-1) + \log\frac{P}{1 - P}
-\]
+$$
 
-命中时加 \(\log(0.7/0.3) \approx +0.85\)，穿过时加 \(\log(0.4/0.6) \approx -0.41\)。
-概率被限制在 \([0.12,\ 0.97]\) 之间（clamping），这样一方面避免"一次误检就永久占用"，
+命中时加 $\log(0.7/0.3) \approx +0.85$，穿过时加 $\log(0.4/0.6) \approx -0.41$。
+概率被限制在 $[0.12,\ 0.97]$ 之间（clamping），这样一方面避免"一次误检就永久占用"，
 另一方面也避免概率被反复累加到浮点饱和，导致后来的测量再也改不回来。
 
 ### 3.3 octomap 的接口
