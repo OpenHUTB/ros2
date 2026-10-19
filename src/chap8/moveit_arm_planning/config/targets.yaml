@@ -1,0 +1,17 @@
+# 末端目标位姿模板。
+#
+# 坐标系：base_link
+# position: [x, y, z]，单位米
+# orientation: [x, y, z, w]，单位四元数
+#
+# 下面的示例只是为了说明格式，不代表机械臂一定可达。
+# 首版请先在 RViz 的 MotionPlanning 面板里手工确认 10 个可达位姿，
+# 再写入本文件；跑通后再扩展到 20 个。
+
+targets:
+  - name: target_01
+    position: [0.35, 0.00, 0.35]
+    orientation: [0.0, 0.7071, 0.0, 0.7071]
+  - name: target_02
+    position: [0.40, 0.10, 0.30]
+    orientation: [0.0, 0.7071, 0.0, 0.7071]

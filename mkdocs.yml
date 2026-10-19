@@ -58,7 +58,9 @@ nav:
     - 5. 机器人感知: './chapter/chap5.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
-    - 8. ROS 机器人综合应用: './chapter/chap8.md'
+    - 8. ROS 机器人综合应用:
+        - 章节首页: './chapter/chap8.md'
+        - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
