@@ -90,6 +90,9 @@ nav:
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 激光雷达感知与神经网络避障: './ground/hutb_lidar_nn_avoid.md'
+    - 自研栅格 SLAM 建图与导航: './ground/hutb_grid_slam_nav.md'
+    - PilotNet 图像端到端控制: './ground/hutb_pilotnet_e2e.md'
 - 空域载具:
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
@@ -117,6 +120,7 @@ nav:
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 无人机物理仿真与键盘运动控制: './air/hutb_uav_keyboard_teleop.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
