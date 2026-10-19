@@ -50,9 +50,9 @@
 
 ## 4. 图表
 
-![fig_success_by_algo.png](fig_success_by_algo.png)
-![fig_success_by_arch_ppo.png](fig_success_by_arch_ppo.png)
-![fig_learning_curves.png](fig_learning_curves.png)
-![fig_cost.png](fig_cost.png)
-![fig_tradeoff.png](fig_tradeoff.png)
+![fig_success_by_algo.png](../../../../docs/img/air/uav_rl_benchmark/fig_success_by_algo.png)
+![fig_success_by_arch_ppo.png](../../../../docs/img/air/uav_rl_benchmark/fig_success_by_arch_ppo.png)
+![fig_learning_curves.png](../../../../docs/img/air/uav_rl_benchmark/fig_learning_curves.png)
+![fig_cost.png](../../../../docs/img/air/uav_rl_benchmark/fig_cost.png)
+![fig_tradeoff.png](../../../../docs/img/air/uav_rl_benchmark/fig_tradeoff.png)
 
