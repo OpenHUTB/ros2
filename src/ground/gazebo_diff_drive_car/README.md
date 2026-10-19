@@ -1,214 +1,191 @@
 # gazebo_diff_drive_car
 
-> OpenHUTB ROS 机器人任务 —— 地面载具（无人车）方向
+> Gazebo 差速驱动小车物理仿真与多传感器闭环控制 ｜ **ROS 2 Humble** + **Gazebo 11**
 >
-> **Gazebo 11** 差速驱动无人车物理仿真 ｜ Ubuntu 20.04 + ROS Noetic
-
----
+> 机器人操作系统及应用课程作业 —— 物理仿真、键盘控制与传感器感知闭环
 
 ## 模块概述
 
-本模块在 **Gazebo 11** 物理仿真环境中构建一台差速驱动无人车，
-完成 OpenHUTB ROS 机器人任务书中的以下要求：
+本模块在 Gazebo 中用 URDF 搭建一台差速驱动小车，实现三项功能：
 
-| 任务书要求 | 分值 | 实现 |
-|---|---|---|
-| (1) 物理仿真 + 键盘运动控制 | 5 | `scripts/teleop_keyboard.py` |
-| (2) 传感器感知 → 运动控制闭环（**雷达**） | 5 | `scripts/laser_avoid.py` |
-| (2) 传感器感知 → 运动控制闭环（**深度相机**） | 5 | `scripts/depth_camera_avoid.py` |
-| 多算法 / 多传感器对比 | 加分 | 激光与深度相机两套独立闭环 |
-| 性能评价 | 加分 | `scripts/odom_recorder.py` + `scripts/analyze_trajectory.py` |
+| 功能 | 实现文件 |
+|---|---|
+| 物理仿真 + 键盘运动控制 | `gazebo_diff_drive_car/teleop_keyboard.py` |
+| 激光雷达感知 → 控制闭环 | `gazebo_diff_drive_car/laser_avoid.py` |
+| 深度相机感知 → 控制闭环 | `gazebo_diff_drive_car/depth_camera_avoid.py` |
 
----
+三者共用同一套底盘与统一入口，通过 `mode` 参数切换。
+
+与同目录其他模块的关系：`carla_keyboard_control`（CARLA 平台）、
+`mujoco_diff_drive_slip_compensation`（MuJoCo 平台）等分别使用各自的仿真器；
+本模块基于 **Gazebo + ROS 2**，与 `turtlebot3_lidar_avoid` 同属 ROS 2 栈，
+区别在于本模块使用**自建差速底盘**（含雷达与深度相机两套传感器闭环）。
 
 ## 运行环境
 
 | 项目 | 版本 |
 |---|---|
-| 操作系统 | Ubuntu 20.04.6 LTS |
-| ROS | Noetic Ninjemys |
-| Gazebo | 11.13.0 |
-| Python | 3.8 |
-| 依赖库 | numpy, matplotlib |
+| 操作系统 | Ubuntu 22.04 |
+| ROS | Humble |
+| 仿真平台 | Gazebo 11 |
+| 构建系统 | colcon（ament_python） |
+| Python | 3.10 |
 
 ### 依赖安装
 
 ```bash
 sudo apt install -y \
-    ros-noetic-gazebo-ros \
-    ros-noetic-gazebo-plugins \
-    ros-noetic-gazebo-ros-control \
-    ros-noetic-robot-state-publisher \
-    ros-noetic-joint-state-publisher \
-    ros-noetic-teleop-twist-keyboard \
-    ros-noetic-xacro \
-    ros-noetic-rviz \
-    python3-numpy \
-    python3-matplotlib
+    ros-humble-gazebo-ros \
+    ros-humble-gazebo-plugins \
+    ros-humble-robot-state-publisher \
+    ros-humble-xacro \
+    python3-numpy
 ```
-
----
 
 ## 编译
 
-本模块为 **catkin (ROS1)** 包。
-
 ```bash
-# 1. 放入 catkin 工作区
-mkdir -p ~/catkin_ws/src
-cp -r /path/to/gazebo_diff_drive_car ~/catkin_ws/src/
-cd ~/catkin_ws
-
-# 2. 编译
-source /opt/ros/noetic/setup.bash
-catkin_make
-
-# 3. 载入环境
-source devel/setup.bash
+mkdir -p ~/ros2_ws/src
+cp -r /path/to/src/ground/gazebo_diff_drive_car ~/ros2_ws/src/
+cd ~/ros2_ws
+source /opt/ros/humble/setup.bash
+colcon build --packages-select gazebo_diff_drive_car
+source install/setup.bash
 ```
-
-> **说明**：本模块为 **ROS1 (catkin)** 包，与仓库中其他 ROS2 (ament/colcon) 模块并存。
-> catkin 与 colcon 分别处理各自格式的包，互不干扰，**无需额外标记**。
->
-> ⚠️ **不要**在本模块目录放置 `COLCON_IGNORE` 文件：
-> 该标记会被 catkin 一并识别，导致本包**被 catkin 完全跳过而不编译**
-> （表现为 `devel/share/` 下找不到本包，`devel/lib/<pkg>/` 不生成）。
-> 这是本项目实际踩过的坑，详见 `docs/ground/gazebo_diff_drive_car.md`
-> 第 8 节第 8 项。
-
----
 
 ## 运行
 
-### 方式一：模块入口脚本（推荐）
+### 统一入口
 
 ```bash
-./main.sh                 # 键盘遥控模式（默认）
+./main.sh                 # 键盘遥控（默认）
 ./main.sh laser           # 激光雷达避障
 ./main.sh camera          # 深度相机避障
 ./main.sh idle            # 仅加载仿真环境
-./main.sh laser nogui     # 激光避障 + 无图形界面（服务器/CI）
+./main.sh laser nogui     # 无图形界面（服务器 / CI）
 ```
 
-### 方式二：roslaunch
+等价写法：
 
 ```bash
-roslaunch gazebo_diff_drive_car main.launch mode:=teleop
-roslaunch gazebo_diff_drive_car main.launch mode:=laser
-roslaunch gazebo_diff_drive_car main.launch mode:=camera
+ros2 launch gazebo_diff_drive_car main.launch.py mode:=laser
+ros2 run    gazebo_diff_drive_car car_main --ros-args -p mode:=laser
 ```
 
-### 可选参数
+### 键盘操作
 
-| 参数 | 默认值 | 说明 |
-|---|---|---|
-| `mode` | `teleop` | `teleop` / `laser` / `camera` / `idle` |
-| `gui` | `true` | 是否启动 Gazebo 图形界面 |
-| `rviz` | `false` | 是否启动 RViz |
-| `x` `y` `yaw` | `-5.0` `-4.0` `0.0` | 车辆初始位姿 |
-| `record` | `true` | 是否记录轨迹并输出性能报告 |
-
----
-
-## 键盘操作
-
-启动 `mode:=teleop` 后，在运行终端按键：
+启动 `teleop` 模式后，在运行终端按键：
 
 | 按键 | 功能 | 按键 | 功能 |
 |---|---|---|---|
-| `w` | 前进 | `s` | 后退 |
-| `a` | 左转 | `d` | 右转 |
-| `q` | 前进 + 左转 | `e` | 前进 + 右转 |
-| `z` | 后退 + 左转 | `c` | 后退 + 右转 |
-| `空格` | 紧急停止 | `x` | 退出程序 |
-| `+` | 提高速度上限 | `-` | 降低速度上限 |
+| `w` / `s` | 前进 / 后退 | `a` / `d` | 左转 / 右转 |
+| `q` / `e` | 前进 + 左转 / 右转 | `z` / `c` | 后退 + 左转 / 右转 |
+| `空格` | 紧急停止 | `x` | 退出 |
+| `+` / `-` | 调整线速度上限 | | |
 
-> 采用**增量式**速度控制：松开按键后车辆保持当前速度，需按空格停车。
+采用增量式控制：松开按键后车辆保持当前速度，需按空格停车。
 
----
+### 观察运行
 
-## 实测性能
+```bash
+ros2 topic list                      # 应含 scan / cmd_vel / odom / camera/...
+ros2 topic hz scan                   # 激光雷达约 10 Hz
+ros2 topic hz cmd_vel                # 控制指令频率
+ros2 topic echo cmd_vel              # 查看速度指令
+```
 
-### 三种模式对比
+## 话题与坐标
 
-| 模式 | 行驶路程 | 净位移 | 路径效率 | 平均速度 | 碰撞 |
-|---|---|---|---|---|---|
-| `teleop` | 6.34 m | 6.31 m | **0.997** | 0.108 m/s | — |
-| `laser` | 18.22 m | 9.07 m | **0.498** | 0.319 m/s | **0** |
-| `camera` | 12.82 m | 9.73 m | **0.758** | 0.219 m/s | **0** |
+**订阅**
 
-### 关键指标
+| 话题 | 类型 | 使用节点 |
+|---|---|---|
+| `scan` | `sensor_msgs/LaserScan` | `laser_avoid` |
+| `camera/depth/image_raw` | `sensor_msgs/Image`（32FC1） | `depth_camera_avoid` |
+| `odom` | `nav_msgs/Odometry` | `odom_recorder` |
 
-| 指标 | 实测值 |
-|---|---|
-| `/cmd_vel` 频率 | 19.9 ~ 20.3 Hz |
-| `/scan` 频率 | ~10 Hz（360 束） |
-| 深度图频率 | 12.7 ~ 14.1 Hz（640×480） |
-| 实时因子（无 GUI） | 0.98 ~ 1.00 |
+**发布**
 
----
+| 话题 | 类型 | 发布者 |
+|---|---|---|
+| `cmd_vel` | `geometry_msgs/Twist` | 各控制节点 |
+| `odom` | `nav_msgs/Odometry` | Gazebo 差速驱动插件 |
+| `scan` | `sensor_msgs/LaserScan` | Gazebo 射线传感器插件 |
+| `camera/image_raw`、`camera/depth/image_raw`、`camera/points` | 相机相关 | Gazebo 相机插件 |
+
+**TF 树**
+
+```
+odom
+ └── base_footprint
+      └── base_link
+           ├── left_wheel_link / right_wheel_link
+           ├── front_caster_link / rear_caster_link
+           ├── laser_link
+           └── camera_link
+                └── camera_optical_link
+```
+
+## 参数
+
+主要参数（完整见 `config/params.yaml`）：
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `mode` | `teleop` | 运行模式 |
+| `safe_distance` | 1.0 / 1.2 m | 进入避障阈值（雷达 / 相机） |
+| `clear_distance` | 1.4 / 1.6 m | 退出避障阈值（滞回） |
+| `danger_distance` | 0.45 / 0.5 m | 紧急后退阈值 |
+| `cruise_speed` | 0.35 / 0.30 m/s | 巡航线速度 |
+| `depth_percentile` | 25.0 | 深度统计百分位 |
+| `floor_value_ratio` | 0.30 | 地板值判定占比 |
+
+运行时覆盖：
+
+```bash
+ros2 run gazebo_diff_drive_car laser_avoid_node --ros-args -p safe_distance:=1.2
+```
+
+## 算法要点
+
+### 激光雷达避障
+
+1. **感知**：360° 扫描划分五个扇区，各取最小距离；用邻域连续性校验
+   剔除车体自遮挡产生的孤立近距回波。
+2. **决策**：三态状态机（巡航 / 避障 / 紧急后退），进入与退出避障用
+   不同阈值形成滞回，抑制状态抖动。
+3. **控制**：由左右可通行度之差决定转向（势场法），并施加最小转向力度
+   约束规避局部极小值；线速度随前方距离线性衰减。
+
+### 深度相机避障
+
+1. **感知**：深度图分左 / 中 / 右三条带，取第 25 百分位深度；
+   用直方图峰值检测剔除 Gazebo 深度相机对无回波区域输出的固定
+   「地板值」（实测占比可达 66%，不清除会锁死统计结果）。
+2. **决策**：与雷达版本同构的三态状态机。
+3. **控制**：势场法转向 + 速度衰减 + 原地点转超时保护。
 
 ## 目录结构
 
 ```
 gazebo_diff_drive_car/
-├── main.py                  统一入口节点
-├── main.sh                  Linux 启动脚本
-├── main.bat                 Windows 启动脚本
-├── package.xml              ROS 包定义
-├── CMakeLists.txt           编译配置
-├── requirements.txt         Python 依赖
-├── launch/main.launch       统一启动入口
-├── urdf/car.xacro           车辆模型
-├── worlds/car_world.world   仿真场景
-├── scripts/                 算法节点
-├── config/params.yaml       参数配置
-└── rviz/car.rviz            RViz 配置
+├── main.py                          模块入口（课程 main.* 约定）
+├── main.sh / main.bat               Linux / Windows 启动脚本
+├── package.xml / setup.py / setup.cfg   ROS 2 包定义
+├── requirements.txt                 Python 依赖说明
+├── launch/main.launch.py            ROS 2 launch 入口
+├── urdf/car.urdf.xacro              车辆模型（含 ROS 2 Gazebo 插件）
+├── worlds/car_world.world           仿真场景
+├── config/params.yaml               参数配置
+├── rviz/car.rviz                    RViz 配置
+├── resource/gazebo_diff_drive_car   ament_index 资源索引
+└── gazebo_diff_drive_car/
+    ├── main.py                      统一入口节点（按 mode 调度）
+    ├── laser_avoid.py               激光雷达避障
+    ├── depth_camera_avoid.py        深度相机避障
+    ├── teleop_keyboard.py           键盘控制
+    └── odom_recorder.py             轨迹记录与性能评价
 ```
-
----
-
-## 关键设计
-
-### 统一入口 + 模式调度
-
-```
-main.sh <mode>  →  main.launch  →  main.py（读取 mode）
-                                        ↓
-                              动态实例化算法节点
-```
-
-所有功能共享同一套底盘接口与安全策略（速度看门狗）。
-
-### 安全机制
-
-- **速度看门狗**：1 秒无新指令则强制停车，算法崩溃时车辆不会失控
-- **滞回抑制**：进入避障阈值 1.0 m / 退出 1.4 m，消除状态抖动
-- **原地点转超时保护**：避免传感器异常导致车辆无限打转
-
-### 传感器缺陷处理
-
-本模块在开发中识别并解决了两个真实的仿真传感器缺陷：
-
-1. **激光雷达自遮挡** → 邻域连续性校验过滤孤立近距回波
-2. **深度图地板值**（无回波区域输出固定常数 1.005 m，占比 66%）
-   → 直方图峰值检测并剔除
-
-详见 `docs/ground/gazebo_diff_drive_car.md` 第 7 节。
-
----
-
-## 相关文档
-
-完整技术文档见仓库 `docs/ground/gazebo_diff_drive_car.md`，包括：
-
-- 运行环境、编译与启动参数
-- 三种模式的运行效果与实测性能
-- 差速运动学推导与避障算法原理
-- 传感器数据处理中的两个关键问题
-- 工程问题排查记录与参数汇总
-
----
 
 ## 许可证
 
