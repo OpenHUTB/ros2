@@ -89,12 +89,10 @@ nav:
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
 - 空域载具:
-      四旋翼无人机基于强化学习的路径规划
-    - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
-=======
+    - 四旋翼无人机基于强化学习的路径规划:
+        - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
-    master
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
