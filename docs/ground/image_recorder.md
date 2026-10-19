@@ -55,21 +55,19 @@ ros2 launch image_recorder main.launch.py
 
 ### 补充：连接 Carla 仿真器获取实际图像
 
-由于本机虚拟机未安装 Carla，为了获取真实的仿真图像，通过配置宿主机与虚拟机的网络连接，实现了从宿主机 Carla 仿真器获取图像的功能。具体操作步骤如下：
+由于本机虚拟机性能限制，无法直接运行完整的 Carla 仿真器。为了验证图像录制节点的功能，本测试通过编写 ROS 2 Python 脚本，模拟 Carla 发布摄像头话题（`/carla/ego_vehicle/camera/rgb/front/image`）进行验证。具体步骤如下：
 
-1.在 Windows 宿主机上启动 Carla 仿真器，并开启 ROS Bridge。
-
-2.在虚拟机终端中执行以下命令，确认与宿主机通信正常：
-```
-ros2 topic list
-```
-3.确认终端中出现了 /carla/ego_vehicle/camera/rgb/front/image 话题。
-
-4.运行图像捕获节点：
+1. 启动图像模拟发布端：在 Ubuntu 虚拟机中新建终端，运行 Python 脚本，向上述指定的 Carla 图像话题循环发布模拟的摄像头图像数据。
+2. 运行录制节点：在另一个终端中执行以下命令启动节点：
 ```
 ros2 launch image_recorder main.launch.py
 ```
-5.节点启动成功后，即可获取到 Carla 仿真器的实时摄像头画面，效果如下图所示：
+3.获取并显示图像：节点成功订阅到话题后，终端输出 [INFO] [image_recorder_node]: Node started, waiting for images...，并在 Ubuntu 屏幕弹出图像显示窗口。
 
-![运行效果图片](../img/run_2.png)
+![运行效果图片](../img/capture_7.png)
+
+(注：在配备真实 Carla 环境的主机上，Carla Server 可运行在 Windows 宿主端，但 ROS Bridge 必须在 Ubuntu 虚拟机中启动并配置 IP 连接。)
+
+
+
 
