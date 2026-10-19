@@ -1,3 +1,4 @@
+
 # 禁飞区检测模块
 
 ## 功能说明
@@ -35,13 +36,14 @@ $$
 
 需要配合 AirSim 模拟器运行：
 
-    cd src/no_fly_zone_check
+    cd src/air/no_fly_zone_check
     python main.py
 
 ## 运行效果
 
 程序启动后会尝试连接 AirSim 模拟器。
 
-![运行截图](../img/cha/no_fly_zone_check_airsim_result.png)
+![运行截图](../img/cha/airsim_connect_success.png)
 
-**说明**：上图为本地开发环境（未安装 AirSim 模拟器）的运行结果，程序正确执行了连接逻辑并给出了友好的错误提示。在已启动 AirSim 1.8.1 模拟器的环境中运行，将获取到无人机实时位置并完成禁飞区检测。
+**说明**：上图为本地启动 AirSim 1.8.1 模拟器并成功连接后的运行结果，获取到无人机位置并完成禁飞区检测。
+
