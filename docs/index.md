@@ -1,4 +1,4 @@
-title: 主页
+﻿title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -68,11 +68,16 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+<<<<<<< HEAD
+* [MuJoCo环境搭建教程](./humanoid/mujoco_install_guide.md)
+=======
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
+>>>>>>> upstream/master
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
+* [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 

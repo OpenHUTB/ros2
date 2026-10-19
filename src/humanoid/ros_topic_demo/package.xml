@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_topic_demo</name>
+  <version>0.0.0</version>
+  <description>最简单的ROS自定义话题通信入门示例</description>
+  <maintainer email="your@todo.todo">yourname</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+</package>
