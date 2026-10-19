@@ -1,3 +1,17 @@
+# Copyright 2026 Your Name
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -7,11 +21,8 @@ from std_msgs.msg import String
 class GeofenceNode(Node):
     def __init__(self):
         super().__init__('geofence_node')
-        # 订阅车辆位置
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        # 订阅禁飞区多边形
         self.geofence_sub = self.create_subscription(PolygonStamped, '/geofence', self.geofence_callback, 10)
-        # 发布报警状态
         self.status_pub = self.create_publisher(String, '/geofence_status', 10)
         
         self.current_x = 0.0
@@ -20,7 +31,6 @@ class GeofenceNode(Node):
         self.get_logger().info('🛡️ 禁飞区检测节点已启动，等待数据...')
 
     def geofence_callback(self, msg):
-        # 更新禁飞区顶点
         self.polygon_points = [(p.x, p.y) for p in msg.polygon.points]
         self.get_logger().info(f'📥 收到新的禁飞区配置，共 {len(self.polygon_points)} 个顶点')
 
@@ -31,7 +41,7 @@ class GeofenceNode(Node):
         if not self.polygon_points:
             return
 
-        # 射线法检测当前点是否在多边形内部
+        # 射线法 (Ray Casting) 检测
         inside = False
         n = len(self.polygon_points)
         p1x, p1y = self.polygon_points[0]
@@ -46,7 +56,6 @@ class GeofenceNode(Node):
                             inside = not inside
             p1x, p1y = p2x, p2y
 
-        # 发布状态
         status_msg = String()
         if inside:
             status_msg.data = f'🚨 [CRITICAL] 闯入禁飞区！坐标: ({self.current_x:.1f}, {self.current_y:.1f})'
