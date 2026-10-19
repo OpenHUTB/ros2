@@ -13,6 +13,6 @@ MuJoCo人形机器人仿真
 pip install mujoco numpy imageio[ffmpeg]
 2.执行仿真代码：cd humanoid_sim
 python3 sim.py
-
+```
 环境
 Ubuntu22.04 + MuJoCo
