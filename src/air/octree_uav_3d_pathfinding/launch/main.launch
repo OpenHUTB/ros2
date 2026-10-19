@@ -36,6 +36,19 @@
   <!-- 是否启动 A* 规划节点 -->
   <arg name="planning" default="true"/>
 
+  <!-- P5：路径平滑的默认开关。
+       与 config/params.yaml 里的 smoothing 是同一个参数，这里暴露成 launch 参数
+       只是为了方便在命令行临时开关，不用改配置文件：
+         roslaunch ... main.launch                    # 用 yaml 里的值（默认 false）
+         roslaunch ... main.launch smoothing:=true    # 临时打开平滑做对比 -->
+  <arg name="smoothing" default="false"/>
+
+  <!-- P5：安全裕度半径（m）。同样是为了命令行临时开关：
+         roslaunch ... main.launch inflation_radius:=0.6
+       0 表示关闭膨胀（此时行为逐位等于上一阶段，可做回归对照）。
+       与 smoothing 一样，只在节点启动时读取，改动后要重启节点。 -->
+  <arg name="inflation_radius" default="0.0"/>
+
   <!-- 规划节点取起点用的机体坐标系。
        正常跑仿真时是 base_link（由 airsim_bridge 广播）；
        用 mock_cloud_publisher.py 做离线验证时，它只广播 world -> lidar_link，
@@ -68,6 +81,8 @@
         name="astar_planner"
         output="screen">
     <param name="body_frame" value="$(arg body_frame)"/>
+    <param name="smoothing" value="$(arg smoothing)"/>
+    <param name="inflation_radius" value="$(arg inflation_radius)"/>
   </node>
 
   <!-- 环境与链路自检节点
