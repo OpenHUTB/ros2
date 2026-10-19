@@ -1,0 +1,13 @@
+# Survey geometry / 测量几何
+scenario: sparse
+roof_width: 20.0
+roof_depth: 14.0
+altitude: 8.0
+strip_spacing: 2.0
+speed: 2.0
+edge_margin: 1.0
+
+# Camera output / 相机输出
+image_width: 320
+image_height: 240
+seed: 20261016
