@@ -1,0 +1,78 @@
+# rooftop_landing 参数（可用 roslaunch 参数覆盖，见 launch/main.launch）
+
+# ---- 话题（与 carlair_ros_bridge 保持一致）----
+topic:
+  lidar: /lidar/points
+  odom: /uav/odom
+  status: /uav/status
+  cmd_vel: /uav/cmd_vel
+  goal: /uav/goal
+
+# ---- 坐标系 ----
+frame:
+  # true : 高度分量「上为正」（标准 ENU）
+  # false: 高度分量「下为正」（NED，AirSim 原始约定）
+  # carlair_ros_bridge 的 /uav/odom 与 /uav/goal 都是 ENU（上为正）：
+  #   · 桥接层源码用 move_to_position_enu()，日志也打印「收到目标点 ENU」；
+  #   · 实测：无人机在 13.3 m 高度时 /uav/odom 的 z = +13.3。
+  # 故默认 true。节点启动后会打印原始 z 与换算结果；
+  # 若换用别的桥接层且高度方向不符，再改这里或 launch 的 z_up 参数。
+  z_up: true
+  world: world                # marker / 状态话题的 frame_id
+
+# ---- 感知 ----
+perception:
+  accumulate_frames: 3        # 积累多少帧点云后再做一次检测
+  max_tilt_deg: 15.0          # 平面水平性阈值（度），超过则不算屋顶
+  plane_dist_thresh: 0.15     # RANSAC 内点距离阈值 (m)
+  min_plane_inliers: 120      # 一个平面至少要有多少点
+  min_roof_area: 8.0          # 屋顶最小面积 (m^2)，滤掉小块
+  # 屋顶与地面都是水平面，只能靠高度区分。下面三行决定「多低算地面」：
+  min_height_mode: relative   # relative（默认）：以检出的最低水平面（地面）为基准
+                              # absolute：改用下面的 min_height 作绝对 ENU 高度下限
+  ground_margin: 1.0          # relative 模式：比检出地面至少高这么多米才算屋顶
+  min_height: 0.5             # absolute 模式的高度下限 (m)；relative 模式忽略此值
+  # ↑ relative 是实测教训：某地图的原点在地面之上约 25 m，所有平面高度都是 −25
+  #   左右，固定阈值 0.5 会把每个候选面都滤掉（日志「检测到 0 个候选水平面」）；
+  #   而把阈值调到 −1000 又会把地面当成屋顶，「降落」在地面上。
+  #   relative 模式不要求原点落在地面高度上，换地图可直接用；
+  #   节点每次检测都会打印实际用的基准，日志里搜「高度基准」即可核对。
+  max_planes: 5               # 最多提取几个候选面（城市视野里前几个可能全是地面/墙，可提到 15）
+  min_landing_radius: 0.6     # 降落点最小安全半径 (m)
+  prefer: highest             # 目标屋顶选择：highest | closest | largest
+  cluster_cell: 1.0           # 连通域聚类栅格边长 (m)：拆开互不相连的点群
+  cluster_min_points: 2       # 一个栅格至少几个点才算被占据（滤零星噪点）
+  # 上面两个参数用于「求凸包前先把平面上互不相连的点群拆开」。
+  # 不这么做的话，少数远处同高度的噪点会把凸包撑开，使降落点跑到屋顶外面
+  # （实测：6900 点里混进 4 个噪点就把 216 m² 的屋顶撑成 1175 m²、降落点偏 22 m）；
+  # 拆分同时也让相邻的两栋楼各成为一个独立候选屋顶。
+
+# ---- 接近（飞到降落点上方）----
+approach:
+  safe_altitude: 5.0          # 高于屋顶的安全高度 (m)
+  goal_timeout: 60.0          # 等待 GOAL_DONE 的超时 (s)
+  # 桥接发的 GOAL_DONE 后面带三个坐标（它实际完成的目标点），据此可以分辨
+  # 「这条到达状态是不是本节点下发的那个目标点」——实测坑：先手动 pub 让飞机
+  # 爬升，再把本节点拉起来，本节点会把那次爬升的 GOAL_DONE 当成自己到达，
+  # 于是在错误位置原地下降直到超时。
+  verify_goal_coords: true    # true：带坐标时必须与本节点下发的目标点一致
+  goal_match_tol: 0.5         # 上面那个核对的位置容差 (m)
+  goal_retry_period: 5.0      # 目标点被桥接忽略（已有别的任务在执行）时重发间隔 (s)，0 = 不重发
+
+# ---- 降落（垂直下降）----
+descend:
+  speed: 0.5                  # 下降速度 (m/s)
+  tolerance: 0.35             # 判定触地的高度容差 (m)
+  timeout: 60.0               # 下降超时 (s)
+
+# ---- 任务 ----
+mission:
+  autostart: true             # 启动后自动开始（false 则等 /rooftop/start 话题）
+  start_topic: /rooftop/start
+  tick_rate_hz: 10.0          # 主循环频率 (Hz)：状态机与下降阶段的 cmd_vel 都按此频率
+
+# ---- 可视化 ----
+visualization:
+  publish_markers: true
+  marker_topic: /rooftop/markers
+  landing_topic: /rooftop/landing_point
