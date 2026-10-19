@@ -143,7 +143,8 @@ markdown_extensions:
   - markdown_grid_tables
   - footnotes
   - admonition
-  - mdx_math
+  - mdx_math:
+      enable_dollar_delimiter: true
   - attr_list
   - pymdownx.superfences:
       custom_fences:
