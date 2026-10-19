@@ -8,36 +8,39 @@
 
 ## 二、项目目录结构
 
-以下仅列出本作业相关文件（仓库 `src/ground/` 下的 `carla_keyboard_control/`、`ros-bridge/` 目录与本作业无关，故不列出）：
+本模块位于 `src/ground/cliff_brake/`，与同目录下的其他模块（`carla_keyboard_control/`、`mujoco_car_project/` 等）并列；仓库中其余与本作业无关的文件不再列出。
 
 ```text
  catkin_ws/
-    ├── src/ground/
+    ├── src/ground/cliff_brake/
     │   ├── CMakeLists.txt            # 编译配置（含三个 Python 节点的安装规则）
-    │   ├── package.xml               # 依赖声明
+    │   ├── package.xml               # 依赖声明（包名 cliff_brake）
+    │   ├── requirements.txt          # Python 依赖（mujoco、numpy）
+    │   ├── main.sh                   # 一键入口：安装依赖并启动
+    │   ├── README.md                 # 模块说明
     │   ├── launch/
-    │   │   └── cliff_brake.launch    # 一键启动三节点
+    │   │   └── main.launch           # 一键启动三节点
     │   ├── cliff_brake_sim.py        # 物理仿真 + 传感 + 执行节点
     │   ├── brake_controller.py       # 滞回决策节点
     │   ├── brake_monitor.py          # 状态监视节点（真实订阅者）
     │   └── brake_test.py             # 定量制动测试（无需 ROS/图形界面）
     └── docs/
-        └── ground/car.md             # 本文档
+        └── ground/cliff_brake.md     # 本文档
 ```
 
 ## 三、环境依赖
 
 - Ubuntu 20.04 + **ROS Noetic**（注：Melodic 基于 Python 2，无法运行本项目的 Python 3 脚本，请勿使用 18.04）
 - Python 3.8+
-- MuJoCo Python bindings：`pip3 install mujoco`。建议固定版本以保证复现性（如 `pip3 install mujoco==3.1.6`）；本文定量测试数据由 **mujoco 3.16.0** 实测生成
+- MuJoCo Python bindings：由模块内 `requirements.txt` 声明（`mujoco>=3.1.6`、`numpy`），安装命令 `pip3 install -r src/ground/cliff_brake/requirements.txt`；本文定量测试数据由 **mujoco 3.16.0** 实测生成
 - rospy、std_msgs（ROS 自带）
 
 ## 四、编译与启动步骤
 
-1. 安装 MuJoCo：
+1. 安装 Python 依赖（脚本内已声明所需版本）：
 
    ```bash
-   pip3 install mujoco==3.1.6
+   pip3 install -r src/ground/cliff_brake/requirements.txt
    ```
 
 2. 编译工作空间并加载环境：
@@ -51,27 +54,27 @@
 3. 给脚本添加可执行权限（`rosrun` 需要）：
 
    ```bash
-   chmod +x src/ground/*.py
+   chmod +x src/ground/cliff_brake/*.py src/ground/cliff_brake/main.sh
    ```
 
 4. 一键启动三节点（自动拉起 ROS master）：
 
    ```bash
-   roslaunch ground cliff_brake.launch
+   roslaunch cliff_brake main.launch
    ```
+
+   也可直接用模块入口脚本：`./src/ground/cliff_brake/main.sh`
 
    或分步启动（需要三个终端，每个都先 `source devel/setup.bash`）：
 
    ```bash
    roscore
-   rosrun ground cliff_brake_sim.py
-   rosrun ground brake_controller.py
-   rosrun ground brake_monitor.py
+   rosrun cliff_brake cliff_brake_sim.py
+   rosrun cliff_brake brake_controller.py
+   rosrun cliff_brake brake_monitor.py
    ```
 
-5. 运行成功界面：
-
-   ![三节点终端输出与 MuJoCo viewer](../img/ground/car1.gif)
+5. 运行成功的终端输出见第九节。
 
 > 提示：`cliff_brake_sim.py` 需要图形界面。在无显示环境或虚拟机软件渲染下，`mujoco.viewer` 可能卡顿或无法打开，此时请只运行无需界面的 `brake_test.py` 获取定量数据。
 
@@ -126,7 +129,7 @@
 无需 ROS 与图形界面，直接运行：
 
 ```bash
-python3 src/ground/brake_test.py
+python3 src/ground/cliff_brake/brake_test.py
 ```
 
 实测结果（mujoco 3.16.0，触发阈值 0.3m，滞回解除 0.5m）：
@@ -153,4 +156,10 @@ python3 src/ground/brake_test.py
 
 ## 九、运行效果
 
-  ![紧急制动过程特写](../img/ground/car2.gif)
+- 图 1：编译与定量测试终端输出（`catkin_make` 构建模块 + `brake_test.py` 的安全包络表与坠落对照验证）：
+
+  ![catkin_make 编译与 brake_test.py 定量测试输出](../img/ground/car1.gif)
+
+- 图 2：`roslaunch` 三节点运行终端输出（决策节点触发告警、监视节点状态切换、仿真节点 RTF 实测）：
+
+  ![roslaunch 三节点终端输出](../img/ground/car2.gif)

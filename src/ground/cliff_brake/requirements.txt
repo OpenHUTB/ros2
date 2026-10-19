@@ -1,0 +1,2 @@
+mujoco>=3.1.6
+numpy
