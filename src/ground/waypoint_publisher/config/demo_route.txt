@@ -1,0 +1,18 @@
+# 示例路线：10 m 见方的矩形环路，8 个点
+# 与 waypoint_core.demo_route() 完全一致（离线测试会校验两者相同）
+#
+# 格式：每行「x y yaw」，yaw 可省略（默认 0）；分隔符可用空格 / 制表符 / 逗号；
+#      # 之后是注释，空行忽略；坐标单位 m，yaw 单位 rad（逆时针为正）。
+#
+# 想用这条路线跑：
+#   roslaunch waypoint_publisher main.launch \
+#       route_file:=$(rospack find waypoint_publisher)/config/demo_route.txt
+
+0.0   0.0   0.0
+5.0   0.0   0.0
+10.0  0.0   0.0
+10.0  5.0   0.0
+10.0  10.0  0.0
+5.0   10.0  0.0
+0.0   10.0  0.0
+0.0   5.0   0.0

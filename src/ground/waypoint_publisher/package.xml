@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>waypoint_publisher</name>
+  <version>0.1.0</version>
+  <description>路径点发布与动态目标点切换：发布路径点与当前目标点，支持按序号切换、顺序推进、循环与就近吸附，可脱离 CARLA 运行</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
