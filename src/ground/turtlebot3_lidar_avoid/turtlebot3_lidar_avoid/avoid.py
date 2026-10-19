@@ -255,7 +255,12 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        node.cmd_pub.publish(Twist())
+        # 退出前发一次零速度让车停下；若 context 已被 launch 销毁
+        # （SIGTERM / 关闭仿真时），publish 会抛 RCLInvalid，直接忽略即可
+        try:
+            node.cmd_pub.publish(Twist())
+        except Exception:
+            pass
         node.destroy_node()
         rclpy.shutdown()
 
