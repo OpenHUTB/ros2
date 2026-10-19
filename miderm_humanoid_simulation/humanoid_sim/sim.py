@@ -41,7 +41,7 @@ xml = """
 
 model = mujoco.MjModel.from_xml_string(xml)
 data = mujoco.MjData(model)
-renderer = mujoco.Renderer(model, width=800, height=600)
+renderer = mujoco.Renderer(model, width=640, height=480)
 
 sim_time = 5.0
 frames = []
