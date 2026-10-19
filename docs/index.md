@@ -137,6 +137,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
+* [MuJoCo 城市屋顶光伏覆盖率测量](./air/mujoco_uav_rooftop_pv_coverage_survey.md) —— 通过轻量屋顶场景、往复条带航线及同步 RGB-光伏掩码构建可复现的测量数据基础
+
+* [MuJoCo 屋顶光伏覆盖率测量第二天](./air/mujoco_uav_rooftop_pv_coverage_survey_day2.md) —— 轻量语义分割、航迹控制、ROS 2 接口与三种布局评价
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
