@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mjc_rov_sonar_cnn</name>
+  <version>0.0.1</version>
+  <description>
+    侧扫声呐图像仿真与 CNN 海底目标分类（礁石/管道/残骸）。
+    MuJoCo 中模拟 ROV 搭载前视/下视声呐，生成合成声呐图像，
+    训练 CNN 做三分类，ROS 节点实时发布分类结果。完全自包含。
+  </description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -44,6 +44,7 @@ setup(
             'collect_data = lidar_obstacle_nn.collect_data:main',
             'generate_synthetic_dataset = lidar_obstacle_nn.generate_synthetic_dataset:main',
             'train_model = lidar_obstacle_nn.train_model:main',
+            'evaluate_model = lidar_obstacle_nn.evaluate_model:main',
         ],
     },
     zip_safe=True,

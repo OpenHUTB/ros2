@@ -62,10 +62,17 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
+ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
+
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
+* [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
+* [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
+* [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
+* [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -78,19 +85,29 @@ ROS每章节运行代码:
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
+* [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
+* [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
+* [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
+* [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
-
+* [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+
+* [无人机载荷质量估计](./air/payload_mass_estimation.md)
+
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
@@ -100,9 +117,8 @@ ROS每章节运行代码:
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
-* [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
-* [八叉树上的 A* 全局寻路](./air/octree_uav_3d_pathfinding/astar_planning.md)
+
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
@@ -122,6 +138,8 @@ ROS每章节运行代码:
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [MuJoCo 城市屋顶光伏覆盖率测量](./air/mujoco_uav_rooftop_pv_coverage_survey.md) —— 通过轻量屋顶场景、往复条带航线及同步 RGB-光伏掩码构建可复现的测量数据基础
+
+* [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
@@ -151,6 +169,12 @@ ROS每章节运行代码:
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+  
+* [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
+
+* [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
+
+* [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
 
 ___
 
