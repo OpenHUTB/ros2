@@ -55,9 +55,7 @@ nav:
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
-    - 5. 机器人感知:
-        - 章节首页: './chapter/chap5.md'
-        - 激光雷达 NN 障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
+    - 5. 机器人感知: './chapter/chap5.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
@@ -68,6 +66,7 @@ nav:
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
+    - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
@@ -84,6 +83,8 @@ nav:
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 停车场场景生成: './ground/carla_parking_lot.md'
+    - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
@@ -91,6 +92,8 @@ nav:
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 空域载具:
+    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
+    - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
@@ -112,6 +115,7 @@ nav:
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
+        - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
     - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
@@ -128,8 +132,11 @@ nav:
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
+    - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
+
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
