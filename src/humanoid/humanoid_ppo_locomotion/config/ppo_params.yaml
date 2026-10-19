@@ -1,0 +1,30 @@
+# humanoid_ppo_locomotion 运行参数
+# 仿真节点与策略节点通过 ROS 2 参数读取
+
+humanoid_sim_node:
+  ros__parameters:
+    # G1 场景文件；默认指向 share/humanoid_ppo_locomotion/models/g1/scene_29dof.xml
+    # 注意：必须是 scene_29dof.xml（含地面），不能是 g1_29dof.xml（仅本体，会自由落体）
+    model_path: "models/g1/scene_29dof.xml"
+    # 控制频率（Hz），与训练时的 50 Hz 保持一致；低于 50 Hz 站不住
+    sim_rate: 50.0
+    # 是否发布 odom -> base_link 的 TF
+    publish_tf: true
+    # 上半身 PD 增益，必须与训练时一致（120 会在 0.8 s 内倒地）
+    upper_kp: 40.0
+    upper_kd: 1.5
+
+humanoid_policy_node:
+  ros__parameters:
+    # TorchScript 策略权重
+    weights: "weights/policy_g1.pt"
+    # 动作裁剪范围，与训练时一致
+    action_clip: 1.0
+
+humanoid_keyboard_teleop:
+  ros__parameters:
+    max_linear: 0.5      # 最大前向速度 m/s（训练时指令上界）
+    min_linear: -0.3     # 最大后退速度 m/s（训练时指令下界）
+    max_angular: 0.4     # 最大转向角速度 rad/s
+    linear_step: 0.1     # 每次按键的速度增量
+    angular_step: 0.1
