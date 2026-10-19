@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="r2d2_parking" type="main.py" name="r2d2_parking" output="screen"/>
+</launch>
