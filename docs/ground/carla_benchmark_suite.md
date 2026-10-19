@@ -302,6 +302,11 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
 
 ![各模块性能指标对比](../img/ground/carla_bench_metric_summary.png)
 
+**动图：各模块指标逐条长出**（10 帧，26 KB。条形从 0 长到实测值，最后停住并标出数值，
+一眼能看出四份作业在"精度 / 误差 / 覆盖率"三个维度上的相对水平）：
+
+![各模块性能指标对比动图](../img/ground/carla_bench_metric_summary.gif)
+
 评测终端输出（节选，本机实测）：
 
 ```
@@ -320,15 +325,15 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
     control_mse                = 0.00350
 
 ---- 评测 navigation：激光雷达占用栅格建图 + 神经网络规划导航 ----
-    plan_mse                   = 0.00610
-    reg_corr                   = 0.99185
-    occupied_cells             = 1261
-    known_ratio                = 0.27145
+    plan_mse                   = 0.00788
+    reg_corr                   = 0.98865
+    occupied_cells             = 1214
+    known_ratio                = 0.26503
     coverage_start             = 0.02950
-    coverage_final             = 0.27145
-    nav_min_dist               = 1.42510
+    coverage_final             = 0.26503
+    nav_min_dist               = 1.41609
     nav_reached                = True
-    latency_mean_ms            = 0.03857
+    latency_mean_ms            = 0.02977
 
 ---- 评测 end_to_end：相机图像 → 端到端 CNN → 转向 ----
     reg_mae                    = 0.14361
@@ -336,7 +341,7 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
     reg_corr                   = 0.98957
     reg_sign_acc               = 0.93000
     e2e_baseline_mae           = 0.40404
-    infer_ms_per_frame         = 2.37534
+    infer_ms_per_frame         = 2.23733
 
 ====================================================================
   汇总
@@ -346,10 +351,10 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
   感知 NN 准确率                       0.9875
   控制 NN MSE                      0.00350
   横向误差 RMSE (m)                   0.2188
-  规划 NN MSE                      0.00610
-  建图覆盖率                           0.2715
-  占据格数                              1261
-  导航最近距离 (m)                      1.4251
+  规划 NN MSE                      0.00788
+  建图覆盖率                           0.2650
+  占据格数                              1214
+  导航最近距离 (m)                      1.4161
   端到端 MAE                        0.14361
   端到端方向一致率                        0.9300
   端到端相关系数                         0.9896
@@ -433,7 +438,7 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
   端到端 CNN）均可由本模块统一调度，且各自满足"算法为神经网络"的硬性要求。
 - **可复现性**：全部指标由 `--benchmark` 真实测量得到，无需 CARLA 服务端即可复现，
   避免了用随机数造指标的无意义做法。
-- **可验证性**：单元测试 20 项覆盖指标计算的数学正确性与副本一致性，
+- **可验证性**：单元测试 23 项覆盖指标计算的数学正确性与副本一致性，
   其中指标计算的边界情形（空输入、单元素）与副本漂移都有回归测试保护。
 - **局限**：评测在合成数据上进行，用于验证算法正确性与链路可用性；
   绝对数值不代表真实道路性能，实车指标需用采集的真实数据重测。

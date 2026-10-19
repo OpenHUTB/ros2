@@ -38,7 +38,11 @@ if _PKG not in sys.path:
 
 import importlib.util  # noqa: E402
 
-_spec = importlib.util.spec_from_file_location("bench_main", os.path.join(_PKG, "main.py"))
+# 实现在 Python 包里；包根的 main.py 只是一层薄壳（课程要求入口叫 main.*）。
+# 静态检查必须读**实现**那份，否则 `from ... import *` 不会带出下划线开头的函数。
+_IMPL = os.path.join(_PKG, "carla_benchmark_suite", "main.py")
+
+_spec = importlib.util.spec_from_file_location("bench_main", _IMPL)
 bench = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bench)
 
@@ -184,7 +188,7 @@ def test_perception_replay_heading_matches_route():
     把"控制器完全失效"的假结论写进了评测报告。
     修复：由 wps[0]→wps[1] 方向推导，修后 lateral_rmse 0.219 m、reached_goal True。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     i_fn = src.index("def bench_perception(")
     seg = src[i_fn:i_fn + 3000]
     assert "yaw = math.atan2(wps[1][1] - wps[0][1], wps[1][0] - wps[0][0])" in seg, \
@@ -198,7 +202,7 @@ def test_navigation_replay_heading_faces_goal():
     历史缺陷：`x, y, yaw, v = mod.START[0], mod.START[1], 0.0, 0.0`，
     而默认目标在起点左后方，回放开头先背离目标再掉头。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     i_fn = src.index("def bench_navigation(")
     seg = src[i_fn:i_fn + 4000]
     assert "yaw = math.atan2(mod.DEFAULT_GOAL[1] - mod.START[1]," in seg, \
@@ -214,7 +218,7 @@ def test_perception_time_budget_covers_route():
     reached_goal 因此恒为 False——并非控制失败，而是预算不足造成的假结论。
     修复：按轨迹长度推导预算（5 m/s 保守估计，上下限 40~180 s）。
     """
-    src = open(os.path.join(_PKG, "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     i_fn = src.index("def bench_perception(")
     i_next = src.index("def bench_navigation(")
     seg = src[i_fn:i_next]          # 只截取 bench_perception 本体
@@ -287,7 +291,7 @@ def _parse_bool_from_source():
     """从 main.py 取出 _parse_bool 来测，避免 import main 拉起 CARLA 依赖。"""
     import ast
     import argparse as _ap
-    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     tree = ast.parse(src)
     fn = next(n for n in tree.body
               if isinstance(n, ast.FunctionDef) and n.name == "_parse_bool")
@@ -322,7 +326,7 @@ def test_launch_bool_args_accept_text_values():
     assert parse(["--follow", "--headless"]) == (True, True, None), \
         "裸开关（命令行习惯写法）仍应可用"
 
-    src = open(os.path.join(_pkg_root(), "main.py"), encoding="utf-8").read()
+    src = open(_IMPL, encoding="utf-8").read()
     assert "_add_bool(" in src, "main.py 应通过 _add_bool 注册布尔开关"
     assert 'action="store_true"' not in src, (
         'main.py 仍有 action="store_true"：launch 传来的 false 会被丢掉')
@@ -373,6 +377,169 @@ def test_main_sh_launch_dispatches_per_ros_version():
     assert "roslaunch" in sh, "main.sh 应支持 ROS 1 的 roslaunch"
     assert "ROS_VERSION" in sh, "应按 ROS_VERSION 选择 launch 命令"
     assert "launch_args" in sh, "其余参数应原样透传给 launch"
+
+
+def _lzw_decode(blob, min_code, npix):
+    """极简 GIF LZW 解码器，只用来验证我们自己编码器的输出。
+
+    码长增长用 `==`：解码端每读一个码才建一条表项、且第一个码不建表，所以比
+    编码端慢一条（编码端对应写 `>`）。两边不共用同一套假设，才能真判错。
+    """
+    clear = 1 << min_code
+    end = clear + 1
+    state = {"bits": 0, "code_size": min_code + 1}
+    table = {i: [i] for i in range(clear)}
+    next_code = end + 1
+    total = len(blob) * 8
+
+    def read():
+        v = 0
+        for k in range(state["code_size"]):
+            p = state["bits"] + k
+            v |= ((blob[p >> 3] >> (p & 7)) & 1) << k
+        state["bits"] += state["code_size"]
+        return v
+
+    out = []
+    prev = None
+    while state["bits"] + state["code_size"] <= total:
+        code = read()
+        if code == clear:
+            table = {i: [i] for i in range(clear)}
+            next_code = end + 1
+            state["code_size"] = min_code + 1
+            prev = None
+            continue
+        if code == end:
+            break
+        if code in table:
+            entry = table[code]
+        elif prev is not None:
+            entry = prev + [prev[0]]
+        else:
+            raise AssertionError(f"非法码 {code}")
+        out.extend(entry)
+        if prev is not None and next_code < 4096:
+            table[next_code] = prev + [entry[0]]
+            next_code += 1
+            if next_code == (1 << state["code_size"]) and state["code_size"] < 12:
+                state["code_size"] += 1
+        prev = entry
+    return np.array(out[:npix], dtype=np.uint8)
+
+
+def _gif_read(path):
+    """读回我们自己写的 GIF：返回 (调色板, [每帧索引数组], (宽, 高))。"""
+    import struct
+
+    data = open(path, "rb").read()
+    assert data[:6] in (b"GIF87a", b"GIF89a"), "文件头不是 GIF"
+    w, h, packed = struct.unpack("<HHB", data[6:11])
+    pos = 13
+    pal = []
+    if packed & 0x80:
+        ncol = 1 << ((packed & 0x07) + 1)
+        pal = [tuple(data[pos + 3 * i: pos + 3 * i + 3]) for i in range(ncol)]
+        pos += 3 * ncol
+    frames = []
+    while pos < len(data):
+        tag = data[pos]
+        if tag == 0x3B:
+            break
+        if tag == 0x21:
+            pos += 2
+            while data[pos]:
+                pos += data[pos] + 1
+            pos += 1
+            continue
+        assert tag == 0x2C, f"期望图像描述符，遇到 {tag:#x}"
+        _l, _t, fw, fh, ipacked = struct.unpack("<HHHHB", data[pos + 1: pos + 10])
+        pos += 10
+        if ipacked & 0x80:
+            pos += 3 * (1 << ((ipacked & 0x07) + 1))
+        min_code = data[pos]
+        pos += 1
+        blob = bytearray()
+        while data[pos]:
+            n = data[pos]
+            blob += data[pos + 1: pos + 1 + n]
+            pos += n + 1
+        pos += 1
+        frames.append(_lzw_decode(blob, min_code, fw * fh).reshape(fh, fw))
+    return pal, frames, (w, h)
+
+
+def test_gif_writer_roundtrip():
+    """GIF 编码必须能被独立解码器原样读回（像素级一致）。
+
+    文档要求放 gif 动图，而本模块是纯 numpy 的、不装 Pillow，所以编码器是自己写的。
+    解码器按 GIF 规范实现（码长增长用 `==`，与编码端 `>` 相差一位），能独立判错。
+    该编码器写出的文件另外用 Pillow 验证过（纯色 / 渐长 / 噪声 / 两色 / 256 色 / RGB 自动调色板）。
+    """
+    from carla_benchmark_suite.gif_writer import write_gif
+
+    frames = []
+    for i in range(5):
+        f = np.zeros((24, 32), dtype=np.uint8)
+        f[:, : max(1, i * 6)] = 1
+        f[6:12, 3:3 + max(1, i * 5)] = 2
+        frames.append(f)
+    palette = [(255, 255, 255), (66, 133, 244), (219, 68, 55)]
+
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "t.gif")
+        write_gif(p, frames, palette, delay_cs=20)
+        pal, got, size = _gif_read(p)
+
+    assert size == (32, 24), f"尺寸应保持 (32,24)，实际 {size}"
+    assert len(got) == len(frames), f"帧数应 {len(frames)}，实际 {len(got)}"
+    for i, (a, b) in enumerate(zip(got, frames)):
+        assert np.array_equal(a, b), f"第 {i} 帧像素不一致"
+    assert [tuple(c) for c in pal[:len(palette)]] == \
+        [tuple(c) for c in palette], "调色板被改动了"
+
+
+def test_metric_bars_canvas_grows_with_progress():
+    """对比图动图的每一帧必须颜色数 ≤256，且 progress 越大条越长。"""
+    results = {"perception": {"percept_acc": 0.99, "control_mse": 0.0035, "lateral_rmse": 0.22},
+               "navigation": {"plan_mse": 0.0079, "known_ratio": 0.265, "nav_min_dist": 1.42},
+               "end_to_end": {"reg_mae": 0.144, "reg_sign_acc": 0.93}}
+    small = bench.metric_bars_canvas(results, progress=0.2)
+    full = bench.metric_bars_canvas(results, progress=1.0)
+    assert small.shape == full.shape, "两帧尺寸应一致"
+    for f in (small, full):
+        n = len({tuple(c) for c in f.reshape(-1, 3)})
+        assert n <= 256, f"一帧用了 {n} 种颜色，GIF 索引化不了"
+    # 条形区域里"非白"像素应随 progress 增多
+    small_ink = int((small != 255).any(axis=2).sum())
+    full_ink = int((full != 255).any(axis=2).sum())
+    assert full_ink > small_ink, f"条长没随 progress 增长: {small_ink} -> {full_ink}"
+
+
+def test_node_loads_benchmark_from_inside_package():
+    """回归：节点必须能通过**包内绝对导入**拿到评测实现。
+
+    早期 `benchmark_node.py` 用 `spec_from_file_location` 按路径加载功能包根目录的
+    `main.py`。但 `setup.py` 只声明 `packages=[package_name]`，包根目录下的文件
+    根本不会被安装，`ros2 launch` 之后加载必然失败、指标全空。
+    现在实现放在 `carla_benchmark_suite/main.py`，节点用
+    `from carla_benchmark_suite import main` 导入，本用例把这个约定钉住。
+    """
+    impl = os.path.join(_PKG, "carla_benchmark_suite", "main.py")
+    assert os.path.isfile(impl), f"实现文件不存在: {impl}"
+
+    node_txt = open(os.path.join(_PKG, "carla_benchmark_suite", "benchmark_node.py"),
+                    encoding="utf-8").read()
+    assert "from carla_benchmark_suite import main" in node_txt, \
+        "benchmark_node.py 应通过包内绝对导入拿实现"
+    assert "spec_from_file_location" not in node_txt, \
+        "benchmark_node.py 不应再按文件路径加载 main.py（包根目录不会被安装）"
+
+    # 包根那份 main.py 必须还在（课程要求入口叫 main.*），并且是转发用的薄壳
+    shim = os.path.join(_PKG, "main.py")
+    assert os.path.isfile(shim), "包根 main.py（课程约定入口）丢了"
+    assert "from carla_benchmark_suite.main import" in open(shim, encoding="utf-8").read(), \
+        "包根 main.py 应是转发到包内实现的薄壳"
 
 
 def _run_all():

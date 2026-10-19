@@ -37,10 +37,12 @@
 
 ```
 src/ground/carla_benchmark_suite/
-├── main.py                                   # 主入口（--list / --benchmark / --target）
+├── main.py                                   # 课程约定的入口（薄壳，转发到包内实现）
 ├── main.sh / main.bat                        # 课程约定的 main.* 一键运行脚本
 ├── carla_benchmark_suite/
 │   ├── __init__.py
+│   ├── main.py                               # 实现：--list / --benchmark / --target
+│   ├── gif_writer.py                         # 纯 Python GIF 编码器（文档动图用）
 │   ├── nn_models.py                          # 与其它功能包保持一致的副本
 │   └── benchmark_node.py                     # ROS 2 节点（发布评测指标 / 调度子模块）
 ├── launch/
@@ -50,7 +52,7 @@ src/ground/carla_benchmark_suite/
 ├── resource/carla_benchmark_suite
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_benchmark_logic.py              # 单元测试（15 项，无需 CARLA）
+└── test/test_benchmark_logic.py              # 单元测试（23 项，无需 CARLA）
 ```
 
 > **ℹ 本包为何没有 `carla_common.py`**

@@ -25,9 +25,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray, String
 
-_HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _HERE not in sys.path:
-    sys.path.insert(0, _HERE)
+_HERE = os.path.dirname(os.path.abspath(__file__))          # .../<pkg>/<pkg>
+_PKG_ROOT = os.path.dirname(_HERE)                          # .../<pkg>
+# 把功能包根目录放进 sys.path，源码树里 `import carla_benchmark_suite.main` 才成立。
+# 安装后该包已在 site-packages 里，这行只是冗余的保险。
+if _PKG_ROOT not in sys.path:
+    sys.path.insert(0, _PKG_ROOT)
 
 
 class BenchmarkNode(Node):
@@ -81,17 +84,15 @@ class BenchmarkNode(Node):
 
         which = [self.target] if self.target in ("perception", "navigation", "end_to_end") else None
         try:
-            import importlib.util
-            spec = importlib.util.spec_from_file_location(
-                "bench_main", os.path.join(_HERE, "main.py"))
-            mod = importlib.util.module_from_spec(spec)
-            sys.modules["bench_main"] = mod
-            spec.loader.exec_module(mod)
+            # 用**包内绝对导入**而不是按文件路径加载：setuptools 只安装
+            # `packages=[package_name]`，功能包根目录下的 main.py 装不进去，
+            # 按路径加载在 `ros2 launch` 之后会直接失败、指标全空。
+            from carla_benchmark_suite import main as bench_main
             self.get_logger().info("现场运行基准评测（无需 CARLA 服务端）...")
             out = {}
             for key in (which or ["perception", "navigation", "end_to_end"]):
                 try:
-                    out[key] = mod.BENCHMARKS[key](epochs=30)
+                    out[key] = bench_main.BENCHMARKS[key](epochs=30)
                 except Exception as exc:  # noqa: BLE001
                     self.get_logger().warn(f"评测 {key} 失败：{exc}")
             return out
