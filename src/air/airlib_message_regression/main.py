@@ -14,38 +14,45 @@ DEFAULT_INPUT = Path(__file__).resolve().parent / "sample_data" / "sample_messag
 
 
 def _finite_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and math.isfinite(float(value))
+    return type(value) in (int, float) and math.isfinite(float(value))
 
 
 def _vector(value: Any, length: int, field: str) -> List[str]:
-    errors: List[str] = []
     if not isinstance(value, list) or len(value) != length:
         return [f"{field} must contain {length} numbers"]
     if not all(_finite_number(item) for item in value):
-        errors.append(f"{field} contains a non-finite or non-numeric value")
-    return errors
+        return [f"{field} contains a non-finite or non-numeric value"]
+    return []
 
 
-def validate_message(message: Dict[str, Any]) -> List[str]:
+def _quaternion(value: Any, field: str) -> List[str]:
+    errors = _vector(value, 4, field)
+    if errors:
+        return errors
+    norm = math.sqrt(sum(float(item) ** 2 for item in value))
+    if abs(norm - 1.0) > 1e-3:
+        return [f"{field} quaternion norm must be approximately 1"]
+    return []
+
+
+def validate_message(message: Any) -> List[str]:
     """Return human-readable contract errors for one AirLib-like message."""
+    if not isinstance(message, dict):
+        return ["message must be a JSON object"]
     errors: List[str] = []
     kind = message.get("type")
     if kind not in {"imu", "gps", "lidar", "odometry"}:
         return [f"unsupported message type: {kind!r}"]
     if not message.get("frame_id"):
         errors.append("frame_id must not be empty")
-    if not isinstance(message.get("timestamp_ns"), int) or message["timestamp_ns"] < 0:
+    timestamp_ns = message.get("timestamp_ns")
+    if type(timestamp_ns) is not int or timestamp_ns < 0:
         errors.append("timestamp_ns must be a non-negative integer")
 
     if kind == "imu":
         errors += _vector(message.get("linear_acceleration"), 3, "linear_acceleration")
         errors += _vector(message.get("angular_velocity"), 3, "angular_velocity")
-        errors += _vector(message.get("orientation"), 4, "orientation")
-        orientation = message.get("orientation")
-        if isinstance(orientation, list) and len(orientation) == 4:
-            norm = math.sqrt(sum(float(value) ** 2 for value in orientation))
-            if abs(norm - 1.0) > 1e-3:
-                errors.append("orientation quaternion norm must be approximately 1")
+        errors += _quaternion(message.get("orientation"), "orientation")
 
     elif kind == "gps":
         latitude = message.get("latitude")
@@ -57,7 +64,8 @@ def validate_message(message: Dict[str, Any]) -> List[str]:
             errors.append("longitude must be within [-180, 180]")
         if not _finite_number(altitude):
             errors.append("altitude must be finite")
-        if message.get("status") not in {-1, 0, 1, 2}:
+        status = message.get("status")
+        if type(status) is not int or status not in {-1, 0, 1, 2}:
             errors.append("status must be one of -1, 0, 1, 2")
 
     elif kind == "lidar":
@@ -65,18 +73,34 @@ def validate_message(message: Dict[str, Any]) -> List[str]:
         if not isinstance(fields, list) or not fields:
             errors.append("fields must be a non-empty list")
         else:
-            names = []
+            names: List[str] = []
             for field in fields:
                 if not isinstance(field, dict) or not {
                     "name", "offset", "datatype", "count"
                 }.issubset(field):
                     errors.append("each LiDAR field needs name/offset/datatype/count")
                     continue
-                names.extend([field["name"]] * int(field["count"]))
-            if len(names) != 4:
-                errors.append("sample expects x/y/z/intensity fields")
+                name = field["name"]
+                offset = field["offset"]
+                datatype = field["datatype"]
+                count = field["count"]
+                if not isinstance(name, str) or not name:
+                    errors.append("LiDAR field name must be a non-empty string")
+                    continue
+                if type(offset) is not int or offset < 0:
+                    errors.append(f"LiDAR field {name} offset must be a non-negative integer")
+                    continue
+                if type(datatype) is not int or datatype < 0:
+                    errors.append(f"LiDAR field {name} datatype must be a non-negative integer")
+                    continue
+                if type(count) is not int or count <= 0:
+                    errors.append(f"LiDAR field {name} count must be a positive integer")
+                    continue
+                names.extend([name] * count)
+            if len(names) != 4 or set(names) != {"x", "y", "z", "intensity"}:
+                errors.append("LiDAR fields must be x/y/z/intensity")
         point_step = message.get("point_step")
-        if not isinstance(point_step, int) or point_step <= 0:
+        if type(point_step) is not int or point_step <= 0:
             errors.append("point_step must be a positive integer")
         points = message.get("points")
         if not isinstance(points, list) or len(points) % 4 != 0:
@@ -86,7 +110,7 @@ def validate_message(message: Dict[str, Any]) -> List[str]:
 
     elif kind == "odometry":
         errors += _vector(message.get("position"), 3, "position")
-        errors += _vector(message.get("orientation"), 4, "orientation")
+        errors += _quaternion(message.get("orientation"), "orientation")
         errors += _vector(message.get("linear_velocity"), 3, "linear_velocity")
 
     return errors
@@ -99,7 +123,7 @@ def validate_dataset(
     count = 0
     for count, message in enumerate(messages, start=1):
         errors = validate_message(message)
-        label = message.get("type", "unknown")
+        label = message.get("type", "unknown") if isinstance(message, dict) else "unknown"
         status = "PASS" if not errors else "FAIL"
         print(f"{count:02d} {label:<10} {status}")
         for error in errors:
@@ -120,12 +144,15 @@ def main(argv: List[str] | None = None) -> int:
 
     try:
         payload = json.loads(args.input.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            print("ERROR: top-level JSON value must be an object")
+            return 1
         messages = payload["messages"]
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         print(f"ERROR: {exc}")
         return 1
-    if not messages:
-        print("ERROR: messages must not be empty")
+    if not isinstance(messages, list) or not messages:
+        print("ERROR: messages must be a non-empty list")
         return 1
 
     count, failures = validate_dataset(messages, max(0.0, args.frame_delay))
