@@ -3,9 +3,9 @@
 <package format="3">
   <name>geofence_demo</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>基于 ROS 2 的禁飞区动态检测与安全预警模块</description>
   <maintainer email="user@todo.todo">user</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>nav_msgs</depend>
