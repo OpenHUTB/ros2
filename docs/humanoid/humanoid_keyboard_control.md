@@ -132,10 +132,10 @@ ros2 launch humanoid_keyboard_control main.launch.py visualize:=false   # 关闭
 
 每个关节的驱动力矩为比例-微分（PD）控制，目标姿态为直立位（全 0）：
 
-$$
+\[
 \tau_i = k_p (0 - q_i) - k_d \dot{q}_i,\qquad
 i \in \{\text{髋/膝/踝/肩/肘/颈}\}
-$$
+\]
 
 其中 `kp=120`、`kd=6`；髋/踝 roll 关节取 `kp_roll=400` 抗侧倾。
 力矩限幅 `±250 N·m`。实测 4 s 站立质心零漂移（根高 1.08 m，仿真 2.6 万 step/s）。

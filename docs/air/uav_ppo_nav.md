@@ -191,7 +191,7 @@ from policy import MlpPolicy; from stable_baselines3 import PPO
 
 ## 6. 效果图
 
-![PPO 自主导航演示](../img/air/uav_ppo_nav/ppo_nav_demo.gif)
+![PPO 自主导航演示](img/air/uav_ppo_nav/ppo_nav_demo.gif)
 
 上图：PPO 策略驱动 CarlaAir 无人机自主飞向目标点（第一视角，前视相机）。
 

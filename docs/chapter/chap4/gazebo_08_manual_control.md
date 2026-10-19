@@ -95,9 +95,9 @@ rostopic pub -r 10 /cmd_vel geometry_msgs/Twist \
 
 组合运动理论半径为：
 
-$$
+\[
 R = \frac{v}{\omega}
-$$
+\]
 
 本命令对应约 0.5 m 的转弯半径。
 

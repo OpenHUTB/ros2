@@ -84,8 +84,8 @@ site"绕线"点，起点固定在前臂/掌骨，止点固定在指骨背侧或�
 ### 4.1 Hill 肌肉模型
 
 MuJoCo 的肌肉执行器按 Hill 三元件模型计算腱力。设归一化腱长度
-$\tilde l = l / L_0$、归一化速度 $\tilde v = v / (L_0 \cdot v_{max})$、
-激活度 $a \in [0,1]$，则：
+\\( \\tilde l = l / L_0 \\)、归一化速度 \\( \\tilde v = v / (L_0 \cdot v_{max}) \\)、
+激活度 \\( a \in [0,1] \\)，则：
 
 **① 激活动力学**（一阶低通，激活/去激活时间常数不同）：
 
@@ -94,7 +94,7 @@ $$
 \tau(u) = \begin{cases} \tau_{act}=0.04\,\text{s}, & u > a \\ \tau_{deact}=0.08\,\text{s}, & u \le a \end{cases}
 $$
 
-**② 力-长度关系**（钟形曲线，宽度参数 $w$）：
+**② 力-长度关系**（钟形曲线，宽度参数 \\( w \\)）：
 
 $$
 f_l(\tilde l) = \exp\!\left(-\frac{(\tilde l - 1)^2}{w^2}\right)
@@ -116,7 +116,7 @@ F_{tendon} = a \cdot F_{max} \cdot f_l \cdot f_v + F_{passive}(\tilde l), \qquad
 \tau_j = \sum_m r_{j,m}(q)\, F_{tendon,m}
 $$
 
-其中 $r_{j,m}(q)$ 是肌肉 $m$ 对关节 $j$ 的力臂，由空间腱路由
+其中 \\( r_{j,m}(q) \\) 是肌肉 \\( m \\) 对关节 \\( j \\) 的力臂，由空间腱路由
 几何随构型实时变化。
 
 ### 4.2 键盘遥操作
@@ -129,13 +129,13 @@ u_{cmd}[k] = u_{cmd}[k-1] + \frac{\Delta t}{\tau_s}\left(u_{tgt}[k] - u_{cmd}[k-
 \qquad \tau_s = 0.12\,\text{s}
 $$
 
-再叠加 4.1 节的肌肉激活动力学（$\tau_{act}=0.04$ s），形成"指令平滑 +
+再叠加 4.1 节的肌肉激活动力学（\\( \tau_{act}=0.04 \\) s），形成"指令平滑 +
 肌肉动力学"双重滤波，保证运动连续无抖动。
 
 ### 4.3 神经网络逆模型
 
-到达任务的逆模型为映射 $f: \mathbb{R}^3 \to \mathbb{R}^{11}$——输入食指
-指尖目标位置 $x$，输出 11 维肌肉激活 $a$。由于逆动力学高度非线性
+到达任务的逆模型为映射 \\( f: \mathbb{R}^3 \to \mathbb{R}^{11} \\)——输入食指
+指尖目标位置 \\( x \\)，输出 11 维肌肉激活 \\( a \\)。由于逆动力学高度非线性
 （肌肉力臂、力-长度曲线均随构型变化），线性模型不足，采用 MLP 拟合。
 
 **网络结构**（3 → 64 → 64 → 11）：
@@ -146,7 +146,7 @@ h_2 = \mathrm{ReLU}(W_2 h_1 + b_2), \quad
 \hat y = \sigma(W_3 h_2 + b_3)
 $$
 
-Sigmoid 输出自然满足激活 $\in [0,1]$ 的物理约束。损失函数为 MSE：
+Sigmoid 输出自然满足激活 \\( \in [0,1] \\) 的物理约束。损失函数为 MSE：
 
 $$
 \mathcal L = \frac{1}{N}\sum_i \|\hat y_i - y_i\|^2
@@ -318,7 +318,7 @@ def update(self, dt):
 ### 8.3 神经网络 `scripts/msk_hand_nn.py`
 
 `MLP` 类手写实现前向、反向与 Adam（约 80 行核心代码）。反向传播中
-Sigmoid 输出层的梯度乘子 $\hat y(1-\hat y)$ 与两层 ReLU 的掩码
+Sigmoid 输出层的梯度乘子 \\( \hat y(1-\hat y) \\) 与两层 ReLU 的掩码
 `(h > 0)` 是关键：
 
 ```python

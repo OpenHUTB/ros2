@@ -274,22 +274,22 @@ ros2 topic echo /uav/status
 
 | 坐标系 | 定义 | 用途 |
 |---|---|---|
-| 世界系 | **ENU**：$x$ 东、$y$ 北、$z$ 上 | `/uav/odom`、`/uav/goal`、`/lidar/points` |
-| 机体系 | **FLU**：$x$ 前、$y$ 左、$z$ 上 | `/uav/cmd_vel` |
+| 世界系 | **ENU**：\(x\) 东、\(y\) 北、\(z\) 上 | `/uav/odom`、`/uav/goal`、`/lidar/points` |
+| 机体系 | **FLU**：\(x\) 前、\(y\) 左、\(z\) 上 | `/uav/cmd_vel` |
 
 与 `carlair_ros_bridge` 完全一致，因此**不需要**做 NED↔ENU 换算。
-四元数按 MuJoCo 约定为 $(w, x, y, z)$。
+四元数按 MuJoCo 约定为 \((w, x, y, z)\)。
 
 ### 6.2 旋翼布置与混控
 
-X 型四旋翼，四个旋翼位于 $(\pm a, \mp a, 0)$，其中 $a = L/(2\sqrt{2})$，$L$ 为轴距。
+X 型四旋翼，四个旋翼位于 \((\pm a, \mp a, 0)\)，其中 \(a = L/(2\sqrt{2})\)，\(L\) 为轴距。
 
 !!! warning "对角两桨必须同向"
     X 型配置下**对角旋翼同向、相邻旋翼反向**。若标错，偏航通道与滚转通道会
     线性相关，混控矩阵奇异，无人机无法独立控制偏航。本模型的取向为：
     旋翼 1（前右）与 2（后左）逆时针，旋翼 3（前左）与 4（后右）顺时针。
 
-设第 $i$ 个旋翼推力为 $T_i$（沿机体 $+z$），则机体的合推力与力矩为
+设第 \(i\) 个旋翼推力为 \(T_i\)（沿机体 \(+z\)），则机体的合推力与力矩为
 
 $$
 \begin{aligned}
@@ -300,10 +300,10 @@ T   &= T_1 + T_2 + T_3 + T_4 \\
 \end{aligned}
 $$
 
-其中 $k_m$ 为反扭矩系数（量纲为长度，约等于桨叶半径尺度；本模型取 $k_m = 0.015\ \text{m}$）。
+其中 \(k_m\) 为反扭矩系数（量纲为长度，约等于桨叶半径尺度；本模型取 \(k_m = 0.015\ \text{m}\)）。
 
-**逆解**（由期望的 $T, \tau_x, \tau_y, \tau_z$ 求四个推力）——记 $u = \tau_x/a$，
-$v = \tau_y/a$，$w = \tau_z/k_m$：
+**逆解**（由期望的 \(T, \tau_x, \tau_y, \tau_z\) 求四个推力）——记 \(u = \tau_x/a\)，
+\(v = \tau_y/a\)，\(w = \tau_z/k_m\)：
 
 $$
 T_1 = \frac{T - u - v - w}{4},\quad
@@ -314,19 +314,19 @@ $$
 
 ### 6.3 饱和处理（这一步不能省）
 
-四个推力都可写成 $(T \pm u \pm v \pm w)/4$，因此**全部落在 $[0, T_{\max}]$ 内的充要条件**是
+四个推力都可写成 \((T \pm u \pm v \pm w)/4\)，因此**全部落在 \([0, T_{\max}]\) 内的充要条件**是
 
 $$
 |u| + |v| + |w| \;\le\; \min\bigl(4T_{\max} - T,\; T\bigr)
 $$
 
-不满足时**整体等比例缩小** $(u, v, w)$，而**不是对四个推力逐个裁剪**。
+不满足时**整体等比例缩小** \((u, v, w)\)，而**不是对四个推力逐个裁剪**。
 
 !!! warning "逐个裁剪会破坏力矩方向"
     逐个裁剪会让四个推力各自撞到上下限，力矩的相对比例被破坏，合力矩方向完全失真。
     实测表现：姿态环要求稍大的力矩时控制器瞬间发散，
     **圆形轨迹跟踪误差从 17 mm 直接炸到 474 m**。
-    等比缩小则保持方向、只降低幅值，并优先保住合推力 $T$（高度不掉），牺牲力矩——
+    等比缩小则保持方向、只降低幅值，并优先保住合推力 \(T\)（高度不掉），牺牲力矩——
     这才是物理上合理的行为。
 
 ### 6.4 几何控制器
@@ -339,8 +339,8 @@ $$
 + \boldsymbol{K}_d \odot (\boldsymbol{v} - \boldsymbol{v}_d)\Bigr)
 $$
 
-再由 $\boldsymbol{f}_{\text{des}}$ 的方向与期望偏航角 $\psi_d$ 构造期望姿态
-$\boldsymbol{R}_{\text{des}} = [\boldsymbol{x}_b\ \boldsymbol{y}_b\ \boldsymbol{z}_b]$：
+再由 \(\boldsymbol{f}_{\text{des}}\) 的方向与期望偏航角 \(\psi_d\) 构造期望姿态
+\(\boldsymbol{R}_{\text{des}} = [\boldsymbol{x}_b\ \boldsymbol{y}_b\ \boldsymbol{z}_b]\)：
 
 $$
 \boldsymbol{z}_b = \frac{\boldsymbol{f}_{\text{des}}}{\|\boldsymbol{f}_{\text{des}}\|},\quad
@@ -356,7 +356,7 @@ $$
 \boldsymbol{\tau} = \boldsymbol{K}_r \boldsymbol{e}_R + \boldsymbol{K}_\omega \boldsymbol{\omega}
 $$
 
-合推力取 $\boldsymbol{f}_{\text{des}}$ 在机体 $z$ 轴上的投影 $T = \boldsymbol{f}_{\text{des}} \cdot \boldsymbol{R}\boldsymbol{e}_z$。
+合推力取 \(\boldsymbol{f}_{\text{des}}\) 在机体 \(z\) 轴上的投影 \(T = \boldsymbol{f}_{\text{des}} \cdot \boldsymbol{R}\boldsymbol{e}_z\)。
 
 **默认增益**由实验扫描选定（见 §9.4 图 4）：
 
@@ -365,7 +365,7 @@ $$
 \boldsymbol{K}_r = (-1.5, -1.5, -0.6),\quad \boldsymbol{K}_\omega = (-0.10, -0.10, -0.07)
 $$
 
-（负号来自误差定义取 $\boldsymbol{p} - \boldsymbol{p}_d$，便于统一调参。）
+（负号来自误差定义取 \(\boldsymbol{p} - \boldsymbol{p}_d\)，便于统一调参。）
 
 ### 6.5 速度指令如何变成飞行
 
@@ -376,7 +376,7 @@ $$
 \boldsymbol{p}_{\text{ref}} \mathrel{+}= \boldsymbol{v}_{\text{filtered}}\,\Delta t
 $$
 
-其中 $\boldsymbol{v}_{\text{filtered}}$ 是 $\boldsymbol{v}_{\text{world}}$ 经一阶低通后的结果：
+其中 \(\boldsymbol{v}_{\text{filtered}}\) 是 \(\boldsymbol{v}_{\text{world}}\) 经一阶低通后的结果：
 
 $$
 \boldsymbol{v}_{\text{filtered}} \leftarrow \boldsymbol{v}_{\text{filtered}}
@@ -390,7 +390,7 @@ $$
     加 0.12 s 时间常数后，参考速度平滑衰减到零，机身自然减速停在附近，
     **松键漂移降到 1.95 cm**。
 
-参考速度同时作为前馈 $\boldsymbol{v}_d$ 交给几何控制器；若不给前馈，
+参考速度同时作为前馈 \(\boldsymbol{v}_d\) 交给几何控制器；若不给前馈，
 参考点以 1 m/s 跑掉而控制器却按"期望速度为 0"去刹车，会有一大截跟随滞后。
 
 ---
@@ -537,7 +537,7 @@ body_mass = float(m.body_subtreemass[self.body_id])
 !!! warning "这是一条真实踩过的坑"
     用 `body_mass` 会只取到 0.85 kg，而实际总重 0.95 kg（4 个旋翼各 0.025 kg）。
     控制器低估重量 11%，稳态直接**下坠 1.29 m**。
-    理论下坠量可解析求出：$m_c(-K_{pz} e) = m_t g$ 给出的 $e$ 与实测 **完全吻合**，
+    理论下坠量可解析求出：\(m_c(-K_{pz} e) = m_t g\) 给出的 \(e\) 与实测 **完全吻合**，
     这也是当初定位这个 bug 的关键线索。
 
 ### 8.4 传感器：通道顺序与自遮挡
@@ -669,12 +669,12 @@ m.data = _as_byte_array(a.tobytes())     # ✓ 0.08 ms
 
 | 增益组 | 1 s 位移 | 松键滑行 | 残余速度 | 圆周 RMSE |
 |---|---|---|---|---|
-| 软 $k_p=-3$（旧默认） | 0.499 m | 0.572 m | 0.178 m/s | 17.0 mm |
-| 中 $k_p=-8$ | 0.790 m | 0.207 m | 0.010 m/s | 11.4 mm |
-| **硬 $k_p=-16$（现默认）** | **0.860 m** | **0.129 m** | **0.0036 m/s** | **10.5 mm** |
-| 很硬 $k_p=-25$ | 0.888 m | 0.092 m | 0.0008 m/s | **发散** |
+| 软 \(k_p=-3\)（旧默认） | 0.499 m | 0.572 m | 0.178 m/s | 17.0 mm |
+| 中 \(k_p=-8\) | 0.790 m | 0.207 m | 0.010 m/s | 11.4 mm |
+| **硬 \(k_p=-16\)（现默认）** | **0.860 m** | **0.129 m** | **0.0036 m/s** | **10.5 mm** |
+| 很硬 \(k_p=-25\) | 0.888 m | 0.092 m | 0.0008 m/s | **发散** |
 
-$k_p=-25$ 超出 100 Hz 控制周期的稳定裕度会发散，因此取 $-16$。
+\(k_p=-25\) 超出 100 Hz 控制周期的稳定裕度会发散，因此取 \(-16\)。
 
 ---
 

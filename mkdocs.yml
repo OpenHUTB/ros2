@@ -139,9 +139,7 @@ markdown_extensions:
   - markdown_grid_tables
   - footnotes
   - admonition
-  # 行内公式同时支持 $...$ 与 \(...\)（默认只支持后者，会导致 $...$ 原样显示）
-  - mdx_math:
-      enable_dollar_delimiter: true
+  - mdx_math
   - attr_list
   - pymdownx.superfences:
       custom_fences:

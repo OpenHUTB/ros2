@@ -303,7 +303,7 @@ python3 tests/test_rooftop_landing_ros_sim.py
 | 真实点云 | LiDAR 16 线 × 10 Hz，**4165 点/帧**（累积 3 帧约 1.2 万点） |
 | 本模块 | **`launch/main.launch` 默认参数，未改 `config/rooftop_landing.yaml`** |
 
-![真机运行终端记录](../../../docs/img/air/rooftop_landing/real_run_console.png)
+![真机运行终端记录](../../img/air/rooftop_landing/real_run_console.png)
 
 拿到的结果：`点云 8082 点，检测到 1 个候选水平面` →
 `选中屋顶：高度 -0.19 m，面积 18.7 m^2，降落点 (3.84, 18.09)，内切圆半径 0.85 m` →

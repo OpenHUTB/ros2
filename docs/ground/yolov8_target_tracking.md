@@ -81,11 +81,11 @@ roslaunch yolov8-target-tracking main.launch
 
 ## 七. 运行效果
 
-![Gazebo仿真环境](../turtlebot3_gazebo_simulation_world.png)
-![YOLOv8检测效果](../yolov8_ros_gazebo_detection.png)
+![Gazebo仿真环境](turtlebot3_gazebo_simulation_world.png)
+![YOLOv8检测效果](yolov8_ros_gazebo_detection.png)
 
 以下截图为本人在重构“感知-控制”闭环代码后的最新实机复现效果。在无目标场景下，系统正确执行了停止指令：
 
-![最新运行截图](../yolov8_ros_cpu_inference_result.png)
+![最新运行截图](yolov8_ros_cpu_inference_result.png.png)
 
 ```
