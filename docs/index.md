@@ -102,6 +102,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 
+* [激光雷达感知与神经网络避障](./ground/hutb_lidar_nn_avoid.md)
+* [自研栅格 SLAM 建图与导航](./ground/hutb_grid_slam_nav.md)
+* [PilotNet 图像端到端控制](./ground/hutb_pilotnet_e2e.md)
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
@@ -146,6 +149,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 
 
+* [无人机物理仿真与键盘运动控制](./air/hutb_uav_keyboard_teleop.md)
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
