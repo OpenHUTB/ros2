@@ -69,7 +69,10 @@ def parse_args(argv):
     parser.add_argument("--frame", default=DEFAULT_FRAME, help="目标位姿参考坐标系")
     parser.add_argument("--ee-link", default=DEFAULT_EE_LINK, help="末端执行器 link")
     parser.add_argument("--no-fk", action="store_true", help="跳过 /compute_fk，末端误差留空")
-    return parser.parse_args(argv)
+    # roslaunch 会附加 __name:=...、__log:=... 等 ROS 参数，
+    # 用 parse_known_args 忽略它们，避免 argparse 报 unrecognized arguments。
+    args, _ = parser.parse_known_args(argv)
+    return args
 
 
 def load_yaml(path):

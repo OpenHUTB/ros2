@@ -386,6 +386,10 @@ export LIBGL_ALWAYS_SOFTWARE=1
 
 `marm_planning` 的旧 `CMakeLists.txt` 和 `package.xml` 声明了未使用的 `manipulation_msgs`，标准 MoveIt 安装不包含它。本 PR 已移除这两处依赖；如果使用旧版本，删除对应行，或安装 `ros-noetic-manipulation-msgs`。
 
+### 9.7 `eval.launch` 期间出现 `XmlRpcClient::writeRequest: Connection refused`
+
+RRT* 在 `plan()` 内会阻塞约 5 秒，`roslaunch` 的节点探活可能超时并打印该警告。只要 `plan_summary.csv` 里的 `success` 为 1，规划结果就不受影响。
+
 ## 10. AI 使用声明
 
 本文档与配套代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、文档起草和问题排查）。文档中的全部运行数据将由作者在 ROS Noetic + MoveIt 环境中实测采集；作者对提交内容的正确性与完整性负全部责任。
