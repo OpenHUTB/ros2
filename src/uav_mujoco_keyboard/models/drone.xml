@@ -16,7 +16,8 @@
       <site name="rotor1" pos="0.2 0.2 0.0"/>
       <site name="rotor2" pos="-0.2 0.2 0.0"/>
       <site name="rotor3" pos="-0.2 -0.2 0.0"/>
-      <site name="rotor4" pos="0.2 -0.2 0.0"/>\n      <camera name="cam_front" pos="0.25 0 0.05" zaxis="-1 0 0" fovy="60"/>
+      <site name="rotor4" pos="0.2 -0.2 0.0"/>
+      <camera name="cam_front" pos="0.25 0 0.05" zaxis="-1 0 0" fovy="60"/>
     </body>
   <camera name="view" pos="5 -6 4" zaxis="0.57 -0.68 0.45"/>
   </worldbody>
