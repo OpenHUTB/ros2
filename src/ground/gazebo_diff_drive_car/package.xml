@@ -11,7 +11,7 @@
       2) 激光雷达感知 → 运动控制闭环避障；
       3) RGB-D 深度相机感知 → 运动控制闭环避障。
 
-    机器人模型由 URDF/xacro 描述，底盘驱动与传感器数据由 gazebo_ros 插件提供，
+    机器人模型由 URDF 描述，底盘驱动与传感器数据由 gazebo_ros 插件提供，
     控制节点以 rclpy 实现，全部功能通过统一入口 launch 启动。
   </description>
   <maintainer email="xjm666god@users.noreply.github.com">xjm666god</maintainer>
@@ -19,6 +19,10 @@
 
   <url type="repository">https://github.com/OpenHUTB/ros2</url>
 
+  <!-- 构建工具声明：ament_python 包必须显式声明，否则 colcon 无法识别构建类型 -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- 节点依赖 -->
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
@@ -26,11 +30,15 @@
   <depend>nav_msgs</depend>
   <depend>visualization_msgs</depend>
 
+  <!-- launch / 运行期依赖 -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>gazebo_plugins</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
 
   <export>
