@@ -50,6 +50,7 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
+    - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
@@ -133,7 +134,6 @@ nav:
     - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
     - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
-- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
 # - mdx_math 用于行内公式显示
