@@ -91,7 +91,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
@@ -182,7 +182,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
@@ -239,6 +239,50 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">恶劣雨雾天气下多传感器感知性能对比实验</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行环境</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11-carla">1.1 下载并启动 CARLA</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#12-python-310">1.2 安装 Python 3.10 与依赖</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#13">1.3 验证环境连通</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 实验原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 天气参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 感知质量指标</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 代码结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 实验结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 结论</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 图像增强恢复实验</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 增强方法</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 恢复率定义</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 增强恢复结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 分析与结论</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">水域载具</span></p>
 <ul>
@@ -287,7 +331,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item active">恶劣雨雾天气下多传感器感知性能对比实验</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/weather_perception_benchmark.md"> 编辑页面</a>
@@ -737,8 +781,8 @@ python<span class="w"> </span>main.py
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../carla_nn_car_following/" title="神经网络自适应跟车(ACC)"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../air/landing_assessment/" title="无人机着陆阶段识别与接地载荷预测">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../../air/drone_trajectory_logger/" title="状态识别与轨迹绘制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../water/HoloOcean/" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -755,8 +799,8 @@ python<span class="w"> </span>main.py
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../carla_nn_car_following/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../air/landing_assessment/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../air/drone_trajectory_logger/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../water/HoloOcean/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
