@@ -1,0 +1,10 @@
+<launch>
+  <!-- 主入口：默认启动键盘遥操作（按键场景） -->
+  <arg name="scene" default="button"/>
+  <arg name="viewer" default="false"/>
+
+  <include file="$(find mujoco_msk_hand_teleop)/launch/keyboard_teleop.launch">
+    <arg name="scene" value="$(arg scene)"/>
+    <arg name="viewer" value="$(arg viewer)"/>
+  </include>
+</launch>

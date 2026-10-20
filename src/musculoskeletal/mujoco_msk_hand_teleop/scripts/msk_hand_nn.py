@@ -23,7 +23,8 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
 from msk_hand_core import MskHandSim, MUSCLE_NAMES, N_MUSCLE  # noqa: E402
 
-ASSET_DIR = os.path.join(os.path.dirname(_HERE), "assets")
+from msk_hand_core import PKG_DIR  # noqa: E402
+ASSET_DIR = os.path.join(PKG_DIR, "assets")
 
 # 影响食指指尖位姿的肌肉子集（其余肌肉置 0，保证逆映射可学习）
 CTRL_MUSCLES = ["m_wrist_flex", "m_wrist_ext", "m_wrist_yaw_l", "m_wrist_yaw_r",

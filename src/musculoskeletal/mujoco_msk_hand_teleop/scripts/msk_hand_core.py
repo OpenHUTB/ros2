@@ -15,8 +15,18 @@ import os
 import numpy as np
 import mujoco
 
-_HERE = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(os.path.dirname(_HERE), "models")
+
+def _share_dir():
+    """返回包根目录：优先 rospkg（ROS 环境），否则回退源码目录。"""
+    try:
+        import rospkg
+        return rospkg.RosPack().get_path("mujoco_msk_hand_teleop")
+    except Exception:
+        return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+PKG_DIR = _share_dir()
+MODEL_DIR = os.path.join(PKG_DIR, "models")
 
 # 场景名 -> XML 文件
 SCENES = {

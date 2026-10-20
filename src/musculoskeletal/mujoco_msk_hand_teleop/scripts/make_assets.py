@@ -17,10 +17,10 @@ from PIL import Image, ImageDraw
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
-from msk_hand_core import MskHandSim, N_MUSCLE  # noqa: E402
+from msk_hand_core import MskHandSim, N_MUSCLE, PKG_DIR  # noqa: E402
 from msk_hand_keyboard import KeyboardPolicy    # noqa: E402
 
-ASSET_DIR = os.path.join(os.path.dirname(_HERE), "assets")
+ASSET_DIR = os.path.join(PKG_DIR, "assets")
 W, H, FPS = 480, 360, 20
 
 # 各场景相机参数（方位角/距离/仰角/注视点，取自离线调参）

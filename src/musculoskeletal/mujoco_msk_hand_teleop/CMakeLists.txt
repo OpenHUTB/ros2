@@ -6,6 +6,10 @@ find_package(catkin REQUIRED COMPONENTS rospy std_msgs geometry_msgs)
 catkin_package()
 
 catkin_install_python(PROGRAMS
+  main.py
+  scripts/msk_hand_core.py
+  scripts/msk_hand_keyboard.py
+  scripts/msk_hand_nn.py
   scripts/msk_hand_sim_node.py
   scripts/msk_hand_keyboard_node.py
   scripts/msk_hand_nn_node.py

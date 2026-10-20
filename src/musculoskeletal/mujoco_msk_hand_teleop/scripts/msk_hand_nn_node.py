@@ -23,8 +23,9 @@ from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import Point
 
 from msk_hand_nn import MLP
+from msk_hand_core import PKG_DIR
 
-ASSET_DIR = os.path.join(os.path.dirname(_HERE), "assets")
+ASSET_DIR = os.path.join(PKG_DIR, "assets")
 
 
 class NNNode:
