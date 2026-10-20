@@ -607,3 +607,12 @@ bash main.sh demo
 5. 上游要求由另一台机器的其他人复测并同意后才可合并。**本文档的所有数字都可以按第 10 节命令复算**，这是给复测者准备的。
 
 `data/raw`、`data/processed` 与实验检查点默认被 `.gitignore` 排除；选定的小模型与样例数据随模块提交。
+
+## 13. 参考资料
+
+1. Cho K., et al. *Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation.* EMNLP 2014.（GRU 原始论文）
+2. Chung J., et al. *Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling.* 2014.（GRU 与 LSTM 的对比）
+3. Shah S., et al. *AirSim: High-Fidelity Visual and Physical Simulation for Autonomous Vehicles.* Field and Service Robotics, 2018.
+4. ROS 2 Humble 文档：<https://docs.ros.org/en/humble/>
+5. ROS REP-103：坐标系与单位约定 <https://www.ros.org/reps/rep-0103.html>
+6. PyTorch `torch.nn.GRU` 文档：<https://pytorch.org/docs/stable/generated/torch.nn.GRU.html>
