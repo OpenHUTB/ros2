@@ -48,6 +48,18 @@ Visualization Manager:
       Line Width: 0.15
       Alpha: 1
       Queue Size: 5
+    # P5 平滑后的路径：由 astar_planner 发布到 /uav/path_smooth。
+    # 与上一条**并存**是有意的 —— 两条线同屏就能一眼看出平滑做了什么
+    # （原始折线是绿色、平滑曲线是青色）。 smoothing:=false 时这一路是空的。
+    - Class: rviz/Path
+      Enabled: true
+      Name: SmoothPath
+      Topic: /uav/path_smooth
+      Color: 0; 200; 255
+      Line Style: Lines
+      Line Width: 0.08
+      Alpha: 1
+      Queue Size: 5
     # A* 实际展开过的节点：由 astar_planner 发布。
     # 按节点尺寸着色 —— 偏蓝是小节点（障碍附近，需要细碎地走），
     # 偏红是大节点（空旷区域一步跨过去）。

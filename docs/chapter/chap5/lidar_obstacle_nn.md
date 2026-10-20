@@ -125,7 +125,37 @@ flowchart TD
     G -->|是| H[保存 .npz]
 ```
 
-### 4.2 训练
+### 4.2 数据采集（动态仿真场景）
+
+静态世界（`obstacle_world.sdf`）里三个障碍物与机器人都是 `static`，对 360° 雷达而言最近距离恒为 0.4 m，`collect_data` 静止采集只能得到 `near` 一类；"旋转机器人"也无济于事——360° 扫描转不转都能同时看到全部障碍。要采到三类均衡的**真实仿真数据**，需要让障碍物的径向距离本身发生变化。
+
+动态世界 `obstacle_world_dynamic.sdf` 把唯一的红色障碍块挂在一条水平棱柱关节（prismatic joint）上，由 Gazebo 自带的 `JointPositionController` 驱动。采集节点在 `/obstacle_slider/cmd_pos` 上发布关节位置，依次经过 6 个站位（每类两个距离），形成天然均衡且带类内距离变化的数据集：
+
+| 站位 | 关节位置 | 障碍表面距离 | 类别 |
+| --- | --- | --- | --- |
+| 1 / 2 | 0.0 / 0.5 | 0.40 / 0.90 m | `near` |
+| 3 / 4 | 0.8 / 2.1 | 1.20 / 2.50 m | `far` |
+| 5 / 6 | 3.1 / 3.6 | 3.50 / 4.00 m | `free` |
+
+> 障碍块半深 0.2 m、关节零位时中心在 0.6 m，因此表面距离 = 关节位置 + 0.4 m。
+
+```mermaid
+flowchart TD
+    A[发布关节位置指令] --> B[等待 settle_sec 滑台到位]
+    B --> C{标签匹配且距离在容差带内?}
+    C -->|否| B
+    C -->|是| D[采集该站位扫描]
+    D --> E{本站位数够了?}
+    E -->|否| C
+    E -->|是| F{还有下一站位?}
+    F -->|是| G[切换到下一关节位置]
+    G --> B
+    F -->|否| H[保存均衡 .npz 并退出]
+```
+
+除了等待运动时间，节点还对每条扫描做**距离带校验**：标签与当前站位一致、且实测最近距离与该站位期望距离之差不超过 `station_tolerance`（默认 0.15 m）才入库。这样滑台穿过中间距离时产生的扫描（标签碰巧相同但距离不对）不会污染数据。
+
+### 4.3 训练
 
 ```mermaid
 flowchart TD
@@ -143,7 +173,7 @@ flowchart TD
     J -->|是| K[加载 best_state 保存 .pt]
 ```
 
-### 4.3 在线推理
+### 4.4 在线推理
 
 ```mermaid
 flowchart TD
@@ -167,12 +197,14 @@ flowchart TD
 | --- | --- |
 | [`lidar_obstacle_nn/model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/model.py) | `LidarMLP` PyTorch 模块定义。 |
 | [`lidar_obstacle_nn/inference_node.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/inference_node.py) | ROS 2 节点，订阅 `/scan`、加载权重、发布 `/obstacle_class`。 |
-| [`lidar_obstacle_nn/collect_data.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/collect_data.py) | 在 Gazebo 运行时订阅 `/scan` 自动标注采 `.npz`。 |
+| [`lidar_obstacle_nn/collect_data.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/collect_data.py) | 订阅 `/scan` 自动标注采集 `.npz`；`motion_enabled:=true` 时驱动动态世界滑台按站位均衡采集。 |
 | [`lidar_obstacle_nn/generate_synthetic_dataset.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/generate_synthetic_dataset.py) | 不依赖 Gazebo 直接合成均衡 `.npz`，本教程默认使用。 |
 | [`lidar_obstacle_nn/train_model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/train_model.py) | 训练脚本，含类均衡采样、早停、metrics sidecar。 |
-| [`worlds/obstacle_world.sdf`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world.sdf) | Gazebo 场景：1 个 `static` 机器人 + 3 个不同距离障碍物 + 360 束 GPU LiDAR。 |
-| [`launch/main.launch.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/launch/main.launch.py) | 顶层入口：仿真 + bridge + 推理节点一键启动。 |
-| [`launch/sim.launch.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/launch/sim.launch.py) | 仅启动 Gazebo + bridge。 |
+| [`lidar_obstacle_nn/evaluate_model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/evaluate_model.py) | 在带标签 `.npz` 上评估权重：总体准确率、逐类精确率/召回率、3×3 混淆矩阵。 |
+| [`worlds/obstacle_world.sdf`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world.sdf) | 静态 Gazebo 场景：1 个 `static` 机器人 + 3 个不同距离障碍物 + 360 束 GPU LiDAR。 |
+| [`worlds/obstacle_world_dynamic.sdf`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world_dynamic.sdf) | 动态 Gazebo 场景：1 个障碍块由棱柱关节位置控制器沿导轨驱动，供真实数据采集。 |
+| [`launch/main.launch.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/launch/main.launch.py) | 顶层入口：仿真 + bridge + 推理节点一键启动，支持 `world:=static/dynamic`。 |
+| [`launch/sim.launch.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/launch/sim.launch.py) | 仅启动 Gazebo + bridge；`world:=dynamic` 时额外桥接滑台位置指令。 |
 
 ## 6. 运行步骤
 
@@ -204,7 +236,7 @@ xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
 `main.launch.py` 同时启动：
-1. Gazebo Fortress 加载 `obstacle_world.sdf`
+1. Gazebo Fortress 加载 `obstacle_world.sdf`（加 `world:=dynamic` 改为加载 `obstacle_world_dynamic.sdf`）
 2. `ros_gz_bridge` 把 Gazebo `/scan` 转发到 ROS 2 `/scan`
 3. `inference_node` 加载 `models/lidar_mlp.pt` 推理
 
@@ -242,10 +274,39 @@ source install/setup.bash
 ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
-也可以从运行中的 Gazebo 采集真实扫描（`ros2 run lidar_obstacle_nn collect_data`），但要注意两点限制：
+静态世界直接采集只有单一类别：世界里的 `lidar_box` 是 `static`、且没有速度/差速控制插件，静止不动时每帧扫描看到同一个最近障碍（实测：默认场景静止时 20/20 帧全为 `near`）。要采三类均衡的真实数据请使用 6.6 节的动态世界流程；采集同样需要可用的渲染上下文（真实显示器或 `xvfb-run -a`），否则 `/scan` 全为最大量程。
 
-- 世界里的 `lidar_box` 是 `static`、且没有速度/差速控制插件，机器人不会自己动。静止不动时每帧扫描看到同一个障碍物，自动标注只会得到单一类别（实测：默认场景静止时 20/20 帧全为 `near`）；要覆盖三类需在 GUI 中手动拖动/旋转模型，或先给机器人加一个控制插件。
-- 采集需要可用的渲染上下文（真实显示器或 `xvfb-run -a`），否则 `/scan` 全为最大量程。
+### 6.6 动态场景真实数据采集与评估（进阶）
+
+终端 1，启动动态世界（只起仿真 + 桥接，不起推理节点；无显示器加 `xvfb-run -a`）：
+
+```bash
+ros2 launch lidar_obstacle_nn sim.launch.py world:=dynamic
+```
+
+终端 2，自动完成 6 站位采集（默认每站位 150 条，共 900 条，约 4 分钟）：
+
+```bash
+ros2 run lidar_obstacle_nn collect_data --ros-args \
+    -p motion_enabled:=true \
+    -p per_station:=150 \
+    -p output_path:=/tmp/lidar_real.npz
+```
+
+节点会依次打印各站位的到位与采集进度，结束时输出三类计数（应各为 300）。随后用真实数据训练并用评估脚本对比：
+
+```bash
+# train_model 内部做 8:2 随机划分并报告验证准确率
+python3 -m lidar_obstacle_nn.train_model \
+    --dataset /tmp/lidar_real.npz \
+    --output /tmp/lidar_real.pt --epochs 50 --device cpu
+
+# 在任意带标签 .npz 上输出准确率、逐类指标与混淆矩阵
+python3 -m lidar_obstacle_nn.evaluate_model \
+    --model /tmp/lidar_real.pt --dataset /tmp/lidar_real.npz
+```
+
+站位关节位置可通过 `joint_positions`（double 数组）与 `station_labels`（int 数组，0/1/2）两个 ROS 参数自定义；两个数组必须等长。
 
 ## 7. 实测结果
 
@@ -281,6 +342,35 @@ ros2 launch lidar_obstacle_nn main.launch.py
 
 ![终端 ros2 topic echo /obstacle_class 持续输出 near](../../img/chap5/lidar_obstacle_nn/topic_obstacle_class.png)
 
+### 7.1 动态世界真实数据采集与合成数据对比
+
+动态世界实测（同一 5 Hz、360 束 GPU LiDAR，6 站位各采 150 帧）：
+
+| 站位 | 指令关节位置 | 实测表面距离 | 命中束数（均值） | 自动标签 |
+| --- | --- | --- | --- | --- |
+| 1 / 2 | 0.0 / 0.5 | 0.397 / 0.903 m | 52 / 24 | near |
+| 3 / 4 | 0.8 / 2.1 | 1.203 / 2.503 m | 20 / 8 | far |
+| 5 / 6 | 3.1 / 3.6 | 3.503 / 4.003 m | 8 / 6 | free |
+
+导轨是纯 visual（无 collision）且位于扫描平面下方（z=0.02 m，波束在 0.11 m），实测不产生回波。
+
+**对比实验设置**：900 条真实数据按站位分层留出 180 条（每类 60）作为测试集，其余 720 条训练"真实模型"；另用 1500 条合成数据训练"合成模型"。两个模型结构、超参数完全一致，在**同一批 180 条真实留出样本**上评估：
+
+| 模型 | 总体准确率 | near 召回 | far 召回 | free 召回 |
+| --- | --- | --- | --- | --- |
+| 真实数据训练 | **100.0 %（180/180）** | 60/60 | 60/60 | 60/60 |
+| 合成数据训练 | 83.9 %（151/180） | 60/60 | **31/60** | 60/60 |
+
+合成模型把 29 个 `far` 样本误判为 `free`（far 召回仅 51.7 %）：合成数据的障碍是带随机宽度/噪声的理想 wedge，而真实仿真中障碍块几何固定、边缘束返回值与合成分布存在差异。这一差距说明静态合成数据可以验证管线，但在真实传感器分布上的分类能力需要动态采集闭环补齐。
+
+**动态世界 Gazebo 场景（红色障碍块 + 灰色导轨 + 黄色 lidar_box）**：
+
+![动态世界：棱柱关节驱动的红色障碍块与导轨](../../img/chap5/lidar_obstacle_nn/dynamic_world.png)
+
+**两个模型在真实留出集上的评估输出（准确率与混淆矩阵）**：
+
+![evaluate_model 输出：真实模型 100% vs 合成模型 83.9%](../../img/chap5/lidar_obstacle_nn/real_vs_synthetic_eval.png)
+
 ## 8. 排错
 
 ### 8.1 CUDA 相关报错与回退机制
@@ -304,6 +394,18 @@ ros2 launch lidar_obstacle_nn main.launch.py
 `inference_node` 默认从 `get_package_share_directory('lidar_obstacle_nn')/models/lidar_mlp.pt` 加载。如果该文件不存在，节点会打印警告 `Model file not found` 并用随机权重运行（输出几乎无意义）。
 
 **解决**：训练后重新 `colcon build --packages-select lidar_obstacle_nn --symlink-install`，确保 `install/lidar_obstacle_nn/share/lidar_obstacle_nn/models/lidar_mlp.pt` 存在（symlink 指向 src 下的真实文件）。
+
+### 8.4 动态采集：节点一直 skip，滑台不动
+
+按顺序排查：
+
+1. **是否启动了动态世界**：动态采集必须用 `ros2 launch lidar_obstacle_nn sim.launch.py world:=dynamic`。若误用默认静态世界，世界里没有 `obstacle_slider`，指令无人接收，节点会持续打印 `scans skipped ... wrong world?`。用 `ign model -m obstacle_slider --pose` 可确认模型是否存在。
+2. **ROS→Gazebo 桥接是否存活**：`ros2 topic info /obstacle_slider/cmd_pos` 应显示 1 个订阅者。注意 SDF 插件默认话题是 `/model/obstacle_slider/joint/slide_joint/0/cmd_pos`，其中 `/0/` 是 ROS 2 非法话题名（路径段不允许数字开头），`parameter_bridge` 会直接崩溃；本世界的 SDF 已用 `<topic>/obstacle_slider/cmd_pos</topic>` 覆盖，自定义关节名时需保持话题不含数字开头的路径段。
+3. **残留的 Gazebo 进程**：若之前的仿真没关干净，两个服务器会同时向 `/scan` 发布，扫描值在两个场景间交替（表现为最小距离在两个数值间跳变），距离带校验会一直不通过。采集前用 `ps -eo pid,args | grep "ign gazebo"` 确认只有一个实例。
+
+### 8.5 动态采集：站位数据被运动过程污染
+
+长距离移动（如从 4 m 回到 0.4 m）可能在 `settle_sec` 内没走完，此时标签虽对、距离却不对。节点已用 `station_tolerance`（默认 0.15 m）距离带拦截这类帧；若仍偶发未走到位，增大 `settle_sec`（如 6.0 秒）即可。导轨运动较慢时也可同步调大 SDF 关节 `velocity` 限制。
 
 ## 参考资料
 
