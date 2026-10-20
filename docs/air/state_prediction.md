@@ -487,3 +487,34 @@ flowchart TD
 在线误差小于离线测试集指标（0.0022 vs 0.0093 m @ 1 s），原因有两点：`episode_026` 本身是较容易的回合（离线逐回合 RMSE 为 0.005245 m），且回放速度平滑、没有重新采集引入的抖动。**这个数字不能替代离线评估**，它验证的是链路是否打通，而非模型精度。
 
 ---
+
+## 8. ROS2 节点与话题
+
+| 话题 | 类型 | 内容 |
+|---|---|---|
+| `/uav/state` | `std_msgs/String` | 版本化 JSON：`schema_version`、整数纳秒时间戳、16 维 NED/FRD 状态、回合号 |
+| `/uav/odometry` | `nav_msgs/Odometry` | 转换为 ENU/FLU 的位置、姿态与机体系速度 |
+| `/uav/truth_path` | `nav_msgs/Path` | 实测轨迹（ENU，`map` 系） |
+| `/uav/predicted_path` | `nav_msgs/Path` | 当前状态 + 3 个时域预测点 |
+| `/uav/prediction_markers` | `visualization_msgs/MarkerArray` | 预测点球体 + 文本指标 |
+| `/uav/forecast` | `std_msgs/String` | 18 维预测值 + 单次推理耗时（ms） |
+| `/uav/errors` | `std_msgs/String` | 目标时刻到达后的累计 MAE/RMSE 与匹配数 |
+
+保留 JSON 原始纳秒时间戳是有意为之：ROS 的 `builtin_interfaces/Time` 虽也是纳秒，但经过序列化往返与不同中间件时存在精度与格式差异，而误差对齐依赖于**原始采集时钟**，不能容忍这种漂移。
+
+| 节点 | 可执行文件 | 职责 |
+|---|---|---|
+| `state_source` | `state_source` | 从 AirSim RPC 或 CSV 读取状态，发布 `/uav/state` 与 odometry |
+| `state_predictor` | `state_predictor` | 加载 GRU，推理并发布预测与对齐误差 |
+| `topic_plot` | `topic_plot` | 从话题实时绘图（无 RViz 依赖） |
+
+启动方式统一走 launch：
+
+```bash
+ros2 launch state_prediction main.launch.py model:=<绝对路径> csv:=<回放文件>
+# 参数: model / csv / host / vehicle / rviz / plot / error_log
+```
+
+没有图形依赖的机器可把 `plot:=false rviz:=false`，仅通过话题消费结果。
+
+---
