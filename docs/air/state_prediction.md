@@ -200,3 +200,132 @@ bash main.sh live    --host <AirSim 主机 IP>
 测试集固定为 `episode_025` ~ `episode_029`。标准化参数**只**从训练窗口拟合。
 
 ---
+
+## 4. 计算原理
+
+### 4.1 状态向量与输入构造
+
+记第 \(t\) 帧的完整状态为
+
+$$
+\mathbf{s}_t \;=\; \big[\underbrace{p_x,p_y,p_z}_{\text{位置}},\; \underbrace{v_x,v_y,v_z}_{\text{速度}},\; \underbrace{a_x,a_y,a_z}_{\text{加速度}},\; \underbrace{q_w,q_x,q_y,q_z}_{\text{姿态}},\; \underbrace{\omega_x,\omega_y,\omega_z}_{\text{角速度}}\big]^{\top}\in\mathbb{R}^{16}
+$$
+
+输入是长度 \(T=20\) 的窗口 \(\mathbf{X}_t=\{\mathbf{s}_{t-T+1},\dots,\mathbf{s}_t\}\)。
+
+为消除绝对位置带来的平移差异（同一动作在不同位置应当等价），对窗口内每一帧的位置做**相对末端平移**：
+
+$$
+\tilde{p}^{(i)} \;=\; p^{(i)} - p^{(T)},\qquad i=1,\dots,T
+$$
+
+四元数在输入前先做符号连续化：若 \(\mathbf{q}^{(i)}\cdot\mathbf{q}^{(i-1)}<0\) 则整体取反，保证插值与求均值时不被符号跳变污染。
+
+### 4.2 标准化
+
+对每个特征维度 \(j\)，用训练窗口的均值 \(\mu_j\) 与标准差 \(\sigma_j\) 做仿射标准化：
+
+$$
+\hat{x}^{(i)}_j \;=\; \frac{\tilde{x}^{(i)}_j-\mu_j}{\max(\sigma_j,\,0.01)}
+$$
+
+标签同样标准化。标准化参数随检查点一起保存，推理时复用，避免训练与部署不一致。
+
+### 4.3 物理基线
+
+**恒速模型（CV）**：假设未来速度不变，
+
+$$
+\hat{p}^{\mathrm{cv}}_{t+h}=p_t+v_t h,\qquad \hat{v}^{\mathrm{cv}}_{t+h}=v_t
+$$
+
+**恒加速度模型（CA）**：假设未来加速度不变，
+
+$$
+\hat{p}^{\mathrm{ca}}_{t+h}=p_t+v_t h+\tfrac{1}{2}a_t h^2,\qquad \hat{v}^{\mathrm{ca}}_{t+h}=v_t+a_t\cdot h
+$$
+
+这两个基线不是"陪跑"的对照组，而是**残差学习的分母**：网络学习的是真实值相对 CV 的偏差。
+
+### 4.4 GRU 的更新方程
+
+单层 GRU，隐状态 \(\mathbf{h}_t\in\mathbb{R}^{48}\)，输入 \(\mathbf{x}_t\in\mathbb{R}^{16}\)：
+
+$$
+\begin{aligned}
+\mathbf{z}_t &= \sigma\!\left(\mathbf{W}_z\mathbf{x}_t+\mathbf{U}_z\mathbf{h}_{t-1}+\mathbf{b}_z\right) &&\text{（更新门）}\\
+\mathbf{r}_t &= \sigma\!\left(\mathbf{W}_r\mathbf{x}_t+\mathbf{U}_r\mathbf{h}_{t-1}+\mathbf{b}_r\right) &&\text{（重置门）}\\
+\tilde{\mathbf{h}}_t &= \tanh\!\left(\mathbf{W}_n\mathbf{x}_t+\mathbf{U}_n(\mathbf{r}_t\odot\mathbf{h}_{t-1})+\mathbf{b}_n\right) &&\text{（候选状态）}\\
+\mathbf{h}_t &= (1-\mathbf{z}_t)\odot\mathbf{h}_{t-1}+\mathbf{z}_t\odot\tilde{\mathbf{h}}_t &&\text{（隐状态更新）}
+\end{aligned}
+$$
+
+其中 \(\sigma\) 为 logistic 函数，\(\odot\) 为逐元素乘。这种"线性插值式"的更新是 GRU 与 LSTM 的关键差别：没有独立的输出门，隐状态直接按门控比例在旧值与候选值之间插值，参数更少、在短序列上更不容易过拟合。
+
+### 4.5 输出头与残差合成
+
+取末时刻隐状态 \(\mathbf{h}_T\) 过一层线性映射：
+
+$$
+\mathbf{f}(\mathbf{h}_T)=\mathbf{W}_o\mathbf{h}_T+\mathbf{b}_o\in\mathbb{R}^{18}
+$$
+
+输出 18 维 = 3 个时域 × (3 位置 + 3 速度)。最终预测为基线加残差：
+
+$$
+\hat{\mathbf{y}}_h \;=\; \mathbf{b}_h \;+\; \boldsymbol{\sigma}_{y,h}\odot\mathbf{f}(\mathbf{h}_T)_h \;+\; \boldsymbol{\mu}_{y,h}
+$$
+
+其中 \(\boldsymbol{\mu}_{y,h},\boldsymbol{\sigma}_{y,h}\) 是该时域残差标签的均值与标准差（每个时域 6 维），\(\mathbf{f}(\mathbf{h}_T)_h\) 表示取出该时域对应的 6 维。
+
+线性层权重与偏置**初始化为零**，因此训练起点是 CV 基线**加上训练集残差均值**（1 秒位置约 −5 mm），而不是纯 CV。网络要做的第一件事不是重新发明预测，而是在这个起点上继续变好；这个性质让训练初期的损失不会比物理基线差太多。
+
+### 4.6 损失函数
+
+标签为残差 \(r_h = y_h - b_h\)，损失为标准化残差上的均方误差：
+
+$$
+\mathcal{L}(\theta) \;=\; \frac{1}{18N}\sum_{n=1}^{N}\sum_{h\in\{0.25,0.5,1.0\}} \left\| \frac{\hat{\mathbf{r}}_{n,h}-\mathbf{r}_{n,h}}{\boldsymbol{\sigma}_{y,h}} \right\|_2^2
+$$
+
+即 18 维（3 时域 × 6 分量）标准化残差上的均方误差。按 \(\boldsymbol{\sigma}_{y,h}\) 归一化使三个时域、位置与速度各分量对总损失的贡献可比；否则 1 秒时域的误差会比 0.25 秒大一个数量级，梯度会被它主导。
+
+### 4.7 评价指标
+
+对第 \(c\) 个分量、所有窗口取平均（本表口径为"窗口 × 分量"平均）：
+
+$$
+\mathrm{RMSE}_c=\sqrt{\frac{1}{N}\sum_{n=1}^{N}\big(\hat{y}_{n,c}-y_{n,c}\big)^2},\qquad
+\mathrm{MAE}_c=\frac{1}{N}\sum_{n=1}^{N}\big|\hat{y}_{n,c}-y_{n,c}\big|
+$$
+
+此外给出**矢量 RMSE**，它衡量单次预测的整体偏离，不受分量正负抵消影响：
+
+$$
+\mathrm{RMSE}_{\text{vec}}=\sqrt{\frac{1}{N}\sum_{n=1}^{N}\big\|\hat{\mathbf{y}}_n-\mathbf{y}_n\big\|_2^2}
+$$
+
+> 注意：1,205 个测试窗口来自 5 个重叠滑窗回合，**不是 1,205 次独立飞行**。窗口间强相关，因此统计显著性应看逐回合指标（第 7.2 节），不能把窗口数当样本量。
+
+### 4.8 在线误差的目标时刻对齐
+
+ROS2 节点的难点不在推理，而在**对齐**：状态以约 20 Hz 的不规则间隔到达，而预测的目标时刻 \(t+h\) 几乎不会正好落在某一帧上。
+
+设预测在 \(t_k\) 发出，目标时刻 \(\tau=t_k+h\)。当真实状态首次满足 \(t_{k'} \ge \tau\) 时，在相邻两帧间线性插值：
+
+$$
+\alpha=\frac{\tau-t_{k'-1}}{t_{k'}-t_{k'-1}},\qquad
+\hat{\mathbf{s}}(\tau)=(1-\alpha)\,\mathbf{s}_{k'-1}+\alpha\,\mathbf{s}_{k'}
+$$
+
+插值用位置与速度的前 6 维。位置与速度分别累积，位置 RMSE 为
+
+$$
+\mathrm{RMSE}^{(j)}_{h}=\sqrt{\frac{\sum_{m\le j}\big\|\mathbf{e}^{\text{pos}}_{m,h}\big\|^2}{3\,n_h}},\qquad
+\mathbf{e}^{\text{pos}}_{m,h}=\hat{\mathbf{y}}_{m,h}[0{:}3]-\hat{\mathbf{s}}(\tau_{m,h})[0{:}3]
+$$
+
+速度 RMSE 同式，取第 3–6 维。分母乘 3 是因为对三个分量取平均；\(n_h\) 是该时域已匹配的预测条数。这个口径与离线评估的"分量平均 RMSE"一致，可以互相对照。
+
+
+---
