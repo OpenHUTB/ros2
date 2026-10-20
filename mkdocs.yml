@@ -1,4 +1,88 @@
-site_name: 模拟器的 ROS 文档
+﻿site_name: 模拟器的 ROS 文档
+# 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
+#repo_url: https://github.com/carla-simulator/carla
+#docs_dir: Docs
+#edit_uri: 'edit/master/Docs/'
+# 设置编译页面的链接的前缀
+repo_url: https://github.com/OpenHUTB/ros2
+# 页面右上角添加直接编辑页面的按钮
+edit_uri: edit/master/docs/
+theme:
+  name: readthedocs
+  sticky_navigation: True
+  navigation_depth: 3
+  features:
+    - search.suggest # 在目录栏中的搜索框中输入一些字母时推荐补全整个单词
+extra_css: [extra.css]
+# mathjax用于单独公式展示
+extra_javascript:
+  # - extra.js
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
+  - js/umlconvert.js
+plugins:
+#  - mkdocs-video
+  - search:
+      lang: ja
+      separator: '[\s\-\.]+'
+      min_search_length: 3
+  - bibtex:
+      bib_file: refs.bib
+      csl_file: nature.csl
+      # 关闭裸 @key 行内引用：避免代码块中的 @staticmethod 被误判为文献引用
+      enable_inline_citations: false
+  - mkdocs-video:
+      is_video: True
+      video_autoplay: True
+      video_loop: True
+  - mermaid2
+extra:
+  generator: false
+hooks:
+  - hooks.py
+copyright: OpenHUTB 版权所有 &copy; {year}
+nav:
+- 入门:
+    - 首页: 'index.md'
+    - 安装 ROS: 'ubuntu20.04.md'
+    - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
+- ROS 教程:
+    - 1. 认识 ROS: 'chapter/chap1/chap1.md'
+    - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
+    - 3. 机器人系统设计: './chapter/chap3.md'
+    - 4. 机器人仿真: './chapter/chap4.md'
+    - 5. 机器人感知: './chapter/chap5.md'
+    - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
+    - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
+    - 8. ROS 机器人综合应用: './chapter/chap8.md'
+    - 9. ROS 2: './chapter/chap9.md'
+- 人形机器人:
+    - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
+    - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
+    - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
+    - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
+    - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
+    - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
+- 肌肉骨骼人:
+    - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+- 地面载具:
+    - 手动控制: './set_up_and_connect_to_carla.md'
+    - 生成对象: './ground/carla_spawn_objects.md'
+    - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
+    - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
+    - 阿克曼控制: './ground/ackermann_control.md'
+    - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
+    - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
+    - 路径点发布器: './ground/waypoint.md'
+    - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
+    - 自动驾驶代理: './ground/ad_agent.md'
+    - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
@@ -69,4 +153,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
