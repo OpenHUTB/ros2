@@ -88,10 +88,12 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
+* [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
+* [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
@@ -103,11 +105,13 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
+* [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
