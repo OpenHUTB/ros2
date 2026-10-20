@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>交通标志识别（Windows 端脚本） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u4ea4\u901a\u6807\u5fd7\u8bc6\u522b\uff08Windows \u7aef\u811a\u672c\uff09";
+        var mkdocs_page_input_path = "ground/carla_traffic_sign_recognition.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">交通标志识别（Windows 端脚本）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">功能</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">运行环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">前置条件</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">依赖安装</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 创建虚拟环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2-carla-python-api">2. 安装 Carla Python API</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 安装其余依赖</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">模型权重</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">键盘操作</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">神经网络原理</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">算法流程</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">参数配置</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">已知限制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">相关模块</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_13">性能评价与源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_14">安装验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">源码解析</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_16">性能说明</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/">YOLO目标检测与八字轨迹控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">交通标志识别（Windows 端脚本）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_traffic_sign_recognition.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla-windows">Carla 交通标志识别（Windows 端脚本版）</h1>
+<p>基于 Carla 仿真器 + YOLOv8 神经网络的交通标志识别与车辆控制模块。使用 YOLOv8n 对摄像头画面实时检测交通标志（stop sign），并通过键盘控制车辆。</p>
+<blockquote>
+<p>本模块与 <code>carla_tsr_ros</code> 互补：<code>carla_tsr_ros</code> 是 ROS 节点版（Linux 离线图像驱动），本模块是 Windows 端脚本版（实时连 Carla 相机、键盘控制）。</p>
+</blockquote>
+<h2 id="_1">功能</h2>
+<ul>
+<li>在 Carla 仿真环境中生成自车并安装 RGB 摄像头</li>
+<li>使用 YOLOv8n 神经网络对摄像头画面进行实时目标检测</li>
+<li>识别交通标志（COCO 类别 11: stop sign）</li>
+<li>支持键盘控制车辆运动（W/A/S/D/Q）</li>
+<li>OpenCV 实时显示摄像头画面与检测结果</li>
+</ul>
+<h2 id="_2">运行环境</h2>
+<ul>
+<li><strong>Windows 10/11</strong>（Carla 服务端与客户端均在本机运行）</li>
+<li>Python 3.10.11</li>
+<li>Carla/OpenHUTB 2.9.16</li>
+<li>PyTorch 2.14.0 (CPU)、Torchvision 0.29.0 (CPU)</li>
+<li>Ultralytics 8.4.160</li>
+<li>OpenCV 4.9.0.80、NumPy 1.26.4</li>
+</ul>
+<h2 id="_3">前置条件</h2>
+<p>运行前请确认：</p>
+<ol>
+<li><strong>Carla 服务端已启动</strong>：Windows 本机运行 <code>CarlaUE4.exe</code>，等待地图加载完成（约 30 秒）</li>
+<li><strong>Carla 服务端地址</strong>：默认 <code>127.0.0.1:2000</code>。如修改端口，运行时加 <code>--port</code> 参数</li>
+<li><strong>Carla Python API 已安装</strong>：见下方依赖安装</li>
+<li><strong>YOLOv8n 权重已就位</strong>：见下方权重说明</li>
+</ol>
+<h2 id="_4">依赖安装</h2>
+<h3 id="1">1. 创建虚拟环境</h3>
+<pre><code>py -3.10 -m venv D:\WWW\venv_carla310
+D:\WWW\venv_carla310\Scripts\activate
+</code></pre>
+<h3 id="2-carla-python-api">2. 安装 Carla Python API</h3>
+<p>Carla Python API <strong>无法通过 pip 直接下载</strong>，需从本地 Carla 安装目录安装对应版本的 whl：</p>
+<pre><code>pip install D:\WWW\hutb_car_vr_air_mujoco\PythonAPI\carla\dist\hutb-2.9.16-cp310-cp310-win_amd64.whl
+</code></pre>
+<h3 id="3">3. 安装其余依赖</h3>
+<pre><code>pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu --no-deps
+pip install ultralytics opencv-python pillow -i https://mirrors.aliyun.com/pypi/simple/
+</code></pre>
+<p>或直接使用 requirements.txt：</p>
+<pre><code>pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+</code></pre>
+<h2 id="_5">模型权重</h2>
+<p>本模块已包含 <code>yolov8n.pt</code>（约 6.3MB），无需额外下载。如需重新获取，可从官方发布页下载：</p>
+<pre><code>wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt
+</code></pre>
+<p>下载后放到模块根目录（与 main.py 同级）。程序会先查找模块目录下的权重，找不到时再查找当前工作目录，并给出明确的路径提示。</p>
+<h2 id="_6">运行步骤</h2>
+<ol>
+<li>
+<p><strong>启动 Carla 服务端</strong>（Windows 端）：</p>
+<p>cd D:\WWW\hutb_car_vr_air_mujoco
+   .\CarlaUE4.exe</p>
+</li>
+</ol>
+<p>等待 Carla 窗口出现，地图加载完成。</p>
+<ol>
+<li>
+<p><strong>运行主程序</strong>（Windows 端）：</p>
+<p>python main.py</p>
+</li>
+</ol>
+<p>或直接双击 <code>main.bat</code>。自定义 Carla 地址：</p>
+<pre><code>   python main.py --host 192.168.56.1 --port 2000
+</code></pre>
+<h2 id="_7">键盘操作</h2>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>W</td>
+<td>油门前进</td>
+</tr>
+<tr>
+<td>S</td>
+<td>刹车 / 倒车</td>
+</tr>
+<tr>
+<td>A</td>
+<td>左转</td>
+</tr>
+<tr>
+<td>D</td>
+<td>右转</td>
+</tr>
+<tr>
+<td>Q</td>
+<td>退出</td>
+</tr>
+</tbody>
+</table>
+<p><strong>重要</strong>：键盘操作需先<strong>点击 OpenCV 窗口</strong>激活焦点，之后按键才会生效。在终端窗口按键无效。</p>
+<h2 id="_8">神经网络原理</h2>
+<p>YOLOv8 为单阶段目标检测网络，将目标检测转化为回归问题。损失函数：</p>
+<p>
+<script type="math/tex; mode=display">
+L = \lambda_{box} \cdot L_{CIoU} + \lambda_{cls} \cdot L_{BCE} + \lambda_{dfl} \cdot L_{DFL}
+</script>
+</p>
+<ul>
+<li>$L_{CIoU}$：边界框回归损失（Complete IoU）</li>
+<li>$L_{BCE}$：分类损失（二元交叉熵）</li>
+<li>$L_{DFL}$：分布焦点损失</li>
+</ul>
+<h2 id="_9">算法流程</h2>
+<ol>
+<li>Carla 服务端启动，客户端连接 127.0.0.1:2000</li>
+<li>生成自车，随机选 spawn 点</li>
+<li>挂载 RGB 摄像头（640x360，FOV 90）</li>
+<li>摄像头回调：图像转 numpy 数组</li>
+<li>每 200ms（按时间限流）执行一次 YOLOv8 推理，仅检测类别 11</li>
+<li>检测结果绘制到画面上，OpenCV 窗口显示</li>
+<li>键盘输入映射为 carla.VehicleControl</li>
+<li>主循环加 20ms 延时控制帧率，按 Q 退出时清理相机和车辆</li>
+</ol>
+<h2 id="_10">参数配置</h2>
+<p>所有可调参数集中在 main.py 顶部的 CONFIG 字典：</p>
+<pre><code>CONFIG = {
+    'host': '127.0.0.1',
+    'port': 2000,
+    'timeout': 10.0,
+    'camera_width': 640,
+    'camera_height': 360,
+    'camera_fov': 90,
+    'model_filename': 'yolov8n.pt',
+    'target_class': 11,
+    'infer_interval': 0.2,
+    'throttle_step': 0.06,
+    'steer_step': 0.10,
+    'key_hold_timeout': 0.18,
+    'loop_sleep': 0.02,
+}
+</code></pre>
+<h2 id="_11">已知限制</h2>
+<ul>
+<li>本模块运行在 Windows 端（Carla 服务端与客户端同机），Ubuntu 端因 Carla 客户端版本不匹配无法直接连接</li>
+</ul>
+<h2 id="_12">相关模块</h2>
+<ul>
+<li><code>carla_tsr_ros</code>：ROS Noetic 节点版，Linux 离线图像驱动</li>
+</ul>
+<h2 id="_13">性能评价与源码解析</h2>
+<h3 id="_14">安装验证</h3>
+<p>安装依赖后执行以下命令，确认 OpenCV 可用：</p>
+<pre><code>python -c "import cv2; print(cv2.__version__)"
+</code></pre>
+<h3 id="_15">源码解析</h3>
+<ul>
+<li><strong>推理限流</strong>：camera_callback 中使用 time.monotonic() 与 CONFIG['infer_interval']（200ms）比较，保证 YOLO 推理频率稳定在 5Hz。</li>
+<li><strong>出生点容错</strong>：world.try_spawn_actor() 配合 random.shuffle() 遍历所有出生点，避免被占用点导致崩溃。</li>
+<li><strong>异常清理</strong>：finally 中每个 destroy() 独立 try/except，确保某一步失败不影响后续资源释放。</li>
+</ul>
+<h3 id="_16">性能说明</h3>
+<ul>
+<li>本模块为 Windows 端脚本，直接连接 CARLA 实时相机，使用 cv2.imshow 显示画面，并通过 vehicle.apply_control() 直接控制车辆；没有 ROS 话题。</li>
+<li>由于缺少带标注的测试集，无法提供 mAP 等检测指标。</li>
+<li>CPU 推理延迟参考：YOLOv8n 单帧约 50ms（5Hz 限流下稳定运行）。</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../rviz_plugin/" title="RVIZ Carla 插件"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../carla_parking_lot/" title="停车场场景生成">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../rviz_plugin/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../carla_parking_lot/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
