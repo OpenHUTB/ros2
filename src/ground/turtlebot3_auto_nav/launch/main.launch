@@ -6,6 +6,11 @@
   <!-- 强制全局使用仿真时间 -->
   <param name="/use_sim_time" value="$(arg use_sim_time)" />
 
+  <!-- robot_state_publisher 发布 TF 树（base_footprint → base_link → base_scan 等） -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="use_sim_time" value="$(arg use_sim_time)"/>
+  </node>
+
   <!-- map_server 加载静态地图 -->
   <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)" output="screen">
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
@@ -19,6 +24,9 @@
     <param name="laser_frame_id" value="base_scan"/>
     <param name="base_frame_id" value="base_link"/>
     <param name="odom_frame_id" value="odom"/>
+    <param name="initial_pose_x" value="0.0"/>
+    <param name="initial_pose_y" value="0.0"/>
+    <param name="initial_pose_a" value="0.0"/>
     <param name="min_particles" value="50"/>
     <param name="max_particles" value="2000"/>
     <param name="update_min_d" value="0.2"/>
