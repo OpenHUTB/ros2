@@ -4,6 +4,8 @@
 
 ![TurtleBot3 自主导航演示](../../img/ground/turtlebot3_auto_nav.gif)
 
+![catkin_make 与 roslaunch 终端输出](../../img/ground/turtlebot3_auto_nav_terminal.png)
+
 ## 项目结构概览
 
 ```text
