@@ -518,3 +518,34 @@ ros2 launch state_prediction main.launch.py model:=<绝对路径> csv:=<回放�
 没有图形依赖的机器可把 `plot:=false rviz:=false`，仅通过话题消费结果。
 
 ---
+
+## 9. 源代码解析
+
+模块共 49 个文件，核心逻辑集中在 `prediction/` 下的 6 个模块。
+
+| 文件 | 行数 | 职责与要点 |
+|---|---:|---|
+| `main.py` | 53 | 统一入口，把 `doctor/prepare/train/evaluate/build/demo/live` 分派到对应模块；`demo` 自动拼出 launch 参数 |
+| `main.sh` | 11 | 加载 ROS 环境 + 激活 venv，再转交 `main.py`；优先级 `UAV_ENV` > `VIRTUAL_ENV` > `~/uav_prediction_env` |
+| `course_environment.py` | 52 | `doctor` 逐模块导入检查；`build` 通过 `colcon_core.command.main` 构建，不依赖非标准 `python -m colcon` |
+| `prediction/data.py` | 94 | 读回合、校验（时间戳单调、无碰撞、非有限值）、四元数连续化、20 Hz 重采样、按回合划分、生成窗口；`features()` 做位置相对平移 |
+| `prediction/model.py` | 37 | `Predictor` 三种变体；输出层零初始化；`load_predictor` 用 `weights_only=True` 加载，避免反序列化任意对象 |
+| `prediction/train.py` | 60 | 标准化、残差标签、Adam、梯度裁剪、早停、保存检查点与配置 |
+| `prediction/evaluate.py` | 88 | 两个物理基线 + 所有 `models/*/model.pt`，输出 `metrics.csv` / 逐回合指标 / 4 张图；部署模型只按验证损失选 |
+| `prediction/ros_nodes.py` | 191 | `StateSource`（回放/实时）、`ForecastNode`（推理 + 目标时刻插值对齐 + 累积误差） |
+| `prediction/plot_node.py` | 74 | TkAgg 三子图实时绘图，`after(250ms)` 轮询；RViz 不可用时的替代方案 |
+| `prediction/collect.py` | 173 | AirSim RPC 采集五类轨迹，含安全范围检查 |
+
+几个值得说明的实现细节：
+
+**窗口不跨回合。** `data.py` 在单个回合内生成窗口（`for index in range(HISTORY-1, len(state)-OFFSETS[-1])`），任何窗口及其标签都完整属于同一回合。这避免了跨回合拼接带来的虚假连续性。
+
+**校验先于训练。** `read_episode` 会拒绝：长度不足、非有限值、有碰撞、时间戳非单调、间隔 > 150 ms 的回合。数据问题在入口就被拦下，不会传播到指标里。
+
+**零初始化输出层。** `nn.init.zeros_(self.head.weight)` 与 `zeros_(bias)` 让模型初始输出为 0，此时预测退化为"CV 基线 + 残差均值"。注意不是严格的纯 CV——残差均值在 1 秒位置约 −5 mm，虽然不大但不是零。这个初始化保证了训练起点不会比物理基线差太多。
+
+**部署模型的选择与测试集隔离。** `evaluate.py` 只用 `config.json` 里的 `best_validation_loss` 选模型，测试指标只用于报告。这条规则写死在代码里，不是靠流程纪律保证。
+
+**`weights_only=True`。** 检查点只包含张量与基础类型，加载时不允许任意 Python 对象，避免模型文件被替换时的代码执行风险。
+
+---
