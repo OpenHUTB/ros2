@@ -147,6 +147,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [PX4+ROS2+OpenCV 视觉目标追踪](./air/px4_ros2_opencv_tracking/index.md) —— 基于 PX4 Offboard 模式的 OpenCV 颜色目标追踪
 
 
 
