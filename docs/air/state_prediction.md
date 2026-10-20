@@ -329,3 +329,55 @@ $$
 
 
 ---
+
+## 5. 算法流程
+
+### 5.1 总体流程
+
+```mermaid
+flowchart TD
+    A[AirSim Blocks 场景<br/>SimpleFlight 控制器] -->|collect| B[30 个回合 CSV<br/>8,430 帧]
+    B -->|prepare: 时间戳校验<br/>20 Hz 插值<br/>四元数连续化| C[data/processed/*.npz<br/>4820 / 1205 / 1205]
+    C -->|train: 3 变体 × 3 种子| D[models/*/model.pt<br/>标准化参数随检查点保存]
+    D -->|evaluate| E[metrics.csv<br/>逐回合指标 / 消融]
+    D -->|deploy| F[ROS2 state_predictor]
+    C -->|demo 回放| G[ROS2 state_source]
+    G -->|/uav/state| F
+    F -->|/uav/predicted_path<br/>/uav/forecast<br/>/uav/errors| H[topic_plot 实时绘图]
+```
+
+### 5.2 训练伪代码
+
+```
+输入: 训练窗口 X ∈ R^(N×20×16), 标签 Y ∈ R^(N×3×6), 种子 s
+1  固定随机种子 random/numpy/torch ← s; 开启确定性算法
+2  计算基线 B = CV(X)                     # 恒速预测, 形状同 Y
+3  μx, σx ← mean/std(X, axis=(0,1))       # 仅训练集
+4  R ← (Y − B − μy) / σy                  # 标准化残差标签
+5  用零权重初始化输出层 ⇒ 初始模型 ≡ CV
+6  for epoch = 1..45:
+7      for 每个 batch (128 条, 打乱):
+8          loss ← MSE( model((X−μx)/σx), R )
+9          反传; 梯度裁剪 ‖g‖ ≤ 1.0; Adam(lr=0.002, wd=1e-5)
+10     计算验证集损失
+11     if 验证损失 < 历史最优 − 1e-5:
+12         保存 model.pt(含 μx,σx,μy,σy 与 manifest 哈希)
+13     else: 连续 8 轮无改善 → 早停
+```
+
+### 5.3 在线推理与误差对齐
+
+```
+每个 /uav/state 消息 s_t:
+1  若 episode 变化 或 t 回退 或 间隔 > 150 ms → 清空历史与待评估队列
+2  对待评估队列中每个 (τ, h, ŷ):
+       if τ ≤ t: 用 (s_prev, s_t) 线性插值得到 s(τ)
+                 e ← ŷ − s(τ)[0:6]; 累积平方与绝对值; 发布 /uav/errors
+3  窗口不足 20 帧 或 距上次预测 < 100 ms → 返回
+4  构造历史矩阵 → 相对平移 → 标准化
+5  ŷ ← CV(s_t) + σy ⊙ GRU(标准化输入) + μy     # 单次前向, CPU p50 0.79 ms
+6  发布 /uav/predicted_path, /uav/forecast, /uav/prediction_markers
+7  把 (t+h, h, ŷ_h) 三个目标压入待评估队列
+```
+
+---
