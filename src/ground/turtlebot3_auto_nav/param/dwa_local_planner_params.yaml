@@ -13,7 +13,6 @@ DWAPlannerROS:
 
   vx_samples: 10
   vtheta_samples: 20
-  vx_samples: 10
 
   path_distance_bias: 32.0
   goal_distance_bias: 20.0

@@ -2,6 +2,8 @@
 
 本项目为基于 ROS Noetic 的 TurtleBot3 (Burger) 在 Gazebo 仿真环境下的自主导航项目配置记录。
 
+![TurtleBot3 自主导航演示](../img/ground/turtlebot3_auto_nav.gif)
+
 ## 项目结构概览
 ```text
 nav_ws/
@@ -9,9 +11,8 @@ nav_ws/
  ├── devel/
  └── src/
      └── turtlebot3_auto_nav/
-         ├── include/
          ├── launch/
-         │   └── navigation.launch       
+         │   └── main.launch
          ├── maps/
          │   ├── map.pgm
          │   └── map.yaml
@@ -21,7 +22,7 @@ nav_ws/
          │   ├── global_costmap_params.yaml
          │   └── local_costmap_params.yaml
          ├── rviz/
-         │   └── turtlebot3_nav.rviz     
+         │   └── turtlebot3_nav.rviz
          ├── CMakeLists.txt
          └── package.xml
 ```
@@ -71,7 +72,7 @@ cd ~/nav_ws
 source devel/setup.bash
 
 # 启动导航
-roslaunch turtlebot3_auto_nav navigation.launch
+roslaunch turtlebot3_auto_nav main.launch
 ```
 
 ---
@@ -98,13 +99,13 @@ roslaunch turtlebot3_auto_nav navigation.launch
 **原因**：CPU 算力枯竭（日志显示 `Map update loop missed its desired rate... loop actually took 4.0 seconds`），导致代价地图更新滞后，DWA找不到可行路径。
 **解决**：
 1.执行 `killall gzclient` 关闭 Gazebo 的3D图形界面（后台物理引擎还会继续运行）。
-2. 降低 `dwa_local_planner_params.yaml` 中的 `vx_samples` 和 `vtheta_samples`（参考本 README 的 8 和 15）。
-3. 降低 `local_costmap_params.yaml` 的 `update_frequency` 为 2.0。
+2. 降低 `dwa_local_planner_params.yaml` 中的 `vx_samples` 和 `vtheta_samples`（参考本 README 的 10 和 20）。
+3. 降低 `local_costmap_params.yaml` 的 `update_frequency` 为 5.0。
 4. 在 RViz 左侧关闭 `LaserScan` 的 `Decay Time`（设为0）以及 `PointCloud` 等非必要显示层。
 
 ---
 
 ## 四、RViz 实操与技巧
-1. **保存配置**：点击 `File` -> `Save Config As`，保存在项目 `rviz/` 目录下。以后通过 `-d` 参数加载，或写入 `navigation.launch` 自动启动。
+1. **保存配置**：点击 `File` -> `Save Config As`，保存在项目 `rviz/` 目录下。以后通过 `-d` 参数加载，或写入 `main.launch` 自动启动。
 2. **初始化定位**：使用 `2D Pose Estimate` 时，**必须按住鼠标左键在地图上拖动并画出箭头**（起点是位置，方向是车头朝向），松开鼠标。等待红色激光点完全贴合地图黑色边缘。
 3. **发布导航目标**：使用 `2D Nav Goal` 时，同样**按住鼠标左键拖拽**，画出目标点和期望到达的车头方向后松开。
