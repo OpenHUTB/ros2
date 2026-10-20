@@ -549,3 +549,37 @@ ros2 launch state_prediction main.launch.py model:=<绝对路径> csv:=<回放�
 **`weights_only=True`。** 检查点只包含张量与基础类型，加载时不允许任意 Python 对象，避免模型文件被替换时的代码执行风险。
 
 ---
+
+## 10. 复现步骤
+
+在已装好 ROS2 Humble 的 Ubuntu 20.04 上：
+
+```bash
+cd ~/ros2/src/air/state_prediction
+source /opt/ros/humble/setup.bash
+source ~/uav_prediction_env/bin/activate
+
+# 1. 环境自检
+bash main.sh doctor
+
+# 2. 数据准备（自动解压 assets/flight_corpus.zip 并校验 SHA256）
+bash main.sh prepare
+# 期望输出: {'train': 4820, 'validation': 1205, 'test': 1205}
+
+# 3a. 用随附部署模型重算指标
+bash main.sh evaluate --output results/checkpoint_check
+# 期望: 1 秒位置 RMSE = 0.009265
+
+# 3b. 完整重训三种子 + 消融
+bash main.sh train --output models/retrained
+bash main.sh evaluate --models models/retrained --output results/retrained
+# 期望: gru 0.008992±0.000303 / no_acc_att 0.047095±0.004532 / mlp 0.012029±0.000348
+
+# 4. ROS2 回放
+bash main.sh build
+bash main.sh demo
+```
+
+纯 CPU 环境下 9 个模型（3 变体 × 3 种子）训练总耗时实测 55 秒，单次全量评估约 3.8 秒，单样本推理 p50 0.79 ms / p95 1.32 ms。
+
+---
