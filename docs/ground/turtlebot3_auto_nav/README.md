@@ -2,7 +2,7 @@
 
 基于 ROS Noetic 的 TurtleBot3 (Burger) 在 Gazebo 仿真环境下的自主导航功能包。使用 AMCL 定位、DWA 局部规划器，支持 map_server 加载静态地图，通过 RViz 进行 2D Nav Goal 目标点导航。
 
-![TurtleBot3 自主导航演示](../../../docs/img/ground/turtlebot3_auto_nav.gif)
+![TurtleBot3 自主导航演示](../../img/ground/turtlebot3_auto_nav.gif)
 
 ## 项目结构概览
 
