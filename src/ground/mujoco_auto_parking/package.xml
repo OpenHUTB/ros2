@@ -4,7 +4,7 @@
   <name>mujoco_auto_parking</name>
   <version>0.1.0</version>
   <description>MuJoCo 四轮差速车自动泊车仿真 / MuJoCo differential-drive auto-parking simulation</description>
-  <maintainer email="student@example.com">OpenHUTB Student</maintainer>
+  <maintainer email="yyyyy2026@users.noreply.github.com">yyyyy2026</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
