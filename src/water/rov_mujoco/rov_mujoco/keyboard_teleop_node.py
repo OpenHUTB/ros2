@@ -23,7 +23,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
 
-# 按键到速度指令的映射 (支持方向键与数字键 1-9)
+# 按键到速度指令的映射 (支持方向键、数字键 1-9与字母键)
 KEY_BINDINGS = {
     # 方向键 (Arrow Keys)
     'KEY_UP':    ('linear', 'x',  1.0),   # ↑ 前进
@@ -48,26 +48,37 @@ KEY_BINDINGS = {
     'd': ('linear', 'y', -1.0),   # 右移
     'q': ('linear', 'z',  1.0),   # 上浮
     'e': ('linear', 'z', -1.0),   # 下潜
+    'j': ('angular', 'z',  1.0),  # 左偏航
+    'l': ('angular', 'z', -1.0),  # 右偏航
+    'i': ('angular', 'y',  1.0),  # 前俯仰（低头）
+    'k': ('angular', 'y', -1.0),  # 后俯仰（抬头）
+    'u': ('angular', 'x',  1.0),  # 左翻滚
+    'o': ('angular', 'x', -1.0),  # 右翻滚
 }
 
 HELP_TEXT = """
 ╔═══════════════════════════════════════════════════════════╗
-║         水下机器人 6-DOF 运动控制 (方向键与数字键)        ║
+║         水下机器人 6-DOF 运动控制 (方向键/数字键/字母键)        ║
 ╠═══════════════════════════════════════════════════════════╣
-║  【方向键】：                                             ║
-║       ↑ : 前进 (Forward)                                  ║
-║       ↓ : 后退 (Backward)                                 ║
+║  【方向键】：                                               ║
+║       ↑ : 前进 (Forward)                                   ║
+║       ↓ : 后退 (Backward)                                  ║
 ║       ← : 原地左转 (Turn Left)    → : 原地右转 (Turn Right)║
-║                                                           ║
-║  【数字键 / 小键盘九宫格 (1-9)】：                        ║
-║     [ 7 ] 左横移       [ 8 ] 垂直上浮       [ 9 ] 右横移  ║
-║     [ 4 ] 原地左转     [ 5 ] 急停悬停       [ 6 ] 原地右转║
-║     [ 1 ] 俯仰调节     [ 2 ] 垂直下潜       [ 3 ] 俯仰调节║
-║                                                           ║
-║  【通用操作】：                                           ║
-║     [ 空格 ] 或 [ 0 ] / [ 5 ] : 急停并锁定当前水深        ║
-║     [ + ] / [ - ]             : 增大 / 减小推力比例       ║
-║     [ Ctrl + C ]              : 安全退出                  ║
+║                                                             ║
+║  【字母键】：                                               ║
+║       W/S : 前进/后退          Q/E : 上浮/下潜             ║
+║       A/D : 左横移/右横移      J/L : 左转/右转             ║
+║       I/K : 低头/抬头俯仰      U/O : 左翻滚/右翻滚         ║
+║                                                             ║
+║  【数字键 / 小键盘九宫格 (1-9)】：                           ║
+║       [ 7 ] 左横移     [ 8 ] 垂直上浮     [ 9 ] 右横移      ║
+║       [ 4 ] 原地左转   [ 5 ] 急停悬停     [ 6 ] 原地右转    ║
+║       [ 1 ] 俯仰调节   [ 2 ] 垂直下潜     [ 3 ] 俯仰调节    ║
+║                                                             ║
+║  【通用操作】：                                             ║
+║       [ 空格 ] 或 [ 0 ] / [ 5 ] : 急停并锁定当前水深        ║
+║       [ + ] / [ - ]             : 增大 / 减小推力比例        ║
+║       [ Ctrl + C ]              : 安全退出                  ║
 ╚═══════════════════════════════════════════════════════════╝
 """
 
@@ -92,6 +103,9 @@ class KeyboardTeleopNode(Node):
 
         # 当前速度指令
         self.twist = Twist()
+        
+        # 新增：记录上次是否已经急停
+        self._is_stopped = False
 
         # 定时发布
         self.timer = self.create_timer(1.0 / pub_rate, self._publish_callback)
@@ -102,7 +116,7 @@ class KeyboardTeleopNode(Node):
         except Exception:
             self.settings = None
 
-        self.get_logger().info('键盘遥控节点已启动 (支持方向键与数字键)')
+        self.get_logger().info('键盘遥控节点已启动 (支持方向键、数字键与字母键控制)')
         print(HELP_TEXT)
 
     def _get_key(self, timeout=0.05):
@@ -142,7 +156,10 @@ class KeyboardTeleopNode(Node):
         if key in (' ', '0', '5'):
             # 急停并悬停
             self.twist = Twist()
-            self.get_logger().info('急停锁定当前水深！')
+            # 只有从运动状态变成急停时才打印，避免刷屏
+            if not self._is_stopped:
+                self.get_logger().info('急停，所有速度归零！')
+                self._is_stopped = True
         elif key in ('+', '='):
             self.linear_scale = min(5.0, self.linear_scale + 0.1)
             self.angular_scale = min(5.0, self.angular_scale + 0.1)
@@ -154,6 +171,7 @@ class KeyboardTeleopNode(Node):
         elif key in KEY_BINDINGS:
             group, axis, value = KEY_BINDINGS[key]
             self.twist = Twist()  # 单键触发
+            self._is_stopped = False  # 机器人又动了，恢复标记
 
             if group == 'linear':
                 scale = self.linear_scale
