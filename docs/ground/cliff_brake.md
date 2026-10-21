@@ -30,7 +30,7 @@
 
 - Ubuntu 20.04 + **ROS Noetic**（注：Melodic 基于 Python 2，无法运行本项目的 Python 3 脚本，请勿使用 18.04）
 - Python 3.8+
-- MuJoCo Python bindings：由模块内 `requirements.txt` 声明（`mujoco>=3.1.6`、`numpy`），安装命令 `pip3 install -r src/ground/cliff_brake/requirements.txt`；本文定量测试数据由 **mujoco 3.16.0** 实测生成
+- MuJoCo Python bindings：由模块内 `requirements.txt` 声明（`mujoco>=3.1.6`、`numpy`），安装命令 `pip3 install -r src/ground/cliff_brake/requirements.txt`；本文定量测试数据由 **mujoco 3.1.6** 实测生成
 - rospy、std_msgs
 
 ## 四、编译与启动步骤
@@ -130,12 +130,12 @@
 python3 src/ground/cliff_brake/brake_test.py
 ```
 
-实测结果（mujoco 3.16.0，触发阈值 0.3m，滞回解除 0.5m）：
+实测结果（mujoco 3.1.6，触发阈值 0.3m，滞回解除 0.5m）：
 
 | 巡航驱动力 (N) | 触发车速 (m/s) | 结果 | 车头余量 (m) |
 |---:|---:|---|---:|
-| 15 | 1.70 | STOPPED（安全停住） | 0.105 |
-| 20 | 2.12 | STOPPED（安全停住） | 0.028 |
+| 15 | 1.69 | STOPPED（安全停住） | 0.105 |
+| 20 | 2.11 | STOPPED（安全停住） | 0.028 |
 | 30 | 2.79 | OVERHANG（车头越界，重心仍在台上） | -0.168 |
 | 50 | 3.81 | FELL（坠落） | — |
 | 100 | 5.56 | FELL（坠落） | — |
