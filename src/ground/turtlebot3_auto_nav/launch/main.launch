@@ -6,7 +6,9 @@
   <!-- 强制全局使用仿真时间 -->
   <param name="/use_sim_time" value="$(arg use_sim_time)" />
 
-  <!-- robot_state_publisher 发布 TF 树（base_footprint → base_link → base_scan 等） -->
+  <!-- robot_state_publisher 发布 TF 树（base_footprint → base_link → base_scan 等）。
+       robot_description 由 turtlebot3_gazebo 的 launch 写入参数服务器（全局 /robot_description），
+       本节点直接读取；turtlebot3_world.launch 本身不启动 robot_state_publisher，故此处需要启动。 -->
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
   </node>

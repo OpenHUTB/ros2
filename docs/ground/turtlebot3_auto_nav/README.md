@@ -4,8 +4,6 @@
 
 ![TurtleBot3 自主导航演示](../../img/ground/turtlebot3_auto_nav.gif)
 
-![catkin_make 与 roslaunch 终端输出](../../img/ground/turtlebot3_auto_nav_terminal.png)
-
 ## 项目结构概览
 
 ```text
@@ -87,7 +85,7 @@ roslaunch turtlebot3_auto_nav main.launch
 ### 2. 报错 "Timed out waiting for transform from base_link to map"
 
 **原因**：TF 树断裂，缺少 `base_link`。
-**解决**：检查 `rosnode list` 是否缺失 `/robot_state_publisher` 节点。如果缺失，新开终端运行 `roslaunch turtlebot3_bringup turtlebot3_remote.launch`。
+**解决**：`main.launch` 已自动启动 `robot_state_publisher`（`robot_description` 由 Gazebo 的 launch 写入参数服务器），正常按本文启动流程操作即可。若仍报错，先用 `rosnode list` 确认 `/robot_state_publisher` 是否在运行，缺失时单独运行 `roslaunch turtlebot3_bringup turtlebot3_remote.launch` 补上。
 
 ### 3. 报错 "Failed to create the dwa_local_planner/DWAPlannerROS planner"
 
