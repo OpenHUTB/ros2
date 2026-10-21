@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """生成项目素材：3 个场景演示 GIF + 任务性能图表（无 ROS，无头渲染）。
 
-输出（assets/）：
-  demo_button.gif / demo_ball.gif / demo_free.gif   每个 <10MB
-  task_metrics.png   按键深度-时间 / 球高-时间 / NN 到达误差-时间
+输出（源码树写入 docs/img/，安装空间回退 assets/）：
+  msk_hand_demo_button.gif / msk_hand_demo_ball.gif / msk_hand_demo_free.gif
+  msk_hand_task_metrics.png   按键深度-时间 / 球高-时间 / NN 到达误差-时间
   nn_training.png    由 msk_hand_nn.py 生成（若缺失则跳过）
 """
 import os
@@ -21,6 +21,11 @@ from msk_hand_core import MskHandSim, N_MUSCLE, PKG_DIR  # noqa: E402
 from msk_hand_keyboard import KeyboardPolicy    # noqa: E402
 
 ASSET_DIR = os.path.join(PKG_DIR, "assets")
+# 文档图片写入 docs/img/（与 mkdocs 引用一致）；安装空间无 docs/ 时回退 assets/
+DOCS_IMG_DIR = os.path.normpath(
+    os.path.join(PKG_DIR, os.pardir, os.pardir, os.pardir, "docs", "img"))
+OUT_DIR = DOCS_IMG_DIR if os.path.isdir(DOCS_IMG_DIR) else ASSET_DIR
+PREFIX = "msk_hand_" if OUT_DIR == DOCS_IMG_DIR else ""
 W, H, FPS = 480, 360, 20
 
 # 各场景相机参数（方位角/距离/仰角/注视点，取自离线调参）
@@ -108,7 +113,7 @@ def scene_button():
 
     script = [("u", 0.5), ("a", 1.4), ("a", 0.0), ("j", 0.7), ("", 0.3)]
     ts, ms = render_gif(sim, "button", run_keys(sim, script), metric,
-                        os.path.join(ASSET_DIR, "demo_button.gif"))
+                        os.path.join(OUT_DIR, PREFIX + "demo_button.gif"))
     ok = ms.max() >= 0.005
     print("  按键最大深度 %.1fmm，行程达标: %s" % (ms.max() * 1e3, ok))
     return ts, ms
@@ -124,7 +129,7 @@ def scene_ball():
 
     script = [("u", 0.5), ("a", 1.4), ("a", 0.0), ("j", 0.7), ("", 0.4)]
     ts, ms = render_gif(sim, "ball", run_keys(sim, script), metric,
-                        os.path.join(ASSET_DIR, "demo_ball.gif"))
+                        os.path.join(OUT_DIR, PREFIX + "demo_ball.gif"))
     off = ms.min() < 0.030
     print("  球最终 z=%.1fmm，离台成功: %s" % (ms.min() * 1e3, off))
     return ts, ms
@@ -162,7 +167,7 @@ def scene_free():
                 yield sim.time, a
 
     ts, ms = render_gif(sim, "free", frames(), metric,
-                        os.path.join(ASSET_DIR, "demo_free.gif"))
+                        os.path.join(OUT_DIR, PREFIX + "demo_free.gif"))
     print("  稳态到达误差 %.1fmm" % (ms[-20:].mean() * 1e3))
     return ts, ms
 
@@ -186,12 +191,12 @@ def make_chart(res):
     axes[2].plot(ts, ms * 1e3)
     axes[2].set(title="NN reach error", xlabel="t (s)", ylabel="err (mm)")
     fig.tight_layout()
-    fig.savefig(os.path.join(ASSET_DIR, "task_metrics.png"), dpi=130)
+    fig.savefig(os.path.join(OUT_DIR, PREFIX + "task_metrics.png"), dpi=130)
     print("图表已保存 task_metrics.png")
 
 
 if __name__ == "__main__":
-    os.makedirs(ASSET_DIR, exist_ok=True)
+    os.makedirs(OUT_DIR, exist_ok=True)
     res = [scene_button(), scene_ball(), scene_free()]
     make_chart(res)
     print("完成")

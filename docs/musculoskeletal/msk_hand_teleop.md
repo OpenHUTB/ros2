@@ -33,6 +33,13 @@
 | Python | 3.8 | 系统自带 |
 | mujoco | 3.2.3 | `pip install mujoco==3.2.3` |
 | numpy / imageio / matplotlib / Pillow | - | `pip install numpy imageio matplotlib Pillow` |
+| xterm | - | `keyboard_teleop.launch` 用 `xterm -e` 弹窗读键，`sudo apt install xterm` |
+
+```bash
+sudo apt install -y xterm
+# 或用 rosdep 安装 package.xml 声明的依赖（已含 xterm）
+rosdep install --from-paths src --ignore-src -r -y
+```
 
 编译工作空间：
 
@@ -207,7 +214,7 @@ flowchart TD
 cd src/musculoskeletal/mujoco_msk_hand_teleop
 python3 main.py check            # 模型自检：正运动学/肌肉扫描
 python3 main.py demo --scene button   # 脚本化按键演示
-python3 scripts/make_assets.py   # 重新生成 GIF 与图表
+python3 scripts/make_assets.py   # 重新生成 GIF 与图表（输出到 docs/img/）
 ```
 
 ### 6.2 ROS 键盘遥操作（按键场景）
@@ -349,6 +356,7 @@ mujoco_msk_hand_teleop/
 ├── package.xml              # catkin 包描述
 ├── CMakeLists.txt
 ├── launch/
+│   ├── main.launch          # 主入口（转发到 keyboard_teleop）
 │   ├── keyboard_teleop.launch
 │   └── nn_reach.launch
 ├── models/

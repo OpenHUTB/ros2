@@ -8,7 +8,8 @@
   2. 训练 MLP（3→64→64→11，ReLU 隐层 + Sigmoid 输出，Adam + MSE）；
   3. 训练岭回归线性基线做对比；
   4. 测试集评估：NN / 线性基线预测的激活下发到仿真，静平衡后测量到达误差；
-  5. 保存权重 assets/nn_weights.npz、指标 assets/nn_metrics.json、图表 assets/nn_training.png。
+  5. 保存权重 assets/nn_weights.npz、指标 assets/nn_metrics.json，
+     训练图表写 docs/img/msk_hand_nn_training.png（安装空间回退 assets/）。
 
 用法：python3 msk_hand_nn.py [--n-train 1500] [--epochs 300]
 """
@@ -25,6 +26,11 @@ from msk_hand_core import MskHandSim, MUSCLE_NAMES, N_MUSCLE  # noqa: E402
 
 from msk_hand_core import PKG_DIR  # noqa: E402
 ASSET_DIR = os.path.join(PKG_DIR, "assets")
+# 训练图表写入 docs/img/（与 mkdocs 引用一致）；安装空间无 docs/ 时回退 assets/
+DOCS_IMG_DIR = os.path.normpath(
+    os.path.join(PKG_DIR, os.pardir, os.pardir, os.pardir, "docs", "img"))
+CHART_DIR = DOCS_IMG_DIR if os.path.isdir(DOCS_IMG_DIR) else ASSET_DIR
+CHART_PREFIX = "msk_hand_" if CHART_DIR == DOCS_IMG_DIR else ""
 
 # 影响食指指尖位姿的肌肉子集（其余肌肉置 0，保证逆映射可学习）
 CTRL_MUSCLES = ["m_wrist_flex", "m_wrist_ext", "m_wrist_yaw_l", "m_wrist_yaw_r",
@@ -232,7 +238,7 @@ def main():
     axes[1].set_ylabel("reach error (m)"); axes[1].set_title("Test reach error")
     axes[1].legend()
     fig.tight_layout()
-    fig.savefig(os.path.join(ASSET_DIR, "nn_training.png"), dpi=130)
+    fig.savefig(os.path.join(CHART_DIR, CHART_PREFIX + "nn_training.png"), dpi=130)
 
     print("NN  误差: mean=%.1fmm p90=%.1fmm" %
           (err_nn.mean() * 1e3, np.percentile(err_nn, 90) * 1e3))

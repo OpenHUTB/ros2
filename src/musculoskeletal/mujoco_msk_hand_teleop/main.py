@@ -15,7 +15,9 @@ import os
 import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-SCRIPTS = os.path.join(_HERE, "scripts")
+# 源码树：模块位于 scripts/；catkin 安装后：main.py 与各模块同级于 lib/<包名>/
+_SRC_SCRIPTS = os.path.join(_HERE, "scripts")
+SCRIPTS = _SRC_SCRIPTS if os.path.isdir(_SRC_SCRIPTS) else _HERE
 sys.path.insert(0, SCRIPTS)
 sys.path.insert(0, _HERE)
 

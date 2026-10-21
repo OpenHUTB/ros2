@@ -10,9 +10,14 @@ MuJoCo 肌肉骨骼灵巧手：键盘遥操作 + 神经网络肌肉激活控制�
 ## 快速开始
 
 ```bash
-# 依赖: Ubuntu 20.04 + ROS Noetic + pip install mujoco==3.2.3 numpy imageio matplotlib Pillow
+# 依赖: Ubuntu 20.04 + ROS Noetic
+sudo apt install -y xterm        # keyboard_teleop.launch 用 xterm -e 弹窗读键
+# 或用 rosdep 安装 package.xml 中声明的依赖（含 xterm）
+rosdep install --from-paths src --ignore-src -r -y
+pip install mujoco==3.2.3 numpy imageio matplotlib Pillow
+
 catkin_make && source devel/setup.bash
-roslaunch mujoco_msk_hand_teleop keyboard_teleop.launch scene:=button
+roslaunch mujoco_msk_hand_teleop main.launch scene:=button   # 主入口
 roslaunch mujoco_msk_hand_teleop keyboard_teleop.launch scene:=ball
 roslaunch mujoco_msk_hand_teleop nn_reach.launch
 ```
