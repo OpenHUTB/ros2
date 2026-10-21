@@ -92,6 +92,9 @@ class KeyboardTeleopNode(Node):
 
         # 当前速度指令
         self.twist = Twist()
+        
+        # 新增：记录上次是否已经急停
+        self._is_stopped = False
 
         # 定时发布
         self.timer = self.create_timer(1.0 / pub_rate, self._publish_callback)
@@ -142,7 +145,10 @@ class KeyboardTeleopNode(Node):
         if key in (' ', '0', '5'):
             # 急停并悬停
             self.twist = Twist()
-            self.get_logger().info('急停锁定当前水深！')
+            # 只有从运动状态变成急停时才打印，避免刷屏
+            if not self._is_stopped:
+                self.get_logger().info('急停，所有速度归零！')
+                self._is_stopped = True
         elif key in ('+', '='):
             self.linear_scale = min(5.0, self.linear_scale + 0.1)
             self.angular_scale = min(5.0, self.angular_scale + 0.1)
@@ -154,6 +160,7 @@ class KeyboardTeleopNode(Node):
         elif key in KEY_BINDINGS:
             group, axis, value = KEY_BINDINGS[key]
             self.twist = Twist()  # 单键触发
+            self._is_stopped = False  # 机器人又动了，恢复标记
 
             if group == 'linear':
                 scale = self.linear_scale
