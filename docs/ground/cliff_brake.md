@@ -30,7 +30,7 @@
 
 - Ubuntu 20.04 + **ROS Noetic**（注：Melodic 基于 Python 2，无法运行本项目的 Python 3 脚本，请勿使用 18.04）
 - Python 3.8+
-- MuJoCo Python bindings：由模块内 `requirements.txt` 声明（`mujoco>=3.1.6`、`numpy`），安装命令 `pip3 install -r src/ground/cliff_brake/requirements.txt`；本文定量测试数据由 **mujoco 3.1.6** 实测生成
+- MuJoCo Python bindings：由模块内 `requirements.txt` 声明并固定到已验证版本（`mujoco==3.1.6`、`numpy==1.24.4`），安装命令 `pip3 install -r src/ground/cliff_brake/requirements.txt`；本文定量测试数据由该版本组合实测生成，其他版本下物理结果可能有微小差异
 - rospy、std_msgs
 
 ## 四、编译与启动步骤
@@ -106,7 +106,7 @@
    F_brake = clip(-KV_BRAKE · vx, -FMAX_BRAKE, 0)
    ```
 
-   不直接改写速度状态（qvel）；车速降为零后制动力自然归零，不会倒推车辆。这是**运动学层面的安全停障**，轮胎级制动模型见 TODO。
+   不直接改写速度状态（qvel）；车速降为零后制动力自然归零，不会倒推车辆。这是**基于力的简化动力学制动**（制动力经 MuJoCo actuator 施加、参与动力学积分），轮胎级制动模型见 TODO。
 5. **控制节拍与实时节流**：控制按仿真时间 100 Hz 定频。仿真整体按墙钟节流到 **RTF≈1.0**（目标实时率 `TARGET_RTF=1.0`）——这一点至关重要：若放任 RTF 高达 ~28（本模型的裸算速度），车辆穿过 0.3m 触发区的过程只占几毫秒真实时间，与 ROS 话题毫秒级传输延迟同量级，制动指令会迟到、车辆在指令到达前冲出边缘；节流到 1x 后，ROS 延迟折算回仿真时间仅数毫秒，制动可靠。软件渲染过慢时节流自动失效，RTF 自然低于 1，行为安全但画面变慢。实时率由程序实测打印（`sim_t / wall_t`），不预设"高实时"。
 
 参数表（位于 `cliff_brake_sim.py` 顶部，调整后请同步 `brake_test.py`）：

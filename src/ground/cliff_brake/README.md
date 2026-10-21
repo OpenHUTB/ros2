@@ -20,11 +20,17 @@ source devel/setup.bash
 roslaunch cliff_brake main.launch
 ```
 
-或直接使用入口脚本：`./main.sh`
+或直接使用入口脚本（注意切到模块目录）：
+
+```bash
+cd ~/catkin_ws/src/ground/cliff_brake
+./main.sh
+```
 
 无需 ROS 与图形界面的定量制动测试（安全包络 + 坠落对照）：
 
 ```bash
+cd ~/catkin_ws/src/ground/cliff_brake
 python3 brake_test.py
 ```
 
