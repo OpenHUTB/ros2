@@ -102,6 +102,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
+
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
@@ -152,6 +154,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+
+* [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 
 
