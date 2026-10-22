@@ -50,4 +50,4 @@ task4 exit=0
 | `task3_navigation.gif` | 任务③建图 + Neural A* 导航 |
 | `task4_end_to_end.gif` | 任务④图像端到端控制 |
 
-所有 GIF 由 `tools/make_gifs.py` 从真实 MuJoCo 渲染帧生成，单个小于 3 MB。
+task1 由 ScreenToGif 录制，task2-4 由 `tools/make_gifs.py` 从真实 MuJoCo 渲染帧生成；四个 GIF 为 3.51/1.74/2.22/1.75 MB，均 <10 MB。
