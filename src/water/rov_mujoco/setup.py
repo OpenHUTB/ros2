@@ -16,7 +16,7 @@ setup(
         # 配置文件
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         # MuJoCo 模型文件与配置
-        (os.path.join('share', package_name, 'models'), glob('models/*.xml') + glob('models/*.json')),
+        (os.path.join('share', package_name, 'models'), glob('models/*.xml') + glob('models/*.json') + glob('models/*.npz')),
         (os.path.join('share', package_name, 'models', 'meshes', 'ur5e'), glob('models/meshes/ur5e/*')),
         (os.path.join('share', package_name, 'models', 'meshes', 'robotiq'), glob('models/meshes/robotiq/*')),
         # 地图文件
@@ -37,6 +37,7 @@ setup(
             'keyboard_teleop_node = rov_mujoco.keyboard_teleop_node:main',
             'sonar_slam_node = rov_mujoco.sonar_slam_node:main',
             'autonomous_navigation_node = rov_mujoco.autonomous_navigation_node:main',
+            'end_to_end_node = rov_mujoco.end_to_end_node:main',
         ],
     },
 )

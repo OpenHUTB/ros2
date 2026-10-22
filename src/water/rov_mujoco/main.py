@@ -707,7 +707,7 @@ def run_task4_test():
     test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_task4.py")
     _run_script(test_path, "任务 4 端到端视觉控制测试")
 
-def run_task4_gui(arch="nature_cnn", algo="sac"):
+def run_task4_gui(arch="nature_cnn", algo="bc"):
     """启动任务 4: 3D 可视化视窗下的基于深度神经网络端到端水下视觉伺服巡航"""
     print("=" * 68)
     print("  水下机器人端到端视觉神经控制系统 (任务 4) - 3D 仿真视窗")
@@ -756,9 +756,9 @@ def run_task4_gui(arch="nature_cnn", algo="sac"):
 
     # 加载端到端视觉控制器
     pkg_dir = os.path.dirname(os.path.abspath(__file__))
-    weights_path = os.path.join(pkg_dir, "models", f"task4_{arch}_{algo}.pt")
+    weights_path = os.path.join(pkg_dir, "models", f"task4_{arch}_{algo}.npz")
     if not os.path.exists(weights_path):
-        weights_path = os.path.join(os.path.dirname(pkg_dir), "models", f"task4_{arch}_{algo}.pt")
+        weights_path = os.path.join(os.path.dirname(pkg_dir), "models", f"task4_{arch}_{algo}.npz")
 
     controller = VisuomotorController(
         architecture=arch,
@@ -938,8 +938,10 @@ def main():
     parser.add_argument("--task4", action="store_true", help="拉起任务 4: 3D 可视化视窗下的端到端水下视觉伺服巡航控制")
     parser.add_argument("--launch4", action="store_true", help="调用 ros2 launch 启动任务 4")
     parser.add_argument("--test4", action="store_true", help="运行任务 4 自动化视觉策略与多模型对比评测")
-    parser.add_argument("--arch", type=str, default="nature_cnn", help="任务 4 网络架构 (nature_cnn/resnet/spatial_softmax)")
-    parser.add_argument("--algo", type=str, default="sac", help="任务 4 学习算法 (sac/ppo/bc)")
+    parser.add_argument("--arch", type=str, default="nature_cnn",
+                        help="任务 4 网络架构 (nature_cnn/small_cnn/mlp)")
+    parser.add_argument("--algo", type=str, default="bc",
+                        help="任务 4 训练算法 (当前发布的权值均由 bc 行为克隆训练)")
     args = parser.parse_args()
 
     if args.task4:
