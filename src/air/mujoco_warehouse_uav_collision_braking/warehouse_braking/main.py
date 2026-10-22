@@ -23,6 +23,9 @@ def run(args):
               "controller": "stopping_distance_reference"}
     (args.output / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
     (args.output / "summary.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    if args.render:
+        from .visualize import render_run
+        render_run(args.output, args.scenario, args.duration)
     print("运行结果 / Run result: " + json.dumps(result))
 
 
@@ -32,6 +35,7 @@ def main(argv=None):
     parser.add_argument("--speed", type=float, default=1.2)
     parser.add_argument("--duration", type=float, default=8.0)
     parser.add_argument("--output", type=Path, default=Path("results"))
+    parser.add_argument("--render", action="store_true", help="保存仿真动画 / Save simulation animation")
     args = parser.parse_args(argv)
     if not (0 < args.speed <= 3 and 0 < args.duration <= 120):
         parser.error("速度须在 (0,3]，时长须在 (0,120]。 / Invalid speed or duration.")

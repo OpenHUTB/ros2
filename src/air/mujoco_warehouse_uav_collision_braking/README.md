@@ -47,3 +47,22 @@ The UAV has three translational degrees of freedom, fixed attitude and altitude 
 
 参考制动控制用于数据采集与模型比较。神经网络的训练、独立测试和闭环评测是该模块的后续功能，不将参考控制结果视为神经网络结果。
 Reference braking supports data collection and model comparison. Neural training, held-out testing and closed-loop evaluation are separate features; reference results are not neural results.
+
+## 功能计划 / Feature Plan
+
+1. 仓储场景、九束测距、参考制动与 ROS 数据接口。 / Warehouse scenes, nine-beam ranging, reference braking and ROS data interfaces.
+2. 轨迹监督数据、隔离划分与质量检查。 / Supervised episodes, isolated splits and quality checks.
+3. 多层感知机风险分类、速度回归与独立测试。 / MLP risk classification, speed regression and held-out evaluation.
+4. 学习控制的 ROS 接口与参考控制对照。 / ROS integration of learned control and reference comparison.
+5. 多场景指标、可视化与原理文档。 / Multi-scenario metrics, visualization and technical documentation.
+
+## 图像与检查 / Visualization and Checks
+
+`python3 main.py --scenario static --render --output results/static` 保存物理场景截图和动画。
+`python3 main.py --scenario static --render --output results/static` saves a physics-scene screenshot and animation.
+
+`python3 -m unittest discover -s tests -v` 检查射线几何、制动、接触、运动与高度保持。
+`python3 -m unittest discover -s tests -v` checks ray geometry, braking, contact, motion and altitude hold.
+
+原理、场景动画和运行指标见[模块文档](../../../docs/air/mujoco_warehouse_uav_collision_braking.md)。
+See the [module documentation](../../../docs/air/mujoco_warehouse_uav_collision_braking.md) for principles, scene animation and run metrics.
