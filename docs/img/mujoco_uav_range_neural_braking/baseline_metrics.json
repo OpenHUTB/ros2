@@ -1,26 +1,32 @@
 [
   {
     "scenario": "speed_0.0",
+    "controller": "reference",
     "steps": 1000,
     "collision_steps": 0,
-    "min_clearance_m": 0.6219749731964219,
-    "final_speed_m_s": 5.947138011837971e-08,
+    "min_clearance_m": 0.6295003423469856,
+    "final_speed_m_s": 5.731267988774968e-08,
+    "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   },
   {
     "scenario": "speed_1.5",
+    "controller": "reference",
     "steps": 1000,
     "collision_steps": 0,
-    "min_clearance_m": 0.6220074910270119,
-    "final_speed_m_s": 7.16203780725973e-09,
+    "min_clearance_m": 0.6294126821409645,
+    "final_speed_m_s": 6.906906041017035e-09,
+    "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   },
   {
     "scenario": "speed_3.0",
+    "controller": "reference",
     "steps": 1000,
     "collision_steps": 0,
-    "min_clearance_m": 0.6219588075224012,
-    "final_speed_m_s": 2.1764974251175768e-09,
+    "min_clearance_m": 0.629408963317414,
+    "final_speed_m_s": 2.0984174862634176e-09,
+    "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   }
 ]

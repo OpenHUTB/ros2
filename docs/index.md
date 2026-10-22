@@ -104,6 +104,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [无人机前向测距与数据集 / UAV ranging dataset](./air/mujoco_uav_ranging_dataset.md)
+
 * [室内无人机安全制动与定高悬停 / Indoor UAV braking](./air/mujoco_uav_range_neural_braking.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)

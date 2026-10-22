@@ -47,7 +47,7 @@ Python 3.10–3.11 and MuJoCo 3.12.0. ROS launch uses Ubuntu 22.04 / ROS 2 Humbl
 
 ```bash
 python -m pip install -r requirements.txt
-python main.py --headless --output results
+python main.py --headless --controller reference --output results
 python main.py
 python evaluate.py --output results --render
 python -m pytest -q
@@ -59,16 +59,16 @@ python -m pytest -q
 
 ```bash
 source /opt/ros/humble/setup.bash
-ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
+ros2 launch ./launch/main.launch.py controller:=reference output:=/tmp/uav_braking
 ```
 
 当前 launch 启动完整无窗口仿真进程；传感器话题与学习控制节点属于后续接口扩展。
 
 The launch entry runs the complete headless simulation process. Sensor topics and learning-control nodes are separate interface extensions.
 
-Ubuntu 22.04、Python 3.10、ROS 2 Humble 下，7 项检查通过，launch 完整运行 1000 个物理步并正常退出，指标与表中 1.5 m/s 场景一致。
+Ubuntu 22.04、Python 3.10、ROS 2 Humble 下，14 项检查通过，launch 完整运行 1000 个物理步并正常退出，默认测距控制的最小间距为 0.668331 m。
 
-On Ubuntu 22.04, Python 3.10 and ROS 2 Humble, seven checks pass and launch completes 1000 physics steps with a clean exit. Metrics match the 1.5 m/s episode below.
+On Ubuntu 22.04, Python 3.10 and ROS 2 Humble, fourteen checks pass and launch completes 1000 physics steps with a clean exit. Default range control has a minimum gap of 0.668331 m.
 
 ## 仿真结果 / Simulation results
 
@@ -78,9 +78,9 @@ The airframe starts at x=-7 m, the obstacle at x=0 m, and reference height is 1.
 
 | 初速度 / Initial speed (m/s) | 碰撞步数 / Contact steps | 最小间距 / Minimum clearance (m) | 最终速度绝对值 / Absolute final speed (m/s) |
 | --- | --- | --- | --- |
-| 0.0 | 0 | 0.621975 | < 0.000001 |
-| 1.5 | 0 | 0.622007 | < 0.000001 |
-| 3.0 | 0 | 0.621959 | < 0.000001 |
+| 0.0 | 0 | 0.629500 | < 0.000001 |
+| 1.5 | 0 | 0.629413 | < 0.000001 |
+| 3.0 | 0 | 0.629409 | < 0.000001 |
 
 三组初始高度均等于参考高度，最大高度误差为 0；另以 0.1 m 高度偏移检查恢复，末端误差小于 0.005 m。三组制动、一次高度恢复及三组无效参数检查共 7 项通过。
 
@@ -102,6 +102,8 @@ Initial altitude equals the reference in all three episodes, giving zero maximum
 | `test_simulation.py` | 制动、恢复和参数检查 / Braking, recovery and parameter checks |
 
 ## 参考 / References
+
+默认运行采用前向测距与距离差分速度，几何控制仅作参照。详见[测距与数据集](mujoco_uav_ranging_dataset.md)。 / Default execution uses forward ranging and finite-difference speed; geometric control is a reference. See [Ranging and datasets](mujoco_uav_ranging_dataset.md).
 
 - [MuJoCo Python](https://mujoco.readthedocs.io/en/stable/python.html)
 - [MuJoCo rangefinder](https://mujoco.readthedocs.io/en/stable/XMLreference.html#sensor-rangefinder)

@@ -11,6 +11,8 @@ def generate_launch_description():
     module = Path(__file__).resolve().parents[1]
     return LaunchDescription([
         DeclareLaunchArgument("output", default_value=str(module / "results")),
+        DeclareLaunchArgument("controller", default_value="range", choices=["reference", "range"]),
         ExecuteProcess(cmd=[sys.executable, str(module / "main.py"), "--headless",
-                            "--output", LaunchConfiguration("output")], output="screen"),
+                            "--output", LaunchConfiguration("output"),
+                            "--controller", LaunchConfiguration("controller")], output="screen"),
     ])

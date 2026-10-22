@@ -12,13 +12,13 @@ from PIL import Image, ImageDraw
 from simulation import Scenario, Simulation
 
 
-def evaluate(output):
+def evaluate(output, controller="reference"):
     """覆盖静止、巡航与高速接近。 Cover rest, cruise and fast approach."""
     output.mkdir(parents=True, exist_ok=True)
     reports = []
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     for speed in (0.0, 1.5, 3.0):
-        sim = Simulation(Scenario(name=f"speed_{speed}", speed=speed))
+        sim = Simulation(Scenario(name=f"speed_{speed}", speed=speed), controller=controller)
         rows, summary = sim.run()
         reports.append(summary)
         axes[0].plot([r["time_s"] for r in rows], [r["range_m"] for r in rows], label=f"v0={speed} m/s")
@@ -35,10 +35,10 @@ def evaluate(output):
     return reports
 
 
-def render(output):
+def render(output, controller="reference"):
     """记录同一物理过程，抽帧不改变步长。 Sample the same fixed-step physics process."""
     output.mkdir(parents=True, exist_ok=True)
-    sim = Simulation()
+    sim = Simulation(controller=controller)
     camera = mujoco.MjvCamera()
     camera.lookat[:] = [-3.4, 0, 0.8]
     camera.distance, camera.azimuth, camera.elevation = 10, 100, -22
@@ -60,7 +60,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("results"))
     parser.add_argument("--render", action="store_true")
+    parser.add_argument("--controller", choices=("reference", "range"), default="reference")
     args = parser.parse_args()
-    print(json.dumps(evaluate(args.output), indent=2))
+    print(json.dumps(evaluate(args.output, args.controller), indent=2))
     if args.render:
-        render(args.output)
+        render(args.output, args.controller)
