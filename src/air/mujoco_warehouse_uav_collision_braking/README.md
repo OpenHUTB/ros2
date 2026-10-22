@@ -66,3 +66,18 @@ Reference braking supports data collection and model comparison. Neural training
 
 原理、场景动画和运行指标见[模块文档](../../../docs/air/mujoco_warehouse_uav_collision_braking.md)。
 See the [module documentation](../../../docs/air/mujoco_warehouse_uav_collision_braking.md) for principles, scene animation and run metrics.
+
+## 监督数据 / Supervised Data
+
+```bash
+python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+```
+
+采集器输出 `train.npz`、`validation.npz`、`test.npz` 与 `manifest.json`。每个分区独占完整轨迹；九束距离、九束闭合速度、实际速度和巡航速度组成20维输入。目标为参考速度与三类风险标签，均来自制动距离规则。
+The collector writes `train.npz`, `validation.npz`, `test.npz` and `manifest.json`. Each split owns complete episodes. Nine ranges, nine closing rates, actual speed and cruise speed form 20 inputs. Reference speed and three risk labels come from the stopping-distance rule.
+
+固定种子42的30条轨迹得到训练5465、验证1816、测试2008个样本。数据在发生首次接触后停止采样，保留接触前高风险观测；NPZ文件可由命令重建，仓库保存清单与小型样例。
+Thirty episodes with seed 42 yield 5465 training, 1816 validation and 2008 test samples. Sampling stops after first contact while retaining pre-contact high-risk observations. The command recreates NPZ files; the repository stores a manifest and a small sample.
+
+闭合速度只使用上一帧，首帧归零且限幅至±10 m/s。完整轨迹隔离用于避免同一运动序列跨分区重叠；数据审计同时检查有限值、量程、目标范围和轨迹交集。
+Closing rates use the previous frame, reset to zero at episode start and are clipped to ±10 m/s. Episode isolation prevents overlap of one motion sequence across splits. Auditing checks finite values, ranges, target bounds and episode intersections.
