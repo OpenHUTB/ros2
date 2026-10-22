@@ -37,3 +37,18 @@ ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
 Target speed follows the remaining braking distance. Acceleration is a clipped velocity-feedback command and horizontal force equals mass times acceleration. The 0.8 m parameter is a braking reference, not a guaranteed final clearance.
 
 原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。 / The original entry point forwards to this module.
+
+## 结果与文档 / Results and documentation
+
+初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.621975、0.622007、0.621959 m。7 项物理与参数检查通过；Ubuntu 22.04、Python 3.10、ROS 2 Humble 的 launch 运行正常退出。 / Three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s have no contacts, with respective minimum gaps of 0.621975, 0.622007 and 0.621959 m. Seven physics/parameter checks pass. The launch entry exits cleanly on Ubuntu 22.04, Python 3.10 and ROS 2 Humble.
+
+完整方程、曲线和动图见[模块文档](../../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
+
+容器环境 / Container environment:
+
+```bash
+docker build -t uav-braking:humble .
+docker run --rm --mount type=bind,source="$PWD",target=/work/module uav-braking:humble bash -lc 'source /opt/ros/humble/setup.bash && ros2 launch ./launch/main.launch.py'
+```
+
+以上挂载命令在 Bash 中执行；Windows PowerShell 使用 `${PWD}` 表示当前路径。 / The mount example uses Bash; use `${PWD}` for the current path in Windows PowerShell.
