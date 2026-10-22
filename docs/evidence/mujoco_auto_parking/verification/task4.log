@@ -1,0 +1,6 @@
+[INFO] 运行任务④端到端测试: test_task4_e2e.py
+端到端视觉控制（S 曲线，闭环）
+CNN       RMSE=0.355 m  max=0.549 m  latency=1.9 ms  reached=True
+零权值    RMSE=0.684 m  max=1.001 m  latency=1.8 ms  reached=True
+
+任务④端到端测试通过：控制量来自图像，零权值明显变差。

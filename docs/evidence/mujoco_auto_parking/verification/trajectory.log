@@ -1,0 +1,6 @@
+[INFO] 运行任务②轨迹跟踪评估: test_trajectory_tracking.py
+给定 S 曲线轨迹跟踪（v_ref = 0.45 m/s）
+NN           RMSE=0.359 m  max=0.551 m  heading=0.591 rad  time=11.60 s  reached=True
+零权值          RMSE=0.704 m  max=1.001 m  heading=0.501 rad  time=15.02 s  reached=False
+
+结论：训练网络能到达终点，零权值网络跑偏；控制量确实来自网络。

@@ -1,0 +1,102 @@
+<mujoco model="mujoco_auto_parking">
+  <!-- MuJoCo 自动泊车场景：四轮差速车 + 停车场 + 车位线 + 目标车位 -->
+  <compiler angle="radian" coordinate="local"/>
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <default>
+    <joint damping="0.02" armature="0.002"/>
+    <geom condim="4" friction="1.0 0.01 0.001" solref="0.02 1"/>
+    <motor ctrllimited="true" ctrlrange="-20 20"/>
+  </default>
+
+  <worldbody>
+    <light name="sun" pos="0 0 8" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="ground" type="plane" size="15 15 0.1" rgba="0.72 0.74 0.76 1"/>
+
+    <!-- 停车场边界墙 / parking lot walls -->
+    <geom name="wall_north" type="box" pos="0 10 0.5" size="10 0.1 0.5" rgba="0.42 0.44 0.46 1"/>
+    <geom name="wall_south" type="box" pos="0 -10 0.5" size="10 0.1 0.5" rgba="0.42 0.44 0.46 1"/>
+    <geom name="wall_east" type="box" pos="10 0 0.5" size="0.1 10 0.5" rgba="0.42 0.44 0.46 1"/>
+    <geom name="wall_west" type="box" pos="-10 0 0.5" size="0.1 10 0.5" rgba="0.42 0.44 0.46 1"/>
+
+    <!-- 四根立柱 / four pillars -->
+    <geom name="pillar_nw" type="box" pos="-8 5 0.8" size="0.25 0.25 0.8" rgba="0.65 0.18 0.18 1"/>
+    <geom name="pillar_ne" type="box" pos="8 5 0.8" size="0.25 0.25 0.8" rgba="0.65 0.18 0.18 1"/>
+    <geom name="pillar_sw" type="box" pos="-8 -5 0.8" size="0.25 0.25 0.8" rgba="0.65 0.18 0.18 1"/>
+    <geom name="pillar_se" type="box" pos="8 -5 0.8" size="0.25 0.25 0.8" rgba="0.65 0.18 0.18 1"/>
+
+    <!-- 通道里的障碍物 / aisle obstacles -->
+    <geom name="obstacle_a" type="box" pos="-3.5 1.4 0.45" size="0.28 0.28 0.45" rgba="0.85 0.55 0.15 1"/>
+    <geom name="obstacle_b" type="box" pos="3.5 -1.4 0.45" size="0.28 0.28 0.45" rgba="0.85 0.55 0.15 1"/>
+
+    <!-- 上方车位线：x 方向分界线 / top row slot dividers -->
+    <geom name="slot_top_1" type="box" pos="-6 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_2" type="box" pos="-3.5 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_3" type="box" pos="-1 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_4" type="box" pos="1.5 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_5" type="box" pos="4 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_6" type="box" pos="6.5 3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_back" type="box" pos="0.25 5.5 0.006" size="6.5 0.025 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_top_front" type="box" pos="0.25 2.0 0.006" size="6.5 0.025 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+
+    <!-- 下方车位线 / bottom row slot dividers -->
+    <geom name="slot_bottom_1" type="box" pos="-6 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_2" type="box" pos="-3.5 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_3" type="box" pos="-1 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_4" type="box" pos="1.5 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_5" type="box" pos="4 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_6" type="box" pos="6.5 -3.75 0.006" size="0.025 1.75 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_back" type="box" pos="0.25 -5.5 0.006" size="6.5 0.025 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+    <geom name="slot_bottom_front" type="box" pos="0.25 -2.0 0.006" size="6.5 0.025 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>
+
+    <!-- 目标车位：绿色区域 + site / target slot -->
+    <geom name="target_slot_geom" type="box" pos="0.25 3.75 0.004" size="1.2 1.7 0.004" rgba="0.15 0.85 0.25 0.45" contype="0" conaffinity="0"/>
+    <site name="target_slot" pos="0.25 3.75 0.02" size="0.04" rgba="0 1 0 1"/>
+    <!-- 目标车位入口的两根绿色立柱：供激光雷达/相机感知 -->
+    <geom name="slot_post_left" type="cylinder" pos="-0.95 2.0 0.3" size="0.05 0.3" rgba="0.1 0.9 0.2 1"/>
+    <geom name="slot_post_right" type="cylinder" pos="1.45 2.0 0.3" size="0.05 0.3" rgba="0.1 0.9 0.2 1"/>
+
+    <!-- 相邻车位里停着的两辆车（静态障碍） / parked cars -->
+    <geom name="parked_car_left" type="box" pos="-4.75 3.75 0.55" size="0.85 1.55 0.55" rgba="0.55 0.57 0.60 1"/>
+    <geom name="parked_car_right" type="box" pos="2.75 3.75 0.55" size="0.85 1.55 0.55" rgba="0.55 0.57 0.60 1"/>
+
+    <!-- 四轮差速小车 / differential-drive car -->
+    <body name="chassis" pos="-6 0 0.16">
+      <freejoint name="chassis_freejoint"/>
+      <inertial pos="0 0 0" mass="8.0" diaginertia="0.12 0.20 0.25"/>
+      <geom name="chassis_geom" type="box" size="0.30 0.21 0.07" rgba="0.12 0.35 0.58 1"/>
+      <site name="imu_site" pos="0 0 0.08" size="0.012" rgba="1 0.8 0 1"/>
+      <site name="lidar_site" pos="0 0 0.15" size="0.02" rgba="1 0 0 1"/>
+      <!-- 前视相机：相机坐标系的 -z 指向车头 +x -->
+      <camera name="front_camera" pos="0.31 0 0.06" xyaxes="0 -1 0 0 0 1"/>
+      <!-- 俯视相机，便于 GUI/录屏观察全场 -->
+      <camera name="overview_camera" pos="0 0 12" xyaxes="1 0 0 0 1 0" fovy="75"/>
+      <!-- 跟随车的俯视相机，GIF 录制用 -->
+      <camera name="follow_camera" pos="0 0 6" xyaxes="1 0 0 0 1 0" fovy="60"/>
+
+      <body name="left_front_wheel" pos="0.20 0.24 -0.08">
+        <joint name="left_front_joint" type="hinge" axis="0 1 0"/>
+        <geom name="left_front_tire" type="cylinder" size="0.08 0.035" euler="1.57079632679 0 0" rgba="0.08 0.08 0.08 1"/>
+      </body>
+      <body name="left_rear_wheel" pos="-0.20 0.24 -0.08">
+        <joint name="left_rear_joint" type="hinge" axis="0 1 0"/>
+        <geom name="left_rear_tire" type="cylinder" size="0.08 0.035" euler="1.57079632679 0 0" rgba="0.08 0.08 0.08 1"/>
+      </body>
+      <body name="right_front_wheel" pos="0.20 -0.24 -0.08">
+        <joint name="right_front_joint" type="hinge" axis="0 1 0"/>
+        <geom name="right_front_tire" type="cylinder" size="0.08 0.035" euler="1.57079632679 0 0" rgba="0.08 0.08 0.08 1"/>
+      </body>
+      <body name="right_rear_wheel" pos="-0.20 -0.24 -0.08">
+        <joint name="right_rear_joint" type="hinge" axis="0 1 0"/>
+        <geom name="right_rear_tire" type="cylinder" size="0.08 0.035" euler="1.57079632679 0 0" rgba="0.08 0.08 0.08 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <velocity name="left_front" joint="left_front_joint" kv="2" ctrllimited="true" ctrlrange="-20 20"/>
+    <velocity name="left_rear" joint="left_rear_joint" kv="2" ctrllimited="true" ctrlrange="-20 20"/>
+    <velocity name="right_front" joint="right_front_joint" kv="2" ctrllimited="true" ctrlrange="-20 20"/>
+    <velocity name="right_rear" joint="right_rear_joint" kv="2" ctrllimited="true" ctrlrange="-20 20"/>
+  </actuator>
+</mujoco>
