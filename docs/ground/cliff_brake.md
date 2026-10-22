@@ -154,7 +154,7 @@ python3 src/ground/cliff_brake/brake_test.py
 
 ## 九、运行效果
 
-- 图 1：编译与定量测试终端输出：
+- 图 1：编译成功截图：
 
   ![catkin_make 编译与 brake_test.py 定量测试输出](../img/ground/car1.gif)
 
