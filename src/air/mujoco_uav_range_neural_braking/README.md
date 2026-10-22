@@ -42,7 +42,7 @@ Target speed follows the remaining braking distance. Acceleration is a clipped v
 
 初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.621975、0.622007、0.621959 m。7 项物理与参数检查通过；Ubuntu 22.04、Python 3.10、ROS 2 Humble 的 launch 运行正常退出。 / Three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s have no contacts, with respective minimum gaps of 0.621975, 0.622007 and 0.621959 m. Seven physics/parameter checks pass. The launch entry exits cleanly on Ubuntu 22.04, Python 3.10 and ROS 2 Humble.
 
-完整方程、曲线和动图见[模块文档](../../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
+完整方程、曲线和动图见[模块文档](../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
 
 容器环境 / Container environment:
 
