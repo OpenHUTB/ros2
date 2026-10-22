@@ -1,0 +1,63 @@
+# Gazebo 差速驱动小车 —— 参数配置参考
+# ==========================================
+# 本文件记录各节点的可调参数。节点的默认值内置于代码中，
+# 需要覆盖时可在运行命令后用 --ros-args -p 传递，例如：
+#     ros2 run gazebo_diff_drive_car laser_avoid_node --ros-args -p safe_distance:=1.2
+
+laser_avoid:
+  ros__parameters:
+    scan_topic: scan
+    cmd_vel_topic: cmd_vel
+    # 距离阈值（米）：进入避障 / 退出避障（滞回）/ 紧急后退
+    safe_distance: 1.0
+    clear_distance: 1.4
+    danger_distance: 0.45
+    # 速度（米/秒）
+    cruise_speed: 0.35
+    avoid_speed: 0.18
+    back_speed: -0.12
+    # 转向（弧度/秒）
+    min_turn: 0.45
+    max_turn: 1.30
+    turn_gain: 1.8
+    emergency_hold: 0.8
+    # 自遮挡过滤：过近判定距离与所需最少连续光束数
+    self_occlusion_range: 0.30
+    min_close_hits: 5
+
+depth_camera_avoid:
+  ros__parameters:
+    depth_topic: camera/depth/image_raw
+    cmd_vel_topic: cmd_vel
+    safe_distance: 1.2
+    clear_distance: 1.6
+    danger_distance: 0.5
+    cruise_speed: 0.30
+    avoid_speed: 0.15
+    back_speed: -0.10
+    min_turn: 0.40
+    max_turn: 1.20
+    turn_gain: 1.6
+    emergency_hold: 0.8
+    max_spin_duration: 1.5
+    # 深度统计百分位与地板值剔除参数
+    depth_percentile: 25.0
+    floor_value_ratio: 0.30
+    floor_bin_width: 0.01
+    # 竖直取样范围（避开天空与地面）
+    roi_row_start: 0.25
+    roi_row_end: 0.75
+
+teleop_keyboard:
+  ros__parameters:
+    cmd_vel_topic: cmd_vel
+    linear_step: 0.1
+    angular_step: 0.2
+    linear_max: 0.8
+    angular_max: 1.2
+    publish_rate: 20.0
+
+odom_recorder:
+  ros__parameters:
+    odom_topic: odom
+    result_dir: ~/gazebo_diff_drive_car_results

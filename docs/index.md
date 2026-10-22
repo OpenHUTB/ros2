@@ -106,6 +106,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [Gazebo 差速驱动小车物理仿真与多传感器闭环控制](./ground/gazebo_diff_drive_car.md) —— 在 Gazebo 中构建差速驱动无人车，实现键盘运动控制、激光雷达避障与深度相机视觉避障三套闭环，含性能评价与多传感器对比
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
