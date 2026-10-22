@@ -28,7 +28,12 @@ class Scenario:
 
 class Simulation:
     """简化纵向动力学；保留重力和质量。 Simplified longitudinal dynamics with gravity and mass."""
-    def __init__(self, scenario=Scenario()):
+    def __init__(self, scenario=Scenario(), controller="reference"):
+        if controller not in ("reference", "range"):
+            raise ValueError("未知控制器 / Unknown controller")
+        self.controller = controller
+        self.previous_range = None
+        self.closing_speed = 0.0
         self.scenario = scenario
         self.model = mujoco.MjModel.from_xml_path(str(Path(__file__).with_name("scene.xml")))
         self.model.body_pos[self.model.body("drone").id] = [scenario.start_x, 0, scenario.height]
@@ -51,17 +56,45 @@ class Simulation:
         target_speed = min(1.5, np.sqrt(2 * 0.8 * max(clearance - 0.8, 0)))
         return float(np.clip(3 * (target_speed - speed), -2.5, 1.2))
 
+    def sense(self):
+        """读取真实测距传感器并估计闭合速度。 Read the rangefinder and estimate closing speed."""
+        distance = float(self.data.sensor("front_range").data[0])
+        valid = bool(np.isfinite(distance) and 0 <= distance < 20)
+        if valid:
+            if self.previous_range is not None:
+                measured_speed = (self.previous_range - distance) / self.model.opt.timestep
+                # 一阶低通抑制差分抖动，不读取机体真实水平速度。
+                # First-order filtering smooths finite differences without true horizontal velocity.
+                self.closing_speed = 0.8 * self.closing_speed + 0.2 * measured_speed
+            self.previous_range = distance
+        else:
+            self.previous_range = None
+            self.closing_speed = 0.0
+        altitude = float(self.data.sensor("body_position").data[2])
+        return distance, self.closing_speed, altitude, valid
+
     def step(self):
         clearance, speed, height = self.observe()
-        acceleration = self.control(clearance, speed)
+        distance, closing_speed, sensed_height, valid = self.sense()
+        if self.controller == "range":
+            # 传感器在机身前缘外0.01m，补偿固定安装偏移。
+            # The sensor sits 0.01m ahead of the airframe surface.
+            acceleration = self.control(distance + 0.01, closing_speed) if valid else -2.5
+        else:
+            acceleration = self.control(clearance, speed)
         # 升力抵消重力，PD反馈保持高度；不直接修改速度。
         # Lift balances gravity; PD feedback holds altitude without resetting velocity.
-        vertical_acceleration = 16 * (self.scenario.height - height) - 8 * self.data.qvel[1]
+        vertical_acceleration = 16 * (self.scenario.height - sensed_height) - 8 * self.data.qvel[1]
         self.data.xfrc_applied[self.drone_id] = 0
         self.data.xfrc_applied[self.drone_id, :3] = [self.mass * acceleration, 0, self.mass * (9.81 + vertical_acceleration)]
         row = {"time_s": float(self.data.time), "range_m": clearance, "speed_m_s": speed,
-               "height_m": height, "accel_m_s2": acceleration, "collision": int(self.data.ncon > 0)}
+               "height_m": height, "accel_m_s2": acceleration, "collision": int(self.data.ncon > 0),
+               "sensor_range_m": distance, "closing_speed_m_s": closing_speed,
+               "height_error_m": self.scenario.height - sensed_height, "sensor_valid": int(valid)}
         mujoco.mj_step(self.model, self.data)
+        # 同步积分后的传感器，避免下一控制步读取上一步的位置。
+        # Refresh post-integration sensors before the next control sample.
+        mujoco.mj_forward(self.model, self.data)
         return row
 
     def run(self, callback=None):
@@ -71,9 +104,11 @@ class Simulation:
             rows.append(self.step())
             if callback:
                 callback(self)
-        summary = {"scenario": self.scenario.name, "steps": len(rows),
+        final_clearance, final_speed, _ = self.observe()
+        summary = {"scenario": self.scenario.name, "controller": self.controller, "steps": len(rows),
                    "collision_steps": sum(r["collision"] for r in rows),
-                   "min_clearance_m": min(r["range_m"] for r in rows),
-                   "final_speed_m_s": rows[-1]["speed_m_s"],
+                   "min_clearance_m": min(final_clearance, min(r["range_m"] for r in rows)),
+                   "final_speed_m_s": final_speed,
+                   "invalid_sensor_steps": sum(not r["sensor_valid"] for r in rows),
                    "max_height_error_m": max(abs(r["height_m"] - self.scenario.height) for r in rows)}
         return rows, summary

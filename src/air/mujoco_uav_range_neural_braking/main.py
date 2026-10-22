@@ -13,8 +13,9 @@ def main():
     parser.add_argument("--headless", action="store_true", help="无窗口 / Run without a window")
     parser.add_argument("--output", type=Path, default=Path("results"), help="结果目录 / Results directory")
     parser.add_argument("--speed", type=float, default=1.5, help="初速度 / Initial speed, m/s")
+    parser.add_argument("--controller", choices=("reference", "range"), default="range", help="控制输入 / Control input")
     args = parser.parse_args()
-    simulation = Simulation(Scenario(speed=args.speed))
+    simulation = Simulation(Scenario(speed=args.speed), controller=args.controller)
     if args.headless:
         rows, summary = simulation.run()
     else:

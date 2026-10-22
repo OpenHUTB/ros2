@@ -16,5 +16,8 @@
       <site name="front_sensor" pos="0.26 0 0" quat="0.70710678 0 0.70710678 0" size="0.015" rgba="0 1 0 1"/>
     </body>
   </worldbody>
-  <sensor><rangefinder name="front_range" site="front_sensor" cutoff="20"/></sensor>
+  <sensor>
+    <rangefinder name="front_range" site="front_sensor" cutoff="20"/>
+    <framepos name="body_position" objtype="body" objname="drone"/>
+  </sensor>
 </mujoco>
