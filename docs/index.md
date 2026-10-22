@@ -108,6 +108,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机定高日志误差与抗扰恢复时间评估](./air/uav_hover_log_eval.md)
+
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
