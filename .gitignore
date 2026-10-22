@@ -38,6 +38,7 @@ data/
 *.gif
 *.pth
 *.pt
+*.pt.json
 *.onnx
 *.ckpt
 *.bag.active
@@ -55,6 +56,9 @@ trajectories/*.json
 
 # 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
 !docs/img/**/*.gif
+
+# 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
+!src/humanoid/humanoid_ppo_locomotion/weights/*.pt
 
 # 编辑器 / 系统
 .vscode/
