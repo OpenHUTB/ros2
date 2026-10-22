@@ -158,6 +158,6 @@ python3 src/ground/cliff_brake/brake_test.py
 
   ![catkin_make 编译与 brake_test.py 定量测试输出](../img/ground/car1.gif)
 
-- 图 2：`roslaunch` 三节点运行终端输出：
+- 图 2：运行效果演示：
 
   ![roslaunch 三节点终端输出](../img/ground/car2.gif)
