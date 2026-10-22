@@ -104,17 +104,21 @@ pip install numpy
 ```shell
 cd src/air/uav_route_cruise
 
-# 训练（600k 步约 8 分钟 / 单核 CPU）
-python3 scripts/train.py --steps 600000 --seed 0 --out models/route_ppo.npz
+# 训练（1.2M 步约 25 分钟 / 单核 CPU）
+python3 scripts/train.py --steps 1200000 --seed 0 --out models/route_ppo_s0.npz
 
-# 评估（导出轨迹对比图到 results/）
-python3 scripts/eval.py --model models/route_ppo.npz --episodes 20
+# 评估（下面的结果表用的就是这条命令：30 回合、eval seed=1000）
+python3 scripts/eval.py --model models/route_ppo_s0.npz --episodes 30 --seed 1000
+
+# 多评估种子稳健性（8 个 eval seed、各 30 回合）
+python3 scripts/multiseed_eval.py --models models/route_ppo_s0.npz models/route_ppo_s1.npz \
+    --seeds 0,1,2,3,4,5,1000,1001 --episodes 30
 
 # 与纯跟踪基线对照
-python3 scripts/compare.py --model models/route_ppo.npz --seeds 0,1,2 --episodes 10
+python3 scripts/compare.py --model models/route_ppo_s0.npz --seeds 0,1,2 --episodes 30
 ```
 
-训练结束后会把 MLP 权重导出为 `models/route_ppo.npz`（约 80 KB），
+训练结束后会把 MLP 权重导出为 `models/route_ppo_s0.npz`（约 80 KB），
 部署侧用 `policy.MlpPolicy` 做纯 numpy 前向，**不需要 torch / sb3**。
 
 ## 部署到 CarlaAir
@@ -144,7 +148,7 @@ roslaunch uav_route_cruise main.launch dry_run:=true
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `weights` | `models/route_ppo.npz` | 策略权重 |
+| `weights` | `models/route_ppo_s0.npz` | 策略权重 |
 | `route` | `rect` | 内置航线（`rect` / `figure8`） |
 | `route_points` | `[]` | 自定义航线（绝对 ENU 坐标），优先于 `route` |
 | `rate` | `20.0` | 控制频率 (Hz) |
@@ -518,21 +522,45 @@ python3 scripts/route_node.py _dry_run:=false
 节点启动后 `/rosnode list` 里能看到 `/uav_route_cruise`，
 `/rostopic list` 里能看到 `/uav/cmd_vel` 与 `/uav_route_cruise/lap_done`。
 
-连续飞 **41 秒**，按 1 Hz 采样记录 `/uav/odom`：
+#### 这次实飞的实际条件（重要：和默认航线不是同一条）
 
-| 指标 | 实测值 |
-| --- | --- |
-| x 范围 | −6.55 ~ 7.17 m（跨度 **13.71 m**）|
-| y 范围 | −6.28 ~ 6.15 m（跨度 **12.43 m**）|
-| 高度 | −28.22 ~ −27.48 m（**波动仅 0.74 m**）|
-| 累计路程 | **174.3 m** ≈ 3 圈（航线 58 m）|
+| 项 | 这次实飞用的 | 文档别处的默认值 |
+| --- | --- | --- |
+| 航线 | 用 `route_points` 自定义的 **15.4 m × 13.8 m 直角矩形**（周长 **58.4 m**），高度对齐无人机当前高度 | 20 m × 14 m **圆角**矩形，62.80 m |
+| `speed_scale` | **0.7**（速度命令上限 2.1 m/s） | 1.0（上限 3.0 m/s）|
+| 采样方式 | shell 循环里 `rostopic echo -n1`，**每轮阻塞等两次消息** | —— |
+
+**因此下面两处必须按实际条件读，不能套用默认值：**
+
+- 航线的 x 跨度是 **15.4 m**（不是 20 m），y 跨度是 **13.8 m**（不是 14 m）。
+  实测包围盒 13.71 × 12.43 m 分别是这条航线的 **89% / 90%** —— 与"飞了整圈"是自洽的。
+- 采样**不是 1 Hz**：41 个样本实际跨了远超 41 秒。按 `speed_scale=0.7` 的 2.1 m/s 上限反推，
+  174.3 m 至少需要 **83 秒**。所以**"41 秒"这个标注是错的**，由它算出的平均速度也不成立。
+
+| 指标 | 实测值 | 说明 |
+| --- | --- | --- |
+| x 范围 | −6.55 ~ 7.17 m（跨度 **13.71 m**）| 为该航线的 89% |
+| y 范围 | −6.28 ~ 6.15 m（跨度 **12.43 m**）| 为该航线的 90% |
+| 高度 | −28.22 ~ −27.48 m（**波动仅 0.74 m**）| 可靠 |
+| 采样点数 | 41 个 | 采样间隔 **不均匀**（不是 1 Hz）|
+| 累计路程 | **174.3 m**（≈ 58.4 m × 3 圈）| 由 1 Hz 相邻点弦长求和，是**下界** |
+| 实际时长 | **未记录**（≥ 83 s）| 上一版误标为 41 s，已更正 |
+| 平均水平速度 | **无法给出** | 缺可靠时长，不作结论 |
 
 ![CarlaAir 实测轨迹](../img/air/uav_route_cruise/carlaair_flight_trace.png)
 
-上图是 41 秒的实测轨迹（蓝线）与目标航线（灰线）。可以看出：
-**无人机确实沿矩形航线绕圈飞行，高度稳定在 ±0.4 m 内，41 秒飞了约 3 圈**。
-但**转弯处过冲明显**（四个角都甩出去 1~2 m），原因是观测里只有一个 4 m 前视点、
-看不到弯道走向 —— 这与「加 3 个前视点反而更难训练」的实测结论一起，说明这块还没调好。
+上图是这次实飞的轨迹（蓝线）与当时的自定义航线（灰线）。能得出的**可靠结论**是：
+
+- 无人机**沿矩形航线绕圈飞行**（轨迹形状与该矩形吻合）；
+- **高度稳定**，波动 0.74 m；
+- **转弯处过冲明显**（四个角甩出去 1~2 m），因为观测里只有一个 4 m 前视点、
+  看不到弯道走向 —— 这和「加 3 个前视点反而更难训练」的实测结论一起，说明这块还没调好。
+
+> **待重做**：用**默认航线（20×14 圆角，62.80 m）**、`speed_scale=1.0`、
+> 并用 rclpy 订阅 `/uav/odom` 按**真实时间戳**记录（而不是 shell 里阻塞采样），
+> 才能给出「时长 / 平均速度 / 圈数」这组互相自洽的数字。
+> 本次没有完成（虚拟机当时无法启动），**所以上表里这三项都标为不确定**，
+> 不再把它们当作实飞证据。
 
 ### 这次实飞**没有**验证到的部分（如实说明）
 

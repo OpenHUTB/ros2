@@ -36,13 +36,13 @@ pip install numpy gymnasium matplotlib
 
 # 训练（需要 stable-baselines3 + torch）
 pip install stable-baselines3 torch
-python3 scripts/train.py --steps 600000 --seed 0 --out models/route_ppo.npz
+python3 scripts/train.py --steps 600000 --seed 0 --out models/route_ppo_s0.npz
 
 # 评估（导出轨迹对比图到 results/）
-python3 scripts/eval.py --model models/route_ppo.npz --episodes 20
+python3 scripts/eval.py --model models/route_ppo_s0.npz --episodes 30 --seed 1000
 
 # 与「纯跟踪」基线对照
-python3 scripts/compare.py --model models/route_ppo.npz --seeds 0,1,2 --episodes 10
+python3 scripts/compare.py --model models/route_ppo_s0.npz --seeds 0,1,2 --episodes 30
 ```
 
 ### 2. 在 CarlaAir / AirSim 里部署
@@ -71,25 +71,34 @@ python3 scripts/main.py --compare ... # 对照
 
 #### CarlaAir 实飞验证结果
 
-已在 **CarlaAir v0.1.7（Town10HD）+ ROS Noetic + AirSim `Drone1`** 上实飞过：
+已在 **CarlaAir v0.1.7（Town10HD）+ ROS Noetic + AirSim `Drone1`** 上实飞过。
 
-| 项 | 实测 |
-| --- | --- |
-| `/uav/odom` 频率 | **20.005 Hz** |
-| `/lidar/points` 频率 | 9.996 Hz |
-| 连续飞行 | 41 秒，x 跨度 13.71 m、y 跨度 12.43 m |
-| 高度稳定性 | −28.22 ~ −27.48 m（**波动 0.74 m**）|
-| 累计路程 | **174.3 m ≈ 3 圈**（航线 58 m）|
+> ⚠️ **这次实飞用的不是默认航线**：通过 `route_points` 传了一条 **15.4 × 13.8 m 直角矩形**
+> （周长 **58.4 m**），`speed_scale = 0.7`（命令上限 2.1 m/s）。
+> 默认航线是 20 × 14 m 圆角矩形（62.80 m），两者不能混用。
+
+| 项 | 实测 | 说明 |
+| --- | --- | --- |
+| `/uav/odom` 频率 | **20.005 Hz** | 可靠 |
+| `/lidar/points` 频率 | 9.996 Hz | 可靠（但内容为空点云，见下）|
+| x / y 跨度 | 13.71 m / 12.43 m | 为该航线的 **89% / 90%** |
+| 高度 | −28.22 ~ −27.48 m（波动 **0.74 m**）| 可靠 |
+| 累计路程 | **174.3 m**（≈ 58.4 m × 3 圈）| 1 Hz 弦长求和，是**下界** |
+| 实际时长 | **未记录**（推算 ≥ 83 s）| 上一版误标「41 秒」，已更正 |
+| 平均速度 | **不作结论** | 缺可靠时长 |
 
 ![CarlaAir 实测轨迹](../../../docs/img/air/uav_route_cruise/carlaair_flight_trace.png)
 
-**已验证**：节点能起、能订阅真实 odom、能算航线几何、能发 `/uav/cmd_vel`、无人机真的沿矩形航线绕圈。
+**已验证**：节点能起、能订阅真实 odom、能算航线几何、能发 `/uav/cmd_vel`、
+无人机沿矩形航线绕圈（轨迹形状与该 15.4×13.8 m 航线吻合），高度稳定。
 
-**未验证**（如实说明）：
+**未验证 / 待重做**（如实说明）：
 
 * **避障** —— 桥接发出的 `/lidar/points` 是空点云（AirSim 侧 `getLidarData('lidar1')`
-  有 1785 个点，但桥接的坐标转换返回空），这次飞的是「全程无障碍」的纯循迹；
-  障碍绕避仍只有离线结论。
+  有 1785 个点，但桥接的坐标转换返回空），这次飞的是「全程无障碍」的纯循迹。
+* **时长与平均速度** —— 采样用的是 shell 里阻塞的 `rostopic echo -n1`，**不是 1 Hz**，
+  所以「41 秒」这个标注是错的，由它算出的平均速度不成立。
+  待用**默认航线 + `speed_scale=1.0` + rclpy 按真实时间戳记录**重做。
 * **转弯过冲** —— 四个角都甩出去 1~2 m，观测里只有一个 4 m 前视点，看不到弯道走向。
 
 ## 话题
