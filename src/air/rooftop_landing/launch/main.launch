@@ -14,9 +14,10 @@
 
        换地图时最常现场调整的是感知阈值（点云稀疏/屋顶较小/候选面被地面挤掉），
        这些都已经暴露成 launch 参数，不必再改 config/rooftop_landing.yaml：
-         roslaunch rooftop_landing main.launch max_planes:=15 min_plane_inliers:=40
-         roslaunch rooftop_landing main.launch min_roof_area:=2.0 cluster_min_points:=1
+         roslaunch rooftop_landing main.launch min_plane_inliers:=40 min_roof_area:=2.0
+         roslaunch rooftop_landing main.launch cluster_min_points:=1 ground_margin:=3.0
          roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
+         roslaunch rooftop_landing main.launch require_ground_reference:=false
        ============================================================ -->
 
   <arg name="safe_altitude" default="5.0"     doc="高于屋顶的安全高度 (m)"/>
@@ -28,11 +29,12 @@
 
   <!-- 感知阈值：换地图 / 换点云密度时最常调整的几个 -->
   <arg name="min_height_mode"    default="relative" doc="屋顶高度判定：relative（以检出的地面为基准）| absolute（绝对 ENU 阈值）"/>
-  <arg name="ground_margin"      default="1.0"  doc="relative 模式：比检出地面至少高这么多米才算屋顶"/>
+  <arg name="ground_margin"      default="4.0"  doc="relative 模式：比检出地面至少高这么多米才算屋顶（实测 1.0 会选中细长条，4.0 才选到正常屋面）"/>
+  <arg name="require_ground_reference" default="true" doc="只检出 1 个水平面时是否要求必须先确定地面：true=不降落实继续搜索，false=旧行为（不做高度过滤）"/>
   <arg name="min_height"         default="0.5"  doc="absolute 模式的高度下限 (m)"/>
   <arg name="min_plane_inliers"  default="120"  doc="一个平面最少点数（点云稀疏时调小）"/>
   <arg name="min_roof_area"      default="8.0"  doc="屋顶最小面积 (m^2)"/>
-  <arg name="max_planes"         default="5"    doc="最多提取几个候选水平面（城市视野可提到 15）"/>
+  <arg name="max_planes"         default="15"   doc="最多提取几个候选水平面（实测城市/高空视野需要 15）"/>
   <arg name="min_landing_radius" default="0.6"  doc="降落点最小安全半径 (m)；一个候选都不满足就继续搜索"/>
   <arg name="cluster_min_points" default="2"    doc="连通域聚类：一个栅格至少几个点才算被占据"/>
   <arg name="tick_rate_hz"       default="10.0" doc="主循环频率 (Hz)，下降阶段的 cmd_vel 也按此频率发布"/>
@@ -45,6 +47,7 @@
   <param name="frame/z_up"             value="$(arg z_up)"/>
   <param name="perception/min_height_mode"    value="$(arg min_height_mode)"/>
   <param name="perception/ground_margin"      value="$(arg ground_margin)"/>
+  <param name="perception/require_ground_reference" value="$(arg require_ground_reference)"/>
   <param name="perception/min_height"         value="$(arg min_height)"/>
   <param name="perception/min_plane_inliers"  value="$(arg min_plane_inliers)"/>
   <param name="perception/min_roof_area"      value="$(arg min_roof_area)"/>
