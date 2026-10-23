@@ -31,6 +31,12 @@ class MujocoSimulation:
     """Own the MuJoCo model, data and four wheel actuators."""
 
     ACTUATOR_NAMES = ('left_front', 'left_rear', 'right_front', 'right_rear')
+    WHEEL_JOINT_NAMES = (
+        'left_front_joint',
+        'left_rear_joint',
+        'right_front_joint',
+        'right_rear_joint',
+    )
 
     def __init__(self, model_path: Path) -> None:
         try:
@@ -49,6 +55,19 @@ class MujocoSimulation:
         )
         self._chassis_body_id = self._require_id(
             mujoco.mjtObj.mjOBJ_BODY, 'chassis'
+        )
+        self._ground_geom_id = self._require_id(
+            mujoco.mjtObj.mjOBJ_GEOM, 'ground'
+        )
+        self._wheel_joint_ids = tuple(
+            self._require_id(mujoco.mjtObj.mjOBJ_JOINT, name)
+            for name in self.WHEEL_JOINT_NAMES
+        )
+        self._accelerometer_sensor_id = self._require_id(
+            mujoco.mjtObj.mjOBJ_SENSOR, 'imu_accelerometer'
+        )
+        self._gyroscope_sensor_id = self._require_id(
+            mujoco.mjtObj.mjOBJ_SENSOR, 'imu_gyroscope'
         )
         self._initial_qpos = self.data.qpos.copy()
         self._initial_qvel = self.data.qvel.copy()
@@ -69,14 +88,52 @@ class MujocoSimulation:
             lower, upper = self.model.actuator_ctrlrange[actuator_id]
             self.data.ctrl[actuator_id] = float(np.clip(command, lower, upper))
 
+    def set_ground_friction(self, coefficient: float) -> None:
+        """Update sliding friction while preserving torsional/rolling values."""
+        if not np.isfinite(coefficient) or coefficient <= 0.0:
+            raise ValueError('friction coefficient must be finite and positive')
+        self.model.geom_friction[self._ground_geom_id, 0] = coefficient
+
+    def wheel_state(self) -> tuple[tuple[float, ...], tuple[float, ...]]:
+        """Return wheel joint positions and velocities in canonical order."""
+        positions = tuple(
+            float(self.data.qpos[self.model.jnt_qposadr[joint_id]])
+            for joint_id in self._wheel_joint_ids
+        )
+        velocities = tuple(
+            float(self.data.qvel[self.model.jnt_dofadr[joint_id]])
+            for joint_id in self._wheel_joint_ids
+        )
+        return positions, velocities
+
+    def _sensor_vector(self, sensor_id: int) -> Tuple[float, float, float]:
+        address = int(self.model.sensor_adr[sensor_id])
+        dimension = int(self.model.sensor_dim[sensor_id])
+        if dimension != 3:
+            raise RuntimeError('expected a three-axis MuJoCo sensor')
+        values = self.data.sensordata[address:address + dimension]
+        return tuple(float(value) for value in values)
+
+    def imu_state(
+        self,
+    ) -> tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+        """Return accelerometer and gyroscope vectors in the IMU site frame."""
+        return (
+            self._sensor_vector(self._accelerometer_sensor_id),
+            self._sensor_vector(self._gyroscope_sensor_id),
+        )
+
     def step(self) -> None:
         self._mujoco.mj_step(self.model, self.data)
 
-    def reset(self) -> None:
+    def reset(self, preserve_time: bool = False) -> None:
+        current_time = float(self.data.time)
         self._mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[:] = self._initial_qpos
         self.data.qvel[:] = self._initial_qvel
         self.data.ctrl[:] = 0.0
+        if preserve_time:
+            self.data.time = current_time
         self._mujoco.mj_forward(self.model, self.data)
 
     def planar_state(self) -> SimulationState:
