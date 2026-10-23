@@ -32,4 +32,6 @@ python main.py --headless --controller mlp --model models/mlp_controller.json --
 
 ## 适用范围 / Scope
 
+三档初速度的扩展对比及完整操作步骤见[课程报告](mujoco_uav_course_report.md)。MLP 在 3 m/s 外推工况记录到 3 个接触步，最小间距为 -0.004636 m；该速度超过数据采集的 2.5 m/s 上限。默认 1.5 m/s 结果不能推广到高速接近工况。 / See the [course report](mujoco_uav_course_report.md) for three-speed comparisons and complete procedures. At the extrapolation speed of 3 m/s, the MLP records three contact steps and a minimum clearance of -0.004636 m. This speed exceeds the 2.5 m/s data-collection limit. Default-speed results do not establish performance for faster approaches.
+
 该模型用于比较固定航向简化场景中的水平制动控制，不包含完整六自由度姿态、旋翼动力学、真实传感器噪声或飞控硬件接口。指标只描述上述 MuJoCo 场景，不外推为真实飞行安全结论。/ This model compares horizontal braking in a simplified fixed-heading scene. It does not include full six-degree-of-freedom attitude, rotor dynamics, real sensor noise or a flight-controller hardware interface. The metrics apply only to the stated MuJoCo scene and are not a real-flight safety claim.

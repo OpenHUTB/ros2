@@ -93,3 +93,9 @@ ros2 topic echo /uav/state
 The default dataset has 30 episodes of 12 s, split into 18/6/6 episodes and 21600/7200/7200 rows for training/validation/test. Features are range, closing speed and altitude error; acceleration is the target. `manifest.json` records episode parameters and full-file SHA-256 values. Identical configurations produce matching hashes on Windows and Ubuntu. Full data reside in `datasets/`; `sample_data/` contains schema samples and a summary.
 
 训练标签来自解析测距控制基线。由于回合初始高度等于参考值，数据中的高度误差恒为零；当前 MLP 因此只使用测距和闭合速度两个特征，高度仍由独立 PD 回路保持。 / Training labels come from the analytical ranging controller. Since each episode starts at the reference altitude, height error is always zero in the dataset. The MLP therefore uses range and closing speed as its two features, while a separate PD loop holds altitude.
+
+## 完整报告 / Complete report
+
+[课程报告](../../../docs/air/mujoco_uav_course_report.md)包含操作步骤、公式、算法流程、源码解析、三种策略在三档初速度下的指标以及 ROS 2 观测结果。 / The [course report](../../../docs/air/mujoco_uav_course_report.md) contains procedures, equations, algorithm flow, source analysis, three-controller comparisons at three initial speeds, and ROS 2 observations.
+
+神经控制在默认 1.5 m/s 场景无碰撞；3 m/s 超出训练速度范围，记录到接触。 / Neural control has no contact in the default 1.5 m/s scene; contact is recorded at 3 m/s, outside training-speed coverage.
