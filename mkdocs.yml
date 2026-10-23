@@ -118,6 +118,7 @@ nav:
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
+    - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 空域载具八叉树三维寻路:
