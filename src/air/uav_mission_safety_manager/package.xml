@@ -2,10 +2,10 @@
 <package format="3">
   <name>uav_mission_safety_manager</name>
   <version>0.1.0</version>
-  <description>ROS 2 Foxy UAV mission manager with asynchronous AirSim safety state machine.</description>
+  <description>ROS 2 UAV mission manager with waypoint queues and asynchronous safety state machine.</description>
   <maintainer email="1357170941@qq.com">LuLuforeverx2</maintainer>
   <license>Apache-2.0</license>
-  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
   <depend>rclpy</depend>
   <exec_depend>ament_index_python</exec_depend>
   <depend>std_msgs</depend>
