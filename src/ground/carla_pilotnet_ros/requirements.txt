@@ -1,0 +1,7 @@
+# 安装 PyTorch CPU 版本需指定 index-url，否则会拉取巨大的 CUDA 版本
+# pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.0.0
+torchvision>=0.15.0
+opencv-python>=4.5.0
+numpy
+pillow

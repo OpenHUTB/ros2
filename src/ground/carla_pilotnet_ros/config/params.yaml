@@ -1,0 +1,10 @@
+image_publisher:
+  publish_rate: 2.0
+  loop: true
+pilotnet_inference:
+  input_h: 66
+  input_w: 200
+  infer_every_n: 2
+control_node:
+  max_steer: 1.0
+  max_throttle: 1.0
