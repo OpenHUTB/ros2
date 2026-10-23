@@ -1,0 +1,6 @@
+online_slip_compensation:
+  ros__parameters:
+    sensor_timeout_seconds: 0.2
+    max_linear_scale: 1.5
+    max_linear_acceleration: 1.5
+    max_angular_acceleration: 3.0
