@@ -63,9 +63,30 @@ python evaluate.py --controller range --render --output results/range
 python -m pytest -q
 ```
 
-`range` 使用前向测距和差分闭合速度；`reference` 使用物理真值作为参照。`launch` 支持 `controller:=range` 或 `controller:=reference`。测距无效时施加最大反向制动；此措施仅适用于当前前进接近场景，不保证任意方向运动的安全性。首帧闭合速度初始化为零，随后按 `0.8 × 原估计 + 0.2 × 距离差分` 更新。
+`range` 使用前向测距和差分闭合速度；`reference` 使用物理真值作为参照；`mlp` 加载 `models/mlp_controller.json` 的 NumPy MLP。`launch` 支持三种控制器。测距无效时施加最大反向制动；此措施仅适用于当前前进接近场景，不保证任意方向运动的安全性。首帧闭合速度初始化为零，随后按 `0.8 × 原估计 + 0.2 × 距离差分` 更新。
 
-`range` uses forward ranging and finite-difference closing speed; `reference` uses physics ground truth. Launch accepts either controller parameter. Invalid ranging applies maximum reverse braking; this policy is limited to the forward-approach scene and is not a safety guarantee for arbitrary motion. Closing speed starts at zero and then updates as `0.8 × previous estimate + 0.2 × range difference / timestep`.
+`range` uses forward ranging and finite-difference closing speed; `reference` uses physics ground truth; `mlp` loads the NumPy model in `models/mlp_controller.json`. Launch accepts all three controller modes. Invalid ranging applies maximum reverse braking; this policy is limited to the forward-approach scene and is not a safety guarantee for arbitrary motion. Closing speed starts at zero and then updates as `0.8 × previous estimate + 0.2 × range difference / timestep`.
+
+## 轻量学习控制 / Lightweight learning controller
+
+训练使用回合数据中的距离和闭合速度两个有效特征，隐藏层为 16 个 ReLU 单元，权重以 JSON 保存，不依赖 PyTorch 或 GPU。/ Training uses range and closing speed from episode data, with 16 ReLU units; JSON weights keep the controller independent of PyTorch and GPUs.
+
+```bash
+python train.py --data datasets --output models
+python main.py --headless --controller mlp --model models/mlp_controller.json --output results/mlp
+```
+
+当前模型测试集 MAE 为 0.1454 m/s²，测试集 RMSE 为 0.2604 m/s²；在默认 MuJoCo 场景运行 1000 步无碰撞，最小间距为 0.459629 m。/ The current model reaches 0.1454 m/s² test MAE and 0.2604 m/s² test RMSE. In the default MuJoCo scene it runs 1000 steps without contact, with a 0.459629 m minimum clearance. These numbers describe this fixed-heading scene and are not a flight-safety guarantee.
+
+## ROS 2 接口 / ROS 2 interface
+
+`launch/ros_node.launch.py` 启动 `uav_range_braking` 节点。节点以 100 Hz 推进仿真并发布 `/uav/front_range_m`、`/uav/braking_accel_m_s2` 和 `/uav/state`；状态数组依次为时间、测距、闭合速度和高度。/ `launch/ros_node.launch.py` starts `uav_range_braking`. The node advances the simulation at 100 Hz and publishes `/uav/front_range_m`, `/uav/braking_accel_m_s2`, and `/uav/state`; the state array is time, range, closing speed, and height.
+
+```bash
+source /opt/ros/humble/setup.bash
+ros2 launch ./launch/ros_node.launch.py controller:=mlp
+ros2 topic echo /uav/state
+```
 
 数据默认 30 回合、每回合 12 s，训练/验证/测试为 18/6/6 回合，21600/7200/7200 行。特征为距离、闭合速度、高度误差，标签为加速度；各回合参数与完整 CSV 的 SHA-256 写入 `manifest.json`。Windows 与 Ubuntu 的相同配置产出一致校验值。完整数据保留在 `datasets/`，仓库的 `sample_data/` 提供字段样本及汇总。
 

@@ -130,6 +130,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机轻量神经网络与 ROS 2 接口](./air/mujoco_uav_neural_ros2.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
