@@ -12,6 +12,12 @@ This project re-implements and extends the ideas of
 (PyBullet + Stable-Baselines3 drone racing) and targets a **plain Ubuntu/ROS VM** — no
 GPU, no flight controller, no Gazebo required.
 
+> **完整中文文档（图表、实验分析与复现步骤）**：
+> [基于 CBF-PPO 的无人机安全导航](../../../docs/air/safedrl_drone_nav.md)
+>
+> 报告图片只在本仓库顶层的 `docs/img/safedrl_drone_nav/` 保存一份，功能包源码目录内
+> 不重复存放静态图表。
+
 ---
 
 ## Headline result
@@ -38,12 +44,9 @@ negative value means the airframe geometrically penetrated an obstacle.*
    success 0.458 → 0.833, because a large fraction of unfiltered failures are avoidable
    crashes. Safety and performance are not in tension here.
 
-![Ablation](docs/figures/ablation_ablation.png)
-
-The per-episode distribution makes the guarantee graphical — with the filter, no episode
-crosses the unsafe boundary:
-
-![Minimum contact clearance](docs/figures/margins_ablation.png)
+The figures behind this table — the four-way ablation, the per-episode clearance
+distribution, the 3-D flight path and the training curves — are collected in the course
+page: [实验结果与图表](../../../docs/air/safedrl_drone_nav.md).
 
 ---
 
@@ -146,17 +149,10 @@ Barriers are placed on **all obstacles, the ground, the ceiling and the corridor
 Gate frames are deliberately *not* barriers — the task requires flying through the
 aperture, and the 0.58 m aperture against a 0.10 m airframe radius leaves 5.8× clearance.
 
-![Trajectory](docs/figures/trajectory_3d_ppo_lagrangian_cbf.png)
-
-*3-D flight path (coloured by safety margin), slalom gates, static obstacle spheres and
-the swept paths of the dynamic obstacles.*
-
-![State response](docs/figures/state_response_ppo_lagrangian_cbf.png)
-
-*State time-domain response: velocity (actual vs. commanded vs. CBF-filtered), attitude,
-the **safety-margin curve against the unsafe boundary**, rotor speeds and the wind field.
-Note the filter clipping in panel 1 and the margin in panel 3 touching but never crossing
-zero.*
+The 3-D flight path (coloured by safety margin) and the state time-domain response —
+velocity actual vs. commanded vs. CBF-filtered, attitude, the safety-margin curve against
+the unsafe boundary, rotor speeds and the wind field — are figures 1 and 4 of the
+[course page](../../../docs/air/safedrl_drone_nav.md).
 
 ### 2.4 Constrained RL (`scripts/lagrangian_ppo.py`)
 
@@ -259,9 +255,8 @@ And from the constrained **training** log (per-rollout trace):
 
 ### Convergence
 
-![Convergence](docs/figures/convergence_all.png)
-
-![Dashboard](docs/figures/training_dashboard_ppo_lagrangian.png)
+Training curves (return, success rate, value and entropy loss for both policies) are in
+figures 5–7 of the [course page](../../../docs/air/safedrl_drone_nav.md).
 
 ---
 
@@ -341,9 +336,12 @@ SafeDRL-DroneNav-ROS/
 │   ├── test_environment.py     # 8 closed-loop integration tests
 │   └── safety_filter.test      # rostest wiring
 ├── checkpoints/                # ONLY best_model.zip is versioned (see §3)
-├── logs/                       # GENERATED, git-ignored: logs/TB/metrics/traces
-└── docs/figures/               # all report figures (200 dpi PNG)
+└── logs/                       # GENERATED, git-ignored: logs/TB/metrics/traces
 ```
+
+Report figures are **not** duplicated inside the package. They are kept once, under the
+repository's top-level `docs/img/safedrl_drone_nav/`, and are referenced from the
+[course page](../../../docs/air/safedrl_drone_nav.md).
 
 ---
 

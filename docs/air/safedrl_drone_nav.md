@@ -198,6 +198,25 @@ v_{\text{des}}=2.6\,(a_1,a_2,a_3)\ \text{m/s},
 
 图 3　四组消融实验的成功率、碰撞率与平均代价对比。
 
+![状态时序响应](../img/safedrl_drone_nav/state_response.png)
+
+图 4　CBF 滤波下的状态时序响应：速度（实际 / 指令 / 滤波后）、姿态、安全裕度、
+旋翼转速与风场。第一栏可见滤波器的速度裁剪，第三栏安全裕度逼近但未越过零线。
+
+### 5.1 训练收敛过程
+
+![综合收敛曲线](../img/safedrl_drone_nav/convergence.png)
+
+图 5　无约束 PPO 与 PPO-Lagrangian 的平均回报与评测成功率随训练步数的变化。
+
+![基线收敛细节](../img/safedrl_drone_nav/convergence_ppo_baseline.png)
+
+图 6　无约束 PPO 基线的回合奖励、回合长度、价值损失与熵损失。
+
+![约束策略收敛细节](../img/safedrl_drone_nav/convergence_ppo_lagrangian.png)
+
+图 7　PPO-Lagrangian 策略的同组训练曲线，价值损失由约 4.2 收敛至 0.6 附近。
+
 ## 6. 运行指令 <span id="quickstart"></span>
 
 ### 6.1 环境安装

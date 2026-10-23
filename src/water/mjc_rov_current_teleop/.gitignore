@@ -1,0 +1,8 @@
+# 生成物不进 git（权重/数据集/缓存/build 产物）
+weights/
+data/
+*.pt
+*.pth
+__pycache__/
+*.pyc
+.pytest_cache/

@@ -34,6 +34,6 @@ dist/
 checkpoints/*
 !checkpoints/best_model.zip
 
-# NOTE: docs/figures/ and docs/img/safedrl_drone_nav/ (report figures) ARE
-# committed on purpose - they are small, they are what the report renders, and
-# they are not regenerable byte-for-byte across matplotlib versions.
+# NOTE: report figures are NOT stored in this package. They are committed once,
+# under the repository's top-level docs/img/safedrl_drone_nav/, and referenced
+# from docs/air/safedrl_drone_nav.md. Do not re-add a docs/ directory here.
