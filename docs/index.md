@@ -105,8 +105,16 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
+
+* [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
+* [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
+
+
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+
+
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
