@@ -13,9 +13,10 @@ def main():
     parser.add_argument("--headless", action="store_true", help="无窗口 / Run without a window")
     parser.add_argument("--output", type=Path, default=Path("results"), help="结果目录 / Results directory")
     parser.add_argument("--speed", type=float, default=1.5, help="初速度 / Initial speed, m/s")
-    parser.add_argument("--controller", choices=("reference", "range"), default="range", help="控制输入 / Control input")
+    parser.add_argument("--controller", choices=("reference", "range", "mlp"), default="range", help="控制输入 / Control input")
+    parser.add_argument("--model", type=Path, default=None, help="MLP 权重路径 / MLP model path")
     args = parser.parse_args()
-    simulation = Simulation(Scenario(speed=args.speed), controller=args.controller)
+    simulation = Simulation(Scenario(speed=args.speed), controller=args.controller, model_path=args.model)
     if args.headless:
         rows, summary = simulation.run()
     else:

@@ -28,10 +28,15 @@ class Scenario:
 
 class Simulation:
     """简化纵向动力学；保留重力和质量。 Simplified longitudinal dynamics with gravity and mass."""
-    def __init__(self, scenario=Scenario(), controller="reference"):
-        if controller not in ("reference", "range"):
+    def __init__(self, scenario=Scenario(), controller="reference", model_path=None):
+        if controller not in ("reference", "range", "mlp"):
             raise ValueError("未知控制器 / Unknown controller")
         self.controller = controller
+        self.policy = None
+        if controller == "mlp":
+            from mlp import MLPRegressor
+            default_path = Path(__file__).with_name("models") / "mlp_controller.json"
+            self.policy = MLPRegressor.load(model_path or default_path)
         self.previous_range = None
         self.closing_speed = 0.0
         self.scenario = scenario
@@ -76,10 +81,16 @@ class Simulation:
     def step(self):
         clearance, speed, height = self.observe()
         distance, closing_speed, sensed_height, valid = self.sense()
-        if self.controller == "range":
+        if self.controller in ("range", "mlp"):
             # 传感器在机身前缘外0.01m，补偿固定安装偏移。
             # The sensor sits 0.01m ahead of the airframe surface.
-            acceleration = self.control(distance + 0.01, closing_speed) if valid else -2.5
+            if valid:
+                if self.controller == "mlp":
+                    acceleration = float(np.clip(self.policy.predict([distance + 0.01, closing_speed]), -2.5, 1.2))
+                else:
+                    acceleration = self.control(distance + 0.01, closing_speed)
+            else:
+                acceleration = -2.5
         else:
             acceleration = self.control(clearance, speed)
         # 升力抵消重力，PD反馈保持高度；不直接修改速度。
