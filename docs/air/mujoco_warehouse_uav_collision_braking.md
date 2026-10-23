@@ -1,0 +1,167 @@
+# 仓储通道巡检无人机多束测距与分级制动 / Multi-Beam Ranging and Graded Braking for Warehouse UAVs
+
+## 场景与结构 / Scene and Structure
+
+系统采用 MuJoCo 3.12.0 构建仓储巡检通道，覆盖静态箱体、横穿障碍和窄通道。无人机具有三轴平移自由度，姿态固定；测距、标签计算和 ROS 发布共享同一物理模型。
+The system uses MuJoCo 3.12.0 for warehouse inspection aisles with static boxes, crossing obstacles and narrow passages. The UAV has three translational degrees of freedom and fixed attitude. Ranging, label calculation and ROS publication share the same physical model.
+
+![仓储测距 / Warehouse ranging](mujoco_warehouse_uav_collision_braking/warehouse_ranging.png)
+
+![静态障碍制动 / Braking before a static obstacle](mujoco_warehouse_uav_collision_braking/warehouse_ranging.gif)
+
+```mermaid
+flowchart LR
+    A[MuJoCo 场景 / Scene] --> B[九束射线 / Nine rays]
+    B --> C[制动距离 / Stopping distance]
+    C --> D[速度跟踪 / Speed tracking]
+    D --> A
+    B --> E[ROS 测距与位姿 / Ranges and pose]
+```
+
+## 测距与控制 / Ranging and Control
+
+射线在水平面覆盖 −60° 至 60°，间隔 15°，量程 8 m；排除自身机体。物理步长为 0.02 s。前方中央三束距离的最小值用于保守制动。
+Horizontal rays span −60° to 60° at 15° intervals with an 8 m range, excluding the UAV body. The physics step is 0.02 s. The minimum of the three central beams supports conservative braking.
+
+设测距值为 \(r\)，机体半径为 0.18 m，控制预留距离为 0.70 m：
+Let \(r\) be the minimum central range, with body radius 0.18 m and control reserve 0.70 m:
+
+\[
+g=\max(0,r-0.18-0.70),\qquad d_b=v^2/4+0.25v
+\]
+
+\[
+v_{ref}=\min(v_{cruise},\max(0,\sqrt{4g+0.25}-0.5))
+\]
+
+当 \(g\le d_b\) 时标签为制动；当 \(d_b<g\le d_b+1.5\) 时为警戒；其余为畅通。速度跟踪采用比例反馈并将纵向加速度限制在 ±2 m/s²；预留距离包含跟踪响应裕度，不代表严格碰撞安全证明。
+Labels are brake for \(g\le d_b\), caution for \(d_b<g\le d_b+1.5\), and clear otherwise. Proportional speed feedback limits longitudinal acceleration to ±2 m/s². The reserve includes tracking response margin and is not a formal collision-safety guarantee.
+
+## 运行与接口 / Execution and Interfaces
+
+源码位于 `src/air/mujoco_warehouse_uav_collision_braking`。模块提供 `main.py`、`launch/main.launch.py` 和 Dockerfile。Ubuntu 22.04、ROS 2 Humble 和 MuJoCo 环境可直接在 Docker Desktop 的 Linux 容器内运行。
+Source is located in `src/air/mujoco_warehouse_uav_collision_braking`. The module provides `main.py`, `launch/main.launch.py` and a Dockerfile. Ubuntu 22.04, ROS 2 Humble and MuJoCo run in Docker Desktop Linux containers.
+
+```bash
+docker build -t warehouse-uav:humble .
+docker run --rm warehouse-uav:humble
+python3 main.py --scenario static --render --output results/static
+ros2 launch mujoco_warehouse_uav_collision_braking main.launch.py scenario:=crossing duration:=8.0
+```
+
+发布接口为 `/warehouse/scan`、`/warehouse/pose`、`/warehouse/reference_velocity` 和 `/warehouse/status`，类型分别为 LaserScan、PoseStamped、TwistStamped 和 String。
+Published topics are `/warehouse/scan`, `/warehouse/pose`, `/warehouse/reference_velocity` and `/warehouse/status`, using LaserScan, PoseStamped, TwistStamped and String respectively.
+
+## 运行结果 / Results
+
+下表为初始速度 1.2 m/s、持续 8 s 的参考控制结果；不作为神经网络性能结果。
+The table reports reference-control runs at an initial speed of 1.2 m/s for 8 s; these are not neural-network performance results.
+
+| 场景 / Scenario | 碰撞 / Collision | 终点 x / Final x (m) | 末速度 / Final speed (m/s) |
+| --- | --- | --- | --- |
+| 静态 / Static | 否 / No | 4.9836 | 0.000004 |
+| 横穿 / Crossing | 否 / No | 9.1730 | 1.1613 |
+| 窄道 / Narrow | 否 / No | 4.9836 | 0.000004 |
+
+ROS 启动检查持续 2 s，节点完成 100 个物理步并正常退出。动画大小约 2.37 MiB。单元检查覆盖射线几何、静态制动、接触检测、横穿运动与高度保持。
+The ROS launch check runs for 2 s, completing 100 physics steps before a clean exit. The animation is approximately 2.37 MiB. Unit checks cover ray geometry, static braking, contact detection, crossing motion and altitude hold.
+
+## 源码导读 / Source Guide
+
+`simulation.py` 构建场景、施加作用力并计算射线；`ros_node.py` 将物理状态转换为消息；`visualize.py` 使用仿真状态生成动画；`tests/test_simulation.py` 检查关键行为。
+`simulation.py` builds scenes, applies forces and casts rays; `ros_node.py` converts physical states to messages; `visualize.py` renders simulation states; `tests/test_simulation.py` checks key behavior.
+
+完整课题为“仓储通道巡检无人机的多束测距神经网络碰撞风险预测与分级制动”。训练、独立测试、学习控制的 ROS 集成与多场景比较在参考控制和监督数据基础上扩展。
+The full topic is “Neural Collision Risk Prediction and Graded Braking for Warehouse Inspection UAVs Using Multi-Beam Ranging”. Training, held-out testing, ROS integration of learned control and multi-scenario comparison extend the reference controller and supervised data.
+
+参考资料 / References: [MuJoCo](https://mujoco.readthedocs.io/)、[ROS 2 Humble](https://docs.ros.org/en/humble/)。
+
+## 监督数据与隔离 / Supervision and Isolation
+
+`dataset.py` 对每条轨迹使用独立随机流，变化障碍位置、巡航速度和横穿速度。每个场景按完整轨迹分为训练60%、验证20%、测试20%；不按单帧随机打散。状态输入只使用当前观测和历史观测，不包含未来位置或碰撞结果。
+`dataset.py` uses an independent random stream per episode, varying obstacle position, cruise speed and crossing speed. Each scenario uses an episode-level 60%/20%/20% training/validation/test split rather than shuffled frames. Inputs use current and historical observations without future positions or contact outcomes.
+
+| 输入或标签 / Input or Target | 维度 / Dimensions | 定义 / Definition |
+| --- | --- | --- |
+| 距离 / Range | 9 | 水平射线距离，0至8 m / Horizontal ray distance, 0–8 m |
+| 闭合速度 / Closing rate | 9 | 前帧距离减当前距离除以0.02 s，限幅±10 m/s / Previous minus current range over 0.02 s, clipped to ±10 m/s |
+| 实际/巡航速度 / Actual/cruise speed | 2 | 当前纵向速度与轨迹巡航设定 / Current forward speed and episode cruise setting |
+| 参考速度 / Reference speed | 1 | 制动距离规则给出的速度 / Speed from the stopping-distance rule |
+| 风险标签 / Risk label | 1 | 0畅通、1警戒、2制动 / 0 clear, 1 caution, 2 brake |
+
+```bash
+python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+python3 -m unittest discover -s tests -v
+```
+
+| 分区 / Split | 轨迹 / Episodes | 样本 / Samples | 畅通/警戒/制动 / Clear/Caution/Brake |
+| --- | --- | --- | --- |
+| 训练 / Train | 18 | 5465 | 2437 / 1195 / 1833 |
+| 验证 / Validation | 6 | 1816 | 854 / 309 / 653 |
+| 测试 / Test | 6 | 2008 | 990 / 468 / 550 |
+
+每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。
+Episodes last at most 8 s and stop after first contact, so sample counts vary. Mixed cruise and reference-braking behavior covers obstacle-approach observations. Labels represent a reference rule, not real-flight collision probabilities.
+
+[数据清单 / Dataset manifest](mujoco_warehouse_uav_collision_braking/dataset_manifest.json) 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；[样本片段 / Sample rows](mujoco_warehouse_uav_collision_braking/sample_rows.csv) 便于查看数据结构。
+The manifest stores seeds, episode parameters, feature order, split statistics and array SHA-256 digests. Sample rows illustrate the schema.
+
+八项检查覆盖几何与控制行为、首帧闭合速度复位、固定种子复现和轨迹泄漏拒绝。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
+Eight checks cover geometry/control behavior, first-frame closing-rate reset, seeded reproducibility and rejection of episode leakage. Split episode sets are disjoint, and each contains all three scenarios and risk classes.
+
+## 轻量模型 / Lightweight Model
+
+训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。
+The trainer uses a NumPy MLP with 20 inputs, hidden layers of 24 and 16 units, and joint risk classification and speed regression. A fixed seed is used; normalization statistics, weights and biases are saved for independent loading.
+
+```mermaid
+flowchart LR
+    A[20维测距特征 / 20D range features] --> B[MLP 24-16]
+    B --> C[风险概率 / Risk probabilities]
+    B --> D[参考速度 / Speed reference]
+    C --> E[状态话题 / Status topic]
+    D --> F[速度话题 / Velocity topic]
+```
+
+评估只使用测试分区，输出 `risk_accuracy`、`speed_mae_mps` 和 3×3 混淆矩阵。固定种子容器示例得到风险准确率 0.768、速度平均绝对误差 0.522 m/s；这些指标用于检查模型加载与接口稳定性，不替代真实飞行验证。
+Evaluation uses only the test split and writes `risk_accuracy`, `speed_mae_mps` and a 3×3 confusion matrix. The fixed-seed container example yields 0.768 risk accuracy and 0.522 m/s speed MAE; these metrics check model loading and interface stability and do not replace real-flight validation.
+
+学习控制节点通过 `/warehouse/scan`、`/warehouse/pose` 接收输入，通过 `/warehouse/learned_velocity`、`/warehouse/learned_status` 输出预测。它与参考控制接口并列，便于逐场景比较。
+The learned controller receives `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. It is exposed beside the reference controller for scenario-by-scenario comparison.
+
+## 多场景对照 / Multi-Scenario Benchmark
+
+学习控制节点在发布速度前应用参考制动速度上限，模型负责风险和速度预测，规则层负责近障碍安全边界。该组合让速度输出可解释，也保留了模型接口。
+Before publishing a speed, the learned controller applies the reference braking speed limit. The model predicts risk and speed, while the rule layer supplies the near-obstacle safety bound. This keeps the output interpretable while preserving the model interface.
+
+| 场景 / Scenario | 接触 / Contact | 末速度 / Final speed (m/s) | 风险一致率 / Risk agreement |
+| --- | --- | ---: | ---: |
+| 静态 / Static | 否 / No | 0.000000 | 1.000 |
+| 横穿 / Crossing | 否 / No | 0.000001 | 0.968 |
+| 窄道 / Narrow | 否 / No | 0.000000 | 0.000 |
+
+窄道的风险分类一致率较低，说明该场景仍需要更多横向几何样本；速度上限仍保持安全制动行为。该指标用于定位数据覆盖缺口，不将低一致率包装成模型优势。
+The narrow-aisle risk agreement is low, indicating a need for more lateral-geometry samples; the speed bound still preserves braking behavior. The metric identifies a data-coverage gap and is not presented as a model strength.
+
+完整命令和固定种子结果见[验证记录 / Validation Record](mujoco_warehouse_uav_collision_braking/validation_report.md)。
+See the [validation record](mujoco_warehouse_uav_collision_braking/validation_report.md) for complete commands and fixed-seed results.
+
+## 轻量模型 / Lightweight Model
+
+训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。
+The trainer uses a NumPy MLP with 20 inputs, hidden layers of 24 and 16 units, and joint risk classification and speed regression. A fixed seed is used; normalization statistics, weights and biases are saved for independent loading.
+
+```mermaid
+flowchart LR
+    A[20维测距特征 / 20D range features] --> B[MLP 24-16]
+    B --> C[风险概率 / Risk probabilities]
+    B --> D[参考速度 / Speed reference]
+    C --> E[状态话题 / Status topic]
+    D --> F[速度话题 / Velocity topic]
+```
+
+评估只使用测试分区，输出 `risk_accuracy`、`speed_mae_mps` 和 3×3 混淆矩阵。指标用于检查模型是否正确加载与接口是否稳定，不替代真实飞行验证。
+Evaluation uses only the test split and writes `risk_accuracy`, `speed_mae_mps` and a 3×3 confusion matrix. These metrics check model loading and interface stability and do not replace real-flight validation.
+
+学习控制节点通过 `/warehouse/scan`、`/warehouse/pose` 接收输入，通过 `/warehouse/learned_velocity`、`/warehouse/learned_status` 输出预测。它与参考控制接口并列，便于逐场景比较。
+The learned controller receives `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. It is exposed beside the reference controller for scenario-by-scenario comparison.
