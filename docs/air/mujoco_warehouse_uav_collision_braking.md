@@ -108,3 +108,60 @@ The manifest stores seeds, episode parameters, feature order, split statistics a
 
 八项检查覆盖几何与控制行为、首帧闭合速度复位、固定种子复现和轨迹泄漏拒绝。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
 Eight checks cover geometry/control behavior, first-frame closing-rate reset, seeded reproducibility and rejection of episode leakage. Split episode sets are disjoint, and each contains all three scenarios and risk classes.
+
+## 轻量模型 / Lightweight Model
+
+训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。
+The trainer uses a NumPy MLP with 20 inputs, hidden layers of 24 and 16 units, and joint risk classification and speed regression. A fixed seed is used; normalization statistics, weights and biases are saved for independent loading.
+
+```mermaid
+flowchart LR
+    A[20维测距特征 / 20D range features] --> B[MLP 24-16]
+    B --> C[风险概率 / Risk probabilities]
+    B --> D[参考速度 / Speed reference]
+    C --> E[状态话题 / Status topic]
+    D --> F[速度话题 / Velocity topic]
+```
+
+评估只使用测试分区，输出 `risk_accuracy`、`speed_mae_mps` 和 3×3 混淆矩阵。固定种子容器示例得到风险准确率 0.768、速度平均绝对误差 0.522 m/s；这些指标用于检查模型加载与接口稳定性，不替代真实飞行验证。
+Evaluation uses only the test split and writes `risk_accuracy`, `speed_mae_mps` and a 3×3 confusion matrix. The fixed-seed container example yields 0.768 risk accuracy and 0.522 m/s speed MAE; these metrics check model loading and interface stability and do not replace real-flight validation.
+
+学习控制节点通过 `/warehouse/scan`、`/warehouse/pose` 接收输入，通过 `/warehouse/learned_velocity`、`/warehouse/learned_status` 输出预测。它与参考控制接口并列，便于逐场景比较。
+The learned controller receives `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. It is exposed beside the reference controller for scenario-by-scenario comparison.
+
+## 多场景对照 / Multi-Scenario Benchmark
+
+学习控制节点在发布速度前应用参考制动速度上限，模型负责风险和速度预测，规则层负责近障碍安全边界。该组合让速度输出可解释，也保留了模型接口。
+Before publishing a speed, the learned controller applies the reference braking speed limit. The model predicts risk and speed, while the rule layer supplies the near-obstacle safety bound. This keeps the output interpretable while preserving the model interface.
+
+| 场景 / Scenario | 接触 / Contact | 末速度 / Final speed (m/s) | 风险一致率 / Risk agreement |
+| --- | --- | ---: | ---: |
+| 静态 / Static | 否 / No | 0.000000 | 1.000 |
+| 横穿 / Crossing | 否 / No | 0.000001 | 0.968 |
+| 窄道 / Narrow | 否 / No | 0.000000 | 0.000 |
+
+窄道的风险分类一致率较低，说明该场景仍需要更多横向几何样本；速度上限仍保持安全制动行为。该指标用于定位数据覆盖缺口，不将低一致率包装成模型优势。
+The narrow-aisle risk agreement is low, indicating a need for more lateral-geometry samples; the speed bound still preserves braking behavior. The metric identifies a data-coverage gap and is not presented as a model strength.
+
+完整命令和固定种子结果见[验证记录 / Validation Record](mujoco_warehouse_uav_collision_braking/validation_report.md)。
+See the [validation record](mujoco_warehouse_uav_collision_braking/validation_report.md) for complete commands and fixed-seed results.
+
+## 轻量模型 / Lightweight Model
+
+训练器使用 NumPy MLP，输入20维，隐藏层为24和16个单元，输出风险三分类与速度回归。训练过程固定随机种子，保存标准化均值、尺度、权重和偏置，模型文件可独立加载。
+The trainer uses a NumPy MLP with 20 inputs, hidden layers of 24 and 16 units, and joint risk classification and speed regression. A fixed seed is used; normalization statistics, weights and biases are saved for independent loading.
+
+```mermaid
+flowchart LR
+    A[20维测距特征 / 20D range features] --> B[MLP 24-16]
+    B --> C[风险概率 / Risk probabilities]
+    B --> D[参考速度 / Speed reference]
+    C --> E[状态话题 / Status topic]
+    D --> F[速度话题 / Velocity topic]
+```
+
+评估只使用测试分区，输出 `risk_accuracy`、`speed_mae_mps` 和 3×3 混淆矩阵。指标用于检查模型是否正确加载与接口是否稳定，不替代真实飞行验证。
+Evaluation uses only the test split and writes `risk_accuracy`, `speed_mae_mps` and a 3×3 confusion matrix. These metrics check model loading and interface stability and do not replace real-flight validation.
+
+学习控制节点通过 `/warehouse/scan`、`/warehouse/pose` 接收输入，通过 `/warehouse/learned_velocity`、`/warehouse/learned_status` 输出预测。它与参考控制接口并列，便于逐场景比较。
+The learned controller receives `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. It is exposed beside the reference controller for scenario-by-scenario comparison.

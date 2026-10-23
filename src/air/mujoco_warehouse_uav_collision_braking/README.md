@@ -81,3 +81,57 @@ Thirty episodes with seed 42 yield 5465 training, 1816 validation and 2008 test 
 
 闭合速度只使用上一帧，首帧归零且限幅至±10 m/s。完整轨迹隔离用于避免同一运动序列跨分区重叠；数据审计同时检查有限值、量程、目标范围和轨迹交集。
 Closing rates use the previous frame, reset to zero at episode start and are clipped to ±10 m/s. Episode isolation prevents overlap of one motion sequence across splits. Auditing checks finite values, ranges, target bounds and episode intersections.
+
+## 模型训练与 ROS 接口 / Model Training and ROS Interface
+
+```bash
+python3 main.py --train --dataset dataset --model model --seed 42
+python3 main.py --evaluate --dataset dataset --model model
+```
+
+模型是共享两层隐藏层的 NumPy MLP，输出三类风险概率和 0 至 3 m/s 的速度参考。训练只读取训练分区；测试命令只读取独立测试分区，并保存准确率、速度平均绝对误差和混淆矩阵。
+The model is a NumPy MLP with two shared hidden layers, producing three risk probabilities and a 0–3 m/s speed reference. Training reads only the training split; evaluation reads only the held-out test split and saves accuracy, speed MAE and a confusion matrix.
+
+训练模型后可启动学习控制接口：
+After training, start the learned-control interface:
+
+```bash
+ros2 launch mujoco_warehouse_uav_collision_braking learned.launch.py model:=model/risk_speed_mlp.npz
+```
+
+节点订阅 `/warehouse/scan` 和 `/warehouse/pose`，发布 `/warehouse/learned_velocity` 与 `/warehouse/learned_status`。首帧闭合速度为零，后续闭合速度只由相邻测距计算；模型输出始终限制在 0 至 3 m/s。
+The node subscribes to `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. The first closing-rate frame is zero; later rates use adjacent ranges only, and model speed is bounded to 0–3 m/s.
+两个 launch 节点共享 `duration` 参数，设置有限时长后会共同完成并正常退出。
+`duration` is shared by both launch nodes, so a finite launch completes and exits cleanly after the configured interval.
+
+## 多场景对照 / Multi-Scenario Benchmark
+
+```bash
+python3 main.py --benchmark --model model --output results
+```
+
+学习速度经过参考制动速度的安全上限约束，再发送到 ROS 话题；这样既保留模型预测，又保留可解释的近障碍制动边界。
+The learned speed is clipped by the reference braking speed before publication, retaining model prediction with an interpretable near-obstacle safety bound.
+
+固定种子模型的 8 s 对照均未发生接触：静态、横穿、窄道的末速度分别约为 0、0、0 m/s；风险标签一致率分别为 1.000、0.968、0.000。窄道一致率较低时仍由安全上限控制速度，指标会在后续数据覆盖扩展后重新评估。
+The fixed-seed model completed 8-second comparisons without contact. Final speeds for static, crossing and narrow scenes were approximately 0, 0 and 0 m/s; risk agreement was 1.000, 0.968 and 0.000. The narrow-scene agreement is low, while the safety bound still controls speed; it should be reevaluated after broader data coverage.
+
+## 模型训练与 ROS 接口 / Model Training and ROS Interface
+
+```bash
+python3 main.py --train --dataset dataset --model model --seed 42
+python3 main.py --evaluate --dataset dataset --model model
+```
+
+模型是共享两层隐藏层的 NumPy MLP，输出三类风险概率和 0 至 3 m/s 的速度参考。训练只读取训练分区；测试命令只读取独立测试分区，并保存准确率、速度平均绝对误差和混淆矩阵。
+The model is a NumPy MLP with two shared hidden layers, producing three risk probabilities and a 0–3 m/s speed reference. Training reads only the training split; evaluation reads only the held-out test split and saves accuracy, speed MAE and a confusion matrix.
+
+训练模型后可启动学习控制接口：
+After training, start the learned-control interface:
+
+```bash
+ros2 launch mujoco_warehouse_uav_collision_braking learned.launch.py model:=model/risk_speed_mlp.npz
+```
+
+节点订阅 `/warehouse/scan` 和 `/warehouse/pose`，发布 `/warehouse/learned_velocity` 与 `/warehouse/learned_status`。首帧闭合速度为零，后续闭合速度只由相邻测距计算；模型输出始终限制在 0 至 3 m/s。
+The node subscribes to `/warehouse/scan` and `/warehouse/pose`, then publishes `/warehouse/learned_velocity` and `/warehouse/learned_status`. The first closing-rate frame is zero; later rates use adjacent ranges only, and model speed is bounded to 0–3 m/s.
