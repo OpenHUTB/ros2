@@ -1,0 +1,66 @@
+```python
+import carla
+import time
+
+def main():
+    # 连接OpenHUTB仿真服务
+    client = carla.Client("127.0.0.1", 2000)
+    client.set_timeout(20.0)
+    world = client.get_world()
+    print("✅ 成功接入OpenHUTB仿真世界")
+
+    drone = None
+    # 遍历场景Actor，查找无人机
+    for actor in world.get_actors():
+        if actor.type_id.find("drone") != -1:
+            drone = actor
+            print(f"找到无人机，ID:{drone.id}, 类型:{drone.type_id}")
+            break
+    if drone is None:
+        print("❌ 场景内没有找到无人机Actor")
+        return
+
+    # 查找挂载在无人机上的激光雷达
+    lidar = None
+    for sensor in world.get_actors():
+        if "lidar" in sensor.type_id and sensor.parent is not None and sensor.parent.id == drone.id:
+            lidar = sensor
+            print("✅ 找到机载激光雷达")
+            break
+
+    min_dist = 100.0
+    # 激光雷达回调函数，读取点云
+    def lidar_callback(pc_data):
+        nonlocal min_dist
+        min_dist = 100
+        for p in pc_data:
+            d = p.distance
+            if d < min_dist:
+                min_dist = d
+
+    if lidar:
+        lidar.listen(lidar_callback)
+    else:
+        print("⚠️ 未检测到机载激光雷达，仅执行匀速前进")
+
+    try:
+        while True:
+            # 避障决策逻辑
+            if min_dist < 4.0:
+                print(f"前方障碍物 {min_dist:.2f}m，停止飞行")
+                drone.set_velocity(carla.Vector3D(0,0,0))
+            else:
+                print(f"前方安全 {min_dist:.2f}m，向前飞行")
+                drone.set_velocity(carla.Vector3D(2,0,0))
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\n程序终止 Ctrl+C")
+    finally:
+        if lidar:
+            lidar.stop()
+        drone.set_velocity(carla.Vector3D(0,0,0))
+
+if 
+__name__ == "__main__
+":
+    main()
