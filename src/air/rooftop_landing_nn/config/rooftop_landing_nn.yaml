@@ -1,4 +1,4 @@
-﻿# rooftop_landing_nn 默认参数（全部都能被 roslaunch 参数覆盖）
+# rooftop_landing_nn 默认参数（全部都能被 roslaunch 参数覆盖）
 # 感知：高度图与网络输入
 perception:
   cells: 64                 # 高度图边长（格）；模型 meta 里也是 64，改这里要重新训练

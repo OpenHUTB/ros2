@@ -1,4 +1,4 @@
-﻿Panels:
+Panels:
   - Class: rviz/Displays
     Name: Displays
 Visualization Manager:
