@@ -153,11 +153,11 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#_3">实现要点</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#ros-2-humble">多航点任务队列（ROS 2 Humble） </a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../usage/">构建与运行</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../waypoint_queue/">Humble 多航点任务队列</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../airsim_validation/">AirSim 实测记录</a>
 </li>
@@ -283,10 +283,9 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">无人机任务管理与安全状态机</h1>
-<p>单无人机控制模块，支持单航点与多航点队列、暂停/继续、返航降落，以及遥测超时和高度检查。原 AirSim 单航点流程在 Foxy 下验证；新增队列在 Ubuntu 22.04 / ROS 2 Humble 下使用本地运动演示适配器验证，尚未执行 AirSim 队列飞行。</p>
+<p>单无人机控制模块，支持单航点与多航点队列、暂停/继续、返航降落，以及遥测超时和高度检查。原 AirSim 单航点流程在 Foxy 下验证；新增队列已在 Ubuntu 22.04 / ROS 2 Humble 下完成 demo 和 AirSim 手动复测。</p>
 <ul>
 <li><a href="../usage/">构建与运行</a></li>
-<li><a href="../waypoint_queue/">多航点任务队列（Ubuntu 22.04 / ROS 2 Humble）</a>：顺序执行、进度反馈、暂停恢复和任务取消；含无需 AirSim 的演示。</li>
 <li><a href="../airsim_validation/">测试结果与已知限制</a></li>
 <li><a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/uav_mission_safety_manager">源码</a></li>
 </ul>
@@ -304,7 +303,102 @@ EXECUTING / PAUSED → RETURNING → LANDING → LANDED
 <li>返航末段低速修正位置，位置误差和速度持续满足阈值后才开始降落。</li>
 <li>起飞 RPC 返回值通过 <code>takeoff_rpc_result</code> 暴露，离地状态由遥测确认。</li>
 </ul>
-<p>服务返回成功仅表示请求已接受，动作是否完成应以状态话题为准。本模块是模拟器原型，安全边界见<a href="../airsim_validation/">已知限制</a>。</p></div>
+<p>服务返回成功仅表示请求已接受，动作是否完成应以状态话题为准。本模块是模拟器原型，安全边界见<a href="../airsim_validation/">已知限制</a>。</p>
+<h2 id="ros-2-humble">多航点任务队列（ROS 2 Humble） <span id="waypoint-queue"></span></h2>
+<p>单次发送最多 100 个 NED 航点，控制器按顺序派发，并在状态话题中报告进度。适用于预先给定的巡检路线；不包含路径规划、避障或 ROS Action。</p>
+<h3 id="_4">环境与构建</h3>
+<p>本次新增功能的验证环境：Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10.12。
+以下演示使用本地匀速运动适配器，不需要安装 AirSim 的 Python 依赖，不连接真实载具。
+它只验证任务调度和 ROS 接口，不模拟飞行动力学、碰撞、地形或网络故障。</p>
+<p>在仓库根目录执行：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+rosdep<span class="w"> </span>install<span class="w"> </span>--from-paths<span class="w"> </span>src/air/uav_mission_safety_manager<span class="w"> </span>--ignore-src<span class="w"> </span>--rosdistro<span class="w"> </span>humble<span class="w"> </span>-r<span class="w"> </span>-y
+colcon<span class="w"> </span>build<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-select<span class="w"> </span>uav_mission_safety_manager
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>src/air/uav_mission_safety_manager/tests<span class="w"> </span>-v
+<span class="nv">ROS_DOMAIN_ID</span><span class="o">=</span><span class="m">88</span><span class="w"> </span><span class="nv">ROS_LOCALHOST_ONLY</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>python3<span class="w"> </span>src/air/uav_mission_safety_manager/tests/ros_queue_smoke.py
+</code></pre></div>
+<p>最后一条命令自动启动独立演示节点，执行三个航点、暂停/继续、取消、返航抢占和降落，退出时清理所启动的节点。
+执行时不要在同一 ROS 域运行另一个同名模块。此脚本只用于 Linux / WSL2。</p>
+<h3 id="_5">手动启动与操作</h3>
+<p>终端一（工作区已 source）：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>uav_mission_safety_manager<span class="w"> </span>main.launch.py<span class="w"> </span>use_demo_adapter:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>也可通过已有 main 入口直接启动，二选一：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>uav_mission_safety_manager<span class="w"> </span>mission_manager<span class="w"> </span>--ros-args<span class="w"> </span>-p<span class="w"> </span>use_demo_adapter:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>终端二同样加载 Humble 与工作区，先观察状态：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav_mission_safety_manager/status
+</code></pre></div>
+<p>另开终端，依次发送下列命令；每步等状态分别进入 <code>ARMING</code>、<code>TAKEOFF</code>、<code>EXECUTING</code> 且 <code>command_pending=false</code> 后再执行下一步：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>--once<span class="w"> </span>/uav_mission_safety_manager/command<span class="w"> </span>std_msgs/msg/String<span class="w"> </span><span class="s1">'{data: "{\"event\":\"connect\"}"}'</span>
+ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>--once<span class="w"> </span>/uav_mission_safety_manager/command<span class="w"> </span>std_msgs/msg/String<span class="w"> </span><span class="s1">'{data: "{\"event\":\"armed\"}"}'</span>
+ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>--once<span class="w"> </span>/uav_mission_safety_manager/command<span class="w"> </span>std_msgs/msg/String<span class="w"> </span><span class="s1">'{data: "{\"event\":\"airborne\"}"}'</span>
+ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>--once<span class="w"> </span>/uav_mission_safety_manager/command<span class="w"> </span>std_msgs/msg/String<span class="w"> </span><span class="s1">'{data: "{\"event\":\"mission\",\"waypoints\":[{\"x\":4,\"y\":0,\"z\":-2,\"speed\":2},{\"x\":8,\"y\":0,\"z\":-2,\"speed\":2},{\"x\":12,\"y\":0,\"z\":-2,\"speed\":2}]}"}'</span>
+</code></pre></div>
+<p>服务按需调用，不必全部连续执行：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/uav_mission_safety_manager/pause<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="s1">'{}'</span>
+ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/uav_mission_safety_manager/resume<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="s1">'{}'</span>
+ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/uav_mission_safety_manager/cancel<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="s1">'{}'</span>
+ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/uav_mission_safety_manager/return_home<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="s1">'{}'</span>
+ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/uav_mission_safety_manager/land<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="s1">'{}'</span>
+</code></pre></div>
+<h3 id="_6">队列语义</h3>
+<table>
+<thead>
+<tr>
+<th>操作或条件</th>
+<th>队列行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mission</code></td>
+<td>仅在 EXECUTING 且无现存目标时接收；先校验全部航点，再派发第一点</td>
+</tr>
+<tr>
+<td>航点到达</td>
+<td>新遥测显示距离目标不超过 1 米后完成该点，再派发下一点；不要求逐点停稳</td>
+</tr>
+<tr>
+<td>暂停 / 继续</td>
+<td>保留当前索引、目标和速度；暂停期间不推进，继续时重发当前目标</td>
+</tr>
+<tr>
+<td><code>cancel</code></td>
+<td>清除当前目标，丢弃剩余任务并请求悬停；PAUSED 状态保持暂停</td>
+</tr>
+<tr>
+<td>返航 / 降落</td>
+<td>队列标记 CANCELED，交由既有返航或降落流程处理</td>
+</tr>
+<tr>
+<td>RPC 异常、高度越界或超时</td>
+<td>队列标记 ABORTED，禁止继续派发后续航点</td>
+</tr>
+<tr>
+<td>全部航点到达</td>
+<td>标记 COMPLETED，清除目标并请求悬停，不自动返航或降落</td>
+</tr>
+</tbody>
+</table>
+<p>航点必须包含数值 <code>x/y/z</code>，可选正数 <code>speed</code>（默认 3 米/秒）。拒绝布尔值、非有限值、未知字段、空列表和超过 100 点的列表。高度条件是 <code>home_z - max_altitude &lt;= z &lt; home_z</code>；NED 的 z 向下为正。不是 ROS ENU 坐标。</p>
+<p>队列执行时拒绝新的 <code>goto</code> 和 <code>mission</code>，避免静默替换路线。先完成或取消当前队列再提交新队列。
+RPC 派发尚未结束时，请求可能被拒绝，需要待 <code>command_pending=false</code> 后重试。</p>
+<h3 id="_7">状态字段</h3>
+<p><code>status</code> 原有字段不变，新增 <code>mission_queue</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"state"</span><span class="p">:</span><span class="s2">"RUNNING"</span><span class="p">,</span><span class="nt">"total"</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="nt">"completed"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="nt">"current_index"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="nt">"remaining"</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span>
+</code></pre></div>
+<p>顶层 <code>adapter_mode</code> 明确区分 <code>demo</code>（本地运动演示）、<code>airsim</code> 和 <code>state_only</code>（历史纯状态机模式）。<code>use_demo_adapter</code> 与 <code>use_airsim</code> 不能同时开启。</p>
+<p><code>current_index</code> 从 0 开始，<code>remaining</code> 包含当前航点。终止后索引为 <code>null</code>，可继续执行的剩余数为 0；原始总数和已完成数保留，便于区分已执行和被丢弃的航点。
+状态依次为 IDLE、RUNNING / PAUSED，再到 COMPLETED、CANCELED 或 ABORTED。</p>
+<p>服务成功仅表示请求被接受。COMPLETED 表示全部航点已进入 1 米到达容差并已请求悬停，不保证已停稳或精确到达坐标。
+暂停请求被接受后，位置字段可能要到下一次遥测才更新；<code>command_pending=false</code> 也不能单独作为已停稳的依据。
+取消和 FAILSAFE 不保证真实无人机已停止；尤其连接中断时无法保证悬停或自动降落。</p>
+<h3 id="_8">实测范围</h3>
+<p>Ubuntu 22.04 / ROS 2 Humble 下构建通过，47 项单元测试及 ROS 冒烟测试通过。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。</p>
+<p>AirSim 手动验证了三航点顺序执行、执行中暂停恢复、取消任务及返航自动落地。测试记录见源码目录 <code>tests/logs/waypoint_queue_airsim_manual.md</code>。</p>
+<p>已知限制：起飞 RPC 返回 <code>False</code> 的既有异常未修复；未验证真机、碰撞或避障。Humble 演示无需安装历史 Foxy/Python 3.8 的 <code>requirements.txt</code>。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
