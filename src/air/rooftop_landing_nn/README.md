@@ -83,8 +83,9 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 
 4.2 已在 **Ubuntu 20.04 + ROS Noetic** 实机跑通（`roscore` + `rosrun rooftop_landing_nn main.py`
 + 测试脚本），输出：`DETECT -> APPROACH -> DESCEND -> LANDED`，落点 (0.12, -1.16)、
-屋面内 + 0.6 m 净空均为「是」，`结论：通过`（截图见
-`docs/img/air/rooftop_landing_nn/closed_loop_ros_noetic.png`）。
+屋面内 + 0.6 m 净空均为「是」，`结论：通过`。录屏见
+`docs/img/air/rooftop_landing_nn/closed_loop_ros_noetic.gif`（左：节点实时日志，
+右：RViz 点云与落点标记），单帧见同目录 `closed_loop_ros_noetic.png`。
 
 ## 5. 重新训练 / 复现实验（开发机，需要 PyTorch）
 
