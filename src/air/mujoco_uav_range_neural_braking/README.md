@@ -71,4 +71,4 @@ python -m pytest -q
 
 The default dataset has 30 episodes of 12 s, split into 18/6/6 episodes and 21600/7200/7200 rows for training/validation/test. Features are range, closing speed and altitude error; acceleration is the target. `manifest.json` records episode parameters and full-file SHA-256 values. Identical configurations produce matching hashes on Windows and Ubuntu. Full data reside in `datasets/`; `sample_data/` contains schema samples and a summary.
 
-当前标签来自解析控制基线，未包含训练后的神经网络。高度初始值等于参考值，因此采集集中的高度误差为零；后续模型可使用距离与闭合速度两个有效特征，高度保持由独立 PD 完成。 / Labels come from the analytical controller, not a trained neural network. Initial height equals the reference, so collected height error is zero. A subsequent model can use range and closing speed as its two active features while a separate PD loop holds altitude.
+训练标签来自解析测距控制基线。由于回合初始高度等于参考值，数据中的高度误差恒为零；当前 MLP 因此只使用测距和闭合速度两个特征，高度仍由独立 PD 回路保持。 / Training labels come from the analytical ranging controller. Since each episode starts at the reference altitude, height error is always zero in the dataset. The MLP therefore uses range and closing speed as its two features, while a separate PD loop holds altitude.
