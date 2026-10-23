@@ -216,19 +216,40 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 测试最后会自己核对：**落点在 U 形屋面内**、且**以落点为心 0.6 m 的圆完全在屋面内**
 （几何法在这张图上会把落点选到缺口上方）。
 
+该测试已在 **Ubuntu 20.04 + ROS Noetic** 实机跑通（`roscore` + `rosrun` 起节点，
+再跑测试脚本），状态机完整走到最后一步：
+
+![ROS Noetic 实机闭环运行](closed_loop_ros_noetic.png)
+
+```text
+[rooftop_nn] 下发目标点 (0.12, -1.16, 13.00)，即屋面上方 5.0 m
+[rooftop_nn] 状态 DETECT -> APPROACH
+[rooftop_nn] 状态 APPROACH -> DESCEND
+[rooftop_nn] 已降落：离屋面 0.35 m <= 容差 0.35 m
+[rooftop_nn] 状态 DESCEND -> LANDED
+落点是否在 U 形屋面内            : 是
+以落点为心 0.6 m 圆是否全在屋面内: 是
+结论：通过
+```
+
 ## 7. 已知限制
 
 * 学习法需要训练数据；本模块的真值来自合成几何，**迁移到完全不同风格的城市地图时
   应当重新采样训练**（`tools/train_landing_cnn.py` 一条命令即可，RTX 5060 上约 4 分钟）。
 * 高度图取每格最高点，对**悬挑结构**（雨棚、广告牌）会偏保守；`rough_max` 能挡掉大部分
   立面误判，但极端场景仍需靠 `min_height_m` 调参。
-* 只在假桥接闭环与合成场景上验证过；真实仿真器（UE + AirSim）整链路的验证步骤见上面的
-  运行说明，与 `rooftop_landing` 共用同一套桥接层接口。
+* 闭环只在**假桥接层**上跑通过（真实 ROS Noetic：`roscore` + `rosrun` + 假桥接，
+  见 6.2 的运行结果）；**尚未**在 UE + AirSim 真实仿真器上跑完整链路 —— 本机
+  Windows 的「智能应用控制」会拦截未签名的 `UnrealEditor-AirSim.dll`，属于环境限制，
+  不是模块接口问题：模块与 `rooftop_landing` 共用同一套桥接话题
+  （`/uav/odom`、`/lidar/points`、`/uav/goal`、`/uav/cmd_vel`、`/uav/status`）。
 
 ## 附：大模型使用声明
 
 本模块的代码、训练脚本、对比实验与文档在编写过程中使用了 AI 大模型辅助
 （方案讨论、代码与文档起草、实验脚本整理）。全部结论均来自本仓库内可复现的运行结果：
 `tests/test_rooftop_landing_nn_local.py`（46 项本地断言）、
+`tests/test_rooftop_landing_nn_ros_sim.py`（Ubuntu 20.04 + ROS Noetic 实机闭环，
+见 6.2）、
 `tools/eval_landing_nn.py`（三组消融实验，CSV 与图见 `src/air/rooftop_landing_nn/results/`
 与 `docs/img/air/rooftop_landing_nn/`）。作者对提交内容的正确性与完整性负全部责任。

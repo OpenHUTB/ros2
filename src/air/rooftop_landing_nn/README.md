@@ -81,6 +81,11 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 `tests/test_rooftop_landing_nn_ros_sim.py` 最后会核对落点是否落在 U 形屋面内、
 以落点为心 0.6 m 的圆是否完全在屋面内（几何法在这张图上会把落点选到缺口上方）。
 
+4.2 已在 **Ubuntu 20.04 + ROS Noetic** 实机跑通（`roscore` + `rosrun rooftop_landing_nn main.py`
++ 测试脚本），输出：`DETECT -> APPROACH -> DESCEND -> LANDED`，落点 (0.12, -1.16)、
+屋面内 + 0.6 m 净空均为「是」，`结论：通过`（截图见
+`docs/img/air/rooftop_landing_nn/closed_loop_ros_noetic.png`）。
+
 ## 5. 重新训练 / 复现实验（开发机，需要 PyTorch）
 
 ```bash
