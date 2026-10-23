@@ -1,0 +1,8 @@
+@@ -0,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="drone_keyboard_control"
+          type="main_drone_keyboard_control.py"
+          name="drone_keyboard_control"
+          output="screen"/>
+</launch>
