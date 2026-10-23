@@ -140,10 +140,17 @@ h_1=\tanh(W_1s+b_1),\quad h_2=\tanh(W_2h_1+b_2),\quad u=W_3h_2+b_3
 
 ## 5. 运行步骤
 
+### 5.0 编译
+
+```bash
+cd ~/ros2_ws
+colcon build --packages-select reacher_track
+source install/setup.bash
+```
+
 ### 5.1 launch 一键启动完整流水线
 
 ```bash
-cd ~/ros2_ws/src/reacher_track
 ros2 launch reacher_track main.launch.py
 ```
 

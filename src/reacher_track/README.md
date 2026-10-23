@@ -83,6 +83,7 @@ src/reacher_track/
 │   └── render_gif.py             # matplotlib 渲染跟踪动图(无显示器兜底)
 ├── launch/main.launch.py
 ├── config/algo_config.yaml
+├── results/                      # 评估结果数据（eval_summary.csv）
 └── README.md
 ```
 
