@@ -40,7 +40,7 @@ Target speed follows the remaining braking distance. Acceleration is a clipped v
 
 ## 结果与文档 / Results and documentation
 
-测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。14 项物理、传感器与数据检查通过；Ubuntu 22.04、Python 3.10、ROS 2 Humble 的 launch 运行正常退出。 / Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Fourteen physics, sensor and dataset checks pass. Launch exits cleanly on Ubuntu 22.04, Python 3.10 and ROS 2 Humble.
+测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。16 项物理、传感器、数据与 MLP 检查通过；ROS 2 Humble 容器中的测距节点成功初始化并完成仿真步进。 / Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Sixteen physics, sensor, dataset and MLP checks pass. The ranging node initializes and advances the simulation in a ROS 2 Humble container.
 
 完整方程、曲线和动图见[模块文档](../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
 

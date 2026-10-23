@@ -62,13 +62,13 @@ source /opt/ros/humble/setup.bash
 ros2 launch ./launch/main.launch.py controller:=reference output:=/tmp/uav_braking
 ```
 
-当前 launch 启动完整无窗口仿真进程；传感器话题与学习控制节点属于后续接口扩展。
+`launch/main.launch.py` 启动无窗口 MuJoCo 仿真；`launch/ros_node.launch.py` 提供 ROS 2 测距、控制与状态话题。`range`、`reference` 和训练后的 `mlp` 控制器均可由参数选择。
 
-The launch entry runs the complete headless simulation process. Sensor topics and learning-control nodes are separate interface extensions.
+`launch/main.launch.py` runs the headless MuJoCo simulation; `launch/ros_node.launch.py` provides ROS 2 range, control and state topics. The `range`, `reference` and trained `mlp` controllers are selectable by argument.
 
-Ubuntu 22.04、Python 3.10、ROS 2 Humble 下，14 项检查通过，launch 完整运行 1000 个物理步并正常退出，默认测距控制的最小间距为 0.668331 m。
+Windows 环境下 16 项物理、传感器、数据和 MLP 检查通过。ROS 2 Humble 容器中，测距节点成功初始化并完成一次仿真步进；默认测距控制场景运行 1000 步无碰撞，最小间距为 0.668331 m。
 
-On Ubuntu 22.04, Python 3.10 and ROS 2 Humble, fourteen checks pass and launch completes 1000 physics steps with a clean exit. Default range control has a minimum gap of 0.668331 m.
+Sixteen physics, sensor, dataset and MLP checks pass on Windows. The ranging node initializes and advances one simulation step in a ROS 2 Humble container. The default range-control scene completes 1000 steps without contact, with a 0.668331 m minimum clearance.
 
 ## 仿真结果 / Simulation results
 
