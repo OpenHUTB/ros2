@@ -1,0 +1,33 @@
+# CARLA 建图 + 导航（神经网络规划）—— 仿真参数
+#
+# 这里只列 ROS 2 节点真正 declare_parameter 过的键。节点没声明的键写进来也不会生效
+# （rclpy 对未声明的参数覆盖项直接忽略），所以栅格/激光雷达那批参数目前由
+# carla_mapping_navigation/main.py 的模块常量统一控制，见文件末尾的说明。
+carla_mapping_navigation_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 道路与建筑丰富，适合建图与避障演示
+    town: "Town05"
+    # 规划神经网络模型路径（由 main.py --mode train 生成）
+    model_path: "models/nn_plan.json"
+    # 导航目标（世界坐标，米）
+    # goal 是 "x,y" 字符串，非空时优先于下面的 goal_x/goal_y；留空即可用 goal_x/goal_y。
+    # 这样 ROS 1 的 main.launch、ROS 2 的 main.launch.py 和命令行 --goal 三种写法一致。
+    goal: ""
+    goal_x: 20.0
+    goal_y: 8.0
+    # 到达判定阈值（米）
+    goal_tol: 1.5
+    # 地图话题发布周期（每 N 个 tick 发一次）
+    map_publish_period: 20
+
+# 下面这些**不是** ROS 参数，由 main.py 的模块常量控制，写在这里不会生效，
+# 因此没有列进 ros__parameters（列了会让人以为能改）：
+#
+#   grid_resolution     = 0.5 m/格    grid_size  = 200 格（覆盖 100 m × 100 m）
+#   log_odds_hit        = +0.85       log_odds_miss = -0.4
+#   lidar_channels      = 32          lidar_range   = 40.0 m
+#   ego_blueprint       = vehicle.tesla.model3（想换可用环境变量 CARLA_EGO_BP）
+#   fixed_delta_seconds = 0.05（同步模式步长，见 carla_common.DT）
