@@ -9,3 +9,11 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
+# MuJoCo 运行日志
+*.TXT
+*.log
+
+# 只忽略仓库根目录下临时图片，保留子目录docs/img图片
+/*.png
+/*.jpg
+/*.gif
