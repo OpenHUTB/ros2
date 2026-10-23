@@ -64,6 +64,7 @@ nav:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - MuJoCo Reacher 机械臂神经网络目标跟踪: './ground/reacher_track.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'

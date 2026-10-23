@@ -1,0 +1,62 @@
+<mujoco model="reacher_track">
+  <!--
+    Reacher: 2 关节平面机械臂（在 xy 平面绕 z 轴旋转）
+    用于"感知 -> 神经网络控制 -> 目标跟踪"闭环演示。
+  -->
+  <compiler angle="radian" inertiafromgeom="true" coordinate="local"/>
+  <option gravity="0 0 -9.81" integrator="RK4" timestep="0.02"/>
+
+  <default>
+    <joint damping="0.3" armature="0.05" limited="true"/>
+    <geom friction="1 0.1 0.1" contype="0" conaffinity="0"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="100" height="100"
+             rgb1="0.85 0.88 0.90" rgb2="0.75 0.80 0.85"/>
+    <material name="gridmat" texture="grid" texrepeat="2 2"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse="0.5 0.5 0.5" pos="0 0 3" dir="0 0 -1"/>
+    <geom name="ground" type="plane" pos="0 0 -0.05" size="1 1 0.02"
+          material="gridmat" contype="1" conaffinity="1" rgba="0.9 0.9 0.9 1"/>
+
+    <!-- 肩部（基座） -->
+    <body name="shoulder" pos="0 0 0">
+      <geom name="shoulder_geom" type="cylinder" size="0.05 0.01" pos="0 0 0" rgba="0.4 0.45 0.5 1"/>
+      <geom name="upper_arm" type="capsule" fromto="0 0 0 0.15 0 0" size="0.04" rgba="0.4 0.6 0.8 1"/>
+      <joint name="shoulder" type="hinge" axis="0 0 1" pos="0 0 0" range="-2.0 2.0"/>
+
+      <!-- 肘部 -->
+      <body name="elbow" pos="0.15 0 0">
+        <geom name="elbow_geom" type="cylinder" size="0.03 0.01" pos="0 0 0" rgba="0.5 0.5 0.55 1"/>
+        <geom name="fore_arm" type="capsule" fromto="0 0 0 0.12 0 0" size="0.03" rgba="0.85 0.5 0.4 1"/>
+        <joint name="elbow" type="hinge" axis="0 0 1" pos="0 0 0" range="-2.0 2.0"/>
+
+        <!-- 末端手 -->
+        <body name="hand" pos="0.12 0 0">
+          <geom name="hand_geom" type="sphere" size="0.025" rgba="0.3 0.75 0.4 1"/>
+          <site name="fingertip" size="0.012" rgba="1 0.2 0.2 1"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- 目标点：mocap body，可由 mocap_pos 自由放置 -->
+    <body name="targetmocap" pos="0.2 0.2 0" mocap="true">
+      <site name="target" size="0.03" rgba="0.9 0.2 0.1 1"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="shoulder_motor" joint="shoulder" ctrlrange="-2.0 2.0" ctrllimited="true"/>
+    <motor name="elbow_motor" joint="elbow" ctrlrange="-2.0 2.0" ctrllimited="true"/>
+  </actuator>
+
+  <sensor>
+    <jointpos joint="shoulder" name="shoulder_pos"/>
+    <jointpos joint="elbow" name="elbow_pos"/>
+    <jointvel joint="shoulder" name="shoulder_vel"/>
+    <jointvel joint="elbow" name="elbow_vel"/>
+  </sensor>
+</mujoco>
