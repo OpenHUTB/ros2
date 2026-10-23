@@ -1,0 +1,4 @@
+tag,final_episode,max_return,final_mean_return
+dqn_mlp1,300,199.5,162.73
+double_mlp1,300,200.0,162.35999999999999
+dueling_mlp1,300,200.0,126.88000000000002

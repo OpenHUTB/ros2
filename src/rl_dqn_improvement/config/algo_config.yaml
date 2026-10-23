@@ -1,0 +1,21 @@
+# rl_dqn_improvement 训练参数配置
+# DQN 及其改进算法（Double / Dueling）在 MuJoCo CartPole 上的对比
+
+# DQN 变体: dqn / double / dueling
+variant: dqn
+# MLP 隐藏层，逗号分隔
+layers: 16
+# 训练回合数
+episodes: 300
+# 每多少回合评估一次并记录
+eval_interval: 30
+# 结果输出目录
+out: results
+# 折扣因子
+gamma: 0.99
+# 学习率
+lr: 0.001
+# 经验回放批量大小
+batch_size: 64
+# 目标网络同步间隔（更新次数）
+target_sync: 200
