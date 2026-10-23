@@ -27,7 +27,6 @@ title: 主页
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
-  - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
 
@@ -109,6 +108,10 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+
+* [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
+
+* [禁飞区检测](./air/no_fly_zone_check/index.md) —— 单点/圆形禁飞区的快速校验
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
