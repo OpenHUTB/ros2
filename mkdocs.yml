@@ -119,6 +119,7 @@ nav:
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 空域载具八叉树三维寻路:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
