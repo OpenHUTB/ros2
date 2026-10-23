@@ -14,7 +14,8 @@
       "delta_max_abs_deg": 33.193,
       "convergence_time_s": 1.38,
       "off_track_ratio": 0.064,
-      "v_mean_mps": 7.262
+      "v_mean_mps": 7.262,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "stanley",
@@ -30,7 +31,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 2.06,
       "off_track_ratio": 0.0583,
-      "v_mean_mps": 7.264
+      "v_mean_mps": 7.264,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "lqr",
@@ -46,7 +48,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 1.9,
       "off_track_ratio": 0.0563,
-      "v_mean_mps": 7.265
+      "v_mean_mps": 7.265,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "pure_pursuit",
@@ -62,7 +65,8 @@
       "delta_max_abs_deg": 21.552,
       "convergence_time_s": 1.22,
       "off_track_ratio": 0.0063,
-      "v_mean_mps": 7.626
+      "v_mean_mps": 7.626,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "stanley",
@@ -78,7 +82,8 @@
       "delta_max_abs_deg": 31.501,
       "convergence_time_s": 1.88,
       "off_track_ratio": 0.006,
-      "v_mean_mps": 7.626
+      "v_mean_mps": 7.626,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "lqr",
@@ -94,7 +99,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 1.76,
       "off_track_ratio": 0.0057,
-      "v_mean_mps": 7.626
+      "v_mean_mps": 7.626,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "pure_pursuit",
@@ -110,7 +116,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 1.4,
       "off_track_ratio": 0.0424,
-      "v_mean_mps": 7.07
+      "v_mean_mps": 7.07,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "stanley",
@@ -126,7 +133,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 2.14,
       "off_track_ratio": 0.0389,
-      "v_mean_mps": 7.071
+      "v_mean_mps": 7.071,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "lqr",
@@ -142,7 +150,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 1.98,
       "off_track_ratio": 0.0389,
-      "v_mean_mps": 7.071
+      "v_mean_mps": 7.071,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "pure_pursuit",
@@ -158,7 +167,8 @@
       "delta_max_abs_deg": 33.0,
       "convergence_time_s": 1.38,
       "off_track_ratio": 0.0421,
-      "v_mean_mps": 7.5
+      "v_mean_mps": 7.5,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "stanley",
@@ -174,7 +184,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 2.06,
       "off_track_ratio": 0.0383,
-      "v_mean_mps": 7.5
+      "v_mean_mps": 7.5,
+      "reverse_blocked_steps": 0
     },
     {
       "controller": "lqr",
@@ -190,7 +201,8 @@
       "delta_max_abs_deg": 35.0,
       "convergence_time_s": 1.9,
       "off_track_ratio": 0.0383,
-      "v_mean_mps": 7.5
+      "v_mean_mps": 7.5,
+      "reverse_blocked_steps": 0
     }
   ],
   "ranking": {

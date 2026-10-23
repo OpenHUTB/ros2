@@ -79,11 +79,16 @@ def format_ranking(metrics: Sequence[Metrics]) -> str:
 
 
 def metrics_to_csv(metrics: Sequence[Metrics], output: str) -> str:
+    """导出指标表。
+
+    编码用 **utf-8 无 BOM**：所有列名均为 ASCII，BOM 没有存在的必要，
+    而部分 Excel 版本会把 BOM 当成首列表头的一部分显示成乱码。
+    """
     os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
     rows = [m.as_dict() for m in metrics]
     if not rows:
         return output
-    with open(output, "w", newline="", encoding="utf-8-sig") as fh:
+    with open(output, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
@@ -103,9 +108,9 @@ def metrics_to_json(metrics: Sequence[Metrics], output: str,
 
 
 def trace_to_csv(trace, output: str) -> str:
-    """导出单条轨迹时序，便于用 Excel / pandas 复现曲线。"""
+    """导出单条轨迹时序，便于用 Excel / pandas 复现曲线（utf-8 无 BOM）。"""
     os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
-    with open(output, "w", newline="", encoding="utf-8-sig") as fh:
+    with open(output, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
         writer.writerow(["t", "x", "y", "yaw", "v", "delta", "e", "psi"])
         for i in range(len(trace)):

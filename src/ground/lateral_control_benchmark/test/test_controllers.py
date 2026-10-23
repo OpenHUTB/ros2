@@ -37,6 +37,9 @@ from lateral_control_benchmark import (  # noqa: E402
 from lateral_control_benchmark.simulation import (  # noqa: E402
     SimulationConfig, Simulator, SpeedProfile, track_speed,
 )
+from lateral_control_benchmark.benchmark import (  # noqa: E402
+    metrics_to_csv, trace_to_csv,
+)
 
 PASS, FAIL = 0, 0
 
@@ -263,6 +266,108 @@ def test_metrics() -> None:
     close(track_speed(10.0, 0.0, 0.1, kp=1.0), 10.0, 1e-9, "纵向 P 控制器输出正确")
 
 
+# ------------------------------------------------------ 7. 速度边界（倒车）
+def test_boundary_speed() -> None:
+    """边界情况：负速度不再被静默钳位，而是配置阶段报错 / 状态层可观测。
+
+    对应评审意见：「负速度（倒车）的时候直接把速度钳到 0，不报错但行为不对」。
+    """
+
+    def expect_error(fn, msg: str) -> None:
+        try:
+            fn()
+        except ValueError:
+            check(True, msg)
+        else:
+            check(False, msg + "（未抛 ValueError）")
+
+    # 1) 配置阶段就拒绝非法的巡航速度
+    expect_error(lambda: SpeedProfile(cruise_speed=-3.0), "cruise_speed 为负时报 ValueError")
+    expect_error(lambda: SpeedProfile(cruise_speed=0.0), "cruise_speed 为 0 时报 ValueError")
+    expect_error(lambda: SpeedProfile(cruise_speed=8.0, min_speed=-1.0),
+                 "min_speed 为负时报 ValueError")
+    expect_error(lambda: SpeedProfile(cruise_speed=2.0, min_speed=5.0),
+                 "min_speed 大于 cruise_speed 时报 ValueError")
+    expect_error(lambda: SpeedProfile(a_lat_max=0.0), "a_lat_max 为 0 时报 ValueError")
+    expect_error(lambda: VehicleParams(max_decel=-1.0), "max_decel 为负时报 ValueError")
+    expect_error(lambda: SimulationConfig(initial_speed=-2.0),
+                 "initial_speed 为负时报 ValueError")
+    expect_error(lambda: SimulationConfig(model="bicycle"),
+                 "未知车辆模型时报 ValueError")
+
+    # 2) 不允许倒车（默认）：速度钳在 0，且拦截步数可观测
+    mdl = KinematicBicycle()
+    state = np.array([0.0, 0.0, 0.0, 0.0])
+    for _ in range(10):
+        state = mdl.step(state, 0.0, -3.0, 0.02)
+    check(state[3] >= 0.0, f"默认不允许倒车：速度不为负（v={state[3]:.6f}）")
+    check(mdl.reverse_blocked_steps == 10,
+          f"拦截步数被记录（{mdl.reverse_blocked_steps} 步）")
+    check(abs(state[0]) < 1e-9, f"被拦截时不产生反向位移（x={state[0]:.2e}）")
+
+    # 3) 显式允许倒车：保留负速度并向后运动
+    mdl_rev = KinematicBicycle(VehicleParams(allow_reverse=True))
+    st = np.array([0.0, 0.0, 0.0, 0.0])
+    for _ in range(10):
+        st = mdl_rev.step(st, 0.0, -3.0, 0.02)
+    check(st[3] < 0.0, f"允许倒车时速度为负（v={st[3]:.4f}）")
+    check(st[0] < -1e-6, f"允许倒车时产生反向位移（x={st[0]:.4f}）")
+    check(mdl_rev.reverse_blocked_steps == 0, "允许倒车时不计拦截步数")
+
+    # 4) 动力学模型行为一致
+    dyn = DynamicBicycle()
+    st = np.array([0.0, 0.0, 0.0, 0.0])
+    for _ in range(10):
+        st, _mem = dyn.step(st, 0.0, -3.0, 0.02)
+    check(st[3] >= 0.0 and dyn.reverse_blocked_steps > 0,
+          f"动力学模型同样不倒退（v={st[3]:.6f}, 拦截 {dyn.reverse_blocked_steps} 步）")
+
+    # 5) 指标里能查到该字段，且正常场景下为 0
+    path = straight_line(length=60.0)
+    cfg = SimulationConfig(dt=0.02, speed=SpeedProfile(cruise_speed=8.0))
+    m = evaluate(Simulator(path, cfg).run(Stanley(), "s"))
+    check("reverse_blocked_steps" in m.as_dict(), "指标字典包含 reverse_blocked_steps")
+    check(m.as_dict()["reverse_blocked_steps"] == 0,
+          "正常场景不会触发倒车拦截（计数值为 0）")
+
+    # 6) 每次 run 独立计数，不累加历史
+    sim = Simulator(path, cfg)
+    sim.run(Stanley(), "a")
+    sim.run(Stanley(), "b")
+    check(sim.model.reverse_blocked_steps == 0, "重复 run 时计数器按次重置")
+
+
+# --------------------------------------------------- 8. CSV 编码（无 BOM）
+def test_csv_encoding() -> None:
+    """CSV 不带 BOM：Excel 打开首列表头不会出现乱码。"""
+    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_test_output")
+    os.makedirs(out_dir, exist_ok=True)
+    path = straight_line(length=40.0)
+    cfg = SimulationConfig(dt=0.02, speed=SpeedProfile(cruise_speed=8.0))
+    tr = Simulator(path, cfg).run(Stanley(), "straight")
+    m = evaluate(tr)
+
+    try:
+        csv_path = metrics_to_csv([m], os.path.join(out_dir, "m.csv"))
+        with open(csv_path, "rb") as fh:
+            head = fh.read(3)
+        check(head != b"\xef\xbb\xbf", f"指标 CSV 无 BOM（前三字节 {head!r}）")
+        with open(csv_path, "r", encoding="utf-8") as fh:
+            first = fh.readline()
+        check(first.startswith("controller,"),
+              f"首列表头以字段名开头（{first[:24]!r}）")
+
+        trace_path = trace_to_csv(tr, os.path.join(out_dir, "t.csv"))
+        with open(trace_path, "rb") as fh:
+            thead = fh.read(3)
+        check(thead != b"\xef\xbb\xbf", f"轨迹 CSV 无 BOM（前三字节 {thead!r}）")
+    finally:
+        for name in ("m.csv", "t.csv"):
+            p = os.path.join(out_dir, name)
+            if os.path.isfile(p):
+                os.remove(p)
+
+
 def main() -> int:
     print("=" * 72)
     print("横向控制对比实验台 —— 离线单元测试（不需要 ROS / 仿真器）")
@@ -273,6 +378,8 @@ def main() -> int:
     test_vehicle_model()
     test_closed_loop()
     test_metrics()
+    test_boundary_speed()
+    test_csv_encoding()
     print("\n" + "=" * 72)
     print(f"通过 {PASS} 项，失败 {FAIL} 项")
     print("=" * 72)

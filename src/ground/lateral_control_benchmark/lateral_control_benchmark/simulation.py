@@ -37,6 +37,24 @@ class SpeedProfile:
     accel_limit: float = 1.5      # 加速度上限 m/s^2
     decel_limit: float = 2.5      # 减速度上限 m/s^2
 
+    def __post_init__(self) -> None:
+        # 显式校验：负的巡航速度此前会被 max(..., 0) 静默钳成 0，
+        # 表现为"车不动"却没有任何报错。本模块的横向指标按前进定义，
+        # 不支持倒车巡航，因此在配置阶段就拒绝。
+        if not math.isfinite(self.cruise_speed) or self.cruise_speed <= 0.0:
+            raise ValueError(
+                f"cruise_speed 必须为正数（当前 {self.cruise_speed}）；"
+                "本模块不支持倒车巡航，倒车请直接用 allow_reverse 的车辆模型")
+        if not math.isfinite(self.min_speed) or self.min_speed < 0.0:
+            raise ValueError(f"min_speed 必须是非负数，当前 {self.min_speed}")
+        if self.min_speed > self.cruise_speed:
+            raise ValueError(
+                f"min_speed({self.min_speed}) 不能大于 cruise_speed({self.cruise_speed})")
+        if not math.isfinite(self.a_lat_max) or self.a_lat_max <= 0.0:
+            raise ValueError(f"a_lat_max 必须为正数，当前 {self.a_lat_max}")
+        if self.accel_limit < 0.0 or self.decel_limit < 0.0:
+            raise ValueError("accel_limit 与 decel_limit 必须是非负数")
+
     def target(self, path: ReferencePath, s: float) -> float:
         v = self.cruise_speed
         kappa = abs(path.curvature_at_s(s))
@@ -71,6 +89,18 @@ class SimulationConfig:
     speed: SpeedProfile = field(default_factory=SpeedProfile)
     params: VehicleParams = field(default_factory=VehicleParams)
 
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.dt) or self.dt <= 0.0:
+            raise ValueError(f"dt 必须为正数，当前 {self.dt}")
+        if not math.isfinite(self.duration) or self.duration <= 0.0:
+            raise ValueError(f"duration 必须为正数，当前 {self.duration}")
+        if not math.isfinite(self.initial_speed) or self.initial_speed < 0.0:
+            raise ValueError(
+                f"initial_speed 必须是非负数（当前 {self.initial_speed}）；"
+                "负初速度请显式设置 params.allow_reverse=True")
+        if self.model not in ("kinematic", "dynamic"):
+            raise ValueError(f"model 只能是 'kinematic' 或 'dynamic'，当前 {self.model!r}")
+
 
 @dataclass
 class Trace:
@@ -86,6 +116,8 @@ class Trace:
     psi: np.ndarray          # 航向偏差（车头 - 路径）
     controller: str
     scenario: str
+    # 被"不允许倒车"规则拦截的步数（0 表示整个仿真中速度从未试图变负）
+    reverse_blocked_steps: int = 0
 
     def __len__(self) -> int:
         return int(self.t.shape[0])
@@ -113,6 +145,9 @@ class Simulator:
         controller.reset()
         state = self.initial_state()
         memory = {"vy": 0.0, "r": 0.0}
+        # 计数器按"每次 run 独立"重置，重复调用同一 Simulator 时不会累加旧值
+        if hasattr(self.model, "reverse_blocked_steps"):
+            self.model.reverse_blocked_steps = 0
         record = {k: [] for k in ("t", "x", "y", "yaw", "v", "delta", "e", "psi")}
         t = 0.0
         while t <= self.cfg.duration:
@@ -150,6 +185,7 @@ class Simulator:
             delta=np.array(record["delta"]), e=np.array(record["e"]),
             psi=np.array(record["psi"]),
             controller=getattr(controller, "name", "controller"), scenario=scenario,
+            reverse_blocked_steps=int(getattr(self.model, "reverse_blocked_steps", 0)),
         )
 
 
@@ -172,6 +208,8 @@ class Metrics:
     convergence_time: float     # 首次进入并保持 0.2 m 的时刻
     off_track_ratio: float      # |e| > 1.0 m 的时间占比（安全性）
     v_mean: float
+    # 被"不允许倒车"规则拦截的步数；>0 说明该场景确实触碰到了边界
+    reverse_blocked_steps: int = 0
 
     def as_dict(self) -> Dict[str, float | str]:
         return {
@@ -189,6 +227,7 @@ class Metrics:
             "convergence_time_s": round(self.convergence_time, 3),
             "off_track_ratio": round(self.off_track_ratio, 4),
             "v_mean_mps": round(self.v_mean, 3),
+            "reverse_blocked_steps": int(self.reverse_blocked_steps),
         }
 
 
@@ -229,6 +268,7 @@ def evaluate(trace: Trace, steady_ratio: float = 0.25,
         convergence_time=convergence,
         off_track_ratio=float((e_abs > off_track_threshold).mean()) if n else 0.0,
         v_mean=float(trace.v.mean()) if n else 0.0,
+        reverse_blocked_steps=int(getattr(trace, "reverse_blocked_steps", 0)),
     )
 
 

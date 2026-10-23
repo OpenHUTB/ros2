@@ -219,6 +219,22 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
 | 4 | Stanley 前轴取点在圆弧上偏差 0.48 m | 前轴比车辆实际位置超前一个轴距，前馈取值偏外 | 默认改为后轴取点，保留 `use_rear_axle=False` 复现经典写法 |
 | 5 | 轨迹图被 `axis("equal")` 压成一条直线 | 横向变化远小于纵向长度，等比例不可读 | 去掉等比例约束 |
 | 6 | 曲率前馈在低速出现 0/0 | $L\kappa v/v$ 在 $v\to0$ 时未定义 | 控制量改为期望横摆角速度，转角换算处对 $v$ 取下限 |
+| 7 | 倒车（负速度）时速度被静默钳成 0：不报错、不留痕，看起来像正常停车 | 步末 `v = max(0, v)` 只是硬截断，既没在配置阶段校验非法参数，也没记录发生过截断 | 配置阶段对 `cruise_speed`/`initial_speed` 等显式报 `ValueError`；模型新增 `allow_reverse`（默认 `False`），截断次数记入 `reverse_blocked_steps` 并写入指标表；积分时对负速度取 0，避免 RK4 中间级产生微小后向位移 |
+| 8 | CSV 带 UTF-8 BOM，部分 Excel 把首列表头识别成乱码 | 写文件用 `encoding="utf-8-sig"`，而所有列名都是 ASCII，BOM 并无必要 | 写 CSV 改为 `utf-8`（无 BOM），读取仍兼容带 BOM 的旧文件；新增单测断言前三字节不是 `EF BB BF` |
+
+> 第 7、8 条由外部评审提出，修复后原有 12 行指标**逐位未变**，
+> 仅新增 `reverse_blocked_steps` 一列（正常场景恒为 0）。
+
+### 7.1 速度边界行为说明
+
+| 场景 | 默认行为（`allow_reverse=False`） | 设置 `allow_reverse=True` 时 |
+|---|---|---|
+| 停车后继续给负加速度 | 速度保持 0，位置不后退，`reverse_blocked_steps` 累加 | 允许倒车，速度变负，位置后退 |
+| `cruise_speed <= 0` | 抛 `ValueError` | 抛 `ValueError`（巡航速度与是否允许倒车无关） |
+| `initial_speed < 0` | 抛 `ValueError` | 同左（负初速度请直接用 `allow_reverse` 的模型自行推进） |
+
+之所以默认不允许倒车：本模块的横向偏差、航向偏差、收敛时间等指标都是按**前进**定义的，
+倒车时这些量的物理含义会改变，混在一起比较会失真。
 
 ## 8. 常见问题排查
 

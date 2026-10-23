@@ -34,11 +34,22 @@ class VehicleParams:
     max_steering: float = math.radians(35.0)   # 前轮最大转角
     max_accel: float = 2.0        # 纵向加速度上限 (m/s^2)
     max_decel: float = 4.0        # 纵向减速度上限 (m/s^2)
+    # 是否允许倒车（v < 0）。默认 False：本模块的横向控制器与指标
+    # （横向偏差、航向偏差、收敛时间）都是按"前进"定义的，
+    # 倒车时这些量没有同等含义，因此默认把 v 钳在 0 并记录被拦截的步数。
+    allow_reverse: bool = False
 
     def __post_init__(self) -> None:
         if abs(self.cg_to_front + self.cg_to_rear - self.wheelbase) > 1e-6:
             # 允许略有不一致，但给出明确提示，避免 LQR 线性化用错车长
             self.wheelbase = self.cg_to_front + self.cg_to_rear
+        # 边界情况显式报错，避免负值被静默钳位成 0 后"看起来正常"
+        if not math.isfinite(self.max_accel) or self.max_accel < 0:
+            raise ValueError(f"max_accel 必须是非负数，当前 {self.max_accel}")
+        if not math.isfinite(self.max_decel) or self.max_decel < 0:
+            raise ValueError(f"max_decel 必须是非负数，当前 {self.max_decel}")
+        if not math.isfinite(self.max_steering) or self.max_steering <= 0:
+            raise ValueError(f"max_steering 必须为正数，当前 {self.max_steering}")
 
 
 class KinematicBicycle:
@@ -58,13 +69,26 @@ class KinematicBicycle:
 
     def __init__(self, params: VehicleParams | None = None) -> None:
         self.p = params or VehicleParams()
+        # 一次仿真中被"不允许倒车"规则拦截的步数（0 表示从未触发）
+        self.reverse_blocked_steps = 0
+
+    def _effective_speed(self, v: float) -> float:
+        """供积分使用的前进速度。
+
+        不允许倒车时把负速度当作 0 参与位置/航向积分。只在步末钳位是不够的：
+        RK4 的中间级（k2/k3/k4）会取到负速度，导致车虽然"停下"却仍有微小后向位移。
+        """
+        if v < 0.0 and not self.p.allow_reverse:
+            return 0.0
+        return float(v)
 
     def derivative(self, state: np.ndarray, delta: float, accel: float) -> np.ndarray:
         x, y, yaw, v = state
+        v_eff = self._effective_speed(v)
         return np.array([
-            v * math.cos(yaw),
-            v * math.sin(yaw),
-            v * math.tan(delta) / self.p.wheelbase,
+            v_eff * math.cos(yaw),
+            v_eff * math.sin(yaw),
+            v_eff * math.tan(delta) / self.p.wheelbase,
             accel,
         ])
 
@@ -76,14 +100,32 @@ class KinematicBicycle:
         k3 = self.derivative(state + 0.5 * dt * k2, delta, accel)
         k4 = self.derivative(state + dt * k3, delta, accel)
         new_state = state + dt / 6.0 * (k1 + 2 * k2 + 2 * k3 + k4)
-        new_state[3] = max(0.0, float(new_state[3]))   # 不倒车
+        new_state[3] = self._resolve_speed(new_state[3])
         return new_state
 
-    def lateral_limits(self, v: float) -> float:
-        """当前车速下能实现的最大横摆角速度（供控制器判断可行性）。"""
-        if v < 1e-6:
+    def _resolve_speed(self, v_new: float) -> float:
+        """处理积分后可能出现负速度的边界情况。
+
+        * ``allow_reverse=True``：保留负速度，即真实倒车；
+        * ``allow_reverse=False``（默认）：把速度钳到 0 并累加
+          ``reverse_blocked_steps``，使这一行为可观测、可断言，
+          而不是静默截断——否则调用方会误以为车辆在正常前进。
+        """
+        if v_new < 0.0 and not self.p.allow_reverse:
+            self.reverse_blocked_steps += 1
             return 0.0
-        return v * math.tan(self.p.max_steering) / self.p.wheelbase
+        return float(v_new)
+
+    def lateral_limits(self, v: float) -> float:
+        """当前车速下能实现的最大横摆角速度（供控制器判断可行性）。
+
+        取 ``|v|``：倒车（``allow_reverse=True``）时曲线半径与前进同向、
+        角速度反号，但可行域大小相同。
+        """
+        v_abs = abs(float(v))
+        if v_abs < 1e-6:
+            return 0.0
+        return v_abs * math.tan(self.p.max_steering) / self.p.wheelbase
 
 
 class DynamicBicycle:
@@ -105,6 +147,7 @@ class DynamicBicycle:
         self.p = params or VehicleParams()
         self.v_min = float(v_min)
         self.kinematic = KinematicBicycle(self.p)
+        self.reverse_blocked_steps = 0
 
     def derivative(self, state: np.ndarray, delta: float, accel: float,
                    vy: float, r: float) -> tuple:
@@ -147,7 +190,8 @@ class DynamicBicycle:
         d4, vy4, r4 = self.derivative(state + dt * d3, delta, accel,
                                       vy + dt * vy3, r + dt * r3)
         new_state = state + dt / 6.0 * (d1 + 2 * d2 + 2 * d3 + d4)
-        new_state[3] = max(0.0, float(new_state[3]))
+        new_state[3] = self.kinematic._resolve_speed(new_state[3])
+        self.reverse_blocked_steps = self.kinematic.reverse_blocked_steps
         new_mem = {
             "vy": float(vy + dt / 6.0 * (vy1 + 2 * vy2 + 2 * vy3 + vy4)),
             "r": float(r + dt / 6.0 * (r1 + 2 * r2 + 2 * r3 + r4)),
