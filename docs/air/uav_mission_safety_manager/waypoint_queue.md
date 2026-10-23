@@ -97,9 +97,8 @@ RPC 派发尚未结束时，请求可能被拒绝，需要待 `command_pending=f
 
 ## 实测范围
 
-2026-10-23 在上述 Humble 环境构建，并执行单元测试、原 ROS 冒烟脚本和新增独立 launch 演示脚本。新增演示的原始输出见源码目录 `tests/logs/waypoint_queue_humble.txt`。
+Ubuntu 22.04 / ROS 2 Humble 下构建通过，47 项单元测试及 ROS 冒烟测试通过。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。
 
-同日另用交互终端逐步输入上述 `ros2` 命令手动复测（ROS_DOMAIN_ID=90），验证三个航点顺序完成、暂停恢复、非法尾部整队拒绝、暂停后取消再恢复不重发、返航抢占并自动降落、reset 后再次起飞，以及显式降落抢占。最终为 LANDED，节点正常退出。采集 1930 条状态消息；保留状态/目标变化段的 52 个首尾帧和完整命令返回，分别见 `tests/logs/waypoint_queue_manual_states.jsonl`、`tests/logs/waypoint_queue_manual_cli.txt`。原始状态流另保存在复测机器 `~/queue_validation/manual/status_stream.txt`。
+AirSim 手动验证了三航点顺序执行、执行中暂停恢复、取消任务及返航自动落地。测试记录见源码目录 `tests/logs/waypoint_queue_airsim_manual.md`。
 
-本次另在 Windows OpenHUTB Air 场景与 WSL2 Humble 节点间完成 AirSim 手动飞行复测：三航点顺序完成、执行中暂停并保留原目标恢复、取消队列、返航自动降落。日志确认 RETURNING → LANDING → LANDED，取消的队列未重启。环境、帧号和限制见源码目录 `tests/logs/waypoint_queue_airsim_manual.md`，变化段首尾帧见 `tests/logs/waypoint_queue_airsim_states.jsonl`。起飞 RPC 返回 False 的既有异常仍保留，未在本次修复；未验证真机、碰撞或避障。第一次贡献的 Foxy/AirSim 历史实测另见 [AirSim 实测记录](airsim_validation.md)。
-原 `requirements.txt` 仍是历史 Foxy/Python 3.8 客户端依赖，本次不改动；不要将它用于上述 Humble 演示安装。
+已知限制：起飞 RPC 返回 `False` 的既有异常未修复；未验证真机、碰撞或避障。Humble 演示无需安装历史 Foxy/Python 3.8 的 `requirements.txt`。
