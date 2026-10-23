@@ -99,6 +99,7 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 空域载具:
     - 室内无人机安全制动与定高悬停 / Indoor UAV braking: './air/mujoco_uav_range_neural_braking.md'
+    - 无人机测距制动实验报告 / UAV braking experiment report: './air/mujoco_uav_experiment_report.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'
