@@ -8,19 +8,25 @@
 
 ## 怎么跑
 1. 把整个`ros_topic_demo`文件夹复制到你的catkin工作区的`src/humanoid`目录下：
+
 ```bash
 cd ~/catkin_ws/src/humanoid
 ```
+
 2. 给脚本加可执行权限，然后编译工作区：
+
 ```bash
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
 ```
+
 3. 一键启动：
+
 ```bash
 roslaunch ros_topic_demo rviz_demo.launch
 ```
+
 启动之后rviz窗口会自动弹出来，已经帮你配好了Fixed Frame为odom和Odometry显示，直接就能看到小红点转圈圈，不需要手动点Add加显示。
 
 ## 我踩过的坑
