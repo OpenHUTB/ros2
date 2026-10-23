@@ -1,0 +1,38 @@
+# 路径点发布器 —— 可调参数
+#
+# 由 launch/main.launch 用 <rosparam command="load"> 加载到全局命名空间，再用
+# <param> 由 launch <arg> 覆盖；节点用 rospy.get_param("rate/publish_hz") 这类
+# 相对名读取，与 launch 里顶层的 <param> 对应。
+#
+# 下面每个值都等于 waypoint_core 里的默认常量，因此「不传参数 = 默认行为」。
+
+rate:
+  publish_hz: 10.0          # 目标点 / 状态的发布频率 Hz
+
+frame:
+  id: "map"                 # 路径点所在坐标系
+
+control:
+  # sequential：到达后顺序推进，走完最后一个点结束
+  # loop      ：到达后顺序推进，走完最后一个点回到第一个
+  # manual    ：不自动推进，只响应 /waypoint/set_index 与 /waypoint/next
+  mode: sequential
+  target_tolerance: 1.0     # 到达判定阈值 m；<= 0 表示关闭自动推进
+  start_index: 0            # 初始目标点下标（0 起算）
+  autostart: true           # 启动后立即开始；false 时等切换指令
+
+route:
+  # 留空 = 使用内置示例路线（10 m 见方环路，8 个点）
+  # 指定文件时请写绝对路径，例如 /home/user/routes/my_route.txt
+  file: ""
+
+mock:
+  enabled: false            # true = 内置模拟车辆自己发 /odom，不需要 CARLA
+  speed: 2.0                # 模拟车辆速度 m/s
+
+topic:
+  waypoints: "/waypoints"                 # 全部路径点（PoseArray，latched）
+  target: "/waypoint/target"              # 当前目标点（PoseStamped）
+  current_index: "/waypoint/current_index"  # 当前下标（Int32，变化时才发）
+  set_index: "/waypoint/set_index"        # 切换指令入口（Int32，1 起算）
+  odom: "/odom"                           # 位姿来源（mock/enabled 时由本节点发布）

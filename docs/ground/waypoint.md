@@ -7,6 +7,127 @@
 
 * [Carla 路径点发布器](https://openhutb.github.io/doc/carla_waypoint/)
 
+## 自主实现：带动态目标点切换的路径点发布器
+
+本文的 waypoint publisher 来自 `carla_ros_bridge`：它把地图导出的道路中心线**整条**
+发出来，车辆开向哪个点、什么时候换目标，都要由另一个节点自己算。下面是在同一页
+基础上**自主实现**的替代方案 —— 一个**不依赖 ros-bridge、也不依赖 CARLA** 的 ROS 包，
+除了发布路径点，还把「当前目标点」单独发布出来，并支持运行期间**动态目标点切换**。
+
+代码位于
+[`src/ground/waypoint_target_switcher`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/waypoint_target_switcher)。
+
+### 与 ros-bridge 的 waypoint publisher 的区别
+
+| 对比项 | 本文示例（ros-bridge） | 本模块 |
+| --- | --- | --- |
+| 依赖 | 必须编译并运行 `carla_ros_bridge` | **不需要**，只依赖 rospy / geometry_msgs / nav_msgs / std_msgs |
+| 发布内容 | 整条中心线路径点 | 路径点 **+ 当前目标点 + 当前下标** |
+| 目标点管理 | 无（由订阅方自己决定） | `sequential` / `loop` / `manual` 三种推进模式 |
+| 动态切换 | 无 | 按序号跳转 / 手动下一个 / 就近吸附 |
+| 到达判定 | 无 | 订阅 `/odom`，进入 `target_tolerance` 半径即推进 |
+| 无 CARLA 时 | 必须连仿真器 | 内置模拟车辆，`mock_enabled:=true` 即可跑通 |
+
+### 话题接口
+
+| 方向 | 话题 | 消息类型 | 说明 |
+| --- | --- | --- | --- |
+| 发布 | `/waypoints` | `geometry_msgs/PoseArray` | 全部路径点（latched，晚连上的节点也能收到） |
+| 发布 | `/waypoint/target` | `geometry_msgs/PoseStamped` | 当前目标点 |
+| 发布 | `/waypoint/current_index` | `std_msgs/Int32` | 当前目标点下标（0 起算），变化时才发 |
+| 发布 | `/odom` | `nav_msgs/Odometry` | 仅 `mock/enabled: true` 时由本模块模拟发布 |
+| 订阅 | `/waypoint/set_index` | `std_msgs/Int32` | 切换到第 N 个点（**1 起算**，越界忽略） |
+| 订阅 | `/waypoint/next` | `std_msgs/Empty` | 手动前进一个 |
+| 订阅 | `/waypoint/snap_nearest` | `std_msgs/Empty` | 吸附到离当前位置最近的点 |
+| 订阅 | `/odom` | `nav_msgs/Odometry` | 真实 / 仿真位姿 |
+
+### 参数
+
+| 参数名 | 默认值 | 单位 | 说明 |
+| --- | --- | --- | --- |
+| `rate/publish_hz` | `10.0` | Hz | 目标点 / 状态的发布频率 |
+| `frame/id` | `map` | — | 路径点坐标系 |
+| `control/mode` | `sequential` | — | `sequential` / `loop` / `manual` |
+| `control/target_tolerance` | `1.0` | m | 到达判定阈值；`<= 0` 关闭自动推进 |
+| `control/start_index` | `0` | — | 初始目标点下标（超范围自动夹住） |
+| `control/autostart` | `true` | — | 启动后立即开始 |
+| `route/file` | `""` | — | 路线文件路径；留空用内置示例路线 |
+| `mock/enabled` | `false` | — | `true` 时自带模拟车辆并发布 `/odom` |
+| `mock/speed` | `2.0` | m/s | 模拟车辆速度 |
+
+完整清单（含话题重映射）见模块内的 `config/waypoint_target_switcher.yaml`。
+
+### 运行
+
+```bash
+# 默认：内置示例路线（10 m 见方环路、8 个点）
+roslaunch waypoint_target_switcher main.launch
+
+# 让目标点自动依次切换（内置模拟车辆，不需要 CARLA）
+roslaunch waypoint_target_switcher main.launch mock_enabled:=true
+
+# 循环模式 + 到达阈值 0.5 m
+roslaunch waypoint_target_switcher main.launch mock_enabled:=true mode:=loop target_tolerance:=0.5
+```
+
+### 动态切换目标点
+
+运行期间在任意终端执行（下标 **1 起算**）：
+
+```bash
+rostopic pub -1 /waypoint/set_index std_msgs/Int32 "data: 3"   # 跳到第 3 个
+rostopic pub -1 /waypoint/next std_msgs/Empty "{}"             # 下一个
+rostopic pub -1 /waypoint/snap_nearest std_msgs/Empty "{}"     # 就近吸附
+```
+
+`sequential` 模式走完最后一个点后停止推进并在终端提示；这时可以随时用 `set_index`
+重新指定目标，或改用 `mode:=loop` 循环跑。
+
+### 路线文件
+
+纯文本，每行一个点 `x y yaw`（`yaw` 可省略，默认 0），`#` 之后是注释：
+
+```
+# x y yaw
+0.0   0.0   0.0
+5.0   0.0   0.0
+10.0  10.0  0.0
+```
+
+随包提供 `config/demo_route.txt` 作为格式样例（与内置示例路线一致）。用纯文本而不是
+YAML，是为了让「读路线」不依赖 PyYAML，手改和离线测试都更省事。
+
+### 离线测试
+
+核心逻辑（路线解析、目标点推进、到达判定、模拟车辆步进、四元数互转）都在
+`scripts/waypoint_core.py`，该文件**不导入 rospy**，因此可以在没有 ROS、没有 CARLA、
+没有图形界面的机器上回归：
+
+```bash
+cd <仓库根目录>
+python3 tests/test_waypoint_target_switcher_local.py   # Noetic / 任意 Python 3
+python2 tests/test_waypoint_target_switcher_local.py   # Melodic / Python 2.7
+```
+
+全部通过时打印 `全部通过` 并以 0 退出。
+
+### 运行效果
+
+`roslaunch waypoint_target_switcher main.launch mock_enabled:=true` 启动后，终端会按到达
+顺序打印目标点切换过程（内置路线的 8 个点依次推进，`sequential` 模式走完后停止）：
+
+```
+[INFO] 路径点发布器已启动：8 个路径点，模式=sequential，到达阈值=1.00m，频率=10.0Hz
+[INFO] 内置模拟车辆已启用：/odom 由本节点发布，速度 2.0 m/s
+[INFO] 到达第 1 个路径点 → 目标切换为第 2 个
+[INFO] 到达第 2 个路径点 → 目标切换为第 3 个
+...
+[INFO] 已到达最后一个路径点，路线结束（可发 /waypoint/set_index 重新指定）
+```
+
+在 rviz 里可以同时显示 `PoseArray`（整条路线）与 `PoseStamped`（当前目标点），
+目标点会随着推进一格一格跳过去。
+
 ## 拓展：自行实现「给定轨迹的神经网络跟踪控制」
 
 本文的路径点发布器只负责**发布**路径点，车辆如何沿路径点行驶由其它节点决定。
