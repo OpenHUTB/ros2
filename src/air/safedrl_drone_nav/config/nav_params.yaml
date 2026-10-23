@@ -1,0 +1,110 @@
+# SafeDRL-DroneNav-ROS - central configuration.
+#
+# Every value here maps 1:1 onto a field of `safe_nav_env.EnvConfig`, so a run
+# can be reproduced either from this file or from the equivalent CLI flags.
+# Keeping it in one place makes the ablation auditable: the three reported rows
+# differ ONLY in `use_cbf` and in whether the constraint is active.
+
+environment:
+  # timing
+  ctrl_freq: 30            # [Hz] RL / control rate
+  pyb_freq: 240            # [Hz] physics rate (must be a multiple of ctrl_freq)
+  max_steps: 900           # 30 s episode cap
+
+  # arena
+  arena_x: 12.6
+  arena_y: 3.2
+  z_min: 0.30
+  z_max: 3.20
+
+  # slalom gates (deliberately non-colinear: a constant forward command fails)
+  n_gates: 3
+  first_gate_x: 3.8
+  gate_spacing: 3.6
+  gate_altitude: 1.50
+  gate_y_offsets: [0.0, 1.55, -1.55]
+  gate_z_offsets: [0.0, 0.45, -0.35]
+  gate_aperture: 0.58
+  gate_bar: 0.055
+
+  # obstacles
+  n_static: 7
+  n_dynamic: 4
+  static_radius: [0.22, 0.42]
+  dynamic_radius: [0.17, 0.28]
+  dynamic_speed: [0.35, 0.95]
+
+  # wind
+  wind_mean: [0.12, 0.0, 0.0]
+  wind_ou_sigma: 0.30
+  wind_ou_theta: 0.9
+  gust_prob: 0.020
+  gust_magnitude: [0.8, 2.4]
+  gust_duration: [3, 10]
+
+  # vehicle
+  max_velocity: 2.6
+  max_yaw_rate: 2.0
+  spawn_noise: 0.10
+  drone_radius: 0.10
+
+safety_filter:
+  # Control barrier function parameters.  `a_max` is the effective braking
+  # authority assumed by the barrier and is deliberately well below the
+  # controller's ~7.5 m/s^2, because the plant is a quadrotor with a first-order
+  # velocity loop rather than an ideal integrator.
+  d_safe: 0.30          # [m] safety boundary offset
+  gamma: 0.55           # [-] discrete CBF class-K gain
+  a_max: 3.0            # [m/s^2] effective braking authority
+  tau_lag: 0.20         # [s] velocity-loop time constant
+  brake_gain: 1.05      # [-] divisor on admissible approach speed
+  activate_below: 2.60  # [m] barriers closer than this are evaluated
+  iters: 6              # Gauss-Seidel sweeps over active constraints
+
+reward:
+  w_progress: 1.0
+  w_energy: 0.03
+  w_action: 0.02
+  w_alive: -0.02        # a *penalty*: loitering must not be free
+  w_gate: 10.0
+  w_success: 40.0
+  w_crash: -25.0
+  w_proximity: 0.15
+  gamma: 0.99
+
+constraint:
+  # Constrained-RL settings (PPO-Lagrangian dual ascent).
+  cost_limit: 2.0          # allowed mean EPISODIC constraint cost
+  lambda_lr: 0.05
+  lambda_max: 25.0
+  cost_barrier_weight: 1.0
+
+training:
+  policy: ppo_lag
+  use_cbf: true
+  timesteps: 120000
+  n_envs: 4
+  n_steps: 1024
+  batch_size: 256
+  n_epochs: 10
+  learning_rate: 5.0e-5    # gentle: a warm-started controller is fragile
+  ent_coef: 0.0
+  gamma: 0.99
+  gae_lambda: 0.95
+  log_std_init: -1.0       # SB3's 0.0 => ~N(0,1) actions, far too violent
+  normalize_reward: true
+  eval_freq: 20000
+  eval_episodes: 12
+
+  # Behaviour-cloning warm start.  Training PPO from scratch on this task falls
+  # into a hovering local optimum; see README section "why a warm start".
+  warm_start: true
+  bc_episodes: 200
+  bc_epochs: 250
+
+ros:
+  odom_topic: /drone/odom
+  scan_topic: /drone/scan
+  cmd_vel_topic: /drone/cmd_vel
+  status_topic: /drone/nav_status
+  control_rate: 30.0

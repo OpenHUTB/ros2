@@ -154,6 +154,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
+* [基于 CBF-PPO 的无人机安全导航](./air/safedrl_drone_nav.md) —— 基于控制屏障函数与拉格朗日 PPO 的无人机安全导航，在奖励约束下学习避障策略并用安全滤波器保证飞行安全
+
 
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
