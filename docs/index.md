@@ -60,6 +60,7 @@ ROS每章节运行代码:
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+  * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)

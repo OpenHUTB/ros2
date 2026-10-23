@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>moveit_arm_planning</name>
+  <version>0.1.0</version>
+  <description>
+    MoveIt 六自由度机械臂运动规划实验：FK/IK/笛卡尔路径/障碍物避让/抓取，
+    以及 RRTConnect、RRT*、PRM 三种 OMPL 规划器的统一指标对比。
+    使用 MoveIt fake execution 与 RViz，不启动 Gazebo 或 MuJoCo。
+  </description>
+
+  <maintainer email="thestella17@users.noreply.github.com">thestella17</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_ros_move_group</depend>
+  <depend>moveit_planners_ompl</depend>
+  <depend>moveit_ros_visualization</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>marm_description</depend>
+  <depend>marm_moveit_config</depend>
+
+  <export>
+  </export>
+</package>
