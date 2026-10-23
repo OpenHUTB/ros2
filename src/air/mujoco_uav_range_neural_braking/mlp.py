@@ -24,6 +24,17 @@ class MLPRegressor:
         return hidden, hidden @ self.w2 + self.b2
 
     def fit(self, features, target, epochs=350, learning_rate=0.003):
+        """在有限二维样本上拟合。 Fit only finite, shape-consistent samples."""
+        features = np.asarray(features, dtype=float)
+        target = np.asarray(target, dtype=float).reshape(-1)
+        if features.ndim != 2 or features.shape[1] != self.w1.shape[0]:
+            raise ValueError("输入特征形状不匹配 / Feature matrix shape does not match the model")
+        if len(features) == 0 or len(features) != len(target):
+            raise ValueError("样本与标签须非空且数量相同 / Samples and targets must be non-empty and aligned")
+        if not np.isfinite(features).all() or not np.isfinite(target).all():
+            raise ValueError("训练样本须为有限数值 / Training data must contain only finite values")
+        if epochs <= 0 or learning_rate <= 0 or not np.isfinite(learning_rate):
+            raise ValueError("训练轮次和学习率须为正数 / Epochs and learning rate must be positive")
         self.mean = features.mean(axis=0)
         self.scale = np.maximum(features.std(axis=0), 1e-6)
         self.target_mean = float(target.mean())
@@ -50,6 +61,10 @@ class MLPRegressor:
         values = np.asarray(features, dtype=float)
         single = values.ndim == 1
         values = np.atleast_2d(values)
+        if values.ndim != 2 or values.shape[1] != self.w1.shape[0]:
+            raise ValueError("输入特征形状不匹配 / Feature matrix shape does not match the model")
+        if not np.isfinite(values).all():
+            raise ValueError("输入特征须为有限数值 / Features must contain only finite values")
         normalized = (values - self.mean) / self.scale
         _, prediction = self._forward(normalized)
         result = prediction * self.target_scale + self.target_mean
