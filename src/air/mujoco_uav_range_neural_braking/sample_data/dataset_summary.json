@@ -1,0 +1,38 @@
+{
+  "seed": 2026,
+  "features": [
+    "sensor_range_m",
+    "closing_speed_m_s",
+    "height_error_m"
+  ],
+  "target": "accel_m_s2",
+  "splits": {
+    "train": {
+      "episodes": 18,
+      "rows": 21600,
+      "sha256": "acfa0f06a9aac3cefc24b91281ed471b0dd676c58f31a4367bab6b6034051f46",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.6680994185095028,
+      "maximum_absolute_final_speed_m_s": 1.480692670673038e-11
+    },
+    "validation": {
+      "episodes": 6,
+      "rows": 7200,
+      "sha256": "e3c3a243c6573bf83a6de85d6a1e73359b69231138bee0b492ef30d986016d01",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.668174676834535,
+      "maximum_absolute_final_speed_m_s": 3.5669408272674663e-12
+    },
+    "test": {
+      "episodes": 6,
+      "rows": 7200,
+      "sha256": "99654ef971cdfe1b3d145b20e5b0f94d9269b75d768b894c498a29ee28a43982",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.6680979991958524,
+      "maximum_absolute_final_speed_m_s": 1.8404655605924153e-12
+    }
+  }
+}
