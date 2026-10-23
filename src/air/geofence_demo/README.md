@@ -68,5 +68,6 @@ ros2 topic pub /odom nav_msgs/msg/Odometry "{pose: {pose: {position: {x: 3.0, y:
 
 /geofence_status (std_msgs/String)：分级安全状态输出
 
-![运行效果图片](
+![安全状态运行效果图片](../../../docs/img/air/test_safe_status.png)
 
+![报警状态运行效果图片](../../../docs/img/air/test_critical_alert.png)
