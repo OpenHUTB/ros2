@@ -7,13 +7,9 @@
 我当时学完ROS话题通信之后，总想找点看得见摸得着的东西做，这个小例子一下就把"发布消息、rviz可视化"两个知识点串起来了，比在终端里打印字符串有意思多了。
 
 ## 怎么跑
-1. 把整个`ros_topic_demo`文件夹复制到你的catkin工作区的`src/humanoid`目录下：
+1. 把整个`ros_topic_demo`文件夹复制到你的ROS工作区`~/catkin_ws/src/humanoid`目录下
 
-```bash
-cd ~/catkin_ws/src/humanoid
-```
-
-2. 给脚本加可执行权限，然后编译工作区：
+2. 编译工作区：
 
 ```bash
 cd ~/catkin_ws
