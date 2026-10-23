@@ -220,9 +220,9 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 再跑测试脚本），状态机完整走到最后一步。下面是这次运行的真实录屏（左：节点实时日志；
 右：RViz 里 `/lidar/points` 的 U 形屋面点云与 `/rooftop_nn/markers` 的落点球 + ROI 框）：
 
-![ROS Noetic 实机闭环运行](closed_loop_ros_noetic.gif)
+![ROS Noetic 实机闭环运行](../img/air/rooftop_landing_nn/closed_loop_ros_noetic.gif)
 
-![ROS Noetic 实机闭环（单帧）](closed_loop_ros_noetic.png)
+![ROS Noetic 实机闭环（单帧）](../img/air/rooftop_landing_nn/closed_loop_ros_noetic.png)
 
 ```text
 [rooftop_nn] 下发目标点 (0.12, -1.16, 13.00)，即屋面上方 5.0 m
