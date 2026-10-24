@@ -54,6 +54,24 @@ STATE_LANDED = "LANDED"
 STATE_ABORT = "ABORT"
 
 
+def _local_to_world(points, pose):
+    """机体系局部点云 -> 世界系 ENU。
+
+    ``pose`` 为 (x, y, z, yaw)。只绕 z 轴旋转 + 平移：LiDAR 安装在机体上、
+    机体系 z 轴已按 ENU 向上对齐（桥接层做了 NED->ENU 轴变换但没加位姿时就是这种）。
+    """
+    x, y, z, yaw = pose
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
+    if abs(yaw) > 1e-6:
+        c, s = math.cos(yaw), math.sin(yaw)
+        out = np.empty_like(pts)
+        out[:, 0] = c * pts[:, 0] - s * pts[:, 1] + x
+        out[:, 1] = s * pts[:, 0] + c * pts[:, 1] + y
+        out[:, 2] = pts[:, 2] + z
+        return out
+    return pts + np.array([x, y, z], dtype=np.float32)
+
+
 class RooftopLandingNNNode(object):
     def __init__(self):
         self.cells = int(rospy.get_param("~perception/cells", 64))
@@ -67,6 +85,11 @@ class RooftopLandingNNNode(object):
 
         self.z_up = bool(rospy.get_param("~frame/z_up", True))
         self.frame_world = str(rospy.get_param("~frame/world", "world"))
+        #: ``/lidar/points`` 给的是「机体系局部点云」（只有轴变换、没加位姿）时置 true：
+        #: 节点会用 ``/uav/odom`` 的位姿把点云搬到世界系再建高度图。
+        #: 有些桥接层（如 carlair_ros_bridge 的 lidar_pub）就是这样发的，默认 false
+        #: 表示话题里已经是世界系点云（假桥接与单测走这条路径）。
+        self.lidar_to_world = bool(rospy.get_param("~frame/lidar_to_world", False))
 
         self.safe_altitude = float(rospy.get_param("~approach/safe_altitude", 5.0))
         self.goal_timeout = float(rospy.get_param("~approach/goal_timeout", 60.0))
@@ -105,6 +128,7 @@ class RooftopLandingNNNode(object):
         self.lock = threading.Lock()
         self.clouds = []
         self.odom = None
+        self.odom_pose = None
         self.status = ""
         self.status_xy = None
         self.state = STATE_DETECT
@@ -140,6 +164,12 @@ class RooftopLandingNNNode(object):
         if not pts:
             return
         arr = np.asarray(pts, dtype=np.float32)
+        if self.lidar_to_world:
+            with self.lock:
+                pose = self.odom_pose
+            if pose is None:
+                return                     # 还没收到里程计，先不累积
+            arr = _local_to_world(arr, pose)
         with self.lock:
             self.clouds.append(arr)
             if len(self.clouds) > max(self.accumulate, 1):
@@ -147,8 +177,12 @@ class RooftopLandingNNNode(object):
 
     def on_odom(self, msg):
         p = msg.pose.pose.position
+        q = msg.pose.pose.orientation
+        yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
+                         1.0 - 2.0 * (q.y * q.y + q.z * q.z))
         with self.lock:
             self.odom = (float(p.x), float(p.y), float(p.z))
+            self.odom_pose = (float(p.x), float(p.y), float(p.z), float(yaw))
 
     def on_status(self, msg):
         raw = (msg.data or "").strip()

@@ -235,6 +235,37 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 结论：通过
 ```
 
+### 6.3 真实仿真器（UE 5.5 + Cosys-AirSim）实测记录
+
+在 Windows 宿主机跑 UE 5.5 + Cosys-AirSim（Blocks 场景，RPC 41451），客机里跑
+`carlair_ros_bridge` 做桥接。**结论先说：整条链路这次没能跑完落地，卡在桥接层的速度通道上，
+不是本模块的算法问题。** 实测到的事实（都可复现）：
+
+| 环节 | 结果 |
+| --- | --- |
+| 桥接层出数据 | `/lidar/points` ~10 Hz（加密雷达后单帧 5k~9k 点）、`/uav/odom` 20 Hz ✅ |
+| 本模块检测 | 在建筑区上空检出路点并下发 `/uav/goal` ✅（例：落点 z=15.92 m） |
+| 桥接层按 `/uav/goal` 飞 | ✅ 日志 `cmd_vel_sub: 已到达目标点 (4.38, 5.55, 20.92)`，里程计到位 |
+| 本模块下降（`/uav/cmd_vel`） | ❌ 桥接层收下指令但飞机不动：连续发 `linear.z=-0.5` 五秒，`/uav/odom` z 只从 13.936 变到 13.972 |
+
+对桥接层的定位（供 `carlair_ros_bridge` 维护者参考）：它把每条速度指令调用成
+`moveByVelocityBodyFrameAsync(..., duration=0.1)`，而策略侧是 10 Hz 下发，
+命令还没生效就被下一条覆盖；把 `control/cmd_duration` 调到 0.6 也没有改善。
+同一时刻直接用 AirSim 的 `moveByVelocityBodyFrameAsync` 能让飞机明显下降，
+说明**速度接口本身好使、问题在桥接层的下发方式**。由于这一段不归本 PR 改，本模块只把现象
+与复现命令记录在这里，不在 PR 里声称跑通过真实仿真器落地。
+
+顺带在这一轮真机联调里修掉了两个真问题（都已包含在本 PR）：
+
+1. **`launch/main.launch` 的 `<param>` 写在 `<node>` 外面** → 全部变成了全局参数，
+   而节点读的是私有参数（`~perception/...`），所以 launch 的每个参数（含 `safe_altitude`、
+   `min_height_m`、`z_up`）**从来没有生效过**。现已全部移进 `<node>`，
+   `rosparam list` 可以看到 `/rooftop_landing_nn/...` 下的一整套参数。
+2. **新增 `frame/lidar_to_world`**：`carlair_ros_bridge` 的 `lidar_pub` 虽然注释写「世界系点云」，
+   实际发出的是**机体系局部坐标**（只做了 NED→ENU 轴变换、没加位姿）。节点置
+   `lidar_to_world:=true` 后会用 `/uav/odom` 位姿把点云搬到世界系再建高度图；
+   默认 `false` 保持与假桥接/单测一致。
+
 ## 7. 已知限制
 
 * 学习法需要训练数据；本模块的真值来自合成几何，**迁移到完全不同风格的城市地图时
@@ -242,9 +273,9 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 * 高度图取每格最高点，对**悬挑结构**（雨棚、广告牌）会偏保守；`rough_max` 能挡掉大部分
   立面误判，但极端场景仍需靠 `min_height_m` 调参。
 * 闭环只在**假桥接层**上跑通过（真实 ROS Noetic：`roscore` + `rosrun` + 假桥接，
-  见 6.2 的运行结果）；**尚未**在 UE + AirSim 真实仿真器上跑完整链路 —— 本机
-  Windows 的「智能应用控制」会拦截未签名的 `UnrealEditor-AirSim.dll`，属于环境限制，
-  不是模块接口问题：模块与 `rooftop_landing` 共用同一套桥接话题
+  见 6.2 的运行结果）；**真实 UE + AirSim** 只验证到「检出落点 → 下发目标 → 桥接层飞抵」，
+  落地没跑完，原因是桥接层的 `/uav/cmd_vel` 通道不驱动飞机（6.3 有实测数据），
+  与模块接口无关：模块与 `rooftop_landing` 共用同一套桥接话题
   （`/uav/odom`、`/lidar/points`、`/uav/goal`、`/uav/cmd_vel`、`/uav/status`）。
 
 ## 附：大模型使用声明
