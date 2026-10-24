@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>路径跟踪与闭环飞行 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u8def\u5f84\u8ddf\u8e2a\u4e0e\u95ed\u73af\u98de\u884c";
+        var mkdocs_page_input_path = "air/octree_uav_3d_pathfinding/path_following.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">空域载具八叉树三维寻路</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">路径跟踪与闭环飞行</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 运行节点与话题关系</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 需要先解决的一个结构性问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 状态机</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 两个取舍</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 运行方法</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 实现中要注意的几点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#9">9. 进一步工作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#10">10. 参考</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../openhutb_yolo_mlp_control/">YOLO目标检测与八字轨迹控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">空域载具八叉树三维寻路</li>
+<li class="breadcrumb-item active">路径跟踪与闭环飞行</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/octree_uav_3d_pathfinding/path_following.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">路径跟踪与闭环飞行</h1>
+<p>本文介绍空域载具八叉树三维寻路项目中的<strong>闭环环节</strong>：把前面几节规划出的路径
+逐点交给控制器，让载具真的飞过去。</p>
+<p>对应总纲第 7 节。</p>
+<hr/>
+<h2 id="1">1. 运行节点与话题关系</h2>
+<p>本节新增一个节点 <code>path_follower</code>，其余节点沿用前几节。
+<code>roslaunch octree_uav_3d_pathfinding full_demo.launch</code> 会启动下图除模拟器以外的全部节点：</p>
+<div class="mermaid">graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划与平滑节点"]
+        FOL["path_follower<br/>路径跟踪节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM --&gt;|"RPC 41451 取点云与位姿"| BR
+
+    BR --&gt;|"/cloud_in"| MAP
+    BR --&gt;|"TF world→base_link→lidar_link"| PLAN
+    MAP --&gt;|"/octomap_full"| PLAN
+
+    USER(["用户目标 /uav/goal"]) --&gt;|"只触发规划"| PLAN
+    PLAN --&gt;|"/uav/path_smooth"| FOL
+    BR --&gt;|"/ground_truth/odom 20 Hz"| FOL
+
+    FOL --&gt;|"/uav/goal_cmd<br/>逐点航点"| BR
+    BR --&gt;|"/uav/goal_cmd 转 moveToPositionAsync"| SIM
+
+    PLAN --&gt;|"/uav/path<br/>原始折线"| RVIZ
+    PLAN --&gt;|"/uav/path_smooth<br/>平滑路径"| RVIZ
+    FOL --&gt;|"/uav/flown_path<br/>实际轨迹"| RVIZ
+</div>
+<h3 id="11">1.1 各节点的职责</h3>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>可执行文件</th>
+<th>本节相关的职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airsim_bridge</code></td>
+<td><code>scripts/airsim_bridge.py</code></td>
+<td>发布 <code>/cloud_in</code>、<code>/ground_truth/odom</code> 与 TF；订阅<strong>控制话题</strong>，把航点转成 AirSim 的 <code>moveToPositionAsync</code></td>
+</tr>
+<tr>
+<td><code>pointcloud_to_octomap</code></td>
+<td><code>src/pointcloud_to_octomap.cpp</code></td>
+<td>点云 → 八叉树地图（本节不涉及）</td>
+</tr>
+<tr>
+<td><code>astar_planner</code></td>
+<td><code>src/astar_planner.cpp</code></td>
+<td>订阅 <code>/uav/goal</code> 与地图，输出 <code>/uav/path</code> 与 <code>/uav/path_smooth</code></td>
+</tr>
+<tr>
+<td><code>path_follower</code></td>
+<td><code>src/path_follower.cpp</code></td>
+<td>订阅路径与位姿，判断"该追哪个航点"，向控制话题逐点下发</td>
+</tr>
+<tr>
+<td><code>rviz</code></td>
+<td>—</td>
+<td>显示两条规划路径与实际飞过的轨迹</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 话题</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>方向</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/uav/goal</code></td>
+<td>用户 → 规划器</td>
+<td><code>geometry_msgs/Point</code></td>
+<td><strong>只</strong>触发规划，不直接控制飞行</td>
+</tr>
+<tr>
+<td><code>/uav/goal_cmd</code></td>
+<td>跟踪 → 桥接</td>
+<td><code>geometry_msgs/Point</code></td>
+<td>当前要飞的航点</td>
+</tr>
+<tr>
+<td><code>/uav/path_smooth</code></td>
+<td>规划 → 跟踪</td>
+<td><code>nav_msgs/Path</code></td>
+<td>要跟踪的路径（默认；可切 <code>/uav/path</code>）</td>
+</tr>
+<tr>
+<td><code>/ground_truth/odom</code></td>
+<td>桥接 → 跟踪</td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>位姿，20 Hz，位置是 ROS 世界系 ENU</td>
+</tr>
+<tr>
+<td><code>/uav/follow_status</code></td>
+<td>跟踪 → RViz</td>
+<td><code>std_msgs/String</code></td>
+<td><code>IDLE</code> / <code>FOLLOWING i/N</code> / <code>DONE</code></td>
+</tr>
+<tr>
+<td><code>/uav/flown_path</code></td>
+<td>跟踪 → RViz</td>
+<td><code>nav_msgs/Path</code></td>
+<td>实际飞过的轨迹，与规划路径同屏对比</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="2">2. 需要先解决的一个结构性问题</h2>
+<p><strong><code>/uav/goal</code> 被两个节点同时订阅</strong>：规划器订阅它来规划，桥接节点订阅它来飞。
+如果跟踪节点也往 <code>/uav/goal</code> 逐点发航点，就会出现：</p>
+<div class="highlight"><pre><span></span><code>path_follower 发航点 → /uav/goal → astar_planner 重新规划 → 发布新路径
+                                → airsim_bridge 飞向该航点
+path_follower 收到新路径 → 从第 0 点重新开始 → 又发航点 → …
+</code></pre></div>
+<p>每次重规划都要跑一遍 A*，路径还会因为起点变化而抖动，载具飞不出去。</p>
+<p>解决办法是<strong>把两种语义拆成两个话题</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>谁发布</th>
+<th>谁订阅</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/uav/goal</code></td>
+<td>用户</td>
+<td><code>astar_planner</code></td>
+<td>"为我规划到这里的路径"</td>
+</tr>
+<tr>
+<td><code>/uav/goal_cmd</code></td>
+<td><code>path_follower</code></td>
+<td><code>airsim_bridge</code></td>
+<td>"飞到这个航点"</td>
+</tr>
+</tbody>
+</table>
+<p>实现上只改了桥接节点的一处 —— 话题名从硬编码改成参数，默认值保持 <code>/uav/goal</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">goal_topic</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">'~goal_topic'</span><span class="p">,</span> <span class="s1">'/uav/goal'</span><span class="p">)</span>
+<span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">goal_topic</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">goal_cb</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+<p><code>full_demo.launch</code> 把它设成 <code>/uav/goal_cmd</code>。<strong>默认值不变，前三节启动方式与行为都不受影响。</strong></p>
+<hr/>
+<h2 id="3">3. 状态机</h2>
+<p>跟踪逻辑全部放在 <code>include/octree_uav_3d_pathfinding/path_follow_core.h</code>，
+是<strong>不依赖 ROS 的纯函数</strong>，因此可以离线单测；<code>src/path_follower.cpp</code> 只做消息转换与发布。</p>
+<div class="highlight"><pre><span></span><code>        ┌──────────────────────────────────────────┐
+        │                                          │
+   ┌────▼────┐  收到路径(pts&gt;=2)  ┌───────────┐   │
+   │  IDLE   ├──────────────────►│ FOLLOWING │   │
+   └─────────┘                   └─────┬─────┘   │ 收到新路径：
+        ▲                              │         │ 复位到新路径
+        │                  到达终点     │         │（不是重规划）
+        │                              ▼         │
+        └───────────────────────── ┌─────────┐   │
+                                   │  DONE   │───┘
+                                   └─────────┘
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IDLE</code></td>
+<td>等一条至少两个点的路径；不合格的路径（空、单点）被忽略</td>
+</tr>
+<tr>
+<td><code>FOLLOWING</code></td>
+<td>判断当前该追哪个航点并按需下发；到终点转 <code>DONE</code>；单点超时则跳过</td>
+</tr>
+<tr>
+<td><code>DONE</code></td>
+<td>停止下发。之后再收到位姿也不动作</td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么收到新路径要从头开始</strong>：规划器每规划一次都会发一条新路径（latched），
+旧路径可能已经因为地图更新而失效，继续按旧下标追没有意义。</p>
+<h3 id="31">3.1 判定规则</h3>
+<div class="highlight"><pre><span></span><code>dist = ‖当前位置 − path[index]‖
+
+若 index 是最后一个点：
+    若 dist &lt; finish_tolerance  → 到达，转 DONE
+否则若 dist &lt; lookahead         → index++，下发 path[index]
+否则                            → 不动
+
+若 距上次前进 &gt; per_point_timeout：
+    若 index 是最后一个点      → 直接结束（不跳过，否则永远到不了终点）
+    否则                       → index++，计入 skipped，下发新航点
+</code></pre></div>
+<p>三个阈值的关系是本节的关键：</p>
+<table>
+<thead>
+<tr>
+<th>关系</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lookahead &gt; finish_tolerance</code></td>
+<td>载具在飞向前一点的过程中目标已被改写 → <strong>连续飞行</strong></td>
+</tr>
+<tr>
+<td><code>lookahead ≤ finish_tolerance</code></td>
+<td>退化成"每点停稳"，动图里一顿一顿（节点启动时会打 WARN 提醒）</td>
+</tr>
+<tr>
+<td>终点只认 <code>finish_tolerance</code></td>
+<td>否则会在距终点 <code>lookahead</code> 处就判"到达"，最后 1.5 m 不飞</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="4">4. 两个取舍</h2>
+<h3 id="41">4.1 前瞻跳点，而不是停稳再走</h3>
+<p>桥接节点只有<strong>位置控制</strong>（<code>moveToPositionAsync</code>：飞到一个点并减速停住），
+没有速度或轨迹跟踪接口。所以"连续飞行"只能靠<strong>提前改写目标</strong>实现：</p>
+<table>
+<thead>
+<tr>
+<th>做法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>等 <code>dist &lt; finish_tolerance</code> 再发下一点</td>
+<td>每个点都减速停住，30 个航点就是 30 次启停</td>
+</tr>
+<tr>
+<td><strong><code>dist &lt; lookahead</code> 就发下一点</strong></td>
+<td>载具在飞行途中目标被改写，动作连续</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代价</strong>：实际轨迹会比规划路径<strong>切内角</strong>（没到点就转向）。
+这个代价是量化的 —— 节点统计 <code>max_dev</code>：实际轨迹到<strong>规划折线</strong>的最大距离。
+注意是"到线段"而不是"到航点"：航点稀疏，到航点的距离会把正常切内角误判成大幅偏离。</p>
+<h3 id="42">4.2 不做飞行中重规划</h3>
+<p>飞行中地图持续生长，每张新地图都可能产出不同路径，跟着换会让载具抖动；
+真正的重规划还需要"路径变化超过阈值才换"的一致性判据。本节只在收到新路径时复位，
+不做主动重规划 —— 见 §7。</p>
+<hr/>
+<h2 id="5">5. 参数</h2>
+<p><code>config/params.yaml</code> 的 <code>path_follower</code> 组：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>path_topic</code></td>
+<td><code>/uav/path_smooth</code></td>
+<td>要跟踪的路径。切 <code>/uav/path</code> 可做"折线 vs 曲线"对照</td>
+</tr>
+<tr>
+<td><code>odom_topic</code></td>
+<td><code>/ground_truth/odom</code></td>
+<td>位姿来源</td>
+</tr>
+<tr>
+<td><code>goal_cmd_topic</code></td>
+<td><code>/uav/goal_cmd</code></td>
+<td>下发给控制器的航点</td>
+</tr>
+<tr>
+<td><code>status_topic</code></td>
+<td><code>/uav/follow_status</code></td>
+<td>状态文本</td>
+</tr>
+<tr>
+<td><code>flown_topic</code></td>
+<td><code>/uav/flown_path</code></td>
+<td>实际轨迹</td>
+</tr>
+<tr>
+<td><code>lookahead</code></td>
+<td>1.5</td>
+<td>距当前航点该距离内切换下一点（m）</td>
+</tr>
+<tr>
+<td><code>finish_tolerance</code></td>
+<td>0.5</td>
+<td>到达终点的判定距离（m），约 2 倍地图分辨率</td>
+</tr>
+<tr>
+<td><code>per_point_timeout</code></td>
+<td>15.0</td>
+<td>单点超时（s）</td>
+</tr>
+<tr>
+<td><code>publish_flown</code></td>
+<td>true</td>
+<td>是否发布实际轨迹</td>
+</tr>
+</tbody>
+</table>
+<p><code>airsim_bridge</code> 组新增：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>goal_topic</code></td>
+<td><code>/uav/goal</code></td>
+<td>默认与前几节一致；<code>full_demo.launch</code> 里设成 <code>/uav/goal_cmd</code></td>
+</tr>
+</tbody>
+</table>
+<p>飞行速度仍由既有参数 <code>goal_velocity</code>（默认 3.0 m/s）决定。</p>
+<hr/>
+<h2 id="6">6. 运行方法</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 编译</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+
+<span class="c1"># 闭环飞行：完整链路（桥接 + 建图 + 规划 + 跟踪 + 自检 + RViz）</span>
+roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>full_demo.launch
+</code></pre></div>
+<h3 id="61-mock">6.1 用 mock 场景离线验证（不起模拟器）</h3>
+<p><code>bridge:=false</code> 只是不启动桥接节点，它<strong>不提供</strong>点云与位姿。所以离线验证要另外起两个节点，
+各占一个终端；否则没有 <code>/cloud_in</code>、没有 <code>/ground_truth/odom</code>，规划器和跟踪节点都不会动：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：roscore</span>
+roscore
+
+<span class="c1"># 终端 2：点云（巡游 40 秒填满地图，之后停在 (-7.5, 7.5)）</span>
+rosrun<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>mock_cloud_publisher.py
+
+<span class="c1"># 终端 3：假载具（位姿来源）。起点对齐路径起点，避免多一段"飞向起点"</span>
+rosrun<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>mock_uav_mover.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>_start_x:<span class="o">=</span>-7.5<span class="w"> </span>_start_y:<span class="o">=</span><span class="m">7</span>.5<span class="w"> </span>_start_z:<span class="o">=</span><span class="m">0</span>.0
+
+<span class="c1"># 终端 4：链路本身</span>
+roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>full_demo.launch<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bridge:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>check:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>body_frame:<span class="o">=</span>lidar_link
+</code></pre></div>
+<blockquote>
+<p>若不传 <code>_start_x/_start_y</code>，假载具从 <code>(0, 0, 0)</code> 起飞，会先飞 22.5 m 到路径起点。
+那段"接近段"不计入 <code>flown</code> 与 <code>duration</code>（见下表的 <code>approach</code> 字段），但会拉长总耗时。</p>
+</blockquote>
+<h3 id="62">6.2 下发目标点</h3>
+<p>飞行器起飞、扫描一段时间地图建起来之后，下发<strong>一次</strong>目标点即可，后续由跟踪节点接管：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/uav/goal<span class="w"> </span>geometry_msgs/Point<span class="w"> </span><span class="s2">"{x: 7.5, y: -7.5, z: 2.0}"</span>
+</code></pre></div>
+<p>到达终点后节点会打印统计：</p>
+<div class="highlight"><pre><span></span><code>follow: DONE | waypoints=73 reached=73 skipped=0 | path=33.52 m flown=31.95 m
+        approach=0.00 m/0.00s | duration=10.65s | mean_speed=3.00 m/s | max_dev=0.41 m
+  corner cutting: flown is 4.7% shorter than the path
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>waypoints</code> / <code>reached</code> / <code>skipped</code></td>
+<td>路径点数、到达数、因超时跳过的数量</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>要跟踪的路径总长（m）</td>
+</tr>
+<tr>
+<td><code>flown</code></td>
+<td><strong>跟踪阶段</strong>实际飞过的路程（m），不含接近段</td>
+</tr>
+<tr>
+<td><code>approach</code></td>
+<td>载具飞向路径起点的那一段：路程（m）/ 耗时（s）</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td>进入跟踪阶段到到达终点（s），与 <code>flown</code> 覆盖同一段轨迹</td>
+</tr>
+<tr>
+<td><code>mean_speed</code></td>
+<td><code>flown / duration</code>，即真实平均速度；上限是 <code>goal_velocity</code></td>
+</tr>
+<tr>
+<td><code>max_dev</code></td>
+<td>实际轨迹到规划折线的最大距离（m），即 §4.1 里"切内角"的程度</td>
+</tr>
+<tr>
+<td><code>corner cutting</code></td>
+<td><code>path</code> 与 <code>flown</code> 的相对差；斜穿拐角省下的路。仅当 <code>flown &lt; path</code> 时打印</td>
+</tr>
+</tbody>
+</table>
+<p>两个口径必须分清：</p>
+<ul>
+<li><strong><code>mean_speed</code> 的分子是 <code>flown</code> 而不是 <code>path</code></strong>。前瞻跳点会切内角，实际路程比规划路径短；
+  用 <code>path / duration</code> 算出来的是"路径推进速率"，会<strong>超过</strong> <code>goal_velocity</code>
+  （实测出现过 <code>37.22 / 10.90 = 3.41 m/s</code>，而设定速度是 3.0 m/s，物理上不可能）。</li>
+<li><strong><code>max_dev</code> 只统计贴上路径之后的轨迹</strong>。<code>index = 0</code> 表示载具还在飞向路径起点，
+  那一段是"接近段"，本来就不在路径上；计入的话，一次从上一趟终点飞回新起点的
+  22.5 m 直线会把 <code>max_dev</code> 拉到 5 m 以上，指标就失去意义。</li>
+</ul>
+<p><code>reached</code> 的口径是 <code>waypoints - skipped</code>：终点超时结束时，它仍被算作到达。</p>
+<hr/>
+<h2 id="7">7. 验证</h2>
+<h3 id="71">7.1 离线单元测试</h3>
+<p><code>tests/test_path_follower.cpp</code>，只依赖 STL —— 不需要 ROS 运行时、不需要 octomap、不需要模拟器。
+被测对象是 <code>path_follow_core.h</code> 里的纯函数。实测 <strong>49 项检查全部通过</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>验证内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前瞻切换</td>
+<td>进 <code>lookahead</code> 就切换并下发；起点在脚下时直接从 0 跳到 1</td>
+</tr>
+<tr>
+<td><strong>边界：恰好等于 <code>lookahead</code></strong></td>
+<td><strong>不切换</strong>（用 <code>&lt;</code> 而不是 <code>&lt;=</code>）</td>
+</tr>
+<tr>
+<td>终点判定</td>
+<td>最后一个点距 1.0 m（小于 <code>lookahead</code>）<strong>不算到达</strong>，只认 <code>finish_tolerance</code></td>
+</tr>
+<tr>
+<td>超时</td>
+<td>中间点超时跳过并计数；前进一次就重新计时</td>
+</tr>
+<tr>
+<td><strong>终点超时</strong></td>
+<td><strong>直接结束，不计入 <code>skipped</code></strong>（否则永远到不了终点）</td>
+</tr>
+<tr>
+<td>新路径复位</td>
+<td>复位后回到 <code>IDLE</code>、下标归零、<code>skipped</code> 与 <code>max_dev</code> 清零</td>
+</tr>
+<tr>
+<td>退化输入</td>
+<td>空路径 / 单点路径被忽略；重复点组成的退化线段不产生 NaN</td>
+</tr>
+<tr>
+<td>偏离度量</td>
+<td>到<strong>折线</strong>而非到航点；折返路径同样正确；历史最大值只增不减</td>
+</tr>
+</tbody>
+</table>
+<p>运行方式：</p>
+<div class="highlight"><pre><span></span><code>~/uav_ws/devel/lib/octree_uav_3d_pathfinding/test_path_follower
+<span class="c1"># 退出码 0 = 全部通过</span>
+</code></pre></div>
+<h3 id="72-mock">7.2 离线整链路（mock 场景）</h3>
+<p>场景：<code>scripts/mock_cloud_publisher.py</code> 造的 20×20×6 m 房间 + 5 个障碍（两道错开的墙 + 三根柱子），
+传感器巡游 40 秒填满地图后停在 <code>(-7.5, 7.5)</code>。目标点取其对角 <code>(7.5, -7.5, 2.0)</code>。</p>
+<p>位姿由 <code>scripts/mock_uav_mover.py</code> 提供 —— 它是<strong>只有运动学的桩</strong>：匀速直线、到达即停、
+不做碰撞判定。它替代的是桥接节点的位姿发布，不是飞行物理，所以这组数据只反映<strong>跟踪逻辑</strong>，
+不反映真实飞行品质。</p>
+<p>测量条件：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>假载具起点</td>
+<td><code>(-7.5, 7.5, 0.0)</code>（与路径起点对齐，接近段为 0）</td>
+</tr>
+<tr>
+<td><code>inflation_radius</code></td>
+<td>0.6</td>
+</tr>
+<tr>
+<td><code>smoothing</code></td>
+<td>true</td>
+</tr>
+<tr>
+<td><code>smoothing_shortcut</code> / <code>smoothing_spline</code></td>
+<td>true / true</td>
+</tr>
+<tr>
+<td><code>smoothing_samples_per_segment</code></td>
+<td>8（默认）</td>
+</tr>
+<tr>
+<td><code>lookahead</code> / <code>finish_tolerance</code> / <code>per_point_timeout</code></td>
+<td>1.5 m / 0.5 m / 15 s</td>
+</tr>
+<tr>
+<td><code>goal_velocity</code></td>
+<td>3.0 m/s</td>
+</tr>
+<tr>
+<td>启动命令</td>
+<td><code>full_demo.launch bridge:=false check:=false body_frame:=lidar_link</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>起点必须对齐</strong>：假载具默认起点是 <code>(0, 0, 0)</code>，此时它会先飞 22.5 m 到路径起点。
+日志里 <code>approach</code> 字段单独给出这段，<code>flown</code> 与 <code>duration</code> 都只算跟踪阶段。</p>
+<h4 id="_2">航点数取决于样条是否通过复检</h4>
+<p>同一套参数跑出来的结果分两种形态，差别不在跟踪逻辑，而在 P5 的平滑结果：</p>
+<table>
+<thead>
+<tr>
+<th>形态</th>
+<th>平滑输出</th>
+<th>航点数</th>
+<th><code>max_dev</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>样条被接受</td>
+<td><code>102 -&gt; 73 pts</code></td>
+<td>73（加密）</td>
+<td>0.41 m（很贴路径）</td>
+</tr>
+<tr>
+<td>样条被复检拒绝</td>
+<td><code>48 -&gt; 11 pts</code>，退回捷径折线</td>
+<td>10 ~ 11</td>
+<td>1.25 ~ 1.26 m（切角多）</td>
+</tr>
+</tbody>
+</table>
+<p>样条是<strong>拟合</strong>，必须穿过每个航点，拐角处的航点贴在安全边界上时会被复检拒绝
+（见 P5 文档 §6.3）。它是否通过取决于地图几何的细节，因此<strong>不同次的运行可能落在不同形态</strong>。</p>
+<p>所以下面把两种形态的数据都列出来，并只用<strong>形态内部</strong>的数字做比较。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>样条被接受（73 点）</th>
+<th>样条被拒绝（10~11 点）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>到达 / 跳过</td>
+<td>73 / 0</td>
+<td>10~11 / 0</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>33.52 m</td>
+<td>36.3 ~ 37.2 m</td>
+</tr>
+<tr>
+<td><code>flown</code></td>
+<td>31.80 ~ 31.95 m</td>
+<td>32.1 ~ 32.3 m</td>
+</tr>
+<tr>
+<td><code>approach</code></td>
+<td>0.00 m / 0.00 s</td>
+<td>0.00 ~ 0.30 m</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td>10.59 ~ 10.65 s</td>
+<td>10.7 ~ 10.8 s</td>
+</tr>
+<tr>
+<td><code>mean_speed</code></td>
+<td>3.00 m/s</td>
+<td>3.00 m/s</td>
+</tr>
+<tr>
+<td><code>max_dev</code></td>
+<td>0.41 m</td>
+<td>1.25 ~ 1.26 m</td>
+</tr>
+<tr>
+<td>切内角省下的路程</td>
+<td>4.7%</td>
+<td>13%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>稳定的是判定性的量</strong>：<code>skipped = 0</code>（全部到达）、<code>mean_speed</code> 正好等于 <code>goal_velocity</code>、
+<code>max_dev</code> 小于 <code>lookahead</code>。这三条在两种形态、多次运行里都成立。</p>
+<p><strong>浮动的是路径形态相关的量</strong>：航点数、<code>path</code>、<code>max_dev</code>。它们由"样条是否通过复检"
+和"地图自由叶数"（实测 17945 与 19366）共同决定，复现时不必追求逐位相同 ——
+按同形态的量对比即可。</p>
+<p><code>max_dev</code> 与航点密度直接相关：73 点的样条路径几乎逐点走到了，偏离 0.41 m；
+10 点的折线只剩拐角，前瞻跳点会斜穿，偏离升到 1.25 m。</p>
+<h4 id="vs">跟折线 vs 跟曲线</h4>
+<p>同一场景、同一目标点，只改 <code>path_topic</code>。下表是<strong>另一次运行</strong>的对照
+（同一张地图、同一个规划结果的两条路径；与该次运行同属"样条被拒绝"的形态，
+见上面的两种形态表）：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>跟原始折线 <code>/uav/path</code></th>
+<th>跟平滑路径 <code>/uav/path_smooth</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>航点数</td>
+<td>48</td>
+<td>11</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>37.86 m</td>
+<td>36.28 m</td>
+</tr>
+<tr>
+<td><code>flown</code></td>
+<td>33.15 m</td>
+<td>32.10 m</td>
+</tr>
+<tr>
+<td><code>duration</code></td>
+<td>11.05 s</td>
+<td>10.70 s</td>
+</tr>
+<tr>
+<td><code>mean_speed</code></td>
+<td>3.00 m/s</td>
+<td>3.00 m/s</td>
+</tr>
+<tr>
+<td><code>max_dev</code></td>
+<td>0.95 m</td>
+<td>1.26 m</td>
+</tr>
+</tbody>
+</table>
+<p>方向与预期一致：跟折线时 <code>max_dev</code> 更小（航点密，切角少），路径略长、耗时略久。</p>
+<p><strong>但这组对照低估了平滑的收益，原因在测量手段</strong>：<code>mock_uav_mover.py</code> 只有运动学
+（匀速直线、无加减速、无转向耗时），所以"48 次转向"和"11 次转向"对它几乎没有区别 ——
+耗时只差 0.35 s。真实载具有加速度与姿态响应，转向次数直接决定耗时与轨迹抖动，
+差距会明显大于这里的读数。<strong>这组数据能说明"<code>max_dev</code> 与航点密度的关系"，
+不能用来量化"平滑在真实飞行中省多少时间"。</strong></p>
+<h3 id="73">7.3 闭环飞行动图</h3>
+<p>下面这段录自 §7.2 里<strong>"样条被复检拒绝、11 航点"的那次运行</strong>（不是 73 点那组），
+属于<strong>离线场景</strong>（mock 点云 + 运动学假载具），不是 AirSim 真机：</p>
+<p><img alt="闭环飞行：绿线为规划路径，青色为平滑路径，黄色为实际飞过的轨迹" src="../../../img/air/octree_uav_3d_pathfinding/p6_demo.gif"/></p>
+<p>能连续看到：地图建满 → 绿色/青色路径出现 → <strong>黄色轨迹边飞边长</strong> → 到达终点。</p>
+<p>黄线与青线的间距就是该次运行的 <code>max_dev</code>（1.26 m）的直观形态：
+前瞻跳点斜穿拐角，轨迹因此偏在路径内侧。</p>
+<blockquote>
+<p>待补：AirSim 真机上的飞行动图。录制要求见 §8 第 5 条 —— 飞低、飞远、斜视视角。
+真机与离线场景的差别在于<strong>动力学</strong>：假载具没有加减速与转向耗时，
+所以这段动图只能说明跟踪逻辑跑通，不能说明真实飞行品质。</p>
+</blockquote>
+<hr/>
+<h2 id="8">8. 实现中要注意的几点</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>事项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>不要在两个节点间共用 <code>/uav/goal</code></strong></td>
+<td>见 §2：会导致"每发一个航点就重新规划"</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>坐标只需要 ROS 世界系 ENU</strong></td>
+<td>世界系 z 偏移与 NED↔ENU 转换都在桥接节点内部完成，跟踪节点不要重复计算</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>目标点必须落在已扫描区域</strong></td>
+<td>可通行判定把"未知"当障碍，目标点在未扫描区时 A* 直接失败。所以流程是"先扫描、再下发目标"</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>航点被吸附到八叉树叶中心</strong></td>
+<td>终点不会精确等于下发值，判定要用容差</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>动图的拍摄要求</strong></td>
+<td>飞低、飞远、斜视视角：高度取 2~4 m，让载具处在障碍之间而非其上；路径跨越房间对角；单次飞行 15~25 s</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="9">9. 进一步工作</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>飞行中重规划</td>
+<td>需要"路径变化超过阈值才换"的一致性判据，否则载具会跟着地图抖动</td>
+</tr>
+<tr>
+<td>2</td>
+<td>速度/加速度约束的轨迹跟踪</td>
+<td>换用 <code>moveByVelocityAsync</code> 并引入动力学约束，替代"逐点位置控制 + 前瞻"</td>
+</tr>
+<tr>
+<td>3</td>
+<td>局部避障</td>
+<td>全局规划 + 地图更新已能覆盖演示场景；更紧的空间需要局部规划器</td>
+</tr>
+<tr>
+<td>4</td>
+<td>到达后的自动悬停与降落</td>
+<td>当前只在终点停止下发航点，降落仍由操作者发起</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="10">10. 参考</h2>
+<ul>
+<li><a href="http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Path.html">nav_msgs/Path 消息定义</a></li>
+<li><a href="http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Odometry.html">nav_msgs/Odometry 消息定义</a></li>
+<li>AirSim 多旋翼 API 文档（<code>moveToPositionAsync</code> 等）</li>
+<li>模块源码：<code>src/air/octree_uav_3d_pathfinding/</code></li>
+</ul>
+<p>查看实际运行的节点与话题关系（第 1 节的图是静态版本）：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>rqt_graph<span class="w"> </span>rqt_graph<span class="w">        </span><span class="c1"># 节点—话题图</span>
+rostopic<span class="w"> </span>info<span class="w"> </span>/uav/goal<span class="w">           </span><span class="c1"># 确认真实订阅者只有规划器</span>
+rostopic<span class="w"> </span>info<span class="w"> </span>/uav/goal_cmd<span class="w">       </span><span class="c1"># 确认真实订阅者只有桥接节点</span>
+rosrun<span class="w"> </span>rqt_tf_tree<span class="w"> </span>rqt_tf_tree<span class="w">    </span><span class="c1"># TF 树</span>
+</code></pre></div></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../path_smoothing/" title="安全裕度与路径平滑"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../openhutb_yolo_mlp_control/" title="YOLO目标检测与八字轨迹控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../path_smoothing/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../openhutb_yolo_mlp_control/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
