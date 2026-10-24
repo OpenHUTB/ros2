@@ -117,6 +117,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
+* [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
+
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
