@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "score_messages": 32,
+  "diagnostic_arrays": 32,
+  "checks": [
+    "malformed JSON",
+    "NaN payload",
+    "model warmup",
+    "no-packet watchdog",
+    "DiagnosticStatus.ERROR"
+  ]
+}
