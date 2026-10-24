@@ -74,6 +74,11 @@ class MujocoSimNode(Node):
         self.declare_parameter('auto_trajectory_mode', False)  # 自动轨迹跟踪
         self.declare_parameter('trajectory_type', '3d_helix')  # 3d_helix / lawnmower
         self.declare_parameter('controller_type', 'nn')        # nn / pid
+        self.declare_parameter('enable_camera_render', True)   # 相机真实离屏渲染
+        self.declare_parameter('camera_width', 320)            # 相机图像宽
+        self.declare_parameter('camera_height', 240)           # 相机图像高
+        self.declare_parameter('camera_underwater_effect', True)  # 水下光谱衰减
+        self.declare_parameter('start_pose', '')               # "x,y,z,yaw" 初始位姿 (可选)
 
         model_path = self.get_parameter('model_path').get_parameter_value().string_value
         config_path = self.get_parameter('config_path').get_parameter_value().string_value
@@ -83,6 +88,11 @@ class MujocoSimNode(Node):
         self.auto_trajectory_mode = self.get_parameter('auto_trajectory_mode').get_parameter_value().bool_value
         self.trajectory_type = self.get_parameter('trajectory_type').get_parameter_value().string_value
         self.controller_type = self.get_parameter('controller_type').get_parameter_value().string_value
+        self.enable_camera_render = self.get_parameter('enable_camera_render').get_parameter_value().bool_value
+        self.camera_width = int(self.get_parameter('camera_width').value)
+        self.camera_height = int(self.get_parameter('camera_height').value)
+        self.camera_underwater_effect = bool(
+            self.get_parameter('camera_underwater_effect').value)
 
         # ========== 加载配置 ==========
         if not config_path or not os.path.exists(config_path):
@@ -162,7 +172,12 @@ class MujocoSimNode(Node):
                 )
 
             self.sonar = MultibeamSonar(self.model, self.data, body_name='rov', num_beams=72)
-            self.camera = UnderwaterCamera(self.model, self.data, camera_name='forward_cam')
+            self.camera = UnderwaterCamera(
+                self.model, self.data, camera_name='forward_cam',
+                width=self.camera_width, height=self.camera_height,
+                enable_underwater_effect=self.camera_underwater_effect,
+                enable_renderer=self.enable_camera_render,
+            )
             self.traj_gen = TrajectoryGenerator(trajectory_type=self.trajectory_type)
 
             if self.controller_type == 'pid':
@@ -180,6 +195,27 @@ class MujocoSimNode(Node):
 
         # ========== 初始化机械臂姿态 ==========
         self._init_robot_pose()
+
+        # ========== 可选：设置 ROV 初始位姿 "x,y,z,yaw" ==========
+        start_pose = self.get_parameter('start_pose').value
+        if start_pose:
+            try:
+                vals = [float(v) for v in str(start_pose).split(',')]
+                if len(vals) >= 3:
+                    self.data.qpos[self.qpos_addr:self.qpos_addr + 3] = vals[:3]
+                    yaw0 = vals[3] if len(vals) > 3 else 0.0
+                    self.data.qpos[self.qpos_addr + 3] = math.cos(yaw0 / 2.0)
+                    self.data.qpos[self.qpos_addr + 4:self.qpos_addr + 7] = (
+                        0.0, 0.0, math.sin(yaw0 / 2.0))
+                    dof = self.model.jnt_dofadr[self.joint_id]
+                    self.data.qvel[dof:dof + 6] = 0.0
+                    self.target_depth = vals[2]
+                    mujoco.mj_forward(self.model, self.data)
+                    self.get_logger().info(
+                        f"初始位姿已设置为 x={vals[0]:.2f}, y={vals[1]:.2f}, "
+                        f"z={vals[2]:.2f}, yaw={yaw0:.2f}")
+            except ValueError as exc:
+                self.get_logger().warn(f"start_pose 解析失败 ({start_pose}): {exc}")
 
         # ========== 控制指令缓存 ==========
         self.cmd_vel = Twist()
@@ -211,6 +247,7 @@ class MujocoSimNode(Node):
         publish_period = 1.0 / publish_rate
         self.sim_steps_per_publish = max(1, int(sim_rate / publish_rate))
         self.step_count = 0
+        self.publish_count = 0
 
         self.sim_timer = self.create_timer(sim_period, self._sim_step_callback)
         self.pub_timer = self.create_timer(publish_period, self._publish_callback)
@@ -347,6 +384,7 @@ class MujocoSimNode(Node):
 
     def _publish_callback(self):
         """发布传感器数据 (Odom, Depth, IMU, Sonar, Camera, Path)"""
+        self.publish_count += 1
         now = self.get_clock().now().to_msg()
         pos = self.data.sensor("pos").data[:3]
         vel = self.data.sensor("vel").data[:3]
@@ -404,16 +442,18 @@ class MujocoSimNode(Node):
             scan_msg = self.sonar.create_laserscan_msg(header)
             self.pub_sonar.publish(scan_msg)
 
-        # --- 前视摄像头 (降采样每 5 次步进发布一次) ---
-        if self.camera is not None and self.step_count % 5 == 0:
+        # --- 前视摄像头 (每 5 次发布一次 = 10 Hz) ---
+        # 注意: 不能用 step_count 取模——步进 500Hz、发布 50Hz 时每次发布
+        # step_count 固定增加 ~10，对 5 取模的相位不变，会导致相机永不发布。
+        if self.camera is not None and self.publish_count % 5 == 0:
             header = Header()
             header.stamp = now
             header.frame_id = 'rov_camera_optical_link'
             cam_msg = self.camera.create_image_msg(header)
             self.pub_camera.publish(cam_msg)
 
-        # --- 参考期望航线 Path (每 50 步广播一次) ---
-        if self.traj_gen is not None and self.step_count % 50 == 0:
+        # --- 参考期望航线 Path (每 50 次发布一次 = 1 Hz) ---
+        if self.traj_gen is not None and self.publish_count % 50 == 0:
             header = Header()
             header.stamp = now
             header.frame_id = 'world'
@@ -434,3 +474,5 @@ class MujocoSimNode(Node):
                 joint_state.position.append(float(self.data.qpos[qadr]))
                 joint_state.velocity.append(float(self.data.qvel[vadr]))
         self.pub_joint_states.publish(joint_state)
+
+
