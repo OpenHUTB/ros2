@@ -135,6 +135,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
+* [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
+
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
