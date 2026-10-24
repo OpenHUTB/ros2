@@ -56,6 +56,11 @@ def run_task1_test():
     test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_sim_teleop.py")
     _run_script(test_path, "任务 1 仿真与遥控测试")
 
+def run_camera_test():
+    """执行前视相机真实渲染测试 (任务 2 感知链路的相机部分)"""
+    test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_camera.py")
+    _run_script(test_path, "相机真实渲染测试")
+
 def run_standalone():
     """独立运行仿真与键盘交互控制，并发布 ROS2 话题"""
     print("=" * 60)
@@ -929,6 +934,7 @@ def main():
     parser.add_argument("--gui", action="store_true", help="拉起 3D 可视化 Viewer 交互视窗 (6-DOF 键盘遥控)")
     parser.add_argument("--ros2", action="store_true", help="运行 ROS2 集成节点")
     parser.add_argument("--test", "--test1", action="store_true", dest="test1", help="运行任务 1 仿真与 6-DOF 运动控制自动化验证测试")
+    parser.add_argument("--test-camera", action="store_true", dest="test_camera", help="运行前视相机真实渲染测试")
     parser.add_argument("--track", "--track-gui", "--task2", action="store_true", dest="track", help="拉起 3D 可视化视窗下的多传感器感知与神经网络 3D 轨迹自主跟踪 (任务 2)")
     parser.add_argument("--launch-track", "--launch2", action="store_true", dest="launch_track", help="调用 ros2 launch 启动水下多传感器感知与 3D 轨迹跟踪系统 (任务 2)")
     parser.add_argument("--eval-trajectory", "--test2", action="store_true", dest="eval_trajectory", help="运行水下多传感器感知与 3D 轨迹跟踪自动化测试与性能对比评测 (任务 2)")
@@ -962,6 +968,8 @@ def main():
         run_trajectory_tracking_test()
     elif args.test1:
         run_task1_test()
+    elif args.test_camera:
+        run_camera_test()
     elif args.launch:
         run_ros2_launch()
     elif args.gui:
