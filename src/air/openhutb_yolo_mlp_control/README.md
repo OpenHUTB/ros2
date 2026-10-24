@@ -3,6 +3,10 @@
 该功能包使用 ROS 2 消息解耦 OpenHUTB/AirSim、YOLO 目标检测和 MLP 轨迹控制。  
 其中仅 `airsim_bridge` 直接调用 OpenHUTB/AirSim Python API，其余节点通过 ROS 2 话题交换数据。
 
+新增独立的 [YOLO 目标水平视觉居中模式](../../../docs/air/openhutb_yolo_mlp_control.md#yolo-目标水平视觉居中)，默认只预览控制量。
+入口为 `ros2 launch openhutb_yolo_mlp_control visual_centering.launch.py`。
+实际控制使用 `dry_run:=false`；完整用法见功能文档。
+
 ## 节点关系
 
 ```text
