@@ -1,6 +1,6 @@
 """
-任务 4 Launch 文件 — 基于深度神经网络的端到端视觉控制模型
-=========================================================
+Launch 文件 — 基于深度神经网络的水下机器人端到端视觉控制模型
+=============================================================
 使用方式:
     ros2 launch rov_mujoco task4.launch.py
     ros2 launch rov_mujoco task4.launch.py architecture:=spatial_softmax algorithm:=sac

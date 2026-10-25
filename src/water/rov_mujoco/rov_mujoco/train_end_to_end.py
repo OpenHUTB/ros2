@@ -1,7 +1,7 @@
 """
 水下机器人端到端视觉模型训练与对比评测套件 (End-to-End Visuomotor Training & Evaluation)
 ========================================================================================
-《机器人操作系统及应用》课程任务 4 训练与学术对比模块。
+端到端视觉控制策略模型训练与对比评测模块。
 功能：
   1. 自动化管网视觉轨迹数据采集（Expert Demonstrator Dataset）
   2. 行为克隆 (BC)、PPO 与 SAC 强化学习算法对比训练
@@ -163,7 +163,7 @@ def train_behavior_cloning(
 
 def train_and_export_all_task4_models(output_dir: str = "models") -> Dict[str, str]:
     """
-    一键训练并保存任务 4 所需的三大架构与不同算法模型权重
+    一键训练并保存三大架构与不同算法模型权重
     返回已保存权重文件路径映射字典
     """
     os.makedirs(output_dir, exist_ok=True)
@@ -242,7 +242,7 @@ def train_and_export_all_task4_models(output_dir: str = "models") -> Dict[str, s
     torch.save(m_spatial.state_dict(), p_spatial)
     saved_weights["spatial_softmax_sac"] = p_spatial
 
-    print(f"✅ 任务 4 全部 5 套预训练端到端策略权重成功导出至: {output_dir}/")
+    print(f"✅ 全部 5 套预训练端到端策略权重成功导出至: {output_dir}/")
     return saved_weights
 
 

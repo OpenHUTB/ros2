@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-任务 4 自动化测试与性能评测脚本 (End-to-End Visuomotor Neural Policy Evaluation)
+水下机器人端到端视觉控制自动化测试与性能评测脚本 (End-to-End Visuomotor Neural Policy Evaluation)
 ================================================================================
-《机器人操作系统及应用》课程任务 4 评测模块。
+水下机器人端到端视觉控制模型系统自动化测试与性能评测模块。
 测试内容：
   1. 视觉策略网络模型拓扑、张量维度与 GPU 推理延迟基准测试 (<10ms 实时约束)
   2. 对比维度 1：同架构 (Nature-CNN) 下不同算法对比 (PPO vs. SAC vs. BC)
@@ -57,7 +57,7 @@ except ImportError:
 
 def run_task4_tests():
     print("=" * 75)
-    print("  水下机器人端到端视觉神经控制系统 (任务 4) 综合自动化测试与性能评测")
+    print("  水下机器人端到端视觉神经控制系统 综合自动化测试与性能评测")
     print("=" * 75)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -295,7 +295,7 @@ def run_task4_tests():
     print("  -> ✅ PART 5 ROS 2 节点通信闭环验证通过！")
 
     print("\n" + "=" * 75)
-    print("  🎉 任务 4 自动化测试全部通过！5 个核心验证模块 100% 达标！")
+    print("  🎉 端到端视觉控制自动化测试全部通过！5 个核心验证模块 100% 达标！")
     print("=" * 75)
 
 
