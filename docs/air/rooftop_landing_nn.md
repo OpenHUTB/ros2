@@ -235,36 +235,41 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 结论：通过
 ```
 
-### 6.3 真实仿真器（UE 5.5 + Cosys-AirSim）实测记录
+### 6.3 真实仿真器（UE 5.5 + Cosys-AirSim）实测：一次完整降落
 
-在 Windows 宿主机跑 UE 5.5 + Cosys-AirSim（Blocks 场景，RPC 41451），客机里跑
-`carlair_ros_bridge` 做桥接。**结论先说：整条链路这次没能跑完落地，卡在桥接层的速度通道上，
-不是本模块的算法问题。** 实测到的事实（都可复现）：
+宿主 Windows 上跑 UE 5.5 + Cosys-AirSim（Blocks 场景，雷达改成 32 线 / 60 m），
+同一台机器上跑 `carlair_ros_bridge` + 本模块（ROS Noetic 用 conda 环境即可，不需要虚拟机）。
+一次完整跑通的日志：
 
-| 环节 | 结果 |
-| --- | --- |
-| 桥接层出数据 | `/lidar/points` ~10 Hz（加密雷达后单帧 5k~9k 点）、`/uav/odom` 20 Hz ✅ |
-| 本模块检测 | 在建筑区上空检出路点并下发 `/uav/goal` ✅（例：落点 z=15.92 m） |
-| 桥接层按 `/uav/goal` 飞 | ✅ 日志 `cmd_vel_sub: 已到达目标点 (4.38, 5.55, 20.92)`，里程计到位 |
-| 本模块下降（`/uav/cmd_vel`） | ❌ 桥接层收下指令但飞机不动：连续发 `linear.z=-0.5` 五秒，`/uav/odom` z 只从 13.936 变到 13.972 |
+```text
+[rooftop_nn] 点云 24980 点，检出落点 (10.99, 14.52)，屋面高度 15.83 m，置信度 1.00
+[rooftop_nn] 下发目标点 (10.99, 14.52, 20.83)，即屋面上方 5.0 m
+[rooftop_nn] 状态 DETECT -> APPROACH
+[rooftop_nn] 状态 APPROACH -> DESCEND
+[rooftop_nn] 下降中：离屋面 4.66 m / 3.68 m / 2.61 m / 1.55 m / 0.55 m
+[rooftop_nn] 已降落：离屋面 0.35 m <= 容差 0.35 m
+[rooftop_nn] 状态 DESCEND -> LANDED
+```
 
-对桥接层的定位（供 `carlair_ros_bridge` 维护者参考）：它把每条速度指令调用成
-`moveByVelocityBodyFrameAsync(..., duration=0.1)`，而策略侧是 10 Hz 下发，
-命令还没生效就被下一条覆盖；把 `control/cmd_duration` 调到 0.6 也没有改善。
-同一时刻直接用 AirSim 的 `moveByVelocityBodyFrameAsync` 能让飞机明显下降，
-说明**速度接口本身好使、问题在桥接层的下发方式**。由于这一段不归本 PR 改，本模块只把现象
-与复现命令记录在这里，不在 PR 里声称跑通过真实仿真器落地。
+![UE + AirSim 真实降落](../img/air/rooftop_landing_nn/airsim_landing.gif)
 
-顺带在这一轮真机联调里修掉了两个真问题（都已包含在本 PR）：
+（橙色球就是模块算出的落点标记，飞机飞到它上方再垂直下降。）
 
-1. **`launch/main.launch` 的 `<param>` 写在 `<node>` 外面** → 全部变成了全局参数，
-   而节点读的是私有参数（`~perception/...`），所以 launch 的每个参数（含 `safe_altitude`、
-   `min_height_m`、`z_up`）**从来没有生效过**。现已全部移进 `<node>`，
-   `rosparam list` 可以看到 `/rooftop_landing_nn/...` 下的一整套参数。
-2. **新增 `frame/lidar_to_world`**：`carlair_ros_bridge` 的 `lidar_pub` 虽然注释写「世界系点云」，
-   实际发出的是**机体系局部坐标**（只做了 NED→ENU 轴变换、没加位姿）。节点置
-   `lidar_to_world:=true` 后会用 `/uav/odom` 位姿把点云搬到世界系再建高度图；
-   默认 `false` 保持与假桥接/单测一致。
+**关键坑：桥接层的 `control/cmd_duration` 必须给到 0.3~0.5 s。**
+`cmd_vel_sub` 把每条速度指令调成 `moveByVelocityBodyFrameAsync(..., duration=cmd_duration)`，
+默认 0.1 s。策略侧 10 Hz 下发时，下一条命令会在上一条生效前把它顶掉，飞机几乎不动。实测（同一架飞机、
+同一条 0.5 m/s 下降指令，各跑 4 s）：
+
+| 下发方式 | 4 s 实际下降 | 期望 |
+| --- | --- | --- |
+| 10 Hz × `duration=0.1`（默认） | +0.11 m | +2.0 m |
+| 3.3 Hz × `duration=0.3` | +0.28 m | +2.0 m |
+| 10 Hz × `duration=0.5` | **+2.27 m** | +2.0 m |
+
+所以跑真机前先 `rosparam set /control/cmd_duration 0.5` 再起桥接层（本模块不用改）。
+
+另一个环境坑：Windows 上 `roslaunch` 解析含中文注释的 `config/*.yaml` 会走 GBK 解码失败，
+需要给进程加 `PYTHONUTF8=1`。
 
 ## 7. 已知限制
 
@@ -272,10 +277,10 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
   应当重新采样训练**（`tools/train_landing_cnn.py` 一条命令即可，RTX 5060 上约 4 分钟）。
 * 高度图取每格最高点，对**悬挑结构**（雨棚、广告牌）会偏保守；`rough_max` 能挡掉大部分
   立面误判，但极端场景仍需靠 `min_height_m` 调参。
-* 闭环只在**假桥接层**上跑通过（真实 ROS Noetic：`roscore` + `rosrun` + 假桥接，
-  见 6.2 的运行结果）；**真实 UE + AirSim** 只验证到「检出落点 → 下发目标 → 桥接层飞抵」，
-  落地没跑完，原因是桥接层的 `/uav/cmd_vel` 通道不驱动飞机（6.3 有实测数据），
-  与模块接口无关：模块与 `rooftop_landing` 共用同一套桥接话题
+* 已在真实 UE + AirSim 上跑通一次完整降落（检出落点 → 飞抵 → 垂直下降 → LANDED，见 6.3），
+  但**下降速度通道依赖桥接层的设置**：`control/cmd_duration` 默认 0.1 s 时飞机几乎不动
+  （实测 4 s 只降 0.11 m），必须先设成 0.3~0.5 s。这是 `carlair_ros_bridge` 的下发方式决定的，
+  不是本模块的问题；模块与 `rooftop_landing` 共用同一套桥接话题
   （`/uav/odom`、`/lidar/points`、`/uav/goal`、`/uav/cmd_vel`、`/uav/status`）。
 
 ## 附：大模型使用声明

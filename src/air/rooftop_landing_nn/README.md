@@ -87,6 +87,11 @@ python3 tests/test_rooftop_landing_nn_ros_sim.py
 `docs/img/air/rooftop_landing_nn/closed_loop_ros_noetic.gif`（左：节点实时日志，
 右：RViz 点云与落点标记），单帧见同目录 `closed_loop_ros_noetic.png`。
 
+4.3 **真实 UE 5.5 + Cosys-AirSim 上也跑通过一次完整降落**（检出落点 → 飞抵 → 下降 → LANDED，
+落点置信度 1.00），录屏见 `docs/img/air/rooftop_landing_nn/airsim_landing.gif`。
+注意：下降走 `/uav/cmd_vel`，桥接层的 `control/cmd_duration` 必须先设成 0.5 s，
+否则 10 Hz 下发时命令会被下一条顶掉、飞机不下高度（实测 4 s 只降 0.11 m）。
+
 ## 5. 重新训练 / 复现实验（开发机，需要 PyTorch）
 
 ```bash
