@@ -99,6 +99,10 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
 - 空域载具:
+    - 无人机任务管理与安全状态机:
+      - 模块概览: './air/uav_mission_safety_manager/overview.md'
+      - 构建与运行: './air/uav_mission_safety_manager/usage.md'
+      - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
@@ -123,7 +127,10 @@ nav:
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
         - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
-    - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
+        - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
+    - YOLO 感知与无人机控制:
+        - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
+        - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
