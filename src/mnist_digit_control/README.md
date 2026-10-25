@@ -36,7 +36,8 @@ src/mnist_digit_control/
 │   └── evaluate_control.py          # 控制精度评价（旋转/平移）
 ├── models/mnist_cnn.pth             # 已训练权重（约 0.8 MB，随仓库提交）
 ├── videos/scene_*.mp4               # 4 个场景演示视频（main.py scenes 生成，不入库）
-└── artifacts/                       # 训练/评价产物（曲线、混淆矩阵、指标）
+└── artifacts/                       # 评价指标 json（曲线/混淆矩阵等 png 由脚本生成，不入库，
+                                     #   文档中的图表见 docs/mnist_digit_control*.png）
 ```
 
 ## 快速开始
