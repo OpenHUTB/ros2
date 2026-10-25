@@ -73,6 +73,7 @@ nav:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
+    - MNIST 手写数字视觉感知与机器人运动控制: './mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
