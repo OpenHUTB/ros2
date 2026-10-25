@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>YOLO 感知与八字轨迹控制 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "YOLO \u611f\u77e5\u4e0e\u516b\u5b57\u8f68\u8ff9\u63a7\u5236";
+        var mkdocs_page_input_path = "air/openhutb_yolo_mlp_control/yolo_trajectory_control.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">YOLO 感知与无人机控制</a>
+<ul class="current">
+<li class="toctree-l2 current"><a class="reference internal current" href="#">YOLO 感知与八字轨迹控制</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#_1">系统架构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">功能与节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mlp">MLP 八字轨迹控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_3">运行方式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ros-2">ROS 2 节点与话题检查</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">轨迹结果与分析</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">实验效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#openhutb">OpenHUTB 控制接口说明</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">软件包结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_11">常见问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">说明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">YOLO 感知与无人机控制</li>
+<li class="breadcrumb-item active">YOLO 感知与八字轨迹控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/openhutb_yolo_mlp_control/yolo_trajectory_control.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="yolo-mlp">YOLO 感知与 MLP 八字轨迹控制</h1>
+<p>本示例通过 ROS 2 接入 OpenHUTB/AirSim，使用 YOLO11n 检测 RGB 图像中的目标，并使用 MLP 控制器跟踪八字轨迹。YOLO 感知与八字轨迹控制分别运行。运行前请完成<a href="../setup/">环境配置</a>。</p>
+<h2 id="_1">系统架构</h2>
+<div class="highlight"><pre><span></span><code>OpenHUTB / AirSim
+       ^
+       | RPC
+       v
++-------------------+
+|   airsim_bridge   |
++-------------------+
+   |            ^
+   |            |
+   |            +---------------- /openhutb/cmd_vel
+   |
+   +-- /openhutb/camera/rgb --&gt; yolo_detector
+   |                              |
+   |                              +-- /openhutb/detections
+   |                              +-- /openhutb/yolo/image
+   |
+   +-- /openhutb/odom ----------&gt; mlp_controller
+                                   ^          |
+                                   |          +-- /openhutb/cmd_vel
+                                   |
+trajectory_target ----------------+
+       |
+       +-- /openhutb/target
+       +-- /openhutb/trajectory_done
+</code></pre></div>
+<p>YOLO 感知链路与八字轨迹控制链路可以分别运行，也可以通过 <code>main.launch.py</code> 同时启动。</p>
+<h2 id="_2">功能与节点</h2>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>作用</th>
+<th>主要输入/输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airsim_bridge</code></td>
+<td>连接 OpenHUTB/AirSim，将模拟器数据转换为 ROS 2 消息，并执行控制指令</td>
+<td>发布图像、里程计；订阅速度指令</td>
+</tr>
+<tr>
+<td><code>yolo_detector</code></td>
+<td>对 RGB 图像执行 YOLO11n 实时目标检测</td>
+<td>订阅 <code>/openhutb/camera/rgb</code>；发布检测结果和标注图像</td>
+</tr>
+<tr>
+<td><code>trajectory_target</code></td>
+<td>根据无人机当前位置生成八字形目标轨迹</td>
+<td>订阅 <code>/openhutb/odom</code>；发布 <code>/openhutb/target</code></td>
+</tr>
+<tr>
+<td><code>mlp_controller</code></td>
+<td>根据当前位置、速度和目标点预测速度控制量</td>
+<td>订阅里程计与目标点；发布 <code>/openhutb/cmd_vel</code></td>
+</tr>
+</tbody>
+</table>
+<p>主要 ROS 2 话题如下：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>消息类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/openhutb/camera/rgb</code></td>
+<td><code>sensor_msgs/Image</code></td>
+<td>OpenHUTB 相机 RGB 图像</td>
+</tr>
+<tr>
+<td><code>/openhutb/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>无人机位置和速度</td>
+</tr>
+<tr>
+<td><code>/openhutb/detections</code></td>
+<td><code>vision_msgs/Detection2DArray</code></td>
+<td>YOLO 检测结果</td>
+</tr>
+<tr>
+<td><code>/openhutb/yolo/image</code></td>
+<td><code>sensor_msgs/Image</code></td>
+<td>带检测框的图像</td>
+</tr>
+<tr>
+<td><code>/openhutb/target</code></td>
+<td><code>geometry_msgs/PointStamped</code></td>
+<td>当前八字轨迹目标点</td>
+</tr>
+<tr>
+<td><code>/openhutb/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>控制器输出的速度指令</td>
+</tr>
+<tr>
+<td><code>/openhutb/trajectory_done</code></td>
+<td><code>std_msgs/Bool</code></td>
+<td>八字轨迹完成标志</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mlp">MLP 八字轨迹控制</h2>
+<p>MLP 控制器输入为：<code>[ex, ey, ez, vx, vy, vz]</code>。</p>
+<p>其中 <code>ex</code>、<code>ey</code>、<code>ez</code> 为目标位置与当前位置之间的误差，<code>vx</code>、<code>vy</code>、<code>vz</code> 为当前速度。</p>
+<p>网络输出为：<code>[vx_cmd, vy_cmd, vz_cmd]</code>。</p>
+<p>控制器通过 <code>/openhutb/cmd_vel</code> 发布 <code>geometry_msgs/Twist</code>。</p>
+<p>当前 ROS 接口保持 OpenHUTB/AirSim 使用的 NED 坐标约定。轨迹生成器使用无人机开始执行轨迹时的当前高度，不强制跳变到固定高度，从而降低轨迹开始阶段的瞬时垂直误差。</p>
+<p>软件包内提供 <code>mlp_controller.pth</code>，其中包含 MLP 网络参数以及运行所需的输入、输出归一化信息。安装 ROS 2 包后，<code>trajectory_control.launch.py</code> 和 <code>main.launch.py</code> 会通过 ROS 2 package share 路径自动定位该模型，通常不需要手动指定路径。</p>
+<p>如需重新生成训练数据并训练模型，可执行：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>generate_training_data
+ros2<span class="w"> </span>run<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>train_mlp
+</code></pre></div>
+<h2 id="_3">运行方式</h2>
+<p>运行前先启动 OpenHUTB AIR 模式，并确认 RPC 端口能够访问。</p>
+<p>如果是原生 Linux 同机运行：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">AIRSIM_IP</span><span class="o">=</span><span class="m">127</span>.0.0.1
+</code></pre></div>
+<p>如果是 WSL2 连接 Windows 主机上的 OpenHUTB：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">AIRSIM_IP</span><span class="o">=</span><span class="k">$(</span>ip<span class="w"> </span>route<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">'/default/ {print $3; exit}'</span><span class="k">)</span>
+</code></pre></div>
+<p>建议在正式启动前执行：</p>
+<div class="highlight"><pre><span></span><code>nc<span class="w"> </span>-vz<span class="w"> </span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="m">41451</span>
+<span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/models/yolo11n.pt"</span>
+</code></pre></div>
+<h3 id="yolo">运行 YOLO 感知</h3>
+<p>在支持 WSLg 或原生 Linux 图形桌面的环境中，优先显示实时 YOLO 检测窗口，便于直接观察目标检测结果：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>perception.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>airsim_ip:<span class="o">=</span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>model_path:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/models/yolo11n.pt"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>show_window:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>该模式不会接管无人机轨迹控制，只发布相机图像、检测结果和标注后的图像，并显示实时检测窗口。</p>
+<p>如果当前环境没有图形界面，例如通过纯 SSH 终端运行，可以关闭窗口显示：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>perception.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>airsim_ip:<span class="o">=</span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>model_path:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/models/yolo11n.pt"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>show_window:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<h3 id="_4">仅运行八字轨迹控制</h3>
+<p>如果无人机已经处于空中，可以关闭自动起飞，并将轨迹数据保存到 <code>~/openhutb_results</code>：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/openhutb_results
+
+ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>trajectory_control.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>airsim_ip:<span class="o">=</span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>figure8_scale:<span class="o">=</span><span class="m">10</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>figure8_points:<span class="o">=</span><span class="m">160</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>use_vertical_control:<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>result_dir:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/openhutb_results"</span>
+</code></pre></div>
+<p>默认情况下会自动加载软件包中的 <code>models/mlp_controller.pth</code>。轨迹执行过程中，控制器会将目标位置、实际位置、误差和控制指令记录到：<code>~/openhutb_results/eight_trajectory.csv</code>。</p>
+<p>轨迹完成后，结束当前 launch 进程，再运行分析脚本生成轨迹图：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>openhutb_yolo_mlp_control.analyze_eight_trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--csv<span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/openhutb_results/eight_trajectory.csv"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--outdir<span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/openhutb_results/analysis"</span>
+</code></pre></div>
+<p>分析结果保存在 <code>~/openhutb_results/analysis</code>，其中主要包括：</p>
+<div class="highlight"><pre><span></span><code>trajectory_xy.png
+tracking_error.png
+path_tracking_error.png
+</code></pre></div>
+<p>三张图片分别用于观察目标轨迹与实际轨迹的平面形状、离散航点跟踪误差以及连续路径跟踪误差。</p>
+<h3 id="yolo_1">一键运行 YOLO + 八字轨迹控制</h3>
+<p><code>main.launch.py</code> 会同时启动 OpenHUTB/AirSim ROS 2 桥接、YOLO11n 实时检测、八字形目标轨迹生成和 MLP 轨迹控制器。</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/openhutb_results
+
+ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>main.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>airsim_ip:<span class="o">=</span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>yolo_model_path:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/models/yolo11n.pt"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>figure8_scale:<span class="o">=</span><span class="m">10</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>figure8_points:<span class="o">=</span><span class="m">160</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>result_dir:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/openhutb_results"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>show_window:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>如果希望由系统自动执行起飞流程，可将 <code>auto_takeoff:=true</code> 传给启动文件。</p>
+<p><code>main.launch.py</code> 默认从安装后的 ROS 2 package share 目录读取 <code>models/mlp_controller.pth</code>，因此 MLP 模型路径不依赖启动命令所在的当前目录。</p>
+<p>可通过以下命令查看 launch 支持的参数：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>main.launch.py<span class="w"> </span>--show-args
+</code></pre></div>
+<h2 id="ros-2">ROS 2 节点与话题检查</h2>
+<p>完整系统启动后，可在另一个已经加载 ROS 2 工作空间的终端中执行：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>node<span class="w"> </span>list
+ros2<span class="w"> </span>topic<span class="w"> </span>list
+</code></pre></div>
+<p>正常情况下可以看到：</p>
+<div class="highlight"><pre><span></span><code>/airsim_bridge
+/yolo_detector
+/trajectory_target
+/mlp_controller
+</code></pre></div>
+<p>检查主要话题频率：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/openhutb/odom
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/openhutb/camera/rgb
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/openhutb/target
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/openhutb/cmd_vel
+</code></pre></div>
+<p>查看 YOLO 检测消息：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/openhutb/detections
+</code></pre></div>
+<h2 id="_5">轨迹结果与分析</h2>
+<p><code>mlp_controller</code> 会在 <code>result_dir</code> 中生成：<code>eight_trajectory.csv</code>。</p>
+<p>CSV 记录目标位置、实际位置、位置误差和控制指令等信息。</p>
+<p>轨迹分析脚本支持 <code>--csv</code> 和 <code>--outdir</code> 参数：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>openhutb_yolo_mlp_control.analyze_eight_trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--csv<span class="w"> </span>~/openhutb_results/eight_trajectory.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--outdir<span class="w"> </span>~/openhutb_results/analysis
+</code></pre></div>
+<p>分析脚本会生成：</p>
+<div class="highlight"><pre><span></span><code>trajectory_xy.png
+tracking_error.png
+path_tracking_error.png
+trajectory_stats.json
+trajectory_report.txt
+</code></pre></div>
+<p>其中：</p>
+<ul>
+<li><code>trajectory_xy.png</code>：目标八字轨迹与实际飞行轨迹对比；</li>
+<li><code>tracking_error.png</code>：当前位置到当前离散 waypoint 的误差；</li>
+<li><code>path_tracking_error.png</code>：当前位置到完整理想八字轨迹最近线段的距离；</li>
+<li><code>trajectory_stats.json</code>：轨迹统计数据；</li>
+<li><code>trajectory_report.txt</code>：实验统计报告。</li>
+</ul>
+<p><code>tracking_error.png</code> 会受到 waypoint 切换影响，因此可能出现周期性峰值。评价连续路径跟踪质量时，可以结合 <code>trajectory_xy.png</code> 和 <code>path_tracking_error.png</code> 观察整体轨迹形状与连续路径偏差。</p>
+<h2 id="_6">实验效果</h2>
+<h3 id="_7">八字形目标轨迹与实际轨迹</h3>
+<p>下图对比目标八字形路径和无人机实际路径，用于观察轨迹形状和整体跟踪效果。</p>
+<p><img alt="八字形目标轨迹与实际轨迹" src="../../../img/air/openhutb_yolo_mlp_control/trajectory_xy.png"/></p>
+<h3 id="_8">航点跟踪误差</h3>
+<p>下图表示无人机当前位置到当前离散 waypoint 的距离。轨迹目标从一个 waypoint 切换到下一个 waypoint 时，误差可能发生跳变。</p>
+<p><img alt="航点跟踪误差" src="../../../img/air/openhutb_yolo_mlp_control/tracking_error.png"/></p>
+<h3 id="_9">连续路径跟踪误差</h3>
+<p>下图计算实际位置到完整理想八字轨迹最近线段的距离。相比离散 waypoint 误差，该指标能够减少 waypoint 切换造成的误差跳变，更适合观察连续路径跟踪偏差。</p>
+<p><img alt="连续路径跟踪误差" src="../../../img/air/openhutb_yolo_mlp_control/path_tracking_error.png"/></p>
+<h3 id="openhutb-yolo">OpenHUTB + YOLO 实时检测</h3>
+<p>下图展示 OpenHUTB 相机图像经过 YOLO11n 后的实时检测效果。检测窗口可以显示 FPS、YOLO 推理耗时、OpenHUTB/AirSim 图像获取耗时、检测目标数量和推理设备等运行信息。</p>
+<p><img alt="OpenHUTB 与 YOLO 实时检测" src="../../../img/air/openhutb_yolo_mlp_control/yolo_realtime.gif"/></p>
+<h2 id="openhutb">OpenHUTB 控制接口说明</h2>
+<p>当前实现中，<code>airsim_bridge</code> 对外保持标准的 <code>geometry_msgs/Twist</code> 速度控制接口。桥接层负责将 ROS 2 控制指令转换为 OpenHUTB/AirSim 可以执行的控制调用。</p>
+<p>因此控制器只依赖 <code>/openhutb/odom</code>、<code>/openhutb/target</code> 和 <code>/openhutb/cmd_vel</code> 等 ROS 2 接口。后续如果替换控制后端，主要调整桥接层即可，不需要改变 MLP 控制节点的 ROS 2 接口。</p>
+<h2 id="_10">软件包结构</h2>
+<div class="highlight"><pre><span></span><code>openhutb_yolo_mlp_control/
+├── package.xml
+├── setup.py
+├── setup.cfg
+├── requirements.txt
+├── README.md
+├── config/
+│   └── openhutb_ros.yaml
+├── launch/
+│   ├── main.launch.py
+│   ├── perception.launch.py
+│   └── trajectory_control.launch.py
+├── models/
+│   └── mlp_controller.pth
+├── resource/
+│   └── openhutb_yolo_mlp_control
+├── tools/
+│   └── vendor_openhutb_pythonclient.ps1
+└── openhutb_yolo_mlp_control/
+    ├── __init__.py
+    ├── airsim_bridge_node.py
+    ├── yolo_node.py
+    ├── trajectory_target_node.py
+    ├── mlp_control_node.py
+    ├── mlp_model.py
+    ├── generate_training_data.py
+    ├── train_mlp.py
+    ├── evaluate_trajectories.py
+    ├── analyze_eight_trajectory.py
+    └── vendor/
+</code></pre></div>
+<h2 id="_11">常见问题</h2>
+<h3 id="connectionrefusederror-errno-111-connection-refused"><code>ConnectionRefusedError: [Errno 111] Connection refused</code></h3>
+<p>该错误表示 <code>airsim_bridge</code> 已经尝试建立 TCP/RPC 连接，但目标地址的 <code>41451</code> 端口没有接受连接。</p>
+<p>先检查当前使用的地址：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span>
+nc<span class="w"> </span>-vz<span class="w"> </span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="m">41451</span>
+</code></pre></div>
+<p>如果 ROS 2 运行在 WSL2、OpenHUTB 运行在 Windows，不要只根据默认参数假定 <code>127.0.0.1</code> 可以访问 Windows 侧服务。可以重新获取 WSL2 默认网关：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">AIRSIM_IP</span><span class="o">=</span><span class="k">$(</span>ip<span class="w"> </span>route<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">'/default/ {print $3; exit}'</span><span class="k">)</span>
+nc<span class="w"> </span>-vz<span class="w"> </span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="m">41451</span>
+</code></pre></div>
+<p>仍然无法连接时，应确认：</p>
+<ul>
+<li>OpenHUTB 已经进入 AIR 模式并完成加载；</li>
+<li>Windows 防火墙允许对应网络上的 RPC 连接；</li>
+<li>端口 <code>41451</code> 没有被其他程序占用；</li>
+<li>WSL2 与 Windows 主机之间网络可达。</li>
+</ul>
+<h3 id="yolo-403-forbidden">YOLO 启动时尝试联网下载并出现 <code>403 Forbidden</code></h3>
+<p>如果日志中出现类似：</p>
+<div class="highlight"><pre><span></span><code>Loading YOLO model: yolo11n.pt
+Download failure ... 403 Client Error: Forbidden
+</code></pre></div>
+<p>通常表示本地没有找到 <code>yolo11n.pt</code>，Ultralytics 随后尝试从网络自动下载模型，但当前网络无法访问下载地址。</p>
+<p>先检查本地模型：</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>-lh<span class="w"> </span>~/models/yolo11n.pt
+</code></pre></div>
+<p>然后显式传入本地绝对路径：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span>main.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>airsim_ip:<span class="o">=</span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>yolo_model_path:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/models/yolo11n.pt"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>show_window:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>建议不要依赖运行时自动下载模型。</p>
+<h3 id="yolo_2">YOLO 模型可以找到，但节点仍无法加载</h3>
+<p>可以在当前虚拟环境中单独测试模型加载：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<span class="s">from pathlib import Path</span>
+<span class="s">from ultralytics import YOLO</span>
+
+<span class="s">path = Path.home() / "models" / "yolo11n.pt"</span>
+<span class="s">YOLO(str(path))</span>
+<span class="s">print(f"YOLO model loaded successfully: {path}")</span>
+<span class="s">PY</span>
+</code></pre></div>
+<p>如果这里仍然报错，应优先检查当前虚拟环境中的 <code>torch</code>、<code>ultralytics</code> 版本以及模型文件是否完整。</p>
+<h3 id="wsl2-yolo-opencv">WSL2 中无法显示 YOLO OpenCV 窗口</h3>
+<p>检测本身不依赖 GUI。没有 WSLg 或图形转发环境时，使用：<code>show_window:=false</code>。</p>
+<p>仍可通过 ROS 2 的 <code>/openhutb/yolo/image</code> 话题获取标注图像。</p>
+<h3 id="mlp_1">MLP 控制器找不到模型</h3>
+<p>正常安装后，launch 文件会自动加载软件包中的 <code>models/mlp_controller.pth</code>。可检查 ROS 2 是否已经找到该包：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </span>openhutb_yolo_mlp_control
+</code></pre></div>
+<p>如果刚修改过 <code>setup.py</code>、模型文件或安装配置，应重新构建：</p>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--packages-select<span class="w"> </span>openhutb_yolo_mlp_control<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<h3 id="_12">无人机已经起飞但启动后再次执行起飞动作</h3>
+<p>启动时使用：<code>auto_takeoff:=false</code>。</p>
+<h3 id="_13">航点误差存在周期性峰值</h3>
+<p><code>tracking_error.png</code> 记录当前位置到当前离散 waypoint 的距离，目标点切换时可能产生跳变。连续轨迹跟踪效果可以结合 <code>path_tracking_error.png</code> 和 XY 轨迹图进行判断。</p>
+<p>返回<a href="../">文档目录</a>。</p>
+<h2 id="_14">说明</h2>
+<p>本文档整理、代码重构和问题排查过程中使用了大模型辅助；提交者已检查全部内容并对最终结果负责。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../../octree_uav_3d_pathfinding/path_following/" title="路径跟踪与闭环飞行"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../yolo_visual_centering/" title="YOLO 目标水平视觉居中">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../../octree_uav_3d_pathfinding/path_following/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../yolo_visual_centering/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
