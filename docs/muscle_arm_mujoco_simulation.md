@@ -192,11 +192,11 @@ python muscle_sim.py
 xdg-open muscle_arm_result.png
 ```
 
-**生成的肌肉骨骼仿真曲线图**（图片查看器打开 `muscle_arm_result.png`）：
+**实际运行截图**（终端运行 `muscle_sim.py` + 图片查看器打开 `muscle_arm_result.png`）：
 
-![肌肉骨骼仿真结果曲线图](image/muscle_mujoco_result.jpg)
+![肌肉骨骼仿真实际运行截图](image/muscle_mujoco_result.jpg)
 
-> 三组子图分别为：关节角度（先伸展后屈曲）、4 条肌肉激活度（屈/伸肌随激励阶跃切换）、肌肉力。
+> 左侧终端：安装依赖、`python muscle_sim.py` 运行、输出角度结果；右侧图片查看器：三组子图分别为关节角度（先伸展后屈曲）、4 条肌肉激活度（屈/伸肌随激励阶跃切换）、肌肉力。
 
 ---
 
