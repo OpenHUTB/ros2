@@ -71,6 +71,7 @@ nav:
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - 膝关节肌肉骨骼仿真与轨迹跟踪控制: './musculoskeletal/docs_musculoskeletal_knee_tracking.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'

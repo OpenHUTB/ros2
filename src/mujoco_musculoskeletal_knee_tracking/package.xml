@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_musculoskeletal_knee_tracking</name>
+  <version>0.1.0</version>
+  <description>
+    单关节膝关节肌肉骨骼仿真与轨迹跟踪控制 (MuJoCo, 屈肌/伸肌拮抗肌肉).
+    Musculoskeletal single-joint knee simulation with sine/step trajectory
+    tracking via PD-driven antagonistic muscles (MuJoCo).
+  </description>
+  <maintainer email="your_email@example.com">student</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-mujoco</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
