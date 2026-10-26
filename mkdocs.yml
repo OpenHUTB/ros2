@@ -88,6 +88,7 @@ nav:
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
+    - 作业综合整合与性能评价: './ground/carla_benchmark_suite.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
