@@ -1,0 +1,24 @@
+<mujoco model="scene_g1">
+  <include file="unitree_g1/g1_mjx_feetonly.xml"/>
+  <include file="scene.xml"/>
+
+  <keyframe>
+    <key name="home"
+      qpos="
+      0 0 0.755
+      1 0 0 0
+      -0.312 0 0 0.669 -0.363 0
+      -0.312 0 0 0.669 -0.363 0
+      0 0 0.073
+      0.2 0.2 0 0.6 0 0 0
+      0.2 -0.2 0 0.6 0 0 0"
+      ctrl="
+      -0.312 0 0 0.669 -0.363 0
+      -0.312 0 0 0.669 -0.363 0
+      0 0 0.073
+      0.2 0.2 0 0.6 0 0 0
+      0.2 -0.2 0 0.6 0 0 0
+    "/>
+  </keyframe>
+
+</mujoco>

@@ -36,22 +36,43 @@
   <!-- 是否启动 A* 规划节点 -->
   <arg name="planning" default="true"/>
 
+  <!-- P5：路径平滑的默认开关。
+       与 config/params.yaml 里的 smoothing 是同一个参数，这里暴露成 launch 参数
+       只是为了方便在命令行临时开关，不用改配置文件：
+         roslaunch ... main.launch                    # 用 yaml 里的值（默认 false）
+         roslaunch ... main.launch smoothing:=true    # 临时打开平滑做对比 -->
+  <arg name="smoothing" default="false"/>
+
+  <!-- P5：安全裕度半径（m）。同样是为了命令行临时开关：
+         roslaunch ... main.launch inflation_radius:=0.6
+       0 表示关闭膨胀（此时行为逐位等于上一阶段，可做回归对照）。
+       与 smoothing 一样，只在节点启动时读取，改动后要重启节点。 -->
+  <arg name="inflation_radius" default="0.0"/>
+
   <!-- 规划节点取起点用的机体坐标系。
        正常跑仿真时是 base_link（由 airsim_bridge 广播）；
        用 mock_cloud_publisher.py 做离线验证时，它只广播 world -> lidar_link，
        所以那时要传 body_frame:=lidar_link -->
   <arg name="body_frame" default="base_link"/>
 
+  <!-- 桥接节点接收"要飞到哪里"的话题。
+       默认 /uav/goal 与 P1'–P5 完全一致（用户发一个目标点，规划器规划、载具飞过去）。
+       P6 的闭环飞行由 full_demo.launch 把它设成 /uav/goal_cmd —— 那里由 path_follower
+       逐点下发航点，如果仍用 /uav/goal，astar_planner 会把每个航点当成新目标重新规划。 -->
+  <arg name="bridge_goal_topic" default="/uav/goal"/>
+
   <!-- 载入参数配置 -->
   <rosparam command="load"
             file="$(find octree_uav_3d_pathfinding)/config/params.yaml"/>
 
-  <!-- AirSim 桥接节点：订阅 /uav/goal，发布 /cloud_in、/ground_truth/odom 与 TF -->
+  <!-- AirSim 桥接节点：订阅目标点，发布 /cloud_in、/ground_truth/odom 与 TF -->
   <node if="$(arg bridge)"
         pkg="octree_uav_3d_pathfinding"
         type="airsim_bridge.py"
         name="airsim_bridge"
-        output="screen"/>
+        output="screen">
+    <param name="goal_topic" value="$(arg bridge_goal_topic)"/>
+  </node>
 
   <!-- 点云建图节点：/cloud_in → /octomap_full 与 /occupied_cells_vis_array -->
   <node if="$(arg mapping)"
@@ -68,6 +89,8 @@
         name="astar_planner"
         output="screen">
     <param name="body_frame" value="$(arg body_frame)"/>
+    <param name="smoothing" value="$(arg smoothing)"/>
+    <param name="inflation_radius" value="$(arg inflation_radius)"/>
   </node>
 
   <!-- 环境与链路自检节点
