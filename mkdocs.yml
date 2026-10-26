@@ -89,6 +89,7 @@ nav:
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
+    - 行人/骑行者数字孪生评价: './ground/vru_twin_metrics.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 点云地图创建: './ground/pcl_recorder.md'
