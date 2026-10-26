@@ -11,8 +11,30 @@ CarlaAir 把 CARLA 和 AirSim 放在同一个 UE4 进程里，但 AirSim 只提�
 - 连接 CarlaAir 的 AirSim（默认 `192.168.189.1:41451`）；
 - 发布 `/drone/pose`（NED 世界坐标，`geometry_msgs/PoseStamped`）；
 - 发布 `/drone/camera/image_raw`（`sensor_msgs/Image`，bgr8）；
+- 发布 `/drone/depth/image_raw`（`sensor_msgs/Image`，32FC1，单位米）；
+- 发布 `/drone/imu`（`sensor_msgs/Imu`，NED 机体系）；
 - 订阅 `/drone/cmd_vel`（NED 速度，`geometry_msgs/Twist`）；
 - 提供 `/drone/takeoff`、`/drone/land` 服务（`std_srvs/Empty`）。
+
+## 传感器与频率（实测）
+
+| 话题 | 类型 | 频率 | 说明 |
+|---|---|---|---|
+| `/drone/pose` | PoseStamped | 10 Hz | 主循环 |
+| `/drone/imu` | Imu | 10 Hz | 主循环 |
+| `/drone/camera/image_raw` | Image bgr8 | ~3 Hz | 1280×960，AirSim RPC 限制 |
+| `/drone/depth/image_raw` | Image 32FC1 | ~3 Hz | 640×480，单位米 |
+
+`rate`（默认 10）控制 pose/IMU，`image_rate`（默认 5）控制图像线程；图像实际频率受 AirSim `simGetImages` 限制，达不到 5 Hz 时会降到 3 Hz 左右。
+
+## 双客户端设计
+
+RGB + 深度一次 `simGetImages` 大约要 0.3 秒。最开始用同一个 AirSim 客户端，图像 RPC 会把 pose/IMU 一起拖到 2.8 Hz。现在拆成两个客户端：
+
+- `state_client`：pose、IMU、起降、速度控制，跑 10 Hz 主循环；
+- `image_client`：RGB + 深度，跑独立图像线程。
+
+两个客户端各自持有独立的 IOLoop，互不阻塞；实测 pose/IMU 稳定在 10 Hz。
 
 ## 目录结构
 
@@ -96,15 +118,18 @@ roslaunch drone_airsim_bringup drone_bringup.launch host:=192.168.189.1 port:=41
 
 ```bash
 rostopic list | grep drone
+rostopic hz /drone/pose
+rostopic hz /drone/imu
 rostopic hz /drone/camera/image_raw
-rostopic echo -n1 /drone/pose
+rostopic hz /drone/depth/image_raw
+rostopic echo -n1 --noarr /drone/depth/image_raw
 rosservice call /drone/takeoff
 rosservice call /drone/land
 ```
 
 预期输出：
 
-- 话题：`/drone/pose`、`/drone/camera/image_raw`、`/drone/cmd_vel`；
+- 话题：`/drone/pose`、`/drone/imu`、`/drone/camera/image_raw`、`/drone/depth/image_raw`、`/drone/cmd_vel`；
 - 图像：配好 `settings.json` 后 1280×960；不配则 256×144；
 - 位姿示例：
 
@@ -133,11 +158,13 @@ pose:
 ## 已知问题
 
 1. **端口冲突**：CarlaAir 和标准 CARLA 都占用 2000 端口，不能同时启动。做无人机时只启动 CarlaAir。
-2. **图像频率**：1280×960 约 2.7 Hz，256×144 可到 5 Hz；主要受 AirSim RPC 和 VM 限制。
+2. **图像频率**：RGB + 深度约 3 Hz（1280×960 + 640×480），主要受 AirSim `simGetImages` RPC 和 VM 限制；pose/IMU 不受影响，稳定 10 Hz。要更高图像频率，可把 `config/settings.json` 里的分辨率降到 640×480 / 320×240。
 3. **坐标系**：当前位姿按 AirSim NED 发布（`frame_id: world_ned`），ROS 侧默认 ENU，后续在感知/控制节点里做转换。
 4. **线程安全**：所有 AirSim 调用必须走同一把锁，不要在多个回调里直接并发调用。
 5. **OpenCV 版本**：本包不再依赖 `cv_bridge`/OpenCV，换 OpenCV 5 不会影响相机话题。
 
 ## 整体任务进度
 
-见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 1 的 PR1，后续 PR2（深度/IMU）、PR3（键盘遥控）会在这个包上继续加。
+见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 1 的 PR2（深度/IMU + 10 Hz 状态），后续 PR3（键盘遥控）会在这个包上继续加。
+
+<!-- pr2 active -->
