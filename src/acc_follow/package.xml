@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>acc_follow</name>
+  <version>0.1.0</version>
+  <description>
+    ACC 自适应巡航仿真：车辆沿直线行驶，前车减速时自动跟停、前车起步后自动
+    跟随恢复巡航。包含 Pygame 交互仿真、无界面自动验证与 ROS Noetic 节点。
+  </description>
+  <maintainer email="p151422485@qq.com">kang liang</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+</package>
