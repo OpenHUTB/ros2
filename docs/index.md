@@ -116,6 +116,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
+* [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 
 
