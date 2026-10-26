@@ -24,32 +24,69 @@ import time
 
 import airsim
 
-PARAMS_DEFAULT = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), os.pardir, "config", "params.yaml")
+PARAMS_NAME = "uav_formation_flight"
 
 
-def default_ip(params_path=PARAMS_DEFAULT):
-    """AirSim 地址默认取 config/params.yaml 的 airsim/ip：换台机器只改 YAML。"""
+def _find_params():
+    """定位 config/params.yaml：直接跑源码、rosrun（devel/install）都能找到。"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    cands = [os.path.join(here, os.pardir, "config", "params.yaml")]
+    for root in os.environ.get("ROS_PACKAGE_PATH", "").split(os.pathsep):
+        if root:
+            cands.append(os.path.join(root, PARAMS_NAME, "config", "params.yaml"))
+    for path in cands:
+        if os.path.isfile(path):
+            return os.path.abspath(path)
+    raise SystemExit("找不到 config/params.yaml；试过：%s" % "；".join(cands))
+
+
+def _load_params():
     try:
         import yaml
-        with open(os.path.abspath(params_path), "r") as fh:
-            ip = ((yaml.safe_load(fh) or {}).get("airsim") or {}).get("ip")
-    except Exception:
-        ip = None
-    if not ip:
-        raise SystemExit("没读到 %s 的 airsim/ip；用法：python3 %s <AirSim IP>"
-                         % (params_path, os.path.basename(__file__)))
-    return ip
+        with open(_find_params(), "r", encoding="utf-8") as fh:
+            return yaml.safe_load(fh) or {}
+    except Exception as exc:
+        raise SystemExit("读取参数失败：%s" % exc)
 
 
-VEHICLES = ["SimpleFlight", "SimpleFlight2", "SimpleFlight3"]
-HOVER_Z = 4.0
-RATE = 20.0
-MAX_SPEED, MAX_VZ = 2.0, 1.0
-CMD_DUR = 0.1
-KP, KI, KD = 1.0, 0.05, 0.2
-TOL = 0.25
-SLOT = (0.0, -3.0, 4.0)          # 就是 SimpleFlight2 那个飞不到的空位
+_CFG = _load_params()
+_AIRSIM = _CFG.get("airsim") or {}
+_FLIGHT = _CFG.get("flight") or {}
+_PID = _CFG.get("pid") or {}
+
+
+def _num(section, key, default):
+    try:
+        return float(section.get(key, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _ip():
+    value = _AIRSIM.get("ip")
+    if not value:
+        raise SystemExit("config/params.yaml 里没有 airsim/ip")
+    return value
+
+
+def _vehicles():
+    leader = _AIRSIM.get("leader") or "SimpleFlight"
+    followers = _AIRSIM.get("followers") or ["SimpleFlight2", "SimpleFlight3"]
+    return [leader] + list(followers)
+
+
+VEHICLES = _vehicles()
+HOVER_Z = 4.0                     # 诊断用固定高度：复现 SF2 当初那个动作，故意不取 params
+RATE = _num(_FLIGHT, "control_rate", 20.0)
+MAX_SPEED = _num(_FLIGHT, "max_speed", 2.0)
+MAX_VZ = _num(_FLIGHT, "max_vertical_speed", 1.0)
+CMD_DUR = _num(_FLIGHT, "cmd_duration", 0.1)
+KP = _num(_PID, "kp", 0.4)
+KI = _num(_PID, "ki", 0.02)
+KD = _num(_PID, "kd", 0.05)
+TOL = _num(_FLIGHT, "waypoint_tolerance", 0.25)
+AIRSIM_TIMEOUT = _num(_AIRSIM, "timeout", 30.0)
+SLOT = (0.0, -3.0, 4.0)           # 诊断目标（同上，固定）
 
 
 class PID(object):
@@ -166,8 +203,8 @@ class Diag(object):
 
 
 def main():
-    ip = sys.argv[1] if len(sys.argv) > 1 else default_ip()
-    client = airsim.MultirotorClient(ip=ip, timeout_value=30.0)
+    ip = sys.argv[1] if len(sys.argv) > 1 else _ip()
+    client = airsim.MultirotorClient(ip=ip, timeout_value=AIRSIM_TIMEOUT)
     client.confirmConnection()
     print("已连接 AirSim %s\n" % ip)
     diag = Diag(client)

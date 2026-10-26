@@ -27,27 +27,58 @@ import time
 
 import airsim
 
-
-PARAMS_DEFAULT = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), os.pardir, "config", "params.yaml")
+PARAMS_NAME = "uav_formation_flight"
 
 
-def default_ip(params_path=PARAMS_DEFAULT):
-    """AirSim 地址默认取 config/params.yaml 的 airsim/ip：换台机器只改 YAML。"""
+def _find_params():
+    """定位 config/params.yaml：直接跑源码、rosrun（devel/install）都能找到。"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    cands = [os.path.join(here, os.pardir, "config", "params.yaml")]
+    for root in os.environ.get("ROS_PACKAGE_PATH", "").split(os.pathsep):
+        if root:
+            cands.append(os.path.join(root, PARAMS_NAME, "config", "params.yaml"))
+    for path in cands:
+        if os.path.isfile(path):
+            return os.path.abspath(path)
+    raise SystemExit("找不到 config/params.yaml；试过：%s" % "；".join(cands))
+
+
+def _load_params():
     try:
         import yaml
-        with open(os.path.abspath(params_path), "r") as fh:
-            ip = ((yaml.safe_load(fh) or {}).get("airsim") or {}).get("ip")
-    except Exception:
-        ip = None
-    if not ip:
-        raise SystemExit("没读到 %s 的 airsim/ip；用法：python3 %s <AirSim IP>"
-                         % (params_path, os.path.basename(__file__)))
-    return ip
+        with open(_find_params(), "r", encoding="utf-8") as fh:
+            return yaml.safe_load(fh) or {}
+    except Exception as exc:
+        raise SystemExit("读取参数失败：%s" % exc)
+
+
+_CFG = _load_params()
+_AIRSIM = _CFG.get("airsim") or {}
+_FLIGHT = _CFG.get("flight") or {}
+
+
+def _num(section, key, default):
+    try:
+        return float(section.get(key, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _ip():
+    value = _AIRSIM.get("ip")
+    if not value:
+        raise SystemExit("config/params.yaml 里没有 airsim/ip")
+    return value
+
+
+RATE = _num(_FLIGHT, "control_rate", 20.0)
+HOVER_ALT = _num(_FLIGHT, "takeoff_altitude", 3.0)
+MAX_VZ = _num(_FLIGHT, "max_vertical_speed", 1.0)
+AIRSIM_TIMEOUT = _num(_AIRSIM, "timeout", 30.0)
 
 
 def connect(ip):
-    client = airsim.MultirotorClient(ip=ip, timeout_value=30.0)
+    client = airsim.MultirotorClient(ip=ip, timeout_value=AIRSIM_TIMEOUT)
     client.confirmConnection()
     client.enableApiControl(True)
     client.armDisarm(True)
@@ -78,7 +109,7 @@ def best_lag(cmd, vel, dt, max_lag=3.0):
     return best
 
 
-def run_phase(client, duration, secs=12.0, amp=0.5, period=3.0, rate=20.0):
+def run_phase(client, duration, secs=12.0, amp=0.5, period=3.0, rate=RATE):
     """用给定 duration 下发方波速度（NED 的 y 轴 = 东向），返回采样序列。"""
     dt_loop = 1.0 / rate
     t0 = time.perf_counter()
@@ -124,7 +155,7 @@ def analyze(tag, ts, cmds, ys):
     return lag
 
 
-def axis_phase(client, home, secs=3.0, rate=20.0):
+def axis_phase(client, home, secs=3.0, rate=RATE):
     """边横飞边下降：水平 +0.5 m/s 与垂直 -0.5 m/s 同时下发，看两者是否都被兑现。
 
     编队任务里出现过「垂直指令满速下降、飞机却常驻 4~7 米」的现象，
@@ -167,15 +198,15 @@ def axis_phase(client, home, secs=3.0, rate=20.0):
 
 
 def main():
-    ip = sys.argv[1] if len(sys.argv) > 1 else default_ip()
+    ip = sys.argv[1] if len(sys.argv) > 1 else _ip()
     print("连接 AirSim %s ..." % ip)
     client = connect(ip)
     try:
         state = client.getMultirotorState().kinematics_estimated.position
         home = (state.x_val, state.y_val, state.z_val)     # 地面起飞点（NED）
-        hover_z = state.z_val - 3.0
+        hover_z = state.z_val - HOVER_ALT
         client.takeoffAsync(timeout_sec=20).join()
-        client.moveToZAsync(hover_z, 1.0, timeout_sec=25).join()
+        client.moveToZAsync(hover_z, MAX_VZ, timeout_sec=25).join()
         client.moveByVelocityAsync(0.0, 0.0, 0.0, 0.5).join()
         time.sleep(3.0)
         print("已悬停在离地 3 米，开始测延迟\n")
@@ -187,7 +218,7 @@ def main():
             time.sleep(3.0)          # 两段之间稳一下
 
         print("\n=== 附加判定：边横飞边下降（先爬到 4.5 米，免得降到地面）===")
-        client.moveToZAsync(home[2] - 4.5, 1.0, timeout_sec=20).join()
+        client.moveToZAsync(home[2] - 4.5, MAX_VZ, timeout_sec=20).join()
         time.sleep(2.0)
         axis_phase(client, home)
 

@@ -69,6 +69,8 @@ class PID(object):
 
 class FormationController(object):
     def __init__(self):
+        # 下面 get_param 的 fallback 与 config/params.yaml 保持一致：只有不经 launch、
+        # 没加载参数文件时才用得到。改参数时两处一起改（launch 里的 kp/ki/kd 另算）。
         self.rate_hz = float(rospy.get_param("/flight/control_rate", 20.0))
         self.takeoff_alt = float(rospy.get_param("/flight/takeoff_altitude", 3.0))
         self.takeoff_interval = float(rospy.get_param("/flight/takeoff_interval", 1.0))
@@ -78,13 +80,13 @@ class FormationController(object):
         self.formation_tol = float(rospy.get_param("/flight/formation_tolerance", 0.30))
         self.wp_timeout = float(rospy.get_param("/flight/waypoint_timeout", 25.0))
         self.settle_time = float(rospy.get_param("/flight/settle_time", 1.0))
-        self.deploy_timeout = float(rospy.get_param("/flight/deploy_timeout", 20.0))
+        self.deploy_timeout = float(rospy.get_param("/flight/deploy_timeout", 30.0))
         self.max_duration = float(rospy.get_param("/flight/max_duration", 150.0))
         off = rospy.get_param("/flight/deploy_offset", [0.0, 0.0])
         self.deploy_offset = (float(off[0]), float(off[1]))
         clr = rospy.get_param("/flight/leader_clear_offset", [2.5, 0.0])
         self.leader_clear_offset = (float(clr[0]), float(clr[1]))
-        self.alt_separation = float(rospy.get_param("/flight/alt_separation", 2.0))
+        self.alt_separation = float(rospy.get_param("/flight/alt_separation", 3.0))
         # 展开阶段用哪种方式就位：position = AirSim 自带位置控制（默认，稳定第一），
         # pid = 我们自己的速度环（用于对比实验）
         self.deploy_mode = str(rospy.get_param("/flight/deploy_mode", "position")).lower()
@@ -92,14 +94,14 @@ class FormationController(object):
         # 而不是把航点当成阶跃指令直接丢给 PID。
         self.ref_speed = float(rospy.get_param("/flight/leader_ref_speed", 0.7))
         # 高度通道的下发方式：
-        #   setpoint = moveByVelocityZAsync，只下发水平速度 + 高度设定值，由 AirSim
-        #              自己的高度环维持（默认）；
-        #   velocity = moveByVelocityAsync 下发三维速度，高度也由我们的 PID 管。
-        # 实测：载具一横向移动，"三维速度里的垂直分量"就不被兑现 —— 目标 3 米、
-        # 垂直指令满速下降，它却常驻 4.3~5.3 米（正好撞进路灯和树冠那一层），
-        # 而 AirSim 自带位置控制在同样的横移中残差只有 0.14~0.40 米（含高度）。
+        #   velocity = moveByVelocityAsync，三维速度都交给我们的 PID（默认，当前配置）；
+        #   setpoint = moveByVelocityZAsync，只下发水平速度 + 高度设定值，高度交给 AirSim。
+        # 两条路都实飞过：setpoint 在这个构建里不尊重水平速度（指令 0.5 m/s，实测
+        # 0.85~1.43 m/s，171%~286%），已弃用；velocity 下 lag_probe.py 的附加判定证明
+        # 「边横飞边下降」时垂直分量是执行的（水平 0.43 m/s、高度 -0.53 m/s 都跟随指令），
+        # 早期的高度漂移是撞进 5~6 米的树冠/路灯，不是接口问题。
         self.altitude_mode = str(
-            rospy.get_param("/flight/altitude_mode", "setpoint")).lower()
+            rospy.get_param("/flight/altitude_mode", "velocity")).lower()
 
         # 速度指令的持续时长（秒），取约两个控制周期。
         # 用 lag_probe.py 实测过：0.5 秒与 0.05 秒两种时长下，"指令 -> 实际速度"
@@ -109,7 +111,7 @@ class FormationController(object):
             "/flight/cmd_duration", 2.0 / self.rate_hz))
         # 僚机前馈增益：把长机当前速度直接叠加进僚机的速度指令。只靠位置误差
         # 「追」一个移动目标，必然滞后一个回路延迟的时间，队形误差 ≈ 延迟 x 长机速度。
-        self.ff_gain = float(rospy.get_param("/flight/leader_velocity_ff", 1.0))
+        self.ff_gain = float(rospy.get_param("/flight/leader_velocity_ff", 0.5))
         # 前馈速度的低通时间常数（秒）：长机速度里的抖动不要整幅灌进僚机指令
         self.ff_tau = float(rospy.get_param("/flight/leader_velocity_ff_tau", 0.3))
         self.ff_state = [0.0, 0.0, 0.0]
@@ -125,9 +127,9 @@ class FormationController(object):
         self.schedule = rospy.get_param("/missions/" + self.mission + "/schedule")
         self.shapes = rospy.get_param("/shapes")
 
-        kp = float(rospy.get_param("/pid/kp", 1.0))
-        ki = float(rospy.get_param("/pid/ki", 0.05))
-        kd = float(rospy.get_param("/pid/kd", 0.2))
+        kp = float(rospy.get_param("/pid/kp", 0.4))
+        ki = float(rospy.get_param("/pid/ki", 0.02))
+        kd = float(rospy.get_param("/pid/kd", 0.05))
         limit = float(rospy.get_param("/pid/integral_limit", 1.0))
         self.gains = (kp, ki, kd)
         self.pids = {}

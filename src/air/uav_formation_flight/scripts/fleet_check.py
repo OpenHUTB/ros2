@@ -29,7 +29,7 @@ def load_params(path):
         import yaml
     except ImportError:
         return {}, "没有装 PyYAML，无法读取 %s" % path
-    with open(path, "r") as fh:
+    with open(path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
     return data.get("airsim") or {}, None
 

@@ -24,30 +24,63 @@ import time
 
 import airsim
 
-PARAMS_DEFAULT = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), os.pardir, "config", "params.yaml")
+PARAMS_NAME = "uav_formation_flight"
 
 
-def default_ip(params_path=PARAMS_DEFAULT):
-    """AirSim 地址默认取 config/params.yaml 的 airsim/ip：换台机器只改 YAML。"""
+def _find_params():
+    """定位 config/params.yaml：直接跑源码、rosrun（devel/install）都能找到。"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    cands = [os.path.join(here, os.pardir, "config", "params.yaml")]
+    for root in os.environ.get("ROS_PACKAGE_PATH", "").split(os.pathsep):
+        if root:
+            cands.append(os.path.join(root, PARAMS_NAME, "config", "params.yaml"))
+    for path in cands:
+        if os.path.isfile(path):
+            return os.path.abspath(path)
+    raise SystemExit("找不到 config/params.yaml；试过：%s" % "；".join(cands))
+
+
+def _load_params():
     try:
         import yaml
-        with open(os.path.abspath(params_path), "r") as fh:
-            ip = ((yaml.safe_load(fh) or {}).get("airsim") or {}).get("ip")
-    except Exception:
-        ip = None
-    if not ip:
-        raise SystemExit("没读到 %s 的 airsim/ip；用法：python3 %s <AirSim IP>"
-                         % (params_path, os.path.basename(__file__)))
-    return ip
+        with open(_find_params(), "r", encoding="utf-8") as fh:
+            return yaml.safe_load(fh) or {}
+    except Exception as exc:
+        raise SystemExit("读取参数失败：%s" % exc)
 
 
-RATE = 20.0
-MAX_SPEED = 2.0
-MAX_VZ = 1.0
-TOL = 0.25
-HOVER_Z = 3.0
-CMD_DUR = 0.1
+_CFG = _load_params()
+_AIRSIM = _CFG.get("airsim") or {}
+_FLIGHT = _CFG.get("flight") or {}
+_PID = _CFG.get("pid") or {}
+
+
+def _num(section, key, default):
+    try:
+        return float(section.get(key, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _ip():
+    value = _AIRSIM.get("ip")
+    if not value:
+        raise SystemExit("config/params.yaml 里没有 airsim/ip")
+    return value
+
+
+RATE = _num(_FLIGHT, "control_rate", 20.0)
+MAX_SPEED = _num(_FLIGHT, "max_speed", 2.0)
+MAX_VZ = _num(_FLIGHT, "max_vertical_speed", 1.0)
+TOL = _num(_FLIGHT, "waypoint_tolerance", 0.25)
+HOVER_Z = _num(_FLIGHT, "takeoff_altitude", 3.0)
+CMD_DUR = _num(_FLIGHT, "cmd_duration", 0.1)
+AIRSIM_TIMEOUT = _num(_AIRSIM, "timeout", 30.0)
+# 当前主回路增益：作为 Phase 2 的第一组候选，并标为“当前值”
+KP_NOW = _num(_PID, "kp", 0.4)
+KI_NOW = _num(_PID, "ki", 0.02)
+KD_NOW = _num(_PID, "kd", 0.05)
+# 下面两个是试跑本身的实验参数，不属于主参数
 STEP = 2.0
 HOLD_SECS = 12.0
 
@@ -75,7 +108,7 @@ class PID(object):
 
 
 def connect(ip):
-    client = airsim.MultirotorClient(ip=ip, timeout_value=30.0)
+    client = airsim.MultirotorClient(ip=ip, timeout_value=AIRSIM_TIMEOUT)
     client.confirmConnection()
     client.enableApiControl(True)
     client.armDisarm(True)
@@ -255,7 +288,7 @@ def phase2(client, home, candidates):
 
 
 def main():
-    ip = sys.argv[1] if len(sys.argv) > 1 else default_ip()
+    ip = sys.argv[1] if len(sys.argv) > 1 else _ip()
     print("连接 AirSim %s ..." % ip)
     client = connect(ip)
     try:
@@ -270,10 +303,13 @@ def main():
               % (HOVER_Z, home[0], home[1], home[2]))
 
         phase1(client, home)
-        phase2(client, home, [(1.0, 0.05, 0.20),      # 当前值
-                              (0.6, 0.02, 0.25),
-                              (0.4, 0.02, 0.20),
-                              (0.3, 0.01, 0.15)])
+        candidates = [(KP_NOW, KI_NOW, KD_NOW),      # 当前值（config/params.yaml）
+                      (1.0, 0.05, 0.20),             # 单机整定最稳的一组（文档 §7 里 0.026 m 的来源）
+                      (0.6, 0.02, 0.25),
+                      (0.4, 0.02, 0.20),
+                      (0.3, 0.01, 0.15)]
+        # 万一改参数后和某一组重合，去重，免得重复占 40 秒
+        phase2(client, home, [c for i, c in enumerate(candidates) if c not in candidates[:i]])
     finally:
         try:
             send(client, [0.0, 0.0, 0.0])

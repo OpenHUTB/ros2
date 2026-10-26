@@ -27,6 +27,10 @@ catkin_install_python(PROGRAMS
   scripts/formation_controller.py
   scripts/plot_formation.py
   scripts/fleet_check.py
+  scripts/tune_hover.py
+  scripts/deploy_probe.py
+  scripts/lag_probe.py
+  scripts/vehicle_diag.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
