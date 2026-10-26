@@ -43,6 +43,53 @@
 cd ~/muscle_arm
 ```
 
+### 模型文件 muscle_arm.xml（复用前两篇）
+
+> 脚本通过 `from_xml_path("muscle_arm.xml")` 加载模型，模型文件需放在运行目录 `~/muscle_arm/`。完整 MJCF 如下（二连杆臂 + 肩/肘各一对拮抗肌肌腱，`coef="-1"` 屈曲、`coef="+1"` 伸展）：
+
+```bash
+cd ~/muscle_arm
+nano muscle_arm.xml
+```
+
+模型完整内容：
+
+```xml
+<mujoco model="muscle arm">
+  <option timestep="0.002"/>
+  <compiler angle="radian"/>
+
+  <worldbody>
+    <light diffuse="0.8 0.8 0.8" pos="0 -1 2" dir="0 1 -1"/>
+    <geom name="ground" type="plane" size="1.5 1.5 0.1" rgba="0.9 0.9 0.9 1"/>
+
+    <body name="shoulder" pos="0 0 0">
+      <joint name="sh_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+      <geom name="upperarm" type="capsule" fromto="0 0 0 0.40 0 0" size="0.05" mass="2.0"/>
+      <body name="elbow" pos="0.40 0 0">
+        <joint name="el_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+        <geom name="forearm" type="capsule" fromto="0 0 0 0.35 0 0" size="0.04" mass="1.2"/>
+        <geom name="hand" type="sphere" pos="0.35 0 0" size="0.06" mass="0.4"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <fixed name="t_sh_flex"><joint joint="sh_pitch" coef="-1"/></fixed>
+    <fixed name="t_sh_ext"><joint joint="sh_pitch" coef="1"/></fixed>
+    <fixed name="t_el_flex"><joint joint="el_pitch" coef="-1"/></fixed>
+    <fixed name="t_el_ext"><joint joint="el_pitch" coef="1"/></fixed>
+  </tendon>
+
+  <actuator>
+    <muscle name="sh_flex" tendon="t_sh_flex" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="sh_ext" tendon="t_sh_ext" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="el_flex" tendon="t_el_flex" force="500" lengthrange="0.05 1.2"/>
+    <muscle name="el_ext" tendon="t_el_ext" force="500" lengthrange="0.05 1.2"/>
+  </actuator>
+</mujoco>
+```
+
 ### 步骤 2：编写共激活对比脚本 muscle_cocontraction.py
 
 ```bash
@@ -166,3 +213,9 @@ xdg-open cocontraction_result.png
 - **柔顺控制**：把共激活程度做成控制量，实现"刚度可调"的柔顺关节控制；
 - **对接 ROS2**：将共激活模式的肌肉激励通过 `/muscle_cmd` 话题下发，闭环调节关节刚度；
 - **能耗分析**：统计共激活与交替激活的肌肉总能耗对比。
+
+---
+
+## 大模型使用声明
+
+本作业使用豆包（Doubao）大模型辅助完成：Python/MuJoCo 代码编写与调试、Markdown 文档撰写、Git 分支操作与问题排查。作者对提交内容负责。
