@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>TurtleBot3 激光雷达自主避障（ROS 2） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "TurtleBot3 \u6fc0\u5149\u96f7\u8fbe\u81ea\u4e3b\u907f\u969c\uff08ROS 2\uff09";
+        var mkdocs_page_input_path = "ground/turtlebot3_lidar_avoid.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 实验目的</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 实验环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 实验原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 感知：扇区最小距离</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 决策：三态有限状态机</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 控制：势场法转向</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 代码实现</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 功能包结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 避障节点核心代码</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 节点注册</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 参数化</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 实验步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 编译功能包</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52-gazebo">5.2 启动 Gazebo 仿真环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 确认雷达话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54">5.4 启动避障节点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#55">5.5 观察运行效果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 实验结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 相对初版单点避障的改进</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 现象分析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 实验总结</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 思考题</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101">10.1 如何修改代码实现左右侧障碍物检测？</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102-ros-2-source">10.2 ROS 2 中 source 命令的作用是什么？</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 声明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#12">12. 许可证</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">TurtleBot3 激光雷达自主避障（ROS 2）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/turtlebot3_lidar_avoid.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="turtlebot3-ros-2-humble">TurtleBot3 激光雷达自主避障（ROS 2 Humble）</h1>
+<blockquote>
+<p>对应课程作业：使用传感器获取的数据进行<strong>感知</strong>，并对机器人进行<strong>运动控制</strong>。
+仿真平台 <strong>Gazebo 11</strong>，机器人 <strong>TurtleBot3 Waffle</strong>，中间件 <strong>ROS 2 Humble</strong>。</p>
+<p>模块源码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/turtlebot3_lidar_avoid"><code>src/ground/turtlebot3_lidar_avoid</code></a></p>
+</blockquote>
+<h2 id="1">1. 实验目的</h2>
+<ol>
+<li>熟悉 ROS 2 的节点、话题、发布者与订阅者通信机制；</li>
+<li>掌握 TurtleBot3 机载激光雷达数据的读取与处理；</li>
+<li>编写控制节点，使无人车检测到障碍物后自动避障；</li>
+<li>掌握 ROS 2 功能包的创建、编译、节点注册与运行流程。</li>
+</ol>
+<h2 id="2">2. 实验环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 22.04</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>Humble</td>
+</tr>
+<tr>
+<td>仿真平台</td>
+<td>Gazebo 11</td>
+</tr>
+<tr>
+<td>机器人</td>
+<td>TurtleBot3 Waffle</td>
+</tr>
+<tr>
+<td>开发语言</td>
+<td>Python 3.10</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>[!NOTE] ROS 2 与 Gazebo 发行版兼容性说明
+- <strong>基准环境</strong>：本模块原生基于 <strong>Ubuntu 22.04 + ROS 2 Humble + Gazebo 11 (Classic)</strong> 设计与验证，避障节点向 <code>/cmd_vel</code> 发布标准 <code>geometry_msgs/msg/Twist</code> 控制指令。
+- <strong>高版本（ROS 2 Jazzy / Rolling + Gazebo Harmonic）</strong>：在 Ubuntu 24.04（ROS 2 Jazzy）中，TurtleBot3 仿真已切换至新版 Gazebo（Gz Sim / Harmonic），底盘桥接节点（<code>ros_gz_bridge</code>）默认期望接收带时间戳的 <code>geometry_msgs/msg/TwistStamped</code>。若在 Jazzy 环境下直接运行，请配置 bridge 桥接类型或适配为 <code>TwistStamped</code>，否则小车无法响应纯 <code>Twist</code> 指令。</p>
+</blockquote>
+<p><img alt="TurtleBot3 迷宫场景" src="../../img/ground/turtlebot3_lidar_avoid.png"/></p>
+<p><em>图 1：Gazebo 中的 TurtleBot3 迷宫场景（右下角为 Waffle 机器人）。</em></p>
+<h2 id="3">3. 实验原理</h2>
+<p>本实验基于 ROS 2 话题通信实现避障闭环。Gazebo 中的 TurtleBot3 搭载
+激光雷达传感器，将周围环境的距离信息以 <code>sensor_msgs/LaserScan</code> 发布到
+扫描话题；避障节点订阅该话题，按下述流程做出决策，再把
+<code>geometry_msgs/Twist</code> 发布到 <code>/cmd_vel</code> 驱动底盘。</p>
+<div class="highlight"><pre><span></span><code>激光雷达 /scan ──▶ 扇区划分 ──▶ 有限状态机 ──▶ 势场法转向 ──▶ /cmd_vel
+   (感知)          (最近距离)     (巡航/避障/紧急)   (方向+速度)    (控制)
+</code></pre></div>
+<h3 id="31">3.1 感知：扇区最小距离</h3>
+<p>把 360° 扫描按角度划分为三个扇区，各取<strong>最小距离</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>扇区</th>
+<th>角度范围</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前方</td>
+<td>−30° ~ +30°</td>
+<td>决定能否直行</td>
+</tr>
+<tr>
+<td>左侧</td>
+<td>+30° ~ +90°</td>
+<td>转向方向选择</td>
+</tr>
+<tr>
+<td>右侧</td>
+<td>−90° ~ −30°</td>
+<td>转向方向选择</td>
+</tr>
+</tbody>
+</table>
+<p>取最小值而非均值：均值会被远处空旷区域稀释，导致对近处障碍不敏感。
+例如前方 −30° 处有 0.3 m 障碍、其余区域为 3 m 时，均值约 2.9 m
+会被误判为安全，而最小值为 0.3 m 能正确识别危险。</p>
+<h3 id="32">3.2 决策：三态有限状态机</h3>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>进入条件</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CRUISE</code></td>
+<td>前方 &gt; <code>clear_distance</code></td>
+<td>直行 0.15 m/s</td>
+</tr>
+<tr>
+<td><code>AVOID</code></td>
+<td>前方 &lt; <code>safe_distance</code></td>
+<td>减速并转向</td>
+</tr>
+<tr>
+<td><code>EMERGENCY</code></td>
+<td>前方 &lt; <code>danger_distance</code></td>
+<td>后退并转向 0.8 s</td>
+</tr>
+</tbody>
+</table>
+<p>进入与退出避障使用<strong>不同阈值</strong>（<code>safe_distance = 0.60 m</code> /
+<code>clear_distance = 0.90 m</code>），形成滞回，避免距离在阈值附近波动时
+状态高频切换造成转向抖动。</p>
+<h3 id="33">3.3 控制：势场法转向</h3>
+<p>转向方向由左右两侧可通行度之差决定：</p>
+<p>
+<script type="math/tex; mode=display">
+\Delta = d_{\text{left}} - d_{\text{right}}, \qquad
+\omega = k_\omega \cdot \text{clamp}\!\left(\frac{\Delta}{2.0},\; -1,\; +1\right)
+</script>
+</p>
+<p>线速度随前方障碍接近程度线性衰减：</p>
+<p>
+<script type="math/tex; mode=display">
+v = v_{\text{avoid}} \cdot \text{clamp}\!\left(
+    \frac{d_{\text{front}} - d_{\text{danger}}}{d_{\text{safe}} - d_{\text{danger}}},\; 0,\; 1\right)
+</script>
+</p>
+<p>并施加<strong>最小转向力度</strong>约束：<code>|ω| &lt; min_turn</code> 时强制取 <code>±min_turn</code>。
+该约束用于规避纯势场法的局部极小值问题——当两侧距离接近时合力趋零，
+机器人可能贴着障碍面平移而不真正转开。</p>
+<h2 id="4">4. 代码实现</h2>
+<h3 id="41">4.1 功能包结构</h3>
+<div class="highlight"><pre><span></span><code>turtlebot3_lidar_avoid/
+├── main.py                            模块入口（课程 main.* 约定）
+├── main.sh / main.bat                 Linux / Windows 启动脚本
+├── package.xml / setup.py / setup.cfg ROS 2 包定义
+├── launch/main.launch.py              ROS 2 launch 文件
+├── config/params.yaml                 参数配置
+└── turtlebot3_lidar_avoid/
+    ├── __init__.py
+    └── avoid.py                       ★ 避障算法实现
+</code></pre></div>
+<h3 id="42">4.2 避障节点核心代码</h3>
+<p>完整实现见 <code>turtlebot3_lidar_avoid/avoid.py</code>，核心流程如下：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">scan_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""收到一帧激光数据后决策并发布速度指令。"""</span>
+    <span class="n">front</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector_distance</span><span class="p">(</span><span class="n">scan</span><span class="p">,</span> <span class="n">SECTOR_FRONT</span><span class="p">)</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector_distance</span><span class="p">(</span><span class="n">scan</span><span class="p">,</span> <span class="n">SECTOR_LEFT</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector_distance</span><span class="p">(</span><span class="n">scan</span><span class="p">,</span> <span class="n">SECTOR_RIGHT</span><span class="p">)</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_state</span><span class="p">(</span><span class="n">front</span><span class="p">)</span>
+    <span class="n">twist</span> <span class="o">=</span> <span class="n">Twist</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">State</span><span class="o">.</span><span class="n">CRUISE</span><span class="p">:</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cruise_speed</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="n">State</span><span class="o">.</span><span class="n">AVOID</span><span class="p">:</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avoid_linear_speed</span><span class="p">(</span><span class="n">front</span><span class="p">)</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avoid_angular_speed</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># EMERGENCY</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">back_speed</span>
+        <span class="n">twist</span><span class="o">.</span><span class="n">angular</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_turn</span> <span class="k">if</span> <span class="n">left</span> <span class="o">&gt;=</span> <span class="n">right</span> <span class="k">else</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">max_turn</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">cmd_pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">twist</span><span class="p">)</span>
+</code></pre></div>
+<p>扇区距离计算（含 <code>inf</code> / <code>nan</code> 过滤与角度规范化）：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">sector_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan</span><span class="p">,</span> <span class="n">sector</span><span class="p">):</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">sector</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">range_max</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">distance</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scan</span><span class="o">.</span><span class="n">ranges</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">distance</span> <span class="o">==</span> <span class="n">distance</span><span class="p">):</span>          <span class="c1"># 剔除 nan</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">distance</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s1">'inf'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="n">scan</span><span class="o">.</span><span class="n">range_min</span><span class="p">:</span>
+            <span class="k">continue</span>                            <span class="c1"># 剔除超量程与噪声</span>
+
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">angle_min</span> <span class="o">+</span> <span class="n">index</span> <span class="o">*</span> <span class="n">scan</span><span class="o">.</span><span class="n">angle_increment</span>
+        <span class="k">while</span> <span class="n">angle</span> <span class="o">&gt;=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>                 <span class="c1"># 规范化到 [-pi, pi)</span>
+            <span class="n">angle</span> <span class="o">-=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">while</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">:</span>
+            <span class="n">angle</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="n">high</span> <span class="ow">and</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">:</span>
+            <span class="n">best</span> <span class="o">=</span> <span class="n">distance</span>
+    <span class="k">return</span> <span class="n">best</span>
+</code></pre></div>
+<h3 id="43">4.3 节点注册</h3>
+<p><code>setup.py</code> 中注册可执行节点，使 ROS 2 能够发现并运行：</p>
+<div class="highlight"><pre><span></span><code><span class="n">entry_points</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">'console_scripts'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">'avoid_node = turtlebot3_lidar_avoid.avoid:main'</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">},</span>
+</code></pre></div>
+<h3 id="44">4.4 参数化</h3>
+<p>所有阈值与速度通过 ROS 2 参数暴露，可在运行时覆盖而无需改代码：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan_topic</code></td>
+<td><code>/scan</code></td>
+<td>激光雷达话题</td>
+</tr>
+<tr>
+<td><code>safe_distance</code></td>
+<td>0.60 m</td>
+<td>进入避障阈值</td>
+</tr>
+<tr>
+<td><code>clear_distance</code></td>
+<td>0.90 m</td>
+<td>退出避障阈值（滞回）</td>
+</tr>
+<tr>
+<td><code>danger_distance</code></td>
+<td>0.28 m</td>
+<td>紧急后退阈值</td>
+</tr>
+<tr>
+<td><code>cruise_speed</code></td>
+<td>0.15 m/s</td>
+<td>巡航线速度</td>
+</tr>
+<tr>
+<td><code>avoid_speed</code></td>
+<td>0.08 m/s</td>
+<td>避障线速度</td>
+</tr>
+<tr>
+<td><code>back_speed</code></td>
+<td>−0.05 m/s</td>
+<td>紧急后退速度</td>
+</tr>
+<tr>
+<td><code>min_turn</code> / <code>max_turn</code></td>
+<td>0.50 / 1.20 rad/s</td>
+<td>角速度上下限</td>
+</tr>
+<tr>
+<td><code>turn_gain</code></td>
+<td>1.50</td>
+<td>转向增益</td>
+</tr>
+<tr>
+<td><code>emergency_hold</code></td>
+<td>0.8 s</td>
+<td>紧急状态最短保持时间</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5">5. 实验步骤</h2>
+<h3 id="51">5.1 编译功能包</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros2_ws/src
+cp<span class="w"> </span>-r<span class="w"> </span>src/ground/turtlebot3_lidar_avoid<span class="w"> </span>~/ros2_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>turtlebot3_lidar_avoid
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+</code></pre></div>
+<h3 id="52-gazebo">5.2 启动 Gazebo 仿真环境</h3>
+<p>新开终端并启动 Gazebo 仿真环境（<strong>必须先指定机器人型号环境变量</strong>，否则会报错 <code>KeyError: 'TURTLEBOT3_MODEL'</code>）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. 设置机器人型号（可选 burger / waffle / waffle_pi）</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">TURTLEBOT3_MODEL</span><span class="o">=</span>burger
+
+<span class="c1"># 2. 启动标准 TurtleBot3 仿真世界场景</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>turtlebot3_gazebo<span class="w"> </span>turtlebot3_world.launch.py
+</code></pre></div>
+<blockquote>
+<p><strong>可选快捷方式</strong>：若使用预装特定课程环境的虚拟机镜像，该镜像可能自带了一键启动脚本（如 <code>~/start-gazebo-turtlebot-ros-humble.sh</code>），亦可使用该脚本启动仿真。标准独立 ROS 2 环境中推荐使用上述官方 <code>ros2 launch</code> 命令。</p>
+</blockquote>
+<h3 id="53">5.3 确认雷达话题</h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>scan
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/scan
+</code></pre></div>
+<blockquote>
+<p>TurtleBot3 标准场景为 <code>/scan</code>；部分课程镜像场景为 <code>/out/scan</code>，
+可通过 <code>scan_topic</code> 参数指定，无需修改代码。</p>
+</blockquote>
+<h3 id="54">5.4 启动避障节点</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 方式一：模块入口脚本</span>
+./main.sh
+./main.sh<span class="w"> </span>/out/scan
+
+<span class="c1"># 方式二：launch 启动</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>turtlebot3_lidar_avoid<span class="w"> </span>main.launch.py
+
+<span class="c1"># 方式三：节点启动</span>
+ros2<span class="w"> </span>run<span class="w"> </span>turtlebot3_lidar_avoid<span class="w"> </span>avoid_node
+</code></pre></div>
+<h3 id="55">5.5 观察运行效果</h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>node<span class="w"> </span>list<span class="w">                  </span><span class="c1"># 出现 /turtlebot3_lidar_avoid</span>
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/cmd_vel<span class="w">        </span><span class="c1"># 观察速度指令变化</span>
+</code></pre></div>
+<p>节点日志会在状态切换时输出提示：</p>
+<div class="highlight"><pre><span></span><code>[INFO] [turtlebot3_lidar_avoid]: 避障节点已启动：scan=/scan, cmd_vel=/cmd_vel, safe=0.60m, danger=0.28m
+[INFO] [turtlebot3_lidar_avoid]: 状态切换 cruise -&gt; avoid（前方 0.52 m）
+[INFO] [turtlebot3_lidar_avoid]: 状态切换 avoid -&gt; cruise（前方 1.03 m）
+</code></pre></div>
+<h2 id="6">6. 实验结果</h2>
+<p>在 TurtleBot3 迷宫场景中，机器人能够自主完成避障巡航：</p>
+<ul>
+<li><strong>无障碍区域</strong>：以 0.15 m/s 直线巡航；</li>
+<li><strong>前方出现障碍</strong>：前方距离小于 0.60 m 时进入避障状态，
+  线速度按距离衰减并朝较空旷一侧转向；</li>
+<li><strong>贴墙 / 死角</strong>：前方距离小于 0.28 m 时进入紧急状态，
+  先后退约 0.8 s 再转向脱离；</li>
+<li><strong>障碍解除</strong>：前方距离恢复到 0.90 m 以上后自动回到巡航状态。</li>
+</ul>
+<h2 id="7">7. 相对初版单点避障的改进</h2>
+<p>课程实验初版只读取正前方单束雷达（<code>ranges[180]</code>），存在明显局限：
+无法感知侧向障碍，在墙角或斜向障碍场景容易卡住。本模块的改进：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>初版</th>
+<th>本模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>感知范围</td>
+<td>正前方单束</td>
+<td>前 / 左 / 右三扇区</td>
+</tr>
+<tr>
+<td>转向决策</td>
+<td>固定右转</td>
+<td>朝较空旷一侧转</td>
+</tr>
+<tr>
+<td>速度控制</td>
+<td>固定值</td>
+<td>随障碍距离衰减</td>
+</tr>
+<tr>
+<td>状态抖动</td>
+<td>无滞回</td>
+<td>进入 / 退出双阈值</td>
+</tr>
+<tr>
+<td>墙角脱困</td>
+<td>易卡住</td>
+<td>紧急后退 + 原地转向</td>
+</tr>
+<tr>
+<td>参数</td>
+<td>硬编码</td>
+<td>ROS 2 参数，可运行时覆盖</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8">8. 现象分析</h2>
+<p>实验基于 ROS 2 标准话题通信架构运行：激光雷达实时采集环境测距信息，
+通过话题传输至避障节点，节点经状态机与势场法决策后输出运动指令，
+构成完整的感知—决策—控制闭环。</p>
+<p>本实现相比单点避障增加了侧向感知与滞回判断，因此：</p>
+<ul>
+<li>在开阔区域不会因远处噪声误触发避障；</li>
+<li>在斜向接近障碍时能提前转向，而非等到正前方贴近才反应；</li>
+<li>在死角场景能通过紧急后退脱困，避免原地打转。</li>
+</ul>
+<p>仍需注意的局限：本实现只使用二维扫描面信息，<strong>无法感知低于扫描面的
+障碍</strong>（如台阶、凹陷），且没有全局路径规划，在长走廊尽头等
+凹形结构中仍可能出现来回徘徊（反应式避障的固有局限）。</p>
+<h2 id="9">9. 实验总结</h2>
+<p>通过本实验完成了 ROS 2 下的 TurtleBot3 激光雷达自主避障功能开发，
+掌握了节点创建、话题订阅与发布、功能包编译、节点注册运行的完整流程，
+理解了基于传感器反馈的反应式控制算法原理。</p>
+<p>后续改进方向：</p>
+<ol>
+<li><strong>多传感器融合</strong>：结合深度相机或 IMU，弥补单线激光的盲区；</li>
+<li><strong>全局规划</strong>：引入 A* / Dijkstra 生成全局路径，避免反应式避障的局部极小值；</li>
+<li><strong>局部规划</strong>：用 DWA 等考虑动力学约束的方法替代固定势场，使轨迹更平滑。</li>
+</ol>
+<h2 id="10">10. 思考题</h2>
+<h3 id="101">10.1 如何修改代码实现左右侧障碍物检测？</h3>
+<p>原程序只检测正前方单束雷达，只能规避正前方障碍。改进方式是读取激光雷达
+数组中左右侧角度对应的距离数据，分别与安全距离比较，通过对比三个方向的
+距离判断障碍物方位，再分别执行左转、右转、直行或后退动作。</p>
+<p>本模块即按此思路实现：<code>sector_distance()</code> 按角度区间取最小值，
+<code>avoid_angular_speed()</code> 用左右距离差决定转向方向。更进一步的改进是把
+三个扇区细分为更多方向（如 5~8 个），提升窄通道下的通过能力。</p>
+<h3 id="102-ros-2-source">10.2 ROS 2 中 source 命令的作用是什么？</h3>
+<p><code>source</code> 用于加载 ROS 2 系统与工作空间的环境配置文件，刷新当前终端的
+环境变量（如 <code>AMENT_PREFIX_PATH</code>、<code>PYTHONPATH</code>、<code>LD_LIBRARY_PATH</code>）。
+执行后终端才能识别 ROS 2 命令、自定义功能包与可执行节点，
+从而正常完成编译、运行与话题查询等操作。</p>
+<h2 id="11">11. 声明</h2>
+<p>本模块的开发过程使用了 AI 大模型辅助（代码编写、文档撰写与问题排查），
+提交者对全部内容负责。</p>
+<h2 id="12">12. 许可证</h2>
+<p>MIT License</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../pcl_recorder/" title="点云地图创建"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mujoco_diff_drive_slip_compensation/" title="MuJoCo 差速小车轮滑感知与轨迹补偿">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../pcl_recorder/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mujoco_diff_drive_slip_compensation/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
