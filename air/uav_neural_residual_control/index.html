@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
@@ -325,7 +327,7 @@
 <h2 id="_3">计划</h2>
 <ul>
 <li>基底：几何控制（负责已知的刚体动力学）</li>
-<li>残差：小型 MLP 学 $f_{\text{res}}(x, u)$，输出加速度修正</li>
+<li>残差：小型 MLP 学 <script type="math/tex">f_{\text{res}}(x, u)</script>，输出加速度修正</li>
 <li>在线自适应：滑动窗口递推最小二乘，只更新最后一层，实现秒级适应新载荷</li>
 <li>数据：由 uav_mujoco_sim 随机激励飞行自动采集，无需人工标注</li>
 <li>对比：3 载荷 × 2 风扰 × 2 轨迹（螺旋、8 字），位置/姿态 RMSE、控制能量、适应时间；

@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul class="current">
@@ -444,9 +446,12 @@ L = \lambda_{box} \cdot L_{CIoU} + \lambda_{cls} \cdot L_{BCE} + \lambda_{dfl} \
 </script>
 </p>
 <ul>
-<li>$L_{CIoU}$：边界框回归损失（Complete IoU）</li>
-<li>$L_{BCE}$：分类损失（二元交叉熵）</li>
-<li>$L_{DFL}$：分布焦点损失</li>
+<li>
+<script type="math/tex">L_{CIoU}</script>：边界框回归损失（Complete IoU）</li>
+<li>
+<script type="math/tex">L_{BCE}</script>：分类损失（二元交叉熵）</li>
+<li>
+<script type="math/tex">L_{DFL}</script>：分布焦点损失</li>
 </ul>
 <h2 id="_9">算法流程</h2>
 <ol>

@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
@@ -324,8 +326,8 @@
 </table>
 <h2 id="_3">计划</h2>
 <ul>
-<li>安全集 $\mathcal{C} = {x : h(x) \ge 0}$，约束 $\dot{h} + \alpha h \ge 0$ 保证前向不变性</li>
-<li>神经 $h(x)$：比手工二次型障碍函数保守性更低（手工版会把大量安全区域误判为危险）</li>
+<li>安全集 <script type="math/tex">\mathcal{C} = \{x : h(x) \ge 0\}</script>，约束 <script type="math/tex">\dot{h} + \alpha h \ge 0</script> 保证前向不变性</li>
+<li>神经 <script type="math/tex">h(x)</script>：比手工二次型障碍函数保守性更低（手工版会把大量安全区域误判为危险）</li>
 <li>QP：在 CBF 约束下求与期望指令最接近的安全指令</li>
 <li>实时性：小型网络 + QP 求解器，CPU 单步 &lt; 1 ms</li>
 <li>对比：无安全层 / 手工 CBF / 神经 CBF 的碰撞率与保守性（指令修改幅度、可达空间缩小比例），

@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
@@ -379,7 +381,7 @@ ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </
 </table>
 <p>本模块在 Gazebo SDF 里配置 360 束、<code>2π</code> 弧度、<code>5 Hz</code>、<code>0.05–30 m</code> 量程的水平 2D 激光雷达。</p>
 <h3 id="32">3.2 分类规则与标签</h3>
-<p>基于<strong>扫描中最小有效距离</strong> $r_{\min} = \min_i r_i$（$r_i$ 为第 $i$ 束距离），三分类规则：</p>
+<p>基于<strong>扫描中最小有效距离</strong> <script type="math/tex">r_{\min} = \min_i r_i</script>（<script type="math/tex">r_i</script> 为第 <script type="math/tex">i</script> 束距离），三分类规则：</p>
 <p>
 <script type="math/tex; mode=display">
 \text{label} =
@@ -390,7 +392,7 @@ ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </
 \end{cases}
 </script>
 </p>
-<p>阈值默认 $d_{\text{danger}}=1.0\,\text{m}$、$d_{\text{far}}=3.0\,\text{m}$，可在 <code>config/params.yaml</code> 修改。</p>
+<p>阈值默认 <script type="math/tex">d_{\text{danger}}=1.0\,\text{m}</script>、<script type="math/tex">d_{\text{far}}=3.0\,\text{m}</script>，可在 <code>config/params.yaml</code> 修改。</p>
 <h3 id="33">3.3 神经网络结构</h3>
 <p>采用三层全连接网络（MLP），输入 360 维（重采样后的扫描向量），输出 3 类 logits：</p>
 <p>
@@ -404,7 +406,7 @@ ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </
 \end{aligned}
 </script>
 </p>
-<p>总参数量 $\approx 360 \times 128 + 128 \times 128 + 128 \times 3 \approx 62{,}272$，权重文件约 249 KB，远低于仓库 3 MB 二进制上限。</p>
+<p>总参数量 <script type="math/tex">\approx 360 \times 128 + 128 \times 128 + 128 \times 3 \approx 62{,}272</script>，权重文件约 249 KB，远低于仓库 3 MB 二进制上限。</p>
 <h3 id="34">3.4 训练目标</h3>
 <p>交叉熵损失 + Adam 优化器，类均衡加权采样防止小类被忽略：</p>
 <p>

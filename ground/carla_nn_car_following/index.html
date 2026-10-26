@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul class="current">
@@ -944,7 +946,7 @@ cat<span class="w"> </span>data/eval_classic.csv
 </tr>
 </tbody>
 </table>
-<p>最小车距只反映"靠得多近"；TTC $= d/(-v_{rel})$ 还包含<strong>接近速度</strong>，是更接近碰撞风险的度量。
+<p>最小车距只反映"靠得多近"；TTC <script type="math/tex">= d/(-v_{rel})</script> 还包含<strong>接近速度</strong>，是更接近碰撞风险的度量。
 本模块的结论是：神经网络控制器的<strong>车距误差略大</strong>（4.06 m vs 2.97 m，源自级联结构中感知误差的传递），
 且<strong>跟车风格与基线不同</strong>（更早留出距离余量，但接近时的相对速度更大）。
 因此<strong>不能</strong>用"最小车距更大"断言网络整体更安全；若要提升安全性，应把 TTC 约束显式加入控制目标

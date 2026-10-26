@@ -89,6 +89,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
@@ -681,38 +683,38 @@ roslaunch<span class="w"> </span>uav_route_cruise<span class="w"> </span>main.la
 </table>
 <h2 id="_8">计算原理</h2>
 <h3 id="1">1. 航线参数化与投影</h3>
-<p>闭合航线由折线点列 ${P_0, P_1, \dots, P_{N-1}}$（$P_N = P_0$）给出，
-第 $i$ 段的方向与长度：</p>
+<p>闭合航线由折线点列 <script type="math/tex">\{P_0, P_1, \dots, P_{N-1}\}</script>（<script type="math/tex">P_N = P_0</script>）给出，
+第 <script type="math/tex">i</script> 段的方向与长度：</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{d}_i = \mathbf{p}_{i+1} - \mathbf{p}_i,\qquad L_i = \|\mathbf{d}_i\|_2,\qquad
 L = \sum_{i=0}^{N-1} L_i
 </script>
 </p>
-<p>无人机水平位置 $\mathbf{p}$ 在第 $i$ 段上的投影参数（夹到 $[0,1]$）：</p>
+<p>无人机水平位置 <script type="math/tex">\mathbf{p}</script> 在第 <script type="math/tex">i</script> 段上的投影参数（夹到 <script type="math/tex">[0,1]</script>）：</p>
 <p>
 <script type="math/tex; mode=display">
 t_i = \mathrm{clip}\!\left(\frac{(\mathbf{p}-\mathbf{p}_i)\cdot\mathbf{d}_i}{L_i^2},\,0,\,1\right)
 </script>
 </p>
-<p>取<strong>距离最近</strong>的那一段作为当前所在段，弧长进度 $s$ 与<strong>带符号横向偏差</strong> $e$：</p>
+<p>取<strong>距离最近</strong>的那一段作为当前所在段，弧长进度 <script type="math/tex">s</script> 与<strong>带符号横向偏差</strong> <script type="math/tex">e</script>：</p>
 <p>
 <script type="math/tex; mode=display">
 s = C_i + t_i L_i,\qquad
 e = \frac{d_{i,x}\,(p_y - p_{i,y}) - d_{i,y}\,(p_x - p_{i,x})}{L_i}
 </script>
 </p>
-<p>（$C_i$ 是前 $i$ 段累计弧长；叉乘的符号定义「沿航线方向左侧为正」。
+<p>（<script type="math/tex">C_i</script> 是前 <script type="math/tex">i</script> 段累计弧长；叉乘的符号定义「沿航线方向左侧为正」。
 <code>route.py:Route.project</code> 就是这个式子。）</p>
-<p>前视点取弧长进度 <code>s + Δ</code> 处（对 $L$ 取模，因此可以自然跨过起终点）：</p>
+<p>前视点取弧长进度 <code>s + Δ</code> 处（对 <script type="math/tex">L</script> 取模，因此可以自然跨过起终点）：</p>
 <p>
 <script type="math/tex; mode=display">
 s_{\text{look}} = (s + \Delta) \bmod L,\qquad \Delta = 4\ \text{m}
 </script>
 </p>
 <h3 id="2">2. 飞行器运动模型</h3>
-<p>用<strong>世界系速度</strong>指令 $\mathbf{v}_{\text{cmd}} = (v_x, v_y, v_z)$，
-速度环用一阶滞后（$\tau = 0.45$ s，$\Delta t = 0.1$ s）：</p>
+<p>用<strong>世界系速度</strong>指令 <script type="math/tex">\mathbf{v}_{\text{cmd}} = (v_x, v_y, v_z)</script>，
+速度环用一阶滞后（<script type="math/tex">\tau = 0.45</script> s，<script type="math/tex">\Delta t = 0.1</script> s）：</p>
 <p>
 <script type="math/tex; mode=display">
 \boldsymbol{\alpha} = \min\!\left(1, \frac{\Delta t}{\tau}\right),\qquad
@@ -724,7 +726,7 @@ s_{\text{look}} = (s + \Delta) \bmod L,\qquad \Delta = 4\ \text{m}
 \mathbf{p}_{k+1} = \mathbf{p}_k + \Delta t\,\mathbf{v}_{k+1}
 </script>
 </p>
-<p>动作 $a \in [-1,1]^4$ 到速度的映射（<code>policy.action_to_velocity</code>）：</p>
+<p>动作 <script type="math/tex">a \in [-1,1]^4</script> 到速度的映射（<code>policy.action_to_velocity</code>）：</p>
 <p>
 <script type="math/tex; mode=display">
 \mathbf{v}_{\text{cmd}} = (3a_0,\; 3a_1,\; 1.5a_2)\ \text{m/s},\qquad \dot\psi = a_3\ \text{rad/s}
@@ -735,8 +737,8 @@ s_{\text{look}} = (s + \Delta) \bmod L,\qquad \Delta = 4\ \text{m}
 机头会自行漂移 ±25°。若用机体系速度，轨迹会随机头打转；用世界系则机头怎么转都不影响轨迹。</p>
 </blockquote>
 <h3 id="3">3. 激光雷达扇形直方图</h3>
-<p>在无人机高度 $\pm 1.5$ m 内取点云，按世界系固定方向分成 $N=24$ 个扇形
-（第 0 扇 = 正东，逆时针递增，扇宽 $2\pi/N = 15^\circ$），
+<p>在无人机高度 <script type="math/tex">\pm 1.5</script> m 内取点云，按世界系固定方向分成 <script type="math/tex">N=24</script> 个扇形
+（第 0 扇 = 正东，逆时针递增，扇宽 <script type="math/tex">2\pi/N = 15^\circ</script>），
 每扇取<strong>最近障碍距离</strong>并归一化：</p>
 <p>
 <script type="math/tex; mode=display">
@@ -744,7 +746,7 @@ h_j = \mathrm{clip}\!\left(\frac{\min_{q \in S_j}\|\mathbf{q}_{xy} - \mathbf{p}_
 \qquad R_{\max} = 12\ \text{m}
 </script>
 </p>
-<p>无遮挡时为 1。24 扇比 16 扇的角分辨率高（$15^\circ$ vs $22.5^\circ$），避障更准。</p>
+<p>无遮挡时为 1。24 扇比 16 扇的角分辨率高（<script type="math/tex">15^\circ</script> vs <script type="math/tex">22.5^\circ</script>），避障更准。</p>
 <h3 id="4-30">4. 观测向量（30 维）</h3>
 <p>
 <script type="math/tex; mode=display">
@@ -752,8 +754,8 @@ h_j = \mathrm{clip}\!\left(\frac{\min_{q \in S_j}\|\mathbf{q}_{xy} - \mathbf{p}_
 \underbrace{\frac{e}{4},\ \frac{\Delta\psi}{\pi},\ \frac{\Delta x}{6},\ \frac{\Delta y}{6},\ \frac{\|\mathbf{v}_{xy}\|}{3},\ \frac{z-z_r}{2}}_{6} \;\Big]
 </script>
 </p>
-<p>其中 $\Delta\psi$ 是速度方向与航线切向的夹角，$(\Delta x, \Delta y)$ 是前视点相对无人机的水平位移，
-$z_r$ 是航线高度。所有分量都已归一化到大致 $[-3, 3]$，便于 MLP 训练。</p>
+<p>其中 <script type="math/tex">\Delta\psi</script> 是速度方向与航线切向的夹角，<script type="math/tex">(\Delta x, \Delta y)</script> 是前视点相对无人机的水平位移，
+<script type="math/tex">z_r</script> 是航线高度。所有分量都已归一化到大致 <script type="math/tex">[-3, 3]</script>，便于 MLP 训练。</p>
 <h3 id="5">5. 奖励函数</h3>
 <p>每步的奖励（<code>route_env.RouteEnv.step</code>）：</p>
 <p>
@@ -776,50 +778,63 @@ r = \underbrace{w_p\,\Delta s}_{\text{沿航线前进}}
 </thead>
 <tbody>
 <tr>
-<td>$w_p$</td>
+<td>
+<script type="math/tex">w_p</script>
+</td>
 <td>10.0</td>
 <td>沿航线每前进 1 m 的奖励</td>
 </tr>
 <tr>
-<td>$w_c$</td>
+<td>
+<script type="math/tex">w_c</script>
+</td>
 <td>0.2</td>
 <td>横向偏差平方惩罚（<strong>调小才愿意绕行</strong>）</td>
 </tr>
 <tr>
-<td>$w_h$</td>
+<td>
+<script type="math/tex">w_h</script>
+</td>
 <td>0.5</td>
 <td>高度偏差平方惩罚</td>
 </tr>
 <tr>
-<td>$w_s$</td>
+<td>
+<script type="math/tex">w_s</script>
+</td>
 <td>0.02</td>
 <td>动作平滑惩罚</td>
 </tr>
 <tr>
-<td>$w_{\text{step}}$</td>
+<td>
+<script type="math/tex">w_{\text{step}}</script>
+</td>
 <td>0.005</td>
 <td>每步时间惩罚</td>
 </tr>
 <tr>
-<td>$w_{\text{prox}}$</td>
+<td>
+<script type="math/tex">w_{\text{prox}}</script>
+</td>
 <td>0.0</td>
 <td>近距惩罚（实测调大反而更差，默认关闭）</td>
 </tr>
 </tbody>
 </table>
-<p>终止奖励：完成一整圈 $+120$；碰撞 $-200$。</p>
+<p>终止奖励：完成一整圈 <script type="math/tex">+120</script>；碰撞 <script type="math/tex">-200</script>。</p>
 <blockquote>
-<p>$\Delta s$ 需要处理跨起终点的环绕：若 $\Delta s &lt; -L/2$ 则 $+L$，若 $&gt; L/2$ 则 $-L$。</p>
+<p>
+<script type="math/tex">\Delta s</script> 需要处理跨起终点的环绕：若 <script type="math/tex">\Delta s < -L/2</script> 则 <script type="math/tex">+L</script>，若 <script type="math/tex">> L/2</script> 则 <script type="math/tex">-L</script>。</p>
 </blockquote>
 <h3 id="6-ppo">6. PPO 目标函数</h3>
-<p>策略 $\pi_\theta$ 与环境交互收集 $(s_t, a_t, r_t)$，优势用 <strong>GAE</strong> 估计：</p>
+<p>策略 <script type="math/tex">\pi_\theta</script> 与环境交互收集 <script type="math/tex">(s_t, a_t, r_t)</script>，优势用 <strong>GAE</strong> 估计：</p>
 <p>
 <script type="math/tex; mode=display">
 \delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t),\qquad
 \hat A_t = \sum_{l \ge 0} (\gamma\lambda)^l\,\delta_{t+l}
 </script>
 </p>
-<p>PPO 的<strong>截断替代目标</strong>（$\varepsilon = 0.2$）：</p>
+<p>PPO 的<strong>截断替代目标</strong>（<script type="math/tex">\varepsilon = 0.2</script>）：</p>
 <p>
 <script type="math/tex; mode=display">
 \rho_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)},\qquad
@@ -833,7 +848,7 @@ L^{\text{CLIP}}(\theta) = \mathbb{E}_t\Big[\min\big(\rho_t \hat A_t,\;
 L = -L^{\text{CLIP}} + c_v\,\mathbb{E}_t\big[(V_\phi(s_t) - R_t)^2\big] - c_e\,\mathbb{E}_t\big[\mathcal{H}[\pi_\theta(\cdot\mid s_t)]\big]
 </script>
 </p>
-<p>超参：$\gamma=0.99$、$\lambda=0.95$、$\varepsilon=0.2$、$c_e = 0.005$、学习率 $3\times10^{-4}$、
+<p>超参：<script type="math/tex">\gamma=0.99</script>、<script type="math/tex">\lambda=0.95</script>、<script type="math/tex">\varepsilon=0.2</script>、<script type="math/tex">c_e = 0.005</script>、学习率 <script type="math/tex">3\times10^{-4}</script>、
 <code>n_steps=1024</code>、<code>batch=256</code>、策略/价值网络各 <code>[128,128]</code>。</p>
 <h2 id="_9">算法流程</h2>
 <h3 id="_10">训练流程</h3>

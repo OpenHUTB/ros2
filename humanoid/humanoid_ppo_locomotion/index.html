@@ -139,6 +139,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
 <ul>
@@ -460,18 +462,19 @@
 </code></pre></div>
 <h2 id="_4">四、核心实现：为什么是「平衡基元 + 神经网络残差」</h2>
 <h3 id="41-ppo">4.1 只靠神经网络（纯 PPO）为什么站不住</h3>
-<p>这不是调参问题，是物理约束。G1 踝关节的 PD 刚度 $K_p = 40\ \mathrm{N\cdot m/rad}$，
+<p>这不是调参问题，是物理约束。G1 踝关节的 PD 刚度 <script type="math/tex">K_p = 40\ \mathrm{N\cdot m/rad}</script>，
 而倒立摆的失稳刚度是</p>
 <p>
 <script type="math/tex; mode=display">m g h \approx 35.11 \times 9.81 \times 0.80 \approx 275\ \mathrm{N\cdot m/rad}</script>
 </p>
-<p>踝关节最大力矩只有 $\pm 50\ \mathrm{N\cdot m}$，刚好够撑住约 10° 倾角。<strong>踝刚度永远小于失稳
+<p>踝关节最大力矩只有 <script type="math/tex">\pm 50\ \mathrm{N\cdot m}</script>，刚好够撑住约 10° 倾角。<strong>踝刚度永远小于失稳
 刚度，力矩还早就饱和了</strong>，所以「给固定目标角 + PD」这种控制方式在数学上不可能站住。</p>
 <p>实测扫描踝关节增益，越硬反而越差（因为饱和后只剩硬碰硬的振荡）：</p>
 <table>
 <thead>
 <tr>
-<th>踝 $K_p$</th>
+<th>踝 <script type="math/tex">K_p</script>
+</th>
 <th>40</th>
 <th>80</th>
 <th>120</th>
@@ -503,16 +506,16 @@
 <p>
 <script type="math/tex; mode=display">\Delta q_{\text{balance}} = K_c\, e_{\text{com}} + K_v\, \dot{x}_{\text{com}},\qquad K_c = 10,\ K_v = 1</script>
 </p>
-<p>修正量按 $1 : 0.5$ 分配到 <code>ankle_pitch</code> 与 <code>hip_pitch</code>。</p>
+<p>修正量按 <script type="math/tex">1 : 0.5</script> 分配到 <code>ankle_pitch</code> 与 <code>hip_pitch</code>。</p>
 <p>两个容易踩的坑：</p>
 <ol>
-<li><strong>$e_{\text{com}}$ 必须相对双脚中心</strong>，不能用世界系绝对坐标。用绝对坐标的话，机器人一往前走
+<li><strong><script type="math/tex">e_{\text{com}}</script> 必须相对双脚中心</strong>，不能用世界系绝对坐标。用绝对坐标的话，机器人一往前走
    误差就线性增长，平衡器会去对抗前进而不是保持平衡。本模块取
-   $e_{\text{com}} = (\text{com}_x - \text{foot}_x) - (\text{com}_x - \text{foot}_x)_0$，平移不变。</li>
-<li><strong>符号</strong>：<code>ankle_pitch</code> 正向 = 身体后仰，所以前倾时必须给<strong>正</strong>修正。写成 $-K_c e_{\text{com}}$
+   <script type="math/tex">e_{\text{com}} = (\text{com}_x - \text{foot}_x) - (\text{com}_x - \text{foot}_x)_0</script>，平移不变。</li>
+<li><strong>符号</strong>：<code>ankle_pitch</code> 正向 = 身体后仰，所以前倾时必须给<strong>正</strong>修正。写成 <script type="math/tex">-K_c e_{\text{com}}</script>
    会变成正反馈，越修越倒。</li>
 </ol>
-<p>力学上这构成良性分工：神经网络摆动腿 → 双脚中心前移 → $e_{\text{com}}$ 变负 → 基元自动把身体
+<p>力学上这构成良性分工：神经网络摆动腿 → 双脚中心前移 → <script type="math/tex">e_{\text{com}}</script> 变负 → 基元自动把身体
 前倾跟上 → 理论上这就是行走。<strong>基元管平衡，网络管步态。</strong></p>
 <blockquote>
 <p><strong>但这个分工只在双脚支撑时成立。</strong> 抬脚之后支撑多边形退化成一条线，同一个反馈律会把身体推向
@@ -546,12 +549,16 @@
 <tr>
 <td>基座高度偏差</td>
 <td>1</td>
-<td>$h - 0.78$</td>
+<td>
+<script type="math/tex">h - 0.78</script>
+</td>
 </tr>
 <tr>
 <td>关节角偏差</td>
 <td>12</td>
-<td>$q - q^\star$</td>
+<td>
+<script type="math/tex">q - q^\star</script>
+</td>
 </tr>
 <tr>
 <td>关节角速度</td>
@@ -561,28 +568,35 @@
 <tr>
 <td>速度指令</td>
 <td>2</td>
-<td>$(v_x^\star, \omega_z^\star)$</td>
+<td>
+<script type="math/tex">(v_x^\star, \omega_z^\star)</script>
+</td>
 </tr>
 <tr>
 <td>步态相位</td>
 <td>2</td>
-<td>$(\sin 2\pi\phi, \cos 2\pi\phi)$</td>
+<td>
+<script type="math/tex">(\sin 2\pi\phi, \cos 2\pi\phi)</script>
+</td>
 </tr>
 <tr>
 <td>质心偏差 / 速度</td>
 <td>2</td>
-<td>$e_{\text{com}}$、$\dot{x}_{\text{com}}$</td>
+<td>
+<script type="math/tex">e_{\text{com}}</script>、<script type="math/tex">\dot{x}_{\text{com}}</script>
+</td>
 </tr>
 </tbody>
 </table>
 <h3 id="44">4.4 动作与力矩</h3>
-<p>网络输出 $a \in [-1,1]^{12}$，关节力矩由 PD 律给出：</p>
+<p>网络输出 <script type="math/tex">a \in [-1,1]^{12}</script>，关节力矩由 PD 律给出：</p>
 <p>
 <script type="math/tex; mode=display">\tau = K_p (q^{\text{target}} - q) - K_d \dot{q}</script>
 </p>
-<p>$K_p/K_d$ 按关节类型取值：髋 100/2、膝 150/3、踝 40/1，力矩按执行器 <code>ctrlrange</code> 裁剪
+<p>
+<script type="math/tex">K_p/K_d</script> 按关节类型取值：髋 100/2、膝 150/3、踝 40/1，力矩按执行器 <code>ctrlrange</code> 裁剪
 （髋 ±88、膝 ±139、踝 ±50 N·m）。</p>
-<p>初始动作标准差设为 $\sigma_0 = e^{-1.5} \approx 0.22$（残差 ±0.078 rad）。这是实测标定的：
+<p>初始动作标准差设为 <script type="math/tex">\sigma_0 = e^{-1.5} \approx 0.22</script>（残差 ±0.078 rad）。这是实测标定的：
 基元在残差 ≤ ±0.15 rad 时能兜住 20 s，±0.30 rad 就只剩 2.4 s。</p>
 <h3 id="45">4.5 奖励</h3>
 <p>
@@ -683,13 +697,13 @@ ros2<span class="w"> </span>launch<span class="w"> </span>humanoid_ppo_locomotio
 </tr>
 <tr>
 <td><code>I</code> / <code>K</code></td>
-<td>速度指令 $v_x$ ±0.1 m/s</td>
+<td>速度指令 <script type="math/tex">v_x</script> ±0.1 m/s</td>
 <td>−0.3 ~ +0.5</td>
 <td>通道通，策略不响应</td>
 </tr>
 <tr>
 <td><code>J</code> / <code>L</code></td>
-<td>速度指令 $\omega_z$ ±0.1 rad/s</td>
+<td>速度指令 <script type="math/tex">\omega_z</script> ±0.1 rad/s</td>
 <td>±0.4</td>
 <td>同上</td>
 </tr>
@@ -821,11 +835,13 @@ python3<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="
 <table>
 <thead>
 <tr>
-<th>指令 $v_x$</th>
+<th>指令 <script type="math/tex">v_x</script>
+</th>
 <th>存活</th>
 <th>跌倒率</th>
 <th>平均位移</th>
-<th>平均 $v_x$</th>
+<th>平均 <script type="math/tex">v_x</script>
+</th>
 <th>速度 MAE</th>
 <th>单帧推理</th>
 </tr>
@@ -955,14 +971,14 @@ python3<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="
 1.50 rad 会跌（2/2，1.3 s），同样的 1.50 rad 用 0.8 s 平滑过渡则 2/2 稳定跑满 20 s。</p>
 <h3 id="63">6.3 为什么没有实现行走</h3>
 <p>这一节如实记录失败的排查过程，避免后来者重复踩坑。</p>
-<p><strong>(1) 策略收敛到了「站着不动」这个局部最优。</strong> 奖励里速度项是 $1.5e^{-(v_x-v_x^\star)^2/0.25}$，
+<p><strong>(1) 策略收敛到了「站着不动」这个局部最优。</strong> 奖励里速度项是 <script type="math/tex">1.5e^{-(v_x-v_x^\star)^2/0.25}</script>，
 站立不动能拿满姿态项与存活项，而迈步一旦失稳就丢掉全部回报。PPO 在这种风险结构下必然选择不动。
 用随机残差强行扰动策略输出，机器人会尝试迈步，但 1.4 s 内必定侧向倾倒。</p>
 <p><strong>(2) 平衡基元在单腿支撑相是「帮倒忙」的。</strong> 4.2 节的质心反馈是为<strong>双脚支撑</strong>设计的：
 双脚着地时抬高踝关节力矩确实能把质心推回去。一旦抬起一只脚，支撑多边形退化成一条线，
 同一个反馈律会把身体推向没有支撑的一侧。实测：给手写步态叠加开环侧向重心转移，
 站立时长从 1.4 s 掉到 <strong>1.0 s</strong>，且倾倒方向变成左右交替——正是反馈与支撑相冲突的表现。</p>
-<p><strong>(3) 增益扫描没有可行解。</strong> 在 $K_c \times$ 髋分配比 $\times$ 残差幅度 共 18 组组合上扫描，
+<p><strong>(3) 增益扫描没有可行解。</strong> 在 <script type="math/tex">K_c \times</script> 髋分配比 <script type="math/tex">\times</script> 残差幅度 共 18 组组合上扫描，
 判据是「既站得住（≥15 s）又抬得起脚（≥5 cm）」：</p>
 <table>
 <thead>
@@ -1001,7 +1017,7 @@ python3<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="
 <ol>
 <li><strong>必须加载 <code>scene_29dof.xml</code>，不能加载 <code>g1_29dof.xml</code></strong>。后者只是机器人本体、<strong>不含地面</strong>，
    用它仿真时机器人一直自由落体，表现为「高度从 0.80 掉到 0.41 但姿态始终直立
-   （$R_{22}\approx1.0$）」，极易被误判成「站不稳」。</li>
+   （<script type="math/tex">R_{22}\approx1.0</script>）」，极易被误判成「站不稳」。</li>
 <li><strong>控制频率必须 ≥ 50 Hz</strong>。25 Hz 时 PD 与平衡基元都会失稳（实测只能站 0.36 s）。</li>
 <li><strong>Windows 下路径不能含中文</strong>：MuJoCo 的 XML 加载器打不开含非 ASCII 字符的路径，
    需把模型放到 <code>C:\g1_assets\g1</code> 之类的纯英文路径。Ubuntu 下无此问题。</li>

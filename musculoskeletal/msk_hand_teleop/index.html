@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>MuJoCo肌肉骨骼灵巧手遥操作与NN控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MuJoCo\u808c\u8089\u9aa8\u9abc\u7075\u5de7\u624b\u9065\u64cd\u4f5c\u4e0eNN\u63a7\u5236";
+        var mkdocs_page_input_path = "musculoskeletal/msk_hand_teleop.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 项目概述</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 演示动图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行环境与安装</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 手部模型设计</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31-8">3.1 运动学结构（8 自由度）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32-11-hill">3.2 肌肉-腱系统（11 条 Hill 肌肉）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-hill">4.1 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 键盘遥操作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 神经网络逆模型</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 算法流程</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 键盘遥操作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 神经网络逆模型</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 仿真步骤（含截图）</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61-ros">6.1 无 ROS 快速验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62-ros">6.2 ROS 键盘遥操作（按键场景）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63-ros">6.3 ROS 键盘遥操作（拨球场景）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#64-ros">6.4 ROS 神经网络到达</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 多场景测试与性能评价</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-nn">7.1 场景一：自由到达（NN 逆模型）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 场景二：按键按压</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 场景三：拨球离台</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 任务指标时间序列</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81-scriptsmsk_hand_corepy">8.1 仿真核心 scripts/msk_hand_core.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82-scriptsmsk_hand_keyboardpy">8.2 键盘策略 scripts/msk_hand_keyboard.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83-scriptsmsk_hand_nnpy">8.3 神经网络 scripts/msk_hand_nn.py</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84-ros">8.4 ROS 节点</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 文件结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 总结与展望</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">肌肉骨骼人</li>
+<li class="breadcrumb-item active">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/musculoskeletal/msk_hand_teleop.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="mujoco">MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制</h1>
+<h2 id="1">1. 项目概述</h2>
+<p>本项目在 <strong>MuJoCo 物理仿真器</strong>中建立了一条<strong>肌肉骨骼（musculoskeletal）灵巧手</strong>，
+包含 3 指（食指、中指、拇指）+ 2 自由度腕部共 <strong>8 个关节</strong>，由 <strong>11 条 Hill 型肌肉</strong>
+通过空间腱（spatial tendon）驱动。项目同时实现两种控制方式：</p>
+<ol>
+<li><strong>键盘遥操作</strong>（任务一：物理仿真 + 键盘运动控制）——按键切换肌肉激活目标，
+   经一阶平滑后下发；</li>
+<li><strong>神经网络逆模型控制</strong>（控制算法为神经网络）——MLP 直接由"食指指尖目标位置"
+   解算 11 维肌肉激活，实现到达任务。</li>
+</ol>
+<p>全部三种场景（自由到达 / 按键按压 / 拨球离台）支持 <code>roslaunch</code> 一键启动，
+运行于 Ubuntu 20.04 + ROS Noetic。</p>
+<p><img alt="模型静息姿态" src="../../img/msk_hand_model_rest.png"/></p>
+<h3 id="11">1.1 演示动图</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="按键按压" src="../../img/msk_hand_demo_button.gif"/></td>
+<td>键盘遥操作按压门铃式按键，钮帽行程 6 mm 全程压满</td>
+</tr>
+<tr>
+<td><img alt="拨球离台" src="../../img/msk_hand_demo_ball.gif"/></td>
+<td>食指卷曲推拨托柱上的小球使其滚落，考察接触力控制</td>
+</tr>
+<tr>
+<td><img alt="NN 到达" src="../../img/msk_hand_demo_free.gif"/></td>
+<td>神经网络逆模型连续 3 个目标点的到达任务</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2">2. 运行环境与安装</h2>
+<table>
+<thead>
+<tr>
+<th>依赖</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ubuntu</td>
+<td>20.04</td>
+<td></td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>Noetic</td>
+<td>仅 3 个 rospy 节点，无自定义消息</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8</td>
+<td>系统自带</td>
+</tr>
+<tr>
+<td>mujoco</td>
+<td>3.2.3</td>
+<td><code>pip install mujoco==3.2.3</code></td>
+</tr>
+<tr>
+<td>numpy / imageio / matplotlib / Pillow</td>
+<td>-</td>
+<td><code>pip install numpy imageio matplotlib Pillow</code></td>
+</tr>
+<tr>
+<td>xterm</td>
+<td>-</td>
+<td><code>keyboard_teleop.launch</code> 用 <code>xterm -e</code> 弹窗读键，<code>sudo apt install xterm</code></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>xterm
+<span class="c1"># 或用 rosdep 安装 package.xml 声明的依赖（已含 xterm）</span>
+rosdep<span class="w"> </span>install<span class="w"> </span>--from-paths<span class="w"> </span>src<span class="w"> </span>--ignore-src<span class="w"> </span>-r<span class="w"> </span>-y
+</code></pre></div>
+<p>编译工作空间：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/msk_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/msk_ws/src
+<span class="c1"># 将 mujoco_msk_hand_teleop 目录拷贝到此处</span>
+<span class="nb">cd</span><span class="w"> </span>~/msk_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<h2 id="3">3. 手部模型设计</h2>
+<h3 id="31-8">3.1 运动学结构（8 自由度）</h3>
+<table>
+<thead>
+<tr>
+<th>关节</th>
+<th>类型</th>
+<th>轴</th>
+<th>范围 (rad)</th>
+<th>关节弹簧刚度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>j_wrist_pitch</td>
+<td>铰</td>
+<td>x</td>
+<td>[-0.6, 1.2]</td>
+<td>1.5</td>
+</tr>
+<tr>
+<td>j_wrist_yaw</td>
+<td>铰</td>
+<td>z</td>
+<td>[-0.5, 0.5]</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>j_index_mcp / j_index_pip</td>
+<td>铰 ×2</td>
+<td>x</td>
+<td>[0, 1.9]</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>j_middle_mcp / j_middle_pip</td>
+<td>铰 ×2</td>
+<td>x</td>
+<td>[0, 1.9]</td>
+<td>0.12</td>
+</tr>
+<tr>
+<td>j_thumb_abd</td>
+<td>铰</td>
+<td>z</td>
+<td>[-0.5, 0.9]</td>
+<td>0.08</td>
+</tr>
+<tr>
+<td>j_thumb_mcp</td>
+<td>铰</td>
+<td>x</td>
+<td>[0, 1.6]</td>
+<td>0.12</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-11-hill">3.2 肌肉-腱系统（11 条 Hill 肌肉）</h3>
+<p>每条肌肉用 MuJoCo <code>&lt;muscle&gt;</code> 执行器 + <code>&lt;spatial&gt;</code> 空间腱实现：腱经过若干
+site"绕线"点，起点固定在前臂/掌骨，止点固定在指骨背侧或掌侧，从而获得
+符合解剖学的力臂与屈/伸方向。</p>
+<table>
+<thead>
+<tr>
+<th>肌肉</th>
+<th>作用</th>
+<th>等长峰值力 (N)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>m_index_flex / m_index_ext</td>
+<td>食指屈 / 伸</td>
+<td>22 / 14</td>
+</tr>
+<tr>
+<td>m_middle_flex / m_middle_ext</td>
+<td>中指屈 / 伸</td>
+<td>24 / 14</td>
+</tr>
+<tr>
+<td>m_thumb_flex / m_thumb_ext / m_thumb_add</td>
+<td>拇指屈 / 伸 / 对掌</td>
+<td>18 / 12 / 10</td>
+</tr>
+<tr>
+<td>m_wrist_flex / m_wrist_ext</td>
+<td>腕屈 / 腕伸</td>
+<td>30 / 20</td>
+</tr>
+<tr>
+<td>m_wrist_yaw_l / m_wrist_yaw_r</td>
+<td>腕左摆 / 右摆</td>
+<td>16 / 16</td>
+</tr>
+</tbody>
+</table>
+<p>建模要点：</p>
+<ul>
+<li><strong>空间腱而非固定腱</strong>：固定腱的静息长度为 0，会使肌肉力-长度曲线退化；
+  空间腱自动得到正的 L0 与合理 lengthrange（MuJoCo 3.2.3 自动计算）；</li>
+<li><strong><code>&lt;contact&gt;&lt;exclude&gt;</code> 排除解剖嵌套体的碰撞对</strong>（前臂-手掌、手掌-拇指中节等），
+  否则初始穿透会导致求解器发散；</li>
+<li><strong>关节弹簧</strong>提供静息姿态回复力矩，模拟关节囊/韧带的被动特性。</li>
+</ul>
+<h2 id="4">4. 计算原理</h2>
+<h3 id="41-hill">4.1 Hill 肌肉模型</h3>
+<p>MuJoCo 的肌肉执行器按 Hill 三元件模型计算腱力。设归一化腱长度
+\( \tilde l = l / L_0 \)、归一化速度 \( \tilde v = v / (L_0 \cdot v_{max}) \)、
+激活度 \( a \in [0,1] \)，则：</p>
+<p><strong>① 激活动力学</strong>（一阶低通，激活/去激活时间常数不同）：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot a = \frac{u - a}{\tau(u)}, \qquad
+\tau(u) = \begin{cases} \tau_{act}=0.04\,\text{s}, & u > a \\ \tau_{deact}=0.08\,\text{s}, & u \le a \end{cases}
+</script>
+</p>
+<p><strong>② 力-长度关系</strong>（钟形曲线，宽度参数 \( w \)）：</p>
+<p>
+<script type="math/tex; mode=display">
+f_l(\tilde l) = \exp\!\left(-\frac{(\tilde l - 1)^2}{w^2}\right)
+</script>
+</p>
+<p><strong>③ 力-速度关系</strong>（短缩时力下降，拉长时力略升）：</p>
+<p>
+<script type="math/tex; mode=display">
+f_v(\tilde v) = \begin{cases}
+\dfrac{1 - \tilde v / v_1}{1 + \tilde v \cdot c}, & \tilde v > 0 \ \text{(短缩)}\\[2mm]
+1 + \tilde v \cdot k_{pe}, & \tilde v \le 0 \ \text{(拉长)}
+\end{cases}
+</script>
+</p>
+<p><strong>④ 腱力与关节力矩</strong>：</p>
+<p>
+<script type="math/tex; mode=display">
+F_{tendon} = a \cdot F_{max} \cdot f_l \cdot f_v + F_{passive}(\tilde l), \qquad
+\tau_j = \sum_m r_{j,m}(q)\, F_{tendon,m}
+</script>
+</p>
+<p>其中 \( r_{j,m}(q) \) 是肌肉 \( m \) 对关节 \( j \) 的力臂，由空间腱路由
+几何随构型实时变化。</p>
+<h3 id="42">4.2 键盘遥操作</h3>
+<p>按键为<strong>切换式</strong>（按一次开、再按一次关）：每个键映射一条肌肉的目标激活
+（0 或 1）。实际下发指令经一阶低通平滑：</p>
+<p>
+<script type="math/tex; mode=display">
+u_{cmd}[k] = u_{cmd}[k-1] + \frac{\Delta t}{\tau_s}\left(u_{tgt}[k] - u_{cmd}[k-1]\right),
+\qquad \tau_s = 0.12\,\text{s}
+</script>
+</p>
+<p>再叠加 4.1 节的肌肉激活动力学（\( \tau_{act}=0.04 \) s），形成"指令平滑 +
+肌肉动力学"双重滤波，保证运动连续无抖动。</p>
+<h3 id="43">4.3 神经网络逆模型</h3>
+<p>到达任务的逆模型为映射 \( f: \mathbb{R}^3 \to \mathbb{R}^{11} \)——输入食指
+指尖目标位置 \( x \)，输出 11 维肌肉激活 \( a \)。由于逆动力学高度非线性
+（肌肉力臂、力-长度曲线均随构型变化），线性模型不足，采用 MLP 拟合。</p>
+<p><strong>网络结构</strong>（3 → 64 → 64 → 11）：</p>
+<p>
+<script type="math/tex; mode=display">
+h_1 = \mathrm{ReLU}(W_1 x + b_1), \quad
+h_2 = \mathrm{ReLU}(W_2 h_1 + b_2), \quad
+\hat y = \sigma(W_3 h_2 + b_3)
+</script>
+</p>
+<p>Sigmoid 输出自然满足激活 \( \in [0,1] \) 的物理约束。损失函数为 MSE：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathcal L = \frac{1}{N}\sum_i \|\hat y_i - y_i\|^2
+</script>
+</p>
+<p><strong>Adam 优化器</strong>（一阶/二阶矩估计）：</p>
+<p>
+<script type="math/tex; mode=display">
+m_t = \beta_1 m_{t-1} + (1-\beta_1) g_t, \quad
+v_t = \beta_2 v_{t-1} + (1-\beta_2) g_t^2, \quad
+\theta_t = \theta_{t-1} - \eta \frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}
+</script>
+</p>
+<p><strong>数据采集</strong>：只随机采样影响食指位姿的 6 条肌肉（腕屈/伸、腕左/右摆、食指
+屈/伸），其余 5 条置 0，保证逆映射可学习。每组激活让手达到静平衡
+（1.2 s），记录 (指尖位置， 激活) 样本 1200 组，另采 80 组作测试集。</p>
+<p><strong>反向传播</strong>核心链式法则（输出层）：</p>
+<p>
+<script type="math/tex; mode=display">
+\frac{\partial \mathcal L}{\partial z_3} = \frac{2(\hat y - y)}{N} \odot \hat y(1-\hat y)
+</script>
+</p>
+<h2 id="5">5. 算法流程</h2>
+<h3 id="51">5.1 键盘遥操作</h3>
+<div class="mermaid">flowchart LR
+    A[终端按键] --&gt; B{切换键状态}
+    B --&gt; C[目标激活向量 0/1]
+    C --&gt; D[一阶低通平滑 0.12s]
+    D --&gt; E[/话题 /msk_hand/muscle_cmd/]
+    E --&gt; F[仿真节点: 激活动力学]
+    F --&gt; G[MuJoCo mj_step x5]
+    G --&gt; H[/话题 /msk_hand/state/]
+</div>
+<h3 id="52">5.2 神经网络逆模型</h3>
+<div class="mermaid">flowchart TD
+    A[随机采样6维激活] --&gt; B[仿真静平衡1.2s]
+    B --&gt; C[记录 指尖位置x / 激活y]
+    C --&gt; D{样本数足够?}
+    D -- 否 --&gt; A
+    D -- 是 --&gt; E[训练 MLP: Adam+MSE 250 epoch]
+    E --&gt; F[测试集: 80 组目标]
+    F --&gt; G[下发激活 -&gt; 仿真 -&gt; 测量到达误差]
+    G --&gt; H[与岭回归线性基线对比]
+</div>
+<h2 id="6">6. 仿真步骤（含截图）</h2>
+<h3 id="61-ros">6.1 无 ROS 快速验证</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/musculoskeletal/mujoco_msk_hand_teleop
+python3<span class="w"> </span>main.py<span class="w"> </span>check<span class="w">            </span><span class="c1"># 模型自检：正运动学/肌肉扫描</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>demo<span class="w"> </span>--scene<span class="w"> </span>button<span class="w">   </span><span class="c1"># 脚本化按键演示</span>
+python3<span class="w"> </span>scripts/make_assets.py<span class="w">   </span><span class="c1"># 重新生成 GIF 与图表（输出到 docs/img/）</span>
+</code></pre></div>
+<h3 id="62-ros">6.2 ROS 键盘遥操作（按键场景）</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mujoco_msk_hand_teleop<span class="w"> </span>keyboard_teleop.launch<span class="w"> </span>scene:<span class="o">=</span>button
+</code></pre></div>
+<ol>
+<li>启动后终端打印按键帮助；按 <strong>u</strong> 腕屈下压接近按键；</li>
+<li>按 <strong>a</strong> 食指屈曲卷向键帽，钮帽被压下，左上角实时显示深度；</li>
+<li>再按 <strong>a</strong> 释放，按 <strong>空格</strong> 全部放松，<strong>ESC</strong> 退出。</li>
+</ol>
+<p><img alt="接近按键" src="../../img/msk_hand_button_approach.png"/></p>
+<p><img alt="压满行程 depth=6.6mm" src="../../img/msk_hand_button_press.png"/></p>
+<h3 id="63-ros">6.3 ROS 键盘遥操作（拨球场景）</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mujoco_msk_hand_teleop<span class="w"> </span>keyboard_teleop.launch<span class="w"> </span>scene:<span class="o">=</span>ball
+</code></pre></div>
+<p>按 <strong>u</strong> 腕屈 → 按 <strong>a</strong> 食指屈曲推拨小球，球滚落托柱，状态话题中
+球高度变为地面高度。</p>
+<p><img alt="对准托柱" src="../../img/msk_hand_ball_ready.png"/></p>
+<p><img alt="球被拨离" src="../../img/msk_hand_ball_knock.png"/></p>
+<h3 id="64-ros">6.4 ROS 神经网络到达</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mujoco_msk_hand_teleop<span class="w"> </span>nn_reach.launch
+<span class="c1"># 另开终端发送目标点（x y z 为指尖工作空间内的米制坐标）</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/msk_hand/target<span class="w"> </span>geometry_msgs/Point<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s2">"x: 0.014  y: 0.182  z: 0.085"</span>
+</code></pre></div>
+<p><img alt="NN 到达目标" src="../../img/msk_hand_free_reach.png"/></p>
+<h2 id="7">7. 多场景测试与性能评价</h2>
+<h3 id="71-nn">7.1 场景一：自由到达（NN 逆模型）</h3>
+<p>测试集 80 个目标（训练时未见），到达误差（稳态）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>平均误差</th>
+<th>p90</th>
+<th>最大</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MLP 逆模型</strong></td>
+<td><strong>7.3 mm</strong></td>
+<td>15.0 mm</td>
+<td>30.4 mm</td>
+</tr>
+<tr>
+<td>岭回归线性基线</td>
+<td>22.4 mm</td>
+<td>31.7 mm</td>
+<td>40.2 mm</td>
+</tr>
+</tbody>
+</table>
+<p>MLP 把平均到达误差降低约 <strong>3 倍</strong>，验证了肌肉骨骼系统逆动力学的非线性
+本质（线性模型无法表达力-长度曲线与随构型变化的力臂）。</p>
+<p><img alt="训练损失与误差对比" src="../../img/msk_hand_nn_training.png"/></p>
+<h3 id="72">7.2 场景二：按键按压</h3>
+<p>成功判据：钮帽行程（6 mm）被压满。实测最大深度 <strong>6.7 mm</strong>（含接触容差），
+任务成功率 100%（20 次重复）。指尖接触力 0.7~2.6 N，按压过程平稳，
+松开后弹簧回程正常。</p>
+<h3 id="73">7.3 场景三：拨球离台</h3>
+<p>成功判据：球心高度低于台面（40 mm）。实测球被推离托柱滚落到地面
+（z=10.5 mm），重复 10 次成功率 <strong>100%</strong>。推拨过程接触力 0.2~0.5 N，
+体现细粒度力控制。</p>
+<h3 id="74">7.4 任务指标时间序列</h3>
+<p><img alt="任务指标" src="../../img/msk_hand_task_metrics.png"/></p>
+<ul>
+<li><strong>Button depth</strong>：红色虚线为 6 mm 行程，曲线在 t≈1.8 s 压满；</li>
+<li><strong>Ball height</strong>：绿色虚线为台面高度，t≈1.9 s 球跌落至地面高度；</li>
+<li><strong>NN reach error</strong>：每个目标 1.2 s 内收敛到 10 mm 以内。</li>
+</ul>
+<h2 id="8">8. 源码解析</h2>
+<h3 id="81-scriptsmsk_hand_corepy">8.1 仿真核心 <code>scripts/msk_hand_core.py</code></h3>
+<p><code>MskHandSim</code> 封装模型加载、步进与查询。<code>step()</code> 将 11 维激活写入
+<code>data.ctrl</code>，每步推进 5 个 2 ms 子步（隐式快速积分 <code>implicitfast</code>，
+时间步 0.002 s），对外呈 100 Hz 控制周期：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">n_sub</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">activation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ctrl</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sub</span><span class="p">):</span>
+        <span class="n">mujoco</span><span class="o">.</span><span class="n">mj_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</code></pre></div>
+<p>任务指标接口：<code>button_depth()</code> 读取滑动关节 <code>j_button</code> 的 qpos；
+<code>ball_height()</code> 由球心 z 减去托柱顶面高度（从 geom 尺寸解析，无硬编码）。</p>
+<h3 id="82-scriptsmsk_hand_keyboardpy">8.2 键盘策略 <code>scripts/msk_hand_keyboard.py</code></h3>
+<p><code>KeyboardPolicy</code> 维护按键集合 → 目标激活向量，<code>update(dt)</code> 做一阶平滑。
+策略与 ROS 解耦，同一份代码既服务节点也服务无头演示与 GIF 录制：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_vector</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span> <span class="o">+=</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span><span class="p">)</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dt</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmd</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="83-scriptsmsk_hand_nnpy">8.3 神经网络 <code>scripts/msk_hand_nn.py</code></h3>
+<p><code>MLP</code> 类手写实现前向、反向与 Adam（约 80 行核心代码）。反向传播中
+Sigmoid 输出层的梯度乘子 \( \hat y(1-\hat y) \) 与两层 ReLU 的掩码
+<code>(h &gt; 0)</code> 是关键：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">y_true</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">cache</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">)</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>      <span class="c1"># dMSE/dy</span>
+    <span class="n">dh2</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>                  <span class="c1"># sigmoid</span>
+    <span class="n">gW2</span> <span class="o">=</span> <span class="n">h2</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dh2</span>
+    <span class="n">dh1</span> <span class="o">=</span> <span class="p">(</span><span class="n">dh2</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">h2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>      <span class="c1"># ReLU 掩码</span>
+    <span class="o">...</span>
+</code></pre></div>
+<h3 id="84-ros">8.4 ROS 节点</h3>
+<ul>
+<li><code>msk_hand_sim_node.py</code>：订阅 <code>/msk_hand/muscle_cmd</code>，按 100 Hz 步进仿真，
+  25 Hz 发布 <code>/msk_hand/state</code>（时间 + 8 关节角 + 9 指尖坐标 + 任务指标）；</li>
+<li><code>msk_hand_keyboard_node.py</code>：termios 非阻塞读键，50 Hz 发布平滑激活；</li>
+<li><code>msk_hand_nn_node.py</code>：加载 <code>assets/nn_weights.npz</code>，收到
+  <code>/msk_hand/target</code>（Point）后前向一次并发布激活。</li>
+</ul>
+<p>节点间只使用标准 <code>Float32MultiArray</code> / <code>Point</code>，无自定义消息，编译零依赖。</p>
+<h2 id="9">9. 文件结构</h2>
+<div class="highlight"><pre><span></span><code>mujoco_msk_hand_teleop/
+├── main.py                  # 统一入口 (check/demo/train/sim/keyboard/nn)
+├── package.xml              # catkin 包描述
+├── CMakeLists.txt
+├── launch/
+│   ├── main.launch          # 主入口（转发到 keyboard_teleop）
+│   ├── keyboard_teleop.launch
+│   └── nn_reach.launch
+├── models/
+│   ├── hand_model.xml       # 手本体: 8 关节 + 11 肌肉空间腱
+│   ├── scene_free.xml       # 场景1: 自由空间 + 目标标记
+│   ├── scene_button.xml     # 场景2: 门铃式按键
+│   └── scene_ball.xml       # 场景3: 托柱 + 小球
+├── scripts/
+│   ├── msk_hand_core.py     # 仿真核心（无 ROS）
+│   ├── msk_hand_keyboard.py # 键盘策略（无 ROS）
+│   ├── msk_hand_nn.py       # 数据采集 + MLP 训练/评估
+│   ├── make_assets.py       # GIF 与图表生成
+│   ├── msk_hand_sim_node.py # ROS 仿真节点
+│   ├── msk_hand_keyboard_node.py
+│   └── msk_hand_nn_node.py
+└── assets/
+    ├── nn_weights.npz       # 训练好的 MLP 权重
+    └── nn_metrics.json      # 评估指标（GIF/PNG 见 docs/img/）
+</code></pre></div>
+<h2 id="10">10. 总结与展望</h2>
+<p>本项目完成了肌肉骨骼灵巧手的建模、键盘遥操作与神经网络控制闭环：</p>
+<ul>
+<li>11 条 Hill 肌肉 + 空间腱的解剖学建模，在 MuJoCo 3.2.3 下数值稳定；</li>
+<li>3 个接触丰富场景（到达/按键/拨球）全部任务达标，且支持 launch 启动；</li>
+<li>纯 numpy 实现的 MLP 逆模型将到达误差压到 7.3 mm，显著优于线性基线。</li>
+</ul>
+<p>展望：引入中指/拇指参与的真双指捏取（需重新设计拇指腱路由以扩大拇指
+工作空间）；以触觉（接触力）为输入的反馈神经网络；强化学习端到端策略。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../musculoskeletal_basics/" title="肌肉骨骼人基础"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../set_up_and_connect_to_carla/" title="手动控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../musculoskeletal_basics/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../set_up_and_connect_to_carla/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
