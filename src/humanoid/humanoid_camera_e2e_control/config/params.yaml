@@ -1,0 +1,30 @@
+# 人形机器人图像端到端控制参数配置
+# ---- 仿真 ----
+sim_rate: 500.0          # 物理仿真频率 (Hz)
+publish_rate: 30.0        # 里程计/关节状态/TF 发布频率 (Hz)
+image_rate: 10.0         # 跟随视角相机图像发布频率 (Hz)
+cmd_timeout: 0.5         # 指令超时停车 (s)
+visualize: true          # 是否打开 MuJoCo 可视化窗口
+
+# ---- 站姿 PD 控制增益 ----
+kp: 120.0                # 比例增益
+kv: 6.0                  # 微分增益
+kp_roll: 400.0           # 髋/踝 roll 关节加强（抗侧倾）
+
+# ---- 运动指令限幅 ----
+v_max: 0.30              # 最大线速度 (m/s)
+w_max: 0.60              # 最大偏航角速度 (rad/s)
+
+# ---- 端到端策略 ----
+control_period: 0.05     # 推理控制周期 (s)
+weights_path: weights/humanoid_cnn.pt
+
+# ---- 采集键盘比例 ----
+linear_scale: 0.22       # 前进/后退速度 (m/s)
+angular_scale: 0.35      # 转向角速度 (rad/s)
+
+# ---- 训练超参（scripts/train_e2e.py 命令行可覆盖，以下为实测取值）----
+epochs: 50
+batch_size: 32
+lr: 0.003
+seed: 42

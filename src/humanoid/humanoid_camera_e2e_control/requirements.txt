@@ -1,0 +1,6 @@
+# humanoid_camera_e2e_control 运行依赖
+mujoco>=2.3,<3.0
+numpy
+torch>=1.13
+imageio>=2.30
+Pillow>=8.3.2
