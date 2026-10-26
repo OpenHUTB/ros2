@@ -300,7 +300,7 @@ ValueError: 307200 exceeds max_array_len(131072)
 
 ### 7.3 本地测试与 CI
 
-桥接层的测试不依赖 ROS、仿真器或 GPU，可以直接在仓库根目录运行：
+桥接层的测试不依赖 ROS、仿真器或 GPU，依赖 `numpy` 和 `PyYAML`，可以直接在仓库根目录运行：
 
 ```bash
 python3 tests/test_frames.py          # 坐标换算 7 项
