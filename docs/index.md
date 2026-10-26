@@ -1,4 +1,4 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
+  - [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
   - [水域载具](#water_vehicle)
 
 ---

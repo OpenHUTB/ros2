@@ -45,7 +45,9 @@ class FacadeSimulation:
     def image(self, camera: str = "front", width: int = 320, height: int = 240) -> np.ndarray:
         if self.renderer is None:
             self.renderer = mujoco.Renderer(self.model, height=height, width=width)
-        self.renderer.update_scene(self.data, camera=camera)
+        options = mujoco.MjvOption()
+        options.flags[mujoco.mjtVisFlag.mjVIS_RANGEFINDER] = False
+        self.renderer.update_scene(self.data, camera=camera, scene_option=options)
         return self.renderer.render().copy()
 
     def step(self, commanded_velocity: np.ndarray) -> None:
