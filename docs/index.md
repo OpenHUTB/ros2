@@ -108,7 +108,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 
+* [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
@@ -135,6 +137,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 
+* [基于 PPO 的无人机固定路线巡航](./air/uav_route_cruise.md) —— 沿给定闭合航线巡航，遇压在航线上的障碍时临时偏离绕行
+
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
@@ -151,7 +155,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
 
-* [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
+* [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control/README.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)

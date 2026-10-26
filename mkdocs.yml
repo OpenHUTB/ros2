@@ -98,6 +98,7 @@ nav:
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
+    - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
 - 空域载具:
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
@@ -114,6 +115,7 @@ nav:
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
+    - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
@@ -127,7 +129,10 @@ nav:
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
         - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
-    - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
+        - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
+    - YOLO 感知与无人机控制:
+        - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
+        - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
