@@ -36,8 +36,16 @@ jobs:
           apt-get install -y -qq --no-install-recommends \
             python3-numpy python3-matplotlib python3-pytest
 
-      - name: 离线单测（不依赖 ROS 话题）
+      - name: 单测 + 节点闭环（用 ROS 替身，不需要 source）
+        # 这一步刻意不 source ROS：没有 rclpy 时 test/fake_ros.py 会接管，
+        # 于是「消息字段、参数声明、三节点闭环」在 Linux + 真 numpy 上也能验。
         run: |
+          cd src/air/uav_camera_tracking
+          python3 -m pytest test/ -q
+
+      - name: source ROS 后单测（替身应自动跳过）
+        run: |
+          source /opt/ros/humble/setup.bash
           cd src/air/uav_camera_tracking
           python3 -m pytest test/ -q
 
@@ -53,7 +61,7 @@ jobs:
 
       - name: 四个场景逐个 launch
         run: |
-          set -uo pipefail
+          set -o pipefail
           source /opt/ros/humble/setup.bash
           source install/setup.bash
           mkdir -p ci_out
@@ -62,7 +70,9 @@ jobs:
 
           run_case () {
             local scene=$1 mode=$2 dur=$3 tag="${1}_${2}"
-            local want=$(( $( wc -l < "$CSV" 2>/dev/null || echo 0 ) + 1 ))
+            local rows=0
+            if [ -f "$CSV" ]; then rows=$(wc -l < "$CSV"); fi
+            local want=$((rows + 1))
             echo "::group::scene=$scene mode=$mode duration=$dur"
             ros2 launch uav_camera_tracking main.launch.py \
                 scene:="$scene" mode:="$mode" duration:="$dur" csv:="$CSV" \
@@ -82,6 +92,10 @@ jobs:
             pkill -f 'lib/uav_camera_tracking' 2>/dev/null || true
             sleep 1
             grep -E '回合结束|场景 |ERROR|Traceback' "ci_out/${tag}.log" | tail -6 || true
+            if [ "$(wc -l < "$CSV" 2>/dev/null || echo 0)" -lt "$want" ]; then
+              echo "::warning::${tag} 没有产出指标行，日志尾部："
+              tail -30 "ci_out/${tag}.log" || true
+            fi
             echo "::endgroup::"
           }
 
