@@ -72,6 +72,8 @@ class DroneBringup(object):
                 self.state_client.moveByVelocityAsync(
                     msg.linear.x, msg.linear.y, msg.linear.z, 0.2
                 )
+                if abs(msg.angular.z) > 1e-3:
+                    self.state_client.rotateByYawRateAsync(msg.angular.z, 0.2)
         except Exception as exc:
             rospy.logwarn_throttle(5.0, "moveByVelocityAsync failed: %r", exc)
 
