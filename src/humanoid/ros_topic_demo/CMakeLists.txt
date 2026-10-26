@@ -6,10 +6,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav_msgs
   geometry_msgs
+  tf2_ros
 )
 
 catkin_package(
-  CATKIN_DEPENDS rospy std_msgs nav_msgs geometry_msgs
+  CATKIN_DEPENDS rospy std_msgs nav_msgs geometry_msgs tf2_ros
 )
 
 catkin_install_python(PROGRAMS

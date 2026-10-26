@@ -26,7 +26,7 @@ roslaunch ros_topic_demo rviz_demo.launch
 ## 我踩过的坑
 1. 最开始Fixed Frame一直选成map，结果半天看不到点，后来才知道我们的节点发的是odom坐标系，改了立刻就看到了
 2. rospy.Rate我一开始参数写反了，一秒钟发了100次消息，rviz里画出来密密麻麻一堆箭头，给我整懵了
-3. 最开始忘了加odom.header的frame_id，rviz直接报No TF data，查了20分钟才发现少了这行
+3. 最开始只发/odom话题不广播TF，rviz里一直报No TF data，后来在节点里用tf2_ros的TransformBroadcaster广播了odom->base_link的坐标变换才正常
 
 ## 运行效果
 启动之后不用显卡，虚拟机里跑也丝滑，就是终端打印启动日志，rviz窗口里一个小红点匀速绕圈，整个过程1分钟就能跑通，特别有成就感。
