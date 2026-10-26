@@ -154,6 +154,22 @@ vy = clip(KP_LAT * ex, ±V_MAX)                    # 横向纠偏
 
 ![遮挡重捕获](../../../docs/img/air/uav_camera_tracking/occlusion.gif)
 
+### ROS 2 侧实测（Ubuntu 22.04 + Humble，GitHub Actions）
+
+同一随机种子、三个节点经 `ros2 launch` 闭环跑出的结果，由 `ros:humble` 容器产出
+（`.github/workflows/ros2_uav_camera_tracking.yml`）：
+
+| 场景 / 控制器 | 可见占比 | 误差 RMS | 平均速度 (m/s) | 判定 |
+|---|---|---|---|---|
+| `static` / expert | 1.0000 | 0.0834 | 0.252 | 通过 |
+| `moving` / two_stage | 1.0000 | 0.1340 | 0.675 | 通过 |
+| `occlusion` / two_stage | 0.8800 | 0.1687 | 0.284 | 通过 |
+| `gust` / two_stage | 1.0000 | 0.1746 | 0.544 | 通过 |
+
+比上面的离线表略高，来源只有一个：ROS 里第 k 帧图像对应的指令从 k+1 才生效（50 ms），
+而离线评估是同进程零延迟。控制节点改成"检测到达即下发"后，定时器的相位抖动被消掉，
+ROS 与本地接口替身的结果逐位一致（详见文档 §6.1）。
+
 ## 场景设计
 
 | 场景 | 目标运动 | 干扰 | 考察点 |
@@ -179,17 +195,24 @@ vy = clip(KP_LAT * ex, ±V_MAX)                    # 横向纠偏
 
 ```bash
 cd ~/ros2/src/air/uav_camera_tracking
-python3 -m pytest test/ -q            # 7 个用例，不需要 ROS
+python3 -m pytest test/ -q     # 有 ROS：7 过 6 跳过；无 ROS：13 过（替身接管）
 ```
 
-覆盖相机投影方向、遮挡判定、热图标签与解码的格子约定一致性、专家指令符号、
-四旋翼速度环收敛与 MLP 拟合能力——都是"错了会静默失效"的地方。
+`test/test_offline.py`（7 个）覆盖相机投影方向、遮挡判定、热图标签与解码的格子约定
+一致性、专家指令符号、四旋翼速度环收敛与 MLP 拟合——都是"错了会静默失效"的地方。
+
+`test/test_nodes_ros.py`（6 个）用 `test/fake_ros.py`（`rclpy` 与消息、ament、launch 的
+替身，只在没有真 rclpy 时启用）把三个节点按真实话题跑起来，验证：参数文件里的键都被
+节点声明、`setup.py` 的 `data_files` 与实际文件一致、入口点指向的模块和函数存在、
+inspect 后的路径能被 `model_io` 定位、`launch` 把参数正确传给三个节点、以及三节点闭环
+在四个场景上收敛。**这 6 个用例在 Ubuntu + Humble 上会自动跳过**，交给真 ROS 去跑
+（见 `.github/workflows/ros2_uav_camera_tracking.yml`）。
 
 ## 复现环境
 
 - 训练与评估：Ubuntu 20.04 + Python 3.8 + NumPy + Matplotlib（纯 CPU，无 GPU 依赖）
 - ROS 2：Humble（Ubuntu 22.04）与 Foxy（Ubuntu 20.04）均可，节点只依赖
-  `rclpy`、`sensor_msgs`、`geometry_msgs`、`nav_msgs`、`std_msgs`
+  `rclpy`、`sensor_msgs`、`geometry_msgs`、`nav_msgs`
 - 构建：`colcon build --packages-select uav_camera_tracking`，无编译步骤
 
 需要说明的边界：本模块的仿真器是自带的解析式渲染器（光线投射），**没有**接 AirSim/CarlaAir。
