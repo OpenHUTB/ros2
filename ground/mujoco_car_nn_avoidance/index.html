@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>MuJoCo 地面小车神经网络端到端避障 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MuJoCo \u5730\u9762\u5c0f\u8f66\u795e\u7ecf\u7f51\u7edc\u7aef\u5230\u7aef\u907f\u969c";
+        var mkdocs_page_input_path = "ground/mujoco_car_nn_avoidance.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo 地面小车神经网络端到端避障</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与目标</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 核心任务目标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#12">1.2 与仓库已有模块的区别</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 射线求交与扇面采样</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 状态向量拼接</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-mlp">2.3 MLP 结构与前向传播</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 训练目标与梯度下降</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#25">2.5 专家策略（仅作离线教师信号）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#26">2.6 差速运动学</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#27">2.7 物理底盘的稳定方案</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 算法流程</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 源码解析</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 仿真运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 支持与测试环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 安装</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 本地纯仿真运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54-ros-2">5.4 ROS 2 闭环</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 运行效果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 性能评价</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-mujoco">7.1 本地 MuJoCo 闭环实测</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-ros-2-ubuntu-2204-humble">7.2 ROS 2 闭环实测（Ubuntu 22.04 + Humble 虚拟机）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 指标定义</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参考</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">辅助工具说明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">MuJoCo 地面小车神经网络端到端避障</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/mujoco_car_nn_avoidance.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="mujoco">MuJoCo 地面差速小车：神经网络端到端避障</h1>
+<blockquote>
+<p>对应课程任务：对地面载具进行物理仿真，用传感器数据完成感知、决策与控制，
+其中感知、规划、控制链路为神经网络，推理阶段不含规则分支。
+本模块在仓库已有的规则避障模块 <code>mujoco_car_avoidance</code> 基础上晋级：
+用一个纯 numpy 实现的小 MLP，把"射线距离 + 航向"直接映射成"转向 + 油门"。</p>
+</blockquote>
+<p>代码位于 <code>src/ground/mujoco_car_nn_avoidance/</code>。</p>
+<h2 id="1">1. 概述与目标</h2>
+<h3 id="11">1.1 核心任务目标</h3>
+<ol>
+<li><strong>物理仿真</strong>：两轮差速小车由 MuJoCo 解算动力学，速度伺服驱动两个驱动轮；两驱动轮加前支撑轮构成静定三点支撑，后支撑轮只作防后仰保护。</li>
+<li><strong>感知</strong>：25 束前视射线扇面（−60°…60°，5° 间隔，量程 6 m）作为小型二维激光雷达，另取一维车体航向偏差作为网络输入。</li>
+<li><strong>决策与控制</strong>：感知结果送入 MLP，网络直接输出归一化转向 <code>steer</code> 与油门 <code>throttle</code>，再由差速运动学换算成左右轮目标角速度。</li>
+<li><strong>端到端</strong>：训练完成后，闭环中没有任何避障规则、阈值判断或状态机；专家策略只在离线采集阶段当教师信号，不参与推理。</li>
+<li><strong>可复现</strong>：本地仿真与多场景评测不需要图形界面和显卡；演示动图用离屏渲染录制。</li>
+</ol>
+<h3 id="12">1.2 与仓库已有模块的区别</h3>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th><code>mujoco_car_avoidance</code>（规则基线）</th>
+<th>本模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>引擎</td>
+<td>MuJoCo</td>
+<td><strong>MuJoCo</strong></td>
+</tr>
+<tr>
+<td>感知方式</td>
+<td><code>mj_ray</code> 射线扇面</td>
+<td><strong><code>mj_ray</code> 射线扇面 + 航向</strong></td>
+</tr>
+<tr>
+<td>决策方式</td>
+<td>距离分级状态机（规则）</td>
+<td><strong>纯神经网络（MLP）</strong></td>
+</tr>
+<tr>
+<td>推理时是否含规则分支</td>
+<td>是</td>
+<td><strong>否</strong></td>
+</tr>
+<tr>
+<td>运行前提</td>
+<td>mujoco + numpy</td>
+<td><strong>mujoco + numpy</strong></td>
+</tr>
+<tr>
+<td>无图形界面可用</td>
+<td>是</td>
+<td><strong>是（默认无窗口）</strong></td>
+</tr>
+</tbody>
+</table>
+<p>本模块复用了规则基线模块已经调通的差速底盘物理方案（速度执行器、质心前移、静定三点支撑、出生穿透量），差别只在决策层：规则被替换成训练得到的神经网络。</p>
+<h2 id="2">2. 计算原理</h2>
+<h3 id="21">2.1 射线求交与扇面采样</h3>
+<p>每条射线由起点（车头 <code>lidar</code> site）和水平面内方向向量定义，调用 MuJoCo 原生 <code>mj_ray</code> 求与几何体的最近交点：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf p_i(t) = \mathbf p_0 + t\,\mathbf d_i,\qquad t \in [0, R_{\max}]
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+d_i = \min\{\, t \mid \mathbf p_i(t) \in \partial \Omega \,\}
+</script>
+</p>
+<p>其中 <script type="math/tex">R_{\max}=6.0\,\text{m}</script>，<script type="math/tex">\Omega</script> 为场景中允许被探测的几何体集合；未命中或超出量程时取 <script type="math/tex">d_i=R_{\max}</script>。</p>
+<p>几何体分组与 <code>models/*.xml</code> 约定一致：障碍物放在 geom group 0（射线可见），地面放在 group 1（屏蔽，避免车身俯仰时打到路面产生假目标），自车放在 group 2（屏蔽）。求交时传入组掩码 <code>geomgroup=[1,0,0,1,1,1]</code>，再用 <code>bodyexclude</code> 排除自车 body 兜一层底——左右驱动轮是车体的子 body，只排除 group 2 仍可能被侧向射线打到，产生"0.3 m 处有障碍"的假距离并直接误导网络。</p>
+<h3 id="22">2.2 状态向量拼接</h3>
+<p>网络输入共 26 维：25 束射线距离先按量程归一化到 <script type="math/tex">[0,1]</script>（越近越接近 0，越远越接近 1），再拼接一维归一化航向偏差：</p>
+<p>
+<script type="math/tex; mode=display">
+s_i = \frac{d_i}{R_{\max}},\quad i=0,\ldots,24,\qquad s_{25} = \mathrm{clip}\!\left(\frac{\psi}{\pi},\,-1,\,1\right)
+</script>
+</p>
+<p>
+<script type="math/tex">\psi</script> 为车体相对初始航向的偏航角（由里程计/IMU 四元数解算）。绕障后车体已经偏转，纯靠射线无法判断绝对朝向，这一维航向反馈是绕障后能把车拉回前进方向、持续绕行通过的关键。</p>
+<h3 id="23-mlp">2.3 MLP 结构与前向传播</h3>
+<p>网络为两层全连接，纯 numpy 实现，不依赖 PyTorch / TensorFlow：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf z_1 = \mathbf x W_1^{\top} + \mathbf b_1,\qquad \mathbf a_1 = \tanh(\mathbf z_1)
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+\mathbf o = \mathbf a_1 W_2^{\top} + \mathbf b_2
+</script>
+</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>维度</th>
+<th>激活</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入</td>
+<td>26</td>
+<td>—</td>
+</tr>
+<tr>
+<td>隐层</td>
+<td>32</td>
+<td><code>tanh</code></td>
+</tr>
+<tr>
+<td>输出</td>
+<td>2</td>
+<td>线性</td>
+</tr>
+</tbody>
+</table>
+<p>输出二维依次为 <code>steer</code>（转向）、<code>throttle</code>（油门）。推理时再做范围约束：</p>
+<p>
+<script type="math/tex; mode=display">
+\text{steer} = \tanh(o_0) \in [-1,1],\qquad \text{throttle} = \mathrm{clip}(o_1,\,0,\,1)
+</script>
+</p>
+<p>权重采用 He 初始化；隐层 <code>tanh</code> 的导数 <script type="math/tex">1-\tanh^2(z)</script> 在反向传播中直接展开计算。</p>
+<h3 id="24">2.4 训练目标与梯度下降</h3>
+<p>训练把专家标签当作回归目标，损失为两项输出的均方误差：</p>
+<p>
+<script type="math/tex; mode=display">
+L(\theta) = \frac{1}{2n}\sum_{k=1}^{n}\big[(\text{steer}_k - \hat{\text{steer}}_k)^2
++ (\text{throttle}_k - \hat{\text{throttle}}_k)^2\big]
+</script>
+</p>
+<p>按小批量随机梯度下降更新权重与偏置：</p>
+<p>
+<script type="math/tex; mode=display">
+W \leftarrow W - \eta \frac{\partial L}{\partial W},\qquad
+\mathbf b \leftarrow \mathbf b - \eta \frac{\partial L}{\partial \mathbf b}
+</script>
+</p>
+<p>训练超参集中在 <code>config.py</code>：</p>
+<table>
+<thead>
+<tr>
+<th>超参</th>
+<th>取值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练轮数 <code>epochs</code></td>
+<td>300</td>
+</tr>
+<tr>
+<td>学习率 <code>lr</code></td>
+<td>0.005</td>
+</tr>
+<tr>
+<td>批大小 <code>batch</code></td>
+<td>64</td>
+</tr>
+<tr>
+<td>随机种子 <code>seed</code></td>
+<td>42</td>
+</tr>
+<tr>
+<td>数据集规模</td>
+<td>3000 样本（3 场景 × 1000）</td>
+</tr>
+</tbody>
+</table>
+<p>实测 300 个 epoch 后末段 20 轮平均损失约 0.0268（初始约 0.0933）。</p>
+<h3 id="25">2.5 专家策略（仅作离线教师信号）</h3>
+<p>专家策略只在 <code>--collect</code> 阶段生成训练标签，推理时完全不参与。它只吃射线距离和航向，不读取任何场景真值位置。</p>
+<p>射线分为三个感知带：</p>
+<table>
+<thead>
+<tr>
+<th>感知带</th>
+<th>索引</th>
+<th>覆盖角度</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>右侧带</td>
+<td>0…9</td>
+<td>−60°…−15°</td>
+<td>右侧平均开放距离</td>
+</tr>
+<tr>
+<td>正前带</td>
+<td>10…14</td>
+<td>−10°…+10°</td>
+<td>正前方最近距离</td>
+</tr>
+<tr>
+<td>左侧带</td>
+<td>15…24</td>
+<td>+15°…+60°</td>
+<td>左侧平均开放距离</td>
+</tr>
+</tbody>
+</table>
+<p>转向规则：正前方出现障碍或两侧开放度差较大时，朝更开放一侧温和转向；前方安全且两侧均衡时，用航向偏差把车回正。油门按全程最近障碍距离分级减速：</p>
+<p>
+<script type="math/tex; mode=display">
+\text{throttle} =
+\begin{cases}
+0.85 & d_{\min} > 3.0\,\text{m}\\
+0.55 & 2.0 < d_{\min} \le 3.0\,\text{m}\\
+0.35 & 1.2 < d_{\min} \le 2.0\,\text{m}\\
+0.20 & d_{\min} \le 1.2\,\text{m}
+\end{cases}
+</script>
+</p>
+<p><strong>探索式采集</strong>：如果只让专家策略自身滚动采集，车大部分时间在空旷直行，转向标签占比很低（实测约 2%），专家轨迹也单一，缺少贴近障碍的状态。采集时实际驱动指令叠加零均值高斯噪声（标准差 0.15，种子固定），让车主动探索贴近障碍、偏航等状态，但写入数据集的标签仍然是专家输出。这样转向标签占比提升到约 78%，左右两侧样本均衡，网络才能学到完整的"绕障—回正"行为。</p>
+<h3 id="26">2.6 差速运动学</h3>
+<p>网络输出归一化指令后，由纯函数 <code>kinematics.differential_wheel_vels</code> 解算成左右轮目标角速度：</p>
+<p>
+<script type="math/tex; mode=display">
+v = \text{throttle}\cdot v_{\max},\qquad
+\omega = \text{steer}\cdot \omega_{\max}
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+w_L = \frac{v - \omega L/2}{r},\qquad
+w_R = \frac{v + \omega L/2}{r}
+</script>
+</p>
+<p>其中 <script type="math/tex">v_{\max}=0.8\,\text{m/s}</script>、<script type="math/tex">\omega_{\max}=2.0\,\text{rad/s}</script>、轮距 <script type="math/tex">L=0.25\,\text{m}</script>、轮半径 <script type="math/tex">r=0.05\,\text{m}</script>。轮角速度再按执行器量程 ±60 rad/s 限幅，与 XML 中速度执行器的 <code>ctrlrange</code> 对齐。</p>
+<h3 id="27">2.7 物理底盘的稳定方案</h3>
+<p>差速小车的动力学沿用规则基线已经调通的方案，写在 <code>models/*.xml</code> 顶部注释里：</p>
+<ul>
+<li>积分器用 <code>implicitfast</code>，2 ms 步长下速度项隐式积分，接触更稳定；</li>
+<li>驱动轮交给 MuJoCo 原生 <code>&lt;velocity&gt;</code> 执行器（<code>ctrl</code> 为目标轮角速度，<code>kv=10</code>，<code>forcerange=±8 N</code>），不手写比例伺服，避免阶跃指令把车弹飞；</li>
+<li>车身 4 kg，质心前移到驱动轮轴前方 0.04 m，静止时由"两驱动轮 + 前支撑轮"构成静定三点支撑，驱动轮承担约 80% 重量，避免法向力不足导致空转打滑；后支撑轮抬离地面约 6 mm，只作防后仰保护、不参与静止承重，避免形成静不定的四点支撑；</li>
+<li>出生高度 0.048 m（轮半径 0.05 m），即轮胎带 2 mm 穿透量，接触从第 0 步起稳定存在；进入闭环前先零轮速静置 0.6 s，等接触建立、车身稳定。</li>
+</ul>
+<h2 id="3">3. 算法流程</h2>
+<p>本地纯仿真四个阶段串成一条流水线，<code>main.py</code> 用互斥模式分别触发：</p>
+<div class="highlight"><pre><span></span><code>--collect  探索式采集
+  ├─ 复位场景，零轮速静置 0.6 s 建立接触
+  └─ 每个控制周期 (50 Hz)：
+       ① mj_ray 扫描 25 束射线                      sensors.ray_scan()
+       ② 拼接 26 维状态（归一化射线 + yaw/π）
+       ③ 专家策略生成 (steer, throttle) 标签          expert.expert_control()
+       ④ 驱动叠加探索噪声，记录 状态 -&gt; 专家标签
+  └─ 导出 results/dataset.npz（数据集体积大，不随仓库提交）
+
+--train    训练 MLP
+  ├─ 读取 dataset.npz，按种子打乱
+  └─ minibatch 梯度下降 300 轮，保存 results/mlp_weights.npz 与损失序列
+
+--eval     闭环评测（纯神经网络推理，无规则分支）
+  ├─ 加载 mlp_weights.npz
+  ├─ 依次复位 basic / slalom / dual 三个场景
+  └─ 每个控制周期：
+       ① 射线扫描 -&gt; 拼接状态
+       ② MLP.predict() -&gt; (steer, throttle)
+       ③ 差速解算 -&gt; 左右轮目标角速度 -&gt; 推进一个控制周期
+       ④ 记录耗时、最小离障距离、最大转向、终点 x
+  └─ 导出 eval_report.csv 与评测柱状图（本地运行产物，不随仓库提交）
+
+--demo     离屏渲染演示
+  └─ basic 场景真实闭环，Renderer 俯视逐帧录制，合成演示 gif
+</code></pre></div>
+<p>ROS 2 闭环把同一条感知—推理—控制链路拆成两个节点：<code>sim_bridge</code> 在 ROS 里跑 MuJoCo、发布 <code>/scan</code> 与 <code>/odom</code>、订阅 <code>/cmd_vel</code>；<code>ros_node</code> 订阅 <code>/scan</code>、<code>/odom</code>，用训练好的 MLP 推理后发布 <code>/cmd_vel</code>。桥接节点跑完三个场景、画完轨迹图退出，launch 随之关闭，避免空转。</p>
+<h2 id="4">4. 源码解析</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>类型</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.py</code></td>
+<td>入口</td>
+<td><code>--collect / --train / --eval / --demo / --test / --launch</code> 互斥模式，退出码 0 成功 / 1 失败 / 2 参数错误</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/config.py</code></td>
+<td>配置</td>
+<td>路径基于包位置推导，集中管理传感器、仿真、控制、网络全部参数</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/car_env.py</code></td>
+<td>仿真</td>
+<td>场景加载、复位静置、轮速伺服写入、车体位姿与航向读取</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/sensors.py</code></td>
+<td>感知</td>
+<td><code>mj_ray</code> 扇面求交、自车与地面屏蔽、距离归一化</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/expert.py</code></td>
+<td>纯逻辑</td>
+<td>专家转向/油门策略，仅作离线教师标签</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/kinematics.py</code></td>
+<td>纯函数</td>
+<td><code>(steer, throttle)</code> 到左右轮角速度的差速解算，不依赖 MuJoCo</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/model.py</code></td>
+<td>纯逻辑</td>
+<td>纯 numpy MLP：前向、MSE 反传、minibatch 训练、权重保存与加载</td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/ros_node.py</code></td>
+<td>ROS 2</td>
+<td>推理节点：订阅 <code>/scan</code>、<code>/odom</code>，MLP 推理后发布 <code>/cmd_vel</code></td>
+</tr>
+<tr>
+<td><code>mujoco_car_nn_avoidance/sim_bridge.py</code></td>
+<td>ROS 2</td>
+<td>仿真桥接节点：在 ROS 里跑 MuJoCo 小车，发布 <code>/scan</code>、<code>/odom</code>，订阅 <code>/cmd_vel</code>，记录轨迹</td>
+</tr>
+<tr>
+<td><code>models/car_scene_basic.xml</code></td>
+<td>场景</td>
+<td>正前方单障碍（x=3.2, y=0，半宽 0.30 m）</td>
+</tr>
+<tr>
+<td><code>models/car_scene_slalom.xml</code></td>
+<td>场景</td>
+<td>两障碍交错：(3.0, 0) 半宽 0.30 m、(5.4, −0.85) 半宽 0.26 m</td>
+</tr>
+<tr>
+<td><code>models/car_scene_dual.xml</code></td>
+<td>场景</td>
+<td>两障碍偏置：(3.0, 0.7) 半宽 0.30 m、(4.8, −0.7) 半宽 0.30 m</td>
+</tr>
+<tr>
+<td><code>config/params.yaml</code></td>
+<td>ROS 参数</td>
+<td>桥接节点读取的场景列表、目标距离、单场景超时</td>
+</tr>
+<tr>
+<td><code>launch/main.launch.py</code></td>
+<td>launch</td>
+<td>双节点闭环，桥接节点退出后关闭整个 launch</td>
+</tr>
+<tr>
+<td><code>test/test_model.py</code></td>
+<td>测试</td>
+<td>网络维度、输出范围、权重初始化、保存加载一致性（不需要 MuJoCo）</td>
+</tr>
+<tr>
+<td><code>test/test_expert.py</code></td>
+<td>测试</td>
+<td>专家策略：巡航回正、朝开放侧转向、油门分级、转向限幅</td>
+</tr>
+<tr>
+<td><code>test/test_kinematics.py</code></td>
+<td>测试</td>
+<td>差速解算：直行等速、左右转向轮速差、原地旋转、限幅</td>
+</tr>
+<tr>
+<td><code>test/test_scene_and_sensors.py</code></td>
+<td>测试</td>
+<td>三场景加载、前方障碍检出、射线不打自车、直行不跑偏、给轮速能前进</td>
+</tr>
+<tr>
+<td><code>tools/check_scene.py</code></td>
+<td>工具</td>
+<td>场景冒烟：加载三场景、直行 2 s 检查贴地与前进、射线命中是否正常</td>
+</tr>
+<tr>
+<td><code>tools/diagnose.py</code></td>
+<td>工具</td>
+<td>单场景 NN 闭环诊断，打印轨迹与关键状态量</td>
+</tr>
+<tr>
+<td><code>tools/diagnose_expert.py</code></td>
+<td>工具</td>
+<td>单场景专家闭环诊断，核对标签覆盖的行驶状态</td>
+</tr>
+</tbody>
+</table>
+<p>决策、运动学、网络三个模块不导入 MuJoCo；<code>main.py</code> 顶层也只导入这些纯逻辑模块，仿真环境 <code>CarEnv</code>、射线 <code>ray_scan</code> 在采集、评测、演示分支内部延迟导入。因此未安装仿真器时，<code>python3 main.py --test --logic-only</code> 可以正常启动并跑完纯逻辑单测；需要 MuJoCo 的场景与传感器测试在缺少依赖时自动跳过。纯逻辑测试也可以绕开入口脚本直接运行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-p<span class="w"> </span><span class="s2">"test_*.py"</span>
+</code></pre></div>
+<h2 id="5">5. 仿真运行步骤</h2>
+<h3 id="51">5.1 支持与测试环境</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 22.04（虚拟机，实测通过）；Windows 本地 Python 环境可跑纯仿真；20.04 见下</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10（虚拟机 3.10.12，本地 3.10.11）</td>
+</tr>
+<tr>
+<td>MuJoCo</td>
+<td>3.15.0（虚拟机实测；课程要求 3.12.0，本模块只使用稳定接口，3.12～3.15 均可运行）</td>
+</tr>
+<tr>
+<td>numpy</td>
+<td>1.26.4（虚拟机）</td>
+</tr>
+<tr>
+<td>可选依赖</td>
+<td><code>matplotlib</code> 画评测曲线、<code>imageio</code> + <code>pillow</code> 合成演示 gif；缺失时程序自动跳过绘图</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>ROS 2 Humble（仅 ROS 节点与 <code>--launch</code> 需要）</td>
+</tr>
+<tr>
+<td>显卡</td>
+<td>不需要；默认离屏无窗口运行</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Ubuntu 20.04 + Humble 的 Python 版本</p>
+<p>20.04 上 ROS 2 Humble 的 <code>_rclpy_pybind11</code> 针对系统 Python 3.8 编译，ROS 节点须用 3.8 运行；
+仿真部分（<code>main.py --collect/--train/--eval/--demo/--test</code>）与 ROS 节点无进程内耦合，可单独用 3.10 解释器运行。
+本模块实测环境为 Ubuntu 22.04 + Humble，20.04 仅为兼容说明，未在 20.04 上复测。</p>
+</div>
+<h3 id="52">5.2 安装</h3>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python3-pip<span class="w"> </span>libgl1
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/ground/mujoco_car_nn_avoidance/requirements.txt
+</code></pre></div>
+<h3 id="53">5.3 本地纯仿真运行</h3>
+<p>在模块根目录 <code>src/ground/mujoco_car_nn_avoidance/</code> 下执行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--version<span class="w">        </span><span class="c1"># 先确认代码版本，避免对着旧文件排查</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--test<span class="w">            </span><span class="c1"># 自检：纯逻辑单测 + 场景冒烟（需要 MuJoCo）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--test<span class="w"> </span>--logic-only<span class="w">   </span><span class="c1"># 只跑纯逻辑单测，不加载 MuJoCo、不跑场景冒烟</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--seconds<span class="w"> </span><span class="m">20</span><span class="w">   </span><span class="c1"># 探索式采集 射线 -&gt; 专家标签（3 场景共约 3000 样本）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--train<span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span><span class="w">    </span><span class="c1"># 训练 MLP</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--eval<span class="w">            </span><span class="c1"># 三场景闭环评测，导出报表与柱状图</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--demo<span class="w">            </span><span class="c1"># 离屏渲染录制演示 gif</span>
+</code></pre></div>
+<p><code>main.sh</code> / <code>main.bat</code> 是脚本入口，无参数时默认执行 <code>--eval</code>；在虚拟机里用 <code>bash main.sh --eval</code>，Windows 上用 <code>main.bat --eval</code>。</p>
+<p>采集与训练属于准备步骤；仓库里已经随包附带训练好的 <code>results/mlp_weights.npz</code>，只想复现评测和演示时直接跑 <code>--eval</code> / <code>--demo</code> 即可。</p>
+<h3 id="54-ros-2">5.4 ROS 2 闭环</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>mujoco_car_nn_avoidance<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_car_nn_avoidance<span class="w"> </span>main.launch.py
+</code></pre></div>
+<p>另开终端可以观察话题：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/scan<span class="w"> </span>--once
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/odom<span class="w"> </span>--once
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/cmd_vel
+</code></pre></div>
+<p>桥接节点依次跑完三个场景后自动画轨迹图并退出，launch 随之关闭。</p>
+<h2 id="6">6. 运行效果</h2>
+<p><img alt="神经网络端到端避障演示" src="../../img/ground/mujoco_car_nn_avoidance_demo.gif"/></p>
+<p><em>basic 场景俯视演示：蓝色小车在神经网络控制下绕开正前方红色障碍并回到前进方向；动图共 450 帧、每帧 40 ms（25 fps）、总时长 18 s，按真实仿真速度播放</em></p>
+<p><img alt="三场景评测耗时与最小离障距离" src="../../img/ground/mujoco_car_nn_avoidance_curves.png"/></p>
+<p><em>左：三场景到达目标的耗时；右：全程最小离障距离（<code>--eval</code> 自动导出）</em></p>
+<p><img alt="ROS 2 闭环真实轨迹" src="../../img/ground/mujoco_car_nn_avoidance_ros_trajectory.png"/></p>
+<p><em>Ubuntu 22.04 Humble 虚拟机内 ROS 闭环实测轨迹：蓝色为真实行驶轨迹，红色为障碍物，灰色虚线为目标线 x=6.0 m</em></p>
+<h2 id="7">7. 性能评价</h2>
+<h3 id="71-mujoco">7.1 本地 MuJoCo 闭环实测</h3>
+<p>评测加载随包附带的权重，每个场景从起点真实闭环运行，由神经网络端到端控制。到达判定：车体 <script type="math/tex">x>6.0\,\text{m}</script>；单场景超时 30 s 记为失败。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">是否避障成功</th>
+<th style="text-align: center;">到达耗时 (s)</th>
+<th style="text-align: center;">最小离障 (m)</th>
+<th style="text-align: center;">最大转向</th>
+<th style="text-align: center;">终点 x (m)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>basic（正前方单障碍）</td>
+<td style="text-align: center;">成功</td>
+<td style="text-align: center;">17.70</td>
+<td style="text-align: center;">0.937</td>
+<td style="text-align: center;">0.493</td>
+<td style="text-align: center;">6.00</td>
+</tr>
+<tr>
+<td>slalom（两障碍交错）</td>
+<td style="text-align: center;">成功</td>
+<td style="text-align: center;">18.62</td>
+<td style="text-align: center;">1.574</td>
+<td style="text-align: center;">0.542</td>
+<td style="text-align: center;">6.01</td>
+</tr>
+<tr>
+<td>dual（两障碍偏置）</td>
+<td style="text-align: center;">成功</td>
+<td style="text-align: center;">15.98</td>
+<td style="text-align: center;">1.711</td>
+<td style="text-align: center;">0.601</td>
+<td style="text-align: center;">6.01</td>
+</tr>
+</tbody>
+</table>
+<p>三个场景全部到达目标，全程未碰撞；障碍半宽 0.26～0.30 m，最小离障距离保持在 0.93 m 以上，留有安全裕度。到达耗时对应平均前进速度约 0.32～0.38 m/s，靠近障碍时网络自动减速绕行。</p>
+<h3 id="72-ros-2-ubuntu-2204-humble">7.2 ROS 2 闭环实测（Ubuntu 22.04 + Humble 虚拟机）</h3>
+<p><code>ros2 launch</code> 双节点闭环复跑三个场景，避障结果与本地评测一致：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">终点 x (m)</th>
+<th style="text-align: center;">闭环耗时 (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>basic</td>
+<td style="text-align: center;">6.00</td>
+<td style="text-align: center;">17.5</td>
+</tr>
+<tr>
+<td>slalom</td>
+<td style="text-align: center;">6.01</td>
+<td style="text-align: center;">18.5</td>
+</tr>
+<tr>
+<td>dual</td>
+<td style="text-align: center;">6.01</td>
+<td style="text-align: center;">15.7</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73">7.3 指标定义</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>success</code></td>
+<td>是否在 30 s 内到达 <script type="math/tex">x>6.0\,\text{m}</script>
+</td>
+</tr>
+<tr>
+<td><code>time_s</code></td>
+<td>到达耗时（真实仿真时间，一个控制周期 = 10 个物理步）</td>
+</tr>
+<tr>
+<td><code>min_clearance_m</code></td>
+<td>全程射线距离最小值，越大越安全</td>
+</tr>
+<tr>
+<td><code>max_steer</code></td>
+<td>全程转向指令绝对值的最大值</td>
+</tr>
+<tr>
+<td><code>final_x</code></td>
+<td>结束时刻车体 x 坐标</td>
+</tr>
+</tbody>
+</table>
+<p>以上数值均为真实仿真输出，可在本地执行 <code>python3 main.py --eval</code> 复现，不是手工填写。</p>
+<h2 id="8">8. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'mujoco'</code></td>
+<td>依赖没装好，或 <code>pip</code> 与解释器不一致；用 <code>python3 -m pip install -r requirements.txt</code> 对齐当前解释器</td>
+</tr>
+<tr>
+<td>虚拟机里 <code>--demo</code> 起不来</td>
+<td>虚拟机无图形界面与 GLFW 上下文；本地仿真改用 <code>--eval</code> 出曲线，演示 gif 在具备离屏渲染的环境录制</td>
+</tr>
+<tr>
+<td>训练后 loss 降不下去、车直行冲障碍</td>
+<td>检查采集转向样本占比是否偏低；确认 <code>--collect</code> 加了探索噪声，必要时加大 <code>--seconds</code> 多采贴近障碍的状态</td>
+</tr>
+<tr>
+<td>ROS 节点启动报找不到 <code>mlp_weights.npz</code></td>
+<td>确认用 <code>--symlink-install</code> 构建，权重已通过 <code>setup.py</code> 的 <code>data_files</code> 安装到 <code>share/mujoco_car_nn_avoidance/results/</code></td>
+</tr>
+<tr>
+<td>静止时射线报出 0.3 m 左右的"近障碍"</td>
+<td>射线打到了自车轮子；检查自车 geom group 2 与 <code>bodyexclude</code> 是否生效，可先跑 <code>python3 tools/check_scene.py</code></td>
+</tr>
+<tr>
+<td>ROS 启动报 <code>ParseXML: Error opening file</code></td>
+<td>场景 XML 未随包安装；确认 <code>setup.py</code> 的 <code>data_files</code> 已打包 <code>models/*.xml</code>，重新 <code>colcon build</code></td>
+</tr>
+<tr>
+<td><code>--test</code> 中场景测试被跳过</td>
+<td>当前环境没装 MuJoCo，纯逻辑测试照常执行，场景与传感器测试自动跳过；装好 MuJoCo 后会全部运行</td>
+</tr>
+<tr>
+<td>未装 MuJoCo 时 <code>main.py --test</code> 起不来</td>
+<td>先用 <code>python3 main.py --test --logic-only</code> 跑纯逻辑单测；也可直接 <code>python3 -m unittest discover -s test -p "test_*.py"</code>；采集、评测、演示、场景冒烟命令需要先装好 MuJoCo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9">9. 参考</h2>
+<ul>
+<li>MuJoCo 文档：射线求交 <code>mj_ray</code>、几何体分组 <code>geom group</code>、速度执行器 <code>&lt;velocity&gt;</code></li>
+<li>仓库规则基线：<code>docs/ground/mujoco_car_avoidance.md</code>（同一差速底盘的规则避障实现）</li>
+<li>课程仓库已有作业：<code>src/water/rov_mujoco</code>（MuJoCo + ROS 2 水下机器人示例）</li>
+</ul>
+<h2 id="_1">辅助工具说明</h2>
+<p>编写过程中使用 AI 编程助手（豆包）辅助代码与文档起草，全部代码、模型与实测结果均在 Ubuntu 22.04 + MuJoCo 3.15 环境中真实跑通验证，提交者对内容负责。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../mujoco_car_avoidance/" title="MuJoCo 地面小车射线感知与分级减速避障"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../car_2d_target_tracker/" title="2D 小车目标追踪仿真">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../mujoco_car_avoidance/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../car_2d_target_tracker/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
