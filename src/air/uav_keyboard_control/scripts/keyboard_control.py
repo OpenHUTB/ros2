@@ -6,16 +6,21 @@
     W/S   前进 / 后退
     A/D   左移 / 右移
     R/F   上升 / 下降
-    Q/E   右转 / 左转（Q=+yaw_rate 机头右转，遵循 AirSim 机体系 yaw_rate 约定）
-    其它键 / 松开    悬停（速度清零）
-    ESC 或 Ctrl-C     退出
+    Q/E   右转 / 左转（Q=+yaw_rate，机头右转；E=-yaw_rate，机头左转）
+    空格   悬停（速度清零）
+
+各轴默认幅值见 config/keyboard.yaml；速度单位 m/s，偏航角速度 rad/s。
+
+Linux 原始终端没有按键松开事件，这里用"状态锁存 + 超时悬停"：
+- 按住按键时终端自动重复上报字符，节点持续保持该指令；
+- 松开按键（或焦点丢失导致收不到字符）后，超过 hold_timeout 秒没有新按键，
+  自动清零悬停，避免节点一直保持上一条指令把无人机带飞。
 
 发布：
-    /uav/cmd_vel   geometry_msgs/Twist   机体系速度指令（默认 30 Hz）
+    /uav/cmd_vel   geometry_msgs/Twist   机体系速度（默认 30 Hz）
 
 依赖：
     需要 carlair_ros_bridge 已启动并订阅 /uav/cmd_vel；本模块只发指令，不直连仿真器。
-    这正是任务①"无人机仿真 + 键盘控制"的分工：仿真/坐标换算在桥接层，键盘只管下发。
 """
 from __future__ import annotations
 
@@ -42,16 +47,17 @@ HELP_TEXT = """
   A / D     左移 / 右移
   R / F     上升 / 下降
   Q / E     右转 / 左转
-  松开按键   悬停
-  ESC       退出
+  空格      悬停
+  按住按键持续飞行；松开后自动悬停；ESC 退出
 ============================================================
 """
 
 
-def key_to_cmd(key, horiz_speed=2.0, vert_speed=1.0, yaw_rate=1.0):
+def key_to_cmd(key, forward_speed=2.0, side_speed=0.5,
+               vert_speed=1.0, yaw_rate=0.4):
     """单个按键 -> 机体系速度 (vx, vy, vz, wz)；无按键返回全零；未知键返回 None.
 
-    纯函数：不依赖 ROS / 终端，便于单元测试。
+    纯函数：不依赖 ROS / 终端，便于单元测试。各轴速度由参数传入，默认值见配置文件。
     """
     if not key:
         return (0.0, 0.0, 0.0, 0.0)
@@ -59,10 +65,15 @@ def key_to_cmd(key, horiz_speed=2.0, vert_speed=1.0, yaw_rate=1.0):
     if k not in KEY_MAP:
         return None
     axis, sign = KEY_MAP[k]
-    vx = horiz_speed * sign if axis == "forward" else 0.0
-    vy = horiz_speed * sign if axis == "left" else 0.0
-    vz = vert_speed * sign if axis == "up" else 0.0
-    wz = yaw_rate * sign if axis == "yaw" else 0.0
+    vx = vy = vz = wz = 0.0
+    if axis == "forward":
+        vx = forward_speed * sign
+    elif axis == "left":
+        vy = side_speed * sign
+    elif axis == "up":
+        vz = vert_speed * sign
+    else:  # yaw
+        wz = yaw_rate * sign
     return (vx, vy, vz, wz)
 
 
@@ -111,16 +122,21 @@ class RawKeyReader(object):
 
 
 class KeyboardController(object):
-    """读取按键并把速度指令发布到 /uav/cmd_vel."""
+    """读取按键并把速度指令发布到 /uav/cmd_vel（锁存 + 超时悬停）."""
 
     def __init__(self):
-        self.horiz = float(rospy.get_param("control/horiz_speed", 2.0))
+        self.forward = float(rospy.get_param("control/forward_speed", 2.0))
+        self.side = float(rospy.get_param("control/side_speed", 0.5))
         self.vert = float(rospy.get_param("control/vert_speed", 1.0))
-        self.yaw = float(rospy.get_param("control/yaw_rate", 1.0))
+        self.yaw = float(rospy.get_param("control/yaw_rate", 0.4))
         topic = rospy.get_param("topic/cmd_vel", "/uav/cmd_vel")
         rate_hz = float(rospy.get_param("rate/publish_hz", 30.0))
+        self.hold_timeout = float(rospy.get_param("control/hold_timeout", 0.3))
         self.pub = rospy.Publisher(topic, Twist, queue_size=1)
         self.rate = rospy.Rate(rate_hz)
+        # 状态锁存：记录最近一次有效指令与时间；超时无新按键则清零悬停。
+        self._current = (0.0, 0.0, 0.0, 0.0)
+        self._last_active = rospy.Time(0)
 
     # ------------------------------------------------------------------ 核心
     def build_twist(self, cmd):
@@ -133,12 +149,37 @@ class KeyboardController(object):
         t.angular.z = wz
         return t
 
+    def _cmd(self, key):
+        return key_to_cmd(key, self.forward, self.side, self.vert, self.yaw)
+
     def step_once(self, key):
-        """把一次按键转换成一个 Twist 消息（独立成函数，便于无 ROS 的单元测试）."""
-        cmd = key_to_cmd(key, self.horiz, self.vert, self.yaw)
-        if cmd is None:          # 未知键（如方向键的转义序列）-> 按松开处理，悬停
+        """把一次按键转换成一个 Twist（独立成函数，便于无 ROS 的单元测试）."""
+        cmd = self._cmd(key)
+        if cmd is None:          # 未知键（如方向键的转义序列）-> 按悬停处理
             cmd = (0.0, 0.0, 0.0, 0.0)
         return self.build_twist(cmd)
+
+    def feed_key(self, key, now=None):
+        """并入一个读到的按键，返回当前应发布的指令（锁存 + 超时悬停）.
+
+        - 有效键：更新指令并刷新活动时间；
+        - 空格/未知键：立即清零悬停；
+        - None（无新按键）：在 hold_timeout 内保持上一条指令，超时则清零悬停。
+        ``now`` 用于注入当前时间，便于离线测试。
+        """
+        if now is None:
+            now = rospy.Time.now()
+        if key is None:
+            if (now - self._last_active).to_sec() > self.hold_timeout:
+                self._current = (0.0, 0.0, 0.0, 0.0)
+            return self._current
+        cmd = self._cmd(key)
+        if cmd is None:
+            self._current = (0.0, 0.0, 0.0, 0.0)
+        else:
+            self._current = cmd
+        self._last_active = now
+        return self._current
 
     # ------------------------------------------------------------------ 主循环
     def spin(self):
@@ -149,7 +190,8 @@ class KeyboardController(object):
                 if key == "\x1b":            # ESC 退出
                     print("\n已退出键盘控制")
                     break
-                self.pub.publish(self.step_once(key))
+                cmd = self.feed_key(key, now=rospy.Time.now())
+                self.pub.publish(self.build_twist(cmd))
                 self.rate.sleep()
 
 
