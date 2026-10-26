@@ -1,0 +1,6 @@
+path: /home/ncut/.ros/drone_dataset
+train: images
+val: images
+names:
+  0: car
+  1: person
