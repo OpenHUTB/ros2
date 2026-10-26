@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>two_dof_arm</name>
+  <version>0.0.0</version>
+  <description>Two DOF robotic arm drawing circle trajectory in Gazebo</description>
+  <maintainer email="hjy@todo.todo">hjy</maintainer>
+  <license>Apache 2.0</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>xacro</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>robot_state_publisher</build_depend>
+  <build_depend>controller_manager</build_depend>
+  <build_depend>position_controllers</build_depend>
+  <build_depend>joint_state_controller</build_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>joint_state_controller</exec_depend>
+  <export>
+  </export>
+</package>
