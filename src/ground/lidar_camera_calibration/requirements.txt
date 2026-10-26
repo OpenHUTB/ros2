@@ -1,0 +1,9 @@
+# Python 运行依赖（安装到 ROS 2 的 Python 环境，不要用独立 venv，保证 rclpy 可导入）：
+#
+#     python3 -m pip install --user -r requirements.txt
+#
+# numpy 下限与 ROS 2 Humble 自带版本（1.21.x）一致，避免 --user 安装更高版本
+# 遮蔽系统 numpy。
+numpy>=1.21,<2.0
+opencv-python>=4.5
+matplotlib>=3.3
