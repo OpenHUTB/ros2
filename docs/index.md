@@ -114,6 +114,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
+* [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
+
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
 
