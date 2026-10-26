@@ -33,3 +33,11 @@ def test_train_save_and_reload_predicts_same_output(tmp_path):
 def test_rejects_invalid_training_data():
     with pytest.raises(ValueError):
         train_controller(np.zeros((10, 15)), np.zeros((10, 3)))
+
+
+def test_train_and_test_scenes_are_disjoint():
+    from facade.dataset import TEST_SCENARIOS, TRAIN_SCENARIOS
+
+    train_styles = {scene["style"] for scene in TRAIN_SCENARIOS}
+    test_styles = {scene["style"] for scene in TEST_SCENARIOS}
+    assert train_styles.isdisjoint(test_styles)

@@ -14,10 +14,13 @@
 python3 -m pip install -r requirements.txt
 python3 main.py --output output/grid --style grid
 python3 main.py --output output/brick --style brick --offset 0.5
+python3 train.py --output output/training
+python3 main.py --controller neural --output output/neural --style plain --offset 0.5
 ros2 launch ./launch/main.launch.py output:=/tmp/facade_scan style:=grid
+ros2 launch ./launch/main.launch.py output:=/tmp/facade_neural style:=plain controller:=neural
 ```
 
-默认完成 12 个扫描航点。结果目录包含 `trajectory.csv`、`metrics.json`、12 张前视照片及 `overview.png`。`--no-images` 用于仅计算物理轨迹；`--duration` 控制最大仿真时间，单位为秒。
+默认完成 12 个扫描航点。结果目录包含 `trajectory.csv`、`metrics.json`、12 张前视照片及 `overview.png`。`train.py` 重新生成训练数据、训练网络并保存评估。训练输入包括九束测距、航点偏差和当前速度；输出为三个方向的归一化速度指令。内置权重文件可由 `--model` 替换。`--no-images` 用于仅计算物理轨迹；`--duration` 控制最大仿真时间，单位为秒。
 
 ## 模型范围
 
@@ -30,4 +33,4 @@ python3 -m pip install pytest
 python3 -m pytest test -q
 ```
 
-测试覆盖航线参数边界、蛇形遍历、测距投影、力驱动运动和完整航点到达。算法与完整操作步骤见[教程](../../../docs/air/mujoco_facade_capture/index.md)。
+测试覆盖航线参数边界、蛇形遍历、测距投影、力驱动运动、场景级数据划分和权重读写。算法与完整操作步骤见[教程](../../../docs/air/mujoco_facade_capture/index.md)。

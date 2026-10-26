@@ -13,6 +13,9 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("output", default_value="/tmp/facade_scan", description="扫描结果目录"),
         DeclareLaunchArgument("style", default_value="grid", description="立面类型"),
+        DeclareLaunchArgument("controller", default_value="proportional", description="控制器类型"),
+        DeclareLaunchArgument("model", default_value=str(root / "models/facade_controller.json"), description="神经网络权重文件"),
         ExecuteProcess(cmd=[sys.executable, str(root / "main.py"), "--output", LaunchConfiguration("output"),
-                            "--style", LaunchConfiguration("style")], output="screen"),
+                            "--style", LaunchConfiguration("style"), "--controller",
+                            LaunchConfiguration("controller"), "--model", LaunchConfiguration("model")], output="screen"),
     ])

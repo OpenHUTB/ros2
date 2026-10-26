@@ -48,7 +48,7 @@ def collect_scenarios(output: Path, scenarios: Iterable[dict],
                 if valid.size:
                     error[1] = float(np.median(valid)) - float(scenario["distance"])
                     velocity = sim.velocity
-                    command = expert_velocity(error)
+                    command = expert_velocity(error, sim.velocity)
                     if step % sample_every == 0:
                         all_features.append(control_features(error, ranges, velocity,
                                                              float(scenario["distance"])))
