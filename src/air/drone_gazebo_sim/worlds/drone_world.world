@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="drone_world">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+
+    <!-- 红色目标（无人机要跟踪的） -->
+    <model name="red_target">
+      <static>true</static>
+      <pose>5 0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box size="0.5 0.5 1"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Red</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 绿色障碍柱 -->
+    <model name="obstacle1">
+      <static>true</static>
+      <pose>2 2 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder radius="0.3" length="1"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obstacle2">
+      <static>true</static>
+      <pose>3 -2 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder radius="0.3" length="1"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
