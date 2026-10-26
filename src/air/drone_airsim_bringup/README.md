@@ -13,8 +13,9 @@ CarlaAir 把 CARLA 和 AirSim 放在同一个 UE4 进程里，但 AirSim 只提�
 - 发布 `/drone/camera/image_raw`（`sensor_msgs/Image`，bgr8）；
 - 发布 `/drone/depth/image_raw`（`sensor_msgs/Image`，32FC1，单位米）；
 - 发布 `/drone/imu`（`sensor_msgs/Imu`，NED 机体系）；
-- 订阅 `/drone/cmd_vel`（NED 速度，`geometry_msgs/Twist`）；
-- 提供 `/drone/takeoff`、`/drone/land` 服务（`std_srvs/Empty`）。
+- 订阅 `/drone/cmd_vel`（NED 速度 + 偏航角速度，`geometry_msgs/Twist`）；
+- 提供 `/drone/takeoff`、`/drone/land` 服务（`std_srvs/Empty`）；
+- 提供键盘遥控节点 `teleop.py`（w/s/a/d/r/f/q/e + t/l）。
 
 ## 传感器与频率（实测）
 
@@ -36,6 +37,36 @@ RGB + 深度一次 `simGetImages` 大约要 0.3 秒。最开始用同一个 AirS
 
 两个客户端各自持有独立的 IOLoop，互不阻塞；实测 pose/IMU 稳定在 10 Hz。
 
+## 键盘遥控
+
+终端 1 启动 bringup：
+
+```bash
+roslaunch drone_airsim_bringup drone_bringup.launch host:=192.168.189.1 port:=41451
+```
+
+终端 2 启动遥控：
+
+```bash
+rosrun drone_airsim_bringup teleop.py
+```
+
+按键：
+
+| 按键 | 动作 |
+|---|---|
+| `w` / `s` | 前进 / 后退（NED x） |
+| `a` / `d` | 左 / 右（NED y） |
+| `r` / `f` | 上升 / 下降（NED z，r 是上升） |
+| `q` / `e` | 左 / 右偏航 |
+| `space` | 停止 |
+| `t` / `l` | 起飞 / 降落 |
+| `Ctrl-C` | 退出 |
+
+也可以直接用 `roslaunch drone_airsim_bringup drone_teleop.launch`，它会同时启动 bringup 和 teleop，并用 `xterm` 打开遥控窗口（需要安装 `xterm`）。
+
+实测：`/drone/cmd_vel` 约 19.7 Hz；发布 `vx=2 m/s` 持续 2 s，NED x 从 -0.05 到 3.24（约 3.3 m）。
+
 ## 目录结构
 
 ```text
@@ -47,9 +78,11 @@ src/air/drone_airsim_bringup/
 ├── config/
 │   └── settings.json
 ├── launch/
-│   └── drone_bringup.launch
+│   ├── drone_bringup.launch
+│   └── drone_teleop.launch
 └── scripts/
-    └── main.py
+    ├── main.py
+    └── teleop.py
 ```
 
 ## 环境
@@ -165,4 +198,4 @@ pose:
 
 ## 整体任务进度
 
-见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 1 的 PR2（深度/IMU + 10 Hz 状态），后续 PR3（键盘遥控）会在这个包上继续加。
+见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 1 的 PR3（键盘遥控 + 起降演示），阶段 1 已齐。
