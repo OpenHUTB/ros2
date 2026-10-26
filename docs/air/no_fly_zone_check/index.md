@@ -42,6 +42,6 @@ $$
 
 程序启动后会尝试连接 AirSim 模拟器。
 
-![运行截图](../../img/cha/no_fly_zone_check_airsim_result.png)
+![运行截图](../../img/cha/airsim_connect_success.png)
 
 **说明**：上图为本地启动 AirSim 1.8.1 模拟器并成功连接后的运行结果，获取到无人机位置并完成禁飞区检测
