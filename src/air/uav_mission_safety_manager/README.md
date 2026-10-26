@@ -1,6 +1,8 @@
 # 无人机任务管理与安全状态机
 
-ROS2 Foxy / Ubuntu 20.04 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降落与安全超时检测。
+ROS 2 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降落与安全超时检测；原有 AirSim 流程使用 Ubuntu 20.04 / Foxy 验证。
+
+新增：**多航点任务队列**，在 Ubuntu 22.04 / ROS 2 Humble 下构建与验证，支持最多 100 点顺序执行、进度反馈、暂停恢复和取消。详见[Humble 构建与本地演示](../../../docs/air/uav_mission_safety_manager/overview.md#waypoint-queue)。以下 Foxy 安装步骤保留供历史 AirSim 用法参考，Humble 演示请使用上述文档中的多航点章节。
 
 ## 文档入口
 
@@ -84,7 +86,7 @@ ros2 run uav_mission_safety_manager mission_manager --ros-args -p use_airsim:=fa
 
 起飞 RPC 可能返回 False 但遥测显示已离地，原因未确定。FAILSAFE 不保证自动降落，停止节点不会停止模拟器飞行任务。
 坐标为 AirSim NED；普通航点容差为 1 米。屋顶落地兼容逻辑仅限记录起点，不代表任意地形或真机验证。
-未实现任务队列、ROS2 Action、避障或实际电子围栏。详见实测记录。
+多航点队列的本次验证使用本地运动演示适配器，尚未执行 AirSim 队列飞行。未实现 ROS2 Action、避障或实际电子围栏。详见新教程与历史实测记录。
 
 ## 维护与许可证
 
