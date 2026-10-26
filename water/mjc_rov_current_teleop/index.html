@@ -357,11 +357,11 @@ sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> <
 <h2 id="_3">动力学模型</h2>
 <p>水下动力学在代码层施加（不依赖 MuJoCo 流体扩展），每步向 <code>qfrc_applied</code> 叠加：</p>
 <ol>
-<li><strong>浮力补偿</strong>：$F_z = m \cdot g$（近似中性浮力）</li>
-<li><strong>黏性阻尼</strong>：$F_{lin} = -c_{lin} \cdot v$，$F_{ang} = -c_{ang} \cdot \omega$</li>
+<li><strong>浮力补偿</strong>：<code>Fz = m·g</code>（近似中性浮力）</li>
+<li><strong>黏性阻尼</strong>：<code>Flin = -clin·v</code>，<code>Fang = -cang·ω</code></li>
 <li><strong>姿态自稳</strong>：横滚/俯仰误差比例力矩</li>
-<li><strong>洋流扰动</strong>：$F_x = a_x \sin(\omega_x t),\; F_y = a_y \sin(\omega_y t)$</li>
-<li><strong>速度闭环推力</strong>：$F = K_p (v_{cmd} - v_{actual})$，限幅</li>
+<li><strong>洋流扰动</strong>：<code>Fx = ax·sin(ωx·t)，Fy = ay·sin(ωy·t)</code></li>
+<li><strong>速度闭环推力</strong>：<code>F = Kp(vcmd - vactual)</code>，限幅</li>
 </ol>
 <h2 id="_4">话题</h2>
 <table>
