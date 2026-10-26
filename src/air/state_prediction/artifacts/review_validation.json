@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-03",
+  "module": "state_prediction",
+  "nonstandard_colcon_module_deliberately_blocked": true,
+  "colcon_core_build_passed": true,
+  "requirements_command_passed_without_new_downloads": true,
+  "unit_tests_passed": 4,
+  "demo_passed": true,
+  "scope": "same Ubuntu VM; new source folders and builds; no external-machine claim",
+  "ros_flow": {
+    "state_count": 279,
+    "forecast_count": 78,
+    "error_count": 233,
+    "horizons_seen": [
+      0.5,
+      0.25,
+      1.0
+    ],
+    "median_inference_ms": 1.178372000026684,
+    "passed": true
+  },
+  "checkpoint_metrics_rows_reproduced": 9
+}

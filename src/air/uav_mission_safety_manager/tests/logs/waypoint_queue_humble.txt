@@ -1,0 +1,84 @@
+Waypoint queue validation
+Date: 2026-10-23 (Asia/Shanghai)
+Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10.12 / WSL2
+Base: 80e3b58b90c9a0c018a4173d14deee90950b39a9
+Adapter: local kinematic demo, NOT AirSim or a real vehicle.
+COMPLETED: all waypoints reached within 1m and hover requested; no precise-stop claim.
+
+=== rosdep check ===
+All system dependencies have been satisfied
+
+=== colcon build ===
+Starting >>> uav_mission_safety_manager
+Finished <<< uav_mission_safety_manager [0.94s]
+
+Summary: 1 package finished [1.29s]
+
+=== unittest discover ===
+test_cancellation_timeout_never_dispatches_landing (test_adapter.TestAdapter) ... ok
+test_cancelled_move_finishes_before_landing_starts (test_adapter.TestAdapter) ... ok
+test_landing_wait_does_not_block_telemetry_or_disarm_worker (test_adapter.TestAdapter) ... ok
+test_rpc_command_and_telemetry_use_independent_workers (test_adapter.TestAdapter) ... ok
+test_connect_rejects_moving_vehicle_even_if_landed_flag_is_stale (test_controller.TestController) ... ok
+test_disarm_failure_does_not_claim_landed (test_controller.TestController) ... ok
+test_failed_landing_result_enters_failsafe (test_controller.TestController) ... ok
+test_flight_operation_deadline_with_healthy_telemetry (test_controller.TestController) ... ok
+test_invalid_land_has_no_external_effect (test_controller.TestController) ... ok
+test_land_can_interrupt_return (test_controller.TestController) ... ok
+test_land_consumes_completed_precision_dispatch_before_next_timer (test_controller.TestController) ... ok
+test_landing_requires_fresh_telemetry (test_controller.TestController) ... ok
+test_landing_rpc_error_does_not_claim_landed (test_controller.TestController) ... ok
+test_landing_success_alone_never_disarms_in_air_or_away_from_home (test_controller.TestController) ... ok
+test_manual_completion_events_rejected_in_airsim_mode (test_controller.TestController) ... ok
+test_nonfinite_waypoint_rejected_before_dispatch (test_controller.TestController) ... ok
+test_pending_rpc_does_not_block_tick_or_timeout (test_controller.TestController) ... ok
+test_resume_reissues_target (test_controller.TestController) ... ok
+test_return_corrects_offset_instead_of_landing_one_metre_away (test_controller.TestController) ... ok
+test_return_stability_restarts_after_drift (test_controller.TestController) ... ok
+test_return_uses_captured_home_and_lands_automatically (test_controller.TestController) ... ok
+test_sample_before_land_request_cannot_complete_landing (test_controller.TestController) ... ok
+test_simpleflight_disarm_then_wait_for_fresh_landed_confirmation (test_controller.TestController) ... ok
+test_stationary_home_without_landing_success_never_disarms (test_controller.TestController) ... ok
+test_takeoff_false_is_recorded_without_inventing_ground_state (test_controller.TestController) ... ok
+test_takeoff_waits_for_observed_altitude (test_controller.TestController) ... ok
+test_telemetry_gap_restarts_stationary_confirmation (test_controller.TestController) ... ok
+test_moves_at_requested_speed_and_hover_stops (test_demo_adapter.TestDemoAdapter) ... ok
+test_takeoff_and_land_are_confirmed_by_demo_telemetry (test_demo_adapter.TestDemoAdapter) ... ok
+test_unknown_command_rejected (test_demo_adapter.TestDemoAdapter) ... ok
+test_zero_velocity_correction_at_current_position_is_stationary (test_demo_adapter.TestDemoAdapter) ... ok
+test_altitude_violation_aborts_queue (test_mission_queue.TestMissionQueue) ... ok
+test_cancel_discards_remaining_targets_even_after_resume (test_mission_queue.TestMissionQueue) ... ok
+test_cancel_without_mission_has_no_side_effects (test_mission_queue.TestMissionQueue) ... ok
+test_expired_arrival_cannot_reset_leg_timeout (test_mission_queue.TestMissionQueue) ... ok
+test_goto_and_new_mission_cannot_silently_replace_queue (test_mission_queue.TestMissionQueue) ... ok
+test_invalid_tail_has_no_partial_dispatch_or_queue_change (test_mission_queue.TestMissionQueue) ... ok
+test_new_mission_after_completion_restarts_progress (test_mission_queue.TestMissionQueue) ... ok
+test_pause_retains_index_and_resume_reissues_same_target (test_mission_queue.TestMissionQueue) ... ok
+test_return_and_land_preempt_queue (test_mission_queue.TestMissionQueue) ... ok
+test_rpc_error_aborts_without_dispatching_next_waypoint (test_mission_queue.TestMissionQueue) ... ok
+test_sequence_advances_with_per_waypoint_speed_and_finishes_hovering (test_mission_queue.TestMissionQueue) ... ok
+test_single_goto_must_finish_before_mission (test_mission_queue.TestMissionQueue) ... ok
+test_stale_sample_cannot_skip_first_waypoint (test_mission_queue.TestMissionQueue) ... ok
+test_telemetry_timeout_aborts_queue (test_mission_queue.TestMissionQueue) ... ok
+test_mission_lifecycle (test_state_machine.TestSafetyMachine) ... ok
+test_safety (test_state_machine.TestSafetyMachine) ... ok
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.010s
+
+OK
+
+=== ROS safety smoke ===
+PASS: actual ROS service, status timer and safety timeout remain responsive
+
+=== Separate-process ROS queue smoke ===
+{"check": "first_waypoint_reached", "status": {"state": "EXECUTING", "reason": "", "adapter_mode": "demo", "position_ned": [3.136452474591376, 0.0, -1.8273350941255786], "target_ned": [8.0, 0.0, -2.0], "target_speed": 2.0, "takeoff_rpc_result": true, "command_pending": true, "mission_queue": {"state": "RUNNING", "total": 3, "completed": 1, "current_index": 1, "remaining": 2}, "last_error": ""}}
+{"check": "pause_preserves_progress", "status": {"state": "PAUSED", "reason": "", "adapter_mode": "demo", "position_ned": [3.5322993095109467, 0.0, -1.9057993050389137], "target_ned": [8.0, 0.0, -2.0], "target_speed": 2.0, "takeoff_rpc_result": true, "command_pending": false, "mission_queue": {"state": "PAUSED", "total": 3, "completed": 1, "current_index": 1, "remaining": 2}, "last_error": ""}}
+{"check": "three_waypoints_completed", "status": {"state": "EXECUTING", "reason": "", "adapter_mode": "demo", "position_ned": [11.523527888390422, 0.0, -1.9989313851106336], "target_ned": null, "target_speed": null, "takeoff_rpc_result": true, "command_pending": false, "mission_queue": {"state": "COMPLETED", "total": 3, "completed": 3, "current_index": null, "remaining": 0}, "last_error": ""}}
+{"check": "cancel_clears_target", "status": {"state": "EXECUTING", "reason": "", "adapter_mode": "demo", "position_ned": [11.523527888390422, 0.0, -1.9989313851106336], "target_ned": null, "target_speed": null, "takeoff_rpc_result": true, "command_pending": false, "mission_queue": {"state": "CANCELED", "total": 1, "completed": 0, "current_index": null, "remaining": 0}, "last_error": ""}}
+{"check": "return_preempts_queue", "status": {"state": "RETURNING", "reason": "", "adapter_mode": "demo", "position_ned": [11.523527888390422, 0.0, -1.9989313851106336], "target_ned": [0.0, 0.0, -5.0], "target_speed": 0.5, "takeoff_rpc_result": true, "command_pending": false, "mission_queue": {"state": "CANCELED", "total": 1, "completed": 0, "current_index": null, "remaining": 0}, "last_error": ""}}
+{"check": "demo_landed", "status": {"state": "LANDED", "reason": "", "adapter_mode": "demo", "position_ned": [12.628587097473089, 0.0, 0.0], "target_ned": null, "target_speed": null, "takeoff_rpc_result": true, "command_pending": false, "mission_queue": {"state": "CANCELED", "total": 1, "completed": 0, "current_index": null, "remaining": 0}, "last_error": ""}}
+PASS: separate ROS launch, 3 waypoints, pause/resume, cancel, return, land
+
+=== Direct ros2 run startup (stopped after 3 seconds) ===
+[WARN] [1792717068.802854389] [uav_mission_safety_manager]: DEMO adapter: local kinematics only; no AirSim or real vehicle
