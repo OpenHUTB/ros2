@@ -20,6 +20,20 @@ $$
 
 预测按置信度降序进行贪心 IoU 匹配，默认阈值为 `0.5`。该评估与 GSD 航线规划模块不同：本模块评价“已经采集的数据上检测器退化多少”，不改变相机任务规划。
 
+
+## Localization metrics
+
+The evaluator also reports `localization_error_px` and `matched_iou`.
+Localization error is the Euclidean distance between ground-truth and
+matched prediction box centers, in pixels:
+
+$$
+e = \sqrt{(x_p-x_g)^2+(y_p-y_g)^2}
+$$
+
+Both metrics are averaged over true positives. Groups without matches
+report `0.0`, so localization metrics must be interpreted together with recall.
+
 ## 3. 运行步骤
 
 ```bash

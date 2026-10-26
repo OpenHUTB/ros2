@@ -15,8 +15,8 @@ mission planners.
 
 For every frame, predictions are sorted by score and greedily assigned to
 unmatched ground-truth boxes using an IoU threshold. Results are grouped by
-`(altitude_m, pitch_deg)` and include precision, recall, F1 and small-object
-recall.
+`(altitude_m, pitch_deg)` and include precision, recall, F1, small-object
+recall, mean matched IoU and center-point localization error in pixels.
 
 ## Input format
 
@@ -27,6 +27,9 @@ See `sample_data/sample_frames.json`. Every frame contains:
 - `ground_truth` boxes in `x, y, width, height` format;
 - `predictions` with boxes and confidence scores;
 - an optional `small` flag on ground-truth boxes.
+
+Localization error is the Euclidean distance between the ground-truth and
+matched prediction box centers. It is averaged over true positives.
 
 ## Run
 
