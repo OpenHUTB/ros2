@@ -75,6 +75,10 @@ rosrun turtlebot_multi_goal_nav main.py
 全部目标点跑完，停车！
 ```
 
+实际运行截图（Gazebo 仿真 + 节点日志，Sim Time 4:10 / Real Time 4:46，小车走完 5 点并停车）：
+
+![运行截图](../../../docs/img/ground/turtlebot_multi_goal_nav_run.png)
+
 ## 声明
 
 `main.py` 是作业的原始代码，其余文件（`package.xml`、`CMakeLists.txt`、`launch`、`README.md`、文档页）在整理时用到了大模型辅助。我已逐项核对，对提交内容负责。
