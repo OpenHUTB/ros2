@@ -119,6 +119,7 @@ nav:
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - 无人机视觉导航（前视CNN行为克隆）: './air/uav_neural_perception.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
     - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
