@@ -1,4 +1,4 @@
-﻿site_name: 模拟器的 ROS 文档
+site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
 #repo_url: https://github.com/carla-simulator/carla
 #docs_dir: Docs
@@ -136,6 +136,7 @@ nav:
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
     - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 仓储通道测距与制动 / Warehouse UAV Braking: 'air/mujoco_warehouse_uav_collision_braking.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
