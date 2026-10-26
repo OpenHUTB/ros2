@@ -64,6 +64,12 @@ airsim_bridge:
   # 首次收到目标点时是否自动解锁起飞
   auto_takeoff: true
 
+  # 接收"要飞到哪里"的话题。
+  # 默认 /uav/goal 与 P1'–P5 一致：用户发一个目标点，规划器规划、载具飞过去。
+  # P6 的闭环飞行里改设成 /uav/goal_cmd —— path_follower 逐点发航点，
+  # 与 /uav/goal 分开，避免每个航点都触发 astar_planner 重新规划。
+  goal_topic: /uav/goal
+
 # 点云 → 八叉树占用地图
 pointcloud_to_octomap:
   # 输入点云话题（由 airsim_bridge 发布）
@@ -136,3 +142,76 @@ astar_planner:
   plan_timeout: 10.0
   # 已展开节点可视化的最大个数，防止 RViz 卡顿
   max_expanded_markers: 20000
+
+  # ---------------- P5：安全裕度与路径平滑 ----------------
+  #
+  # ⚠️ 下面这些参数的默认值刻意设成「等价于 P4」（膨胀 0、惩罚 0、平滑关），
+  #    这样 P4 的验收场景可以原样重跑做回归，也不会"合进来就悄悄改了原有行为"。
+  #    要对比 P5 的效果，按下面注释把开关逐个打开即可。
+
+  # 安全裕度半径（m）—— **硬约束**：把"贴着障碍走"变成"不可通行"。
+  #   0    = 关闭膨胀，行为逐位等于 P4
+  #   0.6  = 推荐值（等于 2 个体素），路径中心到真障碍至少留 0.6 m
+  #   1.0  = 更保守，但窄通道可能被直接堵死（会表现为"P4 有解、P5 无解"）
+  # 注意：膨胀是通过一棵"影子树"实现的，原树与 RViz 里的占用显示都不受影响。
+  inflation_radius: 0.0
+  # 影子树分辨率（m）。0 = 与原树一致（推荐，与逐格判定配套）
+  inflation_resolution: 0.0
+
+  # 间隙惩罚权重 w —— **软偏好**：离障碍近的边变贵，但禁不掉。
+  #   0    = 关闭，代价逐位等于 P4 的中心欧氏距离
+  #   1.0  = 推荐试值
+  # 公式：cost × (1 + w·exp(−d / r_soft))，d 是该节点到膨胀边界的间隙。
+  # ⚠️ w > 0 时**目标函数被重新定义**，得到的是"新代价下的最优"，
+  #    不是 P4 目标下的次优解 —— 文档里要如实这么写。
+  clearance_penalty_weight: 0.0
+  # 惩罚的衰减尺度 r_soft（m）。0 = 取 inflation_radius
+  clearance_penalty_scale: 0.0
+
+  # 路径平滑总开关（默认关）。打开后：
+  #   捷径化（取直、丢冗余航点）→ 三次样条 → **在膨胀图上复检** → 不过就退回折线
+  smoothing: false
+  # 是否做捷径化
+  smoothing_shortcut: true
+  # 是否做样条
+  smoothing_spline: true
+  # 碰撞检测采样步长（m）。0 = 用 resolution/2。
+  # ⚠️ 必须 **小于分辨率**，否则线段会从体素对角缝里穿过去（这是安全关键项，
+  #    不是可以调大的性能旋钮）
+  smoothing_sample_step: 0.0
+  # 样条每段的采样点数（越大曲线越细，但发布的消息越大）
+  smoothing_samples_per_segment: 8
+  # 平滑后路径的话题。与 /uav/path（原始折线）**并存**，便于 RViz 同屏对比
+  smooth_path_topic: /uav/path_smooth
+  # 是否打印 P4/P5 对比指标（路径长度、最大曲率、最小间隙、三段耗时）
+  metrics_log: true
+  # 最小间隙指标的探测上限（m）。越大越能看出"有余量"，但探测更慢
+  clearance_probe_range: 2.0
+
+# 路径跟踪与闭环飞行（P6）
+#
+# 把规划出的路径逐点喂给控制器。注意"喂给谁"：
+#   /uav/goal     由**用户**发布，astar_planner 订阅它触发规划；
+#   /uav/goal_cmd 由本节点发布，bridge 订阅它执行飞行（见 full_demo.launch 里的 remap）。
+# 两者分开，才不会让每个航点都触发一次重新规划。
+path_follower:
+  # 要跟踪的路径。默认用 P5 平滑后的曲线；切 /uav/path 可做"折线 vs 曲线"对照
+  path_topic: /uav/path_smooth
+  # 位姿来源（bridge 以 20 Hz 发布，位置是 ROS 世界系 ENU）
+  odom_topic: /ground_truth/odom
+  # 下发给控制器的话题
+  goal_cmd_topic: /uav/goal_cmd
+  # 状态文本与实际轨迹（后者用于和规划路径同屏对比）
+  status_topic: /uav/follow_status
+  flown_topic: /uav/flown_path
+
+  # 距当前航点该距离内就切到下一个航点（m）。
+  # **必须明显大于 finish_tolerance**，否则退化成"每点停稳"，动图会一顿一顿
+  lookahead: 1.5
+  # 判定"到达终点"的距离（m）。约 2 倍地图分辨率
+  finish_tolerance: 0.5
+  # 单个航点超时（s）。超时跳过；终点超时则直接结束
+  per_point_timeout: 15.0
+
+  # 是否发布实际飞过的轨迹（/uav/flown_path）
+  publish_flown: true
