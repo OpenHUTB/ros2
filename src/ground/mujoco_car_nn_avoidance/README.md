@@ -76,11 +76,12 @@ source install/setup.bash
 
 ```bash
 python3 main.py --version        # 确认代码版本（当前 1.0.0）
-python3 main.py --test            # 自检：纯逻辑单测 + 场景冒烟
+python3 main.py --test            # 自检：纯逻辑单测 + 场景冒烟（需要 MuJoCo）
+python3 main.py --test --logic-only   # 只跑纯逻辑单测，不加载 MuJoCo、不跑场景冒烟
 python3 main.py --collect --seconds 20   # 探索式采集专家标签（准备数据集）
 python3 main.py --train --epochs 300     # 训练 MLP（准备权重）
 python3 main.py --eval            # 三场景闭环评测，导出报表与柱状图
-python3 main.py --demo            # 离屏渲染录制演示 gif
+python3 main.py --demo            # 离屏渲染录制演示 gif（450 帧、每帧 40 ms、总时长 18 s）
 python3 main.py --launch          # ros2 launch 一键启动 ROS 2 闭环
 bash main.sh                      # 等价于 --eval
 ```
@@ -119,8 +120,8 @@ bash main.sh                      # 等价于 --eval
 
 ## 常见问题
 
-**Q1：`ModuleNotFoundError: No module named 'mujoco'`**
-按上面"安装"一节装依赖，确认 `pip` 与运行脚本用的是同一个解释器（用 `python3 -m pip`）。
+**Q1：运行采集、评测、演示命令时报 `ModuleNotFoundError: No module named 'mujoco'`**
+按上面"安装"一节装依赖，确认 `pip` 与运行脚本用的是同一个解释器（用 `python3 -m pip`）。纯逻辑自检不依赖 MuJoCo，见 Q6。
 
 **Q2：虚拟机里 `--demo` 起不来**
 虚拟机没有图形界面和 GLFW 上下文。本地验证改用 `--eval` 出评测曲线；演示 gif 在具备离屏渲染能力的环境录制。
@@ -132,7 +133,10 @@ bash main.sh                      # 等价于 --eval
 确认用 `--symlink-install` 构建；权重由 `setup.py` 的 `data_files` 安装到 `share/mujoco_car_nn_avoidance/results/`，不要手动改节点里的加载路径。
 
 **Q5：`--test` 里场景测试被跳过**
-说明当前环境没装 MuJoCo，纯逻辑测试照常执行；装好 MuJoCo 后场景与传感器测试会全部运行。
+说明当前环境没装 MuJoCo，纯逻辑测试照常执行，场景与传感器测试自动跳过；装好 MuJoCo 后会全部运行。
+
+**Q6：未装 MuJoCo 时入口起不来怎么办**
+先用 `python3 main.py --test --logic-only` 跑纯逻辑单测；也可以绕开入口直接执行 `python3 -m unittest discover -s test -p "test_*.py"`。采集、评测、演示、场景冒烟命令需要先按 5.2 节装好 MuJoCo 才能运行。
 
 ## 已知限制
 

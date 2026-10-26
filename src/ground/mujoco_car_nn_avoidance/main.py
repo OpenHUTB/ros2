@@ -13,7 +13,8 @@
     python3 main.py --train --epochs 300
     python3 main.py --eval
     python3 main.py --demo
-    python3 main.py --test                  # 自检：纯逻辑单测 + 场景冒烟
+    python3 main.py --test                  # 自检：纯逻辑单测 + 场景冒烟（需要 MuJoCo）
+    python3 main.py --test --logic-only    # 只跑纯逻辑单测，未安装 MuJoCo 也可启动
     python3 main.py --launch                # ros2 launch 一键启动 ROS 2 闭环
     bash main.sh --eval                     # 同上，脚本入口
 
@@ -36,11 +37,26 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from mujoco_car_nn_avoidance import __version__  # noqa: E402
+# 只在顶层导入不依赖 MuJoCo 的纯逻辑模块；CarEnv / ray_scan 等仿真相关
+# 导入延迟到 collect / evaluate / demo 分支内部，使未安装 MuJoCo 时
+# `python3 main.py --test --logic-only` 也能正常启动并跑完纯逻辑单测。
 from mujoco_car_nn_avoidance.config import Config  # noqa: E402
-from mujoco_car_nn_avoidance.car_env import CarEnv  # noqa: E402
-from mujoco_car_nn_avoidance.sensors import ray_scan, normalize_rays  # noqa: E402
 from mujoco_car_nn_avoidance.expert import expert_control  # noqa: E402
 from mujoco_car_nn_avoidance.model import MLP  # noqa: E402
+
+
+def _import_sim_modules():
+    """延迟导入 MuJoCo 相关模块；未安装时给出明确提示并以退出码 1 退出。"""
+    try:
+        from mujoco_car_nn_avoidance.car_env import CarEnv
+        from mujoco_car_nn_avoidance.sensors import ray_scan, normalize_rays
+    except ImportError as exc:
+        print(
+            "[错误] 当前命令需要 MuJoCo，但导入失败：{}\n"
+            "未安装仿真器时可先运行纯逻辑自检：python3 main.py --test --logic-only\n"
+            "安装依赖见 README.md 与教程 5.2 节。".format(exc))
+        raise SystemExit(1)
+    return CarEnv, ray_scan, normalize_rays
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 VERSION_LINE = "mujoco_car_nn_avoidance {}".format(__version__)
@@ -53,6 +69,7 @@ def ensure_results():
 
 def build_state(rays, yaw, cfg):
     """拼接网络输入：25 束归一化射线 + 1 维航向偏差 yaw/pi。"""
+    from mujoco_car_nn_avoidance.sensors import normalize_rays
     x = normalize_rays(rays, cfg.lidar_range_m)
     yaw_norm = float(np.clip(yaw / math.pi, -1.0, 1.0))
     return np.concatenate([x, [yaw_norm]]).astype(np.float32)
@@ -69,6 +86,7 @@ def collect(cfg, seconds=6.0):
     "探索收集"策略，可避免纯专家 rollout 状态单一、缺少接近障碍样本。
     """
     ensure_results()
+    CarEnv, ray_scan, _ = _import_sim_modules()
     rng = np.random.default_rng(cfg.seed)
     X, Y = [], []
     per_scene = []
@@ -120,6 +138,7 @@ def train(cfg, epochs, lr):
 # ----------------------------------------------------------------------
 def evaluate(cfg, max_sim_t=30.0):
     ensure_results()
+    CarEnv, ray_scan, _ = _import_sim_modules()
     net = MLP.load(RESULTS / "mlp_weights.npz")
     rows = []
     for scene in cfg.scenes:
@@ -198,6 +217,7 @@ def demo(cfg, gif_name="run_demo.gif", duration_s=18.0, every=2,
          width=480, height=360):
     """离屏渲染真实运行过程并合成 gif（无窗口，Windows 也适用）。"""
     ensure_results()
+    CarEnv, ray_scan, _ = _import_sim_modules()
     import mujoco
 
     net = MLP.load(RESULTS / "mlp_weights.npz")
@@ -221,11 +241,16 @@ def demo(cfg, gif_name="run_demo.gif", duration_s=18.0, every=2,
             frames.append(renderer.render())
     out = RESULTS / gif_name
     import imageio.v2 as imageio
-    # 每帧间隔 = every 个控制周期（真实仿真时长），gif 按真实速度播放
+    # 每帧间隔 = every 个控制周期（真实仿真时长，单位秒）。
+    # imageio 的 Pillow GIF writer 把 duration 按毫秒解释，这里必须传毫秒值，
+    # 否则秒值会被四舍五入成 0 ms，浏览器兜底成 100 ms、整体播放变慢。
     frame_dt = every * cfg.steps_per_control * cfg.timestep
-    imageio.mimsave(str(out), frames, duration=frame_dt)
-    print("运行 gif -> results/{}（{} 帧，每帧 {:.1f}s）".format(
-        gif_name, len(frames), frame_dt))
+    frame_duration_ms = frame_dt * 1000.0
+    imageio.mimsave(str(out), frames, duration=frame_duration_ms)
+    total_s = len(frames) * frame_dt
+    print("运行 gif -> results/{}（{} 帧，每帧 {:.0f} ms / {:.3f} s，"
+          "总时长 {:.1f} s）".format(
+              gif_name, len(frames), frame_duration_ms, frame_dt, total_s))
     return len(frames) > 0
 
 

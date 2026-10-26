@@ -223,7 +223,11 @@ ROS 2 闭环把同一条感知—推理—控制链路拆成两个节点：`sim_
 | `tools/diagnose.py` | 工具 | 单场景 NN 闭环诊断，打印轨迹与关键状态量 |
 | `tools/diagnose_expert.py` | 工具 | 单场景专家闭环诊断，核对标签覆盖的行驶状态 |
 
-决策、运动学、网络三个模块不导入 MuJoCo，因此在没装仿真器的机器上也能跑纯逻辑单测；需要 MuJoCo 的场景与传感器测试在缺少依赖时自动跳过。
+决策、运动学、网络三个模块不导入 MuJoCo；`main.py` 顶层也只导入这些纯逻辑模块，仿真环境 `CarEnv`、射线 `ray_scan` 在采集、评测、演示分支内部延迟导入。因此未安装仿真器时，`python3 main.py --test --logic-only` 可以正常启动并跑完纯逻辑单测；需要 MuJoCo 的场景与传感器测试在缺少依赖时自动跳过。纯逻辑测试也可以绕开入口脚本直接运行：
+
+```bash
+python3 -m unittest discover -s test -p "test_*.py"
+```
 
 ## 5. 仿真运行步骤
 
@@ -257,7 +261,8 @@ python3 -m pip install -r src/ground/mujoco_car_nn_avoidance/requirements.txt
 
 ```bash
 python3 main.py --version        # 先确认代码版本，避免对着旧文件排查
-python3 main.py --test            # 自检：纯逻辑单测 + 场景冒烟
+python3 main.py --test            # 自检：纯逻辑单测 + 场景冒烟（需要 MuJoCo）
+python3 main.py --test --logic-only   # 只跑纯逻辑单测，不加载 MuJoCo、不跑场景冒烟
 python3 main.py --collect --seconds 20   # 探索式采集 射线 -> 专家标签（3 场景共约 3000 样本）
 python3 main.py --train --epochs 300    # 训练 MLP
 python3 main.py --eval            # 三场景闭环评测，导出报表与柱状图
@@ -290,7 +295,7 @@ ros2 topic echo /cmd_vel
 
 ![神经网络端到端避障演示](../img/ground/mujoco_car_nn_avoidance_demo.gif)
 
-*basic 场景俯视演示：蓝色小车在神经网络控制下绕开正前方红色障碍并回到前进方向*
+*basic 场景俯视演示：蓝色小车在神经网络控制下绕开正前方红色障碍并回到前进方向；动图共 450 帧、每帧 40 ms（25 fps）、总时长 18 s，按真实仿真速度播放*
 
 ![三场景评测耗时与最小离障距离](../img/ground/mujoco_car_nn_avoidance_curves.png)
 
@@ -346,7 +351,8 @@ ros2 topic echo /cmd_vel
 | ROS 节点启动报找不到 `mlp_weights.npz` | 确认用 `--symlink-install` 构建，权重已通过 `setup.py` 的 `data_files` 安装到 `share/mujoco_car_nn_avoidance/results/` |
 | 静止时射线报出 0.3 m 左右的"近障碍" | 射线打到了自车轮子；检查自车 geom group 2 与 `bodyexclude` 是否生效，可先跑 `python3 tools/check_scene.py` |
 | ROS 启动报 `ParseXML: Error opening file` | 场景 XML 未随包安装；确认 `setup.py` 的 `data_files` 已打包 `models/*.xml`，重新 `colcon build` |
-| `--test` 中场景测试被跳过 | 当前环境没装 MuJoCo，纯逻辑测试照常执行；装好 MuJoCo 后场景与传感器测试会全部运行 |
+| `--test` 中场景测试被跳过 | 当前环境没装 MuJoCo，纯逻辑测试照常执行，场景与传感器测试自动跳过；装好 MuJoCo 后会全部运行 |
+| 未装 MuJoCo 时 `main.py --test` 起不来 | 先用 `python3 main.py --test --logic-only` 跑纯逻辑单测；也可直接 `python3 -m unittest discover -s test -p "test_*.py"`；采集、评测、演示、场景冒烟命令需要先装好 MuJoCo |
 
 ## 9. 参考
 
