@@ -276,6 +276,14 @@ source install/setup.bash
 ros2 launch uav_camera_tracking main.launch.py scene:=gust mode:=two_stage
 ```
 
+不装 ROS 也能先跑单元测试（7 个用例，覆盖投影方向、遮挡判定、热图标签与解码的格子
+约定、专家指令符号、速度环收敛、MLP 拟合）：
+
+```bash
+cd ~/ros2/src/air/uav_camera_tracking
+python3 -m pytest test/ -q
+```
+
 第 1 步会重新训练并覆盖 `models/*.npz`、`results/*`；`--seeds` 可增加评估回合数，
 `--no-gif` 跳过动图渲染。感知精度（第 3.3 节）可用下面的片段在任意留出种子上复测：
 
