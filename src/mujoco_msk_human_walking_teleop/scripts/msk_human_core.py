@@ -110,8 +110,7 @@ def _default_params():
         "walk": {
             "freq": 0.8, "hip_amp": 0.50, "knee_amp": 0.75, "knee_off": 0.10,
             "ankle_amp": 0.25, "ankle_off": -0.05, "ankle_phase": 0.4,
-            "arm_amp": 0.30, "pitch_ref": 0.10, "freq_min": 0.6,
-            "freq_max": 1.6,
+            "arm_amp": 0.30, "pitch_ref": 0.10,
         },
         "squat": {"freq": 0.5, "depth": 0.32, "z_stand": 0.875},
         "kick": {"T": 1.6},
