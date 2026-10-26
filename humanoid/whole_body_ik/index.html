@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>人形机器人全身逆运动学与可操作性 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u4eba\u5f62\u673a\u5668\u4eba\u5168\u8eab\u9006\u8fd0\u52a8\u5b66\u4e0e\u53ef\u64cd\u4f5c\u6027";
+        var mkdocs_page_input_path = "humanoid/whole_body_ik.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">人形机器人全身逆运动学与可操作性</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_2">为什么做这个</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">一、正运动学</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">二、雅可比</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">三、三种逆解</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_6">最小范数解（伪逆）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dls">阻尼最小二乘（DLS）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">零空间投影</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">四、这几种解法在奇异点处的差别</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">五、可操作性</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_10">末端速度椭球</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">六、冗余自由度</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">七、运行结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_13">末端画圆跟踪</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">动图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_15">八、调试中踩的坑</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_16">坑一：默认初值给了全零，正好落在奇异位形</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">坑二：平面机构的 3 维雅可比恒奇异</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2r-6">坑三：2R 臂做不了 6 维位姿逆解</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_17">九、运行方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#93">十、测试覆盖（93 个）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_18">十一、文件结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_19">十二、已知限制</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">人形机器人</li>
+<li class="breadcrumb-item active">人形机器人全身逆运动学与可操作性</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/humanoid/whole_body_ik.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">人形机器人全身逆运动学与可操作性分析</h1>
+<p>给定末端位姿反解关节角，用可操作性指标量化位形的好坏，并在奇异位形附近
+保持数值稳定。</p>
+<p>代码在 <code>src/humanoid/whole_body_ik/</code>，<strong>核心逻辑只用 Python 标准库</strong>。</p>
+<h2 id="_2">为什么做这个</h2>
+<p>人形机器人板块已有的模块覆盖了这几层：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>层次</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>键盘运动控制 / 键盘操控仿真机械臂</td>
+<td>直接给关节角或末端增量</td>
+</tr>
+<tr>
+<td>平衡控制与外力抗扰恢复</td>
+<td>动力学（ZMP / 捕获点）</td>
+</tr>
+<tr>
+<td>PPO 神经网络平衡控制</td>
+<td>强化学习</td>
+</tr>
+<tr>
+<td>2D 激光雷达 CNN 感知与避障</td>
+<td>感知</td>
+</tr>
+</tbody>
+</table>
+<p><strong>中间缺了「给末端位姿、反解关节角」这一层</strong>——也就是逆运动学。仓库里只有
+MoveIt 的 <code>kinematics.yaml</code> 配置，没有自己实现的求解器。</p>
+<p>这个模块补的就是这一层，而且和上面的模块没有功能重叠：它不控制机器人、
+不做感知、也不算动力学，只回答"要到这里，关节该怎么转"。</p>
+<h2 id="_3">一、正运动学</h2>
+<p>关节约定为"先平移、再绕轴转动"：</p>
+<div class="highlight"><pre><span></span><code>T_i = Translate(origin_i) · Rot(axis_i, q_i)
+T_ee = T_0 · T_1 · … · T_{n−1} · Translate(tool)
+</code></pre></div>
+<p>比 DH 参数直观，也好手工验算。2R 平面臂展开后应该精确等于</p>
+<div class="highlight"><pre><span></span><code>x = l1·cos(q0) + l2·cos(q0+q1)
+y = l1·sin(q0) + l2·sin(q0+q1)
+</code></pre></div>
+<p>实测四个位形的最大偏差是 <strong>5.55e-17</strong>（双精度舍入量级）。</p>
+<h2 id="_4">二、雅可比</h2>
+<p>用几何法而不是解析求导。对转动关节 i：</p>
+<div class="highlight"><pre><span></span><code>z_i  = R_{0..i−1} · axis_i         （关节轴在世界系下的方向）
+p_i  = 关节位置（世界系）
+Jv_i = z_i × (p_ee − p_i)
+Jw_i = z_i
+</code></pre></div>
+<p>拼成 6×n 的矩阵，前 3 行线速度、后 3 行角速度。</p>
+<p>用中心差分 <code>(p(q+h) − p(q−h)) / 2h</code>（h = 1e-7）对照，最大偏差 <strong>1.00e-09</strong>。</p>
+<h2 id="_5">三、三种逆解</h2>
+<h3 id="_6">最小范数解（伪逆）</h3>
+<div class="highlight"><pre><span></span><code>Δq = Jᵀ (J Jᵀ)⁻¹ e
+</code></pre></div>
+<p>在冗余机构上给出范数最小的解。</p>
+<h3 id="dls">阻尼最小二乘（DLS）</h3>
+<div class="highlight"><pre><span></span><code>Δq = Jᵀ (J Jᵀ + λ² I)⁻¹ e
+</code></pre></div>
+<p>λ 相当于给奇异方向"加一点弹簧"。λ = 0 时退化为伪逆。</p>
+<h3 id="_7">零空间投影</h3>
+<div class="highlight"><pre><span></span><code>Δq = J⁺ e + (I − J⁺J) z
+</code></pre></div>
+<p>第二项不改变末端位姿，只用来做次级任务（比如远离关节限位）。</p>
+<h2 id="_8">四、这几种解法在奇异点处的差别</h2>
+<p>这是整个模块最有意思的部分。让 2R 臂的肘角从 0.2 逐渐趋近 0（完全伸直
+就是奇异位形），给一个沿径向的 0.01 m 末端误差，看两种解法的关节步长：</p>
+<table>
+<thead>
+<tr>
+<th>q1</th>
+<th>σ_min</th>
+<th>伪逆 |Δq|</th>
+<th>DLS |Δq|</th>
+<th>自适应 λ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.200</td>
+<td>8.93e-02</td>
+<td>0.111</td>
+<td>0.111</td>
+<td>0.0001</td>
+</tr>
+<tr>
+<td>0.100</td>
+<td>4.47e-02</td>
+<td>0.223</td>
+<td>0.182</td>
+<td>0.0213</td>
+</tr>
+<tr>
+<td>0.050</td>
+<td>2.24e-02</td>
+<td>0.447</td>
+<td><strong>0.0175</strong></td>
+<td>0.1106</td>
+</tr>
+<tr>
+<td>0.020</td>
+<td>8.94e-03</td>
+<td>1.118</td>
+<td><strong>0.0033</strong></td>
+<td>0.1642</td>
+</tr>
+<tr>
+<td>0.010</td>
+<td>4.47e-03</td>
+<td>2.236</td>
+<td><strong>0.0013</strong></td>
+<td>0.1821</td>
+</tr>
+<tr>
+<td>0.005</td>
+<td>2.24e-03</td>
+<td><strong>4.472</strong></td>
+<td><strong>0.0006</strong></td>
+<td>0.1911</td>
+</tr>
+</tbody>
+</table>
+<p><strong>伪逆的步长按 1/σ_min 线性增长</strong>，σ_min 减半它就翻倍。真实机器人上这就是
+关节速度飙到失控、电机报警的原因。DLS 用阻尼把它压住，代价是奇异方向上
+收敛变慢。</p>
+<p><img alt="奇异点步长" src="../../img/humanoid/whole_body_ik/singularity_damping.png"/></p>
+<p>自适应阻尼的策略是：σ_min 高于阈值（默认 0.05）时不阻尼，尽量保精度；
+低于阈值后 λ 随 σ_min 线性升到 0.2。</p>
+<p><img alt="自适应阻尼" src="../../img/humanoid/whole_body_ik/adaptive_lambda.png"/></p>
+<p>顶点处还有一个细节：如果误差方向<strong>完全落在不可达子空间</strong>里（比如完全伸直
+时想沿手臂方向再往外伸），DLS 会给出 <code>Δq = 0</code>。这不是 bug——物理上就是
+动不了，任何关节转动都改变不了那个方向的末端位置。</p>
+<h2 id="_9">五、可操作性</h2>
+<p>Yoshikawa 指标：</p>
+<div class="highlight"><pre><span></span><code>w = sqrt(det(J Jᵀ))
+</code></pre></div>
+<p>几何意义是末端速度椭球的体积。2R 平面臂有闭式解 <code>w = |l1·l2·sin(q1)|</code>，
+和数值实现的一致性到 <strong>2.78e-16</strong>。</p>
+<p><img alt="可操作性曲线" src="../../img/humanoid/whole_body_ik/manipulability_vs_elbow.png"/></p>
+<p>在 q1 = π/2（肘部 90°）时最大，q1 = 0 或 π（完全伸直）时为 0。</p>
+<h3 id="_10">末端速度椭球</h3>
+<p>J 的奇异值就是末端速度椭球的半轴。把关节速度单位圆 <code>|u| = 1</code> 经 <code>v = J·u</code>
+映射过去，就得到椭球在速度空间的形状：</p>
+<p><img alt="可操作性椭球" src="../../img/humanoid/whole_body_ik/manipulability_ellipsoid.png"/></p>
+<p>三个位形下的半轴与可操作性：</p>
+<table>
+<thead>
+<tr>
+<th>肘角 q1</th>
+<th>长半轴</th>
+<th>短半轴</th>
+<th>w</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.35</td>
+<td>2.2033</td>
+<td>0.1556</td>
+<td>0.3429</td>
+</tr>
+<tr>
+<td>1.00</td>
+<td>1.9746</td>
+<td>0.4261</td>
+<td>0.8415</td>
+</tr>
+<tr>
+<td>1.57</td>
+<td>1.6180</td>
+<td>0.6180</td>
+<td>1.0000</td>
+</tr>
+</tbody>
+</table>
+<p>图里三条椭圆<strong>倾角不同</strong>是正常的：主方向由雅可比的奇异向量决定，随位形
+变化。q1 越接近 π/2，长短轴之比越小、越接近圆，也就是各个方向都能动。</p>
+<blockquote>
+<p><strong>一个容易踩的坑</strong>：平面 2R 臂的 3 维位置雅可比<strong>恒奇异</strong>——它本来就在
+平面里运动，z 方向永远是 0，直接算 <code>det(J Jᵀ)</code> 会把所有位形都判成奇异。
+必须只取机构真正能驱动的任务维度（这里取 x、y 两行），才退化成经典的
+<code>|l1 l2 sin q1|</code>。代码里用 <code>rows=(0, 1)</code> 参数处理这件事。</p>
+</blockquote>
+<p><img alt="条件数" src="../../img/humanoid/whole_body_ik/condition_vs_elbow.png"/></p>
+<h2 id="_11">六、冗余自由度</h2>
+<p>7 自由度人形手臂（肩 3 + 肘 1 + 腕 3），自由度 7 &gt; 任务维度 6，有 1 维零空间。</p>
+<p>零空间投影的验证：任取一个方向 z，投影后 <code>|J · (I − J⁺J)z| = 1.50e-16</code>，
+说明末端确实没有被移动，而关节角被调整了。</p>
+<p>配套的还有关节限位代价函数（双曲形式，越靠近限位代价越大），梯度可以直接
+投到零空间里做次级任务。</p>
+<h2 id="_12">七、运行结果</h2>
+<h3 id="_13">末端画圆跟踪</h3>
+<p>7 自由度手臂的末端沿半径 0.12 m 的<strong>竖直圆</strong>（x-z 平面）走一圈，共 25 个
+目标点，每个点以上一个点的解作为初值：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最大末端误差</td>
+<td><strong>9.93e-07 m</strong></td>
+</tr>
+<tr>
+<td>平均迭代次数</td>
+<td><strong>17.6</strong></td>
+</tr>
+<tr>
+<td>最大迭代次数</td>
+<td>177</td>
+</tr>
+</tbody>
+</table>
+<p>竖直圆比水平圆难：走到最低点时手臂几乎伸直、肘角接近限位下限，接近奇异
+位形，所以那一段迭代次数明显偏高（最多 177 次）。水平圆（x-y 平面）因为
+不经过这个位形，平均只要 3 次迭代。</p>
+<p><img alt="跟踪误差" src="../../img/humanoid/whole_body_ik/ik_convergence.png"/></p>
+<p><img alt="迭代次数" src="../../img/humanoid/whole_body_ik/ik_iterations.png"/></p>
+<h3 id="_14">动图</h3>
+<p><img alt="末端画圆" src="../../img/humanoid/whole_body_ik/ik_circle.gif"/></p>
+<p>蓝线是连杆、黑点是关节、红圈是末端、绿十字是当前目标，浅绿色一圈是整条
+目标轨迹、浅红色是末端走过的路径。末端始终压在目标轨迹上。</p>
+<h2 id="_15">八、调试中踩的坑</h2>
+<h3 id="_16">坑一：默认初值给了全零，正好落在奇异位形</h3>
+<p>一开始 <code>solve_position_ik</code> 的缺省初值是全零。对 7 自由度手臂来说，全零
+意味着<strong>完全伸直</strong>，而肘关节限位是 (0, 2.6)——弯肘反而让 x 方向误差变大，
+一阶迭代推不动。</p>
+<p>实测从全零出发去解 (0.12, 0, −0.45)，误差卡在 0.30 m 出不来；加微扰脱困
+也只到 0.18 m。改成<strong>取关节限位中点</strong>做默认初值后，肘部自然弯到 1.3 rad，
+同一个目标 6 次迭代就到 2.25e-10。</p>
+<p>现在还额外加了"连续 15 次没改进就微扰一次"的脱困机制作为兜底。</p>
+<h3 id="3">坑二：平面机构的 3 维雅可比恒奇异</h3>
+<p>见第五节。这个坑会让人误以为"所有位形都奇异"。</p>
+<h3 id="2r-6">坑三：2R 臂做不了 6 维位姿逆解</h3>
+<p>最初想用 2R 臂测 <code>solve_pose_ik</code>，结果误差 0.069 一直下不去。原因是 2R 只能
+实现 3 维任务（平面内 2 个位置 + 绕 z 的 1 个姿态），6 维误差里有一半根本
+不可达——不是算法的问题，是任务提得超出了机构能力。</p>
+<p>改成用 7 自由度手臂测，38 次迭代收敛到 1.28e-11。</p>
+<h2 id="_17">九、运行方法</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/humanoid/whole_body_ik
+python3<span class="w"> </span>main.py<span class="w">            </span><span class="c1"># 完整演示</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--quick<span class="w">    </span><span class="c1"># 跳过画圆</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--gif<span class="w">      </span><span class="c1"># 生成动图（需 pillow）</span>
+./main.sh<span class="w">                  </span><span class="c1"># 等价的 shell 入口</span>
+</code></pre></div>
+<p>测试：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/humanoid/whole_body_ik
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<p>launch 启动：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>main.launch
+roslaunch<span class="w"> </span>whole_body_ik<span class="w"> </span>quick.launch
+</code></pre></div>
+<h2 id="93">十、测试覆盖（93 个）</h2>
+<table>
+<thead>
+<tr>
+<th>组</th>
+<th>数量</th>
+<th>覆盖内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>线性代数</td>
+<td>14</td>
+<td>矩阵乘、转置、叉积、归一化</td>
+</tr>
+<tr>
+<td>旋转</td>
+<td>7</td>
+<td>三个基本旋转、正交性、行列式为 1、转轴不变性</td>
+</tr>
+<tr>
+<td>解方程与行列式</td>
+<td>9</td>
+<td>已知解、奇异抛异常、维度校验、三角矩阵</td>
+</tr>
+<tr>
+<td>特征分解</td>
+<td>5</td>
+<td>已知矩阵、降序、正交归一、残差、对角阵</td>
+</tr>
+<tr>
+<td>位姿工具</td>
+<td>1</td>
+<td>4x4 复合与刚体求逆</td>
+</tr>
+<tr>
+<td>关节</td>
+<td>6</td>
+<td>轴归一化、零轴报错、限位夹取、限位校验</td>
+</tr>
+<tr>
+<td>关节链</td>
+<td>9</td>
+<td>自由度、臂展、空链报错、维数校验、正解对照、雅可比对照</td>
+</tr>
+<tr>
+<td>解析解</td>
+<td>4</td>
+<td>2R 逆解回代、超工作空间报错、肘上/肘下</td>
+</tr>
+<tr>
+<td>可操作性</td>
+<td>11</td>
+<td>闭式解对照、极值位置、奇异判定、条件数、椭球</td>
+</tr>
+<tr>
+<td>限位代价</td>
+<td>3</td>
+<td>中点为 0、靠近限位上升、无限位无代价</td>
+</tr>
+<tr>
+<td>逆解器</td>
+<td>14</td>
+<td>收敛性、默认初值、不可达失败、收敛史、限位、参数校验、画圆</td>
+</tr>
+<tr>
+<td>奇异点处理</td>
+<td>8</td>
+<td>伪逆抛异常、DLS 有界、步长随 σ_min 变化、λ 单调</td>
+</tr>
+<tr>
+<td>零空间</td>
+<td>2</td>
+<td>末端不动、分量被削减</td>
+</tr>
+<tr>
+<td>旋转误差</td>
+<td>3</td>
+<td>恒等为零、纯 z 旋转、夹角</td>
+</tr>
+<tr>
+<td>位姿逆解</td>
+<td>2</td>
+<td>7 自由度收敛、姿态维度校验</td>
+</tr>
+</tbody>
+</table>
+<p>其中几条"证明性质"的测试：</p>
+<ul>
+<li><code>test_fk_matches_analytic</code> —— 通用链和解析式逐项对照</li>
+<li><code>test_jacobian_matches_numeric</code> —— 几何雅可比和中心差分对照</li>
+<li><code>test_2r_closed_form</code> —— 可操作性等于 <code>|sin q1|</code></li>
+<li><code>test_pseudoinverse_dq_grows_near_singularity</code> —— 伪逆步长至少翻倍增长</li>
+<li><code>test_dls_dq_bounded_near_singularity</code> —— DLS 步长反而变小</li>
+<li><code>test_projection_does_not_move_end_effector</code> —— 零空间投影后 <code>|J·Δq| &lt; 1e-6</code></li>
+</ul>
+<h2 id="_18">十一、文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/humanoid/whole_body_ik/
+├── package.xml / CMakeLists.txt / setup.py
+├── .gitignore               忽略 demo_out 与 __pycache__
+├── LICENSE_apache_2_0.txt   Apache-2.0 许可原文
+├── main.py                  便捷入口（转到 scripts/main.py）
+├── main.sh                  shell 入口
+├── launch/
+│   ├── main.launch
+│   └── quick.launch
+├── config/ik_params.yaml
+├── scripts/
+│   ├── linalg.py            线性代数底座
+│   ├── kinematics.py        关节 / 链 / 正解 / 雅可比
+│   ├── ik_solver.py         三种逆解 + 自适应阻尼
+│   ├── manipulability.py    可操作性 / 奇异值 / 椭球
+│   ├── simple_plot.py       PNG 折线图
+│   ├── animate.py           线框动图
+│   └── main.py              真正的入口（main.* 约定，roslaunch 用）
+├── test/test_ik.py
+└── README.md
+</code></pre></div>
+<p>图片放在 <code>docs/img/humanoid/whole_body_ik/</code>，文档放在 <code>docs/humanoid/whole_body_ik.md</code>，
+与 <code>humanoid_push_recovery</code> 等模块一致。</p>
+<h2 id="_19">十二、已知限制</h2>
+<ul>
+<li>逆解是<strong>局部</strong>方法，收敛依赖初值。默认给限位中点，但目标远离当前位形时
+  可能落到不同的关节解（2R 的肘上/肘下两组解就是典型例子）</li>
+<li>只做位置/位姿逆解，<strong>不做轨迹的时间参数化和速度规划</strong></li>
+<li>没有考虑碰撞，关节限位只在关节空间夹取</li>
+<li>可操作性指标用的是标准 Yoshikawa 定义，没有做尺度归一化（位置和姿态
+  量纲不同，6 维指标需要谨慎解读）</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../../waypoint_publisher/" title="ROS2 Humble 路径点发布器"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../musculoskeletal/musculoskeletal_basics/" title="肌肉骨骼人基础">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../../waypoint_publisher/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../musculoskeletal/musculoskeletal_basics/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
