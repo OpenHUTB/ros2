@@ -4,7 +4,7 @@
   <name>reacher_track</name>
   <version>0.0.1</version>
   <description>在 MuJoCo 机械臂（Reacher）环境中，用纯 NumPy 神经网络实现"感知 -> 控制 -> 目标跟踪"闭环：关节编码器+目标检测提供感知，MLP 神经网络直接输出关节扭矩</description>
-  <maintainer email="6lebron23@todo.todo">6lebron23</maintainer>
+  <maintainer email="3248146937@qq.com">6lebron23</maintainer>
   <license>MIT</license>
   <exec_depend>python3</exec_depend>
   <export>

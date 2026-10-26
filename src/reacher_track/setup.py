@@ -18,7 +18,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='6lebron23',
-    maintainer_email='6lebron23@todo.todo',
+    maintainer_email='3248146937@qq.com',
     description='MuJoCo Reacher 机械臂目标跟踪：感知(关节编码器+目标检测) -> MLP 神经网络 -> 闭环扭矩控制',
     license='MIT',
     entry_points={
