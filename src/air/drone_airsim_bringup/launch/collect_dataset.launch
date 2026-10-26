@@ -1,0 +1,20 @@
+<launch>
+  <arg name="output_dir" default="/home/ncut/.ros/drone_dataset" />
+  <arg name="save_rate" default="2.0" />
+  <arg name="max_images" default="200" />
+  <arg name="auto_label" default="false" />
+  <arg name="model" default="yolov8n.pt" />
+  <arg name="conf" default="0.25" />
+
+  <node pkg="drone_airsim_bringup"
+        type="collect_dataset.py"
+        name="drone_dataset_collector"
+        output="screen">
+    <param name="output_dir" value="$(arg output_dir)" />
+    <param name="save_rate" value="$(arg save_rate)" />
+    <param name="max_images" value="$(arg max_images)" />
+    <param name="auto_label" value="$(arg auto_label)" />
+    <param name="model" value="$(arg model)" />
+    <param name="conf" value="$(arg conf)" />
+  </node>
+</launch>
