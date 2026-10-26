@@ -130,7 +130,11 @@ class AirSimBridge(object):
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.static_broadcaster = tf2_ros.StaticTransformBroadcaster()
 
-        rospy.Subscriber('/uav/goal', Point, self.goal_cb, queue_size=1)
+        # 控制目标话题。默认 /uav/goal 保持 P1'–P5 的行为不变；
+        # P6 的闭环飞行里 path_follower 逐点往 /uav/goal_cmd 发航点，与本话题分开 ——
+        # 否则 astar_planner 会把每个航点都当成"用户下发了新目标"而重新规划。
+        self.goal_topic = rospy.get_param('~goal_topic', '/uav/goal')
+        rospy.Subscriber(self.goal_topic, Point, self.goal_cb, queue_size=1)
 
         self.publish_lidar_mount()
         self.state_timer = rospy.Timer(
