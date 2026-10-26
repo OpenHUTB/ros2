@@ -21,6 +21,21 @@
           "Roll": 0.0,
           "Yaw": 0.0
         },
+        "depth": {
+          "CaptureSettings": [
+            {
+              "ImageType": 1,
+              "Width": 640,
+              "Height": 480
+            }
+          ],
+          "X": 0.5,
+          "Y": 0.0,
+          "Z": 0.1,
+          "Pitch": 0.0,
+          "Roll": 0.0,
+          "Yaw": 0.0
+        },
         "front_center": {
           "CaptureSettings": [
             {
