@@ -70,7 +70,8 @@ ros2 launch reacher_track main.launch.py
 ## 一键运行
 
 ```bash
-cd src/reacher_track && python3 main.py
+ros2 run reacher_track main
+# 或（源码目录下）：python3 -m reacher_track.main
 # 或：ros2 launch reacher_track main.launch.py
 ```
 
@@ -89,7 +90,7 @@ src/reacher_track/
 │   ├── deploy_eval.py            # 闭环部署评估 + 误差曲线
 │   └── render_gif.py             # matplotlib 渲染跟踪动图(无显示器兜底)
 ├── launch/main.launch.py
-├── main.py                    # 一键运行全流程入口
+│   ├── main.py                # 一键运行全流程入口（ros2 run reacher_track main）
 ├── config/algo_config.yaml
 ├── results/                      # 评估结果数据（eval_summary.csv）
 └── README.md

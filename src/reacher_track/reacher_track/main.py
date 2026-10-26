@@ -25,7 +25,8 @@ STEPS = [
 
 
 def main():
-    root = os.path.dirname(os.path.abspath(__file__))
+    # 包源码根目录 src/reacher_track/（脚本均相对它定位，任意 CWD 可用）
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     print('=' * 62)
     print('Reacher 目标跟踪全流程（工作目录：%s）' % root)
     print('=' * 62)

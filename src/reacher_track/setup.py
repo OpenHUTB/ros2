@@ -22,6 +22,8 @@ setup(
     description='MuJoCo Reacher 机械臂目标跟踪：感知(关节编码器+目标检测) -> MLP 神经网络 -> 闭环扭矩控制',
     license='MIT',
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'main = reacher_track.main:main',
+        ],
     },
 )

@@ -151,8 +151,9 @@ source install/setup.bash
 ### 5.1 一键启动完整流水线
 
 ```bash
-cd ~/ros2_ws/src/reacher_track
-python3 main.py            # 或：ros2 launch reacher_track main.launch.py
+ros2 run reacher_track main               # 编译安装后推荐
+# 或（源码目录下）：python3 -m reacher_track.main
+# 或：ros2 launch reacher_track main.launch.py
 ```
 
 依次执行数据采集 → 训练 → DAgger → 评估。
