@@ -15,7 +15,8 @@ CarlaAir 把 CARLA 和 AirSim 放在同一个 UE4 进程里，但 AirSim 只提�
 - 发布 `/drone/imu`（`sensor_msgs/Imu`，NED 机体系）；
 - 订阅 `/drone/cmd_vel`（NED 速度 + 偏航角速度，`geometry_msgs/Twist`）；
 - 提供 `/drone/takeoff`、`/drone/land` 服务（`std_srvs/Empty`）；
-- 提供键盘遥控节点 `teleop.py`（w/s/a/d/r/f/q/e + t/l）。
+- 提供键盘遥控节点 `teleop.py`（w/s/a/d/r/f/q/e + t/l）；
+- 提供数据采集与 YOLOv8n 训练脚本（`collect_dataset.py`、`train_yolo.py`）。
 
 ## 传感器与频率（实测）
 
@@ -76,13 +77,18 @@ src/air/drone_airsim_bringup/
 ├── README.md
 ├── ROADMAP.md
 ├── config/
-│   └── settings.json
+│   ├── settings.json
+│   └── dataset.yaml
 ├── launch/
 │   ├── drone_bringup.launch
-│   └── drone_teleop.launch
+│   ├── drone_teleop.launch
+│   └── collect_dataset.launch
+├── requirements-yolo.txt
 └── scripts/
     ├── main.py
-    └── teleop.py
+    ├── teleop.py
+    ├── collect_dataset.py
+    └── train_yolo.py
 ```
 
 ## 环境
@@ -188,6 +194,69 @@ pose:
 - `README.md` / `ROADMAP.md` 用 UTF-8 重新写入，修复乱码；
 - 起降不再在 `join()` 期间持锁，改为异步命令 + 分段等待。
 
+## 数据采集与 YOLOv8n 训练
+
+### 环境
+
+训练环境单独放在 `/opt/yolo_venv`，避免把 PyTorch 装到根分区（根分区只剩 2.5 GB）：
+
+```bash
+sudo apt install python3.8-venv
+sudo python3 -m venv /opt/yolo_venv
+sudo chown -R $USER:$USER /opt/yolo_venv
+/opt/yolo_venv/bin/pip install -r requirements-yolo.txt \
+  -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+`collect_dataset.py` 是 ROS 节点，用系统 Python 3.8 运行；要让它 import ultralytics，启动前把 venv 的 site-packages 加进 `PYTHONPATH`：
+
+```bash
+export PYTHONPATH=/opt/yolo_venv/lib/python3.8/site-packages:$PYTHONPATH
+```
+
+### 采集
+
+终端 1 起 bringup，终端 2 用 `teleop.py` 飞到有车/人的区域，终端 3 采集：
+
+```bash
+roslaunch drone_airsim_bringup collect_dataset.launch \
+  output_dir:=/home/ncut/.ros/drone_dataset \
+  save_rate:=2.0 max_images:=100 \
+  auto_label:=true model:=/opt/yolo_venv/yolov8n.pt
+```
+
+数据集结构：
+
+```text
+~/.ros/drone_dataset/
+├── images/frame_000001.jpg
+├── labels/frame_000001.txt   # YOLO: class xc yc w h（归一化）
+├── classes.txt               # car / person
+└── data.yaml
+```
+
+`auto_label:=true` 用预训练 YOLOv8n 生成**伪标签**，只用于把训练流程跑通；伪标签不是真值，正式指标要换成人工标注或 CARLA 真值。
+
+### 训练
+
+```bash
+/opt/yolo_venv/bin/python \
+  /opt/drone_ws/src/air/drone_airsim_bringup/scripts/train_yolo.py \
+  --data ~/.ros/drone_dataset/data.yaml \
+  --epochs 20 --imgsz 640 --batch 8 --device cpu
+```
+
+权重和指标输出在 `~/.ros/drone_runs/yolov8n_drone/`，最佳权重是 `weights/best.pt`，终端会打印 `mAP50` 和 `mAP50-95`。
+
+CPU 训练比较慢，第一次先用 `--epochs 1 --imgsz 320 --batch 4` 验证流程，再按需要加轮数。
+
+### 实测（2026-10-26）
+
+- 采集节点在 CarlaAir 上保存了 8 张 1280×960 图像，目录结构和 `data.yaml` 正常；
+- 预训练 YOLOv8n 在当前相机视角（地面/栏杆/建筑）检出 0 个 car/person，`auto_label` 数据集为空。这是视角问题，不是采集链路问题；
+- 因此训练流程先用 COCO128 做 1 epoch 冒烟（`--model /opt/yolo_venv/yolov8n.pt --epochs 1 --imgsz 320 --batch 8`），结果：**mAP50 0.5356，mAP50-95 0.3832**（预训练权重，非无人机域指标）；
+- 无人机域训练需要先飞到能看到车/人的位置，或接 CARLA 真值标注；这一步放到 PR5。
+
 ## 已知问题
 
 1. **端口冲突**：CarlaAir 和标准 CARLA 都占用 2000 端口，不能同时启动。做无人机时只启动 CarlaAir。
@@ -195,7 +264,9 @@ pose:
 3. **坐标系**：当前位姿按 AirSim NED 发布（`frame_id: world_ned`），ROS 侧默认 ENU，后续在感知/控制节点里做转换。
 4. **线程安全**：所有 AirSim 调用必须走同一把锁，不要在多个回调里直接并发调用。
 5. **OpenCV 版本**：本包不再依赖 `cv_bridge`/OpenCV，换 OpenCV 5 不会影响相机话题。
+6. **YOLO 伪标签**：`auto_label:=true` 用预训练 YOLOv8n 生成伪标签，只用于验证训练流程；正式训练要换人工标注或 CARLA 真值。
+7. **YOLO 权重下载**：`yolov8n.pt` 默认从 GitHub 下载，网络不通时先手动下载并放到 `/opt/yolo_venv/yolov8n.pt`。
 
 ## 整体任务进度
 
-见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 1 的 PR3（键盘遥控 + 起降演示），阶段 1 已齐。
+见 [ROADMAP.md](ROADMAP.md)。当前处于阶段 2 的 PR4（数据采集 + YOLOv8n 训练）。
