@@ -46,13 +46,17 @@ def main(argv: List[str] | None = None) -> int:
         print("ERROR: no frames were evaluated")
         return 1
 
-    print("altitude  pitch  gt  tp  fp  fn  precision  recall    f1  small_recall")
+    print(
+        "altitude  pitch  gt  tp  fp  fn  precision  recall    f1  "
+        "small_recall  loc_error_px  matched_iou"
+    )
     for row in rows:
         print(
             f"{row['altitude_m']:>8.1f} {row['pitch_deg']:>6.1f} "
             f"{row['ground_truth']:>3} {row['tp']:>3} {row['fp']:>3} "
             f"{row['fn']:>3} {row['precision']:>9.3f} {row['recall']:>7.3f} "
-            f"{row['f1']:>5.3f} {row['small_object_recall']:>12.3f}"
+            f"{row['f1']:>5.3f} {row['small_object_recall']:>12.3f} "
+            f"{row['localization_error_px']:>12.3f} {row['matched_iou']:>11.3f}"
         )
         if args.frame_delay > 0:
             time.sleep(args.frame_delay)
