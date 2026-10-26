@@ -112,3 +112,10 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
 
+
+
+
+nav:
+  - Home: index.md
+  - Manipulator:
+    - Two DOF Arm Circle: manipulator/two_dof_arm/README.md
