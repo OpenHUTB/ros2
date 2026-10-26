@@ -1,0 +1,8 @@
+# 本包只用底座 uav_mujoco_sim 的公开 API，仿真依赖与底座一致。
+# MuJoCo 走 pip 安装，不在 ROS 的 apt 依赖里。
+mujoco>=3.0.0
+numpy>=1.21
+
+# 可选：录 gif / 画对比曲线。缺了只跳过绘图，不影响仿真与评估。
+pillow>=10.0
+matplotlib>=3.5
