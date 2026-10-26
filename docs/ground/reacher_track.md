@@ -148,10 +148,11 @@ colcon build --packages-select reacher_track
 source install/setup.bash
 ```
 
-### 5.1 launch 一键启动完整流水线
+### 5.1 一键启动完整流水线
 
 ```bash
-ros2 launch reacher_track main.launch.py
+cd ~/ros2_ws/src/reacher_track
+python3 main.py            # 或：ros2 launch reacher_track main.launch.py
 ```
 
 依次执行数据采集 → 训练 → DAgger → 评估。

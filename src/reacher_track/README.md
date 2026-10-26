@@ -67,6 +67,13 @@ ros2 launch reacher_track main.launch.py
 
 动图 `docs/img/reacher_track/reacher_ep0.gif` 展示了机械臂末端误差从约 0.20m 收敛到约 0.03m 的目标跟踪过程。
 
+## 一键运行
+
+```bash
+cd src/reacher_track && python3 main.py
+# 或：ros2 launch reacher_track main.launch.py
+```
+
 ## 目录结构
 
 ```
@@ -82,6 +89,7 @@ src/reacher_track/
 │   ├── deploy_eval.py            # 闭环部署评估 + 误差曲线
 │   └── render_gif.py             # matplotlib 渲染跟踪动图(无显示器兜底)
 ├── launch/main.launch.py
+├── main.py                    # 一键运行全流程入口
 ├── config/algo_config.yaml
 ├── results/                      # 评估结果数据（eval_summary.csv）
 └── README.md
