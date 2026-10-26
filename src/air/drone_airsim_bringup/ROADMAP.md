@@ -9,7 +9,7 @@
 | 阶段 | PR | 内容 | 状态 |
 |---|---|---|---|
 | 阶段 1 | PR1 | `drone_airsim_bringup`：位姿 + 相机 + takeoff/land | 已按 review 修改，待复审 |
-| 阶段 1 | PR2 | 深度/IMU 传感器 + 10 Hz 采集 | 未开始 |
+| 阶段 1 | PR2 | 深度/IMU 传感器 + 10 Hz 采集 | 已提交，待 review |
 | 阶段 1 | PR3 | 键盘遥控 + 起飞/降落 | 未开始 |
 | 阶段 2 | PR4 | 数据采集 + YOLOv8n 训练 | 未开始 |
 | 阶段 2 | PR5 | ROS 感知节点（`/drone/detections`） | 未开始 |
