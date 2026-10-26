@@ -1,0 +1,21 @@
+<launch>
+  <rosparam file="$(find two_dof_arm)/config/arm_controller.yaml" command="load"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+
+  <param name="robot_description" textfile="$(find two_dof_arm)/urdf/two_dof_arm.urdf"/>
+
+  <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model two_dof_arm -param robot_description"
+        output="screen"/>
+
+  <node pkg="controller_manager" type="controller_manager" name="controller_manager" output="screen"/>
+
+  <node pkg="controller_manager" type="spawner" name="spawn_controllers"
+        args="joint1_position_controller joint2_position_controller joint_state_controller --timeout 15"
+        output="screen"/>
+</launch>
