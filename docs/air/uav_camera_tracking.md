@@ -280,7 +280,7 @@ RMS ≤ 0.18（约 14 px）。
 | 阵风扰动 | 两阶段(感知网+控制网) | 1.00 | 0.1616 | 0.0000 | 0.488 |
 | 阵风扰动 | 端到端(图像->指令) | 0.00 | 0.5270 | 0.1720 | 3.844 |
 
-![场景对比](uav_camera_tracking/compare.png)
+![场景对比](../img/air/uav_camera_tracking/compare.png)
 
 ### 7.1 怎么读这张表
 
@@ -298,7 +298,7 @@ RMS ≤ 0.18（约 14 px）。
 
 ### 7.2 训练曲线
 
-![训练曲线](uav_camera_tracking/training_curves.png)
+![训练曲线](../img/air/uav_camera_tracking/training_curves.png)
 
 左：感知网络（交叉熵 + BCE，验证损失 3.09）；中：控制网络（回归 MSE，DAgger 后 0.0010）；
 右：端到端网络（验证损失 0.23，但闭环失败——训练损失低不等于闭环能飞，这是本模块最值得记的一条）。

@@ -53,8 +53,11 @@ python3 -m uav_camera_tracking.main          # 约 6 分钟（CPU）
 python3 -m uav_camera_tracking.main --quick  # 约 1 分钟，仅验证流程
 ```
 
-输出：`models/{detector,control,e2e}.npz`、`results/compare_summary.csv`、
-`results/training_curves.png`、`results/compare.png`、`results/tracking.gif`、`results/occlusion.gif`（动图默认不入库，仓库内的版本在 `docs/img/air/uav_camera_tracking/`）。
+输出：`models/{detector,control,e2e}.npz`、`results/compare_summary.csv`，以及
+`results/` 下的 `training_curves.png`、`compare.png`、`tracking.gif`、`occlusion.gif`。
+其中只有 `compare_summary.csv` 与 `models/*.npz` 入库；图片是会随训练变化的生成物，
+仓库里引用的是 `docs/img/air/uav_camera_tracking/` 下那一份（同一次运行拷贝过去的），
+避免同一张图存两份。
 
 ### 方式 B：ROS 2 launch 启动闭环
 
@@ -146,9 +149,9 @@ vy = clip(KP_LAT * ex, ±V_MAX)                    # 横向纠偏
 | 阵风扰动 | 两阶段(感知网+控制网) | 1.00 | 0.1616 | 0.0000 | 0.488 |
 | 阵风扰动 | 端到端(图像->指令) | 0.00 | 0.5270 | 0.1720 | 3.844 |
 
-![场景对比](results/compare.png)
+![场景对比](../../../docs/img/air/uav_camera_tracking/compare.png)
 
-![训练曲线](results/training_curves.png)
+![训练曲线](../../../docs/img/air/uav_camera_tracking/training_curves.png)
 
 立柱遮挡场景的重捕获过程（目标被三根立柱遮挡三次，每次约 0.6 s）：
 
