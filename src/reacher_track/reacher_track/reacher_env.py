@@ -9,12 +9,36 @@ Reacher(2关节平面机械臂) MuJoCo 环境封装。
 - 提供解析逆运动学 + PD 控制器, 用于生成监督学习演示数据
 """
 import math
+import os
 
 import numpy as np
 import mujoco
 
 L1 = 0.15   # 上臂长度
 L2 = 0.12   # 前臂长度
+
+
+def find_model_path(filename="reacher.xml"):
+    """定位模型 xml，不依赖当前工作目录。
+
+    解析顺序：
+    1. ament 安装后的 share 目录（colcon build 后 ros2 run / launch 均可）；
+    2. 包源码根目录下的 models/（相对本文件，源码树内任意 CWD 可用）；
+    3. 回退 CWD 相对路径（兼容"先 cd 到包目录再运行"的老用法）。
+    """
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        p = os.path.join(get_package_share_directory("reacher_track"),
+                         "models", filename)
+        if os.path.exists(p):
+            return p
+    except Exception:
+        pass
+    p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                     "models", filename)
+    if os.path.exists(p):
+        return p
+    return os.path.join("models", filename)
 
 
 def forward_kinematics(q1, q2):
@@ -36,7 +60,11 @@ def inverse_kinematics(tx, ty):
 
 
 class ReacherEnv:
-    def __init__(self, xml_path):
+    def __init__(self, xml_path=None):
+        if xml_path is None or not os.path.exists(xml_path):
+            # 传入路径不存在（如 CWD 相对路径失效）时自动重新解析
+            xml_path = find_model_path(
+                os.path.basename(xml_path) if xml_path else "reacher.xml")
         self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.data = mujoco.MjData(self.model)
         # 索引
