@@ -19,6 +19,7 @@ from nav_msgs.msg import Odometry, Path
 from std_msgs.msg import Float64, Header
 from sensor_msgs.msg import JointState, LaserScan, Image, Imu
 from builtin_interfaces.msg import Time
+from rosgraph_msgs.msg import Clock
 
 try:
     import mujoco
@@ -205,6 +206,9 @@ class MujocoSimNode(Node):
         self.pub_camera = self.create_publisher(Image, '/rov/camera/image_raw', 10)
         self.pub_imu = self.create_publisher(Imu, '/rov/imu', 10)
         self.pub_desired_path = self.create_publisher(Path, '/rov/desired_path', 10)
+        # 仿真时钟：物理步进不保证实时，所有消息必须用仿真时间打戳，
+        # 否则下游（EKF/SLAM）用墙钟积分会产生系统性比例误差。
+        self.pub_clock = self.create_publisher(Clock, '/clock', 10)
 
         # ========== 定时器 ==========
         sim_period = 1.0 / sim_rate
@@ -347,7 +351,13 @@ class MujocoSimNode(Node):
 
     def _publish_callback(self):
         """发布传感器数据 (Odom, Depth, IMU, Sonar, Camera, Path)"""
-        now = self.get_clock().now().to_msg()
+        sim_t = float(self.data.time)
+        now = Time()
+        now.sec = int(sim_t)
+        now.nanosec = int((sim_t - int(sim_t)) * 1e9)
+        clock_msg = Clock()
+        clock_msg.clock = now
+        self.pub_clock.publish(clock_msg)
         pos = self.data.sensor("pos").data[:3]
         vel = self.data.sensor("vel").data[:3]
         quat = self.data.qpos[self.qpos_addr + 3: self.qpos_addr + 7]
