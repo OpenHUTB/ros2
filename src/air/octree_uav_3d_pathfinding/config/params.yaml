@@ -64,6 +64,12 @@ airsim_bridge:
   # 首次收到目标点时是否自动解锁起飞
   auto_takeoff: true
 
+  # 接收"要飞到哪里"的话题。
+  # 默认 /uav/goal 与 P1'–P5 一致：用户发一个目标点，规划器规划、载具飞过去。
+  # P6 的闭环飞行里改设成 /uav/goal_cmd —— path_follower 逐点发航点，
+  # 与 /uav/goal 分开，避免每个航点都触发 astar_planner 重新规划。
+  goal_topic: /uav/goal
+
 # 点云 → 八叉树占用地图
 pointcloud_to_octomap:
   # 输入点云话题（由 airsim_bridge 发布）
@@ -181,3 +187,31 @@ astar_planner:
   metrics_log: true
   # 最小间隙指标的探测上限（m）。越大越能看出"有余量"，但探测更慢
   clearance_probe_range: 2.0
+
+# 路径跟踪与闭环飞行（P6）
+#
+# 把规划出的路径逐点喂给控制器。注意"喂给谁"：
+#   /uav/goal     由**用户**发布，astar_planner 订阅它触发规划；
+#   /uav/goal_cmd 由本节点发布，bridge 订阅它执行飞行（见 full_demo.launch 里的 remap）。
+# 两者分开，才不会让每个航点都触发一次重新规划。
+path_follower:
+  # 要跟踪的路径。默认用 P5 平滑后的曲线；切 /uav/path 可做"折线 vs 曲线"对照
+  path_topic: /uav/path_smooth
+  # 位姿来源（bridge 以 20 Hz 发布，位置是 ROS 世界系 ENU）
+  odom_topic: /ground_truth/odom
+  # 下发给控制器的话题
+  goal_cmd_topic: /uav/goal_cmd
+  # 状态文本与实际轨迹（后者用于和规划路径同屏对比）
+  status_topic: /uav/follow_status
+  flown_topic: /uav/flown_path
+
+  # 距当前航点该距离内就切到下一个航点（m）。
+  # **必须明显大于 finish_tolerance**，否则退化成"每点停稳"，动图会一顿一顿
+  lookahead: 1.5
+  # 判定"到达终点"的距离（m）。约 2 倍地图分辨率
+  finish_tolerance: 0.5
+  # 单个航点超时（s）。超时跳过；终点超时则直接结束
+  per_point_timeout: 15.0
+
+  # 是否发布实际飞过的轨迹（/uav/flown_path）
+  publish_flown: true
