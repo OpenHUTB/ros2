@@ -65,6 +65,9 @@ trajectories/*.json
 # 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
 !src/humanoid/humanoid_ppo_locomotion/weights/*.pt
 
+# 例外：人形机器人相机端到端模块的 CNN 权重必须入库（评测机免重训）
+!src/humanoid/humanoid_camera_e2e_control/weights/*.pt
+
 # 编辑器 / 系统
 .vscode/
 .idea/
