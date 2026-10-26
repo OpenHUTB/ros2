@@ -13,12 +13,13 @@
 1. **实时仿真** —— 节点内用 MuJoCo 推进二连杆臂肌肉骨骼模型（屈/伸肌肌腱驱动）；
 2. **话题发布** —— 每步把关节角、肌肉激活度、肌肉力发布到 3 个话题；
 3. **可观测** —— 用 `ros2 topic echo` 实时查看仿真数据，方便对接下游（rviz、gazebo、控制器）。
-4.**运用了豆包大模型**
-发布的话题：
+4. **运用了豆包大模型**
+
+发布的话题（关节话题用标准复数 `/joint_states`，便于 rviz / robot_state_publisher 直接订阅）：
 
 | 话题名 | 消息类型 | 内容 |
 |--------|----------|------|
-| `/joint_state` | `sensor_msgs/JointState` | 肩/肘关节角度 |
+| `/joint_states` | `sensor_msgs/JointState` | 肩/肘关节角度 |
 | `/muscle_state` | `std_msgs/Float32MultiArray` | 4 条肌肉激活度 |
 | `/muscle_force` | `std_msgs/Float32MultiArray` | 4 条肌肉力 |
 
@@ -68,6 +69,53 @@ pip install mujoco numpy -i https://pypi.tuna.tsinghua.edu.cn/simple --timeout 1
 python3 -c "import mujoco; print('OK', mujoco.__version__)"   # 输出 OK 3.2.3
 ```
 
+### 模型文件 muscle_arm.xml（复用上一份）
+
+> 节点通过 `from_xml_path('muscle_arm.xml')` 加载模型，模型文件需放在运行目录 `~/muscle_arm/`。完整 MJCF 如下（二连杆臂 + 肩/肘各一对拮抗肌肌腱，`coef="-1"` 屈曲、`coef="+1"` 伸展）：
+
+```bash
+cd ~/muscle_arm
+nano muscle_arm.xml
+```
+
+模型完整内容：
+
+```xml
+<mujoco model="muscle arm">
+  <option timestep="0.002"/>
+  <compiler angle="radian"/>
+
+  <worldbody>
+    <light diffuse="0.8 0.8 0.8" pos="0 -1 2" dir="0 1 -1"/>
+    <geom name="ground" type="plane" size="1.5 1.5 0.1" rgba="0.9 0.9 0.9 1"/>
+
+    <body name="shoulder" pos="0 0 0">
+      <joint name="sh_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+      <geom name="upperarm" type="capsule" fromto="0 0 0 0.40 0 0" size="0.05" mass="2.0"/>
+      <body name="elbow" pos="0.40 0 0">
+        <joint name="el_pitch" type="hinge" axis="0 1 0" pos="0 0 0" range="-3.0 3.0"/>
+        <geom name="forearm" type="capsule" fromto="0 0 0 0.35 0 0" size="0.04" mass="1.2"/>
+        <geom name="hand" type="sphere" pos="0.35 0 0" size="0.06" mass="0.4"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <fixed name="t_sh_flex"><joint joint="sh_pitch" coef="-1"/></fixed>
+    <fixed name="t_sh_ext"><joint joint="sh_pitch" coef="1"/></fixed>
+    <fixed name="t_el_flex"><joint joint="el_pitch" coef="-1"/></fixed>
+    <fixed name="t_el_ext"><joint joint="el_pitch" coef="1"/></fixed>
+  </tendon>
+
+  <actuator>
+    <muscle name="sh_flex" tendon="t_sh_flex" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="sh_ext" tendon="t_sh_ext" force="1500" lengthrange="0.05 1.2"/>
+    <muscle name="el_flex" tendon="t_el_flex" force="500" lengthrange="0.05 1.2"/>
+    <muscle name="el_ext" tendon="t_el_ext" force="500" lengthrange="0.05 1.2"/>
+  </actuator>
+</mujoco>
+```
+
 ### 步骤 3：编写 ROS2 桥接节点 muscle_ros_publisher.py
 
 ```bash
@@ -86,12 +134,12 @@ from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32MultiArray
 
-PHASE1 = 2.0   # 前2s伸肌，后2s屈肌
+PHASE1 = 2.0   # 前2s伸肌，2s之后保持屈肌（相位不循环）
 
 class MuscleArmNode(Node):
     def __init__(self):
         super().__init__('muscle_arm_node')
-        self.joint_pub = self.create_publisher(JointState, '/joint_state', 10)
+        self.joint_pub = self.create_publisher(JointState, '/joint_states', 10)
         self.act_pub   = self.create_publisher(Float32MultiArray, '/muscle_state', 10)
         self.force_pub = self.create_publisher(Float32MultiArray, '/muscle_force', 10)
         self.m = mujoco.MjModel.from_xml_path('muscle_arm.xml')
@@ -109,11 +157,12 @@ class MuscleArmNode(Node):
 
     def publish_state(self):
         self.d.ctrl[:] = self.stimulus(self.d.time)
-        mujoco.mj_step(self.m, self.d)
+        for _ in range(5):            # 0.01s 回调内推 5 步（每步 0.002s），实现 1× 实时
+            mujoco.mj_step(self.m, self.d)
         # 关节角
         js = JointState()
         js.header.stamp = self.get_clock().now().to_msg()
-        js.name = ['shoulder', 'elbow']
+        js.name = ['sh_pitch', 'el_pitch']
         js.position = [float(self.d.qpos[0]), float(self.d.qpos[1])]
         self.joint_pub.publish(js)
         # 肌肉激活度
@@ -140,7 +189,7 @@ if __name__ == '__main__':
     main()
 ```
 
-> 说明：节点在 ROS2 定时器回调里每步 `mj_step` 推进 MuJoCo 仿真，然后发布关节角、激活度、肌力。用标准消息类型（`JointState`、`Float32MultiArray`），**无需自定义消息、无需 colcon 构建**，直接 `python3` 运行。
+> 说明：节点在 ROS2 定时器回调（0.01s）里每次 `mj_step` 5 步（每步 0.002s）推进 MuJoCo 仿真，达到 1× 实时，然后发布关节角、激活度、肌力。用标准消息类型（`JointState`、`Float32MultiArray`），**无需自定义消息、无需 colcon 构建**，直接 `python3` 运行。
 
 ### 步骤 4：运行节点
 
@@ -167,7 +216,7 @@ python3 muscle_ros_publisher.py
 # 终端 B
 conda deactivate
 source /opt/ros/humble/setup.bash
-ros2 topic echo /joint_state
+ros2 topic echo /joint_states
 ```
 
 ```bash
@@ -178,10 +227,10 @@ ros2 topic echo /muscle_state
 ```
 
 ✅ 实时看到数据持续更新：
-- `/joint_state`：`position=[-0.122, -0.092]`（shoulder/elbow 角度随时间变化）；
-- `/muscle_state`：`data=[0.6, 0.0, 0.45, 0.0]`（前 2s 伸肌激活，后 2s 切换屈肌）。
+- `/joint_states`：`position=[-0.122, -0.092]`（shoulder/elbow 角度随时间变化）；
+- `/muscle_state`：`data=[0.6, 0.0, 0.45, 0.0]`（前 2s 伸肌激活，2s 之后保持屈肌）。
 
-**实际运行截图**（echo `/joint_state` 与 `/muscle_state`）：
+**实际运行截图**（echo `/joint_states` 与 `/muscle_state`）：
 
 ![话题数据实时echo](image/muscle_ros_echo.jpg)
 
@@ -231,7 +280,7 @@ ros2 topic echo /muscle_state
 2. **第三方库要装到 ROS2 用的 Python 里**：mujoco 装在 conda 里，系统 Python 3.8 用不到，需在正确解释器下重装。
 3. **国内网络用清华镜像**：`pip install -i https://pypi.tuna.tsinghua.edu.cn/simple` 可避免 `Read timed out`。
 4. **用标准消息类型可免去 colcon 构建**：`JointState`、`Float32MultiArray` 都是内置消息，节点直接用 `python3` 跑，不需要自定义 `.msg` 和构建。
-5. **ROS2 定时器回调驱动仿真**：`create_timer` 每秒 100 次回调，每次 `mj_step` 推进 0.002s，实现"仿真即发布"。
+5. **ROS2 定时器回调驱动仿真**：`create_timer` 每秒 100 次回调，每次回调 `mj_step` 5 步（每步 0.002s、共 0.01s），实现 **1× 实时**"仿真即发布"。
 
 ---
 
@@ -250,5 +299,11 @@ ros2 topic echo /muscle_state
 
 - **拮抗共激活（co-contraction）**：同时激励屈肌与伸肌，观察关节刚度变化（下一步 PR）；
 - **对接 rviz2**：用 `JointState` 话题驱动 rviz 里的机械臂模型可视化；
-- **下游控制器**：订阅 `/joint_state`，用话题数据做肌肉激励的闭环控制；
+- **下游控制器**：订阅 `/joint_states`，用话题数据做肌肉激励的闭环控制；
 - **改为功能包**：若需在 launch 中统一启动，可把脚本组织为 `ament_python` 功能包。
+
+---
+
+## 大模型使用声明
+
+本作业使用豆包（Doubao）大模型辅助完成：Python/ROS2 代码编写与调试、Markdown 文档撰写、Git 分支操作与问题排查。作者对提交内容负责。
