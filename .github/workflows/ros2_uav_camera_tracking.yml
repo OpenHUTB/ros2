@@ -55,9 +55,43 @@ jobs:
           colcon build --packages-select uav_camera_tracking \
                        --event-handlers console_direct+
 
-      - name: install 后 share 目录里的文件
+      - name: install 布局断言（data_files 与入口点）
+        # 只打印不判定的话，"models 没被 data_files 装进去"这类回归会漏到运行时；
+        # 这里逐项硬断言，缺一个就红。
         run: |
-          find install/uav_camera_tracking -type f | sort
+          set -e
+          PKG=install/uav_camera_tracking
+          SHARE="$PKG/share/uav_camera_tracking"
+          LIB="$PKG/lib/uav_camera_tracking"
+
+          echo "=== install 后的文件 ==="
+          find "$PKG" -type f | sort
+
+          missing=0
+          for f in \
+            "$SHARE/package.xml" \
+            "$SHARE/launch/main.launch.py" \
+            "$SHARE/config/params.yaml" \
+            "$SHARE/models/detector.npz" \
+            "$SHARE/models/control.npz" \
+            "$SHARE/models/e2e.npz" \
+            "$LIB/main" "$LIB/sim" "$LIB/detector" "$LIB/controller" \
+            "$PKG/share/ament_index/resource_index/packages/uav_camera_tracking"
+          do
+            if [ ! -e "$f" ]; then
+              echo "::error::install 后缺少 $f"
+              missing=1
+            fi
+          done
+          # 可执行位也要在，否则 ros2 run 找不到命令
+          for e in main sim detector controller; do
+            if [ ! -x "$LIB/$e" ]; then
+              echo "::error::$LIB/$e 不可执行"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] && echo "install 布局完整 ✓"
+          exit "$missing"
 
       - name: 四个场景逐个 launch
         run: |
@@ -109,10 +143,9 @@ jobs:
           python3 - <<'PY'
           import csv, io, sys
 
-          # 判定阈值与包内 params.py 一致（ERR_OK / LOST_FRAC_OK）；
-          # gust 放宽到 0.19：阵风残余振荡是物理下限，本机实测 0.175 距 0.18 只剩
-          # 3% 余量，不同 numpy/BLAS 下会有微小抖动，因此留一点工程余量。
-          LIMIT = {'static': 0.18, 'moving': 0.18, 'occlusion': 0.18, 'gust': 0.19}
+          # 判定阈值与包内 params.py 的 ERR_OK / LOST_FRAC_OK 严格一致，
+          # 四个场景用同一条线，不做场景级放宽——否则"通过"就没有可比性了。
+          LIMIT = {s: 0.18 for s in ('static', 'moving', 'occlusion', 'gust')}
           NEED = ['static', 'moving', 'occlusion', 'gust']
 
           rows = list(csv.DictReader(io.open('ci_out/metrics.csv', encoding='utf-8')))
