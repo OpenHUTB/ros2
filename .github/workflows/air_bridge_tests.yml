@@ -26,7 +26,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip numpy
+        run: python3 -m pip install --upgrade pip numpy pyyaml
 
       - name: Run bridge tests
         run: |
