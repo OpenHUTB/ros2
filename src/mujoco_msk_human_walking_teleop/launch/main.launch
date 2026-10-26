@@ -1,0 +1,16 @@
+<launch>
+  <!-- 主入口：MuJoCo 肌肉骨骼人键盘遥操作（默认平地场景 + 打开 viewer） -->
+  <arg name="scene" default="flat"/>
+  <arg name="viewer" default="true"/>
+  <arg name="load_mass" default="10.0"/>
+
+  <node pkg="mujoco_msk_human_walking_teleop" type="msk_human_sim_node.py"
+        name="msk_human_sim_node" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="viewer" value="$(arg viewer)"/>
+    <param name="load_mass" value="$(arg load_mass)"/>
+  </node>
+
+  <node pkg="mujoco_msk_human_walking_teleop" type="msk_human_keyboard_node.py"
+        name="msk_human_keyboard_node" output="screen" launch-prefix="xterm -e"/>
+</launch>

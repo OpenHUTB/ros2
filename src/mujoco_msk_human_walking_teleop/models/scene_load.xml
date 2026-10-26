@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 场景：负载（10 kg 背包在核心代码中加到躯干刚体，见 msk_human_core.add_load） -->
+<mujoco model="scene_load">
+  <include file="msk_human.xml"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+  <worldbody>
+    <geom name="floor" type="plane" size="12 4 0.1" rgba="0.55 0.60 0.55 1"/>
+  </worldbody>
+</mujoco>

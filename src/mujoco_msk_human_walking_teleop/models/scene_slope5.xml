@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  场景：5 度上坡（等效重力法）。
+  平面浮动基座（水平滑轨）无法绕 y 旋转地面，采用等效重力：
+  g' = ( g·sin(5°), 0, -g·cos(5°) )，地面保持水平。
+  人在该场中受到的合力与真实 5 度坡完全一致（含沿坡下滑分量），
+  详见文档"坡道场景的等效重力原理"一节。
+-->
+<mujoco model="scene_slope5">
+  <include file="msk_human.xml"/>
+  <option timestep="0.002" gravity="0.8548 0 -9.7743"/>
+  <worldbody>
+    <geom name="floor" type="plane" size="12 4 0.1" rgba="0.60 0.55 0.45 1"/>
+  </worldbody>
+</mujoco>

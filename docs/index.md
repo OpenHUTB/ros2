@@ -77,6 +77,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/mujoco_msk_human_walking_teleop/index.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
