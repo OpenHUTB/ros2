@@ -15,7 +15,7 @@
 对应作业要求：**选择的感知/控制/端到端算法均为神经网络**、**多场景测试并含性能评价**、
 **所有程序支持 launch 启动**。
 
-![跟踪动图](results/tracking.gif)
+![跟踪动图](../../../docs/img/air/uav_camera_tracking/tracking.gif)
 
 ## 目录结构
 
@@ -54,7 +54,7 @@ python3 -m uav_camera_tracking.main --quick  # 约 1 分钟，仅验证流程
 ```
 
 输出：`models/{detector,control,e2e}.npz`、`results/compare_summary.csv`、
-`results/training_curves.png`、`results/compare.png`、`results/tracking.gif`、`results/occlusion.gif`。
+`results/training_curves.png`、`results/compare.png`、`results/tracking.gif`、`results/occlusion.gif`（动图默认不入库，仓库内的版本在 `docs/img/air/uav_camera_tracking/`）。
 
 ### 方式 B：ROS 2 launch 启动闭环
 
@@ -152,7 +152,7 @@ vy = clip(KP_LAT * ex, ±V_MAX)                    # 横向纠偏
 
 立柱遮挡场景的重捕获过程（目标被三根立柱遮挡三次，每次约 0.6 s）：
 
-![遮挡重捕获](results/occlusion.gif)
+![遮挡重捕获](../../../docs/img/air/uav_camera_tracking/occlusion.gif)
 
 ## 场景设计
 

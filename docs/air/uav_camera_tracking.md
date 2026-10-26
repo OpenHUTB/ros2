@@ -8,7 +8,7 @@
 质点级四旋翼动力学），因此**不需要显卡、不需要仿真器许可**，在任意装了 `numpy` 的 Ubuntu 机器上
 `colcon build` 后即可复现全部结果。这样做的取舍见文末「已知限制」。
 
-![圆周目标跟踪（两阶段控制器）](uav_camera_tracking/tracking.gif)
+![圆周目标跟踪（两阶段控制器）](../img/air/uav_camera_tracking/tracking.gif)
 
 上图为圆周运动场景的三面板动图：左＝三维航迹与目标轨迹，中＝机载相机实时画面（红块为目标、
 蓝块为干扰物），右＝归一化像素误差曲线（虚线为阈值 0.18）。
@@ -254,7 +254,7 @@ RMS ≤ 0.18（约 14 px）。
 
 ### 7.3 遮挡后重捕获
 
-![遮挡重捕获](uav_camera_tracking/occlusion.gif)
+![遮挡重捕获](../img/air/uav_camera_tracking/occlusion.gif)
 
 灰色细柱为目标穿过的三根立柱，可以看到每次目标被遮挡后误差曲线上抬（超阈值），
 目标重现后控制器在 1 s 内把误差压回阈值以内。
