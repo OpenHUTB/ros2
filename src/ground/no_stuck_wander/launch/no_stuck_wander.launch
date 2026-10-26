@@ -1,0 +1,5 @@
+<launch>
+  <!-- no_stuck_wander：防卡死漫游节点，入口 main.py
+       依赖话题：/scan（LaserScan）、/cmd_vel（Twist） -->
+  <node pkg="no_stuck_wander" type="main.py" name="no_stuck_wander" output="screen"/>
+</launch>

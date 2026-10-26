@@ -1,0 +1,5 @@
+<launch>
+  <!-- turtlebot_multi_goal_nav：多目标点导航节点，入口 main.py
+       订阅 /odom、/scan，发布 /cmd_vel -->
+  <node pkg="turtlebot_multi_goal_nav" type="main.py" name="multi_goal_nav_node" output="screen"/>
+</launch>
