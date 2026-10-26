@@ -1,0 +1,20 @@
+<launch>
+  <arg name="host" default="192.168.189.1" />
+  <arg name="port" default="41451" />
+  <arg name="speed" default="3.0" />
+  <arg name="yaw_rate" default="1.0" />
+
+  <include file="$(find drone_airsim_bringup)/launch/drone_bringup.launch">
+    <arg name="host" value="$(arg host)" />
+    <arg name="port" value="$(arg port)" />
+  </include>
+
+  <node pkg="drone_airsim_bringup"
+        type="teleop.py"
+        name="drone_teleop"
+        output="screen"
+        launch-prefix="xterm -e">
+    <param name="speed" value="$(arg speed)" />
+    <param name="yaw_rate" value="$(arg yaw_rate)" />
+  </node>
+</launch>
