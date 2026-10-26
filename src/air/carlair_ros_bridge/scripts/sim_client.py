@@ -98,6 +98,16 @@ def yaw_from_quat_xyzw(q) -> float:
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
+def body_ned_to_flu(vec: np.ndarray) -> np.ndarray:
+    """机体系 NED（前-右-下）-> ROS 机体系 FLU（前-左-上）.
+
+    AirSim 的 IMU 角速度/线加速度是机体系 NED；ROS 的 sensor_msgs/Imu
+    约定机体系 FLU，因此 y、z 取反，x 不变。
+    """
+    v = np.asarray(vec, dtype=np.float64)
+    return np.array([v[0], -v[1], -v[2]], dtype=np.float64)
+
+
 # --------------------------------------------------------------------- 图像解码
 def _to_uint8_array(data) -> np.ndarray:
     """把 AirSim 返回的图像字节（bytes / list[int]）统一成 uint8 一维数组."""
@@ -253,6 +263,25 @@ class SimClient(object):
                               k.angular_velocity.y_val,
                               k.angular_velocity.z_val])
         return pos_enu, q_enu, vel_enu, ang_enu
+
+    def get_imu_enu(self):
+        """返回 (quat_xyzw, angular_velocity_flu(3), linear_acceleration_flu(3)).
+
+        - orientation：载具在 ENU 世界系下的姿态；
+        - angular_velocity / linear_acceleration：机体系 FLU，供
+          sensor_msgs/Imu 直接使用；
+        - AirSim 的线加速度包含重力分量，使用方如需“纯运动加速度”需自行扣除。
+        """
+        data = self.client.getImuData(vehicle_name=self.vehicle_name)
+        q = data.orientation
+        quat = airsim_quat_to_ros_quat([q.w_val, q.x_val, q.y_val, q.z_val])
+        ang_flu = body_ned_to_flu([data.angular_velocity.x_val,
+                                   data.angular_velocity.y_val,
+                                   data.angular_velocity.z_val])
+        acc_flu = body_ned_to_flu([data.linear_acceleration.x_val,
+                                   data.linear_acceleration.y_val,
+                                   data.linear_acceleration.z_val])
+        return quat, ang_flu, acc_flu
 
     def get_collision(self) -> bool:
         state = self.client.getMultirotorState(vehicle_name=self.vehicle_name)
