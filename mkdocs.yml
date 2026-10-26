@@ -72,6 +72,7 @@ nav:
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
@@ -162,7 +163,8 @@ markdown_extensions:
   - markdown_grid_tables
   - footnotes
   - admonition
-  - mdx_math
+  - mdx_math:
+      enable_dollar_delimiter: true
   - attr_list
   - pymdownx.superfences:
       custom_fences:
