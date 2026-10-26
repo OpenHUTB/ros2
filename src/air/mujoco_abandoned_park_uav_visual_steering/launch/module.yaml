@@ -1,0 +1,17 @@
+module:
+  name: mujoco_abandoned_park_uav_visual_steering
+  entry_point: main.py
+  default_mode: simulation
+  ros_2_distribution: humble
+interfaces:
+  camera:
+    name: front_rgb
+    encoding: rgb8
+    width: 320
+    height: 180
+  steering_command:
+    range: [-1.0, 1.0]
+    convention: "positive_right_negative_left / 右正左负"
+  state_fields: [time_seconds, x_m, y_m, z_m, yaw_radians]
+
+
