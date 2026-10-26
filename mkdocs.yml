@@ -1,4 +1,4 @@
-﻿site_name: 模拟器的 ROS 文档
+site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
 #repo_url: https://github.com/carla-simulator/carla
 #docs_dir: Docs
@@ -75,29 +75,36 @@ nav:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
+    - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
     - 阿克曼控制: './ground/ackermann_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
+    - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
-
+    - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
-
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
     - MuJoCo 地面小车射线感知与分级减速避障: './ground/mujoco_car_avoidance.md'
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
-
+    - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
 - 空域载具:
+    - 无人机任务管理与安全状态机:
+      - 模块概览: './air/uav_mission_safety_manager/overview.md'
+      - 构建与运行: './air/uav_mission_safety_manager/usage.md'
+      - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
@@ -109,6 +116,8 @@ nav:
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
+    - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
+    - 基于 DQN 的无人机导航避障: './air/uav_dqn_nav.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
@@ -122,9 +131,14 @@ nav:
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
         - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
-    - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
+        - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
+    - YOLO 感知与无人机控制:
+        - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
+        - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
