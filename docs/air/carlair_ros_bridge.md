@@ -226,6 +226,8 @@ rostopic hz /imu
 rostopic echo -n1 /imu
 ```
 
+![IMU 50 Hz](../img/air/carlair_ros_bridge/imu_hz.png)
+
 ## 7. 运行验证
 
 ```shell
