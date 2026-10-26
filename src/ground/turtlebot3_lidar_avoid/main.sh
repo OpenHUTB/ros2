@@ -9,7 +9,7 @@
 #   bash main.sh --build             # 先 colcon 编译再运行
 #
 # 前置条件：
-#   - ROS 2 Humble（/opt/ros/humble）
+#   - 已安装 ROS 2（推荐 ROS 2 Humble，脚本支持自动检测环境）
 #   - TurtleBot3 仿真环境已启动（Gazebo 中已 spawn 机器人）
 #   - 本包已编译：colcon build --packages-select turtlebot3_lidar_avoid
 #
@@ -20,17 +20,61 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # ---- 载入 ROS 2 环境 ----
-if [ -f /opt/ros/humble/setup.bash ]; then
+if command -v ros2 >/dev/null 2>&1 && [ -n "$ROS_DISTRO" ]; then
+    echo "[信息] 使用当前已载入的 ROS 2 环境: $ROS_DISTRO"
+elif [ -n "$ROS_DISTRO" ] && [ -f "/opt/ros/$ROS_DISTRO/setup.bash" ]; then
+    # shellcheck disable=SC1091
+    source "/opt/ros/$ROS_DISTRO/setup.bash"
+elif [ -f /opt/ros/humble/setup.bash ]; then
     # shellcheck disable=SC1091
     source /opt/ros/humble/setup.bash
+elif [ -f /opt/ros/jazzy/setup.bash ]; then
+    # shellcheck disable=SC1091
+    source /opt/ros/jazzy/setup.bash
+elif [ -f /opt/ros/iron/setup.bash ]; then
+    # shellcheck disable=SC1091
+    source /opt/ros/iron/setup.bash
+elif [ -f /opt/ros/rolling/setup.bash ]; then
+    # shellcheck disable=SC1091
+    source /opt/ros/rolling/setup.bash
 else
-    echo "[错误] 未找到 /opt/ros/humble/setup.bash，请确认已安装 ROS 2 Humble"
+    echo "[错误] 未找到可用的 ROS 2 环境配置（已尝试 humble/jazzy/iron/rolling）。"
+    echo "       请先手动执行 source /opt/ros/<distro>/setup.bash"
     exit 1
 fi
 
-# ---- 载入工作空间（若本包处于 colcon 工作空间内）----
-WS_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-if [ -f "$WS_ROOT/install/setup.bash" ]; then
+# ---- 寻找并载入工作空间 ----
+WS_ROOT=""
+CUR_DIR="$SCRIPT_DIR"
+while [ -n "$CUR_DIR" ] && [ "$CUR_DIR" != "/" ] && [ "$CUR_DIR" != "." ]; do
+    if [ -f "$CUR_DIR/install/setup.bash" ]; then
+        WS_ROOT="$CUR_DIR"
+        break
+    fi
+    PARENT_DIR="$(dirname "$CUR_DIR")"
+    if [ "$PARENT_DIR" = "$CUR_DIR" ]; then
+        break
+    fi
+    CUR_DIR="$PARENT_DIR"
+done
+
+# 若未找到已编译的 install/setup.bash，推断源码所在的工作空间根目录（以备 --build）
+if [ -z "$WS_ROOT" ]; then
+    CUR_DIR="$SCRIPT_DIR"
+    while [ -n "$CUR_DIR" ] && [ "$CUR_DIR" != "/" ] && [ "$CUR_DIR" != "." ]; do
+        if [ "$(basename "$CUR_DIR")" = "src" ]; then
+            WS_ROOT="$(dirname "$CUR_DIR")"
+            break
+        fi
+        PARENT_DIR="$(dirname "$CUR_DIR")"
+        if [ "$PARENT_DIR" = "$CUR_DIR" ]; then
+            break
+        fi
+        CUR_DIR="$PARENT_DIR"
+    done
+fi
+
+if [ -n "$WS_ROOT" ] && [ -f "$WS_ROOT/install/setup.bash" ]; then
     # shellcheck disable=SC1091
     source "$WS_ROOT/install/setup.bash"
 fi
@@ -48,9 +92,15 @@ for arg in "$@"; do
         --launch) MODE="launch" ;;
         --build)
             echo "[1/2] colcon build ..."
+            if [ -z "$WS_ROOT" ]; then
+                echo "[错误] 无法定位 colcon 工作空间根目录，请在工作空间根目录下手动执行 colcon build"
+                exit 1
+            fi
             ( cd "$WS_ROOT" && colcon build --packages-select turtlebot3_lidar_avoid )
-            # shellcheck disable=SC1091
-            source "$WS_ROOT/install/setup.bash"
+            if [ -f "$WS_ROOT/install/setup.bash" ]; then
+                # shellcheck disable=SC1091
+                source "$WS_ROOT/install/setup.bash"
+            fi
             ;;
         --help|-h)
             sed -n '2,20p' "$0"

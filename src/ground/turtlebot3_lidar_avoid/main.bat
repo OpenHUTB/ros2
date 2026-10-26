@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM ============================================================================
 REM TurtleBot3 激光雷达自主避障 —— Windows 端启动脚本
 REM ============================================================================
@@ -20,25 +21,35 @@ setlocal
 set SCAN_TOPIC=%1
 if "%SCAN_TOPIC%"=="" set SCAN_TOPIC=/scan
 
-REM ---- 配置区（按需修改）----
-set ROS_HOST=user@192.168.93.129
-set WS_PATH=/home/user/ros2_ws
+REM ---- 配置区（支持通过环境变量提前设置，或在此处修改）----
+if "%ROS_HOST%"=="" set ROS_HOST=YOUR_ROS_HOST_IP
+if "%WS_PATH%"=="" set WS_PATH=/home/user/ros2_ws
 set PKG_NAME=turtlebot3_lidar_avoid
 
 echo ==================================================
-echo   TurtleBot3 激光雷达自主避障
+echo   TurtleBot3 激光雷达自主避障 (Windows SSH 入口)
 echo ==================================================
 echo   雷达话题 : %SCAN_TOPIC%
 echo   目标主机 : %ROS_HOST%
+echo   工作空间 : %WS_PATH%
 echo ==================================================
 echo.
 
-where ssh >nul 2>nul
-if errorlevel 1 (
-    echo [错误] 未找到 ssh 命令，请在 Linux 上直接运行 main.sh
+if "%ROS_HOST%"=="YOUR_ROS_HOST_IP" (
+    echo [提示] 尚未配置目标 ROS 2 主机地址。
+    echo 请在命令行预先设置环境变量，例如：
+    echo   set ROS_HOST=your_user@your_ip
+    echo   main.bat
+    echo 或直接在 Linux / WSL 环境下执行 bash main.sh
     exit /b 1
 )
 
-ssh %ROS_HOST% "source /opt/ros/humble/setup.bash && source %WS_PATH%/install/setup.bash && ros2 run %PKG_NAME% avoid_node --ros-args -p scan_topic:=%SCAN_TOPIC%"
+where ssh >nul 2>nul
+if errorlevel 1 (
+    echo [错误] 未找到 ssh 命令，请在 Linux / WSL 环境下直接运行 bash main.sh
+    exit /b 1
+)
+
+ssh %ROS_HOST% "source /opt/ros/${ROS_DISTRO:-humble}/setup.bash 2>/dev/null || source /opt/ros/humble/setup.bash; [ -f %WS_PATH%/install/setup.bash ] && source %WS_PATH%/install/setup.bash; ros2 run %PKG_NAME% avoid_node --ros-args -p scan_topic:=%SCAN_TOPIC%"
 
 endlocal

@@ -22,6 +22,10 @@
 | 机器人 | TurtleBot3 Waffle |
 | 开发语言 | Python 3.10 |
 
+> [!NOTE] ROS 2 与 Gazebo 发行版兼容性说明
+> - **基准环境**：本模块原生基于 **Ubuntu 22.04 + ROS 2 Humble + Gazebo 11 (Classic)** 设计与验证，避障节点向 `/cmd_vel` 发布标准 `geometry_msgs/msg/Twist` 控制指令。
+> - **高版本（ROS 2 Jazzy / Rolling + Gazebo Harmonic）**：在 Ubuntu 24.04（ROS 2 Jazzy）中，TurtleBot3 仿真已切换至新版 Gazebo（Gz Sim / Harmonic），底盘桥接节点（`ros_gz_bridge`）默认期望接收带时间戳的 `geometry_msgs/msg/TwistStamped`。若在 Jazzy 环境下直接运行，请配置 bridge 桥接类型或适配为 `TwistStamped`，否则小车无法响应纯 `Twist` 指令。
+
 ![TurtleBot3 迷宫场景](../img/ground/turtlebot3_lidar_avoid.png)
 
 *图 1：Gazebo 中的 TurtleBot3 迷宫场景（右下角为 Waffle 机器人）。*
@@ -194,13 +198,17 @@ source install/setup.bash
 
 ### 5.2 启动 Gazebo 仿真环境
 
-```bash
-# 标准 TurtleBot3 场景
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+新开终端并启动 Gazebo 仿真环境（**必须先指定机器人型号环境变量**，否则会报错 `KeyError: 'TURTLEBOT3_MODEL'`）：
 
-# 或使用课程镜像自带的迷宫场景脚本
-~/start-gazebo-turtlebot-ros-humble.sh
+```bash
+# 1. 设置机器人型号（可选 burger / waffle / waffle_pi）
+export TURTLEBOT3_MODEL=burger
+
+# 2. 启动标准 TurtleBot3 仿真世界场景
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
+
+> **可选快捷方式**：若使用预装特定课程环境的虚拟机镜像，该镜像可能自带了一键启动脚本（如 `~/start-gazebo-turtlebot-ros-humble.sh`），亦可使用该脚本启动仿真。标准独立 ROS 2 环境中推荐使用上述官方 `ros2 launch` 命令。
 
 ### 5.3 确认雷达话题
 

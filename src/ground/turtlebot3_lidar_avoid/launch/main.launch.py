@@ -9,8 +9,7 @@
     若需另行启动 Gazebo 仿真环境，新开终端执行：
         export TURTLEBOT3_MODEL=burger
         ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-    或使用课程镜像自带脚本：
-        ~/start-gazebo-turtlebot-ros-humble.sh
+    （若使用预装特定课程环境的虚拟机镜像，也可使用其提供的快捷启动脚本 ~/start-gazebo-turtlebot-ros-humble.sh）
 """
 
 from launch import LaunchDescription

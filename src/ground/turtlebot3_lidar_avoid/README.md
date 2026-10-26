@@ -30,6 +30,10 @@ ROS 1 / ROS 2 两个版本的对照。
 | 机器人 | TurtleBot3 Waffle |
 | Python | 3.10 |
 
+> [!NOTE] ROS 2 与 Gazebo 发行版兼容性说明
+> - **基准环境**：本模块原生基于 **Ubuntu 22.04 + ROS 2 Humble + Gazebo 11 (Classic)** 开发与测试，节点发布标准 `geometry_msgs/msg/Twist` 控制指令。
+> - **高版本（ROS 2 Jazzy / Rolling + Gazebo Harmonic）兼容提示**：在 Ubuntu 24.04（ROS 2 Jazzy）中，Gazebo 桥接节点（`ros_gz_bridge`）默认监听带有时间戳的 `geometry_msgs/msg/TwistStamped`。若在 Jazzy 环境下直接运行，需配置 bridge 桥接类型或适配为 `TwistStamped`，否则 Gazebo 无法响应纯 `Twist` 指令。
+
 ### 依赖安装
 
 ```bash
@@ -57,15 +61,17 @@ source install/setup.bash
 
 ### 1. 启动仿真环境
 
-任选其一：
+新开终端并启动 Gazebo 仿真环境（**必须先指定机器人型号环境变量**，否则会报错 `KeyError: 'TURTLEBOT3_MODEL'`）：
 
 ```bash
-# 标准 TurtleBot3 场景
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+# 1. 设置机器人型号（可选 burger / waffle / waffle_pi）
+export TURTLEBOT3_MODEL=burger
 
-# 课程镜像自带的迷宫场景脚本
-~/start-gazebo-turtlebot-ros-humble.sh
+# 2. 启动标准 TurtleBot3 仿真世界场景
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
+
+> **可选快捷方式**：若使用预置特定课程环境的虚拟机镜像，也可使用镜像自带的一键脚本（如 `~/start-gazebo-turtlebot-ros-humble.sh`）。标准独立环境中推荐使用上述官方 `ros2 launch` 命令。
 
 ### 2. 启动避障节点
 
