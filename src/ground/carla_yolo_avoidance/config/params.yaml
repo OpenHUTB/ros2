@@ -1,0 +1,42 @@
+# =============================================================================
+# carla_yolo_avoidance 参数文件
+#
+# 【这是唯一需要改的地方】
+#   - 换 CARLA 机器（IP）、换端口：改 carla_host / carla_port
+#   - 换 YOLOv8 权重：改 model
+#   改完不需要修改任何 Python 源码，也不需要重新 colcon build。
+#
+# 加载方式：
+#   1) 一键启动（launch 会自动加载本文件）：
+#        ros2 launch carla_yolo_avoidance carla_yolo_avoidance.launch.py
+#   2) 单独启动某个节点时手动指定：
+#        ros2 run carla_yolo_avoidance carla_camera_node --ros-args \
+#            --params-file src/carla_yolo_avoidance/config/params.yaml
+#
+# 注意：这一段不能删，carla_port 必须是整数（不要加引号）；
+#       carla_host 建议用引号包起来。
+# =============================================================================
+
+/carla_camera_node:
+  ros__parameters:
+    # CARLA 服务端地址。
+    #   - CARLA 与本项目跑在同一台机器上：用回环地址 127.0.0.1
+    #   - CARLA 跑在另一台机器上：填那台机器的 IP 或主机名
+    carla_host: "127.0.0.1"
+
+    # CARLA 服务端端口，必须与启动 CARLA 时 -carla-port 指定的端口一致。
+    # 整数，不要写成 "2000" 这种带引号的字符串。
+    carla_port: 2000
+
+/yolo_detect_node:
+  ros__parameters:
+    # YOLOv8 官方预训练权重（只做推理，不需要训练）。
+    #   - 直接写文件名：放在运行目录下即可，缺失时 ultralytics 会自动下载
+    #   - 也可以写相对/绝对路径，指向你自己存放的 .pt 文件
+    model: "yolov8n.pt"
+
+# 决策节点的安全阈值（SAFE_DISTANCE_M 等）按作业要求写死在代码里：
+#   src/carla_yolo_avoidance/carla_yolo_avoidance/config.py
+# 这里保留一个空小节，只是为了说明"本节点不需要外部参数"。
+/decision_control_node:
+  ros__parameters: {}

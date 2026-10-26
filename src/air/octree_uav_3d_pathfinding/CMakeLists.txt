@@ -78,6 +78,19 @@ add_dependencies(astar_planner
   ${catkin_EXPORTED_TARGETS}
 )
 
+## C++ 节点：闭环飞行的路径跟踪（P6）
+##
+## 状态机在 include/octree_uav_3d_pathfinding/path_follow_core.h（纯逻辑、可离线单测），
+## 本目标只是它的 ROS 外壳：订阅路径与位姿，向 /uav/goal_cmd 逐点下发航点。
+add_executable(path_follower src/path_follower.cpp)
+target_link_libraries(path_follower
+  ${catkin_LIBRARIES}
+)
+add_dependencies(path_follower
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
 #############
 ## Install ##
 #############
@@ -87,11 +100,12 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/airsim_bridge.py
   scripts/mock_cloud_publisher.py
+  scripts/mock_uav_mover.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## C++ 节点
-install(TARGETS pointcloud_to_octomap astar_planner
+install(TARGETS pointcloud_to_octomap astar_planner path_follower
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -115,3 +129,18 @@ install(DIRECTORY launch config rviz
 ## （退出码 0 = 全部通过）
 add_executable(test_astar tests/test_astar.cpp)
 target_link_libraries(test_astar ${OCTOMAP_LIBRARIES})
+
+## P5 安全裕度与路径平滑的离线单元测试
+##
+## 同样只依赖 octomap 与 STL：覆盖"膨胀层"与"平滑层"两部分的纯算法逻辑 ——
+## 包括 r = 0 时退回 P4 的回归、曲率除零守卫、样条复检兜底、以及膨胀规模实测。
+## 运行方式：~/uav_ws/devel/lib/octree_uav_3d_pathfinding/test_smoothing
+add_executable(test_smoothing tests/test_smoothing.cpp)
+target_link_libraries(test_smoothing ${OCTOMAP_LIBRARIES})
+
+## P6 路径跟踪状态机的离线单元测试
+##
+## 只依赖 STL：被测的是 path_follow_core.h 里的纯函数（前瞻切换、终点判定、
+## 超时跳过、偏离度量），不需要 ROS 运行时、不需要 octomap、不需要模拟器。
+## 运行方式：~/uav_ws/devel/lib/octree_uav_3d_pathfinding/test_path_follower
+add_executable(test_path_follower tests/test_path_follower.cpp)
