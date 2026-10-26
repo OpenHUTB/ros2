@@ -38,13 +38,16 @@ src/air/drone_airsim_bringup/
 
 ## 相机配置（必须做）
 
-AirSim 的分辨率由服务端的 `settings.json` 决定，不配置就默认 256×144。仓库里的 `config/settings.json` 是实测用的配置（相机 1280×960）：
+AirSim 的分辨率由服务端的 `settings.json` 决定，不配置就默认 256×144。仓库里的 `config/settings.json` 是实测用的配置（相机 1280×960）。
+
+注意：`CarlaAir.ps1` 每次启动都会用 `<CarlaAir>\AirSimConfig\settings.json` 覆盖 `%USERPROFILE%\Documents\AirSim\settings.json`，所以只改 Documents 会被覆盖。推荐先备份，再替换 CarlaAir 的模板：
 
 ```powershell
-copy config\settings.json "$env:USERPROFILE\Documents\AirSim\settings.json"
+copy "<CarlaAir>\AirSimConfig\settings.json" "<CarlaAir>\AirSimConfig\settings.json.bak"
+copy config\settings.json "<CarlaAir>\AirSimConfig\settings.json"
 ```
 
-然后重启 CarlaAir。VM 里不需要放这个文件。
+然后启动 CarlaAir。如果直接运行 `CarlaUE4.exe`，才需要复制到 `%USERPROFILE%\Documents\AirSim\settings.json`。VM 里不需要放这个文件。
 
 ## 依赖安装
 
