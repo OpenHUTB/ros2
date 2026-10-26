@@ -11,6 +11,7 @@ sim:
 
 rate:
   odom_hz: 20.0             # 位姿发布频率
+  imu_hz: 50.0              # IMU 发布频率（AirSim 默认 IMU 采样率）
   image_hz: 20.0            # 相机发布频率（三路图像合并为一次 RPC）
   lidar_hz: 10.0            # 点云发布频率（与 settings.json 的 RotationsPerSecond 一致）
   cmd_timeout: 0.5          # 超过该时间没有新指令则悬停（安全保护）
@@ -37,9 +38,11 @@ camera:
 frame:
   world: "world"            # 世界坐标系（ENU）
   body: "base_link"         # 机体坐标系
+  imu: "base_link"          # IMU 消息使用的坐标系（没有单独 imu_link 时用 base_link）
 
 topic:
   odom: "/uav/odom"
+  imu: "/imu"
   cmd_vel: "/uav/cmd_vel"
   goal: "/uav/goal"
   image: "/camera/image_raw"
