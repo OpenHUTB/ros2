@@ -175,6 +175,16 @@ vy = clip(KP_LAT * ex, ±V_MAX)                    # 横向纠偏
 | `DS` / `E2E_DS` | 16 / 24 | 感知网络与端到端网络的输入边长 |
 | `ERR_OK` / `LOST_FRAC_OK` | 0.18 / 0.85 | 成功判定阈值 |
 
+## 单元测试
+
+```bash
+cd ~/ros2/src/air/uav_camera_tracking
+python3 -m pytest test/ -q            # 7 个用例，不需要 ROS
+```
+
+覆盖相机投影方向、遮挡判定、热图标签与解码的格子约定一致性、专家指令符号、
+四旋翼速度环收敛与 MLP 拟合能力——都是"错了会静默失效"的地方。
+
 ## 复现环境
 
 - 训练与评估：Ubuntu 20.04 + Python 3.8 + NumPy + Matplotlib（纯 CPU，无 GPU 依赖）
