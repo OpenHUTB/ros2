@@ -231,55 +231,38 @@ src/rl_mujoco_locomotion/
 
 ### 验证步骤
 
-```bash
 # 1. 环境检查
+```bash
 python3 src/rl_mujoco_locomotion/main.py doctor
+```
 
 # 2. 单元测试（环境 reset/step 冒烟）
+```bash
 python3 src/rl_mujoco_locomotion/main.py test
+```
 
 # 3. 快速训练验证
+```bash
 python3 src/rl_mujoco_locomotion/main.py train --env halfcheetah --alg ppo --episodes 50 --max-steps 20000
+```
 
 # 4. 评估与渲染
+```bash
 python3 src/rl_mujoco_locomotion/main.py evaluate --env halfcheetah --alg ppo
 python3 src/rl_mujoco_locomotion/main.py render --env halfcheetah --alg ppo --episodes 2 --stride 5
+```
 
 # 5. 6 组 30 万步完整训练 + 对比图
+```bash
 for env in halfcheetah ant walker2d; do for alg in ppo sac; do
   python3 src/rl_mujoco_locomotion/main.py train --env $env --alg $alg --episodes 1000000 --max-steps 300000
 done; done
 python3 src/rl_mujoco_locomotion/main.py compare
-
+```
 # 6. ROS 2 构建验证
+```bash
 cd <ros2_workspace>
 source /opt/ros/humble/setup.bash
 colcon build --packages-select rl_mujoco_locomotion
 ```
 
-### 未验证内容
-
-- 未在 Windows 上直接运行（MuJoCo 无头渲染需要 GPU/EGL，建议在 Ubuntu 中运行）
-- 未在真实机器人上部署（纯仿真环境）
-- 未做超参数网格搜索（默认超参数即可复现上表结果，但非最优）
-- 未使用 `mkdocs build` 本地构建文档（测试环境未安装 mkdocs）
-
-## 大模型使用声明
-
-本项目在开发过程中使用了大模型辅助生成代码框架与文档结构，核心算法逻辑、参数调优与实验验证由作者独立完成。
-
-## 提交前检查清单
-
-- [x] 源码在 `src/rl_mujoco_locomotion/` 下，不修改其他模块
-- [x] 教程文档在 `docs/ground/rl_mujoco_locomotion.md`
-- [x] 提供 `main.py` 和 `launch/main.launch.py`
-- [x] `mkdocs.yml` 与首页 `index.md` 已添加导航链接
-- [x] 依赖锁定在 `requirements.txt`
-- [x] 已运行单元测试验证 main 和 launch 工作
-- [x] 已在 Ubuntu 虚拟机中实际完成 6 组训练并生成结果（30 万步 / 组）
-- [x] 运行效果已验证（学习曲线 + 6 个推理 GIF，均为实测产物）
-- [x] 结果双列为训练回报与确定性评估回报，未使用示例预期值
-- [x] Walker2d 未收敛等负面结果已如实记录
-- [x] 大模型使用已声明
-- [x] 个人开发环境 Ubuntu 版本、Python 版本、MuJoCo 版本已列出
-- [x] README 中包含可执行的验证命令与效果
