@@ -89,11 +89,30 @@ def plot_error_curve(gt: Sequence[Pose], est: Sequence[Pose], output: str,
     axes[0].plot(times, err, color="#1f77b4", linewidth=1.5)
     axes[0].set_ylabel("位置误差 / m" if cjk else "position error / m")
     axes[0].set_title("对齐后的误差曲线" if cjk else "error after alignment")
+    axes[0].set_ylim(0.0, max(float(err.max()) * 1.15, 1e-3))
     axes[0].grid(alpha=0.3)
+
     axes[1].plot(times, dyaw, color="#d62728", linewidth=1.5)
     axes[1].set_ylabel("朝向误差 / deg" if cjk else "yaw error / deg")
     axes[1].set_xlabel("时间 t / s" if cjk else "time t / s")
     axes[1].grid(alpha=0.3)
+    # 航向误差通常只有 1e-3 度量级（尺度误差只改变距离、不改变朝向）。
+    # 不固定纵轴范围的话，matplotlib 会把 1e-14 的浮点噪声放大成"尖峰"，
+    # 图上看起来像有几十度的误差，与真实数据完全不符——这里显式设定可读范围。
+    yaw_max = float(dyaw.max())
+    if yaw_max < 0.05:
+        axes[1].set_ylim(-0.02, 0.05)
+        axes[1].ticklabel_format(axis="y", style="plain", useOffset=False)
+        axes[1].text(0.015, 0.88,
+                     (f"航向误差恒为 {yaw_max:.4f}°\n尺度误差只影响距离，不影响航向"
+                      if cjk else
+                      f"yaw error is constant {yaw_max:.4f} deg\n"
+                      "scale error affects distance only"),
+                     transform=axes[1].transAxes, fontsize=10, va="top",
+                     bbox=dict(boxstyle="round,pad=0.35", fc="#fff3f3", ec="#d62728", lw=0.8))
+    else:
+        axes[1].set_ylim(0.0, yaw_max * 1.15)
+
     fig.tight_layout()
     os.makedirs(os.path.dirname(os.path.abspath(output)) or ".", exist_ok=True)
     fig.savefig(output, dpi=130)
