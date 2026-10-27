@@ -64,6 +64,12 @@ airsim_bridge:
   # 首次收到目标点时是否自动解锁起飞
   auto_takeoff: true
 
+  # 接收"要飞到哪里"的话题。
+  # 默认 /uav/goal 与 P1'–P5 一致：用户发一个目标点，规划器规划、载具飞过去。
+  # P6 的闭环飞行里改设成 /uav/goal_cmd —— path_follower 逐点发航点，
+  # 与 /uav/goal 分开，避免每个航点都触发 astar_planner 重新规划。
+  goal_topic: /uav/goal
+
 # 点云 → 八叉树占用地图
 pointcloud_to_octomap:
   # 输入点云话题（由 airsim_bridge 发布）
@@ -80,8 +86,13 @@ pointcloud_to_octomap:
   # 最小量程（m）：小于该距离的点视为机体自身或传感器噪声，直接丢弃
   min_range: 0.5
   # 抽稀：每隔 N 个点取一个做射线投射。AirSim 一帧约 1 万点，
-  # 在虚拟机上逐点投射跟不上，取 2~4 比较稳妥
-  point_stride: 2
+  # 在虚拟机上逐点投射跟不上。
+  #
+  # 但抽稀**不能超过采样间距与分辨率的关系**：射线是从一个点射向每个采样点的，
+  # 采样点之间留有缝，缝比体素大时就会"穿漏"——障碍物内部被误标成空闲、
+  # 地面看起来像有洞的网。所以这里取 1，让点云保持原始密度
+  # （离线 mock 场景的采样间距已按此设为 0.2 m，小于 0.3 m 的分辨率）。
+  point_stride: 1
   # 占用概率模型：命中/未命中的 log-odds 增量与概率上下限
   prob_hit: 0.7
   prob_miss: 0.4
@@ -98,3 +109,113 @@ pointcloud_to_octomap:
   status_period: 5.0
   # 等待首帧点云的超时时间（s），超时后输出排查提示
   cloud_timeout: 15.0
+
+# 八叉树上的 A* 全局寻路
+astar_planner:
+  # 输入：八叉树占用地图（由 pointcloud_to_octomap 以 latched 方式发布）
+  map_topic: /octomap_full
+  # 输入：目标点（世界系 ENU）。收到一次就规划一次
+  goal_topic: /uav/goal
+  # 输出：规划出的路径 nav_msgs/Path
+  path_topic: /uav/path
+  # 输出：A* 已展开节点的可视化，按节点尺寸着色 —— 偏蓝为小节点（障碍附近），
+  #       偏红为大节点（空旷区一步跨过）。这是观察跨分辨率行为最直观的一路输出
+  explored_topic: /uav/explored_markers
+
+  # 坐标系：起点由 TF 的 world <- base_link 得到，与建图节点保持一致
+  world_frame: world
+  body_frame: base_link
+
+  # 细侧邻居展开的上限：k = 自身边长 / 邻居边长，k 超过它就放弃该方向。
+  # 空旷处一个大空闲节点旁边可能紧挨着 0.3 m 的细碎结构，此时 k 可达上百，
+  # 面接触要采样上万个点，不可接受。放弃这种方向只会让路径绕远，
+  # 不会产生穿墙路径 —— 是一个保守的近似。
+  k_max: 4.0
+  # A* 最大展开次数，防止在大图上跑飞
+  max_iterations: 200000
+  # 启发权重：1.0 为最优 A*；大于 1 为加权 A*，更快但不再保证最优
+  heuristic_weight: 1.0
+  # 起终点落在障碍/未知区域时，在该半径（m）内螺旋搜索最近的可行节点。
+  # 注意该搜索只看距离、不看连通性
+  search_radius: 3.0
+  # 单次规划超时（s）
+  plan_timeout: 10.0
+  # 已展开节点可视化的最大个数，防止 RViz 卡顿
+  max_expanded_markers: 20000
+
+  # ---------------- P5：安全裕度与路径平滑 ----------------
+  #
+  # ⚠️ 下面这些参数的默认值刻意设成「等价于 P4」（膨胀 0、惩罚 0、平滑关），
+  #    这样 P4 的验收场景可以原样重跑做回归，也不会"合进来就悄悄改了原有行为"。
+  #    要对比 P5 的效果，按下面注释把开关逐个打开即可。
+
+  # 安全裕度半径（m）—— **硬约束**：把"贴着障碍走"变成"不可通行"。
+  #   0    = 关闭膨胀，行为逐位等于 P4
+  #   0.6  = 推荐值（等于 2 个体素），路径中心到真障碍至少留 0.6 m
+  #   1.0  = 更保守，但窄通道可能被直接堵死（会表现为"P4 有解、P5 无解"）
+  # 注意：膨胀是通过一棵"影子树"实现的，原树与 RViz 里的占用显示都不受影响。
+  inflation_radius: 0.0
+  # 影子树分辨率（m）。0 = 与原树一致（推荐，与逐格判定配套）
+  inflation_resolution: 0.0
+
+  # 间隙惩罚权重 w —— **软偏好**：离障碍近的边变贵，但禁不掉。
+  #   0    = 关闭，代价逐位等于 P4 的中心欧氏距离
+  #   1.0  = 推荐试值
+  # 公式：cost × (1 + w·exp(−d / r_soft))，d 是该节点到膨胀边界的间隙。
+  # ⚠️ w > 0 时**目标函数被重新定义**，得到的是"新代价下的最优"，
+  #    不是 P4 目标下的次优解 —— 文档里要如实这么写。
+  clearance_penalty_weight: 0.0
+  # 惩罚的衰减尺度 r_soft（m）。0 = 取 inflation_radius
+  clearance_penalty_scale: 0.0
+
+  # 路径平滑总开关（默认关）。打开后：
+  #   捷径化（取直、丢冗余航点）→ 三次样条 → **在膨胀图上复检** → 不过就退回折线
+  smoothing: false
+  # 是否做捷径化
+  smoothing_shortcut: true
+  # 是否做样条
+  smoothing_spline: true
+  # 碰撞检测采样步长（m）。0 = 用 resolution/2。
+  # ⚠️ 必须 **小于分辨率**，否则线段会从体素对角缝里穿过去（这是安全关键项，
+  #    不是可以调大的性能旋钮）
+  smoothing_sample_step: 0.0
+  # 样条每段的采样点数（越大曲线越细，但发布的消息越大）
+  smoothing_samples_per_segment: 8
+  # 平滑后路径的话题。与 /uav/path（原始折线）**并存**，便于 RViz 同屏对比
+  smooth_path_topic: /uav/path_smooth
+  # 是否打印 P4/P5 对比指标（路径长度、最大曲率、最小间隙、三段耗时）
+  metrics_log: true
+  # 最小间隙指标的探测上限（m）。越大越能看出"有余量"，但探测更慢
+  clearance_probe_range: 2.0
+
+# 路径跟踪与闭环飞行（P6）
+#
+# 把规划出的路径逐点喂给控制器。注意"喂给谁"：
+#   /uav/goal     由**用户**发布，astar_planner 订阅它触发规划；
+#   /uav/goal_cmd 由本节点发布，bridge 订阅它执行飞行（见 full_demo.launch 里的 remap）。
+# 两者分开，才不会让每个航点都触发一次重新规划。
+path_follower:
+  # 要跟踪的路径。默认用 P5 平滑后的曲线；切 /uav/path 可做"折线 vs 曲线"对照
+  path_topic: /uav/path_smooth
+  # 位姿来源（bridge 以 20 Hz 发布，位置是 ROS 世界系 ENU）
+  odom_topic: /ground_truth/odom
+  # 下发给控制器的话题
+  goal_cmd_topic: /uav/goal_cmd
+  # 状态文本与实际轨迹（后者用于和规划路径同屏对比）
+  status_topic: /uav/follow_status
+  flown_topic: /uav/flown_path
+
+  # 距当前航点该距离内就切到下一个航点（m）。
+  # **必须明显大于 finish_tolerance**，否则退化成"每点停稳"，动图会一顿一顿
+  lookahead: 1.5
+  # 判定"到达终点"的距离（m）。
+  # **不能只按"约 2 倍地图分辨率"取**：AirSim 的位置环有稳态误差，本机实测
+  # 悬停在距目标 0.86 m 处就不再收敛。取 0.5 时末点永远够不着，只能等满
+  # per_point_timeout 才收尾 —— 实测把 duration 从 8 s 拖到 21 s、mean_speed
+  # 从 2.27 拉到 1.23 m/s。取 1.0 = 实测稳态误差 + 余量。
+  finish_tolerance: 1.0
+  # 单个航点超时（s）。超时跳过；终点超时则直接结束
+  per_point_timeout: 15.0
+
+  # 是否发布实际飞过的轨迹（/uav/flown_path）
+  publish_flown: true

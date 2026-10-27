@@ -1,0 +1,9 @@
+{
+  "real_ros_messages": 361,
+  "predictions": 21,
+  "events": 1,
+  "malformed_json_rejected": true,
+  "nan_rejected": true,
+  "wall_timeout_resets_history": true,
+  "transport": "rclpy publishers/subscribers, isolated ROS_DOMAIN_ID=76"
+}

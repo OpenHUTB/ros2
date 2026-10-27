@@ -6,7 +6,7 @@
 
 ![](./img/图片1.png)
 
-### 一、查看本机 NVIDIA 显卡硬件
+### 一、查看本机 NVIDIA 显卡硬件.
 
 输入 `lspci | grep -i nvidia`，回车 
 
