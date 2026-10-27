@@ -54,11 +54,11 @@ def extract_digit(frame_gray: np.ndarray, min_area: int = 60) -> Tuple[Optional[
     x1, y1 = min(w, x + bw + mx), min(h, y + bh + my)
     crop = frame_gray[y0:y1, x0:x1]
 
-    digit28 = _normalize_mnist(crop, flags)
+    digit28 = _normalize_mnist(crop)
     return digit28, (x0, y0, x1 - x0, y1 - y0)
 
 
-def _normalize_mnist(crop: np.ndarray, flags: int) -> np.ndarray:
+def _normalize_mnist(crop: np.ndarray) -> np.ndarray:
     """把数字裁剪块归一化为 28x28（20x20 居中，白字黑底）。"""
     # 灰度裁剪块统一为“白字黑底”：若亮色像素占多数说明数字比背景暗，需反转
     if (crop > 127).mean() > 0.5:

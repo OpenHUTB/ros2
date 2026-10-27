@@ -6,7 +6,7 @@
     发布：~/digit        std_msgs/Int32     当前帧识别的数字（-1 表示未检测到）
           ~/confidence   std_msgs/Float32   对应的 softmax 置信度
           ~/debug_image  sensor_msgs/Image  叠加了检测框与预测结果的可视化图像
-          ~/fps          std_msgs/Float32   推理帧率
+          ~/fps          std_msgs/Float32   实测处理帧率（相邻拍时间差的滑动平均）
     订阅：/mnist_digit_control/action std_msgs/String 控制节点反馈的动作名（用于叠加显示）
 
 参数：
@@ -71,6 +71,8 @@ class DigitDetectorNode(Node):
 
         self.capture = self._open_source()
         self.infer_ms = 0.0
+        self._last_tick = None      # 实测处理帧率用上一拍时间戳
+        self.meas_hz = 0.0
         self.create_timer(1.0 / rate, self.tick)
 
     # ------------------------------------------------------------------ source
@@ -97,6 +99,15 @@ class DigitDetectorNode(Node):
 
     # -------------------------------------------------------------------- loop
     def tick(self) -> None:
+        # 实测处理帧率：相邻两拍时间差的滑动平均（比理论 rate 更真实）
+        now = time.monotonic()
+        if self._last_tick is not None:
+            dt = now - self._last_tick
+            if dt > 0:
+                hz = 1.0 / dt
+                self.meas_hz = hz if self.meas_hz <= 0 else 0.9 * self.meas_hz + 0.1 * hz
+        self._last_tick = now
+
         ok, frame = self.capture.read()
         if not ok:
             self.get_logger().warn("视频源读取结束，节点退出")
@@ -112,7 +123,7 @@ class DigitDetectorNode(Node):
 
         self.pub_digit.publish(Int32(data=digit))
         self.pub_conf.publish(Float32(data=conf))
-        self.pub_fps.publish(Float32(data=1000.0 / self.infer_ms if self.infer_ms > 0 else 0.0))
+        self.pub_fps.publish(Float32(data=self.meas_hz))
 
         debug = self._draw(frame, digit, conf, box)
         self.pub_debug.publish(self.bridge.cv2_to_imgmsg(debug, "bgr8"))
