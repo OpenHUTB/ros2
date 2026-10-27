@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>diff_drive_odom_calib</name>
+  <version>1.0.0</version>
+  <description>
+    ROS 1（Noetic）差速移动机器人里程计标定：用直行 + 原地旋转两个实验
+    分别辨识路程系数、直行漂移率与转角系数，评估标定前后的航迹漂移。
+  </description>
+  <maintainer email="openhutb_course@example.com">OpenHUTB Student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export/>
+</package>

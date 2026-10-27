@@ -1,0 +1,9 @@
+# 标定实验参数
+r_nominal: 0.05
+b_nominal: 0.30
+straight_distance: 2.0   # 直行实验长度 (m)
+straight_speed: 0.20     # 直行速度 (m/s)
+rotation_turns: 3.0      # 旋转实验圈数
+rotation_speed: 1.00     # 旋转角速度 (rad/s)
+square_side: 4.0         # 验证用方形路径边长 (m)
+result_file: ""          # 标定结果输出路径，留空写到包的 config/calib_result.yaml

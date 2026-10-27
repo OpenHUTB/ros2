@@ -1,0 +1,16 @@
+<launch>
+  <!-- 差速机器人里程计标定：仿真机器人 + 标定节点，一条命令跑完 -->
+  <arg name="record_bag" default="false"/>
+
+  <node pkg="diff_drive_odom_calib" type="sim_robot.py" name="sim_robot" output="screen">
+    <rosparam command="load" file="$(find diff_drive_odom_calib)/config/sim_robot.yaml"/>
+  </node>
+
+  <node pkg="diff_drive_odom_calib" type="main.py" name="odom_calib" output="screen"
+        required="true">
+    <rosparam command="load" file="$(find diff_drive_odom_calib)/config/calib.yaml"/>
+  </node>
+
+  <node if="$(arg record_bag)" pkg="rosbag" type="record" name="recorder"
+        args="-O /tmp/odom_calib.bag /odom /ground_truth /wheel_ticks /cmd_vel"/>
+</launch>
