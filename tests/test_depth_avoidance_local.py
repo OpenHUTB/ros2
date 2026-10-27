@@ -61,6 +61,9 @@ def test_corridor():
     out = depth_avoidance.corridor_points(pts, 1.0, 1.0, 12.0)
     check(out.shape == (1, 3), "只保留走廊内 1 点: %r" % (out.shape,))
     check(np.allclose(out[0], [0.0, 0.0, 1.0]), "保留点坐标正确")
+    near = np.array([[0.0, 0.0, 0.2]], dtype=np.float32)
+    check(depth_avoidance.corridor_points(near, 1.0, 1.0, 12.0, 0.5).shape == (0, 3),
+          "min_range=0.5 过滤近处地面点")
 
 
 def test_distance():
