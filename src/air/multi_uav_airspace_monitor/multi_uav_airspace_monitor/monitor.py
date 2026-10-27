@@ -168,9 +168,17 @@ def _interpolate_pair(
     track_a: UAVTrack,
     track_b: UAVTrack,
     step_s: float,
+    horizon_s: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Sample the common interval of two tracks, optionally limited to a horizon.
+
+    The horizon starts at the first sample shared by both tracks, so a pair is
+    only evaluated over the first ``horizon_s`` seconds of their common flight.
+    """
     start = max(float(track_a.times[0]), float(track_b.times[0]))
     end = min(float(track_a.times[-1]), float(track_b.times[-1]))
+    if horizon_s is not None:
+        end = min(end, start + float(horizon_s))
     if end <= start:
         return np.empty(0), np.empty((0, 3)), np.empty((0, 3))
     count = max(2, int(np.floor((end - start) / step_s)) + 1)
@@ -187,19 +195,29 @@ def pairwise_conflicts(
     critical_m: float = 10.0,
     step_s: float = 0.25,
 ) -> list[Conflict]:
-    """Detect conflicts using the minimum separation over the common horizon."""
+    """Detect conflicts inside the first ``horizon_s`` seconds of common flight.
+
+    Samples are truncated to ``[start, start + horizon_s]`` before the closest
+    approach is taken. A pair that is already inside the warning distance inside
+    the horizon is therefore still reported when the global minimum of the whole
+    scenario happens later than the horizon.
+    """
+    if horizon_s <= 0:
+        raise ValueError("horizon_s must be positive")
+    if step_s <= 0:
+        raise ValueError("step_s must be positive")
     conflicts: list[Conflict] = []
     for index, track_a in enumerate(tracks):
         for track_b in tracks[index + 1 :]:
-            times, positions_a, positions_b = _interpolate_pair(track_a, track_b, step_s)
+            times, positions_a, positions_b = _interpolate_pair(
+                track_a, track_b, step_s, horizon_s
+            )
             if len(times) == 0:
                 continue
             distances = np.linalg.norm(positions_a - positions_b, axis=1)
             min_index = int(np.argmin(distances))
             min_distance = float(distances[min_index])
             if min_distance > warning_m:
-                continue
-            if times[min_index] - times[0] > horizon_s + 1e-9:
                 continue
 
             severity = "critical" if min_distance <= critical_m else "warning"
