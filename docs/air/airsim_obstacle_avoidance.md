@@ -56,7 +56,7 @@ cd "C:\Users\颜帆\Documents\ChatGPT\无人机\src\air\airsim_obstacle_avoidanc
 
 ![用户提供的 AirSim Unity 无人机实际运行动图](../img/air/airsim_obstacle_avoidance/flight_demo.gif)
 
-动图来自用户实际运行录制，原文件大小 5,884,254 字节，小于 10 MB，未使用生成图冒充实验结果。观察重点为起飞、柱子附近运动和绕行后继续向目标前进；实际最小间距没有独立测量，不将参数值当作实测安全距离。
+动图来自用户实际运行录制。用户原文件虽名为 GIF，文件头实际为 MP4，现已保留为 [原始运行视频](../img/air/airsim_obstacle_avoidance/flight_demo.mp4)（5,884,254 字节），并转码为真正的 GIF（640×425、8 fps、413 帧、8,010,410 字节，小于 10 MB），保留完整时序，未使用生成图冒充实验结果。观察重点为起飞、柱子附近运动和绕行后继续向目标前进；实际最小间距没有独立测量，不将参数值当作实测安全距离。
 
 ## 已知限制与尚未验证内容
 
