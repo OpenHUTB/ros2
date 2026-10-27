@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    统一入口：
+      roslaunch tracked_vehicle_mlp_teleop main.launch world:=flat gui:=true
+      roslaunch tracked_vehicle_mlp_teleop main.launch world:=slope gui:=true spawn_x:=-2.0
+      roslaunch tracked_vehicle_mlp_teleop main.launch world:=low_friction gui:=true
+
+    无界面自动采集 / 评估：
+      roslaunch tracked_vehicle_mlp_teleop main.launch world:=flat gui:=false mode:=collect \
+        duration:=60 output_csv:=$(find tracked_vehicle_mlp_teleop)/data/flat.csv
+  -->
+  <arg name="world" default="flat"/>
+  <arg name="gui" default="true"/>
+  <arg name="paused" default="false"/>
+  <arg name="camera" default="false"/>
+  <arg name="mode" default="keyboard"/>
+  <arg name="controller" default="mlp"/>
+  <arg name="duration" default="60.0"/>
+  <arg name="output_csv" default=""/>
+  <arg name="summary_csv" default=""/>
+  <arg name="spawn_x" default="0.0"/>
+  <arg name="spawn_y" default="0.0"/>
+  <arg name="spawn_z" default="0.05"/>
+  <arg name="spawn_yaw" default="0.0"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="keyboard" default="true"/>
+
+  <param name="/use_sim_time" value="$(arg use_sim_time)"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find tracked_vehicle_mlp_teleop)/worlds/$(arg world).world"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro '$(find tracked_vehicle_mlp_teleop)/urdf/tracked_vehicle.xacro' enable_camera:=$(arg camera)"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+        output="screen"/>
+
+  <node name="spawn_tracked_vehicle" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description -urdf -model tracked_vehicle
+              -x $(arg spawn_x) -y $(arg spawn_y) -z $(arg spawn_z) -Y $(arg spawn_yaw)"
+        output="screen"/>
+
+  <rosparam file="$(find tracked_vehicle_mlp_teleop)/config/params.yaml" command="load"
+            ns="tracked_vehicle_main"/>
+
+  <node name="tracked_vehicle_main" pkg="tracked_vehicle_mlp_teleop" type="main.py"
+        output="screen" required="true">
+    <param name="mode" value="$(arg mode)"/>
+    <param name="controller" value="$(arg controller)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="output_csv" value="$(arg output_csv)"/>
+    <param name="summary_csv" value="$(arg summary_csv)"/>
+    <param name="world" value="$(arg world)"/>
+    <param name="keyboard" value="$(arg keyboard)"/>
+  </node>
+
+</launch>

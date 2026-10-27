@@ -1,0 +1,53 @@
+# 履带车尺寸、控制与 MLP 参数
+vehicle:
+  wheel_separation: 0.54
+  wheel_diameter: 0.16
+  max_linear_velocity: 0.90
+  max_angular_velocity: 1.60
+  control_rate: 20.0
+  odom_timeout: 1.0
+  imu_timeout: 1.0
+
+# PI 专家：用于采集行为克隆数据，同时作为在线对比基线
+expert:
+  kp_v: 1.10
+  ki_v: 1.60
+  kp_w: 1.80
+  ki_w: 3.20
+  integral_limit_v: 0.80
+  integral_limit_w: 1.00
+
+# MLP 结构必须与 train_mlp.py / model.py 一致
+mlp:
+  input_dim: 11
+  hidden: [64, 64]
+  output_dim: 2
+  weights: models/mlp_policy.pt
+  norm_stats: models/norm_stats.npz
+  latency_warn_ms: 8.0
+
+# 自动采集参数
+collect:
+  random_seed: 20261027
+  warmup_seconds: 2.0
+  segment_min_seconds: 2.0
+  segment_max_seconds: 4.0
+  v_min: -0.55
+  v_max: 0.80
+  w_min: -1.10
+  w_max: 1.10
+  slope_v_min: 0.10
+  slope_v_max: 0.65
+  slope_w_min: -0.35
+  slope_w_max: 0.35
+
+# 评估阶段：每个阶段先复位世界，再执行固定指令剖面
+evaluation:
+  settle_seconds: 1.5
+  phase_seconds: 12.0
+  profile:
+    - [0.0, 0.0, 0.5]   # [v, w, 持续秒] 起步
+    - [0.55, 0.0, 3.0]  # 直行
+    - [0.30, 0.55, 3.0] # 右转
+    - [0.30, -0.55, 3.0] # 左转
+    - [0.45, 0.0, 2.0]  # 直行

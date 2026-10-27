@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 无界面数据采集：PI 专家驱动，输出行为克隆 CSV -->
+  <arg name="world" default="flat"/>
+  <arg name="duration" default="60.0"/>
+  <arg name="spawn_x" default="0.0"/>
+  <arg name="output_csv" default=""/>
+
+  <include file="$(find tracked_vehicle_mlp_teleop)/launch/main.launch">
+    <arg name="world" value="$(arg world)"/>
+    <arg name="gui" value="false"/>
+    <arg name="mode" value="collect"/>
+    <arg name="controller" value="pi"/>
+    <arg name="duration" value="$(arg duration)"/>
+    <arg name="spawn_x" value="$(arg spawn_x)"/>
+    <arg name="keyboard" value="false"/>
+    <arg name="output_csv" value="$(arg output_csv)"/>
+  </include>
+</launch>
