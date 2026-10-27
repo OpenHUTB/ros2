@@ -63,7 +63,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   过滤 `Z<=0`、`Z>=100 m` 和 65504 哨兵值。相机 TF 为 `base_link → front_rgb/front_depth`，
   安装偏移由 `camera/mount_x/y/z` 配置（默认 0.3/0/0.1 m）。
 - **深度避障**：`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方
-  `|x|<=lateral_limit`、`|y|<=vertical_limit`、`z<=max_range` 走廊内最近点；
+  `|x|<=lateral_limit`、`|y|<=vertical_limit`、`min_range<=z<=max_range` 走廊内最近点；
   `d<=stop_distance` 停车，`stop<d<slow` 线性减速，`d>=slow` 全速。
   默认关闭，demo 时加 `enable_depth_avoidance:=true`。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
