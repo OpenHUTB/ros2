@@ -29,8 +29,11 @@ build.cmd
 
 ```powershell
 cd $env:USERPROFILE
-git clone --branch codex/airsim_obstacle_avoidance_report https://github.com/yanfan117/ros2.git ros2_avoidance
+git clone https://github.com/OpenHUTB/ros2.git ros2_avoidance
 cd .\ros2_avoidance
+# PR 未合并时额外执行：
+git fetch origin pull/597/head:pr_597
+git switch pr_597
 $repoRoot = $PWD.Path
 $airSimRoot = Join-Path $env:USERPROFILE 'simulators\AirSim'
 $python39 = (Get-Command python).Source
@@ -39,7 +42,7 @@ $python39 = (Get-Command python).Source
 & $python39 -m venv .venv-airsim
 $pythonExe = Join-Path $repoRoot '.venv-airsim\Scripts\python.exe'
 & $pythonExe -m pip install -r .\src\air\airsim_obstacle_avoidance\requirements.txt
-$env:PYTHONPATH = Join-Path $airSimRoot 'PythonClient'
+$env:PYTHONPATH = (Join-Path $airSimRoot 'PythonClient') + [IO.Path]::PathSeparator + $env:PYTHONPATH
 & $pythonExe -c "import airsim, msgpackrpc; print('AirSim client', airsim.__version__)"
 ```
 
@@ -63,7 +66,7 @@ Unity Hub 添加 $airSimRoot/Unity/UnityDemo 工程，用上述 Editor 打开。
 | 新建 Cube，命名 avoidance_pillar | (-320,4,229) | (2,361,2)，Rotation=(0,0,0)，保留 Box Collider，Is Trigger 不勾选 |
 | 地板 Cube (65) | 保留 DroneDemo 原配置 | 保留 Mesh 与 Collider，不当作障碍柱删除 |
 
-通过 GameObject → 3D Object → Cube 创建柱子，避免重复创建。高柱使用演示截图的尺度，覆盖飞行高度；两侧留至少 5 米空旷空间。保存场景。
+通过 GameObject → 3D Object → Cube 创建柱子，避免重复创建。361 是作者 Inspector 截图中的实际 Y 缩放值（不是建议的通用柱高）；高柱使用演示截图的尺度，覆盖飞行高度；两侧留至少 5 米空旷空间。保存场景。
 
 前视相机名称 0，方向水平朝机头；近/远裁剪面为 0.3/1000 米。项目 Color Space 为 Linear，对应默认 --depth-color-space srgb。若使用 Gamma，传 --depth-color-space linear；若修改裁剪面，传 --depth-near 和 --depth-far。先用已知距离的物体验证测距，不能把相机成功返回图像等同于距离标定正确。
 
@@ -100,7 +103,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 
 ## 6. 验收与故障排查
 
-运行目录 artifacts/obstacle_avoidance/flight.csv 记录位置、速度、方向和目标；新版本在到点时记录 goal_reached，终端另确认落地。保存终端、视频和 CSV，核对终点误差小于 0.8 米；safety-margin 是规划参数，不等于实际最小间距的测量结果。
+运行目录 artifacts/obstacle_avoidance/flight.csv 记录位置、速度、方向和目标；新版本在到点时记录 goal_reached，终端另确认落地。同目录 events.jsonl 每次启动覆盖，记录 mission_started、goal_reached、abort、timeout、interrupted，以及独立的降落确认或失败事件和原因；到点不等于已落地。20 秒无水平进展计时在扫描期暂停，持续无通道扫描 30 秒则中止。保存终端、视频和 CSV，核对终点误差小于 0.8 米；safety-margin 是规划参数，不等于实际最小间距的测量结果。
 
 | 症状 | 检查 |
 | --- | --- |
@@ -124,4 +127,8 @@ Push-Location .\src\air\airsim_obstacle_avoidance
 Pop-Location
 ```
 
-21 项测试覆盖合成深度与控制逻辑，不代表所有场景的实飞保证。动态障碍、全局规划、复杂死胡同、ROS 封装和真实无人机均未验证。
+20 项测试覆盖合成深度与控制逻辑，不代表所有场景的实飞保证。动态障碍、全局规划、复杂死胡同、ROS 封装和真实无人机均未验证。
+
+## 大模型使用声明
+
+本模块代码及文档使用 OpenAI Codex 辅助完成方案讨论、代码与文档起草、问题排查和评审修订。提交者负责检查验证，并对提交内容的正确性和完整性负责。

@@ -1,8 +1,11 @@
 """Synthetic depth tests; no AirSim server required."""
 import math
+import json
+import tempfile
+from pathlib import Path
 import unittest
 from types import SimpleNamespace
-from avoidance import (Command, decode_unity_depth, detour_point, insert_detour,
+from avoidance import (Command, record_event, decode_unity_depth,
                        plan, route_from_start, check_new_collision, smooth_yaw_rate)
 
 
@@ -41,7 +44,7 @@ class PlannerTests(unittest.TestCase):
             decoded = decode_unity_depth([captured], srgb=True)[0]
             self.assertAlmostEqual(decoded, distance, places=5)
 
-    def test_pillar_generates_detour_even_when_front_is_blocked(self):
+    def test_pillar_selects_curve_when_front_is_blocked(self):
         image = self.frame()
         for row in range(self.height):
             for col in range(32, 48):
@@ -141,26 +144,26 @@ class PlannerTests(unittest.TestCase):
             image[row * self.width + self.width // 2] = float("nan")
         self.assertEqual(self.command(image).speed, 0)
 
-    def test_goal_behind_turns_in_place(self):
+    def test_goal_behind_selects_visible_safe_corridor(self):
         cmd = self.command(self.frame(), math.pi)
-        self.assertNotEqual(cmd.reason, "turn_to_goal")
+        self.assertIn(cmd.reason, ("advance", "curve_around_obstacle"))
         self.assertGreater(cmd.speed, 0)
 
     def test_route_is_rectangular(self):
         self.assertEqual(route_from_start(10, 20, 12, 6),
                          [(22, 20), (22, 26), (10, 26), (10, 20)])
 
-    def test_scan_result_inserts_detour_before_original_target(self):
-        route = [(12, 0), (12, 6), (0, 6), (0, 0)]
-        insert_detour(route, 0, 3, -2)
-        self.assertEqual(route[0], (3, -2))
-        self.assertEqual(route[1], (12, 0))
-
-    def test_turning_scan_becomes_world_waypoint(self):
-        cmd = Command(0, -18, 5, "turn_to_clear_sector", math.radians(-20))
-        x, y = detour_point(0, 0, 0, cmd)
-        self.assertGreater(x, 0)
-        self.assertLess(y, 0)
+class EventLogTests(unittest.TestCase):
+    def test_failure_and_cleanup_remain_separate_events(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "events.jsonl"
+            record_event(path, "timeout", "goal not reached")
+            record_event(path, "landing_unconfirmed")
+            events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual([event["state"] for event in events],
+                             ["timeout", "landing_unconfirmed"])
+            self.assertEqual(events[0]["reason"], "goal not reached")
+            self.assertGreater(events[0]["time_unix_s"], 0)
 
 
 if __name__ == "__main__":

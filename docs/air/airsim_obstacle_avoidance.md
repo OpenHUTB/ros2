@@ -25,15 +25,15 @@
 | 数值依赖 | NumPy 1.26.4 |
 | 通信 | 本机 127.0.0.1:41451，前视相机 0 |
 
-源码：[模块目录](https://github.com/yanfan117/ros2/tree/codex/airsim_obstacle_avoidance_report/src/air/airsim_obstacle_avoidance)。本模块提供 main.py 和 PowerShell launch 启动器；不提供未经验证的 ROS 封装。
+源码：[模块目录](https://github.com/OpenHUTB/ros2/tree/master/src/air/airsim_obstacle_avoidance)。本模块提供 main.py 和 PowerShell launch 启动器；不提供未经验证的 ROS 封装。
 
 ### 构建与运行命令
 
-实验使用已安装并构建好的 AirSim Unity 插件，不需要编译本模块。依赖安装与 main.py 启动器见模块 README。实际成功运行的命令如下，在 Windows PowerShell 执行：
+实验使用已安装并构建好的 AirSim Unity 插件，不需要编译本模块。依赖安装与 main.py 启动器见模块 README。以下命令与原成功运行使用相同飞行参数，入口与目录已统一为便于复现的写法；新入口未重新实飞。完整安装见 [模块 README](https://github.com/OpenHUTB/ros2/blob/master/src/air/airsim_obstacle_avoidance/README.md)。命令如下，在 Windows PowerShell 执行：
 
 ```powershell
-cd "C:\Users\颜帆\Documents\ChatGPT\无人机\src\air\airsim_obstacle_avoidance"
-& "..\..\..\.venv-airsim\Scripts\python.exe" .\avoidance.py --route goal --goal-x 29 --goal-y 0 --altitude 3 --speed 1.2 --stop-distance 3 --curve-distance 2 --safety-margin 1.5 --vehicle-radius 0.6 --timeout 180
+# 先按模块 README 第 2 节完成安装，再在仓库根目录执行
+& ".\.venv-airsim\Scripts\python.exe" .\src\air\airsim_obstacle_avoidance\main.py --route goal --goal-x 29 --goal-y 0 --altitude 3 --speed 1.2 --stop-distance 3 --curve-distance 2 --safety-margin 1.5 --vehicle-radius 0.6 --timeout 180
 ```
 
 步骤：停止旧脚本，Unity 停止后重新 Play，确认载具出生点位于 Unity X=-320、Z=212；柱子中心 X=-320、Z=229，宽深约 2 米，保留 Box Collider；运行 Python。目标 N/E 坐标为 `(241,-320)`，对应 Unity X=-320、Z=241，即柱子中心沿 +Z 后方 12 米（不是从柱子后表面量起）。altitude 3 表示在起飞后报告位置基础上再上升 3 米。
@@ -42,7 +42,7 @@ cd "C:\Users\颜帆\Documents\ChatGPT\无人机\src\air\airsim_obstacle_avoidanc
 
 用户完成实际飞行并提供下方原始动图，反馈运行成功。程序的成功场景是静态柱子和固定目标，不代表通用障碍环境已验证。
 
-保存的 [真实飞行日志](airsim_obstacle_avoidance/flight.csv) 包含位置、速度、偏航、通道距离、目标和绕行侧。最后一条记录时间为 33.39 秒，位置约 `(240.025,-320.488)`，目标为 `(241,-320)`，距离约 1.09 米。该 CSV 没有单独的终止事件记录，不能仅据此认定满足 0.8 米到点阈值或自动降落已确认；成功反馈和动图、CSV 应分别理解。
+保存的 [真实飞行日志](airsim_obstacle_avoidance/flight.csv) 包含位置、速度、偏航、通道距离、目标和绕行侧。最后一条记录时间为 33.39 秒，位置约 `(240.025,-320.488)`，目标为 `(241,-320)`，距离约 1.09 米。这是原始证据，未因代码修订而改写；当前版本新增 events.jsonl 记录到点、异常、超时、手动中断和降落结果，但尚未重新实飞。该旧 CSV 没有单独的终止事件记录，不能仅据此认定满足 0.8 米到点阈值或自动降落已确认；成功反馈和动图、CSV 应分别理解。
 
 离线测试执行目录为 `src/air/airsim_obstacle_avoidance`：
 
@@ -50,7 +50,7 @@ cd "C:\Users\颜帆\Documents\ChatGPT\无人机\src\air\airsim_obstacle_avoidanc
 & "..\..\..\.venv-airsim\Scripts\python.exe" -m unittest -v test_avoidance
 ```
 
-21 项离线测试涵盖旧碰撞记录、新碰撞、无效深度、完全堵塞、柱子绕行、通道膨胀、方向保持、偏航限幅和速度限制。这些测试验证算法逻辑，不能替代仿真飞行。
+20 项离线测试涵盖旧碰撞记录、新碰撞、无效深度、完全堵塞、柱子绕行、通道膨胀、方向保持、偏航限幅和速度限制。这些测试验证算法逻辑，不能替代仿真飞行。
 
 ## 运行效果
 
@@ -78,3 +78,7 @@ cd "C:\Users\颜帆\Documents\ChatGPT\无人机\src\air\airsim_obstacle_avoidanc
 
 - [x] 已运行 `mkdocs serve --livereload -a 127.0.0.1:8001`，页面及嵌入 GIF 均返回 HTTP 200；文档构建成功。仓库其他页面仍有既有链接告警。
 - [x] 最终检查 `git diff --check`、未解决冲突和暂存文件清单；此次仅新增本模块及首页/导航入口，没有删除公共文件。
+
+## 大模型使用声明
+
+本模块代码及文档使用 OpenAI Codex 辅助完成方案讨论、代码与文档起草、问题排查和评审修订。提交者负责检查验证，并对提交内容的正确性和完整性负责。

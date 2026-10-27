@@ -7,10 +7,21 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
+
+
+def record_event(path: Path, state: str, reason: str = "") -> None:
+    """Append diagnostic events without replacing the original flight failure."""
+    try:
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps({"time_unix_s": time.time(), "state": state,
+                                     "reason": reason}, ensure_ascii=False) + "\n")
+    except OSError as error:
+        print(f"Event log unavailable: {error}")
 
 
 @dataclass(frozen=True)
@@ -30,14 +41,6 @@ def route_from_start(start_x: float, start_y: float, goal_x: float,
             (start_x + goal_x, start_y + goal_y),
             (start_x, start_y + goal_y),
             (start_x, start_y)]
-
-
-def insert_detour(route: list[tuple[float, float]], index: int,
-                  x: float, y: float) -> None:
-    """Insert one temporary waypoint before the active route waypoint."""
-    if index < 0 or index >= len(route):
-        raise IndexError("active route index is out of range")
-    route.insert(index, (x, y))
 
 
 def wrap(angle: float) -> float:
@@ -135,18 +138,6 @@ def smooth_yaw_rate(previous: float, desired: float, dt: float) -> float:
     return previous + max(-step, min(step, desired - previous))
 
 
-def detour_point(position_x: float, position_y: float, yaw: float,
-                 command: Command, distance: float = 3.0) -> tuple[float, float]:
-    """Convert the selected free camera sector into a temporary N/E waypoint."""
-    if command.reason != "turn_to_clear_sector" or command.clearance <= 0:
-        raise ValueError("A clear turning sector is required for a detour")
-    distance = min(distance, command.clearance - 1.0, 6.0)
-    if distance < 1.0:
-        raise ValueError("Insufficient clearance for a detour")
-    heading = yaw + command.steer_angle
-    return position_x + distance * math.cos(heading), position_y + distance * math.sin(heading)
-
-
 def decode_unity_depth(values: list[float], near: float = 0.3,
                        far: float = 1000.0, compression: float = 0.25,
                        srgb: bool = False) -> list[float]:
@@ -191,7 +182,6 @@ def fly(args: argparse.Namespace) -> None:
     try:
         import airsim
     except ModuleNotFoundError as error:
-        import sys
         raise SystemExit(
             f"Missing Python dependency: {error.name}. Install requirements.txt and "
             "set PYTHONPATH to AirSim 1.8.1/PythonClient; see README.md."
@@ -228,6 +218,9 @@ def fly(args: argparse.Namespace) -> None:
         print("No arming or movement requested; check the known-distance obstacle before flight.")
         return
     args.output.mkdir(parents=True, exist_ok=True)
+    event_path = args.output / "events.jsonl"
+    event_path.write_text("", encoding="utf-8")
+    record_event(event_path, "mission_started")
     controlled = False
     airborne = False
     initial_collision = client.simGetCollisionInfo(**vehicle)
@@ -295,13 +288,14 @@ def fly(args: argparse.Namespace) -> None:
                 if math.hypot(pos.x_val - progress_position[0], pos.y_val - progress_position[1]) >= 0.4:
                     progress_position = (pos.x_val, pos.y_val)
                     progress_time = time.monotonic()
-                elif time.monotonic() - progress_time > 20:
+                elif blocked_since is None and time.monotonic() - progress_time > 20:
                     raise RuntimeError("No horizontal progress for 20 seconds; stop and inspect depth/route")
                 target_x, target_y = route[route_index]
                 dx, dy = target_x - pos.x_val, target_y - pos.y_val
                 if math.hypot(dx, dy) < 0.8:
                     if route_index == len(route) - 1:
                         print("Goal reached")
+                        record_event(event_path, "goal_reached")
                         log.writerow([round(time.monotonic() - start_time, 3), pos.x_val,
                                       pos.y_val, pos.z_val, 0, 0, "", "goal_reached",
                                       route_index, target_x, target_y, "", "", avoidance_side])
@@ -346,6 +340,8 @@ def fly(args: argparse.Namespace) -> None:
                     scan_sign = avoidance_side or (1 if wrap(math.atan2(dy, dx) - yaw) >= 0 else -1)
                     cmd = Command(0, scan_sign * 15, 0, "scan_for_exit")
                 else:
+                    if blocked_since is not None:
+                        progress_time = time.monotonic()
                     blocked_since = None
                 vz = max(-0.4, min(0.4, (target_z - pos.z_val) * 0.5))
                 now = time.monotonic()
@@ -365,7 +361,14 @@ def fly(args: argparse.Namespace) -> None:
                 stream.flush()
                 print(f"{cmd.reason}: forward={cmd.speed:.2f}, clearance={cmd.clearance:.2f} m")
             else:
-                raise RuntimeError("Mission timeout; goal not reached")
+                raise TimeoutError("Mission timeout; goal not reached")
+    except KeyboardInterrupt:
+        record_event(event_path, "interrupted", "Ctrl+C")
+        raise
+    except Exception as error:
+        record_event(event_path, "timeout" if isinstance(error, TimeoutError) else "abort",
+                     f"{type(error).__name__}: {error}")
+        raise
     finally:
         if controlled:
             landed = not airborne
@@ -384,7 +387,11 @@ def fly(args: argparse.Namespace) -> None:
                     client.armDisarm(False, **vehicle)
                 else:
                     print("Landing unconfirmed: API control retained; stop Unity Play before retrying")
+            except Exception as error:
+                record_event(event_path, "landing_error", f"{type(error).__name__}: {error}")
+                raise
             finally:
+                record_event(event_path, "landing_confirmed" if landed else "landing_unconfirmed")
                 if landed:
                     client.enableApiControl(False, **vehicle)
 
@@ -418,15 +425,13 @@ def main():
     parser.add_argument("--route", choices=("goal", "rectangle"), default="goal",
                         help="goal: fly to the offset target; rectangle: return around a rectangle")
     parser.add_argument("--timeout", type=float, default=180)
-    parser.add_argument("--max-detours", type=int, default=8,
-                        help="最多插入的临时绕行航点")
     parser.add_argument("--output", type=Path, default=Path("artifacts/obstacle_avoidance"))
     args = parser.parse_args()
     if (not all(math.isfinite(v) for v in (args.goal_x, args.goal_y, args.altitude,
                                           args.speed, args.stop_distance, args.timeout,
                                           args.safety_margin, args.vehicle_radius, args.curve_distance))
             or not 0 < args.speed <= 1.5 or not 1 <= args.altitude <= 10
-            or args.stop_distance < 2 or args.timeout <= 0 or args.max_detours < 0
+            or args.stop_distance < 2 or args.timeout <= 0
             or args.safety_margin < 0 or args.vehicle_radius <= 0
             or args.curve_distance < 0
             or not 0 < args.depth_near < args.depth_far):
