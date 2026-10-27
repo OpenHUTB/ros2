@@ -1,6 +1,6 @@
 # MuJoCo 肌肉骨骼人键盘遥操作：行走、踢腿与蹲起
 
-![综合演示](assets/teleop.gif)
+![综合演示](../img/msk_human_demo_teleop.gif)
 
 ## 1. 模块概述
 
@@ -72,7 +72,7 @@ roslaunch mujoco_msk_human_walking_teleop main.launch
 
 launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）和一个 xterm 键盘窗口。启动后人物以站立姿态稳定在场景中：
 
-![平地场景](assets/scene_flat.png)
+![平地场景](../img/msk_human_scene_flat.png)
 
 ### 3.2 键盘操作
 
@@ -96,19 +96,19 @@ launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）
 
 按 `1` 站稳后按 `2`：机器人将支撑腿微屈、右腿提膝蓄力，随后股四头肌快速兴奋伸膝踢击，脚尖峰值高度约 0.6 m：
 
-![踢腿演示](assets/kick.gif)
+![踢腿演示](../img/msk_human_demo_kick.gif)
 
 ### 3.4 行走与步频调节
 
 按 `4` 进入行走（基频 0.8 Hz），行走中按 `+` 可逐步加快步频（0.8 → 0.95 → 1.10 Hz，每次 +0.15 倍）：
 
-![行走演示](assets/walk.gif)
+![行走演示](../img/msk_human_demo_walk.gif)
 
 ### 3.5 蹲起
 
 按 `3` 进入 0.5 Hz 连续蹲起，骨盆按余弦轨迹升降，双腿由二连杆逆解同步协调：
 
-![蹲起演示](assets/squat.gif)
+![蹲起演示](../img/msk_human_demo_squat.gif)
 
 ### 3.6 场景切换
 
@@ -123,9 +123,9 @@ roslaunch mujoco_msk_human_walking_teleop main.launch scene:=load
 roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
 ```
 
-![5度坡](assets/scene_slope5.png)
+![5度坡](../img/msk_human_scene_slope5.png)
 
-![负载](assets/scene_load.png)
+![负载](../img/msk_human_scene_load.png)
 
 ### 3.7 离线自检与性能评测（无需 ROS）
 

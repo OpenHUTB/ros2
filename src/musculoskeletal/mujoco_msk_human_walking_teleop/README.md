@@ -2,7 +2,7 @@
 
 MuJoCo 平面肌肉骨骼人（22 条 Hill 型肌肉驱动 13 DoF）键盘遥操作：站立、行走、踢腿、蹲起，支持平地 / 5° 坡道 / 负载 10 kg 三场景。
 
-完整教程（含原理公式、算法流程、源码解析、性能评价与 GIF 演示）见仓库文档：`docs/musculoskeletal/mujoco_msk_human_walking_teleop/index.md`。
+完整教程（含原理公式、算法流程、源码解析、性能评价与 GIF 演示）见仓库文档：`docs/musculoskeletal/msk_human_walking_teleop.md`。
 
 ## 运行环境
 
