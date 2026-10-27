@@ -11,8 +11,9 @@ from rclpy.node import Node
 from sensor_msgs.msg import Imu, NavSatFix
 from std_msgs.msg import Float64, String
 
-from .attitude import ComplementaryAttitude, euler_to_rotation
+from .attitude import ComplementaryAttitude
 from .ekf import NavigationEKF
+from .frames import step_imu
 
 
 class EkfStateEstimationNode(Node):
@@ -42,6 +43,7 @@ class EkfStateEstimationNode(Node):
         dt = max(1e-4, stamp - self.last_stamp)
         self.last_stamp = stamp
         self.last_imu = message
+        # REP-103 body frame (FLU): at rest the specific force is (0, 0, +g).
         accel = np.array(
             [message.linear_acceleration.x, message.linear_acceleration.y, message.linear_acceleration.z]
         )
@@ -49,12 +51,9 @@ class EkfStateEstimationNode(Node):
             [message.angular_velocity.x, message.angular_velocity.y, message.angular_velocity.z]
         )
         mag = np.array([1.0, 0.0, 0.0])
-        self.attitude.update(gyro, accel, mag, dt)
+        # One shared chain: attitude keeps FLU, the EKF receives FRD quantities.
+        step_imu(self.attitude, self.ekf, accel, gyro, mag, dt)
         if self.ekf is not None:
-            rotation = euler_to_rotation(
-                self.attitude.roll, self.attitude.pitch, self.attitude.yaw
-            )
-            self.ekf.predict(accel, rotation, dt)
             self.publish_odom(message.header.stamp)
 
     def on_gps(self, message: NavSatFix) -> None:
