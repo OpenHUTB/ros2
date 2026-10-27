@@ -97,6 +97,11 @@ def test_project_files():
     for key in ("forward_speed", "slow_distance", "stop_distance", "lateral_limit"):
         check(key in cfg, "bridge.yaml 含 %s" % key)
     check("深度避障" in readme, "README 记录深度避障")
+    demo = os.path.join(PKG, "launch", "depth_demo.launch")
+    rviz = os.path.join(PKG, "rviz", "depth_demo.rviz")
+    check(os.path.isfile(demo), "depth_demo.launch 存在")
+    check(os.path.isfile(rviz), "depth_demo.rviz 存在")
+    check("depth_demo.launch" in readme, "README 记录一键 demo")
 
 
 if __name__ == "__main__":
