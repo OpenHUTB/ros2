@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>bipedal_gait_zmp</name>
+  <version>1.0.0</version>
+
+  <description>
+    双足步态生成与 ZMP 稳定性验证：线性倒立摆（LIPM）建模、落脚点与支撑多边形、
+    周期解求解、开环不稳定性的定量分析、DCM 反馈闭环行走。
+    只用 Python 标准库，不依赖 ROS 消息与 RViz。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
