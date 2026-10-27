@@ -1,0 +1,3 @@
+# 虚拟机已由 apt/预装提供：rclpy、numpy、opencv-python(python3-opencv)、pygame、PIL
+# 深度学习依赖：
+torch==2.4.1
