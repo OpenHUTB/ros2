@@ -56,7 +56,7 @@ ROS每章节运行代码:
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [RQT 插件](./ground/rviz_plugin.md)
 * [点云地图创建](./ground/rviz_plugin.md)
-* [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_abs.md)
+* [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
 
 ## 3. 空域载具 <span id='air_vehicle'></span>
 

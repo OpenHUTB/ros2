@@ -48,10 +48,10 @@ catkin_make
 source devel/setup.bash
 
 # 方式1：脚本启动
-bash src/ground/mujoco_vehicle_abs/scripts/main.sh
+bash src/ground/mujoco_vehicle_aeb/scripts/main.sh
 
 # 方式2：rosrun启动
-rosrun mujoco_vehicle_abs main.py
+rosrun mujoco_vehicle_aeb main.py
 
 # 方式3：直接python调试运行
 python3 scripts/main.py
@@ -65,9 +65,7 @@ python3 scripts/main.py
 - 制动介入后 TTC 被抬升，有效规避追尾事故。
 
 ## 6 实验结果
-
-程序运行结束自动生成 `aeb_result.png`，包含 3 组时序曲线：
-
+程序运行结束自动生成 `result.png`，包含 3 组时序曲线：
 1. 自车行驶速度
 2. TTC 碰撞时间以及安全阈值虚线
 3. AEB 制动输出信号（0~1）
@@ -77,15 +75,15 @@ python3 scripts/main.py
 ```
 docs/
 └── ground/
-    └── mujoco_vehicle_abs.md
+    └── mujoco_vehicle_aeb.md
 └── img/
     └── aeb_result.png
     └── aeb_demo.gif
 src/
 └── ground/
-    └── mujoco_vehicle_abs/
+    └── mujoco_vehicle_aeb/
         ├── models/
-        │   └── abs_car.xml
+        │   └── aeb_car.xml
         ├── scripts/
         │   ├── main.py
         │   ├── aeb_controller.py

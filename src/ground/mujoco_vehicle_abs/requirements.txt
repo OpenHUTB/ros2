@@ -1,3 +1,0 @@
-mujoco==2.3.7
-numpy==1.21.6
-matplotlib==3.4.3
