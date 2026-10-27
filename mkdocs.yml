@@ -99,6 +99,7 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
 - 空域载具:
+    - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'
