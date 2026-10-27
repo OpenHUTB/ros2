@@ -117,11 +117,27 @@ a_cmd < 0 → 刹车 = −a_cmd · brake_gain
 
 黄灯在 60 m 外时按最大减速能停住（需要 12 m），所以选择和红灯一样的策略。
 
+![黄灯距离曲线](../img/ground/carla_traffic_light/yellow_distance_to_stop_line.png)
+
+距离从 60 m 平滑降到 1.5 m 后保持，没有越过停止线。
+
+![黄灯油门刹车](../img/ground/carla_traffic_light/yellow_pedal.png)
+
+油门全程为 0，刹车量在末段升到满值并保持，对应车辆停在停止线前。
+
 ### 绿灯
 
 ![绿灯速度曲线](../img/ground/carla_traffic_light/green_speed_profile.png)
 
 不加限制，保持 12 m/s 通过。
+
+![绿灯距离曲线](../img/ground/carla_traffic_light/green_distance_to_stop_line.png)
+
+距离一路下降、穿过停止线后变为负值（到 −180 m），说明没有停车动作。
+
+![绿灯油门刹车](../img/ground/carla_traffic_light/green_pedal.png)
+
+离线模型没有行驶阻力，保持 12 m/s 匀速既不需要油门也不需要刹车，两条曲线都贴在 0 上。
 
 ### CARLA 真机运行
 

@@ -268,7 +268,9 @@ def main():
     ap.add_argument("--distance", type=float, default=60.0)
     ap.add_argument("--all-lights", action="store_true",
                     help="离线模式依次跑红/黄/绿三种灯色")
-    args = ap.parse_args()
+    # roslaunch 启动 <node> 时会在命令行末尾追加 __name:= / __log:=，
+    # 用 parse_known_args 忽略掉，否则 launch 一启动就退出。
+    args, _unknown = ap.parse_known_args()
 
     print()
     hr("CARLA 交通信号灯识别与响应")
