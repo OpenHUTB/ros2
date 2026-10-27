@@ -92,6 +92,19 @@ def airsim_quat_to_ros_quat(q_wxyz) -> Tuple[float, float, float, float]:
     return matrix_to_quat_xyzw(R_enu)
 
 
+def airsim_quat_to_ros_quat_flu(q_wxyz) -> Tuple[float, float, float, float]:
+    """AirSim 机体 FRD 姿态 -> ROS 机体 FLU 姿态（ENU 世界系）.
+
+    AirSim 姿态是 body(FRD) -> world(NED)：R_ned。
+    ROS Imu 的姿态是 body(FLU) -> world(ENU)：R_flu。
+    机体轴 FRD -> FLU 为 diag(1, -1, -1)，因此
+        R_flu = C_NED2ENU @ R_ned @ diag(1, -1, -1)
+    只左乘 C 会把机体系 +z（FLU 向上）错误地转到世界系 -z。
+    """
+    R_flu = C_NED2ENU @ quat_wxyz_to_matrix(q_wxyz) @ np.diag([1.0, -1.0, -1.0])
+    return matrix_to_quat_xyzw(R_flu)
+
+
 def yaw_from_quat_xyzw(q) -> float:
     """从 ROS 四元数取偏航角（ENU 下，绕 z 轴，逆时针为正）."""
     x, y, z, w = q
@@ -274,7 +287,7 @@ class SimClient(object):
         """
         data = self.client.getImuData(vehicle_name=self.vehicle_name)
         q = data.orientation
-        quat = airsim_quat_to_ros_quat([q.w_val, q.x_val, q.y_val, q.z_val])
+        quat = airsim_quat_to_ros_quat_flu([q.w_val, q.x_val, q.y_val, q.z_val])
         ang_flu = body_ned_to_flu([data.angular_velocity.x_val,
                                    data.angular_velocity.y_val,
                                    data.angular_velocity.z_val])
