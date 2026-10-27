@@ -77,4 +77,6 @@ depth_avoidance:
   lateral_limit: 0.8        # 前向走廊半宽 m
   vertical_limit: 0.8       # 前向走廊半高 m
   max_range: 12.0           # 超过该距离的点忽略 m
+  min_range: 0.5            # 近处地面/机身自反射过滤 m
+  start_delay: 6.0          # 起飞后延迟接管，避免打断爬升 s
   rate: 10.0                # 指令发布频率 Hz
