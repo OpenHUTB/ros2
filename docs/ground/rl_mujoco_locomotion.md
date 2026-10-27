@@ -231,38 +231,28 @@ src/rl_mujoco_locomotion/
 
 ### 验证步骤
 
-# 1. 环境检查
 ```bash
+# 1. 环境检查
 python3 src/rl_mujoco_locomotion/main.py doctor
-```
 
 # 2. 单元测试（环境 reset/step 冒烟）
-```bash
 python3 src/rl_mujoco_locomotion/main.py test
-```
 
 # 3. 快速训练验证
-```bash
 python3 src/rl_mujoco_locomotion/main.py train --env halfcheetah --alg ppo --episodes 50 --max-steps 20000
-```
 
 # 4. 评估与渲染
-```bash
 python3 src/rl_mujoco_locomotion/main.py evaluate --env halfcheetah --alg ppo
 python3 src/rl_mujoco_locomotion/main.py render --env halfcheetah --alg ppo --episodes 2 --stride 5
-```
 
 # 5. 6 组 30 万步完整训练 + 对比图
-```bash
 for env in halfcheetah ant walker2d; do for alg in ppo sac; do
   python3 src/rl_mujoco_locomotion/main.py train --env $env --alg $alg --episodes 1000000 --max-steps 300000
 done; done
 python3 src/rl_mujoco_locomotion/main.py compare
-```
+
 # 6. ROS 2 构建验证
-```bash
 cd <ros2_workspace>
 source /opt/ros/humble/setup.bash
 colcon build --packages-select rl_mujoco_locomotion
 ```
-
