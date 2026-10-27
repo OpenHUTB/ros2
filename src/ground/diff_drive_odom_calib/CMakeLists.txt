@@ -6,7 +6,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   nav_msgs
-  tf
+  sensor_msgs
+  tf2_ros
 )
 
 catkin_python_setup()
@@ -15,6 +16,9 @@ catkin_package()
 catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/sim_robot.py
+  scripts/sim_node.py
+  scripts/teleop.py
+  scripts/demo_drive.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
