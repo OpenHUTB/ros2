@@ -48,8 +48,11 @@ class RolloutBuffer:
         self.ret_buf[:self.ptr] = self.adv_buf[:self.ptr] + self.val_buf[:self.ptr]
 
     def get(self, batch_size=64):
+        """按随机顺序产出 minibatch；可重复调用（每次按当前缓冲区内容重新打乱），
+        缓冲区指针由调用方在消费完毕后通过 reset() 清空，从而支持多轮（train_iters）复用。"""
         n = self.ptr
-        self.ptr = 0
+        if n == 0:
+            return
         obs = self.obs_buf[:n].copy()
         act = self.act_buf[:n].copy()
         logp = self.logp_buf[:n].copy()
@@ -62,6 +65,10 @@ class RolloutBuffer:
             end = start + batch_size
             mb = idx[start:end]
             yield obs[mb], act[mb], logp[mb], ret[mb], adv[mb]
+
+    def reset(self):
+        """消费完一轮训练后清空缓冲区指针。"""
+        self.ptr = 0
 
 
 class PPO:
@@ -95,6 +102,8 @@ class PPO:
         return np.sum(logp, axis=-1)
 
     def update(self, buf: RolloutBuffer):
+        # 同一份 rollout 复用 train_iters 轮（每轮重新打乱 minibatch 顺序）；
+        # 缓冲区指针在全部轮次结束后才清空，避免第 2 轮起读到空数据。
         for _ in range(self.train_iters):
             for obs, act, old_logp, ret, adv in buf.get(batch_size=64):
                 # Critic update
@@ -120,6 +129,7 @@ class PPO:
                 self.actor_logstd = np.clip(
                     self.actor_logstd - 3e-4 * np.mean(dlogstd, axis=0, keepdims=True),
                     LOG_STD_MIN, LOG_STD_MAX)
+        buf.reset()
 
     def save(self, path):
         self.actor.save(path + "_actor.npz")

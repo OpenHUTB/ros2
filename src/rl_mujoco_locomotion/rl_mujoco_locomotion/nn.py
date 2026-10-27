@@ -51,6 +51,10 @@ class MLP:
     def get_params(self):
         return [w.copy() for w in self.weights], [b.copy() for b in self.biases]
 
+    def params(self):
+        """返回参数数组的**引用**（对返回值原地写入即可修改网络），用于软/硬更新。"""
+        return self.weights, self.biases
+
     def set_params(self, weights, biases):
         self.weights = [w.copy() for w in weights]
         self.biases = [b.copy() for b in biases]

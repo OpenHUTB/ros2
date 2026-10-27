@@ -145,8 +145,10 @@ class SAC:
                 LOG_ALPHA_MIN, LOG_ALPHA_MAX))
 
         # ---- Polyak averaging ----
-        soft_update(self.q1_target.get_params(), self.q1.get_params(), self.tau)
-        soft_update(self.q2_target.get_params(), self.q2.get_params(), self.tau)
+        # 注意：必须传入参数的引用（params()），get_params() 返回的是副本，
+        # 对副本原地写入不会改变目标网络。
+        soft_update(self.q1_target.params(), self.q1.params(), self.tau)
+        soft_update(self.q2_target.params(), self.q2.params(), self.tau)
         self.update_count += 1
 
     # ---------- persistence ----------

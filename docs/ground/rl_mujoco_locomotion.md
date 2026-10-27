@@ -43,9 +43,11 @@ SAC 使用双 Q 网络（Double Q-learning）缓解过估计，Actor 通过重�
 
 | 环境 | 状态维度 | 动作维度 | 任务目标 |
 |------|---------|---------|---------|
-| HalfCheetah | 17 | 6 | 单足猎豹沿 x 轴快速奔跑 |
+| HalfCheetah | 18 | 6 | 单足猎豹沿 x 轴快速奔跑 |
 | Ant | 27 | 8 | 四足蚂蚁保持平衡并向前移动 |
-| Walker2d | 17 | 6 | 二足机器人稳定行走 |
+| Walker2d | 18 | 6 | 二足机器人稳定行走 |
+
+状态由 `qpos` 与 `qvel` 直接拼接而成（`main.py test` 会打印实测维度）。其中 Ant 按 Gym 约定剔除根节点的 x/y 位置，故为 27 维；HalfCheetah 与 Walker2d 保留了根节点 x 位置，因此是 18 维（Gym 默认的 17 维实现会剔除 x，本项目未剔除，两者数值不可逐项对比）。
 
 三个环境的 MJCF 模型文件均来自 gymnasium 的 MuJoCo 环境，已复制到 `assets/` 目录，运行时不依赖 gymnasium。
 
@@ -63,7 +65,8 @@ reward = forward_reward(前进速度) - ctrl_cost(控制代价) - contact_cost(�
 
 - Ubuntu 20.04 / 22.04（实测 20.04.6 LTS）
 - Python 3.8+（实测 3.8.10）
-- MuJoCo 3.1.6（无头渲染使用 `MUJOCO_GL=egl`，已内置在 `env.py` 中）
+- MuJoCo 3.1.6（实测版本，`requirements.txt` 只要求 `>=2.3.7`）
+- 渲染后端：Linux 无头环境默认 `MUJOCO_GL=egl`（已在 `env.py` 中按平台自动设置）；Windows / macOS 自动沿用 MuJoCo 默认的 `glfw`，无需手动设置，也可用环境变量 `MUJOCO_GL` 覆盖
 - ROS 2（可选，仅用于 launch 入口）
 
 ### 安装依赖
@@ -78,12 +81,14 @@ pip install -r src/rl_mujoco_locomotion/requirements.txt
 python3 src/rl_mujoco_locomotion/main.py doctor
 ```
 
-### 快速验证（50 回合，约数分钟）
+### 快速验证（2 万环境步，约数分钟）
 
 ```bash
 python3 src/rl_mujoco_locomotion/main.py train --env halfcheetah --alg ppo --episodes 50 --max-steps 20000
 python3 src/rl_mujoco_locomotion/main.py render --env halfcheetah --alg ppo
 ```
+
+`--max-steps` 优先于 `--episodes`：HalfCheetah 单集 1000 步，因此 2 万步预算实际只会跑到约 20 集（不是 50 集），这是为了控制验证耗时。
 
 ### 完整训练（6 组实验）
 
@@ -125,6 +130,8 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 > 以下全部为**实测数据**（Ubuntu 20.04.6 / Python 3.8.10 / MuJoCo 3.1.6，seed=0，每组 30 万环境步），不是估计值。
 > 表中"训练末段回报"取训练 CSV 最后 10 集的平均回报；"确定性评估"为加载最终模型后按确定性策略（不采样噪声）跑 2~20 集的平均回报，即 GIF 中展示的策略表现。
 
+> **实现修复记录**：初版实现存在两处缺陷——`RolloutBuffer.get()` 取数据时把指针清零，导致 `train_iters`（默认 10 轮）从第 2 轮起读到空数据，实际只更新 1 轮；`SAC` 用 `get_params()` 返回的副本做 Polyak 平均，目标 Q 网络从未更新。两处均已在本 PR 内修复（`ppo.py` / `sac.py` / `nn.py`）。下表 6 组数据与 GIF 由**修复前**的实现产出，尚未在修复后重新训练，重跑后数值会变化。
+
 ### 学习曲线
 
 ![Learning Curves](../img/ground/rl_mujoco_locomotion/comparison.png)
@@ -142,6 +149,8 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 | Walker2d-PPO | Walker2d-SAC |
 |:---:|:---:|
 | ![walker2d-ppo](../img/ground/rl_mujoco_locomotion/walker2d_ppo.gif) | ![walker2d-sac](../img/ground/rl_mujoco_locomotion/walker2d_sac.gif) |
+
+> 注：`ant_sac.gif` 只有 6 帧（该次渲染时策略约 30 步即终止），与性能表中 "Ant-SAC 评估平均集长 1000" 不一致，是渲染所用 checkpoint 早于最终训练结果导致的，重跑训练后需要重新渲染该图。
 
 ### 性能对比
 
@@ -177,8 +186,8 @@ src/rl_mujoco_locomotion/
 ├── assets/                 # HalfCheetah / Ant / Walker2d 的 MJCF 模型
 ├── rl_mujoco_locomotion/
 │   ├── __init__.py
-│   ├── nn.py               # NumPy MLP + Adam 优化器
-│   ├── env.py              # HalfCheetah / Ant / Walker2d 环境封装与 EGL 渲染
+│   ├── nn.py               # NumPy MLP + SGD 更新（含可选 Adam 实现）
+│   ├── env.py              # HalfCheetah / Ant / Walker2d 环境封装与渲染后端
 │   ├── ppo.py              # PPO 算法实现
 │   ├── sac.py              # SAC 算法实现
 │   ├── train.py            # 训练主循环（支持 --max-steps 步数预算）
@@ -193,8 +202,9 @@ src/rl_mujoco_locomotion/
 ### 神经网络（`nn.py`）
 
 - `MLP`：多层感知机，隐藏层 ReLU 激活，输出层线性（PPO Actor 用 tanh 压缩）
-- `Adam`：标准 Adam 优化器，一阶矩 + 二阶矩估计
-- `soft_update` / `hard_update`：目标网络软更新与硬更新
+- `MLP.backward(grad, lr=None)`：反向传播；`lr` 不为空时按 SGD 现场更新权重，为空时只返回 `d(loss)/d(input)`（SAC 取 actor 梯度时用）
+- `Adam`：Adam 优化器实现（一阶矩 + 二阶矩），作为可选工具保留；当前 PPO / SAC 的训练循环实际使用 `MLP.backward(lr=...)` 的 SGD 更新
+- `soft_update` / `hard_update`：目标网络软更新与硬更新；二者都**原地写参数数组**，因此必须传入 `MLP.params()`（引用），传 `get_params()`（副本）不会产生任何效果
 - `clip_grad_norm`：梯度范数裁剪，用于稳定 PPO 训练
 
 ### 环境封装（`env.py`）
@@ -202,19 +212,21 @@ src/rl_mujoco_locomotion/
 - `BaseLocomotionEnv`：统一封装 MuJoCo 的 `MjModel` / `MjData`，提供 `reset()` / `step()` / `render()`
 - 每个环境独立的奖励函数（前进奖励 - 控制代价 - 接触代价 + 存活奖励）
 - 健康状态检测（z 轴高度范围、躯干角度范围），不健康即提前终止
-- `render()` 使用 `MUJOCO_GL=egl` 无头渲染，缓存 `Renderer` 实例，并用跟随躯干（torso）的自由相机，保证录屏画面中机器人始终居中可见
+- 渲染后端按平台自适应：Linux 未设置 `MUJOCO_GL` 时默认 `egl`（无头），Windows / macOS 沿用 MuJoCo 默认的 `glfw`，调用方显式设置的 `MUJOCO_GL` 优先
+- `render()` 缓存 `Renderer` 实例，并用跟随躯干（torso）的自由相机，保证录屏画面中机器人始终居中可见
+- assets 查找同时覆盖源码布局（包目录旁的 `assets/`）与 colcon 安装布局（`share/<pkg>/assets`）
 
 ### PPO（`ppo.py`）
 
 - `RolloutBuffer`：收集 on-policy 轨迹，计算 GAE 与 returns
 - `PPO.act()`：tanh 高斯策略采样（`log_std` 夹紧）
-- `PPO.update()`：clipped surrogate objective + 价值函数回归 + target-KL 早停 + 梯度裁剪
+- `PPO.update()`：clipped surrogate objective + 价值函数回归 + target-KL 早停 + 梯度裁剪；同一份 rollout 会复用 `train_iters`（默认 10）轮，每轮重新打乱 minibatch 顺序，全部轮次结束后才清空缓冲区（`RolloutBuffer.reset()`）
 
 ### SAC（`sac.py`）
 
 - `ReplayBuffer`：off-policy 经验回放池
 - `SAC.act()`：tanh 重参数化采样
-- `SAC.update()`：双 Q 网络 + 软目标更新 + 自动温度调节
+- `SAC.update()`：双 Q 网络 + 软目标更新（`soft_update(q_target.params(), q.params(), tau)`，对目标网络参数原地 Polyak 平均）+ 自动温度调节
 
 ## 测试验证
 

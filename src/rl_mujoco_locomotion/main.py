@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Unified entry point for MuJoCo locomotion RL module."""
 
+import os
 import sys
 import argparse
 
-sys.path.insert(0, __file__.rsplit("/", 1)[0] if "/" in __file__ else __file__.rsplit("\\", 1)[0])
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from rl_mujoco_locomotion.env import ensure_assets
 from rl_mujoco_locomotion.train import train

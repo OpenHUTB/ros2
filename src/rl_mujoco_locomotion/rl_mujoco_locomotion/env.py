@@ -1,12 +1,44 @@
 """MuJoCo locomotion environment wrappers (HalfCheetah, Ant, Walker2d)."""
 
 import os
-os.environ.setdefault('MUJOCO_GL', 'egl')
+import sys
+
+# 渲染后端：仅在「Linux 且调用方未显式设置」时才默认使用无头 EGL；
+# Windows / macOS 保留 MuJoCo 默认后端（glfw），避免 import 阶段直接报
+# RuntimeError: invalid value for environment variable MUJOCO_GL: egl
+if "MUJOCO_GL" not in os.environ and sys.platform.startswith("linux"):
+    os.environ["MUJOCO_GL"] = "egl"
+
 import shutil
 import numpy as np
 import mujoco
 
-ASSET_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
+_HERE = os.path.dirname(os.path.abspath(__file__))
+ASSET_DIR = os.path.normpath(os.path.join(_HERE, "..", "assets"))
+
+
+def _asset_dirs():
+    """assets 的候选目录：源码布局（包目录旁的 assets）与 colcon 安装布局（share/<pkg>/assets）。"""
+    dirs = [ASSET_DIR]
+    try:
+        from ament_index_python.packages import get_package_share_directory
+
+        share_assets = os.path.join(
+            get_package_share_directory("rl_mujoco_locomotion"), "assets")
+        if share_assets not in dirs:
+            dirs.append(share_assets)
+    except Exception:
+        pass
+    return dirs
+
+
+def _find_asset(xml_name):
+    """在候选目录中查找 MJCF 文件，找不到返回 None。"""
+    for d in _asset_dirs():
+        path = os.path.join(d, xml_name)
+        if os.path.exists(path):
+            return path
+    return None
 
 _ENV_CONFIG = {
     "halfcheetah": {
@@ -55,15 +87,16 @@ def _find_gymnasium_xml(xml_name):
 
 
 def ensure_assets():
+    """检查 MJCF 是否可用；只有缺失时才从 gymnasium 复制到源码布局的 assets 目录。"""
+    missing = [cfg["xml_name"] for cfg in _ENV_CONFIG.values()
+               if _find_asset(cfg["xml_name"]) is None]
+    if not missing:
+        return
     os.makedirs(ASSET_DIR, exist_ok=True)
-    for cfg in _ENV_CONFIG.values():
-        xml_name = cfg["xml_name"]
-        dst = os.path.join(ASSET_DIR, xml_name)
-        if os.path.exists(dst):
-            continue
+    for xml_name in missing:
         src = _find_gymnasium_xml(xml_name)
         if src is not None:
-            shutil.copy2(src, dst)
+            shutil.copy2(src, os.path.join(ASSET_DIR, xml_name))
             print(f"[env] Copied {xml_name} from gymnasium.")
         else:
             print(f"[env] WARNING: {xml_name} not found. Install gymnasium: pip install gymnasium[mujoco]")
@@ -74,10 +107,11 @@ class BaseLocomotionEnv:
         self.name = name
         self.cfg = _ENV_CONFIG[name]
         self.render_mode = render_mode
-        xml_path = os.path.join(ASSET_DIR, self.cfg["xml_name"])
-        if not os.path.exists(xml_path):
+        xml_path = _find_asset(self.cfg["xml_name"])
+        if xml_path is None:
             raise FileNotFoundError(
-                f"Asset not found: {xml_path}\n"
+                f"Asset not found: {self.cfg['xml_name']}\n"
+                f"searched: {_asset_dirs()}\n"
                 "Please install gymnasium and run 'python -c \"import rl_mujoco_locomotion.env; rl_mujoco_locomotion.env.ensure_assets()\"'"
             )
         self.model = mujoco.MjModel.from_xml_path(xml_path)
@@ -156,7 +190,6 @@ class BaseLocomotionEnv:
     def render(self, width=640, height=480):
         if self.render_mode is None:
             return None
-        os.environ['MUJOCO_GL'] = 'egl'
         if self._renderer is None:
             self._renderer = mujoco.Renderer(self.model, height=height, width=width)
             cam = mujoco.MjvCamera()
