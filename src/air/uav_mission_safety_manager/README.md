@@ -1,6 +1,8 @@
 # 无人机任务管理与安全状态机
 
-ROS2 Foxy / Ubuntu 20.04 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降落与安全超时检测。
+ROS 2 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降落与安全超时检测；原有 AirSim 流程使用 Ubuntu 20.04 / Foxy 验证。
+
+新增：**多航点任务队列**，在 Ubuntu 22.04 / ROS 2 Humble 下构建与验证，支持最多 100 点顺序执行、进度反馈、暂停恢复和取消。详见[Humble 构建与本地演示](../../../docs/air/uav_mission_safety_manager/overview.md#waypoint-queue)。以下 Foxy 安装步骤保留供历史 AirSim 用法参考，Humble 演示请使用上述文档中的多航点章节。
 
 ## 文档入口
 
@@ -28,13 +30,18 @@ uav_mission_safety_manager/
 │   ├── main.py                 # ROS 节点与 main() 入口
 │   ├── controller.py           # 非阻塞控制器
 │   ├── state_machine.py
+│   ├── mission_queue.py        # 多航点队列校验与进度
 │   ├── airsim_adapter.py
+│   ├── demo_adapter.py         # Humble 本地运动演示适配器
 │   └── mock_adapter.py
 └── tests/
     ├── test_adapter.py
     ├── test_controller.py
     ├── test_state_machine.py
+    ├── test_mission_queue.py
+    ├── test_demo_adapter.py
     ├── ros_smoke.py
+    ├── ros_queue_smoke.py
     ├── live_airsim_validation.py
     └── ros_airsim_validation.py
 ```
@@ -64,6 +71,8 @@ python3 -m unittest discover -s src/air/uav_mission_safety_manager/tests -v
 ROS_DOMAIN_ID=87 python3 src/air/uav_mission_safety_manager/tests/ros_smoke.py
 ```
 
+队列边界测试还覆盖 100 点上限、非零起点高度、非法装载保持原队列，以及终止状态不会重新派发旧航点。
+
 先用默认离线模式检查节点启动：
 
 ```bash
@@ -84,7 +93,7 @@ ros2 run uav_mission_safety_manager mission_manager --ros-args -p use_airsim:=fa
 
 起飞 RPC 可能返回 False 但遥测显示已离地，原因未确定。FAILSAFE 不保证自动降落，停止节点不会停止模拟器飞行任务。
 坐标为 AirSim NED；普通航点容差为 1 米。屋顶落地兼容逻辑仅限记录起点，不代表任意地形或真机验证。
-未实现任务队列、ROS2 Action、避障或实际电子围栏。详见实测记录。
+多航点队列已在本地运动演示适配器和 AirSim 中验证，覆盖三航点顺序执行、执行中暂停/继续、取消与返航落地。此前记录见[AirSim 队列复测记录](../../../docs/air/uav_mission_safety_manager/validation/waypoint_queue_airsim_validation.md)。未实现 ROS2 Action、避障或实际电子围栏。
 
 ## 维护与许可证
 
