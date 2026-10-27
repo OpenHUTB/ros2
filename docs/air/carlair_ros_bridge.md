@@ -244,6 +244,28 @@ Z = depth
 
 ![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
 
+### 6.7 深度避障 demo
+
+`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方走廊内最近点并发布 `/uav/cmd_vel`：
+
+```text
+d = min(z),  |x| <= lateral_limit, |y| <= vertical_limit, z <= max_range
+vx = 0                         , d <= stop_distance
+vx = forward_speed * (d-stop)  , stop_distance < d < slow_distance
+vx = forward_speed             , d >= slow_distance
+```
+
+默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`。
+节点默认关闭，demo 时：
+
+```bash
+roslaunch carlair_ros_bridge main.launch host:=<Windows_IP> \
+  auto_takeoff:=true enable_depth_avoidance:=true \
+  publish_lidar:=false publish_imu:=false start_selfcheck:=false
+
+rostopic echo /uav/cmd_vel
+```
+
 ## 7. 运行验证
 
 ```shell
