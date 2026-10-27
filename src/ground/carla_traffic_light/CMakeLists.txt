@@ -12,6 +12,10 @@ catkin_package()
 # 所以这里保持只装一份；rosrun / roslaunch 与直接运行源码树的入口行为一致。
 install(PROGRAMS
   scripts/main.py
+  scripts/longitudinal.py
+  scripts/simple_plot.py
+  scripts/traffic_light_logic.py
+  scripts/carla_runner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
