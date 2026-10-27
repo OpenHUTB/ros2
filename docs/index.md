@@ -123,6 +123,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
+* [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md) ? static configuration checks for PX4/ArduPilot fixed-wing SITL
+
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
 
