@@ -109,6 +109,7 @@ nav:
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
 - 空域载具:
+    - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'

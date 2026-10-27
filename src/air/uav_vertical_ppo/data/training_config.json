@@ -1,0 +1,11 @@
+{
+  "seed": 17,
+  "requested_steps": 65536,
+  "actual_steps": 65536,
+  "network": [
+    2,
+    32,
+    32,
+    1
+  ]
+}

@@ -122,6 +122,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制](./air/uav_vertical_ppo.md)
+
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)

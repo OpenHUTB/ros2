@@ -1,0 +1,28 @@
+<mujoco model="vertical_quadrotor">
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="RK4"/>
+  <visual><global offwidth="640" offheight="480"/></visual>
+  <worldbody>
+    <light pos="0 -2 5"/>
+    <geom name="ground" type="plane" size="4 4 0.1" rgba="0.22 0.28 0.32 1"/>
+    <camera name="side" pos="3 -5 2.4" xyaxes="0.857 0.514 0 -0.12 0.20 0.972"/>
+    <body name="vehicle" pos="0 0 0">
+      <!-- 垂直导轨约束姿态和横向位移，只研究总推力与高度的关系。 -->
+      <joint name="height" type="slide" axis="0 0 1" damping="0.1"/>
+      <geom type="box" size="0.12 0.12 0.04" mass="0.8" rgba="0.15 0.6 0.85 1"/>
+      <geom type="capsule" fromto="-0.28 -0.28 0 0.28 0.28 0" size="0.018" mass="0.05"/>
+      <geom type="capsule" fromto="-0.28 0.28 0 0.28 -0.28 0" size="0.018" mass="0.05"/>
+      <geom type="cylinder" pos="0.28 0.28 0.02" size="0.10 0.008" mass="0.025" rgba="0.95 0.65 0.15 1"/>
+      <geom type="cylinder" pos="-0.28 0.28 0.02" size="0.10 0.008" mass="0.025" rgba="0.95 0.65 0.15 1"/>
+      <geom type="cylinder" pos="0.28 -0.28 0.02" size="0.10 0.008" mass="0.025"/>
+      <geom type="cylinder" pos="-0.28 -0.28 0.02" size="0.10 0.008" mass="0.025"/>
+      <site name="imu" size="0.01"/>
+      <site name="downward_sensor" pos="0 0 -0.05" quat="0 1 0 0" size="0.01"/>
+    </body>
+  </worldbody>
+  <actuator><motor name="collective_thrust" joint="height" ctrllimited="true" ctrlrange="0 20"/></actuator>
+  <sensor>
+    <rangefinder name="height_sensor" site="downward_sensor" cutoff="6"/>
+    <velocimeter name="body_velocity" site="imu"/>
+    <accelerometer name="specific_acceleration" site="imu"/>
+  </sensor>
+</mujoco>

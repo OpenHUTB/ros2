@@ -1,0 +1,12 @@
+{
+  "os": "Ubuntu 22.04.5 LTS",
+  "ros": "Humble",
+  "python": "3.10",
+  "scope": "colcon build, installed launch, real ROS topic subscription",
+  "result": {
+    "received": 3,
+    "first": "{\"time_s\": 0.02, \"height_m\": 2.3841805490448964, \"target_m\": 1.5, \"velocity_m_s\": -0.20405893377743492, \"thrust_n\": 3.8100000000000005}",
+    "pass": true
+  },
+  "independent_machine_review": false
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": "calm",
+    "controller": "ppo",
+    "rmse_m": 0.1324332125811424,
+    "max_error_m": 0.8841805490448964,
+    "success_rate": 1.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "calm",
+    "controller": "pd",
+    "rmse_m": 0.16182781855056236,
+    "max_error_m": 0.8847211450131933,
+    "success_rate": 1.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "calm",
+    "controller": "constant",
+    "rmse_m": 0.6096030591168641,
+    "max_error_m": 0.8853797494447369,
+    "success_rate": 0.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "gust",
+    "controller": "ppo",
+    "rmse_m": 0.13495080111396857,
+    "max_error_m": 0.8841805490448964,
+    "success_rate": 1.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "gust",
+    "controller": "pd",
+    "rmse_m": 0.18866172445092327,
+    "max_error_m": 0.8847211450131933,
+    "success_rate": 1.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "gust",
+    "controller": "constant",
+    "rmse_m": 0.6869603303825644,
+    "max_error_m": 1.3693470039770208,
+    "success_rate": 0.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "payload",
+    "controller": "ppo",
+    "rmse_m": 0.1585762244611262,
+    "max_error_m": 0.8840808913207279,
+    "success_rate": 1.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "payload",
+    "controller": "pd",
+    "rmse_m": 0.38383895762082026,
+    "max_error_m": 0.8845510156372827,
+    "success_rate": 0.0,
+    "episodes": 3
+  },
+  {
+    "scenario": "payload",
+    "controller": "constant",
+    "rmse_m": 0.7599487412343312,
+    "max_error_m": 1.3735224230536003,
+    "success_rate": 0.0,
+    "episodes": 3
+  }
+]
