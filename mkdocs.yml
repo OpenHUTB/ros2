@@ -106,6 +106,7 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
 - 空域载具:
+    - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'

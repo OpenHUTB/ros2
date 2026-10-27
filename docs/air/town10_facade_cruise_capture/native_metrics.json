@@ -1,0 +1,21 @@
+{
+  "backend": "airsim",
+  "scene": "server_scene",
+  "status": "complete",
+  "controller": "bounded_mlp_feedforward_pd",
+  "waypoints_total": 12,
+  "waypoints_completed": 12,
+  "images_captured": 12,
+  "duration_s": 76.5,
+  "wall_clock_s": 76.95300000000043,
+  "distance_source": "airsim_depth_planar_nine_samples",
+  "maximum_speed_m_s": 1.8488785028457717,
+  "error": null,
+  "arrival_position_tolerance_m": 0.3,
+  "arrival_speed_tolerance_m_s": 0.35,
+  "front_depth_median_mean_m": 7.265688723491028,
+  "front_depth_min_m": 7.03515625,
+  "route_error_rmse_m": 1.3048353866437967,
+  "route_error_max_m": 2.1651235490014726,
+  "capture_position_error_max_m": 0.29785049353896537
+}

@@ -120,6 +120,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
+
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)

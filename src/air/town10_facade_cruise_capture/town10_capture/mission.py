@@ -35,6 +35,15 @@ def native_hybrid_velocity(neural_velocity, error, velocity):
     return command
 
 
+def waypoint_reached(error, velocity, backend):
+    """原生飞控与确定性平移模型分别使用稳定到达阈值。"""
+    position_limit, speed_limit = (0.3, 0.35) if backend == "airsim" else (0.15, 0.22)
+    return (
+        np.linalg.norm(error) < position_limit
+        and np.linalg.norm(velocity) < speed_limit
+    )
+
+
 class CruiseMission:
     def __init__(self, config: CruiseConfig, on_sample=None, backend=None):
         config.validate()
@@ -173,10 +182,7 @@ class CruiseMission:
                     float(np.linalg.norm(target - position)),
                 ]
             )
-            arrived = (
-                np.linalg.norm(target - position) < 0.15
-                and np.linalg.norm(velocity) < 0.22
-            )
+            arrived = waypoint_reached(target - position, velocity, self.config.backend)
             periodic = (
                 self.elapsed - self.last_frame_time
                 >= 1 / self.config.capture_rate - 1e-8
@@ -299,6 +305,12 @@ class CruiseMission:
                     if len(records)
                     else None,
                     "error": error,
+                    "arrival_position_tolerance_m": 0.3
+                    if self.config.backend == "airsim"
+                    else 0.15,
+                    "arrival_speed_tolerance_m_s": 0.35
+                    if self.config.backend == "airsim"
+                    else 0.22,
                 }
                 if self.config.backend == "mujoco":
                     self.metrics["reference_distance_rmse_m"] = (

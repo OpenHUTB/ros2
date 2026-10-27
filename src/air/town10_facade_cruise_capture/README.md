@@ -2,7 +2,7 @@
 
 ![OpenHUTB 2.10 Town10HD 原生自主巡航](../../../docs/img/air/town10_facade_cruise_capture/native_cruise.gif)
 
-OpenHUTB Windows 2.10 的 Town10HD 场景已完成原生在线巡航：12/12 航点、12 张照片、79.109 s。相机与深度由服务端实时返回，采图位置最大误差0.1488 m。
+OpenHUTB Windows 2.10 的 Town10HD 场景已完成原生在线巡航：12/12 航点、12 张照片、76.500 s。相机与深度由服务端实时返回，采图位置最大误差0.2979 m。
 
 模块提供 MuJoCo 纹理立面场景和原生 OpenHUTB/AirSim 两种后端，通过统一神经网络速度控制器执行蛇形扫描，按航点保存 RGB 图像、位姿清单、轨迹与性能指标。
 
@@ -25,18 +25,21 @@ Linux 无显示环境使用 `MUJOCO_GL=osmesa`，并安装 `libosmesa6`、`libgl
 `settings.example.json` 给出 `front_cam` 相机配置：向机体前方偏移 1.5 m、向上偏移 0.2 m，避免机体遮挡图像。原生深度表示相机到表面的前向距离，不能直接当作机体中心到墙的距离。相机名称和载具名称应与实际场景配置一致。
 
 ```bash
-python -m pip install airsim==1.8.1
+python -m pip install numpy wheel msgpack-rpc-python
+python -m pip install airsim==1.8.1 --no-build-isolation
 python main.py --backend airsim --host 127.0.0.1 --camera front_cam --speed 0.5 --duration 150 --gif --output output/native
 ```
 
-本次 Town10HD 原生运行使用 `drone1`、`front_cam`，以 NED `[29.02,38.91,38.53] m`、偏航90.5°作为一次性实验起点。先在已起飞悬停状态显式初始化，再执行相对扫描：
+本次 Town10HD 原生运行使用 `Drone1`、`front_cam`，以 NED `[29.02,38.91,38.53] m`、偏航90.5°作为一次性实验起点。先在已起飞悬停状态显式初始化，再执行相对扫描：
 
 ```bash
-python prepare_airsim.py --vehicle drone1 --camera front_cam --position 29.02 38.91 38.53 --yaw 90.5 --camera-offset 1.5 0 -0.2
-python main.py --backend airsim --vehicle drone1 --camera front_cam --speed 0.65 --rate 20 --capture-rate 2 --duration 200 --gif --output output/native
+python prepare_airsim.py --vehicle Drone1 --camera front_cam --position 29.02 38.91 38.53 --yaw 90.5 --camera-offset 1.5 0 -0.2
+python main.py --backend airsim --vehicle Drone1 --camera front_cam --speed 0.65 --rate 20 --capture-rate 2 --duration 200 --gif --output output/native
 ```
 
 `prepare_airsim.py` 只调用一次 `simSetVehiclePose` 设置实验起点，不代表从出生点飞行至该位置。之后巡航只发送速度命令，由原生飞行动力学推进，运行过程中不改写载具位姿。起点悬停后的实际位姿记录在采集清单中。
+
+设置起点后，初始化脚本最多等待5 s，要求速度连续1 s低于0.2 m/s。原生航点的稳定到达条件为位置误差小于0.3 m且速度小于0.35 m/s；MuJoCo分别为0.15 m和0.22 m/s。容差随每次运行指标保存。
 
 默认相对路线从当前悬停点沿机体右侧横扫 6 m、向上扫描 3 m，共 12 点，保持启动时的平面法向位置和朝向。`--takeoff` 显式请求解锁起飞。`--route town10` 读取随包保存的 36 点 NED 路线，`--route-offset N E D` 用于校准原始坐标；必须先在对应场景核对起点、方向、建筑高度和路线空域。
 
@@ -78,6 +81,6 @@ ros2 launch town10_facade_cruise_capture main.launch.py backend:=airsim host:=ho
 python -m pytest -q
 ```
 
-原生成功运行的[完整指标](../../../docs/air/town10_facade_cruise_capture/native_metrics.json)和[采图位姿清单](../../../docs/air/town10_facade_cruise_capture/native_capture_manifest.json)保留服务端实际记录。前向深度最小值7.0898 m、中位数时间均值7.2316 m，最大实测速度0.6091 m/s。
+原生成功运行的[完整指标](../../../docs/air/town10_facade_cruise_capture/native_metrics.json)和[采图位姿清单](../../../docs/air/town10_facade_cruise_capture/native_capture_manifest.json)保留服务端实际记录。前向深度最小值7.0352 m、中位数时间均值7.2657 m，最大实测速度1.8489 m/s。速度命令限幅与原生飞控响应的实际峰值分别记录。
 
 MuJoCo 三纹理场景也分别完成12/12航点与12张照片，仿真时长43.0 s，最大速度0.789 m/s。完整原理、结果、资产哈希和源码说明见[项目文档](../../../docs/air/town10_facade_cruise_capture/index.md)。接口单元测试与原生在线运行记录分别保留。

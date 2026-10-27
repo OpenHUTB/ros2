@@ -187,3 +187,12 @@ def test_native_depth_metrics_do_not_claim_four_meter_tracking(tmp_path):
     assert metrics["front_depth_median_mean_m"] == pytest.approx(7.2)
     assert metrics["front_depth_min_m"] == pytest.approx(7.2)
     assert metrics["route_error_rmse_m"] == pytest.approx(0)
+
+
+def test_native_stable_arrival_tolerance_is_separate_from_mujoco():
+    from town10_capture.mission import waypoint_reached
+
+    assert waypoint_reached([0.2, 0, 0], [0.1, 0, 0], "airsim")
+    assert not waypoint_reached([0.31, 0, 0], [0, 0, 0], "airsim")
+    assert not waypoint_reached([0.2, 0, 0], [0.36, 0, 0], "airsim")
+    assert not waypoint_reached([0.2, 0, 0], [0.1, 0, 0], "mujoco")

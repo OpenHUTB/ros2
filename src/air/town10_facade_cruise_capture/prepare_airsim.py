@@ -62,8 +62,31 @@ def main():
             ),
             vehicle_name=args.vehicle,
         )
+        # 零速度命令让飞控在新位置重建悬停参考，保持实际积分后的状态。
+        client.moveByVelocityAsync(
+            0.0, 0.0, 0.0, 1.0,
+            yaw_mode=airsim.YawMode(False, args.yaw),
+            vehicle_name=args.vehicle,
+        ).join()
         client.hoverAsync(vehicle_name=args.vehicle).join()
-        state = client.getMultirotorState(vehicle_name=args.vehicle)
+        # 设置起点不会重置动力学速度；持续稳定1s后才允许后续巡航读取原点。
+        deadline = time.monotonic() + 5.0
+        stable_since = None
+        while True:
+            state = client.getMultirotorState(vehicle_name=args.vehicle)
+            v = state.kinematics_estimated.linear_velocity
+            velocity = np.array([v.x_val, v.y_val, v.z_val], dtype=float)
+            now = time.monotonic()
+            if np.isfinite(velocity).all() and np.linalg.norm(velocity) < 0.2:
+                if stable_since is None:
+                    stable_since = now
+                if now - stable_since >= 1.0:
+                    break
+            else:
+                stable_since = None
+            if now >= deadline:
+                raise RuntimeError("初始化后5秒内未达到连续1秒速度低于0.2m/s的稳定悬停")
+            time.sleep(0.1)
         p = state.kinematics_estimated.position
         print(
             json.dumps(
