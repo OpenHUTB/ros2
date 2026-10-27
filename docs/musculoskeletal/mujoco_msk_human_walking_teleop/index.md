@@ -20,7 +20,7 @@
 ### 目录结构
 
 ```text
-src/mujoco_msk_human_walking_teleop/
+src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── main.py                     # 统一入口：check / eval / demo / sim / keyboard
 ├── package.xml                 # catkin 包描述（rospy, std_msgs, sensor_msgs）
 ├── CMakeLists.txt
@@ -130,7 +130,7 @@ roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
 ### 3.7 离线自检与性能评测（无需 ROS）
 
 ```shell
-cd ~/catkin_ws/src/mujoco_msk_human_walking_teleop
+cd ~/catkin_ws/src/musculoskeletal/mujoco_msk_human_walking_teleop
 python3 main.py check    # 模型自检：场景加载 / 22 块肌肉兴奋方向 / 三场景站立
 python3 main.py eval     # 多场景性能评测，结果写入 eval_results.json
 ```
