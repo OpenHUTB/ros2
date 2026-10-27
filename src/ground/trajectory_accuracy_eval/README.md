@@ -139,10 +139,26 @@ src/ground/trajectory_accuracy_eval/
 ├── scripts/                    # roslaunch 的两个入口
 ├── launch/main.launch
 ├── config/params.yaml
-├── test/test_traj_eval.py      # 41 项离线单元测试
+├── test/test_traj_eval.py      # 自洽测试：41 项检查
+├── test/test_known_answer.py   # 已知答案对拍：7 项（含暴力搜索交叉验证）
 ├── results/                    # 实测输出的指标（JSON）
 └── requirements.txt
 ```
+
+### 5.1 测试
+
+```bash
+python3 test/test_traj_eval.py        # 自洽测试
+python3 test/test_known_answer.py     # 已知答案对拍
+python3 -m pytest test/ -q            # 或一次跑完（15 passed）
+```
+
+自洽测试只保证"实现与自己一致"，查不出"公式整体写错但内部自洽"的问题，
+因此 `test_known_answer.py` 用**解析解**与**暴力搜索**两种独立答案源对拍：
+同心圆半径差的 ATE 必须严格等于半径差、匀速直线的 RPE 必须等于 `(k−1)·ds·Δ`、
+已知高斯噪声下 ATE 应接近 `σ√2`，以及与完全不用 SVD 的暴力搜索求出的
+最优对齐 RMSE 一致。详见文档第 7 节。
+
 
 ## 6. 与仓库已有模块的区别
 

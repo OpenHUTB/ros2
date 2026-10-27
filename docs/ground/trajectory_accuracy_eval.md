@@ -102,6 +102,27 @@ RPE(delta=50) 平移  : RMSE 0.0756 m
 
 这三个数与程序输出一致，说明实现没有漏项。
 
+### 3.2 运行效果
+
+`--mode demo` 会同时导出两张图（保存在 `results/` 下，可随时重新生成）：
+
+![轨迹对比：真值、里程计估计与刚体对齐后的结果](../img/ground/trajectory_accuracy_eval/trajectory.png)
+
+*图 1　轨迹对比。黑色为真值，红色为带 2% 轮半径误差的里程计轨迹，
+蓝色虚线为刚体对齐后的结果——对齐抹平了整体偏移，但**尺度误差导致的形状偏差仍然保留**，
+这正是 ATE 取 0.33 m 的原因。*
+
+![对齐后的位置误差与朝向误差曲线](../img/ground/trajectory_accuracy_eval/error.png)
+
+*图 2　对齐后的误差曲线。上图是位置误差（随时间增长，说明误差在累积而非随机抖动），
+下图是朝向误差（恒为 0，因为尺度误差只影响距离、不影响航向）。*
+
+在 Ubuntu 20.04 + ROS Noetic 的虚拟机上从零部署（下载、解压、直接运行）的实际过程：
+
+![Ubuntu 20.04 上部署并运行 demo](../img/ground/trajectory_accuracy_eval/offline_demo.png)
+
+*图 3　在 Ubuntu 20.04 + Python 3.8.10 上的实际运行结果，与 Windows 下逐位一致。*
+
 ## 4. 尺度误差的影响
 
 ```bash
@@ -176,6 +197,19 @@ rostopic echo /traj_eval/metrics
 
 格式：`[ATE_RMSE, ATE_MAX, RPE_delta_RMSE, 配对数]`。
 
+### 5.2 运行效果
+
+`roslaunch trajectory_accuracy_eval main.launch` 启动后的实际终端输出：
+
+![ROS 1 在线评估的实际运行日志](../img/ground/trajectory_accuracy_eval/ros1_launch.png)
+
+*图 4　ROS 1 实际运行。参数正确载入 `/sim_odom_publisher/*` 与 `/traj_eval_node/*`，
+评估节点每 3 秒报告一次；随着累计行驶距离增加，ATE RMSE 从 0.0260 m 单调增长到
+0.3473 m，而 `RPE(10)` 全程稳定在 **0.0152 m**——后者与理论值
+（每步 0.075 m × 2% × 10 步 = 0.015 m）一致，说明节点内部的配对与指标计算没有偏差。
+日志后半段"轨迹回放循环到起点"之后 `RPE(10)` 跳到 0.1268，
+正是本节开头说明的循环重置问题（已由 `/traj_eval/reset` 修复）。*
+
 ### 5.3 接自己的数据
 
 | 方向 | 话题 | 类型 |
@@ -216,12 +250,32 @@ traj_eval_node:
 ## 7. 测试
 
 ```bash
-python3 test/test_traj_eval.py
+python3 test/test_traj_eval.py       # 自洽测试：41 项检查
+python3 test/test_known_answer.py    # 已知答案对拍：7 项
+# 或按 pytest 的方式一次跑完
+python3 -m pytest test/ -q           # 15 passed
 ```
 
-覆盖 41 项：SE2 运算、Umeyama 对齐（含镜像数据不产生反射）、ATE（同轨迹为 0 /
-随噪声单调增大 / 整体平移被对齐消除）、RPE 与解析值对照、漂移率解析值、
+**自洽测试**（`test_traj_eval.py`，41 项）：SE2 运算、Umeyama 对齐（含镜像数据不产生反射）、
+ATE（同轨迹为 0 / 随噪声单调增大 / 整体平移被对齐消除）、RPE 与解析值对照、漂移率解析值、
 误差模型端到端一致性、CSV 读写往返、异常输入。
+
+**已知答案对拍**（`test_known_answer.py`，7 项）：自洽测试只能验证"实现与自己一致"，
+查不出"公式整体写错但内部自洽"的错误（对齐方式选错、旋转与平移求解顺序颠倒等）。
+因此这个文件用两种**独立于实现的答案源**来对拍：
+
+| 用例 | 独立答案来源 | 断言 |
+|---|---|---|
+| 相同轨迹 | 定义 | ATE < 1e-12 |
+| 整体平移 d、不对齐 | 解析 | ATE **严格等于** d |
+| 同心圆半径差 ΔR | 解析（圆对称，残差恒为 ΔR） | ATE **严格等于** ΔR |
+| 刚体变换后对齐 | 解析 | ATE < 1e-9，且恢复出反向旋转角 |
+| 匀速直线 + 尺度误差 | 解析 | RPE(Δ) = (k−1)·ds·Δ，漂移率 = (k−1)·100% |
+| 已知高斯噪声 σ | 统计（Rayleigh 分布，均方根 σ√2） | ATE ≈ σ√2（误差 < 0.03 m） |
+| 随机数据 | **暴力搜索**：不用 SVD，对旋转角做网格搜索 + 黄金分割细化 | 与 Umeyama 的最优 RMSE 与旋转角一致（< 1e-6 / 1e-4 rad） |
+
+最后一条是关键：暴力搜索完全不使用 SVD，若 Umeyama 实现有错（符号、转置、顺序），
+两者不可能对上。
 
 全部测试只依赖 numpy，不需要 ROS。
 
