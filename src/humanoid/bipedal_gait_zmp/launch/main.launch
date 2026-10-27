@@ -7,8 +7,9 @@
 
     用法：
       roslaunch bipedal_gait_zmp main.launch
-      roslaunch bipedal_gait_zmp main.launch args:="--quick"
-      roslaunch bipedal_gait_zmp main.launch args:="--gain 1.5"
+    需要给脚本附加参数时通过 args 传入，可选项见包内 README。
+    这里不写以减号开头的命令行示例：XML 注释内不允许连续两个减号，
+    写了会让整个 launch 文件无法被解析。
   -->
 
   <!-- 透传给 main.py 的额外参数 -->
