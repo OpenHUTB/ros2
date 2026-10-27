@@ -1,0 +1,186 @@
+name: ROS 2 Humble
+
+# 目的：在真 Ubuntu 22.04 + ROS 2 Humble 里验证 uav_camera_tracking 能
+# 编译、能 launch、四个场景都能闭环跑通，并把回合指标打印到日志。
+# 只在改动本模块时触发，不动其它包的 CI 预算。
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_camera_tracking/**'
+      - '.github/workflows/ros2_uav_camera_tracking.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_camera_tracking/**'
+      - '.github/workflows/ros2_uav_camera_tracking.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ros2-uav-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  humble:
+    name: colcon build + launch（Ubuntu 22.04 / Humble）
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装依赖
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            python3-numpy python3-matplotlib python3-pytest
+
+      - name: 单测 + 节点闭环（用 ROS 替身，不需要 source）
+        # 这一步刻意不 source ROS：没有 rclpy 时 test/fake_ros.py 会接管，
+        # 于是「消息字段、参数声明、三节点闭环」在 Linux + 真 numpy 上也能验。
+        run: |
+          cd src/air/uav_camera_tracking
+          python3 -m pytest test/ -q
+
+      - name: source ROS 后单测（替身应自动跳过）
+        run: |
+          source /opt/ros/humble/setup.bash
+          cd src/air/uav_camera_tracking
+          python3 -m pytest test/ -q
+
+      - name: colcon build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select uav_camera_tracking \
+                       --event-handlers console_direct+
+
+      - name: install 布局断言（data_files 与入口点）
+        # 只打印不判定的话，"models 没被 data_files 装进去"这类回归会漏到运行时；
+        # 这里逐项硬断言，缺一个就红。
+        run: |
+          set -e
+          PKG=install/uav_camera_tracking
+          SHARE="$PKG/share/uav_camera_tracking"
+          LIB="$PKG/lib/uav_camera_tracking"
+
+          echo "=== install 后的文件 ==="
+          find "$PKG" -type f | sort
+
+          missing=0
+          for f in \
+            "$SHARE/package.xml" \
+            "$SHARE/launch/main.launch.py" \
+            "$SHARE/config/params.yaml" \
+            "$SHARE/models/detector.npz" \
+            "$SHARE/models/control.npz" \
+            "$SHARE/models/e2e.npz" \
+            "$LIB/main" "$LIB/sim" "$LIB/detector" "$LIB/controller" \
+            "$PKG/share/ament_index/resource_index/packages/uav_camera_tracking"
+          do
+            if [ ! -e "$f" ]; then
+              echo "::error::install 后缺少 $f"
+              missing=1
+            fi
+          done
+          # 可执行位也要在，否则 ros2 run 找不到命令
+          for e in main sim detector controller; do
+            if [ ! -x "$LIB/$e" ]; then
+              echo "::error::$LIB/$e 不可执行"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] && echo "install 布局完整 ✓"
+          exit "$missing"
+
+      - name: 四个场景逐个 launch
+        run: |
+          set -o pipefail
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          mkdir -p ci_out
+          CSV="$PWD/ci_out/metrics.csv"
+          rm -f "$CSV"
+
+          run_case () {
+            local scene=$1 mode=$2 dur=$3 tag="${1}_${2}"
+            local rows=0
+            if [ -f "$CSV" ]; then rows=$(wc -l < "$CSV"); fi
+            local want=$((rows + 1))
+            echo "::group::scene=$scene mode=$mode duration=$dur"
+            ros2 launch uav_camera_tracking main.launch.py \
+                scene:="$scene" mode:="$mode" duration:="$dur" csv:="$CSV" \
+                > "ci_out/${tag}.log" 2>&1 &
+            local pid=$!
+            for _ in $(seq 1 150); do
+              if [ -f "$CSV" ] && [ "$(wc -l < "$CSV")" -ge "$want" ]; then
+                echo "指标已写入（第 $want 行）"
+                break
+              fi
+              kill -0 "$pid" 2>/dev/null || { echo "launch 提前退出"; break; }
+              sleep 1
+            done
+            kill -INT "$pid" 2>/dev/null || true
+            for _ in $(seq 1 15); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+            kill -9 "$pid" 2>/dev/null || true
+            pkill -f 'lib/uav_camera_tracking' 2>/dev/null || true
+            sleep 1
+            grep -E '回合结束|场景 |ERROR|Traceback' "ci_out/${tag}.log" | tail -6 || true
+            if [ "$(wc -l < "$CSV" 2>/dev/null || echo 0)" -lt "$want" ]; then
+              echo "::warning::${tag} 没有产出指标行，日志尾部："
+              tail -30 "ci_out/${tag}.log" || true
+            fi
+            echo "::endgroup::"
+          }
+
+          run_case static    expert    10.0
+          run_case moving    two_stage 0.0
+          run_case occlusion two_stage 0.0
+          run_case gust      two_stage 0.0
+
+      - name: 汇总指标并判定
+        run: |
+          python3 - <<'PY'
+          import csv, io, sys
+
+          # 判定阈值与包内 params.py 的 ERR_OK / LOST_FRAC_OK 严格一致，
+          # 四个场景用同一条线，不做场景级放宽——否则"通过"就没有可比性了。
+          LIMIT = {s: 0.18 for s in ('static', 'moving', 'occlusion', 'gust')}
+          NEED = ['static', 'moving', 'occlusion', 'gust']
+
+          rows = list(csv.DictReader(io.open('ci_out/metrics.csv', encoding='utf-8')))
+          print('| 场景 | 可见占比 | 误差 RMS | 平均速度 | 判定 |')
+          print('|---|---|---|---|---|')
+          got = {}
+          for r in rows:
+              print('| %s | %s | %s | %s | %s |'
+                    % (r['scene'], r['visible_frac'], r['err_rms'],
+                       r['mean_speed'], r['success']))
+              got[r['scene']] = r
+
+          bad = []
+          for scene in NEED:
+              if scene not in got:
+                  bad.append('%s：没有指标行（launch 可能没跑起来）' % scene)
+                  continue
+              if float(got[scene]['visible_frac']) < 0.85:
+                  bad.append('%s：可见占比 %s < 0.85' % (scene, got[scene]['visible_frac']))
+              if float(got[scene]['err_rms']) > LIMIT[scene]:
+                  bad.append('%s：误差 %s > %.2f' % (scene, got[scene]['err_rms'], LIMIT[scene]))
+
+          if bad:
+              print('\n失败：')
+              for item in bad:
+                  print(' -', item)
+              sys.exit(1)
+          print('\n四个场景全部通过')
+          PY
+
+      - name: 失败时保留日志
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros2-logs
+          path: |
+            ci_out/
+            log/

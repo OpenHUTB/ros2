@@ -151,6 +151,7 @@ nav:
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 无人机机载相机视觉目标跟踪: './air/uav_camera_tracking.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:

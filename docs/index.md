@@ -178,6 +178,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control/README.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [无人机机载相机视觉目标跟踪](./air/uav_camera_tracking.md) —— 神经网络感知（图像→目标像素热图）与控制网络解耦训练，与端到端策略在静止/圆周/遮挡/阵风四个场景下闭环对比
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 

@@ -1,0 +1,18 @@
+# 三个节点的默认参数（launch 中会用同名参数覆盖）
+# 注意：权重路径不写死在这里，节点会用 ament share 目录自动定位 models/*.npz，
+# 这样换机器、换工作空间都能找到文件。
+uav_sim:
+  ros__parameters:
+    scene: moving
+    duration: 0.0
+    publish_image: true
+    csv: ''
+
+uav_detector:
+  ros__parameters:
+    vis_thresh: 0.5
+    report_every: 100
+
+uav_controller:
+  ros__parameters:
+    mode: two_stage
