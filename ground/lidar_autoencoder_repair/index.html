@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>基于 Autoencoder 的雷达数据修复与避障 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u57fa\u4e8e Autoencoder \u7684\u96f7\u8fbe\u6570\u636e\u4fee\u590d\u4e0e\u907f\u969c";
+        var mkdocs_page_input_path = "ground/lidar_autoencoder_repair.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">基于 Autoencoder 的雷达数据修复与避障</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">项目结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">环境与依赖</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">离线训练（首次部署必须执行）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">核心算法</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1-autoencoder">1. Autoencoder 架构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 数据流</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 与纯阈值避障的差异</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ros">离线自测（无需 ROS）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">运行截图与实测数据</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#gazebo">Gazebo 闭环运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#20-s">闭环 20 s 记录</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#300">离线量化（300 帧真实扫描）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">离线自测</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">基于 Autoencoder 的雷达数据修复与避障</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/lidar_autoencoder_repair.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="autoencoder">基于 Autoencoder 的雷达数据修复与避障</h1>
+<p>本模块提供一个 <strong>Autoencoder 去噪 + 阈值避障</strong> 的 ROS 节点，用于展示"传感器数据容错"与"控制逻辑"解耦的设计思路。对照的纯阈值避障实现是 master 上已有的 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/turtlebot3_lidar_avoid"><code>turtlebot3_lidar_avoid</code></a>（由已合并的 #245 引入，squash 提交 a8d6de5，文档见 <a href="https://github.com/OpenHUTB/ros2/blob/master/docs/ground/turtlebot3_lidar_avoid.md">docs/ground/turtlebot3_lidar_avoid.md</a>）。与其相比，本模块在输入端多了一层离线训练的自编码器，能够在传感器被注入高斯噪声、椒盐噪声或随机丢点时仍保持稳定控制。</p>
+<blockquote>
+<p>说明：当前实现中的噪声注入是代码主动模拟的（用于在干净的 Gazebo 仿真里复现"传感器损坏"场景），Autoencoder 权重由离线脚本 <code>train_autoencoder.py</code> 在合成数据上训练生成，所有链路均可在本地 Python + NumPy + PyTorch 环境下独立复现。</p>
+</blockquote>
+<h2 id="_1">项目结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/lidar_autoencoder_repair/
+├── CMakeLists.txt              # catkin 编译规则
+├── package.xml                 # 包声明（含 pip 依赖说明）
+├── launch/
+│   └── main.launch             # 一键启动文件
+├── models/
+│   ├── autoencoder_weights.pt   # 离线训练生成的权重（由 train_autoencoder.py 写入）
+│   └── real_scans_sample.npz    # Gazebo 采集的 686 帧真实 /scan，供训练混入真实分布
+└── scripts/
+    ├── main.py                 # ROS 节点：订阅 /scan → 去噪 → 阈值避障 → 发布 /cmd_vel
+    ├── train_autoencoder.py    # 离线训练脚本（无需 ROS 环境即可运行）
+    └── test_offline.py         # 离线自测（mock ROS，无需真实环境即可验证控制链路）
+</code></pre></div>
+<h2 id="_2">环境与依赖</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>ROS Noetic</td>
+</tr>
+<tr>
+<td>仿真引擎</td>
+<td>Gazebo 11 + TurtleBot3</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8+</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td>≥ 2.0（CPU 版即可）</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="c1"># Python 依赖（不在 apt 仓库，需要 pip 安装）</span>
+pip3<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>numpy
+
+<span class="c1"># ROS 包依赖（apt 安装）</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-turtlebot3-gazebo
+</code></pre></div>
+<h2 id="_3">离线训练（首次部署必须执行）</h2>
+<p>Autoencoder 不依赖 ROS，单独跑训练脚本即可生成权重：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws/src/ground/lidar_autoencoder_repair/scripts
+python3<span class="w"> </span>train_autoencoder.py<span class="w"> </span>--real-scans<span class="w"> </span>../models/real_scans_sample.npz
+python3<span class="w"> </span>train_autoencoder.py<span class="w">                  </span><span class="c1"># 不加 --real-scans 则只用合成数据</span>
+</code></pre></div>
+<p><code>--epochs</code> 默认 150，<code>--samples</code> 默认 16000，<code>--real-ratio</code> 默认 0.5；本仓库自带的权重就是用默认参数 + <code>--real-scans</code> 训练出来的。</p>
+<p>脚本会：
+1. 生成 16000 组 <code>(corrupted, clean)</code> 数据对：默认全部由 8 种几何场景合成，加 <code>--real-scans</code> 时按 <code>--real-ratio</code> 混入 Gazebo 采集的真实 <code>/scan</code>（真实帧本身就是干净输入，叠加合成噪声即可成为训练对）；
+2. 在 1D 卷积自编码器上以近障碍加权 MSE 损失训练 150 epoch（&lt;0.5 m 的束 8 倍权重、0.5~1 m 的束 4 倍权重，防止近距障碍被平滑重构导致避障漏检）；
+3. 将权重写入 <code>../models/autoencoder_weights.pt</code>。</p>
+<p>真实扫描样本随包提供在 <code>models/real_scans_sample.npz</code>（686 帧，用 <code>--real-scans ../models/real_scans_sample.npz</code> 使用）。混入真实数据是必要的：纯合成场景以"尖锐的扇区对比"为主，而 Gazebo 里实际分布是"近障碍密集 + 平滑距离梯度"，只在合成数据上训练的模型会把近距整体抬高，实测近距误差反而大于加噪输入。</p>
+<p>训练效果示例（一次实际运行，<code>--real-scans ../models/real_scans_sample.npz</code>，其余默认）：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练样本</td>
+<td>16000（合成 8000 + 真实扫描 8000）</td>
+</tr>
+<tr>
+<td>训练初始 MSE</td>
+<td>0.476</td>
+</tr>
+<tr>
+<td>训练收敛 MSE</td>
+<td>0.047</td>
+</tr>
+<tr>
+<td>训练总耗时（CPU，6 核）</td>
+<td>238 s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_4">运行步骤</h2>
+<p><strong>终端 1 — 启动仿真环境：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">TURTLEBOT3_MODEL</span><span class="o">=</span>burger
+roslaunch<span class="w"> </span>turtlebot3_gazebo<span class="w"> </span>turtlebot3_world.launch
+</code></pre></div>
+<p><strong>终端 2 — 编译并启动节点：</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+roslaunch<span class="w"> </span>lidar_autoencoder_repair<span class="w"> </span>main.launch
+</code></pre></div>
+<p>节点启动后会在日志里打印权重加载结果。若 <code>models/autoencoder_weights.pt</code> 不存在，会打印红色警告并回退到随机初始化 —— 此时修复结果无意义，请先跑训练脚本。</p>
+<h2 id="_5">核心算法</h2>
+<h3 id="1-autoencoder">1. Autoencoder 架构</h3>
+<p>用 <strong>1D 卷积</strong>而不是全连接：雷达去噪本质上是局部平滑——相邻几束通常打在同一个物体上、距离接近，噪声表现为逐束抖动。卷积的平移等变性天然适配这种结构，压掉逐束噪声的同时能保住物体边界的距离跳变；全连接层对每个角度单独学习，学不到"邻域平滑"。</p>
+<div class="highlight"><pre><span></span><code>输入(360 束) → Conv1d(1→16,  k=5, s=2) → ReLU       180
+             → Conv1d(16→32, k=5, s=2) → ReLU        90
+             → Conv1d(32→64, k=5, s=2) → ReLU        45   ← 瓶颈：45 × 64 特征图
+             → ConvTranspose1d(64→32)  → ReLU        90
+             → ConvTranspose1d(32→16)  → ReLU       180
+             → ConvTranspose1d(16→1)               360 → 输出(360 束)
+</code></pre></div>
+<p>输入输出都是完整 360 束激光扫描，与下游阈值避障的扇区划分直接对齐；瓶颈通道数 64 是实测选出来的，更窄（32）时远距离扇区会被整体压向均值，导致下游左右扇区比较翻转。</p>
+<h3 id="2">2. 数据流</h3>
+<div class="highlight"><pre><span></span><code>  /scan (LaserScan, 360 束)
+    │
+    ▼
+  sanitize_ranges()          ← 统一处理 NaN / Inf / ≤0 值 → 3.5 m
+    │
+    ▼
+  corrupt_ranges()           ← 可选：注入高斯噪声 σ=0.3 + 5% 随机丢点
+    │                          （模拟"传感器物理损坏"场景，干净仿真里才需要；
+    │                           实际接到真实脏数据时可注释掉这一步）
+    ▼
+  Autoencoder.repaired       ← 权重来自 models/autoencoder_weights.pt
+    │
+    ▼
+  扇区阈值避障                ← 本模块自定义扇区（与对照模块的 ±30°/30-90°/270-330° 不同）：
+    │                          前方 = 0-15° ∪ 345-360°
+    │                          左侧 = 15-60°
+    │                          右侧 = 300-345°
+    ▼
+  /cmd_vel (Twist)
+</code></pre></div>
+<h3 id="3">3. 与纯阈值避障的差异</h3>
+<p>需要说明的是，本模块<strong>没有复刻</strong>对照模块的控制器，两者的控制逻辑并不相同：</p>
+<ul>
+<li>对照模块（master 上 <code>turtlebot3_lidar_avoid/turtlebot3_lidar_avoid/avoid.py</code>）：扇区为前方 ±30°、左侧 30-90°、右侧 270-330°（avoid.py L32-34）；控制器是 CRUISE / AVOID / EMERGENCY 三态状态机，AVOID 态按前方距离线性减速、按左右差值比例转向，EMERGENCY 态倒车（avoid.py L136-155、L212-244）。</li>
+<li>本模块：扇区为前方 ±15°（0-15° ∪ 345-360°）、左侧 15-60°、右侧 300-345°；控制器是最简的二分支定值控制（front &lt; 0.8 m 时 <code>x=0.05, z=±1.0</code> 减速转向，否则 <code>x=0.3</code> 直行），没有状态机和倒车。</li>
+</ul>
+<p>刻意简化控制器是为了让对比实验只暴露一个变量——<strong>控制输入是否经过 Autoencoder 修复</strong>：</p>
+<ul>
+<li>对照组：<code>raw_ranges</code>（原始数据）→ 同一套二分支控制</li>
+<li>实验组：<code>autoencoder(corrupt(raw_ranges))</code>（修复后数据）→ 同一套二分支控制</li>
+</ul>
+<p>要做 A/B 对比实验，只需在 <code>main.py</code> 的 <code>scan_callback</code> 中：</p>
+<ol>
+<li>把 <code>corrupted_ranges = corrupt_ranges(raw_ranges, noise_sigma=0.3)</code> 一行注释掉（当前提交中位于 <code>main.py</code> 第 128 行，全文共 163 行）；</li>
+<li>把控制扇区计算三行 <code>front = min(repaired_ranges[0:15].min(), ...)</code> / <code>left = repaired_ranges[15:60].min()</code> / <code>right = repaired_ranges[300:345].min()</code> 里的 <code>repaired_ranges</code> 改成 <code>raw_ranges</code>（同一提交中位于第 141-143 行）；</li>
+</ol>
+<p>得到的就是"同一控制器 + 未修复输入"的对照组。这样在同一组 Gazebo 场景里可以直接比较修复前后的轨迹和出障次数——注意本模块的二分支控制器与 turtlebot3_lidar_avoid 的三态状态机并不相同，A/B 对比的变量仅是输入数据是否经过修复。</p>
+<h2 id="ros">离线自测（无需 ROS）</h2>
+<p>为便于快速验证控制链路，<code>scripts/test_offline.py</code> 用 mock 的 rospy 与消息类型直接实例化节点并喂入合成扫描，检查 <code>/cmd_vel</code> 决策，无需 ROS 环境：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/lidar_autoencoder_repair/scripts
+python3<span class="w"> </span>test_offline.py
+</code></pre></div>
+<p>覆盖 8 项检查：权重文件存在、权重成功加载、非随机初始化（eval 模式）、开阔场景直行（30/30）、正前障碍减速转向（30/30）、镜像障碍反向转向、NaN/Inf/负值输入安全、束数不足告警。当前权重在 Ubuntu 20.04 + Python 3.8.10 + PyTorch 2.4.1（CPU）下 8/8 通过。</p>
+<h2 id="_6">运行截图与实测数据</h2>
+<p>以下均为本仓库当前权重在本机（Ubuntu 20.04 + ROS Noetic + Gazebo 11，TurtleBot3 burger）上的实际运行结果。</p>
+<h3 id="gazebo">Gazebo 闭环运行</h3>
+<p><img alt="Gazebo 运行截图" src="../../img/ground/lidar_autoencoder_gazebo_run.png"/></p>
+<p>窗口底部实时显示 <code>Real Time Factor: 1.00</code>、<code>Sim Time 00:00:12:18.560</code>，即节点在 <code>turtlebot3_world</code> 里连续闭环运行了约 12 分钟，全程由 <code>/scan</code> → Autoencoder → <code>/cmd_vel</code> 驱动。</p>
+<p>节点启动日志（<code>~/.ros/log/.../lidar_repair_node-1.log</code>）：</p>
+<div class="highlight"><pre><span></span><code>[rosout][INFO] 已加载 Autoencoder 权重: /home/user/catkin_ws/src/ground/lidar_autoencoder_repair/models/autoencoder_weights.pt
+[rosout][INFO] Autoencoder 雷达修复节点已启动（模拟噪声注入 + 去噪 + 阈值避障）
+</code></pre></div>
+<p><code>rostopic echo /cmd_vel</code> 实录（开阔段直行）：</p>
+<div class="highlight"><pre><span></span><code>linear:
+  x: 0.3
+  y: 0.0
+  z: 0.0
+angular:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+</code></pre></div>
+<h3 id="20-s">闭环 20 s 记录</h3>
+<p><img alt="闭环实测" src="../../img/ground/lidar_autoencoder_closedloop_metrics.png"/></p>
+<ul>
+<li>左：单帧 <code>/scan</code> 的原始曲线（蓝）、注入 σ=0.3 高斯噪声 + 5% 丢点后的输入（红）、Autoencoder 修复输出（绿）；修复曲线贴合原始轮廓，毛刺被压平。</li>
+<li>中：运行 20 s 期间前方扇区最小距离，虚线为 0.8 m 转向阈值。</li>
+<li>右：机器人轨迹，本段从 (0.13, −1.88) 行至 (1.36, 1.55)，位移约 3.6 m。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>指标（本段 116 帧）</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>相对原始 <code>/scan</code> 的 MSE：加噪输入 → 修复输出</td>
+<td>0.3128 → 0.0268（降噪 91.4%）</td>
+</tr>
+<tr>
+<td>前方扇区最小距离：原始 / 修复</td>
+<td>0.717 m / 0.470 m</td>
+</tr>
+</tbody>
+</table>
+<p>修复后的前方最小距离比原始更近，是因为噪声与丢点会把近距障碍"推远"甚至抹成 3.5 m；Autoencoder 把那部分距离还原回来，恰好让下游 0.8 m 阈值重新触发，这正是引入去噪层的目的。</p>
+<h3 id="300">离线量化（300 帧真实扫描）</h3>
+<p>用 <code>models/real_scans_sample.npz</code>（Gazebo 采样的 686 帧真实 <code>/scan</code>）随机抽 300 帧，逐束比较加噪输入与修复输出相对真值的绝对误差：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>加噪输入</th>
+<th>修复输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>逐束绝对误差 mean / p90</td>
+<td>0.371 m / 0.601 m</td>
+<td>0.115 m / 0.232 m</td>
+</tr>
+<tr>
+<td>误差 &gt;0.5 m 的束占比</td>
+<td>14.2%</td>
+<td>1.9%</td>
+</tr>
+<tr>
+<td>MSE</td>
+<td>0.5298</td>
+<td>0.0392（降噪 92.6%）</td>
+</tr>
+<tr>
+<td>近距束（&lt;0.5 m）平均误差</td>
+<td>0.778 m</td>
+<td>0.124 m（改善 84.0%）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">离线自测</h3>
+<p><code>python3 test_offline.py</code> 输出：</p>
+<div class="highlight"><pre><span></span><code>PASS 权重文件存在于 models/
+PASS 启动日志确认权重已加载
+PASS 网络处于 eval 模式（非随机初始化）
+PASS 开阔场景 30/30 直行 (linear.x=0.3, z=0)
+PASS 正前障碍 30/30 减速左转 (x=0.05, z=+1.0)
+PASS 镜像障碍右转 (z=-1.0)
+PASS NaN/Inf/负值输入不崩溃且输出有限
+PASS 束数不足跳过且打印告警
+
+8/8 PASS
+</code></pre></div></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../cliff_brake/" title="悬崖边缘紧急制动仿真"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../air/uav_mission_safety_manager/overview/" title="模块概览">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../cliff_brake/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../air/uav_mission_safety_manager/overview/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
