@@ -192,14 +192,10 @@ def fly(args: argparse.Namespace) -> None:
         import airsim
     except ModuleNotFoundError as error:
         import sys
-        local_client = Path(r"C:\Users\颜帆\AirSim\AirSim-1.8.1\PythonClient")
-        if error.name != "airsim" or not (local_client / "airsim").is_dir():
-            raise SystemExit(
-                "未找到 AirSim 客户端。请先安装 msgpack-rpc-python，或检查 "
-                r"C:\Users\颜帆\AirSim\AirSim-1.8.1\PythonClient"
-            ) from error
-        sys.path.insert(0, str(local_client))
-        import airsim
+        raise SystemExit(
+            f"Missing Python dependency: {error.name}. Install requirements.txt and "
+            "set PYTHONPATH to AirSim 1.8.1/PythonClient; see README.md."
+        ) from error
 
     client = airsim.MultirotorClient(ip=args.host, port=args.port, timeout_value=10)
     client.confirmConnection()
@@ -224,6 +220,13 @@ def fly(args: argparse.Namespace) -> None:
          args.safety_margin, args.vehicle_radius)
     print(f"Obstacle buffer: body radius {args.vehicle_radius:.2f} m + "
           f"surface clearance {args.safety_margin:.2f} m")
+    if args.check_only:
+        state = client.getMultirotorState(**vehicle)
+        pos = state.kinematics_estimated.position
+        print(f"Preflight OK: camera={width}x{height}, FOV={fov}, "
+              f"position=({pos.x_val:.3f},{pos.y_val:.3f},{pos.z_val:.3f})")
+        print("No arming or movement requested; check the known-distance obstacle before flight.")
+        return
     args.output.mkdir(parents=True, exist_ok=True)
     controlled = False
     airborne = False
@@ -241,7 +244,7 @@ def fly(args: argparse.Namespace) -> None:
         if not client.armDisarm(True, **vehicle):
             raise RuntimeError("Arming rejected")
         airborne = True  # Also attempt landing if takeoff RPC fails midway.
-        takeoff_result = client.takeoffAsync(timeout_sec=15, **vehicle).join()
+        takeoff_result = client.takeoffAsync(timeout_sec=15, **vehicle).get()
         if takeoff_result is False:
             raise RuntimeError("Takeoff failed; check Unity ground contact and API control")
         start = client.getMultirotorState(**vehicle).kinematics_estimated.position
@@ -259,7 +262,7 @@ def fly(args: argparse.Namespace) -> None:
         progress_position = (start.x_val, start.y_val)
         progress_time = time.monotonic()
         target_z = start.z_val - args.altitude
-        climb_result = client.moveToZAsync(target_z, 0.5, timeout_sec=30, **vehicle).join()
+        climb_result = client.moveToZAsync(target_z, 0.5, timeout_sec=30, **vehicle).get()
         climb_pos = client.getMultirotorState(**vehicle).kinematics_estimated.position
         print(f"After climb: z={climb_pos.z_val:.2f}, target_z={target_z:.2f}")
         if climb_result is False or abs(climb_pos.z_val - target_z) > 0.6:
@@ -299,6 +302,10 @@ def fly(args: argparse.Namespace) -> None:
                 if math.hypot(dx, dy) < 0.8:
                     if route_index == len(route) - 1:
                         print("Goal reached")
+                        log.writerow([round(time.monotonic() - start_time, 3), pos.x_val,
+                                      pos.y_val, pos.z_val, 0, 0, "", "goal_reached",
+                                      route_index, target_x, target_y, "", "", avoidance_side])
+                        stream.flush()
                         break
                     route_index += 1
                     print(f"route waypoint {route_index}/{len(route) - 1} reached")
@@ -372,6 +379,7 @@ def fly(args: argparse.Namespace) -> None:
                     client.hoverAsync(**vehicle).join()
                     client.landAsync(timeout_sec=30, **vehicle).join()
                     landed = client.getMultirotorState(**vehicle).landed_state == airsim.LandedState.Landed
+                    print(f"Landing confirmed: {landed}")
                 if landed:
                     client.armDisarm(False, **vehicle)
                 else:
@@ -384,6 +392,8 @@ def fly(args: argparse.Namespace) -> None:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--check-only", action="store_true",
+                        help="Check RPC, vehicle and depth without arming or flying")
     parser.add_argument("--port", type=int, default=41451)
     parser.add_argument("--vehicle", default="SimpleFlight",
                         help="AirSim vehicle name")
