@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>地面载具灯光自动控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5730\u9762\u8f7d\u5177\u706f\u5149\u81ea\u52a8\u63a7\u5236";
+        var mkdocs_page_input_path = "ground/carla_auto_light.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">地面载具灯光自动控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 目录结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 控制原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 昼夜判断依据</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 转向灯状态机（回正自动熄灭）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 灯光位掩码</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-carla-windows">4.1 启动 CARLA 服务端（Windows）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42-ipwindows">4.2 查询宿主机 IP（Windows）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 虚拟机连通性检查</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 编译功能包</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45-carla">4.5 离线单元测试（不需要 CARLA）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#46">4.6 运行演示</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#47-ros-2-launch">4.7 用 ROS 2 launch 启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 参数说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 结果与性能</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 结果是否合理</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 已知限制</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-light_logicpy">7.1 light_logic.py：纯决策，可离线测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-carla_utilspy">7.2 carla_utils.py：连接与"干净的退出"</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-apppy">7.3 app.py：四个阶段的演示编排</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参考</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">地面载具灯光自动控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_auto_light.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla">基于 CARLA 的地面载具灯光自动控制</h1>
+<p>本模块在 CARLA 中根据环境亮度与驾驶输入自动控制车辆灯光：近光灯、雾灯、
+转向灯与刹车灯。演示按"白天 → 黄昏 → 夜间 → 暴雨"四个阶段切换天气，
+每个阶段内依次执行"巡航 → 点刹 → 打右转向 → 回正"，四类灯各演一遍。</p>
+<h2 id="1">1. 运行环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主机</td>
+<td>Windows 11，CARLA 0.9.16（解压后双击 <code>CarlaUE4.exe</code>）</td>
+</tr>
+<tr>
+<td>虚拟机</td>
+<td>Ubuntu 22.04 LTS（VMware），ROS 2 Humble，Python 3.10.12</td>
+</tr>
+<tr>
+<td>Python 依赖</td>
+<td><code>carla==0.9.16</code>（见功能包内 <code>requirements.txt</code>）</td>
+</tr>
+</tbody>
+</table>
+<p>安装依赖：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/carla_auto_light
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w"> </span>-i<span class="w"> </span>https://pypi.tuna.tsinghua.edu.cn/simple
+</code></pre></div>
+<h2 id="2">2. 目录结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/carla_auto_light/
+├── main.py                     统一入口（仓库约定：入口为 main.*）
+├── main.sh / main.bat          一键入口
+├── carla_auto_light/
+│   ├── light_logic.py          纯决策逻辑：阈值表 + 转向灯状态机（可离线单测）
+│   ├── carla_utils.py          CARLA 连接、同步步进、天气切换、灯光位掩码、跟随镜头
+│   ├── app.py                  命令行入口与四阶段演示流程
+│   └── light_node.py           ROS 2 节点：演示并发布 /vehicle/lights
+├── test/test_light_logic.py    纯逻辑单元测试（53 项，不需要 CARLA）
+├── launch/main.launch.py       ROS 2 启动入口
+├── requirements.txt / package.xml / setup.py / setup.cfg
+└── README.md
+</code></pre></div>
+<h2 id="3">3. 控制原理</h2>
+<h3 id="31">3.1 昼夜判断依据</h3>
+<p>CARLA 的 <code>carla.WeatherParameters</code> 直接给出太阳高度角（度），它比"读相机图像算亮度"更稳定：</p>
+<ul>
+<li>不受视角、曝光、后处理影响；</li>
+<li>取值连续，阈值可以直接写在文档里并按需调整。</li>
+</ul>
+<p>本模块用的阈值：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SUN_HEADLIGHT_ON</code></td>
+<td>5°</td>
+<td>太阳高度角 ≤ 5° 判为黄昏/黎明，开近光灯</td>
+</tr>
+<tr>
+<td><code>SUN_NIGHT</code></td>
+<td>-5°</td>
+<td>≤ -5° 判为夜间（仅用于日志分级）</td>
+</tr>
+<tr>
+<td><code>PRECIPITATION_FOG</code></td>
+<td>30</td>
+<td>降水强度 ≥ 30 时同时开雾灯</td>
+</tr>
+<tr>
+<td><code>STEER_BLINKER_ON</code></td>
+<td>0.15</td>
+<td>方向盘绝对值 ≥ 0.15 打转向灯</td>
+</tr>
+<tr>
+<td><code>STEER_BLINKER_OFF</code></td>
+<td>0.05</td>
+<td>方向盘回到 0.05 以内（含）转向灯自动熄灭</td>
+</tr>
+<tr>
+<td><code>BRAKE_LIGHT_ON</code></td>
+<td>0.05</td>
+<td>刹车量 ≥ 0.05 点亮刹车灯</td>
+</tr>
+</tbody>
+</table>
+<p>即"该不该开灯"由下式决定（<script type="math/tex">a</script> 为太阳高度角，<script type="math/tex">p</script> 为降水强度）：</p>
+<p>
+<script type="math/tex; mode=display">
+\text{近光灯} = (a \le 5^\circ) \lor (p \ge 30), \qquad
+\text{雾灯} = (p \ge 30)
+</script>
+</p>
+<h3 id="32">3.2 转向灯状态机（回正自动熄灭）</h3>
+<p>真实汽车的方向盘下方有回位机构：打了转向灯之后，必须<strong>把方向盘打够角度再回到中位</strong>，
+转向灯才会自动熄灭；只把方向盘轻轻动一下不会触发。这里用两个阈值复现（阈值本身即触发，全部含边界）。转向灯只看<strong>驾驶员指令</strong>，车道保持算出的微调量不参与判断——否则车在弯道上会一直闪。</p>
+<div class="mermaid">stateDiagram-v2
+    [*] --&gt; 熄灭
+    熄灭 --&gt; 左灯: steer ≤ -0.15
+    熄灭 --&gt; 右灯: steer ≥ 0.15
+    左灯 --&gt; 熄灭: |steer| ≤ 0.05
+    右灯 --&gt; 熄灭: |steer| ≤ 0.05
+    左灯 --&gt; 右灯: steer ≥ 0.15
+    右灯 --&gt; 左灯: steer ≤ -0.15
+</div>
+<p>行为细节：</p>
+<ol>
+<li><strong>锁存</strong>：方向盘一旦越过 0.15 就点亮并记住，此后方向盘在 0.05~0.15 之间摆动<strong>不会熄灭</strong>；</li>
+<li><strong>回正熄灭</strong>：方向盘回到 ±0.05 以内才熄灭，符合"先打到底再回正"的驾驶习惯；</li>
+<li><strong>左右互斥</strong>：确定一侧时另一侧必然熄灭，避免同时点亮。</li>
+</ol>
+<h3 id="33">3.3 灯光位掩码</h3>
+<p>CARLA 用位掩码表示灯光，本模块把决策结果映射过去：</p>
+<table>
+<thead>
+<tr>
+<th>决策字段</th>
+<th>CARLA 位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>low_beam</code></td>
+<td><code>VehicleLightState.LowBeam</code></td>
+</tr>
+<tr>
+<td><code>fog</code></td>
+<td><code>VehicleLightState.Fog</code></td>
+</tr>
+<tr>
+<td><code>left_blinker</code> / <code>right_blinker</code></td>
+<td><code>VehicleLightState.LeftBlinker</code> / <code>RightBlinker</code></td>
+</tr>
+<tr>
+<td><code>brake_light</code></td>
+<td><code>VehicleLightState.Brake</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意：<code>vehicle.set_light_state()</code> 只接受 <code>carla.VehicleLightState</code> <strong>对象</strong>，
+直接把位掩码当 <code>int</code> 传会抛
+<code>Boost.Python.ArgumentError: set_light_state(Vehicle, int) did not match C++ signature</code>。
+正确写法是 <code>carla.VehicleLightState(flags)</code> 再传入。</p>
+</blockquote>
+<h2 id="4">4. 运行步骤</h2>
+<h3 id="41-carla-windows">4.1 启动 CARLA 服务端（Windows）</h3>
+<p>解压 CARLA 0.9.16 后双击 <code>CarlaUE4.exe</code>，等待城市画面出现。</p>
+<h3 id="42-ipwindows">4.2 查询宿主机 IP（Windows）</h3>
+<div class="highlight"><pre><span></span><code>ipconfig
+</code></pre></div>
+<p>在 <code>VMware Network Adapter VMnet8</code> 一节找到 IPv4 地址（形如 <code>192.168.x.1</code>），替换下面命令里的地址。</p>
+<h3 id="43">4.3 虚拟机连通性检查</h3>
+<p>Ubuntu 22.04 默认没有 <code>nc</code>，先装一次：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>netcat
+nc<span class="w"> </span>-vz<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span><span class="m">2000</span>
+</code></pre></div>
+<p>出现 <code>succeeded!</code> 说明能访问 CARLA 的 RPC 端口。若不想装包，也可以用 Python 直接试连：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import socket;s=socket.socket();s.settimeout(3);print(s.connect_ex(('192.168.148.1',2000)))"</span>
+</code></pre></div>
+<p>输出 <code>0</code> 表示端口可达。</p>
+<h3 id="44">4.4 编译功能包</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros2_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros2_ws/src/ros2/src/ground/carla_auto_light<span class="w"> </span>~/ros2_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_auto_light<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>pkg<span class="w"> </span>executables<span class="w"> </span>carla_auto_light
+</code></pre></div>
+<p><strong>预期输出</strong>：<code>Summary: 1 package finished</code>，并列出 <code>carla_auto_light auto_light_node</code>。</p>
+<h3 id="45-carla">4.5 离线单元测试（不需要 CARLA）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src/carla_auto_light
+python3<span class="w"> </span>test/test_light_logic.py
+</code></pre></div>
+<p><strong>预期输出</strong>：<code>[结果] 53 项全部通过</code>。这 53 项覆盖了阈值边界、四类灯的触发条件、
+状态机的锁存/回正熄灭/左右互斥，以及日志名称转换。<strong>先跑它再连 CARLA</strong>，
+可以把"逻辑错"与"仿真器问题"分开。</p>
+<h3 id="46">4.6 运行演示</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1
+</code></pre></div>
+<p>默认按 <strong>仿真时间 1:1</strong> 播放（每阶段 6 秒，全程约 24 秒），并用<strong>第三人称跟随镜头</strong>
+观察车辆，方便看清灯光切换。想更快或更慢：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span>--phase-seconds<span class="w"> </span><span class="m">10</span><span class="w">    </span><span class="c1"># 每阶段 10 秒</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span>--fast<span class="w">                </span><span class="c1"># 关闭实时节奏</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span>--no-follow<span class="w">           </span><span class="c1"># 关闭跟随镜头</span>
+</code></pre></div>
+<h3 id="47-ros-2-launch">4.7 用 ROS 2 launch 启动</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_auto_light<span class="w"> </span>main.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.148.1
+</code></pre></div>
+<p>节点除了跑同一套演示，还会把当前灯光状态发布到 <code>/vehicle/lights</code>：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/vehicle/lights
+<span class="c1"># data: 近光灯、雾灯</span>
+</code></pre></div>
+<h2 id="5">5. 参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--host</code></td>
+<td><code>127.0.0.1</code></td>
+<td>Windows 宿主机 IP</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td><code>2000</code></td>
+<td>CARLA RPC 端口</td>
+</tr>
+<tr>
+<td><code>--town</code></td>
+<td><code>Town03</code></td>
+<td>地图</td>
+</tr>
+<tr>
+<td><code>--dt</code></td>
+<td><code>0.05</code></td>
+<td>同步模式步长（秒）</td>
+</tr>
+<tr>
+<td><code>--vehicle</code></td>
+<td><code>vehicle.tesla.model3</code></td>
+<td>车型 blueprint</td>
+</tr>
+<tr>
+<td><code>--spawn-index</code></td>
+<td><code>-1</code></td>
+<td>出生点编号，-1 表示自动挑选</td>
+</tr>
+<tr>
+<td><code>--phase-seconds</code></td>
+<td><code>6</code></td>
+<td>每个天气阶段时长（秒）</td>
+</tr>
+<tr>
+<td><code>--fast</code></td>
+<td>关闭</td>
+<td>关闭实时节奏</td>
+</tr>
+<tr>
+<td><code>--no-follow</code></td>
+<td>关闭</td>
+<td>关闭第三人称跟随镜头</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 结果与性能</h2>
+<p>一次完整运行的终端输出如下：</p>
+<div class="highlight"><pre><span></span><code>阶段 1/4：白天（太阳高度角 60.0°，降水 0，白天）
+  t= 0.1s 巡航     → 灯光：无
+  t= 2.1s 点刹     → 灯光：刹车灯
+  t= 4.1s 打右转向   → 灯光：右转向灯
+  t= 5.1s 回正     → 灯光：无
+
+阶段 2/4：黄昏（太阳高度角 3.0°，降水 0，黄昏/黎明）
+  t= 0.1s 巡航     → 灯光：近光灯
+  t= 2.1s 点刹     → 灯光：近光灯、刹车灯
+  t= 4.1s 打右转向   → 灯光：近光灯、右转向灯
+  t= 5.1s 回正     → 灯光：近光灯
+
+阶段 3/4：夜间（太阳高度角 -12.0°，降水 0，夜间）
+  t= 0.1s 巡航     → 灯光：近光灯
+  …（与黄昏阶段一致）
+
+阶段 4/4：暴雨（太阳高度角 20.0°，降水 80）
+  t= 0.1s 巡航     → 灯光：近光灯、雾灯
+  t= 2.1s 点刹     → 灯光：近光灯、雾灯、刹车灯
+  t= 4.1s 打右转向   → 灯光：近光灯、雾灯、右转向灯
+  t= 5.1s 回正     → 灯光：近光灯、雾灯
+</code></pre></div>
+<p>四阶段汇总：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>太阳高度角</th>
+<th>降水</th>
+<th>灯光</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>白天</td>
+<td>60.0°</td>
+<td>0</td>
+<td>无</td>
+</tr>
+<tr>
+<td>黄昏</td>
+<td>3.0°</td>
+<td>0</td>
+<td>近光灯</td>
+</tr>
+<tr>
+<td>夜间</td>
+<td>-12.0°</td>
+<td>0</td>
+<td>近光灯</td>
+</tr>
+<tr>
+<td>暴雨</td>
+<td>20.0°</td>
+<td>80</td>
+<td>近光灯、雾灯</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="终端运行结果" src="../../img/ground/carla_auto_light/01_terminal.png"/></p>
+<p><img alt="夜间阶段：近光灯与点刹时的刹车灯" src="../../img/ground/carla_auto_light/02_night.png"/></p>
+<h3 id="61">6.1 结果是否合理</h3>
+<ul>
+<li>白天只按驾驶输入点灯：巡航时全灭、点刹亮刹车灯、打方向亮转向灯、回正后熄灭；</li>
+<li>黄昏与夜间近光灯常亮，刹车灯与转向灯在其上叠加；</li>
+<li>暴雨（太阳 20°，同属白天）因降水达 80 而开近光灯与雾灯；</li>
+<li>转向灯在"回正"动作后自动熄灭，不会一直亮到下一次打方向。</li>
+</ul>
+<h3 id="62">6.2 已知限制</h3>
+<ol>
+<li><strong>阈值是经验值</strong>：5° / 30 / 0.15 取自常见工程实践，未按具体车型灯具标定；</li>
+<li><strong>只看降水不看能见度</strong>：CARLA 没有直接给出能见度，雾天（<code>fog_density</code>）未单独判断，
+   若要区分"浓雾"可增加 <code>fog_density</code> 条件；</li>
+<li><strong>灯光是视觉表现</strong>：CARLA 的车灯不影响其他车辆的感知，本模块只验证"状态决策→
+   执行器"的正确性；</li>
+<li><strong>转向灯只按方向盘判断</strong>：没有读取导航意图（例如导航即将右转时提前打灯），
+   真实系统里应由上游规划器给出转向意图。</li>
+</ol>
+<h2 id="7">7. 源码解析</h2>
+<h3 id="71-light_logicpy">7.1 <code>light_logic.py</code>：纯决策，可离线测试</h3>
+<table>
+<thead>
+<tr>
+<th>函数 / 类</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sun_phase(sun_altitude)</code></td>
+<td>太阳高度角 → 白天 / 黄昏 / 夜间（仅日志用）</td>
+</tr>
+<tr>
+<td><code>decide_lights(sun, precipitation, steer, brake)</code></td>
+<td>环境与驾驶输入 → 应点亮的灯光字典</td>
+</tr>
+<tr>
+<td><code>BlinkerStateMachine.update(steer)</code></td>
+<td>转向灯锁存与回正熄灭</td>
+</tr>
+<tr>
+<td><code>compose_state(decision, blinker_state)</code></td>
+<td>合成最终状态（状态机优先）</td>
+</tr>
+<tr>
+<td><code>state_to_names(state)</code></td>
+<td>转成中文名单，用于日志与话题</td>
+</tr>
+</tbody>
+</table>
+<p>之所以做成纯函数：<strong>灯光决策不需要仿真器就能验证</strong>。53 项单元测试里没有一行 CARLA 代码，
+涵盖阈值边界（太阳 5°、降水 30、方向盘 0.15 / 0.05、刹车 0.05）与状态机的全部转移。</p>
+<h3 id="72-carla_utilspy">7.2 <code>carla_utils.py</code>：连接与"干净的退出"</h3>
+<ul>
+<li><code>LightSession</code> 打开同步模式前会先检查<strong>残留的同步状态</strong>（上次异常退出留下的），
+  先恢复异步再记录"原始设置"，避免退出时无法还原；</li>
+<li><strong>记录并还原三样东西</strong>：天气、观察者镜头位置、世界设置。跟随镜头会把观察者挪到车后，
+  不还原的话下次打开 CARLA 视角会停在上一段演示的终点；</li>
+<li><code>light_state_to_carla</code> 负责字典 → <code>carla.VehicleLightState</code> 的映射（含上面提到的
+  <code>int</code> 与对象之争）。</li>
+</ul>
+<h3 id="73-apppy">7.3 <code>app.py</code>：四个阶段的演示编排</h3>
+<div class="mermaid">flowchart TD
+    A[生成车辆 + 保存天气/镜头/世界设置] --&gt; B[阶段 1: 白天]
+    B --&gt; C[阶段 2: 黄昏]
+    C --&gt; D[阶段 3: 夜间]
+    D --&gt; E[阶段 4: 暴雨]
+    B --&gt; F[每阶段内：巡航 → 点刹 → 打右转向 → 回正]
+    E --&gt; F
+    F --&gt; G[每帧：决策 → 状态机 → set_light_state]
+    G --&gt; H[打印变化 + 汇总表]
+    H --&gt; I[退出：销毁车辆 + 还原天气/镜头/设置]
+</div>
+<p>每个阶段内的时间窗是固定的：2.0~2.5 s 点刹、4.0~5.0 s 打右转向、之后回正，
+因此每次运行的灯光变化序列完全一致，便于截图与核对。</p>
+<h2 id="8">8. 常见问题</h2>
+<p><strong>Q1：<code>Boost.Python.ArgumentError: set_light_state(Vehicle, int) did not match</code></strong>
+把位掩码包成 <code>carla.VehicleLightState(flags)</code> 再传入即可（见 3.3 节）。</p>
+<p><strong>Q2：灯光状态打印正确，但 CARLA 窗口里看不到灯亮</strong>
+车灯是视觉表现，需要在<strong>夜间或降水</strong>视角下才明显；白天阶段点亮的刹车灯/转向灯
+在车尾仍有微弱表现。建议用 <code>--phase-seconds 8</code> 并在"黄昏/夜间/暴雨"阶段观察。</p>
+<p><strong>Q3：窗口里视角不动 / 看不到车</strong>
+默认开启跟随镜头；若用 <code>--no-follow</code>，观察者会停在原地。另外确认没有其它脚本
+在抢 <code>world.get_spectator()</code>。</p>
+<p><strong>Q4：跑完 CARLA 窗口卡住不动</strong>
+说明世界还停在同步模式。本模块在 <code>finally</code> 中会还原世界设置；
+若进程被强制杀死，下次启动 <code>enable_sync()</code> 会检测并清除残留的同步状态。</p>
+<p><strong>Q5：连接超时</strong>
+依次检查：CARLA 是否启动、<code>--host</code> 是否为 VMnet8 的地址、Windows 防火墙是否放行 2000
+（用 <code>nc -vz &lt;host&gt; 2000</code> 验证）。</p>
+<h2 id="9">9. 参考</h2>
+<ol>
+<li>CARLA 官方文档：<a href="https://carla.readthedocs.io/">https://carla.readthedocs.io/</a></li>
+<li><code>carla.VehicleLightState</code> 与 <code>carla.WeatherParameters</code> 接口说明</li>
+<li>仓库既有模块：<code>carla_keyboard_control</code>（物理仿真与键盘控制）、
+   <code>weather_perception_benchmark</code>（雨雾天气对相机感知的影响）</li>
+</ol></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../lidar_autoencoder_repair/" title="基于 Autoencoder 的雷达数据修复与避障"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../air/uav_mission_safety_manager/overview/" title="模块概览">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../lidar_autoencoder_repair/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../air/uav_mission_safety_manager/overview/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
