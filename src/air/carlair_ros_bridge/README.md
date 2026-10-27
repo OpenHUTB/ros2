@@ -50,6 +50,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   若改为 `SensorLocalFrame`，需把 `sensor/lidar_frame` 同步改为 `sensor_local`，
   桥接层会用 `LidarData.pose` 把点云变换到惯性系后再转 ENU；
 - 点云可选环形滤波（`lidar/min_range`、`max_range`）与体素降采样（`lidar/voxel_leaf`）。
+- **里程计协方差**：/uav/odom 的 pose/twist 对角协方差已填（位置/速度 0.01，姿态/角速度 0.1），可直接给 robot_localization/EKF 使用；严格标定时按实际噪声替换。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
