@@ -1,0 +1,12 @@
+# 运行依赖（Ubuntu 20.04 + Python3.8 / ROS Noetic）
+airsim>=1.8.1
+numpy>=1.21
+opencv-python>=4.5
+pillow>=8.0
+pynput>=1.7
+# 神经网络（任务2/4 与对比实验）
+torch>=1.10
+torchvision>=0.11
+# 文档（本地构建 mkdocs）
+mkdocs>=1.6
+mkdocs-material>=9.5

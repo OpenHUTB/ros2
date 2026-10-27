@@ -179,7 +179,12 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
-
+* [基于 AirSim 的神经网络感知/规划/控制](./air/airsim_controller/index.md) —— 课程作业：键盘控制 → 深度相机避障 → SLAM 导航 → 端到端 CNN 飞行
+  * [任务1 键盘控制](./air/airsim_controller/tasks/task1_keyboard.md)
+  * [任务2 感知与轨迹控制](./air/airsim_controller/tasks/task2_perception.md)
+  * [任务3 SLAM 导航](./air/airsim_controller/tasks/task3_slam_nav.md)
+  * [任务4 端到端模型](./air/airsim_controller/tasks/task4_e2e.md)
+  * [性能评价](./air/airsim_controller/performance.md)
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
