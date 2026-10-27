@@ -379,8 +379,8 @@ if __name__ == '__main__':
         help='水平飞行速度，单位 m/s，默认 3.0'
     )    
     args = parser.parse_args()
-    if args.speed <= 0:
-        parser.error('--speed 必须大于 0')
+    if not math.isfinite(args.speed) or args.speed <= 0:
+        parser.error('--speed 必须是大于 0 的有限数值')
 
     DroneTeleop.LINEAR_SPEED = args.speed
     teleop = DroneTeleop(ip=args.ip, port=args.port, vehicle_name=args.vehicle)
