@@ -62,7 +62,7 @@ graph LR
 
 ```bash
 mkdir -p ~/mnist_ws && cd ~/mnist_ws
-git clone https://github.com/Thirin-glitch/ros2.git src   # 或仅复制 src/mnist_digit_control
+git clone https://github.com/OpenHUTB/ros2.git src       # 或仅复制 src/mnist_digit_control
 cd ~/mnist_ws/src/mnist_digit_control
 
 # PyTorch CPU 版（约 190 MB）；OpenCV/numpy 使用系统 ROS 自带版本
@@ -373,7 +373,7 @@ flowchart TD
 
 ## 7. 源码解析
 
-完整源码见 [`src/mnist_digit_control/`](https://github.com/Thirin-glitch/ros2/tree/feat/mnist-digit-control/src/mnist_digit_control)，
+完整源码见 [`src/mnist_digit_control/`](https://github.com/OpenHUTB/ros2/tree/master/src/mnist_digit_control)，
 这里解析三个核心片段。
 
 ### 7.1 预处理：极性判断 + Otsu（`preprocess.py::extract_digit`）
