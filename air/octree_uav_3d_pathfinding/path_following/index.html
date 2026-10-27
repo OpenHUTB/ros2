@@ -598,6 +598,39 @@ path_follower 收到新路径 → 从第 0 点重新开始 → 又发航点 → 
 <p><strong>代价</strong>：实际轨迹会比规划路径<strong>切内角</strong>（没到点就转向）。
 这个代价是量化的 —— 节点统计 <code>max_dev</code>：实际轨迹到<strong>规划折线</strong>的最大距离。
 注意是"到线段"而不是"到航点"：航点稀疏，到航点的距离会把正常切内角误判成大幅偏离。</p>
+<p><strong>这个做法依赖一个前提：后发的目标覆盖先发的目标，而不是排队执行。</strong>
+这一点在 AirSim 1.8.1 上实测确认过（2026-10-26）：先发 A(60, 0, 8)，在载具
+仍在飞往 A 的途中改发 B(−60, 0, 8)，记录 <code>/ground_truth/odom</code> 得到的距离曲线是：</p>
+<table>
+<thead>
+<tr>
+<th>时刻</th>
+<th>到 A 的距离</th>
+<th>到 B 的距离</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>起点（停在 B 附近）</td>
+<td>100.23 m</td>
+<td>19.78 m</td>
+</tr>
+<tr>
+<td>改发 B 的那一刻</td>
+<td>41.28 m</td>
+<td>77.18 m</td>
+</tr>
+<tr>
+<td>记录结束</td>
+<td>104.18 m</td>
+<td>15.82 m</td>
+</tr>
+</tbody>
+</table>
+<p>到 A 的距离在 41.28 m 处由减小转为增大，同期到 B 的距离单调收敛 —— 载具
+<strong>没有飞到 A 就掉头了</strong>。所以 <code>moveToPositionAsync</code> 是覆盖语义，前瞻跳点成立。
+若换成排队语义，这套设计就得改成"每个航点停稳后再发下一个"，<code>max_dev</code> 也会
+退化成接近 0（没有切内角），代价是每段都要启停。</p>
 <h3 id="42">4.2 不做飞行中重规划</h3>
 <p>飞行中地图持续生长，每张新地图都可能产出不同路径，跟着换会让载具抖动；
 真正的重规划还需要"路径变化超过阈值才换"的一致性判据。本节只在收到新路径时复位，
@@ -646,8 +679,8 @@ path_follower 收到新路径 → 从第 0 点重新开始 → 又发航点 → 
 </tr>
 <tr>
 <td><code>finish_tolerance</code></td>
-<td>0.5</td>
-<td>到达终点的判定距离（m），约 2 倍地图分辨率</td>
+<td>1.0</td>
+<td>到达终点的判定距离（m）。不能只按"约 2 倍地图分辨率"取：AirSim 的位置环有稳态误差，本机实测 0.86 m，取 0.5 时末点永远够不着（见 §7.4）</td>
 </tr>
 <tr>
 <td><code>per_point_timeout</code></td>
@@ -714,7 +747,7 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 <div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/uav/goal<span class="w"> </span>geometry_msgs/Point<span class="w"> </span><span class="s2">"{x: 7.5, y: -7.5, z: 2.0}"</span>
 </code></pre></div>
 <p>到达终点后节点会打印统计：</p>
-<div class="highlight"><pre><span></span><code>follow: DONE | waypoints=73 reached=73 skipped=0 | path=33.52 m flown=31.95 m
+<div class="highlight"><pre><span></span><code>follow: DONE | waypoints=73 reached=73 skipped=0 final_timed_out=0 | path=33.52 m flown=31.95 m
         approach=0.00 m/0.00s | duration=10.65s | mean_speed=3.00 m/s | max_dev=0.41 m
   corner cutting: flown is 4.7% shorter than the path
 </code></pre></div>
@@ -729,6 +762,10 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 <tr>
 <td><code>waypoints</code> / <code>reached</code> / <code>skipped</code></td>
 <td>路径点数、到达数、因超时跳过的数量</td>
+</tr>
+<tr>
+<td><code>final_timed_out</code></td>
+<td>终点是否为"超时收尾"（1 = 没进 <code>finish_tolerance</code> 就结束）。此时它不计入 <code>reached</code></td>
 </tr>
 <tr>
 <td><code>path</code></td>
@@ -769,12 +806,13 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
   那一段是"接近段"，本来就不在路径上；计入的话，一次从上一趟终点飞回新起点的
   22.5 m 直线会把 <code>max_dev</code> 拉到 5 m 以上，指标就失去意义。</li>
 </ul>
-<p><code>reached</code> 的口径是 <code>waypoints - skipped</code>：终点超时结束时，它仍被算作到达。</p>
+<p><code>reached</code> 的口径是 <code>waypoints - skipped - final_timed_out</code>：终点若是超时收尾
+（没进 <code>finish_tolerance</code>），它不再算作到达，日志里也会把 <code>final_timed_out</code> 标成 1。</p>
 <hr/>
 <h2 id="7">7. 验证</h2>
 <h3 id="71">7.1 离线单元测试</h3>
 <p><code>tests/test_path_follower.cpp</code>，只依赖 STL —— 不需要 ROS 运行时、不需要 octomap、不需要模拟器。
-被测对象是 <code>path_follow_core.h</code> 里的纯函数。实测 <strong>49 项检查全部通过</strong>。</p>
+被测对象是 <code>path_follow_core.h</code> 里的纯函数。实测 <strong>59 项检查全部通过</strong>。</p>
 <table>
 <thead>
 <tr>
@@ -796,12 +834,20 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 <td>最后一个点距 1.0 m（小于 <code>lookahead</code>）<strong>不算到达</strong>，只认 <code>finish_tolerance</code></td>
 </tr>
 <tr>
+<td><strong>容差 1.0 m（AirSim 上用的默认值）</strong></td>
+<td>距 1.2 m 不算到达、距 0.9 m 算到达，且不置 <code>final_timed_out</code></td>
+</tr>
+<tr>
 <td>超时</td>
 <td>中间点超时跳过并计数；前进一次就重新计时</td>
 </tr>
 <tr>
 <td><strong>终点超时</strong></td>
-<td><strong>直接结束，不计入 <code>skipped</code></strong>（否则永远到不了终点）</td>
+<td><strong>直接结束，不计入 <code>skipped</code></strong>，但置 <code>final_timed_out</code></td>
+</tr>
+<tr>
+<td><strong>进容差恰好撞上超时那一拍</strong></td>
+<td><strong>先判到达、再判超时</strong>：算 Finished，不记成超时收尾</td>
 </tr>
 <tr>
 <td>新路径复位</td>
@@ -858,7 +904,7 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 </tr>
 <tr>
 <td><code>lookahead</code> / <code>finish_tolerance</code> / <code>per_point_timeout</code></td>
-<td>1.5 m / 0.5 m / 15 s</td>
+<td>1.5 m / 1.0 m / 15 s</td>
 </tr>
 <tr>
 <td><code>goal_velocity</code></td>
@@ -1012,16 +1058,69 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 不能用来量化"平滑在真实飞行中省多少时间"。</strong></p>
 <h3 id="73">7.3 闭环飞行动图</h3>
 <p>下面这段录自 §7.2 里<strong>"样条被复检拒绝、11 航点"的那次运行</strong>（不是 73 点那组），
-属于<strong>离线场景</strong>（mock 点云 + 运动学假载具），不是 AirSim 真机：</p>
+属于<strong>离线场景</strong>（mock 点云 + 运动学假载具），不是 AirSim 仿真：</p>
 <p><img alt="闭环飞行：绿线为规划路径，青色为平滑路径，黄色为实际飞过的轨迹" src="../../../img/air/octree_uav_3d_pathfinding/p6_demo.gif"/></p>
 <p>能连续看到：地图建满 → 绿色/青色路径出现 → <strong>黄色轨迹边飞边长</strong> → 到达终点。</p>
 <p>黄线与青线的间距就是该次运行的 <code>max_dev</code>（1.26 m）的直观形态：
 前瞻跳点斜穿拐角，轨迹因此偏在路径内侧。</p>
+<p>AirSim 仿真与离线 mock 场景的差别在于<strong>动力学</strong>：假载具没有加减速与转向耗时，
+所以上面这段只能说明跟踪逻辑跑通，不能说明真实飞行品质。带动力学的仿真见 §7.4。</p>
+<h3 id="74-airsim">7.4 AirSim 上的闭环飞行</h3>
+<p>2026-10-27 在 AirSim（OpenHUTB 发行版，Town10HD 场景）上跑通完整闭环：
+桥接 → 建图 → A* → 安全裕度与平滑 → 跟踪 → 飞行。飞机从 <code>(-31.65, -8.55, 7.95)</code>
+飞到 <code>(-45.15, 1.35, 7.65)</code>，两点直线 16.74 m。</p>
+<p><img alt="AirSim 上的闭环飞行：绿色为规划的原始路径，青色为平滑路径，黄色为实际飞过的轨迹" src="../../../img/air/octree_uav_3d_pathfinding/p6_flight_airsim.gif"/></p>
 <blockquote>
-<p>待补：AirSim 真机上的飞行动图。录制要求见 §8 第 5 条 —— 飞低、飞远、斜视视角。
-真机与离线场景的差别在于<strong>动力学</strong>：假载具没有加减速与转向耗时，
-所以这段动图只能说明跟踪逻辑跑通，不能说明真实飞行品质。</p>
+<p><strong>这份动图的视角偏远</strong>（录制时 RViz 的 <code>Distance</code> 约 120 m），路径只占画面中部的一小块，
+点云与展开节点也在同一屏里，读图时需要先找到那条折线。录制时把 <code>SensorCloud</code> 与
+<code>AStarExplored</code> 关掉、<code>Distance</code> 收到 40~60 m、路径线宽加到 0.08 m，绕行会更清楚。
+这一版保留的是首次录制的原始视角，没有为了好看而重录。</p>
 </blockquote>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规划</td>
+<td><code>expanded</code> 14374、<code>discovered</code> 33220、326.9 ms</td>
+</tr>
+<tr>
+<td>原始路径</td>
+<td>63 点、27.91 m、<code>kappa_max</code> 2.321 1/m、最小间隙 0.75 m</td>
+</tr>
+<tr>
+<td>平滑</td>
+<td>63 → 26 点、26.87 m；<strong>样条被碰撞复检拒绝</strong>，退回捷径折线；最小间隙提到 1.65 m</td>
+</tr>
+<tr>
+<td>绕行比</td>
+<td>27.91 / 16.74 = <strong>1.67</strong>（按平滑后 26.87 m 算为 1.60）</td>
+</tr>
+<tr>
+<td>飞行</td>
+<td>12.30 s、<code>flown</code> 25.82 m、<code>mean_speed</code> 2.10 m/s、<code>max_dev</code> 1.12 m</td>
+</tr>
+<tr>
+<td>终点判定</td>
+<td><code>final_timed_out = 0</code>，即真正进了 <code>finish_tolerance</code>，不是超时收尾</td>
+</tr>
+</tbody>
+</table>
+<p>三点需要如实说明：</p>
+<ol>
+<li><strong>12.30 s 短于 §8 第 5 条建议的 15~25 s。</strong> 这次两点直线只有 16.74 m，行程长度是靠
+   绕行（1.67 倍）撑起来的。要更长就得有更大的已扫描范围，而"未知 = 障碍"
+   把可规划区域限制在雷达量程以内。</li>
+<li><strong>样条又一次被复检拒绝</strong>，与 §7.2 里第二种形态同因：仿真里的地图比 mock 场景更稀疏，
+   平滑曲线更容易擦到障碍。退回折线是复检在起作用的证据，不是平滑失败。</li>
+<li><strong>细枝、细杆进不了八叉树</strong>（0.3 m 分辨率 + 稀疏采样），规划器会把它们当成可通行。
+   这一轮实测里载具撞到过树枝，靠物理引擎自行脱困，但轨迹会短暂偏离。
+   这是感知分辨率与碰撞模型之间的固有缺口，见 §8 第 6 条。</li>
+</ol>
 <hr/>
 <h2 id="8">8. 实现中要注意的几点</h2>
 <table>
@@ -1056,7 +1155,12 @@ roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </spa
 <tr>
 <td>5</td>
 <td><strong>动图的拍摄要求</strong></td>
-<td>飞低、飞远、斜视视角：高度取 2~4 m，让载具处在障碍之间而非其上；路径跨越房间对角；单次飞行 15~25 s</td>
+<td>飞低、飞远、斜视视角：高度取 2~4 m，让载具处在障碍之间而非其上；路径跨越房间对角；单次飞行 15~25 s。<strong>在有树冠的场景里高度要避开树冠带</strong>：本项目实测 <code>z</code> 取 7~8 m 会撞树，贴着街道空域飞反而更安全</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>细障碍看不见，碰撞仍会发生</strong></td>
+<td>0.3 m 分辨率下，直径小于一个体素的枝条、杆件常常不落进任何体素，激光采样也未必打中；规划器据此判为可通行，而 AirSim 的碰撞由物理引擎判定。实测撞到树枝后载具能自行脱困，但会短暂偏离路径。要缩小这个缺口得提高分辨率或降低飞行速度，两者都有代价</td>
 </tr>
 </tbody>
 </table>
