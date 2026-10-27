@@ -74,6 +74,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
+* [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
 
@@ -85,6 +86,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
 * [手动控制](./set_up_and_connect_to_carla.md)
+* [MNIST 手写数字视觉感知与机器人运动控制](./mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
@@ -118,7 +120,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
-
+* [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
@@ -165,6 +167,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
+
+* [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
