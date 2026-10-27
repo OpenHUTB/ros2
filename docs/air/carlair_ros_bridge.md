@@ -249,13 +249,13 @@ Z = depth
 `depth_avoidance.py` 订阅 `/camera/depth/points`，取前方走廊内最近点并发布 `/uav/cmd_vel`：
 
 ```text
-d = min(z),  |x| <= lateral_limit, |y| <= vertical_limit, z <= max_range
+d = min(z),  |x| <= lateral_limit, |y| <= vertical_limit, min_range <= z <= max_range
 vx = 0                         , d <= stop_distance
 vx = forward_speed * (d-stop)  , stop_distance < d < slow_distance
 vx = forward_speed             , d >= slow_distance
 ```
 
-默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`。
+默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`、`min_range=0.5`；起飞后 `start_delay=6 s` 再接管。
 节点默认关闭，demo 时：
 
 ```bash
