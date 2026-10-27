@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  平面（矢状面）肌肉骨骼人：22 条 Hill 型肌肉驱动 13 个自由度。
+  - 浮动基座：root_x / root_z / root_pitch（前倾为正）
+  - 下肢：hip(屈为正) knee(屈为正) ankle(背屈为正)，左右各 3
+  - 上肢：shoulder(前屈为正) elbow(屈为正)，左右各 2
+  - 铰链轴：髋/肩/肘/踝为 (0 -1 0)，膝为 (0 1 0)（膝屈曲时踝相对大腿后摆），
+    全部关节正角 = 屈曲方向（踝为背屈）
+  - 躯干：root_pitch 由腹肌(abs, 前屈)与竖脊肌(erector, 后伸)这对拮抗肌控制
+  每块肌肉是一个 motor 执行器（gear=±1 力臂系数），Hill 肌肉力学
+  （激活动力学 + 力-长度-速度曲线）在 msk_human_core.py 中显式实现。
+-->
+<mujoco model="msk_human">
+  <compiler angle="radian" inertiafromgeom="true"/>
+  <size njmax="500" nconmax="100"/>
+
+  <default>
+    <joint damping="0.6" armature="0.01" limited="true"/>
+    <geom condim="3" friction="0.9 0.02 0.001" density="1000"
+          margin="0.001" solref="0.008 1" solimp="0.95 0.99 0.001"/>
+    <default class="limb">
+      <geom type="capsule" rgba="0.75 0.35 0.30 1"/>
+    </default>
+    <default class="foot_geom">
+      <geom type="box" rgba="0.30 0.30 0.34 1"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light directional="true" pos="0 -2 3" dir="0 0.5 -1" diffuse="0.9 0.9 0.9"/>
+
+    <body name="torso" pos="0 0 0.875">
+      <!-- root_x / root_z 为位移量（初始骨盆高度 0.875 m） -->
+      <joint name="root_x" type="slide" axis="1 0 0" range="-10 10" damping="0"/>
+      <joint name="root_z" type="slide" axis="0 0 1" range="-0.575 0.475" damping="0"/>
+      <joint name="root_pitch" type="hinge" axis="0 1 0" range="-0.7 0.7" damping="2"/>
+
+      <!-- 躯干 + 骨盆 + 头（一个刚体） -->
+      <geom name="pelvis" type="box" size="0.09 0.11 0.06" pos="0 0 -0.03"
+            rgba="0.20 0.25 0.45 1"/>
+      <geom name="trunk" type="capsule" size="0.085" fromto="0 0 0.02 0 0 0.34"
+            rgba="0.20 0.25 0.45 1"/>
+      <geom name="head" type="sphere" size="0.10" pos="0 0 0.56"
+            rgba="0.85 0.70 0.60 1"/>
+
+      <!-- 左臂（y=0.145：与躯干胶囊保持 ~1.5cm 间隙，避免相切抖动） -->
+      <body name="upper_arm_l" pos="0 0.145 0.30">
+        <joint name="shoulder_l" axis="0 -1 0" range="-0.7 2.0"/>
+        <geom class="limb" size="0.045" fromto="0 0 0 0 0 -0.28"/>
+        <body name="forearm_l" pos="0 0 -0.28">
+          <joint name="elbow_l" axis="0 -1 0" range="0 2.4"/>
+          <geom class="limb" size="0.038" fromto="0 0 0 0 0 -0.26"
+                rgba="0.85 0.70 0.60 1"/>
+        </body>
+      </body>
+
+      <!-- 右臂 -->
+      <body name="upper_arm_r" pos="0 -0.145 0.30">
+        <joint name="shoulder_r" axis="0 -1 0" range="-0.7 2.0"/>
+        <geom class="limb" size="0.045" fromto="0 0 0 0 0 -0.28"/>
+        <body name="forearm_r" pos="0 0 -0.28">
+          <joint name="elbow_r" axis="0 -1 0" range="0 2.4"/>
+          <geom class="limb" size="0.038" fromto="0 0 0 0 0 -0.26"
+                rgba="0.85 0.70 0.60 1"/>
+        </body>
+      </body>
+
+      <!-- 左腿 -->
+      <body name="thigh_l" pos="0 0.09 0">
+        <joint name="hip_l" axis="0 -1 0" range="-0.9 1.8"/>
+        <geom class="limb" size="0.070" fromto="0 0 0 0 0 -0.42"/>
+        <body name="shin_l" pos="0 0 -0.42">
+          <!-- 下限 -0.05：允许 ~3 度过伸，避免静止时膝关节顶死在限位上 -->
+          <joint name="knee_l" axis="0 1 0" range="-0.05 2.2"/>
+          <geom class="limb" size="0.050" fromto="0 0 0 0 0 -0.40"/>
+          <body name="foot_l" pos="0 0 -0.40">
+            <joint name="ankle_l" axis="0 -1 0" range="-0.75 0.45"/>
+            <geom class="foot_geom" name="foot_l_box" size="0.115 0.045 0.025"
+                  pos="0.055 0 -0.030"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 右腿 -->
+      <body name="thigh_r" pos="0 -0.09 0">
+        <joint name="hip_r" axis="0 -1 0" range="-0.9 1.8"/>
+        <geom class="limb" size="0.070" fromto="0 0 0 0 0 -0.42"/>
+        <body name="shin_r" pos="0 0 -0.42">
+          <joint name="knee_r" axis="0 1 0" range="-0.05 2.2"/>
+          <geom class="limb" size="0.050" fromto="0 0 0 0 0 -0.40"/>
+          <body name="foot_r" pos="0 0 -0.40">
+            <joint name="ankle_r" axis="0 -1 0" range="-0.75 0.45"/>
+            <geom class="foot_geom" name="foot_r_box" size="0.115 0.045 0.025"
+                  pos="0.055 0 -0.030"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!--
+    肌肉建模：每块肌肉 = 一个 motor 执行器，gear=coef（+1 屈肌 / -1 伸肌），
+    Hill 力学（一阶激活 + 力-长度-速度曲线）在 msk_human_core.py 显式实现，
+    张力 T>=0 作为 ctrl 输入，施加到关节的力矩 tau = coef * T。
+  -->
+
+  <!-- 平面简化模型中手臂与腿在 y 向间距小于半径和，悬垂时会侧面贯穿；
+       屏蔽手臂-腿自碰撞（简化人形模型惯例），保留手臂-躯干碰撞 -->
+  <contact>
+    <exclude body1="upper_arm_l" body2="thigh_l"/>
+    <exclude body1="upper_arm_l" body2="shin_l"/>
+    <exclude body1="upper_arm_l" body2="thigh_r"/>
+    <exclude body1="upper_arm_l" body2="shin_r"/>
+    <exclude body1="forearm_l" body2="thigh_l"/>
+    <exclude body1="forearm_l" body2="shin_l"/>
+    <exclude body1="forearm_l" body2="thigh_r"/>
+    <exclude body1="forearm_l" body2="shin_r"/>
+    <exclude body1="upper_arm_r" body2="thigh_l"/>
+    <exclude body1="upper_arm_r" body2="shin_l"/>
+    <exclude body1="upper_arm_r" body2="thigh_r"/>
+    <exclude body1="upper_arm_r" body2="shin_r"/>
+    <exclude body1="forearm_r" body2="thigh_l"/>
+    <exclude body1="forearm_r" body2="shin_l"/>
+    <exclude body1="forearm_r" body2="thigh_r"/>
+    <exclude body1="forearm_r" body2="shin_r"/>
+  </contact>
+  <actuator>
+    <!-- ===== 躯干 ===== -->
+    <motor name="abs"     joint="root_pitch" gear="1"   ctrlrange="0 400"/>
+    <motor name="erector" joint="root_pitch" gear="-1" ctrlrange="0 400"/>
+
+    <!-- ===== 左腿 ===== -->
+    <motor name="hipfl_l" joint="hip_l"   gear="1"  ctrlrange="0 260"/>
+    <motor name="hipe_l"  joint="hip_l"   gear="-1" ctrlrange="0 260"/>
+    <motor name="kneef_l" joint="knee_l"  gear="1"  ctrlrange="0 300"/>
+    <motor name="kneee_l" joint="knee_l"  gear="-1" ctrlrange="0 300"/>
+    <motor name="ankp_l"  joint="ankle_l" gear="-1" ctrlrange="0 260"/>
+    <motor name="ankd_l"  joint="ankle_l" gear="1"  ctrlrange="0 260"/>
+
+    <!-- ===== 右腿 ===== -->
+    <motor name="hipfl_r" joint="hip_r"   gear="1"  ctrlrange="0 260"/>
+    <motor name="hipe_r"  joint="hip_r"   gear="-1" ctrlrange="0 260"/>
+    <motor name="kneef_r" joint="knee_r"  gear="1"  ctrlrange="0 300"/>
+    <motor name="kneee_r" joint="knee_r"  gear="-1" ctrlrange="0 300"/>
+    <motor name="ankp_r"  joint="ankle_r" gear="-1" ctrlrange="0 260"/>
+    <motor name="ankd_r"  joint="ankle_r" gear="1"  ctrlrange="0 260"/>
+
+    <!-- ===== 左臂 ===== -->
+    <motor name="shof_l" joint="shoulder_l" gear="1"  ctrlrange="0 90"/>
+    <motor name="shoe_l" joint="shoulder_l" gear="-1" ctrlrange="0 90"/>
+    <motor name="elbf_l" joint="elbow_l"    gear="1"  ctrlrange="0 70"/>
+    <motor name="elbe_l" joint="elbow_l"    gear="-1" ctrlrange="0 70"/>
+
+    <!-- ===== 右臂 ===== -->
+    <motor name="shof_r" joint="shoulder_r" gear="1"  ctrlrange="0 90"/>
+    <motor name="shoe_r" joint="shoulder_r" gear="-1" ctrlrange="0 90"/>
+    <motor name="elbf_r" joint="elbow_r"    gear="1"  ctrlrange="0 70"/>
+    <motor name="elbe_r" joint="elbow_r"    gear="-1" ctrlrange="0 70"/>
+  </actuator>
+</mujoco>
