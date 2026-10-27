@@ -266,6 +266,8 @@ roslaunch carlair_ros_bridge main.launch host:=<Windows_IP> \
 rostopic echo /uav/cmd_vel
 ```
 
+![深度避障实测](../img/air/carlair_ros_bridge/depth_avoidance_live.png)
+
 ## 7. 运行验证
 
 ```shell
