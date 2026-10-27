@@ -40,6 +40,23 @@ complementary_yaw_rmse_deg=1.0004
 GPS 更新水平位置，气压计更新高度。姿态被视为飞控或 VIO 的输入，包内另外提供了
 一个互补滤波器用于演示陀螺仪、加速度计和磁力计融合。
 
+### 坐标系与符号约定
+
+`/uav/imu` 遵循 REP-103：机体系为 FLU（x 前、y 左、z 上），`linear_acceleration`
+**含重力**，因此水平静止时读数约为 `(0, 0, +g)`。互补滤波器的倾角估计
+`roll = atan2(ay, az)` 正是按这个约定写的。
+
+EKF 采用航空常用的 FRD（x 前、y 右、z 下）：静止时比力应为 `(0, 0, -g)`，
+这样 `R·f + g_ned` 才能相互抵消。两种约定只在 `frames.py` 一处交汇：
+
+- `specific_force_flu_to_frd()` 把比力从 FLU 换到 FRD（y、z 取反）；
+- `tilt_flu_to_frd()` 把 FLU 倾角换到 FRD（俯仰角取反，水平姿态仍是水平）；
+- `step_imu()` 是 `on_imu` 唯一的处理链，姿态滤波拿原始 REP-103 数据，EKF 拿
+  转换后的 FRD 量。
+
+这样水平静止输入穿过回调后速度保持为零，不会出现“同一加速度按两套重力符号各算
+一遍”的漂移。
+
 这里刻意没有把加速度计零偏放进状态。只有 GPS 位置和气压计高度时，垂直零偏与
 重力/姿态误差不可观，强行估计会让零偏吸收误差并导致发散。需要零偏估计时，应
 升级到包含姿态、陀螺零偏和加速度计零偏的 15 状态滤波器。
@@ -56,7 +73,7 @@ source install/setup.bash
 ros2 launch uav_ekf_state_estimation main.launch.py
 ```
 
-ROS 2 节点在当前 Windows 开发机上未执行；离线核心、6 个单元测试和 PNG 截图
+ROS 2 节点在当前 Windows 开发机上未执行；离线核心、12 个单元测试和 PNG 截图
 均已实际运行。ROS 2 Humble 的实时验证需要在 Ubuntu 虚拟机中完成。
 
 ## 验证
@@ -65,8 +82,9 @@ ROS 2 节点在当前 Windows 开发机上未执行；离线核心、6 个单元
 python -m unittest discover -s tests -v
 ```
 
-6 个测试全部通过，覆盖 GPS 协方差收敛、气压计更新、悬停预测、姿态滤波、
-指标有限性和随机种子可重复性。
+12 个测试全部通过，覆盖 GPS 协方差收敛、气压计更新、悬停预测、姿态滤波、
+指标有限性和随机种子可重复性，以及 REP-103(FLU)→FRD 的符号转换与水平静止输入
+贯穿 `on_imu` 处理链（`step_imu`）的回归。
 
 ## 已知限制
 

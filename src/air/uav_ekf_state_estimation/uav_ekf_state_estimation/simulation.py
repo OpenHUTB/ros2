@@ -138,6 +138,9 @@ def run_simulation(
         # Attitude is treated as an input from the flight controller / VIO.
         # A complementary filter is still evaluated below, but accelerometer
         # based tilt is biased by the vehicle's own acceleration.
+        # This synthetic run already produces FRD specific force, so it feeds the
+        # EKF directly; the ROS adapter converts REP-103 (FLU) input with
+        # ``frames.step_imu`` before calling the EKF.
         rotation_for_navigation = rotations[index]
         ekf.predict(accel_measurement[index], rotation_for_navigation, dt)
         if not np.isnan(gps_position[index, 0]):
