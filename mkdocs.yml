@@ -76,8 +76,10 @@ nav:
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
+    - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
+    - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
@@ -108,6 +110,8 @@ nav:
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
     - 双车自动跟车: './ground/mujoco_car_following.md'
+    - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
+    - 地面载具灯光自动控制: './ground/carla_auto_light.md'
 - 空域载具:
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
