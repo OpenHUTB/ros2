@@ -66,6 +66,8 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   `|x|<=lateral_limit`、`|y|<=vertical_limit`、`min_range<=z<=max_range` 走廊内最近点；
   `d<=stop_distance` 停车，`stop<d<slow` 线性减速，`d>=slow` 全速。
   默认关闭，demo 时加 `enable_depth_avoidance:=true`。
+- **一键 demo**：`roslaunch carlair_ros_bridge depth_demo.launch host:=<Windows_IP>`，
+  自动起 `main.launch` 和 RViz，直接看 `/camera/depth/points` 与避障过程。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
