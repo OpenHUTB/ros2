@@ -1,0 +1,31 @@
+dataset:
+  # 数据生成与评测共用的场景集合（对应 uav_mujoco_sim 的场景名）
+  scenes: ["open_ground", "corridor", "obstacle_field"]
+  episodes: 240
+  duration: 8.0
+  window: 100
+  stride: 10
+
+paths:
+  dataset: results/detector_dataset.npz
+  checkpoint: results/detector.pt
+  metrics_json: results/detector_metrics.json
+  metrics_csv: results/detector_by_fault.csv
+
+uav_rotor_fault_detector:
+  ros__parameters:
+    scene: "open_ground"
+    seed: 0
+    dt: 0.01
+    substeps: 4
+    # 故障：healthy / loss / degradation / stuck / dual_loss / progressive / imu_bias / imu_noise
+    fault: "loss"
+    rotor: 0
+    onset: 2.0
+    severity: 1.0
+    imu_noise: 0.02
+    # 0 表示使用检查点里记录的窗口长度
+    window: 0
+    checkpoint: "results/detector.pt"
+    duration: 10.0
+    publish_rate: 50.0

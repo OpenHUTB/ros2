@@ -1,0 +1,3 @@
+# 数据集 7 MB，可按 README 里的 --gen-data 现场重生成（240 次飞行约 26 s），不入库
+*.npz
+*.tmp.gif
