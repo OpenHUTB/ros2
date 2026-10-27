@@ -116,9 +116,13 @@ def test_get_imu_enu():
     check(abs(np.linalg.norm(quat) - 1.0) < 1e-9, "四元数归一化: norm=%.6f" % np.linalg.norm(quat))
     check(np.allclose(ang, [1.0, -2.0, -3.0]), "角速度 NED->FLU: %r" % (ang,))
     check(np.allclose(acc, [4.0, -5.0, -6.0]), "线加速度 NED->FLU: %r" % (acc,))
-    expected = (np.sqrt(0.5), np.sqrt(0.5), 0.0, 0.0)
+    expected = (0.0, 0.0, np.sqrt(0.5), np.sqrt(0.5))
     check(np.allclose(quat, expected, atol=1e-9),
-          "NED 恒等姿态 -> ENU 180°(x,y) 四元数: %r" % (quat,))
+          "NED 恒等 FRD 姿态 -> ENU/FLU +90° yaw 四元数: %r" % (quat,))
+    R = sim_client.quat_wxyz_to_matrix([quat[3], quat[0], quat[1], quat[2]])
+    up = R @ np.array([0.0, 0.0, 1.0])
+    check(np.allclose(up, [0.0, 0.0, 1.0], atol=1e-9),
+          "机体 FLU +z 映射到 ENU +z（不再 180° 翻转）: %r" % (up,))
 
 
 def test_publish():
