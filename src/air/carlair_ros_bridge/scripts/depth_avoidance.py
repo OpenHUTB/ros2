@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import math
+import time
 
 import numpy as np
 import rospy
@@ -29,7 +30,7 @@ from sensor_msgs import point_cloud2
 from sensor_msgs.msg import PointCloud2
 
 
-def corridor_points(points, lateral_limit, vertical_limit, max_range):
+def corridor_points(points, lateral_limit, vertical_limit, max_range, min_range=0.0):
     """筛选前方走廊内的点（相机光学系），返回 (N,3) float32."""
     pts = np.asarray(points, dtype=np.float32)
     if pts.size == 0:
@@ -37,15 +38,15 @@ def corridor_points(points, lateral_limit, vertical_limit, max_range):
     mask = (
         (np.abs(pts[:, 0]) <= lateral_limit)
         & (np.abs(pts[:, 1]) <= vertical_limit)
-        & (pts[:, 2] > 0.0)
+        & (pts[:, 2] >= min_range)
         & (pts[:, 2] <= max_range)
     )
     return pts[mask]
 
 
-def nearest_distance(points, lateral_limit, vertical_limit, max_range):
+def nearest_distance(points, lateral_limit, vertical_limit, max_range, min_range=0.0):
     """走廊内最近点的前向距离；无点时返回 inf."""
-    pts = corridor_points(points, lateral_limit, vertical_limit, max_range)
+    pts = corridor_points(points, lateral_limit, vertical_limit, max_range, min_range)
     if pts.shape[0] == 0:
         return float("inf")
     return float(np.min(pts[:, 2]))
@@ -72,7 +73,10 @@ class DepthAvoidance(object):
         self.lateral_limit = float(rospy.get_param("depth_avoidance/lateral_limit", 0.8))
         self.vertical_limit = float(rospy.get_param("depth_avoidance/vertical_limit", 0.8))
         self.max_range = float(rospy.get_param("depth_avoidance/max_range", 12.0))
+        self.min_range = float(rospy.get_param("depth_avoidance/min_range", 0.5))
+        self.start_delay = float(rospy.get_param("depth_avoidance/start_delay", 6.0))
         self.rate = rospy.Rate(float(rospy.get_param("depth_avoidance/rate", 10.0)))
+        self.start_time = time.time()
 
         self.topic_points = rospy.get_param("topic/depth_points", "/camera/depth/points")
         self.topic_cmd = rospy.get_param("topic/cmd_vel", "/uav/cmd_vel")
@@ -95,8 +99,12 @@ class DepthAvoidance(object):
     def step_once(self):
         if not self.enabled or self.points is None:
             return
+        # 等自动起飞完成后再接管，避免把爬升中的速度打成 0
+        if time.time() - self.start_time < self.start_delay:
+            return
         d = nearest_distance(
-            self.points, self.lateral_limit, self.vertical_limit, self.max_range)
+            self.points, self.lateral_limit, self.vertical_limit,
+            self.max_range, self.min_range)
         vx = compute_speed(
             d, self.stop_distance, self.slow_distance, self.forward_speed)
         msg = Twist()
