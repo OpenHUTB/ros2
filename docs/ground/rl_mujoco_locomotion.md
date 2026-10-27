@@ -15,27 +15,27 @@
 
 PPO 是一种 on-policy 策略梯度算法，核心目标是限制每次策略更新的幅度，防止训练崩溃。其 clipped surrogate objective 为：
 
-$$L^{CLIP}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t,\ \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]$$
+![PPO clipped surrogate objective](../img/ground/rl_mujoco_locomotion/eq_ppo_clip.png)
 
-其中 $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$ 为新旧策略概率比，$\hat{A}_t$ 为广义优势估计（GAE）：
+其中策略概率比 r_t(θ) = π_θ(a_t | s_t) / π_θold(a_t | s_t)，Â_t 为广义优势估计（GAE）：
 
-$$\hat{A}_t = \delta_t + (\gamma\lambda)\delta_{t+1} + (\gamma\lambda)^2\delta_{t+2} + \cdots$$
+![GAE 优势估计](../img/ground/rl_mujoco_locomotion/eq_ppo_gae.png)
 
-$$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$
+![TD 误差](../img/ground/rl_mujoco_locomotion/eq_ppo_td.png)
 
-本项目使用 Actor-Critic 架构，Actor 输出动作均值（tanh 压缩到 $[-1,1]$），Critic 输出状态价值。为保证训练稳定，对 `log_std` 做了 $[-4, 1]$ 夹紧，对策略/价值梯度做了范数裁剪，并在 KL 超过阈值 `target_kl` 时提前结束本轮更新。
+本项目使用 Actor-Critic 架构，Actor 输出动作均值（tanh 压缩到 [-1, 1]），Critic 输出状态价值。为保证训练稳定，对 `log_std` 做了 [-4, 1] 夹紧，对策略/价值梯度做了范数裁剪，并在 KL 超过阈值 `target_kl` 时提前结束本轮更新。
 
 ### SAC（Soft Actor-Critic）
 
 SAC 是一种 off-policy 最大熵强化学习算法，在最大化累计奖励的同时最大化策略熵，以鼓励探索：
 
-$$J(\pi) = \sum_t \mathbb{E}\left[r(s_t,a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t))\right]$$
+![SAC 最大熵目标](../img/ground/rl_mujoco_locomotion/eq_sac_objective.png)
 
-其中 $\alpha$ 为温度系数，按目标熵 $-|\mathcal{A}|$ 自动调节（$\log\alpha$ 夹紧在 $[\ln 0.01, \ln 10]$）。
+其中 α 为温度系数，按目标熵 -|A| 自动调节（log α 夹紧在 [ln 0.01, ln 10]）。
 
 SAC 使用双 Q 网络（Double Q-learning）缓解过估计，Actor 通过重参数化技巧采样动作：
 
-$$a = \tanh(\mu_\theta(s) + \sigma_\theta(s)\cdot\epsilon),\quad \epsilon\sim\mathcal{N}(0, I)$$
+![SAC 重参数化采样](../img/ground/rl_mujoco_locomotion/eq_sac_reparam.png)
 
 > **实现说明**：本项目 SAC 的 actor 梯度采用了**简化推导**（未严格还原 tanh 重参数化的完整 Jacobian 项），因此推理效果与 Stable-Baselines3 等成熟实现存在差距，详见"结果分析"一节。
 
@@ -159,7 +159,7 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 1. **HalfCheetah：SAC 明显优于 PPO。** SAC 的训练回报和确定性评估回报都更高（661.7 vs 132.0），且评估方差极小（±1.1），说明策略已较稳定；PPO 训练回报不低（末段 399.7），但确定性评估只有 132.0，说明策略对探索噪声依赖较大、确定性动作并不稳定。
 2. **Ant：SAC 能维持站立并缓慢前进，PPO 未能学会。** SAC 单集能跑满 1000 步并取得正的评估回报（158.2），但前向速度很低，GIF 中位移很小；PPO 的回报长期为负且单集只有约 58 步，策略频繁倒地。
 3. **Walker2d：两种算法在本实现与预算下均未收敛。** 两者单集都只坚持 8 步左右就倒地（GIF 中可以看到反复跌倒），回报接近甚至低于"原地站立"的水平。原因分析：
-   - Walker2d 对姿态要求最严格（健康判定为 $z\in[0.8,2.0]$、躯干倾角 $\pm1.0$ rad），早期随机策略几乎必然出界终止，正样本极少；
+   - Walker2d 对姿态要求最严格（健康判定为 z ∈ [0.8, 2.0]、躯干倾角 ±1.0 rad），早期随机策略几乎必然出界终止，正样本极少；
    - 30 万步预算远小于该任务通常需要的百万级步数；
    - 本项目的 SAC actor 梯度为简化推导，探索不足，进一步限制了收敛。
 4. **整体结论：** 在"纯 NumPy + 轻量 MLP + 30 万步预算"的约束下，SAC 在 HalfCheetah 与 Ant 上均优于 PPO；Walker2d 需要更长训练或更完善的 SAC 梯度实现，本仓库暂未达到可用水平（如实记录，未做美化）。
