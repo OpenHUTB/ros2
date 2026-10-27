@@ -1,0 +1,59 @@
+[
+  {
+    "style": "brick",
+    "source_file": "rgb_1792251577_002.png",
+    "source_relative_path": "dataset_manual/images/rgb_1792251577_002.png",
+    "source_sha256": "21972d2ffd250dd8d04d4930a6b6e7a173958443fcf8f30fd846baa513ab14b2",
+    "source_size_px": [
+      640,
+      360
+    ],
+    "crop_xyxy": [
+      25,
+      30,
+      615,
+      345
+    ],
+    "texture_file": "brick.png",
+    "texture_sha256": "01816b6cd7de148cbcb21fabc28c422ac6430f46153f93927b7dfb35dcf7ec03",
+    "mapping": "one RGB crop on one 10 m by 8 m planar facade; no recovered depth or original camera pose"
+  },
+  {
+    "style": "gray",
+    "source_file": "rgb_1792251340_000.png",
+    "source_relative_path": "dataset_manual/images/rgb_1792251340_000.png",
+    "source_sha256": "7992ca7cc28790f0357e0d96b87bd6b03533cc99b3236a16ddd6db5cf603eeb5",
+    "source_size_px": [
+      640,
+      360
+    ],
+    "crop_xyxy": [
+      40,
+      0,
+      600,
+      350
+    ],
+    "texture_file": "gray.png",
+    "texture_sha256": "b3406dad10415c32dc265eb63bddf5b37976a95d27254837cbcc9a4eebaa8408",
+    "mapping": "one RGB crop on one 10 m by 8 m planar facade; no recovered depth or original camera pose"
+  },
+  {
+    "style": "glass",
+    "source_file": "rgb_1792253773_001.png",
+    "source_relative_path": "dataset_manual/images/rgb_1792253773_001.png",
+    "source_sha256": "db487dc4dcc312df031f7ba9c7b7c11ca1f18843675bc5b8f64411d540260309",
+    "source_size_px": [
+      640,
+      360
+    ],
+    "crop_xyxy": [
+      50,
+      25,
+      620,
+      345
+    ],
+    "texture_file": "glass.png",
+    "texture_sha256": "b4d057bc8ebc730dc9d25d3e2eba6bbf9737865d1dc925fdb8ff6f2760513b54",
+    "mapping": "one RGB crop on one 10 m by 8 m planar facade; no recovered depth or original camera pose"
+  }
+]
