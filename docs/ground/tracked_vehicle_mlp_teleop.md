@@ -55,8 +55,8 @@ tracked_vehicle_mlp_teleop/
 │   ├── mlp_policy.pt            # MLP 权重（约 23 KB）
 │   ├── norm_stats.npz           # 特征归一化统计量
 │   └── model_config.json
-├── data/                        # 采集 CSV、评估 CSV、汇总表
-└── media/                       # 截图、GIF、指标图
+├── data/                        # 采集 CSV、评估 CSV、汇总表（运行脚本后生成，不入库）
+└── （演示 GIF、截图与指标图位于 docs/img/ground/tracked_vehicle_mlp_teleop/）
 ```
 
 ## 3. 车辆模型
@@ -224,7 +224,7 @@ bash $(rospack find tracked_vehicle_mlp_teleop)/scripts/collect_all.sh
 bash $(rospack find tracked_vehicle_mlp_teleop)/scripts/run_benchmark.sh
 ```
 
-输出 `data/summary_table.md` 与 `media/metrics.png`。
+输出 `data/summary_table.md` 与 `data/metrics.png`。
 
 ## 7. 性能评价
 

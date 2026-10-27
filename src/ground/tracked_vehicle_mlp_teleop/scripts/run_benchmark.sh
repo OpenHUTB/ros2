@@ -3,7 +3,7 @@
 set -euo pipefail
 
 PKG="$(rospack find tracked_vehicle_mlp_teleop)"
-mkdir -p "${PKG}/data" "${PKG}/media"
+mkdir -p "${PKG}/data"
 
 for world in flat slope low_friction; do
   spawn_x=0.0
@@ -23,6 +23,6 @@ python3 "${PKG}/scripts/evaluate.py" \
           "${PKG}/data/summary_low_friction.csv" \
   --output-csv "${PKG}/data/summary_all.csv" \
   --output-md "${PKG}/data/summary_table.md" \
-  --output-fig "${PKG}/media/metrics.png"
+  --output-fig "${PKG}/data/metrics.png"
 
-echo "===== 完成：${PKG}/media/metrics.png ====="
+echo "===== 完成：${PKG}/data/metrics.png ====="

@@ -105,7 +105,7 @@ def main():
     parser.add_argument("--input", nargs="*", default=[])
     parser.add_argument("--output-csv", default="data/summary_all.csv")
     parser.add_argument("--output-md", default="data/summary_table.md")
-    parser.add_argument("--output-fig", default="media/metrics.png")
+    parser.add_argument("--output-fig", default="data/metrics.png")
     args = parser.parse_args()
 
     paths = args.input or sorted(glob.glob("data/summary_*.csv"))

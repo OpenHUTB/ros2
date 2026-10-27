@@ -385,7 +385,7 @@ class TrackedVehicleNode:
 
     def _print_help(self):
         rospy.loginfo("W/S 前进/后退  A/D 左转/右转  Q/空格 停车")
-        rospy.loginfo("1=RAW 2=PI 3=MLP  N=循环切换  R=复位世界  H=帮助  ESC=退出")
+        rospy.loginfo("1=RAW 2=PI 3=MLP  N=循环切换  R=复位世界  P=打印状态  H=帮助  ESC=退出")
 
     # --------------------------------------------------------------- modes
     def _run_keyboard(self):

@@ -81,6 +81,7 @@ roslaunch tracked_vehicle_mlp_teleop main.launch world:=flat gui:=true
 | `1` / `2` / `3` | 切换 RAW / PI / MLP 控制器 |
 | `N` | 循环切换控制器 |
 | `R` | 复位 Gazebo 世界 |
+| `P` | 打印当前目标/实测速度与控制器状态 |
 | `H` | 显示按键帮助 |
 | `ESC` | 退出 |
 
