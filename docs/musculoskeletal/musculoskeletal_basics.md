@@ -99,11 +99,11 @@ F = F_max · [ a · f_l(l_n) · f_v(v_n) + f_p(l_n) ]
 | 文档 | 内容 |
 |---|---|
 | 本文 | 基本概念与工具 |
-| [肌肉驱动的关节控制与 Hill 肌肉模型](./muscle_joint_control.md) | 单自由度关节 + 拮抗肌对，Hill 模型实现、94 个单元测试与实测数据 |
+| [肌肉驱动的关节控制与 Hill 肌肉模型](./muscle_joint_control.md) | 单自由度关节 + 拮抗肌对，Hill 模型实现、134 个单元测试与实测数据 |
 
-## 6 参考
+## 参考
 
+* [肌肉骨骼人的示例](https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_model)
 * A. V. Hill, *The heat of shortening and the dynamic constants of muscle*, 1938
 * F. E. Zajac, *Muscle and tendon: properties, models, scaling, and application
   to biomechanics and motor control*, 1989
-* [肌肉骨骼人的示例](https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_model)

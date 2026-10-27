@@ -365,7 +365,9 @@ def main():
     ap.add_argument("--outdir", default=os.path.join(HERE, "demo_out"),
                     help="图片输出目录")
     ap.add_argument("--quick", action="store_true", help="只跑基本阶跃响应")
-    args = ap.parse_args()
+    # roslaunch 启动 <node> 时会在命令行末尾追加 __name:= / __log:=，
+    # 用 parse_known_args 忽略掉，否则 launch 一启动就退出。
+    args, _unknown = ap.parse_known_args()
 
     if not os.path.isdir(args.outdir):
         os.makedirs(args.outdir)
