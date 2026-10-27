@@ -1,0 +1,4 @@
+# 仅训练需要额外安装；OpenCV/numpy/Pillow/matplotlib 使用系统 ROS 自带版本，
+# 避免与 cv_bridge 冲突。CPU 版 torch（约 190 MB）：
+#   pip3 install torch --index-url https://download.pytorch.org/whl/cpu
+torch==2.4.1
