@@ -325,6 +325,12 @@ Python 客户端）不提供 `*Async` 方法，那时回退到同名同步方法
    旧客户端自动回退）。
    实机验证：`forward` / `up` / `down` / `yaw_left` 都能让飞机真实移动。
 
+7. **`hover()` 在移动中调用会让飞机掉高度** —— 实测：`forward` 之后调用 `hover`，
+   飞机从 0.85 m 一路降到地面（-0.68 m）；而**静止时**调用 `hover` 是安全的（6 s 高度不变）。
+   现在移动 / 偏航 / 急停之后一律改用**零速度刹车**
+   （`moveByVelocityBodyFrame(0, 0, 0, 0.5)`）：实测 `forward` 位移约 0.9 m 后停住，
+   高度稳定在 0.78~0.85 m；停住后仍有 ±0.2 m 的位置保持抖动（该 build 的固有特性）。
+
 ### 10.3 本机实测（等价 msgpack-rpc 客户端 + 真机 Blocks）
 
 这台机器上 `pip install airsim` 装不上（`msgpack-rpc-python` 拉的 tornado 4.5.3

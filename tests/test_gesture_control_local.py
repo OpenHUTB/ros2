@@ -677,7 +677,8 @@ def test_drone_client():
           str(f.names()))
 
     # ---- 急停三种语义 ----
-    for action, api in (("hover", "hoverAsync"), ("land", "landAsync")):
+    # 急停的 "hover" 语义现在用零速度刹车实现（实测 hover 在移动中会掉高度）
+    for action, api in (("hover", "move"), ("land", "landAsync")):
         d, f = make_drone(estop_action=action)
         d.execute(gm.CMD_ESTOP)
         check("estop_action=%s 调用 %s" % (action, api), api in f.names(),
@@ -1010,7 +1011,7 @@ E2E_EXPECT = {
     gm.GESTURE_VICTORY: (gm.CMD_UP, "move_z-"),
     gm.GESTURE_THUMB_DOWN: (gm.CMD_DOWN, "move_z+"),
     gm.GESTURE_THUMB_UP: (gm.CMD_HOVER, "hoverAsync"),
-    gm.GESTURE_OK: (gm.CMD_ESTOP, "hoverAsync"),
+    gm.GESTURE_OK: (gm.CMD_ESTOP, "move"),
 }
 
 

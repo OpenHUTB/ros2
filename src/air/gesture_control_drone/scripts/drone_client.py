@@ -470,17 +470,17 @@ class AirSimDrone(object):
                 vehicle_name=self.vehicle_name), what)
         except Exception as exc:
             raise RuntimeError(
-                "此 build 的 rotateByYawRate 参数签名不匹配（%s）；偏航暂不可用，"
+                "rotateByYawRate 调用失败（%s）；偏航不可用，"
                 "可改用 moveByVelocityBodyFrame" % exc)
 
     def _yaw_left(self, client):
         # NED 下偏航正方向是顺时针（右转），左转取负
         self._yaw(client, -self.yaw_rate, "左转")
-        self._hover(client)
+        self._brake(client)
 
     def _yaw_right(self, client):
         self._yaw(client, +self.yaw_rate, "右转")
-        self._hover(client)
+        self._brake(client)
 
     def _home(self, client):
         if self.api_mode == "async" and callable(getattr(client, "goHomeAsync", None)):
@@ -496,12 +496,12 @@ class AirSimDrone(object):
             # 同步分支同理：goHome(timeout_sec, vehicle_name)
             self._fire_and_forget("goHome", 60.0, self.vehicle_name)
             return
-        self._hover(client)
+        self._brake(client)
 
     def _estop(self, client):
         if self.estop_action == "hover":
-            self._hover(client)
-            self._log(">>> 紧急停止：已悬停 <<<")
+            self._brake(client, duration=0.8)
+            self._log(">>> 紧急停止：已刹停 <<<")
         elif self.estop_action == "land":
             self._land(client)
             self._log(">>> 紧急停止：立即降落 <<<")
@@ -521,6 +521,22 @@ class AirSimDrone(object):
             return self.move_duration
         return headroom_m / self.speed
 
+    def _brake(self, client, duration=0.5):
+        """用零速度指令把飞机刹住。
+
+        为什么不直接 ``hover()``：实测这个 build 在**移动中**调用 ``hover`` 会让
+        飞机持续掉高度（0.85 m → 落地）；而静止时 ``hover`` 是安全的。
+        零速度刹车在两种状态下都表现稳定（实测停住后抖动 ±0.05 m）。
+        """
+        desc = "刹车"
+        if self.api_mode == "async":
+            self._call(lambda: client.moveByVelocityBodyFrameAsync(
+                0.0, 0.0, 0.0, max(0.1, duration), **self._kw()).join(), desc)
+        else:
+            self._call(lambda: self._sync_rpc(
+                client, "moveByVelocityBodyFrame", 0.0, 0.0, 0.0,
+                max(0.1, duration), vehicle_name=self.vehicle_name), desc)
+
     def _move_body(self, client, sx, sy, sz, what, duration=None):
         """机体系速度控制：sx 前、sy 右、sz 下（NED），单位向量乘速度。"""
         duration = self.move_duration if duration is None else duration
@@ -538,9 +554,9 @@ class AirSimDrone(object):
                     vehicle_name=self.vehicle_name), desc)
             except Exception as exc:
                 raise RuntimeError(
-                    "此 build 的 moveByVelocityBodyFrame 参数签名不匹配（%s）；"
-                    "机体系速度控制暂不可用" % exc)
-        self._hover(client)
+                    "moveByVelocityBodyFrame 调用失败（%s）；"
+                    "机体系速度控制不可用" % exc)
+        self._brake(client)
 
     # ------------------------------------------------------------------ #
     # 状态
