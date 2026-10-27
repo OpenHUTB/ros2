@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-本项目在 **MuJoCo 3.1.6** 物理引擎上，针对三个经典连续控制 locomotion 环境——**HalfCheetah（猎豹奔跑）**、**Ant（蚂蚁四足爬行）**、**Walker2d（二足行走）**——实现了 **PPO** 与 **SAC** 两种强化学习算法的纯 NumPy 手写训练与对比实验。
+本项目在 **MuJoCo**（3.1.6 ~ 3.17.0 均可运行，本轮数据在 3.17.0 上产出）物理引擎上，针对三个经典连续控制 locomotion 环境——**HalfCheetah（猎豹奔跑）**、**Ant（蚂蚁四足爬行）**、**Walker2d（二足行走）**——实现了 **PPO** 与 **SAC** 两种强化学习算法的纯 NumPy 手写训练与对比实验。
 
 与仓库已有项目相比：
 - **环境不同**：仓库已有 RL 项目使用 CartPole（倒立摆）、Unitree G1 人形机器人、无人机等；本项目首次引入 MuJoCo 原生 HalfCheetah / Ant / Walker2d 三个地面 locomotion 环境。
@@ -23,7 +23,7 @@ PPO 是一种 on-policy 策略梯度算法，核心目标是限制每次策略�
 
 ![TD 误差](../img/ground/rl_mujoco_locomotion/eq_ppo_td.png)
 
-本项目使用 Actor-Critic 架构，Actor 输出动作均值（tanh 压缩到 [-1, 1]），Critic 输出状态价值。为保证训练稳定，对 `log_std` 做了 [-4, 1] 夹紧，对策略/价值梯度做了范数裁剪，并在 KL 超过阈值 `target_kl` 时提前结束本轮更新。
+本项目使用 Actor-Critic 架构，Actor 输出动作均值（tanh 压缩到 [-1, 1]），Critic 输出状态价值，两者都用 Adam 更新。为保证训练稳定，对 `log_std` 做了 [-4, 1] 夹紧，对策略/价值梯度做了范数裁剪，surrogate 按 `clip_ratio=0.2` 做掩码，并在 KL 超过阈值 `target_kl` 时提前结束本轮更新；此外策略均值梯度会乘上 tanh 的雅可比 `(1 - μ²)`。
 
 ### SAC（Soft Actor-Critic）
 
@@ -63,9 +63,10 @@ reward = forward_reward(前进速度) - ctrl_cost(控制代价) - contact_cost(�
 
 ### 环境要求
 
-- Ubuntu 20.04 / 22.04（实测 20.04.6 LTS）
-- Python 3.8+（实测 3.8.10）
-- MuJoCo 3.1.6（实测版本，`requirements.txt` 只要求 `>=2.3.7`）
+- Ubuntu 20.04 / 22.04（推荐，无头渲染走 EGL）
+- Windows 11 / macOS（同样支持，渲染自动用 MuJoCo 默认的 `glfw`）
+- Python 3.8+（本机复现实测 3.14.0，Ubuntu 侧 3.8.10）
+- MuJoCo 3.1.6 ~ 3.17.0（本机复现实测 3.17.0，`requirements.txt` 只要求 `>=2.3.7`）
 - 渲染后端：Linux 无头环境默认 `MUJOCO_GL=egl`（已在 `env.py` 中按平台自动设置）；Windows / macOS 自动沿用 MuJoCo 默认的 `glfw`，无需手动设置，也可用环境变量 `MUJOCO_GL` 覆盖
 - ROS 2（可选，仅用于 launch 入口）
 
@@ -127,10 +128,17 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 
 ## 实验结果
 
-> 以下全部为**实测数据**（Ubuntu 20.04.6 / Python 3.8.10 / MuJoCo 3.1.6，seed=0，每组 30 万环境步），不是估计值。
-> 表中"训练末段回报"取训练 CSV 最后 10 集的平均回报；"确定性评估"为加载最终模型后按确定性策略（不采样噪声）跑 2~20 集的平均回报，即 GIF 中展示的策略表现。
+> 以下全部为**实测数据**（Windows 11 / Python 3.14.0 / MuJoCo 3.17.0 / NumPy 2.5.4，seed=0，每组 30 万环境步），不是估计值。
+> 表中"训练末段回报"取训练 CSV 最后 10 集的平均回报；"确定性评估"为加载最终模型后按确定性策略（不采样噪声）跑 10 集的平均回报，即 GIF 中展示的策略表现。
 
-> **实现修复记录**：初版实现存在两处缺陷——`RolloutBuffer.get()` 取数据时把指针清零，导致 `train_iters`（默认 10 轮）从第 2 轮起读到空数据，实际只更新 1 轮；`SAC` 用 `get_params()` 返回的副本做 Polyak 平均，目标 Q 网络从未更新。两处均已在本 PR 内修复（`ppo.py` / `sac.py` / `nn.py`）。下表 6 组数据与 GIF 由**修复前**的实现产出，尚未在修复后重新训练，重跑后数值会变化。
+> **实现修复记录**（本次数据均由修复后的代码产出）：
+> 1. `RolloutBuffer.get()` 取数据时把指针清零，导致 `train_iters` 从第 2 轮起读到空数据，实际只更新 1 轮 → 改为消费完所有轮次后由 `reset()` 清空；
+> 2. `SAC` 用 `get_params()` 返回的副本做 Polyak 平均，目标 Q 网络从未更新 → 改用 `params()` 返回的引用做原地软更新；
+> 3. `PPO` 定义了 `clip_ratio` 却从未使用（只把 ratio 截到 `[0, 10]` 防溢出）→ 补上真正的 clipped surrogate 掩码、tanh 雅可比，并把 `nn.py` 里一直闲置的 Adam 接到 PPO 的 actor / critic 上；
+> 4. `env.py` 硬写 `MUJOCO_GL=egl` 会让 Windows / macOS 在 import 阶段直接崩溃 → 改为仅 Linux 且未显式设置时才默认 egl；
+> 5. assets 查找兼容 colcon 安装布局 `share/<pkg>/assets`。
+>
+> 另需说明：本实现的 PPO Actor 梯度是工程近似（残缺的 squash-高斯修正、64×64 小网络），同一份 rollout 多次复用会发散或停在原地（实测 `train_iters=10` 时 Ant / Walker2d 训练崩溃），因此 **PPO 实际取 `train_iters=1`（每份 rollout 只更新一轮）**，这是本实现下的稳定工作点，不是常规 PPO 的 10 轮复用。
 
 ### 学习曲线
 
@@ -150,28 +158,28 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 |:---:|:---:|
 | ![walker2d-ppo](../img/ground/rl_mujoco_locomotion/walker2d_ppo.gif) | ![walker2d-sac](../img/ground/rl_mujoco_locomotion/walker2d_sac.gif) |
 
-> 注：`ant_sac.gif` 只有 6 帧（该次渲染时策略约 30 步即终止），与性能表中 "Ant-SAC 评估平均集长 1000" 不一致，是渲染所用 checkpoint 早于最终训练结果导致的，重跑训练后需要重新渲染该图。
-
 ### 性能对比
 
 | 环境 | 算法 | 训练预算 | 训练末段回报 | 确定性评估回报 | 评估平均集长 |
 |------|------|---------|------------|--------------|------------|
-| HalfCheetah | PPO | 30 万步 | 399.7 | 132.0 ± 35.9 | 1000 |
-| HalfCheetah | SAC | 30 万步 | **645.8** | **661.7 ± 1.1** | 1000 |
-| Ant | PPO | 30 万步 | -443.4 | -356.5 ± 170.7 | 58 |
-| Ant | SAC | 30 万步 | **149.4** | **158.2 ± 19.3** | 1000 |
-| Walker2d | PPO | 30 万步 | -4.1 | -5.0 ± 0.3 | 8 |
-| Walker2d | SAC | 约 8 万步（中止） | -10.4 | -9.0 ± 0.2 | 8 |
+| HalfCheetah | 随机策略 | — | — | 692.3 ± 86.7 | 1000 |
+| HalfCheetah | PPO | 30 万步 | 352.5 | 348.9 ± 95.1 | 1000 |
+| HalfCheetah | SAC | 30 万步 | **1409.3** | **1818.1 ± 80.0** | 1000 |
+| Ant | 随机策略 | — | — | -59.2 ± 96.2 | 146 |
+| Ant | PPO | 30 万步 | -249.5 | -127.4 ± 104.4 | 59 |
+| Ant | SAC | 30 万步 | **245.7** | **415.4 ± 66.4** | 1000 |
+| Walker2d | 随机策略 | — | — | -1.0 ± 5.3 | 18 |
+| Walker2d | PPO | 30 万步 | -14.9 | -17.3 ± 0.1 | 13 |
+| Walker2d | SAC | 30 万步 | **357.8** | **370.0 ± 3.8** | 177 |
+
+> "随机策略"一行为同一评估协议（10 集、seed 42、动作在 [-1, 1] 均匀采样）下的基线，用于判断算法是否真的学到了东西。注意本环境的奖励含有每步 +1 的存活奖励，因此 HalfCheetah 的随机基线也被抬到 ~692，绝对值不可与 Gym / SB3 的默认奖励口径直接对比。
 
 ### 结果分析
 
-1. **HalfCheetah：SAC 明显优于 PPO。** SAC 的训练回报和确定性评估回报都更高（661.7 vs 132.0），且评估方差极小（±1.1），说明策略已较稳定；PPO 训练回报不低（末段 399.7），但确定性评估只有 132.0，说明策略对探索噪声依赖较大、确定性动作并不稳定。
-2. **Ant：SAC 能维持站立并缓慢前进，PPO 未能学会。** SAC 单集能跑满 1000 步并取得正的评估回报（158.2），但前向速度很低，GIF 中位移很小；PPO 的回报长期为负且单集只有约 58 步，策略频繁倒地。
-3. **Walker2d：两种算法在本实现与预算下均未收敛。** 两者单集都只坚持 8 步左右就倒地（GIF 中可以看到反复跌倒），回报接近甚至低于"原地站立"的水平。原因分析：
-   - Walker2d 对姿态要求最严格（健康判定为 z ∈ [0.8, 2.0]、躯干倾角 ±1.0 rad），早期随机策略几乎必然出界终止，正样本极少；
-   - 30 万步预算远小于该任务通常需要的百万级步数；
-   - 本项目的 SAC actor 梯度为简化推导，探索不足，进一步限制了收敛。
-4. **整体结论：** 在"纯 NumPy + 轻量 MLP + 30 万步预算"的约束下，SAC 在 HalfCheetah 与 Ant 上均优于 PPO；Walker2d 需要更长训练或更完善的 SAC 梯度实现，本仓库暂未达到可用水平（如实记录，未做美化）。
+1. **SAC 在三个环境上都真正学起来了。** HalfCheetah 评估回报 1818.1（随机基线 692.3，约 2.6 倍），Ant 415.4（随机基线 -59.2，且能跑满 1000 步），Walker2d 370.0（随机基线 -1.0，单集从 18 步延长到 177 步）。三组评估方差都很小（±3.8 ~ ±80），说明策略稳定。修复目标网络软更新之后，SAC 的提升是决定性的：修复前那轮（Ubuntu / MuJoCo 3.1.6）同样 30 万步只能拿到 661.7 / 158.2 / -9.0。
+2. **PPO 在三个环境上都没有超过随机基线。** HalfCheetah 348.9 低于随机 692.3，Ant -127.4 低于随机 -59.2，Walker2d -17.3 低于随机 -1.0；Walker2d 更是每集固定 13 步倒地。这说明当前这套 PPO 实现（近似 actor 梯度 + 64×64 MLP + 每份 rollout 单轮更新）在本预算下基本没学到有效策略，如实记录、未做美化。
+3. **为什么 PPO 会输给随机策略？** 三个原因叠加：(a) Actor 梯度是 `adv · ratio · (a-μ)/σ²` 的近似式，缺少真正的 tanh-squash 修正，策略均值容易停在饱和区；(b) 同一份 rollout 复用多轮时梯度方向会重复放大，实测 10 轮会让 Ant / Walker2d 直接发散或 NaN，只能退回单轮更新，样本效率因此很低；(c) 30 万步对 Ant / Walker2d 本就偏少（常规 PPO 通常需要百万级步数），而 SAC 的 off-policy 回放能在同样预算下多次利用每一帧数据。
+4. **整体结论：** 在"纯 NumPy + 轻量 MLP + 30 万步预算"的约束下，SAC 在三个环境上都显著优于随机基线与 PPO；PPO 仅能维持 HalfCheetah 的稳定奔跑但回报低于随机基线，Ant / Walker2d 学不起来。若要提升 PPO，需要补全 squash-高斯 log-prob 与雅可比、改用更大网络并延长训练预算，这属于后续工作，本 PR 未纳入。
 
 ## 目录结构
 
@@ -186,7 +194,7 @@ src/rl_mujoco_locomotion/
 ├── assets/                 # HalfCheetah / Ant / Walker2d 的 MJCF 模型
 ├── rl_mujoco_locomotion/
 │   ├── __init__.py
-│   ├── nn.py               # NumPy MLP + SGD 更新（含可选 Adam 实现）
+│   ├── nn.py               # NumPy MLP + Adam / SGD 更新
 │   ├── env.py              # HalfCheetah / Ant / Walker2d 环境封装与渲染后端
 │   ├── ppo.py              # PPO 算法实现
 │   ├── sac.py              # SAC 算法实现
@@ -203,7 +211,8 @@ src/rl_mujoco_locomotion/
 
 - `MLP`：多层感知机，隐藏层 ReLU 激活，输出层线性（PPO Actor 用 tanh 压缩）
 - `MLP.backward(grad, lr=None)`：反向传播；`lr` 不为空时按 SGD 现场更新权重，为空时只返回 `d(loss)/d(input)`（SAC 取 actor 梯度时用）
-- `Adam`：Adam 优化器实现（一阶矩 + 二阶矩），作为可选工具保留；当前 PPO / SAC 的训练循环实际使用 `MLP.backward(lr=...)` 的 SGD 更新
+- `MLP.grads(grad)`：只反传、返回按层排列的参数梯度列表，供 Adam 使用
+- `Adam`：Adam 优化器（一阶矩 + 二阶矩），PPO 的 actor / critic 用它更新；SAC 仍走 `MLP.backward(lr=...)` 的 SGD 更新
 - `soft_update` / `hard_update`：目标网络软更新与硬更新；二者都**原地写参数数组**，因此必须传入 `MLP.params()`（引用），传 `get_params()`（副本）不会产生任何效果
 - `clip_grad_norm`：梯度范数裁剪，用于稳定 PPO 训练
 
@@ -220,7 +229,7 @@ src/rl_mujoco_locomotion/
 
 - `RolloutBuffer`：收集 on-policy 轨迹，计算 GAE 与 returns
 - `PPO.act()`：tanh 高斯策略采样（`log_std` 夹紧）
-- `PPO.update()`：clipped surrogate objective + 价值函数回归 + target-KL 早停 + 梯度裁剪；同一份 rollout 会复用 `train_iters`（默认 10）轮，每轮重新打乱 minibatch 顺序，全部轮次结束后才清空缓冲区（`RolloutBuffer.reset()`）
+- `PPO.update()`：clipped surrogate objective（`clip_ratio=0.2` 的掩码 + tanh 雅可比）+ 价值函数回归 + target-KL 早停 + 梯度裁剪，actor / critic 均用 Adam；同一份 rollout 默认只更新 `train_iters=1` 轮（多轮复用在简化梯度下不稳定，见上文"实现修复记录"），消费完由 `RolloutBuffer.reset()` 清空
 
 ### SAC（`sac.py`）
 
@@ -234,12 +243,14 @@ src/rl_mujoco_locomotion/
 
 | 项目 | 版本 |
 |------|------|
-| OS | Ubuntu 20.04.6 LTS |
-| Python | 3.8.10 |
-| MuJoCo | 3.1.6 |
-| NumPy | 1.24.4 |
-| imageio | 2.35.1 |
-| ROS 2 | Humble（用于 colcon 构建验证） |
+| OS | Windows 11（本轮数据）；Ubuntu 20.04 / 22.04 亦支持 |
+| Python | 3.14.0（Ubuntu 侧 3.8.10） |
+| MuJoCo | 3.17.0（Ubuntu 侧 3.1.6） |
+| NumPy | 2.5.4 |
+| matplotlib | 3.11.2 |
+| imageio | 2.38.1 |
+| 渲染后端 | Windows：glfw（默认）；Linux 无头：egl（`env.py` 自动设置） |
+| ROS 2 | Humble（可选，用于 colcon 构建验证） |
 
 ### 验证步骤
 

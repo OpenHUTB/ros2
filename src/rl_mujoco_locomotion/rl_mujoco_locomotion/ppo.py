@@ -73,13 +73,18 @@ class RolloutBuffer:
 
 class PPO:
     def __init__(self, obs_dim, act_dim, hidden_sizes=(64, 64), actor_lr=3e-4, critic_lr=1e-3,
-                 clip_ratio=0.2, target_kl=0.01, train_iters=10, gamma=0.99, lam=0.95, seed=0):
+                 clip_ratio=0.2, target_kl=0.01, train_iters=1, gamma=0.99, lam=0.95, seed=0):
         self.actor = MLP([obs_dim] + list(hidden_sizes) + [act_dim], seed=seed)
         self.actor_logstd = np.zeros((1, act_dim)) - 0.5
         self.critic = MLP([obs_dim] + list(hidden_sizes) + [1], seed=seed + 1)
         self.clip_ratio = clip_ratio
         self.target_kl = target_kl
         self.train_iters = train_iters
+        self.actor_lr = actor_lr
+        self.critic_lr = critic_lr
+        # 多轮复用同一份 rollout 时，Adam 的自适应步长比朴素 SGD 稳定得多
+        self.actor_opt = Adam(self.actor.weights + self.actor.biases, lr=actor_lr)
+        self.critic_opt = Adam(self.critic.weights + self.critic.biases, lr=critic_lr)
         self.gamma = gamma
         self.lam = lam
         self.obs_dim = obs_dim
@@ -109,25 +114,31 @@ class PPO:
                 # Critic update
                 v_pred = self.critic.forward(obs)
                 grad_v = clip_grad_norm(2.0 * (v_pred - ret.reshape(-1, 1)) / len(obs), 10.0)
-                self.critic.backward(grad_v, lr=1e-3)
+                self.critic_opt.step(self.critic.grads(grad_v))
 
                 # Actor update
                 mu = np.tanh(self.actor.forward(obs))
                 std = np.exp(np.clip(self.actor_logstd, LOG_STD_MIN, LOG_STD_MAX))
                 logp = self._logp(act, mu, std)
-                ratio = np.clip(np.exp(np.clip(logp - old_logp, -20, 20)), 0.0, 10.0)
+                ratio = np.exp(np.clip(logp - old_logp, -20, 20))
                 kl = np.mean(old_logp - logp)
                 if not np.isfinite(kl) or kl > self.target_kl:
                     break
 
-                # Policy gradient (simplified, using advantage-weighted gradient)
-                dmu = adv.reshape(-1, 1) * ratio.reshape(-1, 1) * (act - mu) / (std ** 2 + 1e-8) / len(obs)
-                dlogstd = adv.reshape(-1, 1) * ratio.reshape(-1, 1) * (((act - mu) / (std + 1e-8)) ** 2 - 1) / len(obs)
+                # Clipped surrogate：越过 trust region 正向边界的样本不再产生梯度，
+                # 这是多轮（train_iters）复用同一份 rollout 不发散的关键。
+                eps = self.clip_ratio
+                active = np.where(adv > 0, ratio < 1.0 + eps, ratio > 1.0 - eps)
+                weight = np.where(active, adv * ratio, 0.0)
+                dmu = weight.reshape(-1, 1) * (act - mu) / (std ** 2 + 1e-8) / len(obs)
+                dlogstd = weight.reshape(-1, 1) * (((act - mu) / (std + 1e-8)) ** 2 - 1) / len(obs)
+                # tanh 压缩的雅可比：梯度要穿过 mu = tanh(z) 这一层
+                dmu = dmu * (1.0 - mu ** 2)
                 dmu = clip_grad_norm(np.nan_to_num(dmu, nan=0.0, posinf=0.0, neginf=0.0), 1.0)
                 dlogstd = np.nan_to_num(dlogstd, nan=0.0, posinf=0.0, neginf=0.0)
-                self.actor.backward(dmu, lr=3e-4)
+                self.actor_opt.step(self.actor.grads(dmu))
                 self.actor_logstd = np.clip(
-                    self.actor_logstd - 3e-4 * np.mean(dlogstd, axis=0, keepdims=True),
+                    self.actor_logstd - self.actor_lr * np.mean(dlogstd, axis=0, keepdims=True),
                     LOG_STD_MIN, LOG_STD_MAX)
         buf.reset()
 

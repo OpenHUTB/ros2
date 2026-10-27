@@ -48,6 +48,18 @@ class MLP:
                 self.biases[i] -= lr * db
         return grad
 
+    def grads(self, grad):
+        """只做反向传播，返回与 params()（weights 后接 biases，按层顺序）对齐的梯度列表。"""
+        gw = [None] * len(self.weights)
+        gb = [None] * len(self.biases)
+        for i in reversed(range(len(self.weights))):
+            if i < len(self.weights) - 1:
+                grad = grad * (self._acts[i + 1] > 0)
+            gw[i] = self._acts[i].T @ grad
+            gb[i] = np.sum(grad, axis=0, keepdims=True)
+            grad = grad @ self.weights[i].T
+        return gw + gb
+
     def get_params(self):
         return [w.copy() for w in self.weights], [b.copy() for b in self.biases]
 
