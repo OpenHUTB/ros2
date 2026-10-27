@@ -1,0 +1,7 @@
+data/
+results/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+MUJOCO_LOG.TXT

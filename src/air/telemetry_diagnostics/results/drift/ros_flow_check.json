@@ -1,0 +1,12 @@
+{
+  "telemetry_messages": 281,
+  "score_messages": 281,
+  "diagnostic_arrays": 281,
+  "alarm_messages": 70,
+  "reasons": [
+    "model_residual",
+    "normal",
+    "warming_up"
+  ],
+  "source": "Actual ROS2 subscribers, recorded AirSim data with software injection"
+}

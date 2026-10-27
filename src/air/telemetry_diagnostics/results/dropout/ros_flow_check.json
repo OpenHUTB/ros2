@@ -1,0 +1,12 @@
+{
+  "telemetry_messages": 211,
+  "score_messages": 279,
+  "diagnostic_arrays": 279,
+  "alarm_messages": 66,
+  "reasons": [
+    "missing_packet",
+    "normal",
+    "warming_up"
+  ],
+  "source": "Actual ROS2 subscribers, recorded AirSim data with software injection"
+}
