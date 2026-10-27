@@ -1,0 +1,16 @@
+# mujoco_car_nn_avoidance 仿真桥接参数
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致：ros2 launch 会自动加载本文件，
+# 桥接节点只取与自己同名的分节。改这里的场景列表、目标距离和超时时间，
+# 不需要改 Python 源码，也不需要重新 colcon build。
+
+/mujoco_car_nn_sim_bridge:
+  ros__parameters:
+    # 依次运行的场景 XML（相对功能包 share/models 目录）
+    scenes:
+      - "car_scene_basic.xml"
+      - "car_scene_slalom.xml"
+      - "car_scene_dual.xml"
+    # 到达判定目标 x (m) 与单场景超时 (s)
+    goal_x: 6.0
+    timeout_s: 30.0
