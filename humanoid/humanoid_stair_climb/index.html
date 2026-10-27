@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>人形上下台阶步态仿真 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u4eba\u5f62\u4e0a\u4e0b\u53f0\u9636\u6b65\u6001\u4eff\u771f";
+        var mkdocs_page_input_path = "humanoid/humanoid_stair_climb.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">人形上下台阶步态仿真</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">效果图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">一、为什么做这个模块</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">二、场景与机器人模型</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">三、步态与逆解</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">四、复现</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">五、实测结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">六、能力边界</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">七、参数</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">人形机器人</li>
+<li class="breadcrumb-item active">人形上下台阶步态仿真</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/humanoid/humanoid_stair_climb.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="humanoid_stair_climb">人形上下台阶步态仿真（humanoid_stair_climb）</h1>
+<p>MuJoCo 场景：平地 + <strong>6 级台阶</strong>（每级高 0.12 m、深 0.30 m）+ 平台，总爬升 0.72 m。
+人形用<strong>解析逆解 + 分段足端轨迹</strong>交替迈步，逐级走上去，全程脚底不穿台阶、关节不越限。</p>
+<h2 id="_1">效果图</h2>
+<table>
+<thead>
+<tr>
+<th>起步：双脚站在台阶前</th>
+<th>中段：第 4～5 级，摆动腿抬起跨级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="" src="../../img/humanoid/humanoid_stair_climb/scene_start.png"/></td>
+<td><img alt="" src="../../img/humanoid/humanoid_stair_climb/scene_mid.png"/></td>
+</tr>
+</tbody>
+</table>
+<p>完整过程（Ubuntu 虚拟机内 <code>ffmpeg -f x11grab</code> 直接录屏，6 fps，596 KB）：</p>
+<p><img alt="" src="../../img/humanoid/humanoid_stair_climb/demo.gif"/></p>
+<p>静图为 Ubuntu 22.04 虚拟机桌面的直接截屏，画面里能看到左侧 dock、顶部状态栏与 MuJoCo 窗口标题栏。
+动图是虚拟机内对 MuJoCo 窗口的直接录屏（<code>--pace --pace-scale 1.5</code> 放慢后 <code>ffmpeg -f x11grab</code> 录 18 s，
+再转 6 fps GIF）—— GNOME 跑在 Wayland 上，X11 抓屏只能拿到 XWayland 窗口，拿不到 GNOME 合成的桌面层。</p>
+<h2 id="_2">一、为什么做这个模块</h2>
+<p><code>src/humanoid/</code> 下已有模块都在<strong>平地</strong>上：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>内容</th>
+<th>差异</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>humanoid_ppo_locomotion</code></td>
+<td>PPO 神经网络平衡控制</td>
+<td>学习型，平地站立/行走</td>
+</tr>
+<tr>
+<td><code>humanoid_push_recovery</code></td>
+<td>外力推挤后的恢复</td>
+<td>平地抗扰</td>
+</tr>
+<tr>
+<td><code>humanoid_local_planner_bench</code></td>
+<td>DWA / APF 局部避障</td>
+<td>平地 + 走廊窄门</td>
+</tr>
+<tr>
+<td><code>mujoco_hopper_demo</code></td>
+<td>单足弹跳</td>
+<td>单腿，无台阶</td>
+</tr>
+</tbody>
+</table>
+<p><strong>台阶是平地模块覆盖不到的一类</strong>：足端必须抬到比落点更高的高度才能跨过立面，
+重心要跟着支撑脚升降，腿长余量随时可能不够。这三件事在平地上都碰不到。</p>
+<h2 id="_3">二、场景与机器人模型</h2>
+<p><code>models/stair_scene.xml</code>：</p>
+<div class="highlight"><pre><span></span><code>台阶     6 级实心方块，第 k 级顶面 z = 0.12k，x ∈ [0.30(k-1), 0.30k]
+平台     x ∈ [1.80, 2.40]，顶面 z = 0.72
+机器人   freejoint（运动学驱动）
+  ├── 躯干/头/双臂           contype=0，纯视觉
+  └── 每条腿 3 关节          hip / knee / ankle，轴均为 +y
+</code></pre></div>
+<p>腿部尺寸：髋在基座上方 0.76 m，大腿 0.45 m，小腿 0.45 m，脚底在踝下 0.04 m。
+腿全长 0.90 m，站立时髋到踝 0.78 m，留约 0.12 m 余量——上台阶时两脚会短暂
+相差两级（0.24 m 高差），余量就是留给这一下的。</p>
+<h2 id="_4">三、步态与逆解</h2>
+<p><code>humanoid_stair_climb/gait.py</code>，不依赖 MuJoCo，可单独跑单元测试。</p>
+<p><strong>足端轨迹</strong>按周期分三段，不是「线性上升 + 正弦拱」：</p>
+<div class="highlight"><pre><span></span><code>u ∈ [0, 0.25)   原地抬到安全高度  max(z0,z1) + 0.05
+u ∈ [0.25,0.75) 水平移动到落点，全程保持安全高度
+u ∈ [0.75,1.0)  落到 z1
+</code></pre></div>
+<blockquote>
+<p>先抬后走的原因：脚是 0.24 m 长的盒子，<strong>前端比踝超前 0.18 m</strong>。用正弦拱时踝还在
+立面之前、脚前端已经伸进台阶里，脚底高度又不够，实测穿模 26 mm。改成分段后
+<code>max_penetration = 0.000 m</code>。</p>
+</blockquote>
+<p><strong>解析 IK</strong>（两连杆闭式解）：由髋到踝的向量直接解 hip / knee，踝角取 <code>-(hip+knee)</code>
+让脚底保持水平。关节方向按 MuJoCo 的 <code>+y</code> 轴约定吸收进公式，往返误差实测 0.0000。</p>
+<p><strong>重心高度</strong>取两只脚里<strong>最低</strong>的那个目标高度（支撑脚用当前台阶，摆动脚用它即将落到的台阶）：</p>
+<blockquote>
+<p>最初取「较高的一只」并让摆动脚用当前高度，实测 <code>髋→踝 = 0.905 m &gt; 腿长 0.90 m</code>，
+IK 被 clamp，脚被拖进立面。改成取最低、并且摆动脚提前用落点高度，最大伸展降到 0.838 m。</p>
+</blockquote>
+<h2 id="_5">四、复现</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/humanoid/humanoid_stair_climb
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+python3<span class="w"> </span>main.py<span class="w"> </span>--test<span class="w">         </span><span class="c1"># 14 项检查</span>
+python3<span class="w"> </span>main.py<span class="w">                </span><span class="c1"># 打开 MuJoCo 窗口实时演示</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--headless<span class="w">     </span><span class="c1"># 只打印指标并写 CSV</span>
+</code></pre></div>
+<p>录 GIF：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--headless<span class="w"> </span>--record<span class="w"> </span>frames<span class="w"> </span>--record-every<span class="w"> </span><span class="m">0</span>.4
+</code></pre></div>
+<p><code>--record</code> 走离屏渲染，导出纯场景画面、不含 UI。要录带 MuJoCo 窗口的动图，
+用 <code>--pace --pace-scale 1.5</code> 打开窗口后直接 <code>ffmpeg -f x11grab -window_id &lt;id&gt;</code> 录屏。</p>
+<p>ROS 2：</p>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>humanoid_stair_climb<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>humanoid_stair_climb<span class="w"> </span>main.launch.py
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/stair_climb/status<span class="w"> </span>--once
+</code></pre></div>
+<p>节点发布的 <code>/stair_climb/joint_states</code>、<code>/stair_climb/odom</code>、<code>/stair_climb/status</code> 与
+<code>/tf</code>（<code>odom → base_link</code>）走的是和 <code>main.py --headless</code> 同一套步态与指标，
+所以 <code>status</code> 里那行摘要和终端输出逐字一致。到达平台后再按 <code>hold</code> 秒继续，
+之后停在平台位姿上继续发位姿，下游查 TF 不会超时。</p>
+<h2 id="_6">五、实测结果</h2>
+<p>Ubuntu 22.04 + Python 3.10.12 + MuJoCo 3.15.0，控制频率 50 Hz，步态周期 1.4 s。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>到达平台</td>
+<td>是</td>
+</tr>
+<tr>
+<td>用时</td>
+<td>11.84 s</td>
+</tr>
+<tr>
+<td>步数</td>
+<td>17</td>
+</tr>
+<tr>
+<td>爬升</td>
+<td>0.720 m（= 6 × 0.12）</td>
+</tr>
+<tr>
+<td>最高基座</td>
+<td>0.780 m</td>
+</tr>
+<tr>
+<td>终点 x</td>
+<td>2.19 m</td>
+</tr>
+<tr>
+<td>脚与台阶最小间距</td>
+<td>−0.000 m（无穿透）</td>
+</tr>
+<tr>
+<td>最大穿透</td>
+<td>0.000 m</td>
+</tr>
+<tr>
+<td>落脚点误差</td>
+<td>0.000 m</td>
+</tr>
+<tr>
+<td>关节越界</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>同一个 <code>--headless</code> 在 Windows 宿主机与 Ubuntu 虚拟机内结果逐位一致。</p>
+<p>「关节越界 0」是把六个关节全部按 <code>models/stair_scene.xml</code> 里的 <code>joint range</code> 逐帧比对
+得到的：hip ±1.6、knee [−0.02, 2.1]、ankle ±1.1。本场景实际用到的行程是
+hip 最大 1.4622、knee 最大 1.9547、ankle 最大 0.9636，都留了余量。
+这组限位是给这个自建模型定的，不是实测机器人的机械限位；<code>test_standalone.py</code>
+里有一条测试解析 XML 比对 <code>config.JOINT_LIMITS</code>，改一处不改另一处会直接失败。</p>
+<h2 id="_7">六、能力边界</h2>
+<ul>
+<li><strong>不含平衡控制</strong>：基座是 freejoint 运动学驱动，重心高度由步态给定，不是动力学算出来的。
+  本模块评价的是「足端轨迹与逆解是否合理」，不是「人形会不会摔倒」。</li>
+<li><strong>脚不参与接触</strong>：脚 <code>contype=0</code>，与台阶的间距用 <code>mj_geomDistance</code> 量，不做接触力求解。</li>
+<li><strong>无感知与规划</strong>：台阶尺寸是给定的，不做视觉识别或落脚点搜索。</li>
+<li><strong>单一场景</strong>：6 级等高等深的直台阶，结论不外推到变高变深、带转角的楼梯。</li>
+<li><strong>速度较慢</strong>：设计前进速度 0.214 m/s（= 步幅 0.30 / 周期 1.4），等价于「一步一级」的保守走法。
+  实测起点 x = −0.35、终点 2.19，11.84 s 走 2.54 m，平均 0.215 m/s，与设计值一致。</li>
+</ul>
+<h2 id="_8">七、参数</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>位置</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>STEP_HEIGHT</code> / <code>STEP_DEPTH</code> / <code>STEP_COUNT</code></td>
+<td><code>config.py</code></td>
+<td>0.12 m / 0.30 m / 6</td>
+<td>台阶几何</td>
+</tr>
+<tr>
+<td><code>HIP_Z</code> / <code>THIGH</code> / <code>SHANK</code></td>
+<td><code>config.py</code></td>
+<td>0.76 / 0.45 / 0.45 m</td>
+<td>腿部尺寸</td>
+</tr>
+<tr>
+<td><code>CYCLE_TIME</code> / <code>SWING_RATIO</code></td>
+<td><code>config.py</code></td>
+<td>1.4 s / 0.42</td>
+<td>步态周期与单腿摆动占比</td>
+</tr>
+<tr>
+<td><code>STRIDE</code> / <code>LIFT_HEIGHT</code></td>
+<td><code>config.py</code></td>
+<td>0.30 m / 0.05 m</td>
+<td>每步前进距离与抬腿余量</td>
+</tr>
+<tr>
+<td><code>CONTROL_HZ</code></td>
+<td><code>config.py</code></td>
+<td>50 Hz</td>
+<td>控制频率</td>
+</tr>
+<tr>
+<td><code>TIME_LIMIT</code> / <code>HOLD_TIME</code></td>
+<td><code>config.py</code></td>
+<td>16 s / 2 s</td>
+<td>仿真时长上限 / 到达后停留</td>
+</tr>
+<tr>
+<td><code>JOINT_LIMITS</code></td>
+<td><code>config.py</code></td>
+<td>hip ±1.6、knee [−0.02,2.1]、ankle ±1.1</td>
+<td>关节限位，与 XML 里 range 一致</td>
+</tr>
+<tr>
+<td><code>cycle_time</code> / <code>swing_ratio</code> / <code>lift_height</code></td>
+<td><code>config/params.yaml</code></td>
+<td>同上</td>
+<td>ROS 节点用的参数</td>
+</tr>
+<tr>
+<td><code>time_limit</code> / <code>hold</code></td>
+<td><code>config/params.yaml</code></td>
+<td>16 / 2</td>
+<td>ROS 节点的时长与停留，与 <code>config.py</code> 保持一致</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../mujoco_hopper_demo/" title="MuJoCo单足弹跳机器人简单仿真"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ros_topic_demo/" title="ROS虚拟机器人圆形轨迹rviz可视化示例">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../mujoco_hopper_demo/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ros_topic_demo/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
