@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>肌肉驱动的关节控制与 Hill 肌肉模型 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u808c\u8089\u9a71\u52a8\u7684\u5173\u8282\u63a7\u5236\u4e0e Hill \u808c\u8089\u6a21\u578b";
+        var mkdocs_page_input_path = "musculoskeletal/muscle_joint_control.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_2">为什么不能直接给力矩</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#hill">Hill 肌肉模型</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_3">激活</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#-">力-长度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#-_1">力-速度</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">关节</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">怎么跑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">阶跃响应</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_7">共激活的影响</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">力矩饱和</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">关节刚度</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_10">刚度怎么算</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_11">关键结果：共激活不一定提高刚度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_12">为什么下降段会失稳</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_13">刚度随关节角变化</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">抗扰测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">代价</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_16">测试</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_17">文件结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_18">参考</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">肌肉骨骼人</li>
+<li class="breadcrumb-item active">肌肉驱动的关节控制与 Hill 肌肉模型</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/musculoskeletal/muscle_joint_control.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">肌肉驱动的关节控制</h1>
+<p>用 Hill 肌肉模型做了一个单自由度关节仿真。跟常见的关节仿真不一样的是，控制器
+输出的不是关节力矩，而是两块拮抗肌的激活度，力由肌肉模型根据当前长度和收缩
+速度算出来。</p>
+<p>代码在 <code>src/musculoskeletal/muscle_joint_control/</code>，只用 Python 标准库，不需要
+MuJoCo、ROS 或 matplotlib。Python 3.8 以上都能跑。</p>
+<h2 id="_2">为什么不能直接给力矩</h2>
+<p>平时做仿真习惯把关节当成理想力矩源，想要多大力就发多大力。真实肌肉做不到：</p>
+<ul>
+<li>控制量是激活度 a，范围只有 0 到 1</li>
+<li>肌肉只能拉，不能推。想让关节往反方向转，只能靠对侧那块肌肉拉</li>
+<li>能出多大力跟肌肉当前的长度、收缩速度都有关系，不是固定的</li>
+<li>激活和放松都要时间，而且放松比激活慢</li>
+</ul>
+<p>这样一来就多出几个力矩源模型里看不到的问题：共激活会互相打架、力矩会饱和、
+增益给大了反而会振荡。这些后面都会给数据。</p>
+<h2 id="hill">Hill 肌肉模型</h2>
+<p>长度和速度都做归一化，<code>l_n = l / l_opt</code>，<code>v_n = v / v_max</code>。这里的 v 是缩短
+速度，向心收缩为正。总力是</p>
+<div class="highlight"><pre><span></span><code>F = F_max · [ a · f_l(l_n) · f_v(v_n) + f_p(l_n) ]
+</code></pre></div>
+<h3 id="_3">激活</h3>
+<p>激活度不会瞬间跳变，用一阶滞后：</p>
+<div class="highlight"><pre><span></span><code>da/dt = (u - a) / τ,    τ = τ_act   (u &gt; a，正在激活)
+                        τ = τ_deact (u ≤ a，正在放松)
+</code></pre></div>
+<p>真实肌肉激活比放松快，所以 τ_act 要比 τ_deact 小。这里默认 0.01 s 和 0.04 s，
+参数类会拒绝 τ_deact ≤ τ_act 的配置。</p>
+<h3 id="-">力-长度</h3>
+<p>主动力用高斯函数，最优长度处最大：</p>
+<div class="highlight"><pre><span></span><code>f_l(l_n) = exp( -((l_n - 1) / w)² )      w 取 0.45
+</code></pre></div>
+<p>肌肉被拉长超过最优长度以后，结缔组织会被动张紧，产生被动力：</p>
+<div class="highlight"><pre><span></span><code>f_p(l_n) = 0                                              l_n ≤ 1
+f_p(l_n) = [exp(k(l_n-1)) - 1] / [exp(k(l_max-1)) - 1]     l_n &gt; 1
+</code></pre></div>
+<p>k 取 5，l_max 取 1.6，也就是拉到 1.6 倍最优长度时被动力跟最大等长力差不多。</p>
+<p><img alt="力-长度曲线" src="../../img/musculoskeletal/muscle_joint_control/muscle_curves.png"/></p>
+<p>蓝的是主动力，峰值在 l_n = 1，两边对称下降。红的是被动力，l_n 小于 1 的时候
+一直是 0，超过以后才开始涨。</p>
+<h3 id="-_1">力-速度</h3>
+<p>从 Hill 方程 <code>(F + a)(v + b) = (F0 + a)b</code> 归一化过来，取 a/F0 = b/v_max = 0.25：</p>
+<div class="highlight"><pre><span></span><code>向心（v_n ≥ 0）:  f_v = 0.3125 / (v_n + 0.25) - 0.25      v_n = 1 时为 0
+离心（v_n &lt; 0）:  f_v = 1 + 0.4 · x / (0.25 + x),  x = min(1, -v_n)
+</code></pre></div>
+<p>离心收缩（肌肉被拉长）时的力反而比等长收缩大，上限大概 1.4 倍。这是肌肉比较
+特别的地方，弹簧和阻尼器都没有这个性质。</p>
+<p><img alt="力-速度曲线" src="../../img/musculoskeletal/muscle_joint_control/force_velocity.png"/></p>
+<p>等长时是 1.0000，离心 v=-0.5 时涨到 1.2667，缩短到最大速度 v=1 时降到 0。</p>
+<h2 id="_4">关节</h2>
+<p>一个绕轴转的关节，两边各挂一块肌肉。力学关系是</p>
+<div class="highlight"><pre><span></span><code>J · θ̈ = r · (F_flex - F_ext) - b · θ̇ + τ_ext
+</code></pre></div>
+<p>τ_ext 是外加力矩，做扰动测试用。肌肉长度跟关节角的关系（小角度下近似）是</p>
+<div class="highlight"><pre><span></span><code>l_flex = l_rest - r·θ        l_ext = l_rest + r·θ
+</code></pre></div>
+<p>对时间求导的时候要注意，缩短速度是长度导数的相反数：</p>
+<div class="highlight"><pre><span></span><code>v_flex = +r·θ̇               v_ext = -r·θ̇
+</code></pre></div>
+<p>也就是关节正转时屈肌缩短、伸肌被拉长。这个符号我第一次写反了，后面测试里
+专门留了一条守住它。</p>
+<p><img alt="关节角跟踪" src="../../img/musculoskeletal/muscle_joint_control/joint_step.png"/></p>
+<h2 id="_5">怎么跑</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/musculoskeletal/muscle_joint_control/scripts
+python3<span class="w"> </span>main.py<span class="w">                 </span><span class="c1"># 完整演示</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--quick<span class="w">         </span><span class="c1"># 只跑基本阶跃响应</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--outdir<span class="w"> </span>输出目录
+</code></pre></div>
+<p>跑完终端会打印各项指标，曲线写到 <code>demo_out/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>muscle_curves.png</code></td>
+<td>力-长度曲线</td>
+</tr>
+<tr>
+<td><code>force_velocity.png</code></td>
+<td>力-速度曲线</td>
+</tr>
+<tr>
+<td><code>joint_step.png</code></td>
+<td>关节角跟踪</td>
+</tr>
+<tr>
+<td><code>activation.png</code></td>
+<td>两块肌肉的激活过程</td>
+</tr>
+<tr>
+<td><code>muscle_force.png</code></td>
+<td>肌肉力和关节力矩</td>
+</tr>
+<tr>
+<td><code>coactivation.png</code></td>
+<td>不同共激活下的跟踪对比</td>
+</tr>
+<tr>
+<td><code>stiffness_vs_coactivation.png</code></td>
+<td>刚度随共激活的变化</td>
+</tr>
+<tr>
+<td><code>stiffness_vs_angle.png</code></td>
+<td>刚度随关节角的变化</td>
+</tr>
+<tr>
+<td><code>disturbance_response.png</code></td>
+<td>扰动力矩下的偏转</td>
+</tr>
+<tr>
+<td><code>tradeoff.png</code></td>
+<td>刚度-精度权衡</td>
+</tr>
+</tbody>
+</table>
+<p>跑测试：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/musculoskeletal/muscle_joint_control
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests
+</code></pre></div>
+<h2 id="_6">阶跃响应</h2>
+<p>控制器把 PD 算出来的期望力矩分给两块肌肉。需要正力矩就让屈肌激活、伸肌维持
+一点共激活，反过来也一样。</p>
+<p>目标 0.35 rad，kp = 9.0，kd = 0.9，共激活 0.02，步长 0.001 s，跑 1.5 s：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最终角度</td>
+<td>+0.335306 rad</td>
+</tr>
+<tr>
+<td>稳态误差</td>
+<td>-0.014694 rad</td>
+</tr>
+<tr>
+<td>上升时间</td>
+<td>0.258 s</td>
+</tr>
+<tr>
+<td>超调</td>
+<td>0.00 %</td>
+</tr>
+<tr>
+<td>屈肌最大激活</td>
+<td>0.6060</td>
+</tr>
+<tr>
+<td>伸肌最大激活</td>
+<td>0.2769</td>
+</tr>
+<tr>
+<td>最大关节力矩</td>
+<td>1.8794 N·m</td>
+</tr>
+</tbody>
+</table>
+<p>单块肌肉全力时关节力矩上限是 <code>F_max · r = 120 × 0.03 = 3.6 N·m</code>，这里用到
+1.8794 N·m，还差得远，所以没饱和，跟踪很平稳。</p>
+<p><img alt="激活动作" src="../../img/musculoskeletal/muscle_joint_control/activation.png"/></p>
+<p>屈肌激活先升后降，伸肌只在要刹车的时候才明显出力。</p>
+<p><img alt="肌肉力与关节力矩" src="../../img/musculoskeletal/muscle_joint_control/muscle_force.png"/></p>
+<h3 id="_7">共激活的影响</h3>
+<p>目标还是 0.35 rad，把共激活调大：</p>
+<table>
+<thead>
+<tr>
+<th>共激活</th>
+<th>稳态误差 (rad)</th>
+<th>上升时间 (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.02</td>
+<td>-0.014694</td>
+<td>0.258</td>
+</tr>
+<tr>
+<td>0.15</td>
+<td>-0.016797</td>
+<td>0.278</td>
+</tr>
+<tr>
+<td>0.35</td>
+<td>-0.021544</td>
+<td>0.333</td>
+</tr>
+</tbody>
+</table>
+<p>共激活越大，误差越大、响应越慢。这是花代价换来的，具体换到了什么看后面刚度
+那一节。</p>
+<p><img alt="共激活对比" src="../../img/musculoskeletal/muscle_joint_control/coactivation.png"/></p>
+<h3 id="_8">力矩饱和</h3>
+<p>这是肌肉驱动跟理想力矩源区别最明显的地方。力矩上限是 3.6 N·m，kp 取 9 时：</p>
+<table>
+<thead>
+<tr>
+<th>目标 (rad)</th>
+<th>PD 要的力矩 (N·m)</th>
+<th>实际最大力矩 (N·m)</th>
+<th>稳态误差 (rad)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.10</td>
+<td>0.9000</td>
+<td>0.5781</td>
+<td>-0.00335</td>
+</tr>
+<tr>
+<td>0.30</td>
+<td>2.7000</td>
+<td>1.6328</td>
+<td>-0.01199</td>
+</tr>
+<tr>
+<td>0.60</td>
+<td>5.4000</td>
+<td>2.5023</td>
+<td>-0.03307</td>
+</tr>
+<tr>
+<td>1.00</td>
+<td>9.0000</td>
+<td>2.5023</td>
+<td>-0.09008</td>
+</tr>
+</tbody>
+</table>
+<p>目标越大，PD 要的力矩越可能超出肌肉能力，误差就跟着涨。</p>
+<p>再把增益也调大看看：</p>
+<table>
+<thead>
+<tr>
+<th>kp</th>
+<th>稳态误差 (rad)</th>
+<th>超调 (%)</th>
+<th>最大力矩 (N·m)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.0</td>
+<td>-0.025579</td>
+<td>0.00</td>
+<td>0.7655</td>
+</tr>
+<tr>
+<td>9.0</td>
+<td>-0.011990</td>
+<td>0.00</td>
+<td>1.6328</td>
+</tr>
+<tr>
+<td>20.0</td>
+<td>-0.005554</td>
+<td>8.27</td>
+<td>2.5023</td>
+</tr>
+<tr>
+<td>40.0</td>
+<td>-0.001829</td>
+<td>30.78</td>
+<td>2.8814</td>
+</tr>
+<tr>
+<td>80.0</td>
+<td>-0.007864</td>
+<td>54.13</td>
+<td>2.8384</td>
+</tr>
+</tbody>
+</table>
+<p>kp 小于等于 9 的时候，增益越大误差越小。到 20 以后指令经常超出上限，开始振
+荡，超调迅速变大，kp = 80 时误差反而回升了。所以"增益越大越好"在这里不成立。</p>
+<h2 id="_9">关节刚度</h2>
+<h3 id="_10">刚度怎么算</h3>
+<p>关节力矩 <code>τ = r(F_flex - F_ext)</code>。稳定的关节，τ 和 θ 是反号的（偏得越多，往回
+拉的力矩越大），所以刚度定义成</p>
+<div class="highlight"><pre><span></span><code>k = -∂τ/∂θ          k &gt; 0 表示稳定
+</code></pre></div>
+<p>把 τ 对小角度展开一下，能看出刚度是从哪来的：</p>
+<div class="highlight"><pre><span></span><code>∂l_flex/∂θ = -r,   ∂l_ext/∂θ = +r
+
+k = r² · ( ∂F_flex/∂l + ∂F_ext/∂l )
+</code></pre></div>
+<p>刚度正比于两条肌肉力-长度曲线斜率之和，再乘力矩臂的平方。下面这些现象都能用
+这个式子解释。</p>
+<h3 id="_11">关键结果：共激活不一定提高刚度</h3>
+<p>肌肉处在力-长度曲线的不同位置，<code>∂f_l/∂l</code> 的符号不一样：</p>
+<ul>
+<li>上升段（l &lt; l_opt）：斜率为正，共激活越大刚度越大</li>
+<li>最优长度：斜率为 0，共激活不影响刚度</li>
+<li>下降段（l &gt; l_opt）：斜率为负，共激活越大刚度越小，甚至变负</li>
+</ul>
+<p>实测（θ = 0，共激活从 0.05 扫到 0.90）：</p>
+<table>
+<thead>
+<tr>
+<th>l_rest / l_opt</th>
+<th>工作段</th>
+<th>k(0.05)</th>
+<th>k(0.90)</th>
+<th>趋势</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.90</td>
+<td>上升段</td>
+<td>0.1015</td>
+<td>1.8275</td>
+<td>上升</td>
+</tr>
+<tr>
+<td>0.95</td>
+<td>上升段</td>
+<td>0.0527</td>
+<td>0.9482</td>
+<td>上升</td>
+</tr>
+<tr>
+<td>0.98</td>
+<td>上升段</td>
+<td>0.0213</td>
+<td>0.3832</td>
+<td>上升</td>
+</tr>
+<tr>
+<td>1.00</td>
+<td>最优长度</td>
+<td>0.2829</td>
+<td>0.2829</td>
+<td>不变</td>
+</tr>
+<tr>
+<td>1.02</td>
+<td>下降段</td>
+<td>0.6041</td>
+<td>0.2421</td>
+<td>下降</td>
+</tr>
+<tr>
+<td>1.05</td>
+<td>下降段</td>
+<td>0.6739</td>
+<td>-0.2216</td>
+<td>下降</td>
+</tr>
+<tr>
+<td>1.10</td>
+<td>下降段</td>
+<td>0.8314</td>
+<td>-0.8945</td>
+<td>下降</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="刚度随共激活变化" src="../../img/musculoskeletal/muscle_joint_control/stiffness_vs_coactivation.png"/></p>
+<p>蓝线是上升段，一路涨上去。绿线是最优长度，完全平的。红线是下降段，一路往下
+掉，最后穿过零点变成负的。</p>
+<p>所以"共激活提高关节刚度"这句话只对上升段成立。下降段上把肌肉拉长反而会让它
+的主动力变小，相当于挂了个负弹簧，激活越高这个负效应越强。</p>
+<h3 id="_12">为什么下降段会失稳</h3>
+<p>下降段能不能稳住，看被动力够不够抵消主动项的负斜率：</p>
+<div class="highlight"><pre><span></span><code>a · ∂f_l/∂l + ∂f_p/∂l &gt; 0
+</code></pre></div>
+<p>拿 l_rest/l_opt = 1.05 算一下（都是对 l_n 的导数）：</p>
+<table>
+<thead>
+<tr>
+<th>激活 a</th>
+<th>a·∂f_l/∂l</th>
+<th>∂f_p/∂l</th>
+<th>合计</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.0</td>
+<td>-0.0000</td>
+<td>+0.3364</td>
+<td>+0.3364</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>0.2</td>
+<td>-0.0976</td>
+<td>+0.3364</td>
+<td>+0.2388</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td>-0.2439</td>
+<td>+0.3364</td>
+<td>+0.0925</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>0.8</td>
+<td>-0.3902</td>
+<td>+0.3364</td>
+<td>-0.0538</td>
+<td>失稳</td>
+</tr>
+<tr>
+<td>1.0</td>
+<td>-0.4878</td>
+<td>+0.3364</td>
+<td>-0.1514</td>
+<td>失稳</td>
+</tr>
+</tbody>
+</table>
+<p>激活超过大概 0.7 以后，主动项的负斜率就压过被动力了，关节失去自稳能力。所以
+被动力不光是个限位保护，它在下降段上还是稳定性的来源。</p>
+<h3 id="_13">刚度随关节角变化</h3>
+<p><img alt="刚度随关节角变化" src="../../img/musculoskeletal/muscle_joint_control/stiffness_vs_angle.png"/></p>
+<p>三个工作点在 θ=0 附近的形状不一样（共激活 0.3，摘几个点）：</p>
+<table>
+<thead>
+<tr>
+<th>θ (rad)</th>
+<th>上升段</th>
+<th>最优长度</th>
+<th>下降段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-0.30</td>
+<td>0.6253</td>
+<td>0.4437</td>
+<td>0.2901</td>
+</tr>
+<tr>
+<td>0.00</td>
+<td>0.3161</td>
+<td>0.2829</td>
+<td>0.4105</td>
+</tr>
+<tr>
+<td>+0.30</td>
+<td>0.6253</td>
+<td>0.4437</td>
+<td>0.2901</td>
+</tr>
+</tbody>
+</table>
+<p>上升段的曲线是个 U 形，中间最低，往两边翘。下降段正好反过来，中间最高。</p>
+<h3 id="_14">抗扰测试</h3>
+<p>加 0.05 N·m 的恒定外力矩，看关节偏多少（上升段，l_rest/l_opt = 0.95）：</p>
+<table>
+<thead>
+<tr>
+<th>共激活</th>
+<th>稳态偏转 (rad)</th>
+<th>等效刚度 (N·m/rad)</th>
+<th>解析刚度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.05</td>
+<td>0.292232</td>
+<td>0.1711</td>
+<td>0.0527</td>
+</tr>
+<tr>
+<td>0.20</td>
+<td>0.196514</td>
+<td>0.2544</td>
+<td>0.2107</td>
+</tr>
+<tr>
+<td>0.50</td>
+<td>0.085913</td>
+<td>0.5820</td>
+<td>0.5268</td>
+</tr>
+<tr>
+<td>0.80</td>
+<td>0.054102</td>
+<td>0.9242</td>
+<td>0.8429</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="扰动响应" src="../../img/musculoskeletal/muscle_joint_control/disturbance_response.png"/></p>
+<p>共激活从 0.05 提到 0.80，同样扰动下偏转从 0.292 rad 降到 0.054 rad，少了 81%。
+抗扰能力是实实在在换到了。</p>
+<h3 id="_15">代价</h3>
+<p>最后把三个指标摆一起看（上升段，目标 0.3 rad）：</p>
+<table>
+<thead>
+<tr>
+<th>共激活</th>
+<th>刚度 k</th>
+<th>稳态误差 (rad)</th>
+<th>上升时间 (s)</th>
+<th>能耗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.02</td>
+<td>0.0211</td>
+<td>-0.005703</td>
+<td>0.244</td>
+<td>0.100</td>
+</tr>
+<tr>
+<td>0.10</td>
+<td>0.1054</td>
+<td>-0.009228</td>
+<td>0.258</td>
+<td>0.500</td>
+</tr>
+<tr>
+<td>0.20</td>
+<td>0.2107</td>
+<td>-0.014431</td>
+<td>0.284</td>
+<td>1.000</td>
+</tr>
+<tr>
+<td>0.35</td>
+<td>0.3688</td>
+<td>-0.024550</td>
+<td>0.388</td>
+<td>1.750</td>
+</tr>
+<tr>
+<td>0.50</td>
+<td>0.5268</td>
+<td>-0.039059</td>
+<td>—</td>
+<td>2.500</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="权衡曲线" src="../../img/musculoskeletal/muscle_joint_control/tradeoff.png"/></p>
+<p>刚度涨了约 25 倍，代价是稳态误差涨了 6.8 倍，能耗线性涨 25 倍。共激活不是白
+来的抗扰手段，实际用的时候得在刚度、精度和能耗之间找个平衡点。</p>
+<h2 id="_16">测试</h2>
+<p><code>tests/</code> 下一共 134 个测试：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>数量</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_muscle_model.py</code></td>
+<td>57</td>
+<td>参数校验、激活、力-长度、力-速度、总力</td>
+</tr>
+<tr>
+<td><code>test_joint_model.py</code></td>
+<td>37</td>
+<td>运动学、动力学、阶跃响应、指标计算</td>
+</tr>
+<tr>
+<td><code>test_stiffness.py</code></td>
+<td>40</td>
+<td>刚度符号、工作点判定、机理、共激活效应、扰动响应</td>
+</tr>
+</tbody>
+</table>
+<p>测试断言的是肌肉的定性特征，不是拟合出来的数值，比如主动力峰值一定在 l_n = 1、
+被动力在 l_n ≤ 1 时一定是 0、离心收缩力大于等长收缩力、激活比放松快、刚度正比
+于力矩臂平方。这些规律任何实现都不该违反。</p>
+<p>写的过程中测试抓到过两个问题。一个是把缩短速度写成了长度导数，符号反了，结果
+关节正转时屈肌反而越来越离心，被 <code>test_positive_angular_velocity_shortens_flexor</code>
+拦下来了。另一个是我一开始以为零激活就等于零力矩，其实 θ &gt; 0 时伸肌被拉过最优
+长度会产生被动力，现在有 <code>test_passive_only_restoring_torque</code> 固定这个行为。</p>
+<h2 id="_17">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/musculoskeletal/muscle_joint_control/
+├── scripts/
+│   ├── muscle_model.py     Hill 肌肉模型
+│   ├── joint_model.py      单自由度关节和拮抗肌对
+│   ├── stiffness.py        刚度、工作点判定、扰动响应、权衡分析
+│   ├── simple_plot.py      PNG 折线图（手写的，只用 zlib）
+│   └── main.py             演示入口
+└── tests/
+    ├── test_muscle_model.py
+    ├── test_joint_model.py
+    └── test_stiffness.py
+</code></pre></div>
+<p><code>simple_plot.py</code> 是自己写的，因为想在没有绘图库的环境里也能出图。PNG 最小结构
+只有 IHDR、IDAT、IEND 三个块，用 zlib 压一下像素行就能生成。</p>
+<h2 id="_18">参考</h2>
+<ul>
+<li>A. V. Hill, <em>The heat of shortening and the dynamic constants of muscle</em>, 1938</li>
+<li>F. E. Zajac, <em>Muscle and tendon: properties, models, scaling, and application to
+  biomechanics and motor control</em>, 1989</li>
+<li>D. G. Thelen, <em>Adjustment of muscle mechanics model parameters to simulate dynamic
+  contractions in older adults</em>, 2003</li>
+<li><a href="https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_model">肌肉骨骼人的示例</a></li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../msk_hand_teleop/" title="MuJoCo肌肉骨骼灵巧手遥操作与NN控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../set_up_and_connect_to_carla/" title="手动控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../msk_hand_teleop/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../set_up_and_connect_to_carla/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>

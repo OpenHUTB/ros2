@@ -97,11 +97,33 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal current" href="#">肌肉骨骼人基础</a>
 <ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1 与电机驱动机器人的区别</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2 核心概念</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 肌肉与肌腱</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 激活度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-">2.3 力-长度-速度关系</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 共激活</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3-hill">3 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4 仿真工具</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5 本版块的内容</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
@@ -313,10 +335,177 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="_1">肌肉骨骼基础</h1>
+<div><h1 id="_1">肌肉骨骼机器人基础</h1>
+<p>肌肉骨骼机器人（musculoskeletal robot）用<strong>肌肉</strong>驱动关节，而不是用电机直接
+输出力矩。这一差别不只是执行器换了个名字，它改变了控制量的含义、出力的大小，
+以及整个控制问题的结构。</p>
+<p>本文介绍基本概念与常用仿真工具，本版块的模块在此基础上展开。</p>
+<h2 id="1">1 与电机驱动机器人的区别</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>电机驱动机器人</th>
+<th>肌肉骨骼机器人</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>控制量</td>
+<td>力矩 / 电流，可正可负</td>
+<td><strong>激活度 a ∈ [0, 1]</strong>，只能"收缩"</td>
+</tr>
+<tr>
+<td>反向运动</td>
+<td>电机反转即可</td>
+<td>必须由<strong>对侧肌肉</strong>拉动</td>
+</tr>
+<tr>
+<td>出力大小</td>
+<td>近似恒定，与位形无关</td>
+<td>随<strong>长度</strong>与<strong>收缩速度</strong>变化</td>
+</tr>
+<tr>
+<td>响应速度</td>
+<td>快，近似瞬时</td>
+<td>一阶滞后，且<strong>激活快于放松</strong></td>
+</tr>
+<tr>
+<td>刚度</td>
+<td>由控制器决定</td>
+<td><strong>共激活</strong>可直接调节关节刚度</td>
+</tr>
+<tr>
+<td>能量</td>
+<td>通电即消耗</td>
+<td>可被动储能（肌腱弹性）</td>
+</tr>
+</tbody>
+</table>
+<p>因此肌肉骨骼系统的控制问题<strong>更难也更有研究价值</strong>：控制量被限制在 [0, 1]，
+反向力只能靠拮抗肌，出力还随状态变化。</p>
+<h2 id="2">2 核心概念</h2>
+<h3 id="21">2.1 肌肉与肌腱</h3>
+<p>一块骨骼肌由<strong>收缩成分</strong>（肌纤维）和<strong>弹性成分</strong>（肌腱）串联组成。肌纤维主动
+收缩产生力，肌腱像弹簧一样储能并缓冲冲击。仿真中常把肌腱简化为串联弹性单元
+（series elasticity），或先忽略它、只建收缩成分。</p>
+<h3 id="22">2.2 激活度</h3>
+<p>神经系统不直接控制肌肉出力，而是发出<strong>神经指令</strong> <code>u</code>，使肌肉产生<strong>激活度</strong>
+<code>a ∈ [0, 1]</code>。激活度不能瞬时跳变，用一阶滞后描述：</p>
+<div class="highlight"><pre><span></span><code>da/dt = (u - a) / τ,    τ = τ_act  (u &gt; a，正在激活)
+                        τ = τ_deact (u ≤ a，正在放松)
+</code></pre></div>
+<p>生理上<strong>激活快于放松</strong>，因此 <code>τ_act &lt; τ_deact</code>。</p>
+<h3 id="23-">2.3 力-长度-速度关系</h3>
+<p>肌肉能产生多大力，取决于它当前有多长、收缩得多快：</p>
+<ul>
+<li><strong>力-长度</strong>：肌节在<strong>最优长度</strong> <code>l_opt</code> 时主动力最大，过短或过长都下降；
+  被拉长超过最优长度时，结缔组织还会产生<strong>被动力</strong>。</li>
+<li><strong>力-速度</strong>：<strong>缩短</strong>（向心收缩）时力下降，缩短到最大速度时力为 0；
+  <strong>拉长</strong>（离心收缩）时力反而<strong>超过</strong>等长收缩，上限约 1.4 倍。</li>
+</ul>
+<p>离心收缩比等长收缩更有力，这是肌肉区别于弹簧、阻尼器的重要特性。</p>
+<h3 id="24">2.4 共激活</h3>
+<p>一对<strong>拮抗肌</strong>（屈肌 / 伸肌）可以同时保持一定激活度。这会：</p>
+<ul>
+<li><strong>提高关节刚度</strong>，增强抗扰与稳定性</li>
+<li><strong>增加能耗</strong></li>
+<li><strong>降低定位精度、减慢响应</strong>（两侧相互对抗）</li>
+</ul>
+<p>刚度和精度之间的这种权衡，是肌肉骨骼系统里必须面对的问题。</p>
+<h2 id="3-hill">3 Hill 肌肉模型</h2>
+<p>最常用的肌肉模型由 Hill（1938）提出，把总肌肉力写为</p>
+<div class="highlight"><pre><span></span><code>F = F_max · [ a · f_l(l_n) · f_v(v_n) + f_p(l_n) ]
+</code></pre></div>
+<p>其中归一化长度 <code>l_n = l / l_opt</code>，归一化<strong>缩短速度</strong> <code>v_n = v / v_max</code>：</p>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+<th>典型形式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>f_l</code></td>
+<td>主动力-长度</td>
+<td>高斯型，<code>l_n = 1</code> 处为 1</td>
+</tr>
+<tr>
+<td><code>f_p</code></td>
+<td>被动力-长度</td>
+<td>指数型，<code>l_n ≤ 1</code> 时为 0</td>
+</tr>
+<tr>
+<td><code>f_v</code></td>
+<td>力-速度</td>
+<td>Hill 方程，离心段超过 1</td>
+</tr>
+</tbody>
+</table>
+<p>本版块有完整的实现、验证与实测数据：</p>
+<ul>
+<li><a href="../muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a></li>
+</ul>
+<h2 id="4">4 仿真工具</h2>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/google-deepmind/mujoco">MuJoCo</a></td>
+<td>通用物理引擎，内置肌肉执行器（<code>dyntype="muscle"</code>），本仓库水域载具模块也用它</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MyoHub/myosuite">MyoSuite</a></td>
+<td>基于 MuJoCo 的肌肉骨骼环境与任务集合，接入 OpenAI Gym API</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MyoHub/myoconverter">MyoConverter</a></td>
+<td>把 OpenSim 的骨骼肌模型转成 MuJoCo 格式</td>
+</tr>
+<tr>
+<td><a href="https://opensim.stanford.edu/">OpenSim</a></td>
+<td>生物力学领域的标准建模与仿真平台</td>
+</tr>
+<tr>
+<td><a href="https://github.com/robfiras/loco-mujoco">LocoMuJoCo</a></td>
+<td>面向运动的模仿学习基准，含两足与肌肉骨骼人体模型</td>
+</tr>
+</tbody>
+</table>
+<p>想快速上手，建议顺序：先用本文档对应模块把<strong>单关节</strong>的肌肉模型搞明白，
+再接 MuJoCo 或 MyoSuite 做整机仿真。</p>
+<h2 id="5">5 本版块的内容</h2>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本文</td>
+<td>基本概念与工具</td>
+</tr>
+<tr>
+<td><a href="../muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a></td>
+<td>单自由度关节 + 拮抗肌对，Hill 模型实现、134 个单元测试与实测数据</td>
+</tr>
+</tbody>
+</table>
 <h2 id="_2">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_model">肌肉骨骼人的示例</a></li>
+<li>A. V. Hill, <em>The heat of shortening and the dynamic constants of muscle</em>, 1938</li>
+<li>F. E. Zajac, <em>Muscle and tendon: properties, models, scaling, and application
+  to biomechanics and motor control</em>, 1989</li>
 </ul></div>
 </div>
 </div><footer>
