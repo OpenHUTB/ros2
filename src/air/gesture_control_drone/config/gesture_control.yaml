@@ -35,6 +35,8 @@ min_altitude: 0.5           # 高度下限 (m)，到这里就拒绝下降（改�
 move_duration: 1.0          # 单次位移/偏航的持续时间 (s)
 yaw_rate: 30.0              # 偏航角速度 (deg/s)
 command_timeout: 10.0       # 单次 AirSim RPC 调用超时 (s)，超时视为失败
+takeoff_timeout: 60.0       # 起飞（含定高）超时 (s)；慢机器/慢仿真器可调大
+land_timeout: 60.0          # 降落超时 (s)；3 m 高度约需 14 s
 command_cooldown: 1.5       # 同一条指令的最小间隔 (s)，控制节点侧的第二道防抖
 connect_retries: 3          # 连接 AirSim 的重试次数
 state_rate: 5.0             # 状态回传频率 (Hz)，0 = 关闭

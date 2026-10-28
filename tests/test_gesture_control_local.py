@@ -769,6 +769,8 @@ def test_drone_client():
           and abs(st.velocity_enu[2] - 0.3) < 1e-6, str(st.velocity_enu))
     check("落地状态可读（1 -> Flying）", st.landed_state == "Flying",
           st.landed_state)
+    check("读到有效状态后 state_valid 为 True", d.state_valid is True,
+          d.state_valid)
     check("高度取 ENU 的 z", abs(st.altitude - 2.0) < 1e-6, str(st.altitude))
     check("api_control 如实反映", st.api_control is True)
     f.collided = True
@@ -785,6 +787,8 @@ def test_drone_client():
     check("关闭时交还 API 控制",
           ("enableApiControl", False) in f.calls, str(f.calls))
     check("关闭后 connected=False", d.connected is False)
+    check("未读到状态时 state_valid 为 False", d.state_valid is False,
+          d.state_valid)
 
 
 # --------------------------------------------------------------------------- #
@@ -1275,7 +1279,8 @@ def test_project_layout():
     cfg = read(os.path.join(PKG, "config", "gesture_control.yaml"))
     for key in ("camera_index", "airsim", "estop_action", "command_cooldown",
                 "stable_frames", "command_topic", "takeoff_altitude",
-                "max_altitude", "min_altitude", "state_rate", "odom_topic"):
+                "max_altitude", "min_altitude", "state_rate", "odom_topic",
+                "command_timeout", "takeoff_timeout", "land_timeout"):
         check("config 里包含 %s" % key, key in cfg)
     try:
         import yaml

@@ -174,9 +174,11 @@ python3 tests/test_gesture_control_local.py
 
 ## 9. 运行证据
 
+> **图片说明**：本节所有图片都由 `tools/log_to_png.py` 从**真实终端输出**渲染而成，不是系统截屏；对应的原始文本见各小节代码块。
+
 ### 9.1 离线回归（本机真实输出）
 
-![离线回归 225 项全部通过](../img/air/gesture_control_drone/local_test.png)
+![离线回归 230 项全部通过](../img/air/gesture_control_drone/local_test.png)
 
 上图由 `tools/log_to_png.py` 从**本机真实终端输出**生成（不是拍照、不是外链），
 复现命令：
@@ -188,23 +190,7 @@ python3 tools/log_to_png.py /tmp/local_test.log \
     --title "python3 tests/test_gesture_control_local.py"
 ```
 
-### 9.2 AirSim 真机运行
-
-真机截图请在**装有仿真器的机器**上跑一次生成（本模块的离线环境没有仿真器，
-不伪造运行证据）：
-
-```bash
-roslaunch gesture_control_drone main.launch airsim_ip:=192.168.80.1 2>&1 | tee /tmp/run.log
-python3 tools/log_to_png.py /tmp/run.log \
-    docs/img/air/gesture_control_drone/run.png \
-    --title "roslaunch gesture_control_drone main.launch (AirSim Blocks)"
-```
-
-生成 `run.png` 后把下面这行取消注释即可显示：
-
-![AirSim 真机运行：起飞 -> 悬停 -> 降落](../img/air/gesture_control_drone/run.png)
-
-### 9.3 虚拟机内 ROS → AirSim 真机飞行（实测）
+### 9.2 虚拟机内 ROS → AirSim 真机飞行（实测）
 
 在 **Ubuntu 20.04 + ROS Noetic 虚拟机**里跑节点，AirSim Blocks 跑在 Windows 宿主上
 （`airsim_ip:=192.168.80.1`），通过 `rostopic` 下发指令验证了完整控制链路：
@@ -229,7 +215,7 @@ python3 tools/log_to_png.py /tmp/run.log \
 这一步证明 **ROS 节点 → AirSim → 真实起降** 是通的；
 `摄像头 → MediaPipe → 手势` 这一段见下面的说明。
 
-### 9.4 实跑才暴露的两个坑（已修）
+### 9.3 实跑才暴露的两个坑（已修）
 
 1. **`catkin_install_python` 不能用来装"辅助模块"**
    它在 devel 空间给每个脚本生成的是**启动器**（`exec(compile(...))`），
@@ -244,7 +230,7 @@ python3 tools/log_to_png.py /tmp/run.log \
    **MJPG**（可用 `GESTURE_CAMERA_FOURCC` 覆盖）并降到 640×480，
    同一台机器上立刻出画面（`shape=(480, 640, 3)`）。
 
-### 9.5 真实手势 → 真机起降（完整链路）
+### 9.4 真实手势 → 真机起降（完整链路）
 
 摄像头（Integrated Camera，USB 透传进虚拟机）→ MediaPipe → `/gesture_command`
 → 控制节点 → AirSim，**全程由真人做手势触发**：
@@ -265,7 +251,7 @@ $ rostopic echo /drone/odom        -> position.z: -0.681(地面) → +1.229(空�
 > `Cannot perform takeoff because vehicle is already moving`，但节点侧仍按"已下发"记录。
 > 有 `*Async` 时 `join()` 会把异常抛出来。
 
-### 9.6 全部动作实机验证
+### 9.5 全部动作实机验证
 
 `forward` / `up` / `yaw_left` / `down` 在修复"按服务端完整签名传参"之后都能真实驱动飞机：
 
@@ -325,17 +311,19 @@ Python 客户端）不提供 `*Async` 方法，那时回退到同名同步方法
    旧客户端自动回退）。
    实机验证：`forward` / `up` / `down` / `yaw_left` 都能让飞机真实移动。
 
-7. **`hover()` 在移动中调用会让飞机掉高度** —— 实测：`forward` 之后调用 `hover`，
-   飞机从 0.85 m 一路降到地面（-0.68 m）；而**静止时**调用 `hover` 是安全的（6 s 高度不变）。
+7. **`hover()` 在移动中调用会让飞机掉高度**（**在等价 msgpack-rpc 客户端上观察到**，未在官方客户端上复现）——
+   实测：`forward` 之后调用 `hover`，飞机从 0.85 m 一路降到地面（-0.68 m）；而**静止时**调用 `hover` 是安全的（6 s 高度不变）。
    现在移动 / 偏航 / 急停之后一律改用**零速度刹车**
    （`moveByVelocityBodyFrame(0, 0, 0, 0.5)`）：实测 `forward` 位移约 0.9 m 后停住，
-   高度稳定在 0.78~0.85 m；停住后仍有 ±0.2 m 的位置保持抖动（该 build 的固有特性）。
+   高度稳定在 0.78~0.85 m；停住后仍有 ±0.2 m 的位置保持抖动（在当前环境下观察到的位置保持抖动）。
 
 ### 10.3 本机实测（等价 msgpack-rpc 客户端 + 真机 Blocks）
 
-这台机器上 `pip install airsim` 装不上（`msgpack-rpc-python` 拉的 tornado 4.5.3
-在 Python 3.10 上无法导入），所以用了一个**等价的 msgpack-rpc 客户端**驱动
-`drone_client.py`。它没有实现 `*Async`，因此走的是上面的**同步回退分支**：
+这台机器上 `pip install airsim` 装不上，原因有两个（都实测过）：
+1. `airsim` 在 PyPI 只有 sdist，它的 `setup.py` **构建期要 `import numpy`**，构建隔离环境里没有 numpy → `ModuleNotFoundError: No module named 'numpy'`；
+2. 它依赖的 `msgpack-rpc-python` 要 `msgpack-python==0.5.6`（老 msgpack API），这个包在 Windows 没有预编译 wheel，需要 MSVC 才能编。
+
+所以用了一个**等价的 msgpack-rpc 客户端**驱动 `drone_client.py`。它没有实现 `*Async`，因此走的是上面的**同步回退分支**（代码里已支持 `pip install cosysairsim` 作为 Windows 上的替代客户端）：
 
 ```
 AirSim API：客户端缺少 *Async —— 已自动切换到同步回退
@@ -347,7 +335,6 @@ execute('land')   -> True（0.02 s）
     +6.0s 离地 +0.12 m            降落 OK
 ```
 
-摄像头 → MediaPipe → 指令 → 飞行这一段尚未跑通（见 §9.2 的说明与 PR 讨论）。
 
 ## 11. 大模型使用声明
 

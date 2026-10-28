@@ -73,6 +73,8 @@ class DroneControlNode(object):
                 min_altitude=_p("min_altitude", 0.5),
                 yaw_rate=_p("yaw_rate", 30.0),
                 command_timeout=_p("command_timeout", 10.0),
+                takeoff_timeout=_p("takeoff_timeout", 60.0),
+                land_timeout=_p("land_timeout", 60.0),
                 connect_retries=_p("connect_retries", 3),
                 log=rospy.loginfo)
         self.drone = drone
@@ -160,8 +162,14 @@ class DroneControlNode(object):
     # 状态回传
     # ------------------------------------------------------------------ #
     def publish_odom(self):
-        """读一次载具状态并发成 ``nav_msgs/Odometry``（ENU）。"""
+        """读一次载具状态并发成 ``nav_msgs/Odometry``（ENU）。
+
+        未连接 / 读不到状态时**不发布**：否则会先发一帧 (0,0,0)，
+        RViz 里表现为飞机从原点跳到真实位置。
+        """
         state = self.drone.state()
+        if not getattr(self.drone, "state_valid", True):
+            return
         msg = Odometry()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = self.world_frame

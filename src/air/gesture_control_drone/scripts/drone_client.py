@@ -143,6 +143,8 @@ class AirSimDrone(object):
         self.last_error = ""
         self.counts = {}
         self.last_state = DroneState()
+        #: 最近一次 state() 是否真的读到了数据；节点据此决定是否发布 odom
+        self.state_valid = False
 
         self._handlers = {
             gm.CMD_TAKEOFF: self._takeoff,
@@ -172,10 +174,16 @@ class AirSimDrone(object):
             return self._client_factory(ip=self.ip, port=self.port)
         try:
             import airsim
-        except ImportError as exc:
-            raise RuntimeError(
-                "缺少 airsim 客户端：pip3 install airsim"
-                "（经典版 AirSim 用 airsim；Cosys-AirSim 才用 cosysairsim）") from exc
+        except ImportError:
+            # Windows 上官方 airsim 包要编译 msgpack-python(0.5.6，需 MSVC)，
+            # 很多机器装不上；Cosys-AirSim 的客户端 RPC 协议一致，可直接顶上。
+            try:
+                import cosysairsim as airsim
+            except ImportError as exc:
+                raise RuntimeError(
+                    "缺少 AirSim 客户端：pip install airsim（Linux/macOS 推荐）"
+                    " 或 pip install cosysairsim（Windows 无需编译器）；"
+                    "两者 RPC 协议一致") from exc
         return airsim.MultirotorClient(ip=self.ip, port=self.port)
 
     def connect(self):
@@ -310,8 +318,13 @@ class AirSimDrone(object):
                     return fn(*args)
                 raise
         if self._has_raw_rpc():
+            # 服务端签名里 vehicle_name 是**最后一个位置参数**，裸 RPC 也必须补上，
+            # 否则会 invalid number of arguments。
             raw = getattr(client, "client")
-            return raw.call(method, *args)
+            extra = kwargs.get("vehicle_name")
+            if extra is None:
+                return raw.call(method, *args)
+            return raw.call(method, *args, extra)
         raise RuntimeError("客户端没有 %s()，也没有底层 call()" % method)
 
     def _ensure_unpaused(self):
@@ -565,6 +578,7 @@ class AirSimDrone(object):
         """读取一次载具状态并转成 ENU；失败时返回上一帧并记录错误。"""
         client = client or self.client
         if client is None:
+            self.state_valid = False
             return self.last_state
         try:
             raw = self._call(lambda: client.getMultirotorState(**self._kw()),
@@ -590,7 +604,9 @@ class AirSimDrone(object):
                 position_enu=pos, velocity_enu=vel,
                 landed_state=landed_state_name(getattr(raw, "landed_state", 0)),
                 api_control=api, collision=collision, stamp=self._clock())
+            self.state_valid = True
         except Exception as exc:
+            self.state_valid = False
             self.last_error = str(exc)
             self._log("读取状态失败：%s" % exc)
         return self.last_state

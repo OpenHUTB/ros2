@@ -90,7 +90,7 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'home'"
 | 能力 | 实现 |
 |---|---|
 | 连接 | `confirmConnection` + `enableApiControl` 只做一次并复用；失败可重试 |
-| 起飞 | `armDisarm(True)` → `takeoffAsync` → `moveToZAsync(-高度)` → `hoverAsync` |
+| 起飞 | `armDisarm(True)` → `takeoffAsync` → `moveToZAsync(-takeoff_altitude)` → `hoverAsync`（定高仅在 `*Async` 路径生效，同步回退由仿真器默认高度决定） |
 | 降落 / 悬停 | `landAsync` / `hoverAsync` |
 | 位移 | `moveByVelocityBodyFrameAsync`（机体系；NED 下 `-z` 为上） |
 | 偏航 | `rotateByYawRateAsync`（NED 顺时针为正） |
@@ -101,6 +101,7 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'home'"
 | 超时 | 每个 RPC 在工作线程执行并加 `command_timeout`，卡住即失败 |
 | 退出 | 先悬停再 `enableApiControl(False)`，不锁桨 |
 | **API 兼容** | `*Async` 只是客户端对 `call_async('takeoff', ...)` 的包装（服务端所有版本都只有 `takeoff/land/hover/goHome`）。连上后探测客户端是否提供 `*Async`：有则走异步，没有则回退到同名同步方法，并用**独立连接发完即弃**、状态靠轮询 |
+| **客户端** | 优先 `import airsim`；装不上时回退 `cosysairsim`（Windows 无需编译器，RPC 协议一致） |
 | **结果语义** | 有 `*Async` 时 `join()` 能拿到 AirSim 的异常；同步回退模式下同步命令是"发完即弃"，只能确认"已下发"，结果看 `/drone/odom` 与 `/drone_state` |
 | **摄像头** | Linux 下默认用 V4L2 + **MJPG 640×480**：VMware/VirtualBox 透传的摄像头在默认 YUYV 720p 下会 `select() timeout`；可用 `GESTURE_CAMERA_FOURCC=YUYV` 覆盖 |
 | **暂停检查** | 连接时查 `simIsPaused`，若被暂停自动 `simPause(False)`（暂停时物理不推进，`takeoff` 会永远等不到高度） |
