@@ -212,6 +212,22 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false
 python3 tests/test_sensors_local.py    # 80 项，全部通过
 ```
 
+### 6.6 IMU
+
+`imu_pub.py` 发布 `/imu`（`sensor_msgs/Imu`，默认 50 Hz）：
+
+- 姿态：ENU 世界系；
+- 角速度 / 线加速度：机体系 FLU，AirSim 的机体系 NED 经 `body_ned_to_flu` 转换；
+- 线加速度包含重力分量，纯运动加速度需使用方自行扣除；
+- `frame/imu` 默认 `base_link`，`rate/imu_hz` 默认 50。
+
+```bash
+rostopic hz /imu
+rostopic echo -n1 /imu
+```
+
+![IMU 50 Hz](../img/air/carlair_ros_bridge/imu_hz.png)
+
 ## 7. 运行验证
 
 ```shell
