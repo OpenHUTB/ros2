@@ -178,7 +178,7 @@ python3 tests/test_gesture_control_local.py
 
 ### 9.1 离线回归（本机真实输出）
 
-![离线回归 230 项全部通过](../img/air/gesture_control_drone/local_test.png)
+![离线回归 232 项全部通过](../img/air/gesture_control_drone/local_test.png)
 
 上图由 `tools/log_to_png.py` 从**本机真实终端输出**生成（不是拍照、不是外链），
 复现命令：
@@ -256,6 +256,43 @@ $ rostopic echo /drone/odom        -> position.z: -0.681(地面) → +1.229(空�
 `forward` / `up` / `yaw_left` / `down` 在修复"按服务端完整签名传参"之后都能真实驱动飞机：
 
 ![全部动作实机验证](../img/air/gesture_control_drone/run_actions.png)
+### 9.6 官方客户端（airsim 1.8.1）—— 真 `*Async` 路径实机验证
+
+前面的 9.2~9.5 都是走**同步回退**分支（等价 msgpack-rpc 客户端）。这一节用**官方 `airsim` 客户端**，
+走真实 `takeoffAsync().join()` / `moveByVelocityBodyFrameAsync()` 路径：
+
+![官方客户端 *Async 路径实机验证](../img/air/gesture_control_drone/run_async.png)
+
+```
+协议：Connected!   Client Ver:1 (Min Req: 1), Server Ver:1 (Min Req: 1)
+
+api_mode: async
+初始:      alt=-0.68  Landed
+takeoff -> True   5.39s   alt=2.63   Flying     <- 定高生效（moveToZAsync）
+up      -> True   1.52s   alt=3.61   Flying
+forward -> True   1.51s   y=0.65     Flying     <- 机体系前向位移
+land    -> True  20.69s   alt=-0.68  落地
+```
+
+两个额外结论：
+
+* **定高只在 `*Async` 路径生效**：这里 `takeoff` 到 2.63 m（`takeoff_altitude=3.0`），
+  而同步回退只到仿真器默认高度（约 +1.54 m）。
+* **`land` 用了 20.69 s**：证实必须给降落独立超时（`land_timeout=60 s`），
+  套用 `command_timeout`(10 s) 会误判失败。
+
+安装方式（`airsim` 在 PyPI 只有 sdist，构建期要 `numpy` 和 `msgpackrpc`）：
+
+```bash
+sudo apt install -y gcc python3-dev        # msgpack-python 0.5.6 需要编译
+pip3 install --user numpy
+pip3 install --user msgpack-rpc-python     # 会现场编出 msgpack-python 0.5.6
+pip3 install --user --no-build-isolation airsim
+```
+
+> 另外实测发现：**airsim 1.8.1 的 `confirmConnection()` 只打印 `Connected!` 不返回值**（`None`），
+> 早期代码用 `if not confirmConnection()` 会误判为失败；现已改为"只有明确 `False` 才算失败"。
+
 ## 10. 客户端兼容层与已知坑
 
 ### 10.1 先澄清一个容易误判的点

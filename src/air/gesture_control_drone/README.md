@@ -38,6 +38,14 @@ sudo apt install -y python3-numpy python3-opencv python3-pil fonts-wqy-zenhei
 # mediapipe / airsim / pygame 用 pip
 pip3 install -r requirements.txt
 
+> 官方 `airsim` 在 PyPI 只有 sdist，构建期要 `numpy` 与 `msgpackrpc`，Linux 上按这个顺序装：
+> ```bash
+> sudo apt install -y gcc python3-dev
+> pip3 install --user numpy msgpack-rpc-python
+> pip3 install --user --no-build-isolation airsim
+> ```
+> Windows 上编不了 `msgpack-python`，可改用 `pip install cosysairsim`（注意：Cosys 客户端是协议 v4，只对接新版本服务端）。
+
 > `mediapipe`、`airsim`、`pygame` 没有 rosdep 键，`rosdep install` 装不上，**必须**用上面的 `pip3` 命令装。
 > 其中 **mediapipe 必须 0.10.x**（`requirements.txt` 已钉 `<1.0`）：1.x 移除了 `mp.solutions`，装最新版会直接 `AttributeError: module 'mediapipe' has no attribute 'solutions'`。
 ```

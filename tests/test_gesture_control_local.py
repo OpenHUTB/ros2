@@ -862,6 +862,22 @@ class FakeSyncOnlyAirSim(object):
         self._rec("hover", vehicle_name)
 
 
+def test_confirm_none():
+    """airsim 1.8.1 的 confirmConnection() 只打印不返回（None），不能当失败。"""
+
+    class NoneConfirm(FakeAirSim):
+        def confirmConnection(self, **k):
+            self._rec("confirmConnection")
+            return None
+
+    fake = NoneConfirm()
+    d = drone_client.AirSimDrone(client_factory=lambda **k: fake,
+                                log=lambda m: None, clock=lambda: 0.0)
+    check("confirmConnection() 返回 None 也视为连接成功", d.connect() is True,
+          d.last_error)
+    check("返回 None 时不记录连接错误", d.last_error == "", d.last_error)
+
+
 def test_api_compat():
     # ---- 支持 async 的 build：仍走原路径 ----
     d, f = make_drone()
@@ -1332,6 +1348,7 @@ def main():
             ("6.5 AirSim API 兼容（async / sync 自动回退）", test_api_compat),
             ("6.6 降落超时（慢下降不误判）", test_land_slow_descent),
             ("6.7 同步回退的参数签名", test_sync_move_signature),
+            ("6.8 confirmConnection 返回 None", test_confirm_none),
             ("7. 端到端：手势 -> 指令 -> AirSim", test_end_to_end),
             ("8. 两个节点的契约 + 状态回传", test_nodes),
             ("9. 叠加层不丢帧", test_overlay_not_lost),

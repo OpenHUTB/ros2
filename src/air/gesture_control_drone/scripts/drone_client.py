@@ -194,8 +194,10 @@ class AirSimDrone(object):
             try:
                 self.client = self._make_client()
                 with self._api_lock:
-                    connected = bool(self.client.confirmConnection())
-                if not connected:
+                    connected = self.client.confirmConnection()
+                # 不同客户端版本行为不同：airsim 1.8.1 的 confirmConnection() 只打印
+                # "Connected!" 而**不返回值**（None），所以只有明确 False 才算失败。
+                if connected is False:
                     raise RuntimeError("confirmConnection() 返回 False"
                                        "（仿真器没开 / IP 不对 / 41451 被防火墙拦）")
                 with self._api_lock:
