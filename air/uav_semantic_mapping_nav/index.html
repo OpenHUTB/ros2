@@ -172,7 +172,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
 <ul>
 <li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/overview/">模块概览</a>
@@ -257,6 +257,56 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
 </li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">语义分割建图与语义路径规划</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 模块定位</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 分割网络</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 损失</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 训练</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34">3.4 类别分布</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 语义栅格</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 语义代价图与规划</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 对比实验设计</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 分割精度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 规划对比</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-inf">7.3 语义代价不能给 inf</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81-nnpyim2col">8.1 nn.py：im2col 的维度顺序</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82-segdatapy">8.2 segdata.py：扫描航线的几何约束</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83-semantic_mappy">8.3 semantic_map.py：分开估计的代价</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 复现步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 依赖</a>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../drone_trajectory_logger/">状态识别与轨迹绘制</a>
 </li>
 </ul>
@@ -307,6 +357,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item active">语义分割建图与语义路径规划</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_semantic_mapping_nav.md"> 编辑页面</a>
@@ -317,25 +368,26 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">语义分割建图与语义路径规划</h1>
-<div class="admonition note">
-<p class="admonition-title">占位页</p>
-<p>完整内容随本模块 PR 提交。</p>
-</div>
-<p>对应任务（2）传感器感知、任务（3）建图与导航。
-几何地图只知道"哪里有障碍"，本模块用语义分割建图，支持"沿可通行区域飞、绕开植被"这类任务。</p>
-<h2 id="_2">与已有模块的区别</h2>
-<p>课程内无人机建图全为纯几何（八叉树 / 栅格），无任何语义建图：</p>
+<p>对应作业任务（2）<strong>传感器感知</strong>与任务（3）<strong>建图与导航</strong>。</p>
+<p>几何地图只知道"哪里有障碍"，不知道"那是什么"。本模块用语义分割构建语义地图，
+使无人机能完成"沿可通行区域飞、绕开植被、从门框穿过"这类需要理解环境的任务。</p>
+<p>分割网络是纯 numpy 手写前向与反向的小型编解码网络（不依赖深度学习框架），
+在仿真真值分割上训练；语义栅格把占据概率与类别分布<strong>分开估计</strong>；规划器在
+语义代价图上跑 A*。对比实验：几何代价图 / 语义代价图 / 真值分割语义图。</p>
+<hr/>
+<h2 id="1">1. 模块定位</h2>
+<p>课程内的无人机建图全部是纯几何的（八叉树 / 栅格），没有任何语义建图：</p>
 <table>
 <thead>
 <tr>
-<th>已有</th>
+<th>已有模块</th>
 <th>区别</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>octree_uav_3d_pathfinding</code></td>
-<td>只有占据/空闲，没有类别</td>
+<td>几何八叉树占用地图，只有占据/空闲，没有类别</td>
 </tr>
 <tr>
 <td><code>unmanned_aerial_car_perception</code></td>
@@ -347,24 +399,463 @@
 </tr>
 </tbody>
 </table>
-<p>分割网络为神经网络，符合"感知算法需为神经网络"的要求。</p>
-<h2 id="_3">计划</h2>
+<p>分割网络本身也满足"感知算法需为神经网络"的要求。</p>
+<hr/>
+<h2 id="2">2. 架构</h2>
+<div class="highlight"><pre><span></span><code>RGB 160×128 ─→ 分割网络（3 层 stride-2 编码器 + 1×1 头 + 最近邻上采样）
+                    │
+                    ├─ 9 类语义图
+                    └─ 逐像素置信度
+                          │
+深度 160×128 ─────────────┴─→ 针孔逆投影 ─→ 语义栅格
+                                              │  占据对数几率（几何）
+                                              │  类别投票（语义）
+                                              │
+                                       语义代价图 ─→ A* ─→ 视线捷径 ─→ 路径
+</code></pre></div>
+<hr/>
+<h2 id="3">3. 分割网络</h2>
+<h3 id="31">3.1 结构</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>形状</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conv1</td>
+<td>3×64×64 → 16×30×30，5×5 /2</td>
+<td>valid 卷积，不补零</td>
+</tr>
+<tr>
+<td>Conv2</td>
+<td>16×30×30 → 24×14×14，3×3 /2</td>
+<td></td>
+</tr>
+<tr>
+<td>Conv3</td>
+<td>24×14×14 → 32×6×6，3×3 /2</td>
+<td></td>
+</tr>
+<tr>
+<td>分类头</td>
+<td>32×6×6 → 9×6×6，1×1</td>
+<td></td>
+</tr>
+<tr>
+<td>上采样</td>
+<td>9×6×6 → 9×64×64</td>
+<td>最近邻，无参数</td>
+</tr>
+</tbody>
+</table>
+<p>上采样放在 <strong>logits</strong> 上而不是特征图上：解码器不需要参数，输入尺寸也不必是
+2 的幂——全卷积结构让同一份权重既能跑训练的 64×64，也能跑板端的其他分辨率。
+上采样的目标尺寸取自<strong>本次输入</strong>的空间尺寸，钉死在构造时会让 logits 与标签
+尺寸对不上（实测 96×96 的 logits 对上 64×64 的标签）。</p>
+<h3 id="32">3.2 损失</h3>
+<p>逐像素加权交叉熵，权重取类别频率的逆平方根：</p>
+<p>
+<script type="math/tex; mode=display">
+w_c = \left(\frac{\sum_{c'} n_{c'}}{n_c}\right)^{1/2},
+\qquad \mathcal{L} = -\frac{1}{N}\sum_{i} w_{y_i}\log p_{i,y_i}
+</script>
+</p>
+<p>类别极不平衡（地面与天空占多数像素），不加权时网络会把所有像素判成多数类，
+像素准确率看着很高而 mIoU 接近 0。权重归一化到均值为 1。</p>
+<h3 id="33">3.3 训练</h3>
+<p>Adam（<script type="math/tex">\text{lr}=2\times10^{-3}</script>，权重衰减 <script type="math/tex">10^{-6}</script>，梯度范数限幅 1.0），
+30 轮，每集最多取 150 帧。数据从仿真真值分割采，RGB 用分箱平均下采样到
+64×64，标签用最近邻。分箱平均会把类别索引平均成不存在的类别：训练 loss
+下降而 mIoU 停在随机水平（实测）。</p>
+<p>源尺寸与目标尺寸不成整数倍时，退回裁剪会错位：标签贯穿全图最近邻采样，输入只取左上角。
+160×128 → 96×96 时 RGB 裁掉 44% 画面、标签未裁，mIoU 崩。</p>
+<p><strong>验证集按帧留出（15%），不按集留。</strong> 四个采集 episode 分属三个场景，留一集
+时验证集与训练集分布不同：实测验证损失上升、训练损失下降（域偏移，非过拟合）。</p>
+<h3 id="34">3.4 类别分布</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>像素占比</th>
+<th>类别</th>
+<th>像素占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>背景</td>
+<td>50.65%</td>
+<td>门</td>
+<td>1.65%</td>
+</tr>
+<tr>
+<td>地面</td>
+<td>34.46%</td>
+<td>车辆</td>
+<td>0.22%</td>
+</tr>
+<tr>
+<td>建筑</td>
+<td>10.80%</td>
+<td>障碍 / 行人 / 自身</td>
+<td>0（本批场景无样本）</td>
+</tr>
+<tr>
+<td>植被</td>
+<td>2.22%</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>三类无样本的类不参与 mIoU 统计（<script type="math/tex">0/0</script> 不是 0 分）。车辆只占 0.22% 像素，
+是六类里最难的。</p>
+<p><img alt="" src="../../img/air/uav_semantic_mapping_nav/01_seg_samples.png"/></p>
+<hr/>
+<h2 id="4">4. 语义栅格</h2>
+<p>每格维护三样东西：</p>
+<table>
+<thead>
+<tr>
+<th>量</th>
+<th>更新方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>logodds</code></td>
+<td>射线穿过减 <script type="math/tex">l_{\text{free}}=-0.40</script>，命中加 <script type="math/tex">l_{\text{occ}}=+0.85</script>，限幅 ±4</td>
+</tr>
+<tr>
+<td><code>votes[c]</code></td>
+<td>命中点的分类结果投一票</td>
+</tr>
+<tr>
+<td><code>hits</code> / <code>free</code></td>
+<td>命中、穿过的次数（区分"没看过"和"看过是空的"）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>占据与语义分开估计</strong>：占据由几何射线决定，语义由分类结果投票决定。把两者
+耦合（例如"只有建筑类像素才标占据"）会让分割错误直接变成避障错误；分开之后
+语义错了只影响代价，不影响安全。</p>
+<p>两个实现细节：</p>
+<p><strong>射线空域采样不含终点。</strong> 终点是命中格，空域票会抵消刚加的占据票：同一堵墙
+被几百条射线打中时对数几率变负，概率图上整面墙消失。</p>
+<p><strong>2.5D 反投影的深度按视线几何给。</strong> 同一 (u,v) 上不同俯仰角的像素若深度相同，
+会映射到同一格，二维上塌缩成一条线（合成测试场景实测）。</p>
+<hr/>
+<h2 id="5">5. 语义代价图与规划</h2>
+<p>
+<script type="math/tex; mode=display">
+\text{cost}(r,c) = \begin{cases}
+\infty & \text{占据概率} > 0.7 \\
+c_{\text{class}} & \text{已知且置信度} \ge 0.6 \\
+0.5\,c_{\text{class}} + 0.5\,c_{\text{unknown}} & \text{置信度} < 0.6 \\
+c_{\text{unknown}} & \text{未观测}
+\end{cases}
+</script>
+</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>通行代价 <script type="math/tex">c</script>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>地面</td>
+<td>1.0（基准）</td>
+</tr>
+<tr>
+<td>门</td>
+<td>1.2</td>
+</tr>
+<tr>
+<td>植被</td>
+<td>3.0（可穿越但代价高）</td>
+</tr>
+<tr>
+<td>建筑 / 障碍 / 车辆 / 行人 / 背景</td>
+<td>20（不该走，但走得通）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>只有几何占据给 <script type="math/tex">\infty</script>。</strong> 语义是估计，把它当硬约束会让一次误分类直接堵死
+通路（见 §7.3）。</p>
+<p>代价定义在<strong>格</strong>上，8 邻域的边权取两端格代价的均值乘以步长：</p>
+<p>
+<script type="math/tex; mode=display">
+e(a \to b) = \|a - b\| \cdot \tfrac{1}{2}\big(\text{cost}(a) + \text{cost}(b)\big)
+</script>
+</p>
+<p>启发式用欧氏距离。规划完成后再做一次<strong>视线捷径</strong>：能直线通达就跳过中间点，
+去掉栅格 A* 的锯齿。</p>
+<p>置信度低时把代价往中性值拉，避免"猜错的语义"把代价压得过低——这一项是
+语义地图比几何地图多出来的自由度，也是它需要被单独评测的原因。</p>
+<hr/>
+<h2 id="6">6. 对比实验设计</h2>
+<p>同一份扫描数据、同一套 A*，只换代价图：</p>
+<table>
+<thead>
+<tr>
+<th>代价图</th>
+<th>语义来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>几何</td>
+<td>只用占据概率（基线）</td>
+</tr>
+<tr>
+<td>语义</td>
+<td>网络预测的分割</td>
+</tr>
+<tr>
+<td>语义（真值分割）</td>
+<td>仿真真值分割，用来分离"网络的错"与"语义本身的收益"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>场景按区分度挑。</strong> 起终点随便取时三张代价图给出同一条路径（实测三条路径
+长度均为 46.37 m，真值语义代价均为 1.00）。<code>make_scenarios</code> 计算直线段在真值
+语义图上的平均代价，优先取"几何上通畅、语义上不该走"的场景。</p>
+<p><strong>打分统一用真值语义图。</strong> 按规划器自己的代价图打分没有可比性：语义图把满路
+判成建筑时，它给自己的路径打 10.50。</p>
+<p>指标：成功率、路径长度、撞上几何占据格的采样点数、沿途语义不确定性、
+A<em> 展开节点数、</em><em>真值语义代价</em>*。</p>
+<hr/>
+<h2 id="7">7. 实测结果</h2>
+<p>平台：Windows 11 + Intel Core 5 220H（核显，无独显）。训练 30 轮 702 s。
+ROS2 侧在 Ubuntu 20.04 + Humble 虚拟机中 <code>colcon build</code> 通过。</p>
+<h3 id="71">7.1 分割精度</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mIoU（6 个非空类）</td>
+<td><strong>0.4730</strong></td>
+</tr>
+<tr>
+<td>像素准确率</td>
+<td>0.8265</td>
+</tr>
+<tr>
+<td>建图后语义一致 mIoU</td>
+<td>0.4688</td>
+</tr>
+<tr>
+<td>建图后语义一致像素准确率</td>
+<td>0.9313</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>IoU</th>
+<th>类别</th>
+<th>IoU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>背景</td>
+<td>0.8332</td>
+<td>门</td>
+<td>0.3220</td>
+</tr>
+<tr>
+<td>地面</td>
+<td>0.6948</td>
+<td>车辆</td>
+<td>0.0946</td>
+</tr>
+<tr>
+<td>建筑</td>
+<td>0.5691</td>
+<td>障碍 / 行人 / 自身</td>
+<td>无样本</td>
+</tr>
+<tr>
+<td>植被</td>
+<td>0.3245</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>车辆只占 0.22% 像素，是六类里最难的；门（1.65%）次之。地面与建筑决定
+可通行性，两者都在 0.57 以上。</p>
+<p><img alt="" src="../../img/air/uav_semantic_mapping_nav/02_seg_accuracy.png"/></p>
+<h3 id="72">7.2 规划对比</h3>
+<table>
+<thead>
+<tr>
+<th>代价图</th>
+<th>成功率</th>
+<th>路径长度</th>
+<th>碰撞</th>
+<th>语义不确定性</th>
+<th>展开节点</th>
+<th>真值语义代价</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>几何</td>
+<td>100%</td>
+<td>32.80 m</td>
+<td>0.00</td>
+<td>0.151</td>
+<td>4697</td>
+<td><strong>7.33</strong></td>
+</tr>
+<tr>
+<td>语义（网络）</td>
+<td>100%</td>
+<td>32.80 m</td>
+<td>0.00</td>
+<td>0.144</td>
+<td>6073</td>
+<td><strong>4.17</strong></td>
+</tr>
+<tr>
+<td>语义（真值分割）</td>
+<td>100%</td>
+<td>32.80 m</td>
+<td>0.00</td>
+<td>0.069</td>
+<td>4989</td>
+<td><strong>1.00</strong></td>
+</tr>
+</tbody>
+</table>
+<p>网络语义图把真值语义代价从 7.33 压到 4.17（−43%），真值分割能到 1.00。
+差距就是分割精度的损失。</p>
+<p>逐场景（代价越低越好）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>几何</th>
+<th>语义（网络）</th>
+<th>语义（真值）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>对角</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>判别14</td>
+<td>10.50</td>
+<td>10.50</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>判别213</td>
+<td>10.50</td>
+<td><strong>1.00</strong></td>
+<td>1.00</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="" src="../../img/air/uav_semantic_mapping_nav/04_paths.png"/></p>
+<p>语义图在"判别213"上找出了干净路线，在"判别14"上没有——网络在那一处漏检了。
+整张语义图上建筑格 4494 个，真值只有 2440 个：建筑召回高、<strong>精确率低</strong>，
+多出来的都是误检。</p>
+<p><img alt="" src="../../img/air/uav_semantic_mapping_nav/03_maps.png"/></p>
+<h3 id="73-inf">7.3 语义代价不能给 <code>inf</code></h3>
+<p>初版把"建筑/障碍"的通行代价设成 <code>inf</code>，结果网络预测的语义图<strong>成功率 0%</strong>
+（几何图与真值语义图都是 100%）：网络把场景起点格判成"建筑"、置信度 1.00，
+起点代价 <code>inf</code>，A* 直接无解。</p>
+<p>语义是<strong>估计</strong>，当硬约束时一次误分类即可堵死通路。现在只有几何占据（深度
+射线打中）给 <code>inf</code>，语义高代价取有限值 20；绕不开时可穿过，代价计入"真值
+语义代价"。</p>
+<hr/>
+<h2 id="8">8. 源码解析</h2>
+<div class="highlight"><pre><span></span><code>uav_semantic_mapping_nav/core/
+├── nn.py            手写 Conv2d / Linear / Upsample2x / Adam / 交叉熵
+├── segnet.py        SegNet：前向、反向、加权交叉熵
+├── labels.py        9 类语义表、配色与通行代价
+├── segdata.py       数据采集（弓字形扫描航线 + 半圆掉头）
+├── training.py      训练与推理
+├── semantic_map.py  SemanticGrid：逆投影、占据更新、类别投票、代价图
+├── planner.py       A* 与视线捷径
+├── metrics.py       mIoU / 像素准确率 / ECE / 路径指标
+└── experiment.py    三张代价图的受控对比
+</code></pre></div>
+<h3 id="81-nnpyim2col">8.1 <code>nn.py</code>：im2col 的维度顺序</h3>
+<p><code>as_strided</code> 的维度顺序与 reshape 的目标一致。顺序不一致时 reshape 按内存序
+重新分组；此时前向与反向仍互为转置、数值梯度校验通过，只有伴随恒等式
+<script type="math/tex">\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle</script>
+能发现（自检含这一项）。</p>
+<h3 id="82-segdatapy">8.2 <code>segdata.py</code>：扫描航线的几何约束</h3>
+<p>航线按场景的<strong>实际可通行空间</strong>给。以 <code>urban_block</code> 为例：</p>
 <ul>
-<li>MuJoCo 分割渲染生成标签 → 训练 U-Net / DeepLabV3-MobileNetV3（256×256，CPU 可训），统计 mIoU</li>
-<li>分割逆投影到 2.5D 栅格，贝叶斯更新占据概率 + 语义类别投票</li>
-<li>代价 = 几何距离 + 语义可通行性惩罚 + 语义不确定性惩罚，A<em>/D</em> Lite 求解</li>
-<li>订阅 <code>/camera/seg</code>、<code>/uav/odom</code>，发布语义地图与规划路径</li>
-<li>对比：几何栅格 vs 语义栅格，在 3 个"必须穿过可通行区域"场景下的成功率与路径长度</li>
+<li>建筑中心在 <script type="math/tex">|y| \in [7, 13]</script>、半深 ≤ 1.75 → 建筑外沿 <script type="math/tex">|y| \ge 5.25</script>
+</li>
+<li>树冠顶约 5.1 m</li>
 </ul>
-<p>依赖：<a href="../uav_mujoco_sim/">uav_mujoco_sim</a></p></div>
+<p>所以走廊取 <script type="math/tex">|y| \le 4.5</script>、<script type="math/tex">z \ge 6.0</script>。起始点落进障碍时几何控制器会发散
+（实测飞到 3.5 km 外），帧率与类别占比都正常；<code>collect_episode</code> 末尾因此加了
+范围守卫，超范围直接报错。</p>
+<p>换道段最初写成"位置平移 + 偏航阶跃"，速度和偏航在段边界同时跳变，姿态环饱和后
+把机身甩出航线。改成<strong>半圆掉头</strong>：相邻两条横道的端点本来就重合，在同一个点上做
+180° 掉头、半径只有半个道距，位置、速度、偏航全部连续，圆弧的切向自动就是机头
+方向（实测参考轨迹的相邻点跳变从 29.5 m 降到 0.335 m，跟踪误差 &lt; 0.17 m）。</p>
+<h3 id="83-semantic_mappy">8.3 <code>semantic_map.py</code>：分开估计的代价</h3>
+<p><code>cost_map()</code> 里三处修正按顺序叠加：</p>
+<div class="highlight"><pre><span></span><code><span class="n">base</span><span class="p">[</span><span class="o">~</span><span class="n">obs</span><span class="p">]</span> <span class="o">=</span> <span class="n">unknown_cost</span>          <span class="c1"># 未观测</span>
+<span class="n">base</span><span class="p">[</span><span class="n">low</span><span class="p">]</span>  <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">base</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">unknown_cost</span>   <span class="c1"># 低置信度</span>
+<span class="n">base</span><span class="p">[</span><span class="n">probability</span> <span class="o">&gt;</span> <span class="mf">0.7</span><span class="p">]</span> <span class="o">=</span> <span class="n">inf</span>      <span class="c1"># 已知占据</span>
+</code></pre></div>
+<p>顺序不能反：先判占据再插值会把 <script type="math/tex">\infty</script> 插值成有限值，规划器就会往墙里走。</p>
+<hr/>
+<h2 id="9">9. 复现步骤</h2>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">                        </span><span class="c1"># 30 项，不需要 ROS</span>
+python<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--out<span class="w"> </span>data/seg_dataset.npz
+python<span class="w"> </span>main.py<span class="w"> </span>--train<span class="w">   </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--out<span class="w"> </span>data/
+python<span class="w"> </span>main.py<span class="w"> </span>--evaluate<span class="w"> </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span>--out<span class="w"> </span>results.json
+python<span class="w"> </span>main.py<span class="w"> </span>--figures<span class="w">  </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span><span class="se">\</span>
+<span class="w">               </span>--outdir<span class="w"> </span>../docs/img/air/uav_semantic_mapping_nav
+</code></pre></div>
+<p>ROS2 在线运行见包内 <code>README.md</code>。</p>
+<hr/>
+<h2 id="10">10. 依赖</h2>
+<ul>
+<li><a href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+  （提供 <code>/camera/image_raw</code>、<code>/camera/depth</code>、<code>/camera/seg</code> 与 <code>/uav/odom</code>）</li>
+</ul></div>
 </div>
 </div><footer>
-<hr/>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../allocnet_teleop/" title="AllocNet 四旋翼避障规划与键盘遥操作"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../drone_trajectory_logger/" title="状态识别与轨迹绘制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
@@ -374,6 +865,8 @@
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../allocnet_teleop/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../drone_trajectory_logger/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
