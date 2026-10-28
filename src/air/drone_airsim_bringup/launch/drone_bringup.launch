@@ -1,0 +1,16 @@
+<launch>
+  <arg name="host" default="192.168.189.1" />
+  <arg name="port" default="41451" />
+  <arg name="camera" default="0" />
+  <arg name="rate" default="5.0" />
+
+  <node pkg="drone_airsim_bringup"
+        type="main.py"
+        name="drone_airsim_bringup"
+        output="screen">
+    <param name="host" value="$(arg host)" />
+    <param name="port" value="$(arg port)" />
+    <param name="camera" value="$(arg camera)" />
+    <param name="rate" value="$(arg rate)" />
+  </node>
+</launch>

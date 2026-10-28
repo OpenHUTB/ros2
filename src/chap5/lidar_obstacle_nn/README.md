@@ -96,9 +96,12 @@ xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
 This starts:
 1. Gazebo Fortress with `worlds/obstacle_world.sdf` (a 360-beam LiDAR
    on a box-shaped robot, surrounded by 3 obstacles at different
-   radii).
+   radii). Add `world:=dynamic` to load `obstacle_world_dynamic.sdf`
+   instead (one obstacle on a controllable prismatic slide).
 2. The `ros_gz_bridge` `parameter_bridge` forwarding Gazebo `/scan`
-   to ROS 2 `/scan` (`sensor_msgs/LaserScan`).
+   to ROS 2 `/scan` (`sensor_msgs/LaserScan`). In the dynamic world it
+   also bridges `/obstacle_slider/cmd_pos` (`std_msgs/Float64` ->
+   `ignition.msgs.Double`) used by the data collector.
 3. The `inference_node` that loads the trained MLP and publishes
    `/obstacle_class` (`std_msgs/String`) and
    `/obstacle_confidence` (`std_msgs/Float32`).
@@ -132,29 +135,65 @@ The default, Gazebo-free path is the synthetic generator (class-balanced,
 about a minute — shown in 4.2 below). It is what the numbers in this
 README and the docs page were produced with.
 
-Collecting from the live Gazebo world also works, but know its limits:
+#### 4.1.1 Balanced real data from the dynamic world
 
-- `lidar_box` in `obstacle_world.sdf` is `static` and has **no
-  velocity/diff-drive plugin**, so the robot does not move by itself.
-  With the robot standing still, every scan sees the same obstacle and
-  the auto-labeller assigns a single class (measured: 20/20 frames all
-  `near` in the default scene). To cover all three classes you must
-  move/rotate the model by hand in the Gazebo GUI (or extend the world
-  with a control plugin first).
-- As shown in section 3, collection needs a rendering context: use a
-  real display or `xvfb-run -a ros2 launch lidar_obstacle_nn sim.launch.py`.
+`obstacle_world_dynamic.sdf` puts the obstacle on a horizontal
+prismatic joint driven by Gazebo's `JointPositionController`. The
+collector publishes the joint position and visits six stations (two
+distances per class), accepting a scan only when its label matches the
+station **and** the measured distance is within a configurable band,
+so the resulting dataset is balanced by construction:
 
 ```bash
-# Terminal A: start the simulation (with display or via xvfb-run)
+# Terminal A: dynamic world + bridges (add xvfb-run -a without a display)
+ros2 launch lidar_obstacle_nn sim.launch.py world:=dynamic
+
+# Terminal B: 150 scans x 6 stations = 900 scans (300 per class),
+# fully automatic, about 4 minutes
+ros2 run lidar_obstacle_nn collect_data --ros-args \
+    -p motion_enabled:=true \
+    -p per_station:=150 \
+    -p output_path:=/tmp/lidar_real.npz
+```
+
+Train on it and evaluate any checkpoint (accuracy, per-class metrics,
+confusion matrix):
+
+```bash
+python3 -m lidar_obstacle_nn.train_model \
+    --dataset /tmp/lidar_real.npz --output /tmp/lidar_real.pt \
+    --epochs 50 --device cpu
+python3 -m lidar_obstacle_nn.evaluate_model \
+    --model /tmp/lidar_real.pt --dataset /tmp/lidar_real.npz
+```
+
+Measured on the same held-out real set (180 scans, 60 per class):
+the model trained on 720 real scans scores **100%**, while the
+synthetic-data model scores **83.9%** — it misses 29/60 `far` scans
+(recall 51.7%) because synthetic wedge geometry differs from the real
+box returns. The synthetic generator is still the fastest way to
+validate the pipeline; the dynamic world closes the sim-to-real gap.
+
+#### 4.1.2 Static world collection (single class)
+
+Collecting from the static world also works, but yields one class:
+
+- `lidar_box` in `obstacle_world.sdf` is `static` with **no
+  velocity/diff-drive plugin**, and a 360 degree scan always sees the
+  nearest box no matter how the robot rotates. Standing still, the
+  auto-labeller assigns a single class (measured: 20/20 frames all
+  `near`). Use the dynamic world above for all three classes.
+- Collection needs a rendering context: use a real display or
+  `xvfb-run -a ros2 launch lidar_obstacle_nn sim.launch.py`.
+
+```bash
+# Terminal A: start the static simulation
 ros2 launch lidar_obstacle_nn sim.launch.py
 
-# Terminal B: collect 1000 scans
+# Terminal B: collect 1000 scans (all "near" in the default scene)
 ros2 run lidar_obstacle_nn collect_data --ros-args \
     -p output_path:=/tmp/lidar_dataset.npz \
     -p num_samples:=1000
-
-# (Optional) Drag/rotate lidar_box in the Gazebo GUI between samples so
-# all three obstacle classes appear in the dataset.
 ```
 
 ### 4.2 Train the MLP
@@ -194,11 +233,13 @@ ros2 launch lidar_obstacle_nn main.launch.py
 | `lidar_obstacle_nn/main.py` | Documented entry point (calls inference_node). |
 | `lidar_obstacle_nn/model.py` | `LidarMLP` PyTorch module. |
 | `lidar_obstacle_nn/inference_node.py` | ROS 2 node wrapping the MLP. |
-| `lidar_obstacle_nn/collect_data.py` | Records `/scan` + auto-labels into `.npz`. |
+| `lidar_obstacle_nn/collect_data.py` | Records `/scan` + auto-labels into `.npz`; motion mode drives the dynamic-world slide through labelled stations. |
 | `lidar_obstacle_nn/train_model.py` | Trains the MLP and saves `.pt` weights. |
-| `launch/main.launch.py` | Top-level launch entry. |
-| `launch/sim.launch.py` | Gazebo + ros_gz_bridge only. |
-| `worlds/obstacle_world.sdf` | Gazebo world (robot + 3 obstacles + LiDAR). |
+| `lidar_obstacle_nn/evaluate_model.py` | Accuracy, per-class precision/recall and confusion matrix on a labelled `.npz`. |
+| `launch/main.launch.py` | Top-level launch entry (`world:=static/dynamic`). |
+| `launch/sim.launch.py` | Gazebo + ros_gz_bridge; also bridges the slide command in the dynamic world. |
+| `worlds/obstacle_world.sdf` | Static Gazebo world (robot + 3 obstacles + LiDAR). |
+| `worlds/obstacle_world_dynamic.sdf` | Dynamic Gazebo world: one obstacle on a position-controlled prismatic slide. |
 | `config/params.yaml` | Default ROS 2 parameters. |
 | `models/` | Trained weights (`lidar_mlp.pt`, generated locally). |
 | `requirements.txt` | Python deps. |
@@ -210,6 +251,7 @@ ros2 launch lidar_obstacle_nn main.launch.py
 | `/scan` | `sensor_msgs/LaserScan` | input (from `ros_gz_bridge`) |
 | `/obstacle_class` | `std_msgs/String` | output (`near` / `far` / `free`) |
 | `/obstacle_confidence` | `std_msgs/Float32` | output (max softmax probability) |
+| `/obstacle_slider/cmd_pos` | `std_msgs/Float64` | output (dynamic world only; collector -> slide joint position) |
 
 ## 7. Notes / Limitations
 
@@ -231,6 +273,14 @@ ros2 launch lidar_obstacle_nn main.launch.py
 - Data collection and inference need a **rendering context** for the
   `gpu_lidar` sensor: use a real display or `xvfb-run -a`. Plain
   `--headless-rendering` yields all-max-range scans (see section 3).
-- `lidar_box` is `static` with no control plugin; live collection only
-  yields multiple classes if you move the model in the GUI (or extend
-  the world). The synthetic generator is the recommended dataset path.
+- In the static world `lidar_box` is `static` with no control plugin,
+  so live collection there yields a single class. The dynamic world
+  (`world:=dynamic`) automates balanced three-class collection; the
+  synthetic generator remains the fastest no-Gazebo path.
+- The dynamic slide controller's default Gazebo topic contains a `/0/`
+  token, which is an illegal ROS 2 topic name; the SDF overrides it to
+  `/obstacle_slider/cmd_pos`. Keep that in mind when renaming joints.
+- A model trained only on synthetic data reached 83.9% on real sim
+  scans (far-class recall 51.7%); training on dynamic-world data
+  reached 100% on the same held-out set — see section 4.1.1 and the
+  docs page for the full comparison.
