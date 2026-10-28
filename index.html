@@ -215,6 +215,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/rooftop_landing/">无人机屋顶降落</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_keyboard_control/">无人机键盘控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
@@ -272,6 +274,8 @@
 <li class="toctree-l1"><a class="reference internal" href="air/no_fly_zone_check/">禁飞区检测</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
 </li>
@@ -488,6 +492,7 @@
 </li>
 <li><a href="air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a></li>
 <li><a href="air/rooftop_landing/">无人机屋顶降落</a> —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落</li>
+<li><a href="air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a> —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比</li>
 <li>
 <p><a href="air/uav_keyboard_control/">无人机键盘控制</a></p>
 </li>
@@ -532,6 +537,9 @@
 </li>
 <li>
 <p><a href="air/openhutb_yolo_mlp_control/">YOLO目标检测与八字轨迹控制</a></p>
+</li>
+<li>
+<p><a href="air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a></p>
 </li>
 <li>
 <p><a href="air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a> —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层</p>
