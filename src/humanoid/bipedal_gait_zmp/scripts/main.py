@@ -16,6 +16,9 @@
 * demo_out/dcm_error.png        DCM 跟踪误差
 * demo_out/gain_sweep.png       不同反馈增益下的行程
 
+图默认写到**包根**的 demo_out/（不是 scripts/ 下），与 README、launch 的默认
+输出目录一致，想换地方用 --outdir 指定。
+
 只用 Python 标准库。
 """
 
@@ -226,7 +229,9 @@ def demo_plan_table(plan):
 
 def main():
     ap = argparse.ArgumentParser(description="双足步态生成与 ZMP 稳定性验证")
-    ap.add_argument("--outdir", default=os.path.join(HERE, "demo_out"))
+    ap.add_argument("--outdir",
+                    default=os.path.normpath(os.path.join(HERE, os.pardir, "demo_out")),
+                    help="曲线输出目录（默认包根 demo_out/）")
     ap.add_argument("--quick", action="store_true", help="跳过增益扫描")
     ap.add_argument("--gain", type=float, default=DEFAULT_GAIN,
                     help="DCM 反馈增益（默认 1.0）")

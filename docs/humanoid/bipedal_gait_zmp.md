@@ -3,7 +3,8 @@
 用线性倒立摆模型（LIPM）做双足行走的步态生成，并检查每一时刻的 ZMP 是否
 落在支撑多边形内。
 
-代码在 `src/humanoid/bipedal_gait_zmp/`，只用 Python 标准库。
+代码在 `src/humanoid/bipedal_gait_zmp/`。离线分析只用 Python 标准库，
+另有一个 rospy 节点把结果发布成话题。
 
 ## 倒立摆模型
 
@@ -145,6 +146,17 @@ p ← clip(p, 支撑区间)
 
 ## 运行结果
 
+### 行走动画
+
+![行走动画](../img/humanoid/bipedal_gait_zmp/walking.gif)
+
+侧视视角。深蓝色是支撑腿，浅蓝色是摆动腿，地面上的绿色带是当前支撑区间，
+红色竖线是 ZMP 位置。镜头跟随质心，所以看起来机器人原地走，实际每帧都在前进。
+
+跑 `python3 scripts/animate.py` 可以重新生成这个动图（需要 Pillow）。
+
+### 数据
+
 参数：步长 0.35 m，步时 0.5 s，支撑相占比 0.6，12 步，z_c = 0.8 m，
 反馈增益 1.0，仿真步长 0.001 s。
 
@@ -174,12 +186,57 @@ p ← clip(p, 支撑区间)
 
 ## 怎么跑
 
+### 不需要 ROS
+
+在包目录下直接跑（不用先 cd 进 scripts）：
+
 ```bash
-cd src/humanoid/bipedal_gait_zmp/scripts
-python3 main.py            # 完整演示，图输出到 demo_out/
+cd src/humanoid/bipedal_gait_zmp
+python3 main.py            # 完整演示，图输出到包根 demo_out/
 python3 main.py --quick    # 跳过增益扫描
 python3 main.py --gain 1.5 # 指定反馈增益
+python3 scripts/animate.py # 重新生成行走动图（需要 Pillow）
 ```
+
+`main.py` 只用标准库；`scripts/animate.py` 画动图用了 Pillow，需要时
+`pip install pillow`（Ubuntu 下也可以 `sudo apt install python3-pil`）。
+
+### 在 ROS 里跑
+
+```bash
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+roslaunch bipedal_gait_zmp main.launch
+```
+
+launch 起两个节点：`bipedal_gait_demo` 跑上面的离线演示并出图，`bipedal_gait_zmp`
+把同一次仿真的结果发布成话题。离线分析只吃标准库，ROS 这一侧是真的注册节点、
+真的在发消息，可以用 `rostopic` / `rqt_plot` 验收。
+
+| 话题 | 类型 | 内容 |
+|---|---|---|
+| `/bipedal_gait/com_path` | `nav_msgs/Path` | 整条质心轨迹（latched）|
+| `/bipedal_gait/zmp_path` | `nav_msgs/Path` | 整条 ZMP 轨迹（latched）|
+| `/bipedal_gait/com_pose` | `geometry_msgs/PoseStamped` | 当前质心，随回放逐帧发 |
+| `/bipedal_gait/zmp_pose` | `geometry_msgs/PoseStamped` | 当前 ZMP |
+| `/bipedal_gait/margin` | `std_msgs/Float64` | 当前稳定裕度 |
+| `/bipedal_gait/footsteps` | `visualization_msgs/MarkerArray` | 12 个落脚点 |
+| `/bipedal_gait/support` | `visualization_msgs/Marker` | 当前支撑区间 |
+
+验收：
+
+```bash
+rostopic list | grep bipedal_gait
+rostopic hz /bipedal_gait/margin        # 约 50 Hz
+rostopic echo -n1 /bipedal_gait/margin  # 一时一值
+rqt_plot /bipedal_gait/margin/data      # 曲线不发散
+```
+
+节点参数：`step_length` 0.35、`step_time` 0.5、`duty` 0.6、`n_steps` 12、
+`com_height` 0.8、`gain` 1.0、`playback_rate` 1.0、`publish_rate` 50、
+`loop` true、`frame_id` map，在 launch 里用 `<param>` 覆盖。只要话题不出图用
+`demo:=false`，只跑演示用 `node:=false`。
 
 跑测试：
 
@@ -211,11 +268,18 @@ python3 -m unittest discover -s tests
 ```
 src/humanoid/bipedal_gait_zmp/
 ├── README.md
+├── main.py             包根入口，转调 scripts/main.py
+├── package.xml
+├── CMakeLists.txt
+├── launch/
+│   └── main.launch     离线演示 + ROS 节点
 ├── scripts/
 │   ├── lipm.py         LIPM 动力学与解析解
 │   ├── footstep.py     落脚点、支撑多边形、稳定裕度
 │   ├── gait.py         对称步态、周期解、开环仿真
 │   ├── dcm.py          发散分量与反馈控制
+│   ├── gait_node.py    ROS 节点：发质心、ZMP、裕度、落脚点
+│   ├── animate.py      行走动图渲染（需要 Pillow）
 │   ├── simple_plot.py  PNG 折线图（手写，只用 zlib）
 │   └── main.py         演示入口
 └── tests/

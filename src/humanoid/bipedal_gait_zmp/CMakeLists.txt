@@ -1,21 +1,29 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(bipedal_gait_zmp)
 
-# 模块不依赖 rospy，本包只用来纳入 catkin 工作空间并支持 launch 启动
-find_package(catkin REQUIRED)
+# 离线分析（scripts/main.py）只用 Python 标准库；scripts/gait_node.py 是本包的
+# ROS 节点，把步态结果发布成话题，所以这里声明运行期需要的消息包。
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  nav_msgs
+  geometry_msgs
+  visualization_msgs
+  std_msgs
+)
 
 catkin_package()
 
-# 包根 main.py 是源码树里 `python3 main.py` 的入口，转调 scripts/main.py。
-# 安装时只装 scripts/main.py（原名安装为 bin/main.py），两者同名，
-# 同时装会冲突，所以这里保持只装一份；launch 里的 type="main.py" 即指向它。
+# 安装清单必须与 scripts/ 下的实际文件一一对应：catkin_install_python 碰到
+# 不存在的文件会在 configure 阶段直接报错，整个工作空间都编译不过。
+# 包根 main.py 只供源码树里 `python3 main.py` 用，不重复安装（重名会冲突）。
 catkin_install_python(PROGRAMS
   scripts/main.py
+  scripts/gait_node.py
+  scripts/animate.py
   scripts/lipm.py
   scripts/footstep.py
   scripts/gait.py
   scripts/dcm.py
-  scripts/animate.py
   scripts/simple_plot.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
