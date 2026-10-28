@@ -101,7 +101,7 @@ uav_neural_residual_control/
 │   │   ├── dataset.py            #   数据采集（含带限激励）
 │   │   ├── training.py           #   训练 + 早停
 │   │   ├── metrics.py            #   RMSE / P95 / IAE / 残差精度
-│   │   └── experiment.py         #   3 载荷 × 3 风况 × 3 轨迹 × 4 控制器
+│   │   └── experiment.py         #   4 载荷 × 3 风况 × 3 轨迹 × 4 控制器
 │   ├── sim/plant_server.py       # 带未建模效应的仿真服务端（供 ROS 用）
 │   └── ros/residual_node.py      # ROS2 桥接节点（控制律跑在 ROS 侧）
 ├── artifacts/                    # 训练产物（数据集 / 权重 / 结果 / 配图）

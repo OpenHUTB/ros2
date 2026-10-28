@@ -48,7 +48,7 @@ def cmd_collect(a) -> int:
     from .core import collect_dataset
     out = a.out or _paths().default_dataset()
     specs = _default_specs()
-    print("采集 %d 个 episode（3 载荷 × 3 风况 × 2 轨迹 × 3 种子）…" % len(specs))
+    print("采集 %d 个 episode（3 载荷 × 3 风况 × 3 轨迹 × 3 种子）…" % len(specs))
     t0 = time.time()
     ds = collect_dataset(specs, excite_std=a.excite, verbose=True)
     ds.save(out)
