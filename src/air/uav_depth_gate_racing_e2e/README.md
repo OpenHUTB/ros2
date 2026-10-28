@@ -59,13 +59,15 @@ cp -r <本目录> .
 
 # 仿真侧（需要 Python ≥3.10）
 uv venv ~/uav_ws/.venv --python 3.12
-uv pip install --python ~/uav_ws/.venv/bin/python 'mujoco==3.12.0' numpy
+uv pip install --python ~/uav_ws/.venv/bin/python 'mujoco==3.12.0' numpy matplotlib
 
 # ROS 侧（Python 3.8）
 cd ~/uav_ws/ros2_ws
 colcon build --packages-select uav_mujoco_sim uav_depth_gate_racing_e2e
 source install/setup.bash
 ```
+
+`--figures` 需要 matplotlib；无头服务器先 `export MPLBACKEND=Agg`。
 
 ## 4. 运行步骤
 

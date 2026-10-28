@@ -21,7 +21,7 @@ setup(
         # 预训练策略权重（离线复现用）
         (os.path.join("share", package_name, "data"), glob("data/*.npz")),
     ],
-    install_requires=["setuptools"],
+    install_requires=["setuptools", "matplotlib"],
     zip_safe=True,
     maintainer="eeexty",
     maintainer_email="eeexty@users.noreply.github.com",
