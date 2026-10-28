@@ -262,11 +262,15 @@ class SimClient(object):
 
     # ---------------------------------------------------------------- 状态读取
     def get_state_enu(self):
-        """返回 (position_enu(3), quat_xyzw(4), lin_vel_enu(3), ang_vel_enu(3))."""
+        """返回 (position_enu(3), quat_xyzw(4), lin_vel_enu(3), ang_vel_enu(3)).
+
+        quat 为 base_link(FLU) -> world(ENU)，与 /imu 的 orientation 使用同一约定；
+        这样 EKF 同时订阅 /uav/odom 和 /imu 时不会出现 180° 机体翻转。
+        """
         state = self.client.getMultirotorState(vehicle_name=self.vehicle_name)
         k = state.kinematics_estimated
         pos_enu = ned_to_enu([k.position.x_val, k.position.y_val, k.position.z_val])
-        q_enu = airsim_quat_to_ros_quat(
+        q_enu = airsim_quat_to_ros_quat_flu(
             [k.orientation.w_val, k.orientation.x_val,
              k.orientation.y_val, k.orientation.z_val])
         vel_enu = ned_to_enu([k.linear_velocity.x_val,
