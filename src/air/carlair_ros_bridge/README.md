@@ -54,6 +54,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 - **IMU**：`/imu` 的姿态是 ENU 世界系，角速度和线加速度已从 AirSim 机体系 NED
   转成 ROS 机体系 FLU（前-左-上）；线加速度包含重力分量，做纯运动加速度时需自行扣除。
   默认 `rate/imu_hz: 50.0`，`frame/imu: base_link`。
+  /uav/odom 的 ase_link 也使用同一 FLU 约定（get_state_enu() 已切到 irsim_quat_to_ros_quat_flu()），两话题姿态可直接融合。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
