@@ -3,7 +3,7 @@
 """残差动力学网络：手写前向/反向的 numpy MLP + 自适应优化器。
 
 不引 torch：仿真与 ROS 两侧都要能跑，纯 numpy 省掉一个 700 MB 依赖，
-且 4 万样本 × 1.5 万参数在这个规模下 torch 并不更快（实测单轮 0.4 s vs 0.5 s）。
+且 9 万样本 × 5,315 个参数在这个规模下 torch 并不更快（实测单轮 0.4 s vs 0.5 s）。
 ROS 侧 Python 3.8 也能直接导入本模块。
 """
 from __future__ import annotations
