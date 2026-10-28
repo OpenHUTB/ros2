@@ -27,6 +27,8 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
+#include <functional>
+#include <memory>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -40,6 +42,7 @@
 // （容易和 Pointcloud.h 混淆）。
 
 #include "octree_uav_3d_pathfinding/astar_types.h"
+#include "octree_uav_3d_pathfinding/map_inflation.h"
 
 namespace octree_uav_3d_pathfinding {
 
@@ -58,6 +61,21 @@ struct ExpandedCell {
 
 class OctreeAStar {
  public:
+  // ---------------- P5：安全裕度的两个注入式谓词类型 ----------------
+  //
+  // ★ 必须声明在**类体内最前面**（2026-10-14 客户机编译报错后修正）：
+  //   构造函数里用到了这两个类型，而**成员初始化列表不享受"整个类作用域可见"
+  //   的待遇** —— 它和基类列表一样，是在类体完整之前解析的。别名原先放在文件
+  //   末尾的 private 区，于是报：
+  //       error: 'BlockedFn' does not name a type
+  //       error: no matching function for call to 'std::function<...>::function(const int&)'
+  //   把它们提前到 public 区最前面即可。
+  //
+  // 用 std::function 而不是直接持有 MapInflation，是为了让 astar.h 只依赖
+  // "一个判定谓词"这个概念 —— 单元测试可以注入解析式障碍，不必建树。
+  using BlockedFn = std::function<bool(const octomap::point3d&)>;
+  using ClearanceFn = std::function<double(const octomap::point3d&)>;
+
   struct Params {
     /// 细侧邻居展开的上限。k = 自身边长 / 邻居边长；k > k_max 时**放弃该方向**。
     ///
@@ -78,6 +96,41 @@ class OctreeAStar {
 
     /// 单次规划超时（s）。<= 0 表示不限时。
     double plan_timeout = 10.0;
+
+    // ---------------- P5：安全裕度（安全侧的两个独立开关） ----------------
+    //
+    // 关系（详见 notes/P5_安全裕度与路径平滑设计.md §1）：
+    //   膨胀   → **硬约束**：让"贴着障碍走"变成"不可通行"
+    //   惩罚   → **软偏好**：离障碍近的边变贵，但禁不掉
+    // 只有惩罚没有膨胀时，A* 在别无选择时照样会贴过去 —— 所以两者不是平级的。
+
+    /// 安全裕度半径（m）。**0 = 关闭膨胀，行为逐位等于 P4**。
+    ///
+    /// 非 0 时本类会自己在内部建一棵"膨胀占用"影子树（MapInflation），
+    /// 于是不需要调用方传任何东西 —— 保持 P4 的调用签名可用。
+    double inflation_radius = 0.0;
+
+    /// 影子树分辨率（m）。<= 0 表示与原树一致（推荐）。
+    double inflation_resolution = 0.0;
+
+    /// 间隙惩罚权重 w。
+    ///   w = 0（默认）→ 代价逐位等于 P4 的"中心欧氏距离"
+    ///   w > 0        → cost × (1 + w·exp(−d / r_soft))
+    ///
+    /// 注意：w > 0 时**目标函数被重新定义**，得到的是"新代价下的最优"，
+    /// 不是 P4 目标下的次优解 —— 这一点文档里要如实写。
+    double clearance_penalty_weight = 0.0;
+
+    /// 惩罚的衰减尺度 r_soft（m）。<= 0 表示取 inflation_radius。
+    double clearance_penalty_scale = 0.0;
+
+    /// 间隙探测范围（m）：`clearance()` 从这个距离之内找第一个占用体素。
+    ///
+    /// 这个值同时决定两件事：
+    ///   · 惩罚用的 d 的上限（d 超过它就没有意义了，exp 早已衰减到 0）
+    ///   · 指标里 min_clear 的**饱和值** —— 即"至少这么远"，
+    ///     所以指标打印出来等于它时，含义是"全程都比它更远"，而不是恰好这么远。
+    double clearance_probe_range = 2.0;
   };
 
   /// 注意：这里收的是**非 const 引用**。
@@ -86,7 +139,116 @@ class OctreeAStar {
   /// 等接口在部分版本里不可用，收非 const 引用可以避免一连串 const 相关的
   /// 编译错误。A* 本身并不修改地图，这个不变量由调用方保证。
   OctreeAStar(octomap::OcTree& tree, const Params& params)
-      : tree_(tree), params_(params) {}
+      : tree_(tree), params_(params) {
+    // P5：安全裕度。r = 0 时 **不建影子树**，blocked_ / clearance_ 都保持为空，
+    // 于是下面的判空分支让行为逐位等于 P4 —— 这是回归测试的锚点。
+    if (params_.inflation_radius > 0.0) {
+      MapInflation::Params ip;
+      ip.radius = params_.inflation_radius;
+      ip.resolution = params_.inflation_resolution;
+      inflation_.reset(new MapInflation(tree_, ip));
+
+      if (inflation_->enabled()) {
+        blocked_.reset(new BlockedFn(
+            [this](const octomap::point3d& p) { return inflation_->isBlocked(p); }));
+        clearance_.reset(new ClearanceFn([this](const octomap::point3d& p) {
+          // 第二参数是**探测范围**（不是惩罚尺度 r_soft）。
+          // 早先这里误传了 clearance_penalty_scale，而它的默认值是 0，
+          // 于是探测循环一次都不执行、恒返回 0 —— 惩罚实际从未生效。
+          return inflation_->clearance(p, params_.clearance_probe_range);
+        }));
+      }
+    }
+  }
+
+  /// 搜索图的一个节点：叶标识 + 几何。自带 occupied 标记，避免到处传节点指针。
+  ///
+  /// 声明在类体靠前处：`traversable()` 要按"原树占用/未知"判定任意点，而成员
+  /// 函数体内引用**后面才声明的嵌套类型**会被解析成别的类型（编译错误），
+  /// 所以提前定义，供 `findLeaf()` 与 `traversable()` 共用。
+  struct Node {
+    NodeId id;
+    octomap::point3d center;
+    double size;
+    bool occupied;
+
+    Node() : size(0.0), occupied(true) {}
+    Node(const NodeId& i, const octomap::point3d& c, double s, bool occ)
+        : id(i), center(c), size(s), occupied(occ) {}
+  };
+
+  /// 供测试与调用方查询：某个位置当前是否可通行。
+  ///
+  /// 语义 = **原树的占用/未知判定** ∧ **叠加膨胀阻塞**（膨胀关闭时后一项恒真）。
+  ///
+  /// ⚠️ 这里曾经写成 `if (blocked_ == NULL) return true;` —— 那是错的：
+  /// `blocked_` 只在 `inflation_radius > 0` 时才被赋值，于是 **r = 0 时对任何坐标
+  /// 都返回 true**。A\* 内部不受影响（它自己在 expand 里先查叶子的 occupied 标志），
+  /// 但本函数是**平滑阶段唯一的碰撞谓词** —— 配置
+  /// `smoothing:=true inflation_radius:=0` 是合法的，那时 `segmentFree()` 会认为
+  /// 任何线段都无碰撞，捷径化或样条可能把安全的 A\* 折线直接取直、穿过障碍。
+  ///
+  /// 现在两层判定始终生效，与 A\* 扩展邻居时的口径一致
+  /// （见 probeDirection()：先 `findLeaf` 成功且 `!occupied`，再叠加 `blocked_`）。
+  bool traversable(const octomap::point3d& p) const {
+    // ① 原树：未知空间一律当障碍 —— 与 A\* 的搜图范围保持一致
+    Node leaf;
+    if (!findLeaf(p, leaf)) return false;
+    // ② 原树：占用叶不可通行
+    if (leaf.occupied) return false;
+    // ③ 膨胀层（r = 0 时 blocked_ 为空，这一层自动跳过）
+    if (blocked_ != NULL && (*blocked_)(p)) return false;
+    return true;
+  }
+
+  /// 供 ROS 节点读取膨胀层的规模/耗时统计（叶子数、内存、建树时间）。
+  /// r = 0 时返回启用状态为 false 的默认统计。
+  const InflationStats& inflationStats() const {
+    static const InflationStats kEmpty;
+    return (inflation_ != NULL) ? inflation_->stats() : kEmpty;
+  }
+
+  /// 从 p 到**原树中真实占用体素**的距离（m），供指标统计使用。
+  ///
+  /// 为什么不用 `clearance_`：那个探的是**膨胀后的影子树**，量到的是"到安全
+  /// 边界还有多远"。指标里想回答的是"路径离障碍物留了多少余量"，所以必须探原树。
+  /// 两者的关系是：影子树把障碍外扩了 r，所以对同一点，
+  /// `到障碍的距离 ≈ 到膨胀边界的距离 + r`。
+  ///
+  /// 返回 `max_range` 表示"在 max_range 之内没有碰到占用体素"。
+  /// 与 `MapInflation::clearance` 同样是沿 6 个轴向的近似（偏乐观）。
+  double distanceToObstacle(const octomap::point3d& p,
+                            double max_range = 2.0,
+                            double step = 0.0) const {
+    const double h = (step > 0.0) ? step : tree_.getResolution() / 2.0;
+    const int steps = static_cast<int>(max_range / h + 0.5);
+    static const int kAxis[6][3] = {{1, 0, 0},  {-1, 0, 0}, {0, 1, 0},
+                                    {0, -1, 0}, {0, 0, 1},  {0, 0, -1}};
+    double best = max_range;
+    for (int a = 0; a < 6; ++a) {
+      for (int i = 1; i <= steps; ++i) {
+        const double d = i * h;
+        if (d >= best) break;  // 不可能更优了
+        const octomap::point3d q(p.x() + kAxis[a][0] * d,
+                                 p.y() + kAxis[a][1] * d,
+                                 p.z() + kAxis[a][2] * d);
+        octomap::OcTreeNode* n = tree_.search(q);
+        if (n != NULL && tree_.isNodeOccupied(n)) {
+          best = d;
+          break;
+        }
+      }
+    }
+    return best;
+  }
+
+  /// 测试与高级用法：注入自定义的"阻塞"与"间隙"谓词，绕过 MapInflation。
+  /// 传空表示不使用该路信息。
+  void setTraversabilityCallbacks(const BlockedFn& blocked,
+                                  const ClearanceFn& clearance) {
+    blocked_.reset(new BlockedFn(blocked));
+    clearance_.reset(new ClearanceFn(clearance));
+  }
 
   /// 规划一条从 start 到 goal 的路径（世界系坐标，单位 m）。
   ///
@@ -377,14 +539,42 @@ class OctreeAStar {
                         static_cast<unsigned int>(k2[2]));
           first_detail = buf;
         }
-      } else if (n.id.depth != it.getDepth() || !(n.id.key == it.getKey())) {
-        ++bad;
-        if (first_detail.empty()) {
-          std::snprintf(buf, sizeof(buf),
-                        "leaf center (%.2f, %.2f, %.2f)"
-                        " expected depth=%u, findLeaf got depth=%u",
-                        c.x(), c.y(), c.z(), it.getDepth(), n.id.depth);
-          first_detail = buf;
+      } else {
+        // ★★ 比较前必须把遍历器的 key **折算到该叶所在层**（2026-10-14 修正）
+        //
+        // 原先这里直接写 `n.id.key == it.getKey()`，于是自检长期误报
+        // 「2000 个自由叶里 172 个查不回来」。实测发现两者差一个**精确的右移**：
+        //     depth 13：leafKey 32772 → 折算后 4096（= 32772 >> 3，3 = 16−13）
+        //     depth 15：leafKey 32777 → 折算后 16388（= 32777 >> 1，1 = 16−15）
+        // 也就是说：**八叉树遍历器报告的 key 把"该叶在父节点中的位置"留在了低位**，
+        // 与"叶子自己所在那一层的键"（findLeaf/makeNode 产出的那种）不是同一个东西。
+        //
+        // 这不是 findLeaf 的问题 —— 用折算后的键去比，两种测试地图共 1519 个自由叶
+        // **全部命中**（KEY-DIFF=0、unknown=0，见 .tools/p5_findleaf_key.cpp）。
+        // 错的是自检自己的比较基准。
+        const unsigned int shift = tree_.getTreeDepth() - it.getDepth();
+        const octomap::OcTreeKey leaf_key(
+            static_cast<uint16_t>(it.getKey()[0] >> shift),
+            static_cast<uint16_t>(it.getKey()[1] >> shift),
+            static_cast<uint16_t>(it.getKey()[2] >> shift));
+
+        if (n.id.depth != it.getDepth() || !(n.id.key == leaf_key)) {
+          ++bad;
+          if (first_detail.empty()) {
+            std::snprintf(buf, sizeof(buf),
+                          "leaf center (%.2f, %.2f, %.2f)"
+                          " expected depth=%u key=(%u,%u,%u),"
+                          " findLeaf got depth=%u key=(%u,%u,%u)",
+                          c.x(), c.y(), c.z(), it.getDepth(),
+                          static_cast<unsigned int>(leaf_key[0]),
+                          static_cast<unsigned int>(leaf_key[1]),
+                          static_cast<unsigned int>(leaf_key[2]),
+                          n.id.depth,
+                          static_cast<unsigned int>(n.id.key[0]),
+                          static_cast<unsigned int>(n.id.key[1]),
+                          static_cast<unsigned int>(n.id.key[2]));
+            first_detail = buf;
+          }
         }
       }
     }
@@ -401,18 +591,6 @@ class OctreeAStar {
   }
 
  private:
-  /// 搜索图的一个节点：叶标识 + 几何。自带 occupied 标记，避免到处传节点指针。
-  struct Node {
-    NodeId id;
-    octomap::point3d center;
-    double size;
-    bool occupied;
-
-    Node() : size(0.0), occupied(true) {}
-    Node(const NodeId& i, const octomap::point3d& c, double s, bool occ)
-        : id(i), center(c), size(s), occupied(occ) {}
-  };
-
   struct OpenItem {
     double f;
     Node node;
@@ -556,6 +734,11 @@ class OctreeAStar {
     if (nb.occupied) return;              // 障碍
     if (nb.id == n.id) return;            // 兜底（正常不会发生）
 
+    // ★ P5：安全裕度。findLeaf 给的是**原树**的自由叶，这里再问一次
+    //   "这个位置是否落在膨胀占用里"。r = 0 时 blocked_ 为空 → 直接跳过，
+    //   行为逐位等于 P4。
+    if (blocked_ != NULL && (*blocked_)(base)) return;
+
     // 情况一：同层或更粗 —— 一个邻居
     if (nb.size >= n.size) {
       out.push_back(nb);
@@ -586,6 +769,8 @@ class OctreeAStar {
           if (!findLeaf(q, c)) continue;
           if (c.occupied) continue;
           if (c.id == n.id) continue;
+          // ★ P5：展开出来的每个细邻居同样要过安全裕度这一关
+          if (blocked_ != NULL && (*blocked_)(q)) continue;
           if (seen.insert(c.id).second) out.push_back(c);
         }
       }
@@ -624,10 +809,26 @@ class OctreeAStar {
     return false;
   }
 
-  /// 代价：两节点中心的欧氏距离。
+  /// 代价：两节点中心的欧氏距离；P5 打开惩罚时再乘一个"离障碍太近"的放大因子。
+  ///
+  /// · `w = 0`（默认）→ 逐位等于 P4
+  /// · `w > 0`        → cost × (1 + w·exp(−d / r_soft))，d 是目标节点到膨胀边界的间隙
+  ///
   /// 对粗邻居这个值偏高（高估），会让 A* 偏向细分路径 —— 属于保守方向。
-  static double cost(const Node& a, const Node& b) {
-    return (b.center - a.center).norm();
+  /// 惩罚只会让 g 变大，因此启发仍然可采纳（w 为 0 时保证最优）。
+  double cost(const Node& a, const Node& b) const {
+    const double base = (b.center - a.center).norm();
+    if (params_.clearance_penalty_weight <= 0.0 || clearance_ == NULL) {
+      return base;
+    }
+    double r_soft = params_.clearance_penalty_scale;
+    if (r_soft <= 0.0) r_soft = params_.inflation_radius;
+    if (r_soft <= 0.0) return base;
+
+    const double d = (*clearance_)(b.center);
+    const double penalty =
+        1.0 + params_.clearance_penalty_weight * std::exp(-d / r_soft);
+    return base * penalty;
   }
 
   /// 欧氏启发，可采纳（不会高估真实剩余代价）。
@@ -641,6 +842,12 @@ class OctreeAStar {
 
   octomap::OcTree& tree_;
   Params params_;
+
+  // ---------------- P5：安全裕度（可选） ----------------
+  // BlockedFn / ClearanceFn 已提到类体最前面声明（见那里的说明）。
+  std::unique_ptr<MapInflation> inflation_;  ///< r > 0 时才有
+  std::unique_ptr<BlockedFn> blocked_;       ///< 为空 → 等同 P4
+  std::unique_ptr<ClearanceFn> clearance_;   ///< 为空 → 等同 P4（无惩罚）
 };
 
 }  // namespace octree_uav_3d_pathfinding
