@@ -20,7 +20,7 @@
 ## 目录结构
 
 ```
-src/ground/mnist_digit_control/
+src/mnist_digit_control/
 ├── main.py                          # 一键入口：run/build/train/scenes/eval
 ├── package.xml  setup.py  setup.cfg # ROS2 ament_python 包
 ├── launch/mnist_digit_control.launch.py
@@ -43,7 +43,7 @@ src/ground/mnist_digit_control/
 ## 快速开始
 
 ```bash
-cd ~/ros2/src/ground/mnist_digit_control
+cd ~/ros2/src/mnist_digit_control
 
 # 1) 安装依赖（torch CPU 版；OpenCV 等使用系统自带）
 python3 -m pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu

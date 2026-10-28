@@ -16,8 +16,7 @@ import subprocess
 import sys
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(MODULE_DIR)))
-# 模块位于 src/ground/ 下，仓库根为其上三级
+REPO_ROOT = os.path.dirname(os.path.dirname(MODULE_DIR))  # src 的上一级即仓库根
 ROS_SETUP = "/opt/ros/humble/setup.bash"
 INSTALL_SETUP = os.path.join(REPO_ROOT, "install", "setup.bash")
 
