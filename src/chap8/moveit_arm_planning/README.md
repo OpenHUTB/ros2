@@ -35,10 +35,6 @@ moveit_arm_planning/
 │   └── planners.yaml
 ├── scripts/
 │   ├── plan_eval.py
-│   └── pick_place_task.py
-├── results/
-│   ├── plan_attempts.csv
-│   └── plan_summary.csv
 ├── CMakeLists.txt
 ├── package.xml
 ├── main.sh
@@ -125,8 +121,6 @@ RRT* 会跑满 5 秒规划时限做优化，因此耗时明显高于另外两种
 | 障碍物避让 | `rosrun marm_planning moveit_obstacles_demo.py` | 是否绕开障碍物 |
 | 抓取 | `rosrun marm_planning moveit_pick_and_place_demo.py` | 抓取/放置成功率 |
 | 规划器对比 | `roslaunch moveit_arm_planning eval.launch` | 成功率、耗时、路径长度 |
-
-`scripts/pick_place_task.py` 只调用并记录 `marm_planning` 里已有的抓取 demo，不重复实现抓取算法。
 
 ## 常见问题
 

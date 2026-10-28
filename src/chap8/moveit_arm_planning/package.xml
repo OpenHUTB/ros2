@@ -14,6 +14,8 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>rospy</depend>
+  <depend>moveit_commander</depend>
+  <depend>moveit_msgs</depend>
   <depend>moveit_ros_planning_interface</depend>
   <depend>moveit_ros_move_group</depend>
   <depend>moveit_planners_ompl</depend>
@@ -25,6 +27,7 @@
   <depend>visualization_msgs</depend>
   <depend>marm_description</depend>
   <depend>marm_moveit_config</depend>
+  <exec_depend>python3-yaml</exec_depend>
 
   <export>
   </export>

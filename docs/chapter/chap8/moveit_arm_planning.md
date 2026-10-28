@@ -1,7 +1,5 @@
 # MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比
 
-> 状态：规划器对比数据和 RViz 截图已加入；单任务截图待补。正式 PR 前删除本行。
-
 本实验在 ROS Noetic 下使用 MoveIt 1 对六自由度机械臂进行运动规划，覆盖正运动学、逆运动学、笛卡尔路径、障碍物避让和抓取五类任务，并在同一组目标位姿上比较 OMPL 的 RRTConnect、RRT*、PRM 三种规划器。实验只使用 MoveIt 的 fake controller 和 RViz 可视化，**不启动 Gazebo、MuJoCo 或任何物理引擎**。
 
 ## 1. 实验目的
@@ -61,10 +59,6 @@ src/chap8/
     │   └── planners.yaml    # OMPL 规划器与重复次数
     ├── scripts/
     │   ├── plan_eval.py     # 批量规划与指标记录
-    │   └── pick_place_task.py
-    ├── results/
-    │   ├── plan_attempts.csv
-    │   └── plan_summary.csv
     ├── CMakeLists.txt
     ├── package.xml
     ├── main.sh
@@ -299,8 +293,6 @@ timeout: 5.0
 
 规划器名称必须和 `marm_moveit_config/config/ompl_planning.yaml` 中的定义一致，不同 MoveIt 版本的默认后缀可能不同，运行前先确认。
 
-`scripts/pick_place_task.py` 只负责调用 `marm_planning` 里已有的抓取 demo 并记录指标，不重复实现抓取算法。
-
 ### 7.8 实验流程
 
 1. `roslaunch marm_moveit_config demo.launch use_gui:=false`，确认机械臂和 MotionPlanning 面板正常。
@@ -388,7 +380,7 @@ export LIBGL_ALWAYS_SOFTWARE=1
 
 ### 9.7 `eval.launch` 期间出现 `XmlRpcClient::writeRequest: Connection refused`
 
-RRT* 在 `plan()` 内会阻塞约 5 秒，`roslaunch` 的节点探活可能超时并打印该警告。只要 `plan_summary.csv` 里的 `success` 为 1，规划结果就不受影响。
+RRT* 在 `plan()` 内会阻塞约 5 秒，`roslaunch` 的节点探活可能超时并打印该警告。只要输出目录里的 `plan_summary.csv` 显示 `success=1`，规划结果就不受影响。
 
 ## 10. AI 使用声明
 
