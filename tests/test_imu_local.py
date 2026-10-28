@@ -125,6 +125,23 @@ def test_get_imu_enu():
           "机体 FLU +z 映射到 ENU +z（不再 180° 翻转）: %r" % (up,))
 
 
+def test_odom_imu_consistency():
+    print("== B2. /uav/odom 与 /imu 姿态一致 ==")
+    q = types.SimpleNamespace(w_val=1.0, x_val=0.0, y_val=0.0, z_val=0.0)
+    v = types.SimpleNamespace(x_val=0.0, y_val=0.0, z_val=0.0)
+    state = types.SimpleNamespace(kinematics_estimated=types.SimpleNamespace(
+        position=v, orientation=q, linear_velocity=v, angular_velocity=v))
+    sim = sim_client.SimClient()
+    sim.client = types.SimpleNamespace(
+        getImuData=lambda vehicle_name="": _fake_imu_data(),
+        getMultirotorState=lambda vehicle_name="": state)
+    sim.vehicle_name = ""
+    _, q_odom, _, _ = sim.get_state_enu()
+    q_imu, _, _ = sim.get_imu_enu()
+    check(np.allclose(q_odom, q_imu, atol=1e-9),
+          "odom/imu base_link 姿态一致: %r vs %r" % (q_odom, q_imu))
+
+
 def test_publish():
     print("== C. imu_pub.publish ==")
     node = object.__new__(imu_pub.ImuPublisher)
@@ -159,6 +176,7 @@ def test_project_files():
 if __name__ == "__main__":
     test_body_axes()
     test_get_imu_enu()
+    test_odom_imu_consistency()
     test_publish()
     test_project_files()
     print("\n通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
