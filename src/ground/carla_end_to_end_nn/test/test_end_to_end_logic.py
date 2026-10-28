@@ -152,14 +152,18 @@ def test_predict_output_in_tanh_range():
 def test_cnn_learns_image_to_steer():
     """端到端 CNN 应真正学到"图像 → 转向"：预测与标签强相关、方向判对率高。
 
-    这是端到端模块的核心验收项。为控制纯 numpy 训练耗时，使用较小的样本量。
+    这是端到端模块的核心验收项。为控制纯 numpy 训练耗时，使用较小的样本量
+    与轮次（评审反馈：整份测试 140 s 偏慢）。阈值仍卡在「明显优于零输出基线」，
+    maxpool 反向写错时网络会塌缩成常数输出，这里依然会红。
     """
-    X, Y = main_mod.synth_dataset(n=100, seed=0)
-    net = SimpleCNN(in_channels=3, hidden=8, out=1,
-                    img=(main_mod.IMG_H, main_mod.IMG_W), seed=0)
-    net.train(X, Y.ravel(), epochs=45, lr=0.15, batch=16, verbose=0)
+    # 降采样到 30×40 再训练：纯 numpy 训练耗时与像素数成正比，半分辨率省 4 倍时间，
+    # 车道线弯曲信息仍保留（评审反馈：整份测试 140 s 偏慢）。
+    X, Y = main_mod.synth_dataset(n=60, seed=0)
+    Xs = np.ascontiguousarray(X[:, ::2, ::2])
+    net = SimpleCNN(in_channels=3, hidden=8, out=1, img=(30, 40), seed=0)
+    net.train(Xs, Y.ravel(), epochs=40, lr=0.15, batch=16, verbose=0)
 
-    pred = net.predict(X.astype(np.float32)).ravel()
+    pred = net.predict(Xs.astype(np.float32)).ravel()
     y = Y.ravel()
     mae = float(np.mean(np.abs(pred - y)))
     base = float(np.mean(np.abs(y)))                # 恒输出 0 的基线
@@ -173,14 +177,14 @@ def test_cnn_learns_image_to_steer():
 
 def test_prediction_stable_under_noise():
     """加入轻微噪声后预测不应剧烈跳变（说明网络学到的是结构而非单像素）。"""
-    X, Y = main_mod.synth_dataset(n=60, seed=0)
-    net = SimpleCNN(in_channels=3, hidden=8, out=1,
-                    img=(main_mod.IMG_H, main_mod.IMG_W), seed=0)
-    net.train(X, Y.ravel(), epochs=45, lr=0.15, batch=16, verbose=0)
+    X, Y = main_mod.synth_dataset(n=40, seed=0)
+    Xs = np.ascontiguousarray(X[:, ::2, ::2])       # 半分辨率，省 4 倍训练时间
+    net = SimpleCNN(in_channels=3, hidden=8, out=1, img=(30, 40), seed=0)
+    net.train(Xs, Y.ravel(), epochs=25, lr=0.15, batch=16, verbose=0)
 
     rng = np.random.RandomState(1)
-    noisy = np.clip(X.astype(np.float32) + rng.normal(0, 6.0, X.shape), 0, 255).astype(np.uint8)
-    p0 = net.predict(X.astype(np.float32)).ravel()
+    noisy = np.clip(Xs.astype(np.float32) + rng.normal(0, 6.0, Xs.shape), 0, 255).astype(np.uint8)
+    p0 = net.predict(Xs.astype(np.float32)).ravel()
     p1 = net.predict(noisy.astype(np.float32)).ravel()
     max_jump = float(np.max(np.abs(p1 - p0)))
     assert max_jump < 0.25, f"轻微噪声导致预测跳变过大: {max_jump:.3f}"
@@ -225,11 +229,29 @@ def test_expert_steer_clipped():
 def test_offline_demo_runs():
     """离线取证模式应能在无 CARLA / 无 GPU / 无 TensorFlow 环境下跑通并导出图。"""
     with tempfile.TemporaryDirectory() as d:
-        rc = main_mod.run_offline_demo(d, epochs=6, n_samples=30)
+        rc = main_mod.run_offline_demo(d, epochs=4, n_samples=24)
         assert rc == 0
         produced = sorted(os.listdir(d))
-        for need in ("cnn_loss.png", "steer_pred_vs_true.png", "road_samples.png", "cnn_steer.json"):
+        for need in ("cnn_loss.png", "steer_pred_vs_true.png", "road_samples.png",
+                     "cnn_steer.json", "steer_pred_vs_true.csv"):
             assert need in produced, f"缺少产物 {need}: {produced}"
+        # 评审第 4 条：相关系数必须能从产出复算 —— CSV 里要有标签与预测两列
+        head = open(os.path.join(d, "steer_pred_vs_true.csv"), encoding="utf-8").readline().strip()
+        assert head == "steer_true,steer_pred", f"CSV 表头不对: {head}"
+
+
+def test_evidence_figures_have_axis_labels():
+    """取证图必须带标题/坐标轴标签（评审第 2 条：图本身要能自证）。
+
+    图是纯 numpy 手写 PNG，没有 matplotlib 的 set_xlabel，文字由 bitmap_font
+    画进像素。这里直接断言绘图函数确实调用了 draw_text。
+    """
+    src = open(_IMPL, encoding="utf-8").read()
+    for fn in ("def render_loss_png", "def render_pred_vs_true_png"):
+        seg = src[src.index(fn):]
+        seg = seg[:seg.index("\ndef ", 1)]
+        assert "draw_text(" in seg, f"{fn} 没有画标题/轴标签"
+    assert "training loss (MAE)" in src and "steer: pred (red) vs true (blue)" in src
 
 
 def test_test_carla_source_guards_missing_model():

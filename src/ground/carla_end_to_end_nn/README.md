@@ -38,7 +38,7 @@ src/ground/carla_end_to_end_nn/
 ├── resource/carla_end_to_end_nn
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_end_to_end_logic.py             # 单元测试（26 项，无需 CARLA）
+└── test/test_end_to_end_logic.py             # 单元测试（27 项，无需 CARLA）
 ```
 
 > **为什么 `main.py` 有两份？** 课程要求入口叫 `main.*`，所以包根必须有 `main.py`；
@@ -54,6 +54,8 @@ src/ground/carla_end_to_end_nn/
 # ① 离线取证（不需要 CARLA、图形界面、TensorFlow；约 3~4 分钟）
 python3 main.py --headless --demo --epochs 60 --samples 150 --save_dir ~/shots
 #    导出：cnn_loss.png / steer_pred_vs_true.png / road_samples.png
+#         + steer_pred_vs_true.csv（标签与预测，可复算相关系数）
+#    终端同时打印 MAE / RMSE / 方向一致率 / 相关系数
 
 # ② 行为克隆采集（需要 CARLA）：专家驾驶并记录 (图像, 转向)
 python3 main.py --mode collect --host <宿主机IP> --frames 300 --out_dir dataset
@@ -74,7 +76,7 @@ bash main.sh --host <宿主机IP> --mode test
 ## 4. 测试
 
 ```bash
-python3 test/test_end_to_end_logic.py     # 26 项全部通过，无需 CARLA
+python3 test/test_end_to_end_logic.py     # 27 项全部通过，无需 CARLA（约 30 s）
 ```
 
 其中两项是**回归测试**，卡住两个会让网络完全学不动的缺陷：
@@ -89,7 +91,7 @@ python3 test/test_end_to_end_logic.py     # 26 项全部通过，无需 CARLA
 以及 `test_main_sh_launch_dispatches_per_ros_version`、
 `test_documented_launch_args_are_declared` 等入口与文档一致性的回归测试。
 
-## 5. 实测指标（离线取证模式，本机实测）
+## 5. 实测指标（离线取证模式，合成数据，训练集口径）
 
 | 指标 | 数值 |
 |---|---|
@@ -97,7 +99,7 @@ python3 test/test_end_to_end_logic.py     # 26 项全部通过，无需 CARLA
 | RMSE | 0.11124 |
 | 转向方向一致率 | 98.0% |
 | 零输出基线 MAE | 0.40268（网络优于基线 **4.3 倍**） |
-| 预测/标签相关系数 | +0.992 |
+| 预测/标签相关系数 | +0.992（实测 +0.99176，可由 `steer_pred_vs_true.csv` 复算） |
 
 ## 6. 与已有示例的关系
 

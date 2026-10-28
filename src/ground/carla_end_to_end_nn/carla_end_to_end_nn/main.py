@@ -33,6 +33,7 @@ import sys
 
 import numpy as np
 
+from carla_end_to_end_nn.bitmap_font import draw_text, text_width
 from carla_end_to_end_nn.gif_writer import rgb_frames_to_gif
 from carla_end_to_end_nn.nn_models import SimpleCNN
 
@@ -271,47 +272,71 @@ def _line(canvas, x0, y0, x1, y1, color):
             y0 += sy
 
 
-def _axes(canvas, margin=28):
-    """画坐标轴边框。"""
+# ------------------------------------------------------- 取证图：带标注的绘图区
+# 评审指出取证图「没有标题、坐标轴、图例，图本身不能自证」。本模块的 PNG 是
+# 纯 numpy + zlib 手写的（不依赖 Pillow / matplotlib），所以没有 set_xlabel 可用，
+# 这里用 bitmap_font 的位图字体把标题/刻度/轴标签/图例直接写进像素。
+_TXT = (40, 40, 40)
+_TXT_LIGHT = (235, 235, 238)
+
+
+def _plot_frame(canvas, left, right, top, bottom, title, xlabel, ylabel, y_ticks):
+    """画带标题 / 坐标轴 / 刻度文字的绘图区，返回内框 (x0, y0, x1, y1)。"""
     h, w = canvas.shape[:2]
-    canvas[margin:h - margin, margin:margin + 2] = 190
-    canvas[margin:h - margin, w - margin - 2:w - margin] = 190
-    canvas[margin:margin + 2, margin:w - margin] = 190
-    canvas[h - margin - 2:h - margin, margin:w - margin] = 190
-    # y=0 参考线（转向为 0 的中线）
-    mid = h // 2
-    canvas[mid - 1:mid + 1, margin:w - margin] = 220
-    return margin
+    x0, x1 = left, w - right
+    y0, y1 = top, h - bottom
+
+    draw_text(canvas, 8, 4, title, _TXT)                    # 标题
+    canvas[y0:y1 + 1, x0:x0 + 2] = 190                      # y 轴
+    canvas[y0:y1 + 1, x1 - 2:x1] = 190                      # 右边框
+    canvas[y0:y0 + 2, x0:x1] = 190                          # 上边框
+    canvas[y1 - 2:y1, x0:x1] = 190                          # x 轴
+
+    draw_text(canvas, 6, y0 - 22, ylabel, _TXT)             # y 轴标签（横排，不旋转）
+    for frac, label in y_ticks:                             # 刻度值 + 短刻度线
+        yy = int(round(y1 - frac * (y1 - y0)))
+        draw_text(canvas, max(2, x0 - text_width(label) - 8), yy - 7, label, _TXT)
+        canvas[max(y0, yy - 1):yy + 1, x0 - 5:x0] = 150
+    draw_text(canvas, (x0 + x1) // 2 - text_width(xlabel) // 2, y1 + 26, xlabel, _TXT)
+    return x0, y0, x1, y1
 
 
 def render_loss_png(losses, path, width=640, height=360):
-    """训练损失曲线（MAE）。"""
+    """训练损失曲线（MAE）：带标题、坐标轴、刻度值与轴标签。"""
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
-    m = _axes(canvas)
     v = np.asarray(losses, dtype=np.float32).ravel()
     if v.size < 2:
         return _write_png(path, canvas)
     vmin, vmax = float(v.min()), float(v.max())
     if vmax - vmin < 1e-9:
         vmax = vmin + 1.0
-    xs = np.linspace(m + 6, width - m - 6, v.size).astype(int)
-    ys = (height - m - 6 - (v - vmin) / (vmax - vmin) * (height - 2 * m - 12)).astype(int)
+    x0, y0, x1, y1 = _plot_frame(
+        canvas, 68, 22, 44, 58, "training loss (MAE)", "epoch", "MAE",
+        [(1.0, f"{vmax:.4f}"), (0.5, f"{(vmin + vmax) / 2:.4f}"), (0.0, f"{vmin:.4f}")])
+    xs = np.linspace(x0 + 6, x1 - 6, v.size).astype(int)
+    ys = (y1 - 6 - (v - vmin) / (vmax - vmin) * (y1 - y0 - 12)).astype(int)
     for i in range(v.size - 1):
         _line(canvas, xs[i], ys[i], xs[i + 1], ys[i + 1], (200, 60, 60))
+    draw_text(canvas, x0, y1 + 8, "1", _TXT)                    # x 轴端点：epoch
+    draw_text(canvas, x1 - text_width(str(v.size)), y1 + 8, str(v.size), _TXT)
     return _write_png(path, canvas)
 
 
 def render_pred_vs_true_png(y_true, y_pred, path, width=640, height=360):
-    """预测转向 vs 真实转向：蓝=标签，红=CNN 预测。两条曲线越贴合越好。"""
+    """预测转向 vs 真实转向：蓝=标签，红=CNN 预测。带标题、轴标签与图例。"""
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
-    m = _axes(canvas)
     n = len(y_true)
     if n < 2:
         return _write_png(path, canvas)
+    x0, y0, x1, y1 = _plot_frame(
+        canvas, 60, 22, 44, 58, "steer: pred (red) vs true (blue)",
+        "sample (sorted by steer)", "steer", [(1.0, "+1"), (0.5, "0"), (0.0, "-1")])
+    mid = (y0 + y1) // 2
+    canvas[mid - 1:mid + 1, x0 + 2:x1 - 2] = 225        # steer=0 参考线
 
     def to_xy(vals):
-        xs = np.linspace(m + 6, width - m - 6, n).astype(int)
-        ys = (height // 2 - np.clip(vals, -1, 1) * (height / 2 - m - 12)).astype(int)
+        xs = np.linspace(x0 + 6, x1 - 6, n).astype(int)
+        ys = (mid - np.clip(vals, -1, 1) * ((y1 - y0) / 2 - 8)).astype(int)
         return xs, ys
 
     xs, ys_t = to_xy(np.asarray(y_true, dtype=np.float32))
@@ -319,20 +344,30 @@ def render_pred_vs_true_png(y_true, y_pred, path, width=640, height=360):
     for i in range(n - 1):
         _line(canvas, xs[i], ys_t[i], xs[i + 1], ys_t[i + 1], (60, 90, 200))
         _line(canvas, xs[i], ys_p[i], xs[i + 1], ys_p[i + 1], (210, 50, 50))
+
+    # 图例（绘图区内右上角）：红线=预测，蓝线=标签
+    lx, ly = x1 - 128, y0 + 10
+    canvas[ly:ly + 4, lx:lx + 18] = (210, 50, 50)
+    draw_text(canvas, lx + 24, ly - 5, "pred", _TXT)
+    canvas[ly + 20:ly + 24, lx:lx + 18] = (60, 90, 200)
+    draw_text(canvas, lx + 24, ly + 15, "true", _TXT)
     return _write_png(path, canvas)
 
 
 def render_samples_png(images, steers, preds, path, cols=4, scale=3):
-    """把若干张样本图像横向拼成一张图，便于在文档里展示训练数据。"""
+    """把若干张样本图像横向拼成一张图，每张下方标注真实/预测转向。"""
     n = min(cols, len(images))
     if n == 0:
         return _write_png(path, np.full((IMG_H, IMG_W, 3), 255, np.uint8))
     h, w = images[0].shape[:2]
-    gap = 4
-    canvas = np.full((h, n * w + (n - 1) * gap, 3), 30, dtype=np.uint8)
+    gap = 8
+    cap_h = 36
+    canvas = np.full((h + cap_h, n * w + (n - 1) * gap, 3), 30, dtype=np.uint8)
     for i in range(n):
         x0 = i * (w + gap)
-        canvas[:, x0:x0 + w] = images[i][:, :, :3]
+        canvas[:h, x0:x0 + w] = images[i][:, :, :3]
+        draw_text(canvas, x0 + 2, h + 3, f"true {float(steers[i]):+.2f}", _TXT_LIGHT)
+        draw_text(canvas, x0 + 2, h + 20, f"pred {float(preds[i]):+.2f}", _TXT_LIGHT)
     if scale > 1:
         canvas = np.repeat(np.repeat(canvas, scale, axis=0), scale, axis=1)
     return _write_png(path, canvas)
@@ -400,11 +435,19 @@ def run_offline_demo(save_dir, epochs=60, n_samples=150, seed=0):
     mae = float(np.mean(np.abs(pred - Y.ravel())))
     rmse = float(np.sqrt(np.mean((pred - Y.ravel()) ** 2)))
     sign_acc = float(np.mean(np.sign(pred) == np.sign(Y.ravel())))
+    # 预测/标签相关系数：评审指出这个数只在文档里出现、命令输出里拿不到，
+    # 因此这里直接打印，并把 (标签, 预测) 落成 CSV 供读者独立复算。
+    corr = float(np.corrcoef(pred, Y.ravel())[0, 1])
     # 与"恒输出 0"的基线比较，证明网络确实学到了东西
     base_mae = float(np.mean(np.abs(Y.ravel())))
     print(f"\n端到端 CNN 评估：MAE = {mae:.5f}，RMSE = {rmse:.5f}，"
           f"转向方向一致率 = {sign_acc * 100:.1f}%")
+    print(f"预测/标签相关系数 = {corr:+.5f}")
     print(f"零输出基线 MAE = {base_mae:.5f}（MAE 明显低于基线才说明网络学到了映射）")
+    csv_path = os.path.join(save_dir, "steer_pred_vs_true.csv")
+    np.savetxt(csv_path, np.column_stack([Y.ravel(), pred]), delimiter=",",
+               header="steer_true,steer_pred", comments="", fmt="%.6f")
+    print(f"预测与标签已存 CSV：{csv_path}")
 
     # ---- 导出证据图 ----
     p1 = render_loss_png(hist["loss"], os.path.join(save_dir, "cnn_loss.png"))
