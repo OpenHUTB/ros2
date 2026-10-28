@@ -1,0 +1,5 @@
+<launch>
+  <!-- fixed_point_stop：定点停车节点，入口 main.py
+       订阅 /odom、/scan，发布 /cmd_vel，到达目标点自动停车 -->
+  <node pkg="fixed_point_stop" type="main.py" name="fixed_point_stop_node" output="screen"/>
+</launch>

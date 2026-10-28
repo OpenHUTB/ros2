@@ -88,6 +88,7 @@ nav:
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 防卡死漫游: './ground/no_stuck_wander.md'
     - 多目标点导航: './ground/turtlebot_multi_goal_nav.md'
+    - 定点停车: './ground/fixed_point_stop.md'
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'

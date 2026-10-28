@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>fixed_point_stop</name>
+  <version>0.0.0</version>
+  <description>定点停车模块：小车驶向指定目标点，到达后自动停车并报告停点误差</description>
+  <maintainer email="352797580@qq.com">Ri-kin08</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>roslaunch</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export/>
+</package>

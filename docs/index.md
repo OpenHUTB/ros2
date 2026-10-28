@@ -99,6 +99,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [点云地图创建](./ground/pcl_recorder.md)
 * [防卡死漫游](./ground/no_stuck_wander.md)
 * [多目标点导航](./ground/turtlebot_multi_goal_nav.md)
+* [定点停车](./ground/fixed_point_stop.md)
 * [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
