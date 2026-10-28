@@ -112,11 +112,11 @@ nav:
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
 - 空域载具:
+    - 室内无人机安全制动与定高悬停 / Indoor UAV braking: './air/mujoco_uav_range_neural_braking.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'
-      - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
-    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
+      - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
