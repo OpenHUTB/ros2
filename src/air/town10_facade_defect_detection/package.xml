@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>town10_facade_defect_detection</name>
+  <version>1.0.0</version>
+  <description>Town10 facade image defect detection and ROS 2 image interfaces.</description>
+  <maintainer email="551657264@qq.com">kangxin-li</maintainer>
+  <license>AGPL-3.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -1,0 +1,25 @@
+{
+  "sha256": "de2fced0c5260ba31af51603f6c884f783572afed6e32fed5a76bdf699a5a97f",
+  "classes": [
+    "crack",
+    "stain",
+    "peel",
+    "glass"
+  ],
+  "input_shape": [
+    1,
+    3,
+    640,
+    640
+  ],
+  "output_shape": [
+    1,
+    8,
+    8400
+  ],
+  "license": "AGPL-3.0",
+  "source_archive": "airsim_facade_impl_20261026.zip",
+  "source_path": "01_ros_pkg/airsim_facade_inspection_yolo/models/best.onnx",
+  "export_version": "8.4.178",
+  "export_date": "2026-10-18T17:33:37.799424+08:00"
+}
