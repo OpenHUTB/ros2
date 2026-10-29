@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>轨迹/里程计精度评估（ATE/RPE） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u8f68\u8ff9/\u91cc\u7a0b\u8ba1\u7cbe\u5ea6\u8bc4\u4f30\uff08ATE/RPE\uff09";
+        var mkdocs_page_input_path = "ground/trajectory_accuracy_eval.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">轨迹/里程计精度评估（ATE/RPE）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 这个模块解决什么问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 公式</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-umeyama">2.1 刚体对齐（Umeyama）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22-ate">2.2 ATE</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-rpe">2.3 RPE</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#24">2.4 漂移率</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 快速开始</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 手算验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 运行效果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 尺度误差的影响</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5-ros-1">5. ROS 1 在线评估</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 换场景</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 观察指标话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52_1">5.2 运行效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 接自己的数据</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 参数说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 测试</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-windows">7.1 跨平台可移植性（Windows 控制台编码）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参考</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">轨迹/里程计精度评估（ATE/RPE）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/trajectory_accuracy_eval.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">轨迹 / 里程计精度评估</h1>
+<blockquote>
+<p>所属模块：<code>src/ground/trajectory_accuracy_eval</code>
+依赖：Python 3 + NumPy（离线）；ROS 1 Noetic（在线评估，可选）
+不需要 Gazebo / CARLA / GPU</p>
+</blockquote>
+<h2 id="1">1. 这个模块解决什么问题</h2>
+<p>小车跑完一条轨迹，怎么判断它"跑得准不准"？</p>
+<p>如果只看终点停在哪，会漏掉两类信息：轨迹中段是否整体偏移、以及局部运动是否算错。
+本模块用三个标准指标把精度变成<strong>可比较、可复现</strong>的数字：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+<th>回答的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ATE</strong> 绝对轨迹误差</td>
+<td>整条轨迹刚体对齐后，逐点位置误差的 RMSE</td>
+<td>两条轨迹整体贴合得怎么样</td>
+</tr>
+<tr>
+<td><strong>RPE</strong> 相对位姿误差</td>
+<td>固定间隔 <code>Δ</code> 内相对运动的平移/旋转误差</td>
+<td>局部运动估计准不准（尺度、漂移）</td>
+</tr>
+<tr>
+<td><strong>漂移率</strong></td>
+<td>终点位置误差 ÷ 真值轨迹长度 × 100%</td>
+<td>跑 100 m 会偏多少米</td>
+</tr>
+</tbody>
+</table>
+<p>这三个指标来自 SLAM 评测领域的标准做法（Sturm et al., IROS 2012），
+本模块把它们实现成不依赖 ROS 的纯 NumPy 工具，同时提供 ROS 1 在线版本。</p>
+<h2 id="2">2. 公式</h2>
+<p>设真值轨迹 <script type="math/tex">P^{gt}_i</script>、估计轨迹 <script type="math/tex">P^{est}_i</script>（<script type="math/tex">i=1..N</script>），均为二维位姿 <script type="math/tex">(x,y,\theta)</script>。</p>
+<h3 id="21-umeyama">2.1 刚体对齐（Umeyama）</h3>
+<p>求旋转 <script type="math/tex">R</script> 与平移 <script type="math/tex">t</script>，使</p>
+<p>
+<script type="math/tex; mode=display">
+\min_{R \in SO(2),\ t} \sum_{i=1}^{N} \left\| R\, p^{est}_i + t - p^{gt}_i \right\|^2
+</script>
+</p>
+<p>闭式解由两组点的协方差矩阵 <script type="math/tex">S = \frac{1}{N}\sum_i (p^{gt}_i - \bar{p}^{gt})(p^{est}_i - \bar{p}^{est})^\top</script> 的 SVD 给出：</p>
+<p>
+<script type="math/tex; mode=display">
+S = U \Sigma V^\top,\quad R = U \begin{bmatrix}1&0\\0&\det(UV^\top)\end{bmatrix} V^\top,\quad t = \bar{p}^{gt} - R\,\bar{p}^{est}
+</script>
+</p>
+<p><strong>默认不估计尺度。</strong> 这一点是刻意的：轮半径标定误差造成的正是尺度偏差，
+如果对齐时把尺度吸收掉，ATE 反而看不出问题。需要单独观察尺度时可用 <code>with_scale=True</code>。</p>
+<h3 id="22-ate">2.2 ATE</h3>
+<p>
+<script type="math/tex; mode=display">
+\text{ATE}_{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\left\| R\,p^{est}_i + t - p^{gt}_i \right\|^2}
+</script>
+</p>
+<h3 id="23-rpe">2.3 RPE</h3>
+<p>对间隔 <script type="math/tex">\Delta</script> 的每一对帧：</p>
+<p>
+<script type="math/tex; mode=display">
+E_i = \left( (P^{gt}_i)^{-1} P^{gt}_{i+\Delta} \right)^{-1} \left( (P^{est}_i)^{-1} P^{est}_{i+\Delta} \right)
+</script>
+</p>
+<p>取 <script type="math/tex">E_i</script> 的平移量 <script type="math/tex">\| \mathrm{trans}(E_i) \|</script> 与旋转量 <script type="math/tex">|\theta(E_i)|</script> 分别统计 RMSE。
+RPE 不需要对齐，因此能直接暴露尺度误差。</p>
+<h3 id="24">2.4 漂移率</h3>
+<p>
+<script type="math/tex; mode=display">
+\text{drift} = \frac{\left\| p^{est}_N - p^{gt}_N \right\|}{\sum_{i=1}^{N-1}\left\| p^{gt}_{i+1} - p^{gt}_i \right\|} \times 100\%
+</script>
+</p>
+<p>本模块同时输出<strong>原始</strong>（未对齐）与<strong>对齐后</strong>两个版本：
+评估里程计标定效果看原始值，与文献对照 ATE 看对齐值。</p>
+<h2 id="3">3. 快速开始</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/trajectory_accuracy_eval
+
+<span class="c1"># 生成一条 figure8 轨迹 + 带 2% 轮半径误差的里程计并评估</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>demo
+</code></pre></div>
+<p>预期输出：</p>
+<div class="highlight"><pre><span></span><code>轨迹长度            : 60.00 m
+ATE RMSE            : 0.3301 m  (mean 0.2876 / max 0.5709)
+ATE 朝向 RMSE       : 0.002 °
+RPE(delta=1) 平移   : RMSE 0.0015 m
+RPE(delta=10) 平移  : RMSE 0.0152 m
+RPE(delta=50) 平移  : RMSE 0.0756 m
+终点漂移率(原始)    : 1.897 %
+终点漂移率(对齐后)  : 0.951 %
+</code></pre></div>
+<h3 id="31">3.1 手算验证</h3>
+<p>指标是否算对，可以直接用纸笔核对：</p>
+<p>每步前进 <script type="math/tex">1.5\ \text{m/s} \times 0.05\ \text{s} = 0.075\ \text{m}</script>，
+轮半径尺度误差 2%，因此每步多算 <script type="math/tex">0.075 \times 0.02 = 0.0015\ \text{m}</script>。</p>
+<ul>
+<li>
+<script type="math/tex">\text{RPE}(\Delta=1) = 0.0015\ \text{m}</script> ✅</li>
+<li>
+<script type="math/tex">\text{RPE}(\Delta=10) = 10 \times 0.0015 = 0.015\ \text{m}</script> ✅</li>
+<li>
+<script type="math/tex">\text{RPE}(\Delta=50) = 50 \times 0.0015 = 0.075\ \text{m}</script> ✅</li>
+</ul>
+<p>这三个数与程序输出一致，说明实现没有漏项。</p>
+<h3 id="32">3.2 运行效果</h3>
+<p><code>--mode demo</code> 会同时导出两张图（保存在 <code>results/</code> 下，可随时重新生成）：</p>
+<p><img alt="轨迹对比：真值、里程计估计与刚体对齐后的结果" src="../../img/ground/trajectory_accuracy_eval/trajectory.png"/></p>
+<p><em>图 1　轨迹对比。黑色为真值，红色为带 2% 轮半径误差的里程计轨迹，
+蓝色虚线为刚体对齐后的结果——对齐抹平了整体偏移，但</em><em>尺度误差导致的形状偏差仍然保留</em><em>，
+这正是 ATE 取 0.33 m 的原因。</em></p>
+<p><img alt="对齐后的位置误差与朝向误差曲线" src="../../img/ground/trajectory_accuracy_eval/error.png"/></p>
+<p><em>图 2　对齐后的误差曲线。上图是位置误差（随时间增长，说明误差在累积而非随机抖动），
+下图是朝向误差：</em><em>恒为 0.0018°</em><em>，因为轮半径尺度误差只影响行驶距离、不影响航向。
+注：这一项数值只有 1e-3 度量级，若不固定纵轴范围，绘图库会把 1e-14 的浮点噪声
+放大成"尖峰"，看起来像几十度的误差——因此在绘图代码里显式设定了可读的纵轴范围。</em></p>
+<p>在 Ubuntu 20.04 + ROS Noetic 的虚拟机上从零部署（下载、解压、直接运行）的实际过程：</p>
+<p><img alt="Ubuntu 20.04 上部署并运行 demo" src="../../img/ground/trajectory_accuracy_eval/offline_demo.png"/></p>
+<p><em>图 3　在 Ubuntu 20.04 + Python 3.8.10 上的实际运行结果，与 Windows 下逐位一致。</em></p>
+<h2 id="4">4. 尺度误差的影响</h2>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>sweep
+</code></pre></div>
+<p>真值 <code>figure8</code>、1.5 m/s、40 s（轨迹长 60 m）：</p>
+<table>
+<thead>
+<tr>
+<th>尺度系数</th>
+<th>尺度误差</th>
+<th>ATE RMSE / m</th>
+<th>ATE max / m</th>
+<th>漂移率 / %</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.96</td>
+<td>−4%</td>
+<td>0.6601</td>
+<td>1.1397</td>
+<td>3.793</td>
+</tr>
+<tr>
+<td>0.98</td>
+<td>−2%</td>
+<td>0.3302</td>
+<td>0.5710</td>
+<td>1.898</td>
+</tr>
+<tr>
+<td>0.99</td>
+<td>−1%</td>
+<td>0.1655</td>
+<td>0.2868</td>
+<td>0.950</td>
+</tr>
+<tr>
+<td>1.00</td>
+<td>0%</td>
+<td>0.0119</td>
+<td>0.0173</td>
+<td>0.055</td>
+</tr>
+<tr>
+<td>1.01</td>
+<td>+1%</td>
+<td>0.1653</td>
+<td>0.2866</td>
+<td>0.949</td>
+</tr>
+<tr>
+<td>1.02</td>
+<td>+2%</td>
+<td>0.3301</td>
+<td>0.5709</td>
+<td>1.897</td>
+</tr>
+<tr>
+<td>1.04</td>
+<td>+4%</td>
+<td>0.6599</td>
+<td>1.1397</td>
+<td>3.793</td>
+</tr>
+</tbody>
+</table>
+<p>两条可直接用于实验报告的结论：</p>
+<ol>
+<li><strong>漂移率与尺度误差近似成正比</strong>：2% 的轮半径误差，跑 60 m 就偏 1.9%，
+   即 100 m 偏约 3.2 m。</li>
+<li><strong>多算与少算对称</strong>：<script type="math/tex">\pm</script>2% 的 ATE 都是 0.33 m，说明该指标对符号不敏感，
+   要判断"偏大还是偏小"需看原始（未对齐）坐标下的终点误差方向。</li>
+</ol>
+<p>表格对应的数据文件：<code>results/sweep_scale.json</code>。</p>
+<h2 id="5-ros-1">5. ROS 1 在线评估</h2>
+<p>不需要任何仿真器：launch 里自带一对"真值 + 带误差里程计"的数据源。</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src
+cp<span class="w"> </span>-r<span class="w"> </span>src/ground/trajectory_accuracy_eval<span class="w"> </span>~/catkin_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+roslaunch<span class="w"> </span>trajectory_accuracy_eval<span class="w"> </span>main.launch
+</code></pre></div>
+<p>终端输出：</p>
+<div class="highlight"><pre><span></span><code>[INFO] sim_odom_publisher: kind=figure8 speed=1.50 m/s wheel_scale=1.020，共 801 个采样点
+[INFO] traj_eval_node 已启动: 订阅 /ground_truth 与 /odom，配对容差 0.050 s
+[INFO] 配对 401 组 | ATE RMSE 0.1665 m (max 0.2845) | RPE(10) 0.0152 m
+</code></pre></div>
+<p>跑满一圈后演示数据源会回到起点，并向 <code>/traj_eval/reset</code> 发一次信号，
+评估节点随即清空缓冲、从新一轮重新统计（否则两圈轨迹会攒在一起，
+循环处的"跳回起点"会被误当成真实运动，把 RPE 抬高数倍）：</p>
+<div class="highlight"><pre><span></span><code>[INFO] 轨迹回放循环到起点，已通知评估节点重置
+[INFO] 收到重置信号，已清空 801 组缓存，重新开始评估
+</code></pre></div>
+<h3 id="51">5.1 换场景</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>trajectory_accuracy_eval<span class="w"> </span>main.launch<span class="w"> </span>kind:<span class="o">=</span>circle
+roslaunch<span class="w"> </span>trajectory_accuracy_eval<span class="w"> </span>main.launch<span class="w"> </span>wheel_scale:<span class="o">=</span><span class="m">1</span>.01
+roslaunch<span class="w"> </span>trajectory_accuracy_eval<span class="w"> </span>main.launch<span class="w"> </span>kind:<span class="o">=</span>straight<span class="w"> </span>wheel_scale:<span class="o">=</span><span class="m">1</span>.02
+</code></pre></div>
+<h3 id="52">5.2 观察指标话题</h3>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/traj_eval/metrics
+</code></pre></div>
+<p>格式：<code>[ATE_RMSE, ATE_MAX, RPE_delta_RMSE, 配对数]</code>。</p>
+<h3 id="52_1">5.2 运行效果</h3>
+<p><code>roslaunch trajectory_accuracy_eval main.launch</code> 启动后的实际终端输出：</p>
+<p><img alt="ROS 1 在线评估的实际运行日志" src="../../img/ground/trajectory_accuracy_eval/ros1_launch.png"/></p>
+<p><em>图 4　ROS 1 实际运行。参数正确载入 <code>/sim_odom_publisher/*</code> 与 <code>/traj_eval_node/*</code>，
+评估节点每 3 秒报告一次；随着累计行驶距离增加，ATE RMSE 从 0.0260 m 单调增长到
+0.3473 m，而 <code>RPE(10)</code> 全程稳定在 </em><em>0.0152 m</em><em>——后者与理论值
+（每步 0.075 m × 2% × 10 步 = 0.015 m）一致，说明节点内部的配对与指标计算没有偏差。
+日志后半段"轨迹回放循环到起点"之后 <code>RPE(10)</code> 跳到 0.1268，
+正是本节开头说明的循环重置问题（已由 <code>/traj_eval/reset</code> 修复）。</em></p>
+<h3 id="53">5.3 接自己的数据</h3>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>订阅</td>
+<td><code>/ground_truth</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/traj_eval/reset</code></td>
+<td><code>std_msgs/Empty</code>（清空缓冲，开始新一轮评估）</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/traj_eval/metrics</code></td>
+<td><code>std_msgs/Float64MultiArray</code></td>
+</tr>
+</tbody>
+</table>
+<p>把 <code>rosbag play</code> 或真实定位输出接到这两个话题即可。Ctrl+C 退出后，
+配对好的轨迹写到 <code>~/traj_eval_out/</code>，可再用离线模式复核：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--gt<span class="w"> </span>~/traj_eval_out/ground_truth.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">                            </span>--est<span class="w"> </span>~/traj_eval_out/odometry.csv
+</code></pre></div>
+<h2 id="6">6. 参数说明</h2>
+<p><code>config/params.yaml</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">sim_odom_publisher</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="s">"figure8"</span><span class="w">           </span><span class="c1"># straight / circle / figure8 / sine</span>
+<span class="w">  </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.5</span><span class="w">                </span><span class="c1"># m/s</span>
+<span class="w">  </span><span class="nt">wheel_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.02</span><span class="w">         </span><span class="c1"># 轮半径尺度误差</span>
+<span class="w">  </span><span class="nt">yaw_bias_deg_per_m</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w">   </span><span class="c1"># 每米航向偏置</span>
+<span class="w">  </span><span class="nt">rate_hz</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20.0</span>
+<span class="nt">traj_eval_node</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">match_tolerance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span><span class="w">     </span><span class="c1"># 时间戳配对容差 s</span>
+<span class="w">  </span><span class="nt">report_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.0</span><span class="w">        </span><span class="c1"># 报告周期 s</span>
+<span class="w">  </span><span class="nt">rpe_delta</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">             </span><span class="c1"># RPE 间隔</span>
+<span class="w">  </span><span class="nt">min_pairs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="nt">align</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">               </span><span class="c1"># ATE 是否对齐</span>
+<span class="w">  </span><span class="nt">output_dir</span><span class="p">:</span><span class="w"> </span><span class="s">"~/traj_eval_out"</span>
+</code></pre></div>
+<h2 id="7">7. 测试</h2>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test/test_traj_eval.py<span class="w">       </span><span class="c1"># 自洽测试：41 项检查</span>
+python3<span class="w"> </span>test/test_known_answer.py<span class="w">    </span><span class="c1"># 已知答案对拍：7 项</span>
+<span class="c1"># 或按 pytest 的方式一次跑完</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test/<span class="w"> </span>-q<span class="w">           </span><span class="c1"># 15 passed</span>
+</code></pre></div>
+<p><strong>自洽测试</strong>（<code>test_traj_eval.py</code>，41 项）：SE2 运算、Umeyama 对齐（含镜像数据不产生反射）、
+ATE（同轨迹为 0 / 随噪声单调增大 / 整体平移被对齐消除）、RPE 与解析值对照、漂移率解析值、
+误差模型端到端一致性、CSV 读写往返、异常输入。</p>
+<p><strong>已知答案对拍</strong>（<code>test_known_answer.py</code>，7 项）：自洽测试只能验证"实现与自己一致"，
+查不出"公式整体写错但内部自洽"的错误（对齐方式选错、旋转与平移求解顺序颠倒等）。
+因此这个文件用两种<strong>独立于实现的答案源</strong>来对拍：</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>独立答案来源</th>
+<th>断言</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>相同轨迹</td>
+<td>定义</td>
+<td>ATE &lt; 1e-12</td>
+</tr>
+<tr>
+<td>整体平移 d、不对齐</td>
+<td>解析</td>
+<td>ATE <strong>严格等于</strong> d</td>
+</tr>
+<tr>
+<td>同心圆半径差 ΔR</td>
+<td>解析（圆对称，残差恒为 ΔR）</td>
+<td>ATE <strong>严格等于</strong> ΔR</td>
+</tr>
+<tr>
+<td>刚体变换后对齐</td>
+<td>解析</td>
+<td>ATE &lt; 1e-9，且恢复出反向旋转角</td>
+</tr>
+<tr>
+<td>匀速直线 + 尺度误差</td>
+<td>解析</td>
+<td>RPE(Δ) = (k−1)·ds·Δ，漂移率 = (k−1)·100%</td>
+</tr>
+<tr>
+<td>已知高斯噪声 σ</td>
+<td>统计（Rayleigh 分布，均方根 σ√2）</td>
+<td>ATE ≈ σ√2（误差 &lt; 0.03 m）</td>
+</tr>
+<tr>
+<td>随机数据</td>
+<td><strong>暴力搜索</strong>：不用 SVD，对旋转角做网格搜索 + 黄金分割细化</td>
+<td>与 Umeyama 的最优 RMSE 与旋转角一致（&lt; 1e-6 / 1e-4 rad）</td>
+</tr>
+</tbody>
+</table>
+<p>最后一条是关键：暴力搜索完全不使用 SVD，若 Umeyama 实现有错（符号、转置、顺序），
+两者不可能对上。</p>
+<p>全部测试只依赖 numpy，不需要 ROS。</p>
+<h3 id="71-windows">7.1 跨平台可移植性（Windows 控制台编码）</h3>
+<p>Windows 默认控制台是 GBK，无法编码 <code>∘</code>、<code>⁻</code>、<code>¹</code> 这类数学符号。
+早期版本在打印第一条结果时就抛 <code>UnicodeEncodeError</code>，导致<strong>断言没跑完就中断</strong>，
+看起来像"测试失败"，实际是输出编码问题。</p>
+<p>现在两个测试脚本都在启动时做了处理：</p>
+<ol>
+<li>把 <code>stdout/stderr</code> 的 <code>errors</code> 设为 <code>replace</code>，任何无法编码的字符都不会再抛异常；</li>
+<li>对少量符号做 <strong>ASCII 等价替换</strong>（<code>∘</code>→<code>o</code>、<code>⁻¹</code>→<code>^-1</code>、<code>¹</code>→<code>^1</code> 等），
+   先匹配多字符组合再逐字符兜底，因此 GBK 下输出仍然是可读的
+   （例如 <code>a ∘ a⁻¹ 的平移为 0</code> 显示为 <code>a o a^-1 的平移为 0</code>）。</li>
+</ol>
+<p>两种编码下都能完整跑完，结果一致：</p>
+<table>
+<thead>
+<tr>
+<th>控制台编码</th>
+<th><code>test/test_traj_eval.py</code></th>
+<th><code>test/test_known_answer.py</code></th>
+<th><code>pytest test/</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UTF-8（Linux / 现代终端）</td>
+<td>41 项通过</td>
+<td>7 项通过</td>
+<td>15 passed</td>
+</tr>
+<tr>
+<td>GBK（Windows 默认）</td>
+<td>41 项通过</td>
+<td>7 项通过</td>
+<td>15 passed</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8">8. 已知限制</h2>
+<ol>
+<li><strong>对齐不估尺度</strong>（默认）：这是刻意设计，见 2.1 节；需要时可 <code>with_scale=True</code>。</li>
+<li><strong>零误差仍有约 0.01 m 残留</strong>：仿真用一阶积分把相对运动重新积分成里程计轨迹，
+   与真值的解析积分存在离散差异，减小 <code>--dt</code> 可降低。</li>
+<li><strong>只处理平面运动（SE2）</strong>：地面车辆足够；三维轨迹需扩展为 SE3。</li>
+<li><strong>要求两条轨迹逐点对应</strong>：按时间戳配对，不做重采样；采样率不同时请先插值。</li>
+<li><strong><code>ros_sim_publisher</code> 只是演示数据源</strong>：它不模拟真实传感器噪声，
+   仅用于展示从"两条轨迹"到"指标"的完整链路。</li>
+</ol>
+<h2 id="9">9. 参考</h2>
+<ul>
+<li>Sturm et al. <em>A Benchmark for the Evaluation of RGB-D SLAM Systems</em>. IROS 2012.</li>
+<li>Umeyama. <em>Least-squares estimation of transformation parameters between two point patterns</em>. TPAMI 1991.</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_auto_light/" title="地面载具灯光自动控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../air/uav_mission_safety_manager/overview/" title="模块概览">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../carla_auto_light/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../air/uav_mission_safety_manager/overview/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
