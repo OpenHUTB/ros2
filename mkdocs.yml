@@ -70,6 +70,8 @@ nav:
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
+    - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
     - ROS2 话题桥接（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_ros2_bridge.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
