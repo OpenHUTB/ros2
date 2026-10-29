@@ -1,0 +1,45 @@
+<mujoco model="passive_walker">
+  <!-- 轮辐式被动行走器（rimless wheel / McGeer 1989 的最小被动行走模型）。
+       特点：没有任何执行器（nu=0），只靠“推一下”+ 重力 + 落地碰撞沿 5° 斜坡持续前进。
+       平面约束：slide_x + slide_z + hinge_y 三个关节把运动限制在矢状面内，
+       既允许轮心随辐条翻转而升降，又避免 3D 侧翻。
+       参数：半径 0.45 m，12 根辐条（每步 30°），坡面 5°（下坡方向 = +x）。
+       注意：MuJoCo 的 euler 属性单位是“度”。 -->
+  <option timestep="0.0005" gravity="0 0 -9.81" integrator="RK4"/>
+  <visual><global offwidth="640" offheight="480"/></visual>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="slope" type="plane" size="200 4 0.1" euler="0 5 0"
+          rgba="0.72 0.74 0.78 1" friction="1.2 0.02 0.001"/>
+    <body name="wheel" pos="0 0 0.48">
+      <joint name="slide_x" type="slide" axis="1 0 0"/>
+      <joint name="slide_z" type="slide" axis="0 0 1"/>
+      <joint name="roll" type="hinge" axis="0 1 0"/>
+      <geom name="hub" type="sphere" size="0.05" mass="1.5" rgba="0.2 0.6 1 1"/>
+      <geom name="spoke0" type="capsule" fromto="0 0 0 0.45000 0 0.00000" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip0" type="sphere" pos="0.45000 0 0.00000" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke1" type="capsule" fromto="0 0 0 0.38971 0 0.22500" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip1" type="sphere" pos="0.38971 0 0.22500" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke2" type="capsule" fromto="0 0 0 0.22500 0 0.38971" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip2" type="sphere" pos="0.22500 0 0.38971" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke3" type="capsule" fromto="0 0 0 0.00000 0 0.45000" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip3" type="sphere" pos="0.00000 0 0.45000" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke4" type="capsule" fromto="0 0 0 -0.22500 0 0.38971" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip4" type="sphere" pos="-0.22500 0 0.38971" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke5" type="capsule" fromto="0 0 0 -0.38971 0 0.22500" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip5" type="sphere" pos="-0.38971 0 0.22500" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke6" type="capsule" fromto="0 0 0 -0.45000 0 0.00000" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip6" type="sphere" pos="-0.45000 0 0.00000" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke7" type="capsule" fromto="0 0 0 -0.38971 0 -0.22500" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip7" type="sphere" pos="-0.38971 0 -0.22500" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke8" type="capsule" fromto="0 0 0 -0.22500 0 -0.38971" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip8" type="sphere" pos="-0.22500 0 -0.38971" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke9" type="capsule" fromto="0 0 0 -0.00000 0 -0.45000" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip9" type="sphere" pos="-0.00000 0 -0.45000" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke10" type="capsule" fromto="0 0 0 0.22500 0 -0.38971" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip10" type="sphere" pos="0.22500 0 -0.38971" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+      <geom name="spoke11" type="capsule" fromto="0 0 0 0.38971 0 -0.22500" size="0.014" mass="0.02" rgba="0.82 0.84 0.9 1"/>
+      <geom name="tip11" type="sphere" pos="0.38971 0 -0.22500" size="0.03" mass="0.4" rgba="1 0.45 0.15 1"/>
+    </body>
+  </worldbody>
+</mujoco>
