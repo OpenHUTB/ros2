@@ -66,8 +66,6 @@ ROS每章节运行代码:
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
-* [基于 AprilTag 的无人机视觉精准降落](./air/uav_apriltag_landing.md)
-
 
 
 ## 4. 水域载具  <span id='water_vehicle'></span>
