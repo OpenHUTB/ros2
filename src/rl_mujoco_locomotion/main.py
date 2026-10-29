@@ -7,11 +7,8 @@ import argparse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from rl_mujoco_locomotion.env import ensure_assets
-from rl_mujoco_locomotion.train import train
-from rl_mujoco_locomotion.evaluate import evaluate
-from rl_mujoco_locomotion.render_gif import render_gif
-from rl_mujoco_locomotion.compare import plot_all
+# 子命令内部再导入各模块：doctor 需要在缺少 matplotlib / imageio / mujoco 时也能给出诊断，
+# 因此这里不做顶层导入，避免缺依赖时直接 ImportError 崩溃。
 
 
 def cmd_doctor(args):
@@ -36,7 +33,12 @@ def cmd_doctor(args):
         print(f"[OK] imageio {imageio.__version__}")
     except Exception as e:
         print(f"[FAIL] imageio: {e}")
-    ensure_assets()
+    try:
+        from rl_mujoco_locomotion.env import ensure_assets
+        ensure_assets()
+        print("[OK] assets 已就绪")
+    except Exception as e:
+        print(f"[FAIL] assets: {e}")
     print("Doctor finished.")
 
 
@@ -56,20 +58,24 @@ def cmd_test(args):
 
 
 def cmd_train(args):
+    from rl_mujoco_locomotion.train import train
     train(args.env, alg=args.alg, episodes=args.episodes, seed=args.seed,
           max_total_steps=args.max_steps)
 
 
 def cmd_evaluate(args):
+    from rl_mujoco_locomotion.evaluate import evaluate
     evaluate(args.env, alg=args.alg, episodes=args.episodes, seed=args.seed)
 
 
 def cmd_render(args):
+    from rl_mujoco_locomotion.render_gif import render_gif
     render_gif(args.env, alg=args.alg, episodes=args.episodes, seed=args.seed,
                frame_stride=args.stride)
 
 
 def cmd_compare(args):
+    from rl_mujoco_locomotion.compare import plot_all
     plot_all()
 
 

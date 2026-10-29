@@ -5,8 +5,8 @@
 本项目在 **MuJoCo**（3.1.6 ~ 3.17.0 均可运行，本轮数据在 3.17.0 上产出）物理引擎上，针对三个经典连续控制 locomotion 环境——**HalfCheetah（猎豹奔跑）**、**Ant（蚂蚁四足爬行）**、**Walker2d（二足行走）**——实现了 **PPO** 与 **SAC** 两种强化学习算法的纯 NumPy 手写训练与对比实验。
 
 与仓库已有项目相比：
-- **环境不同**：仓库已有 RL 项目使用 CartPole（倒立摆）、Unitree G1 人形机器人、无人机等；本项目首次引入 MuJoCo 原生 HalfCheetah / Ant / Walker2d 三个地面 locomotion 环境。
-- **算法不同**：仓库已有 PPO 用于无人机巡航与 G1 平衡；本项目首次引入 **SAC** 算法，并与 PPO 形成 3 环境 × 2 算法 = 6 组对比矩阵。
+- **环境不同**：仓库已有 RL 项目覆盖无人机导航（DQN `air/uav_dqn_nav.md`、PPO `air/uav_ppo_nav.md`、PPO/SAC/TD3 对比 `air/uav_rl_benchmark.md`）与 Unitree G1 人形机器人（`humanoid_lidar_nn_perception.md`，MuJoCo 仿真 + ONNX 行走策略）、四足 MuJoCo 仿真桥（`quadruped_mujoco_rl.md`）；本项目首次引入 MuJoCo 原生 HalfCheetah / Ant / Walker2d 三个地面 locomotion 环境。
+- **算法不同**：仓库既有的 SAC 对比实验基于 Stable-Baselines3（`air/uav_rl_benchmark.md`）；本项目提供仓库内第一个**纯 NumPy 手写**的 SAC 与 PPO 实现，与 PPO 形成 3 环境 × 2 算法 = 6 组对比矩阵。
 - **实现方式**：全部使用 **NumPy 手写神经网络与反向传播**，不依赖 PyTorch / TensorFlow / Stable-Baselines3。
 
 ## 算法原理
@@ -47,9 +47,9 @@ SAC 使用双 Q 网络（Double Q-learning）缓解过估计，Actor 通过重�
 | Ant | 27 | 8 | 四足蚂蚁保持平衡并向前移动 |
 | Walker2d | 18 | 6 | 二足机器人稳定行走 |
 
-状态由 `qpos` 与 `qvel` 直接拼接而成（`main.py test` 会打印实测维度）。其中 Ant 按 Gym 约定剔除根节点的 x/y 位置，故为 27 维；HalfCheetah 与 Walker2d 保留了根节点 x 位置，因此是 18 维（Gym 默认的 17 维实现会剔除 x，本项目未剔除，两者数值不可逐项对比）。
+状态由 `qpos` 与 `qvel` 直接拼接而成（`main.py test` 会打印实测维度）。其中 Ant 剔除根节点的 x/y 位置，故为 27 维——注意本实现**不含 Gym 观测里的 84 维接触力项 `cfrc_ext`**，因此与 Gymnasium Ant 的 111 维观测并不等价；HalfCheetah 与 Walker2d 保留了根节点 x 位置，因此是 18 维（Gym 默认的 17 维实现会剔除 x，本项目未剔除，两者数值不可逐项对比）。
 
-三个环境的 MJCF 模型文件均来自 gymnasium 的 MuJoCo 环境，已复制到 `assets/` 目录，运行时不依赖 gymnasium。
+三个环境的 MJCF 模型文件均来自 gymnasium 的 MuJoCo 环境，已复制到 `assets/` 目录，运行时不依赖 gymnasium；来源与 MIT 许可证说明见 `src/rl_mujoco_locomotion/THIRD_PARTY_NOTICES.md`。
 
 奖励函数统一为：
 
@@ -117,6 +117,8 @@ python3 src/rl_mujoco_locomotion/main.py render --env ant --alg sac --episodes 2
 python3 src/rl_mujoco_locomotion/main.py render --env walker2d --alg ppo --episodes 20 --stride 1
 ```
 
+> `evaluate.py` 里对渲染帧数设了 `MAX_FRAMES=200` 的上限，所以 `--episodes 20 --stride 1` 的 Walker2d 实际只会录到约 200 帧（约 1.2 个单集），其余组合同理；想录更长需要改这个常量。
+
 ### ROS 2 启动
 
 ```bash
@@ -138,7 +140,7 @@ ros2 launch rl_mujoco_locomotion main.launch.py env:=halfcheetah alg:=ppo episod
 > 4. `env.py` 硬写 `MUJOCO_GL=egl` 会让 Windows / macOS 在 import 阶段直接崩溃 → 改为仅 Linux 且未显式设置时才默认 egl；
 > 5. assets 查找兼容 colcon 安装布局 `share/<pkg>/assets`。
 >
-> 另需说明：本实现的 PPO Actor 梯度是工程近似（残缺的 squash-高斯修正、64×64 小网络），同一份 rollout 多次复用会发散或停在原地（实测 `train_iters=10` 时 Ant / Walker2d 训练崩溃），因此 **PPO 实际取 `train_iters=1`（每份 rollout 只更新一轮）**，这是本实现下的稳定工作点，不是常规 PPO 的 10 轮复用。
+> 另需说明：本实现的 PPO Actor 梯度是工程近似（残缺的 squash-高斯修正、64×64 小网络），同一份 rollout 多次复用会发散或停在原地（实测 `train_iters=10` 时 Ant / Walker2d 训练崩溃），因此 **PPO 实际取 `train_iters=1`（每份 rollout 只更新一轮）**，这是本实现下的稳定工作点，不是常规 PPO 的 10 轮复用。此外 `PPO.act()` 是先把动作裁剪到 [-1, 1] 再用裁剪后的动作计算 log-prob（未按未裁剪分布做校正），也属于上述近似的一部分，本轮数据即在该实现下产出。
 
 ### 学习曲线
 
