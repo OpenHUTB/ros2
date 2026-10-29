@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>2. ROS 基础 - ROS 基础 - 模拟器的 ROS 文档</title>
+<title>章节首页 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "2. ROS \u57fa\u7840 - ROS \u57fa\u7840";
+        var mkdocs_page_name = "\u7ae0\u8282\u9996\u9875";
         var mkdocs_page_input_path = "chapter/chap2.md";
         var mkdocs_page_url = null;
       </script>
@@ -44,26 +44,30 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
-</li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../chap1/chap1/">1. 认识 ROS</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">2. ROS 基础 - ROS 基础</a>
+<li class="toctree-l1 current"><a class="reference internal current">2. ROS 基础 - ROS 基础</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#vmware">第一步：装 VMware + 打开虚拟机</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">章节首页</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#vmware">第一步：装 VMware + 打开虚拟机</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_1">第二步：获取代码</a>
+<li class="toctree-l3"><a class="reference internal" href="#_1">第二步：获取代码</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#workspace">第三步：把第二章代码拷贝到 workspace</a>
+<li class="toctree-l3"><a class="reference internal" href="#workspace">第三步：把第二章代码拷贝到 workspace</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">第四步：编译</a>
+<li class="toctree-l3"><a class="reference internal" href="#_2">第四步：编译</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">第五步：运行</a>
+<li class="toctree-l3"><a class="reference internal" href="#_3">第五步：运行</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 运行参数热更新</a>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
 </li>
 </ul>
 </li>
@@ -80,8 +84,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../chap8/">8. ROS 机器人综合应用</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap9/">9. ROS 2</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -334,7 +336,8 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">2. ROS 基础 - ROS 基础</li>
+<li class="breadcrumb-item">2. ROS 基础 - ROS 基础</li>
+<li class="breadcrumb-item active">章节首页</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap2.md"> 编辑页面</a>
 </li>
@@ -444,16 +447,12 @@ roslaunch<span class="w"> </span>learning_tf<span class="w"> </span>start_demo_w
 <span class="c1"># 鼠标点进键盘控制的那个终端，按方向键移动 turtle1，turtle2 会追着跑</span>
 </code></pre></div>
 <p>结果如下图所示：</p>
-<p><img alt="image-20260903181216668" src="../../img/code/chap2/The%20turtle%20follows.png"/></p>
-<h2 id="7">7. 运行参数热更新</h2>
-<p>使用 <code>dynamic_reconfigure</code> 在线调整正弦信号的幅值、频率和发布频率，无需
-重启节点。</p>
-<p><a href="../../chap2/ros1_parameter_sine_wave/">进入 ROS Noetic 运行参数热更新实验</a></p></div>
+<p><img alt="image-20260903181216668" src="../../img/code/chap2/The%20turtle%20follows.png"/></p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../chap1/chap1/" title="1. 认识 ROS"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap3/" title="3. 机器人系统设计">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../../chap2/ros1_message_time_sync/" title="ROS Noetic 多传感器话题时间同步">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr>
 <div role="contentinfo">
@@ -471,7 +470,7 @@ roslaunch<span class="w"> </span>learning_tf<span class="w"> </span>start_demo_w
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../chap1/chap1/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../chap3/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../chap2/ros1_message_time_sync/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

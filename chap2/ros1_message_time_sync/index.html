@@ -37,45 +37,51 @@
 </div>
 <div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
 <p class="caption"><span class="caption-text">入门</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">ROS Noetic 多传感器话题时间同步</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 实验目标</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 数据流</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 运行环境</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 构建</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5. 启动</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 查看结果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 参数调整</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8. 实测结果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#9">9. 测试</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#10">10. 常见问题</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#11">11. 小结</a>
-</li>
-</ul>
-</li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap2/">2. ROS 基础 - ROS 基础</a>
+<li class="toctree-l1 current"><a class="reference internal current">2. ROS 基础 - ROS 基础</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">ROS Noetic 多传感器话题时间同步</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 实验目标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 数据流</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 运行环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 构建</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 查看结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 参数调整</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#9">9. 测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#10">10. 常见问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#11">11. 小结</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
 </li>
@@ -90,8 +96,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -343,7 +347,8 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">入门</li>
+<li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">2. ROS 基础 - ROS 基础</li>
 <li class="breadcrumb-item active">ROS Noetic 多传感器话题时间同步</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chap2/ros1_message_time_sync/index.md"> 编辑页面</a>
@@ -583,8 +588,8 @@ catkin_test_results<span class="w"> </span>build/test_results/ros1_message_time_
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../ros2_pubsub_py/" title="ROS2 话题发布订阅基础实验（talker/listener）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../chapter/chap1/chap1/" title="1. 认识 ROS">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../../chapter/chap2/" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ros1_parameter_sine_wave/" title="ROS Noetic 运行参数热更新（正弦信号）">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -601,8 +606,8 @@ catkin_test_results<span class="w"> </span>build/test_results/ros1_message_time_
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../ros2_pubsub_py/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../chapter/chap1/chap1/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../chapter/chap2/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ros1_parameter_sine_wave/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
