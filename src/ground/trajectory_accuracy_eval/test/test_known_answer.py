@@ -43,6 +43,46 @@ from traj_eval import (  # noqa: E402
 
 TOL = 1e-9
 
+# Windows 默认控制台为 GBK，无法编码部分数学符号；保留原编码把不可编码字符
+# 替换掉，避免打印结果时抛 UnicodeEncodeError 而中断断言（评审 #464 反馈）。
+_SYMBOL_FALLBACK = {
+    "\u2218": "o",          # ∘  复合
+    "\u207b\u00b9": "^-1",  # ⁻¹ 逆
+    "\u207b": "^-",
+    "\u00b9": "^1",
+    "\u00b2": "^2",
+    "\u00b3": "^3",
+}
+
+
+def _harden_console() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+def _safe(text: str) -> str:
+    enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+    # 先按多字符组合替换（如 ⁻¹ → ^-1），再逐字符兜底
+    for src, dst in _SYMBOL_FALLBACK.items():
+        try:
+            src.encode(enc)
+        except (UnicodeEncodeError, LookupError):
+            text = text.replace(src, dst)
+    out = []
+    for ch in text:
+        try:
+            ch.encode(enc)
+            out.append(ch)
+        except (UnicodeEncodeError, LookupError):
+            out.append("?")
+    return "".join(out)
+
+
+_harden_console()
+
 
 # ------------------------------------------------------------------ 辅助构造
 def circle_traj(radius: float, n: int = 360, turns: float = 1.0) -> list:
@@ -222,9 +262,9 @@ if __name__ == "__main__":
     for fn in fns:
         try:
             fn()
-            print(f"[PASS] {fn.__name__}")
+            print(_safe(f"[PASS] {fn.__name__}"))
         except AssertionError as exc:
             failed += 1
-            print(f"[FAIL] {fn.__name__}: {exc}")
+            print(_safe(f"[FAIL] {fn.__name__}: {exc}"))
     print(f"\n{len(fns) - failed}/{len(fns)} 通过")
     sys.exit(0 if failed == 0 else 1)

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """离线单元测试：不需要 ROS，只需 numpy。
 
@@ -38,15 +38,59 @@ from traj_eval import (  # noqa: E402
 
 PASS, FAIL = 0, 0
 
+# Windows 默认控制台是 GBK，无法编码 ∘ / ⁻ / ¹ 等符号，
+# 会在打印第一条结果时就抛 UnicodeEncodeError，导致断言没跑完就中断。
+# 这里做两层保护：保留原编码但把无法编码的字符替换掉，并把少量符号换成 ASCII 等价物。
+_SYMBOL_FALLBACK = {
+    "\u2218": "o",          # ∘  复合
+    "\u207b\u00b9": "^-1",  # ⁻¹ 逆
+    "\u207b": "^-",
+    "\u00b9": "^1",
+    "\u00b2": "^2",
+    "\u00b3": "^3",
+}
+
+
+def _harden_console() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+def _safe(text: str) -> str:
+    """把当前输出编码无法表示的符号换成 ASCII 等价物。
+
+    先按**多字符组合**替换（如 ``⁻¹`` → ``^-1``），否则逐字符替换会得到 ``^-^1``。
+    """
+    enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+    for src, dst in _SYMBOL_FALLBACK.items():
+        try:
+            src.encode(enc)
+        except (UnicodeEncodeError, LookupError):
+            text = text.replace(src, dst)
+    out = []
+    for ch in text:
+        try:
+            ch.encode(enc)
+            out.append(ch)
+        except (UnicodeEncodeError, LookupError):
+            out.append("?")
+    return "".join(out)
+
+
+_harden_console()
+
 
 def check(cond: bool, msg: str) -> None:
     global PASS, FAIL
     if cond:
         PASS += 1
-        print(f"  [PASS] {msg}")
+        print(_safe(f"  [PASS] {msg}"))
     else:
         FAIL += 1
-        print(f"  [FAIL] {msg}")
+        print(_safe(f"  [FAIL] {msg}"))
 
 
 def close(actual: float, expected: float, tol: float, msg: str) -> None:
