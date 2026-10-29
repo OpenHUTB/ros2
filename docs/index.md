@@ -27,6 +27,7 @@
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
   - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
@@ -86,11 +87,13 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
@@ -126,6 +129,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
