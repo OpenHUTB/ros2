@@ -139,6 +139,8 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
+* [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
+
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
