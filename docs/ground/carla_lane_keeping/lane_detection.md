@@ -513,7 +513,7 @@ roslaunch carla_lane_keeping main.launch camera_height:=2.10 camera_pitch:=12.0
 > 本节替换了早期基于**俯视相机**的验证。俯视视角下车道线又粗又规整，
 > 测出来好看，但它不代表车载前视相机的真实难度；现在这套结果是在与
 > 实际部署一致的前视视角下得到的。检测进入闭环后与地图真值的逐帧对比
-> 见 [车道保持控制 §9](./lane_keeping_control.md#9-闭环实跑验证carla)。
+> 见 [车道保持控制](./lane_keeping_control.md) 第 9 节「闭环实跑验证」。
 
 ### 7.3 正确性校验
 
