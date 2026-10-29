@@ -8,8 +8,10 @@
 2. **水平性筛选** —— 只保留法向与竖直方向夹角 <= ``max_tilt_deg`` 的平面
    （屋顶、地面都属于水平面，靠高度与面积区分）；
 3. **去掉地面** —— 默认按 ``min_height_mode="relative"``：以检出的最低水平面
-   （地面）为基准，丢掉与它高度差小于 ``ground_margin`` 的平面，因此**不要求
-   地图原点落在地面高度上**（换地图实测过的坑，详见 :func:`detect_rooftops`）；
+   （地面）为基准，丢掉与它高度差小于 ``ground_margin``（默认 4.0 m）的平面，
+   因此**不要求地图原点落在地面高度上**；只检出 1 个水平面（分不清是地面还是
+   屋顶）时**不产生候选**、由调用方继续搜索，避免把地面当成屋顶
+   （换地图实测过的坑，详见 :func:`detect_rooftops`）；
 4. **屋顶轮廓** —— 把平面内点投影到水平面，取 2D 凸包；
 5. **降落点** —— 用 polylabel（**最大内切圆圆心**）求「离屋顶边缘最远」的点，
    这正是安全降落点：四周余量最大，最不容易撞到女儿墙或掉下去；
@@ -328,10 +330,11 @@ def split_clusters_2d(points, cell=1.0, min_points=2):
 # 3. 屋顶检测主流程
 # --------------------------------------------------------------------------- #
 def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
-                    min_area=8.0, min_inliers=120, max_planes=5,
+                    min_area=8.0, min_inliers=120, max_planes=15,
                     min_height=0.5, rng=None,
                     cluster_cell=1.0, cluster_min_points=2,
-                    min_height_mode="relative", ground_margin=1.0, info=None):
+                    min_height_mode="relative", ground_margin=4.0,
+                    require_ground_reference=True, info=None):
     """从点云中找出所有「水平候选面」，按高度从高到低返回列表。
 
     每个元素::
@@ -355,17 +358,29 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
         固定阈值 ``min_height=0.5`` 会把**每一个**候选面都滤掉，日志表现为
         「检测到 0 个候选水平面」，无人机一直不动；而把阈值放到 −1000 之后
         **地面又被当成屋顶**，会在地面上"降落"。
-        只有提取到 **2 个及以上**水平面时才把最低的那个当基准 —— 只有一个
-        水平面时无从判断它是地面还是屋顶，此时不做高度过滤。
+        ``ground_margin`` 默认 **4.0 m**：实测设成 1.0 时，选中的"屋顶"只比地面
+        高 1.9 m、面积 70.2 m² 却只有 1.35 m 内切圆半径（≈26×2.7 m 的细长条，
+        不像屋面）；调到 4.0 后选到 4.25 m 高、99 m²、半径 2.61 m 的正常屋面。
     ``"absolute"``
         直接用 ``min_height`` 作为绝对 ENU 高度下限（旧行为），
         适合原点就在地面高度上的地图。
+
+    只有 **1 个**水平面时无从判断它是地面还是屋顶，此时由
+    ``require_ground_reference`` 决定（默认 ``True``）：
+
+    * ``True`` —— **不产生任何候选**，调用方应继续搜索。宁可"不降落"，也不把
+      一个来路不明的高平面当成屋顶。
+      **实测教训**：高空点云只有 9 千点时可能只提出地面这一个平面，早期版本在
+      这种情况下静默关掉高度过滤，于是**把地面当成屋顶并报告 LANDED 成功** ✓，
+      这个失败模式很隐蔽，所以默认改成不降落。
+    * ``False`` —— 保持旧行为：本次不做高度过滤（适合"场景里确实只有屋顶、
+      看不到地面"的情形，例如只对着楼顶飞）。
 
     传入 ``info`` 字典（可选）可取出本次判定依据::
 
         info["planes"]     提取到的水平面个数
         info["floor_ref"]  地面参考高度（relative 模式下有效，否则 None）
-        info["threshold"]  实际生效的高度下限
+        info["threshold"]  实际生效的高度下限（未做过滤时为 None）
     """
     pts = np.asarray(points, dtype=np.float64)
     if pts.ndim != 2 or pts.shape[1] < 3:
@@ -397,8 +412,17 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
         if len(planes) >= 2:
             floor_ref = min(p["height"] for p in planes)
             threshold = floor_ref + abs(ground_margin)
+        elif require_ground_reference:
+            # 只有一个水平面，无从判断它是地面还是屋顶：**不产生候选**，让调用方
+            # 继续搜索。实测过反面教材 —— 早期这里静默关掉过滤，于是把地面当成
+            # 屋顶、一路降到地面并报 LANDED 成功。
+            if info is not None:
+                info["planes"] = len(planes)
+                info["floor_ref"] = None
+                info["threshold"] = None
+            return []
         else:
-            # 只有一个水平面，无从判断它是地面还是屋顶 ⇒ 不做过高度滤
+            # 显式要求保持旧行为时才不过滤（场景里确实只有屋顶、看不到地面）
             threshold = float("-inf")
     else:
         threshold = min_height
