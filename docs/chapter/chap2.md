@@ -151,3 +151,10 @@ roslaunch learning_tf start_demo_with_listener.launch
 重启节点。
 
 [进入 ROS Noetic 运行参数热更新实验](../chap2/ros1_parameter_sine_wave/index.md)
+
+## 8. 多传感器话题时间同步
+
+使用 `message_filters.ApproximateTimeSynchronizer` 对两路不同频率的模拟传感
+器话题按消息头时间戳进行近似同步。
+
+[进入 ROS Noetic 多传感器话题时间同步实验](../chap2/ros1_message_time_sync/index.md)
