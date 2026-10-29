@@ -11,6 +11,7 @@ sim:
 
 rate:
   odom_hz: 20.0             # 位姿发布频率
+  imu_hz: 50.0              # IMU 发布频率（AirSim 默认 IMU 采样率）
   image_hz: 20.0            # 相机发布频率（三路图像合并为一次 RPC）
   lidar_hz: 10.0            # 点云发布频率（与 settings.json 的 RotationsPerSecond 一致）
   cmd_timeout: 0.5          # 超过该时间没有新指令则悬停（安全保护）
@@ -33,18 +34,29 @@ camera:
   publish_rgb: true
   publish_depth: true
   publish_seg: false        # 分割图默认关闭，需要做语义感知时再打开
+  fov_degrees: 90.0         # 与 settings.json 的 FOV_Degrees 一致
+  rgb_frame: "front_rgb"    # 相机光学系（z 前、x 右、y 下）
+  depth_frame: "front_depth"
+  mount_x: 0.3              # 相机相对 base_link 的安装位置（ROS FLU，米）
+  mount_y: 0.0
+  mount_z: 0.1              # AirSim 的 Z=-0.1（NED 向下）对应 ROS +0.1
 
 frame:
   world: "world"            # 世界坐标系（ENU）
   body: "base_link"         # 机体坐标系
+  imu: "base_link"          # IMU 消息使用的坐标系（没有单独 imu_link 时用 base_link）
 
 topic:
   odom: "/uav/odom"
+  imu: "/imu"
   cmd_vel: "/uav/cmd_vel"
   goal: "/uav/goal"
   image: "/camera/image_raw"
   depth: "/camera/depth"
   seg: "/camera/seg"
+  camera_info: "/camera/camera_info"
+  depth_info: "/camera/depth/camera_info"
+  depth_points: "/camera/depth/points"
   lidar: "/lidar/points"
   status: "/uav/status"
 
@@ -56,3 +68,15 @@ control:
   cmd_duration: 0.1         # 单条速度指令持续时长 s；应与上游控制周期一致
                             # （uav_ppo_nav 训练环境 dt = 0.1 s，故默认 0.1）
   auto_takeoff: true        # 启动后自动起飞并悬停
+
+depth_avoidance:
+  enabled: true             # 节点内部开关；launch 默认不启动，demo 时显式打开
+  forward_speed: 1.5        # 无障碍时前向速度 m/s
+  slow_distance: 4.0        # 小于该距离开始线性减速 m
+  stop_distance: 2.0        # 小于等于该距离停车 m
+  lateral_limit: 0.8        # 前向走廊半宽 m
+  vertical_limit: 0.8       # 前向走廊半高 m
+  max_range: 12.0           # 超过该距离的点忽略 m
+  min_range: 0.5            # 近处地面/机身自反射过滤 m
+  start_delay: 6.0          # 起飞后延迟接管，避免打断爬升 s
+  rate: 10.0                # 指令发布频率 Hz

@@ -15,13 +15,16 @@ catkin_package()
 catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/odom_pub.py
+  scripts/imu_pub.py
+  scripts/camera_model_pub.py
+  scripts/depth_avoidance.py
   scripts/cmd_vel_sub.py
   scripts/image_pub.py
   scripts/lidar_pub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY launch config rviz
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )

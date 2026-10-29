@@ -212,6 +212,62 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false
 python3 tests/test_sensors_local.py    # 80 项，全部通过
 ```
 
+### 6.6 相机模型与深度点云
+
+`camera_model_pub.py` 订阅 `/camera/image_raw` 与 `/camera/depth`，发布：
+
+| 话题 | 类型 | 说明 |
+|---|---|---|
+| `/camera/camera_info` | `sensor_msgs/CameraInfo` | 彩色相机内参 |
+| `/camera/depth/camera_info` | `sensor_msgs/CameraInfo` | 深度相机内参 |
+| `/camera/depth/points` | `sensor_msgs/PointCloud2` | 深度反投影点云，相机光学系 |
+
+针孔模型：
+
+```text
+fx = fy = W / (2 * tan(FOV / 2))
+cx = W / 2,  cy = H / 2
+K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+```
+
+深度反投影（`DepthPlanar` 的 Z 就是沿光轴深度）：
+
+```text
+X = (u - cx) * Z / fx
+Y = (v - cy) * Z / fy
+Z = depth
+```
+
+点云过滤 `Z <= 0`、`Z >= 100 m` 和 65504 哨兵值；相机 TF 为 `base_link -> front_rgb/front_depth`，安装偏移由 `camera/mount_x/y/z` 配置。
+
+深度点云前视图（颜色表示距离）：
+
+![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
+
+### 6.7 深度避障 demo
+
+`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方走廊内最近点并发布 `/uav/cmd_vel`：
+
+```text
+d = min(z),  |x| <= lateral_limit, |y| <= vertical_limit, min_range <= z <= max_range
+vx = 0                         , d <= stop_distance
+vx = forward_speed * (d-stop)  , stop_distance < d < slow_distance
+vx = forward_speed             , d >= slow_distance
+```
+
+默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`、`min_range=0.5`；起飞后 `start_delay=6 s` 再接管。
+节点默认关闭，demo 时：
+
+```bash
+roslaunch carlair_ros_bridge main.launch host:=<Windows_IP> \
+  auto_takeoff:=true enable_depth_avoidance:=true \
+  publish_lidar:=false publish_imu:=false start_selfcheck:=false
+
+rostopic echo /uav/cmd_vel
+```
+
+![深度避障实测](../img/air/carlair_ros_bridge/depth_avoidance_live.png)
+
 ## 7. 运行验证
 
 ```shell
