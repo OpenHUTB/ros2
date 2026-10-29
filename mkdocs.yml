@@ -152,7 +152,7 @@ nav:
         - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
     - YOLO 感知与无人机控制:
         - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
-        - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
+        - YOLO 目标视觉伺服：居中与距离保持: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
