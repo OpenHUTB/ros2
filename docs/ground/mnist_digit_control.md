@@ -9,9 +9,9 @@
 
 **效果演示**（检测节点识别到数字后，控制节点经防抖确认驱动 turtlesim 执行对应动作）：
 
-![演示动图](img/mnist_digit_control_demo.gif)
+![演示动图](../img/ground/mnist_digit_control/demo.gif)
 
-源码位置：`src/mnist_digit_control/`（含 `main.py` 一键入口与 launch 文件）。
+源码位置：`src/ground/mnist_digit_control/`（含 `main.py` 一键入口与 launch 文件）。
 
 ## 1. 系统架构
 
@@ -62,8 +62,8 @@ graph LR
 
 ```bash
 mkdir -p ~/mnist_ws && cd ~/mnist_ws
-git clone https://github.com/OpenHUTB/ros2.git src       # 或仅复制 src/mnist_digit_control
-cd ~/mnist_ws/src/mnist_digit_control
+git clone https://github.com/OpenHUTB/ros2.git src   # 或仅复制 src/ground/mnist_digit_control
+cd ~/mnist_ws/src/ground/mnist_digit_control
 
 # PyTorch CPU 版（约 190 MB）；OpenCV/numpy 使用系统 ROS 自带版本
 python3 -m pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu
@@ -81,10 +81,10 @@ source install/setup.bash
 ### 3.3 生成演示场景视频（首次运行前）
 
 仓库按约定不入库视频类二进制文件，4 个场景视频用以下命令一键重新生成
-（自动下载 MNIST 并合成，约 1~2 分钟，产物在 `src/mnist_digit_control/videos/`）：
+（自动下载 MNIST 并合成，约 1~2 分钟，产物在 `src/ground/mnist_digit_control/videos/`）：
 
 ```bash
-cd ~/mnist_ws/src/mnist_digit_control
+cd ~/mnist_ws/src/ground/mnist_digit_control
 python3 main.py scenes
 ```
 
@@ -95,7 +95,7 @@ python3 main.py scenes
 
 ```bash
 # 方式一：main.py 一键入口（首次自动构建）
-cd ~/mnist_ws/src/mnist_digit_control
+cd ~/mnist_ws/src/ground/mnist_digit_control
 python3 main.py
 
 # 方式二：launch 启动
@@ -115,7 +115,7 @@ launch 文件会同时启动 `turtlesim_node`、`detector`、`commander` 三个�
 启动后约 2~3 秒（PyTorch 导入）出现两个窗口：左侧为检测节点可视化，右侧为 turtlesim。
 以默认 `scene_paper.mp4` 视频源为例，完整运行日志如下（终端截图）：
 
-![终端运行日志](mnist_digit_control_run.png)
+![终端运行日志](../img/ground/mnist_digit_control/run.png)
 
 关键日志解读：
 
@@ -129,11 +129,11 @@ launch 文件会同时启动 `turtlesim_node`、`detector`、`commander` 三个�
 检测节点特写：绿色框为数字外接矩形（绿色 = 置信度过门限，橙色 = 未过门限），
 下方橙色文字为控制节点反馈的当前动作名：
 
-![检测特写](mnist_digit_control_detect.png)
+![检测特写](../img/ground/mnist_digit_control/detect.png)
 
 一段演示结束后 turtlesim 画出完整运动轨迹（前进 → 右转 90° → 前进 → 停止 → 360° 旋转 → 左转 90° → 前进 → 停止）：
 
-![运动轨迹](mnist_digit_control_path.png)
+![运动轨迹](../img/ground/mnist_digit_control/path.png)
 
 ### 3.6 停止与清理
 
@@ -150,7 +150,7 @@ pkill -f 'digit_detector|digit_command'
 ### 4.1 训练 CNN
 
 ```bash
-cd ~/mnist_ws/src/mnist_digit_control
+cd ~/mnist_ws/src/ground/mnist_digit_control
 python3 main.py train          # 自动下载 MNIST 到 data/mnist/ 并训练
 ```
 
@@ -162,12 +162,12 @@ python3 main.py train          # 自动下载 MNIST 到 data/mnist/ 并训练
 | 学习率 | 0.001 | 随机种子 | 42 |
 | 参数量 | 206,922 | 权重文件 | `models/mnist_cnn.pth`（约 0.8 MB） |
 
-![训练曲线](mnist_digit_control_loss_curve.png)
+![训练曲线](../img/ground/mnist_digit_control/loss_curve.png)
 
 测试集准确率逐 epoch 为 95.86% → 96.61% → 97.53% → **97.55%**。混淆矩阵显示主要混淆集中在
 4/9、7/2、9/4 等字形相近类别：
 
-![混淆矩阵](mnist_digit_control_confusion.png)
+![混淆矩阵](../img/ground/mnist_digit_control/confusion.png)
 
 ### 4.2 生成多场景虚拟相机视频
 
@@ -189,7 +189,7 @@ python3 main.py scenes
 `artifacts/scene_ground_truth.json`。视频开头有 1.2 s 纯背景"空白段"——系统实际运行时节点间
 DDS 互相发现需要时间，若视频第 0 帧就出现数字，最早的识别结果可能在对端订阅建立前发布而丢失。
 
-![四场景示例帧](mnist_digit_control_scenes.png)
+![四场景示例帧](../img/ground/mnist_digit_control/scenes.png)
 
 ### 4.3 多场景离线评价
 
@@ -373,7 +373,7 @@ flowchart TD
 
 ## 7. 源码解析
 
-完整源码见 [`src/mnist_digit_control/`](https://github.com/OpenHUTB/ros2/tree/master/src/mnist_digit_control)，
+完整源码见 [`src/ground/mnist_digit_control/`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/mnist_digit_control)，
 这里解析三个核心片段。
 
 ### 7.1 预处理：极性判断 + Otsu（`preprocess.py::extract_digit`）
@@ -479,7 +479,7 @@ else:
 属开环动作的预期精度。下图左为连续 3 次"左转 90°"的航向跟踪曲线（约 1.8 s 平滑收敛、无超调），
 右为各动作误差统计：
 
-![控制精度评价](mnist_digit_control_heading.png)
+![控制精度评价](../img/ground/mnist_digit_control/heading.png)
 
 ### 8.3 演示实测（GIF 录制对应的完整闭环）
 

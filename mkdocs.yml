@@ -60,6 +60,7 @@ nav:
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
+    - ROS Noetic 运行参数热更新（正弦信号）: './chap2/ros1_parameter_sine_wave/index.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
@@ -76,9 +77,10 @@ nav:
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
+    - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
-    - MNIST 手写数字视觉感知与机器人运动控制: './mnist_digit_control.md'
+    - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
@@ -97,6 +99,7 @@ nav:
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
@@ -108,6 +111,8 @@ nav:
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
+    - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
+    - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
 - 空域载具:
     - 无人机任务管理与安全状态机:
@@ -122,9 +127,11 @@ nav:
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
+    - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
+    - 神经残差动力学与学习式轨迹跟踪: './air/uav_neural_residual_control.md'
     - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
     - 基于 DQN 的无人机导航避障: './air/uav_dqn_nav.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
@@ -148,6 +155,7 @@ nav:
         - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'

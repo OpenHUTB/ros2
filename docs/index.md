@@ -64,6 +64,8 @@ ROS每章节运行代码:
 
 ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
 
+ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_wave](./chap2/ros1_parameter_sine_wave/index.md)
+
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
@@ -83,10 +85,11 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 
+* [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
 * [手动控制](./set_up_and_connect_to_carla.md)
-* [MNIST 手写数字视觉感知与机器人运动控制](./mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
+* [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
@@ -108,6 +111,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 
+* [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
+
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
 
@@ -120,6 +125,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
+* [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
+* [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
@@ -148,6 +155,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
+* [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
@@ -156,6 +164,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机导航强化学习对比实验（PPO/SAC/TD3）](./air/uav_rl_benchmark.md)
 
+* [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
 * [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
@@ -175,6 +184,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control/README.md)
+
+* [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
