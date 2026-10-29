@@ -22,7 +22,7 @@
 | | Windows 本机 | WSL2 + Ubuntu |
 | --- | --- | --- |
 | 安装难度 | 低，装个 Python 即可 | 高，需要启用系统功能并重启 |
-| 连接地址 | `127.0.0.1:41451` | Windows 宿主机的局域网 IP |
+| 连接地址 | `127.0.0.1:41451` | NAT 模式下为宿主机局域网 IP；镜像模式下可用 `127.0.0.1` |
 | 是否需要改防火墙 | 不需要 | 需要放行 41451 |
 | 适用场景 | 只想跑通 AirSim 示例 | 需要 ROS/ROS2 与 AirSim 联合仿真 |
 
@@ -256,11 +256,13 @@ cd ~
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 # 默认路径安装（用户主目录下）
 bash Miniconda3-latest-Linux-x86_64.sh -b
-# 将 miniconda 添加到 PATH
-echo 'export PATH="~/miniconda3/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+# 将 miniconda 添加到 PATH（必须写 $HOME：双引号内的 ~ 不会被 bash 展开）
+echo 'export PATH="$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 # 验证安装，输出 conda 版本号即成功
 conda --version
 ```
+
+**注意：** 这里必须写 `$HOME/miniconda3/bin`，不能写成 `~/miniconda3/bin`。Bash **不会**在双引号内展开 `~`，写成 `export PATH="~/miniconda3/bin:$PATH"` 时 `~` 会被当成普通字符写进 `PATH`，之后执行 `conda --version` 会提示找不到命令。上面的 `echo` 用的是单引号，`$HOME` 会原样写入 `.bashrc`，等每次启动 shell 时再展开。
 
 创建示例使用的 Python 3.8 虚拟环境：
 
@@ -290,7 +292,7 @@ export CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
 
 ## 6. 让 WSL2 连上 Windows 上的模拟器
 
-客户端在 WSL2 里运行时，不能像 3.3 那样直接用 `127.0.0.1`。
+WSL2 默认使用 **NAT 网络模式**，此时客户端不能像 3.3 那样直接用 `127.0.0.1`，需要改用 Windows 宿主机的局域网 IP；如果启用了**镜像网络模式**（mirrored），`localhost` 则可以直接使用，两种模式的判断与配置见 6.1。
 
 ### 6.1 查询 Windows 宿主机 IP
 
@@ -302,7 +304,16 @@ ipconfig
 
 在「无线局域网适配器 WLAN」或「以太网适配器」下找到 `IPv4 地址`，例如 `172.21.108.47`，这就是后续 `--host` 要填写的地址。
 
-**注意：** 在 WSL2 里 `localhost` 和 `127.0.0.1` 指向的是 WSL2 自己，**不是** Windows 宿主机，因此连接宿主机上的模拟器必须使用上面查到的 Windows 局域网 IP。
+**注意（仅适用于 NAT 模式）：** 在默认的 NAT 网络模式下，WSL2 有自己独立的虚拟网络，`localhost` 和 `127.0.0.1` 指向的是 WSL2 自己，**不是** Windows 宿主机，因此连接宿主机上的模拟器必须使用上面查到的 Windows 局域网 IP。
+
+**镜像网络模式（mirrored）下不受此限制。** WSL 2.0 及以上版本在 Windows 11 22H2 及以上支持镜像网络，开启后 WSL2 直接复用 Windows 的网络接口，`localhost` 即可访问宿主机上的服务，不必再查询 IP。可以在 `%USERPROFILE%\.wslconfig` 中启用：
+
+```ini
+[wsl2]
+networkingMode=mirrored
+```
+
+保存后执行 `wsl --shutdown` 退出所有发行版，重新进入即生效。也可以进入 Ubuntu 后用 `ip addr` 判断当前模式：若看到的网卡名称与 Windows 上的一致（例如 `WLAN`、`以太网`），说明已经处于镜像模式；若只有 `eth0` 之类的虚拟网卡，则是 NAT 模式。
 
 ### 6.2 放行 41451 端口
 
@@ -328,7 +339,7 @@ python hello_drone.py --host 172.21.108.47
 
 这是 WSL2 连接 AirSim 时最常见的报错，按下面顺序排查：
 
-1. 确认使用的是 **Windows 宿主机 IP**，而不是 `localhost` 或 `127.0.0.1`（见 6.1）；
+1. 若 WSL2 处于 **NAT 模式**，确认使用的是 **Windows 宿主机 IP**，而不是 `localhost` 或 `127.0.0.1`；镜像模式下两者都可以（见 6.1）；
 2. 确认模拟器窗口已经打开、场景加载完毕，并且**已在选择载具对话框中选择「否」**（见 3.1）；
 3. 确认 Windows 防火墙放行了 `41451` 端口（见 6.2）；
 4. 确认模拟器确实在监听：`Get-NetTCPConnection -State Listen -LocalPort 41451`；
