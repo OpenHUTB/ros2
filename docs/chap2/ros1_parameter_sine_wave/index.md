@@ -123,6 +123,9 @@ rosrun dynamic_reconfigure dynparam set /sine_wave_node amplitude 3.0
 rosrun dynamic_reconfigure dynparam set /sine_wave_node frequency_hz 1.0
 ```
 
+节点会按新频率和当前运行时间重新计算正弦相位，因此切换瞬间可能出现相位
+跳变；本实验不作为连续调频建模。
+
 将消息发布频率改为 50 Hz：
 
 ```bash
@@ -139,7 +142,8 @@ rosrun dynamic_reconfigure dynparam set /sine_wave_node enabled true
 参数成功更新后，启动终端会重新打印参数摘要。将发布频率改为 50 Hz 后，
 `rostopic hz /sine_wave/value` 应接近 50 Hz。
 
-也可以使用图形界面操作：
+也可以使用图形界面操作（可选，本次实测使用 `dynparam` 命令行，未单独测试
+图形界面）：
 
 ```bash
 rosrun rqt_reconfigure rqt_reconfigure
@@ -167,7 +171,7 @@ rosrun rqt_reconfigure rqt_reconfigure
 | --- | --- |
 | 修改前发布频率 | 约 20 Hz |
 | 修改后发布频率 | 49.998 Hz、49.997 Hz |
-| 发布周期 | 最小 0.019 s，最大 0.020 s |
+| 发布周期 | 最小 0.019 s，最大 0.021 s |
 | 话题数值 | 从 2.326 上升到 2.952，并继续向 3.0 接近 |
 | 单元测试 | 2 tests，0 errors，0 failures，0 skipped |
 | 100 个样本最小值 | -2.9956 |
@@ -185,6 +189,7 @@ rosrun rqt_reconfigure rqt_reconfigure
 
 ```bash
 cd ~/ros1_ws
+source /opt/ros/noetic/setup.bash
 source devel/setup.bash
 catkin_make run_tests_ros1_parameter_sine_wave
 catkin_test_results build/test_results/ros1_parameter_sine_wave

@@ -44,6 +44,9 @@ rosrun dynamic_reconfigure dynparam set /sine_wave_node publish_rate_hz 50.0
 rosrun dynamic_reconfigure dynparam set /sine_wave_node enabled false
 ```
 
+修改 `frequency_hz` 时会按新参数重新计算正弦相位，切换瞬间可能出现相位跳变；
+本实验不作为连续调频建模。
+
 ## 参数
 
 | 参数 | 默认值 | 范围 | 说明 |
@@ -58,6 +61,8 @@ rosrun dynamic_reconfigure dynparam set /sine_wave_node enabled false
 
 ```bash
 cd ~/ros1_ws
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
 catkin_make run_tests_ros1_parameter_sine_wave
 catkin_test_results build/test_results/ros1_parameter_sine_wave
 ```
