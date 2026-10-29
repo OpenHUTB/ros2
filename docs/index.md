@@ -54,6 +54,8 @@ ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
+  * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
+  * [ROS Noetic 运行参数热更新（正弦信号）](./chap2/ros1_parameter_sine_wave/index.md)
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
 * [第 5 章](./chapter/chap5.md) - 机器人感知
@@ -63,11 +65,6 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
-
-ROS Noetic 多传感器话题时间同步：[chap2/ros1_message_time_sync](./chap2/ros1_message_time_sync/index.md)
-
-ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_wave](./chap2/ros1_parameter_sine_wave/index.md)
-
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 

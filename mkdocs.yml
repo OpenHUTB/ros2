@@ -50,11 +50,12 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
-    - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
-    - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
-    - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
+    - 2. ROS 基础 - ROS 基础:
+        - 章节首页: './chapter/chap2.md'
+        - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
+        - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
     - 4. 机器人仿真: './chapter/chap4.md'
     - 5. 机器人感知: './chapter/chap5.md'
