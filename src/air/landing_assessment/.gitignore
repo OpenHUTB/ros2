@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+build/
+install/
+log/
+data/
+*.log
+
+# Recreated locally by prepare/train/evaluate/report/doctor
+results/
+artifacts/
+models/trained/
+models/retrained/
+final_protocol.json
+assets/landing_corpus.zip
