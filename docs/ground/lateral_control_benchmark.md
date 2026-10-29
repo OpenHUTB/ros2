@@ -130,6 +130,18 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
 话题：`/lateral_control/odom`、`/lateral_control/cmd`、`/lateral_control/styles`、
 `/lateral_control/metrics`、`/lateral_control/path`（latched，可在 RViz 中看参考路径）。
 
+在 Ubuntu 20.04 + ROS Noetic 上的实际运行记录：
+
+![ROS 1 实际运行：节点启动与话题输出](../img/ground/lateral_control_benchmark/ros1_launch.png)
+
+*图 1　上窗口为 `roslaunch` 启动日志——`controller=stanley`、`scenario=sine`、
+`model=kinematic` 参数正确载入，节点 `lateral_control_node` 正常启动；
+下窗口为 `rostopic echo /lateral_control/styles` 的输出，四个分量依次是
+`[横向偏差 e, 航向偏差 ψ, 前轮转角 δ, 车速 v]`：e 已从初始 1.2 m 收敛到 **0.013 m**，
+ψ 与 δ 都趋于 0（约 1e-14），车速稳定在 7.99 m/s，说明横向控制闭环确实在工作。
+（下窗口里那次 `git pull` 报 `GnuTLS recv error` 是虚拟机访问 GitHub 的网络问题，
+与本模块无关，之后改用压缩包导入代码继续验证。）*
+
 ## 4. 评测方法（公平性设计）
 
 | 维度 | 做法 |
@@ -193,6 +205,34 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
    Stanley 与 LQR 的稳态偏差随速度基本不变，纯跟踪的稳态偏差随速度略有上升
    （8 m/s 时 0.022 m，15 m/s 时 0.041 m）。
 
+### 5.3 运行效果
+
+**离线基准**（`python3 main.py --mode bench --no-figures`）在 Ubuntu 20.04 + Python 3.8.10 上的实际输出：
+
+![离线基准的实际终端输出](../img/ground/lateral_control_benchmark/bench_offline.png)
+
+*图 2　12 行指标（4 场景 × 3 控制器）+ 综合排名 + 汇总。可直接对照 5.1 节的表格核对，
+例如 `stanley / arc` 的稳态偏差 0.0011 m、`pure_pursuit / straight` 的均值 0.1252 m 都与表一致。
+排名按「场景内各指标名次汇总」计算：pure_pursuit 1.81、stanley 1.91、lqr 2.28。*
+
+**四项关键指标的柱状对比**（`results/metrics.png`，由 `--mode bench` 自动生成）：
+
+![四项关键指标对比](../img/ground/lateral_control_benchmark/metrics.png)
+
+*图 3　左上：平均绝对横向偏差；右上：最大横向偏差；左下：稳态横向偏差；右下：收敛时间。
+横轴为「场景 / 控制器」，PP=纯跟踪、ST=Stanley。
+最直观的一组对比是**左下**：`sine` 场景下纯跟踪的稳态偏差 0.083 m，
+而 Stanley 只有 0.003 m —— 差距来自 Stanley 的曲率先验，而非"调参好坏"。*
+
+**单场景轨迹与误差曲线**（`--mode single` 自动生成，这里给出圆弧场景）：
+
+![圆弧场景的轨迹对比](../img/ground/lateral_control_benchmark/trajectory_arc.png)
+
+![正弦场景的横向与航向偏差](../img/ground/lateral_control_benchmark/error_sine.png)
+
+*图 4、图 5　上图为圆弧场景三条轨迹的贴合情况（三者都能跟上，差异体现在稳态偏差上）；
+下图为正弦场景的误差曲线，可看到纯跟踪在曲率连续变化的区段误差明显更大。*
+
 ## 6. 与仓库已有模块的区别
 
 仓库里已经出现过"纯跟踪 / 横向控制"这些词，为避免与既有模块混淆，这里把定位说清楚：
@@ -245,6 +285,35 @@ roslaunch lateral_control_benchmark main.launch controller:=stanley scenario:=si
 | `roslaunch` 找不到 `lateral_control_node.py` | 确认已 `catkin_make` 并 `source devel/setup.bash`；脚本需要可执行权限 |
 | 节点启动但话题没有数据 | 检查 `rostopic list` 是否有 `/lateral_control/styles`；确认 `rate_hz` 参数有效 |
 | 图中中文显示为方块 | 安装中文字体（Noto Sans CJK / 微软雅黑），绘图会自动匹配 |
+| `catkin_make` 在别的包上报错（见下图） | 见下方说明：与本模块无关 |
+
+### 8.1 `catkin_make` 在无关包上失败
+
+把本模块放进一个**已经装了其他课程包**的工作空间时，`catkin_make` 可能先在本模块之前
+去配置别的包，并在那里失败。典型例子：
+
+![catkin_make 在无关包上失败](../img/ground/lateral_control_benchmark/catkin_unsupported.png)
+
+*图 6　编译 `mw_vision_example` 时 `find_package(turtlebot3_gazebo)` 报错：
+`Project 'turtlebot3_gazebo' specifies '/usr/include/sdformat-9.8' as an include dir,
+which is not found`。这是预装的 `turtlebot3_gazebo` 与本机 `sdformat` 版本不匹配导致的，
+**与本模块无关**——本模块是纯 Python 的 catkin 包，只依赖 `rospy` / `nav_msgs` / `std_msgs` / numpy。*
+
+遇到这种情况，有两种处理办法：
+
+```bash
+# 办法一（推荐）：单独建一个干净的工作空间，只放本模块
+mkdir -p ~/lcb_ws/src && cp -r <本模块目录> ~/lcb_ws/src/
+cd ~/lcb_ws && source /opt/ros/noetic/setup.bash && catkin_make
+```
+
+```bash
+# 办法二：只编译本模块，跳过出问题的包
+catkin_make --pkg lateral_control_benchmark
+```
+
+> 注意：上面第一条命令里的 `<本模块目录>` 是占位符，请替换成实际路径，
+> **不要把尖括号原样粘贴**，否则 bash 会把 `<` 当成重定向符。
 
 ## 9. 大模型使用声明
 

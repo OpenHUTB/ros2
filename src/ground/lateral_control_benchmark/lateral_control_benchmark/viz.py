@@ -98,10 +98,16 @@ def plot_errors(traces: Sequence[Trace], output: str) -> str:
 
 
 def plot_metrics(metrics: Sequence[Metrics], output: str) -> str:
-    """四项关键指标的柱状图对比。"""
+    """四项关键指标的柱状图对比。
+
+    横轴标签用「场景 + 控制器缩写」并旋转 30°：12 根柱子的完整名字（如
+    pure_pursuit / stanley）会挤在一起互相重叠，图上就成了一团。
+    """
     plt = _plt()
     cjk = _setup_cjk(plt)
-    names = [f"{m.controller}\n{m.scenario}" for m in metrics]
+    short = {"pure_pursuit": "PP", "stanley": "ST", "lqr": "LQR",
+             "lookahead_pid": "PID"}
+    names = [f"{m.scenario}\n{short.get(m.controller, m.controller)}" for m in metrics]
     panels = [
         ("平均绝对横向偏差 / m" if cjk else "mean |e| / m", [m.e_mean_abs for m in metrics]),
         ("最大横向偏差 / m" if cjk else "max |e| / m", [m.e_max_abs for m in metrics]),
@@ -109,17 +115,22 @@ def plot_metrics(metrics: Sequence[Metrics], output: str) -> str:
         ("收敛时间 / s" if cjk else "convergence / s", [m.convergence_time for m in metrics]),
     ]
     colors = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e"]
-    fig, axes = plt.subplots(2, 2, figsize=(12, 7))
+    fig, axes = plt.subplots(2, 2, figsize=(12.5, 7.5))
     for ax, (label, values), color in zip(axes.ravel(), panels, colors):
         pos = np.arange(len(values))
         ax.bar(pos, values, color=color, alpha=0.85)
         ax.set_xticks(pos)
-        ax.set_xticklabels(names, fontsize=7)
+        ax.set_xticklabels(names, fontsize=7.5, rotation=30, ha="right")
         ax.set_ylabel(label, fontsize=9)
         ax.grid(axis="y", alpha=0.3)
+        top = max(values) if values else 1.0
+        if top > 0:
+            ax.set_ylim(0.0, top * 1.18)   # 给数值标注留出空间，避免贴顶
         for x, v in zip(pos, values):
-            ax.text(x, v, f"{v:.3f}", ha="center", va="bottom", fontsize=7)
-    fig.suptitle("横向控制指标对比" if cjk else "Lateral control metrics")
+            ax.text(x, v + top * 0.02, f"{v:.3f}", ha="center", va="bottom", fontsize=7)
+    fig.suptitle("横向控制指标对比（横轴：场景 / 控制器，PP=纯跟踪，ST=Stanley）"
+                 if cjk else "Lateral control metrics (scenario / controller)",
+                 fontsize=11)
     fig.tight_layout()
     os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
     fig.savefig(output, dpi=130)
