@@ -1,0 +1,50 @@
+<launch>
+  <!-- ============================================================
+       路径点发布器统一启动入口
+         roslaunch waypoint_target_switcher main.launch
+
+       默认用内置示例路线（10 m 见方环路、8 个点），发布全部路径点与当前目标点。
+       想看到「目标点自动依次切换」，加 mock_enabled:=true 让本节点自带一台
+       模拟车辆（自己发 /odom），不需要 CARLA：
+
+         roslaunch waypoint_target_switcher main.launch mock_enabled:=true
+
+       想切换目标点（运行期间，任意终端）：
+         rostopic pub -1 /waypoint/set_index std_msgs/Int32 "data: 3"   # 跳到第 3 个
+         rostopic pub -1 /waypoint/next std_msgs/Empty "{}"             # 下一个
+         rostopic pub -1 /waypoint/snap_nearest std_msgs/Empty "{}"     # 就近吸附
+       ============================================================ -->
+
+  <arg name="publish_hz"        default="10.0"       doc="目标点 / 状态的发布频率 Hz"/>
+  <arg name="frame_id"          default="map"        doc="路径点所在坐标系"/>
+  <arg name="mode"              default="sequential" doc="推进模式：sequential / loop / manual"/>
+  <arg name="target_tolerance"  default="1.0"        doc="到达判定阈值 m；填 0 或负数表示关闭自动推进"/>
+  <arg name="start_index"       default="0"          doc="初始目标点下标（0 起算）"/>
+  <arg name="autostart"         default="true"       doc="启动后立即开始；false 时等切换指令"/>
+  <arg name="route_file"        default=""           doc="路径点文件绝对路径；留空用内置示例路线"/>
+  <arg name="mock_enabled"      default="false"      doc="true=内置模拟车辆自带 /odom，不需要 CARLA"/>
+  <arg name="mock_speed"        default="2.0"        doc="内置模拟车辆速度 m/s"/>
+  <arg name="waypoints_topic"   default="/waypoints"          doc="全部路径点话题（PoseArray）"/>
+  <arg name="target_topic"      default="/waypoint/target"    doc="当前目标点话题（PoseStamped）"/>
+  <arg name="odom_topic"        default="/odom"               doc="位姿话题（Odometry）"/>
+
+  <!-- 先加载 yaml 里的默认值，再用下面的 <param> 覆盖成 launch 参数，
+       因此 `roslaunch ... mode:=loop` 这类命令行覆盖生效。 -->
+  <rosparam command="load" file="$(find waypoint_target_switcher)/config/waypoint_target_switcher.yaml"/>
+
+  <param name="rate/publish_hz"          value="$(arg publish_hz)"/>
+  <param name="frame/id"                 value="$(arg frame_id)"/>
+  <param name="control/mode"             value="$(arg mode)"/>
+  <param name="control/target_tolerance" value="$(arg target_tolerance)"/>
+  <param name="control/start_index"      value="$(arg start_index)"/>
+  <param name="control/autostart"        value="$(arg autostart)"/>
+  <param name="route/file"               value="$(arg route_file)"/>
+  <param name="mock/enabled"             value="$(arg mock_enabled)"/>
+  <param name="mock/speed"               value="$(arg mock_speed)"/>
+  <param name="topic/waypoints"          value="$(arg waypoints_topic)"/>
+  <param name="topic/target"             value="$(arg target_topic)"/>
+  <param name="topic/odom"               value="$(arg odom_topic)"/>
+
+  <!-- 入口为 main.py（作业要求每模块入口为 main.*） -->
+  <node pkg="waypoint_target_switcher" type="main.py" name="waypoint_target_switcher" output="screen"/>
+</launch>
