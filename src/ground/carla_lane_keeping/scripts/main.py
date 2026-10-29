@@ -25,9 +25,10 @@ import signal
 import subprocess
 import sys
 
-import rospy
-
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+# 子节点固定跑在 /lane_detector 命名空间下，命令行参数要写到这里才生效
+DETECTOR_NS = "/lane_detector"
 
 
 def parse_args(argv=None):
@@ -51,8 +52,11 @@ def parse_args(argv=None):
         default=os.path.join(HERE, "..", "config", "lane_params.yaml"),
         help="YAML 参数文件路径",
     )
-    parser.add_argument("--publish-debug", action="store_true", default=True,
-                        help="是否发布鸟瞰掩码调试图像")
+    parser.add_argument("--publish-debug", dest="publish_debug", action="store_true",
+                        default=True, help="发布鸟瞰掩码调试图像（默认开启）")
+    parser.add_argument("--no-publish-debug", dest="publish_debug",
+                        action="store_false", default=argparse.SUPPRESS,
+                        help="关闭鸟瞰掩码调试图像")
     return parser.parse_args(argv)
 
 
@@ -68,29 +72,37 @@ def build_env():
 def main(argv=None):
     args = parse_args(argv)
 
+    # rospy 放到解析参数之后再导入：这样没有 ROS 的机器上
+    # `main.py --help` 也能正常打印用法
+    import rospy
+
     # 入口本身不需要 master 也能解析参数，但 ROS 参数写入需要
     if not rospy.core.is_initialized():
         rospy.init_node("carla_lane_keeping_main", anonymous=True)
 
-    # 把命令行参数落到 ROS 参数服务器，供子节点读取
-    rospy.set_param("~image_topic", args.image_topic)
-    rospy.set_param("~publish_debug", bool(args.publish_debug))
-
     # 载入 YAML 参数（若存在）。
     # 用 rosparam 命令行加载而不是自己解析 YAML：rosparam 是 ROS 自带工具，
     # 能正确处理嵌套命名空间与类型推断，不引入额外 Python 依赖。
+    #
+    # 顺序很重要：**先载入 YAML，再写命令行参数**。反过来的话 YAML 里的
+    # 同名项会把命令行覆盖掉，`--image-topic` 就失效了。
     params_path = os.path.abspath(args.params)
     if os.path.isfile(params_path):
         rospy.loginfo("[main] 从 %s 载入参数", params_path)
         try:
             subprocess.check_call(
-                ["rosparam", "load", params_path, "/lane_detector"],
+                ["rosparam", "load", params_path, DETECTOR_NS],
                 env=build_env(),
             )
         except Exception as exc:  # noqa: BLE001
             rospy.logwarn("[main] 参数加载失败（将使用代码默认值）：%s", exc)
     else:
         rospy.logwarn("[main] 未找到参数文件 %s，使用代码默认值", params_path)
+
+    # 命令行参数覆盖 YAML。必须写到 /lane_detector 下——写 "~xxx" 会落到
+    # 本节点自己的私有命名空间（/carla_lane_keeping_main_xxxx），子节点读不到。
+    rospy.set_param(DETECTOR_NS + "/image_topic", args.image_topic)
+    rospy.set_param(DETECTOR_NS + "/publish_debug", bool(args.publish_debug))
 
     targets = []
     if args.mode in ("detect", "both"):
