@@ -144,3 +144,10 @@ roslaunch learning_tf start_demo_with_listener.launch
 结果如下图所示：
 
 ![image-20260903181216668](../img/code/chap2/The%20turtle%20follows.png)
+
+## 7. 运行参数热更新
+
+使用 `dynamic_reconfigure` 在线调整正弦信号的幅值、频率和发布频率，无需
+重启节点。
+
+[进入 ROS Noetic 运行参数热更新实验](../chap2/ros1_parameter_sine_wave/index.md)
