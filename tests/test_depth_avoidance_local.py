@@ -28,12 +28,29 @@ PKG = os.path.join(ROOT, "src", "air", "carlair_ros_bridge")
 sys.path.insert(0, os.path.join(PKG, "scripts"))
 
 # 桩掉 ROS 依赖，纯数学测试不需要 roscore
+import time  # noqa: E402
 import types  # noqa: E402
 
-sys.modules["rospy"] = types.ModuleType("rospy")
+rospy_stub = types.ModuleType("rospy")
+rospy_stub.logwarn = lambda *a, **k: None
+rospy_stub.loginfo = lambda *a, **k: None
+sys.modules["rospy"] = rospy_stub
+
+
+class _Vec(object):
+    def __init__(self):
+        self.x = self.y = self.z = 0.0
+
+
+class _Twist(object):
+    def __init__(self):
+        self.linear = _Vec()
+        self.angular = _Vec()
+
+
 gm = types.ModuleType("geometry_msgs")
 gmm = types.ModuleType("geometry_msgs.msg")
-gmm.Twist = type("Twist", (), {})
+gmm.Twist = _Twist
 gm.msg = gmm
 sys.modules["geometry_msgs"] = gm
 sys.modules["geometry_msgs.msg"] = gmm
@@ -85,6 +102,58 @@ def test_speed():
     check(f(float("inf"), 2.0, 4.0, 1.5) == 1.5, "inf 也全速")
 
 
+def test_safety():
+    print("== C2. fail-open 保护 ==")
+
+    class _Pub(object):
+        def __init__(self):
+            self.msgs = []
+
+        def publish(self, msg):
+            self.msgs.append(msg)
+
+    def make_node():
+        n = object.__new__(depth_avoidance.DepthAvoidance)
+        n.enabled = True
+        n.points = None
+        n.last_cloud_time = None
+        n.cloud_timeout = 0.5
+        n.start_time = 0.0
+        n.start_delay = 0.0
+        n.last_action = ""
+        n.pub = _Pub()
+        n.forward_speed = 1.5
+        n.slow_distance = 4.0
+        n.stop_distance = 2.0
+        n.lateral_limit = 0.8
+        n.vertical_limit = 0.8
+        n.max_range = 12.0
+        n.min_range = 0.5
+        return n
+
+    n = make_node()
+    n.step_once()
+    check(n.pub.msgs[-1].linear.x == 0.0, "无点云 -> STOP")
+
+    n = make_node()
+    n.points = np.empty((0, 3), dtype=np.float32)
+    n.last_cloud_time = time.time()
+    n.step_once()
+    check(n.pub.msgs[-1].linear.x == 0.0, "空点云 -> STOP")
+
+    n = make_node()
+    n.points = np.array([[0.0, 0.0, 3.0]], dtype=np.float32)
+    n.last_cloud_time = 0.0
+    n.step_once()
+    check(n.pub.msgs[-1].linear.x == 0.0 and n.points is None,
+          "点云超时 -> STOP 并清空")
+
+    n = make_node()
+    n.enabled = False
+    n.step_once()
+    check(n.pub.msgs[-1].linear.x == 0.0, "禁用 -> 发布 0 速度")
+
+
 def test_project_files():
     print("== D. 工程文件 ==")
     cmake = open(os.path.join(PKG, "CMakeLists.txt"), encoding="utf-8").read()
@@ -97,12 +166,18 @@ def test_project_files():
     for key in ("forward_speed", "slow_distance", "stop_distance", "lateral_limit"):
         check(key in cfg, "bridge.yaml 含 %s" % key)
     check("深度避障" in readme, "README 记录深度避障")
+    demo = os.path.join(PKG, "launch", "depth_demo.launch")
+    rviz = os.path.join(PKG, "rviz", "depth_demo.rviz")
+    check(os.path.isfile(demo), "depth_demo.launch 存在")
+    check(os.path.isfile(rviz), "depth_demo.rviz 存在")
+    check("depth_demo.launch" in readme, "README 记录一键 demo")
 
 
 if __name__ == "__main__":
     test_corridor()
     test_distance()
     test_speed()
+    test_safety()
     test_project_files()
     print("\n通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
     sys.exit(1 if FAIL else 0)
