@@ -126,4 +126,50 @@ MuJoCo 3.1.6（`pip3 install mujoco`）、NumPy 1.24.4、colcon 0.12.1。
 | launch 启动 | `ros2 launch passive_walker main.launch.py seconds:=5` | 仿真 5.1 s，前进 **4.94 m**，19 步，稳态 1.22 m/s |
 
 以上数字均为上述命令在虚拟机中的实际终端输出，未做任何事后修饰。
+表中 `colcon build` 的 2.43 s 是首次构建，`pytest` 的 0.46 s 与第 7 节截图里的 0.40~0.43 s
+来自不同的两次执行，耗时本来就随机器负载浮动，其余仿真结果（位移、步数、速度）每次都完全一致；
+话题里的 `data` 是随仿真进度递增的步数，不同次截图截到的数值不同（第 7 节那张截到 12）。
+
+## 7. 终端截图与仿真画面
+
+> 截图方式：虚拟机没有接显示器，所以用 `Xvfb` 虚拟屏幕 + `xterm` **真实执行命令**，
+> 再用 `xwd` 抓取窗口像素转成 PNG。下面的命令与输出都是终端里真跑出来的，没有拼接或补写。
+
+### 7.1 构建与单元测试
+
+![colcon build 与 pytest 的终端截图](../img/ground/passive_walker/01_terminal_build.png)
+
+### 7.2 无 ROS 的纯仿真（20 s / 60 s）
+
+![两段仿真运行的终端截图](../img/ground/passive_walker/02_terminal_run.png)
+
+### 7.3 ROS 2 节点、话题与 launch
+
+![ROS 2 节点、ros2 topic echo 与 launch 的终端截图](../img/ground/passive_walker/03_terminal_ros2.png)
+
+节点在跑满 `seconds` 后会自动结束（`main()` 用 `spin_once` 轮询 `finished` 标志），
+因此 `ros2 run` / `ros2 launch` 都能自行退出，不需要额外按 Ctrl-C：
+
+```text
+[INFO] [main.py-1]: process has finished cleanly [pid 19567]
+```
+
+### 7.4 MuJoCo 离屏渲染（EGL）
+
+服务器上没有显示器，用 `MUJOCO_GL=egl` + `mujoco.Renderer` 逐帧渲染。相机跟随轮子时：
+
+![跟随相机渲染的六帧](../img/ground/passive_walker/04_sim_follow_camera.png)
+
+相机固定不动时，可以直接看出「沿 5° 下坡从 x=0 滚到 x=3.6 m，轮心世界高度从 0.488 m 降到 0.158 m」：
+
+![固定相机渲染的六帧](../img/ground/passive_walker/05_sim_fixed_camera.png)
+
+连续滚动（0~6 s，每 0.2 s 一帧）：
+
+![被动行走连续滚动 GIF](../img/ground/passive_walker/06_sim_walk.gif)
+
+地面上的棋盘格纹理（`<texture builtin="checker">` + `<material>`）只影响渲染显示，
+摩擦、质量、几何尺寸等物理参数都没有改动：加纹理前后
+`python3 main.py --seconds 20` 的输出完全一致（23.76 m / 95 步 / 1.25 m/s / 0.468 m）。
+
 

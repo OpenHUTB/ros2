@@ -7,9 +7,15 @@
        注意：MuJoCo 的 euler 属性单位是“度”。 -->
   <option timestep="0.0005" gravity="0 0 -9.81" integrator="RK4"/>
   <visual><global offwidth="640" offheight="480"/></visual>
+  <asset>
+    <!-- 地面棋盘格纹理：只影响渲染，用于在截图里看清 5° 坡面与轮子滚动 -->
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.34 0.37 0.41"
+             rgb2="0.45 0.48 0.52" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="200 4" reflectance="0.05"/>
+  </asset>
   <worldbody>
     <light pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
-    <geom name="slope" type="plane" size="200 4 0.1" euler="0 5 0"
+    <geom name="slope" type="plane" size="200 4 0.1" euler="0 5 0" material="grid"
           rgba="0.72 0.74 0.78 1" friction="1.2 0.02 0.001"/>
     <body name="wheel" pos="0 0 0.48">
       <joint name="slide_x" type="slide" axis="1 0 0"/>

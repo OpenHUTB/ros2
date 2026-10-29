@@ -56,12 +56,15 @@ def main(args=None, seconds=20.0, push=0.3):
     rclpy.init(args=args)
     node = PassiveWalkerNode(seconds=seconds, push=push)
     try:
-        rclpy.spin(node)
+        # 到达设定时长后节点自行结束，ros2 run / launch 才能正常退出
+        while rclpy.ok() and not node.finished:
+            rclpy.spin_once(node, timeout_sec=0.05)
     except KeyboardInterrupt:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
     return 0
 
 
