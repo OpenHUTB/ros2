@@ -1,0 +1,46 @@
+# gesture_control_drone 参数
+# 由 launch/main.launch 用 <rosparam command="load"> 载入到**各节点私有命名空间**，
+# 因此节点里用 rospy.get_param("~xxx") 读取。两个节点共用这一份，各取所需。
+
+# ---------------- 手势感知节点 ----------------
+camera_index: 0             # 摄像头索引；打不开时会自动尝试 0~4
+width: 640
+height: 480
+publish_rate: 10.0          # 识别循环频率 (Hz)
+show_window: false          # 是否弹出预览窗口（远程 SSH / 无显示器时保持 false）
+stable_frames: 3            # 连续多少帧识别到同一手势才算数（去抖，防抖动误触）
+max_hands: 1
+detection_confidence: 0.7
+tracking_confidence: 0.5
+command_topic: /gesture_command       # 感知节点发布、控制节点订阅（两个节点共用）
+gesture_state_topic: /gesture_state   # 感知节点发布"当前手势"，仅用于观察/排查
+
+# ---------------- 无人机控制节点 ----------------
+airsim:
+  ip: 127.0.0.1             # 仿真器地址。跨机部署（模拟器在宿主 Windows、ROS 在
+                            # 客户机 Ubuntu）时填宿主 IP，例如 192.168.80.1
+  port: 41451
+  vehicle_name: ""          # 留空 = 默认载具（settings.json 里的 Drone1）
+
+estop_action: hover         # 紧急停止动作：
+                            #   hover  = 悬停（默认，安全）
+                            #   land   = 立即降落
+                            #   disarm = 空中锁桨（会导致坠落，慎用）
+
+takeoff_altitude: 3.0       # 起飞后爬升到的高度 (m)
+speed: 1.0                  # 前进/上升/下降的速度 (m/s)
+max_speed: 3.0              # 速度上限 (m/s)，超过会被夹到该值
+max_altitude: 30.0          # 高度上限 (m)，到这里就不再上升
+min_altitude: 0.5           # 高度下限 (m)，到这里就拒绝下降（改用降落）
+move_duration: 1.0          # 单次位移/偏航的持续时间 (s)
+yaw_rate: 30.0              # 偏航角速度 (deg/s)
+command_timeout: 10.0       # 单次 AirSim RPC 调用超时 (s)，超时视为失败
+takeoff_timeout: 60.0       # 起飞（含定高）超时 (s)；慢机器/慢仿真器可调大
+land_timeout: 60.0          # 降落超时 (s)；3 m 高度约需 14 s
+command_cooldown: 1.5       # 同一条指令的最小间隔 (s)，控制节点侧的第二道防抖
+connect_retries: 3          # 连接 AirSim 的重试次数
+state_rate: 5.0             # 状态回传频率 (Hz)，0 = 关闭
+odom_topic: /drone/odom     # nav_msgs/Odometry（ENU），可在 RViz 里看
+drone_state_topic: /drone_state   # 执行结果（如 "takeoff OK"）
+frame:
+  world: world              # Odometry 的 frame_id
