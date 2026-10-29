@@ -109,6 +109,7 @@ nav:
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
