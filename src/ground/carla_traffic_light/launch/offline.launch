@@ -1,0 +1,13 @@
+<launch>
+  <!-- 离线模式：不需要 CARLA，只跑决策逻辑并出图 -->
+  <arg name="light" default="Red" />
+  <arg name="outdir" default="$(find carla_traffic_light)/demo_out" />
+
+  <node pkg="carla_traffic_light"
+        type="main.py"
+        name="carla_traffic_light_offline"
+        output="screen"
+        args="--offline --light $(arg light) --outdir $(arg outdir)">
+    <rosparam command="load" file="$(find carla_traffic_light)/config/tl_params.yaml" />
+  </node>
+</launch>
