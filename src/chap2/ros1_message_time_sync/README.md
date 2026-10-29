@@ -57,6 +57,8 @@ rostopic echo /sensors/sync_pair
 
 ```bash
 cd ~/ros1_ws
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
 catkin_make run_tests_ros1_message_time_sync
 catkin_test_results build/test_results/ros1_message_time_sync
 ```

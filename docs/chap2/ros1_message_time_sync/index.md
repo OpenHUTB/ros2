@@ -10,7 +10,7 @@
 
 - 使用 `sensor_msgs/Temperature` 和 `sensor_msgs/RelativeHumidity`；
 - 为消息设置 ROS 时间戳；
-- 比较不同频率话题的到达时间；
+- 比较不同频率话题的消息头时间戳；
 - 使用近似时间同步器配对消息；
 - 检查同步输出的时间差和频率。
 
@@ -117,9 +117,9 @@ timestamp_diff_sec=0.028000 temperature_seq=42 humidity_seq=30"
 
 | 话题 | 实测频率 |
 | --- | ---: |
-| `/sensors/temperature` | 10.000 Hz |
-| `/sensors/humidity` | 7.000 Hz |
-| `/sensors/sync_pair` | 7.000 Hz |
+| `/sensors/temperature` | 9.999–10.001 Hz |
+| `/sensors/humidity` | 7.000–7.001 Hz |
+| `/sensors/sync_pair` | 6.997–7.000 Hz |
 
 ![输入话题频率](../../img/chap2/ros1_message_time_sync/input_rates.png)
 
@@ -142,6 +142,8 @@ temperature_c=23.411 humidity_percent=52.679 timestamp_diff_sec=0.043115
 
 ```bash
 cd ~/ros1_ws
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
 catkin_make run_tests_ros1_message_time_sync
 catkin_test_results build/test_results/ros1_message_time_sync
 ```
