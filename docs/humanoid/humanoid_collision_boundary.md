@@ -58,7 +58,7 @@ src/
 2. 从 ros2 仓库拷贝模块代码到工作空间：
 
    ```bash
-   cp -r ~/OpenHUTB/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
+   cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
    cd ~/ros2_ws
    ```
 
