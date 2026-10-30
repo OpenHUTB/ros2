@@ -128,6 +128,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
+* [车道线检测（前视视觉）](./ground/carla_lane_keeping/lane_detection.md)
+* [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
