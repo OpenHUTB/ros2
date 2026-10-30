@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>rl_mujoco_locomotion</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 原生 locomotion 环境上的强化学习对比实验模块。
+    包含 HalfCheetah、Ant、Walker2d 三个经典连续控制环境，
+    使用 NumPy 手写 PPO 与 SAC 算法，在 MuJoCo 3.1.6 ~ 3.17.0 上进行训练、评估与 GIF 渲染。
+    MuJoCo 本身没有 rosdep 键，需按 requirements.txt 用 pip 安装。
+  </description>
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-imageio</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
