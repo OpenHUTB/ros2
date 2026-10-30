@@ -1,0 +1,4 @@
+<launch>
+  <!-- 超车变道仿真节点 -->
+  <node pkg="overtake" type="main.py" name="overtake_node" output="screen" />
+</launch>
