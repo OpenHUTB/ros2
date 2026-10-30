@@ -31,6 +31,10 @@ jobs:
       - name: Install package dependencies
         run: |
           source /opt/ros/humble/setup.bash
+          if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+            sudo rosdep init
+          fi
+          rosdep update
           rosdep install \
             --from-paths src/chap2/ros2_qos_compatibility_lab \
             --ignore-src \
