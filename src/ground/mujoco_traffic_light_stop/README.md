@@ -28,6 +28,9 @@ python3 main.py
   - 绿灯：正常前进
 - 终端实时打印运行日志（时间、灯状态、位置、速度、推力）
 
+## 运行效果
+![红绿灯启停仿真效果](../../../docs/img/ground/mujoco_traffic_light_stop_demo.gif)
+
 ## 文件结构
 ```
 mujoco_traffic_light_stop/
