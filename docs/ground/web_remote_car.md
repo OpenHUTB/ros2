@@ -153,8 +153,8 @@ http://127.0.0.1:8000
 
 
 控制与相机画面演示：
-
-
+<img width="1619" height="824" alt="camera_demo1" src="https://github.com/user-attachments/assets/00fdacbe-233d-4f5c-87cb-8a2c3b17ba24" />
+<img width="1619" height="824" alt="camera_demo2" src="https://github.com/user-attachments/assets/578d526a-04dc-43c3-ba48-fb4cdfb415e7" />
 
 \## 7. 参数调整
 
