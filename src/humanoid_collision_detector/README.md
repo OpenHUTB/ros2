@@ -64,7 +64,3 @@ Fixed Frame 设为 `world`，MarkerArray 话题选择 `/collision_boundary`，�
 ## 坐标约定
 
 所有碰撞体位置与尺寸均以 z 轴为高度方向：`BOX` 的 `size = (x, y, z)`；`CYLINDER` 的 `size = (radius, height, 0)`，高度沿 z 轴；`SPHERE` 的 `size.x()` 为半径。
-
-## 许可
-
-Apache-2.0
