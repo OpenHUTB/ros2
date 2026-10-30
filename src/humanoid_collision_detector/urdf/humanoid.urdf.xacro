@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <!--
   humanoid.urdf.xacro
-  简化版3D人形机器人URDF描述（用于碰撞体边界检测演示）
-  包含12个带碰撞体的连杆
 -->
 <robot name="humanoid_demo" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
