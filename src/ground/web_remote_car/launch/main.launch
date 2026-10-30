@@ -1,0 +1,23 @@
+<launch>
+  <!-- 启动gazebo空世界 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+
+  <!-- 加载小车xacro，核对文件名：urdf/car.xacro -->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find web_remote_car)/urdf/car_two_cam.urdf.xacro'"/>
+
+  <!-- 发布关节状态，给robot_state_publisher提供joint_states -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" output="screen"/>
+
+  <!-- 发布robot_state_publisher，解析URDF、广播TF -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+
+  <!-- 把小车spawn到gazebo，z抬高防止穿模 -->
+  <node name="spawn_car" pkg="gazebo_ros" type="spawn_model"
+    args="-urdf -model web_car -param robot_description -x 0 -y 0 -z 0.1"
+    output="screen"/>
+</launch>
+
