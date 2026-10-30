@@ -1,0 +1,27 @@
+<mujoco model="traffic_scene">
+  <option timestep="0.02"/>
+  <default>
+    <geom solref="0.03 1.2" solimp="0.9 0.98 0.01"/>
+  </default>
+  <worldbody>
+    <light pos="0 0 8" dir="0 0 -1"/>
+    <geom name="ground" type="plane" size="12 6 0.1" rgba="0.3 0.3 0.3 1" friction="1.2 0.1 0.1"/>
+
+    <!-- 红绿灯：位于 x=1 -->
+    <body name="light_pole" pos="1 0 0.8">
+      <geom type="cylinder" size="0.05 0.8" rgba="0.2 0.2 0.2 1"/>
+      <geom name="light_red" type="sphere" pos="0 0 0.3" size="0.10" rgba="0.8 0 0 1"/>
+      <geom name="light_yellow" type="sphere" pos="0 0 0.0" size="0.10" rgba="0.8 0.8 0 1"/>
+      <geom name="light_green" type="sphere" pos="0 0 -0.3" size="0.10" rgba="0 0.8 0 1"/>
+    </body>
+
+    <!-- 方块小车：沿 x 轴平移，无轮子，避免接触仿真爆炸 -->
+    <body name="car" pos="-3 0 0.05">
+      <joint name="car_joint" type="slide" axis="1 0 0" damping="0.8"/>
+      <geom type="box" size="0.25 0.18 0.04" rgba="0.1 0.4 0.8 1" mass="1.2"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="drive" joint="car_joint" gear="1.0"/>
+  </actuator>
+</mujoco>
