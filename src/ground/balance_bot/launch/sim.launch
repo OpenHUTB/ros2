@@ -1,0 +1,13 @@
+<launch>
+  <!-- MuJoCo 平衡车仿真。键盘另开一个终端：
+         rosrun balance_bot teleop.py
+
+       注意 <rosparam> 必须放在 <node> **里面**：
+       放在外面会落到根命名空间（/controller、/rate_hz），
+       而 sim_node.py 读的是私有参数 ~controller（= /sim_balance/controller），
+       结果还是走代码默认值，改 yaml 没有任何反应。
+       评审用 `rosparam get /sim_balance/controller` 验证过这一点。 -->
+  <node pkg="balance_bot" type="sim_node.py" name="sim_balance" output="screen">
+    <rosparam command="load" file="$(find balance_bot)/config/sim.yaml"/>
+  </node>
+</launch>

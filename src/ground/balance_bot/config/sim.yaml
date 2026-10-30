@@ -1,0 +1,3 @@
+# 仿真节点参数
+controller: nn      # pd 或 nn；默认 nn 是为了能验证 yaml 真的被读到
+rate_hz: 50.0
