@@ -120,9 +120,9 @@ MuJoCo 3.1.6（`pip3 install mujoco`）、NumPy 1.24.4、colcon 0.12.1。
 | launch 启动 | `ros2 launch passive_walker main.launch.py seconds:=5` | 仿真 5.1 s，前进 **4.94 m**，19 步，稳态 1.22 m/s |
 
 以上数字均为上述命令在虚拟机中的实际终端输出，未做任何事后修饰。
-表中 `colcon build` 的 2.43 s 是首次构建，`pytest` 的 0.46 s 与第 7 节截图里的 0.40~0.43 s
+表中 `colcon build` 的 2.43 s 是首次构建，`pytest` 的 0.46 s 与第 6 节截图里的 0.40~0.43 s
 来自不同的两次执行，耗时本来就随机器负载浮动，其余仿真结果（位移、步数、速度）每次都完全一致；
-话题里的 `data` 是随仿真进度递增的步数，不同次截图截到的数值不同（第 7 节那张截到 12）。
+话题里的 `data` 是随仿真进度递增的步数，不同次截图截到的数值不同（第 6 节那张截到 12）。
 
 ## 6. 终端截图与仿真画面
 ![终端运行记录](../img/ground/passive_walker/02_terminal.gif)
