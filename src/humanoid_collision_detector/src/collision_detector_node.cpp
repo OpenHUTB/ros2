@@ -53,7 +53,7 @@ public:
     this->declare_parameter<double>("safety_boundary", 0.15);
     this->declare_parameter<double>("obstacle_radius", 0.2);
     this->declare_parameter<double>("check_frequency", 100.0);
-    this->declare_parameter<bool>("use_robot_description", true);
+    this->declare_parameter<bool>("use_robot_description", false);
 
     // ========== 初始化检测器 ==========
     // 优先尝试 URDF 加载（如果有 urdf 库），否则回退到默认 12 个碰撞体

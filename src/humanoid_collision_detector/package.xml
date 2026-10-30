@@ -4,7 +4,7 @@
   <name>humanoid_collision_detector</name>
   <version>1.0.0</version>
   <description>3D人形机器人碰撞体边界检测与可视化节点 (ROS2 Humble)</description>
-  <maintainer email="dev@example.com">Humanoid Robotics Team</maintainer>
+  <maintainer email="Rafaye-71-star@users.noreply.github.com">nn</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

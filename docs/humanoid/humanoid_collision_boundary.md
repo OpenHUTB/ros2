@@ -36,7 +36,6 @@ src/
     │   └── humanoid_collision_detector     # 无后缀空文件
     ├── CMakeLists.txt                      # 构建配置
     ├── package.xml                         # ROS 2 依赖声明文件
-    ├── mkdocs.yml                          # 文档站点配置
     └── README.md                           # 模块说明文档
 ```
 
@@ -116,14 +115,14 @@ src/
 
 节点启动后，障碍物沿正弦轨迹在机器人前后往返。终端中可见最近距离随障碍物位置连续变化，最近碰撞体名称在头、躯干、前臂等部件间切换；当距离低于安全边界时 `collision_detected` 翻转为 `true`。
 
-![运行效果](./img/collision_boundary_run.png)
+![运行效果](../img/collision_boundary_run.png)
 
 动态过程：
 
-![运行演示](./img/collision_boundary_demo.gif)
+![运行演示](../img/collision_boundary_demo.gif)
 
 ## 验证范围说明
 
 本模块已在该虚拟机上完成以下验证：节点正常启动、话题正常收发、距离数值随障碍物位置连续变化、碰撞标志随安全边界正确翻转、MarkerArray 可被 RViz2 正常解析显示。
 
-碰撞体为简化几何近似（12 个基元），并非完整 URDF 碰撞模型；当 `use_robot_description` 为 `true` 时可解析 URDF 碰撞体，该路径尚未在真实整机模型上完成验证。
+碰撞体为简化几何近似（12 个基元），并非完整 URDF 碰撞模型；`use_robot_description` 默认为 `false`，当显式设为 `true` 时会解析 URDF 碰撞体，该路径尚未在真实整机模型上完成验证。
