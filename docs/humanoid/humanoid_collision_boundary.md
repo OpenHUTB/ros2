@@ -50,21 +50,21 @@ src/
 
 1. 新建标准工作空间并进入 src 目录：
 
-   ```bash
+   ```
    mkdir -p ~/ros2_ws/src
    cd ~/ros2_ws/src
    ```
 
 2. 从 ros2 仓库拷贝模块代码到工作空间：
 
-   ```bash
+   ```
    cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
    cd ~/ros2_ws
    ```
 
 3. 安装依赖并编译工作空间、部署环境：
 
-   ```bash
+   ```
    rosdep install --from-paths src --ignore-src -r -y
    colcon build --packages-select humanoid_collision_detector
    source install/setup.bash
@@ -72,13 +72,13 @@ src/
 
 4. 启动碰撞体边界检测节点与障碍物演示节点：
 
-   ```bash
+   ```
    ros2 launch humanoid_collision_detector main_launch.py
    ```
 
 5. 另开终端查看实时检测结果：
 
-   ```bash
+   ```
    source install/setup.bash
    ros2 topic echo /distance_to_obstacle
    ros2 topic echo /collision_detected
@@ -86,7 +86,7 @@ src/
 
 6. 可选：打开 RViz2 查看碰撞体边界可视化：
 
-   ```bash
+   ```
    ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
    ```
 
@@ -115,7 +115,7 @@ src/
 
 节点启动后，障碍物沿正弦轨迹在机器人前后往返。终端中可见最近距离随障碍物位置连续变化，最近碰撞体名称在头、躯干、前臂等部件间切换；当距离低于安全边界时 `collision_detected` 翻转为 `true`。
 
-![运行演示](../img/collision_boundary_demo.gif)
+![运行演示](https://raw.githubusercontent.com/Rafaye-71-star/ros2/feat/humanoid-collision-boundary/docs/img/collision_boundary_demo.gif)
 
 ## 验证范围说明
 
