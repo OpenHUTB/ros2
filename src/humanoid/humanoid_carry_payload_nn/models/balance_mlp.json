@@ -1,0 +1,23 @@
+{
+  "features": [
+    "roll",
+    "pitch",
+    "roll_rate",
+    "pitch_rate",
+    "payload_norm",
+    "v_cmd",
+    "w_cmd",
+    "phase_sin",
+    "phase_cos"
+  ],
+  "outputs": [
+    "ankle_pitch",
+    "ankle_roll",
+    "hip_pitch"
+  ],
+  "hidden": [
+    32,
+    32
+  ],
+  "corr_limit": 0.3
+}
