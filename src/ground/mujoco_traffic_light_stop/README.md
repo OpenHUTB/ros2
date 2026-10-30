@@ -29,6 +29,10 @@ python3 main.py
 - 终端实时打印运行日志（时间、灯状态、位置、速度、推力）
 
 ## 运行效果
+仿真运行界面：
+![红绿灯启停仿真运行界面](../../../docs/img/ground/mujoco_traffic_light_stop_running.png)
+
+动态效果：
 ![红绿灯启停仿真效果](../../../docs/img/ground/mujoco_traffic_light_stop_demo.gif)
 
 ## 文件结构
