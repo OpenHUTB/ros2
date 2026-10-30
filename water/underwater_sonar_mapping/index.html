@@ -367,7 +367,8 @@
 <div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros2_ws/src
 <span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src
 </code></pre></div></li>
-<li>从 ros2 仓库拷贝模块代码到工作空间：
+<li>从 ros2 仓库拷贝模块代码到工作空间：                 <br/>
+("cp -r ~/OpenHUTB/ros2/src/....._mapping ~/ros2_ws/src/"中OPenHUTB是文件夹名，一般克隆ros2不会自带OPenHUTB文件夹，输入改指令时可以去掉"/OpenHUTB"部分)
 <div class="highlight"><pre><span></span><code>cp<span class="w"> </span>-r<span class="w"> </span>~/OpenHUTB/ros2/src/underwater_sonar_mapping<span class="w"> </span>~/ros2_ws/src/
 <span class="nb">cd</span><span class="w"> </span>~/ros2_ws
 </code></pre></div></li>
@@ -379,7 +380,7 @@
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>underwater_sonar_mapping<span class="w"> </span>main.launch.py
 </code></pre></div>
 5.运行效果（截图）
-<img alt="运行效果" src="../../img/capture_4.png"/></li>
+<img alt="运行效果" src="../../img/underwater_sonar_3d_mapping_run.png"/></li>
 </ol>
 <p>效果说明：节点成功启动，基于模拟声呐数据生成了三维海底地形，并清晰标注了水下沉船/暗礁等障碍物位置，验证了声呐三维测绘与避障感知算法的可行性。</p></div>
 </div>
