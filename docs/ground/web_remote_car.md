@@ -116,7 +116,13 @@ http://127.0.0.1:8000
 <img width="1619" height="824" alt="camera_demo1" src="https://github.com/user-attachments/assets/00fdacbe-233d-4f5c-87cb-8a2c3b17ba24" />
 <img width="1619" height="824" alt="camera_demo2" src="https://github.com/user-attachments/assets/578d526a-04dc-43c3-ba48-fb4cdfb415e7" />
 
+<<<<<<< HEAD
 ## 7. 参数调整
+=======
+\## 7. 参数调整
+
+
+>>>>>>> cfb807b87568947e11f42e8915f85da6cc2aef98
 
 默认启动参数位于 `launch/web\_bridge.launch`：
 表格
