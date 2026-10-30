@@ -1,0 +1,3 @@
+mujoco
+opencv-python
+numpy
