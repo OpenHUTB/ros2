@@ -1,4 +1,4 @@
-# ROS 1 环境自检与常见问题排查
+﻿# ROS 1 环境自检与常见问题排查
 
 > 所属模块：`src/chap2/ros1_env_check`
 > 依赖：Python 3.6+（**不需要 ROS 也能运行**）
@@ -166,7 +166,7 @@ git update-index --chmod=+x run.sh
 [FAIL] import rospy 失败：ImportError
 ```
 
-![在 Foxy 终端里运行自检：准确指出当前是 ROS 2 环境](../img/chap2/ros1_env_check/mixed_ros_terminal.png)
+![在 Foxy 终端里运行自检：准确指出当前是 ROS 2 环境](../../img/chap2/ros1_env_check/mixed_ros_terminal.png)
 
 *图 1　两种 ROS 都装了、但当前终端 source 的是 Foxy 时的输出。脚本没有笼统地报"ROS 不可用"，
 而是明确指出「本机同时装了 noetic 与 foxy」「当前终端是 ROS 2 环境」，
@@ -184,7 +184,7 @@ git update-index --chmod=+x run.sh
 结果：15 项通过，2 项警告，0 项失败
 ```
 
-![切到 ROS 1 干净终端后：15 项通过、0 项失败](../img/chap2/ros1_env_check/clean_ros1_terminal.png)
+![切到 ROS 1 干净终端后：15 项通过、0 项失败](../../img/chap2/ros1_env_check/clean_ros1_terminal.png)
 
 *图 2　新开终端并 `source /opt/ros/noetic/setup.bash` 后重跑，**0 项失败**：
 `rospy` 可导入、`rosversion` 正常、BOM / CRLF / 可执行位三项文件卫生检查全部通过。
