@@ -1,0 +1,3 @@
+# 仿真节点参数
+controller: pd      # pd = 倾角PD控制器；nn = 神经网络策略（需先跑 tools/train_policy.py）
+rate_hz: 50.0

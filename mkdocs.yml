@@ -112,6 +112,7 @@ nav:
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - 两轮自平衡机器人（LQR + 神经网络策略克隆）: './ground/balance_bot.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
