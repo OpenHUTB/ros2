@@ -59,6 +59,7 @@ python3 scripts/main.py
 ## 5 运行效果
 
 仿真现象：
+https://github.com/yi-lu-ping-an/ros2/blob/add-mujoco-aeb/docs/img/aeb_demo.gif
 
 - 仿真初期自车匀速向前行驶，前车保持静止，TTC 数值持续下降；
 - TTC 下降至设定安全阈值后 AEB 系统触发，输出平滑增大的制动力，自车开始减速；
