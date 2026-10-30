@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>drone_trajectory_logger</name>
+  <version>0.0.0</version>
+  <description>Drone flight status recognition and trajectory plotting module</description>
+  <maintainer email="3523828193@qq.com">student</maintainer>
+  <license>MIT</license>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>matplotlib</depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

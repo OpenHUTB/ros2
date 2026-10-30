@@ -1,0 +1,8 @@
+{
+  "rejected_episode": "episode_308",
+  "reason": "duplicate timestamps; maximum time gap 0.576 s",
+  "rejected_sha256": "458477bef0626ad340c9c77fa16c623e5d101d272d8fe7184b9498eb18b758a0",
+  "replacement_sha256": "b76d889d5b605d2d65737241ebdb7ac792a137f702531199a1c021530e075bc0",
+  "same_seed_and_trajectory_parameters": true,
+  "replacement_before_any_final_model_evaluation": true
+}

@@ -1,0 +1,14 @@
+<launch>
+  <!-- 神经网络逆模型到达：sim 节点 + NN 节点，
+       用 rostopic pub /msk_hand/target 发目标点 -->
+  <arg name="viewer" default="false"/>
+
+  <node pkg="mujoco_msk_hand_teleop" type="msk_hand_sim_node.py"
+        name="msk_hand_sim_node" output="screen">
+    <param name="scene" value="free"/>
+    <param name="viewer" value="$(arg viewer)"/>
+  </node>
+
+  <node pkg="mujoco_msk_hand_teleop" type="msk_hand_nn_node.py"
+        name="msk_hand_nn_node" output="screen"/>
+</launch>
