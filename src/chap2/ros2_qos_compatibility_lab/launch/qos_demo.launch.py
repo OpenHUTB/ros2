@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -44,9 +45,15 @@ def generate_launch_description() -> LaunchDescription:
                 output="screen",
                 parameters=[
                     {
-                        "topic": topic,
-                        "reliability": publisher_reliability,
-                        "durability": publisher_durability,
+                        "topic": ParameterValue(topic, value_type=str),
+                        "reliability": ParameterValue(
+                            publisher_reliability,
+                            value_type=str,
+                        ),
+                        "durability": ParameterValue(
+                            publisher_durability,
+                            value_type=str,
+                        ),
                     }
                 ],
             ),
@@ -57,9 +64,15 @@ def generate_launch_description() -> LaunchDescription:
                 output="screen",
                 parameters=[
                     {
-                        "topic": topic,
-                        "reliability": subscriber_reliability,
-                        "durability": subscriber_durability,
+                        "topic": ParameterValue(topic, value_type=str),
+                        "reliability": ParameterValue(
+                            subscriber_reliability,
+                            value_type=str,
+                        ),
+                        "durability": ParameterValue(
+                            subscriber_durability,
+                            value_type=str,
+                        ),
                     }
                 ],
             ),
@@ -71,7 +84,7 @@ def generate_launch_description() -> LaunchDescription:
                 parameters=[
                     {
                         "scan_period_sec": 1.0,
-                        "topic_filter": topic,
+                        "topic_filter": ParameterValue(topic, value_type=str),
                     }
                 ],
             ),

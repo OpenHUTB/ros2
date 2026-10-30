@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -27,9 +28,13 @@ def generate_launch_description() -> LaunchDescription:
                 output="screen",
                 parameters=[
                     {
-                        "topic_filter": LaunchConfiguration("topic_filter"),
-                        "scan_period_sec": LaunchConfiguration(
-                            "scan_period_sec"
+                        "topic_filter": ParameterValue(
+                            LaunchConfiguration("topic_filter"),
+                            value_type=str,
+                        ),
+                        "scan_period_sec": ParameterValue(
+                            LaunchConfiguration("scan_period_sec"),
+                            value_type=float,
                         ),
                     }
                 ],
