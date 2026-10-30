@@ -34,7 +34,8 @@ roslaunch fixed_point_stop fixed_point_stop.launch
 
 在自己的机器上实际构建、启动、运行过：Ubuntu 20.04.6 LTS（focal）、ROS Noetic、Python 3.8.10、
 catkin 0.8.12、Gazebo 11.15.1、TurtleBot3 burger。`catkin_make` 编译通过，仿真和节点正常启动，
-小车驶向目标点并自动停车，终端输出 `ARRIVED! goal=(3.00,0.00) pos=(2.75,0.01) err=0.25m` 并打印实际位置与误差。
+小车驶向目标点并自动停车，节点输出 `定点停车启动，目标点 (1.50, 1.50)，容差 0.10 m`，到达后打印
+`已到达目标点，停车！实际位置 (x, y)，误差 d m`（含实际停点坐标与误差）。
 
 ## 声明
 

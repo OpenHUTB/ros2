@@ -68,12 +68,11 @@ roslaunch fixed_point_stop fixed_point_stop.launch target_x:=2.0 target_y:=1.0
 
 `catkin_make` 编译通过；`roslaunch turtlebot3_gazebo turtlebot3_world.launch` 正常启动仿真；
 `roslaunch fixed_point_stop fixed_point_stop.launch` 启动节点后，小车从起点驶向目标点
-并自动停车。节点终端输出：
+并自动停车。节点终端输出（以 `target_x:=3.0` 为例）：
 
 ```
-GOING STRAIGHT
-x=2.75 y=0.01 yaw=0.01 | dist=0.25 | front=10.00
-ARRIVED! goal=(3.00,0.00) pos=(2.75,0.01) err=0.25m
+定点停车启动，目标点 (3.00, 0.00)，容差 0.10 m
+已到达目标点，停车！实际位置 (2.75, 0.01)，误差 0.250 m
 ```
 
 ## 声明
