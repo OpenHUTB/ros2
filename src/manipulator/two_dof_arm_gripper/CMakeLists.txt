@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(two_dof_arm_gripper)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs geometry_msgs urdf xacro gazebo_ros robot_state_publisher controller_manager position_controllers joint_state_controller)
+catkin_package(CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs urdf xacro gazebo_ros robot_state_publisher controller_manager position_controllers joint_state_controller)
+include_directories(${catkin_INCLUDE_DIRS})
+install(PROGRAMS scripts/main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY urdf launch config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
