@@ -125,9 +125,9 @@ MuJoCo 3.1.6（`pip3 install mujoco`）、NumPy 1.24.4、colcon 0.12.1。
 话题里的 `data` 是随仿真进度递增的步数，不同次截图截到的数值不同（第 7 节那张截到 12）。
 
 ## 6. 终端截图与仿真画面
-![运行效果演示](../img/ground/2.gif)
+![终端运行记录](../img/ground/passive_walker/02_terminal.gif)
 
-![运行效果演示](../img/ground/1.gif)
+![MuJoCo 离屏渲染画面](../img/ground/passive_walker/01_simulation.gif)
 
 
 
