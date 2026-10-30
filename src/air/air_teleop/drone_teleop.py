@@ -372,8 +372,17 @@ if __name__ == '__main__':
     parser.add_argument('--ip', default='127.0.0.1', help='AirSim 服务地址，默认本机')
     parser.add_argument('--port', type=int, default=41451, help='AirSim RPC 端口，默认 41451')
     parser.add_argument('--vehicle', default='', help='载具名称，默认取仿真器里的第一架')
+    parser.add_argument(
+        '--speed',
+        type=float,
+        default=DroneTeleop.LINEAR_SPEED,
+        help='水平飞行速度，单位 m/s，默认 3.0'
+    )    
     args = parser.parse_args()
+    if not math.isfinite(args.speed) or args.speed <= 0:
+        parser.error('--speed 必须是大于 0 的有限数值')
 
+    DroneTeleop.LINEAR_SPEED = args.speed
     teleop = DroneTeleop(ip=args.ip, port=args.port, vehicle_name=args.vehicle)
     try:
         teleop.run()
