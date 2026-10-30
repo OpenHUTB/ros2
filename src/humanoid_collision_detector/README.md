@@ -10,7 +10,7 @@
 
 ## 构建
 
-```bash
+```
 mkdir -p ~/ros2_ws/src
 cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
 cd ~/ros2_ws
@@ -22,13 +22,13 @@ source install/setup.bash
 
 ## 启动
 
-```bash
+```
 ros2 launch humanoid_collision_detector main_launch.py
 ```
 
 ## 查看检测结果
 
-```bash
+```
 ros2 topic echo /distance_to_obstacle
 ros2 topic echo /collision_detected
 ros2 topic list | grep collision
@@ -38,7 +38,7 @@ ros2 topic list | grep collision
 
 ## 可视化
 
-```bash
+```
 ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
 ```
 
