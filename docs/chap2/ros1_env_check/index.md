@@ -152,7 +152,47 @@ git update-index --chmod=+x run.sh
 | 工作空间 | 含 `src/` 的工作空间根、`build/`、`devel/`、`devel` 是否在 `sys.path`、包数量 | `roslaunch` 找不到包 |
 | 文件卫生 | BOM、CRLF、`.sh` 可执行位 | 脚本无法执行或解析失败 |
 
-## 6. 已知限制
+## 6. 运行效果
+
+在 Ubuntu 20.04 + **Noetic 与 Foxy 共存**的虚拟机上实测。
+
+### 6.1 终端里选错版本时（ROS_DISTRO=foxy）
+
+```
+[WARN] 本机同时安装了 ROS 1（noetic）与 ROS 2（foxy）
+[FAIL] 当前终端是 ROS 2 环境（ROS_DISTRO=foxy，ROS_VERSION=2）
+       → 本书实验基于 ROS 1 Noetic。请【新开终端】只执行 source /opt/ros/noetic/setup.bash
+[WARN] AMENT_PREFIX_PATH 非空，说明环境里还残留 ROS 2 的路径
+[FAIL] import rospy 失败：ImportError
+```
+
+![在 Foxy 终端里运行自检：准确指出当前是 ROS 2 环境](../img/chap2/ros1_env_check/mixed_ros_terminal.png)
+
+*图 1　两种 ROS 都装了、但当前终端 source 的是 Foxy 时的输出。脚本没有笼统地报"ROS 不可用"，
+而是明确指出「本机同时装了 noetic 与 foxy」「当前终端是 ROS 2 环境」，
+并给出切回 ROS 1 的具体命令。这正是 `ROS_DISTRO was set to 'noetic' before` 这类警告的根源。*
+
+### 6.2 切到干净终端后（ROS_DISTRO=noetic）
+
+```
+== 文件卫生（扫描 /home/ros/envcheck/ros1_env_check） ==
+[ OK ] 共扫描 3 个文本文件
+[ OK ] 无 UTF-8 BOM
+[ OK ] 无 CRLF 行尾
+[ OK ] 无缺少可执行位（.sh）
+
+结果：15 项通过，2 项警告，0 项失败
+```
+
+![切到 ROS 1 干净终端后：15 项通过、0 项失败](../img/chap2/ros1_env_check/clean_ros1_terminal.png)
+
+*图 2　新开终端并 `source /opt/ros/noetic/setup.bash` 后重跑，**0 项失败**：
+`rospy` 可导入、`rosversion` 正常、BOM / CRLF / 可执行位三项文件卫生检查全部通过。
+剩下两条 WARN 都不是缺陷：一条是"本机同时装了 ROS 1 与 ROS 2"（环境事实，
+保留它是为了提醒别混用），另一条是"当前目录不在 catkin 工作空间内"——
+因为示例是把模块解压到 `~/envcheck` 单独运行；放进 `~/catkin_ws/src` 后该项会变成 OK。*
+
+## 7. 已知限制
 
 1. **可执行位检查只在 Linux/macOS 生效**。Windows 没有 POSIX 权限位，`os.access` 的 `X_OK`
    在 Windows 上只检查文件是否存在，会产生假阴性，因此脚本在 Windows 上显式跳过该项。
@@ -160,3 +200,4 @@ git update-index --chmod=+x run.sh
    但 `ROS_DISTRO` 的判断仍然有效。
 3. **自检通过不代表模块能编译**：环境自检只覆盖"环境类"问题，
    `catkin_make` 与 `roslaunch` 仍需单独执行。
+

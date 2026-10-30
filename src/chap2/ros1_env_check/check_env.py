@@ -129,7 +129,7 @@ def check_ros() -> None:
         report(WARN,
                "本机同时安装了 ROS 1（{}）与 ROS 2（{}）".format(
                    "、".join(ros1_installed), "、".join(ros2_installed)),
-               "本书实验基于 ROS 1。请**新开一个终端**，只 source "
+               "本书实验基于 ROS 1。请【新开一个终端】，只 source "
                "/opt/ros/{}/setup.bash；不要先 source ROS 2 再 catkin_make，"
                "两者混用会导致 ROS_DISTRO 冲突、catkin_make 行为异常".format(
                    ros1_installed[-1]))
@@ -148,7 +148,7 @@ def check_ros() -> None:
         report(FAIL,
                "当前终端是 ROS 2 环境（ROS_DISTRO={}，ROS_VERSION={}）".format(
                    distro, ros_version or "2"),
-               "本书实验基于 ROS 1 Noetic。**新开终端**只执行 "
+               "本书实验基于 ROS 1 Noetic。请【新开终端】只执行 "
                "source /opt/ros/noetic/setup.bash（不要再 source 那份 {}/setup.bash）；"
                "已经在同一个终端里混用过的，直接关掉终端重开最省事".format(distro))
     elif distro in ROS1_DISTROS:
@@ -217,7 +217,7 @@ def check_python() -> None:
             report(OK, f"import {name} 正常")
         except Exception as exc:                     # noqa: BLE001 - 需捕获所有导入错误
             level = FAIL if required else WARN
-            report(level, f"import {name} 失败：{type(exc).__name__}", fix)
+            report(level, f"import {name} 失败：{type(exc).__name__}: {exc}", fix)
 
     for name, fix in OPTIONAL_MODULES:
         try:
