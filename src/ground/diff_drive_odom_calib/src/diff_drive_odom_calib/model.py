@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""差速机器人的真实运动学与里程计积分（纯逻辑，不依赖 rospy）。
+"""里程计积分器与位姿工具（纯逻辑，不依赖 rospy、不依赖 MuJoCo）。
+
+注意：本模块**不负责仿真**。位姿由 MuJoCo（mujoco_env.py）积分，
+这里只提供"用编码器增量 + 标定系数反算位姿"的数学部分。
+早期版本在这里有一个解析式 DiffDrive 类充当"仿真器"，已经删除——
+那正是被指出"用六行运动学积分冒充物理仿真"的地方。
 
 两条链路刻意分开：
 
@@ -32,64 +37,6 @@ def _se2_step(pose, ds, dth):
     y += ds * math.sin(th + 0.5 * dth)
     th = wrap_angle(th + dth)
     return (x, y, th)
-
-
-class DiffDrive(object):
-    """真实机器人：把指令轮速用**真实**参数积分成真实位姿，同时输出编码器增量。
-
-    打滑建模成"轮子转了但地面没走那么多"，用一个 0 均值高斯扰动乘在轮子位移上，
-    这是非系统误差的来源 —— 标定消不掉它，只能靠统计它的散布。
-    """
-
-    def __init__(self, r_left=0.0505, r_right=0.0495, b_true=0.306,
-                 r_nominal=R_NOMINAL, b_nominal=B_NOMINAL,
-                 slip_std=0.004, tick_noise=0.0, seed=0, pose=(0.0, 0.0, 0.0)):
-        self.r_left = float(r_left)
-        self.r_right = float(r_right)
-        self.b_true = float(b_true)
-        self.r_nominal = float(r_nominal)
-        self.b_nominal = float(b_nominal)
-        self.slip_std = float(slip_std)
-        self.tick_noise = float(tick_noise)
-        self.rng = np.random.RandomState(seed)
-        self.pose = tuple(float(v) for v in pose)
-        # 累计轮子转角（编码器读数）
-        self.phi_left = 0.0
-        self.phi_right = 0.0
-
-    # ------------------------------------------------------------------
-    def reset(self, pose=(0.0, 0.0, 0.0)):
-        self.pose = tuple(float(v) for v in pose)
-        self.phi_left = 0.0
-        self.phi_right = 0.0
-
-    def wheel_speeds(self, v, w):
-        """指令 (v, ω) → 轮速，使用**标称**参数（真实驱动器的做法）。"""
-        r = self.r_nominal
-        b = self.b_nominal
-        return (v - w * b * 0.5) / r, (v + w * b * 0.5) / r
-
-    def step(self, v, w, dt):
-        """推进一步，返回本步的真实位移、转角与编码器增量。"""
-        wl, wr = self.wheel_speeds(v, w)
-        # 编码器读数：轮子实际转过的角度（含少量量化噪声）
-        dphi_l = wl * dt
-        dphi_r = wr * dt
-        if self.tick_noise > 0.0:
-            dphi_l += self.rng.normal(0.0, self.tick_noise)
-            dphi_r += self.rng.normal(0.0, self.tick_noise)
-        self.phi_left += dphi_l
-        self.phi_right += dphi_r
-
-        # 真实位移：用真实轮径 + 打滑扰动
-        slip_l = 1.0 + (self.rng.normal(0.0, self.slip_std) if self.slip_std > 0 else 0.0)
-        slip_r = 1.0 + (self.rng.normal(0.0, self.slip_std) if self.slip_std > 0 else 0.0)
-        ds_l = self.r_left * dphi_l * slip_l
-        ds_r = self.r_right * dphi_r * slip_r
-        ds = 0.5 * (ds_l + ds_r)
-        dth = (ds_r - ds_l) / self.b_true
-        self.pose = _se2_step(self.pose, ds, dth)
-        return dict(ds_true=ds, dth_true=dth, dphi_left=dphi_l, dphi_right=dphi_r)
 
 
 class OdometryIntegrator(object):
