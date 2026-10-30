@@ -23,7 +23,7 @@ include_directories(include)
 
 # collision detector library
 add_library(collision_detector_lib SHARED
-  src/collision_detector_core.cpp
+  humanoid_collision_detector/collision_detector_core.cpp
 )
 ament_target_dependencies(collision_detector_lib
   rclcpp
@@ -43,7 +43,7 @@ target_include_directories(collision_detector_lib PUBLIC
 
 # main node
 add_executable(collision_detector_node
-  src/collision_detector_node.cpp
+  humanoid_collision_detector/collision_detector_node.cpp
 )
 ament_target_dependencies(collision_detector_node
   rclcpp
@@ -61,7 +61,7 @@ target_link_libraries(collision_detector_node collision_detector_lib)
 
 # obstacle demo node
 add_executable(obstacle_demo_node
-  src/obstacle_demo_node.cpp
+  humanoid_collision_detector/obstacle_demo_node.cpp
 )
 ament_target_dependencies(obstacle_demo_node
   rclcpp
