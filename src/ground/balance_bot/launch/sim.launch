@@ -1,0 +1,7 @@
+<launch>
+  <!-- MuJoCo 平衡车仿真。键盘另开一个终端：
+         rosrun balance_bot teleop.py -->
+  <node pkg="balance_bot" type="sim_node.py" name="sim_balance" output="screen">
+    <param name="controller" value="pd"/>   <!-- pd | nn -->
+  </node>
+</launch>
