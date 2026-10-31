@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_lidar_safety_corridor</name>
+  <version>0.1.0</version>
+  <description>
+    基于 OpenHUTB/CarlaAir 激光雷达点云的无人机三维安全走廊选择、
+    自适应高度避障与世界系速度控制实验。
+  </description>
+
+  <maintainer email="Qinfy-fly@users.noreply.github.com">Qinfy-fly</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+</package>
