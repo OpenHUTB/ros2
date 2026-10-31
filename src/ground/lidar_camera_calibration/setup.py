@@ -35,8 +35,8 @@ setup(
         ],
     },
     zip_safe=True,
-    maintainer='OpenHUTB contributor',
-    maintainer_email='maintainer@example.com',
+    maintainer='lcl52555',
+    maintainer_email='lichenlin525@qq.com',
     description=(
         'ROS 2 Humble module for LiDAR-camera extrinsic calibration: '
         'synthetic multi-view chessboard scene, PnP solving and '

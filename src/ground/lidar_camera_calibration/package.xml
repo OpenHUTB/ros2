@@ -9,7 +9,7 @@
     rotation/translation errors plus noise and view-count sensitivity.
   </description>
 
-  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <maintainer email="lichenlin525@qq.com">lcl52555</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
