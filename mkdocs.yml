@@ -62,7 +62,9 @@ nav:
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
-    - 9. ROS 2: './chapter/chap9.md'
+    - 9. ROS 2:
+        - 章节首页: './chapter/chap9.md'
+        - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
