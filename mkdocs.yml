@@ -102,6 +102,7 @@ nav:
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
+    - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
