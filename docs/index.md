@@ -212,7 +212,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
-  
+
+* [水下机器人端到端深度神经网络视觉伺服控制模型](./water/rov_end_to_end_nn.md)
+
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
