@@ -1,0 +1,78 @@
+/fire_detector:
+  ros__parameters:
+    image_topic: /camera/image_raw
+    publish_debug_image: true
+    process_every_n_frames: 1
+    min_confidence: 0.45
+    min_consecutive_frames: 3
+    alert_hold_sec: 2.0
+    image_timeout_sec: 2.0
+    horizontal_fov_deg: 90.0
+
+    hsv_h_min: 0
+    hsv_h_max: 35
+    hsv_s_min: 90
+    hsv_v_min: 110
+    red_h_min: 160
+    red_h_max: 179
+    red_s_min: 110
+    red_v_min: 90
+    min_area_ratio: 0.0015
+    max_area_ratio: 0.70
+    morph_kernel: 5
+    max_detections: 3
+    min_aspect_ratio: 0.10
+    max_aspect_ratio: 8.0
+
+    # Optional ONNX classifier. Leave empty to use HSV segmentation only.
+    model_path: ''
+    model_input_size: 224
+    model_fire_class_index: 1
+    model_weight: 0.5
+
+/drone_explorer:
+  ros__parameters:
+    pose_topic: /odom
+    pose_message_type: odometry
+    alert_topic: /fire_detection/alert
+    bbox_topic: /fire_detection/bbox
+    abort_topic: /fire_detection/abort
+    cmd_vel_topic: /cmd_vel
+    land_topic: /drone/land
+
+    require_odometry: true
+    use_initial_pose_as_home: true
+    ned_input: false
+    ned_output: false
+    pose_timeout_sec: 1.5
+    alert_timeout_sec: 3.0
+    bbox_timeout_sec: 1.0
+    control_rate: 20.0
+    status_rate: 1.0
+    max_linear_speed: 2.0
+    max_vertical_speed: 1.0
+    max_angular_speed: 1.0
+
+    exploration_pattern: lawnmower
+    search_width: 12.0
+    search_height: 8.0
+    lane_spacing: 2.5
+    spiral_turns: 3.0
+    search_altitude: 3.0
+    patrol_speed: 0.8
+    return_speed: 1.0
+    vertical_speed: 0.4
+    max_yaw_rate: 0.6
+    yaw_gain: 1.2
+    waypoint_tolerance: 0.8
+
+    confirm_hover_sec: 2.0
+    alert_grace_sec: 3.0
+    evidence_sec: 12.0
+    evidence_yaw_rate: 0.5
+    return_home_tolerance: 0.6
+    max_mission_sec: 300.0
+    land_after_return: true
+    home_x: 0.0
+    home_y: 0.0
+    home_z: 0.0

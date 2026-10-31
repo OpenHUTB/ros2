@@ -140,6 +140,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
+* [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
+
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
