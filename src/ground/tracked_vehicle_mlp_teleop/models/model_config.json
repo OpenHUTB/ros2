@@ -1,0 +1,34 @@
+{
+  "input_dim": 11,
+  "hidden": [
+    64,
+    64
+  ],
+  "output_dim": 2,
+  "feature_names": [
+    "v_target",
+    "w_target",
+    "v_meas",
+    "w_meas",
+    "e_v",
+    "e_w",
+    "int_v",
+    "int_w",
+    "pitch",
+    "roll",
+    "yaw_rate"
+  ],
+  "target_scale": [
+    0.9,
+    1.6
+  ],
+  "training_samples": 3060,
+  "validation_samples": 540,
+  "best_val_loss": 0.00014242019096855074,
+  "epochs": 300,
+  "scenes": [
+    "flat",
+    "low_friction",
+    "slope"
+  ]
+}
