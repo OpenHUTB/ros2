@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """赛道与标志场景定义。
 
-世界为 8m x 8m 平面（1 px = 1 cm），小车沿圆形赛道巡航，
+MuJoCo 世界为带地面纹理的开阔场地：小车沿半径 2.5 m 的圆形赛道巡航，
 限速牌按圆周角度布置，作用域为「进入相机视野至驶离」。
 """
 import math
 
 # 世界尺度
 PX_PER_M = 100.0
-CANVAS = 800                      # 世界画布边长（px）
 TRACK_CENTER = (400, 400)         # 赛道圆心（px）
 TRACK_RADIUS = 250                # 赛道半径（px）= 2.5 m
 
@@ -18,11 +17,10 @@ TRACK_RADIUS = 250                # 赛道半径（px）= 2.5 m
 CRUISE_SPEED = 45.0 / 36.0        # 巡航 45 km/h（缩比）= 1.25 m/s
 KMH2MS = 1.0 / 36.0
 
-# 相机参数
+# 车载相机参数
 CAM_FOV_DEG = 90.0                # 水平视场角
-CAM_RANGE_M = 4.5                 # 最大视距
+CAM_RANGE_M = 4.5                 # 最大视距（真值区间计算用）
 CAM_W, CAM_H = 320, 240           # 图像分辨率
-CAM_F = 150.0                     # 简化针孔焦距（px·m）
 SIGN_PHYS_M = 0.6                 # 标志牌物理边长（m）
 SIGN_LATERAL_M = 0.55             # 牌面相对赛道边缘的外侧横向偏移（m）
 CAM_HEIGHT_M = 0.2                # 相机安装高度（m）

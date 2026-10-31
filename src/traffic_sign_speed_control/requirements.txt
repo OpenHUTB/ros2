@@ -1,3 +1,4 @@
-# 虚拟机已由 apt/预装提供：rclpy、numpy、opencv-python(python3-opencv)、pygame、PIL
-# 深度学习依赖：
+# 虚拟机已由 apt/预装提供：rclpy、numpy、opencv-python(python3-opencv)、PIL
+# 仿真器与深度学习依赖：
+mujoco>=3.0
 torch==2.4.1

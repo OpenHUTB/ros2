@@ -1,7 +1,8 @@
 # 限速标志识别与神经网络限速控制
 
-本模块对应课程任务（2）——传感器感知及运动控制：车载虚拟相机采集前视图像，
-**卷积神经网络（CNN）读取限速标志数值**，控制器据此对差速小车实施闭环限速运动控制。
+本模块对应课程任务（2）——传感器感知及运动控制：**MuJoCo 物理仿真**中车载相机采集
+前视图像，**卷积神经网络（CNN）读取限速标志数值**，控制器据此对差速小车实施闭环
+限速运动控制。
 
 > 与已有 CARLA 版交通标志识别模块的区别：`carla_traffic_sign_recognition` 与
 > `carla_tsr_ros` 使用 YOLOv8 检测 **stop sign 类别**（刹车/直行二值控制）；
@@ -10,8 +11,8 @@
 
 ## 功能
 
-- 圆形赛道差速小车巡航（预瞄 P 控制横向，速度闭环纵向）
-- 虚拟前视相机（320x240，10 Hz）：针孔投影渲染标志牌，支持旋转/模糊/暗光/噪声退化
+- MuJoCo 圆形赛道差速小车巡航（刚体动力学推进，预瞄 P 控制横向，速度闭环纵向）
+- 车载前视相机（320x240，10 Hz）：MuJoCo 离屏渲染标志牌，支持旋转/模糊/暗光/噪声退化
 - 感知流水线：HSV 红圈定位 → 圆内字符切分 → DigitCNN 字符识别 → 位值组合 → 滑窗防抖
 - 限速器：目标速度取巡航与限速的较小值，加速度限幅平滑减速，驶离视野后延时解除
 - 一键 launch 启动；预置 3 个场景（基准/强退化/密集牌序）；离屏渲染帧可一键合成 GIF
@@ -20,7 +21,7 @@
 
 ```mermaid
 graph LR
-    W[world_node<br/>运动学+虚拟相机+渲染] -- "/camera/image_raw (Image)" --> D[detector_node<br/>HSV定位+CNN识别]
+    W[world_node<br/>MuJoCo 动力学+相机渲染] -- "/camera/image_raw (Image)" --> D[detector_node<br/>HSV定位+CNN识别]
     D -- "/speed_limit (Int32)" --> V[driver_node<br/>预瞄P控制+限速器]
     V -- "/cmd_vel (Twist)" --> W
     W -- "/world/odom (Odometry)" --> V
@@ -37,7 +38,7 @@ graph LR
 
 ## 环境与安装
 
-- Ubuntu 20.04 + ROS 2 Humble、Python 3.8、PyTorch ≥ 2.0 (CPU)、OpenCV、Pillow、pygame
+- Ubuntu 20.04 + ROS 2 Humble、Python 3.8、PyTorch ≥ 2.0 (CPU)、OpenCV、Pillow、MuJoCo ≥ 3.0（无头环境经 OSMesa 软渲染）
 
     cd ~/ts_ws/src
     git clone <本仓库>          # 或直接拷贝 src/traffic_sign_speed_control
@@ -57,7 +58,7 @@ graph LR
 
 | launch 参数 | 默认值 | 说明 |
 |---|---|---|
-| `render_mode` | `file` | `none` 不渲染；`file` 离屏写帧；`window` 弹出实时画布 |
+| `render_mode` | `file` | `none` 不渲染；`file` 离屏写帧（`window` 已弃用，按 `file` 处理） |
 | `frame_dir` | `/tmp/ts_frames` | file 模式帧输出目录（PNG，用于合成 GIF） |
 | `scene` | `default` | 预置场景：`default` / `degraded` / `dense` |
 
@@ -67,7 +68,7 @@ graph LR
 ![运行画布](../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_canvas.png)
 
 （左：世界画布——圆形赛道、限速牌、红色小车、HUD、相机画中画；
-右：虚拟相机原始图像与检测节点调试图像）
+右下画中画：车载相机原始图像）
 
 ![相机视角](../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_camera.png)
 
@@ -89,13 +90,19 @@ graph LR
 
 ## 原理与公式
 
-### 1. 差速小车运动学
+### 1. 差速小车刚体动力学
 
-平面一阶差速模型，位姿 (x, y, θ) 由速度指令 (v, ω) 积分得到，步长 0.02 s（50 Hz）欧拉积分：
+小车在 MuJoCo 中建模为刚体：底盘 + 两驱动轮（hinge 关节）+ 万向轮，`/cmd_vel`
+的 (v, ω) 按差速关系换算为左右轮目标转速，由速度执行器（velocity actuator）
+跟踪，物理以 2 ms 子步 implicitfast 积分推进（每 50 Hz 控制周期 10 个子步）：
 
 $$
-\dot{x} = v\cos\theta,\quad \dot{y} = v\sin\theta,\quad \dot{\theta} = \omega
+\omega_l = \frac{v - \omega \cdot b}{r},\qquad
+\omega_r = \frac{v + \omega \cdot b}{r}
 $$
+
+其中 b 为半轮距（0.095 m），r 为驱动轮半径（0.035 m）。轮地摩擦产生实际
+纵向速度与偏航角速度，里程计由 free joint 位姿差分得到。
 
 ### 2. 预瞄 P 控制（横向）
 
@@ -119,16 +126,21 @@ $$
 
 减速取 a = 1.6 m/s²，加速取 a = 1.0 m/s²，保证速度曲线连续可跟踪。
 
-### 4. 虚拟相机针孔投影
+### 4. MuJoCo 车载相机
 
-牌面中心世界坐标 S，相机焦距 f = 150 px·m，水平偏角 α、距离 d：u 为图像中牌面
-中心横坐标，s 为牌面边长（px），l_s = 0.6 m 为牌面物理尺寸；纵坐标由地平线行
-v_h 与高度差 (h_s − h_c) 求得。视场角 90°、视距 4.5 m 外不可见。
+相机刚体安装于车头（高 0.2 m，水平视场 90°，分辨率 320x240），由 MuJoCo
+离屏渲染器逐帧渲染。标志牌为边长 l_s = 0.6 m 的带纹理几何体，牌面中心
+距地 0.35 m；距离 d、水平偏角 α 时，针孔投影近似给出牌面中心的图像横坐标
+u 与牌面边长 s（像素）：
 
 $$
-u = \frac{W}{2} + f\tan\alpha,\qquad
-s = \frac{f \cdot l_s}{d}
+u \approx \frac{W}{2} + f\tan\alpha,\qquad
+s \approx \frac{f \cdot l_s}{d},\qquad
+f = \frac{W/2}{\tan(45^\circ)}
 $$
+
+渲染以 2 倍分辨率超采样后 INTER_AREA 降采样回 320x240，避免远处牌面数字
+笔画在缩采样中糊化；视距 4.5 m 外认为不可见（真值区间计算用）。
 
 ### 5. HSV 红色分割与圆形度
 
@@ -139,7 +151,7 @@ $$
 c = \frac{4\pi A}{P^2} \ge 0.6
 $$
 
-再用最小外接圆半径 r ∈ [12, 110] px 过滤。
+再用最小外接圆半径 r ∈ [15, 110] px 过滤。
 
 ### 6. 字符 CNN（DigitCNN）
 
@@ -154,10 +166,12 @@ $$
 两位数牌面按位组合 value = 10·d1 + d2，单字符牌 value = d1。任一字符置信度
 低于 0.60 时整帧判无效。
 
-### 7. 滑窗防抖
+### 7. 滑窗防抖（多数票）
 
-检测值序列进入长度 N = 3 的滑动窗口，仅当窗口内取值全部一致时更新对外发布的
-稳定值，抑制单帧误检；无牌（-1）同样需要连续 N 帧才发布。
+检测值序列进入长度 N = 5 的滑动窗口，稳定值取窗口内票数最多的非负读数
+（≥ 2 票，同票数时置信度均值决胜），上锁与改判同规则；仅当整窗均为无牌（-1）
+时才解除。相比"连续 N 帧一致"，多数票容忍退化场景下的散乱误读与掉帧，
+同时防止单帧误读翻转已生效的限速。
 
 ## 算法流程
 
@@ -166,7 +180,7 @@ $$
 ```mermaid
 graph TD
     A[相机图像 320x240] --> B[HSV 红色分割]
-    B --> C{圆形度≥0.6 且 12≤r≤110?}
+    B --> C{圆形度≥0.6 且 15≤r≤110?}
     C -- 否 --> Z[发布 -1]
     C -- 是 --> D[圆内暗色连通域字符切分]
     D --> E{1~2 个字符?}
@@ -175,7 +189,7 @@ graph TD
     F --> G{置信度≥0.60?}
     G -- 否 --> Z
     G -- 是 --> H[位值组合 v=10d1+d2]
-    H --> I[滑窗防抖 N=3]
+    H --> I[滑窗多数票防抖 N=5]
     I --> J[发布 /speed_limit]
 ```
 
@@ -194,11 +208,12 @@ stateDiagram-v2
 
 | 文件 | 类型 | 职责 |
 |---|---|---|
-| `traffic_sign_speed_control/world_node.py` | 节点 | 50 Hz 运动学积分、虚拟相机投影与退化、pygame 画布渲染与帧输出 |
+| `traffic_sign_speed_control/world_node.py` | 节点 | 构建 MuJoCo 世界、50 Hz 控制周期 mj_step 推进、里程计/相机话题发布、俯视画布渲染与帧输出 |
+| `traffic_sign_speed_control/mujoco_scene.py` | 库 | 运行时生成 MJCF（赛道纹理/限速牌/差速小车/相机）、物理推进与相机离屏渲染 |
 | `traffic_sign_speed_control/detector_node.py` | 节点 | HSV 定位 → 字符切分 → CNN 推理 → 滑窗防抖，发布 `/speed_limit` |
 | `traffic_sign_speed_control/driver_node.py` | 节点 | 限速状态机与加速度限幅、预瞄 P 横向控制，发布 `/cmd_vel` |
 | `traffic_sign_speed_control/scene.py` | 库 | 3 个预置场景定义，支持 `/world/scene_config` 运行时热切换 |
-| `traffic_sign_speed_control/sign_render.py` | 库 | 标志牌绘制（RGBA 透明四角）、字符合成与增广、字符归一化 |
+| `traffic_sign_speed_control/sign_render.py` | 库 | 标志牌纹理绘制（仿真材质与训练数据共用）、字符合成与增广、字符归一化 |
 | `traffic_sign_speed_control/model.py` | 库 | DigitCNN 网络定义与推理预处理 |
 | `scripts/train_signs.py` | 脚本 | 合成数据集生成与 CNN 训练（约 3 分钟，CPU） |
 | `scripts/evaluate_detector.py` | 脚本 | 检测器退化矩阵评测（6 种条件 × 10 类 × 100 张） |
@@ -210,8 +225,10 @@ stateDiagram-v2
 - 手工构造 `sensor_msgs/Image`（rgb8，step = width*3），零 cv_bridge 依赖；
 - 训练与推理共用 `canonicalize_char()` 字符归一化（暗像素紧裁剪 → 方形白底 →
   32×32），消除"训练字符带白边 / 相机字符满框"的分布不匹配；
-- 牌面 sprite 以 RGBA 透明四角合成进相机帧与画布，同一套 `draw_limit_sign()`
-  同时服务实时渲染与训练数据合成；
+- 牌面以程序化纹理贴附 MuJoCo 几何体，同一套 `draw_limit_sign()` 同时生成
+  仿真材质与训练数据，保证两域字形一致；
+- 车载相机 2 倍超采样渲染后 INTER_AREA 降采样，避免远处牌面笔画缩采样糊化；
+  牌面与立杆设为无碰撞（contype=0），不干扰小车动力学；
 - `run_scenes.py` 以进程组管理三节点栈（start_new_session + killpg），保证多场景
   连续评测无残留进程。
 
@@ -251,36 +268,35 @@ Adam（lr=1e-3）、batch 128、15 epoch，CPU 训练约 3 分钟。
 
 ### 场景端到端结果
 
-每个场景以 `render_mode:=none` 运行真实 ROS 系统 70 s（约 3–4 圈），指标按多圈
-区间取均值（详见 `src/traffic_sign_speed_control/artifacts/scene_eval.json`）：
+每个场景以 `render_mode:=none` 运行真实 ROS 系统 55 s（约 3–4 圈），注入场景后
+从小车复位起统计指标（详见 `src/traffic_sign_speed_control/artifacts/scene_eval.json`）：
 
 | 场景 | 标志序列 | 退化 | 检出率 | 平均识别延迟 | 平均达标时间 | 平均稳态误差 |
 |---|---|---|---|---|---|---|
-| default | 30 → 15 | 无 | 100% (2/2) | 2.35 s | 2.45 s | 0.076 m/s |
-| degraded | 30 → 15 | 旋转12°/模糊1.4/暗光/噪声 | 100% (2/2) | 2.50 s | 2.15 s | 0.103 m/s |
-| dense | 30 → 15 → 20 | 轻度 | 100% (3/3) | 3.25 s | 2.75 s | 0.219 m/s |
+| default | 30 → 15 | 无 | 100% (2/2) | 0.68 s | 1.33 s | 0.010 m/s |
+| degraded | 30 → 15 | 旋转12°/模糊1.4/暗光/噪声 | 100% (2/2) | 1.40 s | 2.95 s | 0.012 m/s |
+| dense | 30 → 15 → 20 | 轻度 | 100% (3/3) | 0.39 s | 1.66 s | 0.012 m/s |
 
 分解到逐牌（检出后能否在可见区间内把速度稳住）：
 
 | 场景 | 牌 | 延迟 (s) | 达标时间 (s) | 稳态误差 (m/s) | 超速占比 |
 |---|---|---|---|---|---|
-| default | 30 | 2.55 | 2.60 | 0.152 | 0% |
-| default | 15 | 2.15 | 2.30 | 0.000 | 0% |
-| degraded | 30 | 2.90 | 未达标 | 0.207 | 48% |
-| degraded | 15 | 2.10 | 2.15 | 0.000 | 0% |
-| dense | 30 | 4.75 | 未达标 | 0.225 | 71% |
-| dense | 15 | 2.55 | 2.75 | 0.001 | 0% |
-| dense | 20 | 2.45 | 未达标 | 0.431 | 84% |
+| default | 30 | 0.90 | 1.65 | 0.012 | 0% |
+| default | 15 | 0.45 | 1.00 | 0.008 | 0% |
+| degraded | 30 | 1.15 | 2.00 | 0.012 | 0% |
+| degraded | 15 | 1.66 | 3.90 | 0.012 | 0% |
+| dense | 30 | 0.00 | 2.83 | 0.012 | 0% |
+| dense | 15 | 0.81 | 1.35 | 0.013 | 0% |
+| dense | 20 | 0.35 | 0.80 | 0.012 | 0% |
 
-结果显示：**感知全部命中**（7/7 牌、三场景检出率均 100%）；低速牌（15）稳态
-误差接近 0，而高限速与短区间组合时（degraded-30、dense-20）达标时间超过剩余
-可见时间，稳态误差升至 0.21–0.43 m/s——主要瓶颈是"检出延迟 2–3 s + 防抖 0.3 s"
-挤占了减速窗口。
+结果显示：**感知全部命中**（7/7 牌、三场景检出率均 100%），且全部牌在可见区间内
+完成限速整定，限速区内零超速；强退化场景仅使识别延迟增加约 0.5–1.2 s、达标时间
+相应延长（degraded-15 为 3.90 s），稳态误差保持在 0.012 m/s 量级。
 
 !!! note "调参方向"
 
-    降低置信度门限、减小防抖窗口或提前预减速可进一步压缩检出延迟、
-    改善短区间场景的达标率，为已知优化方向。
+    degraded-15 与 dense-30 的达标时间仍偏长（误读抑制与起步加速挤占减速窗口），
+    可通过预瞄提前减速进一步压缩。
 
 三场景速度跟踪曲线：
 
@@ -293,21 +309,23 @@ Adam（lr=1e-3）、batch 128、15 epoch，CPU 训练约 3 分钟。
 结果复现：
 
     python3 src/traffic_sign_speed_control/scripts/evaluate_detector.py
-    python3 src/traffic_sign_speed_control/scripts/run_scenes.py --duration 70
+    python3 src/traffic_sign_speed_control/scripts/run_scenes.py --duration 55
 
 ### 端到端延迟
 
 感知单帧耗时（ROI 定位 + 字符切分 + CNN 推理）实测约 **2.5 ms**（CPU i5 级虚拟机
 6 核，20 帧均值），相机 10 Hz 下感知链路不构成瓶颈；从牌面进入视野到限速生效的
-端到端延迟主要由防抖窗口（3 帧 ≈ 0.3 s）、小尺寸牌面的识别置信度积累与控制周期
-（0.05 s）共同决定。
+端到端延迟主要由多数票防抖（5 帧窗口 ≈ 0.2–0.5 s）、小尺寸牌面的识别置信度积累与
+控制周期（0.05 s）共同决定。
 
 ## 已知限制
 
-- 虚拟相机的道路背景为程序化简化渲染，未建模透视畸变与运动模糊的耦合；
+- MuJoCo 场景为程序化材质与光照渲染，未覆盖真实相机的畸变、曝光与运动模糊；
 - 限速作用域为"牌面可见区间"，未建模真实交规中区段限速的延续语义
   （可通过增加"解除限速"牌类扩展）；
-- 字符分割对极端透视形变（牌面倾斜 > 15°）鲁棒性有限；
+- 字符分割对极端透视形变（牌面斜视 > 45°）鲁棒性有限，牌面朝向已按来车方向
+  预瞄摆放以缓解；
+- 无 GPU 环境依赖 OSMesa 软件渲染，渲染帧率受 CPU 限制；
 - 训练与测试均基于同一程序化渲染管线，未验证真实相机实拍图像。
 
 ## 大模型使用声明

@@ -114,6 +114,8 @@ def _kill_stack(proc):
     sp.run(["pkill", "-9", "-f",
             "install/traffic_sign_speed_control/lib/"],
            check=False, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+    sp.run(["ros2", "daemon", "stop"], check=False,
+           stdout=sp.DEVNULL, stderr=sp.DEVNULL)   # 清残留 DDS 发现缓存
     time.sleep(1.0)
 
 
@@ -130,6 +132,10 @@ def evaluate_scene(name, cfg, duration, log):
     col.inject({"name": name,
                 "signs": [{"angle": s.angle_deg, "value": s.value_kmh} for s in signs],
                 "degrade": cfg.get("degrade", {})})
+    time.sleep(1.0)                # 等待复位稳定
+    col.rows.clear()               # 丢弃注入期间（复位前）的采样：
+    col.t0 = None                  # 注入会重建世界并把小车传回起点，
+    col.last_limit = -1            # 复位前的视野区间不应计入真值窗口
     t_start = time.time()
     while time.time() - t_start < duration:
         col.rclpy.spin_once(col.node, timeout_sec=0.2)

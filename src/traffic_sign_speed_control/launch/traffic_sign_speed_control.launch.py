@@ -4,7 +4,7 @@
 用法：
   ros2 launch traffic_sign_speed_control traffic_sign_speed_control.launch.py
 可选参数：
-  render_mode:=none|file|window  渲染模式（默认 file，帧写入 frame_dir）
+  render_mode:=none|file         渲染模式（默认 file，帧写入 frame_dir）
   frame_dir:=/tmp/ts_frames      file 模式帧输出目录
   scene:=default|degraded|dense  预置场景
 """

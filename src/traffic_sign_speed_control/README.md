@@ -2,7 +2,7 @@
 
 基于 CNN 限速标志识别的车辆运动控制（ROS 2 Humble，任务二：传感器感知及运动控制）。
 
-自研轻量世界节点（差速运动学 + 虚拟前视相机 + pygame 渲染），
+MuJoCo 物理仿真世界（差速底盘刚体动力学 + 车载前视相机离屏渲染），
 感知流水线：HSV 红圈定位 → 字符切分 → DigitCNN（0-9）→ 位值组合 → 滑窗防抖；
 控制：预瞄 P 巡航 + `min(巡航, 限速)` 目标速度 + 加速度限幅。
 
@@ -15,7 +15,7 @@
     python3 src/traffic_sign_speed_control/scripts/train_signs.py
     ros2 launch traffic_sign_speed_control traffic_sign_speed_control.launch.py
 
-launch 参数：`render_mode`（none/file/window）、`frame_dir`（GIF 帧目录）、
+launch 参数：`render_mode`（none/file）、`frame_dir`（GIF 帧目录）、
 `scene`（default/degraded/dense）。
 
 ## 脚本

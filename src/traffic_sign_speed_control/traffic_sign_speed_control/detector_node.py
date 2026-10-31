@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""检测节点：虚拟相机图像 -> 限速值。
+"""检测节点：车载相机图像 -> 限速值。
 
 流水线（经典 CV 定位 + 神经网络识别）：
 1. HSV 红色分割 + 圆度/半径筛选，定位限速牌圆形 ROI；
 2. 在 ROI 内按暗色连通域切分 1~2 个数字字符；
 3. DigitCNN 逐字符分类（0-9），按位组合成限速值；
-4. 滑窗防抖后发布 /speed_limit（Int32，-1 表示视野内无牌）与置信度。
+4. 滑窗防抖后发布 /speed_limit（Int32，-1 表示视野内无牌）与置信度：
+   稳定值取窗口内票数最多的非负读数（>=2 票，置信度均值决胜），
+   上锁/改判同规则；整窗无有效读数才解除。容忍退化场景下的散乱误读。
 """
 from collections import deque
 
@@ -38,7 +40,7 @@ def find_sign_roi(bgr):
         if circularity < 0.6:      # 圆形度筛选
             continue
         (cx, cy), r = cv2.minEnclosingCircle(c)
-        if not (12 <= r <= 110):   # 合理的牌面半径范围（px）
+        if not (15 <= r <= 110):   # 合理的牌面半径范围（px）
             continue
         if best is None or area > best[3]:
             best = (int(cx), int(cy), int(r), area)
@@ -62,7 +64,6 @@ def split_chars(bgr, cx, cy, r):
     yy, xx = np.mgrid[0:h, 0:w]
     inside = (xx + x0 - cx) ** 2 + (yy + y0 - cy) ** 2 <= (r * 0.92) ** 2
     dark = ((roi < 110) & inside).astype(np.uint8) * 255
-    dark = cv2.morphologyEx(dark, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
     n, labels, stats, _ = cv2.connectedComponentsWithStats(dark, 8)
     boxes = []
     for i in range(1, n):
@@ -87,13 +88,13 @@ class DetectorNode(Node):
     def __init__(self):
         super().__init__("detector_node")
         self.declare_parameter("conf_threshold", 0.60)   # 字符置信度门限
-        self.declare_parameter("debounce_n", 3)          # 防抖窗口（帧）
+        self.declare_parameter("debounce_n", 5)          # 防抖滑窗长度（帧）
         self.declare_parameter("debug_image", True)
         self.model, self.device = load_model()
         self.conf_th = float(self.get_parameter("conf_threshold").value)
         self.debounce_n = int(self.get_parameter("debounce_n").value)
         self.debug = bool(self.get_parameter("debug_image").value)
-        self.window = deque(maxlen=self.debounce_n)
+        self.window = deque(maxlen=self.debounce_n)   # (读数, 置信度) 滑窗
         self.stable = -1
         self.stable_conf = 0.0
         self.sub = self.create_subscription(Image, "camera/image_raw",
@@ -146,11 +147,24 @@ class DetectorNode(Node):
             value, conf = self.classify(chars)
             if dbg is not None:
                 cv2.circle(dbg, (cx, cy), r, (60, 220, 60), 2)
-        # 滑窗防抖：窗口内全部一致才更新稳定值
-        self.window.append(value)
-        if len(self.window) == self.debounce_n and len(set(self.window)) == 1:
-            self.stable = value
-            self.stable_conf = conf
+        # 滑窗防抖（对称多数票）：稳定值 = 窗口内票数最多的非负读数
+        # （>=2 票，同票数时置信度均值决胜）；整窗无有效读数才解除。
+        # 对上锁与改判一视同仁，散乱误读既无法上锁也无法长期霸占稳定值。
+        self.window.append((value, conf))
+        pos = [(v, c) for v, c in self.window if v > 0]
+        if len(self.window) == self.window.maxlen and not pos:
+            self.stable = -1                 # 整窗无牌：解除
+            self.stable_conf = 0.0
+        elif pos:
+            groups = {}
+            for v, c in pos:
+                groups.setdefault(v, []).append(c)
+            best = max(groups, key=lambda v: (len(groups[v]),
+                                              float(np.mean(groups[v]))))
+            if len(groups[best]) >= 2 and best != self.stable:
+                self.stable = best
+            if self.stable == best:
+                self.stable_conf = float(np.mean(groups[best]))
         self.infer_ms = (time.perf_counter() - t0) * 1000.0
         self.pub_val.publish(Int32(data=self.stable))
         self.pub_conf.publish(Float32(data=self.stable_conf))
