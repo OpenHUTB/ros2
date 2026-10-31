@@ -1,0 +1,5 @@
+# 需先手动安装 PyTorch CPU 版本，避免拉取 CUDA：
+# pip install torch==2.4.1+cpu torchvision==0.19.1+cpu --index-url https://download.pytorch.org/whl/cpu
+opencv-python>=4.5.0
+numpy
+pillow
