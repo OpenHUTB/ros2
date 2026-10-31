@@ -368,6 +368,66 @@ def test_csv_encoding() -> None:
                 os.remove(p)
 
 
+# ------------------------------------------------- 9. 动力学模型（dynamic）
+def test_dynamic_model_closed_loop() -> None:
+    """`--model dynamic` 的回归保护。
+
+    文档 §5 写明可用 `--model dynamic` 切换二自由度动力学模型（含轮胎侧偏刚度），
+    `simulation.py` 里也实现了该分支，但此前没有任何测试真正走 ``model="dynamic"``
+    的闭环路径——只有 `DynamicBicycle` 的单步单元测试。
+    也就是说：若有人改动 dynamic 分支（轮胎模型、积分顺序、v_min 退化条件），
+    现有测试不会报错。这里补上闭环级别的冒烟保护（评审 #422 指出）。
+    """
+    path = circular_arc(radius=20.0)
+    cfg = SimulationConfig(dt=0.02, model="dynamic", duration=20.0,
+                           speed=SpeedProfile(cruise_speed=8.0))
+    tr = Simulator(path, cfg).run(Stanley(), "arc_dynamic")
+
+    # 1) 不发散：状态与输出全程有限
+    check(bool(np.all(np.isfinite(tr.x))) and bool(np.all(np.isfinite(tr.y))),
+          "dynamic: 轨迹坐标全程有限（无 NaN / inf）")
+    check(bool(np.all(np.isfinite(tr.e))) and bool(np.all(np.isfinite(tr.delta))),
+          "dynamic: 横向偏差与转角全程有限")
+    check(bool(np.all(np.isfinite(tr.v))), "dynamic: 车速全程有限")
+
+    # 2) 误差有界（圆弧半径 20 m，留足余量：允许 2 m）
+    e_max = float(np.abs(tr.e).max())
+    check(e_max < 2.0, f"dynamic: 最大横向偏差有界（{e_max:.4f} m < 2.0 m）")
+
+    # 3) 能收敛：末段稳态偏差与收敛时间都应在合理范围
+    m = evaluate(tr)
+    check(m.e_steady_abs < 0.30,
+          f"dynamic: 末段稳态偏差 < 0.30 m（实际 {m.e_steady_abs:.4f} m）")
+    check(m.convergence_time < m.duration,
+          f"dynamic: 能在时长内收敛（{m.convergence_time:.2f} s < {m.duration:.1f} s）")
+    for name, value in (("e_rms", m.e_rms), ("v_mean", m.v_mean),
+                        ("delta_max", m.delta_max_abs_deg)):
+        check(bool(np.isfinite(value)), f"dynamic: 指标 {name} 为有限值（{value:.4f}）")
+
+    # 4) 车速不越界：既不倒车（默认不允许），也不超过巡航速度
+    check(float(tr.v.min()) >= 0.0, f"dynamic: 车速不为负（最小 {tr.v.min():.4f} m/s）")
+    check(float(tr.v.max()) <= 8.0 + 1e-6, f"dynamic: 车速不超过巡航值（最大 {tr.v.max():.4f} m/s）")
+
+
+def test_dynamic_low_speed_fallback() -> None:
+    """dynamic 模型在低于 ``v_min`` 时退化为运动学模型，不应出现除零或 NaN。
+
+    ``DynamicBicycle.derivative`` 在 ``v < v_min`` 时改用运动学方程（否则式中含 1/v），
+    这条退化分支此前也没有闭环覆盖。
+    """
+    path = straight_line(length=30.0)
+    cfg = SimulationConfig(dt=0.02, model="dynamic", duration=12.0,
+                           initial_speed=1.0,
+                           speed=SpeedProfile(cruise_speed=1.5, min_speed=1.0))
+    tr = Simulator(path, cfg).run(PurePursuit(), "low_speed_dynamic")
+    check(bool(np.all(np.isfinite(tr.e))),
+          "dynamic 低速退化：横向偏差全程有限（无除零 NaN）")
+    check(bool(np.all(np.isfinite(tr.v))), "dynamic 低速退化：车速全程有限")
+    m = evaluate(tr)
+    check(np.isfinite(m.e_rms) and m.e_rms < 1.0,
+          f"dynamic 低速退化：误差 RMS 有界（{m.e_rms:.4f} m）")
+
+
 def main() -> int:
     print("=" * 72)
     print("横向控制对比实验台 —— 离线单元测试（不需要 ROS / 仿真器）")
@@ -380,6 +440,8 @@ def main() -> int:
     test_metrics()
     test_boundary_speed()
     test_csv_encoding()
+    test_dynamic_model_closed_loop()
+    test_dynamic_low_speed_fallback()
     print("\n" + "=" * 72)
     print(f"通过 {PASS} 项，失败 {FAIL} 项")
     print("=" * 72)

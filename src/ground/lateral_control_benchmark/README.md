@@ -1,4 +1,4 @@
-# lateral_control_benchmark
+﻿# lateral_control_benchmark
 
 地面载具**横向控制算法对比实验台**：把三种最常用的横向控制器放在**同一车辆模型、同一参考轨迹、同一套指标**下做定量比较。
 
@@ -146,4 +146,4 @@ results/                      运行产物（CSV/JSON/PNG），均由脚本现�
 ## 7. 大模型使用声明
 
 本模块的代码、文档与实验脚本在编写过程中使用了 AI 编程助手（DeepSeek）辅助生成与调试；
-所有指标均来自本机实际运行（`results/metrics.csv`），提交内容由提交者负责。
+所有指标均由 `python3 main.py --mode bench` 现场生成（`results/` 已加入 .gitignore，不入库），提交内容由提交者负责。
