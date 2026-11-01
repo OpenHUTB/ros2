@@ -44,6 +44,8 @@ def _score_altitudes(points, position, goal, params):
     lateral = horizontal.dot(right)
 
     mask = (
+        (along > 0.0)
+        &
         (distance >= float(params["lookahead_min"]))
         & (distance <= float(params["lookahead_max"]))
         & (np.abs(lateral) <= float(params["half_width"]))

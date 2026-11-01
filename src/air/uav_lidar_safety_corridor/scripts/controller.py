@@ -37,6 +37,11 @@ def bearing_error_deg(position, goal, heading_rad):
     return abs(math.degrees(delta))
 
 
+def body_frame_is_safe(value):
+    """只有显式设置为 false 才允许发布世界系速度."""
+    return value is not None and not bool(value)
+
+
 def _accel_limit(target, current, maximum, dt):
     limit = maximum * max(dt, 0.0)
     delta = np.clip(target - current, -limit, limit)

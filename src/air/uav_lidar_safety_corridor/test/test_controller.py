@@ -11,7 +11,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
 )
 
-from controller import bearing_error_deg, compute_velocity  # noqa: E402
+from controller import bearing_error_deg, body_frame_is_safe, compute_velocity  # noqa: E402
 
 
 PARAMS = {
@@ -154,6 +154,11 @@ class ControllerTest(unittest.TestCase):
             ),
             179.0,
         )
+
+    def test_body_frame_requires_explicit_false(self):
+        self.assertTrue(body_frame_is_safe(False))
+        self.assertFalse(body_frame_is_safe(True))
+        self.assertFalse(body_frame_is_safe(None))
 
 
 if __name__ == "__main__":

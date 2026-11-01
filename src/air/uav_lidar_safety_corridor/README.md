@@ -49,8 +49,12 @@ source devel/setup.bash
 ```bash
 roslaunch carlair_ros_bridge main.launch \
   body_frame:=false \
-  publish_image:=false
+  publish_image:=true
 ```
+
+`publish_image:=true` 会同时发布 `/camera/depth`，是深度近距离保护的必需输入。
+若显式关闭图像，应把 `control/depth_enabled` 参数设为 `false`，并接受没有
+深度保护的前向飞行流程。
 
 确认传感器已经发布：
 
@@ -88,11 +92,12 @@ roslaunch uav_lidar_safety_corridor main.launch \
 
 ```bash
 roslaunch uav_lidar_safety_corridor openhutb_test.launch \
-  host:=192.168.237.1 \
-  goal_x:=0.0 goal_y:=0.0 goal_z:=0.0
+  host:=192.168.94.1 \
+  goal_x:=-2.54 goal_y:=1.60 goal_z:=3.0
 ```
 
-`goal_*` 是相对初始位置的 ENU 偏移。用于短距离测试时可直接改这三个值。
+`goal_*` 是相对初始位置的 ENU 偏移。`host` 需替换为本机 VMware VMnet8
+宿主机地址。一键 launch 默认目标为上升 3 m、前飞约 3 m。
 
 ## 话题
 

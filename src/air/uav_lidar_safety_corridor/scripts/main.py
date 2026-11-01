@@ -18,7 +18,11 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from controller import bearing_error_deg, compute_velocity  # noqa: E402
+from controller import (  # noqa: E402
+    bearing_error_deg,
+    body_frame_is_safe,
+    compute_velocity,
+)
 from corridor import choose_altitude, distance_to_points  # noqa: E402
 from depth_guard import (  # noqa: E402
     central_min_depth,
@@ -92,15 +96,16 @@ class SafetyCorridorNode:
         )
 
         body_frame = rospy.get_param("control/body_frame", None)
+        self.body_frame_safe = body_frame_is_safe(body_frame)
         if body_frame is None:
-            rospy.logwarn(
-                "未读到 control/body_frame；请确认 carlair_ros_bridge "
-                "使用 body_frame:=false，否则速度会按机体系解释"
+            rospy.logerr(
+                "未读到 control/body_frame；安全策略将拒绝飞行。"
+                "请使用 body_frame:=false 启动桥接"
             )
         elif bool(body_frame):
             rospy.logerr(
                 "control/body_frame=true，但本节点发布世界 ENU 速度；"
-                "请用 body_frame:=false 重新启动桥接"
+                "安全策略将拒绝飞行，请用 body_frame:=false 重新启动桥接"
             )
 
         self.latest_odom = None
@@ -247,6 +252,10 @@ class SafetyCorridorNode:
         self.marker_pub.publish(MarkerArray(markers=[sphere, line, text]))
 
     def _step_once(self):
+        if not self.body_frame_safe:
+            self._publish_stop()
+            self._publish_status("REJECTED body_frame_not_false")
+            return
         if self.latest_odom is None:
             self._publish_stop()
             self._publish_status("WAIT_ODOM")

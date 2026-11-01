@@ -70,8 +70,11 @@ $d_{\min} \le d \le d_{\max}$、横向宽度 $|y| \le w$ 的走廊内统计
 ```bash
 roslaunch carlair_ros_bridge main.launch \
   body_frame:=false \
-  publish_image:=false
+  publish_image:=true
 ```
+
+深度保护依赖桥接发布的 `/camera/depth`，因此这里必须开启图像。若关闭图像，
+应同时禁用深度保护，并明确该次运行不能复现深度减速结果。
 
 确认 `/uav/odom` 和 `/lidar/points` 正常后启动实验：
 
@@ -105,7 +108,7 @@ RViz 中添加 `MarkerArray` 话题
 | 模拟器 | OpenHUTB / CarlaAir，Town10HD Opt |
 | 虚拟机 | Ubuntu 20.04.6 |
 | ROS | Noetic 1.17.4 |
-| 飞控接口 | AirSim `Drone1`，VMware VMnet8 `192.168.237.1:41451` |
+| 飞控接口 | AirSim `Drone1`，VMware VMnet8 `<宿主机IP>:41451` |
 | 感知 | 16 线 `lidar1` + 640×480 `front_depth` |
 
 桥接自检 5/5 通过；单帧雷达约 2300 个点。最终验收飞行使用相对目标

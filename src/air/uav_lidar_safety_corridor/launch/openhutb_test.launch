@@ -1,11 +1,11 @@
 <launch>
-  <arg name="host" default="192.168.237.1"/>
+  <arg name="host" default="192.168.94.1"/>
   <arg name="vehicle_name" default="Drone1"/>
   <arg name="publish_image" default="true"/>
 
-  <arg name="goal_x" default="0.0"/>
-  <arg name="goal_y" default="0.0"/>
-  <arg name="goal_z" default="0.0"/>
+  <arg name="goal_x" default="-2.54"/>
+  <arg name="goal_y" default="1.60"/>
+  <arg name="goal_z" default="3.0"/>
 
   <!-- One command starts both the AirSim bridge and the safety-corridor node. -->
   <include file="$(find carlair_ros_bridge)/launch/main.launch">

@@ -52,6 +52,20 @@ class CorridorTest(unittest.TestCase):
         self.assertAlmostEqual(choice.target_z, 6.0)
         self.assertEqual(choice.corridor_points, 0)
 
+    def test_obstacle_behind_is_ignored(self):
+        points = np.array(
+            [[-1.0, 0.0, 2.0], [-2.0, 0.0, 2.0]],
+            dtype=np.float64,
+        )
+        choice = choose_altitude(
+            points,
+            np.array([0.0, 0.0, 2.0]),
+            np.array([5.0, 0.0, 2.0]),
+            PARAMS,
+        )
+        self.assertAlmostEqual(choice.target_z, 2.0)
+        self.assertEqual(choice.corridor_points, 0)
+
     def test_distance_to_empty_cloud_is_infinite(self):
         self.assertTrue(
             np.isinf(distance_to_points(np.zeros(3), np.empty((0, 3))))
