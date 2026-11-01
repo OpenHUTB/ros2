@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- 端到端 CNN 视觉驾驶（任务 4）：深度图 -> 网络 -> /cmd_vel -->
+<launch>
+  <arg name="scene" default="obstacle_field"/>
+  <arg name="seed" default="0"/>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="sim_node.py" name="humanoid_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+  </node>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="e2e_node.py" name="humanoid_e2e" output="screen"/>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="metrics_node.py" name="humanoid_metrics" output="screen">
+    <param name="mode" value="e2e"/>
+    <param name="scene" value="$(arg scene)"/>
+    <param name="output" value="$(find humanoid_mujoco_slam_nn_nav)/results/ros_e2e_$(arg scene).json"/>
+  </node>
+</launch>

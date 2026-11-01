@@ -80,6 +80,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
 
+* [人形机器人 MuJoCo 建图导航与神经网络控制](./humanoid/humanoid_mujoco_slam_nn_nav.md)
+
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
