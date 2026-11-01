@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros1_message_time_sync</name>
+  <version>0.1.0</version>
+  <description>
+    ROS Noetic 多传感器话题时间同步演示。
+  </description>
+  <maintainer email="3173240490@qq.com">Qinfy-fly</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>message_filters</depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <test_depend>python3-nose</test_depend>
+</package>

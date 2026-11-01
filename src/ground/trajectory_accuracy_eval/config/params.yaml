@@ -1,0 +1,21 @@
+# 轨迹/里程计精度评估 —— ROS 1 运行参数
+# 由 launch/main.launch 在顶层加载（根键即节点名，落在各自私有命名空间下），
+# 再用 <arg>/<param> 覆盖。
+
+sim_odom_publisher:
+  # 演示用的真值轨迹形状：straight / circle / figure8 / sine
+  kind: "figure8"
+  speed: 1.5                 # 行驶速度 m/s
+  duration: 40.0             # 回放时长 s
+  wheel_scale: 1.02          # 轮半径尺度误差（1.02 = 每 100 m 多算 2 m）
+  yaw_bias_deg_per_m: 0.0    # 每米航向偏置（度/米），模拟陀螺零偏
+  rate_hz: 20.0              # 发布频率 Hz
+  loop: true                 # 回放结束后是否循环
+
+traj_eval_node:
+  match_tolerance: 0.05      # 真值与里程计配对的时间容差 s
+  report_period: 3.0         # 报告周期 s
+  rpe_delta: 10              # 计算 RPE 的相对间隔（帧）
+  min_pairs: 20              # 至少多少组配对才开始评估
+  align: true                # ATE 是否做刚体对齐（不吸收尺度误差）
+  output_dir: "~/traj_eval_out"  # 退出时保存结果的目录
