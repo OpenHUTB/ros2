@@ -53,9 +53,14 @@ ament_target_dependencies(obstacle_demo_node
   geometry_msgs
 )
 
-# install
+# install：库装到 lib，可执行文件装到 lib/${PROJECT_NAME}（ROS 2 约定）
+install(TARGETS collision_detector_lib
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 install(TARGETS
-  collision_detector_lib
   collision_detector_node
   obstacle_demo_node
   DESTINATION lib/${PROJECT_NAME}
