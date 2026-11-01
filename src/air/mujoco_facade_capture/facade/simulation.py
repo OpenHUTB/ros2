@@ -65,15 +65,19 @@ class FacadeSimulation:
             self.renderer = None
 
 
-def expert_velocity(error: np.ndarray) -> np.ndarray:
-    """输出幅值受限的比例速度；供基线及监督标签使用。"""
-    return np.clip(1.1 * np.asarray(error), -1., 1.)
+def expert_velocity(error: np.ndarray, velocity: np.ndarray | None = None) -> np.ndarray:
+    """输出幅值受限的比例速度；训练标签可增加速度阻尼。"""
+    command = 1.1 * np.asarray(error)
+    if velocity is not None:
+        command -= .5 * np.asarray(velocity)
+    return np.clip(command, -1., 1.)
 
 
 def run_scan(output: Path, style: str = "grid", duration: float = 70.,
              distance: float = 4., offset: float = 0., capture: bool = True,
-             policy: Callable[[np.ndarray, np.ndarray], np.ndarray] | None = None,
-             frame_hook: Callable[[FacadeSimulation, np.ndarray, np.ndarray], None] | None = None) -> dict:
+             policy: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None = None,
+             frame_hook: Callable[[FacadeSimulation, np.ndarray, np.ndarray], None] | None = None,
+             control_hook: Callable[[np.ndarray, np.ndarray, np.ndarray, np.ndarray], None] | None = None) -> dict:
     """执行完整扫描；输出轨迹、照片与带单位的实测指标。"""
     if duration <= 0 or not np.isfinite(duration):
         raise ValueError("运行时长必须为正的有限数")
@@ -89,13 +93,16 @@ def run_scan(output: Path, style: str = "grid", duration: float = 70.,
             error = target - sim.position
             projected = ray_features(sim.ranges())
             measured_distance = float(np.nanmedian(projected))
+            error[1] = measured_distance - distance
+            velocity = sim.velocity
             if not np.isfinite(measured_distance):
                 command = np.zeros(3)
             elif policy is None:
-                error[1] = measured_distance - distance
                 command = expert_velocity(error)
             else:
-                command = policy(error, sim.ranges())
+                command = policy(error, sim.ranges(), velocity)
+            if control_hook is not None:
+                control_hook(error.copy(), sim.ranges(), velocity, np.asarray(command).copy())
             sim.step(command)
             if step % 20 == 0:
                 rows.append([sim.data.time, *sim.position, *sim.velocity, measured_distance, index])
