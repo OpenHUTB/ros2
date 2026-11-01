@@ -24,8 +24,9 @@ ament_target_dependencies(collision_detector_lib
   std_msgs
   geometry_msgs
   visualization_msgs
-  Eigen3
 )
+# Eigen3 不是 ament 包，必须直接链接 CMake target 才能传递头文件路径
+target_link_libraries(collision_detector_lib Eigen3::Eigen)
 target_include_directories(collision_detector_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -40,9 +41,8 @@ ament_target_dependencies(collision_detector_node
   std_msgs
   geometry_msgs
   visualization_msgs
-  Eigen3
 )
-target_link_libraries(collision_detector_node collision_detector_lib)
+target_link_libraries(collision_detector_node collision_detector_lib Eigen3::Eigen)
 
 # obstacle demo node
 add_executable(obstacle_demo_node
@@ -77,7 +77,7 @@ install(DIRECTORY rviz
 ament_export_include_directories(include)
 ament_export_libraries(collision_detector_lib)
 ament_export_dependencies(
-  rclcpp std_msgs geometry_msgs visualization_msgs Eigen3
+  rclcpp std_msgs geometry_msgs visualization_msgs
 )
 
 if(BUILD_TESTING)
