@@ -1,10 +1,8 @@
 #ifndef HUMANOID_COLLISION_DETECTOR__COLLISION_DETECTOR_HPP_
 #define HUMANOID_COLLISION_DETECTOR__COLLISION_DETECTOR_HPP_
 
-#include <memory>
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <cmath>
 
 #include "rclcpp/rclcpp.hpp"
@@ -14,10 +12,6 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
-#include "shape_msgs/msg/solid_primitive.hpp"
-#include "tf2_ros/transform_listener.h"
-#include "tf2_ros/buffer.h"
-#include "tf2_eigen/tf2_eigen.hpp"
 
 #include <Eigen/Dense>
 
@@ -40,16 +34,15 @@ struct CollisionBody {
   std::string name;           // 连杆名称
   CollisionType type;
   Eigen::Vector3d size;       // 尺寸参数 (box: xyz, sphere: x=radius, cylinder: x=radius, y=height)
-  Eigen::Vector3d position;   // 当前世界坐标
+  Eigen::Vector3d position;   // 世界坐标
   Eigen::Quaterniond rotation;
-  Eigen::Vector3d local_position;  // 建模时的本地偏移 (相对 link 原点), 用于 TF 变换
 };
 
 /**
  * @brief 检测结果
  */
 struct DetectionResult {
-  bool collision_detected;
+  bool collision_detected;    // 障碍物是否已进入安全边界
   double min_distance;
   std::string closest_body;
   Eigen::Vector3d closest_point_on_body;
@@ -59,6 +52,8 @@ struct DetectionResult {
 
 /**
  * @brief 碰撞体边界检测器核心类
+ *
+ * 当前仅支持静态简化碰撞体：碰撞体位置在注册时确定，运行期不再更新。
  */
 class CollisionDetector
 {
@@ -67,21 +62,15 @@ public:
   ~CollisionDetector();
 
   /**
-   * @brief 手动添加一个碰撞体（节点层负责从URDF解析然后调用这里）
+   * @brief 手动添加一个碰撞体
    */
   void addCollisionBody(const CollisionBody & body);
-
-  /**
-   * @brief 更新所有碰撞体的世界位置（根据TF）
-   * @param transforms TF变换表 (link_name -> world transform)
-   */
-  void updateTransforms(const std::unordered_map<std::string, Eigen::Isometry3d> & transforms);
 
   /**
    * @brief 检测障碍物与所有碰撞体的边界距离
    * @param obstacle_pos 障碍物世界坐标
    * @param obstacle_radius 障碍物近似半径
-   * @param safety_boundary 安全边界膨胀系数
+   * @param safety_boundary 安全边界阈值
    */
   DetectionResult detect(
     const Eigen::Vector3d & obstacle_pos,

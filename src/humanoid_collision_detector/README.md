@@ -6,11 +6,13 @@
 
 - Ubuntu 22.04
 - ROS 2 Humble
-- 依赖：`rclcpp std_msgs geometry_msgs visualization_msgs shape_msgs tf2 tf2_ros tf2_eigen urdf Eigen3`
+- 依赖：`rclcpp std_msgs geometry_msgs visualization_msgs eigen`
+
+> 本模块当前只支持静态简化碰撞体：12 个碰撞体的位姿在节点启动时确定，运行期不做 TF/URDF 跟踪。
 
 ## 构建
 
-```
+```bash
 mkdir -p ~/ros2_ws/src
 cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
 cd ~/ros2_ws
@@ -22,13 +24,13 @@ source install/setup.bash
 
 ## 启动
 
-```
+```bash
 ros2 launch humanoid_collision_detector main_launch.py
 ```
 
 ## 查看检测结果
 
-```
+```bash
 ros2 topic echo /distance_to_obstacle
 ros2 topic echo /collision_detected
 ros2 topic list | grep collision
@@ -38,7 +40,7 @@ ros2 topic list | grep collision
 
 ## 可视化
 
-```
+```bash
 ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
 ```
 
@@ -53,7 +55,6 @@ Fixed Frame 设为 `world`，MarkerArray 话题选择 `/collision_boundary`，�
 | `safety_boundary` | 0.15 | 安全边界膨胀量（m），小于该距离判为碰撞 |
 | `obstacle_radius` | 0.20 | 障碍物近似半径（m） |
 | `check_frequency` | 100.0 | 检测频率（Hz） |
-| `base_frame` | world | 碰撞体参考坐标系 |
 | `origin_x` | 0.85 | 演示障碍物轨迹中心 x（m） |
 | `origin_y` | 0.0 | 演示障碍物轨迹中心 y（m） |
 | `origin_z` | 1.15 | 演示障碍物轨迹中心 z（m） |
@@ -64,3 +65,7 @@ Fixed Frame 设为 `world`，MarkerArray 话题选择 `/collision_boundary`，�
 ## 坐标约定
 
 所有碰撞体位置与尺寸均以 z 轴为高度方向：`BOX` 的 `size = (x, y, z)`；`CYLINDER` 的 `size = (radius, height, 0)`，高度沿 z 轴；`SPHERE` 的 `size.x()` 为半径。
+
+## 许可
+
+Apache-2.0

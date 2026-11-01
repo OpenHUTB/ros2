@@ -28,7 +28,7 @@ Visualization Manager:
         distance_indicator: true
         distance_text: true
     - Class: rviz_default_plugins/RobotModel
-      Enabled: true
+      Enabled: false
       Name: RobotModel
       Robot Description: robot_description
       Collision Enabled: false

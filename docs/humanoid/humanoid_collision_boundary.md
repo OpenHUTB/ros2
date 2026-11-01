@@ -10,7 +10,7 @@
 
 - 操作系统：Ubuntu 22.04（虚拟机）
 - ROS 2 版本：Humble
-- 依赖库：rclcpp、std_msgs、geometry_msgs、visualization_msgs、shape_msgs、tf2、tf2_ros、tf2_eigen、urdf、Eigen3
+- 依赖库：rclcpp、std_msgs、geometry_msgs、visualization_msgs、eigen
 
 ## 核心代码文件清单
 
@@ -30,8 +30,6 @@ src/
     │   └── main_launch.py                  # 一键启动文件
     ├── rviz/
     │   └── collision_boundary.rviz         # RViz2 可视化配置
-    ├── urdf/
-    │   └── humanoid.urdf.xacro             # 简化人形机器人模型
     ├── resource/                           # 资源目录
     │   └── humanoid_collision_detector     # 无后缀空文件
     ├── CMakeLists.txt                      # 构建配置
@@ -43,28 +41,28 @@ src/
 
 1. **碰撞体建模。** 每个人形部件用 BOX 或 CYLINDER 基元近似，位置与尺寸均以 z 轴为高度方向。
 2. **距离计算。** 对 BOX 取障碍物点到包围盒的有符号表面距离；对 CYLINDER 用外接盒近似；最后减去障碍物半径，得到表面间距。
-3. **风险分级。** 依据安全边界 `safety_boundary` 与距离阈值，把结果分为 safe、warning、danger、collided 四级，同时把 `collision_detected` 置位。
+3. **风险分级。** 依据安全边界 `safety_boundary` 与距离阈值，把结果分为 safe、warning、danger、collided 四级。当最近距离小于 `safety_boundary` 时，`collision_detected` 置为 `true`；距离小于 0（几何侵入）时风险等级记为 collided。
 4. **可视化。** 最近碰撞体以高亮色显示，其余碰撞体以半透明青色显示，并绘制边界线框与距离指示线。
 
 ## 运行步骤
 
 1. 新建标准工作空间并进入 src 目录：
 
-   ```
+   ```bash
    mkdir -p ~/ros2_ws/src
    cd ~/ros2_ws/src
    ```
 
 2. 从 ros2 仓库拷贝模块代码到工作空间：
 
-   ```
+   ```bash
    cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
    cd ~/ros2_ws
    ```
 
 3. 安装依赖并编译工作空间、部署环境：
 
-   ```
+   ```bash
    rosdep install --from-paths src --ignore-src -r -y
    colcon build --packages-select humanoid_collision_detector
    source install/setup.bash
@@ -72,13 +70,13 @@ src/
 
 4. 启动碰撞体边界检测节点与障碍物演示节点：
 
-   ```
+   ```bash
    ros2 launch humanoid_collision_detector main_launch.py
    ```
 
 5. 另开终端查看实时检测结果：
 
-   ```
+   ```bash
    source install/setup.bash
    ros2 topic echo /distance_to_obstacle
    ros2 topic echo /collision_detected
@@ -86,7 +84,7 @@ src/
 
 6. 可选：打开 RViz2 查看碰撞体边界可视化：
 
-   ```
+   ```bash
    ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
    ```
 
@@ -106,7 +104,6 @@ src/
 | `safety_boundary` | `0.15` | 安全边界膨胀量（m） |
 | `obstacle_radius` | `0.20` | 障碍物近似半径（m） |
 | `check_frequency` | `100.0` | 检测频率（Hz） |
-| `base_frame` | `world` | 碰撞体参考坐标系 |
 | `origin_x` / `origin_y` / `origin_z` | `0.85` / `0.0` / `1.15` | 演示障碍物轨迹中心 |
 | `amplitude` | `0.55` | 演示障碍物振幅（m） |
 | `frequency` | `1.0` | 演示障碍物角频率（rad/s） |
@@ -115,10 +112,10 @@ src/
 
 节点启动后，障碍物沿正弦轨迹在机器人前后往返。终端中可见最近距离随障碍物位置连续变化，最近碰撞体名称在头、躯干、前臂等部件间切换；当距离低于安全边界时 `collision_detected` 翻转为 `true`。
 
-![运行演示](https://raw.githubusercontent.com/Rafaye-71-star/ros2/feat/humanoid-collision-boundary/docs/img/collision_boundary_demo.gif)
+![运行演示](../img/collision_boundary_demo.gif)
 
 ## 验证范围说明
 
 本模块已在该虚拟机上完成以下验证：节点正常启动、话题正常收发、距离数值随障碍物位置连续变化、碰撞标志随安全边界正确翻转、MarkerArray 可被 RViz2 正常解析显示。
 
-碰撞体为简化几何近似（12 个基元），并非完整 URDF 碰撞模型；`use_robot_description` 默认为 `false`，当显式设为 `true` 时会解析 URDF 碰撞体，该路径尚未在真实整机模型上完成验证。
+碰撞体为简化几何近似（12 个基元），并非完整 URDF 碰撞模型。当前版本只支持静态碰撞体：位姿在节点启动时确定，运行期不做 TF/URDF 跟踪，因此不解析 `robot_description`，也不需要 `robot_state_publisher`。

@@ -11,24 +11,7 @@ CollisionDetector::~CollisionDetector() = default;
 
 void CollisionDetector::addCollisionBody(const CollisionBody & body)
 {
-  CollisionBody b = body;
-  // 记录建模时的本地偏移, 作为 TF 变换的基准, 避免逐帧累积漂移
-  b.local_position = body.position;
-  collision_bodies_.push_back(b);
-}
-
-void CollisionDetector::updateTransforms(
-  const std::unordered_map<std::string, Eigen::Isometry3d> & transforms)
-{
-  for (auto & body : collision_bodies_) {
-    auto it = transforms.find(body.name);
-    if (it != transforms.end()) {
-      const Eigen::Isometry3d & world_tf = it->second;
-      // 始终基于 local_position 重新计算, 不可在 body.position 上累加
-      body.position = world_tf.translation() + world_tf.linear() * body.local_position;
-      body.rotation = Eigen::Quaterniond(world_tf.linear());
-    }
-  }
+  collision_bodies_.push_back(body);
 }
 
 double CollisionDetector::pointToBoxDistance(
@@ -98,12 +81,13 @@ DetectionResult CollisionDetector::detect(
 
   // 判定风险等级
   constexpr double kCollisionThreshold = 0.0;
-  constexpr double kDangerThreshold = 0.15;
   constexpr double kWarningThreshold = 0.30;
 
+  // 统一语义: 障碍物一旦进入安全边界即判定为碰撞告警
+  result.collision_detected = result.min_distance < safety_boundary;
+
   if (result.min_distance < kCollisionThreshold) {
-    result.collision_detected = true;
-    result.risk_level = 3;
+    result.risk_level = 3;  // 几何侵入
   } else if (result.min_distance < safety_boundary) {
     result.risk_level = 2;  // danger zone
   } else if (result.min_distance < kWarningThreshold) {
@@ -170,8 +154,10 @@ visualization_msgs::msg::MarkerArray CollisionDetector::generateBoundaryMarkers(
       m.scale.x = m.scale.y = m.scale.z = body.size.x() * 2.0;
     } else if (body.type == CollisionType::CYLINDER) {
       m.type = visualization_msgs::msg::Marker::CYLINDER;
-      m.scale.x = m.scale.z = body.size.x() * 2.0;
-      m.scale.y = body.size.y();
+      // ROS 圆柱 Marker 约定: scale.x/scale.y = 直径, scale.z = 高度
+      m.scale.x = body.size.x() * 2.0;
+      m.scale.y = body.size.x() * 2.0;
+      m.scale.z = body.size.y();
     }
 
     markers.markers.push_back(m);
