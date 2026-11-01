@@ -10,16 +10,41 @@
 python3 -m pip install -r requirements.txt
 python3 main.py --style grid --output output/grid
 python3 main.py --controller neural --style plain --offset 0.5 --output output/neural
-python3 train.py --output output/training
+python3 train.py --epochs 60 --output output/training
 ```
 
-ROS 2 Humble 环境中可通过统一启动文件运行比例控制扫描：
+ROS 2 Humble 环境中，在构建并加载工作区后可通过统一启动文件运行神经网络控制扫描：
 
 ```bash
-ros2 launch ./launch/main.launch.py style:=grid output:=/tmp/facade_grid
+cd <工作区>
+colcon build --symlink-install --packages-select mujoco_facade_capture
+source install/setup.bash
+MUJOCO_GL=osmesa ros2 launch mujoco_facade_capture main.launch.py style:=grid output:=/tmp/facade_grid
 ```
 
-`grid`、`brick`、`plain` 分别选择网格、砖色和素色立面。输出照片、轨迹及指标位于指定目录。更改 `--offset 0.5` 可从较近壁距开始观察控制修正。
+`grid`、`brick`、`plain` 分别选择网格、砖色和素色立面。输出照片、轨迹及指标位于指定目录。`offset:=0.5` 可设置初始壁距偏移，`duration:=70.0` 设置仿真时长。
+
+节点配置为 100 Hz 控制周期，每次回调读取九束测距、计算控制指令，并按 MuJoCo 时间步推进物理状态；当前场景每周期推进一个 0.01 秒物理步。相机每十个控制周期发布一帧，实际墙钟频率受渲染和运行负载影响。ROS 话题如下：
+
+| 话题 | 类型 | 作用 |
+|---|---|---|
+| `/facade/image` | `sensor_msgs/msg/Image` | 发布 RGB 相机图像 |
+| `/facade/range` | `std_msgs/msg/Float32MultiArray` | 发布九束测距值，单位为米 |
+| `/facade/cmd_vel` | `geometry_msgs/msg/Twist` | 发布当前线速度控制指令 |
+| `/facade/cmd_vel_override` | `geometry_msgs/msg/Twist` | 接收外部线速度覆盖指令，超时后恢复自主控制 |
+| `/facade/status` | `std_msgs/msg/String` | 发布航点进度和任务状态 |
+
+外部覆盖指令限制在每轴 ±1 m/s，角速度字段不参与该简化飞行器模型。任务完成后节点保留运行并持续发布零速度，便于读取最终话题状态；照片、轨迹 CSV 和 `metrics.json` 写入 `output` 参数目录。
+
+可在另一个终端查看接口和发送短时速度覆盖：
+
+```bash
+ros2 topic info -v /facade/image
+ros2 topic echo /facade/range
+ros2 topic hz /facade/image
+ros2 topic pub -r 10 --times 10 /facade/cmd_vel_override geometry_msgs/msg/Twist \
+  '{linear: {x: 0.7, y: 0.0, z: 0.0}}'
+```
 
 ## 2. 航线与控制原理
 
@@ -61,9 +86,29 @@ $$ h=\max(0,\hat{x}W_1+b_1),\quad \hat{v}=\operatorname{clip}(hW_2+b_2,-1,1),\qu
 | 素色立面航点完成率 | 12 / 12 | 12 / 12 |
 | 壁距均方根误差 | 0.0651 m | 0.0748 m |
 | 最大速度 | 0.9863 m/s | 0.9847 m/s |
-| 网络对独立测试专家速度指令 MAE | 0.0164 | — |
+| 网络对独立测试专家速度指令 MAE | 0.0164 m/s | — |
 
 结果目录还会保存 `evaluation.json`、训练和测试场景清单、压缩样本以及权重文件。训练数据由脚本生成，不需要下载外部数据集。
+
+在 MuJoCo 3.12.0 中使用同一权重、4.0 m 目标壁距和 0.5 m 初始偏移，对三种外观分别执行了完整扫描。每种均到达 12 个航点；指标来自对应轨迹记录：
+
+| 立面外观 | 完成航点 | 用时 | 壁距 RMSE | 最大速度 |
+|---|---:|---:|---:|---:|
+| 网格 | 12 / 12 | 49.61 s | 0.0764 m | 0.9815 m/s |
+| 砖色 | 12 / 12 | 49.61 s | 0.0764 m | 0.9815 m/s |
+| 素色 | 12 / 12 | 49.61 s | 0.0764 m | 0.9815 m/s |
+
+三种外观共享相同的几何、测距布置和动力学参数，因此测距轨迹指标一致；该组运行用于核对不同立面外观下的扫描执行与相机取像。采集过程由每个航点的实际相机帧组成：
+
+![网格立面采集过程](../../img/air/mujoco_facade_capture/facade_scan_grid.gif)
+
+![砖色立面采集过程](../../img/air/mujoco_facade_capture/facade_scan_brick.gif)
+
+![素色立面采集过程](../../img/air/mujoco_facade_capture/facade_scan_plain.gif)
+
+三种场景的完整机器可读数据保存在 `scenario_metrics.json`；每个动图均小于 0.5 MB。
+
+ROS 2 Humble 下运行相同素色立面任务，神经网络控制完成 12 / 12 个航点，仿真用时 49.64 s，壁距 RMSE 为 0.0717 m；节点保存了 12 张前视照片、总览图和轨迹。ROS 话题检查确认图像类型为 `sensor_msgs/msg/Image`，距离数组含九个数值，外部线速度覆盖可改变控制输出与物理位移。
 
 单元测试覆盖航线输入、蛇形顺序、测距几何、力驱动位移、完整扫描、网络确定性和训练/测试场景分离：
 
@@ -71,6 +116,14 @@ $$ h=\max(0,\hat{x}W_1+b_1),\quad \hat{v}=\operatorname{clip}(hW_2+b_2,-1,1),\qu
 python3 -m pip install pytest
 python3 -m pytest test -q
 ```
+
+ROS 2 接口测试使用 `python3 -m pytest test -q`，三种立面神经网络评估与相机采集动图使用：
+
+```bash
+python3 evaluate_scenarios.py
+```
+
+脚本将各场景实测值写入 `docs/air/mujoco_facade_capture/scenario_metrics.json`，并在 `docs/img/air/mujoco_facade_capture/` 保存逐航点采集图像组成的 GIF。
 
 ## 6. 适用范围
 
