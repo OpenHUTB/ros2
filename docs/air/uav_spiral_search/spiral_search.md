@@ -98,6 +98,19 @@ bash "$REPO_DIR/src/air/uav_spiral_search/main.sh" \
 
 状态发布在 `/openhutb/spiral_search/status`（JSON 字符串），字段包括：`state`（`waiting_odom` / `climbing` / `searching` / `locked` / `exhausted` / `odom_stale`）、`search_time_s`（搜索用时）、`radius_m`（当前螺旋半径）、`path_len_m`（累计水平路程）、`confirm_frames`（当前连续检测帧数）、`target_estimate_ned`（锁定后的目标位置估计）与 `velocity_ned`。预览速度发布在 `/openhutb/spiral_search/preview_cmd_vel`。
 
+## 离线闭环仿真演示
+
+无需 AirSim 仿真器即可验证任务逻辑：`tools/simulate_mission.py` 用一阶惯性速度模型代替无人机闭环运行真实控制器代码（状态机、螺旋轨迹与锁定逻辑与实机运行完全一致）；`tools/make_demo_gif.py` 将该过程生成动画。目标位于 NED (12, −14) m、初始方位在相机视场之外时的完整任务过程：
+
+![离线闭环仿真动画](images/spiral_search_demo.gif)
+
+蓝色为无人机实际轨迹，灰色虚线为螺旋参考点，扇形为相机水平视场（目标进入视场并连续确认后扇形变红）；右侧实时显示状态、搜索半径、路程、确认帧数与目标估计。复现命令：
+
+```bash
+python3 tools/simulate_mission.py --target-x 12 --target-y -14 --plot sim.png
+python3 tools/make_demo_gif.py --target-x 12 --target-y -14 --output demo.gif
+```
+
 返回[文档目录](README.md)。
 
 ## 说明
