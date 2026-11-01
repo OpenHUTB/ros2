@@ -3,8 +3,10 @@
   <name>mrobot_navigation</name>
   <version>0.1.0</version>
   <description>
-    mrobot 激光 SLAM 建图示例：通过 launch 配置并启动 gmapping(slam_gmapping) 节点与 rviz，
-    配合 mrobot_teleop 键盘遥控完成房间建图，并用 map_server(map_saver) 保存地图。
+    mrobot 激光 SLAM 与自主导航示例：
+    1) 通过 launch 配置并启动 gmapping(slam_gmapping) 节点与 rviz，配合 mrobot_teleop 键盘遥控完成房间建图，并用 map_server(map_saver) 保存地图；
+    2) 基于 arbotix 假仿真，使用 map_server 加载已有地图、fake_localization 提供定位、move_base 完成全局/局部路径规划与实时避障，
+       支持 rviz 中 2D Nav Goal 手动导航与 random_navigation 随机自动导航。
   </description>
 
   <maintainer email="hcx@todo.todo">hcx</maintainer>
@@ -12,8 +14,15 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- 本包只提供 launch/rviz/地图，自身不含节点；运行期依赖如下 -->
+  <!-- 本包只提供 launch/rviz/地图/脚本，自身不含编译节点；运行期依赖如下 -->
+  <!-- 建图 -->
   <exec_depend>gmapping</exec_depend>
+  <!-- 导航与定位 -->
   <exec_depend>map_server</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>fake_localization</exec_depend>
+  <exec_depend>amcl</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <!-- 可视化 -->
   <exec_depend>rviz</exec_depend>
 </package>
