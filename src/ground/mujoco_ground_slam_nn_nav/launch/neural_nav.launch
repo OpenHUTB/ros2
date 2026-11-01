@@ -1,0 +1,16 @@
+<launch>
+  <!-- Neural planning + neural control variant of the full navigation stack. -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="20261026"/>
+  <arg name="viewer" default="true"/>
+  <arg name="duration" default="90"/>
+
+  <include file="$(find mujoco_ground_slam_nn_nav)/launch/slam_nav.launch">
+    <arg name="scene" value="$(arg scene)"/>
+    <arg name="seed" value="$(arg seed)"/>
+    <arg name="viewer" value="$(arg viewer)"/>
+    <arg name="duration" value="$(arg duration)"/>
+    <arg name="use_neural_planner" value="true"/>
+    <arg name="use_nn_controller" value="true"/>
+  </include>
+</launch>

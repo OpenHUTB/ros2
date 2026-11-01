@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_ground_slam_nn_nav</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 3.12.0 + ROS Noetic ground vehicle assignment:
+    physically simulated differential-drive vehicle, 360-degree lidar,
+    RGB-D/BEV cameras, online occupancy-grid SLAM, A* navigation,
+    and NumPy neural networks for perception, planning, control and
+    end-to-end vision-based driving.
+  </description>
+  <maintainer email="lxy@example.com">lxy</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+
+  <export>
+    <architecture_independent/>
+  </export>
+</package>

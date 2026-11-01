@@ -1,0 +1,46 @@
+{
+  "type": "cnn",
+  "spec": [
+    {
+      "type": "conv",
+      "cin": 3,
+      "cout": 8,
+      "k": 5,
+      "s": 2,
+      "p": 0,
+      "act": "relu"
+    },
+    {
+      "type": "pool",
+      "k": 2
+    },
+    {
+      "type": "conv",
+      "cin": 8,
+      "cout": 16,
+      "k": 3,
+      "s": 1,
+      "p": 1,
+      "act": "relu"
+    },
+    {
+      "type": "pool",
+      "k": 2
+    },
+    {
+      "type": "flatten"
+    },
+    {
+      "type": "dense",
+      "nin": 784,
+      "nout": 64,
+      "act": "relu"
+    },
+    {
+      "type": "dense",
+      "nin": 64,
+      "nout": 2,
+      "act": "tanh"
+    }
+  ]
+}
