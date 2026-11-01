@@ -14,7 +14,7 @@ void CollisionDetector::addCollisionBody(const CollisionBody & body)
   collision_bodies_.push_back(body);
 }
 
-double CollisionDetector::pointToBoxDistance(
+Eigen::Vector3d CollisionDetector::closestPointOnBox(
   const Eigen::Vector3d & point,
   const Eigen::Vector3d & box_center,
   const Eigen::Vector3d & box_size) const
@@ -25,26 +25,7 @@ double CollisionDetector::pointToBoxDistance(
   clamped.x() = std::clamp(diff.x(), -half.x(), half.x());
   clamped.y() = std::clamp(diff.y(), -half.y(), half.y());
   clamped.z() = std::clamp(diff.z(), -half.z(), half.z());
-  return (diff - clamped).norm();
-}
-
-double CollisionDetector::pointToSphereDistance(
-  const Eigen::Vector3d & point,
-  const Eigen::Vector3d & sphere_center,
-  double radius) const
-{
-  return (point - sphere_center).norm() - radius;
-}
-
-double CollisionDetector::pointToCylinderDistance(
-  const Eigen::Vector3d & point,
-  const Eigen::Vector3d & cyl_center,
-  double radius, double height) const
-{
-  // 使用外接box近似：适用于大多数机器人碰撞体检测场景
-  // 注意: 世界坐标系以 z 轴为高度方向, 因此圆柱高度对应 box 的 z 分量
-  Eigen::Vector3d box_size(radius * 2.0, radius * 2.0, height);
-  return pointToBoxDistance(point, cyl_center, box_size);
+  return box_center + clamped;
 }
 
 DetectionResult CollisionDetector::detect(
@@ -59,23 +40,32 @@ DetectionResult CollisionDetector::detect(
   result.obstacle_position = obstacle_pos;
 
   for (const auto & body : collision_bodies_) {
-    double dist = 0.0;
-    switch (body.type) {
-      case CollisionType::BOX:
-        dist = pointToBoxDistance(obstacle_pos, body.position, body.size) - obstacle_radius;
-        break;
-      case CollisionType::SPHERE:
-        dist = pointToSphereDistance(obstacle_pos, body.position, body.size.x()) - obstacle_radius;
-        break;
-      case CollisionType::CYLINDER:
-        dist = pointToCylinderDistance(obstacle_pos, body.position, body.size.x(), body.size.y()) - obstacle_radius;
-        break;
+    Eigen::Vector3d nearest;
+    double surface_distance = 0.0;
+
+    if (body.type == CollisionType::SPHERE) {
+      const Eigen::Vector3d dir = obstacle_pos - body.position;
+      const double norm = dir.norm();
+      const double radius = body.size.x();
+      nearest = norm > 1e-9 ? body.position + dir * (radius / norm)
+                           : body.position + Eigen::Vector3d(radius, 0.0, 0.0);
+      surface_distance = std::abs(norm - radius);
+    } else {
+      Eigen::Vector3d box_size = body.size;
+      if (body.type == CollisionType::CYLINDER) {
+        // 圆柱以外接盒近似，高度沿 z 轴
+        box_size = Eigen::Vector3d(body.size.x() * 2.0, body.size.x() * 2.0, body.size.y());
+      }
+      nearest = closestPointOnBox(obstacle_pos, body.position, box_size);
+      surface_distance = (obstacle_pos - nearest).norm();
     }
+
+    const double dist = surface_distance - obstacle_radius;
 
     if (dist < result.min_distance) {
       result.min_distance = dist;
       result.closest_body = body.name;
-      result.closest_point_on_body = body.position;
+      result.closest_point_on_body = nearest;
     }
   }
 
@@ -101,6 +91,7 @@ DetectionResult CollisionDetector::detect(
 
 visualization_msgs::msg::MarkerArray CollisionDetector::generateBoundaryMarkers(
   double safety_boundary,
+  double obstacle_radius,
   const DetectionResult & result)
 {
   visualization_msgs::msg::MarkerArray markers;
@@ -213,7 +204,8 @@ visualization_msgs::msg::MarkerArray CollisionDetector::generateBoundaryMarkers(
   obs.pose.position.x = result.obstacle_position.x();
   obs.pose.position.y = result.obstacle_position.y();
   obs.pose.position.z = result.obstacle_position.z();
-  obs.scale.x = obs.scale.y = obs.scale.z = 0.4;
+  // 障碍物Marker（直径与检测使用的 obstacle_radius 保持一致）
+  obs.scale.x = obs.scale.y = obs.scale.z = obstacle_radius * 2.0;
   obs.color.r = 1.0;
   obs.color.g = 0.4;
   obs.color.b = 0.4;

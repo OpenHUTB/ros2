@@ -166,7 +166,7 @@ private:
     collision_pub_->publish(col_msg);
 
     // 发布可视化Marker
-    auto markers = detector_.generateBoundaryMarkers(safety_boundary, result);
+    auto markers = detector_.generateBoundaryMarkers(safety_boundary, obstacle_radius, result);
     marker_pub_->publish(markers);
 
     // 定期日志输出

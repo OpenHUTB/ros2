@@ -36,7 +36,7 @@ ros2 topic echo /collision_detected
 ros2 topic list | grep collision
 ```
 
-默认配置下，障碍物沿正弦轨迹在机器人前后往返，`/distance_to_obstacle` 数值随障碍物位置连续变化；默认轨迹位于机器人右侧（`origin_x = 0.85`），最近碰撞体在 `R_forearm` 与 `R_upper_arm` 之间切换。实测距离在 0.018~0.780 m 之间变化，当距离低于安全边界 `safety_boundary` 时，`/collision_detected` 翻转为 `true`。
+默认配置下，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.187·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动（x 覆盖 0.30~1.40 m）。该轨迹会穿过躯干与右臂所在空间，所以 `/distance_to_obstacle` 在部分时段为负值，最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换；当距离低于安全边界 `safety_boundary` 时，`/collision_detected` 为 `true`。
 
 ## 可视化
 

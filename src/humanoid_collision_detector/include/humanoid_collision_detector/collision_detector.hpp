@@ -79,9 +79,13 @@ public:
 
   /**
    * @brief 生成RViz可视化MarkerArray
+   * @param safety_boundary 安全边界阈值
+   * @param obstacle_radius 障碍物半径（用于绘制与检测尺寸一致的障碍物球）
+   * @param result 当前检测结果
    */
   visualization_msgs::msg::MarkerArray generateBoundaryMarkers(
     double safety_boundary,
+    double obstacle_radius,
     const DetectionResult & result);
 
   /**
@@ -96,28 +100,12 @@ public:
 
 private:
   /**
-   * @brief 计算点到box的最近距离
+   * @brief 计算点到box的最近点（世界坐标，位于box表面或其内部）
    */
-  double pointToBoxDistance(
+  Eigen::Vector3d closestPointOnBox(
     const Eigen::Vector3d & point,
     const Eigen::Vector3d & box_center,
     const Eigen::Vector3d & box_size) const;
-
-  /**
-   * @brief 计算点到球体的最近距离
-   */
-  double pointToSphereDistance(
-    const Eigen::Vector3d & point,
-    const Eigen::Vector3d & sphere_center,
-    double radius) const;
-
-  /**
-   * @brief 计算点到圆柱体的最近距离（外接盒近似）
-   */
-  double pointToCylinderDistance(
-    const Eigen::Vector3d & point,
-    const Eigen::Vector3d & cyl_center,
-    double radius, double height) const;
 
   std::vector<CollisionBody> collision_bodies_;
 };
