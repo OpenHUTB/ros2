@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>6.2 gmapping 激光 SLAM 建图 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "6.2 gmapping \u6fc0\u5149 SLAM \u5efa\u56fe";
+        var mkdocs_page_input_path = "chapter/chap6/slam_02_gmapping.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item active">6.2 gmapping 激光 SLAM 建图</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap6/slam_02_gmapping.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="62-gmapping-slam">6.2 gmapping 激光 SLAM 建图</h1>
+<p>本节在 6.1 搭建好的仿真环境基础上，使用 <strong>gmapping</strong> 功能包，通过键盘遥控 mrobot 走遍房间，
+增量式地构建出二维<strong>占据栅格地图</strong>，并用 <code>map_saver</code> 把地图保存为 <code>map.pgm</code> 与 <code>map.yaml</code>。</p>
+<p>本节配套功能包位于仓库：</p>
+<div class="highlight"><pre><span></span><code>src/chap6/catkin_ws/src/mrobot_navigation/
+src/chap6/catkin_ws/src/mrobot_teleop/
+</code></pre></div>
+<h2 id="1">1. 本节目标</h2>
+<ol>
+<li>理解 gmapping 基于<strong>粒子滤波（RBPF）</strong>的建图原理与输入输出；</li>
+<li>安装并配置 <code>gmapping</code>、<code>map_server</code> 等功能包；</li>
+<li>用三个终端分别启动 Gazebo、gmapping(+rviz)、键盘遥控；</li>
+<li>遥控小车遍历房间，在 rviz 中观察地图逐步建立；</li>
+<li>用 <code>map_saver</code> 保存地图，并读懂 <code>map.yaml</code> 各字段；</li>
+<li>记录并分析高速建图产生的噪点问题，给出改进方法。</li>
+</ol>
+<h2 id="2">2. 背景知识</h2>
+<h3 id="21">2.1 占据栅格地图</h3>
+<p>二维导航中最常用的地图是<strong>占据栅格地图（Occupancy Grid Map）</strong>：把连续空间离散成大小相同的格子，
+每个格子存储一个概率值，表示该格子被障碍物占据的可能性：</p>
+<ul>
+<li>黑色（概率接近 100）：障碍物，如墙体；</li>
+<li>白色（概率接近 0）：可通行的空闲区域；</li>
+<li>灰色（未知）：尚未观测到的区域。</li>
+</ul>
+<p>栅格边长由地图分辨率决定，本节地图分辨率为 <code>0.05 m/pix</code>，即每个像素对应实际 5 厘米。</p>
+<h3 id="22-gmapping-rbpf">2.2 gmapping 与 RBPF</h3>
+<p>gmapping 是 ROS 中经典的开源激光 SLAM 包，其节点名为 <code>slam_gmapping</code>，内部采用
+<strong>Rao-Blackwellized 粒子滤波（RBPF）</strong>：</p>
+<ol>
+<li>用一组<strong>粒子</strong>表示机器人可能的位姿（位置 + 朝向）分布；</li>
+<li>每来一帧激光数据，结合里程计运动模型对每个粒子进行位姿预测；</li>
+<li>根据激光观测与地图的匹配程度给每个粒子<strong>赋权重</strong>，匹配越好权重越高；</li>
+<li>按权重<strong>重采样</strong>，丢弃低权重粒子、复制高权重粒子；</li>
+<li>对每个粒子各自维护一张地图，最终输出权重最高的地图。</li>
+</ol>
+<p>RBPF 把"定位"和"建图"两个问题分开：先估计机器人轨迹，再在已知轨迹上计算地图，
+从而降低了计算复杂度。粒子数越多越鲁棒，但计算量越大，本节配置 <code>particles=80</code>。</p>
+<h3 id="23">2.3 输入与输出</h3>
+<p><code>slam_gmapping</code> 节点的关键输入输出：</p>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题/TF</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入</td>
+<td><code>/scan</code>（<code>sensor_msgs/LaserScan</code>）</td>
+<td>激光雷达扫描数据</td>
+</tr>
+<tr>
+<td>输入</td>
+<td><code>/tf</code>：<code>odom → base_footprint → base_link → laser_link</code></td>
+<td>里程计与坐标系变换</td>
+</tr>
+<tr>
+<td>输出</td>
+<td><code>/map</code>（<code>nav_msgs/OccupancyGrid</code>）</td>
+<td>占据栅格地图</td>
+</tr>
+<tr>
+<td>输出</td>
+<td><code>/tf</code>：<code>map → odom</code></td>
+<td>地图坐标系到里程计坐标系的校正</td>
+</tr>
+</tbody>
+</table>
+<p>6.1 中 mrobot 的差速插件已提供 <code>/odom</code> 与 <code>odom → base_footprint</code> 的 TF，rplidar 插件提供
+<code>/scan</code> 与 <code>laser_link</code>，因此 gmapping 所需的话题和 TF 链在仿真中已完整。</p>
+<h2 id="3">3. 安装功能包</h2>
+<p>更新软件源并安装 gmapping、map_server 与深度图转激光（深度相机方案备用）：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ros-noetic-gmapping<span class="w"> </span>ros-noetic-map-server<span class="w"> </span>ros-noetic-depthimage-to-laserscan
+</code></pre></div>
+<p>安装过程中会自动安装其依赖（如 <code>openslam_gmapping</code>、<code>libsdl</code> 系列等）：</p>
+<p><img alt="安装 gmapping 等功能包" src="../../../img/code/chap6/27_apt_install.png"/></p>
+<p>看到 "新安装了 ... 个软件包" 且无报错即安装成功。可用以下命令确认节点存在：</p>
+<div class="highlight"><pre><span></span><code>rospack<span class="w"> </span>find<span class="w"> </span>gmapping
+rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver<span class="w"> </span>-h
+</code></pre></div>
+<h2 id="4">4. 准备功能包</h2>
+<p>gmapping 的节点参数与 rviz 配置在 <code>mrobot_navigation</code> 包中，键盘遥控在 <code>mrobot_teleop</code> 包中。
+从源码目录把这两个包（连同 <code>mrobot_description</code>）复制到工作空间 <code>src</code> 下。</p>
+<blockquote>
+<p>注意：shell 变量（如 <code>$SRC</code>）只在定义它的那个终端有效，<strong>换终端或重新登录后变量会失效</strong>。
+若变量为空，<code>cp "$SRC/..."</code> 会被展开成 <code>/robot_mrobot/...</code> 而报错。建议直接使用<strong>绝对路径</strong>，
+让每条命令自包含。</p>
+</blockquote>
+<p>本示例第一次复制时因 <code>$SRC</code> 为空而失败：</p>
+<p><img alt="变量 SRC 为空导致 cp 报错" src="../../../img/code/chap6/28_src_empty_error.png"/></p>
+<p>改用绝对路径重新复制三个包：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 若源码不存在则重新克隆</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://gitee.com/changjy/ros_exploring.git<span class="w"> </span>~/ros_exploring_src
+<span class="c1"># 用绝对路径复制</span>
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros_exploring_src/robot_mrobot/mrobot_navigation<span class="w"> </span>~/catkin_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros_exploring_src/robot_mrobot/mrobot_teleop<span class="w">     </span>~/catkin_ws/src/
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros_exploring_src/robot_mrobot/mrobot_description<span class="w"> </span>~/catkin_ws/src/
+</code></pre></div>
+<p>复制后确认四个 mrobot 包都已到位：</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>-d<span class="w"> </span>~/catkin_ws/src/mrobot_*
+</code></pre></div>
+<p><img alt="确认 mrobot 功能包到位" src="../../../img/code/chap6/29_packages_copied.png"/></p>
+<h2 id="5-ros-noetic">5. 适配 ROS Noetic</h2>
+<p>教程最初基于 ROS Kinetic（Python2），在 Noetic（Python3）下需要做两处适配。</p>
+<h3 id="51-python3">5.1 键盘脚本改为 Python3 并加可执行权限</h3>
+<p>原始 <code>mrobot_teleop/scripts/mrobot_teleop.py</code> 是 Python2 代码：</p>
+<ul>
+<li>首行解释器为 <code>#!/usr/bin/env python</code>，而 Noetic 下默认 <code>python</code> 可能不存在或指向 Python3；</li>
+<li>使用了 Python2 语法 <code>print msg</code>、<code>print vels(...)</code>、裸 <code>except:</code> 等，在 Python3 下会直接报语法错误。</li>
+</ul>
+<p>本仓库已提供修复后的脚本，主要修改：</p>
+<div class="highlight"><pre><span></span><code>#!/usr/bin/env python        →  #!/usr/bin/env python3
+print msg                   →  print(msg)
+print vels(speed,turn)      →  print(vels(speed,turn))
+except:                     →  except Exception as e:
+print e                     →  print(e)
+</code></pre></div>
+<p>同时脚本必须具备<strong>可执行权限</strong>，否则 <code>roslaunch</code> 会报
+<code>can't locate node [mrobot_teleop.py] in package [mrobot_teleop]</code>：</p>
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>~/catkin_ws/src/mrobot_teleop/scripts/mrobot_teleop.py
+</code></pre></div>
+<p>可用以下命令验证语法与权限：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>py_compile<span class="w"> </span>~/catkin_ws/src/mrobot_teleop/scripts/mrobot_teleop.py<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"键盘脚本 OK"</span>
+ls<span class="w"> </span>-l<span class="w"> </span>~/catkin_ws/src/mrobot_teleop/scripts/mrobot_teleop.py
+</code></pre></div>
+<p><img alt="键盘脚本修复并通过编译检查" src="../../../img/code/chap6/30_teleop_fixed.png"/></p>
+<h3 id="52-xacro">5.2 （可选）深度相机方案的 xacro 前缀</h3>
+<p>若使用 kinect 深度相机方案，6.1 已说明 Noetic 新版 xacro 不再展开不带 <code>xacro:</code> 前缀的宏，
+需把 <code>mrobot_with_kinect.urdf.xacro</code> 中的 <code>&lt;mrobot_body/&gt;</code> 改为 <code>&lt;xacro:mrobot_body/&gt;</code>，
+并去掉 launch 中已废弃的 <code>xacro --inorder</code>。本仓库的激光方案默认已正确，无需额外处理。</p>
+<h2 id="6">6. 编译工作空间</h2>
+<h3 id="61-move_base_msgs">6.1 缺少 move_base_msgs 的报错</h3>
+<p>首次 <code>catkin_make</code> 时，原始 <code>mrobot_navigation/CMakeLists.txt</code> 在 <code>find_package(... COMPONENTS ...)</code>
+中声明了 <code>move_base_msgs</code>。即使 gmapping 本身用不到它，catkin 在<strong>配置阶段</strong>仍会检查所有组件，
+未安装时会直接报错：</p>
+<div class="highlight"><pre><span></span><code>-- Could NOT find move_base_msgs (missing: move_base_msgs_DIR)
+CMake Error ... Could not find the required component 'move_base_msgs'.
+mrobot_navigation/CMakeLists.txt:7 (find_package)
+Invoking "cmake" failed
+</code></pre></div>
+<p><img alt="缺少 move_base_msgs 导致编译失败" src="../../../img/code/chap6/31_make_movebase_error.png"/></p>
+<p>安装缺失的消息与可视化依赖（已安装的包会提示已是最新，不影响）：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ros-noetic-move-base-msgs<span class="w"> </span>ros-noetic-visualization-msgs<span class="w"> </span><span class="se">\</span>
+<span class="w">                    </span>ros-noetic-tf<span class="w"> </span>ros-noetic-geometry-msgs
+</code></pre></div>
+<blockquote>
+<p>本仓库已精简 <code>mrobot_navigation</code> 的 <code>package.xml</code> 与 <code>CMakeLists.txt</code>，只保留 gmapping 运行期依赖，
+全新克隆并按本仓库编译时不再需要 <code>move_base_msgs</code>；此处保留该问题以复现原始教程的排错过程。</p>
+</blockquote>
+<h3 id="62">6.2 重新编译</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>编译成功，末尾出现 <code>[100%] Built target ...</code>，中间的 Gazebo "deprecated" 黄色警告可忽略：</p>
+<p><img alt="catkin_make 编译成功" src="../../../img/code/chap6/32_make_success.png"/></p>
+<h2 id="7-slam">7. 启动激光 SLAM</h2>
+<p>打开 <strong>3 个终端</strong>，每个终端都先执行一次环境加载（若 <code>~/.bashrc</code> 已配置可省略）：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+</code></pre></div>
+<p><strong>终端 1 —— 启动 Gazebo（房间 + 小车）：</strong></p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mrobot_gazebo<span class="w"> </span>mrobot_laser_nav_gazebo.launch
+</code></pre></div>
+<p>启动日志中可看到差速插件 <code>DiffDrive</code> 已订阅 <code>cmd_vel</code>、发布 <code>odom</code>，激光插件 <code>Laser Plugin</code> 启动：</p>
+<p><img alt="终端 1 启动 Gazebo 与插件" src="../../../img/code/chap6/33_gazebo_launch.png"/></p>
+<p>Gazebo 中加载出 6.1 手绘的 my_room 房间与 mrobot 小车：</p>
+<p><img alt="Gazebo 中加载房间与小车" src="../../../img/code/chap6/34_gazebo_room.png"/></p>
+<p><strong>终端 2 —— 启动 gmapping，rviz 自动打开：</strong></p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mrobot_navigation<span class="w"> </span>gmapping_demo.launch
+</code></pre></div>
+<p><code>gmapping_demo.launch</code> 先 <code>include</code> 了 <code>gmapping.launch</code>（启动 <code>slam_gmapping</code> 并加载全套参数），
+再以 <code>gmapping.rviz</code> 启动 rviz。rviz 的 Fixed Frame 为 <code>map</code>，并显示 Map(<code>/map</code>)、LaserScan(<code>/scan</code>)、
+RobotModel、TF 等：</p>
+<p><img alt="终端 2 启动 gmapping 与 rviz" src="../../../img/code/chap6/35_rviz_start.png"/></p>
+<blockquote>
+<p>日志中可能出现 <code>TF_REPEATED_DATA ... ignoring data with redundant timestamp</code> 警告，
+这是多个发布者在同一时刻发布相同时间戳的 TF 所致，不影响建图，可忽略。</p>
+</blockquote>
+<p><strong>终端 3 —— 启动键盘遥控：</strong></p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mrobot_teleop<span class="w"> </span>mrobot_teleop.launch
+</code></pre></div>
+<p>出现 <code>Control mrobot!</code> 键位界面，初始线速度 <code>speed 0.2</code>、角速度 <code>turn 1</code>：</p>
+<p><img alt="键盘遥控 Control mrobot 界面" src="../../../img/code/chap6/36_teleop_control.png"/></p>
+<h2 id="8">8. 键盘遥控建图</h2>
+<p>点击终端 3 使其获得焦点，用按键慢速驱动小车，让激光扫描覆盖整个房间：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>i</code></td>
+<td>前进（建议点按）</td>
+</tr>
+<tr>
+<td><code>,</code></td>
+<td>后退</td>
+</tr>
+<tr>
+<td><code>j</code> / <code>l</code></td>
+<td>原地左转 / 右转</td>
+</tr>
+<tr>
+<td><code>u</code> / <code>o</code></td>
+<td>前进并左转 / 右转</td>
+</tr>
+<tr>
+<td><code>m</code> / <code>.</code></td>
+<td>后退并左转 / 右转</td>
+</tr>
+<tr>
+<td><code>k</code> 或空格</td>
+<td>强制停止</td>
+</tr>
+<tr>
+<td><code>q</code> / <code>z</code></td>
+<td>同时增大 / 减小线速度和角速度 10%</td>
+</tr>
+<tr>
+<td><code>w</code> / <code>x</code></td>
+<td>只增大 / 减小线速度 10%</td>
+</tr>
+<tr>
+<td><code>e</code> / <code>c</code></td>
+<td>只增大 / 减小角速度 10%</td>
+</tr>
+</tbody>
+</table>
+<p>随着小车移动，rviz 中 <code>/map</code> 的可通行区域（白色）和墙体（黑色）不断扩大：</p>
+<p><img alt="rviz 中地图逐步建立" src="../../../img/code/chap6/37_rviz_mapping.png"/></p>
+<h3 id="81">8.1 误触加速导致速度过高</h3>
+<p>建图过程中若误按 <code>q</code>/<code>w</code> 等加速键，线速度会被持续放大。本次实操中速度一度从 0.2 增大到
+<strong>41.59 m/s</strong>（远超正常范围）。此时 rviz 中出现明显的<strong>放射状噪点</strong>，地图边缘也变得毛糙：</p>
+<p><img alt="速度过高导致放射状噪点" src="../../../img/code/chap6/38_rviz_highspeed.png"/></p>
+<p>正确处理方式是：先按 <code>k</code> 或空格停车，再 <code>Ctrl+C</code> 重启 <code>mrobot_teleop</code>（速度重置为 0.2）；
+若地图已明显错位，可一并重启 gmapping 后慢速重建。本次实操保留了该地图，其房间主体轮廓仍可辨认，
+但放射噪点客观存在，改进建议见第 11 节。</p>
+<h2 id="9">9. 保存地图</h2>
+<p>建图完成后，<strong>新开一个终端</strong>，进入要保存地图的目录，用 <code>map_server</code> 提供的 <code>map_saver</code> 保存：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src/mrobot_navigation/maps
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws/src/mrobot_navigation/maps
+rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver
+</code></pre></div>
+<p>终端显示接收到地图并依次写入两个文件：</p>
+<div class="highlight"><pre><span></span><code>[INFO] Waiting for the map
+[INFO] Received a 576 X 544 map @ 0.050 m/pix
+[INFO] Writing map occupancy data to map.pgm
+[INFO] Writing map occupancy data to map.yaml
+[INFO] Done
+</code></pre></div>
+<p><img alt="map_saver 保存地图" src="../../../img/code/chap6/39_map_saver.png"/></p>
+<p>保存后可看到两个文件：</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>-l<span class="w"> </span>map.pgm<span class="w"> </span>map.yaml
+<span class="c1"># -rw-rw-r-- ... 313396 ... map.pgm</span>
+<span class="c1"># -rw-rw-r-- ...    131 ... map.yaml</span>
+</code></pre></div>
+<h2 id="10">10. 地图文件解读</h2>
+<h3 id="101-mapyaml">10.1 map.yaml</h3>
+<p><code>map.yaml</code> 是地图的配置文件，本次实际内容：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">map.pgm</span>
+<span class="nt">resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.050000</span>
+<span class="nt">origin</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-13.800000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-13.800000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000000</span><span class="p p-Indicator">]</span>
+<span class="nt">negate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="nt">occupied_thresh</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.65</span>
+<span class="nt">free_thresh</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.196</span>
+</code></pre></div>
+<p><img alt="map.yaml 六个字段" src="../../../img/code/chap6/40_map_yaml.png"/></p>
+<p>各字段含义：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>本次取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image</code></td>
+<td><code>map.pgm</code></td>
+<td>地图图像文件路径</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td><code>0.05</code></td>
+<td>分辨率，米/像素</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td><code>[-13.8,-13.8,0]</code></td>
+<td>地图左下角在世界坐标系中的位姿（x,y,偏航角）</td>
+</tr>
+<tr>
+<td><code>negate</code></td>
+<td><code>0</code></td>
+<td>是否反转图像的黑白含义，0 表示不反转</td>
+</tr>
+<tr>
+<td><code>occupied_thresh</code></td>
+<td><code>0.65</code></td>
+<td>占据概率大于该值判为障碍物</td>
+</tr>
+<tr>
+<td><code>free_thresh</code></td>
+<td><code>0.196</code></td>
+<td>占据概率小于该值判为空闲</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-mappgm">10.2 map.pgm</h3>
+<p><code>map.pgm</code> 是 PGM（Portable Gray Map）格式的灰度图像，可用图像查看器打开。
+本次地图 576×544 像素，中部为建出的房间轮廓，周围放射状短线即高速建图产生的噪点：</p>
+<p><img alt="map.pgm 最终地图" src="../../../img/code/chap6/41_map_pgm.png"/></p>
+<h2 id="11">11. 建图质量分析与改进</h2>
+<h3 id="111">11.1 本次问题</h3>
+<ul>
+<li>遥控时误触加速键，线速度最高达 41.59 m/s，激光帧率与里程计跟不上快速运动；</li>
+<li>高速下相邻帧之间位移过大，扫描匹配退化，地图出现放射状噪点、边缘毛糙，严重时会重影错位；</li>
+<li>地图四周存在未观测的灰色区域，说明部分空间覆盖不足。</li>
+</ul>
+<h3 id="112">11.2 改进建议</h3>
+<ol>
+<li><strong>慢速建图</strong>：线速度保持 0.2 m/s 左右，转弯采用点动，避免长按方向键；</li>
+<li><strong>不要误触加速键</strong>：<code>q/w/e</code> 会放大速度，开始前确认底部为 <code>speed 0.2</code>；</li>
+<li><strong>全覆盖</strong>：规划路线走遍每个房间和角落，开门、过门时减速，减少灰色未知区；</li>
+<li><strong>走闭环</strong>：尽量回到经过的位置形成环路，利用回环修正累计误差；</li>
+<li><strong>必要时重跑</strong>：若出现明显重影，重启 gmapping 与 teleop 后慢速重建，可获得更干净的地图；</li>
+<li><strong>参数调优</strong>：环境更大时可适当增加 <code>particles</code>，并根据雷达量程调整 <code>maxUrange</code>、<code>maxRange</code>。</li>
+</ol>
+<h2 id="12">12. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>can't locate node [mrobot_teleop.py]</code></td>
+<td>脚本无可执行权限</td>
+<td><code>chmod +x</code> 对应脚本</td>
+</tr>
+<tr>
+<td><code>SyntaxError: invalid syntax</code>（print 附近）</td>
+<td>Python2 脚本跑在 Python3</td>
+<td>改为 <code>print(...)</code>，shebang 改 <code>python3</code></td>
+</tr>
+<tr>
+<td><code>cp: 无法获取 '/robot_mrobot/...'</code></td>
+<td>shell 变量为空</td>
+<td>用绝对路径，命令自包含</td>
+</tr>
+<tr>
+<td><code>Could NOT find move_base_msgs</code></td>
+<td>CMake 声明的组件未安装</td>
+<td>安装 <code>ros-noetic-move-base-msgs</code></td>
+</tr>
+<tr>
+<td>rviz 全局状态报错、无地图</td>
+<td>Fixed Frame 或 TF 错误</td>
+<td>确认 Fixed Frame 为 <code>map</code>，检查 TF 链</td>
+</tr>
+<tr>
+<td>地图放射噪点/重影</td>
+<td>速度过快、扫描匹配失败</td>
+<td>减速、全覆盖、走闭环，必要时重跑</td>
+</tr>
+<tr>
+<td><code>TF_REPEATED_DATA</code> 警告</td>
+<td>同时间戳重复 TF</td>
+<td>不影响建图，可忽略</td>
+</tr>
+</tbody>
+</table>
+<h2 id="13">13. 小结</h2>
+<p>本节完成了 gmapping 激光 SLAM 的完整流程：安装依赖 → 复制并适配功能包 → 编译 →
+三终端启动 Gazebo/gmapping/键盘 → 遥控遍历房间 → <code>map_saver</code> 保存地图，并解读了
+占据栅格地图与 <code>map.yaml</code> 的六个字段。下一节将基于保存的地图，使用 AMCL 进行定位并
+结合 move_base 实现地图内的自主导航。</p></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
