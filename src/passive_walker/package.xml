@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>passive_walker</name>
+  <version>1.0.0</version>
+  <description>
+    无动力被动行走（Passive Dynamic Walking）最小演示模块。
+    模型是一个没有执行器的轮辐式行走器（rimless wheel，McGeer 1989），
+    只靠一个很小的初始推力、重力沿 5° 斜坡驱动以及落地碰撞完成持续前进，
+    用 slide_x + slide_z + hinge_y 三个关节把它约束在矢状面内。
+    MuJoCo 没有 rosdep 键，需用 pip 安装。
+  </description>
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
