@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>Traffic Manager 车辆轨迹与 AirSim 跟随 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "Traffic Manager \u8f66\u8f86\u8f68\u8ff9\u4e0e AirSim \u8ddf\u968f";
+        var mkdocs_page_input_path = "air/openhutb_yolo_mlp_control/traffic_tracking.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">YOLO 感知与无人机控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#_1">环境与入口</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">生成车辆与记录轨迹</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_3">可选：生成轨迹快照</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#wsl">可选：WSL 仿真跟随</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_4">验证结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">说明</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item">YOLO 感知与无人机控制</li>
+<li class="breadcrumb-item active">Traffic Manager 车辆轨迹与 AirSim 跟随</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/openhutb_yolo_mlp_control/traffic_tracking.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="traffic-manager-airsim">Traffic Manager 车辆轨迹与 AirSim 跟随</h1>
+<p>本示例提供 Traffic Manager 车辆生成、轨迹记录、快照导出和可选的 AirSim 无人机跟随，默认跟随点位于车辆后方 12 米、上方 25 米。</p>
+<p><strong>目标位置来自 CARLA 车辆坐标，尚未接入 YOLO 视觉闭环，也不能据此认定无人机动力学跟随已经验证通过。</strong> 默认使用 <code>auto</code> 控制模式并保留当前朝向：模拟器飞控就绪时使用 AirSim 速度接口，否则使用增量位姿控制。</p>
+<h2 id="_1">环境与入口</h2>
+<p>入口位于功能包 <code>tools/traffic</code>，安装路径为 <code>share/openhutb_yolo_mlp_control/tools/traffic</code>，直接使用模拟器 API。</p>
+<ul>
+<li>Windows：运行 OpenHUTB AIR 场景和匹配版本的 CARLA Python API；车辆生成与记录使用该环境。</li>
+<li>WSL2 Ubuntu 22.04 / Python 3.10：运行随包提供的 AirSim 客户端和可选的无人机跟随。</li>
+<li>绘图依赖：<code>numpy</code>、<code>matplotlib</code>。AirSim 客户端依赖 <code>numpy</code>、<code>msgpack</code>。</li>
+</ul>
+<p>Windows 使用 HUTB 2.10.0 随附、与本机 Python 版本匹配的 wheel。</p>
+<p>下面的 PowerShell 命令从<strong>仓库根目录</strong>执行。首次获取源码可运行 <code>git clone https://github.com/OpenHUTB/ros2.git</code>，然后 <code>cd ros2</code>；测试未合并 PR 时应先检出对应 PR 分支。</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$repoDir</span> <span class="p">=</span> <span class="p">(</span><span class="n">git</span> <span class="n">rev-parse</span> <span class="p">-</span><span class="n">-show-toplevel</span><span class="p">).</span><span class="n">Trim</span><span class="p">()</span>
+<span class="nv">$toolsDir</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$repoDir</span> <span class="s1">'src/air/openhutb_yolo_mlp_control/tools/traffic'</span>
+<span class="nv">$env:HUTB_ROOT</span> <span class="p">=</span> <span class="nb">Read-Host</span> <span class="s1">'输入本机 OpenHUTB 模拟器目录的完整路径'</span>
+<span class="nv">$apiEnv</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$env:USERPROFILE</span> <span class="s1">'.venvs/openhutb_traffic_api'</span>
+<span class="n">python</span> <span class="n">-m</span> <span class="n">venv</span> <span class="nv">$apiEnv</span>
+<span class="nv">$carlaPython</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$apiEnv</span> <span class="s1">'Scripts/python.exe'</span>
+<span class="nv">$pythonTag</span> <span class="p">=</span> <span class="p">(&amp;</span> <span class="nv">$carlaPython</span> <span class="n">-c</span> <span class="s2">"import sys; print('cp%d%d' % sys.version_info[:2])"</span><span class="p">).</span><span class="n">Trim</span><span class="p">()</span>
+<span class="nv">$wheels</span> <span class="p">=</span> <span class="p">@(</span><span class="nb">Get-ChildItem</span> <span class="p">(</span><span class="nb">Join-Path</span> <span class="nv">$env:HUTB_ROOT</span> <span class="s1">'PythonAPI/carla/dist'</span><span class="p">)</span> <span class="n">-Filter</span> <span class="s2">"hutb-*-$pythonTag-*-win_amd64.whl"</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$wheels</span><span class="p">.</span><span class="n">Count</span> <span class="o">-ne</span> <span class="n">1</span><span class="p">)</span> <span class="p">{</span> <span class="k">throw</span> <span class="s1">'请使用模拟器 wheel 所支持的 Python 版本，并核对 wheel 目录'</span> <span class="p">}</span>
+<span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="p">-</span><span class="n">-no-deps</span> <span class="nv">$wheels</span><span class="p">[</span><span class="n">0</span><span class="p">].</span><span class="n">FullName</span>
+<span class="nv">$runDir</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$env:USERPROFILE</span> <span class="p">(</span><span class="s1">'OpenHUTB/traffic_runs/'</span> <span class="p">+</span> <span class="p">(</span><span class="nb">Get-Date</span> <span class="n">-Format</span> <span class="s1">'yyyyMMdd_HHmmss'</span><span class="p">))</span>
+</code></pre></div>
+<p>启动模拟器并加载地图。CARLA 默认地址为 <code>127.0.0.1:2000</code>，可通过 <code>--host</code>、<code>--port</code> 修改。</p>
+<h2 id="_2">生成车辆与记录轨迹</h2>
+<p>第一个 PowerShell 终端生成 8 辆车并保持运行，按 <code>Ctrl+C</code> 清理<strong>本进程创建的车辆</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="s2">"$toolsDir/main.py"</span> <span class="n">spawn</span> <span class="p">-</span><span class="n">-count</span> <span class="n">8</span>
+</code></pre></div>
+<p>第二个 PowerShell 终端在仓库根目录记录车辆：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$repoDir</span> <span class="p">=</span> <span class="p">(</span><span class="n">git</span> <span class="n">rev-parse</span> <span class="p">-</span><span class="n">-show-toplevel</span><span class="p">).</span><span class="n">Trim</span><span class="p">()</span>
+<span class="nv">$toolsDir</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$repoDir</span> <span class="s1">'src/air/openhutb_yolo_mlp_control/tools/traffic'</span>
+<span class="nv">$carlaPython</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$env:USERPROFILE</span> <span class="s1">'.venvs/openhutb_traffic_api/Scripts/python.exe'</span>
+<span class="nv">$runDir</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$env:USERPROFILE</span> <span class="p">(</span><span class="s1">'OpenHUTB/traffic_runs/'</span> <span class="p">+</span> <span class="p">(</span><span class="nb">Get-Date</span> <span class="n">-Format</span> <span class="s1">'yyyyMMdd_HHmmss'</span><span class="p">))</span>
+<span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="s2">"$toolsDir/main.py"</span> <span class="n">record</span> <span class="p">-</span><span class="n">-output</span> <span class="nv">$runDir</span> <span class="p">-</span><span class="n">-duration</span> <span class="n">90</span>
+</code></pre></div>
+<p>记录对象为本工具生成的车辆（<code>role_name=openhutb_traffic_demo</code>）。<code>--duration 0</code> 表示持续记录。另提供 <code>launch.ps1</code> 前台启动入口。</p>
+<p>输出包括：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vehicle_trajectories.csv</code></td>
+<td>时间戳、模拟帧号、车辆 ID、车型、位置、朝向和速度</td>
+</tr>
+<tr>
+<td><code>metadata.json</code></td>
+<td>当前地图、实际采集时长和记录数量</td>
+</tr>
+<tr>
+<td><code>references.json</code></td>
+<td>当前地图中用于校准的静态场景参考点</td>
+</tr>
+<tr>
+<td><code>live.json</code></td>
+<td>最新车辆状态，供可选的跟随入口读取</td>
+</tr>
+</tbody>
+</table>
+<p>车辆 CSV 使用 CARLA 左手世界坐标，位置、朝向、速度单位分别为米、度、米每秒；按请求频率采样并跳过重复模拟帧。<code>metadata.json</code> 同时记录请求频率 <code>sampling_hz_requested</code> 和实测墙钟频率 <code>sampling_hz_actual</code>。</p>
+<h2 id="_3">可选：生成轨迹快照</h2>
+<p>采集完成后，可在同一个 Windows Python 环境安装绘图依赖并导出 PNG、PDF 和每辆车的统计 CSV：</p>
+<div class="highlight"><pre><span></span><code><span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">matplotlib</span>
+<span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="s2">"$toolsDir/plot_trajectories.py"</span> <span class="p">-</span><span class="n">-data</span> <span class="nv">$runDir</span>
+</code></pre></div>
+<p><img alt="Traffic Manager 车辆轨迹与速度" src="../../../img/air/openhutb_yolo_mlp_control/traffic_trajectory_snapshot.png"/></p>
+<p>圆点和叉号分别表示记录起点和终点；速度曲线使用模拟时间与水平速度，行驶距离按相邻二维位置采样点累加。</p>
+<h2 id="wsl">可选：WSL 仿真跟随</h2>
+<p>记录入口使用 <code>--duration 0</code> 持续运行；无人机跟随默认运行 90 秒，结束时取消运动任务并恢复启动前的 API 控制状态。</p>
+<p>在第二个 PowerShell 终端（保留 <code>$repoDir</code> 和 <code>$runDir</code>）打开定位到同一源码目录的 WSL 终端，并打印本次数据目录的 WSL 路径：</p>
+<div class="highlight"><pre><span></span><code><span class="n">wsl</span><span class="p">.</span><span class="n">exe</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="n">22</span><span class="p">.</span><span class="n">04</span> <span class="n">-e</span> <span class="n">wslpath</span> <span class="n">-u</span> <span class="nv">$runDir</span>
+<span class="n">wsl</span><span class="p">.</span><span class="n">exe</span> <span class="n">-d</span> <span class="n">Ubuntu</span><span class="p">-</span><span class="n">22</span><span class="p">.</span><span class="n">04</span> <span class="p">-</span><span class="n">-cd</span> <span class="nv">$repoDir</span>
+</code></pre></div>
+<p>随后在 WSL 中执行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/.venvs/openhutb_traffic"</span>
+<span class="nb">source</span><span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/.venvs/openhutb_traffic/bin/activate"</span>
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/air/openhutb_yolo_mlp_control/tools/traffic/requirements.txt
+<span class="nb">export</span><span class="w"> </span><span class="nv">REPO_DIR</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="k">)</span><span class="s2">"</span>
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$REPO_DIR</span><span class="s2">/src/air/openhutb_yolo_mlp_control"</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">TOOLS_DIR</span><span class="o">=</span><span class="s2">"</span><span class="nv">$REPO_DIR</span><span class="s2">/src/air/openhutb_yolo_mlp_control/tools/traffic"</span>
+<span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>-p<span class="w"> </span><span class="s1">'输入上面 wslpath 输出的本次数据目录: '</span><span class="w"> </span>TRAFFIC_DATA
+<span class="nb">export</span><span class="w"> </span>TRAFFIC_DATA
+<span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>-p<span class="w"> </span><span class="s1">'输入当前已验证可达的 Windows 主机 IP: '</span><span class="w"> </span>AIRSIM_IP
+<span class="nb">export</span><span class="w"> </span>AIRSIM_IP
+python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<span class="s">import os, socket</span>
+<span class="s">with socket.create_connection((os.environ['AIRSIM_IP'], 41451), timeout=3):</span>
+<span class="s">    print('AirSim TCP reachable')</span>
+<span class="s">PY</span>
+python<span class="w"> </span><span class="s2">"</span><span class="nv">$TOOLS_DIR</span><span class="s2">/follow_vehicle.py"</span><span class="w"> </span>--data<span class="w"> </span><span class="s2">"</span><span class="nv">$TRAFFIC_DATA</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--host<span class="w"> </span><span class="s2">"</span><span class="nv">$AIRSIM_IP</span><span class="s2">"</span><span class="w"> </span>--enable-follow-control<span class="w"> </span>--control-mode<span class="w"> </span>auto<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--speed<span class="w"> </span><span class="m">12</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">90</span>
+</code></pre></div>
+<p>入口不会自动起飞；速度模式要求飞控报告在空中，位姿模式使用校准坐标检查无人机高于目标车辆路面至少 2 米，不依赖未就绪飞控的 <code>landed_state</code>。该高度仅作启动检查，不代表已检测无人机下方地形；跟随前请先用模拟器或现有飞行入口将无人机置于安全高度。<code>auto</code> 会根据 <code>ready</code> 状态选择控制后端；可用 <code>--control-mode pose</code> 强制使用位姿模式，或用 <code>--control-mode velocity</code> 强制使用原生速度模式。速度模式以车辆速度作为前馈，并按位置误差修正速度指令。</p>
+<p>脚本最多导出 20 个候选静态对象，至少匹配 5 个后校准 CARLA 与 AirSim 坐标，允许残差为 0.25 米，适用于坐标轴对齐、Z 方向相反的场景。默认选择附近移动车辆，可用 <code>--target-id</code> 指定。</p>
+<p><code>drone_follow.csv</code> 记录无人机、期望跟随点和实际导航点的 NED 坐标、水平误差、实际速度、阶段及速度指令；<code>follow_status.json</code> 保存实际后端和控制恢复状态。通过 <code>simGetCollisionInfo()</code> 检测到本轮新增碰撞、目标消失、地图改变或车辆数据超时会结束跟随；历史碰撞不作为本轮退出依据。默认保留地形、建筑及车辆碰撞退出；位姿更新产生的新接触也可能触发退出。显式 <code>--ignore-collision</code> 同时允许位姿穿越几何体并跳过碰撞报告退出，仅供隔离仿真诊断。<code>--speed</code>（默认 12 m/s）在原生速度模式下是 AirSim 世界坐标速度指令上限，在位姿模式下是每秒位姿更新步长上限；实际运动还受模拟器飞控状态、动力学和碰撞检查影响，不能保证达到该数值。追车时上限应高于目标车速并留出爬升与追赶余量；12 m/s 也不保证实际追上车辆。结束时恢复启动前的 API 控制状态。</p>
+<p>可选的 <code>--avoid-obstacles</code> 使用 CARLA 场景射线查询检查前方通道，尝试短距离侧向或向上的中间航点；无可用路线时保持当前位置（<code>blocked</code>），查询失败时结束跟随。它依赖模拟器几何信息，不是 LiDAR／视觉感知，也不是八叉树全局规划；通道由离散射线采样，可能遗漏细小障碍，不能保证无碰撞或持续追上车辆。<code>--obstacle-margin</code> 默认 1.5 米，与 <code>--ignore-collision</code> 不可同时使用。</p>
+<p>启用前，在独立的 Windows PowerShell 终端使用匹配模拟器的 CARLA Python 启动只读查询服务：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$rayHost</span> <span class="p">=</span> <span class="nb">Read-Host</span> <span class="s1">'输入已验证可从 WSL 访问的 Windows IP'</span>
+<span class="p">&amp;</span> <span class="nv">$carlaPython</span> <span class="s2">"$toolsDir/obstacle_avoidance.py"</span> <span class="p">-</span><span class="n">-server</span> <span class="p">-</span><span class="n">-listen</span> <span class="nv">$rayHost</span>
+</code></pre></div>
+<p>随后给上述 WSL 跟随命令加上 <code>--avoid-obstacles</code>；服务地址默认与 <code>--host</code> 相同，端口默认 41452，可用 <code>--obstacle-host</code> 和 <code>--obstacle-port</code> 修改。服务仅用于本地仿真测试，每次跟随重新启动一次。</p>
+<p>另一个 WSL 终端设置相同的 <code>TRAFFIC_DATA</code> 后，可暂停、恢复或结束跟随：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 暂停并保持位置</span>
+touch<span class="w"> </span><span class="s2">"</span><span class="nv">$TRAFFIC_DATA</span><span class="s2">/follow_pause"</span>
+<span class="c1"># 恢复跟随</span>
+rm<span class="w"> </span>-f<span class="w"> </span><span class="s2">"</span><span class="nv">$TRAFFIC_DATA</span><span class="s2">/follow_pause"</span>
+<span class="c1"># 结束跟随并释放控制</span>
+touch<span class="w"> </span><span class="s2">"</span><span class="nv">$TRAFFIC_DATA</span><span class="s2">/follow_exit"</span>
+</code></pre></div>
+<p>也可按 <code>Ctrl+C</code> 结束跟随；恢复控制状态不执行降落或悬停，也不等同于键盘操控已验证恢复。若 <code>spawn</code> 被强制终止而有车辆残留，可在 Windows 运行 <code>&amp; $carlaPython "$toolsDir/main.py" clean</code> 清理 <code>role_name=openhutb_traffic_demo</code> 的车辆。</p>
+<p><img alt="OpenHUTB 车辆与无人机运行场景" src="../../../img/air/openhutb_yolo_mlp_control/traffic_simulation_scene.png"/></p>
+<p>图中展示场景车辆与无人机，静态截图不作为动力学跟随验证依据。</p>
+<h2 id="_4">验证结果</h2>
+<p>Windows 11、Python 3.13.14、HUTB 2.10.0 / Town10HD 下完成车辆生成、记录与快照导出。在线复测确认 HUTB 当前构建 <code>ready=false</code>，<code>moveByVelocityAsync()</code> 和 <code>moveToPositionAsync()</code> 未产生可测水平位移；<code>auto</code> 因此选择 <code>pose</code> 后端，0.5 米空旷位姿更新在 0.2 秒内产生约 0.5 米位移。速度后端已通过本地单元测试，未将不可靠的原生速度接口作为 HUTB 在线验证结论。</p>
+<p>本次修订在同一 HUTB 2.10.0 / Town10HD 实例完成 20 秒 <code>auto</code> 位姿跟随复测（<code>--speed 12 --avoid-obstacles</code>，保留碰撞检查）：记录 55 行，最高观测速度约 9.51 m/s，水平误差由 51.57 米降至 44.55 米，按时退出并恢复启动前的 API 控制状态。随后 60 秒复测记录 171 行，经历 <code>climb</code>、<code>avoid</code> 和 <code>follow</code> 阶段，按时退出并恢复控制；目标车中途停车，不能据此证明持续追上移动车辆。两轮均未替换飞控状态或碰撞报告。</p>
+<p>位姿模式退出时恢复启动前的 API 控制状态，避免影响原有键盘接管设置。上述结果仅为有限场景复测，不代表完整车辆跟随或动力学速度跟随已经通过。</p>
+<p>返回<a href="../">文档目录</a>。</p>
+<h2 id="_5">说明</h2>
+<p>本文档整理、代码重构和问题排查过程中使用了大模型辅助；提交者已检查全部内容并对最终结果负责。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../yolo_visual_centering/" title="YOLO 目标水平视觉居中"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../no_fly_zone_check/" title="禁飞区检测">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../yolo_visual_centering/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../no_fly_zone_check/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
