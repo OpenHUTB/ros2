@@ -110,7 +110,7 @@ src/
 
 ## 运行效果
 
-节点启动后，障碍物沿正弦轨迹在机器人前后往返。终端中可见最近距离随障碍物位置连续变化，最近碰撞体名称在头、躯干、前臂等部件间切换；当距离低于安全边界时 `collision_detected` 翻转为 `true`。
+节点启动后，障碍物沿正弦轨迹在机器人前后往返。终端中可见最近距离随障碍物位置连续变化；默认轨迹位于机器人右侧（`origin_x = 0.85`），因此最近碰撞体在 `R_forearm` 与 `R_upper_arm` 之间切换。实测 `/distance_to_obstacle` 在 0.018~0.780 m 之间连续变化，距离低于安全边界 0.15 m 时 `/collision_detected` 翻转为 `true`，采样 8 s 内可见 `false/true` 交替。
 
 ![运行演示](../img/collision_boundary_demo.gif)
 
