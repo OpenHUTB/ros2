@@ -187,6 +187,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 
+* [基于阿基米德螺旋的无人机自主搜索与目标定位](./air/uav_spiral_search/spiral_search.md) —— 无人机沿阿基米德螺旋自动覆盖搜索区域，HSV 颜色检测连续确认后锁定目标并估计其 NED 坐标
+
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层

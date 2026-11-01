@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uav_spiral_search</name>
+  <version>0.1.0</version>
+  <description>
+    Archimedean-spiral area search with proportional tracking and HSV
+    target detection for the OpenHUTB AirSim simulator.
+  </description>
+
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <!-- 复用 openhutb_yolo_mlp_control 的 AirSim 桥接节点（airsim_bridge）。 -->
+  <exec_depend>openhutb_yolo_mlp_control</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
