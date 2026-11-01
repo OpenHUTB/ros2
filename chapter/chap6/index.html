@@ -348,8 +348,10 @@
 <div><h1 id="6-slam">第6章 机器人 SLAM 与自主导航</h1>
 <p>本章介绍在 Gazebo Classic 11 中，为一台带 RPLIDAR 激光雷达的 mrobot 移动机器人搭建仿真环境，并完成 SLAM 建图与自主导航。</p>
 <p>本章配套完整功能包：</p>
-<div class="highlight"><pre><span></span><code>src/chap6/catkin_ws/src/mrobot_gazebo/        # 仿真环境：房间世界、机器人模型与插件
-src/chap6/catkin_ws/src/mrobot_navigation/    # gmapping 启动配置、rviz 配置与保存的地图
+<div class="highlight"><pre><span></span><code>src/chap6/catkin_ws/src/mrobot_gazebo/        # 仿真环境：房间世界、Gazebo 机器人模型与插件
+src/chap6/catkin_ws/src/mrobot_description/   # arbotix 假仿真使用的简化机器人 URDF 模型
+src/chap6/catkin_ws/src/mrobot_bringup/       # arbotix 假机器人启动配置（精简版）
+src/chap6/catkin_ws/src/mrobot_navigation/    # gmapping 与 move_base 启动配置、代价地图、rviz、地图与随机导航脚本
 src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 </code></pre></div>
 <p>教程内容：</p>
@@ -360,12 +362,13 @@ src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 <li>加载带激光雷达的 mrobot 机器人；</li>
 <li>排查 Noetic 下 xacro 宏前缀、重复包、关节状态等常见问题；</li>
 <li>使用 gmapping（RBPF 粒子滤波）进行激光 SLAM 建图，并用 map_saver 保存地图；</li>
-<li>（后续）使用 AMCL + move_base 实现地图内自主导航。</li>
+<li>基于 arbotix 假仿真，使用 fake_localization + move_base 实现地图内定位、路径规划、实时避障与自主导航。</li>
 </ul>
 <h2 id="_1">教程小节</h2>
 <ul>
 <li><a href="slam_01_environment_setup/">6.1 仿真环境搭建</a></li>
 <li><a href="slam_02_gmapping/">6.2 gmapping 激光 SLAM 建图</a></li>
+<li><a href="slam_03_navigation/">6.3 导航功能包与实时避障</a></li>
 </ul></div>
 </div>
 </div><footer>
