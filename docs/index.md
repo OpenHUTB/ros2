@@ -197,6 +197,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 
 
+* [四旋翼无人机 MuJoCo 建图导航与神经网络控制](./air/aerial_mujoco_slam_nn_nav/README.md)
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
