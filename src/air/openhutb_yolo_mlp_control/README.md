@@ -3,6 +3,10 @@
 该功能包使用 ROS 2 消息解耦 OpenHUTB/AirSim、YOLO 目标检测和 MLP 轨迹控制。  
 其中仅 `airsim_bridge` 直接调用 OpenHUTB/AirSim Python API，其余节点通过 ROS 2 话题交换数据。
 
+新增独立的 [YOLO 目标水平视觉居中模式](../../../docs/air/openhutb_yolo_mlp_control/yolo_visual_centering.md)，默认只预览控制量。
+入口为 `ros2 launch openhutb_yolo_mlp_control visual_centering.launch.py`。
+实际控制使用 `dry_run:=false`；完整用法见功能文档。
+
 ## 节点关系
 
 ```text
@@ -71,6 +75,8 @@ nc -vz "$AIRSIM_IP" 41451
 如果连接失败，请确认 OpenHUTB 已完全启动、防火墙允许访问 TCP 41451，并根据实际网络配置设置 Windows 主机地址。
 
 ## 运行 YOLO 感知
+
+启动前请按[相机分辨率配置](../../../docs/air/openhutb_yolo_mlp_control/setup.md#相机分辨率)将 RGB 相机设为 **1280×720**，并重启模拟器。默认的 **256×144** 图像会被固定大小的性能信息面板大面积遮挡，导致画面和文字显示不完整；仅调整 OpenCV 窗口大小不能解决此问题。
 
 YOLO 权重 `yolo11n.pt` 不包含在本仓库中，请提前下载并保存到本地，例如：
 
