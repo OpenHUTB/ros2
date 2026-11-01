@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>MuJoCo无人机幕墙定距扫描 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MuJoCo\u65e0\u4eba\u673a\u5e55\u5899\u5b9a\u8ddd\u626b\u63cf";
+        var mkdocs_page_input_path = "air/mujoco_facade_capture/index.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap8/">8. ROS 机器人综合应用</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo无人机幕墙定距扫描</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 环境与启动</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 航线与控制原理</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 神经网络数据划分</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 源码与流程</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 运行结果与验证</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 适用范围</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">MuJoCo无人机幕墙定距扫描</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/mujoco_facade_capture/index.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="mujoco">基于测距感知与定距控制的 MuJoCo 无人机幕墙图像采集</h1>
+<p>模块围绕建筑立面的规则扫描组织航线、测距和摄影。物理环境使用 MuJoCo 3.12.0，立面由简单几何体组成；无人机采用三个平移自由度、固定姿态的稳定飞行器模型。运动由力驱动积分产生，相机图像来自仿真渲染。神经网络读取九束测距、航点偏差和当前速度，输出三个方向的归一化速度指令。</p>
+<h2 id="1">1. 环境与启动</h2>
+<p>安装 Python 3.10 或 3.11，在 <code>src/air/mujoco_facade_capture</code> 目录执行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+python3<span class="w"> </span>main.py<span class="w"> </span>--style<span class="w"> </span>grid<span class="w"> </span>--output<span class="w"> </span>output/grid
+python3<span class="w"> </span>main.py<span class="w"> </span>--controller<span class="w"> </span>neural<span class="w"> </span>--style<span class="w"> </span>plain<span class="w"> </span>--offset<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>--output<span class="w"> </span>output/neural
+python3<span class="w"> </span>train.py<span class="w"> </span>--epochs<span class="w"> </span><span class="m">60</span><span class="w"> </span>--output<span class="w"> </span>output/training
+</code></pre></div>
+<p>ROS 2 Humble 环境中，在构建并加载工作区后可通过统一启动文件运行神经网络控制扫描：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;工作区&gt;
+colcon<span class="w"> </span>build<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-select<span class="w"> </span>mujoco_facade_capture
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+<span class="nv">MUJOCO_GL</span><span class="o">=</span>osmesa<span class="w"> </span>ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_facade_capture<span class="w"> </span>main.launch.py<span class="w"> </span>style:<span class="o">=</span>grid<span class="w"> </span>output:<span class="o">=</span>/tmp/facade_grid
+</code></pre></div>
+<p><code>grid</code>、<code>brick</code>、<code>plain</code> 分别选择网格、砖色和素色立面。输出照片、轨迹及指标位于指定目录。<code>offset:=0.5</code> 可设置初始壁距偏移，<code>duration:=70.0</code> 设置仿真时长。</p>
+<p>节点配置为 100 Hz 控制周期，每次回调读取九束测距、计算控制指令，并按 MuJoCo 时间步推进物理状态；当前场景每周期推进一个 0.01 秒物理步。相机每十个控制周期发布一帧，实际墙钟频率受渲染和运行负载影响。ROS 话题如下：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/facade/image</code></td>
+<td><code>sensor_msgs/msg/Image</code></td>
+<td>发布 RGB 相机图像</td>
+</tr>
+<tr>
+<td><code>/facade/range</code></td>
+<td><code>std_msgs/msg/Float32MultiArray</code></td>
+<td>发布九束测距值，单位为米</td>
+</tr>
+<tr>
+<td><code>/facade/cmd_vel</code></td>
+<td><code>geometry_msgs/msg/Twist</code></td>
+<td>发布当前线速度控制指令</td>
+</tr>
+<tr>
+<td><code>/facade/cmd_vel_override</code></td>
+<td><code>geometry_msgs/msg/Twist</code></td>
+<td>接收外部线速度覆盖指令，超时后恢复自主控制</td>
+</tr>
+<tr>
+<td><code>/facade/status</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>发布航点进度和任务状态</td>
+</tr>
+</tbody>
+</table>
+<p>外部覆盖指令限制在每轴 ±1 m/s，角速度字段不参与该简化飞行器模型。任务完成后节点保留运行并持续发布零速度，便于读取最终话题状态；照片、轨迹 CSV 和 <code>metrics.json</code> 写入 <code>output</code> 参数目录。</p>
+<p>可在另一个终端查看接口和发送短时速度覆盖：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>info<span class="w"> </span>-v<span class="w"> </span>/facade/image
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/facade/range
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/facade/image
+ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>-r<span class="w"> </span><span class="m">10</span><span class="w"> </span>--times<span class="w"> </span><span class="m">10</span><span class="w"> </span>/facade/cmd_vel_override<span class="w"> </span>geometry_msgs/msg/Twist<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s1">'{linear: {x: 0.7, y: 0.0, z: 0.0}}'</span>
+</code></pre></div>
+<h2 id="2">2. 航线与控制原理</h2>
+<p>纵向视场角为 <script type="math/tex">\theta=50^\circ</script>、目标壁距为 <script type="math/tex">d</script> 时，相机覆盖高度为</p>
+<p>
+<script type="math/tex; mode=display"> H=2d\tan(\theta/2),\qquad W=\frac{4}{3}H. </script>
+</p>
+<p>设重叠率为 <script type="math/tex">r</script>，相邻拍摄中心的最大间隔分别为 <script type="math/tex">(1-r)W</script>、<script type="math/tex">(1-r)H</script>。程序将扫描区域均匀采样，逐行交替遍历左右端点形成蛇形航线。航点误差和速度同时低于阈值后拍照，再进入下一个航点。</p>
+<p>九束测距射线沿不同方向指向同一平面。斜向距离 <script type="math/tex">s_i</script> 经方向投影并补偿传感器安装偏移，得到垂直壁距估计：</p>
+<p>
+<script type="math/tex; mode=display"> d_i=s_i\cos\alpha_i\cos\beta_i+0.14. </script>
+</p>
+<p>输入特征包括九束原始距离、三个方向位置误差和三个方向速度。壁距方向的位置误差由测距中值计算。单隐藏层网络将标准化特征映射到速度：</p>
+<p>
+<script type="math/tex; mode=display"> h=\max(0,\hat{x}W_1+b_1),\quad \hat{v}=\operatorname{clip}(hW_2+b_2,-1,1),\quad L=\frac{1}{N}\sum_i\|\hat{v}_i-v_i\|_2^2. </script>
+</p>
+<p>训练标签来自包含速度阻尼的比例控制器。底层速度内环仍使用仿真力推动无人机运动。</p>
+<h2 id="3">3. 神经网络数据划分</h2>
+<p>训练数据由四个完整 MuJoCo 扫描序列生成，包含网格与砖色立面及不同起始壁距。独立测试序列使用训练中未出现的素色立面。按场景划分序列，避免将同一轨迹相邻图像拆进训练和测试集合。<code>train.py</code> 会重新生成测距数据、训练权重、计算独立指令误差，并在完整测试扫描中比较神经网络控制与比例控制基线。</p>
+<h2 id="4">4. 源码与流程</h2>
+<ol>
+<li><code>facade/scene.py</code> 构建立面、飞行器、相机和测距传感器。</li>
+<li><code>facade/route.py</code> 计算相机覆盖尺寸及蛇形航点。</li>
+<li><code>facade/dataset.py</code> 分别运行训练场景和未见测试场景并记录传感输入与控制标签。</li>
+<li><code>facade/learning.py</code> 实现 NumPy 前馈网络、权重验证和 JSON 序列化。</li>
+<li><code>facade/simulation.py</code> 执行测距、控制、物理积分和照片保存。</li>
+<li><code>train.py</code> 训练网络并在独立立面评估；<code>main.py --controller neural</code> 加载权重运行扫描。</li>
+</ol>
+<h2 id="5">5. 运行结果与验证</h2>
+<p>在 Windows / Python 3.11 / MuJoCo 3.12.0 的 CPU 环境中，以默认随机种子和 60 个训练轮次运行训练与测试。结果为同一仿真环境下的可复现实测值。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th style="text-align: right;">神经网络控制</th>
+<th style="text-align: right;">比例控制基线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>素色立面航点完成率</td>
+<td style="text-align: right;">12 / 12</td>
+<td style="text-align: right;">12 / 12</td>
+</tr>
+<tr>
+<td>壁距均方根误差</td>
+<td style="text-align: right;">0.0651 m</td>
+<td style="text-align: right;">0.0748 m</td>
+</tr>
+<tr>
+<td>最大速度</td>
+<td style="text-align: right;">0.9863 m/s</td>
+<td style="text-align: right;">0.9847 m/s</td>
+</tr>
+<tr>
+<td>网络对独立测试专家速度指令 MAE</td>
+<td style="text-align: right;">0.0164 m/s</td>
+<td style="text-align: right;">—</td>
+</tr>
+</tbody>
+</table>
+<p>结果目录还会保存 <code>evaluation.json</code>、训练和测试场景清单、压缩样本以及权重文件。训练数据由脚本生成，不需要下载外部数据集。</p>
+<p>在 MuJoCo 3.12.0 中使用同一权重、4.0 m 目标壁距和 0.5 m 初始偏移，对三种外观分别执行了完整扫描。每种均到达 12 个航点；指标来自对应轨迹记录：</p>
+<table>
+<thead>
+<tr>
+<th>立面外观</th>
+<th style="text-align: right;">完成航点</th>
+<th style="text-align: right;">用时</th>
+<th style="text-align: right;">壁距 RMSE</th>
+<th style="text-align: right;">最大速度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网格</td>
+<td style="text-align: right;">12 / 12</td>
+<td style="text-align: right;">49.61 s</td>
+<td style="text-align: right;">0.0764 m</td>
+<td style="text-align: right;">0.9815 m/s</td>
+</tr>
+<tr>
+<td>砖色</td>
+<td style="text-align: right;">12 / 12</td>
+<td style="text-align: right;">49.61 s</td>
+<td style="text-align: right;">0.0764 m</td>
+<td style="text-align: right;">0.9815 m/s</td>
+</tr>
+<tr>
+<td>素色</td>
+<td style="text-align: right;">12 / 12</td>
+<td style="text-align: right;">49.61 s</td>
+<td style="text-align: right;">0.0764 m</td>
+<td style="text-align: right;">0.9815 m/s</td>
+</tr>
+</tbody>
+</table>
+<p>三种外观共享相同的几何、测距布置和动力学参数，因此测距轨迹指标一致；该组运行用于核对不同立面外观下的扫描执行与相机取像。采集过程由每个航点的实际相机帧组成：</p>
+<p><img alt="网格立面采集过程" src="../../img/air/mujoco_facade_capture/facade_scan_grid.gif"/></p>
+<p><img alt="砖色立面采集过程" src="../../img/air/mujoco_facade_capture/facade_scan_brick.gif"/></p>
+<p><img alt="素色立面采集过程" src="../../img/air/mujoco_facade_capture/facade_scan_plain.gif"/></p>
+<p>三种场景的完整机器可读数据保存在 <code>scenario_metrics.json</code>；每个动图均小于 0.5 MB。</p>
+<p>ROS 2 Humble 下运行相同素色立面任务，神经网络控制完成 12 / 12 个航点，仿真用时 49.64 s，壁距 RMSE 为 0.0717 m；节点保存了 12 张前视照片、总览图和轨迹。ROS 话题检查确认图像类型为 <code>sensor_msgs/msg/Image</code>，距离数组含九个数值，外部线速度覆盖可改变控制输出与物理位移。</p>
+<p>单元测试覆盖航线输入、蛇形顺序、测距几何、力驱动位移、完整扫描、网络确定性和训练/测试场景分离：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pytest
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-q
+</code></pre></div>
+<p>ROS 2 接口测试使用 <code>python3 -m pytest test -q</code>，三种立面神经网络评估与相机采集动图使用：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>evaluate_scenarios.py
+</code></pre></div>
+<p>脚本将各场景实测值写入 <code>docs/air/mujoco_facade_capture/scenario_metrics.json</code>，并在 <code>docs/img/air/mujoco_facade_capture/</code> 保存逐航点采集图像组成的 GIF。</p>
+<h2 id="6">6. 适用范围</h2>
+<p>该环境表达规则平面立面和姿态稳定后的平移运动，不等同于 Town10 地图或真实幕墙。立面纹理、光照和无人机气动均有简化，指标用于相同仿真设置下的比较。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../../ground/trajectory_accuracy_eval/" title="轨迹/里程计精度评估（ATE/RPE）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../uav_mission_safety_manager/overview/" title="模块概览">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../../ground/trajectory_accuracy_eval/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../uav_mission_safety_manager/overview/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
