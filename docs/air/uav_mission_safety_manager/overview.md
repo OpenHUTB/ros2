@@ -103,6 +103,8 @@ ros2 service call /uav_mission_safety_manager/land std_srvs/srv/Trigger '{}'
 
 航点必须包含数值 `x/y/z`，可选正数 `speed`（默认 3 米/秒）。拒绝布尔值、非有限值、未知字段、空列表和超过 100 点的列表。高度条件是 `home_z - max_altitude <= z < home_z`；NED 的 z 向下为正。不是 ROS ENU 坐标。
 
+队列装载先校验 `home_z` 与 `max_altitude`：两者必须是有限的整数或浮点数，`max_altitude` 必须大于 0；布尔值、字符串、NaN 和无穷大都会被拒绝。所有航点和这两个高度参数都通过校验后才会替换当前队列，因此非法新任务不会清空或部分改写已有任务。
+
 队列执行时拒绝新的 `goto` 和 `mission`，避免静默替换路线。先完成或取消当前队列再提交新队列。
 RPC 派发尚未结束时，请求可能被拒绝，需要待 `command_pending=false` 后重试。
 
@@ -119,14 +121,16 @@ RPC 派发尚未结束时，请求可能被拒绝，需要待 `command_pending=f
 `current_index` 从 0 开始，`remaining` 包含当前航点。终止后索引为 `null`，可继续执行的剩余数为 0；原始总数和已完成数保留，便于区分已执行和被丢弃的航点。
 状态依次为 IDLE、RUNNING / PAUSED，再到 COMPLETED、CANCELED 或 ABORTED。
 
+终止状态的计数含义固定为：`COMPLETED` 保留全部已完成点，`CANCELED` 保留已经完成的点并将未执行点丢弃，`ABORTED` 保留故障发生前的计数。三种终止状态都将 `current_index` 置为 `null`、`remaining` 置为 0，并且不会再次派发旧航点。
+
 服务成功仅表示请求被接受。COMPLETED 表示全部航点已进入 1 米到达容差并已请求悬停，不保证已停稳或精确到达坐标。
 暂停请求被接受后，位置字段可能要到下一次遥测才更新；`command_pending=false` 也不能单独作为已停稳的依据。
 取消和 FAILSAFE 不保证真实无人机已停止；尤其连接中断时无法保证悬停或自动降落。
 
 ### 实测范围
 
-Ubuntu 22.04 / ROS 2 Humble 下构建通过，47 项单元测试及 ROS 冒烟测试通过。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。
+Ubuntu 22.04 / ROS 2 Humble 下构建通过，当前队列回归测试覆盖 54 项单元测试及 ROS 冒烟测试。测试包含 100 点上限、非零起点高度边界、非法装载的原子性，以及暂停、完成、取消和中止后的状态字段和不重复派发保证。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。
 
-AirSim 手动验证了三航点顺序执行、执行中暂停恢复、取消任务及返航自动落地。测试记录见源码目录 `tests/logs/waypoint_queue_airsim_manual.md`。
+AirSim 手动验证了三航点顺序执行、执行中暂停/恢复、取消任务以及返航自动落地。非法高度输入由自动测试覆盖，未计为 AirSim 手动实测；普通航点完成采用 1 米到达容差。
 
 已知限制：起飞 RPC 返回 `False` 的既有异常未修复；未验证真机、碰撞或避障。Humble 演示无需安装历史 Foxy/Python 3.8 的 `requirements.txt`。

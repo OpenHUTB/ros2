@@ -1,0 +1,34 @@
+<launch>
+  <!-- 轨迹/里程计精度评估 —— 一键演示（不需要任何仿真器）
+       用法:  roslaunch trajectory_accuracy_eval main.launch
+       换轨迹: roslaunch trajectory_accuracy_eval main.launch kind:=circle
+       调误差: roslaunch trajectory_accuracy_eval main.launch wheel_scale:=1.01
+       观察:   roslaunch 终端里每 3 秒打印一次 ATE/RPE
+               rostopic echo /traj_eval/metrics
+       退出:   Ctrl+C 后会把配对好的两条轨迹存到 ~/traj_eval_out/
+  -->
+  <arg name="kind" default="figure8" doc="straight / circle / figure8 / sine"/>
+  <arg name="speed" default="1.5" doc="行驶速度 m/s"/>
+  <arg name="duration" default="40.0" doc="回放时长 s"/>
+  <arg name="wheel_scale" default="1.02" doc="轮半径尺度误差（1.02 = 多算 2%）"/>
+  <arg name="rate_hz" default="20.0" doc="发布频率 Hz"/>
+  <arg name="report_period" default="3.0" doc="评估报告周期 s"/>
+
+  <rosparam command="load" file="$(find trajectory_accuracy_eval)/config/params.yaml"/>
+
+  <!-- 演示数据源：真值 + 带误差里程计 -->
+  <node pkg="trajectory_accuracy_eval" type="sim_odom_publisher.py"
+        name="sim_odom_publisher" output="screen">
+    <param name="kind" value="$(arg kind)"/>
+    <param name="speed" value="$(arg speed)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="wheel_scale" value="$(arg wheel_scale)"/>
+    <param name="rate_hz" value="$(arg rate_hz)"/>
+  </node>
+
+  <!-- 评估节点：订阅 /ground_truth 与 /odom，输出 ATE/RPE -->
+  <node pkg="trajectory_accuracy_eval" type="odom_eval_node.py"
+        name="traj_eval_node" output="screen">
+    <param name="report_period" value="$(arg report_period)"/>
+  </node>
+</launch>
