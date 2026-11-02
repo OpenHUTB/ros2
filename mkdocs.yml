@@ -124,6 +124,7 @@ nav:
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
+    - 减速带通过平顺性与建议车速评估: './ground/speed_bump_ride_comfort.md'
 - 空域载具:
     - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'

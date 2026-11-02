@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>speed_bump_ride_comfort</name>
+  <version>0.1.0</version>
+  <description>
+    减速带通过平顺性评估：两自由度四分之一车模型、峰值/RMS/VDV/轮荷/动行程指标、
+    自定义阈值下的建议通过车速，附带 ROS 2 适配节点与 PIL 运行效果图
+  </description>
+  <maintainer email="xy18574557330@users.noreply.github.com">xy18574557330</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
