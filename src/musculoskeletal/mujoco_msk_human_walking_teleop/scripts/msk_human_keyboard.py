@@ -71,11 +71,6 @@ class KeyboardPolicy:
             return None
         return ACTION_KEYS.get(key)
 
-    def release(self, key):
-        if key in self.held:
-            self.held.discard(key)
-            self._apply_holds()
-
     def _apply_holds(self):
         self.manual[:] = 0.0
         for k in self.held:

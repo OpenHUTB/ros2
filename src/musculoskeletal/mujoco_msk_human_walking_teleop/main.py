@@ -6,7 +6,7 @@
   python3 main.py check                     # 模型自检（无 ROS）
   python3 main.py eval                      # 离线多场景性能评测（无 ROS）
   python3 main.py demo --script walk:8,squat:10   # 脚本化演示（无 ROS，用于录屏）
-  python3 main.py sim --scene flat          # ROS: 仿真节点
+  python3 main.py sim --scene flat --viewer true   # ROS: 仿真节点（参数生效）
   python3 main.py keyboard                  # ROS: 键盘遥操作节点
 """
 import argparse
@@ -15,7 +15,18 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _SRC_SCRIPTS = os.path.join(_HERE, "scripts")
-SCRIPTS = _SRC_SCRIPTS if os.path.isdir(_SRC_SCRIPTS) else _HERE
+if os.path.isdir(_SRC_SCRIPTS):               # 源码树内运行
+    SCRIPTS = _SRC_SCRIPTS
+elif os.path.isfile(os.path.join(_HERE, "msk_human_core.py")):
+    SCRIPTS = _HERE
+else:                                         # catkin 安装后（devel/lib/<pkg>）：
+    try:                                      # 库文件不随 PROGRAMS 安装，用 roslib 定位
+        import roslib.packages
+        SCRIPTS = os.path.join(
+            roslib.packages.get_pkg_dir(
+                "mujoco_msk_human_walking_teleop"), "scripts")
+    except Exception:
+        SCRIPTS = _HERE
 sys.path.insert(0, SCRIPTS)
 sys.path.insert(0, _HERE)
 
@@ -82,6 +93,10 @@ def cmd_demo(args):
 def cmd_sim(args):
     import rospy
     rospy.init_node("msk_human_sim_node")
+    # 命令行参数生效：写为节点私有参数（SimNode 以 ~scene/~viewer 读取）
+    rospy.set_param("~scene", args.scene)
+    rospy.set_param("~viewer",
+                    str(args.viewer).lower() not in ("false", "0", "no"))
     from msk_human_sim_node import SimNode
     SimNode().spin()
 

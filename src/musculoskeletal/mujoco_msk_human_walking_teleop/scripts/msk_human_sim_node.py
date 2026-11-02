@@ -18,6 +18,16 @@ import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
+# catkin 安装后本脚本位于 devel/lib/<pkg>，库文件 msk_human_core.py
+# 不随 PROGRAMS 安装；通过 roslib 定位源码包内的 scripts 目录
+if not os.path.isfile(os.path.join(_HERE, "msk_human_core.py")):
+    try:
+        import roslib.packages
+        sys.path.insert(0, os.path.join(
+            roslib.packages.get_pkg_dir(
+                "mujoco_msk_human_walking_teleop"), "scripts"))
+    except Exception:
+        pass
 
 import rospy
 from sensor_msgs.msg import JointState

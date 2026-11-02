@@ -7,9 +7,6 @@ catkin_package()
 
 catkin_install_python(PROGRAMS
   main.py
-  scripts/msk_human_core.py
-  scripts/msk_human_keyboard.py
-  scripts/msk_human_eval.py
   scripts/msk_human_sim_node.py
   scripts/msk_human_keyboard_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

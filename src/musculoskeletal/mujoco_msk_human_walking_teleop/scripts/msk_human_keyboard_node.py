@@ -3,8 +3,8 @@
 """键盘遥操作节点：终端按键 -> 发布肌肉激活与动作指令。
 
 在 xterm 终端中运行（launch 中以 launch-prefix="xterm -e" 启动）。
-持续键按住生效（30 Hz 心跳重发手动激活），动作键按一次发布一次。
-ESC 退出。
+手动兴奋键为自锁语义（按一次开启、再按一次关闭），30 Hz 心跳持续
+重发当前手动激活；动作键按一次发布一次。ESC 退出。
 
 话题：
   发布 /msk_human/manual_cmd (std_msgs/Float32MultiArray, 22 维)
@@ -18,6 +18,16 @@ import tty
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
+# catkin 安装后本脚本位于 devel/lib/<pkg>，库文件 msk_human_keyboard.py
+# 不随 PROGRAMS 安装；通过 roslib 定位源码包内的 scripts 目录
+if not os.path.isfile(os.path.join(_HERE, "msk_human_keyboard.py")):
+    try:
+        import roslib.packages
+        sys.path.insert(0, os.path.join(
+            roslib.packages.get_pkg_dir(
+                "mujoco_msk_human_walking_teleop"), "scripts"))
+    except Exception:
+        pass
 
 import rospy
 from std_msgs.msg import Float32MultiArray, String

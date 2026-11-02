@@ -23,8 +23,9 @@
 src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── main.py                     # 统一入口：check / eval / demo / sim / keyboard
 ├── package.xml                 # catkin 包描述（rospy, std_msgs, sensor_msgs）
+├── README.md                   # 快速上手说明
 ├── CMakeLists.txt
-├── launch/main.launch          # 一键启动：仿真节点 + xterm 键盘节点
+├── launch/main.launch          # 一键启动：仿真节点 + 可选 xterm 键盘节点
 ├── config/params.yaml          # 反射增益 / 步态 / 蹲起 / 踢腿参数
 ├── models/
 │   ├── msk_human.xml           # 肌肉骨骼人模型（13 DoF + 22 motor）
@@ -44,7 +45,7 @@ src/musculoskeletal/mujoco_msk_human_walking_teleop/
 | 项目 | 版本/说明 |
 |------|-----------|
 | 操作系统 | Ubuntu 20.04 |
-| ROS | Noetic（`rospy` 也可在 Humble 下以 rclpy 等价替换运行） |
+| ROS | 1 Noetic（`rospy`；本模块未适配 ROS 2） |
 | Python | 3.8 |
 | MuJoCo | `mujoco==3.2.3`（`pip install mujoco==3.2.3`） |
 | 其他依赖 | `numpy`、`PyYAML`、`xterm`（`sudo apt install xterm`） |
@@ -58,7 +59,7 @@ sudo apt install xterm
 
 # 2. 建立工作空间并放置本模块（假设模块位于 ~/catkin_ws/src/ 下）
 cd ~/catkin_ws
-catkin_make
+catkin_make -DCATKIN_WHITELIST_PACKAGES="mujoco_msk_human_walking_teleop"
 source devel/setup.bash
 ```
 
@@ -119,7 +120,9 @@ launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）
 roslaunch mujoco_msk_human_walking_teleop main.launch scene:=slope5
 # 负载 10 kg（运行时给躯干加 10 kg 背包并更新惯量）
 roslaunch mujoco_msk_human_walking_teleop main.launch scene:=load
-# 关闭 3D viewer（无显示器环境）
+# 关闭 3D viewer 与 xterm 键盘终端（无显示器环境）
+roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false keyboard:=false
+# 只关闭 3D viewer、保留键盘终端（终端交互录屏）
 roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
 ```
 
@@ -412,7 +415,7 @@ def fallen(self):
 
 ## 8. 常见问题
 
-- **无显示器环境运行**：`viewer:=false` 关闭 3D 窗口；离线评测（check/eval）完全 headless。软件渲染可设 `MUJOCO_GL=osmesa`（需 `sudo apt install libosmesa6`）。
+- **无显示器环境运行**：`viewer:=false keyboard:=false` 同时关闭 3D 窗口与 xterm 键盘终端（无 X 环境下 xterm 无法启动，故键盘节点也要关闭）；离线评测（check/eval）完全 headless。软件渲染可设 `MUJOCO_GL=osmesa`（需 `sudo apt install libosmesa6`）。
 - **EGL 报错** `module 'OpenGL.EGL' has no attribute 'EGLDeviceEXT'`：PyOpenGL 版本与 MuJoCo 不匹配，headless 场景改用 osmesa 即可。
 - **键盘节点无响应**：确认 `xterm` 已安装；launch 用 `launch-prefix="xterm -e"` 打开独立终端读取按键。
 - **行走时原地踏步**：步频过低时前进速度小属正常；确认 `ankle_phase` 未被改动（相位取反会几乎无法前进，见 §4.3）。

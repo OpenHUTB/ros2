@@ -18,6 +18,7 @@ Python 中显式实现（一阶激活动力学 + Hill 力-长度-速度曲线）
 import json
 import math
 import os
+import sys
 
 import numpy as np
 
@@ -119,9 +120,18 @@ def _default_params():
 
 def load_params(path=None):
     if path is None:
+        # 1) 源码树内直接查找（离线运行 check/eval/demo）
         path = os.path.join(os.path.dirname(_HERE), "config", "params.yaml")
-        if not os.path.isdir(os.path.dirname(path)):
-            path = None
+        # 2) catkin 安装后 _HERE 位于 devel/lib/<pkg>，其下没有 config；
+        #    通过 roslib 定位源码包目录，保证 roslaunch 时 yaml 真正生效
+        if not os.path.isfile(path):
+            try:
+                import roslib.packages
+                pkg = roslib.packages.get_pkg_dir(
+                    "mujoco_msk_human_walking_teleop")
+                path = os.path.join(pkg, "config", "params.yaml")
+            except Exception:
+                path = None
     if path and os.path.isfile(path):
         try:
             import yaml
@@ -136,6 +146,9 @@ def load_params(path=None):
             return params
         except Exception:
             pass
+    else:
+        print("[msk_human] 未找到 params.yaml，使用内置默认参数",
+              file=sys.stderr)
     return _default_params()
 
 

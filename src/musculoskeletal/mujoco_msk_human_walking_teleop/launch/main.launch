@@ -3,6 +3,8 @@
   <arg name="scene" default="flat"/>
   <arg name="viewer" default="true"/>
   <arg name="load_mass" default="10.0"/>
+  <!-- 无显示器环境：viewer:=false keyboard:=false（不启动 xterm 键盘终端） -->
+  <arg name="keyboard" default="true"/>
 
   <node pkg="mujoco_msk_human_walking_teleop" type="msk_human_sim_node.py"
         name="msk_human_sim_node" output="screen">
@@ -12,5 +14,6 @@
   </node>
 
   <node pkg="mujoco_msk_human_walking_teleop" type="msk_human_keyboard_node.py"
-        name="msk_human_keyboard_node" output="screen" launch-prefix="xterm -e"/>
+        name="msk_human_keyboard_node" output="screen"
+        launch-prefix="xterm -e" if="$(arg keyboard)"/>
 </launch>
