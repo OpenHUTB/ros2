@@ -52,10 +52,18 @@ EKF 采用航空常用的 FRD（x 前、y 右、z 下）：静止时比力应为
 - `specific_force_flu_to_frd()` 把比力从 FLU 换到 FRD（y、z 取反）；
 - `tilt_flu_to_frd()` 把 FLU 倾角换到 FRD（俯仰角取反，水平姿态仍是水平）；
 - `step_imu()` 是 `on_imu` 唯一的处理链，姿态滤波拿原始 REP-103 数据，EKF 拿
-  转换后的 FRD 量。
+  转换后的 FRD 量；
+- `geodetic_to_ned()` 把 GPS 经纬度投影成 `[north, east]`，与 6 维状态的
+  `x[0]=north`、`x[1]=east` 一致；`ned_to_enu()` 把位置和速度换回 ENU 发布。
 
 这样水平静止输入穿过回调后速度保持为零，不会出现“同一加速度按两套重力符号各算
 一遍”的漂移。
+
+GPS 与发布坐标同样只在这一层换轴。EKF 内部是 NED，所以 `on_gps` 送给
+`update_position()` 的测量必须是 `[north, east]`：若写成 `[east, north]`，纯向东
+的位移会被更新到内部北向状态，而后续换轴只是机械地交换前两维，无法把这个混淆再
+纠正回来。`/uav/ekf/odom` 发布的 `world` 系为 ENU（x 东、y 北、z 上），由
+`ned_to_enu()` 统一转换。
 
 这里刻意没有把加速度计零偏放进状态。只有 GPS 位置和气压计高度时，垂直零偏与
 重力/姿态误差不可观，强行估计会让零偏吸收误差并导致发散。需要零偏估计时，应
@@ -82,9 +90,11 @@ ROS 2 节点在当前 Windows 开发机上未执行；离线核心、12 个单�
 python -m unittest discover -s tests -v
 ```
 
-12 个测试全部通过，覆盖 GPS 协方差收敛、气压计更新、悬停预测、姿态滤波、
+15 个测试全部通过，覆盖 GPS 协方差收敛、气压计更新、悬停预测、姿态滤波、
 指标有限性和随机种子可重复性，以及 REP-103(FLU)→FRD 的符号转换与水平静止输入
-贯穿 `on_imu` 处理链（`step_imu`）的回归。
+贯穿 `on_imu` 处理链（`step_imu`）的回归。GPS 轴序另有三个用例：只增加纬度时只
+更新内部 north、只增加经度时只更新内部 east（并核对发布的 ENU 方向），以及
+NED→ENU 的换轴与 z 取反。
 
 ## 已知限制
 

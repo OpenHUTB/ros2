@@ -13,7 +13,7 @@ from std_msgs.msg import Float64, String
 
 from .attitude import ComplementaryAttitude
 from .ekf import NavigationEKF
-from .frames import step_imu
+from .frames import geodetic_to_ned, ned_to_enu, step_imu
 
 
 class EkfStateEstimationNode(Node):
@@ -64,12 +64,15 @@ class EkfStateEstimationNode(Node):
             self.origin_lon = float(message.longitude)
             self.ekf = NavigationEKF(np.array([0.0, 0.0, -float(message.altitude)]))
             return
-        east = np.radians(message.longitude - self.origin_lon) * 6371000.0 * np.cos(
-            np.radians(self.origin_lat)
-        )
-        north = np.radians(message.latitude - self.origin_lat) * 6371000.0
         sigma = float(self.get_parameter("gps_sigma_m").value)
-        self.ekf.update_position(np.array([east, north]), sigma)
+        # The filter state is NED, so the measurement arrives as [north, east].
+        measurement = geodetic_to_ned(
+            float(message.latitude),
+            float(message.longitude),
+            self.origin_lat,
+            self.origin_lon,
+        )
+        self.ekf.update_position(measurement, sigma)
 
     def on_baro(self, message: Float64) -> None:
         if self.ekf is not None:
@@ -82,17 +85,17 @@ class EkfStateEstimationNode(Node):
         message.header.stamp = stamp
         message.header.frame_id = "world"
         message.child_frame_id = "base_link"
-        position = self.ekf.position
-        message.pose.pose.position.x = float(position[1])
-        message.pose.pose.position.y = float(position[0])
-        message.pose.pose.position.z = float(-position[2])
-        velocity = self.ekf.velocity
-        message.twist.twist.linear.x = float(velocity[1])
-        message.twist.twist.linear.y = float(velocity[0])
-        message.twist.twist.linear.z = float(-velocity[2])
+        position = ned_to_enu(self.ekf.position)
+        message.pose.pose.position.x = float(position[0])
+        message.pose.pose.position.y = float(position[1])
+        message.pose.pose.position.z = float(position[2])
+        velocity = ned_to_enu(self.ekf.velocity)
+        message.twist.twist.linear.x = float(velocity[0])
+        message.twist.twist.linear.y = float(velocity[1])
+        message.twist.twist.linear.z = float(velocity[2])
         self.odom_pub.publish(message)
         diagnostics = {
-            "position_ned": [round(float(value), 4) for value in position],
+            "position_ned": [round(float(value), 4) for value in self.ekf.position],
             "velocity_ned": [round(float(value), 4) for value in self.ekf.velocity],
         }
         self.diag_pub.publish(String(data=json.dumps(diagnostics)))

@@ -3,6 +3,9 @@
 对应评审意见：``on_imu`` 曾把同一个 accel 同时喂给姿态校正和 EKF，而两者对
 静止时重力符号的约定相反。这里覆盖 REP-103(FLU) -> FRD 的转换，以及水平静止
 输入贯穿 ``step_imu``（即 ``on_imu`` 的处理链）后不应产生加速度。
+
+另一个评审意见：``on_gps`` 曾把 ``[east, north]`` 交给 NED 状态的滤波器。这里
+同时覆盖 GPS 投影顺序、内部 NED 状态和最终发布 ENU 的对应关系。
 """
 
 import math
@@ -18,7 +21,9 @@ from uav_ekf_state_estimation.attitude import (
 from uav_ekf_state_estimation.ekf import NavigationEKF
 from uav_ekf_state_estimation.frames import (
     FLU_TO_FRD,
+    geodetic_to_ned,
     imu_to_ekf,
+    ned_to_enu,
     specific_force_flu_to_frd,
     step_imu,
 )
@@ -80,6 +85,40 @@ class FramesTest(unittest.TestCase):
         )
         self.assertAlmostEqual(roll, 0.0, places=6)
         self.assertAlmostEqual(pitch, 0.0, places=6)
+
+    def test_ned_to_enu_swaps_horizontal_axes_and_flips_down(self):
+        self.assertTrue(np.allclose(ned_to_enu(np.array([1.0, 2.0, 3.0])), [2.0, 1.0, -3.0]))
+
+    def test_latitude_increase_updates_north_only(self):
+        """只增加纬度：内部 north 增大、east 不受影响，发布坐标的 y 增大。"""
+        origin_lat, origin_lon = 30.0, 120.0
+        ekf = NavigationEKF(np.array([0.0, 0.0, -50.0]))
+        ekf.update_position(
+            geodetic_to_ned(origin_lat + 1e-4, origin_lon, origin_lat, origin_lon),
+            sigma_m=1.0,
+        )
+        north, east, _ = ekf.position
+        self.assertGreater(north, 5.0)
+        self.assertLess(abs(east), 1e-6)
+        # 发布的 ENU：x 是东向，y 是北向。
+        enu_x, enu_y, _ = ned_to_enu(ekf.position)
+        self.assertLess(abs(enu_x), 1e-6)
+        self.assertGreater(enu_y, 5.0)
+
+    def test_longitude_increase_updates_east_only(self):
+        """只增加经度：内部 east 增大、north 不受影响，发布坐标的 x 增大。"""
+        origin_lat, origin_lon = 30.0, 120.0
+        ekf = NavigationEKF(np.array([0.0, 0.0, -50.0]))
+        ekf.update_position(
+            geodetic_to_ned(origin_lat, origin_lon + 1e-4, origin_lat, origin_lon),
+            sigma_m=1.0,
+        )
+        north, east, _ = ekf.position
+        self.assertLess(abs(north), 1e-6)
+        self.assertGreater(east, 5.0)
+        enu_x, enu_y, _ = ned_to_enu(ekf.position)
+        self.assertGreater(enu_x, 5.0)
+        self.assertLess(abs(enu_y), 1e-6)
 
 
 if __name__ == "__main__":
