@@ -1,0 +1,77 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Preferences:
+  PromptSaveOnExit: true
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+      Plane: XY
+      Plane Cell Count: 30
+      Cell Size: 0.5
+      Color: 120; 120; 120
+      Alpha: 0.35
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+      Marker Scale: 0.6
+      Show Arrows: false
+      Show Axes: true
+      Show Names: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Reachable Workspace
+      Namespaces:
+        body_head: true
+        body_skeleton: true
+        demo_end_effector: true
+        demo_joints: true
+        demo_skeleton: true
+        demo_trace_left: true
+        demo_trace_right: true
+        slices_left: true
+        slices_right: true
+        summary_left: true
+        summary_right: true
+        voxels_left: true
+        voxels_right: true
+        workspace_bounds_left: true
+        workspace_bounds_right: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /reachable_workspace
+  Enabled: true
+  Global Options:
+    Background Color: 28; 30; 36
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 3.6
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 1.3
+      Name: Current View
+      Pitch: 0.45
+      Target Frame: world
+      Yaw: 0.9
+Window Geometry:
+  Height: 840
+  Width: 1280
