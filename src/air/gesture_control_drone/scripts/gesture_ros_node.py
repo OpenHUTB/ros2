@@ -55,10 +55,14 @@ class GestureControlNode(object):
         self.show_window = bool(_p("show_window", False))
         self.command_topic = _p("command_topic", "/gesture_command")
         self.state_topic = _p("gesture_state_topic", "/gesture_state")
+        #: 手势分类器："rules"（规则法，默认）或 "seq"（LSTM 时序模型）
+        self.classifier = str(_p("classifier", "rules")).strip().lower()
 
         self.gate = CommandGate(
             stable_frames=_p("stable_frames", 3),
             cooldown=_p("command_cooldown", 1.5))
+        #: 时序分类器（classifier:=seq 且模型存在时才建立）
+        self.seq_gate = None
 
         self.camera = camera or Camera(
             camera_index=self.camera_index, width=self.width, height=self.height)
@@ -74,9 +78,14 @@ class GestureControlNode(object):
         self._frames = 0
         rospy.on_shutdown(self.shutdown)
 
+        self._maybe_build_seq_gate()
+
         rospy.loginfo("[gesture] 已启动：摄像头索引 %d，%dx%d，%.1f Hz"
                       % (self.camera_index, self.width, self.height,
                          self.publish_rate))
+        rospy.loginfo("[gesture] 分类器：%s"
+                      % ("seq（LSTM 时序模型）" if self.classifier == "seq"
+                         else "rules（规则法）"))
         rospy.loginfo("[gesture] 手势 -> 指令：%s" % gm.describe_map())
         rospy.loginfo("[gesture] 发布 %s（指令）与 %s（识别状态）"
                       % (self.command_topic, self.state_topic))
@@ -87,19 +96,79 @@ class GestureControlNode(object):
 
         抽成独立方法是为了能脱离 ROS 单测（见 tests/）。
         """
-        if result.gesture != self._last_gesture:
-            self._last_gesture = result.gesture
-            if result.gesture != gm.GESTURE_NONE:
-                rospy.loginfo("[gesture] 识别到 %s" % gm.gesture_cn(result.gesture))
-            self.pub_state.publish(String(data=result.gesture))
+        if self.seq_gate is not None:
+            # 时序模式：入参是**关键点**，不是单帧手势
+            command = self.seq_gate.update(result.landmarks, now=now)
+            gesture = self.seq_gate.last_gesture
+        else:
+            command = self.gate.update(result.command, now=now)
+            gesture = result.gesture
 
-        command = self.gate.update(result.command, now=now)
+        if gesture != self._last_gesture:
+            self._last_gesture = gesture
+            if gesture != gm.GESTURE_NONE:
+                rospy.loginfo("[gesture] 识别到 %s" % gm.gesture_cn(gesture))
+            self.pub_state.publish(String(data=gesture))
         if command is None:
             return None
         self.pub_cmd.publish(String(data=command))
         rospy.loginfo("[gesture] 发布指令 %s（%s）"
                       % (gm.command_cn(command), command))
         return command
+
+    # ------------------------------------------------------------------ #
+    # 时序分类器
+    # ------------------------------------------------------------------ #
+    def _maybe_build_seq_gate(self):
+        """classifier:=seq 时建立时序闸门；任何环节失败都**回退规则法**，不让节点崩。"""
+        if self.classifier != "seq":
+            self.classifier = "rules"
+            return
+        try:
+            import sequence_model as sm
+        except ImportError as exc:
+            rospy.logwarn("[gesture] 没有 sequence_model（%s），回退规则法" % exc)
+            self.classifier = "rules"
+            return
+
+        path = self._resolve_model_path()
+        if path is None:
+            rospy.logwarn("[gesture] 找不到时序模型（sequence/model_path=%s），回退规则法"
+                          % _p("sequence/model_path", "models/gesture_seq.npz"))
+            self.classifier = "rules"
+            return
+        try:
+            model = sm.LSTMModel.load(path)
+        except Exception as exc:                       # noqa: BLE001 - 任何失败都回退
+            rospy.logwarn("[gesture] 模型加载失败（%s），回退规则法" % exc)
+            self.classifier = "rules"
+            return
+
+        threshold = float(_p("sequence/threshold", 0.8))
+        self.seq_gate = sm.SequenceGate(model, self.gate, threshold=threshold)
+        rospy.loginfo("[gesture] 时序分类器已启用：%s（hidden=%d, T=%.3f, 阈值=%.2f）"
+                      % (path, model.hidden, model.temperature, threshold))
+
+    def _resolve_model_path(self):
+        """按"参数 -> 源码树 -> ROS 包目录"的顺序找模型文件。"""
+        name = str(_p("sequence/model_path", "models/gesture_seq.npz"))
+        candidates = []
+        if os.path.isabs(name):
+            candidates.append(name)
+        else:
+            here = os.path.dirname(os.path.abspath(__file__))
+            candidates.append(os.path.join(here, os.pardir, name))     # 源码树
+            candidates.append(os.path.join(here, name))
+            try:
+                import rospkg
+                candidates.append(os.path.join(
+                    rospkg.RosPack().get_path("gesture_control_drone"), name))
+            except Exception:                          # noqa: BLE001 - 没有 rospkg 很正常
+                pass
+        for c in candidates:
+            if os.path.isfile(c):
+                return os.path.abspath(c)
+        return None
 
     def spin(self):
         camera = self.camera

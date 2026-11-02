@@ -1379,6 +1379,78 @@ def test_project_layout():
     check("模块 README 写明状态回传话题", "/drone/odom" in readme)
 
 
+
+def test_classifier_switch():
+    """classifier:=rules|seq 的切换与"模型缺失自动回退"。"""
+    import gesture_ros_node as gnode
+
+    old_get = gnode.rospy.get_param
+
+    def fake_get(name, default=None):
+        return default
+
+    # 1) 默认 rules
+    node = gnode.GestureControlNode(camera=FakeCamera(),
+                                    detector=FakeDetector(gm.GESTURE_PALM))
+    check("分类器默认 rules", node.classifier == "rules", node.classifier)
+    check("rules 模式不建时序闸门", node.seq_gate is None)
+
+    # 2) seq + 模型不存在 -> 自动回退 rules（不能崩）
+    def get_missing(name, default=None):
+        if name == "~classifier":
+            return "seq"
+        if name == "~sequence/model_path":
+            return os.path.join(SCRIPTS, "models", "definitely_missing.npz")
+        return default
+
+    gnode.rospy.get_param = get_missing
+    try:
+        node2 = gnode.GestureControlNode(camera=FakeCamera(),
+                                         detector=FakeDetector(gm.GESTURE_PALM))
+        check("模型缺失时回退 rules", node2.classifier == "rules", node2.classifier)
+        check("回退时 seq_gate 为空", node2.seq_gate is None)
+    finally:
+        gnode.rospy.get_param = old_get
+
+    # 3) seq + 模型存在 -> 建立时序闸门并真的能发指令
+    model_path = os.path.join(PKG, "models", "gesture_seq.npz")
+
+    def get_seq(name, default=None):
+        if name == "~classifier":
+            return "seq"
+        if name == "~sequence/model_path":
+            return model_path
+        return default
+
+    gnode.rospy.get_param = get_seq
+    try:
+        node3 = gnode.GestureControlNode(camera=FakeCamera(),
+                                         detector=FakeDetector(gm.GESTURE_PALM))
+        check("seq 模式生效", node3.classifier == "seq", node3.classifier)
+        check("seq_gate 已建立", node3.seq_gate is not None)
+
+        if node3.seq_gate is not None:
+            tools = os.path.join(PKG, "tools")
+            if tools not in sys.path:
+                sys.path.insert(0, tools)
+            import synthetic_sequences as gen
+            seq = gen.make_sequence("PALM_OPEN", length=16, seed=7)
+            for i, frame in enumerate(seq):
+                node3.handle_result(
+                    gd.GestureResult(gesture=gm.GESTURE_NONE, command=gm.CMD_NONE,
+                                     landmarks=[tuple(p) for p in frame.tolist()]),
+                    now=float(i) * 0.3)
+            data = [m.data for m in node3.pub_cmd.sent]
+            check("seq 模式：过渡序列触发 takeoff", gm.CMD_TAKEOFF in data, str(data))
+            check("seq 模式：过渡期不误发别的指令",
+                  set(data) <= {gm.CMD_TAKEOFF}, str(data))
+            states = [m.data for m in node3.pub_state.sent]
+            check("seq 模式：发布模型判断的手势",
+                  gm.GESTURE_PALM in states, str(states))
+    finally:
+        gnode.rospy.get_param = old_get
+
+
 def main():
     print("=" * 70)
     print("gesture_control_drone 本地回归测试（无需 ROS / 摄像头 / AirSim）")
@@ -1397,6 +1469,7 @@ def main():
             ("6.8 confirmConnection 返回 None", test_confirm_none),
             ("7. 端到端：手势 -> 指令 -> AirSim", test_end_to_end),
             ("8. 两个节点的契约 + 状态回传", test_nodes),
+            ("8.5 分类器切换（rules / seq）", test_classifier_switch),
             ("9. 叠加层不丢帧", test_overlay_not_lost),
             ("10. 工程文件约定", test_project_layout)]:
         print("\n-- %s --" % title)

@@ -26,12 +26,13 @@ install(FILES
   scripts/camera_utils.py
   scripts/gesture_detection.py
   scripts/gesture_gate.py
+  scripts/sequence_model.py
   scripts/gesture_map.py
   scripts/drone_client.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY launch config models
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )

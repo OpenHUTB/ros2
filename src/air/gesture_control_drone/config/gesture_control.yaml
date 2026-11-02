@@ -46,3 +46,14 @@ odom_topic: /drone/odom     # nav_msgs/Odometry（ENU），可在 RViz 里看
 drone_state_topic: /drone_state   # 执行结果（如 "takeoff OK"）
 frame:
   world: world              # Odometry 的 frame_id
+
+# 手势分类器：rules = 规则法（默认，零依赖）
+#             seq   = LSTM 时序模型（需要 models/gesture_seq.npz）
+classifier: rules
+
+sequence:
+  # 模型路径：相对包目录（也可写绝对路径）
+  model_path: models/gesture_seq.npz
+  # 置信度阈值（温度校准后的概率；出厂模型正确预测在 0.90~0.99，
+  # 取 0.8 留余量 —— 实测 0.6 时"过渡帧"会被高置信误判成别的手势）
+  threshold: 0.8
