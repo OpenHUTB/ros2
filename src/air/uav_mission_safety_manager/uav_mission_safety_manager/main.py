@@ -9,6 +9,7 @@ from std_srvs.srv import Trigger
 from .airsim_adapter import AirSimAdapter
 from .controller import FlightController
 from .demo_adapter import DemoAdapter
+from .mission_action import MissionAction
 from .state_machine import SafetyMachine, State
 
 
@@ -45,6 +46,7 @@ class MissionNode(Node):
             self.control_services.append(self.create_service(
                 Trigger, '~/' + name, lambda req, res, e=event: self.service_cb(e, res)))
         self.last_telemetry = time.monotonic()
+        self.mission_action = MissionAction(self)
         self.create_timer(0.2, self.timer_cb)
 
     def publish(self):
@@ -63,6 +65,8 @@ class MissionNode(Node):
         self.status_pub.publish(msg)
 
     def request(self, event, **data):
+        if self.mission_action.busy and event in ('mission', 'goto', 'reset'):
+            raise ValueError('Wait for the active action result before starting another task')
         if not self.controller and event in ('mission', 'cancel'):
             raise ValueError('Waypoint missions require a flight controller')
         if self.controller:
@@ -105,6 +109,7 @@ class MissionNode(Node):
             self.controller.tick()
         elif self.machine.state in FlightController.ACTIVE:
             self.machine.check_safety(0, time.monotonic() - self.last_telemetry)
+        self.mission_action.tick()
         self.publish()
 
 
@@ -116,6 +121,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        node.mission_action.server.destroy()
         if node.adapter:
             node.adapter.close()
         node.destroy_node()

@@ -1,0 +1,4 @@
+# 运行产物：由 `python3 main.py --mode bench/single/sweep` 现场生成，
+# 不入库——否则仓库里的数值会与实际运行结果脱节，读者容易把过期数据当成真实结果。
+# 文档里用到的图放在 docs/img/ground/lateral_control_benchmark/，与这里无关。
+results/

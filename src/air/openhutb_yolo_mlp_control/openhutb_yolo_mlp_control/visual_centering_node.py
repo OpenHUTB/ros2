@@ -128,6 +128,8 @@ class VisualCenteringNode(Node):
         self.cmd_pub.publish(msg)
         report = String()
         report.data = json.dumps({'status': status, 'error_x': error,
+                                  'distance_error': self.controller.last_distance_error,
+                                  'forward_speed': self.controller.last_forward_speed,
                                   'velocity_ned': command, 'dry_run': self.dry_run})
         self.status_pub.publish(report)
         if status != self.last_status:
