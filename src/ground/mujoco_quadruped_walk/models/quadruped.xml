@@ -1,0 +1,78 @@
+<mujoco model="quadruped">
+  <option timestep="0.01"/>
+
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+
+    <!-- 参照物：彩色柱子，用来判断四足有没有往前走 -->
+    <geom name="pole1" type="cylinder" pos="2 0 0.5" size="0.1 0.5" rgba="1 0 0 1"/>
+    <geom name="pole2" type="cylinder" pos="-2 0 0.5" size="0.1 0.5" rgba="0 1 0 1"/>
+    <geom name="pole3" type="cylinder" pos="0 2 0.5" size="0.1 0.5" rgba="0 0 1 1"/>
+    <geom name="pole4" type="cylinder" pos="0 -2 0.5" size="0.1 0.5" rgba="1 1 0 1"/>
+
+    <!-- 四足机器人主体 -->
+    <body name="trunk" pos="0 0 0.3">
+      <freejoint/>
+      <geom name="chassis" type="box" size="0.2 0.12 0.04" rgba="0.3 0.3 0.8 1"/>
+      <site name="imu" pos="0 0 0.02"/>
+
+      <!-- 前左腿 FL -->
+      <body name="fl_hip" pos="0.15 0.1 -0.02">
+        <joint name="fl_hip" type="hinge" axis="0 1 0" limited="true" range="-1.0 1.0"/>
+        <geom type="box" size="0.03 0.03 0.08" rgba="0.6 0.6 0.6 1"/>
+        <body name="fl_knee" pos="0 0 -0.1">
+          <joint name="fl_knee" type="hinge" axis="0 1 0" limited="true" range="-2.0 0.0"/>
+          <geom type="box" size="0.02 0.02 0.1" rgba="0.4 0.4 0.4 1"/>
+          <geom name="fl_foot" type="sphere" size="0.03" pos="0 0 -0.1" rgba="0.2 0.2 0.2 1"/>
+        </body>
+      </body>
+
+      <!-- 前右腿 FR -->
+      <body name="fr_hip" pos="0.15 -0.1 -0.02">
+        <joint name="fr_hip" type="hinge" axis="0 1 0" limited="true" range="-1.0 1.0"/>
+        <geom type="box" size="0.03 0.03 0.08" rgba="0.6 0.6 0.6 1"/>
+        <body name="fr_knee" pos="0 0 -0.1">
+          <joint name="fr_knee" type="hinge" axis="0 1 0" limited="true" range="-2.0 0.0"/>
+          <geom type="box" size="0.02 0.02 0.1" rgba="0.4 0.4 0.4 1"/>
+          <geom name="fr_foot" type="sphere" size="0.03" pos="0 0 -0.1" rgba="0.2 0.2 0.2 1"/>
+        </body>
+      </body>
+
+      <!-- 后左腿 RL -->
+      <body name="rl_hip" pos="-0.15 0.1 -0.02">
+        <joint name="rl_hip" type="hinge" axis="0 1 0" limited="true" range="-1.0 1.0"/>
+        <geom type="box" size="0.03 0.03 0.08" rgba="0.6 0.6 0.6 1"/>
+        <body name="rl_knee" pos="0 0 -0.1">
+          <joint name="rl_knee" type="hinge" axis="0 1 0" limited="true" range="-2.0 0.0"/>
+          <geom type="box" size="0.02 0.02 0.1" rgba="0.4 0.4 0.4 1"/>
+          <geom name="rl_foot" type="sphere" size="0.03" pos="0 0 -0.1" rgba="0.2 0.2 0.2 1"/>
+        </body>
+      </body>
+
+      <!-- 后右腿 RR -->
+      <body name="rr_hip" pos="-0.15 -0.1 -0.02">
+        <joint name="rr_hip" type="hinge" axis="0 1 0" limited="true" range="-1.0 1.0"/>
+        <geom type="box" size="0.03 0.03 0.08" rgba="0.6 0.6 0.6 1"/>
+        <body name="rr_knee" pos="0 0 -0.1">
+          <joint name="rr_knee" type="hinge" axis="0 1 0" limited="true" range="-2.0 0.0"/>
+          <geom type="box" size="0.02 0.02 0.1" rgba="0.4 0.4 0.4 1"/>
+          <geom name="rr_foot" type="sphere" size="0.03" pos="0 0 -0.1" rgba="0.2 0.2 0.2 1"/>
+        </body>
+      </body>
+    </body>
+
+    <camera name="side_camera" pos="2.0 -2.0 1.0" xyaxes="0.707 0.707 0 -0.354 0.354 0.866"/>
+  </worldbody>
+
+  <actuator>
+    <motor name="fl_hip_motor" joint="fl_hip" gear="20" ctrllimited="true" ctrlrange="-1.5 1.5"/>
+    <motor name="fl_knee_motor" joint="fl_knee" gear="20" ctrllimited="true" ctrlrange="-2.5 0.0"/>
+    <motor name="fr_hip_motor" joint="fr_hip" gear="20" ctrllimited="true" ctrlrange="-1.5 1.5"/>
+    <motor name="fr_knee_motor" joint="fr_knee" gear="20" ctrllimited="true" ctrlrange="-2.5 0.0"/>
+    <motor name="rl_hip_motor" joint="rl_hip" gear="20" ctrllimited="true" ctrlrange="-1.5 1.5"/>
+    <motor name="rl_knee_motor" joint="rl_knee" gear="20" ctrllimited="true" ctrlrange="-2.5 0.0"/>
+    <motor name="rr_hip_motor" joint="rr_hip" gear="20" ctrllimited="true" ctrlrange="-1.5 1.5"/>
+    <motor name="rr_knee_motor" joint="rr_knee" gear="20" ctrllimited="true" ctrlrange="-2.5 0.0"/>
+  </actuator>
+</mujoco>
