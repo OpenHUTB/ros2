@@ -175,3 +175,14 @@ python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
 - 环形滤波、体素降采样、`PointCloud2` 字节布局（`point_step=12`、字段偏移 0/4/8、小端 float32）；
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
+## 诊断工具 bridge_doctor
+
+`bridge_doctor.py` 检查 `/uav/odom`、`/camera/image_raw`、`/camera/depth`、`/lidar/points`
+的实际频率和 `world -> base_link` TF：
+
+```bash
+rosrun carlair_ros_bridge bridge_doctor.py --duration 5
+rosrun carlair_ros_bridge bridge_doctor.py --skip-tf
+```
+
+输出 `PASS / LOW / NO_DATA` 表格，有 FAIL 时退出码为 1。
