@@ -1,0 +1,23 @@
+humanoid_reachability:
+  ros__parameters:
+    # 每臂均匀随机采样次数（7 维关节空间）
+    samples_per_arm: 200000
+    # 注意：samples_per_arm 建议保持为正数，过小会导致可达域覆盖不全
+    # 体素边长（m），越小体积估计越精细、体素数量越多
+    voxel_resolution: 0.03
+    # 高度切片厚度（m）
+    slice_height: 0.05
+    # 固定随机种子，保证结果可复现
+    random_seed: 2026
+    # 表面体素最大显示数量（超出后等间隔抽稀；0 表示不限制）
+    max_display_voxels: 2500
+    # MarkerArray / 统计话题发布频率（Hz）
+    publish_rate: 2.0
+
+arm_demo_node:
+  ros__parameters:
+    publish_hz: 20.0
+    # 正弦轨迹周期（s）
+    period: 8.0
+    # 振幅系数：相对各关节限位范围的一半
+    amplitude_scale: 0.35
