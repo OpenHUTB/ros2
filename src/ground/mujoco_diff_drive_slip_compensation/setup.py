@@ -28,10 +28,25 @@ setup(
         '/ MuJoCo 差速小车轮滑感知与轨迹补偿'
     ),
     license='Apache-2.0',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'main = mujoco_diff_drive_slip_compensation.main:main',
+            (
+                'collect_dataset = '
+                'mujoco_diff_drive_slip_compensation.collector:main'
+            ),
+            (
+                'command_profile = '
+                'mujoco_diff_drive_slip_compensation.command_profile:main'
+            ),
+            (
+                'train_slip_model = '
+                'mujoco_diff_drive_slip_compensation.slip_model:main'
+            ),
+            (
+                'generate_slip_sample_data = '
+                'mujoco_diff_drive_slip_compensation.generate_sample_dataset:main'
+            ),
         ],
     },
 )
