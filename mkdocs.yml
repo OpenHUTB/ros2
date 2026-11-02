@@ -79,6 +79,7 @@ nav:
     - ROS虚拟机器人圆形轨迹rviz可视化示例: './humanoid/ros_topic_demo/index.md'
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
     - 人形机器人全身逆运动学与可操作性: './humanoid/whole_body_ik.md'
+    - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
