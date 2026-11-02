@@ -197,6 +197,8 @@
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
@@ -255,7 +257,23 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 效果图</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 本机实测记录</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 运行环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 运行步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 性能评价</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#75">7.5 实测截图</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#76">7.6 按键闭环的复现方法</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 参考</a>
 </li>
 </ul>
 </li>
@@ -279,11 +297,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
 <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../gesture_control_drone/">手势控制无人机</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../gesture_control_bridge/">手势控制无人机（桥接层版）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
 </li>
@@ -459,7 +477,7 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <code>step_once</code> 再打包成 <code>geometry_msgs/Twist</code>。两者都不依赖 ROS/终端，
 可在无 ROS 的机器上单元测试（<code>tests/test_keyboard_local.py</code>，35 项）。</p>
 <h3 id="43">4.3 松开即悬停</h3>
-<p>节点以 30 Hz 持续发布：按键按下发对应速度，松开/未知键发全零。桥接层的
+<p>节点主循环 30 Hz，<strong>每轮循环发布一条</strong> <code>Twist</code>：读到按键就发该方向速度，没读到（松开/未知键）就发全零；按键<strong>不锁存</strong>，要连续运动必须持续按键（自动化时即"定频重复注入"，见 7.6）。桥接层的
 <code>cmd_vel_sub</code> 有「超过 <code>cmd_timeout</code> 无指令自动悬停」的安全保护，这里再叠加一层
 显式零速度，双保险防止无人机失控。</p>
 <h2 id="5-wasd">5. 与视口内置 WASD 的关系</h2>
@@ -470,23 +488,395 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <h2 id="6">6. 效果图</h2>
 <p>键盘控制演示（录屏转 GIF，<code>W 前进 / A 左移 / D 右移 / R 上升 / Q 右转</code> 机动，第三人称视角）：</p>
 <p><img alt="" src="../../img/air/uav_keyboard_control/keyboard_demo.gif"/></p>
-<h2 id="7">7. 参考</h2>
+<h2 id="7">7. 本机实测记录</h2>
+<h3 id="71">7.1 运行环境</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主机</td>
+<td>Windows + Unreal Engine 5.5 + <strong>Cosys-AirSim 3.3</strong>（Blocks 环境）</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>VMware 虚拟机，Ubuntu 20.04.6 LTS（内核 5.15）</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td><strong>ROS Noetic</strong>（Python 3.8.10）</td>
+</tr>
+<tr>
+<td>工作区</td>
+<td><code>~/uav_ws</code>（catkin）</td>
+</tr>
+<tr>
+<td>仿真器地址</td>
+<td><code>192.168.49.1:41451</code>（本次实测环境的值，即 VMware NAT 下 VMnet8 的宿主机地址；换环境请用 <code>ipconfig</code> 重新确认）</td>
+</tr>
+<tr>
+<td>AirSim RPC 监听</td>
+<td>本构建（Cosys-AirSim 3.3）<strong>无需修改 <code>settings.json</code></strong>：监听地址由顶层键 <code>"LocalHostIp"</code> 决定，默认空字符串即监听所有网卡。依据与实测见 <a href="#711-%E5%85%B3%E4%BA%8E-rpc-%E7%9B%91%E5%90%AC%E5%9C%B0%E5%9D%80">7.1.1</a></td>
+</tr>
+</tbody>
+</table>
+<h4 id="711-rpc">7.1.1 关于 RPC 监听地址</h4>
+<p>原文写的是「<code>settings.json</code> 必须含 <code>"ApiServerAddress": "0.0.0.0"</code>，默认只监听 <code>127.0.0.1</code>」。
+经核对本机构建的源码与二进制，<strong>这两句都不成立</strong>，特此更正：</p>
+<ul>
+<li><strong>键名不对。</strong> 本构建读取的是顶层键 <strong><code>"LocalHostIp"</code></strong>，不是 <code>ApiServerAddress</code>。
+  源码依据 <code>Plugins/AirSim/Source/AirLib/include/common/AirSimSettings.hpp</code>：</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1">//by default we spawn server at local endpoint. Do not use 127.0.0.1 as default below</span>
+<span class="c1">//because for docker container default is 0.0.0.0 and people get really confused why things</span>
+<span class="n">api_server_address</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">settings_json</span><span class="p">.</span><span class="n">getString</span><span class="p">(</span><span class="s">"LocalHostIp"</span><span class="p">,</span><span class="w"> </span><span class="s">""</span><span class="p">);</span>
+<span class="n">api_port</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="n">settings_json</span><span class="p">.</span><span class="n">getInt</span><span class="p">(</span><span class="s">"ApiServerPort"</span><span class="p">,</span><span class="w"> </span><span class="n">RpcLibPort</span><span class="p">);</span>
+</code></pre></div>
+<p>佐证：该构建的 <code>Binaries/Win64/UnrealEditor-AirSim.dll</code> 里能查到字符串
+  <code>LocalHostIp</code> 与 <code>ApiServerPort</code>，但<strong>查不到 <code>ApiServerAddress</code></strong>。</p>
+<ul>
+<li>
+<p><strong>「默认只监听 127.0.0.1」没有依据。</strong> 上面两行的默认值是<strong>空字符串</strong>，
+  紧邻的源码注释还明确写了「不要默认用 127.0.0.1，因为 docker 容器场景默认是 0.0.0.0」。
+  也就是<strong>默认就监听所有网卡</strong>。</p>
+</li>
+<li>
+<p><strong>实测与之一致。</strong> 宿主机 <code>netstat -ano | findstr 41451</code> 显示 <code>0.0.0.0:41451</code>，
+  客户机侧直连该端口即可建立 TCP 连接。</p>
+</li>
+</ul>
+<p><strong>结论</strong>：把「虚拟机连不上」归因于 <code>ApiServerAddress</code> 是错的，本机实测中<strong>从未真正需要</strong>这一项。
+如果确实要显式限定监听地址，应写成顶层键 <code>"LocalHostIp": "0.0.0.0"</code>。</p>
+<h3 id="72">7.2 运行步骤</h3>
+<p>前置：按 <a href="../setup_and_connect/">环境搭建与连接</a> 配好虚拟机 ROS 环境；
+按 <a href="../carlair_ros_bridge/">桥接模块</a> 的 <strong>2.1 节</strong>在宿主机启动 CarlaAir 仿真器，
+等终端输出 <code>CarlaAir is ready.</code>（此时 <code>41451</code> 端口就绪）。
+<strong>仿真器窗口不要最小化</strong>，否则 AirSim 取相机会阻塞。</p>
+<blockquote>
+<p>最初的本机实测是用一个<strong>自写的控制脚本</strong>（负责起飞并爬升到 15 m）配合桥接层完成的，
+那个脚本不属于本仓库。下面给出<strong>只用仓库内组件</strong>的等价步骤。</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="c1"># ① 客户机：桥接层</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://localhost:11311
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+<span class="c1"># &lt;宿主机IP&gt; 换成仿真器所在机器的地址（Windows 下用 ipconfig 查看，</span>
+<span class="c1"># 桥接模块文档中的示例为 192.168.94.1）</span>
+<span class="c1"># auto_takeoff 默认为 true：桥接层会 takeoff() 并 hover()，起飞后悬停在约 1 m</span>
+roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span>&lt;宿主机IP&gt;
+
+<span class="c1"># ② 客户机：把无人机送到 15 m 高空</span>
+<span class="c1">#    /uav/goal 是 ENU（z 向上为正），桥接层飞抵该点后自动悬停，</span>
+<span class="c1">#    并把 /uav/status 置为 GOAL_DONE</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/uav/goal<span class="w"> </span>geometry_msgs/Point<span class="w"> </span><span class="s2">"{x: 0.0, y: 0.0, z: 15.0}"</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span>/uav/odom/pose/pose/position<span class="w">     </span><span class="c1"># 确认 z ≈ 15</span>
+
+<span class="c1"># ③ 客户机：另开一个终端，键盘控制（作业要求的 launch 启动方式）</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ROS_MASTER_URI</span><span class="o">=</span>http://localhost:11311
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/uav_ws/devel/setup.bash
+roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
+<span class="c1"># 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出</span>
+</code></pre></div>
+<blockquote>
+<p><strong>关于 <code>auto_takeoff</code></strong>：它的语义是「<strong>起飞并悬停</strong>」——桥接层源码里就是
+<code>sim.takeoff()</code> + <code>sim.hover()</code>，<strong>并不会自动升到 15 m</strong>；想让无人机到 15 m，
+必须另外下发目标点（如上面第 ② 步）或速度指令。
+若把它设为 <code>false</code>，则无人机根本不会起飞，需要自己补上起飞动作。</p>
+</blockquote>
+<h3 id="73">7.3 实测结果</h3>
+<p>桥接层环境自检 <strong>5/5 通过</strong>：</p>
+<div class="highlight"><pre><span></span><code>[通过] airsim 包可用  -- 已导入
+[通过] 连接仿真器 192.168.49.1:41451  -- confirmConnection 成功
+[通过] 读取位姿  -- pos_enu=(-0.00, 0.00, -0.69) yaw=90.0°
+[通过] 相机取帧 front_rgb  -- 尺寸 640x480
+[通过] 激光雷达点云 lidar1  -- 点数 8192, x∈[-71.4, 93.6] z∈[-0.4, 22.5]
+自检结果: 5/5 通过
+</code></pre></div>
+<p><code>/uav/odom</code> 发布频率实测 <strong>19.999 Hz</strong>（设计值 20 Hz）。</p>
+<p>键盘闭环验证（用伪终端模拟真人按键，注入协议与脚本见 <a href="#76-%E6%8C%89%E9%94%AE%E9%97%AD%E7%8E%AF%E7%9A%84%E5%A4%8D%E7%8E%B0%E6%96%B9%E6%B3%95">7.6</a>）。
+下面是<strong>最初一次</strong>运行的位姿记录——当时用的是"单次写入 + 保持"协议，由 7.6.1 的源码分析可知该协议下<strong>一个字节只产生一条指令</strong>，因此这组数据只用来证明整条链路有效、位置确实发生变化，<strong>不能当作定量指标</strong>（定量结论见 7.4、7.6）：</p>
+<div class="highlight"><pre><span></span><code>[test] 节点已在伪终端中启动 (pid=22254)
+[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / ESC 退出
+
+按键前  (x, y, z) = ( 3.6e-07,  2.2e-07, 15.145)    ← 已按 7.2 第 ② 步送到 15 m
+按键后  (x, y, z) = ( 0.389,   -0.403,   15.071)    ← 水平移动约 0.56 m，高度保持
+</code></pre></div>
+<p><strong>位置发生实际变化</strong>，证明「键盘 → <code>/uav/cmd_vel</code> → 桥接层 → 仿真器」整条链路有效。</p>
+<h3 id="74">7.4 性能评价</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>实测值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/uav/odom</code> 发布频率</td>
+<td>19.999 ~ 20.24 Hz</td>
+<td>桥接层环境自检实测；另用 <code>rostopic hz /uav/odom</code> 复测为 20.010 Hz（min 0.041 s / max 0.055 s）</td>
+</tr>
+<tr>
+<td>键盘节点指令发布频率</td>
+<td>30 Hz</td>
+<td>由 <code>rate/publish_hz</code> 设定。<strong>这是设定值，不能当作端到端响应延迟的实测值</strong></td>
+</tr>
+<tr>
+<td>指令水平速度</td>
+<td>2.0 m/s</td>
+<td>由 <code>control/horiz_speed</code> 决定，可用参数覆盖</td>
+</tr>
+<tr>
+<td>单次按键脉冲的水平位移</td>
+<td>约 0.20 m（1 条非零指令）</td>
+<td>单次写入一个 <code>W</code> 字节：节点只在该轮循环发布一条非零指令，随后回落全零（源码见 7.6.1）。数字为评审在另一台机器（Ubuntu 20.04 + Noetic + Blocks/AirSim）的对照测试结果</td>
+</tr>
+<tr>
+<td>20 Hz 定频注入 3 s 的位移</td>
+<td>约 4.56 m（60 条非零指令）</td>
+<td>同上；注入频率 20 Hz、测量时段 3 s，等效平均速度约 1.5 m/s（低于设定 2.0 m/s，差额来自桥接层控制周期与加减速过程）</td>
+</tr>
+<tr>
+<td>遥控稳定性</td>
+<td>松开即悬停</td>
+<td>双重保护：节点显式发零速 + 桥接层 0.5 s 超时悬停</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>关于「按键响应延迟」</strong>：原表写的「&lt; 30 ms」是用 30 Hz 轮询周期反推出来的，
+既不是实测值，本身也和 30 Hz（周期 33 ms）矛盾，已删除。
+要得到真实延迟，需要给按键打时间戳、再和 <code>/uav/cmd_vel</code> 首帧的到达时刻对比，
+本机没有做这项测量，因此不给出数字。</p>
+</blockquote>
+<h3 id="75">7.5 实测截图</h3>
+<p>键盘控制窗口。<code>main.launch</code> 通过 <code>launch-prefix="xterm -e"</code> 拉起，
+窗口标题为 <code>main.py</code>，黑底白字即是键位帮助：</p>
+<p><img alt="键盘控制窗口" src="../../img/air/uav_keyboard_control/xterm_keyboard_window.png"/></p>
+<p>仿真器中无人机自动起飞至 15 m 悬停。AirSim 叠加层显示
+<code>requestApiControl was successful</code>、<code>Vehicle is already armed</code>、<code>Collision Count:0</code>：</p>
+<p><img alt="15 m 悬停" src="../../img/air/uav_keyboard_control/hover_15m.png"/></p>
+<h3 id="76">7.6 按键闭环的复现方法</h3>
+<h4 id="761">7.6.1 先看清语义：一个字节只产生一条速度指令</h4>
+<p><code>src/air/uav_keyboard_control/scripts/keyboard_control.py</code> 的主循环：</p>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">RawKeyReader</span><span class="p">()</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>      <span class="c1"># 没按键时返回 None</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">:</span>                       <span class="c1"># ESC 退出</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_once</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>   <span class="c1"># 每轮循环发布一条 Twist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>                       <span class="c1"># 30 Hz</span>
+</code></pre></div>
+<ul>
+<li>每一轮循环<strong>发布一条</strong> <code>Twist</code>：读到键就发该方向速度，没读到键（<code>None</code>）就发<strong>全零</strong>；</li>
+<li>因此<strong>写入一个字节 = 一条非零指令</strong>，约 33 ms 后的下一轮循环就回落到零速。
+  按键<strong>不是锁存的</strong>：写一次 <code>W</code> 并不会让飞机持续前进，只会"推一下"。</li>
+</ul>
+<p>这一点由评审在另一台机器上实测确认（Ubuntu 20.04 / ROS Noetic / 本机 Blocks+AirSim）：</p>
+<table>
+<thead>
+<tr>
+<th>注入方式</th>
+<th>收到的非零 <code>/uav/cmd_vel</code></th>
+<th>水平位移</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单次写入 <code>W</code></td>
+<td><strong>1 条</strong></td>
+<td>约 <strong>0.20 m</strong></td>
+</tr>
+<tr>
+<td>以 <strong>20 Hz</strong> 重复写入 <code>W</code>、持续 <strong>3 s</strong>（60 次）</td>
+<td><strong>60 条</strong></td>
+<td>约 <strong>4.56 m</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>本页早期版本写的是「每个按键写一次字节、保持 2.5~3 s，节点在这段时间内持续发布该方向速度」——
+<strong>这是错的</strong>（作者当时误以为按键会被锁存），已删除；早期按该协议得到的位移数字
+也不再作为定量指标。</p>
+</blockquote>
+<h4 id="762">7.6.2 两种可复现协议</h4>
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th>注入方式</th>
+<th>注入频率</th>
+<th>测量时段</th>
+<th>预期观测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A 单次脉冲</td>
+<td>只写一个 <code>b"w"</code></td>
+<td>一次</td>
+<td>写入后 1.0 s 内的位姿差</td>
+<td>1 条非零指令；位移约 0.20 m</td>
+</tr>
+<tr>
+<td>B 定频注入</td>
+<td>循环写 <code>b"w"</code></td>
+<td><strong>20 Hz</strong></td>
+<td><strong>连续 3.0 s</strong>（共写入 60 次）</td>
+<td>60 条非零指令；位移约 4.56 m</td>
+</tr>
+</tbody>
+</table>
+<p>测量方法（两条协议通用）：</p>
+<ol>
+<li>客户机先按 7.2 启动桥接层与键盘节点，确认无人机已在目标高度悬停；</li>
+<li>测量时段首尾各取一次位姿：
+   <code>rostopic echo -n1 /uav/odom/pose/pose/position</code>，两者相减即水平位移；</li>
+<li>同时统计指令条数核对"写入次数 → 非零指令条数"：
+   <code>rostopic echo -p /uav/cmd_vel/linear/x</code>，数其中 <code>!= 0</code> 的样本条数。</li>
+</ol>
+<blockquote>
+<p>注意：桥接层 <code>cmd_timeout</code> 有"超时自动悬停"保护，定频注入的间隔要明显小于它
+（默认 0.5 s），20 Hz（50 ms）远小于该阈值。</p>
+</blockquote>
+<h4 id="763-pty">7.6.3 注入脚本（pty + 定频重复写入，仅用标准库）</h4>
+<p>保存为 <code>kb_inject_test.py</code>，在已 source 工作空间的客户机上运行：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<span class="w"> </span>pulse<span class="w">                            </span><span class="c1"># 协议 A</span>
+python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<span class="w"> </span>repeat<span class="w"> </span>--hz<span class="w"> </span><span class="m">20</span><span class="w"> </span>--seconds<span class="w"> </span><span class="m">3</span><span class="w">       </span><span class="c1"># 协议 B</span>
+</code></pre></div>
+<details>
+<summary>点击展开 kb_inject_test.py（纯标准库，无第三方依赖）</summary>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">"""用伪终端(pty)把按键按固定频率"敲"进 uav_keyboard_control，模拟真人连续按键。</span>
+
+<span class="sd">为什么要定频重复写入：节点主循环每轮只发布一条 Twist（见文档 7.6.1），</span>
+<span class="sd">写一次字节只"推一下"；要让飞机持续运动，必须按固定频率重复写。</span>
+
+<span class="sd">用法：</span>
+<span class="sd">  python3 kb_inject_test.py --mode pulse                         # 协议 A：单次脉冲</span>
+<span class="sd">  python3 kb_inject_test.py --mode repeat --hz 20 --seconds 3    # 协议 B：20 Hz 定频</span>
+<span class="sd">"""</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pty</span>
+<span class="kn">import</span> <span class="nn">select</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">CMD</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"rosrun"</span><span class="p">,</span> <span class="s2">"uav_keyboard_control"</span><span class="p">,</span> <span class="s2">"main.py"</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">ap</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--mode"</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">(</span><span class="s2">"pulse"</span><span class="p">,</span> <span class="s2">"repeat"</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="s2">"repeat"</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--key"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">"w"</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--hz"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">20.0</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--seconds"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--boot-wait"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"节点初始化等待 (s)"</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">pid</span><span class="p">,</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">pty</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>                                  <span class="c1"># 子进程：节点本体</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">execvp</span><span class="p">(</span><span class="n">CMD</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CMD</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>                  <span class="c1"># noqa: BLE001</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"exec failed: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">"</span> <span class="o">%</span> <span class="n">exc</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">_exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"[test] 节点已在伪终端中启动 (pid=</span><span class="si">%d</span><span class="s2">)"</span> <span class="o">%</span> <span class="n">pid</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">boot_wait</span><span class="p">)</span>                    <span class="c1"># 等节点初始化并打印启动信息</span>
+
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">drain</span><span class="p">(</span><span class="n">seconds</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""在 seconds 秒内持续把子进程输出读走（保持伪终端不被写满）。"""</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">+</span> <span class="n">seconds</span>
+        <span class="k">while</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">r</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">fd</span><span class="p">],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mf">0.02</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">4096</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">drain</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"pulse"</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[test] 协议 A：单次写入 </span><span class="si">%r</span><span class="s2">，测量时段 1.0 s"</span> <span class="o">%</span> <span class="n">args</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">drain</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">args</span><span class="o">.</span><span class="n">hz</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">seconds</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">hz</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[test] 协议 B：</span><span class="si">%r</span><span class="s2"> 以 </span><span class="si">%.1f</span><span class="s2"> Hz 重复写入 </span><span class="si">%d</span><span class="s2"> 次，测量时段 </span><span class="si">%.1f</span><span class="s2"> s"</span>
+              <span class="o">%</span> <span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">hz</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seconds</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="n">nxt</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">period</span>
+            <span class="n">drain</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">nxt</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"[test] 定频注入结束，实际用时 </span><span class="si">%.2f</span><span class="s2"> s"</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
+
+    <span class="c1"># 松开：不再写字节，节点下一轮循环自动发全零</span>
+    <span class="n">drain</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="n">drain</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----- 键盘节点输出 -----"</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="s2">"replace"</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"----- 输出结束 -----"</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div>
+</details>
+<h2 id="8">8. 参考</h2>
 <ul>
 <li><a href="../carlair_ros_bridge/">carlair_ros_bridge 桥接模块</a></li>
 <li><a href="https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient">AirSim 无人机 API 参考</a></li>
-</ul></div>
+</ul>
+<hr/>
+<p>本文档在编写过程中使用了 AI 大模型辅助（资料核对、文档起草、问题排查）。
+文中运行环境、命令与<strong>实测数据</strong>均来自本机实际运行记录：桥接层环境自检 <strong>5/5 通过</strong>、
+<code>/uav/odom</code> 发布频率实测 <strong>19.999 Hz</strong>；键盘闭环的位姿记录与两种注入协议（单次脉冲 / 20 Hz 定频）见第 7 节，其中「单次脉冲 ≈ 0.20 m、20 Hz 定频 3 s ≈ 4.56 m」为评审在另一台机器上的对照复现结果，本页据此更正了先前关于"按键锁存"的错误描述；
+对应的终端输出与截图已随本页一并提交（第 7 节）并被评审逐条核对过；
+作者对提交内容的正确性与完整性负全部责任。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../rooftop_landing_nn/" title="无人机屋顶降落（学习型落点选择）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
 <a class="btn btn-neutral float-right" href="../uav_ppo_nav/" title="基于 PPO 的无人机导航避障">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr/>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>

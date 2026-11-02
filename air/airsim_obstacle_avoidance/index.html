@@ -6,15 +6,15 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>手势控制无人机（桥接层版） - 模拟器的 ROS 文档</title>
+<title>AirSim Unity 无人机曲线绕柱避障实验 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u624b\u52bf\u63a7\u5236\u65e0\u4eba\u673a\uff08\u6865\u63a5\u5c42\u7248\uff09";
-        var mkdocs_page_input_path = "air/gesture_control_bridge.md";
+        var mkdocs_page_name = "AirSim Unity \u65e0\u4eba\u673a\u66f2\u7ebf\u7ed5\u67f1\u907f\u969c\u5b9e\u9a8c";
+        var mkdocs_page_input_path = "air/airsim_obstacle_avoidance.md";
         var mkdocs_page_url = null;
       </script>
 <!--[if lt IE 9]>
@@ -197,6 +197,28 @@
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal current" href="#">AirSim Unity 无人机曲线绕柱避障实验</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">修改目的与内容</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">测试环境与结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_3">构建与运行命令</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_4">验证操作与结果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">运行效果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">已知限制与尚未验证内容</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">提交前检查</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">大模型使用声明</a>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
@@ -255,47 +277,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
 <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../gesture_control_drone/">手势控制无人机</a>
-</li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">手势控制无人机（桥接层版）</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 它解决什么问题</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 指令 → 桥接层消息</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#21-n">2.1 为什么一"次"手势要发 N 条速度指令</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#22">2.2 给桥接层补的动作通道</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 环境要求</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5. 话题接口</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 参数</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 自测</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#9">9. 运行证据</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#91">9.1 离线回归（本机真实输出）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#92">9.2 桥接层联调（真机）</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#10">10. 与直连版的关系</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#11">11. 大模型使用声明</a>
-</li>
-</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
 </li>
@@ -388,451 +374,124 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">空域载具</li>
-<li class="breadcrumb-item active">手势控制无人机（桥接层版）</li>
+<li class="breadcrumb-item active">AirSim Unity 无人机曲线绕柱避障实验</li>
 <li class="wy-breadcrumbs-aside">
-<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/gesture_control_bridge.md"> 编辑页面</a>
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/airsim_obstacle_avoidance.md"> 编辑页面</a>
 </li>
 </ul>
 <hr/>
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="_1">手势控制无人机（桥接层版）</h1>
-<p>用<strong>摄像头 + MediaPipe</strong> 识别手势，但执行层不再直连 AirSim，而是把指令翻译成
-<code>carlair_ros_bridge</code> 的话题（<code>/uav/action</code>、<code>/uav/cmd_vel</code>、<code>/uav/goal</code>），由桥接层
-统一限速、超时悬停并执行。</p>
-<p>源码位于 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/gesture_control_bridge"><code>src/air/gesture_control_bridge</code></a>，
-完整运行细节见模块 <code>README.md</code>；<strong>直连版</strong>见 <a href="../gesture_control_drone/"><code>gesture_control_drone</code></a>。</p>
-<hr/>
-<h2 id="1">1. 它解决什么问题</h2>
-<p><code>gesture_control_drone</code> 已经证明"手势能飞"，但它是<strong>直连 AirSim</strong> 的：自己建连接、
-自己限速、自己判超时。仓库里其它无人机模块（键盘、遥操作、导航）都统一走
-<code>carlair_ros_bridge</code>，直连就带来三个问题：</p>
-<ol>
-<li><strong>安全逻辑两份</strong>：模块自己的 <code>command_timeout</code> 与桥接层的 <code>cmd_timeout</code> 语义不同，
-   出问题时不知道哪一层生效；</li>
-<li><strong>换仿真器要改模块</strong>：换 CarlaAir、多机 <code>vehicle_name</code>、换桥接层的限速策略，都得动手势代码；</li>
-<li><strong>位姿话题两套</strong>：直连版发 <code>/drone/odom</code>，桥接层发 <code>/uav/odom</code>，RViz/TF 里容易混乱。</li>
-</ol>
-<p>本模块把"翻译"和"执行"分开：</p>
-<div class="highlight"><pre><span></span><code>gesture_control_drone（感知，不动）
-    /gesture_command ──►  gesture_control_bridge（只翻译，不连仿真器）
-                             ├─ /uav/action   takeoff | land | hover
-                             ├─ /uav/cmd_vel  机体系速度流（前/左/上 + 偏航角速度）
-                             └─ /uav/goal     home 的 ENU 目标点
-                                        │
-                              carlair_ros_bridge（唯一连仿真器）
-                                        ├─ control/* 限速限幅
-                                        ├─ cmd_timeout 超时自动悬停
-                                        ├─ /uav/odom + TF
-                                        └─ 多机 vehicle_name
-</code></pre></div>
-<p>换仿真器、改限速、上多机，都只动桥接层参数，本模块一行不改。</p>
-<h2 id="2">2. 指令 → 桥接层消息</h2>
-<table>
-<thead>
-<tr>
-<th>手势指令</th>
-<th>通道</th>
-<th>消息</th>
-<th>内容</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>takeoff</code> / <code>land</code> / <code>hover</code></td>
-<td><code>/uav/action</code></td>
-<td><code>std_msgs/String</code></td>
-<td>一条消息，桥接层在工作线程里执行</td>
-</tr>
-<tr>
-<td><code>forward</code></td>
-<td><code>/uav/cmd_vel</code></td>
-<td><code>geometry_msgs/Twist</code></td>
-<td><code>linear.x = +speed</code>（机体系前）</td>
-</tr>
-<tr>
-<td><code>up</code> / <code>down</code></td>
-<td><code>/uav/cmd_vel</code></td>
-<td><code>Twist</code></td>
-<td><code>linear.z = ±speed</code>（机体系上/下）</td>
-</tr>
-<tr>
-<td><code>yaw_left</code> / <code>yaw_right</code></td>
-<td><code>/uav/cmd_vel</code></td>
-<td><code>Twist</code></td>
-<td><code>angular.z = ±yaw_rate</code>（rad/s，逆时针为正）</td>
-</tr>
-<tr>
-<td><code>home</code></td>
-<td><code>/uav/goal</code></td>
-<td><code>geometry_msgs/Point</code></td>
-<td><code>(0, 0, home_altitude)</code>，ENU 世界系</td>
-</tr>
-<tr>
-<td><code>estop</code></td>
-<td><code>/uav/cmd_vel</code> + <code>/uav/action</code></td>
-<td><code>Twist</code>×N + <code>String</code></td>
-<td>先 <code>estop_zeros</code> 条零速刹停，再 <code>hover</code>（或 <code>land</code>）</td>
-</tr>
-</tbody>
-</table>
-<h3 id="21-n">2.1 为什么一"次"手势要发 N 条速度指令</h3>
-<p>桥接层的两条安全语义决定了这件事：</p>
-<table>
-<thead>
-<tr>
-<th>桥接层参数</th>
-<th>默认</th>
-<th>含义</th>
-<th>对本模块的约束</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>control/cmd_duration</code></td>
-<td>0.1 s</td>
-<td><strong>单条</strong>速度指令的作用时长</td>
-<td>只发一条 → 飞机只动 0.1 s</td>
-</tr>
-<tr>
-<td><code>rate/cmd_timeout</code></td>
-<td>0.5 s</td>
-<td>超过该时间没有<strong>新</strong>指令 → 自动悬停</td>
-<td>发得太稀 → 中途被悬停打断</td>
-</tr>
-</tbody>
-</table>
-<p>所以一次 1 s 的位移被拆成 <code>action_duration × stream_hz = 1.0 × 20 = 20</code> 条、
-间隔 <code>1/20 = 0.05 s</code> 的指令流：每条覆盖 0.1 s、下一条在 0.05 s 后接上，既不中断也不堆积。
-<code>tests/test_gesture_bridge_local.py</code> 会直接读桥接层的 <code>bridge.yaml</code> 校验
-<code>1/stream_hz &lt; cmd_timeout</code>，防止以后有人把频率调低把功能调坏。</p>
-<h3 id="22">2.2 给桥接层补的动作通道</h3>
-<p>桥接层原本只有速度（<code>/uav/cmd_vel</code>）和目标点（<code>/uav/goal</code>）两个通道，"起飞"只能靠
-<code>control/auto_takeoff</code> 启动即起飞，<strong>没有降落通道</strong>。本模块给它补了最小的
-<code>/uav/action</code>（<code>takeoff</code> / <code>land</code> / <code>hover</code>）：</p>
+<div><h1 id="airsim-unity">AirSim Unity 无人机曲线绕柱避障实验报告</h1>
+<h2 id="_1">修改目的与内容</h2>
+<p>原始程序在柱子前反复朝目标转向和扫描，或者以约 0.019 m/s 缓慢前进，无法顺利绕过柱子。实验目标是在 AirSim Unity 场景中，从已知出生点起飞，利用前视深度扫描绕过静态柱子，继续到达柱子中心后方 12 米处。</p>
+<p>实现内容：</p>
 <ul>
-<li><code>cmd_vel_sub.py</code> 新增 <code>cb_action</code> + <code>_action_worker</code>，用独立线程调用
-  <code>SimClient.takeoff()/land()/hover()</code>（同步调用会阻塞到动作完成，不能放订阅回调）；</li>
-<li>动作执行期间 <code>action_active</code> 置位，速度通道让位（与原有的 <code>goal_active</code> 一致），
-  避免"边降落边接受速度指令"；</li>
-<li>状态回报：<code>ACTION:takeoff</code> → <code>ACTION_DONE takeoff</code> / <code>ACTION_FAILED takeoff &lt;err&gt;</code>；</li>
-<li>因此桥接层的 <code>auto_takeoff</code> 在配合本模块时应设为 <strong><code>false</code></strong>，由手势决定何时起飞。</li>
+<li>本机 Unity 插件仅对 DepthVis 启用深度着色器，因此改用浮点 DepthVis，按裁剪面和色彩空间解码距离。</li>
+<li>将机体半径 0.6 米和额外间距 1.5 米用于障碍膨胀，检查候选运动通道。</li>
+<li>候选方向同时考虑目标方向、上次世界航向和绕行侧偏好，抑制左右摇头；沿可见安全方向移动，偏航平滑跟随，形成曲线绕行。</li>
+<li>取消固定 85% 绕行限速，安全通道足够时可使用设定的 1.2 m/s；距离不足和接近终点仍减速。</li>
+<li>飞行中检查控制权、碰撞、深度时间戳和水平位移；异常时尝试降落。落地未确认则保留控制权并提示检查 Unity。</li>
 </ul>
-<h2 id="3">3. 环境要求</h2>
+<h2 id="_2">测试环境与结果</h2>
 <table>
 <thead>
 <tr>
-<th>位置</th>
 <th>项目</th>
-<th>版本</th>
+<th>实际环境</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>宿主</td>
-<td>操作系统</td>
-<td>Windows 10/11</td>
+<td>系统</td>
+<td>Windows，内核版本 10.0.26200.0（Windows 11 系列）</td>
 </tr>
 <tr>
-<td>宿主</td>
-<td>模拟器</td>
-<td>AirSim（Blocks）或 CarlaAir，RPC 41451</td>
-</tr>
-<tr>
-<td>客户机</td>
-<td>操作系统</td>
-<td>Ubuntu 20.04</td>
-</tr>
-<tr>
-<td>客户机</td>
 <td>ROS</td>
-<td>Noetic（ROS 1）</td>
+<td>本次实验未使用 ROS，不宣称验证了 ROS 节点或消息接口</td>
 </tr>
 <tr>
-<td>客户机</td>
 <td>Python</td>
-<td>3.8</td>
+<td>独立虚拟环境 Python 3.9.13，64 位</td>
 </tr>
 <tr>
-<td>客户机</td>
-<td>依赖</td>
-<td><code>python3-opencv</code> <code>python3-numpy</code> <code>python3-pil</code>（apt）<br/><code>mediapipe</code>(0.10.x) <code>airsim</code>（pip，见 <code>gesture_control_drone/requirements.txt</code>）</td>
+<td>模拟器</td>
+<td>Microsoft AirSim 1.8.1 Unity 源码项目，SimpleFlight</td>
+</tr>
+<tr>
+<td>Unity</td>
+<td>项目记录 2019.3.12f1，revision 84b23722532d</td>
+</tr>
+<tr>
+<td>RPC</td>
+<td>msgpack-rpc-python 0.4.1、msgpack-python 0.5.6、Tornado 4.5.3</td>
+</tr>
+<tr>
+<td>数值依赖</td>
+<td>NumPy 1.26.4</td>
+</tr>
+<tr>
+<td>通信</td>
+<td>本机 127.0.0.1:41451，前视相机 0</td>
 </tr>
 </tbody>
 </table>
-<p>摄像头必须接在<strong>跑 ROS 的那台机器</strong>上（虚拟机需透传 USB 摄像头；VMware 透传时建议
-<code>GESTURE_CAMERA_FOURCC=MJPG</code>，见直连版文档 §9.3）。</p>
-<h2 id="4">4. 运行</h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># 1) 编译</span>
-<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
-
-<span class="c1"># 2) 宿主机启动 AirSim</span>
-
-<span class="c1"># 3) 一条命令：桥接层 + 手势感知 + 本模块</span>
-roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.49.1
-
-<span class="c1"># 或分两个终端（推荐，桥接层日志单独看）：</span>
-roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.49.1<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_lidar:<span class="o">=</span><span class="nb">false</span>
-roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>start_bridge:<span class="o">=</span><span class="nb">false</span>
+<p>源码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/airsim_obstacle_avoidance">模块目录</a>。本模块提供 main.py 和 PowerShell launch 启动器；不提供未经验证的 ROS 封装。</p>
+<h3 id="_3">构建与运行命令</h3>
+<p>实验使用已安装并构建好的 AirSim Unity 插件，不需要编译本模块。依赖安装与 main.py 启动器见模块 README。以下命令与原成功运行使用相同飞行参数，入口与目录已统一为便于复现的写法；新入口未重新实飞。完整安装见 <a href="https://github.com/OpenHUTB/ros2/blob/master/src/air/airsim_obstacle_avoidance/README.md">模块 README</a>。命令如下，在 Windows PowerShell 执行：</p>
+<div class="highlight"><pre><span></span><code><span class="c"># 先按模块 README 第 2 节完成安装，再在仓库根目录执行</span>
+<span class="p">&amp;</span> <span class="s2">".\.venv-airsim\Scripts\python.exe"</span> <span class="p">.\</span><span class="n">src</span><span class="p">\</span><span class="n">air</span><span class="p">\</span><span class="n">airsim_obstacle_avoidance</span><span class="p">\</span><span class="n">main</span><span class="p">.</span><span class="n">py</span> <span class="p">-</span><span class="n">-route</span> <span class="n">goal</span> <span class="p">-</span><span class="n">-goal-x</span> <span class="n">29</span> <span class="p">-</span><span class="n">-goal-y</span> <span class="n">0</span> <span class="p">-</span><span class="n">-altitude</span> <span class="n">3</span> <span class="p">-</span><span class="n">-speed</span> <span class="n">1</span><span class="p">.</span><span class="n">2</span> <span class="p">-</span><span class="n">-stop-distance</span> <span class="n">3</span> <span class="p">-</span><span class="n">-curve-distance</span> <span class="n">2</span> <span class="p">-</span><span class="n">-safety-margin</span> <span class="n">1</span><span class="p">.</span><span class="n">5</span> <span class="p">-</span><span class="n">-vehicle-radius</span> <span class="n">0</span><span class="p">.</span><span class="n">6</span> <span class="p">-</span><span class="n">-timeout</span> <span class="n">180</span>
 </code></pre></div>
-<p>预期日志：</p>
-<div class="highlight"><pre><span></span><code>[bridge] 已启动：订阅 /gesture_command -&gt; /uav/cmd_vel / /uav/action / /uav/goal
-[bridge] 指令通道：takeoff-&gt;/uav/action，land-&gt;/uav/action，…，forward-&gt;/uav/cmd_vel，…
-[bridge] 速度 0.80 m/s，偏航 0.50 rad/s，单次时长 1.00 s，指令流 20 Hz（20 条/次），急停=hover
-[bridge] takeoff OK action=takeoff
-[bridge] forward OK cmd_vel×20 (0.80,0.00,0.00) yaw=0.00 rad/s
+<p>步骤：停止旧脚本，Unity 停止后重新 Play，确认载具出生点位于 Unity X=-320、Z=212；柱子中心 X=-320、Z=229，宽深约 2 米，保留 Box Collider；运行 Python。目标 N/E 坐标为 <code>(241,-320)</code>，对应 Unity X=-320、Z=241，即柱子中心沿 +Z 后方 12 米（不是从柱子后表面量起）。altitude 3 表示在起飞后报告位置基础上再上升 3 米。</p>
+<h3 id="_4">验证操作与结果</h3>
+<p>用户完成实际飞行并提供下方原始动图，反馈运行成功。程序的成功场景是静态柱子和固定目标，不代表通用障碍环境已验证。</p>
+<p>保存的 <a href="flight.csv">真实飞行日志</a> 包含位置、速度、偏航、通道距离、目标和绕行侧。最后一条记录时间为 33.39 秒，位置约 <code>(240.025,-320.488)</code>，目标为 <code>(241,-320)</code>，距离约 1.09 米。这是原始证据，未因代码修订而改写；当前版本新增 events.jsonl 记录到点、异常、超时、手动中断和降落结果，但尚未重新实飞。该旧 CSV 没有单独的终止事件记录，不能仅据此认定满足 0.8 米到点阈值或自动降落已确认；成功反馈和动图、CSV 应分别理解。</p>
+<p>离线测试执行目录为 <code>src/air/airsim_obstacle_avoidance</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="p">&amp;</span> <span class="s2">"..\..\..\.venv-airsim\Scripts\python.exe"</span> <span class="n">-m</span> <span class="n">unittest</span> <span class="n">-v</span> <span class="n">test_avoidance</span>
 </code></pre></div>
-<h2 id="5">5. 话题接口</h2>
-<table>
-<thead>
-<tr>
-<th>方向</th>
-<th>话题</th>
-<th>类型</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>订阅</td>
-<td><code>/gesture_command</code></td>
-<td><code>std_msgs/String</code></td>
-<td>手势指令 token（由 <code>gesture_control_drone</code> 发布）</td>
-</tr>
-<tr>
-<td>订阅</td>
-<td><code>/uav/status</code></td>
-<td><code>std_msgs/String</code></td>
-<td>桥接层状态（<code>READY</code>/<code>HOVER</code>/<code>VELOCITY</code>/<code>ACTION_DONE</code>…）</td>
-</tr>
-<tr>
-<td>订阅</td>
-<td><code>/uav/odom</code></td>
-<td><code>nav_msgs/Odometry</code></td>
-<td>桥接层位姿（本模块只用于日志/观测）</td>
-</tr>
-<tr>
-<td>发布</td>
-<td><code>/uav/action</code></td>
-<td><code>std_msgs/String</code></td>
-<td><code>takeoff</code> / <code>land</code> / <code>hover</code></td>
-</tr>
-<tr>
-<td>发布</td>
-<td><code>/uav/cmd_vel</code></td>
-<td><code>geometry_msgs/Twist</code></td>
-<td>机体系速度流</td>
-</tr>
-<tr>
-<td>发布</td>
-<td><code>/uav/goal</code></td>
-<td><code>geometry_msgs/Point</code></td>
-<td>home 目标点（ENU）</td>
-</tr>
-<tr>
-<td>发布</td>
-<td><code>/gesture_bridge/state</code></td>
-<td><code>std_msgs/String</code></td>
-<td>本模块的执行结果，便于排查</td>
-</tr>
-</tbody>
-</table>
-<p>排查命令：</p>
-<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_command<span class="w">        </span><span class="c1"># 感知端有没有发指令</span>
-rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_bridge/state<span class="w">   </span><span class="c1"># 本模块翻译成了什么</span>
-rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/status<span class="w">             </span><span class="c1"># 桥接层执行到哪一步</span>
-rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/odom<span class="w">               </span><span class="c1"># 位姿有没有真的变</span>
-rostopic<span class="w"> </span>hz<span class="w"> </span>/uav/cmd_vel<span class="w">              </span><span class="c1"># 指令流是否按 20 Hz 发（一次动作约 1 s）</span>
-</code></pre></div>
-<h2 id="6">6. 参数</h2>
-<table>
-<thead>
-<tr>
-<th>参数</th>
-<th>默认</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>command_topic</code></td>
-<td><code>/gesture_command</code></td>
-<td>订阅的手势指令话题</td>
-</tr>
-<tr>
-<td><code>cmd_vel_topic</code> / <code>action_topic</code> / <code>goal_topic</code></td>
-<td><code>/uav/cmd_vel</code> / <code>/uav/action</code> / <code>/uav/goal</code></td>
-<td>三个输出通道</td>
-</tr>
-<tr>
-<td><code>status_topic</code> / <code>odom_topic</code></td>
-<td><code>/uav/status</code> / <code>/uav/odom</code></td>
-<td>桥接层状态与位姿</td>
-</tr>
-<tr>
-<td><code>speed</code></td>
-<td>0.8</td>
-<td>机体系线速度 m/s（须 ≤ 桥接层 <code>max_horiz_speed</code>/<code>max_vert_speed</code>）</td>
-</tr>
-<tr>
-<td><code>yaw_rate</code></td>
-<td>0.5</td>
-<td>偏航角速度 rad/s（须 ≤ 桥接层 <code>max_yaw_rate</code>）</td>
-</tr>
-<tr>
-<td><code>action_duration</code></td>
-<td>1.0</td>
-<td>一次位移/偏航持续时长 s</td>
-</tr>
-<tr>
-<td><code>stream_hz</code></td>
-<td>20.0</td>
-<td>速度指令流频率 Hz（<code>1/hz</code> 必须 &lt; 桥接层 <code>cmd_timeout</code>）</td>
-</tr>
-<tr>
-<td><code>home_altitude</code></td>
-<td>3.0</td>
-<td><code>home</code> 的 ENU 高度 m</td>
-</tr>
-<tr>
-<td><code>estop_action</code></td>
-<td>hover</td>
-<td>急停语义：<code>hover</code>（刹停后悬停）/ <code>land</code>（刹停后降落）</td>
-</tr>
-<tr>
-<td><code>estop_zeros</code></td>
-<td>5</td>
-<td>急停先发几条零速</td>
-</tr>
-<tr>
-<td><code>command_cooldown</code></td>
-<td>0.5</td>
-<td>同一条指令的最小间隔 s</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p><strong>限速/限幅不在本模块</strong>：改速度上限请改 <code>carlair_ros_bridge/config/bridge.yaml</code>
-的 <code>control/max_*</code>；本模块只保证自己发出去的速度不超过它（离线回归里有这条断言）。</p>
-</blockquote>
-<h2 id="7">7. 自测</h2>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_gesture_bridge_local.py
-</code></pre></div>
-<p>覆盖：脚本语法与静态约定、<strong>与 <code>gesture_control_drone</code> 的词表契约</strong>（逐项比对，防漂移）、
-指令→<code>Twist</code>/<code>Point</code>/<code>String</code> 映射与符号、指令流条数与节拍、<strong>桥接层 <code>cmd_timeout</code>
-兼容性</strong>、急停（零速 + 动作）、home 目标点、节点冷却/未知指令/退出安全、工程文件与文档约定。</p>
-<h2 id="8">8. 常见问题</h2>
-<table>
-<thead>
-<tr>
-<th>现象</th>
-<th>原因与处理</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>发的 <code>takeoff</code> 没反应，桥接层日志报 <code>already moving</code></td>
-<td>桥接层 <code>auto_takeoff</code> 还是 <code>true</code>（它启动就起飞了）→ 用 <code>auto_takeoff:=false</code></td>
-</tr>
-<tr>
-<td>飞机只动一下就停</td>
-<td>指令流频率太低（<code>stream_hz</code> 被调小）导致被 <code>cmd_timeout</code> 判失效 → 保持 20 Hz</td>
-</tr>
-<tr>
-<td><code>rostopic hz /uav/cmd_vel</code> 看不到数据</td>
-<td>只在动作那一瞬间有（约 1 s / 20 条），动作结束就没有了，属正常</td>
-</tr>
-<tr>
-<td><code>land</code> 卡住十几秒</td>
-<td>桥接层是同步 <code>land()</code>，降落实测 20 s 量级（AirSim 下降约 0.2 m/s 且带减速）</td>
-</tr>
-<tr>
-<td>桥接管相机/雷达节点报错退出</td>
-<td>纯 AirSim Blocks 没有 <code>front_rgb</code>/<code>lidar1</code> → <code>publish_image:=false publish_lidar:=false</code></td>
-</tr>
-</tbody>
-</table>
-<h2 id="9">9. 运行证据</h2>
-<h3 id="91">9.1 离线回归（本机真实输出）</h3>
-<p><img alt="离线回归全部通过" src="../../img/air/gesture_control_bridge/local_test.png"/></p>
-<p>上图由 <code>gesture_control_drone/tools/log_to_png.py</code> 从<strong>真实终端输出</strong>渲染（不是系统截屏）：</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_gesture_bridge_local.py<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>/tmp/bridge_test.log
-python3<span class="w"> </span>src/air/gesture_control_drone/tools/log_to_png.py<span class="w"> </span>/tmp/bridge_test.log<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>docs/img/air/gesture_control_bridge/local_test.png<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--title<span class="w"> </span><span class="s2">"python3 tests/test_gesture_bridge_local.py"</span>
-</code></pre></div>
-<h3 id="92">9.2 桥接层联调（真机）</h3>
-<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span>&lt;宿主IP&gt;<span class="w"> </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_lidar:<span class="o">=</span><span class="nb">false</span>
-roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>start_bridge:<span class="o">=</span><span class="nb">false</span>
-<span class="c1"># 另一个终端：</span>
-rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'takeoff'"</span>
-rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'forward'"</span>
-rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'land'"</span>
-rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/status<span class="w">     </span><span class="c1"># ACTION:takeoff -&gt; VELOCITY -&gt; ACTION:land -&gt; HOVER</span>
-</code></pre></div>
-<p>证据图（<code>docs/img/air/gesture_control_bridge/</code>）待真机跑通后按上面的命令生成。</p>
-<h2 id="10">10. 与直连版的关系</h2>
-<table>
-<thead>
-<tr>
-<th></th>
-<th><code>gesture_control_drone</code></th>
-<th>本模块</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>连接仿真器</td>
-<td>自己持有 <code>MultirotorClient</code></td>
-<td>不持有，走桥接层</td>
-</tr>
-<tr>
-<td>起飞/降落</td>
-<td>自己 <code>armDisarm/takeoffAsync/landAsync</code></td>
-<td><code>/uav/action</code></td>
-</tr>
-<tr>
-<td>位移</td>
-<td><code>moveByVelocityBodyFrameAsync</code></td>
-<td><code>/uav/cmd_vel</code> 指令流</td>
-</tr>
-<tr>
-<td>限速/超时保护</td>
-<td>模块自己实现</td>
-<td>桥接层 <code>control/*</code> + <code>cmd_timeout</code></td>
-</tr>
-<tr>
-<td>位姿</td>
-<td><code>/drone/odom</code></td>
-<td><code>/uav/odom</code></td>
-</tr>
-<tr>
-<td>适用场景</td>
-<td>手机上只有 AirSim Blocks、不想装 CarlaAir 栈</td>
-<td>与仓库其它无人机模块统一栈、多机、需要统一安全策略</td>
-</tr>
-</tbody>
-</table>
-<p>两个模块可以共存：直连版保留原有证据与文档，本模块作为"接入统一桥接层"的替代路径。</p>
-<h2 id="11">11. 大模型使用声明</h2>
-<p>本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、代码与文档起草）。
-参数与话题接口以本模块的离线回归测试和桥接层源码为准；真机动作序列以现场日志为准。
-作者对提交内容的正确性与完整性负全部责任。</p></div>
+<p>20 项离线测试涵盖旧碰撞记录、新碰撞、无效深度、完全堵塞、柱子绕行、通道膨胀、方向保持、偏航限幅和速度限制。这些测试验证算法逻辑，不能替代仿真飞行。</p>
+<h2 id="_5">运行效果</h2>
+<p><img alt="用户提供的 AirSim Unity 无人机实际运行动图" src="../../img/air/airsim_obstacle_avoidance/flight_demo.gif"/></p>
+<p>动图来自用户实际运行录制。用户原文件虽名为 GIF，文件头实际为 MP4，现已保留为 <a href="../../img/air/airsim_obstacle_avoidance/flight_demo.mp4">原始运行视频</a>（5,884,254 字节），并转码为真正的 GIF（640×425、8 fps、413 帧、8,010,410 字节，小于 10 MB），保留完整时序，未使用生成图冒充实验结果。观察重点为起飞、柱子附近运动和绕行后继续向目标前进；实际最小间距没有独立测量，不将参数值当作实测安全距离。</p>
+<h2 id="_6">已知限制与尚未验证内容</h2>
+<ul>
+<li>本实验直接使用 AirSim Python API，ROS 集成未实现和验证；Windows 启动器不是 ROS launch。</li>
+<li>只检测相机图像中部竖直带；侧后方、细杆、动态物体、复杂死胡同和多障碍全局规划未验证。</li>
+<li>深度解码依赖本机 Unity 插件与裁剪面、色彩空间，不能原样当作 Unreal AirSim 米制深度使用。</li>
+<li>起飞与升高后才建立碰撞基线，起降阶段无视觉避障；必须保证起降区空旷。此安排也可能忽略升高期间已结束的接触，仍需检查场景。</li>
+<li>局部方向选择与偏航平滑不构成全程连续曲率或固定最小间距的数学保证；高速度下的制动与传感延迟未做系统标定。</li>
+<li>新 main.py 与 launch 启动器完成入口检查，尚未单独重新飞行；矩形、多柱和其他速度参数未作为本次成功证据。</li>
+<li>仿真运行成功不能作为真实无人机部署结论。</li>
+</ul>
+<h2 id="_7">提交前检查</h2>
+<ul>
+<li>[x] 源码与教程分别放在 src/air 与 docs/air，新增文件使用英文下划线命名。</li>
+<li>[x] 提供 main.py、launch/run_demo.ps1、requirements.txt、README；ROS launch 不适用于本次直接 API 实验。</li>
+<li>[x] 新增首页与空域载具导航入口，真实 GIF 小于 10 MB；未添加 PNG。</li>
+<li>[x] 已保留实际飞行日志，未把虚拟环境、缓存和临时 artifacts 目录作为源码提交。</li>
+<li>
+<p>[ ] main.py/启动器单独实飞、ROS 接口及自动降落确认未验证，不虚报完成。</p>
+</li>
+<li>
+<p>[x] 已运行 <code>mkdocs serve --livereload -a 127.0.0.1:8001</code>，页面及嵌入 GIF 均返回 HTTP 200；文档构建成功。仓库其他页面仍有既有链接告警。</p>
+</li>
+<li>[x] 最终检查 <code>git diff --check</code>、未解决冲突和暂存文件清单；此次仅新增本模块及首页/导航入口，没有删除公共文件。</li>
+</ul>
+<h2 id="_8">大模型使用声明</h2>
+<p>本模块代码及文档使用 OpenAI Codex 辅助完成方案讨论、代码与文档起草、问题排查和评审修订。提交者负责检查验证，并对提交内容的正确性和完整性负责。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../gesture_control_drone/" title="手势控制无人机"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../ap_cpp_overfomo/" title="AP-CPP 主动感知覆盖路径规划">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../../ground/trajectory_accuracy_eval/" title="轨迹/里程计精度评估（ATE/RPE）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mujoco_facade_capture/" title="MuJoCo无人机幕墙定距扫描">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr>
+<hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</hr></footer>
+</footer>
 </div>
 </div>
 </section>
@@ -842,8 +501,8 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../gesture_control_drone/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../ap_cpp_overfomo/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../ground/trajectory_accuracy_eval/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mujoco_facade_capture/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
