@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+  车道线检测与车道保持一键启动。
+
+  用法：
+    roslaunch carla_lane_keeping main.launch                      # 只检测
+    roslaunch carla_lane_keeping main.launch mode:=both           # 检测 + 车道保持
+    roslaunch carla_lane_keeping main.launch image_topic:=/camera/image_raw
+
+  换了相机安装位置时，不必改 yaml，直接在命令行覆盖：
+    roslaunch carla_lane_keeping main.launch camera_height:=2.10 camera_pitch:=12.0
+    roslaunch carla_lane_keeping main.launch use_calibration:=false   # 退回比例模式
+
+  前置条件：CARLA 已启动，且已有车辆在跑（可用 carla_ros_bridge 或本模块的
+  独立采集脚本）。本 launch 只负责拉起感知与控制节点。
+-->
+<launch>
+
+  <!-- 运行模式：detect=只检测 / control=只控制 / both=检测+控制闭环 -->
+  <arg name="mode" default="detect" />
+
+  <!-- 前视相机图像话题。carla_ros_bridge 默认发布在下面这个位置 -->
+  <arg name="image_topic" default="/carla/ego_vehicle/rgb_front/image" />
+
+  <!-- 是否发布鸟瞰掩码调试图像（在 rviz 里加 Image 显示 lane/mask 即可看到） -->
+  <arg name="publish_debug" default="true" />
+
+  <!-- 相机安装参数。标定模式下横向偏差的物理意义全靠这三个值 -->
+  <arg name="use_calibration" default="true" />
+  <!-- 光心离地高度（米） -->
+  <arg name="camera_height" default="1.70" />
+  <!-- 光轴俯角（度，向下为正）。CARLA 里 Rotation.pitch = -8 对应这里 8.0 -->
+  <arg name="camera_pitch" default="8.0" />
+
+  <!-- 参数文件 -->
+  <arg name="params" default="$(find carla_lane_keeping)/config/lane_params.yaml" />
+
+  <!-- 载入检测参数到 /lane_detector 命名空间 -->
+  <rosparam command="load" file="$(arg params)" ns="lane_detector" />
+
+  <!-- 检测节点 -->
+  <node
+    pkg="carla_lane_keeping"
+    type="lane_detector.py"
+    name="lane_detector"
+    output="screen"
+    required="false"
+  >
+    <param name="image_topic" value="$(arg image_topic)" />
+    <param name="publish_debug" value="$(arg publish_debug)" />
+    <param name="use_calibration" value="$(arg use_calibration)" />
+    <param name="camera_height_m" value="$(arg camera_height)" />
+    <param name="camera_pitch_deg" value="$(arg camera_pitch)" />
+  </node>
+
+  <!-- 控制器节点（仅在 control / both 模式下启动） -->
+  <node
+    pkg="carla_lane_keeping"
+    type="lane_keeping_controller.py"
+    name="lane_keeping_controller"
+    output="screen"
+    if="$(eval arg('mode') in ('control', 'both'))"
+  />
+
+</launch>
