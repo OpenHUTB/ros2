@@ -1,0 +1,257 @@
+<?xml version="1.0" ?>
+<!--
+  Gazebo Fortress (Ignition Gazebo 6.x) dynamic world for the
+  lidar_obstacle_nn module. Follow-up to obstacle_world.sdf.
+
+  Why a second world
+  ------------------
+  obstacle_world.sdf is fully static: with a 360 degree lidar the
+  minimum measured range never changes (the nearest box is always at
+  ~0.6 m), so collect_data.py can only ever record the "near" class.
+  Rotating the static lidar box would not help either: a 360 degree
+  scan already sees everything around it.
+
+  This world therefore places the single red obstacle on a horizontal
+  prismatic slide ("obstacle_slider") aligned with the lidar x axis.
+  The JointPositionController accepts a commanded joint position on
+
+      /model/obstacle_slider/joint/slide_joint/0/cmd_pos  (Double)
+
+  and collect_data.py drives it through three stations:
+
+      joint 0.0 -> box at 0.6 m -> near   (min < 1.0 m)
+      joint 1.2 -> box at 1.8 m -> far    (1.0 <= min < 3.0 m)
+      joint 3.6 -> box at 4.2 m -> free   (min >= 3.0 m)
+
+  Only this one obstacle exists in the dynamic world on purpose:
+  static boxes at fixed radii would dominate the minimum range and
+  prevent the free/far stations from being reached.
+
+  Layout:
+      - A 20x20 m ground plane.
+      - The same static "lidar_box" carrying the 360-beam 2D LiDAR.
+      - One red box (0.4x0.4x0.5 m) sliding along the +x ray.
+      - A thin rail visual below the scan plane (no collision, so it
+        never appears in the lidar data).
+-->
+<sdf version="1.8">
+  <world name="lidar_obstacle_world_dynamic">
+    <plugin
+      filename="ignition-gazebo-physics-system"
+      name="ignition::gazebo::systems::Physics"/>
+    <plugin
+      filename="ignition-gazebo-user-commands-system"
+      name="ignition::gazebo::systems::UserCommands"/>
+    <plugin
+      filename="ignition-gazebo-scene-broadcaster-system"
+      name="ignition::gazebo::systems::SceneBroadcaster"/>
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors"/>
+
+    <!-- Simulation clock: 1 ms physics step, real time. -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.9 1</background>
+    </scene>
+
+    <!-- Sun (so GPU lidar / camera effects look reasonable) -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <linear>0.01</linear>
+        <constant>0.9</constant>
+      </attenuation>
+      <direction>-0.5 0.5 -1</direction>
+    </light>
+
+    <!-- Ground -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1</ambient>
+            <diffuse>0.2 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Static-looking rail below the scan beam (z=0.02, beam is at
+         z=0.11); visual only, so it never shows up in /scan. -->
+    <model name="slide_rail">
+      <static>true</static>
+      <pose>2.6 0 0.02 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box><size>4.4 0.06 0.04</size></box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!--
+      Dynamic obstacle: red box on a horizontal prismatic joint.
+      Joint position 0 leaves the link at its pose x=0.6 m; positive
+      joint displacement moves it away from the robot along +x.
+      Joint range [-0.2, 4.0] covers 0.4 m .. 4.6 m box distance.
+    -->
+    <model name="obstacle_slider">
+      <pose>0 0 0 0 0 0</pose>
+      <link name="box_link">
+        <!-- x here is the joint-zero offset (joint pos 0 -> 0.6 m). -->
+        <pose>0.6 0 0.25 0 0 0</pose>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <!-- 0.4 x 0.4 x 0.5 m box, 1 kg. -->
+            <ixx>0.0342</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.0342</iyy><iyz>0</iyz>
+            <izz>0.0267</izz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.4 0.4 0.5</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.1 0.1 1</ambient>
+            <diffuse>0.8 0.1 0.1 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.4 0.4 0.5</size></box>
+          </geometry>
+        </collision>
+      </link>
+
+      <joint name="slide_joint" type="prismatic">
+        <parent>world</parent>
+        <child>box_link</child>
+        <axis>
+          <xyz>1 0 0</xyz>
+          <limit>
+            <lower>-0.2</lower>
+            <upper>4.0</upper>
+            <effort>20</effort>
+            <velocity>1.0</velocity>
+          </limit>
+          <dynamics>
+            <damping>2.0</damping>
+            <friction>0.1</friction>
+          </dynamics>
+        </axis>
+      </joint>
+
+      <plugin
+        filename="ignition-gazebo-joint-position-controller-system"
+        name="ignition::gazebo::systems::JointPositionController">
+        <joint_name>slide_joint</joint_name>
+        <!-- Override the default topic (.../slide_joint/0/cmd_pos):
+             the "/0/" token is an illegal ROS 2 topic name and would
+             crash ros_gz_bridge (InvalidTopicNameError). -->
+        <topic>/obstacle_slider/cmd_pos</topic>
+        <use_velocity_commands>false</use_velocity_commands>
+        <p_gain>30.0</p_gain>
+        <i_gain>0.0</i_gain>
+        <d_gain>6.0</d_gain>
+        <initial_position>0.0</initial_position>
+      </plugin>
+    </model>
+
+    <!-- Robot: the same box carrying a 360-beam 2D LiDAR as in the
+         static world. static=true keeps it at the origin. z=0.05 keeps
+         the lidar beam (z = 0.05 + 0.06 = 0.11 m) inside the obstacle
+         height range (0 - 0.5 m). -->
+    <model name="lidar_box">
+      <static>true</static>
+      <pose>0 0 0.05 0 0 0</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.01</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.01</iyy><iyz>0</iyz>
+            <izz>0.01</izz>
+          </inertia>
+        </inertial>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.2 0.2 0.1</size></box>
+          </geometry>
+          <material>
+            <ambient>0.7 0.7 0.1 1</ambient>
+            <diffuse>0.7 0.7 0.1 1</diffuse>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.2 0.2 0.1</size></box>
+          </geometry>
+        </collision>
+      </link>
+
+      <!-- 2D LiDAR sensor. Publishes on Gazebo topic "/scan". -->
+      <link name="lidar_link">
+        <pose>0 0 0.06 0 0 0</pose>
+        <sensor name="gpu_lidar" type="gpu_lidar">
+          <topic>scan</topic>
+          <update_rate>5</update_rate>
+          <lidar>
+            <scan>
+              <horizontal>
+                <!-- 360 beams covering the full 360 degree FOV. -->
+                <samples>360</samples>
+                <resolution>1</resolution>
+                <min_angle>-3.14159</min_angle>
+                <max_angle>3.14159</max_angle>
+              </horizontal>
+              <vertical>
+                <samples>1</samples>
+                <resolution>1</resolution>
+                <min_angle>0</min_angle>
+                <max_angle>0</max_angle>
+              </vertical>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>30.0</max>
+              <resolution>0.02</resolution>
+            </range>
+          </lidar>
+          <always_on>true</always_on>
+          <visualize>true</visualize>
+        </sensor>
+      </link>
+
+      <!-- Joint connecting base_link to lidar_link. -->
+      <joint name="lidar_joint" type="fixed">
+        <parent>base_link</parent>
+        <child>lidar_link</child>
+      </joint>
+    </model>
+
+  </world>
+</sdf>
