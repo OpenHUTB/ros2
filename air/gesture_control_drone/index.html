@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>手势控制无人机 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u624b\u52bf\u63a7\u5236\u65e0\u4eba\u673a";
+        var mkdocs_page_input_path = "air/gesture_control_drone.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">手势控制无人机</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 它解决什么问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 手势与指令</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 环境要求</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 话题接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 参数</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 自测</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 运行证据</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 离线回归（本机真实输出）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92-ros-airsim">9.2 虚拟机内 ROS → AirSim 真机飞行（实测）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实跑才暴露的两个坑（已修）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#94">9.4 真实手势 → 真机起降（完整链路）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#95">9.5 全部动作实机验证</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#96-airsim-181-async">9.6 官方客户端（airsim 1.8.1）—— 真 *Async 路径实机验证</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 客户端兼容层与已知坑</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101">10.1 先澄清一个容易误判的点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 五个已知坑（都已处理）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#103-msgpack-rpc-blocks">10.3 本机实测（等价 msgpack-rpc 客户端 + 真机 Blocks）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 大模型使用声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">手势控制无人机</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/gesture_control_drone.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="airsim">手势控制 AirSim 无人机</h1>
+<p>用<strong>摄像头 + MediaPipe</strong> 识别手部手势，把识别结果转换成指令，通过 ROS 话题交给
+控制节点，由控制节点调用 AirSim 多旋翼 API 完成 <strong>起飞 / 降落 / 悬停 / 前进 /
+上升 / 下降 / 紧急停止</strong>，并把载具位姿以 <code>nav_msgs/Odometry</code>（ENU）回传。</p>
+<p>源码位于 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/gesture_control_drone"><code>src/air/gesture_control_drone</code></a>，
+完整运行细节（环境、参数、排查）见模块
+<a href="https://github.com/OpenHUTB/ros2/blob/master/src/air/gesture_control_drone/README.md"><code>README.md</code></a>。</p>
+<hr/>
+<h2 id="1">1. 它解决什么问题</h2>
+<p>用"抬手"指挥无人机，难点不在识别单个手势，而在<strong>让两半程序对同一套词</strong>、并且
+把 AirSim 的多旋翼接口用对：</p>
+<div class="highlight"><pre><span></span><code>摄像头 -&gt; MediaPipe -&gt; 手势 token -&gt; 指令 token -&gt; AirSim 多旋翼 API
+        └── 感知节点（发布）──┘└──── 控制节点（订阅 + 执行 + 回传）────┘
+                                   │
+                                   └─&gt; /drone/odom (Odometry) /drone_state
+</code></pre></div>
+<ul>
+<li>手势与指令的映射<strong>只在一处定义</strong>（<code>scripts/gesture_map.py</code>），两个节点
+  <code>import</code> 同一份常量；AirSim 的每个动作都有实现，缺一个就启动即报错；</li>
+<li>线上传输一律用 <strong>ASCII token</strong>（<code>PALM_OPEN</code> / <code>takeoff</code> …），中文只用于日志与
+  界面，避免编码与别名问题；</li>
+<li>识别结果经过<strong>去抖 + 边沿触发 + 冷却</strong>才发布：同一个手势一直举着只发一条指令；</li>
+<li>控制节点把耗时动作放到<strong>工作线程</strong>执行，订阅回调只入队；每次 RPC 调用都有
+  <strong>超时保护</strong>，仿真器卡住也不会把节点拖死；</li>
+<li>有<strong>安全限幅</strong>：限速、限高、限低；紧急停止默认悬停，不再空中锁桨。</li>
+</ul>
+<h2 id="2">2. 手势与指令</h2>
+<table>
+<thead>
+<tr>
+<th>手势</th>
+<th>手势 token</th>
+<th>指令 token</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>张开手掌</td>
+<td><code>PALM_OPEN</code></td>
+<td><code>takeoff</code></td>
+<td>解锁 → 起飞 → 爬升到 <code>takeoff_altitude</code> → 悬停（定高仅 <code>*Async</code> 路径生效，同步回退由仿真器默认高度决定，实测约 +1.54 m）</td>
+</tr>
+<tr>
+<td>握拳</td>
+<td><code>FIST</code></td>
+<td><code>land</code></td>
+<td>降落</td>
+</tr>
+<tr>
+<td>食指指向</td>
+<td><code>POINT</code></td>
+<td><code>forward</code></td>
+<td>机体系向前飞 <code>speed × move_duration</code></td>
+</tr>
+<tr>
+<td>胜利手势</td>
+<td><code>VICTORY</code></td>
+<td><code>up</code></td>
+<td>上升一档（受 <code>max_altitude</code> 限制）</td>
+</tr>
+<tr>
+<td>拇指向下</td>
+<td><code>THUMB_DOWN</code></td>
+<td><code>down</code></td>
+<td>下降一档（受 <code>min_altitude</code> 限制）</td>
+</tr>
+<tr>
+<td>拇指向上</td>
+<td><code>THUMB_UP</code></td>
+<td><code>hover</code></td>
+<td>原地悬停（稳定）</td>
+</tr>
+<tr>
+<td>OK 手势</td>
+<td><code>OK</code></td>
+<td><code>estop</code></td>
+<td>紧急停止（默认悬停，可配 <code>land</code>/<code>disarm</code>）</td>
+</tr>
+</tbody>
+</table>
+<p>另外还有两个<strong>不占用手指</strong>的指令，可直接用话题触发（便于联调/答辩演示）：
+<code>yaw_left</code> / <code>yaw_right</code>（按 <code>yaw_rate</code> 偏航）与 <code>home</code>（返航到原点上方）。</p>
+<h2 id="3">3. 环境要求</h2>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主</td>
+<td>操作系统</td>
+<td>Windows 10/11</td>
+</tr>
+<tr>
+<td>宿主</td>
+<td>模拟器</td>
+<td>AirSim（Blocks，UE 4.27，RPC 41451）</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>操作系统</td>
+<td>Ubuntu 20.04.6</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>ROS</td>
+<td>Noetic（ROS 1）</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>Python</td>
+<td>3.8</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>依赖</td>
+<td><code>python3-opencv</code> <code>python3-numpy</code> <code>python3-pil</code>（apt）<br/><code>mediapipe</code>(0.10.x) <code>airsim</code>（pip，见 <code>requirements.txt</code>）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>摄像头必须接在<strong>跑 ROS 的那台机器</strong>上；虚拟机里需要先把 USB 摄像头透传进来。
+用的是<strong>经典版 AirSim</strong> 时客户端是 <code>airsim</code>（不是 <code>cosysairsim</code>）。</p>
+</blockquote>
+<h2 id="4">4. 运行</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1) 编译</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+
+<span class="c1"># 2) 宿主机启动 AirSim 仿真器，并放行 41451 端口</span>
+
+<span class="c1"># 3) 启动本模块（跨机部署时用 airsim_ip 指定宿主 IP）</span>
+roslaunch<span class="w"> </span>gesture_control_drone<span class="w"> </span>main.launch<span class="w"> </span>airsim_ip:<span class="o">=</span><span class="m">192</span>.168.80.1
+
+<span class="c1"># 4) 只看识别效果、不动飞机</span>
+roslaunch<span class="w"> </span>gesture_control_drone<span class="w"> </span>main.launch<span class="w"> </span>start_drone_control:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>show_window:<span class="o">=</span><span class="nb">true</span>
+
+<span class="c1"># 5) 没有 ROS 也能验证手势与词表（单机演示，画一台"虚拟无人机"）</span>
+rosrun<span class="w"> </span>gesture_control_drone<span class="w"> </span>gesture_demo.py
+</code></pre></div>
+<p>预期日志（起手"张开手掌"）：</p>
+<div class="highlight"><pre><span></span><code>[gesture] 已启动：摄像头索引 0，640x480，10.0 Hz
+[gesture] 手势 -&gt; 指令：张开手掌-&gt;起飞，握拳-&gt;降落，食指指向-&gt;前进，胜利手势-&gt;上升，拇指向下-&gt;下降，拇指向上-&gt;悬停，OK 手势-&gt;紧急停止
+[gesture] 识别到 张开手掌
+[gesture] 发布指令 起飞（takeoff）
+[drone] 已启动：订阅 /gesture_command，AirSim 192.168.80.1:41451，estop_action=hover，起飞高度 3.0m，限速 3.0 m/s，限高 30.0 m，指令冷却 1.5s
+Connected! AirSim 192.168.80.1:41451
+[drone] 执行成功：起飞（累计 1 次）
+</code></pre></div>
+<h2 id="5">5. 话题接口</h2>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>发布</td>
+<td><code>/gesture_command</code></td>
+<td><code>std_msgs/String</code></td>
+<td>指令 token，边沿触发</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/gesture_state</code></td>
+<td><code>std_msgs/String</code></td>
+<td>当前识别到的手势 token（变化时才发）</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/gesture_command</code></td>
+<td><code>std_msgs/String</code></td>
+<td>控制节点订阅；词表外的字符串会被忽略并告警</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/drone/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>载具位姿与速度（<strong>ENU</strong>，<code>frame_id=world</code>），可加进 RViz</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/drone_state</code></td>
+<td><code>std_msgs/String</code></td>
+<td>执行结果，如 <code>takeoff OK</code> / <code>down FAIL 已到最低高度…</code></td>
+</tr>
+</tbody>
+</table>
+<p>排查"为什么没触发"：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_state<span class="w">     </span><span class="c1"># 识别有没有出结果</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_command<span class="w">   </span><span class="c1"># 指令有没有发出来</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/drone_state<span class="w">       </span><span class="c1"># 执行成功/失败原因</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/drone/odom<span class="w">        </span><span class="c1"># 位姿（确认飞机真的动了）</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'takeoff'"</span><span class="w">   </span><span class="c1"># 绕过识别直接测执行</span>
+</code></pre></div>
+<blockquote>
+<p><strong>为什么直连 AirSim、而不是走 <code>carlair_ros_bridge</code> + <code>/uav/cmd_vel</code>？</strong>
+本轮验证用的是<strong>经典版 AirSim（Blocks, UE 4.27）</strong>，这套环境里没有
+<code>carlair_ros_bridge</code>（它服务于 CarlaAir / Cosys-AirSim 那套栈）。直连时桥接层原本
+提供的安全逻辑由本模块自己补齐：<strong>指令冷却</strong>、<strong>单次 RPC 超时</strong>（<code>command_timeout</code>，
+超时判失败而非永久阻塞）、<strong>限速/限高/限低</strong>、<strong>退出时先悬停再交还控制权</strong>、
+<strong>紧急停止三选一</strong>。若之后接入 CarlaAir 栈，只需把 <code>drone_client.py</code> 换成发布
+<code>/uav/cmd_vel</code>——它是唯一与仿真器耦合的模块，感知/词表/闸门那一层不用动。</p>
+</blockquote>
+<h2 id="6">6. 参数</h2>
+<p>参数在 <code>config/gesture_control.yaml</code>，由 launch 载入各节点的<strong>私有命名空间</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>camera_index</code></td>
+<td>0</td>
+<td>摄像头索引，打不开时自动尝试 0~4</td>
+</tr>
+<tr>
+<td><code>show_window</code></td>
+<td>false</td>
+<td>是否弹出识别预览窗</td>
+</tr>
+<tr>
+<td><code>publish_rate</code></td>
+<td>10.0</td>
+<td>识别循环频率 (Hz)</td>
+</tr>
+<tr>
+<td><code>stable_frames</code></td>
+<td>3</td>
+<td>连续多少帧识别到同一手势才算数（去抖）</td>
+</tr>
+<tr>
+<td><code>command_cooldown</code></td>
+<td>1.5</td>
+<td>同一条指令的最小间隔 (s)</td>
+</tr>
+<tr>
+<td><code>command_topic</code></td>
+<td><code>/gesture_command</code></td>
+<td>指令话题（两端共用）</td>
+</tr>
+<tr>
+<td><code>airsim/ip</code></td>
+<td>127.0.0.1</td>
+<td>仿真器地址；跨机填宿主 IP</td>
+</tr>
+<tr>
+<td><code>airsim/port</code></td>
+<td>41451</td>
+<td>RPC 端口</td>
+</tr>
+<tr>
+<td><code>airsim/vehicle_name</code></td>
+<td>空</td>
+<td>留空 = 默认载具（<code>Drone1</code>）</td>
+</tr>
+<tr>
+<td><code>estop_action</code></td>
+<td>hover</td>
+<td>紧急停止：<code>hover</code> / <code>land</code> / <code>disarm</code>（空中锁桨会坠落）</td>
+</tr>
+<tr>
+<td><code>takeoff_altitude</code></td>
+<td>3.0</td>
+<td>起飞后爬升高度 (m)，不得超过 <code>max_altitude</code></td>
+</tr>
+<tr>
+<td><code>speed</code></td>
+<td>1.0</td>
+<td>前进/上升/下降速度 (m/s)</td>
+</tr>
+<tr>
+<td><code>max_speed</code></td>
+<td>3.0</td>
+<td>速度上限 (m/s)</td>
+</tr>
+<tr>
+<td><code>max_altitude</code></td>
+<td>30.0</td>
+<td>高度上限 (m)</td>
+</tr>
+<tr>
+<td><code>min_altitude</code></td>
+<td>0.5</td>
+<td>高度下限 (m)，到这里拒绝下降</td>
+</tr>
+<tr>
+<td><code>move_duration</code></td>
+<td>1.0</td>
+<td>单次位移/偏航持续时间 (s)</td>
+</tr>
+<tr>
+<td><code>yaw_rate</code></td>
+<td>30.0</td>
+<td>偏航角速度 (deg/s)</td>
+</tr>
+<tr>
+<td><code>command_timeout</code></td>
+<td>10.0</td>
+<td>单次 RPC 超时 (s)，超时视为失败</td>
+</tr>
+<tr>
+<td><code>takeoff_timeout</code></td>
+<td>60.0</td>
+<td>起飞（含 <code>moveToZAsync</code> 定高）超时 (s)；慢仿真器可调大</td>
+</tr>
+<tr>
+<td><code>land_timeout</code></td>
+<td>60.0</td>
+<td>降落超时 (s)；3 m 降落实测约 14~20 s，不能用 <code>command_timeout</code></td>
+</tr>
+<tr>
+<td><code>state_lock_timeout</code></td>
+<td>0.1</td>
+<td>读状态抢不到 RPC 锁时的等待上限 (s)；降落时锁会被占 20 s，取值必须很短，否则 <code>/drone/odom</code> 会停更</td>
+</tr>
+<tr>
+<td><code>state_rate</code></td>
+<td>5.0</td>
+<td><code>/drone/odom</code> 发布频率 (Hz)，0 = 关闭</td>
+</tr>
+<tr>
+<td><code>connect_retries</code></td>
+<td>3</td>
+<td>连接 AirSim 的重试次数</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7">7. 自测</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 离线回归（不需要 ROS / 摄像头 / 仿真器）</span>
+python3<span class="w"> </span>tests/test_gesture_control_local.py
+</code></pre></div>
+<p>覆盖：脚本语法、<strong>词表一致性</strong>（7 手势→7 动作、10 条指令都有实现）、手势分类
+（含 OK / 拇指朝上朝下）、去抖/边沿/冷却、跨平台摄像头、<strong>AirSim 全部动作</strong>
+（解锁→定高→悬停顺序、机体系速度、偏航、返航回退、急停三语义）、<strong>安全限幅</strong>
+（限速/限高/限低）、<strong>RPC 超时保护</strong>、<strong>NED→ENU 状态转换</strong>、七种手势的端到端链路、
+<code>Odometry</code> 回传、以及工程文件约定。</p>
+<h2 id="8">8. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>无法打开摄像头（已尝试索引 [0,1,2,3,4]…）</code></td>
+<td>摄像头没接在 ROS 机器上 / 没透传进虚拟机 / 被占用。<code>ls /dev/video*</code> 确认；可用 <code>GESTURE_CAMERA_BACKEND=CAP_V4L2</code></td>
+</tr>
+<tr>
+<td><code>连接 AirSim x.x.x.x:41451 失败</code></td>
+<td>仿真器没启动、<code>airsim_ip</code> 填错、或 41451 被防火墙拦（Windows 需加入站规则）</td>
+</tr>
+<tr>
+<td><code>缺少 airsim 客户端：pip3 install airsim</code></td>
+<td>只装了 apt 依赖。经典 AirSim 用 <code>airsim</code>，Cosys-AirSim 才用 <code>cosysairsim</code></td>
+</tr>
+<tr>
+<td>手势识别到了但飞机不动</td>
+<td>看 <code>/gesture_command</code>；没有 → 去抖参数或手势不在词表；有 → 看 <code>/drone_state</code> 与 <code>[drone]</code> 日志</td>
+</tr>
+<tr>
+<td>一直举着手，指令只发一次</td>
+<td>设计如此（边沿触发）。手放下再举起才再次触发</td>
+</tr>
+<tr>
+<td><code>已到最大高度</code> / <code>已到最低高度</code></td>
+<td>触发了 <code>max_altitude</code> / <code>min_altitude</code> 保护；改参数或改用降落</td>
+</tr>
+<tr>
+<td>起飞后高度不对</td>
+<td>检查 <code>takeoff_altitude</code>；AirSim 的 <code>takeoffAsync</code> 只到默认高度，本模块会再 <code>moveToZAsync</code> 定高</td>
+</tr>
+<tr>
+<td>中文显示成方块</td>
+<td>缺中文字体；Ubuntu 装 <code>fonts-wqy-zenhei</code>，Windows 自带 simhei</td>
+</tr>
+<tr>
+<td>手指旋转超过 90° 后识别率下降</td>
+<td>手指伸展判定基于"指尖在 PIP 关节上方"的启发式，掌心朝镜头、手指大致朝上时最稳</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9">9. 运行证据</h2>
+<blockquote>
+<p><strong>图片说明</strong>：本节所有图片都由 <code>tools/log_to_png.py</code> 从<strong>真实终端输出</strong>渲染而成，不是系统截屏；对应的原始文本见各小节代码块。</p>
+</blockquote>
+<h3 id="91">9.1 离线回归（本机真实输出）</h3>
+<p><img alt="离线回归 236 项全部通过" src="../../img/air/gesture_control_drone/local_test.png"/></p>
+<p>上图由 <code>tools/log_to_png.py</code> 从<strong>本机真实终端输出</strong>生成（不是拍照、不是外链），
+复现命令：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_gesture_control_local.py<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>/tmp/local_test.log
+python3<span class="w"> </span>tools/log_to_png.py<span class="w"> </span>/tmp/local_test.log<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>docs/img/air/gesture_control_drone/local_test.png<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--title<span class="w"> </span><span class="s2">"python3 tests/test_gesture_control_local.py"</span>
+</code></pre></div>
+<h3 id="92-ros-airsim">9.2 虚拟机内 ROS → AirSim 真机飞行（实测）</h3>
+<p>在 <strong>Ubuntu 20.04 + ROS Noetic 虚拟机</strong>里跑节点，AirSim Blocks 跑在 Windows 宿主上
+（<code>airsim_ip:=192.168.80.1</code>），通过 <code>rostopic</code> 下发指令验证了完整控制链路：</p>
+<div class="highlight"><pre><span></span><code>节点：/drone_control_node   /gesture_ros_node   /rosout
+话题：/drone/odom  /drone_state  /gesture_command  /gesture_state
+/drone/odom frame_id = "world"
+
+下发 takeoff 之后（/drone/odom 的 position.z，ENU）：
+  +3s   z = 0.852
+  +6s   z = 0.855
+  +18s  z = 0.855     ← 稳定悬停（相对地面爬升约 1.54 m）
+
+下发 land 之后：
+  +3s   z = -0.640
+  +6s   z = -0.681    ← 回到地面并保持
+</code></pre></div>
+<p><img alt="VM 内 ROS -&gt; AirSim 真机飞行" src="../../img/air/gesture_control_drone/run_vm.png"/></p>
+<p>这一步证明 <strong>ROS 节点 → AirSim → 真实起降</strong> 是通的；
+<code>摄像头 → MediaPipe → 手势</code> 这一段见下面的说明。</p>
+<h3 id="93">9.3 实跑才暴露的两个坑（已修）</h3>
+<ol>
+<li><strong><code>catkin_install_python</code> 不能用来装"辅助模块"</strong>
+   它在 devel 空间给每个脚本生成的是<strong>启动器</strong>（<code>exec(compile(...))</code>），
+   被启动的文件能跑，但 <code>from drone_client import AirSimDrone</code> 会 <code>ImportError</code>
+   —— 因为拿到的是启动器而不是真模块。
+   → 现在只把 4 个入口（<code>main</code> / <code>gesture_ros_node</code> / <code>drone_control_node</code> /
+   <code>gesture_demo</code>）交给 <code>catkin_install_python</code>，辅助模块改用 <code>install(FILES)</code>；
+   节点里再加一段 <code>sys.path</code> 引导，保证从源码目录也能 import。</li>
+<li><strong>VMware 透传的摄像头默认格式读不到帧</strong>
+<code>/dev/video0</code> 能 <code>open</code>，但 <code>cap.read()</code> 一直 <code>select() timeout</code>
+   （默认 YUYV 720p 带宽不够）。→ <code>camera_utils.open_capture()</code> 现在默认设
+   <strong>MJPG</strong>（可用 <code>GESTURE_CAMERA_FOURCC</code> 覆盖）并降到 640×480，
+   同一台机器上立刻出画面（<code>shape=(480, 640, 3)</code>）。</li>
+</ol>
+<h3 id="94">9.4 真实手势 → 真机起降（完整链路）</h3>
+<p>摄像头（Integrated Camera，USB 透传进虚拟机）→ MediaPipe → <code>/gesture_command</code>
+→ 控制节点 → AirSim，<strong>全程由真人做手势触发</strong>：</p>
+<p><img alt="真实手势控制：6 次起飞 + 6 次降落" src="../../img/air/gesture_control_drone/run_gesture.png"/></p>
+<div class="highlight"><pre><span></span><code>$ rostopic echo /gesture_state     -&gt; "PALM_OPEN" / "FIST"（中间夹 "NONE"）
+$ rostopic echo /gesture_command   -&gt; "takeoff" ×6 / "land" ×6
+$ rostopic echo /drone/odom        -&gt; position.z: -0.681(地面) → +1.229(空中) → -0.681(落地)
+</code></pre></div>
+<p>控制节点对 6 次起飞、6 次降落全部记录 <code>执行成功</code>（见上图时间戳）。</p>
+<blockquote>
+<p><strong>同步回退模式的结果语义（如实说明）</strong>：客户端没有 <code>*Async</code> 时，同步 <code>takeoff</code> / <code>land</code>
+是"发完即弃"，节点只能确认<strong>命令已下发</strong>，拿不到 AirSim 的执行结果。
+例如飞机已在空中再发 <code>takeoff</code>，AirSim 会返回
+<code>Cannot perform takeoff because vehicle is already moving</code>，但节点侧仍按"已下发"记录。
+有 <code>*Async</code> 时 <code>join()</code> 会把异常抛出来。</p>
+</blockquote>
+<h3 id="95">9.5 全部动作实机验证</h3>
+<p><code>forward</code> / <code>up</code> / <code>yaw_left</code> / <code>down</code> 在修复"按服务端完整签名传参"之后都能真实驱动飞机：</p>
+<p><img alt="全部动作实机验证" src="../../img/air/gesture_control_drone/run_actions.png"/></p>
+<h3 id="96-airsim-181-async">9.6 官方客户端（airsim 1.8.1）—— 真 <code>*Async</code> 路径实机验证</h3>
+<p>前面的 9.2~9.5 都是走<strong>同步回退</strong>分支（等价 msgpack-rpc 客户端）。这一节用<strong>官方 <code>airsim</code> 客户端</strong>，
+走真实 <code>takeoffAsync().join()</code> / <code>moveByVelocityBodyFrameAsync()</code> 路径：</p>
+<p><img alt="官方客户端 *Async 路径实机验证" src="../../img/air/gesture_control_drone/run_async.png"/></p>
+<div class="highlight"><pre><span></span><code>协议：Connected!   Client Ver:1 (Min Req: 1), Server Ver:1 (Min Req: 1)
+
+api_mode: async
+初始:      alt=-0.68  Landed
+takeoff -&gt; True   5.39s   alt=2.63   Flying     &lt;- 定高生效（moveToZAsync）
+up      -&gt; True   1.52s   alt=3.61   Flying
+forward -&gt; True   1.51s   y=0.65     Flying     &lt;- 机体系前向位移
+land    -&gt; True  20.69s   alt=-0.68  落地
+</code></pre></div>
+<p>两个额外结论：</p>
+<ul>
+<li><strong>定高只在 <code>*Async</code> 路径生效</strong>：这里 <code>takeoff</code> 到 2.63 m（<code>takeoff_altitude=3.0</code>），
+  而同步回退只到仿真器默认高度（约 +1.54 m）。<blockquote>
+<p>2.63 m 比设定的 3.0 m 低 0.37 m，是 <code>moveToZAsync</code> 的减速/<code>lookahead</code> 造成的稳态误差
+（AirSim 侧不做到绝对到位），不是控制逻辑的问题；要更贴近设定值可调大
+<code>moveToZAsync</code> 的速度或在目标点附近补一次 <code>moveToZAsync</code>。</p>
+</blockquote>
+</li>
+<li><strong><code>land</code> 用了 20.69 s</strong>：证实必须给降落独立超时（<code>land_timeout=60 s</code>），
+  套用 <code>command_timeout</code>(10 s) 会误判失败。
+  同样因为它整段持锁，读状态必须用 <code>state_lock_timeout</code>（见 §6）而不是干等，
+  否则这 20 s 里 <code>/drone/odom</code> 不会更新。</li>
+</ul>
+<p>安装方式（<code>airsim</code> 在 PyPI 只有 sdist，构建期要 <code>numpy</code> 和 <code>msgpackrpc</code>）：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>gcc<span class="w"> </span>python3-dev<span class="w">        </span><span class="c1"># msgpack-python 0.5.6 需要编译</span>
+pip3<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>numpy
+pip3<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>msgpack-rpc-python<span class="w">     </span><span class="c1"># 会现场编出 msgpack-python 0.5.6</span>
+pip3<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-build-isolation<span class="w"> </span>airsim
+</code></pre></div>
+<blockquote>
+<p>另外实测发现：<strong>airsim 1.8.1 的 <code>confirmConnection()</code> 只打印 <code>Connected!</code> 不返回值</strong>（<code>None</code>），
+早期代码用 <code>if not confirmConnection()</code> 会误判为失败；现已改为"只有明确 <code>False</code> 才算失败"。</p>
+</blockquote>
+<h2 id="10">10. 客户端兼容层与已知坑</h2>
+<h3 id="101">10.1 先澄清一个容易误判的点</h3>
+<p><code>takeoffAsync</code> / <code>landAsync</code> / <code>hoverAsync</code> / <code>moveToZAsync</code> / <code>goHomeAsync</code> 都是
+<strong>Python 客户端</strong>的方法，内部只是 <code>call_async('takeoff', ...)</code> 之类的包装：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># microsoft/AirSim  PythonClient/airsim/client.py</span>
+<span class="k">def</span> <span class="nf">takeoffAsync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout_sec</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">vehicle_name</span><span class="o">=</span><span class="s1">''</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">call_async</span><span class="p">(</span><span class="s1">'takeoff'</span><span class="p">,</span> <span class="n">timeout_sec</span><span class="p">,</span> <span class="n">vehicle_name</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">goHomeAsync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout_sec</span><span class="o">=</span><span class="mf">3e+38</span><span class="p">,</span> <span class="n">vehicle_name</span><span class="o">=</span><span class="s1">''</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">call_async</span><span class="p">(</span><span class="s1">'goHome'</span><span class="p">,</span> <span class="n">timeout_sec</span><span class="p">,</span> <span class="n">vehicle_name</span><span class="p">)</span>
+</code></pre></div>
+<p>也就是说 <strong>服务端从来只有 <code>takeoff</code> / <code>land</code> / <code>hover</code> / <code>goHome</code></strong>（所有 AirSim 版本都一样），
+"异步"是客户端把请求发出去后不等结果。所以"服务端没有 <code>takeoffAsync</code>"不是老 build 的特征。</p>
+<p>本模块的 <code>api_mode</code> 只解决<strong>另一个</strong>问题：某些客户端（例如自写的精简客户端、很老的
+Python 客户端）不提供 <code>*Async</code> 方法，那时回退到同名同步方法：</p>
+<table>
+<thead>
+<tr>
+<th>客户端方法</th>
+<th>服务端方法</th>
+<th>缺 <code>*Async</code> 时的回退</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>takeoffAsync(timeout)</code></td>
+<td><code>takeoff</code></td>
+<td><code>takeoff(timeout, vehicle_name)</code>，阻塞</td>
+</tr>
+<tr>
+<td><code>landAsync(timeout)</code></td>
+<td><code>land</code></td>
+<td><code>land(timeout, vehicle_name)</code>，阻塞</td>
+</tr>
+<tr>
+<td><code>hoverAsync()</code></td>
+<td><code>hover</code></td>
+<td><code>hover(vehicle_name)</code></td>
+</tr>
+<tr>
+<td><code>moveToZAsync(z, v)</code></td>
+<td><code>moveToZ</code></td>
+<td><code>moveToZ(z, velocity, timeout, yaw_mode, lookahead, adaptive, vehicle_name)</code> —— <strong>7 个参数</strong></td>
+</tr>
+<tr>
+<td><code>goHomeAsync(timeout)</code></td>
+<td><code>goHome</code></td>
+<td><code>goHome(timeout, vehicle_name)</code>，阻塞</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 五个已知坑（都已处理）</h3>
+<ol>
+<li><strong>同步 <code>takeoff</code> / <code>land</code> 会阻塞到动作完成</strong>
+   3 m 高度按 ~0.22 m/s 下降约需 14 s，放在调用线程里会把 ROS 回调/定时器堵住。
+   → 用<strong>独立连接</strong>发命令、后台线程等待、调用方立即返回；状态靠轮询 <code>/drone/odom</code>。</li>
+<li><strong>降落比 <code>command_timeout</code>(10 s) 慢</strong>
+   从 3 m 降落约 14 s，套用 10 s 会误判超时。
+   → <code>takeoff</code> 与 <code>land</code> 各有独立上限 <code>takeoff_timeout</code> / <code>land_timeout</code>（默认 60 s）。</li>
+<li><strong>msgpack-rpc 客户端不是线程安全的</strong>
+   控制节点的状态定时器（5 Hz 读状态）与指令工作线程共用同一个连接，
+   <code>msgpackrpc</code> 的 <code>Session</code> 没有发送锁 —— 这是"响应错位/超时"的真正根因。
+   → 所有对主客户端的 RPC 由 <code>_api_lock</code>（<code>threading.RLock</code>）串行化。</li>
+<li><strong><code>landed_state</code> 的取值</strong>
+   官方 <code>airsim.types.LandedState</code> 是 <strong><code>Landed = 0</code>、<code>Flying = 1</code></strong>
+   （旧代码把 0/1 映射写反了，已修正）；起降判定仍以<strong>高度</strong>为准，不依赖它。</li>
+<li>
+<p><strong><code>goHomeAsync</code> 第一个位置参数是超时</strong>，不是速度
+   （旧代码误传 <code>speed</code>，等于给返航设了 1 s 超时，已改为 60 s）。</p>
+</li>
+<li>
+<p><strong>同步回退必须按服务端签名传参</strong> —— 例如 <code>moveByVelocityBodyFrame</code> 要
+   <code>(vx, vy, vz, duration, drivetrain, yaw_mode, vehicle_name)</code> <strong>共 7 个</strong>，
+   <code>rotateByYawRate</code> 要 <code>(yaw_rate, duration, vehicle_name)</code> 3 个；
+   少传会报 <code>Function ... was called with an invalid number of arguments</code>。
+   <code>drone_client</code> 现在按完整签名调用，<code>vehicle_name</code> 用关键字传（对没有该形参的
+   旧客户端自动回退）。
+   实机验证：<code>forward</code> / <code>up</code> / <code>down</code> / <code>yaw_left</code> 都能让飞机真实移动。</p>
+</li>
+<li>
+<p><strong><code>hover()</code> 在移动中调用会让飞机掉高度</strong>（<strong>在等价 msgpack-rpc 客户端上观察到</strong>，未在官方客户端上复现）——
+   实测：<code>forward</code> 之后调用 <code>hover</code>，飞机从 0.85 m 一路降到地面（-0.68 m）；而<strong>静止时</strong>调用 <code>hover</code> 是安全的（6 s 高度不变）。
+   现在移动 / 偏航 / 急停之后一律改用<strong>零速度刹车</strong>
+   （<code>moveByVelocityBodyFrame(0, 0, 0, 0.5)</code>）：实测 <code>forward</code> 位移约 0.9 m 后停住，
+   高度稳定在 0.78~0.85 m；停住后仍有 ±0.2 m 的位置保持抖动（在当前环境下观察到的位置保持抖动）。</p>
+</li>
+</ol>
+<h3 id="103-msgpack-rpc-blocks">10.3 本机实测（等价 msgpack-rpc 客户端 + 真机 Blocks）</h3>
+<p>这台机器上 <code>pip install airsim</code> 装不上，原因有两个（都实测过）：
+1. <code>airsim</code> 在 PyPI 只有 sdist，它的 <code>setup.py</code> <strong>构建期要 <code>import numpy</code></strong>，构建隔离环境里没有 numpy → <code>ModuleNotFoundError: No module named 'numpy'</code>；
+2. 它依赖的 <code>msgpack-rpc-python</code> 要 <code>msgpack-python==0.5.6</code>（老 msgpack API），这个包在 Windows 没有预编译 wheel，需要 MSVC 才能编。</p>
+<p>所以用了一个<strong>等价的 msgpack-rpc 客户端</strong>驱动 <code>drone_client.py</code>。它没有实现 <code>*Async</code>，因此走的是上面的<strong>同步回退分支</strong>（代码里已支持 <code>pip install cosysairsim</code> 作为 Windows 上的替代客户端）：</p>
+<div class="highlight"><pre><span></span><code>AirSim API：客户端缺少 *Async —— 已自动切换到同步回退
+Connected! AirSim 127.0.0.1:41451
+execute('takeoff') -&gt; True（0.02 s 立即返回）
+    +3.0s 离地 +1.40 m            起飞 OK
+execute('hover')  -&gt; 稳定 1.40 → 1.43 m
+execute('land')   -&gt; True（0.02 s）
+    +6.0s 离地 +0.12 m            降落 OK
+</code></pre></div>
+<h2 id="11">11. 大模型使用声明</h2>
+<p>本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、问题排查、
+代码与文档起草）。参数与话题接口以本模块的离线回归测试为准；<strong>真机
+（AirSim + 摄像头）的动作序列</strong>以现场日志为准。作者对提交内容的正确性与
+完整性负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../uav_formation_flight/" title="无人机编队飞行"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../ap_cpp_overfomo/" title="AP-CPP 主动感知覆盖路径规划">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../uav_formation_flight/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../ap_cpp_overfomo/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
