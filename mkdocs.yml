@@ -82,6 +82,7 @@ nav:
     - 人形机器人全身逆运动学与可操作性: './humanoid/whole_body_ik.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
 - 地面载具:

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_msk_human_walking_teleop</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 平面肌肉骨骼人：键盘遥操作行走、踢腿与蹲起。
+    22 条 Hill 型肌肉驱动 13 自由度全身模型，分层控制
+    （动作编排 -> 姿势反射 -> 肌肉动力学），支持平地/坡道/负载三场景与性能评测。
+  </description>
+  <maintainer email="247221616@qq.com">Thirin-glitch</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <exec_depend>xterm</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+</package>
