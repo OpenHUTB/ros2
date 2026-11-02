@@ -47,8 +47,11 @@ DetectionResult CollisionDetector::detect(
       const Eigen::Vector3d dir = obstacle_pos - body.position;
       const double norm = dir.norm();
       const double radius = body.size.x();
-      nearest = norm > 1e-9 ? body.position + dir * (radius / norm)
-                           : body.position + Eigen::Vector3d(radius, 0.0, 0.0);
+      if (norm > 1e-9) {
+        nearest = body.position + dir * (radius / norm);
+      } else {
+        nearest = body.position + Eigen::Vector3d(radius, 0.0, 0.0);
+      }
       surface_distance = std::abs(norm - radius);
     } else {
       Eigen::Vector3d box_size = body.size;
