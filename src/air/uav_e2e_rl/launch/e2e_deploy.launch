@@ -1,0 +1,7 @@
+<launch>
+  <!-- 端到端 RL 部署：相机图像 -> PPO -> /uav/cmd_vel -->
+  <arg name="model_path" default="$(find uav_e2e_rl)/models/ppo_e2e.zip"/>
+  <node pkg="uav_e2e_rl" type="deploy_node.py" name="e2e_rl_deploy" output="screen">
+    <param name="model_path" value="$(arg model_path)"/>
+  </node>
+</launch>
