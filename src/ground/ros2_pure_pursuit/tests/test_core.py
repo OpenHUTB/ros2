@@ -16,7 +16,8 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
-from ros2_pure_pursuit.obstacle import ObstacleAvoider, synthetic_scan  # noqa: E402
+from ros2_pure_pursuit.arbitrate import arbitrate  # noqa: E402
+from ros2_pure_pursuit.obstacle import AvoidInfo, ObstacleAvoider, synthetic_scan  # noqa: E402
 from ros2_pure_pursuit.paths import circle, load_path, straight  # noqa: E402
 from ros2_pure_pursuit.pure_pursuit import PurePursuitController  # noqa: E402
 from ros2_pure_pursuit.robot import DiffDriveRobot  # noqa: E402
@@ -159,6 +160,56 @@ def test_load_path_with_and_without_header():
         assert len(p1) == 3
         assert len(p2) == 3
         assert abs(p1.points[-1, 0] - 2.0) < 1e-9
+
+
+def test_arbitration_finished_wins_over_avoidance():
+    """回归：到达终点必须停车，即使此刻避障正要求转向/减速。
+
+    早期实现把终点判断写成 `if 避障... elif finished`，导致开着避障并收到
+    激光时终点永远判不到，机器人会绕着终点继续跑。本测试锁定该行为。
+    """
+    danger = AvoidInfo(min_front=0.30, risk=1.0, turn_bias=1.6, slow_factor=0.15)
+    res = arbitrate(v_pursuit=0.8, w_pursuit=0.3, finished=True, avoid=danger)
+    assert res.v == 0.0
+    assert res.w == 0.0
+    assert res.reason == "finished"
+    assert res.applied_avoidance is False
+
+
+def test_arbitration_finished_without_lidar_also_stops():
+    """无激光数据时到达终点同样应停车。"""
+    res = arbitrate(0.8, 0.3, finished=True, avoid=None)
+    assert (res.v, res.w) == (0.0, 0.0)
+    assert res.reason == "finished"
+
+
+def test_arbitration_pursuit_passthrough():
+    """未到终点且无避障输入时，应原样采纳纯追踪输出。"""
+    res = arbitrate(0.8, 0.3, finished=False, avoid=None)
+    assert res.v == 0.8
+    assert res.w == 0.3
+    assert res.reason == "pursuit"
+    assert res.applied_avoidance is False
+
+
+def test_arbitration_avoidance_overrides_pursuit():
+    """未到终点且有障碍时，应在纯追踪输出基础上叠加转向偏置与减速。"""
+    av = AvoidInfo(min_front=0.5, risk=0.8, turn_bias=-0.9, slow_factor=0.32)
+    res = arbitrate(1.0, 0.2, finished=False, avoid=av)
+    assert abs(res.v - 1.0 * 0.32) < 1e-9
+    assert abs(res.w - (0.2 + (-0.9))) < 1e-9
+    assert res.reason == "avoidance"
+    assert res.applied_avoidance is True
+
+
+def test_arbitration_neutral_avoid_info_changes_nothing():
+    """前方空旷（危险度为 0）时，避障层不应引入任何扰动。"""
+    neutral = AvoidInfo(min_front=10.0, risk=0.0, turn_bias=0.0, slow_factor=1.0)
+    res = arbitrate(0.8, 0.3, finished=False, avoid=neutral)
+    assert res.v == 0.8
+    assert res.w == 0.3
+    assert res.reason == "pursuit"          # 未真正介入，仍记作纯追踪
+    assert res.applied_avoidance is False
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 
+from .arbitrate import arbitrate
 from .obstacle import ObstacleAvoider
 from .paths import Path, load_path
 from .pure_pursuit import PurePursuitController
@@ -71,30 +72,41 @@ class PurePursuitNode(Node):
     def _on_scan(self, msg: LaserScan) -> None:
         self.scan = (np.asarray(msg.ranges, dtype=float), msg.angle_min, msg.angle_increment)
 
-    def _on_timer(self) -> None:
-        v = self.target_speed
-        _, w, info = self.controller.compute(self.path, self.pose, v)
-
-        if self.enable_avoidance and self.scan is not None:
-            ranges, amin, ainc = self.scan
-            av = self.avoider.evaluate(ranges, amin, ainc)
-            w += av.turn_bias
-            v *= av.slow_factor
-        elif info.finished:
-            v = 0.0
-
+    def _publish_cmd_vel(self, v: float, w: float) -> None:
+        """统一出口：无论由哪条分支得出速度，都在此处发布。"""
         cmd = Twist()
         cmd.linear.x = float(v)
         cmd.angular.z = float(w)
         self.cmd_pub.publish(cmd)
+
+    def _on_timer(self) -> None:
+        # 先解算一次纯追踪，拿到本周期的状态量（含是否到达终点）。
+        # 这里只是取状态，尚未决定是否采纳其输出。
+        v_pp, w_pp, info = self.controller.compute(self.path, self.pose, self.target_speed)
+
+        # 避障建议；未开启避障或本周期无激光数据时为 None
+        av = None
+        if self.enable_avoidance and self.scan is not None:
+            ranges, amin, ainc = self.scan
+            av = self.avoider.evaluate(ranges, amin, ainc)
+
+        # 按优先级裁决最终速度：终点停车 > 纯追踪 > 避障覆盖。
+        # 裁决逻辑抽在 arbitrate() 中，不依赖 rclpy，因此可被单元测试覆盖。
+        res = arbitrate(v_pp, w_pp, info.finished, av)
+        if res.reason == "finished":
+            self.get_logger().info("已到达终点，停车。", throttle_duration_sec=2.0)
+
+        # 统一出口发布（终点处发布零速，保证持续刹停）
+        self._publish_cmd_vel(res.v, res.w)
 
         payload = {
             "cte": info.cte,
             "alpha": info.alpha,
             "curvature": info.curvature,
             "lookahead": info.lookahead,
-            "v": v,
-            "w": w,
+            "v": res.v,
+            "w": res.w,
+            "reason": res.reason,
         }
         self.info_pub.publish(String(data=json.dumps(payload)))
 
