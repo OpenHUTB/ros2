@@ -6,6 +6,8 @@
 
 ![AirSim 返航迫降画面](./uav_battery_rth_failsafe_airsim.png)
 
+![状态机动画演示](./uav_battery_rth_failsafe_demo.gif)
+
 ## 状态机
 
 ```mermaid
