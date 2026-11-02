@@ -16,7 +16,9 @@ def _open_csv(tag):
     path = os.path.join(RESULTS_DIR, f"{tag}.csv")
     f = open(path, "w", newline="")
     writer = csv.writer(f)
-    writer.writerow(["episode", "episode_return", "episode_length"])
+    # truncated：该回合是否被"时间上限（1000 步）或总步数预算"强制截断而中断（1=截断，0=正常结束），
+    # 与自然终止的回合区分开，避免结果表里出现无法解释的短回合。
+    writer.writerow(["episode", "episode_return", "episode_length", "truncated"])
     return f, writer, path
 
 
@@ -41,7 +43,13 @@ def train_ppo(env_name, episodes=300, steps_per_epoch=4000, seed=0, max_total_st
             next_obs = np.nan_to_num(next_obs, nan=0.0, posinf=0.0, neginf=0.0)
             rew = float(np.nan_to_num(rew, nan=0.0, posinf=0.0, neginf=0.0))
             done = terminated or truncated
-            buf.store(obs, act, rew, val, logp, done)
+            # 时间上限截断（truncated）不是真正的终止：GAE 要用 V(next_obs) 自举，
+            # 只有 terminated 才把后继价值归零。
+            boot = 0.0
+            if truncated and not terminated:
+                boot = float(agent.critic.forward(np.atleast_2d(next_obs))[0, 0])
+            buf.store(obs, act, rew, val, logp, done, truncated=float(truncated),
+                      boot_val=boot)
             obs = next_obs
             ep_ret += rew
             ep_len += 1
@@ -51,7 +59,7 @@ def train_ppo(env_name, episodes=300, steps_per_epoch=4000, seed=0, max_total_st
                 buf.finish_path(last_val=0.0)
                 ep_count += 1
                 ep_return_hist.append(ep_ret)
-                writer.writerow([ep_count, round(ep_ret, 4), ep_len])
+                writer.writerow([ep_count, round(ep_ret, 4), ep_len, int(truncated)])
                 if ep_count % 10 == 0 or ep_count == 1:
                     recent = np.mean(ep_return_hist[-10:])
                     print(f"[PPO:{env_name}] ep {ep_count}/{episodes}  "
@@ -64,6 +72,13 @@ def train_ppo(env_name, episodes=300, steps_per_epoch=4000, seed=0, max_total_st
                     break
             if max_total_steps is not None and total_steps >= max_total_steps:
                 break
+
+        # 预算在回合中途耗尽：这段不完整回合也要写进 CSV 并明确标注，
+        # 否则结果表与 --max-total-steps 统计对不上。
+        if (max_total_steps is not None and total_steps >= max_total_steps
+                and ep_len > 0 and not done):
+            writer.writerow([ep_count + 1, round(ep_ret, 4), ep_len, 1])
+            f.flush()
 
         if buf.ptr > 0:
             last_val = float(agent.critic.forward(np.atleast_2d(obs))[0, 0])
@@ -93,6 +108,7 @@ def train_sac(env_name, episodes=300, max_steps=1000, seed=0,
             break
         obs = env.reset(seed=seed + ep)
         ep_ret, ep_len = 0.0, 0
+        ended = False
         for t in range(max_steps):
             if total_steps < start_steps:
                 act = np.random.uniform(-1.0, 1.0, size=act_dim)
@@ -101,8 +117,9 @@ def train_sac(env_name, episodes=300, max_steps=1000, seed=0,
             next_obs, rew, terminated, truncated, _ = env.step(act)
             next_obs = np.nan_to_num(next_obs, nan=0.0, posinf=0.0, neginf=0.0)
             rew = float(np.nan_to_num(rew, nan=0.0, posinf=0.0, neginf=0.0))
-            done = terminated or truncated
-            buf.store(obs, act, rew, next_obs, done)
+            # replay 里的 done 只记真正终止（terminated）；时间上限截断要用 next_obs
+            # 继续自举，把它当成 done=1 会把目标值错误地截断成 r。
+            buf.store(obs, act, rew, next_obs, float(terminated))
             obs = next_obs
             ep_ret += rew
             ep_len += 1
@@ -111,11 +128,15 @@ def train_sac(env_name, episodes=300, max_steps=1000, seed=0,
             if total_steps >= start_steps and total_steps % update_every == 0:
                 agent.update(buf, batch_size=batch_size)
 
-            if done:
+            if terminated or truncated:
+                ended = True
+                break
+            # 预算检查必须在内层：原来只在回合开头检查，一个 1000 步的回合会整段超预算。
+            if max_total_steps is not None and total_steps >= max_total_steps:
                 break
 
         ep_return_hist.append(ep_ret)
-        writer.writerow([ep + 1, round(ep_ret, 4), ep_len])
+        writer.writerow([ep + 1, round(ep_ret, 4), ep_len, int(bool(truncated) or not ended)])
         if (ep + 1) % 10 == 0 or ep == 0:
             recent = np.mean(ep_return_hist[-10:])
             alpha = float(np.exp(agent.log_alpha))

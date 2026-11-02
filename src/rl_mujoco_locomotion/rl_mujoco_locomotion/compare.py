@@ -32,7 +32,9 @@ def _smooth(values, window=5):
 
 
 def plot_all(envs=("halfcheetah", "ant", "walker2d"), algs=("ppo", "sac")):
-    fig, axes = plt.subplots(1, len(envs), figsize=(5 * len(envs), 4), sharey=False)
+    # constrained_layout 会把总标题也计入布局，避免 suptitle 压到中间子图的标题
+    fig, axes = plt.subplots(1, len(envs), figsize=(5 * len(envs), 4), sharey=False,
+                             constrained_layout=True)
     if len(envs) == 1:
         axes = [axes]
     colors = {"ppo": "tab:blue", "sac": "tab:orange"}
@@ -51,7 +53,6 @@ def plot_all(envs=("halfcheetah", "ant", "walker2d"), algs=("ppo", "sac")):
         ax.legend(loc="best")
         ax.grid(True, alpha=0.3)
     fig.suptitle("MuJoCo Locomotion: PPO vs SAC")
-    fig.tight_layout()
     out_path = os.path.join(RESULTS_DIR, "comparison.png")
     fig.savefig(out_path, dpi=150)
     print(f"[Compare] Saved comparison plot to {out_path}")

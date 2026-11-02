@@ -34,11 +34,16 @@ def cmd_doctor(args):
     except Exception as e:
         print(f"[FAIL] imageio: {e}")
     try:
-        from rl_mujoco_locomotion.env import ensure_assets
+        from rl_mujoco_locomotion.env import ensure_assets, make_env
         ensure_assets()
-        print("[OK] assets 已就绪")
+        # 不只检查文件存在：与 BaseLocomotionEnv 走同一条加载路径，真正解析三个 MJCF，
+        # 确保 doctor 报 OK 时模型确实可用（中文路径等问题会在这里暴露）。
+        for name in ("halfcheetah", "ant", "walker2d"):
+            env = make_env(name)
+            print(f"[OK] {name}: nq={env.model.nq} nv={env.model.nv} "
+                  f"nu={env.model.nu} obs_dim={env.observation_space_dim}")
     except Exception as e:
-        print(f"[FAIL] assets: {e}")
+        print(f"[FAIL] model load: {e}")
     print("Doctor finished.")
 
 

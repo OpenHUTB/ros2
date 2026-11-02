@@ -114,7 +114,10 @@ class BaseLocomotionEnv:
                 f"searched: {_asset_dirs()}\n"
                 "Please install gymnasium and run 'python -c \"import rl_mujoco_locomotion.env; rl_mujoco_locomotion.env.ensure_assets()\"'"
             )
-        self.model = mujoco.MjModel.from_xml_path(xml_path)
+        # MjModel.from_xml_path 在 Windows 中文路径下会打不开文件（C 层不做 UTF-8 解码）；
+        # 三个 MJCF 均为自包含（assets/ 下无 mesh/纹理引用），因此改为显式 UTF-8 读取。
+        with open(xml_path, "r", encoding="utf-8") as f:
+            self.model = mujoco.MjModel.from_xml_string(f.read())
         self.data = mujoco.MjData(self.model)
         self._max_episode_steps = 1000
         self._elapsed_steps = 0

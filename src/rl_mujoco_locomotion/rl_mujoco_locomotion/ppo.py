@@ -15,6 +15,8 @@ class RolloutBuffer:
         self.val_buf = np.zeros(size)
         self.logp_buf = np.zeros(size)
         self.done_buf = np.zeros(size)
+        self.trunc_buf = np.zeros(size)
+        self.boot_buf = np.zeros(size)
         self.adv_buf = np.zeros(size)
         self.ret_buf = np.zeros(size)
         self.gamma = gamma
@@ -22,7 +24,7 @@ class RolloutBuffer:
         self.ptr = 0
         self.max_size = size
 
-    def store(self, obs, act, rew, val, logp, done):
+    def store(self, obs, act, rew, val, logp, done, truncated=0.0, boot_val=0.0):
         assert self.ptr < self.max_size
         self.obs_buf[self.ptr] = obs
         self.act_buf[self.ptr] = act
@@ -30,20 +32,30 @@ class RolloutBuffer:
         self.val_buf[self.ptr] = val
         self.logp_buf[self.ptr] = logp
         self.done_buf[self.ptr] = done
+        # truncated：因时间上限被截断；boot_val：该步之后 V(next_obs) 的自举值。
+        self.trunc_buf[self.ptr] = truncated
+        self.boot_buf[self.ptr] = boot_val
         self.ptr += 1
 
     def finish_path(self, last_val=0.0):
         start = self.ptr - 1
         lastgaelam = 0.0
         for t in reversed(range(start + 1)):
-            if t == start:
-                nextnonterminal = 1.0 - self.done_buf[t]
-                nextvalue = last_val
+            if self.trunc_buf[t] > 0:
+                # 时间上限截断：回合是被外部打断而非真正终止，用 V(next_obs) 自举
+                # （nextnonterminal 仍为 1），而不是把后继价值直接归零。
+                nextnonterminal = 1.0
+                nextvalue = self.boot_buf[t]
             else:
                 nextnonterminal = 1.0 - self.done_buf[t]
-                nextvalue = self.val_buf[t + 1]
+                nextvalue = last_val if t == start else self.val_buf[t + 1]
             delta = self.rew_buf[t] + self.gamma * nextvalue * nextnonterminal - self.val_buf[t]
-            lastgaelam = delta + self.gamma * self.lam * nextnonterminal * lastgaelam
+            # 回合边界（或本段末尾）必须清掉 λ 迹；terminated 时 nextnonterminal=0 已自动清零，
+            # truncated 的自举值不为 0，必须在这里显式重置，否则迹会泄漏到下一回合。
+            if t == start or self.done_buf[t] > 0:
+                lastgaelam = delta
+            else:
+                lastgaelam = delta + self.gamma * self.lam * lastgaelam
             self.adv_buf[t] = lastgaelam
         self.ret_buf[:self.ptr] = self.adv_buf[:self.ptr] + self.val_buf[:self.ptr]
 
@@ -84,6 +96,9 @@ class PPO:
         self.critic_lr = critic_lr
         # 多轮复用同一份 rollout 时，Adam 的自适应步长比朴素 SGD 稳定得多
         self.actor_opt = Adam(self.actor.weights + self.actor.biases, lr=actor_lr)
+        # log_std 同样是待优化参数，之前用朴素 SGD 更新：与网络权重的量级差异很大，
+        # 同一学习率下既容易过冲也容易几乎不动，改为同样走 Adam。
+        self.logstd_opt = Adam([self.actor_logstd], lr=actor_lr)
         self.critic_opt = Adam(self.critic.weights + self.critic.biases, lr=critic_lr)
         self.gamma = gamma
         self.lam = lam
@@ -137,9 +152,10 @@ class PPO:
                 dmu = clip_grad_norm(np.nan_to_num(dmu, nan=0.0, posinf=0.0, neginf=0.0), 1.0)
                 dlogstd = np.nan_to_num(dlogstd, nan=0.0, posinf=0.0, neginf=0.0)
                 self.actor_opt.step(self.actor.grads(dmu))
-                self.actor_logstd = np.clip(
-                    self.actor_logstd - self.actor_lr * np.mean(dlogstd, axis=0, keepdims=True),
-                    LOG_STD_MIN, LOG_STD_MAX)
+                self.logstd_opt.step([np.mean(dlogstd, axis=0, keepdims=True)])
+                # Adam 持有的是参数数组的引用，必须原地裁剪；重新赋值会让优化器
+                # 继续更新旧数组，log_std 从此与网络脱钩。
+                np.clip(self.actor_logstd, LOG_STD_MIN, LOG_STD_MAX, out=self.actor_logstd)
         buf.reset()
 
     def save(self, path):
@@ -151,3 +167,8 @@ class PPO:
         self.actor.load(path + "_actor.npz")
         self.actor_logstd = np.load(path + "_logstd.npy")
         self.critic.load(path + "_critic.npz")
+        # load 之后参数数组已经是新对象，优化器必须重新绑定，否则之后所有更新的
+        # 都会打到已废弃的旧数组上（权重看起来像没在训练）。
+        self.actor_opt = Adam(self.actor.weights + self.actor.biases, lr=self.actor_lr)
+        self.logstd_opt = Adam([self.actor_logstd], lr=self.actor_lr)
+        self.critic_opt = Adam(self.critic.weights + self.critic.biases, lr=self.critic_lr)
