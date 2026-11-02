@@ -1,0 +1,124 @@
+<mujoco model="stair_climb_scene">
+  <!-- 人形上下台阶场景：平地 → 6 级台阶（每级高 0.12 m、深 0.30 m）→ 平台。
+
+       机器人结构与 humanoid_local_planner_bench 保持一致：
+         · 骨盆 / 躯干 / 头 / 双臂 / 双腿，全部 contype=0（本场景不做接触动力学，
+           位姿由 gait.py 的运动学步态写入 freejoint）；
+         · 每条腿 3 个铰链关节 hip / knee / ankle，由解析 IK 求解；
+         · 脚底几何单独命名（foot_l / foot_r），指标用 mj_geomDistance 量脚底与
+           台阶面的真实距离，因此"脚踩在台阶上""摆动时有没有踢到立面"都能量化。
+
+       台阶按实心方块堆叠：第 k 级的顶面 z = k * 0.12，x ∈ [(k-1)*0.30, k*0.30]。 -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.005" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960" azimuth="95" elevation="-8"/>
+    <headlight ambient="0.42 0.42 0.42" diffuse="0.7 0.7 0.7"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.01 0.0001" solref="0.01 1"/>
+    <default class="vis">
+      <geom contype="0" conaffinity="0" group="1"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.24 0.26 0.28" rgb2="0.30 0.32 0.34"
+             width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="8 8" texuniform="true" reflectance="0.03"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
+
+    <!-- 6 级台阶，均为实心方块，宽 y = ±0.60 -->
+    <geom name="step_1" type="box" pos="0.15 0 0.060" size="0.15 0.60 0.060"
+          rgba="0.71 0.73 0.77 1"/>
+    <geom name="step_2" type="box" pos="0.45 0 0.120" size="0.15 0.60 0.120"
+          rgba="0.68 0.70 0.74 1"/>
+    <geom name="step_3" type="box" pos="0.75 0 0.180" size="0.15 0.60 0.180"
+          rgba="0.65 0.67 0.71 1"/>
+    <geom name="step_4" type="box" pos="1.05 0 0.240" size="0.15 0.60 0.240"
+          rgba="0.62 0.64 0.68 1"/>
+    <geom name="step_5" type="box" pos="1.35 0 0.300" size="0.15 0.60 0.300"
+          rgba="0.59 0.61 0.65 1"/>
+    <geom name="step_6" type="box" pos="1.65 0 0.360" size="0.15 0.60 0.360"
+          rgba="0.56 0.58 0.62 1"/>
+
+    <!-- 平台，顶面与最后一级齐平（z = 0.72） -->
+    <geom name="landing" type="box" pos="2.10 0 0.360" size="0.30 0.60 0.360"
+          rgba="0.56 0.58 0.62 1"/>
+
+    <!-- 台阶前沿的高亮条，便于在截图里数级数 -->
+    <geom name="edge_1" class="vis" type="box" pos="0.005 0 0.120" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+    <geom name="edge_2" class="vis" type="box" pos="0.305 0 0.240" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+    <geom name="edge_3" class="vis" type="box" pos="0.605 0 0.360" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+    <geom name="edge_4" class="vis" type="box" pos="0.905 0 0.480" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+    <geom name="edge_5" class="vis" type="box" pos="1.205 0 0.600" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+    <geom name="edge_6" class="vis" type="box" pos="1.505 0 0.720" size="0.008 0.60 0.006"
+          rgba="0.90 0.65 0.20 1"/>
+
+    <body name="robot" pos="0 0 0">
+      <freejoint name="root"/>
+
+      <!-- ===== 躯干（纯视觉）===== -->
+      <geom name="pelvis_geom" class="vis" type="box" pos="0 0 0.83" size="0.13 0.11 0.07"
+            rgba="0.90 0.90 0.92 1"/>
+      <geom name="torso_geom" class="vis" type="box" pos="0 0 1.06" size="0.13 0.11 0.17"
+            rgba="0.88 0.90 0.94 1"/>
+      <geom name="head_geom" class="vis" type="sphere" pos="0 0 1.34" size="0.10"
+            rgba="0.96 0.90 0.80 1"/>
+
+      <geom name="upper_arm_l" class="vis" type="capsule" fromto="0 0.17 1.19 0 0.20 0.91" size="0.038"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="fore_arm_l" class="vis" type="capsule" fromto="0 0.20 0.91 0.04 0.21 0.68" size="0.034"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="upper_arm_r" class="vis" type="capsule" fromto="0 -0.17 1.19 0 -0.20 0.91" size="0.038"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="fore_arm_r" class="vis" type="capsule" fromto="0 -0.20 0.91 0.04 -0.21 0.68" size="0.034"
+            rgba="0.86 0.88 0.92 1"/>
+
+      <!-- 左腿：髋 z=0.76 → 大腿 0.45 → 膝 → 小腿 0.45 → 踝 → 脚（脚底 -0.04） -->
+      <body name="thigh_l" pos="0 0.105 0.76">
+        <joint name="hip_l" type="hinge" axis="0 1 0" range="-1.6 1.6"/>
+        <geom name="thigh_geom_l" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.062"
+              rgba="0.20 0.42 0.80 1"/>
+        <body name="shank_l" pos="0 0 -0.45">
+          <joint name="knee_l" type="hinge" axis="0 1 0" range="-0.02 2.1"/>
+          <geom name="shank_geom_l" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.052"
+                rgba="0.20 0.42 0.80 1"/>
+          <body name="foot_l" pos="0 0 -0.45">
+            <joint name="ankle_l" type="hinge" axis="0 1 0" range="-1.1 1.1"/>
+            <geom name="foot_l" class="vis" type="box" pos="0.06 0 -0.02" size="0.12 0.06 0.02"
+                  rgba="0.15 0.15 0.18 1"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 右腿 -->
+      <body name="thigh_r" pos="0 -0.105 0.76">
+        <joint name="hip_r" type="hinge" axis="0 1 0" range="-1.6 1.6"/>
+        <geom name="thigh_geom_r" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.062"
+              rgba="0.20 0.42 0.80 1"/>
+        <body name="shank_r" pos="0 0 -0.45">
+          <joint name="knee_r" type="hinge" axis="0 1 0" range="-0.02 2.1"/>
+          <geom name="shank_geom_r" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.052"
+                rgba="0.20 0.42 0.80 1"/>
+          <body name="foot_r" pos="0 0 -0.45">
+            <joint name="ankle_r" type="hinge" axis="0 1 0" range="-1.1 1.1"/>
+            <geom name="foot_r" class="vis" type="box" pos="0.06 0 -0.02" size="0.12 0.06 0.02"
+                  rgba="0.15 0.15 0.18 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
