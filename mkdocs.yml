@@ -165,6 +165,14 @@ nav:
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 基于 AirSim 的神经网络感知/规划/控制:
+        - 首页: 'air/airsim_controller/index.md'
+        - 环境部署: 'air/airsim_controller/getting-started/install.md'
+        - 任务1 键盘控制: 'air/airsim_controller/tasks/task1_keyboard.md'
+        - 任务2 感知与轨迹控制: 'air/airsim_controller/tasks/task2_perception.md'
+        - 任务3 SLAM 导航: 'air/airsim_controller/tasks/task3_slam_nav.md'
+        - 任务4 端到端模型: 'air/airsim_controller/tasks/task4_e2e.md'
+        - 性能评价: 'air/airsim_controller/performance.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
