@@ -27,10 +27,12 @@ It satisfies the OpenHUTB/ros2 contribution rules:
 | GPU (optional) | NVIDIA GPU + CUDA 12.x (CPU-only machines work fine) |
 
 The verification run recorded in section 7 used a prebuilt VMware image
-with Ubuntu 20.04.6, ROS 2 Humble, Python 3.8.10, Gazebo Fortress
-6.17.1 and CPU PyTorch 2.4.1. That image is useful as a compatibility
-check, but it is not the supported Humble installation recipe. Use
-Ubuntu 22.04 and Python 3.10 for a standard deployment.
+with Ubuntu 20.04.6, Python 3.8.10, Gazebo Fortress 6.17.1 and CPU
+PyTorch 2.4.1. In that image, Humble is manually preinstalled as the
+`/opt/ros/humble` directory and is not managed by dpkg; it is not a
+container or WSL setup. That image is useful only as a compatibility
+check, and its installation procedure is not reproducible from this
+README. Use Ubuntu 22.04 and Python 3.10 for a standard deployment.
 
 Python dependencies (install into the ROS 2 Python, **not** a
 separate venv, so that `rclpy` stays importable):
