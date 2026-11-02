@@ -1,0 +1,115 @@
+name: ROS 2 · ugv_visual_slam_nav
+
+on:
+  push:
+    paths:
+      - 'src/ground/ugv_visual_slam_nav/**'
+      - '.github/workflows/ros2_ugv_visual_slam_nav.yml'
+  pull_request:
+    paths:
+      - 'src/ground/ugv_visual_slam_nav/**'
+      - '.github/workflows/ros2_ugv_visual_slam_nav.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python 依赖
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            python3-numpy python3-matplotlib python3-pil python3-pytest
+
+      # ---- 1) 纯离线测试：几何 / 检测 / SLAM / 建图 / 规划 / 网络梯度
+      #      test_nodes_ros.py 在装了真 rclpy 的机器上会自动 skip
+      - name: 离线单元测试
+        working-directory: src/ground/ugv_visual_slam_nav
+        run: python3 -m pytest test/ -q
+
+      # ---- 2) 真 colcon build
+      - name: colcon build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select ugv_visual_slam_nav --symlink-install
+
+      # ---- 3) install 布局硬断言：少一项就说明 data_files 又漏了
+      - name: 校验 install 布局
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          SHARE=$(ros2 pkg prefix ugv_visual_slam_nav)/share/ugv_visual_slam_nav
+          echo "share=$SHARE"
+          for f in \
+              package.xml \
+              launch/main.launch.py \
+              launch/teleop.launch.py \
+              launch/e2e.launch.py \
+              config/params.yaml \
+              models/e2e.npz ; do
+            test -e "$SHARE/$f" || { echo "缺少 $f"; exit 1; }
+          done
+          for e in main sim slam nav e2e ; do
+            test -x "install/ugv_visual_slam_nav/lib/ugv_visual_slam_nav/$e" \
+              || { echo "缺少可执行 $e"; exit 1; }
+          done
+          echo "install 布局检查通过"
+
+      # ---- 4) 四场景真 launch：每场景跑 30 s，看 SLAM 日志是否在推进
+      - name: 四场景 launch 冒烟
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          for s in corridor cluttered dynamic night ; do
+            echo "=================== $s ==================="
+            timeout 30 ros2 launch ugv_visual_slam_nav main.launch.py \
+                scene:=$s seed:=0 > /tmp/$s.log 2>&1 || true
+            echo "--- 日志尾部 ---"
+            tail -n 12 /tmp/$s.log
+            grep -q "SLAM 节点启动" /tmp/$s.log \
+              || { echo "::error::[$s] SLAM 节点没有启动"; exit 1; }
+            grep -q "帧 " /tmp/$s.log \
+              || { echo "::error::[$s] SLAM 没有收到图像"; exit 1; }
+            if grep -q "Traceback" /tmp/$s.log ; then
+              echo "::error::[$s] 运行中出现异常"; exit 1
+            fi
+            echo "[$s] ok"
+          done
+
+      # ---- 5) 端到端权重能被加载并推理（不起闭环，只验模型可用）
+      - name: 端到端权重冒烟
+        working-directory: src/ground/ugv_visual_slam_nav
+        run: |
+          python3 - <<'PY'
+          import numpy as np
+          from ugv_visual_slam_nav.model_io import load_net
+          from ugv_visual_slam_nav.cnn import IN_CH
+          from ugv_visual_slam_nav.policies import E2EPolicy
+          net = load_net('models/e2e.npz')
+          x = np.zeros((1, IN_CH, E2EPolicy.IN_H, E2EPolicy.IN_W), dtype=np.float32)
+          out = net.forward(x, train=False)
+          assert out.shape == (1, 2), out.shape
+          assert np.all(np.abs(out) <= 1.0)
+          print('端到端权重可用，输出', out.ravel())
+          PY
+
+      # ---- 6) 离线闭环：只跑走廊场景，确认 slam_nav 能收敛到终点
+      - name: 离线闭环回归
+        working-directory: src/ground/ugv_visual_slam_nav
+        run: |
+          python3 - <<'PY'
+          from ugv_visual_slam_nav.policies import make_policy
+          from ugv_visual_slam_nav.sim import rollout
+          from ugv_visual_slam_nav.world import make_scene
+          r = rollout('corridor', make_policy('slam_nav', make_scene('corridor', 0)), seed=0)
+          print({k: r[k] for k in ('success', 'time_s', 'ate_rmse', 'map_iou', 'coverage')})
+          assert r['success'], '走廊场景 slam_nav 未到达终点'
+          assert r['ate_rmse'] < 0.35, '定位误差过大：%.3f' % r['ate_rmse']
+          assert r['map_iou'] > 0.20, '建图质量过低：%.3f' % r['map_iou']
+          PY
