@@ -1,0 +1,7 @@
+[INFO] 运行任务②神经网络测试: test_task2_nn.py
+[PASS] 视觉感知网络：MAE dx 0.342 m, dy 0.202 m, dtheta 0.054 rad
+[PASS] 感知零权值消融：dtheta 误差 2.583 rad（训练网络 0.054）
+[PASS] 轨迹控制网络：与专家相关系数 v=0.9989, wz=0.9995
+[PASS] 闭环跟踪：NN RMSE 0.359 m (到达 True)，零权值 RMSE 0.704 m (到达 False)
+
+任务②神经网络测试全部通过。
