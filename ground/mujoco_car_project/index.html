@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>基于 Mujoco 的键盘遥控小车 - 模拟器的 ROS 文档</title>
+<title>基于Mujoco的键盘遥控小车 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u57fa\u4e8e Mujoco \u7684\u952e\u76d8\u9065\u63a7\u5c0f\u8f66";
+        var mkdocs_page_name = "\u57fa\u4e8eMujoco\u7684\u952e\u76d8\u9065\u63a7\u5c0f\u8f66";
         var mkdocs_page_input_path = "ground/mujoco_car_project.md";
         var mkdocs_page_url = null;
       </script>
@@ -119,7 +119,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
@@ -189,6 +189,26 @@
 <li class="toctree-l1"><a class="reference internal" href="../carla_lane_departure_warning/">车道偏离预警（LDW）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">基于Mujoco的键盘遥控小车</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">一、实验目的</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">二、实验环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">三、功能包结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">四、实现原理</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">五、编译</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">六、运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">七、实验结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">八、总结</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
 </li>
@@ -361,7 +381,8 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item active">基于 Mujoco 的键盘遥控小车</li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">基于Mujoco的键盘遥控小车</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/mujoco_car_project.md"> 编辑页面</a>
 </li>
@@ -462,6 +483,10 @@ v = \frac{v_r + v_l}{2} = \frac{R(\omega_r + \omega_l)}{2}
 <p>借助模型：Deepseek,豆包。</p></div>
 </div>
 </div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../weather_perception_benchmark/" title="恶劣雨雾天气下多传感器感知性能对比实验"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../lateral_control_benchmark/" title="地面载具横向控制算法对比（纯跟踪/Stanley/LQR）">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -477,6 +502,8 @@ v = \frac{v_r + v_l}{2} = \frac{R(\omega_r + \omega_l)}{2}
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../weather_perception_benchmark/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../lateral_control_benchmark/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
