@@ -124,6 +124,8 @@ nav:
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
 - 空域载具:
+    - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
+    - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
     - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'
     - 无人机任务管理与安全状态机:
