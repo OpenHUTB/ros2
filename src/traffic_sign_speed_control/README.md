@@ -11,8 +11,8 @@ MuJoCo 物理仿真世界（差速底盘刚体动力学 + 车载前视相机离�
     cd ~/ts_ws
     colcon build --packages-select traffic_sign_speed_control
     source install/setup.bash
-    # 首次运行先训练权重（CPU 约 3 分钟，仓库已含训练好的 sign_cnn.pth）
-    python3 src/traffic_sign_speed_control/scripts/train_signs.py
+    # 仓库已含训练好的权重 models/sign_cnn.pth；如需重新生成（CPU 约 3 分钟）：
+    # python3 src/traffic_sign_speed_control/scripts/train_signs.py
     ros2 launch traffic_sign_speed_control traffic_sign_speed_control.launch.py
 
 launch 参数：`render_mode`（none/file）、`frame_dir`（GIF 帧目录）、

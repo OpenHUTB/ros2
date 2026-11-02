@@ -218,7 +218,7 @@ stateDiagram-v2
 | `scripts/train_signs.py` | 脚本 | 合成数据集生成与 CNN 训练（约 3 分钟，CPU） |
 | `scripts/evaluate_detector.py` | 脚本 | 检测器退化矩阵评测（6 种条件 × 10 类 × 100 张） |
 | `scripts/run_scenes.py` | 脚本 | 多场景端到端评测（进程组管理，指标统计与画图） |
-| `main.py` / `launch/` | 入口 | CLI 入口（launch/单节点/demo）与三节点一键启动 |
+| `main.py` / `launch/` | 入口 | CLI 入口（train/evaluate/scenes/demo）与三节点一键启动 |
 
 设计要点：
 

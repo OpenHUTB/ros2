@@ -9,7 +9,7 @@
    - 控制：区间内稳态误差、达标时间、区间内最大速度、超速时间占比；
 4. 写入 artifacts/scene_eval.json 并输出每场景速度曲线图。
 
-用法：python3 scripts/run_scenes.py [--duration 70] [--scene default degraded dense]
+用法：python3 scripts/run_scenes.py [--duration 55] [--scene default degraded dense]
 """
 import argparse
 import json
@@ -239,7 +239,7 @@ def evaluate_scene(name, cfg, duration, log):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--duration", type=float, default=70.0)
+    ap.add_argument("--duration", type=float, default=55.0)
     ap.add_argument("--scene", nargs="+", default=["default", "degraded", "dense"])
     args = ap.parse_args()
 

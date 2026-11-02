@@ -31,15 +31,26 @@ def main():
     if mode == "scenes":
         sys.exit(sh([sys.executable, SCRIPTS / "run_scenes.py"] + sys.argv[2:]))
     if mode == "demo":
-        # 离屏渲染帧 + 合成 GIF（需 ffmpeg）
-        import os
+        # 离屏渲染帧 + 合成 GIF（需 ffmpeg）。终端 Ctrl+C 会同时送达本进程与
+        # launch 子进程：捕获中断，等 launch 退出后用已写入帧合成 GIF。
+        import glob
         frames = PKG / "frames"
         gif = PKG / "traffic_sign_speed_control_demo.gif"
-        rc = sh(["ros2", "launch", "traffic_sign_speed_control",
-                 "traffic_sign_speed_control.launch.py",
-                 "render_mode:=file", f"frame_dir:={frames}"])
-        if rc:
-            sys.exit(rc)
+        cmd = ["ros2", "launch", "traffic_sign_speed_control",
+               "traffic_sign_speed_control.launch.py",
+               "render_mode:=file", f"frame_dir:={frames}"]
+        print("+", " ".join(cmd))
+        proc = subprocess.Popen(cmd)
+        try:
+            proc.wait()
+        except KeyboardInterrupt:
+            try:
+                proc.wait(timeout=10)
+            except Exception:
+                proc.kill()
+        if not glob.glob(str(frames / "frame_*.png")):
+            print("未生成渲染帧（frame_dir 为空），跳过 GIF 合成")
+            sys.exit(1)
         sys.exit(sh(["ffmpeg", "-y", "-framerate", "10", "-i",
                      str(frames / "frame_%05d.png"),
                      "-vf", "fps=10,scale=480:480:flags=lanczos,split[a][b];"
