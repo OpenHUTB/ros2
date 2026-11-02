@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>humanoid_carry_payload_nn</name>
+  <version>1.0.0</version>
+  <description>
+    人形机器人双臂搬运负载的神经网络平衡控制（MuJoCo 仿真）。
+    跑步机 + 减重助行架台架提供矢状面平衡实验条件，机器人双臂刚性夹持
+    0/2/4 kg 负载行走，PD 专家与行为克隆神经网络输出髋/踝姿态补偿。
+  </description>
+
+  <maintainer email="tangwang-0614@users.noreply.github.com">tangwang-0614</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-mujoco</exec_depend>
+
+  <export>
+    <build_type>catkin</build_type>
+  </export>
+</package>

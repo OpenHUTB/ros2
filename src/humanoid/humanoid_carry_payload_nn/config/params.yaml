@@ -1,0 +1,35 @@
+# humanoid_carry_payload_nn 参数
+# 与 scripts/sim_core.py、model.py 中的默认值一致，供 launch 或外部脚本读取。
+
+# ---- 仿真 ----
+sim:
+  timestep: 0.002        # s，MJCF 的 <option timestep>
+  control_dt: 0.01       # s，控制器/日志采样周期
+
+# ---- 负载场景 ----
+payload:
+  masses: [0.0, 2.0, 4.0]   # kg，空载 / 中载 / 重载
+  zero_mass_floor: 0.05     # kg，空载时保留的极小质量（避免零惯量奇异）
+
+# ---- 步态 ----
+gait:
+  stride_max: 0.18      # rad，髋关节摆动半幅（决定固定步长）
+  knee_lift: 0.78       # rad，摆动相膝弯曲量（保证脚跟离地）
+  stance_ratio: 0.60    # 支撑相占比
+  cycle_time: 1.8       # s，基准周期（步频由速度换算）
+
+# ---- 控制器 ----
+expert:
+  kp_pitch: 0.5
+  kd_pitch: 0.2
+  k_hip: -0.3
+  k_mass_hip: 0.05
+  corr_limit: 0.50      # rad，补偿角限幅
+mlp:
+  hidden: [32, 32]
+  weights: models/balance_mlp.npz
+
+# ---- 演示 ----
+demo:
+  speed: 0.15           # m/s
+  seconds: 15.0
