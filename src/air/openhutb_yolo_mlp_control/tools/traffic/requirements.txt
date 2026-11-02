@@ -1,0 +1,8 @@
+# WSL Python 3.10 traffic helper dependencies
+# Install the CARLA/HUTB wheel matching the server separately.
+# Windows spawn/record require only that wheel and the Python standard library.
+# WSL AirSim pose following uses the existing package vendor client:
+numpy>=1.26,<2.0
+msgpack>=1.0
+# Offline plotting:
+matplotlib>=3.8
