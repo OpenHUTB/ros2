@@ -102,8 +102,11 @@ class PathPlanner(Node):
     # ---------- helpers ----------
 
     def to_cell(self, x, y):
-        cx = int(x / self.resolution)
-        cy = int(y / self.resolution)
+        # 分辨率经 OccupancyGrid 传输是 float32（0.1 -> 0.10000000149），
+        # int(0.5 / 0.1f) 会得到 4，边界点被算进前一格；加个小量再取整
+        eps = 1e-3
+        cx = int(math.floor(x / self.resolution + eps))
+        cy = int(math.floor(y / self.resolution + eps))
         cx = max(0, min(self.width - 1, cx))
         cy = max(0, min(self.height - 1, cy))
         return cy * self.width + cx
