@@ -1,10 +1,14 @@
-# 键盘控制参数（任务①）
+# 键盘控制参数（任务① / 任务②采集共用）
 # 本模块只发布机体系速度指令到 /uav/cmd_vel，真正的执行/坐标换算在 carlair_ros_bridge。
+# 各轴速度默认对齐部署侧安全限幅（perception.yaml: max_vx=2.0, max_vy=0.5, max_yaw=0.4），
+# 使人工采集的动作标签幅值与部署模型输出尺度一致，避免训练标签被部署端钳位。
 
 control:
-  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D）
-  vert_speed: 1.0         # 垂直速度 m/s（R/F）
-  yaw_rate: 1.0           # 偏航角速度 rad/s（Q/E，正值=机头右转）
+  forward_speed: 2.0      # W/S 前后速度 m/s（对齐 max_vx=2.0）
+  side_speed: 0.5         # A/D 左右速度 m/s（对齐 max_vy=0.5）
+  vert_speed: 1.0         # R/F 升降速度 m/s
+  yaw_rate: 0.4           # Q/E 偏航角速度 rad/s（对齐 max_yaw=0.4，正值=机头右转）
+  hold_timeout: 0.3       # 松开按键后保持指令的最长秒数，超时自动悬停
 
 rate:
   publish_hz: 30.0        # 指令发布频率

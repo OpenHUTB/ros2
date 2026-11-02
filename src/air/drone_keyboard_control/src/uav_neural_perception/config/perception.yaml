@@ -1,0 +1,11 @@
+# uav_neural_perception 默认参数
+model:
+  model_path: ""
+
+safety:
+  max_vx: 2.0
+  max_vy: 0.5
+  max_yaw: 0.4
+
+dataset:
+  save_dir: "~/perception_dataset"
