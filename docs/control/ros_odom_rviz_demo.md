@@ -29,3 +29,4 @@ roslaunch ros_topic_demo rviz_demo.launch
 ◦ 解决：在代码中使用 tf2_ros.TransformBroadcaster 广播 odom -> base_link。
 ## 四、运行效果
 启动后，RViz 窗口中的 Odometry 箭头沿半径 1m 的正圆匀速绕圈，Global Status 为 Ok。
+![RViz 可视化效果](images/d21b3e65790535d4666317f0d56c08a9.png)
