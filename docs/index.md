@@ -82,6 +82,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
