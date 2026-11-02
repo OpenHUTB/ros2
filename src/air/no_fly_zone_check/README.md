@@ -15,8 +15,10 @@
    cd src/air/no_fly_zone_check
    python main.py
 
-## 可视化功能
+## 2D 可视化
 
-运行 `python visualize.py` 可生成 2D 禁飞区示意图（红色圆圈代表禁飞区，绿色三角形代表无人机当前位置），结果将保存为图片。
+无需启动 AirSim，直接运行以下命令生成 2D 禁飞区示意图（红色圆圈代表禁飞区，绿色三角形代表无人机当前位置），结果将保存为图片：
+   cd src/air/no_fly_zone_check
+   python visualize.py
 
-![可视化效果](../../../docs/img/cha/no_fly_zone_visualization.png)
+![可视化效果](../../../docs/img/cha/no_fly_zone_check_visualization.png)
