@@ -1,0 +1,5 @@
+# ROS 2 Humble already provides python3-numpy and python3-opencv.
+# These pins are for running the pure-algorithm tests outside a ROS workspace.
+numpy>=1.21
+opencv-python>=4.5
+pytest>=7.0
