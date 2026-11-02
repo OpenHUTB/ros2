@@ -29,87 +29,87 @@
 
 ### 3.1 相机成像模型
 
-相机固定在车头，高度 $h$，焦距 $f$。道路上一点在世界坐标中横向偏移 $x$、纵向深度 $z$，
+相机固定在车头，高度 \(h\)，焦距 \(f\)。道路上一点在世界坐标中横向偏移 \(x\)、纵向深度 \(z\)，
 投影到图像列坐标：
 
-$$
+\[
 u = c_x + f \cdot \frac{x}{z}
-$$
+\]
 
-本模块取 $f=46$、$c_x=24$、图像 $48\times48$、地平线在第 15 行，深度从 $z_{near}=4\,m$ 到 $z_{far}=45\,m$
-均匀采样。（$x$ 是"该点相对车头轴的横向偏移"）
+本模块取 \(f=46\)、\(c_x=24\)、图像 \(48\times48\)、地平线在第 15 行，深度从 \(z_{near}=4\,m\) 到 \(z_{far}=45\,m\)
+均匀采样。（\(x\) 是"该点相对车头轴的横向偏移"）
 
-道路中心线在深度 $z$ 处的横向坐标为
+道路中心线在深度 \(z\) 处的横向坐标为
 
-$$
+\[
 x_c(z) = e + \tfrac{1}{2}\kappa z^2
-$$
+\]
 
-其中 $\kappa$ 为曲率、$e$ 为道路中心相对车头轴的偏移。左右车道线分别位于 $x_c \pm W/2$（$W=3.5\,m$），
+其中 \(\kappa\) 为曲率、\(e\) 为道路中心相对车头轴的偏移。左右车道线分别位于 \(x_c \pm W/2\)（\(W=3.5\,m\)），
 逐行投影后得到两条车道线的像素位置，叠加亮度扰动与高斯噪声即得到一帧图像。
 
 ### 3.2 标签生成（纯追踪）
 
 给定曲率与偏移，控制量由纯追踪律给出：
 
-$$
+\[
 \delta = \operatorname{clip}\!\left(-(\kappa L + k_e\, e),\; -1,\; 1\right),\qquad L=8\,m,\; k_e=0.35
-$$
+\]
 
-$$
+\[
 \theta = \operatorname{clip}\!\left(1 - 0.65\,|\delta|,\; 0,\; 1\right)
-$$
+\]
 
-即：弯道越急（$|\kappa|$ 越大）、越偏离中心（$|e|$ 越大），转向越大；同时按转向幅度降油门。
-**注意**：网络只会看到图像，$\kappa$ 与 $e$ 对它都是隐变量，必须自己从像素里推断出来。
+即：弯道越急（\(|\kappa|\) 越大）、越偏离中心（\(|e|\) 越大），转向越大；同时按转向幅度降油门。
+**注意**：网络只会看到图像，\(\kappa\) 与 \(e\) 对它都是隐变量，必须自己从像素里推断出来。
 
-本项目生成 1200 组训练样本与 300 组验证样本，曲率 $\kappa \in [-0.004, 0.004]$、
-偏移 $e \in [-1.2, 1.2]\,m$，亮度随机缩放 $[0.75, 1.15]$ 以增加鲁棒性。
+本项目生成 1200 组训练样本与 300 组验证样本，曲率 \(\kappa \in [-0.004, 0.004]\)、
+偏移 \(e \in [-1.2, 1.2]\,m\)，亮度随机缩放 \([0.75, 1.15]\) 以增加鲁棒性。
 
 ### 3.3 网络结构
 
-$$
+\[
 \begin{aligned}
 \mathbf{z}_1 &= \mathrm{im2col}(\mathbf{x}) \cdot \mathbf{W}_1 + \mathbf{b}_1, & \mathbf{a}_1 &= \mathrm{ReLU}(\mathbf{z}_1) &\quad (48^2 \to 23^2,\,8\ \text{通道})\\
 \mathbf{z}_2 &= \mathrm{im2col}(\mathbf{a}_1) \cdot \mathbf{W}_2 + \mathbf{b}_2, & \mathbf{a}_2 &= \mathrm{ReLU}(\mathbf{z}_2) &\quad (23^2 \to 11^2,\,16\ \text{通道})\\
 \mathbf{z}_3 &= \mathbf{a}_2 \cdot \mathbf{W}_3 + \mathbf{b}_3, & \mathbf{a}_3 &= \mathrm{ReLU}(\mathbf{z}_3) &\quad (1936 \to 32)\\
 \mathbf{z}_4 &= \mathbf{a}_3 \cdot \mathbf{W}_4 + \mathbf{b}_4, & &
 \end{aligned}
-$$
+\]
 
 输出层拆成两路：
 
-$$
+\[
 \hat{\delta} = \tanh(z_{4,0}), \qquad \hat{\theta} = \sigma(z_{4,1}) = \frac{1}{1+e^{-z_{4,1}}}
-$$
+\]
 
-卷积均为 $3\times3$、步长 2，因此每层的空间尺寸为 $(H-3)/2+1$。总参数量 **63,298**。
+卷积均为 \(3\times3\)、步长 2，因此每层的空间尺寸为 \((H-3)/2+1\)。总参数量 **63,298**。
 
 ### 3.4 损失与反向传播
 
 损失为两路输出的均方误差：
 
-$$
+\[
 \mathcal{L} = \frac{1}{N}\sum_{i=1}^{N}\Big[(\hat{\delta}_i-\delta_i)^2 + (\hat{\theta}_i-\theta_i)^2\Big]
-$$
+\]
 
-对输出层求偏导，注意 $\tanh$ 与 $\sigma$ 的导数：
+对输出层求偏导，注意 \(\tanh\) 与 \(\sigma\) 的导数：
 
-$$
+\[
 \frac{\partial \mathcal{L}}{\partial z_{4,0}} = \frac{2(\hat{\delta}-\delta)}{N}\big(1-\hat{\delta}^2\big),
 \qquad
 \frac{\partial \mathcal{L}}{\partial z_{4,1}} = \frac{2(\hat{\theta}-\theta)}{N}\,\hat{\theta}(1-\hat{\theta})
-$$
+\]
 
 隐含层反传为标准的链式法则，卷积层的关键是**用 `im2col` 把卷积写成矩阵乘法**再反传：
 
-$$
+\[
 \frac{\partial \mathcal{L}}{\partial \mathbf{W}} = \mathbf{C}^{\top}\frac{\partial \mathcal{L}}{\partial \mathbf{z}},
 \qquad
 \frac{\partial \mathcal{L}}{\partial \mathbf{C}} = \frac{\partial \mathcal{L}}{\partial \mathbf{z}}\,\mathbf{W}^{\top}
-$$
+\]
 
-其中 $\mathbf{C}$ 为 `im2col` 展开的列矩阵。$\partial\mathcal{L}/\partial\mathbf{C}$ 需要 `col2im` 折叠回特征图尺寸；
+其中 \(\mathbf{C}\) 为 `im2col` 展开的列矩阵。\(\partial\mathcal{L}/\partial\mathbf{C}\) 需要 `col2im` 折叠回特征图尺寸；
 当步长小于卷积核时 patch 会重叠，`col2im` 用**累加**处理重叠区域，这样梯度才与 `im2col` 的展开方式严格对应
 （单元测试 `test_im2col_roundtrip_with_stride_equal_to_kernel` 在无重叠情形下验证了可逆性）。
 
@@ -117,29 +117,29 @@ $$
 
 采用 Adam，一阶/二阶矩估计与偏差校正：
 
-$$
+\[
 m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t,\quad
 v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2
-$$
+\]
 
-$$
+\[
 \hat{m}_t = \frac{m_t}{1-\beta_1^t},\quad
 \hat{v}_t = \frac{v_t}{1-\beta_2^t},\quad
 \mathbf{W} \leftarrow \mathbf{W} - \eta\,\frac{\hat{m}_t}{\sqrt{\hat{v}_t}+\epsilon}
-$$
+\]
 
-取 $\beta_1=0.9,\ \beta_2=0.999,\ \epsilon=10^{-8},\ \eta=10^{-3}$、批大小 32、训练 12 轮。
+取 \(\beta_1=0.9,\ \beta_2=0.999,\ \epsilon=10^{-8},\ \eta=10^{-3}\)、批大小 32、训练 12 轮。
 
 ### 3.6 闭环动力学
 
-把网络放回回路时，车辆横向位置按简化模型更新（$\Delta t=0.1\,s$）：
+把网络放回回路时，车辆横向位置按简化模型更新（\(\Delta t=0.1\,s\)）：
 
-$$
+\[
 e_{t+1} = e_t + \big(\underbrace{\gamma\kappa_t}_{\text{弯道漂移}} - \underbrace{G\,\hat{\delta}_t}_{\text{转向修正}}\big)\Delta t,
 \qquad \gamma = 8.0,\ G = 2.0
-$$
+\]
 
-相机看到的道路偏移为 $e^{cam}_t = e^{road}_t - e_t$，即"视觉误差"，网络据此输出修正转向。
+相机看到的道路偏移为 \(e^{cam}_t = e^{road}_t - e_t\)，即"视觉误差"，网络据此输出修正转向。
 
 ## 4. 算法流程
 
@@ -176,10 +176,10 @@ $$
 
 几个关键实现点：
 
-- **`im2col` 直接切片的技巧**：`x[:, i:i+stride*ho:stride, ...]` 一次性取出所有 patch 的第 $(i,j)$ 个元素，
+- **`im2col` 直接切片的技巧**：`x[:, i:i+stride*ho:stride, ...]` 一次性取出所有 patch 的第 \((i,j)\) 个元素，
   避免 Python 双层循环遍历每个输出位置。
 - **`col2im` 必须累加**：步长 2、核 3 时相邻 patch 在边界处重叠，重叠像素要累加梯度而不是覆盖。
-- **输出层的激活与损失匹配**：转向用 `tanh`（值域 $[-1,1]$ 正好是归一化转向），油门用 `sigmoid`（值域 $[0,1]$）。
+- **输出层的激活与损失匹配**：转向用 `tanh`（值域 \([-1,1]\) 正好是归一化转向），油门用 `sigmoid`（值域 \([0,1]\)）。
 - **闭环时不做 batch**：每步只推理单帧，`predict()` 内部按 128 分批以兼容离线评估。
 
 ## 6. 运行步骤
@@ -259,20 +259,20 @@ ros2 topic hz    /pix2cmd/camera  # 相机图像发布频率
 
 | 结构 | 组成 | 参数公式 |
 | --- | --- | --- |
-| `mlp` | flatten(48×48=2304) → FC(64) → ReLU → FC(2) | $2304H + H + 2H + 2$ |
-| `cnn_tiny` | Conv(3×3,4,s2) → Conv(3×3,8,s2) → FC(16) → FC(2) | $9c_1 + c_1 + 9c_1c_2 + c_2 + h_2^2c_2H + 3H + 2$ |
+| `mlp` | flatten(48×48=2304) → FC(64) → ReLU → FC(2) | \(2304H + H + 2H + 2\) |
+| `cnn_tiny` | Conv(3×3,4,s2) → Conv(3×3,8,s2) → FC(16) → FC(2) | \(9c_1 + c_1 + 9c_1c_2 + c_2 + h_2^2c_2H + 3H + 2\) |
 | `cnn_base` | Conv(3×3,8,s2) → Conv(3×3,16,s2) → FC(32) → FC(2) | 同上 |
 | `cnn_wide` | Conv(3×3,12,s2) → Conv(3×3,24,s2) → FC(64) → FC(2) | 同上 |
 
-其中 $c_1,c_2$ 为两个卷积层的通道数，$H$ 为全连接隐层宽度，$h_2$ 为第二层卷积输出的空间边长
+其中 \(c_1,c_2\) 为两个卷积层的通道数，\(H\) 为全连接隐层宽度，\(h_2\) 为第二层卷积输出的空间边长
 （48 → 23 → 11）。`mlp` 与 CNN 的**唯一差别是没有局部感受野与权值共享**，因此它就是这个消融实验的对照组。
 
-`cnn_base` 中 $h_2=11$，代入 $c_1=8,\ c_2=16,\ H=32$：
+`cnn_base` 中 \(h_2=11\)，代入 \(c_1=8,\ c_2=16,\ H=32\)：
 
-$$
+\[
 (9\times 8 + 8) + (9\times 8\times 16 + 16) + (11^2\times 16\times 32 + 32) + (32\times 2 + 2)
 = 80 + 1168 + 61984 + 66 = 63298
-$$
+\]
 
 与程序输出的 `params = 63298` 一致（该数字由测试 `test_mlp_baseline_param_count_matches_formula`
 一类公式校验覆盖）。
@@ -280,7 +280,7 @@ $$
 ### 7.2 评价协议
 
 1. **训练集/验证集**：同一 `seed` 生成的 1200 / 300 张图像，四种结构看到的是**逐像素相同**的数据。
-2. **优化**：Adam，$lr=10^{-3}$，batch 32，12 轮，初始化种子相同。
+2. **优化**：Adam，\(lr=10^{-3}\)，batch 32，12 轮，初始化种子相同。
 3. **回归指标**：验证集转向/油门 MAE。
 4. **闭环指标**：S 形弯道 120 步的稳态横向误差（跳过前 3 s 暂态）与最大横向误差。
 5. **回正指标**：直线路段从 1.0 m 初始偏差出发，误差首次降到 0.1 m 以内所需时间（回正时间）与超调量。
@@ -322,7 +322,7 @@ Windows 11 + Python 3.10.6 + numpy 2.2.6，单核 CPU，一次运行的结果：
 | --- | --- |
 | 参数量 | 63,298 |
 | 训练 MSE（第 1 轮 → 第 12 轮） | 0.02374 → **0.00026** |
-| 验证 MAE（转向） | **0.0152**（转向值域 $[-1,1]$，约 1.5% 满量程） |
+| 验证 MAE（转向） | **0.0152**（转向值域 \([-1,1]\)，约 1.5% 满量程） |
 | 验证 MAE（油门） | **0.0130** |
 
 闭环驾驶（120 步，S 形弯道，初始横向偏移 0.9 m）：

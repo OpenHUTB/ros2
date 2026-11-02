@@ -69,9 +69,12 @@ def main(args=None) -> int:
 
             if self.publish_images:
                 msg = Image()
+                msg.header.stamp = self.get_clock().now().to_msg()
+                msg.header.frame_id = "pix2cmd_camera"
                 msg.height = IMG
                 msg.width = IMG
                 msg.encoding = "mono8"
+                msg.is_bigendian = 0
                 msg.step = IMG
                 msg.data = (np.clip(image, 0, 1) * 255).astype(np.uint8).tobytes()
                 self.image_pub.publish(msg)
