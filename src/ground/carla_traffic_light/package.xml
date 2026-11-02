@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_traffic_light</name>
+  <version>0.1.0</version>
+  <description>
+    CARLA 交通信号灯识别与响应：读取信号灯状态与停止线，按红灯停 / 黄灯判断
+    能否停住 / 绿灯行的规则决策，用 PI + 前馈的纵向控制器执行，并保存运行截图。
+  </description>
+
+  <maintainer email="zyfmy@example.com">zyfmy</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
