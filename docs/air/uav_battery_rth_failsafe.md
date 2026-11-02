@@ -2,6 +2,8 @@
 
 按电量分级触发预警、返航、迫降, 防止低电量丢机。
 
+![节点运行日志](./uav_battery_rth_failsafe_run.png)
+
 ## 状态机
 
 ```mermaid
