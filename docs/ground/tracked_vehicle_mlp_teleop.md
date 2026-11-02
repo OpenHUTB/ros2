@@ -50,7 +50,7 @@ tracked_vehicle_mlp_teleop/
 │   ├── evaluate.py              # 汇总指标 + 绘图
 │   ├── collect_all.sh           # 三场景采集 + 训练
 │   ├── run_benchmark.sh         # 三场景 RAW/PI/MLP 评估
-│   └── test_offline.py          # 离线自检
+│   └── test_offline.py          # pytest 离线自检（已接入 catkin test）
 ├── models/
 │   ├── mlp_policy.pt            # MLP 权重（约 23 KB）
 │   ├── norm_stats.npz           # 特征归一化统计量
@@ -193,6 +193,14 @@ cd ~/catkin_ws
 source /opt/ros/noetic/setup.bash
 catkin_make --only-pkg-with-deps tracked_vehicle_mlp_teleop
 source devel/setup.bash
+```
+
+离线测试（不依赖 ROS/Gazebo，已通过 `catkin_add_nosetests` 接入 catkin test）：
+
+```bash
+catkin_make run_tests_tracked_vehicle_mlp_teleop
+# 或直接运行 pytest
+python3 -m pytest src/ground/tracked_vehicle_mlp_teleop/scripts/test_offline.py
 ```
 
 ### 6.2 键盘控制

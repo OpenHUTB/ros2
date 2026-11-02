@@ -47,7 +47,7 @@ tracked_vehicle_mlp_teleop/
 │   ├── evaluate.py              # 汇总指标 + 绘图
 │   ├── collect_all.sh           # 三场景采集 + 训练
 │   ├── run_benchmark.sh         # 三场景 RAW/PI/MLP 评估
-│   └── test_offline.py          # 不依赖 ROS 的离线自检
+│   └── test_offline.py          # pytest 离线自检（已接入 catkin test）
 ├── models/
 │   ├── mlp_policy.pt            # 约 23 KB
 │   ├── norm_stats.npz           # 约 1 KB
@@ -63,6 +63,16 @@ cd ~/catkin_ws
 source /opt/ros/noetic/setup.bash
 catkin_make --only-pkg-with-deps tracked_vehicle_mlp_teleop
 source devel/setup.bash
+```
+
+离线测试（不依赖 ROS/Gazebo）：
+
+```bash
+# 通过 catkin 注册的标准测试入口
+catkin_make run_tests_tracked_vehicle_mlp_teleop
+
+# 也可以直接用 pytest 运行
+python3 -m pytest src/ground/tracked_vehicle_mlp_teleop/scripts/test_offline.py
 ```
 
 ## 4. 键盘控制演示
@@ -183,7 +193,7 @@ roslaunch tracked_vehicle_mlp_teleop eval.launch world:=flat \
 
 ## 9. 演示素材
 
-- `docs/img/ground/tracked_vehicle_mlp_teleop/demo.gif`：三场景键盘/MLP 演示（10–20 MB）。
+- `docs/img/ground/tracked_vehicle_mlp_teleop/demo.gif`：三场景键盘/MLP 演示（已压缩至 10 MB 以内）。
 - `docs/img/ground/tracked_vehicle_mlp_teleop/flat.png`、`slope.png`、`low_friction.png`：场景截图。
 - `docs/img/ground/tracked_vehicle_mlp_teleop/metrics.png`：RAW / PI / MLP 指标对比图。
 

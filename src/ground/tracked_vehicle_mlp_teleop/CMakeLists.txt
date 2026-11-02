@@ -37,9 +37,13 @@ catkin_install_python(PROGRAMS
   scripts/evaluate.py
   scripts/train_mlp.py
   scripts/model.py
-  scripts/test_offline.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+if(CATKIN_ENABLE_TESTING)
+  # 离线 pytest 用例（不依赖 ROS/Gazebo），catkin_make run_tests 会自动执行
+  catkin_add_nosetests(scripts/test_offline.py TIMEOUT 120)
+endif()
 
 install(DIRECTORY launch urdf worlds config models
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}

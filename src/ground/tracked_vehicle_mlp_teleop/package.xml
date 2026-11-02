@@ -28,6 +28,9 @@
   <depend>xacro</depend>
   <depend>robot_state_publisher</depend>
 
+  <test_depend>python3-nose</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
   <export>
     <gazebo_ros gazebo_model_path="${prefix}/models"/>
   </export>

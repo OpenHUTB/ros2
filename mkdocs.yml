@@ -92,7 +92,7 @@ nav:
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
-    - RVIZ Carla 插件: './ground/rviz
+    - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 履带车物理仿真与 MLP 打滑补偿: './ground/tracked_vehicle_mlp_teleop.md'
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'

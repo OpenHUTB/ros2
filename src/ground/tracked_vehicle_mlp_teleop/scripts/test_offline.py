@@ -1,8 +1,10 @@
-#!/usr/bin/env python3
-"""Offline smoke tests that do not require ROS or Gazebo.
+"""Offline pytest suite for the tracked_vehicle_mlp_teleop package.
 
-Run:
-    python3 scripts/test_offline.py
+The tests do not require ROS or Gazebo.  They are registered with
+``catkin_add_nosetests`` in CMakeLists.txt, so ``catkin_make run_tests``
+executes them, and they can also be run directly with pytest:
+
+    python3 -m pytest scripts/test_offline.py
 """
 import os
 import sys
@@ -11,6 +13,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from model import (  # noqa: E402
     FEATURE_NAMES,
     INPUT_DIM,
@@ -20,46 +23,55 @@ from model import (  # noqa: E402
     package_path,
 )
 
+MAX_V = 0.9
+MAX_W = 1.6
+TOL = 1e-6
 
-def check_model():
+
+def test_feature_layout():
+    """Feature vector length must match the first network layer input."""
+    assert len(FEATURE_NAMES) == INPUT_DIM
+    assert INPUT_DIM == 11
+
+
+def test_mlp_batch_shape():
+    """The policy maps a batch of feature vectors to (v, w) pairs."""
+    model = MLPController()
+    out = model(torch.zeros(3, INPUT_DIM))
+    assert tuple(out.shape) == (3, 2)
+
+
+def test_model_artifacts_present():
+    """The exported weights and normalization statistics must be in the repo."""
     weights = package_path("models/mlp_policy.pt")
     norm = package_path("models/norm_stats.npz")
     assert os.path.isfile(weights), "缺少 MLP 权重: {}".format(weights)
     assert os.path.isfile(norm), "缺少归一化文件: {}".format(norm)
-    controller = NeuralController(weights, norm, 0.9, 1.6)
-    features = np.zeros(INPUT_DIM, dtype=np.float32)
-    v_cmd, w_cmd = controller.command(features)
+
+
+def test_trained_policy_inference():
+    """The shipped policy must produce finite commands inside the limits."""
+    weights = package_path("models/mlp_policy.pt")
+    norm = package_path("models/norm_stats.npz")
+    controller = NeuralController(weights, norm, MAX_V, MAX_W)
+    v_cmd, w_cmd = controller.command(np.zeros(INPUT_DIM, dtype=np.float32))
     assert np.isfinite(v_cmd) and np.isfinite(w_cmd)
-    assert abs(v_cmd) <= 0.9 + 1e-6
-    assert abs(w_cmd) <= 1.6 + 1e-6
-    print("[test] MLP 推理正常: v={:.3f}, w={:.3f}".format(v_cmd, w_cmd))
+    assert abs(v_cmd) <= MAX_V + TOL
+    assert abs(w_cmd) <= MAX_W + TOL
 
 
-def check_pi():
-    expert = PIExpert(1.1, 1.6, 1.8, 3.2, 0.8, 1.0, 0.9, 1.6)
+def test_pi_expert_tracks_error():
+    """The PI expert must react to a positive speed error."""
+    expert = PIExpert(1.1, 1.6, 1.8, 3.2, 0.8, 1.0, MAX_V, MAX_W)
     v, w = expert.command(0.5, 0.0, 0.0, 0.0, 0.05)
     assert v >= 0.5
-    assert abs(w) < 1e-6
+    assert abs(w) < TOL
+
+
+def test_pi_expert_saturates():
+    """Integral windup must be clipped to the configured command limits."""
+    expert = PIExpert(1.1, 1.6, 1.8, 3.2, 0.8, 1.0, MAX_V, MAX_W)
     for _ in range(100):
         v, w = expert.command(0.5, 0.2, 0.0, 0.0, 0.05)
-    assert v <= 0.9 + 1e-6 and w <= 1.6 + 1e-6
-    print("[test] PI 专家输出正常: v={:.3f}, w={:.3f}".format(v, w))
-
-
-def check_shapes():
-    model = MLPController()
-    out = model(torch.zeros(3, INPUT_DIM))
-    assert tuple(out.shape) == (3, 2)
-    assert len(FEATURE_NAMES) == INPUT_DIM
-    print("[test] 张量维度正常:", tuple(out.shape))
-
-
-def main():
-    check_shapes()
-    check_pi()
-    check_model()
-    print("[test] 全部离线测试通过")
-
-
-if __name__ == "__main__":
-    main()
+    assert v <= MAX_V + TOL
+    assert w <= MAX_W + TOL
