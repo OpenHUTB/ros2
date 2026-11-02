@@ -27,6 +27,7 @@ from std_srvs.srv import SetBool
 
 pytestmark = pytest.mark.ros_integration
 
+
 def test_service_call_switches_mode_to_flying():
     """通过真实服务调用把模式切换到 FLYING，断言服务端模式随之改变."""
     rclpy.init()
