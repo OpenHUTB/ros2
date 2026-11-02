@@ -1,0 +1,53 @@
+topics:
+  odom: /uav/odom
+  lidar: /lidar/points
+  depth: /camera/depth
+  cmd_vel: /uav/cmd_vel
+  status: /uav_lidar_safety_corridor/status
+  markers: /uav_lidar_safety_corridor/markers
+
+nav:
+  relative_goal: false
+  max_goal_bearing_deg: 75.0
+
+control:
+  rate_hz: 10.0
+  require_lidar: true
+  cloud_timeout: 0.8
+  max_horizontal_speed: 2.2
+  max_vertical_speed: 1.0
+  max_horizontal_accel: 2.5
+  max_vertical_accel: 1.5
+  goal_tolerance_xy: 1.0
+  goal_tolerance_z: 0.7
+  vertical_gain: 0.9
+  stop_distance: 1.0
+  slow_distance: 4.0
+  repulsion_radius: 2.0
+  repulsion_gain: 0.8
+  vertical_influence: 1.2
+  vertical_influence_below: 0.15
+  forward_corridor_half_width: 1.2
+  depth_enabled: true
+  depth_timeout: 0.8
+  depth_stop_distance: 1.2
+  depth_slow_distance: 3.5
+  depth_roi_x_min: 0.2
+  depth_roi_x_max: 0.8
+  depth_roi_y_min: 0.25
+  depth_roi_y_max: 0.75
+
+corridor:
+  lookahead_min: 0.8
+  lookahead_max: 8.0
+  half_width: 1.8
+  vertical_clearance: 0.7
+  min_offset: -2.5
+  max_offset: 3.5
+  offset_step: 0.25
+  goal_z_weight: 0.08
+  current_z_weight: 0.04
+  distance_weight: 0.5
+
+metrics:
+  output_file: ""
