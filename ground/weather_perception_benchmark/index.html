@@ -224,6 +224,20 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 激光雷达感知退化评测与跨传感器对比</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 传感器配置与采集口径</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 雷达指标与退化率口径</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84">8.4 建模口径与对照实验</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85">8.5 分析与结论</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
@@ -409,7 +423,7 @@
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">基于恶劣雨雾天气下多传感器感知性能对比实验</h1>
 <p>本文介绍一个基于 CARLA 0.9.15 与 OpenCV 的车载相机感知性能评测模块。模块以地面载具（ego 车辆）为感知平台，在车顶挂载 <code>sensor.camera.rgb</code> 相机（800×600，FOV 90°），通过 CARLA 天气 API 在<strong>同一场景、同一参考位姿</strong>下依次切换 <code>ClearNoon</code>（清晰）、<code>SoftRainNoon</code>（小雨）、<code>HardRainNoon</code>（大雨）、<code>HeavyFog</code>（浓雾）四档天气，对每档采集的图像计算亮度（灰度均值）、对比度（灰度标准差）、边缘密度（Canny 边缘像素占比）三个指标（每档连续取 5 帧平均），量化雨雾天气对车载视觉感知的退化程度；测量结束后车辆切换为自动驾驶，并录制恶劣天气下的行驶演示动图。</p>
-<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力。当前两部分以相机（<code>sensor.camera.rgb</code>）为感知对象，后续部分将扩展激光雷达等其他传感器，逐步覆盖多传感器感知对比。</p>
+<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力；<strong>第三部分（第 8 节）</strong>在同一场景、同一参考位姿下同时挂载相机与激光雷达，用统一的退化率口径做跨传感器对比。</p>
 <h2 id="1">1. 运行环境</h2>
 <table>
 <thead>
@@ -421,7 +435,7 @@
 <tbody>
 <tr>
 <td>操作系统</td>
-<td>Windows 10</td>
+<td>Windows 11</td>
 </tr>
 <tr>
 <td>模拟器</td>
@@ -843,7 +857,261 @@ python<span class="w"> </span>main.py
 </ul>
 <p>因此，恶劣天气下的可靠感知不能只依赖相机图像后处理：增强算法可作为低成本的第一层补救，
 但更根本的方向是多传感器融合（如不受可见光散射影响的激光雷达）与对天气鲁棒的感知模型，
-这也将是本系列后续部分的内容。</p></div>
+这也将是本系列后续部分的内容。</p>
+<h2 id="8">8. 激光雷达感知退化评测与跨传感器对比</h2>
+<p>第 1~6 节与第 7 节都以相机（<code>sensor.camera.rgb</code>）为感知对象。本节在同一辆车、同一参考位姿、
+同一四档天气下<strong>同时挂载 RGB 相机与激光雷达</strong>，一次采集得到两套数据，再用统一的
+「相对晴朗基准的退化率」把两个传感器的退化程度放进同一口径，回答「雨雾到底更伤相机还是更伤雷达」。</p>
+<h3 id="81">8.1 传感器配置与采集口径</h3>
+<table>
+<thead>
+<tr>
+<th>传感器</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensor.camera.rgb</code></td>
+<td>800×600、FOV 90°（与第 1、7 节完全一致，保证三场实验可比）</td>
+</tr>
+<tr>
+<td><code>sensor.lidar.ray_cast</code></td>
+<td>32 线、量程 50 m、转速 20 Hz、<code>points_per_second=200000</code>、<code>upper_fov=10</code>、<code>lower_fov=-30</code></td>
+</tr>
+</tbody>
+</table>
+<p>雷达回波的大气衰减由 blueprint 属性 <code>atmosphere_attenuation_rate</code> 描述（引擎默认 0.004）。
+雨滴与雾滴会对 ~905 nm 激光产生散射与吸收，因此本实验按天气档位递增设定该系数：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>ClearNoon</th>
+<th>SoftRainNoon</th>
+<th>HardRainNoon</th>
+<th>HeavyFog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>atmosphere_attenuation_rate</code></td>
+<td>0.004</td>
+<td>0.01</td>
+<td>0.03</td>
+<td>0.06</td>
+</tr>
+</tbody>
+</table>
+<p>该属性只能在传感器生成时写入、运行中不可修改，所以<strong>每档天气前都要销毁旧雷达、用新系数重建一次</strong>。</p>
+<p>另需注意 CARLA 雷达的发布方式：它<strong>按渲染帧发布</strong>，本机世界频率约 160 FPS，
+20 Hz 转速下单帧只含约 45° 的扇形、约 1000 个点，并不代表一整圈。为得到可用于统计的完整扫描，
+本实验在车辆静止的前提下，于固定 <strong>0.2 s 时间窗内累积连续多帧点云取并集</strong>（约 4 圈、3 万个点），
+四档天气使用完全相同的窗口。若直接拿单帧统计，「近/中/远占比」会随扇形相位大幅跳动，
+把采样噪声误判成天气退化。</p>
+<h3 id="82">8.2 雷达指标与退化率口径</h3>
+<ul>
+<li><strong>有效点数</strong>：回波衰减会让强度落到丢点阈值以下而被丢弃，点数随之下降；</li>
+<li><strong>平均回波强度</strong>：回波质量，最灵敏的退化指标；</li>
+<li><strong>距离 95 分位</strong>：近似「还能看多远」；</li>
+<li><strong>近/中/远点数占比</strong>：&lt;15 m / 15–30 m / ≥30 m 三段的点数占比，反映几何覆盖的变化。</li>
+</ul>
+<p>退化率沿用第 7.2 节的同口径定义：<code>退化率 = (晴朗基准 − 当前值) / 晴朗基准 × 100%</code>。</p>
+<h3 id="83">8.3 实验结果</h3>
+<p>四档天气下同一场景、同一机位的点云 BEV 俯视图（按高度 z 着色，浓雾档外圈点已明显变稀）：</p>
+<p><img alt="" src="../img/ground/weather_lidar_bev.png"/></p>
+<p>相机与雷达指标原始数值（同一参考位姿；相机取 5 帧平均，雷达在 0.2 s 窗口内累积成整圈）：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>相机 亮度</th>
+<th>相机 对比度</th>
+<th>相机 边缘密度(%)</th>
+<th>雷达 点数</th>
+<th>雷达 平均强度</th>
+<th>雷达 距离95分位(m)</th>
+<th>雷达 近/中/远(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ClearNoon</td>
+<td>113.8</td>
+<td>43.8</td>
+<td>13.92</td>
+<td>35014</td>
+<td>0.944</td>
+<td>35.85</td>
+<td>65.7 / 24.0 / 10.3</td>
+</tr>
+<tr>
+<td>SoftRainNoon</td>
+<td>115.0</td>
+<td>35.4</td>
+<td>10.97</td>
+<td>34610</td>
+<td>0.872</td>
+<td>35.58</td>
+<td>67.0 / 23.7 / 9.3</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>103.9</td>
+<td>32.2</td>
+<td>4.34</td>
+<td>30295</td>
+<td>0.692</td>
+<td>34.93</td>
+<td>69.8 / 22.6 / 7.6</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>131.0</td>
+<td>35.9</td>
+<td>2.21</td>
+<td>28064</td>
+<td>0.509</td>
+<td>34.26</td>
+<td>71.0 / 21.8 / 7.2</td>
+</tr>
+</tbody>
+</table>
+<p>相对晴朗基准的退化率：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>相机边缘密度</th>
+<th>雷达点数</th>
+<th>雷达平均强度</th>
+<th>雷达距离95分位</th>
+<th>雷达远端占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SoftRainNoon</td>
+<td>21.2%</td>
+<td>1.2%</td>
+<td>7.6%</td>
+<td>0.8%</td>
+<td>9.7%</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>68.8%</td>
+<td>13.5%</td>
+<td>26.7%</td>
+<td>2.6%</td>
+<td>26.0%</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>84.1%</td>
+<td>19.8%</td>
+<td>46.1%</td>
+<td>4.4%</td>
+<td>29.9%</td>
+</tr>
+</tbody>
+</table>
+<p>把各自各指标的退化率取绝对值后平均，得到传感器级的单一可对比数：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>相机（3 指标平均）</th>
+<th>雷达（4 指标平均）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SoftRainNoon</td>
+<td>13.8%</td>
+<td>4.8%</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>34.6%</td>
+<td>17.2%</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>39.1%</td>
+<td>25.1%</td>
+</tr>
+</tbody>
+</table>
+<p>相机与雷达退化率对照柱状图：</p>
+<p><img alt="" src="../img/ground/weather_multisensor_degradation.png"/></p>
+<h3 id="84">8.4 建模口径与对照实验</h3>
+<p>需要如实说明雷达退化的来源：<strong>CARLA 引擎本身不会按天气改变激光回波</strong>——
+<code>atmosphere_attenuation_rate</code> 默认恒为 0.004，雨雾粒子只参与画面渲染、并不遮挡激光射线，
+所以本实验的雷达退化完全来自 8.1 节中显式递增的衰减系数。</p>
+<p>为验证这一点，把该系数四档全部固定为引擎默认值 0.004、其余流程不变再跑一遍
+（复现方式：将源码中 <code>LIDAR_ATTENUATION</code> 的四档取值全部改为 0.004 后重跑），结果如下：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>点数</th>
+<th>平均强度</th>
+<th>距离95分位(m)</th>
+<th>近/中/远(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ClearNoon</td>
+<td>36148</td>
+<td>0.944</td>
+<td>35.58</td>
+<td>65.3 / 24.7 / 10.0</td>
+</tr>
+<tr>
+<td>SoftRainNoon</td>
+<td>35616</td>
+<td>0.944</td>
+<td>35.58</td>
+<td>65.6 / 24.2 / 10.2</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>36508</td>
+<td>0.944</td>
+<td>35.58</td>
+<td>65.2 / 24.9 / 9.9</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>35745</td>
+<td>0.944</td>
+<td>36.62</td>
+<td>65.7 / 24.0 / 10.3</td>
+</tr>
+</tbody>
+</table>
+<p>四档天气的指标几乎完全一致（平均强度恒为 0.944、点数波动在 ±3% 以内），
+证明在没有显式衰减建模时，CARLA 的雷达对雨雾是「免疫」的。</p>
+<h3 id="85">8.5 分析与结论</h3>
+<ul>
+<li><strong>雷达退化随天气单调上升，但幅度明显小于相机</strong>：浓雾下相机各指标平均退化 39.1%，
+  雷达 25.1%；相机最关键的边缘密度损失 84.1%（13.92% → 2.21%），
+  而雷达平均回波强度损失 46.1%、有效点数只损失 19.8%。</li>
+<li><strong>雷达的退化集中在远距离</strong>：远端（≥30 m）点数占比由 10.3% 降到 7.2%，
+  而近端（&lt;15 m）占比反而从 65.7% 升到 71.0%，近处结构几乎完整保留——
+  雨雾削掉的主要是「看得多远」。</li>
+<li><strong>两个传感器的退化机理不同</strong>：相机是在成像环节整体损失结构信息（白化、低对比、边缘消失），
+  靠后处理最多只能挽回一部分（第 7 节实测浓雾边缘密度恢复率仅 15.5%）；
+  雷达则是回波强度按距离与衰减系数衰减、并因低于丢点阈值而掉点，属于可建模、可预测的退化。</li>
+<li>结合 8.4 节的对照可以给出更一般的判断：<strong>激光雷达对雨雾的敏感度远低于可见光相机</strong>——
+  需要人为把衰减系数放大 15 倍（0.004 → 0.06），其指标损失仍只有相机在同一批天气下的一半左右。
+  因此相机 + 激光雷达的多传感器融合，是恶劣天气下比「单靠相机 + 图像增强」更可靠的方案。</li>
+</ul>
+<p>本节源码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/weather_lidar_perception"><code>src/ground/weather_lidar_perception</code></a>，
+采集流程与指标口径与本文档一致，依赖与运行方式见该目录的 README。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
