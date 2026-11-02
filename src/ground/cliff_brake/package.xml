@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>cliff_brake</name>
+  <version>0.0.1</version>
+  <description>基于 MuJoCo 与 ROS 的地面无人车悬崖边缘紧急制动仿真</description>
+
+  <maintainer email="2930366365@qq.com">Tan-aaa</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+
+  <export>
+  </export>
+</package>

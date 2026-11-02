@@ -1,0 +1,11 @@
+{
+  "telemetry_messages": 470,
+  "score_messages": 469,
+  "diagnostic_arrays": 469,
+  "alarm_messages": 0,
+  "reasons": [
+    "normal",
+    "warming_up"
+  ],
+  "source": "Actual ROS2 subscribers, live read-only AirSim bridge; vehicle landed"
+}
