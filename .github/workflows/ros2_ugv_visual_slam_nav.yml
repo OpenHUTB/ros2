@@ -62,12 +62,17 @@ jobs:
           echo "install 布局检查通过"
 
       # ---- 4) 四场景真 launch：每场景跑 180 s，看 SLAM 日志是否在推进
-      #（ros:humble 容器里首次 ros2 launch 的节点拉起+Python 导入要 60 s 以上，
-      # 90 s 会在第一帧图像处理之前就把进程杀掉）
+      #（ros:humble 容器里首次 ros2 launch 的节点拉起+Python 导入要 60 s 以上；
+      # 另外默认 Fast DDS 走 UDP 传输、单条报文上限 64KB，而 RGB-D 图像约
+      # 230-300KB 会被静默丢弃导致 SLAM 收不到图像，必须换 CycloneDDS）
       - name: 四场景 launch 冒烟
         run: |
+          apt-get update -qq
+          apt-get install -y -qq ros-humble-rmw-cyclonedds-cpp
           source /opt/ros/humble/setup.bash
+          export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
           source install/setup.bash
+          echo "RMW_IMPLEMENTATION=$RMW_IMPLEMENTATION"
           for s in corridor cluttered dynamic night ; do
             echo "=================== $s ==================="
             timeout 180 ros2 launch ugv_visual_slam_nav main.launch.py \
