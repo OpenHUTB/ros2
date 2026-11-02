@@ -460,9 +460,9 @@ rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver<span c
 <p>gmapping 的节点参数与 rviz 配置在 <code>mrobot_navigation</code> 包中，键盘遥控在 <code>mrobot_teleop</code> 包中。
 从源码目录把这两个包（连同 <code>mrobot_description</code>）复制到工作空间 <code>src</code> 下。</p>
 <blockquote>
-<p>注意：shell 变量（如 <code>$SRC</code>）只在定义它的那个终端有效，<strong>换终端或重新登录后变量会失效</strong>。
+<p>注意：shell 变量（如 <code>$SRC</code>）只在定义它的那个终端有效，<strong>换终端或重新登录后变量会失效</strong>
 若变量为空，<code>cp "$SRC/..."</code> 会被展开成 <code>/robot_mrobot/...</code> 而报错。建议直接使用<strong>绝对路径</strong>，
-让每条命令自包含。</p>
+让每条命令自包含</p>
 </blockquote>
 <p>本示例第一次复制时因 <code>$SRC</code> 为空而失败：</p>
 <p><img alt="变量 SRC 为空导致 cp 报错" src="../../../img/code/chap6/28_src_empty_error.png"/></p>
