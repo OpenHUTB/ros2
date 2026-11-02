@@ -239,4 +239,9 @@ ___
 
 ___
 
+## 7. 经典控制 <span id='classical_control'></span>
+
+* [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制
+
+
 ## 参考文献
