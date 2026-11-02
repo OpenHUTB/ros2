@@ -1,0 +1,4 @@
+<launch>
+    <node name="vehicle_rviz_sim" pkg="vehicle_rviz_sim" type="main.py" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vehicle_rviz_sim)/vehicle.rviz"/>
+</launch>

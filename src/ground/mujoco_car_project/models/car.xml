@@ -1,0 +1,46 @@
+<mujoco model="simple_car">
+  <option timestep="0.01"/>
+
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+
+    <!-- 参照物：彩色柱子，用来判断小车有没有动 -->
+    <geom name="pole1" type="cylinder" pos="2 0 0.5" size="0.1 0.5" rgba="1 0 0 1"/>
+    <geom name="pole2" type="cylinder" pos="-2 0 0.5" size="0.1 0.5" rgba="0 1 0 1"/>
+    <geom name="pole3" type="cylinder" pos="0 2 0.5" size="0.1 0.5" rgba="0 0 1 1"/>
+    <geom name="pole4" type="cylinder" pos="0 -2 0.5" size="0.1 0.5" rgba="1 1 0 1"/>
+
+    <body name="car" pos="0 0 0.1">
+      <freejoint/>
+      <geom name="chassis" type="box" size="0.2 0.15 0.05" rgba="0.2 0.4 0.8 1"/>
+
+      <body name="wheel_fl" pos="0.15 0.15 -0.05">
+        <joint name="wheel_fl" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+
+      <body name="wheel_fr" pos="0.15 -0.15 -0.05">
+        <joint name="wheel_fr" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+
+      <body name="wheel_rl" pos="-0.15 0.15 -0.05">
+        <joint name="wheel_rl" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+
+      <body name="wheel_rr" pos="-0.15 -0.15 -0.05">
+        <joint name="wheel_rr" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="fl_motor" joint="wheel_fl" gear="1" ctrllimited="true" ctrlrange="-5 5"/>
+    <motor name="fr_motor" joint="wheel_fr" gear="1" ctrllimited="true" ctrlrange="-5 5"/>
+    <motor name="rl_motor" joint="wheel_rl" gear="1" ctrllimited="true" ctrlrange="-5 5"/>
+    <motor name="rr_motor" joint="wheel_rr" gear="1" ctrllimited="true" ctrlrange="-5 5"/>
+  </actuator>
+</mujoco>

@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-03",
+  "module": "telemetry_diagnostics",
+  "nonstandard_colcon_module_deliberately_blocked": true,
+  "colcon_core_build_passed": true,
+  "requirements_command_passed_without_new_downloads": true,
+  "unit_tests_passed": 13,
+  "demo_passed": true,
+  "scope": "same Ubuntu VM; new source folders and builds; no external-machine claim",
+  "published_results": 361
+}

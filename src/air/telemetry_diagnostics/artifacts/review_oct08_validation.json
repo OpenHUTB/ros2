@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-08",
+  "module": "telemetry_diagnostics",
+  "lark_version": "1.1.9",
+  "lark_import_file": "/home/user/uav_prediction_env/lib/python3.8/site-packages/lark/__init__.py",
+  "doctor_passed": true,
+  "colcon_build_passed": true,
+  "unit_tests_passed": 13,
+  "requirements_install": "pip --no-index --find-links wheels -r requirements.txt; existing dependencies reused; only Lark wheel downloaded",
+  "missing_lark_failure_reproduced": true,
+  "scope": "existing Ubuntu VM; new source directories; not a clean OS installation",
+  "demo_passed": true,
+  "published_records": 361,
+  "missing_lark_reproduction_method": "fresh subprocess with lark import deliberately blocked; actual host previously had system lark 0.8.1; repaired path verified with venv-installed 1.1.9"
+}

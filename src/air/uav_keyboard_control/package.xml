@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_keyboard_control</name>
+  <version>0.1.0</version>
+  <description>
+    任务①：无人机键盘控制模块。把终端按键转换为机体系速度指令，
+    发布到 /uav/cmd_vel，由 carlair_ros_bridge 执行。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export/>
+</package>

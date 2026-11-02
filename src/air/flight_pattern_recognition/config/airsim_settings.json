@@ -1,0 +1,9 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "LocalHostIp": "192.168.239.1",
+  "ApiServerPort": 41451,
+  "ClockSpeed": 1.0,
+  "ViewMode": "SpringArmChase",
+  "Vehicles": {"PredictionDrone": {"VehicleType": "SimpleFlight", "AutoCreate": true}}
+}

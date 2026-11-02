@@ -13,7 +13,7 @@
     * **一定**要用 **`mkdocs serve --livereload`** 检查网页的是否为想要的修改效果后再提交
     * Pull Request 的标题和提交信息不能随意，需要说明为什么修改，而不仅仅是修改了什么
     * Pull Request 页面的 File changed 下的内容是否为想要的修改
-    * 检查 Pull Request 页面是否有红色的提示（有冲突），如果有请先合并仓库最新修改再新建 Pull Requst
+    * 检查 Pull Request 页面是否有红色的提示（有冲突），如果有请先合并仓库最新修改再新建 Pull Request
     * 用截图，而不是拍照
     * 不需要说明个人信息，因为git log的提交记录中有
     * 每次 Pull Request 都需要保证能够通过main脚本直接运行整个模块，在提交信息中提供运行效果图（动图可以用[ScreenToGif](https://github.com/NickeManarin/ScreenToGif)），README.md文档中提供运行环境和运行步骤的说明
@@ -27,5 +27,5 @@
 
 
 * 每次合并到主分支之前需要至少一名其他人 测试并同意（另一台机器修改部分的运行结果）
-* Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up) 
+* Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up).
 

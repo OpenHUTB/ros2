@@ -1,0 +1,9 @@
+mujoco_diff_drive_simulation:
+  ros__parameters:
+    model_file: models/diff_drive.xml
+    wheel_radius: 0.08
+    track_width: 0.42
+    max_wheel_speed: 20.0
+    command_timeout: 0.5
+    publish_tf: true
+    use_sim_time: true

@@ -36,6 +36,8 @@ rosrun turtlesim turtlesim_node
 python3 main.py          # 直接运行入口脚本（16.04 下为 python main.py）
 ```
 
+**重复运行**：画完一次后不用做任何清理，直接再次运行即可。程序每次启动都会先调用 /clear 服务把上一次画的花瓣擦掉，再从头重画，反复运行不会报错。
+
 ## 可调参数
 
 | 参数 | 默认值 | 说明 |
