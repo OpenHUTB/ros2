@@ -6,7 +6,7 @@
   <description>
     MuJoCo 原生 locomotion 环境上的强化学习对比实验模块。
     包含 HalfCheetah、Ant、Walker2d 三个经典连续控制环境，
-    使用 NumPy 手写 PPO 与 SAC 算法，在 MuJoCo 3.1.6 ~ 3.17.0 上进行训练、评估与 GIF 渲染。
+    使用 NumPy 手写 PPO 与 SAC 算法，在 MuJoCo 3.1.6 ~ 3.16.0 上进行训练、评估与 GIF 渲染。
     MuJoCo 本身没有 rosdep 键，需按 requirements.txt 用 pip 安装。
   </description>
   <maintainer email="Tan-aaa@users.noreply.github.com">Tan-aaa</maintainer>
