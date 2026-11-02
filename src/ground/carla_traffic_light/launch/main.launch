@@ -1,0 +1,19 @@
+<launch>
+  <!-- CARLA 服务器地址 -->
+  <arg name="carla_host" default="127.0.0.1" />
+  <arg name="carla_port" default="2000" />
+  <arg name="duration"  default="30.0" />
+  <arg name="save_dir"  default="$(find carla_traffic_light)/screenshots" />
+
+  <node pkg="carla_traffic_light"
+        type="main.py"
+        name="carla_traffic_light"
+        output="screen">
+    <rosparam command="load" file="$(find carla_traffic_light)/config/tl_params.yaml" />
+    <param name="carla_host" value="$(arg carla_host)" />
+    <param name="carla_port" value="$(arg carla_port)" />
+    <param name="duration"   value="$(arg duration)" />
+    <param name="save_dir"   value="$(arg save_dir)" />
+    <param name="offline"    value="false" />
+  </node>
+</launch>
