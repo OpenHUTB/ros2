@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_curve_speed_limit</name>
+  <version>1.0.0</version>
+  <description>CARLA 弯道自适应限速（CSL）：地图路点曲率预瞄 → v=√(a·R) 安全过弯速度 → 平顺加减速控制</description>
+  <maintainer email="82540295@example.com">82540295</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
