@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# 测试与缓存
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ROS2
+install/
+log/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 仿真中间产物（保留 benchmark.md 与基准图）
+results/*.tmp
