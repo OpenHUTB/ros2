@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>地面载具动力性测试 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u5730\u9762\u8f7d\u5177\u52a8\u529b\u6027\u6d4b\u8bd5";
+        var mkdocs_page_input_path = "ground/carla_vehicle_dynamics_test.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">地面载具动力性测试</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 目录结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 平均加速度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 制动距离与平均减速度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 转弯半径</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34">3.4 为什么转向测试的参数这么温和</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#35">3.5 三项测试的初始条件必须一致</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#36">3.6 异常样本判定：碰撞与掉速</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 仿真搭建与运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-carla-windows">4.1 启动 CARLA 服务端（Windows）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42-ipwindows">4.2 查询宿主机 IP（Windows）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 虚拟机连通性检查</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 编译功能包</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45-carla">4.5 离线单元测试（不需要 CARLA）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#46">4.6 单车型三项全测</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#47">4.7 多车型对比</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#48-ros-2-launch">4.8 用 ROS 2 launch 启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 参数说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 结果与性能</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 结果是否合理</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 已知限制</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-metricspy">7.1 metrics.py：只做数学，可以被离线测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-carla_utilspy">7.2 carla_utils.py：连接与车辆操作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-runnerpy">7.3 runner.py：三项测量流程</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参考</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">地面载具动力性测试</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_vehicle_dynamics_test.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla">基于 CARLA 的地面载具动力性测试</h1>
+<p>本模块在 CARLA 中对地面载具做三项<strong>动力性（纵向与转向性能）测试</strong>，并支持多车型横向对比：
+0→60 km/h 加速时间、60→0 制动距离、稳态转弯半径。三项指标都同时给出<strong>实测值</strong>与
+<strong>理论值</strong>，便于判断结果是否合理。</p>
+<div class="admonition note">
+<p class="admonition-title">与仓库已有模块的区别</p>
+<p>本模块<strong>不做控制算法</strong>，而是做<strong>被控对象本身的性能测量</strong>：</p>
+<ul>
+<li><code>carla_keyboard_control</code>、<code>ackermann_control</code> 等解决"怎么把车开起来"；</li>
+<li><code>aeb_collision_avoidance</code> 用"所需制动距离"作为<strong>决策判据</strong>来设计制动系统；</li>
+<li>本模块反过来——<strong>测出车辆真实的加速能力、制动能力和转向能力</strong>，并把多车型放在同一套
+  流程下比较，为标定、选型和后续控制算法的参数设定提供依据。</li>
+</ul>
+</div>
+<h2 id="1">1. 运行环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本 / 说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主机</td>
+<td>Windows 11，CARLA 0.9.16（Windows 发行版解压即用，双击其中的 <code>CarlaUE4.exe</code>）</td>
+</tr>
+<tr>
+<td>虚拟机</td>
+<td>Ubuntu 22.04 LTS（VMware），ROS 2 Humble，Python 3.10.12</td>
+</tr>
+<tr>
+<td>Python 依赖</td>
+<td><code>carla==0.9.16</code>、<code>numpy</code>；<code>matplotlib</code> 可选（只用于画曲线图）</td>
+</tr>
+<tr>
+<td>硬件</td>
+<td>能跑起 CARLA 服务端的独立显卡（本模块的测量不依赖渲染帧率）</td>
+</tr>
+</tbody>
+</table>
+<p>安装客户端（Ubuntu 22.04 + Python 3.10 对应 cp310 的 wheel，依赖清单见功能包内的 <code>requirements.txt</code>）：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/carla_vehicle_dynamics_test
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>-r<span class="w"> </span>requirements.txt<span class="w"> </span>-i<span class="w"> </span>https://pypi.tuna.tsinghua.edu.cn/simple
+</code></pre></div>
+<h2 id="2">2. 目录结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/carla_vehicle_dynamics_test/
+├── main.py                     统一入口（仓库约定：入口为 main.*）
+├── main.sh / main.bat          一键入口
+├── carla_vehicle_dynamics_test/
+│   ├── metrics.py              纯数学函数：加速度、制动距离、圆拟合、理论转弯半径
+│   ├── carla_utils.py          CARLA 连接、同步步进、生成指定车型、车道保持、复位
+│   ├── runner.py               三项测试的测量流程
+│   ├── app.py                  命令行参数、对比表、CSV、曲线图
+│   └── dynamics_node.py        ROS 2 节点：跑测试并把结果发布到 /dynamics/result
+├── test/
+│   ├── test_metrics.py         指标函数单元测试（38 项，不需要 CARLA）
+│   └── test_physics_parse.py   车辆物理参数解析测试（18 项，假对象，不需要 CARLA）
+├── launch/main.launch.py       ROS 2 启动入口
+├── requirements.txt            依赖清单（carla==0.9.16、numpy，matplotlib 可选）
+├── package.xml / setup.py / setup.cfg
+└── README.md
+</code></pre></div>
+<h2 id="3">3. 计算原理</h2>
+<h3 id="31">3.1 平均加速度</h3>
+<p>车辆从速度 <script type="math/tex">v_0</script> 变到 <script type="math/tex">v_1</script> 用时 <script type="math/tex">t</script>，区间平均加速度为</p>
+<p>
+<script type="math/tex; mode=display">
+a = \frac{v_1 - v_0}{t}
+</script>
+</p>
+<p>程序在起始时刻读一次速度、跨过目标车速那一帧再读一次，两者之差除以用时即为平均加速度。
+采样间隔由同步模式的步长决定（默认 0.05 s，即 20 Hz）。</p>
+<h3 id="32">3.2 制动距离与平均减速度</h3>
+<p>匀减速假设下，制动距离与减速度的关系为</p>
+<p>
+<script type="math/tex; mode=display">
+s = \frac{v^2}{2a} \quad\Longleftrightarrow\quad a = \frac{v^2}{2s}
+</script>
+</p>
+<p>程序沿轨迹逐帧累加位移得到实测制动距离 <script type="math/tex">s</script>，再由上式反推<strong>平均减速度</strong> <script type="math/tex">a</script>；
+随后把 <script type="math/tex">a</script> 代回 <script type="math/tex">s = v^2/(2a)</script> 与实测值对照。二者恒等并非"验证成功"，
+它只说明公式被正确使用；真正有信息量的是<strong>不同车型之间的差异</strong>（见第 6 节）。</p>
+<h3 id="33">3.3 转弯半径</h3>
+<p>转向测试采用<strong>阶跃转向</strong>：先在车道内直线加速到目标车速，再打一个固定方向盘并保持，
+采集转向段的轨迹与偏航角。转弯半径用两种互相独立的方法计算：</p>
+<p><strong>方法一：稳态偏航角速度法。</strong> 定速圆周运动中，偏航角速度 <script type="math/tex">\omega</script> 与半径 <script type="math/tex">R</script> 满足</p>
+<p>
+<script type="math/tex; mode=display">
+v = \omega R \quad\Longrightarrow\quad R = \frac{v}{\omega}
+</script>
+</p>
+<p>程序对末段（默认最后 0.6 s）的偏航角随时间做最小二乘直线拟合求 <script type="math/tex">\omega</script>，
+再除以该段的平均车速。偏航角在 <script type="math/tex">\pm\pi</script> 处会跳变，拟合前先做 <code>unwrap</code> 处理。</p>
+<p><strong>方法二：轨迹最小二乘圆拟合（Kasa 法）。</strong> 设圆心为 <script type="math/tex">(x_0, y_0)</script>、半径为 <script type="math/tex">r</script>，
+最小化</p>
+<p>
+<script type="math/tex; mode=display">
+\sum_{i=1}^{n}\left[\left(x_i^2 + y_i^2\right) - \left(2x_0x_i + 2y_0y_i + c\right)\right]^2,
+\qquad c = r^2 - x_0^2 - y_0^2
+</script>
+</p>
+<p>这是一个关于 <script type="math/tex">(x_0, y_0, c)</script> 的线性最小二乘问题，可用 <code>numpy.linalg.lstsq</code> 直接求解，
+半径由 <script type="math/tex">r = \sqrt{c + x_0^2 + y_0^2}</script> 还原。</p>
+<p><strong>理论对照：阿克曼几何。</strong> 忽略轮胎侧偏时，自行车模型的稳态转弯半径为</p>
+<p>
+<script type="math/tex; mode=display">
+R_{\text{theory}} = \frac{L}{\tan\delta}
+</script>
+</p>
+<p>其中 <script type="math/tex">L</script> 为轴距、<script type="math/tex">\delta</script> 为前轮转角。CARLA 的方向盘指令 <code>steer</code> 是归一化量（-1~1），
+真实前轮转角为 <script type="math/tex">\delta = \text{steer} \times \delta_{\max}</script>，
+<script type="math/tex">\delta_{\max}</script> 从车辆的物理参数中读取。</p>
+<blockquote>
+<p>实测半径通常<strong>略大于</strong>理论值：轮胎存在侧偏角，车辆实际走出的轨迹比几何预测更"宽"，
+即转向不足。第 6 节的偏差（8%~19%）与此一致。</p>
+</blockquote>
+<h3 id="34">3.4 为什么转向测试的参数这么温和</h3>
+<p>车道宽度只有 3.5 m。若转角取 14°（理论半径约 10 m），车辆在 1 s 内就会冲出路沿、
+撞上路边障碍后骤停——实测速度会从 7 m/s 掉到 0.07 m/s，此时算出的"半径"没有任何意义。
+因此默认取 <strong>3.5°（理论半径约 41~49 m）</strong>、转向段 <strong>1.5 s</strong>：侧向加速度只有约
+1.0 m/s²，1.5 s 内横向偏出不到 0.3 m，车辆始终留在车道内，同时偏航角变化约 12°，
+足够测出角速度。</p>
+<h3 id="35">3.5 三项测试的初始条件必须一致</h3>
+<p>车辆每次都在同一个出生点生成，但三项测试会依次进行——加速测试结束时车已经向前
+开了几十米。因此每项测试开始前都要<strong>复位</strong>：清零线速度与角速度、把车辆搬回出生点、
+持续刹车直到速度低于 0.05 m/s 再开始测量。</p>
+<p>另外，CARLA 的出生点通常比地面高十几厘米，车辆生成后会下落并弹跳。因此速度只取
+<strong>水平分量</strong>，否则竖直速度会污染读数（实测曾让"0→60 km/h"的起点凭空变成 5.3 km/h）。</p>
+<h3 id="36">3.6 异常样本判定：碰撞与掉速</h3>
+<p>全油门加速时车速只应单调上升。若中途撞上前车或路沿，车速会在一两个 0.05 s 采样点内掉几 m/s，
+随后又被油门"拉起来"，于是"跨过目标车速的时刻"被推迟，得到 6.30 s 这种虚高成绩
+（同一台特斯拉、同一组参数复跑 4 次为 3.45 / 3.60 / 6.30 / 3.60 s）；BMW 速度曲线里
+42→31→40→31 km/h 的来回抖动也是同一原因。这种样本不能当加速成绩。</p>
+<p>程序用两个互相独立的办法识别它：</p>
+<ol>
+<li><strong>碰撞传感器</strong>：给车辆挂 <code>sensor.other.collision</code>，同步模式下回调随 <code>world.tick()</code> 触发，
+   记录碰撞次数与冲量；</li>
+<li><strong>速度序列检测</strong>：<code>metrics.detect_speed_drops()</code> 查找相邻采样点之间超过 0.8 m/s 的掉速，
+   不依赖传感器，传感器不可用时依然有效。制动测试用对称的 <code>detect_speed_rises()</code>
+   识别"被追尾/被顶出去"（会让制动距离偏短）。</li>
+</ol>
+<p>判为异常时程序复位车辆并重跑（<code>--retries</code>，默认 2 次）；重跑后仍异常的结果保留，
+但在对比表里打 <code>*</code>、CSV 里记 <code>*_valid = False</code>，不参与结论。</p>
+<h2 id="4">4. 仿真搭建与运行步骤</h2>
+<h3 id="41-carla-windows">4.1 启动 CARLA 服务端（Windows）</h3>
+<p>解压 CARLA 0.9.16 后双击 <code>CarlaUE4.exe</code>，等待场景加载完成（窗口出现城市画面）。</p>
+<h3 id="42-ipwindows">4.2 查询宿主机 IP（Windows）</h3>
+<div class="highlight"><pre><span></span><code>ipconfig
+</code></pre></div>
+<p>在 <code>VMware Network Adapter VMnet8</code> 一节找到 IPv4 地址（形如 <code>192.168.x.1</code>）。
+<strong>下文命令中的地址要换成你自己查到的值。</strong></p>
+<p><img alt="Windows 中查询 IP" src="../../img/ground/carla_vehicle_dynamics_test/01_windows_ipconfig.png"/></p>
+<h3 id="43">4.3 虚拟机连通性检查</h3>
+<div class="highlight"><pre><span></span><code>nc<span class="w"> </span>-vz<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span><span class="m">2000</span>
+</code></pre></div>
+<p>出现 <code>succeeded!</code> 说明虚拟机能访问 CARLA 的 RPC 端口。</p>
+<h3 id="44">4.4 编译功能包</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/ros2_ws/src<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+cp<span class="w"> </span>-r<span class="w"> </span>~/ros2_ws/src/ros2/src/ground/carla_vehicle_dynamics_test<span class="w"> </span>~/ros2_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/ros2_ws
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_vehicle_dynamics_test<span class="w"> </span>--symlink-install
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>pkg<span class="w"> </span>executables<span class="w"> </span>carla_vehicle_dynamics_test
+</code></pre></div>
+<p><strong>预期输出</strong>：<code>Summary: 1 package finished</code>，并列出 <code>carla_vehicle_dynamics_test dynamics_test_node</code>。</p>
+<blockquote>
+<p><strong>评审本 PR 时</strong>：模块尚未合并进 <code>OpenHUTB/ros2</code> 的 master，请改为克隆 PR 所在分支
+（例如 <code>git clone -b feat/carla_vehicle_dynamics_test https://github.com/Aogusilakui/ros2.git</code>）。</p>
+</blockquote>
+<h3 id="45-carla">4.5 离线单元测试（不需要 CARLA）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws/src/carla_vehicle_dynamics_test
+python3<span class="w"> </span>test/test_metrics.py<span class="w">          </span><span class="c1"># 预期：[结果] 38 项全部通过</span>
+python3<span class="w"> </span>test/test_physics_parse.py<span class="w">    </span><span class="c1"># 预期：[结果] 18 项全部通过</span>
+</code></pre></div>
+<p>这两组测试把"不需要 CARLA 就能验证的东西"全部覆盖掉：公式、边界条件、圆拟合、
+偏航角速度法（含合成圆周数据）、异常掉速/异常加速检测、车辆物理参数的字段兼容性。
+<strong>先跑它们再连 CARLA</strong>，可以避免把代码错误误判成仿真问题。</p>
+<h3 id="46">4.6 单车型三项全测</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>all<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1
+</code></pre></div>
+<h3 id="47">4.7 多车型对比</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>all<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.148.1<span class="w"> </span>--vehicles<span class="w"> </span>all
+</code></pre></div>
+<p>结果会打印成对比表，并写入：</p>
+<ul>
+<li><code>data/dynamics_results.csv</code> —— 汇总表；</li>
+<li><code>data/dynamics_curves.png</code> —— 加速/制动过程的速度曲线。</li>
+</ul>
+<p><img alt="速度曲线" src="../../img/ground/carla_vehicle_dynamics_test/03_dynamics_curves.png"/></p>
+<h3 id="48-ros-2-launch">4.8 用 ROS 2 launch 启动</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/ros2_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_vehicle_dynamics_test<span class="w"> </span>main.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.148.1<span class="w"> </span>vehicles:<span class="o">=</span>all
+</code></pre></div>
+<p>节点跑完测试后会把汇总结果（JSON 文本）发布到 <code>/dynamics/result</code>：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/dynamics/result<span class="w"> </span>--once
+</code></pre></div>
+<h2 id="5">5. 参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--mode</code></td>
+<td><code>all</code></td>
+<td><code>accel</code> / <code>brake</code> / <code>turn</code> / <code>all</code></td>
+</tr>
+<tr>
+<td><code>--host</code></td>
+<td><code>127.0.0.1</code></td>
+<td>Windows 宿主机 IP</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td><code>2000</code></td>
+<td>CARLA RPC 端口</td>
+</tr>
+<tr>
+<td><code>--town</code></td>
+<td><code>Town03</code></td>
+<td>CARLA 地图</td>
+</tr>
+<tr>
+<td><code>--dt</code></td>
+<td><code>0.05</code></td>
+<td>同步模式步长（秒）</td>
+</tr>
+<tr>
+<td><code>--vehicle</code></td>
+<td><code>vehicle.tesla.model3</code></td>
+<td>单个车型 blueprint</td>
+</tr>
+<tr>
+<td><code>--vehicles</code></td>
+<td>无</td>
+<td>写 <code>all</code> 则循环内置三种车型对比</td>
+</tr>
+<tr>
+<td><code>--v-target-kmh</code></td>
+<td><code>60</code></td>
+<td>目标车速（km/h）</td>
+</tr>
+<tr>
+<td><code>--steer</code></td>
+<td><code>0.05</code></td>
+<td>阶跃转向的归一化指令（约 3.5° 前轮转角）</td>
+</tr>
+<tr>
+<td><code>--turn-speed</code></td>
+<td><code>7.0</code></td>
+<td>转向测试的目标车速（m/s）</td>
+</tr>
+<tr>
+<td><code>--turn-time</code></td>
+<td><code>1.5</code></td>
+<td>转向段持续时间（秒）</td>
+</tr>
+<tr>
+<td><code>--max-time</code></td>
+<td><code>40</code></td>
+<td>单项测试超时（秒）</td>
+</tr>
+<tr>
+<td><code>--timeout</code></td>
+<td><code>30</code></td>
+<td>CARLA 客户端 RPC 超时（秒）；切地图慢时调大</td>
+</tr>
+<tr>
+<td><code>--retries</code></td>
+<td><code>2</code></td>
+<td>样本出现碰撞/掉速时的自动重跑次数（<code>0</code> = 只标注）</td>
+</tr>
+<tr>
+<td><code>--out-dir</code></td>
+<td><code>data</code></td>
+<td>CSV 与曲线图输出目录</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 结果与性能</h2>
+<p>以下数据来自一次完整运行（CARLA 0.9.16，Town03，出生点 #0，步长 0.05 s，
+目标车速 60 km/h），与上方终端输出截图对应。制动距离与转弯半径的重复性尚可（另一次运行的制动距离为
+18.88 / 17.63 / 16.76 m，三次运行之间相差 0.4%~2.3%，其中宝马波动最大，在 17.2~17.6 m 之间）；
+<strong>加速时间则对交通流最敏感</strong>——同一台特斯拉、同一组参数复跑 4 次，评审实测为 3.45 / 3.60 / 6.30 / 3.60 s，
+其中 6.30 s 那次在 t≈3 s 撞上障碍，车速从 15.1 m/s 掉到 2.5 m/s 后才被油门拉起。
+因此下表的加速时间应按"<strong>无碰撞样本</strong>"理解，而不是稳定到 1% 以内的重复值；
+程序现在会自动识别并重跑这类样本（见 3.6 节）。</p>
+<table>
+<thead>
+<tr>
+<th>车型</th>
+<th>轴距</th>
+<th>0→60 km/h</th>
+<th>平均加速度</th>
+<th>制动距离</th>
+<th>平均减速度</th>
+<th>转弯半径（实测）</th>
+<th>阿克曼理论</th>
+<th>偏差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vehicle.tesla.model3</code></td>
+<td>3.00 m</td>
+<td><strong>2.75 s</strong></td>
+<td>6.17 m/s²</td>
+<td>18.81 m</td>
+<td>7.31 m/s²</td>
+<td>55.85 m</td>
+<td>49.13 m</td>
+<td>13.7%</td>
+</tr>
+<tr>
+<td><code>vehicle.bmw.grandtourer</code></td>
+<td>2.93 m</td>
+<td>5.20 s</td>
+<td>3.22 m/s²</td>
+<td>17.24 m</td>
+<td>7.84 m/s²</td>
+<td>56.88 m</td>
+<td>47.98 m</td>
+<td>18.5%</td>
+</tr>
+<tr>
+<td><code>vehicle.mini.cooper_s</code></td>
+<td>2.51 m</td>
+<td>3.90 s</td>
+<td>4.28 m/s²</td>
+<td>16.70 m</td>
+<td>8.12 m/s²</td>
+<td>44.51 m</td>
+<td>41.06 m</td>
+<td>8.4%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="终端运行结果" src="../../img/ground/carla_vehicle_dynamics_test/02_terminal_run.png"/></p>
+<h3 id="61">6.1 结果是否合理</h3>
+<p><strong>加速能力</strong>：特斯拉 2.75 s 最快、宝马 SUV 5.20 s 最慢，Mini 居中（3.90 s），
+与三车的动力/质量配置一致。需要注意宝马的 5.20 s 只在全程无碰撞的样本里成立：
+它车身最重、出生点附近跟车最近，复跑时出现过 8.20 s（中途碰撞后被油门拉起）。
+程序现在会自动丢弃这类样本（3.6 节），所以引用加速时间时请确认表格里没有 <code>*</code>。</p>
+<p><strong>制动能力</strong>：三车制动距离 16.7~18.8 m，平均减速度 7.3~8.1 m/s²，即 <strong>0.75~0.83 g</strong>，
+落在真实乘用车（约 0.8~1.0 g）的合理区间内。</p>
+<p><strong>转向能力</strong>：三车的实测半径都<strong>大于</strong>阿克曼理论值，偏差 8.4%~18.5%。方向是合理的——
+理论公式忽略轮胎侧偏角，而真实车辆存在转向不足，实际轨迹更"宽"。
+Mini 的偏差最小（8.4%，轴距最短、速度最低），宝马最大（18.5%，车身最重最长）。</p>
+<h3 id="62">6.2 已知限制</h3>
+<ol>
+<li><strong>依赖 CARLA 的车辆动力学</strong>：测得的是 CARLA 物理引擎的行为，不能直接当作真车数据；
+   本模块的价值在于<strong>同一套流程下的横向对比</strong>与<strong>实测/理论一致性检查</strong>。</li>
+<li><strong>转向测试为短时阶跃</strong>：受车道宽度限制，只测量 1.5 s 的响应，得到的是该时间窗口内的
+   平均半径，不是完整稳态圆周；若要测完整圆周需要空旷场地或专用试验场地图。</li>
+<li><strong>同步步长影响精度</strong>：<code>dt = 0.05 s</code> 时，跨过目标车速的那一帧最多带来 0.05 s 的时间
+   量化误差（例如特斯拉 2.75 s 对应约 1.8% 的相对误差）。减小 <code>--dt</code> 可以提高分辨率，
+   代价是同样的仿真时长需要更多帧。</li>
+<li>
+<p><strong>加速时间对交通流敏感，必须按"合格样本"看待</strong>：出生点附近存在其他车辆，提速过程中若发生
+   避让/擦碰，车速会先掉几 m/s 再被拉起，直接取"跨过目标车速的时刻"会得到 6~8 s 的虚高成绩
+   （实测宝马 5.20 → 8.20 s），此时"结论不受影响"并不成立。程序为此加了两个判定
+   （碰撞传感器和速度序列掉速检测，见 3.6 节）：异常样本自动复位重跑，重跑仍异常的结果
+   在表格里打 <code>*</code>。第 6 节的加速时间均为无碰撞样本；若要把数据写进报告，建议
+   <code>--retries 3</code> 多跑几次取中位数。</p>
+</li>
+<li>
+<p><strong>制动/转向前的提速段是纯 P 控制，重车在目标附近会振荡</strong>：<code>_drive_to_speed</code> 用 P 控制 +
+   前馈，没有积分项。宝马（三车里加速最慢）在 16.1~16.4 m/s 附近会出现 ±1 m/s 的来回，最坏要
+   11 s 才越过 16.42 m/s 的判定阈值，所以这组制动测试的实际起测速度是 16.42 m/s（比目标
+   16.67 m/s 低 1.5%）。程序按<strong>实际起测速度</strong>反推 <code>s = v²/(2a)</code>，指标本身自洽；若希望起测
+   速度更贴近目标，可以调小刹车增益或给控制器加积分项。</p>
+</li>
+</ol>
+<h2 id="7">7. 源码解析</h2>
+<h3 id="71-metricspy">7.1 <code>metrics.py</code>：只做数学，可以被离线测试</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mean_acceleration(v0, v1, dt)</code></td>
+<td>区间平均加速度</td>
+</tr>
+<tr>
+<td><code>braking_distance_theory(v, decel)</code></td>
+<td>
+<script type="math/tex">s = v^2/(2a)</script>
+</td>
+</tr>
+<tr>
+<td><code>stopping_deceleration(v, distance)</code></td>
+<td>
+<script type="math/tex">a = v^2/(2s)</script>
+</td>
+</tr>
+<tr>
+<td><code>turn_radius_theory(wheelbase, steer)</code></td>
+<td>
+<script type="math/tex">R = L/\tan\delta</script>
+</td>
+</tr>
+<tr>
+<td><code>steer_to_angle(steer, max_steer_rad)</code></td>
+<td>归一化指令 → 真实前轮转角</td>
+</tr>
+<tr>
+<td><code>radius_from_yaw_rate(times, yaws, speeds)</code></td>
+<td>偏航角速度法求半径（含 <code>unwrap</code>）</td>
+</tr>
+<tr>
+<td><code>circle_fit_radius(points)</code></td>
+<td>Kasa 最小二乘圆拟合</td>
+</tr>
+<tr>
+<td><code>path_length(points)</code></td>
+<td>折线长度（制动距离累加）</td>
+</tr>
+<tr>
+<td><code>detect_speed_drops(samples)</code></td>
+<td>加速段的异常掉速检测（碰撞特征）</td>
+</tr>
+<tr>
+<td><code>detect_speed_rises(samples)</code></td>
+<td>制动段的异常加速检测（被追尾特征）</td>
+</tr>
+<tr>
+<td><code>summarize_test(values, name)</code></td>
+<td>一组值的 min/mean/max 汇总</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-carla_utilspy">7.2 <code>carla_utils.py</code>：连接与车辆操作</h3>
+<ul>
+<li><code>CarlaSession.ensure_town / enable_sync / tick / settle / close</code> —— 世界设置与生命周期。
+  打开同步模式前会先检查是否存在<strong>残留的同步状态</strong>（上一次异常退出留下的），
+  先恢复异步再记录"原始设置"，避免退出时无法还原；</li>
+<li><code>spawn_vehicle(blueprint_filter, spawn_index)</code> —— 按车型生成，自动寻找空余出生点；</li>
+<li><code>lane_steer(vehicle, carla_map)</code> —— 纯追踪横向控制，前视距离随车速增大；</li>
+<li><code>reset_vehicle(...)</code> —— 复位并等待静止；</li>
+<li><code>watch_collisions(vehicle)</code> —— 挂 <code>sensor.other.collision</code> 并返回 <code>CollisionMonitor</code>
+  （<code>reset()</code> 清空、<code>count</code> 取碰撞次数，传感器不可用时自动降级为 <code>available=False</code>）；</li>
+<li><code>parse_physics(physics, transform)</code> —— 解析轴距/最大前轮转角/质量。</li>
+</ul>
+<p><strong>关于 <code>parse_physics</code> 的一个坑</strong>：CARLA 0.9.16 中
+<code>WheelPhysicsControl.position</code> 返回的是<strong>世界坐标（cm）</strong>，不是车身系偏移。
+若直接"前轴平均 x − 后轴平均 x"，在车辆航向角较大时会得到完全错误的结果
+（实测某次算出轴距 0.11 m）。程序用"轮位到车辆的距离是否在 10 m 以内"判别这两种可能，
+是则先减去车辆位置、再投影到车头方向求轴距。该逻辑有 18 项离线测试覆盖，
+包括世界坐标、车身系偏移、缺字段与异常值。</p>
+<h3 id="73-runnerpy">7.3 <code>runner.py</code>：三项测量流程</h3>
+<div class="mermaid">flowchart TD
+    A[复位：清零速度 + 搬回出生点] --&gt; B{测试类型}
+    B --&gt;|accel| C[全油门 + 车道保持<br/>直到跨过目标车速]
+    B --&gt;|brake| D[P 控制 + 前馈提速<br/>到目标车速]
+    D --&gt; E[全力刹车 + 车道保持<br/>直到速度低于 0.1 m/s]
+    B --&gt;|turn| F[P 控制 + 前馈直线提速]
+    F --&gt; G[打固定转向角 1.5 s<br/>采集速度/偏航角/轨迹]
+    G --&gt; H[偏航角速度法求半径]
+    G --&gt; I[轨迹最小二乘圆拟合]
+    C --&gt; J[样本判定：碰撞 / 掉速？]
+    E --&gt; J
+    H --&gt; J
+    I --&gt; J
+    J --&gt;|异常且还有重跑次数| A
+    J --&gt;|合格，或用尽重跑| K[对比表 + CSV + 曲线图<br/>异常样本打 *]
+</div>
+<p>重跑逻辑在 <code>app.run_with_retries()</code>：复位 → 测量 → 判定，异常则回到复位，最多
+<code>--retries + 1</code> 次。判定条件是"跑完 + 无碰撞事件 + 速度序列无非物理跳变"
+（制动额外要求减速度 ≤ 1.5 g）。</p>
+<p>提速环节使用 <strong>P 控制 + 前馈油门</strong>：只用纯 P 控制时，高速段算出的油门偏小，
+车速会停在目标值下方（实测目标 16.67 m/s、车速卡在 15.7 m/s），
+导致制动测试判定"未达到目标车速"而跳过。前馈项用来抵消滚动阻力与风阻。</p>
+<h2 id="8">8. 常见问题</h2>
+<p><strong>Q1：<code>RuntimeError: 未找到 carla 包</code></strong>
+未安装 CARLA 客户端，或 Python 版本与 wheel 不匹配。CARLA 0.9.16 提供
+cp310/cp311/cp312 的 wheel，因此需要 Python 3.10 及以上（Ubuntu 20.04 自带的
+Python 3.8 无法安装）。</p>
+<p><strong>Q2：连接超时 / <code>time-out of 20000ms</code></strong>
+先确认超时值：客户端默认超时已改为 <code>--timeout 30</code>（可用参数调大，例如 <code>--timeout 60</code>）。
+切地图（<code>load_world</code>）比 <code>get_world</code> 慢得多，20 s 在 Town03↔Town10HD 之间经常不够。
+其余依次检查：CARLA 服务端是否已启动；<code>--host</code> 是否为 VMware NAT 下 VMnet8 的地址；
+Windows 防火墙是否放行 2000 端口（<code>nc -vz &lt;host&gt; 2000</code> 验证）。</p>
+<p><strong>Q3：程序结束后 CARLA 窗口卡住不动</strong>
+同步模式下客户端不推进就不会有画面。本模块在 <code>finally</code> 中恢复异步模式并销毁车辆；
+若曾在异常中断后手动 Ctrl+C，重新运行时 <code>enable_sync()</code> 会检测并清除残留的同步状态。</p>
+<p><strong>Q4：车辆生成失败</strong>
+出生点可能被占用（上一次运行遗留的车辆）。程序会自动尝试其他出生点；
+若全部失败，请重启 CARLA 服务端。</p>
+<p><strong>Q5：制动测试被跳过，提示"未能达到目标车速"</strong>
+说明提速环节没到目标车速。请确认没有其他版本的代码在跑、<code>bias</code> 前馈是否生效；
+若地图限速极低或前方有障碍，可降低 <code>--v-target-kmh</code>。</p>
+<p><strong>Q6：转向半径与理论值偏差较大</strong>
+先确认 <code>--steer</code> 是否过大（转角大 → 侧向加速度高 → 侧偏明显 → 实测半径偏大更多），
+再确认转向段内速度是否稳定（速度波动会让 <script type="math/tex">R = v/\omega</script> 失真）。
+默认参数下偏差应在 20% 以内。</p>
+<h2 id="9">9. 参考</h2>
+<ol>
+<li>CARLA Simulator 官方文档：<a href="https://carla.readthedocs.io/">https://carla.readthedocs.io/</a></li>
+<li>车辆动力学基础：自行车模型与阿克曼转向几何</li>
+<li>Kasa I. <em>A circle fitting procedure and its error analysis</em>. IEEE Transactions on
+   Instrumentation and Measurement, 1976.</li>
+<li>仓库既有模块：<code>carla_keyboard_control</code>（物理仿真与键盘控制）、
+   <code>aeb_collision_avoidance</code>（前向碰撞预警与紧急制动）</li>
+</ol></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../trajectory_accuracy_eval/" title="轨迹/里程计精度评估（ATE/RPE）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../air/airsim_obstacle_avoidance/" title="AirSim Unity 无人机曲线绕柱避障实验">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../trajectory_accuracy_eval/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../air/airsim_obstacle_avoidance/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
