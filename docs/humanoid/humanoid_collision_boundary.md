@@ -40,8 +40,8 @@ src/
 ## 检测原理
 
 1. **碰撞体建模。** 每个人形部件用 BOX 或 CYLINDER 基元近似，位置与尺寸均以 z 轴为高度方向。
-2. **距离计算。** 对 BOX 取障碍物点到包围盒的有符号表面距离；对 CYLINDER 用外接盒近似；最后减去障碍物半径，得到表面间距。
-3. **风险分级。** 依据安全边界 `safety_boundary` 与距离阈值，把结果分为 safe、warning、danger、collided 四级。当最近距离小于 `safety_boundary` 时，`collision_detected` 置为 `true`；距离小于 0（几何侵入）时风险等级记为 collided。
+2. **距离计算。** 计算障碍物球面到 BOX/CYLINDER 外接盒表面的最小间隙（基础距离非负），再减去障碍物半径得到带正负含义的最近距离，球体与碰撞体几何重叠时结果为负。
+3. **风险分级。** 依据安全边界 `safety_boundary` 与距离阈值，把结果分为 safe、warning、danger、collided 四级。当最近距离小于 `safety_boundary` 时，`collision_detected` 置为 `true`；距离小于 0（球体与碰撞体几何重叠）时风险等级记为 collided。
 4. **可视化。** 最近碰撞体以高亮色显示，其余碰撞体以半透明青色显示，并绘制边界线框与距离指示线；距离指示线连接障碍物中心与最近碰撞体表面的最近点。
 
 ## 运行步骤
@@ -110,7 +110,7 @@ src/
 
 ## 运行效果
 
-节点启动后，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.187·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动，x 覆盖 0.30~1.40 m。该轨迹会穿过躯干与右臂所在空间，因此最近距离在部分时段为负值（障碍物中心进入碰撞体），最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换。距离小于安全边界 0.15 m 时 `/collision_detected` 为 `true`，小于 0 时风险等级为 `COLLIDED`。
+节点启动后，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.22·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动，x 覆盖 0.30~1.40 m、y 覆盖 -0.22~0.22 m。该轨迹会与躯干及右臂的碰撞体发生几何重叠，因此最近距离在部分时段为负值（障碍物球体已与碰撞体相交），最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换。距离小于安全边界 0.15 m 时 `/collision_detected` 为 `true`，小于 0 时风险等级为 `COLLIDED`。
 
 ![运行演示](../img/collision_boundary_demo.gif)
 
