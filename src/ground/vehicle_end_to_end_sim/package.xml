@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>vehicle_end_to_end_sim</name>
+  <version>0.1.0</version>
+  <description>基于端到端感知与物理动力学的车载仿真系统 —— Pygame 实现的环境感知、决策规划与底层物理控制（自动巡航 / 人机共驾 / AEB）</description>
+  <maintainer email="wqs159@example.com">wqs159</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <exec_depend>python3-pygame</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
