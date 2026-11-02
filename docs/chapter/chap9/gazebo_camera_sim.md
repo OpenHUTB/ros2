@@ -47,9 +47,11 @@ flowchart LR
 `ros_gz_sim_demos` 的 `camera.launch.py` 会同时启动三个部件：Gazebo（含 GUI）、`ros_gz_bridge` 的 `parameter_bridge`、以及加载好相机面板的 RViz2。桥接规则写死在 launch 里：
 
 ```text
-/camera      sensor_msgs/msg/Image       ←→ gz.msgs.Image
-/camera_info sensor_msgs/msg/CameraInfo  ←→ gz.msgs.CameraInfo
+/camera      sensor_msgs/msg/Image       @ gz.msgs.Image
+/camera_info sensor_msgs/msg/CameraInfo  @ gz.msgs.CameraInfo
 ```
+
+两条规则都用 `@` 表示双向桥接（GZ→ROS 和 ROS→GZ 同时建立），实测日志里也能看到两个方向的 Bridge 都被创建。相机图像实际只有 Gazebo 会发布，所以 **GZ→ROS 方向有持续数据流，ROS→GZ 方向闲置**。
 
 ## 3. 环境与安装 <span id="install"></span>
 
@@ -87,11 +89,13 @@ ign gazebo --version               # 应输出 Gazebo Sim, version 6.x
 ros2 launch ros_gz_sim_demos camera.launch.py
 ```
 
-正常启动后会出现两个窗口：Gazebo（左侧 3D 场景，右侧 `Image display` 面板订阅 `/camera`）和 RViz2。终端里能看到桥接建立的两条日志：
+正常启动后会出现两个窗口：Gazebo（左侧 3D 场景，右侧 `Image display` 面板订阅 `/camera`）和 RViz2。终端里能看到桥接建立日志（每个话题双向各一条）：
 
 ```text
 [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera (gz.msgs.Image) -> /camera (sensor_msgs/msg/Image)]
+[ros_gz_bridge]: Creating ROS->GZ Bridge: [/camera (sensor_msgs/msg/Image) -> /camera (gz.msgs.Image)]
 [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera_info (gz.msgs.CameraInfo) -> /camera_info (sensor_msgs/msg/CameraInfo)]
+[ros_gz_bridge]: Creating ROS->GZ Bridge: [/camera_info (sensor_msgs/msg/CameraInfo) -> /camera_info (gz.msgs.CameraInfo)]
 ```
 
 ![Gazebo 场景与 Image display 面板中的实时相机画面](../../img/chap9/gazebo_camera_sim/01_gazebo_image_display.png)
@@ -240,7 +244,7 @@ libEGL warning: failed to open /dev/dri/renderD128
 按顺序排查：
 
 1. 确认 Gazebo 窗口里的场景已经加载，并且 `Image display` 选到了 `/camera`；
-2. 确认 `parameter_bridge` 进程还在：`ros2 node list | grep parameter_bridge`；
+2. 确认桥接节点还在：`ros2 node list | grep ros_gz_bridge`；
 3. 确认使用的是同一个 `ROS_DOMAIN_ID`，两个终端都要先 `source /opt/ros/humble/setup.bash`。
 
 **有 `/camera` 但画面不刷新**
