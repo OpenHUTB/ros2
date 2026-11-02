@@ -11,6 +11,9 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 
+*.log
+*.TXT
+# 保留 docs/img 图片，这里不用加任何img过滤规则
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
 

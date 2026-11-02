@@ -1,0 +1,65 @@
+<mujoco model="skid_offroad_robot">
+  <option timestep="0.001" gravity="0 0 -9.81"/>
+  <default>
+    <geom condim="3" friction="1.2 0.025 0.3"/>
+  </default>
+
+  <asset>
+    <material name="ground_mat" rgba="0.45 0.38 0.3 1"/>
+    <material name="wheel_mat" rgba="0.1 0.4 0.9 1"/>
+    <material name="body_mat" rgba="0.8 0.8 0.8 1"/>
+    <hfield name="terrain" nrow="128" ncol="128" size="60 60 0.4 0.15"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 30" dir="0 0 -1" diffuse="0.9 0.9 0.9" specular="0.4 0.4 0.4"/>
+    <light pos="10 0 30" dir="0 0 -1" diffuse="0.9 0.9 0.9" specular="0.3 0.3 0.3"/>
+    <light pos="5 10 20" dir="0 0 -1" diffuse="0.6 0.6 0.6"/>
+
+    <geom name="ground" type="hfield" hfield="terrain" material="ground_mat"/>
+    <camera name="global_view" pos="-6 -14 10" euler="-100 0 0" fovy="60"/>
+
+    <!-- 小车初始位置(2,0)，离目标点10m很近 -->
+    <body name="robot_base" pos="2 0 0.45">
+      <freejoint/>
+      <geom type="box" size="0.3 0.25 0.12" mass="2.2" material="body_mat"/>
+      <site name="imu_site" pos="0 0 0.05" size="0.01"/>
+
+      <!-- 车轮：去掉euler旋转，圆面朝下正常滚动 -->
+      <body name="lf_wheel" pos="0.22 0.24 -0.14">
+        <joint name="lf_joint" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.14 0.08" euler="90 0 0" mass="0.45" material="wheel_mat"/>
+      </body>
+      <body name="rf_wheel" pos="0.22 -0.24 -0.14">
+        <joint name="rf_joint" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.14 0.08" euler="90 0 0" mass="0.45" material="wheel_mat"/>
+      </body>
+      <body name="lb_wheel" pos="-0.22 0.24 -0.14">
+        <joint name="lb_joint" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.14 0.08" euler="90 0 0" mass="0.45" material="wheel_mat"/>
+      </body>
+      <body name="rb_wheel" pos="-0.22 -0.24 -0.14">
+        <joint name="rb_joint" type="hinge" axis="0 1 0"/>
+        <geom type="cylinder" size="0.14 0.08" euler="90 0 0" mass="0.45" material="wheel_mat"/>
+      </body>
+    </body>
+
+    <!-- 红色目标标记球 -->
+    <body name="target_marker" pos="10 0 0.5">
+      <geom name="target_ball" type="sphere" size="0.2" rgba="1 0 0 1"/>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <gyro name="gyro_imu" site="imu_site"/>
+    <accelerometer name="accel_imu" site="imu_site"/>
+  </sensor>
+
+  <actuator>
+    <velocity name="lf_motor" joint="lf_joint" gear="1.0"/>
+    <velocity name="rf_motor" joint="rf_joint" gear="1.0"/>
+    <velocity name="lb_motor" joint="lb_joint" gear="1.0"/>
+    <velocity name="rb_motor" joint="rb_joint" gear="1.0"/>
+  </actuator>
+</mujoco>
+
