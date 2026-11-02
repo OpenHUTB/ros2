@@ -80,6 +80,7 @@
 | Python | 3.12.7（Anaconda base） |
 | NumPy | 1.26.4 |
 | Matplotlib | 3.9.2 |
+| 回归测试虚拟机 | Ubuntu 22.04.5 / Python 3.10.12 / NumPy 1.21.5 |
 
 代码本身不依赖这两个包的特定版本，较新的版本都可以运行。只装核心依赖：
 
@@ -117,7 +118,7 @@ python -m unittest discover -s tests -v
 python -m pytest tests/ -q
 ```
 
-43 个测试，覆盖栅格化、信念融合、传感器几何、效用函数的正向模型、A\* 与航带重采样、
+44 个测试，覆盖栅格化、信念融合、传感器几何、效用函数的正向模型、A\* 与航带重采样、
 速度律一致性、任务不变量以及 WGS84 往返转换。不需要仿真器，也不需要 TensorFlow。
 
 ---
