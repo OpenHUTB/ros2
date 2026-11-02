@@ -53,9 +53,15 @@ class FallWarningSim:
     def fallen(self, z=0.6): return self.root_z < z
 
     def torso_pose(self):
+        """返回躯干 (pitch, roll) 弧度，ZYX欧拉角顺序。"""
         qw, qx, qy, qz = self.data.qpos[3:7]
-        pitch = float(np.arcsin(np.clip(2*(qw*qy-qz*qx), -1, 1)))
-        roll = float(np.arcsin(np.clip(2*(qw*qx+qy*qz), -1, 1)))
+        # roll (绕x轴)
+        sinr_cosp = 2 * (qw * qx + qy * qz)
+        cosr_cosp = 1 - 2 * (qx * qx + qy * qy)
+        roll = float(np.arctan2(sinr_cosp, cosr_cosp))
+        # pitch (绕y轴)
+        sinp = 2 * (qw * qy - qz * qx)
+        pitch = float(np.arcsin(np.clip(sinp, -1, 1)))
         return pitch, roll
 
     def render_front(self, gray=True):
