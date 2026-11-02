@@ -38,7 +38,7 @@ ros2 topic list | grep collision
 
 默认配置下，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.22·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动（x 覆盖 0.30 至 1.40 m，y 覆盖 -0.22 至 0.22 m）。该轨迹会与躯干及右臂的碰撞体发生几何重叠，所以 `/distance_to_obstacle` 在部分时段为负值（障碍物球体与碰撞体相交），最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换；仅当 `min_distance < 0`（障碍物球体与碰撞体几何重叠）时，`/collision_detected` 为 `true`；若 `0 ≤ min_distance < safety_boundary`，风险等级记为 DANGER，但碰撞标志仍为 false。
 
-默认参数下连续采样 20 s（2001 帧（100 Hz × 20 s，含 t=0 与 t=20 端点），100 Hz）的实测结果：`/distance_to_obstacle` 范围 **-0.178~0.743 m**，`/collision_detected` 计数为 **true 640 / false 1361**。
+默认参数下连续采样 20 s（100 Hz，约 2001 帧）重复三次的实测结果：`/distance_to_obstacle` 最小值稳定在约 **-0.200 m**（轨迹周期远小于采样窗口，每次均覆盖最近点），最大值约 0.73~0.75 m；`/collision_detected` 的 true 计数随采样窗口起点相位在 **675~806** 之间波动（对应 false 1195~1326），true 仅出现在 `min_distance < 0` 的时段。
 
 ## 可视化
 
