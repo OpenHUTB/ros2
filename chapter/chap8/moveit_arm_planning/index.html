@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>MoveIt 六自由度机械臂运动规划 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MoveIt \u516d\u81ea\u7531\u5ea6\u673a\u68b0\u81c2\u8fd0\u52a8\u89c4\u5212";
+        var mkdocs_page_input_path = "chapter/chap8/moveit_arm_planning.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">8. ROS 机器人综合应用</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../">章节首页</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">MoveIt 六自由度机械臂运动规划</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 实验目的</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 与已有机械臂模块的区别</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 环境与依赖</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 目录结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5-noetic">5. Noetic 兼容修复</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 编译与启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 实验内容</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#9">9. 常见问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#10-ai">10. AI 使用声明</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">8. ROS 机器人综合应用</li>
+<li class="breadcrumb-item active">MoveIt 六自由度机械臂运动规划</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap8/moveit_arm_planning.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="moveit-ompl">MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比</h1>
+<p>本实验在 ROS Noetic 下使用 MoveIt 1 对六自由度机械臂进行运动规划，覆盖正运动学、逆运动学、笛卡尔路径、障碍物避让和抓取五类任务，并在同一组目标位姿上比较 OMPL 的 RRTConnect、RRT<em>、PRM 三种规划器。实验只使用 MoveIt 的 fake controller 和 RViz 可视化，</em><em>不启动 Gazebo、MuJoCo 或任何物理引擎</em>*。</p>
+<h2 id="1">1. 实验目的</h2>
+<ul>
+<li>理解 MoveIt 的规划场景、规划组、末端执行器和 fake execution。</li>
+<li>掌握 FK、IK、笛卡尔路径和抓取的基本调用方式。</li>
+<li>用统一指标比较不同 OMPL 规划器：成功率、规划耗时、路径长度、末端误差。</li>
+<li>给出可复现的命令、配置和结果表，方便其他同学在同一台虚拟机上复现。</li>
+</ul>
+<h2 id="2">2. 与已有机械臂模块的区别</h2>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>自由度</th>
+<th>仿真/框架</th>
+<th>主要内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单自由度机械臂模块</td>
+<td>1</td>
+<td>Gazebo + PID</td>
+<td>单关节角度自动演示</td>
+</tr>
+<tr>
+<td>MuJoCo two dof arm</td>
+<td>2</td>
+<td>MuJoCo</td>
+<td>两关节摆动，熟悉 MuJoCo</td>
+</tr>
+<tr>
+<td>本模块</td>
+<td>6</td>
+<td>MoveIt 1 + RViz fake execution</td>
+<td>FK/IK/笛卡尔/抓取 + OMPL 规划器对比</td>
+</tr>
+</tbody>
+</table>
+<p>本模块不涉及 URDF 建模、关节 PID 整定和物理引擎，重点是 MoveIt 的运动规划链路和规划器性能对比。</p>
+<h2 id="3">3. 环境与依赖</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>Noetic</td>
+</tr>
+<tr>
+<td>MoveIt</td>
+<td>MoveIt 1（<code>ros-noetic-moveit</code>）</td>
+</tr>
+<tr>
+<td>可视化</td>
+<td>RViz</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>Python 3</td>
+</tr>
+<tr>
+<td>物理引擎</td>
+<td>无（fake execution，不启动 Gazebo）</td>
+</tr>
+</tbody>
+</table>
+<p>安装依赖：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ros-noetic-moveit<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ros-noetic-joint-state-publisher<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ros-noetic-robot-state-publisher<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ros-noetic-xacro
+</code></pre></div>
+<h2 id="4">4. 目录结构</h2>
+<p>本模块复用 <code>src/chap8</code> 下已有的机械臂模型和 MoveIt 配置，新增一个实验封装包。计划结构如下：</p>
+<div class="highlight"><pre><span></span><code>src/chap8/
+├── marm_description/        # 机械臂 URDF/xacro（已有）
+├── marm_moveit_config/      # MoveIt 配置（已有，需做 Noetic 兼容修复）
+├── marm_planning/           # 原有 FK/IK/笛卡尔/抓取 demo（已有）
+└── moveit_arm_planning/     # 本模块新增
+    ├── launch/
+    │   ├── main.launch      # 一键启动 MoveIt + RViz
+    │   └── eval.launch      # 批量规划器对比
+    ├── config/
+    │   ├── targets.yaml     # 目标位姿列表
+    │   └── planners.yaml    # OMPL 规划器与重复次数
+    ├── scripts/
+    │   ├── plan_eval.py     # 批量规划与指标记录
+    ├── CMakeLists.txt
+    ├── package.xml
+    ├── main.sh
+    └── README.md
+</code></pre></div>
+<h2 id="5-noetic">5. Noetic 兼容修复</h2>
+<p><code>src/chap8</code> 里的机械臂包来自较早的 ROS 1 版本，在 Noetic 下需要做两处小修复。</p>
+<h3 id="51-xacro-inorder">5.1 去掉 <code>xacro --inorder</code></h3>
+<p><code>marm_moveit_config/launch/planning_context.launch</code> 当前写法：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"$(arg robot_description)"</span>
+<span class="w">       </span><span class="na">command=</span><span class="s">"$(find xacro)/xacro --inorder '$(find marm_description)/urdf/arm_gazebo.xacro'"</span><span class="nt">/&gt;</span>
+</code></pre></div>
+<p>Noetic 的 xacro 已删除 <code>--inorder</code> 选项，改为：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;param</span><span class="w"> </span><span class="na">name=</span><span class="s">"$(arg robot_description)"</span>
+<span class="w">       </span><span class="na">command=</span><span class="s">"$(find xacro)/xacro '$(find marm_description)/urdf/arm_gazebo.xacro'"</span><span class="nt">/&gt;</span>
+</code></pre></div>
+<h3 id="52-state_publisher">5.2 修正 <code>state_publisher</code></h3>
+<p><code>marm_description/launch/view_arm.launch</code> 里使用了旧节点名：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;node</span><span class="w"> </span><span class="na">name=</span><span class="s">"robot_state_publisher"</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"robot_state_publisher"</span><span class="w"> </span><span class="na">type=</span><span class="s">"state_publisher"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</code></pre></div>
+<p>改为：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;node</span><span class="w"> </span><span class="na">name=</span><span class="s">"robot_state_publisher"</span><span class="w"> </span><span class="na">pkg=</span><span class="s">"robot_state_publisher"</span><span class="w"> </span><span class="na">type=</span><span class="s">"robot_state_publisher"</span><span class="w"> </span><span class="nt">/&gt;</span>
+</code></pre></div>
+<p>同时删除该文件中未使用的 <code>&lt;arg name="model" /&gt;</code>，或者给它一个默认值，避免启动时提示参数未设置。</p>
+<blockquote>
+<p>URDF 中的 <code>&lt;gazebo&gt;</code> 标签只是模型描述，RViz 和 MoveIt 会忽略它们；本实验不会启动 Gazebo 进程。</p>
+</blockquote>
+<h3 id="53">5.3 脚本可执行位</h3>
+<p><code>src/chap8/marm_planning/scripts/</code> 下的五个 demo 在仓库里是 <code>100644</code>，没有可执行位。直接 <code>rosrun</code> 会报 <code>Permission denied</code>。进入工作空间后先补上：</p>
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>~/catkin_ws/src/chap8/marm_planning/scripts/*.py
+</code></pre></div>
+<p>本模块的脚本在 Git 索引里是 LF。如果从 Windows 工作区直接 scp 后在虚拟机里报 <code>python\r</code>，先执行 <code>sed -i 's/\r$//'</code> 转回 LF。</p>
+<h3 id="54-xacro">5.4 xacro 宏调用前缀</h3>
+<p>Noetic 的 xacro 要求宏调用带 <code>xacro:</code> 前缀。旧文件里的 <code>&lt;arm_base .../&gt;</code>、<code>&lt;cylinder_inertial_matrix .../&gt;</code>、<code>&lt;box_inertial_matrix .../&gt;</code> 不会展开，导致 <code>base_link</code> 缺失，<code>robot_state_publisher</code> 报：</p>
+<div class="highlight"><pre><span></span><code>Failed to build tree: parent link [base_link] of joint [kinect_joint] not found
+</code></pre></div>
+<p>本 PR 已改为 <code>&lt;xacro:arm_base .../&gt;</code>、<code>&lt;xacro:cylinder_inertial_matrix .../&gt;</code> 和 <code>&lt;xacro:box_inertial_matrix .../&gt;</code>。</p>
+<h2 id="6">6. 编译与启动</h2>
+<p>把 <code>src/chap8</code> 下的机械臂包和本模块放到同一个 catkin 工作空间：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src/chap8
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;repo&gt;/src/chap8/marm_description<span class="w"> </span>~/catkin_ws/src/chap8/
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;repo&gt;/src/chap8/marm_moveit_config<span class="w"> </span>~/catkin_ws/src/chap8/
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;repo&gt;/src/chap8/marm_planning<span class="w"> </span>~/catkin_ws/src/chap8/
+cp<span class="w"> </span>-r<span class="w"> </span>&lt;repo&gt;/src/chap8/moveit_arm_planning<span class="w"> </span>~/catkin_ws/src/chap8/
+
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>先单独验证 MoveIt 配置：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>marm_moveit_config<span class="w"> </span>demo.launch<span class="w"> </span>use_gui:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>预期结果：</p>
+<ul>
+<li>RViz 打开，能看到六自由度机械臂；</li>
+<li>左侧 MotionPlanning 面板正常加载；</li>
+<li>机械臂处于 <code>home</code> 位姿；</li>
+<li><strong>不会</strong>弹出 Gazebo 窗口。</li>
+</ul>
+<p>再启动本模块的一键入口：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>moveit_arm_planning<span class="w"> </span>main.launch
+</code></pre></div>
+<p>如果虚拟机里 RViz 黑屏或报 OpenGL 错误，先设置软件渲染：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">LIBGL_ALWAYS_SOFTWARE</span><span class="o">=</span><span class="m">1</span>
+</code></pre></div>
+<h2 id="7">7. 实验内容</h2>
+<h3 id="71-fk">7.1 正运动学（FK）</h3>
+<p>给定一组关节角，观察末端执行器的位姿变化：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>marm_planning<span class="w"> </span>moveit_fk_demo.py
+</code></pre></div>
+<p>记录：</p>
+<ul>
+<li>目标关节角；</li>
+<li>末端执行器实际位姿；</li>
+<li>运动是否平滑、是否发生碰撞。</li>
+</ul>
+<h3 id="72-ik">7.2 逆运动学（IK）</h3>
+<p>给定末端执行器的目标位姿，让 MoveIt 求解关节角并规划：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>marm_planning<span class="w"> </span>moveit_ik_demo.py
+</code></pre></div>
+<p>记录：</p>
+<ul>
+<li>目标位姿；</li>
+<li>求解是否成功；</li>
+<li>末端位置误差和姿态误差；</li>
+<li>规划耗时。</li>
+</ul>
+<h3 id="73">7.3 笛卡尔路径</h3>
+<p>让末端执行器沿直线或圆弧运动：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>marm_planning<span class="w"> </span>moveit_cartesian_demo.py
+</code></pre></div>
+<p>重点观察笛卡尔路径是否连续、是否出现关节跳变。</p>
+<h3 id="74">7.4 障碍物避让</h3>
+<p>在规划场景中加入桌面、盒子等障碍物，再规划到目标位姿：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>marm_planning<span class="w"> </span>moveit_obstacles_demo.py
+</code></pre></div>
+<p>记录：</p>
+<ul>
+<li>障碍物尺寸和位置；</li>
+<li>规划是否成功；</li>
+<li>规划轨迹是否绕过障碍物；</li>
+<li>规划耗时。</li>
+</ul>
+<h3 id="75">7.5 抓取</h3>
+<p>在规划场景中放置桌面和目标盒子，执行接近、夹取、抬起、放置的完整流程：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>marm_planning<span class="w"> </span>moveit_pick_and_place_demo.py
+</code></pre></div>
+<p>记录：</p>
+<ul>
+<li>抓取成功次数；</li>
+<li>放置位置误差；</li>
+<li>总耗时。</li>
+</ul>
+<h3 id="76-ompl">7.6 OMPL 规划器对比</h3>
+<p>对同一组目标位姿，分别使用 RRTConnect、RRT*、PRM 进行规划。规划器名称以 <code>marm_moveit_config/config/ompl_planning.yaml</code> 为准；MoveIt 1 运行时通常使用带 <code>kConfigDefault</code> 后缀的名称，例如 <code>RRTConnectkConfigDefault</code>。</p>
+<p>批量运行：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>moveit_arm_planning<span class="w"> </span>eval.launch<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>targets:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/catkin_ws/src/chap8/moveit_arm_planning/config/targets.yaml"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>repeats:<span class="o">=</span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>timeout:<span class="o">=</span><span class="m">5</span>.0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>out_dir:<span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/moveit_arm_results"</span>
+</code></pre></div>
+<p>首版使用 3 个通过 <code>moveit_fk_demo</code> 和 <code>forward</code> 命名状态确认可达的目标位姿，每个目标重复 3 次，规划超时设为 5 秒。RRT* 会跑满 5 秒规划时限做优化，这是它的正常行为，不是卡死。扩展时先用 FK 或命名状态确认新位姿可达，再写入 YAML。</p>
+<p>指标定义：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>成功率</td>
+<td>成功规划次数 / 总尝试次数</td>
+</tr>
+<tr>
+<td>规划耗时</td>
+<td>调用 <code>plan()</code> 前后的墙钟时间，不含 RViz 渲染</td>
+</tr>
+<tr>
+<td>末端路径长度</td>
+<td>规划轨迹按等间隔采样后，末端位置欧氏距离之和</td>
+</tr>
+<tr>
+<td>位置误差</td>
+<td>规划终点与目标点的欧氏距离</td>
+</tr>
+<tr>
+<td>姿态误差</td>
+<td>规划终点与目标姿态的四元数夹角</td>
+</tr>
+<tr>
+<td>关节路径长度</td>
+<td>相邻轨迹点关节角绝对差之和，用于观察关节空间绕行程度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="77">7.7 参数文件</h3>
+<p><code>config/targets.yaml</code> 保存末端目标位姿。下面是本实验实际使用的 3 个可达位姿，由 <code>moveit_fk_demo</code> 和 <code>forward</code> 命名状态实测得到：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">targets</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forward</span>
+<span class="w">    </span><span class="nt">position</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.411057</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.000009</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.256801</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">orientation</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-0.999667</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000012</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.025811</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000015</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forward_left</span>
+<span class="w">    </span><span class="nt">position</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.392692</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.121510</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.256785</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">orientation</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.988435</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.149427</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.025577</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.003797</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">forward_right</span>
+<span class="w">    </span><span class="nt">position</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.392700</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">-0.121503</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.256797</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">orientation</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-0.988437</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.149421</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.025482</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.003937</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>扩展时不要直接抄没有验证过的位姿；先用 FK 或命名状态让机械臂实际到达，再读取 <code>get_current_pose()</code> 写入 YAML。</p>
+<p><code>config/planners.yaml</code> 保存规划器名称、重复次数和超时：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">planners</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RRTConnectkConfigDefault</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RRTstarkConfigDefault</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PRMkConfigDefault</span>
+<span class="nt">repeats</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.0</span>
+</code></pre></div>
+<p>规划器名称必须和 <code>marm_moveit_config/config/ompl_planning.yaml</code> 中的定义一致，不同 MoveIt 版本的默认后缀可能不同，运行前先确认。</p>
+<h3 id="78">7.8 实验流程</h3>
+<ol>
+<li><code>roslaunch marm_moveit_config demo.launch use_gui:=false</code>，确认机械臂和 MotionPlanning 面板正常。</li>
+<li>依次运行 FK、IK、笛卡尔、障碍物、抓取五个 demo，记录终端输出并截图。</li>
+<li>用 FK demo 或命名状态确认 3 个可达目标位姿，写入 <code>config/targets.yaml</code>。</li>
+<li>运行 <code>eval.launch</code>，得到三种规划器的逐次记录和汇总 CSV。</li>
+<li>把真实结果写入第 8 节，补齐配图，再删除文首的状态说明。</li>
+</ol>
+<h2 id="8">8. 实验结果</h2>
+<h3 id="81">8.1 单次任务</h3>
+<p>FK demo 已在 Noetic + MoveIt 下跑通：机械臂回到 <code>home</code>，夹爪动作，再运动到一组目标关节角。IK、笛卡尔、障碍物和抓取四个 demo 沿用 <code>marm_planning</code> 原有入口，运行命令见 7.2–7.5；本文的量化对比集中在 8.2 的规划器对比。</p>
+<table>
+<thead>
+<tr>
+<th>任务</th>
+<th>入口</th>
+<th>本次状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FK</td>
+<td><code>moveit_fk_demo.py</code></td>
+<td>已运行</td>
+</tr>
+<tr>
+<td>IK</td>
+<td><code>moveit_ik_demo.py</code></td>
+<td>沿用原有入口，未在本 PR 中量化</td>
+</tr>
+<tr>
+<td>笛卡尔路径</td>
+<td><code>moveit_cartesian_demo.py</code></td>
+<td>沿用原有入口，未在本 PR 中量化</td>
+</tr>
+<tr>
+<td>障碍物避让</td>
+<td><code>moveit_obstacles_demo.py</code></td>
+<td>沿用原有入口，未在本 PR 中量化</td>
+</tr>
+<tr>
+<td>抓取</td>
+<td><code>moveit_pick_and_place_demo.py</code></td>
+<td>沿用原有入口，未在本 PR 中量化</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-ompl">8.2 OMPL 规划器对比</h3>
+<p>3 个可达目标 × 3 次重复，共 27 次规划：</p>
+<table>
+<thead>
+<tr>
+<th>规划器</th>
+<th>尝试次数</th>
+<th>成功次数</th>
+<th>成功率</th>
+<th>平均耗时（s）</th>
+<th>P95 耗时（s）</th>
+<th>平均关节路径（rad）</th>
+<th>平均位置误差（m）</th>
+<th>平均姿态误差（rad）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RRTConnect</td>
+<td>9</td>
+<td>9</td>
+<td>100%</td>
+<td>0.0169</td>
+<td>0.0228</td>
+<td>2.474</td>
+<td>8.06e-05</td>
+<td>7.23e-04</td>
+</tr>
+<tr>
+<td>RRT*</td>
+<td>9</td>
+<td>9</td>
+<td>100%</td>
+<td>5.0031</td>
+<td>5.0063</td>
+<td>1.825</td>
+<td>7.02e-05</td>
+<td>6.34e-04</td>
+</tr>
+<tr>
+<td>PRM</td>
+<td>9</td>
+<td>9</td>
+<td>100%</td>
+<td>0.0297</td>
+<td>0.0522</td>
+<td>2.926</td>
+<td>7.59e-05</td>
+<td>6.77e-04</td>
+</tr>
+</tbody>
+</table>
+<p>结论：</p>
+<ul>
+<li>三种规划器在本组目标上都达到 100% 成功率。</li>
+<li>RRTConnect 最快，但关节路径不是最短；PRM 也很快，路径略长。</li>
+<li>RRT* 跑满 5 秒时限做优化，路径最短，适合对路径质量要求更高、可以接受较长规划时间的场景。</li>
+<li>末端位置误差都在 0.1 mm 量级，姿态误差都在 0.001 rad 量级，说明 FK 校验与目标位姿一致。</li>
+</ul>
+<h3 id="83">8.3 配图</h3>
+<p><img alt="三种 OMPL 规划器对比" src="../../../img/chap8/moveit_arm_planning/planner_comparison.png"/></p>
+<p>图 8-1：三种规划器的成功率、平均耗时（对数坐标）和平均关节路径长度。</p>
+<p><img alt="RViz 中的机械臂初始位姿" src="../../../img/chap8/moveit_arm_planning/rviz_home.png"/></p>
+<p>图 8-2：RViz 中机械臂处于 home 位姿，Global Status 和 MotionPlanning 均为 Ok。</p>
+<h2 id="9">9. 常见问题</h2>
+<h3 id="91-xacro-unrecognized-argument-inorder">9.1 <code>xacro: unrecognized argument --inorder</code></h3>
+<p>Noetic 已删除 <code>--inorder</code>，按第 5.1 节修改 <code>planning_context.launch</code>。</p>
+<h3 id="92-could-not-find-package-moveit_ros_move_group">9.2 <code>Could not find package moveit_ros_move_group</code></h3>
+<p>MoveIt 没有安装完整，执行：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ros-noetic-moveit
+</code></pre></div>
+<h3 id="93-rviz-opengl">9.3 RViz 黑屏或 OpenGL 报错</h3>
+<p>虚拟机没有独立显卡时，使用软件渲染：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">LIBGL_ALWAYS_SOFTWARE</span><span class="o">=</span><span class="m">1</span>
+</code></pre></div>
+<p>并把 RViz 窗口缩小到 1280×720 以内，减少渲染压力。</p>
+<h3 id="94-unable-to-identify-any-set-of-controllers">9.4 <code>Unable to identify any set of controllers</code></h3>
+<p>本实验使用 fake execution，不需要真实控制器。确认启动的是 <code>marm_moveit_config/launch/demo.launch</code>，且其中 <code>fake_execution</code> 为 <code>true</code>。</p>
+<h3 id="95">9.5 规划一直失败</h3>
+<p>先检查目标位姿是否在机械臂工作空间内；把目标位姿改到 <code>home</code> 附近再试。也可能是目标姿态与当前姿态差距过大，导致 IK 无解。</p>
+<h3 id="96-rosdep-manipulation_msgs">9.6 <code>rosdep</code> 报 <code>manipulation_msgs</code> 找不到</h3>
+<p><code>marm_planning</code> 的旧 <code>CMakeLists.txt</code> 和 <code>package.xml</code> 声明了未使用的 <code>manipulation_msgs</code>，标准 MoveIt 安装不包含它。本 PR 已移除这两处依赖；如果使用旧版本，删除对应行，或安装 <code>ros-noetic-manipulation-msgs</code>。</p>
+<h3 id="97-evallaunch-xmlrpcclientwriterequest-connection-refused">9.7 <code>eval.launch</code> 期间出现 <code>XmlRpcClient::writeRequest: Connection refused</code></h3>
+<p>RRT* 在 <code>plan()</code> 内会阻塞约 5 秒，<code>roslaunch</code> 的节点探活可能超时并打印该警告。只要输出目录里的 <code>plan_summary.csv</code> 显示 <code>success=1</code>，规划结果就不受影响。</p>
+<h2 id="10-ai">10. AI 使用声明</h2>
+<p>本文档与配套代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、文档起草和问题排查）。文档中的全部运行数据将由作者在 ROS Noetic + MoveIt 环境中实测采集；作者对提交内容的正确性与完整性负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../chap9/" title="9. ROS 2">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../chap9/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
