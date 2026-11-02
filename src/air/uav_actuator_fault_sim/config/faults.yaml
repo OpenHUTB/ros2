@@ -1,0 +1,19 @@
+# uav_actuator_fault_sim 节点参数（launch 里可用同名 launch 参数覆盖）
+uav_actuator_fault_sim:
+  ros__parameters:
+    # ---- 仿真 ----
+    scene: open_ground        # open_ground | obstacle_field | corridor | gate_track | urban_block
+    seed: 0
+    dt: 0.01
+    substeps: 4
+    # ---- 故障 ----
+    fault: single_loss        # healthy | single_loss | dual_loss | partial_degradation | stuck | progressive | sensor_bias
+    rotor: 0                  # 0..3，机体系桨序号
+    onset: 2.0                # 故障注入时刻，秒
+    severity: 0.0             # 故障强度；partial_degradation 用 0~1 表示推力保留比例
+    # ---- 控制器 ----
+    controller: geometric     # geometric=基线几何控制器（PR3 会加入容错控制器）
+    # ---- 运行 ----
+    seconds: 0.0              # 0 = 一直运行直到 Ctrl+C
+    publish_rate: 50.0        # /uav/fault 与 /uav/fault_aircraft_state 的发布频率
+    record_frames: false      # 是否把 RGB 帧发到 /camera/image_raw（占用带宽）
