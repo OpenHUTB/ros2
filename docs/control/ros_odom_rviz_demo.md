@@ -17,3 +17,15 @@ mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws
 catkin_make
 source devel/setup.bash
+###2.2 一键启动运行
+roslaunch ros_topic_demo rviz_demo.launch
+启动后，RViz 窗口将自动弹出，无需手动配置。节点会同时广播 odom -> base_link 的 TF，确保不会出现 No TF data 报错。
+## 三、常见问题与解决记录
+1. Fixed Frame 选错导致看不到点
+◦ 解决：将 Fixed Frame 选为 odom 即可显示。
+2. Rviz 画出一堆密密麻麻的箭头
+◦ 解决：修正 rospy.Rate 参数（如 30Hz），使轨迹平滑。
+3. 报错 No TF data
+◦ 解决：在代码中使用 tf2_ros.TransformBroadcaster 广播 odom -> base_link。
+## 四、运行效果
+启动后，RViz 窗口中的 Odometry 箭头沿半径 1m 的正圆匀速绕圈，Global Status 为 Ok。
