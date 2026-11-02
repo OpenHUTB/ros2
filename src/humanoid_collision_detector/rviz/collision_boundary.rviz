@@ -1,0 +1,64 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Preferences:
+  PromptSaveOnExit: true
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Enabled: true
+      Name: Grid
+      Plane: XY
+      Plane Cell Count: 40
+      Reference Frame: world
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Marker Topic: /collision_boundary
+      Name: Collision Boundary Markers
+      Namespaces:
+        collision_bodies: true
+        collision_boundaries: true
+        obstacle: true
+        distance_indicator: true
+        distance_text: true
+    - Class: rviz_default_plugins/RobotModel
+      Enabled: false
+      Name: RobotModel
+      Robot Description: robot_description
+      Collision Enabled: false
+      Visual Enabled: true
+      Material:
+        Material Description: Flat Color
+        Color: 200; 200; 200
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/SetGoal
+    - Class: rviz_default_plugins/PublishPoint
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 4
+      Focal Point:
+        X: 0
+        Y: 0.8
+        Z: 0
+      Name: Current View
+      Pitch: 0.5
+      Target Frame: world
+      Yaw: 0.785
+Window Geometry:
+  Height: 780
+  Width: 1200
