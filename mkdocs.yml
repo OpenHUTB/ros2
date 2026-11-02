@@ -244,6 +244,7 @@ nav:
     - 刹车距离核算: './ground/braking_distance_check.md'
     - 换挡策略与闭环控制: './ground/gear_shift_policy.md'
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
+    - 垂直车位泊车路径规划: './ground/parking_path_planner.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 车辆几何通过性核算（接近角/离去角/纵向通过角）: './ground/passability_check.md'
