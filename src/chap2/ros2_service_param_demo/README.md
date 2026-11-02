@@ -11,6 +11,7 @@ ROS 2 **服务（service）与参数（parameter）** 基础实验：用「无�
 | 项目 | 版本 / 说明 |
 |---|---|
 | 操作系统 | Ubuntu 20.04 / 22.04（VMware 虚拟机），均实测通过 |
+| ROS | ROS 2 Humble |
 | Python | 3.10（22.04 自带）/ 3.8（20.04 自带），与 Humble 匹配 |
 | 依赖 | 仅 ROS 2 自带功能包：`rclpy`、`std_msgs`、`std_srvs`、`launch`、`launch_ros` |
 
