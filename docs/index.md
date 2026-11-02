@@ -139,6 +139,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
+* [室内无人机安全制动与定高悬停 / Indoor UAV braking](./air/mujoco_uav_range_neural_braking.md)
+
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
 
