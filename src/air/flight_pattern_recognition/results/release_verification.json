@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-03",
+  "fresh_zip_extraction": true,
+  "data_checksum_and_frozen_protocol_passed": true,
+  "unit_tests_passed": 9,
+  "streaming_windows_matching": 315,
+  "ros_demo_predictions": 105,
+  "ros_demo_events": 5,
+  "launch_processes_exited_cleanly": true,
+  "retrained_models_tensor_identical": [
+    "mlp_42",
+    "mlp_43",
+    "mlp_44",
+    "gru_42",
+    "mlp_position_only_42"
+  ],
+  "retrained_original_and_final_metrics_identical": true,
+  "scope": "Same Ubuntu VM, fresh directory; not another-machine retest"
+}
