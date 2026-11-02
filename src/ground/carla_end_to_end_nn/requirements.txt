@@ -1,0 +1,7 @@
+# CARLA 端到端神经网络（图像 → 控制）—— 运行时依赖
+#
+# 端到端 CNN 为纯 numpy 实现，无需 TensorFlow / PyTorch（--backend numpy 为默认值）。
+# 若希望使用 tf.keras 版本（--backend tf），再额外安装 tensorflow。
+# carla 客户端模块不在 PyPI 的 0.9.16 版本中，需从 CARLA 0.9.16 Linux 发行包安装：
+#   pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+numpy>=1.21
