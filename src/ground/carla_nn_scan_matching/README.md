@@ -8,7 +8,7 @@
 
 - **lidar_simulator.py**：生成虚拟的 2D 环境和 LiDAR 扫描数据（10Hz）。
 - **nn_odometry.py**：加载 1D CNN 模型，订阅 `/scan`，输出相对位姿并发布 `/odom` 和 TF 变换。
-- **grid_mapper.py**：订阅 `/scan` 和 `/odom`，实时维护并发布二维占据栅格地图（`/map`）。
+- **mapper.py**：订阅 `/scan` 和 `/odom`，实时维护并发布二维占据栅格地图（`/map`）。
 - **src/model.py**：1D CNN 模型定义。
 - **src/train.py**：合成数据生成与模型训练脚本。
 

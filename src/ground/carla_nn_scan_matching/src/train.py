@@ -83,8 +83,15 @@ class SyntheticScanDataset(Dataset):
 
 def train():
     print("初始化合成数据集...")
-    dataset = SyntheticScanDataset(num_samples=2000)
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    full_dataset = SyntheticScanDataset(num_samples=2000)
+    
+    # 划分训练集和验证集 (80% / 20%)
+    train_size = int(0.8 * len(full_dataset))
+    val_size = len(full_dataset) - train_size
+    train_dataset, val_dataset = torch.utils.data.random_split(full_dataset, [train_size, val_size])
+    
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("使用设备:", device)
@@ -97,9 +104,10 @@ def train():
     print(f"开始训练，共 {epochs} 轮...")
     
     for epoch in range(epochs):
+        # 训练阶段
         model.train()
         running_loss = 0.0
-        for i, (inputs, targets) in enumerate(dataloader):
+        for inputs, targets in train_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             
             optimizer.zero_grad()
@@ -110,8 +118,20 @@ def train():
             
             running_loss += loss.item()
             
-        avg_loss = running_loss / len(dataloader)
-        print(f"Epoch [{epoch+1}/{epochs}], Loss: {avg_loss:.6f}")
+        train_loss = running_loss / len(train_loader)
+        
+        # 验证阶段
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for inputs, targets in val_loader:
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                val_loss += loss.item()
+                
+        val_loss = val_loss / len(val_loader)
+        print(f"Epoch [{epoch+1}/{epochs}], Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
         
     save_path = "scan_match_model.pth"
     torch.save(model.state_dict(), save_path)
