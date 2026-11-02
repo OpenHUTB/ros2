@@ -18,9 +18,9 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from carla_vehicle_dynamics_test.metrics import (      # noqa: E402
-    braking_distance_theory, circle_fit_radius, mean_acceleration, path_length,
-    radius_from_yaw_rate, steer_to_angle, stopping_deceleration, summarize_test,
-    turn_radius_theory)
+    braking_distance_theory, circle_fit_radius, detect_speed_drops, detect_speed_rises,
+    mean_acceleration, path_length, radius_from_yaw_rate, steer_to_angle,
+    stopping_deceleration, summarize_test, turn_radius_theory)
 
 PASSED = []
 FAILED = []
@@ -138,6 +138,30 @@ def main():
     check('忽略 None 与 NaN', s2['n'] == 1 and s2['mean'] == 1.0)
     s3 = summarize_test([], 'demo')
     check('空输入不报错', s3['n'] == 0 and s3['mean'] is None)
+
+    print('\n[8] 异常样本检测（碰撞/被顶的特征）')
+    ts_acc = [i * 0.05 for i in range(40)]
+    clean = [(t, 0.9 * t + 0.01 * ((i % 3) - 1)) for i, t in enumerate(ts_acc)]
+    check('单调加速：无掉速', detect_speed_drops(clean) == [])
+    crash = list(clean)
+    crash[20] = (crash[20][0], crash[19][1] - 3.2)
+    events = detect_speed_drops(crash)
+    check('撞掉 3.2 m/s：识别为 1 处', len(events) == 1 and close(events[0][0], ts_acc[20]))
+    check('掉速事件保留前后速度用于打印',
+          close(events[0][1], crash[19][1]) and close(events[0][2], crash[20][1]))
+    jitter = [(t, 10.0 + 0.3 * ((i % 2) * 2 - 1)) for i, t in enumerate(ts_acc)]
+    check('±0.3 m/s 抖动不误报（阈值 0.8）', detect_speed_drops(jitter) == [])
+    crash2 = list(crash)
+    crash2[25] = (crash2[25][0], crash2[24][1] - 2.0)
+    check('连续两次碰撞：识别为 2 处', len(detect_speed_drops(crash2)) == 2)
+    check('单点/空序列不报错', detect_speed_drops([]) == [] and detect_speed_drops([(0.0, 1.0)]) == [])
+
+    brake = [(t, max(0.0, 16.0 - 6.0 * t)) for t in ts_acc]
+    check('正常制动（单调减速）无异常加速', detect_speed_rises(brake) == [])
+    bumped = list(brake)
+    bumped[10] = (bumped[10][0], bumped[9][1] + 2.5)
+    rises = detect_speed_rises(bumped)
+    check('被追尾顶出：识别为 1 处', len(rises) == 1 and close(rises[0][0], ts_acc[10]))
 
     print('\n' + '=' * 72)
     print('[结果] %d 项全部通过' % len(PASSED) if not FAILED

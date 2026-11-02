@@ -17,9 +17,9 @@ import math
 import numpy as np
 
 from .carla_utils import (carla, lane_steer, set_spectator_follow, speed_of)
-from .metrics import (braking_distance_theory, circle_fit_radius, mean_acceleration,
-                      path_length, radius_from_yaw_rate, stopping_deceleration,
-                      turn_radius_theory)
+from .metrics import (braking_distance_theory, circle_fit_radius, detect_speed_drops,
+                      detect_speed_rises, mean_acceleration, path_length,
+                      radius_from_yaw_rate, stopping_deceleration, turn_radius_theory)
 
 STOP_SPEED = 0.1            # 判定"已停稳"的速度阈值（m/s）
 
@@ -103,6 +103,13 @@ def measure_acceleration(session, vehicle, carla_map, v_target=16.67, max_time=3
     end = vehicle.get_transform().location
     distance = math.dist((start.x, start.y), (end.x, end.y))
     accel = mean_acceleration(v0, speed, t) if t > 0 else None
+    # 全油门加速只应单调升速：出现明显掉速说明撞了东西或被前车顶住，
+    # 这种样本的"0→v 时间"没有物理意义，必须交给调用方重跑或标注。
+    anomalies = detect_speed_drops(samples)
+    if anomalies:
+        print('[警告] 加速段出现 %d 处异常掉速（首处 t=%.2fs，%.2f→%.2f m/s），'
+              '该样本不可信' % (len(anomalies), anomalies[0][0], anomalies[0][1],
+                              anomalies[0][2]))
     if ok:
         print('[加速] %.2f→%.2f m/s（%.1f→%.1f km/h）用时 %.2f s，'
               '平均加速度 %.2f m/s^2（位移 %.1f m）'
@@ -111,7 +118,8 @@ def measure_acceleration(session, vehicle, carla_map, v_target=16.67, max_time=3
         print('[加速] %.1f s 内未达到 %.1f km/h（末速 %.1f km/h）'
               % (max_time, v_target * 3.6, speed * 3.6))
     return {'ok': ok, 'time': t if ok else None, 'v0': v0, 'v1': speed,
-            'accel': accel, 'distance': distance, 'samples': samples}
+            'accel': accel, 'distance': distance, 'samples': samples,
+            'anomalies': anomalies}
 
 
 def measure_braking(session, vehicle, carla_map, v_start=16.67, max_time=15.0,
@@ -150,12 +158,19 @@ def measure_braking(session, vehicle, carla_map, v_start=16.67, max_time=15.0,
     distance = path_length(positions)
     decel = stopping_deceleration(v0, distance) if distance > 0.0 else None
     theory = braking_distance_theory(v0, decel) if decel else None
+    # 制动过程中车速只应下降：突然加速说明被追尾/被顶，会人为缩短制动距离。
+    anomalies = detect_speed_rises(samples)
+    if anomalies:
+        print('[警告] 制动段出现 %d 处异常加速（首处 t=%.2fs，%.2f→%.2f m/s），'
+              '该样本不可信' % (len(anomalies), anomalies[0][0], anomalies[0][1],
+                              anomalies[0][2]))
     print('[制动] %.1f km/h → 0：实测制动距离 %.2f m，平均减速度 %.2f m/s^2（用时 %.2f s）'
           % (v0 * 3.6, distance, decel, t))
     print('       匀减速理论值 s = v^2/(2a) = %.2f m，与实测相差 %.2f m'
           % (theory, abs(theory - distance)))
     return {'ok': True, 'v0': v0, 'distance': distance, 'decel': decel,
-            'theory': theory, 'duration': t, 'samples': samples}
+            'theory': theory, 'duration': t, 'samples': samples,
+            'anomalies': anomalies}
 
 
 def measure_turn(session, vehicle, carla_map, steer_cmd=0.05, v_target=7.0,

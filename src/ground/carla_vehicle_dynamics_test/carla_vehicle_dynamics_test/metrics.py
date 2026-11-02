@@ -123,6 +123,41 @@ def path_length(points):
     return float(np.sum(np.linalg.norm(np.diff(pts, axis=0), axis=1)))
 
 
+def _speed_steps(samples):
+    """把 ``[(t, v), ...]`` 化成逐步差值 ``[(t, v_prev, v_now, dv), ...]``。"""
+    steps = []
+    for index in range(1, len(samples)):
+        t_prev, v_prev = float(samples[index - 1][0]), float(samples[index - 1][1])
+        t_now, v_now = float(samples[index][0]), float(samples[index][1])
+        steps.append((t_now, v_prev, v_now, v_now - v_prev))
+    return steps
+
+
+def detect_speed_drops(samples, min_drop=0.8):
+    """找出加速过程中**突然掉速**的位置（碰撞、擦碰、被前车顶住的特征）。
+
+    全油门加速时车速只会上升；一旦发生碰撞，车速会在一两个采样点内掉好几 m/s
+    （实测 20 Hz 下撞墙可从 15.1 m/s 直接掉到 2.5 m/s，随后又被油门"拉起来"，
+    于是整段时间被当成加速成绩）。``min_drop`` 是判定阈值（m/s），默认 0.8 m/s
+    （约 2.9 km/h），明显高于正常采样抖动。
+
+    返回 ``[(t, v_prev, v_now), ...]``；空列表表示全程没有异常掉速。
+    """
+    threshold = abs(float(min_drop))
+    return [(t, v_prev, v_now) for t, v_prev, v_now, dv in _speed_steps(samples)
+            if dv < -threshold]
+
+
+def detect_speed_rises(samples, min_rise=0.8):
+    """找出制动过程中**突然加速**的位置（被追尾、被顶出去，会缩短制动距离）。
+
+    与 :func:`detect_speed_drops` 对称，用于制动测试的异常样本判定。
+    """
+    threshold = abs(float(min_rise))
+    return [(t, v_prev, v_now) for t, v_prev, v_now, dv in _speed_steps(samples)
+            if dv > threshold]
+
+
 def summarize_test(values, name):
     """把一组测试值汇总成 min/mean/max 字典（用于打印对比表）。"""
     arr = np.asarray([v for v in values if v is not None and np.isfinite(v)],

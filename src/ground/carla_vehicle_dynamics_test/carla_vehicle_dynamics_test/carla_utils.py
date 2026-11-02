@@ -20,6 +20,7 @@ DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 2000
 DEFAULT_TOWN = 'Town03'
 DEFAULT_DT = 0.05            # 20 Hz，与真实台架采样率同量级
+DEFAULT_TIMEOUT = 30.0       # RPC 超时（秒）：默认 20 s 在 load_world 时会超时
 
 
 def require_carla():
@@ -190,10 +191,66 @@ def parse_physics(physics, vehicle_transform=None):
             'raw_wheel_y': [round(w.position.y, 4) for w in wheels]}
 
 
+class CollisionMonitor:
+    """碰撞事件监听器（``sensor.other.collision``）。
+
+    同步模式下传感器回调随 ``world.tick()`` 触发，因此每步控制之后不需要额外轮询。
+    加速测试用它识别"撞了又爬起来"的样本——那种样本的 0→v 时间没有物理意义。
+
+    传感器不可用时（部分 CARLA 版本/精简服务端）不会抛异常，而是置
+    ``available = False``，由调用方退回"速度序列掉速检测"。
+    """
+
+    def __init__(self, world, vehicle):
+        self.events = []
+        self.sensor = None
+        self.available = False
+        try:
+            require_carla()
+            blueprint = world.get_blueprint_library().find('sensor.other.collision')
+            self.sensor = world.spawn_actor(blueprint, carla.Transform(), attach_to=vehicle)
+            self.sensor.listen(self._on_event)
+            self.available = True
+        except Exception as exc:                            # noqa: BLE001
+            print('[警告] 碰撞传感器不可用（%s），仅用速度序列判定异常样本' % exc)
+
+    def _on_event(self, event):
+        try:
+            other = getattr(event, 'other_actor', None)
+            impulse = getattr(event, 'normal_impulse', None)
+            magnitude = None
+            if impulse is not None:
+                magnitude = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
+            self.events.append({
+                'frame': getattr(event, 'frame', None),
+                'other': getattr(other, 'type_id', None) if other is not None else None,
+                'impulse': magnitude,
+            })
+        except Exception:                                   # noqa: BLE001
+            self.events.append({})
+
+    @property
+    def count(self):
+        return len(self.events)
+
+    def reset(self):
+        """每次测量开始前清空，避免把上一项测试的碰撞算到这一次头上。"""
+        self.events = []
+
+    def destroy(self):
+        if self.sensor is not None:
+            try:
+                self.sensor.stop()
+                self.sensor.destroy()
+            except Exception:                               # noqa: BLE001
+                pass
+            self.sensor = None
+
+
 class CarlaSession:
     """一次测试运行所需的 CARLA 会话。"""
 
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, timeout=20.0):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, timeout=DEFAULT_TIMEOUT):
         require_carla()
         self.host = host
         self.port = int(port)
@@ -203,6 +260,7 @@ class CarlaSession:
         self.original_settings = None
         self.dt = DEFAULT_DT
         self.actors = []
+        self.monitors = []
 
     # ---------------- 世界设置 ----------------
     def ensure_town(self, town):
@@ -282,6 +340,12 @@ class CarlaSession:
         """读取车辆物理参数（轴距、最大前轮转角、质量），见 :func:`parse_physics`。"""
         return parse_physics(vehicle.get_physics_control(), vehicle.get_transform())
 
+    def watch_collisions(self, vehicle):
+        """给车辆挂一个碰撞传感器，返回 :class:`CollisionMonitor`（会话结束时统一销毁）。"""
+        monitor = CollisionMonitor(self.world, vehicle)
+        self.monitors.append(monitor)
+        return monitor
+
     def destroy_actor(self, actor):
         if actor is None:
             return
@@ -294,6 +358,9 @@ class CarlaSession:
 
     def close(self):
         """销毁本会话生成的所有对象并恢复世界设置。"""
+        for monitor in list(self.monitors):
+            monitor.destroy()
+        self.monitors = []
         for actor in list(self.actors):
             self.destroy_actor(actor)
         self.restore_async()

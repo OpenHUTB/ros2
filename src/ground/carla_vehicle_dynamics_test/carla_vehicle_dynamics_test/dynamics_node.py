@@ -27,20 +27,26 @@ from carla_vehicle_dynamics_test.carla_utils import CarlaSession, require_carla 
 
 NODE_NAME = 'dynamics_test_node'
 
+# 默认值全部从 app.build_parser() 取，避免节点参数与命令行参数"各写一份"后走样
+# （曾经就出现过节点里 steer 写 0.3、app.py 里写 0.05 的不一致）。
+_DEFAULTS = build_parser().parse_args([])
+
 PARAMETERS = [
-    ('host', '127.0.0.1'),
-    ('port', '2000'),
-    ('town', 'Town03'),
-    ('mode', 'all'),
-    ('vehicle', DEFAULT_VEHICLES[0]),
-    ('vehicles', ''),
-    ('v_target_kmh', '60.0'),
-    ('steer', '0.3'),
-    ('turn_speed', '8.0'),
-    ('turn_time', '25.0'),
-    ('max_time', '40.0'),
-    ('log_every', '1.0'),
-    ('out_dir', 'data'),
+    ('host', _DEFAULTS.host),
+    ('port', str(_DEFAULTS.port)),
+    ('town', _DEFAULTS.town),
+    ('mode', _DEFAULTS.mode),
+    ('vehicle', _DEFAULTS.vehicle),
+    ('vehicles', '' if _DEFAULTS.vehicles is None else str(_DEFAULTS.vehicles)),
+    ('v_target_kmh', str(_DEFAULTS.v_target_kmh)),
+    ('steer', str(_DEFAULTS.steer)),
+    ('turn_speed', str(_DEFAULTS.turn_speed)),
+    ('turn_time', str(_DEFAULTS.turn_time)),
+    ('max_time', str(_DEFAULTS.max_time)),
+    ('timeout', str(_DEFAULTS.timeout)),
+    ('retries', str(_DEFAULTS.retries)),
+    ('log_every', str(_DEFAULTS.log_every)),
+    ('out_dir', _DEFAULTS.out_dir),
 ]
 
 
@@ -70,6 +76,8 @@ class DynamicsTestNode(Node):
         args.turn_speed = float(self._string('turn_speed'))
         args.turn_time = float(self._string('turn_time'))
         args.max_time = float(self._string('max_time'))
+        args.timeout = float(self._string('timeout'))
+        args.retries = int(float(self._string('retries')))
         args.log_every = float(self._string('log_every'))
         args.out_dir = self._string('out_dir')
 
@@ -77,7 +85,7 @@ class DynamicsTestNode(Node):
         self.get_logger().info('动力性测试开始：模式 %s，车型 %s，目标车速 %.0f km/h'
                                % (args.mode, ', '.join(vehicles), args.v_target_kmh))
 
-        session = CarlaSession(args.host, args.port)
+        session = CarlaSession(args.host, args.port, timeout=args.timeout)
         results = []
         try:
             session.ensure_town(args.town)

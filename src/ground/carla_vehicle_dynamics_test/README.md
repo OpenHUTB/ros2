@@ -31,7 +31,7 @@ python3 -m pip install --user -r requirements.txt -i https://pypi.tuna.tsinghua.
 
 # ③ 离线单元测试（不需要 CARLA，先跑这个最省时间）
 cd src/ground/carla_vehicle_dynamics_test
-python3 test/test_metrics.py          # 预期：[结果] 30 项全部通过
+python3 test/test_metrics.py          # 预期：[结果] 38 项全部通过
 python3 test/test_physics_parse.py    # 预期：[结果] 18 项全部通过
 
 # ④ 单车型三项全测
@@ -54,8 +54,11 @@ ros2 launch carla_vehicle_dynamics_test main.launch.py host:=192.168.148.1 vehic
 | `--vehicle` | `vehicle.tesla.model3` | 单个车型 blueprint |
 | `--vehicles` | - | 写 `all` 则循环内置三种车型对比 |
 | `--v-target-kmh` | `60` | 目标车速（km/h） |
-| `--steer` | `0.3` | 转向测试的归一化转向指令（-1~1） |
-| `--turn-speed` | `8.0` | 转向测试目标车速（m/s） |
+| `--steer` | `0.05` | 转向测试的归一化转向指令（-1~1，约 3.5° 前轮转角） |
+| `--turn-speed` | `7.0` | 转向测试目标车速（m/s） |
+| `--turn-time` | `1.5` | 转向段持续时间（秒，太长会冲出路沿） |
+| `--timeout` | `30` | CARLA 客户端 RPC 超时（秒），切地图慢时调大 |
+| `--retries` | `2` | 样本出现碰撞/掉速时自动重跑次数（`0` = 只标注不重跑） |
 | `--out-dir` | `data` | CSV 与曲线图输出目录 |
 
 ## 4. 目录说明
@@ -64,12 +67,12 @@ ros2 launch carla_vehicle_dynamics_test main.launch.py host:=192.168.148.1 vehic
 main.py                       统一入口（check 参数 → 连接 CARLA → 逐车型测试 → 出表）
 main.sh / main.bat            一键入口
 carla_vehicle_dynamics_test/
-├── metrics.py                纯数学函数（加速度/制动距离/圆拟合/理论转弯半径），可离线单测
-├── carla_utils.py            CARLA 连接、同步步进、按车型生成车辆、跟随镜头、销毁
-├── runner.py                 三项测试的测量流程
-├── app.py                    命令行参数、对比表、CSV、曲线图
+├── metrics.py                纯数学函数（加速度/制动距离/圆拟合/理论半径/异常掉速检测），可离线单测
+├── carla_utils.py            CARLA 连接、同步步进、按车型生成车辆、碰撞监听、跟随镜头、销毁
+├── runner.py                 三项测试的测量流程（含异常样本判定）
+├── app.py                    命令行参数、重跑逻辑、对比表、CSV、曲线图
 └── dynamics_node.py          ROS 2 节点：跑测试并把结果发布到 /dynamics/result
-test/test_metrics.py          纯函数单元测试（30 项，不需要 CARLA）
+test/test_metrics.py          纯函数单元测试（38 项，不需要 CARLA）
 test/test_physics_parse.py    车辆物理参数解析测试（18 项，假对象，不需要 CARLA）
 launch/main.launch.py         ROS 2 启动入口
 ```
@@ -80,5 +83,8 @@ launch/main.launch.py         ROS 2 启动入口
 * **制动**：程序会用实测减速度反推匀减速理论距离 $s=v^2/(2a)$，两者应当接近；
 * **转向**：用最小二乘圆拟合实测轨迹得到半径，与阿克曼理论值 $R=L/\tan\delta$
   （$L$ 从车辆物理参数读取）对照，二者差异反映轮胎侧滑等非理想因素。
+* **异常样本**：加速/制动过程中若发生碰撞，或速度序列出现非物理掉速，程序会自动
+  复位重跑（`--retries`，默认 2 次）；重跑后仍异常的结果在表格里打 `*`，
+  CSV 里对应 `*_valid = False`。带 `*` 的数值不建议直接引用。
 
 完整推导、算法流程图与实测数据见在线文档：`docs/ground/carla_vehicle_dynamics_test.md`。
