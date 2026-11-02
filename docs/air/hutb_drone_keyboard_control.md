@@ -136,7 +136,8 @@ ros2 topic hz /cmd_vel
 src/air/hutb_drone_keyboard_control/
 ├── main.py              # 一键启动入口: 同时拉起两个节点
 ├── keyboard_teleop.py   # 键盘遥控节点: termios 原始读键 -> /cmd_vel
-└── drone_client.py      # 无人机桥接节点: /cmd_vel -> airsim.MultirotorClient
+├── drone_client.py      # 无人机桥接节点: /cmd_vel -> airsim.MultirotorClient
+└── check_env.py         # 环境自检: Python/ROS2/airsim/模拟器连接
 ```
 
 - `keyboard_teleop.py`：使用 `termios` 将终端切为 cbreak 模式读取按键，后台线程根据按键调整目标速度（含限幅与步长调节），主线程按 10 Hz 发布 `/cmd_vel`；
@@ -144,13 +145,24 @@ src/air/hutb_drone_keyboard_control/
 
 ## 8. 运行效果
 
-> 以下截图/动图请在本机运行后替换（截图用 .png 且 < 3 MB，动图用 ScreenToGif 录制 .gif 且 < 10 MB）。
+### 8.1 运行前自检
 
-【运行截图 1：模拟器 AIR 模式场景 + 无人机起飞瞬间】
+正式运行前先用自检脚本确认环境（也可作为模拟器连接问题排查工具）：
 
-【运行截图 2：键盘控制无人机平移/旋转过程中的模拟器画面】
+```bash
+python3 check_env.py            # 检查 Python / ROS2 / airsim 模块
+python3 check_env.py --sim      # 额外检查模拟器连接并打印无人机当前状态
+```
 
-【运行截图 3：终端运行日志（连接成功、起飞、碰撞告警）】
+### 8.2 录图清单
+
+> 以下截图/动图请在本机运行后补充（截图用 .png 且 < 3 MB，动图用 ScreenToGif 录制 .gif 且 < 10 MB）。
+
+【运行截图 1：`check_env.py --sim` 通过的终端输出（环境自检证据）】
+
+【运行截图 2：模拟器 AIR 模式场景 + 无人机起飞瞬间】
+
+【运行截图 3：键盘控制无人机平移/旋转过程中的模拟器画面】
 
 【运行动图：完整键盘操控过程（起飞 → 前进 → 上升 → 左旋 → 下降 → 急停悬停）】
 
