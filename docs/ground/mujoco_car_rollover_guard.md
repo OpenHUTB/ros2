@@ -142,7 +142,7 @@ mujoco_car_rollover_guard/
 ├── models/                     # 三个载荷高度场景
 ├── config/params.yaml          # ROS 参数
 ├── launch/main.launch.py       # 双节点一键启动
-├── results/                    # 数据集、权重、指标 json、曲线、演示 gif
+├── results/                    # 数据集、权重、指标 json、曲线（演示 gif 由 --demo 生成，不入库）
 ├── test/                       # 38 项单元测试
 └── tools/check_scene.py        # 场景结构自检
 ```
@@ -196,7 +196,7 @@ ros2 launch mujoco_car_rollover_guard main.launch.py scene:=car_scene_payload_hi
 | 低载荷 0.16 m | 1.4 m/s | 跑满 9.02 s 未翻 | 13.2° | 触发减速 |
 | 高载荷 0.36 m | 1.1 m/s | 5.36 s 侧翻 | 56.6° | 先减速、再制动，没压住 |
 
-高载荷这一行是这套方法最诚实的边界：网络预测的是 0.5 s 后的翻车概率，而高质心车一旦越过临界，从风险抬头到 55° 只有零点几秒，门控来不及把速度降下来。默认工况选 0.26 m，是因为它能稳定触发减速、又撑得住整段。
+高载荷这一行是这套方法的边界：网络预测的是 0.5 s 后的翻车概率，而高质心车越过临界后到 55° 只有零点几秒，门控来不及减速。默认选 0.26 m，是它能稳定触发减速、又撑得住整段。
 
 节点侧还有三处工程处理，不在网络本身：
 
@@ -205,8 +205,6 @@ ros2 launch mujoco_car_rollover_guard main.launch.py scene:=car_scene_payload_hi
 - 释放带迟滞：已经限过速的车，要风险连续 5 帧低于 0.35 才恢复油门。
 
 要注意 ROS 闭环和离线评测不是同一条执行路径：闭环里门控由 `/imu` 帧驱动，指令在下一个仿真步生效，`/odom` 车速比姿态晚一帧；`main.py --eval` 是单进程逐帧推进、指令当帧生效。所以同一场景两边数值不会一致，本节表格只对 ROS 闭环负责，第 8 节表格只对离线评测负责。
-
-
 
 节点拓扑：
 
