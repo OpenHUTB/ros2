@@ -106,6 +106,14 @@ class SlamNode(Node):
 
         self.n_frames += 1
         self.n_obs += len(lms)
+        # 直接在图像回调里打日志：放 2Hz 的 publish_map 定时器里会被
+        # “10Hz 帧 × 2Hz 定时器”的采样错位漏掉（n_frames 每 0.5s 恰好 +5，
+        # 定时器只能看到 4 个固定余数，大概率永远撞不上 %20==0）
+        if self.n_frames % 100 == 0:
+            self.get_logger().info(
+                '帧 %d：观测 %d 次，路标 %d 个，已探索 %.0f%%'
+                % (self.n_frames, self.n_obs, len(self.slam.ids),
+                   100.0 * self.grid.coverage()))
         self._stamp = msg.header.stamp
         self.publish_pose()
 
@@ -175,12 +183,6 @@ class SlamNode(Node):
             p.orientation.w = 1.0
             lms.poses.append(p)
         self.pub_lm.publish(lms)
-
-        if self.n_frames % 20 == 0 and self.n_frames:
-            self.get_logger().info(
-                '帧 %d：观测 %d 次，路标 %d 个，已探索 %.0f%%'
-                % (self.n_frames, self.n_obs, len(self.slam.ids),
-                   100.0 * self.grid.coverage()))
 
 
 def main(argv=None):
