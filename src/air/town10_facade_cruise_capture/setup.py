@@ -23,7 +23,8 @@ setup(
         ("share/town10_facade_cruise_capture", ["package.xml"]),
         ("share/town10_facade_cruise_capture/launch", ["launch/main.launch.py"]),
     ],
-    install_requires=["setuptools", "numpy>=1.24,<3", "Pillow>=9", "mujoco==3.12.0"],
+    install_requires=["setuptools", "numpy>=1.21,<3", "Pillow>=9", "mujoco==3.12.0"],
+    tests_require=["pytest"],
     extras_require={"airsim": ["airsim==1.8.1"]},
     zip_safe=False,
     entry_points={

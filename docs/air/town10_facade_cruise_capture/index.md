@@ -96,13 +96,14 @@ flowchart TD
 
 ## 3. 安装与运行
 
-源码目录为 `src/air/town10_facade_cruise_capture`。最低要求 Python 3.10（代码使用 `X | None` 联合类型标注）。实际验证环境：Windows 11 + Python 3.11 + MuJoCo 3.12.0 + OpenHUTB 2.10.0，用于 MuJoCo 后端与 Town10HD 原生后端；Ubuntu 22.04 + ROS 2 Humble + Python 3.10 容器，用于 `colcon build` 与 `ros2 launch`。pytest 不在 `requirements.txt` 中，需单独安装。
+源码目录为 `src/air/town10_facade_cruise_capture`。最低要求 Python 3.10（代码使用 `X | None` 联合类型标注）。实际验证环境：Windows 11 + Python 3.11 + MuJoCo 3.12.0 + OpenHUTB 2.10.0，用于 MuJoCo 后端与 Town10HD 原生后端；Ubuntu 22.04 + ROS 2 Humble + Python 3.10 容器，用于 `colcon build` 与 `ros2 launch`。pytest 已列入 `requirements.txt`，可直接安装。
+
+NumPy 约束为 `>=1.21,<3`，与 ROS 2 Humble 系统自带的 NumPy 1.21.5 兼容，安装依赖不会升级系统 NumPy；涉及 MuJoCo 的独立运行建议在虚拟环境中进行。
 
 ```bash
 python -m pip install -r requirements.txt
 python main.py --backend mujoco --style brick --gif --output output/brick
 python evaluate_scenarios.py --output output/three_scenes
-python -m pip install pytest
 python -m pytest -q
 ```
 

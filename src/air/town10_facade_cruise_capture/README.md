@@ -14,6 +14,8 @@ MuJoCo 场景将补充数据包中的砖墙、灰墙和玻璃立面照片映射�
 
 最低要求 Python 3.10（代码使用 `X | None` 联合类型标注，3.9 及以下无法运行）。实际验证环境：Windows 11 + Python 3.11 + MuJoCo 3.12.0 + OpenHUTB 2.10.0（MuJoCo 后端与 Town10HD 原生后端）；Ubuntu 22.04 + ROS 2 Humble + Python 3.10 容器（`colcon build` 与 `ros2 launch`）。
 
+NumPy 约束为 `>=1.21,<3`，与 ROS 2 Humble 系统自带的 NumPy 1.21.5 兼容，`pip install` 不会升级系统 NumPy。涉及 `mujoco==3.12.0` 的独立（非 ROS）运行建议使用虚拟环境（`python -m venv`）隔离，避免与其他系统包相互影响；ROS 2 Humble 侧的 `colcon build`/`colcon test`/`ros2 launch` 可直接使用系统 Python。
+
 ```bash
 python -m pip install -r requirements.txt
 python main.py --backend mujoco --style brick --gif --output output/brick
@@ -79,10 +81,9 @@ ros2 launch town10_facade_cruise_capture main.launch.py backend:=airsim host:=ho
 
 原生指标报告前向深度中位数的时间均值、最小实测深度、航点跟踪误差和采图位置误差。原生路线保持启动平面位置，`--distance` 用于路线采样与模型输入参考，不表示相机被控制在4 m深度。
 
-pytest 不在 `requirements.txt` 中，需单独安装后在本目录运行：
+pytest 已列入 `requirements.txt`，在本目录运行：
 
 ```bash
-python -m pip install pytest
 python -m pytest -q
 ```
 
