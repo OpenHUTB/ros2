@@ -29,3 +29,7 @@
    ```bash
    ros2 run airsim_drone_gimbal_teleop drone_gimbal_teleop
    ```
+   ## 运行效果
+附带仿真运行截图，可正常完成无人机手动飞行控制与云台相机角度调节。
+
+
