@@ -1,0 +1,17 @@
+<launch>
+  <!-- rosbridge_websocket，允许局域网访问 -->
+  <node name="rosbridge" pkg="rosbridge_server" type="rosbridge_websocket" output="screen" respawn="true">
+    <param name="port" value="9090"/>
+    <param name="address" value="0.0.0.0"/>
+  </node>
+
+  <!-- web_video_server 视频流，端口8080，和网页匹配 -->
+  <node name="web_video_server" pkg="web_video_server" type="web_video_server" output="screen" respawn="true">
+    <param name="port" value="8080"/>
+    <param name="address" value="0.0.0.0"/>
+  </node>
+
+  <!-- 不需要TF可视化就注释掉下面这行 -->
+  <!-- <node name="tf_repub" pkg="tf2_web_republisher" type="tf2_web_republisher" output="screen"/> -->
+</launch>
+
