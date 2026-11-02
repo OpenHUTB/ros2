@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_rotor_fault_detector_nn</name>
+  <version>1.0.0</version>
+  <description>
+    四旋翼桨故障的健康度估计：以机载 IMU 与控制器指令为输入，用 1D-CNN + GRU 实时估计
+    四个桨各自还剩多少推力权限。对应课程任务②的"传感器感知"部分，为后续容错控制提供状态输入。
+  </description>
+  <maintainer email="2920111320@qq.com">Fortranquility</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- 仿真底座：数据生成与在线联调都复用它，本包不修改它 -->
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <!-- torch / mujoco 通过 pip 安装（见 requirements.txt），不在此声明 -->
+
+  <test_depend>ament_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

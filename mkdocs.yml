@@ -151,6 +151,7 @@ nav:
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
+    - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
