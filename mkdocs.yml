@@ -128,6 +128,7 @@ nav:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'
       - ROS 2 Action 任务接口: './air/uav_mission_safety_manager/mission_action.md'
+      - 任务日志与离线统计: './air/uav_mission_safety_manager/mission_recording.md'
       - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
