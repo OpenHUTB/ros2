@@ -107,7 +107,11 @@ def evaluate_mission(profile: Any) -> Tuple[List[Dict[str, Any]], Dict[str, Any]
         return rows, summary, errors
     margin_wh = usable_wh - reserve_wh - total_energy
     remaining_percent = (usable_wh - total_energy) / capacity_wh * 100.0
-    max_cruise_distance = max(0.0, (usable_wh - reserve_wh) / cruise_power * 3600.0 * ground_speed)
+    effective_cruise_power = cruise_power * mass_factor
+    max_cruise_distance = max(
+        0.0,
+        (usable_wh - reserve_wh) / effective_cruise_power * 3600.0 * ground_speed,
+    )
     summary = {
         "total_energy_wh": round(total_energy, 4),
         "usable_energy_wh": round(usable_wh, 4),

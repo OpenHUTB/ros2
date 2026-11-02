@@ -32,6 +32,28 @@ class UavEnergyBudgetTests(unittest.TestCase):
         profile["aircraft"]["payload_kg"] += 2.0
         _, heavier, _ = evaluate_mission(profile)
         self.assertGreater(heavier["total_energy_wh"], baseline["total_energy_wh"])
+        self.assertLess(
+            heavier["max_cruise_distance_m"],
+            baseline["max_cruise_distance_m"],
+        )
+
+    def test_max_cruise_distance_uses_effective_mass_adjusted_power(self):
+        _, summary, errors = evaluate_mission(self.profile)
+        self.assertEqual(errors, [])
+        aircraft = self.profile["aircraft"]
+        battery = self.profile["battery"]
+        mass_factor = (
+            (aircraft["empty_mass_kg"] + aircraft["payload_kg"])
+            / aircraft["empty_mass_kg"]
+        ) ** aircraft["mass_power_exponent"]
+        expected = (
+            battery["capacity_wh"]
+            * (battery["efficiency"] - battery["reserve_fraction"])
+            / (aircraft["cruise_power_w"] * mass_factor)
+            * 3600.0
+            * (aircraft["cruise_airspeed_ms"] - self.profile["headwind_ms"])
+        )
+        self.assertAlmostEqual(summary["max_cruise_distance_m"], expected, places=3)
 
     def test_reserve_failure_is_reported(self):
         profile = copy.deepcopy(self.profile)
