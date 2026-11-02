@@ -1,0 +1,43 @@
+{
+  "regression": {
+    "rmse_forward": 0.37050458788871765,
+    "rmse_left": 0.09175648540258408,
+    "rmse_up": 0.06367770582437515,
+    "rmse_distance": 0.3869725465774536
+  },
+  "closed_loop": {
+    "oracle": {
+      "episodes": 50,
+      "pass_rate": 1.0,
+      "miss_rate": 0.0,
+      "timeout_rate": 0.0,
+      "time_mean": 4.371999999999993,
+      "time_median": 4.249999999999993,
+      "time_max": 5.4999999999999885
+    },
+    "mlp": {
+      "episodes": 50,
+      "pass_rate": 0.96,
+      "miss_rate": 0.04,
+      "timeout_rate": 0.0,
+      "time_mean": 3.632999999999995,
+      "time_median": 3.5499999999999954,
+      "time_max": 6.249999999999986
+    }
+  },
+  "latency": {
+    "latency_mean_ms": 0.04803590034134686,
+    "latency_p95_ms": 0.09439990972168744
+  },
+  "pass_vs_lateral": {
+    "-1.5": 0.8,
+    "-1.0": 1.0,
+    "-0.5": 1.0,
+    "0.0": 1.0,
+    "0.5": 1.0,
+    "1.0": 1.0,
+    "1.5": 0.8
+  },
+  "model_params": 6275,
+  "val_samples": 1007
+}

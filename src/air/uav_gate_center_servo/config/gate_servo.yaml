@@ -1,0 +1,20 @@
+# uav_gate_center_servo 节点参数
+model: ""                       # 留空用包内 share/.../data/gate_servo.npz
+topic:
+  depth: "/camera/depth"        # 32FC1，米
+  odom: "/uav/odom"
+  cmd: "/uav/cmd_vel"           # 机体系 Twist
+  status: "/gate_servo/status"
+  view: "/gate_servo/depth_view"
+rate_hz: 20.0
+publish_view: true
+depth_timeout: 0.5
+servo:
+  k_x: 1.5
+  look_ahead: 1.0
+  v_min: 0.5
+  v_max: 1.8
+  k_y: 1.2
+  k_z: 1.2
+  v_z_max: 0.9
+  valid_frac_min: 0.5
