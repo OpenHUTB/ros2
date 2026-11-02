@@ -18,7 +18,7 @@
 cd ~/ros2_ws/src
 
 # 复制本功能包
-cp -r /mnt/e/课程作业/机器人操作系统及应用/rov_mujoco .
+git clone https://github.com/OpenHUTB/ros2.git
 
 # 编译
 cd ~/ros2_ws
