@@ -28,6 +28,7 @@ install(FILES
   scripts/gesture_gate.py
   scripts/gesture_map.py
   scripts/drone_client.py
+  scripts/gesture_dataset.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
