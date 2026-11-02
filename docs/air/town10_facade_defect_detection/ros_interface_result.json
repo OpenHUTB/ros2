@@ -1,0 +1,13 @@
+{
+  "input_encoding": "rgb8",
+  "input_step": 1927,
+  "output_encoding": "bgr8",
+  "output_step": 1920,
+  "width": 640,
+  "height": 360,
+  "source_stamp_preserved": true,
+  "frame_id_preserved": true,
+  "detections": 13,
+  "defects": 9,
+  "status": "passed"
+}
