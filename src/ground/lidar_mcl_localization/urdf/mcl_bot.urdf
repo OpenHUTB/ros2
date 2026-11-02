@@ -12,17 +12,17 @@
 
   <link name="base_link">
     <inertial>
-      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
       <mass value="5.0"/>
       <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.08" iyz="0" izz="0.10"/>
     </inertial>
     <visual>
-      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
       <geometry><box size="0.40 0.30 0.16"/></geometry>
       <material name="body_blue"><color rgba="0.20 0.45 0.75 1.0"/></material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
       <geometry><box size="0.40 0.30 0.16"/></geometry>
     </collision>
   </link>
@@ -46,7 +46,7 @@
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+      <geometry><sphere radius="0.100"/></geometry>
     </collision>
   </link>
 
@@ -71,7 +71,7 @@
     </visual>
     <collision>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
-      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+      <geometry><sphere radius="0.100"/></geometry>
     </collision>
   </link>
 
