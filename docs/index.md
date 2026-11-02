@@ -99,6 +99,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
+* [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
