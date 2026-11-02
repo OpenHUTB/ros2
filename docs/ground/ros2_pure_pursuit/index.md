@@ -113,16 +113,56 @@ $$v \leftarrow v \cdot (1 - 0.85\,r)$$
 危险度为 1 时速度降至 15%。这一点很关键：反应式避障的转向能力与速度直接相关，
 转弯半径 $R = v/\omega$；不减速则 $R$ 过大，机器人来不及绕过障碍。
 
-## 5. 运行步骤
+### 4.4 危险距离内的急停
 
-### 5.1 安装依赖
+仅靠减速仍然存在下限：上式在 $r=1$ 时仍保留 15% 速度，机器人会继续逼近障碍。
+因此当最小测距进入危险距离之内时，直接判定为急停：
+
+$$d_{\min} \le d_{\text{danger}} \;\Rightarrow\; v = 0$$
+
+此时**保留转向偏置**，机器人会在原地转向直至前方让出通路，再恢复前进，
+避免在障碍正前方「停死」。该行为由 `test_arbitration_emergency_stop_zero_speed_keeps_turn`
+与 `test_simulation_survives_emergency_stop` 两项测试锁定。
+
+## 5. 控制仲裁与安全兜底
+
+每个控制周期最终下发哪一组 $(v, \omega)$ 由 `arbitrate()` 统一裁决——
+节点层不再出现多个分支各自发布速度的情况，所有决策只有一个出口：
+
+| 优先级 | 条件 | 结果 | `reason` |
+| :---: | --- | --- | --- |
+| 0 | `/odom` 超过 `odom_timeout`(0.5 s) 未更新，或从未收到 | 停车 $(0,0)$ | `stale_odom` |
+| 1 | 到达路径终点 | 停车 $(0,0)$ | `finished` |
+| 2 | 正常跟踪 | 采纳纯追踪输出 | `pursuit` |
+| 3 | 前向有障碍 | 叠加转向偏置与减速 | `avoidance` |
+| 4 | 前向测距 $\le d_{\text{danger}}$ | 急停 $v=0$，保留转向 | `emergency_stop` |
+
+出口处统一把角速度截断到 $\pm$ `max_angular`(1.8 rad/s)，防止叠加偏置后
+下发车辆执行不了的角速度。
+
+三点设计考量：
+
+1. **定位超时的优先级高于终点判断**：位姿都不可信时，「是否到达终点」本身无法确认，
+   因此 `stale_odom` 排在 `finished` 之前；
+2. **激光超时只停用避障、不停机**：`/scan` 断流后节点不再用过期扫描做安全决策，
+   退化为纯跟踪并每 2 s 告警一次，而不是让机器人急停；
+3. **可测试性**：`arbitrate()` 与 `safety.FreshnessTracker` 都不依赖 rclpy，
+   上述全部规则可以在无 ROS 环境下被单元测试直接覆盖，
+   离线仿真 `sim/run_sim.py` 也复用同一个 `arbitrate()`，保证仿真与节点行为一致。
+
+节点同时对 `target_speed` 做合法性校验（NaN/非正数回退 0.8 m/s，过大值截断到 3.0 m/s），
+并对空 `ranges` 显式停用避障。
+
+## 6. 运行步骤
+
+### 6.1 安装依赖
 
 ```bash
 cd src/ground/ros2_pure_pursuit
 pip3 install -r requirements.txt    # numpy, matplotlib
 ```
 
-### 5.2 离线仿真（无需 ROS）
+### 6.2 离线仿真（无需 ROS）
 
 ```bash
 python3 sim/run_sim.py --path eight        # 可选 circle / eight / s_curve / straight
@@ -130,7 +170,7 @@ python3 sim/run_sim.py --path eight --no-avoid   # 关闭避障的对照组
 python3 sim/benchmark.py                   # 生成 4 路径 × 有无避障 的基准矩阵
 ```
 
-### 5.3 ROS2 中部署
+### 6.3 ROS2 中部署
 
 ```bash
 colcon build --packages-select ros2_pure_pursuit
@@ -143,16 +183,16 @@ ros2 launch ros2_pure_pursuit nav.launch.py
 
 $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 
-## 6. 实验结果
+## 7. 实验结果
 
-### 6.1 场景设置
+### 7.1 场景设置
 
 - 参考路径四种：圆形（$R=8$ m）、8 字形（利萨如曲线 $a=10$ m）、S 形（$L=24$ m，$A=3$ m）、直线（$L=20$ m）
 - 障碍：沿路径法线方向偏移 0.80 m、半径 0.50 m 布置两处；
   该位置满足 $0.80 < 0.50 + 0.35$，即**关闭避障必然碰撞**、开启避障必须绕行
 - 期望速度 0.9 m/s，控制周期 0.05 s，机器人等效外接半径 0.35 m
 
-### 6.2 对照实验数据
+### 7.2 对照实验数据
 
 | 路径 | 避障 | 最大横向误差 (m) | RMS (m) | 前向最小测距 (m) | 步数 | 碰撞 |
 | --- | --- | ---: | ---: | ---: | ---: | :---: |
@@ -165,7 +205,7 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 | straight | 开 | 0.317 | 0.116 | 0.727 | 475 | 否 |
 | straight | 关 | 0.000 | 0.000 | — | 116 | **是** |
 
-### 6.3 轨迹与误差曲线（开启避障）
+### 7.3 轨迹与误差曲线（开启避障）
 
 ![8 字形路径跟踪轨迹与横向误差](eight.png)
 
@@ -175,13 +215,13 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 
 ![直线路径跟踪轨迹与横向误差](straight.png)
 
-### 6.4 对照组（关闭避障）
+### 7.4 对照组（关闭避障）
 
 ![8 字形 - 关闭避障发生碰撞](eight_noavoid.png)
 
 ![圆形 - 关闭避障发生碰撞](circle_noavoid.png)
 
-### 6.5 讨论
+### 7.5 讨论
 
 1. **跟踪精度**：开启避障时 RMS 误差 0.07~0.12 m，主要来自绕行阶段的横向偏移，
    绕行结束后误差迅速回落到厘米级；
@@ -190,9 +230,26 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 3. **鲁棒性**：S 形路径在曲率反号处出现误差尖峰（最大 0.32 m），
    原因是前视距离固定而局部曲率突变，改善方式是让 $L_d$ 随曲率自适应。
 
-## 7. 局限与展望
+## 8. 测试与可复现性
+
+`python3 tests/test_core.py` 共 **27 项**，全部通过；`bash ci/run_ci.sh` 一条命令跑完
+语法 → 依赖 → 测试 → 仿真 → 基准 五个阶段。除运动学与几何外，其中包含针对上文
+安全规则的回归测试：
+
+| 测试 | 锁定的行为 |
+| --- | --- |
+| `test_arbitration_finished_wins_over_avoidance` | 到达终点必须停车，即使避障正要求转向 |
+| `test_arbitration_emergency_stop_zero_speed_keeps_turn` | 危险距离内 $v=0$ 且保留转向 |
+| `test_avoider_emergency_stop_inside_danger_distance` | $d_{\min} \le d_{\text{danger}}$ 时急停 |
+| `test_arbitration_stale_odom_stops_robot` | 定位超时必须停车 |
+| `test_freshness_tracker_detects_stale_and_fresh` | 超时判定对多路数据源互不干扰 |
+| `test_sanitize_target_speed_rejects_bad_values` | 非法速度参数回退/截断 |
+| `test_arbitration_angular_speed_is_clamped` | 角速度不超过 `max_angular` |
+| `test_simulation_survives_emergency_stop` | 急停介入后闭环仿真仍不碰撞 |
+
+## 9. 局限与展望
 
 - 避障为反应式，只处理前方扇区内的障碍，无法处理被遮挡后突然出现的物体；
 - 未做全局重规划，绕行后仍沿原路径回归，可能与静态地图产生冲突；
 - 仿真使用合成激光，尚未在 Gazebo / CARLA 中接入真实话题验证；
-- 未考虑车辆动力学（加减速迟滞、转向角速度上限），真车部署前需补充 PID 速度环。
+- 未考虑车辆动力学（轮胎侧滑、电机力矩饱和），真车部署前需补充 PID 速度环。

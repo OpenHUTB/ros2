@@ -17,6 +17,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
+from ros2_pure_pursuit.arbitrate import arbitrate  # noqa: E402
 from ros2_pure_pursuit.obstacle import ObstacleAvoider, synthetic_scan  # noqa: E402
 from ros2_pure_pursuit.paths import circle, figure_eight, s_curve, straight  # noqa: E402
 from ros2_pure_pursuit.pure_pursuit import PurePursuitController  # noqa: E402
@@ -78,22 +79,29 @@ def run(path_name: str, speed: float, avoid: bool, max_steps: int = 2000):
     lap_done = False
     traveled = 0.0
 
+    emergency_steps = 0
+
     for _ in range(max_steps):
         v_cmd, w_cmd, info = ctrl.compute(path, robot.pose, speed)
 
+        av = None
         if avoid:
             scan, amin, ainc = synthetic_scan(
                 robot.pose.x, robot.pose.y, robot.pose.theta, obstacles
             )
             av = avoider.evaluate(scan, amin, ainc)
-            v_cmd *= av.slow_factor
-            w_cmd += av.turn_bias
             fronts.append(av.min_front)
             risks.append(av.risk)
             min_clearance = min(min_clearance, av.min_front)
         else:
             fronts.append(float("nan"))
             risks.append(0.0)
+
+        # 与 ROS2 节点共用同一套裁决逻辑（含终点停车、危险急停、角速度限幅）
+        res = arbitrate(v_cmd, w_cmd, info.finished, av, max_angular=robot.max_w)
+        v_cmd, w_cmd = res.v, res.w
+        if res.reason == "emergency_stop":
+            emergency_steps += 1
 
         robot.step(v_cmd, w_cmd)
         traj.append((robot.pose.x, robot.pose.y, robot.pose.theta))
@@ -125,6 +133,7 @@ def run(path_name: str, speed: float, avoid: bool, max_steps: int = 2000):
         "mean_speed": float(np.mean(speeds)) if speeds else 0.0,
         "collision": collision,
         "finished": bool(info.finished or lap_done),
+        "emergency_steps": emergency_steps,
     }
     return metrics, traj, path.points, ctes, np.array(risks), obstacles
 

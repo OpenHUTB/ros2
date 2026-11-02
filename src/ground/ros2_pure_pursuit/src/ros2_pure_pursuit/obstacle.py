@@ -17,10 +17,14 @@ import numpy as np
 
 @dataclass
 class AvoidInfo:
-    min_front: float   # 前向扇区最小测距 (m)
-    risk: float        # 危险度，0(安全) ~ 1( imminent )
-    turn_bias: float   # 附加转向角速度 (rad/s)，正为左转
-    slow_factor: float # 速度缩放系数 0~1
+    min_front: float    # 前向扇区最小测距 (m)
+    risk: float         # 危险度，0(安全) ~ 1( imminent )
+    turn_bias: float    # 附加转向角速度 (rad/s)，正为左转
+    slow_factor: float  # 速度缩放系数 0~1
+    #: 前向测距已进入 danger_distance 之内，必须立即停车（v=0）。
+    #: 仅减速不足以阻止机器人继续逼近障碍：slow_factor 有 0.15 的下限，
+    #: 在 risk=1 时仍会保留 15% 的速度，因此这里单独给出急停标志。
+    emergency: bool = False
 
 
 class ObstacleAvoider:
@@ -71,8 +75,12 @@ class ObstacleAvoider:
         direction = 1.0 if left_clear >= right_clear else -1.0
 
         turn_bias = direction * self.gain * risk
+        if min_front <= self.danger_distance:
+            # 已进入危险距离：不再以“减速”处理，直接急停（v=0）
+            return AvoidInfo(min_front, 1.0, turn_bias, 0.0, True)
+
         slow_factor = float(np.clip(1.0 - 0.85 * risk, 0.15, 1.0))
-        return AvoidInfo(min_front, risk, turn_bias, slow_factor)
+        return AvoidInfo(min_front, risk, turn_bias, slow_factor, False)
 
 
 def synthetic_scan(
