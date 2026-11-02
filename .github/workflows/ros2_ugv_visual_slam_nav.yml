@@ -61,16 +61,16 @@ jobs:
           done
           echo "install 布局检查通过"
 
-      # ---- 4) 四场景真 launch：每场景跑 90 s，看 SLAM 日志是否在推进
-      #（ros:humble 容器里首次 ros2 launch 的节点拉起就要 ~30 s，30 s 会在
-      # 第一帧图像处理之前就把进程杀掉）
+      # ---- 4) 四场景真 launch：每场景跑 180 s，看 SLAM 日志是否在推进
+      #（ros:humble 容器里首次 ros2 launch 的节点拉起+Python 导入要 60 s 以上，
+      # 90 s 会在第一帧图像处理之前就把进程杀掉）
       - name: 四场景 launch 冒烟
         run: |
           source /opt/ros/humble/setup.bash
           source install/setup.bash
           for s in corridor cluttered dynamic night ; do
             echo "=================== $s ==================="
-            timeout 90 ros2 launch ugv_visual_slam_nav main.launch.py \
+            timeout 180 ros2 launch ugv_visual_slam_nav main.launch.py \
                 scene:=$s seed:=0 > /tmp/$s.log 2>&1 || true
             echo "--- 日志尾部 ---"
             tail -n 12 /tmp/$s.log
