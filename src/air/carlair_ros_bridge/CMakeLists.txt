@@ -16,6 +16,8 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/bridge_doctor.py
   scripts/odom_pub.py
+  scripts/imu_pub.py
+  scripts/camera_model_pub.py
   scripts/cmd_vel_sub.py
   scripts/image_pub.py
   scripts/lidar_pub.py
