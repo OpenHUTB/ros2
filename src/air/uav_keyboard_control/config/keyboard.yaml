@@ -2,9 +2,13 @@
 # 本模块只发布机体系速度指令到 /uav/cmd_vel，真正的执行/坐标换算在 carlair_ros_bridge。
 
 control:
-  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D）
+  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D 的目标速度，组合键时各轴独立）
   vert_speed: 1.0         # 垂直速度 m/s（R/F）
   yaw_rate: 1.0           # 偏航角速度 rad/s（Q/E，正值=机头右转）
+  key_hold_timeout: 0.15  # 按键保持判定 s：超过该时间没再收到该键的字节 -> 视为松开
+  accel_horiz: 4.0        # 水平加速度上限 m/s^2（<=0 关闭平滑，瞬时到位）
+  accel_vert: 2.0         # 垂直加速度上限 m/s^2
+  accel_yaw: 4.0          # 偏航角加速度上限 rad/s^2
 
 rate:
   publish_hz: 30.0        # 指令发布频率
