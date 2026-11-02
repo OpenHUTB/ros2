@@ -20,7 +20,7 @@ recall, mean matched IoU and center-point localization error in pixels.
 
 ## Input format
 
-See `sample_data/sample_frames.json`. Every frame contains:
+See `air_ground_detection_benchmark/sample_data/sample_frames.json`. Every frame contains:
 
 - `altitude_m`;
 - `pitch_deg`;
@@ -34,26 +34,29 @@ matched prediction box centers. It is averaged over true positives.
 ## Run
 
 ```bash
-python3 main.py
+PYTHONPATH=src/air/air_ground_detection_benchmark python3 -m air_ground_detection_benchmark.main
 ```
 
 Write results to a custom CSV:
 
 ```bash
-python3 main.py --output output/height_angle_metrics.csv
+PYTHONPATH=src/air/air_ground_detection_benchmark python3 -m air_ground_detection_benchmark.main --output output/height_angle_metrics.csv
 ```
 
 From a sourced ROS 2 environment:
 
 ```bash
 source /opt/ros/humble/setup.bash
-ros2 launch "$(pwd)/launch/main.launch.py"
+colcon build --packages-select air_ground_detection_benchmark
+source install/setup.bash
+ros2 launch air_ground_detection_benchmark main.launch.py
 ```
 
 ## Test
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=src/air/air_ground_detection_benchmark python3 -m unittest discover \
+  -s src/air/air_ground_detection_benchmark/tests -v
 ```
 
 ## AI assistance disclosure

@@ -1,4 +1,6 @@
+---
 title: 高度与倾角检测评估
+---
 
 # 高度与倾角检测质量评估
 
@@ -37,14 +39,14 @@ report `0.0`, so localization metrics must be interpreted together with recall.
 ## 3. 运行步骤
 
 ```bash
-cd src/air/air_ground_detection_benchmark
-python3 main.py
+PYTHONPATH=src/air/air_ground_detection_benchmark \
+  python3 -m air_ground_detection_benchmark.main
 ```
 
 指定输出文件：
 
 ```bash
-python3 main.py --output output/height_angle_metrics.csv
+PYTHONPATH=src/air/air_ground_detection_benchmark python3 -m air_ground_detection_benchmark.main --output output/height_angle_metrics.csv
 ```
 
 ## 4. 预期结果
@@ -52,8 +54,12 @@ python3 main.py --output output/height_angle_metrics.csv
 终端输出每个高度/倾角分组的指标，并生成 CSV：
 
 ```text
-PASS: evaluated 2 altitude/pitch groups
+altitude  pitch  gt  tp  fp  fn  precision  recall    f1  small_recall  loc_error_px  matched_iou
+    30.0  -60.0   2   2   0   0     1.000   1.000 1.000        1.000        1.266       0.897
+    50.0  -60.0   2   2   0   0     1.000   1.000 1.000        1.000        1.059       0.924
+    80.0  -90.0   2   1   0   1     1.000   0.500 0.667        0.500        0.000       1.000
 CSV: output/altitude_pitch_metrics.csv
+PASS: evaluated 3 altitude/pitch groups
 ```
 
 ![高度与倾角评估运行效果](../img/air_ground_detection_benchmark.gif)
@@ -61,7 +67,8 @@ CSV: output/altitude_pitch_metrics.csv
 ## 5. 测试
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=src/air/air_ground_detection_benchmark python3 -m unittest discover \
+  -s src/air/air_ground_detection_benchmark/tests -v
 ```
 
 ## AI 使用声明
