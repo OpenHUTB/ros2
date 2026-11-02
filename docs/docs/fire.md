@@ -9,23 +9,30 @@
 - 依赖库：OpenCV、cv_bridge、rclpy
 
 ## 项目文件结构
-src/fire_detect/
+src/chap5/fire_detect/
 
-├── package.xml                  # 包声明（依赖库说明）
+├── package.xml       # 包声明（依赖库说明）
 
-├── setup.py                     # ament_python 编译配置
+├── setup.py         
 
 ├── fire_detect/
 
-│   ├── **init**.py
+│   ├── __init__.py
 
-│   └── fire_detector_node.py    # ROS 主节点：订阅图像 → HSV 火焰检测 → 绘制框 → 发布图像
+│   └── fire_detector_node.py  # ROS主节点：订阅图像 → HSV火焰检测 → 绘制框
 
 ├── launch/
 
-│   └── fire_detect.launch.py    # 一键启动文件
+│   └── fire_detect.launch.py  # 一键启动文件
 
-└── README.md                    # 项目说明文档
+├── resource/
+
+│   └── fire_detect/
+
+│       └── __init__.py
+
+└── README.md         # 项目说明文档
+
 ## 核心代码
 ### 1. fire_detector_node.py
 ```python
@@ -188,4 +195,4 @@ ros2 launch fire_detect fire_detect.launch.py
 # 方式2：直接运行节点
 ros2 run fire_detect fire_detector_node
 ```
-![运行效果图](https://raw.githubusercontent.com/Xavier-101666/ros2/11c73f8cc920d1bff009321f6b15126be377b854/你的图片文件名.png)
+![运行效果图]Flame Recognition Running Effect Diagram.png
