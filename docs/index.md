@@ -27,9 +27,7 @@ title: 主页
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
-  - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
-  - [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
   - [水域载具](#water_vehicle)
 
 ---
@@ -155,8 +153,6 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
-## 5. 空域载具 <span id='air_vehicle'></span>
-
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
@@ -173,6 +169,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
+* [禁飞区检测模块](./air/no_fly_zone_check/index.md) —— 基于 Haversine 距离校验起降点是否进入预设禁飞区
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
@@ -209,6 +206,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
+* [MuJoCo无人机幕墙定距扫描](./air/mujoco_facade_capture/index.md) —— 九束测距与定距控制驱动无人机沿建筑立面扫描采集图像
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
