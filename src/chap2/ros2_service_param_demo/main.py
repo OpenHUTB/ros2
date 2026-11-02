@@ -7,7 +7,6 @@
 """运行本文件即启动整个模块（本地源码调试入口）."""
 
 
-
 from launch import LaunchDescription, LaunchService
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -41,7 +40,7 @@ def generate_launch_description():
 
 def main():
     """以 LaunchService 运行整个模块，(参数取 launch 描述里的默认值)."""
-    launch_service = LaunchService(argv=sys.argv[1:])
+    launch_service = LaunchService()
     launch_service.include_launch_description(generate_launch_description())
     return launch_service.run()
 
