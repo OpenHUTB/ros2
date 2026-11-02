@@ -1,9 +1,12 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
 pytest.importorskip("mujoco")
 
-from uav_gate_center_servo.core.env import EnvConfig, GateServoEnv  # noqa: E402
+from uav_gate_center_servo.core.env import (  # noqa: E402
+    EnvConfig, GateServoEnv, parse_single_gate)
 
 
 @pytest.fixture(scope="module")
@@ -27,6 +30,15 @@ def test_gate_geometry(env):
     assert abs(env.gate.x - 5.0) < 1e-6
     assert env.gate.half == 1.1
     assert env.gate.contains(env.gate.center)
+
+
+def test_gate_half_from_scene():
+    posts = [SimpleNamespace(name="gate_post_0_0", pos=(5.0, 0.95, 2.0),
+                             size=(0.125, 0.125, 0.9)),
+             SimpleNamespace(name="gate_post_0_1", pos=(5.0, -0.95, 2.0),
+                             size=(0.125, 0.125, 0.9))]
+    spec = parse_single_gate(SimpleNamespace(objects=posts))
+    assert abs(spec.half - 0.825) < 1e-9
 
 
 def test_reset_ranges(env):

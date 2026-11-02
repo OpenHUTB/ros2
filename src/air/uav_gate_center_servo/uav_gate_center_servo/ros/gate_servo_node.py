@@ -156,6 +156,10 @@ class GateServoNode(Node):
         t.linear.z = float(v_body[2])
         self.pub_cmd.publish(t)
 
+    def publish_zero(self) -> None:
+        """退出前发零速，避免底座沿用最后一条指令。"""
+        self._publish(np.zeros(3))
+
     def _publish_view(self, img: np.ndarray) -> None:
         m = Image()
         m.header.stamp = self.get_clock().now().to_msg()
@@ -188,8 +192,20 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        try:
+            node.publish_zero()
+            time.sleep(0.1)
+        except (Exception, KeyboardInterrupt):  # noqa: BLE001
+            pass
+        try:
+            node.destroy_node()
+        except KeyboardInterrupt:
+            pass
+        if rclpy.ok():
+            try:
+                rclpy.shutdown()
+            except KeyboardInterrupt:
+                pass
     return 0
 
 

@@ -35,19 +35,25 @@ class GateSpec:
         return np.array([self.x, self.y, self.z], dtype=np.float64)
 
     def contains(self, p: np.ndarray) -> bool:
+        """质心是否落在门内；不含机体半径或安全余量。"""
         return abs(float(p[1]) - self.y) <= self.half \
             and abs(float(p[2]) - self.z) <= self.half
 
 
 def parse_single_gate(scene) -> GateSpec:
-    """从单门 scene 的两根 gate_post 解析中心。"""
+    """从单门 scene 的两根 gate_post 解析中心和净空半宽。"""
     posts = [o for o in scene.objects if o.name.startswith("gate_post")]
     if len(posts) != 2:
         raise ValueError("单门场景应有两根 gate_post，实际 %d 根" % len(posts))
     x = float(np.mean([o.pos[0] for o in posts]))
     y = float(np.mean([o.pos[1] for o in posts]))
     z = float(np.mean([o.pos[2] for o in posts]))
-    return GateSpec(x=x, y=y, z=z, half=1.1)
+    # 立柱中心距的一半减去立柱半宽，等于门内净空半宽。
+    bar_half = float(np.mean([o.size[1] for o in posts]))
+    half = 0.5 * abs(float(posts[0].pos[1]) - float(posts[1].pos[1])) - bar_half
+    if half <= 0.0:
+        raise ValueError("门内净空半宽非正：%.3f" % half)
+    return GateSpec(x=x, y=y, z=z, half=half)
 
 
 @dataclass

@@ -82,12 +82,13 @@ def run_selftest() -> int:
 
     # 9-10 servo
     servo = GateServo(ServoConfig())
-    cmd = servo.command(np.array([4.0, 1.0, -1.0]))
+    cmd = servo.command(np.array([4.0, 1.0, -1.0]), np.zeros(3))
     rep.check("伺服符号与限幅",
               cmd[0] > 0 and cmd[1] > 0 and cmd[2] < 0
               and abs(cmd[1]) <= 1.8 and abs(cmd[2]) <= 0.9,
               "cmd=%s" % np.round(cmd, 3).tolist())
-    zero = servo.command(np.array([4.0, 1.0, 0.0]), valid_frac=0.0)
+    zero = servo.command(np.array([4.0, 1.0, 0.0]), np.zeros(3),
+                         valid_frac=0.0)
     rep.check("失效/低有效像素减速", np.allclose(zero, 0.0), "cmd=%s" % zero.tolist())
 
     # 11-15 env

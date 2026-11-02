@@ -8,8 +8,6 @@ from typing import Optional
 
 import numpy as np
 
-from .geometry import CAM_OFFSET_BODY
-
 __all__ = ["ServoConfig", "GateServo", "is_plausible_label"]
 
 
@@ -40,14 +38,14 @@ class GateServo:
         self.cfg = cfg or ServoConfig()
 
     def command(self, label_cam: np.ndarray,
-                cam_offset_world: Optional[np.ndarray] = None,
+                cam_offset_world: np.ndarray,
                 valid_frac: float = 1.0,
                 valid_prediction: bool = True) -> np.ndarray:
+        """label_cam 在相机系；cam_offset_world 由调用方按 R·c_b 传入。"""
         cfg = self.cfg
         if not valid_prediction or not is_plausible_label(label_cam):
             return np.zeros(3, dtype=np.float32)
-        offset = CAM_OFFSET_BODY if cam_offset_world is None \
-            else np.asarray(cam_offset_world, float).reshape(3)
+        offset = np.asarray(cam_offset_world, float).reshape(3)
         target = np.asarray(label_cam, float).reshape(3) + offset
         if target[0] <= 0.0:
             return np.zeros(3, dtype=np.float32)

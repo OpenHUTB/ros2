@@ -11,6 +11,7 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -42,8 +43,10 @@ def generate_launch_description():
         name="gate_servo_node", output="screen",
         parameters=[cfg, {
             "model": LaunchConfiguration("model"),
-            "rate_hz": LaunchConfiguration("rate_hz"),
-            "publish_view": LaunchConfiguration("publish_view"),
+            "rate_hz": ParameterValue(LaunchConfiguration("rate_hz"),
+                                      value_type=float),
+            "publish_view": ParameterValue(LaunchConfiguration("publish_view"),
+                                           value_type=bool),
         }])
 
     return LaunchDescription(args + [sim, TimerAction(period=3.0,

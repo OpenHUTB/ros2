@@ -9,6 +9,8 @@
 训练标签由仿真真值生成。与 `uav_depth_gate_racing_e2e` 的端到端策略不同，
 本模块把感知和控制分开：网络只负责“门在哪”，控制律只负责“怎么飞”。
 
+![架构](../img/air/uav_gate_center_servo/00_architecture.png)
+
 ## 1. 与已有模块的区别
 
 | 模块 | 做法 | 本模块不同 |
@@ -71,8 +73,8 @@ oracle 和 MLP 共用这一个函数，只换标签来源。
 
 环境：底座 `gate_track` 单门（`n_gates=1`），无人机在门前 2–6 m、横向 ±1.5 m、
 高度 ±0.8 m 随机重置；固定航向，20 Hz 帧内 5 个 0.01 s 控制步调用
-`GeometricController.act`。穿过门平面且落在 1.1 m 开口内算通过，否则记 miss；
-12 s 未穿过记 timeout。
+`GeometricController.act`。质心穿过门平面且落在 1.1 m 开口内算通过，否则记 miss；
+判定不含机体半径或安全余量；12 s 未穿过记 timeout。
 
 ![闭环轨迹](../img/air/uav_gate_center_servo/04_trajectory.png)
 
@@ -135,6 +137,7 @@ python main.py --figures
 ## 7. 已知限制
 
 - 单门、固定航向；不处理门序、偏航跟踪和障碍物。
+- 通过判定按质心，不含机体半径或安全余量。
 - 只在仿真深度上验证；真实相机的时延、缺帧、噪声未覆盖。
 - 深度全零时自检/测试跳过，数据集采集直接报错，避免训练空图。
 - MLP 输入 12×16 是速度/精度折中；更远或更小的门需要更高分辨率。

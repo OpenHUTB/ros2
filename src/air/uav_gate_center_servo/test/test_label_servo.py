@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from uav_gate_center_servo.core.geometry import camera_label, project_label
 from uav_gate_center_servo.core.servo import GateServo, ServoConfig
@@ -25,15 +26,23 @@ def test_camera_offset_removed():
 
 
 def test_servo_signs_and_clamps():
-    cmd = GateServo(ServoConfig()).command(np.array([4.0, 1.0, -1.0]))
+    s = GateServo(ServoConfig())
+    cmd = s.command(np.array([4.0, 1.0, -1.0]), np.zeros(3))
     assert cmd[0] > 0 and cmd[1] > 0 and cmd[2] < 0
     assert abs(cmd[1]) <= 1.8 and abs(cmd[2]) <= 0.9
 
 
+def test_servo_requires_camera_offset():
+    with pytest.raises(TypeError):
+        GateServo(ServoConfig()).command(np.array([4.0, 1.0, 0.0]))
+
+
 def test_servo_invalid_slowdown():
     s = GateServo(ServoConfig())
-    assert np.allclose(s.command(np.array([4.0, 1.0, 0.0]), valid_frac=0.0), 0.0)
-    assert np.allclose(s.command(np.array([4.0, 1.0, 0.0]), valid_prediction=False), 0.0)
+    assert np.allclose(s.command(np.array([4.0, 1.0, 0.0]), np.zeros(3),
+                                 valid_frac=0.0), 0.0)
+    assert np.allclose(s.command(np.array([4.0, 1.0, 0.0]), np.zeros(3),
+                                 valid_prediction=False), 0.0)
 
 
 def test_projection_center():
