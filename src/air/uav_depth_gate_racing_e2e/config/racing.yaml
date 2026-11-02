@@ -1,0 +1,17 @@
+# uav_depth_gate_racing_e2e 节点参数
+# 话题与坐标系约定沿用 uav_mujoco_sim / carlair_ros_bridge。
+
+model: ""                 # 策略权重 .npz；留空用包内 share/.../data/policy_cnn.npz
+
+topic:
+  depth: "/camera/depth"      # 32FC1，单位米
+  odom: "/uav/odom"
+  cmd: "/uav/cmd_vel"         # geometry_msgs/Twist，机体系
+  status: "/racing/status"
+  view: "/racing/depth_view"  # mono8，网络实际看到的深度图（回放/调试用）
+
+rate_hz: 20.0             # 策略频率，与训练时 CTRL_HZ 一致
+publish_view: true
+
+max_horiz: 4.0            # 水平速度上限（m/s），与 EnvConfig 一致
+max_vert: 2.0             # 垂直速度上限（m/s）
