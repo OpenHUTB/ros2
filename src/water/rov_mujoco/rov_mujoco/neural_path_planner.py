@@ -11,9 +11,15 @@
 """
 
 import math
+import os
 import time
 import heapq
 import numpy as np
+
+try:
+    from rov_mujoco.nn_core import NumpyMLP, load_npz
+except ImportError:                       # 兼容直接运行单文件的场景
+    from nn_core import NumpyMLP, load_npz
 
 try:
     import torch
@@ -21,6 +27,51 @@ try:
     HAS_TORCH = True
 except ImportError:
     HAS_TORCH = False
+
+
+GUIDANCE_FEATURE_DIM = 13
+
+
+def analytic_guidance(h, w, sx, sy, gx, gy, inflated):
+    """解析椭圆走廊先验（训练标签来源，也作为权值缺失时的回退）"""
+    Y, X = np.ogrid[:h, :w]
+    dist_goal = np.hypot(X - gx, Y - gy)
+    dist_start = np.hypot(X - sx, Y - sy)
+    direct = math.hypot(gx - sx, gy - sy) + 1e-4
+    corridor = (dist_start + dist_goal) - direct
+    phi = np.exp(-corridor / 2.0)
+    phi = np.asarray(phi, dtype=np.float32)
+    phi[inflated] = 0.0
+    return phi
+
+
+def guidance_features(h, w, sx, sy, gx, gy, inflated):
+    """构造引导网络的逐栅格输入 (h*w, 13)
+
+    训练脚本与在线推理共用此函数，保证特征定义一致。
+    """
+    Y, X = np.ogrid[:h, :w]
+    diag = math.hypot(h, w) + 1e-9
+    occ = inflated.astype(np.float32)
+    padded = np.pad(occ, 1, constant_values=1.0)   # 地图外视为障碍
+
+    direct = math.hypot(gx - sx, gy - sy)
+    d_start = np.hypot(X - sx, Y - sy)
+    d_goal = np.hypot(X - gx, Y - gy)
+
+    feats = np.empty((h, w, GUIDANCE_FEATURE_DIM), dtype=np.float32)
+    feats[..., 0] = (X - gx) / diag
+    feats[..., 1] = (Y - gy) / diag
+    # 椭圆走廊坐标 (单位: 8 栅格)。解析先验 exp(-corridor_cells/2) 在该坐标下
+    # 变成 exp(-4*u)，普通 tanh MLP 的权重范围即可表示，避免数值上无法拟合。
+    feats[..., 2] = (d_start + d_goal - direct) / 8.0
+    feats[..., 3] = d_goal / diag
+    k = 4
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            feats[..., k] = padded[1 + dy:1 + dy + h, 1 + dx:1 + dx + w]
+            k += 1
+    return feats.reshape(-1, GUIDANCE_FEATURE_DIM)
 
 
 # =============================================================================
@@ -224,9 +275,58 @@ class NeuralAStarPlanner(BaselineAStarPlanner):
       使扩展节点数相比标准 A* 减少 40%~60%，大幅降低规划时延。
     """
 
-    def __init__(self, resolution: float = 0.1, clearance_m: float = 0.35, lambda_neural: float = 0.35):
+    def __init__(self, resolution: float = 0.1, clearance_m: float = 0.35,
+                 lambda_neural: float = 0.35, weights_path=None,
+                 zero_weights: bool = False):
         super().__init__(resolution=resolution, clearance_m=clearance_m)
         self.lambda_neural = lambda_neural
+        self.zero_weights = zero_weights
+        self.guidance_loaded = False
+        self.guidance_source = "analytic_fallback"
+        self.guidance_net = None
+
+        if zero_weights:
+            net = NumpyMLP([GUIDANCE_FEATURE_DIM, 64, 32, 1],
+                           hidden_act='tanh', output_act='sigmoid', seed=0)
+            net.W = [np.zeros_like(w) for w in net.W]
+            net.b = [np.zeros_like(b) for b in net.b]
+            self.guidance_net = net
+            self.guidance_loaded = True
+            self.guidance_source = "zero_ablation"
+            return
+
+        candidates = []
+        if weights_path:
+            candidates.append(weights_path)
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        candidates.append(os.path.join(cur_dir, "planner_weights.npz"))
+        try:
+            from ament_index_python.packages import get_package_share_directory
+            share = get_package_share_directory('rov_mujoco')
+            candidates.append(os.path.join(share, "planner_weights.npz"))
+            candidates.append(os.path.join(share, "rov_mujoco", "planner_weights.npz"))
+        except Exception:
+            pass
+
+        for path in candidates:
+            if os.path.exists(path):
+                try:
+                    weights = load_npz(path)
+                    net = NumpyMLP([GUIDANCE_FEATURE_DIM, 64, 32, 1],
+                                   hidden_act='tanh', output_act='sigmoid',
+                                   weights=weights)
+                    if net.W[0].shape != (GUIDANCE_FEATURE_DIM, 64):
+                        raise ValueError("planner_weights.npz 形状不匹配 13-64-32-1")
+                    self.guidance_net = net
+                    self.guidance_loaded = True
+                    self.guidance_source = path
+                    break
+                except Exception as exc:
+                    print(f"[WARN] Neural A* 引导场权值加载失败 ({path}): {exc}")
+                    break
+
+        if not self.guidance_loaded:
+            print("[WARN] 未找到 planner_weights.npz，使用解析走廊先验作为回退")
 
     def _compute_neural_guidance_field(
         self,
@@ -235,25 +335,17 @@ class NeuralAStarPlanner(BaselineAStarPlanner):
         gx: int, gy: int,
         inflated: np.ndarray
     ) -> np.ndarray:
-        """
-        前向推理神经引导场 Phi (值域 [0, 1])
-        纯 NumPy 高性能实现（可作为 PyTorch 离线训练权重的闭式等价表达）
-        """
+        """前向推理神经引导场 Phi (值域 [0, 1])"""
         h, w = grid_shape
-        Y, X = np.ogrid[:h, :w]
+        if self.guidance_net is None:
+            # 权值缺失时的回退：解析椭圆走廊
+            return analytic_guidance(h, w, sx, sy, gx, gy, inflated)
 
-        # 1. 目标吸引势能与起始扩散势能
-        dist_to_goal = np.hypot(X - gx, Y - gy)
-        dist_to_start = np.hypot(X - sx, Y - sy)
-        direct_dist = math.hypot(gx - sx, gy - sy) + 1e-4
-
-        # 椭圆走廊先验: dist(start, p) + dist(p, goal) - direct_dist
-        corridor = (dist_to_start + dist_to_goal) - direct_dist
-        guidance = np.exp(-corridor / 2.0)
-
-        # 2. 障碍物负向排斥掩码
+        feats = guidance_features(h, w, sx, sy, gx, gy, inflated)
+        guidance = self.guidance_net.forward(feats).reshape(h, w).astype(np.float32)
+        # 障碍栅格硬约束为 0（安全层，不依赖网络精度）
         guidance[inflated] = 0.0
-        return guidance.astype(np.float32)
+        return guidance
 
     def plan(
         self,
@@ -348,39 +440,82 @@ class NeuralAStarPlanner(BaselineAStarPlanner):
 class NeuralLocalAvoidancePolicy:
     """基于深度策略网络的水下声呐局部动态避障规划器"""
 
-    def __init__(self, safe_margin: float = 0.65, max_speed: float = 0.6):
+    def __init__(self, safe_margin: float = 0.65, max_speed: float = 0.6,
+                 weights_path=None, zero_weights: bool = False):
         self.safe_margin = safe_margin
         self.max_speed = max_speed
+        self.weights_loaded = False
+        self.weights_source = "handcrafted_fallback"
+        self.zero_weights = zero_weights
 
-        # 策略网络权重初始化 (76 维状态输入 -> 3 维速度输出: vx, vy, wz)
-        # 输入: 72维声呐归一化距离, 目标距离, sin(目标方位角), cos(目标方位角), 当前线速度
-        self.W1 = np.zeros((76, 128), dtype=np.float32)
-        self.b1 = np.zeros(128, dtype=np.float32)
-        self.W2 = np.zeros((128, 64), dtype=np.float32)
-        self.b2 = np.zeros(64, dtype=np.float32)
-        self.W3 = np.zeros((64, 3), dtype=np.float32)
-        self.b3 = np.zeros(3, dtype=np.float32)
+        # 策略网络权重 (76 维状态输入 -> 3 维速度输出: vx, vy, wz)
+        # 输入: 72维声呐归一化距离, 目标距离, sin/cos(目标方位角), 当前线速度
+        if zero_weights:
+            self.W1 = np.zeros((76, 128), dtype=np.float32)
+            self.b1 = np.zeros(128, dtype=np.float32)
+            self.W2 = np.zeros((128, 64), dtype=np.float32)
+            self.b2 = np.zeros(64, dtype=np.float32)
+            self.W3 = np.zeros((64, 3), dtype=np.float32)
+            self.b3 = np.zeros(3, dtype=np.float32)
+            self.weights_source = "zero_ablation"
+            self.weights_loaded = True
+            return
 
-        # 1. 目标吸引与对准通道:
-        # state[73] 是 sin(target_angle)，对准目标航向
-        self.W1[73, :32] = 1.2
-        self.W2[:32, :16] = 1.0
-        self.W3[:16, 2] = 0.8  # wz
+        candidates = []
+        if weights_path:
+            candidates.append(weights_path)
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        candidates.append(os.path.join(cur_dir, "local_policy_weights.npz"))
+        try:
+            from ament_index_python.packages import get_package_share_directory
+            share = get_package_share_directory('rov_mujoco')
+            candidates.append(os.path.join(share, "local_policy_weights.npz"))
+            candidates.append(os.path.join(share, "rov_mujoco", "local_policy_weights.npz"))
+        except Exception:
+            pass
 
-        # state[74] 是 cos(target_angle)，前向推进
-        self.W1[74, 32:64] = 1.0
-        self.W2[32:64, 16:32] = 1.0
-        self.W3[16:32, 0] = 1.0  # vx
+        for path in candidates:
+            if os.path.exists(path):
+                try:
+                    data = np.load(path)
+                    self.W1 = data["w1"].astype(np.float32)
+                    self.b1 = data["b1"].astype(np.float32)
+                    self.W2 = data["w2"].astype(np.float32)
+                    self.b2 = data["b2"].astype(np.float32)
+                    self.W3 = data["w3"].astype(np.float32)
+                    self.b3 = data["b3"].astype(np.float32)
+                    if self.W1.shape != (76, 128) or self.W3.shape != (64, 3):
+                        raise ValueError("local_policy_weights.npz 形状不匹配 76-128-64-3")
+                    self.weights_loaded = True
+                    self.weights_source = path
+                    break
+                except Exception as exc:
+                    print(f"[WARN] 局部避障策略权值加载失败 ({path}): {exc}")
+                    break
 
-        # 2. 72 束前视声呐左右扇区差分动态避障通道:
-        # 0~35 为左侧波束（障碍近 -> 减小 -> 产生向右负偏航力矩）
-        # 36~71 为右侧波束（障碍近 -> 减小 -> 产生向左正偏航力矩）
-        for b in range(36):
-            self.W1[b, 64:96] = -0.6 / 36.0
-        for b in range(36, 72):
-            self.W1[b, 64:96] = +0.6 / 36.0
-        self.W2[64:96, 32:48] = 1.0
-        self.W3[32:48, 2] = 1.2
+        if not self.weights_loaded:
+            # 旧版手工权值仅作为权值文件缺失时的兜底
+            self.W1 = np.zeros((76, 128), dtype=np.float32)
+            self.b1 = np.zeros(128, dtype=np.float32)
+            self.W2 = np.zeros((128, 64), dtype=np.float32)
+            self.b2 = np.zeros(64, dtype=np.float32)
+            self.W3 = np.zeros((64, 3), dtype=np.float32)
+            self.b3 = np.zeros(3, dtype=np.float32)
+
+            self.W1[73, :32] = 1.2
+            self.W2[:32, :16] = 1.0
+            self.W3[:16, 2] = 0.8
+
+            self.W1[74, 32:64] = 1.0
+            self.W2[32:64, 16:32] = 1.0
+            self.W3[16:32, 0] = 1.0
+
+            for b in range(36):
+                self.W1[b, 64:96] = -0.6 / 36.0
+            for b in range(36, 72):
+                self.W1[b, 64:96] = +0.6 / 36.0
+            self.W2[64:96, 32:48] = 1.0
+            self.W3[32:48, 2] = 1.2
 
     def compute_cmd(
         self,
@@ -414,41 +549,35 @@ class NeuralLocalAvoidancePolicy:
         state[74] = math.cos(rel_target_angle)
         state[75] = np.clip(current_vx / self.max_speed, -1.0, 1.0)
 
-        # 策略网络前向推理
+        # 策略网络前向推理（输出即控制量，不再叠加手写航向项）
         h1 = np.tanh(state @ self.W1 + self.b1)
         h2 = np.tanh(h1 @ self.W2 + self.b2)
         out = np.tanh(h2 @ self.W3 + self.b3)
 
-        # 基础速度映射 (平滑航向跟踪，转弯时保持前向水动力自稳走廊)
-        speed_factor = max(0.35, float(math.cos(rel_target_angle)))
-        vx = float(np.clip(self.max_speed * speed_factor, 0.18, self.max_speed))
-        vy = float(np.clip(out[1] * 0.20, -0.20, 0.20))
-        wz = float(np.clip(0.40 * out[2] + 0.45 * rel_target_angle, -0.55, 0.55))
+        # 输出语义（与 train/train_local_policy.py 的专家标签一致）:
+        #   out[0] ∈ [-1,1] -> vx ∈ [0, max_speed]
+        #   out[1] ∈ [-1,1] -> vy ∈ [-0.20, 0.20] m/s
+        #   out[2] ∈ [-1,1] -> wz ∈ [-1.2, 1.2] rad/s (WZ_SCALE, 与训练标签一致)
+        vx = float(np.clip(0.5 * self.max_speed * (out[0] + 1.0), 0.0, self.max_speed))
+        vy = float(np.clip(0.20 * out[1], -0.20, 0.20))
+        wz = float(np.clip(1.2 * out[2], -0.9, 0.9))
 
-        # 碰撞安全保障（动态势场自愈与近距紧急制动）
-        in_avoidance = False
-        if min_dist < self.safe_margin:
-            in_avoidance = True
-            # 声呐分左右扇区计算排斥力矩
-            left_sector = ranges[:36]
-            right_sector = ranges[36:]
-            left_min = float(np.min(left_sector))
-            right_min = float(np.min(right_sector))
+        in_avoidance = bool(min_dist < self.safe_margin)
 
-            # 向距离更开阔的一侧主动避障转舵
-            avoid_gain = 1.5 * (self.safe_margin - min_dist)
-            if left_min < right_min:
-                wz -= avoid_gain  # 右转避障
-                vy -= 0.22
+        # 安全层 (shield)：正常避障由网络输出；0.5 m 内的紧急反射由几何规则兜底，
+        # 保证即使网络对完全对称场景估计保守，也不会直冲障碍。
+        if min_dist < 0.50:
+            left_min = float(np.min(ranges[36:]))    # 正角度 = 左舷
+            right_min = float(np.min(ranges[:36]))   # 负角度 = 右舷
+            reflex = 2.0 * (0.50 - min_dist) / 0.50
+            if left_min >= right_min:
+                wz = float(np.clip(wz + reflex, -0.9, 0.9))
             else:
-                wz += avoid_gain  # 左转避障
-                vy += 0.22
-
-            # 若前方极近范围内存在障碍，主动减速甚至制动，避免盲目前冲
-            if min_dist < 0.45:
+                wz = float(np.clip(wz - reflex, -0.9, 0.9))
+            if min_dist < 0.30:
                 vx = 0.0
             else:
-                vx = max(0.05, vx * ((min_dist - 0.3) / max(0.01, self.safe_margin - 0.3)))
+                vx *= 0.6
 
         return {
             "vx": vx,
