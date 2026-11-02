@@ -1,0 +1,4 @@
+mujoco
+numpy
+imageio
+imageio-ffmpeg
