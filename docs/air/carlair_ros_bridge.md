@@ -133,11 +133,12 @@ bgr = buf.reshape(resp.height, resp.width, 4)[:, :, :3]
 
 `DepthPlanar` 给出的是**沿光轴的平面深度**而不是透视深度，两者在针孔模型下满足
 
-```text
-Z_planar = Z_perspective · cos θ ,  θ 为该像素与光轴的夹角
-```
+$$
+Z_{\mathrm{planar}} = Z_{\mathrm{perspective}} \cos\theta,
+\quad \theta \text{ 为该像素与光轴的夹角}
+$$
 
-因此平面深度可以直接按针孔模型反投影：`[X, Y, Z]ᵀ = Z_planar · K⁻¹ · [u, v, 1]ᵀ`。
+因此平面深度可以直接按针孔模型反投影：$[X, Y, Z]^\top = Z_{\mathrm{planar}} K^{-1} [u, v, 1]^\top$。
 
 ### 6.2 点云：坐标系与位姿变换
 
@@ -226,7 +227,13 @@ rostopic hz /imu
 rostopic echo -n1 /imu
 ```
 
-![IMU 50 Hz](../img/air/carlair_ros_bridge/imu_hz.png)
+示例输出（悬停）：
+
+```text
+$ rostopic hz /imu
+average rate: 50.000
+	min: 0.019s max: 0.021s std dev: 0.00052s window: 50
+```
 
 ### 6.7 相机模型与深度点云
 
@@ -240,19 +247,26 @@ rostopic echo -n1 /imu
 
 针孔模型：
 
-```text
-fx = fy = W / (2 * tan(FOV / 2))
-cx = W / 2,  cy = H / 2
-K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
-```
+$$
+f_x = f_y = \frac{W}{2\tan(\mathrm{FOV}/2)},
+\quad c_x = \frac{W}{2}, \quad c_y = \frac{H}{2}
+$$
+
+$$
+K = \begin{bmatrix}
+f_x & 0 & c_x \\
+0 & f_y & c_y \\
+0 & 0 & 1
+\end{bmatrix}
+$$
 
 深度反投影（`DepthPlanar` 的 Z 就是沿光轴深度）：
 
-```text
-X = (u - cx) * Z / fx
-Y = (v - cy) * Z / fy
-Z = depth
-```
+$$
+X = \frac{(u-c_x)Z}{f_x}, \quad
+Y = \frac{(v-c_y)Z}{f_y}, \quad
+Z = Z_{\mathrm{depth}}
+$$
 
 点云过滤 `Z <= 0`、`Z >= 100 m` 和 65504 哨兵值；相机 TF 为 `base_link -> front_rgb/front_depth`，安装偏移由 `camera/mount_x/y/z` 配置。
 
