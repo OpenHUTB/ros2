@@ -3,7 +3,7 @@
   <name>uav_mujoco_depth_avoidance</name>
   <version>0.1.0</version>
   <description>UAV depth-camera obstacle avoidance in MuJoCo: numpy CNN perception (sector clearance), keyboard teleop and closed-loop ROS 2 node.</description>
-  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <maintainer email="nikedordo@gmail.com">nikedordo-debug</maintainer>
   <license>MIT</license>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>

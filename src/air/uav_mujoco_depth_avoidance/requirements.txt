@@ -2,3 +2,4 @@ numpy>=1.20
 mujoco>=3.0
 matplotlib>=3.3
 pillow>=8.0
+pytest>=7.0

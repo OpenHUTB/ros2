@@ -32,26 +32,26 @@
 
 ### 3.1 四旋翼动力学与控制抽象
 
-状态 $\mathbf{p}\in\mathbb{R}^3$、速度 $\mathbf{v}$、偏航角 $\psi$。MuJoCo 用 RK4 以 $\Delta t_{sim}=5$ ms 积分；控制层以 $T=50$ ms 下发一次指令，中间跑 10 个子步。
+状态 \(\mathbf{p}\in\mathbb{R}^3\)、速度 \(\mathbf{v}\)、偏航角 \(\psi\)。MuJoCo 用 RK4 以 \(\Delta t_{sim}=5\) ms 积分；控制层以 \(T=50\) ms 下发一次指令，中间跑 10 个子步。
 
-外环（速度伺服）把期望速度 $\mathbf{v}^{d}$ 变成世界系加速度：
+外环（速度伺服）把期望速度 \(\mathbf{v}^{d}\) 变成世界系加速度：
 
-$$
+\[
 \mathbf{a}^{d} = k_v\left(\mathbf{v}^{d} - \mathbf{v}\right) + g\,\mathbf{e}_z,
 \qquad
 \mathbf{F} = m\,\mathbf{a}^{d},\quad m = 1.12\ \text{kg}
-$$
+\]
 
-其中 $\mathbf{v}^{d} = v_x^{d}\,[\cos\psi, \sin\psi, 0]^\top$，$k_v = 2.5$，$m$ 直接从模型 `body_subtreemass` 读取（避免手填质量与模型不一致）。
+其中 \(\mathbf{v}^{d} = v_x^{d}\,[\cos\psi, \sin\psi, 0]^\top\)，\(k_v = 2.5\)，\(m\) 直接从模型 `body_subtreemass` 读取（避免手填质量与模型不一致）。
 
-内环（姿态 PD）把机体系 $z$ 轴拉回世界 $z$ 轴，同时跟踪偏航：
+内环（姿态 PD）把机体系 \(z\) 轴拉回世界 \(z\) 轴，同时跟踪偏航：
 
-$$
+\[
 \boldsymbol{\tau} = k_\theta\left(\mathbf{z}_b \times \mathbf{e}_z\right) - k_\omega\,\boldsymbol{\omega}
 + k_\psi^{y}\left(\psi^{ref}-\psi\right)\mathbf{e}_z - k_\omega^{y}\,\omega_z
-$$
+\]
 
-$\mathbf{z}_b$ 是机体 $z$ 轴在世界系的表示，$\boldsymbol{\omega}$ 是角速度，取 $k_\theta=3.0$、$k_\omega=0.35$、$k_\psi^{y}=2.5$、$k_\omega^{y}=0.9$，力矩限幅 $\pm 4$ N·m。
+\(\mathbf{z}_b\) 是机体 \(z\) 轴在世界系的表示，\(\boldsymbol{\omega}\) 是角速度，取 \(k_\theta=3.0\)、\(k_\omega=0.35\)、\(k_\psi^{y}=2.5\)、\(k_\omega^{y}=0.9\)，力矩限幅 \(\pm 4\) N·m。
 
 > 这一层是"推力矢量抽象"：真实多旋翼靠四个电机的转速差产生力矩，这里把姿态内环简化为力矩伺服，
 > 但质量、惯量、重力、碰撞、积分全部由 MuJoCo 承担，因此外环看到的速度响应仍然是非线性的，
@@ -59,71 +59,71 @@ $\mathbf{z}_b$ 是机体 $z$ 轴在世界系的表示，$\boldsymbol{\omega}$ �
 
 ### 3.2 深度相机模型
 
-相机固定在机头前 0.18 m、离机体中心 0.02 m，视场角 80°，分辨率 64×64，输出米制深度 $z(u,v)$。渲染得到的是透视深度，直接截断到 8 m：
+相机固定在机头前 0.18 m、离机体中心 0.02 m，视场角 80°，分辨率 64×64，输出米制深度 \(z(u,v)\)。渲染得到的是透视深度，直接截断到 8 m：
 
-$$
+\[
 \tilde z = \min\left(z,\; z_{max}\right),\qquad z_{max}=8\ \text{m}
-$$
+\]
 
-机头方向为 $+x$。相机姿态四元数为 $q=(0.5,0.5,-0.5,-0.5)$，它把 $-z_{cam}$ 对齐到 $+x$、$+y_{cam}$ 对齐到 $+z$，
-即"看向机头方向、并且上方向是天空"——这个四元数是按 $R=[-\mathbf{e}_y,\ \mathbf{e}_z,\ -\mathbf{e}_x]$ 反解出来的，
+机头方向为 \(+x\)。相机姿态四元数为 \(q=(0.5,0.5,-0.5,-0.5)\)，它把 \(-z_{cam}\) 对齐到 \(+x\)、\(+y_{cam}\) 对齐到 \(+z\)，
+即"看向机头方向、并且上方向是天空"——这个四元数是按 \(R=[-\mathbf{e}_y,\ \mathbf{e}_z,\ -\mathbf{e}_x]\) 反解出来的，
 `test_uav_nav.py` 里的画面方向问题（早期版本上下颠倒）就是靠这一步修正的。
 
 ### 3.3 标签：三扇区通行度
 
 把 64×64 深度图按列三等分，忽略下方 38% 的地面像素（否则地面永远比障碍近，标签失效）：
 
-$$
+\[
 c_k = \frac{1}{z_{max}}\min_{(u,v)\in \Omega_k,\ v<0.62H}\tilde z(u,v),
 \qquad k\in\{L,M,R\}
-$$
+\]
 
-$\Omega_L$ 取列 $[0, w/3-1)$，$\Omega_M$ 取 $[w/3+1, 2w/3-1)$，$\Omega_R$ 取 $[2w/3+1, w)$。
-$c_k\in[0,1]$，含义是"这个方向还有多少余量"：$c=1$ 表示 8 m 内没有东西，$c\approx0.02$ 表示贴脸。
+\(\Omega_L\) 取列 \([0, w/3-1)\)，\(\Omega_M\) 取 \([w/3+1, 2w/3-1)\)，\(\Omega_R\) 取 \([2w/3+1, w)\)。
+\(c_k\in[0,1]\)，含义是"这个方向还有多少余量"：\(c=1\) 表示 8 m 内没有东西，\(c\approx0.02\) 表示贴脸。
 
 ### 3.4 网络结构
 
-输入是 $32\times32$ 的"通行度图" $\mathbf{x}=1-\tilde z/z_{max}$（64×64 做 2×2 平均池化），不是原始米制深度——
+输入是 \(32\times32\) 的"通行度图" \(\mathbf{x}=1-\tilde z/z_{max}\)（64×64 做 2×2 平均池化），不是原始米制深度——
 这样输入与输出同一量纲，训练更稳定。
 
-$$
+\[
 \begin{aligned}
 \mathbf{z}_1 &= \mathrm{im2col}(\mathbf{x})\mathbf{W}_1+\mathbf{b}_1, & \mathbf{a}_1 &= \mathrm{ReLU}(\mathbf{z}_1) & (32^2\to15^2,\ 6\ \text{通道})\\
 \mathbf{z}_2 &= \mathrm{im2col}(\mathbf{a}_1)\mathbf{W}_2+\mathbf{b}_2, & \mathbf{a}_2 &= \mathrm{ReLU}(\mathbf{z}_2) & (15^2\to7^2,\ 12\ \text{通道})\\
 \mathbf{z}_3 &= \mathbf{a}_2\mathbf{W}_3+\mathbf{b}_3, & \mathbf{a}_3 &= \mathrm{ReLU}(\mathbf{z}_3) & (588\to32)\\
 \hat{\mathbf{c}} &= \sigma(\mathbf{a}_3\mathbf{W}_4+\mathbf{b}_4) & &
 \end{aligned}
-$$
+\]
 
 参数量（与程序输出 `params = 19667` 一致）：
 
-$$
+\[
 (9\cdot1\cdot6+6)+(9\cdot6\cdot12+12)+(7^2\cdot12\cdot32+32)+(32\cdot3+3)
 = 60+660+18848+99 = 19667
-$$
+\]
 
-损失为三个扇区的平方误差，梯度由手写反向传播给出（im2col/col2im 处理卷积的 $3\times3$ 重叠），优化器 Adam（$lr=2\times10^{-3}$）：
+损失为三个扇区的平方误差，梯度由手写反向传播给出（im2col/col2im 处理卷积的 \(3\times3\) 重叠），优化器 Adam（\(lr=2\times10^{-3}\)）：
 
-$$
+\[
 J(\theta)=\frac{1}{N}\sum_{i=1}^{N}\sum_{k=1}^{3}\left(\hat c_{ik}-c_{ik}\right)^2
-$$
+\]
 
 ### 3.5 控制律
 
-设网络预测 $\hat{\mathbf{c}}=(\hat c_L,\hat c_M,\hat c_R)$，则
+设网络预测 \(\hat{\mathbf{c}}=(\hat c_L,\hat c_M,\hat c_R)\)，则
 
-$$
+\[
 v_x = v_{max}\cdot\mathrm{clip}\!\left(\frac{\hat c_M-c_{safe}}{c_{nom}-c_{safe}},\,0.12,\,1\right)
-$$
+\]
 
-$$
+\[
 \dot\psi = k_\psi(\hat c_L-\hat c_R) - k_{head}\,\psi + k_{esc}\cdot\mathbb{1}[\hat c_M<c_{safe}]\cdot\mathrm{sign}(\hat c_L-\hat c_R)
-$$
+\]
 
-取 $v_{max}=2.4$ m/s、$c_{safe}=0.14$、$c_{nom}=0.5$、$k_\psi=1.5$、$k_{head}=1.2$、$k_{esc}=1.4$、$|\dot\psi|\le1.5$ rad/s。
+取 \(v_{max}=2.4\) m/s、\(c_{safe}=0.14\)、\(c_{nom}=0.5\)、\(k_\psi=1.5\)、\(k_{head}=1.2\)、\(k_{esc}=1.4\)、\(|\dot\psi|\le1.5\) rad/s。
 
 三项的物理含义：**限速**（前方越挤越慢）、**绕行**（朝更空的一侧转）、**逃逸**（贴脸时强制转开）。
-$k_{head}\psi$ 这一项是调参时踩坑后加的：没有它，只要左右通行度存在固定差，飞机就会一直朝同一侧转、
+\(k_{head}\psi\) 这一项是调参时踩坑后加的：没有它，只要左右通行度存在固定差，飞机就会一直朝同一侧转、
 原地绕圈而不前进（实测第一版 9 次全部失败，前进距离为负）。
 
 ## 4. 算法流程
@@ -164,7 +164,7 @@ $k_{head}\psi$ 这一项是调参时踩坑后加的：没有它，只要左右�
 
 - **场景复用**：6 根柱子在 XML 里只定义一次，`set_scene()` 按布局改写 `model.geom_pos`；
   改完必须 `mj_forward()` 重算运动学，否则渲染仍用旧位置（这是测试 `test_depth_reacts_to_obstacle` 抓出来的 bug）。
-- **标签与输入同量纲**：网络输入是 $1-z/z_{max}$，输出是 $1-z_{min}/z_{max}$，两者都是"通行度"，避免了输入输出尺度差 8 倍。
+- **标签与输入同量纲**：网络输入是 \(1-z/z_{max}\)，输出是 \(1-z_{min}/z_{max}\)，两者都是"通行度"，避免了输入输出尺度差 8 倍。
 - **地面像素必须排除**：相机水平看出去，画面下缘几乎全是地面（1.5 m 高、80° 视场），
   不排除的话三个扇区的"最近距离"会被地面统一压到 1.4–2.6 m，标签失去区分度（第一版就是这个现象）。
 - **碰撞检测**：遍历 `data.contact`，若接触的一对几何体里有无人机刚体就置 `crashed=True`。
@@ -259,7 +259,7 @@ ros2 topic pub /uav/scene std_msgs/String "{data: gate}" -1                  # �
 | --- | --- |
 | 参数量 | 19,667 |
 | 训练 MSE（第 1 轮 → 第 14 轮） | 0.0205 → **0.00239** |
-| 验证 MAE（左/中/右） | **0.033 / 0.047 / 0.052**（通行度值域 $[0,1]$） |
+| 验证 MAE（左/中/右） | **0.033 / 0.047 / 0.052**（通行度值域 \([0,1]\)） |
 
 ![训练曲线](../img/air/uav_depth_avoid_training.png)
 
@@ -288,7 +288,7 @@ ros2 topic pub /uav/scene std_msgs/String "{data: gate}" -1                  # �
 ## 8. 局限与后续
 
 - 感知只做"三扇区最低余量"，没有做地形/可通行区域分割；复杂三维结构（悬空横梁、细网）可能被低估。
-- 控制律是手工设计的势场式规则，不是学习出来的；若要做端到端（任务 4），可把 §3.5 换成网络直接输出 $(\dot\psi, v_x)$。
+- 控制律是手工设计的势场式规则，不是学习出来的；若要做端到端（任务 4），可把 §3.5 换成网络直接输出 \((\dot\psi, v_x)\)。
 - 场景只用柱子与三面墙，尚未接入 OpenHUTB/AirSim 的真实城市模型；`env.py` 的接口（`step(vx, yaw_rate)`、
   `depth()`）是为替换仿真后端预留的，替换时上层 `policy.py` 不需要改。
 
