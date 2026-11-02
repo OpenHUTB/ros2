@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+from auv_end2end.auv_obstacle_avoid import main
+
+if __name__ == '__main__':
+    main()
+
