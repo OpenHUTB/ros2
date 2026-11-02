@@ -1,0 +1,35 @@
+﻿<?xml version="1.0"?>
+<launch>
+  <arg name="mode" default="teleop"/>
+  <arg name="scene" default="pool"/>
+  <arg name="goal_x" default="2.6"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="terminal" default="true"/>
+  <node pkg="rov_mujoco_slam_nn_nav" type="sim_node.py" name="rov_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+  </node>
+  <group if="$(eval arg('mode') == 'teleop')">
+    <node if="$(arg terminal)" pkg="rov_mujoco_slam_nn_nav" type="teleop_node.py" name="rov_teleop"
+          launch-prefix="xterm -e" output="screen"/>
+    <node unless="$(arg terminal)" pkg="rov_mujoco_slam_nn_nav" type="teleop_node.py" name="rov_teleop" output="screen"/>
+  </group>
+  <group if="$(eval arg('mode') == 'nav')">
+    <node pkg="rov_mujoco_slam_nn_nav" type="nav_node.py" name="rov_nav" output="screen">
+      <param name="goal_x" value="$(arg goal_x)"/>
+      <param name="goal_y" value="$(arg goal_y)"/>
+    </node>
+    <node pkg="rov_mujoco_slam_nn_nav" type="metrics_node.py" name="rov_metrics" output="screen">
+      <param name="mode" value="classical"/>
+      <param name="scene" value="$(arg scene)"/>
+      <param name="goal_x" value="$(arg goal_x)"/>
+      <param name="goal_y" value="$(arg goal_y)"/>
+    </node>
+  </group>
+  <group if="$(eval arg('mode') == 'e2e')">
+    <node pkg="rov_mujoco_slam_nn_nav" type="e2e_node.py" name="rov_e2e" output="screen"/>
+    <node pkg="rov_mujoco_slam_nn_nav" type="metrics_node.py" name="rov_metrics" output="screen">
+      <param name="mode" value="e2e"/>
+      <param name="scene" value="$(arg scene)"/>
+    </node>
+  </group>
+</launch>

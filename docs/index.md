@@ -241,4 +241,5 @@ ___
 
 ___
 
+* [ROV 水下机器人 MuJoCo 建图导航与神经网络控制](./water/rov_mujoco_slam_nn_nav/README.md)
 ## 参考文献
