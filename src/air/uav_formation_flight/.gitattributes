@@ -1,0 +1,11 @@
+# 本模块统一使用 LF：仓库根目录未设 .gitattributes，若在 Windows 上以 CRLF 提交，
+# 其它模块的同类情况会让工作区长期显示为“已修改”（见 docs/air/uav_formation_flight.md）。
+* text=auto eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.launch text eol=lf
+*.md text eol=lf
+*.xml text eol=lf
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.png binary
+*.gif binary
