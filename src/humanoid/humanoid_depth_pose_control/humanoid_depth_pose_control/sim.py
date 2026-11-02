@@ -66,30 +66,42 @@ class DepthPoseSim:
         return self.root_z < z_thresh
 
     def torso_pose(self):
-        """返回躯干 (pitch, roll, yaw) 弧度。"""
+        """返回躯干 (pitch, roll, yaw) 弧度，ZYX欧拉角顺序。"""
         qw, qx, qy, qz = self.data.qpos[3:7]
-        # pitch (绕y轴)
-        sinp = 2*(qw*qy - qz*qx)
-        pitch = float(np.arcsin(np.clip(sinp, -1, 1)))
         # roll (绕x轴)
-        sinr = 2*(qw*qx + qy*qz)
-        roll = float(np.arcsin(np.clip(sinr, -1, 1)))
+        sinr_cosp = 2 * (qw * qx + qy * qz)
+        cosr_cosp = 1 - 2 * (qx * qx + qy * qy)
+        roll = float(np.arctan2(sinr_cosp, cosr_cosp))
+        # pitch (绕y轴)
+        sinp = 2 * (qw * qy - qz * qx)
+        pitch = float(np.arcsin(np.clip(sinp, -1, 1)))
         # yaw (绕z轴)
-        siny = 2*(qw*qz + qx*qy)
-        yaw = float(np.arcsin(np.clip(siny, -1, 1)))
+        siny_cosp = 2 * (qw * qz + qx * qy)
+        cosy_cosp = 1 - 2 * (qy * qy + qz * qz)
+        yaw = float(np.arctan2(siny_cosp, cosy_cosp))
         return pitch, roll, yaw
 
     def render_depth(self):
-        """渲染深度图，返回 (H,W) float32，值为距离(m)，归一化到[0,1]。"""
+        """渲染深度图，返回 (H,W) float32，归一化到[0,1]。
+
+        使用MuJoCo离屏渲染的真实深度缓冲，而非RGB亮度近似。
+        """
         if self._renderer is None:
             self._renderer = mujoco.Renderer(self.model, self.image_h, self.image_w)
         self._renderer.update_scene(self.data, camera=self._cam_id)
-        # mujoco Renderer 渲染 RGB；深度图需要 offscreen
-        img = self._renderer.render()
-        # 用亮度近似深度（近处亮远处暗）
-        gray = 0.299*img[..., 0] + 0.587*img[..., 1] + 0.114*img[..., 2]
-        depth_map = 1.0 - gray.astype(np.float32)/255.0
-        return depth_map
+        # MuJoCo 2.3+ 支持 render(depth=True) 获取真实深度缓冲
+        try:
+            depth = self._renderer.render(depth=True)
+            # 深度值为距离(m)，归一化到[0,1]（近处=0，远处=1）
+            znear = self.model.vis.map.znear
+            zfar = self.model.vis.map.zfar
+            depth_norm = np.clip((depth - znear) / (zfar - znear), 0.0, 1.0)
+            return depth_norm.astype(np.float32)
+        except TypeError:
+            # 旧版MuJoCo不支持depth参数，回退到RGB亮度近似
+            img = self._renderer.render()
+            gray = 0.299*img[..., 0] + 0.587*img[..., 1] + 0.114*img[..., 2]
+            return (1.0 - gray.astype(np.float32)/255.0)
 
     def close(self):
         if self._renderer is not None:

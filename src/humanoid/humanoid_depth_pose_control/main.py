@@ -47,7 +47,7 @@ def run_check():
           f"(pitch={p:.3f}, roll={r:.3f})")
 
     ctrl = ProportionalController()
-    t = ctrl.target_for(p, r)
+    t = ctrl.target_for(p, r, y)
     check("控制器输出", t.shape == (15,))
 
     sim.close()
@@ -68,7 +68,7 @@ def run_demo(force=120, direction=0):
     for i in range(1500):
         depth = sim.render_depth()
         p, r, y = pred.predict_from_depth(depth)
-        target = ctrl.target_for(p, r)
+        target = ctrl.target_for(p, r, y)
         sim.step(target=target)
         if sim.fallen():
             print(f"  [demo] 跌倒 @ step {i}")
