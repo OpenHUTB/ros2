@@ -58,6 +58,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 - **IMU**：`/imu` 的姿态是 ENU 世界系，角速度和线加速度已从 AirSim 机体系 NED
   转成 ROS 机体系 FLU（前-左-上）；线加速度包含重力分量，做纯运动加速度时需自行扣除。
   默认 `rate/imu_hz: 50.0`，`frame/imu: base_link`。
+  `/uav/odom` 的 `base_link` 也使用同一 FLU 约定（`get_state_enu()` 已切到 `airsim_quat_to_ros_quat_flu()`），两话题姿态可直接融合。
 - **相机模型**：`camera_model_pub.py` 按针孔模型发布 `CameraInfo` 和深度点云：
   `fx = W / (2·tan(FOV/2))`，主点在图像中心；深度按 `X=(u-cx)Z/fx`、`Y=(v-cy)Z/fy` 反投影，
   过滤 `Z<=0`、`Z>=100 m` 和 65504 哨兵值。相机 TF 为 `base_link → front_rgb/front_depth`，

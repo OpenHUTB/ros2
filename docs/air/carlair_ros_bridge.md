@@ -133,11 +133,12 @@ bgr = buf.reshape(resp.height, resp.width, 4)[:, :, :3]
 
 `DepthPlanar` 给出的是**沿光轴的平面深度**而不是透视深度，两者在针孔模型下满足
 
-```text
-Z_planar = Z_perspective · cos θ ,  θ 为该像素与光轴的夹角
-```
+$$
+Z_{\mathrm{planar}} = Z_{\mathrm{perspective}} \cos\theta,
+\quad \theta \text{ 为该像素与光轴的夹角}
+$$
 
-因此平面深度可以直接按针孔模型反投影：`[X, Y, Z]ᵀ = Z_planar · K⁻¹ · [u, v, 1]ᵀ`。
+因此平面深度可以直接按针孔模型反投影：$[X, Y, Z]^\top = Z_{\mathrm{planar}} K^{-1} [u, v, 1]^\top$。
 
 ### 6.2 点云：坐标系与位姿变换
 
@@ -212,7 +213,24 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false
 python3 tests/test_sensors_local.py    # 80 项，全部通过
 ```
 
-### 6.6 相机模型与深度点云
+### 6.6 IMU
+
+`imu_pub.py` 发布 `/imu`（`sensor_msgs/Imu`，默认 50 Hz）：
+
+- 姿态：ENU 世界系；
+- 角速度 / 线加速度：机体系 FLU，AirSim 的机体系 NED 经 `body_ned_to_flu` 转换；
+- 线加速度包含重力分量，纯运动加速度需使用方自行扣除；
+- `frame/imu` 默认 `base_link`，`rate/imu_hz` 默认 50。
+
+示例输出（悬停）：
+
+```text
+$ rostopic hz /imu
+average rate: 50.000
+	min: 0.019s max: 0.021s std dev: 0.00052s window: 50
+```
+
+### 6.7 相机模型与深度点云
 
 `camera_model_pub.py` 订阅 `/camera/image_raw` 与 `/camera/depth`，发布：
 
@@ -224,19 +242,26 @@ python3 tests/test_sensors_local.py    # 80 项，全部通过
 
 针孔模型：
 
-```text
-fx = fy = W / (2 * tan(FOV / 2))
-cx = W / 2,  cy = H / 2
-K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
-```
+$$
+f_x = f_y = \frac{W}{2\tan(\mathrm{FOV}/2)},
+\quad c_x = \frac{W}{2}, \quad c_y = \frac{H}{2}
+$$
+
+$$
+K = \begin{bmatrix}
+f_x & 0 & c_x \\
+0 & f_y & c_y \\
+0 & 0 & 1
+\end{bmatrix}
+$$
 
 深度反投影（`DepthPlanar` 的 Z 就是沿光轴深度）：
 
-```text
-X = (u - cx) * Z / fx
-Y = (v - cy) * Z / fy
-Z = depth
-```
+$$
+X = \frac{(u-c_x)Z}{f_x}, \quad
+Y = \frac{(v-c_y)Z}{f_y}, \quad
+Z = Z_{\mathrm{depth}}
+$$
 
 点云过滤 `Z <= 0`、`Z >= 100 m` 和 65504 哨兵值；相机 TF 为 `base_link -> front_rgb/front_depth`，安装偏移由 `camera/mount_x/y/z` 配置。
 
@@ -244,7 +269,7 @@ Z = depth
 
 ![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
 
-### 6.7 深度避障 demo
+### 6.8 深度避障 demo
 
 `depth_avoidance.py` 订阅 `/camera/depth/points`，取前方走廊内最近点并发布 `/uav/cmd_vel`：
 
@@ -256,7 +281,6 @@ vx = forward_speed             , d >= slow_distance
 ```
 
 默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`、`min_range=0.5`；起飞后 `start_delay=6 s` 再接管。
-节点默认关闭，demo 时：
 
 ```bash
 roslaunch carlair_ros_bridge main.launch host:=<Windows_IP> \
@@ -267,6 +291,7 @@ rostopic echo /uav/cmd_vel
 ```
 
 ![深度避障实测](../img/air/carlair_ros_bridge/depth_avoidance_live.png)
+
 
 ## 7. 运行验证
 
