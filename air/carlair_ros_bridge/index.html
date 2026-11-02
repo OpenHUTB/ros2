@@ -263,6 +263,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#65">6.5 传感器接口验证</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#66-imu">6.6 IMU</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#7">7. 运行验证</a>
@@ -679,6 +681,18 @@ roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.
 <p>本地（无 ROS / 仿真器 / GPU）可先跑桩测试：</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_sensors_local.py<span class="w">    </span><span class="c1"># 80 项，全部通过</span>
 </code></pre></div>
+<h3 id="66-imu">6.6 IMU</h3>
+<p><code>imu_pub.py</code> 发布 <code>/imu</code>（<code>sensor_msgs/Imu</code>，默认 50 Hz）：</p>
+<ul>
+<li>姿态：ENU 世界系；</li>
+<li>角速度 / 线加速度：机体系 FLU，AirSim 的机体系 NED 经 <code>body_ned_to_flu</code> 转换；</li>
+<li>线加速度包含重力分量，纯运动加速度需使用方自行扣除；</li>
+<li><code>frame/imu</code> 默认 <code>base_link</code>，<code>rate/imu_hz</code> 默认 50。</li>
+</ul>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>hz<span class="w"> </span>/imu
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-n1<span class="w"> </span>/imu
+</code></pre></div>
+<p><img alt="IMU 50 Hz" src="../../img/air/carlair_ros_bridge/imu_hz.png"/></p>
 <h2 id="7">7. 运行验证</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 环境自检（5 项：airsim 包、连接、位姿、相机、激光雷达）</span>
 rosrun<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.py
