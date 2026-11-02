@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>lateral_control_benchmark</name>
+  <version>1.0.0</version>
+  <description>
+    地面载具横向控制算法对比实验台：纯跟踪（pure pursuit）、Stanley、LQR 在统一车辆模型、
+    统一参考轨迹与统一指标下做定量比较。核心算法为纯 Python + numpy 实现，不依赖
+    Gazebo/CARLA 等外部仿真器；提供 ROS 1 (Noetic) 节点与 launch 启动入口。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+</package>
