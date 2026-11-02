@@ -1,0 +1,27 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.14, pytest-9.2.0, pluggy-1.7.0 -- C:\Users\JYX\.workbuddy\binaries\python\versions\3.13.12\python.exe
+cachedir: .pytest_cache
+rootdir: D:\ros2_kkyy\src\air\no_fly_zone_check
+collecting ... collected 19 items
+
+test/test_nfz_core.py::test_one_degree_latitude PASSED                   [  5%]
+test/test_nfz_core.py::test_one_degree_longitude_on_equator PASSED       [ 10%]
+test/test_nfz_core.py::test_haversine_symmetry_and_zero PASSED           [ 15%]
+test/test_nfz_core.py::test_bearing_north_and_east PASSED                [ 21%]
+test/test_nfz_core.py::test_path_crossing_zone_is_detected PASSED        [ 26%]
+test/test_nfz_core.py::test_path_parallel_offset_is_safe PASSED          [ 31%]
+test/test_nfz_core.py::test_zone_beyond_segment_endpoint_is_safe PASSED  [ 36%]
+test/test_nfz_core.py::test_buffer_margin_enlarges_zone PASSED           [ 42%]
+test/test_nfz_core.py::test_mission_catches_endpoints_and_path PASSED    [ 47%]
+test/test_nfz_core.py::test_mission_safe_case PASSED                     [ 52%]
+test/test_nfz_core.py::test_mission_with_waypoint_detour_is_safe PASSED  [ 57%]
+test/test_nfz_core.py::test_check_path_requires_two_points PASSED        [ 63%]
+test/test_nfz_core.py::test_segment_distance_projection_inside PASSED    [ 68%]
+test/test_nfz_core.py::test_segment_distance_endpoint_cases PASSED       [ 73%]
+test/test_nfz_core.py::test_segment_distance_perpendicular_accuracy PASSED [ 78%]
+test/test_nfz_core.py::test_point_on_zone_center_hits PASSED             [ 84%]
+test/test_nfz_core.py::test_point_outside_all_zones PASSED               [ 89%]
+test/test_nfz_core.py::test_ned_to_gps_north_and_east PASSED             [ 94%]
+test/test_nfz_core.py::test_ned_to_gps_old_scale_error_is_corrected PASSED [100%]
+
+============================= 19 passed in 0.12s ==============================
