@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+  只起仿真：Gazebo 场景 + 机器人 + 激光雷达。
+  gui=false 时纯无头运行（虚拟机里没有显卡也能跑）。
+
+  用法：
+    roslaunch lidar_mcl_localization sim.launch                  # 无头
+    roslaunch lidar_mcl_localization sim.launch gui:=true         # 带 Gazebo 界面
+-->
+<launch>
+  <arg name="gui" default="false"/>
+  <arg name="paused" default="false"/>
+  <arg name="world" default="$(find lidar_mcl_localization)/worlds/mcl_room.world"/>
+  <arg name="x" default="-3.5"/>
+  <arg name="y" default="0.0"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="spawn_delay" default="5.0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         textfile="$(find lidar_mcl_localization)/urdf/mcl_bot.urdf"/>
+
+  <!-- 延迟 spawn：gazebo 刚启动的几秒内物理还没稳定，立刻生成模型会被接触求解推走
+       ——实测机器人会被推到墙边并原地转 90°，而且每次都是同一个（错误的）位姿，
+       看起来像"定位算法不收敛"。等世界稳定后再生成，则完全不动（实测 6 秒位移 0 mm）。 -->
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_mcl_bot" output="screen"
+        launch-prefix="bash -c 'sleep $(arg spawn_delay); $0 $@'"
+        args="-urdf -param robot_description -model mcl_bot
+              -x $(arg x) -y $(arg y) -z 0.0 -Y $(arg yaw)"/>
+
+  <!-- robot_state_publisher：把 URDF 里的固定关节（base_link -> laser_link 等）
+       发布成 TF。没有它，rviz 里激光点无法变换到 map 系，只能看到粒子云。 -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="robot_description"
+           textfile="$(find lidar_mcl_localization)/urdf/mcl_bot.urdf"/>
+    <param name="publish_frequency" value="30.0"/>
+  </node>
+</launch>
