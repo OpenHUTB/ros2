@@ -361,8 +361,8 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    import sys as _sys
-    _sys.exit(main())
+    import sys
+    sys.exit(main())
 
 
 # --------------------------------------------------------------------------- #
