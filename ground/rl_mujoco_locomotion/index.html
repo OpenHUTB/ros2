@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>MuJoCo Locomotion 强化学习对比实验 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MuJoCo Locomotion \u5f3a\u5316\u5b66\u4e60\u5bf9\u6bd4\u5b9e\u9a8c";
+        var mkdocs_page_input_path = "ground/rl_mujoco_locomotion.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo Locomotion 强化学习对比实验</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_1">项目简介</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">算法原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#ppoproximal-policy-optimization">PPO（Proximal Policy Optimization）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sacsoft-actor-critic">SAC（Soft Actor-Critic）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">环境说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">快速开始</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_5">环境要求</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">安装依赖</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">一键检查环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">快速验证（2 万环境步，约数分钟）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">完整训练（6 组实验）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#gif">渲染推理 GIF</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ros-2">ROS 2 启动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">实验结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_9">学习曲线</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#gif_1">推理 GIF</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">性能对比</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_11">结果分析</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">目录结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_13">源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#nnpy">神经网络（nn.py）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#envpy">环境封装（env.py）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ppoppopy">PPO（ppo.py）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sacsacpy">SAC（sac.py）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_14">测试验证</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_15">测试环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_16">验证步骤</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">MuJoCo Locomotion 强化学习对比实验</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/rl_mujoco_locomotion.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="mujoco-locomotion">MuJoCo Locomotion 强化学习对比实验</h1>
+<h2 id="_1">项目简介</h2>
+<p>本项目在 <strong>MuJoCo</strong>（3.1.6 ~ 3.16.0 实测可运行，本轮数据在 Ubuntu 20.04.6 / Python 3.8.10 / MuJoCo 3.1.6 上产出）物理引擎上，针对三个经典连续控制 locomotion 环境——<strong>HalfCheetah（猎豹奔跑）</strong>、<strong>Ant（蚂蚁四足爬行）</strong>、<strong>Walker2d（二足行走）</strong>——实现了 <strong>PPO</strong> 与 <strong>SAC</strong> 两种强化学习算法的纯 NumPy 手写训练与对比实验。</p>
+<p>与仓库已有项目相比：
+- <strong>环境不同</strong>：仓库已有 RL 项目覆盖无人机导航（DQN <code>air/uav_dqn_nav.md</code>、PPO <code>air/uav_ppo_nav.md</code>、PPO/SAC/TD3 对比 <code>air/uav_rl_benchmark.md</code>）与 Unitree G1 人形机器人（<code>humanoid_lidar_nn_perception.md</code>，MuJoCo 仿真 + ONNX 行走策略）、四足 MuJoCo 仿真桥（<code>quadruped_mujoco_rl.md</code>）；本项目首次引入 MuJoCo 原生 HalfCheetah / Ant / Walker2d 三个地面 locomotion 环境。
+- <strong>算法不同</strong>：仓库既有的 SAC 对比实验基于 Stable-Baselines3（<code>air/uav_rl_benchmark.md</code>）；本项目提供仓库内第一个<strong>纯 NumPy 手写</strong>的 SAC 与 PPO 实现，与 PPO 形成 3 环境 × 2 算法 = 6 组对比矩阵。
+- <strong>实现方式</strong>：全部使用 <strong>NumPy 手写神经网络与反向传播</strong>，不依赖 PyTorch / TensorFlow / Stable-Baselines3。</p>
+<h2 id="_2">算法原理</h2>
+<h3 id="ppoproximal-policy-optimization">PPO（Proximal Policy Optimization）</h3>
+<p>PPO 是一种 on-policy 策略梯度算法，核心目标是限制每次策略更新的幅度，防止训练崩溃。其 clipped surrogate objective 为：</p>
+<p><img alt="PPO clipped surrogate objective" src="../../img/ground/rl_mujoco_locomotion/eq_ppo_clip.png"/></p>
+<p>其中策略概率比 r_t(θ) = π_θ(a_t | s_t) / π_θold(a_t | s_t)，Â_t 为广义优势估计（GAE）：</p>
+<p><img alt="GAE 优势估计" src="../../img/ground/rl_mujoco_locomotion/eq_ppo_gae.png"/></p>
+<p><img alt="TD 误差" src="../../img/ground/rl_mujoco_locomotion/eq_ppo_td.png"/></p>
+<p>本项目使用 Actor-Critic 架构，Actor 输出动作均值（tanh 压缩到 [-1, 1]），Critic 输出状态价值，actor 权重、critic 权重与策略的 <code>log_std</code> 都用 Adam 更新。为保证训练稳定，对 <code>log_std</code> 做了 [-4, 1] 夹紧，对策略/价值梯度做了范数裁剪，surrogate 按 <code>clip_ratio=0.2</code> 做掩码，并在 KL 超过阈值 <code>target_kl</code> 时提前结束本轮更新；此外策略均值梯度会乘上 tanh 的雅可比 <code>(1 - μ²)</code>。</p>
+<h3 id="sacsoft-actor-critic">SAC（Soft Actor-Critic）</h3>
+<p>SAC 是一种 off-policy 最大熵强化学习算法，在最大化累计奖励的同时最大化策略熵，以鼓励探索：</p>
+<p><img alt="SAC 最大熵目标" src="../../img/ground/rl_mujoco_locomotion/eq_sac_objective.png"/></p>
+<p>其中 α 为温度系数，按目标熵 -|A| 自动调节（log α 夹紧在 [ln 0.01, ln 10]）。</p>
+<p>SAC 使用双 Q 网络（Double Q-learning）缓解过估计，Actor 通过重参数化技巧采样动作：</p>
+<p><img alt="SAC 重参数化采样" src="../../img/ground/rl_mujoco_locomotion/eq_sac_reparam.png"/></p>
+<blockquote>
+<p><strong>实现说明</strong>：本项目 SAC 的 actor 梯度采用了<strong>简化推导</strong>（未严格还原 tanh 重参数化的完整 Jacobian 项），因此推理效果与 Stable-Baselines3 等成熟实现存在差距，详见"结果分析"一节。</p>
+</blockquote>
+<h2 id="_3">环境说明</h2>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>状态维度</th>
+<th>动作维度</th>
+<th>任务目标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HalfCheetah</td>
+<td>18</td>
+<td>6</td>
+<td>单足猎豹沿 x 轴快速奔跑</td>
+</tr>
+<tr>
+<td>Ant</td>
+<td>27</td>
+<td>8</td>
+<td>四足蚂蚁保持平衡并向前移动</td>
+</tr>
+<tr>
+<td>Walker2d</td>
+<td>18</td>
+<td>6</td>
+<td>二足机器人稳定行走</td>
+</tr>
+</tbody>
+</table>
+<p>状态由 <code>qpos</code> 与 <code>qvel</code> 直接拼接而成（<code>main.py test</code> 会打印实测维度）。其中 Ant 剔除根节点的 x/y 位置，故为 27 维——注意本实现<strong>不含 Gym 观测里的 84 维接触力项 <code>cfrc_ext</code></strong>，因此与 Gymnasium Ant 的 111 维观测并不等价；HalfCheetah 与 Walker2d 保留了根节点 x 位置，因此是 18 维（Gym 默认的 17 维实现会剔除 x，本项目未剔除，两者数值不可逐项对比）。</p>
+<p>三个环境的 MJCF 模型文件均来自 gymnasium 的 MuJoCo 环境，已复制到 <code>assets/</code> 目录，运行时不依赖 gymnasium；来源与 MIT 许可证说明见 <code>src/rl_mujoco_locomotion/THIRD_PARTY_NOTICES.md</code>。</p>
+<p>奖励函数统一为：</p>
+<div class="highlight"><pre><span></span><code>reward = forward_reward(前进速度) - ctrl_cost(控制代价) - contact_cost(接触冲击代价) + healthy(存活奖励)
+</code></pre></div>
+<p>其中 HalfCheetah 不做提前终止；Ant 与 Walker2d 在机体高度/姿态超出健康范围时提前终止，单集上限 1000 步（与 Gym 默认一致）。</p>
+<h2 id="_4">快速开始</h2>
+<h3 id="_5">环境要求</h3>
+<ul>
+<li>Ubuntu 20.04 / 22.04（推荐，无头渲染走 EGL）</li>
+<li>Windows 11 / macOS（同样支持，渲染自动用 MuJoCo 默认的 <code>glfw</code>）</li>
+<li>Python 3.8+（本轮数据在 3.8.10 上产出，Windows 侧另在 3.14.0 上做过冒烟验证）</li>
+<li>MuJoCo 3.1.6 ~ 3.16.0（本轮数据在 3.1.6 上产出，Windows 侧冒烟验证在 3.16.0 上完成；<code>requirements.txt</code> 只要求 <code>&gt;=2.3.7</code>）</li>
+<li>渲染后端：Linux 无头环境默认 <code>MUJOCO_GL=egl</code>（已在 <code>env.py</code> 中按平台自动设置）；Windows / macOS 自动沿用 MuJoCo 默认的 <code>glfw</code>，无需手动设置，也可用环境变量 <code>MUJOCO_GL</code> 覆盖</li>
+<li>ROS 2（可选，仅用于 launch 入口）</li>
+</ul>
+<h3 id="_6">安装依赖</h3>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/rl_mujoco_locomotion/requirements.txt
+</code></pre></div>
+<h3 id="_7">一键检查环境</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>doctor
+</code></pre></div>
+<h3 id="2">快速验证（2 万环境步，约数分钟）</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>train<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--max-steps<span class="w"> </span><span class="m">20000</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>render<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo
+</code></pre></div>
+<p><code>--max-steps</code> 优先于 <code>--episodes</code>：HalfCheetah 单集 1000 步，因此 2 万步预算实际只会跑到约 20 集（不是 50 集），这是为了控制验证耗时。</p>
+<h3 id="6">完整训练（6 组实验）</h3>
+<p><code>--max-steps</code> 是<strong>总环境步数预算</strong>，到达后自动停止，避免不同环境单集长度差异导致的训练时间失控（Walker2d/Ant 会提前终止，若只按回合数计数会跑出极多回合）。训练 CSV 的列是 <code>episode, episode_return, episode_length, truncated</code>，其中 <code>truncated=1</code> 表示该回合是被"时间上限（1000 步）或总步数预算"强制中断、而不是自然结束（最后一行的 <code>truncated=1</code> 即是被 <code>--max-steps</code> 截断的部分回合）。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 6 组实验，每组 30 万环境步</span>
+<span class="k">for</span><span class="w"> </span>env<span class="w"> </span><span class="k">in</span><span class="w"> </span>halfcheetah<span class="w"> </span>ant<span class="w"> </span>walker2d<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span>alg<span class="w"> </span><span class="k">in</span><span class="w"> </span>ppo<span class="w"> </span>sac<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span>python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>train<span class="w"> </span>--env<span class="w"> </span><span class="nv">$env</span><span class="w"> </span>--alg<span class="w"> </span><span class="nv">$alg</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>--episodes<span class="w"> </span><span class="m">1000000</span><span class="w"> </span>--max-steps<span class="w"> </span><span class="m">300000</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">0</span>
+<span class="w">  </span><span class="k">done</span>
+<span class="k">done</span>
+
+<span class="c1"># 生成 6 组学习曲线对比图</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>compare
+</code></pre></div>
+<h3 id="gif">渲染推理 GIF</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># --stride 表示每隔 N 个环境步保留一帧；单集很短的环境（如 Walker2d）用 1，长集环境用 5~20</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>render<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo<span class="w"> </span>--episodes<span class="w"> </span><span class="m">2</span><span class="w"> </span>--stride<span class="w"> </span><span class="m">5</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>render<span class="w"> </span>--env<span class="w"> </span>ant<span class="w"> </span>--alg<span class="w"> </span>sac<span class="w"> </span>--episodes<span class="w"> </span><span class="m">2</span><span class="w"> </span>--stride<span class="w"> </span><span class="m">5</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>render<span class="w"> </span>--env<span class="w"> </span>walker2d<span class="w"> </span>--alg<span class="w"> </span>ppo<span class="w"> </span>--episodes<span class="w"> </span><span class="m">20</span><span class="w"> </span>--stride<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+<blockquote>
+<p><code>evaluate.py</code> 里对渲染帧数设了 <code>MAX_FRAMES=200</code> 的上限，所以 <code>--episodes 20 --stride 1</code> 的 Walker2d 实际只会录到约 200 帧（约 1.2 个单集），其余组合同理；想录更长需要改这个常量。</p>
+</blockquote>
+<h3 id="ros-2">ROS 2 启动</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;ros2_workspace&gt;
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>rl_mujoco_locomotion
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>rl_mujoco_locomotion<span class="w"> </span>main.launch.py<span class="w"> </span>env:<span class="o">=</span>halfcheetah<span class="w"> </span>alg:<span class="o">=</span>ppo<span class="w"> </span>episodes:<span class="o">=</span><span class="m">50</span>
+</code></pre></div>
+<h2 id="_8">实验结果</h2>
+<blockquote>
+<p>以下全部为<strong>实测数据</strong>（Ubuntu 20.04.6 / Python 3.8.10 / MuJoCo 3.1.6 / NumPy 1.24.4，seed=0，每组 30 万环境步），不是估计值。
+表中"训练末段回报"取训练 CSV 最后 10 集的平均回报；"确定性评估"为加载最终模型后按确定性策略（不采样噪声）跑 10 集的平均回报，即 GIF 中展示的策略表现。</p>
+<p><strong>实现修复记录</strong>（本次数据均由修复后的代码产出）：
+1. <code>RolloutBuffer.get()</code> 取数据时把指针清零，导致 <code>train_iters</code> 从第 2 轮起读到空数据，实际只更新 1 轮 → 改为消费完所有轮次后由 <code>reset()</code> 清空；
+2. <code>SAC</code> 用 <code>get_params()</code> 返回的副本做 Polyak 平均，目标 Q 网络从未更新 → 改用 <code>params()</code> 返回的引用做原地软更新；
+3. <code>PPO</code> 定义了 <code>clip_ratio</code> 却从未使用（只把 ratio 截到 <code>[0, 10]</code> 防溢出）→ 补上真正的 clipped surrogate 掩码、tanh 雅可比，并把 <code>nn.py</code> 里一直闲置的 Adam 接到 PPO 的 actor / critic 上；
+4. <code>env.py</code> 硬写 <code>MUJOCO_GL=egl</code> 会让 Windows / macOS 在 import 阶段直接崩溃 → 改为仅 Linux 且未显式设置时才默认 egl；
+5. assets 查找兼容 colcon 安装布局 <code>share/&lt;pkg&gt;/assets</code>。
+6. <code>PPO</code> 的 GAE 把 1000 步时间上限截断（<code>truncated</code>）当成真正终止，后继价值被错误归零；<code>SAC</code> 的回放池也把截断写进 <code>done</code>，目标值被截成 <code>r</code> → 两者都改为用 <code>V(next_obs)</code> 自举，只有 <code>terminated</code> 才归零，并新增 CSV 的 <code>truncated</code> 列；
+7. <code>PPO</code> 的 <code>log_std</code> 单独用朴素 SGD 更新（与网络权重的 Adam 不同步）→ 改为同样走 Adam（梯度步后原地 <code>np.clip</code>，保证优化器持有的引用有效），并在 <code>load()</code> 后重新绑定 actor / critic / log_std 三个优化器（原来加载模型后更新都打在旧数组上）；<code>--max-steps</code> 在 SAC 下原只在回合开头检查、会整段超预算 → 改为内层逐步检查；
+8. <code>main.py doctor</code> 原来只检查文件存在 → 改为真正解析三个 MJCF；<code>MjModel.from_xml_path</code> 在中文路径下打不开 → 改用显式 UTF-8 读取 + <code>from_xml_string</code>；<code>package.xml</code> 的占位邮箱改为真实维护者邮箱。</p>
+<p>另需说明：本实现的 PPO Actor 梯度是工程近似（残缺的 squash-高斯修正、64×64 小网络），同一份 rollout 多次复用会发散或停在原地（实测 <code>train_iters=10</code> 时 Ant / Walker2d 训练崩溃），因此 <strong>PPO 实际取 <code>train_iters=1</code>（每份 rollout 只更新一轮）</strong>，这是本实现下的稳定工作点，不是常规 PPO 的 10 轮复用。此外 <code>PPO.act()</code> 是先把动作裁剪到 [-1, 1] 再用裁剪后的动作计算 log-prob（未按未裁剪分布做校正），也属于上述近似的一部分，本轮数据即在该实现下产出。</p>
+</blockquote>
+<h3 id="_9">学习曲线</h3>
+<p><img alt="Learning Curves" src="../../img/ground/rl_mujoco_locomotion/comparison.png"/></p>
+<h3 id="gif_1">推理 GIF</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">HalfCheetah-PPO</th>
+<th style="text-align: center;">HalfCheetah-SAC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="halfcheetah-ppo" src="../../img/ground/rl_mujoco_locomotion/halfcheetah_ppo.gif"/></td>
+<td style="text-align: center;"><img alt="halfcheetah-sac" src="../../img/ground/rl_mujoco_locomotion/halfcheetah_sac.gif"/></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Ant-PPO</th>
+<th style="text-align: center;">Ant-SAC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="ant-ppo" src="../../img/ground/rl_mujoco_locomotion/ant_ppo.gif"/></td>
+<td style="text-align: center;"><img alt="ant-sac" src="../../img/ground/rl_mujoco_locomotion/ant_sac.gif"/></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Walker2d-PPO</th>
+<th style="text-align: center;">Walker2d-SAC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img alt="walker2d-ppo" src="../../img/ground/rl_mujoco_locomotion/walker2d_ppo.gif"/></td>
+<td style="text-align: center;"><img alt="walker2d-sac" src="../../img/ground/rl_mujoco_locomotion/walker2d_sac.gif"/></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">性能对比</h3>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>算法</th>
+<th>训练预算</th>
+<th>训练末段回报</th>
+<th>确定性评估回报</th>
+<th>评估平均集长</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HalfCheetah</td>
+<td>随机策略</td>
+<td>—</td>
+<td>—</td>
+<td>682.0 ± 85.2</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>HalfCheetah</td>
+<td>PPO</td>
+<td>30 万步</td>
+<td>386.5</td>
+<td>423.3 ± 52.4</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>HalfCheetah</td>
+<td>SAC</td>
+<td>30 万步</td>
+<td><strong>1535.6</strong></td>
+<td><strong>1639.5 ± 40.0</strong></td>
+<td>1000</td>
+</tr>
+<tr>
+<td>Ant</td>
+<td>随机策略</td>
+<td>—</td>
+<td>—</td>
+<td>-68.0 ± 98.3</td>
+<td>196</td>
+</tr>
+<tr>
+<td>Ant</td>
+<td>PPO</td>
+<td>30 万步</td>
+<td>-387.9</td>
+<td>-318.8 ± 577.3</td>
+<td>149</td>
+</tr>
+<tr>
+<td>Ant</td>
+<td>SAC</td>
+<td>30 万步</td>
+<td><strong>362.3</strong></td>
+<td><strong>557.0 ± 109.8</strong></td>
+<td>1000</td>
+</tr>
+<tr>
+<td>Walker2d</td>
+<td>随机策略</td>
+<td>—</td>
+<td>—</td>
+<td>-1.0 ± 5.3</td>
+<td>18</td>
+</tr>
+<tr>
+<td>Walker2d</td>
+<td>PPO</td>
+<td>30 万步</td>
+<td>-11.3</td>
+<td>-12.9 ± 0.1</td>
+<td>9</td>
+</tr>
+<tr>
+<td>Walker2d</td>
+<td>SAC</td>
+<td>30 万步</td>
+<td><strong>319.8</strong></td>
+<td><strong>383.3 ± 16.6</strong></td>
+<td>174.7</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>各组实际环境步数（训练 CSV 集长求和）全部<strong>精确等于</strong> 30 万步预算：HalfCheetah-PPO / SAC 的最后一行是恰好跑满 1000 步的回合（正好卡在预算边界），Ant-PPO（916 步）、Ant-SAC（607 步）、Walker2d-PPO（5 步）、Walker2d-SAC（84 步）的最后一行则是被 <code>--max-steps</code> 截断的部分回合（该行 <code>truncated=1</code>）。</p>
+<p>"随机策略"一行为同一评估协议（10 集、seed 42、动作在 [-1, 1] 均匀采样）下的基线，用于判断算法是否真的学到了东西。注意本环境的奖励含有每步 +1 的存活奖励，因此 HalfCheetah 的随机基线也被抬到 ~682，绝对值不可与 Gym / SB3 的默认奖励口径直接对比。</p>
+</blockquote>
+<h3 id="_11">结果分析</h3>
+<ol>
+<li><strong>SAC 在三个环境上都真正学起来了。</strong> HalfCheetah 评估回报 1639.5（随机基线 682.0，约 2.4 倍），Ant 557.0（随机基线 -68.0，且能跑满 1000 步），Walker2d 383.3（随机基线 -1.0，单集从 18 步延长到 174.7 步）。三组评估方差都不大（±16.6 ~ ±109.8），其中 Ant 的方差主要来自个别回合提前摔倒，说明策略整体稳定。修复目标网络软更新之后，SAC 的提升是决定性的：修复前那轮（Ubuntu / MuJoCo 3.1.6）同样 30 万步只能拿到 661.7 / 158.2 / -9.0。</li>
+<li><strong>PPO 在三个环境上都没有超过随机基线。</strong> HalfCheetah 423.3 低于随机 682.0，Ant -318.8 低于随机 -68.0（且方差高达 ±577.3，个别回合回报极负，明显不稳定），Walker2d -12.9 低于随机 -1.0，且每集固定约 9 步倒地。这说明当前这套 PPO 实现（近似 actor 梯度 + 64×64 MLP + 每份 rollout 单轮更新）在本预算下基本没学到有效策略，如实记录、未做美化。</li>
+<li><strong>为什么 PPO 会输给随机策略？</strong> 三个原因叠加：(a) Actor 梯度是 <code>adv · ratio · (a-μ)/σ²</code> 的近似式，缺少真正的 tanh-squash 修正，策略均值容易停在饱和区；(b) 同一份 rollout 复用多轮时梯度方向会重复放大，实测 10 轮会让 Ant / Walker2d 直接发散或 NaN，只能退回单轮更新，样本效率因此很低；(c) 30 万步对 Ant / Walker2d 本就偏少（常规 PPO 通常需要百万级步数），而 SAC 的 off-policy 回放能在同样预算下多次利用每一帧数据。</li>
+<li><strong>整体结论：</strong> 在"纯 NumPy + 轻量 MLP + 30 万步预算"的约束下，SAC 在三个环境上都显著优于随机基线与 PPO；PPO 仅能维持 HalfCheetah 的稳定奔跑但回报低于随机基线，Ant / Walker2d 学不起来。若要提升 PPO，需要补全 squash-高斯 log-prob 与雅可比、改用更大网络并延长训练预算，这属于后续工作，本 PR 未纳入。</li>
+</ol>
+<h2 id="_12">目录结构</h2>
+<div class="highlight"><pre><span></span><code>src/rl_mujoco_locomotion/
+├── main.py                 # 统一入口：doctor/test/train/evaluate/compare/render
+├── requirements.txt        # mujoco / numpy / matplotlib / Pillow / imageio
+├── package.xml             # ROS 2 包描述
+├── CMakeLists.txt          # ament_cmake + ament_python 构建规则
+├── launch/
+│   └── main.launch.py      # ROS 2 launch 入口（参数：env/alg/episodes）
+├── assets/                 # HalfCheetah / Ant / Walker2d 的 MJCF 模型
+├── rl_mujoco_locomotion/
+│   ├── __init__.py
+│   ├── nn.py               # NumPy MLP + Adam / SGD 更新
+│   ├── env.py              # HalfCheetah / Ant / Walker2d 环境封装与渲染后端
+│   ├── ppo.py              # PPO 算法实现
+│   ├── sac.py              # SAC 算法实现
+│   ├── train.py            # 训练主循环（支持 --max-steps 步数预算）
+│   ├── evaluate.py         # 确定性评估
+│   ├── render_gif.py       # 推理 GIF 渲染
+│   └── compare.py          # 6 组对比图汇总
+└── results/                # 训练产出（CSV、权重、GIF、对比图），已加入 .gitignore
+</code></pre></div>
+<h2 id="_13">源码解析</h2>
+<h3 id="nnpy">神经网络（<code>nn.py</code>）</h3>
+<ul>
+<li><code>MLP</code>：多层感知机，隐藏层 ReLU 激活，输出层线性（PPO Actor 用 tanh 压缩）</li>
+<li><code>MLP.backward(grad, lr=None)</code>：反向传播；<code>lr</code> 不为空时按 SGD 现场更新权重，为空时只返回 <code>d(loss)/d(input)</code>（SAC 取 actor 梯度时用）</li>
+<li><code>MLP.grads(grad)</code>：只反传、返回按层排列的参数梯度列表，供 Adam 使用</li>
+<li><code>Adam</code>：Adam 优化器（一阶矩 + 二阶矩），PPO 的 actor / critic 权重与策略 <code>log_std</code> 都用它更新；SAC 仍走 <code>MLP.backward(lr=...)</code> 的 SGD 更新</li>
+<li><code>soft_update</code> / <code>hard_update</code>：目标网络软更新与硬更新；二者都<strong>原地写参数数组</strong>，因此必须传入 <code>MLP.params()</code>（引用），传 <code>get_params()</code>（副本）不会产生任何效果</li>
+<li><code>clip_grad_norm</code>：梯度范数裁剪，用于稳定 PPO 训练</li>
+</ul>
+<h3 id="envpy">环境封装（<code>env.py</code>）</h3>
+<ul>
+<li><code>BaseLocomotionEnv</code>：统一封装 MuJoCo 的 <code>MjModel</code> / <code>MjData</code>，提供 <code>reset()</code> / <code>step()</code> / <code>render()</code></li>
+<li>每个环境独立的奖励函数（前进奖励 - 控制代价 - 接触代价 + 存活奖励）</li>
+<li>健康状态检测（z 轴高度范围、躯干角度范围），不健康即提前终止</li>
+<li>渲染后端按平台自适应：Linux 未设置 <code>MUJOCO_GL</code> 时默认 <code>egl</code>（无头），Windows / macOS 沿用 MuJoCo 默认的 <code>glfw</code>，调用方显式设置的 <code>MUJOCO_GL</code> 优先</li>
+<li><code>render()</code> 缓存 <code>Renderer</code> 实例，并用跟随躯干（torso）的自由相机，保证录屏画面中机器人始终居中可见</li>
+<li>assets 查找同时覆盖源码布局（包目录旁的 <code>assets/</code>）与 colcon 安装布局（<code>share/&lt;pkg&gt;/assets</code>）</li>
+</ul>
+<h3 id="ppoppopy">PPO（<code>ppo.py</code>）</h3>
+<ul>
+<li><code>RolloutBuffer</code>：收集 on-policy 轨迹，计算 GAE 与 returns；时间上限截断（<code>truncated</code>）用 <code>V(next_obs)</code> 自举，只有真正终止（<code>terminated</code>）才把后继价值归零</li>
+<li><code>PPO.act()</code>：tanh 高斯策略采样（<code>log_std</code> 夹紧）</li>
+<li><code>PPO.update()</code>：clipped surrogate objective（<code>clip_ratio=0.2</code> 的掩码 + tanh 雅可比）+ 价值函数回归 + target-KL 早停 + 梯度裁剪，actor / critic 权重与策略 <code>log_std</code> 均用 Adam；同一份 rollout 默认只更新 <code>train_iters=1</code> 轮（多轮复用在简化梯度下不稳定，见上文"实现修复记录"），消费完由 <code>RolloutBuffer.reset()</code> 清空</li>
+</ul>
+<h3 id="sacsacpy">SAC（<code>sac.py</code>）</h3>
+<ul>
+<li><code>ReplayBuffer</code>：off-policy 经验回放池</li>
+<li><code>SAC.act()</code>：tanh 重参数化采样</li>
+<li><code>SAC.update()</code>：双 Q 网络 + 软目标更新（<code>soft_update(q_target.params(), q.params(), tau)</code>，对目标网络参数原地 Polyak 平均）+ 自动温度调节</li>
+<li>结束标志的语义：回放池里的 <code>done</code> 只记真正终止（<code>terminated</code>），因 1000 步时间上限截断的转移保留 <code>next_obs</code> 继续自举</li>
+</ul>
+<h2 id="_14">测试验证</h2>
+<h3 id="_15">测试环境</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS</td>
+<td>Ubuntu 20.04.6（本轮数据）；Windows 11 亦做过 doctor / test / 短训练冒烟验证</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10（本轮数据）；Windows 侧 3.14.0</td>
+</tr>
+<tr>
+<td>MuJoCo</td>
+<td>3.1.6（本轮数据）；Windows 侧 3.16.0</td>
+</tr>
+<tr>
+<td>NumPy</td>
+<td>1.24.4（本轮数据）；Windows 侧 2.5.4</td>
+</tr>
+<tr>
+<td>matplotlib</td>
+<td>3.1.2</td>
+</tr>
+<tr>
+<td>imageio</td>
+<td>2.35.1</td>
+</tr>
+<tr>
+<td>渲染后端</td>
+<td>Linux 无头：egl（<code>env.py</code> 自动设置，本轮 GIF 即由此产出）；Windows：glfw（默认）</td>
+</tr>
+<tr>
+<td>ROS 2</td>
+<td>Humble（可选，用于 colcon 构建验证）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">验证步骤</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. 环境检查</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>doctor
+<span class="c1"># 2. 单元测试（环境 reset/step 冒烟）</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span><span class="nb">test</span>
+<span class="c1"># 3. 快速训练验证</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>train<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--max-steps<span class="w"> </span><span class="m">20000</span>
+<span class="c1"># 4. 评估与渲染</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>evaluate<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>render<span class="w"> </span>--env<span class="w"> </span>halfcheetah<span class="w"> </span>--alg<span class="w"> </span>ppo<span class="w"> </span>--episodes<span class="w"> </span><span class="m">2</span><span class="w"> </span>--stride<span class="w"> </span><span class="m">5</span>
+<span class="c1"># 5. 6 组 30 万步完整训练 + 对比图</span>
+<span class="k">for</span><span class="w"> </span>env<span class="w"> </span><span class="k">in</span><span class="w"> </span>halfcheetah<span class="w"> </span>ant<span class="w"> </span>walker2d<span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>alg<span class="w"> </span><span class="k">in</span><span class="w"> </span>ppo<span class="w"> </span>sac<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>train<span class="w"> </span>--env<span class="w"> </span><span class="nv">$env</span><span class="w"> </span>--alg<span class="w"> </span><span class="nv">$alg</span><span class="w"> </span>--episodes<span class="w"> </span><span class="m">1000000</span><span class="w"> </span>--max-steps<span class="w"> </span><span class="m">300000</span>
+<span class="k">done</span><span class="p">;</span><span class="w"> </span><span class="k">done</span>
+python3<span class="w"> </span>src/rl_mujoco_locomotion/main.py<span class="w"> </span>compare
+<span class="c1"># 6. ROS 2 构建验证</span>
+<span class="nb">cd</span><span class="w"> </span>&lt;ros2_workspace&gt;
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>rl_mujoco_locomotion
+</code></pre></div></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_nn_car_following/" title="神经网络自适应跟车(ACC)"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../carla_aeb_braking/" title="自动紧急制动（AEB）">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../carla_nn_car_following/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../carla_aeb_braking/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
