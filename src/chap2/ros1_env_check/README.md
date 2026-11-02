@@ -12,13 +12,23 @@
 ```bash
 cd src/chap2/ros1_env_check
 
-./main.sh                       # 检查当前终端与环境
-python3 check_env.py --scan .   # 额外扫描目录下的 BOM / CRLF / 可执行位
-python3 check_env.py --strict   # 把警告也算失败（适合放进 CI）
-python3 check_env.py --quiet    # 只打印问题
+./main.sh                            # 检查当前终端与环境
+python3 check_env.py --scan .        # 额外扫描目录下的 BOM / CRLF / 可执行位
+python3 check_env.py --scan . --scan-only   # 只按文件检查计退出码（CI 做文档 lint 用）
+python3 check_env.py --strict        # 把警告也算失败（适合放进 CI）
+python3 check_env.py --quiet         # 只打印问题
 ```
 
-退出码：`0` = 通过，`1` = 有 FAIL（`--strict` 时含 WARN）。
+退出码：`0` = 通过，`1` = 有 FAIL（`--strict` 时含 WARN），`2` = 参数错误。
+
+**`--scan-only` 为什么要单独存在**：不加它时，退出码把环境检查也算进去。
+在**没装 ROS 的 CI job** 里跑 `--scan docs` 会一直红（`ROS_DISTRO 未设置`、
+`import rospy 失败` 与文件无关）。加上 `--scan-only` 后只跑文件卫生、只按它计退出码：
+
+```bash
+# 干净目录、没 source ROS：仍然退出 0
+python3 check_env.py --scan docs/ --scan-only
+```
 
 ## 它检查什么
 
@@ -26,8 +36,9 @@ python3 check_env.py --quiet    # 只打印问题
 |---|---|
 | ROS 环境 | `ROS_DISTRO` / `ROS_VERSION` 是否 ROS 1；`/opt/ros` 下装了哪些发行版；**ROS 1 与 ROS 2 是否共存、当前终端 source 的是哪一个**；`AMENT_PREFIX_PATH` / `COLCON_PREFIX_PATH` 是否残留 ROS 2 路径；`rosversion` 是否可用；`ROS_MASTER_URI` |
 | Python 与依赖 | Python 版本 ≥ 3.6；`rospy`、`numpy` 必装；`yaml`、`matplotlib`、`catkin_pkg`、`tf` 可选 |
-| 工作空间 | 向上查找含 `src/` 的 catkin 工作空间；`build/`、`devel/` 是否存在；`devel` 的 Python 路径是否已进入 `sys.path`（等价于"有没有 `source devel/setup.bash`"）；`src/` 下的包数量 |
+| 工作空间 | 向上查找 **带 catkin 标记**（`.catkin_workspace` / `devel` / `build`）且含 `src/` 的工作空间；`build/`、`devel/` 是否存在；`devel` 的 Python 路径是否已进入 `sys.path`（等价于"有没有 `source devel/setup.bash`"）；`src/` 下的包数量 |
 | 文件卫生（`--scan`） | UTF-8 **BOM**、**CRLF** 行尾、`.sh` **缺可执行位** |
+
 
 ## 为什么特别关注「ROS 1 与 ROS 2 共存」
 
@@ -51,17 +62,26 @@ source /opt/ros/noetic/setup.bash      # 不要再 source foxy 的 setup.bash
 
 ```
 src/chap2/ros1_env_check/
-├── check_env.py    # 全部检查逻辑（纯标准库，可单独运行）
-├── main.sh         # 一键包装：定位自身目录后调用 check_env.py
+├── check_env.py            # 全部检查逻辑（纯标准库，可单独运行）
+├── main.sh                 # 一键包装：定位自身目录后调用 check_env.py
+├── package.xml             # catkin 包声明（只为与同章节其它模块一致，不依赖 ROS 运行）
+├── CMakeLists.txt          # 把两个入口安装到 devel/lib/ros1_env_check
+├── test/
+│   └── test_check_env.py   # 18 项回归测试（subprocess 调命令行，断言退出码与输出）
 └── README.md
 ```
+
+**没有 `launch/`，这是刻意的**：本模块是独立 CLI 工具，不是 ROS 节点
+（它甚至要在"ROS 还没 source 好"的环境里运行才最有价值）。
+用 `roslaunch` 去启动一个跑完就退出的诊断脚本并不合适，
+所以入口就是上表的 `./main.sh` 与 `python3 check_env.py`。
 
 ## 测试
 
 ```bash
 cd src/chap2/ros1_env_check
 python3 -m pytest test/ -q        # 用 pytest 跑
-python3 test/test_check_env.py    # 不装 pytest 也能跑（12 项断言）
+python3 test/test_check_env.py    # 不装 pytest 也能跑（18 项断言）
 ```
 
 测试用 `subprocess` 直接调命令行，断言的是**退出码与输出文字**——

@@ -447,24 +447,35 @@ def main(argv=None) -> int:
         description="ROS 1 环境自检与文件卫生检查（不依赖 ROS，可在任意机器运行）")
     parser.add_argument("--scan", metavar="DIR", default=None,
                         help="额外扫描该目录下的 BOM / CRLF / 可执行位问题")
+    parser.add_argument("--scan-only", action="store_true",
+                        help="只做文件卫生检查，退出码也只按文件检查计"
+                             "（适合没装 ROS 的 CI 用它做文档 lint，需配合 --scan）")
     parser.add_argument("--strict", action="store_true",
                         help="把警告也视为失败，适合放进 CI")
     parser.add_argument("--quiet", action="store_true",
                         help="只打印警告、失败与最终结论")
     args = parser.parse_args(argv)
 
+    if args.scan_only and not args.scan:
+        parser.error("--scan-only 需要配合 --scan DIR 使用")
+
     QUIET = args.quiet
 
     if not QUIET:
         print("=" * 68)
-        print("ROS 1 环境自检")
+        print("ROS 1 环境自检" + ("（仅文件卫生）" if args.scan_only else ""))
         print("=" * 68)
 
-    check_ros()
-    check_python()
-    check_workspace(os.getcwd())
-    if args.scan:
+    if args.scan_only:
+        # 只查文件：退出码不应被"没装 ROS""没 source"这类环境问题带红。
+        # 否则在没装 ROS 的 CI job 里，文档 lint 永远失败（评审 #628 第 ① 条）。
         check_files(args.scan)
+    else:
+        check_ros()
+        check_python()
+        check_workspace(os.getcwd())
+        if args.scan:
+            check_files(args.scan)
 
     return summary(args.strict)
 

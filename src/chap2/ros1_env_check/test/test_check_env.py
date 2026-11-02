@@ -125,13 +125,48 @@ def test_repo_root_not_workspace():
         shutil.rmtree(TMP, ignore_errors=True)
 
 
+# ------------------- 评审 #628 第二轮 ①：--scan-only 的退出码不能被环境问题带红
+def test_scan_only_exit_code():
+    print("\n== ④ --scan-only 只按文件检查计退出码 ==")
+    if os.path.isdir(TMP):
+        shutil.rmtree(TMP)
+    os.makedirs(TMP)
+    try:
+        with open(os.path.join(TMP, "clean.md"), "wb") as fh:
+            fh.write("# 干净\n".encode("utf-8"))
+
+        # 干净目录 + 没 source ROS：--scan-only 必须退出 0
+        code, out = run("--scan", TMP, "--scan-only")
+        check(code == 0, "干净目录 + 无 ROS 环境时退出码为 0（实际 %d）" % code)
+        check("仅文件卫生" in out, "输出标题写明是「仅文件卫生」")
+
+        # 同样的目录不带 --scan-only 时会被环境问题带红（对照，仅打印不判定）
+        code2, _ = run("--scan", TMP, "--quiet")
+        print("       （对照）不带 --scan-only 时退出码 %d" % code2)
+
+        # 有 BOM 时 --scan-only 仍必须失败
+        with open(os.path.join(TMP, "bad.md"), "wb") as fh:
+            fh.write(b"\xef\xbb\xbf# BOM\n")
+        code3, out3 = run("--scan", TMP, "--scan-only")
+        check(code3 == 1, "有 BOM 时 --scan-only 退出码为 1（实际 %d）" % code3)
+        check("UTF-8 BOM" in out3, "--scan-only 仍能报出 BOM")
+
+        # 参数约束：--scan-only 必须配合 --scan
+        code4, out4 = run("--scan-only")
+        check(code4 == 2, "缺少 --scan 时按用法错误退出（实际 %d）" % code4)
+        check("需要配合" in out4, "提示 --scan-only 需要配合 --scan")
+    finally:
+        shutil.rmtree(TMP, ignore_errors=True)
+
+
 def main():
     print("=" * 72)
-    print("ros1_env_check 回归测试（对应评审 #628 的三条意见）")
+    print("ros1_env_check 回归测试（对应评审 #628 的三条意见 + 第二轮补充）")
     print("=" * 72)
     test_bom_detected()
     test_missing_scan_dir_fails()
     test_repo_root_not_workspace()
+    test_scan_only_exit_code()
     print("\n" + "=" * 72)
     print("通过 %d 项，失败 %d 项" % (PASS, FAIL))
     print("=" * 72)

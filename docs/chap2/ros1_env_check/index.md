@@ -31,6 +31,9 @@ cd src/chap2/ros1_env_check
 # 额外扫描某个目录的文件卫生（BOM / CRLF / 可执行位）
 python3 check_env.py --scan .
 
+# 只按文件检查计退出码（没装 ROS 的 CI job 用它做文档 lint）
+python3 check_env.py --scan docs/ --scan-only
+
 # 只把问题打出来
 python3 check_env.py --quiet
 
@@ -60,7 +63,15 @@ python3 check_env.py --strict
 [ OK ] devel 的 Python 包路径已生效（source devel/setup.bash 已执行）
 ```
 
-退出码：`0` 表示通过，`1` 表示有 FAIL（加 `--strict` 时 WARN 也算失败）。
+退出码：`0` 表示通过，`1` 表示有 FAIL（加 `--strict` 时 WARN 也算失败），
+`2` 表示参数用法错误。
+
+!!! tip "`--scan-only`：把文件检查与环境检查的退出码分开"
+    不带 `--scan-only` 时，退出码把**环境检查**也算进去。所以在**没装 ROS 的 CI job** 里
+    跑 `check_env.py --scan docs/` 会一直红——失败项是 `ROS_DISTRO 未设置`、`import rospy 失败`，
+    与文件完全无关。加上 `--scan-only` 就只跑文件卫生、只按它计退出码：
+    干净目录即使没 source ROS 也返回 `0`，而一旦真有 BOM / CRLF 仍然返回 `1`。
+
 
 ## 3. ROS 1 与 ROS 2 共存时最容易踩的坑
 
