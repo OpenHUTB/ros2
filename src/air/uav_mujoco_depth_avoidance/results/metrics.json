@@ -1,0 +1,212 @@
+{
+  "training": [
+    {
+      "epoch": 1,
+      "train_mse": 0.020511,
+      "val_mae_left": 0.0729,
+      "val_mae_center": 0.0922,
+      "val_mae_right": 0.0842
+    },
+    {
+      "epoch": 2,
+      "train_mse": 0.009072,
+      "val_mae_left": 0.0577,
+      "val_mae_center": 0.0756,
+      "val_mae_right": 0.064
+    },
+    {
+      "epoch": 3,
+      "train_mse": 0.006393,
+      "val_mae_left": 0.0479,
+      "val_mae_center": 0.0659,
+      "val_mae_right": 0.0552
+    },
+    {
+      "epoch": 4,
+      "train_mse": 0.004767,
+      "val_mae_left": 0.042,
+      "val_mae_center": 0.0575,
+      "val_mae_right": 0.0568
+    },
+    {
+      "epoch": 5,
+      "train_mse": 0.004234,
+      "val_mae_left": 0.037,
+      "val_mae_center": 0.056,
+      "val_mae_right": 0.0479
+    },
+    {
+      "epoch": 6,
+      "train_mse": 0.003758,
+      "val_mae_left": 0.0377,
+      "val_mae_center": 0.0539,
+      "val_mae_right": 0.046
+    },
+    {
+      "epoch": 7,
+      "train_mse": 0.003715,
+      "val_mae_left": 0.0349,
+      "val_mae_center": 0.0501,
+      "val_mae_right": 0.046
+    },
+    {
+      "epoch": 8,
+      "train_mse": 0.003263,
+      "val_mae_left": 0.033,
+      "val_mae_center": 0.047,
+      "val_mae_right": 0.044
+    },
+    {
+      "epoch": 9,
+      "train_mse": 0.003052,
+      "val_mae_left": 0.0328,
+      "val_mae_center": 0.046,
+      "val_mae_right": 0.0452
+    },
+    {
+      "epoch": 10,
+      "train_mse": 0.002788,
+      "val_mae_left": 0.0309,
+      "val_mae_center": 0.0469,
+      "val_mae_right": 0.0438
+    },
+    {
+      "epoch": 11,
+      "train_mse": 0.002572,
+      "val_mae_left": 0.0301,
+      "val_mae_center": 0.0459,
+      "val_mae_right": 0.0456
+    },
+    {
+      "epoch": 12,
+      "train_mse": 0.002714,
+      "val_mae_left": 0.0373,
+      "val_mae_center": 0.05,
+      "val_mae_right": 0.0423
+    },
+    {
+      "epoch": 13,
+      "train_mse": 0.002578,
+      "val_mae_left": 0.029,
+      "val_mae_center": 0.0433,
+      "val_mae_right": 0.0423
+    },
+    {
+      "epoch": 14,
+      "train_mse": 0.002393,
+      "val_mae_left": 0.0333,
+      "val_mae_center": 0.0469,
+      "val_mae_right": 0.0517
+    }
+  ],
+  "closed_loop": [
+    {
+      "scene": "slalom",
+      "run": 0,
+      "success": true,
+      "crashed": false,
+      "steps": 221,
+      "traveled_x": 13.604461646214133,
+      "min_clearance": 0.074,
+      "mean_pred_error": 0.0429,
+      "mean_speed": 1.296,
+      "path_length": 14.12
+    },
+    {
+      "scene": "slalom",
+      "run": 1,
+      "success": true,
+      "crashed": false,
+      "steps": 221,
+      "traveled_x": 13.604461646214133,
+      "min_clearance": 0.074,
+      "mean_pred_error": 0.0429,
+      "mean_speed": 1.296,
+      "path_length": 14.12
+    },
+    {
+      "scene": "slalom",
+      "run": 2,
+      "success": true,
+      "crashed": false,
+      "steps": 221,
+      "traveled_x": 13.604461646214133,
+      "min_clearance": 0.074,
+      "mean_pred_error": 0.0429,
+      "mean_speed": 1.296,
+      "path_length": 14.12
+    },
+    {
+      "scene": "gate",
+      "run": 3,
+      "success": true,
+      "crashed": false,
+      "steps": 293,
+      "traveled_x": 13.608876996011409,
+      "min_clearance": 0.061,
+      "mean_pred_error": 0.0381,
+      "mean_speed": 0.98,
+      "path_length": 14.15
+    },
+    {
+      "scene": "gate",
+      "run": 4,
+      "success": true,
+      "crashed": false,
+      "steps": 293,
+      "traveled_x": 13.608876996011409,
+      "min_clearance": 0.061,
+      "mean_pred_error": 0.0381,
+      "mean_speed": 0.98,
+      "path_length": 14.15
+    },
+    {
+      "scene": "gate",
+      "run": 5,
+      "success": true,
+      "crashed": false,
+      "steps": 293,
+      "traveled_x": 13.608876996011409,
+      "min_clearance": 0.061,
+      "mean_pred_error": 0.0381,
+      "mean_speed": 0.98,
+      "path_length": 14.15
+    },
+    {
+      "scene": "clutter",
+      "run": 6,
+      "success": true,
+      "crashed": false,
+      "steps": 229,
+      "traveled_x": 13.609375930803544,
+      "min_clearance": 0.06,
+      "mean_pred_error": 0.0432,
+      "mean_speed": 1.25,
+      "path_length": 14.15
+    },
+    {
+      "scene": "clutter",
+      "run": 7,
+      "success": true,
+      "crashed": false,
+      "steps": 254,
+      "traveled_x": 13.606813651244206,
+      "min_clearance": 0.064,
+      "mean_pred_error": 0.0356,
+      "mean_speed": 1.133,
+      "path_length": 14.17
+    },
+    {
+      "scene": "clutter",
+      "run": 8,
+      "success": true,
+      "crashed": false,
+      "steps": 263,
+      "traveled_x": 13.608949918610183,
+      "min_clearance": 0.061,
+      "mean_pred_error": 0.0419,
+      "mean_speed": 1.092,
+      "path_length": 14.15
+    }
+  ]
+}
