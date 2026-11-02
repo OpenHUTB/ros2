@@ -10,12 +10,14 @@
 
 ## 2. 环境要求与安装
 
+下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该兼容性镜像不能替代标准 Humble 安装流程。
+
 | 项目 | 版本 |
 | --- | --- |
-| 操作系统 | Ubuntu 22.04 LTS |
+| 目标操作系统 | Ubuntu 22.04 LTS |
 | ROS | ROS 2 Humble (`/opt/ros/humble`) |
-| 仿真器 | Gazebo Fortress 6.x（Ignition Gazebo） |
-| Python | 3.10（ROS 2 Humble 自带） |
+| 目标仿真器 | Gazebo Fortress 6.x（Ignition Gazebo） |
+| 目标 Python | 3.10（ROS 2 Humble 自带） |
 | GPU（可选） | NVIDIA GPU + CUDA 12.x（纯 CPU 环境完全可用，5070 Ti 等 Blackwell 架构建议直接用 CPU 推理，详见 8.1 节） |
 
 加载 ROS 2 环境并安装 Python 依赖：
@@ -322,29 +324,32 @@ python3 -m lidar_obstacle_nn.evaluate_model \
 
 ## 7. 实测结果
 
-数据在 Ubuntu 22.04.5 LTS 与 ROS 2 Humble 环境下实测得到：
+以下数据均来自同一台 VMware 预装镜像。该镜像是兼容性验证环境，不是标准 Humble 安装环境：
 
 | 项目 | 实测结果 |
 | --- | --- |
-| OS / ROS 版本 | Ubuntu 22.04.5 LTS / ROS 2 Humble |
-| Gazebo 版本 | Gazebo Fortress 6.18.0 |
-| PyTorch 版本 | 2.5.1+cu121（推理使用 CPU） |
+| OS / ROS 版本 | Ubuntu 20.04.6 LTS / ROS 2 Humble（预装兼容性镜像） |
+| Python 版本 | 3.8.10 |
+| Gazebo 版本 | Gazebo Fortress 6.17.1 |
+| PyTorch 版本 | 2.4.1+cpu |
 | 激光雷达 | 360 束 GPU LiDAR，5 Hz，0.05–30 m |
 | 模型参数量 | 约 62,272（360→128→128→3） |
-| 权重文件大小 | 249 KB |
+| 权重文件大小 | 约 250 KB |
 | 数据集规模 | 1500 样本，3 类各 500 条（合成） |
-| 训练时长 | 1.63 秒（CPU，50 epoch，早停在 46） |
-| 最佳验证损失 | 0.0596 |
-| 最终验证准确率 | 99.67 % |
-| `/scan` 发布频率 | 约 4.75 Hz |
+| 训练划分 | 1200 训练 / 300 验证 |
+| 训练时长 | 2.02 秒（CPU，50 epoch） |
+| 最佳验证损失 | 0.0102 |
+| 最终验证准确率 | 100 % |
+| `/scan` 发布频率 | 约 4.3 Hz |
 | `/obstacle_class` 实测输出 | `near`（场景含 0.6 m 红方块） |
+| `/obstacle_confidence` 实测输出 | 0.978 |
 
 **无头渲染 vs 虚拟显示实测对照**（同一世界、同一版本代码）：
 
 | 启动方式 | 360 束中命中障碍数 | 最近距离 | 判定 |
 | --- | --- | --- | --- |
 | `ign gazebo -r -s --headless-rendering` | 0/360（全部 30.00 m） | 30.00 m | `free`（无回波，数据无效） |
-| `xvfb-run -a` + 正常 GUI 构建 | 76/360 | 0.40 m | `near`（与场景一致） |
+| `xvfb-run -a` + Ogre1 | 80/360 | 0.40 m | `near`（与场景一致） |
 
 **Gazebo 仿真启动后效果**：
 
@@ -356,7 +361,7 @@ python3 -m lidar_obstacle_nn.evaluate_model \
 
 ### 7.1 本次重新验证与图解
 
-本次在 VMware 中的 Ubuntu 20.04 + ROS 2 Humble + Gazebo Fortress 6.17.1 环境重新复测；发布频率约 4.3 Hz，360 束中有 80 束产生有效回波，最近距离 0.400 m，分类为 `near`，置信度 0.978。
+本节与前文表格使用同一台 VMware 预装兼容性镜像：Ubuntu 20.04.6、Python 3.8.10、ROS 2 Humble、Gazebo Fortress 6.17.1、PyTorch 2.4.1 CPU。发布频率约 4.3 Hz，360 束中有 80 束产生有效回波，最近距离 0.400 m，分类为 `near`，置信度 0.978。
 
 **Gazebo 静态 world 实际画面**：
 

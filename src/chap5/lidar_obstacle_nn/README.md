@@ -16,15 +16,21 @@ It satisfies the OpenHUTB/ros2 contribution rules:
 - no binary blobs larger than 3 MB (the trained MLP is a few hundred KB)
 - README with environment + run steps
 
-## 1. Environment
+## 1. Target environment
 
 | Item | Version |
 | --- | --- |
-| OS | Ubuntu 22.04 LTS |
+| Target OS | Ubuntu 22.04 LTS |
 | ROS | ROS 2 Humble (`/opt/ros/humble`) |
-| Simulator | Gazebo Fortress 6.x (Ignition Gazebo) |
-| Python | 3.10 (the one shipped with ROS 2 Humble) |
+| Target simulator | Gazebo Fortress 6.x (Ignition Gazebo) |
+| Target Python | 3.10 (the one shipped with ROS 2 Humble) |
 | GPU (optional) | NVIDIA GPU + CUDA 12.x (CPU-only machines work fine) |
+
+The verification run recorded in section 7 used a prebuilt VMware image
+with Ubuntu 20.04.6, ROS 2 Humble, Python 3.8.10, Gazebo Fortress
+6.17.1 and CPU PyTorch 2.4.1. That image is useful as a compatibility
+check, but it is not the supported Humble installation recipe. Use
+Ubuntu 22.04 and Python 3.10 for a standard deployment.
 
 Python dependencies (install into the ROS 2 Python, **not** a
 separate venv, so that `rclpy` stays importable):
@@ -135,12 +141,12 @@ ros2 topic hz /scan
 
 ### Why not `ign gazebo --headless-rendering`?
 
-Measured on Ubuntu 22.04 + Gazebo Fortress 6.18.0 with this world:
+Measured on the VMware verification image with Gazebo Fortress 6.17.1:
 
 | Launch method | `/scan` beams hitting an obstacle | Verdict |
 | --- | --- | --- |
 | `ign gazebo -r -s --headless-rendering` | 0/360 (every beam = 30 m max range) | no echoes — dataset collection and demo are meaningless |
-| `xvfb-run -a` + normal GUI build | 76/360 (closest 0.40 m) | works — matches the scene |
+| `xvfb-run -a` + Ogre1 | 80/360 (closest 0.40 m) | works — matches the scene |
 
 `--headless-rendering` gives the `gpu_lidar` sensor no rendering
 context, so it never produces echoes. For Xvfb, Ogre1 is selected
