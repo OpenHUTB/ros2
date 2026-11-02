@@ -10,6 +10,7 @@ setup(
         ('share/uav_altitude_command_guard/launch', glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'], zip_safe=False,
+    tests_require=['pytest'],
     description='无人机定高指令限幅与超时保持', license='MIT',
     entry_points={'console_scripts': ['main = uav_altitude_command_guard.cli:main', 'node = uav_altitude_command_guard.ros_node:main']},
 )
