@@ -17,12 +17,13 @@ extra_css: [extra.css]
 # mathjax用于单独公式展示
 extra_javascript:
   # - extra.js
-  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
-  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
+  # 国内可达 CDN：原 cdnjs.cloudflare.com 在国内网络下无法加载导致公式/mermaid 不渲染
+  - https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - /js/mermaid.min.js
+  - https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js
+  - https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js
+  - https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
+  - https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js
   - js/umlconvert.js
 plugins:
 #  - mkdocs-video
@@ -61,7 +62,9 @@ nav:
     - 5. 机器人感知: './chapter/chap5.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
-    - 8. ROS 机器人综合应用: './chapter/chap8.md'
+    - 8. ROS 机器人综合应用:
+        - 章节首页: './chapter/chap8.md'
+        - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
@@ -92,6 +95,7 @@ nav:
     - 路径点发布器: './ground/waypoint.md'
     - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
+    - 端到端神经网络图像驾驶: './ground/carla_end_to_end_nn.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
@@ -120,18 +124,22 @@ nav:
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
 - 空域载具:
     - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
+    - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
       - 构建与运行: './air/uav_mission_safety_manager/usage.md'
+      - ROS 2 Action 任务接口: './air/uav_mission_safety_manager/mission_action.md'
       - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
+    - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
+    - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
@@ -145,7 +153,9 @@ nav:
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
+    - 神经安全过滤器: './air/uav_neural_safety_filter.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
+    - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
@@ -158,7 +168,7 @@ nav:
         - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
     - YOLO 感知与无人机控制:
         - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
-        - YOLO 目标水平视觉居中: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
+        - YOLO 目标视觉伺服：居中与距离保持: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
         - Traffic Manager 车辆轨迹与 AirSim 跟随: 'air/openhutb_yolo_mlp_control/traffic_tracking.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
@@ -172,6 +182,7 @@ nav:
         - Docker 开发环境: './water/docker.md'
         - HoloOcean ROS2 运行时容器: './water/docker_runtime.md'
     - 水域载具示例: './water/holoocean_examples.md'
+    - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
