@@ -1,0 +1,70 @@
+{
+  "stand_flat": [
+    {
+      "ok": true,
+      "pitch": -0.0171,
+      "drift": -0.0098,
+      "z_end": 0.8758
+    },
+    {
+      "ok": true,
+      "pitch": -0.0171,
+      "drift": -0.0098,
+      "z_end": 0.8758
+    },
+    {
+      "ok": true,
+      "pitch": -0.0171,
+      "drift": -0.0098,
+      "z_end": 0.8758
+    }
+  ],
+  "squat_flat": {
+    "ok": true,
+    "cycles": 8,
+    "z_min": 0.5387,
+    "depth": 0.461,
+    "work_J": 1072.8
+  },
+  "kick_flat": [
+    {
+      "ok": true,
+      "toe_peak_m": 0.609
+    },
+    {
+      "ok": true,
+      "toe_peak_m": 0.609
+    },
+    {
+      "ok": true,
+      "toe_peak_m": 0.609
+    }
+  ],
+  "walk_flat": {
+    "ok": true,
+    "dist_m": 2.419,
+    "speed_mps": 0.121,
+    "act_effort": 196.4,
+    "work_J": 2698.5,
+    "work_per_m": 1115.6,
+    "fell_at": null
+  },
+  "walk_slope5": {
+    "ok": true,
+    "dist_m": 9.958,
+    "speed_mps": 0.664,
+    "act_effort": 51.6,
+    "work_J": 1614.1,
+    "work_per_m": 162.1,
+    "fell_at": null
+  },
+  "walk_load": {
+    "ok": true,
+    "dist_m": 1.505,
+    "speed_mps": 0.1,
+    "act_effort": 48.6,
+    "work_J": 973.5,
+    "work_per_m": 647.0,
+    "fell_at": null
+  }
+}

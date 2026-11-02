@@ -27,6 +27,10 @@ src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── CMakeLists.txt
 ├── launch/main.launch          # 一键启动：仿真节点 + 可选 xterm 键盘节点
 ├── config/params.yaml          # 反射增益 / 步态 / 蹲起 / 踢腿参数
+├── eval/                       # 可复现评测证据（终端输出与结果，见 §7）
+│   ├── check_output.txt        # python3 main.py check 完整终端输出
+│   ├── eval_output.txt         # python3 main.py eval 完整终端输出
+│   └── eval_results.json       # eval 结构化结果（机器可读）
 ├── models/
 │   ├── msk_human.xml           # 肌肉骨骼人模型（13 DoF + 22 motor）
 │   ├── scene_flat.xml          # 平地场景
