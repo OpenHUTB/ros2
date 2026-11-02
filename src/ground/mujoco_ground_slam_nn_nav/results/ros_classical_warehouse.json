@@ -1,0 +1,18 @@
+{
+  "mode": "classical",
+  "scene": "warehouse",
+  "success": true,
+  "reason": "success",
+  "duration_s": 35.1,
+  "goal": [
+    22.0,
+    14.0
+  ],
+  "final_distance_m": 0.846,
+  "collisions": 0,
+  "path_length_m": 23.508,
+  "slam_ate_rmse_m": 0.0796,
+  "map_coverage": 0.8783,
+  "frames": 352,
+  "timestamp": "2026-10-26 09:15:40"
+}
