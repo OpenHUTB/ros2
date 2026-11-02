@@ -38,9 +38,10 @@ class PredictorNode(Node):
         p_normal, p_fall = self.pred.predict(feat, self._pitch, self._roll)
         target = DEFAULT_STAND_TARGET.copy()
         if p_fall > 0.6:
-            # 即将跌倒：紧急下蹲姿态
-            target[1] = 0.3; target[6] = 0.3
-            target[2] = -0.4; target[7] = -0.4
+            # 即将跌倒：紧急下蹲姿态（髋屈+膝屈+踝背屈，降低重心）
+            target[1] = 0.25; target[6] = 0.25    # hip_pitch 髋屈曲
+            target[2] = -0.35; target[7] = -0.35  # knee 膝关节屈曲
+            target[3] = 0.15; target[8] = 0.15    # ankle_pitch 踝背屈
             self._warn_count += 1
             if self._warn_count % 30 == 0:
                 self.get_logger().warn(f"FALL WARNING p_fall={p_fall:.2f}, triggering squat")
