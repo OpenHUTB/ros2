@@ -1,0 +1,9 @@
+# LDW 决策参数（与 carla_lane_departure_warning/lane_departure_core.py 的 LDWParams 一一对应）
+ldw:
+  ros__parameters:
+    lane_width: 3.5     # 车道宽（m），bridge 会按路点动态覆盖
+    warn_enter: 0.5     # 进入 deviation 的横向偏移（m）
+    warn_exit: 0.3      # 回 normal 的横向偏移（m，滞回下界）
+    depart_enter: 0.9   # 进入 departure 的横向偏移（m，接近压线）
+    depart_exit: 0.65   # 回 deviation 的横向偏移（m，滞回）
+    period: 0.05        # 状态机推进周期（s）
