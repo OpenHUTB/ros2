@@ -172,6 +172,7 @@ nav:
         - YOLO 目标视觉伺服：居中与距离保持: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
         - Traffic Manager 车辆轨迹与 AirSim 跟随: 'air/openhutb_yolo_mlp_control/traffic_tracking.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
+    - 多无人机空域监测（多边形禁飞区与机间冲突）: './air/multi_uav_airspace_monitor.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
