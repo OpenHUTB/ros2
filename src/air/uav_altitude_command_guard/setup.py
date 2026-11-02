@@ -8,8 +8,6 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/uav_altitude_command_guard']),
         ('share/uav_altitude_command_guard', ['package.xml']),
         ('share/uav_altitude_command_guard/launch', glob('launch/*.launch.py')),
-        ('share/uav_altitude_command_guard/models', glob('models/*.xml')),
-        ('share/uav_altitude_command_guard/data', glob('data/*')),
     ],
     install_requires=['setuptools'], zip_safe=False,
     description='无人机定高指令限幅与超时保持', license='MIT',
