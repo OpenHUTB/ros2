@@ -72,7 +72,8 @@ source install/setup.bash
 
 ```bash
 # 方式 A：launch 启动（推荐）
-ros2 launch ros2_service_param_demo service_param_demo.launch.py
+ros2 launch ros2_service_param_demo service_param_demo.launch.py\
+publish_rate:=5.0 start_mode:=FLYING
 # 方式 B：main 脚本入口
 python3 ~/ros2_ws/src/ros2_service_param_demo/main.py
 # 方式 C：单节点并指定参数
@@ -115,7 +116,7 @@ ros2 topic hz /uav/status     # 频率与 publish_rate 一致
 
 结束运行：在终端按 `Ctrl+C`。正常情况下只会看到节点打印的 `uav_mode_node 被手动终止` 后退出（退出路径已捕获 `KeyboardInterrupt`，不会再打印 Traceback）；若还跟着一行 `Failed to publish log message to rosout: publisher's context is invalid`，同样是节点销毁后的正常现象。
 
-> 三点注意：① **方式 B 是本地源码调试入口**，它通过 ament 索引查找 `ros2_service_param_demo`，必须先 `source ~/ros2_ws/install/setup.bash`，干净终端只 source ROS 2 会报 `package 'ros2_service_param_demo' not found`；参数用 `--ros-args -p publish_rate:=5.0` 透传。② `publish_rate` 是 double 类型，请写 `0.0` 而不是 `0`（整数字面量会报类型错误）；取值范围 (0, 100] Hz。③ 启动参数非法时（`publish_rate` 超出范围、`start_mode` 不在 `IDLE` / `FLYING` 之内）节点会告警并回退到默认值，**同时把回退值写回参数**，所以 `ros2 param get` 显示的值始终等于实际生效值，不会出现"参数是 5.0、实际按 2.0 发布"的不一致。
+> 三点注意：① **方式 B 是本地源码调试入口**，它通过 ament 索引查找 `ros2_service_param_demo`，必须先 `source ~/ros2_ws/install/setup.bash`，干净终端只 source ROS 2 会报 `package 'ros2_service_param_demo' not found`；main.py 只是本地源码调试入口，不支持命令行改参数，需要改参数请用方式 A（ros2 launch ros2_service_param_demo service_param_demo.launch.py publish_rate:=5.0 start_mode:=FLYING）或方式 C。② `publish_rate` 是 double 类型，请写 `0.0` 而不是 `0`（整数字面量会报类型错误）；取值范围 (0, 100] Hz。③ 启动参数非法时（`publish_rate` 超出范围、`start_mode` 不在 `IDLE` / `FLYING` 之内）节点会告警并回退到默认值，**同时把回退值写回参数**，所以 `ros2 param get` 显示的值始终等于实际生效值，不会出现"参数是 5.0、实际按 2.0 发布"的不一致。
 
 ## 5. 运行效果
 
