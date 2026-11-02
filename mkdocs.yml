@@ -107,6 +107,7 @@ nav:
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - Turtlebot3 激光雷达避障: './ground/tb3_lidar_obstacle.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
@@ -176,6 +177,8 @@ nav:
         - Traffic Manager 车辆轨迹与 AirSim 跟随: 'air/openhutb_yolo_mlp_control/traffic_tracking.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 无人机激光雷达分扇区避障与梯形速度巡航: './air/uav_lidar_cruise.md'
+    - 无人机激光雷达避障（固定阈值版）: './air/uav_lidar_avoid.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
 - 水域载具:
