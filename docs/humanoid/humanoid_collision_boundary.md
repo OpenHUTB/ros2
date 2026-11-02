@@ -16,7 +16,7 @@
 
 本模块包含以下核心文件，均已提交至仓库：
 
-```text
+```
 src/
 └── humanoid_collision_detector/
     ├── include/
@@ -48,21 +48,21 @@ src/
 
 1. 新建标准工作空间并进入 src 目录：
 
-   ```bash
+   ```
    mkdir -p ~/ros2_ws/src
    cd ~/ros2_ws/src
    ```
 
 2. 从 ros2 仓库拷贝模块代码到工作空间：
 
-   ```bash
+   ```
    cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
    cd ~/ros2_ws
    ```
 
 3. 安装依赖并编译工作空间、部署环境：
 
-   ```bash
+   ```
    rosdep install --from-paths src --ignore-src -r -y
    colcon build --packages-select humanoid_collision_detector
    source install/setup.bash
@@ -70,13 +70,13 @@ src/
 
 4. 启动碰撞体边界检测节点与障碍物演示节点：
 
-   ```bash
+   ```
    ros2 launch humanoid_collision_detector main_launch.py
    ```
 
 5. 另开终端查看实时检测结果：
 
-   ```bash
+   ```
    source install/setup.bash
    ros2 topic echo /distance_to_obstacle
    ros2 topic echo /collision_detected
@@ -84,7 +84,7 @@ src/
 
 6. 可选：打开 RViz2 查看碰撞体边界可视化：
 
-   ```bash
+   ```
    ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
    ```
 
@@ -101,7 +101,7 @@ src/
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `safety_boundary` | `0.15` | 安全边界膨胀量（m） |
+| `safety_boundary` | `0.15` | 安全边界膨胀量（m），仅用于风险分级与可视化；碰撞判定阈值固定为 0 |
 | `obstacle_radius` | `0.20` | 障碍物近似半径（m） |
 | `check_frequency` | `100.0` | 检测频率（Hz） |
 | `origin_x` / `origin_y` / `origin_z` | `0.85` / `0.0` / `1.15` | 演示障碍物轨迹中心 |
@@ -112,7 +112,9 @@ src/
 
 节点启动后，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.22·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动，x 覆盖 0.30 至 1.40 m、y 覆盖 -0.22 至 0.22 m。该轨迹会与躯干及右臂的碰撞体发生几何重叠，因此最近距离在部分时段为负值（障碍物球体已与碰撞体相交），最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换。仅当最近距离小于 0（障碍物与碰撞体几何侵入）时 `/collision_detected` 为 `true`；距离在 0 到安全边界 0.15 m 之间时风险等级为 `DANGER`，但 `/collision_detected` 仍为 `false`。
 
-默认参数下待 launch 稳定运行后连续采样 20 s（订阅 `/collision_detected` 与 `/distance_to_obstacle`，检测频率 100 Hz），重复三次的实测结果：
+默认参数下从两节点启动时刻（t=0.0 s）对齐开始连续采样 20 s（2001 帧，100 Hz，含 t=0 与 t=20 端点）的理论复现结果：`/distance_to_obstacle` 范围 **-0.178~0.743 m**（全局最小 -0.178 m，出现在 t=11.60 s，最近碰撞体 `R_forearm`），`/collision_detected` 计数 **true 640 / false 1361**，`closest_body` 分布为 `R_forearm` 76.0% / `R_upper_arm` 12.5% / `torso` 11.5%。
+
+若采样窗口不与启动时刻对齐（演示节点持续运行，从任意时刻起采 20 s），结果随窗口起点相位变化，虚拟机三次实测：
 
 | 次数 | 帧数 | true | false | `/distance_to_obstacle` 范围 |
 | --- | --- | --- | --- | --- |
@@ -120,7 +122,7 @@ src/
 | 2 | 2002 | 695 | 1307 | -0.200 ~ 0.738 m |
 | 3 | 2001 | 806 | 1195 | -0.200 ~ 0.732 m |
 
-说明：演示障碍物轨迹持续运行，20 s 采样窗口的起点相位每次不同，因此 true 计数在约 675~806 之间波动（false = 帧数 - true），帧数偶尔为 2002 属计时抖动；轨迹周期远小于 20 s 采样窗口，每次采样均覆盖最近点，故最小距离稳定在约 **-0.200 m**。true 仅出现在 `min_distance < 0` 的时段，与碰撞判定语义一致。
+说明：true 计数随窗口起点相位在约 640~810 之间波动（false = 帧数 - true），帧数偶尔为 2002 属计时抖动；非对齐窗口内最小距离可达 **-0.200 m**，该值是基础距离钳位为 0 后再减 `obstacle_radius` 的下限，表示障碍物中心已进入碰撞体外接盒内部。true 仅出现在 `min_distance < 0` 的时段，与碰撞判定语义一致。
 
 ![运行演示](../img/collision_boundary_demo.gif)
 
@@ -128,7 +130,7 @@ src/
 
 ## 验证范围说明
 
-本模块已在该虚拟机上完成以下验证：节点正常启动、话题正常收发、距离数值随障碍物位置连续变化、碰撞标志随安全边界正确翻转、`/collision_boundary` 持续发布结构合法的 MarkerArray。
+本模块已在该虚拟机上完成以下验证：节点正常启动、话题正常收发、距离数值随障碍物位置连续变化、碰撞标志在 `min_distance < 0` 时翻转为 true、`/collision_boundary` 持续发布结构合法的 MarkerArray。
 
 可视化仅完成 MarkerArray 消息结构与内容层面的校验，**未在 RViz2 中完成人工视觉确认**；上图为修正前的历史版本。
 

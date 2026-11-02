@@ -12,7 +12,7 @@
 
 ## 构建
 
-```bash
+```
 mkdir -p ~/ros2_ws/src
 cp -r ~/ros2/src/humanoid_collision_detector ~/ros2_ws/src/
 cd ~/ros2_ws
@@ -24,13 +24,13 @@ source install/setup.bash
 
 ## 启动
 
-```bash
+```
 ros2 launch humanoid_collision_detector main_launch.py
 ```
 
 ## 查看检测结果
 
-```bash
+```
 ros2 topic echo /distance_to_obstacle
 ros2 topic echo /collision_detected
 ros2 topic list | grep collision
@@ -38,11 +38,13 @@ ros2 topic list | grep collision
 
 默认配置下，障碍物按 `x = 0.85 + 0.55·sin(t)`、`y = 0.22·cos(0.7t)`、`z = 1.15 + 0.2·sin(0.5t)` 运动（x 覆盖 0.30 至 1.40 m，y 覆盖 -0.22 至 0.22 m）。该轨迹会与躯干及右臂的碰撞体发生几何重叠，所以 `/distance_to_obstacle` 在部分时段为负值（障碍物球体与碰撞体相交），最近碰撞体在 `R_forearm`、`R_upper_arm` 与 `torso` 之间切换；仅当 `min_distance < 0`（障碍物球体与碰撞体几何重叠）时，`/collision_detected` 为 `true`；若 `0 ≤ min_distance < safety_boundary`，风险等级记为 DANGER，但碰撞标志仍为 false。
 
-默认参数下连续采样 20 s（100 Hz，约 2001 帧）重复三次的实测结果：`/distance_to_obstacle` 最小值稳定在约 **-0.200 m**（轨迹周期远小于采样窗口，每次均覆盖最近点），最大值约 0.73~0.75 m；`/collision_detected` 的 true 计数随采样窗口起点相位在 **675~806** 之间波动（对应 false 1195~1326），true 仅出现在 `min_distance < 0` 的时段。
+默认参数下从两节点启动时刻（t=0.0 s）对齐开始连续采样 20 s（2001 帧，100 Hz，含端点）的理论复现结果：`/distance_to_obstacle` 范围 **-0.178~0.743 m**（全局最小出现在 t=11.60 s，最近碰撞体 `R_forearm`），`/collision_detected` 计数 **true 640 / false 1361**，`closest_body` 分布为 `R_forearm` 76.0% / `R_upper_arm` 12.5% / `torso` 11.5%。
+
+若采样窗口不与启动时刻对齐（演示节点持续运行，从任意时刻起采 20 s），结果随窗口起点相位变化：虚拟机三次实测为 true 675 / false 1326（2001 帧，-0.200~0.747 m）、true 695 / false 1307（2002 帧，-0.200~0.738 m）、true 806 / false 1195（2001 帧，-0.200~0.732 m）。此时最小距离可达 **-0.200 m**——该值是基础距离钳位为 0 后再减 `obstacle_radius` 的下限，表示障碍物中心已进入碰撞体外接盒内部。
 
 ## 可视化
 
-```bash
+```
 ros2 run rviz2 rviz2 -d install/humanoid_collision_detector/share/humanoid_collision_detector/rviz/collision_boundary.rviz
 ```
 
