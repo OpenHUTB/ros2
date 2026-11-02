@@ -283,7 +283,7 @@
 <ul>
 <li class="toctree-l2"><a class="reference internal" href="yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="yolo_visual_centering/">YOLO 目标水平视觉居中</a>
+<li class="toctree-l2"><a class="reference internal" href="yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
 </li>
@@ -362,11 +362,11 @@
 <ul>
 <li><a href="setup/">环境配置</a>：依赖安装、模拟器连接、YOLO 权重和功能包构建。</li>
 <li><a href="yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>：系统架构、运行命令和轨迹分析。</li>
-<li><a href="yolo_visual_centering/">YOLO 目标水平视觉居中</a>。</li>
+<li><a href="yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>。</li>
 <li><a href="traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>：车辆生成、轨迹记录与可选无人机跟随。</li>
 </ul>
 <h2 id="_2">功能扩展与未来规划</h2>
-<p>后续计划实现“基于 YOLO 的移动车辆视觉居中与目标丢失处理”：根据检测框偏差持续居中，目标丢失时停止跟随，重新确认目标后恢复。CARLA 车辆坐标用于轨迹记录与效果评估，视觉闭环以图像检测结果作为目标观测。该完整流程尚未实现。</p>
+<p>视觉伺服目前支持：水平居中、目标丢失后停止跟随并在重新确认后恢复、基于表观尺寸的距离保持，以及可选的垂直居中，详见<a href="yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>。仍待实现的部分包括：对<strong>运动目标</strong>的持续跟随与环绕拍摄、把距离估计从单目表观尺寸升级为深度或已知尺寸约束、以及与避障规划的联合。</p>
 <h2 id="_3">说明</h2>
 <p>本文档整理、代码重构和问题排查过程中使用了大模型辅助；提交者已检查全部内容并对最终结果负责。</p></div>
 </div>

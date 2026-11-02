@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../../img/favicon.ico" rel="shortcut icon"/>
-<title>YOLO 目标水平视觉居中 - 模拟器的 ROS 文档</title>
+<title>YOLO 目标视觉伺服：居中与距离保持 - 模拟器的 ROS 文档</title>
 <link href="../../../css/theme.css" rel="stylesheet"/>
 <link href="../../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "YOLO \u76ee\u6807\u6c34\u5e73\u89c6\u89c9\u5c45\u4e2d";
+        var mkdocs_page_name = "YOLO \u76ee\u6807\u89c6\u89c9\u4f3a\u670d\uff1a\u5c45\u4e2d\u4e0e\u8ddd\u79bb\u4fdd\u6301";
         var mkdocs_page_input_path = "air/openhutb_yolo_mlp_control/yolo_visual_centering.md";
         var mkdocs_page_url = null;
       </script>
@@ -283,7 +283,7 @@
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
 </li>
-<li class="toctree-l2 current"><a class="reference internal current" href="#">YOLO 目标水平视觉居中</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">YOLO 目标视觉伺服：居中与距离保持</a>
 <ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="#_1">预览控制量</a>
 </li>
@@ -291,9 +291,11 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#_2">仿真控制</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_3">常用参数与状态</a>
+<li class="toctree-l3"><a class="reference internal" href="#_3">距离保持与垂直居中</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_4">说明</a>
+<li class="toctree-l3"><a class="reference internal" href="#_4">常用参数与状态</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">说明</a>
 </li>
 </ul>
 </li>
@@ -361,7 +363,7 @@
 <li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
 <li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item">YOLO 感知与无人机控制</li>
-<li class="breadcrumb-item active">YOLO 目标水平视觉居中</li>
+<li class="breadcrumb-item active">YOLO 目标视觉伺服：居中与距离保持</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/openhutb_yolo_mlp_control/yolo_visual_centering.md"> 编辑页面</a>
 </li>
@@ -370,8 +372,8 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="yolo">YOLO 目标水平视觉居中</h1>
-<p><code>openhutb_yolo_mlp_control</code> 提供独立的 YOLO 目标水平居中模式。节点根据检测框的水平偏差控制无人机横向运动，使目标接近画面中心；不控制前进距离、避障、垂直居中或相机朝向。无人机须先在仿真器中起飞并稳定，本模式不负责解锁、起飞或降落。</p>
+<div><h1 id="yolo">YOLO 目标视觉伺服：居中与距离保持</h1>
+<p><code>openhutb_yolo_mlp_control</code> 提供独立的 YOLO 目标视觉伺服模式。节点根据检测框偏差控制无人机运动：<strong>水平居中始终启用</strong>；<strong>距离保持</strong>与<strong>垂直居中</strong>为可选能力，默认关闭，关闭时行为与原有水平居中模式完全一致。本模式不做避障，也不控制相机朝向。无人机须先在仿真器中起飞并稳定，本模式不负责解锁、起飞或降落。</p>
 <p>目标类别默认为 <code>car</code>，也可通过 <code>target_class:=person</code> 等参数切换。运行前需先准备 YOLO11n 权重；该文件不包含在仓库中，可从<a href="https://pan.baidu.com/s/1nHSTqk4aYdC5HOpih6jPrg?pwd=fffa">模型下载地址</a>下载（提取码：<code>fffa</code>）。请将 <code>yolo11n.pt</code> 保存到本地，并在启动时传入其绝对路径，避免 Ultralytics 在运行时尝试联网下载。</p>
 <p>以下命令在完成<a href="../setup/">环境配置</a>中的依赖安装、功能包构建并加载工作空间后运行。先将 <code>REPO_DIR</code> 设为本仓库根目录，再设置模型文件和当前 Windows 主机地址，并确认文件及 RPC 端口可用：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">REPO_DIR</span><span class="o">=</span>/绝对路径/到/ros2
@@ -412,8 +414,13 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <span class="w">  </span>target_class:<span class="o">=</span>car<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>dry_run:<span class="o">=</span><span class="nb">false</span>
 </code></pre></div>
-<p>退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态或位移保护触发时，控制器输出零速度。</p>
-<h2 id="_3">常用参数与状态</h2>
+<p>退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态、水平位移保护触发时，控制器输出零速度；启用垂直居中时，高度保护（<code>altitude_limit</code>）也会输出零速度。</p>
+<h2 id="_3">距离保持与垂直居中</h2>
+<p>两项能力默认关闭，需要显式设置参数才会启用。</p>
+<p><strong>距离保持</strong>（<code>target_area</code> &gt; 0）：把目标框占画面的面积比作为设定值，检测框偏小说明目标太远，控制器输出前向速度；偏大则后退。该量是<strong>单目视觉的表观尺寸</strong>，不是真实测距，因此只在目标类别已知、目标完整可见且不改变姿态的场景下可靠；目标被遮挡或侧向旋转时面积会剧烈变化，此时不建议开启。参数为 <code>target_area</code>、<code>distance_gain</code>、<code>distance_deadband</code>、<code>max_forward_speed</code>。</p>
+<p><strong>垂直居中</strong>（<code>vertical_gain</code> &gt; 0）：用检测框的纵向偏差控制升降，<strong>启用后取代原有的定高保持</strong>；目标在画面上方则爬升，在下方则下降。参数为 <code>vertical_gain</code>、<code>vertical_deadband</code>，升降速度仍受 <code>max_vertical_speed</code> 限制。</p>
+<p><strong>安全边界</strong>：<code>max_altitude_change</code> 限制的是<strong>相对跟踪起点高度的变化量</strong>，并且<strong>只在启用垂直居中（<code>vertical_gain</code> &gt; 0）时生效</strong>；超过该值控制器立即输出零速度并报告 <code>altitude_limit</code>。未启用垂直居中时该限制不会触发，高度仍按原有定高逻辑保持，正常爬升或高空作业不受影响。水平位移始终由 <code>max_displacement</code> 限制。</p>
+<h2 id="_4">常用参数与状态</h2>
 <table>
 <thead>
 <tr>
@@ -449,15 +456,51 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <td>相对初始位置的水平位移上限，单位 m</td>
 </tr>
 <tr>
+<td><code>target_area</code></td>
+<td><code>0.0</code></td>
+<td>期望的目标框面积占画面比例；<code>0</code> 表示关闭距离保持</td>
+</tr>
+<tr>
+<td><code>distance_gain</code></td>
+<td><code>1.0</code></td>
+<td>相对面积误差到前向速度的增益</td>
+</tr>
+<tr>
+<td><code>distance_deadband</code></td>
+<td><code>0.15</code></td>
+<td>相对面积误差死区，落在区间内不输出前向速度</td>
+</tr>
+<tr>
+<td><code>max_forward_speed</code></td>
+<td><code>0.5</code></td>
+<td>前向速度上限，单位 m/s</td>
+</tr>
+<tr>
+<td><code>vertical_gain</code></td>
+<td><code>0.0</code></td>
+<td>纵向偏差到升降速度的增益；<code>0</code> 表示保持定高</td>
+</tr>
+<tr>
+<td><code>vertical_deadband</code></td>
+<td><code>0.08</code></td>
+<td>纵向归一化偏差死区</td>
+</tr>
+<tr>
+<td><code>max_altitude_change</code></td>
+<td><code>3.0</code></td>
+<td>启用垂直居中时，相对跟踪起点高度的最大变化，单位 m</td>
+</tr>
+<tr>
 <td><code>start_topmost</code></td>
 <td><code>true</code></td>
 <td>启动时置顶 YOLO 窗口</td>
 </tr>
 </tbody>
 </table>
-<p>状态发布在 <code>/openhutb/visual_centering/status</code>，包括 <code>tracking</code>、<code>centered</code>、<code>target_lost</code>、<code>odom_stale</code> 及保护状态；预览速度发布在 <code>/openhutb/visual_centering/preview_cmd_vel</code>。该模式仅修正水平图像偏差，不提供距离保持或避障。</p>
+<p>状态发布在 <code>/openhutb/visual_centering/status</code>，包含 <code>status</code>、<code>error_x</code>、<code>distance_error</code>、<code>forward_speed</code>、<code>velocity_ned</code>、<code>dry_run</code> 字段；<code>status</code> 取值包括 <code>tracking</code>、<code>centered</code>、<code>target_lost</code>、<code>odom_stale</code>、<code>displacement_limit</code>、<code>heading_changed</code>、<code>altitude_limit</code>。预览速度发布在 <code>/openhutb/visual_centering/preview_cmd_vel</code>。<code>centered</code> 表示水平偏差在死区内，且启用距离保持时面积误差也在死区内。</p>
+<p>本模式仍不提供避障；需要绕障时请改用避障规划类模块。</p>
 <p>返回<a href="../">文档目录</a>。</p>
-<h2 id="_4">说明</h2>
+<h2 id="_5">说明</h2>
 <p>本文档整理、代码重构和问题排查过程中使用了大模型辅助；提交者已检查全部内容并对最终结果负责。</p></div>
 </div>
 </div><footer>
