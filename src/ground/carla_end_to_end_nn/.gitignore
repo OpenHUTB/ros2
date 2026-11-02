@@ -1,0 +1,14 @@
+# 训练产物与缓存：不入库（模型可由 main.py --mode train 或现场回退重建）
+models/
+*.json.bak
+
+# 行为克隆采集数据集（体积大，可重新采集）
+dataset/
+
+# 取证截图与曲线（运行时可再生成）
+shots/
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
