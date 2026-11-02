@@ -99,6 +99,7 @@ nav:
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - VRU 冲突风险图: './ground/vru_conflict_risk_map.md'
 - 空域载具:
     - 无人机任务管理与安全状态机:
       - 模块概览: './air/uav_mission_safety_manager/overview.md'
