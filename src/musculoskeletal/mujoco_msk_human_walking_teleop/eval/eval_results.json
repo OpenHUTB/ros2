@@ -21,10 +21,10 @@
   ],
   "squat_flat": {
     "ok": true,
-    "cycles": 8,
-    "z_min": 0.5387,
-    "depth": 0.461,
-    "work_J": 1072.8
+    "cycles": 7,
+    "z_min": 0.5343,
+    "depth": 0.466,
+    "work_J": 1057.4
   },
   "kick_flat": [
     {
@@ -44,9 +44,9 @@
     "ok": true,
     "dist_m": 2.419,
     "speed_mps": 0.121,
-    "act_effort": 196.4,
-    "work_J": 2698.5,
-    "work_per_m": 1115.6,
+    "act_effort": 188.0,
+    "work_J": 2683.1,
+    "work_per_m": 1109.3,
     "fell_at": null
   },
   "walk_slope5": {

@@ -12,7 +12,7 @@
 
 - **分层控制**：动作编排器（Composer）→ 姿势反射层（Reflex）→ Hill 肌肉动力学 → MuJoCo 步进；
 - **键盘遥操作**：动作键切换站立/行走/踢腿/蹲起/放松，手动兴奋键可直接兴奋任意一块肌肉并与当前动作叠加；
-- **三种场景**：平地、5° 坡道、负重 10 kg 背包，均通过同一套控制器参数稳定运行；
+- **三种场景**：平地、5° 下坡（等效重力）、负重 10 kg 背包，均通过同一套控制器参数稳定运行；
 - **launch 一键启动**，并附带无需 ROS 的离线自检（`check`）与多场景性能评测（`eval`）。
 
 > 说明：本模块对应任务 (1) 的物理仿真与键盘运动控制，控制回路为生物合理反射模型，不涉及感知/规划/端到端神经网络算法（该要求针对任务 (2)–(4)）。
@@ -27,18 +27,19 @@ src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── CMakeLists.txt
 ├── launch/main.launch          # 一键启动：仿真节点 + 可选 xterm 键盘节点
 ├── config/params.yaml          # 反射增益 / 步态 / 蹲起 / 踢腿参数
-├── eval/                       # 可复现评测证据（终端输出与结果，见 §7）
+├── eval/                       # 可复现评测证据与工具（见 §7）
 │   ├── check_output.txt        # python3 main.py check 完整终端输出
 │   ├── eval_output.txt         # python3 main.py eval 完整终端输出
-│   └── eval_results.json       # eval 结构化结果（机器可读）
+│   ├── eval_results.json       # eval 结构化结果（机器可读）
+│   └── render_scenes.py        # 场景说明截图生成脚本（英文标注）
 ├── models/
 │   ├── msk_human.xml           # 肌肉骨骼人模型（13 DoF + 22 motor）
 │   ├── scene_flat.xml          # 平地场景
-│   ├── scene_slope5.xml        # 5 度坡场景
+│   ├── scene_slope5.xml        # 5 度下坡场景（等效重力法）
 │   └── scene_load.xml          # 负载场景（运行时躯干 +10 kg）
 └── scripts/
     ├── msk_human_core.py       # 仿真核心：Hill 肌肉、反射层、动作编排、自检
-    ├── msk_human_keyboard.py   # 键盘策略（按键 -> 激活/动作，ROS 节点与离线共用）
+    ├── msk_human_keyboard.py   # 键盘策略（按键 -> 激活/动作，被键盘节点导入）
     ├── msk_human_eval.py       # 离线多场景性能评测
     ├── msk_human_sim_node.py   # ROS 仿真节点（500 Hz 控制回路）
     └── msk_human_keyboard_node.py  # ROS 键盘遥操作节点（xterm 中运行）
@@ -130,7 +131,12 @@ roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false keyboard:=fa
 roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
 ```
 
-![5度坡](../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_slope5.png)
+场景截图（由 `eval/render_scenes.py` 离屏渲染生成，含英文标注：坡道场景
+红色箭头为沿坡向下的重力分量、负载场景躯干上灰色矩形为 10 kg 背包）：
+
+![平地](../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_flat.png)
+
+![5度下坡](../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_slope5.png)
 
 ![负载](../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_load.png)
 
@@ -266,10 +272,10 @@ $$
 
 $$
 \cos\alpha = \frac{L_1^2 + h^2 - L_2^2}{2 L_1 h},\qquad
-q_{hip} = \alpha,\qquad q_{ankle} = q_{knee} - q_{hip}\ \text{（保持脚掌水平）}
+q_{hip} = \alpha,\qquad q_{ankle} = \min(q_{knee} - q_{hip},\ 0.45\ \text{rad})
 $$
 
-其中 \(L_1 = 0.42\) m（大腿）、\(L_2 = 0.40\) m（小腿）。骨盆高度按余弦轨迹升降：\(z(t) = z_{stand} - \frac{d}{2}(1 - \cos 2\pi f t)\)。
+其中 \(L_1 = 0.42\) m（大腿）、\(L_2 = 0.40\) m（小腿）。骨盆高度按余弦轨迹升降：\(z(t) = z_{stand} - \frac{d}{2}(1 - \cos 2\pi f t)\)。浅蹲时 \(q_{knee}-q_{hip}\) 不超过踝限位，脚掌保持水平；深蹲（本模块 \(d=0.24\) m）时该值达约 0.82 rad，超出踝限位 0.45 rad，目标被截断——脚掌随之上仰约 18°，由脚盒前缘触地支撑，配合反射层维持稳定。
 
 ### 4.5 踢腿编排（四阶段）
 
@@ -379,7 +385,7 @@ cos_g = (THIGH_L**2 + SHIN_L**2 - h**2) / (2 * THIGH_L * SHIN_L)
 gamma = math.acos(...)                  # 膝内角（余弦定理）
 knee = math.pi - gamma                  # 屈曲角
 cos_a = (THIGH_L**2 + h**2 - SHIN_L**2) / (2 * THIGH_L * h)
-hip, ankle = alpha, knee - alpha        # 踝 = 膝 - 髋，保持脚掌水平
+hip, ankle = alpha, min(knee - alpha, 0.45)   # 浅蹲脚平放；深蹲踝顶到限位 0.45
 ```
 
 ### 6.5 摔倒判定与安全设计
@@ -398,21 +404,21 @@ def fallen(self):
 | 场景 | 说明 |
 |------|------|
 | 平地 `flat` | 基准场景 |
-| 5° 坡道 `slope5` | 沿 x 方向 5° 上坡，等效于增加重力沿坡分量 |
+| 5° 下坡 `slope5` | 等效重力法：\(g'=(g\sin 5°,\,0,\,-g\cos 5°)\)，沿 \(+x\) 的分量即沿坡向下的助推力 |
 | 负载 `load` | 运行时躯干质量 +10 kg 并同步缩放惯量（18.8 → 28.8 kg） |
 
 评测结果（`python3 main.py eval`，MuJoCo 3.2.3，dt = 0.002 s）：
 
-| 指标 | 平地 | 5° 坡 | 负载 10 kg | 达标条件 | 结果 |
+| 指标 | 平地 | 5° 下坡 | 负载 10 kg | 达标条件 | 结果 |
 |------|------|-------|-----------|----------|------|
 | 站立成功率（6 s × 3 次） | 3/3 | — | — | 不摔、俯仰<0.2、漂移<0.2 m | 通过 |
-| 蹲起周期数（15 s） | 8 | — | — | ≥5 | 通过 |
+| 蹲起周期数（15 s） | 7 | — | — | ≥5 | 通过 |
 | 踢腿脚尖峰值（3 次） | 0.609 m | — | — | >0.30 m 且不摔 | 通过 |
 | 行走距离 / 平均速度 | 2.419 m / 0.121 m/s（20 s） | 9.958 m / 0.664 m/s（15 s） | 1.505 m / 0.100 m/s（15 s） | >1.0 m 且不摔 | 通过 |
 
 结果分析：
 
-1. **坡道距离反而远大于平地**（0.664 vs 0.121 m/s）：5° 上坡时重力沿坡分量使身体持续倒向前方，前倾倒立摆自然获得更大步幅，反射层靠踝刚度即可维持稳定；
+1. **下坡距离远大于平地**（0.664 vs 0.121 m/s）：5° 下坡的等效重力沿 \(+x\) 分量 \(g\sin 5°\approx 0.85\ \text{m/s}^2\) 持续助推身体，前倾倒立摆自然获得更大步幅，反射层靠踝刚度即可维持稳定。反向的 5° 上坡（等效重力 \(x\) 分量为负）在同套参数下站立与行走均无法维持——上坡需克服 \(mg\sin 5°\) 的做功增量，超出该反射层与步长的能力范围，故本模块选取下坡作为坡道场景；
 2. **负载行走距离下降约 38%**：+10 kg 后倒立摆临界刚度 \(mgh\) 升高约 53%，踝 460 N·m/rad 的刚度裕量变小，步态变保守；距离仍远超阈值；
 3. **平地行走速度 0.121 m/s 偏慢**：这是"稳定性优先"的步态——躯干前倾参考仅 0.07 rad、反射层 kd 与激活延迟（τ_act=12 ms）使实际髋摆幅滞后参考；若牺牲稳定裕量增大前倾与步幅可提速，但单腿支撑期摔倒概率上升；
 4. **正机械功 / 距离**（`work_per_m` 字段）记录在 `eval_results.json` 中，可用于对比不同步频下的能耗。

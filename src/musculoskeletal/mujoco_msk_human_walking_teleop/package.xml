@@ -15,4 +15,6 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <exec_depend>xterm</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
 </package>

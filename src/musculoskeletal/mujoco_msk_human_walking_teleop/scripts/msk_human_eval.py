@@ -57,13 +57,21 @@ def trial_squat(sim, p):
     comp.set_action("squat")
     sim.reset()
     z_min = [1.0]
+    cycles = [0]
+    in_low = [False]
 
     def cb(_t):
-        z_min[0] = min(z_min[0], sim.pelvis_z())
+        z = sim.pelvis_z()
+        z_min[0] = min(z_min[0], z)
+        # 实际完成周期数：骨盆高度越过下蹲阈值以下再回到其上计 1 次
+        if z < 0.78:
+            in_low[0] = True
+        elif in_low[0] and z > 0.83:
+            in_low[0] = False
+            cycles[0] += 1
 
     t_fall, acc = run(sim, comp, 15.0, on_step=cb)
-    cycles = max(0, int(round((15.0 - (t_fall or 0.0)) * p["squat"]["freq"])))
-    return {"ok": t_fall is None and cycles >= 5, "cycles": cycles,
+    return {"ok": t_fall is None and cycles[0] >= 5, "cycles": cycles[0],
             "z_min": round(z_min[0], 4), "depth": round(1.0 - z_min[0], 3),
             "work_J": round(acc["work"], 1)}
 
@@ -142,10 +150,11 @@ def main():
     summary = [
         ("平地站立成功率", "%d/3" % round(ok_rate(results["stand_flat"]) * 3)),
         ("蹲起周期数(15s)", str(results["squat_flat"]["cycles"])),
-        ("踢腿脚尖峰值(m)", str(results["kick_flat"][0]["toe_peak_m"])),
+        ("踢腿脚尖峰值(m)", str(max(t["toe_peak_m"]
+                                    for t in results["kick_flat"]))),
         ("平地行走距离(m)/速度(m/s)", "%s / %s" % (
             results["walk_flat"]["dist_m"], results["walk_flat"]["speed_mps"])),
-        ("坡道行走距离(m)", str(results["walk_slope5"]["dist_m"])),
+        ("下坡行走距离(m)", str(results["walk_slope5"]["dist_m"])),
         ("负载行走距离(m)", str(results["walk_load"]["dist_m"])),
     ]
     print("\n================= 性能汇总 =================")

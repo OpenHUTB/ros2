@@ -96,8 +96,8 @@ def _default_params():
     return {
         "reflex": {
             "kp": {"root_pitch": 320.0, "hip_l": 320.0, "knee_l": 300.0,
-                   "ankle_l": 400.0, "hip_r": 320.0, "knee_r": 300.0,
-                   "ankle_r": 400.0, "shoulder_l": 40.0, "elbow_l": 30.0,
+                   "ankle_l": 460.0, "hip_r": 320.0, "knee_r": 300.0,
+                   "ankle_r": 460.0, "shoulder_l": 40.0, "elbow_l": 30.0,
                    "shoulder_r": 40.0, "elbow_r": 30.0},
             "kd": {"root_pitch": 26.0, "hip_l": 10.0, "knee_l": 6.0,
                    "ankle_l": 30.0, "hip_r": 10.0, "knee_r": 6.0,
@@ -111,9 +111,9 @@ def _default_params():
         "walk": {
             "freq": 0.8, "hip_amp": 0.50, "knee_amp": 0.75, "knee_off": 0.10,
             "ankle_amp": 0.25, "ankle_off": -0.05, "ankle_phase": 0.4,
-            "arm_amp": 0.30, "pitch_ref": 0.10,
+            "arm_amp": 0.30, "pitch_ref": 0.07,
         },
-        "squat": {"freq": 0.5, "depth": 0.32, "z_stand": 0.875},
+        "squat": {"freq": 0.5, "depth": 0.24, "z_stand": 0.875},
         "kick": {"T": 1.6},
     }
 
@@ -325,7 +325,9 @@ def leg_ik_squat(z_pelvis, torso_pitch=0.0):
     cos_a = (THIGH_L ** 2 + h ** 2 - SHIN_L ** 2) / (2 * THIGH_L * h)
     alpha = math.acos(max(-1.0, min(1.0, cos_a)))       # 大腿与竖直线夹角
     hip = alpha                                          # 前屈为正
-    ankle = knee - hip                                   # 脚平放
+    # 深蹲时踝需背屈超过关节限位 0.45 rad，此时目标被限位截断：
+    # 脚掌上仰、由脚盒前缘触地支撑（见文档蹲起一节的说明）
+    ankle = min(knee - hip, 0.45)
     return hip, knee, ankle
 
 
@@ -549,10 +551,13 @@ def run_check():
         check("stand_6s_%s" % sc, not fell and abs(pit) < 0.25,
               "z=%.3f pitch=%+.3f t=%.1f" % (z, pit, i * dt))
 
-    # 蹲起 IK 校验：z=0.63 时膝角应显著大于 0
-    hip, knee, ankle = leg_ik_squat(0.63)
-    check("squat_ik", 0.4 < knee < 2.0 and abs(hip + ankle - knee) < 1e-9,
-          "hip=%.2f knee=%.2f ankle=%.2f" % (hip, knee, ankle))
+    # 蹲起 IK 校验：浅蹲满足"踝=膝-髋"（脚平放）；深蹲踝背屈顶到限位 0.45
+    hip, knee, ankle = leg_ik_squat(0.83)
+    hip2, knee2, ankle2 = leg_ik_squat(0.63)
+    check("squat_ik",
+          abs(hip + ankle - knee) < 1e-9 and abs(ankle2 - 0.45) < 1e-9,
+          "shallow hip=%.2f knee=%.2f ankle=%.2f | deep ankle=%.2f (limit)"
+          % (hip, knee, ankle, ankle2))
 
     # 负载场景质量校验
     m0 = mujoco.MjModel.from_xml_path(_model_path("flat"))

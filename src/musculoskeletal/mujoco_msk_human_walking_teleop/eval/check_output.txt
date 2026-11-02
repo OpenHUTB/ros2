@@ -7,6 +7,6 @@
 [PASS] stand_6s_flat z=0.876 pitch=-0.017 t=6.0
 [PASS] stand_6s_slope5 z=0.875 pitch=+0.034 t=6.0
 [PASS] stand_6s_load z=0.876 pitch=-0.021 t=6.0
-[PASS] squat_ik hip=0.77 knee=1.59 ankle=0.82
+[PASS] squat_ik shallow hip=0.32 knee=0.67 ankle=0.34 | deep ankle=0.45 (limit)
 [PASS] load_mass torso mass 18.8 -> 28.8
 ---- check: 11/11 passed ----

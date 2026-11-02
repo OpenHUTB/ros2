@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 场景：负载（10 kg 背包在核心代码中加到躯干刚体，见 msk_human_core.add_load） -->
+<!-- 场景：负载（10 kg 背包，由 MskHumanSim.__init__ 修改躯干质量与惯量实现） -->
 <mujoco model="scene_load">
   <include file="msk_human.xml"/>
   <option timestep="0.002" gravity="0 0 -9.81"/>

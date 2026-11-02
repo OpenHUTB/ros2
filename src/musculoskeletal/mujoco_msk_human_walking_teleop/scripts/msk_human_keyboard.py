@@ -7,7 +7,7 @@
      反射层输出上；
   2. 动作键（按一次切换）：站立 / 踢腿 / 蹲起 / 行走 / 放松 / 步频增减。
 
-被 ROS 键盘节点与离线演示脚本共用。
+被 ROS 键盘控制节点（msk_human_keyboard_node）导入使用。
 """
 import numpy as np
 
