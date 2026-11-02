@@ -170,6 +170,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
+* [低空多源气象扰动下无人机影响预测与风险分级](./air/uav_weather_risk.md)
+
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
 
