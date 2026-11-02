@@ -63,6 +63,7 @@ ROS每章节运行代码:
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+  * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
@@ -70,6 +71,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
@@ -99,6 +101,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
+* [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
@@ -132,6 +135,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
@@ -184,8 +189,10 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
+* [神经安全过滤器](./air/uav_neural_safety_filter.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
+* [手势控制无人机](./air/gesture_control_drone.md)
 
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
 
