@@ -1,0 +1,42 @@
+<launch>
+  <!-- ============================================================
+       gesture_control_drone 统一启动入口（作业要求的 launch 启动）
+
+         roslaunch gesture_control_drone main.launch
+
+       前置条件：
+         1. 宿主机先启动 AirSim 仿真器（Windows 端）；
+         2. 跨机部署时用 airsim_ip 指定宿主 IP，例如：
+              roslaunch gesture_control_drone main.launch airsim_ip:=192.168.49.1
+         3. 摄像头需要接在被 ROS 跑的那台机器上（虚拟机需先透传 USB 摄像头）
+
+       常用参数：
+         roslaunch gesture_control_drone main.launch show_window:=true
+         roslaunch gesture_control_drone main.launch start_drone_control:=false
+         roslaunch gesture_control_drone main.launch estop_action:=land
+       ============================================================ -->
+
+  <arg name="airsim_ip"    default="127.0.0.1" doc="AirSim 仿真器地址（跨机填宿主 IP）"/>
+  <arg name="airsim_port"  default="41451"     doc="AirSim RPC 端口"/>
+  <arg name="camera_index" default="0"         doc="摄像头索引"/>
+  <arg name="estop_action" default="hover"     doc="紧急停止动作：hover | land | disarm"/>
+  <arg name="show_window"  default="false"     doc="是否显示手势预览窗口"/>
+  <arg name="start_drone_control" default="true" doc="是否同时启动无人机控制节点"/>
+
+  <!-- 手势感知节点（模块入口 main.py） -->
+  <node pkg="gesture_control_drone" type="main.py" name="gesture_ros_node"
+        output="screen">
+    <rosparam command="load" file="$(find gesture_control_drone)/config/gesture_control.yaml"/>
+    <param name="camera_index" value="$(arg camera_index)"/>
+    <param name="show_window"  value="$(arg show_window)"/>
+  </node>
+
+  <!-- 无人机控制节点（订阅手势指令并调用 AirSim） -->
+  <node if="$(arg start_drone_control)" pkg="gesture_control_drone"
+        type="drone_control_node.py" name="drone_control_node" output="screen">
+    <rosparam command="load" file="$(find gesture_control_drone)/config/gesture_control.yaml"/>
+    <param name="airsim/ip"   value="$(arg airsim_ip)"/>
+    <param name="airsim/port" value="$(arg airsim_port)"/>
+    <param name="estop_action" value="$(arg estop_action)"/>
+  </node>
+</launch>
