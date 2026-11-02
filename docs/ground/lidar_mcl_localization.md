@@ -1,4 +1,4 @@
-﻿# 基于 2D 激光雷达的蒙特卡洛定位（MCL）
+# 基于 2D 激光雷达的蒙特卡洛定位（MCL）
 
 本页对应 `src/ground/lidar_mcl_localization`。在第 6 章用 `amcl` 做定位之后，
 这一节把盒子打开：**用不到 400 行纯 NumPy 把粒子滤波的每一步写出来**，
@@ -142,7 +142,7 @@ python3 tools/run_experiment.py     # 训练网络 + 四组对比 + 出图
 | `src/.../nn_motion.py` | MLP 与修正器 |
 | `scripts/mcl_node.py` | 定位节点：订 `/scan` `/odom`，发 `/mcl_pose` `/particles` `/tf` |
 | `scripts/map_publisher.py` | 把 PGM 地图发布成 `/map`（OccupancyGrid，latched），替代 map_server |
-| `config/mcl.rviz` | rviz 配置：地图 + 粒子云 + 激光 + 定位协方差 |
+| `config/mcl.rviz` | rviz 配置：地图 + 粒子云 + 激光 + 定位协方差 + 机器人模型 |
 | `scripts/teleop.py` | 键盘遥控（termios，无 GUI 依赖） |
 | `scripts/goal_driver.py` | 用 `/mcl_pose` 闭环走到目标点 |
 | `tools/gen_scene.py` | 生成 world + 地图 |
@@ -168,7 +168,7 @@ python3 tools/run_experiment.py     # 训练网络 + 四组对比 + 出图
 ### 6.1 Gazebo 实跑（Ubuntu 20.04 + Noetic + Gazebo 11，无 GPU）
 
 ```
-$ roslaunch lidar_mcl_localization main.launch     # 无头
+$ roslaunch lidar_mcl_localization main.launch gui:=true rviz:=true
 $ rostopic hz /mcl_pose
 average rate: 10.011
 
@@ -177,14 +177,22 @@ $ rostopic echo -n1 /mcl_diagnostics/data
 #  Neff   位置散布  航向散布  位置误差  航向误差  重采样次数  更新次数
 ```
 
-出生点初始位置误差 **0.073 m**；直行 3 s + 左转 3 s 后降到 **0.020 m**，
-航向误差 0.09 rad（5.2°）。同一个时刻的里程计已经累计了 0.2 m 的漂移。
+![rviz 中的粒子云、激光与定位结果](../img/ground/lidar_mcl_localization/rviz_particles.png)
+
+*图 2　rviz 实拍（`main.launch gui:=true rviz:=true`）：灰色是 `/map` 占据栅格，
+**橙色粒子云**紧贴在机器人周围（散布约 5 cm，说明已经收敛），
+**红色激光点**贴在墙面上，绿色位姿箭头与走廊方向一致。
+粒子云“收紧成一团”正是定位收敛的直接证据；如果滤波器发散，会看到橙色粒子散满整张地图。*
+
+出生点初始位置误差 **0.071 m**；直行 4 s 后 **0.066 m**；转向后再直行 **0.050 m**
+（同期里程计累计漂移 0.284 m）。航向误差在静止时约 0.1°，
+急转弯过程中会短暂升到 7.6°——这是 $c_\theta$ 把转向滑移一起吸收的后果。
 
 ### 6.2 四组对比（`tools/run_experiment.py`）
 
 ![四组方案的误差曲线](../img/ground/lidar_mcl_localization/error_comparison.png)
 
-*图 2　左：位置误差；右：航向误差。蓝线（纯里程计）一路漂到 0.66 m / 27°；
+*图 3　左：位置误差；右：航向误差。蓝线（纯里程计）一路漂到 0.66 m / 27°；
 橙线是加了神经网络修正的里程计，明显改善；绿线与红线（两种 MCL）几乎贴着零。*
 
 | 方案 | 位置误差 均值 / 最大 | 航向误差 均值 / 最大 |
@@ -196,7 +204,7 @@ $ rostopic echo -n1 /mcl_diagnostics/data
 
 !!! info "怎么读这张表 —— 两个诚实的结论"
     1. **神经网络对纯里程计有效**：误差从 0.345 m 降到 0.195 m（−43%），
-       说明它确实学到了"转向越大、滑移越大"的规律（训练曲线见图 3）。
+       说明它确实学到了"转向越大、滑移越大"的规律（训练曲线见图 4）。
     2. **但在 MCL 里几乎没差别**（0.020 → 0.021 m）。原因是观测更新本身就在吸收
        里程计的系统误差，网络的价值被掩盖了。把激光更新降到 2 Hz（`scan_every=2`）
        时网络能再改善约 19%（0.0221 → 0.0179 m），但趋势不稳定，不宜过度解读。
@@ -206,7 +214,7 @@ $ rostopic echo -n1 /mcl_diagnostics/data
 
 ![神经网络训练曲线](../img/ground/lidar_mcl_localization/nn_training.png)
 
-*图 3　神经网络运动模型的验证集 MSE 随训练轮次下降（1500 轮，从 2.55 降到 6.4e-4）。*
+*图 4　神经网络运动模型的验证集 MSE 随训练轮次下降（1500 轮，从 2.55 降到 6.4e-4）。*
 
 ## 7. 测试
 
