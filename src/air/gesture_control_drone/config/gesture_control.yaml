@@ -37,6 +37,8 @@ yaw_rate: 30.0              # 偏航角速度 (deg/s)
 command_timeout: 10.0       # 单次 AirSim RPC 调用超时 (s)，超时视为失败
 takeoff_timeout: 60.0       # 起飞（含定高）超时 (s)；慢机器/慢仿真器可调大
 land_timeout: 60.0          # 降落超时 (s)；3 m 高度约需 14 s
+state_lock_timeout: 0.1     # 读状态抢不到 RPC 锁时的等待上限 (s)：
+                            # 降落时锁会被占 20 s，这里必须很短，否则 /drone/odom 会停更
 command_cooldown: 1.5       # 同一条指令的最小间隔 (s)，控制节点侧的第二道防抖
 connect_retries: 3          # 连接 AirSim 的重试次数
 state_rate: 5.0             # 状态回传频率 (Hz)，0 = 关闭

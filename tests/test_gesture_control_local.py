@@ -743,18 +743,25 @@ def test_drone_client():
     check("连接失败时 execute 返回 False", d.execute(gm.CMD_TAKEOFF) is False)
     check("连接失败会记录错误信息", bool(d.last_error), d.last_error)
 
-    saved = sys.modules.get("airsim", "MISSING")
-    sys.modules["airsim"] = None
+    # 缺依赖时要给出可读提示。注意**两个客户端都要屏蔽**：drone_client 在
+    # `import airsim` 失败后会回退 `import cosysairsim`（Windows 推荐方案），
+    # 只屏蔽 airsim 的话会真的去连 127.0.0.1，报"Retry connection over the limit"。
+    clients = ("airsim", "cosysairsim")
+    saved = {n: sys.modules.get(n, "MISSING") for n in clients}
+    for n in clients:
+        sys.modules[n] = None
     try:
         d2 = drone_client.AirSimDrone(log=lambda m: None)
-        check("缺 airsim 依赖时安全失败", d2.execute(gm.CMD_TAKEOFF) is False)
-        check("缺 airsim 依赖时提示 pip install airsim",
-              "airsim" in d2.last_error, d2.last_error)
+        check("缺 AirSim 客户端时安全失败", d2.execute(gm.CMD_TAKEOFF) is False)
+        check("缺客户端时提示两种安装方式",
+              "airsim" in d2.last_error and "cosysairsim" in d2.last_error,
+              d2.last_error)
     finally:
-        if saved == "MISSING":
-            sys.modules.pop("airsim", None)
-        else:
-            sys.modules["airsim"] = saved
+        for n, v in saved.items():
+            if v == "MISSING":
+                sys.modules.pop(n, None)
+            else:
+                sys.modules[n] = v
 
     # ---- 状态回传（NED -> ENU）----
     d, f = make_drone()
@@ -795,7 +802,7 @@ def test_drone_client():
 # 6.5 AirSim API 兼容：async build 与 sync build 都要能用
 # --------------------------------------------------------------------------- #
 class FakeSyncOnlyAirSim(object):
-    """只提供同步接口的假客户端（模拟本项目实测的 UE4.27 Blocks build）。
+    """只提供同步方法的假客户端（模拟"客户端没有 *Async 包装"的情况）。
 
     刻意**没有** takeoffAsync / landAsync / hoverAsync，
     并且 takeoff 会阻塞 0.3 s —— 用来验证"发完即弃、不阻塞调用方"。
@@ -1005,6 +1012,44 @@ def test_sync_move_signature():
     yr = [c for c in fake.calls if c[0] == "rotateByYawRate"]
     check("yaw 按 3 参数签名调用（rate, duration, vehicle_name）",
           bool(yr) and len(yr[0]) == 4, str(yr[:1]))
+
+
+def test_sync_raw_fallback():
+    """只暴露 ``client.call`` 的客户端：裸 RPC 也要按服务端完整签名传参。
+
+    ``moveByVelocityBodyFrame`` 服务端要 **7** 个参数（vx, vy, vz, duration,
+    drivetrain, yaw_mode, vehicle_name）——只补 ``vehicle_name`` 会少 2 个，
+    仍然 ``invalid number of arguments``。
+    """
+
+    class RawOnlyAirSim(FakeSyncOnlyAirSim):
+        def __init__(self, **k):
+            FakeSyncOnlyAirSim.__init__(self, **k)
+            self.raw_calls = []
+            owner = self
+
+            class _Raw(object):
+                def call(self, method, *args):
+                    owner.raw_calls.append((method,) + args)
+                    return True
+
+            self.client = _Raw()
+
+    fake = RawOnlyAirSim(z=-2.0)
+    fake.hover = None                  # 模拟"没有同名便捷方法，只能走裸 RPC"
+    d = drone_client.AirSimDrone(client_factory=lambda **k: fake,
+                                 log=lambda m: None, clock=lambda: 0.0)
+    d.connect()
+    check("raw-only 客户端 forward 能执行", d.execute(gm.CMD_FORWARD) is True,
+          d.last_error)
+    mv = [c for c in fake.raw_calls if c[0] == "moveByVelocityBodyFrame"]
+    check("裸 RPC 的 moveByVelocityBodyFrame 传满 7 个参数",
+          bool(mv) and len(mv[0]) == 8, str(mv[:1]))
+    check("raw-only 客户端 hover 能执行", d.execute(gm.CMD_HOVER) is True,
+          d.last_error)
+    hv = [c for c in fake.raw_calls if c[0] == "hover"]
+    check("裸 RPC 的 hover 带上 vehicle_name",
+          bool(hv) and len(hv[0]) == 2, str(hv[:1]))
 
 
 # --------------------------------------------------------------------------- #
@@ -1348,6 +1393,7 @@ def main():
             ("6.5 AirSim API 兼容（async / sync 自动回退）", test_api_compat),
             ("6.6 降落超时（慢下降不误判）", test_land_slow_descent),
             ("6.7 同步回退的参数签名", test_sync_move_signature),
+            ("6.75 裸 RPC 回退（只有 client.call）", test_sync_raw_fallback),
             ("6.8 confirmConnection 返回 None", test_confirm_none),
             ("7. 端到端：手势 -> 指令 -> AirSim", test_end_to_end),
             ("8. 两个节点的契约 + 状态回传", test_nodes),

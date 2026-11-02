@@ -75,6 +75,7 @@ class DroneControlNode(object):
                 command_timeout=_p("command_timeout", 10.0),
                 takeoff_timeout=_p("takeoff_timeout", 60.0),
                 land_timeout=_p("land_timeout", 60.0),
+                state_lock_timeout=_p("state_lock_timeout", 0.1),
                 connect_retries=_p("connect_retries", 3),
                 log=rospy.loginfo)
         self.drone = drone

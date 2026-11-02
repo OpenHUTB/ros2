@@ -10,15 +10,16 @@
 ----
 ::
 
-    # 1) 先把真实输出存成文本
+    # 1) 先把真实输出存成文本（**务必是 UTF-8**：Windows 下 `>` 默认写 UTF-16，
+    #    中文会变成乱码；Linux 的 tee 默认就是 UTF-8）
     python3 tests/test_gesture_control_local.py 2>&1 | tee /tmp/local_test.log
     # 2) 再转成图片（工具会自动放在 docs/img 下，符合仓库约定）
     python3 tools/log_to_png.py /tmp/local_test.log docs/img/air/gesture_control_drone/local_test.png \\
-        --title "python3 tests/test_gesture_control_local.py   ->   212 次断言全通过"
+        --title "python3 tests/test_gesture_control_local.py   ->   236/236 通过"
 
     # AirSim 真机运行日志同理
     roslaunch gesture_control_drone main.launch airsim_ip:=192.168.80.1 2>&1 | tee /tmp/run.log
-    python3 tools/log_to_png.py /tmp/run.log docs/img/air/gesture_control_drone/run.png \\
+    python3 tools/log_to_png.py /tmp/run.log docs/img/air/gesture_control_drone/run_async.png \\
         --title "roslaunch gesture_control_drone main.launch (AirSim Blocks, ENU)"
 
 参数

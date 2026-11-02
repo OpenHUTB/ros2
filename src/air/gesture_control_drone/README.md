@@ -113,7 +113,8 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'home'"
 | **结果语义** | 有 `*Async` 时 `join()` 能拿到 AirSim 的异常；同步回退模式下同步命令是"发完即弃"，只能确认"已下发"，结果看 `/drone/odom` 与 `/drone_state` |
 | **摄像头** | Linux 下默认用 V4L2 + **MJPG 640×480**：VMware/VirtualBox 透传的摄像头在默认 YUYV 720p 下会 `select() timeout`；可用 `GESTURE_CAMERA_FOURCC=YUYV` 覆盖 |
 | **暂停检查** | 连接时查 `simIsPaused`，若被暂停自动 `simPause(False)`（暂停时物理不推进，`takeoff` 会永远等不到高度） |
-| **线程安全** | `msgpack-rpc` 客户端不可并发使用（状态定时器 + 指令线程），所有 RPC 由 `RLock` 串行化 |
+| **线程安全** | `msgpack-rpc` 客户端不可并发使用（状态定时器 + 指令线程），所有 RPC 由 `RLock` 串行化；读状态抢不到锁时按 `state_lock_timeout`（默认 0.1 s）放弃，避免降落那 20 s 里 `/drone/odom` 停更 |
+| **状态有效性** | 未连接 / 读失败时 `state_valid=False`，控制节点**不发布** `Odometry`（否则会先发一帧 `(0,0,0)`，RViz 里表现为从原点跳变） |
 | **动作超时** | `command_timeout`(10 s) 用于一般调用；`takeoff_timeout` / `land_timeout`(60 s) 单独给起降（3 m 降落约 14 s） |
 
 > 细节见 `docs/air/gesture_control_drone.md` §10：同步 `takeoff`/`land` 会阻塞到动作

@@ -43,6 +43,11 @@ ESTOP_ACTIONS = ("hover", "land", "disarm")
 #: （旧版本这里写成 0=Unknown / 1=Landed，与官方相反，已修正）
 LANDED_STATE_NAMES = {0: "Landed", 1: "Flying"}
 
+#: 服务端裸 RPC 需要的默认参数：``DrivetrainType.MaxDegreeOfFreedom`` + 不控偏航
+#: （与官方客户端 ``moveByVelocityBodyFrameAsync`` 的默认值等价）
+RAW_DRIVETRAIN = 0
+RAW_YAW_MODE = {"is_rate": True, "yaw_or_rate": 0}
+
 
 class CommandTimeout(RuntimeError):
     """RPC 调用超过 ``command_timeout`` 秒未返回。"""
@@ -101,6 +106,7 @@ class AirSimDrone(object):
                  takeoff_altitude=3.0, max_speed=3.0, max_altitude=30.0,
                  min_altitude=0.5, yaw_rate=30.0, command_timeout=10.0,
                  takeoff_timeout=60.0, land_timeout=60.0,
+                 state_lock_timeout=0.1,
                  connect_retries=3, log=None, client_factory=None,
                  clock=None):
         self.ip = str(ip)
@@ -128,6 +134,9 @@ class AirSimDrone(object):
         # msgpack-rpc 客户端不是线程安全的（状态定时器与指令工作线程共用同一连接），
         # 所有对主客户端的 RPC 都串行化。
         self._api_lock = threading.RLock()
+        # 状态读取抢不到锁时最多等这么久就放弃（不能把 5 Hz 的 odom 卡在
+        # 一次 20 s 的降落后面）。
+        self.state_lock_timeout = max(0.0, float(state_lock_timeout))
         self.connect_retries = max(1, int(connect_retries))
 
         self._log = log if log is not None else (lambda msg: None)
@@ -274,10 +283,12 @@ class AirSimDrone(object):
             return box.get("value")
 
     # ------------------------------------------------------------------ #
-    # 兼容层：不同 AirSim build 暴露的 API 不一样
-    #   * 新版（Cosys-AirSim / AirSim 1.8）：takeoffAsync / landAsync / hoverAsync
-    #   * 旧版（本项目实测的 UE4.27 Blocks）：只有同步 takeoff / land / hover
-    # 这里做能力探测 + 回退，保证同一份代码在两种 build 上都能用。
+    # 兼容层：客户端能力不一样，而**不是**服务端不一样
+    #   * 官方客户端（airsim / cosysairsim）：提供 *Async 包装，
+    #     内部等价于 call_async('takeoff', ...)；
+    #   * 精简/自写客户端：可能只有同步方法，或只暴露底层 client.call。
+    # 服务端在所有版本都只有 takeoff / land / hover / moveByVelocityBodyFrame …。
+    # 这里做能力探测 + 回退，保证同一份代码在两种客户端上都能用。
     # ------------------------------------------------------------------ #
     @staticmethod
     def _supports(client, name):
@@ -303,30 +314,39 @@ class AirSimDrone(object):
         raw = getattr(self.client, "client", None)
         return raw is not None and callable(getattr(raw, "call", None))
 
-    def _sync_rpc(self, client, method, *args, **kwargs):
+    def _sync_rpc(self, client, method, *args, vehicle_name=None,
+                  raw_args=None):
         """调用同步方法；客户端里没有该方法时退回底层 RPC。
 
-        服务端的参数个数是固定的（例如 ``moveByVelocityBodyFrame`` 要 7 个：
-        vx, vy, vz, duration, drivetrain, yaw_mode, vehicle_name），少传会报
-        ``Function ... was called with an invalid number of arguments``。
-        ``vehicle_name`` 用关键字传，兼容没有该参数的旧客户端。
+        两条路的参数**不是一回事**：
+
+        * **客户端方法**（如 ``hover(vehicle_name)``、
+          ``rotateByYawRate(rate, duration, vehicle_name)``）：用 ``args`` +
+          ``vehicle_name`` 关键字；旧客户端没有该形参时退回纯位置调用。
+        * **服务端裸 RPC**（``client.call(...)``）：参数个数是固定的，而且往往
+          比客户端方法多。例如 ``moveByVelocityBodyFrame`` 要 7 个::
+
+              vx, vy, vz, duration, drivetrain, yaw_mode, vehicle_name
+
+          只补一个 ``vehicle_name`` 仍然会
+          ``Function ... was called with an invalid number of arguments``。
+          这类方法由调用方用 ``raw_args`` 把**完整**参数列表给进来。
         """
         fn = getattr(client, method, None)
         if callable(fn):
+            if vehicle_name is None:
+                return fn(*args)
             try:
-                return fn(*args, **kwargs)
-            except TypeError:
-                if kwargs:                 # 旧客户端没有 vehicle_name 形参
-                    return fn(*args)
-                raise
+                return fn(*args, vehicle_name=vehicle_name)
+            except TypeError:              # 旧客户端没有 vehicle_name 形参
+                return fn(*args)
         if self._has_raw_rpc():
-            # 服务端签名里 vehicle_name 是**最后一个位置参数**，裸 RPC 也必须补上，
-            # 否则会 invalid number of arguments。
             raw = getattr(client, "client")
-            extra = kwargs.get("vehicle_name")
-            if extra is None:
+            if raw_args is not None:       # 调用方给了服务端的完整参数
+                return raw.call(method, *raw_args)
+            if vehicle_name is None:
                 return raw.call(method, *args)
-            return raw.call(method, *args, extra)
+            return raw.call(method, *args, vehicle_name)
         raise RuntimeError("客户端没有 %s()，也没有底层 call()" % method)
 
     def _ensure_unpaused(self):
@@ -544,13 +564,18 @@ class AirSimDrone(object):
         零速度刹车在两种状态下都表现稳定（实测停住后抖动 ±0.05 m）。
         """
         desc = "刹车"
+        dur = max(0.1, duration)
         if self.api_mode == "async":
             self._call(lambda: client.moveByVelocityBodyFrameAsync(
-                0.0, 0.0, 0.0, max(0.1, duration), **self._kw()).join(), desc)
+                0.0, 0.0, 0.0, dur, **self._kw()).join(), desc)
         else:
+            # 服务端裸 RPC 要 7 个参数：vx, vy, vz, duration, drivetrain,
+            # yaw_mode, vehicle_name —— 只补 vehicle_name 会少 2 个。
             self._call(lambda: self._sync_rpc(
-                client, "moveByVelocityBodyFrame", 0.0, 0.0, 0.0,
-                max(0.1, duration), vehicle_name=self.vehicle_name), desc)
+                client, "moveByVelocityBodyFrame", 0.0, 0.0, 0.0, dur,
+                vehicle_name=self.vehicle_name,
+                raw_args=(0.0, 0.0, 0.0, dur, RAW_DRIVETRAIN, RAW_YAW_MODE,
+                          self.vehicle_name)), desc)
 
     def _move_body(self, client, sx, sy, sz, what, duration=None):
         """机体系速度控制：sx 前、sy 右、sz 下（NED），单位向量乘速度。"""
@@ -564,9 +589,12 @@ class AirSimDrone(object):
                 vx, vy, vz, duration, **self._kw()).join(), desc)
         else:
             try:
+                # 服务端裸 RPC 要 7 个参数（见 _sync_rpc 的说明）
                 self._call(lambda: self._sync_rpc(
                     client, "moveByVelocityBodyFrame", vx, vy, vz, duration,
-                    vehicle_name=self.vehicle_name), desc)
+                    vehicle_name=self.vehicle_name,
+                    raw_args=(vx, vy, vz, duration, RAW_DRIVETRAIN,
+                              RAW_YAW_MODE, self.vehicle_name)), desc)
             except Exception as exc:
                 raise RuntimeError(
                     "moveByVelocityBodyFrame 调用失败（%s）；"
@@ -577,38 +605,50 @@ class AirSimDrone(object):
     # 状态
     # ------------------------------------------------------------------ #
     def state(self, client=None):
-        """读取一次载具状态并转成 ENU；失败时返回上一帧并记录错误。"""
+        """读取一次载具状态并转成 ENU；失败时返回上一帧并记录错误。
+
+        **抢不到 ``_api_lock`` 就直接放弃这次读取**（``state_lock_timeout``，默认
+        0.1 s）：起飞/降落是在锁内 ``join()`` 的，实测 ``land`` 要 20 s 量级，
+        如果这里干等，5 Hz 的 ``/drone/odom`` 会整整停 20 s —— RViz 里表现为
+        飞机"冻住"再突然跳到地面。放弃时 ``state_valid`` 置 False，节点就不发布。
+        """
         client = client or self.client
         if client is None:
             self.state_valid = False
             return self.last_state
-        try:
-            raw = self._call(lambda: client.getMultirotorState(**self._kw()),
-                             "读取状态")
-            k = raw.kinematics_estimated
-            pos = ned_to_enu(k.position.x_val, k.position.y_val, k.position.z_val)
-            vel = ned_to_enu(k.linear_velocity.x_val, k.linear_velocity.y_val,
-                             k.linear_velocity.z_val)
-            collision = False
-            try:
-                info = self._call(
-                    lambda: client.simGetCollisionInfo(**self._kw()), "读取碰撞")
-                collision = bool(getattr(info, "has_collided", False))
-            except Exception:
-                collision = False
-            try:
-                api = bool(self._call(
-                    lambda: client.isApiControlEnabled(**self._kw()),
-                    "读取 API 状态"))
-            except Exception:
-                api = self.api_control
-            self.last_state = DroneState(
-                position_enu=pos, velocity_enu=vel,
-                landed_state=landed_state_name(getattr(raw, "landed_state", 0)),
-                api_control=api, collision=collision, stamp=self._clock())
-            self.state_valid = True
-        except Exception as exc:
+        if not self._api_lock.acquire(timeout=self.state_lock_timeout):
             self.state_valid = False
-            self.last_error = str(exc)
-            self._log("读取状态失败：%s" % exc)
+            return self.last_state
+        try:
+            try:
+                raw = self._call(lambda: client.getMultirotorState(**self._kw()),
+                                 "读取状态")
+                k = raw.kinematics_estimated
+                pos = ned_to_enu(k.position.x_val, k.position.y_val, k.position.z_val)
+                vel = ned_to_enu(k.linear_velocity.x_val, k.linear_velocity.y_val,
+                                 k.linear_velocity.z_val)
+                collision = False
+                try:
+                    info = self._call(
+                        lambda: client.simGetCollisionInfo(**self._kw()), "读取碰撞")
+                    collision = bool(getattr(info, "has_collided", False))
+                except Exception:
+                    collision = False
+                try:
+                    api = bool(self._call(
+                        lambda: client.isApiControlEnabled(**self._kw()),
+                        "读取 API 状态"))
+                except Exception:
+                    api = self.api_control
+                self.last_state = DroneState(
+                    position_enu=pos, velocity_enu=vel,
+                    landed_state=landed_state_name(getattr(raw, "landed_state", 0)),
+                    api_control=api, collision=collision, stamp=self._clock())
+                self.state_valid = True
+            except Exception as exc:
+                self.state_valid = False
+                self.last_error = str(exc)
+                self._log("读取状态失败：%s" % exc)
+        finally:
+            self._api_lock.release()
         return self.last_state

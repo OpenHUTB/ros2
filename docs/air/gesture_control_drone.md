@@ -35,7 +35,7 @@
 
 | 手势 | 手势 token | 指令 token | 动作 |
 |---|---|---|---|
-| 张开手掌 | `PALM_OPEN` | `takeoff` | 解锁 → 起飞 → 爬升到 `takeoff_altitude` → 悬停 |
+| 张开手掌 | `PALM_OPEN` | `takeoff` | 解锁 → 起飞 → 爬升到 `takeoff_altitude` → 悬停（定高仅 `*Async` 路径生效，同步回退由仿真器默认高度决定，实测约 +1.54 m） |
 | 握拳 | `FIST` | `land` | 降落 |
 | 食指指向 | `POINT` | `forward` | 机体系向前飞 `speed × move_duration` |
 | 胜利手势 | `VICTORY` | `up` | 上升一档（受 `max_altitude` 限制） |
@@ -142,6 +142,9 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'takeoff'"   # 绕过识
 | `move_duration` | 1.0 | 单次位移/偏航持续时间 (s) |
 | `yaw_rate` | 30.0 | 偏航角速度 (deg/s) |
 | `command_timeout` | 10.0 | 单次 RPC 超时 (s)，超时视为失败 |
+| `takeoff_timeout` | 60.0 | 起飞（含 `moveToZAsync` 定高）超时 (s)；慢仿真器可调大 |
+| `land_timeout` | 60.0 | 降落超时 (s)；3 m 降落实测约 14~20 s，不能用 `command_timeout` |
+| `state_lock_timeout` | 0.1 | 读状态抢不到 RPC 锁时的等待上限 (s)；降落时锁会被占 20 s，取值必须很短，否则 `/drone/odom` 会停更 |
 | `state_rate` | 5.0 | `/drone/odom` 发布频率 (Hz)，0 = 关闭 |
 | `connect_retries` | 3 | 连接 AirSim 的重试次数 |
 
@@ -178,7 +181,7 @@ python3 tests/test_gesture_control_local.py
 
 ### 9.1 离线回归（本机真实输出）
 
-![离线回归 232 项全部通过](../img/air/gesture_control_drone/local_test.png)
+![离线回归 236 项全部通过](../img/air/gesture_control_drone/local_test.png)
 
 上图由 `tools/log_to_png.py` 从**本机真实终端输出**生成（不是拍照、不是外链），
 复现命令：
@@ -278,8 +281,13 @@ land    -> True  20.69s   alt=-0.68  落地
 
 * **定高只在 `*Async` 路径生效**：这里 `takeoff` 到 2.63 m（`takeoff_altitude=3.0`），
   而同步回退只到仿真器默认高度（约 +1.54 m）。
+  > 2.63 m 比设定的 3.0 m 低 0.37 m，是 `moveToZAsync` 的减速/`lookahead` 造成的稳态误差
+  > （AirSim 侧不做到绝对到位），不是控制逻辑的问题；要更贴近设定值可调大
+  > `moveToZAsync` 的速度或在目标点附近补一次 `moveToZAsync`。
 * **`land` 用了 20.69 s**：证实必须给降落独立超时（`land_timeout=60 s`），
   套用 `command_timeout`(10 s) 会误判失败。
+  同样因为它整段持锁，读状态必须用 `state_lock_timeout`（见 §6）而不是干等，
+  否则这 20 s 里 `/drone/odom` 不会更新。
 
 安装方式（`airsim` 在 PyPI 只有 sdist，构建期要 `numpy` 和 `msgpackrpc`）：
 
