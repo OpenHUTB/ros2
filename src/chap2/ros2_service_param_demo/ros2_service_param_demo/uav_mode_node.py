@@ -4,10 +4,11 @@
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
 
-VALID_MODES = ('IDLE', 'FLYING', 'LANDING')
+VALID_MODES = ('IDLE', 'FLYING')
 MAX_PUBLISH_RATE = 100.0
 
 
@@ -18,11 +19,12 @@ class UavModeNode(Node):
         """创建服务、参数与状态发布定时器."""
         super().__init__('uav_mode_node')
 
-        # start_mode 只允许在启动时配置，运行中修改会被 rclpy 拒绝
+        # start_mode 只允许在启动时配置；运行中修改由参数回调拒绝。
+        # 不使用 read_only=True，因为构造函数需要把非法值写回为回退值。
         self.declare_parameter(
             'start_mode', 'IDLE',
             ParameterDescriptor(
-                read_only=True, description='启动模式：IDLE / FLYING / LANDING'))
+                description='启动模式：IDLE / FLYING（启动后不可修改）'))
         self.declare_parameter(
             'publish_rate', 2.0,
             ParameterDescriptor(description='状态发布频率，范围 (0, 100] Hz'))
@@ -46,20 +48,26 @@ class UavModeNode(Node):
             % (self.publish_rate, self.mode))
 
     def read_publish_rate(self):
-        """读取并校验 publish_rate，非法值回退到 2.0，避免启动期除零."""
+        """读取并校验 publish_rate，非法值回退到 2.0 并写回参数."""
         value = float(self.get_parameter('publish_rate').value)
         if value <= 0.0 or value > MAX_PUBLISH_RATE:
             self.get_logger().warn(
                 'publish_rate=%.3f 不在 (0, %.0f] 范围内，回退到 2.0 Hz'
                 % (value, MAX_PUBLISH_RATE))
+            # 把回退值写回参数，保证 ros2 param get 与实际生效频率一致
+            self.set_parameters([
+                Parameter('publish_rate', Parameter.Type.DOUBLE, 2.0)])
             return 2.0
         return value
 
     def read_start_mode(self):
-        """读取并校验 start_mode，非法值回退到 IDLE."""
+        """读取并校验 start_mode，非法值回退到 IDLE 并写回参数."""
         value = self.get_parameter('start_mode').value
         if value not in VALID_MODES:
             self.get_logger().warn('start_mode=%s 不合法，回退到 IDLE' % value)
+            # 同样写回，避免参数值与实际模式不一致
+            self.set_parameters([
+                Parameter('start_mode', Parameter.Type.STRING, 'IDLE')])
             return 'IDLE'
         return value
 
@@ -72,9 +80,13 @@ class UavModeNode(Node):
         return response
 
     def on_parameter_update(self, parameters):
-        """参数回调：先整体校验，全部合法后再应用到属性与定时器."""
+        """参数回调：start_mode 仅启动时可设置，publish_rate 先校验再生效."""
         new_rate = None
         for param in parameters:
+            if param.name == 'start_mode':
+                # 运行中要改模式请调用 /uav/set_mode，避免出现第二条切换路径
+                return SetParametersResult(
+                    successful=False, reason='start_mode 只能在启动时设置')
             if param.name == 'publish_rate':
                 new_rate = float(param.value)
 

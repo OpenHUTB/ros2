@@ -22,9 +22,11 @@
 | 接口 | 类型 | 说明 |
 |---|---|---|
 | 服务 `/uav/set_mode` | `std_srvs/SetBool` | `data: true` → `FLYING`；`data: false` → `IDLE`；返回 `success` 与 `message` |
-| 参数 `publish_rate` | double，默认 `2.0` | 状态发布频率（Hz），运行中可改 |
-| 参数 `start_mode` | string，默认 `IDLE` | 启动时的初始模式 |
+| 参数 `publish_rate` | double，默认 `2.0` | 状态发布频率（Hz），取值范围 (0, 100]，运行中可改 |
+| 参数 `start_mode` | string，默认 `IDLE` | 启动时的初始模式，取值 `IDLE` / `FLYING`；启动后不可修改（运行中改模式请调 `/uav/set_mode`） |
 | 话题 `/uav/status` | `std_msgs/String` | 内容形如 `mode=FLYING, count=12` |
+
+> `start_mode` 只接受 `IDLE` 与 `FLYING`，与服务 `/uav/set_mode` 能切换的两种模式保持一致：`SetBool` 只有真假两态，无法表达「降落」，因此本模块不把 `LANDING` 作为可设置的模式。降落属于后续控制器模块的职责，那一步需要比 `SetBool` 更丰富的接口。
 
 ## 2. 运行环境
 
@@ -113,7 +115,7 @@ ros2 topic hz /uav/status     # 频率与 publish_rate 一致
 
 结束运行：在终端按 `Ctrl+C`。正常情况下只会看到节点打印的 `uav_mode_node 被手动终止` 后退出（退出路径已捕获 `KeyboardInterrupt`，不会再打印 Traceback）；若还跟着一行 `Failed to publish log message to rosout: publisher's context is invalid`，同样是节点销毁后的正常现象。
 
-> 两点注意：① **方式 B 是本地源码调试入口**，它通过 ament 索引查找 `ros2_service_param_demo`，必须先 `source ~/ros2_ws/install/setup.bash`，干净终端只 source ROS 2 会报 `package 'ros2_service_param_demo' not found`；参数用 `--ros-args -p publish_rate:=5.0` 透传。② `publish_rate` 是 double 类型，请写 `0.0` 而不是 `0`（整数字面量会报类型错误）；取值范围 (0, 100] Hz，超出会在启动时回退到 2.0 并告警。
+> 三点注意：① **方式 B 是本地源码调试入口**，它通过 ament 索引查找 `ros2_service_param_demo`，必须先 `source ~/ros2_ws/install/setup.bash`，干净终端只 source ROS 2 会报 `package 'ros2_service_param_demo' not found`；参数用 `--ros-args -p publish_rate:=5.0` 透传。② `publish_rate` 是 double 类型，请写 `0.0` 而不是 `0`（整数字面量会报类型错误）；取值范围 (0, 100] Hz。③ 启动参数非法时（`publish_rate` 超出范围、`start_mode` 不在 `IDLE` / `FLYING` 之内）节点会告警并回退到默认值，**同时把回退值写回参数**，所以 `ros2 param get` 显示的值始终等于实际生效值，不会出现"参数是 5.0、实际按 2.0 发布"的不一致。
 
 ## 5. 运行效果
 

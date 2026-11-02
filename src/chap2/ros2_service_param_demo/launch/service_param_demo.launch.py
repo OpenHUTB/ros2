@@ -17,7 +17,7 @@ def generate_launch_description():
         description='状态发布频率（Hz），范围 (0, 100]')
     start_mode_arg = DeclareLaunchArgument(
         'start_mode', default_value='IDLE',
-        description='启动模式：IDLE / FLYING / LANDING')
+        description='启动模式：IDLE / FLYING（启动后不可修改）')
 
     mode_node = Node(
         package='ros2_service_param_demo',

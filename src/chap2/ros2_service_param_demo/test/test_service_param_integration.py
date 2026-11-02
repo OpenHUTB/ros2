@@ -72,3 +72,38 @@ def test_publish_rate_parameter_is_applied():
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
+
+def test_invalid_initial_parameters_are_normalised():
+    """启动参数非法时，回退值应写回参数，保证参数值与实际行为一致."""
+    rclpy.init(args=[
+        '--ros-args',
+        '-p', 'publish_rate:=-5.0',
+        '-p', 'start_mode:=PARKING',
+    ])
+    node = UavModeNode()
+    try:
+        assert node.publish_rate == 2.0, '非法 publish_rate 应回退到 2.0'
+        assert node.get_parameter('publish_rate').value == 2.0, \
+            '回退值应写回 publish_rate 参数'
+        assert node.mode == 'IDLE', '非法 start_mode 应回退到 IDLE'
+        assert node.get_parameter('start_mode').value == 'IDLE', \
+            '回退值应写回 start_mode 参数'
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+def test_start_mode_rejects_runtime_change():
+    """start_mode 只能启动时设置，运行中修改应被参数回调拒绝."""
+    rclpy.init()
+    node = UavModeNode()
+    try:
+        rejected = node.set_parameters([
+            Parameter('start_mode', Parameter.Type.STRING, 'FLYING')])
+        assert not rejected[0].successful, '运行中修改 start_mode 应被拒绝'
+        assert node.get_parameter('start_mode').value == 'IDLE'
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
