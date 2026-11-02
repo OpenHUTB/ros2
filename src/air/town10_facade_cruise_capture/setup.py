@@ -5,6 +5,7 @@ from setuptools import find_packages, setup
 setup(
     name="town10_facade_cruise_capture",
     version="0.1.0",
+    python_requires=">=3.10",
     packages=find_packages(),
     package_data={
         "town10_capture": [

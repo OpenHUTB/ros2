@@ -12,6 +12,8 @@ MuJoCo 场景将补充数据包中的砖墙、灰墙和玻璃立面照片映射�
 
 ## Python 运行
 
+最低要求 Python 3.10（代码使用 `X | None` 联合类型标注，3.9 及以下无法运行）。实际验证环境：Windows 11 + Python 3.11 + MuJoCo 3.12.0 + OpenHUTB 2.10.0（MuJoCo 后端与 Town10HD 原生后端）；Ubuntu 22.04 + ROS 2 Humble + Python 3.10 容器（`colcon build` 与 `ros2 launch`）。
+
 ```bash
 python -m pip install -r requirements.txt
 python main.py --backend mujoco --style brick --gif --output output/brick
@@ -77,10 +79,21 @@ ros2 launch town10_facade_cruise_capture main.launch.py backend:=airsim host:=ho
 
 原生指标报告前向深度中位数的时间均值、最小实测深度、航点跟踪误差和采图位置误差。原生路线保持启动平面位置，`--distance` 用于路线采样与模型输入参考，不表示相机被控制在4 m深度。
 
+pytest 不在 `requirements.txt` 中，需单独安装后在本目录运行：
+
 ```bash
+python -m pip install pytest
 python -m pytest -q
 ```
 
 原生成功运行的[完整指标](../../../docs/air/town10_facade_cruise_capture/native_metrics.json)和[采图位姿清单](../../../docs/air/town10_facade_cruise_capture/native_capture_manifest.json)保留服务端实际记录。前向深度最小值7.0352 m、中位数时间均值7.2657 m，最大实测速度1.8489 m/s。速度命令限幅与原生飞控响应的实际峰值分别记录。
 
 MuJoCo 三纹理场景也分别完成12/12航点与12张照片，仿真时长43.0 s，最大速度0.789 m/s。完整原理、结果、资产哈希和源码说明见[项目文档](../../../docs/air/town10_facade_cruise_capture/index.md)。接口单元测试与原生在线运行记录分别保留。
+
+## 与相关 PR 的关系
+
+本包与已合入 master 的 `mujoco_facade_capture`（#586）代码相互独立，不存在 import 依赖；复用的只有九束测距 + 航点误差 + 速度的控制器输入约定及同一份 `facade_controller.json` 权重（按文件拷贝）。本包新增 Town10HD/OpenHUTB 原生 AirSim 后端、深度近障限速与安全状态机、位姿可追溯采集清单和三种照片纹理 MuJoCo 场景。#584 已被 #586 取代，#585 的训练内容与 #586 的 `train.py` 重叠；建议顺序为 #586（已合入）→ 本 PR → #585 视剩余差异决定。详见[项目文档](../../../docs/air/town10_facade_cruise_capture/index.md)末尾说明。
+
+## 辅助工具声明
+
+代码与文档编写过程中使用 ZCode（基于 Anthropic Claude 模型）辅助起草代码、整理文档和排查错误。全部代码由作者审阅并在上述实测环境中运行验证，文中数据来自实际运行记录；本模块的正确性、许可合规与后续维护由作者本人负责。

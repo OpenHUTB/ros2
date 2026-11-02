@@ -96,12 +96,13 @@ flowchart TD
 
 ## 3. 安装与运行
 
-源码目录为 `src/air/town10_facade_cruise_capture`。
+源码目录为 `src/air/town10_facade_cruise_capture`。最低要求 Python 3.10（代码使用 `X | None` 联合类型标注）。实际验证环境：Windows 11 + Python 3.11 + MuJoCo 3.12.0 + OpenHUTB 2.10.0，用于 MuJoCo 后端与 Town10HD 原生后端；Ubuntu 22.04 + ROS 2 Humble + Python 3.10 容器，用于 `colcon build` 与 `ros2 launch`。pytest 不在 `requirements.txt` 中，需单独安装。
 
 ```bash
 python -m pip install -r requirements.txt
 python main.py --backend mujoco --style brick --gif --output output/brick
 python evaluate_scenarios.py --output output/three_scenes
+python -m pip install pytest
 python -m pytest -q
 ```
 
@@ -241,3 +242,19 @@ ros2 launch town10_facade_cruise_capture main.launch.py backend:=airsim host:=ho
 巡航节点与病害识别节点在 ROS 2 Humble 中同时运行，立面任务完成 12/12 航点。识别节点连续处理 93 帧 320×240 相机图像，发布 BGR 带框图像和检测 JSON，并保留相机坐标系。识别结果中的玻璃构件与病害分别计数。
 
 [图像联动记录](ros_integration.json)
+
+## 与相关 PR 的关系
+
+| PR | 内容 | 与本 PR 的关系 |
+|---|---|---|
+| #586（已合入 master） | `mujoco_facade_capture`：MuJoCo 几何立面定距扫描、ROS 2 封装、跨场景评估 | 本包**复用**其控制器输入约定（九束测距 + 三轴航点误差 + 三轴速度）和同一份 `facade_controller.json` 权重（按文件拷贝，不做 import）。两个包代码相互独立，可分别维护。 |
+| #584 | 原始 MuJoCo 幕墙扫描 | 内容已被 #586 覆盖，同步 master 后无剩余差异，建议关闭。 |
+| #585 | 幕墙扫描神经网络训练与独立闭环评估 | 训练流程与 #586 中 `train.py`、`facade/learning.py` 重叠，建议基于 #586 之后的 master 重新比对，仅保留新增部分。 |
+
+本 PR **新增**且不与上述 PR 重复的部分：Town10HD/OpenHUTB 2.10.0 原生 AirSim 后端（真实位姿、Scene 图像、DepthPlanar 深度）；深度近障限速与碰撞/超时/非有限值安全状态机；带服务端时间戳和相机位置的位姿可追溯采集清单；砖墙、灰墙、玻璃三种照片纹理 MuJoCo 场景；独立 ROS 2 包 `town10_facade_cruise_capture`（话题前缀 `/town10/`，与 `/facade/` 不冲突）。
+
+建议合并顺序：#586（已完成）→ 本 PR #594 → #585 视剩余差异决定。
+
+## 辅助工具声明
+
+本模块的代码与文档在编写过程中使用 ZCode（基于 Anthropic Claude 模型）作为辅助工具，用于代码起草、文档整理与错误排查。全部代码由作者审阅，并在第 3 节所列实测环境中运行验证，文中所有指标来自实际运行记录（`native_metrics.json`、`three_scene_metrics.json`、`ros_integration.json`）。本模块的正确性、许可合规与后续维护由作者本人负责。
