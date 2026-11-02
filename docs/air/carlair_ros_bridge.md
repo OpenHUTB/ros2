@@ -298,6 +298,20 @@ ValueError: 307200 exceeds max_array_len(131072)
 对不支持这些参数的 msgpack 老版本则探测后跳过。单元测试
 `tests/test_sensors_local.py` 的 F 组用桩 msgpack 覆盖了"新版注入 / 老版跳过 / 幂等"三条路径。
 
+### 7.3 本地测试与 CI
+
+桥接层的测试不依赖 ROS、仿真器或 GPU，依赖 `numpy` 和 `PyYAML`，可以直接在仓库根目录运行：
+
+```bash
+python3 tests/test_frames.py          # 坐标换算 7 项
+python3 tests/test_bridge_local.py    # 桥接状态机与工程文件 31 项
+python3 tests/test_sensors_local.py   # 图像/点云 80 项
+```
+
+`.github/workflows/air_bridge_tests.yml` 在 `src/air/carlair_ros_bridge/**` 或 `tests/**` 变更时自动执行上述测试，并额外做 `py_compile` 检查；如果存在 `tests/test_imu_local.py`（IMU 扩展），也会一起跑。
+
+![Air bridge tests](https://github.com/OpenHUTB/ros2/actions/workflows/air_bridge_tests.yml/badge.svg)
+
 ## 8. 效果图
 
 仿真器鸟瞰场景：
