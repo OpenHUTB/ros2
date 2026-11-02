@@ -54,11 +54,19 @@ trajectories/*.json
 # 但部署必需的权重文件要保留
 !**/models/*.npz
 
+# 训练日志与轨迹中间数据（由 train.py / eval.py / plot_results.py 重新生成）
+*.log
+**/models/traj_*.csv
+
 # 例外：文档里要引用的动图必须入库（上面的 *.gif 会把它一起吞掉）
 !docs/img/**/*.gif
+!src/air/uav_dqn_nav/models/*.gif
 
 # 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
 !src/humanoid/humanoid_ppo_locomotion/weights/*.pt
+
+# 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
+!src/ground/lidar_autoencoder_repair/models/*.pt
 
 # 编辑器 / 系统
 .vscode/
