@@ -269,6 +269,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#66-imu">6.6 IMU</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#67">6.7 相机模型与深度点云</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#7">7. 运行验证</a>
@@ -697,6 +699,47 @@ roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.
 rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-n1<span class="w"> </span>/imu
 </code></pre></div>
 <p><img alt="IMU 50 Hz" src="../../img/air/carlair_ros_bridge/imu_hz.png"/></p>
+<h3 id="67">6.7 相机模型与深度点云</h3>
+<p><code>camera_model_pub.py</code> 订阅 <code>/camera/image_raw</code> 与 <code>/camera/depth</code>，发布：</p>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/camera/camera_info</code></td>
+<td><code>sensor_msgs/CameraInfo</code></td>
+<td>彩色相机内参</td>
+</tr>
+<tr>
+<td><code>/camera/depth/camera_info</code></td>
+<td><code>sensor_msgs/CameraInfo</code></td>
+<td>深度相机内参</td>
+</tr>
+<tr>
+<td><code>/camera/depth/points</code></td>
+<td><code>sensor_msgs/PointCloud2</code></td>
+<td>深度反投影点云，相机光学系</td>
+</tr>
+</tbody>
+</table>
+<p>针孔模型：</p>
+<div class="highlight"><pre><span></span><code>fx = fy = W / (2 * tan(FOV / 2))
+cx = W / 2,  cy = H / 2
+K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+</code></pre></div>
+<p>深度反投影（<code>DepthPlanar</code> 的 Z 就是沿光轴深度）：</p>
+<div class="highlight"><pre><span></span><code>X = (u - cx) * Z / fx
+Y = (v - cy) * Z / fy
+Z = depth
+</code></pre></div>
+<p>点云过滤 <code>Z &lt;= 0</code>、<code>Z &gt;= 100 m</code> 和 65504 哨兵值；相机 TF 为 <code>base_link -&gt; front_rgb/front_depth</code>，安装偏移由 <code>camera/mount_x/y/z</code> 配置。</p>
+<p>深度点云前视图（颜色表示距离）：</p>
+<p><img alt="深度点云前视图" src="../../img/air/carlair_ros_bridge/depth_points_front.png"/></p>
 <h2 id="7">7. 运行验证</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 环境自检（5 项：airsim 包、连接、位姿、相机、激光雷达）</span>
 rosrun<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.py
