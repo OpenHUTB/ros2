@@ -1,4 +1,4 @@
-﻿# ROS 1 环境自检与常见问题排查
+# ROS 1 环境自检与常见问题排查
 
 > 所属模块：`src/chap2/ros1_env_check`
 > 依赖：Python 3.6+（**不需要 ROS 也能运行**）
@@ -192,7 +192,54 @@ git update-index --chmod=+x run.sh
 保留它是为了提醒别混用），另一条是"当前目录不在 catkin 工作空间内"——
 因为示例是把模块解压到 `~/envcheck` 单独运行；放进 `~/catkin_ws/src` 后该项会变成 OK。*
 
-## 7. 已知限制
+## 7. 几个容易踩的判定细节
+
+自检脚本里有两处判断"看上去能跑通、其实会给出错误结论"，这里单独说明。
+
+### 7.1 `--scan` 的路径必须存在
+
+早期版本里 `--scan` 传一个不存在的目录会**静默通过**：`os.walk` 什么都不产出，
+三项检查于是全部显示 OK —— CI 里路径写错也全绿，这是最危险的一类假阴性。
+现在会直接报 FAIL 并退出码 1：
+
+```
+[FAIL] 扫描路径不存在：/path/typo
+       修复：检查 --scan 后面的路径；相对路径是相对当前目录解析的
+```
+
+同理，传进来的是文件而不是目录时也会明确拒绝；目录存在但没扫到任何文本文件时给 WARN。
+
+### 7.2 仓库源码树不是 catkin 工作空间
+
+仓库根目录下也有 `src/`，所以"有 `src/` 就当工作空间"这条判断会把源码树误判成工作空间，
+进而建议你 `catkin_make` —— 而这会在仓库里生成 `build/`、`devel/`，
+正是提交指引明确不允许提交的目录（很多人被这条坑过）。
+
+现在判定工作空间时，除了 `src/` 还要求 catkin 自己的标记之一：
+`.catkin_workspace`（`catkin_make` 首次运行后生成）、`devel/`、`build/`。
+在源码树里运行时给出的是正确做法：
+
+```
+[WARN] /path/to/ros2 下有 src/，但没有 catkin 标记（.catkin_workspace / devel / build），
+       看起来是源码树而不是工作空间
+       修复：不要在这里直接 catkin_make（会生成 build/、devel/）。
+             正确做法：mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src &&
+                       ln -s <本仓库路径>/src/<模块> . && cd ~/catkin_ws && catkin_make
+```
+
+### 7.3 `core.autocrlf=true` 时会跳过 CRLF 检查
+
+Windows 克隆机常把 `core.autocrlf` 设成 `true`，此时工作区里所有文本文件都是 CRLF，
+但提交进仓库后会被自动转成 LF。不了解这一点，`--scan` 会把正常文件全部报成"CRLF 问题"。
+脚本检测到该配置后改为跳过这一项并说明原因，而不是制造一堆假阳性：
+
+```
+[ OK ] 跳过 CRLF 检查：git 配置 core.autocrlf=true，工作区为 CRLF 是正常的（提交后自动转 LF）
+```
+
+要真正检查仓库里的行尾，先 `git config core.autocrlf false` 再重新检出。
+
+## 8. 已知限制
 
 1. **可执行位检查只在 Linux/macOS 生效**。Windows 没有 POSIX 权限位，`os.access` 的 `X_OK`
    在 Windows 上只检查文件是否存在，会产生假阴性，因此脚本在 Windows 上显式跳过该项。
@@ -200,4 +247,7 @@ git update-index --chmod=+x run.sh
    但 `ROS_DISTRO` 的判断仍然有效。
 3. **自检通过不代表模块能编译**：环境自检只覆盖"环境类"问题，
    `catkin_make` 与 `roslaunch` 仍需单独执行。
+4. **BOM / CRLF 只扫描常见文本扩展名**（`.py` `.sh` `.md` `.launch` `.xml` `.yaml` `.yml`
+   `.cpp` `.h`），其它类型如 `.urdf` `.rviz` `.pgm` 不在范围内；需要时可自行扩展 `SCAN_EXTS`。
+
 

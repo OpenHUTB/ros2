@@ -229,10 +229,18 @@ def check_python() -> None:
 
 # ------------------------------------------------------------ 3. 工作空间检查
 def _find_ws_root(start: str):
-    """从 start 向上找含 src/ 的 catkin 工作空间根目录。"""
+    """从 start 向上找 catkin 工作空间根目录。
+
+    判定条件除了 ``src/``，还要有 catkin 自己的标记：
+    ``.catkin_workspace``（catkin_make 首次运行后生成）、``devel/`` 或 ``build/``。
+
+    为什么不能只看 ``src/``：本仓库的源码树根目录下也有 ``src/``，
+    只按 ``src/`` 判断会把它当成工作空间，进而建议 `catkin_make` ——
+    而这会在仓库里生成 `build/`、`devel/`，正是提交指引明确不允许提交的目录。
+    """
     cur = os.path.abspath(start)
     while True:
-        if os.path.isdir(os.path.join(cur, "src")):
+        if os.path.isdir(os.path.join(cur, "src")) and _looks_like_catkin_ws(cur):
             return cur
         parent = os.path.dirname(cur)
         if parent == cur:
@@ -240,13 +248,59 @@ def _find_ws_root(start: str):
         cur = parent
 
 
+def _looks_like_catkin_ws(path: str) -> bool:
+    """是否带 catkin 工作空间的标记（而不是"恰好有个 src/ 的源码树"）。"""
+    markers = (".catkin_workspace", "devel", "build")
+    return any(os.path.exists(os.path.join(path, m)) for m in markers)
+
+
+def _inside_git_repo(path: str) -> bool:
+    """path 及其上级是否存在 .git（无论是目录还是文件，submodule/worktree 都算）。"""
+    cur = os.path.abspath(path)
+    while True:
+        if os.path.exists(os.path.join(cur, ".git")):
+            return True
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return False
+        cur = parent
+
+
+def _git_autocrlf(path: str) -> str:
+    """读取 git 的 core.autocrlf 配置（读不到就返回空串）。
+
+    Windows 克隆机常把 core.autocrlf 设成 true，此时工作区里所有文本文件都是 CRLF，
+    但提交后会被转成 LF。不了解这一点会把正常文件全部报成"CRLF 问题"。
+    """
+    try:
+        out = subprocess.run(["git", "-C", path, "config", "--get", "core.autocrlf"],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                             timeout=5)
+        return out.stdout.decode("utf-8", "replace").strip().lower()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
 def check_workspace(path: str) -> None:
     section("工作空间")
 
     ws = _find_ws_root(path)
     if ws is None:
-        report(WARN, f"未在 {os.path.abspath(path)} 及其上级找到 catkin 工作空间（没有 src/）",
-               "单独建一个：mkdir -p ~/catkin_ws/src && cd ~/catkin_ws && catkin_make")
+        # 源码树 ≠ 工作空间：本仓库根目录也有 src/，在这里 catkin_make 会生成
+        # build/、devel/（提交指引不允许）。所以给出"软链到独立工作空间"的做法。
+        if os.path.isdir(os.path.join(os.path.abspath(path), "src")):
+            report(WARN, f"{os.path.abspath(path)} 下有 src/，但没有 catkin 标记"
+                         "（.catkin_workspace / devel / build），看起来是源码树而不是工作空间",
+                   "不要在这里直接 catkin_make（会生成 build/、devel/）。"
+                   "正确做法：mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src && "
+                   "ln -s <本仓库路径>/src/<模块> . && cd ~/catkin_ws && catkin_make")
+        elif _inside_git_repo(path):
+            report(WARN, f"未在 {os.path.abspath(path)} 及其上级找到 catkin 工作空间（没有 src/）",
+                   "本仓库是源码树，不要直接在这里编译。"
+                   "请建独立工作空间：mkdir -p ~/catkin_ws/src，把模块软链或拷进去再 catkin_make")
+        else:
+            report(WARN, f"未在 {os.path.abspath(path)} 及其上级找到 catkin 工作空间（没有 src/）",
+                   "单独建一个：mkdir -p ~/catkin_ws/src && cd ~/catkin_ws && catkin_make")
         return
 
     report(OK, f"工作空间根目录：{ws}")
@@ -291,6 +345,17 @@ def check_files(root: str, limit: int = 8) -> None:
     """
     section(f"文件卫生（扫描 {os.path.abspath(root)}）")
 
+    # 路径不存在时必须明确失败：否则 os.walk 什么都不产出，
+    # 三项检查全部显示 OK —— CI 里路径写错了也全绿，这是最危险的假阴性。
+    if not os.path.exists(root):
+        report(FAIL, f"扫描路径不存在：{os.path.abspath(root)}",
+               "检查 --scan 后面的路径；相对路径是相对**当前目录**解析的")
+        return
+    if not os.path.isdir(root):
+        report(FAIL, f"扫描路径不是目录：{os.path.abspath(root)}",
+               "--scan 需要一个目录，不是单个文件")
+        return
+
     bom, crlf, noexec = [], [], []
     scanned = 0
     for cur, dirs, files in os.walk(root):
@@ -314,7 +379,11 @@ def check_files(root: str, limit: int = 8) -> None:
                 crlf.append(os.path.relpath(full, root))
             if name.endswith(".sh") and not os.access(full, os.X_OK):
                 noexec.append(os.path.relpath(full, root))
-    report(OK, f"共扫描 {scanned} 个文本文件")
+    if scanned == 0:
+        report(WARN, f"目录存在但没有扫到任何文本文件（{os.path.abspath(root)}）",
+               "确认路径指向源码目录；扩展名支持 %s" % "/".join(SCAN_EXTS))
+    else:
+        report(OK, f"共扫描 {scanned} 个文本文件")
 
     def _list(title, items, level, fix, why):
         if not items:
@@ -329,11 +398,19 @@ def check_files(root: str, limit: int = 8) -> None:
           "逐个转成「UTF-8 无 BOM」；Python 可容忍，但 BOM 出现在 mkdocs.yml、"
           "launch、shell 脚本里会引发难以定位的异常",
           "BOM 是文件最前面的 EF BB BF 三个字节，多数编辑器会把它显示成不可见字符")
-    _list("CRLF 行尾", crlf, WARN,
-          "在仓库里统一为 LF：git config core.autocrlf false 后重新检出，"
-          "或用编辑器把换行符改成 LF",
-          "shell 脚本带 CRLF 会报 bad interpreter: /bin/bash^M，"
-          ".py 带 CRLF 在部分环境会报 SyntaxError")
+    if crlf and _git_autocrlf(root) == "true":
+        # Windows 上开着 autocrlf 时，工作区里每个文本文件都是 CRLF，
+        # 但提交进仓库后会被自动转成 LF —— 这时逐个报 CRLF 全是假阳性。
+        report(OK, f"跳过 CRLF 检查：git 配置 core.autocrlf=true，"
+                   f"工作区为 CRLF 是正常的（提交后自动转 LF）")
+        if not QUIET:
+            print(f"       （若确实要查仓库里的行尾，先 git config core.autocrlf false 再重新检出）")
+    else:
+        _list("CRLF 行尾", crlf, WARN,
+              "在仓库里统一为 LF：git config core.autocrlf false 后重新检出，"
+              "或用编辑器把换行符改成 LF",
+              "shell 脚本带 CRLF 会报 bad interpreter: /bin/bash^M，"
+              ".py 带 CRLF 在部分环境会报 SyntaxError")
     if os.name == "nt":
         # Windows 没有 POSIX 可执行位，os.access(X_OK) 只检查文件是否存在，
         # 在这里判断会产生假阴性，因此显式跳过，避免给出错误结论。

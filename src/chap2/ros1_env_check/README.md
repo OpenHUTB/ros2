@@ -56,6 +56,17 @@ src/chap2/ros1_env_check/
 └── README.md
 ```
 
+## 测试
+
+```bash
+cd src/chap2/ros1_env_check
+python3 -m pytest test/ -q        # 用 pytest 跑
+python3 test/test_check_env.py    # 不装 pytest 也能跑（12 项断言）
+```
+
+测试用 `subprocess` 直接调命令行，断言的是**退出码与输出文字**——
+这类脚本最容易回归的正是"该失败的时候退出码是不是 1"。
+
 ## 已知限制
 
 1. **可执行位检查只在 Linux/macOS 生效**：Windows 没有 POSIX 权限位，
@@ -64,3 +75,16 @@ src/chap2/ros1_env_check/
    但 `ROS_DISTRO` 的判断仍然有效。
 3. **不代替真正的编译验证**：环境自检通过不代表模块能编译；
    `catkin_make` 与 `roslaunch` 仍需单独执行。
+4. **`--scan` 只认常见文本扩展名**（`.py` `.sh` `.md` `.launch` `.xml` `.yaml` `.yml`
+   `.cpp` `.h`），`.urdf` `.rviz` `.pgm` 不在范围内，需要时扩展 `SCAN_EXTS`。
+5. **`core.autocrlf=true` 时跳过 CRLF 检查**：此时工作区本来就是 CRLF（提交后转 LF），
+   逐个报 CRLF 全是假阳性，所以说明原因后跳过，而不是制造噪声。
+
+## 三处容易给出错误结论的判定
+
+* **`--scan` 的路径不存在**：早期版本 `os.walk` 什么都不产出，三项检查全 OK ——
+  CI 里路径写错也全绿。现在直接 FAIL 并退出码 1；传文件而非目录、目录里没有可扫文件也会明确提示。
+* **仓库源码树 ≠ catkin 工作空间**：仓库根目录也有 `src/`，只按 `src/` 判断会建议你在此 `catkin_make`，
+  而那会生成提交指引不允许的 `build/`、`devel/`。现在要求同时存在
+  `.catkin_workspace` / `devel/` / `build/` 之一，源码树里改为提示"软链到独立工作空间"。
+* **`core.autocrlf=true`**：见上面第 5 条。
