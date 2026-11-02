@@ -118,6 +118,8 @@ launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）
 
 通过 launch 参数切换场景：
 
+**参数说明**：本包不使用 ROS 参数服务器——反射增益、步态、蹲起、踢腿参数统一由 `config/params.yaml` 在节点启动时直接加载（`load_params()`），修改该文件后重启节点即可生效。
+
 ```shell
 # 5 度坡道
 roslaunch mujoco_msk_human_walking_teleop main.launch scene:=slope5

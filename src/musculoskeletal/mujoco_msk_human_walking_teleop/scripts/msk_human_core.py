@@ -24,8 +24,16 @@ import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _MODEL_DIR = os.path.join(os.path.dirname(_HERE), "models")
-if not os.path.isdir(_MODEL_DIR):  # catkin 安装后 models 与脚本同级
-    _MODEL_DIR = os.path.join(os.path.dirname(_HERE), "models")
+if not os.path.isdir(_MODEL_DIR):
+    # catkin 安装后脚本位于 devel/lib/<pkg>/scripts/，其下没有 models；
+    # 照 load_params() 的方式用 roslib 定位源码包目录中的模型
+    try:
+        import roslib.packages
+        _MODEL_DIR = os.path.join(
+            roslib.packages.get_pkg_dir("mujoco_msk_human_walking_teleop"),
+            "models")
+    except Exception:
+        pass
 
 import mujoco
 

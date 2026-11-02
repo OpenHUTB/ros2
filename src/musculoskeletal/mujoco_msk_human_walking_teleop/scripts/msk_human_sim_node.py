@@ -54,7 +54,6 @@ class SimNode:
             "/msk_human/joint_states", JointState, queue_size=1)
         self.pub_state = rospy.Publisher(
             "/msk_human/state", Float32MultiArray, queue_size=1)
-        self.rate = rospy.Rate(500)
         self.js_seq = 0
         rospy.loginfo("msk_human_sim_node: scene=%s viewer=%s", scene, viewer)
 
@@ -73,8 +72,11 @@ class SimNode:
         rospy.loginfo("action: %s", name)
 
     def spin(self):
-        dt = 0.002
-        js_every = 10  # 500 Hz -> 50 Hz 状态发布
+        # 步长/频率/状态发布间隔均由模型 XML 的 option timestep 派生，
+        # 修改场景 timestep 后节点自动保持一致
+        dt = float(self.sim.model.opt.timestep)
+        self.rate = rospy.Rate(int(round(1.0 / dt)))
+        js_every = max(1, int(round(0.02 / dt)))  # 状态发布约 50 Hz
         i = 0
         while not rospy.is_shutdown():
             self.comp.manual = self.manual

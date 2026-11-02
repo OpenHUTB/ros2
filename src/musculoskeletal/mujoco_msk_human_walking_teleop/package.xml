@@ -9,6 +9,7 @@
   </description>
   <maintainer email="247221616@qq.com">Thirin-glitch</maintainer>
   <license>MIT</license>
+  <url type="website">https://github.com/OpenHUTB/ros2</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>rospy</depend>
@@ -17,4 +18,5 @@
   <exec_depend>xterm</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
+  <!-- mujoco 无 rosdep 键，需手动安装：pip3 install mujoco==3.2.3 -->
 </package>
