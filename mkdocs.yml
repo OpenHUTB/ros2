@@ -125,6 +125,10 @@ nav:
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
 - 空域载具:
+    - 室内无人机安全制动与定高悬停 / Indoor UAV braking: './air/mujoco_uav_range_neural_braking.md'
+    - 无人机轻量神经网络与 ROS 2 接口: './air/mujoco_uav_neural_ros2.md'
+    - 无人机测距制动实验报告 / UAV braking experiment report: './air/mujoco_uav_experiment_report.md'
+    - 无人机测距神经制动课程报告 / UAV Neural Braking Report: 'air/mujoco_uav_course_report.md'
     - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
     - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'
     - 无人机任务管理与安全状态机:

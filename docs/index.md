@@ -76,6 +76,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
+
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
@@ -136,8 +137,14 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [无人机测距神经制动完整课程报告 / UAV Neural Braking Course Report](./air/mujoco_uav_course_report.md)
+
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+
+* [无人机前向测距与数据集 / UAV ranging dataset](./air/mujoco_uav_ranging_dataset.md)
+
+* [室内无人机安全制动与定高悬停 / Indoor UAV braking](./air/mujoco_uav_range_neural_braking.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
@@ -165,6 +172,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机轻量神经网络与 ROS 2 接口](./air/mujoco_uav_neural_ros2.md)
+* [无人机测距制动实验报告 / UAV braking experiment report](./air/mujoco_uav_experiment_report.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
 * [无人机键盘控制](./air/uav_keyboard_control.md)
