@@ -4,6 +4,8 @@
 
 ![节点运行日志](./uav_battery_rth_failsafe_run.png)
 
+![AirSim 返航迫降画面](./uav_battery_rth_failsafe_airsim.png)
+
 ## 状态机
 
 ```mermaid
