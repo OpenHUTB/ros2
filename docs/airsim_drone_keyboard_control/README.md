@@ -24,3 +24,6 @@
    ```bash
    colcon build
    source install/setup.bash
+3. 启动无人机云台遥控节点
+   ```bash
+   ros2 run airsim_drone_gimbal_teleop drone_gimbal_teleop
