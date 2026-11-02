@@ -1,0 +1,23 @@
+<mujoco model="cart_pole">
+  <option timestep="0.01" integrator="implicitfast"/>
+  <worldbody>
+    <!-- 修正：使用 xyaxes 替代 zaxis，解决画面倾斜问题 -->
+    <camera name="wide_view" pos="0 -4 1" xyaxes="1 0 0 0 0.98 0.2"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+    <body name="cart" pos="0 0 0.1">
+      <!-- slide关节平动阻尼0.5，限位±5米 -->
+      <joint name="slide_joint" type="slide" axis="1 0 0" range="-5 5" damping="0.5"/>
+      <geom name="cart_geom" type="box" size="0.2 0.1 0.1" rgba="0.2 0.6 0.8 1" mass="1.0"/>
+      
+      <body name="pole" pos="0 0 0.1">
+        <!-- 铰链关节转动阻尼0.02 -->
+        <joint name="hinge" type="hinge" axis="0 1 0" damping="0.02"/>
+        <!-- 修正：加入 contype="0" conaffinity="0" 忽略与车体的碰撞，防止穿模 -->
+        <geom name="pole_geom" type="cylinder" size="0.02" fromto="0 0 0 0 0 0.3" rgba="0.9 0.3 0.3 1" mass="0.5" contype="0" conaffinity="0"/>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="cart_motor" joint="slide_joint" gear="1"/>
+  </actuator>
+</mujoco>
