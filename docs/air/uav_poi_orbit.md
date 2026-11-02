@@ -2,6 +2,8 @@
 
 给定任意地面 POI, 自动生成圆周/螺旋航线, 偏航始终对准目标。
 
+![节点运行日志](./uav_poi_orbit_run.png)
+
 ## 几何
 
 - 圆周: `x = poi_x + r*cos(θ)`, `y = poi_y + r*sin(θ)`
