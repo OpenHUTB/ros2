@@ -365,15 +365,10 @@
 <div><h1 id="_1">基于激光雷达扫描的神经网络障碍物分类</h1>
 <p>本文介绍一个基于 ROS 2 Humble、Gazebo Fortress 与 PyTorch 的激光雷达感知模块。模块订阅仿真环境中 2D 激光雷达发布的 <code>/scan</code>（<code>sensor_msgs/LaserScan</code>，360 束），由一个三层 MLP 将每条扫描分为 <code>near</code>（近障）、<code>far</code>（远障）、<code>free</code>（无障）三类，并通过 <code>/obstacle_class</code>、<code>/obstacle_confidence</code> 话题发布分类结果以及置信度。</p>
 <h2 id="1">1. 系统组成</h2>
-<div class="mermaid">flowchart LR
-    A[Gazebo GPU LiDAR] --&gt;|Gazebo Transport| B[ros_gz_bridge]
-    B --&gt;|sensor_msgs/LaserScan| C["/scan"]
-    C --&gt; D[LidarMLP 推理节点]
-    D --&gt;|std_msgs/String| E["/obstacle_class"]
-    D --&gt;|std_msgs/Float32| F["/obstacle_confidence"]
-</div>
+<p><img alt="LiDAR 障碍物分类系统数据流" src="../../../img/chap5/lidar_obstacle_nn/system_dataflow.png"/></p>
 <p>仿真激光雷达生成 360 束 2D 扫描，<code>ros_gz_bridge</code> 把 Gazebo 消息转换为 ROS 2 <code>sensor_msgs/LaserScan</code>，<code>inference_node</code> 加载训练好的 MLP 权重做推理，发布类别字符串和置信度。</p>
 <h2 id="2">2. 环境要求与安装</h2>
+<p>下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该兼容性镜像不能替代标准 Humble 安装流程。</p>
 <table>
 <thead>
 <tr>
@@ -383,7 +378,7 @@
 </thead>
 <tbody>
 <tr>
-<td>操作系统</td>
+<td>目标操作系统</td>
 <td>Ubuntu 22.04 LTS</td>
 </tr>
 <tr>
@@ -391,11 +386,11 @@
 <td>ROS 2 Humble (<code>/opt/ros/humble</code>)</td>
 </tr>
 <tr>
-<td>仿真器</td>
+<td>目标仿真器</td>
 <td>Gazebo Fortress 6.x（Ignition Gazebo）</td>
 </tr>
 <tr>
-<td>Python</td>
+<td>目标 Python</td>
 <td>3.10（ROS 2 Humble 自带）</td>
 </tr>
 <tr>
@@ -418,7 +413,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </s
 <p>验证安装：</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; print(torch.__version__, torch.cuda.is_available())"</span>
 <span class="c1"># 纯 CPU 机器输出形如 2.3.1+cpu False，属预期且受支持</span>
-ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </span>ros_gz_sim_demos<span class="w">   </span><span class="c1"># 应输出 /opt/ros/humble</span>
+ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </span>ros_gz_sim<span class="w">   </span><span class="c1"># 应输出 ROS 2 的安装前缀</span>
 </code></pre></div>
 <h2 id="3">3. 计算原理</h2>
 <h3 id="31">3.1 激光雷达扫描数据结构</h3>
@@ -463,6 +458,7 @@ ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </
 </script>
 </p>
 <p>阈值默认 <script type="math/tex">d_{\text{danger}}=1.0\,\text{m}</script>、<script type="math/tex">d_{\text{far}}=3.0\,\text{m}</script>，可在 <code>config/params.yaml</code> 修改。</p>
+<p><img alt="LiDAR 最近障碍分类区域俯视示意" src="../../../img/chap5/lidar_obstacle_nn/classification_zones.png"/></p>
 <h3 id="33">3.3 神经网络结构</h3>
 <p>采用三层全连接网络（MLP），输入 360 维（重采样后的扫描向量），输出 3 类 logits：</p>
 <p>
@@ -590,6 +586,10 @@ w_c = \frac{N}{3 \cdot N_c}
 <td><code>LidarMLP</code> PyTorch 模块定义。</td>
 </tr>
 <tr>
+<td><a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/scan_utils.py"><code>lidar_obstacle_nn/scan_utils.py</code></a></td>
+<td>扫描清洗、360 维重采样、标签规则与低置信度 fallback 的共享实现。</td>
+</tr>
+<tr>
 <td><a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/inference_node.py"><code>lidar_obstacle_nn/inference_node.py</code></a></td>
 <td>ROS 2 节点，订阅 <code>/scan</code>、加载权重、发布 <code>/obstacle_class</code>。</td>
 </tr>
@@ -608,6 +608,10 @@ w_c = \frac{N}{3 \cdot N_c}
 <tr>
 <td><a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/evaluate_model.py"><code>lidar_obstacle_nn/evaluate_model.py</code></a></td>
 <td>在带标签 <code>.npz</code> 上评估权重：总体准确率、逐类精确率/召回率、3×3 混淆矩阵。</td>
+</tr>
+<tr>
+<td><a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/scripts/generate_docs_figures.py"><code>scripts/generate_docs_figures.py</code></a></td>
+<td>生成系统数据流、分类区域和真实运行效果图。</td>
 </tr>
 <tr>
 <td><a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world.sdf"><code>worlds/obstacle_world.sdf</code></a></td>
@@ -634,15 +638,23 @@ w_c = \frac{N}{3 \cdot N_c}
 colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>lidar_obstacle_nn<span class="w"> </span>--symlink-install
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
 </code></pre></div>
+<p>构建后运行测试：</p>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--packages-select<span class="w"> </span>lidar_obstacle_nn
+colcon<span class="w"> </span>test-result<span class="w"> </span>--verbose
+</code></pre></div>
+<p>测试覆盖模型输入输出、inf/nan 清洗、标签边界、合成数据形状与类别均衡、训练产物、LaserScan 风格消息重采样和 fallback，以及 Gazebo/launch 资产检查。</p>
 <h3 id="62">6.2 首次运行前必须先生成模型权重</h3>
 <p><code>models/lidar_mlp.pt</code> 权重文件<strong>不随仓库分发</strong>（仓库 <code>.gitignore</code> 约定忽略 <code>*.pt</code> 二进制训练产物，保持仓库以文本为主），克隆后第一次运行前需要自己训练生成一次（CPU 上约 1 分钟，详见 6.5 节；不训练的话推理节点会打印 <code>Model file not found</code> 警告并使用随机权重，输出无意义）。</p>
 <h3 id="63">6.3 一键启动（推荐）</h3>
 <p>有显示器的环境：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>lidar_obstacle_nn<span class="w"> </span>main.launch.py
 </code></pre></div>
-<p>无显示器的环境（服务器、虚拟机、CI）用虚拟显示启动——<code>gpu_lidar</code> 传感器需要渲染上下文才能产生回波：</p>
-<div class="highlight"><pre><span></span><code>xvfb-run<span class="w"> </span>-a<span class="w"> </span>ros2<span class="w"> </span>launch<span class="w"> </span>lidar_obstacle_nn<span class="w"> </span>main.launch.py
+<p>无显示器的环境（服务器、虚拟机、CI）传入 <code>headless:=true</code>，launch 会通过 <code>xvfb-run</code> 和 Ogre1 软件渲染启动 Gazebo。<code>gpu_lidar</code> 传感器需要渲染上下文才能产生回波；Ogre2 在部分 Xvfb 环境中因缺少 OpenGL 3.3 上下文无法启动：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>lidar_obstacle_nn<span class="w"> </span>main.launch.py<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
 </code></pre></div>
+<p>也可以保留原来的外层虚拟显示写法：<code>xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py</code>。</p>
+<p>桌面虚拟机默认使用 <code>render_engine:=ogre</code>，避免软件 OpenGL 环境缺少 OpenGL 3.3 时 Ogre2 崩溃。显卡驱动完整的主机可显式传入 <code>render_engine:=ogre2</code>。</p>
+<p>world 已加载 Gazebo 的 <code>VisualizeLidar</code> GUI 插件。选中 <code>lidar_box/lidar_link/gpu_lidar</code> 后即可打开激光射线显示。</p>
 <p><code>main.launch.py</code> 同时启动：
 1. Gazebo Fortress 加载 <code>obstacle_world.sdf</code>（加 <code>world:=dynamic</code> 改为加载 <code>obstacle_world_dynamic.sdf</code>）
 2. <code>ros_gz_bridge</code> 把 Gazebo <code>/scan</code> 转发到 ROS 2 <code>/scan</code>
@@ -698,7 +710,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 </code></pre></div>
 <p>站位关节位置可通过 <code>joint_positions</code>（double 数组）与 <code>station_labels</code>（int 数组，0/1/2）两个 ROS 参数自定义；两个数组必须等长。</p>
 <h2 id="7">7. 实测结果</h2>
-<p>数据在 Ubuntu 22.04.5 LTS 与 ROS 2 Humble 环境下实测得到：</p>
+<p>以下数据均来自同一台 VMware 预装镜像。该镜像是兼容性验证环境，不是标准 Humble 安装环境：</p>
 <table>
 <thead>
 <tr>
@@ -709,15 +721,19 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <tbody>
 <tr>
 <td>OS / ROS 版本</td>
-<td>Ubuntu 22.04.5 LTS / ROS 2 Humble</td>
+<td>Ubuntu 20.04.6 LTS / ROS 2 Humble（预装兼容性镜像）</td>
+</tr>
+<tr>
+<td>Python 版本</td>
+<td>3.8.10</td>
 </tr>
 <tr>
 <td>Gazebo 版本</td>
-<td>Gazebo Fortress 6.18.0</td>
+<td>Gazebo Fortress 6.17.1</td>
 </tr>
 <tr>
 <td>PyTorch 版本</td>
-<td>2.5.1+cu121（推理使用 CPU）</td>
+<td>2.4.1+cpu</td>
 </tr>
 <tr>
 <td>激光雷达</td>
@@ -729,31 +745,39 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 </tr>
 <tr>
 <td>权重文件大小</td>
-<td>249 KB</td>
+<td>约 250 KB</td>
 </tr>
 <tr>
 <td>数据集规模</td>
 <td>1500 样本，3 类各 500 条（合成）</td>
 </tr>
 <tr>
+<td>训练划分</td>
+<td>1200 训练 / 300 验证</td>
+</tr>
+<tr>
 <td>训练时长</td>
-<td>1.63 秒（CPU，50 epoch，早停在 46）</td>
+<td>2.02 秒（CPU，50 epoch）</td>
 </tr>
 <tr>
 <td>最佳验证损失</td>
-<td>0.0596</td>
+<td>0.0102</td>
 </tr>
 <tr>
 <td>最终验证准确率</td>
-<td>99.67 %</td>
+<td>100 %</td>
 </tr>
 <tr>
 <td><code>/scan</code> 发布频率</td>
-<td>约 4.75 Hz</td>
+<td>约 4.3 Hz</td>
 </tr>
 <tr>
 <td><code>/obstacle_class</code> 实测输出</td>
 <td><code>near</code>（场景含 0.6 m 红方块）</td>
+</tr>
+<tr>
+<td><code>/obstacle_confidence</code> 实测输出</td>
+<td>0.978</td>
 </tr>
 </tbody>
 </table>
@@ -775,8 +799,8 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <td><code>free</code>（无回波，数据无效）</td>
 </tr>
 <tr>
-<td><code>xvfb-run -a</code> + 正常 GUI 构建</td>
-<td>76/360</td>
+<td><code>xvfb-run -a</code> + Ogre1</td>
+<td>80/360</td>
 <td>0.40 m</td>
 <td><code>near</code>（与场景一致）</td>
 </tr>
@@ -786,7 +810,13 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <p><img alt="Gazebo 仿真场景：黄色 lidar_box 机器人 + 红/绿/蓝三色障碍物 + 激光射线" src="../../../img/chap5/lidar_obstacle_nn/gazebo_scene.png"/></p>
 <p><strong>终端 <code>/obstacle_class</code> 实时输出</strong>：</p>
 <p><img alt="终端 ros2 topic echo /obstacle_class 持续输出 near" src="../../../img/chap5/lidar_obstacle_nn/topic_obstacle_class.png"/></p>
-<h3 id="71">7.1 动态世界真实数据采集与合成数据对比</h3>
+<h3 id="71">7.1 本次重新验证与图解</h3>
+<p>本节与前文表格使用同一台 VMware 预装兼容性镜像：Ubuntu 20.04.6、Python 3.8.10、ROS 2 Humble、Gazebo Fortress 6.17.1、PyTorch 2.4.1 CPU。发布频率约 4.3 Hz，360 束中有 80 束产生有效回波，最近距离 0.400 m，分类为 <code>near</code>，置信度 0.978。</p>
+<p><strong>Gazebo 静态 world 实际画面</strong>：</p>
+<p><img alt="Gazebo Fortress 静态 world 实际运行画面" src="../../../img/chap5/lidar_obstacle_nn/gazebo_static_2026-11-01.png"/></p>
+<p><strong>真实截图、单帧扫描统计和分类结果总览</strong>：</p>
+<p><img alt="Gazebo Fortress 真实运行效果总览" src="../../../img/chap5/lidar_obstacle_nn/runtime_effect.png"/></p>
+<h3 id="72">7.2 动态世界真实数据采集与合成数据对比</h3>
 <p>动态世界实测（同一 5 Hz、360 束 GPU LiDAR，6 站位各采 150 帧）：</p>
 <table>
 <thead>
