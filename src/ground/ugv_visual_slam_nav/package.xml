@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ugv_visual_slam_nav</name>
+  <version>0.1.0</version>
+  <description>地面无人车视觉 SLAM 建图与自主导航：RGB-D 路标检测 + EKF-SLAM + 占据栅格 + A*/纯追踪，附端到端 CNN 对比与四场景性能评价</description>
+  <maintainer email="3248146937@qq.com">6lebron23</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <!-- slame_node / sim_node 发布 map->odom 与 odom->base_link -->
+  <exec_depend>tf2_msgs</exec_depend>
+  <!-- model_io.py 用它在 install 后定位 share/models/*.npz -->
+  <exec_depend>ament_index_python</exec_depend>
+  <!-- launch/*.launch.py 直接 import launch 与 launch_ros -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

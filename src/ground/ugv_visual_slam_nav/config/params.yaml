@@ -1,0 +1,32 @@
+# 一次装好全部节点参数，例如：
+#   ros2 run ugv_visual_slam_nav sim --ros-args --params-file <此文件>
+# 或在自己的 launch 里把 yaml 直接传给 Node(parameters=[<路径>])。
+ugv_sim:
+  ros__parameters:
+    scene: corridor          # corridor | cluttered | dynamic | night
+    seed: 0
+    rate_hz: 10.0
+    publish_tf: true
+
+ugv_slam:
+  ros__parameters:
+    map_rate_hz: 2.0
+    occ_threshold: 0.62
+    publish_tf: true
+    start_x: 2.0
+    start_y: 2.0
+    start_yaw: 0.0
+
+ugv_nav:
+  ros__parameters:
+    goal_x: 17.6
+    goal_y: 11.6
+    control_hz: 10.0
+    spin_time: 1.6
+    max_speed: 0.6
+
+ugv_e2e:
+  ros__parameters:
+    model_path: ''           # 留空则用 share/ugv_visual_slam_nav/models/e2e.npz
+    control_hz: 10.0
+    max_speed: 0.6
