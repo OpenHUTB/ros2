@@ -1,0 +1,5 @@
+# 行为克隆数据集（约 120 MB，由 `--stage data` 重新生成，不入库）
+results/bc_dataset.npz
+# 图片由 `--stage figures` 重新生成，入库的是 docs/img/ground/ugv_visual_slam_nav/ 下的拷贝
+results/*.png
+results/*.gif
