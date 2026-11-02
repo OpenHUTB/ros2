@@ -2,8 +2,13 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 import time
+import os
 
-model = mujoco.MjModel.from_xml_path("scene.xml")
+# 自动获取脚本所在目录，换目录也能跑
+script_dir = os.path.dirname(os.path.abspath(__file__))
+xml_path = os.path.join(script_dir, "scene.xml")
+
+model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
 T_RED = 5.0
@@ -17,6 +22,7 @@ id_yellow = model.geom("light_yellow").id
 id_green = model.geom("light_green").id
 
 stop_line = 2.0
+slow_down_distance = 1.0  # 离停止线1米就开始减速
 normal_force = 0.6
 slow_force = 0.2
 brake_force = -0.3
@@ -44,8 +50,12 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         car_v = data.qvel[0]
         force = normal_force
 
+        distance_to_stop = stop_line - car_x
+
         if car_x >= stop_line:
+            # 过了停止线
             if light == 0:
+                # 红灯：刹车停车
                 if car_v > 0.001:
                     force = brake_force
                 else:
@@ -54,6 +64,14 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
                 force = slow_force
             else:
                 force = normal_force
+        elif distance_to_stop < slow_down_distance:
+            # 离停止线很近了，红灯的话提前减速
+            if light == 0:
+                # 根据距离线性减速
+                ratio = distance_to_stop / slow_down_distance
+                force = normal_force * ratio
+            elif light == 1:
+                force = slow_force
 
         data.ctrl[0] = force
         mujoco.mj_step(model, data)
