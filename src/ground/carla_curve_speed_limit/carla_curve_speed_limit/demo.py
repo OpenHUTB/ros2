@@ -204,9 +204,13 @@ def _screenshot(world, ego, path, fov=110):
     return False
 
 
-def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
-    """真实 CARLA 场景：自车沿 Town01 环路巡航，弯道自动减速、直道恢复。
+def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60,
+             town=None, spawn_index=None):
+    """真实 CARLA 场景：自车沿指定地图环路巡航，弯道自动减速、直道恢复。
 
+    town 默认 None 用 carla_common.DEFAULT_MAP（Town01_Opt）；
+    spawn_index 默认 None 沿用"依次尝试前 10 个出生点"的回退逻辑，
+    显式给 N 则取地图第 N 个出生点（换场景出不同弯道的演示图）。
     桥接节点逻辑内嵌：地图路点预瞄 → 目标速度 → 滞回+斜坡 → 控车。
     每次状态跃迁自动截图，全程导出 CSV + 曲线。
     """
@@ -221,9 +225,14 @@ def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"[demo] 连接 CARLA {host}:{port} ...")
-    client, world = cc.connect(host, port)
+    client, world = cc.connect(host, port, town=town or cc.DEFAULT_MAP)
     cc.cleanup_actors(world)
-    ego, tf = cc.spawn_vehicle(world)
+    if spawn_index is not None:
+        spawns = world.get_map().get_spawn_points()
+        tf0 = spawns[int(spawn_index) % len(spawns)] if spawns else None
+        ego, tf = cc.spawn_vehicle(world, transform=tf0)
+    else:
+        ego, tf = cc.spawn_vehicle(world)
     road_map = world.get_map()
     p = CSLParams()
     ctrl = CSLController(p)
@@ -341,6 +350,8 @@ def main(argv=None):
     host, port = "127.0.0.1", 2000
     live = False
     seconds = 60
+    town = None
+    spawn_index = None
     it = iter(argv)
     for a in it:
         if a == "--live":
@@ -353,10 +364,15 @@ def main(argv=None):
             out_dir = Path(next(it))
         elif a == "--seconds":
             seconds = int(next(it))
+        elif a == "--town":
+            town = next(it)
+        elif a == "--spawn-index":
+            spawn_index = int(next(it))
         else:
             print(f"未知参数 {a}，忽略")
     if live:
-        return 1 if not run_live(host, port, out_dir, max_seconds=seconds) else 0
+        return 1 if not run_live(host, port, out_dir, max_seconds=seconds,
+                                 town=town, spawn_index=spawn_index) else 0
     return 0 if run_offline(out_dir) else 1
 
 

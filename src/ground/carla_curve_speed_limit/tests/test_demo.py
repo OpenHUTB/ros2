@@ -102,6 +102,47 @@ class TestOfflineScenario(unittest.TestCase):
         self.assertTrue(all(v > 7.0 for v in tail),
                         f"末段直道速度未恢复巡航: {tail[-5:]}")
 
+    def test_live_args_parsing(self):
+        """--town/--spawn-index/--seconds 解析并透传给 run_live。"""
+        captured = {}
+
+        def fake(host, port, out_dir, max_seconds=60, town=None,
+                 spawn_index=None):
+            captured.update(host=host, town=town,
+                            spawn_index=spawn_index, seconds=max_seconds)
+            return True
+
+        orig = demo.run_live
+        demo.run_live = fake
+        try:
+            rc = demo.main(["--live", "--host", "192.168.122.1",
+                            "--town", "Town02_Opt", "--spawn-index", "3",
+                            "--seconds", "30"])
+        finally:
+            demo.run_live = orig
+        self.assertEqual(rc, 0)
+        self.assertEqual(captured["town"], "Town02_Opt")
+        self.assertEqual(captured["spawn_index"], 3)
+        self.assertEqual(captured["seconds"], 30)
+
+    def test_live_default_args_unchanged(self):
+        """不传 --town/--spawn-index 时保持原默认（None=旧回退逻辑）。"""
+        captured = {}
+
+        def fake(host, port, out_dir, max_seconds=60, town=None,
+                 spawn_index=None):
+            captured.update(town=town, spawn_index=spawn_index)
+            return True
+
+        orig = demo.run_live
+        demo.run_live = fake
+        try:
+            demo.main(["--live"])
+        finally:
+            demo.run_live = orig
+        self.assertIsNone(captured["town"])
+        self.assertIsNone(captured["spawn_index"])
+
 
 if __name__ == "__main__":
     unittest.main()
