@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>Gazebo 仿真相机与图像话题验证 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "Gazebo \u4eff\u771f\u76f8\u673a\u4e0e\u56fe\u50cf\u8bdd\u9898\u9a8c\u8bc1";
+        var mkdocs_page_input_path = "chapter/chap9/gazebo_camera_sim.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">9. ROS 2</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../">章节首页</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">Gazebo 仿真相机与图像话题验证</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 要解决的问题 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 系统组成与数据流 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 环境与安装 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 启动仿真 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 检查话题与图像规格 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6-rviz2">6. 在 RViz2 中查看实时画面 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 实测结果 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 常见问题 </a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_1">参考</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">9. ROS 2</li>
+<li class="breadcrumb-item active">Gazebo 仿真相机与图像话题验证</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap9/gazebo_camera_sim.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="gazebo">Gazebo 仿真相机与图像话题验证</h1>
+<p>本实验在 Ubuntu 22.04 + ROS 2 Humble + Gazebo Fortress 下，用官方示例包 <code>ros_gz_sim_demos</code> 启动一个带 RGB 相机的 Gazebo 场景，把相机图像桥接成标准 ROS 2 话题，并在命令行与 RViz2 中确认画面确实在实时刷新。</p>
+<p>实验只用系统自带示例包，不需要自己写 URDF、SDF 或插件，适合作为图像类感知实验的起点：跑通「仿真相机 → 桥接 → ROS 2 话题 → 可视化」这条链路之后，再去接自己的检测、分类或测距节点。</p>
+<ul>
+<li><a href="#problem">1. 要解决的问题</a></li>
+<li><a href="#method">2. 系统组成与数据流</a></li>
+<li><a href="#install">3. 环境与安装</a></li>
+<li><a href="#launch">4. 启动仿真</a></li>
+<li><a href="#check">5. 检查话题与图像规格</a></li>
+<li><a href="#rviz">6. 在 RViz2 中查看实时画面</a></li>
+<li><a href="#results">7. 实测结果</a></li>
+<li><a href="#faq">8. 常见问题</a></li>
+</ul>
+<h2 id="1">1. 要解决的问题 <span id="problem"></span></h2>
+<p>很多图像感知实验在仿真里卡在第一步：Gazebo 里的相机到底有没有出图、出的图是哪个话题、长什么样，肉眼和命令行都不确定。本实验把这件事拆成三个可以单独验证的环节：</p>
+<ol>
+<li>Gazebo 侧：场景启动后相机传感器是否工作；</li>
+<li>桥接侧：Gazebo Transport 的图像是否真的转成了 <code>sensor_msgs/msg/Image</code>；</li>
+<li>ROS 2 侧：话题频率、分辨率、编码、相机内参是否符合预期，RViz2 里能否看到连续画面。</li>
+</ol>
+<p>三个环节都通过，才说明后续的视觉节点拿到的是可信的仿真图像。</p>
+<h2 id="2">2. 系统组成与数据流 <span id="method"></span></h2>
+<div class="mermaid">flowchart LR
+    A[Gazebo 场景<br/>camera_sensor.sdf] --&gt;|RGB 图像| B[Gazebo Transport]
+    B --&gt; C{ros_gz_bridge<br/>parameter_bridge}
+    C --&gt;|sensor_msgs/Image| D[/camera/]
+    C --&gt;|sensor_msgs/CameraInfo| E[/camera_info/]
+    D --&gt; F[RViz2 Camera 面板]
+    D --&gt; G[RViz2 Image 面板]
+    D --&gt; H[命令行 ros2 topic hz]
+
+    style C fill:#fff3e0,color:#e65100
+    style D fill:#bbdefb,color:#0d47a1
+    style E fill:#bbdefb,color:#0d47a1
+</div>
+<p><code>ros_gz_sim_demos</code> 的 <code>camera.launch.py</code> 会同时启动三个部件：Gazebo（含 GUI）、<code>ros_gz_bridge</code> 的 <code>parameter_bridge</code>、以及加载好相机面板的 RViz2。桥接规则写死在 launch 里：</p>
+<div class="highlight"><pre><span></span><code>/camera      sensor_msgs/msg/Image       @ gz.msgs.Image
+/camera_info sensor_msgs/msg/CameraInfo  @ gz.msgs.CameraInfo
+</code></pre></div>
+<p>两条规则都用 <code>@</code> 表示双向桥接（GZ→ROS 和 ROS→GZ 同时建立），实测日志里也能看到两个方向的 Bridge 都被创建。相机图像实际只有 Gazebo 会发布，所以 <strong>GZ→ROS 方向有持续数据流，ROS→GZ 方向闲置</strong>。</p>
+<h2 id="3">3. 环境与安装 <span id="install"></span></h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>本实验验证版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 22.04</td>
+</tr>
+<tr>
+<td>ROS 2</td>
+<td>Humble</td>
+</tr>
+<tr>
+<td>Gazebo</td>
+<td>Gazebo Sim 6.18.0（Fortress）</td>
+</tr>
+<tr>
+<td>示例包</td>
+<td><code>ros-humble-ros-gz-sim-demos</code></td>
+</tr>
+</tbody>
+</table>
+<p>先加载 ROS 2 环境并确认发行版：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$ROS_DISTRO</span><span class="s2">"</span><span class="w">     </span><span class="c1"># 应输出 humble</span>
+</code></pre></div>
+<p>示例包会自动拉取 Gazebo Fortress、<code>ros_gz</code> 桥接和 RViz2，不需要逐个安装：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>ros-humble-ros-gz-sim-demos
+</code></pre></div>
+<p>安装后可以先确认包存在：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>pkg<span class="w"> </span>prefix<span class="w"> </span>ros_gz_sim_demos<span class="w">   </span><span class="c1"># 应输出 /opt/ros/humble</span>
+ign<span class="w"> </span>gazebo<span class="w"> </span>--version<span class="w">               </span><span class="c1"># 应输出 Gazebo Sim, version 6.x</span>
+</code></pre></div>
+<h2 id="4">4. 启动仿真 <span id="launch"></span></h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>ros_gz_sim_demos<span class="w"> </span>camera.launch.py
+</code></pre></div>
+<p>正常启动后会出现两个窗口：Gazebo（左侧 3D 场景，右侧 <code>Image display</code> 面板订阅 <code>/camera</code>）和 RViz2。终端里能看到桥接建立日志（每个话题双向各一条）：</p>
+<div class="highlight"><pre><span></span><code>[ros_gz_bridge]: Creating GZ-&gt;ROS Bridge: [/camera (gz.msgs.Image) -&gt; /camera (sensor_msgs/msg/Image)]
+[ros_gz_bridge]: Creating ROS-&gt;GZ Bridge: [/camera (sensor_msgs/msg/Image) -&gt; /camera (gz.msgs.Image)]
+[ros_gz_bridge]: Creating GZ-&gt;ROS Bridge: [/camera_info (gz.msgs.CameraInfo) -&gt; /camera_info (sensor_msgs/msg/CameraInfo)]
+[ros_gz_bridge]: Creating ROS-&gt;GZ Bridge: [/camera_info (sensor_msgs/msg/CameraInfo) -&gt; /camera_info (gz.msgs.CameraInfo)]
+</code></pre></div>
+<p><img alt="Gazebo 场景与 Image display 面板中的实时相机画面" src="../../../img/chap9/gazebo_camera_sim/01_gazebo_image_display.png"/></p>
+<p>Gazebo 窗口右侧的 <code>Image display</code> 下拉框里选择 <code>/camera</code>，如果能看到蓝色方块、绿色球体和交通锥，说明相机传感器本身已经在出图。这一步最直观，但要确认数据真的进了 ROS 2，还需要下一步的话题检查。</p>
+<h2 id="5">5. 检查话题与图像规格 <span id="check"></span></h2>
+<p>新开一个终端，同样先 <code>source /opt/ros/humble/setup.bash</code>。</p>
+<p><strong>查看话题与消息类型</strong></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>list<span class="w"> </span>-t
+</code></pre></div>
+<p>实测输出中与相机相关的部分：</p>
+<div class="highlight"><pre><span></span><code>/camera [sensor_msgs/msg/Image]
+/camera_info [sensor_msgs/msg/CameraInfo]
+</code></pre></div>
+<p><strong>查看发布者数量</strong></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>info<span class="w"> </span>/camera
+</code></pre></div>
+<p>实测输出：</p>
+<div class="highlight"><pre><span></span><code>Type: sensor_msgs/msg/Image
+Publisher count: 1
+</code></pre></div>
+<p>只有 1 个发布者，说明图像来自桥接，而不是别的节点在误发。</p>
+<p><strong>查看频率</strong></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/camera
+</code></pre></div>
+<p>实测输出（连续多个窗口都稳定在 27 Hz 左右）：</p>
+<div class="highlight"><pre><span></span><code>average rate: 27.580
+        min: 0.027s max: 0.042s std dev: 0.00334s window: 113
+</code></pre></div>
+<p><strong>查看相机内参与图像规格</strong></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/camera_info<span class="w"> </span>--once
+</code></pre></div>
+<p>实测关键字段：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">frame_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">camera/link/camera</span>
+<span class="nt">height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">240</span>
+<span class="nt">width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">320</span>
+<span class="nt">distortion_model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plumb_bob</span>
+<span class="nt">k</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">277.1913528442383</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">160.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">277.1913528442383</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</code></pre></div>
+<p>图像消息本身的规格可以用下面的命令打印，或用 RViz2 的 Image 面板直接确认：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/camera<span class="w"> </span>--once<span class="w"> </span>--field<span class="w"> </span>encoding
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/camera<span class="w"> </span>--once<span class="w"> </span>--field<span class="w"> </span>width
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/camera<span class="w"> </span>--once<span class="w"> </span>--field<span class="w"> </span>height
+</code></pre></div>
+<p>实测为 <code>rgb8</code>、<code>320</code>、<code>240</code>，<code>step</code> 为 960（320 × 3），<code>frame_id</code> 为 <code>camera/link/camera</code>。内参矩阵中的焦距 277.19 与主点 (160, 120) 正好对应 320 × 240 的中心，畸变系数全为 0。</p>
+<h2 id="6-rviz2">6. 在 RViz2 中查看实时画面 <span id="rviz"></span></h2>
+<p><code>camera.launch.py</code> 默认会带 RViz2，并加载 <code>camera.rviz</code> 配置。窗口中已经配好两个显示项：</p>
+<ul>
+<li><code>Camera</code>：把相机图像按固定帧 <code>camera/link/camera</code> 投影到 3D 视图；</li>
+<li><code>Image</code>：把图像原样贴到面板上。</li>
+</ul>
+<p>两个面板的 <code>Status</code> 都是 <code>Ok</code>，<code>Topic</code> 都是 <code>/camera</code>，右下角帧率显示约 31 fps，说明画面在持续刷新而不是卡在某一帧。</p>
+<p><img alt="RViz2 中 Camera 与 Image 面板同时显示 /camera" src="../../../img/chap9/gazebo_camera_sim/02_rviz_camera_image.png"/></p>
+<p>如果要自己重新添加显示项，在左下角 <code>Add</code> 里分别选 <code>rviz_default_plugins/Camera</code> 和 <code>rviz_default_plugins/Image</code>，再把 <code>Topic</code> 设为 <code>/camera</code> 即可。<code>Global Options</code> 里的 <code>Fixed Frame</code> 需要设成 <code>camera/link/camera</code>，否则会因为找不到坐标系而显示异常。</p>
+<h2 id="7">7. 实测结果 <span id="results"></span></h2>
+<p>在同一台机器上多次采样，结果稳定：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>实测值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>图像话题</td>
+<td><code>/camera</code>（<code>sensor_msgs/msg/Image</code>）</td>
+</tr>
+<tr>
+<td>标定话题</td>
+<td><code>/camera_info</code>（<code>sensor_msgs/msg/CameraInfo</code>）</td>
+</tr>
+<tr>
+<td>发布者数量</td>
+<td>1</td>
+</tr>
+<tr>
+<td>分辨率</td>
+<td>320 × 240</td>
+</tr>
+<tr>
+<td>像素编码</td>
+<td><code>rgb8</code>，<code>step</code> = 960</td>
+</tr>
+<tr>
+<td>坐标帧</td>
+<td><code>camera/link/camera</code></td>
+</tr>
+<tr>
+<td>平均频率</td>
+<td>27.5 Hz（27.52 / 27.58 两个窗口）</td>
+</tr>
+<tr>
+<td>帧间隔</td>
+<td>最小 0.027 s，最大 0.042 s，标准差约 0.0033 s</td>
+</tr>
+<tr>
+<td>内参</td>
+<td>f = 277.19，cx = 160，cy = 120，畸变系数全 0</td>
+</tr>
+<tr>
+<td>RViz2 显示</td>
+<td>Camera 与 Image 面板 <code>Status: Ok</code>，约 31 fps</td>
+</tr>
+</tbody>
+</table>
+<p>频率不到 30 Hz 属于正常现象：Gazebo 的相机按仿真步长采样，实际发布频率受渲染速度与实时因子影响，不同机器上会有几个 Hz 的差异。</p>
+<h2 id="8">8. 常见问题 <span id="faq"></span></h2>
+<p><strong>Wayland 会话下的 Qt 提示</strong></p>
+<div class="highlight"><pre><span></span><code>Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome.
+</code></pre></div>
+<p>这是 Gazebo 与 RViz2 在 Wayland 桌面下的提示，不影响运行。如需固定 Qt 平台后端，可以显式指定走 XWayland：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">QT_QPA_PLATFORM</span><span class="o">=</span>xcb<span class="w"> </span>ros2<span class="w"> </span>launch<span class="w"> </span>ros_gz_sim_demos<span class="w"> </span>camera.launch.py
+</code></pre></div>
+<p><strong>Gazebo 窗口起不来或刚启动就退出</strong></p>
+<p>多半是没有可用的图形会话或 GPU 设备。如果终端里能看到下面这类告警：</p>
+<div class="highlight"><pre><span></span><code>libEGL warning: egl: failed to create dri2 screen
+libEGL warning: failed to open /dev/dri/renderD128
+</code></pre></div>
+<p>说明当前环境（远程 SSH、纯容器、无 GPU 的虚拟机）无法创建渲染上下文。本实验需要 Gazebo GUI 与 RViz2 来确认画面，请在有桌面且有可用 GPU 或软件渲染的环境下运行。</p>
+<p><strong><code>ros2 topic list</code> 里没有 <code>/camera</code></strong></p>
+<p>按顺序排查：</p>
+<ol>
+<li>确认 Gazebo 窗口里的场景已经加载，并且 <code>Image display</code> 选到了 <code>/camera</code>；</li>
+<li>确认桥接节点还在：<code>ros2 node list | grep ros_gz_bridge</code>；</li>
+<li>确认使用的是同一个 <code>ROS_DOMAIN_ID</code>，两个终端都要先 <code>source /opt/ros/humble/setup.bash</code>。</li>
+</ol>
+<p><strong>有 <code>/camera</code> 但画面不刷新</strong></p>
+<p><code>ros2 topic hz /camera</code> 如果输出 <code>no new messages</code>，通常是 Gazebo 处于暂停状态（GUI 左下角的暂停按钮被按下），点一下继续即可。</p>
+<h2 id="_1">参考</h2>
+<ul>
+<li><a href="https://github.com/gazebosim/ros_gz/tree/humble/ros_gz_sim_demos">ros_gz_sim_demos 官方示例</a></li>
+<li><a href="https://gazebosim.org/docs/fortress/sensors">Gazebo Sim 相机传感器</a></li>
+<li><a href="https://docs.ros.org/en/humble/p/sensor_msgs/msg/Image.html">sensor_msgs/Image 消息定义</a></li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../../humanoid/humanoid_basics/" title="人形机器人基础">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../../humanoid/humanoid_basics/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
