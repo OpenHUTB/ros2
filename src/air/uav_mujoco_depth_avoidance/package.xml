@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uav_mujoco_depth_avoidance</name>
+  <version>0.1.0</version>
+  <description>UAV depth-camera obstacle avoidance in MuJoCo: numpy CNN perception (sector clearance), keyboard teleop and closed-loop ROS 2 node.</description>
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

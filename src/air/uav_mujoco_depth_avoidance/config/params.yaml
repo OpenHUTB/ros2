@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    scene: slalom          # slalom / gate / clutter
+    use_policy: true       # true: 无速度指令时用神经网络策略自主飞行
+    rate_hz: 20.0
