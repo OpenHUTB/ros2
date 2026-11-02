@@ -1,0 +1,72 @@
+<mujoco model="car_fault_mid">
+  <!--
+    地面两轮差速小车 + 两侧车道边界（单侧轮毂拖滞场景）。
+    与仓库已跑通的差速底盘一致：implicitfast 积分器、<velocity> 轮速伺服（kv=10，forcerange ±8）。
+    左驱动轮关节额外加 0.50 的阻尼，模拟轮毂轴承/制动拖滞导致该轮被拖慢：
+    伺服想维持指令转速，但拖滞让它跑不到，车被右侧轮推着往右偏。
+  -->
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-130" elevation="-20"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.005 0.0001" solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    <joint damping="0.05" armature="0.005"/>
+    <default class="ego">
+      <geom group="2"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0 0 0.05" rgba="0.30 0.32 0.34 1" group="1"/>
+    <camera name="top" pos="6 0 9" fovy="60"/>
+    <camera name="follow" pos="1.5 -3.2 1.6" fovy="45"/>
+
+    <!-- 车道两侧边界：车身越出 y=±1.4 即视为跑偏出界 -->
+    <geom name="edge_l" type="box" pos="6 1.4 0.05" size="7.0 0.03 0.05"
+          rgba="0.75 0.70 0.55 1" group="0"/>
+    <geom name="edge_r" type="box" pos="6 -1.4 0.05" size="7.0 0.03 0.05"
+          rgba="0.75 0.70 0.55 1" group="0"/>
+
+    <body name="chassis" pos="0 0 0.048">
+      <freejoint name="chassis_root"/>
+      <geom name="chassis_body" class="ego" type="box" pos="0.04 0 0.04"
+            size="0.22 0.12 0.035" rgba="0.20 0.45 0.85 1" mass="4.0"/>
+      <geom name="caster" class="ego" type="sphere" pos="0.16 0 -0.02" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+      <geom name="caster_rear" class="ego" type="sphere" pos="-0.16 0 -0.018" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+      <site name="imu_site" pos="0 0 0.04" size="0.012" rgba="1 1 0 1" group="3"/>
+      <body name="wheel_l" pos="0 0.09 0">
+        <joint name="wheel_l_joint" type="hinge" axis="0 1 0" damping="0.10"/>
+        <geom name="wheel_l_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" mass="0.25" rgba="0.08 0.08 0.08 1"/>
+      </body>
+      <body name="wheel_r" pos="0 -0.09 0">
+        <joint name="wheel_r_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_r_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" mass="0.25" rgba="0.08 0.08 0.08 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <sensor>
+    <gyro site="imu_site" name="imu_gyro"/>
+    <accelerometer site="imu_site" name="imu_acc"/>
+    <framelinvel objtype="body" objname="chassis" name="imu_linvel"/>
+    <jointpos joint="wheel_l_joint" name="wheel_l_pos"/>
+    <jointpos joint="wheel_r_joint" name="wheel_r_pos"/>
+    <jointvel joint="wheel_l_joint" name="wheel_l_vel"/>
+    <jointvel joint="wheel_r_joint" name="wheel_r_vel"/>
+  </sensor>
+
+  <actuator>
+    <velocity name="drive_l" joint="wheel_l_joint" kv="10" ctrlrange="-60 60" forcerange="-8 8"/>
+    <velocity name="drive_r" joint="wheel_r_joint" kv="10" ctrlrange="-60 60" forcerange="-8 8"/>
+  </actuator>
+</mujoco>
