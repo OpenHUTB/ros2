@@ -32,7 +32,7 @@ class SimNode(Node):
         for _ in range(5): self.sim.step(target=self.target)
         img = self.sim.render_front(gray=True)
         m = Image(); m.height, m.width = img.shape; m.encoding = "mono8"
-        m.data = (img*255).astype(np.uint8).to_bytes()
+        m.data = (img*255).astype(np.uint8).tobytes()
         m.header.stamp = self.get_clock().now().to_msg()
         self.pub_img.publish(m)
         pitch, roll = self.sim.torso_pose()
