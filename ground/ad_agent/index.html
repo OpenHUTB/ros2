@@ -136,7 +136,23 @@
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">拓展：自行实现「端到端神经网络图像驾驶」</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_4">与本文示例的区别</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">复用本文的配置步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">本拓展新增的内容</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">运行本拓展模块</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">实测结果</a>
+</li>
 </ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
 </li>
@@ -354,15 +370,152 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">自动驾驶代理</h1>
+<p>本文介绍 CARLA ROS Bridge 中的<strong>自动驾驶代理</strong>（AD Agent）：它订阅路径点与地图信息，
+用<strong>规则式</strong>局部规划让车辆沿路径行驶，属于 <code>carla_ros_bridge</code> 的既有功能。</p>
 <h2 id="_2">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/carla_ad_agent/">Carla 自动驾驶代理</a></li>
-</ul></div>
+</ul>
+<h2 id="_3">拓展：自行实现「端到端神经网络图像驾驶」</h2>
+<p>本文的自动驾驶代理是<strong>规则式</strong>的：先由地图算出路径，再按几何规则跟踪路径。
+下面是在该功能基础上<strong>自主实现</strong>的一套「相机图像 → 控制指令」的<strong>端到端神经网络</strong>驾驶，
+代码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_end_to_end_nn"><code>src/ground/carla_end_to_end_nn</code></a>，
+详细介绍（计算原理、源码解析、性能评价）见
+<a href="../carla_end_to_end_nn/">CARLA 端到端神经网络（图像 → 控制）</a>。</p>
+<h3 id="_4">与本文示例的区别</h3>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>本文示例（自动驾驶代理）</th>
+<th>本拓展模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技术路线</td>
+<td><code>carla_ros_bridge</code> + 规则式局部规划</td>
+<td>CARLA Python API 直连 + 端到端 CNN</td>
+</tr>
+<tr>
+<td>是否依赖 ros-bridge</td>
+<td>必须编译并运行 ros-bridge</td>
+<td><strong>不需要</strong>，仅需 <code>carla</code> Python 客户端</td>
+</tr>
+<tr>
+<td>输入</td>
+<td>路径点 + 地图</td>
+<td><strong>相机图像</strong>（原始像素）</td>
+</tr>
+<tr>
+<td>决策方式</td>
+<td>规则式（查地图算路径，几何跟踪）</td>
+<td><strong>神经网络</strong>（图像直接 → 转向）</td>
+</tr>
+<tr>
+<td>模块分层</td>
+<td>感知 / 规划 / 控制分层明确</td>
+<td><strong>无分层</strong>，图像直接变成控制量</td>
+</tr>
+<tr>
+<td>是否可训练</td>
+<td>否（规则固定）</td>
+<td><strong>是</strong>：行为克隆采集专家数据后训练 CNN</td>
+</tr>
+<tr>
+<td>框架依赖</td>
+<td>—</td>
+<td>默认<strong>纯 numpy</strong>（无需 TensorFlow/PyTorch）</td>
+</tr>
+<tr>
+<td>无 CARLA / 无图形界面时</td>
+<td>无法运行</td>
+<td><code>--headless --demo</code> 离线自证并导出曲线</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">复用本文的配置步骤</h3>
+<p>CARLA 服务端的启动、宿主机 IP 与端口 2000 的查看、虚拟机网络设置等步骤
+<strong>与已有示例完全一致，此处不再重复</strong>，请参考
+<a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a> 的
+「启动 Carla 服务器」与「使用 Carla 客户端启动 Ego Vehicle」小节；
+连接失败的排查见同一篇的「常见问题」小节。</p>
+<div class="admonition warning">
+<p class="admonition-title">不要从头到尾照做已有示例</p>
+<p>已有示例中的「设置 Carla ROS Bridge」「使用 rviz 进行可视化」等小节属于
+<strong>ros-bridge 路线</strong>（需要 catkin 编译 ros-bridge）。本拓展模块<strong>不依赖 ros-bridge</strong>，
+这些步骤可以跳过。</p>
+</div>
+<h3 id="_6">本拓展新增的内容</h3>
+<ol>
+<li><strong>端到端神经网络</strong>：单个 CNN 直接把 <script type="math/tex">60\times80\times3</script> 的相机图像映射为转向角，
+   中间不含人工的感知/规划环节。</li>
+<li><strong>行为克隆数据采集</strong>：由专家控制器（沿车道前视的纯跟踪律）实际驾驶并记录
+   (图像, 转向) 对，保证<strong>图像与标签有因果关系</strong>。</li>
+<li><strong>纯 numpy 反向传播</strong>：含卷积、ReLU、最大池化、全局平均池化与 tanh 输出层的
+   完整手写反向传播，无需 TensorFlow/PyTorch。</li>
+<li><strong>梯度正确性保障</strong>：最大池化反向按 argmax 回传，并有有限差分梯度校验与回归测试。</li>
+<li><strong>离线取证模式</strong>：<code>--headless --demo</code> 用合成道路图像训练并导出损失曲线、
+   预测对比曲线与样本图，无 CARLA、无 GPU、无 TensorFlow 也能自证。</li>
+<li><strong>ROS 话题接口</strong>：发布图像、转向指令与控制量，便于外部可视化与记录。</li>
+</ol>
+<h3 id="_7">运行本拓展模块</h3>
+<p>除本文所需环境外，只需补装 CARLA 0.9.16 的 Python 客户端
+（端到端 CNN 为纯 numpy 实现，无需 TensorFlow/PyTorch）：</p>
+<div class="highlight"><pre><span></span><code>pip3<span class="w"> </span>install<span class="w"> </span>&lt;CARLA&gt;/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+</code></pre></div>
+<p>离线取证（<strong>不需要 CARLA</strong>，先用合成图像确认链路可用，约 3~4 分钟）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/ground/carla_end_to_end_nn/main.py<span class="w"> </span>--headless<span class="w"> </span>--demo<span class="w"> </span>--save_dir<span class="w"> </span>~/shots
+</code></pre></div>
+<p>行为克隆采集 → 训练 → 端到端驾驶（<code>--host</code> 的填法与本文一致：填宿主机 IP）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/ground/carla_end_to_end_nn/main.py<span class="w"> </span>--mode<span class="w"> </span>collect<span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.8.1<span class="w"> </span>--frames<span class="w"> </span><span class="m">300</span>
+python3<span class="w"> </span>src/ground/carla_end_to_end_nn/main.py<span class="w"> </span>--mode<span class="w"> </span>train<span class="w"> </span>--data_dir<span class="w"> </span>dataset<span class="w"> </span>--epochs<span class="w"> </span><span class="m">60</span>
+python3<span class="w"> </span>src/ground/carla_end_to_end_nn/main.py<span class="w"> </span>--mode<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--host<span class="w"> </span><span class="m">192</span>.168.8.1<span class="w"> </span>--sim_time<span class="w"> </span><span class="m">20</span>
+</code></pre></div>
+<p>使用 launch 启动（ROS 2 / ROS 1）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ROS 2</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_end_to_end_nn<span class="w"> </span>main.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.8.1
+<span class="c1"># ROS 1</span>
+roslaunch<span class="w"> </span>carla_end_to_end_nn<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.8.1<span class="w"> </span>mode:<span class="o">=</span><span class="nb">test</span>
+</code></pre></div>
+<h3 id="_8">实测结果</h3>
+<p>本机离线取证模式实测（<code>--epochs 60 --samples 150</code>，无需 CARLA）：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAE</td>
+<td>0.09364</td>
+</tr>
+<tr>
+<td>转向方向一致率</td>
+<td>98.0%</td>
+</tr>
+<tr>
+<td>预测/标签相关系数</td>
+<td>+0.992</td>
+</tr>
+<tr>
+<td>零输出基线 MAE</td>
+<td>0.40268（网络优于基线 4.3 倍）</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="端到端 CNN 预测转向与真实转向对比" src="../../img/ground/carla_e2e_steer_pred_vs_true.png"/></p>
+<p><img alt="合成道路图像样本" src="../../img/ground/carla_e2e_road_samples.png"/></p>
+<p>完整的调优过程（含 maxpool 梯度缺陷与 tanh 缺失的排查）见
+<a href="../carla_end_to_end_nn/">CARLA 端到端神经网络（图像 → 控制）</a> 第 6 节。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../carla_mapping_navigation/" title="激光雷达建图与神经网络规划导航"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../ad_demo/" title="自动驾驶示例">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../carla_end_to_end_nn/" title="端到端神经网络图像驾驶">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -380,7 +533,7 @@
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../carla_mapping_navigation/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../ad_demo/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../carla_end_to_end_nn/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
