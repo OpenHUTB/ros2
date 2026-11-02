@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="rov_world">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+
+    <!-- 水下红色目标柱（ROV要追踪的） -->
+    <model name="red_target">
+      <static>true</static>
+      <pose>3 0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder radius="0.2" length="1.5"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Red</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 绿色障碍物 -->
+    <model name="obstacle1">
+      <static>true</static>
+      <pose>2 1.5 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box size="0.5 0.5 1.0"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 蓝色障碍物 -->
+    <model name="obstacle2">
+      <static>true</static>
+      <pose>2 -1.5 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box size="0.5 0.5 1.0"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ROV本体 -->
+    <model name="rov">
+      <static>false</static>
+      <pose>0 0 0.5 0 0 0</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>10</mass>
+          <inertia>
+            <ixx>0.2</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.2</iyy><iyz>0</iyz>
+            <izz>0.3</izz>
+          </inertia>
+        </inertial>
+        <visual name="v">
+          <geometry><box size="0.5 0.3 0.2"/></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Blue</name></script></material>
+        </visual>
+        <collision name="c">
+          <geometry><box size="0.5 0.3 0.2"/></geometry>
+        </collision>
+        <!-- 前置摄像头（RGB, 320x240, 20Hz），话题 /rov/camera/image_raw -->
+        <sensor name="camera_sensor" type="camera">
+          <always_on>true</always_on>
+          <update_rate>20</update_rate>
+          <camera>
+            <horizontal_fov>1.047</horizontal_fov>
+            <image>
+              <width>320</width>
+              <height>240</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>50</far>
+            </clip>
+          </camera>
+          <plugin name="camera_plugin" filename="libgazebo_ros_camera.so">
+            <ros>
+              <namespace>/rov/camera</namespace>
+            </ros>
+            <frame_name>camera_link</frame_name>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+  </world>
+</sdf>
