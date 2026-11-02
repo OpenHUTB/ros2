@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_nn_scan_matching</name>
+  <version>1.0.0</version>
+  <description>
+    基于 1D CNN 神经网络的 2D 激光雷达里程计与建图模块。
+    通过神经网络匹配连续两帧雷达数据，预测相对位姿并实时构建占据栅格地图。
+  </description>
+  <maintainer email="1687183895@qq.com">HaiLang47</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+
+  <export>
+  </export>
+</package>
