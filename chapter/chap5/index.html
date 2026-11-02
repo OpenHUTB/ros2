@@ -65,9 +65,55 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">5. 机器人感知</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">已收录模块</a>
+<li class="toctree-l2"><a class="reference internal" href="#_1">目录结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">后续规划模块（占位）</a>
+<li class="toctree-l2"><a class="reference internal" href="#face_follower">第一部分：视觉追踪 face_follower</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_2">节点逻辑</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_3">话题接口</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#launch">关键参数（launch 可配）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#voice_control">第二部分：语音控制 voice_control</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_4">节点逻辑</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">命令映射</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">话题接口</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#tts-tts_backend">TTS 兼容策略（tts_backend 参数）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">环境准备与工作空间配置</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 克隆仓库并切换分支</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2-catkin">2. 创建 catkin 工作空间并软链接功能包</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 编译并加载环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4-launch">4. 验证包与 launch 文件已就绪</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">运行与测试指南（闭环复现）</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_9">方案一：仿真底座与视觉跟踪（人脸闭环）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#roslaunch-stdin">方案二：语音控制交互（解决 roslaunch 吞 stdin 问题）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">（可选）一键拉起</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ros-2">相关模块：基于 ROS 2 与神经网络的感知</a>
 </li>
 </ul>
 </li>
@@ -365,9 +411,486 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="5">第5章 机器人感知</h1>
-<p>本章介绍基于 ROS 2 与神经网络的多模态传感器感知模块。每个模块都自包含源代码、训练脚本、Gazebo 仿真场景与 launch 入口，并满足 OpenHUTB/ros2 仓库的提交约定（<code>main.py</code> 入口、launch 启动、全英文文件名、<code>docs/</code> + <code>src/</code> 目录约定）。</p>
-<h2 id="_1">已收录模块</h2>
+<div><h1 id="ros-opencv">第五章：ROS + OpenCV 视觉追踪与语音控制</h1>
+<p>本章在第四章两轮差速小车（mbot）底盘之上，实现两大部分实验：</p>
+<ol>
+<li><strong>视觉追踪</strong>（<code>robot_vision</code>）：通过 OpenCV 人脸检测识别顶置 Kinect 相机采集到的图像，
+   计算人脸中心偏离图像中心的横向偏差与人脸面积，使用比例控制器（P 控制）发布
+   <code>/cmd_vel</code> 速度指令，使小车自动转向面朝目标并保持距离跟随。</li>
+<li><strong>语音控制</strong>（<code>robot_voice</code>）：接收“向前 / 向后 / 向左 / 向右 / 停止”等语音命令，
+   发布对应的 <code>/cmd_vel</code> 运动指令，并通过语音合成（TTS）播报反馈文本
+   （如“太阳当空照，花儿对我笑”）。</li>
+</ol>
+<blockquote>
+<p>环境说明：本章为 ROS1（Melodic / Noetic）功能包，依赖 <code>rospy</code>、<code>cv_bridge</code>、
+<code>sensor_msgs</code>、<code>geometry_msgs</code>、<code>std_msgs</code> 等；语音部分同时兼容<strong>离线无声卡的虚拟机</strong>
+与<strong>真实讯飞语音 SDK</strong> 接入。</p>
+</blockquote>
+<hr/>
+<h2 id="_1">目录结构</h2>
+<div class="highlight"><pre><span></span><code>src/chap5/
+├── robot_vision/                     # 第一部分：视觉识别与控制
+│   ├── CMakeLists.txt
+│   ├── package.xml
+│   ├── launch/
+│   │   ├── face_follower.launch      # 人脸追踪（P 控制）启动文件
+│   │   ├── spawn_face_target.launch  # 在 Gazebo 中生成人脸立牌目标
+│   │   ├── mbot_intelligence.launch  # 一键拉起视觉 + 语音
+│   │   ├── face_detector.launch      # 人脸检测（仅画框演示）
+│   │   ├── usb_cam.launch            # USB 相机驱动
+│   │   └── freenect.launch           # Kinect (freenect) 驱动
+│   ├── scripts/
+│   │   ├── face_follower.py          # ★ 人脸追踪 + P 控制 + /cmd_vel
+│   │   ├── face_detector.py          # 人脸检测（画框发布图像）
+│   │   ├── motion_detector.py        # 运动检测
+│   │   └── cv_bridge_test.py         # cv_bridge 用法示例
+│   ├── data/haar_detectors/          # Haar 级联分类器
+│   └── config/                       # rviz 配置
+└── robot_voice/                      # 第二部分：语音识别与输出
+    ├── CMakeLists.txt
+    ├── package.xml
+    ├── launch/
+    │   └── voice_control.launch      # 语音控制启动文件
+    ├── scripts/
+    │   └── voice_control.py          # ★ 语音命令 -&gt; /cmd_vel + TTS 反馈
+    ├── src/                          # 讯飞 SDK C++ 节点（真实 SDK 接入）
+    │   ├── iat_publish.cpp           # 语音识别（发布 voiceWords）
+    │   ├── tts_subscribe.cpp         # 语音合成（订阅 voiceWords）
+    │   └── voice_assistant.cpp       # 语音助手整合
+    ├── include/robot_voice/          # 讯飞 SDK 头文件
+    └── libs/                         # 讯飞 SDK 动态库 libmsc.so
+</code></pre></div>
+<hr/>
+<h2 id="face_follower">第一部分：视觉追踪 <code>face_follower</code></h2>
+<p><strong>演示效果</strong>：</p>
+<p><img alt="视觉目标追踪演示" src="../../img/chapter/demo_chap5_vision.gif"/></p>
+<h3 id="_2">节点逻辑</h3>
+<ol>
+<li>订阅相机 RGB 图像（<code>input_rgb_image</code>，launch 中重映射为 <code>/camera/rgb/image_raw</code>），
+   通过 <code>cv_bridge</code> 转换为 OpenCV 的 BGR 格式。</li>
+<li>灰度化 + 直方图均衡后，使用 Haar 级联分类器
+   <code>haarcascade_frontalface_default.xml</code> 检测人脸（正面失败时可用侧面分类器兜底）。</li>
+<li>计算人脸中心 <code>(cx, cy)</code> 与图像中心的<strong>横向偏差</strong>及<strong>人脸面积</strong>。</li>
+<li>比例控制：</li>
+<li>角速度 <code>w = kp_angular * err_x</code>（人脸偏右 → 右转），带死区与限幅（±0.5 rad/s）；</li>
+<li>线速度默认关闭（<code>only_turn=true</code> 纯原地转向）；设为 <code>false</code> 后按
+     <code>v = kp_linear * (target_area - area) / target_area</code>（面积过小/太远 → 前进）保持距离，
+     并叠加防贴脸死区（过近时停止/倒退）。</li>
+<li>发布 <code>geometry_msgs/Twist</code> 到 <code>/cmd_vel</code>，同时弹出 OpenCV 调试窗口，
+   标注人脸框、图像中心、人脸中心与偏差/面积/速度等信息。</li>
+</ol>
+<h3 id="_3">话题接口</h3>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>订阅</td>
+<td><code>input_rgb_image</code>（→ <code>/camera/rgb/image_raw</code>）</td>
+<td><code>sensor_msgs/Image</code></td>
+<td>相机 RGB 图像</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>差速底盘速度指令</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>~image_out</code></td>
+<td><code>sensor_msgs/Image</code></td>
+<td>标注后的图像</td>
+</tr>
+</tbody>
+</table>
+<h3 id="launch">关键参数（launch 可配）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kp_angular</code></td>
+<td>1.2</td>
+<td>横向偏差 → 角速度比例系数</td>
+</tr>
+<tr>
+<td><code>kp_linear</code></td>
+<td>0.6</td>
+<td>面积偏差 → 线速度比例系数</td>
+</tr>
+<tr>
+<td><code>max_linear</code> / <code>max_angular</code></td>
+<td>0.25 / 0.5</td>
+<td>速度限幅</td>
+</tr>
+<tr>
+<td><code>target_area</code></td>
+<td>0（自动）</td>
+<td>目标人脸面积（像素），0 表示取图像面积的 1/16</td>
+</tr>
+<tr>
+<td><code>dead_zone</code></td>
+<td>0.05</td>
+<td>横向偏差死区（归一化）</td>
+</tr>
+<tr>
+<td><code>only_turn</code></td>
+<td>true</td>
+<td>纯原地转向模式（线速度恒 0）；<code>false</code> 启用距离保持 + 防贴脸死区</td>
+</tr>
+<tr>
+<td><code>cascade_frontal</code></td>
+<td>OpenCV 默认</td>
+<td>正面人脸分类器路径</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="voice_control">第二部分：语音控制 <code>voice_control</code></h2>
+<p><strong>演示效果</strong>：</p>
+<p><img alt="语音控制演示" src="../../img/chapter/demo_chap5_voice.gif"/></p>
+<h3 id="_4">节点逻辑</h3>
+<ol>
+<li>通过 <code>/voice_cmd</code> 话题（<code>std_msgs/String</code>）或<strong>交互式终端</strong>接收命令。</li>
+<li>将命令映射为差速底盘速度：<code>向前/向后 → 线速度</code>，<code>向左/向右 → 角速度</code>，<code>停止 → 零速</code>。</li>
+<li>发布 <code>geometry_msgs/Twist</code> 到 <code>/cmd_vel</code>（10Hz 持续发布，<code>move_duration</code> 后自动停止）。</li>
+<li>收到命令后触发 TTS 反馈，默认播报“太阳当空照，花儿对我笑”。</li>
+</ol>
+<h3 id="_5">命令映射</h3>
+<table>
+<thead>
+<tr>
+<th>语音命令</th>
+<th>等价英文</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>向前 / 前进</td>
+<td>forward</td>
+<td><code>linear.x = +linear_speed</code></td>
+</tr>
+<tr>
+<td>向后 / 后退</td>
+<td>backward</td>
+<td><code>linear.x = -linear_speed</code></td>
+</tr>
+<tr>
+<td>向左 / 左转</td>
+<td>left</td>
+<td><code>angular.z = +angular_speed</code></td>
+</tr>
+<tr>
+<td>向右 / 右转</td>
+<td>right</td>
+<td><code>angular.z = -angular_speed</code></td>
+</tr>
+<tr>
+<td>停止 / 停下 / 停</td>
+<td>stop</td>
+<td>全零（立即停车）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">话题接口</h3>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>订阅</td>
+<td><code>voice_cmd</code>（→ <code>/voice_cmd</code>）</td>
+<td><code>std_msgs/String</code></td>
+<td>语音命令文本</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>差速底盘速度指令</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>~tts_topic</code>（→ <code>/voice_tts</code>）</td>
+<td><code>std_msgs/String</code></td>
+<td>待合成的反馈文本</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tts-tts_backend">TTS 兼容策略（<code>tts_backend</code> 参数）</h3>
+<table>
+<thead>
+<tr>
+<th>取值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>log</code>（默认）</td>
+<td>离线/无声卡环境：日志输出 + 发布到 <code>~tts_topic</code></td>
+</tr>
+<tr>
+<td><code>espeak</code> / <code>festival</code></td>
+<td>Linux 命令行语音合成（需自行安装）</td>
+</tr>
+<tr>
+<td><code>say</code></td>
+<td>macOS 自带语音合成</td>
+</tr>
+<tr>
+<td><code>sdk</code></td>
+<td>交由讯飞 SDK 节点 <code>tts_subscribe.cpp</code> 订阅 <code>~tts_topic</code> 播报</td>
+</tr>
+</tbody>
+</table>
+<p><code>voice_control.py</code> 始终把反馈文本发布到 <code>~tts_topic</code>，因此无论使用哪种后端，
+都能把文本交给下游真实 SDK 节点（把 <code>tts_topic</code> 重映射为 <code>voiceWords</code> 即可对接
+<code>tts_subscribe.cpp</code>）。</p>
+<hr/>
+<h2 id="_7">环境准备与工作空间配置</h2>
+<p>本章的视觉/语音实验依赖第四章的 mbot 仿真底盘，因此需在<strong>同一个 catkin 工作空间</strong>中同时挂载
+<strong>第四章的 <code>mbot_description</code>、<code>mbot_gazebo</code></strong> 与<strong>本章的 <code>robot_vision</code>、<code>robot_voice</code></strong>
+共 4 个功能包。缺失 <code>mbot_gazebo</code> 会导致 <code>roslaunch mbot_gazebo ...</code> 报
+<code>RLException: [xxx] is neither a launch file in package ...</code>（包名或 launch 文件不存在）。</p>
+<h3 id="1">1. 克隆仓库并切换分支</h3>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git<span class="w"> </span>~/ros2
+<span class="nb">cd</span><span class="w"> </span>~/ros2
+git<span class="w"> </span>checkout<span class="w"> </span>feat/chap5-vision-voice<span class="w">   </span><span class="c1"># 本章代码所在分支（若已合并主分支可跳过）</span>
+</code></pre></div>
+<h3 id="2-catkin">2. 创建 catkin 工作空间并软链接功能包</h3>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/catkin_ws/src
+
+<span class="c1"># 第四章：mbot 仿真底盘（Gazebo 仿真环境由它提供，缺少则无法启动仿真小车）</span>
+ln<span class="w"> </span>-s<span class="w"> </span>~/ros2/src/chap4/mbot_description<span class="w"> </span>~/catkin_ws/src/mbot_description
+ln<span class="w"> </span>-s<span class="w"> </span>~/ros2/src/chap4/mbot_gazebo<span class="w">     </span>~/catkin_ws/src/mbot_gazebo
+
+<span class="c1"># 第五章：视觉追踪 + 语音控制</span>
+ln<span class="w"> </span>-s<span class="w"> </span>~/ros2/src/chap5/robot_vision<span class="w">    </span>~/catkin_ws/src/robot_vision
+ln<span class="w"> </span>-s<span class="w"> </span>~/ros2/src/chap5/robot_voice<span class="w">     </span>~/catkin_ws/src/robot_voice
+</code></pre></div>
+<blockquote>
+<p>若不想用软链接，也可 <code>cp -r</code> 复制到 <code>~/catkin_ws/src/</code>。软链接的好处是仓库更新后
+无需重新拷贝，<code>catkin_make</code> 直接编译最新代码。</p>
+</blockquote>
+<h3 id="3">3. 编译并加载环境</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<blockquote>
+<p><strong>全新克隆后遇执行权限问题</strong>：若 <code>roslaunch</code> 报
+<code>Cannot locate node of type [voice_control.py] in package [robot_voice]</code>（或
+<code>face_follower.py</code> / <code>spawn_face_target.py</code>），通常是脚本在 Git 中缺失可执行权限
+（<code>git ls-files -s</code> 显示 <code>100644</code>）。请先执行
+<code>chmod +x ~/ros2/src/chap5/robot_voice/scripts/*.py ~/ros2/src/chap5/robot_vision/scripts/*.py</code>
+后重新 <code>catkin_make</code>；<code>catkin_install_python</code> 安装的 Python 脚本需保留可执行位才能被
+<code>rosrun</code> / <code>roslaunch</code> 定位并执行。</p>
+<p>前置依赖：ROS1 桌面完整版（Melodic 或 Noetic）、<code>gazebo_ros_pkgs</code>、<code>cv_bridge</code>/OpenCV、
+<code>rospkg</code> 等。若 <code>robot_voice</code> 的讯飞 SDK C++ 节点因缺少 <code>libmsc.so</code>/<code>libasound</code> 编译失败，
+可关闭可选编译 <code>catkin_make -DROBOT_VOICE_BUILD_SDK=OFF</code>（不影响纯 Python 的 <code>voice_control.py</code>）。</p>
+</blockquote>
+<h3 id="4-launch">4. 验证包与 launch 文件已就绪</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 四个包都应能解析出路径（软链接对应 ~/catkin_ws/src/ 下的包目录）</span>
+rospack<span class="w"> </span>find<span class="w"> </span>mbot_description<span class="w"> </span>mbot_gazebo<span class="w"> </span>robot_vision<span class="w"> </span>robot_voice
+
+<span class="c1"># 确认本章要用到的 launch 文件真实存在</span>
+ls<span class="w"> </span><span class="k">$(</span>rospack<span class="w"> </span>find<span class="w"> </span>mbot_gazebo<span class="k">)</span>/launch/view_mbot_with_kinect_gazebo.launch
+ls<span class="w"> </span><span class="k">$(</span>rospack<span class="w"> </span>find<span class="w"> </span>robot_vision<span class="k">)</span>/launch/face_follower.launch
+ls<span class="w"> </span><span class="k">$(</span>rospack<span class="w"> </span>find<span class="w"> </span>robot_voice<span class="k">)</span>/launch/voice_control.launch
+</code></pre></div>
+<hr/>
+<h2 id="_8">运行与测试指南（闭环复现）</h2>
+<p>以下每个终端在运行前都需执行一次 <code>source ~/catkin_ws/devel/setup.bash</code>（或已写入 <code>~/.bashrc</code>）。</p>
+<blockquote>
+<p>⚠️ <strong>关于终端交互（stdin）</strong>：<code>roslaunch</code> 会吞掉节点的标准输入（stdin），因此依赖
+键盘/控制台输入的两个脚本（<code>spawn_face_target.py</code>、<code>voice_control.py</code>）请在<strong>独立终端用
+<code>rosrun</code> 启动</strong>，否则键盘指令无法送达。若坚持用 <code>roslaunch</code>，语音控制请改用话题发布方式
+（见下文“方案二·方式二”）。</p>
+</blockquote>
+<h3 id="_9">方案一：仿真底座与视觉跟踪（人脸闭环）</h3>
+<p><strong>终端 1 —— 启动带 Kinect 相机的 Gazebo 仿真小车</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>mbot_gazebo<span class="w"> </span>view_mbot_with_kinect_gazebo.launch
+</code></pre></div>
+<p>Gazebo 中会出现带顶置 Kinect 的 mbot 小车。Kinect 的 RGB 图像话题为
+<strong><code>/kinect/rgb/image_raw</code></strong>（由 <code>mbot_description</code> 的 <code>kinect_gazebo.xacro</code> 以
+<code>prefix="kinect"</code> 生成，<code>cameraName</code> 即话题前缀）。</p>
+<p><strong>终端 2 —— 独立终端生成人脸立牌目标（支持键盘手操）</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+rosrun<span class="w"> </span>robot_vision<span class="w"> </span>spawn_face_target.py
+</code></pre></div>
+<blockquote>
+<p>这里<strong>必须用 <code>rosrun</code> 在独立终端运行</strong>：脚本依赖 <code>termios</code> 读取 <code>stdin</code> 原始按键，
+用 <code>roslaunch</code> 启动会因无 TTY 而自动禁用键盘（脚本会告警“当前环境无 TTY，键盘手操不可用”）。
+若仅需立牌静止在正前方、无需键盘手操，也可用
+<code>roslaunch robot_vision spawn_face_target.launch enable_keyboard:=false</code> 启动。</p>
+</blockquote>
+<p>在小车正前方 <code>x=1.3 y=0.0 z=0.4</code> 处生成高对比度人脸立牌（标准 Gazebo 模型
+<code>models/face_board/</code>，脚本会自动加入 <code>GAZEBO_MODEL_PATH</code> 并改用 <code>file://</code> 绝对路径，
+保证纹理 100% 渲染）。键盘可微调立牌位置：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a</code> / <code>d</code></td>
+<td>左移 / 右移 0.15 m</td>
+</tr>
+<tr>
+<td><code>w</code> / <code>s</code></td>
+<td>靠近 / 远离小车 0.10 m</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>复位到初始正前方</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td>退出控制</td>
+</tr>
+</tbody>
+</table>
+<p><strong>终端 3 —— 启动视觉人脸追踪</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>face_follower.launch<span class="w"> </span>cam_image_topic:<span class="o">=</span>/kinect/rgb/image_raw
+</code></pre></div>
+<blockquote>
+<p>必须显式指定 <code>cam_image_topic:=/kinect/rgb/image_raw</code>：<code>face_follower.launch</code> 的默认话题
+<code>/camera/rgb/image_raw</code> 对应<strong>真实 freenect Kinect</strong>，而 Gazebo 仿真 Kinect 的前缀是 <code>/kinect</code>。</p>
+</blockquote>
+<p><strong>预期现象</strong>：</p>
+<ul>
+<li>弹出 OpenCV 调试窗口，用<strong>绿色框</strong>锁定人脸，叠加人脸中心（蓝点）、横向偏差、面积与
+  当前速度指令（<code>cmd: v=.. w=..</code>）。</li>
+<li>小车<strong>原地转向</strong>（默认 <code>only_turn=true</code> 纯转向模式），自动把车头对准立牌；在终端 2 中
+  用 <code>a</code>/<code>d</code> 左右移动立牌，小车会同步左右转向跟随，保持目标居中。</li>
+<li>需要“前进 + 保持距离”模式时改为
+  <code>roslaunch robot_vision face_follower.launch cam_image_topic:=/kinect/rgb/image_raw only_turn:=false</code>。</li>
+</ul>
+<p><strong>真实相机（freenect / usb_cam，非 Gazebo）</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Kinect（freenect）：RGB 话题为 /camera/rgb/image_raw（face_follower 默认值，无需覆盖）</span>
+roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>freenect.launch
+roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>face_follower.launch
+
+<span class="c1"># 或 USB 相机：RGB 话题为 /usb_cam/image_raw</span>
+roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>usb_cam.launch
+roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>face_follower.launch<span class="w"> </span>cam_image_topic:<span class="o">=</span>/usb_cam/image_raw
+</code></pre></div>
+<h3 id="roslaunch-stdin">方案二：语音控制交互（解决 roslaunch 吞 stdin 问题）</h3>
+<p>语音控制节点 <code>voice_control.py</code> 同时支持“控制台键盘输入”与“<code>/voice_cmd</code> 话题订阅”，
+提供两种启动方式，请按需选择。</p>
+<p><strong>方式一（推荐）：独立终端控制台交互</strong></p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+rosrun<span class="w"> </span>robot_voice<span class="w"> </span>voice_control.py
+</code></pre></div>
+<blockquote>
+<p>独立终端运行可正常接收 <code>stdin</code> 键盘输入，直接在控制台敲入指令（回车触发）即可。</p>
+</blockquote>
+<p>直接在控制台输入中文指令（回车触发），映射如下：</p>
+<table>
+<thead>
+<tr>
+<th>语音命令</th>
+<th>等价英文</th>
+<th>动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>向前 / 前进</td>
+<td>forward</td>
+<td>前进 <code>linear.x = +0.35 m/s</code>，1.5 s 后自动停止</td>
+</tr>
+<tr>
+<td>向后 / 后退</td>
+<td>backward</td>
+<td>后退</td>
+</tr>
+<tr>
+<td>向左 / 左转</td>
+<td>left</td>
+<td>原地左转 <code>angular.z = +1.2 rad/s</code></td>
+</tr>
+<tr>
+<td>向右 / 右转</td>
+<td>right</td>
+<td>原地右转</td>
+</tr>
+<tr>
+<td>停止 / 停下 / 停</td>
+<td>stop</td>
+<td>立即停车</td>
+</tr>
+</tbody>
+</table>
+<p>每条指令执行后触发 TTS 反馈，默认播报文本「太阳当空照，花儿对我笑」；无声卡的虚拟机中
+<code>tts_backend=log</code>（默认），反馈以日志输出并发布到 <code>/voice_tts</code>。</p>
+<p><strong>方式二：标准 ROS 话题交互（配合 roslaunch）</strong></p>
+<p>若希望用 <code>roslaunch robot_voice voice_control.launch</code> 启动（此时 <code>stdin</code> 被吞、控制台输入不可用），
+另开一个终端下发话题指令即可：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 A：roslaunch 启动语音控制节点</span>
+<span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>robot_voice<span class="w"> </span>voice_control.launch
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 B：通过话题发布指令（-1 表示发布一次即退出）</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/voice_cmd<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: '向前'"</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/voice_cmd<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: '停止'"</span>
+</code></pre></div>
+<blockquote>
+<p>默认 <code>enable_terminal=true</code> 时节点仍会尝试读取终端输入，但在 roslaunch 下无 TTY，
+终端线程会自动静默退出，不影响话题订阅。</p>
+</blockquote>
+<h3 id="_10">（可选）一键拉起</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>robot_vision<span class="w"> </span>mbot_intelligence.launch
+</code></pre></div>
+<blockquote>
+<p>⚠️ 视觉与语音节点都发布 <code>/cmd_vel</code>，<strong>实际运行请二选一</strong>，避免速度指令互相冲突；
+一键启动仅用于验证两个节点均可正常拉起。</p>
+</blockquote>
+<hr/>
+<h2 id="_11">常见问题</h2>
+<ul>
+<li><strong>报错 <code>cv2.data</code> 不存在 / 找不到默认分类器</strong>：较老 OpenCV 无 <code>cv2.data</code>，<code>face_follower.py</code>
+  已做多路径容错（launch 指定 → 包内自带 <code>data/haar_detectors/</code> → 系统
+  <code>/usr/share/opencv4|opencv/haarcascades</code> → <code>cv2.data</code>），会自动回退到包内的
+  <code>haarcascade_frontalface_alt.xml</code>，无需手动改 launch。</li>
+<li><strong>虚拟机无声卡、<code>espeak</code> 未安装</strong>：保持 <code>tts_backend=log</code>，反馈文本仅以日志输出，
+  同时发布到 <code>/voice_tts</code>，可被下游真实 SDK 节点消费。</li>
+<li><strong><code>catkin_make</code> 编译 <code>robot_voice</code> 的讯飞 C++ 节点报错 / 无 SDK</strong>：这些 C++ 节点已改为
+  <strong>可选编译</strong>（<code>option(ROBOT_VOICE_BUILD_SDK)</code>，默认 <code>ON</code> 且自动检测）。找不到 <code>libmsc.so</code>
+  或 <code>libasound</code> 时会自动跳过对应节点并告警，不影响纯 Python 节点 <code>voice_control.py</code>。
+  也可强制关闭：<code>catkin_make -DROBOT_VOICE_BUILD_SDK=OFF</code>。</li>
+<li><strong>人脸检测不稳定</strong>：调整 <code>scaleFactor</code>、<code>minNeighbors</code>、<code>minSize</code>，或改善光照、
+  正对相机。</li>
+</ul>
+<hr/>
+<h2 id="ros-2">相关模块：基于 ROS 2 与神经网络的感知</h2>
+<p>本章另收录基于 ROS 2 与神经网络的多模态传感器感知模块，每个模块都自包含源代码、
+训练脚本、Gazebo 仿真场景与 launch 入口：</p>
 <ul>
 <li><a href="lidar_obstacle_nn/">基于激光雷达扫描的神经网络障碍物分类</a></li>
 <li>仿真器：Gazebo Fortress 6.x</li>
@@ -376,26 +899,20 @@
 <li>任务：把每条扫描分类为 <code>near</code> / <code>far</code> / <code>free</code> 三类</li>
 <li>源代码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn"><code>src/chap5/lidar_obstacle_nn/</code></a></li>
 </ul>
-<h2 id="_2">后续规划模块（占位）</h2>
-<p>以下方向待补，作为后续 PR 的增量提交：</p>
-<ul>
-<li>相机目标检测（YOLOv8 + Gazebo 仿真相机）</li>
-<li>深度相机避障 NN（深度图 → 速度指令）</li>
-<li>激光雷达 + 相机融合感知</li>
-<li>感知→运动控制闭环（感知结果驱动 cmd_vel）</li>
-</ul></div>
+<p>后续规划方向（占位）：相机目标检测（YOLOv8 + Gazebo 仿真相机）、深度相机避障 NN、
+激光雷达 + 相机融合感知、感知→运动控制闭环。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../chap4/" title="4. 机器人仿真"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
 <a class="btn btn-neutral float-right" href="../chap6/" title="6. 机器人 SLAM 与自主导航">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr/>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
