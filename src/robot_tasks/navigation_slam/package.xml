@@ -4,7 +4,7 @@
   <name>navigation_slam</name>
   <version>0.0.0</version>
   <description>ROS 2 Navigation and Path Planning Module</description>
-  <maintainer email="2507417911@qq.com">1woshichienwenguang1</maintainer>
+  <maintainer email="2507417911@qq.com">1woshichenwenguang1</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>
