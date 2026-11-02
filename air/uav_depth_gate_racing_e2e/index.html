@@ -188,7 +188,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
@@ -208,6 +208,74 @@
 <li class="toctree-l1"><a class="reference internal" href="../payload_mass_estimation/">无人机载荷质量估计</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">深度图端到端穿越门竞速</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 模块定位</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 环境</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 动作语义为什么是"航向系"而不是"机体系"</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 门通过判定</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 奖励权重的量级</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 专家</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 训练</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51-dagger">5.1 DAgger</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#511">5.1.1 每轮的闭环评测</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52">5.2 损失</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#521">5.2.1 水平镜像增广</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53-ppo">5.3 PPO</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6-2-ppo">6. 对比实验②：同一 PPO、不同网络结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 专家</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-dagger">7.2 DAgger 没有跑赢"只做一轮行为克隆"</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 最终策略</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74-2-ppo">7.4 对比实验②：同一 PPO、不同网络结构</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81-nnpyim2col">8.1 nn.py：im2col 的维度顺序</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 混控饱和会吃掉姿态控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 观测里的深度图非空</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84-ppopy">8.4 ppo.py：熵项的符号与高斯得分函数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85">8.5 整网梯度的验证方式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#86">8.6 出图路径的动作尺度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#87-resize_area">8.7 resize_area 的缩放方式</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 已知限制</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
 </li>
@@ -335,6 +403,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item active">深度图端到端穿越门竞速</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_depth_gate_racing_e2e.md"> 编辑页面</a>
@@ -345,15 +414,17 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">深度图端到端穿越门竞速</h1>
-<div class="admonition note">
-<p class="admonition-title">占位页</p>
-<p>完整内容随本模块 PR 提交。</p>
-</div>
-<p>对应任务（4）端到端模型（输入图像、输出控制指令）。
-三段式"感知→规划→控制"的延迟放不下高速连续穿门，本模块用深度图直接回归控制指令，
-训练范式为 DAgger 在线聚合 + PPO 微调。</p>
-<h2 id="_2">与已有模块的区别</h2>
-<p><code>air_learning</code> 是最接近的已有工作，五个维度全部不同：</p>
+<p>对应作业任务（4）<strong>端到端模型</strong>（输入图像、输出控制指令）。
+对比实验②：<strong>同一 RL 算法、不同网络结构</strong>。</p>
+<p>三段式"感知→规划→控制"的延迟放不下高速连续穿门。本模块把 48×64 的深度图
+直接喂给网络，输出速度指令，中间没有手工特征、没有地图、没有路径搜索。
+训练分两段：先用专家示范做 <strong>DAgger</strong>（策略自己飞，专家在它飞到的状态上纠错），
+再用 <strong>PPO</strong> 在 MuJoCo 真动力学里继续优化。网络、反向传播、PPO、DAgger
+全部纯 numpy 手写，不依赖 torch / stable-baselines3。</p>
+<hr/>
+<h2 id="1">1. 模块定位</h2>
+<p>课程内已有的 <code>air_learning</code> 就是端到端视觉行为克隆，本模块在<strong>五个维度</strong>上与
+它不同：</p>
 <table>
 <thead>
 <tr>
@@ -366,7 +437,7 @@
 <tr>
 <td>输入模态</td>
 <td>RGB 224×224</td>
-<td>深度图 96×96 + 当前速度</td>
+<td>深度图 48×64 + 机体系速度</td>
 </tr>
 <tr>
 <td>数据来源</td>
@@ -375,39 +446,561 @@
 </tr>
 <tr>
 <td>训练范式</td>
-<td>纯监督 MSE 回归</td>
-<td>行为克隆预训练 + PPO 微调</td>
+<td>纯监督 MSE</td>
+<td>行为克隆 + PPO 微调</td>
 </tr>
 <tr>
 <td>任务</td>
 <td>通用导航</td>
-<td>竞速：连续穿越随机摆放的门</td>
+<td>竞速：连续穿越 8 道门，间距 5 m，开口 ±1.1 m</td>
 </tr>
 <tr>
-<td>评价</td>
-<td>验证集 Loss</td>
-<td>穿越时间 / 碰撞率 / 推理延迟</td>
+<td>框架</td>
+<td>torch</td>
+<td>纯 numpy（含手写卷积反向）</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_3">计划</h2>
+<p>与同为强化学习导航的 <code>uav_ppo_nav</code> 相比：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>uav_ppo_nav</code></th>
+<th>本模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>观测</td>
+<td>22 维人工特征（16 线雷达直方图 + 目标相对位置 + 世界系速度）</td>
+<td><strong>原始深度图</strong> + 机体系速度</td>
+</tr>
+<tr>
+<td>训练环境</td>
+<td>质点 + 一阶滞后模型</td>
+<td><strong>MuJoCo 刚体动力学</strong>（转子饱和、混控、姿态环）</td>
+</tr>
+<tr>
+<td>算法</td>
+<td>PPO</td>
+<td>DAgger + PPO</td>
+</tr>
+<tr>
+<td>对比实验</td>
+<td>README 注明"见后续 PR"</td>
+<td>本模块即对比实验②</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="2">2. 架构</h2>
+<div class="highlight"><pre><span></span><code>深度图 48×64 ─┐
+              ├─→ 主干(mlp/cnn/gru/attn) ─→ 128 维 ─┬─→ 策略头 μ ─→ tanh ─→ 动作 a
+机体系速度 3  ─┘                                    └─→ 价值头 V
+                                                            │
+                              a（航向系速度）─→ 参考轨迹 ─→ 几何控制器 ─→ 四桨推力
+</code></pre></div>
+<p>四种主干共用同一套输入输出契约，只换中间结构（对比实验②）：</p>
+<table>
+<thead>
+<tr>
+<th>arch</th>
+<th>主干</th>
+<th>参数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mlp</code></td>
+<td>深度图拉平 → 全连接</td>
+<td>410756</td>
+<td>无空间先验的基线</td>
+</tr>
+<tr>
+<td><code>cnn</code></td>
+<td>3 层 stride-2 卷积 → 展平</td>
+<td>126684</td>
+<td>有平移等变性</td>
+</tr>
+<tr>
+<td><code>gru</code></td>
+<td>CNN → GRU(128)</td>
+<td>208860</td>
+<td>带记忆，可抑制单帧噪声</td>
+</tr>
+<tr>
+<td><code>attn</code></td>
+<td>CNN → 单头自注意力（32 维）</td>
+<td>130780</td>
+<td>全局感受野（24 个 token）</td>
+</tr>
+</tbody>
+</table>
+<p>卷积主干<strong>展平</strong>而非全局平均池化：竞速需要门在画面中的位置，池化会抹掉空间
+信息（实测池化版横向输出塌到 ±0.05 m/s）。</p>
+<p>策略头输出高斯均值，标准差是<strong>状态无关</strong>的可学习参数；动作经 <code>tanh</code> 压到
+[−1,1]，再按环境速度上限缩放。对数概率含 <code>tanh</code> 的雅可比修正
+<script type="math/tex">\log p(a) = \log p_{\text{raw}}(r) - \log(1-a^2)</script>；缺这一项时动作长期贴边界。</p>
+<hr/>
+<h2 id="3">3. 环境</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>场景</td>
+<td><code>gate_track</code>：8 道门沿 +x 排开，间距 5 m，开口 2.2×2.2 m</td>
+</tr>
+<tr>
+<td>门心高度</td>
+<td>0.8 ~ 3.0 m（相邻门高差最大 2.2 m）</td>
+</tr>
+<tr>
+<td>策略频率</td>
+<td>20 Hz；控制器 100 Hz</td>
+</tr>
+<tr>
+<td>观测</td>
+<td>深度图 48×64（u8，量程 0.2~12 m）+ 机体系速度</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>航向系速度，水平 ±4 m/s、垂直 ±2 m/s</td>
+</tr>
+<tr>
+<td>奖励</td>
+<td>前进速度 + 10×干净过门 − 0.01×能耗 − 0.05×动作变化 − 2×倾角</td>
+</tr>
+</tbody>
+</table>
+<p>擦框不发奖励、也不额外扣分：<code>passed</code> 只数<strong>干净穿过开口</strong>的门，擦框时它不增加，
+等于相对少拿 10 分。另设一项负奖励会重复扣。</p>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/01_track.png"/></p>
+<h3 id="31">3.1 动作语义为什么是"航向系"而不是"机体系"</h3>
+<p>底座的 <code>VelocityCommander</code> 用<strong>实时全姿态</strong>把机体系速度旋到世界系。这在
+平缓轨迹上没问题，但竞速里机身为了前进本来就要俯仰 20~35°，映射会跟着转：</p>
 <ul>
-<li>专家：A* + 几何控制器自动生成示范，不需要人工遥控</li>
-<li>网络：小型 CNN，约 20 万参数，CPU 推理 &lt; 5 ms（满足 20 Hz 控制）</li>
-<li>阶段一 DAgger 迭代 3 轮（策略跑 → 专家在策略分布上纠错 → 重训）</li>
-<li>阶段二 PPO 微调，奖励 = 前进距离 − 碰撞惩罚 − 能耗惩罚 − 动作平滑惩罚</li>
-<li>部署：网络直接发布 <code>/uav/cmd_vel</code></li>
-<li>对比：纯 BC / BC+PPO / 三段式管线；并承担对比实验②（同一 PPO、不同网络结构：MLP / CNN / GRU / 小型 Transformer）</li>
+<li>机身一倾斜，<code>R @ a</code> 就把前向指令的一部分旋到竖直轴上</li>
+<li>参考点被拽向侧面，姿态环为了追上又倾得更多</li>
+<li>正反馈，几个门下来直接翻转（实测倾斜到 170°、掉到 −1.5 km）</li>
 </ul>
-<p>依赖：<a href="../uav_mujoco_sim/">uav_mujoco_sim</a></p></div>
+<p>环境因此改用<strong>参考航向</strong> <code>R_z(yaw)</code> 做映射，把姿态从回路里摘出去。ROS 节点
+里发布前先做 <code>v_body = Rᵀ · R_z(yaw) · a</code>，让底座的全姿态映射正好复原出
+<code>R_z(yaw)·a</code>。</p>
+<h3 id="32">3.2 门通过判定</h3>
+<p>门是位于 <code>x = 5(i+1)</code> 的竖直矩形框。质心穿过该平面且落在开口内算通过，
+否则记一次擦框。判定是几何的，不依赖感知——避免"感知对了但判定错了"污染奖励。</p>
+<p>一次只结算一道门，无论成功还是擦框都推进门序：擦了框却不推进，下一步会因
+"已越过平面"再记一次碰撞，一次失误记两笔。</p>
+<h3 id="33">3.3 奖励权重的量级</h3>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>一轮的量级（270 帧 @3 m/s）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前进奖励 × 系数 1.0</td>
+<td>+810</td>
+</tr>
+<tr>
+<td>8 道门的奖励（系数 10）</td>
+<td>+80</td>
+</tr>
+<tr>
+<td>倾角惩罚（系数 2.0，巡航 20°）</td>
+<td>−108</td>
+</tr>
+</tbody>
+</table>
+<p>系数初值下，"直着飞不穿门"能拿 700 分，"穿齐 8 道门"才 780 分——PPO 没有
+穿门的动机。改成前进 0.2、过门 50、倾角 0.5 之后：直飞 +100，全过门 +500。</p>
+<hr/>
+<h2 id="4">4. 专家</h2>
+<p>赛道是一条沿 +x 排开的门序列，"走哪条路"没有搜索空间，所以专家不用 A<em>——
+真正需要决策的是</em><em>怎么在门之间保持平飞并压住速度</em>*。用航向系比例控制：</p>
+<p>
+<script type="math/tex; mode=display">\mathbf{v}_{\text{cmd}} = \text{clip}\big(K \odot R_z(\text{yaw})^{\top}(T_{\text{aim}} - p),\ \pm v_{\max}\big)</script>
+</p>
+<p>瞄准点取门中心<strong>再往前 2.5 m</strong>（<code>look_ahead</code>）。这个值不是随便定的：相邻门
+高差最大 2.2 m、间距 5 m，只有 1.7 s 去补偿。瞄准点 1.5 m 时无人机进门前才
+开始补偿高度，实测平均擦框 1.25 次/轮；2.5 m 时 0 次。</p>
+<p>专家只吃<strong>真值位姿</strong>（不吃深度图）：深度图留给策略学，专家给出"该怎么动"。
+两者共用同一套动作语义，DAgger 的对齐前提。</p>
+<p>实测（10 轮，起点抖动 0.6 m）：<strong>8.00/8 门全过、0 擦框、13.49 s、完成率 100%</strong>。</p>
+<hr/>
+<h2 id="5">5. 训练</h2>
+<h3 id="51-dagger">5.1 DAgger</h3>
+<p>纯行为克隆的问题在闭环里会放大：策略一旦偏离专家轨迹，就进入了训练集里没见过的
+状态，误差随步数累积。DAgger 的做法是在策略自己的状态分布上持续向专家要标签：</p>
+<div class="highlight"><pre><span></span><code>π₀ ← 专家示范
+for i in 1..N:
+    用 πᵢ₋₁ 跑，并在每一步同时问专家该怎么做
+    把新数据并进数据集
+    πᵢ ← 在聚合数据上重训
+</code></pre></div>
+<p>聚合数据按"轮次越新权重越高"采样（<code>decay</code>）：早期专家轨迹的样本量会淹没
+后几轮的纠错样本。</p>
+<p><strong>采集策略轨迹不加探索噪声。</strong> 初版直接按策略分布采样，<code>log_std_init=-0.5</code>
+对应 σ=0.6（归一化尺度），折算成物理量是 <strong>2.4 m/s</strong> 的随机抖动——无人机出门
+就被甩飞，采到的全是失控状态，第 1 轮后闭环掉到 0/8（第 0 轮 1.7/8）。
+DAgger 用<strong>策略自己的状态分布</strong>，探索留给后面的 PPO。</p>
+<p><strong>策略漂出专家包络时截断本轮采集。</strong> 失控状态下的专家标签残差很大，而行为
+克隆用的是 MSE（平方加权），几千条这种样本会把专家数据<strong>反向压过去</strong>：实测
+不截断时三轮 DAgger 把闭环从 1.7/8 拖到 0/8，连专家分布上的验证 MSE 都从
+0.00058 涨到 0.00835。截断条件取专家自己从不越过的边界（倾角 &lt; 50°、
+高度 &gt; 0.4 m、|y| &lt; 4 m）。</p>
+<h3 id="511">5.1.1 每轮的闭环评测</h3>
+<p>只看开环 MSE 会误判：训练/验证集都是专家数据时 MSE 一路降，策略可能已退化。
+<code>run_dagger</code> 每轮跑一次闭环评测，把通过门数记进训练曲线。</p>
+<h3 id="52">5.2 损失</h3>
+<p>行为克隆用 <strong>MSE</strong>，不用 Huber：</p>
+<p>Huber 在残差大于 <script type="math/tex">\delta</script> 后退化成 L1，梯度是常数，回归目标变成条件<strong>中位数</strong>。
+本任务里横向指令在 ±3 m/s 之间来回摆动（相邻门 y 差最大 1.4 m），中位数接近 0
+——实测 Huber(δ=0.1) 把策略的横向输出压在 [−0.08, +0.08] m/s，专家是
+[−2.8, +3.0]，闭环 3.7/8；换 MSE 后输出范围 [−0.34, +0.55]，闭环 5.0/8。</p>
+<h3 id="521">5.2.1 水平镜像增广</h3>
+<p>深度图左右翻转 + <script type="math/tex">v_y</script> 取反是<strong>严格成立</strong>的样本：相机与机体左右对称、重力沿
+<script type="math/tex">z</script>、专家律 <script type="math/tex">v_y = k(\text{目标}_y - p_y)</script> 在 <script type="math/tex">y \to -y</script> 下正好变号。增广把数据
+翻倍，并固定"画面左 ↔ <script type="math/tex">+v_y</script>"的符号约定；不增广时左右两种情形各自从数据里学，
+横向输出被压向中间。</p>
+<p>验证集<strong>先切再增广</strong>：镜像件与原件是同一帧的两种视角，混进验证集会泄漏。</p>
+<p>消融（同一份 2176 条专家数据、40 轮、同一批评测种子）：</p>
+<table>
+<thead>
+<tr>
+<th>mirror</th>
+<th>验证 MSE</th>
+<th>开环 RMS(<script type="math/tex">v_y</script>, <script type="math/tex">v_z</script>)</th>
+<th>横向输出范围</th>
+<th>闭环</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>关</td>
+<td>0.00475</td>
+<td>0.235 / 0.121</td>
+<td>[−2.00, 2.68]</td>
+<td>4.2/8，擦框 3.8</td>
+</tr>
+<tr>
+<td><strong>开</strong></td>
+<td><strong>0.00404</strong></td>
+<td><strong>0.218 / 0.129</strong></td>
+<td>[−2.04, 2.07]</td>
+<td><strong>5.0/8</strong>，擦框 3.0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-ppo">5.3 PPO</h3>
+<p>裁剪式代理目标 + GAE。两处符号约定：</p>
+<ul>
+<li>
+<script type="math/tex">\partial \log p/\partial \mu = +(r-\mu)/\sigma^2</script>（高斯得分函数，符号为正）。
+  写成负号会让更新把高回报动作的概率往下压——单测里奖励偏向 +1 的动作，
+  10 轮 PPO 后策略输出收敛到 −1。</li>
+<li>熵 <script type="math/tex">H = \log\sigma + \text{const}</script>，最大化熵是让 <script type="math/tex">\log\sigma</script>
+<strong>变大</strong>。</li>
+</ul>
+<hr/>
+<h2 id="6-2-ppo">6. 对比实验②：同一 PPO、不同网络结构</h2>
+<p>四种主干在完全相同的环境、超参、随机种子下各训一遍，比较：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>参数量</td>
+<td>网络规模</td>
+</tr>
+<tr>
+<td>BC 完成率 / 通过门数</td>
+<td>纯行为克隆阶段（未加 PPO）</td>
+</tr>
+<tr>
+<td>PPO 完成率 / 通过门数</td>
+<td>加 PPO 之后</td>
+</tr>
+<tr>
+<td>推理延迟</td>
+<td>单帧前向耗时（20 Hz 要求 &lt; 50 ms）</td>
+</tr>
+</tbody>
+</table>
+<hr/>
+<h2 id="7">7. 实测结果</h2>
+<p>平台：Windows 11 + Intel Core 5 220H（核显，无独显）。策略推理 0.7 ms/帧
+（20 Hz 预算 50 ms，余量 70 倍）。ROS2 侧在 Ubuntu 20.04 + Humble 虚拟机中
+<code>colcon build</code> 通过。</p>
+<h3 id="71">7.1 专家</h3>
+<p>10 轮、起点抖动 0.6 m：<strong>8.00/8 门全过、0 擦框、13.49 s、完成率 100%</strong>。
+专家是策略的上界参照。</p>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/02_expert.png"/></p>
+<h3 id="72-dagger">7.2 DAgger 没有跑赢"只做一轮行为克隆"</h3>
+<p>每轮都做闭环评测（通过门数 / 8）：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>第 0 轮后</th>
+<th>第 1 轮后</th>
+<th>第 2 轮后</th>
+<th>第 3 轮后</th>
+<th>专家分布上的验证 MSE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>不截断</td>
+<td>1.7</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.3</td>
+<td>0.00058 → 0.00620 → 0.00835</td>
+</tr>
+<tr>
+<td>加漂移截断</td>
+<td>1.7</td>
+<td>0.3</td>
+<td>0.0</td>
+<td>0.7</td>
+<td>0.00073 → 0.00167 → 0.00110</td>
+</tr>
+<tr>
+<td>加漂移截断（复跑）</td>
+<td>1.0</td>
+<td>1.0</td>
+<td>0.3</td>
+<td>1.0</td>
+<td>0.00093 → 0.00104 → 0.00097</td>
+</tr>
+</tbody>
+</table>
+<p>两次独立的截断跑都停在 1 门上下，说明这不是噪声——<strong>DAgger 在这里确实没有
+正收益</strong>。</p>
+<p>两个观察：</p>
+<ul>
+<li><strong>不截断时，加进去的策略样本会把专家拟合一起拖坏</strong>（验证 MSE 涨 14 倍）。
+  策略跑飞后的状态残差很大，MSE 又是平方加权，几千条这种样本压过了专家数据。
+  加漂移截断后验证 MSE 稳住了（0.0007~0.0017），新增样本数也从 2000 掉到
+  1486 → 673 → 189——后几轮策略一出门就出包络，几乎采不到新数据。</li>
+<li><strong>闭环始终没有超过第 0 轮</strong>。瓶颈在第 0 轮的行为克隆本身（抖动 1.0 m
+  时 1.7/8），不在 DAgger。</li>
+</ul>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/04_training.png"/></p>
+<h3 id="73">7.3 最终策略</h3>
+<p>起点条件对成绩影响很大，两种都报：</p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>通过门数</th>
+<th>用时</th>
+<th>擦框</th>
+<th>推理延迟</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无起点抖动（seed 0）</td>
+<td><strong>7/8</strong></td>
+<td>13.6 s</td>
+<td>1</td>
+<td>0.69 ms</td>
+</tr>
+<tr>
+<td>起点抖动 0.6 m，10 轮平均</td>
+<td>3.1/8</td>
+<td>—</td>
+<td>0.90</td>
+<td>0.69 ms</td>
+</tr>
+<tr>
+<td>专家（上界）</td>
+<td>8.0/8</td>
+<td>13.5 s</td>
+<td>0</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>无抖动那一轮，策略用时与专家只差 0.1 s——<strong>速度不是瓶颈，鲁棒性才是</strong>。
+下图就是这一轮：横向压在 ±1 m 内，高度跟着门走，只在第 2 道门擦了一下框。</p>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/03_policy.png"/></p>
+<p>起点一偏到 0.6 m，平均就掉到 3.1/8。<strong>精度预算</strong>：门半宽 1.1 m、间距 5 m、
+巡航 3 m/s，每个门只有 1.67 s 修正时间。横向速度误差 RMS 0.22（归一化）=
+0.88 m/s，在一个门距内累积 1.47 m，<strong>超过门半宽</strong>。稳定过关需把横向 RMS
+压到 0.6 m/s 以下，是现在精度的 1.5 倍。</p>
+<p><strong>数据量是当前唯一的瓶颈。</strong> 训练数据从 8 轮示范（2176 帧）加到 30 轮
+（约 8100 帧），抖动 0.6 m 下的平均通过门数从 1.8 涨到 3.1，擦框下降，趋势
+未到平台。训练集 MSE 0.0006，比验证 MSE 低一个数量级，瓶颈在<strong>泛化</strong>：
+相邻帧只差 0.05 s，一条轨迹里独立场景只有两位数，不足以训练 48×64 卷积网络。</p>
+<p>PPO 在这点预算下帮不上忙：6 × 1024 步约 6100 帧，训练回报一路从 251.8 掉到
+156.9。要让它起作用需要几十倍的在策略采样量。</p>
+<h3 id="74-2-ppo">7.4 对比实验②：同一 PPO、不同网络结构</h3>
+<p>2176 条专家演示只采一次，四个结构在同一份数据、同一套超参（BC 40 轮 MSE +
+镜像、PPO 6 × 1024 步）、同一个种子下各训一遍，评测 5 轮、起点抖动 1.0 m：</p>
+<table>
+<thead>
+<tr>
+<th>结构</th>
+<th>参数量</th>
+<th>推理延迟</th>
+<th>BC 通过门数</th>
+<th>BC 擦框</th>
+<th>PPO 通过门数</th>
+<th>PPO 擦框</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MLP（拉平）</td>
+<td>410756</td>
+<td>0.55 ms</td>
+<td>2.00</td>
+<td>1.00</td>
+<td>0.00</td>
+<td>0.20</td>
+</tr>
+<tr>
+<td><strong>CNN</strong></td>
+<td>126684</td>
+<td>0.66 ms</td>
+<td>1.80</td>
+<td>1.20</td>
+<td><strong>0.40</strong></td>
+<td>0.80</td>
+</tr>
+<tr>
+<td>CNN+GRU</td>
+<td>208860</td>
+<td>0.87 ms</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.00</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>CNN+注意力</td>
+<td>130780</td>
+<td>0.87 ms</td>
+<td>1.60</td>
+<td>1.40</td>
+<td>0.00</td>
+<td>0.00</td>
+</tr>
+</tbody>
+</table>
+<p>能读出来的：</p>
+<ul>
+<li><strong>参数量与成绩不成比例。</strong> MLP 用 3.2 倍于 CNN 的参数拿到相近（甚至略好）
+  的行为克隆成绩，但推理更快——48×64 的深度图拉平后只有 3075 维，卷积在这里
+  没有体现出优势。</li>
+<li><strong>CNN+GRU 完全没学出来</strong>（0 门）。行为克隆按<strong>帧</strong>打乱训练，每帧的隐状态都是
+  零；闭环里隐状态却是一路累积下来的。训练与推理喂给 GRU 的隐状态分布不一致，
+  且回合越长差得越远。要修就得按<strong>定长片段</strong>切数据、片段内隐状态连续（VIO 前端
+  就是这么做的），本模块没做。</li>
+<li><strong>PPO 在这点预算下没有正收益。</strong> 6 × 1024 步（约 6100 帧）对 PPO 来说太少，
+  四个结构里三个被它拖低。要让它起作用需要几十倍的在策略采样量。</li>
+<li>四种结构的推理延迟都在 1 ms 以内，20 Hz 的 50 ms 预算完全用不满。</li>
+</ul>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/05_compare.png"/></p>
+<p><img alt="" src="../../img/air/uav_depth_gate_racing_e2e/06_latency.png"/></p>
+<hr/>
+<h2 id="8">8. 源码解析</h2>
+<div class="highlight"><pre><span></span><code>uav_depth_gate_racing_e2e/core/
+├── nn.py         手写 Conv2d / Linear / GRUCell / SelfAttention / LayerNorm / Adam
+├── gate_env.py   竞速环境（深度图观测、航向系动作、门通过判定）
+├── expert.py     比例控制专家
+├── policy.py     四种主干 + 高斯策略头 + 价值头
+├── bc.py         行为克隆（MSE / Huber）
+├── dagger.py     轮次加权聚合的 DAgger
+└── ppo.py        GAE + 裁剪代理目标 + tanh 雅可比
+</code></pre></div>
+<h3 id="81-nnpyim2col">8.1 <code>nn.py</code>：im2col 的维度顺序</h3>
+<p><code>as_strided</code> 的维度顺序与 reshape 的目标一致。顺序不一致时 reshape 按内存序
+重新分组；此时前向与反向仍互为转置、数值梯度校验通过，只有伴随恒等式
+<script type="math/tex">\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle</script>
+能发现（单测含这一项）。</p>
+<h3 id="82">8.2 混控饱和会吃掉姿态控制</h3>
+<p><code>mixer</code> 的力矩预算是 <script type="math/tex">\min(4T_{\max}-T,\ T)</script>：期望总推力 <script type="math/tex">T</script> 顶到 <script type="math/tex">4T_{\max}</script>
+时预算归零，四个桨都满转、没有任何差动余量，姿态控制彻底消失。</p>
+<p>几何控制器的位置增益 <script type="math/tex">k_p=-16</script> 只需要 0.6 m 的位置误差就能把期望推力算到
+上限——实测竞速场景里 <script type="math/tex">|f|</script> 峰值 <strong>2269 N，是上限 24 N 的 95 倍</strong>，全程
+<strong>54.5% 的控制步力矩预算不足 5%</strong>，姿态不可控。</p>
+<p>修法是给控制器加输出限幅（<code>GeometricController.thrust_alloc = 0.7</code>），
+等比缩小期望推力矢量而不是逐个 clip。加上之后专家从 0/8 变成 8/8。</p>
+<h3 id="83">8.3 观测里的深度图非空</h3>
+<p><code>GateRacingEnv</code> 早期沿用底座的 <code>headless</code> 开关（底座里是"不渲染视觉传感器"，
+对键盘遥控/规划适用）。训练全用 <code>--headless</code> 时策略吃到<strong>全零图</strong>，退化成
+"照平均速度平飞"——横向输出 ±0.05 m/s，而训练损失还在下降。现在环境永远
+渲染，自检加了"深度图非空"一项（形状断言拦不住）。</p>
+<h3 id="84-ppopy">8.4 <code>ppo.py</code>：熵项的符号与高斯得分函数</h3>
+<p>两处符号写反时训练照常进行、更新方向相反：</p>
+<ul>
+<li>
+<script type="math/tex">\partial \log p/\partial \mu = +(r-\mu)/\sigma^2</script>（高斯对数密度的得分函数，
+  符号为<strong>正</strong>）。写成负号的意思是"降低高回报动作的概率"——单测里奖励偏向
+  <script type="math/tex">+1</script> 的动作，10 轮 PPO 后策略输出收敛到 <script type="math/tex">-1</script>。</li>
+<li>熵 <script type="math/tex">H = \log\sigma + \text{const}</script>，最大化熵是让 <script type="math/tex">\log\sigma</script>
+<strong>变大</strong>。</li>
+</ul>
+<p>这两处不靠肉眼看，靠两个单测：<code>test_ppo_pushes_toward_high_reward_action</code>
+（回报只与动作有关的赌博机，PPO 必须把动作推向高回报侧）和
+<code>test_entropy_raises_log_std</code>（两份逐位相同的策略、同一批数据，只差
+<code>entropy_coef</code>，<script type="math/tex">\log\sigma</script> 的差必须为正）。</p>
+<h3 id="85">8.5 整网梯度的验证方式</h3>
+<p>扰动 <script type="math/tex">10^{-5}</script> 会让几千个 ReLU 里的某几个跨过折点，每次翻转对数值梯度的
+贡献与真实梯度<strong>同量级</strong>：实测 <script type="math/tex">\text{corr}(g, n) = 0.72</script>、逐元素比值落在
+<script type="math/tex">-136</script> 到 <script type="math/tex">+8</script> 之间，真梯度和噪声混在一起，怎么调容差都验不出问题。</p>
+<p>所以逐元素的数值梯度只在<strong>层一级</strong>做（Conv2d / GRU / 自注意力三个测试，
+外加 im2col 的伴随恒等式）；整网用<strong>下降量</strong>验——沿解析梯度走一步，损失
+下降量应与 <script type="math/tex">\eta\|g\|^2</script> 同量级（实测只有 0.25 倍，折点噪声吃掉七成，
+所以带宽放到 0.05~5 倍）。这一步抓得住符号写反与量级写错。</p>
+<h3 id="86">8.6 出图路径的动作尺度</h3>
+<p>策略输出是 <code>tanh</code> 的 [−1,1]，要乘上速度上限才是物理指令。<code>plotting._rollout</code>
+早期漏了这一步，把 [−1,1] 直接喂给环境——无人机以四分之一速度飞，出图看着
+"通过 4/8、超时收场"，像是策略不行，实际是<strong>出图路径的错</strong>。同一份权重在
+评测里是 7/8、13.6 s。评测与出图走的是两套调用，只测一套不够。</p>
+<h3 id="87-resize_area">8.7 <code>resize_area</code> 的缩放方式</h3>
+<p>深度图先按米做面积平均再量化，不是先量化再缩放：量化是 1/254 的定点，先量化
+会把远处的细节直接抹平。无效像素不参与平均，按有效像素数加权——否则空洞会把
+周围的有效深度拉浅。放大时退回最近邻：分箱宽度不足一个源像素，箱内计数会
+取到 0，除零出 NaN。</p>
+<hr/>
+<h2 id="9">9. 已知限制</h2>
+<ul>
+<li>策略频率 20 Hz、控制器 100 Hz。深度图 48×64 是训练速度与空间分辨率的折中。</li>
+<li>专家只吃真值位姿，上界为"干净通过全部门"。</li>
+<li>单精度不参与训练：全部用 float64 numpy，CPU 推理约 0.7 ms/帧，余量很大。</li>
+<li>奖励里没有惩罚"绕路"，前进速度本身就给正奖励，所以策略可能学会"贴着门框
+  蹭过去"——擦框拿不到 +10 是唯一的约束。要做严格竞速应该按时间给奖励。</li>
+</ul></div>
 </div>
 </div><footer>
-<hr/>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../flight_pattern_recognition/" title="无人机飞行轨迹类型识别与 ROS2 自动任务日志"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../telemetry_diagnostics/" title="无人机遥测异常检测与 ROS2 在线诊断">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
@@ -417,6 +1010,8 @@
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../flight_pattern_recognition/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../telemetry_diagnostics/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
