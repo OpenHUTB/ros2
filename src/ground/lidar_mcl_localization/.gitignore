@@ -1,0 +1,4 @@
+﻿# 运行产物：由 tools/run_experiment.py 现场生成，不入库
+results/
+__pycache__/
+*.pyc

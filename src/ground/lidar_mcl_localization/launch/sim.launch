@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  只起仿真：Gazebo 场景 + 机器人 + 激光雷达。
+  gui=false 时纯无头运行（虚拟机里没有显卡也能跑）。
+
+  用法：
+    roslaunch lidar_mcl_localization sim.launch              # 无头
+    roslaunch lidar_mcl_localization sim.launch gui:=true     # 带 Gazebo 界面
+-->
+<launch>
+  <arg name="gui" default="false"/>
+  <arg name="paused" default="false"/>
+  <arg name="world" default="$(find lidar_mcl_localization)/worlds/mcl_room.world"/>
+  <arg name="x" default="-3.5"/>
+  <arg name="y" default="0.0"/>
+  <arg name="yaw" default="0.0"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         textfile="$(find lidar_mcl_localization)/urdf/mcl_bot.urdf"/>
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_mcl_bot" output="screen"
+        args="-urdf -param robot_description -model mcl_bot
+              -x $(arg x) -y $(arg y) -z 0.02 -Y $(arg yaw)"/>
+
+  <!-- 静止时也让 base_footprint -> base_link 的 TF 存在，便于 rviz 显示 -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_tf"
+        args="0 0 0 0 0 0 base_footprint base_link"/>
+</launch>

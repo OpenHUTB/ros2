@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<!--
+  差速机器人 mcl_bot：两驱动轮 + 两个万向球 + 2D 激光雷达。
+
+  轮子几何（真实值）：半径 0.100 m，轮距 0.350 m（两轮中心 y = ±0.175）。
+  里程计由 gazebo_ros_diff_drive 的 encoder 模式给出——即**用轮子转角积分**，
+  不是读仿真真值，所以会和真实位姿产生漂移，这正是定位要解决的问题。
+-->
+<robot name="mcl_bot">
+
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <mass value="5.0"/>
+      <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.08" iyz="0" izz="0.10"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <geometry><box size="0.40 0.30 0.16"/></geometry>
+      <material name="body_blue"><color rgba="0.20 0.45 0.75 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.08" rpy="0 0 0"/>
+      <geometry><box size="0.40 0.30 0.16"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= 驱动轮 ================= -->
+  <link name="wheel_l">
+    <inertial>
+      <mass value="0.4"/>
+      <inertia ixx="0.0008" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.0008"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+      <material name="wheel_black"><color rgba="0.15 0.15 0.15 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_l_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_l"/>
+    <origin xyz="0 0.175 0.100" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.05" friction="0.0"/>
+    <limit effort="20" velocity="20"/>
+  </joint>
+
+  <link name="wheel_r">
+    <inertial>
+      <mass value="0.4"/>
+      <inertia ixx="0.0008" ixy="0" ixz="0" iyy="0.0016" iyz="0" izz="0.0008"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+      <material name="wheel_black"><color rgba="0.15 0.15 0.15 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.100" length="0.040"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="wheel_r_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="wheel_r"/>
+    <origin xyz="0 -0.175 0.100" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.05" friction="0.0"/>
+    <limit effort="20" velocity="20"/>
+  </joint>
+
+  <!-- ================= 前后万向球 ================= -->
+  <link name="caster_front">
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <geometry><sphere radius="0.030"/></geometry>
+      <material name="caster_grey"><color rgba="0.6 0.6 0.6 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><sphere radius="0.030"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_front"/>
+    <origin xyz="0.16 0 0.030" rpy="0 0 0"/>
+  </joint>
+
+  <link name="caster_rear">
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <geometry><sphere radius="0.030"/></geometry>
+      <material name="caster_grey"><color rgba="0.6 0.6 0.6 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><sphere radius="0.030"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="caster_rear_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_rear"/>
+    <origin xyz="-0.16 0 0.030" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= 激光雷达 ================= -->
+  <link name="laser_link">
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.045" length="0.060"/></geometry>
+      <material name="laser_dark"><color rgba="0.25 0.25 0.30 1.0"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.045" length="0.060"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+    <origin xyz="0 0 0.215" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ================= Gazebo 插件 ================= -->
+
+  <!-- 驱动轮摩擦：mu 略低，转向时会有真实的轮胎打滑，里程计因此漂移 -->
+  <gazebo reference="wheel_l">
+    <mu1>0.9</mu1><mu2>0.9</mu2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+  <gazebo reference="wheel_r">
+    <mu1>0.9</mu1><mu2>0.9</mu2>
+    <material>Gazebo/Black</material>
+  </gazebo>
+  <gazebo reference="caster_front">
+    <mu1>0.05</mu1><mu2>0.05</mu2>
+  </gazebo>
+  <gazebo reference="caster_rear">
+    <mu1>0.05</mu1><mu2>0.05</mu2>
+  </gazebo>
+
+  <!-- 差速驱动：odometrySource=encoder 表示里程计由轮子转角积分得到（会漂移） -->
+  <gazebo>
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <updateRate>50</updateRate>
+      <leftJoint>wheel_l_joint</leftJoint>
+      <rightJoint>wheel_r_joint</rightJoint>
+      <!-- 机器人"以为自己"的几何：轮距多 1.4%、轮径少 0.5%，出厂标定的典型量级 -->
+      <wheelSeparation>0.355</wheelSeparation>
+      <wheelDiameter>0.199</wheelDiameter>
+      <torque>8.0</torque>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometrySource>encoder</odometrySource>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishWheelTF>false</publishWheelTF>
+      <publishOdomTF>true</publishOdomTF>
+      <publishWheelJointState>true</publishWheelJointState>
+      <legacyMode>false</legacyMode>
+    </plugin>
+  </gazebo>
+
+  <!-- 2D 激光雷达：360 束、8 m、1cm 噪声 -->
+  <gazebo reference="laser_link">
+    <sensor type="ray" name="lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>8.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.010</stddev>
+        </noise>
+      </ray>
+      <plugin name="laser_plugin" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <frameName>laser_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>

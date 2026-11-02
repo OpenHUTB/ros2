@@ -1,0 +1,217 @@
+<?xml version="1.0" ?>
+<!-- 由 tools/gen_scene.py 自动生成，请勿手改；改 config/scene_layout.py 后重新生成 -->
+<sdf version="1.6">
+  <world name="mcl_room">
+
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- 光照与全局参数：全部内联，避免 model:// 下载 -->
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>-0.4 0.3 -0.9</direction>
+    </light>
+
+    <scene>
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <background>0.75 0.75 0.78 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- 地面：一个巨大的薄盒子，代替 model://ground_plane -->
+    <model name="ground">
+      <static>true</static>
+      <pose>0 0 -0.005 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>40 40 0.01</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>40 40 0.01</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 墙体：由 WALLS 逐条生成 -->
+    <model name="wall_0">
+      <static>true</static>
+      <pose>0.0000 4.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>10.2000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>10.2000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_1">
+      <static>true</static>
+      <pose>0.0000 -4.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>10.2000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>10.2000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_2">
+      <static>true</static>
+      <pose>5.0000 0.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.2000 8.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2000 8.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_3">
+      <static>true</static>
+      <pose>-5.0000 0.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.2000 8.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2000 8.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_4">
+      <static>true</static>
+      <pose>-1.5000 1.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>5.0000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>5.0000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_5">
+      <static>true</static>
+      <pose>2.0000 1.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_6">
+      <static>true</static>
+      <pose>-1.5000 -1.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>5.0000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>5.0000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_7">
+      <static>true</static>
+      <pose>2.0000 -1.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_8">
+      <static>true</static>
+      <pose>2.5000 3.0000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.2000 2.0000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.2000 2.0000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_9">
+      <static>true</static>
+      <pose>-3.0000 -2.5000 0.5000 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>2.0000 0.2000 1.0000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.35 0.25 1</ambient>
+            <diffuse>0.85 0.35 0.25 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
