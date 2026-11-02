@@ -7,6 +7,7 @@
 - [环境配置](setup.md)：依赖安装、模拟器连接、YOLO 权重和功能包构建。
 - [YOLO 感知与八字轨迹控制](yolo_trajectory_control.md)：系统架构、运行命令和轨迹分析。
 - [YOLO 目标水平视觉居中](yolo_visual_centering.md)。
+- [Traffic Manager 车辆轨迹与 AirSim 跟随](traffic_tracking.md)：车辆生成、轨迹记录与可选无人机跟随。
 
 ## 功能扩展与未来规划
 
