@@ -90,4 +90,4 @@ ROS_DOMAIN_ID=97 ROS_LOCALHOST_ONLY=1 python3 \
 
 脚本启动真实 launch 和独立记录进程，在 demo 中验证三航点成功、暂停/恢复后客户端取消、返航抢占及最终落地；正常停止进程后实际执行安装的 `mission_report`，校验 JSONL、三个任务的终态、暂停时长、距离和 CSV 行数。原始状态和报告写入指定目录，不应提交仓库。
 
-本功能验证范围是 Ubuntu 22.04 / ROS 2 Humble 的本地 demo。尚未验证本次记录功能在 AirSim、Foxy、真机、磁盘耗尽或进程崩溃下的完整行为；此前 Action 的 AirSim 测试不能作为本功能的实测证据。
+本功能已在 Ubuntu 22.04 / ROS 2 Humble 的本地 demo 和 OpenHUTB Air 场景完成验证。AirSim 覆盖三航点成功、暂停/恢复后客户端取消、返航抢占及最终落地；独立记录器生成完整 JSONL，离线 JSON/CSV 的三个任务终态与 ROS 观测一致。起飞 RPC 仍可能返回 False，离地由遥测确认；该既有异常未修复。尚未验证 Foxy、真机、磁盘耗尽或进程崩溃下的完整行为。
