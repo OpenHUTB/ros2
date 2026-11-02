@@ -1,0 +1,8 @@
+# BSD 决策参数（与 carla_bsd_blind_spot/bsd_core.py 的 BSDParams 一一对应）
+bsd:
+  ros__parameters:
+    warn_enter: 12.0      # 盲区目标近于此距离（米）→ warn
+    warn_exit: 15.0       # warn 中目标远于此距离 → 恢复 normal（滞回带）
+    approach_enter: 25.0  # 目标近于此距离且正接近 → approach 提前预警
+    close_min: 0.5        # approach 接近速度阈值（m/s）
+    valid_max: 40.0       # 无目标哨兵值（米）

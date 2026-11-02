@@ -58,6 +58,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 - **IMU**：`/imu` 的姿态是 ENU 世界系，角速度和线加速度已从 AirSim 机体系 NED
   转成 ROS 机体系 FLU（前-左-上）；线加速度包含重力分量，做纯运动加速度时需自行扣除。
   默认 `rate/imu_hz: 50.0`，`frame/imu: base_link`。
+  `/uav/odom` 的 `base_link` 也使用同一 FLU 约定（`get_state_enu()` 已切到 `airsim_quat_to_ros_quat_flu()`），两话题姿态可直接融合。
 - **相机模型**：`camera_model_pub.py` 按针孔模型发布 `CameraInfo` 和深度点云：
   `fx = W / (2·tan(FOV/2))`，主点在图像中心；深度按 `X=(u-cx)Z/fx`、`Y=(v-cy)Z/fy` 反投影，
   过滤 `Z<=0`、`Z>=100 m` 和 65504 哨兵值。相机 TF 为 `base_link → front_rgb/front_depth`，
@@ -65,7 +66,8 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 - **深度避障**：`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方
   `|x|<=lateral_limit`、`|y|<=vertical_limit`、`min_range<=z<=max_range` 走廊内最近点；
   `d<=stop_distance` 停车，`stop<d<slow` 线性减速，`d>=slow` 全速。
-  默认关闭，demo 时加 `enable_depth_avoidance:=true`。无点云、空点云或点云超时（`cloud_timeout`）时发布 0 速度，避免 fail-open。
+  默认关闭，demo 时加 `enable_depth_avoidance:=true`。无点云、空点云或点云超时
+  （`cloud_timeout`）时发布 0 速度，避免 fail-open。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
