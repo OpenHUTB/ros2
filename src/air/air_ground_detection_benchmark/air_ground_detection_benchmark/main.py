@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from importlib.resources import files
 import json
 import time
 from pathlib import Path
@@ -14,7 +15,7 @@ except ImportError:
     from evaluator import evaluate_frames, write_csv
 
 
-DEFAULT_INPUT = Path(__file__).resolve().parent / "sample_data" / "sample_frames.json"
+DEFAULT_INPUT = files(__package__).joinpath("sample_data", "sample_frames.json")
 
 
 def main(argv: List[str] | None = None) -> int:
