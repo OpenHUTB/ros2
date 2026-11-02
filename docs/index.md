@@ -171,6 +171,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
 * [无人机键盘控制](./air/uav_keyboard_control.md)
+* [基于 OpenHUTB 的无人机键盘控制仿真（ROS2）](./air/hutb_drone_keyboard_control.md) —— 键盘遥控与 AirSim 桥接一体的 ROS2 Humble 模块，额外发布 NED→ENU 定位与碰撞检测话题
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 
