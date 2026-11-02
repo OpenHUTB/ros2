@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>车道偏离预警（LDW） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u8f66\u9053\u504f\u79bb\u9884\u8b66\uff08LDW\uff09";
+        var mkdocs_page_input_path = "ground/carla_lane_departure_warning.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">车道偏离预警（LDW）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与目标</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11">1.1 与仓库中其它地面载具模块的区分</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#12">1.2 为什么需要跳变剔除</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 带符号横向偏移</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 航向偏差</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23">2.3 三级滞回状态机</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 模块结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4-ros">4. ROS 接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 快速开始与结果复现</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51-ros-carla">5.1 离线测试（无需 ROS 与 CARLA）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52-carla">5.2 CARLA 实测</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 演示结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61-carla-48-s">6.1 事件时间线（CARLA 实测 48 s）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 指标汇总</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63">6.3 效果图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 参数说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">车道偏离预警（LDW）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/carla_lane_departure_warning.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla-ldw">CARLA 车道偏离预警（LDW）</h1>
+<blockquote>
+<p>从地图路点计算自车相对车道中心线的带符号横向偏移，
+三级滞回状态机（normal → deviation → departure）输出带方向的
+车道偏离预警，支持纯离线测试与连 CARLA 真实偏离场景演示。</p>
+</blockquote>
+<h2 id="1">1. 概述与目标</h2>
+<p>本模块实现乘用车 <strong>LDW（Lane Departure Warning，车道偏离预警）</strong> 的
+完整闭环，在 CARLA 0.9.16 中可一键复现：</p>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>感知</td>
+<td>地图 API：自车位置投影到行驶车道中心线（LaneType.Driving）→ 带符号横向偏移 + 航向偏差 + 车道宽</td>
+</tr>
+<tr>
+<td>数据质量</td>
+<td>跳变剔除：单拍（0.05 s）偏移突变超 1.5 m 判定为相邻车道投影假值，限幅步进</td>
+</tr>
+<tr>
+<td>决策</td>
+<td>三级滞回状态机 normal/deviation/departure（进入/退出双阈值消除抖动）</td>
+</tr>
+<tr>
+<td>输出</td>
+<td>分级状态 + 带方向跃迁事件（deviation_start_left/right、departure_start_*、deviation_clear、departure_end）</td>
+</tr>
+</tbody>
+</table>
+<p>代码位于 <code>src/ground/carla_lane_departure_warning/</code>。</p>
+<h3 id="11">1.1 与仓库中其它地面载具模块的区分</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>输入</th>
+<th>算法</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自动紧急制动 AEB（<code>carla_aeb_braking</code>）</td>
+<td>前向 LiDAR 点云</td>
+<td>规则式滞回状态机</td>
+<td>前向障碍制动，需要传感器</td>
+</tr>
+<tr>
+<td>盲区监测 BSD（<code>carla_bsd_blind_spot</code>）</td>
+<td>侧向 LiDAR 点云</td>
+<td>三级预警状态机</td>
+<td>侧向预警，只报不控</td>
+</tr>
+<tr>
+<td>弯道自适应限速 CSL（<code>carla_curve_speed_limit</code>）</td>
+<td>地图路点</td>
+<td>v=√(a·R) 限速 + 斜坡</td>
+<td>舒适性件，只控速度</td>
+</tr>
+<tr>
+<td><strong>本模块</strong></td>
+<td><strong>地图路点（零传感器）</strong></td>
+<td><strong>横向偏移几何 + 三级滞回</strong></td>
+<td><strong>车道保持预警，带方向事件</strong></td>
+</tr>
+</tbody>
+</table>
+<p>LDW 与 CSL 同为<strong>零传感器依赖</strong>模块（数据源是地图拓扑），但决策维度不同：
+CSL 沿道路纵向看曲率（入弯减速），LDW 沿横向看偏移（出线预警）。
+全部决策逻辑（偏移几何 + 跳变剔除 + 状态机）为纯离线函数，
+40 个单元测试不依赖 ROS 与 CARLA 即可完整覆盖。</p>
+<h3 id="12">1.2 为什么需要跳变剔除</h3>
+<p>CARLA <code>map.get_waypoint()</code> 返回<strong>最近</strong>的可行驶车道路点。自车大幅偏离
+或靠近分岔时，最近点可能跳到相邻车道/对向车道，参考中心线瞬移
+（≈一个车道宽），横向偏移出现 1~2 m 的台阶假值。实测 45 s 中此类跳变
+可造成状态机每 0.3 s 一次假振荡。剔除规则：0.05 s 内偏移变化超过
+1.5 m（6 m/s 车速下物理不可能）时，沿用上拍方向限幅步进 1.5 m，
+把投影跳变压成最大可信步长。</p>
+<h2 id="2">2. 计算原理</h2>
+<h3 id="21">2.1 带符号横向偏移</h3>
+<p>道路方向单位向量 dir=(cos y, sin y)（y 为道路朝向 yaw，逆时针为正），
+左侧法向 left=(−sin y, cos y)，自车 e 相对中心线参考点 w：</p>
+<div class="highlight"><pre><span></span><code>offset = (e − w) · left = −(ex−wx)·sin y + (ey−wy)·cos y
+</code></pre></div>
+<p>左偏为正、右偏为负；沿道路方向的前后错位不产生横向偏移。</p>
+<h3 id="22">2.2 航向偏差</h3>
+<p><code>heading_err = wrap(ego_yaw − road_yaw) ∈ [−π, π]</code>，正值表示车头朝左偏，
+作为趋势参考输出（不参与状态机判定）。</p>
+<h3 id="23">2.3 三级滞回状态机</h3>
+<div class="highlight"><pre><span></span><code>normal ──|o| ≥ depart_enter(0.9)──▶ departure
+normal ──|o| ≥ warn_enter(0.5)───▶ deviation
+deviation ──|o| ≥ depart_enter───▶ departure
+deviation ──|o| &lt; warn_exit(0.3)──▶ normal
+departure ──|o| &lt; depart_exit(0.65)▶ deviation
+</code></pre></div>
+<p>双阈值滞回带 [0.3, 0.5] 与 [0.65, 0.9] 消除临界抖动；事件仅在真实
+跃迁时发出一次，方向由偏移符号给出（<code>_left</code> / <code>_right</code>）。</p>
+<h2 id="3">3. 模块结构</h2>
+<div class="highlight"><pre><span></span><code>src/ground/carla_lane_departure_warning/
+├── carla_lane_departure_warning/
+│   ├── lane_departure_core.py  # 决策核心：偏移几何/跳变剔除/三级滞回（纯离线）
+│   ├── bridge_node.py          # CARLA 桥接：路点投影 → /ldw/lateral_offset 等
+│   ├── ldw_node.py             # 预警节点：定时器推进状态机 → /ldw/state + /ldw/event
+│   ├── carla_common.py         # CARLA 封装（复用 AEB/BSD/CSL 已验证实现）
+│   └── demo.py                 # 离线/真实 CARLA 一键演示
+├── launch/main.launch.py       # 桥接+预警两节点一键启动
+├── config/ldw_params.yaml      # 全部决策参数（与 LDWParams 一一对应）
+├── tests/                      # 40 个离线单元测试（宿主机无需 ROS/CARLA）
+└── main.py                     # doctor / test / build / demo 统一入口
+</code></pre></div>
+<h2 id="4-ros">4. ROS 接口</h2>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>方向</th>
+<th>类型</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/ldw/lateral_offset</code></td>
+<td>桥接 → 预警</td>
+<td>Float32</td>
+<td>带符号横向偏移（m，左偏正，跳变剔除后）</td>
+</tr>
+<tr>
+<td><code>/ldw/heading_error</code></td>
+<td>桥接 → 外部</td>
+<td>Float32</td>
+<td>航向偏差（rad）</td>
+</tr>
+<tr>
+<td><code>/ldw/lane_width</code></td>
+<td>桥接 → 外部</td>
+<td>Float32</td>
+<td>当前车道宽（m）</td>
+</tr>
+<tr>
+<td><code>/ldw/state</code></td>
+<td>预警 → 外部</td>
+<td>String</td>
+<td>normal / deviation / departure</td>
+</tr>
+<tr>
+<td><code>/ldw/event</code></td>
+<td>预警 → 外部</td>
+<td>String</td>
+<td>带方向跃迁事件（仅跃迁拍发布一次）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="5">5. 快速开始与结果复现</h2>
+<h3 id="51-ros-carla">5.1 离线测试（无需 ROS 与 CARLA）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/ground/carla_lane_departure_warning/
+python3<span class="w"> </span>main.py<span class="w"> </span>doctor<span class="w">     </span><span class="c1"># 依赖体检</span>
+python3<span class="w"> </span>main.py<span class="w"> </span><span class="nb">test</span><span class="w">       </span><span class="c1"># 40 个离线单元测试</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>demo<span class="w">       </span><span class="c1"># 离线演示：正弦偏离轨迹</span>
+</code></pre></div>
+<p>离线场景为自车沿直道 y=0 以 6 m/s 行驶、横向按正弦 y(t)=1.2·sin(2πt/20)
+偏离：幅值跨过 warn(0.5) 与 depart(0.9) 阈值，左右两侧各触发一轮完整
+deviation → departure → 恢复事件链。</p>
+<h3 id="52-carla">5.2 CARLA 实测</h3>
+<p>先启动 CARLA 0.9.16（宿主机离屏渲染），VM 内执行
+（<code>--host</code> 填 CARLA 所在机器 IP）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 方式一：源码直跑（目录：src/ground/carla_lane_departure_warning/）</span>
+python3<span class="w"> </span>main.py<span class="w"> </span>demo<span class="w"> </span>--live<span class="w"> </span>--host<span class="w"> </span>&lt;CARLA_IP&gt;<span class="w"> </span>--seconds<span class="w"> </span><span class="m">48</span>
+
+<span class="c1"># 方式二：colcon 构建 + launch（目录：ros2 工作空间根目录）</span>
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_lane_departure_warning<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_lane_departure_warning<span class="w"> </span>main.launch.py<span class="w"> </span>host:<span class="o">=</span>&lt;CARLA_IP&gt;
+<span class="c1"># 另开终端：ros2 topic echo /ldw/state</span>
+</code></pre></div>
+<p>实测现象（Town01，16 s 周期纯追踪偏离：居中 → 左偏 1.2 m（车道内）→ 回中）：
+自车起步加速后稳定 5 m/s 巡航，偏离设定值下达 4 s 内横向偏移单调逼近
+1.2 m 并稳定保持——<code>deviation</code> 进入（&gt;0.5 m）→ <code>departure</code> 压线（&gt;0.9 m）→
+回中后 <code>departure_end</code> → <code>deviation_clear</code> 恢复，全程 3 轮完整事件链、
+零假振荡（跳变剔除生效）。</p>
+<h2 id="6">6. 演示结果</h2>
+<h3 id="61-carla-48-s">6.1 事件时间线（CARLA 实测 48 s）</h3>
+<table>
+<thead>
+<tr>
+<th>轮次</th>
+<th>deviation_start</th>
+<th>departure_start</th>
+<th>departure_end</th>
+<th>deviation_clear</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>t=5.15 s</td>
+<td>t=6.25 s</td>
+<td>t=11.80 s</td>
+<td>t=13.00 s</td>
+</tr>
+<tr>
+<td>2</td>
+<td>t=18.45 s</td>
+<td>t=18.70 s</td>
+<td>t=27.05 s</td>
+<td>t=28.25 s</td>
+</tr>
+<tr>
+<td>3</td>
+<td>t=36.95 s</td>
+<td>t=38.25 s</td>
+<td>t=43.00 s</td>
+<td>t=44.20 s</td>
+</tr>
+</tbody>
+</table>
+<p>每轮恰好 4 个事件、顺序固定、轮间 normal 段约 4~5 s（居中段），
+departure 状态合计 373/960 拍（38.8 s）。第 1 轮偏移峰值约 2.7 m 为起步
+加速段纯追踪暂态，第 2/3 轮收敛至设定值 1.2 m ± 0.1 m。</p>
+<h3 id="62">6.2 指标汇总</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>离线演示</th>
+<th>CARLA 实测</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>状态链</td>
+<td>三级齐全、左右对称触发</td>
+<td>3 轮 × 4 事件，顺序固定</td>
+</tr>
+<tr>
+<td>设定值跟踪</td>
+<td>—</td>
+<td>收敛 1.2 m ± 0.1 m（第 2/3 轮）</td>
+</tr>
+<tr>
+<td>假振荡</td>
+<td>0</td>
+<td>0（跳变剔除生效，959 拍中仅 1 拍超步长）</td>
+</tr>
+<tr>
+<td>传感器依赖</td>
+<td>无</td>
+<td>无（纯地图拓扑）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 效果图</h3>
+<p>压线报警（departure）瞬间、偏离预警（deviation）瞬间、恢复（recover）
+截图，以及偏移/状态/速度三行跟踪曲线：</p>
+<p><img alt="压线报警（departure）瞬间" src="https://raw.githubusercontent.com/82540295/ros2/feat/carla_lane_departure_warning/docs/img/ground/carla_lane_departure_warning/ldw_live_departure.png"/></p>
+<p><img alt="偏离预警（deviation）瞬间" src="https://raw.githubusercontent.com/82540295/ros2/feat/carla_lane_departure_warning/docs/img/ground/carla_lane_departure_warning/ldw_live_deviation.png"/></p>
+<p><img alt="LDW 实测曲线" src="https://raw.githubusercontent.com/82540295/ros2/feat/carla_lane_departure_warning/docs/img/ground/carla_lane_departure_warning/ldw_live_curve.png"/></p>
+<p>图片与逐拍 CSV 数据已入库 <code>docs/img/ground/carla_lane_departure_warning/</code>
+（PNG 均 &lt; 3 MB），复现命令见第 5 节。</p>
+<h2 id="7">7. 参数说明</h2>
+<p>全部参数集中于 <code>config/ldw_params.yaml</code>，与代码 <code>LDWParams</code> 一一对应
+（阈值按默认车道宽 3.5 m 标定，即半宽 1.75 m）：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>warn_enter</code> / <code>warn_exit</code></td>
+<td>0.5 / 0.3</td>
+<td>deviation 进/出阈值（m，半宽 28%~17%）</td>
+</tr>
+<tr>
+<td><code>depart_enter</code> / <code>depart_exit</code></td>
+<td>0.9 / 0.65</td>
+<td>departure 进/出阈值（m，接近压线）</td>
+</tr>
+<tr>
+<td><code>lane_width</code></td>
+<td>3.5</td>
+<td>车道宽（m），bridge 按路点动态发布</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8">8. 已知限制</h2>
+<ul>
+<li>阈值按 3.5 m 标准车道标定；窄车道（如 3 m）应等比下调 warn/depart 阈值，
+  宽车道反之（改 yaml 参数即可）；</li>
+<li>跳变剔除假设车速 &lt; 6 m/s 量级；高速场景 max_step 应随速度放宽；</li>
+<li>模块只预警不控车——演示中的纯追踪驾驶为演示基建，接入整车时应将
+  /ldw/event 送入提示音/视觉提示，并可与车道纠偏功能（主动干预）联动；</li>
+<li>路口/分岔区域的最近车道投影天然不稳定，本模块在该区域事件密度会
+  升高（属已知行为，实际产品应结合车道拓扑过滤）。</li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_bsd_blind_spot/" title="盲区监测（BSD）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../weather_perception_benchmark/" title="恶劣雨雾天气下多传感器感知性能对比实验">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../carla_bsd_blind_spot/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../weather_perception_benchmark/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
