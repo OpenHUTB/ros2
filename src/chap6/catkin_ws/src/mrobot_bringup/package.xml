@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrobot_bringup</name>
+  <version>1.0.0</version>
+  <description>mrobot 启动配置：使用 arbotix 假仿真加载带激光雷达的机器人（fake 导航，不启动 Gazebo）</description>
+
+  <maintainer email="wkb@example.com">wkb</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>arbotix_python</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>mrobot_description</exec_depend>
+</package>
