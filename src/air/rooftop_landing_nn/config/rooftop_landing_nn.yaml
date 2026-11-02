@@ -1,0 +1,46 @@
+# rooftop_landing_nn 默认参数（全部都能被 roslaunch 参数覆盖）
+# 感知：高度图与网络输入
+perception:
+  cells: 64                 # 高度图边长（格）；模型 meta 里也是 64，改这里要重新训练
+  size_m: 16.0              # ROI 边长 (m)：以无人机（或点云中心）为中心的方形区域
+  accumulate_frames: 3      # 累积几帧点云再做一次推理（点云稀疏时累积能显著改善）
+  min_height_m: 1.0         # 落点比参考面至少高多少米（硬约束，防止把地面当屋顶）
+  rough_max: 0.35           # 允许的最大粗糙度（归一化）：挡掉贴着立面/墙下落
+  roi_center: uav           # uav（以无人机为中心）| cloud（以点云中心为中心）
+
+model:
+  path: ""                  # 权重 npz 路径；留空则用 <包目录>/models/landing_cnn.npz
+                            # launch 里会填成 $(find rooftop_landing_nn)/models/landing_cnn.npz
+
+frame:
+  z_up: true                # 高度分量是否上为正（ENU）；实测 carlair_ros_bridge 为 ENU
+  world: world              # marker / 状态话题的 frame_id
+
+approach:
+  safe_altitude: 5.0        # 高于屋面多少米作为过渡目标点 (m)
+  goal_timeout: 60.0        # 等待 GOAL_DONE 超时 (s)
+  goal_retry_period: 5.0    # 目标点被桥接丢弃时的重发周期 (s)；0 = 不重发
+  verify_goal_coords: true  # GOAL_DONE 带坐标时，核对是不是本次下发的目标点
+  goal_match_tol: 0.5       # 上面那个核对的容差 (m)
+
+descend:
+  speed: 0.5                # 垂直下降速度 (m/s)
+  tolerance: 0.35           # 判定触地的高度容差 (m)
+  timeout: 60.0             # 下降超时 (s)
+
+mission:
+  autostart: true           # 启动后是否自动开始；false 则等 /rooftop_nn/start
+  tick_rate_hz: 10.0        # 主循环频率 (Hz)
+  start_topic: /rooftop_nn/start
+
+topic:
+  lidar: /lidar/points
+  odom: /uav/odom
+  status: /uav/status
+  cmd_vel: /uav/cmd_vel
+  goal: /uav/goal
+  landing_point: /rooftop_nn/landing_point
+  markers: /rooftop_nn/markers
+
+visualization:
+  publish_markers: true
