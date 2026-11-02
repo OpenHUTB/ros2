@@ -67,9 +67,11 @@ def closed_loop_drive(net, steps: int = 120, lateral0: float = 0.9):
         frames.append((image.copy(), steer, throttle, offset - lateral))
 
     errors = np.asarray(errors, dtype=np.float32)
+    warm = errors[30:]        # 前 3 s 属于从初始横向偏差 0.9 m 收敛的暂态
     metrics = {
         "steps": steps,
         "mean_abs_lateral_error_m": round(float(errors.mean()), 4),
+        "steady_abs_lateral_error_m": round(float(warm.mean()), 4),
         "max_abs_lateral_error_m": round(float(errors.max()), 4),
         "final_abs_lateral_error_m": round(float(errors[-1]), 4),
         "within_lane_ratio": round(float((errors < 0.6).mean()), 4),

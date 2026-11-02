@@ -112,3 +112,78 @@ def test_road_profile_is_bounded():
         curvature, offset = road_profile(step, 60)
         assert abs(curvature) <= 0.005
         assert abs(offset) <= 1.2
+
+
+# ---------------------------------------------------------------- 结构对比相关
+
+def test_mlp_baseline_param_count_matches_formula():
+    from pix2cmd.arch_sweep import MLPBaseline
+
+    net = MLPBaseline(in_hw=IMG, hidden=64)
+    expected = IMG * IMG * 64 + 64 + 64 * 2 + 2
+    assert net.config()["params"] == expected
+
+
+def test_mlp_forward_backward_shapes():
+    from pix2cmd.arch_sweep import MLPBaseline
+
+    net = MLPBaseline(hidden=8, seed=0)
+    x, y, _ = make_dataset(3, seed=5)
+    pred, cache = net.forward(x)
+    assert pred.shape == (3, 2)
+    assert -1.0 <= pred[:, 0].min() and pred[:, 0].max() <= 1.0
+    assert 0.0 <= pred[:, 1].min() and pred[:, 1].max() <= 1.0
+    grads = net.backward(cache, y)
+    for key, value in grads.items():
+        assert value.shape == net.p[key].shape, key
+        assert np.isfinite(value).all(), key
+
+
+def test_mlp_gradient_matches_finite_difference():
+    """数值梯度校验：MLP 的反向传播必须与中心差分一致（相对误差 < 1e-3）。"""
+    from pix2cmd.arch_sweep import MLPBaseline
+
+    net = MLPBaseline(hidden=8, seed=1)
+    x, y, _ = make_dataset(2, seed=6)
+    _, cache = net.forward(x)
+    grads = net.backward(cache, y)
+
+    def loss():
+        # 与 cnn.py 中反向传播的目标函数一致：J = (1/n) * Σ_i Σ_j (pred_ij - y_ij)^2
+        return float(np.mean(((net.predict(x) - y) ** 2).sum(axis=1)))
+
+    eps = 1e-2
+    for key in ("w2", "b2"):
+        before = net.p[key].copy()
+        for idx in [(0, 0), (1, 1)] if before.ndim == 2 else [(0,)]:
+            orig = before[idx]
+            net.p[key][idx] = orig + eps
+            plus = loss()
+            net.p[key][idx] = orig - eps
+            minus = loss()
+            net.p[key][idx] = orig
+            numeric = (plus - minus) / (2 * eps)
+            assert abs(numeric - grads[key][idx]) < 1e-3 * max(1.0, abs(numeric))
+
+
+def test_sweep_returns_one_record_per_architecture():
+    from pix2cmd.arch_sweep import VARIANTS, sweep
+
+    records = sweep(epochs=1, n_train=48, n_val=16, log=lambda *a, **k: None)
+    assert [r["arch"] for r in records] == ["mlp", *VARIANTS]
+    required = {"params", "val_mae_steering", "steady_abs_lateral_error_m",
+                "settle_seconds", "overshoot_m", "train_seconds"}
+    for rec in records:
+        assert required <= set(rec), rec
+        assert rec["params"] > 0
+        assert 0.0 <= rec["within_lane_ratio"] <= 1.0
+
+
+def test_recovery_test_reports_finite_values():
+    from pix2cmd.arch_sweep import MLPBaseline, recovery_test
+
+    net = MLPBaseline(hidden=8, seed=2)
+    out = recovery_test(net, steps=20)
+    assert out["final_offset_m"] >= 0.0
+    assert out["overshoot_m"] >= 0.0
+    assert out["settle_seconds"] >= -1.0
