@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtlebot3_gazebo_control</name>
+  <version>0.0.1</version>
+  <description>Turtlebot3 Gazebo control simulation (open-loop speed command)</description>
+  <maintainer email="ruan@todo.todo">ruan</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+</package>

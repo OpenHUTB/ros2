@@ -66,6 +66,7 @@ nav:
         - 章节首页: './chapter/chap8.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
     - 9. ROS 2: './chapter/chap9.md'
+    - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
