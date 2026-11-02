@@ -165,6 +165,8 @@ ROS每章节运行代码:
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 
+* [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.53 m 降到 0.01 m
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
