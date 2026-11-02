@@ -76,3 +76,8 @@ Thumbs.db
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
+
+# uav_camera_tracking 的曲线/对比图：每次训练都会重画，属生成物。
+# 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
+# results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
+src/air/uav_camera_tracking/results/*.png

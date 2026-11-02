@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_camera_tracking</name>
+  <version>0.1.0</version>
+  <description>无人机机载相机视觉目标跟踪：感知网络(图像->目标像素)+控制网络(偏差->速度指令)闭环，含端到端对比与多场景性能评价</description>
+  <maintainer email="3248146937@qq.com">6lebron23</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <!-- model_io.py 用它在 install 后定位 share/models/*.npz -->
+  <exec_depend>ament_index_python</exec_depend>
+  <!-- launch/main.launch.py 直接 import launch 与 launch_ros -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
