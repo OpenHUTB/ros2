@@ -228,6 +228,38 @@ rostopic echo -n1 /imu
 
 ![IMU 50 Hz](../img/air/carlair_ros_bridge/imu_hz.png)
 
+### 6.7 相机模型与深度点云
+
+`camera_model_pub.py` 订阅 `/camera/image_raw` 与 `/camera/depth`，发布：
+
+| 话题 | 类型 | 说明 |
+|---|---|---|
+| `/camera/camera_info` | `sensor_msgs/CameraInfo` | 彩色相机内参 |
+| `/camera/depth/camera_info` | `sensor_msgs/CameraInfo` | 深度相机内参 |
+| `/camera/depth/points` | `sensor_msgs/PointCloud2` | 深度反投影点云，相机光学系 |
+
+针孔模型：
+
+```text
+fx = fy = W / (2 * tan(FOV / 2))
+cx = W / 2,  cy = H / 2
+K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+```
+
+深度反投影（`DepthPlanar` 的 Z 就是沿光轴深度）：
+
+```text
+X = (u - cx) * Z / fx
+Y = (v - cy) * Z / fy
+Z = depth
+```
+
+点云过滤 `Z <= 0`、`Z >= 100 m` 和 65504 哨兵值；相机 TF 为 `base_link -> front_rgb/front_depth`，安装偏移由 `camera/mount_x/y/z` 配置。
+
+深度点云前视图（颜色表示距离）：
+
+![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
+
 ## 7. 运行验证
 
 ```shell

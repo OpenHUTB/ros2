@@ -34,6 +34,12 @@ camera:
   publish_rgb: true
   publish_depth: true
   publish_seg: false        # 分割图默认关闭，需要做语义感知时再打开
+  fov_degrees: 90.0         # 与 settings.json 的 FOV_Degrees 一致
+  rgb_frame: "front_rgb"    # 相机光学系（z 前、x 右、y 下）
+  depth_frame: "front_depth"
+  mount_x: 0.3              # 相机相对 base_link 的安装位置（ROS FLU，米）
+  mount_y: 0.0
+  mount_z: 0.1              # AirSim 的 Z=-0.1（NED 向下）对应 ROS +0.1
 
 frame:
   world: "world"            # 世界坐标系（ENU）
@@ -48,6 +54,9 @@ topic:
   image: "/camera/image_raw"
   depth: "/camera/depth"
   seg: "/camera/seg"
+  camera_info: "/camera/camera_info"
+  depth_info: "/camera/depth/camera_info"
+  depth_points: "/camera/depth/points"
   lidar: "/lidar/points"
   status: "/uav/status"
 

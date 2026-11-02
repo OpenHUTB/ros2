@@ -13,6 +13,7 @@
   <arg name="body_frame"    default="true"         doc="速度指令是否按机体系解释（uav_ppo_nav 是机体系=false）"/>
   <arg name="cmd_duration"  default="0.1"          doc="单条速度指令持续时长 s，应与上游控制周期一致"/>
   <arg name="publish_image" default="true"         doc="是否启动相机（RGB/深度/分割）发布节点"/>
+  <arg name="publish_camera_model" default="true"  doc="是否启动相机模型节点（CameraInfo/TF/深度点云）"/>
   <arg name="publish_lidar" default="true"         doc="是否启动激光雷达点云发布节点"/>
   <arg name="publish_imu"   default="true"         doc="是否启动 IMU 发布节点"/>
   <arg name="voxel_leaf"    default="0.0"          doc="点云体素降采样边长 m，0 表示不降采样"/>
@@ -36,6 +37,10 @@
   <!-- 相机发布：/camera/image_raw + /camera/depth (+ /camera/seg) -->
   <node if="$(arg publish_image)" pkg="carlair_ros_bridge" type="image_pub.py"
         name="uav_image_pub" output="screen"/>
+
+  <!-- 相机模型：CameraInfo、相机 TF、/camera/depth/points -->
+  <node if="$(arg publish_camera_model)" pkg="carlair_ros_bridge" type="camera_model_pub.py"
+        name="uav_camera_model_pub" output="screen"/>
 
   <!-- 激光雷达发布：/lidar/points (PointCloud2, 世界系 ENU) -->
   <node if="$(arg publish_lidar)" pkg="carlair_ros_bridge" type="lidar_pub.py"
