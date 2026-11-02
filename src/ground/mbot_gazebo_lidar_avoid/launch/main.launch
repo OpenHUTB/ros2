@@ -1,0 +1,6 @@
+<launch>
+    <node name="mbot_lidar_avoid_node"
+          pkg="mbot_gazebo_lidar_avoid"
+          type="main.py"
+          output="screen" />
+</launch>
