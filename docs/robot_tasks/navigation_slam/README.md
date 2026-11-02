@@ -37,7 +37,7 @@ ros2 topic pub --once /goal_pose geometry_msgs/msg/PoseStamped \
 规划器终端会打印类似：
 
 ```
-path to (8.50, 8.50): 99 cells, 12.37 m
+path to (8.50, 8.50): 100 cells, 12.43 m
 ```
 
 ## 4. 话题与参数
