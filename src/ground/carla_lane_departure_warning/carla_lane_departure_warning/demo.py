@@ -179,7 +179,7 @@ def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
     """
     from carla_lane_departure_warning import carla_common as cc
     from carla_lane_departure_warning.lane_departure_core import (
-        LDWController, LDWParams, lateral_offset, heading_error)
+        LDWController, LDWParams, lateral_offset, heading_error, reject_jump)
     import carla
 
     out_dir = Path(out_dir)
@@ -192,7 +192,7 @@ def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
     p = LDWParams()
     ctrl = LDWController(p)
     print(f"[demo] 自车已生成于 ({tf.location.x:.1f}, {tf.location.y:.1f})，"
-          "每 12 s 注入 1.2 s 右偏置转向")
+          "16 s 周期纯追踪偏离：居中 → 左偏 1.2 m（车道内）→ 回中")
 
     history = []
     shots = {}
@@ -209,19 +209,27 @@ def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
         herr = heading_error(math.radians(tf.rotation.yaw), road_yaw)
         return offset, herr, float(wp.lane_width)
 
-    def _lane_keep_steer():
-        """航点跟随转向：瞄向前方 6 m 路点，按航向角差比例修正。"""
-        wp = road_map.get_waypoint(ego.get_location(), project_to_road=True,
+    def _steer_toward_offset(target_offset):
+        """纯追踪转向：瞄向前方 8 m 路点沿车道横向平移 target_offset 后的点。
+
+        追固定横向偏差设定值（0=居中，+1.2=车道内左偏）——收敛后稳定保持，
+        不会产生偏置对抗式车道保持的欠阻尼蛇形振荡。
+        """
+        tf = ego.get_transform()
+        wp = road_map.get_waypoint(tf.location, project_to_road=True,
                                    lane_type=carla.LaneType.Driving)
-        nxt = wp.next(6.0)
+        nxt = wp.next(8.0)
         if not nxt:
             return 0.0
-        t = nxt[0].transform.location
-        loc = ego.get_location()
-        desired = math.atan2(t.y - loc.y, t.x - loc.x)
-        current = math.radians(ego.get_transform().rotation.yaw)
+        ahead = nxt[0].transform.location
+        road_yaw = math.radians(wp.transform.rotation.yaw)
+        nx, ny = -math.sin(road_yaw), math.cos(road_yaw)   # 左侧法向
+        tx = ahead.x + nx * target_offset
+        ty = ahead.y + ny * target_offset
+        desired = math.atan2(ty - tf.location.y, tx - tf.location.x)
+        current = math.radians(tf.rotation.yaw)
         err = math.atan2(math.sin(desired - current), math.cos(desired - current))
-        return max(-0.3, min(0.3, 1.5 * err))
+        return max(-0.5, min(0.5, 2.0 * err))
 
     def _shot(tag):
         if tag not in shots:
@@ -230,16 +238,20 @@ def run_live(host="127.0.0.1", port=2000, out_dir=ARTIFACTS, max_seconds=60):
 
     try:
         dt = 0.05
+        prev_offset = None
         for k in range(n_ticks):
             t = k * dt
-            offset, herr, width = _measure()
+            offset_raw, herr, width = _measure()
+            # 投影跳变剔除：0.05s 内偏移突变超 1.5m 为相邻车道假值
+            offset, rej = reject_jump(prev_offset, offset_raw)
+            prev_offset = offset
             r = ctrl.tick(offset, dt)
 
-            # 定速行驶 + 车道保持；每 12 s 注入 1.2 s 右偏置（steer 负=右）
-            phase = t % 12.0
-            bias = -0.28 if 6.0 <= phase < 7.2 else 0.0
-            steer = max(-1.0, min(1.0, _lane_keep_steer() + bias))
-            cc.apply_control(ego, throttle=0.35, steer=steer)
+            # 16 s 周期纯追踪：0~4s 居中 → 4~10s 左偏 +1.2 m（车道内偏移）→ 回中
+            phase = t % 16.0
+            target_offset = 1.2 if 4.0 <= phase < 10.0 else 0.0
+            steer = _steer_toward_offset(target_offset)
+            cc.apply_control(ego, throttle=0.3, steer=steer)
 
             history.append({
                 "t": round(t, 2),

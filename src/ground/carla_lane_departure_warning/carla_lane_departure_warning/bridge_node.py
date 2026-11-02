@@ -24,7 +24,7 @@ from std_msgs.msg import Float32
 # 让 colcon install / 源码直跑两种方式都能找到本包
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from lane_departure_core import heading_error, lateral_offset  # noqa: E402
+from lane_departure_core import heading_error, lateral_offset, reject_jump  # noqa: E402
 import carla_common as cc  # noqa: E402
 
 
@@ -45,6 +45,7 @@ class LDWBridgeNode(Node):
         self.pub_offset = self.create_publisher(Float32, "ldw/lateral_offset", 10)
         self.pub_heading = self.create_publisher(Float32, "ldw/heading_error", 10)
         self.pub_width = self.create_publisher(Float32, "ldw/lane_width", 10)
+        self._prev_offset = None
 
         self.client, self.world = cc.connect(self.host, self.port, self.town)
         cc.cleanup_actors(self.world)
@@ -71,6 +72,9 @@ class LDWBridgeNode(Node):
         wp = self.world.get_map().get_waypoint(
             tf.location, project_to_road=True, lane_type=carla.LaneType.Driving)
         offset, herr, width = self.measure(ego_xy, tf.rotation.yaw, wp)
+        # 投影跳变剔除：0.05s 内偏移突变超 1.5m 为相邻车道假值
+        offset, _ = reject_jump(self._prev_offset, offset)
+        self._prev_offset = offset
         self.pub_offset.publish(Float32(data=float(offset)))
         self.pub_heading.publish(Float32(data=float(herr)))
         self.pub_width.publish(Float32(data=float(width)))

@@ -8,7 +8,8 @@ import unittest
 
 from carla_lane_departure_warning.lane_departure_core import (
     DEPARTURE, DEVIATION, NORMAL, LDWController, LDWParams,
-    heading_error, lateral_offset, ldw_decide, normalize_angle, side_of,
+    heading_error, lateral_offset, ldw_decide, normalize_angle,
+    reject_jump, side_of,
 )
 
 
@@ -60,6 +61,30 @@ class TestSideOf(unittest.TestCase):
         self.assertEqual(side_of(0.2), "left")
         self.assertEqual(side_of(-0.2), "right")
         self.assertEqual(side_of(0.0), "")
+
+
+class TestRejectJump(unittest.TestCase):
+
+    def test_first_pass_through(self):
+        cur, rej = reject_jump(None, 0.8)
+        self.assertEqual(cur, 0.8)
+        self.assertFalse(rej)
+
+    def test_normal_change_passes(self):
+        cur, rej = reject_jump(0.5, 0.8)   # 步长 0.3 < 1.5
+        self.assertEqual(cur, 0.8)
+        self.assertFalse(rej)
+
+    def test_jump_limited_to_step(self):
+        cur, rej = reject_jump(0.41, -1.50)   # 跳变 1.91 → 限幅 1.5
+        self.assertAlmostEqual(cur, -1.09, delta=1e-9)
+        self.assertTrue(rej)
+
+    def test_jump_direction_both_sides(self):
+        cur, _ = reject_jump(-1.0, 2.0)   # +3.0 → -1.0+1.5 = 0.5
+        self.assertAlmostEqual(cur, 0.5)
+        cur, _ = reject_jump(1.0, -2.0)   # -3.0 → 1.0-1.5 = -0.5
+        self.assertAlmostEqual(cur, -0.5)
 
 
 class TestLDWDecide(unittest.TestCase):

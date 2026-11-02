@@ -63,6 +63,25 @@ def side_of(offset):
     return ""
 
 
+def reject_jump(prev, cur, max_step=1.5):
+    """横向偏移跳变剔除（纯函数）。
+
+    相邻两拍（0.05 s）横向偏移变化超过 max_step 视为地图投影跳变
+    （车速 6 m/s 时物理上不可能横移 1.5 m），将其限幅为单步最大变化。
+    返回 (accepted, rejected)；首拍直通。
+    """
+    if prev is None:
+        return cur, False
+    d = cur - prev
+    if abs(d) > max_step:
+        return float(prev + math_copysign(max_step, d)), True
+    return float(cur), False
+
+
+def math_copysign(x, y):
+    return float(np.copysign(x, y))
+
+
 @dataclass
 class LDWParams:
     """LDW 决策参数（与 config/ldw_params.yaml 一一对应）。"""
