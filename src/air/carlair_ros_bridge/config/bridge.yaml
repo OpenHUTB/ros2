@@ -68,3 +68,15 @@ control:
   cmd_duration: 0.1         # 单条速度指令持续时长 s；应与上游控制周期一致
                             # （uav_ppo_nav 训练环境 dt = 0.1 s，故默认 0.1）
   auto_takeoff: true        # 启动后自动起飞并悬停
+
+depth_avoidance:
+  enabled: true             # 节点内部开关；launch 默认不启动，demo 时显式打开
+  forward_speed: 1.5        # 无障碍时前向速度 m/s
+  slow_distance: 4.0        # 小于该距离开始线性减速 m
+  stop_distance: 2.0        # 小于等于该距离停车 m
+  lateral_limit: 0.8        # 前向走廊半宽 m
+  vertical_limit: 0.8       # 前向走廊半高 m
+  max_range: 12.0           # 超过该距离的点忽略 m
+  min_range: 0.5            # 近处地面/机身自反射过滤 m
+  start_delay: 6.0          # 起飞后延迟接管，避免打断爬升 s
+  rate: 10.0                # 指令发布频率 Hz
