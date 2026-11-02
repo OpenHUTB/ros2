@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <!-- 设置turtlebot3模型：burger小型小车 -->
+    <arg name="model" default="burger"/>
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro'" />
+
+    <!-- 启动Gazebo + 快递配送障碍物场景 -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find delivery_robot)/world/delivery_env.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="true"/>
+    </include>
+
+    <!-- 在Gazebo生成TurtleBot3小车，放在坐标原点 -->
+    <node name="spawn_turtlebot" pkg="gazebo_ros" type="spawn_model" args="-urdf -model delivery_car -param robot_description -x 0 -y 0 -z 0.05" output="screen"/>
+
+    <!-- 启动八叉树自动避障送快递寻路节点 -->
+    <node name="octree_planner" pkg="delivery_robot" type="octree_delivery_planner.py" output="screen"/>
+</launch>
+
