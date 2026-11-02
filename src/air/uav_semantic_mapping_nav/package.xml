@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_semantic_mapping_nav</name>
+  <version>0.1.0</version>
+  <description>
+    语义分割建图与语义路径规划。分割网络（纯 numpy 手写反向传播）从 RGB 预测
+    9 类语义，与深度一起逆投影进 2.5D 语义栅格（占据对数几率 + 类别投票），
+    再在语义代价图上用 A* 规划。对比实验：几何代价图 vs 语义代价图 vs
+    真值分割语义图，在"必须穿过可通行区域"的场景上比较成功率、路径长度与
+    语义不确定性。
+    依赖 uav_mujoco_sim 提供 /camera/image_raw、/camera/depth、/camera/seg 与 /uav/odom。
+  </description>
+  <maintainer email="eeexty@users.noreply.github.com">eeexty</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sensor_msgs_py</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -4,8 +4,11 @@ ROS 2 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降
 
 新增：**多航点任务队列**，在 Ubuntu 22.04 / ROS 2 Humble 下构建与验证，支持最多 100 点顺序执行、进度反馈、暂停恢复和取消。详见[Humble 构建与本地演示](../../../docs/air/uav_mission_safety_manager/overview.md#waypoint-queue)。以下 Foxy 安装步骤保留供历史 AirSim 用法参考，Humble 演示请使用上述文档中的多航点章节。
 
+新增：**ROS 2 Action 任务接口**，使用同级 `uav_mission_interfaces` 包生成 `ExecuteMission` 类型，提供结构化反馈、客户端取消和最终结果。当前新增接口在 Humble 下验证；以下 Foxy 流程未重新验证。
+
 ## 文档入口
 
+- [ROS 2 Action 任务接口](../../../docs/air/uav_mission_safety_manager/mission_action.md)
 - [模块概览](../../../docs/air/uav_mission_safety_manager/overview.md)
 - [构建与运行教程](../../../docs/air/uav_mission_safety_manager/usage.md)：依赖、WSL 地址、命令话题、服务、离线与实际模拟器复测命令。
 - [AirSim 实测及已知限制](../../../docs/air/uav_mission_safety_manager/airsim_validation.md)
@@ -30,6 +33,7 @@ uav_mission_safety_manager/
 │   ├── main.py                 # ROS 节点与 main() 入口
 │   ├── controller.py           # 非阻塞控制器
 │   ├── state_machine.py
+│   ├── mission_action.py       # Action 目标、反馈、取消和结果
 │   ├── mission_queue.py        # 多航点队列校验与进度
 │   ├── airsim_adapter.py
 │   ├── demo_adapter.py         # Humble 本地运动演示适配器
@@ -42,6 +46,7 @@ uav_mission_safety_manager/
     ├── test_demo_adapter.py
     ├── ros_smoke.py
     ├── ros_queue_smoke.py
+    ├── ros_action_smoke.py
     ├── live_airsim_validation.py
     └── ros_airsim_validation.py
 ```
@@ -55,7 +60,7 @@ Python 文件使用英文下划线命名，文件名不包含日期；README、L
 
 ```bash
 source /opt/ros/foxy/setup.bash
-rosdep install --from-paths src/air/uav_mission_safety_manager --ignore-src --rosdistro foxy -r -y
+rosdep install --from-paths src/air/uav_mission_interfaces src/air/uav_mission_safety_manager --ignore-src --rosdistro foxy -r -y
 # AirSim 安装脚本提前导入这两项，首次安装需先准备构建工具和这两项。
 python3 -m pip install --user "setuptools>=45.2.0,<76" "wheel<0.46" numpy==1.17.4 msgpack-rpc-python==0.4.1
 python3 -m pip install --user --no-build-isolation -r src/air/uav_mission_safety_manager/requirements.txt
@@ -65,7 +70,7 @@ python3 -m pip install --user --no-build-isolation -r src/air/uav_mission_safety
 
 ```bash
 source /opt/ros/foxy/setup.bash
-colcon build --symlink-install --packages-select uav_mission_safety_manager
+colcon build --symlink-install --packages-up-to uav_mission_safety_manager
 source install/setup.bash
 python3 -m unittest discover -s src/air/uav_mission_safety_manager/tests -v
 ROS_DOMAIN_ID=87 python3 src/air/uav_mission_safety_manager/tests/ros_smoke.py
@@ -93,7 +98,7 @@ ros2 run uav_mission_safety_manager mission_manager --ros-args -p use_airsim:=fa
 
 起飞 RPC 可能返回 False 但遥测显示已离地，原因未确定。FAILSAFE 不保证自动降落，停止节点不会停止模拟器飞行任务。
 坐标为 AirSim NED；普通航点容差为 1 米。屋顶落地兼容逻辑仅限记录起点，不代表任意地形或真机验证。
-多航点队列已在本地运动演示适配器和 AirSim 中验证，覆盖三航点顺序执行、执行中暂停/继续、取消与返航落地。此前记录见[AirSim 队列复测记录](../../../docs/air/uav_mission_safety_manager/validation/waypoint_queue_airsim_validation.md)。未实现 ROS2 Action、避障或实际电子围栏。
+多航点队列已在本地运动演示适配器和 AirSim 中验证，覆盖三航点顺序执行、执行中暂停/继续、取消与返航落地。此前记录见[AirSim 队列复测记录](../../../docs/air/uav_mission_safety_manager/validation/waypoint_queue_airsim_validation.md)。新增 ROS 2 Action 接口已完成 Humble demo 自动验证，以及在 OpenHUTB Air 场景中的手动复测，覆盖三航点成功、客户端取消、返航抢占及最终落地。详见[Action 教程](../../../docs/air/uav_mission_safety_manager/mission_action.md)。本接口未实现避障或实际电子围栏。
 
 ## 维护与许可证
 
