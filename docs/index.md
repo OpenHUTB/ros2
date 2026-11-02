@@ -134,6 +134,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
+* [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
