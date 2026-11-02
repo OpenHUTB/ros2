@@ -85,9 +85,9 @@ rosrun map_server map_saver -h
 gmapping 的节点参数与 rviz 配置在 `mrobot_navigation` 包中，键盘遥控在 `mrobot_teleop` 包中。
 从源码目录把这两个包（连同 `mrobot_description`）复制到工作空间 `src` 下。
 
-> 注意：shell 变量（如 `$SRC`）只在定义它的那个终端有效，**换终端或重新登录后变量会失效**。
+> 注意：shell 变量（如 `$SRC`）只在定义它的那个终端有效，**换终端或重新登录后变量会失效**
 > 若变量为空，`cp "$SRC/..."` 会被展开成 `/robot_mrobot/...` 而报错。建议直接使用**绝对路径**，
-> 让每条命令自包含。
+> 让每条命令自包含
 
 本示例第一次复制时因 `$SRC` 为空而失败：
 
