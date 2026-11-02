@@ -1,0 +1,44 @@
+# uav_neural_residual_control 桥接节点参数（launch 可逐项覆盖）
+residual_node:
+  ros__parameters:
+    # 仿真服务端
+    host: "127.0.0.1"
+    port: 41460
+
+    # 控制器：pid | geo | geo_res | geo_rls
+    controller: "geo_rls"
+    # 参考轨迹：hover | circle | helix | figure8
+    trajectory: "helix"
+    # 参考轨迹绕行周期（s），只对 circle / helix / figure8 生效
+    period: 8.0
+
+    # 残差网络权重（相对于包目录；留空则退化为纯几何控制器）
+    net: "artifacts/residual_net.npz"
+    # 控制器认为的机体质量，必须与仿真侧的空机质量一致
+    nominal_mass: 0.95
+
+    # 外环增益（符号约定：误差 = 当前值 − 期望值，故为负）
+    kp_x: -16.0
+    kp_y: -16.0
+    kp_z: -20.0
+    kd_x: -8.0
+    kd_y: -8.0
+    kd_z: -9.0
+    # 内环姿态增益
+    kr_xy: -1.5
+    kr_z: -0.6
+    kw_xy: -0.20
+    kw_z: -0.14
+
+    # 在线 RLS
+    rls_enable: true
+    rls_lambda: 0.998
+    rls_delta: 100.0       # θ 初值协方差：把离线解当成一个观测的置信度。
+                           # 1e3 太松（定点悬停实测 0.14~0.25 m），1e2 → 0.02 m
+    rls_warmup: 100        # 空转步数：只辨识不施加，避免首个脏样本把最后一层打飞
+
+    # 回路频率
+    control_hz: 50.0
+    sensor_hz: 10.0
+    # 单次 TCP 往返推进的仿真步数（50 Hz × 2 = 与仿真 100 Hz 匹配）
+    steps_per_cycle: 2
