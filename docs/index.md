@@ -238,6 +238,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
+* [基于 CBF-PPO 的无人机安全导航](./air/safedrl_drone_nav.md) —— 基于控制屏障函数与拉格朗日 PPO 的无人机安全导航，通过标准 ROS 话题接入 AirSim 或 MuJoCo，并用 CBF 安全滤波器保证飞行安全
 
 
 

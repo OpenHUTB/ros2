@@ -1,0 +1,37 @@
+# Simulator-neutral interface for the SafeDRL navigator.
+#
+# The controller, the policy observation builder and the CBF filter only use
+# the topics and frames below.  Simulator-specific adapters translate to and
+# from this interface, so the same checkpoint runs unchanged on AirSim,
+# MuJoCo and the offline PyBullet verification environment.
+#
+# Frames follow ROS REP-103: world is ENU (x east, y north, z up) and the body
+# frame is FLU (x forward, y left, z up).
+
+frames:
+  world: world
+  body: base_link
+
+topics:
+  odom: /drone/odom            # nav_msgs/Odometry
+  scan: /drone/scan            # sensor_msgs/LaserScan, optional
+  cmd_vel: /drone/cmd_vel      # geometry_msgs/Twist
+  status: /drone/nav_status    # std_msgs/String (JSON)
+
+simulators:
+  airsim:
+    bridge: scripts/airsim_bridge_node.py
+    launch: launch/airsim_navigate.launch
+    native_frames: NED / FRD
+    conversion: scripts/sim_frames.py
+    backends:
+      ros: airsim_ros_pkgs topics
+      api: airsim.MultirotorClient
+  mujoco:
+    bridge: scripts/mujoco_bridge_node.py
+    launch: launch/mujoco_navigate.launch
+    model: models/quadrotor_scene.xml
+    native_frames: ENU / FLU
+  pybullet:
+    role: offline unit-level verification only
+    entry_point: scripts/safe_nav_env.py
