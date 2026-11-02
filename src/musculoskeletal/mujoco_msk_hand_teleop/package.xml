@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_msk_hand_teleop</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 肌肉骨骼灵巧手：键盘遥操作 + 神经网络肌肉激活控制。
+    11 条 Hill 型肌肉驱动 8 自由度手部，支持按键按压、拨球等接触任务。
+  </description>
+  <maintainer email="247221616@qq.com">Thirin-glitch</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <exec_depend>xterm</exec_depend>
+</package>
