@@ -1,0 +1,10 @@
+<launch>
+  <!-- ACC 自适应巡航仿真：启动 acc_follow 节点（发布 /cmd_vel） -->
+  <node pkg="acc_follow" type="main.py" name="acc_follow" output="screen">
+    <param name="v_cruise" value="15.0" />   <!-- 巡航速度 m/s -->
+    <param name="d0"       value="3.0" />    <!-- 停车安全间距 m -->
+    <param name="t_gap"    value="1.0" />    <!-- 跟车时距 s -->
+    <param name="use_external" value="false" />
+    <!-- 若置为 true，则由外部话题 /lead_state 提供前车状态 -->
+  </node>
+</launch>
