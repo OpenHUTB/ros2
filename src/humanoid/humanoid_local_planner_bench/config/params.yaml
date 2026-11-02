@@ -1,0 +1,13 @@
+# humanoid_local_planner_bench 参数文件
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致。
+
+/planner_bench_node:
+  ros__parameters:
+    planner: "dwa"          # dwa | apf
+    control_hz: 20.0
+    n_rays: 72
+    ray_range: 4.0
+    time_limit: 60.0
+    goal_tolerance: 0.35
+    scene: ""               # 留空使用包内 models/corridor_scene.xml

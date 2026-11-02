@@ -22,10 +22,15 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
 | 方向 | 话题 | 类型 | 说明 |
 |---|---|---|---|
 | 发布 | `/uav/odom` | `nav_msgs/Odometry` | 位姿与速度（ENU），默认 20 Hz |
+| 发布 | `/imu` | `sensor_msgs/Imu` | 姿态（ENU）+ 角速度/线加速度（机体系 FLU），默认 50 Hz |
 | 发布 | `/tf` | `tf2_msgs/TFMessage` | `world → base_link` |
 | 发布 | `/camera/image_raw` | `sensor_msgs/Image` | 前视彩色图，`bgr8`，640×480，实测约 7 Hz（上限 20 Hz） |
 | 发布 | `/camera/depth` | `sensor_msgs/Image` | 平面深度图，`32FC1`，单位米，实测约 7 Hz |
 | 发布 | `/camera/seg` | `sensor_msgs/Image` | 语义分割伪彩色图，`bgr8`（默认关闭） |
+| 发布 | `/camera/camera_info` | `sensor_msgs/CameraInfo` | 彩色相机内参（针孔模型） |
+| 发布 | `/camera/depth/camera_info` | `sensor_msgs/CameraInfo` | 深度相机内参 |
+| 发布 | `/camera/depth/points` | `sensor_msgs/PointCloud2` | 深度反投影点云，相机光学系 |
+| 发布 | `/tf` | `tf2_msgs/TFMessage` | `world → base_link`、`base_link → front_rgb/front_depth` |
 | 发布 | `/lidar/points` | `sensor_msgs/PointCloud2` | XYZ float32 世界系（ENU）点云，默认 10 Hz |
 | 发布 | `/uav/status` | `std_msgs/String` | `READY / HOVER / VELOCITY / GOAL / GOAL_DONE` |
 | 订阅 | `/uav/cmd_vel` | `geometry_msgs/Twist` | 速度指令，默认机体系（x 前, y 左, z 上）；`body_frame:=false` 时按世界系 ENU 解释 |
@@ -49,7 +54,15 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   （载具惯性系，NED 世界系），与 `/uav/odom` 同源，建图/规划无需额外外参；
   若改为 `SensorLocalFrame`，需把 `sensor/lidar_frame` 同步改为 `sensor_local`，
   桥接层会用 `LidarData.pose` 把点云变换到惯性系后再转 ENU；
-- 点云可选环形滤波（`lidar/min_range`、`max_range`）与体素降采样（`lidar/voxel_leaf`）。
+- 点云可选环形滤波（`lidar/min_range`、`max_range`）与体素降采样（`lidar/voxel_leaf`）；
+- **IMU**：`/imu` 的姿态是 ENU 世界系，角速度和线加速度已从 AirSim 机体系 NED
+  转成 ROS 机体系 FLU（前-左-上）；线加速度包含重力分量，做纯运动加速度时需自行扣除。
+  默认 `rate/imu_hz: 50.0`，`frame/imu: base_link`。
+  `/uav/odom` 的 `base_link` 也使用同一 FLU 约定（`get_state_enu()` 已切到 `airsim_quat_to_ros_quat_flu()`），两话题姿态可直接融合。
+- **相机模型**：`camera_model_pub.py` 按针孔模型发布 `CameraInfo` 和深度点云：
+  `fx = W / (2·tan(FOV/2))`，主点在图像中心；深度按 `X=(u-cx)Z/fx`、`Y=(v-cy)Z/fy` 反投影，
+  过滤 `Z<=0`、`Z>=100 m` 和 65504 哨兵值。相机 TF 为 `base_link → front_rgb/front_depth`，
+  安装偏移由 `camera/mount_x/y/z` 配置（默认 0.3/0/0.1 m）。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
@@ -106,6 +119,8 @@ rosrun carlair_ros_bridge main.py _sim/host:=192.168.94.1
 ```bash
 rostopic hz /uav/odom                 # 应约 20 Hz
 rostopic echo -n1 /uav/odom           # 看位姿
+rostopic hz /imu                      # 应约 50 Hz
+rostopic echo -n1 /imu                # 看姿态/角速度/线加速度
 rostopic echo /uav/status             # 看状态机（HOVER/VELOCITY/GOAL）
 
 # 键盘控制（任务①）
@@ -114,6 +129,9 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/uav/cmd_vel
 # 传感器（任务②③的数据源）
 rostopic hz /camera/image_raw         # 应约 7 Hz（640×480 吞吐上限；要更快可降分辨率/关深度）
 rostopic hz /camera/depth             # 应约 7 Hz
+rostopic hz /camera/depth/points      # 与深度图同频
+rostopic echo -n1 /camera/camera_info # 检查 K/P
+rostopic echo -n1 /camera/depth/points/width  # 当前帧点数
 rostopic hz /lidar/points             # 应约 10 Hz
 rostopic echo -n1 /camera/image_raw/encoding    # bgr8
 rostopic echo -n1 /lidar/points/width           # 当前帧点数
@@ -122,7 +140,7 @@ rostopic echo -n1 /lidar/points/width           # 当前帧点数
 rosrun rviz rviz        # 添加 Image(/camera/image_raw) 与 PointCloud2(/lidar/points, 颜色 Height)
 
 # 只关掉传感器节点（省虚拟机 CPU）
-roslaunch carlair_ros_bridge main.launch publish_image:=false publish_lidar:=false
+roslaunch carlair_ros_bridge main.launch publish_image:=false publish_lidar:=false publish_imu:=false
 
 # 点云降到 0.2 m 体素，便于建图与可视化
 roslaunch carlair_ros_bridge main.launch voxel_leaf:=0.2
@@ -165,6 +183,8 @@ rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 30.0, y: 10.0, z: -8.0}"
 python3 tests/test_frames.py          # 坐标换算        7 项
 python3 tests/test_bridge_local.py    # 桥接状态机与工程文件  31 项
 python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
+python3 tests/test_imu_local.py       # IMU 轴变换/消息/工程文件
+python3 tests/test_camera_model_local.py  # CameraInfo/深度点云/相机 TF
 ```
 
 `test_sensors_local.py` 用桩替代 `rospy` 与 `sensor_msgs`，覆盖：
@@ -175,3 +195,5 @@ python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
 - 环形滤波、体素降采样、`PointCloud2` 字节布局（`point_step=12`、字段偏移 0/4/8、小端 float32）；
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
+
+`test_imu_local.py` 用桩覆盖 IMU 的机体系 NED→FLU 轴变换、`sensor_msgs/Imu` 的字段与协方差，以及 CMakeLists / main.launch / bridge.yaml 的一致性。
