@@ -1,0 +1,19 @@
+# AirSim NED coordinates; one positive speed (m/s) per waypoint.
+# Requires an airborne EXECUTING controller. No automatic takeoff.
+geometry_msgs/Point[<=100] waypoints
+float64[<=100] speeds
+---
+# COMPLETED, CANCELED or ABORTED. External return/land/cancel abort the
+# action with queue_state=CANCELED; only action cancellation is CANCELED.
+string queue_state
+uint32 total
+uint32 completed
+string message
+---
+string flight_state
+string queue_state
+uint32 total
+uint32 completed
+# -1 when no waypoint is active; otherwise zero-based.
+int32 current_index
+uint32 remaining
