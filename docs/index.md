@@ -180,6 +180,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
 * [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
+* [定常风场下悬停漂移仿真与 PD 位置补偿](./air/wind_drift_sim.md)
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
