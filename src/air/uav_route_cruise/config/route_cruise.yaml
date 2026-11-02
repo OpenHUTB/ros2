@@ -1,0 +1,32 @@
+# 基于 PPO 的无人机固定路线巡航 —— 运行参数
+#
+# 只列节点真正用到的键：route_node.py 里每一个 get_param("~xxx") 都在这里出现。
+# 没在这里写、代码里也没读的键一律不放 —— 免得让人以为改了会生效。
+
+route_cruise:
+  # 策略权重（由 train.py 训练并导出；纯 numpy，部署侧不需要 torch/sb3）
+  weights: "models/route_ppo_s0.npz"
+
+  # 控制频率（Hz）。桥接的 odom 发布频率是 20 Hz，这里保持一致。
+  rate: 20.0
+
+  # 速度整体缩放。调试时调小（如 0.5）更稳；正式跑 1.0。
+  speed_scale: 1.0
+
+  # true 时只计算观测/动作并打日志，不发布 /uav/cmd_vel（用于地面检查）
+  dry_run: false
+
+  # 内置航线：rect（20 m × 14 m 圆角矩形，总长 62.8 m）或 figure8
+  route: "rect"
+
+  # 自定义航线（可选，优先于 route）：绝对 ENU 坐标点列 [[x, y, z], ...]。
+  # 留空则用内置航线。航线会自动闭合（末点自动接回首点）。
+  # 例：
+  #   route_points: [[8.0, 7.0, 1.5], [-8.0, 7.0, 1.5], [-8.0, -7.0, 1.5], [8.0, -7.0, 1.5]]
+  route_points: []
+
+  # 前方航点前视距离（米）。与训练环境 route_env.lookahead 默认值一致。
+  lookahead: 4.0
+
+  # 超过该时间没有新指令时，桥接会把无人机悬停（安全保护，在桥接侧实现）
+  cmd_timeout: 0.5

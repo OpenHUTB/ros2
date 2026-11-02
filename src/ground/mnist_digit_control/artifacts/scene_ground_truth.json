@@ -1,0 +1,187 @@
+{
+  "fps": 10,
+  "frame_size": [
+    320,
+    240
+  ],
+  "sequence": [
+    2,
+    9,
+    2,
+    5,
+    0,
+    7,
+    2,
+    5
+  ],
+  "scenes": {
+    "scene_paper.mp4": [
+      {
+        "label": 2,
+        "start_frame": 12,
+        "end_frame": 27
+      },
+      {
+        "label": 9,
+        "start_frame": 31,
+        "end_frame": 46
+      },
+      {
+        "label": 2,
+        "start_frame": 50,
+        "end_frame": 65
+      },
+      {
+        "label": 5,
+        "start_frame": 69,
+        "end_frame": 84
+      },
+      {
+        "label": 0,
+        "start_frame": 88,
+        "end_frame": 103
+      },
+      {
+        "label": 7,
+        "start_frame": 107,
+        "end_frame": 122
+      },
+      {
+        "label": 2,
+        "start_frame": 126,
+        "end_frame": 141
+      },
+      {
+        "label": 5,
+        "start_frame": 145,
+        "end_frame": 160
+      }
+    ],
+    "scene_dark.mp4": [
+      {
+        "label": 2,
+        "start_frame": 12,
+        "end_frame": 27
+      },
+      {
+        "label": 9,
+        "start_frame": 31,
+        "end_frame": 46
+      },
+      {
+        "label": 2,
+        "start_frame": 50,
+        "end_frame": 65
+      },
+      {
+        "label": 5,
+        "start_frame": 69,
+        "end_frame": 84
+      },
+      {
+        "label": 0,
+        "start_frame": 88,
+        "end_frame": 103
+      },
+      {
+        "label": 7,
+        "start_frame": 107,
+        "end_frame": 122
+      },
+      {
+        "label": 2,
+        "start_frame": 126,
+        "end_frame": 141
+      },
+      {
+        "label": 5,
+        "start_frame": 145,
+        "end_frame": 160
+      }
+    ],
+    "scene_rotated.mp4": [
+      {
+        "label": 2,
+        "start_frame": 12,
+        "end_frame": 27
+      },
+      {
+        "label": 9,
+        "start_frame": 31,
+        "end_frame": 46
+      },
+      {
+        "label": 2,
+        "start_frame": 50,
+        "end_frame": 65
+      },
+      {
+        "label": 5,
+        "start_frame": 69,
+        "end_frame": 84
+      },
+      {
+        "label": 0,
+        "start_frame": 88,
+        "end_frame": 103
+      },
+      {
+        "label": 7,
+        "start_frame": 107,
+        "end_frame": 122
+      },
+      {
+        "label": 2,
+        "start_frame": 126,
+        "end_frame": 141
+      },
+      {
+        "label": 5,
+        "start_frame": 145,
+        "end_frame": 160
+      }
+    ],
+    "scene_screen.mp4": [
+      {
+        "label": 2,
+        "start_frame": 12,
+        "end_frame": 27
+      },
+      {
+        "label": 9,
+        "start_frame": 31,
+        "end_frame": 46
+      },
+      {
+        "label": 2,
+        "start_frame": 50,
+        "end_frame": 65
+      },
+      {
+        "label": 5,
+        "start_frame": 69,
+        "end_frame": 84
+      },
+      {
+        "label": 0,
+        "start_frame": 88,
+        "end_frame": 103
+      },
+      {
+        "label": 7,
+        "start_frame": 107,
+        "end_frame": 122
+      },
+      {
+        "label": 2,
+        "start_frame": 126,
+        "end_frame": 141
+      },
+      {
+        "label": 5,
+        "start_frame": 145,
+        "end_frame": 160
+      }
+    ]
+  }
+}

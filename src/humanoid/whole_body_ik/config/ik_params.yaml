@@ -1,0 +1,17 @@
+# 逆解器默认参数
+#
+# main.py 启动时会自动读取本文件（可用 --params 指定别的路径），
+# roslaunch 也把本文件路径传给 main.py。目前 main.py 只识别
+# tol / max_iter / damping 三项，其余是 ik_solver.py 里的缺省值，
+# 留着方便手工调参时对照。
+tol: 1.0e-6              # 收敛容差 (m)
+max_iter: 200            # 最大迭代次数
+step_size: 1.0           # 每步缩放
+damping: adaptive        # adaptive / fixed / 具体数值
+damping_fixed: 1.0e-3
+damping_adaptive_min: 1.0e-4
+damping_adaptive_max: 0.2
+sigma_threshold: 0.05
+escape: true             # 卡住时是否微扰脱困
+stall_patience: 15
+escape_scale: 0.15
