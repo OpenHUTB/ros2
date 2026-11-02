@@ -114,6 +114,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [Turtlebot3 激光雷达避障](./ground/tb3_lidar_obstacle.md) —— 订阅 /scan 按角度反查正前方距离，低于安全距离时停止转向
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
@@ -203,6 +204,10 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+
+* [无人机激光雷达分扇区避障与梯形速度巡航](./air/uav_lidar_cruise.md) —— 把全向最小距离拆成前/左/右三扇区，用梯形速度规划替换阶跃指令，实现减速、转向、通过的行为链
+
+* [无人机激光雷达避障（固定阈值版）](./air/uav_lidar_avoid.md) —— 保留全向最小距离 + 固定阈值策略，修正 set_velocity、.distance 与自反射误触发三个问题
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
