@@ -4,14 +4,7 @@
 
 ## 1. 系统组成
 
-```mermaid
-flowchart LR
-    A[Gazebo GPU LiDAR] -->|Gazebo Transport| B[ros_gz_bridge]
-    B -->|sensor_msgs/LaserScan| C["/scan"]
-    C --> D[LidarMLP 推理节点]
-    D -->|std_msgs/String| E["/obstacle_class"]
-    D -->|std_msgs/Float32| F["/obstacle_confidence"]
-```
+![LiDAR 障碍物分类系统数据流](../../img/chap5/lidar_obstacle_nn/system_dataflow.png)
 
 仿真激光雷达生成 360 束 2D 扫描，`ros_gz_bridge` 把 Gazebo 消息转换为 ROS 2 `sensor_msgs/LaserScan`，`inference_node` 加载训练好的 MLP 权重做推理，发布类别字符串和置信度。
 
@@ -51,7 +44,7 @@ sudo apt install xvfb
 ```bash
 python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 # 纯 CPU 机器输出形如 2.3.1+cpu False，属预期且受支持
-ros2 pkg prefix ros_gz_sim_demos   # 应输出 /opt/ros/humble
+ros2 pkg prefix ros_gz_sim   # 应输出 ROS 2 的安装前缀
 ```
 
 ## 3. 计算原理
@@ -83,6 +76,8 @@ $$
 $$
 
 阈值默认 $d_{\text{danger}}=1.0\,\text{m}$、$d_{\text{far}}=3.0\,\text{m}$，可在 `config/params.yaml` 修改。
+
+![LiDAR 最近障碍分类区域俯视示意](../../img/chap5/lidar_obstacle_nn/classification_zones.png)
 
 ### 3.3 神经网络结构
 
@@ -196,11 +191,13 @@ flowchart TD
 | 文件 | 作用 |
 | --- | --- |
 | [`lidar_obstacle_nn/model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/model.py) | `LidarMLP` PyTorch 模块定义。 |
+| [`lidar_obstacle_nn/scan_utils.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/scan_utils.py) | 扫描清洗、360 维重采样、标签规则与低置信度 fallback 的共享实现。 |
 | [`lidar_obstacle_nn/inference_node.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/inference_node.py) | ROS 2 节点，订阅 `/scan`、加载权重、发布 `/obstacle_class`。 |
 | [`lidar_obstacle_nn/collect_data.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/collect_data.py) | 订阅 `/scan` 自动标注采集 `.npz`；`motion_enabled:=true` 时驱动动态世界滑台按站位均衡采集。 |
 | [`lidar_obstacle_nn/generate_synthetic_dataset.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/generate_synthetic_dataset.py) | 不依赖 Gazebo 直接合成均衡 `.npz`，本教程默认使用。 |
 | [`lidar_obstacle_nn/train_model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/train_model.py) | 训练脚本，含类均衡采样、早停、metrics sidecar。 |
 | [`lidar_obstacle_nn/evaluate_model.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/lidar_obstacle_nn/evaluate_model.py) | 在带标签 `.npz` 上评估权重：总体准确率、逐类精确率/召回率、3×3 混淆矩阵。 |
+| [`scripts/generate_docs_figures.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/scripts/generate_docs_figures.py) | 生成系统数据流、分类区域和真实运行效果图。 |
 | [`worlds/obstacle_world.sdf`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world.sdf) | 静态 Gazebo 场景：1 个 `static` 机器人 + 3 个不同距离障碍物 + 360 束 GPU LiDAR。 |
 | [`worlds/obstacle_world_dynamic.sdf`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/worlds/obstacle_world_dynamic.sdf) | 动态 Gazebo 场景：1 个障碍块由棱柱关节位置控制器沿导轨驱动，供真实数据采集。 |
 | [`launch/main.launch.py`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn/launch/main.launch.py) | 顶层入口：仿真 + bridge + 推理节点一键启动，支持 `world:=static/dynamic`。 |
@@ -217,6 +214,15 @@ colcon build --packages-select lidar_obstacle_nn --symlink-install
 source install/setup.bash
 ```
 
+构建后运行测试：
+
+```bash
+colcon test --packages-select lidar_obstacle_nn
+colcon test-result --verbose
+```
+
+测试覆盖模型输入输出、inf/nan 清洗、标签边界、合成数据形状与类别均衡、训练产物、LaserScan 风格消息重采样和 fallback，以及 Gazebo/launch 资产检查。
+
 ### 6.2 首次运行前必须先生成模型权重
 
 `models/lidar_mlp.pt` 权重文件**不随仓库分发**（仓库 `.gitignore` 约定忽略 `*.pt` 二进制训练产物，保持仓库以文本为主），克隆后第一次运行前需要自己训练生成一次（CPU 上约 1 分钟，详见 6.5 节；不训练的话推理节点会打印 `Model file not found` 警告并使用随机权重，输出无意义）。
@@ -229,11 +235,17 @@ source install/setup.bash
 ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
-无显示器的环境（服务器、虚拟机、CI）用虚拟显示启动——`gpu_lidar` 传感器需要渲染上下文才能产生回波：
+无显示器的环境（服务器、虚拟机、CI）传入 `headless:=true`，launch 会通过 `xvfb-run` 和 Ogre1 软件渲染启动 Gazebo。`gpu_lidar` 传感器需要渲染上下文才能产生回波；Ogre2 在部分 Xvfb 环境中因缺少 OpenGL 3.3 上下文无法启动：
 
 ```bash
-xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
+ros2 launch lidar_obstacle_nn main.launch.py headless:=true
 ```
+
+也可以保留原来的外层虚拟显示写法：`xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py`。
+
+桌面虚拟机默认使用 `render_engine:=ogre`，避免软件 OpenGL 环境缺少 OpenGL 3.3 时 Ogre2 崩溃。显卡驱动完整的主机可显式传入 `render_engine:=ogre2`。
+
+world 已加载 Gazebo 的 `VisualizeLidar` GUI 插件。选中 `lidar_box/lidar_link/gpu_lidar` 后即可打开激光射线显示。
 
 `main.launch.py` 同时启动：
 1. Gazebo Fortress 加载 `obstacle_world.sdf`（加 `world:=dynamic` 改为加载 `obstacle_world_dynamic.sdf`）
@@ -342,7 +354,19 @@ python3 -m lidar_obstacle_nn.evaluate_model \
 
 ![终端 ros2 topic echo /obstacle_class 持续输出 near](../../img/chap5/lidar_obstacle_nn/topic_obstacle_class.png)
 
-### 7.1 动态世界真实数据采集与合成数据对比
+### 7.1 本次重新验证与图解
+
+本次在 VMware 中的 Ubuntu 20.04 + ROS 2 Humble + Gazebo Fortress 6.17.1 环境重新复测；发布频率约 4.3 Hz，360 束中有 80 束产生有效回波，最近距离 0.400 m，分类为 `near`，置信度 0.978。
+
+**Gazebo 静态 world 实际画面**：
+
+![Gazebo Fortress 静态 world 实际运行画面](../../img/chap5/lidar_obstacle_nn/gazebo_static_2026-11-01.png)
+
+**真实截图、单帧扫描统计和分类结果总览**：
+
+![Gazebo Fortress 真实运行效果总览](../../img/chap5/lidar_obstacle_nn/runtime_effect.png)
+
+### 7.2 动态世界真实数据采集与合成数据对比
 
 动态世界实测（同一 5 Hz、360 束 GPU LiDAR，6 站位各采 150 帧）：
 

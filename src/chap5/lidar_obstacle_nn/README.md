@@ -70,6 +70,16 @@ colcon build --packages-select lidar_obstacle_nn --symlink-install
 source install/setup.bash
 ```
 
+Run the package tests:
+
+```bash
+source /opt/ros/humble/setup.bash
+colcon build --packages-select lidar_obstacle_nn --symlink-install
+source install/setup.bash
+colcon test --packages-select lidar_obstacle_nn
+colcon test-result --verbose
+```
+
 ## 3. Run (one-liner)
 
 > **First run? Train first.** The trained weights (`models/lidar_mlp.pt`)
@@ -85,13 +95,22 @@ With a display attached:
 ros2 launch lidar_obstacle_nn main.launch.py
 ```
 
-Without a display (server / VM / CI), wrap the command in a virtual X
-server — the `gpu_lidar` sensor renders into it and `/scan` contains
-real echoes:
+Without a display (server / VM / CI), pass `headless:=true`. The launch
+file starts Gazebo through `xvfb-run` with the Ogre1 renderer so the
+`gpu_lidar` sensor still has a software-OpenGL rendering context and
+`/scan` contains real echoes:
 
 ```bash
-xvfb-run -a ros2 launch lidar_obstacle_nn main.launch.py
+ros2 launch lidar_obstacle_nn main.launch.py headless:=true
 ```
+
+You can also wrap the whole launch command in `xvfb-run -a`; both forms
+keep the normal Gazebo GUI build available on the virtual display.
+The launch defaults to `render_engine:=ogre` for compatibility with
+software-rendered VMware/VirtualBox guests. On a host with working
+OpenGL 3.3 drivers, pass `render_engine:=ogre2`.
+The world also loads Gazebo's `VisualizeLidar` GUI plugin. Select the
+`gpu_lidar` entity to enable the LiDAR ray display.
 
 This starts:
 1. Gazebo Fortress with `worlds/obstacle_world.sdf` (a 360-beam LiDAR
@@ -124,8 +143,9 @@ Measured on Ubuntu 22.04 + Gazebo Fortress 6.18.0 with this world:
 | `xvfb-run -a` + normal GUI build | 76/360 (closest 0.40 m) | works — matches the scene |
 
 `--headless-rendering` gives the `gpu_lidar` sensor no rendering
-context, so it never produces echoes. Always use `xvfb-run -a` (or a
-real display) for data collection and inference.
+context, so it never produces echoes. For Xvfb, Ogre1 is selected
+explicitly because Ogre2 may fail when software OpenGL does not expose
+an OpenGL 3.3 context.
 
 ## 4. Train your own model
 
@@ -232,10 +252,13 @@ ros2 launch lidar_obstacle_nn main.launch.py
 | `lidar_obstacle_nn/` | Python package (sources). |
 | `lidar_obstacle_nn/main.py` | Documented entry point (calls inference_node). |
 | `lidar_obstacle_nn/model.py` | `LidarMLP` PyTorch module. |
+| `lidar_obstacle_nn/scan_utils.py` | Shared sanitizing, resampling, label and fallback logic. |
 | `lidar_obstacle_nn/inference_node.py` | ROS 2 node wrapping the MLP. |
 | `lidar_obstacle_nn/collect_data.py` | Records `/scan` + auto-labels into `.npz`; motion mode drives the dynamic-world slide through labelled stations. |
 | `lidar_obstacle_nn/train_model.py` | Trains the MLP and saves `.pt` weights. |
 | `lidar_obstacle_nn/evaluate_model.py` | Accuracy, per-class precision/recall and confusion matrix on a labelled `.npz`. |
+| `test/` | pytest/unittest coverage for the model, data balance, labels, message fallback, training and simulation assets. |
+| `scripts/generate_docs_figures.py` | Regenerates the tutorial architecture, classification-zone and runtime-overview figures. |
 | `launch/main.launch.py` | Top-level launch entry (`world:=static/dynamic`). |
 | `launch/sim.launch.py` | Gazebo + ros_gz_bridge; also bridges the slide command in the dynamic world. |
 | `worlds/obstacle_world.sdf` | Static Gazebo world (robot + 3 obstacles + LiDAR). |
@@ -258,8 +281,9 @@ ros2 launch lidar_obstacle_nn main.launch.py
 - The MLP is intentionally tiny (360-128-128-3 ≈ 50 K parameters,
   ~200 KB on disk) so the binary stays well under the 3 MB guidance.
 - `inference_node.py` falls back to a geometric rule (min range vs
-  the two thresholds) when the network confidence is below 0.45, so
-  the module is still useful before training completes.
+  the two thresholds) when the network confidence is below
+  `fallback_confidence` (default 0.45), so the module is still useful
+  before training completes.
 - Gazebo reports `inf` ranges when a beam misses; both the collector
   and the inference node replace those with the scan maximum (30 m),
   which the MLP treats as "no return".

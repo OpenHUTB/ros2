@@ -1,0 +1,6 @@
+.pytest_cache/
+.pytest-artifacts/
+.test_temp*/
+.test_tmp*/
+pytest-cache-files-*/
+tmp*/
