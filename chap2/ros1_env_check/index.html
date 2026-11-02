@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>ROS Noetic 环境自检与常见问题排查 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "ROS Noetic \u73af\u5883\u81ea\u68c0\u4e0e\u5e38\u89c1\u95ee\u9898\u6392\u67e5";
+        var mkdocs_page_input_path = "chap2/ros1_env_check/index.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current">2. ROS 基础 - ROS 基础</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">ROS Noetic 环境自检与常见问题排查</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 为什么需要环境自检</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 快速开始</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3-ros-1-ros-2">3. ROS 1 与 ROS 2 共存时最容易踩的坑</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 三类文件卫生问题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 检查项清单</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 运行效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 几个容易踩的判定细节</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 已知限制</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">2. ROS 基础 - ROS 基础</li>
+<li class="breadcrumb-item active">ROS Noetic 环境自检与常见问题排查</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chap2/ros1_env_check/index.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="ros-1">ROS 1 环境自检与常见问题排查</h1>
+<blockquote>
+<p>所属模块：<code>src/chap2/ros1_env_check</code>
+依赖：Python 3.6+（<strong>不需要 ROS 也能运行</strong>）
+适用：Ubuntu 20.04 + ROS Noetic；同样适用于 <strong>ROS 1 与 ROS 2 共存的机器</strong></p>
+</blockquote>
+<h2 id="1">1. 为什么需要环境自检</h2>
+<p>跟着本书跑模块时，"跑不起来"的原因里，<strong>环境问题</strong>和<strong>代码问题</strong>大约各占一半，
+但环境问题的报错往往指向别处：</p>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>看起来像</th>
+<th>实际原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'rospy'</code></td>
+<td>代码缺依赖</td>
+<td>当前终端没 <code>source /opt/ros/noetic/setup.bash</code></td>
+</tr>
+<tr>
+<td><code>ImportError: No module named 'lateral_control_benchmark'</code></td>
+<td>包没装好</td>
+<td>没 <code>source devel/setup.bash</code>，或包未加 <code>catkin_python_setup()</code></td>
+</tr>
+<tr>
+<td><code>RLException: ... is neither a launch file in package ...</code></td>
+<td>launch 文件写错</td>
+<td>包没编译成功，<code>devel</code> 里没有该包</td>
+</tr>
+<tr>
+<td><code>bash: ./run.sh: /bin/bash^M: bad interpreter</code></td>
+<td>脚本内容有问题</td>
+<td>文件是 <strong>CRLF</strong> 行尾（从 Windows 拷过来）</td>
+</tr>
+<tr>
+<td><code>mkdocs.yml</code> 报奇怪的 YAML 解析错误</td>
+<td>配置写错</td>
+<td>文件开头有不可见的 <strong>UTF-8 BOM</strong></td>
+</tr>
+<tr>
+<td><code>catkin_make</code> 在别的包上失败</td>
+<td>本模块有问题</td>
+<td>工作空间里有其他包缺依赖（如 <code>turtlebot3_gazebo</code> 缺 <code>sdformat-9.8</code>）</td>
+</tr>
+</tbody>
+</table>
+<p><code>ros1_env_check</code> 把上述检查集中到一处，一次性告诉你<strong>缺什么、怎么修</strong>。</p>
+<h2 id="2">2. 快速开始</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/chap2/ros1_env_check
+
+<span class="c1"># 检查当前终端与环境</span>
+./main.sh
+
+<span class="c1"># 额外扫描某个目录的文件卫生（BOM / CRLF / 可执行位）</span>
+python3<span class="w"> </span>check_env.py<span class="w"> </span>--scan<span class="w"> </span>.
+
+<span class="c1"># 只按文件检查计退出码（没装 ROS 的 CI job 用它做文档 lint）</span>
+python3<span class="w"> </span>check_env.py<span class="w"> </span>--scan<span class="w"> </span>docs/<span class="w"> </span>--scan-only
+
+<span class="c1"># 只把问题打出来</span>
+python3<span class="w"> </span>check_env.py<span class="w"> </span>--quiet
+
+<span class="c1"># 把警告也算失败（适合放进 CI）</span>
+python3<span class="w"> </span>check_env.py<span class="w"> </span>--strict
+</code></pre></div>
+<p>输出形如：</p>
+<div class="highlight"><pre><span></span><code>== ROS 环境 ==
+[ OK ] /opt/ros 下已安装：foxy、noetic
+[WARN] 本机同时安装了 ROS 1（noetic）与 ROS 2（foxy）
+       修复：本书实验基于 ROS 1。请**新开一个终端**，只 source /opt/ros/noetic/setup.bash；
+             不要先 source ROS 2 再 catkin_make，两者混用会导致 ROS_DISTRO 冲突、catkin_make 行为异常
+[ OK ] 当前终端为 ROS 1 环境：ROS_DISTRO=noetic
+[ OK ] rosversion -d = noetic
+
+== Python 与依赖 ==
+[ OK ] Python 3.8.10（满足 &gt;= 3.6）
+[ OK ] import rospy 正常
+[ OK ] import numpy 正常
+
+== 工作空间 ==
+[ OK ] 工作空间根目录：/home/user/catkin_ws
+[ OK ] 存在 src/
+[ OK ] devel 的 Python 包路径已生效（source devel/setup.bash 已执行）
+</code></pre></div>
+<p>退出码：<code>0</code> 表示通过，<code>1</code> 表示有 FAIL（加 <code>--strict</code> 时 WARN 也算失败），
+<code>2</code> 表示参数用法错误。</p>
+<div class="admonition tip">
+<p class="admonition-title"><code>--scan-only</code>：把文件检查与环境检查的退出码分开</p>
+<p>不带 <code>--scan-only</code> 时，退出码把<strong>环境检查</strong>也算进去。所以在<strong>没装 ROS 的 CI job</strong> 里
+跑 <code>check_env.py --scan docs/</code> 会一直红——失败项是 <code>ROS_DISTRO 未设置</code>、<code>import rospy 失败</code>，
+与文件完全无关。加上 <code>--scan-only</code> 就只跑文件卫生、只按它计退出码：
+干净目录即使没 source ROS 也返回 <code>0</code>，而一旦真有 BOM / CRLF 仍然返回 <code>1</code>。</p>
+</div>
+<h2 id="3-ros-1-ros-2">3. ROS 1 与 ROS 2 共存时最容易踩的坑</h2>
+<p>Ubuntu 20.04 上常见 <strong>Noetic + Foxy</strong> 双版本共存。这时 <code>source</code> 错一个就会出问题：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ❌ 错误：同一个终端里先 source 了 ROS 2</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/foxy/setup.bash
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash<span class="w">      </span><span class="c1"># 后 source 也清不掉已混入的路径</span>
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+</code></pre></div>
+<p>典型报错：</p>
+<div class="highlight"><pre><span></span><code>ROS_DISTRO was set to 'foxy' before. Please make sure that the environment does not mix paths
+</code></pre></div>
+<p>后果是 <code>catkin_make</code> 行为异常、<code>rospy</code> 导入失败、节点启动即退出。
+<strong>正确做法：关掉终端重开</strong>，只 source ROS 1：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ✅ 正确：干净终端里只 source ROS 1</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>需要切回 ROS 2 做别的实验时，<strong>再开一个终端</strong>，不要试图在同一个终端里来回切换。
+自检脚本会检查 <code>ROS_DISTRO</code>、<code>ROS_VERSION</code>、<code>AMENT_PREFIX_PATH</code>、<code>COLCON_PREFIX_PATH</code>，
+把"混用"这个状态直接指出来。</p>
+<blockquote>
+<p>同时装了 ROS 2 时，<code>$HOME/.bashrc</code> 里若写了 <code>source /opt/ros/foxy/setup.bash</code>，
+每开一个新终端都会自动加载。做本书实验前建议先注释掉那一行，用完再打开。</p>
+</blockquote>
+<h2 id="4">4. 三类文件卫生问题</h2>
+<p><code>--scan</code> 会检查 BOM、CRLF 与可执行位。这三类问题都源于 <strong>Windows 与 Linux 之间来回拷文件</strong>，
+在课程作业里非常常见。</p>
+<h3 id="41-utf-8-bom">4.1 UTF-8 BOM</h3>
+<p>BOM 是文件最前面的三个字节 <code>EF BB BF</code>，多数编辑器把它显示成不可见字符。</p>
+<ul>
+<li><strong>危害</strong>：<code>mkdocs.yml</code>、<code>launch</code> 文件、shell 脚本开头的 BOM 会引发难以定位的解析错误；
+  今天已有多位同学的 PR 因为 <code>mkdocs.yml</code> 带 BOM 被打回。</li>
+<li><strong>修复</strong>：用编辑器另存为「UTF-8 无 BOM」。命令行可用：</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># 去掉单个文件的 BOM（sed 会原地改写，先备份）</span>
+sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'1s/^\xEF\xBB\xBF//'</span><span class="w"> </span>mkdocs.yml
+
+<span class="c1"># 批量检查哪些文件带 BOM</span>
+grep<span class="w"> </span>-rlI<span class="w"> </span><span class="s1">$'\xEF\xBB\xBF'</span><span class="w"> </span>docs<span class="w"> </span>src<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+</code></pre></div>
+<h3 id="42-crlf">4.2 CRLF 行尾</h3>
+<ul>
+<li><strong>危害</strong>：shell 脚本会报 <code>/bin/bash^M: bad interpreter</code>；Python 部分场景会报 <code>SyntaxError</code>；
+  git 里会出现整文件的"伪修改"。</li>
+<li><strong>修复</strong>：</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># 递归转成 LF（先确认没有需要保留 CRLF 的文件）</span>
+find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="se">\(</span><span class="w"> </span>-name<span class="w"> </span><span class="s1">'*.sh'</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">'*.py'</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s1">'*.md'</span><span class="w"> </span><span class="se">\)</span><span class="w"> </span>-exec<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'s/\r$//'</span><span class="w"> </span><span class="o">{}</span><span class="w"> </span>+
+</code></pre></div>
+<p>仓库里也可以统一设置：<code>git config core.autocrlf false</code>，然后重新检出。</p>
+<h3 id="43">4.3 脚本缺少可执行位</h3>
+<ul>
+<li><strong>危害</strong>：<code>roslaunch</code> 与直接执行都要求脚本可执行，否则报找不到可执行文件。</li>
+<li><strong>修复</strong>：</li>
+</ul>
+<div class="highlight"><pre><span></span><code>chmod<span class="w"> </span>+x<span class="w"> </span>run.sh
+<span class="c1"># 注意：Windows 上无法保存该权限位，需要用 git 显式记录</span>
+git<span class="w"> </span>update-index<span class="w"> </span>--chmod<span class="o">=</span>+x<span class="w"> </span>run.sh
+</code></pre></div>
+<h2 id="5">5. 检查项清单</h2>
+<table>
+<thead>
+<tr>
+<th>分组</th>
+<th>检查内容</th>
+<th>失败后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROS 环境</td>
+<td><code>ROS_DISTRO</code>、<code>ROS_VERSION</code>、<code>/opt/ros</code> 已装版本、<code>rosversion</code>、<code>ROS_MASTER_URI</code></td>
+<td>任何 ROS 命令都不可用</td>
+</tr>
+<tr>
+<td>ROS 2 残留</td>
+<td><code>AMENT_PREFIX_PATH</code>、<code>COLCON_PREFIX_PATH</code></td>
+<td><code>catkin_make</code> 行为异常</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>版本 ≥ 3.6，<code>rospy</code>、<code>numpy</code> 必装，<code>yaml</code>/<code>matplotlib</code>/<code>catkin_pkg</code>/<code>tf</code> 可选</td>
+<td>运行期才报错</td>
+</tr>
+<tr>
+<td>工作空间</td>
+<td>含 <code>src/</code> 的工作空间根、<code>build/</code>、<code>devel/</code>、<code>devel</code> 是否在 <code>sys.path</code>、包数量</td>
+<td><code>roslaunch</code> 找不到包</td>
+</tr>
+<tr>
+<td>文件卫生</td>
+<td>BOM、CRLF、<code>.sh</code> 可执行位</td>
+<td>脚本无法执行或解析失败</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6">6. 运行效果</h2>
+<p>在 Ubuntu 20.04 + <strong>Noetic 与 Foxy 共存</strong>的虚拟机上实测。</p>
+<h3 id="61-ros_distrofoxy">6.1 终端里选错版本时（ROS_DISTRO=foxy）</h3>
+<div class="highlight"><pre><span></span><code>[WARN] 本机同时安装了 ROS 1（noetic）与 ROS 2（foxy）
+[FAIL] 当前终端是 ROS 2 环境（ROS_DISTRO=foxy，ROS_VERSION=2）
+       → 本书实验基于 ROS 1 Noetic。请【新开终端】只执行 source /opt/ros/noetic/setup.bash
+[WARN] AMENT_PREFIX_PATH 非空，说明环境里还残留 ROS 2 的路径
+[FAIL] import rospy 失败：ImportError
+</code></pre></div>
+<p><img alt="在 Foxy 终端里运行自检：准确指出当前是 ROS 2 环境" src="../../img/chap2/ros1_env_check/mixed_ros_terminal.png"/></p>
+<p><em>图 1　两种 ROS 都装了、但当前终端 source 的是 Foxy 时的输出。脚本没有笼统地报"ROS 不可用"，
+而是明确指出「本机同时装了 noetic 与 foxy」「当前终端是 ROS 2 环境」，
+并给出切回 ROS 1 的具体命令。这正是 <code>ROS_DISTRO was set to 'noetic' before</code> 这类警告的根源。</em></p>
+<h3 id="62-ros_distronoetic">6.2 切到干净终端后（ROS_DISTRO=noetic）</h3>
+<div class="highlight"><pre><span></span><code>== 文件卫生（扫描 /home/ros/envcheck/ros1_env_check） ==
+[ OK ] 共扫描 3 个文本文件
+[ OK ] 无 UTF-8 BOM
+[ OK ] 无 CRLF 行尾
+[ OK ] 无缺少可执行位（.sh）
+
+结果：15 项通过，2 项警告，0 项失败
+</code></pre></div>
+<p><img alt="切到 ROS 1 干净终端后：15 项通过、0 项失败" src="../../img/chap2/ros1_env_check/clean_ros1_terminal.png"/></p>
+<p><em>图 2　新开终端并 <code>source /opt/ros/noetic/setup.bash</code> 后重跑，</em><em>0 项失败</em><em>：
+<code>rospy</code> 可导入、<code>rosversion</code> 正常、BOM / CRLF / 可执行位三项文件卫生检查全部通过。
+剩下两条 WARN 都不是缺陷：一条是"本机同时装了 ROS 1 与 ROS 2"（环境事实，
+保留它是为了提醒别混用），另一条是"当前目录不在 catkin 工作空间内"——
+因为示例是把模块解压到 <code>~/envcheck</code> 单独运行；放进 <code>~/catkin_ws/src</code> 后该项会变成 OK。</em></p>
+<h2 id="7">7. 几个容易踩的判定细节</h2>
+<p>自检脚本里有两处判断"看上去能跑通、其实会给出错误结论"，这里单独说明。</p>
+<h3 id="71-scan">7.1 <code>--scan</code> 的路径必须存在</h3>
+<p>早期版本里 <code>--scan</code> 传一个不存在的目录会<strong>静默通过</strong>：<code>os.walk</code> 什么都不产出，
+三项检查于是全部显示 OK —— CI 里路径写错也全绿，这是最危险的一类假阴性。
+现在会直接报 FAIL 并退出码 1：</p>
+<div class="highlight"><pre><span></span><code>[FAIL] 扫描路径不存在：/path/typo
+       修复：检查 --scan 后面的路径；相对路径是相对当前目录解析的
+</code></pre></div>
+<p>同理，传进来的是文件而不是目录时也会明确拒绝；目录存在但没扫到任何文本文件时给 WARN。</p>
+<h3 id="72-catkin">7.2 仓库源码树不是 catkin 工作空间</h3>
+<p>仓库根目录下也有 <code>src/</code>，所以"有 <code>src/</code> 就当工作空间"这条判断会把源码树误判成工作空间，
+进而建议你 <code>catkin_make</code> —— 而这会在仓库里生成 <code>build/</code>、<code>devel/</code>，
+正是提交指引明确不允许提交的目录（很多人被这条坑过）。</p>
+<p>现在判定工作空间时，除了 <code>src/</code> 还要求 catkin 自己的标记之一：
+<code>.catkin_workspace</code>（<code>catkin_make</code> 首次运行后生成）、<code>devel/</code>、<code>build/</code>。
+在源码树里运行时给出的是正确做法：</p>
+<div class="highlight"><pre><span></span><code>[WARN] /path/to/ros2 下有 src/，但没有 catkin 标记（.catkin_workspace / devel / build），
+       看起来是源码树而不是工作空间
+       修复：不要在这里直接 catkin_make（会生成 build/、devel/）。
+             正确做法：mkdir -p ~/catkin_ws/src &amp;&amp; cd ~/catkin_ws/src &amp;&amp;
+                       ln -s &lt;本仓库路径&gt;/src/&lt;模块&gt; . &amp;&amp; cd ~/catkin_ws &amp;&amp; catkin_make
+</code></pre></div>
+<h3 id="73-coreautocrlftrue-crlf">7.3 <code>core.autocrlf=true</code> 时会跳过 CRLF 检查</h3>
+<p>Windows 克隆机常把 <code>core.autocrlf</code> 设成 <code>true</code>，此时工作区里所有文本文件都是 CRLF，
+但提交进仓库后会被自动转成 LF。不了解这一点，<code>--scan</code> 会把正常文件全部报成"CRLF 问题"。
+脚本检测到该配置后改为跳过这一项并说明原因，而不是制造一堆假阳性：</p>
+<div class="highlight"><pre><span></span><code>[ OK ] 跳过 CRLF 检查：git 配置 core.autocrlf=true，工作区为 CRLF 是正常的（提交后自动转 LF）
+</code></pre></div>
+<p>要真正检查仓库里的行尾，先 <code>git config core.autocrlf false</code> 再重新检出。</p>
+<h2 id="8">8. 已知限制</h2>
+<ol>
+<li><strong>可执行位检查只在 Linux/macOS 生效</strong>。Windows 没有 POSIX 权限位，<code>os.access</code> 的 <code>X_OK</code>
+   在 Windows 上只检查文件是否存在，会产生假阴性，因此脚本在 Windows 上显式跳过该项。</li>
+<li><strong>只在 <code>/opt/ros</code> 下查找已安装发行版</strong>。源码编译或装在自定义路径的 ROS 不会被列出，
+   但 <code>ROS_DISTRO</code> 的判断仍然有效。</li>
+<li><strong>自检通过不代表模块能编译</strong>：环境自检只覆盖"环境类"问题，
+   <code>catkin_make</code> 与 <code>roslaunch</code> 仍需单独执行。</li>
+<li><strong>BOM / CRLF 只扫描常见文本扩展名</strong>（<code>.py</code> <code>.sh</code> <code>.md</code> <code>.launch</code> <code>.xml</code> <code>.yaml</code> <code>.yml</code>
+<code>.cpp</code> <code>.h</code>），其它类型如 <code>.urdf</code> <code>.rviz</code> <code>.pgm</code> 不在范围内；需要时可自行扩展 <code>SCAN_EXTS</code>。</li>
+</ol></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../ros1_parameter_sine_wave/" title="ROS Noetic 运行参数热更新（正弦信号）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../chapter/chap3/" title="3. 机器人系统设计">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../ros1_parameter_sine_wave/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../chapter/chap3/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
