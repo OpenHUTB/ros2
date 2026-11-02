@@ -65,7 +65,9 @@ nav:
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
-    - 9. ROS 2: './chapter/chap9.md'
+    - 9. ROS 2:
+        - 章节首页: './chapter/chap9.md'
+        - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
