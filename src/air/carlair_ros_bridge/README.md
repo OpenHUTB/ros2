@@ -175,3 +175,12 @@ python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
 - 环形滤波、体素降采样、`PointCloud2` 字节布局（`point_step=12`、字段偏移 0/4/8、小端 float32）；
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
+## 数据采集 demo_recorder
+
+`demo_recorder.py` 同步保存 RGB、深度和里程计，便于离线分析：
+
+```bash
+rosrun carlair_ros_bridge demo_recorder.py --output-dir /tmp/demo_data --max-frames 20
+```
+
+输出 `rgb/000001.png`、`depth/000001.npy`、`meta.csv`；数据文件不要提交到仓库。
