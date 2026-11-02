@@ -1,4 +1,4 @@
-# 基于 2D 激光雷达的蒙特卡洛定位（MCL）
+﻿# 基于 2D 激光雷达的蒙特卡洛定位（MCL）
 
 本页对应 `src/ground/lidar_mcl_localization`。在第 6 章用 `amcl` 做定位之后，
 这一节把盒子打开：**用不到 400 行纯 NumPy 把粒子滤波的每一步写出来**，
@@ -141,6 +141,8 @@ python3 tools/run_experiment.py     # 训练网络 + 四组对比 + 出图
 | `src/.../particle_filter.py` | 预测/加权/重采样/Neff/协方差 |
 | `src/.../nn_motion.py` | MLP 与修正器 |
 | `scripts/mcl_node.py` | 定位节点：订 `/scan` `/odom`，发 `/mcl_pose` `/particles` `/tf` |
+| `scripts/map_publisher.py` | 把 PGM 地图发布成 `/map`（OccupancyGrid，latched），替代 map_server |
+| `config/mcl.rviz` | rviz 配置：地图 + 粒子云 + 激光 + 定位协方差 |
 | `scripts/teleop.py` | 键盘遥控（termios，无 GUI 依赖） |
 | `scripts/goal_driver.py` | 用 `/mcl_pose` 闭环走到目标点 |
 | `tools/gen_scene.py` | 生成 world + 地图 |

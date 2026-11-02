@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <!--
-  一条命令跑完：Gazebo 场景 + 机器人 + MCL 定位节点。
+  一条命令跑完：Gazebo 场景 + 机器人 + 地图发布 + MCL 定位节点。
 
   用法：
-    roslaunch lidar_mcl_localization main.launch              # 无头
-    roslaunch lidar_mcl_localization main.launch gui:=true     # 带 Gazebo 与 rviz
+    roslaunch lidar_mcl_localization main.launch                        # 无头（没有显卡也能跑）
+    roslaunch lidar_mcl_localization main.launch gui:=true              # 带 Gazebo 界面
+    roslaunch lidar_mcl_localization main.launch gui:=true rviz:=true   # 再开 rviz 看粒子云
 -->
 <launch>
   <arg name="gui" default="false"/>
@@ -18,6 +19,12 @@
     <arg name="gui" value="$(arg gui)"/>
     <arg name="world" value="$(arg world)"/>
   </include>
+
+  <!-- 地图：自己发 /map（不依赖 map_server，虚拟机里可能没装） -->
+  <node pkg="lidar_mcl_localization" type="map_publisher.py" name="mcl_map_publisher"
+        output="screen">
+    <param name="map_file" value="$(arg map)"/>
+  </node>
 
   <node pkg="lidar_mcl_localization" type="mcl_node.py" name="mcl_node" output="screen">
     <param name="map_file" value="$(arg map)"/>

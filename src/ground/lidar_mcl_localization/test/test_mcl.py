@@ -30,7 +30,8 @@ sys.path.insert(0, os.path.join(PKG_ROOT, "config"))
 from lidar_mcl_localization import nn_motion                       # noqa: E402
 from lidar_mcl_localization.geometry import (compose, pose_error,  # noqa: E402
                                              relative_pose, weighted_pose, wrap_angle)
-from lidar_mcl_localization.map_model import OccupancyMap, load_pgm  # noqa: E402
+from lidar_mcl_localization.map_model import (OccupancyMap, load_pgm,  # noqa: E402
+                                              to_occupancy_values)
 from lidar_mcl_localization.motion_model import MotionModel, odometry_delta  # noqa: E402
 from lidar_mcl_localization.nn_motion import (MotionMLP, NNMotionCorrector,  # noqa: E402
                                               StandardScaler, correction_from_output,
@@ -121,6 +122,22 @@ def test_map():
     corridor = float(occ.likelihood_at_world(0.0, 0.0))
     check(0.7 < corridor < 1.1,
           "走廊中心到最近墙约 0.9 m（实测 %.2f m）" % corridor)
+
+    # OccupancyGrid 的行序：PGM 顶部是 y 最大，而 data[0] 必须是 y 最小处
+    values = to_occupancy_values(occ.grid)
+    check(values.size == occ.width * occ.height, "OccupancyGrid 数据长度 = 宽×高")
+    check(set(np.unique(values)).issubset({-1, 0, 100}), "取值只有 -1/0/100")
+
+    def grid_value_at(x, y):
+        col = int((x - occ.origin[0]) / occ.resolution)
+        row = int((y - occ.origin[1]) / occ.resolution)
+        return int(values[row * occ.width + col])
+
+    spawn_v = grid_value_at(SPAWN["x"], SPAWN["y"])
+    check(spawn_v == 0, "出生点在 OccupancyGrid 里是空闲（实际 %d）" % spawn_v)
+    north_wall_v = grid_value_at(0.0, 1.0)
+    check(north_wall_v == 100, "走廊北墙在 OccupancyGrid 里是占据（实际 %d）"
+          % north_wall_v)
 
     # 射线投射：从出生点正前方（+x）打一束，沿走廊一直打到东墙
     angles = np.array([0.0])

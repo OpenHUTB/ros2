@@ -14,6 +14,7 @@ catkin_python_setup()
 catkin_package()
 
 catkin_install_python(PROGRAMS
+  scripts/map_publisher.py
   scripts/mcl_node.py
   scripts/teleop.py
   scripts/goal_driver.py

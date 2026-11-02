@@ -81,6 +81,23 @@ def load_yaml(path):
     )
 
 
+def to_occupancy_values(grid):
+    """PGM 灰度 → OccupancyGrid 取值（-1 未知 / 0 空闲 / 100 占据）。
+
+    行序是最容易错的地方：PGM 第 0 行是地图**顶部**（y 最大），
+    而 OccupancyGrid 的 data 是**从 y 最小处开始、逐行向上**。
+    所以这里必须竖直翻转一次，否则整张地图会在 y 方向镜像 ——
+    定位看起来"收敛了"，但位姿是反的。
+
+    放到这个模块而不是 node 里，是为了能在**不装 ROS 的机器上单测**。
+    """
+    flipped = np.asarray(grid)[::-1, :]
+    out = np.full(flipped.shape, -1, dtype=np.int8)
+    out[flipped == 254] = 0
+    out[flipped == 0] = 100
+    return out.reshape(-1)
+
+
 class OccupancyMap(object):
     """占据栅格 + 似然场。
 
