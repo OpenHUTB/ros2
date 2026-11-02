@@ -1,4 +1,4 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
+  - [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
   - [水域载具](#water_vehicle)
 
 ---
@@ -54,19 +55,18 @@ ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
+    * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
+    * [ROS Noetic 运行参数热更新（正弦信号）](./chap2/ros1_parameter_sine_wave/index.md)
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
 * [第 5 章](./chapter/chap5.md) - 机器人感知
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+  * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
-
-ROS Noetic 多传感器话题时间同步：[chap2/ros1_message_time_sync](./chap2/ros1_message_time_sync/index.md)
-ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_wave](./chap2/ros1_parameter_sine_wave/index.md)
-
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
@@ -100,6 +100,7 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
+* [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
@@ -113,6 +114,7 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
+* [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
@@ -123,6 +125,7 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
@@ -131,6 +134,8 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
@@ -140,9 +145,13 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
+* [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
+
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
+
+* [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
@@ -180,14 +189,17 @@ ROS Noetic 运行参数热更新（正弦信号）：[chap2/ros1_parameter_sine_
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
+* [神经安全过滤器](./air/uav_neural_safety_filter.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
+* [手势控制无人机](./air/gesture_control_drone.md)
 
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
 
-* [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control/README.md)
+* [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
+
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
