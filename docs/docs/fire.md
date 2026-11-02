@@ -9,19 +9,23 @@
 - 依赖库：OpenCV、cv_bridge、rclpy
 
 ## 项目文件结构
-fire_detect/
+src/fire_detect/
+
+├── package.xml                  # 包声明（依赖库说明）
+
+├── setup.py                     # ament_python 编译配置
 
 ├── fire_detect/
 
-│   └── fire_detector_node.py
+│   ├── **init**.py
+
+│   └── fire_detector_node.py    # ROS 主节点：订阅图像 → HSV 火焰检测 → 绘制框 → 发布图像
 
 ├── launch/
 
-│   └── fire_detect.launch.py
+│   └── fire_detect.launch.py    # 一键启动文件
 
-├── package.xml
-
-└── setup.py
+└── README.md                    # 项目说明文档
 ## 核心代码
 ### 1. fire_detector_node.py
 ```python
