@@ -271,11 +271,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_formation_flight/">无人机编队飞行</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="air/uav_neural_safety_filter/">神经安全过滤器</a>
-</li>
 <li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="air/gesture_control_bridge/">手势控制无人机（桥接层版）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
 </li>
@@ -591,13 +591,11 @@
 <p><a href="air/uav_formation_flight/">无人机编队飞行</a> —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务</p>
 </li>
 <li>
-<p><a href="air/uav_neural_safety_filter/">神经安全过滤器</a></p>
-</li>
-<li>
 <p><a href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a></p>
 </li>
+<li><a href="air/gesture_control_drone/">手势控制无人机</a></li>
 <li>
-<p><a href="air/gesture_control_drone/">手势控制无人机</a></p>
+<p><a href="air/gesture_control_bridge/">手势控制无人机（桥接层版）</a> —— 手势指令不再直连 AirSim，而是翻译成 <code>/uav/action</code>、<code>/uav/cmd_vel</code>、<code>/uav/goal</code> 交给 <code>carlair_ros_bridge</code> 统一执行，安全逻辑只有一份</p>
 </li>
 <li>
 <p><a href="ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a> —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」</p>

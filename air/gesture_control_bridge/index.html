@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>手势控制无人机（桥接层版） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u624b\u52bf\u63a7\u5236\u65e0\u4eba\u673a\uff08\u6865\u63a5\u5c42\u7248\uff09";
+        var mkdocs_page_input_path = "air/gesture_control_bridge.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap9/">9. ROS 2</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">手势控制无人机（桥接层版）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 它解决什么问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 指令 → 桥接层消息</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-n">2.1 为什么一"次"手势要发 N 条速度指令</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 给桥接层补的动作通道</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 环境要求</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 话题接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 参数</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 自测</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 运行证据</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 离线回归（本机真实输出）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92">9.2 桥接层联调（真机）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 与直连版的关系</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 大模型使用声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
+<li class="breadcrumb-item active">手势控制无人机（桥接层版）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/gesture_control_bridge.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">手势控制无人机（桥接层版）</h1>
+<p>用<strong>摄像头 + MediaPipe</strong> 识别手势，但执行层不再直连 AirSim，而是把指令翻译成
+<code>carlair_ros_bridge</code> 的话题（<code>/uav/action</code>、<code>/uav/cmd_vel</code>、<code>/uav/goal</code>），由桥接层
+统一限速、超时悬停并执行。</p>
+<p>源码位于 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/air/gesture_control_bridge"><code>src/air/gesture_control_bridge</code></a>，
+完整运行细节见模块 <code>README.md</code>；<strong>直连版</strong>见 <a href="../gesture_control_drone/"><code>gesture_control_drone</code></a>。</p>
+<hr/>
+<h2 id="1">1. 它解决什么问题</h2>
+<p><code>gesture_control_drone</code> 已经证明"手势能飞"，但它是<strong>直连 AirSim</strong> 的：自己建连接、
+自己限速、自己判超时。仓库里其它无人机模块（键盘、遥操作、导航）都统一走
+<code>carlair_ros_bridge</code>，直连就带来三个问题：</p>
+<ol>
+<li><strong>安全逻辑两份</strong>：模块自己的 <code>command_timeout</code> 与桥接层的 <code>cmd_timeout</code> 语义不同，
+   出问题时不知道哪一层生效；</li>
+<li><strong>换仿真器要改模块</strong>：换 CarlaAir、多机 <code>vehicle_name</code>、换桥接层的限速策略，都得动手势代码；</li>
+<li><strong>位姿话题两套</strong>：直连版发 <code>/drone/odom</code>，桥接层发 <code>/uav/odom</code>，RViz/TF 里容易混乱。</li>
+</ol>
+<p>本模块把"翻译"和"执行"分开：</p>
+<div class="highlight"><pre><span></span><code>gesture_control_drone（感知，不动）
+    /gesture_command ──►  gesture_control_bridge（只翻译，不连仿真器）
+                             ├─ /uav/action   takeoff | land | hover
+                             ├─ /uav/cmd_vel  机体系速度流（前/左/上 + 偏航角速度）
+                             └─ /uav/goal     home 的 ENU 目标点
+                                        │
+                              carlair_ros_bridge（唯一连仿真器）
+                                        ├─ control/* 限速限幅
+                                        ├─ cmd_timeout 超时自动悬停
+                                        ├─ /uav/odom + TF
+                                        └─ 多机 vehicle_name
+</code></pre></div>
+<p>换仿真器、改限速、上多机，都只动桥接层参数，本模块一行不改。</p>
+<h2 id="2">2. 指令 → 桥接层消息</h2>
+<table>
+<thead>
+<tr>
+<th>手势指令</th>
+<th>通道</th>
+<th>消息</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>takeoff</code> / <code>land</code> / <code>hover</code></td>
+<td><code>/uav/action</code></td>
+<td><code>std_msgs/String</code></td>
+<td>一条消息，桥接层在工作线程里执行</td>
+</tr>
+<tr>
+<td><code>forward</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td><code>linear.x = +speed</code>（机体系前）</td>
+</tr>
+<tr>
+<td><code>up</code> / <code>down</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td><code>Twist</code></td>
+<td><code>linear.z = ±speed</code>（机体系上/下）</td>
+</tr>
+<tr>
+<td><code>yaw_left</code> / <code>yaw_right</code></td>
+<td><code>/uav/cmd_vel</code></td>
+<td><code>Twist</code></td>
+<td><code>angular.z = ±yaw_rate</code>（rad/s，逆时针为正）</td>
+</tr>
+<tr>
+<td><code>home</code></td>
+<td><code>/uav/goal</code></td>
+<td><code>geometry_msgs/Point</code></td>
+<td><code>(0, 0, home_altitude)</code>，ENU 世界系</td>
+</tr>
+<tr>
+<td><code>estop</code></td>
+<td><code>/uav/cmd_vel</code> + <code>/uav/action</code></td>
+<td><code>Twist</code>×N + <code>String</code></td>
+<td>先 <code>estop_zeros</code> 条零速刹停，再 <code>hover</code>（或 <code>land</code>）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="21-n">2.1 为什么一"次"手势要发 N 条速度指令</h3>
+<p>桥接层的两条安全语义决定了这件事：</p>
+<table>
+<thead>
+<tr>
+<th>桥接层参数</th>
+<th>默认</th>
+<th>含义</th>
+<th>对本模块的约束</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>control/cmd_duration</code></td>
+<td>0.1 s</td>
+<td><strong>单条</strong>速度指令的作用时长</td>
+<td>只发一条 → 飞机只动 0.1 s</td>
+</tr>
+<tr>
+<td><code>rate/cmd_timeout</code></td>
+<td>0.5 s</td>
+<td>超过该时间没有<strong>新</strong>指令 → 自动悬停</td>
+<td>发得太稀 → 中途被悬停打断</td>
+</tr>
+</tbody>
+</table>
+<p>所以一次 1 s 的位移被拆成 <code>action_duration × stream_hz = 1.0 × 20 = 20</code> 条、
+间隔 <code>1/20 = 0.05 s</code> 的指令流：每条覆盖 0.1 s、下一条在 0.05 s 后接上，既不中断也不堆积。
+<code>tests/test_gesture_bridge_local.py</code> 会直接读桥接层的 <code>bridge.yaml</code> 校验
+<code>1/stream_hz &lt; cmd_timeout</code>，防止以后有人把频率调低把功能调坏。</p>
+<h3 id="22">2.2 给桥接层补的动作通道</h3>
+<p>桥接层原本只有速度（<code>/uav/cmd_vel</code>）和目标点（<code>/uav/goal</code>）两个通道，"起飞"只能靠
+<code>control/auto_takeoff</code> 启动即起飞，<strong>没有降落通道</strong>。本模块给它补了最小的
+<code>/uav/action</code>（<code>takeoff</code> / <code>land</code> / <code>hover</code>）：</p>
+<ul>
+<li><code>cmd_vel_sub.py</code> 新增 <code>cb_action</code> + <code>_action_worker</code>，用独立线程调用
+  <code>SimClient.takeoff()/land()/hover()</code>（同步调用会阻塞到动作完成，不能放订阅回调）；</li>
+<li>动作执行期间 <code>action_active</code> 置位，速度通道让位（与原有的 <code>goal_active</code> 一致），
+  避免"边降落边接受速度指令"；</li>
+<li>状态回报：<code>ACTION:takeoff</code> → <code>ACTION_DONE takeoff</code> / <code>ACTION_FAILED takeoff &lt;err&gt;</code>；</li>
+<li>因此桥接层的 <code>auto_takeoff</code> 在配合本模块时应设为 <strong><code>false</code></strong>，由手势决定何时起飞。</li>
+</ul>
+<h2 id="3">3. 环境要求</h2>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>项目</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主</td>
+<td>操作系统</td>
+<td>Windows 10/11</td>
+</tr>
+<tr>
+<td>宿主</td>
+<td>模拟器</td>
+<td>AirSim（Blocks）或 CarlaAir，RPC 41451</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>操作系统</td>
+<td>Ubuntu 20.04</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>ROS</td>
+<td>Noetic（ROS 1）</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>Python</td>
+<td>3.8</td>
+</tr>
+<tr>
+<td>客户机</td>
+<td>依赖</td>
+<td><code>python3-opencv</code> <code>python3-numpy</code> <code>python3-pil</code>（apt）<br/><code>mediapipe</code>(0.10.x) <code>airsim</code>（pip，见 <code>gesture_control_drone/requirements.txt</code>）</td>
+</tr>
+</tbody>
+</table>
+<p>摄像头必须接在<strong>跑 ROS 的那台机器</strong>上（虚拟机需透传 USB 摄像头；VMware 透传时建议
+<code>GESTURE_CAMERA_FOURCC=MJPG</code>，见直连版文档 §9.3）。</p>
+<h2 id="4">4. 运行</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1) 编译</span>
+<span class="nb">cd</span><span class="w"> </span>~/uav_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>devel/setup.bash
+
+<span class="c1"># 2) 宿主机启动 AirSim</span>
+
+<span class="c1"># 3) 一条命令：桥接层 + 手势感知 + 本模块</span>
+roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.49.1
+
+<span class="c1"># 或分两个终端（推荐，桥接层日志单独看）：</span>
+roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.49.1<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_lidar:<span class="o">=</span><span class="nb">false</span>
+roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>start_bridge:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>预期日志：</p>
+<div class="highlight"><pre><span></span><code>[bridge] 已启动：订阅 /gesture_command -&gt; /uav/cmd_vel / /uav/action / /uav/goal
+[bridge] 指令通道：takeoff-&gt;/uav/action，land-&gt;/uav/action，…，forward-&gt;/uav/cmd_vel，…
+[bridge] 速度 0.80 m/s，偏航 0.50 rad/s，单次时长 1.00 s，指令流 20 Hz（20 条/次），急停=hover
+[bridge] takeoff OK action=takeoff
+[bridge] forward OK cmd_vel×20 (0.80,0.00,0.00) yaw=0.00 rad/s
+</code></pre></div>
+<h2 id="5">5. 话题接口</h2>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>订阅</td>
+<td><code>/gesture_command</code></td>
+<td><code>std_msgs/String</code></td>
+<td>手势指令 token（由 <code>gesture_control_drone</code> 发布）</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/uav/status</code></td>
+<td><code>std_msgs/String</code></td>
+<td>桥接层状态（<code>READY</code>/<code>HOVER</code>/<code>VELOCITY</code>/<code>ACTION_DONE</code>…）</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/uav/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>桥接层位姿（本模块只用于日志/观测）</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/uav/action</code></td>
+<td><code>std_msgs/String</code></td>
+<td><code>takeoff</code> / <code>land</code> / <code>hover</code></td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/uav/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>机体系速度流</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/uav/goal</code></td>
+<td><code>geometry_msgs/Point</code></td>
+<td>home 目标点（ENU）</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/gesture_bridge/state</code></td>
+<td><code>std_msgs/String</code></td>
+<td>本模块的执行结果，便于排查</td>
+</tr>
+</tbody>
+</table>
+<p>排查命令：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_command<span class="w">        </span><span class="c1"># 感知端有没有发指令</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/gesture_bridge/state<span class="w">   </span><span class="c1"># 本模块翻译成了什么</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/status<span class="w">             </span><span class="c1"># 桥接层执行到哪一步</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/odom<span class="w">               </span><span class="c1"># 位姿有没有真的变</span>
+rostopic<span class="w"> </span>hz<span class="w"> </span>/uav/cmd_vel<span class="w">              </span><span class="c1"># 指令流是否按 20 Hz 发（一次动作约 1 s）</span>
+</code></pre></div>
+<h2 id="6">6. 参数</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command_topic</code></td>
+<td><code>/gesture_command</code></td>
+<td>订阅的手势指令话题</td>
+</tr>
+<tr>
+<td><code>cmd_vel_topic</code> / <code>action_topic</code> / <code>goal_topic</code></td>
+<td><code>/uav/cmd_vel</code> / <code>/uav/action</code> / <code>/uav/goal</code></td>
+<td>三个输出通道</td>
+</tr>
+<tr>
+<td><code>status_topic</code> / <code>odom_topic</code></td>
+<td><code>/uav/status</code> / <code>/uav/odom</code></td>
+<td>桥接层状态与位姿</td>
+</tr>
+<tr>
+<td><code>speed</code></td>
+<td>0.8</td>
+<td>机体系线速度 m/s（须 ≤ 桥接层 <code>max_horiz_speed</code>/<code>max_vert_speed</code>）</td>
+</tr>
+<tr>
+<td><code>yaw_rate</code></td>
+<td>0.5</td>
+<td>偏航角速度 rad/s（须 ≤ 桥接层 <code>max_yaw_rate</code>）</td>
+</tr>
+<tr>
+<td><code>action_duration</code></td>
+<td>1.0</td>
+<td>一次位移/偏航持续时长 s</td>
+</tr>
+<tr>
+<td><code>stream_hz</code></td>
+<td>20.0</td>
+<td>速度指令流频率 Hz（<code>1/hz</code> 必须 &lt; 桥接层 <code>cmd_timeout</code>）</td>
+</tr>
+<tr>
+<td><code>home_altitude</code></td>
+<td>3.0</td>
+<td><code>home</code> 的 ENU 高度 m</td>
+</tr>
+<tr>
+<td><code>estop_action</code></td>
+<td>hover</td>
+<td>急停语义：<code>hover</code>（刹停后悬停）/ <code>land</code>（刹停后降落）</td>
+</tr>
+<tr>
+<td><code>estop_zeros</code></td>
+<td>5</td>
+<td>急停先发几条零速</td>
+</tr>
+<tr>
+<td><code>command_cooldown</code></td>
+<td>0.5</td>
+<td>同一条指令的最小间隔 s</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>限速/限幅不在本模块</strong>：改速度上限请改 <code>carlair_ros_bridge/config/bridge.yaml</code>
+的 <code>control/max_*</code>；本模块只保证自己发出去的速度不超过它（离线回归里有这条断言）。</p>
+</blockquote>
+<h2 id="7">7. 自测</h2>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_gesture_bridge_local.py
+</code></pre></div>
+<p>覆盖：脚本语法与静态约定、<strong>与 <code>gesture_control_drone</code> 的词表契约</strong>（逐项比对，防漂移）、
+指令→<code>Twist</code>/<code>Point</code>/<code>String</code> 映射与符号、指令流条数与节拍、<strong>桥接层 <code>cmd_timeout</code>
+兼容性</strong>、急停（零速 + 动作）、home 目标点、节点冷却/未知指令/退出安全、工程文件与文档约定。</p>
+<h2 id="8">8. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因与处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>发的 <code>takeoff</code> 没反应，桥接层日志报 <code>already moving</code></td>
+<td>桥接层 <code>auto_takeoff</code> 还是 <code>true</code>（它启动就起飞了）→ 用 <code>auto_takeoff:=false</code></td>
+</tr>
+<tr>
+<td>飞机只动一下就停</td>
+<td>指令流频率太低（<code>stream_hz</code> 被调小）导致被 <code>cmd_timeout</code> 判失效 → 保持 20 Hz</td>
+</tr>
+<tr>
+<td><code>rostopic hz /uav/cmd_vel</code> 看不到数据</td>
+<td>只在动作那一瞬间有（约 1 s / 20 条），动作结束就没有了，属正常</td>
+</tr>
+<tr>
+<td><code>land</code> 卡住十几秒</td>
+<td>桥接层是同步 <code>land()</code>，降落实测 20 s 量级（AirSim 下降约 0.2 m/s 且带减速）</td>
+</tr>
+<tr>
+<td>桥接管相机/雷达节点报错退出</td>
+<td>纯 AirSim Blocks 没有 <code>front_rgb</code>/<code>lidar1</code> → <code>publish_image:=false publish_lidar:=false</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="9">9. 运行证据</h2>
+<h3 id="91">9.1 离线回归（本机真实输出）</h3>
+<p><img alt="离线回归全部通过" src="../../img/air/gesture_control_bridge/local_test.png"/></p>
+<p>上图由 <code>gesture_control_drone/tools/log_to_png.py</code> 从<strong>真实终端输出</strong>渲染（不是系统截屏）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_gesture_bridge_local.py<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>/tmp/bridge_test.log
+python3<span class="w"> </span>src/air/gesture_control_drone/tools/log_to_png.py<span class="w"> </span>/tmp/bridge_test.log<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>docs/img/air/gesture_control_bridge/local_test.png<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--title<span class="w"> </span><span class="s2">"python3 tests/test_gesture_bridge_local.py"</span>
+</code></pre></div>
+<h3 id="92">9.2 桥接层联调（真机）</h3>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span>&lt;宿主IP&gt;<span class="w"> </span>auto_takeoff:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>publish_image:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_lidar:<span class="o">=</span><span class="nb">false</span>
+roslaunch<span class="w"> </span>gesture_control_bridge<span class="w"> </span>main.launch<span class="w"> </span>start_bridge:<span class="o">=</span><span class="nb">false</span>
+<span class="c1"># 另一个终端：</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'takeoff'"</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'forward'"</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'land'"</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/status<span class="w">     </span><span class="c1"># ACTION:takeoff -&gt; VELOCITY -&gt; ACTION:land -&gt; HOVER</span>
+</code></pre></div>
+<p>证据图（<code>docs/img/air/gesture_control_bridge/</code>）待真机跑通后按上面的命令生成。</p>
+<h2 id="10">10. 与直连版的关系</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>gesture_control_drone</code></th>
+<th>本模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>连接仿真器</td>
+<td>自己持有 <code>MultirotorClient</code></td>
+<td>不持有，走桥接层</td>
+</tr>
+<tr>
+<td>起飞/降落</td>
+<td>自己 <code>armDisarm/takeoffAsync/landAsync</code></td>
+<td><code>/uav/action</code></td>
+</tr>
+<tr>
+<td>位移</td>
+<td><code>moveByVelocityBodyFrameAsync</code></td>
+<td><code>/uav/cmd_vel</code> 指令流</td>
+</tr>
+<tr>
+<td>限速/超时保护</td>
+<td>模块自己实现</td>
+<td>桥接层 <code>control/*</code> + <code>cmd_timeout</code></td>
+</tr>
+<tr>
+<td>位姿</td>
+<td><code>/drone/odom</code></td>
+<td><code>/uav/odom</code></td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>手机上只有 AirSim Blocks、不想装 CarlaAir 栈</td>
+<td>与仓库其它无人机模块统一栈、多机、需要统一安全策略</td>
+</tr>
+</tbody>
+</table>
+<p>两个模块可以共存：直连版保留原有证据与文档，本模块作为"接入统一桥接层"的替代路径。</p>
+<h2 id="11">11. 大模型使用声明</h2>
+<p>本文档及配套模块代码在编写过程中使用了 AI 大模型辅助（需求分析、代码与文档起草）。
+参数与话题接口以本模块的离线回归测试和桥接层源码为准；真机动作序列以现场日志为准。
+作者对提交内容的正确性与完整性负全部责任。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../gesture_control_drone/" title="手势控制无人机"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../ap_cpp_overfomo/" title="AP-CPP 主动感知覆盖路径规划">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../gesture_control_drone/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../ap_cpp_overfomo/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/js/mermaid.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
