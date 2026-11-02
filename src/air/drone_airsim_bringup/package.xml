@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>drone_airsim_bringup</name>
+  <version>0.1.0</version>
+  <description>AirSim drone bringup for ROS Noetic: pose, camera and velocity control.</description>
+  <maintainer email="ncut@example.com">ncut</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_srvs</depend>
+
+  <export/>
+</package>
