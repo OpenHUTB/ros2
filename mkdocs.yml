@@ -71,6 +71,7 @@ nav:
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - 驾驶人接管准备度: './musculoskeletal/driver_takeover_readiness.md'
 - 地面载具:
     - 手动控制: './set_up_and_connect_to_carla.md'
     - 生成对象: './ground/carla_spawn_objects.md'

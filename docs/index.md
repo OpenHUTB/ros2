@@ -77,6 +77,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [驾驶人接管准备度](./musculoskeletal/driver_takeover_readiness.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
