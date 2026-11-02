@@ -52,7 +52,9 @@ nav:
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
 - ROS 教程:
-    - 1. 认识 ROS: 'chapter/chap1/chap1.md'
+    - 1. 认识 ROS:
+        - 章节首页: 'chapter/chap1/chap1.md'
+        - 小海龟画爱心: 'chapter/chap1/turtle_heart.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
         - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
