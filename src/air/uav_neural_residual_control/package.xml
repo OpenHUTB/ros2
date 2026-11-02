@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_neural_residual_control</name>
+  <version>1.0.0</version>
+  <description>
+    神经残差动力学与学习式轨迹跟踪：用一个小型前馈网络学习"标称模型 − 真实动力学"
+    的残差（气动阻力、阵风、挂载载荷、地面效应），再用递推最小二乘在线重写最后一层。
+    包含 4 个控制器的完整对比实验（PID / SE(3) 几何控制 / +离线残差 / +在线自适应）。
+  </description>
+
+  <maintainer email="eeexty@users.noreply.github.com">eeexty</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
