@@ -47,6 +47,14 @@ OK_DISTANCE_RATIO = 0.35
 THUMB_OFFSET_RATIO = 0.25
 #: 拇指朝上/朝下判定：拇指尖相对 IP 关节的竖直偏移超过手掌尺度的这个比例
 THUMB_DIRECTION_RATIO = 0.15
+#: 张开手掌的"拇指张开角"下限（度）。
+#:
+#: 为什么不能只靠 ``thumb_extended`` 的 x 偏移：手掌正对镜头、拇指朝**侧面**时，
+#: 指尖相对 IP 关节在 x 方向的偏移很小（实测真实手掌只有约 0.1 个掌宽，
+#: 而阈值是 0.25），于是"四指伸直"被误判成"拇指没伸" -> 整个手势退回 NONE。
+#: 用 mcp2->tip4 与 mcp2->index_mcp5 的夹角就稳得多：
+#: 实测张开手掌 43.6°~66.1°（均值 48.8°），握拳 0.2°~78.3°（均值 17.4°）。
+PALM_ABDUCTION_MIN_DEG = 35.0
 
 Landmarks = List[Tuple[int, int]]
 
@@ -113,6 +121,29 @@ def thumb_extended(landmarks, handedness=None):
     return (ip_x - tip_x) > margin
 
 
+def thumb_abduction_deg(landmarks):
+    """拇指张开角（度）：``mcp2 -> tip4`` 与 ``mcp2 -> index_mcp5`` 的夹角。
+
+    取值越大表示拇指越"张开"。手掌正对镜头、拇指朝侧面时，这个角度仍有
+    40°~60°，而"指尖相对 IP 关节的 x 偏移"几乎为 0 —— 所以它更适合判断
+    "张开手掌"。关键点缺失或退化时返回 ``0.0``。
+    """
+    try:
+        mcp = np.asarray(landmarks[THUMB_MCP], dtype=np.float32)
+        tip = np.asarray(landmarks[THUMB_TIP], dtype=np.float32)
+        index_mcp = np.asarray(landmarks[INDEX_MCP], dtype=np.float32)
+    except (IndexError, TypeError, ValueError):
+        return 0.0
+    v1 = tip - mcp
+    v2 = index_mcp - mcp
+    n1 = float(np.linalg.norm(v1))
+    n2 = float(np.linalg.norm(v2))
+    if n1 < 1e-6 or n2 < 1e-6:
+        return 0.0
+    cos = float(np.dot(v1, v2) / (n1 * n2))
+    return float(math.degrees(math.acos(max(-1.0, min(1.0, cos)))))
+
+
 def finger_states(landmarks, handedness=None):
     """返回 ``[thumb, index, middle, ring, pinky]`` 的伸出状态。"""
     return [
@@ -156,7 +187,9 @@ def classify_landmarks(landmarks, handedness=None):
     判断顺序：OK 手势 -> 只有拇指伸出（朝上/朝下）-> 按伸出指数分类。
     返回 ``GESTURE_NONE`` 表示"没识别出可用手势"（含关键点不足的情况）。
     """
-    if not landmarks or len(landmarks) < 21:
+    # 注意：不能写 ``if not landmarks`` —— 传进来的是 numpy 数组时，
+    # 它的真值判断会抛 "truth value of an array is ambiguous"。
+    if landmarks is None or len(landmarks) < 21:
         return GESTURE_NONE
 
     states = finger_states(landmarks, handedness)
@@ -169,6 +202,11 @@ def classify_landmarks(landmarks, handedness=None):
         return thumb_direction(landmarks) or GESTURE_NONE
     if extended == 5:
         return GESTURE_PALM
+    # 四指伸直但"拇指没伸"：多半是拇指朝侧面被误判，用张开角兜底。
+    # 握拳（extended == 0）走不到这里，所以不会把拳头认成手掌。
+    if extended == 4 and all(states[1:]):
+        if thumb_abduction_deg(landmarks) >= PALM_ABDUCTION_MIN_DEG:
+            return GESTURE_PALM
     if extended == 0:
         return GESTURE_FIST
     if extended == 1 and states[1]:

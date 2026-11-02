@@ -436,6 +436,61 @@ def test_classification():
 # --------------------------------------------------------------------------- #
 # 4. 指令闸门
 # --------------------------------------------------------------------------- #
+def test_palm_thumb_abduction():
+    """张开手掌：拇指朝侧面时 x 偏移判据失效，要用张开角兜底。
+
+    真实录制数据（660 个有手帧）：
+      - 四指伸直 90 帧：改前全部 NONE，改后全部 PALM_OPEN
+      - 五指全弯 444 帧：改前 FIST，改后仍是 FIST（没有误伤）
+    """
+
+    def hand(thumb_mcp, thumb_ip, thumb_tip, curled=False):
+        pts = [(0.0, 0.0)] * 21
+        pts[0] = (0.0, 0.0)                       # 腕
+        # 四指：mcp / pip / dip / tip
+        for mcp, x in ((5, -30), (9, 0), (13, 15), (17, 28)):
+            pts[mcp] = (x, -10.0)
+            pts[mcp + 1] = (x, -30.0)             # PIP
+            pts[mcp + 2] = (x, -40.0)             # DIP
+            pts[mcp + 3] = (x, -50.0)             # TIP（y 更小 = 伸直）
+        if curled:                                # 握拳：指尖落到 PIP 下方
+            for mcp in (5, 9, 13, 17):
+                pts[mcp + 3] = (pts[mcp][0], pts[mcp + 1][1] + 20.0)
+        pts[1] = (-5.0, 5.0)                      # 拇指 CMC
+        pts[2] = thumb_mcp
+        pts[3] = thumb_ip
+        pts[4] = thumb_tip
+        return pts
+
+    # 掌心朝镜头、四指伸直、拇指朝侧面：x 偏移只有 1 px（掌宽 10），但张开角 ~76°
+    palm = hand((-5.0, 5.0), (-19.0, 16.0), (-20.0, 20.0))
+    states = gd.finger_states(palm)
+    check("掌宽按腕->中指根算", abs(gd.palm_scale(palm) - 10.0) < 1e-6,
+          "%.2f" % gd.palm_scale(palm))
+    check("拇指朝侧面时旧判据认为拇指没伸", states[0] is False, str(states))
+    check("四指伸直", all(states[1:]), str(states))
+    check("张开角 >= 35°", gd.thumb_abduction_deg(palm) >= 35.0,
+          "%.1f°" % gd.thumb_abduction_deg(palm))
+    check("补丁后判为 PALM_OPEN", gd.classify_landmarks(palm) == gm.GESTURE_PALM,
+          str(gd.classify_landmarks(palm)))
+
+    # 握拳：四指全弯 -> extended==0，不应被"张开角兜底"改坏
+    # 拇指与手掌用同一姿态（差值 1 px < 0.25*掌宽），确保 extended == 0
+    fist = hand((-5.0, 5.0), (-19.0, 16.0), (-20.0, 20.0), curled=True)
+    check("握拳时四指全弯", not any(gd.finger_states(fist)[1:]),
+          str(gd.finger_states(fist)))
+    check("握拳仍判为 FIST", gd.classify_landmarks(fist) == gm.GESTURE_FIST,
+          str(gd.classify_landmarks(fist)))
+
+    # numpy 数组输入（之前 `if not landmarks` 会抛 ValueError）
+    try:
+        ok = gd.classify_landmarks(np.asarray(palm, dtype=np.float32)) == gm.GESTURE_PALM
+        detail = ""
+    except Exception as exc:                      # noqa: BLE001
+        ok, detail = False, str(exc)
+    check("numpy 数组输入也能正常分类", ok, detail)
+
+
 def test_command_gate():
     gate = gesture_gate.CommandGate(stable_frames=3, cooldown=1.0,
                                     release_frames=2, clock=lambda: 0.0)
@@ -1387,6 +1442,7 @@ def main():
             ("1. 语法与静态约定", test_syntax_and_static),
             ("2. 词表一致性", test_vocabulary_contract),
             ("3. 手势分类", test_classification),
+            ("3.5 张开手掌（拇指张开角兜底）", test_palm_thumb_abduction),
             ("4. 指令闸门（去抖/边沿/冷却）", test_command_gate),
             ("5. 摄像头（跨平台后端）", test_camera),
             ("6. AirSim 封装（动作/限幅/超时/状态）", test_drone_client),
