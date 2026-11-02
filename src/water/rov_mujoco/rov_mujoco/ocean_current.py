@@ -396,22 +396,41 @@ class OceanCurrentCascade:
 
 def apply_current_drag(data: "mujoco.MjData", body_id: int,
                        current_velocity: np.ndarray,
-                       drag_coeff: float = 10.0) -> None:
+                       drag_coeff: float = 10.0,
+                       body_velocity: np.ndarray = None) -> None:
     """
-    将洋流速度作为拖曳力注入 xfrc_applied
-    
-    简单线性模型：F_drag = -drag_coeff * V_current
-    更精确的模型应使用 V_rel = V_robot - V_current
-    
+    将洋流拖曳力注入 xfrc_applied
+
+    线性相对速度模型：
+        V_rel = V_body - V_current
+        F_drag = -drag_coeff * V_rel
+              =  drag_coeff * (V_current - V_body)
+
+    即：静止的机器人会被洋流推向洋流方向；机器人自身运动时受到反向阻尼。
+    修复前实现为 F = -drag_coeff * V_current，符号与物理方向相反。
+
     Args:
         data: MuJoCo MjData 实例
         body_id: 受影响的 body ID
         current_velocity: 洋流速度 [vx, vy, vz] (m/s)
         drag_coeff: 拖曳系数 (kg/s)
+        body_velocity: 机器人线速度 [vx, vy, vz] (m/s)；None 时从 data.qvel 读取
     """
-    data.xfrc_applied[body_id, 0] -= drag_coeff * current_velocity[0]
-    data.xfrc_applied[body_id, 1] -= drag_coeff * current_velocity[1]
-    data.xfrc_applied[body_id, 2] -= drag_coeff * current_velocity[2]
+    if body_velocity is None:
+        jnt_id = int(data.model.body_jntadr[body_id])
+        if jnt_id >= 0:
+            dof_adr = int(data.model.jnt_dofadr[jnt_id])
+            body_velocity = np.asarray(data.qvel[dof_adr:dof_adr + 3], dtype=float)
+        else:
+            body_velocity = np.zeros(3, dtype=float)
+
+    v_rel = compute_relative_velocity(
+        np.asarray(body_velocity, dtype=float),
+        np.asarray(current_velocity, dtype=float),
+    )
+    data.xfrc_applied[body_id, 0] -= drag_coeff * v_rel[0]
+    data.xfrc_applied[body_id, 1] -= drag_coeff * v_rel[1]
+    data.xfrc_applied[body_id, 2] -= drag_coeff * v_rel[2]
 
 
 def compute_relative_velocity(robot_vel: np.ndarray,
