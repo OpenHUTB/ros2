@@ -2,7 +2,7 @@
 """电池 RTH 模块纯计算单元测试, 不依赖 ROS."""
 
 import sys, os
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'uav_battery_rth_failsafe'))
 from rth_math import decide_state, dist_3d, ST_NORMAL, ST_WARNING, ST_RETURN_HOME, ST_EMERGENCY_LAND
 
 

@@ -1,11 +1,21 @@
-import os
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    main_py = os.path.join(script_dir, "..", "main.py")
     return LaunchDescription([
-        ExecuteProcess(cmd=["python3", main_py], output="screen")
+        Node(
+            package='uav_battery_rth_failsafe',
+            executable='battery_rth_node',
+            name='battery_rth_failsafe',
+            output='screen',
+            parameters=[{
+                'warn_percent': 25.0,
+                'rth_percent': 15.0,
+                'emergency_percent': 8.0,
+                'home_x': 0.0,
+                'home_y': 0.0,
+                'home_z': 0.0,
+            }],
+        ),
     ])

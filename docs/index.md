@@ -66,6 +66,7 @@ ROS每章节运行代码:
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 
+* [电池电量监控与自动返航迫降](./air/uav_battery_rth_failsafe.md)
 
 
 ## 4. 水域载具  <span id='water_vehicle'></span>
