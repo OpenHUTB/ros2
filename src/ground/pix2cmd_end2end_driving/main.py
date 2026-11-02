@@ -63,6 +63,32 @@ def run_demo(output_dir: str, epochs: int, n_train: int, n_val: int, lr: float, 
     return 0
 
 
+def run_sweep(output_dir: str, epochs: int) -> int:
+    """同一任务、不同网络结构的对比实验（mlp / cnn_tiny / cnn_base / cnn_wide）。"""
+    from pix2cmd.arch_sweep import plot_comparison, save_comparison, sweep
+
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    print("== 结构对比：同一数据集、同一训练轮数、同一闭环评价 ==")
+    records = sweep(epochs=epochs)
+    save_comparison(records, out)
+    plot_comparison(records, out / "arch_comparison.png")
+
+    header = (f"{'arch':<10}{'params':>9}{'秒':>7}{'MAE(st)':>9}{'MAE(th)':>9}"
+              f"{'steady':>9}{'max_err':>9}{'回正s':>8}{'超调m':>8}{'车道内':>8}")
+    print("\n" + header)
+    for r in records:
+        print(f"{r['arch']:<10}{r['params']:>9}{r['train_seconds']:>7.1f}"
+              f"{r['val_mae_steering']:>9.4f}{r['val_mae_throttle']:>9.4f}"
+              f"{r['steady_abs_lateral_error_m']:>9.4f}"
+              f"{r['max_abs_lateral_error_m']:>9.4f}"
+              f"{r['settle_seconds']:>8.1f}{r['overshoot_m']:>8.3f}"
+              f"{r['within_lane_ratio']:>8.2f}")
+    print(f"\n表格: {out / 'arch_comparison.csv'}")
+    print(f"图  : {out / 'arch_comparison.png'}")
+    return 0
+
+
 def run_tests() -> int:
     import pytest
 
@@ -80,6 +106,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="pix2cmd end-to-end driving demo")
     parser.add_argument("--demo", action="store_true", help="离线训练 + 评估 + 导出图与动图（默认）")
     parser.add_argument("--test", action="store_true", help="运行单元测试")
+    parser.add_argument("--sweep", action="store_true", help="不同网络结构对比实验")
     parser.add_argument("--ros", action="store_true", help="启动 ROS 2 节点")
     parser.add_argument("--headless", action="store_true", help="无显示环境（默认即为离线渲染）")
     parser.add_argument("--output-dir", default="results", help="结果输出目录")
@@ -94,6 +121,8 @@ def main() -> int:
         return run_tests()
     if args.ros:
         return run_ros()
+    if args.sweep:
+        return run_sweep(args.output_dir, args.epochs)
     return run_demo(args.output_dir, args.epochs, args.n_train, args.n_val, args.lr, args.steps)
 
 
