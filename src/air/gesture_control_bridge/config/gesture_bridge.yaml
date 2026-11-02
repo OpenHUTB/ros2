@@ -1,0 +1,27 @@
+# gesture_control_bridge 参数
+# 由 launch/main.launch 用 <rosparam command="load"> 载入本节点的**私有命名空间**，
+# 节点里用 rospy.get_param("~xxx") 读取。
+#
+# 注意：这里只放"翻译层"的参数。限速/限幅/cmd_timeout 属于桥接层，
+# 在 carlair_ros_bridge/config/bridge.yaml 里改，两边不要重复配置。
+
+# ---------------- 话题（与桥接层约定一致）----------------
+command_topic: /gesture_command          # 订阅：gesture_control_drone 发布的手势指令 token
+cmd_vel_topic: /uav/cmd_vel              # 发布：机体系速度流（x 前 / y 左 / z 上）
+action_topic: /uav/action                # 发布：takeoff / land / hover
+goal_topic: /uav/goal                    # 发布：home 的 ENU 目标点
+status_topic: /uav/status                # 订阅：桥接层状态（READY/HOVER/VELOCITY/GOAL…）
+odom_topic: /uav/odom                    # 订阅：桥接层位姿（仅用于日志/观测）
+state_topic: /gesture_bridge/state       # 发布：本节点的执行结果（便于排查）
+
+# ---------------- 动作幅度 ----------------
+speed: 0.8              # 机体系线速度 m/s（须 ≤ 桥接层 control/max_horiz_speed）
+yaw_rate: 0.5           # 偏航角速度 rad/s（须 ≤ 桥接层 control/max_yaw_rate）
+action_duration: 1.0    # 一次位移/偏航持续多久 s（速度类指令会按此拆成指令流）
+stream_hz: 20.0         # 速度指令流频率 Hz。周期 1/hz 必须 < 桥接层 rate/cmd_timeout(0.5 s)
+home_altitude: 3.0      # home 指令的 ENU 高度 m
+command_cooldown: 0.5   # 同一条指令的最小间隔 s（感知端已有去抖，这里是第二道）
+
+# ---------------- 急停语义 ----------------
+estop_action: hover     # hover = 刹停后悬停（默认，安全）；land = 刹停后立即降落
+estop_zeros: 5          # 急停先发几条零速度（约 estop_zeros/stream_hz 秒）

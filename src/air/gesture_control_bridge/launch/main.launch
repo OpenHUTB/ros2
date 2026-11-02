@@ -1,0 +1,67 @@
+<launch>
+  <!-- ============================================================
+       gesture_control_bridge 统一启动入口
+
+         # 最省事：一条命令把 桥接层 + 手势感知 + 本模块 全拉起来
+         roslaunch gesture_control_bridge main.launch host:=192.168.49.1
+
+         # 桥接层已经在另开终端跑着（推荐，方便看它的日志）
+         roslaunch carlair_ros_bridge main.launch host:=192.168.49.1 auto_takeoff:=false \
+             publish_image:=false publish_lidar:=false
+         roslaunch gesture_control_bridge main.launch start_bridge:=false
+
+       关键点：
+        1. 桥接层的 auto_takeoff **必须为 false**，否则它启动就起飞，
+           手势发 takeoff 时 AirSim 会拒绝（"already moving"）；
+        2. 本 launch 通过 include 复用 gesture_control_drone 的感知节点，但把它的
+           start_drone_control 关掉（那是"直连 AirSim"的执行节点，本模块不用它）；
+        3. 纯 AirSim Blocks 环境没有 front_rgb/lidar1 时，靠 publish_image/lidar:=false 关掉。
+       ============================================================ -->
+
+  <!-- 桥接层的仿真器地址（Windows 宿主 IP；同机填 127.0.0.1） -->
+  <arg name="host"          default="127.0.0.1" doc="运行 AirSim/CarlaAir 的机器 IP"/>
+  <arg name="vehicle_name"  default=""          doc="多机时的载具名，如 Drone1"/>
+  <arg name="start_bridge"  default="true"      doc="是否顺带启动 carlair_ros_bridge"/>
+  <arg name="start_gesture" default="true"      doc="是否顺带启动手势感知节点"/>
+  <arg name="camera_index"  default="0"         doc="摄像头索引"/>
+  <arg name="show_window"   default="false"     doc="是否显示手势预览窗"/>
+
+  <!-- 翻译层参数（也可只改 config/gesture_bridge.yaml） -->
+  <arg name="speed"           default="0.8"     doc="机体系线速度 m/s"/>
+  <arg name="yaw_rate"        default="0.5"     doc="偏航角速度 rad/s"/>
+  <arg name="action_duration" default="1.0"     doc="一次动作持续 s"/>
+  <arg name="stream_hz"       default="20.0"    doc="速度指令流频率 Hz"/>
+  <arg name="home_altitude"   default="3.0"     doc="home 的 ENU 高度 m"/>
+  <arg name="estop_action"    default="hover"   doc="急停：hover | land"/>
+
+  <!-- 桥接层：关掉自动起飞与传感器发布，只留 位姿 / 指令 / 状态 -->
+  <include if="$(arg start_bridge)" file="$(find carlair_ros_bridge)/launch/main.launch">
+    <arg name="host"           value="$(arg host)"/>
+    <arg name="vehicle_name"   value="$(arg vehicle_name)"/>
+    <arg name="auto_takeoff"   value="false"/>
+    <arg name="publish_image"  value="false"/>
+    <arg name="publish_lidar"  value="false"/>
+    <arg name="start_selfcheck" value="false"/>
+  </include>
+
+  <!-- 手势感知：复用 gesture_control_drone，但关掉它的直连执行节点 -->
+  <include if="$(arg start_gesture)" file="$(find gesture_control_drone)/launch/main.launch">
+    <arg name="airsim_ip"            value="$(arg host)"/>
+    <arg name="camera_index"         value="$(arg camera_index)"/>
+    <arg name="show_window"          value="$(arg show_window)"/>
+    <arg name="estop_action"         value="$(arg estop_action)"/>
+    <arg name="start_drone_control"  value="false"/>
+  </include>
+
+  <!-- 本模块：手势指令 -> 桥接层消息 -->
+  <node pkg="gesture_control_bridge" type="main.py" name="gesture_bridge_node"
+        output="screen">
+    <rosparam command="load" file="$(find gesture_control_bridge)/config/gesture_bridge.yaml"/>
+    <param name="speed"           value="$(arg speed)"/>
+    <param name="yaw_rate"        value="$(arg yaw_rate)"/>
+    <param name="action_duration" value="$(arg action_duration)"/>
+    <param name="stream_hz"       value="$(arg stream_hz)"/>
+    <param name="home_altitude"   value="$(arg home_altitude)"/>
+    <param name="estop_action"    value="$(arg estop_action)"/>
+  </node>
+</launch>

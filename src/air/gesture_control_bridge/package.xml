@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>gesture_control_bridge</name>
+  <version>0.1.0</version>
+  <description>
+    手势控制无人机（桥接层版）：订阅 gesture_control_drone 发布的 /gesture_command，
+    按 carlair_ros_bridge 的契约翻译成 /uav/action（takeoff/land/hover）、
+    /uav/cmd_vel（机体系速度流）与 /uav/goal（home 目标点），由桥接层统一执行。
+
+    与 gesture_control_drone（直连 AirSim）的区别：本模块**不持有 AirSim 客户端**，
+    限速/限幅、cmd_timeout 超时自动悬停、位姿发布、多机 vehicle_name 全部交给桥接层，
+    因此换仿真器或多机部署时不需要改本模块。
+
+    桥接层原本只有速度与目标点两个通道，本模块同时给它补了一个最小的
+    /uav/action 动作通道（takeoff/land/hover），使手势指令集可以在桥接层完整表达。
+
+    感知与控制逻辑不依赖 ROS，可用 tests/test_gesture_bridge_local.py 离线回归。
+  </description>
+  <maintainer email="jaycrfgdsbfdfd@users.noreply.github.com">jaycrfgdsbfdfd</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <!-- 运行时依赖同仓库的两个包：感知端 + 桥接层 -->
+  <exec_depend>gesture_control_drone</exec_depend>
+  <exec_depend>carlair_ros_bridge</exec_depend>
+
+  <export/>
+</package>

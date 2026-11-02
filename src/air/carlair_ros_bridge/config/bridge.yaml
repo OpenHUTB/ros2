@@ -42,6 +42,7 @@ topic:
   odom: "/uav/odom"
   cmd_vel: "/uav/cmd_vel"
   goal: "/uav/goal"
+  action: "/uav/action"           # std_msgs/String: takeoff / land / hover
   image: "/camera/image_raw"
   depth: "/camera/depth"
   seg: "/camera/seg"
@@ -56,3 +57,4 @@ control:
   cmd_duration: 0.1         # 单条速度指令持续时长 s；应与上游控制周期一致
                             # （uav_ppo_nav 训练环境 dt = 0.1 s，故默认 0.1）
   auto_takeoff: true        # 启动后自动起飞并悬停
+  action_timeout: 30.0      # /uav/action 的 takeoff/land 超时 s（同步调用会阻塞到动作完成）
