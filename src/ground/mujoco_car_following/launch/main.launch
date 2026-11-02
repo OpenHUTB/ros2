@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="mujoco_car_following" type="main.py" name="mujoco_car_following" output="screen"/>
+</launch>
