@@ -33,6 +33,7 @@ class LDWAlertNode(Node):
         self.declare_parameter("depart_enter", 0.9)
         self.declare_parameter("depart_exit", 0.65)
         self.declare_parameter("period", 0.05)
+        self.declare_parameter("warmup_ticks", 2)
 
         self.p = LDWParams(
             warn_enter=float(self.get_parameter("warn_enter").value),
@@ -42,7 +43,9 @@ class LDWAlertNode(Node):
         )
         self.period = float(self.get_parameter("period").value)
 
-        self.ctrl = LDWController(self.p)
+        self.ctrl = LDWController(
+            self.p,
+            warmup_ticks=int(self.get_parameter("warmup_ticks").value))
         self._offset = 0.0
         self._last_state = self.ctrl._state
 

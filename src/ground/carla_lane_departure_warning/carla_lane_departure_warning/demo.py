@@ -154,10 +154,15 @@ def _screenshot(world, ego, path, fov=110):
             holder["arr"] = arr.reshape(img.height, img.width, 4)[:, :, :3]
 
     cam.listen(_cb)
-    for _ in range(4):
-        world.tick()
-    cam.stop()
-    cam.destroy()
+    try:
+        for _ in range(4):
+            world.tick()
+    finally:
+        try:
+            cam.stop()
+            cam.destroy()
+        except Exception:  # noqa: BLE001  异常路径也要销毁临时相机，防 actor 泄漏
+            pass
     if "arr" in holder:
         try:
             import matplotlib

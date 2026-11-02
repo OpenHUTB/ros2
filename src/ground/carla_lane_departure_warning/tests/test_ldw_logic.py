@@ -135,6 +135,8 @@ class TestLDWDecide(unittest.TestCase):
 
     def test_event_emitted_once_only(self):
         c = LDWController()
+        c.tick(0.0)   # 热身 2 拍
+        c.tick(0.0)
         events = [c.tick(0.8)["event"] for _ in range(5)]
         self.assertEqual(events[0], "deviation_start_left")
         self.assertTrue(all(e == "" for e in events[1:]))
@@ -163,9 +165,39 @@ class TestLDWController(unittest.TestCase):
 
     def test_right_side_events(self):
         c = LDWController()
+        c.tick(0.0)   # 热身 2 拍
+        c.tick(0.0)
         r = c.tick(-0.7)
         self.assertEqual(r["event"], "deviation_start_right")
         self.assertEqual(r["side"], "right")
+
+    def test_warmup_suppresses_cold_start(self):
+        """热身期内不输出决策（实测冷启动首拍偏移 1.648 m 的假报警）。"""
+        c = LDWController()
+        r = c.tick(1.65)
+        self.assertEqual(r["state"], NORMAL)
+        self.assertEqual(r["event"], "")
+        r = c.tick(0.15)
+        self.assertEqual(r["state"], NORMAL)
+        self.assertEqual(r["event"], "")
+        r = c.tick(0.8)   # 热身结束，正常决策
+        self.assertEqual(r["state"], DEVIATION)
+        self.assertEqual(r["event"], "deviation_start_left")
+
+    def test_warmup_zero_disables(self):
+        c = LDWController(warmup_ticks=0)
+        r = c.tick(0.8)
+        self.assertEqual(r["state"], DEVIATION)
+
+    def test_reset_restarts_warmup(self):
+        c = LDWController()
+        c.tick(0.0)
+        c.tick(0.0)
+        c.tick(1.2)          # departure
+        c.reset()            # 复位后重新热身
+        r = c.tick(1.5)      # 热身拍：大偏移也不报警
+        self.assertEqual(r["state"], NORMAL)
+        self.assertEqual(r["event"], "")
 
     def test_reset(self):
         c = LDWController()

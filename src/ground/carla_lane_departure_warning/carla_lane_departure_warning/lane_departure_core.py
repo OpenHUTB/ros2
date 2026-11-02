@@ -132,17 +132,31 @@ def ldw_decide(state, offset, p=None):
 
 
 class LDWController:
-    """LDW 有状态封装：三级滞回状态机 + 最近一次事件记忆。
+    """LDW 有状态封装：三级滞回状态机 + 热身期 + 最近一次事件记忆。
 
     tick() 每周期喂入带符号横向偏移，返回
     {state, offset, side, event}；连续保持时 event 为空。
+
+    warmup_ticks：热身拍数（默认 2）。CARLA 生成点常有初始横向偏移，
+    起步头几拍测量不稳定（实测首拍偏移达 1.6 m），热身期内不输出
+    决策（保持 normal、无事件），只累计拍数建立基线。
     """
 
-    def __init__(self, params=None):
+    def __init__(self, params=None, warmup_ticks=2):
         self.p = params or LDWParams()
         self._state = NORMAL
+        self._ticks = 0
+        self.warmup_ticks = int(warmup_ticks)
 
     def tick(self, offset, dt=0.05):
+        self._ticks += 1
+        if self._ticks <= self.warmup_ticks:
+            return {
+                "state": NORMAL,
+                "offset": float(offset),
+                "side": side_of(offset),
+                "event": "",
+            }
         state, event = ldw_decide(self._state, offset, self.p)
         self._state = state
         return {
@@ -153,5 +167,6 @@ class LDWController:
         }
 
     def reset(self):
-        """复位到 normal。"""
+        """复位到 normal 并重新热身。"""
         self._state = NORMAL
+        self._ticks = 0

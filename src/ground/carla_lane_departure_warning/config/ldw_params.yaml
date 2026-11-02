@@ -1,7 +1,7 @@
 # LDW 决策参数（与 carla_lane_departure_warning/lane_departure_core.py 的 LDWParams 一一对应）
-ldw:
+# 顶层用 /** 通配：同时匹配 ldw_bridge_node 与 ldw_alert_node（按具体节点名写会导致另一节点静默回落默认值）
+/**:
   ros__parameters:
-    lane_width: 3.5     # 车道宽（m），bridge 会按路点动态覆盖
     warn_enter: 0.5     # 进入 deviation 的横向偏移（m）
     warn_exit: 0.3      # 回 normal 的横向偏移（m，滞回下界）
     depart_enter: 0.9   # 进入 departure 的横向偏移（m，接近压线）

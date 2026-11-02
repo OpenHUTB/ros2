@@ -58,12 +58,12 @@ class _FakeNode(LDWAlertNode):
 
     def __init__(self, **overrides):
         cfg = {"warn_enter": 0.5, "warn_exit": 0.3, "depart_enter": 0.9,
-               "depart_exit": 0.65, "period": 0.05}
+               "depart_exit": 0.65, "period": 0.05, "warmup_ticks": 2}
         cfg.update(overrides)
         self.p = LDWParams(**{k: cfg[k] for k in (
             "warn_enter", "warn_exit", "depart_enter", "depart_exit")})
         self.period = cfg["period"]
-        self.ctrl = LDWController(self.p)
+        self.ctrl = LDWController(self.p, warmup_ticks=cfg["warmup_ticks"])
         self._offset = 0.0
         self._last_state = self.ctrl._state
         self.states = []
@@ -101,6 +101,8 @@ class TestStatePublishing(unittest.TestCase):
 
     def test_offset_subscription_updates(self):
         n = _FakeNode()
+        n.feed(0.0)   # 热身 2 拍
+        n.feed(0.0)
         n.feed(0.8)   # deviation 区
         self.assertEqual(n.states[-1], "deviation")
         self.assertEqual(n.events, ["deviation_start_left"])
@@ -118,7 +120,8 @@ class TestEventDedup(unittest.TestCase):
 
     def test_full_cycle_event_chain(self):
         n = _FakeNode()
-        for o in [0.0, 0.7, 1.1, 1.1, 0.7, 0.2, 0.0]:
+        # 前两拍 0.0 为热身；后续 0.7→1.1→回中 触发完整事件链
+        for o in [0.0, 0.0, 0.7, 1.1, 1.1, 0.7, 0.2, 0.0]:
             n.feed(o)
         self.assertEqual(n.events, ["deviation_start_left",
                                     "departure_start_left",
@@ -128,8 +131,20 @@ class TestEventDedup(unittest.TestCase):
 
     def test_right_side_event(self):
         n = _FakeNode()
+        n.feed(0.0)   # 热身 2 拍
+        n.feed(0.0)
         n.feed(-0.7)
         self.assertEqual(n.events[-1], "deviation_start_right")
+
+    def test_warmup_suppresses_cold_start_false_alarm(self):
+        """起步首拍大偏移（spawn 投影不稳）不得触发假报警。"""
+        n = _FakeNode()
+        n.feed(1.65)   # 热身拍：实测冷启动偏移 1.648 m，须被抑制
+        n.feed(0.15)
+        self.assertEqual(n.events, [])
+        self.assertEqual(n.states, ["normal", "normal"])
+        n.feed(0.8)    # 热身结束后的真实偏离正常报警
+        self.assertEqual(n.events, ["deviation_start_left"])
 
     def test_no_event_while_staying(self):
         n = _FakeNode()
