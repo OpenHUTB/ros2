@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 六自由度机械臂 MoveIt 实验入口。
+       使用 moveit_fake_controller_manager + RViz，不启动 Gazebo。 -->
+
+  <arg name="use_gui" default="false"
+       doc="是否显示 joint_state_publisher 的滑条窗口"/>
+
+  <!-- marm_moveit_config 的 demo.launch 会启动 move_group（fake execution）、
+       joint_state_publisher、robot_state_publisher 和 RViz。 -->
+  <include file="$(find marm_moveit_config)/launch/demo.launch">
+    <arg name="use_gui" value="$(arg use_gui)"/>
+  </include>
+</launch>
