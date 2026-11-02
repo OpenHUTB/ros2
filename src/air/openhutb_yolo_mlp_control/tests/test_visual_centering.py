@@ -241,6 +241,22 @@ class DepthAndVerticalTests(unittest.TestCase):
         c.update_pose(0, 0, -7, 0, 0.1)  # 4 m above the origin altitude
         self.assertEqual(c.step(0.1)[1], 'altitude_limit')
 
+    def test_altitude_limit_inactive_without_vertical_centering(self):
+        # Regression: the guard must not change the default behaviour.
+        c = self.controller()  # vertical_gain == 0
+        c.update_detections([self.sized(80, 100, x=480)], 640, 480, 0)
+        c.step(0)
+        c.update_pose(0, 0, -7, 0, 0.1)  # 4 m above the origin altitude
+        cmd, status, _ = c.step(0.1)
+        self.assertEqual(status, 'tracking')
+        self.assertGreater(cmd[1], 0)  # lateral centering still commanding
+
+    def test_forward_diagnostics_are_read_only(self):
+        c = self.controller()
+        for name in ('last_forward_speed', 'last_distance_error'):
+            with self.assertRaises(AttributeError):
+                setattr(c, name, 1.0)
+
     def test_guard_zeroes_forward_component(self):
         c = self.controller(target_area=0.1)
         c.update_detections([self.sized(80, 100)], 640, 480, 0)

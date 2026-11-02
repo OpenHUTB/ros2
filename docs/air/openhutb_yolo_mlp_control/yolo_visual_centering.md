@@ -63,7 +63,7 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
   dry_run:=false
 ```
 
-退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态、水平位移或高度保护触发时，控制器输出零速度。
+退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态、水平位移保护触发时，控制器输出零速度；启用垂直居中时，高度保护（`altitude_limit`）也会输出零速度。
 
 ## 距离保持与垂直居中
 
@@ -73,7 +73,7 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
 
 **垂直居中**（`vertical_gain` > 0）：用检测框的纵向偏差控制升降，**启用后取代原有的定高保持**；目标在画面上方则爬升，在下方则下降。参数为 `vertical_gain`、`vertical_deadband`，升降速度仍受 `max_vertical_speed` 限制。
 
-**安全边界**：两个能力都受 `max_altitude_change` 约束，一旦相对初始高度超过该值，控制器立即输出零速度并报告 `altitude_limit`，避免垂直居中把无人机带向地面。水平位移仍由 `max_displacement` 限制。
+**安全边界**：`max_altitude_change` 限制的是**相对跟踪起点高度的变化量**，并且**只在启用垂直居中（`vertical_gain` > 0）时生效**；超过该值控制器立即输出零速度并报告 `altitude_limit`。未启用垂直居中时该限制不会触发，高度仍按原有定高逻辑保持，正常爬升或高空作业不受影响。水平位移始终由 `max_displacement` 限制。
 
 ## 常用参数与状态
 
@@ -90,7 +90,7 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
 | `max_forward_speed` | `0.5` | 前向速度上限，单位 m/s |
 | `vertical_gain` | `0.0` | 纵向偏差到升降速度的增益；`0` 表示保持定高 |
 | `vertical_deadband` | `0.08` | 纵向归一化偏差死区 |
-| `max_altitude_change` | `3.0` | 相对初始高度的最大允许变化，单位 m |
+| `max_altitude_change` | `3.0` | 启用垂直居中时，相对跟踪起点高度的最大变化，单位 m |
 | `start_topmost` | `true` | 启动时置顶 YOLO 窗口 |
 
 状态发布在 `/openhutb/visual_centering/status`，包含 `status`、`error_x`、`distance_error`、`forward_speed`、`velocity_ned`、`dry_run` 字段；`status` 取值包括 `tracking`、`centered`、`target_lost`、`odom_stale`、`displacement_limit`、`heading_changed`、`altitude_limit`。预览速度发布在 `/openhutb/visual_centering/preview_cmd_vel`。`centered` 表示水平偏差在死区内，且启用距离保持时面积误差也在死区内。

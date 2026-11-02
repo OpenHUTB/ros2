@@ -45,6 +45,9 @@ class Settings:
     # Opt-in vertical centering. Zero keeps the original altitude hold.
     vertical_gain: float = 0.0
     vertical_deadband: float = 0.08
+    # Maximum |z - z0| in metres, measured from the pose captured when tracking
+    # started. It bounds the altitude change that vertical centering may
+    # command, so it only takes effect while vertical_gain > 0.
     max_altitude_change: float = 3.0
 
     def __post_init__(self):
@@ -81,8 +84,18 @@ class CenteringController:
         self.last_step_time = None
         self.lateral_speed = 0.0
         self.seen_area = None
-        self.last_distance_error = None
-        self.last_forward_speed = 0.0
+        self._last_distance_error = None
+        self._last_forward_speed = 0.0
+
+    @property
+    def last_distance_error(self):
+        """Relative area error from the most recent step, or None when disabled."""
+        return self._last_distance_error
+
+    @property
+    def last_forward_speed(self):
+        """Forward speed commanded by the most recent step, in m/s."""
+        return self._last_forward_speed
 
     def update_pose(self, x, y, z, yaw, now):
         if not all(math.isfinite(v) for v in (x, y, z, yaw, now)):
@@ -135,8 +148,8 @@ class CenteringController:
         # Every guard and the centered state bypass the acceleration ramp.
         previous_speed = self.lateral_speed
         self.lateral_speed = 0.0
-        self.last_forward_speed = 0.0
-        self.last_distance_error = None
+        self._last_forward_speed = 0.0
+        self._last_distance_error = None
         if self.pose is None or not 0 <= now-self.pose_time <= s.odom_timeout:
             return stop, 'odom_stale', None
         if self.target is None or not 0 <= now-self.target_time <= s.detection_timeout:
@@ -152,8 +165,9 @@ class CenteringController:
         yaw_error = math.atan2(math.sin(yaw-initial_yaw), math.cos(yaw-initial_yaw))
         if abs(yaw_error) > s.max_yaw_error:
             return stop, 'heading_changed', error
-        # Vertical centering must not be able to fly the vehicle into the ground.
-        if abs(z-oz) > s.max_altitude_change:
+        # Bounds only the altitude change commanded by vertical centering, so the
+        # default (vertical_gain == 0) keeps the original behaviour untouched.
+        if s.vertical_gain > 0 and abs(z-oz) > s.max_altitude_change:
             return stop, 'altitude_limit', error
         lateral = 0.0 if abs(error) <= s.deadband else max(
             -s.max_speed, min(s.max_speed, s.gain*error))
@@ -168,11 +182,11 @@ class CenteringController:
         area_error = None
         if s.target_area > 0 and self.seen_area:
             area_error = (s.target_area - self.seen_area)/s.target_area
-            self.last_distance_error = area_error
+            self._last_distance_error = area_error
             if abs(area_error) > s.distance_deadband:
                 forward = max(-s.max_forward_speed,
                               min(s.max_forward_speed, s.distance_gain*area_error))
-        self.last_forward_speed = forward
+        self._last_forward_speed = forward
         if s.vertical_gain > 0:
             elevation = self.target[1]
             vertical = 0.0 if abs(elevation) <= s.vertical_deadband else max(
