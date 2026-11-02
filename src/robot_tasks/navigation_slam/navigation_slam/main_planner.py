@@ -37,6 +37,7 @@ class PathPlanner(Node):
         self.width = 0
         self.height = 0
         self.resolution = 0.1
+        self.frame_id = 'map'
 
         map_qos = QoSProfile(depth=1,
                              durability=DurabilityPolicy.TRANSIENT_LOCAL,
@@ -56,6 +57,7 @@ class PathPlanner(Node):
         self.width = msg.info.width
         self.height = msg.info.height
         self.resolution = msg.info.resolution
+        self.frame_id = msg.header.frame_id or 'map'
         if first_time:
             occupied = sum(1 for v in self.grid if v == OCCUPIED)
             self.get_logger().info(
@@ -84,9 +86,7 @@ class PathPlanner(Node):
             self.get_logger().warn(
                 'no path from (%.2f, %.2f) to (%.2f, %.2f)'
                 % (self.start_x, self.start_y, goal_x, goal_y))
-            return
-
-        path = self.to_path(cells, msg.header.frame_id or 'map')
+        path = self.to_path(cells, self.frame_id)
         self.publisher.publish(path)
 
         length = 0.0
