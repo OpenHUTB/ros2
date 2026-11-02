@@ -46,7 +46,6 @@ class AprilTagLandingNode(Node):
         self.declare_parameter("hover_height", 5.0)
         self.declare_parameter("align_pixel_tol", 15.0)
         self.declare_parameter("descend_step", 0.3)
-        self.declare_parameter("descend_speed", 0.5)
         self.declare_parameter("landed_height", 0.1)
         self.declare_parameter("cam_fx", 500.0)
         self.declare_parameter("cam_fy", 500.0)
@@ -63,7 +62,6 @@ class AprilTagLandingNode(Node):
         self.hover_height = float(self.get_parameter("hover_height").value)
         self.align_tol = float(self.get_parameter("align_pixel_tol").value)
         self.descend_step = float(self.get_parameter("descend_step").value)
-        self.descend_speed = float(self.get_parameter("descend_speed").value)
         self.landed_h = float(self.get_parameter("landed_height").value)
         self.fx = float(self.get_parameter("cam_fx").value)
         self.fy = float(self.get_parameter("cam_fy").value)
@@ -182,13 +180,14 @@ class AprilTagLandingNode(Node):
                 self.get_logger().warn(
                     f"传感器超时 (img={img_age:.1f}s, hgt={hgt_age:.1f}s), "
                     "回 SEARCH 悬停")
-            self._publish(*self.current_target)
+            # 超时保持当前高度悬停, 不继续下降
+            self._publish(self.current_target[0], self.current_target[1],
+                          max(self.height, self.landed_h))
             self.state_pub.publish(String(data=self.state))
             return
 
-        # 未收到位姿时只悬停, 不发布跳变目标
+        # 未收到位姿时不发布 setpoint, 等待 odom 话题
         if not self.pose_received:
-            self._publish(0.0, 0.0, self.hover_height)
             self.state_pub.publish(String(data=self.state))
             return
 
