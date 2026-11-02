@@ -89,6 +89,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
+* [TurtleBot3 激光雷达 VFH 局部避障](./ground/tb3_vfh_avoidance.md) —— 72 扇区向量场直方图 + 配置空间膨胀 + 谷值搜索，附离线闭环仿真与朴素策略对比
 * [生成对象](./ground/carla_spawn_objects.md)
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)

@@ -1,0 +1,24 @@
+# ROS 2 参数文件：TB3 VFH 局部避障节点
+#
+# 数值按 TurtleBot3 Waffle 标定：
+# - 底盘半径约 0.214 m，取 0.22 留余量
+# - 最大线速度 0.26 m/s、最大角速度 1.82 rad/s，各留 15% 裕量
+# - LDS-01 雷达量程 0.12 ~ 3.5 m
+ */
+/tb3_vfh_avoidance:
+  ros__parameters:
+    scan_topic: /scan
+    cmd_vel_topic: /cmd_vel
+    state_topic: vfh_state
+    goal_topic: vfh_goal_bearing
+    exit_after: 0.0
+
+    n_sectors: 72            # 直方图扇区数（每扇区 5°）
+    max_range: 3.5           # 雷达有效量程 m
+    block_distance: 0.50     # 净空低于该值的方向判为阻塞 m
+    min_gap_deg: 25.0        # 可通行谷的最小角宽 °
+    robot_radius: 0.22       # 车身等效半径 m
+    safety_distance: 0.40    # 选定方向净空低于该值只转不走 m
+    max_linear: 0.22         # 最大线速度 m/s
+    max_angular: 1.82        # 最大角速度 rad/s
+    turn_gain: 1.6           # 航向比例增益

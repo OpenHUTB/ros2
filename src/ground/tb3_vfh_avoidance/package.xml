@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>tb3_vfh_avoidance</name>
+  <version>1.0.0</version>
+  <description>
+    TurtleBot3 激光雷达 VFH（向量场直方图）局部避障：
+    72 扇区极坐标直方图 + 配置空间膨胀（车身半径）+ 谷值搜索，
+    内置安全停障、航向平滑与死锁恢复，附带离线闭环仿真验证工具。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -104,6 +104,7 @@ nav:
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
+    - TurtleBot3 激光雷达 VFH 局部避障（配置空间膨胀 + 谷值搜索）: './ground/tb3_vfh_avoidance.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
     - MuJoCo 地面小车射线感知与分级减速避障: './ground/mujoco_car_avoidance.md'
     - MuJoCo 地面小车神经网络端到端避障: './ground/mujoco_car_nn_avoidance.md'
