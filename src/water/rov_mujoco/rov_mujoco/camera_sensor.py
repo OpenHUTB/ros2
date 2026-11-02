@@ -7,11 +7,23 @@
   2. 模拟水下光线蓝绿吸收衰减、水体悬浮物与暗角特性
 """
 
+import os
 from typing import Optional
 import numpy as np
 import mujoco
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
+
+
+def _is_wsl() -> bool:
+    """检测当前是否运行在 WSL 中（WSL 下 MuJoCo 默认 GLFW 离屏上下文会段错误）"""
+    if os.environ.get("WSL_DISTRO_NAME"):
+        return True
+    try:
+        with open("/proc/version", "r", encoding="utf-8", errors="ignore") as f:
+            return "microsoft" in f.read().lower()
+    except OSError:
+        return False
 
 
 class UnderwaterCamera:
@@ -25,7 +37,7 @@ class UnderwaterCamera:
         width: int = 320,
         height: int = 240,
         enable_underwater_effect: bool = True,
-        enable_renderer: bool = False,
+        enable_renderer: bool = True,
     ):
         self.model = model
         self.data = data
@@ -37,16 +49,35 @@ class UnderwaterCamera:
 
         self.cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, camera_name)
         self.renderer = None
+        self.render_mode = "placeholder"   # real / placeholder
+        self.render_backend = os.environ.get("MUJOCO_GL", "default")
         if enable_renderer:
             self.init_renderer()
 
     def init_renderer(self):
-        """按需初始化 EGL 离屏渲染器 (仅在无图形界面测试时启用)"""
-        if self.renderer is None:
-            try:
-                self.renderer = mujoco.Renderer(self.model, height=self.height, width=self.width)
-            except Exception:
-                self.renderer = None
+        """初始化 MuJoCo 离屏渲染器；失败时回退为占位图并给出明确告警"""
+        if self.renderer is not None:
+            return
+
+        # WSL 下 MuJoCo 默认的 GLFW 离屏上下文会直接段错误（无法用 try/except 捕获），
+        # 因此仅允许在 osmesa 后端下创建真实渲染器。可用 ROV_CAMERA_RENDER=0/1 强制覆盖。
+        forced = os.environ.get("ROV_CAMERA_RENDER", "").strip().lower()
+        if forced in ("0", "false", "off"):
+            self.render_mode = "placeholder"
+            return
+        if _is_wsl() and self.render_backend.lower() != "osmesa" and forced not in ("1", "true", "on"):
+            self.render_mode = "placeholder"
+            print("[UnderwaterCamera] WSL 环境未使用 osmesa 后端，已跳过离屏渲染 "
+                  "(设置 MUJOCO_GL=osmesa 可启用真实相机图像)")
+            return
+
+        try:
+            self.renderer = mujoco.Renderer(self.model, height=self.height, width=self.width)
+            self.render_mode = "real"
+        except Exception as exc:  # 例如无 OpenGL 上下文
+            self.renderer = None
+            self.render_mode = "placeholder"
+            print(f"[UnderwaterCamera] 离屏渲染器初始化失败，回退占位图: {exc}")
 
     def close(self):
         """安全释放渲染器与 OpenGL 上下文"""
@@ -60,7 +91,7 @@ class UnderwaterCamera:
     def render(self) -> np.ndarray:
         """渲染一帧 RGB 图像 (H, W, 3)"""
         if self.renderer is None:
-            # 仿真视窗运行模式下使用轻量级水下色彩缓冲区，杜绝 EGL 与 GLFW 抢占 GPU 上下文
+            # 无可用 GL 上下文时的占位图（真实渲染路径见 render_mode == 'real'）
             img = np.zeros((self.height, self.width, 3), dtype=np.uint8)
             img[:, :, 0] = 15   # 极低红光
             img[:, :, 1] = 85   # 中等绿光
