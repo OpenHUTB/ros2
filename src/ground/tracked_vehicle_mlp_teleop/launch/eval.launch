@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 无界面多控制器评估：RAW / PI / MLP，每个控制器前自动复位世界 -->
+  <arg name="world" default="flat"/>
+  <arg name="spawn_x" default="0.0"/>
+  <arg name="output_csv" default=""/>
+  <arg name="summary_csv" default=""/>
+
+  <include file="$(find tracked_vehicle_mlp_teleop)/launch/main.launch">
+    <arg name="world" value="$(arg world)"/>
+    <arg name="gui" value="false"/>
+    <arg name="mode" value="eval"/>
+    <arg name="controller" value="all"/>
+    <arg name="duration" value="0.0"/>
+    <arg name="spawn_x" value="$(arg spawn_x)"/>
+    <arg name="keyboard" value="false"/>
+    <arg name="output_csv" value="$(arg output_csv)"/>
+    <arg name="summary_csv" value="$(arg summary_csv)"/>
+  </include>
+</launch>

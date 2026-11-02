@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tracked_vehicle_mlp_teleop</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 1 Noetic / Gazebo 11 tracked ground vehicle physical simulation.
+    Keyboard teleoperation with an optional PyTorch MLP slip/slope compensation
+    controller, multi-scene evaluation (flat, 10-degree slope, low friction) and
+    CSV/GIF demo tooling.  The MLP is trained by behaviour cloning from a PI
+    expert and runs as the final feedback controller.
+  </description>
+  <maintainer email="3608156082@qq.com">tangwang-0614</maintainer>
+  <license>MIT</license>
+  <url type="website">https://github.com/OpenHUTB/ros2</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_plugins</depend>
+  <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+
+  <test_depend>python3-nose</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+  </export>
+</package>

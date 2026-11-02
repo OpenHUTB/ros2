@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find tracked_vehicle_mlp_teleop)/launch/main.launch">
+    <arg name="world" value="low_friction"/>
+    <arg name="gui" value="true"/>
+    <arg name="spawn_x" value="0.0"/>
+  </include>
+</launch>
