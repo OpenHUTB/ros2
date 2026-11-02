@@ -1,0 +1,47 @@
+# rov_current_params.yaml —— mjc_rov_current_teleop 全部可调参数
+# 设计原则：节点用 declare_parameter 读取，默认值与本文件一致，
+# 这样 python3 main.py 直接跑（不经 ROS launch）也能拿到同样参数。
+
+sim_node:
+  ros__parameters:
+    # 仿真步长与发布频率
+    sim_rate: 500.0          # 物理内循环 Hz（每个 ROS tick 步进若干小步）
+    odom_rate: 50.0           # odom 发布 Hz
+    image_rate: 10.0          # 相机图像发布 Hz
+    image_width: 160
+    image_height: 120
+
+    # 水下动力学（代码层施加，不依赖 MuJoCo 流体扩展）
+    buoyancy_z: 10.0          # 浮力补偿≈重力(m≈5kg*g≈10N)，近似中性浮力
+    damping_lin: 2.5          # 平动黏性阻尼系数（大点=停得快、少过冲）
+    damping_ang: 1.5          # 转动黏性阻尼系数
+    stab_roll: 4.0            # 横滚自稳力矩增益
+    stab_pitch: 4.0           # 俯仰自稳力矩增益
+
+    # 洋流扰动：时变力 Fx=ax*sin(wx*t), Fy=ay*sin(wy*t)
+    current_amp_x: 0.15       # 洋流 x 向幅值（N）
+    current_amp_y: 0.10       # 洋流 y 向幅值
+    current_w_x: 0.30         # 洋流 x 角频率 rad/s
+    current_w_y: 0.23
+
+    # 指令限幅
+    max_force_x: 5.0
+    max_force_y: 5.0
+    max_torque_yaw: 1.0
+
+    # 模型/相机话题
+    model_path: ""            # 留空=自动解析包内 models/rov_pond.xml
+    odom_topic: /rov_teleop/odom
+    image_topic: /rov_teleop/image_raw
+    status_topic: /rov_teleop/status
+    cmd_topic: /rov_teleop/cmd_vel
+
+cruise_node:
+  ros__parameters:
+    weights_path: ""          # 留空=自动找 weights/cruise_mlp.pt
+    odom_topic: /rov_teleop/odom
+    cmd_topic: /rov_teleop/cmd_vel
+    waypoint_topic: /rov_teleop/waypoint
+    publish_rate: 20.0
+    # 巡航目标航点（池内绕圈）
+    waypoints: [2.0, 0.0, -1.0,  0.0, 2.0, -1.0,  -2.0, 0.0, -1.0,  0.0, -2.0, -1.0]

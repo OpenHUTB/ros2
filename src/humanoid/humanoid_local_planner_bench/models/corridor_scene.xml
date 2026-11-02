@@ -1,0 +1,111 @@
+<mujoco model="corridor_narrow_door">
+  <!-- 人形避障对比场景：8 m 走廊 + 一扇 0.90 m 窄门 + 两个室内障碍。
+
+       机器人结构：
+         · 碰撞足迹 —— 半径 0.28 m 的半透明圆柱（对应肩宽 0.45 m + 安全裕度），
+           所有避障与碰撞判定都用它，`contype=1`；
+         · 人形外形 —— 骨盆/躯干/头/双臂/双腿，全部 `contype=0`（纯视觉），
+           腿部 3 关节由 sim_core 按行进距离做运动学步态摆动。
+
+       即：碰撞按圆柱算，观感是人形。既保证判定可靠，又能看出「是个人在走」。 -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.01" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960" azimuth="90" elevation="-70"/>
+    <headlight ambient="0.42 0.42 0.42" diffuse="0.7 0.7 0.7"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.01 0.0001" solref="0.01 1"/>
+    <default class="vis">
+      <!-- group=1：机器人自身几何体。渲染默认可见，但射线通过 geomgroup 屏蔽掉，
+           避免激光打到自己的身体（尤其是腿）。 -->
+      <geom contype="0" conaffinity="0" group="1"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.24 0.26 0.28" rgb2="0.30 0.32 0.34"
+             width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="8 8" texuniform="true" reflectance="0.03"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
+
+    <!-- 走廊两侧墙：x 从 -1 到 9，y = ±1.6；在 x = 4 处留 0.90 m 净宽的门 -->
+    <geom name="wall_south_a" type="box" pos="1.5 -1.60 0.60" size="2.50 0.06 0.60" rgba="0.62 0.62 0.66 1"/>
+    <geom name="wall_south_b" type="box" pos="6.5 -1.60 0.60" size="2.50 0.06 0.60" rgba="0.62 0.62 0.66 1"/>
+    <geom name="wall_north_a" type="box" pos="1.5  1.60 0.60" size="2.50 0.06 0.60" rgba="0.62 0.62 0.66 1"/>
+    <geom name="wall_north_b" type="box" pos="6.5  1.60 0.60" size="2.50 0.06 0.60" rgba="0.62 0.62 0.66 1"/>
+
+    <!-- 门柱：内缘 y=±0.45 → 净宽 0.90 m -->
+    <geom name="door_jamb_s" type="box" pos="4 -1.025 0.60" size="0.10 0.575 0.60" rgba="0.85 0.70 0.30 1"/>
+    <geom name="door_jamb_n" type="box" pos="4  1.025 0.60" size="0.10 0.575 0.60" rgba="0.85 0.70 0.30 1"/>
+
+    <!-- 室内障碍 -->
+    <geom name="obs_a" type="cylinder" pos="2.6 0.00 0.45" size="0.22 0.45" rgba="0.80 0.30 0.28 1"/>
+    <geom name="obs_b" type="cylinder" pos="6.0 0.35 0.45" size="0.22 0.45" rgba="0.80 0.30 0.28 1"/>
+
+    <body name="robot" pos="0 0 0">
+      <freejoint name="root"/>
+
+      <!-- ===== 碰撞足迹（唯一参与判定的几何体）===== -->
+      <geom name="footprint" type="cylinder" pos="0 0 0.82" size="0.28 0.80" group="1"
+            rgba="0.20 0.45 0.85 0.12" contype="1" conaffinity="1"/>
+
+      <!-- ===== 人形外形（纯视觉）===== -->
+      <geom name="pelvis_geom" class="vis" type="box" pos="0 0 0.95" size="0.13 0.11 0.07"
+            rgba="0.90 0.90 0.92 1"/>
+      <geom name="torso_geom" class="vis" type="box" pos="0 0 1.20" size="0.13 0.11 0.17"
+            rgba="0.88 0.90 0.94 1"/>
+      <geom name="head_geom" class="vis" type="sphere" pos="0 0 1.50" size="0.10"
+            rgba="0.96 0.90 0.80 1"/>
+
+      <geom name="upper_arm_l" class="vis" type="capsule" fromto="0 0.17 1.33 0 0.20 1.05" size="0.038"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="fore_arm_l" class="vis" type="capsule" fromto="0 0.20 1.05 0.04 0.21 0.82" size="0.034"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="upper_arm_r" class="vis" type="capsule" fromto="0 -0.17 1.33 0 -0.20 1.05" size="0.038"
+            rgba="0.86 0.88 0.92 1"/>
+      <geom name="fore_arm_r" class="vis" type="capsule" fromto="0 -0.20 1.05 0.04 -0.21 0.82" size="0.034"
+            rgba="0.86 0.88 0.92 1"/>
+
+      <!-- 左腿：髋 → 大腿 → 膝 → 小腿 → 踝 → 脚 -->
+      <body name="thigh_l" pos="0 0.105 0.88">
+        <joint name="hip_l" type="hinge" axis="0 1 0" range="-1.1 1.1"/>
+        <geom name="thigh_geom_l" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.062"
+              rgba="0.20 0.42 0.80 1"/>
+        <body name="shank_l" pos="0 0 -0.45">
+          <joint name="knee_l" type="hinge" axis="0 1 0" range="-0.05 1.9"/>
+          <geom name="shank_geom_l" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.052"
+                rgba="0.20 0.42 0.80 1"/>
+          <body name="foot_l" pos="0 0 -0.45">
+            <joint name="ankle_l" type="hinge" axis="0 1 0" range="-0.7 0.7"/>
+            <geom name="foot_geom_l" class="vis" type="box" pos="0.06 0 0.04" size="0.12 0.06 0.02"
+                  rgba="0.15 0.15 0.18 1"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 右腿 -->
+      <body name="thigh_r" pos="0 -0.105 0.88">
+        <joint name="hip_r" type="hinge" axis="0 1 0" range="-1.1 1.1"/>
+        <geom name="thigh_geom_r" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.062"
+              rgba="0.20 0.42 0.80 1"/>
+        <body name="shank_r" pos="0 0 -0.45">
+          <joint name="knee_r" type="hinge" axis="0 1 0" range="-0.05 1.9"/>
+          <geom name="shank_geom_r" class="vis" type="capsule" fromto="0 0 -0.045 0 0 -0.405" size="0.052"
+                rgba="0.20 0.42 0.80 1"/>
+          <body name="foot_r" pos="0 0 -0.45">
+            <joint name="ankle_r" type="hinge" axis="0 1 0" range="-0.7 0.7"/>
+            <geom name="foot_geom_r" class="vis" type="box" pos="0.06 0 0.04" size="0.12 0.06 0.02"
+                  rgba="0.15 0.15 0.18 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

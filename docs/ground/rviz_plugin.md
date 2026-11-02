@@ -35,7 +35,6 @@ rosrun rviz rviz
 
     ![](../img/ground/rviz.png)
 
-
 ## 参考
 
 * [RVIZ Carla 插件](https://openhutb.github.io/doc/rviz_plugin/)
