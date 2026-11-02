@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   diagnostic_msgs
   geometry_msgs
-  manipulation_msgs
   moveit_msgs
   moveit_ros_perception
   moveit_ros_planning_interface
