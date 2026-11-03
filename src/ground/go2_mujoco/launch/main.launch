@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="go2_mujoco" type="main.py" name="go2_mujoco" output="screen" cwd="node"/>
+</launch>

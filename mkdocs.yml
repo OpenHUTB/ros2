@@ -133,6 +133,7 @@ nav:
     - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
     - MuJoCo Locomotion 强化学习对比实验: './ground/rl_mujoco_locomotion.md'
+    - 宇树 Go2 四足机器人 MuJoCo 小跑仿真: './ground/go2_mujoco_simulation.md'
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
     - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
