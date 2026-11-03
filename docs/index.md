@@ -1,11 +1,11 @@
-title: 主页
+﻿title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
 <span id="submission-guide"></span>
-**提交项目之前**，请按以下指引自查，并阅读[仓库提交约定](https://github.com/OpenHUTB/ros2#注意事项)。PR 模板只列常见检查项；具体任务、模拟器和验收要求以老师及维护者说明为准。
+**提交项目之前**，请按以下指引自查，并阅读[仓库提交约定](https://github.com/OpenHUTB/ros2#注意事项)。PR 模板只列常见检查项；具体任务、模拟器和验收要求以仓库约定及维护者说明为准。
 
 <details>
 <summary>展开项目提交与复现指引</summary>
@@ -15,7 +15,7 @@ title: 主页
 <li><strong>整理模块与启动入口。</strong> 源码放在 src 对应模块，教程放在 docs 对应模块，文件使用英文下划线命名。提供 main.* 和 launch，核对包名、可执行名、依赖、模型路径及安装规则，完善实际包描述、维护信息和许可证。</li>
 <li><strong>按文档完整运行。</strong> README 写清实际验证的系统、ROS、Python、模拟器和关键依赖版本，以及获取源码、安装、构建、加载环境、启动和停止步骤，注明执行目录。建议从新终端操作，检查键盘输入、运动方向、状态切换、退出停车和异常清理。</li>
 <li><strong>准确说明验证范围。</strong> 区分节点启动、话题通信、可视化演示与完整仿真效果。固定速度发布不等于轨迹跟踪，离线测试不等于在线闭环验证。指标注明定义、单位、场景与测量方法，保留必要日志；未验证的内容和简化假设如实说明。</li>
-<li><strong>检查网页与配图。</strong> 新模块在本首页和 mkdocs.yml 增加入口，运行 <code>mkdocs serve --livereload</code> 检查相关页面、链接、公式和流程图。使用真实运行截图而非拍照，示意图明确标注；PNG 小于 3 MB、GIF 小于 10 MB，大量数据提供持久下载链接。</li>
+<li><strong>检查网页与配图。</strong> 新模块在本首页和 mkdocs.yml 增加入口，运行 <code>mkdocs serve --livereload</code> 检查相关页面、链接、公式和流程图。使用真实运行截图而非拍照，示意图明确标注；PNG 小于 3 MB、GIF 小于 5 MB，大量数据提供持久下载链接。</li>
 <li><strong>完成说明与复核。</strong> PR 标题和提交信息说明修改目的，使用大模型时声明具体工具并对内容负责。合并前至少一名其他人在另一台机器测试并同意，不能用作者自测替代。纯文档或局部修复按实际影响检查，不要求新增无关模块。</li>
 </ol>
 <p>以上结合仓库要求和复现建议整理，不作为新增评分标准。也可参阅<a href="https://github.com/OpenHUTB/doc#撰写规范">文档撰写约定</a>和<a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">贡献指南</a>。</p>
@@ -27,9 +27,7 @@ title: 主页
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
-  - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
-  - [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
   - [水域载具](#water_vehicle)
 
 ---
@@ -55,6 +53,7 @@ ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
+    * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
     * [ROS Noetic 运行参数热更新（正弦信号）](./chap2/ros1_parameter_sine_wave/index.md)
     * [ROS Noetic 环境自检与常见问题排查](./chap2/ros1_env_check/index.md)
@@ -67,7 +66,6 @@ ROS每章节运行代码:
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
-ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
@@ -125,9 +123,11 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
+* [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
+* [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
 
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
@@ -144,10 +144,14 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
+
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
+
+* [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
 
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
@@ -157,6 +161,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+
+* [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
@@ -226,7 +232,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
+* [禁飞区检测模块](no_fly_zone_check/index.md)
 
+* [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
