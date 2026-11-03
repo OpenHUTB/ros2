@@ -37,6 +37,7 @@ setup(
             'keyboard_teleop_node = rov_mujoco.keyboard_teleop_node:main',
             'sonar_slam_node = rov_mujoco.sonar_slam_node:main',
             'autonomous_navigation_node = rov_mujoco.autonomous_navigation_node:main',
+            'end_to_end_vision_control_node = rov_mujoco.end_to_end_vision_control_node:main',
         ],
     },
 )

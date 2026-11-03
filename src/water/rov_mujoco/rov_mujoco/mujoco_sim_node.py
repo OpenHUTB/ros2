@@ -434,3 +434,20 @@ class MujocoSimNode(Node):
                 joint_state.position.append(float(self.data.qpos[qadr]))
                 joint_state.velocity.append(float(self.data.qvel[vadr]))
         self.pub_joint_states.publish(joint_state)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = MujocoSimNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
