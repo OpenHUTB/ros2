@@ -151,6 +151,8 @@ ROS每章节运行代码:
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
+* [AirSim 无人机弓字形区域勘测](./air/drone_lawnmower_survey.md) —— 按区域尺寸、航线间距、高度和速度生成往返覆盖航线，支持无仿真器安全预览与参数边界测试
+
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
