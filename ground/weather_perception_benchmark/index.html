@@ -131,7 +131,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
@@ -282,13 +282,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_vehicle_dynamics_test/">地面载具动力性测试</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
@@ -403,6 +405,62 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
 </li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">恶劣雨雾天气下多传感器感知性能对比实验</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 运行环境</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#11-carla">1.1 下载并启动 CARLA</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#12-python-310">1.2 安装 Python 3.10 与依赖</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#13">1.3 验证环境连通</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 实验原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 天气参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 感知质量指标</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 代码结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 实验结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 结论</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 图像增强恢复实验</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 增强方法</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 恢复率定义</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73">7.3 增强恢复结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 分析与结论</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 激光雷达感知退化评测与跨传感器对比</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 传感器配置与采集口径</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 雷达指标与退化率口径</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84">8.4 建模口径与对照实验</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85">8.5 分析与结论</a>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">水域载具</span></p>
 <ul>
@@ -453,7 +511,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item active">恶劣雨雾天气下多传感器感知性能对比实验</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/weather_perception_benchmark.md"> 编辑页面</a>
@@ -1157,8 +1215,8 @@ python<span class="w"> </span>main.py
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../carla_lane_departure_warning/" title="车道偏离预警（LDW）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../mujoco_car_project/" title="基于Mujoco的键盘遥控小车">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../../air/drone_trajectory_logger/" title="状态识别与轨迹绘制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../water/HoloOcean/" title="水域载具 ROS2 接口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -1175,8 +1233,8 @@ python<span class="w"> </span>main.py
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../carla_lane_departure_warning/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../mujoco_car_project/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../air/drone_trajectory_logger/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../water/HoloOcean/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
