@@ -31,11 +31,16 @@ class ExitKeyTests(unittest.TestCase):
         ros = types.ModuleType('rospy')
         ros.is_shutdown = Mock(return_value=False)
         ros.logwarn = Mock()
+        ros.Subscriber = lambda *a, **k: None
         geometry = types.ModuleType('geometry_msgs')
         messages = types.ModuleType('geometry_msgs.msg')
         messages.Twist = _Twist
+        nav = types.ModuleType('nav_msgs')
+        nav_msg = types.ModuleType('nav_msgs.msg')
+        nav_msg.Odometry = type('Odometry', (object,), {})
         with patch.dict(sys.modules, {'rospy': ros, 'geometry_msgs': geometry,
-                                      'geometry_msgs.msg': messages}):
+                                      'geometry_msgs.msg': messages,
+                                      'nav_msgs': nav, 'nav_msgs.msg': nav_msg}):
             spec = importlib.util.spec_from_file_location('keyboard_under_test', SCRIPT)
             self.module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(self.module)
@@ -47,6 +52,9 @@ class ExitKeyTests(unittest.TestCase):
         self.node.rate = Mock()
         self.node.tracker = self.module.KeyTracker()
         self.node.smoother = self.module.VelocitySmoother()
+        self.node.skills = self.module.MacroRunner()
+        self.node.pose = None
+        self.node.pose_time = 0.0
         self.node.step_once = Mock(return_value='command')
         self.context = None
 

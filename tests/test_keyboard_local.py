@@ -87,6 +87,7 @@ def install_stubs():
     m.get_param = lambda name, default=None: PARAMS.get(name, default)
     m.Publisher = _Publisher
     m.Rate = _Rate
+    m.Subscriber = lambda *a, **k: None
     m.init_node = lambda *a, **k: None
     m.is_shutdown = lambda: False
     m.loginfo = lambda *a, **k: None
@@ -99,6 +100,13 @@ def install_stubs():
     gm.msg = gmm
     sys.modules["geometry_msgs"] = gm
     sys.modules["geometry_msgs.msg"] = gmm
+
+    nm = types.ModuleType("nav_msgs")
+    nmm = types.ModuleType("nav_msgs.msg")
+    nmm.Odometry = type("Odometry", (object,), {})
+    nm.msg = nmm
+    sys.modules["nav_msgs"] = nm
+    sys.modules["nav_msgs.msg"] = nmm
 
 
 install_stubs()
@@ -269,8 +277,12 @@ def test_project_files():
     check(pkg.findtext("name").strip() == "uav_keyboard_control", "package.xml 包名正确")
 
     cmake = open(os.path.join(PKG, "CMakeLists.txt"), encoding="utf-8").read()
-    for name in ("main.py", "keyboard_control.py"):
+    for name in ("main.py", "keyboard_control.py", "skill_macros.py"):
         check(name in cmake, "CMakeLists 安装 %s" % name)
+    check("nav_msgs" in cmake, "CMakeLists 声明 nav_msgs 依赖")
+
+    pkg_xml = open(os.path.join(PKG, "package.xml"), encoding="utf-8").read()
+    check("nav_msgs" in pkg_xml, "package.xml 声明 nav_msgs 依赖")
 
     launch_path = os.path.join(PKG, "launch", "main.launch")
     launch = ET.parse(launch_path).getroot()
@@ -280,16 +292,21 @@ def test_project_files():
     check("keyboard.yaml" in launch_text, "main.launch 加载 keyboard.yaml")
     args = [a.get("name") for a in launch.findall("arg")]
     for a in ("horiz_speed", "vert_speed", "yaw_rate", "cmd_vel_topic",
-              "key_hold_timeout", "accel_horiz", "accel_vert", "accel_yaw"):
+              "key_hold_timeout", "accel_horiz", "accel_vert", "accel_yaw",
+              "odom_topic", "takeoff_altitude", "spin_degrees", "forward_distance"):
         check(a in args, "main.launch 暴露参数 %s" % a)
     params = [p.get("name") for p in launch.findall("param")]
     for p in ("control/key_hold_timeout", "control/accel_horiz",
-              "control/accel_vert", "control/accel_yaw"):
+              "control/accel_vert", "control/accel_yaw",
+              "topic/odom", "macro/takeoff_altitude", "macro/spin_degrees",
+              "macro/forward_distance"):
         check(p in params, "main.launch 下发参数 %s" % p)
 
     yaml = open(os.path.join(PKG, "config", "keyboard.yaml"), encoding="utf-8").read()
     for key in ("horiz_speed", "vert_speed", "yaw_rate", "publish_hz", "cmd_vel",
-                "key_hold_timeout", "accel_horiz", "accel_vert", "accel_yaw"):
+                "key_hold_timeout", "accel_horiz", "accel_vert", "accel_yaw",
+                "odom", "odom_timeout", "takeoff_altitude", "spin_degrees",
+                "forward_distance", "forward_speed", "brake_accel"):
         check(key in yaml, "keyboard.yaml 含 %s" % key)
 
 
