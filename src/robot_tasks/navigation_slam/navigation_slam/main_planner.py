@@ -86,6 +86,8 @@ class PathPlanner(Node):
             self.get_logger().warn(
                 'no path from (%.2f, %.2f) to (%.2f, %.2f)'
                 % (self.start_x, self.start_y, goal_x, goal_y))
+            return
+          
         path = self.to_path(cells, self.frame_id)
         self.publisher.publish(path)
 
