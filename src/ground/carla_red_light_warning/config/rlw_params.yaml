@@ -1,0 +1,10 @@
+# RLW 决策参数（与 carla_red_light_warning/red_light_core.py 的 RLWParams 一一对应）
+# 顶层用 /** 通配：同时匹配 rlw_bridge_node 与 rlw_alert_node
+/**:
+  ros__parameters:
+    a_comfort: 2.5      # 舒适减速上限（m/s²）
+    warn_enter: 30.0    # 黄/红灯进入 approaching 的停止线距离（m）
+    warn_exit: 35.0     # 回 normal 的停止线距离（m，滞回上界）
+    brake_margin: 1.2   # violation 退出滞回系数（d > d_stop×margin 才回退）
+    period: 0.05        # 状态机推进周期（s）
+    warmup_ticks: 2     # 热身拍数（冷启动灯态未稳定，不输出决策）
