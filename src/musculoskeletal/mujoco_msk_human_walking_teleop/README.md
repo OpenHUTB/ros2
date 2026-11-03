@@ -12,7 +12,7 @@ MuJoCo 平面肌肉骨骼人（22 条 Hill 型肌肉驱动 13 DoF）键盘遥操
 
 ## 运行步骤
 
-```shell
+```
 cd ~/catkin_ws
 catkin_make -DCATKIN_WHITELIST_PACKAGES="mujoco_msk_human_walking_teleop"
 source devel/setup.bash
@@ -27,7 +27,7 @@ roslaunch mujoco_msk_human_walking_teleop main.launch
 
 无 ROS 离线运行：
 
-```shell
+```
 python3 main.py check    # 模型自检
 python3 main.py eval     # 多场景性能评测
 ```

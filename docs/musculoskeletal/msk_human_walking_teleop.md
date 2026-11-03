@@ -17,7 +17,7 @@
 
 ### 目录结构
 
-```text
+```
 src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── main.py                     # 统一入口：check / eval / demo / sim / keyboard
 ├── package.xml                 # catkin 包描述（rospy, std_msgs, sensor_msgs）
@@ -25,10 +25,7 @@ src/musculoskeletal/mujoco_msk_human_walking_teleop/
 ├── CMakeLists.txt
 ├── launch/main.launch          # 一键启动：仿真节点 + 可选 xterm 键盘节点
 ├── config/params.yaml          # 反射增益 / 步态 / 蹲起 / 踢腿参数
-├── eval/                       # 可复现评测证据与工具（见 §7）
-│   ├── check_output.txt        # python3 main.py check 完整终端输出
-│   ├── eval_output.txt         # python3 main.py eval 完整终端输出
-│   ├── eval_results.json       # eval 结构化结果（机器可读）
+├── eval/                       # 评测工具
 │   └── render_scenes.py        # 场景说明截图生成脚本（英文标注）
 ├── models/
 │   ├── msk_human.xml           # 肌肉骨骼人模型（13 DoF + 22 motor）
@@ -55,7 +52,7 @@ src/musculoskeletal/mujoco_msk_human_walking_teleop/
 
 安装与构建：
 
-```shell
+```
 # 1. 安装 Python 依赖
 pip3 install mujoco==3.2.3 numpy pyyaml
 sudo apt install xterm
@@ -70,7 +67,7 @@ source devel/setup.bash
 
 ### 3.1 一键启动
 
-```shell
+```
 roslaunch mujoco_msk_human_walking_teleop main.launch
 ```
 
@@ -120,7 +117,7 @@ launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）
 
 **参数说明**：本包不使用 ROS 参数服务器——反射增益、步态、蹲起、踢腿参数统一由 `config/params.yaml` 在节点启动时直接加载（`load_params()`），修改该文件后重启节点即可生效。
 
-```shell
+```
 # 5 度坡道
 roslaunch mujoco_msk_human_walking_teleop main.launch scene:=slope5
 # 负载 10 kg（运行时给躯干加 10 kg 背包并更新惯量）
@@ -142,7 +139,7 @@ roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
 
 ### 3.7 离线自检与性能评测（无需 ROS）
 
-```shell
+```
 cd ~/catkin_ws/src/musculoskeletal/mujoco_msk_human_walking_teleop
 python3 main.py check    # 模型自检：场景加载 / 22 块肌肉兴奋方向 / 三场景站立
 python3 main.py eval     # 多场景性能评测，结果写入 eval_results.json
@@ -150,7 +147,7 @@ python3 main.py eval     # 多场景性能评测，结果写入 eval_results.jso
 
 `check` 的标准输出（全部通过）：
 
-```text
+```
 [PASS] load_scene_flat
 [PASS] load_scene_slope5
 [PASS] load_scene_load
@@ -167,7 +164,7 @@ python3 main.py eval     # 多场景性能评测，结果写入 eval_results.jso
 
 `eval` 的标准输出：
 
-```text
+```
 ================= 性能汇总 =================
 平地站立成功率                    3/3
 蹲起周期数(15s)                 7
@@ -326,7 +323,7 @@ flowchart TB
 
 向量化实现 §4.1 的四个方程，每步先更新肌肉状态再写入执行器：
 
-```python
+```
 def _hill_update(self, u, dt):
     q, qd = self.q(), self.qd()
     # (1) 激活动力学：兴奋 tau_act=12ms，去激活 tau_deact=50ms
@@ -349,7 +346,7 @@ def _hill_update(self, u, dt):
 
 ### 6.2 姿势反射层（`Composer :: _reflex`）
 
-```python
+```
 for jname, flex, ext in ANTAGONIST:
     j = JOINT_NAMES.index(jname)
     e = self._ref[jname] - q[j]                       # 参考角误差
@@ -364,7 +361,7 @@ for jname, flex, ext in ANTAGONIST:
 
 ### 6.3 步态参考轨迹（`Composer :: _q_ref` walk 分支）
 
-```python
+```
 self.phase += 2 * math.pi * w["freq"] * self.freq_scale * dt
 phi_l, phi_r = self.phase, self.phase + math.pi
 for phi, s in ((phi_l, "l"), (phi_r, "r")):
@@ -379,7 +376,7 @@ for phi, s in ((phi_l, "l"), (phi_r, "r")):
 
 ### 6.4 蹲起逆解（`leg_ik_squat`）
 
-```python
+```
 h = z_pelvis - ANKLE_HEIGHT            # 髋到踝竖直距离
 cos_g = (THIGH_L**2 + SHIN_L**2 - h**2) / (2 * THIGH_L * SHIN_L)
 gamma = math.acos(...)                  # 膝内角（余弦定理）
@@ -390,7 +387,7 @@ hip, ankle = alpha, min(knee - alpha, 0.45)   # 浅蹲脚平放；深蹲踝顶�
 
 ### 6.5 摔倒判定与安全设计
 
-```python
+```
 def fallen(self):
     return self.pelvis_z() < 0.50 or abs(self.pitch()) > 0.9
 ```
@@ -429,3 +426,7 @@ def fallen(self):
 - **EGL 报错** `module 'OpenGL.EGL' has no attribute 'EGLDeviceEXT'`：PyOpenGL 版本与 MuJoCo 不匹配，headless 场景改用 osmesa 即可。
 - **键盘节点无响应**：确认 `xterm` 已安装；launch 用 `launch-prefix="xterm -e"` 打开独立终端读取按键。
 - **行走时原地踏步**：步频过低时前进速度小属正常；确认 `ankle_phase` 未被改动（相位取反会几乎无法前进，见 §4.3）。
+
+## 9. 大模型使用声明
+
+使用 deep seek 辅助代码生成调试、文档撰写与 GIF 渲染脚本；全部代码经作者在 Ubuntu 20.04 与 ROS Noetic 环境实际运行验证，作者对提交内容负责。
