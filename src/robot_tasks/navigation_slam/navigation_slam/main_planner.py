@@ -146,7 +146,7 @@ class PathPlanner(Node):
                 nxt = ny * w + nx
                 if self.grid[nxt] == OCCUPIED:
                     continue
-                                  # 对角移动不许贴角穿过：两个正交邻格也必须是空的
+                # 对角移动不许贴角穿过：两个正交邻格也必须是空的
                 if dx != 0 and dy != 0:
                     if (self.grid[cy * w + nx] == OCCUPIED
                             or self.grid[ny * w + cx] == OCCUPIED):
