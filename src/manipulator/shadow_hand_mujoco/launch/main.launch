@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="shadow_hand_mujoco" type="main.py" name="shadow_hand_mujoco" output="screen" cwd="node"/>
+</launch>

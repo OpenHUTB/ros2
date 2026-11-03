@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂与灵巧手](#manipulator)
 
 ---
 
@@ -276,6 +277,10 @@ ROS每章节运行代码:
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
 ___
+
+## 7. 机械臂与灵巧手 <span id='manipulator'></span>
+
+* [Shadow Hand 灵巧手 MuJoCo 仿真](./manipulator/shadow_hand_mujoco_simulation.md)
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 

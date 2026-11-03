@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>shadow_hand_mujoco</name>
+  <version>0.0.1</version>
+  <description>Shadow Hand 灵巧手 MuJoCo 仿真模块（入口 main.py，支持 roslaunch 启动）</description>
+  <maintainer email="368773156@qq.com">nanxi666521</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+</package>
