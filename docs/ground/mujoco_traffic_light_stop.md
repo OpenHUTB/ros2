@@ -19,7 +19,6 @@ python3 mujoco_traffic_light_stop/main.py
 
 - 红绿灯循环：红灯5s → 黄灯2s → 绿灯5s
 - 小车从左往右开
-- 到停止线前1米就开始减速
 - 红灯停，黄灯慢，绿灯走
 
 ## 效果
