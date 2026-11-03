@@ -1,0 +1,3 @@
+from setuptools import find_packages,setup
+p="uav_wind_triangle"
+setup(name=p,version="0.1.0",packages=find_packages(exclude=["tests"]),package_data={p:["sample_data/*.json"]},data_files=[("share/ament_index/resource_index/packages",["resource/"+p]),("share/"+p,["package.xml"]),("share/"+p+"/sample_data",[p+"/sample_data/wind_profile.json"]),("share/"+p+"/launch",["launch/main.launch.py"])],install_requires=["setuptools"],zip_safe=True,maintainer="useruseruser452",maintainer_email="useruseruser452@users.noreply.github.com",description="Wind triangle solver for UAV mission planning.",license="MIT",entry_points={"console_scripts":[p+" = "+p+".main:main"]})
