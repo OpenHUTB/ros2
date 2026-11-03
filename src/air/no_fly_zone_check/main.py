@@ -66,7 +66,7 @@ def main():
     pos = state.kinematics_estimated.position
     drone_lat = 47.65 + pos.x_val * 0.00001
     drone_lon = -122.14 + pos.y_val * 0.00001
-    altitude = abs(pos.z_val) 
+    altitude = abs(pos.z_val)
     
     print(f"[INFO] 从模拟器获取到无人机位置: ({drone_lat:.5f}, {drone_lon:.5f})，当前高度: {altitude:.1f} 米")
 
