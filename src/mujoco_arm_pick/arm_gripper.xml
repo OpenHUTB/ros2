@@ -1,0 +1,61 @@
+<mujoco model="arm_gripper">
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+  <visual>
+    <global offwidth="640" offheight="480"/>
+  </visual>
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="256" height="256" rgb1="0.52 0.52 0.54" rgb2="0.42 0.42 0.44"/>
+    <material name="floor_mat" texture="grid" texrepeat="4 4" reflectance="0.2"/>
+  </asset>
+  <worldbody>
+    <light name="sun" pos="0.3 0.3 1.5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <light name="fill" pos="-0.3 0.3 1.0" dir="0.5 0 -1" diffuse="0.35 0.35 0.4"/>
+    <camera name="front" pos="0.3 0 1.5" zaxis="0 0 -1" fovy="38"/>
+    <geom name="floor" type="plane" size="2 2 0.1" pos="0.3 0 -0.02" material="floor_mat"/>
+
+    <!-- 起点 A（绿色）与目标点 B（黄色）地面标记 + 矮托盘柱（球心 z=0.08，低于机械臂平面 0.15） -->
+    <geom name="mark_a" type="sphere" size="0.018" pos="0.18 0.20 0.012" rgba="0.0 0.8 0.25 1"/>
+    <geom name="mark_b" type="sphere" size="0.018" pos="0.45 -0.15 0.012" rgba="0.95 0.75 0.1 1"/>
+    <geom name="ped_a" type="cylinder" size="0.02 0.025" pos="0.18 0.20 0.025" rgba="0.3 0.3 0.35 1"/>
+    <geom name="ped_b" type="cylinder" size="0.02 0.025" pos="0.45 -0.15 0.025" rgba="0.3 0.3 0.35 1"/>
+
+    <!-- 被抓取的球（free joint，初始在 A 托盘柱顶，球心 z=0.08；位置由代码控制） -->
+    <body name="ball" pos="0.18 0.20 0.08">
+      <freejoint name="ball_free"/>
+      <geom name="ball_g" type="sphere" size="0.03" density="177" rgba="0.2 0.6 0.9 1" condim="4" friction="1 0.005 0.001"/>
+    </body>
+
+    <!-- 机械臂：底座 + 肩关节 + 第一段杆 + 肘关节 + 第二段杆 + 升降 + 夹爪（运动平面 z=0.15） -->
+    <body name="base" pos="0 0 0.15">
+      <geom name="base_g" type="cylinder" size="0.07 0.05" pos="0 0 0" rgba="0.35 0.35 0.4 1"/>
+      <joint name="shoulder" type="hinge" axis="0 0 1" pos="0 0 0"/>
+      <body name="link1" pos="0 0 0">
+        <geom name="link1_g" type="capsule" fromto="0 0 0 0.3 0 0" size="0.035" rgba="0.15 0.45 0.85 1"/>
+        <joint name="elbow" type="hinge" axis="0 0 1" pos="0.3 0 0"/>
+        <body name="link2" pos="0.3 0 0">
+          <geom name="link2_g" type="capsule" fromto="0 0 0 0.27 0 0" size="0.028" rgba="0.85 0.55 0.2 1"/>
+          <!-- 垂直升降关节（长行程：向下探到球心高度） -->
+          <body name="lift" pos="0.3 0 0">
+            <joint name="lift_j" type="slide" axis="0 0 1" range="-0.20 0.15"/>
+            <!-- 升降连接杆（细，视觉用；球为 kinematic 无接触） -->
+            <geom name="lift_conn" type="cylinder" size="0.006 0.10" pos="0 0 0.10" rgba="0.45 0.45 0.5 1"/>
+            <!-- 夹爪（旋转钳，几何在球上方：与球完全无接触，吸附靠位置控制） -->
+            <body name="gripper" pos="0 0 0.02">
+              <joint name="grip_j" type="hinge" axis="0 0 1" range="-0.55 0"/>
+              <geom name="grip_base" type="box" size="0.012 0.018 0.012" pos="0.03 0 0.08" rgba="0.5 0.5 0.55 1"/>
+              <geom name="finger1" type="box" size="0.02 0.005 0.02" pos="0.03 0.025 0.08" rgba="0.35 0.35 0.4 1"/>
+              <geom name="finger2" type="box" size="0.02 0.005 0.02" pos="0.03 -0.025 0.08" rgba="0.35 0.35 0.4 1"/>
+              <!-- 末端标记球（校准/轨迹用，纯红色，抬高避开球） -->
+              <geom name="tip" type="sphere" size="0.018" pos="0.0 0 0.11" rgba="1 0 0 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="shoulder_m" joint="shoulder" ctrlrange="-30 30" gear="1"/>
+    <motor name="elbow_m" joint="elbow" ctrlrange="-30 30" gear="1"/>
+    <motor name="lift_m" joint="lift_j" ctrlrange="-50 50" gear="1"/>
+  </actuator>
+</mujoco>
