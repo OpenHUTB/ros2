@@ -43,6 +43,7 @@ graph LR
     cd ~/ts_ws/src
     git clone <本仓库>          # 或直接拷贝 src/traffic_sign_speed_control
     cd ~/ts_ws
+    pip3 install -r src/traffic_sign_speed_control/requirements.txt
     colcon build --packages-select traffic_sign_speed_control
     source install/setup.bash
 
@@ -79,7 +80,7 @@ graph LR
 
 ### 3. 合成演示 GIF
 
-    python3 src/traffic_sign_speed_control/main.py demo     # 需要 ffmpeg
+    ros2 run traffic_sign_speed_control main demo     # 需要 ffmpeg
 
 ### 4. 完整演示
 
@@ -218,7 +219,7 @@ stateDiagram-v2
 | `scripts/train_signs.py` | 脚本 | 合成数据集生成与 CNN 训练（约 3 分钟，CPU） |
 | `scripts/evaluate_detector.py` | 脚本 | 检测器退化矩阵评测（6 种条件 × 10 类 × 100 张） |
 | `scripts/run_scenes.py` | 脚本 | 多场景端到端评测（进程组管理，指标统计与画图） |
-| `main.py` / `launch/` | 入口 | CLI 入口（train/evaluate/scenes/demo）与三节点一键启动 |
+| `traffic_sign_speed_control/main.py` / `launch/` | 入口 | `ros2 run ... main` CLI（train/evaluate/scenes/demo）与三节点一键启动 |
 
 设计要点：
 
@@ -264,12 +265,12 @@ Adam（lr=1e-3）、batch 128、15 epoch，CPU 训练约 3 分钟。
 
 ![退化矩阵](../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_degrade.png)
 
-（数值见 `src/traffic_sign_speed_control/artifacts/detector_eval.json`）
+（数值由 `scripts/evaluate_detector.py` 评测生成）
 
 ### 场景端到端结果
 
 每个场景以 `render_mode:=none` 运行真实 ROS 系统 55 s（约 3–4 圈），注入场景后
-从小车复位起统计指标（详见 `src/traffic_sign_speed_control/artifacts/scene_eval.json`）：
+从小车复位起统计指标（由 `scripts/run_scenes.py` 生成场景 JSON 与速度曲线图）：
 
 | 场景 | 标志序列 | 退化 | 检出率 | 平均识别延迟 | 平均达标时间 | 平均稳态误差 |
 |---|---|---|---|---|---|---|

@@ -13,6 +13,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         ("share/" + package_name + "/launch", glob("launch/*.launch.py")),
         ("share/" + package_name + "/models", glob("models/*.pth")),
+        ("share/" + package_name + "/scripts", glob("scripts/*.py")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,

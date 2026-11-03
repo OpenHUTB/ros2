@@ -9,6 +9,7 @@ MuJoCo 物理仿真世界（差速底盘刚体动力学 + 车载前视相机离�
 ## 快速开始
 
     cd ~/ts_ws
+    pip3 install -r src/traffic_sign_speed_control/requirements.txt
     colcon build --packages-select traffic_sign_speed_control
     source install/setup.bash
     # 仓库已含训练好的权重 models/sign_cnn.pth；如需重新生成（CPU 约 3 分钟）：
@@ -22,9 +23,9 @@ launch 参数：`render_mode`（none/file）、`frame_dir`（GIF 帧目录）、
 
 | 命令 | 作用 |
 |---|---|
-| `python3 main.py train` | 合成数据 + 训练 DigitCNN，输出权重与指标 |
-| `python3 main.py evaluate` | 字符级退化矩阵评测 |
-| `python3 main.py scenes` | 端到端多场景评测（启动真实 ROS 系统） |
-| `python3 main.py demo` | file 渲染模式跑默认场景并合成 GIF（需 ffmpeg） |
+| `ros2 run traffic_sign_speed_control main train` | 合成数据 + 训练 DigitCNN，输出权重与指标 |
+| `ros2 run traffic_sign_speed_control main evaluate` | 字符级退化矩阵评测 |
+| `ros2 run traffic_sign_speed_control main scenes` | 端到端多场景评测（启动真实 ROS 系统） |
+| `ros2 run traffic_sign_speed_control main demo` | file 渲染模式跑默认场景并合成 GIF（需 ffmpeg） |
 
 完整教程（原理、流程、代码结构、性能评价、GIF）见仓库 `docs/ground/traffic_sign_speed_control.md`。
