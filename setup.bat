@@ -2,12 +2,10 @@
 
 
 if not exist "ros2" (
-    git clone https://OpenHUTB:T8w6TYB_r71gGTP3A02B@git.code.tencent.com/OpenHUTB/ros2.git   &&  cd ros2  && git lfs pull
+    git clone https://github.com/OpenHUTB/ros2.git   &&  cd ros2  && git lfs pull
 ) else (
     cd ros2
-    git reset --hard HEAD
-    git clean -fdx
-    git pull
+    git pull --ff-only
     git lfs pull
 )
 
