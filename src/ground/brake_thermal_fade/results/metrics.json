@@ -1,0 +1,167 @@
+{
+  "disc": {
+    "disc_mass_kg": 7.0,
+    "specific_heat_j_per_kgk": 500.0,
+    "heat_capacity_j_per_k": 3500.0,
+    "cooling_w_per_k": 15.0,
+    "radiation_area_m2": 0.06,
+    "emissivity": 0.8,
+    "ambient_c": 25.0
+  },
+  "friction": {
+    "mu_cold": 0.4,
+    "fade_start_c": 250.0,
+    "fade_end_c": 650.0,
+    "mu_hot": 0.22
+  },
+  "vehicle": {
+    "mass_kg": 1500.0,
+    "reference_decel_mps2": 8.0,
+    "brake_count": 4
+  },
+  "grade": 0.07,
+  "descent_duration_s": 600.0,
+  "descents": [
+    {
+      "speed_kmh": 40.0,
+      "power_per_disc_w": 2860.3,
+      "equilibrium_c": 207.4,
+      "fade_onset_s": null,
+      "final_temperature_c": 195.7,
+      "stop_distance_m": 48.2,
+      "stop_distance_cold_m": 48.2
+    },
+    {
+      "speed_kmh": 60.0,
+      "power_per_disc_w": 4290.4,
+      "equilibrium_c": 293.7,
+      "fade_onset_s": 387.0,
+      "final_temperature_c": 278.1,
+      "stop_distance_m": 49.8,
+      "stop_distance_cold_m": 48.2
+    },
+    {
+      "speed_kmh": 80.0,
+      "power_per_disc_w": 5720.5,
+      "equilibrium_c": 375.7,
+      "fade_onset_s": 214.0,
+      "final_temperature_c": 357.7,
+      "stop_distance_m": 54.9,
+      "stop_distance_cold_m": 48.2
+    }
+  ],
+  "stop_cycles": {
+    "speed_kmh": 100.0,
+    "cooldown_s": 10.0,
+    "cycles": 16,
+    "temperature_max_c": 447.6,
+    "distance_first_m": 48.2,
+    "distance_last_m": 59.2,
+    "distance_cold_m": 48.2,
+    "per_cycle": [
+      {
+        "cycle": 1,
+        "temperature_before_c": 25.0,
+        "temperature_after_c": 66.0,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 2,
+        "temperature_before_c": 64.3,
+        "temperature_after_c": 104.7,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 3,
+        "temperature_before_c": 101.3,
+        "temperature_after_c": 141.1,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 4,
+        "temperature_before_c": 136.1,
+        "temperature_after_c": 175.4,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 5,
+        "temperature_before_c": 168.9,
+        "temperature_after_c": 207.7,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 6,
+        "temperature_before_c": 199.7,
+        "temperature_after_c": 238.0,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 7,
+        "temperature_before_c": 228.6,
+        "temperature_after_c": 266.4,
+        "distance_m": 48.2
+      },
+      {
+        "cycle": 8,
+        "temperature_before_c": 255.8,
+        "temperature_after_c": 293.1,
+        "distance_m": 48.5
+      },
+      {
+        "cycle": 9,
+        "temperature_before_c": 281.2,
+        "temperature_after_c": 318.0,
+        "distance_m": 50.0
+      },
+      {
+        "cycle": 10,
+        "temperature_before_c": 304.9,
+        "temperature_after_c": 341.2,
+        "distance_m": 51.4
+      },
+      {
+        "cycle": 11,
+        "temperature_before_c": 326.9,
+        "temperature_after_c": 362.6,
+        "distance_m": 52.8
+      },
+      {
+        "cycle": 12,
+        "temperature_before_c": 347.4,
+        "temperature_after_c": 382.5,
+        "distance_m": 54.2
+      },
+      {
+        "cycle": 13,
+        "temperature_before_c": 366.2,
+        "temperature_after_c": 400.9,
+        "distance_m": 55.5
+      },
+      {
+        "cycle": 14,
+        "temperature_before_c": 383.7,
+        "temperature_after_c": 417.8,
+        "distance_m": 56.8
+      },
+      {
+        "cycle": 15,
+        "temperature_before_c": 399.7,
+        "temperature_after_c": 433.4,
+        "distance_m": 58.0
+      },
+      {
+        "cycle": 16,
+        "temperature_before_c": 414.5,
+        "temperature_after_c": 447.6,
+        "distance_m": 59.2
+      }
+    ]
+  },
+  "options": {
+    "grade": 0.07,
+    "duration_s": 600.0,
+    "cycles": 16,
+    "cooldown_s": 10.0
+  },
+  "emergency_stop_kmh": 100.0
+}
