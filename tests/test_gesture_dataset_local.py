@@ -15,8 +15,7 @@ import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(_HERE)
-sys.path.insert(0, os.path.join(_REPO, "src", "air", "gesture_control_drone",
-                                "scripts"))
+sys.path.insert(0, os.path.join(_REPO, "src", "air", "gesture_control_drone", "scripts"))
 
 import gesture_dataset as gd  # noqa: E402
 
@@ -50,7 +49,7 @@ def test_normalize():
     check("手掌尺度 = 100", abs(gd.palm_scale(hand) - 100.0) < 1e-3, gd.palm_scale(hand))
 
     feat = gd.normalize_landmarks(hand)
-    check("特征维度 = 63", feat.shape == (42,), feat.shape)
+    check("特征维度 = 42（21 个点 × 2）", feat.shape == (42,), feat.shape)
     check("腕部被移到原点", np.allclose(feat[:2], [0.0, 0.0], atol=1e-6), feat[:2])
 
     # 平移不变
@@ -195,8 +194,39 @@ def test_stats_split():
     check("划分后总数不变", len(ytr) + len(yv) == 70, (len(ytr), len(yv)))
     check("验证集约占 20%", abs(len(yv) - 14) <= 2, len(yv))
     check("每类验证集至少 1 个", all((yv == c).sum() >= 1 for c in range(7)),
-          {c: int((yv == c).sum()) for c in range(7)})
-    check("训练集不含验证样本", len(set(ytr.tolist()) | set(yv.tolist())) <= 7)
+          str({c: int((yv == c).sum()) for c in range(7)}))
+
+    # 索引级校验：训练/验证的**样本下标**不能有交集（原来的写法只比较标签集合，恒真）
+    tr_idx, va_idx, skipped = gd.split_train_val(feats, labs, val_ratio=0.2,
+                                                 seed=0, return_index=True)
+    check("训练/验证索引无交集", len(set(tr_idx.tolist()) & set(va_idx.tolist())) == 0,
+          str(len(set(tr_idx.tolist()) & set(va_idx.tolist()))))
+    check("索引并集覆盖全部样本",
+          sorted(tr_idx.tolist() + va_idx.tolist()) == list(range(70)),
+          (len(tr_idx), len(va_idx)))
+    check("本次划分没有跳过任何类别", skipped == [], str(skipped))
+
+    # 第 2 条回归：打乱之后的标签不应该还按类聚在一起
+    first_half = ytr[: len(ytr) // 2]
+    check("训练集已打乱（前一半不是同一类）",
+          len(set(first_half.tolist())) > 1, str(first_half.tolist()[:12]))
+
+    # 第 1 条回归：某类只有 1 个样本时，必须留在训练集，不能整类消失
+    tiny_feats = np.concatenate([feats[:1], feats[7:10]])       # 类 0 只有 1 个
+    tiny_labs = np.array([0, 1, 1, 1], dtype=np.int64)
+    tr_i, va_i, sk = gd.split_train_val(tiny_feats, tiny_labs, val_ratio=0.3,
+                                        seed=0, return_index=True)
+    check("单样本类别留在训练集", 0 in tiny_labs[tr_i].tolist(), tr_i.tolist())
+    check("单样本类别记入 skipped", sk == [0], str(sk))
+    check("校验集非空", len(va_i) > 0, len(va_i))
+
+    # 第 3 条回归：脏标签必须报错，而不是被统计悄悄丢掉
+    try:
+        gd.dataset_stats(feats[:3], np.array([0, 7, 99], dtype=np.int64))
+        ok = False
+    except ValueError:
+        ok = True
+    check("dataset_stats 对越界标签抛 ValueError", ok)
 
     try:
         gd.split_train_val(feats, labs, val_ratio=1.5)
@@ -207,6 +237,32 @@ def test_stats_split():
 
 
 # ------------------------------------------------------------------ 从识别结果提取
+def test_gesture_map_contract():
+    """_TRAIN_GESTURES 的顺序决定 label id，必须和 gesture_map.py 一致。"""
+    import re as _re
+    import os as _os
+
+    repo = _os.path.dirname(_HERE)
+    gm_path = _os.path.join(repo, "src", "air", "gesture_control_drone",
+                            "scripts", "gesture_map.py")
+    if not _os.path.isfile(gm_path):
+        check("能找到 gesture_map.py", False, gm_path)
+        return
+    src = open(gm_path, encoding="utf-8").read()
+
+    # 取 GESTURE_TO_COMMAND 字典里的 key（按文件里的书写顺序）
+    block = src.split("GESTURE_TO_COMMAND = {", 1)[1].split("}", 1)[0]
+    keys = _re.findall(r"(GESTURE_[A-Z_]+)\s*:", block)
+    consts = dict(_re.findall(r'^(GESTURE_[A-Z_]+)\s*=\s*"([A-Z_]+)"', src,
+                              flags=_re.M))
+    map_gestures = [consts[k] for k in keys if k in consts]
+
+    check("gesture_map 里有 7 个手势映射", len(map_gestures) == 7, str(map_gestures))
+    check("本模块的可训练手势与 gesture_map 完全一致（顺序也一致）",
+          list(gd.trainable_gestures()) == map_gestures,
+          "%s vs %s" % (list(gd.trainable_gestures()), map_gestures))
+
+
 def test_extract():
     class _Result(object):
         def __init__(self, landmarks, gesture):
@@ -232,6 +288,7 @@ def main():
         test_io(tmp)
         test_merge(tmp)
         test_stats_split()
+        test_gesture_map_contract()
         test_extract()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

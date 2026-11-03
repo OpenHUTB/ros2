@@ -33,8 +33,10 @@ NUM_LANDMARKS = 21
 FEATURE_DIM = NUM_LANDMARKS * 2
 
 #: 参与分类的手势（不含 NONE：NONE 表示"没有手/无法判定"，不进训练集）
+#: 顺序必须与 ``gesture_map.GESTURE_TO_COMMAND`` 一致（类别 id 由它决定）。
+#: 改顺序 = 改 label id，已训练模型的输出会错位，所以有专门的契约测试盯着。
 _TRAIN_GESTURES = ("PALM_OPEN", "FIST", "POINT", "VICTORY",
-                   "THUMB_UP", "THUMB_DOWN", "OK")
+                   "THUMB_DOWN", "THUMB_UP", "OK")
 GESTURE_INDEX = {g: i for i, g in enumerate(_TRAIN_GESTURES)}
 INDEX_GESTURE = {i: g for g, i in GESTURE_INDEX.items()}
 #: 类别数（7）
@@ -202,6 +204,14 @@ def dataset_stats(features, labels) -> Dict:
     labs = np.asarray(labels, dtype=np.int64)
     if feats.shape[0] == 0:
         raise ValueError("空数据集无法统计")
+    if feats.shape[0] != labs.shape[0]:
+        raise ValueError("features 与 labels 长度不一致：%d vs %d"
+                         % (feats.shape[0], labs.shape[0]))
+    # 统计的意义就是**发现**数据问题；标签越界必须报错，不能悄悄少样本。
+    if labs.min() < 0 or labs.max() >= NUM_CLASSES:
+        raise ValueError("标签越界：应在 0~%d，收到 %d~%d（有脏标签，"
+                         "直接统计会把它们默默丢掉）"
+                         % (NUM_CLASSES - 1, int(labs.min()), int(labs.max())))
     counts = {g: int((labs == i).sum()) for g, i in GESTURE_INDEX.items()}
     missing = [g for g, n in counts.items() if n == 0]
     return {
@@ -215,25 +225,46 @@ def dataset_stats(features, labels) -> Dict:
     }
 
 
-def split_train_val(features, labels, val_ratio: float = 0.2, seed: int = 0):
-    """按比例划分训练/验证集（分层抽样的简化版：每类各自切分）。
+def split_train_val(features, labels, val_ratio: float = 0.2, seed: int = 0,
+                    return_index: bool = False):
+    """按比例划分训练/验证集（分层抽样：每类各自切分）。
 
-    返回 ``(x_train, y_train, x_val, y_val)``。
+    返回 ``(x_train, y_train, x_val, y_val)``；``return_index=True`` 时返回
+    ``(train_idx, val_idx, skipped_classes)``，方便调用方自己取子集或做校验。
+
+    两个容易踩的坑（都已处理）：
+
+    * **某类只有 1 个样本**时，不能把它整个切进验证集，否则训练集里这一类
+      直接消失；这类样本全部留在训练集，并把类别记进 ``skipped_classes``。
+    * 切完之后**不能 ``sorted()``**：那会把刚打乱的顺序又按类别聚回去，
+      mini-batch 会连续吃到同一类。这里用 ``rng.permutation`` 再打散一次。
     """
     feats = np.asarray(features, dtype=np.float32)
     labs = np.asarray(labels, dtype=np.int64)
+    if feats.shape[0] != labs.shape[0]:
+        raise ValueError("features 与 labels 长度不一致：%d vs %d"
+                         % (feats.shape[0], labs.shape[0]))
     if not (0.0 < val_ratio < 1.0):
         raise ValueError("val_ratio 必须在 (0, 1) 之间，收到 %.3f" % val_ratio)
+
     rng = np.random.RandomState(int(seed))
-    train_idx, val_idx = [], []
+    train_idx, val_idx, skipped = [], [], []
     for cls in np.unique(labs):
         idx = np.where(labs == cls)[0]
         rng.shuffle(idx)
+        if len(idx) < 2:                       # 太少：整类留在训练集
+            train_idx.extend(idx.tolist())
+            skipped.append(int(cls))
+            continue
         n_val = max(1, int(round(len(idx) * val_ratio)))
+        n_val = min(n_val, len(idx) - 1)       # 至少给训练集留 1 个
         val_idx.extend(idx[:n_val].tolist())
         train_idx.extend(idx[n_val:].tolist())
-    train_idx = np.array(sorted(train_idx), dtype=np.int64)
-    val_idx = np.array(sorted(val_idx), dtype=np.int64)
+
+    train_idx = rng.permutation(np.array(train_idx, dtype=np.int64))
+    val_idx = rng.permutation(np.array(val_idx, dtype=np.int64))
+    if return_index:
+        return train_idx, val_idx, skipped
     return (feats[train_idx], labs[train_idx], feats[val_idx], labs[val_idx])
 
 
@@ -268,6 +299,17 @@ def _make_synthetic_hand(kind, seed=0):
     elif kind == "point":                    # 只伸食指
         for tip, mcp in ((12, 9), (16, 13), (20, 17)):
             base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
+    elif kind == "victory":                  # 食指 + 中指
+        for tip, mcp in ((16, 13), (20, 17)):
+            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
+    elif kind in ("thumbs_up", "thumbs_down"):
+        # 四指全收起来，只竖大拇指
+        for tip, mcp in ((8, 5), (12, 9), (16, 13), (20, 17)):
+            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
+        sign = -1.0 if kind == "thumbs_up" else 1.0     # 图像 y 向下
+        base[2] = base[1] + np.array([2.0, 12.0 * sign], dtype=np.float32)
+        base[3] = base[2] + np.array([2.0, 14.0 * sign], dtype=np.float32)
+        base[4] = base[3] + np.array([1.0, 14.0 * sign], dtype=np.float32)
     elif kind == "ok":                       # 拇指尖贴食指尖
         base[4] = base[8] + rng.normal(0, 1.0, 2)
     base += rng.normal(0, 0.8, base.shape)   # 一点抖动
@@ -300,11 +342,19 @@ def _cmd_merge(args):
 
 
 def _cmd_selftest(args):
-    """用合成关键点跑一遍完整流程，适合在没摄像头/没数据时验证环境。"""
+    """用合成关键点跑一遍完整流程，适合在没摄像头/没数据时验证环境。
+
+    临时文件写到系统临时目录（``tempfile.mkdtemp``）并在结束时清理，
+    **不会在源码目录留下未跟踪的中间文件**（用 ``--keep`` 可以保留查看）。
+    """
+    import shutil
+    import tempfile
+
     print("[1] 生成合成数据（7 类 × %d 个样本）" % args.per_class)
     feats, labs = [], []
     mapping = {"palm": "PALM_OPEN", "fist": "FIST", "point": "POINT",
-               "ok": "OK", "victory": "VICTORY"}
+               "victory": "VICTORY", "thumbs_up": "THUMB_UP",
+               "thumbs_down": "THUMB_DOWN", "ok": "OK"}
     for kind, name in mapping.items():
         for k in range(max(1, args.per_class // len(mapping))):
             hand = _make_synthetic_hand(kind, seed=k)
@@ -319,7 +369,7 @@ def _cmd_selftest(args):
         print("  %-12s %5d" % (g, n))
 
     print("[3] 存盘 + 读回 + 合并")
-    tmpdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_selftest")
+    tmpdir = tempfile.mkdtemp(prefix="gesture_selftest_")
     p1 = save_session(os.path.join(tmpdir, "a.npz"), feats[: len(feats) // 2],
                       labs[: len(labs) // 2])
     p2 = save_session(os.path.join(tmpdir, "b.npz"), feats[len(feats) // 2:],
@@ -331,7 +381,12 @@ def _cmd_selftest(args):
     print("[4] 训练/验证划分")
     xtr, ytr, xv, yv = split_train_val(item["features"], item["labels"], 0.25, seed=0)
     print("  训练 %d / 验证 %d" % (len(ytr), len(yv)))
-    print("OK：数据工具工作正常（合成数据在 %s）" % tmpdir)
+
+    if getattr(args, "keep", False):
+        print("OK：数据工具工作正常（临时数据保留在 %s）" % tmpdir)
+    else:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        print("OK：数据工具工作正常（临时数据已清理）")
     return 0
 
 
@@ -354,15 +409,12 @@ def main(argv=None):
 
     p_self = sub.add_parser("selftest", help="用合成数据验证整条流程")
     p_self.add_argument("--per-class", type=int, default=70)
+    p_self.add_argument("--keep", action="store_true",
+                        help="保留临时目录（默认跑完就清理）")
     p_self.set_defaults(func=_cmd_selftest)
 
     args = parser.parse_args(argv)
     return args.func(args)
-
-
-if __name__ == "__main__":
-    import sys
-    sys.exit(main())
 
 
 # --------------------------------------------------------------------------- #
@@ -378,3 +430,8 @@ def _self_check():                                   # pragma: no cover
 
 
 _self_check()
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())
