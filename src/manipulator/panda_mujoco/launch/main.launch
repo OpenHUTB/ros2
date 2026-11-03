@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="panda_mujoco" type="main.py" name="panda_mujoco" output="screen" cwd="node"/>
+</launch>
