@@ -1,0 +1,13 @@
+{
+  "samples": 486,
+  "duration_s": 49.20072313300011,
+  "level_counts": {
+    "NOMINAL": 315,
+    "CAUTION": 91,
+    "WARNING": 35,
+    "CRITICAL": 45
+  },
+  "max_true_wind_mps": 11.813376994816966,
+  "max_fused_wind_mps": 11.067132771914128,
+  "max_risk_score": 0.78515625
+}

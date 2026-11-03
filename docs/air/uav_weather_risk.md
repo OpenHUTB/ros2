@@ -187,7 +187,53 @@ python3 main.py --duration 60 --seed 42 --output-dir artifacts/demo
 
 ## 9. 本次实际运行结果
 
-环境：Windows 11、Python 3.13.7；NumPy 2.3.4、Matplotlib 3.10.8 仅用于绘图。核心 `unittest` 共 12 项通过。
+### 9.1 ROS 2 Humble 实测
+
+在 Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10 虚拟机中完成了实际构建、节点启动和话题录制：
+
+```text
+colcon build --packages-select uav_weather_risk
+Finished <<< uav_weather_risk [0.80s]
+Summary: 1 package finished [1.04s]
+```
+
+12 项 `unittest` 全部通过。启动 `ros2 launch uav_weather_risk main.launch.py` 后确认了 5 个话题：
+
+```text
+/uav_weather_risk/assessment
+/uav_weather_risk/markers
+/uav_weather_risk/odom
+/uav_weather_risk/target
+/uav_weather_risk/weather
+```
+
+连续录制 49.2 秒，共 486 个真实 ROS 2 里程计样本：
+
+| 项目 | 结果 |
+|---|---:|
+| NOMINAL | 315 |
+| CAUTION | 91 |
+| WARNING | 35 |
+| CRITICAL | 45 |
+| 最大真实风速 | 11.81 m/s |
+| 最大融合风速 | 11.07 m/s |
+| 最大风险分数 | 0.785 |
+
+![ROS 2 Humble 实测轨迹与话题流](../img/air/uav_weather_risk/ros2_runtime_effect.png)
+
+这张图的左图来自 `/uav_weather_risk/odom` 的实际轨迹，颜色来自 `/uav_weather_risk/assessment`；右图的真实风速、融合风速和风险分数来自同一时间段的话题流，不是离线重算。
+
+运行中抓取的一条有效评估消息：
+
+```json
+{"valid":true,"target_available":true,"level":0,"level_name":"NOMINAL","score":0.0,"probabilities":{"wind":0.0,"tilt":0.0,"position":0.0,"control":0.0},"predicted_p95":{"wind_mps":9.17,"tilt_deg":14.71,"position_error_m":0.82,"control_saturation":0.51},"dominant_factor":"wind","reason":"wind above 11.0 m/s in 0% of 64 rollouts over 10.0 s","horizon_s":10.0,"samples":64}
+```
+
+原始 CSV、summary、话题列表和这条评估消息保存在 `sample/` 目录，便于复核。
+
+### 9.2 离线 60 秒复现
+
+环境：Windows 11、Python 3.13.7；NumPy 2.3.4、Matplotlib 3.10.8 仅用于绘图。
 
 固定 `seed=42`、60 秒、评估周期 0.5 秒、每次 64 个集合成员的本次输出：
 
@@ -212,27 +258,23 @@ python3 main.py --duration 60 --seed 42 --output-dir artifacts/demo
 
 ![多源融合](../img/air/uav_weather_risk/wind_sources.png)
 
-这些图来自同一份实际 CSV，不是手工绘制的示意图。阵风锋在约 10 秒后增强，风险在 20 秒后进入警告区，峰值出现在 33.5 秒；45 秒后随锋面减弱回到正常。
+这些离线图来自同一份实际 CSV，不是手工绘制的示意图。
 
 ## 10. 验证状态与提交前检查
 
 已完成：
 
-- 核心融合、随机过程、飞行器响应、风险分级和场景确定性测试；
+- Ubuntu 22.04.5 / ROS 2 Humble 下 `colcon build`、`ros2 launch` 和 5 个话题的实际运行；
+- 49.2 秒、486 个 `/uav_weather_risk/odom` 样本的 ROS 2 运行数据录制与绘图；
+- 12 项核心 `unittest`；
 - 60 秒离线端到端运行，CSV、summary、PNG、GIF 均由同一 `seed=42` 生成；
-- `package.xml` 使用 `ament_python`，入口、launch、config、resource 和 README 齐备；
-- 未声称进行过真实气象数据接入、AirSim 飞行或实机测试。
+- `package.xml` 使用 `ament_python`，入口、launch、config、resource 和 README 齐备。
 
-尚需在 Ubuntu 22.04 / ROS 2 Humble 环境执行并附终端输出：
+尚未完成：
 
-```bash
-colcon build --symlink-install --packages-select uav_weather_risk
-source install/setup.bash
-ros2 launch uav_weather_risk main.launch.py
-ros2 topic echo /uav_weather_risk/assessment
-```
-
-提交前还应由另一名同学在另一台机器复跑上述命令，确认话题、MarkerArray 和干净退出。没有完成这一步时，不应把本模块标记为“已通过 ROS 2 实测”。
+- 没有 RViz2 图形界面的截图；`/uav_weather_risk/markers` 话题已确认存在，但 MarkerArray 的实际渲染未做视觉验收。
+- 没有真实气象数据、AirSim 飞行或实机测试。
+- 还应由另一名同学在另一台机器复跑一次并确认干净退出。
 
 ## 11. 参数说明
 
