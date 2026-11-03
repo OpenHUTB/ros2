@@ -581,3 +581,15 @@ bash main.sh demo "$PWD/data/final_raw/episode_300.csv;$PWD/data/final_raw/episo
 文件职责：`assets/flight_corpus.zip` 为自包含原始数据；`models/` 为权重、训练 loss 与配置；`results/` 为实验指标、预测 CSV、图表、截图与运行日志；`tests/` 为校验；`main.py` / `main.sh` 为统一入口。`data/`、ROS 构建目录与再训练输出都在本地生成，不入库。
 
 ---
+
+## 13. 参考资料
+
+1. Cho K., et al. *Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation.* EMNLP 2014.（GRU，本文按 PyTorch 实现书写）
+2. Goodfellow I., Bengio Y., Courville A. *Deep Learning.* MIT Press, 2016. 第 11 章（分类指标与宏平均）
+3. Shah S., et al. *AirSim: High-Fidelity Visual and Physical Simulation for Autonomous Vehicles.* Field and Service Robotics, 2018.
+4. ROS 2 Humble 文档：<https://docs.ros.org/en/humble/>
+5. ROS REP-105：坐标系约定 <https://www.ros.org/reps/rep-0105.html>
+
+---
+
+**声明**：本页的代码与文档在大模型辅助下完成；随附数据来自实际仿真采集，训练、评估、ROS2 回放与截图均来自本机实际运行。提交者负责检查并维护提交内容。
