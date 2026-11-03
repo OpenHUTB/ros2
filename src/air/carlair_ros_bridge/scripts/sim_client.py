@@ -92,10 +92,33 @@ def airsim_quat_to_ros_quat(q_wxyz) -> Tuple[float, float, float, float]:
     return matrix_to_quat_xyzw(R_enu)
 
 
+def airsim_quat_to_ros_quat_flu(q_wxyz) -> Tuple[float, float, float, float]:
+    """AirSim 机体 FRD 姿态 -> ROS 机体 FLU 姿态（ENU 世界系）.
+
+    AirSim 姿态是 body(FRD) -> world(NED)：R_ned。
+    ROS Imu 的姿态是 body(FLU) -> world(ENU)：R_flu。
+    机体轴 FRD -> FLU 为 diag(1, -1, -1)，因此
+        R_flu = C_NED2ENU @ R_ned @ diag(1, -1, -1)
+    只左乘 C 会把机体系 +z（FLU 向上）错误地转到世界系 -z。
+    """
+    R_flu = C_NED2ENU @ quat_wxyz_to_matrix(q_wxyz) @ np.diag([1.0, -1.0, -1.0])
+    return matrix_to_quat_xyzw(R_flu)
+
+
 def yaw_from_quat_xyzw(q) -> float:
     """从 ROS 四元数取偏航角（ENU 下，绕 z 轴，逆时针为正）."""
     x, y, z, w = q
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+
+
+def body_ned_to_flu(vec: np.ndarray) -> np.ndarray:
+    """机体系 NED（前-右-下）-> ROS 机体系 FLU（前-左-上）.
+
+    AirSim 的 IMU 角速度/线加速度是机体系 NED；ROS 的 sensor_msgs/Imu
+    约定机体系 FLU，因此 y、z 取反，x 不变。
+    """
+    v = np.asarray(vec, dtype=np.float64)
+    return np.array([v[0], -v[1], -v[2]], dtype=np.float64)
 
 
 # --------------------------------------------------------------------- 图像解码
@@ -239,11 +262,15 @@ class SimClient(object):
 
     # ---------------------------------------------------------------- 状态读取
     def get_state_enu(self):
-        """返回 (position_enu(3), quat_xyzw(4), lin_vel_enu(3), ang_vel_enu(3))."""
+        """返回 (position_enu(3), quat_xyzw(4), lin_vel_enu(3), ang_vel_enu(3)).
+
+        quat 为 base_link(FLU) -> world(ENU)，与 /imu 的 orientation 使用同一约定；
+        这样 EKF 同时订阅 /uav/odom 和 /imu 时不会出现 180° 机体翻转。
+        """
         state = self.client.getMultirotorState(vehicle_name=self.vehicle_name)
         k = state.kinematics_estimated
         pos_enu = ned_to_enu([k.position.x_val, k.position.y_val, k.position.z_val])
-        q_enu = airsim_quat_to_ros_quat(
+        q_enu = airsim_quat_to_ros_quat_flu(
             [k.orientation.w_val, k.orientation.x_val,
              k.orientation.y_val, k.orientation.z_val])
         vel_enu = ned_to_enu([k.linear_velocity.x_val,
@@ -253,6 +280,25 @@ class SimClient(object):
                               k.angular_velocity.y_val,
                               k.angular_velocity.z_val])
         return pos_enu, q_enu, vel_enu, ang_enu
+
+    def get_imu_enu(self):
+        """返回 (quat_xyzw, angular_velocity_flu(3), linear_acceleration_flu(3)).
+
+        - orientation：载具在 ENU 世界系下的姿态；
+        - angular_velocity / linear_acceleration：机体系 FLU，供
+          sensor_msgs/Imu 直接使用；
+        - AirSim 的线加速度包含重力分量，使用方如需“纯运动加速度”需自行扣除。
+        """
+        data = self.client.getImuData(vehicle_name=self.vehicle_name)
+        q = data.orientation
+        quat = airsim_quat_to_ros_quat_flu([q.w_val, q.x_val, q.y_val, q.z_val])
+        ang_flu = body_ned_to_flu([data.angular_velocity.x_val,
+                                   data.angular_velocity.y_val,
+                                   data.angular_velocity.z_val])
+        acc_flu = body_ned_to_flu([data.linear_acceleration.x_val,
+                                   data.linear_acceleration.y_val,
+                                   data.linear_acceleration.z_val])
+        return quat, ang_flu, acc_flu
 
     def get_collision(self) -> bool:
         state = self.client.getMultirotorState(vehicle_name=self.vehicle_name)

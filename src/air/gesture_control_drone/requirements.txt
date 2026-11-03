@@ -1,0 +1,24 @@
+# gesture_control_drone 运行时依赖
+#
+# 说明：numpy / OpenCV / Pillow 在 ROS 环境里**优先用 apt**，避免 pip 版与系统
+# ROS 自带的 OpenCV 冲突：
+#     sudo apt install -y python3-numpy python3-opencv python3-pil
+#
+# mediapipe 与 airsim 通常没有对应的 apt/rosdep 包，用 pip 安装：
+mediapipe>=0.10,<1.0   # 手势识别（本模块核心依赖）
+                       # ⚠ 必须 <1.0：mediapipe 1.x 移除了 mp.solutions
+                       #   （老 Hands 接口），装最新版会直接报
+                       #   AttributeError: module 'mediapipe' has no attribute 'solutions'
+airsim             # AirSim Python 客户端（只有 sdist，构建期要 import numpy/msgpackrpc）
+                     # Linux 上按这个顺序装：
+                     #   sudo apt install -y gcc python3-dev
+                     #   pip3 install --user numpy msgpack-rpc-python
+                     #   pip3 install --user --no-build-isolation airsim
+                   # ⚠ 旧版 requirements.txt 漏了这一条，导致控制节点
+                   #   `import airsim` 直接 ModuleNotFoundError
+
+# 仅"无 ROS 单机演示"（scripts/gesture_demo.py）需要：
+pygame
+
+# 中文绘制；若已用 apt 安装 python3-pil 可省略
+Pillow
