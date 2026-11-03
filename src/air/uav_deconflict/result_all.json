@@ -1,0 +1,505 @@
+[
+  {
+    "scenario": "crossing",
+    "title": "十字交叉 + 斜向穿越",
+    "description": "四条航路在同一时刻穿越中心点，第五架沿对角线斜穿同一空域。中心点四机同时到达，属于最坏情况的空域拥塞。",
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "东西向配送",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 103.0,
+        "end_time": 103.0,
+        "path_xy": 440.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "南北向配送",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 103.0,
+        "end_time": 103.0,
+        "path_xy": 440.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-3",
+        "label": "西向回程",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 103.0,
+        "end_time": 103.0,
+        "path_xy": 440.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-4",
+        "label": "南向回程",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 103.0,
+        "end_time": 103.0,
+        "path_xy": 440.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-5",
+        "label": "斜向巡检",
+        "t0": 10.0,
+        "alt": 60.0,
+        "duration": 111.64,
+        "end_time": 121.64,
+        "path_xy": 509.1,
+        "priority": 0
+      }
+    ],
+    "actions": [
+      {
+        "kind": "altitude",
+        "uid": "UAV-2",
+        "value": 30.0,
+        "cost": 29.0,
+        "note": "巡航高度 60 → 90 m"
+      },
+      {
+        "kind": "altitude",
+        "uid": "UAV-4",
+        "value": -30.0,
+        "cost": 29.0,
+        "note": "巡航高度 60 → 30 m"
+      },
+      {
+        "kind": "lateral",
+        "uid": "UAV-3",
+        "value": 60.0,
+        "cost": 27.5,
+        "note": "航路中点侧向偏移 +60 m"
+      }
+    ],
+    "summary": {
+      "scenario": "crossing",
+      "sep": {
+        "horizontal": 50.0,
+        "vertical": 20.0
+      },
+      "before": {
+        "conflicts": 8,
+        "conflict_pairs": 8,
+        "min_h": 0.0,
+        "min_v": 0.0,
+        "total_duration": 54.4
+      },
+      "after": {
+        "conflicts": 0,
+        "conflict_pairs": 0,
+        "min_h": Infinity,
+        "min_v": Infinity,
+        "total_duration": 0
+      },
+      "delay_total": 26.3,
+      "advance_total": 24.0,
+      "delay_max": 24.0,
+      "alt_changes": 2,
+      "lateral_extra_m": 18.6,
+      "delays": {
+        "UAV-1": 0.0,
+        "UAV-2": 24.0,
+        "UAV-3": 2.3,
+        "UAV-4": -24.0,
+        "UAV-5": 0.0
+      },
+      "truth_before": {
+        "min_h": 0.17,
+        "pair": [
+          "UAV-1",
+          "UAV-2"
+        ],
+        "t": 51.1,
+        "violations": 1090
+      },
+      "truth_after": {
+        "min_h": 59.08,
+        "pair": [
+          "UAV-1",
+          "UAV-3"
+        ],
+        "t": 51.4,
+        "violations": 0,
+        "arrival_error_max": 0.0,
+        "track_error_max": 3.54
+      }
+    }
+  },
+  {
+    "scenario": "corridor",
+    "title": "走廊对头 + 追越",
+    "description": "同一条东西向走廊内两机对头飞行、快机追越慢机；另有一架高优先级医疗急救机，解脱时不允许被延误。",
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "东向干线",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 123.0,
+        "end_time": 123.0,
+        "path_xy": 600.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "西向干线",
+        "t0": 20.0,
+        "alt": 60.0,
+        "duration": 123.0,
+        "end_time": 143.0,
+        "path_xy": 600.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-3",
+        "label": "慢速巡检",
+        "t0": 40.0,
+        "alt": 60.0,
+        "duration": 108.0,
+        "end_time": 148.0,
+        "path_xy": 300.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-4",
+        "label": "医疗急救（不可延误）",
+        "t0": 55.0,
+        "alt": 60.0,
+        "duration": 73.0,
+        "end_time": 128.0,
+        "path_xy": 300.0,
+        "priority": 10
+      }
+    ],
+    "actions": [
+      {
+        "kind": "altitude",
+        "uid": "UAV-2",
+        "value": 30.0,
+        "cost": 29.0,
+        "note": "巡航高度 60 → 90 m"
+      },
+      {
+        "kind": "delay",
+        "uid": "UAV-3",
+        "value": 10.0,
+        "cost": 10.0,
+        "note": "起飞推迟 10 s"
+      }
+    ],
+    "summary": {
+      "scenario": "corridor",
+      "sep": {
+        "horizontal": 50.0,
+        "vertical": 20.0
+      },
+      "before": {
+        "conflicts": 4,
+        "conflict_pairs": 4,
+        "min_h": 0.0,
+        "min_v": 0.0,
+        "total_duration": 30.9
+      },
+      "after": {
+        "conflicts": 0,
+        "conflict_pairs": 0,
+        "min_h": Infinity,
+        "min_v": Infinity,
+        "total_duration": 0
+      },
+      "delay_total": 34.0,
+      "advance_total": 0,
+      "delay_max": 24.0,
+      "alt_changes": 1,
+      "lateral_extra_m": 0.0,
+      "delays": {
+        "UAV-1": 0.0,
+        "UAV-2": 24.0,
+        "UAV-3": 10.0,
+        "UAV-4": 0.0
+      },
+      "truth_before": {
+        "min_h": 0.24,
+        "pair": [
+          "UAV-1",
+          "UAV-2"
+        ],
+        "t": 71.1,
+        "violations": 618
+      },
+      "truth_after": {
+        "min_h": 54.46,
+        "pair": [
+          "UAV-1",
+          "UAV-4"
+        ],
+        "t": 104.2,
+        "violations": 0,
+        "arrival_error_max": 0.0,
+        "track_error_max": 5.54
+      }
+    }
+  },
+  {
+    "scenario": "metro",
+    "title": "网格状多机空域",
+    "description": "六架飞机沿两横两纵航路飞行，交叉点多、时间错开但仍有重叠，用于检验多冲突同时存在时的消解能力。",
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "南横线东行",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 105.78,
+        "end_time": 105.78,
+        "path_xy": 520.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "北横线西行",
+        "t0": 2.0,
+        "alt": 60.0,
+        "duration": 105.78,
+        "end_time": 107.78,
+        "path_xy": 520.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-3",
+        "label": "西纵线北行",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 113.0,
+        "end_time": 113.0,
+        "path_xy": 520.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-4",
+        "label": "东纵线南行",
+        "t0": 3.0,
+        "alt": 60.0,
+        "duration": 113.0,
+        "end_time": 116.0,
+        "path_xy": 520.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-5",
+        "label": "中横线东行",
+        "t0": 8.0,
+        "alt": 60.0,
+        "duration": 122.29,
+        "end_time": 130.29,
+        "path_xy": 520.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-6",
+        "label": "中纵线南行",
+        "t0": 10.0,
+        "alt": 60.0,
+        "duration": 122.29,
+        "end_time": 132.29,
+        "path_xy": 520.0,
+        "priority": 0
+      }
+    ],
+    "actions": [
+      {
+        "kind": "delay",
+        "uid": "UAV-5",
+        "value": 15.0,
+        "cost": 15.0,
+        "note": "起飞推迟 15 s"
+      },
+      {
+        "kind": "lateral",
+        "uid": "UAV-6",
+        "value": 20.0,
+        "cost": 13.571428571428571,
+        "note": "航路中点侧向偏移 +20 m"
+      },
+      {
+        "kind": "delay",
+        "uid": "UAV-4",
+        "value": 10.0,
+        "cost": 10.0,
+        "note": "起飞推迟 10 s"
+      },
+      {
+        "kind": "altitude",
+        "uid": "UAV-2",
+        "value": 30.0,
+        "cost": 29.0,
+        "note": "巡航高度 60 → 90 m"
+      }
+    ],
+    "summary": {
+      "scenario": "metro",
+      "sep": {
+        "horizontal": 50.0,
+        "vertical": 20.0
+      },
+      "before": {
+        "conflicts": 5,
+        "conflict_pairs": 5,
+        "min_h": 4.650546871809491,
+        "min_v": 0.0,
+        "total_duration": 38.3
+      },
+      "after": {
+        "conflicts": 0,
+        "conflict_pairs": 0,
+        "min_h": Infinity,
+        "min_v": Infinity,
+        "total_duration": 0
+      },
+      "delay_total": 49.3,
+      "advance_total": 0,
+      "delay_max": 24.0,
+      "alt_changes": 1,
+      "lateral_extra_m": 1.8,
+      "delays": {
+        "UAV-1": 0.0,
+        "UAV-2": 24.0,
+        "UAV-3": 0.0,
+        "UAV-4": 10.0,
+        "UAV-5": 15.0,
+        "UAV-6": 0.3
+      },
+      "truth_before": {
+        "min_h": 4.66,
+        "pair": [
+          "UAV-1",
+          "UAV-4"
+        ],
+        "t": 66.2,
+        "violations": 767
+      },
+      "truth_after": {
+        "min_h": 55.31,
+        "pair": [
+          "UAV-3",
+          "UAV-5"
+        ],
+        "t": 60.6,
+        "violations": 0,
+        "arrival_error_max": 0.0,
+        "track_error_max": 4.02
+      }
+    }
+  },
+  {
+    "scenario": "slot",
+    "title": "固定时隙（禁止地面等待）",
+    "description": "三架飞机在高峰时段已排定起飞时隙，不允许地面等待，解脱只能通过高度层或侧向绕行完成。",
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "东行干线",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 98.0,
+        "end_time": 98.0,
+        "path_xy": 400.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "北行干线",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 98.0,
+        "end_time": 98.0,
+        "path_xy": 400.0,
+        "priority": 0
+      },
+      {
+        "uid": "UAV-3",
+        "label": "西行干线",
+        "t0": 0.0,
+        "alt": 60.0,
+        "duration": 98.0,
+        "end_time": 98.0,
+        "path_xy": 400.0,
+        "priority": 0
+      }
+    ],
+    "actions": [
+      {
+        "kind": "lateral",
+        "uid": "UAV-2",
+        "value": -40.0,
+        "cost": 20.0,
+        "note": "航路中点侧向偏移 -40 m"
+      },
+      {
+        "kind": "lateral",
+        "uid": "UAV-3",
+        "value": -20.0,
+        "cost": 12.5,
+        "note": "航路中点侧向偏移 -20 m"
+      }
+    ],
+    "summary": {
+      "scenario": "slot",
+      "sep": {
+        "horizontal": 50.0,
+        "vertical": 20.0
+      },
+      "before": {
+        "conflicts": 3,
+        "conflict_pairs": 3,
+        "min_h": 28.284271247461902,
+        "min_v": 0.0,
+        "total_duration": 18.3
+      },
+      "after": {
+        "conflicts": 0,
+        "conflict_pairs": 0,
+        "min_h": Infinity,
+        "min_v": Infinity,
+        "total_duration": 0
+      },
+      "delay_total": 1.4,
+      "advance_total": 0,
+      "delay_max": 1.2,
+      "alt_changes": 0,
+      "lateral_extra_m": 11.5,
+      "delays": {
+        "UAV-1": 0.0,
+        "UAV-2": 1.2,
+        "UAV-3": 0.3
+      },
+      "truth_before": {
+        "min_h": 28.28,
+        "pair": [
+          "UAV-1",
+          "UAV-2"
+        ],
+        "t": 48.6,
+        "violations": 367
+      },
+      "truth_after": {
+        "min_h": 51.78,
+        "pair": [
+          "UAV-1",
+          "UAV-2"
+        ],
+        "t": 51.6,
+        "violations": 0,
+        "arrival_error_max": 0.0,
+        "track_error_max": 3.57
+      }
+    }
+  }
+]

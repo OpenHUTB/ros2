@@ -144,6 +144,7 @@ nav:
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
+    - 低空多机 4D 航迹冲突检测与解脱: './air/uav_deconflict.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 空域载具八叉树三维寻路:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
