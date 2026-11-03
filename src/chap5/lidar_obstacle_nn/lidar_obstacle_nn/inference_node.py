@@ -16,7 +16,6 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
@@ -31,12 +30,14 @@ except ImportError:  # pragma: no cover
     torch = None
 
 from lidar_obstacle_nn.model import LidarMLP  # noqa: E402
-
-
-CLASS_NAMES = ('near', 'far', 'free')
-DEFAULT_INPUT_SIZE = 360
-DEFAULT_DANGER_DISTANCE = 1.0   # metres inside which we say "near"
-DEFAULT_FAR_DISTANCE = 3.0      # metres beyond which we say "free"
+from lidar_obstacle_nn.scan_utils import (  # noqa: E402
+    CLASS_NAMES,
+    DEFAULT_DANGER_DISTANCE,
+    DEFAULT_FALLBACK_CONFIDENCE,
+    DEFAULT_FAR_DISTANCE,
+    DEFAULT_SCAN_SIZE,
+    classify_scan_message,
+)
 
 
 class LidarInferenceNode(Node):
@@ -47,15 +48,25 @@ class LidarInferenceNode(Node):
 
         # ---- Parameters ------------------------------------------------
         self.declare_parameter('model_path', '')
-        self.declare_parameter('input_size', DEFAULT_INPUT_SIZE)
+        self.declare_parameter('input_size', DEFAULT_SCAN_SIZE)
         self.declare_parameter('danger_distance', DEFAULT_DANGER_DISTANCE)
         self.declare_parameter('far_distance', DEFAULT_FAR_DISTANCE)
+        self.declare_parameter(
+            'fallback_confidence',
+            DEFAULT_FALLBACK_CONFIDENCE,
+        )
         self.declare_parameter('device', 'cpu')
         # Default: do NOT use CUDA. The MLP is tiny (~50K params), CPU
         # inference is sub-millisecond, and avoiding CUDA avoids
         # capability-mismatch issues (e.g. very recent GPUs whose
         # compute capability is not yet supported by the stable wheels).
         self.declare_parameter('use_gpu', False)
+
+        if torch is None:
+            raise RuntimeError(
+                'PyTorch is required for inference. Install the package '
+                'requirements before starting this node.'
+            )
 
         model_path = (
             self.get_parameter('model_path').get_parameter_value().string_value
@@ -72,6 +83,21 @@ class LidarInferenceNode(Node):
             self.get_parameter('use_gpu').get_parameter_value().bool_value
         )
         device_name = self.get_parameter('device').get_parameter_value().string_value
+        self._fallback_confidence = float(
+            self.get_parameter('fallback_confidence')
+            .get_parameter_value()
+            .double_value
+        )
+        self._danger_distance = float(
+            self.get_parameter('danger_distance')
+            .get_parameter_value()
+            .double_value
+        )
+        self._far_distance = float(
+            self.get_parameter('far_distance')
+            .get_parameter_value()
+            .double_value
+        )
 
         # ---- Device selection -----------------------------------------
         # We deliberately start on CPU. Only when CUDA is explicitly
@@ -175,22 +201,15 @@ class LidarInferenceNode(Node):
             self._device = torch.device('cpu')
             return sample_tensor.to(self._device)
 
-    def _scan_cb(self, msg: LaserScan) -> None:
-        # Resample the raw scan to the model's expected input size.
-        raw = np.asarray(msg.ranges, dtype=np.float32)
-        if raw.size != self._model.input_size:
-            idx = np.linspace(0, raw.size - 1, self._model.input_size)
-            raw = np.interp(idx, np.arange(raw.size), raw)
+    def _predict_proba(self, raw):
+        """Run the model, including the one-shot CUDA compatibility path."""
         tensor = torch.from_numpy(raw).unsqueeze(0)
-
         # Probe CUDA on the first scan (only if requested); falls back
         # to CPU on any error.
         tensor = self._maybe_probe_cuda(tensor)
 
         try:
-            probs = self._model.predict_proba(tensor)[0]
-            cls_id = int(torch.argmax(probs).item())
-            confidence = float(probs[cls_id].item())
+            return self._model.predict_proba(tensor)[0].cpu().numpy()
         except (RuntimeError, AssertionError) as exc:
             # Late CUDA failure: drop to CPU and re-run forward.
             self.get_logger().warn(
@@ -200,29 +219,24 @@ class LidarInferenceNode(Node):
             self._model.to(torch.device('cpu')).eval()
             self._device = torch.device('cpu')
             tensor = tensor.to(self._device)
-            probs = self._model.predict_proba(tensor)[0]
-            cls_id = int(torch.argmax(probs).item())
-            confidence = float(probs[cls_id].item())
+            return self._model.predict_proba(tensor)[0].cpu().numpy()
 
-        # Safety-net fallback: also re-derive the label from the raw
-        # distances so that running with random weights is still useful
-        # for wiring tests in Gazebo (does not override a confident NN
-        # prediction, only used when confidence is low).
-        if confidence < 0.45:
-            min_range = float(np.nanmin(np.where(np.isfinite(raw), raw, np.inf)))
-            if min_range < self.get_parameter('danger_distance').get_parameter_value().double_value:
-                cls_id = 0
-            elif min_range >= self.get_parameter('far_distance').get_parameter_value().double_value:
-                cls_id = 2
-            else:
-                cls_id = 1
+    def _scan_cb(self, msg: LaserScan) -> None:
+        prediction = classify_scan_message(
+            msg,
+            predict_proba=self._predict_proba,
+            input_size=self._model.input_size,
+            danger_distance=self._danger_distance,
+            far_distance=self._far_distance,
+            fallback_confidence=self._fallback_confidence,
+        )
 
         class_msg = String()
-        class_msg.data = CLASS_NAMES[cls_id]
+        class_msg.data = CLASS_NAMES[prediction.class_id]
         self._class_pub.publish(class_msg)
 
         conf_msg = Float32()
-        conf_msg.data = confidence
+        conf_msg.data = prediction.confidence
         self._conf_pub.publish(conf_msg)
 
 
