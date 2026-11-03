@@ -1,0 +1,41 @@
+# carla_nn_car_following 运行参数
+# 说明：main.py 会读取本文件；命令行参数（--host/--town/--weather/--duration）优先级更高。
+
+# ---- CARLA 连接 ----
+host: 192.168.148.1        # Windows 宿主机 IP（VMware NAT 下的 VMnet8 地址，用 ipconfig 确认）
+port: 2000
+town: Town03               # 推荐 Town03：直路多、路口少
+weather: ClearNoon         # ClearNoon / HardRainNoon / ClearNight
+dt: 0.05                   # 同步步长（秒），0.05 = 20 Hz
+
+# ---- 仿真流程 ----
+duration: 30.0             # 单次工况时长（秒）
+lead_distance: 25.0        # 前车初始生成距离（米）
+spawn_index: -1            # 自车出生点序号；-1 = 自动预检挑选一个能正常行驶的出生点
+initial_speed: auto        # 开场速度：auto = 用工况的巡航速度（推荐）；也可写具体数值（m/s），0 表示从静止起步
+v_set: auto                # 设定车速：auto = 用工况巡航速度；前车很远/跟丢时自车按此速度巡航，避免无限加速
+v_set_margin: 2.0          # 设定车速的余量（m/s）：前车实际速度会略高于目标速度，没有余量车距会被缓慢拉开
+
+# ---- 经典 ACC 控制器（神经网络标签的来源）----
+d0: 5.0                    # 静止安全距离（米）
+headway: 1.2               # 车头时距（秒）
+kp: 0.35                   # 车距误差增益
+kv: 1.5                    # 相对速度增益（越大越早刹车，跟车更稳）
+k_throttle: 0.25           # 加速度 -> 油门
+k_brake: 0.35              # 减速度 -> 刹车
+k_feedforward: 0.03        # 油门前馈系数（k_ff × 车速），抵消滚阻/风阻，消除车距稳态误差
+
+# ---- 神经网络 ----
+controller: classic        # classic = 经典 ACC（用真值车距）；nn = 神经网络控制器（用雷达数据估计）
+models_dir: models         # 训练好的模型目录（perception.npz、control.npz）
+data_dir: data             # 采集数据与评测结果的输出目录
+train_epochs: 300          # 训练轮数
+train_lr: 0.01             # 学习率（Adam）
+train_batch: 64            # 批大小
+
+# ---- 前向毫米波雷达 ----
+radar_fov: 30.0                    # 水平视场角（度）
+radar_range: 100.0                 # 量程（米）
+radar_vertical_fov: 4.0            # 垂直视场角（度）；过大会扫到路面，使"最短回波"变成路面回波
+radar_velocity_tolerance: 8.0      # 多普勒速度门限（m/s）：径向速度超过该值的回波视为静止杂波（护栏/墙面/路面）
+radar_azimuth_tolerance_deg: 8.0   # 只统计正前方 ±8 度内的回波

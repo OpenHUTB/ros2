@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrobot_gazebo</name>
+  <version>0.1.0</version>
+  <description>
+    在 Gazebo Classic 11 中加载带 RPLIDAR 激光雷达的 mrobot 移动机器人，并载入自建房间世界 my_room，
+    作为机器人 SLAM 与自主导航的环境搭建示例（ROS Noetic）。
+  </description>
+
+  <maintainer email="hcx@todo.todo">hcx</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>gazebo_plugins</depend>
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_ros_control</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>xacro</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>robot_state_publisher</depend>
+
+  <!-- 将本包 models 目录导出为 Gazebo 模型搜索路径，
+       source 工作空间后 Gazebo 即可通过 model://my_room 找到房子模型。 -->
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+  </export>
+</package>
