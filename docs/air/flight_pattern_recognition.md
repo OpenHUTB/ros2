@@ -458,3 +458,50 @@ $$
 另有一条独立的等价性检查：`python verify_stream.py` 逐条喂入遥测，比对离线整批预测与流式预测的概率，容差 **2e-6**，覆盖全部 315 个最终窗口。它验证的是"在线路径与离线评估走的是同一套预处理与推理"，而不是训练可复现性。
 
 ---
+
+## 8. ROS2 接口与事件防抖
+
+| 话题 | 类型 | 内容 |
+|---|---|---|
+| `/uav/pattern/telemetry` | `std_msgs/String` | 每帧遥测：整数纳秒时间戳、`segment_id`、9 个运动分量 |
+| `/uav/pattern/prediction` | `std_msgs/String` | 原始类别、拒识后类别、置信度、5 维概率、稳定标签、事件 |
+| `/uav/pattern/task_events` | `std_msgs/String` | 稳定后的任务事件：`previous`、`label`、`confidence` |
+| `/uav/pattern/status` | `std_msgs/String` | 节点状态：`collecting_7_seconds_of_history` / `recognizing` / `replay_complete` / `no_data_history_reset` |
+| `/uav/pattern/replay_status` | `std_msgs/String` | 回放结束通知，用于触发关停 |
+
+| 节点 | 可执行文件 | 职责 |
+|---|---|---|
+| `pattern_replay` | `pattern_replay` | 按记录时间戳回放 CSV，可设 `speed` 与 `startup_delay` |
+| `pattern_recognizer` | `pattern_recognizer` | 维护窗口、推理、防抖、发布事件与预测 |
+| `flight_pattern_dashboard` | `topic_dashboard` | 订阅四个话题实时绘图 |
+
+启动：
+
+```bash
+ros2 launch flight_pattern_recognition pattern.launch.py \
+  files:="$PWD/data/final_raw/episode_300.csv" model:="$PWD/models/mlp_42" log:="$PWD/results/ros_predictions.jsonl"
+```
+
+回放节点有一个容错设计：如果因为宿主卡顿导致落后超过 0.15 s，它会**移动本地的墙钟原点**而不是把积压的样本一次性倾倒出去，真实的记录时间戳保持不变。副作用是——在负载高时回放会显得比实时快。
+
+启动参数：`files`（分号分隔的 CSV 路径）与 `model` 必填，`log` 可选。回放进程退出会触发识别节点退出，日志每行立即写入——看板上的任务日志因此是实时可见的。
+
+`segment_000` 这类匿名分段标识只用于"换段即重置历史"，不携带真实任务标签。分段边界来自数据源本身，本模块**不声称**能自动发现未知任务的起止边界。
+
+### 8.1 单元测试与集成检查
+
+`tests/` 下 **10 项**单元测试覆盖：因果性（不使用未来数据）、特征对平移/旋转的不变性、采样间断、跨段重置、时钟回退、NaN、防抖，以及"低置信度只记 `uncertain` 而不冒充类别"。
+
+```bash
+bash main.sh test
+```
+
+另有真实 ROS2 集成检查，验证 361 条消息、21 次预测、1 条事件，以及坏 JSON、NaN 与墙钟断流重置，结果记在 `results/ros_integration.json`：
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/uav_prediction_env/bin/activate
+ROS_DOMAIN_ID=76 PYTHONPATH="$PWD:$PYTHONPATH" python tests/ros_smoke.py
+```
+
+---
