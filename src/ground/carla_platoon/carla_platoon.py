@@ -10,8 +10,10 @@ apply_control(VehicleControl(throttle/brake, steer)) 下发，横向用纯跟踪
 纵向用「进度误差 P 控制」调节车速以维持间距。
 
 前置条件（本地机器）：
-  - 已安装并启动 CARLA 模拟器（含 Python API，路径如
-    /opt/carla/PythonAPI/carla/dist/carla-<ver>-py3.7-linux-x86_64.egg）
+  - 已安装并启动 CARLA 模拟器（含 Python API）。CARLA 的 .egg 需与所用 Python
+    版本匹配（例如 CARLA 0.9.15 对应 py3.7，更高版本提供 py3.8/py3.10 等），
+    请按本地 Python 选择对应 .egg，或将 carla 目录加入 PYTHONPATH：
+    /opt/carla/PythonAPI/carla/dist/carla-<ver>-py<X.Y>-linux-x86_64.egg
   - 安装依赖：pip install numpy
 运行：
   python3 carla_platoon.py                     # 连 localhost:2000，4 车编队
@@ -26,9 +28,8 @@ import time
 
 import numpy as np
 
-from platoon_core import (Bicycle, pure_pursuit_steer, project_to_path,
-                          sample_path, build_path_from_waypoints,
-                          normalize_angle)
+from platoon_core import (pure_pursuit_steer, project_to_path,
+                          sample_path, build_path_from_waypoints)
 
 
 # ---------------- 参考轨迹（与 2D 版同一形状：直线 + S 形横摆 + 直线）-------
@@ -52,21 +53,33 @@ def import_carla():
     except ImportError as e:
         print("[-] 未找到 carla Python API。请在本机启动 CARLA 并设置 PythonAPI 路径，例如：")
         print("    export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/"
-              "carla-0.9.15-py3.7-linux-x86_64.egg:$PYTHONPATH")
+              "carla-<ver>-py<X.Y>-linux-x86_64.egg:$PYTHONPATH")
+        print("    注意：.egg 中的 py<X.Y> 需与本地 Python 版本匹配。")
         raise SystemExit(e)
 
 
-def spawn_platoon(carla, world, n_vehicles, spacing, start_xy=(40.0, 0.0)):
-    """在参考轨迹起点附近按队形 spawn n_vehicles 辆车，返回 actor 列表。"""
+def spawn_platoon(carla, world, n_vehicles, spacing):
+    """在参考轨迹起点附近按队形 spawn n_vehicles 辆车，返回 actor 列表。
+
+    spawn 坐标与参考轨迹使用同一坐标系（leader 位于路径起点，follower 沿路径
+    起点反方向依次间隔 spacing 排开），因此与主循环中 leader/follower 的
+    弧长进度定义（s_des = s_leader - i*spacing）严格一致：车一出生就在各自的
+    期望参考位置附近，目标点不会跳到数十米外；同时避免了多车 spawn 重叠
+    （CARLA 车辆有碰撞体积，重叠会导致后车生成失败）。"""
     blueprint_lib = world.get_blueprint_library()
     bp = blueprint_lib.filter("vehicle.*")[0]   # 用默认车辆蓝图
-    spawn_points = []
     path, s = make_reference_path()
+    yaw = np.degrees(np.arctan2(path[1][1] - path[0][1],
+                                path[1][0] - path[0][0]))
+    rad = np.radians(yaw)
+    # 起点坐标（与参考轨迹同一坐标系）
+    x0, y0 = path[0][0], path[0][1]
+    spawn_points = []
     for i in range(n_vehicles):
-        px, py = sample_path(path, s, max(-i * spacing, 0.0))
-        yaw = np.degrees(np.arctan2(path[1][1] - path[0][1],
-                                    path[1][0] - path[0][0]))
-        spawn_points.append((start_xy[0] + px, start_xy[1] + py, yaw))
+        back = i * spacing                     # leader(0) 在最前，follower 依次滞后
+        sx = x0 - back * np.cos(rad)
+        sy = y0 - back * np.sin(rad)
+        spawn_points.append((sx, sy, yaw))
 
     actors = []
     for (sx, sy, syaw) in spawn_points:
@@ -105,6 +118,8 @@ def run(args):
     max_steer = 0.6
 
     s_leader = 0.0
+    # 每车上次投影弧长（供 project_to_path 近邻搜索，避免每帧全量遍历路径）
+    last_s = np.zeros(len(actors))
     prev_pos = [actors[0].get_transform().location.x,
                 actors[0].get_transform().location.y]
     t0 = time.time()
@@ -122,8 +137,10 @@ def run(args):
                            np.radians(tf.rotation.yaw)])
         states = np.asarray(states)
 
-        # leader 实际进度（投影到路径）
-        s_leader, _ = project_to_path(path, s, states[0, :2])
+        # leader 实际进度（投影到路径，用上次弧长做近邻搜索）
+        s_leader, _ = project_to_path(path, s, states[0, :2],
+                                      hint_s=last_s[0])
+        last_s[0] = s_leader
 
         # 各车控制
         for i, (actor, state) in enumerate(zip(actors, states)):
@@ -135,7 +152,9 @@ def run(args):
                 # follower：追沿轨迹滞后 leader 的参考点，纵向控间距
                 s_des = max(s_leader - i * spacing, 0.0)
                 tgt = sample_path(path, s, s_des)
-                s_actual, _ = project_to_path(path, s, state[:2])
+                s_actual, _ = project_to_path(path, s, state[:2],
+                                              hint_s=last_s[i])
+                last_s[i] = s_actual
                 v_des = v_set + kp * (s_des - s_actual)
                 v_des = float(np.clip(v_des, v_min, v_max))
 

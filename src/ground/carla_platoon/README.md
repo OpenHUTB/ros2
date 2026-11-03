@@ -8,7 +8,8 @@
 - **CARLA 版**（`carla_platoon.py`）：车辆状态取自 CARLA 真实位姿，控制量经
   `apply_control` 下发，需要在本地装 CARLA 的机器上运行。
 - **2D 轻量版**（`sim_2d_platoon.py`）：matplotlib 渲染，可直接运行并生成
-  效果动图 `platoon_demo.gif`——即本编队算法的真实运行效果演示。
+  效果动图（入库位置 `docs/img/ground/carla_platoon_demo.gif`）——即本编队算法
+  的真实运行效果演示。
 
 ## 编队原理
 
@@ -26,16 +27,22 @@ carla_platoon/
 ├── platoon_core.py       # 共享编队核心（运动学/纯跟踪/编队控制律）
 ├── carla_platoon.py      # CARLA 渲染版主脚本
 ├── sim_2d_platoon.py     # 2D 轻量仿真版主脚本
-├── platoon_demo.gif      # 2D 版真实运行效果动图
 ├── requirements.txt
 └── README.md
 ```
+> 效果动图统一入库 `docs/img/ground/carla_platoon_demo.gif`，源码目录不重复存放动图。
+
+## 运行环境
+
+2D 轻量版（生成动图）在本工程实测环境：**Ubuntu 22.04 + Python 3.12.11**
+（3.12 为独立安装的 Python，非系统自带 3.10；2D 仿真为纯 numpy/matplotlib 实现，
+不依赖系统编译器）。CARLA 渲染版需在装有对应版本 CARLA 的机器上运行。
 
 ## 运行
 
 ### 2D 版（本工程直接可跑，生成动图）
 
-```bash
+``` 
 pip install numpy matplotlib Pillow
 python3 sim_2d_platoon.py                      # 生成 platoon_demo.gif
 python3 sim_2d_platoon.py --show               # 弹出窗口实时查看
@@ -44,10 +51,10 @@ python3 sim_2d_platoon.py --frames 300 --fps 30 --out platoon_demo.gif
 
 ### CARLA 版（需本机装 CARLA）
 
-```bash
+``` 
 # 1) 启动 CARLA（如 /opt/carla/CarlaUE4.sh）
-# 2) 让 Python 能找到 carla API
-export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/carla-<ver>-py3.7-linux-x86_64.egg:$PYTHONPATH
+# 2) 让 Python 能找到 carla API（.egg 的 py<X.Y> 需与本地 Python 版本匹配）
+export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/carla-<ver>-py<X.Y>-linux-x86_64.egg:$PYTHONPATH
 pip install numpy
 python3 carla_platoon.py --map Town03 --n 4 --spacing 8 --v 6
 ```
@@ -64,8 +71,9 @@ python3 carla_platoon.py --map Town03 --n 4 --spacing 8 --v 6
 
 ## 运行效果
 
-`platoon_demo.gif` 为 2D 轻量版真实运行效果：Leader 沿 S 形参考轨迹匀速领航，
-3 辆 follower 保持约 8 m 间距跟进，连续转弯处队形保持稳定。
+动图 `docs/img/ground/carla_platoon_demo.gif` 为 2D 轻量版真实运行效果：
+Leader 沿 S 形参考轨迹匀速领航，3 辆 follower 保持约 8 m 间距跟进，
+连续转弯处队形保持稳定（实测稳态车距 7.7～8.0 m，与目标 8 m 一致）。
 
 ## 合规说明
 

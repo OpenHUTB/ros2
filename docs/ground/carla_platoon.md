@@ -35,7 +35,7 @@ src/ground/carla_platoon/
 
 ### 2D 轻量版（本工程直接可跑，生成动图）
 
-```bash
+``` 
 pip install numpy matplotlib Pillow
 python3 sim_2d_platoon.py                      # 生成 platoon_demo.gif
 python3 sim_2d_platoon.py --show               # 弹出窗口实时查看
@@ -43,10 +43,10 @@ python3 sim_2d_platoon.py --show               # 弹出窗口实时查看
 
 ### CARLA 渲染版（需本机装 CARLA）
 
-```bash
+``` 
 # 1) 启动 CARLA（如 /opt/carla/CarlaUE4.sh）
-# 2) 让 Python 找到 carla API
-export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/carla-<ver>-py3.7-linux-x86_64.egg:$PYTHONPATH
+# 2) 让 Python 找到 carla API（.egg 的 py<X.Y> 需与本地 Python 版本匹配）
+export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/carla-<ver>-py<X.Y>-linux-x86_64.egg:$PYTHONPATH
 pip install numpy
 python3 carla_platoon.py --map Town03 --n 4 --spacing 8 --v 6
 ```
@@ -65,7 +65,7 @@ python3 carla_platoon.py --map Town03 --n 4 --spacing 8 --v 6
 
 `platoon_demo.gif` 为 2D 轻量版真实运行效果：Leader 沿 S 形参考轨迹匀速领航，
 3 辆 follower 保持约 8 m 间距跟进，连续转弯处队形保持稳定（实测稳态车距
-7.7~8.0 m，与目标 8 m 一致）。
+7.7～8.0 m，与目标 8 m 一致）。
 
 ![多车协同编队效果动图](../img/ground/carla_platoon_demo.gif)
 

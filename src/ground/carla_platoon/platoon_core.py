@@ -57,14 +57,24 @@ def sample_path(path, s, s_query):
     return path[idx - 1] + t * (path[idx] - path[idx - 1])
 
 
-def project_to_path(path, s, point):
+def project_to_path(path, s, point, hint_s=None, window=60):
     """把世界坐标 point 投影到折线路径，返回 (最近点弧长 s_p, 最近点坐标)。
-    用于把车辆实际位置折算成路径进度，供纵向速度控制使用。"""
+    用于把车辆实际位置折算成路径进度，供纵向速度控制使用。
+    hint_s: 上一次的投影弧长（可选）。给定时从 hint_s 附近窗口搜索，
+    避免编队多车、每帧高频调用时全量遍历整条路径，显著提速；
+    未给定时退化为全路径搜索（结果一致）。"""
     p = np.asarray(point, dtype=float)
     dif = np.diff(path, axis=0)
+    n_seg = len(dif)
+    # 由 hint_s 确定搜索的折线段区间 [i0, i1)
+    if hint_s is None:
+        i0, i1 = 0, n_seg
+    else:
+        idx = int(np.clip(np.searchsorted(s, hint_s), 0, len(s) - 1))
+        i0, i1 = max(0, idx - 1 - window), min(n_seg, idx + window)
     best_s, best_d2 = s[0], 1e18
     best_pt = path[0].copy()
-    for i in range(len(dif)):
+    for i in range(i0, i1):
         v = dif[i]
         w = p - path[i]
         L2 = np.dot(v, v)
