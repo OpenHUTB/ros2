@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "MuJoCo\u808c\u8089\u9aa8\u9abc\u4eba\u952e\u76d8\u9065\u64cd\u4f5c\u884c\u8d70\u8e22\u817f\u8e72\u8d77";
+        var mkdocs_page_input_path = "musculoskeletal/msk_human_walking_teleop.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 模块概述</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">目录结构</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 运行环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 仿真步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 一键启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 键盘操作</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 站立与踢腿</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34">3.4 行走与步频调节</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#35">3.5 蹲起</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#36">3.6 场景切换</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#37-ros">3.7 离线自检与性能评测（无需 ROS）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 计算原理</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-hill">4.1 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42-pd">4.2 姿势反射层（PD 反射 + 拮抗共收缩）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 步态生成（相位振荡器）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 蹲起逆运动学（平面二连杆）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 踢腿编排（四阶段）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#46">4.6 性能指标定义</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 算法流程</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 源代码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61-hill-msk_human_corepy-_hill_update">6.1 Hill 肌肉更新（msk_human_core.py :: _hill_update）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62-composer-_reflex">6.2 姿势反射层（Composer :: _reflex）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63-composer-_q_ref-walk">6.3 步态参考轨迹（Composer :: _q_ref walk 分支）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#64-leg_ik_squat">6.4 蹲起逆解（leg_ik_squat）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#65">6.5 摔倒判定与安全设计</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 多场景测试与性能评价</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 大模型使用声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="" href="../../ground/mujoco_vehicle_aeb/mujoco_vehicle_aeb.md">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">肌肉骨骼人</li>
+<li class="breadcrumb-item active">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/musculoskeletal/msk_human_walking_teleop.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="mujoco">MuJoCo 肌肉骨骼人键盘遥操作：行走、踢腿与蹲起</h1>
+<h2 id="1">1. 模块概述</h2>
+<p>本模块在 <strong>MuJoCo</strong> 物理仿真器中构建了一个平面（矢状面）全身<strong>肌肉骨骼人</strong>，由 <strong>22 条 Hill 型肌肉</strong>驱动 <strong>13 个自由度</strong>（浮动基座 3 + 下肢 6 + 上肢 4），实现了课程任务 (1)：<em>对人形机器人/肌肉骨骼人进行物理仿真，通过键盘对机器人进行运动控制</em>。</p>
+<p>与常见的"每个关节一个电机"的简化不同，本模块的驱动力完全由肌肉产生：控制器输出的不是关节力矩，而是 <strong>22 维肌肉激活量</strong>，肌肉经过激活动力学与 Hill 力-长度-速度曲线滤波后产生张力，张力再通过力臂系数映射为关节力矩。肌肉只能拉、不能推，每个关节的自由度由一对<strong>拮抗肌</strong>（屈肌/伸肌）共同约束。</p>
+<p>主要特性：</p>
+<ul>
+<li><strong>分层控制</strong>：动作编排器（Composer）→ 姿势反射层（Reflex）→ Hill 肌肉动力学 → MuJoCo 步进；</li>
+<li><strong>键盘遥操作</strong>：动作键切换站立/行走/踢腿/蹲起/放松，手动兴奋键可直接兴奋任意一块肌肉并与当前动作叠加；</li>
+<li><strong>三种场景</strong>：平地、5° 下坡（等效重力）、负重 10 kg 背包，均通过同一套控制器参数稳定运行；</li>
+<li><strong>launch 一键启动</strong>，并附带无需 ROS 的离线自检（<code>check</code>）与多场景性能评测（<code>eval</code>）。</li>
+</ul>
+<blockquote>
+<p>说明：本模块对应任务 (1) 的物理仿真与键盘运动控制，控制回路为生物合理反射模型，不涉及感知/规划/端到端神经网络算法（该要求针对任务 (2)–(4)）。</p>
+</blockquote>
+<h3 id="_1">目录结构</h3>
+<div class="highlight"><pre><span></span><code>src/musculoskeletal/mujoco_msk_human_walking_teleop/
+├── main.py                     # 统一入口：check / eval / demo / sim / keyboard
+├── package.xml                 # catkin 包描述（rospy, std_msgs, sensor_msgs）
+├── README.md                   # 快速上手说明
+├── CMakeLists.txt
+├── launch/main.launch          # 一键启动：仿真节点 + 可选 xterm 键盘节点
+├── config/params.yaml          # 反射增益 / 步态 / 蹲起 / 踢腿参数
+├── eval/                       # 评测工具
+│   └── render_scenes.py        # 场景说明截图生成脚本（英文标注）
+├── models/
+│   ├── msk_human.xml           # 肌肉骨骼人模型（13 DoF + 22 motor）
+│   ├── scene_flat.xml          # 平地场景
+│   ├── scene_slope5.xml        # 5 度下坡场景（等效重力法）
+│   └── scene_load.xml          # 负载场景（运行时躯干 +10 kg）
+└── scripts/
+    ├── msk_human_core.py       # 仿真核心：Hill 肌肉、反射层、动作编排、自检
+    ├── msk_human_keyboard.py   # 键盘策略（按键 -&gt; 激活/动作，被键盘节点导入）
+    ├── msk_human_eval.py       # 离线多场景性能评测
+    ├── msk_human_sim_node.py   # ROS 仿真节点（500 Hz 控制回路）
+    └── msk_human_keyboard_node.py  # ROS 键盘遥操作节点（xterm 中运行）
+</code></pre></div>
+<h2 id="2">2. 运行环境</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>版本/说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04</td>
+</tr>
+<tr>
+<td>ROS</td>
+<td>1 Noetic（<code>rospy</code>；本模块未适配 ROS 2）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8</td>
+</tr>
+<tr>
+<td>MuJoCo</td>
+<td><code>mujoco==3.2.3</code>（<code>pip install mujoco==3.2.3</code>）</td>
+</tr>
+<tr>
+<td>其他依赖</td>
+<td><code>numpy</code>、<code>PyYAML</code>、<code>xterm</code>（<code>sudo apt install xterm</code>）</td>
+</tr>
+</tbody>
+</table>
+<p>安装与构建：</p>
+<div class="highlight"><pre><span></span><code># 1. 安装 Python 依赖
+pip3 install mujoco==3.2.3 numpy pyyaml
+sudo apt install xterm
+
+# 2. 建立工作空间并放置本模块（假设模块位于 ~/catkin_ws/src/ 下）
+cd ~/catkin_ws
+catkin_make -DCATKIN_WHITELIST_PACKAGES="mujoco_msk_human_walking_teleop"
+source devel/setup.bash
+</code></pre></div>
+<h2 id="3">3. 仿真步骤</h2>
+<h3 id="31">3.1 一键启动</h3>
+<div class="highlight"><pre><span></span><code>roslaunch mujoco_msk_human_walking_teleop main.launch
+</code></pre></div>
+<p>launch 会同时启动两个节点：MuJoCo 仿真窗口（默认平地场景）和一个 xterm 键盘窗口。启动后人物以站立姿态稳定在场景中：</p>
+<p><img alt="平地场景" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_flat.png"/></p>
+<h3 id="32">3.2 键盘操作</h3>
+<p>在 xterm 窗口中按键（按 <code>H</code> 可随时打印帮助）：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>动作切换</td>
+<td><code>1</code></td>
+<td>站立</td>
+</tr>
+<tr>
+<td></td>
+<td><code>2</code></td>
+<td>踢腿（右腿，单次）</td>
+</tr>
+<tr>
+<td></td>
+<td><code>3</code></td>
+<td>蹲起（连续周期）</td>
+</tr>
+<tr>
+<td></td>
+<td><code>4</code></td>
+<td>行走</td>
+</tr>
+<tr>
+<td></td>
+<td><code>0</code></td>
+<td>全身放松（肌肉激活清零，身体瘫倒）</td>
+</tr>
+<tr>
+<td>步频调节</td>
+<td><code>+</code> / <code>-</code></td>
+<td>行走步频加快/减慢（0.5–1.5 倍）</td>
+</tr>
+<tr>
+<td>手动兴奋</td>
+<td><code>Q/W</code> 左髋屈/伸，<code>A/S</code> 左膝屈/伸，<code>Z/X</code> 左踝背屈/跖屈</td>
+<td>自锁式：按一次开启、再按一次关闭，叠加在反射层之上</td>
+</tr>
+<tr>
+<td></td>
+<td><code>U/I</code>、<code>J/K</code>、<code>N/M</code></td>
+<td>右腿髋/膝/踝</td>
+</tr>
+<tr>
+<td></td>
+<td><code>R/T</code> 双肩前摆/后摆，<code>F/G</code> 双肘屈/伸</td>
+<td>上肢</td>
+</tr>
+<tr>
+<td>其他</td>
+<td><code>H</code></td>
+<td>打印帮助</td>
+</tr>
+<tr>
+<td></td>
+<td><code>ESC</code></td>
+<td>退出键盘节点</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 站立与踢腿</h3>
+<p>按 <code>1</code> 站稳后按 <code>2</code>：机器人将支撑腿微屈、右腿提膝蓄力，随后股四头肌快速兴奋伸膝踢击，脚尖峰值高度约 0.6 m：</p>
+<p><img alt="踢腿演示" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/kick.gif"/></p>
+<h3 id="34">3.4 行走与步频调节</h3>
+<p>按 <code>4</code> 进入行走（基频 0.8 Hz），行走中按 <code>+</code> 可逐步加快步频（0.8 → 0.95 → 1.10 Hz，每次 +0.15 倍）：</p>
+<p><img alt="行走演示" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/walk.gif"/></p>
+<h3 id="35">3.5 蹲起</h3>
+<p>按 <code>3</code> 进入 0.5 Hz 连续蹲起，骨盆按余弦轨迹升降，双腿由二连杆逆解同步协调：</p>
+<p><img alt="蹲起演示" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/squat.gif"/></p>
+<h3 id="36">3.6 场景切换</h3>
+<p>通过 launch 参数切换场景：</p>
+<p><strong>参数说明</strong>：本包不使用 ROS 参数服务器——反射增益、步态、蹲起、踢腿参数统一由 <code>config/params.yaml</code> 在节点启动时直接加载（<code>load_params()</code>），修改该文件后重启节点即可生效。</p>
+<div class="highlight"><pre><span></span><code># 5 度坡道
+roslaunch mujoco_msk_human_walking_teleop main.launch scene:=slope5
+# 负载 10 kg（运行时给躯干加 10 kg 背包并更新惯量）
+roslaunch mujoco_msk_human_walking_teleop main.launch scene:=load
+# 关闭 3D viewer 与 xterm 键盘终端（无显示器环境）
+roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false keyboard:=false
+# 只关闭 3D viewer、保留键盘终端（终端交互录屏）
+roslaunch mujoco_msk_human_walking_teleop main.launch viewer:=false
+</code></pre></div>
+<p>场景截图（由 <code>eval/render_scenes.py</code> 离屏渲染生成，含英文标注：坡道场景
+红色箭头为沿坡向下的重力分量、负载场景躯干上灰色矩形为 10 kg 背包）：</p>
+<p><img alt="平地" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_flat.png"/></p>
+<p><img alt="5度下坡" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_slope5.png"/></p>
+<p><img alt="负载" src="../../img/musculoskeletal/mujoco_msk_human_walking_teleop/scene_load.png"/></p>
+<h3 id="37-ros">3.7 离线自检与性能评测（无需 ROS）</h3>
+<div class="highlight"><pre><span></span><code>cd ~/catkin_ws/src/musculoskeletal/mujoco_msk_human_walking_teleop
+python3 main.py check    # 模型自检：场景加载 / 22 块肌肉兴奋方向 / 三场景站立
+python3 main.py eval     # 多场景性能评测，结果写入 eval_results.json
+</code></pre></div>
+<p><code>check</code> 的标准输出（全部通过）：</p>
+<div class="highlight"><pre><span></span><code>[PASS] load_scene_flat
+[PASS] load_scene_slope5
+[PASS] load_scene_load
+[PASS] n_muscle nu=22
+[PASS] n_joint njnt=13
+[PASS] muscle_sign 22/22 方向正确
+[PASS] stand_6s_flat z=0.876 pitch=-0.017 t=6.0
+[PASS] stand_6s_slope5 z=0.875 pitch=+0.034 t=6.0
+[PASS] stand_6s_load z=0.876 pitch=-0.021 t=6.0
+[PASS] squat_ik shallow hip=0.32 knee=0.67 ankle=0.34 | deep ankle=0.45 (limit)
+[PASS] load_mass torso mass 18.8 -&gt; 28.8
+---- check: 11/11 passed ----
+</code></pre></div>
+<p><code>eval</code> 的标准输出：</p>
+<div class="highlight"><pre><span></span><code>================= 性能汇总 =================
+平地站立成功率                    3/3
+蹲起周期数(15s)                 7
+踢腿脚尖峰值(m)                  0.609
+平地行走距离(m)/速度(m/s)          2.419 / 0.121
+下坡行走距离(m)                  9.958
+负载行走距离(m)                  1.505
+=============================================
+</code></pre></div>
+<h2 id="4">4. 计算原理</h2>
+<h3 id="41-hill">4.1 Hill 肌肉模型</h3>
+<p>每块肌肉是一个一阶激活状态 + 非线性力生产机构。设第 <script type="math/tex">i</script> 块肌肉的神经输入（目标激活）为 <script type="math/tex">u_i \in [0,1]</script>：</p>
+<p><strong>（1）激活动力学</strong>（一阶低通，兴奋快、去激活慢）：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot a_i = \frac{u_i - a_i}{\tau_i},\qquad
+\tau_i = \begin{cases} \tau_{act} = 0.012\ \text{s}, & u_i > a_i \\ \tau_{deact} = 0.05\ \text{s}, & u_i \le a_i \end{cases}
+</script>
+</p>
+<p><strong>（2）力-长度曲线</strong>（高斯型，<script type="math/tex">q_{opt}</script> 取关节活动范围中点，<script type="math/tex">\sigma</script> 取半量程）：</p>
+<p>
+<script type="math/tex; mode=display">
+f_l(q) = \exp\!\left( -\frac{(q - q_{opt})^2}{2\sigma^2} \right)
+</script>
+</p>
+<p><strong>（3）力-速度曲线</strong>（Hill 方程，<script type="math/tex">\hat v = v / v_{max}</script> 为归一化缩短速度，缩短为正）：</p>
+<p>
+<script type="math/tex; mode=display">
+f_v(\hat v) = \begin{cases}
+\dfrac{1 - \hat v}{1 + 3\hat v}, & \hat v > 0 \ \text{（缩短）} \\[2mm]
+\min(1.4,\ 1 - 1.8\hat v), & \hat v \le 0 \ \text{（拉长）}
+\end{cases}
+</script>
+</p>
+<p><strong>（4）肌肉张力</strong>（肌肉只能拉不能推，故截断为非负）：</p>
+<p>
+<script type="math/tex; mode=display">
+T_i = \max\bigl(0,\ a_i \cdot F_{0,i} \cdot f_l(q_{j(i)}) \cdot f_v(\hat v_i)\bigr)
+</script>
+</p>
+<p>其中 <script type="math/tex">F_{0,i}</script> 为峰值力矩（如膝伸肌 290 N·m、踝背屈肌 60 N·m），<script type="math/tex">j(i)</script> 为肌肉 <script type="math/tex">i</script> 跨越的关节。</p>
+<p><strong>（5）关节力矩合成</strong>：XML 中每块肌肉是一个 <code>motor</code> 执行器（<code>gear = c_i</code>，屈肌 <script type="math/tex">c_i=+1</script>、伸肌 <script type="math/tex">c_i=-1</script>），关节净力矩为跨关节肌肉张力之和：</p>
+<p>
+<script type="math/tex; mode=display">
+\tau_j = \sum_{i:\, j(i)=j} c_i\, T_i
+</script>
+</p>
+<h3 id="42-pd">4.2 姿势反射层（PD 反射 + 拮抗共收缩）</h3>
+<p>对每个关节，反射层把参考角与实际角的误差转换为肌肉激活（模拟脊髓反射）：</p>
+<p>
+<script type="math/tex; mode=display">
+\tau_{ref} = k_p\,(q_{ref} - q) - k_d\,\dot q
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+a_{flex} = \frac{b + \max(0,\ \tau_{ref})}{F_0^{flex}},\qquad
+a_{ext} = \frac{b + \max(0,\ -\tau_{ref})}{F_0^{ext}}
+</script>
+</p>
+<p>其中 <script type="math/tex">b</script> 为<strong>共收缩力矩</strong>（如髋 10 N·m、踝 10 N·m）：两块拮抗肌各被施加等量的力矩配额，净力矩为零、只提供关节刚度，类似人体运动中的共收缩（co-contraction）。注意这里必须按各自的峰值力 <script type="math/tex">F_0</script> 换算激活——若直接给两块肌肉相等的激活量，由于伸肌 <script type="math/tex">F_0</script> 普遍更大，净力矩会系统性偏向伸展方向，导致全身后倾。</p>
+<p>踝关节的 <script type="math/tex">k_p</script> 需满足倒立摆临界刚度条件才能稳住站立模态。把身体视为绕踝转动的倒立摆，恢复力矩 <script type="math/tex">k_p \theta</script> 需要超过重力倾覆力矩 <script type="math/tex">m g h\,\theta</script>：</p>
+<p>
+<script type="math/tex; mode=display">
+k_p^{ankle} > m g h \approx 30 \times 9.8 \times 0.63 \approx 184\ \text{N·m/rad}
+</script>
+</p>
+<p>实际取 <script type="math/tex">k_p = 460</script>、<script type="math/tex">k_d = 30</script>（坡道与负载场景下等效 <script type="math/tex">mgh</script> 更高，实际取值需在此临界之上留出裕量）。髋/膝的 <script type="math/tex">k_d</script> 必须取小（10/6）：<script type="math/tex">k_d\dot q</script> 在快速摆动时是反向制动力矩，还会通过拮抗映射兴奋伸肌"刹车"，使步幅严重缩水。</p>
+<h3 id="43">4.3 步态生成（相位振荡器）</h3>
+<p>行走时每个腿有一个相位 <script type="math/tex">\phi</script>，左右腿相差 <script type="math/tex">\pi</script>，相位以步态基频推进（<script type="math/tex">\pm</script> 键缩放）：</p>
+<p>
+<script type="math/tex; mode=display">
+\dot\phi = 2\pi f,\qquad \phi_r = \phi_l + \pi
+</script>
+</p>
+<p>三条参考轨迹（摆动相取 <script type="math/tex">\max(0,\sin\phi)^{1.2}</script> 使膝只在腿前摆时屈曲，支撑相保持近伸直）：</p>
+<p>
+<script type="math/tex; mode=display">
+q_{hip}^{ref} = A_h \sin\phi,\qquad
+q_{knee}^{ref} = q_{k0} + A_k \max(0, \sin\phi)^{1.2},\qquad
+q_{ankle}^{ref} = q_{a0} + A_a \sin(\phi + \varphi)
+</script>
+</p>
+<p>踝相位滞后 <script type="math/tex">\varphi = 0.4</script> rad 是推进力的关键：腿在最后方（<script type="math/tex">\phi = 3\pi/2</script>）时 <script type="math/tex">\sin(3\pi/2 + 0.4) \approx -0.93</script>，踝跖屈蹬地（push-off）；腿摆到最前方时踝背屈，以脚跟先着地。若相位取反，会出现"脚尖先戳地、后蹬反而抬脚"的倒挂步态，几乎无法前进。</p>
+<h3 id="44">4.4 蹲起逆运动学（平面二连杆）</h3>
+<p>给定骨盆目标高度 <script type="math/tex">z</script>，髋到踝的竖直距离 <script type="math/tex">h = z - h_{ankle}</script>，由余弦定理解膝内角 <script type="math/tex">\gamma</script>：</p>
+<p>
+<script type="math/tex; mode=display">
+\cos\gamma = \frac{L_1^2 + L_2^2 - h^2}{2 L_1 L_2},\qquad
+q_{knee} = \pi - \gamma
+</script>
+</p>
+<p>
+<script type="math/tex; mode=display">
+\cos\alpha = \frac{L_1^2 + h^2 - L_2^2}{2 L_1 h},\qquad
+q_{hip} = \alpha,\qquad q_{ankle} = \min(q_{knee} - q_{hip},\ 0.45\ \text{rad})
+</script>
+</p>
+<p>其中 <script type="math/tex">L_1 = 0.42</script> m（大腿）、<script type="math/tex">L_2 = 0.40</script> m（小腿）。骨盆高度按余弦轨迹升降：<script type="math/tex">z(t) = z_{stand} - \frac{d}{2}(1 - \cos 2\pi f t)</script>。浅蹲时 <script type="math/tex">q_{knee}-q_{hip}</script> 不超过踝限位，脚掌保持水平；深蹲（本模块 <script type="math/tex">d=0.24</script> m）时该值达约 0.82 rad，超出踝限位 0.45 rad，目标被截断——脚掌随之上仰约 18°，由脚盒前缘触地支撑，配合反射层维持稳定。</p>
+<h3 id="45">4.5 踢腿编排（四阶段）</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>时间</th>
+<th>右髋</th>
+<th>右膝</th>
+<th>右踝</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>重心转移</td>
+<td>0–0.30 s</td>
+<td>0 → 0.05</td>
+<td>0 → 0.30</td>
+<td>0</td>
+<td>支撑腿微屈 0.20</td>
+</tr>
+<tr>
+<td>提膝蓄力</td>
+<td>0.30–0.65 s</td>
+<td>0.05 → 0.95</td>
+<td>0.30 → 1.55</td>
+<td>0 → −0.30</td>
+<td>屈膝折叠大腿</td>
+</tr>
+<tr>
+<td>伸膝踢击</td>
+<td>0.65–0.95 s</td>
+<td>0.95 → 1.20</td>
+<td>1.55 → 0.15</td>
+<td>−0.30 → −0.45</td>
+<td>股四头肌爆发伸膝</td>
+</tr>
+<tr>
+<td>收腿还原</td>
+<td>0.95–1.60 s</td>
+<td>1.20 → 0</td>
+<td>0.15 → 0.03</td>
+<td>−0.45 → 0</td>
+<td>余弦 s 曲线平滑</td>
+</tr>
+</tbody>
+</table>
+<p>踢击阶段脚尖高度由髋屈曲角 <script type="math/tex">\theta_h</script> 与膝伸展角 <script type="math/tex">\theta_k</script> 共同决定。小腿方向角 <script type="math/tex">\theta_s = \theta_h - \theta_k</script>，踝关节中心高度：</p>
+<p>
+<script type="math/tex; mode=display">
+z_{ankle} = z_{pelvis} - L_1\cos\theta_h - L_2\cos\theta_s
+</script>
+</p>
+<p>取 <script type="math/tex">\theta_h = 1.20</script>、<script type="math/tex">\theta_k = 0.15</script>（<script type="math/tex">\theta_s = 1.05</script>），<script type="math/tex">z_{pelvis} = 0.875</script> 时 <script type="math/tex">z_{ankle} \approx 0.53</script> m，脚尖高度显著超过 0.30 m 的评测阈值（实测峰值 0.609 m）。</p>
+<h3 id="46">4.6 性能指标定义</h3>
+<ul>
+<li><strong>站立</strong>：6 s 内不摔倒（骨盆高度 &lt; 0.5 m 或俯仰 &gt; 0.9 rad 判摔）、末态俯仰 &lt; 0.2 rad、水平漂移 &lt; 0.2 m；</li>
+<li><strong>蹲起</strong>：15 s 内完成周期数 <script type="math/tex">\ge 5</script>（按 0.5 Hz 计最多 7 个完整周期）；</li>
+<li><strong>踢腿</strong>：踢后 3 s 内不摔且右脚尖峰值高度 &gt; 0.30 m；</li>
+<li><strong>行走</strong>：不摔倒且推进距离 &gt; 1.0 m；同时记录平均速度、激活努力 <script type="math/tex">\int |u|\,dt</script> 与正机械功 <script type="math/tex">\int \max(0, \tau\dot q)\,dt</script>。</li>
+</ul>
+<h2 id="5">5. 算法流程</h2>
+<p>控制回路以 500 Hz（MuJoCo 步长 0.002 s）在仿真节点中运行：</p>
+<div class="mermaid">flowchart TB
+    K[xterm 键盘节点 30Hz] -- "/msk_human/manual_cmd 22维激活" --&gt; S
+    K -- "/msk_human/action_cmd 动作指令" --&gt; S
+    subgraph S[仿真节点 msk_human_sim_node 500Hz]
+        C[Composer 动作编排<br/>q_ref t 相位振荡/逆解/踢腿脚本] --&gt; R[Reflex 姿势反射<br/>PD误差 + 共收缩 -&gt; 22维激活]
+        M[手动激活叠加] --&gt; R
+        R --&gt; H[Hill 肌肉动力学<br/>激活动力学 + 力-长度-速度 -&gt; 张力 T&gt;=0]
+        H --&gt; MJ["MuJoCo 步进<br/>tau_j = sum c_i T_i -&gt; 关节力矩"]
+        MJ --&gt; FB[状态读取 q, qd, 骨盆位姿, 摔倒判定]
+        FB --&gt; C
+    end
+    S -- "/msk_human/joint_states /msk_human/state 50Hz" --&gt; U[用户 / rostopic]
+</div>
+<h2 id="6">6. 源代码解析</h2>
+<h3 id="61-hill-msk_human_corepy-_hill_update">6.1 Hill 肌肉更新（<code>msk_human_core.py :: _hill_update</code>）</h3>
+<p>向量化实现 §4.1 的四个方程，每步先更新肌肉状态再写入执行器：</p>
+<div class="highlight"><pre><span></span><code>def _hill_update(self, u, dt):
+    q, qd = self.q(), self.qd()
+    # (1) 激活动力学：兴奋 tau_act=12ms，去激活 tau_deact=50ms
+    tau_t = np.where(u &gt; self.act, TAU_ACT, TAU_DEACT)
+    self.act = np.clip(self.act + (u - self.act) / tau_t * dt, 0.0, 1.0)
+    # (3) 力-速度：肌肉缩短速度 = 力臂系数 * 关节角速度
+    v = self._coef * qd[self._joint_of_muscle]
+    vh = np.clip(v / self._vmax, -3.0, 3.0)
+    fv = np.where(vh &gt; 0.0, (1 - vh) / (1 + 3 * vh),
+                  np.minimum(1.4, 1.0 - 1.8 * vh))
+    # (2) 力-长度：高斯曲线
+    dq = q[self._joint_of_muscle] - self._q_opt
+    fl = np.exp(-dq * dq / (2.0 * self._sigma2))
+    # (4) 张力 = 激活 * 峰值力 * fl * fv，恒 &gt;= 0
+    self.tension = np.clip(
+        self.act * self._F0 * fl * np.clip(fv, 0.0, 1.4), 0.0, None)
+    for a, val in zip(self.muscle_adr, self.tension):
+        self.data.ctrl[a] = val     # (5) ctrl 即张力，gear 施加力矩
+</code></pre></div>
+<h3 id="62-composer-_reflex">6.2 姿势反射层（<code>Composer :: _reflex</code>）</h3>
+<div class="highlight"><pre><span></span><code>for jname, flex, ext in ANTAGONIST:
+    j = JOINT_NAMES.index(jname)
+    e = self._ref[jname] - q[j]                       # 参考角误差
+    tau = r["kp"][jname] * e - r["kd"][jname] * qd[j] # PD 反射力矩
+    b = r["cocon"][jname]                             # 共收缩力矩
+    # 等力矩共收缩：按各自 F0 换算激活，净力矩恒 0，只提供刚度
+    a_f = (b + max(0.0, tau)) / _MUSCLE_SPEC[flex][2]
+    a_e = (b + max(0.0, -tau)) / _MUSCLE_SPEC[ext][2]
+    u[MUSCLE_ID[flex]] = min(1.0, a_f)
+    u[MUSCLE_ID[ext]] = min(1.0, a_e)
+</code></pre></div>
+<h3 id="63-composer-_q_ref-walk">6.3 步态参考轨迹（<code>Composer :: _q_ref</code> walk 分支）</h3>
+<div class="highlight"><pre><span></span><code>self.phase += 2 * math.pi * w["freq"] * self.freq_scale * dt
+phi_l, phi_r = self.phase, self.phase + math.pi
+for phi, s in ((phi_l, "l"), (phi_r, "r")):
+    ref["hip_" + s] = w["hip_amp"] * math.sin(phi)
+    # 膝只在 sin(phi)&gt;0（腿前摆）时屈曲，支撑相保持近伸直
+    ref["knee_" + s] = w["knee_off"] + w["knee_amp"] * \
+        max(0.0, math.sin(phi)) ** 1.2
+    # 踝滞后 ankle_phase：后蹬跖屈推进 + 前摆脚跟着地
+    ref["ankle_" + s] = w["ankle_off"] + w["ankle_amp"] * \
+        math.sin(phi + w["ankle_phase"])
+</code></pre></div>
+<h3 id="64-leg_ik_squat">6.4 蹲起逆解（<code>leg_ik_squat</code>）</h3>
+<div class="highlight"><pre><span></span><code>h = z_pelvis - ANKLE_HEIGHT            # 髋到踝竖直距离
+cos_g = (THIGH_L**2 + SHIN_L**2 - h**2) / (2 * THIGH_L * SHIN_L)
+gamma = math.acos(...)                  # 膝内角（余弦定理）
+knee = math.pi - gamma                  # 屈曲角
+cos_a = (THIGH_L**2 + h**2 - SHIN_L**2) / (2 * THIGH_L * h)
+hip, ankle = alpha, min(knee - alpha, 0.45)   # 浅蹲脚平放；深蹲踝顶到限位 0.45
+</code></pre></div>
+<h3 id="65">6.5 摔倒判定与安全设计</h3>
+<div class="highlight"><pre><span></span><code>def fallen(self):
+    return self.pelvis_z() &lt; 0.50 or abs(self.pitch()) &gt; 0.9
+</code></pre></div>
+<p>模型中有两处容易被忽视的稳定性设计：膝关节限位下界为 −0.05 rad（允许约 3° 过伸），避免静止时膝伸肌把关节顶死在限位上——MuJoCo 的软限位约束在持续力矩下会积聚巨大的约束力并突然释放，把关节"弹射"出去；肌肉力-长度的高斯半宽取 <script type="math/tex">\sigma = \text{range}/2</script> 而非更窄的值，保证肢体在全活动范围内 <script type="math/tex">f_l \ge 0.6</script>，否则伸直位的膝伸肌几乎没有力气。</p>
+<h2 id="7">7. 多场景测试与性能评价</h2>
+<p>三种场景（同一套控制器参数，无需逐场景调参）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>平地 <code>flat</code></td>
+<td>基准场景</td>
+</tr>
+<tr>
+<td>5° 下坡 <code>slope5</code></td>
+<td>等效重力法：<script type="math/tex">g'=(g\sin 5°,\,0,\,-g\cos 5°)</script>，沿 <script type="math/tex">+x</script> 的分量即沿坡向下的助推力</td>
+</tr>
+<tr>
+<td>负载 <code>load</code></td>
+<td>运行时躯干质量 +10 kg 并同步缩放惯量（18.8 → 28.8 kg）</td>
+</tr>
+</tbody>
+</table>
+<p>评测结果（<code>python3 main.py eval</code>，MuJoCo 3.2.3，dt = 0.002 s）：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>平地</th>
+<th>5° 下坡</th>
+<th>负载 10 kg</th>
+<th>达标条件</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>站立成功率（6 s × 3 次）</td>
+<td>3/3</td>
+<td>—</td>
+<td>—</td>
+<td>不摔、俯仰&lt;0.2、漂移&lt;0.2 m</td>
+<td>通过</td>
+</tr>
+<tr>
+<td>蹲起周期数（15 s）</td>
+<td>7</td>
+<td>—</td>
+<td>—</td>
+<td>≥5</td>
+<td>通过</td>
+</tr>
+<tr>
+<td>踢腿脚尖峰值（3 次）</td>
+<td>0.609 m</td>
+<td>—</td>
+<td>—</td>
+<td>&gt;0.30 m 且不摔</td>
+<td>通过</td>
+</tr>
+<tr>
+<td>行走距离 / 平均速度</td>
+<td>2.419 m / 0.121 m/s（20 s）</td>
+<td>9.958 m / 0.664 m/s（15 s）</td>
+<td>1.505 m / 0.100 m/s（15 s）</td>
+<td>&gt;1.0 m 且不摔</td>
+<td>通过</td>
+</tr>
+</tbody>
+</table>
+<p>结果分析：</p>
+<ol>
+<li><strong>下坡距离远大于平地</strong>（0.664 vs 0.121 m/s）：5° 下坡的等效重力沿 <script type="math/tex">+x</script> 分量 <script type="math/tex">g\sin 5°\approx 0.85\ \text{m/s}^2</script> 持续助推身体，前倾倒立摆自然获得更大步幅，反射层靠踝刚度即可维持稳定。反向的 5° 上坡（等效重力 <script type="math/tex">x</script> 分量为负）在同套参数下站立与行走均无法维持——上坡需克服 <script type="math/tex">mg\sin 5°</script> 的做功增量，超出该反射层与步长的能力范围，故本模块选取下坡作为坡道场景；</li>
+<li><strong>负载行走距离下降约 38%</strong>：+10 kg 后倒立摆临界刚度 <script type="math/tex">mgh</script> 升高约 53%，踝 460 N·m/rad 的刚度裕量变小，步态变保守；距离仍远超阈值；</li>
+<li><strong>平地行走速度 0.121 m/s 偏慢</strong>：这是"稳定性优先"的步态——躯干前倾参考仅 0.07 rad、反射层 kd 与激活延迟（τ_act=12 ms）使实际髋摆幅滞后参考；若牺牲稳定裕量增大前倾与步幅可提速，但单腿支撑期摔倒概率上升；</li>
+<li><strong>正机械功 / 距离</strong>（<code>work_per_m</code> 字段）记录在 <code>eval_results.json</code> 中，可用于对比不同步频下的能耗。</li>
+</ol>
+<h2 id="8">8. 常见问题</h2>
+<ul>
+<li><strong>无显示器环境运行</strong>：<code>viewer:=false keyboard:=false</code> 同时关闭 3D 窗口与 xterm 键盘终端（无 X 环境下 xterm 无法启动，故键盘节点也要关闭）；离线评测（check/eval）完全 headless。软件渲染可设 <code>MUJOCO_GL=osmesa</code>（需 <code>sudo apt install libosmesa6</code>）。</li>
+<li><strong>EGL 报错</strong> <code>module 'OpenGL.EGL' has no attribute 'EGLDeviceEXT'</code>：PyOpenGL 版本与 MuJoCo 不匹配，headless 场景改用 osmesa 即可。</li>
+<li><strong>键盘节点无响应</strong>：确认 <code>xterm</code> 已安装；launch 用 <code>launch-prefix="xterm -e"</code> 打开独立终端读取按键。</li>
+<li><strong>行走时原地踏步</strong>：步频过低时前进速度小属正常；确认 <code>ankle_phase</code> 未被改动（相位取反会几乎无法前进，见 §4.3）。</li>
+</ul>
+<h2 id="9">9. 大模型使用声明</h2>
+<p>使用 deep seek 辅助代码生成调试、文档撰写与 GIF 渲染脚本；全部代码经作者在 Ubuntu 20.04 与 ROS Noetic 环境实际运行验证，作者对提交内容负责。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../musculoskeletal_basics/" title="肌肉骨骼人基础"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../msk_hand_teleop/" title="MuJoCo肌肉骨骼灵巧手遥操作与NN控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../musculoskeletal_basics/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../msk_hand_teleop/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
