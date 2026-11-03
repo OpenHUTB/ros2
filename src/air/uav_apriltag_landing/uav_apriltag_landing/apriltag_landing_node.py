@@ -35,7 +35,7 @@ try:
 except ImportError:
     HAS_DT_APRILTAGS = False
 
-from landing_math import pixel_to_ground, ST_SEARCH, ST_ALIGN, ST_DESCEND, ST_LANDED
+from .landing_math import pixel_to_ground, ST_SEARCH, ST_ALIGN, ST_DESCEND, ST_LANDED
 
 
 class AprilTagLandingNode(Node):
@@ -171,6 +171,12 @@ class AprilTagLandingNode(Node):
     def _control_loop(self):
         now = self.get_clock().now()
 
+        # 未收到位姿时不发布任何 setpoint, 等待 odom 话题
+        # (必须在超时判断之前, 否则启动时超时会跳变到原点)
+        if not self.pose_received:
+            self.state_pub.publish(String(data=self.state))
+            return
+
         # ---- 超时保护 ----
         img_age = (now - self.last_img_time).nanoseconds / 1e9
         hgt_age = (now - self.last_height_time).nanoseconds / 1e9
@@ -183,11 +189,6 @@ class AprilTagLandingNode(Node):
             # 超时保持当前高度悬停, 不继续下降
             self._publish(self.current_target[0], self.current_target[1],
                           max(self.height, self.landed_h))
-            self.state_pub.publish(String(data=self.state))
-            return
-
-        # 未收到位姿时不发布 setpoint, 等待 odom 话题
-        if not self.pose_received:
             self.state_pub.publish(String(data=self.state))
             return
 
