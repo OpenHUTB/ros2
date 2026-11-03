@@ -1,5 +1,6 @@
 # 虚拟环境
 venv/
+.venv/
 
 # mkdocs 构建产物
 site/
