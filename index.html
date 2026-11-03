@@ -447,9 +447,7 @@
 <li><a href="#humanoid">人形机器人</a></li>
 <li><a href="#musculoskeletal">肌肉骨骼人</a></li>
 <li><a href="#ground_vehicle">地面载具</a></li>
-<li><a href="no_fly_zone_check/">禁飞区检测模块</a></li>
 <li><a href="#air_vehicle">空域载具</a></li>
-<li><a href="air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a></li>
 <li><a href="#water_vehicle">水域载具</a></li>
 </ul>
 <hr/>
@@ -469,6 +467,7 @@
 <ul>
 <li><a href="chapter/chap1/chap1/">第 1 章</a> - 认识 ROS</li>
 <li><a href="chapter/chap2/">第 2 章</a> - ROS 基础<ul>
+<li><a href="chap2/ros2_pubsub_py/">ROS 2 话题发布订阅基础实验（talker/listener）</a></li>
 <li><a href="chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a></li>
 <li><a href="chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a></li>
 <li><a href="chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a></li>
@@ -483,7 +482,6 @@
 <li><a href="chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a></li>
 <li><a href="chapter/chap9/">第 9 章</a> - ROS 2</li>
 </ul>
-<p>ROS 2 话题发布订阅基础实验（talker/listener）：<a href="chap2/ros2_pubsub_py/">chap2/ros2_pubsub_py</a></p>
 <h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
 <ul>
 <li><a href="humanoid/humanoid_basics/">人形机器人基础</a></li>
@@ -724,6 +722,12 @@
 <li>
 <p><a href="air/rflysim_sitl_first_flight/">RflySim 单机起飞与端口故障排查（补充实验）</a></p>
 </li>
+<li>
+<p><a href="no_fly_zone_check/">禁飞区检测模块</a></p>
+</li>
+<li>
+<p><a href="air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a></p>
+</li>
 </ul>
 <h2 id="6">6. 水域载具  <span id="water_vehicle"></span></h2>
 <ul>
@@ -803,12 +807,12 @@
 <script>var base_url = ".";</script>
 <script src="js/theme_extra.js"></script>
 <script src="js/theme.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-<script src="/js/mermaid.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
 <script src="js/umlconvert.js"></script>
 <script src="search/main.js"></script>
 <script>
