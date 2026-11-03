@@ -1,0 +1,77 @@
+<mujoco model="tripod_robot">
+  <compiler angle="degree" inertiafromgeom="true" autolimits="true"/>
+  <option timestep="0.002"/>
+
+  <default>
+    <joint armature="0.01" damping="1.0" limited="true"/>
+    <geom condim="4" friction="1.0 0.1 0.1" material="mat_body"/>
+  </default>
+
+  <asset>
+    <material name="mat_body" rgba="0.2 0.5 0.9 1"/>
+    <material name="mat_leg" rgba="0.9 0.5 0.2 1"/>
+    <material name="mat_foot" rgba="0.3 0.3 0.3 1"/>
+    <material name="mat_ground" rgba="0.8 0.8 0.8 1"/>
+    <texture type="skybox" builtin="gradient" rgb1="0.6 0.8 1.0" rgb2="1 1 1" width="512" height="512"/>
+  </asset>
+
+  <worldbody>
+    <light directional="true" pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="ground" type="plane" size="5 5 0.1" material="mat_ground"/>
+
+    <body name="torso" pos="0 0 0.35">
+      <freejoint/>
+      <geom name="body_sphere" type="sphere" size="0.08" mass="1.0"/>
+      <geom name="body_torso" type="cylinder" size="0.06 0.05" mass="0.5"/>
+
+      <!-- 腿1: 前方 0度 -->
+      <body name="hip_1" pos="0.07 0 0">
+        <joint name="hip_abd_1" type="hinge" axis="0 1 0" range="-30 30"/>
+        <joint name="hip_rot_1" type="hinge" axis="0 0 1" range="-45 45"/>
+        <geom name="hip_ball_1" type="sphere" size="0.03"/>
+        <body name="thigh_1" pos="0.05 0 -0.05">
+          <joint name="knee_1" type="hinge" axis="0 1 0" range="-90 10"/>
+          <geom name="thigh_geom_1" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
+          <body name="shin_1" pos="0 0 -0.16">
+            <geom name="shin_geom_1" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
+            <geom name="foot_1" type="sphere" size="0.03" pos="0 0 -0.15" material="mat_foot"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 腿2: 左后方 120度 -->
+      <body name="hip_2" pos="-0.035 0.0606 0">
+        <joint name="hip_abd_2" type="hinge" axis="0 1 0" range="-30 30"/>
+        <joint name="hip_rot_2" type="hinge" axis="0 0 1" range="-45 45"/>
+        <geom name="hip_ball_2" type="sphere" size="0.03"/>
+        <body name="thigh_2" pos="0.05 0 -0.05">
+          <joint name="knee_2" type="hinge" axis="0 1 0" range="-90 10"/>
+          <geom name="thigh_geom_2" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
+          <body name="shin_2" pos="0 0 -0.16">
+            <geom name="shin_geom_2" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
+            <geom name="foot_2" type="sphere" size="0.03" pos="0 0 -0.15" material="mat_foot"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 腿3: 右后方 240度 -->
+      <body name="hip_3" pos="-0.035 -0.0606 0">
+        <joint name="hip_abd_3" type="hinge" axis="0 1 0" range="-30 30"/>
+        <joint name="hip_rot_3" type="hinge" axis="0 0 1" range="-45 45"/>
+        <geom name="hip_ball_3" type="sphere" size="0.03"/>
+        <body name="thigh_3" pos="0.05 0 -0.05">
+          <joint name="knee_3" type="hinge" axis="0 1 0" range="-90 10"/>
+          <geom name="thigh_geom_3" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
+          <body name="shin_3" pos="0 0 -0.16">
+            <geom name="shin_geom_3" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
+            <geom name="foot_3" type="sphere" size="0.03" pos="0 0 -0.15" material="mat_foot"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <keyframe>
+    <key name="stand" qpos="0 0 0.35 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"/>
+  </keyframe>
+</mujoco>
