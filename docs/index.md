@@ -1,4 +1,4 @@
-title: 主页
+﻿title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -27,9 +27,7 @@ title: 主页
   - [人形机器人](#humanoid)
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
-  - [禁飞区检测模块](no_fly_zone_check/index.md)
   - [空域载具](#air_vehicle)
-  - [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
   - [水域载具](#water_vehicle)
 
 ---
@@ -55,6 +53,7 @@ ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
+    * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
     * [ROS Noetic 运行参数热更新（正弦信号）](./chap2/ros1_parameter_sine_wave/index.md)
     * [ROS Noetic 环境自检与常见问题排查](./chap2/ros1_env_check/index.md)
@@ -67,7 +66,6 @@ ROS每章节运行代码:
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
-ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
@@ -246,7 +244,9 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
+* [禁飞区检测模块](no_fly_zone_check/index.md)
 
+* [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
