@@ -41,6 +41,8 @@ class FakeNode:
         self.parameters = parameters
         self.publishers = []
         self.subscriptions = []
+        self.publisher_topics = []
+        self.subscription_topics = []
         self.logger = FakeLogger()
 
     def declare_parameter(self, name, value):
@@ -49,13 +51,15 @@ class FakeNode:
     def get_parameter(self, name):
         return SimpleNamespace(value=self.parameters[name])
 
-    def create_publisher(self, _message_type, _topic, _depth):
+    def create_publisher(self, _message_type, topic, _depth):
         publisher = FakePublisher()
         self.publishers.append(publisher)
+        self.publisher_topics.append(topic)
         return publisher
 
-    def create_subscription(self, _type, _topic, callback, _depth):
+    def create_subscription(self, _type, topic, callback, _depth):
         self.subscriptions.append(callback)
+        self.subscription_topics.append(topic)
         return callback
 
     def create_timer(self, _period, callback):
@@ -116,6 +120,13 @@ def test_tick_publishes_arm_state_and_muscle_messages():
 
     assert implementation.simulation.data.time == pytest.approx(0.01)
     assert len(node.publishers) == 4
+    assert node.publisher_topics == [
+        'joint_states',
+        'end_effector_position',
+        'muscle_forces',
+        'muscle_activations',
+    ]
+    assert node.subscription_topics == ['target_position']
     joint_message = node.publishers[0].messages[0]
     assert joint_message.name == ['shoulder_joint', 'elbow_joint']
     assert len(joint_message.position) == 2

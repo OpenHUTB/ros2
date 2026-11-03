@@ -15,7 +15,7 @@ Hill 型肌肉驱动，其中两条肌肉跨越双关节，因此同一个肌肉
 本模块没有重复实现单关节拮抗肌实验，而是重点处理运动冗余和肌肉跨关节
 耦合力臂。
 
-## 2. 系统结构
+## 2. ROS 2 计算图与接口
 
 ```mermaid
 flowchart LR
@@ -23,16 +23,59 @@ flowchart LR
     B --> C[肩、肘 PD 力矩]
     C --> D[六肌肉协同分配]
     D --> E["/muscle_activations"]
-    E --> F[MuJoCo Hill 肌肉与空间腱]
+    E --> F[MuJoCo Hill 肌肉与固定腱]
     F --> G["/joint_states"]
     F --> H["/end_effector_position"]
     F --> I["/muscle_forces"]
 ```
 
+本模块只创建一个 ROS 2 节点
+`/mujoco_musculoskeletal_arm_reach`，包含 1 个订阅话题和 4 个发布话题，
+不创建 service、action 或 TF。
+
+![ROS 2 节点、话题和消息方向](../img/musculoskeletal/msk_arm_reach/ros_graph.png)
+
+| 话题 | 类型 | 方向 | 内容与发布时机 |
+| --- | --- | --- | --- |
+| `/target_position` | `geometry_msgs/msg/Point` | 订阅 | 使用 `x`、`z`，`y` 忽略；收到消息后先做可达性检查 |
+| `/joint_states` | `sensor_msgs/msg/JointState` | 发布 | 肩、肘位置与速度，每个 100 Hz 控制周期发布 |
+| `/end_effector_position` | `geometry_msgs/msg/Point` | 发布 | 末端在手臂平面的 `x-z` 坐标 |
+| `/muscle_activations` | `std_msgs/msg/Float64MultiArray` | 发布 | 6 条肌肉的归一化激活，顺序与模型一致 |
+| `/muscle_forces` | `std_msgs/msg/Float64MultiArray` | 发布 | MuJoCo 计算出的 6 条肌肉力，单位 N |
+
+启动后检查实时 ROS 计算图：
+
+```bash
+ros2 node list
+ros2 node info /mujoco_musculoskeletal_arm_reach
+ros2 topic list -t
+ros2 topic hz /joint_states
+rqt_graph
+```
+
+预期 `ros2 node info` 中的接口与上图及表格一致；`rqt_graph` 中应只出现上述
+节点与五个话题。
+
+## 3. 运行逻辑
+
+![启动流程、目标校验和 100 Hz 控制循环](../img/musculoskeletal/msk_arm_reach/runtime_logic.png)
+
+启动阶段按以下顺序执行：
+
+1. `main.launch.py` 启动 `arm_sim_node`；
+2. 从 `config/simulation.yaml` 加载参数；
+3. 读取 `models/arm.xml`，创建 MuJoCo 状态；
+4. 创建 1 个目标订阅和 4 个状态发布者；
+5. 注册 100 Hz 定时器，每 10 ms 执行一次控制回调。
+
+每个控制周期读取肩、肘状态，执行逆运动学、PD 控制和六肌肉协同分配，
+然后推进 5 个 2 ms MuJoCo 物理步，并发布最新状态。目标不可达时保留上一
+有效目标；仿真计算出现异常时清零全部肌肉激活并停止定时器。
+
 控制器不直接向关节施加理想力矩。它只输出 6 条肌肉的激活度，实际关节力矩
 由 MuJoCo 根据肌腱长度、速度、力臂和肌肉执行器参数计算。
 
-## 3. 双关节模型
+## 4. 双关节模型
 
 模型位于 `models/arm.xml`。
 
@@ -62,7 +105,7 @@ flowchart LR
 固定腱用关节系数定义每条肌肉的力臂。双关节肌同时包含肩系数和肘系数，
 因此一条肌肉的激活会同时改变两个关节的力矩。
 
-## 4. 逆运动学与力矩分配
+## 5. 逆运动学与力矩分配
 
 末端位置由两连杆正运动学给出：
 
@@ -88,7 +131,7 @@ z = -L1 sin(q1) - L2 sin(q1 + q2)
 目标坐标均相对于肩关节，使用手臂平面的 `x-z` 坐标；100 Hz 控制回调每次
 推进 5 个 2 ms MuJoCo 物理步。
 
-## 5. 构建与运行
+## 6. 构建与运行
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -114,13 +157,16 @@ ros2 topic pub --once /target_position geometry_msgs/msg/Point \
 观察状态：
 
 ```bash
+ros2 node info /mujoco_musculoskeletal_arm_reach
+ros2 topic list -t
+ros2 topic hz /joint_states
 ros2 topic echo /end_effector_position
 ros2 topic echo /joint_states
 ros2 topic echo /muscle_activations
 ros2 topic echo /muscle_forces
 ```
 
-## 6. 测试
+## 7. 测试
 
 ```bash
 python3 -m pytest \
@@ -136,7 +182,8 @@ colcon test-result --verbose
 - 不可达目标拒绝；
 - 六维肌肉激活范围；
 - 肩、肘主动肌选择；
-- 模型关节、空间腱和肌肉数量；
+- ROS 节点订阅和发布话题名称；
+- 模型关节、固定腱和肌肉数量；
 - MuJoCo 模型加载与安全步进。
 
 闭环到达结果：
@@ -145,7 +192,22 @@ colcon test-result --verbose
 
 默认目标 `(0.38, -0.17) m` 在 3.2 s 内到达，最终误差约 `0.014 m`。
 
-## 7. 当前边界
+真实 MuJoCo 闭环运行记录：
+
+![闭环误差、关节角和肌肉响应](../img/musculoskeletal/msk_arm_reach/runtime_signals.png)
+
+默认目标下，末端误差约 `0.26 s` 进入 `0.02 m` 范围，随后保持在
+`0.014 m` 左右。关节角逐渐跟踪逆运动学目标；屈肌与伸肌保持共同激活，
+以提供关节稳定性和双向力矩控制能力。
+
+重新生成三张 ROS 与运行图：
+
+```bash
+python3 \
+  src/musculoskeletal/mujoco_musculoskeletal_arm_reach/scripts/generate_ros_diagrams.py
+```
+
+## 8. 当前边界
 
 本模块是三步扩展中的 Commit 1：
 

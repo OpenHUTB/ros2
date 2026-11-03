@@ -29,6 +29,10 @@
   → MuJoCo Hill 肌肉动力学
 ```
 
+![ROS 2 graph](../../../docs/img/musculoskeletal/msk_arm_reach/ros_graph.png)
+
+![Runtime loop](../../../docs/img/musculoskeletal/msk_arm_reach/runtime_logic.png)
+
 ## 构建
 
 ```bash
@@ -53,6 +57,7 @@ ros2 launch mujoco_musculoskeletal_arm_reach main.launch.py
 | `/muscle_activations` | `std_msgs/Float64MultiArray` | 输出 |
 | `/muscle_forces` | `std_msgs/Float64MultiArray` | 输出 |
 
+节点只创建上述 1 个订阅和 4 个发布接口，不创建 service、action 或 TF。
 目标坐标相对于肩关节，使用手臂平面的 `x-z` 坐标。100 Hz 控制回调每次推进
 5 个 2 ms MuJoCo 物理步。
 
@@ -66,11 +71,22 @@ ros2 topic pub --once /target_position geometry_msgs/msg/Point \
 观察：
 
 ```bash
+ros2 node info /mujoco_musculoskeletal_arm_reach
+ros2 topic list -t
+ros2 topic hz /joint_states
+rqt_graph
 ros2 topic echo /end_effector_position
 ros2 topic echo /joint_states
 ros2 topic echo /muscle_activations
 ros2 topic echo /muscle_forces
 ```
+
+闭环运行记录：
+
+![Runtime signals](../../../docs/img/musculoskeletal/msk_arm_reach/runtime_signals.png)
+
+默认目标 `(0.38, -0.17) m` 下，末端误差约 `0.26 s` 进入 `0.02 m`，
+3.2 s 时最终误差约 `0.014 m`。
 
 ## 测试
 
@@ -83,6 +99,12 @@ colcon test-result --verbose
 ```
 
 测试覆盖正/逆运动学、不可达目标、六维激活范围、MuJoCo 模型结构、模型加载和单步仿真。
+
+重新生成 ROS 与运行图：
+
+```bash
+python3 scripts/generate_ros_diagrams.py
+```
 
 ## 后续
 
