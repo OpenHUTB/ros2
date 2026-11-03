@@ -569,3 +569,15 @@ bash main.sh demo "$PWD/data/final_raw/episode_300.csv;$PWD/data/final_raw/episo
 8. **窗口重叠**：315 个窗口来自 15 段飞行，互相重叠，不能当作 315 次独立试验。
 
 ---
+
+## 12. 维护说明
+
+1. 数据与模型分开放：`data/prepared` 与 `models/` 都是可再生产物，训练脚本拒绝写入已存在的输出目录；
+2. 改动特征或窗口参数后必须重跑 `prepare` 与 `reproduce`，并同步更新第 7 节的表；
+3. `results/frozen_protocol.json` 记录关键文件哈希，改了数据或协议就要同步更新它，否则 final 集准备会失败；
+4. 图片统一放在 `docs/img/air/flight_pattern_recognition/`——仓库 `.gitignore` 忽略 `*.gif`，只对 `docs/img/**/*.gif` 开白名单；
+5. 提交前按仓库约定跑 `mkdocs serve --livereload` 自查。
+
+文件职责：`assets/flight_corpus.zip` 为自包含原始数据；`models/` 为权重、训练 loss 与配置；`results/` 为实验指标、预测 CSV、图表、截图与运行日志；`tests/` 为校验；`main.py` / `main.sh` 为统一入口。`data/`、ROS 构建目录与再训练输出都在本地生成，不入库。
+
+---
