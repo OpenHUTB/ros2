@@ -505,3 +505,31 @@ ROS_DOMAIN_ID=76 PYTHONPATH="$PWD:$PYTHONPATH" python tests/ros_smoke.py
 ```
 
 ---
+
+## 9. 源代码解析
+
+| 文件 | 行数 | 职责 |
+|---|---:|---|
+| `pattern_data.py` | 82 | 8 个几何特征、窗口采样、插值、按回合划分 |
+| `pattern_model.py` | 19 | `PatternNet` 的三种变体（MLP / GRU / 位置特征） |
+| `train.py` | 57 | 标准化、交叉熵、早停、阈值策略、写 `config.json` |
+| `evaluate.py` | 65 | 五模型评估、逐类指标、混淆矩阵、最近质心基线、推理计时 |
+| `pattern_stream.py` | 87 | 在线窗口维护、拒识、3 次防抖、状态机 |
+| `ros_pattern.py` | 152 | `Replay` 与 `PatternNode` 两个节点 |
+| `pattern_dashboard.py` | 102 | Tk 看板：轨迹、softmax、时间线、任务日志 |
+| `prepare_final.py` | 44 | 校验冻结协议、生成独立 final 集 |
+| `reproduce.py` | 24 | 重训 5 个模型并评估，用于一致性检查 |
+| `report.py` | — | 从随附实验 JSON/CSV 与 loss 记录重新绘图表 |
+| `verify_stream.py` | — | 校验离线整批预测与逐条流式预测一致（容差 2e-6） |
+
+四个值得说明的设计：
+
+**特征层与网络层严格分离。** `geometry()` 只接受位置/速度/加速度数组，返回 8 列特征；模型看不到原始 9 分量，也看不到标签。消融实验因此可以对特征下手（置零前 5 列），而不必改网络结构。
+
+**阈值写在训练阶段。** `train.py` 在验证集上扫完阈值后写进 `config.json`，推理时直接读取。测试集从头到尾没参与阈值选择——这是防止"用测试集调参"的关键。
+
+**在线与离线共用同一段代码。** `Recognizer` 既被 ROS2 节点调用，也被离线回放调用（通过注入 `predict` 函数），保证两条路径的预处理完全一致。
+
+**状态机显式区分"未就绪"。** warmup 未满、历史被重置、无数据超时，都会通过 `/uav/pattern/status` 报出来，而不是静默返回一个旧结果。
+
+---
