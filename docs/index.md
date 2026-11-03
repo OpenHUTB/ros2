@@ -84,6 +84,7 @@ ROS每章节运行代码:
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
 
+* [简易人形机器人 MuJoCo 仿真（原地踏步 + 交替摆臂）](./humanoid/midterm_humanoid_simulation.md) —— 4 关节位置伺服，内联 XML 建模，离屏渲染 8 秒视频
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)

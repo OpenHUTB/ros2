@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="midterm_humanoid" type="main.py" name="midterm_humanoid" output="screen" cwd="node"/>
+</launch>
