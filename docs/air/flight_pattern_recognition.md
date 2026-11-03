@@ -193,3 +193,102 @@ final 集是**另外 15 段**飞行，与前三集在回合 ID 与文件 SHA256 
 5. **冻结协议**：`results/frozen_protocol.json` 记录关键文件的 SHA256，final 集准备前先校验，改动过就直接失败。
 
 ---
+
+## 4. 计算原理
+
+### 4.1 八个几何特征
+
+记窗口内第 \(t\) 帧的水平速度 \(\mathbf{v}_{xy}(t)=(v_x,v_y)\)、水平加速度 \(\mathbf{a}_{xy}(t)=(a_x,a_y)\)、水平位置 \(\mathbf{p}_{xy}(t)=(p_x,p_y)\)。八个特征逐帧计算：
+
+$$
+\begin{aligned}
+f_1(t) &= \big\|\mathbf{v}_{xy}(t)\big\|_2 &&\text{水平速度}\\
+f_2(t) &= v_z(t) &&\text{垂直速度}\\
+f_3(t) &= \frac{\mathbf{v}_{xy}(t)\cdot\mathbf{a}_{xy}(t)}{\max(\|\mathbf{v}_{xy}(t)\|_2,\ 0.05)} &&\text{切向加速度}\\
+f_4(t) &= \frac{v_x a_y - v_y a_x}{\max(\|\mathbf{v}_{xy}(t)\|_2,\ 0.05)} &&\text{带符号法向加速度}\\
+f_5(t) &= a_z(t) &&\text{垂直加速度}\\
+f_6(t) &= \big\|\mathbf{p}_{xy}(t)-\mathbf{p}_{xy}(0)\big\|_2 &&\text{水平位移}\\
+f_7(t) &= p_z(t)-p_z(0) &&\text{相对高度}\\
+f_8(t) &= \frac{f_6(t)}{L(t)},\quad L(t)=\sum_{k=1}^{t}\big\|\mathbf{p}_{xy}(k)-\mathbf{p}_{xy}(k-1)\big\|_2 &&\text{路径效率}
+\end{aligned}
+$$
+
+三处设计意图：
+
+- **分母下限 0.05 m/s**：悬停时速度接近 0，切向与法向加速度的定义会炸开；钳住分母让"停住"成为一个稳定状态而不是噪声放大器。
+- **法向加速度带符号**：左转与右转在 8 字轨迹里方向相反，取绝对值会把两者抹平。
+- **路径效率 \(f_8\)**：直线时位移≈路程，效率接近 1；绕圈时位移远小于路程，效率明显小于 1。它是区分"直线"与"闭合曲线"最直接的一个量。
+
+### 4.2 时间维聚合与标准化
+
+特征在时间维取均值与标准差（\(\sigma\) 用总体标准差，`unbiased=False`）：
+
+$$
+\mu_j=\frac{1}{61}\sum_{t=1}^{61}f_j(t),\qquad
+\sigma_j=\sqrt{\frac{1}{61}\sum_{t=1}^{61}\big(f_j(t)-\mu_j\big)^2}
+$$
+
+拼成 16 维向量 \(\mathbf{z}=[\mu_1..\mu_8,\sigma_1..\sigma_8]^{\top}\)，再用训练集的统计量标准化：
+
+$$
+\tilde{\mathbf{z}}=\frac{\mathbf{z}-\mathbf{m}}{\max(\mathbf{s},\,0.02)}
+$$
+
+下限 0.02 防止某个特征在训练集上几乎不变时被除爆。
+
+### 4.3 主模型：两层 MLP
+
+$$
+\mathbf{h}=\mathrm{ReLU}\big(\mathbf{W}_1\tilde{\mathbf{z}}+\mathbf{b}_1\big)\in\mathbb{R}^{32},\qquad
+\mathbf{o}=\mathbf{W}_2\mathbf{h}+\mathbf{b}_2\in\mathbb{R}^{5}
+$$
+
+参数量 \(16\times32+32 + 32\times5+5 = 709\)。
+
+### 4.4 序列对照：GRU
+
+$$
+\mathbf{h}_t=\mathrm{GRU}\big(\mathbf{f}(t),\mathbf{h}_{t-1}\big),\quad
+\mathbf{u}=\mathrm{ReLU}\big(\mathbf{W}_g\mathbf{h}_{61}+\mathbf{b}_g\big)\in\mathbb{R}^{24},\quad
+\mathbf{o}=\mathbf{W}_o\mathbf{u}+\mathbf{b}_o
+$$
+
+其中 GRU 使用 PyTorch `nn.GRU` 的约定（重置门作用于隐藏态线性变换的结果，更新门加权上一时刻隐状态）。它吃的是未经时间聚合的 61×8 特征序列。
+
+### 4.5 softmax 与损失
+
+$$
+p_k=\frac{\exp(o_k)}{\sum_{j=1}^{5}\exp(o_j)},\qquad
+\mathcal{L}=-\frac{1}{N}\sum_{n=1}^{N}\log p_{n,\,y_n}
+$$
+
+### 4.6 置信阈值与拒识
+
+模型总会给出一个 argmax，但低置信度的预测不该变成任务事件。阈值 \(\tau\) 在**验证集**上按固定规则选：
+
+$$
+\tau^{*}=\min\Big\{\tau\in[0.20,0.95]\ \big(\text{步长 }0.01\big)\ :\ \mathrm{cov}(\tau)\ge 0.20\ \wedge\ \mathrm{acc}_{\text{acc}}(\tau)\ge 0.90\Big\}
+$$
+
+其中 \(\mathrm{cov}(\tau)=\frac{1}{N}\big|\{n:p_{\max}^{(n)}\ge\tau\}\big|\) 是被接受的窗口比例，\(\mathrm{acc}_{\text{acc}}\) 是被接受窗口的准确率。取满足条件的最小阈值，等价于**在保证 90% 接受准确率的前提下最大化覆盖率**。没有候选时回落到 0.80。
+
+低于阈值时输出 `uncertain`，而不是硬选一个类。
+
+### 4.7 评价指标
+
+$$
+\mathrm{acc}=\frac{1}{N}\sum_{n}\mathbb{1}\big[\hat{y}_n=y_n\big],\qquad
+P_k=\frac{\mathrm{TP}_k}{\mathrm{TP}_k+\mathrm{FP}_k},\qquad
+R_k=\frac{\mathrm{TP}_k}{\mathrm{TP}_k+\mathrm{FN}_k}
+$$
+
+$$
+F1_k=\frac{2P_kR_k}{P_k+R_k},\qquad
+\text{macro-F1}=\frac{1}{5}\sum_{k=1}^{5}F1_k
+$$
+
+宏平均让五个类权重相同——本数据每类窗口数相等，宏平均与微平均接近，但在类别均衡被打破时宏平均更能暴露短板。
+
+另外报告**回合级准确率**：对一个回合内所有窗口的预测取众数，与回合标签比较。它衡量"整段飞行是否被认对"，比逐窗口准确率更接近实际使用。
+
+---
