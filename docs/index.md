@@ -152,6 +152,8 @@ ROS每章节运行代码:
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
+* [UAV payload CG envelope](./air/uav_payload_cg_envelope.md) ? Combine empty-aircraft and payload masses to compute CG, longitudinal margins and lateral offset.
+
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
