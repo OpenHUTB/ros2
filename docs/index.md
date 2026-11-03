@@ -1,8 +1,10 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
-欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
+欢迎使用 OpenHUTB 的 ROS 文档 [@macenski2022robot]。
+
+文档环境初始化：[Ubuntu 一键安装与本地预览](./ubuntu_docs_setup.md)。
 
 <span id="submission-guide"></span>
 **提交项目之前**，请按以下指引自查，并阅读[仓库提交约定](https://github.com/OpenHUTB/ros2#注意事项)。PR 模板只列常见检查项；具体任务、模拟器和验收要求以仓库约定及维护者说明为准。

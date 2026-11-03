@@ -48,6 +48,7 @@ copyright: OpenHUTB 版权所有 &copy; {year}
 nav:
 - 入门:
     - 首页: 'index.md'
+    - Ubuntu 文档环境初始化: 'ubuntu_docs_setup.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
 - ROS 教程:
