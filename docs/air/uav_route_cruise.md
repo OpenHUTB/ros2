@@ -455,7 +455,7 @@ def frac(self, num_timesteps):
 
 ### 运行效果动图
 
-![运行效果](uav_route_cruise/route_cruise_demo.gif)
+![运行效果](../img/air/uav_route_cruise/route_cruise_demo.gif)
 
 同一场景下两个策略的逐帧对比（scripts/make_gif.py 生成，90 帧 / 0.8 MB）：
 

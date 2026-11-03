@@ -314,7 +314,7 @@ edge_density = np.sum(cv2.Canny(gray, 50, 150) > 0) / gray.size * 100
 
 四档天气下同一场景、同一机位的点云 BEV 俯视图（按高度 z 着色，浓雾档外圈点已明显变稀）：
 
-![](../img/ground/weather_lidar_bev.png)
+![](../img/ground/weather_lidar_perception/weather_lidar_bev.png)
 
 相机与雷达指标原始数值（同一参考位姿；相机取 5 帧平均，雷达在 0.2 s 窗口内累积成整圈）：
 
@@ -343,7 +343,7 @@ edge_density = np.sum(cv2.Canny(gray, 50, 150) > 0) / gray.size * 100
 
 相机与雷达退化率对照柱状图：
 
-![](../img/ground/weather_multisensor_degradation.png)
+![](../img/ground/weather_lidar_perception/weather_multisensor_degradation.png)
 
 ### 8.4 建模口径与对照实验
 
