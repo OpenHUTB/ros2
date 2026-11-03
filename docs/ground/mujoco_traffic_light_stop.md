@@ -6,20 +6,20 @@ MuJoCo 写的红绿灯小车，红灯停绿灯行，黄灯慢下来。
 
 - Ubuntu 20.04
 - Python 3.8
-- MuJoCo 3.x
+- MuJoCo 2.3.7
 - NumPy
 
 ## 依赖
 
 ```bash
-pip install mujoco numpy
+pip install mujoco==2.3.7 numpy
 ```
 
 ## 运行
 
 ```bash
 cd src/ground/mujoco_traffic_light_stop
-python3 mujoco_traffic_light_stop/main.py
+python3 main.py
 ```
 
 ## 预期现象

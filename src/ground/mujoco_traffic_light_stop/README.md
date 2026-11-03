@@ -6,15 +6,15 @@ MuJoCo 写的红绿灯小车，红灯停绿灯行，黄灯慢下来。
 
 - Ubuntu 20.04
 - Python 3.8
-- MuJoCo 3.x
+- MuJoCo 2.3.7
 - NumPy
 
 ## 跑起来
 
 ```bash
-pip install mujoco numpy
+pip install mujoco==2.3.7 numpy
 cd src/ground/mujoco_traffic_light_stop
-python3 mujoco_traffic_light_stop/main.py
+python3 main.py
 ```
 
 ## 预期现象
@@ -22,10 +22,9 @@ python3 mujoco_traffic_light_stop/main.py
 - 红绿灯循环：红灯5s → 黄灯2s → 绿灯5s
 - 小车从x=-6位置开始向右行驶
 - 到达x=2.0停止线后：
-  - 红灯：小车刹车停住，位置保持在x=2.0附近
+  - 红灯：小车刹车停住
   - 黄灯：小车减速慢行
   - 绿灯：小车继续向右行驶
-- 终端每秒打印约20条日志，包含时间、灯色、位置、速度、推力
 
 ## 已知限制
 
