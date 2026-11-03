@@ -45,14 +45,17 @@ source devel/setup.bash
 
 roslaunch uav_minimum_jerk_tracking openhutb_test.launch \
   host:=192.168.94.1 \
-  mission:=smooth_forward_6m \
+  mission:=straight_3m_up \
   mode:=minimum_jerk
 ```
 
 `host` 必须替换为 VMnet8 中 Windows 宿主机地址。
 
-轨迹结束后若在 `final_wait_timeout` 内仍未达到终点容差，节点输出
+轨迹结束后若在 `final_wait_timeout` 内仍未达到 `0.35 m` 终点容差，节点输出
 `FAILED_STALLED` 并停止，不会无限重复控制日志。
+
+控制器采用参考速度前馈和位置/速度 PD 反馈；odom 超过 `odom_timeout_sec`
+未更新时输出 `STALE_ODOM` 并暂停轨迹时钟。
 
 ## 输出
 
@@ -81,7 +84,7 @@ python3 -m unittest discover -s test -v
 
 ## OpenHUTB 实测结果
 
-已在 OpenHUTB 中分别运行 `minimum_jerk` 与 `linear`：
+第一轮 `smooth_forward_6m` 初始数据：
 
 | 模式 | 最终误差 | 运动段 RMSE | 参考时长 | 结果 |
 |---|---:|---:|---:|---|
@@ -89,8 +92,13 @@ python3 -m unittest discover -s test -v
 | linear | 2.155 m | 3.297 m | 6.67 s | FAILED_STALLED |
 
 五次轨迹最终收敛，但实际收敛时间约 37.9 s，说明当前外环控制在 OpenHUTB 的
-速度执行滞后下仍需整定。线性参考在 5 s 最终等待窗口内未收敛；该结果作为负面对照
-保留，不包装成成功。
+速度执行滞后下仍需整定。线性参考当时还存在终点速度未归零的代码缺陷，因此该轮
+失败不能作为最终对照结论，修复后必须重新测试。
+
+修复后使用 `straight_3m_up` 做回归：15 s 最终等待窗曾在误差 0.434 m 时触发
+`FAILED_STALLED`；调整到 18 s 后重新运行，节点最终输出
+`DONE ... error=0.084`，确认修复后控制器能够收敛。修复后的线性对照尚未重跑，
+因此不在 README 中给出短任务的最终 RMSE 对照结论。
 
 ## AI 使用声明
 

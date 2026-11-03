@@ -67,6 +67,17 @@ class TrajectoryTest(unittest.TestCase):
         np.testing.assert_allclose(middle.position, [1.0, 0.0, 0.0])
         np.testing.assert_allclose(middle.velocity, [2.0 / trajectory.total_duration, 0.0, 0.0])
 
+    def test_linear_endpoint_velocity_is_zero(self):
+        trajectory = MinimumJerkTrajectory(
+            [0.0, 0.0, 0.0],
+            [[2.0, 0.0, 0.0]],
+            PARAMS,
+            mode="linear",
+        )
+        endpoint = trajectory.sample(trajectory.total_duration)
+        np.testing.assert_allclose(endpoint.position, [2.0, 0.0, 0.0])
+        np.testing.assert_allclose(endpoint.velocity, 0.0, atol=1e-12)
+
     def test_zero_length_waypoint_is_skipped(self):
         trajectory = MinimumJerkTrajectory(
             [0.0, 0.0, 0.0],

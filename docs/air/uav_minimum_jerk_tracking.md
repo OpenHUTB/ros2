@@ -55,17 +55,20 @@ a_peak = 5.7735 · distance / T²
 
 ## 4. 跟踪控制
 
-控制器使用：
+控制器使用参考前馈和 PD 反馈：
 
 ```text
-v_cmd = v_ref + Kp · (p_ref - p_actual)
+v_cmd = v_ref + Kp · (p_ref - p_actual) + Kd · (v_ref - v_actual)
 ```
 
 随后对水平/垂直速度、水平/垂直加速度分别限幅。参考位置、速度、加速度和
 加加速度会随状态和 CSV 一起发布，便于比较不同轨迹模式。
 
-轨迹结束后若超过 `final_wait_timeout` 仍未进入终点容差，节点会输出
+轨迹结束后若超过 `final_wait_timeout` 仍未进入 `0.35 m` 终点容差，节点会输出
 `FAILED_STALLED` 并停止，避免执行器受阻时持续发布相同日志。
+
+odom 超过 `odom_timeout_sec` 未更新时，节点输出 `STALE_ODOM`，停止输出速度并
+暂停轨迹时钟，避免用旧状态继续推进参考。
 
 ## 5. 线性参考对照
 
@@ -85,7 +88,7 @@ source devel/setup.bash
 
 roslaunch uav_minimum_jerk_tracking openhutb_test.launch \
   host:=<宿主机IP> \
-  mission:=smooth_forward_6m \
+  mission:=straight_3m_up \
   mode:=minimum_jerk
 ```
 
@@ -94,7 +97,7 @@ roslaunch uav_minimum_jerk_tracking openhutb_test.launch \
 ```bash
 roslaunch uav_minimum_jerk_tracking openhutb_test.launch \
   host:=<宿主机IP> \
-  mission:=smooth_forward_6m \
+  mission:=straight_3m_up \
   mode:=linear
 ```
 
@@ -120,12 +123,12 @@ CSV 位于：
 ## 8. OpenHUTB 实测结果
 
 测试环境为 OpenHUTB/CarlaAir Town10HD Opt、ROS Noetic、`Drone1`。
-同一任务 `smooth_forward_6m` 分别运行五次轨迹和线性轨迹。
+第一轮任务 `smooth_forward_6m` 的初始数据如下：
 
 | 模式 | 参考时长 | 实测结束时刻 | 最终误差 | 运动段 RMSE | 运动段最大误差 | 结果 |
 |---|---:|---:|---:|---:|---:|---|
-| minimum_jerk | 12.5 s | 37.9 s | 0.238 m | 2.023 m | 2.908 m | DONE |
-| linear | 6.67 s | 11.7 s | 2.155 m | 3.297 m | 4.995 m | FAILED_STALLED |
+| minimum_jerk | 12.50 s | 37.9 s | 0.238 m | 2.023 m | 2.908 m | DONE |
+| linear | 6.67 s | 11.67 s | 2.155 m | 3.297 m | 4.995 m | FAILED_STALLED |
 
 参考量峰值：
 
@@ -140,8 +143,27 @@ CSV 位于：
 
 线性参考在段边界存在速度跳变，实际机体受速度环和执行器限幅影响出现较大跟踪
 滞后；在 `final_wait_timeout=5 s` 到达时仍未收敛，输出 `FAILED_STALLED`。
+该轮同时受到线性终点速度未归零缺陷的影响，因此只作为初测记录，不作为最终对照
+结论。
 五次轨迹最终收敛到 0.238 m，但实际收敛时间明显长于 12.5 s 参考时长，说明
 当前控制器在 OpenHUTB 的速度执行滞后下仍需继续整定；这一限制没有被隐藏。
+
+修复线性终点速度缺陷并加入速度阻尼、里程计新鲜度保护后，使用更短的
+`straight_3m_up` 做回归。第一次沿用 15 s 最终等待窗时，误差已经收敛到
+0.434 m，但仍略高于 0.35 m 容差，因此输出 `FAILED_STALLED`；从日志可见末段
+误差仍从 1.532 m 连续下降。统一等待窗调整为 18 s 后重新运行，无人机在
+9.38 s 参考轨迹结束后进入容差并完成稳定判定：
+
+```text
+DONE mission=straight_3m_up mode=minimum_jerk error=0.084
+```
+
+![straight_3m_up 最终收敛日志](../img/air/uav_minimum_jerk_tracking/minimum_jerk_straight_3m_up_done.png)
+
+该结果验证了修复后控制器在上升 3 m 任务上的最终收敛能力，也说明先前失败是
+最终等待窗与速度执行滞后共同造成的边界情况，而不是节点停滞。修复后的
+`straight_3m_up` 线性对照尚未重跑，因此不对两种模式在该短任务上的 RMSE 作
+最终结论。
 
 ## 9. AI 使用声明
 

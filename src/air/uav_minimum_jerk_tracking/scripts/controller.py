@@ -76,9 +76,15 @@ def tracking_velocity(position, velocity, reference, params, dt):
     error = reference.position - position
     desired = reference.velocity + np.array(
         [
-            float(params["position_gain_xy"]) * error[0],
-            float(params["position_gain_xy"]) * error[1],
-            float(params["position_gain_z"]) * error[2],
+            float(params["position_gain_xy"]) * error[0]
+            + float(params["velocity_gain_xy"])
+            * (reference.velocity[0] - velocity[0]),
+            float(params["position_gain_xy"]) * error[1]
+            + float(params["velocity_gain_xy"])
+            * (reference.velocity[1] - velocity[1]),
+            float(params["position_gain_z"]) * error[2]
+            + float(params["velocity_gain_z"])
+            * (reference.velocity[2] - velocity[2]),
         ],
         dtype=np.float64,
     )

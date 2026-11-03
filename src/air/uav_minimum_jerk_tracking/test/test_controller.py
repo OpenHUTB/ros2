@@ -26,6 +26,8 @@ PARAMS = {
     "max_vertical_accel": 0.8,
     "position_gain_xy": 1.0,
     "position_gain_z": 1.0,
+    "velocity_gain_xy": 0.35,
+    "velocity_gain_z": 0.35,
 }
 
 
@@ -83,6 +85,25 @@ class ControllerTest(unittest.TestCase):
             0.1,
         )
         self.assertLessEqual(command.vx, PARAMS["max_horizontal_accel"] * 0.1)
+
+    def test_velocity_lag_produces_damping_term(self):
+        reference = TrajectorySample(
+            position=np.zeros(3),
+            velocity=np.array([0.5, 0.0, 0.0]),
+            acceleration=np.zeros(3),
+            jerk=np.zeros(3),
+            elapsed=1.0,
+            total_duration=3.0,
+            segment_index=0,
+        )
+        command = tracking_velocity(
+            np.zeros(3),
+            np.zeros(3),
+            reference,
+            PARAMS,
+            1.0,
+        )
+        self.assertAlmostEqual(command.vx, 0.675)
 
 
 if __name__ == "__main__":

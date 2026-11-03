@@ -75,7 +75,10 @@ def linear_state(start, end, duration, elapsed):
     u = float(np.clip(float(elapsed) / duration, 0.0, 1.0))
     delta = end - start
     position = start + delta * u
-    velocity = delta / duration
+    if float(elapsed) >= duration:
+        velocity = np.zeros(3, dtype=np.float64)
+    else:
+        velocity = delta / duration
     return (
         position,
         velocity,

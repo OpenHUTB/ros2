@@ -57,6 +57,9 @@ class MinimumJerkTrackingNode:
         self.start_delay_sec = float(
             self.control_params.get("start_delay_sec", 2.0)
         )
+        self.odom_timeout_sec = float(
+            self.control_params.get("odom_timeout_sec", 0.5)
+        )
 
         self.topic_odom = rospy.get_param("topics/odom", "/uav/odom")
         self.topic_cmd = rospy.get_param("topics/cmd_vel", "/uav/cmd_vel")
@@ -73,8 +76,9 @@ class MinimumJerkTrackingNode:
         self.latest_odom = None
         self.start_position = None
         self.trajectory = None
-        self.started_at = None
         self.first_odom_at = None
+        self.last_odom_at = None
+        self.trajectory_elapsed = 0.0
         self.settled_since = None
         self.finished = False
         self.last_step_at = None
@@ -103,6 +107,7 @@ class MinimumJerkTrackingNode:
 
     def _odom_callback(self, msg):
         self.latest_odom = msg
+        self.last_odom_at = rospy.get_time()
 
     def _status(self, text, force=False):
         self.status_pub.publish(String(data=text))
@@ -124,8 +129,8 @@ class MinimumJerkTrackingNode:
             self.trajectory_params,
             self.mode,
         )
-        self.started_at = rospy.get_time()
-        self.last_step_at = self.started_at
+        self.trajectory_elapsed = 0.0
+        self.last_step_at = rospy.get_time()
         self._publish_desired_path()
         self._open_csv()
         rospy.loginfo(
@@ -202,11 +207,20 @@ class MinimumJerkTrackingNode:
             self._publish_stop()
             self._status("WAIT_ODOM")
             return
+        now = rospy.get_time()
+        if (
+            self.last_odom_at is None
+            or now - self.last_odom_at > self.odom_timeout_sec
+        ):
+            self.last_step_at = now
+            self._publish_stop()
+            self._status("STALE_ODOM")
+            return
         if self.first_odom_at is None:
-            self.first_odom_at = rospy.get_time()
+            self.first_odom_at = now
         if (
             self.trajectory is None
-            and rospy.get_time() - self.first_odom_at < self.start_delay_sec
+            and now - self.first_odom_at < self.start_delay_sec
         ):
             self._publish_stop()
             self._status("WAIT_TAKEOFF")
@@ -217,10 +231,10 @@ class MinimumJerkTrackingNode:
             self._publish_stop()
             return
 
-        now = rospy.get_time()
         dt = max(now - float(self.last_step_at or now), 1e-3)
         self.last_step_at = now
-        elapsed = now - self.started_at
+        self.trajectory_elapsed += min(dt, 0.2)
+        elapsed = self.trajectory_elapsed
         reference = self.trajectory.sample(elapsed)
         position = _pose_position(self.latest_odom)
         velocity = _pose_velocity(self.latest_odom)
@@ -257,7 +271,7 @@ class MinimumJerkTrackingNode:
         tolerance = float(self.control_params.get("goal_tolerance", 0.25))
         settle_time = float(self.control_params.get("settle_time", 0.8))
         final_wait_timeout = float(
-            self.control_params.get("final_wait_timeout", 5.0)
+            self.control_params.get("final_wait_timeout", 18.0)
         )
         if (
             elapsed >= reference.total_duration + final_wait_timeout
@@ -266,11 +280,14 @@ class MinimumJerkTrackingNode:
             self.finished = True
             self._publish_stop()
             self._status(
-                "FAILED_STALLED mission=%s mode=%s error=%.3f timeout=%.1f"
+                "FAILED_STALLED mission=%s mode=%s error=%.3f "
+                "elapsed=%.2f ref_duration=%.2f timeout=%.1f"
                 % (
                     self.mission,
                     self.mode,
                     command.position_error,
+                    elapsed,
+                    reference.total_duration,
                     final_wait_timeout,
                 ),
                 force=True,
@@ -283,11 +300,13 @@ class MinimumJerkTrackingNode:
                 self.finished = True
                 self._publish_stop()
                 self._status(
-                    "DONE mission=%s mode=%s error=%.3f duration=%.2f"
+                    "DONE mission=%s mode=%s error=%.3f "
+                    "elapsed=%.2f ref_duration=%.2f"
                     % (
                         self.mission,
                         self.mode,
                         command.position_error,
+                        elapsed,
                         reference.total_duration,
                     ),
                     force=True,

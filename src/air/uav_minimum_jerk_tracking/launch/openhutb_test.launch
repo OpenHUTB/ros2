@@ -1,7 +1,7 @@
 <launch>
   <arg name="host" default="192.168.94.1"/>
   <arg name="vehicle_name" default="Drone1"/>
-  <arg name="mission" default="smooth_forward_6m"/>
+  <arg name="mission" default="straight_3m_up"/>
   <arg name="mode" default="minimum_jerk"/>
 
   <include file="$(find carlair_ros_bridge)/launch/main.launch">

@@ -1,5 +1,5 @@
 <launch>
-  <arg name="mission" default="smooth_forward_6m"/>
+  <arg name="mission" default="straight_3m_up"/>
   <arg name="mode" default="minimum_jerk"
        doc="轨迹模式：minimum_jerk 或 linear"/>
 
