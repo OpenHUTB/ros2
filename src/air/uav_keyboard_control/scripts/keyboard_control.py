@@ -8,8 +8,12 @@
     R/F   上升 / 下降
     Q/E   右转 / 左转（Q=+yaw_rate 机头右转，遵循 AirSim 机体系 yaw_rate 约定）
     组合键 可同时按住多个方向键（W+A 斜向、W+Q 边走边转），各轴分量叠加
+    1/2/3 技能宏：升到 1.5 m 悬停 / 原地转 360° / 前进 3 m 自动刹停（见 skill_macros.py）
     其它键 / 松开    悬停（速度按加速度上限平滑回零，而不是瞬间跳变）
     ESC 或 Ctrl-C     退出（退出前补发一条零速指令，避免无人机保持最后速度）
+
+订阅：
+    /uav/odom      nav_msgs/Odometry      位姿（ENU + 偏航），技能宏闭环用；超时则宏拒绝启动
 
 发布：
     /uav/cmd_vel   geometry_msgs/Twist   机体系速度指令（默认 30 Hz）
@@ -26,6 +30,8 @@
        W+S 这种互斥组合自然抵消为 0（悬停）。
     3) 发布前经加速度限幅：速度按 accel_* 斜坡逼近目标值，桥接层收到的是一条
        连续变化的指令序列，而不是从 0 直接跳到 2 m/s 的阶跃。
+    4) 技能宏（1/2/3）是基于 /uav/odom 的短闭环：高度用 P 律、旋转用累计偏航、
+       前进用刹车曲线，结束即回到"悬停"；任一方向键立即接管（手动优先）。
 """
 from __future__ import annotations
 
@@ -36,6 +42,11 @@ import time
 
 import rospy
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+
+# 同目录模块：rosrun 时脚本目录已在 sys.path[0]，用 importlib 加载时不一定，这里补一次。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from skill_macros import MACRO_KEYS, MacroRunner, Pose, ZERO_CMD, quat_to_yaw  # noqa: E402
 
 # 按键 -> (轴, 符号)。符号 +1 表示该轴正方向，-1 表示负方向。
 KEY_MAP = {
@@ -62,6 +73,7 @@ HELP_TEXT = """
   R / F     上升 / 下降
   Q / E     右转 / 左转
   组合键    可同时按（W+A 斜飞、W+Q 边走边转）
+  1 / 2 / 3  技能宏：升到 1.5 m 悬停 / 原地转 360° / 前进 3 m 刹停
   松开按键   平滑减速到悬停
   ESC / Ctrl-C 退出
 ============================================================
@@ -244,7 +256,9 @@ class KeyboardController(object):
         self.vert = float(rospy.get_param("control/vert_speed", 1.0))
         self.yaw = float(rospy.get_param("control/yaw_rate", 1.0))
         self.hold_timeout = float(rospy.get_param("control/key_hold_timeout", HOLD_TIMEOUT))
+        self.odom_timeout = float(rospy.get_param("control/odom_timeout", 0.6))
         topic = rospy.get_param("topic/cmd_vel", "/uav/cmd_vel")
+        odom_topic = rospy.get_param("topic/odom", "/uav/odom")
         rate_hz = float(rospy.get_param("rate/publish_hz", 30.0))
         self.pub = rospy.Publisher(topic, Twist, queue_size=1)
         self.rate = rospy.Rate(rate_hz)
@@ -254,7 +268,42 @@ class KeyboardController(object):
             rospy.get_param("control/accel_vert", 2.0),
             rospy.get_param("control/accel_yaw", 4.0),
         )
+        self.skills = MacroRunner(
+            takeoff_altitude=rospy.get_param("macro/takeoff_altitude", 1.5),
+            spin_degrees=rospy.get_param("macro/spin_degrees", 360.0),
+            forward_distance=rospy.get_param("macro/forward_distance", 3.0),
+            forward_speed=rospy.get_param("macro/forward_speed", 1.5),
+            brake_accel=rospy.get_param("macro/brake_accel", 2.0),
+            alt_kp=rospy.get_param("macro/alt_kp", 2.0),
+            max_vert_speed=self.vert,
+            spin_rate=self.yaw,
+            altitude_tolerance=rospy.get_param("macro/altitude_tolerance", 0.05),
+            settle_ticks=rospy.get_param("macro/settle_ticks", 6),
+        )
+        # 技能宏要闭环，用桥接层发的 ENU 位姿；没有它时宏拒绝启动。
+        self.pose = None
+        self.pose_time = 0.0
+        rospy.Subscriber(odom_topic, Odometry, self.cb_odom, queue_size=1)
         self._last_time = None
+
+    # ------------------------------------------------------------------ 位姿
+    def cb_odom(self, msg):
+        """缓存最新位姿（ENU 位置 + 偏航角）."""
+        p = msg.pose.pose.position
+        q = msg.pose.pose.orientation
+        self.pose = Pose(float(p.x), float(p.y), float(p.z),
+                         quat_to_yaw(q.x, q.y, q.z, q.w))
+        self.pose_time = time.monotonic()
+
+    def _fresh_pose(self, now, provided=None):
+        """返回可用位姿：优先用测试注入的，其次用最近 odom；超时返回 None."""
+        if provided is not None:
+            return provided
+        if self.pose is None:
+            return None
+        if now - self.pose_time > self.odom_timeout:
+            return None
+        return self.pose
 
     # ------------------------------------------------------------------ 核心
     def build_twist(self, cmd):
@@ -267,22 +316,52 @@ class KeyboardController(object):
         t.angular.z = wz
         return t
 
-    def step_once(self, key, now=None, dt=None):
+    def step_once(self, key, now=None, dt=None, pose=None):
         """把一次按键（可能为 None）推进一个控制周期，返回要发布的 Twist.
 
-        独立成函数、时间可由外部注入，便于无 ROS 的单元测试。
+        独立成函数、时间和位姿都可由外部注入，便于无 ROS 的单元测试。
+        ``pose`` 不给时用最近一次 ``/uav/odom``（超时视为没有）。
         """
         now = time.monotonic() if now is None else float(now)
         if dt is None:
             dt = 0.0 if self._last_time is None else now - self._last_time
         self._last_time = now
 
-        self.tracker.press(key, now)
-        target = merge_target(self.tracker.active(now), self.horiz, self.vert, self.yaw)
+        pose = self._fresh_pose(now, pose)
+
+        if key in MACRO_KEYS:
+            self._start_macro(key, pose)
+            target = ZERO_CMD if self.skills.active else None
+        elif key and _axis(key) is not None and self.skills.active:
+            print("\n[技能宏] 手动键 %r 接管，取消 %s" % (key, self.skills.name))
+            self.skills.cancel()
+            target = None
+        else:
+            target = None
+
+        if self.skills.active:
+            target = self.skills.update(pose, dt)
+            if not self.skills.active:
+                print("\n[技能宏] 完成，回到悬停")
+
+        if target is None:
+            self.tracker.press(key, now)
+            target = merge_target(self.tracker.active(now), self.horiz, self.vert, self.yaw)
         return self.build_twist(self.smoother.update(target, dt))
+
+    def _start_macro(self, key, pose):
+        if pose is None:
+            print("\n[技能宏] 没有可用的 /uav/odom 位姿（或已超时），忽略按键 %r" % key)
+            return
+        if self.skills.active:
+            print("\n[技能宏] 取消 %s" % self.skills.name)
+            self.skills.cancel()
+        if self.skills.trigger(key, pose):
+            print("\n[技能宏] 开始 %s（ESC 退出 / 任意方向键接管）" % self.skills.name)
 
     def stop(self):
         """立即补发零速（退出/异常路径调用），不再等桥接层的超时保护."""
+        self.skills.cancel()
         self.tracker.release_all()
         self.smoother.reset()
         try:
