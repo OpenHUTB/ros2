@@ -1,0 +1,13 @@
+<launch>
+  <arg name="mission" default="smooth_forward_6m"/>
+  <arg name="mode" default="minimum_jerk"
+       doc="轨迹模式：minimum_jerk 或 linear"/>
+
+  <rosparam command="load"
+            file="$(find uav_minimum_jerk_tracking)/config/params.yaml"/>
+  <param name="mission" value="$(arg mission)" type="str"/>
+  <param name="trajectory/mode" value="$(arg mode)" type="str"/>
+
+  <node pkg="uav_minimum_jerk_tracking" type="main.py"
+        name="uav_minimum_jerk_tracking" output="screen"/>
+</launch>

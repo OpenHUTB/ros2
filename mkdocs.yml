@@ -160,6 +160,7 @@ nav:
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
     - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
+    - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
