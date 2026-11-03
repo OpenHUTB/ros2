@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-任务 4 —— 端到端视觉伺服网络 (纯 NumPy 实现)
-=============================================
+任务 4 —— 端到端视觉控制网络 (纯 NumPy 实现，S 曲线泊车)
+=========================================================
 输入: 前视相机 RGB 图像 -> 灰度 84x84 -> 归一化
-输出: 归一化控制量 [vx, vy, wz]
-      vx = nominal_speed * (out0 + 1) / 2
-      vy = 0.35 * out1
-      wz = 0.60 * out2
+输出: 归一化控制量 [v, wz]
+      v  = nominal_speed * (out0 + 1) / 2
+      wz = 1.2 * out1
 
 三种网络架构 (均支持前向推理与反向传播训练):
-  - nature_cnn : 16@5x5/s2 -> 32@3x3/s2 -> 2x2 avgpool -> FC128 -> FC3
-  - small_cnn  :  8@5x5/s2 -> 16@3x3/s2 -> 2x2 avgpool -> FC64  -> FC3
-  - mlp        : flatten(84x84) -> FC128 -> FC3
+  - nature_cnn : 16@5x5/s2 -> 32@3x3/s2 -> 2x2 avgpool -> FC128 -> FC2
+  - small_cnn  :  8@5x5/s2 -> 16@3x3/s2 -> 2x2 avgpool -> FC64  -> FC2
+  - mlp        : flatten(84x84) -> FC128 -> FC2
 
-训练脚本: train/train_task4.py
+训练脚本: train/train_e2e.py
 """
 
 import math
@@ -25,7 +24,6 @@ import numpy as np
 IMG_SIZE = 84
 ACTION_DIM = 2
 NOMINAL_SPEED = 0.45
-VY_SCALE = 0.35
 WZ_SCALE = 1.2
 
 ARCHITECTURES = {
@@ -33,28 +31,6 @@ ARCHITECTURES = {
     'nature_cnn': {'channels': (16, 32), 'fc': 128},
     'mlp':        None,
 }
-
-PIPE_Y = 3.2          # 管线横向中心线
-PIPE_Z = -1.45        # 巡检高度
-
-
-def expert_label_ref(y, yaw):
-    """几何专家标签：横向纠偏 + 航向回正 + 跟随巡航。
-
-    返回归一化动作 [out0, out1, out2]，与 VisuomotorController 的输出映射一致。
-    """
-    dy = PIPE_Y - y
-    vx = NOMINAL_SPEED * (1.0 - 0.55 * min(1.0, abs(dy) / 0.6))
-    vx *= (1.0 - 0.30 * min(1.0, abs(yaw) / 0.28))
-    vx = float(np.clip(vx, 0.0, NOMINAL_SPEED))
-    vy = float(np.clip(1.2 * dy, -VY_SCALE, VY_SCALE))
-    wz = float(np.clip(-1.6 * yaw, -WZ_SCALE, WZ_SCALE))
-    return np.array([
-        2.0 * vx / NOMINAL_SPEED - 1.0,
-        vy / VY_SCALE,
-        wz / WZ_SCALE,
-    ], dtype=np.float64)
-
 
 # ──────────────────────────────────────────────────────────────
 # 图像预处理
