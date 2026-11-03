@@ -1,0 +1,31 @@
+# uav_semantic_mapping_nav 节点参数
+# 话题与坐标系约定沿用 uav_mujoco_sim / carlair_ros_bridge。
+
+map:
+  size: 60.0              # 地图边长（米），以原点为中心
+  res: 0.20               # 分辨率（米/格）
+  stride: 3               # 深度图抽样步长，每 stride 个像素取一个
+  use_truth_seg: false    # true 则用 /camera/seg 真值替代网络预测（对照用）
+
+model_dir: ""             # 预训练分割权重目录；留空用包内 share/.../data
+
+net:
+  in_hw: [64, 64]         # 网络输入分辨率（高、宽），与训练一致
+
+cam:
+  fovy_deg: 60.0          # 与模型 XML 里的相机 fovy 一致
+
+topic:
+  rgb: "/camera/image_raw"
+  depth: "/camera/depth"
+  seg: "/camera/seg"
+  odom: "/uav/odom"       # 换 VIO 后端时重映射到 /vio/odom 即可
+  goal: "/uav/goal"
+  map: "/semantic/map"
+  map_color: "/semantic/map_color"
+  path: "/semantic/path"
+  status: "/semantic/status"
+  cost: "/semantic/cost"
+
+rate:
+  report_every: 5.0       # 打印实测速率的间隔（秒）

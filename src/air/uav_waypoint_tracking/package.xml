@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_waypoint_tracking</name>
+  <version>1.0.0</version>
+  <description>
+    四旋翼航点轨迹跟踪实验：用自研 PID 控制器驱动 AirSim 中的四旋翼依次飞过给定航点，
+    记录真实轨迹并与 AirSim 内置位置接口对比，给出到达时间、稳态误差、超调量与
+    轨迹均方根误差等量化指标。
+  </description>
+
+  <maintainer email="thestella17@users.noreply.github.com">thestella17</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <exec_depend>rviz</exec_depend>
+
+  <export>
+  </export>
+</package>

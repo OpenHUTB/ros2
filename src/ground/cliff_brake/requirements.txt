@@ -1,0 +1,3 @@
+# 固定到已验证版本：实测数据由 mujoco 3.1.6 + numpy 1.24.4 生成（见 docs/ground/cliff_brake.md 第七节）
+mujoco==3.1.6
+numpy==1.24.4

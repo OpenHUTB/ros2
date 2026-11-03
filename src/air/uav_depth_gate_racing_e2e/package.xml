@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_depth_gate_racing_e2e</name>
+  <version>0.1.0</version>
+  <description>
+    深度图端到端穿越门竞速。策略输入 48×64 深度图与当前机体系速度，直接输出
+    速度指令，不经过地图或路径搜索。训练范式为 DAgger 在线聚合 + PPO 微调；
+    专家由真值位姿的比例控制律自动生成，不需要人工遥控。
+    含对比实验②：同一 PPO、四种网络结构（MLP / CNN / CNN+GRU / CNN+注意力）。
+    依赖 uav_mujoco_sim 提供 /camera/depth 与 gate_track 赛道场景。
+  </description>
+  <maintainer email="eeexty@users.noreply.github.com">eeexty</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

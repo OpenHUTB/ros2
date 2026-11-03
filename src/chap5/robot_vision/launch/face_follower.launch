@@ -1,0 +1,43 @@
+<launch>
+    <!-- 人脸追踪（比例控制）节点。
+         默认订阅 Kinect 的 RGB 图像 /camera/rgb/image_raw，
+         可传入 cam_image_topic 参数重映射为 /usb_cam/image_raw 等。 -->
+
+    <arg name="cam_image_topic" default="/camera/rgb/image_raw" />
+    <arg name="show_image" default="true" />
+
+    <node pkg="robot_vision" name="face_follower" type="face_follower.py" output="screen">
+        <remap from="input_rgb_image" to="$(arg cam_image_topic)" />
+
+        <!-- 未设置 cascade_frontal 时，节点默认使用 OpenCV 自带的
+             haarcascade_frontalface_default.xml。
+             若需改为仓库自带的 haarcascade_frontalface_alt.xml，取消下面注释。 -->
+        <!-- <param name="cascade_frontal" value="$(find robot_vision)/data/haar_detectors/haarcascade_frontalface_alt.xml" /> -->
+        <param name="cascade_profile" value="$(find robot_vision)/data/haar_detectors/haarcascade_profileface.xml" />
+
+        <param name="show_image" value="$(arg show_image)" />
+
+        <rosparam param="scaleFactor">1.05</rosparam>
+        <rosparam param="minNeighbors">3</rosparam>
+        <rosparam param="minSize">40</rosparam>
+        <rosparam param="maxSize">0</rosparam>
+        <rosparam param="kp_angular">1.2</rosparam>
+        <rosparam param="kp_linear">0.6</rosparam>
+        <rosparam param="max_linear">0.25</rosparam>
+        <rosparam param="max_angular">0.5</rosparam>
+        <rosparam param="target_area">0</rosparam>
+        <rosparam param="dead_zone">0.05</rosparam>
+
+        <!-- 纯转向模式（默认开启）：视觉追踪核心是"车头对齐目标(角速度闭环 w)"，
+             原地旋转即可完美展现 P 控制器跟随效果，彻底杜绝前冲贴脸丢失目标。
+             改为 false 后启用线速度闭环，并配合下方防贴脸死区。 -->
+        <param name="only_turn" value="true" />
+
+        <!-- 防贴脸安全死区（仅在 only_turn=false 时生效）：
+             面积 > area_stop   -> v=0；
+             面积 > area_backup -> v=-backup_linear（小幅度倒退拉开视距）。 -->
+        <rosparam param="area_stop">2500</rosparam>
+        <rosparam param="area_backup">3500</rosparam>
+        <rosparam param="backup_linear">0.15</rosparam>
+    </node>
+</launch>
