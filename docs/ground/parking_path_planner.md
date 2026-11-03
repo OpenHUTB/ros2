@@ -45,6 +45,17 @@ ros2 launch parking_path_planner main.launch.py
 
 launch 会同时启动规划节点与 RViz2，并自动完成一次规划。RViz2 中可以看到绿色车位框、红色目标位姿箭头，以及蓝/橙双色轨迹。
 
+在 ROS 2 Humble 的 RViz2 里打开 `rviz/parking_path_planner.rviz`，同一个车位场景是这样的（俯视正交视角，左侧 Displays 面板里 `Parking Path` 订阅 `/parking_path`，`Parking Markers` 订阅 `/parking_markers`）：
+
+![RViz2 中的泊车轨迹](../img/ground/rviz2_parking_path.png)
+
+节点启动时的日志：
+
+```
+[INFO] [parking_path_planner]: 规划成功：里程 15.60 m，换挡 1 次，扩展 14628 次
+[INFO] [parking_path_planner]: 泊车路径规划节点已启动：调用 `ros2 service call /plan_parking std_srvs/srv/Trigger {}` 重新规划
+```
+
 如果机器上没有 ROS，也可以直接离线跑出轨迹图：
 
 ```bash
@@ -56,7 +67,7 @@ python3 main.py --offline --output results
 
 ## 运行效果
 
-没有 ROS 环境时，规划器可以直接离线运行并把结果渲染成动图（`docs/img/ground/parking_path_planner_demo.gif` 为脚本自动生成，非 RViz2 界面截图）：
+没有 ROS 环境时，规划器也可以直接离线运行，把结果渲染成动图（`docs/img/ground/parking_path_planner_demo.gif` 由离线脚本生成，方便在没装 ROS 的机器上查看过程）：
 
 ![离线模式运行过程](../img/ground/parking_path_planner_demo.gif)
 
