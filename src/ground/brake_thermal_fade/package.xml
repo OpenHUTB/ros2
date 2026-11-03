@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>brake_thermal_fade</name>
+  <version>0.1.0</version>
+  <description>
+    制动器温升与热衰退评估：集总热容模型、分段线性摩擦衰退曲线、恒速长下坡与连续
+    制动两个工况，输出盘温、摩擦系数与停车距离，附带 ROS 2 适配节点与 PIL 运行效果图
+  </description>
+  <maintainer email="xy18574557330@users.noreply.github.com">xy18574557330</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

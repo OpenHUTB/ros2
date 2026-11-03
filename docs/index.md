@@ -144,6 +144,7 @@ ROS每章节运行代码:
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
+* [制动器温升与热衰退评估](./ground/brake_thermal_fade.md) —— 集总热容模型量化长下坡与连续制动的盘温累积，按摩擦衰退曲线给出停车距离增长
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
