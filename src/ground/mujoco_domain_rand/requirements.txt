@@ -1,0 +1,7 @@
+# 2D 轻量域随机化仿真核心依赖
+numpy>=1.23
+matplotlib>=3.6
+Pillow>=9.0
+
+# MuJoCo 渲染版（mujoco_domain_rand.py）额外需要（本机运行）
+# mujoco>=2.3
