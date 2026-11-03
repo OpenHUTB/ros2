@@ -575,6 +575,20 @@ vx = min(forward_speed, sqrt(2 * brake_accel * remaining))
 * `3` 键沿“按下 `3` 时的机头方向”直线走，**不做避障**——避障由 `uav_lidar_safety_corridor`
   一类模块负责，两者可以叠加（宏只发速度，不占通道）。
 
+### 8.7 行为演示（本机回放，非 ROS 链路）
+
+![](../img/air/uav_keyboard_control/keyboard_v3_demo.gif)
+
+演示内容（8 fps，26 s，压到 8.7 MB）：按住 `W` 加速 → 松开平滑减速 → `W`+`A` 斜飞 →
+按 `3` 前进 3 m 自动刹停 → 按 `1` 升到 1.5 m 悬停 → 按 `2` 原地转 360°。
+
+> **这段是怎么录的**：用的是仓库里**同一份** `keyboard_control.KeyboardController.step_once()`
+> （组合键、按键保持、加速度平滑、技能宏全部走原代码），但本机没有 ROS，所以用一个假的
+> `rospy` 承接它输出的 `Twist`，再经 AirSim 的 Python 接口直接下发（等价于桥接层做的那一段）。
+> 因此它展示的是"按键 → 速度指令 → 飞行动作"，**不是** `roslaunch` 的 ROS 实飞录屏；
+> 场景是本机打包版 AirSim（AbandonedPark），不是 CarlaAir。
+> ROS 链路的实飞录屏与位移测量仍待在 Ubuntu + CarlaAir 环境补录（见 7.2 / 7.6）。
+
 ## 9. 参考
 
 * [carlair_ros_bridge 桥接模块](../air/carlair_ros_bridge.md)
