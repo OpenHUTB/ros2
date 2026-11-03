@@ -1,49 +1,76 @@
 # 水域载具 - 水下声呐三维测深与避障 ROS 2 封装模块
 
-## 作业概述与背景
-本模块基于水下声呐探测原理，在 ROS 2 环境下实现了一个水下三维地形测绘与避障仿真节点。节点模拟了声呐探测海底起伏以及识别障碍物的过程，实时生成包含障碍物信息的三维海底地形图，为水下航行器的自主避障提供环境感知基础。
+## 实验目标
 
-## 二、运行环境
-* 操作系统：Ubuntu 22.04（虚拟机）
-* ROS 2 版本：Humble
-* 依赖库：rclpy, matplotlib, numpy
+本模块使用确定性合成数据演示水下三维地形、三个障碍物和五束声呐扇形探测的
+可视化流程。数据由参数化海底曲面生成，不代表真实声呐测量结果，也不会连接真实设备。
 
-## 核心代码文件
+## 运行环境
 
-本模块包含以下核心文件，均已提交至仓库：
+| 项目 | 版本或说明 |
+|---|---|
+| 操作系统 | Ubuntu 22.04 |
+| ROS | ROS 2 Humble |
+| Python | 3.10 |
+| 依赖 | NumPy、Matplotlib |
+
+## 模块结构
 
 ```text
-src/
-└── underwater_sonar_mapping/
-    ├── main.py                 # 三维声呐测绘与障碍物可视化节点
-    ├── setup.py                # ROS 2 功能包配置文件
-    └── launch/
-        └── main.launch.py      # 一键启动文件
+src/underwater_sonar_mapping/
+├── launch/
+│   └── main.launch.py
+├── tests/
+│   └── test_scene.py
+├── underwater_sonar_mapping/
+│   ├── main.py              # ROS 2 可视化节点
+│   └── scene.py             # 可复用的场景生成与离线渲染
+├── README.md
+├── package.xml
+└── setup.py
 ```
-## 运行步骤
 
-1. 新建标准工作空间并进入 src 目录：
+## 构建与运行
+
 ```bash
 mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws/src
-```
-2. 从 ros2 仓库拷贝模块代码到工作空间：                   
-("cp -r ~/OpenHUTB/ros2/src/....._mapping ~/ros2_ws/src/"中OPenHUTB是文件夹名，一般克隆ros2不会自带OPenHUTB文件夹，输入改指令时可以去掉"/OpenHUTB"部分)
-```bash
-cp -r ~/OpenHUTB/ros2/src/underwater_sonar_mapping ~/ros2_ws/src/
+cp -r /path/to/ros2/src/underwater_sonar_mapping ~/ros2_ws/src/
 cd ~/ros2_ws
-```
-3. 编译工作空间并部署环境：
-```bash
 colcon build --packages-select underwater_sonar_mapping
 source install/setup.bash
-```
-4. 运行水下声呐测绘节点：
-```bash
 ros2 launch underwater_sonar_mapping main.launch.py
 ```
-5.运行效果（截图）
-![运行效果](../img/underwater_sonar_3d_mapping_run.png)
 
-效果说明：节点成功启动，基于模拟声呐数据生成了三维海底地形，并清晰标注了水下沉船/暗礁等障碍物位置，验证了声呐三维测绘与避障感知算法的可行性。
+节点启动后会打开 Matplotlib 三维窗口。也可以把场景保存到指定文件：
 
+```bash
+ros2 launch underwater_sonar_mapping main.launch.py \
+  save_path:=$HOME/underwater_sonar.png
+```
+
+## 无界面渲染
+
+在模块目录执行：
+
+```bash
+python3 -m underwater_sonar_mapping.scene \
+  --output docs/img/underwater_sonar_3d_mapping_run.png \
+  --dpi 150
+```
+
+脚本使用同一套场景生成函数，可在没有图形界面的 CI 环境生成截图。
+
+## 回归测试
+
+```bash
+python3 -m pytest tests -q
+```
+
+测试检查地形数组尺寸、深度范围、障碍物数量、非法网格参数以及无界面 PNG 渲染。
+
+## 运行效果
+
+![水下声呐三维测绘运行效果](../img/underwater_sonar_3d_mapping_run.png)
+
+图中蓝色曲面表示合成海底地形，红色立方体表示障碍物，黄色三角和青色射线表示
+声呐位置及五个探测方向。
