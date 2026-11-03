@@ -1,0 +1,43 @@
+{
+  "frames": [
+    {
+      "frame_id": "uav_0030_p060_0001",
+      "altitude_m": 30,
+      "pitch_deg": -60,
+      "ground_truth": [
+        {"id": 1, "bbox": [10, 10, 80, 60], "small": false},
+        {"id": 2, "bbox": [110, 20, 24, 20], "small": true}
+      ],
+      "predictions": [
+        {"bbox": [11, 9, 80, 61], "score": 0.93},
+        {"bbox": [111, 21, 24, 20], "score": 0.72}
+      ]
+    },
+    {
+      "frame_id": "uav_0050_p060_0002",
+      "altitude_m": 50,
+      "pitch_deg": -60,
+      "ground_truth": [
+        {"id": 1, "bbox": [30, 30, 30, 22], "small": true},
+        {"id": 2, "bbox": [100, 20, 50, 36], "small": false}
+      ],
+      "predictions": [
+        {"bbox": [30, 29, 30, 22], "score": 0.86},
+        {"bbox": [101, 21, 50, 35], "score": 0.61}
+      ]
+    },
+    {
+      "frame_id": "uav_0080_p090_0003",
+      "altitude_m": 80,
+      "pitch_deg": -90,
+      "ground_truth": [
+        {"id": 1, "bbox": [50, 50, 16, 14], "small": true},
+        {"id": 2, "bbox": [150, 50, 20, 18], "small": true}
+      ],
+      "predictions": [
+        {"bbox": [50, 50, 16, 14], "score": 0.38},
+        {"bbox": [250, 50, 20, 18], "score": 0.20}
+      ]
+    }
+  ]
+}
