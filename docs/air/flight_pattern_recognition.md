@@ -292,3 +292,54 @@ $$
 另外报告**回合级准确率**：对一个回合内所有窗口的预测取众数，与回合标签比较。它衡量"整段飞行是否被认对"，比逐窗口准确率更接近实际使用。
 
 ---
+
+## 5. 算法流程
+
+### 5.1 总体流程
+
+```mermaid
+flowchart TD
+    A[AirSim Blocks 采集<br/>30 段 + 15 段] -->|CSV + JSON 标签| B[prepare：哈希校验<br/>6 s 窗口 / 0.5 s 步长]
+    B -->|插值到 10 Hz| C[8 个几何特征]
+    C -->|时间维均值/标准差| D[16 维向量<br/>data/prepared/*.npz]
+    D -->|train：验证集选权重与阈值| E[models/*/model.pt + config.json]
+    E -->|evaluate / reproduce| F[accuracy / macro-F1<br/>混淆矩阵 / 覆盖率]
+    E -->|部署| G[ROS2 pattern_recognizer]
+    D -->|回放| H[ROS2 pattern_replay]
+    H -->|/uav/pattern/telemetry| G
+    G -->|prediction / task_events| I[dashboard 看板]
+```
+
+### 5.2 训练与阈值选择
+
+```
+输入: 训练窗口 X(N×61×8), 标签 y, 验证窗口 V, 变体 variant, 种子 s
+1  固定 random/numpy/torch 种子; 线程数 = 3
+2  μ, σ ← 训练集在 (窗口, 时间) 两维上的均值/标准差, σ 下限 0.02
+3  for epoch = 1..120:
+4      打乱训练集, batch = 32
+5      前向 → 交叉熵 → 反传; 梯度裁剪 ‖g‖ ≤ 1.0; Adam(lr=0.002, wd=1e-4)
+6      验证损失若不比历史最优低 1e-5: stale += 1, 否则保存权重并清零
+7      stale ≥ 20 → 早停
+8  用最优权重在验证集上算 softmax, 取 argmax 与置信度
+9  按 4.6 的规则扫阈值 τ ∈ [0.2, 0.95], 写入 config.json
+```
+
+### 5.3 在线识别与事件防抖
+
+```
+每条 /uav/pattern/telemetry:
+1  校验时间戳为整数、9 个分量有限; 否则清空历史并报告 invalid_telemetry_history_reset
+2  若 segment 变化 / 时间戳回退 / 间隔 > 150 ms → 清空历史
+3  累计样本; 不足 warmup_s=7 s → 返回 None（状态 collecting_7_seconds_of_history）
+4  每 inference_period_s=0.5 s 触发一次:
+      取最近 6 s → 61 帧插值 → 8 特征 → 均值/标准差 → 标准化 → softmax
+      label = argmax 若 p_max ≥ τ, 否则 'uncertain'
+5  若 label 与上一候选相同: count += 1; 否则 candidate = label, count = 1
+6  count ≥ 3 且 label ≠ 当前稳定标签 → 发布一次 task_event, 更新稳定标签
+7  超过 1 s 没有新消息 → 清空历史（no_data_history_reset）
+```
+
+防抖的作用：单帧抖动不会产生事件，只有连续 3 次（约 1.5 s）一致的判定才写进任务日志。
+
+---
