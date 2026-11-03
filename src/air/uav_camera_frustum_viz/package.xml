@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_camera_frustum_viz</name>
+  <version>0.1.0</version>
+  <description>RViz camera frustum and flight trail for UAV.</description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <export/>
+</package>
