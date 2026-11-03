@@ -20,3 +20,8 @@ ros2 run demo_nodes_cpp listener
 ```
 
 ![](../img/ros/ros2_talker_listener.png)
+
+
+## 练习：Rover LiDAR obstacle avoidance
+
+本练习的代码、运行说明和项目图见[Rover LiDAR obstacle avoidance](../chap9/rover_lidar_avoidance.md)。

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+<defs><pattern id="g" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#263447" stroke-width="1"/></pattern><linearGradient id="bg" y2="1"><stop stop-color="#111b2b"/><stop offset="1" stop-color="#1b2a3c"/></linearGradient></defs>
+<rect width="1200" height="700" rx="24" fill="url(#bg)"/><rect x="24" y="24" width="1152" height="652" rx="18" fill="url(#g)" stroke="#41536a"/>
+<text x="56" y="76" fill="#e6f0fb" font-family="Arial,sans-serif" font-size="30" font-weight="700">ROS 2 · LIDAR ROVER AVOIDANCE</text><text x="56" y="112" fill="#8da2bc" font-family="Arial,sans-serif" font-size="18">/scan → sector minimum → /cmd_vel</text>
+<path d="M420 420 L790 165 M420 420 L900 260 M420 420 L930 400 M420 420 L880 550 M420 420 L730 650" stroke="#43d6c5" stroke-width="3" opacity=".7"/>
+<path d="M420 420 L665 290 L625 510Z" fill="#39ceb8" opacity=".13" stroke="#49e0ca" stroke-width="2"/>
+<circle cx="720" cy="345" r="58" fill="#d76c67" stroke="#ff9d89" stroke-width="4"/><rect x="814" y="435" width="100" height="86" rx="16" fill="#d76c67" stroke="#ff9d89" stroke-width="4"/>
+<g transform="translate(420 420) rotate(-18)"><rect x="-52" y="-34" width="104" height="68" rx="18" fill="#eccb68" stroke="#fff0a8" stroke-width="4"/><circle cx="-32" cy="-38" r="11" fill="#172234"/><circle cx="32" cy="-38" r="11" fill="#172234"/><circle cx="-32" cy="38" r="11" fill="#172234"/><circle cx="32" cy="38" r="11" fill="#172234"/><path d="M38 0h32" stroke="#fff0a8" stroke-width="8"/></g>
+<text x="500" y="380" fill="#b6c9df" font-family="Arial,sans-serif" font-size="18">front scan sectors</text>
+<rect x="56" y="558" width="480" height="78" rx="12" fill="#132337" stroke="#40556c"/><text x="78" y="590" fill="#8ee3d5" font-family="Arial,sans-serif" font-size="18">FRONT  0.42 m   ·   TURN LEFT</text><text x="78" y="618" fill="#c4d2e2" font-family="Arial,sans-serif" font-size="16">Illustrative visualization · not a Gazebo capture</text>
+<rect x="56" y="640" width="410" height="24" rx="12" fill="#8a5f26"/><text x="70" y="658" fill="#fff3d3" font-family="Arial,sans-serif" font-size="14">TEACHING SCHEMATIC · NOT A REAL SIMULATION SCREENSHOT</text></svg>
