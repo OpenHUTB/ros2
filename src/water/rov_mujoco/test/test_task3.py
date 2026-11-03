@@ -125,7 +125,7 @@ def run_task3_tests():
     print("  -> ✅ ROS 2 TF2 坐标变换树 (map -> odom -> rov_base -> rov_sonar_link) 链路验证通过！")
     slam_node.destroy_node()
 
-    print("  -> ✅ 子项 1：贝叶斯对数几率声呐 SLAM 占据栅格建图系统 100% 达成！\n")
+    print("  -> ✅ 子项 1：贝叶斯对数几率声呐 SLAM 占据栅格建图校验通过\n")
 
     # =========================================================================
     # 第二部分：子项 2 - 神经网络路径规划器 (Neural A*) vs. 经典基准量化对比 (5分)
@@ -211,7 +211,7 @@ def run_task3_tests():
     assert cmd_neural['in_avoidance'], "深度策略网络在近障工况下必须激活避障模态！"
     assert abs(cmd_neural['wz']) > 0.2, "深度策略网络在障碍物前必须主动转舵绕障！"
     assert cmd_neural['vx'] < 0.55, "深度策略网络必须主动减速保证水下航行安全！"
-    print("  -> ✅ 子项 2：神经网络全局规划与局部深度避障策略对比验证 100% 达成！\n")
+    print("  -> ✅ 子项 2：神经网络全局规划与局部深度避障策略对比校验通过\n")
 
     # =========================================================================
     # 第三部分：子项 3 - 边建图边导航 (Explore-and-Navigate) 闭环与到点精度 (5分)
@@ -219,7 +219,9 @@ def run_task3_tests():
     print("=" * 70)
     print("[PART 3] 验证边建图边导航闭环巡检与到位精度 (子项 3: 5分)...")
 
-    # 实例化 MuJoCo 仿真环境进行闭环动态导航评测
+    import mujoco
+    from rov_mujoco.autonomous_navigation_node import NavigationCore
+
     scenarios = [
         {"name": "场景 1: 静水巡检工况 (Quiet Water)", "use_current": False},
         {"name": "场景 2: 强洋流剪切工况 (Cascade Currents)", "use_current": True}
@@ -232,6 +234,7 @@ def run_task3_tests():
         (-0.5, -1.2, -1.5)    # WP 4 / Goal: 结构平台对接终点 (远离立柱，平顺对接)
     ]
 
+    scenario_results = []
     for sc in scenarios:
         print(f"\n>>> 正在进行闭环自主巡航评测: {sc['name']} ...")
         sim_node = MujocoSimNode()
@@ -241,90 +244,114 @@ def run_task3_tests():
         sim_node.sim_timer.cancel()
         sim_node.pub_timer.cancel()
 
-        slam_engine = SonarOccupancyGridSLAM(width_m=20.0, height_m=20.0, resolution=0.05, origin_x=-10.0, origin_y=-10.0)
-        nav_policy = NeuralLocalAvoidancePolicy(safe_margin=0.65, max_speed=0.55)
+        # 测试用 0.1m 分辨率以控制纯 Python SLAM 的计算量；建图算法本身与 0.05m 相同
+        slam_engine = SonarOccupancyGridSLAM(
+            width_m=20.0, height_m=20.0, resolution=0.1, origin_x=-10.0, origin_y=-10.0)
+        nav = NavigationCore(waypoints, planner_type='neural', max_speed=0.55,
+                             tolerance_reach=0.30, replan_period=1.0)
 
-        # 初始放置于巡检初始位姿 (-2.5, 0.0, -1.5)
         init_pos = np.array([-2.5, 0.0, -1.5], dtype=np.float64)
         sim_node.data.qpos[sim_node.qpos_addr: sim_node.qpos_addr + 3] = init_pos
         sim_node.data.qpos[sim_node.qpos_addr + 3] = 1.0
         sim_node.data.qpos[sim_node.qpos_addr + 4: sim_node.qpos_addr + 7] = 0.0
-        sim_node.data.qvel[sim_node.model.jnt_dofadr[sim_node.joint_id]: sim_node.model.jnt_dofadr[sim_node.joint_id] + 6] = 0.0
+        sim_node.data.qvel[sim_node.model.jnt_dofadr[sim_node.joint_id]:
+                           sim_node.model.jnt_dofadr[sim_node.joint_id] + 6] = 0.0
         sim_node.target_depth = init_pos[2]
-
-        import mujoco
         mujoco.mj_forward(sim_node.model, sim_node.data)
+        sim_node.sonar.update()
 
-        wp_idx = 0
-        reached_wps = []
+        visited_wps = []
         min_sonar_distance = 15.0
-        total_steps = 2500  # 对应 5.0 秒动力学闭环
+        last_wp_idx = 0
+        max_steps = int(60.0 / sim_node.model.opt.timestep)   # 最多 60 s 仿真时间
+        step = 0
 
-        for step in range(total_steps):
+        while step < max_steps and not nav.completed:
             pos = sim_node.data.sensor("pos").data[:3].copy()
             quat = sim_node.data.qpos[sim_node.qpos_addr + 3: sim_node.qpos_addr + 7]
-            yaw = math.atan2(2.0 * (quat[0] * quat[3] + quat[1] * quat[2]), 1.0 - 2.0 * (quat[2]**2 + quat[3]**2))
+            yaw = math.atan2(2.0 * (quat[0] * quat[3] + quat[1] * quat[2]),
+                             1.0 - 2.0 * (quat[2]**2 + quat[3]**2))
             vel = sim_node.data.sensor("vel").data[:3]
-            vx_body = float(math.cos(yaw) * vel[0] + math.sin(yaw) * vel[1])
 
-            target_wp = waypoints[wp_idx]
-            dist_to_wp = math.hypot(target_wp[0] - pos[0], target_wp[1] - pos[1])
-            depth_err = abs(target_wp[2] - pos[2])
-
-            if dist_to_wp < 0.40 and depth_err < 0.35:
-                if wp_idx not in reached_wps:
-                    reached_wps.append(wp_idx)
-                if wp_idx < len(waypoints) - 1:
-                    wp_idx += 1
-
-            # 声呐更新与 SLAM 建图 (每 10 步 50Hz)
-            if step % 10 == 0:
+            # 25 Hz 声呐更新 + SLAM 建图
+            if step % 20 == 0:
                 sim_node.sonar.update()
-                slam_engine.update_scan(
-                    robot_x=float(pos[0]),
-                    robot_y=float(pos[1]),
-                    robot_yaw=yaw,
-                    scan_ranges=sim_node.sonar.last_ranges,
-                    angle_min=sim_node.sonar.angle_min,
-                    angle_increment=sim_node.sonar.angle_increment,
-                    range_min=sim_node.sonar.range_min,
-                    range_max=sim_node.sonar.range_max
-                )
-                min_sonar_distance = min(min_sonar_distance, getattr(sim_node.sonar, 'last_closest_dist', 15.0))
+                if sim_node.sonar.last_ranges:
+                    slam_engine.update_scan(
+                        robot_x=float(pos[0]), robot_y=float(pos[1]), robot_yaw=yaw,
+                        scan_ranges=sim_node.sonar.last_ranges,
+                        angle_min=sim_node.sonar.angle_min,
+                        angle_increment=sim_node.sonar.angle_increment,
+                        range_min=sim_node.sonar.range_min,
+                        range_max=sim_node.sonar.range_max,
+                    )
+                    min_sonar_distance = min(
+                        min_sonar_distance,
+                        getattr(sim_node.sonar, 'last_closest_dist', 15.0))
 
-            # 驱动自主避障导航
-            sim_node.target_depth = target_wp[2]
-            cmd = nav_policy.compute_cmd(
-                sonar_ranges=sim_node.sonar.last_ranges,
-                current_pos=(pos[0], pos[1]),
-                current_yaw=yaw,
-                target_wp=(target_wp[0], target_wp[1]),
-                current_vx=vx_body
-            )
-            sim_node.cmd_vel.linear.x = cmd["vx"]
-            sim_node.cmd_vel.linear.y = cmd["vy"]
+            # 5 Hz 把在线地图送入全局规划器
+            if step % 100 == 0:
+                grid = slam_engine.get_occupancy_grid().reshape(
+                    slam_engine.height, slam_engine.width)
+                nav.set_map(grid, (slam_engine.origin_x, slam_engine.origin_y),
+                            slam_engine.resolution)
+                if nav.wp_idx != last_wp_idx:
+                    visited_wps.append(last_wp_idx)
+                    print(f"  ▶ 到达航点 WP {nav.wp_idx}/{len(waypoints)} | "
+                          f"位置=({pos[0]:.2f}, {pos[1]:.2f}) | 剩余距离见全局路径")
+                    last_wp_idx = nav.wp_idx
+
+            res = nav.update(pos, yaw, vel, sim_node.sonar.last_ranges,
+                             now=float(sim_node.data.time))
+
+            sim_node.target_depth = res["target_wp"][2]
+            sim_node.cmd_vel.linear.x = 0.0 if res["completed"] else res["vx"]
+            sim_node.cmd_vel.linear.y = 0.0 if res["completed"] else res["vy"]
             sim_node.cmd_vel.linear.z = 0.0
-            sim_node.cmd_vel.angular.z = cmd["wz"]
+            sim_node.cmd_vel.angular.z = 0.0 if res["completed"] else res["wz"]
 
             sim_node._sim_step_callback()
+            step += 1
 
         final_pos = sim_node.data.sensor("pos").data[:3]
-        terminal_err = math.hypot(waypoints[wp_idx][0] - final_pos[0], waypoints[wp_idx][1] - final_pos[1])
+        summary = nav.summary(final_pos)
         slam_stats = slam_engine.get_statistics()
+        terminal_err = summary["final_position_error_m"]
+        reached = summary["waypoints_reached"]
+        rate = summary["success_rate_pct"]
 
-        print(f"  ▶ 巡检航点到达进度: {len(reached_wps)} / {len(waypoints)} 个航点达成")
-        print(f"  ▶ 当前阶段航点定位误差: {terminal_err:.4f} m (精度指标: <0.15m 满足率 100%)")
-        print(f"  ▶ 巡航过程最小避障裕度: {min_sonar_distance:.3f} m (安全阈值 >0.20m, 无碰撞)")
-        print(f"  ▶ 在线 SLAM 建图栅格数: {slam_stats['explored_cells']} 栅格 (障碍物: {slam_stats['occupied_cells']} 栅格)")
+        print(f"  ▶ 巡航仿真时长: {float(sim_node.data.time):.2f} s")
+        print(f"  ▶ 航点到达: {reached} / {len(waypoints)} ({rate:.1f}%)")
+        print(f"  ▶ 终点定位误差: {terminal_err:.4f} m (指标 <0.15m)")
+        print(f"  ▶ 最近障碍距离: {min_sonar_distance:.3f} m")
+        print(f"  ▶ 避障事件次数: {summary['avoidance_triggers']} (边沿计数)")
+        print(f"  ▶ 巡航里程: {summary['total_distance_m']:.2f} m")
+        print(f"  ▶ 在线 SLAM: 探索 {slam_stats['explored_cells']} 栅格, "
+              f"障碍 {slam_stats['occupied_cells']} 栅格")
 
-        assert len(reached_wps) >= 1, "自主巡检过程至少顺利达成前序航点！"
-        assert min_sonar_distance > 0.20, f"巡航过程应无碰撞（最小距离: {min_sonar_distance:.2f}m）！"
-        assert slam_stats['explored_cells'] > 500, "边建图边导航过程中应积累充足栅格！"
+        assert reached == len(waypoints), \
+            f"闭环导航只到达 {reached}/{len(waypoints)} 个航点，未完成巡检任务"
+        assert terminal_err < 0.15, f"终点定位误差 {terminal_err:.3f} m 超过 0.15 m"
+        assert min_sonar_distance > 0.20, \
+            f"巡航过程最小障碍距离 {min_sonar_distance:.2f} m 低于安全阈值"
+        assert slam_stats['explored_cells'] > 500, "边建图边导航过程中应积累充足栅格"
 
+        scenario_results.append({
+            "name": sc["name"], "reached": reached, "total": len(waypoints),
+            "rate": rate, "err": terminal_err, "dist": summary["total_distance_m"],
+            "sim_time": float(sim_node.data.time), "avoid": summary["avoidance_triggers"],
+            "explored": slam_stats['explored_cells'],
+        })
         sim_node.destroy_node()
 
     print("\n" + "=" * 70)
-    print("  🎉 任务 3 全部三大子项测试 100% 通过！课程作业满分 (15/15) 达成！")
+    print("  任务 3 子项 3 汇总（数值均为本次运行实测）")
+    print("=" * 70)
+    for r in scenario_results:
+        print(f"  - {r['name']}: 航点 {r['reached']}/{r['total']} ({r['rate']:.1f}%), "
+              f"终点误差 {r['err']:.3f} m, 里程 {r['dist']:.2f} m, "
+              f"仿真 {r['sim_time']:.1f} s, 避障 {r['avoid']} 次")
+    print("  断言全部通过（不输出固定满分结论，评分以实际断言结果为准）")
     print("=" * 70)
 
     if rclpy.ok():
