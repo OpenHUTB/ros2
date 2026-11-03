@@ -37,9 +37,7 @@ def grab(sim, comp):
     cam = mujoco.MjvCamera()
     cam.lookat[:] = [sim.pelvis_x(), 0.0, 0.8]
     cam.distance, cam.azimuth, cam.elevation = 3.2, 90.0, -8.0
-    renderer = sim._renderer
-    renderer.update_scene(sim.data, camera=cam)
-    arr[:] = renderer.render()
+    arr[:] = sim.render_rgb(cam, height=H, width=W)
     return Image.fromarray(arr)
 
 
@@ -54,7 +52,7 @@ def label(img, lines):
 
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "."
-    from mujoco import Renderer
+    os.makedirs(out_dir, exist_ok=True)
     imgs = {}
     for scene, title, grav in (
             ("flat", "Scene 1: Flat ground", "g = (0, 0, -9.81)"),
@@ -63,8 +61,7 @@ def main():
             ("load", "Scene 3: Load +10 kg backpack on torso",
              "g = (0, 0, -9.81) m/s^2")):
         sim = MskHumanSim(scene)
-        # mujoco.Renderer 签名为 (model, height, width)，数据在 update_scene 传入
-        sim._renderer = Renderer(sim.model, height=H, width=W)
+        # 渲染器由 MskHumanSim.render_rgb 惰性创建，sim.close() 统一释放
         img = grab(sim, Composer())
         d = label(img, [title, grav])
         if scene == "slope5":
@@ -85,7 +82,6 @@ def main():
         path = os.path.join(out_dir, "scene_%s.png" % scene)
         img.save(path)
         print("saved", path)
-        sim._renderer.close()
         sim.close()
 
 

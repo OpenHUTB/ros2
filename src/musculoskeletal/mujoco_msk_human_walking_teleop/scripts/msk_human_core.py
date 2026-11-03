@@ -282,7 +282,7 @@ class MskHumanSim:
         vh = np.clip(v / self._vmax, -3.0, 3.0)    # 归一化缩短速度
         fv = np.where(
             vh > 0.0,
-            (1.0 - vh) / np.where(vh > 0.0, 1.0 + 3.0 * vh, 1.0),
+            (1.0 - vh) / (1.0 + 3.0 * vh),
             np.minimum(1.4, 1.0 - 1.8 * vh))
         dq = q[jm] - self._q_opt
         fl = np.exp(-dq * dq / (2.0 * self._sigma2))
@@ -301,10 +301,25 @@ class MskHumanSim:
         if self._viewer is not None and self._viewer.is_running():
             self._viewer.sync()
 
+    def render_rgb(self, camera, height=480, width=640):
+        """离屏渲染当前状态为 RGB 帧（评测可视化与教程截图用）。
+
+        mujoco.Renderer 首次调用时惰性创建，close() 时统一释放；
+        camera 为 MjvCamera 实例。
+        """
+        if getattr(self, "_renderer", None) is None:
+            from mujoco import Renderer
+            self._renderer = Renderer(self.model, height=height, width=width)
+        self._renderer.update_scene(self.data, camera=camera)
+        return self._renderer.render()
+
     def close(self):
         if self._viewer is not None:
             self._viewer.close()
             self._viewer = None
+        if getattr(self, "_renderer", None) is not None:
+            self._renderer.close()
+            self._renderer = None
 
     # ---------- 指标 ----------
     def effort(self, u, dt):

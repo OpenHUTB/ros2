@@ -151,16 +151,16 @@ python3 main.py eval     # 多场景性能评测，结果写入 eval_results.jso
 `check` 的标准输出（全部通过）：
 
 ```text
-[PASS] load_scene_flat 
-[PASS] load_scene_slope5 
-[PASS] load_scene_load 
+[PASS] load_scene_flat
+[PASS] load_scene_slope5
+[PASS] load_scene_load
 [PASS] n_muscle nu=22
 [PASS] n_joint njnt=13
 [PASS] muscle_sign 22/22 方向正确
 [PASS] stand_6s_flat z=0.876 pitch=-0.017 t=6.0
-[PASS] stand_6s_slope5 z=0.875 pitch=+0.038 t=6.0
+[PASS] stand_6s_slope5 z=0.875 pitch=+0.034 t=6.0
 [PASS] stand_6s_load z=0.876 pitch=-0.021 t=6.0
-[PASS] squat_ik hip=0.77 knee=1.59 ankle=0.82
+[PASS] squat_ik shallow hip=0.32 knee=0.67 ankle=0.34 | deep ankle=0.45 (limit)
 [PASS] load_mass torso mass 18.8 -> 28.8
 ---- check: 11/11 passed ----
 ```
@@ -170,12 +170,12 @@ python3 main.py eval     # 多场景性能评测，结果写入 eval_results.jso
 ```text
 ================= 性能汇总 =================
 平地站立成功率                    3/3
-蹲起周期数(15s)                 8
+蹲起周期数(15s)                 7
 踢腿脚尖峰值(m)                  0.609
 平地行走距离(m)/速度(m/s)          2.419 / 0.121
-坡道行走距离(m)                  9.958
+下坡行走距离(m)                  9.958
 负载行走距离(m)                  1.505
-============================================
+=============================================
 ```
 
 ## 4. 计算原理
@@ -297,7 +297,7 @@ $$
 ### 4.6 性能指标定义
 
 - **站立**：6 s 内不摔倒（骨盆高度 < 0.5 m 或俯仰 > 0.9 rad 判摔）、末态俯仰 < 0.2 rad、水平漂移 < 0.2 m；
-- **蹲起**：15 s 内完成周期数 \(\ge 5\)（按 0.5 Hz 计满程 8 个）；
+- **蹲起**：15 s 内完成周期数 \(\ge 5\)（按 0.5 Hz 计最多 7 个完整周期）；
 - **踢腿**：踢后 3 s 内不摔且右脚尖峰值高度 > 0.30 m；
 - **行走**：不摔倒且推进距离 > 1.0 m；同时记录平均速度、激活努力 \(\int |u|\,dt\) 与正机械功 \(\int \max(0, \tau\dot q)\,dt\)。
 

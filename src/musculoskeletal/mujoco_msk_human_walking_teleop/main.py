@@ -53,7 +53,8 @@ def cmd_demo(args):
     scene = args.scene
     sim = MskHumanSim(scene, viewer=not args.headless)
     comp = Composer(load_params())
-    dt = 0.002
+    # 步长取自场景 XML 的 option timestep，与 sim_node 一致
+    dt = float(sim.model.opt.timestep)
     script = []
     for tok in args.script.split(","):
         name, sec = tok.split(":")
