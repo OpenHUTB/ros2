@@ -533,3 +533,26 @@ ROS_DOMAIN_ID=76 PYTHONPATH="$PWD:$PYTHONPATH" python tests/ros_smoke.py
 **状态机显式区分"未就绪"。** warmup 未满、历史被重置、无数据超时，都会通过 `/uav/pattern/status` 报出来，而不是静默返回一个旧结果。
 
 ---
+
+## 10. 复现步骤
+
+```bash
+cd ~/ros2/src/air/flight_pattern_recognition
+source /opt/ros/humble/setup.bash
+source ~/uav_prediction_env/bin/activate
+
+bash main.sh doctor                  # 环境自检
+python main.py prepare               # 期望 train/val/test = 280/70/70
+python main.py test                  # 10 项单元测试
+python reproduce.py --output models/retrained_run
+# 期望 5 个模型重训完成，并在 models/retrained_run/ 下生成两份评估
+python main.py evaluate --split final --models models --output results/submitted_final
+python verify_stream.py              # 离线与流式预测一致性，容差 2e-6
+python main.py report                # 从实验 JSON/CSV 重绘图表
+bash main.sh build
+bash main.sh demo "$PWD/data/final_raw/episode_300.csv;$PWD/data/final_raw/episode_302.csv"
+```
+
+纯 CPU 环境下重训 5 个模型约 **36 秒**，单次全量评估约 **2.6 秒**，10 项单元测试 **0.04 秒**。
+
+---
