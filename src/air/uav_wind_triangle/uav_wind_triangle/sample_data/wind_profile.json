@@ -1,0 +1,6 @@
+{
+  "true_airspeed_ms": 15.0,
+  "desired_course_deg": 60.0,
+  "wind_speed_ms": 5.0,
+  "wind_from_deg": 330.0
+}

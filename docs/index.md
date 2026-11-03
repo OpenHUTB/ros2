@@ -207,6 +207,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
+* [UAV wind triangle](./air/uav_wind_triangle.md) ? Calculate required heading, ground speed and wind correction from true airspeed, wind and desired course.
+
 
 * [无人机飞行轨迹类型识别与 ROS2 自动任务日志](./air/flight_pattern_recognition.md)
 
