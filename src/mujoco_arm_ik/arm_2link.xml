@@ -1,0 +1,49 @@
+<mujoco model="arm2link">
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+  <visual>
+    <global offwidth="640" offheight="480"/>
+  </visual>
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="256" height="256" rgb1="0.52 0.52 0.54" rgb2="0.42 0.42 0.44"/>
+    <material name="floor_mat" texture="grid" texrepeat="4 4" reflectance="0.2"/>
+  </asset>
+  <worldbody>
+    <light name="sun" pos="0.3 0.3 1.5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <light name="fill" pos="-0.3 0.3 1.0" dir="0.5 0 -1" diffuse="0.35 0.35 0.4"/>
+    <camera name="front" pos="0.3 0 1.5" zaxis="0 0 -1" fovy="38"/>
+    <geom name="floor" type="plane" size="2 2 0.1" pos="0.3 0 -0.02" material="floor_mat"/>
+    <!-- 目标参考圆（绿色小点，半径 0.15，圆心 0.3,0），用于对比机械臂画出的轨迹 -->
+    <geom name="rc0"  type="sphere" size="0.009" pos="0.4500 0.0000 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc1"  type="sphere" size="0.009" pos="0.4386 0.0574 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc2"  type="sphere" size="0.009" pos="0.4061 0.1061 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc3"  type="sphere" size="0.009" pos="0.3574 0.1386 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc4"  type="sphere" size="0.009" pos="0.3000 0.1500 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc5"  type="sphere" size="0.009" pos="0.2426 0.1386 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc6"  type="sphere" size="0.009" pos="0.1939 0.1061 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc7"  type="sphere" size="0.009" pos="0.1614 0.0574 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc8"  type="sphere" size="0.009" pos="0.1500 0.0000 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc9"  type="sphere" size="0.009" pos="0.1614 -0.0574 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc10" type="sphere" size="0.009" pos="0.1939 -0.1061 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc11" type="sphere" size="0.009" pos="0.2426 -0.1386 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc12" type="sphere" size="0.009" pos="0.3000 -0.1500 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc13" type="sphere" size="0.009" pos="0.3574 -0.1386 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc14" type="sphere" size="0.009" pos="0.4061 -0.1061 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <geom name="rc15" type="sphere" size="0.009" pos="0.4386 -0.0574 0.012" rgba="0.15 0.6 0.2 0.95"/>
+    <body name="base" pos="0 0 0">
+      <geom name="base_g" type="cylinder" size="0.07 0.05" pos="0 0 0.05" rgba="0.35 0.35 0.4 1"/>
+      <joint name="shoulder" type="hinge" axis="0 0 1" pos="0 0 0.05"/>
+      <body name="link1" pos="0 0 0.05">
+        <geom name="link1_g" type="capsule" fromto="0 0 0 0.3 0 0" size="0.035" rgba="0.15 0.45 0.85 1"/>
+        <joint name="elbow" type="hinge" axis="0 0 1" pos="0.3 0 0"/>
+        <body name="link2" pos="0.3 0 0">
+          <geom name="link2_g" type="capsule" fromto="0 0 0 0.3 0 0" size="0.028" rgba="0.9 0.3 0.15 1"/>
+          <geom name="tip" type="sphere" size="0.03" pos="0.3 0 0.01" rgba="1 0.05 0.05 1"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="shoulder_m" joint="shoulder" ctrlrange="-15 15" gear="1"/>
+    <motor name="elbow_m" joint="elbow" ctrlrange="-15 15" gear="1"/>
+  </actuator>
+</mujoco>
