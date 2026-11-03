@@ -44,8 +44,6 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 * [虚拟机环境介绍](./vm_introduction.md)
 * 补充：[Ubuntu 20.04 安装 ROS Noetic 详细教程](ubuntu20.04.md)
 
-
-
 [下载](https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html)并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 `lsb_release -a`）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。
 
 
@@ -86,14 +84,8 @@ ROS每章节运行代码:
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
-
-
-## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
-
-* [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
-* [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
-
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
 * [手动控制](./set_up_and_connect_to_carla.md)
@@ -136,9 +128,6 @@ ROS每章节运行代码:
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
-* [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
-* [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
-* [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
@@ -151,8 +140,6 @@ ROS每章节运行代码:
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
-
-## 5. 空域载具 <span id='air_vehicle'></span>
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
@@ -186,9 +173,6 @@ ROS每章节运行代码:
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
 * [八叉树上的 A* 全局寻路](./air/octree_uav_3d_pathfinding/astar_planning.md)
-
-
-
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
@@ -229,20 +213,10 @@ ROS每章节运行代码:
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
-* [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
-
-* [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
-
-* [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
-
-* [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
-
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
-* [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
-* [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
