@@ -1,0 +1,36 @@
+# mujoco_car_avoidance 参数文件
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致：ros2 launch 会自动加载本文件，
+# 各节点只取与自己同名的分节。
+#
+# 改这些参数不需要改 Python 源码，也不需要重新 colcon build。
+
+/mujoco_car_avoidance:
+  ros__parameters:
+    # 场景 XML。留空表示用功能包自带的 models/car_road_scene.xml
+    scene: ""
+
+    # 控制频率 (Hz) 与话题坐标系
+    control_hz: 50.0
+    frame_id: "lidar"
+    odom_frame_id: "map"
+    base_frame_id: "base_link"
+
+    # 外部 cmd_vel 接管时间 (s)：超过该时间没有新指令就回到自主避障
+    teleop_timeout_s: 0.5
+
+    # 起步静置 (s)：零轮速推进，等轮胎接触建立后再进闭环（不要设 0）
+    settle_s: 0.6
+
+    # 直行航向保持增益（0 = 关闭）
+    heading_gain: 0.8
+
+    # ---------------- 避障阈值（与文档"参数表"一一对应） ----------------
+    cruise_speed: 2.0       # 巡航速度 (m/s)
+    slow_start_m: 6.0       # 开始减速的距离 (m)
+    stop_target_m: 1.8      # 期望停车位置：障碍物前该距离处速度归零 (m)
+    emergency_m: 0.8        # 急刹距离 (m)
+    stale_timeout_s: 0.5    # 感知失效超时 (s)
+
+    # 说明：目标速度低于蠕动阈值（0.12 m/s，见 decision.py 的 creep_speed）时
+    # 会主动刹停，避免长时间低速蠕动；该值属于算法常量，未对外暴露。
