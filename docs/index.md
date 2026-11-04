@@ -138,6 +138,7 @@ ROS每章节运行代码:
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
+* [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
