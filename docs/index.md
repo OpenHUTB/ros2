@@ -407,6 +407,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 
+* [四旋翼风扰下物资精准空投（MuJoCo）](./air/uav_wind_aware_delivery.md) —— 吊挂物资起飞，侧风下用 MLP 预测落点并迭代补偿释放点；10 组随机风平均误差 0.1604 m，不补偿 1.0455 m
+
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
 * [无人机控制权限饱和与积分饱和监测](./air/uav_control_authority_guard.md) —— 对比期望与实际角速度、执行器饱和和电压下降，识别控制权限不足并输出机动限制建议
