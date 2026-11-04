@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Shadow Hand 右手灵巧手：手指开合摆动（MuJoCo，不依赖 Gazebo）。
 
-运行：python3 sim_shadow_hand.py            # 输出 shadow_hand_grasp.mp4（当前目录）
-检查取景：python3 sim_shadow_hand.py --preview
+运行：python3 main.py            # 输出 output/shadow_hand_grasp.mp4
+检查取景：python3 main.py --preview
 """
 import numpy as np
 
