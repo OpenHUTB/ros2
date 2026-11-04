@@ -46,10 +46,14 @@ python3 main.py --teleop --weights results/policy.npz   # 用 --demo 训练好�
 `W/S` 调前向速度，`A/D` 调偏航角速度，`空格` 悬停，`R` 重开，`ESC` 退出。
 窗口左侧追尾视角、右侧深度相机、底部实时显示网络预测。
 
+> 软件 OpenGL（VMware / llvmpipe 等）缺少 `ARB_clip_control` 时，MuJoCo 的深度渲染会
+> 静默返回 inf，本模块会自动切到 `mj_ray` 光线投射并在日志里提示一次；也可以设
+> `UAV_FORCE_RAYCAST=1` 强制走这条路。详见文档 §7.6。
+
 ### 4. 单元测试
 
 ```bash
-python3 main.py --test        # 21 passed，约 3 s
+python3 main.py --test        # 24 passed，约 2 s
 python3 -m pytest -q test
 ```
 
@@ -79,7 +83,7 @@ uav_mujoco_depth_avoidance/
 │   ├── policy.py                     # 控制律与闭环评价
 │   ├── teleop.py                     # 键盘遥操作
 │   └── node.py                       # ROS 2 节点
-├── test/test_uav_nav.py              # 21 项离线测试
+├── test/test_uav_nav.py              # 24 项离线测试
 └── requirements.txt
 ```
 

@@ -261,3 +261,52 @@ def _eval_set(env, n: int = 24):
     from uav_nav.data import make_dataset
 
     return make_dataset(env, n, seed=999)
+
+
+# ---------------------------------------------------------------- 深度回退（软件 OpenGL）
+
+def test_depth_falls_back_when_gl_returns_inf(env):
+    """客户机（VMware SVGA/llvmpipe）缺少 ARB_clip_control 时 GL 深度全为 inf，
+    必须自动切到 mj_ray 并给出有效深度，否则标签恒为 1.0、网络只能学出常数。"""
+
+    class BrokenRenderer:
+        def update_scene(self, *args, **kwargs):
+            pass
+
+        def render(self):
+            return np.full((64, 64), np.inf, dtype=np.float32)
+
+    env.use_raycasting = False
+    env.renderer = BrokenRenderer()
+    depth = env.depth()
+    assert env.use_raycasting is True
+    assert np.isfinite(depth).all()
+    assert (depth < D_MAX).any(), depth.mean()
+
+
+def test_raycast_depth_reacts_to_obstacle(env):
+    """光线投射模式下的几何方向必须正确：正前方 2 m 放柱子 -> 中扇区余量变小。"""
+    env.use_raycasting = True
+    env.reset(scene="gate", pos=(2.0, 0.0, 1.5), yaw=0.0)
+    for gid in env.post_ids:
+        env.model.geom_pos[gid] = (14.0, 8.0, 1.5)
+    env.refresh()
+    far = env.sector_clearance(env.depth())
+
+    env.model.geom_pos[env.post_ids[0]] = (4.0, 0.0, 1.5)
+    env.refresh()
+    near = env.sector_clearance(env.depth())
+    assert near[1] < far[1], (near, far)
+    assert near[1] < 0.4
+
+
+def test_raycast_and_gl_depth_agree(env):
+    """有 GL 的机器上，两条路径的深度图应高度相关（防止以后改坏射线几何）。"""
+    env.use_raycasting = False
+    gl = env.depth()
+    if not env._depth_looks_valid(gl):        # 客户机：GL 不可用，本用例跳过
+        return
+    env.use_raycasting = True
+    ray = env.depth()
+    corr = float(np.corrcoef(gl.ravel(), ray.ravel())[0, 1])
+    assert corr > 0.8, corr

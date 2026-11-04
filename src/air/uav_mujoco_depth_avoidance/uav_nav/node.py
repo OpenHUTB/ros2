@@ -134,6 +134,10 @@ def main() -> int:
             if state.crashed:
                 self.get_logger().warn("检测到碰撞，重置场景")
                 self.env.reset()
+            elif state.pos[0] > 13.6:
+                # 走廊尽头（end_wall 前）主动重置，否则会一头撞上墙并被记成"碰撞"
+                self.get_logger().info("到达走廊尽头，重置到起点继续")
+                self.env.reset()
 
     rclpy.init()
     node = UavDepthNode()

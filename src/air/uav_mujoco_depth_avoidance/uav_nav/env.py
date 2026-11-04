@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-
+import os
 import numpy as np
 
 try:
@@ -31,6 +31,9 @@ DT = 0.05              # 控制周期 20 Hz
 SUBSTEPS = int(round(DT / 0.005))
 
 GRAVITY = 9.81
+
+# 整个进程只提示一次"GL 深度不可用"，否则 run_matrix 每建一个环境就刷一行
+_DEGRADED_WARNED = [False]
 
 
 @dataclass
@@ -66,6 +69,14 @@ class DepthUavEnv:
         self.renderer = mujoco.Renderer(self.model, DEPTH_HW, DEPTH_HW)
         self.renderer.enable_depth_rendering()
         self.mass = float(self.model.body_subtreemass[self.body_id])
+        self.cam_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+        # 有些 OpenGL 实现（VMware SVGA / llvmpipe 等软件渲染）缺少 ARB_clip_control，
+        # MuJoCo 的深度渲染会静默返回 inf，此时自动切到光线投射（见 depth()）。
+        # 设环境变量 UAV_FORCE_RAYCAST=1 可强制使用光线投射，便于在没有该问题的机器上复现客户机行为。
+        self.use_raycasting = os.environ.get("UAV_FORCE_RAYCAST", "") == "1"
+        self.ray_grid = 16
+        self._ray_has_normal = True     # MuJoCo >= 3.2 的 mj_ray 多一个 normal 出参，3.1.x 没有
+        self.degraded_warned = _DEGRADED_WARNED
         self.yaw_ref = 0.0
         self.scene = scene
         self.seed = seed
@@ -135,11 +146,65 @@ class DepthUavEnv:
 
     # ------------------------------------------------------------------- 传感器
     def depth(self) -> np.ndarray:
-        """前视深度图，裁剪到 D_MAX，单位米。"""
-        self.renderer.update_scene(self.data, camera="depth_cam")
-        depth = np.array(self.renderer.render(), dtype=np.float32)
-        depth = np.where(np.isfinite(depth), depth, D_MAX)
-        return np.clip(depth, 0.0, D_MAX)
+        """前视深度图，裁剪到 D_MAX，单位米。
+
+        先尝试 MuJoCo 的 GL 深度渲染；若结果是"全 inf / 全 D_MAX"（软件 OpenGL 缺少
+        `ARB_clip_control` 时的典型表现），自动切到 `mj_ray` 光线投射，并在日志里警告一次。
+        """
+        if not self.use_raycasting:
+            self.renderer.update_scene(self.data, camera="depth_cam")
+            raw = np.array(self.renderer.render(), dtype=np.float32)
+            if self._depth_looks_valid(raw):
+                depth = np.where(np.isfinite(raw), raw, D_MAX)
+                return np.clip(depth, 0.0, D_MAX)
+            self.use_raycasting = True
+            if not self.degraded_warned[0]:
+                self.degraded_warned[0] = True
+                print("[uav_nav] GL 深度渲染不可用（软件 OpenGL 缺少 ARB_clip_control），"
+                      "已切换到 mj_ray 光线投射（16x16 采样后上采样）")
+        return self.ray_depth()
+
+    @staticmethod
+    def _depth_looks_valid(raw: np.ndarray) -> bool:
+        finite = np.isfinite(raw)
+        if finite.mean() < 0.5:          # 一半以上是非有限值 -> 渲染失败
+            return False
+        valid = raw[finite]
+        if valid.size and np.all(valid >= D_MAX * 0.999):
+            return False                 # 全是最远距离 -> 没有真正渲染出几何
+        return True
+
+    def _cast_ray(self, pnt, vec, geomid, normal) -> float:
+        """兼容不同 MuJoCo 版本的 `mj_ray` 签名（3.1.x 只有 8 个参数）。"""
+        if self._ray_has_normal:
+            try:
+                return mujoco.mj_ray(self.model, self.data, pnt, vec, None, True,
+                                     self.body_id, geomid, normal)
+            except TypeError:
+                self._ray_has_normal = False
+        return mujoco.mj_ray(self.model, self.data, pnt, vec, None, True,
+                             self.body_id, geomid)
+
+    def ray_depth(self) -> np.ndarray:
+        """用 `mj_ray` 逐像素投射得到深度图（不依赖 GL），再上采样到 64x64。"""
+        g = self.ray_grid
+        cam_pos = np.array(self.data.cam_xpos[self.cam_id], dtype=np.float64)
+        R = np.array(self.data.cam_xmat[self.cam_id], dtype=np.float64).reshape(3, 3)
+        # 相机看向 -z_cam；fovy=80°，方形视场
+        scale = np.tan(np.deg2rad(80.0) / 2.0)
+        grid = np.zeros((g, g), dtype=np.float32)
+        geomid = np.zeros(1, dtype=np.int32)
+        normal = np.zeros(3, dtype=np.float64)
+        for i in range(g):
+            v = (i + 0.5) / g * 2.0 - 1.0          # -1..1
+            for j in range(g):
+                u = (j + 0.5) / g * 2.0 - 1.0
+                direction = R @ np.array([u * scale, -v * scale, -1.0])
+                direction /= np.linalg.norm(direction)
+                dist = self._cast_ray(cam_pos, direction, geomid, normal)
+                grid[i, j] = D_MAX if dist < 0 else min(float(dist), D_MAX)
+        step = DEPTH_HW // g
+        return np.repeat(np.repeat(grid, step, axis=0), step, axis=1)
 
     def rgb(self, camera: str = "chase_cam") -> np.ndarray:
         """彩色图，用于 GIF 与文档截图（不参与控制）。"""

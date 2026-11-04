@@ -158,7 +158,7 @@ v_x = v_{max}\cdot\mathrm{clip}\!\left(\frac{\hat c_M-c_{safe}}{c_{nom}-c_{safe}
 | `uav_nav/teleop.py` | 键盘遥操作（pygame 窗口 / 无窗口脚本化） |
 | `uav_nav/node.py` | ROS 2 节点：深度图、通行度、里程计发布，Twist 订阅 |
 | `main.py` | 课程入口：`--demo` / `--teleop` / `--test` / `--ros` |
-| `test/test_uav_nav.py` | 21 项离线测试（物理、传感器、网络、策略、权重往返、多种子与长跑） |
+| `test/test_uav_nav.py` | 24 项离线测试（物理、传感器、网络、策略、权重往返、多种子与长跑、软渲染回退） |
 
 几个关键实现点：
 
@@ -231,7 +231,7 @@ python3 main.py --teleop --weights results/policy.npz   # 直接用 --demo 训�
 ### 6.4 单元测试
 
 ```bash
-python3 main.py --test          # 21 passed，约 3 s
+python3 main.py --test          # 24 passed，约 2 s
 python3 -m pytest -q test
 ```
 
@@ -336,6 +336,70 @@ ros2 topic pub /uav/scene std_msgs/String "{data: gate}" -1                  # �
 
 随机网络在走廊场景只有 40% 成功率、并且会撞柱子——这正是"部署未训练权重"的危害，
 也说明只看 `pytest` 通过并不足以证明系统可用。
+
+### 7.6 ROS 2 Humble 虚拟机实测（Ubuntu 20.04）
+
+课程要求的运行环境是 Ubuntu 20.04 + ROS 2 Humble。下面是在课程虚拟机里的**完整实测**，
+而且这次实测直接抓出了一个只在软件 OpenGL 下出现的 bug（见 7.6.2）。
+
+| 项目 | 值 |
+| --- | --- |
+| 系统 / ROS | Ubuntu 20.04.6 LTS，ROS 2 Humble |
+| Python / numpy | 3.8.10 / 1.24.4 |
+| MuJoCo | 3.1.4（manylinux wheel，客户机无外网，由宿主机下载后传入安装） |
+| GPU / OpenGL | VMware SVGA 软件渲染，**缺少 `ARB_clip_control`** |
+
+#### 7.6.1 结果
+
+| 步骤 | 结果 |
+| --- | --- |
+| `colcon build --packages-select uav_mujoco_depth_avoidance` | 通过，3.15 s |
+| 客户机内训练（600 样本 × 12 轮） | train MSE **0.00254**，验证 MAE **0.032 / 0.055 / 0.043** |
+| 三场景 × 3 实例 | slalom / gate / clutter 全部 **100% 成功、0 碰撞** |
+| `ros2 launch ... main.launch.py` | 节点 `/uav_mujoco_depth_avoidance` 正常起来，启动时现场训练 5 s |
+| `/uav/depth` | **20.1 Hz**（20 Hz 定时器） |
+| `/uav/sector_clearance` | 有变化的实测值，例如 `0.462 / 0.204 / 0.343` |
+| `/uav/odom` | `frame_id: map`，`child_frame_id: uav_base` |
+| 连续运行 45 s | **0 次碰撞**，4 次"到达走廊尽头 → 重置继续" |
+
+![Humble 虚拟机内实测画面](../img/air/uav_depth_avoid_vm_run.png)
+
+上图为客户机内实际生成的画面：左侧 MuJoCo 追尾视角（蓝色四旋翼正在穿门洞），
+右侧是 7.6.2 里的光线投射回退深度图。
+
+#### 7.6.2 这次实测抓到的 bug：软件 OpenGL 下深度恒为 inf
+
+第一版在客户机里 `ros2 launch` 能起来、话题也有，但训练结果是：
+
+```text
+训练完成：train MSE 0.18630，验证 MAE(左/中/右) 0.427/0.427/0.427
+```
+
+三个扇区一字不差，说明网络只学到了常数；随后飞机每 6 s 撞一次。继续查发现：
+
+```text
+WARNING: ARB_clip_control unavailable while mjDEPTH_ZEROFAR requested, depth accuracy will be limited
+depth min/max/mean: 8.00 8.00 8.00        # 全是 D_MAX
+label mean [1. 1. 1.]  label std [0. 0. 0.]
+```
+
+软件 OpenGL（VMware SVGA / llvmpipe）不支持 `mjDEPTH_ZEROFAR` 需要的
+`ARB_clip_control`，MuJoCo 的深度渲染**静默返回 inf**，被 `depth()` 里的
+`np.where(np.isfinite(d), d, D_MAX)` 变成全 8 m，于是三扇区标签恒为 1.0，
+监督学习退化成拟合常数——**`pytest` 全绿也发现不了，只有真机（真虚拟机）跑才会暴露**。
+
+修复：`depth()` 先检查渲染结果是否"全非有限 / 全为 D_MAX"，若是则自动切到
+`mj_ray` 光线投射（16×16 采样后上采样到 64×64，单帧约 2.8 ms），并只提示一次；
+`mj_ray` 的签名在 MuJoCo 3.1.x（8 参数）与 3.2+（多一个 `normal` 出参）之间不同，
+用 `_cast_ray()` 做兼容。可以用 `UAV_FORCE_RAYCAST=1` 在任何机器上强制复现该路径。
+
+修复后同一台虚拟机上的结果见 7.6.1：train MSE 从 0.186 降到 0.00254，
+三场景 100% 成功、0 碰撞。
+
+> 提示：客户机没有外网时，可以在宿主机上 `pip download mujoco==3.1.4 --python-version 38
+> --platform manylinux2014_x86_64 --abi cp38 --only-binary=:all:` 拿到 wheel 与依赖
+> （`absl-py`、`etils`、`glfw`、`pyopengl`、`numpy`），拷进客户机后
+> `pip3 install --no-index --find-links=<目录> mujoco` 即可离线安装。
 
 ## 8. 局限与后续
 
