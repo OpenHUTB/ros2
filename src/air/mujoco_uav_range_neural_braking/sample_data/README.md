@@ -8,7 +8,7 @@ Each CSV contains 24 uniformly selected rows from its split for schema inspectio
 python dataset.py --seed 2026 --episodes 30 --output datasets
 ```
 
-输入 / Features: `sensor_range_m`、`closing_speed_m_s`、`height_error_m`。
+输入 / Features: `sensor_range_m`、`closing_speed_m_s`。
 
 标签 / Target: `accel_m_s2`。
 

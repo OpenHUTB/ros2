@@ -40,7 +40,7 @@ Target speed follows the remaining braking distance. Acceleration is a clipped v
 
 ## 结果与文档 / Results and documentation
 
-测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。神经控制在默认 1.5 m/s 场景无碰撞，最小间距 0.459629 m；3 m/s 外推场景记录 3 个接触步。21 项自动化检查通过。/ Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Neural control has no contact at the default 1.5 m/s and reaches 0.459629 m minimum clearance; the 3 m/s extrapolation case records three contact steps. Twenty-one automated checks pass.
+测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。神经控制在初速度 0 和 1.5 m/s 时均无碰撞，最小间距分别为 0.759476 m 和 0.470438 m，末速度分别为 0.015899 m/s 和 -0.056074 m/s；3 m/s 外推场景记录 4 个接触步。21 项自动化检查通过。/ Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Neural control has no contacts at 0 and 1.5 m/s, with minimum clearances of 0.759476 m and 0.470438 m and final speeds of 0.015899 m/s and -0.056074 m/s, respectively. The 3 m/s extrapolation case records four contact steps. Twenty-one automated checks pass.
 
 完整方程、曲线和动图见[模块文档](../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
 
