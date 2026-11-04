@@ -234,6 +234,10 @@ def main():
     app.cc.attach_lidar = lambda *a, **k: (types.SimpleNamespace(stop=lambda: None), queue)
     app.cc.points_from_raw = lambda data: np.asarray(data, dtype=float)
     app.cc.teardown = fake_teardown
+    # 全判成"可行驶"：走廊里没有阻挡物，用来看起步油门与加速是否正常。
+    # 用一个几乎不学习的模型配合"全 drivable"的预测，才能稳定复现起步过程。
+    app.segment_frame = lambda net, points, mean, std: np.zeros(
+        np.asarray(points).shape[0], dtype=int)
 
     print('[1] 离线跑完整循环')
     print('-' * 72)
@@ -256,6 +260,11 @@ def main():
               '%.2f ~ %.2f' % (brakes.min(), brakes.max()))
         check('刹车量不出现负零', not bool((brakes == 0.0).any()
                                           and np.signbit(brakes).any()))
+        check('起步时给了足够油门', bool(throttles.max() >= 0.4),
+              '最大 %.2f' % throttles.max())
+        check('全程没有误刹车', bool((brakes < 0.01).all()),
+              '最大 %.2f' % brakes.max())
+        check('自车确实动起来了', ego.speed > 0.0, '%.2f m/s' % ego.speed)
         check('转向在 [-1, 1] 内', bool(np.abs(steers).max() <= 1.0),
               '%.2f' % np.abs(steers).max())
         check('接管后关闭了 autopilot', ego.autopilot is False)

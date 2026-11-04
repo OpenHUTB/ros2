@@ -170,6 +170,7 @@ def spawn_pedestrians(world, ego, count=8, seed=0, radii=(6.0, 10.0, 14.0)):
     transform = ego.get_transform()
     yaw0 = np.deg2rad(transform.rotation.yaw)
     actors = []
+    forward = np.array([np.cos(yaw0), np.sin(yaw0)])
     for radius in radii:
         for step in rng.permutation(16):
             if len(actors) >= count:
@@ -182,6 +183,14 @@ def spawn_pedestrians(world, ego, count=8, seed=0, radii=(6.0, 10.0, 14.0)):
             waypoint = carla_map.get_waypoint(location, project_to_road=True,
                                               lane_type=carla.LaneType.Any)
             if waypoint is None:
+                continue
+            # 别把人放在自车正前方的车道里：采集时那会让"前方余量"永远只有几米，
+            # 演示时自车会一直礼让不肯走，看起来像卡死。
+            offset = np.array([waypoint.transform.location.x - transform.location.x,
+                               waypoint.transform.location.y - transform.location.y])
+            longitudinal = float(offset @ forward)
+            lateral = float(offset @ np.array([-forward[1], forward[0]]))
+            if 0.0 < longitudinal < 25.0 and abs(lateral) < 3.0:
                 continue
             walker_bp = rng.choice(library.filter('walker.pedestrian.*'))
             spawn_transform = carla.Transform(

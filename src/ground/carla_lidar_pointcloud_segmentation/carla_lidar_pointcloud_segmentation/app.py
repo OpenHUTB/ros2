@@ -293,6 +293,12 @@ def run_demo(args):
                 # 打印出来是 "刹车 -0.00"，看着像 bug，也容易让人以为控制量越界。
                 throttle = float(np.clip(error / max(args.max_speed, 1e-3), 0.0, 1.0)) + 0.0
                 brake = float(np.clip(-error / max(args.max_speed, 1e-3), 0.0, 1.0)) + 0.0
+                # 起步死区：车辆静止时需要的油门比"速度误差除以最大速度"大得多，
+                # 按比例算出来只有 0.02~0.05，车根本动不了，于是一直停着。
+                # 只要还想走（速度系数不为 0），就给一个能起步的油门下限。
+                if factor > 0.05 and speed < 0.5:
+                    throttle = max(throttle, 0.45)
+                    brake = 0.0
                 command = carla_module.VehicleControl(throttle=throttle, brake=brake,
                                                       steer=steer)
                 ego.apply_control(command)
