@@ -147,15 +147,15 @@ ROS每章节运行代码:
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
-* [无人机前向测距与数据集 / UAV ranging dataset](./air/mujoco_uav_ranging_dataset.md)
+* [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 
-* [室内无人机安全制动与定高悬停 / Indoor UAV braking](./air/mujoco_uav_range_neural_braking.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 

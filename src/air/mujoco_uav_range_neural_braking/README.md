@@ -8,12 +8,12 @@ The longitudinal MuJoCo model retains gravity, mass and contact. Forward ranging
 
 ## 环境 / Environment
 
-- Python 3.10–3.11；MuJoCo 3.12.0；依赖见 `requirements.txt`。 / See `requirements.txt` for dependencies.
+- Python 3.10～3.11；MuJoCo 3.12.0；依赖见 `requirements.txt`。 / See `requirements.txt` for dependencies.
 - Windows 可运行独立物理仿真；Ubuntu 22.04 / ROS 2 Humble 用于 launch 启动。 / Standalone physics runs on Windows; launch uses Ubuntu 22.04 / ROS 2 Humble.
 
 在模块目录执行 / Run from the module directory:
 
-```bash
+```
 python -m pip install -r requirements.txt
 python main.py --headless --output results
 python main.py
@@ -23,7 +23,7 @@ python main.py
 
 ROS 环境中执行 / In a ROS environment:
 
-```bash
+```
 source /opt/ros/humble/setup.bash
 ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
 ```
@@ -40,13 +40,13 @@ Target speed follows the remaining braking distance. Acceleration is a clipped v
 
 ## 结果与文档 / Results and documentation
 
-测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。14 项物理、传感器与数据检查通过；Ubuntu 22.04、Python 3.10、ROS 2 Humble 的 launch 运行正常退出。 / Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Fourteen physics, sensor and dataset checks pass. Launch exits cleanly on Ubuntu 22.04, Python 3.10 and ROS 2 Humble.
+测距控制在初速度 0、1.5、3 m/s 的三组 10 s 场景均无碰撞，最小间距分别为 0.668362、0.668331、0.668360 m。神经控制在默认 1.5 m/s 场景无碰撞，最小间距 0.459629 m；3 m/s 外推场景记录 3 个接触步。21 项自动化检查通过。/ Range control has no contacts in three 10 s episodes at initial speeds of 0, 1.5 and 3 m/s; respective minimum gaps are 0.668362, 0.668331 and 0.668360 m. Neural control has no contact at the default 1.5 m/s and reaches 0.459629 m minimum clearance; the 3 m/s extrapolation case records three contact steps. Twenty-one automated checks pass.
 
 完整方程、曲线和动图见[模块文档](../../../docs/air/mujoco_uav_range_neural_braking.md)。 / See the [module guide](../../../docs/air/mujoco_uav_range_neural_braking.md) for equations, curves and animation.
 
 容器环境 / Container environment:
 
-```bash
+```
 docker build -t uav-braking:humble .
 docker run --rm --mount type=bind,source="$PWD",target=/work/module uav-braking:humble bash -lc 'source /opt/ros/humble/setup.bash && ros2 launch ./launch/main.launch.py'
 ```
@@ -55,7 +55,7 @@ docker run --rm --mount type=bind,source="$PWD",target=/work/module uav-braking:
 
 ## 数据与控制模式 / Data and controller modes
 
-```bash
+```
 python main.py --headless --controller range --output results
 python main.py --headless --controller reference --output results/reference
 python dataset.py --seed 2026 --episodes 30 --output datasets
@@ -63,12 +63,14 @@ python evaluate.py --controller range --render --output results/range
 python -m pytest -q
 ```
 
-`range` 使用前向测距和差分闭合速度；`reference` 使用物理真值作为参照。`launch` 支持 `controller:=range` 或 `controller:=reference`。测距无效时施加最大反向制动；此措施仅适用于当前前进接近场景，不保证任意方向运动的安全性。首帧闭合速度初始化为零，随后按 `0.8 × 原估计 + 0.2 × 距离差分` 更新。
+`range` 使用前向测距和差分闭合速度；`reference` 使用物理真值作为参照。`launch` 支持 `controller:=range`、`controller:=reference` 或 `controller:=mlp`，`model` 指定权重路径。测距无效时施加最大反向制动；此措施仅适用于当前前进接近场景，不保证任意方向运动的安全性。首帧闭合速度初始化为零，随后按 `0.8 × 原估计 + 0.2 × 距离差分` 更新。
 
-`range` uses forward ranging and finite-difference closing speed; `reference` uses physics ground truth. Launch accepts either controller parameter. Invalid ranging applies maximum reverse braking; this policy is limited to the forward-approach scene and is not a safety guarantee for arbitrary motion. Closing speed starts at zero and then updates as `0.8 × previous estimate + 0.2 × range difference / timestep`.
+`range` uses forward ranging and finite-difference closing speed; `reference` uses physics ground truth. Launch accepts all three controllers and a model path. Invalid ranging applies maximum reverse braking; this policy is limited to the forward-approach scene and is not a safety guarantee for arbitrary motion. Closing speed starts at zero and then updates as `0.8 × previous estimate + 0.2 × range difference / timestep`.
 
-数据默认 30 回合、每回合 12 s，训练/验证/测试为 18/6/6 回合，21600/7200/7200 行。特征为距离、闭合速度、高度误差，标签为加速度；各回合参数与完整 CSV 的 SHA-256 写入 `manifest.json`。Windows 与 Ubuntu 的相同配置产出一致校验值。完整数据保留在 `datasets/`，仓库的 `sample_data/` 提供字段样本及汇总。
+数据默认 30 回合、每回合 12 s，训练/验证/测试为 18/6/6 回合，21600/7200/7200 行。特征为距离和闭合速度，标签为加速度；各回合参数与完整 CSV 的 SHA-256 写入 `manifest.json`。完整数据保留在 `datasets/`，仓库的 `sample_data/` 提供字段样本及汇总。
 
-The default dataset has 30 episodes of 12 s, split into 18/6/6 episodes and 21600/7200/7200 rows for training/validation/test. Features are range, closing speed and altitude error; acceleration is the target. `manifest.json` records episode parameters and full-file SHA-256 values. Identical configurations produce matching hashes on Windows and Ubuntu. Full data reside in `datasets/`; `sample_data/` contains schema samples and a summary.
+The default dataset has 30 episodes of 12 s, split into 18/6/6 episodes and 21600/7200/7200 rows for training/validation/test. Features are range and closing speed; acceleration is the target. `manifest.json` records episode parameters and full-file SHA-256 values. Full data reside in `datasets/`; `sample_data/` contains schema samples and a summary.
 
-训练标签来自解析测距控制基线。由于回合初始高度等于参考值，数据中的高度误差恒为零；当前 MLP 因此只使用测距和闭合速度两个特征，高度仍由独立 PD 回路保持。 / Training labels come from the analytical ranging controller. Since each episode starts at the reference altitude, height error is always zero in the dataset. The MLP therefore uses range and closing speed as its two features, while a separate PD loop holds altitude.
+训练标签来自解析测距控制基线。MLP 使用测距与闭合速度两个特征，高度由独立 PD 回路保持。验证集误差用于选择训练轮次，并在达到耐心阈值后提前停止。/ Training labels come from the analytical ranging controller. The MLP uses range and closing speed; a separate PD loop holds altitude. Validation error selects the retained training epoch and triggers early stopping.
+
+`evaluate.py --controller all` 可重复运行几何参照、测距控制和 MLP 三种控制器在 0、1.5、3 m/s 下的闭环比较，并输出各控制器曲线与 JSON 指标。/ `evaluate.py --controller all` reproduces closed-loop comparisons for the geometric reference, ranging controller and MLP at 0, 1.5 and 3 m/s, and exports controller curves and JSON metrics.

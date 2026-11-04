@@ -23,7 +23,7 @@ class MLPRegressor:
         hidden = np.maximum(features @ self.w1 + self.b1, 0)
         return hidden, hidden @ self.w2 + self.b2
 
-    def fit(self, features, target, epochs=350, learning_rate=0.003):
+    def fit(self, features, target, epochs=350, learning_rate=0.003, validation_data=None, patience=30):
         """在有限二维样本上拟合。 Fit only finite, shape-consistent samples."""
         features = np.asarray(features, dtype=float)
         target = np.asarray(target, dtype=float).reshape(-1)
@@ -41,7 +41,11 @@ class MLPRegressor:
         self.target_scale = float(max(target.std(), 1e-6))
         x = (features - self.mean) / self.scale
         y = (target - self.target_mean) / self.target_scale
-        for _ in range(epochs):
+        best_loss = float("inf")
+        best_parameters = None
+        stale_epochs = 0
+        self.epochs_trained = 0
+        for epoch in range(epochs):
             hidden, prediction = self._forward(x)
             error = prediction - y
             grad_prediction = 2 * error / len(x)
@@ -55,6 +59,21 @@ class MLPRegressor:
             self.b1 -= learning_rate * grad_b1
             self.w2 -= learning_rate * grad_w2
             self.b2 -= learning_rate * grad_b2
+            self.epochs_trained = epoch + 1
+            if validation_data is not None:
+                validation_x, validation_y = validation_data
+                validation_loss = float(np.mean((self.predict(validation_x) - validation_y) ** 2))
+                if validation_loss < best_loss:
+                    best_loss = validation_loss
+                    best_parameters = tuple(value.copy() if isinstance(value, np.ndarray) else value
+                                            for value in (self.w1, self.b1, self.w2, self.b2))
+                    stale_epochs = 0
+                else:
+                    stale_epochs += 1
+                    if stale_epochs >= patience:
+                        break
+        if best_parameters is not None:
+            self.w1, self.b1, self.w2, self.b2 = best_parameters
         return self
 
     def predict(self, features):
