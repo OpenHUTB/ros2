@@ -69,7 +69,6 @@ nav:
         - 章节首页: './chapter/chap9.md'
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
     - MuJoCo差速小车避障: mujoco_obstacle_avoidance.md
-    - MuJoCo双自由度机械臂画正方形: mujoco_two_dof_arm_square.md
 
 ```
 - 人形机器人:
