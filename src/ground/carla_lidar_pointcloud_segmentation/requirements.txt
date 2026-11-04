@@ -1,0 +1,8 @@
+# CARLA 客户端：wheel 需与 Python 版本匹配（Ubuntu 22.04 用 cp310）
+carla==0.9.16
+
+# 数值计算：特征工程、最小二乘、训练
+numpy
+
+# 可选：画分割结果与训练曲线。不安装也能训练，只是跳过画图
+matplotlib
