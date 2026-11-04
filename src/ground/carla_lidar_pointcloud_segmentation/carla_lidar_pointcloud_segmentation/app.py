@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import time
 
@@ -167,6 +168,26 @@ def segment_frame(net, points, mean, std):
     return net.predict(F.standardize_apply(feats, mean, std))
 
 
+def _print_demo_summary(stats, args):
+    """把演示过程里的控制指标汇总成一段，方便直接抄进文档。"""
+    if not stats['free']:
+        return
+    free = np.asarray(stats['free'], dtype=float)
+    print('=' * 60)
+    print('演示汇总：%d 帧' % free.size)
+    print('  前方余量：最小 %.1f m，平均 %.1f m'
+          % (free.min(), free.mean()))
+    print('  触发刹车（刹车量 > 0.1）的帧：%d / %d'
+          % (stats['brake_frames'], free.size))
+    if stats['lateral']:
+        lateral = np.asarray(stats['lateral'], dtype=float)
+        print('  横向偏差：平均 %.2f m，最大 %.2f m' % (lateral.mean(), lateral.max()))
+    if stats['gap_true']:
+        gap = np.asarray(stats['gap_true'], dtype=float)
+        print('  与其它车辆的真实最小中心距：%.1f m' % gap.min())
+    print('=' * 60)
+
+
 def run_demo(args):
     """在线演示：边采边分割，打印可行驶比例与前方余量；可选三维散点图。"""
     net = load_model(args.checkpoint)
@@ -213,6 +234,10 @@ def run_demo(args):
             world.tick()
 
         colors = np.array([[0.2, 0.8, 0.2], [0.9, 0.2, 0.2], [1.0, 0.8, 0.1], [0.4, 0.4, 0.9]])
+        carla_map = world.get_map()
+        if args.control:
+            ego.set_autopilot(False)
+        stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': []}
         for frame in range(args.frames):
             world.tick()
             try:
@@ -223,8 +248,62 @@ def run_demo(args):
             classes = segment_frame(net, points, mean, std)
             free = control.free_distance(points, classes, half_width=args.corridor_width)
             ratio = control.drivable_ratio(classes, points=points)
-            print('[演示] 帧 %3d 点数 %5d 可行驶比例 %.2f 前方余量 %.1f m'
-                  % (frame, points.shape[0], ratio, free))
+            factor = control.speed_factor(free, comfort=args.comfort_distance,
+                                          stop=args.stop_distance)
+
+            pose = ego.get_transform()
+            command = None
+            if args.control:
+                # 参考轨迹取当前车道往前 30 m 的中心线，按 2 m 采样
+                path = []
+                waypoint = carla_map.get_waypoint(pose.location, project_to_road=True)
+                travelled = 0.0
+                while waypoint is not None and travelled < 30.0:
+                    location = waypoint.transform.location
+                    path.append((location.x, location.y))
+                    next_waypoints = waypoint.next(2.0)
+                    if not next_waypoints:
+                        break
+                    waypoint = next_waypoints[0]
+                    travelled += 2.0
+
+                delta = control.pure_pursuit(
+                    (pose.location.x, pose.location.y, math.radians(pose.rotation.yaw)),
+                    path, lookahead=args.lookahead)
+                steer = control.normalized_steer(delta)
+
+                # 速度控制：远了给油门，近了踩刹车；目标速度按速度系数缩放
+                speed = math.sqrt(ego.get_velocity().x ** 2 + ego.get_velocity().y ** 2)
+                target = args.max_speed * factor
+                error = target - speed
+                throttle = float(np.clip(error / max(args.max_speed, 1e-3), 0.0, 1.0))
+                brake = float(np.clip(-error / max(args.max_speed, 1e-3), 0.0, 1.0))
+                command = carla.VehicleControl(throttle=throttle, brake=brake, steer=steer)
+                ego.apply_control(command)
+                if brake > 0.1:
+                    stats['brake_frames'] += 1
+
+                # 横向偏差：自车到车道中心线的距离，越小说明循迹越好
+                lateral = pose.location.distance(
+                    carla_map.get_waypoint(pose.location, project_to_road=True)
+                    .transform.location)
+                stats['lateral'].append(float(lateral))
+
+                # 真实最小间距：命令行里能直接看出有没有真的撞上
+                nearest = min(
+                    (pose.location.distance(other.get_location())
+                     for other in world.get_actors().filter('vehicle.*')
+                     if other.id != ego.id),
+                    default=float('nan'))
+                if nearest == nearest:
+                    stats['gap_true'].append(float(nearest))
+            stats['free'].append(float(free))
+
+            print('[演示] 帧 %3d 点数 %5d 可行驶比例 %.2f 前方余量 %5.1f m 速度系数 %.2f%s'
+                  % (frame, points.shape[0], ratio, free, factor,
+                     '' if command is None else
+                     ' 油门 %.2f 刹车 %.2f 转向 %+.2f' % (command.throttle, command.brake,
+                                                         command.steer)))
 
             if plot is not None:
                 plot.clf()
@@ -244,6 +323,7 @@ def run_demo(args):
                 plot.pause(0.001)
         if plot is not None:
             plot.close()
+        _print_demo_summary(stats, args)
         return 0
     finally:
         cc.teardown(client, world, sensors, actors)
