@@ -1,0 +1,16 @@
+rov_planning_node:
+  ros__parameters:
+    # 热力图网格
+    grid_size: 100
+    resolution: 0.5
+
+    # 路径规划权重
+    risk_weight: 5.0
+    current_weight: 3.0
+    current_compensation: 0.5
+    max_risk_threshold: 0.7
+
+    # 洋流场
+    current_pattern: "vortex"
+    current_magnitude: 0.4
+    current_direction: 0.0

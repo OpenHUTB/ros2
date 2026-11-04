@@ -1,0 +1,180 @@
+# 基于热力图的洋流干扰下 ROV 自适应路径规划 ROS 2 模块
+
+## 1. 作业概述与背景
+
+遥控水下机器人（ROV）在海底作业时面临两类典型导航挑战：一是海底礁石、沉船等障碍物需要规避，二是洋流会对 ROV 产生持续推力干扰，逆流航行能耗高、顺流航行易偏航。传统的全局路径规划（如纯 A*）只考虑障碍物距离，忽略了洋流的动态影响，导致规划出的路径在实际洋流中能耗大甚至无法到达。
+
+本模块基于 OpenCV 与 A* 算法实现一条"热力图 + 洋流补偿"的自适应路径规划链路：将海底环境离散化为风险热力图，用向量场建模洋流，并在 A* 的代价函数中同时考虑障碍物风险、洋流推力（顺流奖励、逆流惩罚）和路径长度，从而规划出兼顾安全与节能的路径。模块附带演示节点，可自动生成海底障碍物和起终点触发规划。
+
+## 2. 运行环境
+
+- 操作系统：Ubuntu 20.04（虚拟机）
+- ROS 2 版本：Humble
+- 依赖库：rclcpp、nav_msgs、geometry_msgs、std_msgs、sensor_msgs、cv_bridge、image_transport、OpenCV 4.x、Eigen3
+
+## 3. 核心代码文件清单
+
+本模块包含以下核心文件，均已提交至仓库：
+
+```
+src/water/water_rov_path_planning/
+├── include/water_rov_path_planning/
+│   ├── heatmap.hpp            # 热力图：参数结构与类声明
+│   ├── ocean_current.hpp      # 洋流场：四种模式（均匀/涡流/潮汐/剪切）
+│   └── path_planner.hpp       # A* 路径规划器：代价函数与平滑
+├── src/
+│   ├── heatmap.cpp            # 障碍物风险高斯扩散实现
+│   ├── ocean_current.cpp      # 洋流向量场计算与可视化
+│   ├── path_planner.cpp       # A* + 洋流顺逆流补偿 + B 样条平滑
+│   ├── planning_node.cpp      # 主节点：环境更新 + 路径规划
+│   └── demo_node.cpp          # 演示节点：生成障碍物与起终点
+├── launch/
+│   └── main.launch.py         # 一键启动
+├── config/
+│   └── params.yaml            # 参数配置
+├── rviz/
+│   └── path_planning.rviz     # RViz2 可视化配置
+├── scripts/
+│   └── render_demo.py         # 订阅节点输出并离线渲染演示动图
+├── resource/
+│   └── water_rov_path_planning  # 无后缀空文件
+├── CMakeLists.txt
+├── package.xml
+└── README.md
+```
+
+## 4. 处理原理
+
+### 4.1 热力图风险建模
+
+将 50m×50m 海域离散化为 100×100 网格（分辨率 0.5m）。每个障碍物在其位置产生峰值风险 1.0，并按高斯函数向周围扩散：
+
+$$
+R(x,y) = \exp(-\alpha \cdot d^2)
+$$
+
+其中 \(d\) 为格子到障碍物的距离（米），\(\alpha\) 为衰减系数。洋流强度超过 0.5 m/s 的区域也会叠加风险（上限 0.6），使规划器主动回避强洋流区。
+
+### 4.2 洋流场建模
+
+支持四种洋流模式：
+
+- **均匀流**：全海域流速大小方向一致，模拟开阔海域的定向洋流。
+- **涡流**：以某点为中心的旋转流，流速随距离中心增大而衰减，模拟海底涡旋。
+- **潮汐振荡**：流速随时间正弦变化，模拟潮汐周期。
+- **剪切流**：流速随坐标线性变化，模拟海峡中的流速梯度。
+
+### 4.3 自适应 A* 代价函数
+
+A* 的每步代价由三部分加权组成：
+
+$$
+C = w_l \cdot d + w_r \cdot R \cdot d + w_c \cdot f_{current}
+$$
+
+- \(d\) 为本步移动距离；
+- \(R\) 为目标格子的热力图风险（超过阈值 0.7 则不可通行）；
+- \(f_{current}\) 为洋流因子：顺流时（移动方向与洋流方向点积为正）降低代价，逆流时增加代价。
+
+顺流奖励系数（默认 0.5）使规划器倾向于选择顺流段，降低 ROV 推进能耗。
+
+### 4.4 路径平滑
+
+A* 输出的网格路径存在锯齿，通过迭代加权平均对中间点做 B 样条近似平滑，得到连续可执行的路径。
+
+## 5. 运行步骤
+
+1. 新建标准工作空间并进入 src 目录：
+
+   ```
+   mkdir -p ~/ros2_ws/src
+   cd ~/ros2_ws/src
+   ```
+
+2. 从 ros2 仓库拷贝模块代码到工作空间：
+
+   ```
+   cp -r ~/ros2/src/water/water_rov_path_planning ~/ros2_ws/src/
+   cd ~/ros2_ws
+   ```
+
+3. 安装依赖并编译工作空间、部署环境：
+
+   ```
+   rosdep install --from-paths src --ignore-src -r -y
+   colcon build --packages-select water_rov_path_planning
+   source install/setup.bash
+   ```
+
+   若系统存在多个 OpenCV 版本导致找不到 OpenCV 配置，编译时显式指定：
+
+   ```
+   colcon build --packages-select water_rov_path_planning --cmake-args -DOpenCV_DIR=/usr/lib/x86_64-linux-gnu/cmake/opencv4
+   ```
+
+4. 启动演示节点（自动生成 12 个障碍物 + 起点终点 + 路径规划）：
+
+   ```
+   ros2 launch water_rov_path_planning main.launch.py
+   ```
+
+5. 另开终端查看路径代价与规划结果：
+
+   ```
+   source install/setup.bash
+   ros2 topic echo /rov/path_cost
+   ros2 topic echo /rov/planned_path
+   ```
+
+6. 可选：打开 RViz2 查看热力图、洋流场与规划路径：
+
+   ```
+   ros2 run rviz2 rviz2 -d install/water_rov_path_planning/share/water_rov_path_planning/rviz/path_planning.rviz
+   ```
+
+## 6. 话题与参数
+
+| 话题 | 类型 | 方向 | 说明 |
+| --- | --- | --- | --- |
+| `/rov/obstacle` | `geometry_msgs/PointStamped` | 输入 | 障碍物位置（米） |
+| `/rov/start` | `geometry_msgs/PointStamped` | 输入 | 起点位置 |
+| `/rov/goal` | `geometry_msgs/PointStamped` | 输入 | 终点位置（触发规划） |
+| `/rov/planned_path` | `nav_msgs/Path` | 输出 | 规划路径 |
+| `/rov/heatmap` | `sensor_msgs/Image` | 输出 | 热力图可视化（蓝=安全，红=危险） |
+| `/rov/ocean_current` | `sensor_msgs/Image` | 输出 | 洋流场向量图 |
+| `/rov/path_cost` | `std_msgs/Float32MultiArray` | 输出 | [总代价, 路径长度(m), 路径点数] |
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `grid_size` | 100 | 热力图网格边长 |
+| `resolution` | 0.5 | 每个格子对应实际尺寸（米） |
+| `risk_weight` | 5.0 | 热力图风险权重 |
+| `current_weight` | 3.0 | 洋流权重 |
+| `current_compensation` | 0.5 | 顺流奖励系数（0～1） |
+| `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
+| `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear） |
+| `current_magnitude` | 0.4 | 基础洋流流速（m/s） |
+
+## 7. 运行效果
+
+默认参数下，演示节点在 50m×50m 海域内随机生成 12 个障碍物，起点 (5, 25)、终点 (45, 25)，洋流模式为涡流（中心 (25, 25)，半径 15m，基础流速 0.4 m/s）。规划器输出的路径会：
+
+- 绕过所有障碍物及其风险扩散区（热力图红色区域）；
+- 在涡流边缘选择顺流段（与洋流方向一致的格子），减少逆流段；
+- 路径总长度略长于直线距离，但总代价（风险+洋流+长度）最低。
+
+在虚拟机上以默认参数（grid_size 100、resolution 0.5、涡流模式、基础流速 0.4 m/s、障碍物种子 42、起点 (5, 25)、终点 (45, 25)）启动后连续运行，规划器实测输出稳定在：路径点数 81，路径长度 40.10 m，总代价 80.02。演示节点每 5 秒触发一次重规划，由于环境静态，多次规划结果一致。
+
+![运行演示](../img/water/water_rov_path_planning/demo.gif)
+
+> 上图为节点实际输出数据经 scripts/render_demo.py 离线渲染的三联对比动图（非 RViz 截图）：左侧 HEATMAP 为热力图（蓝=安全，红=危险），中间 OCEAN CURRENT 为洋流场向量图，右侧 PLANNED PATH 为叠加在热力图上的规划路径（黄色折线，绿色起点，红色终点）。
+
+## 8. 验证范围说明
+
+本模块已在虚拟机上完成以下验证：节点正常启动、话题正常收发、热力图随障碍物添加正确更新、洋流场可视化正常输出、A* 在有障碍物和洋流的环境下成功规划出避开高风险区的路径、路径平滑后无明显锯齿。
+
+当前版本使用合成演示数据（随机障碍物 + 解析洋流场），尚未接入真实海底声呐或多波束数据；洋流场为稳态解析模型，未考虑时间动态变化（潮汐模式有周期变化但未做实测验证）；路径规划为全局一次性规划，未实现随洋流变化的动态重规划（演示节点 5 秒后会触发一次重规划作为示意）。
+
+## 大模型使用声明
+
+本模块代码与文档由大模型辅助生成，作者已在 Ubuntu 20.04 + ROS 2 Humble 虚拟机中实际运行验证，作者对提交内容负责。
