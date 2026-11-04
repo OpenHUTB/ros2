@@ -1,0 +1,6 @@
+usv_colreg_avoidance:
+  ros__parameters:
+    scenario: crossing
+    d_safe: 400.0
+    playback_rate: 8.0
+    frame_step: 4
