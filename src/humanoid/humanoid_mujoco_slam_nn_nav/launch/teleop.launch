@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- 键盘遥控演示：人形机器人物理仿真 + 步态 + 键盘速度指令 -->
+<launch>
+  <arg name="scene" default="warehouse"/>
+  <arg name="seed" default="0"/>
+  <arg name="terminal" default="true"/>
+
+  <node pkg="humanoid_mujoco_slam_nn_nav" type="sim_node.py" name="humanoid_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="rate" value="100"/>
+  </node>
+
+  <group if="$(arg terminal)">
+    <node pkg="humanoid_mujoco_slam_nn_nav" type="teleop_node.py" name="humanoid_teleop"
+          launch-prefix="xterm -e" output="screen"/>
+  </group>
+  <group unless="$(arg terminal)">
+    <node pkg="humanoid_mujoco_slam_nn_nav" type="teleop_node.py" name="humanoid_teleop" output="screen"/>
+  </group>
+</launch>
