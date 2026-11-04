@@ -30,8 +30,9 @@ src/
     └── setup.py                  # ROS2功能包配置文件
 ```
 ## 功能说明
-- 中文：航点节点持续监听`/odom`里程计话题，对比当前位置与目标航点坐标，到达航点后自动切换下一个航点索引，依次完成航点遍历；可视化节点发布标记话题，在 RViz 中渲染航点标记。无仿真模块，依靠外部发布里程计数据驱动。
-- English: - The waypoint node continuously subscribes to the `/odom` odometry topic, compares the current pose with the target waypoint. After reaching the waypoint, it automatically switches to the next waypoint index and traverses all preset waypoints. The visualization node publishes marker topics to render waypoints in RViz. No simulation module, driven by externally published odometry data.
+- 中文：航点节点持续监听`/odom`里程计话题，对比当前位置与目标航点坐标，到达航点后自动切换下一个航点索引，依次完成航点遍历；可视化节点发布标记话题。无仿真模块，依靠外部发布里程计数据驱动。
+- English: The waypoint node continuously subscribes to the `/odom` odometry topic, compares the current pose with the target waypoint. After reaching the waypoint, it automatically switches to the next waypoint index and traverses all preset waypoints. The visualization node publishes marker topics. No simulation module, driven by externally published odometry data.
+
 ## 启动步骤
 1. 进入 ROS2 工作空间
 ```bash
@@ -53,7 +54,7 @@ source install/setup.bash
 ros2 topic pub /odom nav_msgs/msg/Odometry "{pose: {pose: {position: {x: 3.0, y: 0.0, z:0.0}}}}"
 ```
 ## 运行效果
-节点启动后，RViz 将加载简易模型并展示预设航点标记。手动发布里程计消息后，终端会打印 `reach waypoint` 到达航点日志，自动切换到下一个航点。
+手动发布里程计消息后，终端会打印 `reach waypoint` 到达航点日志，自动切换到下一个航点。
 ![运行效果图片](../../docs/img/water/rov_waypoint_cruise_build_success.png)
 ![运行效果图片](../../docs/img/water/rov_waypoint_cruise_run_test.png)
 ![运行效果图片](../../docs/img/water/rov_waypoint_cruise_waypoint2_reach.png)
