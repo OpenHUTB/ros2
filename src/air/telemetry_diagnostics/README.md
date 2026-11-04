@@ -144,6 +144,16 @@ seed42 在最轻微 0.03 强度下，位置漂移平均检出延迟 0.323 秒、
 ![分强度检出率](results/final/severity_recall.png)
 ![消融与误报权衡](results/final/ablation.png)
 
+### 通道归因
+
+报警时除评分外，还会给出 6 个残差通道（p*、v*）的占比 `channels` 与主导通道 `dominant`（占比 ≥20% 的前两个），两个检测器都输出这两个字段。归因只用残差，不看注入标签。
+
+测试集上按注入通道组统计命中率：位置漂移（注入 p*）**99.1%**（350 个报警步），速度偏置（注入 v*）**53.0%**（287 个报警步）。速度偏置偏低是差分残差的固有性质——恒定偏置只在起止边缘出现在差分里，平台段残差接近噪声。
+
+![通道归因命中率](results/attribution_hit.png)
+
+复现：`python attribution_eval.py --model models/gru_42`，结果写入 `results/attribution_eval.json`。
+
 ## 6. ROS2 接口、实时接入和验证
 
 | 话题 | 类型 | 用途 |
