@@ -73,20 +73,28 @@ class DepthUavEnv:
 
     # ---------------------------------------------------------------- 场景与重置
     def set_scene(self, scene: str, seed: int = 0) -> None:
-        """按场景名重新摆放六个柱子。同一个 XML 复用三种布局。"""
+        """按场景名重新摆放六个柱子。同一个 XML 复用三种布局。
+
+        `seed` 会给出**同一个场景族内的不同实例**：slalom / gate 的柱子在基准位置上做
+        随机偏移、门的宽度也在 ±0.15 m 内变化。这样"多随机种子"测的才是稳定性，
+        而不是把同一条轨迹重复跑 5 次。
+        """
         if scene not in self.SCENES:
             raise ValueError(f"未知场景 {scene}，可选 {self.SCENES}")
         rng = np.random.default_rng(seed)
+        jitter = 0.0 if seed == 0 else 0.25      # seed=0 保持标称布局，便于对齐文档里的示意图
         positions = []
         if scene == "slalom":
             for i in range(6):
-                positions.append((3.0 + 2.0 * i, 1.4 if i % 2 == 0 else -1.4, 1.5))
+                dy = rng.normal(0, jitter) if jitter else 0.0
+                positions.append((3.0 + 2.0 * i + rng.normal(0, jitter / 3),
+                                  (1.4 if i % 2 == 0 else -1.4) + dy, 1.5))
         elif scene == "gate":
-            # 两组"门"：柱心 ±0.8 m，留 1.6 m 通道（机身宽 0.44 m，余量约 0.5 m）
+            half = 0.8 + (rng.uniform(-0.15, 0.15) if jitter else 0.0)
             for i in range(6):
                 x = 5.0 if i < 3 else 10.0
-                y = (-0.8, 0.8, 4.0)[i % 3]
-                positions.append((x, y, 1.5))
+                y = (-half, half, 4.0)[i % 3]
+                positions.append((x + rng.normal(0, jitter / 3), y, 1.5))
         else:  # clutter
             for _ in range(6):
                 positions.append((float(rng.uniform(3.0, 13.0)),

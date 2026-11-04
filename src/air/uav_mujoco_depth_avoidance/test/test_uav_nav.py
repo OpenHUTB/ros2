@@ -188,3 +188,44 @@ def test_episode_runs_and_reports(env):
     assert res.steps <= 20
     assert 0.0 <= res.min_clearance <= 1.0
     assert res.mean_pred_error >= 0.0
+
+
+# ---------------------------------------------------------------- 多种子 / 长跑
+
+def test_seed_changes_scene_layout(env):
+    """同一场景不同 seed 必须给出不同布局，否则"多种子"统计没有意义。"""
+    env.set_scene("slalom", seed=0)
+    nominal = env.model.geom_pos[env.post_ids, 1].copy()
+    env.set_scene("slalom", seed=3)
+    jittered = env.model.geom_pos[env.post_ids, 1].copy()
+    assert np.abs(nominal - jittered).max() > 0.05
+
+    env.set_scene("gate", seed=0)
+    nominal_gate = env.model.geom_pos[env.post_ids[0], 1]
+    env.set_scene("gate", seed=4)
+    assert abs(env.model.geom_pos[env.post_ids[0], 1] - nominal_gate) > 1e-3
+
+
+def test_run_matrix_reports_all_scenes(env):
+    from uav_nav.policy import run_matrix
+
+    net = DepthCNN(seed=0)
+    table = run_matrix(net, seeds=(0, 1), cfg=PolicyConfig(steps=15), log=lambda *a, **k: None)
+    assert set(table) == set(DepthUavEnv.SCENES)
+    for row in table.values():
+        assert row["runs"] == 2
+        assert 0.0 <= row["success_rate"] <= 1.0
+        assert row["min_clearance_min"] <= row["min_clearance_mean"] + 1e-6
+        assert row["steps_std"] >= 0.0
+
+
+def test_soak_run_accumulates_steps(env):
+    from uav_nav.policy import soak_run
+
+    net = DepthCNN(seed=0)
+    out = soak_run(net, scene="clutter", total_steps=40, cfg=PolicyConfig(steps=24),
+                   log=lambda *a, **k: None)
+    assert out["total_steps"] >= 40
+    assert out["episodes"] >= 2
+    assert out["successes"] + out["collisions"] <= out["episodes"]
+    assert 0.0 <= out["min_clearance"] <= 1.0

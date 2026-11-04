@@ -2,211 +2,183 @@
   "training": [
     {
       "epoch": 1,
-      "train_mse": 0.020511,
-      "val_mae_left": 0.0729,
-      "val_mae_center": 0.0922,
-      "val_mae_right": 0.0842
+      "train_mse": 0.019376,
+      "val_mae_left": 0.0872,
+      "val_mae_center": 0.0786,
+      "val_mae_right": 0.0711
     },
     {
       "epoch": 2,
-      "train_mse": 0.009072,
-      "val_mae_left": 0.0577,
-      "val_mae_center": 0.0756,
-      "val_mae_right": 0.064
+      "train_mse": 0.008334,
+      "val_mae_left": 0.0643,
+      "val_mae_center": 0.0702,
+      "val_mae_right": 0.0528
     },
     {
       "epoch": 3,
-      "train_mse": 0.006393,
-      "val_mae_left": 0.0479,
-      "val_mae_center": 0.0659,
-      "val_mae_right": 0.0552
+      "train_mse": 0.005885,
+      "val_mae_left": 0.0508,
+      "val_mae_center": 0.0616,
+      "val_mae_right": 0.0537
     },
     {
       "epoch": 4,
-      "train_mse": 0.004767,
-      "val_mae_left": 0.042,
-      "val_mae_center": 0.0575,
-      "val_mae_right": 0.0568
+      "train_mse": 0.004685,
+      "val_mae_left": 0.0399,
+      "val_mae_center": 0.0546,
+      "val_mae_right": 0.0433
     },
     {
       "epoch": 5,
-      "train_mse": 0.004234,
-      "val_mae_left": 0.037,
-      "val_mae_center": 0.056,
-      "val_mae_right": 0.0479
+      "train_mse": 0.003923,
+      "val_mae_left": 0.0371,
+      "val_mae_center": 0.0526,
+      "val_mae_right": 0.0418
     },
     {
       "epoch": 6,
-      "train_mse": 0.003758,
-      "val_mae_left": 0.0377,
-      "val_mae_center": 0.0539,
-      "val_mae_right": 0.046
+      "train_mse": 0.003382,
+      "val_mae_left": 0.0352,
+      "val_mae_center": 0.0488,
+      "val_mae_right": 0.0379
     },
     {
       "epoch": 7,
-      "train_mse": 0.003715,
-      "val_mae_left": 0.0349,
-      "val_mae_center": 0.0501,
-      "val_mae_right": 0.046
+      "train_mse": 0.003142,
+      "val_mae_left": 0.0321,
+      "val_mae_center": 0.0545,
+      "val_mae_right": 0.0382
     },
     {
       "epoch": 8,
-      "train_mse": 0.003263,
-      "val_mae_left": 0.033,
+      "train_mse": 0.00301,
+      "val_mae_left": 0.0338,
       "val_mae_center": 0.047,
-      "val_mae_right": 0.044
+      "val_mae_right": 0.0388
     },
     {
       "epoch": 9,
-      "train_mse": 0.003052,
-      "val_mae_left": 0.0328,
-      "val_mae_center": 0.046,
-      "val_mae_right": 0.0452
+      "train_mse": 0.002674,
+      "val_mae_left": 0.0301,
+      "val_mae_center": 0.0443,
+      "val_mae_right": 0.0377
     },
     {
       "epoch": 10,
-      "train_mse": 0.002788,
-      "val_mae_left": 0.0309,
-      "val_mae_center": 0.0469,
-      "val_mae_right": 0.0438
+      "train_mse": 0.002514,
+      "val_mae_left": 0.0292,
+      "val_mae_center": 0.0423,
+      "val_mae_right": 0.0377
     },
     {
       "epoch": 11,
-      "train_mse": 0.002572,
-      "val_mae_left": 0.0301,
-      "val_mae_center": 0.0459,
-      "val_mae_right": 0.0456
+      "train_mse": 0.002358,
+      "val_mae_left": 0.0292,
+      "val_mae_center": 0.0418,
+      "val_mae_right": 0.0392
     },
     {
       "epoch": 12,
-      "train_mse": 0.002714,
-      "val_mae_left": 0.0373,
-      "val_mae_center": 0.05,
-      "val_mae_right": 0.0423
+      "train_mse": 0.002254,
+      "val_mae_left": 0.0294,
+      "val_mae_center": 0.0491,
+      "val_mae_right": 0.0357
     },
     {
       "epoch": 13,
-      "train_mse": 0.002578,
-      "val_mae_left": 0.029,
-      "val_mae_center": 0.0433,
-      "val_mae_right": 0.0423
+      "train_mse": 0.002254,
+      "val_mae_left": 0.0322,
+      "val_mae_center": 0.039,
+      "val_mae_right": 0.0357
     },
     {
       "epoch": 14,
-      "train_mse": 0.002393,
-      "val_mae_left": 0.0333,
-      "val_mae_center": 0.0469,
-      "val_mae_right": 0.0517
+      "train_mse": 0.002214,
+      "val_mae_left": 0.0298,
+      "val_mae_center": 0.0553,
+      "val_mae_right": 0.036
     }
   ],
-  "closed_loop": [
-    {
-      "scene": "slalom",
-      "run": 0,
-      "success": true,
-      "crashed": false,
-      "steps": 221,
-      "traveled_x": 13.604461646214133,
-      "min_clearance": 0.074,
-      "mean_pred_error": 0.0429,
-      "mean_speed": 1.296,
-      "path_length": 14.12
+  "results": {
+    "matrix": {
+      "slalom": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 174.2,
+        "steps_std": 3.2,
+        "min_clearance_mean": 0.072,
+        "min_clearance_min": 0.07,
+        "path_mean": 13.85,
+        "path_std": 0.03
+      },
+      "gate": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 214.0,
+        "steps_std": 22.8,
+        "min_clearance_mean": 0.057,
+        "min_clearance_min": 0.028,
+        "path_mean": 13.95,
+        "path_std": 0.1
+      },
+      "clutter": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 202.0,
+        "steps_std": 19.9,
+        "min_clearance_mean": 0.064,
+        "min_clearance_min": 0.047,
+        "path_mean": 13.98,
+        "path_std": 0.15
+      }
     },
-    {
-      "scene": "slalom",
-      "run": 1,
-      "success": true,
-      "crashed": false,
-      "steps": 221,
-      "traveled_x": 13.604461646214133,
-      "min_clearance": 0.074,
-      "mean_pred_error": 0.0429,
-      "mean_speed": 1.296,
-      "path_length": 14.12
-    },
-    {
-      "scene": "slalom",
-      "run": 2,
-      "success": true,
-      "crashed": false,
-      "steps": 221,
-      "traveled_x": 13.604461646214133,
-      "min_clearance": 0.074,
-      "mean_pred_error": 0.0429,
-      "mean_speed": 1.296,
-      "path_length": 14.12
-    },
-    {
-      "scene": "gate",
-      "run": 3,
-      "success": true,
-      "crashed": false,
-      "steps": 293,
-      "traveled_x": 13.608876996011409,
-      "min_clearance": 0.061,
-      "mean_pred_error": 0.0381,
-      "mean_speed": 0.98,
-      "path_length": 14.15
-    },
-    {
-      "scene": "gate",
-      "run": 4,
-      "success": true,
-      "crashed": false,
-      "steps": 293,
-      "traveled_x": 13.608876996011409,
-      "min_clearance": 0.061,
-      "mean_pred_error": 0.0381,
-      "mean_speed": 0.98,
-      "path_length": 14.15
-    },
-    {
-      "scene": "gate",
-      "run": 5,
-      "success": true,
-      "crashed": false,
-      "steps": 293,
-      "traveled_x": 13.608876996011409,
-      "min_clearance": 0.061,
-      "mean_pred_error": 0.0381,
-      "mean_speed": 0.98,
-      "path_length": 14.15
-    },
-    {
+    "soak": {
       "scene": "clutter",
-      "run": 6,
-      "success": true,
-      "crashed": false,
-      "steps": 229,
-      "traveled_x": 13.609375930803544,
-      "min_clearance": 0.06,
-      "mean_pred_error": 0.0432,
-      "mean_speed": 1.25,
-      "path_length": 14.15
+      "total_steps": 3030,
+      "simulated_seconds": 151.5,
+      "episodes": 15,
+      "collisions": 0,
+      "successes": 15,
+      "min_clearance": 0.047,
+      "total_path_m": 209.7
     },
-    {
-      "scene": "clutter",
-      "run": 7,
-      "success": true,
-      "crashed": false,
-      "steps": 254,
-      "traveled_x": 13.606813651244206,
-      "min_clearance": 0.064,
-      "mean_pred_error": 0.0356,
-      "mean_speed": 1.133,
-      "path_length": 14.17
-    },
-    {
-      "scene": "clutter",
-      "run": 8,
-      "success": true,
-      "crashed": false,
-      "steps": 263,
-      "traveled_x": 13.608949918610183,
-      "min_clearance": 0.061,
-      "mean_pred_error": 0.0419,
-      "mean_speed": 1.092,
-      "path_length": 14.15
-    }
-  ]
+    "scenes": [
+      {
+        "scene": "slalom",
+        "success": true,
+        "crashed": false,
+        "steps": 171,
+        "traveled_x": 13.600603334992586,
+        "min_clearance": 0.07,
+        "mean_pred_error": 0.0429,
+        "mean_speed": 1.637,
+        "path_length": 13.81
+      },
+      {
+        "scene": "gate",
+        "success": true,
+        "crashed": false,
+        "steps": 215,
+        "traveled_x": 13.602962846622093,
+        "min_clearance": 0.062,
+        "mean_pred_error": 0.0313,
+        "mean_speed": 1.324,
+        "path_length": 14.02
+      },
+      {
+        "scene": "clutter",
+        "success": true,
+        "crashed": false,
+        "steps": 175,
+        "traveled_x": 13.603793255306934,
+        "min_clearance": 0.061,
+        "mean_pred_error": 0.0417,
+        "mean_speed": 1.592,
+        "path_length": 13.79
+      }
+    ]
+  }
 }

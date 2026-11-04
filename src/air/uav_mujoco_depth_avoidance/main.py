@@ -16,9 +16,10 @@ import sys
 from pathlib import Path
 
 
-def run_demo(out_dir: str, epochs: int, n_train: int, n_val: int, scene: str) -> int:
+def run_demo(out_dir: str, epochs: int, n_train: int, n_val: int, scene: str,
+             soak_steps: int = 3000) -> int:
     from uav_nav.env import DepthUavEnv
-    from uav_nav.policy import PolicyConfig, run_all, run_episode
+    from uav_nav.policy import PolicyConfig, run_episode, run_matrix, soak_run
     from uav_nav.train import plot_prediction, plot_training, save_gif, save_report, train
 
     out = Path(out_dir)
@@ -45,23 +46,30 @@ def run_demo(out_dir: str, epochs: int, n_train: int, n_val: int, scene: str) ->
               f"预测误差={res.mean_pred_error:.3f} 路径长={res.path_length:.2f} m "
               f"-> {gif.name} ({size/1024:.0f} KB, {frames} 帧)")
 
-    print("== 4/4 多随机种子统计与指标落盘 ==")
-    stats = run_all(net, seeds=(0, 1, 2))
+    print("== 4/4 多种子稳定性统计、长时间运行与指标落盘 ==")
+    matrix = run_matrix(net, seeds=(0, 1, 2, 3, 4))
+    soak = soak_run(net, scene="clutter", total_steps=soak_steps)
 
-    summary = save_report(history, [
-        {"scene": r.scene, "run": i, "success": r.success, "crashed": r.crashed,
+    summary = save_report(history, {"matrix": matrix, "soak": soak, "scenes": [
+        {"scene": r.scene, "success": r.success, "crashed": r.crashed,
          "steps": r.steps, "traveled_x": r.traveled_x, "min_clearance": r.min_clearance,
          "mean_pred_error": r.mean_pred_error, "mean_speed": r.mean_speed,
          "path_length": r.path_length}
-        for i, r in enumerate(stats)
-    ], out)
+        for r in results
+    ]}, out)
 
-    n_ok = sum(r.success for r in stats)
+    n_ok = sum(v["success_rate"] for v in matrix.values())
     print(f"\n参数数量            : {net.config()['params']}")
     print(f"最终 train MSE      : {history[-1]['train_mse']}")
     print(f"验证 MAE(左/中/右)  : {history[-1]['val_mae_left']:.3f} / "
           f"{history[-1]['val_mae_center']:.3f} / {history[-1]['val_mae_right']:.3f}")
-    print(f"多场景成功率        : {n_ok}/{len(stats)}")
+    print("多实例成功率(3 场景 × 5 实例):")
+    for name, row in matrix.items():
+        print(f"  {name:8} 成功 {row['success_rate']*100:5.0f}%  碰撞 {row['collisions']}  "
+              f"步数 {row['steps_mean']:5.1f}±{row['steps_std']:4.1f}  "
+              f"最小余量 {row['min_clearance_mean']:.3f}(最差 {row['min_clearance_min']:.3f})")
+    print(f"长时间运行          : {soak['total_steps']} 步 / {soak['simulated_seconds']} s，"
+          f"{soak['episodes']} 次任务，碰撞 {soak['collisions']} 次")
     print(f"指标                : {out / 'metrics.json'}")
     print(f"GIF                 : {out}/flight_*.gif")
     return 0
@@ -102,6 +110,7 @@ def main() -> int:
     parser.add_argument("--epochs", type=int, default=14)
     parser.add_argument("--n-train", type=int, default=900)
     parser.add_argument("--n-val", type=int, default=200)
+    parser.add_argument("--soak-steps", type=int, default=3000, help="长时间运行测试的总步数")
     args = parser.parse_args()
 
     if args.test:
@@ -110,7 +119,8 @@ def main() -> int:
         return run_teleop(args.scene)
     if args.ros:
         return run_ros()
-    return run_demo(args.output_dir, args.epochs, args.n_train, args.n_val, args.scene)
+    return run_demo(args.output_dir, args.epochs, args.n_train, args.n_val, args.scene,
+                    args.soak_steps)
 
 
 if __name__ == "__main__":

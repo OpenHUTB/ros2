@@ -117,7 +117,7 @@ def save_gif(frames, path: Path, duration: int = 90) -> tuple[int, int]:
 def save_report(history, runs, out_dir) -> dict:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    summary = {"training": history, "closed_loop": runs}
+    summary = {"training": history, "results": runs}
     (out / "metrics.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False),
                                       encoding="utf-8")
     return summary

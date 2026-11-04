@@ -79,8 +79,12 @@ def act(net, depth: np.ndarray, cfg: PolicyConfig, yaw: float = 0.0):
 
 
 def run_episode(net, scene: str, seed: int = 0, cfg: PolicyConfig | None = None,
-                record: bool = False, env: DepthUavEnv | None = None) -> RunResult:
-    """在一个场景里跑一次完整飞行，返回指标（可选返回 GIF 帧）。"""
+                record: bool = False, env: DepthUavEnv | None = None,
+                stop_at_goal: bool = True) -> RunResult:
+    """在一个场景实例里跑一次飞行，返回指标（可选返回 GIF 帧）。
+
+    `stop_at_goal=False` 时不因到达终点而提前结束，用于长时间运行测试。
+    """
     cfg = cfg or PolicyConfig()
     env = env or DepthUavEnv(scene, seed=seed)
     env.reset(scene=scene, seed=seed)
@@ -113,7 +117,7 @@ def run_episode(net, scene: str, seed: int = 0, cfg: PolicyConfig | None = None,
         crashed = state.crashed
         if crashed:
             break
-        if state.pos[0] > 13.6:
+        if state.pos[0] > 13.6 and stop_at_goal:
             success = True
             break
 
@@ -132,7 +136,7 @@ def run_episode(net, scene: str, seed: int = 0, cfg: PolicyConfig | None = None,
 
 
 def run_all(net, seeds=(0, 1), cfg: PolicyConfig | None = None, log=print) -> list[RunResult]:
-    """三种场景各跑若干个随机种子，便于做多场景性能评价。"""
+    """三种场景各跑若干个场景实例，便于做多场景性能评价。"""
     results = []
     for scene in DepthUavEnv.SCENES:
         for seed in seeds:
@@ -143,3 +147,71 @@ def run_all(net, seeds=(0, 1), cfg: PolicyConfig | None = None, log=print) -> li
                 f"最小余量={res.min_clearance:.3f} 预测误差={res.mean_pred_error:.3f} "
                 f"路径长={res.path_length:.2f} m")
     return results
+
+
+def run_matrix(net, seeds=(0, 1, 2, 3, 4), cfg: PolicyConfig | None = None,
+               log=print) -> dict:
+    """多种子稳定性矩阵：每个场景在 N 个不同布局实例上各跑一次，输出均值 ± 标准差。
+
+    注意 `seed` 会改变柱子位置（见 `DepthUavEnv.set_scene`），因此这里统计的是
+    "同一类场景下不同布局"的分布，而不是同一条轨迹的重复执行。
+    """
+    table = {}
+    for scene in DepthUavEnv.SCENES:
+        rows = [run_episode(net, scene, seed=seed, cfg=cfg) for seed in seeds]
+        steps = np.array([r.steps for r in rows], dtype=np.float32)
+        clear = np.array([r.min_clearance for r in rows], dtype=np.float32)
+        path = np.array([r.path_length for r in rows], dtype=np.float32)
+        table[scene] = {
+            "runs": len(rows),
+            "success_rate": round(float(np.mean([r.success for r in rows])), 3),
+            "collisions": int(sum(r.crashed for r in rows)),
+            "steps_mean": round(float(steps.mean()), 1),
+            "steps_std": round(float(steps.std()), 1),
+            "min_clearance_mean": round(float(clear.mean()), 3),
+            "min_clearance_min": round(float(clear.min()), 3),
+            "path_mean": round(float(path.mean()), 2),
+            "path_std": round(float(path.std()), 2),
+        }
+        log(f"[{scene}] {len(rows)} 个实例：成功 {table[scene]['success_rate']*100:.0f}% "
+            f"碰撞 {table[scene]['collisions']} 步数 {table[scene]['steps_mean']:.1f}±"
+            f"{table[scene]['steps_std']:.1f} 最小余量 {table[scene]['min_clearance_mean']:.3f}"
+            f"(最差 {table[scene]['min_clearance_min']:.3f}) "
+            f"路径 {table[scene]['path_mean']:.2f}±{table[scene]['path_std']:.2f} m")
+    return table
+
+
+def soak_run(net, scene: str = "clutter", total_steps: int = 3000,
+             cfg: PolicyConfig | None = None, log=print) -> dict:
+    """长时间运行测试：连续飞到累计 `total_steps` 步（3000 步 = 150 s）不停机。
+
+    每到走廊尽头或发生碰撞就重置到起点继续，等价于"连续跑很多次任务"，
+    用来暴露状态泄漏、渲染上下文失效、内存增长这类只在长跑中出现的问题。
+    """
+    cfg = cfg or PolicyConfig()
+    env = DepthUavEnv(scene, seed=0)
+    done = 0
+    episodes = crashes = successes = 0
+    min_clear = 1.0
+    path_total = 0.0
+    while done < total_steps:
+        res = run_episode(net, scene, seed=episodes % 5, cfg=cfg, env=env)
+        episodes += 1
+        done += res.steps
+        crashes += int(res.crashed)
+        successes += int(res.success)
+        min_clear = min(min_clear, res.min_clearance)
+        path_total += res.path_length
+    summary = {
+        "scene": scene,
+        "total_steps": done,
+        "simulated_seconds": round(done * 0.05, 1),
+        "episodes": episodes,
+        "collisions": crashes,
+        "successes": successes,
+        "min_clearance": round(min_clear, 3),
+        "total_path_m": round(path_total, 1),
+    }
+    log(f"[soak] {done} 步（{summary['simulated_seconds']} s）连续运行：{episodes} 次任务，"
+        f"成功 {successes}，碰撞 {crashes}，最小余量 {min_clear:.3f}")
+    return summary
