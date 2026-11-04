@@ -36,18 +36,26 @@ src/
 1. 进入 ROS2 工作空间
 ```bash
 cd ~/ros2_ws
+```
 2. 功能编译包
 ```bash
 colcon build --packages-select rov_fixed_waypoint_cruise
 source install/setup.bash
+```
 3. 使用 launch 文件一键启动（启动航点节点、可视化节点、RViz、URDF 模型）
 ```bash
 ros2 launch rov_fixed_waypoint_cruise main.launch.py
+```
 4.新开一个终端窗口，同样进入工作空间并加载环境，发送模拟里程计数据
 ```bash
 cd ~/ros2_ws
 source install/setup.bash
 ros2 topic pub /odom nav_msgs/msg/Odometry "{pose: {pose: {position: {x: 3.0, y: 0.0, z:0.0}}}}"
+```
 ## 运行效果
 节点启动后，RViz 将加载简易模型并展示预设航点标记。手动发布里程计消息后，终端会打印 `reach waypoint` 到达航点日志，自动切换到下一个航点。
+![运行效果图片](../../../docs/img/water/rov_waypoint_cruise_build_success.png)
+![运行效果图片](../../../docs/img/water/rov_waypoint_cruise_run_test.png)
+![运行效果图片](../../../docs/img/water/rov_waypoint_cruise_waypoint2_reach.png)
+![运行效果图片](../../../docs/img/water/rov_waypoint_cruise_waypoint3_reach.png)
 
