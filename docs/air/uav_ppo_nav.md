@@ -114,13 +114,38 @@ h1 = tanh(W1·h0 + b1)
 a  = clip(W2·h1 + b2, -1, 1)
 ```
 
+### 4.1 安全速度包络（近障减速 / 急停）
+
+策略是在质点环境里训练的，部署到仿真或真机时再加一层**与策略解耦**的兜底：直接复用
+22 维观测里的 16 扇直方图，沿**速度方向**取净空（含相邻扇），据此限速。
+
+| 条件 | 行为 |
+|---|---|
+| `clearance > slow_distance` | 速度不变 |
+| `stop_distance < clearance ≤ slow_distance` | 水平速度按 `(clearance − stop) / (slow − stop)` 线性衰减 |
+| `clearance ≤ stop_distance` | 水平速度清零（急停），垂直速度保留以便脱离 |
+| 水平速度 ≈ 0（悬停） | 不判定方向，也不急停 |
+
+- 净空 = 扇形归一化值 × 12 m；速度方向按世界系 `atan2(vy, vx)` 分扇（0 = 正东，逆时针），与观测直方图完全一致；
+- 只缩放水平速度，垂直速度只做 `±1.5 m/s` 限幅；
+- 参数：`safety/enabled`（默认 `true`）、`safety/stop_distance`（0.8 m）、`safety/slow_distance`（3.0 m），launch 里可用 `safety_stop_distance:=` 等覆盖；
+- 触发急停时按 1 Hz 打印 `logwarn`（含净空），便于区分“策略不敢走”和“包络把速度拦掉了”。
+
+```shell
+# 调保守一些
+roslaunch uav_ppo_nav main.launch safety_stop_distance:=1.0 safety_slow_distance:=3.5
+# 关掉兜底（仅用于对照实验）
+roslaunch uav_ppo_nav main.launch safety_enabled:=false
+```
+
 ## 5. 验证
 
 ### 5.1 本地桩测试（无需 ROS / 仿真器）
 
 ```shell
-python3 tests/test_ppo_nav_local.py        # 20 项：直方图/世界系变换/动作映射/环境/策略
-python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy 也能测）
+python3 tests/test_ppo_nav_local.py        # 直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 部署节点（mock 掉 rospy 也能测）
+python3 tests/test_ppo_nav_safety_local.py # 安全包络：减速/急停/限幅/扇区映射（42 项）
 ```
 
 > 项数是**不同断言的个数**。所有断言都写在循环外——写进循环会靠重复执行把计数灌水

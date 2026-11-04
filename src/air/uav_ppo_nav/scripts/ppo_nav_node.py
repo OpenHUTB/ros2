@@ -26,6 +26,7 @@ from sensor_msgs.msg import PointCloud2
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from policy import (MlpPolicy, action_to_velocity, build_observation,  # noqa: E402
                     lidar_points_to_histogram, N_SECTORS)
+from safety import SafetyEnvelope  # noqa: E402
 
 
 def cloud_to_xyz(msg: PointCloud2) -> np.ndarray:
@@ -69,6 +70,8 @@ class PpoNavNode(object):
 
         self.latest_odom = None
         self.latest_cloud = None
+        self.last_safety = None
+        self.safety = self._make_safety()
         self.pub = rospy.Publisher(self.cmd_topic, Twist, queue_size=1)
         rospy.Subscriber("/uav/odom", Odometry, self._cb_odom, queue_size=1)
         rospy.Subscriber("/lidar/points", PointCloud2, self._cb_cloud, queue_size=1)
@@ -79,6 +82,18 @@ class PpoNavNode(object):
 
     def _cb_cloud(self, msg):
         self.latest_cloud = msg
+
+    def _make_safety(self):
+        """按 rosparam 构造安全包络；safety/enabled=false 时关闭。"""
+        if not bool(rospy.get_param("safety/enabled", True)):
+            rospy.loginfo("ppo_nav: 安全包络已关闭（safety/enabled=false）")
+            return None
+        envelope = SafetyEnvelope(
+            stop_distance=float(rospy.get_param("safety/stop_distance", 0.8)),
+            slow_distance=float(rospy.get_param("safety/slow_distance", 3.0)))
+        rospy.loginfo("ppo_nav: 安全包络已启用（stop=%.2f m, slow=%.2f m）",
+                      envelope.stop_distance, envelope.slow_distance)
+        return envelope
 
     # ------------------------------------------------------------------ 观测
     def build_obs(self) -> np.ndarray:
@@ -104,6 +119,13 @@ class PpoNavNode(object):
         obs = self.build_obs()
         action = self.policy.forward(obs)
         vx, vy, vz, wz = action_to_velocity(action)
+        # 安全包络：沿速度方向看扇形净空，近障减速、过近急停（不改动垂直速度）。
+        if self.safety is not None:
+            vx, vy, vz, self.last_safety = self.safety.filter(
+                vx, vy, vz, obs[:N_SECTORS])
+            if self.last_safety['braking']:
+                rospy.logwarn_throttle(
+                    1.0, "ppo_nav: 前方净空 %.2f m，已急停", self.last_safety['clearance_m'])
         t = Twist()
         t.linear.x, t.linear.y, t.linear.z = vx, vy, vz   # 世界系 ENU 速度
         t.angular.z = wz
