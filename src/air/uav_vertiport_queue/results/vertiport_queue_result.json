@@ -1,0 +1,2088 @@
+{
+  "package": "uav_vertiport_queue",
+  "scenarios": [
+    {
+      "name": "light",
+      "title": "轻度流量（8 架次）",
+      "description": "8 架 UAV 各执行 1 个架次：前 4 架离场时刻间隔仅 20~40 s，小于离场最小间隔 60 s，必须排队；进场同理受 90 s 间隔约束。",
+      "strategy": "interval",
+      "n_requests": 8,
+      "requests": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "t_request": 0.0,
+          "priority": 0,
+          "label": "东向配送"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "t_request": 20.0,
+          "priority": 0,
+          "label": "北向配送"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "t_request": 70.0,
+          "priority": 0,
+          "label": "巡检"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "t_request": 110.0,
+          "priority": 0,
+          "label": "巡检"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "t_request": 160.0,
+          "priority": 0,
+          "label": "返场配送"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "t_request": 190.0,
+          "priority": 0,
+          "label": "返场配送"
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "t_request": 220.0,
+          "priority": 0,
+          "label": "返场巡检"
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "t_request": 250.0,
+          "priority": 0,
+          "label": "返场巡检"
+        }
+      ],
+      "before": {
+        "requested": 8,
+        "scheduled": 8,
+        "delay_total": 0.0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "delayed_ops": 0,
+        "pad_conflicts": 3,
+        "min_dep_interval": 20.0,
+        "min_arr_interval": 30.0,
+        "dep_interval_violations": 3,
+        "arr_interval_violations": 3,
+        "max_queue_length": 0
+      },
+      "after": {
+        "requested": 8,
+        "scheduled": 8,
+        "delay_total": 520.0,
+        "avg_wait": 65.0,
+        "max_wait": 180.0,
+        "delayed_ops": 6,
+        "pad_conflicts": 0,
+        "min_dep_interval": 60.0,
+        "min_arr_interval": 90.0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0,
+        "max_queue_length": 2
+      },
+      "before_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 20.0,
+          "t_scheduled": 20.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 70.0,
+          "t_scheduled": 70.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 110.0,
+          "t_scheduled": 110.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 160.0,
+          "t_scheduled": 160.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 190.0,
+          "t_scheduled": 190.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 220.0,
+          "t_scheduled": 220.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 250.0,
+          "t_scheduled": 250.0,
+          "wait": 0.0,
+          "priority": 0
+        }
+      ],
+      "after_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 20.0,
+          "t_scheduled": 60.0,
+          "wait": 40.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 70.0,
+          "t_scheduled": 120.0,
+          "wait": 50.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 160.0,
+          "t_scheduled": 160.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 110.0,
+          "t_scheduled": 180.0,
+          "wait": 70.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 190.0,
+          "t_scheduled": 250.0,
+          "wait": 60.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 220.0,
+          "t_scheduled": 340.0,
+          "wait": 120.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 250.0,
+          "t_scheduled": 430.0,
+          "wait": 180.0,
+          "priority": 0
+        }
+      ],
+      "pad_conflict_pairs": [
+        {
+          "pad": "L1",
+          "a": "UAV-5",
+          "b": "UAV-7",
+          "kind": "arrival",
+          "overlap": 30.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-6",
+          "b": "UAV-8",
+          "kind": "arrival",
+          "overlap": 30.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "departure",
+          "overlap": 20.0
+        }
+      ],
+      "sim": null
+    },
+    {
+      "name": "rush",
+      "title": "早高峰（16 架次）",
+      "description": "8 架 UAV 先后出港再返场，离场请求间隔 35 s、进场请求间隔 35 s，均远小于 60/90 s 最小间隔，排队延误显著。",
+      "strategy": "interval",
+      "n_requests": 16,
+      "requests": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "t_request": 0.0,
+          "priority": 0,
+          "label": "早高峰出港 1"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "t_request": 35.0,
+          "priority": 0,
+          "label": "早高峰出港 2"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "t_request": 70.0,
+          "priority": 0,
+          "label": "早高峰出港 3"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "t_request": 105.0,
+          "priority": 0,
+          "label": "早高峰出港 4"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "t_request": 140.0,
+          "priority": 0,
+          "label": "早高峰出港 5"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "t_request": 175.0,
+          "priority": 0,
+          "label": "早高峰出港 6"
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "t_request": 210.0,
+          "priority": 0,
+          "label": "早高峰出港 7"
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "t_request": 245.0,
+          "priority": 0,
+          "label": "早高峰出港 8"
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "t_request": 300.0,
+          "priority": 0,
+          "label": "早高峰进港 1"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "t_request": 335.0,
+          "priority": 0,
+          "label": "早高峰进港 2"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "t_request": 370.0,
+          "priority": 0,
+          "label": "早高峰进港 3"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "t_request": 405.0,
+          "priority": 0,
+          "label": "早高峰进港 4"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "t_request": 440.0,
+          "priority": 0,
+          "label": "早高峰进港 5"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "t_request": 475.0,
+          "priority": 0,
+          "label": "早高峰进港 6"
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "t_request": 510.0,
+          "priority": 0,
+          "label": "早高峰进港 7"
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "t_request": 545.0,
+          "priority": 0,
+          "label": "早高峰进港 8"
+        }
+      ],
+      "before": {
+        "requested": 16,
+        "scheduled": 16,
+        "delay_total": 0.0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "delayed_ops": 0,
+        "pad_conflicts": 12,
+        "min_dep_interval": 35.0,
+        "min_arr_interval": 35.0,
+        "dep_interval_violations": 7,
+        "arr_interval_violations": 7,
+        "max_queue_length": 0
+      },
+      "after": {
+        "requested": 16,
+        "scheduled": 16,
+        "delay_total": 2240.0,
+        "avg_wait": 140.0,
+        "max_wait": 385.0,
+        "delayed_ops": 14,
+        "pad_conflicts": 0,
+        "min_dep_interval": 60.0,
+        "min_arr_interval": 90.0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0,
+        "max_queue_length": 5
+      },
+      "before_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 35.0,
+          "t_scheduled": 35.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 70.0,
+          "t_scheduled": 70.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 105.0,
+          "t_scheduled": 105.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 140.0,
+          "t_scheduled": 140.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 175.0,
+          "t_scheduled": 175.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 210.0,
+          "t_scheduled": 210.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 245.0,
+          "t_scheduled": 245.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 300.0,
+          "t_scheduled": 300.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 335.0,
+          "t_scheduled": 335.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 370.0,
+          "t_scheduled": 370.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 405.0,
+          "t_scheduled": 405.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 440.0,
+          "t_scheduled": 440.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 475.0,
+          "t_scheduled": 475.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 510.0,
+          "t_scheduled": 510.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 545.0,
+          "t_scheduled": 545.0,
+          "wait": 0.0,
+          "priority": 0
+        }
+      ],
+      "after_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 35.0,
+          "t_scheduled": 60.0,
+          "wait": 25.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 70.0,
+          "t_scheduled": 120.0,
+          "wait": 50.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 105.0,
+          "t_scheduled": 180.0,
+          "wait": 75.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 140.0,
+          "t_scheduled": 240.0,
+          "wait": 100.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 300.0,
+          "t_scheduled": 300.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 175.0,
+          "t_scheduled": 300.0,
+          "wait": 125.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 210.0,
+          "t_scheduled": 360.0,
+          "wait": 150.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 335.0,
+          "t_scheduled": 390.0,
+          "wait": 55.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 245.0,
+          "t_scheduled": 420.0,
+          "wait": 175.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 370.0,
+          "t_scheduled": 480.0,
+          "wait": 110.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 405.0,
+          "t_scheduled": 570.0,
+          "wait": 165.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 440.0,
+          "t_scheduled": 660.0,
+          "wait": 220.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 475.0,
+          "t_scheduled": 750.0,
+          "wait": 275.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 510.0,
+          "t_scheduled": 840.0,
+          "wait": 330.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 545.0,
+          "t_scheduled": 930.0,
+          "wait": 385.0,
+          "priority": 0
+        }
+      ],
+      "pad_conflict_pairs": [
+        {
+          "pad": "L1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-3",
+          "b": "UAV-5",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-5",
+          "b": "UAV-7",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-4",
+          "b": "UAV-6",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-6",
+          "b": "UAV-8",
+          "kind": "arrival",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "departure",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-3",
+          "b": "UAV-5",
+          "kind": "departure",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-5",
+          "b": "UAV-7",
+          "kind": "departure",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "departure",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-4",
+          "b": "UAV-6",
+          "kind": "departure",
+          "overlap": 20.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-6",
+          "b": "UAV-8",
+          "kind": "departure",
+          "overlap": 20.0
+        }
+      ],
+      "sim": null
+    },
+    {
+      "name": "medical",
+      "title": "急救插队（12 架次）",
+      "description": "6 架 UAV 共 12 个架次：UAV-3 为医疗急救（priority=10），在 0~45 s 的离场机流中要求优先放行——priority 策略下急救机不被延误，普通机流为其让行。",
+      "strategy": "priority",
+      "n_requests": 12,
+      "requests": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "t_request": 0.0,
+          "priority": 0,
+          "label": "普通配送"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "t_request": 15.0,
+          "priority": 0,
+          "label": "普通配送"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "t_request": 30.0,
+          "priority": 10,
+          "label": "医疗急救（送血）"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "t_request": 45.0,
+          "priority": 0,
+          "label": "普通配送"
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "t_request": 150.0,
+          "priority": 0,
+          "label": "普通返场"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "t_request": 170.0,
+          "priority": 0,
+          "label": "普通返场"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "t_request": 210.0,
+          "priority": 10,
+          "label": "急救返场"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "t_request": 230.0,
+          "priority": 0,
+          "label": "普通返场"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "t_request": 300.0,
+          "priority": 0,
+          "label": "普通配送"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "t_request": 315.0,
+          "priority": 0,
+          "label": "普通配送"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "t_request": 420.0,
+          "priority": 0,
+          "label": "普通返场"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "t_request": 440.0,
+          "priority": 0,
+          "label": "普通返场"
+        }
+      ],
+      "before": {
+        "requested": 12,
+        "scheduled": 12,
+        "delay_total": 0.0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "delayed_ops": 0,
+        "pad_conflicts": 4,
+        "min_dep_interval": 15.0,
+        "min_arr_interval": 20.0,
+        "dep_interval_violations": 4,
+        "arr_interval_violations": 4,
+        "max_queue_length": 0
+      },
+      "after": {
+        "requested": 12,
+        "scheduled": 12,
+        "delay_total": 1425.0,
+        "avg_wait": 118.75,
+        "max_wait": 250.0,
+        "delayed_ops": 9,
+        "pad_conflicts": 0,
+        "min_dep_interval": 60.0,
+        "min_arr_interval": 90.0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0,
+        "max_queue_length": 3
+      },
+      "before_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 15.0,
+          "t_scheduled": 15.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 30.0,
+          "t_scheduled": 30.0,
+          "wait": 0.0,
+          "priority": 10
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 45.0,
+          "t_scheduled": 45.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 150.0,
+          "t_scheduled": 150.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 170.0,
+          "t_scheduled": 170.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 210.0,
+          "t_scheduled": 210.0,
+          "wait": 0.0,
+          "priority": 10
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 230.0,
+          "t_scheduled": 230.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 300.0,
+          "t_scheduled": 300.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 315.0,
+          "t_scheduled": 315.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 420.0,
+          "t_scheduled": 420.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 440.0,
+          "t_scheduled": 440.0,
+          "wait": 0.0,
+          "priority": 0
+        }
+      ],
+      "after_assignments": [
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 30.0,
+          "t_scheduled": 30.0,
+          "wait": 0.0,
+          "priority": 10
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 0.0,
+          "t_scheduled": 90.0,
+          "wait": 90.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 15.0,
+          "t_scheduled": 150.0,
+          "wait": 135.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 210.0,
+          "t_scheduled": 210.0,
+          "wait": 0.0,
+          "priority": 10
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 45.0,
+          "t_scheduled": 210.0,
+          "wait": 165.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 150.0,
+          "t_scheduled": 300.0,
+          "wait": 150.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 300.0,
+          "t_scheduled": 300.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 315.0,
+          "t_scheduled": 360.0,
+          "wait": 45.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 170.0,
+          "t_scheduled": 390.0,
+          "wait": 220.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 230.0,
+          "t_scheduled": 480.0,
+          "wait": 250.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 420.0,
+          "t_scheduled": 570.0,
+          "wait": 150.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 440.0,
+          "t_scheduled": 660.0,
+          "wait": 220.0,
+          "priority": 0
+        }
+      ],
+      "pad_conflict_pairs": [
+        {
+          "pad": "L1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "arrival",
+          "overlap": 30.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "arrival",
+          "overlap": 30.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "departure",
+          "overlap": 60.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "departure",
+          "overlap": 60.0
+        }
+      ],
+      "sim": null
+    },
+    {
+      "name": "saturation",
+      "title": "饱和压测（20 架次）",
+      "description": "10 架 UAV 出港/进港请求各间隔 20 s，请求率远超 60/90 s 间隔决定的容量上限，队列持续增长，用于观测最大排队长度与饱和行为。",
+      "strategy": "interval",
+      "n_requests": 20,
+      "requests": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "t_request": 0.0,
+          "priority": 0,
+          "label": "饱和压测出港 1"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "t_request": 20.0,
+          "priority": 0,
+          "label": "饱和压测出港 2"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "t_request": 40.0,
+          "priority": 0,
+          "label": "饱和压测出港 3"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "t_request": 60.0,
+          "priority": 0,
+          "label": "饱和压测出港 4"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "t_request": 80.0,
+          "priority": 0,
+          "label": "饱和压测出港 5"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "t_request": 100.0,
+          "priority": 0,
+          "label": "饱和压测出港 6"
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "t_request": 120.0,
+          "priority": 0,
+          "label": "饱和压测出港 7"
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "t_request": 140.0,
+          "priority": 0,
+          "label": "饱和压测出港 8"
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "departure",
+          "t_request": 160.0,
+          "priority": 0,
+          "label": "饱和压测出港 9"
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "departure",
+          "t_request": 180.0,
+          "priority": 0,
+          "label": "饱和压测出港 10"
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "t_request": 200.0,
+          "priority": 0,
+          "label": "饱和压测进港 1"
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "t_request": 220.0,
+          "priority": 0,
+          "label": "饱和压测进港 2"
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "t_request": 240.0,
+          "priority": 0,
+          "label": "饱和压测进港 3"
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "t_request": 260.0,
+          "priority": 0,
+          "label": "饱和压测进港 4"
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "t_request": 280.0,
+          "priority": 0,
+          "label": "饱和压测进港 5"
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "t_request": 300.0,
+          "priority": 0,
+          "label": "饱和压测进港 6"
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "t_request": 320.0,
+          "priority": 0,
+          "label": "饱和压测进港 7"
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "t_request": 340.0,
+          "priority": 0,
+          "label": "饱和压测进港 8"
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "arrival",
+          "t_request": 360.0,
+          "priority": 0,
+          "label": "饱和压测进港 9"
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "arrival",
+          "t_request": 380.0,
+          "priority": 0,
+          "label": "饱和压测进港 10"
+        }
+      ],
+      "before": {
+        "requested": 20,
+        "scheduled": 20,
+        "delay_total": 0.0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "delayed_ops": 0,
+        "pad_conflicts": 28,
+        "min_dep_interval": 20.0,
+        "min_arr_interval": 20.0,
+        "dep_interval_violations": 9,
+        "arr_interval_violations": 9,
+        "max_queue_length": 0
+      },
+      "after": {
+        "requested": 20,
+        "scheduled": 20,
+        "delay_total": 4950.0,
+        "avg_wait": 247.5,
+        "max_wait": 630.0,
+        "delayed_ops": 18,
+        "pad_conflicts": 0,
+        "min_dep_interval": 60.0,
+        "min_arr_interval": 90.0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0,
+        "max_queue_length": 10
+      },
+      "before_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 20.0,
+          "t_scheduled": 20.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 40.0,
+          "t_scheduled": 40.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 60.0,
+          "t_scheduled": 60.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 80.0,
+          "t_scheduled": 80.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 100.0,
+          "t_scheduled": 100.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 120.0,
+          "t_scheduled": 120.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 140.0,
+          "t_scheduled": 140.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 160.0,
+          "t_scheduled": 160.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 180.0,
+          "t_scheduled": 180.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 200.0,
+          "t_scheduled": 200.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 220.0,
+          "t_scheduled": 220.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 240.0,
+          "t_scheduled": 240.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 260.0,
+          "t_scheduled": 260.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 280.0,
+          "t_scheduled": 280.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 300.0,
+          "t_scheduled": 300.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 320.0,
+          "t_scheduled": 320.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 340.0,
+          "t_scheduled": 340.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 360.0,
+          "t_scheduled": 360.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 380.0,
+          "t_scheduled": 380.0,
+          "wait": 0.0,
+          "priority": 0
+        }
+      ],
+      "after_assignments": [
+        {
+          "uid": "UAV-1",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 0.0,
+          "t_scheduled": 0.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 20.0,
+          "t_scheduled": 60.0,
+          "wait": 40.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 40.0,
+          "t_scheduled": 120.0,
+          "wait": 80.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 60.0,
+          "t_scheduled": 180.0,
+          "wait": 120.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-1",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 200.0,
+          "t_scheduled": 200.0,
+          "wait": 0.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 80.0,
+          "t_scheduled": 240.0,
+          "wait": 160.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-2",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 220.0,
+          "t_scheduled": 290.0,
+          "wait": 70.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 100.0,
+          "t_scheduled": 300.0,
+          "wait": 200.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 120.0,
+          "t_scheduled": 360.0,
+          "wait": 240.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-3",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 240.0,
+          "t_scheduled": 380.0,
+          "wait": 140.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 140.0,
+          "t_scheduled": 420.0,
+          "wait": 280.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-4",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 260.0,
+          "t_scheduled": 470.0,
+          "wait": 210.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "departure",
+          "pad": "T1",
+          "t_request": 160.0,
+          "t_scheduled": 480.0,
+          "wait": 320.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "departure",
+          "pad": "T2",
+          "t_request": 180.0,
+          "t_scheduled": 540.0,
+          "wait": 360.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-5",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 280.0,
+          "t_scheduled": 560.0,
+          "wait": 280.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-6",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 300.0,
+          "t_scheduled": 650.0,
+          "wait": 350.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-7",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 320.0,
+          "t_scheduled": 740.0,
+          "wait": 420.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-8",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 340.0,
+          "t_scheduled": 830.0,
+          "wait": 490.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-9",
+          "kind": "arrival",
+          "pad": "L1",
+          "t_request": 360.0,
+          "t_scheduled": 920.0,
+          "wait": 560.0,
+          "priority": 0
+        },
+        {
+          "uid": "UAV-10",
+          "kind": "arrival",
+          "pad": "L2",
+          "t_request": 380.0,
+          "t_scheduled": 1010.0,
+          "wait": 630.0,
+          "priority": 0
+        }
+      ],
+      "pad_conflict_pairs": [
+        {
+          "pad": "L1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-1",
+          "b": "UAV-5",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-3",
+          "b": "UAV-5",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-3",
+          "b": "UAV-7",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-5",
+          "b": "UAV-7",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-5",
+          "b": "UAV-9",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L1",
+          "a": "UAV-7",
+          "b": "UAV-9",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-2",
+          "b": "UAV-6",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-4",
+          "b": "UAV-6",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-4",
+          "b": "UAV-8",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-6",
+          "b": "UAV-8",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-6",
+          "b": "UAV-10",
+          "kind": "arrival",
+          "overlap": 10.0
+        },
+        {
+          "pad": "L2",
+          "a": "UAV-8",
+          "b": "UAV-10",
+          "kind": "arrival",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-1",
+          "b": "UAV-3",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-1",
+          "b": "UAV-5",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-3",
+          "b": "UAV-5",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-3",
+          "b": "UAV-7",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-5",
+          "b": "UAV-7",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-5",
+          "b": "UAV-9",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T1",
+          "a": "UAV-7",
+          "b": "UAV-9",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-2",
+          "b": "UAV-4",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-2",
+          "b": "UAV-6",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-4",
+          "b": "UAV-6",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-4",
+          "b": "UAV-8",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-6",
+          "b": "UAV-8",
+          "kind": "departure",
+          "overlap": 50.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-6",
+          "b": "UAV-10",
+          "kind": "departure",
+          "overlap": 10.0
+        },
+        {
+          "pad": "T2",
+          "a": "UAV-8",
+          "b": "UAV-10",
+          "kind": "departure",
+          "overlap": 50.0
+        }
+      ],
+      "sim": null
+    }
+  ],
+  "capacity": {
+    "scan": [
+      {
+        "rate": 12,
+        "requested": 12,
+        "throughput": 12.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 16,
+        "requested": 16,
+        "throughput": 16.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 20,
+        "requested": 20,
+        "throughput": 20.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 24,
+        "requested": 24,
+        "throughput": 24.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 28,
+        "requested": 28,
+        "throughput": 28.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 32,
+        "requested": 32,
+        "throughput": 32.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 36,
+        "requested": 36,
+        "throughput": 36.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 40,
+        "requested": 40,
+        "throughput": 40.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 48,
+        "requested": 48,
+        "throughput": 48.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 56,
+        "requested": 56,
+        "throughput": 56.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 64,
+        "requested": 64,
+        "throughput": 64.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 72,
+        "requested": 72,
+        "throughput": 72.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 80,
+        "requested": 80,
+        "throughput": 80.0,
+        "backlog": 0,
+        "avg_wait": 0.0,
+        "max_wait": 0.0,
+        "max_queue_length": 0,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      },
+      {
+        "rate": 88,
+        "requested": 88,
+        "throughput": 84.0,
+        "backlog": 4,
+        "avg_wait": 87.95,
+        "max_wait": 351.82,
+        "max_queue_length": 4,
+        "pad_conflicts": 0,
+        "dep_interval_violations": 0,
+        "arr_interval_violations": 0
+      }
+    ],
+    "saturation": {
+      "rate": 80,
+      "avg_wait": 0.0,
+      "saturated": true,
+      "first_saturated_rate": 88
+    }
+  }
+}

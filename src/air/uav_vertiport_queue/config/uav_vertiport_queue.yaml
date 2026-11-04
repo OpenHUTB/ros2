@@ -1,0 +1,28 @@
+# 在线排队节点 + 算法层关键参数
+queue:
+  pads_departure: 2          # 起飞位数量
+  pads_arrival: 2            # 降落位数量
+  occupancy_departure: 90.0  # 起飞位单次占用时长（s）
+  occupancy_arrival: 90.0    # 降落位单次占用时长（s）
+  min_interval_departure: 60.0   # 相邻两次离场最小间隔（s）
+  min_interval_arrival: 90.0     # 相邻两次进场最小间隔（s）
+
+strategy: interval              # fifo / priority / interval
+
+capacity:
+  rates: [12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 88]  # 架次/h
+  horizon: 3600.0               # 评估窗口（s）
+  wait_threshold: 60.0          # 饱和判定等待阈值（s）
+
+track:
+  gate_alt: 60.0                # 进离场过渡高度（m）
+  cruise_alt: 100.0             # 巡航高度（m）
+  speed: 8.0                    # 平飞速度（m/s）
+  climb_speed: 2.5              # 离场爬升率（m/s）
+  descent_speed: 2.0            # 进场下降率（m/s）
+
+node:
+  uav_count: 8
+  request_prefix: "/vertiport/uav"
+  queue_topic: "/uav_vertiport_queue/queue"
+  timer_period: 1.0

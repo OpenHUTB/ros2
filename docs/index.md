@@ -186,6 +186,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [低空起降场进离场排队与容量评估](./air/uav_vertiport_queue.md) —— 起降位占用区间建模三种排队策略（FIFO/优先级抢占/固定间隔），扫描请求率得到容量曲线与饱和点（80 架次/h），MuJoCo 闭环证明排定时刻真飞可执行
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
