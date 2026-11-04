@@ -1,0 +1,5 @@
+{
+  "max_roundtrip_error": 3.554447978966673e-16,
+  "samples": 101,
+  "validation_scope": "offline mathematical demo; ROS runtime not tested"
+}
