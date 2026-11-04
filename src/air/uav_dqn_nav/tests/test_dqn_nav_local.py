@@ -127,8 +127,13 @@ def main():
         check("常量 %s 与 PPO 一致 (%s)" % (name, a), a == b)
 
     print("\n结果: %d 通过, %d 失败" % (PASSED, FAILED))
-    sys.exit(1 if FAILED else 0)
+    return 1 if FAILED else 0
+
+
+def test_dqn_nav_local_smoke():
+    """pytest 入口：复用与独立运行完全相同的 main() 检查。"""
+    assert main() == 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
