@@ -20,3 +20,8 @@ ros2 run demo_nodes_cpp listener
 ```
 
 ![](../img/ros/ros2_talker_listener.png)
+
+
+## 练习：ROV 6-DOF response model
+
+本练习的代码、运行说明和项目图见[ROV 6-DOF response model](../chap9/rov_6dof_teleop.md)。
