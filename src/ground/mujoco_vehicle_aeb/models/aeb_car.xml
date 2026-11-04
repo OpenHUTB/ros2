@@ -1,4 +1,16 @@
 <mujoco model="aeb_car">
+  <!--
+    AEB（自动紧急制动）两车纵向场景。
+
+    与原版相比只改了两处，都是为了让"取下标"这件事不再靠魔法数字：
+      1. 自车的 freejoint 命名成 ego_free；
+      2. 前车加了一个沿 x 的滑移关节 lead_slide 并命名。
+
+    原版前车是直接挂在 worldbody 上的刚体（没有关节），因此 `qpos` 里根本没有它的
+    位置 —— 这也正是原 main.py 里 `data.qpos[11]` / `data.qvel[10]` 会 IndexError 的
+    原因（该模型只有 11 个 qpos、10 个 qvel）。加了滑移关节后前车速度可配置
+    （`--v-lead`），速度为 0 时就是文档描述的"前车静止"工况。
+  -->
   <option timestep="0.001" gravity="0 0 -9.81"/>
   <default>
     <geom condim="3" friction="1.0 0.005 0.2"/>
@@ -7,10 +19,10 @@
     <geom name="floor" type="plane" size="100 30 0.1" rgba="0.3 0.3 0.3 1"/>
     <light pos="0 0 20" dir="0 0 -1" diffuse="1 1 1" specular="0.2 0.2 0.2"/>
     <light pos="40 0 20" dir="0 0 -1" diffuse="1 1 1"/>
-    <!-- 新增fixed相机，消除日志警告 -->
     <camera name="fixed" pos="20 -40 15" euler="-25 0 0"/>
+
     <body name="ego_car" pos="0 0 0.3">
-      <freejoint/>
+      <freejoint name="ego_free"/>
       <geom name="chassis" type="box" size="1.2 0.5 0.2" rgba="0.2 0.4 0.8 1" mass="1000"/>
       <body name="fl_wheel_body" pos="0.8 0.5 0">
         <joint name="fl_joint" type="hinge" axis="0 1 0"/>
@@ -29,8 +41,10 @@
         <geom name="rr_wheel" type="cylinder" size="0.3 0.15" euler="90 0 0" rgba="0.2 0.2 0.2 1" mass="5"/>
       </body>
     </body>
-    <!-- 修改前车z高度与自车对齐，删除freejoint，静止障碍物 -->
+
+    <!-- 前车：沿 x 可滑移，速度由 --v-lead 给定；默认 0 即"静止障碍车" -->
     <body name="lead_car" pos="35 0 0.3">
+      <joint name="lead_slide" type="slide" axis="1 0 0"/>
       <geom name="lead_body" type="box" size="1.2 0.5 0.2" rgba="0.9 0.2 0.2 1" mass="1000"/>
     </body>
   </worldbody>

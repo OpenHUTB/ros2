@@ -1,19 +1,31 @@
 #!/bin/bash
-# 切换到脚本所在目录 scripts
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-# 向上回到catkin包根目录
-PACKAGE_ROOT=$(dirname "${SCRIPT_DIR}")
+# MuJoCo AEB —— 一键运行脚本（Linux / WSL / macOS）
+#
+#   ./main.sh                     离线批跑 + 导出 CSV/PNG（默认）
+#   ./main.sh --gui               可视化窗口（需要图形界面）
+#   ./main.sh --selftest          单元测试
+#   ./main.sh --v-ego 12 --ttc 6  改工况与阈值
+set -euo pipefail
 
-# 进入包根，保证models相对路径正确
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(dirname "${SCRIPT_DIR}")"
 cd "${PACKAGE_ROOT}"
 
-# 虚拟机/无显卡：软件渲染
-export MJ_CORE_GLFW=software
+# 虚拟机/无独显时用软件渲染（只有 --gui 才会用到）
+export MJ_CORE_GLFW="${MJ_CORE_GLFW:-software}"
 
-# 可选：尝试source catkin环境，兼容ROS
-if [ -f devel/setup.bash ];then
-    source devel/setup.bash
+PYTHON_BIN="${PYTHON_BIN:-}"
+if [ -z "${PYTHON_BIN}" ]; then
+  for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      PYTHON_BIN="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "${PYTHON_BIN}" ]; then
+  echo "[错误] 找不到 python3/python，请先安装 Python 3.10+" >&2
+  exit 1
 fi
 
-# 在包根执行main.py
-python3 "${SCRIPT_DIR}/main.py"
+exec "$PYTHON_BIN" "${PACKAGE_ROOT}/main.py" "$@"
