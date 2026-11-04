@@ -247,6 +247,9 @@ def run_demo(args):
         carla_map = world.get_map()
         if args.control:
             ego.set_autopilot(False)
+            # 延迟导入：只有装了 CARLA 才会走到这里。--self-check 在没有 carla
+            # 库的机器上也要能跑，所以不能在模块顶部 import carla。
+            import carla as carla_module
         stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': []}
         for frame in range(args.frames):
             world.tick()
@@ -286,9 +289,12 @@ def run_demo(args):
                 speed = math.sqrt(ego.get_velocity().x ** 2 + ego.get_velocity().y ** 2)
                 target = args.max_speed * factor
                 error = target - speed
-                throttle = float(np.clip(error / max(args.max_speed, 1e-3), 0.0, 1.0))
-                brake = float(np.clip(-error / max(args.max_speed, 1e-3), 0.0, 1.0))
-                command = carla.VehicleControl(throttle=throttle, brake=brake, steer=steer)
+                # 末尾补 0.0：误差正好为 0 时 np.clip 会保留 -0.0，
+                # 打印出来是 "刹车 -0.00"，看着像 bug，也容易让人以为控制量越界。
+                throttle = float(np.clip(error / max(args.max_speed, 1e-3), 0.0, 1.0)) + 0.0
+                brake = float(np.clip(-error / max(args.max_speed, 1e-3), 0.0, 1.0)) + 0.0
+                command = carla_module.VehicleControl(throttle=throttle, brake=brake,
+                                                      steer=steer)
                 ego.apply_control(command)
                 if brake > 0.1:
                     stats['brake_frames'] += 1
