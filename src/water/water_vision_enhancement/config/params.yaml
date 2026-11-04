@@ -1,7 +1,7 @@
 water_vision_node:
   ros__parameters:
     # 色彩校正增益
-    red_gain: 1.8
+    red_gain: 1.35
     green_gain: 1.0
     blue_gain: 0.85
 
@@ -21,11 +21,11 @@ water_vision_node:
     auto_reinit: true
     detect_interval: 30
 
-    # 初始追踪框（图像坐标）
-    init_bbox_x: 200
-    init_bbox_y: 150
-    init_bbox_w: 120
-    init_bbox_h: 120
+    # 初始追踪框（图像坐标），默认对准合成演示目标的初始位置
+    init_bbox_x: 290
+    init_bbox_y: 220
+    init_bbox_w: 60
+    init_bbox_h: 40
 
     # 话题名
     input_topic: "/camera/image_raw"

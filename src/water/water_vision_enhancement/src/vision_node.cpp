@@ -22,7 +22,7 @@ public:
   {
     // ---- 参数声明 ----
     // 图像增强参数
-    declare_parameter("red_gain", 1.8);
+    declare_parameter("red_gain", 1.35);
     declare_parameter("green_gain", 1.0);
     declare_parameter("blue_gain", 0.85);
     declare_parameter("use_clahe", true);
@@ -39,10 +39,10 @@ public:
     declare_parameter("detect_interval", 30);
 
     // 初始化框（演示用，可被外部设置）
-    declare_parameter("init_bbox_x", 200);
-    declare_parameter("init_bbox_y", 150);
-    declare_parameter("init_bbox_w", 120);
-    declare_parameter("init_bbox_h", 120);
+    declare_parameter("init_bbox_x", 290);
+    declare_parameter("init_bbox_y", 220);
+    declare_parameter("init_bbox_w", 60);
+    declare_parameter("init_bbox_h", 40);
 
     // 话题名
     declare_parameter("input_topic", "/camera/image_raw");

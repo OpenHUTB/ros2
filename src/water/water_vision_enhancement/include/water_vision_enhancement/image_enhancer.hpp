@@ -15,7 +15,7 @@ namespace water_vision_enhancement
  *   2. 对比度下降（悬浮颗粒散射导致雾化）
  *   3. 亮度不均
  *
- * 处理流程：通道增益校正 → 白平衡 → CLAHE 局部对比度增强 → 去散射（暗通道先验简化版）
+ * 处理流程：白平衡 → 通道增益校正 → CLAHE 局部对比度增强 → 去散射（暗通道先验简化版）
  */
 class ImageEnhancer
 {
@@ -23,7 +23,7 @@ public:
   struct Params
   {
     // 色彩校正
-    double red_gain{1.8};       // 红色通道增益（补偿水体吸收）
+    double red_gain{1.35};      // 红色通道增益（补偿水体吸收）
     double blue_gain{0.85};     // 蓝色通道增益（抑制偏蓝）
     double green_gain{1.0};     // 绿色通道增益
 

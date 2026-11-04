@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(water_vision_enhancement)
 
+# 代码使用 std::clamp 等 C++17 特性，需显式声明，不能依赖其他包间接传播
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -27,7 +32,6 @@ add_library(image_enhancer SHARED
 )
 ament_target_dependencies(image_enhancer
   rclcpp
-  OpenCV
 )
 target_link_libraries(image_enhancer ${OpenCV_LIBS})
 
@@ -37,7 +41,6 @@ add_library(object_tracker SHARED
 )
 ament_target_dependencies(object_tracker
   rclcpp
-  OpenCV
 )
 target_link_libraries(object_tracker ${OpenCV_LIBS})
 
@@ -52,7 +55,6 @@ ament_target_dependencies(vision_node
   std_msgs
   cv_bridge
   image_transport
-  OpenCV
 )
 target_link_libraries(vision_node
   image_enhancer
@@ -69,7 +71,6 @@ ament_target_dependencies(video_demo_node
   sensor_msgs
   cv_bridge
   image_transport
-  OpenCV
 )
 target_link_libraries(video_demo_node ${OpenCV_LIBS})
 
@@ -97,6 +98,11 @@ install(DIRECTORY include/
 
 install(DIRECTORY launch config rviz
   DESTINATION share/${PROJECT_NAME}
+)
+
+# 演示 GIF 离线渲染脚本
+install(PROGRAMS scripts/render_demo.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # 资源文件标记

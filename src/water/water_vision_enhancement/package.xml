@@ -22,7 +22,12 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
 
-  <exec_depend>opencv</exec_depend>
+  <depend>opencv</depend>
+
+  <!-- launch 中 static_transform_publisher（world → camera_frame） -->
+  <exec_depend>tf2_ros</exec_depend>
+  <!-- scripts/render_demo.py 依赖 PIL，rosdep 键为 python3-pil -->
+  <exec_depend>python3-pil</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

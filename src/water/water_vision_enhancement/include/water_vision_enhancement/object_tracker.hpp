@@ -5,15 +5,6 @@
 #include <opencv2/tracking.hpp>
 #include <string>
 
-// OpenCV 4.5.1 起 KCF / CSRT / MOSSE 等经典追踪器移至 cv::legacy 命名空间，
-// 之前的版本仍在 cv 命名空间下，这里按版本统一别名，保证两种环境都能编译。
-#if CV_VERSION_MAJOR > 4 || (CV_VERSION_MAJOR == 4 && \
-    (CV_VERSION_MINOR > 5 || (CV_VERSION_MINOR == 5 && CV_VERSION_REVISION >= 1)))
-namespace tracker_ns = cv::legacy;
-#else
-namespace tracker_ns = cv;
-#endif
-
 namespace water_vision_enhancement
 {
 
@@ -22,6 +13,7 @@ namespace water_vision_enhancement
  *
  * 在增强后的图像上运行 OpenCV 追踪算法（KCF / CSRT / MOSSE），
  * 输出目标边界框与中心点。首次调用 init 选定初始框后即可连续追踪。
+ * 置信度为当前追踪区域与初始框灰度模板的 TM_CCOEFF_NORMED 归一化互相关系数。
  */
 class ObjectTracker
 {
@@ -76,10 +68,14 @@ public:
   const Params & getParams() const { return params_; }
 
 private:
-  cv::Ptr<tracker_ns::Tracker> createTracker();
+  cv::Ptr<cv::Tracker> createTracker();
+
+  /** 真实置信度：追踪区域与初始模板的归一化互相关系数（0~1） */
+  double computeConfidence(const cv::Mat & frame, const cv::Rect2d & bbox);
 
   Params params_;
-  cv::Ptr<tracker_ns::Tracker> tracker_;
+  cv::Ptr<cv::Tracker> tracker_;
+  cv::Mat template_;   // init 时的初始框灰度模板，用于置信度计算
   bool initialized_{false};
   cv::Rect2d current_bbox_;
   cv::Point2d center_;

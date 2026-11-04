@@ -6,7 +6,7 @@
 
 本模块面向水下机器人（ROV/AUV）在浑浊水体中的视觉感知需求，提供两级处理：
 
-1. **浑浊水体图像增强**：针对水下成像的色彩衰减（红光被吸收）、对比度下降（悬浮颗粒散射）和雾化效应，依次执行通道增益校正、白平衡、CLAHE 局部对比度增强和暗通道去散射。
+1. **浑浊水体图像增强**：针对水下成像的色彩衰减（红光被吸收）、对比度下降（悬浮颗粒散射）和雾化效应，依次执行白平衡、通道增益校正、CLAHE 局部对比度增强和暗通道去散射。
 2. **目标追踪**：在增强后的图像上运行 OpenCV 追踪器（KCF / CSRT / MOSSE），输出目标边界框与归一化中心点坐标。
 
 模块附带一个合成视频演示节点，可在无外部相机/仿真环境时独立验证整条链路。
@@ -15,7 +15,7 @@
 
 - 操作系统：Ubuntu 20.04
 - ROS 2 版本：Humble
-- 依赖：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、OpenCV 4.x（含 opencv_contrib 追踪模块）
+- 依赖：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、tf2_ros、OpenCV 4.x（含 opencv_contrib 追踪模块）；scripts/render_demo.py 另需 python3-pil（rosdep 可自动安装）
 
 ## 核心文件结构
 
@@ -98,7 +98,7 @@ src/water/water_vision_enhancement/
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `red_gain` | 1.8 | 红光通道增益（补偿水体吸收） |
+| `red_gain` | 1.35 | 红光通道增益（补偿水体吸收） |
 | `blue_gain` | 0.85 | 蓝光通道增益（抑制偏蓝） |
 | `clahe_clip_limit` | 2.0 | CLAHE 裁剪阈值 |
 | `dehaze_strength` | 0.6 | 去散射强度（0～1） |

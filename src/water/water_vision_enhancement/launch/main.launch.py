@@ -45,9 +45,19 @@ def generate_launch_description():
         ],
     )
 
+    # 发布静态 TF：world → camera_frame，
+    # 使 rviz 的 Fixed Frame 与 /tracked_object 的坐标系有效
+    static_tf_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_frame_static_tf',
+        arguments=['0', '0', '0', '0', '0', '0', 'world', 'camera_frame'],
+    )
+
     return LaunchDescription([
         turbidity_arg,
         tracker_arg,
+        static_tf_node,
         video_demo_node,
         vision_node,
     ])

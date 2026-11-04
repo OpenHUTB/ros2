@@ -26,9 +26,10 @@ void ImageEnhancer::enhance(const cv::Mat & input, cv::Mat & output)
   // 深拷贝，避免修改原图
   cv::Mat img = input.clone();
 
-  // 1. 色彩校正：通道增益 + 白平衡
-  channelGain(img);
+  // 1. 色彩校正：先白平衡消除整体色偏，再施加通道增益补偿水体吸收
+  //    （若先增益后白平衡，白平衡会把各通道均值重新拉回 128，抵消增益效果）
   whiteBalance(img);
+  channelGain(img);
 
   // 2. 局部对比度增强（CLAHE）
   if (params_.use_clahe) {
