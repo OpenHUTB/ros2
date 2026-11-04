@@ -79,6 +79,9 @@ def main():
     est_hist = []
     s = 0.0
     err_amcl = err_odom = 0.0
+    # 末帧验收指标（供保存后以 key=value 打到 stdout，便于 CI / 复现者核对）
+    metrics = {"state": "searching", "err_amcl": 0.0, "err_odom": 0.0,
+               "spread": 0.0, "neff_pct": 0.0}
 
     # ---------------- 绘图 ----------------
     fig, ax = plt.subplots(figsize=(8.5, 8.5), dpi=100)
@@ -107,7 +110,7 @@ def main():
     ell_patch = [None]
 
     def update(frame):
-        nonlocal s, odom_pose, prev_th, err_amcl, err_odom
+        nonlocal s, odom_pose, prev_th, err_amcl, err_odom, metrics
         # 一帧 = 若干仿真步
         for _ in range(1):
             s += SPEED * DT
@@ -169,15 +172,22 @@ def main():
             f"({truth[0]:.1f},{truth[1]:.1f})\n"
             f"particle spread = {spread:.2f} m   Neff = "
             f"{pf.neff() / args.npart * 100:.0f}%")
+        metrics.update(state=state, err_amcl=err_amcl, err_odom=err_odom,
+                       spread=spread, neff_pct=pf.neff() / args.npart * 100)
         return (true_line, odom_line, est_line, pcloud, est_marker,
                 true_marker, info)
 
     anim = FuncAnimation(fig, update, frames=args.frames, interval=1000 / args.fps,
                          blit=False)
     anim.save(args.out, writer=PillowWriter(fps=args.fps), dpi=100)
-    print(f"[OK] 动图已生成: {os.path.abspath(args.out)}  "
-          f"({args.frames} frames @ {args.fps}fps, "
-          f"{os.path.getsize(args.out)//1024} KB)")
+    # stdout 精简：第一行为 GIF 绝对路径（可直接 `$(...) | head -1` 取用），
+    # 随后为末帧 key=value 验收指标（state / AMCL·里程计误差 / 粒子 spread / Neff）
+    print(os.path.abspath(args.out))
+    print(f"state={metrics['state']}")
+    print(f"err_amcl={metrics['err_amcl']:.2f} m")
+    print(f"err_odom={metrics['err_odom']:.2f} m")
+    print(f"particle_spread={metrics['spread']:.2f} m")
+    print(f"neff={metrics['neff_pct']:.0f}%")
     if args.show:
         plt.show()
 

@@ -40,11 +40,14 @@
 
 ### 3.1 2D 轻量版（可直接运行、出动图）
 
-```bash
+```
 pip install -r requirements.txt
 python3 sim_2d_relocalization.py                     # 默认 240 帧 @30fps
 python3 sim_2d_relocalization.py --frames 300 --fps 20
 ```
+
+运行后 stdout 第一行为 GIF 绝对路径，随后打印末帧验收指标
+`state` / `err_amcl` / `err_odom` / `particle_spread` / `neff`，便于复现者与 CI 核对。
 
 ### 3.2 Gazebo/TurtleBot3 渲染版（需本机 ROS2 + Gazebo）
 
