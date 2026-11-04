@@ -67,7 +67,7 @@ void Heatmap::gridToWorld(int gx, int gy, double & wx, double & wy) const
 
 cv::Mat Heatmap::toColorImage() const
 {
-  // 风险 0 -> 蓝色，0.5 -> 黄色，1.0 -> 红色
+  // 风险 0 -> 蓝色，0.5 -> 绿色，1.0 -> 红色，中间经绿、黄过渡
   cv::Mat color(grid_size_, grid_size_, CV_8UC3);
   for (int y = 0; y < grid_size_; ++y) {
     for (int x = 0; x < grid_size_; ++x) {

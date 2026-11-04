@@ -27,8 +27,8 @@ public:
 
   struct Params
   {
-    Pattern pattern = Pattern::UNIFORM;
-    double magnitude = 0.3;     // 基础流速（m/s）
+    Pattern pattern = Pattern::VORTEX;
+    double magnitude = 0.4;     // 基础流速（m/s）
     double direction = 0.0;     // 均匀流方向（弧度，0=+x）
     double vortex_x = 25.0;     // 涡流中心 x（米）
     double vortex_y = 25.0;     // 涡流中心 y（米）
