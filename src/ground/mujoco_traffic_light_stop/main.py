@@ -8,7 +8,7 @@ xml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scene.xml")
 model = mujoco.MjModel.from_xml_path(xml_path)
 data = mujoco.MjData(model)
 
-T_RED = 5.0
+T_RED = 8.0
 T_YELLOW = 2.0
 T_GREEN = 5.0
 CYCLE = T_RED + T_YELLOW + T_GREEN
@@ -19,10 +19,10 @@ id_yellow = model.geom("light_yellow").id
 id_green = model.geom("light_green").id
 
 stop_line = 2.0
-brake_distance = 0.8
+brake_distance = 2.0
 normal_force = 0.6
 slow_force = 0.3
-brake_force = -1.2
+brake_force = -2.0
 
 light_name = ["红", "黄", "绿"]
 
