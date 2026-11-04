@@ -19,7 +19,7 @@ def observable(raw):
 
 
 def prepare(folder):
-    folder=Path(folder);manifest=json.loads((folder/'manifest.json').read_text())
+    folder=Path(folder);manifest=json.loads((folder/'manifest.json').read_text(encoding='utf-8'))
     splits={}
     for record in manifest:
         path=folder/record['file']

@@ -35,7 +35,7 @@ def main():
             for ax in axes:ax.grid(alpha=.2)
             fig.tight_layout(rect=[0,0,1,.93]);plt.pause(.02)
         output=Path(a.output);output.parent.mkdir(parents=True,exist_ok=True);fig.savefig(output,dpi=150)
-        output.with_suffix('.json').write_text(json.dumps({'source':'actual /landing/assessment subscriber','messages':len(rows),'ready_messages':sum(r.get('ready',False) for r in rows),'impact_predictions':sum('predicted_peak_load_factor' in r for r in rows)},indent=2))
+        output.with_suffix('.json').write_text(json.dumps({'source':'actual /landing/assessment subscriber','messages':len(rows),'ready_messages':sum(r.get('ready',False) for r in rows),'impact_predictions':sum('predicted_peak_load_factor' in r for r in rows)},indent=2),encoding='utf-8')
     finally:
         node.destroy_node()
         if rclpy.ok():rclpy.shutdown()

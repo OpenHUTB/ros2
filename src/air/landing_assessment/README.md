@@ -65,6 +65,14 @@
 ![接地前载荷预测与真实值](../../../docs/air/landing_assessment/results/impact_comparison.png)
 ![着陆阶段预测与真实标签](../../../docs/air/landing_assessment/results/phase_comparison.png)
 
+### 载荷预测区间与风险分级
+
+点估计之外，本模块还输出**保形（conformal）预测区间**：用验证集 16 次着陆的绝对残差标定半宽 `q`（`alpha=0.1`，目标覆盖率 90%），`train` 时写进 `meta.json`；在线估算器在 18 cm 接地前观测处给出 `predicted_peak_load_factor_low/high` 与 `risk_level`（阈值取训练集 P75/P90，可按机体覆盖）。
+
+原始测试集 24 次着陆中 22 次落在区间内，覆盖率 91.7%，达到 90% 目标；半宽 4.23 倍体重，对应载荷量级 4.63–26.14 的水准。标定集只有 16 次，区间偏保守；换机体或接触参数后需要重新标定。
+
+![载荷预测 90% 区间与测试覆盖率](../../../docs/air/landing_assessment/results/impact_interval.png)
+
 以上表格和图片保留此前实验结果，不代表每次重训都会逐位相同。重新运行后，数值写入本地 `results/metrics.json`、`results/final/metrics.json` 和逐次预测 CSV；`freeze_final.py` 在采集最终测试前记录当次模型和源码哈希。上述生成文件均不提交。
 
 ## 3. 环境与快速运行
