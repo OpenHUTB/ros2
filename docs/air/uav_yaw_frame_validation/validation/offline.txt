@@ -1,0 +1,12 @@
+test_distance_invariance (test_core.Checks) ... ok
+test_identity (test_core.Checks) ... ok
+test_inverse_random (test_core.Checks) ... ok
+test_noncommute (test_core.Checks) ... ok
+test_nonfinite (test_core.Checks) ... ok
+test_quarter_turn (test_core.Checks) ... ok
+test_translation (test_core.Checks) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.001s
+
+OK

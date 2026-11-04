@@ -1,0 +1,10 @@
+{
+  "README.md": "ad08c384adf4a9d0a4135bdd4684a1f4a202777fe2e8b8b360a25a0ecd75edc7",
+  "core.py": "8accc15cbffea203f99785367b1ce13da61a9c003de30e1ec6d70e477e7e5111",
+  "CMakeLists.txt": "a91df9819a4360a5290984b874b74199dced6cd60ecb593a506fbd131b907fcb",
+  "package.xml": "0a9f1c6c940101f31fab37ed1a50d4a2470dda107bfe42928cec25ba5f28dfa4",
+  "ros_node.py": "ba4061ec2af621c80c5f8cacac01dba22b4cf07857be6b0b067c21311854acb1",
+  "main.py": "5ed77e8cc569f4fa723e5eec47796fc7ae86ff0305b2380c04d868209fb59c1d",
+  "launch/main.launch": "dffe1a00577aa7e196e09ba7096ce532796c8645b0a48b0fdbde9c5427cd2bbc",
+  "tests/test_core.py": "facdae86ea4c5c29bec896114c3f97055adc03c0c1fd967c6309f9e18debe82d"
+}
