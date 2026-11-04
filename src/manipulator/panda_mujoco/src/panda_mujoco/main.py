@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """Franka Emika Panda 七轴机械臂：关节轨迹运动 + 夹爪开合（MuJoCo，不依赖 Gazebo）。
 
-运行：python3 sim_panda.py            # 输出 panda_motion.mp4（当前目录）
-检查取景：python3 sim_panda.py --preview
+运行：python3 main.py            # 输出 output/panda_motion.mp4
+检查取景：python3 main.py --preview
 """
 import numpy as np
 
-from common import setup_gl, load_with_camera, run_sim, parse_args
+try:
+    from panda_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
+except ImportError:
+    from common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 固定相机：前侧 3/4 视角，对准手臂伸展中心 (0.3, 0, 0.5)
 CAM = ('<camera name="view0" fovy="40" pos="0.9 -1.2 0.55" '

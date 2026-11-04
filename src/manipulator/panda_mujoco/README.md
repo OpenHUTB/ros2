@@ -5,6 +5,8 @@
 通过位置伺服执行器直接写目标角，实现多组姿态间的余弦缓动轨迹运动与夹爪开合，
 并离屏渲染输出 MP4 仿真视频。不依赖 Gazebo、不需要写 URDF，适合机械臂运动控制入门示例。
 
+运行效果动图见仓库 `docs/img/manipulator/panda_mujoco/panda_motion.gif`（完整视频由脚本运行生成）。
+
 ## 💻 运行环境
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可运行）
 - Python >= 3.10
@@ -37,25 +39,32 @@ catkin_make
 source devel/setup.bash
 roslaunch panda_mujoco main.launch
 ```
+包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/panda_mujoco/`
+安装为 Python 包，`roslaunch` 下 `main.py` 以 `from panda_mujoco.common import ...` 导入公共库；
+源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
 
 ## 🔧 控制原理
-- 7 个臂关节为位置伺服执行器（增益 2000~4500），直接把目标角写进 `data.ctrl`，无需 PD。
-- 夹爪 actuator8 为腱执行器（0~255），按 8 秒周期开合。
-- 轨迹：home 姿态 + 3 组增量位姿共 4 段循环（上抬 → 前伸 → 侧摆 → 归位），余弦缓动平滑过渡。
+- 7 个臂关节为位置伺服执行器（等效 PD，增益 2000~4500），直接把目标角写进 `data.ctrl`。
+- 夹爪 actuator8 为腱执行器（0~255），按 8 秒周期正弦开合。
+- 轨迹：home 姿态 + 3 组增量位姿共 4 段循环（上抬 → 前伸 → 侧摆 → 归位），
+  段间余弦缓动插值（q_d = q_a + (1−cos(πt/T))/2·(q_b−q_a)），首尾零速度避免力矩冲击。
+- 公式与推导、性能实测见教程页 `docs/manipulator/panda_mujoco_simulation.md`。
 
 ## 📄 文件结构
 ```
 panda_mujoco/
-├── main.py            # 仿真与渲染主脚本（入口）
-├── common.py          # 公共库：渲染后端选择 / 相机注入 / 视频导出
+├── setup.py             # setuptools 配置（catkin_python_setup 需要）
+├── package.xml          # catkin 包描述
+├── CMakeLists.txt       # catkin_python_setup + 只安装 main.py 入口
 ├── requirements.txt
-├── package.xml        # catkin 包描述
-├── CMakeLists.txt
+├── .gitignore           # 忽略 output/（运行生成物不入库）
 ├── launch/
-│   └── main.launch    # roslaunch 启动入口
+│   └── main.launch      # roslaunch 启动入口
 ├── README.md
-└── output/
-    ├── panda_motion.mp4   # 生成的仿真视频
-    ├── panda_motion.gif   # 运行效果动图
-    └── preview_000.png
+└── src/
+    └── panda_mujoco/    # Python 包
+        ├── __init__.py
+        ├── common.py    # 公共库：渲染后端 / 仿真循环 / 视频导出
+        └── main.py      # 仿真与渲染主脚本（入口）
 ```
+`output/`（panda_motion.mp4 / 预览 PNG）为运行生成物，已通过 `.gitignore` 排除，不入版本库。
