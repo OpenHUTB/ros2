@@ -70,7 +70,7 @@ src/
    ```
 4. 新开一个终端窗口，同样进入工作空间并加载环境，发送录制指令
    ```
-   cd ~/ros2-cc
+   cd <你的 ROS 2 工作空间>
    source install/setup.bash
    
    # 开始录制
