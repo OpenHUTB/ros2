@@ -1,0 +1,173 @@
+{
+  "accuracy": 0.9650793650793651,
+  "macro_f1": 0.9648111710568074,
+  "confusion_matrix": [
+    [
+      63,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      63,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      63,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      63,
+      0
+    ],
+    [
+      11,
+      0,
+      0,
+      0,
+      52
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 0.8513513513513513,
+      "recall": 1.0,
+      "f1": 0.9197080291970803
+    },
+    {
+      "class": "circle",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "figure_eight",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 1.0,
+      "recall": 0.8253968253968254,
+      "f1": 0.9043478260869565
+    }
+  ],
+  "model": "mlp_42",
+  "windows": 315,
+  "episodes": 15,
+  "accepted_coverage": 0.9936507936507937,
+  "accepted_accuracy": 0.9680511182108626,
+  "episode_results": [
+    {
+      "episode": "episode_300",
+      "truth": "line",
+      "majority_prediction": "line",
+      "correct": true
+    },
+    {
+      "episode": "episode_301",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_302",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_303",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_304",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    },
+    {
+      "episode": "episode_305",
+      "truth": "line",
+      "majority_prediction": "line",
+      "correct": true
+    },
+    {
+      "episode": "episode_306",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_307",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_308",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_309",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    },
+    {
+      "episode": "episode_310",
+      "truth": "line",
+      "majority_prediction": "line",
+      "correct": true
+    },
+    {
+      "episode": "episode_311",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_312",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_313",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_314",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 1.0,
+  "inference_median_ms": 0.020957999993242993,
+  "inference_p95_ms": 0.028590749980139656
+}

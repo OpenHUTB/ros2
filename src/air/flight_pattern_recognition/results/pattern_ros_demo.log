@@ -1,0 +1,15 @@
+nohup: ignoring input
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/2026-10-02-08-41-54-936563-ubuntu-6860
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [pattern_recognizer-1]: process started with pid [6878]
+[INFO] [pattern_replay-2]: process started with pid [6880]
+[pattern_recognizer-1] [INFO] [1790955726.583669578] [flight_pattern_recognizer]: Task event: line
+[pattern_recognizer-1] [INFO] [1790955745.122961901] [flight_pattern_recognizer]: Task event: circle
+[pattern_recognizer-1] [INFO] [1790955763.678052316] [flight_pattern_recognizer]: Task event: figure_eight
+[pattern_recognizer-1] [INFO] [1790955782.062929124] [flight_pattern_recognizer]: Task event: climb
+[pattern_recognizer-1] [INFO] [1790955801.653271785] [flight_pattern_recognizer]: Task event: stop_go
+[INFO] [pattern_replay-2]: process has finished cleanly [pid 6880]
+[INFO] [pattern_recognizer-1]: sending signal 'SIGINT' to process[pattern_recognizer-1]
+[INFO] [pattern_recognizer-1]: process has finished cleanly [pid 6878]
+/opt/ros/humble/bin/ros2:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  from pkg_resources import load_entry_point

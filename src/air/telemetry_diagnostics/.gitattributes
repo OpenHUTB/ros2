@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+# csv.DictWriter uses CRLF; preserve exact experiment files across platforms.
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.pt binary
+*.zip binary
+*.png binary

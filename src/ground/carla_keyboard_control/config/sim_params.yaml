@@ -1,0 +1,27 @@
+# CARLA 地面载具键盘运动控制 —— 仿真参数
+carla_control_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 道路丰富，适合运动控制演示
+    town: "Town05"
+    # 自车蓝图
+    ego_blueprint: "vehicle.tesla.model3"
+    # 同步模式固定步长（秒）
+    fixed_delta_seconds: 0.05
+    # 相机参数
+    image_width: 640
+    image_height: 480
+    camera_fov: 90.0
+    # 控制量标定
+    throttle_max: 0.6
+    brake_max: 0.8
+    steer_max: 0.6
+    # 挂倒挡的速度阈值（m/s）：车速低于该值按 S 视为倒车
+    reverse_speed_threshold: 0.5
+
+keyboard_teleop_node:
+  ros__parameters:
+    # 控制指令发布频率（Hz）
+    publish_rate: 20.0
