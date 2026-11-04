@@ -17,6 +17,7 @@
 - 操作系统：Ubuntu 20.04
 - ROS 2 版本：Humble
 - 依赖：rclcpp、nav_msgs、geometry_msgs、std_msgs、sensor_msgs、cv_bridge、image_transport、OpenCV 4.x、Eigen3
+- 演示动图渲染脚本依赖：python3-opencv、python3-numpy、python3-pil
 
 ## 核心文件结构
 
@@ -40,8 +41,6 @@ src/water/water_rov_path_planning/
 │   └── path_planning.rviz
 ├── scripts/
 │   └── render_demo.py         # 订阅节点输出并离线渲染演示动图
-├── resource/
-│   └── water_rov_path_planning
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md
@@ -114,3 +113,4 @@ src/water/water_rov_path_planning/
 | `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
 | `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear） |
 | `current_magnitude` | 0.4 | 基础洋流流速（m/s） |
+| `current_direction` | 0.0 | 均匀流方向（弧度） |

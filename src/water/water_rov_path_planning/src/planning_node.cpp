@@ -28,8 +28,8 @@ public:
     declare_parameter("current_weight", 3.0);
     declare_parameter("current_compensation", 0.5);
     declare_parameter("max_risk_threshold", 0.7);
-    declare_parameter("current_pattern", "uniform");
-    declare_parameter("current_magnitude", 0.3);
+    declare_parameter("current_pattern", "vortex");
+    declare_parameter("current_magnitude", 0.4);
     declare_parameter("current_direction", 0.0);
 
     // 初始化环境
@@ -109,9 +109,6 @@ private:
   void replan()
   {
     if (start_.x < 0 || goal_.x < 0) return;
-
-    // 更新洋流风险到热力图
-    // （此处用洋流场的局部最大流速作为风险源）
 
     std::vector<PathPlanner::Point> path;
     bool ok = planner_->plan(start_, goal_, path);

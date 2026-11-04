@@ -54,7 +54,7 @@ public:
   /// 获取规划的路径代价
   double getLastCost() const { return last_cost_; }
 
-  /// 路径平滑（B 样条近似）
+  /// 路径平滑（迭代加权平均）
   static void smoothPath(std::vector<Point> & path, int iterations = 3);
 
 private:

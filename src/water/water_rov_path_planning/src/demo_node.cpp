@@ -1,6 +1,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <chrono>
+#include <cmath>
+#include <thread>
+#include <utility>
 #include <vector>
 #include <random>
 
@@ -57,6 +60,7 @@ private:
 
     // 发布障碍物（避开起点和终点附近 5m）
     RCLCPP_INFO(get_logger(), "正在生成 %d 个障碍物...", num_obstacles_);
+    std::vector<std::pair<double, double>> obstacles;
     for (int i = 0; i < num_obstacles_; ++i) {
       double ox, oy;
       int tries = 0;
@@ -67,15 +71,22 @@ private:
       } while (tries < 50 && (
         (std::hypot(ox - start_x, oy - start_y) < 5.0) ||
         (std::hypot(ox - goal_x, oy - goal_y) < 5.0)));
-
-      auto msg = geometry_msgs::msg::PointStamped();
-      msg.header.stamp = now();
-      msg.header.frame_id = "world";
-      msg.point.x = ox;
-      msg.point.y = oy;
-      msg.point.z = 0.0;
-      obstacle_pub_->publish(msg);
+      obstacles.emplace_back(ox, oy);
       RCLCPP_INFO(get_logger(), "  障碍物 %d: (%.1f, %.1f)", i + 1, ox, oy);
+    }
+
+    // 重发 3 次，避免订阅端尚未完成发现时丢消息
+    for (int round = 0; round < 3; ++round) {
+      for (const auto & obstacle : obstacles) {
+        auto msg = geometry_msgs::msg::PointStamped();
+        msg.header.stamp = now();
+        msg.header.frame_id = "world";
+        msg.point.x = obstacle.first;
+        msg.point.y = obstacle.second;
+        msg.point.z = 0.0;
+        obstacle_pub_->publish(msg);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     // 等待 1 秒让热力图更新

@@ -17,6 +17,10 @@ def generate_launch_description():
         'current_magnitude', default_value='0.4',
         description='基础洋流流速（m/s）')
 
+    current_direction_arg = DeclareLaunchArgument(
+        'current_direction', default_value='0.0',
+        description='均匀流方向（弧度）')
+
     # 规划节点
     planning_node = Node(
         package='water_rov_path_planning',
@@ -28,6 +32,7 @@ def generate_launch_description():
             {
                 'current_pattern': LaunchConfiguration('current_pattern'),
                 'current_magnitude': LaunchConfiguration('current_magnitude'),
+                'current_direction': LaunchConfiguration('current_direction'),
             },
         ],
     )
@@ -52,6 +57,7 @@ def generate_launch_description():
     return LaunchDescription([
         current_pattern_arg,
         current_magnitude_arg,
+        current_direction_arg,
         planning_node,
         demo_node,
     ])

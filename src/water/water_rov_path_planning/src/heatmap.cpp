@@ -26,17 +26,6 @@ void Heatmap::addObstacle(double world_x, double world_y)
   spreadRisk(gx, gy, 1.0, obstacle_radius_);
 }
 
-void Heatmap::addCurrentRisk(double world_x, double world_y, double current_magnitude)
-{
-  int gx, gy;
-  if (!worldToGrid(world_x, world_y, gx, gy)) return;
-  // 洋流强度 > 0.5 m/s 时开始增加风险
-  double risk = std::clamp((current_magnitude - 0.5) / 1.0, 0.0, 0.6);
-  if (risk > 0.0) {
-    spreadRisk(gx, gy, risk, 3.0);  // 洋流风险影响半径 3 米
-  }
-}
-
 void Heatmap::spreadRisk(int cx, int cy, double max_val, double radius_m)
 {
   int radius_cells = static_cast<int>(radius_m / resolution_);
@@ -83,8 +72,8 @@ cv::Mat Heatmap::toColorImage() const
   for (int y = 0; y < grid_size_; ++y) {
     for (int x = 0; x < grid_size_; ++x) {
       double r = risk_.at<double>(y, x);
-      // HSV: H=240(蓝) -> H=0(红), S=255, V=255
-      double h = 240.0 * (1.0 - r);
+      // HSV 色相范围为 0~179：H=120(蓝) -> H=0(红)，0.5 处约为 H=60(绿)
+      double h = 120.0 * (1.0 - r);
       cv::Mat hsv(1, 1, CV_8UC3, cv::Scalar(h, 255, 255));
       cv::Mat bgr;
       cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);

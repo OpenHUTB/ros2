@@ -34,9 +34,6 @@ public:
   /// 添加一个障碍物（世界坐标 x, y，单位米），自动扩散风险
   void addObstacle(double world_x, double world_y);
 
-  /// 设置洋流强度贡献到风险（洋流越强，该格子风险越高）
-  void addCurrentRisk(double world_x, double world_y, double current_magnitude);
-
   /// 获取某格子的风险值（0~1）
   double getRisk(int gx, int gy) const;
 
