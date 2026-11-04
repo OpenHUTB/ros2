@@ -14,8 +14,9 @@
 // 语义约定（与设计文档 §3.3 一致）：
 //   · 距当前航点 < lookahead        → 切到下一个航点（**不停稳**，这是连续飞行的关键）
 //   · 最后一个航点用 finish_tolerance 判定到达，不参与 lookahead 提前切换
-//   · 单点超时（per_point_timeout）→ 跳过该点；但终点超时不跳过，直接结束，
-//     否则"永远到不了终点"会让状态机永远停在 Following
+//   · 单点超时（per_point_timeout）→ 中间点跳过；终点只收尾、不跳过
+//     （终点若也跳过，状态机永远到不了 Done）。终点收尾时置 final_timed_out，
+//     供统计区分"真的进了容差"与"超时收尾"
 // =============================================================================
 
 #include <cmath>
@@ -101,8 +102,11 @@ struct FollowOptions {
   /// **必须明显大于 finish_tolerance**，否则退化成"每点停稳"。
   double lookahead = 1.5;
 
-  /// 判定"到达终点"的距离（m）。约 2 倍地图分辨率。
-  double finish_tolerance = 0.5;
+  /// 判定"到达终点"的距离（m）。
+  /// 不能只按"约 2 倍地图分辨率"取：AirSim 的位置环有稳态误差，本机实测约
+  /// 0.86 m，取 0.5 时末点永远够不着，只能等满 per_point_timeout 才收尾。
+  /// 默认值与 config/params.yaml 保持一致，改一处就要改另一处。
+  double finish_tolerance = 1.0;
 
   /// 单个航点的超时（s）。超时跳过该点；终点超时则直接结束。
   double per_point_timeout = 15.0;
@@ -125,6 +129,7 @@ struct FollowState {
   FollowPhase phase = FollowPhase::Idle;
   std::size_t index = 0;              ///< 当前要追的航点下标
   std::size_t skipped = 0;            ///< 因超时被跳过的航点数
+  bool final_timed_out = false;       ///< 终点是超时收尾的（没真正进容差）
   double last_progress_s = 0.0;       ///< 上次前进的时刻（用于超时判定）
   double max_deviation = 0.0;         ///< 到折线的历史最大偏离（m），**只统计贴上路径之后**
 };
@@ -135,6 +140,7 @@ struct FollowStep {
   std::size_t index = 0;            ///< action == Send 时要发送的航点下标
   double distance_to_index = 0.0;   ///< 当前位姿到该航点的距离（m），供日志
   bool timed_out = false;           ///< 本轮是否触发了超时
+  bool is_final = false;            ///< 本次超时的是终点（是"收尾"而不是"跳过"）
 };
 
 /// 复位状态机（收到新路径时调用）。
@@ -193,31 +199,41 @@ static inline FollowStep followStep(FollowState& st,
   const double d = followDistance(path[st.index], pos);
   out.distance_to_index = d;
 
-  // 超时：跳过该点。终点不跳 —— 否则永远到不了终点
-  if (now_s - st.last_progress_s > opt.per_point_timeout) {
-    out.timed_out = true;
-    if (st.index >= last) {
+  const bool is_last = (st.index >= last);
+  const bool over_time = (now_s - st.last_progress_s > opt.per_point_timeout);
+
+  // 终点：**先判是否已进容差，再判超时**。
+  // 顺序不能反 —— 反了会把"恰好卡在超时那一拍进入容差"记成超时收尾，
+  // 日志写着 WITHOUT reaching it，而载具其实已经到了（PR #596 评审指出）。
+  if (is_last) {
+    if (d < opt.finish_tolerance) {
       st.phase = FollowPhase::Done;
       out.action = FollowAction::Finished;
       out.index = last;
       return out;
     }
+    if (over_time) {
+      // 终点超时：确认没进容差才收尾。单独记标志，
+      // 否则统计里 reached 会把"超时收尾"也算成"到达"（实测踩到过）。
+      out.timed_out = true;
+      out.is_final = true;
+      st.final_timed_out = true;
+      st.phase = FollowPhase::Done;
+      out.action = FollowAction::Finished;
+      out.index = last;
+    }
+    return out;
+  }
+
+  // 中间点超时：跳过该点（终点不跳，否则永远到不了 Done）
+  if (over_time) {
+    out.timed_out = true;
     ++st.skipped;
     ++st.index;
     st.last_progress_s = now_s;
     out.action = FollowAction::Send;
     out.index = st.index;
     out.distance_to_index = followDistance(path[st.index], pos);
-    return out;
-  }
-
-  // 已经是最后一个点：只看到达容差，不做前瞻切换
-  if (st.index >= last) {
-    if (d < opt.finish_tolerance) {
-      st.phase = FollowPhase::Done;
-      out.action = FollowAction::Finished;
-      out.index = last;
-    }
     return out;
   }
 

@@ -64,6 +64,54 @@ class TestMissionQueue(unittest.TestCase):
                 self.assertEqual(self.adapter.calls, [])
                 self.assertEqual(self.c.mission_queue.state, 'IDLE')
 
+    def test_invalid_altitude_limits_are_rejected_before_dispatch(self):
+        invalid_limits = [
+            (float('nan'), 50),
+            (float('inf'), 50),
+            (0, float('inf')),
+            (0, 0),
+            (0, -1),
+            (True, 50),
+            (0, False),
+            ('0', 50),
+        ]
+        for home_z, max_altitude in invalid_limits:
+            with self.subTest(home_z=home_z, max_altitude=max_altitude):
+                with self.assertRaises(ValueError):
+                    self.c.mission_queue.load(self.points, home_z, max_altitude)
+                self.assertEqual(self.c.mission_queue.state, 'IDLE')
+                self.assertEqual(self.c.mission_queue.waypoints, ())
+
+    def test_accepts_altitude_boundaries_and_the_100_waypoint_limit(self):
+        home_z = 11.1961030960083
+        max_altitude = 3.0
+        waypoints = [
+            {'x': index * 0.1, 'y': 0.0,
+             'z': home_z - max_altitude if index == 0 else home_z - 1e-9}
+            for index in range(100)]
+
+        self.c.mission_queue.load(waypoints, home_z, max_altitude)
+
+        self.assertEqual(self.c.mission_queue.state, 'RUNNING')
+        self.assertEqual(self.c.mission_queue.status(), {
+            'state': 'RUNNING', 'total': 100, 'completed': 0,
+            'current_index': 0, 'remaining': 100})
+        self.assertEqual(self.c.mission_queue.waypoints[0],
+                         ((0.0, 0.0, home_z - max_altitude), 3.0))
+
+    def test_invalid_load_does_not_modify_an_existing_queue(self):
+        self.c.mission_queue.load(self.points, 0.0, 50.0)
+        before = (self.c.mission_queue.waypoints,
+                  self.c.mission_queue.completed, self.c.mission_queue.state)
+
+        with self.assertRaises(ValueError):
+            self.c.mission_queue.load(
+                [dict(self.points[0], z=0.0)], 0.0, 50.0)
+
+        self.assertEqual((self.c.mission_queue.waypoints,
+                          self.c.mission_queue.completed,
+                          self.c.mission_queue.state), before)
+
     def test_pause_retains_index_and_resume_reissues_same_target(self):
         self.start()
         self.c.request('pause')
@@ -74,6 +122,15 @@ class TestMissionQueue(unittest.TestCase):
         self.c.request('resume')
         self.assertEqual(self.adapter.calls[-1][1], {'target': (10., 0., -5.), 'speed': 0.5})
         self.assertEqual(self.c.mission_queue.state, 'RUNNING')
+
+    def test_pause_status_reports_current_index_and_remaining(self):
+        self.start()
+        self.c.request('pause')
+        self.finish()
+
+        self.assertEqual(self.c.mission_queue.status(), {
+            'state': 'PAUSED', 'total': 2, 'completed': 0,
+            'current_index': 0, 'remaining': 2})
 
     def test_cancel_discards_remaining_targets_even_after_resume(self):
         self.start()
@@ -86,6 +143,29 @@ class TestMissionQueue(unittest.TestCase):
         self.observe((10., 0., -5.))
         self.assertEqual(self.c.mission_queue.state, 'CANCELED')
         self.assertEqual([c[0] for c in self.adapter.calls], ['goto', 'hover', 'hover', 'hover'])
+
+    def test_cancel_status_is_terminal_and_does_not_dispatch_again(self):
+        self.start()
+        self.c.request('cancel')
+        self.finish()
+        calls = len(self.adapter.calls)
+
+        self.assertEqual(self.c.mission_queue.status(), {
+            'state': 'CANCELED', 'total': 2, 'completed': 0,
+            'current_index': None, 'remaining': 0})
+        self.observe((10., 0., -5.))
+        self.assertEqual(len(self.adapter.calls), calls)
+
+    def test_cancel_after_progress_preserves_completed_count(self):
+        self.start()
+        self.observe((10., 0., -5.))
+        self.finish()
+        self.c.request('cancel')
+        self.finish()
+
+        self.assertEqual(self.c.mission_queue.status(), {
+            'state': 'CANCELED', 'total': 2, 'completed': 1,
+            'current_index': None, 'remaining': 0})
 
     def test_return_and_land_preempt_queue(self):
         for event, state in [('return', State.RETURNING), ('land', State.LANDING)]:
@@ -125,6 +205,18 @@ class TestMissionQueue(unittest.TestCase):
         self.assertEqual(self.c.mission_queue.state, 'ABORTED')
         self.assertEqual(self.c.machine.state, State.FAILSAFE)
         self.assertEqual(len(self.adapter.calls), 1)
+
+    def test_abort_status_is_terminal_and_does_not_dispatch_again(self):
+        self.c.request('mission', waypoints=self.points)
+        self.adapter.calls[-1][2].set_exception(RuntimeError('RPC lost'))
+        self.c.tick()
+        calls = len(self.adapter.calls)
+
+        self.assertEqual(self.c.mission_queue.status(), {
+            'state': 'ABORTED', 'total': 2, 'completed': 0,
+            'current_index': None, 'remaining': 0})
+        self.observe((10., 0., -5.))
+        self.assertEqual(len(self.adapter.calls), calls)
 
     def test_telemetry_timeout_aborts_queue(self):
         self.start()

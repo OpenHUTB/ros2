@@ -39,10 +39,15 @@ from typing import Tuple
 
 import numpy as np
 
-DEFAULT_SCAN_SIZE = 360
-DEFAULT_DANGER_DISTANCE = 1.0
-DEFAULT_FAR_DISTANCE = 3.0
-DEFAULT_SCAN_MAX = 30.0
+from lidar_obstacle_nn.scan_utils import (
+    CLASS_NAMES,
+    DEFAULT_DANGER_DISTANCE,
+    DEFAULT_FAR_DISTANCE,
+    DEFAULT_SCAN_MAX,
+    DEFAULT_SCAN_SIZE,
+    label_for_min_range,
+)
+
 DEFAULT_NUM_SAMPLES = 1500
 DEFAULT_NOISE_STD = 0.05
 SEED = 42
@@ -85,19 +90,6 @@ def _simulate_scan(
     return scan
 
 
-def label_for_min_range(
-    min_range: float,
-    danger_distance: float,
-    far_distance: float,
-) -> int:
-    """Return the label id for a given minimum range."""
-    if min_range < danger_distance:
-        return 0
-    if min_range < far_distance:
-        return 1
-    return 2
-
-
 def generate_dataset(
     num_samples: int = DEFAULT_NUM_SAMPLES,
     scan_size: int = DEFAULT_SCAN_SIZE,
@@ -113,6 +105,17 @@ def generate_dataset(
         scans  : float32 array of shape (num_samples, scan_size)
         labels : int64 array of shape (num_samples,)
     """
+    if num_samples < 3:
+        raise ValueError('num_samples must be at least 3 for a balanced dataset')
+    if scan_size <= 0:
+        raise ValueError('scan_size must be positive')
+    if not 0.0 < danger_distance < far_distance < scan_max:
+        raise ValueError(
+            'expected 0 < danger_distance < far_distance < scan_max'
+        )
+    if noise_std < 0.0:
+        raise ValueError('noise_std must be non-negative')
+
     rng = np.random.default_rng(seed)
 
     # Force class balance: split samples 1/3, 1/3, 1/3.
@@ -130,21 +133,39 @@ def generate_dataset(
 
     scans = np.empty((num_samples, scan_size), dtype=np.float32)
     for i, label in enumerate(labels):
-        # Sample an obstacle distance conditioned on the label.
-        if label == 0:        # near: 0.1 m to 0.95 m
-            obs_dist = float(rng.uniform(0.1, danger_distance - 0.05))
-        elif label == 1:      # far: 1.05 m to 2.95 m
-            obs_dist = float(rng.uniform(danger_distance + 0.05, far_distance - 0.05))
-        else:                 # free: 3.5 m to scan_max
-            obs_dist = float(rng.uniform(far_distance + 0.5, scan_max - 0.5))
+        for _ in range(100):
+            # Sample an obstacle distance conditioned on the requested label.
+            if label == 0:
+                obs_dist = float(rng.uniform(0.1, danger_distance - 0.05))
+            elif label == 1:
+                obs_dist = float(
+                    rng.uniform(danger_distance + 0.05, far_distance - 0.05)
+                )
+            else:
+                obs_dist = float(
+                    rng.uniform(min(far_distance + 0.05, scan_max), scan_max)
+                )
 
-        scans[i] = _simulate_scan(
-            scan_size=scan_size,
-            obstacle_distance=obs_dist,
-            rng=rng,
-            scan_max=scan_max,
-            noise_std=noise_std,
-        )
+            candidate = _simulate_scan(
+                scan_size=scan_size,
+                obstacle_distance=obs_dist,
+                rng=rng,
+                scan_max=scan_max,
+                noise_std=noise_std,
+            )
+            actual_label = label_for_min_range(
+                float(candidate.min()),
+                danger_distance=danger_distance,
+                far_distance=far_distance,
+            )
+            if actual_label == label:
+                scans[i] = candidate
+                break
+        else:
+            raise ValueError(
+                'noise_std=%.3f is too large to generate label %d reliably'
+                % (noise_std, label)
+            )
 
     return scans, labels
 
@@ -166,7 +187,7 @@ def save_dataset(
         scan_size=scan_size,
         danger_distance=danger_distance,
         far_distance=far_distance,
-        class_names=np.asarray(['near', 'far', 'free']),
+        class_names=np.asarray(CLASS_NAMES),
         source='synthetic',
     )
 

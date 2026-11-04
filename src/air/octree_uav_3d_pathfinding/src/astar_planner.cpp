@@ -202,6 +202,11 @@ private:
   // ------------------------------------------------------------------
   void goalCallback(const geometry_msgs::Point::ConstPtr& msg)
   {
+    // 先记一条"收到了"：没有它，规划之前的任何一次安静退出（还没有地图、
+    // TF 查不到）在终端上都表现为"发了目标点没反应"，只能靠翻日志或
+    // 比对 /uav/path 的时间戳才看得出（2026-10-26 在 AirSim 上排查时踩到）。
+    ROS_INFO("goal received: (%.2f, %.2f, %.2f)", msg->x, msg->y, msg->z);
+
     if (!has_map_ || tree_ == NULL) {
       ROS_WARN("goal received but no map yet -- is the mapping node running?");
       return;
