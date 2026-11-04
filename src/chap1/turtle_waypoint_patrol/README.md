@@ -47,7 +47,24 @@ Ctrl+C 停止 launch。不要同时运行其他 cmd_vel 控制器。
 启动日志输出实际源码路径、PID 与 SHA256。Ctrl+C 和 SIGTERM 仅设置退出标志；主循环统一发送零速度、注销订阅、关闭 CSV 并调用 ROS 清理。不要用 kill -9 测试正常退出。
 如进程未结束，`kill -USR1 <本节点PID>` 可在其 stderr 输出线程栈，不会结束节点。
 
-当前已通过七项 ROS 接口替身离线回归；历史真实 turtlesim 日志只有部分成功，退出仍曾超时。修复后的真实 ROS 集成验证尚待完成，不能以离线通过代替。
+2026-11-04 已在 Ubuntu 20.04.6 / Python 3.8.10 / ROS Noetic / turtlesim 上运行真实集成检查。
+初次完整日志为 5/7；当前显式释放资源版本的终端结果为 **6/7**，取消后的进程退出仍超时。
+普通停车与进程完全退出是不同检查，不能将 6/7 记作全部通过。
+
+当前源码在关闭时显式注销订阅、服务及发布器，并输出单调时钟阶段时间。
+测试超过 8 秒后会收集线程栈，再观察最多 22 秒；即使随后自然退出，仍判为失败。
+最新取消日志显示应用清理约 0.108 秒，ROS 关闭阶段约 23.709 秒，根因未定。
+8 秒为本项目自设回归门槛，未确认是课程要求。
+
+### 真实轨迹（初次版本）
+
+![初次真实 turtlesim 航点巡航轨迹](../../../docs/chapter/chap1/turtle_waypoint_patrol/actual_trace.svg)
+
+该图由初次完整日志的 707 行真实位姿 CSV 绘制，含暂停、恢复及三个航点完成。
+最后记录的目标误差为 0.07852，小于 0.08 阈值。图中坐标为 turtlesim 单位，非实际飞行数据。
+此图不代表新版轨迹；新版完整结果包尚未取得。
+
+[验证细节与证据](https://github.com/tanyongkang0618-spec/ros2/blob/feat/turtle-waypoint-patrol/src/chap1/turtle_waypoint_patrol/validation/REAL_RUN.md) 可在仓库源码中查看。
 
 真实集成检查：先退出其他控制器，按包内 `run_checks.sh` 自动启动独立 Master 与 turtlesim：
 
@@ -71,7 +88,7 @@ python3 plot_trace.py /tmp/my_patrol_trace.csv /tmp/my_patrol_trace.png
 
 状态完成数为已到达点数；CSV 中 target_error 为当时当前目标距离，不应将多航点切换时的误差峰值当作跟踪失败。位姿回调记录与控制周期不同，最终误差应结合完成状态附近样本及 0.08 阈值解释。
 
-尚待：修复版本的真实 ROS 构建与集成检查、真实截图、网页预览和另一人另一台机器复测。
+尚待：退出延迟的定位修复、当前完整运行归档、catkin/roslaunch 入口验证、文档网页预览和另一人另一台机器复测。
 
 ## 大模型使用声明
 
