@@ -95,10 +95,17 @@ class PatrolChecks(unittest.TestCase):
         except subprocess.TimeoutExpired:
             # Ask THIS child for its Python stacks before killing it. Preserve failure.
             p.send_signal(signal.SIGUSR1)
-            time.sleep(.3)
-            p.kill()
-            p.wait(timeout=3)
-            self.fail('exit timeout: thread stacks saved in ' + str(OUTPUT))
+            try:
+                result = p.wait(timeout=22)
+            except subprocess.TimeoutExpired:
+                p.send_signal(signal.SIGUSR1)
+                time.sleep(.3)
+                p.kill()
+                p.wait(timeout=3)
+                self.fail('exit still blocked after 30 seconds: ' + str(OUTPUT))
+            print('LATE_NATURAL_EXIT seconds={:.3f} returncode={}'.format(
+                time.monotonic()-sent, result), flush=True)
+            self.fail('exit exceeded original 8-second limit: ' + str(OUTPUT))
         self.assertEqual(result, 0)
         print('exit signal={} seconds={:.3f}'.format(sig, time.monotonic()-sent), flush=True)
 
