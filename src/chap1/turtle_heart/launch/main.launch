@@ -1,0 +1,9 @@
+<launch>
+  <arg name="start_turtlesim" default="true"/>
+
+  <group if="$(arg start_turtlesim)">
+    <node pkg="turtlesim" type="turtlesim_node" name="turtlesim" output="screen"/>
+  </group>
+
+  <node pkg="turtle_heart" type="main.py" name="draw_heart" output="screen" required="true"/>
+</launch>

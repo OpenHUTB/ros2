@@ -50,6 +50,7 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
+    * [小海龟画爱心](./chapter/chap1/turtle_heart.md)
 * [第 2 章](./chapter/chap2.md) - ROS 基础
     * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
@@ -151,6 +152,7 @@ ROS每章节运行代码:
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
+* [MuJoCo无人机幕墙定距扫描](./air/mujoco_facade_capture/index.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
@@ -206,6 +208,7 @@ ROS每章节运行代码:
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
+* [禁飞区检测](./air/no_fly_zone_check/index.md)
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 * [手势控制无人机](./air/gesture_control_drone.md)

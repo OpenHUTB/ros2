@@ -2,6 +2,7 @@
 import rospy
 from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
+from turtlesim.srv import SetPen
 import math
 import time
 
@@ -16,8 +17,14 @@ class TurtleDrawer:
         rospy.init_node('draw_heart', anonymous=True)
         self.pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
         rospy.Subscriber('/turtle1/pose', Pose, pose_callback)
+        rospy.wait_for_service('/turtle1/set_pen')
+        self.set_pen_service = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
         self.rate = rospy.Rate(10)
         time.sleep(2)
+
+    def set_pen(self, down):
+        """抬起或落下画笔，避免移动过程中留下轨迹。"""
+        self.set_pen_service(255, 0, 0, 3, 0 if down else 1)
 
     def move_to(self, target_x, target_y):
         """让海龟平滑移动到目标点"""
@@ -84,12 +91,19 @@ class TurtleDrawer:
             
             points.append((scaled_x, scaled_y))
 
-        # 让海龟依次走到这些点
-        for point in points:
+        # turtlesim 默认落笔。先抬笔移动到起点，避免从初始位置到爱心
+        # 顶部凹口之间出现一条多余连线。
+        self.set_pen(down=False)
+        self.move_to(points[0][0], points[0][1])
+        self.set_pen(down=True)
+
+        # 从第二个点开始绘制闭合轮廓。
+        for point in points[1:]:
             rospy.loginfo(f"移动到: {point}")
             self.move_to(point[0], point[1])
             time.sleep(0.05)
 
+        self.set_pen(down=False)
         rospy.loginfo("爱心绘制完成！")
 
 if __name__ == '__main__':

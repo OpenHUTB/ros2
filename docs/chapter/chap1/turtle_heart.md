@@ -21,8 +21,9 @@
 turtle_heart/
 ├── package.xml             # 包清单
 ├── CMakeLists.txt          # 构建文件
-├── scripts/
-│   └── main.py             # 主程序：控制小海龟绘制爱心
+├── launch/
+│   └── main.launch         # 一键启动 turtlesim 与绘制节点
+├── main.py                 # 主程序：控制小海龟绘制爱心
 └── README.md               # 运行环境和步骤说明
 ```
 
@@ -48,7 +49,7 @@ Pose 消息中用到三个分量：
 x = 16 * sin^3(t)
 y = 13 * cos(t) - 5 * cos(2t) - 2 * cos(3t) - cos(4t)
 
-其中 t 的取值范围是 [0, 2π]。代码中均匀采样 60 个点。为了适配 turtlesim 的 11.08×11.08 画布边界，对计算出的坐标进行了缩放（乘 0.25）和偏移（加 5.5），确保爱心能居中显示且不撞墙。
+其中 t 的取值范围是 [0, 2π]。代码中均匀采样 60 段并保留首尾重复点，共生成 61 个目标点。为了适配 turtlesim 的 11.08×11.08 画布边界，对计算出的坐标进行了缩放（乘 0.25）和偏移（加 5.5），确保爱心能居中显示且不撞墙。
 
 闭环跟踪控制：
 对于每个目标点 (x_target, y_target)，计算当前点 (x_cur, y_cur) 的距离：
@@ -65,24 +66,26 @@ d = sqrt((x_target - x_cur)^2 + (y_target - y_cur)^2)
 
 2.4 算法流程
 
-1. 初始化节点，创建发布者发布 /turtle1/cmd_vel，创建订阅者订阅 /turtle1/pose，设置控制频率为 10Hz。
-2. 等待第一帧位姿数据，确保连接建立。
+1. 初始化节点，创建发布者发布 /turtle1/cmd_vel，创建订阅者订阅 /turtle1/pose，连接 /turtle1/set_pen 服务，设置控制频率为 10Hz。
+2. 等待位姿数据和画笔服务，确保连接建立。
 3. 根据爱心参数方程，计算并存储 61 个目标坐标点。
-4. 遍历目标点列表：
+4. 抬起画笔，移动到第一个目标点，再落下画笔。
+5. 从第二个目标点开始遍历列表：
    · 计算当前位置与目标点的距离 d。
    · 如果 d < 0.15，停止并等待 0.05s，切换到下一个目标点。
    · 计算角度差，将角度归一化到 [-π, π]，发布线速度与角速度指令。
-5. 循环结束后，发布停止指令，绘制完成。
+6. 循环结束后，抬起画笔并发布停止指令，绘制完成。
 
 三、完整源码展示
 
-3.1 主程序 scripts/main.py
+3.1 主程序 main.py
 
 ```python
 #!/usr/bin/env python3
 import rospy
 from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
+from turtlesim.srv import SetPen
 import math
 import time
 
@@ -97,8 +100,14 @@ class TurtleDrawer:
         rospy.init_node('draw_heart', anonymous=True)
         self.pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
         rospy.Subscriber('/turtle1/pose', Pose, pose_callback)
+        rospy.wait_for_service('/turtle1/set_pen')
+        self.set_pen_service = rospy.ServiceProxy('/turtle1/set_pen', SetPen)
         self.rate = rospy.Rate(10) # 10Hz
         time.sleep(2)
+
+    def set_pen(self, down):
+        """抬起或落下画笔，避免移动过程中留下轨迹。"""
+        self.set_pen_service(255, 0, 0, 3, 0 if down else 1)
 
     def move_to(self, target_x, target_y):
         """让海龟平滑移动到目标点"""
@@ -157,11 +166,17 @@ class TurtleDrawer:
             
             points.append((scaled_x, scaled_y))
 
-        for point in points:
+        # 先抬笔移动到起点，再从第二个点开始绘制。
+        self.set_pen(down=False)
+        self.move_to(points[0][0], points[0][1])
+        self.set_pen(down=True)
+
+        for point in points[1:]:
             rospy.loginfo(f"移动到: {point}")
             self.move_to(point[0], point[1])
             time.sleep(0.05)
 
+        self.set_pen(down=False)
         rospy.loginfo("爱心绘制完成！")
 
 if __name__ == '__main__':
@@ -187,8 +202,12 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package()
 
 catkin_install_python(PROGRAMS
-  scripts/main.py
+  main.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 ```
 
@@ -199,14 +218,11 @@ catkin_install_python(PROGRAMS
 <package format="2">
   <name>turtle_heart</name>
   <version>0.0.0</version>
-  <description>The turtle_heart package</description>
-  <maintainer email="liming@todo.todo">liming</maintainer>
-  <license>TODO</license>
+  <description>Draw a heart in turtlesim without an initial pen stroke.</description>
+  <maintainer email="noreply@openhutb.github.io">OpenHUTB</maintainer>
+  <license>BSD-3-Clause</license>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>turtlesim</build_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
@@ -226,7 +242,21 @@ catkin_make
 source devel/setup.bash
 ```
 
-4.2 启动节点
+4.2 一键启动
+
+编译后执行：
+
+```bash
+roslaunch turtle_heart main.launch
+```
+
+该命令同时启动 turtlesim 和画爱心节点。也可以在已有 turtlesim 实例上只启动绘制节点：
+
+```bash
+roslaunch turtle_heart main.launch start_turtlesim:=false
+```
+
+4.3 手动启动
 
 需要打开三个终端，分别运行：
 
@@ -248,7 +278,7 @@ rosrun turtlesim turtlesim_node
 rosrun turtle_heart main.py
 ```
 
-4.3 话题订阅与验证
+4.4 话题订阅与验证
 
 在节点运行时，另开终端依次执行：
 
@@ -260,11 +290,18 @@ rostopic echo /turtle1/pose
 
 预期可以看到 Twist 线速度 linear.x 在 0.0-1.0 之间不断变化，角速度 angular.z 频繁调整，表明程序正在实时计算并发布速度指令。
 
-4.4 预期结果
+4.5 预期结果
 
 节点启动后，在 turtle_win 窗口中可以看到小海龟先移动至起始点，然后平滑地画出一个完整的爱心图案。最后海龟停在爱心上
 
-![小海龟画爱心运行效果](images/turtle_heart.png)
+修复前运行截图可见，默认落笔使爱心内部出现一条从中心到顶部凹口的多余连线：
+
+![修复前运行截图](../../img/chapter/turtle_heart.png)
+
+修复后的画笔顺序和轨迹效果如下。该图由回归测试使用的同一轨迹生成，实际 ROS
+运行截图需要在上述 ROS Noetic + turtlesim 环境复现：
+
+![修复后轨迹效果](../../img/chapter/turtle_heart_fixed.png)
 
 五、总结
 

@@ -981,7 +981,7 @@ class RollingHorizonPlanner:
         if len(hits) < 2:
             return []
         hits.sort()
-        lo, hi = hits[0], hits[-1]
-        if hi - lo < 1e-6:
+        first, second = hits[0], hits[1]
+        if second - first < 1e-6:
             return []
-        return [(lo, hi)]
+        return [(cross, first), (cross, second)]

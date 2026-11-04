@@ -267,6 +267,24 @@ class TestPlanner(unittest.TestCase):
             )
             prev = pose
 
+    def test_boustrophedon_lane_has_two_distinct_endpoints(self):
+        lane = RollingHorizonPlanner._cross_section(
+            np.asarray(SQUARE),
+            cross=10.0,
+            cross_idx=0,
+            sweep_idx=1,
+        )
+        self.assertEqual(lane, [(10.0, 0.0), (10.0, 60.0)])
+
+        route = RollingHorizonPlanner.boustrophedon_route(
+            SQUARE,
+            lane_spacing=20.0,
+            altitude_axis="north",
+        )
+        self.assertGreaterEqual(len(route), 4)
+        self.assertEqual((route[0].x, route[0].y), (0.0, 0.0))
+        self.assertEqual((route[1].x, route[1].y), (0.0, 60.0))
+
     def test_lattice_route_never_crosses_a_blocked_cell(self):
         obstacle = [(20.0, 20.0), (40.0, 20.0), (40.0, 40.0), (20.0, 40.0)]
         grid = make_grid(obstacles=[obstacle])
