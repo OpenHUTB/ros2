@@ -91,7 +91,7 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 
     python3.10 main.py --train --data data/dataset.npz --epochs 30
 
-148 万点、30 轮约 1 分 40 秒。终端打印逐类 IoU/精确率/召回率、混淆矩阵、
+148 万点、30 轮：虚拟机约 1 分 40 秒，宿主机约 70 秒。终端打印逐类 IoU/精确率/召回率、混淆矩阵、
 分距离档准确率，并写出四个文件：
 
     models/seg_mlp.npz          权重
