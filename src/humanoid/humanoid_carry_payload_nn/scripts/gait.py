@@ -76,8 +76,9 @@ class GaitGenerator:
             rate = min(rate, 1.2 / self.cycle_time)
         self.phase = (self.phase + rate * dt) % 1.0
 
-        # 转向：支撑腿髋偏航累积到 ±LIMIT，摆动腿归零重新落脚
-        limit = 0.6 * math.pi  # ~0.6 rad
+        # 转向：支撑腿髋偏航累积到 ±limit，摆动腿归零重新落脚
+        # hip_yaw 关节范围为 ±0.8 rad，超出部分会被关节限位截断，故取 0.6 rad
+        limit = 0.6
         for side in ("l", "r"):
             swing = self._in_swing(side)
             cur = getattr(self, "yaw_" + side)

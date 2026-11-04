@@ -107,7 +107,7 @@ def train(args):
     batch = args.batch
 
     for epoch in range(args.epochs):
-        perm = np.random.permutation(train_idx)
+        perm = rng.permutation(train_idx)
         losses = []
         for start in range(0, len(perm), batch):
             b = perm[start:start + batch]
@@ -143,7 +143,7 @@ def main():
     ap.add_argument("--batch", type=int, default=256)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--hidden", type=int, nargs="+", default=[32, 32])
-    ap.add_argument("--corr_limit", type=float, default=0.30)
+    ap.add_argument("--corr_limit", type=float, default=0.50)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--output", default=package_path("models/balance_mlp.npz"))
     train(ap.parse_args())

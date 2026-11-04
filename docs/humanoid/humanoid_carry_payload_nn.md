@@ -20,7 +20,7 @@
 | ROS | ROS Noetic（catkin）；不装 ROS 也能用 `python3 scripts/main.py` 直接跑 |
 | Python | 3.8+，`numpy`、`mujoco>=2.3`（本仓库在 MuJoCo 3.x 上验证）、`imageio`（仅生成 GIF 需要） |
 
-```bash
+```
 pip3 install numpy mujoco imageio          # 或用 requirements.txt
 ```
 
@@ -28,7 +28,7 @@ pip3 install numpy mujoco imageio          # 或用 requirements.txt
 
 ## 3. 快速开始
 
-```bash
+```
 # 1) 编译（ROS 环境）
 cd ~/catkin_ws && catkin_make && source devel/setup.bash
 
@@ -41,17 +41,20 @@ roslaunch humanoid_carry_payload_nn main.launch mode:=keyboard controller:=nn ma
 # 4) 三种负载对照评测（输出 results/eval_*.csv 与终端表格）
 rosrun humanoid_carry_payload_nn evaluate.py --seconds 20 --speed 0.15
 
-# 5) 生成演示 GIF（写入 docs/media/）
+# 5) 生成演示 GIF（写入 docs/img/humanoid/humanoid_carry_payload_nn/demo.gif）
 rosrun humanoid_carry_payload_nn make_gif.py --seconds 10 --fps 20
 ```
 
 不装 ROS 时（克隆到任意目录即可）：
 
-```bash
+```
 python3 scripts/train_mlp.py
 python3 scripts/main.py --mode demo --controller nn --no-viewer
-python3 scripts/main.py --mode eval
+python3 scripts/main.py --mode eval --seconds 20 --speed 0.15
 ```
+
+> `--mode eval` / `--mode collect` 会把 `--seconds`、`--speed` 透传给 `evaluate.py` / `train_mlp.py`；
+> `--mass` 只对 demo / keyboard 生效（eval 固定评测 0/2/4 kg，collect 固定采集 0/2/4 kg）。
 
 演示动图见 [docs/img/humanoid/humanoid_carry_payload_nn/demo.gif](../img/humanoid/humanoid_carry_payload_nn/demo.gif)。
 
@@ -60,7 +63,6 @@ python3 scripts/main.py --mode eval
 ```
 humanoid_carry_payload_nn/
 ├── CMakeLists.txt / package.xml       # ROS1 catkin 包
-├── config/params.yaml                 # 与代码默认值一致的参数表
 ├── launch/main.launch                 # mode / controller / mass / viewer 参数
 ├── models/
 │   ├── humanoid_carry.xml             # 自建 MJCF：人形 + 负载箱 + 跑步机 + 助行架
@@ -75,7 +77,7 @@ humanoid_carry_payload_nn/
 │   └── make_gif.py                    # 渲染演示 GIF
 ├── test/test_offline.py               # 不依赖 ROS 的离线自检
 ├── requirements.txt / README.md       # 依赖与使用说明
-└── results/                           # 评测输出的 CSV
+└── results/                           # 评测输出的 CSV（入库的这一份是留档证据）
 ```
 
 本页文档位于仓库 `docs/humanoid/humanoid_carry_payload_nn.md`，
@@ -133,7 +135,7 @@ humanoid_carry_payload_nn/
 | 4 kg | pd | 4.69 | 5.98 | 9.23 | 2.94 | 无 |
 | 4 kg | nn | 4.71 | 6.01 | 9.25 | 2.94 | 无 |
 
-结论：11 秒级搬运过程中三种负载全部不跌倒；补偿控制器把俯仰均值降低约 2%~5%，且神经网络与
+结论：20 秒级搬运过程中三种负载全部不跌倒；补偿控制器把俯仰均值降低约 2%～5%，且神经网络与
 PD 专家表现一致（验证行为克隆精度）。俯仰绝对量主要来自步态本身，台架吊带承担了大部分回复力矩。
 
 ## 9. 键盘操作
@@ -149,15 +151,20 @@ Linux 下读取 `/dev/tty`（不依赖 X）；Windows 下自动改用 `msvcrt`�
 
 ## 10. 参数
 
-见 `config/params.yaml`，与代码默认值一致。常用：
+下表就是代码里的实际默认值（`gait.py` / `model.py` / `evaluate.py` 的常量与构造函数参数），
+改参数直接改代码或传命令行选项，不存在额外的配置文件：
 
 | 参数 | 默认 | 含义 |
 | --- | --- | --- |
-| `payload.masses` | `[0, 2, 4]` kg | 三种负载场景 |
-| `gait.stride_max` | 0.18 rad | 固定步长对应的髋半幅 |
+| `masses`（evaluate / collect） | `[0, 2, 4]` kg | 三种负载场景 |
+| `gait.stride_max` | 0.22 rad | 固定步长对应的髋半幅 |
+| `gait.cycle_time` | 1.6 s | 一个完整步态周期的时间 |
+| `gait.stance_ratio` | 0.60 | 支撑相占整个周期的比例 |
 | `gait.knee_lift` | 0.78 rad | 摆动抬膝量（低于 0.7 会拖地） |
+| `expert.kp_pitch` / `kd_pitch` | 0.5 / 0.2 | 俯仰 PD |
 | `expert.k_hip` | -0.3 | 俯仰反馈到髋 |
 | `expert.k_mass_hip` | 0.05 | 负载质量前馈 |
+| `corr_limit` | 0.50 rad | 补偿角限幅（PD 与 MLP 共用） |
 | `mlp.hidden` | `[32, 32]` | 网络结构 |
 
 ## 11. 常见问题
@@ -172,12 +179,12 @@ Linux 下读取 `/dev/tty`（不依赖 X）；Windows 下自动改用 `msvcrt`�
 把本页加入 MkDocs：在 `mkdocs.yml` 的 `nav` 中找到「人形机器人」分组
 （若没有则新建），在其下加入一行
 
-```yaml
+```
   - 双臂搬运负载的神经网络平衡控制: humanoid/humanoid_carry_payload_nn.md
 ```
 
 并在 `docs/index.md` 的模块列表中加一行链接：
 
-```markdown
+```
 - [人形机器人双臂搬运负载的神经网络平衡控制](humanoid/humanoid_carry_payload_nn.md)
 ```

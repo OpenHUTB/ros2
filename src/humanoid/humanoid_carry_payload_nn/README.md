@@ -18,7 +18,7 @@
 | NumPy | 1.24 |
 | imageio | 仅生成演示 GIF 需要 |
 
-```bash
+```
 pip3 install -r requirements.txt
 ```
 
@@ -29,7 +29,6 @@ pip3 install -r requirements.txt
 ```
 humanoid_carry_payload_nn/
 ├── CMakeLists.txt / package.xml       # ROS1 catkin 包
-├── config/params.yaml                 # 与代码默认值一致的参数表
 ├── launch/main.launch                 # mode / controller / mass / speed / viewer 参数
 ├── models/
 │   ├── humanoid_carry.xml             # 自建 MJCF：人形 + 双臂负载箱 + 跑步机 + 助行架
@@ -44,12 +43,12 @@ humanoid_carry_payload_nn/
 │   └── make_gif.py                    # 渲染演示 GIF
 ├── test/test_offline.py               # 不依赖 ROS 的离线自检
 ├── requirements.txt
-└── results/                           # 评测输出的 CSV（运行后生成）
+└── results/                           # 评测输出的 CSV：入库的那份是留档证据，重跑会生成新文件
 ```
 
 ## 3. 编译
 
-```bash
+```
 cd ~/catkin_ws
 source /opt/ros/noetic/setup.bash
 catkin_make --only-pkg-with-deps humanoid_carry_payload_nn
@@ -58,7 +57,7 @@ source devel/setup.bash
 
 ## 4. 键盘控制演示
 
-```bash
+```
 roslaunch humanoid_carry_payload_nn main.launch mode:=keyboard controller:=nn mass:=2.0
 ```
 
@@ -75,13 +74,13 @@ roslaunch humanoid_carry_payload_nn main.launch mode:=keyboard controller:=nn ma
 
 不带可视化窗口的自动演示：
 
-```bash
+```
 roslaunch humanoid_carry_payload_nn main.launch mode:=demo controller:=nn mass:=4.0 viewer:=false
 ```
 
 ## 5. 采集、训练与评估（一键复现）
 
-```bash
+```
 # 1) 用 PD 专家在 0/2/4 kg、随机速度/转向指令下采集 3.75 万条样本并训练（约 5 s）
 rosrun humanoid_carry_payload_nn train_mlp.py --seconds 25 --epochs 60
 
@@ -94,7 +93,7 @@ rosrun humanoid_carry_payload_nn make_gif.py --seconds 10 --fps 20 --width 640 -
 
 完全脱离 ROS 时（把包目录拷到任意位置即可）：
 
-```bash
+```
 python3 scripts/train_mlp.py
 python3 scripts/main.py --mode demo --controller nn --no-viewer
 python3 scripts/main.py --mode eval
@@ -120,7 +119,7 @@ python3 test/test_offline.py          # 5 项离线自检
 | 2 kg | open / pd / nn | 4.50 / 4.41 / 4.43 | 5.72 / 5.68 / 5.71 | 8.74 / 8.84 / 8.89 | 无 |
 | 4 kg | open / pd / nn | 4.77 / 4.69 / 4.71 | 5.96 / 5.98 / 6.01 | 9.08 / 9.23 / 9.25 | 无 |
 
-结论：三种负载下全程不跌倒，补偿控制器把俯仰均值降低约 2%~5%，神经网络与 PD 专家表现一致
+结论：三种负载下全程不跌倒，补偿控制器把俯仰均值降低约 2%～5%，神经网络与 PD 专家表现一致
 （验证行为克隆精度）；俯仰绝对量主要由步态本身决定。
 
 ## 8. 仿真台架与已知限制
@@ -129,14 +128,16 @@ python3 test/test_offline.py          # 5 项离线自检
   等效搬运里程 = ∫v_cmd dt（`sim.distance`）。
 - **减重助行架**：根部 4 个一维关节（`root_x / root_z / root_pitch / root_yaw`）替代自由关节，
   侧向与横滚被导轨锁定；**俯仰方向不驱动**，是平衡控制器要抑制的倒立摆方向。
-- 限制：台架弹性吊带承担了大部分回复力矩，控制器的绝对改善幅度有限（上表 2%~5%），
+- 限制：台架弹性吊带承担了大部分回复力矩，控制器的绝对改善幅度有限（上表 2%～5%），
   它的作用是在负载变化时保持一致的躯干姿态，而非"挽救即将跌倒的机器人"；
   这是为可重复实验刻意选择的台架条件。步态为相位式准静态步态，不是动态行走；
   演示建议速度 ≤ 0.15 m/s、单次 ≤ 20 s。
 
 ## 9. 演示素材与文档
 
-- 动图：[docs/img/humanoid/humanoid_carry_payload_nn/demo.gif](../../../docs/img/humanoid/humanoid_carry_payload_nn/demo.gif)（2.7 MB）
+- 动图：[docs/img/humanoid/humanoid_carry_payload_nn/demo.gif](../../../docs/img/humanoid/humanoid_carry_payload_nn/demo.gif)（2.73 MB）
+- 评测留档：`results/eval_20261030_144953.csv` 是文档第 8 节那张表的原始数据，作为证据提交入库；
+  重新运行 `evaluate.py` 会在 `results/` 下生成新的带时间戳 CSV，不会覆盖这一份。
 - 详细文档（任务、模型、训练、结果、键盘、参数、FAQ）：
   [docs/humanoid/humanoid_carry_payload_nn.md](../../../docs/humanoid/humanoid_carry_payload_nn.md)
 

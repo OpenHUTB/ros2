@@ -98,7 +98,7 @@ def run_keyboard(args, log_obj=None):
     controller = make_controller(args.controller)
     sim = CarryPayloadSim(payload_mass=args.mass)
     sim.reset(args.mass)
-    view = open_viewer(sim, log_obj)
+    view = None if args.no_viewer else open_viewer(sim, log_obj)
     log(log_obj, "[keyboard] W/S 前后，A/D 转向，空格急停，Q 退出（目标速度 %.2f m/s）"
         % MAX_SPEED)
 
@@ -212,11 +212,15 @@ def main():
         run_keyboard(args, logger)
     elif args.mode == "eval":
         import evaluate
-        sys.argv = ["evaluate.py"]
+        # 把本入口的评测参数透传下去，避免 evaluate.py 的默认值悄悄覆盖用户输入
+        sys.argv = ["evaluate.py",
+                    "--seconds", str(args.seconds),
+                    "--speed", str(args.speed)]
         evaluate.main()
     else:
         import train_mlp
-        sys.argv = ["train_mlp.py"]
+        # collect 只用 --seconds 控制每个负载场景的采集时长，负载仍固定为 0/2/4 kg
+        sys.argv = ["train_mlp.py", "--seconds", str(args.seconds)]
         train_mlp.main()
 
 

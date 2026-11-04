@@ -14,8 +14,8 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-# 模型 / 配置 / launch / 权重
-install(DIRECTORY models config launch
+# 模型 / launch / 权重
+install(DIRECTORY models launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

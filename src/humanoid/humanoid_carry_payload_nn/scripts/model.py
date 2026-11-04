@@ -76,7 +76,7 @@ class PDExpert:
 class BalanceMLP:
     """3 层全连接网络（numpy 前向推理），权重文件为 .npz。"""
 
-    def __init__(self, weights=None, hidden=(32, 32), corr_limit=0.45, mean=None, std=None):
+    def __init__(self, weights=None, hidden=(32, 32), corr_limit=0.50, mean=None, std=None):
         self.corr_limit = float(corr_limit)
         self.hidden = hidden
         self.mean = np.zeros(len(FEATURE_NAMES)) if mean is None else np.asarray(mean, dtype=float)
@@ -127,10 +127,18 @@ class BalanceMLP:
 
     @classmethod
     def load(cls, path, corr_limit=None):
+        """加载权重：限幅优先用显式参数，其次用同名 .json 的元信息，最后取默认 0.50。"""
         data = np.load(path)
         n_layers = len([k for k in data.files if k.startswith("w")])
         weights = [data[f"w{i}"] for i in range(n_layers)]
         hidden = tuple(weights[0].shape[1:]) + tuple(weights[-1].shape[:-1])
-        return cls(weights=weights, hidden=hidden,
-                   corr_limit=corr_limit or 0.45,
+        meta = {}
+        meta_path = os.path.splitext(path)[0] + ".json"
+        if os.path.isfile(meta_path):
+            with open(meta_path, encoding="utf-8") as f:
+                meta = json.load(f)
+        if corr_limit is None:
+            corr_limit = float(meta.get("corr_limit", 0.50))
+        return cls(weights=weights, hidden=tuple(meta.get("hidden") or hidden),
+                   corr_limit=corr_limit,
                    mean=data["mean"], std=data["std"])
