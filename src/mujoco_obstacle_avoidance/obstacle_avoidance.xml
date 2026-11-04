@@ -1,50 +1,40 @@
-<mujoco model="diff_drive_obstacle">
+<mujoco model="diff_drive">
   <option timestep="0.005"/>
-
   <default>
     <joint armature="0.01"/>
     <geom condim="4"/>
   </default>
-
   <worldbody>
     <light pos="0 0 5" dir="0 0 -1"/>
     <geom name="floor" type="plane" size="10 10 0.1" rgba="0.85 0.85 0.85 1" friction="1.0 0.1 0.1"/>
-
-    <geom name="goal" type="sphere" size="0.1" pos="3.0 2.0 0.1" rgba="0 1 0 0.5"/>
-    <geom name="obs1" type="cylinder" size="0.25 0.3" pos="1.0 0.5 0.15" rgba="1 0 0 1"/>
-    <geom name="obs2" type="cylinder" size="0.25 0.3" pos="2.0 -0.5 0.15" rgba="1 0 0 1"/>
-
     <body name="chassis" pos="0 0 0.1">
       <freejoint/>
       <geom name="chassis" type="box" size="0.2 0.1 0.05" rgba="0.2 0.4 0.8 1"/>
       <inertial pos="0 0 0" mass="2.0" diaginertia="0.01 0.01 0.02"/>
-
       <body name="left_wheel" pos="-0.08 0.11 -0.05">
         <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
         <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       </body>
-
       <body name="right_wheel" pos="-0.08 -0.11 -0.05">
         <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.1 0.1 0.1 1" friction="1.0 0.1 0.1"/>
         <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       </body>
-
       <body name="front_left_wheel" pos="0.08 0.11 -0.05">
         <joint name="front_left_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="front_left_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
         <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       </body>
-
       <body name="front_right_wheel" pos="0.08 -0.11 -0.05">
         <joint name="front_right_wheel_joint" type="hinge" axis="0 1 0"/>
         <geom name="front_right_wheel" type="cylinder" fromto="0 -0.03 0 0 0.03 0" size="0.05" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
         <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
       </body>
     </body>
+    <geom name="obstacle1" type="cylinder" pos="1.5 0.5 0.1" size="0.1 0.1" rgba="1 0 0 1"/>
+    <geom name="obstacle2" type="cylinder" pos="2.0 -0.4 0.1" size="0.1 0.1" rgba="1 0 0 1"/>
   </worldbody>
-
   <actuator>
     <velocity name="left_wheel" joint="left_wheel_joint" kv="2"/>
     <velocity name="right_wheel" joint="right_wheel_joint" kv="2"/>
