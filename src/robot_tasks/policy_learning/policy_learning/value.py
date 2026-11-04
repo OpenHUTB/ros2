@@ -39,7 +39,7 @@ def distance_map(g: np.ndarray, goal_xy) -> np.ndarray:
             if di and dj and (g[cj, ni] or g[nj, ci]):   # 不许贴角穿过
                 continue
             nd = d + math.hypot(di, dj) * RES
-            if nd < dist[nj, ni] - 1e-9:
+            if nd < float(dist[nj, ni]) - 1e-9:
                 dist[nj, ni] = nd
                 heapq.heappush(heap, (nd, ni, nj))
     return dist
