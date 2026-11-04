@@ -1,6 +1,6 @@
 # water_vision_enhancement
 
-基于 OpenCV 的浑浊水体视觉增强与目标追踪 ROS 2 模块。
+基于 OpenCV 的浑浊水体视觉增强与目标追踪 ROS 2 模块（合成视频演示）。
 
 ## 功能概述
 
