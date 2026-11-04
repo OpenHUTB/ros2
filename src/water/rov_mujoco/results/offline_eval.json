@@ -1,0 +1,60 @@
+{
+  "3d_helix/nn": {
+    "trajectory": "3d_helix",
+    "duration": 60.0,
+    "rmse": 0.13331390412186667,
+    "max_error": 1.3698664267603213,
+    "mean_error": 0.09350938123167445,
+    "final_error": 0.08306090133285474,
+    "yaw_rmse": 0.11007448449801638,
+    "effort": 11.026203926231496
+  },
+  "3d_helix/los": {
+    "trajectory": "3d_helix",
+    "duration": 60.0,
+    "rmse": 0.11228781392701502,
+    "max_error": 1.3703549480070134,
+    "mean_error": 0.040750101576435924,
+    "final_error": 0.026739178462247673,
+    "yaw_rmse": 0.10988901512987918,
+    "effort": 10.666276846491623
+  },
+  "lawnmower/nn": {
+    "trajectory": "lawnmower",
+    "duration": 60.0,
+    "rmse": 0.1216690924603154,
+    "max_error": 1.3702758997121174,
+    "mean_error": 0.08454152212244788,
+    "final_error": 0.0773192796180694,
+    "yaw_rmse": 0.2418562874122585,
+    "effort": 22.539709256138284
+  },
+  "lawnmower/los": {
+    "trajectory": "lawnmower",
+    "duration": 60.0,
+    "rmse": 0.1057524895035523,
+    "max_error": 1.3708222819754023,
+    "mean_error": 0.04028170472792841,
+    "final_error": 0.022001050822768018,
+    "yaw_rmse": 0.2456092056022243,
+    "effort": 19.699379523776773
+  },
+  "config": {
+    "duration": 60.0,
+    "dt": 0.02,
+    "start_offset": [
+      1.0,
+      -0.8,
+      0.5
+    ],
+    "controllers": [
+      "nn",
+      "los"
+    ],
+    "trajectories": [
+      "3d_helix",
+      "lawnmower"
+    ],
+    "vehicle": "first-order surrogate, not MuJoCo dynamics"
+  }
+}

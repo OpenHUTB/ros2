@@ -394,3 +394,34 @@ python3 src/water/rov_mujoco/test/test_trajectory_tracking.py
 !!! warning "Python 环境说明"
     - **Ubuntu 22.04**：默认使用系统 Python 3.10 环境即可直接运行。
     - **Ubuntu 20.04**：需使用 Python 3.8 执行指令，以保证与 ROS 2 C-extension (`_rclpy_pybind11.cpython-38`) 的 ABI 兼容性。
+
+### 7.3 无 ROS 的离线回归评测（新增）
+
+上面的测试与仿真都要求 ROS 2 和 MuJoCo，在没有 ROS 的机器（Windows、纯 Python 环境）上一步都跑不了。新增的离线评测把现有的 NN / LOS 控制器、轨迹生成器接到一个**一阶速度响应代理**上，只依赖 `numpy` 和 `matplotlib`：
+
+```bash
+# 在模块目录下
+python3 eval_offline.py --duration 60
+python3 eval_offline.py --controllers nn --trajectories 3d_helix --duration 30
+```
+
+代理模型为 `m·dv/dt = R(yaw)·[fx, fy, 0] + [0, 0, fz] − c·v`、`I·dω/dt = τz − c_yaw·ω`，**不是 MuJoCo 的 6-DOF 水动力**，因此结果只用于回归和相对比较，不能替代仿真结论。评测从偏离参考点约 1 m 的位置出发，考察收敛过程与稳态误差。
+
+| 航迹 / 控制器 | RMSE (m) | 最大误差 (m) | 末段误差 (m) | 偏航 RMSE (rad) | 平均控制量 |
+|---|---:|---:|---:|---:|---:|
+| 3D 螺旋 / NN | 0.133 | 1.370 | 0.083 | 0.110 | 11 |
+| 3D 螺旋 / LOS+PID | 0.112 | 1.370 | 0.027 | 0.110 | 11 |
+| 割草机 / NN | 0.122 | 1.370 | 0.077 | 0.242 | 23 |
+| 割草机 / LOS+PID | 0.106 | 1.371 | 0.022 | 0.246 | 20 |
+
+两个控制器都能把 1.4 m 的初始偏差在约 4 秒内收敛到 0.1 m 以内，差别主要在稳态残差：LOS+PID 为 0.027 / 0.022 m，NN 约 8 cm。这更像是训练环境的差异——NN 权值在 MuJoCo 中训练，而代理模型没有推进器布置、附加水质量等效应，网络没有补偿掉这部分稳态偏差；不能据此认为 NN 在 MuJoCo 中更差，两者在真实仿真里的对比仍以第 4 节为准。
+
+评测可以作为**回归门禁**使用：任一组合超过给定 RMSE 即返回非零退出码。
+
+```bash
+python3 eval_offline.py --duration 60 --max-rmse 0.2   # 当前全部通过
+```
+
+![离线闭环误差曲线](img/water/rov_trajectory_tracking_offline.png)
+
+指标写入 `results/offline_eval.json`，曲线写入 `results/offline_tracking.png`。对应单元测试不依赖 ROS：`python3 -m unittest discover -s test -p "test_offline_eval.py"`。
