@@ -15,6 +15,18 @@ class MissionQueue:
         return self.state in ('RUNNING', 'PAUSED')
 
     def load(self, waypoints, home_z, max_altitude):
+        if (isinstance(home_z, bool) or isinstance(max_altitude, bool) or
+                not isinstance(home_z, (int, float)) or
+                not isinstance(max_altitude, (int, float))):
+            raise ValueError('home_z and max_altitude must be numbers')
+        try:
+            home_z = float(home_z)
+            max_altitude = float(max_altitude)
+        except OverflowError as exc:
+            raise ValueError('home_z and max_altitude must be finite') from exc
+        if (not math.isfinite(home_z) or not math.isfinite(max_altitude) or
+                max_altitude <= 0):
+            raise ValueError('home_z must be finite and max_altitude must be positive')
         if not isinstance(waypoints, list) or not 1 <= len(waypoints) <= self.MAX_WAYPOINTS:
             raise ValueError('waypoints must be a list of 1..100 NED waypoints')
         validated = []
