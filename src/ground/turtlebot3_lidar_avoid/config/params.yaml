@@ -1,0 +1,41 @@
+# TurtleBot3 激光雷达避障 —— 参数配置参考
+# ==========================================
+# 说明：本文件作为参数说明与调参参考。节点默认值是代码内置的，
+#       如需在运行时覆盖，可直接用 --ros-args -p 传参，例如：
+#         ros2 run turtlebot3_lidar_avoid avoid_node --ros-args -p safe_distance:=0.7
+
+turtlebot3_lidar_avoid:
+  ros__parameters:
+    # ---- 话题 ----
+    # 激光雷达话题。TurtleBot3 标准场景为 /scan；
+    # 课程镜像的迷宫场景若使用 /out/scan 请改此处
+    scan_topic: /scan
+    cmd_vel_topic: /cmd_vel
+
+    # ---- 距离阈值（米）----
+    # 进入避障的距离
+    safe_distance: 0.60
+    # 退出避障的距离（须大于 safe_distance，用于滞回抑制抖动）
+    clear_distance: 0.90
+    # 进入紧急后退的距离
+    danger_distance: 0.28
+
+    # ---- 速度 ----
+    # 巡航线速度（米/秒）
+    cruise_speed: 0.15
+    # 避障时最大线速度（米/秒）
+    avoid_speed: 0.08
+    # 紧急后退速度（米/秒，负值表示后退）
+    back_speed: -0.05
+
+    # ---- 转向 ----
+    # 最小角速度（弧度/秒），保证能真正转开
+    min_turn: 0.50
+    # 最大角速度（弧度/秒）
+    max_turn: 1.20
+    # 左右距离差到角速度的比例增益
+    turn_gain: 1.50
+
+    # ---- 状态机 ----
+    # 紧急后退状态最短保持时间（秒）
+    emergency_hold: 0.8

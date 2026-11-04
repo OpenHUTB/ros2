@@ -21,10 +21,10 @@
                 <box size="1 1 0.02" />
             </geometry>
         </collision>
-        <box_inertial_matrix m="1000" w="1" h="0.02" d="1"/>
+        <xacro:box_inertial_matrix m="1000" w="1" h="0.02" d="1"/>
     </link>
 
-    <arm_base parent="bottom_link" xyz="0 0 0.02" rpy="0 0 0"/>
+    <xacro:arm_base parent="bottom_link" xyz="0 0 0.02" rpy="0 0 0"/>
 
     <!-- kinect -->
     <joint name="kinect_joint" type="fixed">
