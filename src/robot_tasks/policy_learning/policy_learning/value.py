@@ -21,7 +21,7 @@ __all__ = ["distance_map", "descend_path"]
 def distance_map(g: np.ndarray, goal_xy) -> np.ndarray:
     """Dijkstra：每个空闲格到目标的测地距离（米），障碍为 inf。"""
     h, w = g.shape
-    dist = np.full((h, w), np.inf, np.float32)
+    dist = np.full((h, w), np.inf, np.float64)
     gi, gj = to_cell(g, goal_xy[0], goal_xy[1])
     if g[gj, gi]:
         return dist
