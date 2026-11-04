@@ -53,6 +53,11 @@ ros2 topic pub --once /goal_pose geometry_msgs/msg/PoseStamped \
 
 ## 5. 运行效果验证
 
+![运行效果](screenshot.png)
+
+`ros2 launch policy_learning main_launch.py` 启动仿真与策略节点后发送目标点，
+rviz 中显示占据栅格、红色规划路径与绿色机器人。
+
 同一起点/终点集合（200 段随机任务）上的闭环结果：
 
 | 策略 | 成功率 | 碰撞率 | 超时率 | 平均路径 | 平均步数 |
