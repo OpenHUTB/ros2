@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_dqn_nav</name>
+  <version>0.1.0</version>
+  <description>
+    基于 DQN（深度 Q 网络）的无人机自主导航与避障模块。
+    与 uav_ppo_nav 共用同一训练环境与观测/动作接口，仅替换强化学习算法
+    （PPO -> DQN），用于课程"相同模型不同 RL 算法对比"。
+    用激光雷达扇形直方图 + 里程计构造观测，输出世界系速度指令，
+    训练在轻量质点环境完成，部署在 CarlaAir/AirSim 仿真器。
+  </description>
+  <maintainer email="xu-da111@example.com">xu-da111</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>rospkg</exec_depend>
+
+  <export/>
+</package>
