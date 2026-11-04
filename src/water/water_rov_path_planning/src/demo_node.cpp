@@ -99,7 +99,7 @@ private:
 
     RCLCPP_INFO(get_logger(), "已发布起点和终点，等待规划结果...");
 
-    // 3 秒后重新发布终点触发重规划（演示动态重规划）
+    // 5 秒后重新发布终点触发重规划（演示周期性重规划）
     timer_ = create_wall_timer(std::chrono::seconds(5),
       [this, goal_x, goal_y]() {
         auto goal_msg = geometry_msgs::msg::PointStamped();
