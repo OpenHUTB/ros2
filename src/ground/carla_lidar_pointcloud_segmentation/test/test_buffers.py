@@ -140,6 +140,13 @@ def main():
     _, tags3 = cc.points_from_semantic(sem_nested)
     check('兜底也支持 point.x 写法', list(tags3) == [1])
 
+    sem_idx = type('M', (), {
+        'raw_data': semantic_buffer([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], tags),
+        '__len__': lambda self: 2})()
+    _, tags_i, indices = cc.semantic_arrays(sem_idx)
+    check('semantic_arrays 同时给出标签', list(tags_i) == tags, str(tags_i.tolist()))
+    check('semantic_arrays 给出 actor 编号', indices.shape == (2,), str(indices.shape))
+
     empty_sem = type('M', (), {'raw_data': b'', '__len__': lambda self: 0})()
     coords_e, tags_e = cc.points_from_semantic(empty_sem)
     check('空语义点云返回两个空数组',

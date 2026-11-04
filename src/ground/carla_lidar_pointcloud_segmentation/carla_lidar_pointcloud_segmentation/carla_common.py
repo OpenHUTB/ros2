@@ -118,20 +118,6 @@ def spawn_ego(world, blueprint=EGO_BLUEPRINT, spawn_index=0, autopilot=True):
     return ego
 
 
-def to_world(points, transform):
-    """把传感器坐标系的点转到世界坐标系。
-
-    语义标签的分布、和已知目标比对，都必须先转到同一个坐标系，
-    否则"传感器原点"和"世界原点"混用，包围盒里一个点都筛不到。
-    """
-    yaw = np.deg2rad(transform.rotation.yaw)
-    cos_yaw, sin_yaw = np.cos(yaw), np.sin(yaw)
-    x = points[:, 0] * cos_yaw - points[:, 1] * sin_yaw + transform.location.x
-    y = points[:, 0] * sin_yaw + points[:, 1] * cos_yaw + transform.location.y
-    z = points[:, 2] + transform.location.z
-    return np.column_stack([x, y, z]).astype(np.float32)
-
-
 def spawn_traffic(world, client, count=12, seed=0):
     """撒一批自动驾驶的 NPC 车，让点云里有更多"车辆"样本。"""
     check_carla()
@@ -214,26 +200,39 @@ def points_from_raw(data):
     return np.array([_point_xyz(p) for p in data], dtype=np.float32)
 
 
-def points_from_semantic(data):
-    """语义点云 -> ``((N, 3) 坐标, (N,) 语义标签)``。
+def semantic_arrays(data):
+    """语义点云 -> ``((N, 3) 坐标, (N,) 标签, (N,) actor 编号)``。
 
     语义激光雷达每点 6 个 32 位：``x, y, z, cos_inc_angle`` 是 float32，
     ``object_idx, object_tag`` 是 uint32。同一段内存按 uint32 视图取最后两个即可，
     不需要依赖点对象的属性名。
 
-    ``object_tag`` 的取值与 ``carla.CityObjectLabel`` 一致，映射在 :mod:`labels` 里做。
+    ``object_idx`` 是射线撞到的 actor 编号，可以用来精确核对"某个已知目标
+    对应哪个标签"，比按半径筛点可靠得多（半径筛会被遮挡和位置误差骗）。
     """
     count = len(data)
     if count == 0:
-        return np.zeros((0, 3), dtype=np.float32), np.zeros(0, dtype=np.int32)
+        return (np.zeros((0, 3), dtype=np.float32), np.zeros(0, dtype=np.int32),
+                np.zeros(0, dtype=np.int32))
     buffer = _raw_buffer(data)
     if buffer.size == count * 6:
         points = buffer.reshape(count, 6)[:, :3].astype(np.float32)
         as_uint = np.ascontiguousarray(buffer).view(np.uint32).reshape(count, 6)
         tags = as_uint[:, 5].astype(np.int32)
-        return points, tags
+        indices = as_uint[:, 4].astype(np.int32)
+        return points, tags, indices
     points = np.array([_point_xyz(p) for p in data], dtype=np.float32)
     tags = np.array([int(getattr(p, 'object_tag')) for p in data], dtype=np.int32)
+    indices = np.array([int(getattr(p, 'object_idx', -1)) for p in data], dtype=np.int32)
+    return points, tags, indices
+
+
+def points_from_semantic(data):
+    """语义点云 -> ``((N, 3) 坐标, (N,) 语义标签)``。
+
+    只要坐标和标签时用这个；需要知道每个点属于哪个 actor 时用 :func:`semantic_arrays`。
+    """
+    points, tags, _ = semantic_arrays(data)
     return points, tags
 
 
