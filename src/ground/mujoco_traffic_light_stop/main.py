@@ -1,7 +1,6 @@
 import mujoco
 import mujoco.viewer
 import numpy as np
-import time
 import os
 
 xml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scene.xml")
@@ -12,23 +11,22 @@ T_RED = 5.0
 T_YELLOW = 2.0
 T_GREEN = 5.0
 CYCLE = T_RED + T_YELLOW + T_GREEN
-start_t = time.time()
 
 id_red = model.geom("light_red").id
 id_yellow = model.geom("light_yellow").id
 id_green = model.geom("light_green").id
 
 stop_line = 2.0
-brake_distance = 0.8
+brake_distance = 1.5
 normal_force = 0.6
-slow_force = 0.3
-brake_force = -1.2
+slow_force = -0.1
+brake_force = -2.0
 
 light_name = ["红", "黄", "绿"]
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
     while viewer.is_running():
-        t_now = time.time() - start_t
+        t_now = data.time
         t_mod = t_now % CYCLE
         
         if t_mod < T_RED:
@@ -62,4 +60,3 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
         data.ctrl[0] = force
         mujoco.mj_step(model, data)
         viewer.sync()
-        time.sleep(0.02)
