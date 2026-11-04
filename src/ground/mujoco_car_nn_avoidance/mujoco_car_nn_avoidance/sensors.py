@@ -40,7 +40,31 @@ def ray_scan(env, pos=None, yaw=None):
                              1, int(env.chassis_id), geomid)
         if geomid[0] >= 0 and dist is not None and np.isfinite(dist) and dist > 0.0:
             ranges[i] = min(float(dist), cfg.lidar_range_m)
-    return ranges
+    return _apply_sensor_noise(env, ranges)
+
+
+def _apply_sensor_noise(env, ranges):
+    """给射线加测距噪声与随机丢束（dropout），用于鲁棒性评测。
+
+    cfg.lidar_noise_sigma_m / cfg.lidar_dropout_prob 都为 0 时原样返回，
+    不影响默认精度；随机数按 episode 固定种子，同一配置可复现。
+    """
+    cfg = env.cfg
+    sigma = float(getattr(cfg, "lidar_noise_sigma_m", 0.0))
+    dropout = float(getattr(cfg, "lidar_dropout_prob", 0.0))
+    if sigma <= 0.0 and dropout <= 0.0:
+        return ranges
+    rng = getattr(env, "_sensor_rng", None)
+    if rng is None:
+        rng = np.random.default_rng(int(getattr(cfg, "sensor_seed", 0)))
+        env._sensor_rng = rng
+    n = ranges.shape[0]
+    if dropout > 0.0:
+        ranges = ranges.copy()
+        ranges[rng.random(n) < dropout] = cfg.lidar_range_m
+    if sigma > 0.0:
+        ranges = ranges + rng.normal(0.0, sigma, n).astype(np.float32)
+    return np.clip(ranges, 0.0, cfg.lidar_range_m).astype(np.float32)
 
 
 def normalize_rays(rays, range_m):

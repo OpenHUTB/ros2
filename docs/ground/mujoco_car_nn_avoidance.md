@@ -341,6 +341,25 @@ ros2 topic echo /cmd_vel
 
 以上数值均为真实仿真输出，可在本地执行 `python3 main.py --eval` 复现，不是手工填写。
 
+### 7.4 传感器噪声鲁棒性（新增）
+
+7.1 的评测假设射线测距是理想值。真实激光雷达有测距噪声，也会随机丢束，而端到端策略把 25 束距离直接当输入，因此新增了这组评测：给每束射线加高斯噪声并随机按丢束率置为量程，扫描 6 档噪声 × 3 档丢束，每个组合跑全部 3 个场景。
+
+```bash
+python3 main.py --robustness     # 结果写 results/robustness.csv 与 robustness.png
+```
+
+| 测距噪声 σ (m) | 0.00 | 0.05 | 0.10 | 0.20 | 0.30 | 0.40 |
+|---|---:|---:|---:|---:|---:|---:|
+| 最小离障 (m)，丢束 0% | 0.934 | 0.871 | 0.757 | 0.479 | 0.128 | **0.000** |
+| 到达成功率 | 100% | 100% | 100% | 100% | 100% | 100% |
+
+**关键结论：通过率全是 100%，但安全裕度被悄悄吃掉了。** 噪声到 0.30 m 时最小离障只剩 0.13 m，0.40 m 时降到 0.000 m——已经擦到障碍，而「是否在 30 s 内到达目标」这个指标完全看不出来。所以只看 success 会高估策略的鲁棒性，验收应同时看 `min_clearance_m`；这也是本模块把最小离障单独列进指标表的原因。
+
+丢束率的 3 档（0/10%/20%）在噪声较低时没有单调影响（同一 σ 下 20% 丢束的离障甚至略大），样本只有 3 个场景，不宜过度解读；丢束更像是让策略更早绕行，而不是直接失效。
+
+![传感器噪声下的最小离障与成功率](img/ground/mujoco_car_nn_avoidance_robustness.png)
+
 ## 8. 常见问题
 
 | 现象 | 原因与处理 |
@@ -352,6 +371,7 @@ ros2 topic echo /cmd_vel
 | 静止时射线报出 0.3 m 左右的"近障碍" | 射线打到了自车轮子；检查自车 geom group 2 与 `bodyexclude` 是否生效，可先跑 `python3 tools/check_scene.py` |
 | ROS 启动报 `ParseXML: Error opening file` | 场景 XML 未随包安装；确认 `setup.py` 的 `data_files` 已打包 `models/*.xml`，重新 `colcon build` |
 | `--test` 中场景测试被跳过 | 当前环境没装 MuJoCo，纯逻辑测试照常执行，场景与传感器测试自动跳过；装好 MuJoCo 后会全部运行 |
+| 路径含中文/空格时报 `mjParseXML: resource not found` | MuJoCo 默认走 OS 文件系统读取，非 ASCII 路径会失败；`CarEnv._load_model` 已回落到「读文本 + `from_xml_string`」，场景不引用外部网格，结果等价 |
 | 未装 MuJoCo 时 `main.py --test` 起不来 | 先用 `python3 main.py --test --logic-only` 跑纯逻辑单测；也可直接 `python3 -m unittest discover -s test -p "test_*.py"`；采集、评测、演示、场景冒烟命令需要先装好 MuJoCo |
 
 ## 9. 参考

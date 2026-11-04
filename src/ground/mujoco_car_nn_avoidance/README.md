@@ -20,7 +20,7 @@ MuJoCo 地面两轮差速小车：**25 束前视射线 + 航向偏差 → 纯 nu
 
 ```
 src/ground/mujoco_car_nn_avoidance/
-├── main.py                     统一入口（--collect/--train/--eval/--demo/--test/--launch）
+├── main.py                     统一入口（--collect/--train/--eval/--robustness/--demo/--test/--launch）
 ├── main.sh / main.bat          脚本入口（无参数时默认 --eval）
 ├── mujoco_car_nn_avoidance/
 │   ├── config.py               路径解析与全部可调参数
@@ -81,6 +81,7 @@ python3 main.py --test --logic-only   # 只跑纯逻辑单测，不加载 MuJoCo
 python3 main.py --collect --seconds 20   # 探索式采集专家标签（准备数据集）
 python3 main.py --train --epochs 300     # 训练 MLP（准备权重）
 python3 main.py --eval            # 三场景闭环评测，导出报表与柱状图
+python3 main.py --robustness      # 传感器噪声鲁棒性评测：6 档噪声 x 3 档丢束，导出 robustness.csv 与热力图
 python3 main.py --demo            # 离屏渲染录制演示 gif（450 帧、每帧 40 ms、总时长 18 s）
 python3 main.py --launch          # ros2 launch 一键启动 ROS 2 闭环
 bash main.sh                      # 等价于 --eval

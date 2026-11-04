@@ -136,41 +136,43 @@ def train(cfg, epochs, lr):
 # ----------------------------------------------------------------------
 # 3. 闭环评测（真实仿真，NN 端到端控制）
 # ----------------------------------------------------------------------
+def _run_scene(cfg, scene, net, max_sim_t=30.0):
+    """跑一个场景的闭环，返回单场景指标（evaluate / robustness 共用）。"""
+    CarEnv, ray_scan, _ = _import_sim_modules()
+    env = CarEnv(cfg, scene)
+    env.reset()
+    sim_t = 0.0
+    reached = False
+    min_clearance = 1e9
+    max_steer = 0.0
+    while sim_t < max_sim_t:
+        rays = ray_scan(env)
+        x = build_state(rays, env.yaw(), cfg)
+        steer, throttle = net.predict(x)
+        steer = float(steer)
+        max_steer = max(max_steer, abs(steer))
+        min_clearance = min(min_clearance, float(np.min(rays)))
+        wl, wr = env.desired_wheel_vel(steer, throttle)
+        env.step_vel(wl, wr)
+        # 一次 step_vel 推进一个控制周期（steps_per_control 个物理步）
+        sim_t += cfg.steps_per_control * cfg.timestep
+        if env.pos()[0] > cfg.goal_x:
+            reached = True
+            break
+    return {
+        "scene": scene,
+        "success": reached,
+        "time_s": round(sim_t, 2),
+        "min_clearance_m": round(min_clearance, 3),
+        "max_steer": round(max_steer, 3),
+        "final_x": round(float(env.pos()[0]), 2),
+    }
+
+
 def evaluate(cfg, max_sim_t=30.0):
     ensure_results()
-    CarEnv, ray_scan, _ = _import_sim_modules()
     net = MLP.load(RESULTS / "mlp_weights.npz")
-    rows = []
-    for scene in cfg.scenes:
-        env = CarEnv(cfg, scene)
-        env.reset()
-        sim_t = 0.0
-        reached = False
-        min_clearance = 1e9
-        max_steer = 0.0
-        while sim_t < max_sim_t:
-            rays = ray_scan(env)
-            x = build_state(rays, env.yaw(), cfg)
-            steer, throttle = net.predict(x)
-            steer = float(steer)
-            max_steer = max(max_steer, abs(steer))
-            min_clearance = min(min_clearance, float(np.min(rays)))
-            wl, wr = env.desired_wheel_vel(steer, throttle)
-            env.step_vel(wl, wr)
-            # 一次 step_vel 推进一个控制周期（steps_per_control 个物理步）
-            sim_t += cfg.steps_per_control * cfg.timestep
-            pos = env.pos()
-            if pos[0] > cfg.goal_x:
-                reached = True
-                break
-        rows.append({
-            "scene": scene,
-            "success": reached,
-            "time_s": round(sim_t, 2),
-            "min_clearance_m": round(min_clearance, 3),
-            "max_steer": round(max_steer, 3),
-            "final_x": round(float(env.pos()[0]), 2),
-        })
+    rows = [_run_scene(cfg, scene, net, max_sim_t) for scene in cfg.scenes]
     header = list(rows[0].keys())
     with open(RESULTS / "eval_report.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=header)
@@ -208,6 +210,81 @@ def plot_eval(rows):
     fig.savefig(RESULTS / "eval_curves.png", dpi=110)
     plt.close(fig)
     print("评测曲线 -> results/eval_curves.png")
+
+
+# ----------------------------------------------------------------------
+# 3.5 传感器噪声鲁棒性评测
+# ----------------------------------------------------------------------
+NOISE_LEVELS = (0.0, 0.05, 0.10, 0.20, 0.30, 0.40)
+DROPOUT_LEVELS = (0.0, 0.10, 0.20)
+
+
+def robustness(cfg, max_sim_t=30.0):
+    """扫描测距噪声与丢束比例，统计多场景通过率。"""
+    ensure_results()
+    net = MLP.load(RESULTS / "mlp_weights.npz")
+    rows = []
+    for sigma in NOISE_LEVELS:
+        for dropout in DROPOUT_LEVELS:
+            cfg.lidar_noise_sigma_m = sigma
+            cfg.lidar_dropout_prob = dropout
+            results = [_run_scene(cfg, scene, net, max_sim_t) for scene in cfg.scenes]
+            success = sum(1 for r in results if r["success"])
+            rows.append({
+                "noise_sigma_m": sigma,
+                "dropout": dropout,
+                "success_rate": round(success / len(results), 3),
+                "mean_time_s": round(float(np.mean([r["time_s"] for r in results])), 2),
+                "min_clearance_m": round(float(np.min([r["min_clearance_m"] for r in results])), 3),
+                # 最小间距 < 0.10 m 视为擦碰：通过率相同，但安全裕度已耗尽
+                "grazed_scenes": sum(1 for r in results if r["min_clearance_m"] < 0.10),
+            })
+            print("[noise={:.2f}m dropout={:.0%}] success={}/{} time={}s clearance={}m".format(
+                sigma, dropout, success, len(results),
+                rows[-1]["mean_time_s"], rows[-1]["min_clearance_m"]))
+    with open(RESULTS / "robustness.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    print("鲁棒性报告 -> results/robustness.csv")
+    try:
+        plot_robustness(rows)
+    except Exception as exc:  # matplotlib 不可用则跳过绘图
+        print("（绘图跳过：{}）".format(exc))
+    baseline = [r for r in rows if r["noise_sigma_m"] == 0.0 and r["dropout"] == 0.0][0]
+    return baseline["success_rate"] == 1.0
+
+
+def plot_robustness(rows):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    grid = np.zeros((len(DROPOUT_LEVELS), len(NOISE_LEVELS)))
+    success = np.zeros_like(grid)
+    for r in rows:
+        i = DROPOUT_LEVELS.index(r["dropout"])
+        j = NOISE_LEVELS.index(r["noise_sigma_m"])
+        grid[i, j] = r["min_clearance_m"]
+        success[i, j] = r["success_rate"]
+    fig, ax = plt.subplots(figsize=(7.4, 3.9))
+    im = ax.imshow(grid, cmap="RdYlGn", vmin=0.0, vmax=1.0, aspect="auto")
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]):
+            ax.text(j, i, "{:.2f} m\n{:.0f}%".format(grid[i, j], 100 * success[i, j]),
+                    ha="center", va="center", fontsize=8)
+    ax.set_xticks(range(len(NOISE_LEVELS)))
+    ax.set_xticklabels(["{:.2f}".format(v) for v in NOISE_LEVELS])
+    ax.set_yticks(range(len(DROPOUT_LEVELS)))
+    ax.set_yticklabels(["{:.0%}".format(v) for v in DROPOUT_LEVELS])
+    ax.set_xlabel("Range noise sigma (m)")
+    ax.set_ylabel("Ray dropout rate")
+    ax.set_title("Min clearance (top) and success rate (bottom), 3 scenes")
+    fig.colorbar(im, ax=ax, label="min clearance (m)")
+    fig.tight_layout()
+    fig.savefig(RESULTS / "robustness.png", dpi=110)
+    plt.close(fig)
+    print("鲁棒性曲线 -> results/robustness.png")
 
 
 # ----------------------------------------------------------------------
@@ -305,6 +382,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--collect", action="store_true", help="采集专家标签数据")
     mode.add_argument("--train", action="store_true", help="训练 MLP 端到端模型")
     mode.add_argument("--eval", action="store_true", help="多场景闭环评测")
+    mode.add_argument("--robustness", action="store_true", help="传感器噪声鲁棒性评测")
     mode.add_argument("--demo", action="store_true", help="离屏录制运行 gif")
     mode.add_argument("--test", action="store_true", help="运行自检（单测 + 场景冒烟）")
     mode.add_argument("--launch", action="store_true", help="调用 ros2 launch 启动闭环")
@@ -343,6 +421,8 @@ def main(argv=None) -> int:
             return 0 if train(cfg, cfg.epochs, cfg.lr) else 1
         if args.eval:
             return 0 if evaluate(cfg) else 1
+        if args.robustness:
+            return 0 if robustness(cfg) else 1
         if args.demo:
             return 0 if demo(cfg, duration_s=args.duration) else 1
     except Exception as exc:  # noqa: BLE001
@@ -350,7 +430,7 @@ def main(argv=None) -> int:
         return 1
 
     build_parser().print_help()
-    print("\n请选择一个模式：--collect / --train / --eval / --demo / "
+    print("\n请选择一个模式：--collect / --train / --eval / --robustness / --demo / "
           "--test / --launch")
     return 2
 
