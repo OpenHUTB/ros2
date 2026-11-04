@@ -88,6 +88,7 @@ ROS每章节运行代码:
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
