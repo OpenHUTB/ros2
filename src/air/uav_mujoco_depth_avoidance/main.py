@@ -29,9 +29,11 @@ def run_demo(out_dir: str, epochs: int, n_train: int, n_val: int, scene: str,
     env = DepthUavEnv(scene)
     net, history, (x_va, y_va) = train(env, epochs=epochs, n_train=n_train, n_val=n_val)
 
-    print("\n== 2/4 训练曲线与预测对照图 ==")
+    print("== 2/4 训练曲线与预测对照图 ==")
     plot_training(history, out / "training_curve.png")
     plot_prediction(net, x_va, y_va, out / "prediction.png")
+    weights = net.save(out / "policy.npz")
+    print(f"训练好的权重已保存: {weights}（ROS 节点与 --teleop 可直接加载）")
 
     print("== 3/4 三种场景闭环飞行（含 GIF 录制）==")
     cfg = PolicyConfig()
@@ -75,15 +77,39 @@ def run_demo(out_dir: str, epochs: int, n_train: int, n_val: int, scene: str,
     return 0
 
 
-def run_teleop(scene: str) -> int:
-    from uav_nav.env import DepthUavEnv
+def build_policy(env, weights: str = "", epochs: int = 8, n_train: int = 600, log=print):
+    """构建用于部署的网络：优先加载训练好的权重，没有就现场训练一次。
+
+    关键点：绝不返回随机初始化的网络。之前 `--teleop` / `--ros` 直接 `DepthCNN()`
+    拿到的是未训练权重，控制律会给出错误转向（评审实测随机网络 slalom 只有 40% 成功率）。
+    """
     from uav_nav.net import DepthCNN
+
+    net = DepthCNN(seed=0)
+    if weights:
+        net.load(weights)
+        log(f"已加载权重: {weights}（{net.config()['params']} 参数）")
+        return net
+
+    from uav_nav.train import train
+
+    log(f"未提供权重，现场训练 {n_train} 样本 × {epochs} 轮（约 5 s）…")
+    net, history, _ = train(env, epochs=epochs, n_train=n_train, n_val=150, log=lambda *a, **k: None)
+    log(f"训练完成：最终 train MSE {history[-1]['train_mse']:.5f}，"
+        f"验证 MAE(左/中/右) {history[-1]['val_mae_left']:.3f}/"
+        f"{history[-1]['val_mae_center']:.3f}/{history[-1]['val_mae_right']:.3f}")
+    return net
+
+
+def run_teleop(scene: str, weights: str = "") -> int:
+    from uav_nav.env import DepthUavEnv
     from uav_nav.teleop import run_window
 
     env = DepthUavEnv(scene)
     print("键盘遥操作：W/S 调速度，A/D 偏航，空格悬停，R 重开，ESC 退出")
     print("（窗口里同时显示追尾视角、深度相机与网络预测，便于对照）")
-    return run_window(env, DepthCNN())
+    net = build_policy(env, weights)
+    return run_window(env, net)
 
 
 def run_tests() -> int:
@@ -106,6 +132,7 @@ def main() -> int:
     parser.add_argument("--test", action="store_true", help="运行单元测试")
     parser.add_argument("--ros", action="store_true", help="启动 ROS 2 节点")
     parser.add_argument("--scene", default="slalom", choices=["slalom", "gate", "clutter"])
+    parser.add_argument("--weights", default="", help="训练好的 npz 权重（不给则现场训练）")
     parser.add_argument("--output-dir", default="results")
     parser.add_argument("--epochs", type=int, default=14)
     parser.add_argument("--n-train", type=int, default=900)
@@ -116,7 +143,7 @@ def main() -> int:
     if args.test:
         return run_tests()
     if args.teleop:
-        return run_teleop(args.scene)
+        return run_teleop(args.scene, args.weights)
     if args.ros:
         return run_ros()
     return run_demo(args.output_dir, args.epochs, args.n_train, args.n_val, args.scene,

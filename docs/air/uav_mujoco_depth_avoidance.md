@@ -16,7 +16,7 @@
 | 1 | MuJoCo 物理仿真中的四旋翼，速度伺服飞行 | 任务（1）物理仿真 |
 | 2 | 键盘遥操作（W/S 速度、A/D 偏航、空格悬停、R 重开） | 任务（1）键盘运动控制 |
 | 3 | 机载深度相机 → CNN → 三扇区通行度 | 任务（2）传感器感知 |
-| 4 | 通行度 → 速度/偏航的闭环飞行，三种场景各 3 次评估 | 任务（2）给定轨迹的控制 |
+| 4 | 通行度 → 速度/偏航的闭环飞行，3 场景 × 5 个布局实例共 15 次评估 | 任务（2）给定轨迹的控制 |
 | 5 | ROS 2 节点 + launch，发布深度图/通行度/里程计 | 交付要求（4） |
 
 ## 2. 与已有模块的区别
@@ -158,7 +158,7 @@ v_x = v_{max}\cdot\mathrm{clip}\!\left(\frac{\hat c_M-c_{safe}}{c_{nom}-c_{safe}
 | `uav_nav/teleop.py` | 键盘遥操作（pygame 窗口 / 无窗口脚本化） |
 | `uav_nav/node.py` | ROS 2 节点：深度图、通行度、里程计发布，Twist 订阅 |
 | `main.py` | 课程入口：`--demo` / `--teleop` / `--test` / `--ros` |
-| `test/test_uav_nav.py` | 16 项离线测试（物理、传感器、网络、策略） |
+| `test/test_uav_nav.py` | 21 项离线测试（物理、传感器、网络、策略、权重往返、多种子与长跑） |
 
 几个关键实现点：
 
@@ -174,8 +174,9 @@ v_x = v_{max}\cdot\mathrm{clip}\!\left(\frac{\hat c_M-c_{safe}}{c_{nom}-c_{safe}
 ### 6.1 环境
 
 - Python 3.8+（已在 Python 3.10.6 验证）
-- `numpy`、`mujoco>=3.0`、`matplotlib`、`pillow`、`pygame`（仅键盘模式）
-- **不需要** ROS / CARLA / AirSim / Gazebo / GPU（ROS 只在 `--ros` 模式需要）
+- `numpy`、`mujoco>=3.0`、`matplotlib`、`pillow`、`pygame`（仅键盘模式）、`pytest`（测试）
+- **不需要** ROS / CARLA / AirSim / Gazebo / GPU（ROS 只在 `--ros` 模式需要；包是 `ament_python` + `rclpy`，
+  因此 `--ros` 只能在 ROS 2 Humble 上跑，**ROS 1 Noetic 没有 rclpy，不支持**）
 
 ```bash
 cd src/air/uav_mujoco_depth_avoidance
@@ -210,8 +211,12 @@ python3 main.py --demo --output-dir results
 ### 6.3 键盘遥操作（任务 1）
 
 ```bash
-python3 main.py --teleop
+python3 main.py --teleop                      # 现场训练一次（约 5 s）后进入窗口
+python3 main.py --teleop --weights results/policy.npz   # 直接用 --demo 训练好的权重
 ```
+
+> 这里加载的**一定是训练过的网络**：给了 `--weights` 就加载，没给就现场训练一次。
+> 早期版本直接 `DepthCNN()` 用随机权重画图与半自动控制，属于 bug（见 §7.5）。
 
 | 按键 | 作用 |
 | --- | --- |
@@ -226,7 +231,7 @@ python3 main.py --teleop
 ### 6.4 单元测试
 
 ```bash
-python3 main.py --test          # 16 passed，约 1 s
+python3 main.py --test          # 21 passed，约 3 s
 python3 -m pytest -q test
 ```
 
@@ -253,6 +258,9 @@ ros2 topic pub /uav/scene std_msgs/String "{data: gate}" -1                  # �
 ```
 
 未收到 `/uav/cmd_vel` 时节点按网络策略自主飞行（`config/params.yaml` 里 `use_policy: true`）。
+节点启动时**先确认网络是训练过的**：`weights` 参数指向 `results/policy.npz` 就加载，
+否则现场训练 600 样本 × 8 轮（约 5 s）并在日志里打印验证 MAE，绝不会把随机权重接进控制回路。
+`/uav/odom` 的 `frame_id` 是 `map`（世界坐标），`/uav/depth` 保留 `uav_depth_cam`（相机系）。
 
 ## 7. 实测结果
 
@@ -310,6 +318,24 @@ ros2 topic pub /uav/scene std_msgs/String "{data: gate}" -1                  # �
    也是这个场景族里最接近碰撞的样本。
 3. **长跑没有退化**：151.5 s、15 次任务后成功率仍为 100%，最小通行度 0.047，说明没有随运行时间累积的漂移。
 4. **计算开销**：单步推理 3.4 ms（含渲染与网络前向），20 Hz 控制回路余量约 96%。
+
+### 7.5 部署正确性：训练权重 vs 随机初始化
+
+早期版本有一个真实缺陷：`--teleop` 与 ROS 节点直接 `DepthCNN(seed=0)`，拿到的是**未训练**的随机权重，
+而 `params.yaml` 默认 `use_policy: true`，等于用随机网络控制飞机。这一项被评审抓出来后已修（见 §6.3 / §6.5）：
+训练结束会把权重存成 `results/policy.npz`，节点与键盘模式优先加载；没有权重就现场训练一次，绝不接随机网络。
+
+用同一套评价脚本分别跑训练后的网络与 3 个随机初始化网络（每行 3 场景 × 5 实例）：
+
+| 策略 | slalom 成功率 | gate 成功率 | clutter 成功率 | 碰撞总数 |
+| --- | ---: | ---: | ---: | ---: |
+| **训练后（本项目默认）** | **100%** | **100%** | **100%** | **0** |
+| 随机初始化 seed=0 | 40% | 100% | 80% | 4 |
+| 随机初始化 seed=1 | 80% | 100% | 80% | 2 |
+| 随机初始化 seed=2 | 100% | 100% | 80% | 1 |
+
+随机网络在走廊场景只有 40% 成功率、并且会撞柱子——这正是"部署未训练权重"的危害，
+也说明只看 `pytest` 通过并不足以证明系统可用。
 
 ## 8. 局限与后续
 

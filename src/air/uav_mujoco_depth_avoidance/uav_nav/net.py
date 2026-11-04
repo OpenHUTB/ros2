@@ -130,5 +130,32 @@ class DepthCNN:
             outs.append(out)
         return np.concatenate(outs, axis=0)
 
+    # ------------------------------------------------------------ 权重保存/加载
+    def save(self, path) -> str:
+        """把训练好的权重存成 npz，供 ROS 节点/键盘模式加载，避免部署未训练的网络。"""
+        from pathlib import Path
+
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        np.savez(p, in_hw=np.array([self.shapes[0]], dtype=np.int32),
+                 **{f"p_{k}": v for k, v in self.p.items()})
+        return str(p)
+
+    def load(self, path) -> "DepthCNN":
+        """加载 save() 写出的 npz；形状不匹配会直接报错，而不是悄悄用随机权重。"""
+        with np.load(path) as z:
+            expected = int(z["in_hw"][0])
+            if expected != self.shapes[0]:
+                raise ValueError(f"权重输入尺寸 {expected} 与当前网络 {self.shapes[0]} 不一致")
+            for key in self.p:
+                array = z[f"p_{key}"]
+                if array.shape != self.p[key].shape:
+                    raise ValueError(f"权重 {key} 形状 {array.shape} 与网络 {self.p[key].shape} 不一致")
+                self.p[key] = array.astype(np.float32)
+        self.m = {k: np.zeros_like(v) for k, v in self.p.items()}
+        self.v = {k: np.zeros_like(v) for k, v in self.p.items()}
+        self.t = 0
+        return self
+
     def config(self) -> dict:
         return {"in_hw": self.shapes[0], "params": int(sum(v.size for v in self.p.values()))}

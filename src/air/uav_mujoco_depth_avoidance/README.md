@@ -13,9 +13,9 @@
 | --- | --- |
 | 操作系统 | Windows 10/11、Ubuntu 20.04 / 22.04 |
 | Python | 3.8+（已在 3.10.6 验证） |
-| 依赖 | `numpy`、`mujoco>=3.0`、`matplotlib`、`pillow`；键盘模式另需 `pygame` |
-| ROS（可选） | ROS 2 Humble / ROS Noetic，仅 `--ros` 模式需要 |
-| 硬件 | 普通 CPU；`--demo` 全流程约 14 s |
+| 依赖 | `numpy`、`mujoco>=3.0`、`matplotlib`、`pillow`、`pygame`（键盘模式）、`pytest`（测试） |
+| ROS（可选） | ROS 2 Humble，仅 `--ros` 模式需要（`ament_python` + `rclpy`，Noetic 不支持） |
+| 硬件 | 普通 CPU；`--demo` 全流程约 25 s |
 
 ## 运行步骤
 
@@ -39,7 +39,8 @@ python3 main.py --demo --output-dir results
 ### 3. 键盘遥操作（任务 1）
 
 ```bash
-python3 main.py --teleop
+python3 main.py --teleop                                # 现场训练约 5 s 后进入窗口
+python3 main.py --teleop --weights results/policy.npz   # 用 --demo 训练好的权重
 ```
 
 `W/S` 调前向速度，`A/D` 调偏航角速度，`空格` 悬停，`R` 重开，`ESC` 退出。
@@ -48,7 +49,7 @@ python3 main.py --teleop
 ### 4. 单元测试
 
 ```bash
-python3 main.py --test        # 16 passed，约 1 s
+python3 main.py --test        # 21 passed，约 3 s
 python3 -m pytest -q test
 ```
 
@@ -78,7 +79,7 @@ uav_mujoco_depth_avoidance/
 │   ├── policy.py                     # 控制律与闭环评价
 │   ├── teleop.py                     # 键盘遥操作
 │   └── node.py                       # ROS 2 节点
-├── test/test_uav_nav.py              # 16 项离线测试
+├── test/test_uav_nav.py              # 21 项离线测试
 └── requirements.txt
 ```
 

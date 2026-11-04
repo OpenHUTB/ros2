@@ -229,3 +229,35 @@ def test_soak_run_accumulates_steps(env):
     assert out["episodes"] >= 2
     assert out["successes"] + out["collisions"] <= out["episodes"]
     assert 0.0 <= out["min_clearance"] <= 1.0
+
+
+# ---------------------------------------------------------------- 权重保存/加载
+
+def test_weight_roundtrip_is_exact(env, tmp_path):
+    """save()/load() 必须逐元素一致，否则部署的网络与训练的不是同一个。"""
+    from uav_nav.train import train
+
+    net, _, (x_va, y_va) = train(env, epochs=2, n_train=40, n_val=20, lr=3e-3,
+                                 log=lambda *a, **k: None)
+    before = net.predict(x_va)
+    path = tmp_path / "policy.npz"
+    net.save(path)
+    loaded = DepthCNN(seed=123).load(path)      # 不同初始化，加载后必须被覆盖
+    assert np.allclose(loaded.predict(x_va), before, atol=1e-6)
+
+
+def test_loaded_policy_beats_random_network(env):
+    """评审发现的 bug 回归：随机初始化网络的通行度误差必须明显大于训练后的网络。"""
+    from uav_nav.train import train
+
+    x_va, y_va = _eval_set(env)
+    random_mae = float(np.abs(DepthCNN(seed=7).predict(x_va) - y_va).mean())
+    net, _, _ = train(env, epochs=4, n_train=80, n_val=20, lr=3e-3, log=lambda *a, **k: None)
+    trained_mae = float(np.abs(net.predict(x_va) - y_va).mean())
+    assert trained_mae < random_mae * 0.6, (trained_mae, random_mae)
+
+
+def _eval_set(env, n: int = 24):
+    from uav_nav.data import make_dataset
+
+    return make_dataset(env, n, seed=999)

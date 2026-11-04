@@ -35,12 +35,13 @@ def main() -> int:
             super().__init__("uav_mujoco_depth_avoidance")
             self.declare_parameter("scene", "slalom")
             self.declare_parameter("use_policy", True)
+            self.declare_parameter("weights", "")
             self.declare_parameter("rate_hz", 20.0)
             scene = str(self.get_parameter("scene").value)
             self.use_policy = bool(self.get_parameter("use_policy").value)
 
             self.env = DepthUavEnv(scene)
-            self.net = DepthCNN(seed=0)
+            self.net = self._build_policy(str(self.get_parameter("weights").value))
             self.cfg = PolicyConfig()
             self.vx_cmd = 0.0
             self.yaw_cmd = 0.0
@@ -56,6 +57,29 @@ def main() -> int:
             self.get_logger().info(
                 f"uav depth avoidance 已启动：scene={scene}，{rate:.0f} Hz，"
                 f"use_policy={self.use_policy}（未收到 /uav/cmd_vel 时按策略/悬停飞行）")
+
+        def _build_policy(self, weights: str):
+            """加载训练好的权重；没有权重就现场训练一次，绝不把随机网络接进控制回路。"""
+            from pathlib import Path
+
+            net = DepthCNN(seed=0)
+            if weights and Path(weights).exists():
+                net.load(weights)
+                self.get_logger().info(f"已加载权重 {weights}")
+                return net
+            if weights:
+                self.get_logger().warn(f"权重 {weights} 不存在，改为现场训练")
+
+            from .train import train
+
+            self.get_logger().info("未提供权重，现场训练 600 样本 × 8 轮（约 5 s）…")
+            net, history, _ = train(self.env, epochs=8, n_train=600, n_val=150,
+                                    log=lambda *a, **k: None)
+            self.get_logger().info(
+                f"训练完成：train MSE {history[-1]['train_mse']:.5f}，"
+                f"验证 MAE(左/中/右) {history[-1]['val_mae_left']:.3f}/"
+                f"{history[-1]['val_mae_center']:.3f}/{history[-1]['val_mae_right']:.3f}")
+            return net
 
         def on_cmd(self, msg: Twist):
             self.vx_cmd = float(msg.linear.x)
@@ -94,7 +118,8 @@ def main() -> int:
             self.pub_clearance.publish(msg)
 
             odom = Odometry()
-            odom.header = img.header
+            odom.header.stamp = img.header.stamp
+            odom.header.frame_id = "map"          # 里程计是世界坐标，不能沿用相机的 frame
             odom.child_frame_id = "uav_base"
             odom.pose.pose.position.x = float(state.pos[0])
             odom.pose.pose.position.y = float(state.pos[1])
