@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>car_2d_target_tracker</name>
+  <version>1.0.0</version>
+  <description>
+    2D 单轮车目标追踪：纯运动学仿真 + 离线指标评测（到达时间 / 路径长度 /
+    最小障碍间隙 / 卡死占比），对比"原地打转"与"沿障碍切向绕行"两种控制器。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_copyright</buildtool_depend>
+  <buildtool_depend>ament_flake8</buildtool_depend>
+  <buildtool_depend>ament_pep257</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
