@@ -170,5 +170,10 @@ def main():
     return 1 if FAILED else 0
 
 
+def test_metrics():
+    """pytest 入口：离线指标计算自检必须返回 0。"""
+    assert main() == 0
+
+
 if __name__ == '__main__':
     sys.exit(main())
