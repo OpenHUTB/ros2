@@ -55,20 +55,20 @@ src/
 ## 启动步骤
 
 1. 进入 ROS2 工作空间
-   ```bash
+   ```
    cd ~/ros2-cc
    ```
 2. 编译功能包
-   ```bash
+   ```
    colcon build --packages-select humanoid_joint_tools
    source install/setup.bash
    ```
 3. 使用 launch 文件一键启动（启动模型、RViz、假数据及录制/回放节点）
-   ```bash
+   ```
    ros2 launch humanoid_joint_tools main.launch.py
    ```
 4. 新开一个终端窗口，同样进入工作空间并加载环境，发送录制指令
-   ```bash
+   ```
    cd ~/ros2-cc
    source install/setup.bash
    
@@ -76,7 +76,7 @@ src/
    ros2 service call /start_record std_srvs/srv/Trigger
    ```
 5. 等待几秒后，发送停止录制指令（此时会自动生成 json 并触发回放）
-   ```bash
+   ```
    ros2 service call /stop_record std_srvs/srv/Trigger
    ```
 
