@@ -4,6 +4,23 @@
 本项目基于 ROS2 (Humble版本) 和 Python (rclpy) 编写，实现了一个**滑动窗口均值滤波节点**。
 节点通过订阅原始的传感器数据话题，使用固定长度的滑动窗口计算均值，从而有效过滤数据中的突变噪声，并将平滑后的结果发布出去。
 
+## 📂 项目目录结构
+
+本项目核心文件均位于 `src/chap2/mean_filter_pkg` 根目录下，完整结构如下：
+
+```text
+mean_filter_pkg/                      <-- 项目根目录
+├── package.xml                       # 功能包的身份证（依赖声明）
+├── setup.py                          # 注册节点入口及编译配置
+├── setup.cfg                         # 保证终端能找到可执行文件
+├── resource/                         # 资源索引目录
+│   └── mean_filter_pkg               
+├── test/                             # 自动化测试目录
+└── mean_filter_pkg/                  # 核心算法源码目录
+    ├── __init__.py                   # 模块初始化文件
+    └── mean_filter_node.py           <-- 核心代码（滑动窗口均值滤波算法）
+```
+
 ## ⚙️ 核心参数
 节点启动时支持以下参数配置：
 - `input_topic`: 订阅的输入话题，默认值为 `/sensor/raw`
