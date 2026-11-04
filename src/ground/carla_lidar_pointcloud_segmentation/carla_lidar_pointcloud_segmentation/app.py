@@ -179,6 +179,10 @@ def _print_demo_summary(stats, args):
           % (free.min(), free.mean()))
     print('  触发刹车（刹车量 > 0.1）的帧：%d / %d'
           % (stats['brake_frames'], free.size))
+    if stats['speed']:
+        speed = np.asarray(stats['speed'], dtype=float)
+        print('  车速：平均 %.1f m/s，最高 %.1f m/s'
+              % (speed.mean(), speed.max()))
     if stats['lateral']:
         lateral = np.asarray(stats['lateral'], dtype=float)
         print('  横向偏差：平均 %.2f m，最大 %.2f m' % (lateral.mean(), lateral.max()))
@@ -250,7 +254,8 @@ def run_demo(args):
             # 延迟导入：只有装了 CARLA 才会走到这里。--self-check 在没有 carla
             # 库的机器上也要能跑，所以不能在模块顶部 import carla。
             import carla as carla_module
-        stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': []}
+        stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': [],
+                 'speed': []}
         for frame in range(args.frames):
             world.tick()
             try:
@@ -319,10 +324,14 @@ def run_demo(args):
                     default=float('nan'))
                 if nearest == nearest:
                     stats['gap_true'].append(float(nearest))
+                stats['speed'].append(float(speed))
             stats['free'].append(float(free))
 
-            print('[演示] 帧 %3d 点数 %5d 可行驶比例 %.2f 前方余量 %5.1f m 速度系数 %.2f%s'
-                  % (frame, points.shape[0], ratio, free, factor,
+            velocity = ego.get_velocity()
+            speed_now = math.sqrt(velocity.x ** 2 + velocity.y ** 2)
+            print('[演示] 帧 %3d 点数 %5d 可行驶比例 %.2f 前方余量 %5.1f m '
+                  '速度系数 %.2f 车速 %4.1f m/s%s'
+                  % (frame, points.shape[0], ratio, free, factor, speed_now,
                      '' if command is None else
                      ' 油门 %.2f 刹车 %.2f 转向 %+.2f' % (command.throttle, command.brake,
                                                          command.steer)))
