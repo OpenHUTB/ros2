@@ -1,0 +1,13 @@
+test_broken_streak (test_core.Checks.test_broken_streak) ... ok
+test_clock_backward (test_core.Checks.test_clock_backward) ... ok
+test_confirm (test_core.Checks.test_confirm) ... ok
+test_gap_not_continuous (test_core.Checks.test_gap_not_continuous) ... ok
+test_hysteresis (test_core.Checks.test_hysteresis) ... ok
+test_invalid (test_core.Checks.test_invalid) ... ok
+test_parameters (test_core.Checks.test_parameters) ... ok
+test_stale (test_core.Checks.test_stale) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.000s
+
+OK
