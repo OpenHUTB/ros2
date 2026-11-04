@@ -1,0 +1,22 @@
+{
+  "module": "uav_range_denoising_mlp",
+  "scope": "real ROS Noetic build/roslaunch/topic transport with synthetic inputs; NOT flight or sensor hardware validation",
+  "functional_pass": true,
+  "shutdown_clean": true,
+  "launch_returncode": 0,
+  "node_exit_errors": false,
+  "checks": [
+    "six inputs: no output before seven-sample warmup",
+    "seven inputs: model estimate matches pinned constant-input fixture",
+    "range frame and bounds retained",
+    "invalid input clears window; six fresh inputs produce no estimate",
+    "stale gap clears window",
+    {
+      "constant_input_m": 2.0,
+      "observed_estimate_m": 2.0086710453033447,
+      "expected_estimate_m": 2.0086710342324596
+    },
+    "roslaunch remains running through functional checks"
+  ],
+  "error": null
+}
