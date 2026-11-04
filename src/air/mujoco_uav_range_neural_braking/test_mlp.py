@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from mlp import MLPRegressor
 from train import evaluate
@@ -22,3 +23,23 @@ def test_fit_and_predict_are_finite():
     metrics = evaluate(model, features, target)
     assert np.isfinite(model.predict(features)).all()
     assert metrics["samples"] == 4
+
+
+def test_training_rejects_invalid_shapes_and_nonfinite_values():
+    model = MLPRegressor(seed=7)
+    with pytest.raises(ValueError, match="shape"):
+        model.fit(np.ones((3, 3)), np.ones(3))
+    with pytest.raises(ValueError, match="finite"):
+        model.fit(np.asarray([[1.0, np.nan]]), np.asarray([0.0]))
+    with pytest.raises(ValueError, match="aligned"):
+        model.fit(np.ones((2, 2)), np.ones(1))
+
+
+def test_saved_and_loaded_models_produce_same_output(tmp_path):
+    features = np.asarray([[2.0, 0.2], [1.0, 0.7], [0.5, 1.0], [3.0, 0.0]])
+    target = np.asarray([0.4, -0.8, -2.0, 1.0])
+    model = MLPRegressor(seed=7).fit(features, target, epochs=20)
+    path = tmp_path / "controller.json"
+    model.save(path)
+    loaded = MLPRegressor.load(path)
+    assert np.allclose(model.predict(features), loaded.predict(features))

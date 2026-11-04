@@ -1,6 +1,7 @@
 """输出多场景指标与物理场景图。 Export scenario metrics and physics views."""
 import argparse
 import json
+import tempfile
 from pathlib import Path
 
 import matplotlib
@@ -12,13 +13,13 @@ from PIL import Image, ImageDraw
 from simulation import Scenario, Simulation
 
 
-def evaluate(output, controller="reference"):
+def evaluate(output, controller="reference", model_path=None):
     """覆盖静止、巡航与高速接近。 Cover rest, cruise and fast approach."""
     output.mkdir(parents=True, exist_ok=True)
     reports = []
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
     for speed in (0.0, 1.5, 3.0):
-        sim = Simulation(Scenario(name=f"speed_{speed}", speed=speed), controller=controller)
+        sim = Simulation(Scenario(name=f"speed_{speed}", speed=speed), controller=controller, model_path=model_path)
         rows, summary = sim.run()
         reports.append(summary)
         axes[0].plot([r["time_s"] for r in rows], [r["range_m"] for r in rows], label=f"v0={speed} m/s")
@@ -31,14 +32,14 @@ def evaluate(output, controller="reference"):
     fig.tight_layout()
     fig.savefig(output / "braking_curves.png", dpi=140)
     plt.close(fig)
-    (output / "baseline_metrics.json").write_text(json.dumps(reports, indent=2), encoding="utf-8")
+    (output / f"{controller}_metrics.json").write_text(json.dumps(reports, indent=2), encoding="utf-8")
     return reports
 
 
-def render(output, controller="reference"):
+def render(output, controller="reference", model_path=None):
     """记录同一物理过程，抽帧不改变步长。 Sample the same fixed-step physics process."""
     output.mkdir(parents=True, exist_ok=True)
-    sim = Simulation(controller=controller)
+    sim = Simulation(controller=controller, model_path=model_path)
     camera = mujoco.MjvCamera()
     camera.lookat[:] = [-3.4, 0, 0.8]
     camera.distance, camera.azimuth, camera.elevation = 10, 100, -22
@@ -58,10 +59,18 @@ def render(output, controller="reference"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("results"))
+    parser.add_argument("--output", type=Path, default=Path(tempfile.gettempdir()) / "mujoco_uav_evaluation")
     parser.add_argument("--render", action="store_true")
-    parser.add_argument("--controller", choices=("reference", "range"), default="reference")
+    parser.add_argument("--controller", choices=("reference", "range", "mlp", "all"), default="reference")
+    parser.add_argument("--model", type=Path, default=None)
     args = parser.parse_args()
-    print(json.dumps(evaluate(args.output, args.controller), indent=2))
-    if args.render:
-        render(args.output, args.controller)
+    controllers = ("reference", "range", "mlp") if args.controller == "all" else (args.controller,)
+    combined = {}
+    for controller in controllers:
+        output = args.output / controller if args.controller == "all" else args.output
+        combined[controller] = evaluate(output, controller, args.model)
+        if args.render:
+            render(output, controller, args.model)
+    args.output.mkdir(parents=True, exist_ok=True)
+    (args.output / "comparison_metrics.json").write_text(json.dumps(combined, indent=2), encoding="utf-8")
+    print(json.dumps(combined, indent=2))
