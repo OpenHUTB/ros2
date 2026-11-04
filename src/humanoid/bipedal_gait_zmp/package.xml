@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>bipedal_gait_zmp</name>
+  <version>1.1.0</version>
+
+  <description>
+    双足步态生成与 ZMP 稳定性验证：线性倒立摆（LIPM）建模、落脚点与支撑多边形、
+    周期解求解、开环不稳定性的定量分析、DCM 反馈闭环行走。
+    离线分析只用 Python 标准库；另含 rospy 节点，把质心轨迹、ZMP、稳定裕度和
+    落脚点发布成话题，可用 rqt_plot / RViz 观察。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
