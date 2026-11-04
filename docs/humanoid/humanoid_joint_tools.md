@@ -85,8 +85,11 @@ src/
 5. 等待几秒后，发送停止录制指令（此时会生成 json 文件）
    ```
    ros2 service call /stop_record std_srvs/srv/Trigger
-  
+   ```
 6. 发送回放指令，模型按录制轨迹动作一次后停止
+   ```
+   ros2 service call /start_play std_srvs/srv/Trigger
+   ```
   
 
 ## 运行效果
