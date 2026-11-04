@@ -1,0 +1,37 @@
+# 肌肉骨骼人控制参数（反射层 / 步态 / 蹲起 / 踢腿）
+
+reflex:
+  # 姿势反射层：tau = kp * (q_ref - q) - kd * qdot，映射到拮抗肌对
+  # 踝 kp 需 > mg*h ≈ 184 N·m/rad（倒立摆临界刚度）才能稳住站立模态；
+  # 髋/膝 kd 必须小：kd 太大时快速摆动会产生反向制动力矩（kd*qd），
+  # 既拖慢摆动又通过拮抗映射兴奋伸肌刹车
+  kp: {root_pitch: 320.0, hip_l: 320.0, knee_l: 300.0, ankle_l: 460.0,
+       hip_r: 320.0, knee_r: 300.0, ankle_r: 460.0,
+       shoulder_l: 40.0, elbow_l: 30.0, shoulder_r: 40.0, elbow_r: 30.0}
+  kd: {root_pitch: 26.0, hip_l: 10.0, knee_l: 6.0, ankle_l: 30.0,
+       hip_r: 10.0, knee_r: 6.0, ankle_r: 30.0,
+       shoulder_l: 3.0, elbow_l: 2.0, shoulder_r: 3.0, elbow_r: 2.0}
+  # 共收缩力矩 (N·m)：对拮抗肌施加等大小力矩（按各自 F0 换算激活），
+  # 净力矩为零、只提供关节刚度（类似人体共收缩）；反射力矩叠加其上
+  cocon: {root_pitch: 18.0, hip_l: 10.0, knee_l: 12.0, ankle_l: 10.0,
+          hip_r: 10.0, knee_r: 12.0, ankle_r: 10.0,
+          shoulder_l: 1.5, elbow_l: 1.2, shoulder_r: 1.5, elbow_r: 1.2}
+
+walk:
+  freq: 0.8            # 步态基频 Hz（± 键在 0.5-1.5 倍间调节）
+  hip_amp: 0.50        # 髋摆动幅值 rad
+  knee_amp: 0.75       # 摆动相膝屈曲幅值 rad
+  knee_off: 0.10
+  ankle_amp: 0.25
+  ankle_off: -0.05
+  ankle_phase: 0.4     # 踝相对髋的相位滞后 rad（脚跟着地背屈/后蹬跖屈）
+  arm_amp: 0.30        # 双臂反相摆动幅值
+  pitch_ref: 0.07      # 行走时躯干前倾参考 rad（重心前移助力推进）
+
+squat:
+  freq: 0.5            # 蹲起周期 Hz
+  depth: 0.24          # 骨盆下降深度 m
+  z_stand: 0.875       # 站立骨盆高度 m（与 XML 初始位形一致）
+
+kick:
+  T: 1.6               # 一次踢腿动作时长 s

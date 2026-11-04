@@ -1,5 +1,3 @@
-# 测距与回合数据 / Ranging and episode data
+# 无人机前向测距与回合数据集
 
-内容统一见[无人机前向测距、神经制动与定高悬停](mujoco_uav_range_neural_braking.md#dataset)。
-
-See [UAV Forward Ranging, Neural Braking and Altitude Hold](mujoco_uav_range_neural_braking.md#dataset) for the complete guide.
+测距原理、数据字段、回合划分和训练步骤统一见[模块文档的数据集章节](mujoco_uav_range_neural_braking.md#dataset)。

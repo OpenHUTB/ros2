@@ -11,7 +11,7 @@ import numpy as np
 
 from simulation import Scenario, Simulation
 
-FEATURES = ["sensor_range_m", "closing_speed_m_s", "height_error_m"]
+FEATURES = ["sensor_range_m", "closing_speed_m_s"]
 TARGET = "accel_m_s2"
 
 
@@ -36,7 +36,7 @@ def generate(output, seed=2026, episodes=30):
                                   height=float(rng.uniform(0.8, 1.8)), duration=12))
     manifest = {"seed": seed, "mujoco_version": mujoco.__version__, "numpy_version": np.__version__,
                 "timestep_s": 0.01, "controller": "range", "features": FEATURES, "target": TARGET,
-                "feature_units": ["m", "m/s", "m"], "target_unit": "m/s^2", "splits": {}}
+                "feature_units": ["m", "m/s"], "target_unit": "m/s^2", "splits": {}}
     for split, indices in splits.items():
         reports = []
         count = 0
@@ -49,6 +49,7 @@ def generate(output, seed=2026, episodes=30):
                 report["parameters"] = asdict(scenario)
                 reports.append(report)
                 for row in rows:
+                    row.pop("height_error_m")
                     record = {"episode_id": scenario.name, **row}
                     if writer is None:
                         writer = csv.DictWriter(stream, fieldnames=record, lineterminator="\n")

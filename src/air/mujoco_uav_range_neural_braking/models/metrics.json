@@ -23,5 +23,6 @@
   ],
   "target": "accel_m_s2",
   "epochs": 350,
-  "hidden_size": 16
+  "hidden_size": 16,
+  "learning_rate": 0.003
 }

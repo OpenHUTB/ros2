@@ -4,7 +4,7 @@
 
 Each CSV contains 24 uniformly selected rows from its split for schema inspection, not training. Regenerate complete data with `dataset.py` from the module root. Hashes in `dataset_summary.json` refer to the complete CSV files rather than these samples.
 
-```bash
+```
 python dataset.py --seed 2026 --episodes 30 --output datasets
 ```
 
