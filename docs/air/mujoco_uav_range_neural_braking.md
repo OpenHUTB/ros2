@@ -36,7 +36,7 @@ Python 3.10～3.11，MuJoCo 3.12.0，NumPy 依赖见 `requirements.txt`。以下
 ```
 python -m pip install -r requirements.txt
 python main.py --headless --controller mlp
-python evaluate.py --controller all --output results/comparison
+python evaluate.py --controller all --render --output results
 python -m pytest -q
 ```
 
@@ -62,15 +62,15 @@ python dataset.py --seed 2026 --episodes 30 --output datasets
 python train.py --data datasets --output models --epochs 350 --hidden-size 16
 ```
 
-网络输入为 `sensor_range_m` 和 `closing_speed_m_s`，标签为解析测距控制器的 `accel_m_s2`。高度误差不列入数据集；独立高度控制仍参与仿真。清单记录特征、单位、回合参数与文件 SHA-256，仓库只保留每组 24 行样本和汇总。
+网络输入为补偿固定安装偏移后的表面间距 `sensor_range_m` 和 `closing_speed_m_s`，标签为解析测距控制器的 `accel_m_s2`。生成数据与在线推理都使用 `range + 0.01 m` 的同一测距定义。高度误差不列入数据集；独立高度控制仍参与仿真。清单记录特征、单位、回合参数与文件 SHA-256，仓库只保留每组 24 行样本和汇总。
 
-模型为 NumPy 两层 MLP，默认含 16 个 ReLU 隐藏单元，学习率 0.003。验证误差用于保留最佳模型，连续 30 轮未改善则提前停止；`metrics.json` 记录实际训练轮数、隐藏单元数和学习率。默认训练完成 350 轮，测试 MAE 为 0.145426 米/秒²，RMSE 为 0.260402 米/秒²。
+模型为 NumPy 两层 MLP，默认含 16 个 ReLU 隐藏单元，学习率 0.003。验证误差用于保留最佳模型，连续 30 轮未改善则提前停止；`metrics.json` 记录实际训练轮数、隐藏单元数和学习率。默认训练完成 350 轮，测试 MAE 为 0.145426 米/秒²，RMSE 为 0.260402 米/秒²。传感器特征已补偿 0.01 米安装偏移，与闭环推理输入保持一致。
 
 <span id="results"></span>
 
 ## 闭环比较
 
-同一次评测使用机身中心 x=-7 米、障碍中心 x=0 米、参考高度 1.2 米，每组运行 10 秒。结果文件见模块 `results/`，其中各控制器 JSON 与 `comparison_metrics.json` 可由上述评测命令重建。
+同一次评测使用机身中心 x=-7 米、障碍中心 x=0 米、参考高度 1.2 米，每组运行 10 秒。评测命令将 JSON、PNG 和 GIF 平铺写入模块 `results/`，文件名分别带有控制器前缀；各控制器指标与 `comparison_metrics.json` 可由该命令重建。
 
 | 控制器 | 初速度（米/秒） | 最小表面间距（米） | 末速度（米/秒） | 接触步数 |
 | --- | ---: | ---: | ---: | ---: |
@@ -81,14 +81,14 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 | 测距控制 | 1.5 | 0.668331 | 0.000000 | 0 |
 | 测距控制 | 3 | 0.668360 | 0.000000 | 0 |
 | 神经控制 | 0 | 0.748400 | 0.015567 | 0 |
-| 神经控制 | 1.5 | 0.459629 | -0.056239 | 0 |
-| 神经控制 | 3 | -0.004636 | -0.020618 | 3 |
+| 神经控制 | 1.5 | 0.470438 | -0.056074 | 0 |
+| 神经控制 | 3 | -0.010629 | -0.004231 | 4 |
 
-几何参照与测距控制分别对应约 0.629 米和 0.668 米的间距，两者使用不同观测，不能混作同一组结果。神经控制在默认 1.5 米/秒场景无碰撞；3 米/秒超出训练速度范围，记录 3 个接触步。
+几何参照与测距控制分别对应约 0.629 米和 0.668 米的间距，两者使用不同观测，不能混作同一组结果。神经控制在默认 1.5 米/秒场景无碰撞；3 米/秒超出训练速度范围，记录 4 个接触步。
 
-![测距控制曲线](../img/mujoco_uav_range_neural_braking/range_braking_curves.png)
+![神经控制曲线](../img/mujoco_uav_range_neural_braking/mlp_braking_curves.png)
 
-![制动过程](../img/mujoco_uav_range_neural_braking/braking.gif)
+![神经制动过程](../img/mujoco_uav_range_neural_braking/mlp_braking.gif)
 
 ## 检查与文件职责
 

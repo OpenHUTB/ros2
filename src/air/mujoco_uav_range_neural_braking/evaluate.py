@@ -30,7 +30,7 @@ def evaluate(output, controller="reference", model_path=None):
     for axis in axes:
         axis.grid(alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output / "braking_curves.png", dpi=140)
+    fig.savefig(output / f"{controller}_braking_curves.png", dpi=140)
     plt.close(fig)
     (output / f"{controller}_metrics.json").write_text(json.dumps(reports, indent=2), encoding="utf-8")
     return reports
@@ -53,8 +53,8 @@ def render(output, controller="reference", model_path=None):
             frame = Image.fromarray(renderer.render())
             ImageDraw.Draw(frame).text((16, 16), f"MuJoCo | t={row['time_s']:.2f}s | gap={row['range_m']:.2f}m | v={row['speed_m_s']:.2f}m/s", fill="white", stroke_width=1, stroke_fill="black")
             frames.append(frame)
-    frames[0].save(output / "scene.png")
-    frames[0].save(output / "braking.gif", save_all=True, append_images=frames[1:], duration=150, loop=0, optimize=True)
+    frames[0].save(output / f"{controller}_scene.png")
+    frames[0].save(output / f"{controller}_braking.gif", save_all=True, append_images=frames[1:], duration=150, loop=0, optimize=True)
 
 
 if __name__ == "__main__":
@@ -67,10 +67,9 @@ if __name__ == "__main__":
     controllers = ("reference", "range", "mlp") if args.controller == "all" else (args.controller,)
     combined = {}
     for controller in controllers:
-        output = args.output / controller if args.controller == "all" else args.output
-        combined[controller] = evaluate(output, controller, args.model)
+        combined[controller] = evaluate(args.output, controller, args.model)
         if args.render:
-            render(output, controller, args.model)
+            render(args.output, controller, args.model)
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "comparison_metrics.json").write_text(json.dumps(combined, indent=2), encoding="utf-8")
     print(json.dumps(combined, indent=2))

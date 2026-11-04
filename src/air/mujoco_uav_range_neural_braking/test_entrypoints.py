@@ -35,3 +35,6 @@ def test_neural_evaluation_includes_extrapolation(tmp_path):
     assert reports[1]["collision_steps"] == 0
     assert reports[2]["collision_steps"] > 0
     assert (tmp_path / "mlp_metrics.json").is_file()
+    assert (tmp_path / "mlp_braking_curves.png").is_file()
+    assert not (tmp_path / "mlp").exists()
+    assert not (tmp_path / "mlp").exists()

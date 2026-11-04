@@ -4,8 +4,8 @@
     "controller": "mlp",
     "steps": 1000,
     "collision_steps": 0,
-    "min_clearance_m": 0.7484000130245079,
-    "final_speed_m_s": 0.015566702797502925,
+    "min_clearance_m": 0.759475727533812,
+    "final_speed_m_s": 0.015898545585753675,
     "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   },
@@ -14,8 +14,8 @@
     "controller": "mlp",
     "steps": 1000,
     "collision_steps": 0,
-    "min_clearance_m": 0.4596294931613487,
-    "final_speed_m_s": -0.056238739274966615,
+    "min_clearance_m": 0.47043843651372796,
+    "final_speed_m_s": -0.05607397389807219,
     "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   },
@@ -23,9 +23,9 @@
     "scenario": "speed_3.0",
     "controller": "mlp",
     "steps": 1000,
-    "collision_steps": 3,
-    "min_clearance_m": -0.004636489671487887,
-    "final_speed_m_s": -0.020617636176815404,
+    "collision_steps": 4,
+    "min_clearance_m": -0.010628856909471907,
+    "final_speed_m_s": -0.004230652324528377,
     "invalid_sensor_steps": 0,
     "max_height_error_m": 0.0
   }

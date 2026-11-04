@@ -9,7 +9,7 @@
     "train": {
       "episodes": 18,
       "rows": 21600,
-      "sha256": "1515af40f9281aa73e7562350cb39f2ee75efc1bf8533f951f877e5003596417",
+      "sha256": "fd1d7b6c38e220c5106066795589f4afd455e8464cfa816fd11d02f26e54cb56",
       "collision_steps": 0,
       "invalid_sensor_steps": 0,
       "minimum_clearance_m": 0.6680994185095028
@@ -17,7 +17,7 @@
     "validation": {
       "episodes": 6,
       "rows": 7200,
-      "sha256": "1fe5f50fd12b261e60d41cde03edef580282cf96d21115201bb7368417159559",
+      "sha256": "ea8e1431241d5cad1c34a76b5333c9240e4a231674475268c56592d26423271a",
       "collision_steps": 0,
       "invalid_sensor_steps": 0,
       "minimum_clearance_m": 0.668174676834535
@@ -25,7 +25,7 @@
     "test": {
       "episodes": 6,
       "rows": 7200,
-      "sha256": "b18f008440c21d20d8f48a4527bbc87f96188ce445322750fad3b5959c5fc1b0",
+      "sha256": "39be12b1b390945c8e0ec43729ad20066a87e53fc1618b63b41c0167622de5fe",
       "collision_steps": 0,
       "invalid_sensor_steps": 0,
       "minimum_clearance_m": 0.6680979991958524

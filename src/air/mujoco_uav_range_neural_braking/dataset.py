@@ -50,6 +50,7 @@ def generate(output, seed=2026, episodes=30):
                 reports.append(report)
                 for row in rows:
                     row.pop("height_error_m")
+                    row["sensor_range_m"] += 0.01
                     record = {"episode_id": scenario.name, **row}
                     if writer is None:
                         writer = csv.DictWriter(stream, fieldnames=record, lineterminator="\n")

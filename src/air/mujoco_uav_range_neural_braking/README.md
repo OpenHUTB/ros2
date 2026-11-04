@@ -57,9 +57,9 @@ docker run --rm --mount type=bind,source="$PWD",target=/work/module uav-braking:
 
 ```
 python main.py --headless --controller range --output results
-python main.py --headless --controller reference --output results/reference
 python dataset.py --seed 2026 --episodes 30 --output datasets
-python evaluate.py --controller range --render --output results/range
+python train.py --data datasets --output models
+python evaluate.py --controller all --render --output results
 python -m pytest -q
 ```
 

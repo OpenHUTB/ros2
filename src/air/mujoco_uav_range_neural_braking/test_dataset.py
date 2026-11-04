@@ -54,6 +54,8 @@ def test_splits_are_disjoint_and_reproducible(tmp_path):
         assert split["sha256"] == second["splits"][name]["sha256"]
         with path.open(encoding="utf-8", newline="") as stream:
             rows = list(csv.DictReader(stream))
+        assert "height_error_m" not in rows[0]
+        assert all(float(row["sensor_range_m"]) == pytest.approx(float(row["range_m"])) for row in rows)
         expected = {ep["scenario"] for ep in split["episodes"]}
         assert {row["episode_id"] for row in rows} == expected
         assert len(rows) == split["rows"]
