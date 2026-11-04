@@ -4,7 +4,7 @@
   <name>mujoco_traffic_light_stop</name>
   <version>0.0.0</version>
   <description>MuJoCo traffic light stop simulation</description>
-  <maintainer email="rikin@example.com">rikin</maintainer>
+  <maintainer email="352797580@qq.com">rikin</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
