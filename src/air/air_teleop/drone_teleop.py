@@ -8,6 +8,10 @@
 # 坐标与通信：通过 AirSim RPC（默认 41451 端口）连接多旋翼，
 # 在机体坐标系（Body Frame）下周期性下发速度指令，频率 10 Hz。
 # 注意 AirSim 使用 NED 坐标系：z 轴指向地面，所以上升对应 vz < 0、下降对应 vz > 0。
+#
+# 载具名称：--vehicle 显式传入时直接使用；否则初始化时通过 client.listVehicles()
+# 自动获取第一架载具名称，查询失败或列表为空时回退默认名 'SimpleFlight'。
+# 所有 AirSim API 调用均显式传入 vehicle_name。
 
 import math
 import signal
@@ -46,7 +50,8 @@ class DroneTeleop:
         # 连接 AirSim RPC 服务，建立与仿真器之间的通信
         self.client = airsim.MultirotorClient(ip=ip, port=port)
         self.client.confirmConnection()
-        self.vehicle_name = vehicle_name
+        # 载具名称：显式传入优先，否则 listVehicles 自动获取第一架载具
+        self.vehicle_name = self._resolve_vehicle_name(self.client, vehicle_name)
 
         # 控制参数
         self.ctrl_freq = 10.0                     # 控制频率 10 Hz
@@ -67,6 +72,24 @@ class DroneTeleop:
         self.last_loop_at = time.time()           # 上一次控制循环的时刻，供看门狗判断
         self.last_hud_at = 0.0                    # 上一次刷新 HUD 的时刻
         self.last_warn_at = 0.0                   # 上一次打印看门狗告警的时刻
+
+    # ---------------- 连接与载具 ----------------
+
+    @staticmethod
+    def _resolve_vehicle_name(client, requested=''):
+        """确定载具名称：显式传入优先；否则 listVehicles 取第一架，失败回退 'SimpleFlight'"""
+        if requested:
+            return requested
+        try:
+            vehicles = client.listVehicles()
+        except Exception as exc:
+            print('[警告] listVehicles 查询失败：%s，回退默认载具名 SimpleFlight' % exc)
+            return 'SimpleFlight'
+        if vehicles:
+            print('listVehicles 自动获取载具: %s' % vehicles)
+            return vehicles[0]
+        print('[警告] listVehicles 返回空列表，回退默认载具名 SimpleFlight')
+        return 'SimpleFlight'
 
     # ---------------- 终端按键 ----------------
 

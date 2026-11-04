@@ -1,0 +1,142 @@
+[
+  {
+    "episode": "episode_000",
+    "split": "train"
+  },
+  {
+    "episode": "episode_001",
+    "split": "train"
+  },
+  {
+    "episode": "episode_002",
+    "split": "train"
+  },
+  {
+    "episode": "episode_003",
+    "split": "train"
+  },
+  {
+    "episode": "episode_004",
+    "split": "train"
+  },
+  {
+    "episode": "episode_005",
+    "split": "train"
+  },
+  {
+    "episode": "episode_006",
+    "split": "train"
+  },
+  {
+    "episode": "episode_007",
+    "split": "train"
+  },
+  {
+    "episode": "episode_008",
+    "split": "train"
+  },
+  {
+    "episode": "episode_009",
+    "split": "train"
+  },
+  {
+    "episode": "episode_010",
+    "split": "train"
+  },
+  {
+    "episode": "episode_011",
+    "split": "train"
+  },
+  {
+    "episode": "episode_012",
+    "split": "train"
+  },
+  {
+    "episode": "episode_013",
+    "split": "train"
+  },
+  {
+    "episode": "episode_014",
+    "split": "train"
+  },
+  {
+    "episode": "episode_015",
+    "split": "train"
+  },
+  {
+    "episode": "episode_016",
+    "split": "train"
+  },
+  {
+    "episode": "episode_017",
+    "split": "train"
+  },
+  {
+    "episode": "episode_018",
+    "split": "train"
+  },
+  {
+    "episode": "episode_019",
+    "split": "train"
+  },
+  {
+    "episode": "episode_020",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_021",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_022",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_023",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_024",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_100",
+    "split": "train"
+  },
+  {
+    "episode": "episode_101",
+    "split": "train"
+  },
+  {
+    "episode": "episode_102",
+    "split": "train"
+  },
+  {
+    "episode": "episode_103",
+    "split": "train"
+  },
+  {
+    "episode": "episode_104",
+    "split": "train"
+  },
+  {
+    "episode": "episode_105",
+    "split": "train"
+  },
+  {
+    "episode": "episode_106",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_107",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_108",
+    "split": "validation"
+  },
+  {
+    "episode": "episode_109",
+    "split": "validation"
+  }
+]

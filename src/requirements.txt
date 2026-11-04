@@ -1,3 +1,8 @@
-# 无人机终端键盘遥控器（drone_teleop）与空域载具 ROS 遥控（drone_ros_node / drone_ros_teleop）运行时依赖
-pynput
+# 空域载具 ROS 遥控（drone_ros_node / drone_ros_teleop）运行时依赖；
+# 键盘节点改用 termios 原始模式监听按键，仅依赖 Python 标准库，不再需要 pynput
 airsim
+
+# 任务四：端到端视觉行为克隆
+opencv-python   # 相机图像编解码与存取（drone_ros_node / record_dataset.py）
+torch           # 行为克隆 CNN 训练（第二阶段）
+torchvision     # 图像预处理与数据集加载（第二阶段）

@@ -1,0 +1,14 @@
+{
+  "recall": {
+    "mean": 1.0,
+    "population_std": 0.0
+  },
+  "f1": {
+    "mean": 0.8191613394676464,
+    "population_std": 0.042898933761994655
+  },
+  "clean_false_alarms_per_min": {
+    "mean": 2.3351516779598263,
+    "population_std": 0.9820714860164478
+  }
+}

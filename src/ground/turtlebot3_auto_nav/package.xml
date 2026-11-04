@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtlebot3_auto_nav</name>
+  <version>0.1.0</version>
+  <description>
+    TurtleBot3 (Burger) 在 Gazebo 仿真环境下的自主导航功能包。
+    使用 AMCL 定位、DWA 局部规划器，支持 map_server 加载静态地图，
+    通过 RViz 进行 2D Nav Goal 目标点导航。
+  </description>
+  <maintainer email="247221616@qq.com">Thirin-glitch</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>amcl</exec_depend>
+  <exec_depend>map_server</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>dwa_local_planner</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>turtlebot3_bringup</exec_depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,14 @@
+teleop:
+  vx_max: 0.3
+  vy_max: 0.3
+  vz_max: 0.2
+  yaw_max: 0.3
+
+controller:
+  kp_x: 0.5
+  kp_y: 0.3
+  deadzone: 0.05
+  max_speed: 0.2
+
+bridge:
+  model_name: rov

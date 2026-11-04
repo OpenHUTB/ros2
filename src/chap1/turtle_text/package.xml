@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtle_text</name>
+  <version>0.0.1</version>
+
+  <description>
+    ROS Noetic turtlesim demo: draw arbitrary words and short sentences typed from the keyboard.
+  </description>
+
+  <maintainer email="wu_200706@163.com">thestella17</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>turtlesim</depend>
+  <depend>std_srvs</depend>
+
+  <export>
+  </export>
+</package>

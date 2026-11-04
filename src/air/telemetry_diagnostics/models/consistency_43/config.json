@@ -1,0 +1,21 @@
+{
+  "method": "consistency",
+  "variant": "gru",
+  "seed": 43,
+  "history": 8,
+  "scale": [
+    0.0010000000474974513,
+    0.0010000000474974513,
+    0.0010000000474974513,
+    0.009999999776482582,
+    0.009999999776482582,
+    0.03034953400492668
+  ],
+  "threshold": 2.99324486732482,
+  "persistence": 3,
+  "physics_threshold": 1.8161091279983388,
+  "best_validation_bce": 0.13535010444389992,
+  "selection": "validation BCE; normal validation 99.5% score quantile",
+  "train_windows": 143982,
+  "validation_windows": 52763
+}

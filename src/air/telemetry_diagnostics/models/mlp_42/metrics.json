@@ -1,0 +1,555 @@
+{
+  "event_precision": 0.8,
+  "event_recall": 1.0,
+  "event_f1": 0.888888888888889,
+  "missed_events": 0,
+  "false_alarms_per_min": 1.0670422740455299,
+  "mean_detected_delay_s": 0.11175238399999995,
+  "details": [
+    {
+      "episode": "episode_025",
+      "kind": "clean",
+      "detected": false,
+      "false_alarm_events": 1,
+      "delay_s": null
+    },
+    {
+      "episode": "episode_025",
+      "kind": "position_drift",
+      "detected": true,
+      "false_alarm_events": 1,
+      "delay_s": 0.15000319999999956
+    },
+    {
+      "episode": "episode_025",
+      "kind": "velocity_spike",
+      "detected": true,
+      "false_alarm_events": 1,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_025",
+      "kind": "freeze",
+      "detected": true,
+      "false_alarm_events": 1,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_025",
+      "kind": "dropout",
+      "detected": true,
+      "false_alarm_events": 1,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_026",
+      "kind": "clean",
+      "detected": false,
+      "false_alarm_events": 0,
+      "delay_s": null
+    },
+    {
+      "episode": "episode_026",
+      "kind": "position_drift",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.15000320000000045
+    },
+    {
+      "episode": "episode_026",
+      "kind": "velocity_spike",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_026",
+      "kind": "freeze",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_026",
+      "kind": "dropout",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_027",
+      "kind": "clean",
+      "detected": false,
+      "false_alarm_events": 0,
+      "delay_s": null
+    },
+    {
+      "episode": "episode_027",
+      "kind": "position_drift",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.15000319999999956
+    },
+    {
+      "episode": "episode_027",
+      "kind": "velocity_spike",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_027",
+      "kind": "freeze",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_027",
+      "kind": "dropout",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_028",
+      "kind": "clean",
+      "detected": false,
+      "false_alarm_events": 0,
+      "delay_s": null
+    },
+    {
+      "episode": "episode_028",
+      "kind": "position_drift",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.15000319999999956
+    },
+    {
+      "episode": "episode_028",
+      "kind": "velocity_spike",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_028",
+      "kind": "freeze",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_028",
+      "kind": "dropout",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_029",
+      "kind": "clean",
+      "detected": false,
+      "false_alarm_events": 0,
+      "delay_s": null
+    },
+    {
+      "episode": "episode_029",
+      "kind": "position_drift",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.15000320000000045
+    },
+    {
+      "episode": "episode_029",
+      "kind": "velocity_spike",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_029",
+      "kind": "freeze",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    },
+    {
+      "episode": "episode_029",
+      "kind": "dropout",
+      "detected": true,
+      "false_alarm_events": 0,
+      "delay_s": 0.09900211199999998
+    }
+  ],
+  "without_persistence": {
+    "event_precision": 0.5714285714285714,
+    "event_recall": 1.0,
+    "event_f1": 0.7272727272727273,
+    "missed_events": 0,
+    "false_alarms_per_min": 3.2011268221365894,
+    "mean_detected_delay_s": 0.012150259199999968,
+    "details": [
+      {
+        "episode": "episode_025",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 1,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_025",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.048001023999999504
+      },
+      {
+        "episode": "episode_025",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_025",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_025",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_026",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_026",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.05100108800000047
+      },
+      {
+        "episode": "episode_026",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_026",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_026",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_027",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_027",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.048001023999999504
+      },
+      {
+        "episode": "episode_027",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_027",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_027",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_028",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_028",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.048001023999999504
+      },
+      {
+        "episode": "episode_028",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_028",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_028",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_029",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 2,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_029",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 2,
+        "delay_s": 0.04800102400000039
+      },
+      {
+        "episode": "episode_029",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 2,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_029",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 2,
+        "delay_s": 0.0
+      },
+      {
+        "episode": "episode_029",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 2,
+        "delay_s": 0.0
+      }
+    ]
+  },
+  "physics_baseline": {
+    "event_precision": 0.8,
+    "event_recall": 1.0,
+    "event_f1": 0.888888888888889,
+    "missed_events": 0,
+    "false_alarms_per_min": 1.0670422740455299,
+    "mean_detected_delay_s": 0.11175238399999995,
+    "details": [
+      {
+        "episode": "episode_025",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 1,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_025",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.15000319999999956
+      },
+      {
+        "episode": "episode_025",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_025",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_025",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 1,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_026",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_026",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.15000320000000045
+      },
+      {
+        "episode": "episode_026",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_026",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_026",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_027",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_027",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.15000319999999956
+      },
+      {
+        "episode": "episode_027",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_027",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_027",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_028",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_028",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.15000319999999956
+      },
+      {
+        "episode": "episode_028",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_028",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_028",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_029",
+        "kind": "clean",
+        "detected": false,
+        "false_alarm_events": 0,
+        "delay_s": null
+      },
+      {
+        "episode": "episode_029",
+        "kind": "position_drift",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.15000320000000045
+      },
+      {
+        "episode": "episode_029",
+        "kind": "velocity_spike",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_029",
+        "kind": "freeze",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      },
+      {
+        "episode": "episode_029",
+        "kind": "dropout",
+        "detected": true,
+        "false_alarm_events": 0,
+        "delay_s": 0.09900211199999998
+      }
+    ]
+  }
+}

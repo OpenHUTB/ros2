@@ -13,5 +13,6 @@
 
   <depend>rospy</depend>
   <depend>geometry_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>turtlesim</depend>
 </package>

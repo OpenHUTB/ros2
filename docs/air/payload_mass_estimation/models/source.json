@@ -1,0 +1,10 @@
+{
+  "project": "OpenHUTB/ros2 PR #178",
+  "status_at_reuse": "open, not merged",
+  "repository": "eeexty/ros2",
+  "commit": "ee3227230d9eb6bd571152198e3f1ed76a7276b9",
+  "path": "src/air/uav_mujoco_sim/models/quadrotor.xml",
+  "sha256": "155da1e7c65d68f8a531be84a2b347855c77bc1f2f35b302e6b3677a4e4b3027",
+  "license_declaration": "MIT in upstream package.xml",
+  "modification": "Source XML preserved byte-for-byte; central body mass adjusted at runtime to represent payload."
+}
