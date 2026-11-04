@@ -85,12 +85,11 @@ src/
 节点启动后，RViz 将显示机器人模型。执行开始/停止录制指令后，终端会打印保存成功信息，且模型会自动回放刚录制的动作。
 
 1. **编译成功**
-   ![编译成功](../../../docs/img/humanoid/compile_success.png)
+   ![编译成功](../../../docs/img/humanoid/humanoid_joint_tools/compile_success.png)
 2. **启动节点与 RViz 可视化**
-   ![启动与RViz](../../../docs/img/humanoid/launch_and_rviz.png)
+   ![启动与RViz](../../../docs/img/humanoid/humanoid_joint_tools/launch_and_rviz.png)
 3. **录制保存成功并触发回放**
-   ![录制与回放](../../../docs/img/humanoid/record_and_replay.png)
+   ![录制与回放](../../../docs/img/humanoid/humanoid_joint_tools/record_and_replay.png)
 4. **完整操作流程演示动图**
-   ![完整演示动图](../../../docs/img/humanoid/record_and_replay_demo.gif)
+   ![完整演示动图](../../../docs/img/humanoid/humanoid_joint_tools/record_and_replay_demo.gif)
 
-```
