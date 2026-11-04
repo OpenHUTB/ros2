@@ -175,6 +175,17 @@ roslaunch midterm_humanoid main.launch
 | 依赖版本 | mujoco 3.2.3、numpy、imageio、imageio-ffmpeg |
 | 启动验证 | `catkin_make` 通过；`roslaunch midterm_humanoid main.launch` 正常启动；源码 `python3 main.py` 直接运行正常 |
 
+### 7.2 关节角跟踪误差曲线
+
+kp=20 默认参数下，8 秒仿真（100 Hz 步进）四个关节的跟踪误差 |q_d − q| 时域曲线如下：
+
+![关节角跟踪误差曲线](../img/humanoid/midterm_humanoid/error_curve.png)
+
+- 误差呈 0.5 Hz 周期性波动，幅值稳定、无发散；腿部（±0.216 rad 全程 RMS）高于手臂（±0.124 rad），
+  因腿部摆幅更大（0.55 vs 0.70 rad 中手臂幅值虽大但惯量小）且 ctrlrange（±0.8）更窄；
+- 0~0.5 s 为启动瞬态（关节从 0 向目标突变），其后进入稳态周期；
+- 图中 RMS 为**全程**统计（含启动瞬态）；7.1 节对比表取**稳态段** RMS，口径不同、数值略低。
+
 ### 7.1 多参数（场景）对比
 
 | 场景 | kp | 手臂稳态误差（rad） | 腿部稳态误差（rad） | 说明 |
