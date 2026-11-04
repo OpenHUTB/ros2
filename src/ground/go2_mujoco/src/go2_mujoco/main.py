@@ -11,7 +11,10 @@
 """
 import numpy as np
 
-from common import setup_gl, load_with_camera, run_sim, parse_args
+try:
+    from go2_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
+except ImportError:
+    from common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 跟踪相机：正侧方跟随机身 base，距离拉远以容纳步态中的轻微转向
 CAM = ('<camera name="view0" mode="track" target="base" fovy="38" '
