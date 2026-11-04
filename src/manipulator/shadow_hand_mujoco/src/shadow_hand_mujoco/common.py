@@ -119,4 +119,5 @@ def parse_args():
     ap.add_argument("--preview", action="store_true",
                     help="只跑 1.5 秒，输出 3 张 PNG 检查取景")
     ap.add_argument("--out", default=None, help="视频输出路径")
-    return ap.parse_args()
+    args, _ = ap.parse_known_args()
+    return args

@@ -6,7 +6,10 @@
 """
 import numpy as np
 
-from common import setup_gl, load_with_camera, run_sim, parse_args
+try:
+    from shadow_hand_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
+except ImportError:
+    from common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 固定相机：上前方 3/4 俯视，对准手掌中心（手平放于地面、沿 +x 展开）
 CAM = ('<camera name="view0" fovy="45" pos="0.35 -0.45 0.35" '
