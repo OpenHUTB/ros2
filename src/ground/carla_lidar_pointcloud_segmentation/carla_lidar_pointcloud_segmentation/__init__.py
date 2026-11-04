@@ -10,7 +10,7 @@
 ``app`` 负责在 CARLA 里采集"普通点云 + 语义真值"成对数据；``node`` 是 ROS 2 节点。
 """
 
-from . import features, labels, metrics, model  # noqa: F401
+from . import control, features, labels, metrics, model, pipeline  # noqa: F401
 
-__all__ = ['features', 'labels', 'metrics', 'model']
+__all__ = ['control', 'features', 'labels', 'metrics', 'model', 'pipeline']
 __version__ = '0.1.0'
