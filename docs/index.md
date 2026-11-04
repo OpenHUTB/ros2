@@ -254,6 +254,9 @@ ROS每章节运行代码:
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
 
 * [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
+  
+* [水下ROV固定航点巡航](./water/rov_fixed_waypoint_cruise.md)
+
 
 ___
 
