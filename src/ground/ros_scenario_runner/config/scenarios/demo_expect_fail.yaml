@@ -1,0 +1,26 @@
+# 反例场景：断言和脚本对不上，用来演示"失败长什么样"
+#
+#   roslaunch ros_scenario_runner main.launch \
+#       scenario_file:=$(find ros_scenario_runner)/config/scenarios/demo_expect_fail.yaml
+#
+# 预期结论是 FAILED：脚本一直在 4 m/s 巡航、从没刹车，
+# 但断言要求"结束速度为 0"，于是这一条会红。
+
+scenario:
+  name: 断言写错的例子
+  duration: 8.0
+
+  initial: {x: 0.0, y: 0.0, yaw: 0.0, speed: 0.0}
+
+  steps:
+    - at: 0.5
+      name: 一直巡航
+      command: {linear: 4.0, angular: 0.0}
+
+  expects:
+    - type: reach_speed
+      value: 4.0
+      tolerance: 0.05
+    - type: final_speed
+      value: 0.0
+      tolerance: 0.05
