@@ -136,6 +136,8 @@ rostopic pub -1 /rooftop/start std_msgs/Bool "data: true"
 | `perception/prefer` | `highest` | 目标屋顶策略：`highest` / `closest` / `largest` |
 | `perception/cluster_cell` | 1.0 | 连通域聚类栅格边长 (m)：拆开平面上互不相连的点群 |
 | `perception/cluster_min_points` | 2 | 一个栅格至少几个点才算被占据（滤掉零星噪点） |
+| `perception/landing_mode` | `auto` | 落点算法：`auto`（凹形/带天井时自动切栅格法）/ `grid`（总是栅格法）/ `hull`（旧的凸包法，仅作对照） |
+| `perception/grid_cell` | 0.5 | 栅格法落点的格子边长 (m)；点云稀疏时可放大到 1.0 |
 | `approach/safe_altitude` | 5.0 | 高于屋顶的安全高度 (m) |
 | `approach/goal_timeout` | 60.0 | 等待 `GOAL_DONE` 超时 (s) |
 | `approach/verify_goal_coords` | `true` | `GOAL_DONE` 带坐标时，核对它是不是**本节点下发的那个目标点**（分辨别人的到达状态，见 §9） |
@@ -166,6 +168,9 @@ roslaunch rooftop_landing main.launch z_up:=false         # 若桥接层高度�
 roslaunch rooftop_landing main.launch max_planes:=15 min_plane_inliers:=40
 roslaunch rooftop_landing main.launch min_roof_area:=2.0 cluster_min_points:=1
 roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
+
+# 屋顶是天井 / U 形内院时：默认 auto 会自动切到栅格法；点云很稀时可放大格子
+roslaunch rooftop_landing main.launch landing_mode:=grid grid_cell:=1.0
 ```
 
 ---
@@ -199,8 +204,11 @@ roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
    │     滤掉零星噪声点；相邻的两栋楼各自成为候选
    ▼
    │  ⑤ 每个连通块投影 → 2D 凸包作为屋顶轮廓         convex_hull_2d
+   │     （凹形/带天井时凸包会把凹口填平，见下方说明）
    ▼
-   │  ⑥ polylabel 求最大内切圆圆心 = 降落点          polylabel
+   │  ⑥ 落点：polylabel（凸包）或占据栅格 + 距离变换  polylabel / grid_incenter
+   │     landing_mode=auto 时按"轮廓是否明显不凸"和
+   │     "凸包落点脚下有没有屋顶"自动二选一
    ▼
    │  ⑦ 按高度/半径打分选最优屋顶                   select_landing_target
    ▼
@@ -221,6 +229,34 @@ roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
 通风管或靠近边缘的位置；内切圆圆心是**离屋顶边界最远**的点，四周余量最大，
 是几何上最安全的落点。这也是 Mapbox 的 polylabel 算法要解决的问题。
 
+**凹形 / 带天井的屋顶：凸包会把"洞"填平**。`polylabel` 只认凸包多边形，而凸包
+会把 U 形内院、L 形缺口、回字形天井都算进屋顶范围内。实测：24×16 m 的屋顶中央
+开一个 8×6 m 的天井，凸包法给出的落点就在**天井正中**、半径仍报 8.0 m——按这个
+点下降会直接掉进天井；U 形内院同理。为此新增**占据栅格 + 精确欧氏距离变换**
+（Felzenszwalb 算法，纯 numpy）：
+
+* 把平面内点栅格化到 `grid_cell`（默认 0.5 m）的格子，一格宽的采样缝隙用闭运算填掉；
+* 对占据格求"到最近空格的距离"，取最大值所在格 = 真正的最大内切圆圆心；
+* `landing_mode=auto`（默认）时，满足以下任一条件就切到栅格法，否则保持旧的凸包法：
+  占据面积/凸包面积 < 0.85（明显不凸或带孔），或**凸包落点脚下根本没有屋顶**
+  （面积比可能看着正常——回字形天井实测比值 0.91，高于阈值——但落点已经掉进天井，
+  这条是安全底线）。
+
+> 与 [`rooftop_landing_nn`](../rooftop_landing_nn/README.md)（学习型落点选择）的关系：
+> 那一版用点云高度图 + 小 CNN 处理同一类退化；这里是**不需要训练、可直接用回归测试
+> 卡住**的纯几何解法，两者可互为对照。
+
+**凸形屋顶的行为与旧版本完全一致**，因此该改动不影响已有场景；需要时可用
+`landing_mode:=hull` 强制回到旧行为做对照。
+
+| 场景（15 m 高，24×16 m） | 凸包法落点 | 凸包法半径 | 栅格法落点 | 栅格法半径 |
+|---|---|---|---|---|
+| 实心矩形（对照） | 屋顶中心 ✓ | 8.00 m | 同左（不切换） | 8.00 m |
+| U 形（南侧 10×9 m 内院） | **内院正中 ✗** | 8.00 m（虚报） | 西翼屋顶上 ✓ | 3.74 m |
+| 回字形（中央 8×6 m 天井） | **天井正中 ✗** | 8.00 m（虚报） | 西侧屋顶上 ✓ | 3.62 m |
+
+![凹形屋顶落点对比](../../docs/img/air/rooftop_landing_concave.png)
+
 ---
 
 ## 8. 本地测试（无需 ROS / 仿真器 / GPU）
@@ -231,17 +267,19 @@ roslaunch rooftop_landing main.launch min_height_mode:=absolute min_height:=1.0
 python3 tests/test_rooftop_landing_local.py
 ```
 
-覆盖 93 项：PointCloud2 解析（含缺字段、空数据、NaN 过滤）、ENU/NED 换算、
+覆盖 115 项：PointCloud2 解析（含缺字段、空数据、NaN 过滤）、ENU/NED 换算、
 RANSAC 平面拟合精度、凸包与面积、polylabel 圆心与半径、点–多边形有符号距离、
 **合成城市场景端到端感知**（地面 + 楼房 + 墙面 + 离群点 → 应挑出 15 m 屋顶且
 落点接近中心）、**换地图的高度基准回归**（地图原点在地面之上约 25 m 时，
 默认的相对地面基准仍要挑出屋顶、且不会把地面当屋顶）、**安全半径硬约束**、
-**桥接状态解析与目标点认领**，以及工程文件约定（入口命名、launch 参数、文件名全英文等）。
+**桥接状态解析与目标点认领**、**凹形 / 带天井屋顶的落点回归**（U 形内院、回字形
+天井：落点必须真的落在屋顶上，且 `landing_mode=hull` 时要能复现旧缺陷，
+防止把修复改回去），以及工程文件约定（入口命名、launch 参数、文件名全英文等）。
 
 预期输出结尾：
 
 ```
-结果：93/93 通过
+结果：115/115 通过
 ```
 
 ### 8.2 闭环仿真冒烟测试（假桥接层，**不含仿真器**）
@@ -365,7 +403,7 @@ python3 tests/test_rooftop_landing_ros_sim.py
 ## 附：大模型使用声明
 
 本模块代码与文档在编写过程中使用了 AI 大模型辅助（需求分析、算法方案讨论、代码与文档起草）。
-全部内容已通过三类验证：**本地回归测试**（`tests/test_rooftop_landing_local.py`，93 项全部通过）、
+全部内容已通过三类验证：**本地回归测试**（`tests/test_rooftop_landing_local.py`，115 项全部通过）、
 **假桥接闭环冒烟测试**（`tests/test_rooftop_landing_ros_sim.py`，在 ROS Noetic 上完整跑通
 `DETECT → APPROACH → DESCEND → LANDED`，不含仿真器）、以及**真机链路验证**
 （仿真器 + `carlair_ros_bridge` + 真实点云，见 §8.3，**下降到底这一段尚未在真机上复现成功**）；

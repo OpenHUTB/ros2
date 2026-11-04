@@ -251,6 +251,233 @@ def polylabel(rings, precision=0.05):
     return (float(best.x), float(best.y)), max(0.0, float(best.d))
 
 
+# --------------------------------------------------------------------------- #
+# 2b. 占据栅格 + 距离变换：凹形 / 带天井屋顶的落点
+# --------------------------------------------------------------------------- #
+# 为什么需要这一套：`polylabel` 作用在**凸包**上，而凸包会把凹口和天井"填平"。
+# 于是凹形屋顶（U 形、L 形、回字形天井）上求出的"最大内切圆圆心"可能根本不
+# 在屋顶上——实测回字形屋顶 24×16 m 中央开 8×6 m 天井时，凸包法给出的落点
+# 就在天井正中，无人机按这个点下降会直接掉进天井。
+#
+# 这里改用**占据栅格 + 欧氏距离变换**：先把点换成"哪些格子有屋顶"，再求每个
+# 占据格到最近空格的距离，取最大者即真正的最大内切圆圆心。它天然尊重凹口、
+# 天井与障碍，且依然只依赖 numpy。
+
+def _shift_or(mask):
+    """3×3 邻域"或"：带 padding 的平移，**不能用 np.roll**。
+
+    坑：`np.roll` 会把最后一列环绕到第一列，于是栅格最外圈（本来是"没有点"的
+    安全边界）被填成占据，距离变换算出来的就成了"到图外"的距离而不是到空隙的
+    距离——实测 U 形屋顶因此报出 8.0 m 半径、落点跑到角落。
+    """
+    h, w = mask.shape
+    padded = np.pad(mask, 1, mode="constant", constant_values=False)
+    out = np.zeros_like(mask)
+    for dy in range(3):
+        for dx in range(3):
+            out |= padded[dy:dy + h, dx:dx + w]
+    return out
+
+
+def _shift_and(mask):
+    """3×3 邻域"与"（腐蚀），同样用 padding 避免环绕。"""
+    h, w = mask.shape
+    padded = np.pad(mask, 1, mode="constant", constant_values=False)
+    out = np.ones_like(mask)
+    for dy in range(3):
+        for dx in range(3):
+            out &= padded[dy:dy + h, dx:dx + w]
+    return out
+
+
+def _binary_dilate(mask):
+    """3×3 膨胀（不引入 scipy）。"""
+    return _shift_or(np.asarray(mask, dtype=bool))
+
+
+def _binary_erode(mask):
+    """3×3 腐蚀。"""
+    return _shift_and(np.asarray(mask, dtype=bool))
+
+
+def rasterize_occupancy(points_xy, cell=0.5, close_iters=1):
+    """把平面内点栅格化成占据图。
+
+    为什么默认做一次**闭运算**（先膨胀后腐蚀）：LiDAR 点云是稀疏采样，0.5 m 的
+    格子里可能恰好没有点，形成"假空隙"；不填掉的话距离变换会把落点挤到点最密
+    的地方而不是真正的几何中心。闭运算只填一格宽的缝，不会把天井（通常远宽于
+    1 m）糊上。
+
+    Args:
+        points_xy: (N,2) 平面内点
+        cell: 栅格边长 (m)
+        close_iters: 闭运算次数（0 表示不做）
+
+    Returns:
+        dict（输入退化时返回 None）::
+
+            mask    (H,W) bool    True = 该格有屋顶
+            origin  (x0,y0)       mask[0,0] 格子的左下角坐标
+            cell    float
+            area    float         占据面积估计 (m^2)
+    """
+    pts = np.asarray(points_xy, dtype=np.float64)
+    if pts.ndim != 2 or len(pts) < 3 or pts.shape[1] < 2:
+        return None
+    step = float(cell)
+    if not math.isfinite(step) or step <= 0.0:
+        return None
+
+    xy = pts[:, :2]
+    minx, miny = xy.min(axis=0) - step
+    maxx, maxy = xy.max(axis=0) + step
+    nx = int(math.ceil((maxx - minx) / step)) + 1
+    ny = int(math.ceil((maxy - miny) / step)) + 1
+    if nx < 2 or ny < 2:
+        return None
+
+    ix = np.floor((xy[:, 0] - minx) / step).astype(np.int64)
+    iy = np.floor((xy[:, 1] - miny) / step).astype(np.int64)
+    np.clip(ix, 0, nx - 1, out=ix)
+    np.clip(iy, 0, ny - 1, out=iy)
+
+    mask = np.zeros((ny, nx), dtype=bool)
+    mask[iy, ix] = True
+    for _ in range(int(close_iters)):
+        mask = _binary_erode(_binary_dilate(mask))
+    # 强制最外圈为空：距离变换需要"屋顶之外至少有一圈空地"才能算出真实余量；
+    # 若点云恰好铺满栅格边界，这一步相当于把边界当作屋顶边缘处理（保守）。
+    if mask.shape[0] >= 3 and mask.shape[1] >= 3:
+        mask[0, :] = mask[-1, :] = False
+        mask[:, 0] = mask[:, -1] = False
+    if not mask.any():
+        return None
+    return {"mask": mask, "origin": (float(minx), float(miny)), "cell": step,
+            "area": float(mask.sum()) * step * step}
+
+
+def _edt_1d(f):
+    """一维平方距离变换（Felzenszwalb & Huttenlocher 1985，精确算法）。
+
+    ``f[i]`` 是第 i 个位置的初始代价（0 或 +inf），返回
+    ``d[i] = min_j ((i-j)^2 + f[j])``。下面用它把 2D 距离变换拆成两趟 1D。
+    """
+    from collections import deque
+
+    n = f.size
+    d = np.empty(n, dtype=np.float64)
+    # 直接用 O(n^2) 会让 200x200 的图慢到几秒；这里用论文里的下包络算法 O(n)
+    v = np.zeros(n, dtype=np.int64)      # 抛物线顶点位置
+    z = np.empty(n + 1, dtype=np.float64)  # 各段分界
+    z[0] = -np.inf
+    z[1] = np.inf
+    k = 0
+    for q in range(1, n):
+        s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2.0 * q - 2.0 * v[k])
+        while s <= z[k]:
+            k -= 1
+            s = ((f[q] + q * q) - (f[v[k]] + v[k] * v[k])) / (2.0 * q - 2.0 * v[k])
+        k += 1
+        v[k] = q
+        z[k] = s
+        z[k + 1] = np.inf
+    k = 0
+    for q in range(n):
+        while z[k + 1] < q:
+            k += 1
+        d[q] = (q - v[k]) ** 2 + f[v[k]]
+    return d
+
+
+def distance_transform(mask):
+    """占据栅格的平方欧氏距离变换：每个占据格到最近空格的距离（单位：格^2）。
+
+    ``mask`` 为 True 的格子是屋顶，False 是空隙。返回与 mask 同形的数组，
+    空格处为 0。
+    """
+    m = np.asarray(mask, dtype=bool)
+    if m.ndim != 2 or not m.any():
+        return np.zeros_like(m, dtype=np.float64)
+    big = 1e12
+    f = np.where(m, big, 0.0)            # 空格代价 0，占据格代价 +inf
+    # 先按列（y 方向），再按行（x 方向）
+    tmp = np.empty_like(f)
+    for j in range(f.shape[1]):
+        tmp[:, j] = _edt_1d(f[:, j])
+    out = np.empty_like(f)
+    for i in range(f.shape[0]):
+        out[i, :] = _edt_1d(tmp[i, :])
+    return np.where(m, out, 0.0)
+
+
+def point_in_occupancy(x, y, grid):
+    """判断落点是否落在占据格里（即真的在屋顶上）。
+
+    这是 ``auto`` 模式的**关键判据**：只看面积比会漏掉小天井——24×16 m 屋顶中央
+    开个 8×6 m 的天井只占 12% 面积，面积比 0.88 看着"很正常"，但凸包落点正好
+    落在天井中心。所以先直接问一句：凸包算出来的那个点，脚下有屋顶吗？
+    """
+    if not grid:
+        return False
+    mask, (x0, y0), step = grid["mask"], grid["origin"], grid["cell"]
+    ix = int(math.floor((float(x) - x0) / step))
+    iy = int(math.floor((float(y) - y0) / step))
+    if 0 <= iy < mask.shape[0] and 0 <= ix < mask.shape[1]:
+        return bool(mask[iy, ix])
+    return False
+
+
+def grid_incenter(points_xy, cell=0.5, close_iters=1):
+    """占据栅格版「最大内切圆圆心」：在真实屋顶范围内找离空隙最远的格子。
+
+    与 :func:`polylabel` 的区别：polylabel 吃的是**凸包多边形**，凹口/天井会被
+    填平；这里吃的是**占据栅格**，凹口与天井自然是空格，因此落点不会落进去。
+
+    返回 dict 或 None::
+
+        landing_point (x,y)  落点（格子中心）
+        radius        最大内切圆半径 (m)，换算时保守内缩一格（见下方注释）
+        area          占据面积 (m^2)
+        mask/origin/cell  便于可视化与复算
+        shape_ratio   占据面积 / 凸包面积（凹形或带孔时明显小于 1）
+    """
+    grid = rasterize_occupancy(points_xy, cell=cell, close_iters=close_iters)
+    if grid is None:
+        return None
+    mask, (x0, y0), step = grid["mask"], grid["origin"], grid["cell"]
+    d2 = distance_transform(mask)
+    if not np.isfinite(d2).any() or d2.max() <= 0.0:
+        return None
+    iy, ix = np.unravel_index(int(np.argmax(d2)), d2.shape)
+    # 保守换算成米：距离变换算的是"到最近空格中心的格数"，而一个占据格代表
+    # 边长 cell 的一小块、其真实边界最多再向外半格。为安全起见整体内缩一格
+    # （宁可把余量少报 0.5 m，也不能多报——半径直接决定落点离女儿墙多远）。
+    radius_cells = math.sqrt(float(d2[iy, ix])) - 1.0
+    radius = max(0.0, radius_cells) * step
+    return {"landing_point": (x0 + (ix + 0.5) * step, y0 + (iy + 0.5) * step),
+            "radius": float(radius), "area": grid["area"], "mask": mask,
+            "origin": (x0, y0), "cell": step}
+
+
+def footprint_points(result, max_points=600):
+    """把占据栅格结果转成一串 (x,y,z) 点，供 RViz 用 CUBE_LIST 画屋顶覆盖范围。
+
+    凹形/带天井的屋顶用凸包线框看不出来（凸包把凹口填平了），所以除线框之外
+    再画一层占据格，RViz 里能直接看出"哪里是屋顶、哪里是洞"。
+    """
+    grid = result.get("grid")
+    if not grid:
+        return []
+    mask, (x0, y0), step = grid["mask"], grid["origin"], grid["cell"]
+    iy, ix = np.nonzero(mask)
+    if len(ix) > max_points:                     # 稀疏化，避免 marker 过大
+        sel = np.linspace(0, len(ix) - 1, max_points).astype(np.int64)
+        ix, iy = ix[sel], iy[sel]
+    z = float(result.get("height", 0.0))
+    return [(x0 + (i + 0.5) * step, y0 + (j + 0.5) * step, z)
+            for i, j in zip(ix, iy)]
+
+
 def split_clusters_2d(points, cell=1.0, min_points=2):
     """把（近似共面的）点集按水平面 2D 栅格做连通域聚类。
 
@@ -331,7 +558,9 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
                     min_area=8.0, min_inliers=120, max_planes=5,
                     min_height=0.5, rng=None,
                     cluster_cell=1.0, cluster_min_points=2,
-                    min_height_mode="relative", ground_margin=1.0, info=None):
+                    min_height_mode="relative", ground_margin=1.0, info=None,
+                    landing_mode="auto", grid_cell=0.5, grid_close_iters=1,
+                    concave_ratio=0.85):
     """从点云中找出所有「水平候选面」，按高度从高到低返回列表。
 
     每个元素::
@@ -340,11 +569,26 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
           "normal": (3,), "d": float, "height": float,
           "area": float, "hull": (M,2) ndarray,
           "landing_point": (x, y), "radius": float,
+          "landing_mode": "hull" | "grid",   # 落点由哪种方法给出
+          "shape_ratio": float,              # 占据面积 / 凸包面积
+          "grid": dict | None,               # grid 模式下的占据栅格，供可视化
         }
 
     求凸包之前会先用 :func:`split_clusters_2d` 把平面上互不相连的点群拆开
     （``cluster_cell`` / ``cluster_min_points``），因此**一个平面可能产生多个
     候选屋顶** —— 既滤掉了零星离群点，也把相邻的两栋楼分成两个独立候选。
+
+    **落点算法 ``landing_mode``**（为什么默认不是纯凸包，见 §2b 的注释）：
+
+    ``"auto"``（默认）
+        先用凸包 + polylabel 求一版落点，同时用占据栅格 + 距离变换求一版；
+        若 ``占据面积 / 凸包面积 < concave_ratio``（说明轮廓明显不凸或带天井），
+        采用栅格版落点，否则保持凸包版。**凸形屋顶的行为与旧版本完全一致**，
+        只有凹口/天井这类"凸包会骗人"的形状才切换。
+    ``"grid"``
+        强制用占据栅格版（凹形/带孔屋顶更安全，代价是需要足够密的点云）。
+    ``"hull"``
+        强制用旧的凸包 + polylabel（回归对照用；凹形屋顶上可能把落点放在天井里）。
 
     **高度下限 ``min_height_mode``**（地面与屋顶都是水平面，只能靠高度区分）：
 
@@ -424,10 +668,31 @@ def detect_rooftops(points, max_tilt_deg=15.0, dist_thresh=0.15,
             if len(hull) < 3 or area < min_area:
                 continue
             (lx, ly), radius = polylabel([hull], precision=0.05)
+            mode, shape_ratio, grid = "hull", 1.0, None
+            if landing_mode in ("auto", "grid"):
+                g = grid_incenter(cluster[:, :2], cell=grid_cell,
+                                  close_iters=grid_close_iters)
+                if g is not None and area > 0.0:
+                    shape_ratio = float(g["area"] / area)
+                    grid = {k: g[k] for k in ("mask", "origin", "cell", "area")}
+                    # auto 的切换条件（两条任一满足就换栅格落点）：
+                    #   ① 轮廓明显不凸/带孔：占据面积显著小于凸包面积；
+                    #   ② 凸包算出来的落点脚下根本没有屋顶（落进天井/凹口）——
+                    #      面积比可能看起来很正常，但这条是安全底线。
+                    hull_pt_on_roof = point_in_occupancy(lx, ly, grid)
+                    if (landing_mode == "grid"
+                            or shape_ratio < float(concave_ratio)
+                            or not hull_pt_on_roof):
+                        lx, ly = g["landing_point"]
+                        radius = g["radius"]
+                        mode = "grid"
+                    else:
+                        grid = None
             results.append({"normal": plane["normal"], "d": plane["d"],
                             "height": plane["height"], "area": float(area),
                             "hull": hull, "landing_point": (float(lx), float(ly)),
-                            "radius": float(radius)})
+                            "radius": float(radius), "landing_mode": mode,
+                            "shape_ratio": float(shape_ratio), "grid": grid})
 
     results.sort(key=lambda r: r["height"], reverse=True)
     return results

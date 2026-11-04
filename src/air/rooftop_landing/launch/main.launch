@@ -35,6 +35,8 @@
   <arg name="max_planes"         default="5"    doc="最多提取几个候选水平面（城市视野可提到 15）"/>
   <arg name="min_landing_radius" default="0.6"  doc="降落点最小安全半径 (m)；一个候选都不满足就继续搜索"/>
   <arg name="cluster_min_points" default="2"    doc="连通域聚类：一个栅格至少几个点才算被占据"/>
+  <arg name="landing_mode"       default="auto" doc="落点算法：auto（凹形/天井自动切栅格法）| grid | hull"/>
+  <arg name="grid_cell"          default="0.5"  doc="栅格法落点的格子边长 (m)，点云稀疏时可放大到 1.0"/>
   <arg name="tick_rate_hz"       default="10.0" doc="主循环频率 (Hz)，下降阶段的 cmd_vel 也按此频率发布"/>
 
   <rosparam command="load" file="$(find rooftop_landing)/config/rooftop_landing.yaml"/>
@@ -51,6 +53,8 @@
   <param name="perception/max_planes"         value="$(arg max_planes)"/>
   <param name="perception/min_landing_radius" value="$(arg min_landing_radius)"/>
   <param name="perception/cluster_min_points" value="$(arg cluster_min_points)"/>
+  <param name="perception/landing_mode"       value="$(arg landing_mode)"/>
+  <param name="perception/grid_cell"          value="$(arg grid_cell)"/>
   <param name="mission/tick_rate_hz"          value="$(arg tick_rate_hz)"/>
 
   <!-- 主节点（入口 main.py） -->
