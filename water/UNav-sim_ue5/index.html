@@ -407,6 +407,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#2">2. 运行模拟</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-hellorov">2.1 HelloROV 圆形轨迹</a>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -463,8 +467,60 @@ build.cmd
 <li>用 Visual Studio 打开 <code>Blocks.sln</code></li>
 <li>进行调试</li>
 <li>进入 Unreal Engine 5 后进行模拟
-<img alt="模拟图" src="/img/water/wmx0002.png"/></li>
-</ol></div>
+<img alt="模拟图" src="../../img/water/wmx0002.png"/></li>
+</ol>
+<h3 id="21-hellorov">2.1 HelloROV 圆形轨迹</h3>
+<blockquote>
+<p>本仿真基于1.2的<code>UNav-Sim</code>仓库</p>
+</blockquote>
+<h4 id="1">第 1 步：启动仿真器</h4>
+<ol>
+<li>打开 <code>E:\underwater\daima\UNav-Sim\Unreal\Environments\Blocks\Blocks.uproject</code></li>
+<li>等编辑器加载完（约 1 分钟）</li>
+<li>点工具栏绿色 <code>Play</code> 按钮</li>
+<li>确认：视口出现蓝色 <code>BlueROV2</code> 且没有报错弹窗</li>
+</ol>
+<h4 id="2-rpc">第 2 步：确认 RPC 服务器已就绪</h4>
+<p>另开一个命令行窗口输入: <code>netstat -ano | findstr ":41451"</code></p>
+<p>看到 <code>LISTENING</code> 就说明 <code>API</code> 服务在线。</p>
+<h4 id="3">第 3 步：运行圆形轨迹控制器</h4>
+<p>在命令行输入: <code>python E:\underwater\daima\UNav-Sim\circle_rov.py</code></p>
+<ul>
+<li>运行 <code>90</code> 秒自动停止，半径 <code>2.5</code> 米，一圈约 <code>79</code> 秒</li>
+<li>脚本开头会自动把 <code>ROV</code> 重置回水面附近，不需要手动处理沉底问题</li>
+</ul>
+<h4 id="4-ue">第 4 步：在 UE 视口里看</h4>
+<ol>
+<li>鼠标点一下视口中的画面</li>
+<li>滚轮拉远 <code>+</code> 右键旋转到俯视角度，能看到整个约 5m 直径的圆</li>
+<li>盯着蓝色 <code>ROV</code> ， <code>20</code> 秒内就能看到它在绕圈
+如图所示：
+<img alt="结果1" src="../images/result_1.png"/>
+<img alt="结果2" src="../images/result_2.png"/></li>
+</ol>
+<h4 id="5">第 5 步：停止</h4>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>命令</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 脚本</td>
+<td>等下自动停（90 秒）或 <code>Ctrl+C</code></td>
+</tr>
+<tr>
+<td>HelloRov.exe</td>
+<td><code>Stop-Process -Name HelloRov -Force</code></td>
+</tr>
+<tr>
+<td>退出仿真</td>
+<td>点编辑器 Stop （停止 Play）</td>
+</tr>
+</tbody>
+</table></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
