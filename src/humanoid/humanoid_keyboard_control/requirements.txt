@@ -1,3 +1,0 @@
-# humanoid_keyboard_control 运行依赖
-mujoco>=3.0
-numpy

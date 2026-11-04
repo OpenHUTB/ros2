@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(mujoco_car_parking)
-
 find_package(catkin REQUIRED)
 catkin_package()
-
-catkin_install_python(PROGRAMS main.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-)
+catkin_install_python(PROGRAMS main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)

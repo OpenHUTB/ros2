@@ -1,4 +1,0 @@
-mujoco
-mujoco-python-viewer
-opencv-python
-numpy

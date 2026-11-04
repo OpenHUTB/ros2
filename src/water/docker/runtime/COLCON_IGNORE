@@ -1,1 +1,0 @@
-# BUG FIX: Used to prevent colcon from building the holoocean package if it is in the tmp folder 

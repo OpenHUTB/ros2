@@ -1,3 +1,0 @@
-<launch>
-  <node name="hopper_control" pkg="mujoco_hopper_demo" type="main.py" output="screen"/>
-</launch>

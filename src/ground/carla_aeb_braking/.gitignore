@@ -1,9 +1,0 @@
-__pycache__/
-*.pyc
-*.pyo
-build/
-install/
-log/
-artifacts/
-results/
-models/

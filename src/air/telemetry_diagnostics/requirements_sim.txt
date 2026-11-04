@@ -1,3 +1,0 @@
-# Optional live AirSim bridge and new flight collection; replay does not need these.
-msgpack-rpc-python==0.4.1
-airsim==1.8.1

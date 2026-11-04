@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-import mujoco
-import mujoco.viewer
-import math
-import time
+import mujoco, mujoco.viewer, math, time
 
 XML = """
 <mujoco>
@@ -51,13 +47,11 @@ XML = """
 m = mujoco.MjModel.from_xml_string(XML)
 d = mujoco.MjData(m)
 
-
 def pose():
     x, y = d.qpos[0], d.qpos[1]
     w, qx, qy, qz = d.qpos[3], d.qpos[4], d.qpos[5], d.qpos[6]
-    yaw = math.atan2(2 * (w * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz))
+    yaw = math.atan2(2*(w*qz+qx*qy), 1-2*(qy*qy+qz*qz))
     return x, y, yaw
-
 
 phase = 0
 step = 0

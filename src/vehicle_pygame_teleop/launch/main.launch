@@ -1,3 +1,0 @@
-<launch>
-    <node pkg="vehicle_pygame_teleop" type="vehicle_pygame_teleop.py" name="vehicle_pygame_teleop" output="screen"/>
-</launch>
