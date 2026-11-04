@@ -1,0 +1,33 @@
+{
+  "images": 93,
+  "detections": 93,
+  "status": {
+    "state": "complete",
+    "waypoint": 12,
+    "total": 12
+  },
+  "dimensions": [
+    320,
+    240
+  ],
+  "finite_scores": true,
+  "frame_id": "town10_camera_optical",
+  "last_detection_count": 3,
+  "last_defect_count": 0,
+  "mission": {
+    "backend": "mujoco",
+    "scene": "brick",
+    "status": "complete",
+    "controller": "numpy_mlp_15_32_3",
+    "waypoints_total": 12,
+    "waypoints_completed": 12,
+    "images_captured": 12,
+    "duration_s": 43.0,
+    "wall_clock_s": 44.01887705299987,
+    "distance_source": "mujoco_nine_ray",
+    "maximum_speed_m_s": 0.7893529182541378,
+    "error": null,
+    "reference_distance_rmse_m": 0.001999999999999336
+  },
+  "passed": true
+}
