@@ -130,7 +130,8 @@ humanoid_carry_payload_nn/
 
 ## 8. 评测结果
 
-`evaluate.py --seconds 20 --speed 0.15`（固定指令曲线，三种负载 × 三种控制器）：
+`evaluate.py --seconds 20 --speed 0.15`（固定指令曲线，三种负载 × 三种控制器；下表是修正
+`mj_setConst` 后重训权重的复算结果，mujoco 3.17.0）：
 
 | 场景 | 控制器 | 俯仰均值 (°) | 俯仰 RMS (°) | 俯仰峰值 (°) | 等效里程 (m) | 跌倒 |
 | --- | --- | --- | --- | --- | --- | --- |
