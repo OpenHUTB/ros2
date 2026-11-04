@@ -38,6 +38,8 @@ from visualization_msgs.msg import Marker       # noqa: E402
 
 KEY, TRAJ = "/teleop/key", "/visualizer/trajectory"
 STEP = 0.5
+DEFAULT_FRAMES = "/tmp/shots"
+DEFAULT_MAX_MB = 2000
 traj = []
 
 
@@ -46,11 +48,26 @@ def on_traj(msg):
         traj.append(len(msg.points))
 
 
-def main():
-    os.makedirs(FRAMES, exist_ok=True)
-    for f in os.listdir(FRAMES):
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="抓取 AllocNet 演示帧")
+    parser.add_argument("--frames", default=DEFAULT_FRAMES,
+                        help="帧输出目录，默认 %s" % DEFAULT_FRAMES)
+    parser.add_argument("--max-mb", type=int, default=DEFAULT_MAX_MB,
+                        help="帧目录超过该大小时停止抓取，默认 %d MB" % DEFAULT_MAX_MB)
+    return parser.parse_args(argv)
+
+
+def frames_size_mb(path):
+    return sum(entry.stat().st_size for entry in os.scandir(path)) / (1024.0 * 1024.0)
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    frames_dir = os.path.abspath(os.path.expanduser(args.frames))
+    os.makedirs(frames_dir, exist_ok=True)
+    for f in os.listdir(frames_dir):
         if f.endswith(".png"):
-            os.remove(os.path.join(FRAMES, f))
+            os.remove(os.path.join(frames_dir, f))
 
     rospy.init_node("best_shot", anonymous=True)
     pub = rospy.Publisher(KEY, String, queue_size=100)
@@ -67,9 +84,14 @@ def main():
 
     def grab():
         subprocess.call(["import", "-display", DISP, "-window", "root",
-                         os.path.join(FRAMES, "s_%04d.png" % n[0])],
+                         os.path.join(frames_dir, "s_%04d.png" % n[0])],
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         n[0] += 1
+        if n[0] % 10 == 0:
+            size_mb = frames_size_mb(frames_dir)
+            if size_mb > args.max_mb:
+                raise SystemExit("帧目录 %.0f MB 超过 --max-mb %d MB，停止抓取"
+                                 % (size_mb, args.max_mb))
 
     def move_to(tx, ty):
         send("r"); time.sleep(0.4)
