@@ -8,6 +8,10 @@
 * 分距离 IoU 曲线 —— 远处点稀疏，精度下滑多少，一张图看出来。
 
 matplotlib 是可选依赖：没装就返回空列表，由调用方提示，不阻断训练。
+
+**图里的文字一律用英文。** matplotlib 默认字体没有中文字形，直接写中文会变成
+方框（终端刷一屏 "Glyph missing from current font"）。装 Noto CJK 能解决，
+但要求每个复现的人先去装字体不合理；中文说明放到文档图注里，图本身保持英文。
 """
 
 import os
@@ -23,7 +27,7 @@ def _pyplot():
     return plt
 
 
-def save_confusion(matrix, path, title='混淆矩阵（行=真实，列=预测）'):
+def save_confusion(matrix, path, title='Confusion matrix (rows = truth, cols = prediction)'):
     """画混淆矩阵热力图，数字写在格子里，颜色越深表示数量越多。"""
     plt = _pyplot()
     names = list(L.CLASS_NAMES)
@@ -35,8 +39,8 @@ def save_confusion(matrix, path, title='混淆矩阵（行=真实，列=预测�
     axes.set_yticks(range(len(names)))
     axes.set_xticklabels(names, rotation=30, ha='right')
     axes.set_yticklabels(names)
-    axes.set_xlabel('预测类别')
-    axes.set_ylabel('真实类别')
+    axes.set_xlabel('predicted class')
+    axes.set_ylabel('true class')
     axes.set_title(title, fontsize=11)
 
     total = float(matrix.sum()) or 1.0
@@ -55,7 +59,7 @@ def save_confusion(matrix, path, title='混淆矩阵（行=真实，列=预测�
     return path
 
 
-def save_range_curve(by_range, path, title='分距离分割精度'):
+def save_range_curve(by_range, path, title='Accuracy and macro IoU by range'):
     """画分距离档的准确率与宏平均 IoU。"""
     plt = _pyplot()
     keys = list(by_range.keys())
@@ -64,13 +68,13 @@ def save_range_curve(by_range, path, title='分距离分割精度'):
 
     figure, axes = plt.subplots(figsize=(5.2, 3.6), dpi=140)
     positions = range(len(keys))
-    axes.plot(positions, accuracy, marker='o', label='总体准确率')
-    axes.plot(positions, macro, marker='s', label='宏平均 IoU')
+    axes.plot(positions, accuracy, marker='o', label='overall accuracy')
+    axes.plot(positions, macro, marker='s', label='macro IoU')
     axes.set_xticks(list(positions))
     axes.set_xticklabels(keys)
     axes.set_ylim(0.0, 1.05)
-    axes.set_xlabel('距离档')
-    axes.set_ylabel('指标')
+    axes.set_xlabel('range bin')
+    axes.set_ylabel('score')
     axes.set_title(title, fontsize=11)
     axes.grid(True, linestyle='--', alpha=0.4)
     axes.legend(loc='lower left')
