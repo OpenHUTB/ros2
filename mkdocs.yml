@@ -117,6 +117,7 @@ nav:
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
+    - 任务4 - 端到端策略网络: robot_tasks/policy_learning/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
     - 端到端驾驶（图像到控制指令）: './ground/pix2cmd_end2end_driving.md'
