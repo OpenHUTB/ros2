@@ -138,6 +138,88 @@ def spawn_traffic(world, client, count=12, seed=0):
     return actors
 
 
+def spawn_pedestrians(world, ego, count=8, seed=0, radii=(6.0, 10.0, 14.0)):
+    """在自车周围撒一群静止行人，补上"行人"这一类样本。
+
+    为什么绕自车放而不是用地图的导航随机点：随机点可能在地图另一头，
+    自车雷达根本看不到，采出来的数据集里行人点数还是 0。
+    绕自车多圈布点，保证至少有一部分落在量程内。
+
+    行人不带 AI 控制器，站着不动：移动的行人更真实，但需要额外的
+    控制器生命周期管理，崩溃面变大；对训练分类器来说，静止行人同样提供
+    有效的"行人"标签，先保证数据里有这一类。
+    """
+    check_carla()
+    carla_map = world.get_map()
+    library = world.get_blueprint_library()
+    rng = np.random.default_rng(seed)
+    transform = ego.get_transform()
+    yaw0 = np.deg2rad(transform.rotation.yaw)
+    actors = []
+    for radius in radii:
+        for step in rng.permutation(16):
+            if len(actors) >= count:
+                break
+            angle = yaw0 + 2.0 * np.pi * float(step) / 16.0
+            location = carla.Location(
+                x=transform.location.x + radius * np.cos(angle),
+                y=transform.location.y + radius * np.sin(angle),
+                z=transform.location.z + 0.5)
+            waypoint = carla_map.get_waypoint(location, project_to_road=True,
+                                              lane_type=carla.LaneType.Any)
+            if waypoint is None:
+                continue
+            walker_bp = rng.choice(library.filter('walker.pedestrian.*'))
+            spawn_transform = carla.Transform(
+                carla.Location(x=waypoint.transform.location.x,
+                               y=waypoint.transform.location.y,
+                               z=waypoint.transform.location.z + 0.3),
+                waypoint.transform.rotation)
+            walker = world.try_spawn_actor(walker_bp, spawn_transform)
+            if walker is not None:
+                actors.append(walker)
+    print('[行人] 已生成 %d 个行人' % len(actors))
+    return actors
+
+
+def teardown(client, world, sensors=(), actors=()):
+    """统一清理：先停传感器，再批量销毁 actor，最后恢复异步模式。
+
+    为什么不逐个 ``destroy()``：TrafficManager 在同步模式下还持有这些车辆的引用，
+    逐个销毁时客户端会抛 C++ 的 ``trying to operate on a destroyed actor``，
+    这个异常跨不过 Python 边界，进程会直接 abort。先关掉 TM 的同步模式，
+    再用 ``apply_batch_sync`` 一次性销毁，既快也不会踩到悬空引用。
+    """
+    check_carla()
+    try:
+        client.get_trafficmanager().set_synchronous_mode(False)
+    except Exception:      # noqa: BLE001
+        pass
+
+    for sensor in list(sensors):
+        try:
+            sensor.stop()
+        except Exception:      # noqa: BLE001
+            pass
+
+    targets = list(sensors) + list(actors)
+    if targets:
+        try:
+            client.apply_batch_sync([carla.command.DestroyActor(a) for a in targets], True)
+        except Exception:      # noqa: BLE001
+            for actor in targets:
+                try:
+                    actor.destroy()
+                except Exception:      # noqa: BLE001
+                    pass
+
+    try:
+        restore_async(world)
+    except Exception:      # noqa: BLE001
+        pass
+    print('[清理] 传感器与车辆已销毁，世界已恢复异步模式')
+
+
 def lidar_blueprint(world, semantic=False, lidar_range=60.0, channels=32,
                     points_per_second=600000, rotation_frequency=20.0,
                     upper_fov=10.0, lower_fov=-30.0, sensor_tick=0.0):

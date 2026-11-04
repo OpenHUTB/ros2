@@ -58,12 +58,14 @@ def build_parser():
     parser.add_argument('--vehicle', default='vehicle.tesla.model3', help='自车 blueprint')
     parser.add_argument('--spawn-index', type=int, default=0, help='出生点索引')
     parser.add_argument('--traffic', type=int, default=12, help='NPC 车数量，0 表示不放')
+    parser.add_argument('--pedestrians', type=int, default=8, help='行人数量，0 表示不放')
     parser.add_argument('--dt', type=float, default=0.05, help='同步步长（秒）')
 
     # 激光雷达参数（普通与语义两台必须一致）
     parser.add_argument('--lidar-range', type=float, default=60.0, help='量程（米）')
     parser.add_argument('--channels', type=int, default=32, help='线数')
-    parser.add_argument('--points-per-second', type=int, default=600000, help='点频')
+    parser.add_argument('--points-per-second', type=int, default=200000,
+                        help='点频，双雷达各一路；虚拟机里太高会拖到两帧每秒')
     parser.add_argument('--rotation', type=float, default=20.0, help='转速（Hz）')
     parser.add_argument('--lidar-height', type=float, default=2.4, help='雷达安装高度（米）')
 

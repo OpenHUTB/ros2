@@ -65,6 +65,13 @@ def run_collect(args):
             actors = cc.spawn_traffic(world, client, count=args.traffic)
         actors.append(ego)
 
+        # 行人必须主动放：Town03 默认场景里没有行人，不补的话
+        # 数据集里 pedestrian 一直是 0，训练出来的模型永远预测不出行人。
+        # 放之前先 tick 一次，让自车位姿下发，否则相对位置会算到世界原点。
+        if getattr(args, 'pedestrians', 0) > 0:
+            world.tick()
+            actors.extend(cc.spawn_pedestrians(world, ego, count=args.pedestrians))
+
         common = dict(lidar_range=args.lidar_range, channels=args.channels,
                       points_per_second=args.points_per_second,
                       rotation_frequency=args.rotation, sensor_tick=0.0)
@@ -140,19 +147,7 @@ def run_collect(args):
         print('=' * 60)
         return 0
     finally:
-        for sensor in sensors:
-            try:
-                sensor.stop()
-                sensor.destroy()
-            except Exception:      # noqa: BLE001
-                pass
-        for actor in actors:
-            try:
-                actor.destroy()
-            except Exception:      # noqa: BLE001
-                pass
-        cc.restore_async(world)
-        print('[清理] 传感器与车辆已销毁，世界已恢复异步模式')
+        cc.teardown(client, world, sensors, actors)
 
 
 def load_model(checkpoint, n_features=None):
@@ -199,6 +194,13 @@ def run_demo(args):
         if args.traffic > 0:
             actors = cc.spawn_traffic(world, client, count=args.traffic)
         actors.append(ego)
+
+        # 行人必须主动放：Town03 默认场景里没有行人，不补的话
+        # 数据集里 pedestrian 一直是 0，训练出来的模型永远预测不出行人。
+        # 放之前先 tick 一次，让自车位姿下发，否则相对位置会算到世界原点。
+        if getattr(args, 'pedestrians', 0) > 0:
+            world.tick()
+            actors.extend(cc.spawn_pedestrians(world, ego, count=args.pedestrians))
         common = dict(lidar_range=args.lidar_range, channels=args.channels,
                       points_per_second=args.points_per_second,
                       rotation_frequency=args.rotation, sensor_tick=0.0)
@@ -242,16 +244,4 @@ def run_demo(args):
             plot.close()
         return 0
     finally:
-        for sensor in sensors:
-            try:
-                sensor.stop()
-                sensor.destroy()
-            except Exception:      # noqa: BLE001
-                pass
-        for actor in actors:
-            try:
-                actor.destroy()
-            except Exception:      # noqa: BLE001
-                pass
-        cc.restore_async(world)
-        print('[清理] 已完成')
+        cc.teardown(client, world, sensors, actors)
