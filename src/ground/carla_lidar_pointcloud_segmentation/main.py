@@ -87,6 +87,7 @@ def build_parser():
     # 控制与画图
     parser.add_argument('--corridor-width', type=float, default=1.2, help='走廊半宽（米）')
     parser.add_argument('--no-plot', action='store_true', help='演示时不弹三维图')
+    parser.add_argument('--record', default='', help='逐帧存 PNG 的目录，用于合成 gif')
     parser.add_argument('--no-control', dest='control', action='store_false',
                         help='演示时只可视化，不接管车辆控制')
     parser.add_argument('--max-speed', type=float, default=8.0, help='目标车速（米/秒）')

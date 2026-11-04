@@ -202,7 +202,17 @@ def run_demo(args):
     cc.enable_sync_traffic_manager(client)
     sensors, actors = [], []
     plot = None
-    if not args.no_plot:
+    record_fig = None
+    if getattr(args, 'record', ''):
+        # 录制模式先用无界面后端：虚拟机里没有显示服务，TkAgg 会直接失败。
+        # 每帧存一张 PNG，后面用 Pillow 或 ffmpeg 合成 gif。
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        os.makedirs(args.record, exist_ok=True)
+        record_fig = plt.figure(figsize=(6.4, 4.8), dpi=80)
+        print('[录制] 逐帧写入 %s' % args.record)
+    elif not args.no_plot:
         try:
             import matplotlib
             matplotlib.use('TkAgg')
@@ -305,6 +315,33 @@ def run_demo(args):
                      ' 油门 %.2f 刹车 %.2f 转向 %+.2f' % (command.throttle, command.brake,
                                                          command.steer)))
 
+            if record_fig is not None:
+                # 录制：每帧清空重画，标题里带上本帧的关键指标，
+                # 合成 gif 后能直接看出"哪里是路面、哪里在减速"。
+                record_fig.clf()
+                record_ax = record_fig.add_subplot(111, projection='3d')
+                for cls_id in range(L.N_CLASSES):
+                    mask = classes == cls_id
+                    if mask.any():
+                        record_ax.scatter(points[mask, 0], points[mask, 1], points[mask, 2],
+                                          s=2, c=[colors[cls_id]],
+                                          label=L.CLASS_NAMES[cls_id], depthshade=False)
+                record_ax.set_xlim(0, 40)
+                record_ax.set_ylim(-15, 15)
+                record_ax.set_zlim(-3, 6)
+                record_ax.set_xlabel('x / m', fontsize=8)
+                record_ax.set_ylabel('y / m', fontsize=8)
+                record_ax.set_zlabel('z / m', fontsize=8)
+                record_ax.tick_params(labelsize=7)
+                record_ax.view_init(elev=18, azim=-68)
+                record_ax.set_title('frame %d   free %.1f m   factor %.2f   brake %.2f'
+                                    % (frame, free, factor,
+                                       0.0 if command is None else command.brake),
+                                    fontsize=9)
+                record_ax.legend(loc='upper right', markerscale=4, fontsize=7)
+                record_fig.savefig(os.path.join(args.record, 'frame_%04d.png' % frame))
+                continue
+
             if plot is not None:
                 plot.clf()
                 ax = plot.subplot(111, projection='3d') if hasattr(plot, 'subplot') else plot.gca()
@@ -323,6 +360,9 @@ def run_demo(args):
                 plot.pause(0.001)
         if plot is not None:
             plot.close()
+        if record_fig is not None:
+            import matplotlib.pyplot as plt
+            plt.close(record_fig)
         _print_demo_summary(stats, args)
         return 0
     finally:
