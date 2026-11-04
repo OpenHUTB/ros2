@@ -1,0 +1,47 @@
+[
+  {
+    "backend": "mujoco",
+    "scene": "brick",
+    "status": "complete",
+    "controller": "numpy_mlp_15_32_3",
+    "waypoints_total": 12,
+    "waypoints_completed": 12,
+    "images_captured": 12,
+    "duration_s": 43.0,
+    "wall_clock_s": 1.6869999999998981,
+    "distance_source": "mujoco_nine_ray",
+    "reference_distance_rmse_m": 0.0020000000000002243,
+    "maximum_speed_m_s": 0.7893529182541378,
+    "error": null
+  },
+  {
+    "backend": "mujoco",
+    "scene": "gray",
+    "status": "complete",
+    "controller": "numpy_mlp_15_32_3",
+    "waypoints_total": 12,
+    "waypoints_completed": 12,
+    "images_captured": 12,
+    "duration_s": 43.0,
+    "wall_clock_s": 2.25,
+    "distance_source": "mujoco_nine_ray",
+    "reference_distance_rmse_m": 0.0020000000000002243,
+    "maximum_speed_m_s": 0.7893529182541378,
+    "error": null
+  },
+  {
+    "backend": "mujoco",
+    "scene": "glass",
+    "status": "complete",
+    "controller": "numpy_mlp_15_32_3",
+    "waypoints_total": 12,
+    "waypoints_completed": 12,
+    "images_captured": 12,
+    "duration_s": 43.0,
+    "wall_clock_s": 1.3589999999999236,
+    "distance_source": "mujoco_nine_ray",
+    "reference_distance_rmse_m": 0.0020000000000002243,
+    "maximum_speed_m_s": 0.7893529182541378,
+    "error": null
+  }
+]

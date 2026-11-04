@@ -28,7 +28,7 @@ EXECUTING / PAUSED → RETURNING → LANDING → LANDED
 
 ## 多航点任务队列（ROS 2 Humble） <span id="waypoint-queue"></span>
 
-单次发送最多 100 个 NED 航点，控制器按顺序派发，并在状态话题中报告进度。适用于预先给定的巡检路线；不包含路径规划、避障或 ROS Action。
+单次发送最多 100 个 NED 航点，控制器按顺序派发，并在状态话题中报告进度。适用于预先给定的巡检路线；不包含路径规划或避障。标准 Action 接口见 [ROS 2 Action 任务接口](mission_action.md)。
 
 ### 环境与构建
 
@@ -40,8 +40,8 @@ EXECUTING / PAUSED → RETURNING → LANDING → LANDED
 
 ```bash
 source /opt/ros/humble/setup.bash
-rosdep install --from-paths src/air/uav_mission_safety_manager --ignore-src --rosdistro humble -r -y
-colcon build --symlink-install --packages-select uav_mission_safety_manager
+rosdep install --from-paths src/air/uav_mission_interfaces src/air/uav_mission_safety_manager --ignore-src --rosdistro humble -r -y
+colcon build --symlink-install --packages-up-to uav_mission_safety_manager
 source install/setup.bash
 python3 -m unittest discover -s src/air/uav_mission_safety_manager/tests -v
 ROS_DOMAIN_ID=88 ROS_LOCALHOST_ONLY=1 python3 src/air/uav_mission_safety_manager/tests/ros_queue_smoke.py
