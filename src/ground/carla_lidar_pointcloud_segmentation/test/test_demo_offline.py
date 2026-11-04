@@ -16,6 +16,7 @@
 
 import argparse
 import os
+import shutil
 import sys
 import types
 
@@ -207,7 +208,10 @@ def main():
     install_fake_carla()
     from carla_lidar_pointcloud_segmentation import app
 
-    tmpdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '_tmp_demo')
+    # 临时权重放在 test/ 下的临时目录，跑完删掉。目录名带 _tmp_demo_ 前缀，
+    # 并由同目录的 .gitignore 挡住：万一中途崩溃留下残file，也不会被误提交。
+    tmpdir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '_tmp_demo_%d' % os.getpid())
     os.makedirs(tmpdir, exist_ok=True)
     args = make_args(tmpdir)
     build_model(args.checkpoint,
@@ -281,6 +285,8 @@ def main():
     check('入库权重仍是 models/seg_mlp.npz',
           M.DEFAULT_CHECKPOINT.replace(os.sep, '/') == 'models/seg_mlp.npz',
           M.DEFAULT_CHECKPOINT)
+
+    shutil.rmtree(tmpdir, ignore_errors=True)
 
     print('\n' + '=' * 72)
     if _failed:

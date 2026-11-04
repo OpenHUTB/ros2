@@ -39,13 +39,17 @@ VMware 虚拟网卡 VMnet8 的地址，形如 `192.168.148.1`，下文都用这�
     │   ├── pipeline.py              逐帧提特征 → 划分 → 训练 → 评价
     │   ├── control.py               走廊余量、速度系数、纯跟踪
     │   ├── carla_common.py          CARLA 连接、双雷达、点云配对
+    │   ├── probe.py                实测语义标签编号（--probe）
+    │   ├── figures.py              混淆矩阵与分距离曲线出图
     │   ├── app.py                   采集（--collect）与在线演示（--demo）
     │   └── node.py                  ROS 2 节点
     └── test/
         ├── test_features.py         27 项
-        ├── test_labels.py           22 项
-        ├── test_segmentation.py     46 项
-        └── test_control.py          31 项
+        ├── test_labels.py           26 项
+        ├── test_segmentation.py     49 项
+        ├── test_control.py          31 项
+        ├── test_buffers.py          22 项
+        └── test_demo_offline.py     15 项
 
 ## 3. 计算原理
 
