@@ -33,21 +33,29 @@ def main():
 
     # ---------------- 1. 标签映射 ----------------
     print('\n[1] 标签映射')
-    check('路面 Roads(7) -> 可行驶', L.tag_to_class(7) == L.DRIVABLE)
-    check('车道线 RoadLines(6) -> 可行驶', L.tag_to_class(6) == L.DRIVABLE)
-    check('车辆 Vehicles(11) -> 车辆', L.tag_to_class(11) == L.VEHICLE)
-    check('行人 Pedestrians(4) -> 行人', L.tag_to_class(4) == L.PEDESTRIAN)
-    check('建筑 Buildings(1) -> 障碍物', L.tag_to_class(1) == L.OBSTACLE)
-    check('植被 Vegetation(10) -> 障碍物', L.tag_to_class(10) == L.OBSTACLE)
+    check('实测：路面(1) -> 可行驶', L.tag_to_class(1) == L.DRIVABLE)
+    check('实测：人行道/地形(2) -> 可行驶', L.tag_to_class(2) == L.DRIVABLE)
+    check('实测：车辆(14) -> 车辆', L.tag_to_class(14) == L.VEHICLE)
+    check('实测：行人(12) -> 行人', L.tag_to_class(12) == L.PEDESTRIAN)
+    check('实测：建筑(3) -> 障碍物', L.tag_to_class(3) == L.OBSTACLE)
+    check('实测：杆/树(6) -> 障碍物', L.tag_to_class(6) == L.OBSTACLE)
+    check('官方编号在本版本无效：Roads(7) 被丢弃', L.tag_to_class(7) == L.UNKNOWN)
+    check('官方编号在本版本无效：Vehicles(11) 被丢弃', L.tag_to_class(11) == L.UNKNOWN)
+    check('官方编号在本版本含义不同：Pedestrians(4) 实为建筑',
+          L.tag_to_class(4) == L.OBSTACLE)
     check('未知标签返回 -1', L.tag_to_class(99) == L.UNKNOWN)
-    check('标签名表覆盖 0~15', sorted(L.SEMANTIC_TAG_NAMES) == list(range(16)),
-          str(sorted(L.SEMANTIC_TAG_NAMES)))
-    check('可行驶标签不重复计数', len(set(L.TAG_TO_CLASS)) == len(L.TAG_TO_CLASS))
+    check('实测表覆盖全部四个类别',
+          sorted(set(L.TAG_TO_CLASS.values())) == list(range(L.N_CLASSES)),
+          str(sorted(set(L.TAG_TO_CLASS.values()))))
+    check('每个实测标签都有中文描述',
+          all(L.tag_description(tag) != '未知标签' for tag in L.MEASURED_TAG_TABLE))
+    check('映射表键与实测表一致',
+          sorted(L.TAG_TO_CLASS) == sorted(L.MEASURED_TAG_TABLE))
     check('四类名称与类别数一致', len(L.CLASS_NAMES) == L.N_CLASSES)
 
     # ---------------- 2. 批量转换与过滤 ----------------
     print('\n[2] 批量转换')
-    tags = [7, 11, 4, 99, 1]
+    tags = [1, 14, 12, 99, 3]
     grouped = L.group_labels(tags)
     check('批量转换长度不变', len(grouped) == len(tags))
     check('批量转换保留未知为 -1', grouped[3] == -1, str(grouped))

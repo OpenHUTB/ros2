@@ -42,7 +42,16 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
     client = carla.Client(host, port)
     client.set_timeout(timeout)
     try:
-        current = client.get_world().get_map().name
+        current_world = client.get_world()
+        current = current_world.get_map().name
+        # 上一次运行如果崩在 restore_async 之前，服务端会停在同步模式，
+        # 此时再 load_world 极容易卡死甚至把客户端拖崩，所以先恢复异步。
+        if current_world.get_settings().synchronous_mode:
+            settings = current_world.get_settings()
+            settings.synchronous_mode = False
+            settings.fixed_delta_seconds = None
+            current_world.apply_settings(settings)
+            print('[连接] 检测到服务端停在同步模式（上次退出异常），已恢复异步')
     except Exception:      # noqa: BLE001
         current = None
 
@@ -79,6 +88,19 @@ def restore_async(world):
         return False
 
 
+def enable_sync_traffic_manager(client, port=8000):
+    """让 TrafficManager 也按同步模式推进。
+
+    世界是同步的、TM 还是异步的话，NPC 车不会跟着 world.tick() 走，
+    采到的点云里"车"全是静止的，训练出来的模型对运动车辆没有泛化能力。
+    """
+    check_carla()
+    tm = client.get_trafficmanager(port)
+    tm.set_synchronous_mode(True)
+    return tm
+
+
+
 def spawn_ego(world, blueprint=EGO_BLUEPRINT, spawn_index=0, autopilot=True):
     """在指定出生点生成自车，默认打开自动驾驶以便采集多样化的场景。"""
     check_carla()
@@ -94,6 +116,20 @@ def spawn_ego(world, blueprint=EGO_BLUEPRINT, spawn_index=0, autopilot=True):
     if autopilot:
         ego.set_autopilot(True)
     return ego
+
+
+def to_world(points, transform):
+    """把传感器坐标系的点转到世界坐标系。
+
+    语义标签的分布、和已知目标比对，都必须先转到同一个坐标系，
+    否则"传感器原点"和"世界原点"混用，包围盒里一个点都筛不到。
+    """
+    yaw = np.deg2rad(transform.rotation.yaw)
+    cos_yaw, sin_yaw = np.cos(yaw), np.sin(yaw)
+    x = points[:, 0] * cos_yaw - points[:, 1] * sin_yaw + transform.location.x
+    y = points[:, 0] * sin_yaw + points[:, 1] * cos_yaw + transform.location.y
+    z = points[:, 2] + transform.location.z
+    return np.column_stack([x, y, z]).astype(np.float32)
 
 
 def spawn_traffic(world, client, count=12, seed=0):
@@ -144,18 +180,60 @@ def attach_lidar(world, ego, blueprint, height=2.4):
     return sensor, data_queue
 
 
+def _raw_buffer(data):
+    """把测量对象里的二进制缓冲区取成 float32 数组。
+
+    不同版本的 Python 客户端给点对象起的字段名不一样：官方 0.9.16 是
+    ``detection.x``，但 PyPI 上重新打包的版本把坐标塞进了 ``detection.point``，
+    直接按属性读会在采集现场炸掉。缓冲区布局是稳定的（每点 4 个或 6 个 float32），
+    所以优先解析缓冲区，属性只作为兜底。
+    """
+    return np.frombuffer(data.raw_data, dtype=np.float32)
+
+
+def _point_xyz(item):
+    """兜底：按属性取坐标，兼容 ``item.x`` 与 ``item.point.x`` 两种写法。"""
+    for owner in (item, getattr(item, 'point', None)):
+        if owner is not None and hasattr(owner, 'x'):
+            return float(owner.x), float(owner.y), float(owner.z)
+    raise AttributeError('这个 CARLA 版本的点对象既没有 x 也没有 point.x，'
+                         '请把 dir(point) 的输出反馈给维护者')
+
+
 def points_from_raw(data):
-    """普通点云 -> ``(N, 3)`` 数组（传感器坐标系，单位米）。"""
-    return np.array([[p.x, p.y, p.z] for p in data], dtype=np.float32)
+    """普通点云 -> ``(N, 3)`` 数组（传感器坐标系，单位米）。
+
+    普通激光雷达每点 4 个 float32：``x, y, z, cos_inc_angle``。
+    """
+    count = len(data)
+    if count == 0:
+        return np.zeros((0, 3), dtype=np.float32)
+    buffer = _raw_buffer(data)
+    if buffer.size == count * 4:
+        return buffer.reshape(count, 4)[:, :3].astype(np.float32)
+    return np.array([_point_xyz(p) for p in data], dtype=np.float32)
 
 
 def points_from_semantic(data):
     """语义点云 -> ``((N, 3) 坐标, (N,) 语义标签)``。
 
+    语义激光雷达每点 6 个 32 位：``x, y, z, cos_inc_angle`` 是 float32，
+    ``object_idx, object_tag`` 是 uint32。同一段内存按 uint32 视图取最后两个即可，
+    不需要依赖点对象的属性名。
+
     ``object_tag`` 的取值与 ``carla.CityObjectLabel`` 一致，映射在 :mod:`labels` 里做。
     """
-    points = np.array([[p.x, p.y, p.z] for p in data], dtype=np.float32)
-    tags = np.array([int(p.object_tag) for p in data], dtype=np.int32)
+    count = len(data)
+    if count == 0:
+        return np.zeros((0, 3), dtype=np.float32), np.zeros(0, dtype=np.int32)
+    buffer = _raw_buffer(data)
+    if buffer.size == count * 6:
+        points = buffer.reshape(count, 6)[:, :3].astype(np.float32)
+        as_uint = np.ascontiguousarray(buffer).view(np.uint32).reshape(count, 6)
+        tags = as_uint[:, 5].astype(np.int32)
+        return points, tags
+    points = np.array([_point_xyz(p) for p in data], dtype=np.float32)
+    tags = np.array([int(getattr(p, 'object_tag')) for p in data], dtype=np.int32)
     return points, tags
 
 

@@ -31,11 +31,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from carla_lidar_pointcloud_segmentation import labels as L      # noqa: E402
 from carla_lidar_pointcloud_segmentation import pipeline as P    # noqa: E402
 
-# 合成数据里用的原始语义标签：路面 / 车辆 / 行人 / 建筑
-TAG_ROAD = 7
-TAG_VEHICLE = 11
-TAG_PEDESTRIAN = 4
-TAG_BUILDING = 1
+# 合成数据里用的原始语义标签，直接取实测表的首个标签：
+# 这样以后重新体检、调整实测表时，自检数据会自动跟着变，不会悄悄用旧编号。
+TAG_ROAD = L.first_tag_of(L.DRIVABLE)
+TAG_VEHICLE = L.first_tag_of(L.VEHICLE)
+TAG_PEDESTRIAN = L.first_tag_of(L.PEDESTRIAN)
+TAG_BUILDING = L.first_tag_of(L.OBSTACLE)
 
 
 def build_parser():
@@ -47,6 +48,8 @@ def build_parser():
     parser.add_argument('--collect', action='store_true', help='在 CARLA 里采集数据集')
     parser.add_argument('--train', action='store_true', help='用数据集训练并评价')
     parser.add_argument('--demo', action='store_true', help='在线分割演示')
+    parser.add_argument('--probe', action='store_true',
+                        help='实测语义标签编号，换地图或换 CARLA 版本后先跑这个')
 
     # CARLA 连接
     parser.add_argument('--host', default='127.0.0.1', help='CARLA 服务端地址')
@@ -186,12 +189,15 @@ def main(argv=None):
         print('  python3 main.py --self-check')
         return 2
 
+    if args.probe:
+        from carla_lidar_pointcloud_segmentation import probe
+        return probe.run_probe(args)
     if args.collect:
         return app.run_collect(args)
     if args.demo:
         return app.run_demo(args)
 
-    print('没有指定运行模式，试试 --self-check / --collect / --train / --demo')
+    print('没有指定运行模式，试试 --self-check / --probe / --collect / --train / --demo')
     return 2
 
 

@@ -1,20 +1,21 @@
 """语义标签映射（纯计算，不依赖 CARLA）。
 
-CARLA 的 ``sensor.lidar.ray_cast_semantic`` 给每个点返回一个 ``object_tag``，
-取值与 ``carla.CityObjectLabel`` 一致。本模块把它归并成 4 个对驾驶有意义的类别：
+**这张表是实测出来的，不是抄文档的。**
 
-* ``DRIVABLE``   可行驶面：路面、车道线、人行道、地形；
-* ``VEHICLE``    车辆；
-* ``PEDESTRIAN`` 行人；
-* ``OBSTACLE``   其余（建筑、栅栏、杆、植被、墙、标志、红绿灯、水等）。
+CARLA 的语义激光雷达给每个点一个 ``object_tag``。文档说它等于
+``carla.CityObjectLabel``（Roads=7、Vehicles=11、Pedestrians=4），
+但实测下来（CARLA 0.9.16，PyPI 打包版，Town03）编号完全是另一套：
+路面是 1、车辆是 14、行人是 12。按文档写会在采集现场把"建筑"当成"行人"。
 
-归并有两点考虑：
+实测方法见文档第 3.1 节：在自车前方 10 m 放一辆已知车辆、右侧 6 m 放一个已知行人，
+统计落在这两个目标附近的点用什么 tag。结果：
 
-1. 类别太多会让逐点分类的样本极少（路牌只占几十个点），合并后每类都有足够样本；
-2. 驾驶决策只关心"能不能走 / 前面有没有东西"，不需要区分建筑和墙。
+* 自车自身半径 3 m 内只有 tag 14 -> 14 是车辆；
+* 前方 BMW 半径 3 m 内是 1（路面）与 14（110 点）-> 确认 14 是车辆；
+* 右侧行人半径 1.2 m 内是 1（路面）与 12（38 点）-> 12 是行人。
 
-真正的标签值需要在 CARLA 里实测一次（不同版本的 tag 编号可能不同），
-所以 :func:`tag_to_class` 对未知标签返回 ``-1``，由调用方决定丢弃还是报警。
+归并成 4 个对驾驶有意义的类别：可行驶面、车辆、行人、障碍物。
+未知标签返回 ``-1``，由调用方丢弃并计数，绝不猜。
 """
 
 from typing import Dict, Iterable, Sequence
@@ -28,51 +29,49 @@ CLASS_NAMES = ('drivable', 'vehicle', 'pedestrian', 'obstacle')
 N_CLASSES = len(CLASS_NAMES)
 UNKNOWN = -1
 
-# CARLA CityObjectLabel 的枚举值 -> 类别
-# 参考 carla.CityObjectLabel：0 NONE, 1 Buildings, 2 Fences, 3 Other, 4 Pedestrians,
-# 5 Poles, 6 RoadLines, 7 Roads, 8 Sidewalks, 9 TrafficSigns, 10 Vegetation,
-# 11 Vehicles, 12 Walls, 13 TrafficLight, 14 Water, 15 Terrain
-SEMANTIC_TAG_NAMES: Dict[int, str] = {
-    0: 'NONE',
-    1: 'Buildings',
-    2: 'Fences',
-    3: 'Other',
-    4: 'Pedestrians',
-    5: 'Poles',
-    6: 'RoadLines',
-    7: 'Roads',
-    8: 'Sidewalks',
-    9: 'TrafficSigns',
-    10: 'Vegetation',
-    11: 'Vehicles',
-    12: 'Walls',
-    13: 'TrafficLight',
-    14: 'Water',
-    15: 'Terrain',
+# 实测标签表：标签值 -> (实测描述, 归属类别)
+# 描述里写了判断依据，换地图或换 CARLA 版本后重新跑 --probe 核对。
+MEASURED_TAG_TABLE: Dict[int, tuple] = {
+    1: ('路面，高度恒定、点数最多', DRIVABLE),
+    2: ('人行道/地形，贴着地面、比路面低约 0.5 m', DRIVABLE),
+    3: ('建筑，远且高（高度到 9 m 以上）', OBSTACLE),
+    4: ('建筑/墙，中远距离、高度到 6 m', OBSTACLE),
+    6: ('杆、树，细高、距离 5~14 m', OBSTACLE),
+    9: ('高处零星点（交通灯/标志）', OBSTACLE),
+    12: ('行人，近距离一小簇点', PEDESTRIAN),
+    14: ('车辆（含自车），贴着车身、比路面高', VEHICLE),
+    20: ('远处零星物体', OBSTACLE),
+    21: ('远处零星物体', OBSTACLE),
+    25: ('远处零星物体', OBSTACLE),
 }
 
-TAG_TO_CLASS: Dict[int, int] = {
-    1: OBSTACLE,        # Buildings
-    2: OBSTACLE,        # Fences
-    3: OBSTACLE,        # Other
-    4: PEDESTRIAN,      # Pedestrians
-    5: OBSTACLE,        # Poles
-    6: DRIVABLE,        # RoadLines
-    7: DRIVABLE,        # Roads
-    8: DRIVABLE,        # Sidewalks
-    9: OBSTACLE,        # TrafficSigns
-    10: OBSTACLE,       # Vegetation
-    11: VEHICLE,        # Vehicles
-    12: OBSTACLE,       # Walls
-    13: OBSTACLE,       # TrafficLight
-    14: OBSTACLE,       # Water
-    15: DRIVABLE,       # Terrain
+TAG_TO_CLASS: Dict[int, int] = {tag: cls for tag, (_, cls) in MEASURED_TAG_TABLE.items()}
+
+# 官方文档里的编号，仅作对照，不参与映射
+OFFICIAL_CITY_OBJECT_LABEL = {
+    1: 'Buildings', 2: 'Fences', 3: 'Other', 4: 'Pedestrians', 5: 'Poles',
+    6: 'RoadLines', 7: 'Roads', 8: 'Sidewalks', 9: 'TrafficSigns', 10: 'Vegetation',
+    11: 'Vehicles', 12: 'Walls', 13: 'TrafficLight', 14: 'Water', 15: 'Terrain',
 }
 
 
 def tag_to_class(tag: int) -> int:
     """单个标签转类别；未知标签返回 ``UNKNOWN``（-1）。"""
     return TAG_TO_CLASS.get(int(tag), UNKNOWN)
+
+
+def first_tag_of(cls: int) -> int:
+    """取某个类别在实测表里编号最小的标签，用于造合成数据或写测试。"""
+    candidates = sorted(tag for tag, (_, c) in MEASURED_TAG_TABLE.items() if c == cls)
+    if not candidates:
+        raise ValueError('实测表里没有类别 %d' % cls)
+    return candidates[0]
+
+
+def tag_description(tag: int) -> str:
+    """返回实测描述，用于日志和文档。"""
+    item = MEASURED_TAG_TABLE.get(int(tag))
+    return item[0] if item else '未知标签'
 
 
 def group_labels(tags: Sequence[int]) -> list:
@@ -117,3 +116,12 @@ def class_distribution(labels: Iterable[int], n_classes: int = N_CLASSES) -> Dic
     if total == 0:
         return {name: 0.0 for name in CLASS_NAMES[:n_classes]}
     return {CLASS_NAMES[i]: round(counts[i] / total, 4) for i in range(n_classes)}
+
+
+def tag_histogram(tags: Sequence[int]) -> Dict[str, int]:
+    """原始标签直方图（按实测描述命名），体检时打印用。"""
+    counts: Dict[int, int] = {}
+    for tag in tags:
+        counts[int(tag)] = counts.get(int(tag), 0) + 1
+    return {'%d(%s)' % (tag, tag_description(tag)): n
+            for tag, n in sorted(counts.items(), key=lambda item: -item[1])}

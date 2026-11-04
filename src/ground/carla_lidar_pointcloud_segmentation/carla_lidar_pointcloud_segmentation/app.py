@@ -33,9 +33,28 @@ def _log_every(frame, total, started):
         print('[采集] %d/%d 帧，%.1f 帧/秒' % (frame + 1, total, rate))
 
 
+def _read_matched(raw_q, sem_q, timeout=10.0, max_skew=10):
+    """读到同一帧的两份点云。
+
+    两台雷达各自有队列，服务端给出的帧可能差一拍；帧号小的那边多读几帧追上，
+    最多容错 ``max_skew`` 次，超过就直接返回当前这对（由坐标配对兜底）。
+    """
+    raw = raw_q.get(timeout=timeout)
+    sem = sem_q.get(timeout=timeout)
+    for _ in range(max_skew):
+        if raw.frame == sem.frame:
+            return raw, sem
+        if raw.frame < sem.frame:
+            raw = raw_q.get(timeout=timeout)
+        else:
+            sem = sem_q.get(timeout=timeout)
+    return raw, sem
+
+
 def run_collect(args):
     """采集成对点云并存盘。"""
     client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt)
+    cc.enable_sync_traffic_manager(client)
     sensors, actors = [], []
     started = time.time()
     try:
@@ -64,8 +83,7 @@ def run_collect(args):
         for frame in range(args.frames):
             world.tick()
             try:
-                raw = raw_q.get(timeout=10.0)
-                sem = sem_q.get(timeout=10.0)
+                raw, sem = _read_matched(raw_q, sem_q, timeout=10.0)
             except Exception:      # noqa: BLE001
                 print('[采集] 第 %d 帧等不到传感器数据，跳过' % frame)
                 continue
@@ -104,7 +122,9 @@ def run_collect(args):
                       'points_per_second': args.points_per_second,
                       'rotation_frequency': args.rotation,
                       'height': args.lidar_height},
-            'class_distribution': L.class_distribution(tags),
+            # 存的是原始标签，统计前要先归并成四个类别，否则打印出来是一堆编号
+            'class_distribution': L.class_distribution(L.group_labels(tags)),
+            'tag_histogram': L.tag_histogram(tags),
             'size_bytes': int(points.nbytes + tags.nbytes + frames.nbytes),
         }
         with open(os.path.join(args.out_dir, 'dataset_meta.json'), 'w', encoding='utf-8') as handle:
@@ -162,6 +182,7 @@ def run_demo(args):
             mean, std = data['mean'], data['std']
 
     client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt)
+    cc.enable_sync_traffic_manager(client)
     sensors, actors = [], []
     plot = None
     if not args.no_plot:

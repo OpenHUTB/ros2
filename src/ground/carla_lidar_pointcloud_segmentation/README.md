@@ -27,7 +27,7 @@ CARLA 装在 Windows 宿主机、ROS 装在 VMware 虚拟机时，虚拟机的�
 ## 2. 目录结构
 
     carla_lidar_pointcloud_segmentation/
-    ├── main.py                 统一入口（--collect / --train / --self-check）
+    ├── main.py                 统一入口（--self-check / --probe / --collect / --train / --demo）
     ├── main.sh / main.bat      一键入口
     ├── carla_lidar_pointcloud_segmentation/
     │   ├── labels.py           语义标签 -> 四类
@@ -53,26 +53,37 @@ ROS 2 工作空间里还需要：
 
 ### 4.1 离线自检（不需要 CARLA）
 
-    python3 main.py --self-check
+    python3.10 main.py --self-check
 
 用合成点云跑通"特征 -> 训练 -> 评价"，确认整条链路可用，末行打印宏平均 IoU。
 
-### 4.2 采集数据
+### 4.2 实测语义标签（换地图或换 CARLA 版本后必做）
+
+```bash
+python3.10 main.py --probe --host 192.168.148.1
+```
+
+CARLA 的 `object_tag` 编号在不同打包版本里不一致，官方文档给的是 Roads=7、
+Vehicles=11、Pedestrians=4，而本项目实测的 0.9.16 是 Roads=1、Vehicles=14、
+Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放一个已知行人，
+打印各自附近的标签，用来核对 `labels.py` 里的实测表。
+
+### 4.3 采集数据
 
 先启动 CARLA 服务端（Windows 上双击 `CarlaUE4.exe`），然后在虚拟机里：
 
-    python3 main.py --collect --host 192.168.148.1 --town Town03 --frames 300
+    python3.10 main.py --collect --host 192.168.148.1 --town Town03 --frames 300
 
 生成 `data/dataset.npz`，里面是 `points / tags / frames` 三个数组。
 
-### 4.3 训练与评价
+### 4.4 训练与评价
 
     python3 main.py --train --data data/dataset.npz --epochs 30
 
 终端打印逐类 IoU/精确率/召回率、分距离档准确率和混淆矩阵，
 权重写到 `models/seg_mlp.npz`。
 
-### 4.4 ROS 2 节点
+### 4.5 ROS 2 节点
 
     ros2 run carla_lidar_pointcloud_segmentation lidar_segmentation_node --ros-args \
         --params-file config/params.yaml
