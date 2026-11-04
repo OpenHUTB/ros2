@@ -228,6 +228,7 @@ ROS每章节运行代码:
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
+* [四旋翼无人机 MuJoCo 建图导航与神经网络控制](./air/aerial_mujoco_slam_nn_nav/README.md)
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
