@@ -1,0 +1,13 @@
+test_boundary_stop (test_core.Checks.test_boundary_stop) ... ok
+test_center (test_core.Checks.test_center) ... ok
+test_diagonal_ball (test_core.Checks.test_diagonal_ball) ... ok
+test_horizon (test_core.Checks.test_horizon) ... ok
+test_nonfinite (test_core.Checks.test_nonfinite) ... ok
+test_outside (test_core.Checks.test_outside) ... ok
+test_stale (test_core.Checks.test_stale) ... ok
+test_swept_bound (test_core.Checks.test_swept_bound) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+OK
