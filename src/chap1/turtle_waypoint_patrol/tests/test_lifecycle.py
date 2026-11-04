@@ -35,9 +35,14 @@ for pkg, kind, values in [
 params=json.loads(os.environ.get('FAKE_PARAMS','{}'))
 shutdown=False
 subs=[]
+pubs=[]
+services=[]
 class Publisher:
-    def __init__(self, topic, *a, **kw): self.topic=topic
+    def __init__(self, topic, *a, **kw):
+        self.topic=topic; self.closed=False; pubs.append(self)
+    def unregister(self): self.closed=True
     def publish(self, value):
+        assert not self.closed, "publish after unregister"
         if isinstance(value, Twist):
             value={'v':value.linear.x,'w':value.angular.z}
         with open(os.environ['FAKE_LOG'],'a') as f:
@@ -52,9 +57,12 @@ class Subscriber:
         self.thread=threading.Thread(target=feed, daemon=True); self.thread.start()
     def unregister(self):
         self.live=False; self.thread.join(1)
-def Service(name, cls, callback):
-    if name.endswith('pause') and os.environ.get('FAKE_PAUSE'):
-        callback(None)
+class Service:
+    def __init__(self, name, cls, callback):
+        self.closed=False; services.append(self)
+        if name.endswith('pause') and os.environ.get('FAKE_PAUSE'):
+            callback(None)
+    def shutdown(self, reason): self.closed=True
 def init_node(*a, **kw):
     assert kw.get('disable_signals') is True
     time.sleep(float(os.environ.get('FAKE_INIT_DELAY','0')))
@@ -62,6 +70,8 @@ def signal_shutdown(reason):
     global shutdown
     shutdown=True
     for sub in subs: assert not sub.thread.is_alive(), 'subscriber still running'
+    assert all(p.closed for p in pubs), 'publisher still registered'
+    assert all(s.closed for s in services), 'service still registered'
 def get_param(name, default=None): return params.get(name,default)
 def is_shutdown(): return shutdown
 '''
