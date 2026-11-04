@@ -32,7 +32,7 @@ ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
 
 目标速度：`v_ref = min(1.5, sqrt(2 × 0.8 × max(d − 0.8, 0)))`；加速度：`clip(3 × (v_ref − v), −2.5, 1.2)`；水平力：`mass × acceleration`。0.8 m 是减速参考间距，并非保证的最终停车间距。
 
-原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。 / The original entry point forwards to this module.
+原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。
 
 ## 结果与文档
 
@@ -65,6 +65,6 @@ python -m pytest -q
 
 数据默认 30 回合、每回合 12 s，训练/验证/测试为 18/6/6 回合，21600/7200/7200 行。特征为距离和闭合速度，标签为加速度；各回合参数与完整 CSV 的 SHA-256 写入 `manifest.json`。完整数据保留在 `datasets/`，仓库的 `sample_data/` 提供字段样本及汇总。
 
-训练标签来自解析测距控制基线。MLP 使用测距与闭合速度两个特征，高度由独立 PD 回路保持。验证集误差用于选择训练轮次，并在达到耐心阈值后提前停止。/ Training labels come from the analytical ranging controller. The MLP uses range and closing speed; a separate PD loop holds altitude. Validation error selects the retained training epoch and triggers early stopping.
+训练标签来自解析测距控制基线。MLP 使用测距与闭合速度两个特征，高度由独立 PD 回路保持。验证集误差用于选择训练轮次，并在连续 30 轮未改善后提前停止。
 
 `evaluate.py --controller all` 可重复运行几何参照、测距控制和 MLP 三种控制器在 0、1.5、3 m/s 下的闭环比较，并输出各控制器曲线与 JSON 指标。
