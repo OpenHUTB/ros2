@@ -41,12 +41,6 @@ void ImageEnhancer::enhance(const cv::Mat & input, cv::Mat & output)
     dehaze(img);
   }
 
-  // 4. 可选转灰度
-  if (params_.output_grayscale) {
-    cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-    cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
-  }
-
   output = img;
 }
 

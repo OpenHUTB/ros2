@@ -36,9 +36,6 @@ public:
     bool   use_dehaze{true};
     double dehaze_strength{0.6};    // 去雾强度 0~1
     double atmosphere_light{0.95};  // 大气光估计值 0~1
-
-    // 输出
-    bool   output_grayscale{false}; // 是否转灰度输出
   };
 
   ImageEnhancer();

@@ -8,9 +8,10 @@
 
 ## 运行环境
 
-- 操作系统：Ubuntu 20.04（虚拟机）
+- 操作系统：Ubuntu 22.04（虚拟机）
 - ROS 2 版本：Humble
-- 依赖库：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、tf2_ros、OpenCV 4.x（含 opencv_contrib 追踪模块）；scripts/render_demo.py 另需 python3-pil（rosdep 可自动安装）
+- 依赖库：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、tf2_ros、OpenCV 4.5.4（含 opencv_contrib 追踪模块）；scripts/render_demo.py 另需 python3-pil（rosdep 可自动安装）
+- 追踪器命名空间：KCF / CSRT 始终位于 `cv`，MOSSE 自 OpenCV 4.5.1 起迁入 `cv::legacy`，代码按 `CV_VERSION_*` 编译期自动切换
 
 ## 核心代码文件清单
 
@@ -109,26 +110,31 @@ src/water/water_vision_enhancement/
 | `/tracked_object` | `geometry_msgs/PointStamped` | 输出 | 目标归一化中心点（x、y 为 0～1，z 为置信度） |
 | `/enhancement_metrics` | `std_msgs/Float32MultiArray` | 输出 | [对比度, 色彩度, PSNR(dB), 追踪置信度] |
 
-| 参数 | 默认值 | 说明 |
-| --- | --- | --- |
-| `red_gain` | 1.35 | 红光通道增益 |
-| `green_gain` | 1.0 | 绿光通道增益 |
-| `blue_gain` | 0.85 | 蓝光通道增益 |
-| `use_clahe` | true | 是否启用 CLAHE |
-| `clahe_clip_limit` | 2.0 | CLAHE 裁剪阈值 |
-| `clahe_tile_grid` | 8 | CLAHE 网格大小 |
-| `use_dehaze` | true | 是否启用去散射 |
-| `dehaze_strength` | 0.6 | 去散射强度（0～1） |
-| `atmosphere_light` | 0.95 | 大气光估计值 |
-| `tracker_type` | KCF | 追踪器类型（KCF/CSRT/MOSSE） |
-| `min_confidence` | 0.3 | 追踪置信度下限 |
-| `turbidity` | 0.5 | 演示节点水体浑浊度（0～1） |
+| 参数 | 默认值 | 所属节点 | 说明 |
+| --- | --- | --- | --- |
+| `red_gain` | 1.35 | water_vision_node | 红光通道增益（补偿水体吸收） |
+| `green_gain` | 1.0 | water_vision_node | 绿光通道增益 |
+| `blue_gain` | 0.85 | water_vision_node | 蓝光通道增益（抑制偏蓝） |
+| `use_clahe` | true | water_vision_node | 是否启用 CLAHE |
+| `clahe_clip_limit` | 2.0 | water_vision_node | CLAHE 裁剪阈值 |
+| `clahe_tile_grid` | 8 | water_vision_node | CLAHE 网格大小 |
+| `use_dehaze` | true | water_vision_node | 是否启用去散射 |
+| `dehaze_strength` | 0.6 | water_vision_node | 去散射强度（0～1） |
+| `atmosphere_light` | 0.95 | water_vision_node | 大气光估计值（0～1） |
+| `tracker_type` | KCF | water_vision_node | 追踪器类型（KCF/CSRT/MOSSE） |
+| `min_confidence` | 0.3 | water_vision_node | 追踪置信度下限 |
+| `auto_reinit` | true | water_vision_node | 丢失后是否自动重置追踪器 |
+| `detect_interval` | 30 | water_vision_node | 自动重置前的连续丢失帧数 |
+| `init_bbox_x/y/w/h` | 290 / 220 / 60 / 40 | water_vision_node | 初始追踪框，对准演示目标初始位置 |
+| `turbidity` | 0.5 | water_video_demo_node | 合成水体浑浊度（0～1） |
+| `target_speed` | 80.0 | water_video_demo_node | 目标移动速度（px/s） |
+| `width / height / fps` | 640 / 480 / 20 | water_video_demo_node | 输出图像尺寸与帧率 |
 
 ## 运行效果
 
 默认参数下，演示节点生成 640×480、20 fps 的浑浊水体视频：蓝绿色背景叠加雾化与颗粒噪声，一个橙色矩形目标在画面内做反弹运动。视觉节点依次完成增强与追踪。
 
-在虚拟机上以默认参数（浑浊度 0.5、KCF 追踪器、初始框 [290, 220, 60, 40]，对准合成演示目标的初始位置）启动后连续运行，`/enhancement_metrics` 实测稳定在：对比度（拉普拉斯方差）506～511，色彩度 68.6，PSNR 12.4 dB；`/tracked_object` 持续输出目标中心点。追踪置信度为当前追踪区域与初始框灰度模板的归一化互相关系数（TM_CCOEFF_NORMED，0～1），稳定追踪期实测约 0.84～0.88，随目标运动与噪声逐帧波动，不再是固定常数。长时间运行后，追踪框可能漂移退化，置信度低于 min_confidence 时判定为丢失，auto_reinit 按 detect_interval（默认 30 帧）自动重置追踪器，并以参数指定的初始框重新初始化，此时追踪框回到初始位置而非跟随运动目标，此现象与“初始框由参数指定、未实现自动检测初始化”的设计一致。
+在虚拟机上以默认参数（浑浊度 0.5、KCF 追踪器、初始框 [290, 220, 60, 40]，演示目标固定为 60×40、初始中心 (320, 240)，初始框与目标基本重合）启动后连续运行，`/enhancement_metrics` 实测稳定在：对比度（拉普拉斯方差）506～511，色彩度 68.6，PSNR 12.4 dB；`/tracked_object` 持续输出目标中心点。追踪置信度为当前追踪区域与初始框灰度模板的归一化互相关系数（TM_CCOEFF_NORMED，0～1），稳定追踪期实测约 0.84～0.88，随目标运动与噪声逐帧波动，不再是固定常数。长时间运行后，追踪框可能漂移退化，置信度低于 min_confidence 时判定为丢失，auto_reinit 按 detect_interval（默认 30 帧）自动重置追踪器，并以参数指定的初始框重新初始化，此时追踪框回到初始位置而非跟随运动目标，此现象与“初始框由参数指定、未实现自动检测初始化”的设计一致。
 
 ![运行演示](../img/water/water_vision_enhancement/demo.gif)
 
@@ -136,6 +142,6 @@ src/water/water_vision_enhancement/
 
 ## 验证范围说明
 
-本模块已在虚拟机上完成以下验证：节点正常启动、话题正常收发、增强后图像对比度与色彩度提升、追踪器在目标移动过程中持续输出边界框与中心点、`/enhancement_metrics` 数值随画面变化正常波动。
+本模块已在 Ubuntu 22.04 + ROS 2 Humble（OpenCV 4.5.4）虚拟机上完成以下验证：节点正常启动、话题正常收发、增强与追踪链路连续运行、追踪器在目标移动过程中持续输出边界框与中心点、`/enhancement_metrics` 数值随画面变化正常波动（对比度 506～511、色彩度 68.6、PSNR 12.4 dB）。需要说明的是，增强在提升对比度的同时也放大了颗粒噪声，PSNR 偏低；红色通道补偿使画面整体偏暖棕色调，属简化算法的已知局限。
 
 当前版本使用合成视频演示，尚未接入真实水下相机或 HoloOcean 仿真；追踪器初始框由参数指定，未实现自动检测初始化。去散射采用暗通道先验简化实现，对极端浑浊或强光场景效果有限。

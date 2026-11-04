@@ -13,9 +13,9 @@
 
 ## 运行环境
 
-- 操作系统：Ubuntu 20.04
+- 操作系统：Ubuntu 22.04
 - ROS 2 版本：Humble
-- 依赖：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、tf2_ros、OpenCV 4.x（含 opencv_contrib 追踪模块）；scripts/render_demo.py 另需 python3-pil（rosdep 可自动安装）
+- 依赖：rclcpp、sensor_msgs、geometry_msgs、std_msgs、cv_bridge、image_transport、tf2_ros、OpenCV 4.5.4（含 opencv_contrib 追踪模块）；scripts/render_demo.py 另需 python3-pil（rosdep 可自动安装）
 
 ## 核心文件结构
 
@@ -94,13 +94,24 @@ src/water/water_vision_enhancement/
 | `/tracked_object` | `geometry_msgs/PointStamped` | 输出 | 目标归一化中心点（x,y 为 0～1，z 为置信度） |
 | `/enhancement_metrics` | `std_msgs/Float32MultiArray` | 输出 | [对比度, 色彩度, PSNR(dB), 追踪置信度] |
 
-## 主要参数
+## 参数说明
 
-| 参数 | 默认值 | 说明 |
-| --- | --- | --- |
-| `red_gain` | 1.35 | 红光通道增益（补偿水体吸收） |
-| `blue_gain` | 0.85 | 蓝光通道增益（抑制偏蓝） |
-| `clahe_clip_limit` | 2.0 | CLAHE 裁剪阈值 |
-| `dehaze_strength` | 0.6 | 去散射强度（0～1） |
-| `tracker_type` | KCF | 追踪器类型（KCF/CSRT/MOSSE） |
-| `turbidity` | 0.5 | 演示节点浑浊度（0～1） |
+| 参数 | 默认值 | 所属节点 | 说明 |
+| --- | --- | --- | --- |
+| `red_gain` | 1.35 | water_vision_node | 红光通道增益（补偿水体吸收） |
+| `green_gain` | 1.0 | water_vision_node | 绿光通道增益 |
+| `blue_gain` | 0.85 | water_vision_node | 蓝光通道增益（抑制偏蓝） |
+| `use_clahe` | true | water_vision_node | 是否启用 CLAHE |
+| `clahe_clip_limit` | 2.0 | water_vision_node | CLAHE 裁剪阈值 |
+| `clahe_tile_grid` | 8 | water_vision_node | CLAHE 网格大小 |
+| `use_dehaze` | true | water_vision_node | 是否启用去散射 |
+| `dehaze_strength` | 0.6 | water_vision_node | 去散射强度（0～1） |
+| `atmosphere_light` | 0.95 | water_vision_node | 大气光估计值（0～1） |
+| `tracker_type` | KCF | water_vision_node | 追踪器类型（KCF/CSRT/MOSSE） |
+| `min_confidence` | 0.3 | water_vision_node | 追踪置信度下限 |
+| `auto_reinit` | true | water_vision_node | 丢失后是否自动重置追踪器 |
+| `detect_interval` | 30 | water_vision_node | 自动重置前的连续丢失帧数 |
+| `init_bbox_x/y/w/h` | 290 / 220 / 60 / 40 | water_vision_node | 初始追踪框，对准演示目标初始位置 |
+| `turbidity` | 0.5 | water_video_demo_node | 合成水体浑浊度（0～1） |
+| `target_speed` | 80.0 | water_video_demo_node | 目标移动速度（px/s） |
+| `width / height / fps` | 640 / 480 / 20 | water_video_demo_node | 输出图像尺寸与帧率 |

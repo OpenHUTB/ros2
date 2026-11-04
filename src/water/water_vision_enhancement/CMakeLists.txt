@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(water_vision_enhancement)
 
-# 代码使用 std::clamp 等 C++17 特性，需显式声明，不能依赖其他包间接传播
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+# 代码使用 std::clamp 等 C++17 特性，显式声明，不依赖其他包间接传播
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
