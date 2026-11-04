@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- 无人机模块一键启动：roslaunch aerial_mujoco_slam_nn_nav main.launch mode:=nav scene:=corridor -->
+<launch>
+  <arg name="mode" default="teleop"/>          <!-- teleop | nav | e2e -->
+  <arg name="scene" default="warehouse"/>
+  <arg name="goal_x" default="2.6"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="terminal" default="true"/>
+
+  <node pkg="aerial_mujoco_slam_nn_nav" type="sim_node.py" name="drone_sim" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+  </node>
+
+  <group if="$(eval arg('mode') == 'teleop')">
+    <node if="$(arg terminal)" pkg="aerial_mujoco_slam_nn_nav" type="teleop_node.py" name="drone_teleop"
+          launch-prefix="xterm -e" output="screen"/>
+    <node unless="$(arg terminal)" pkg="aerial_mujoco_slam_nn_nav" type="teleop_node.py" name="drone_teleop"
+          output="screen"/>
+  </group>
+
+  <group if="$(eval arg('mode') == 'nav')">
+    <node pkg="aerial_mujoco_slam_nn_nav" type="nav_node.py" name="drone_nav" output="screen">
+      <param name="goal_x" value="$(arg goal_x)"/>
+      <param name="goal_y" value="$(arg goal_y)"/>
+    </node>
+    <node pkg="aerial_mujoco_slam_nn_nav" type="metrics_node.py" name="drone_metrics" output="screen">
+      <param name="mode" value="classical"/>
+      <param name="scene" value="$(arg scene)"/>
+      <param name="goal_x" value="$(arg goal_x)"/>
+      <param name="goal_y" value="$(arg goal_y)"/>
+    </node>
+  </group>
+
+  <group if="$(eval arg('mode') == 'e2e')">
+    <node pkg="aerial_mujoco_slam_nn_nav" type="e2e_node.py" name="drone_e2e" output="screen"/>
+    <node pkg="aerial_mujoco_slam_nn_nav" type="metrics_node.py" name="drone_metrics" output="screen">
+      <param name="mode" value="e2e"/>
+      <param name="scene" value="$(arg scene)"/>
+    </node>
+  </group>
+</launch>
