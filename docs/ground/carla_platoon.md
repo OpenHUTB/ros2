@@ -61,6 +61,14 @@ python3 carla_platoon.py --map Town03 --n 4 --spacing 8 --v 6
 | `lookahead` | 纯跟踪前视距离（m） | 6.0 |
 | `L` | 轴距（m） | 2.8 |
 
+## 测试
+
+不依赖 CARLA / matplotlib 的核心测试（断言初始位姿不重合、稳态间距有界、leader 前视转向）：
+
+``` 
+python3 test_platoon.py
+```
+
 ## 运行效果
 
 `platoon_demo.gif` 为 2D 轻量版真实运行效果：Leader 沿 S 形参考轨迹匀速领航，

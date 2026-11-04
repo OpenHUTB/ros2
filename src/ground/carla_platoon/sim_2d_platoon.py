@@ -43,7 +43,8 @@ def make_reference_path():
 
 
 def draw_car(ax, state, color, label, size=(4.6, 1.8)):
-    """按位姿画一辆车的矩形（阿克曼车横置，车头沿 yaw）。"""
+    """按位姿画一辆车的矩形（阿克曼车横置，车头沿 yaw）。
+    返回创建的 (rect, arrow, text)，供调用方逐帧统一清理，避免残影。"""
     x, y, yaw = state
     w, h = size
     rect = patches.Rectangle((-w / 2, -h / 2), w, h, linewidth=1.2,
@@ -52,11 +53,12 @@ def draw_car(ax, state, color, label, size=(4.6, 1.8)):
     rect.set_transform(t + ax.transData)
     ax.add_patch(rect)
     # 车头方向箭头
-    ax.annotate("", xy=(x + 2.4 * np.cos(yaw), y + 2.4 * np.sin(yaw)),
-                xytext=(x, y), arrowprops=dict(arrowstyle="->", color="black",
-                                               lw=1.0, alpha=0.8))
-    ax.text(x, y - 2.2, label, ha="center", va="top", fontsize=10,
-            fontweight="bold", color=color)
+    arrow = ax.annotate("", xy=(x + 2.4 * np.cos(yaw), y + 2.4 * np.sin(yaw)),
+                        xytext=(x, y), arrowprops=dict(arrowstyle="->", color="black",
+                                                       lw=1.0, alpha=0.8))
+    txt = ax.text(x, y - 2.2, label, ha="center", va="top", fontsize=10,
+                  fontweight="bold", color=color)
+    return rect, arrow, txt
 
 
 def main():
@@ -90,13 +92,15 @@ def main():
     info = ax.text(0.02, 0.95, "", transform=ax.transAxes, va="top",
                    fontsize=10, fontfamily="monospace",
                    bbox=dict(boxstyle="round", fc="white", ec="gray", alpha=0.8))
+    prev_objs = []          # 统一维护每帧的车辆绘图对象，逐帧清理（防残影）
 
     def update(frame):
         states, targets, speeds = platoon.step(args.dt)
-        for p in list(ax.patches):      # 清除上一帧车辆图形
-            p.remove()
+        for o in prev_objs:          # 清除上一帧的全部车辆图形（矩形/箭头/标签）
+            o.remove()
+        prev_objs.clear()
         for i in range(platoon.n):
-            draw_car(ax, states[i], colors[i], labels[i])
+            prev_objs.extend(draw_car(ax, states[i], colors[i], labels[i]))
         # leader 尾迹
         trail.append([states[0, 0], states[0, 1]])
         if len(trail) > 60:

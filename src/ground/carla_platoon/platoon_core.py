@@ -129,6 +129,22 @@ def pure_pursuit_steer(x, y, yaw, target, lookahead, L, max_steer=0.6):
 
 
 # ---------------------------------------------------------------- 编队
+def platoon_initial_progress(n, spacing):
+    """编队初始基准进度：leader 置于路径起点前方 (n-1)*spacing 处，
+    follower 依次沿路径滞后 spacing，起步位姿沿轨迹排开、互不重合。"""
+    return float((n - 1) * spacing)
+
+
+def leader_target_s(s_leader, lookahead):
+    """leader 目标点弧长 = 当前进度 + 前视距离（保证前视向量非退化、能转向）。"""
+    return s_leader + lookahead
+
+
+def follower_target_s(s_leader, i, spacing):
+    """第 i 辆 follower 目标点弧长 = 编队基准进度 - i*spacing（>=0）。"""
+    return max(s_leader - i * spacing, 0.0)
+
+
 class Platoon:
     """一字纵队编队控制。
     参数:
@@ -157,39 +173,51 @@ class Platoon:
         self.max_steer = float(max_steer)
         self.v_min, self.v_max = float(v_min), float(v_max)
 
-        # 初始位姿：leader 在起点，follower 依次滞后 spacing*i
+        # 初始：leader 在路径起点前方 (n-1)*spacing，follower 依次滞后 spacing
+        # → 起步位姿沿轨迹排开、互不重合（避免四车初始重叠）
+        self.s_leader = platoon_initial_progress(self.n, self.spacing)
         yaw0 = np.arctan2(path[1][1] - path[0][1], path[1][0] - path[0][0])
-        self.s_leader = 0.0
         self.cars = []
         for i in range(self.n):
-            s_i = -i * self.spacing  # 起始在起点前（暂未出发），实际从 0 起步
-            s_i = max(s_i, 0.0)
+            s_i = self.s_leader - i * self.spacing   # >= 0
             px, py = sample_path(path, s, s_i)
             self.cars.append(Bicycle(px, py, yaw0, L=L))
 
+    def initial_states(self):
+        """返回各车初始位姿 (N,3)，供测试与渲染版对照。"""
+        return np.array([c.state() for c in self.cars])
+
     def step(self, dt):
-        """推进一帧。返回 (states(N,3), targets(N,2), speeds(N,))"""
-        # 1) leader 沿轨迹匀速推进
-        self.s_leader = min(self.s_leader + self.v_set * dt, self.s[-1])
+        """推进一帧。返回 (states(N,3), targets(N,2), speeds(N,))。
+        编队基准 = leader 实际投影进度（反馈，非固定累加虚拟值）；
+        leader 目标 = 当前进度 + 前视（前视向量非退化，转弯时能转向）。"""
+        # 各车实际进度（投影到路径）
+        s_actual = np.zeros(self.n)
+        for i, car in enumerate(self.cars):
+            s_actual[i], _ = project_to_path(self.path, self.s, [car.x, car.y])
+        s_leader = float(s_actual[0])
+        self.s_leader = s_leader                  # 编队基准 = leader 实际进度
+
         targets = np.zeros((self.n, 2))
         speeds = np.zeros(self.n)
         states = np.zeros((self.n, 3))
         for i, car in enumerate(self.cars):
-            # 期望进度 = leader 进度 - i*spacing（不能小于 0）
-            s_des = max(self.s_leader - i * self.spacing, 0.0)
-            tgt = sample_path(self.path, self.s, s_des)
+            if i == 0:
+                # leader：目标 = 当前进度 + 前视（有前视向量，转弯时能转向）
+                s_tgt = leader_target_s(s_leader, self.lookahead)
+                v = self.v_set                     # leader 定速领航
+            else:
+                # follower：目标 = 基准进度 - i*spacing，纵向 P 控间距
+                s_tgt = follower_target_s(s_leader, i, self.spacing)
+                err = s_tgt - s_actual[i]
+                v = self.v_set + self.kp * err
+                v = float(np.clip(v, self.v_min, self.v_max))
+
+            tgt = sample_path(self.path, self.s, s_tgt)
             targets[i] = tgt
-
-            # 纵向：用实际进度误差做 P 控制
-            s_actual, _ = project_to_path(self.path, self.s, [car.x, car.y])
-            err = s_des - s_actual
-            v = self.v_set + self.kp * err
-            v = float(np.clip(v, self.v_min, self.v_max))
-
             # 横向：纯跟踪追参考点
             delta = pure_pursuit_steer(
                 car.x, car.y, car.yaw, tgt, self.lookahead, car.L, self.max_steer)
-
             car.step(v, delta, dt)
             states[i] = car.state()
             speeds[i] = v

@@ -29,7 +29,9 @@ import time
 import numpy as np
 
 from platoon_core import (pure_pursuit_steer, project_to_path,
-                          sample_path, build_path_from_waypoints)
+                          sample_path, build_path_from_waypoints,
+                          platoon_initial_progress, leader_target_s,
+                          follower_target_s)
 
 
 # ---------------- 参考轨迹（与 2D 版同一形状：直线 + S 形横摆 + 直线）-------
@@ -59,42 +61,36 @@ def import_carla():
 
 
 def spawn_platoon(carla, world, n_vehicles, spacing):
-    """在参考轨迹起点附近按队形 spawn n_vehicles 辆车，返回 actor 列表。
+    """按队形 spawn n_vehicles 辆车，返回 [(原始序号i, actor)]。
 
-    spawn 坐标与参考轨迹使用同一坐标系（leader 位于路径起点，follower 沿路径
-    起点反方向依次间隔 spacing 排开），因此与主循环中 leader/follower 的
-    弧长进度定义（s_des = s_leader - i*spacing）严格一致：车一出生就在各自的
-    期望参考位置附近，目标点不会跳到数十米外；同时避免了多车 spawn 重叠
-    （CARLA 车辆有碰撞体积，重叠会导致后车生成失败）。"""
+    与 2D 版 Platoon 使用同一套共享初始基准（platoon_initial_progress）：
+    leader 置于路径起点前方 (n-1)*spacing 处，follower 沿路径依次滞后 spacing，
+    起步位姿沿轨迹排开、互不重合（车辆有碰撞体积，重叠会导致后车生成失败）。
+
+    保留**原始序号映射**：即使某辆车 spawn 失败被跳过，其余车仍按其原始序号 i
+    计算间距基准（follower 目标 = 基准进度 - i*spacing），不会因列表压缩而错位。
+    失败车辆不做无效重试（相同位姿重试不会成功）。"""
     blueprint_lib = world.get_blueprint_library()
     bp = blueprint_lib.filter("vehicle.*")[0]   # 用默认车辆蓝图
     path, s = make_reference_path()
-    yaw = np.degrees(np.arctan2(path[1][1] - path[0][1],
-                                path[1][0] - path[0][0]))
-    rad = np.radians(yaw)
-    # 起点坐标（与参考轨迹同一坐标系）
-    x0, y0 = path[0][0], path[0][1]
+    yaw_deg = np.degrees(np.arctan2(path[1][1] - path[0][1],
+                                    path[1][0] - path[0][0]))
+    s_leader0 = platoon_initial_progress(n_vehicles, spacing)
     spawn_points = []
     for i in range(n_vehicles):
-        back = i * spacing                     # leader(0) 在最前，follower 依次滞后
-        sx = x0 - back * np.cos(rad)
-        sy = y0 - back * np.sin(rad)
-        spawn_points.append((sx, sy, yaw))
+        px, py = sample_path(path, s, s_leader0 - i * spacing)
+        spawn_points.append((i, float(px), float(py), yaw_deg))
 
     actors = []
-    for (sx, sy, syaw) in spawn_points:
-        transform = carla.Transform(carla.Location(sx, sy, 0.5),
+    for (i, px, py, syaw) in spawn_points:
+        transform = carla.Transform(carla.Location(px, py, 0.5),
                                     carla.Rotation(yaw=syaw))
         actor = world.try_spawn_actor(bp, transform)
         if actor is None:
-            print(f"[!] spawn 失败于 ({sx:.1f}, {sy:.1f})，尝试移除遮挡后重试")
-            # 尝试物理冲突位置：清空再试
-            time.sleep(0.2)
-            actor = world.try_spawn_actor(bp, transform)
-        if actor is None:
+            print(f"[!] 车辆 {i} spawn 失败于 ({px:.1f}, {py:.1f})，跳过（保留序号 {i}）")
             continue
         actor.set_autopilot(False)
-        actors.append(actor)
+        actors.append((i, actor))
     print(f"[i] 已 spawn {len(actors)}/{n_vehicles} 辆车")
     return actors
 
@@ -107,10 +103,16 @@ def run(args):
     world = client.load_world(args.map)
     print(f"[i] 已连接 CARLA，地图 {args.map}")
 
-    actors = spawn_platoon(carla, world, args.n, args.spacing)
-    if len(actors) < 2:
-        raise SystemExit("[-] 车辆 spawn 数量不足，无法编队")
+    actor_list = spawn_platoon(carla, world, args.n, args.spacing)
+    if len(actor_list) < 2:
+        for _, a in actor_list:
+            a.destroy()
+        raise SystemExit("[-] 车辆 spawn 数量不足(<2)，无法编队，已清理")
 
+    # 原始序号映射：idxs 与 actors 一一对应（follower 用原始序号算间距）
+    idxs = [i for i, _ in actor_list]
+    actors = [a for _, a in actor_list]
+    leader_i = min(idxs)                       # 最小序号的车辆为 leader
     path, s = make_reference_path()
     # 目标间距、纯跟踪参数（与 2D 版一致）
     spacing, v_set, lookahead, L = args.spacing, args.v, 6.0, 2.8
@@ -137,24 +139,24 @@ def run(args):
                            np.radians(tf.rotation.yaw)])
         states = np.asarray(states)
 
-        # leader 实际进度（投影到路径，用上次弧长做近邻搜索）
+        # leader（最小序号车）实际进度（投影到路径，用上次弧长做近邻搜索）
         s_leader, _ = project_to_path(path, s, states[0, :2],
                                       hint_s=last_s[0])
         last_s[0] = s_leader
 
-        # 各车控制
-        for i, (actor, state) in enumerate(zip(actors, states)):
-            if i == 0:
-                # leader：追自己前方 lookahead 处的参考点，定速 v_set
-                tgt = sample_path(path, s, s_leader + lookahead)
+        # 各车控制（按原始序号 i 计算编队目标，两版共用共享核心函数）
+        for k, (i, actor, state) in enumerate(zip(idxs, actors, states)):
+            if i == leader_i:
+                # leader：目标 = 当前进度 + 前视（共享核心，保证能转向）
+                tgt = sample_path(path, s, leader_target_s(s_leader, lookahead))
                 v_des = v_set
             else:
-                # follower：追沿轨迹滞后 leader 的参考点，纵向控间距
-                s_des = max(s_leader - i * spacing, 0.0)
+                # follower：目标 = 基准进度 - 原始序号 i*spacing（共享核心）
+                s_des = follower_target_s(s_leader, i, spacing)
                 tgt = sample_path(path, s, s_des)
                 s_actual, _ = project_to_path(path, s, state[:2],
-                                              hint_s=last_s[i])
-                last_s[i] = s_actual
+                                              hint_s=last_s[k])
+                last_s[k] = s_actual
                 v_des = v_set + kp * (s_des - s_actual)
                 v_des = float(np.clip(v_des, v_min, v_max))
 
@@ -180,7 +182,7 @@ def run(args):
         time.sleep(args.dt)
 
     print("[OK] 编队巡航结束，清理车辆")
-    for a in actors:
+    for _, a in actor_list:
         a.destroy()
 
 
