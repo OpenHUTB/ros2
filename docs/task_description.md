@@ -23,9 +23,7 @@ src/ant_colony_swarm
 
 ├── package.xml
 
-├── setup.py
-
-└── task_description.md
+└── setup.py
 
 ## 环境依赖
 - ROS2 Humble
