@@ -202,6 +202,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
+* [输电走廊巡检覆盖规划](./air/uav_inspection_cover.md) —— 为每座杆塔生成多角度观察点，最近邻 + 2-opt 优化塔序，禁飞区用可飞图 Dijkstra 绕行，MuJoCo 闭环统计实飞航程与到点误差
+
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 

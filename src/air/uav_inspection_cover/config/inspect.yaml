@@ -1,0 +1,29 @@
+# 巡检覆盖规划关键参数（算法层与 ROS 节点共用同一套数值）
+observe:
+  offset_m: 45.0        # 观察点到塔位的水平偏移
+  height_ratio: 0.7     # 观察高度 = 塔高比例
+  min_height_m: 12.0    # 观察高度下限
+  max_height_m: 60.0    # 观察高度上限
+
+route:
+  clearance_m: 25.0     # 航段距塔身最小安全距离
+  cruise_speed: 8.0     # 巡航速度 m/s
+  hover_time: 6.0       # 每观察点悬停时间 s
+
+cover:
+  radius_m: 15.0        # 覆盖判定球半径
+
+detour:
+  grid_step_m: 40.0     # 可飞图采样间距
+  zone_margin_m: 15.0   # 禁飞区外扩裕度
+
+fly:
+  dt: 0.01              # 控制周期 s
+  legs: 4               # 闭环真飞取前 N 个航点段
+  ref_tau: 0.5          # 参考速度一阶低通时间常数 s
+
+node:
+  case: case_grid_short
+  odom_topic: /uav/odom
+  arrive_radius_m: 12.0
+  publish_period_s: 0.5

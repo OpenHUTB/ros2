@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_inspection_cover</name>
+  <version>0.1.0</version>
+  <description>Transmission-corridor UAV inspection coverage planning with MuJoCo closed-loop flight verification.
+    输电走廊无人机巡检覆盖规划。对走廊内每座杆塔按方位角与相对塔高生成观察点，
+    先用最近邻构造塔访问序、再以 2-opt 只在总航程下降时改进；塔内观察点按到达
+    角串接，遇不可飞段（含河流禁飞区）在可飞图上用 Dijkstra 直线替代绕行。
+    覆盖校验按"航路进入观察点 15 m 球"判定覆盖率并输出漏检清单，最后取改进
+    前后航线各前 4 个航点段在 uav_mujoco_sim 中闭环真飞，统计实际航程与到点误差。</description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
