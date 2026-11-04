@@ -144,7 +144,7 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     python3.10 test/test_buffers.py
     python3.10 test/test_demo_offline.py
 
-每个文件末行输出 `[结果] N 项全部通过`，六个文件共 166 项。
+每个文件末行输出 `[结果] N 项全部通过`，六个文件共 170 项。
 
 其中 `test_demo_offline.py` 用假的 `carla` 模块把 `--demo` 的整条循环跑一遍，
 控制量、统计指标、清理流程都能在没有 CARLA 的机器上验证。
