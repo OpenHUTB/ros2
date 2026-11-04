@@ -13,8 +13,13 @@
 - 上臂长度 `0.30 m`，前臂长度 `0.28 m`
 - 肩关节范围 `[-1.25, 1.45] rad`
 - 肘关节范围 `[-0.10, 2.30] rad`
+- 控制周期 `10 ms`，每个周期包含 5 个 `2 ms` MuJoCo 物理步
 - MuJoCo muscle actuator，控制量为 `[0, 1]`
 - 固定腱通过肩、肘关节系数定义肌肉力臂
+
+固定腱长度是相对关节坐标，零位为 `0`，因此允许负腱行程。肌肉
+`lengthrange` 按肩肌、肘肌、双关节肌分别使用 `±0.09`、`±0.12`、
+`±0.14 m`，覆盖全部关节范围并避免在零位截断。
 
 ## 控制
 
@@ -86,7 +91,7 @@ ros2 topic echo /muscle_forces
 ![Runtime signals](../../../docs/img/musculoskeletal/msk_arm_reach/runtime_signals.png)
 
 默认目标 `(0.38, -0.17) m` 下，末端误差约 `0.26 s` 进入 `0.02 m`，
-3.2 s 时最终误差约 `0.014 m`。
+3.2 s 时最终误差约 `0.005 m`。
 
 ## 测试
 
@@ -98,7 +103,8 @@ colcon test --packages-select mujoco_musculoskeletal_arm_reach
 colcon test-result --verbose
 ```
 
-测试覆盖正/逆运动学、不可达目标、六维激活范围、MuJoCo 模型结构、模型加载和单步仿真。
+测试覆盖正/逆运动学、非有限目标和关节限位、收敛时间、ROS 目标拒绝、
+安全停机、六维激活范围、MuJoCo 模型结构、固定腱行程、模型加载和单步仿真。
 
 重新生成 ROS 与运行图：
 

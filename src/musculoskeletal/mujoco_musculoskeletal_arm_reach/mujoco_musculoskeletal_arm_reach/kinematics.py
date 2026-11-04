@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import acos, atan2, cos, hypot, pi, sin
+from math import acos, atan2, cos, hypot, isfinite, pi, sin, sqrt
 from typing import Tuple
 
 
@@ -13,22 +13,68 @@ class ArmGeometry:
 
     upper_arm_length_m: float = 0.30
     forearm_length_m: float = 0.28
+    minimum_shoulder_rad: float = -1.25
+    maximum_shoulder_rad: float = 1.45
     minimum_elbow_rad: float = -0.10
     maximum_elbow_rad: float = 2.30
 
     def __post_init__(self) -> None:
+        values = vars(self).values()
+        if not all(isfinite(value) for value in values):
+            raise ValueError('arm geometry values must be finite')
         if self.upper_arm_length_m <= 0.0 or self.forearm_length_m <= 0.0:
             raise ValueError('link lengths must be positive')
+        if not (
+            -pi
+            <= self.minimum_shoulder_rad
+            < self.maximum_shoulder_rad
+            <= pi
+        ):
+            raise ValueError('shoulder limits must be ordered within [-pi, pi]')
         if self.minimum_elbow_rad >= self.maximum_elbow_rad:
             raise ValueError('elbow limits must be ordered')
 
     @property
     def reach_min_m(self) -> float:
-        return abs(self.upper_arm_length_m - self.forearm_length_m)
+        if (
+            self.minimum_elbow_rad
+            <= pi
+            <= self.maximum_elbow_rad
+        ):
+            minimum_cosine = -1.0
+        else:
+            minimum_cosine = min(
+                cos(self.minimum_elbow_rad),
+                cos(self.maximum_elbow_rad),
+            )
+        squared_reach = (
+            self.upper_arm_length_m ** 2
+            + self.forearm_length_m ** 2
+            + 2.0
+            * self.upper_arm_length_m
+            * self.forearm_length_m
+            * minimum_cosine
+        )
+        return sqrt(max(0.0, squared_reach))
 
     @property
     def reach_max_m(self) -> float:
-        return self.upper_arm_length_m + self.forearm_length_m
+        if self.minimum_elbow_rad <= 0.0 <= self.maximum_elbow_rad:
+            maximum_cosine = 1.0
+        else:
+            maximum_cosine = max(
+                cos(self.minimum_elbow_rad),
+                cos(self.maximum_elbow_rad),
+            )
+        squared_reach = (
+            self.upper_arm_length_m ** 2
+            + self.forearm_length_m ** 2
+            + 2.0
+            * self.upper_arm_length_m
+            * self.forearm_length_m
+            * maximum_cosine
+        )
+        return sqrt(max(0.0, squared_reach))
 
 
 def forward_kinematics(
@@ -53,7 +99,9 @@ def inverse_kinematics(
     target_z_m: float,
     geometry: ArmGeometry = ArmGeometry(),
 ) -> Tuple[float, float]:
-    """Solve elbow-up inverse kinematics for a reachable planar target."""
+    """Solve planar inverse kinematics with both joint limits enforced."""
+    if not isfinite(target_x_m) or not isfinite(target_z_m):
+        raise ValueError('target coordinates must be finite')
     radius = hypot(target_x_m, target_z_m)
     tolerance = 1e-9
     if radius < geometry.reach_min_m - tolerance:
@@ -67,16 +115,28 @@ def inverse_kinematics(
         radius * radius - l1 * l1 - l2 * l2
     ) / (2.0 * l1 * l2)
     cosine_elbow = max(-1.0, min(1.0, cosine_elbow))
-    elbow = acos(cosine_elbow)
-    shoulder = atan2(-target_z_m, target_x_m) - atan2(
-        l2 * sin(elbow),
-        l1 + l2 * cos(elbow),
+    elbow_magnitude = acos(cosine_elbow)
+    base_angle = atan2(-target_z_m, target_x_m)
+
+    for elbow in (elbow_magnitude, -elbow_magnitude):
+        if not (
+            geometry.minimum_elbow_rad
+            <= elbow
+            <= geometry.maximum_elbow_rad
+        ):
+            continue
+        shoulder = base_angle - atan2(
+            l2 * sin(elbow),
+            l1 + l2 * cos(elbow),
+        )
+        shoulder = (shoulder + pi) % (2.0 * pi) - pi
+        if (
+            geometry.minimum_shoulder_rad
+            <= shoulder
+            <= geometry.maximum_shoulder_rad
+        ):
+            return shoulder, elbow
+
+    raise ValueError(
+        'target requires a joint angle outside the shoulder or elbow limits'
     )
-    shoulder = (shoulder + pi) % (2.0 * pi) - pi
-    if not (
-        geometry.minimum_elbow_rad
-        <= elbow
-        <= geometry.maximum_elbow_rad
-    ):
-        raise ValueError('target requires an elbow angle outside the limits')
-    return shoulder, elbow

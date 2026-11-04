@@ -98,12 +98,12 @@
   </tendon>
 
   <actuator>
-    <muscle name="shoulder_flexor" tendon="t_shoulder_flex" ctrlrange="0 1" force="220" lengthrange="0.02 1.0"/>
-    <muscle name="shoulder_extensor" tendon="t_shoulder_ext" ctrlrange="0 1" force="220" lengthrange="0.02 1.0"/>
-    <muscle name="elbow_flexor" tendon="t_elbow_flex" ctrlrange="0 1" force="180" lengthrange="0.02 1.0"/>
-    <muscle name="elbow_extensor" tendon="t_elbow_ext" ctrlrange="0 1" force="180" lengthrange="0.02 1.0"/>
-    <muscle name="biarticular_flexor" tendon="t_bi_flex" ctrlrange="0 1" force="150" lengthrange="0.02 1.0"/>
-    <muscle name="biarticular_extensor" tendon="t_bi_ext" ctrlrange="0 1" force="150" lengthrange="0.02 1.0"/>
+    <muscle name="shoulder_flexor" tendon="t_shoulder_flex" ctrlrange="0 1" force="220" lengthrange="-0.09 0.09"/>
+    <muscle name="shoulder_extensor" tendon="t_shoulder_ext" ctrlrange="0 1" force="220" lengthrange="-0.09 0.09"/>
+    <muscle name="elbow_flexor" tendon="t_elbow_flex" ctrlrange="0 1" force="180" lengthrange="-0.12 0.12"/>
+    <muscle name="elbow_extensor" tendon="t_elbow_ext" ctrlrange="0 1" force="180" lengthrange="-0.12 0.12"/>
+    <muscle name="biarticular_flexor" tendon="t_bi_flex" ctrlrange="0 1" force="150" lengthrange="-0.14 0.14"/>
+    <muscle name="biarticular_extensor" tendon="t_bi_ext" ctrlrange="0 1" force="150" lengthrange="-0.14 0.14"/>
   </actuator>
 
   <sensor>

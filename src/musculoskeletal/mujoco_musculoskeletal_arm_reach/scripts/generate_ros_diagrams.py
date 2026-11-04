@@ -510,6 +510,8 @@ def generate_runtime_signals() -> Path:
     figure.tight_layout(rect=(0.02, 0.02, 0.98, 0.95))
     figure.savefig(output, dpi=170, bbox_inches='tight')
     plt.close(figure)
+    print('runtime_settle_s=%.3f' % settle_time)
+    print('runtime_final_error_m=%.5f' % errors_array[-1])
     return output
 
 
