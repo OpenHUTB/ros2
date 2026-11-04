@@ -190,6 +190,7 @@ nav:
     - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
+    - 基于 AprilTag 的无人机视觉精准降落: './air/uav_apriltag_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
