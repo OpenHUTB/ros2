@@ -49,6 +49,13 @@ def _decode():
     table = {}
     for line in raw.splitlines():
         parts = line.split()
+        # 空格（以及任何"只有宽度、没有笔画"的字形）在压缩表里第三列是空的，
+        # 按 3 段解析会被整行丢弃 → 宽度变 0 → 标题里的词全被粘在一起
+        # （现象：`hold-out MAE under ...` 渲染成 `hold-outMAEunder...`）。
+        # 因此 2 段的行也要收下，笔画行数为空即可。
+        if len(parts) == 2:
+            table[int(parts[0])] = (int(parts[1]), [])
+            continue
         if len(parts) != 3:
             continue
         code, width, rows = parts
@@ -58,12 +65,25 @@ def _decode():
 
 _GLYPHS = _decode()
 
+# 压缩字体表里空格的字形宽度是 0（只有"无笔画"的空行），直接照用会让标题里的
+# 单词粘成一串（`hold-out MAE under ...` → `hold-outMAEunder...`），图就没法自证了。
+# 这里给空格一个固定前进宽度。
+SPACE_W = 4
+
+
+def _glyph(ch):
+    """取字形的 (宽度, 扫描行)；空格补一个可用宽度。"""
+    gw, rows = _GLYPHS.get(ord(ch), (0, []))
+    if gw == 0 and ch == " ":
+        return SPACE_W, []
+    return gw, rows
+
 
 def text_width(text, scale=1):
     """文本在 scale 倍缩放下的像素宽度（含字间 1 px）。"""
     w = 0
     for ch in text:
-        gw, _rows = _GLYPHS.get(ord(ch), (0, []))
+        gw, _rows = _glyph(ch)
         w += (gw + 1) * scale
     return w
 
@@ -73,7 +93,7 @@ def draw_text(canvas, x, y, text, color=(40, 40, 40), scale=1):
     h, w = canvas.shape[:2]
     cx = int(x)
     for ch in text:
-        gw, rows = _GLYPHS.get(ord(ch), (0, []))
+        gw, rows = _glyph(ch)
         if gw == 0:
             cx += (gw + 1) * scale
             continue

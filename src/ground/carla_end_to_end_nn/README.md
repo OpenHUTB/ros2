@@ -38,7 +38,7 @@ src/ground/carla_end_to_end_nn/
 ├── resource/carla_end_to_end_nn
 ├── setup.py / setup.cfg / package.xml
 ├── requirements.txt
-└── test/test_end_to_end_logic.py             # 单元测试（27 项，无需 CARLA）
+└── test/test_end_to_end_logic.py             # 单元测试（40 项，无需 CARLA）
 ```
 
 > **为什么 `main.py` 有两份？** 课程要求入口叫 `main.*`，所以包根必须有 `main.py`；
@@ -51,16 +51,24 @@ src/ground/carla_end_to_end_nn/
 ## 3. 快速开始
 
 ```bash
-# ① 离线取证（不需要 CARLA、图形界面、TensorFlow；约 3~4 分钟）
+# ① 离线取证（不需要 CARLA、图形界面、TensorFlow；约 3 分钟）
 python3 main.py --headless --demo --epochs 60 --samples 150 --save_dir ~/shots
-#    导出：cnn_loss.png / steer_pred_vs_true.png / road_samples.png
-#         + steer_pred_vs_true.csv（标签与预测，可复算相关系数）
-#    终端同时打印 MAE / RMSE / 方向一致率 / 相关系数
+#    导出：cnn_loss.png（训练+留出集曲线）/ steer_pred_vs_true.png / road_samples.png
+#         + steer_pred_vs_true.csv（留出集标签与预测，可复算相关系数）
+#    终端分别打印「训练集」与「留出集」两个口径的指标
+
+# ①' 加数据增强（镜像 + 宽范围光度扰动；验证集始终不增强）
+python3 main.py --headless --demo --augment --aug_gain 0.45,1.45 --aug_noise 12 \
+        --save_dir ~/shots
+
+# ①'' 增强消融：基线 / 复制扩容 / 增强 × 三档光度偏移（约 8 分钟）
+python3 main.py --headless --demo --ablation --save_dir ~/shots
+#    额外导出 e2e_shift_ablation.png + e2e_shift_ablation.csv
 
 # ② 行为克隆采集（需要 CARLA）：专家驾驶并记录 (图像, 转向)
 python3 main.py --mode collect --host <宿主机IP> --frames 300 --out_dir dataset
 
-# ③ 训练端到端 CNN
+# ③ 训练端到端 CNN（自动切留出集，报两个口径）
 python3 main.py --mode train --data_dir dataset --epochs 60 --model_path models/cnn.json
 
 # ④ 端到端自主驾驶（仅凭相机图像）
@@ -76,30 +84,50 @@ bash main.sh --host <宿主机IP> --mode test
 ## 4. 测试
 
 ```bash
-python3 test/test_end_to_end_logic.py     # 27 项全部通过，无需 CARLA（约 30 s）
+python3 test/test_end_to_end_logic.py     # 40 项全部通过，无需 CARLA（约 17 s）
 ```
 
-其中两项是**回归测试**，卡住两个会让网络完全学不动的缺陷：
+其中几项是**回归测试**，卡住会让网络学不动或让结论失真的缺陷：
 
 - `test_maxpool_backward_only_max_position` —— 最大池化反向必须**只回传给窗口内最大值位置**。
   早期实现把梯度均摊到窗口全部 \(p^2\) 个位置，导致网络塌缩成常数输出
   （相关系数 +0.293、方向判对率 50%）。
 - `test_predict_output_in_tanh_range` —— 推理输出必须与训练目标同值域 \([-1,1]\)。
   早期 `predict()` 遗漏 tanh，预测值可达 \(\pm13\)，MAE 高达 13.47。
+- `test_split_dataset_is_disjoint_and_deterministic` —— 训练/留出**不能有重叠**，
+  且同一 seed 结果可复现；重叠会让留出指标变成"背过的题"，比不做留出集更糟。
+- `test_mirror_augmentation_negates_label` —— 镜像增强必须**同时把标签取负**，
+  否则等于教网络打反方向，且不会报错、只会越训越差。
 
 另有 `test_pool_gradient_matches_finite_difference` 用有限差分校验梯度实现，
 以及 `test_main_sh_launch_dispatches_per_ros_version`、
 `test_documented_launch_args_are_declared` 等入口与文档一致性的回归测试。
 
-## 5. 实测指标（离线取证模式，合成数据，训练集口径）
+## 5. 实测指标（离线取证模式，合成数据）
 
-| 指标 | 数值 |
-|---|---|
-| MAE | 0.09364 |
-| RMSE | 0.11124 |
-| 转向方向一致率 | 98.0% |
-| 零输出基线 MAE | 0.40268（网络优于基线 **4.3 倍**） |
-| 预测/标签相关系数 | +0.992（实测 +0.99176，可由 `steer_pred_vs_true.csv` 复算） |
+**5.1 训练集 / 留出集两个口径**（留出集 38 样本全程不参与梯度更新）：
+
+| 指标 | 训练集（n=112） | 留出集（n=38） |
+|---|---|---|
+| MAE | 0.05715 | **0.05836** |
+| RMSE | 0.06673 | **0.06481** |
+| 转向方向一致率 | 99.1% | **100.0%** |
+| 预测/标签相关系数 | +0.99264 | **+0.99298** |
+| 零输出基线 MAE | — | 0.41681（网络低 **7.1 倍**） |
+
+两口径几乎一致 → 该合成任务上**没有过拟合**；但干净集指标不足以说明鲁棒性。
+
+**5.2 数据增强 × 光度偏移消融**（同一初始化、同一留出集）：
+
+| 配置 | 训练样本 | clean | mild (×0.75+σ8) | strong (×0.60+σ18) |
+|---|---|---|---|---|
+| base | 112 | **0.05836** | 0.14047 | 0.24349 |
+| copy x2（控制组） | 224 | 0.08697 | 0.17049 | 0.33582 |
+| aug（镜像+宽范围光度） | 224 | 0.09883 | **0.03241** | **0.09236** |
+
+结论：**增强不提升干净集精度，但把强偏移下的退化从 4.2× 压到 0.9×**（MAE 0.243 → 0.092）。
+仅复制扩容（数据量翻倍、信息不变）各档都更差——增益来自"多样性"而非"样本数"。
+增强范围必须覆盖部署偏移：窄范围（0.85~1.15、σ=3）在强偏移下为 0.326，**比不增强还差**。
 
 ## 6. 与已有示例的关系
 
