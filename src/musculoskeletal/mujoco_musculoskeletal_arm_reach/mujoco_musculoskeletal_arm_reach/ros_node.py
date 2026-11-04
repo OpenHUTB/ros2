@@ -88,6 +88,14 @@ class ArmSimulationNode:
         if not 1 <= self.physics_steps_per_tick <= 100:
             raise ValueError('physics_steps_per_tick must be within [1, 100]')
         self.timer = node.create_timer(1.0 / publish_rate, self._tick)
+        node.get_logger().info('Loaded MuJoCo model: %s' % model_path)
+        node.get_logger().info(
+            'Target position: x=%.3f m, z=%.3f m' % self.target
+        )
+        node.get_logger().info(
+            'Publishing 4 state topics at %.1f Hz with %d physics steps/tick'
+            % (publish_rate, self.physics_steps_per_tick)
+        )
 
     def _target_callback(self, message) -> None:
         target = (float(message.x), float(message.z))
@@ -99,6 +107,9 @@ class ArmSimulationNode:
             )
             return
         self.target = target
+        self.node.get_logger().info(
+            'Target updated: x=%.3f m, z=%.3f m' % target
+        )
 
     def _tick(self) -> None:
         try:
