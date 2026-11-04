@@ -46,13 +46,12 @@ src/
 
 完整代码请点击下方链接查看：
 
-* [查看 mock.py 代码](./src/humanoid/humanoid_joint_tools/humanoid_joint_tools/mock.py)
-* [查看 record.py 代码](./src/humanoid/humanoid_joint_tools/humanoid_joint_tools/record.py)
-* [查看 play.py 代码](./src/humanoid/humanoid_joint_tools/humanoid_joint_tools/play.py)
-* [查看 main.launch.py 代码](./src/humanoid/humanoid_joint_tools/launch/main.launch.py)
-* [查看 setup.py 代码](./src/humanoid/humanoid_joint_tools/setup.py)
-* [查看 test_joint_recorder.py 代码](./src/humanoid/humanoid_joint_tools/test/test_joint_recorder.py)
-
+* [查看 mock.py 代码](./humanoid_joint_tools/mock.py)
+* [查看 record.py 代码](./humanoid_joint_tools/record.py)
+* [查看 play.py 代码](./humanoid_joint_tools/play.py)
+* [查看 main.launch.py 代码](./launch/main.launch.py)
+* [查看 setup.py 代码](./setup.py)
+* [查看 test_joint_recorder.py 代码](./test/test_joint_recorder.py)
 ## 功能说明 / Boundary behavior
 
 - 中文：录制节点通过 ROS 2 Service (std_srvs/Trigger) 控制起止。启动录制后，缓存 `/joint_states_raw` 数据；停止录制时，将数据序列化写入 `~/.ros/joint_traj.json`。回放节点提供 `/start_play` 服务，或在 `auto_play:=true` 时检测到新文件后自动回放一次；回放按录制帧的时间戳调度发布，播完最后一帧即停止，不循环。
@@ -85,10 +84,11 @@ src/
 5. 等待几秒后，发送停止录制指令（此时会生成 json 文件）
    ```
    ros2 service call /stop_record std_srvs/srv/Trigger
-  
+   ```
 6. 发送回放指令，模型按录制轨迹动作一次后停止
-  
-
+   ```
+   ros2 service call /start_play std_srvs/srv/Trigger
+   ```
 ## 运行效果
 
 节点启动后，RViz 将显示机器人模型。执行开始/停止录制指令后，终端会打印保存成功信息；随后调用 `/start_play` 服务（或启动时加 `auto_play:=true`），模型即按录制轨迹回放一次，播完停止。
