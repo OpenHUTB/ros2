@@ -1,0 +1,78 @@
+# ROS Noetic 小海龟多航点巡航与暂停恢复
+
+本实验订阅 turtlesim 的真实位姿，以闭环速度控制依次到达航点，演示任务状态与服务通信。
+当前为开发版本，尚未完成运行验收，不应将下面的操作说明视为测试通过证据。
+
+## 环境
+
+已检查的环境：Ubuntu 20.04.6、Python 3.8.10、ROS Noetic、catkin 0.8.12、turtlesim 0.10.3。
+源码只使用 ROS 1 的 rospy、catkin 和 roslaunch。
+
+## 构建和运行
+
+在单独的 catkin 工作空间 src 下放置本功能包，不要将整个混合 ROS 1/ROS 2 仓库直接交给 catkin。
+
+```bash
+source /opt/ros/noetic/setup.bash
+cd ~/course_patrol_ws
+catkin_make
+source devel/setup.bash
+roslaunch turtle_waypoint_patrol main.launch
+```
+
+另开终端并加载相同环境后，可执行：
+
+```bash
+rosservice call /waypoint_patrol/pause
+rosservice call /waypoint_patrol/resume
+rosservice call /waypoint_patrol/cancel
+rostopic echo /waypoint_patrol/status
+```
+
+取消、完成、超时均为终态；恢复服务只接受 PAUSED。重新启动节点才能开启新任务。
+Ctrl+C 停止 launch。不要同时运行其他 cmd_vel 控制器。
+
+## 控制原理
+
+以目标与实际位姿的欧氏距离作为距离误差，将目标方向和实际朝向之差归一化至 [-pi, pi]。
+角速度按方向误差比例控制并限幅至 2 rad/s。方向误差大于 0.6 rad 时原地转向；否则
+线速度随距离减小，并限制至 1.5 turtlesim 单位/s。距离不超过 0.08 时切换下一航点。
+
+控制循环使用单调墙钟检测位姿接收超时（0.5 s）、初始等待超时（3 s）和任务超时（120 s，包含暂停）。
+暂停保留目标索引。服务与控制循环通过可重入锁串行访问状态。
+正常退出时尽力发布零速度，但无法保证强杀或通信断开时消息送达。
+
+## 退出诊断与验证状态
+
+启动日志输出实际源码路径、PID 与 SHA256。Ctrl+C 和 SIGTERM 仅设置退出标志；主循环统一发送零速度、注销订阅、关闭 CSV 并调用 ROS 清理。不要用 kill -9 测试正常退出。
+如进程未结束，`kill -USR1 <本节点PID>` 可在其 stderr 输出线程栈，不会结束节点。
+
+当前已通过七项 ROS 接口替身离线回归；历史真实 turtlesim 日志只有部分成功，退出仍曾超时。修复后的真实 ROS 集成验证尚待完成，不能以离线通过代替。
+
+真实集成检查：先退出其他控制器，按包内 `run_checks.sh` 自动启动独立 Master 与 turtlesim：
+
+```bash
+bash run_checks.sh
+```
+
+脚本输出结果压缩包路径。其七个用例验证暂停恢复/完成、取消、非法航点、初始无位姿、SIGTERM 停车、运动中位姿中断、SIGINT 停车。测试失败仍保存日志，超时采集 Python 栈后仅强制清理该测试创建的控制进程，并标记失败。
+
+正式 launch 可配置绝对 `trace_path`，路径必须尚不存在：
+
+```bash
+roslaunch turtle_waypoint_patrol main.launch trace_path:=/tmp/my_patrol_trace.csv
+```
+
+绘图需 matplotlib，输入真实记录 CSV，不生成模拟数据：
+
+```bash
+python3 plot_trace.py /tmp/my_patrol_trace.csv /tmp/my_patrol_trace.png
+```
+
+状态完成数为已到达点数；CSV 中 target_error 为当时当前目标距离，不应将多航点切换时的误差峰值当作跟踪失败。位姿回调记录与控制周期不同，最终误差应结合完成状态附近样本及 0.08 阈值解释。
+
+尚待：修复版本的真实 ROS 构建与集成检查、真实截图、网页预览和另一人另一台机器复测。
+
+## 大模型使用声明
+
+使用 OpenAI Codex 辅助开发与文档整理。仅报告实际执行的验证；提交者需复核内容并对其负责。
