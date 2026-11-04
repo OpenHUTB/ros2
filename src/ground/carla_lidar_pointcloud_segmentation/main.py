@@ -29,6 +29,10 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# 入库的默认权重。自检不能用它，否则合成数据的权重会覆盖真实训练结果。
+DEFAULT_CHECKPOINT = os.path.join('models', 'seg_mlp.npz')
+SELF_CHECK_CHECKPOINT = os.path.join('models', '_selfcheck.npz')
+
 from carla_lidar_pointcloud_segmentation import labels as L      # noqa: E402
 from carla_lidar_pointcloud_segmentation import pipeline as P    # noqa: E402
 
@@ -75,7 +79,7 @@ def build_parser():
     parser.add_argument('--out-dir', default='data', help='数据集输出目录')
     parser.add_argument('--data', default=os.path.join('data', 'dataset.npz'),
                         help='训练用数据集路径')
-    parser.add_argument('--checkpoint', default=os.path.join('models', 'seg_mlp.npz'),
+    parser.add_argument('--checkpoint', default=DEFAULT_CHECKPOINT,
                         help='权重路径（models/ 下的 npz 会入库，方便免训复现）')
     parser.add_argument('--epochs', type=int, default=30, help='训练轮数')
     parser.add_argument('--lr', type=float, default=0.01, help='学习率')
@@ -173,7 +177,11 @@ def run_train(args, points, tags, frames, source):
     })
     stats_path = os.path.splitext(args.checkpoint)[0] + '.stats.npz'
     np.savez_compressed(stats_path, mean=result['mean'], std=result['std'])
-    metrics_path = os.path.join(out_dir, 'metrics.json')
+    # 指标文件名跟着权重走：入库权重对应 metrics.json，
+    # 自检写 _selfcheck.metrics.json，两者互不覆盖。
+    stem = os.path.splitext(os.path.basename(args.checkpoint))[0]
+    metrics_name = 'metrics.json' if stem == 'seg_mlp' else stem + '.metrics.json'
+    metrics_path = os.path.join(out_dir, metrics_name)
     with open(metrics_path, 'w', encoding='utf-8') as handle:
         json.dump({
             'source': source,
@@ -211,6 +219,10 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
 
     if args.self_check:
+        # 自检用的是合成点云，绝不能写进 models/seg_mlp.npz：
+        # 那会无声无息地覆盖掉训练好的真实权重，之后 --demo 用的就是假模型。
+        if args.checkpoint == DEFAULT_CHECKPOINT:
+            args.checkpoint = SELF_CHECK_CHECKPOINT
         points, tags, frames = synthetic_dataset()
         return run_train(args, points, tags, frames, '合成点云（离线自检）')
 

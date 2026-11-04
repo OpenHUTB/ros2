@@ -273,6 +273,15 @@ def main():
     check('结束后调用了 teardown', calls['teardown'] == 1)
     check('类别常量完整', len(L.CLASS_NAMES) == L.N_CLASSES == 4)
 
+    print('\n[4] 自检不会覆盖入库权重')
+    import main as M
+    check('自检权重与入库权重是两个路径',
+          M.SELF_CHECK_CHECKPOINT != M.DEFAULT_CHECKPOINT,
+          M.SELF_CHECK_CHECKPOINT)
+    check('入库权重仍是 models/seg_mlp.npz',
+          M.DEFAULT_CHECKPOINT.replace(os.sep, '/') == 'models/seg_mlp.npz',
+          M.DEFAULT_CHECKPOINT)
+
     print('\n' + '=' * 72)
     if _failed:
         print('[结果] %d 项通过，%d 项失败' % (_passed, _failed))
