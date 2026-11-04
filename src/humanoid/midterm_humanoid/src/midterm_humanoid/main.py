@@ -8,10 +8,16 @@
 
 运行：python3 main.py            # 输出 output/robot_sim.mp4
       python3 main.py --preview  # 只跑 1.5 秒，输出 3 张 PNG 检查取景
+      roslaunch midterm_humanoid main.launch  # ROS 环境
 """
 import numpy as np
 
-from common import setup_gl, run_sim, parse_args
+# 包方式安装（catkin_python_setup / setup.py）后按包导入；
+# 源码目录直接运行时回退到同目录的 common.py
+try:
+    from midterm_humanoid.common import setup_gl, run_sim, parse_args
+except ImportError:
+    from common import setup_gl, run_sim, parse_args
 
 setup_gl()  # 必须在 import mujoco 之前调用（无显示环境自动用 osmesa）
 
@@ -23,36 +29,36 @@ XML = """
   <worldbody>
     <geom name="ground" type="plane" size="5 5 0.1" rgba="0.85 0.85 0.85 1"/>
     <camera name="view0" mode="track" target="torso" fovy="50"
-            pos="0 -1.9 1.45" xyaxes="1 0 0 0 0.26 0.97"/>
+            pos="0 -1.7 1.4" xyaxes="1 0 0 0 0.26 0.97"/>
     <body name="torso" pos="0 0 1.2">
-      <geom type="box" size="0.2 0.15 0.28" rgba="0.2 0.6 0.8 1"/>
-      <joint name="root" type="free"/>
-      <body name="head" pos="0 0 0.32">
-        <geom type="sphere" size="0.15" rgba="0.9 0.5 0.3 1"/>
+      <geom type="box" size="0.2 0.15 0.28" density="300" rgba="0.2 0.6 0.8 1"/>
+      <!-- 原地踏步仿真：躯干无关节 = 固定在世界系，四肢相对躯干摆动 -->
+      <body name="head" pos="0 0 0.5">
+        <geom type="sphere" size="0.15" density="300" rgba="0.9 0.5 0.3 1"/>
       </body>
-      <body name="left_arm" pos="-0.25 0 0.12">
-        <joint name="j_larm" type="hinge" axis="0 1 0" range="-1.4 1.4"/>
-        <geom type="cylinder" fromto="0 0 0 -0.35 0 0" size="0.06" rgba="0.1 0.7 0.4 1"/>
+      <body name="left_arm" pos="-0.3 0 0.12">
+        <joint name="j_larm" type="hinge" axis="0 1 0" range="-80 80" damping="0.8"/>
+        <geom type="cylinder" fromto="0 0 0 -0.35 0 0" size="0.06" density="300" rgba="0.1 0.7 0.4 1"/>
       </body>
-      <body name="right_arm" pos="0.25 0 0.12">
-        <joint name="j_rarm" type="hinge" axis="0 1 0" range="-1.4 1.4"/>
-        <geom type="cylinder" fromto="0 0 0 0.35 0 0" size="0.06" rgba="0.1 0.7 0.4 1"/>
+      <body name="right_arm" pos="0.3 0 0.12">
+        <joint name="j_rarm" type="hinge" axis="0 1 0" range="-80 80" damping="0.8"/>
+        <geom type="cylinder" fromto="0 0 0 0.35 0 0" size="0.06" density="300" rgba="0.1 0.7 0.4 1"/>
       </body>
-      <body name="left_leg" pos="-0.12 0 -0.3">
-        <joint name="j_lleg" type="hinge" axis="0 1 0" range="-1.0 1.0"/>
-        <geom type="cylinder" fromto="0 0 0 0 0 -0.45" size="0.07" rgba="0.5 0.3 0.7 1"/>
+      <body name="left_leg" pos="-0.12 0 -0.45">
+        <joint name="j_lleg" type="hinge" axis="0 1 0" range="-57 57" damping="1.2"/>
+        <geom type="cylinder" fromto="0 0 0 0 0 -0.45" size="0.07" density="300" rgba="0.5 0.3 0.7 1"/>
       </body>
-      <body name="right_leg" pos="0.12 0 -0.3">
-        <joint name="j_rleg" type="hinge" axis="0 1 0" range="-1.0 1.0"/>
-        <geom type="cylinder" fromto="0 0 0 0 0 -0.45" size="0.07" rgba="0.5 0.3 0.7 1"/>
+      <body name="right_leg" pos="0.12 0 -0.45">
+        <joint name="j_rleg" type="hinge" axis="0 1 0" range="-57 57" damping="1.2"/>
+        <geom type="cylinder" fromto="0 0 0 0 0 -0.45" size="0.07" density="300" rgba="0.5 0.3 0.7 1"/>
       </body>
     </body>
   </worldbody>
   <actuator>
-    <position name="j_larm" joint="j_larm" kp="8" ctrlrange="-1.2 1.2"/>
-    <position name="j_rarm" joint="j_rarm" kp="8" ctrlrange="-1.2 1.2"/>
-    <position name="j_lleg" joint="j_lleg" kp="8" ctrlrange="-0.8 0.8"/>
-    <position name="j_rleg" joint="j_rleg" kp="8" ctrlrange="-0.8 0.8"/>
+    <position name="j_larm" joint="j_larm" kp="20" ctrlrange="-1.2 1.2"/>
+    <position name="j_rarm" joint="j_rarm" kp="20" ctrlrange="-1.2 1.2"/>
+    <position name="j_lleg" joint="j_lleg" kp="20" ctrlrange="-0.8 0.8"/>
+    <position name="j_rleg" joint="j_rleg" kp="20" ctrlrange="-0.8 0.8"/>
   </actuator>
   <visual>
     <global offwidth="960" offheight="544"/>
@@ -61,8 +67,8 @@ XML = """
 """
 
 FREQ = 0.5     # 节律频率 Hz（2 秒一个完整周期）
-ARM_AMP = 0.55  # 手臂摆幅 rad
-LEG_AMP = 0.42  # 腿部踏步摆幅 rad
+ARM_AMP = 0.7  # 手臂摆幅 rad
+LEG_AMP = 0.55  # 腿部踏步摆幅 rad
 
 
 def make_controller(model):
