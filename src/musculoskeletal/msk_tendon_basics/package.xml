@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>msk_tendon_basics</name>
+  <version>0.1.0</version>
+  <description>
+    肌肉-肌腱串联弹性基础实验：等长传力、肌腱刚度权衡与松手释放。
+    纯 Python，不依赖 ROS、MuJoCo 或真实机器人。
+  </description>
+
+  <maintainer email="2427477138@qq.com">jasmine055</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

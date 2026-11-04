@@ -88,6 +88,7 @@ nav:
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
     - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
