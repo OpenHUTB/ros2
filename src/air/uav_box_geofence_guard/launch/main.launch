@@ -1,0 +1,1 @@
+<launch><node pkg="uav_box_geofence_guard" type="main.py" name="uav_box_geofence_guard" args="--ros" output="screen"/></launch>
