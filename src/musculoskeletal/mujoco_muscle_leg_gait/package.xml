@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_muscle_leg_gait</name>
+  <version>0.1.0</version>
+  <description>
+    肌肉驱动的下肢关节与步态仿真：Hill 肌肉 + 拮抗肌，覆盖单关节、双关节耦合适、
+    负重站立与原地踏步六级实验。MuJoCo 只负责刚体动力学，肌肉模型由 Python 实现。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
