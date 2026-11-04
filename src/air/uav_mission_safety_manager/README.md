@@ -6,6 +6,8 @@ ROS 2 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降
 
 新增：**ROS 2 Action 任务接口**，使用同级 `uav_mission_interfaces` 包生成 `ExecuteMission` 类型，提供结构化反馈、客户端取消和最终结果。当前新增接口在 Humble 下验证；以下 Foxy 流程未重新验证。
 
+新增：**飞行事件黑匣子**，把状态迁移、任务里程碑和 FAILSAFE 原因记入有界环形缓冲，支持运行中服务导出与退出自动落盘，用于复盘和验收。详见[模块概览](../../../docs/air/uav_mission_safety_manager/overview.md#飞行事件黑匣子)。
+
 ## 文档入口
 
 - [ROS 2 Action 任务接口](../../../docs/air/uav_mission_safety_manager/mission_action.md)
@@ -33,6 +35,7 @@ uav_mission_safety_manager/
 │   ├── main.py                 # ROS 节点与 main() 入口
 │   ├── controller.py           # 非阻塞控制器
 │   ├── state_machine.py
+│   ├── flight_recorder.py      # 飞行事件黑匣子（纯逻辑，可离线测试）
 │   ├── mission_action.py       # Action 目标、反馈、取消和结果
 │   ├── mission_queue.py        # 多航点队列校验与进度
 │   ├── airsim_adapter.py
@@ -44,6 +47,7 @@ uav_mission_safety_manager/
     ├── test_state_machine.py
     ├── test_mission_queue.py
     ├── test_demo_adapter.py
+    ├── test_flight_recorder.py
     ├── ros_smoke.py
     ├── ros_queue_smoke.py
     ├── ros_action_smoke.py
