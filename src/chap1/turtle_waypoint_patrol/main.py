@@ -46,8 +46,10 @@ class Patrol:
         self.pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=1)
         self.status = rospy.Publisher('~status', String, queue_size=1, latch=True)
         self.sub = rospy.Subscriber('/turtle1/pose', Pose, self.on_pose, queue_size=1)
+        self.services = []
         for name in ('pause', 'resume', 'cancel'):
-            rospy.Service('~' + name, Trigger, lambda req, action=name: self.command(action))
+            self.services.append(rospy.Service(
+                '~' + name, Trigger, lambda req, action=name: self.command(action)))
 
     def on_pose(self, pose):
         with self.lock:
@@ -67,8 +69,10 @@ class Patrol:
 
     def close(self):
         # A finally block owns cleanup; signal handlers never call ROS or take locks.
-        print('EXIT cleanup_begin', file=sys.stderr, flush=True)
+        print('EXIT cleanup_begin monotonic={:.6f}'.format(time.monotonic()), file=sys.stderr, flush=True)
         with self.lock:
+            if self.closed:
+                return
             self.closed = True
             self.stop()
         self.sub.unregister()
@@ -76,15 +80,24 @@ class Patrol:
             if self.trace:
                 self.trace.close()
                 self.trace = None
-        print('EXIT trace_closed', file=sys.stderr, flush=True)
+        print('EXIT trace_closed monotonic={:.6f}'.format(time.monotonic()), file=sys.stderr, flush=True)
         # Keep transport alive briefly so turtlesim can receive the last zero.
         time.sleep(0.1)
-        print('EXIT ros_shutdown_begin', file=sys.stderr, flush=True)
+        # Release this node's public ROS handles before global shutdown.
+        # No ROS internals, forced exit, or change to the 8-second test limit.
+        for service in self.services:
+            service.shutdown('patrol exited')
+        self.pub.unregister()
+        self.status.unregister()
+        print('EXIT handles_released monotonic={:.6f}'.format(time.monotonic()), file=sys.stderr, flush=True)
+        print('EXIT ros_shutdown_begin monotonic={:.6f}'.format(time.monotonic()), file=sys.stderr, flush=True)
         rospy.signal_shutdown('patrol exited')
-        print('EXIT ros_shutdown_done', file=sys.stderr, flush=True)
+        print('EXIT ros_shutdown_done monotonic={:.6f}'.format(time.monotonic()), file=sys.stderr, flush=True)
 
     def command(self, action):
         with self.lock:
+            if self.closed:
+                return TriggerResponse(False, 'SHUTTING_DOWN')
             if action == 'cancel' and self.state in ('RUNNING', 'PAUSED'):
                 self.state = 'CANCELED'
             elif action == 'pause' and self.state == 'RUNNING':
