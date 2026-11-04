@@ -131,6 +131,15 @@ def format_report(result: Dict[str, object]) -> str:
     lines.append('宏平均 IoU %.3f，宏平均 F1 %.3f，总体准确率 %.3f'
                  % (report['macro_iou'], report['macro_f1'], report['accuracy']))
     lines.append('')
+    lines.append('混淆矩阵（行=真实，列=预测）')
+    names = list(L.CLASS_NAMES)
+    matrix = report['confusion_matrix']
+    width = max(12, max(len(n) for n in names) + 2)
+    lines.append('%*s' % (width, '') + ''.join('%*s' % (width, n) for n in names))
+    for index, name in enumerate(names):
+        lines.append('%-*s' % (width, name)
+                     + ''.join('%*d' % (width, int(v)) for v in matrix[index]))
+    lines.append('')
     lines.append('%-14s %6s %8s %8s' % ('距离档', '点数', '准确率', '宏平均IoU'))
     lines.append('-' * 40)
     for key, value in result['by_range'].items():

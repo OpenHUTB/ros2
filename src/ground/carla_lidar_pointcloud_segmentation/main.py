@@ -21,6 +21,7 @@
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -79,6 +80,8 @@ def build_parser():
     parser.add_argument('--epochs', type=int, default=30, help='训练轮数')
     parser.add_argument('--lr', type=float, default=0.01, help='学习率')
     parser.add_argument('--hidden', default='32,32', help='隐层宽度，逗号分隔')
+    parser.add_argument('--figure-dir', default='figures', help='训练曲线输出目录')
+    parser.add_argument('--no-figures', action='store_true', help='不出图')
     parser.add_argument('--no-weight', action='store_true', help='不加类别权重')
 
     # 控制与画图
@@ -160,9 +163,37 @@ def run_train(args, points, tags, frames, source):
     })
     stats_path = os.path.splitext(args.checkpoint)[0] + '.stats.npz'
     np.savez_compressed(stats_path, mean=result['mean'], std=result['std'])
+    metrics_path = os.path.join(out_dir, 'metrics.json')
+    with open(metrics_path, 'w', encoding='utf-8') as handle:
+        json.dump({
+            'source': source,
+            'n_train': int(result['n_train']),
+            'n_val': int(result['n_val']),
+            'n_parameters': int(result['n_parameters']),
+            'confusion_matrix': [[int(v) for v in row]
+                                 for row in result['report']['confusion_matrix']],
+            'iou': result['report']['iou'],
+            'precision': result['report']['precision'],
+            'recall': result['report']['recall'],
+            'f1': result['report']['f1'],
+            'macro_iou': result['report']['macro_iou'],
+            'macro_f1': result['report']['macro_f1'],
+            'accuracy': result['report']['accuracy'],
+            'by_range': result['by_range'],
+        }, handle, ensure_ascii=False, indent=2)
+
     print('\n权重已保存：%s（%.1f KB）'
           % (args.checkpoint, os.path.getsize(args.checkpoint) / 1024.0))
     print('标准化统计量：%s' % stats_path)
+    print('指标明细：%s' % metrics_path)
+
+    if not getattr(args, 'no_figures', False):
+        from carla_lidar_pointcloud_segmentation import figures
+        paths = figures.save_all(result['report'], result['by_range'],
+                                 getattr(args, 'figure_dir', 'figures'))
+        for path in paths:
+            print('图已保存：%s（%.1f KB）'
+                  % (path, os.path.getsize(path) / 1024.0))
     return 0
 
 

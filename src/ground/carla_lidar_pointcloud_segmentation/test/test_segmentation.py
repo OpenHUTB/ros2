@@ -14,6 +14,8 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from carla_lidar_pointcloud_segmentation import labels as L   # noqa: E402
+
 from carla_lidar_pointcloud_segmentation import metrics as M   # noqa: E402
 from carla_lidar_pointcloud_segmentation import model as MD   # noqa: E402
 
@@ -163,6 +165,26 @@ def main():
               '%.1f KB' % (os.path.getsize(path) / 1024.0))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+    # ---------------- 6. 报告排版 ----------------
+    print('\n[6] 报告排版')
+    from carla_lidar_pointcloud_segmentation import pipeline as PP
+    fake = {
+        'report': {
+            'confusion_matrix': [[90, 5, 3, 2], [4, 80, 1, 5], [2, 1, 70, 7], [3, 6, 4, 87]],
+            'iou': {'drivable': 0.9, 'vehicle': 0.8, 'pedestrian': 0.7, 'obstacle': 0.85},
+            'precision': {'drivable': 0.9, 'vehicle': 0.8, 'pedestrian': 0.7, 'obstacle': 0.85},
+            'recall': {'drivable': 0.9, 'vehicle': 0.8, 'pedestrian': 0.7, 'obstacle': 0.85},
+            'f1': {'drivable': 0.9, 'vehicle': 0.8, 'pedestrian': 0.7, 'obstacle': 0.85},
+            'macro_iou': 0.812, 'macro_f1': 0.825, 'accuracy': 0.905,
+        },
+        'by_range': {'0-20 m': {'n': 100, 'accuracy': 0.95, 'macro_iou': 0.9}},
+        'n_train': 1000, 'n_val': 200, 'n_parameters': 1508,
+    }
+    text = PP.format_report(fake)
+    check('报告含混淆矩阵标题', '混淆矩阵' in text)
+    check('报告含四类名称', all(name in text for name in L.CLASS_NAMES))
+    check('报告含宏平均一行', '宏平均 IoU 0.812' in text)
 
     print('\n' + '=' * 72)
     if _failed:
