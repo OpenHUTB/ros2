@@ -1,19 +1,6 @@
 #!/usr/bin/env python3
 """
 任务 4 —— 端到端视觉伺服网络 (纯 NumPy 实现)
-=============================================
-输入: 前视相机 RGB 图像 -> 灰度 84x84 -> 归一化
-输出: 归一化控制量 [vx, vy, wz]
-      vx = nominal_speed * (out0 + 1) / 2
-      vy = 0.35 * out1
-      wz = 0.60 * out2
-
-三种网络架构 (均支持前向推理与反向传播训练):
-  - nature_cnn : 16@5x5/s2 -> 32@3x3/s2 -> 2x2 avgpool -> FC128 -> FC3
-  - small_cnn  :  8@5x5/s2 -> 16@3x3/s2 -> 2x2 avgpool -> FC64  -> FC3
-  - mlp        : flatten(84x84) -> FC128 -> FC3
-
-训练脚本: train/train_task4.py
 """
 
 import math

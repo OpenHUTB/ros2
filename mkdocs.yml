@@ -83,8 +83,10 @@ nav:
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
     - 人形机器人全身逆运动学与可操作性: './humanoid/whole_body_ik.md'
     - 人形机器人跌倒预判与保护性倒地: './humanoid/humanoid_fall_protection.md'
+    - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
 - 地面载具:
@@ -117,6 +119,7 @@ nav:
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
+    - 端到端驾驶（图像到控制指令）: './ground/pix2cmd_end2end_driving.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
     - MuJoCo 地面小车射线感知与分级减速避障: './ground/mujoco_car_avoidance.md'
     - MuJoCo 地面小车神经网络端到端避障: './ground/mujoco_car_nn_avoidance.md'
@@ -190,6 +193,8 @@ nav:
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 单门深度视觉伺服（门中心回归）: './air/uav_gate_center_servo.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
@@ -205,6 +210,7 @@ nav:
     - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
     - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
+    - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
