@@ -1,26 +1,19 @@
-class PIDController:
-    def __init__(self, kp, ki, kd, output_min=-5.0, output_max=5.0):
-        self.kp = kp
-        self.ki = ki
-        self.kd = kd
-        self.output_min = output_min
-        self.output_max = output_max
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""向后兼容 shim：`from pid_controller import PIDController` 仍然可用。
 
-        self.integral = 0.0
-        self.prev_error = 0.0
+模块重构后 PID 实现搬到了 `mujoco_balance_car/pid.py`（带积分限幅等改进），
+但仓库文档与历史用法里可能有 `import pid_controller`。这里保留一层转发，
+避免直接删文件把别人的用法弄坏。
+"""
 
-    def compute(self, target, current, dt):
-        error = target - current
-        self.integral += error * dt
-        derivative = (error - self.prev_error) / dt
+import os
+import sys
 
-        output = self.kp * error + self.ki * self.integral + self.kd * derivative
-        # 输出限幅，防止力矩过大
-        output = max(self.output_min, min(self.output_max, output))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 
-        self.prev_error = error
-        return output
+from mujoco_balance_car.pid import PIDController  # noqa: F401,E402
 
-    def reset(self):
-        self.integral = 0.0
-        self.prev_error = 0.0
+__all__ = ["PIDController"]
