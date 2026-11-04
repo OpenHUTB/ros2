@@ -16,6 +16,21 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from lidar_obstacle_nn.scan_utils import DEFAULT_SCAN_MAX
+
+
+def normalise_scan(x: torch.Tensor, scan_max: float = DEFAULT_SCAN_MAX) -> torch.Tensor:
+    """Sanitize ranges and scale them to the network's 0..1 input range."""
+    if scan_max <= 0:
+        raise ValueError('scan_max must be positive')
+    x = torch.nan_to_num(
+        x,
+        nan=float(scan_max),
+        posinf=float(scan_max),
+        neginf=0.0,
+    )
+    return torch.clamp(x, min=0.0, max=float(scan_max)) / float(scan_max)
+
 
 class LidarMLP(nn.Module):
     """Three-layer MLP for LiDAR scan classification.
@@ -58,12 +73,9 @@ class LidarMLP(nn.Module):
         Returns:
             Logits of shape ``(batch, num_classes)``.
         """
-        # Sanitise ranges coming straight from sensor_msgs/LaserScan.
-        x = torch.nan_to_num(x, nan=30.0, posinf=30.0, neginf=0.0)
-        x = torch.clamp(x, min=0.0, max=30.0)
-        # Normalise to [0, 1] so the network trains stably regardless
-        # of whether the scan range is 10 m or 30 m.
-        x = x / 30.0
+        # Sanitise ranges coming straight from sensor_msgs/LaserScan and
+        # normalise so the network trains stably across scan-range limits.
+        x = normalise_scan(x)
         return self.net(x)
 
     @torch.no_grad()
