@@ -1,0 +1,461 @@
+{
+  "scenario": "wind-aware payload delivery, target=(5,2), release_alt=3m",
+  "episodes_per_method": 10,
+  "nn_compensation": {
+    "episodes": 10,
+    "success_rate": 1.0,
+    "mean_error_m": 0.1604,
+    "p90_error_m": 0.2481,
+    "mean_time_s": 12.73
+  },
+  "no_compensation": {
+    "episodes": 10,
+    "success_rate": 0.0,
+    "mean_error_m": 1.0455,
+    "p90_error_m": 1.3195,
+    "mean_time_s": 12.59
+  },
+  "improvement_error_pct": 84.7,
+  "rows": [
+    {
+      "seed": 0,
+      "wind": [
+        1.88,
+        2.321,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1051,
+      "success": true,
+      "time_s": 14.9,
+      "release_point": [
+        4.338,
+        1.206
+      ],
+      "predicted_offset": [
+        0.662,
+        0.794
+      ]
+    },
+    {
+      "seed": 0,
+      "wind": [
+        1.88,
+        2.321,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 1.1535,
+      "success": false,
+      "time_s": 15.48,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 1,
+      "wind": [
+        0.629,
+        1.761,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1349,
+      "success": true,
+      "time_s": 13.81,
+      "release_point": [
+        4.768,
+        1.402
+      ],
+      "predicted_offset": [
+        0.232,
+        0.598
+      ]
+    },
+    {
+      "seed": 1,
+      "wind": [
+        0.629,
+        1.761,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 0.7788,
+      "success": false,
+      "time_s": 14.32,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 2,
+      "wind": [
+        1.939,
+        -2.124,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.2422,
+      "success": true,
+      "time_s": 10.68,
+      "release_point": [
+        4.322,
+        2.731
+      ],
+      "predicted_offset": [
+        0.678,
+        -0.731
+      ]
+    },
+    {
+      "seed": 2,
+      "wind": [
+        1.939,
+        -2.124,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 1.1686,
+      "success": false,
+      "time_s": 10.74,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 3,
+      "wind": [
+        -1.763,
+        1.473,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1785,
+      "success": true,
+      "time_s": 11.75,
+      "release_point": [
+        5.589,
+        1.501
+      ],
+      "predicted_offset": [
+        -0.589,
+        0.499
+      ]
+    },
+    {
+      "seed": 3,
+      "wind": [
+        -1.763,
+        1.473,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 0.8952,
+      "success": false,
+      "time_s": 11.58,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 4,
+      "wind": [
+        1.944,
+        1.293,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1303,
+      "success": true,
+      "time_s": 14.73,
+      "release_point": [
+        4.317,
+        1.562
+      ],
+      "predicted_offset": [
+        0.683,
+        0.438
+      ]
+    },
+    {
+      "seed": 4,
+      "wind": [
+        1.944,
+        1.293,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 0.9416,
+      "success": false,
+      "time_s": 15.05,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 5,
+      "wind": [
+        -0.574,
+        1.894,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1554,
+      "success": true,
+      "time_s": 12.78,
+      "release_point": [
+        5.181,
+        1.356
+      ],
+      "predicted_offset": [
+        -0.181,
+        0.644
+      ]
+    },
+    {
+      "seed": 5,
+      "wind": [
+        -0.574,
+        1.894,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 0.7841,
+      "success": false,
+      "time_s": 13.24,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 6,
+      "wind": [
+        -3.412,
+        -2.499,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.0736,
+      "success": true,
+      "time_s": 11.92,
+      "release_point": [
+        6.164,
+        2.865
+      ],
+      "predicted_offset": [
+        -1.164,
+        -0.865
+      ]
+    },
+    {
+      "seed": 6,
+      "wind": [
+        -3.412,
+        -2.499,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 1.5161,
+      "success": false,
+      "time_s": 11.35,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 7,
+      "wind": [
+        -1.071,
+        1.961,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.159,
+      "success": true,
+      "time_s": 12.4,
+      "release_point": [
+        5.353,
+        1.333
+      ],
+      "predicted_offset": [
+        -0.353,
+        0.667
+      ]
+    },
+    {
+      "seed": 7,
+      "wind": [
+        -1.071,
+        1.961,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 0.8624,
+      "success": false,
+      "time_s": 12.96,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 8,
+      "wind": [
+        2.211,
+        0.238,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.3016,
+      "success": true,
+      "time_s": 10.32,
+      "release_point": [
+        4.226,
+        1.925
+      ],
+      "predicted_offset": [
+        0.774,
+        0.075
+      ]
+    },
+    {
+      "seed": 8,
+      "wind": [
+        2.211,
+        0.238,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 1.0573,
+      "success": false,
+      "time_s": 10.58,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "seed": 9,
+      "wind": [
+        2.378,
+        -2.067,
+        0.0
+      ],
+      "compensate": true,
+      "landed": true,
+      "released": true,
+      "error_m": 0.1232,
+      "success": true,
+      "time_s": 13.99,
+      "release_point": [
+        4.172,
+        2.711
+      ],
+      "predicted_offset": [
+        0.828,
+        -0.711
+      ]
+    },
+    {
+      "seed": 9,
+      "wind": [
+        2.378,
+        -2.067,
+        0.0
+      ],
+      "compensate": false,
+      "landed": true,
+      "released": true,
+      "error_m": 1.2977,
+      "success": false,
+      "time_s": 10.6,
+      "release_point": [
+        5.0,
+        2.0
+      ],
+      "predicted_offset": [
+        0.0,
+        0.0
+      ]
+    }
+  ]
+}
