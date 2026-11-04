@@ -14,8 +14,8 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>rospy</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
+  <!-- mujoco 与 imageio 没有有效的 rosdep key，只能用 pip 安装（见 requirements.txt / README） -->
 
   <export>
     <build_type>catkin</build_type>

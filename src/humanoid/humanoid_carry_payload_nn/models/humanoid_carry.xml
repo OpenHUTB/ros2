@@ -4,8 +4,8 @@
   用途：humanoid_carry_payload_nn 模块的 MuJoCo 物理场景。
 
   机器人：
-    - 自由度 15（不含自由根）：双腿 ×(髋 yaw/roll/pitch + 膝 + 踝 pitch/roll)
-      + 双臂 ×(肩 pitch + 肘 pitch) + 颈 yaw，共 15 个可动关节；
+    - 自由度 17（不含自由根）：双腿 ×(髋 yaw/roll/pitch + 膝 + 踝 pitch/roll)
+      + 双臂 ×(肩 pitch + 肘 pitch) + 颈 yaw，共 17 个可动关节（与 17 个执行器一一对应）；
     - 驱动：position 伺服（kp/kv 写在 actuator 中），ctrl 为目标关节角；
     - 双臂保持"抱持"姿态，负载箱通过两条 weld 约束刚性夹持在双手之间。
 

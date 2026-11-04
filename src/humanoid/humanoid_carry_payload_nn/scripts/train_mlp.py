@@ -8,11 +8,13 @@
   3. 保存权重到 models/balance_mlp.npz（+ 同名 .json 记录特征名与结构）。
 
 用法（在包目录或任意目录均可）：
-    python3 scripts/train_mlp.py                 # 默认 0/2/4 kg，20 s/场景
+    python3 scripts/train_mlp.py                 # 默认 0/2/4 kg，20 s/场景（约 3.0 万条样本）
     python3 scripts/train_mlp.py --epochs 80 --seconds 30
+    python3 scripts/train_mlp.py --seconds 25    # 3.75 万条样本（文档中的口径）
 """
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -24,36 +26,66 @@ from model import FEATURE_NAMES, OUTPUT_NAMES, BalanceMLP, PDExpert  # noqa: E40
 from sim_core import CarryPayloadSim, package_path                 # noqa: E402
 
 DEFAULT_MASSES = (0.0, 2.0, 4.0)
+#: 每个"巡航片段"的时长（s）。基础速度按片段固定，片段边界才重新采样，
+#: 否则 500 Hz 循环里每步换一次速度，采到的分布不是"按某个速度巡航"。
+SEGMENT_SECONDS = 4.0
+#: 基础巡航速度候选（m/s）
+BASE_SPEEDS = (0.0, 0.12, 0.20, 0.28)
+#: 转向幅度候选（rad/s）
+BASE_YAW_RATES = (0.0, 0.15, 0.25)
 
 
-def command_profile(t, rng):
-    """随时间变化的指令：巡航速度 + 偶尔加减速/转向，覆盖不同运动状态。"""
-    base_v = rng.choice([0.0, 0.12, 0.20, 0.28])
+def command_profile(t, base_v, base_w):
+    """在给定基础速度/转向下的平滑指令（加减速段 + 正弦转向）。"""
     v = base_v * (1.0 + 0.15 * np.sin(0.4 * t))
     if 3.0 < t < 5.0:
         v *= 0.3                       # 减速段
-    w = 0.25 * np.sin(0.25 * t) if t > 2.0 else 0.0
+    w = base_w * np.sin(0.25 * t) if t > 2.0 else 0.0
     return float(np.clip(v, -0.3, 0.3)), float(w)
 
 
-def collect(args):
-    """用 PD 专家采集 (特征, 补偿角) 数据对。"""
-    rng = np.random.default_rng(args.seed)
+def collect(args, rng):
+    """用 PD 专家采集 (特征, 补偿角) 数据对。
+
+    返回 (x, y, groups)：groups 为片段编号，训练/验证按片段切分，
+    避免时间上相邻的样本同时出现在两边。
+    """
     expert = PDExpert()
-    xs, ys = [], []
+    xs, ys, groups = [], [], []
+    gid = 0
     for mass in args.masses:
         sim = CarryPayloadSim(payload_mass=mass)
         sim.reset(mass, phase=float(rng.random()))
         steps = int(args.seconds / sim.dt)
+        seg_len = max(1, int(SEGMENT_SECONDS / sim.dt))
+        base_v = float(rng.choice(BASE_SPEEDS))
+        base_w = float(rng.choice(BASE_YAW_RATES))
+        mark = len(xs)                 # 当前片段的样本起点，跌倒时整段回滚
+        resets = 0
         for i in range(steps):
             t = i * sim.dt
-            v_cmd, w_cmd = command_profile(t, rng)
+            if i > 0 and i % seg_len == 0:
+                base_v = float(rng.choice(BASE_SPEEDS))
+                base_w = float(rng.choice(BASE_YAW_RATES))
+                gid += 1
+                mark = len(xs)
+            v_cmd, w_cmd = command_profile(t, base_v, base_w)
             feats = sim.step(v_cmd=v_cmd, w_cmd=w_cmd, controller=expert)
+            if not sim.standing():
+                # 摔倒后继续记录会把倒地姿态当成示教数据：整段丢弃并重置
+                del xs[mark:], ys[mark:], groups[mark:]
+                resets += 1
+                sim.reset(mass, phase=float(rng.random()))
+                gid += 1
+                mark = len(xs)
+                continue
             xs.append([feats[name] for name in FEATURE_NAMES])
             ys.append([feats["expert"][name] for name in OUTPUT_NAMES])
-        print("[collect] 负载 %4.1f kg：累计样本 %d" % (mass, len(xs)))
+            groups.append(gid)
+        print("[collect] 负载 %4.1f kg：累计样本 %d，跌倒重置 %d 次" % (mass, len(xs), resets))
         sim.close()
-    return np.asarray(xs, dtype=float), np.asarray(ys, dtype=float)
+    return (np.asarray(xs, dtype=float), np.asarray(ys, dtype=float),
+            np.asarray(groups, dtype=int))
 
 
 def forward(weights, x):
@@ -84,16 +116,28 @@ def backward(weights, acts, y_true, y_pred):
 
 def train(args):
     t0 = time.time()
-    x, y = collect(args)
-    mean, std = x.mean(axis=0), x.std(axis=0)
+    rng = np.random.default_rng(args.seed)
+    x, y, groups = collect(args, rng)
+
+    # 按片段切分：每 5 段取 1 段做验证，避免时间上相邻的样本同时落在两边
+    uniq = np.unique(groups)
+    val_groups = set(uniq[::5].tolist())
+    val_mask = np.array([g in val_groups for g in groups])
+    if val_mask.all() or not val_mask.any():
+        idx = rng.permutation(len(x))
+        n_val = max(1, int(0.15 * len(x)))
+        val_mask = np.zeros(len(x), dtype=bool)
+        val_mask[idx[:n_val]] = True
+
+    # 归一化统计只用训练集，避免验证集信息泄漏
+    mean = x[~val_mask].mean(axis=0)
+    std = x[~val_mask].std(axis=0)
     std[std < 1e-6] = 1.0
     xn = (x - mean) / std
 
-    n_val = max(1, int(0.15 * len(xn)))
-    idx = np.random.default_rng(args.seed).permutation(len(xn))
-    val_idx, train_idx = idx[:n_val], idx[n_val:]
+    val_idx = np.flatnonzero(val_mask)
+    train_idx = np.flatnonzero(~val_mask)
 
-    rng = np.random.default_rng(args.seed + 1)
     sizes = [len(FEATURE_NAMES)] + list(args.hidden) + [len(OUTPUT_NAMES)]
     weights = []
     for i in range(len(sizes) - 1):
@@ -106,6 +150,7 @@ def train(args):
     beta1, beta2, eps = 0.9, 0.999, 1e-8
     batch = args.batch
 
+    history = []
     for epoch in range(args.epochs):
         perm = rng.permutation(train_idx)
         losses = []
@@ -124,6 +169,9 @@ def train(args):
         if (epoch + 1) % max(1, args.epochs // 10) == 0:
             y_val, _ = forward(weights, xn[val_idx])
             val_mse = float(np.mean((y_val - y[val_idx]) ** 2))
+            history.append({"epoch": epoch + 1,
+                            "train_mse": float(np.mean(losses)),
+                            "val_mse": val_mse})
             print("[train] epoch %3d  train_mse=%.4f  val_mse=%.4f"
                   % (epoch + 1, np.mean(losses), val_mse))
 
@@ -131,8 +179,36 @@ def train(args):
                      corr_limit=args.corr_limit, mean=mean, std=std)
     out = args.output
     net.save(out)
-    print("[train] 样本 %d，训练用时 %.1f s" % (len(x), time.time() - t0))
-    print("[train] 权重已保存：%s（同名 .json 为元信息）" % out)
+
+    # 训练指标留档，便于复核文档中的 MSE 结论
+    y_tr, _ = forward(weights, xn[train_idx])
+    y_va, _ = forward(weights, xn[val_idx])
+    metrics = {
+        "samples": int(len(x)),
+        "train_samples": int(len(train_idx)),
+        "val_samples": int(len(val_idx)),
+        "segments": int(len(uniq)),
+        "val_segments": int(len(val_groups)),
+        "seconds_per_scene": float(args.seconds),
+        "masses": list(map(float, args.masses)),
+        "epochs": int(args.epochs),
+        "batch": int(args.batch),
+        "lr": float(args.lr),
+        "hidden": list(map(int, args.hidden)),
+        "seed": int(args.seed),
+        "corr_limit": float(args.corr_limit),
+        "final_train_mse": float(np.mean((y_tr - y[train_idx]) ** 2)),
+        "final_val_mse": float(np.mean((y_va - y[val_idx]) ** 2)),
+        "history": history,
+    }
+    metrics_path = os.path.splitext(out)[0] + "_metrics.json"
+    with open(metrics_path, "w", encoding="utf-8") as f:
+        json.dump(metrics, f, ensure_ascii=False, indent=2)
+    print("[train] 样本 %d（训练 %d / 验证 %d），最终 train_mse=%.2e  val_mse=%.2e"
+          % (len(x), len(train_idx), len(val_idx),
+             metrics["final_train_mse"], metrics["final_val_mse"]))
+    print("[train] 训练用时 %.1f s" % (time.time() - t0))
+    print("[train] 权重已保存：%s（同名 .json 为元信息，_metrics.json 为指标留档）" % out)
 
 
 def main():

@@ -52,6 +52,21 @@ def log(logger, msg):
     (logger.info if logger is not None else print)(msg)
 
 
+def _pace(next_wall, dt):
+    """按仿真步长稳定节拍，返回下一拍的目标时刻。
+
+    落后太多（例如窗口渲染卡顿）时放弃追赶，重新对齐到当前时刻，
+    避免出现"连跑几百步"的突发。
+    """
+    next_wall += dt
+    lag = next_wall - time.time()
+    if lag > 0:
+        time.sleep(lag)
+    else:
+        next_wall = time.time()
+    return next_wall
+
+
 def demo_command(t, speed):
     """演示指令：0.5 s 内起步，4~7 s 轻微转向，随后匀速搬运。"""
     v = speed * min(1.0, t / 0.5)
@@ -69,6 +84,7 @@ def run_demo(args, log_obj=None):
 
     n = int(args.seconds / sim.dt)
     next_print = 0.0
+    next_wall = time.time()
     try:
         for i in range(n):
             t = i * sim.dt
@@ -87,6 +103,8 @@ def run_demo(args, log_obj=None):
                     "等效里程=%.1f m  站立=%s"
                     % (t, v_cmd, math.degrees(pitch), sim.odom()["z"], sim.distance,
                        "是" if sim.standing() else "否"))
+            # 按 sim.dt 固定节拍，避免不同机器上仿真快慢不一致
+            next_wall = _pace(next_wall, sim.dt)
     except KeyboardInterrupt:
         log(log_obj, "[demo] 收到中断，结束演示")
     finally:
@@ -99,12 +117,13 @@ def run_keyboard(args, log_obj=None):
     sim = CarryPayloadSim(payload_mass=args.mass)
     sim.reset(args.mass)
     view = None if args.no_viewer else open_viewer(sim, log_obj)
-    log(log_obj, "[keyboard] W/S 前后，A/D 转向，空格急停，Q 退出（目标速度 %.2f m/s）"
+    log(log_obj, "[keyboard] W/S 前后，A/D 转向，空格急停，R 航向归零，Q 退出（目标速度 %.2f m/s）"
         % MAX_SPEED)
 
     keys = _KeyboardReader(log_obj)
     v_cmd, w_cmd = 0.0, 0.0
     t0 = time.time()
+    next_wall = time.time()
     try:
         while not keys.quit:
             key = keys.pop()
@@ -118,13 +137,17 @@ def run_keyboard(args, log_obj=None):
                 w_cmd = max(-MAX_YAW_RATE, w_cmd - 0.06)
             elif key == " ":
                 v_cmd, w_cmd = 0.0, 0.0
+            elif key == "r":
+                sim.reset_heading()
+                log(log_obj, "[keyboard] 航向已归零")
             sim.step(v_cmd=v_cmd, w_cmd=w_cmd, controller=controller)
             if view is not None and view.is_running():
                 view.sync()
             if int(time.time() - t0) % 2 == 0 and keys.tick:
                 _, pitch, _, _ = sim.posture()
-                log(log_obj, "[keyboard] v=%+.2f w=%+.2f 俯仰=%+.1f° 里程=%.1f m"
-                    % (v_cmd, w_cmd, math.degrees(pitch), sim.distance))
+                log(log_obj, "[keyboard] v=%+.2f w=%+.2f 俯仰=%+.1f° 里程=%.1f m 航向=%+.2f rad"
+                    % (v_cmd, w_cmd, math.degrees(pitch), sim.distance, sim.heading))
+            next_wall = _pace(next_wall, sim.dt)
     except KeyboardInterrupt:
         pass
     finally:
@@ -202,6 +225,10 @@ def main():
     if args.log:
         try:
             import rospy
+            # 用 rospy 当 logger 之前必须先 init_node，否则日志接口行为不一致
+            if not rospy.core.is_initialized():
+                rospy.init_node("humanoid_carry_payload_nn", anonymous=True,
+                                disable_signals=True)
             logger = rospy
         except Exception:                                         # noqa: BLE001
             logger = None

@@ -14,13 +14,15 @@
 | 操作系统 | Ubuntu 20.04.6 LTS（课程虚拟机），Windows 亦可跑离线模式 |
 | ROS | ROS Noetic（catkin） |
 | Python | 3.8 |
-| MuJoCo | `mujoco >= 2.3`（本模块在 3.x 上验证） |
+| MuJoCo | `mujoco >= 3.2, < 4`（代码使用 `model.joint(i).name` 等 3.x 接口，2.x 不兼容） |
 | NumPy | 1.24 |
 | imageio | 仅生成演示 GIF 需要 |
 
 ```
 pip3 install -r requirements.txt
 ```
+
+`mujoco` 与 `imageio` 在 rosdep 中没有对应的 apt 包，只能 pip 安装（`package.xml` 里因此不声明它们）。
 
 无需 Gazebo、PyTorch、GPU；MLP 权重为纯 numpy 的 `npz`（13.5 KB），推理是单次前向，耗时远小于 2 ms 的仿真步长。
 
@@ -32,7 +34,8 @@ humanoid_carry_payload_nn/
 ├── launch/main.launch                 # mode / controller / mass / speed / viewer 参数
 ├── models/
 │   ├── humanoid_carry.xml             # 自建 MJCF：人形 + 双臂负载箱 + 跑步机 + 助行架
-│   └── balance_mlp.npz (+ .json)      # 训练得到的平衡网络权重与元信息
+│   ├── balance_mlp.npz (+ .json)      # 训练得到的平衡网络权重与元信息
+│   └── balance_mlp_metrics.json       # 训练留档：每轮 train/val MSE、样本数、切分方式
 ├── scripts/
 │   ├── main.py                        # 统一入口：demo / keyboard / eval / collect
 │   ├── sim_core.py                    # MuJoCo 仿真封装（不 import rospy）
@@ -66,6 +69,7 @@ roslaunch humanoid_carry_payload_nn main.launch mode:=keyboard controller:=nn ma
 | `W` / `S` | 前进 / 后退（每次 ±0.04 m/s，上限 0.22 m/s） |
 | `A` / `D` | 左转 / 右转（每次 ±0.06 rad/s，上限 0.45 rad/s） |
 | 空格 | 急停（速度与转向清零） |
+| `R` | 航向归零（`root_yaw` 与累计航向清零，防止连续转向顶到关节限位后卡死） |
 | `Q` | 退出 |
 
 > `main.py` 在 Linux 下直接读取 `/dev/tty`（不依赖 X，也不会被 `roslaunch` 的 stdin 转发影响），
@@ -81,7 +85,9 @@ roslaunch humanoid_carry_payload_nn main.launch mode:=demo controller:=nn mass:=
 ## 5. 采集、训练与评估（一键复现）
 
 ```
-# 1) 用 PD 专家在 0/2/4 kg、随机速度/转向指令下采集 3.75 万条样本并训练（约 5 s）
+# 1) 用 PD 专家在 0/2/4 kg 场景下采集并训练（每个场景 --seconds 秒）
+#    基础巡航速度每 4 s 重新采样一次（不是每个物理步都跳变），摔倒立即丢弃该片段并重置
+#    --seconds 25 三个场景共约 3.75 万条；直接用默认的 --seconds 20 约 3.0 万条
 rosrun humanoid_carry_payload_nn train_mlp.py --seconds 25 --epochs 60
 
 # 2) 三种负载 × 三种控制器对照评测（写 results/eval_<时间戳>.csv，并打印汇总表）
@@ -107,7 +113,10 @@ python3 test/test_offline.py          # 5 项离线自检
   与步态规划的目标角叠加后送位置伺服。
 - 训练：行为克隆 `PDExpert`（`ankle_pitch = kp*pitch + kd*pitch_rate`，
   `hip_pitch = k_hip*pitch + k_mass_hip*payload_norm`），Adam(lr=1e-3, batch=256, 60 epoch)，
-  验证集 MSE ≈ `1e-5`。
+  验证集 MSE ≈ `2e-5`（验证集按片段切分、归一化统计只用训练集，见 `balance_mlp_metrics.json`）。
+- **退化维度**：台架根关节锁死横滚，因此 `roll`、`roll_rate` 恒为 0，输出中的 `ankle_roll` 也恒为 0
+  （`kp_roll/kd_roll` 默认为 0）。网络实际起作用的是 7 个输入、2 个输出
+  （`ankle_pitch`、`hip_pitch`），其余维度保留只为对齐真实双足平台的接口，**不表示横滚补偿在生效**。
 
 ## 7. 实测结果
 
@@ -115,13 +124,13 @@ python3 test/test_offline.py          # 5 项离线自检
 
 | 场景 | 控制器 | 俯仰均值 (°) | 俯仰 RMS (°) | 俯仰峰值 (°) | 跌倒 |
 | --- | --- | --- | --- | --- | --- |
-| 0 kg | open / pd / nn | 4.21 / 4.10 / 4.13 | 5.46 / 5.34 / 5.38 | 8.63 / 8.58 / 8.62 | 无 |
-| 2 kg | open / pd / nn | 4.50 / 4.41 / 4.43 | 5.72 / 5.68 / 5.71 | 8.74 / 8.84 / 8.89 | 无 |
-| 4 kg | open / pd / nn | 4.77 / 4.69 / 4.71 | 5.96 / 5.98 / 6.01 | 9.08 / 9.23 / 9.25 | 无 |
+| 0 kg | open / pd / nn | 4.23 / 4.12 / 4.14 | 5.48 / 5.36 / 5.39 | 8.68 / 8.61 / 8.65 | 无 |
+| 2 kg | open / pd / nn | 4.29 / 4.20 / 4.22 | 5.72 / 5.69 / 5.70 | 8.72 / 8.82 / 8.85 | 无 |
+| 4 kg | open / pd / nn | 4.52 / 4.51 / 4.45 | 5.97 / 6.09 / 6.02 | 9.08 / 9.26 / 9.25 | 无 |
 
-结论：三种负载下全程不跌倒，补偿控制器把俯仰均值降低 1.7%～2.6%，神经网络与 PD 专家表现一致
-（验证行为克隆精度）；4 kg 时补偿后的 RMS 与峰值反而略有上升（5.96→5.98、9.08→9.23）。
-俯仰绝对量主要由步态本身决定。
+结论：三种负载下全程不跌倒，补偿控制器把俯仰均值降低 0.2%～2.6%（神经网络 1.5%～2.1%），
+与 PD 专家表现一致（验证行为克隆精度）；2 kg 时 RMS 基本持平而峰值略升（5.72→5.69、8.72→8.82），
+4 kg 时 RMS 与峰值都略升（5.97→6.09、9.08→9.26）。俯仰绝对量主要由步态本身决定。
 
 ## 8. 仿真台架与已知限制
 
@@ -129,7 +138,7 @@ python3 test/test_offline.py          # 5 项离线自检
   等效搬运里程 = ∫v_cmd dt（`sim.distance`）。
 - **减重助行架**：根部 4 个一维关节（`root_x / root_z / root_pitch / root_yaw`）替代自由关节，
   侧向与横滚被导轨锁定；**俯仰方向不驱动**，是平衡控制器要抑制的倒立摆方向。
-- 限制：台架弹性吊带承担了大部分回复力矩，控制器的绝对改善幅度有限（上表 1.7%～2.6%），
+- 限制：台架弹性吊带承担了大部分回复力矩，控制器的绝对改善幅度有限（上表 0.2%～2.6%），
   它的作用是在负载变化时保持一致的躯干姿态，而非"挽救即将跌倒的机器人"；
   这是为可重复实验刻意选择的台架条件。步态为相位式准静态步态，不是动态行走；
   演示建议速度 ≤ 0.15 m/s、单次 ≤ 20 s。
@@ -137,8 +146,9 @@ python3 test/test_offline.py          # 5 项离线自检
 ## 9. 演示素材与文档
 
 - 动图：[docs/img/humanoid/humanoid_carry_payload_nn/demo.gif](../../../docs/img/humanoid/humanoid_carry_payload_nn/demo.gif)（2.73 MB）
-- 评测留档：`results/eval_20261030_144953.csv` 是文档第 8 节那张表的原始数据，作为证据提交入库；
+- 评测留档：`results/eval_20261104_212925.csv` 是文档第 8 节那张表的原始数据（重训后的权重 + `mj_setConst` 修正），作为证据提交入库；
   重新运行 `evaluate.py` 会在 `results/` 下生成新的带时间戳 CSV，不会覆盖这一份。
+- 训练留档：`models/balance_mlp_metrics.json` 记录样本数、切分方式与每轮 train/val MSE。
 - 详细文档（任务、模型、训练、结果、键盘、参数、FAQ）：
   [docs/humanoid/humanoid_carry_payload_nn.md](../../../docs/humanoid/humanoid_carry_payload_nn.md)
 

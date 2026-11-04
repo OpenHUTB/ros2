@@ -69,7 +69,7 @@ def main():
     ap = argparse.ArgumentParser(description="负载场景控制器对照评测")
     ap.add_argument("--masses", type=float, nargs="+", default=list(DEFAULT_MASSES))
     ap.add_argument("--seconds", type=float, default=20.0)
-    ap.add_argument("--speed", type=float, default=0.20)
+    ap.add_argument("--speed", type=float, default=0.15)
     ap.add_argument("--weights", default=package_path("models/balance_mlp.npz"))
     ap.add_argument("--output", default="")
     args = ap.parse_args()

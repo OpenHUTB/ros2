@@ -143,8 +143,9 @@ class CarryPayloadSim:
             mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "belt_x")])
         self.root_yaw_v = int(self.model.jnt_dofadr[
             mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "root_yaw")])
-        # 等效搬运里程（皮带走过的距离 = 速度指令积分）
+        # 等效搬运里程（皮带走过的距离 = 速度指令积分）与连续航向（关节角回绕后仍连续）
         self.distance = 0.0
+        self.heading = 0.0
         self.reset(self.payload_mass)
 
     # ------------------------------------------------------------------
@@ -167,12 +168,15 @@ class CarryPayloadSim:
         self.model.body_mass[self.payload_body] = effective_mass
         self.model.body_inertia[self.payload_body] = \
             self._base_inertia * (effective_mass / NOMINAL_PAYLOAD_MASS)
+        # 质量/惯量改完必须刷新派生量（子树质量、质心等），否则与编译期缓存不一致
+        mujoco.mj_setConst(self.model, self.data)
 
         self.data.ctrl[:] = 0.0
         for name, value in HOLD_POSE.items():
             self.data.ctrl[self.actuator[name]] = value
         self.gait.reset(phase)
         self.distance = 0.0
+        self.heading = 0.0
         mujoco.mj_forward(self.model, self.data)
 
     # ------------------------------------------------------------------
@@ -214,6 +218,7 @@ class CarryPayloadSim:
         self.data.qvel[self.belt_dof] = -float(v_cmd)
         self.data.qvel[self.root_yaw_v] = float(w_cmd)
         self.distance += float(v_cmd) * self.dt
+        self.heading += float(w_cmd) * self.dt
 
         roll, pitch, roll_rate, pitch_rate = self.posture()
         feats = self.features(roll, pitch, roll_rate, pitch_rate, v_cmd, w_cmd)
@@ -237,6 +242,10 @@ class CarryPayloadSim:
             self.data.ctrl[self.actuator[name]] = value
 
         mujoco.mj_step(self.model, self.data)
+        # 航向累积超过 ±3.1 rad 时回绕 2π，否则会顶到关节限位后卡死
+        yaw = float(self.data.qpos[self.root_yaw_q])
+        if abs(yaw) > 3.1:
+            self.data.qpos[self.root_yaw_q] = yaw - 2.0 * math.pi * round(yaw / (2.0 * math.pi))
         feats["expert"] = corr
         return feats
 
@@ -244,8 +253,13 @@ class CarryPayloadSim:
     def odom(self):
         x = float(self.data.qpos[self.root_x_q])
         z = ROOT_Z + float(self.data.qpos[self.root_z_q])
-        yaw = float(self.data.qpos[self.root_yaw_q])
-        return {"x": x, "y": 0.0, "z": z, "yaw": yaw}
+        return {"x": x, "y": 0.0, "z": z, "yaw": self.heading}
+
+    def reset_heading(self):
+        """把航向与转向关节清零（键盘模式的 R 键）。"""
+        self.data.qpos[self.root_yaw_q] = 0.0
+        self.data.qvel[self.root_yaw_v] = 0.0
+        self.heading = 0.0
 
     def standing(self, min_tilt_deg=35.0):
         """未摔倒判定：俯仰角不超限且根高度没有跌落到蹲姿以下。"""
