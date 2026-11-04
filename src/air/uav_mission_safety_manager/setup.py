@@ -3,7 +3,7 @@ from setuptools import setup
 package_name = 'uav_mission_safety_manager'
 setup(
     name=package_name, version='0.1.0',
-    description='ROS 2 Foxy UAV mission manager with asynchronous AirSim safety state machine.',
+    description='ROS 2 UAV mission manager with waypoint queues and asynchronous safety state machine.',
     maintainer='LuLuforeverx2',
     maintainer_email='1357170941@qq.com',
     license='Apache-2.0',
