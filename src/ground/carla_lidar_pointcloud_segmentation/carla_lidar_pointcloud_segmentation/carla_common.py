@@ -118,23 +118,37 @@ def spawn_ego(world, blueprint=EGO_BLUEPRINT, spawn_index=0, autopilot=True):
     return ego
 
 
-def spawn_traffic(world, client, count=12, seed=0):
-    """撒一批自动驾驶的 NPC 车，让点云里有更多"车辆"样本。"""
+def spawn_traffic(world, client, count=12, seed=0, near=None, radius=(10.0, 45.0)):
+    """撒一批自动驾驶的 NPC 车，让点云里有更多"车辆"样本。
+
+    ``near`` 给自车时，优先挑自车周围 10~45 m 的空闲出生点。整张地图随机撒的
+    话，NPC 车大多在几百米外，雷达根本扫不到——实测车辆点只占 0.17%，
+    训练出来的分类器几乎见不到车。
+    """
     check_carla()
     library = world.get_blueprint_library()
     tm = client.get_trafficmanager()
     tm.set_synchronous_mode(True)
-    spawn_points = world.get_map().get_spawn_points()
+    spawn_points = list(world.get_map().get_spawn_points())
     rng = np.random.default_rng(seed)
+
+    if near is not None:
+        origin = near.get_location()
+        low, high = radius
+        spawn_points = [sp for sp in spawn_points
+                        if low <= sp.location.distance(origin) <= high]
+        spawn_points.sort(key=lambda sp: sp.location.distance(origin))
+
     actors = []
-    for index in rng.permutation(len(spawn_points))[:count]:
-        bp = library.filter('vehicle.*')[0]
-        npc = world.try_spawn_actor(bp, spawn_points[int(index)])
+    for spawn_point in spawn_points[:count]:
+        bp = rng.choice(library.filter('vehicle.*'))
+        npc = world.try_spawn_actor(bp, spawn_point)
         if npc is None:
             continue
         npc.set_autopilot(True)
         actors.append(npc)
-    print('[交通] 已生成 %d 辆 NPC 车' % len(actors))
+    print('[交通] 已生成 %d 辆 NPC 车（%s）'
+          % (len(actors), '自车附近' if near is not None else '全图随机'))
     return actors
 
 
@@ -182,6 +196,14 @@ def spawn_pedestrians(world, ego, count=8, seed=0, radii=(6.0, 10.0, 14.0)):
     return actors
 
 
+def _alive(actor):
+    """安全地判断 actor 是否还活着；销毁过的 actor 访问属性会抛异常。"""
+    try:
+        return bool(actor.is_alive)
+    except Exception:      # noqa: BLE001
+        return False
+
+
 def teardown(client, world, sensors=(), actors=()):
     """统一清理：先停传感器，再批量销毁 actor，最后恢复异步模式。
 
@@ -202,14 +224,19 @@ def teardown(client, world, sensors=(), actors=()):
         except Exception:      # noqa: BLE001
             pass
 
-    targets = list(sensors) + list(actors)
+    targets = [a for a in list(sensors) + list(actors) if _alive(a)]
     if targets:
         try:
-            client.apply_batch_sync([carla.command.DestroyActor(a) for a in targets], True)
+            # do_tick 传 False：这一批里全是"销毁"，没必要再推进世界，
+            # 传 True 反而会让服务端在已销毁的 actor 上继续 tick。
+            client.apply_batch_sync([carla.command.DestroyActor(a) for a in targets], False)
         except Exception:      # noqa: BLE001
+            # 批量失败时才逐个退让；这里仍要检查存活，否则会重复销毁，
+            # 服务端刷一屏 "already dead" 的警告。
             for actor in targets:
                 try:
-                    actor.destroy()
+                    if _alive(actor):
+                        actor.destroy()
                 except Exception:      # noqa: BLE001
                     pass
 

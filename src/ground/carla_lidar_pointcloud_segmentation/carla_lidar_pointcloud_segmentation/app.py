@@ -61,15 +61,16 @@ def run_collect(args):
         ego = cc.spawn_ego(world, args.vehicle, args.spawn_index, autopilot=True)
         print('[自车] %s 已在出生点 %d' % (ego.type_id, args.spawn_index))
 
+        # 先 tick 一次：刚 spawn 的自车位姿还是全零，拿它算"附近"会全部落空
+        world.tick()
         if args.traffic > 0:
-            actors = cc.spawn_traffic(world, client, count=args.traffic)
+            actors = cc.spawn_traffic(world, client, count=args.traffic, near=ego)
         actors.append(ego)
 
         # 行人必须主动放：Town03 默认场景里没有行人，不补的话
         # 数据集里 pedestrian 一直是 0，训练出来的模型永远预测不出行人。
         # 放之前先 tick 一次，让自车位姿下发，否则相对位置会算到世界原点。
         if getattr(args, 'pedestrians', 0) > 0:
-            world.tick()
             actors.extend(cc.spawn_pedestrians(world, ego, count=args.pedestrians))
 
         common = dict(lidar_range=args.lidar_range, channels=args.channels,
@@ -191,15 +192,16 @@ def run_demo(args):
 
     try:
         ego = cc.spawn_ego(world, args.vehicle, args.spawn_index, autopilot=True)
+        # 先 tick 一次：刚 spawn 的自车位姿还是全零，拿它算"附近"会全部落空
+        world.tick()
         if args.traffic > 0:
-            actors = cc.spawn_traffic(world, client, count=args.traffic)
+            actors = cc.spawn_traffic(world, client, count=args.traffic, near=ego)
         actors.append(ego)
 
         # 行人必须主动放：Town03 默认场景里没有行人，不补的话
         # 数据集里 pedestrian 一直是 0，训练出来的模型永远预测不出行人。
         # 放之前先 tick 一次，让自车位姿下发，否则相对位置会算到世界原点。
         if getattr(args, 'pedestrians', 0) > 0:
-            world.tick()
             actors.extend(cc.spawn_pedestrians(world, ego, count=args.pedestrians))
         common = dict(lidar_range=args.lidar_range, channels=args.channels,
                       points_per_second=args.points_per_second,
