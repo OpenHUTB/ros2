@@ -19,8 +19,13 @@ from ..value import descend_path, distance_map
 
 
 def _share_dir() -> str:
-    here = os.path.dirname(os.path.abspath(__file__))
-    return os.path.dirname(os.path.dirname(here))
+    """安装后从包 share 目录取权重；源码直接运行时回落到包目录。"""
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        return get_package_share_directory("policy_learning")
+    except Exception:
+        here = os.path.dirname(os.path.abspath(__file__))
+        return os.path.dirname(os.path.dirname(here))
 
 
 def default_model_path() -> str:
@@ -51,6 +56,8 @@ class PolicyNode(Node):
         self.goal = None
         self.dist = None
         self.last_cmd = (0.0, 0.0)
+        self.arrived = False
+        self._k = 0
 
         odom_topic = str(self.get_parameter("topic.odom").value)
         self.create_subscription(Odometry, odom_topic, self.on_odom, 10)
@@ -92,6 +99,8 @@ class PolicyNode(Node):
             return
         self.dist = dist
         self.goal = (p.x, p.y)
+        self.arrived = False          # 新目标要清掉上一轮的到达状态
+        self._k = 0
         if bool(self.get_parameter("publish_plan").value):
             self.publish_plan()
         self.get_logger().info("收到目标 (%.2f, %.2f)" % (p.x, p.y))
@@ -127,9 +136,20 @@ class PolicyNode(Node):
             self.publish(0.0, 0.0)
             return
 
+        self._k += 1
+        # rviz 的 Path 是 Volatile QoS，周期性重发，避免晚订阅漏掉
+        if self._k % 10 == 0 and bool(self.get_parameter("publish_plan").value):
+            self.publish_plan()
+
+        if self.arrived:
+            self.publish(0.0, 0.0)
+            return
+
         if math.hypot(self.pose[0] - self.goal[0],
                       self.pose[1] - self.goal[1]) < 0.2:
+            self.arrived = True
             self.publish(0.0, 0.0)
+            self.publish_plan()
             self.get_logger().info("已到达目标")
             return
 

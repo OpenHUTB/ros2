@@ -9,8 +9,8 @@ import math
 
 import numpy as np
 import rclpy
-from geometry_msgs.msg import Odometry, Twist
-from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from visualization_msgs.msg import Marker
