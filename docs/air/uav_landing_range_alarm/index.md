@@ -20,7 +20,7 @@ python3 src/air/uav_landing_range_alarm/main.py --output /tmp/uav_landing_range_
 
 第二条生成 samples.csv、metrics.json 和 offline_demo.svg；MLP 还会重新训练并输出 model.json。不同 NumPy/BLAS 版本可能产生末位数值差异。
 
-## ROS 构建和运行（待实际验证）
+## ROS 构建和运行（下方附本轮实测）
 
 从仓库根目录开始，在独立 catkin 工作空间中只放这个包，不把整个混合 ROS1/ROS2 仓库交给 catkin：
 
@@ -54,7 +54,7 @@ ROS Range 的正负无穷有传感器特定意义，本教学模块选择保守�
 
 演示在 3–6 秒注入近地段，在 8–9.5 秒停止发布，之后恢复正常距离。
 
-## ROS 联调操作（待实际验证）
+## ROS 联调操作（下方附本轮实测）
 
 ```bash
 rostopic echo /uav_landing_range_alarm/state
@@ -93,8 +93,40 @@ rosrun uav_landing_range_alarm main.py --ros _demo:=false
 ![离线演示](../../img/uav_landing_range_alarm/offline_demo.svg)
 
 指标文件：源码模块内 offline_metrics.json。逐点样本可用离线复现命令重新生成。
-没有本次 ROS 在线截图、catkin 构建结果、真实数据验证、文档浏览器预览和另一人另一台机器复测，需后续补齐。
+本轮 ROS 构建与通信验证见下方实测补充；仍无真实硬件和外部复测。
 
 ## 大模型使用声明
 
 使用 OpenAI Codex 辅助方案设计、代码、核心测试、合成演示、文档和提交准备。仅报告实际执行结果；作者需理解、复核和补充目标环境验证，并对内容负责。
+
+
+## ROS Noetic 实测补充（2026-11-04）
+
+本轮使用 VirtualBox Ubuntu 20.04.6、Python 3.8.10、ROS Noetic。工作目录为 `/home/ros/four_assignments_0yekhx11/ws_uav_landing_range_alarm`。
+
+离线测试、独立 catkin 构建、真实 roslaunch/话题功能、退出清理四项分别通过；launch 返回码 0，无节点异常退出。
+
+测试使用真实 ROS 通信发送合成输入，不是无人机飞行、真实传感器或 AirSim/Gazebo 验证。
+
+- range 2.0 -> CLEAR
+- range 0.8 -> ALARM
+- range 1.15 -> ALARM
+- range 1.5 -> CLEAR
+- range nan -> INVALID
+- missing range -> STALE
+- roslaunch remains running through functional checks
+
+复现构建（将本模块复制到独立工作空间 src 后）：
+
+```bash
+source /opt/ros/noetic/setup.bash
+catkin_make -C /path/to/workspace
+source /path/to/workspace/devel/setup.bash
+roslaunch uav_landing_range_alarm main.launch
+```
+
+必须检查 `devel/setup.bash` 与 `devel/lib/uav_landing_range_alarm/main.py` 存在。旧脚本曾在错误工作空间构建，旧 BUILD=PASS 无效；以上是修正版的新工作空间证据。
+
+原始证据：[构建](validation/build.txt)、[launch](validation/launch.log)、[ROS 测试](validation/ros_test.txt)、[结构化结果](validation/ros_result.json)、[离线测试](validation/offline.txt)、[源码 SHA256](validation/source_sha256.json)。哈希对应运行包源码，本轮已逐项核对；README 后续文档更新会改变其哈希，程序源码未改变。
+
+仍未验证真实硬件/飞行与另一人另一台机器复测。PR 保持 Draft，外部复测不勾选。使用 OpenAI Codex 辅助日志核验、文档与提交整理。
