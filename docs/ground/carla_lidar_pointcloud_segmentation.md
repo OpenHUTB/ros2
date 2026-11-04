@@ -509,6 +509,10 @@ CARLA 里刚 `try_spawn_actor` 的 actor，在**下一次 `world.tick()` 之前*
 
 1. CARLA 官方文档，*Sensors reference: Lidar and Semantic Lidar*。
 2. CARLA 官方示例 `PythonAPI/examples/lidar_to_camera.py`（点云与相机投影的对照）。
-3. Redmon 等，*PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation*，
+3. Qi 等，*PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation*，
    CVPR 2017 —— 逐点特征 + 置换不变性的思路来源。
 4. 仓库内 `carla_aeb_braking`、`carla_bsd_blind_spot`：几何规则处理激光雷达的对照实现。
+
+!!! note "AI 声明"
+    本项目源码与本文档使用大模型辅助编写（DeepSeek 协助整理与排错），
+    提交者已对提交内容负全部责任，并已在真实 CARLA 0.9.16 环境中完成端到端运行验证。
