@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="tripod_mujoco" type="main.py" name="tripod_mujoco" output="screen" cwd="node"/>
+</launch>
