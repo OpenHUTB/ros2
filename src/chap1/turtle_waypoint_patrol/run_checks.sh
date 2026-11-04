@@ -46,14 +46,14 @@ setsid rosrun turtlesim turtlesim_node > "$RUN_DIR/turtlesim.log" 2>&1 &
 SIM_PID=$!
 # The Python test waits for /reset and is authoritative about readiness.
 set +e
-python3 -u "$PACKAGE_DIR/verify_turtlesim.py" > "$RUN_DIR/checks.txt" 2>&1
-result=$?
+python3 -u "$PACKAGE_DIR/verify_turtlesim.py" 2>&1 | tee "$RUN_DIR/checks.txt"
+result=${PIPESTATUS[0]}
 set -e
-cat "$RUN_DIR/checks.txt"
-if [[ "$result" -eq 0 ]]; then
+# Plot actual observed poses even if another case fails; never infer success.
+if [[ -s "$PATROL_EVIDENCE_DIR/test_01_pause_resume_completion.csv" ]]; then
   python3 "$PACKAGE_DIR/plot_trace.py" "$PATROL_EVIDENCE_DIR/test_01_pause_resume_completion.csv" \
     "$RUN_DIR/actual_patrol.png" > "$RUN_DIR/plot.txt" 2>&1 || {
-      cat "$RUN_DIR/plot.txt"; exit 1;
+      cat "$RUN_DIR/plot.txt"; result=1;
     }
 fi
 exit "$result"
