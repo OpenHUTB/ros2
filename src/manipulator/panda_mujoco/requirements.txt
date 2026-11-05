@@ -1,0 +1,6 @@
+mujoco>=3.2
+mujoco-menagerie
+numpy
+imageio>=2.34.0
+imageio-ffmpeg
+pillow
