@@ -264,6 +264,18 @@ def run(args):
             drive_target(carla, target, t)
             drive_ego_sway(carla, ego, t)
 
+            # ---- 目标关联：把 EKF 世界系估计转到 ego 体坐标，作为检测的目标门限（评审点 2/3/4）
+            ego_tf = ego.get_transform()
+            ego_yaw = math.radians(ego_tf.rotation.yaw)
+            ego_x, ego_y = ego_tf.location.x, ego_tf.location.y
+            pred_r = pred_th = None
+            if ekf is not None:
+                dx, dy = ekf.state()[0] - ego_x, ekf.state()[1] - ego_y
+                c, s = math.cos(-ego_yaw), math.sin(-ego_yaw)
+                bx, by = c * dx - s * dy, s * dx + c * dy
+                pred_r = float(math.hypot(bx, by))
+                pred_th = float(math.atan2(by, bx))     # ego 体坐标，右为正
+
             # ---- 取最新一帧真实传感器数据并解析
             cam_item = hub.latest(hub.camera_q)
             lid_item = hub.latest(hub.lidar_q)
@@ -275,28 +287,34 @@ def run(args):
                 mask = decode_semantic_mask(cam_item[2], args.image_width,
                                             args.image_height)
                 if mask is not None:
-                    th_cam, cam_px = mask_to_bearing(mask, args.camera_fov)
+                    th_cam, cam_px = mask_to_bearing(
+                        mask, args.camera_fov, pred_bearing=pred_th)
                     last["cam"] = (th_cam, t)
                     cam_updated = th_cam is not None
-                    buffer.push("camera", t, th_cam)
+                    if th_cam is not None:          # 无观测不入队，避免同步取到 None
+                        buffer.push("camera", t, th_cam)
 
             lid_updated = False
             if lid_item is not None:
                 pts = decode_lidar_points(lid_item[2])
                 obs = lidar_points_to_observation(
-                    pts, max_range=args.lidar_range)
+                    pts, max_range=args.lidar_range,
+                    pred=(pred_r,) if pred_r is not None else None)
                 last["lid"] = (obs, t)
                 lid_updated = obs is not None
-                buffer.push("lidar", t, obs)
+                if obs is not None:
+                    buffer.push("lidar", t, obs)
 
             rad_updated = False
             if rad_item is not None:
                 rpts = decode_radar_points(rad_item[2])
                 rob = radar_points_to_observation(
-                    rpts, max_range=args.radar_range)
+                    rpts, max_range=args.radar_range,
+                    pred=(pred_r, pred_th) if pred_r is not None else None)
                 last["rad"] = (rob, t)
                 rad_updated = rob is not None
-                buffer.push("radar", t, rob)
+                if rob is not None:
+                    buffer.push("radar", t, rob)
 
             if imu_item is not None:
                 last["yaw"] = (imu_compass_to_yaw(imu_item[2]), t)
@@ -331,22 +349,24 @@ def run(args):
                 ekf.predict(args.fusion_period)
                 yaw_est = last["yaw"][0] if last["yaw"][0] is not None else 0.0
 
-                rad = buffer.get("radar", t)      # 雷达：测距准，主测距观测
-                lid = buffer.get("lidar", t)      # LiDAR：点云测距，第二路交叉验证
+                rad = buffer.get("radar", t)      # 雷达：(ts, (r, θ)) 或 None
+                lid = buffer.get("lidar", t)      # LiDAR：(ts, (r, θ)) 或 None
+                cam = buffer.get("camera", t)     # 相机：(ts, bearing) 或 None
                 r_ref = None
-                if rad is not None:
-                    r_ref, th_body = rad
+                if rad is not None and rad[1] is not None:
+                    _, (r_ref, th_body) = rad
                     ekf.update_radar(r_ref, wrap_angle(th_body + yaw_est))
-                if lid is not None:
+                if lid is not None and lid[1] is not None:
+                    _, (r_lidar, th_lidar) = lid
                     if r_ref is None:
-                        r_ref = lid[0]
-                    ekf.update_radar(lid[0], wrap_angle(lid[1] + yaw_est))
+                        r_ref = r_lidar
+                    ekf.update_radar(r_lidar, wrap_angle(th_lidar + yaw_est))
 
-                cam = buffer.get("camera", t)
-                if cam is not None:
+                if cam is not None and cam[1] is not None:
+                    _, cam_bearing = cam
                     if r_ref is None:
                         r_ref = max(float(np.linalg.norm(ekf.state()[:2])), 0.5)
-                    th_rad = transform_camera_bearing(cam, r_ref, ext)
+                    th_rad = transform_camera_bearing(cam_bearing, r_ref, ext)
                     ekf.update_camera(wrap_angle(th_rad + yaw_est))
 
                 truth = figure_eight(t)

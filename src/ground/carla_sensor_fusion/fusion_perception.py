@@ -2,13 +2,18 @@
 """fusion_perception.py —— 原始传感器数据 → 目标级观测（纯 numpy，无 CARLA 依赖）
 
 CARLA 版的传感器回调把原始数据（语义分割图 / 点云 / IMU compass）交给本模块，
-由这里完成「检测 → 目标级观测」的一步；函数全部是纯函数，便于用合成数据做单元测试
-（见 test/test_sensor_fusion.py）。
+由这里完成「检测 → 目标级观测」；函数全部是纯函数，便于用合成数据做单元测试。
+
+**目标关联（评审点 2/3/4）**：三个检测函数都支持 `pred` 参数（来自 EKF 预测的目标
+在 ego 体坐标系下的距离/方位）。给了 `pred` 时按「距离门限 + 方位门限」选目标，
+避免道路边缘、路桩、杂波或其他车辆被当成目标；未给 `pred`（首帧 bootstrap）时退回
+「最近点/最近簇/全图质心」。LiDAR 使用体素降采样 + 欧式聚类后按簇质心关联。
 
 坐标约定：
   - 相机坐标系：x 前、y 右；方位角右为正。
-  - 雷达（LiDAR）坐标系：与本模块一致，x 前、y 左，方位角逆时针为正
-    （CARLA LiDAR 点云原生如此）。相机→雷达的轴向差异由外参标定吸收。
+  - 雷达（LiDAR）坐标系：x 前、y 左，方位角逆时针为正（CARLA LiDAR 原生如此）。
+  - CARLA 毫米波雷达 azimuth：右为正（与雷达传感器约定一致，与 LiDAR 相反）。
+    相机→雷达的轴向差异由外参标定吸收。
 """
 
 import math
@@ -21,6 +26,16 @@ from sensor_fusion_core import rot2, wrap_angle
 CARLA_TAG_VEHICLE = 10
 
 
+def _xy(r, th):
+    """极坐标 (r, θ) → 平面 (x, y)。"""
+    return np.array([r * math.cos(th), r * math.sin(th)])
+
+
+def _polar(xy):
+    """平面 (x, y) → 极坐标 (r, θ)。"""
+    return float(np.hypot(xy[0], xy[1])), float(math.atan2(xy[1], xy[0]))
+
+
 def image_to_bearing(u_px, width, fov_deg):
     """图像像素列 u → 相机坐标系方位角（rad，右为正）。
 
@@ -30,10 +45,18 @@ def image_to_bearing(u_px, width, fov_deg):
     return math.atan2(float(u_px) - width / 2.0, fx)
 
 
-def mask_to_bearing(mask, fov_deg, target_tag=CARLA_TAG_VEHICLE, min_pixels=30):
-    """语义分割掩码（H×W，值为 CARLA 语义标签）里目标类像素 → 方位观测。
+def bearing_to_pixel(theta, width, fov_deg):
+    """相机方位角（右为正）→ 像素列，用于 ROI 关联。"""
+    fx = (width / 2.0) / math.tan(math.radians(fov_deg) / 2.0)
+    return width / 2.0 + fx * math.tan(float(theta))
 
-    取目标类像素的质心列反投影；像素数不足 min_pixels 视为未检出。
+
+def mask_to_bearing(mask, fov_deg, target_tag=CARLA_TAG_VEHICLE,
+                    min_pixels=30, pred_bearing=None, roi_px=80):
+    """语义分割掩码里目标类像素 → 方位观测。
+
+    pred_bearing 给出时（EKF 预测的相机方位），只在对应像素列 ±roi_px 的 ROI 内
+    取目标像素质心，实现目标关联，避免其他车辆/误检进入观测（评审点 2）。
     返回 (bearing | None, n_pixels)。
     """
     if mask is None or np.size(mask) == 0:
@@ -41,17 +64,67 @@ def mask_to_bearing(mask, fov_deg, target_tag=CARLA_TAG_VEHICLE, min_pixels=30):
     mask = np.asarray(mask)
     ys, xs = np.nonzero(mask == target_tag)
     n = int(xs.size)
+    if pred_bearing is not None and n > 0:
+        u0 = bearing_to_pixel(pred_bearing, mask.shape[1], fov_deg)
+        keep = np.abs(xs - u0) <= roi_px
+        xs, ys = xs[keep], ys[keep]
+        n = int(xs.size)
     if n < min_pixels:
         return None, n
     return image_to_bearing(float(xs.mean()), mask.shape[1], fov_deg), n
 
 
-def lidar_points_to_observation(points, min_range=1.5, max_range=40.0,
-                                z_min=-0.8, z_max=2.5, n_nearest=12):
-    """LiDAR 点云 (N,4)[x,y,z,intensity]（雷达坐标系）→ 最近目标观测 (r, θ)。
+# ---------------------------------------------------------------- 点云聚类
+def voxel_downsample(points_xy, voxel=0.4):
+    """体素网格降采样，(N,2) → 每体素取均值，降低聚类复杂度。"""
+    if len(points_xy) == 0:
+        return points_xy
+    key = np.floor(points_xy / voxel).astype(int)
+    _, idx = np.unique(key, axis=0, return_index=True)
+    return points_xy[idx]
 
-    过滤距离与高度（去掉地面回波与车身自反射），取最近 n_nearest 个点的均值
-    作为目标观测。返回 None 表示本帧未检出。
+
+def cluster_points_2d(points_xy, eps=1.2, min_pts=3):
+    """欧式聚类（半径 eps 连通），返回 [(质心 (x,y), 点数)]。
+
+    在体素降采样后的少量点上做 O(N²) 邻接遍历，保证每个簇有 min_pts 个点。
+    """
+    n = len(points_xy)
+    if n == 0:
+        return []
+    labels = -np.ones(n, dtype=int)
+    cid = 0
+    for i in range(n):
+        if labels[i] != -1:
+            continue
+        stack = [i]
+        labels[i] = cid
+        while stack:
+            j = stack.pop()
+            d = np.hypot(points_xy[:, 0] - points_xy[j, 0],
+                         points_xy[:, 1] - points_xy[j, 1])
+            nb = np.where((d <= eps) & (labels == -1))[0]
+            for b in nb:
+                labels[b] = cid
+                stack.append(int(b))
+        cid += 1
+    clusters = []
+    for c in range(cid):
+        m = labels == c
+        if int(m.sum()) >= min_pts:
+            clusters.append((points_xy[m].mean(axis=0), int(m.sum())))
+    return clusters
+
+
+def lidar_points_to_observation(points, min_range=1.5, max_range=40.0,
+                                z_min=-0.8, z_max=2.5,
+                                pred=None, gate=2.5, eps=1.2, min_pts=3):
+    """LiDAR 点云 (N,4)[x,y,z,intensity]（LiDAR 坐标系）→ 目标观测 (r, θ)。
+
+    过滤距离/高度后做体素降采样 + 欧式聚类，再按簇质心关联（评审点 3）：
+      - pred=(r_pred,) 给出时，选 |簇距离 - r_pred| 最小且 < gate 的簇；
+      - 未给 pred 时退回最近簇（bootstrap）。
+    返回 None 表示本帧未检出。
     """
     if points is None or len(points) == 0:
         return None
@@ -61,10 +134,20 @@ def lidar_points_to_observation(points, min_range=1.5, max_range=40.0,
     keep = (r >= min_range) & (r <= max_range) & (z >= z_min) & (z <= z_max)
     if not np.any(keep):
         return None
-    r, y, x = r[keep], y[keep], x[keep]
-    th = np.arctan2(y, x)
-    k = np.argsort(r)[:min(n_nearest, r.size)]
-    return float(r[k].mean()), float(np.mean(th[k]))
+    xy = np.stack([x[keep], y[keep]], axis=1)
+    xy = voxel_downsample(xy, 0.4)
+    clusters = cluster_points_2d(xy, eps=eps, min_pts=min_pts)
+    if not clusters:
+        return None
+    if pred is not None:
+        r_pred = float(pred[0])
+        best = min(clusters, key=lambda c: abs(float(np.hypot(*c[0])) - r_pred))
+        if abs(float(np.hypot(*best[0])) - r_pred) > gate:
+            return None
+        cxy = np.asarray(best[0])
+    else:
+        cxy = np.asarray(min(clusters, key=lambda c: np.hypot(*c[0]))[0])
+    return _polar(cxy)
 
 
 def imu_compass_to_yaw(compass_rad):
@@ -111,14 +194,15 @@ def points_to_extrinsic_pairs(camera_bearings, lidar_obs):
 
 
 def radar_points_to_observation(points, min_range=1.5, max_range=40.0,
-                                n_nearest=6):
+                                pred=None, gate=3.0, min_nearest=1, n_nearest=6):
     """CARLA Radar 原始检测点 (N,4)[depth, azimuth, altitude, velocity]
-    → 最近目标观测 (r, θ)。
+    → 目标观测 (r, θ)。
 
     CARLA sensor.other.radar 每点 4 个 float32：斜距 depth(m)、水平方位
-    azimuth(rad，以传感器 forward 为 0)、俯仰 altitude(rad)、径向速度
-    velocity(m/s)。按 depth 过滤后取最近若干点均值作为目标观测；
-    方位与 LiDAR/相机同为 ego 体坐标（x 前、y 右，右为正），可直接配对标定。
+    azimuth(rad，右为正)、俯仰 altitude(rad)、径向速度 velocity(m/s)。
+    按 depth 过滤后做目标关联（评审点 4）：
+      - pred=(r_pred, th_pred) 给出时，选离预测位置最近的、距离差 < gate 的点簇；
+      - 未给 pred 时退回最近若干点（bootstrap）。
     返回 None 表示本帧未检出。
     """
     if points is None or len(points) == 0:
@@ -129,6 +213,17 @@ def radar_points_to_observation(points, min_range=1.5, max_range=40.0,
     if not np.any(keep):
         return None
     depth, azimuth = depth[keep], azimuth[keep]
-    k = np.argsort(depth)[:min(n_nearest, depth.size)]
-    return float(depth[k].mean()), float(np.mean(azimuth[k]))
+    if pred is None:
+        k = np.argsort(depth)[:min(n_nearest, depth.size)]
+        return float(depth[k].mean()), float(np.mean(azimuth[k]))
 
+    pref = _xy(float(pred[0]), float(pred[1]))
+    pts_xy = np.stack([depth * np.cos(azimuth), depth * np.sin(azimuth)], axis=1)
+    d = np.hypot(pts_xy[:, 0] - pref[0], pts_xy[:, 1] - pref[1])
+    dmin = float(d.min())
+    if dmin > gate:
+        return None
+    sel = d <= max(dmin + 1.0, 1.5)          # 目标附近一簇点
+    idx = np.where(sel)[0]
+    idx = idx[np.argsort(d[idx])][:min(n_nearest, idx.size)]
+    return float(depth[idx].mean()), float(np.mean(azimuth[idx]))

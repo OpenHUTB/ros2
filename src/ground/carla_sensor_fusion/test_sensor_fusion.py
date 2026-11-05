@@ -100,6 +100,117 @@ def test_sensor_callback_queue():
     print("[OK] CARLA 传感数据回调：camera/lidar/radar/imu 均入队缓冲且可读取")
 
 
+# ---------------- 5. 空 / None 观测不崩溃 ----------------
+def test_none_observations():
+    from fusion_perception import (lidar_points_to_observation,
+                                   mask_to_bearing,
+                                   radar_points_to_observation)
+    assert mask_to_bearing(None, 90.0) == (None, 0)
+    assert lidar_points_to_observation(None) is None
+    assert lidar_points_to_observation(np.zeros((0, 4))) is None
+    assert radar_points_to_observation(None) is None
+    assert radar_points_to_observation(np.zeros((0, 4))) is None
+    print("[OK] 空/None 观测不崩溃（相机/LiDAR/Radar 全部返回 None）")
+
+
+# ---------------- 6. SyncBuffer.get 解包与 None 过滤 ----------------
+def test_sync_get_obs_and_none_filter():
+    b = SyncBuffer(tol=0.05)
+    b.push("radar", 0.1, (3.0, 0.2))
+    got = b.get("radar", 0.1)
+    assert got is not None
+    ts, (r, th) = got                    # 正确解包 (ts, (r, θ))
+    assert abs(r - 3.0) < 1e-9 and abs(th - 0.2) < 1e-9
+    b2 = SyncBuffer(tol=0.05)            # 只 push 有效观测时，空缓冲返回 None
+    assert b2.get("radar", 0.0) is None
+    print("[OK] SyncBuffer.get 解包 (ts,(r,θ))，空缓冲返回 None")
+
+
+# ---------------- 7. 相机观测经外参转换进 EKF ----------------
+def test_camera_extrinsic_into_ekf():
+    ekf = EKF2D(5.0, 3.0)
+    th_rad = transform_camera_bearing(0.2, 5.0, (0.0, 0.0, 0.0))
+    ekf.update_camera(th_rad)
+    assert np.all(np.isfinite(ekf.state()))
+    th_rad2 = transform_camera_bearing(0.2, 5.0, (10.0, 0.5, -0.3))
+    ekf.update_camera(th_rad2)
+    assert np.all(np.isfinite(ekf.state()))
+    print("[OK] 相机观测经外参转换后进 EKF（单位/非零外参均正常）")
+
+
+# ---------------- 8. Fake CARLA 融合周期（捕获 None 解包 TypeError） ----------------
+def test_fake_fusion_cycle():
+    """模拟主循环 3 个融合周期：有效观测入队、None 不入队，再 get→解包→EKF。
+    评审指出旧代码把 None push 进缓冲后解包会 TypeError，本测试覆盖该路径。"""
+    b = SyncBuffer(tol=0.15)
+    ekf = EKF2D(6.0, 1.0)
+    for k in range(3):
+        t = k * 0.05
+        rad_obs = None if k == 0 else (6.0 + 0.1 * k, 0.15)
+        lid_obs = (6.0 + 0.1 * k, 0.14)
+        cam_th = 0.16
+        if rad_obs is not None:
+            b.push("radar", t, rad_obs)
+        if lid_obs is not None:
+            b.push("lidar", t, lid_obs)
+        if cam_th is not None:
+            b.push("camera", t, cam_th)
+        ekf.predict(0.05)
+        rad = b.get("radar", t)
+        lid = b.get("lidar", t)
+        cam = b.get("camera", t)
+        if rad is not None and rad[1] is not None:
+            _, (r_ref, th_body) = rad
+            ekf.update_radar(r_ref, th_body)
+        if lid is not None and lid[1] is not None:
+            _, (r_lidar, th_lidar) = lid
+            ekf.update_radar(r_lidar, th_lidar)
+        if cam is not None and cam[1] is not None:
+            _, cam_bearing = cam
+            th_rad = transform_camera_bearing(cam_bearing, 6.0,
+                                              (0.0, 0.0, 0.0))
+            ekf.update_camera(th_rad)
+    assert np.all(np.isfinite(ekf.state()))
+    print("[OK] Fake CARLA 3 个融合周期：None/有效观测混合解包无 TypeError")
+
+
+# ---------------- 9. 多车场景：ROI 关联锁定目标 ----------------
+def test_multi_target_association():
+    from fusion_perception import (bearing_to_pixel, image_to_bearing,
+                                   mask_to_bearing)
+    mask = np.zeros((200, 400), dtype=np.uint8)
+    mask[80:120, 100:140] = 10            # 目标（列≈120）
+    mask[80:120, 280:320] = 10            # 干扰车（列≈300）
+    th_pred, _ = mask_to_bearing(
+        mask, 90.0, pred_bearing=image_to_bearing(120, 400, 90.0))
+    assert th_pred is not None
+    u_t = bearing_to_pixel(th_pred, 400, 90.0)
+    assert abs(u_t - 120) < 10, f"有 pred 应锁定目标列 120，实际 {u_t:.0f}"
+    print(f"[OK] 多车场景 ROI 关联：有 pred 锁定目标列≈{u_t:.0f}（非两车质心）")
+
+
+# ---------------- 10. LiDAR/Radar 杂波下按 pred 选目标 ----------------
+def test_lidar_radar_association():
+    from fusion_perception import (lidar_points_to_observation,
+                                   radar_points_to_observation)
+    pts = np.array([[3.0, 0.0, 0.0, 0.0],      # 近处杂波簇（3 点，间距>voxel）
+                    [3.5, 0.0, 0.0, 0.0],
+                    [3.0, 0.5, 0.0, 0.0],
+                    [12.0, 0.0, 0.0, 0.0],     # 目标簇
+                    [12.5, 0.0, 0.0, 0.0],
+                    [12.0, 0.5, 0.0, 0.0]])
+    near = lidar_points_to_observation(pts, min_range=1.5, pred=None)
+    tgt = lidar_points_to_observation(pts, min_range=1.5, pred=(12.0,))
+    assert near is not None and abs(near[0] - 3.0) < 1.0, "无 pred 应退回最近点"
+    assert tgt is not None and abs(tgt[0] - 12.0) < 1.5, "有 pred 应锁定目标"
+    rpts = np.array([[2.0, 0.0, 0.0, 0.0],     # 近处杂波
+                     [10.0, 0.05, 0.0, 0.0],   # 目标
+                     [10.1, 0.06, 0.0, 0.0]])
+    rob = radar_points_to_observation(rpts, pred=(10.0, 0.05))
+    assert rob is not None and abs(rob[0] - 10.0) < 1.0
+    print("[OK] LiDAR/Radar 杂波下按 pred 锁定目标（非最近反射点）")
+
+
 def run():
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

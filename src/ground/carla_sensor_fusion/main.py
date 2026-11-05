@@ -62,6 +62,8 @@ def main(argv=None):
     p.add_argument("--out", default="fusion_demo.gif",
                    help="动图输出路径（本地默认 fusion_demo.gif）")
     p.add_argument("--csv", default="fusion_metrics.csv")
+    p.add_argument("--warmup-frames", type=int, default=0,
+                   help="统计 RMSE 时跳过前 N 帧（默认 0=全程统计）")
     p.add_argument("--show", action="store_true")
 
     p = sub.add_parser("carla", help="CARLA 渲染版（需本机 CARLA）")
@@ -80,7 +82,8 @@ def main(argv=None):
     if args.cmd == "sim2d":
         from sim_2d_fusion import main as sim_main
         argv_s = ["--frames", str(args.frames), "--fps", str(args.fps),
-                  "--out", args.out, "--csv", args.csv]
+                  "--out", args.out, "--csv", args.csv,
+                  "--warmup-frames", str(args.warmup_frames)]
         if args.show:
             argv_s.append("--show")
         return sim_main(argv_s)
