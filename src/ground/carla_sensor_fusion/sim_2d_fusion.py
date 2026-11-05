@@ -18,11 +18,12 @@ sim_2d_fusion.py —— 轻量 2D 多传感器融合仿真（matplotlib 渲染�
 依赖：numpy, matplotlib, Pillow
 """
 import argparse
+import csv
+import math
 import os
 
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -95,13 +96,21 @@ def run_fusion_step(buffer, ekf_fused, ekf_radar, sig_imu, truth_f, t):
     return ekf_fused.state(), ekf_radar.state(), (obs_radar, cam_th), ages
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--frames", type=int, default=240)
     ap.add_argument("--fps", type=int, default=30)
-    ap.add_argument("--out", default="fusion_demo.gif")
+    ap.add_argument("--out", default="fusion_demo.gif",
+                    help="动图输出路径（本地运行默认 fusion_demo.gif；文档展示动图 "
+                         "docs/img/ground/carla_sensor_fusion_demo.gif 已入库，如需更新可 --out 指定）")
     ap.add_argument("--show", action="store_true")
-    args = ap.parse_args()
+    ap.add_argument("--csv", default="fusion_metrics.csv")
+    ap.add_argument("--warmup-frames", type=int, default=0,
+                    help="统计 RMSE 时跳过前 N 帧（默认 0=全程统计；可设如 40 只评收敛稳定段）")
+    args = ap.parse_args(argv)
+
+    # 后端按需选择：--show 用可交互后端（TkAgg），否则用 Agg（无显示环境也能稳定出图）
+    matplotlib.use("TkAgg" if args.show else "Agg")
 
     RNG = np.random.default_rng(7)
     sig_r, sig_th_r = 0.5, 0.10    # 雷达：测距准、方位较粗
@@ -160,6 +169,8 @@ def main():
 
     est_hist = []
     error_patch = [None]
+    # RMSE 累计（融合 vs 仅雷达），结束统一打印并写 CSV
+    err_sq_f, err_sq_r, n_cnt, n_frames = [0.0], [0.0], [0], [0]
 
     def update(frame):
         nonlocal t
@@ -201,6 +212,11 @@ def main():
         truth = target_truth(t)
         err_f = np.linalg.norm(st_f[:2] - truth)
         err_r = np.linalg.norm(st_r[:2] - truth)
+        if n_frames[0] >= args.warmup_frames:      # 跳过滤波器收敛段
+            err_sq_f[0] += err_f * err_f
+            err_sq_r[0] += err_r * err_r
+            n_cnt[0] += 1
+        n_frames[0] += 1
         info.set_text(
             f"t = {t:.1f} s\n"
             f"err  fused = {err_f:.2f} m   radar-only = {err_r:.2f} m\n"
@@ -220,6 +236,22 @@ def main():
           f"{os.path.getsize(args.out)//1024} KB)")
     if args.show:
         plt.show()
+
+    # ---- 结束汇总：把 RMSE 指标打印出来并写入 CSV（评审点：指标不应只在文档里） ----
+    if n_cnt[0]:
+        rmse_f = math.sqrt(err_sq_f[0] / n_cnt[0])
+        rmse_r = math.sqrt(err_sq_r[0] / n_cnt[0])
+        improve = (1.0 - rmse_f / rmse_r) * 100.0 if rmse_r > 0 else 0.0
+        print(f"[OK] 2D 实测指标: 融合 RMSE={rmse_f:.3f} m  仅雷达 RMSE={rmse_r:.3f} m  "
+              f"提升≈{improve:.1f}%（{n_cnt[0]} 帧）")
+        with open(args.csv, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["metric", "value"])
+            w.writerow(["rmse_fused_m", f"{rmse_f:.3f}"])
+            w.writerow(["rmse_radar_only_m", f"{rmse_r:.3f}"])
+            w.writerow(["improvement_pct", f"{improve:.1f}"])
+            w.writerow(["samples", n_cnt[0]])
+        print(f"[i] 指标已写入 {os.path.abspath(args.csv)}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,17 @@
+<launch>
+  <!-- ============================================================
+       carla_sensor_fusion 统一启动入口
+         roslaunch carla_sensor_fusion main.launch              # 默认 2D 轻量合成仿真
+         roslaunch carla_sensor_fusion main.launch mode:=carla  # CARLA 渲染版(需本机 CARLA)
+
+       非 ROS 环境可直接运行统一入口：
+         python3 main.py sim2d
+         python3 main.py carla
+       ============================================================ -->
+
+  <arg name="mode" default="sim2d" doc="sim2d:2D轻量合成仿真(默认); carla:CARLA渲染版"/>
+
+  <!-- 通过 main.py 统一入口调度两个平台 -->
+  <node pkg="carla_sensor_fusion" type="main.py" name="sensor_fusion" output="screen"
+        args="$(arg mode)"/>
+</launch>

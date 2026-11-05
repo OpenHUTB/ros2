@@ -1,16 +1,16 @@
 # 多传感器融合跟踪（Radar + Camera + IMU）
 
-地面载具多传感器真融合：对单个移动目标做融合跟踪，覆盖 **外参标定 → 时间同步 → EKF 融合** 完整链路。
+地面载具多传感器真融合：对单个移动目标做融合跟踪，覆盖 **外参标定 → 时间同步 → 载体运动补偿 → EKF 融合** 完整链路。
 
 同一套融合核心（`sensor_fusion_core.py`）被两个平台复用：
 
-- **CARLA 渲染版**（`carla_sensor_fusion.py`）：在 ego 车挂载 相机(camera)、激光雷达(lidar)、IMU 三个传感器，采集数据后做标定、时间同步与 EKF 融合，需本机装 CARLA 运行。
-- **2D 轻量版**（`sim_2d_fusion.py`）：合成传感器仿真，可直接运行并生成效果动图 `fusion_demo.gif`——即本融合算法的真实运行效果演示。
+- **CARLA 渲染版**（`carla_sensor_fusion.py`）：在 ego 车挂载 相机(camera)、激光雷达(lidar)、毫米波雷达(radar)、IMU 四个真实传感器，listen 回调把原始数据入队缓冲，经语义分割/点云/雷达点检测得到目标观测后做标定、时间同步与 EKF 融合。
+- **2D 轻量版**（`sim_2d_fusion.py`）：合成传感器仿真，可直接运行并生成效果动图 `fusion_demo.gif` 与指标 CSV——本融合算法真实运行效果演示。
 
 ## 融合链路
 
-1. **外参标定**：最小二乘估计相机↔雷达相对旋转/平移，把各传感器观测统一到同一坐标系。
-2. **时间同步**：雷达 ~10Hz、相机 ~30Hz、IMU ~100Hz，按「最近时间戳」对齐到 20Hz 融合网格，超过容差视为失同步。
+1. **外参标定**：`estimate_extrinsic_2d` 最小二乘估计相机↔雷达相对旋转/平移，标定结果通过 `transform_camera_bearing` 直接参与相机观测的坐标系对齐后再送 EKF。
+2. **时间同步**：`SyncBuffer` 按「最近时间戳」把雷达 ~10Hz、相机 ~30Hz、IMU ~100Hz 对齐到 20Hz 融合网格，超过容差判失同步。
 3. **载体运动补偿**：IMU 估计载体姿态角，把各传感器体坐标观测转到世界系。
 4. **EKF 融合**：世界系 4 态 `[px,py,vx,vy]`，匀速预测，分别用雷达（距离+方位）与相机（方位）观测更新。
 
@@ -18,22 +18,30 @@
 
 ```
 carla_sensor_fusion/
-├── sensor_fusion_core.py  # 共享核心（外参标定 / 时间同步 / EKF 融合）
-├── carla_sensor_fusion.py # CARLA 渲染版主脚本
-├── sim_2d_fusion.py       # 2D 轻量仿真版主脚本
-├── fusion_demo.gif        # 2D 版真实运行效果动图
+├── main.py                  # 统一入口（doctor / test / sim2d / carla）
+├── sensor_fusion_core.py    # 共享核心（外参标定 / 时间同步 / EKF 融合）
+├── fusion_perception.py     # 原始数据 → 目标级观测（纯 numpy，可单测）
+├── carla_sensor_fusion.py   # CARLA 渲染版主脚本（真实传感器回调链路）
+├── sim_2d_fusion.py         # 2D 轻量仿真版主脚本（生成动图 + 指标 CSV）
+├── test_sensor_fusion.py    # 离线最小测试（无需 CARLA）
+├── launch/main.launch       # ROS launch 统一启动入口
+├── package.xml / setup.py   # catkin 包声明（支持 rosrun/roslaunch）
+├── fusion_demo.gif          # 2D 版本地运行生成的动图（本地调试用）
+│                            #   文档展示动图统一入库 docs/img/ground/carla_sensor_fusion_demo.gif（不重复存放）
 ├── requirements.txt
 └── README.md
 ```
 
 ## 运行
 
-### 2D 轻量版（本工程直接可跑，生成动图）
+### 2D 轻量版（本工程直接可跑，生成动图 + 指标 CSV）
 
 ```bash
 pip install numpy matplotlib Pillow
-python3 sim_2d_fusion.py                 # 生成 fusion_demo.gif
-python3 sim_2d_fusion.py --show          # 弹出窗口实时查看
+python3 sim_2d_fusion.py                    # 生成 fusion_demo.gif + fusion_metrics.csv
+python3 sim_2d_fusion.py --show             # 弹出窗口实时查看（自动切换交互后端）
+python3 main.py sim2d                       # 等价统一入口
+python3 main.py sim2d --warmup-frames 40    # RMSE 只统计收敛稳定段
 ```
 
 ### CARLA 渲染版（需本机装 CARLA）
@@ -41,7 +49,15 @@ python3 sim_2d_fusion.py --show          # 弹出窗口实时查看
 ```bash
 export PYTHONPATH=/opt/carla/PythonAPI/carla/dist/carla-<ver>-py3.7-linux-x86_64.egg:$PYTHONPATH
 pip install numpy
-python3 carla_sensor_fusion.py --map Town03 --frames 600
+python3 main.py carla --map Town03 --seconds 30    # 统一入口
+python3 carla_sensor_fusion.py --map Town03 --ticks 3000
+```
+
+### 离线测试与依赖体检
+
+```bash
+python3 main.py test        # 外参标定 / 时间同步 / EKF / 传感器回调 最小测试
+python3 main.py doctor      # 依赖体检
 ```
 
 ## 参数说明
@@ -54,11 +70,26 @@ python3 carla_sensor_fusion.py --map Town03 --frames 600
 | `sig_imu` | IMU 姿态估计噪声 (rad) | 0.012 |
 | 融合频率 | EKF 更新周期 | 20 Hz |
 
-## 运行效果
+## 实测指标（脚本结束打印并写入 CSV）
 
-`fusion_demo.gif` 为 2D 轻量版真实运行效果：载体(ego)在原点缓慢横摆，跟踪沿 8 字轨迹运动的目标。
-图中同时显示 **EKF 融合（雷达+相机）** 与 **仅雷达跟踪** 两条估计线，以及雷达原始观测（红 ×）、相机方位射线（绿）、估计协方差椭圆。
-实测融合 RMSE ≈ 0.60 m，仅雷达 ≈ 0.97 m，**融合比单传感器提升约 38%**（相机 30Hz 高频方位补偿了雷达方位分辨率与采样率的不足）。
+`sim_2d_fusion.py` 运行结束会打印并写入 `fusion_metrics.csv`。全程（240 帧 @ 30fps）实测：
+
+| 指标 | 值 |
+|------|-----|
+| EKF 融合 RMSE | ≈ 0.73 m |
+| 仅雷达 RMSE | ≈ 1.07 m |
+| 融合提升 | ≈ 32% |
+
+相机 30Hz 高频方位补偿了雷达方位分辨率与采样率的不足，融合误差低于单雷达。
+
+## 最小测试
+
+`test_sensor_fusion.py` 覆盖 4 项（无需 CARLA / ROS）：外参标定恢复、时间同步最近/超时、EKF 收敛、CARLA 传感器回调入队缓冲。
+
+## 环境与限制声明（如实）
+
+- **本沙箱无 GPU / CARLA / ROS**：`carla_sensor_fusion.py` 的 CARLA 链路按官方 API 完整实现（真实传感器 listen 回调、队列缓冲、语义分割/点云/雷达点检测），但未在沙箱实跑，需本机启动 CARLA 后执行 `python3 main.py carla` 验证。
+- **2D 轻量版为合成传感器仿真**：传感器观测由真值加高斯噪声合成，用于算法演示与指标复现，不是真实物理传感器数据。文档/PR 已如实声明此定位，不夸大。
 
 ## 合规说明
 
