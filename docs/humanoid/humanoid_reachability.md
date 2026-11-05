@@ -110,7 +110,7 @@ src/
 | `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
 | `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
 
-命名约定：`humanoid_reachability_node` 的输出全部使用 `~/` 私有命名空间（实际解析为 `/humanoid_reachability/...`），多实例运行时互不抢占话题，也方便 remap；`/demo_joint_angles` 有意保持绝对路径，用于 `arm_demo_node` 与主节点之间松耦合，两个节点可以各自替换或单独启动。
+命名约定：`humanoid_reachability_node` 的输出全部使用 `~/` 私有命名空间（实际解析为 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也方便 remap；`/demo_joint_angles` 有意保持绝对路径，用于 `arm_demo_node` 与主节点之间松耦合，两个节点可以各自替换或单独启动。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -149,7 +149,7 @@ src/
 本模块已在该虚拟机上完成以下验证：
 
 - 干净工作空间编译通过：`Finished <<< humanoid_reachability [11.5s]`，`Summary: 1 package finished`；
-- 两个节点正常启动，采样完成后 `20.78 s` 内完成双臂统计；
+- 两个节点正常启动，初始化耗时 `20.78 s`，之后开始周期性发布话题；
 - `/humanoid_reachability/reachable_volume`、`/humanoid_reachability/reachable_bounds`、`/humanoid_reachability/reachability_stats` 数值与 launch 日志一致；
 - `/humanoid_reachability/reachable_workspace` 除首帧 1 个 `DELETEALL` 外，持续发布 15 个结构合法的标记，命名空间、`frame_id=world`、点集数量均已校验；
 - 左右臂末端坐标（`/humanoid_reachability/demo_end_effector_left`、`/humanoid_reachability/demo_end_effector_right` 与 300 点轨迹）随演示关节角连续变化；包围盒、体积与切片在采样阶段一次算出，运行期间保持不变。

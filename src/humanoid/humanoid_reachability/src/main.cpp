@@ -45,11 +45,13 @@ public:
     if (voxel_resolution_ <= 0.0 || slice_height_ <= 0.0 || publish_rate_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：voxel_resolution / slice_height / publish_rate 必须为正数，节点退出");
       // 在构造函数内直接请求关闭，避免 launch 层看到节点“启动成功却什么都不做”
+      params_valid_ = false;
       rclcpp::shutdown();
       return;
     }
     if (samples_per_arm_ <= 0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：samples_per_arm 必须为正整数，节点退出");
+      params_valid_ = false;
       rclcpp::shutdown();
       return;
     }
@@ -83,6 +85,12 @@ public:
       std::chrono::duration_cast<std::chrono::milliseconds>(period),
       std::bind(&ReachabilityNode::publish_all, this));
 
+  }
+
+  /// 参数校验是否通过；用于让 main 返回非零退出码，使 launch 层能识别失败
+  bool parameters_valid() const
+  {
+    return params_valid_;
   }
 
 private:
@@ -134,13 +142,23 @@ private:
   {
     if (init_timer_) {
       init_timer_->cancel();
-      init_timer_.reset();
     }
     const auto start = std::chrono::steady_clock::now();
     compute_workspace();
     log_summary();
     const auto elapsed = std::chrono::duration<double>(
       std::chrono::steady_clock::now() - start).count();
+    // 初始化期间订阅回调被阻塞，清空演示姿态与轨迹，避免把积压的旧帧当作最新状态
+    {
+      std::lock_guard<std::mutex> lock(demo_mutex_);
+      for (int side = 0; side < 2; ++side) {
+        traces_[side].clear();
+        demo_q_[side].fill(0.0);
+        for (int i = 0; i < kDof; ++i) {
+          demo_q_[side][i] = 0.5 * (arms_[side].joints[i].lower + arms_[side].joints[i].upper);
+        }
+      }
+    }
     RCLCPP_INFO(get_logger(), "初始化完成，耗时 %.2f s", elapsed);
   }
 
@@ -651,6 +669,7 @@ private:
   rclcpp::Subscription<Float64MultiArray>::SharedPtr demo_sub_;
   rclcpp::TimerBase::SharedPtr init_timer_;  ///< one-shot 后台初始化
   rclcpp::TimerBase::SharedPtr timer_;
+  bool params_valid_{true};  ///< 参数校验结果，false 时 main 返回非零退出码
 };
 
 }  // namespace humanoid_reachability
@@ -659,12 +678,14 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   try {
-    rclcpp::spin(std::make_shared<humanoid_reachability::ReachabilityNode>());
+    auto node = std::make_shared<humanoid_reachability::ReachabilityNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    // 参数错误会导致构造函数内 shutdown，这里用退出码让 launch 层识别失败
+    return node->parameters_valid() ? 0 : 1;
   } catch (const std::exception & e) {
     std::cerr << "ReachabilityNode 运行异常: " << e.what() << std::endl;
     rclcpp::shutdown();
     return 1;
   }
-  rclcpp::shutdown();
-  return 0;
 }

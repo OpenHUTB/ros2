@@ -67,7 +67,7 @@ ros2 launch humanoid_reachability main.launch.py
 | `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
 | `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
 
-话题命名约定：`humanoid_reachability_node` 自身的输出统一使用 `~/` 私有命名空间（即 `/humanoid_reachability/...`），因此同一工作空间启动多个实例时不会互相抢占话题，也便于用 `ros2 run ... --remap` 重映射；只有跨节点的 `/demo_joint_angles` 保持绝对路径，使 `arm_demo_node` 与主节点保持松耦合，任意一方都可以单独替换。
+话题命名约定：`humanoid_reachability_node` 自身的输出统一使用 `~/` 私有命名空间（即 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也便于用 `ros2 run ... --remap` 重映射；只有跨节点的 `/demo_joint_angles` 保持绝对路径，使 `arm_demo_node` 与主节点保持松耦合，任意一方都可以单独替换。
 
 ## 参数
 
@@ -127,7 +127,8 @@ Fixed Frame 设为 `world`，MarkerArray 话题选择 `/humanoid_reachability/re
 - 均匀随机采样在高维关节空间下存在覆盖盲区，体素体积随采样数与分辨率变化，属于估计值而非解析解；
 - 右臂由左臂几何镜像得到，未建模左右侧实际差异；
 - 末端参考点固定为腕点沿局部 x 轴 0.10 m 处，未建模手指与工具；
-- 静态参考骨架（躯干、骨盆、下肢、头部）仅用于空间参照，不参与可达域计算。
+- 静态参考骨架（躯干、骨盆、下肢、头部）仅用于空间参照，不参与可达域计算；
+- 初始化约 20 s 期间单线程执行器被占用，`/demo_joint_angles` 的订阅回调同样被阻塞，深度 10 的队列会在初始化结束后集中补发旧帧；初始化完成时已清空 `traces_` 并将 `demo_q_` 重置到关节中位，轨迹从初始化完成后重新累计，但补发的旧帧仍可能造成短暂跳动。
 
 ## 许可
 

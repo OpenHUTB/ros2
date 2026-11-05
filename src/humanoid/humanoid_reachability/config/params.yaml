@@ -1,8 +1,7 @@
 humanoid_reachability:
   ros__parameters:
-    # 每臂均匀随机采样次数（7 维关节空间）
+    # 每臂均匀随机采样次数（7 维关节空间）；需保持为正数，过小会导致可达域覆盖不全
     samples_per_arm: 200000
-    # 注意：samples_per_arm 建议保持为正数，过小会导致可达域覆盖不全
     # 体素边长（m），越小体积估计越精细、体素数量越多
     voxel_resolution: 0.03
     # 高度切片厚度（m）

@@ -28,6 +28,7 @@ public:
 
     if (publish_hz_ <= 0.0 || period_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：publish_hz / period 必须为正数，节点退出");
+      params_valid_ = false;
       rclcpp::shutdown();
       return;
     }
@@ -44,6 +45,12 @@ public:
     RCLCPP_INFO(
       get_logger(), "双臂关节演示已启动：%.1f Hz，周期 %.1f s，振幅系数 %.2f",
       publish_hz_, period_, amplitude_scale_);
+  }
+
+  /// 参数校验是否通过；用于让 main 返回非零退出码，使 launch 层能识别失败
+  bool parameters_valid() const
+  {
+    return params_valid_;
   }
 
 private:
@@ -83,6 +90,7 @@ private:
   rclcpp::Time start_time_;
   rclcpp::Publisher<Float64MultiArray>::SharedPtr publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
+  bool params_valid_{true};  ///< 参数校验结果，false 时 main 返回非零退出码
 };
 
 }  // namespace humanoid_reachability
@@ -91,12 +99,14 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   try {
-    rclcpp::spin(std::make_shared<humanoid_reachability::ArmDemoNode>());
+    auto node = std::make_shared<humanoid_reachability::ArmDemoNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    // 参数错误会导致构造函数内 shutdown，这里用退出码让 launch 层识别失败
+    return node->parameters_valid() ? 0 : 1;
   } catch (const std::exception & e) {
     std::cerr << "ArmDemoNode 运行异常: " << e.what() << std::endl;
     rclcpp::shutdown();
     return 1;
   }
-  rclcpp::shutdown();
-  return 0;
 }

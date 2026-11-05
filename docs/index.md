@@ -1,4 +1,4 @@
-title: 主页
+﻿title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -81,7 +81,7 @@ ROS每章节运行代码:
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
-* [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
+*  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -277,4 +277,3 @@ ___
 ___
 
 ## 参考文献
-
