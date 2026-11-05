@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>CARLA 手动控制：设置并连接到 CARLA 模拟器 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "CARLA \u624b\u52a8\u63a7\u5236\uff1a\u8bbe\u7f6e\u5e76\u8fde\u63a5\u5230 CARLA \u6a21\u62df\u5668";
+        var mkdocs_page_input_path = "control/carla_manual_control.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/zmp_walk_planner/">简化双足步态动画演示</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_reach/">MuJoCo双关节肌肉骨骼手臂到达控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_vehicle_aeb/">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_parallel_parking/">MuJoCo侧方停车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/UNav-sim_ue5/">水下机器人 Unreal Engine 5 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（合成视频演示）</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item active">CARLA 手动控制：设置并连接到 CARLA 模拟器</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/control/carla_manual_control.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="carla-carla">CARLA 手动控制：设置并连接到 CARLA 模拟器</h1>
+<blockquote>
+<p><strong>Abstract (English)</strong>: This document records a verified CARLA 0.9.14 + ROS 2 Humble
+manual-driving setup. The CARLA simulator runs on a Windows host, while the Python API
+and <code>carla_ros_bridge</code> run inside an Ubuntu 20.04 virtual machine. Note that ROS 2
+Humble officially targets Ubuntu 22.04; the combination documented here is a
+source-built, non-officially-supported setup that has been validated end to end. The
+CARLA Python API <strong>must</strong> be installed from the PyPI <code>carla==0.9.14</code> cp38 wheel — the
+bundled <code>py3.7</code> egg cannot be imported by Python 3.8.</p>
+</blockquote>
+<p>中文摘要：本文记录在 Windows 宿主机 + Ubuntu 20.04 虚拟机上，用 CARLA 0.9.14 与
+ROS 2 Humble 实现 <code>ego_vehicle</code> 手动控制的完整流程，并给出各版本组件的实测验证方式。</p>
+<h2 id="_1">一、项目概述</h2>
+<p>本项目基于 <strong>CARLA 0.9.14</strong> 和 <strong>ROS 2 Humble</strong>，实现对 CARLA 模拟器中 <code>ego_vehicle</code>
+的手动控制。通过 <code>carla_manual_control</code> 节点，可以用键盘控制车辆行驶、转向、刹车和倒车。</p>
+<h3 id="11">1.1 系统架构</h3>
+<ul>
+<li><strong>Windows 宿主机</strong>：运行 CARLA 0.9.14 服务器（提供 3D 渲染和物理引擎）</li>
+<li><strong>Ubuntu 20.04 虚拟机</strong>：运行 ROS 2 Humble 和 CARLA ROS Bridge（通过网络连接 CARLA 服务器）</li>
+</ul>
+<h3 id="12">1.2 功能</h3>
+<ul>
+<li>手动控制（键盘 W/A/S/D 控制车辆）</li>
+<li>中文部署文档</li>
+</ul>
+<h2 id="_2">二、环境准备</h2>
+<h3 id="21">2.1 硬件与系统</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>宿主机</td>
+<td>Windows 10 / 11</td>
+</tr>
+<tr>
+<td>虚拟机</td>
+<td>VMware Workstation</td>
+</tr>
+<tr>
+<td>虚拟机系统</td>
+<td>Ubuntu 20.04.6 LTS</td>
+</tr>
+<tr>
+<td>虚拟机内存</td>
+<td>8 GB 以上</td>
+</tr>
+<tr>
+<td>虚拟机处理器</td>
+<td>4 核以上</td>
+</tr>
+<tr>
+<td>显卡</td>
+<td>支持 Vulkan 的独立显卡（宿主机）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 软件版本</h3>
+<p>本文档描述的是一组<strong>已实测通过</strong>的版本组合，它并不等同于 ROS 2 的官方支持矩阵，
+请勿与其他版本混搭。</p>
+<table>
+<thead>
+<tr>
+<th>软件</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>操作系统</td>
+<td>Ubuntu 20.04.6 LTS</td>
+<td>虚拟机</td>
+</tr>
+<tr>
+<td>ROS 2</td>
+<td>Humble</td>
+<td>源码编译安装（<code>dpkg</code> 中无 <code>ros-humble-*</code> 包）。Humble 官方目标平台是 Ubuntu 22.04，本组合属<strong>非官方支持</strong>，仅记录实测结果</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.8.10</td>
+<td>Ubuntu 20.04 系统自带，ROS 2 节点与 CARLA Python API 共用此解释器</td>
+</tr>
+<tr>
+<td>CARLA</td>
+<td>0.9.14</td>
+<td>Windows 服务器 + Linux Python API</td>
+</tr>
+<tr>
+<td>CARLA Python API</td>
+<td><code>carla==0.9.14</code>（<strong>cp38</strong> wheel，来自 PyPI）</td>
+<td>不能用发行包里自带的 <code>py3.7</code> egg，见 5.9</td>
+</tr>
+<tr>
+<td>CARLA ROS Bridge</td>
+<td>1.3.0</td>
+<td><code>carla-simulator/ros-bridge</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ 版本一致性是这套环境最容易踩的坑：CARLA 官方 Linux 包里只带 <code>py3.7</code> 的 egg，
+而 Ubuntu 20.04 的 <code>python3</code> 是 3.8。两者 ABI 不兼容，必须另外安装 cp38 版本。</p>
+</blockquote>
+<h2 id="_3">三、部署流程</h2>
+<h3 id="31-carla-0914">3.1 下载 CARLA 0.9.14</h3>
+<p>Windows 版（用于宿主机服务器）：</p>
+<div class="highlight"><pre><span></span><code>https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/CARLA_0.9.14.zip
+</code></pre></div>
+<p>解压到 <code>D:\CARLA_0.9.14\WindowsNoEditor\</code>。</p>
+<p>Linux 版（用于 Ubuntu 的 Python API）：</p>
+<div class="highlight"><pre><span></span><code>https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/CARLA_0.9.14.tar.gz
+</code></pre></div>
+<p>在 Ubuntu 上解压：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~
+tar<span class="w"> </span>-xzvf<span class="w"> </span>CARLA_0.9.14.tar.gz
+</code></pre></div>
+<h3 id="32-carla-ros-bridge">3.2 安装 CARLA ROS Bridge</h3>
+<ol>
+<li>创建工作空间并克隆代码：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/carla-ros-bridge<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge
+git<span class="w"> </span>clone<span class="w"> </span>https://gitclone.com/github.com/carla-simulator/ros-bridge.git<span class="w"> </span>src/ros-bridge
+</code></pre></div>
+<ol>
+<li>修复子模块地址：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/src/ros-bridge
+sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'s|https://github.com/|https://gitclone.com/github.com/|g'</span><span class="w"> </span>.gitmodules
+git<span class="w"> </span>submodule<span class="w"> </span>sync
+git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+</code></pre></div>
+<ol>
+<li>安装依赖并编译：</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+rosdep<span class="w"> </span>update
+rosdep<span class="w"> </span>install<span class="w"> </span>--from-paths<span class="w"> </span>src<span class="w"> </span>--ignore-src<span class="w"> </span>-r
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-skip<span class="w"> </span>rviz_carla_plugin<span class="w"> </span>carla_ad_demo<span class="w"> </span>pcl_recorder
+</code></pre></div>
+<h3 id="33-carla-python-api">3.3 安装并验证 CARLA Python API</h3>
+<p><strong>不要</strong>把发行包里的 <code>carla-0.9.14-py3.7-linux-x86_64.egg</code> 加进 <code>PYTHONPATH</code>，
+它无法被 Python 3.8 导入。正确做法是从 PyPI 安装 cp38 的 wheel：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--upgrade<span class="w"> </span>pip
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--no-deps<span class="w"> </span><span class="nv">carla</span><span class="o">==</span><span class="m">0</span>.9.14
+</code></pre></div>
+<p>验证 1 —— 确认模块来自 <code>site-packages</code>：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import carla; print(carla.__file__)"</span>
+</code></pre></div>
+<p>实测输出：</p>
+<div class="highlight"><pre><span></span><code>/home/user/.local/lib/python3.8/site-packages/carla/__init__.py
+</code></pre></div>
+<p>验证 2 —— 启动 CARLA 服务器后，打印客户端/服务端版本：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import carla; c = carla.Client('192.168.0.3', 2000); c.set_timeout(10); print(c.get_client_version(), c.get_server_version())"</span>
+</code></pre></div>
+<p>预期输出：</p>
+<div class="highlight"><pre><span></span><code>0.9.14 0.9.14
+</code></pre></div>
+<blockquote>
+<p>注意：CARLA 0.9.14 的 Python 模块<strong>没有</strong> <code>__version__</code> 属性，其
+<code>carla/__init__.py</code> 只有一行 <code>from .libcarla import *</code>。因此
+<code>carla.__version__</code> 会抛 <code>AttributeError</code>，这是正常现象，不能作为验证依据，
+请使用上面的 <code>carla.__file__</code> 或 <code>get_client_version()</code>。</p>
+</blockquote>
+<p>安装完成后<strong>不需要</strong>再设置 <code>PYTHONPATH</code>。如果 <code>~/.bashrc</code> 里残留了旧的行，请一并删除：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 删除类似下面这样的残留（已废弃的写法）</span>
+<span class="c1"># export CARLA_ROOT=$HOME/PythonAPI</span>
+<span class="c1"># export PYTHONPATH=$CARLA_ROOT/carla/dist/carla-0.9.14-py3.7-linux-x86_64.egg:$CARLA_ROOT/carla:$PYTHONPATH</span>
+</code></pre></div>
+<h3 id="34-carla">3.4 修改 CARLA 版本检查</h3>
+<p>ROS Bridge 默认要求 CARLA 0.9.13，需要修改为 0.9.14：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span><span class="w"> </span><span class="s2">"0.9.14"</span><span class="w"> </span>&gt;<span class="w"> </span>~/carla-ros-bridge/src/ros-bridge/carla_ros_bridge/src/carla_ros_bridge/CARLA_VERSION
+<span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_ros_bridge
+</code></pre></div>
+<h3 id="35-ego_vehicle">3.5 修改 ego_vehicle 车型</h3>
+<p>编辑 <code>objects.json</code>，把 <code>ego_vehicle</code> 的车型从 <code>vehicle.tesla.model3</code> 改成 <code>vehicle.audi.a2</code>：</p>
+<div class="highlight"><pre><span></span><code>nano<span class="w"> </span>~/carla-ros-bridge/src/ros-bridge/carla_spawn_objects/config/objects.json
+</code></pre></div>
+<p>找到：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vehicle.tesla.model3"</span><span class="p">,</span>
+<span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ego_vehicle"</span><span class="p">,</span>
+</code></pre></div>
+<p>改成：</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vehicle.audi.a2"</span><span class="p">,</span>
+<span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ego_vehicle"</span><span class="p">,</span>
+</code></pre></div>
+<p>重新编译：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>carla_spawn_objects
+</code></pre></div>
+<h3 id="36-vmware">3.6 配置 VMware 网络</h3>
+<ol>
+<li>在 VMware 里设置桥接模式：</li>
+</ol>
+<p><code>虚拟机 → 设置 → 网络适配器 → 桥接模式：直接连接物理网络</code>，并勾选「复制物理网络连接状态」。</p>
+<ol>
+<li>在 VMware 虚拟网络编辑器里，把 VMnet0 桥接到 WLAN 网卡：</li>
+</ol>
+<p><code>编辑 → 虚拟网络编辑器 → 更改设置 → 选中 VMnet0 → 桥接到实际的无线网卡</code>。</p>
+<ol>
+<li>在 Ubuntu 里获取 IP：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>dhclient<span class="w"> </span>ens33
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>ens33<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"inet "</span>
+</code></pre></div>
+<ol>
+<li>测试连接 Windows 上的 CARLA（<code>192.168.0.3</code> 换成宿主机当前 IP）：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>nc<span class="w"> </span>-zv<span class="w"> </span><span class="m">192</span>.168.0.3<span class="w"> </span><span class="m">2000</span>
+</code></pre></div>
+<p>显示 <code>succeeded</code> 即可。</p>
+<h2 id="_4">四、启动流程</h2>
+<h3 id="41-windows-carla">4.1 启动 Windows 上的 CARLA 服务器</h3>
+<p>进入 <code>D:\CARLA_0.9.14\WindowsNoEditor\</code>，双击 <code>CarlaUE4.exe</code>，等 1–2 分钟让它完全加载。</p>
+<p>确认监听 2000 端口：</p>
+<div class="highlight"><pre><span></span><code>netstat -ano | findstr 2000
+</code></pre></div>
+<p>应该只有一行 <code>LISTENING</code>。</p>
+<h3 id="42-ros-bridge-1">4.2 启动 ROS Bridge（终端 1）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">unset</span><span class="w"> </span>ROS_DISTRO<span class="w"> </span>ROS_VERSION<span class="w"> </span>ROS_PYTHON_VERSION<span class="w"> </span>AMENT_PREFIX_PATH<span class="w"> </span>CMAKE_PREFIX_PATH<span class="w"> </span>COLCON_PREFIX_PATH<span class="w"> </span>PYTHONPATH<span class="w"> </span>LD_LIBRARY_PATH<span class="w"> </span>ROS_ETC_DIR<span class="w"> </span>ROS_PACKAGE_PATH<span class="w"> </span>ROS_ROOT<span class="w"> </span>ROS_MASTER_URI<span class="w"> </span>PKG_CONFIG_PATH
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PATH</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">':'</span><span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>noetic<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>catkin_ws<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="s1">':'</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">PATH</span><span class="p">%:</span><span class="si">}</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/opt/ros/humble/lib
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.0.3<span class="w"> </span>port:<span class="o">=</span><span class="m">2000</span><span class="w"> </span>timeout:<span class="o">=</span><span class="m">60</span>
+</code></pre></div>
+<h3 id="43-spawn-objects-ego_vehicle-2">4.3 启动 spawn objects 生成 ego_vehicle（终端 2）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">unset</span><span class="w"> </span>ROS_DISTRO<span class="w"> </span>ROS_VERSION<span class="w"> </span>ROS_PYTHON_VERSION<span class="w"> </span>AMENT_PREFIX_PATH<span class="w"> </span>CMAKE_PREFIX_PATH<span class="w"> </span>COLCON_PREFIX_PATH<span class="w"> </span>PYTHONPATH<span class="w"> </span>LD_LIBRARY_PATH<span class="w"> </span>ROS_ETC_DIR<span class="w"> </span>ROS_PACKAGE_PATH<span class="w"> </span>ROS_ROOT<span class="w"> </span>ROS_MASTER_URI<span class="w"> </span>PKG_CONFIG_PATH
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PATH</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">':'</span><span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>noetic<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>catkin_ws<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="s1">':'</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">PATH</span><span class="p">%:</span><span class="si">}</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/opt/ros/humble/lib
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_spawn_objects<span class="w"> </span>carla_spawn_objects.launch.py<span class="w"> </span>host:<span class="o">=</span><span class="m">192</span>.168.0.3<span class="w"> </span>port:<span class="o">=</span><span class="m">2000</span>
+</code></pre></div>
+<p>等它输出 <code>All objects spawned</code>。</p>
+<h3 id="44-3">4.4 启动手动控制（终端 3）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">unset</span><span class="w"> </span>ROS_DISTRO<span class="w"> </span>ROS_VERSION<span class="w"> </span>ROS_PYTHON_VERSION<span class="w"> </span>AMENT_PREFIX_PATH<span class="w"> </span>CMAKE_PREFIX_PATH<span class="w"> </span>COLCON_PREFIX_PATH<span class="w"> </span>PYTHONPATH<span class="w"> </span>LD_LIBRARY_PATH<span class="w"> </span>ROS_ETC_DIR<span class="w"> </span>ROS_PACKAGE_PATH<span class="w"> </span>ROS_ROOT<span class="w"> </span>ROS_MASTER_URI<span class="w"> </span>PKG_CONFIG_PATH
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PATH</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">':'</span><span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>noetic<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>catkin_ws<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">'\n'</span><span class="w"> </span><span class="s1">':'</span><span class="k">)</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">PATH</span><span class="p">%:</span><span class="si">}</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/opt/ros/humble/lib
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/install/setup.bash
+ros2<span class="w"> </span>run<span class="w"> </span>carla_manual_control<span class="w"> </span>carla_manual_control
+</code></pre></div>
+<h3 id="45">4.5 开车操作</h3>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B</td>
+<td>激活 / 关闭手动驾驶</td>
+</tr>
+<tr>
+<td>W</td>
+<td>油门</td>
+</tr>
+<tr>
+<td>S</td>
+<td>刹车（车停后再按可倒车）</td>
+</tr>
+<tr>
+<td>A</td>
+<td>左转</td>
+</tr>
+<tr>
+<td>D</td>
+<td>右转</td>
+</tr>
+<tr>
+<td>空格</td>
+<td>手刹</td>
+</tr>
+<tr>
+<td>P</td>
+<td>切换自动驾驶</td>
+</tr>
+<tr>
+<td>H</td>
+<td>查看帮助</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">五、遇到的问题与解决方案</h2>
+<h3 id="51-vmware-vulkan">5.1 VMware Vulkan 支持不足</h3>
+<p><strong>问题</strong>：CARLA 在 VMware 虚拟机里运行时报 <code>GameThread timed out waiting for RenderThread</code>，最终段错误崩溃。</p>
+<p><strong>解决</strong>：把 CARLA 服务器放在 Windows 宿主机上运行，Ubuntu 虚拟机通过网络连接。</p>
+<h3 id="52-ros-1-noetic-ros-2-humble">5.2 ROS 1 Noetic 与 ROS 2 Humble 环境混用</h3>
+<p><strong>问题</strong>：ROS Bridge 启动时报 <code>AttributeError: type object 'type' has no attribute '_TYPE_SUPPORT'</code>。</p>
+<p><strong>解决</strong>：在每个终端启动前，执行 <code>unset</code> 清理所有 ROS 相关变量，然后只 <code>source /opt/ros/humble/setup.bash</code>。同时修复 <code>carla-ros-bridge/install/setup.sh</code> 里写死的 <code>/opt/ros/noetic</code> 路径。</p>
+<h3 id="53">5.3 版本不匹配</h3>
+<p><strong>问题</strong>：ROS Bridge 报 <code>CARLA python module version 0.9.13 required. Found: 0.9.14</code>。</p>
+<p><strong>解决</strong>：修改 <code>carla_ros_bridge/src/carla_ros_bridge/CARLA_VERSION</code> 文件，把 <code>0.9.13</code> 改成 <code>0.9.14</code>，重新编译。</p>
+<h3 id="54">5.4 依赖缺失</h3>
+<p><strong>问题</strong>：编译时报 <code>ModuleNotFoundError: No module named 'derived_object_msgs'</code>。</p>
+<p><strong>解决</strong>：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/src
+git<span class="w"> </span>clone<span class="w"> </span>https://gitclone.com/github.com/astuff/astuff_sensor_msgs.git
+<span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>derived_object_msgs
+</code></pre></div>
+<h3 id="55-tf2">5.5 tf2 库冲突</h3>
+<p><strong>问题</strong>：报 <code>undefined symbol: _ZN3tf210BufferCore15allFramesAsDotB5cxx11Ev</code>。</p>
+<p><strong>解决</strong>：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>remove<span class="w"> </span>ros-noetic-tf2<span class="w"> </span>ros-noetic-tf2-eigen<span class="w"> </span>ros-noetic-tf2-geometry-msgs<span class="w"> </span>ros-noetic-tf2-kdl<span class="w"> </span>ros-noetic-tf2-msgs<span class="w"> </span>ros-noetic-tf2-py<span class="w"> </span>ros-noetic-tf2-ros<span class="w"> </span>-y
+</code></pre></div>
+<h3 id="56-foxy-humble">5.6 Foxy 与 Humble 库冲突</h3>
+<p><strong>问题</strong>：报 <code>undefined symbol: rcutils_expand_user</code>。</p>
+<p><strong>解决</strong>：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mv<span class="w"> </span>/opt/ros/foxy/lib<span class="w"> </span>/opt/ros/foxy/lib.bak
+</code></pre></div>
+<h3 id="57-vmware">5.7 VMware 桥接网络问题</h3>
+<p><strong>问题</strong>：Ubuntu 无法连接 Windows 上的 CARLA，报 <code>Network is unreachable</code>。</p>
+<p><strong>解决</strong>：在 VMware 虚拟网络编辑器里，把 VMnet0 桥接到实际的 WLAN 网卡。</p>
+<h3 id="58">5.8 车辆卡在护栏上</h3>
+<p><strong>问题</strong>：车辆生成后卡在护栏上，全油门也动不了。</p>
+<p><strong>解决</strong>：用 Python 脚本把车辆瞬移到空旷的生成点：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">carla</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">carla</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="s1">'192.168.0.3'</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">set_timeout</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">world</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_world</span><span class="p">()</span>
+<span class="n">vehicles</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">get_actors</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s1">'vehicle.*'</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vehicles</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'role_name'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'ego_vehicle'</span><span class="p">:</span>
+        <span class="n">spawn_points</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">get_map</span><span class="p">()</span><span class="o">.</span><span class="n">get_spawn_points</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spawn_points</span><span class="p">:</span>
+            <span class="k">if</span> <span class="mf">0.2</span> <span class="o">&lt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">z</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">set_transform</span><span class="p">(</span><span class="n">sp</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">break</span>
+</code></pre></div>
+<h3 id="59-import-carla-py37-egg-python-38">5.9 <code>import carla</code> 成功但用不了（py3.7 egg 与 Python 3.8）</h3>
+<p><strong>问题</strong>：按官方文档把 <code>carla-0.9.14-py3.7-linux-x86_64.egg</code> 加进 <code>PYTHONPATH</code> 后，
+<code>python3 -c "import carla"</code> 不报错，但后面所有调用都失败，或报
+<code>AttributeError: module 'carla' has no attribute ...</code>。</p>
+<p><strong>原因</strong>：Ubuntu 20.04 的 <code>python3</code> 是 3.8，而该 egg 是为 CPython 3.7 编译的，不能跨版本加载。
+此时 <code>PYTHONPATH</code> 里的 <code>~/PythonAPI/carla</code> 目录会被 Python 当成 <strong>namespace package</strong>，
+于是 <code>import carla</code> "成功"了，但里面是空壳——这也是为什么这个错误很容易被误判为"装好了"。</p>
+<p><strong>解决</strong>：改用 PyPI 上的 cp38 wheel（见 3.3），并删掉 <code>PYTHONPATH</code> 里的 egg 路径。验证方式是打印
+<code>carla.__file__</code>，它应当指向 <code>site-packages</code> 而不是 <code>~/PythonAPI/carla</code>。</p>
+<h2 id="_6">六、运行效果</h2>
+<p>以下是实际运行截图：</p>
+<p><img alt="a6f7f79a6f7ad495036d0edf228eea8e" height="940" src="https://github.com/user-attachments/assets/c4878df1-c34c-4dc9-adff-c468d3f5b4d5" width="1368"/>
+<img alt="6f1c034cd4ced47e1bab9c74e9f7c8ff" height="940" src="https://github.com/user-attachments/assets/2df782ae-d37c-4090-83c0-96b13d504754" width="1368"/>
+<img alt="04925efc8308b365169c7fad3c7014f4" height="940" src="https://github.com/user-attachments/assets/3aa3b9d7-9915-4ef4-ae78-51841b5b5752" width="1368"/>
+<img alt="465a5d65260905200b94ea33eb1a2018" height="940" src="https://github.com/user-attachments/assets/c5d83adf-38f8-47a3-97e3-0bff78362fda" width="1368"/>
+<img alt="c86dfd4297d1fa23c96555ff11376c43" height="789" src="https://github.com/user-attachments/assets/f71978dd-864b-4d38-8f8e-3a9fe21a6add" width="1227"/></p>
+<h2 id="_7">七、总结</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ROS Bridge 编译</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>CARLA 服务器运行</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>ego_vehicle 生成</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>手动控制开车</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>中文部署文档</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>文档作者：jasmine055
+日期：2026-10-16</p></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>
