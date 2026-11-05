@@ -16,6 +16,9 @@ python3 src/ground/mujoco_shooting/main.py
 
 # 3. 无头跑一局：不开窗口，跑完打印结果，返回码 0 = 全部击倒
 python3 src/ground/mujoco_shooting/main.py --headless --max-steps 12000
+
+# 4. Linux 无显示服务（WSL2 / 服务器）时，给无头模式指定软件渲染
+MUJOCO_GL=osmesa python3 src/ground/mujoco_shooting/main.py --headless
 ```
 
 可视化模式下：绿色激光开场扫描，随后炮塔自动锁定靶子发射小球，靶子逐个倒下，全部击倒后自动停止。
