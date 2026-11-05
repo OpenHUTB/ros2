@@ -72,9 +72,8 @@ nav:
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
-    - 9. ROS 2: './chapter/chap9.md'
-    - 10. MuJoCo 差速小车 go-to-goal: './chapter/diff_drive_go_to_goal.md'
-    - MuJoCo双自由度机械臂画正方形: chapter/mujoco_two_dof_arm_square.md
+    - 9. ROS 2: './chapter/ch.
+    - MuJoCo双自由度机械臂画正方形: ./chapter/mujoco_two_dof_arm_square.md
 
 
 - 人形机器人:
