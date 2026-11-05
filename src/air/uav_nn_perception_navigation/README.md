@@ -101,3 +101,21 @@ Windows 下中文用户名会导致 `Documents\AirSim\settings.json` 被覆盖�
 
 **键盘没反应**
 节点必须运行在真实终端里；通过管道或后台运行时读不到标准输入。
+
+## 感知节点
+
+`lidar_perception.py` 从 AirSim 读取激光雷达点云，发布两路数据：
+
+| 话题 | 类型 | 说明 |
+| --- | --- | --- |
+| `/uav/lidar/scan` | `sensor_msgs/LaserScan` | 标准扫描，供 RViz 显示与 gmapping 建图 |
+| `/uav/lidar/features` | `std_msgs/Float32MultiArray` | 12 维扇区距离，供控制节点推理 |
+
+主要参数：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `~scan_bins` | 180 | 扫描格数 |
+| `~scan_fov` | 360.0 | 扫描视场（度） |
+| `~scan_frame` | laser | 扫描坐标系，需与 base_link 区分 |
+| `~scan_source` | lidar | 扫描来源，可选 `depth`（深度相机反投影） |
