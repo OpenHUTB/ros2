@@ -1,0 +1,41 @@
+name: Air bridge tests
+
+on:
+  push:
+    paths:
+      - 'src/air/carlair_ros_bridge/**'
+      - 'tests/**'
+      - '.github/workflows/air_bridge_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/carlair_ros_bridge/**'
+      - 'tests/**'
+      - '.github/workflows/air_bridge_tests.yml'
+
+jobs:
+  test:
+    name: Local tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy pyyaml
+
+      - name: Run bridge tests
+        run: |
+          python3 tests/test_frames.py
+          python3 tests/test_bridge_local.py
+          python3 tests/test_sensors_local.py
+          if [ -f tests/test_imu_local.py ]; then
+            python3 tests/test_imu_local.py
+          fi
+
+      - name: Byte-compile bridge scripts
+        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py

@@ -1,0 +1,11 @@
+# Python 3.8 / ROS2 Foxy. ROS packages and pytest are installed via rosdep.
+# AirSim setup imports numpy and msgpackrpc before resolving dependencies.
+# Install numpy and msgpack-rpc-python first; see README.md.
+setuptools>=45.2.0,<76
+wheel<0.46
+numpy==1.17.4
+msgpack-python==0.5.6
+msgpack-rpc-python==0.4.1
+tornado==4.5.3
+opencv-contrib-python==4.5.5.64
+airsim==1.8.1
