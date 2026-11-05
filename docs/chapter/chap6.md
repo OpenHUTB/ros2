@@ -8,7 +8,7 @@
 src/chap6/catkin_ws/src/mrobot_gazebo/        # 仿真环境：房间世界、Gazebo 机器人模型与插件
 src/chap6/catkin_ws/src/mrobot_description/   # arbotix 假仿真使用的简化机器人 URDF 模型
 src/chap6/catkin_ws/src/mrobot_bringup/       # arbotix 假机器人启动配置（精简版）
-src/chap6/catkin_ws/src/mrobot_navigation/    # gmapping 与 move_base 启动配置、代价地图、rviz、地图与随机导航脚本
+src/chap6/catkin_ws/src/mrobot_navigation/    # gmapping 与 move_base 启动配置、代价地图、rviz、地图、随机导航与离线路径规划脚本
 src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 ```
 
@@ -20,7 +20,8 @@ src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 - 加载带激光雷达的 mrobot 机器人；
 - 排查 Noetic 下 xacro 宏前缀、重复包、关节状态等常见问题；
 - 使用 gmapping（RBPF 粒子滤波）进行激光 SLAM 建图，并用 map_saver 保存地图；
-- 基于 arbotix 假仿真，使用 fake_localization + move_base 实现地图内定位、路径规划、实时避障与自主导航。
+- 基于 arbotix 假仿真，使用 fake_localization + move_base 实现地图内定位、路径规划、实时避障与自主导航；
+- 用 `map_planner.py` 离线检查建图质量并规划全局路径（不需要启动 Gazebo 与 move_base）。
 
 ## 教程小节
 
