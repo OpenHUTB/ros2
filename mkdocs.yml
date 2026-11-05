@@ -74,7 +74,7 @@ nav:
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. MuJoCo 差速小车 go-to-goal: './chapter/diff_drive_go_to_goal.md'
-    - MuJoCo双自由度机械臂画正方形: mujoco_two_dof_arm_square.md
+    - MuJoCo双自由度机械臂画正方形: chapter/mujoco_two_dof_arm_square.md
 
 
 - 人形机器人:
