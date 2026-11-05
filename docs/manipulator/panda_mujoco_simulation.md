@@ -150,7 +150,7 @@ roslaunch panda_mujoco main.launch
 | 视频规格 | 8 秒 / 30 fps / 240 帧 / 960×544 |
 | 端到端生成耗时（含仿真+渲染+编码） | 2.13 s |
 | 关节跟踪 | 7 关节无超调；误差峰值 < 0.02 rad（缓动中点） |
-| 启动验证 | `catkin_make` 通过；`roslaunch panda_mujoco main.launch` 正常启动；源码 `python3 main.py` 直接运行正常 |
+| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch panda_mujoco main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认 |
 
 ### 7.1 多参数（场景）对比
 
