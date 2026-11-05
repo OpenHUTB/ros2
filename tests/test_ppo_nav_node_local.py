@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 import os
 import sys
+import time
 import types
 
 import numpy as np
@@ -116,11 +117,16 @@ def _install_stub_modules():
     rospy.Rate = _Rate
     rospy.init_node = lambda *a, **k: None
     rospy.is_shutdown = lambda: False
+    def _mk_throttle_logger(level):
+        def _log(period, msg, *a, **k):
+            rospy.logged.append((level, (msg % a) if a else msg))
+        return _log
+
     rospy.loginfo = _mk_logger("info")
     rospy.logwarn = _mk_logger("warn")
     rospy.logerr = _mk_logger("err")
-    rospy.loginfo_throttle = _mk_logger("info")
-    rospy.logwarn_throttle = _mk_logger("warn")
+    rospy.loginfo_throttle = _mk_throttle_logger("info")
+    rospy.logwarn_throttle = _mk_throttle_logger("warn")
     sys.modules["rospy"] = rospy
     return rospy
 
@@ -191,15 +197,51 @@ def test_node(N, rospy):
 
 
 # ================================================================= D. 边界
-def test_edge(N):
-    print("== D. 边界情况 ==")
+def test_edge(N, rospy):
+    print("== D. 边界：尚无点云 ==")
+    rospy.params["nav/weights"] = WEIGHTS
+    rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
     node = N.PpoNavNode()
     od = N.Odometry()
     od.pose.pose.position.z = -3.0
     node._cb_odom(od)
     obs = node.build_obs()
     check(obs.shape == (22,) and np.allclose(obs[:16], 1.0),
-          "尚无点云 -> 直方图全 1（视为无遮挡），不崩溃")
+          "尚无点云 -> 策略观测用全 1 占位，不崩溃")
+    check(node.last_hist is None, "尚无点云 -> 安全层拿到 None（不能当成无遮挡）")
+
+    rospy.published[:] = []
+    node.step_once()
+    _, msg = rospy.published[-1]
+    check((msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z) == (0.0, 0.0, 0.0, 0.0),
+          "尚无点云 -> 发布零速度（fail-safe）")
+    check(node.last_safety['reason'] == 'no_lidar', "reason = no_lidar")
+
+
+# ================================================================= F. 过期点云
+def test_stale_cloud(N, rospy):
+    print("== F. 过期点云 -> 零速度 ==")
+    rospy.params["nav/weights"] = WEIGHTS
+    rospy.params["nav/goal"] = [10.0, 0.0, 0.0]
+    node = N.PpoNavNode()
+    od = N.Odometry()
+    od.pose.pose.position.z = -3.0
+    node._cb_odom(od)
+    pc = N.PointCloud2()
+    pc.data = np.zeros((0, 3), dtype=np.float32).tobytes()
+    pc.point_step = 12
+    node._cb_cloud(pc)
+    node.build_obs()
+    check(node.last_hist is not None, "收到点云后安全层拿到直方图")
+
+    node.cloud_stamp = time.monotonic() - 5.0      # 伪造 5 s 前收到
+    rospy.published[:] = []
+    node.step_once()
+    _, msg = rospy.published[-1]
+    check((msg.linear.x, msg.linear.y, msg.linear.z, msg.angular.z) == (0.0, 0.0, 0.0, 0.0),
+          "点云过期 -> 发布零速度")
+    check(node.last_safety['reason'] == 'stale_lidar', "reason = stale_lidar")
+    check(node.last_safety['cloud_age_s'] >= 5.0, "记录的点云 age 正确")
 
 
 # ================================================================= E. body_frame 安全校验
@@ -236,7 +278,8 @@ def main():
     test_parse_goal(N)
     test_cloud_to_xyz(N)
     test_node(N, rospy)
-    test_edge(N)
+    test_edge(N, rospy)
+    test_stale_cloud(N, rospy)
     test_body_frame_guard(N, rospy)
 
     print("\n==================== 结果 ====================")

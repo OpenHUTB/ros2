@@ -17,3 +17,4 @@ safety:
   enabled: true              # 与策略解耦的兜底：近障减速 + 过近急停
   stop_distance: 0.8         # 前方净空小于该值（米）时水平速度清零
   slow_distance: 3.0         # 前方净空小于该值（米）时按比例衰减水平速度
+  cloud_timeout: 0.5         # 点云超过该时间未更新（秒）视为过期 -> 输出零速度

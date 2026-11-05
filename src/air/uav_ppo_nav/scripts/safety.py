@@ -25,19 +25,47 @@ class SafetyEnvelope(object):
 
     def __init__(self, stop_distance=0.8, slow_distance=3.0,
                  max_horiz_speed=MAX_HORIZ_SPEED, max_vert_speed=MAX_VERT_SPEED,
-                 max_range=MAX_RANGE, sector_window=1):
+                 max_range=MAX_RANGE, sector_window=1, sensor_timeout=0.5):
         if not stop_distance >= 0.0:
             raise ValueError('stop_distance must be non-negative')
         if not stop_distance < slow_distance:
             raise ValueError('slow_distance must be greater than stop_distance')
         if max_horiz_speed <= 0 or max_vert_speed <= 0 or max_range <= 0:
             raise ValueError('speed and range limits must be positive')
+        if not sensor_timeout > 0:
+            raise ValueError('sensor_timeout must be positive')
         self.stop_distance = float(stop_distance)
         self.slow_distance = float(slow_distance)
         self.max_horiz_speed = float(max_horiz_speed)
         self.max_vert_speed = float(max_vert_speed)
         self.max_range = float(max_range)
         self.sector_window = max(0, int(sector_window))
+        self.sensor_timeout = float(sensor_timeout)
+
+    # ------------------------------------------------------------ 传感器有效性
+    def sensor_valid(self, hist, cloud_age):
+        """判断点云能否用于安全判定，返回 ``(ok, reason)``。
+
+        reason 取值：``ok`` / ``no_lidar``（从未收到或空点云） /
+        ``no_timestamp``（缺少或非法的接收时间）/ ``stale_lidar``（超过 sensor_timeout）。
+        缺失或过期时安全层不能"假设无遮挡"，必须让调用方输出零速度。
+        """
+        if hist is None:
+            return False, 'no_lidar'
+        values = np.asarray(hist, dtype=np.float64).reshape(-1)
+        if values.size == 0:
+            return False, 'no_lidar'
+        if cloud_age is None:
+            return False, 'no_timestamp'
+        try:
+            age = float(cloud_age)
+        except (TypeError, ValueError):
+            return False, 'no_timestamp'
+        if not math.isfinite(age) or age < 0.0:
+            return False, 'no_timestamp'
+        if age > self.sensor_timeout:
+            return False, 'stale_lidar'
+        return True, 'ok'
 
     # ------------------------------------------------------------ 净空
     def sector_of(self, vx, vy, n_sectors):
@@ -65,20 +93,31 @@ class SafetyEnvelope(object):
         return max(0.0, min(float(np.min(hist)), 1.0)) * self.max_range
 
     # ------------------------------------------------------------ 过滤
-    def filter(self, vx, vy, vz, hist):
+    def filter(self, vx, vy, vz, hist, cloud_age=None):
         """限制速度并返回 ``(vx, vy, vz, info)``。
 
-        info 字段：``clearance_m`` / ``scale`` / ``braking`` / ``sector``。
-        悬停（水平速度接近 0）时不判定方向，也不会触发急停。
+        info 字段：``clearance_m`` / ``scale`` / ``braking`` / ``sector`` /
+        ``reason`` / ``cloud_age_s``。
+
+        * 点云缺失（``hist is None``）、缺时间戳或超过 ``sensor_timeout``：
+          无法判断障碍，一律输出零速度（fail-safe），不做"无遮挡"假设；
+        * 悬停（水平速度接近 0）时不判定方向，也不会触发急停。
         """
         vx = float(np.clip(vx, -self.max_horiz_speed, self.max_horiz_speed))
         vy = float(np.clip(vy, -self.max_horiz_speed, self.max_horiz_speed))
         vz = float(np.clip(vz, -self.max_vert_speed, self.max_vert_speed))
 
-        hist = np.asarray(hist, dtype=np.float64).reshape(-1)
-        info = {'clearance_m': self.max_range, 'scale': 1.0,
-                'braking': False, 'sector': None}
-        if hist.size == 0 or math.hypot(vx, vy) < 1e-6:
+        hist = None if hist is None else np.asarray(hist, dtype=np.float64).reshape(-1)
+        ok, reason = self.sensor_valid(hist, cloud_age)
+        info = {'clearance_m': 0.0, 'scale': 0.0, 'braking': True, 'sector': None,
+                'reason': reason,
+                'cloud_age_s': None if cloud_age is None else round(float(cloud_age), 3)}
+        if not ok:
+            # 传感器不可用时不能放行：零速度是最保守的安全行为。
+            return 0.0, 0.0, 0.0, info
+
+        info.update(clearance_m=self.max_range, scale=1.0, braking=False)
+        if math.hypot(vx, vy) < 1e-6:
             return vx, vy, vz, info
 
         sector = self.sector_of(vx, vy, hist.size)
