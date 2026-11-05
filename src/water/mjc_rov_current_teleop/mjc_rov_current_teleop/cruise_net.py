@@ -56,6 +56,22 @@ def _yaw_from_quat(q: np.ndarray) -> float:
     return np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
+def make_features(state: np.ndarray, waypoint: np.ndarray) -> np.ndarray:
+    """
+    6 维输入特征 [ex, ey, eyaw, vx, vy, wz]。
+
+    为什么单独抽成函数：collect / evaluate / DAgger 三处都要构造同一组特征，
+    各写一份最容易在改动时漂移，导致训练与部署的输入分布不一致。
+    state = [x, y, z, yaw, vx, vy, wz]
+    """
+    return np.array([
+        waypoint[0] - state[0],
+        waypoint[1] - state[1],
+        np.arctan2(waypoint[1] - state[1], waypoint[0] - state[0]) - state[3],
+        state[4], state[5], state[6],
+    ], dtype=np.float32)
+
+
 def _expert_cmd(state: np.ndarray, waypoint: np.ndarray) -> np.ndarray:
     """
     脚本专家：输出世界坐标系下的期望速度 [vx, vy]。
@@ -112,9 +128,7 @@ def collect_data(params: dict, steps: int = 4000):
             wp_idx = (wp_idx + 1) % len(EXPERT_WAYPOINTS)
         wp = EXPERT_WAYPOINTS[wp_idx]
         expert = _expert_cmd(state, wp)
-        feat = np.array([wp[0] - state[0], wp[1] - state[1],
-                         (np.arctan2(wp[1] - state[1], wp[0] - state[0]) - state[3]),
-                         state[4], state[5], state[6]], dtype=np.float32)
+        feat = make_features(state, wp)
         feat_list.append(feat)
         cmd_list.append(expert)
         # 底层 P 推力（与 sim_node 同一套）
@@ -170,7 +184,7 @@ def train(params: dict, epochs: int = 200, lr: float = 1e-3):
     return history
 
 
-def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
+def evaluate(params: dict, horizon: int = 12000, use_net: bool = True, net=None):
     """
     闭环评估：离线跑 horizon 步，MLP 或专家输出速度指令，统计航点跟踪误差。
     返回 dict：MAE(位置)、成功率(到过所有航点)、平均速度。
@@ -178,11 +192,12 @@ def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
     输出 MSE/MAE 满足作业"测试脚本打印量化指标"要求。
     与 collect_data 一致：按 wp_idx 顺序推进航点（到点切下一个），
     而不是每步选最近点——否则到达第一个点后会卡住不动。
+
+    ``net`` 允许传入内存中的策略（DAgger 每轮训练后直接评估，不必先落盘）。
     """
     root = common.get_package_root()
     wpath = common.find_weights_path(params.get("weights_path", ""))
-    net = None
-    if use_net:
+    if use_net and net is None:
         if not wpath.exists():
             raise FileNotFoundError(
                 f"找不到权重 {wpath}。请先运行: python3 main.py train"
@@ -190,6 +205,7 @@ def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
         ckpt = torch.load(wpath, map_location="cpu")
         net = CruiseMLP()
         net.load_state_dict(ckpt["model"])
+    if net is not None:
         net.eval()
 
     model, data, dyn = _make_sim(params)
@@ -209,9 +225,7 @@ def evaluate(params: dict, horizon: int = 12000, use_net: bool = True):
         d_to_wp = float(np.hypot(wp[0] - state[0], wp[1] - state[1]))
         err_hist.append(d_to_wp)
         if use_net:
-            feat = np.array([wp[0] - state[0], wp[1] - state[1],
-                             (np.arctan2(wp[1] - state[1], wp[0] - state[0]) - state[3]),
-                             state[4], state[5], state[6]], dtype=np.float32)
+            feat = make_features(state, wp)
             with torch.no_grad():
                 cmd = net(torch.tensor(feat).unsqueeze(0)).squeeze(0).numpy()
         else:
