@@ -4,7 +4,10 @@ project(mujoco_shooting)
 find_package(catkin REQUIRED)
 catkin_package()
 
-catkin_install_python(PROGRAMS main.py
+catkin_install_python(PROGRAMS
+  main.py
+  controller.py
+  scene.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
