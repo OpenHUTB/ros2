@@ -15,12 +15,12 @@
       <body name="joint1" pos="0 0 0.05">
         <joint name="joint1" type="hinge" axis="0 0 1"/>
         <geom name="link1" type="capsule" fromto="0 0 0 0.5 0 0" size="0.05" rgba="0.2 0.4 0.8 1"/>
-        <inertial pos="0.25 0 0" mass="0.5" diaginertia="0.01 0.01 0.05"/>
+        <inertial pos="0.25 0 0" mass="0.5" diaginertia="0.01 0.01 0.001"/>
         
         <body name="joint2" pos="0.5 0 0">
           <joint name="joint2" type="hinge" axis="0 0 1"/>
           <geom name="link2" type="capsule" fromto="0 0 0 0.5 0 0" size="0.04" rgba="0.8 0.4 0.2 1"/>
-          <inertial pos="0.25 0 0" mass="0.3" diaginertia="0.005 0.005 0.03"/>
+          <inertial pos="0.25 0 0" mass="0.3" diaginertia="0.005 0.005 000503"/>
           
           <body name="ee" pos="0.5 0 0">
             <geom name="ee" type="sphere" size="0.03" rgba="0 1 0 1"/>
