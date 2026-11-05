@@ -67,7 +67,7 @@ ros2 launch humanoid_reachability main.launch.py
 | `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
 | `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
 
-话题命名约定：`humanoid_reachability_node` 自身的输出统一使用 `~/` 私有命名空间（即 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也便于用 `ros2 run ... --remap` 重映射；只有跨节点的 `/demo_joint_angles` 保持绝对路径，使 `arm_demo_node` 与主节点保持松耦合，任意一方都可以单独替换。
+话题命名约定：主节点（节点名 `humanoid_reachability`，可执行文件 `humanoid_reachability_node`）的输出统一使用 `~/` 私有命名空间（即 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也便于用 `ros2 run ... --remap` 重映射；只有跨节点的 `/demo_joint_angles` 保持绝对路径，使 `arm_demo_node` 与主节点保持松耦合，任意一方都可以单独替换。
 
 ## 参数
 
@@ -99,7 +99,7 @@ ros2 launch humanoid_reachability main.launch.py
 ros2 run rviz2 rviz2 -d ~/ros2_ws/install/humanoid_reachability/share/humanoid_reachability/rviz/reachability.rviz
 ```
 
-Fixed Frame 设为 `world`，MarkerArray 话题选择 `/humanoid_reachability/reachable_workspace`（已在仓库配置中预填）。体素壳立方体按 `0.9 × voxel_resolution`（默认 0.027 m）绘制，留出缝隙避免相邻面重叠闪烁；左臂体素由青到绿、右臂由橙到红按高度渐变；切片为每层 x/y 范围的矩形线框，层内体素少于 5 个的切片不绘制；示例骨架与末端轨迹随演示节点实时更新；灰色 `body_skeleton` 为躯干/骨盆/下肢静态参考骨架，`body_head` 为半径 0.22 m 的半透明头部球（动图中按三向线框绘制），二者仅作空间参照，不参与可达域计算。
+Fixed Frame 设为 `world`，MarkerArray 话题选择 `/humanoid_reachability/reachable_workspace`（已在仓库配置中预填）。体素壳立方体按 `0.9 × voxel_resolution`（默认 0.027 m）绘制，留出缝隙避免相邻面重叠闪烁；左臂体素由青到绿、右臂由橙到红按高度渐变；切片为每层 x/y 范围的矩形线框，层内体素少于 5 个的切片不绘制；示例骨架与末端轨迹随演示节点实时更新；灰色 `body_skeleton` 为躯干/骨盆/下肢静态参考骨架，`body_head` 为直径 0.22 m（半径 0.11 m）的半透明头部球（动图中按三向线框绘制），二者仅作空间参照，不参与可达域计算。
 
 若虚拟机显卡性能不足，可先只开数据话题（`/humanoid_reachability/reachable_volume`、`/humanoid_reachability/reachability_stats`）检查数值，再开 RViz2。
 

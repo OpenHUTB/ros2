@@ -382,9 +382,10 @@ private:
     marker.scale.z = voxel_resolution_ * 0.9;
 
     size_t stride = 1;
-    if (max_display_voxels_ > 0 && surface.size() > static_cast<size_t>(max_display_voxels_)) {
-      // 整数除法向下取整得到抽稀步长；显式钳到 >= 1，保证不会出现 stride=0（除零/死循环）
-      stride = std::max<size_t>(1, surface.size() / static_cast<size_t>(max_display_voxels_));
+    const size_t max_display = static_cast<size_t>(max_display_voxels_);
+    if (max_display > 0 && surface.size() > max_display) {
+      // 向上取整求步长，保证抽稀后立方体数量不超过 max_display_voxels（向下取整会超出该上限）
+      stride = std::max<size_t>(1, (surface.size() + max_display - 1) / max_display);
     }
 
     const double z_span = std::max(1e-3, stats.max_bound.z() - stats.min_bound.z());

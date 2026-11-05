@@ -110,7 +110,7 @@ src/
 | `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
 | `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
 
-命名约定：`humanoid_reachability_node` 的输出全部使用 `~/` 私有命名空间（实际解析为 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也方便 remap；`/demo_joint_angles` 有意保持绝对路径，用于 `arm_demo_node` 与主节点之间松耦合，两个节点可以各自替换或单独启动。
+命名约定：主节点（节点名 `humanoid_reachability`，可执行文件 `humanoid_reachability_node`）的输出全部使用 `~/` 私有命名空间（实际解析为 `/humanoid_reachability/...`）。`~/` 按节点名解析，重命名节点（如 `name:=reach_left`）后多个实例互不抢占话题，也方便 remap；`/demo_joint_angles` 有意保持绝对路径，用于 `arm_demo_node` 与主节点之间松耦合，两个节点可以各自替换或单独启动。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -140,7 +140,7 @@ src/
 
 ![双臂末端可达域分析动图](../../img/humanoid/humanoid_reachability/reachability_demo.gif)
 
-动图中左右臂各占一个面板：青绿色为左臂可达域体素壳、橙色为右臂，灰色为躯干/骨盆/下肢静态参考骨架与头部线框球，白色为当前演示姿态的双臂骨架，黄色为关节球，浅蓝色/粉色曲线为末端轨迹。
+动图中左右臂各占一个面板：青绿色为左臂可达域体素壳、橙色为右臂，灰色为躯干/骨盆/下肢静态参考骨架与头部线框球，白色为当前演示姿态的双臂骨架，黄色为关节球，青色/橙色曲线为末端轨迹。
 
 > 说明：该 VMware 虚拟机的 RViz2 在 llvmpipe 软渲染下启动即崩溃（`OGRE::UnimplementedException: pack to PF_UNKNOWN` 与 `AxisAlignedBox::setExtents` 断言），因此无法提供 RViz2 截图。上图由节点**实际发布的 MarkerArray 数据**在虚拟机内用 matplotlib Agg 后端离线渲染（24 帧、720×480），并非示意性绘图。
 
@@ -149,7 +149,7 @@ src/
 本模块已在该虚拟机上完成以下验证：
 
 - 干净工作空间编译通过：`Finished <<< humanoid_reachability [11.5s]`，`Summary: 1 package finished`；
-- 两个节点正常启动，初始化耗时 `20.78 s`，之后开始周期性发布话题；
+- 两个节点正常启动，初始化（含采样与统计输出）耗时 `20.82 s`，其中双臂采样 `20.78 s`，之后开始周期性发布话题；
 - `/humanoid_reachability/reachable_volume`、`/humanoid_reachability/reachable_bounds`、`/humanoid_reachability/reachability_stats` 数值与 launch 日志一致；
 - `/humanoid_reachability/reachable_workspace` 除首帧 1 个 `DELETEALL` 外，持续发布 15 个结构合法的标记，命名空间、`frame_id=world`、点集数量均已校验；
 - 左右臂末端坐标（`/humanoid_reachability/demo_end_effector_left`、`/humanoid_reachability/demo_end_effector_right` 与 300 点轨迹）随演示关节角连续变化；包围盒、体积与切片在采样阶段一次算出，运行期间保持不变。
