@@ -245,11 +245,28 @@ def main():
             print("  已渲染 %d/%d 帧（%.0f%%）" % (i + 1, total_frames,
                                                   (i + 1) * 100.0 / total_frames))
 
+    # ---- 搬运结果核对（无头环境 / CI 可直接验收）----
+    final_ball = data.qpos[ball_qadr:ball_qadr + 3].copy()
+    target_b = np.array([PLACE[0], PLACE[1], BALL_Z])
+    err_b = float(np.linalg.norm(final_ball - target_b))
+    print("小球最终位置：x=%.4f y=%.4f z=%.4f m"
+          % (final_ball[0], final_ball[1], final_ball[2]))
+    print("目标点 B：(%.2f, %.2f, %.2f) m，偏差 %.4f m（阈值 0.0200 m）"
+          % (target_b[0], target_b[1], target_b[2], err_b))
+    assert err_b < 0.02, ("搬运失败：小球最终位置与目标点 B 偏差 %.4f m，"
+                          "超过 0.02 m" % err_b)
+    print("搬运判定：PASS（小球已放到目标点 B）")
+
     print("渲染完成，合成 GIF...")
     frames[0].save(OUT_GIF, save_all=True, append_images=frames[1:],
                    duration=int(1000 / FPS), loop=0)
-    print("已生成效果图：%s（%d 帧，%.1f 秒）" % (OUT_GIF, len(frames),
-                                            len(frames) / FPS))
+    size_mb = os.path.getsize(OUT_GIF) / 1024.0 / 1024.0
+    print("已生成效果图：%s（%d 帧，%.1f 秒，%.2f MB）"
+          % (OUT_GIF, len(frames), len(frames) / FPS, size_mb))
+    if size_mb > 10.0:
+        print("提示：该 GIF 超过仓库 10 MB 限制，本地产物仅供本地查看，"
+              "不要直接提交；仓库内 docs/ 版本已压缩，"
+              "需要重新提交时请先减小 FPS/分辨率或二次压缩。")
 
 
 if __name__ == "__main__":

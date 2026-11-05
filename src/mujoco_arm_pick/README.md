@@ -63,4 +63,23 @@ MUJOCO_GL=osmesa python3 mujoco_arm_pick.py
 xdg-open demo_pick.gif
 ```
 
+## 验证
+
+脚本运行结束会打印小球最终位置，并与目标点 B 做断言（无头环境 / CI 可直接判读，无需看 GIF）：
+
+```
+小球最终位置：x=0.4500 y=-0.1500 z=0.0800 m
+目标点 B：(0.45, -0.15, 0.08) m，偏差 0.0000 m（阈值 0.0200 m）
+搬运判定：PASS（小球已放到目标点 B）
+```
+
+偏差超过 `0.02 m` 时断言失败、脚本以非 0 退出码退出，说明搬运没有真正到位。
+
+## 效果图体积
+
+`demo_pick.gif` 由 201 帧 640×480 逐帧渲染合成，本地实测约 **15.5 MB**，超过仓库单文件 10 MB 的限制。
+仓库内 [docs/mujoco_arm_pick_demo.gif](docs/mujoco_arm_pick_demo.gif)（8.1 MB）是压缩后提交的版本。
+
+> **生成的文件仅本地查看，不要直接提交。** 如需更新仓库里的演示图，请先降低 `FPS` / 分辨率，或二次压缩到 10 MB 以内再提交；脚本结束时也会打印生成体积并在超限时给出提示。
+
 详细说明见 [docs/mujoco_arm_pick.md](docs/mujoco_arm_pick.md)。
