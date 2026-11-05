@@ -494,19 +494,38 @@ CPU 上还应记录 `nproc` 与主频，否则数字不可比。
 | B | 输入 32×32 / 64×64 / 96×96 | 参数量、推理耗时、MAE |
 | C | 训练 20 / 50 / 100 epoch | 训练/验证曲线是否过拟合 |
 
+### 8.5 本机实测结果
+
+下表是 2026-11-05 在虚拟机（Ubuntu 22.04 + ROS 2 Humble + torch 2.14.1+cpu）里
+跑完「采集 → 训练 → 测试」后 `metrics.json` 的真实输出：
+
+| 项目 | 数值 |
+| --- | --- |
+| 样本数（训练/验证/测试） | 27（21 / 3 / 3） |
+| 网络参数量 | 556,098 |
+| 训练配置 | CPU，Adam，lr=1e-3，batch=8，60 epoch |
+| 训练耗时 | 10.2 s |
+| 最优 epoch / 验证 MSE | 59 / 0.938 (m/s)² |
+| 测试 MSE | 0.422 (m/s)² |
+| 测试 MAE | 0.477 m/s（vx 0.256，vy 0.698） |
+
+验证 MSE 在 epoch 15 之后不再下降（约 0.94~1.3 之间波动）、训练 MSE 却一路降到 0.146，
+是典型的**小样本过拟合**，不是实现错误。27 帧只够验证整条链路通不通；要飞稳，按
+本章前面的建议把每类航点采到几百帧以上，并换 2~3 个场景。
+
 ## 9. 运行效果
 
 闭环飞行录屏（ScreenToGif 录制，≤10 MB）：
 
-![端到端闭环飞行](img/uav_vision_nn_flight.gif)
+![端到端闭环飞行](../../img/uav_vision_nn_flight.gif)
 
 训练曲线（`loss_curve.png`，纵轴对数）：
 
-![训练与验证损失曲线](img/uav_vision_nn_loss.png)
+![训练与验证损失曲线](../../img/uav_vision_nn_loss.png)
 
 闭环轨迹对比（专家 vs 网络，俯视图）：
 
-![轨迹对比](img/uav_vision_nn_track.png)
+![轨迹对比](../../img/uav_vision_nn_track.png)
 
 > 录制建议：GIF 控制在 10 s 以内、15 fps，分辨率 960×540，体积通常小于 5 MB。
 > 用 `ffmpeg -i flight.mp4 -vf "fps=15,scale=960:-1" flight.gif` 也可压缩。
