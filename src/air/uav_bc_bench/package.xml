@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_bc_bench</name>
+  <version>0.1.0</version>
+  <description>行为克隆模型对比基准：同一数据集上比较不同网络结构与数据增强策略</description>
+  <maintainer email="dniuna@example.com">dniuna</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-torch</exec_depend>
+
+  <test_depend>ament_flake8</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
