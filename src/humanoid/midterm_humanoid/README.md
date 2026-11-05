@@ -10,13 +10,16 @@
 ## 💻 运行环境
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可运行）
 - Python >= 3.10
-- 依赖版本：mujoco 3.x、numpy、imageio、imageio-ffmpeg
+- 依赖版本：mujoco 3.x、numpy、imageio、imageio-ffmpeg、pillow（预览 PNG）
 
 ## 📦 安装依赖
 ```bash
 cd src/humanoid/midterm_humanoid
 pip install -r requirements.txt
 ```
+
+> Linux 无显示环境（虚拟机 / SSH）用 osmesa 软件渲染，需要系统库：`sudo apt install -y libosmesa6-dev`。
+> MP4 由 `imageio-ffmpeg` 自带的 ffmpeg 生成，无需另装；预览 PNG 用 Pillow，已列在 requirements.txt。
 
 ## 🚀 运行仿真
 
@@ -29,7 +32,7 @@ python3 main.py --duration 3     # 自定义完整视频时长（秒），不填
 python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 python3 main.py --out 自定义.mp4
 ```
-无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
+Linux 无显示环境默认自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
 
 ### 方式二：作为 catkin 包，用 roslaunch 启动（需 ROS 环境）
 ```bash

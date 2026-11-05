@@ -13,5 +13,5 @@ catkin_python_setup()
 catkin_install_python(PROGRAMS src/midterm_humanoid/main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # 安装 launch 文件
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION} USE_SOURCE_PERMISSIONS)
 
