@@ -2,7 +2,7 @@
 
 功能包源码位于仓库的 src/mujoco_arm_ball 目录。
 
-![](../../src/mujoco_arm_ball/docs/mujoco_arm_ball_demo.gif)
+![](../img/arm/mujoco_arm_ball.png)
 
 ## 1. 任务
 
