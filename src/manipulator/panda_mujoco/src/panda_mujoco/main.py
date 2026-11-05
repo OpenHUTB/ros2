@@ -6,14 +6,13 @@
 """
 import numpy as np
 
-try:
-    from panda_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
-except ImportError:
-    from common import setup_gl, load_with_camera, run_sim, parse_args
+# 按包导入：源码树直跑由模块根目录的 main.py 先把 src/ 加入 sys.path 后转发，
+# catkin 安装后由 setup.py / catkin 环境提供包路径。
+from panda_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 固定相机：前侧 3/4 视角，对准手臂伸展中心 (0.3, 0, 0.5)
-CAM = ('<camera name="view0" fovy="40" pos="0.9 -1.2 0.55" '
-       'xyaxes="0.893 0.451 0  -0.018 0.036 0.999"/>')
+CAM = dict(name="view0", pos=(0.9, -1.2, 0.55),
+           xyaxes=(0.893, 0.451, 0, -0.018, 0.036, 0.999), fovy=40)
 
 ROBOT = "franka_emika_panda"
 ENTRY = "scene"
