@@ -43,7 +43,9 @@
 
 | Python | Python 3.8 |
 
-| 依赖 | `rosbridge\_server`、`web\_video\_server`、`xacro`、`gazebo\_ros` |
+| 依赖 | `rosbridge\_server 0.11.13`、`web\_video\_server 0.2.0`、`xacro`、`gazebo\_ros` |
+
+| Gazebo版本| Gazebo 11.11.0 |
 
 本项目依赖 Gazebo 仿真环境，不需要真实硬件小车与实体相机。
 
@@ -192,7 +194,16 @@ catkin\_test\_results build/test\_results/web\_remote\_car
 
 | 修改 launch 后参数不生效 | 节点残留 | 关闭所有 roslaunch，重新启动 |
 
+## 11.已知限制
+1. 仅支持**单用户控制**，不支持多用户同时下发速度指令，多端同时操作会出现指令冲突。
+2. 小车只有远程手动遥控功能，**无自主避障、路径规划、自动巡航算法**。
+3. 相机仅原始图像推流，没有图像识别、目标检测处理。
+4. 差速模型为纯仿真模型，未在实体硬件车部署测试。
+5. 网页端没有断线重连自动恢复逻辑，WebSocket断开后需要手动刷新页面重连。
 
-## 11. 小结
+## 12. 小结
 
 本项目基于 ROS Noetic 搭建 Web 远程监控遥控系统，`rosbridge` 打通 ROS 后端与前端，`web\_video\_server` 完成图像推流。适合仿真小车远程操控、车载相机可视化场景；可以在此基础上扩展雷达数据可视化、自动避障、AEB 制动算法等功能。
+## 13.大模型说明
+
+使用豆包辅助完成代码与文档创作。作者对提交内容负责。
