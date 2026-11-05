@@ -41,7 +41,7 @@ class UavVisionNode(Node):
     def __init__(self):
         super().__init__('uav_vision_node')
 
-        self.declare_parameter('model_path', '~/.ros/uav_vision_nn/model.pth')
+        self.declare_parameter('model_path', '~/.ros/uav_vision_nn/model/model.pth')
         self.declare_parameter('image_size', 64)
         self.declare_parameter('max_speed', 2.0)
         self.declare_parameter('publish_rate', 10.0)

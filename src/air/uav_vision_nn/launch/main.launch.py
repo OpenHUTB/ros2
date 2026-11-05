@@ -34,7 +34,7 @@ def generate_launch_description():
     params_file = os.path.join(share_dir, 'config', 'params.yaml')
 
     default_model = os.path.join(
-        os.path.expanduser('~'), '.ros', 'uav_vision_nn', 'model.pth')
+        os.path.expanduser('~'), '.ros', 'uav_vision_nn', 'model', 'model.pth')
 
     airsim_ip = LaunchConfiguration('airsim_ip')
     airsim_port = LaunchConfiguration('airsim_port')

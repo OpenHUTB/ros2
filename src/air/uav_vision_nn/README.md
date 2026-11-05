@@ -120,7 +120,7 @@ ros2 service call /uav/takeoff std_srvs/srv/Trigger
 ```bash
 ros2 run uav_vision_nn main --ros-args \
   -r ~/image:=/uav/image -r ~/cmd_vel:=/uav/cmd_vel \
-  -p model_path:=$HOME/.ros/uav_vision_nn/model.pth
+  -p model_path:=$HOME/.ros/uav_vision_nn/model/model.pth
 ```
 
 ## 接口
@@ -151,7 +151,7 @@ ros2 run uav_vision_nn main --ros-args \
 | `airsim_source` | `airsim_ip` / `airsim_port` | `10.0.2.2` / `41451` |
 | `airsim_source` | `frame_rate` / `pose_rate` / `depth_rate` / `control_rate` | 10 / 20 / 5 / 10 Hz |
 | `airsim_source` | `cmd_timeout` | 0.5 s |
-| `uav_vision_node` | `model_path` | `~/.ros/uav_vision_nn/model.pth` |
+| `uav_vision_node` | `model_path` | `~/.ros/uav_vision_nn/model/model.pth` |
 | `uav_vision_node` | `image_size` / `max_speed` / `publish_rate` / `device` | 64 / 2.0 / 10.0 / cpu |
 | `uav_vision_collect` | `data_dir` / `sample_rate` / `mode` | `~/.ros/uav_vision_nn/data` / 2.0 / waypoint |
 | `uav_vision_collect` | `waypoints` / `altitude` / `gain` / `reach_radius` | 见 yaml |
