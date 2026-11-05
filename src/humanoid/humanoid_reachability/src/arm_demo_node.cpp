@@ -32,8 +32,7 @@ public:
     amplitude_scale_ = declare_parameter<double>("amplitude_scale", 0.35);
 
     if (publish_hz_ <= 0.0 || period_ <= 0.0) {
-      RCLCPP_ERROR(get_logger(), "publish_hz / period 必须为正数，节点退出");
-      RCLCPP_ERROR(get_logger(), "参数校验失败：publish_hz/period 必须为正数");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：publish_hz / period 必须为正数，节点退出");
       return;
     }
 

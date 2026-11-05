@@ -43,13 +43,11 @@ public:
     publish_rate_ = declare_parameter<double>("publish_rate", 2.0);
 
     if (voxel_resolution_ <= 0.0 || slice_height_ <= 0.0 || publish_rate_ <= 0.0) {
-      RCLCPP_ERROR(get_logger(), "voxel_resolution / slice_height / publish_rate 必须为正数，节点退出");
-      RCLCPP_ERROR(get_logger(), "参数校验失败：voxel_resolution/slice_height/publish_rate 必须为正数");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：voxel_resolution / slice_height / publish_rate 必须为正数，节点退出");
       return;
     }
     if (samples_per_arm_ <= 0) {
-      RCLCPP_ERROR(get_logger(), "samples_per_arm 必须为正整数，节点退出");
-      RCLCPP_ERROR(get_logger(), "参数校验失败：samples_per_arm 必须为正整数");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：samples_per_arm 必须为正整数，节点退出");
       return;
     }
 
@@ -61,12 +59,12 @@ public:
       }
     }
 
-    marker_pub_ = create_publisher<MarkerArray>("/reachable_workspace", 1);
-    volume_pub_ = create_publisher<Float64MultiArray>("/reachable_volume", 10);
-    bounds_pub_ = create_publisher<Float64MultiArray>("/reachable_bounds", 10);
-    stats_pub_ = create_publisher<String>("/reachability_stats", 10);
-    ee_left_pub_ = create_publisher<PointStamped>("/demo_end_effector_left", 10);
-    ee_right_pub_ = create_publisher<PointStamped>("/demo_end_effector_right", 10);
+    marker_pub_ = create_publisher<MarkerArray>("~/reachable_workspace", 1);
+    volume_pub_ = create_publisher<Float64MultiArray>("~/reachable_volume", 10);
+    bounds_pub_ = create_publisher<Float64MultiArray>("~/reachable_bounds", 10);
+    stats_pub_ = create_publisher<String>("~/reachability_stats", 10);
+    ee_left_pub_ = create_publisher<PointStamped>("~/demo_end_effector_left", 10);
+    ee_right_pub_ = create_publisher<PointStamped>("~/demo_end_effector_right", 10);
 
     demo_sub_ = create_subscription<Float64MultiArray>(
       "/demo_joint_angles", 10,
