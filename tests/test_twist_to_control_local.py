@@ -94,7 +94,7 @@ def make_getter(mapping):
 
 
 # ---------------------------------------------------------------- A 默认值
-def test_defaults():
+def group_defaults():
     check("A01 默认底盘模型为 bicycle", core.DEFAULT_MODEL == "bicycle")
     check("A02 支持三种底盘模型",
           core.MODELS == ("bicycle", "ackermann", "diff_drive"))
@@ -129,7 +129,7 @@ def test_defaults():
 
 
 # ---------------------------------------------------------------- B 小工具
-def test_helpers():
+def group_helpers():
     check_close("B01 clamp 下界", core.clamp(-3.0, -1.0, 1.0), -1.0)
     check_close("B02 clamp 上界", core.clamp(3.0, -1.0, 1.0), 1.0)
     check_close("B03 clamp 区间内不动", core.clamp(0.25, -1.0, 1.0), 0.25)
@@ -157,7 +157,7 @@ def test_helpers():
 
 
 # ---------------------------------------------------------------- C 曲率
-def test_curvature():
+def group_curvature():
     check_close("C01 1m/s 转 0.5rad/s 曲率 0.5",
                 core.curvature_from_twist(1.0, 0.5), 0.5)
     check_close("C02 2m/s 转 0.5rad/s 曲率 0.25",
@@ -180,7 +180,7 @@ def test_curvature():
 
 
 # ---------------------------------------------------------------- D 转角
-def test_steering():
+def group_steering():
     angle, saturated = core.steering_from_curvature(0.2, 2.7, 1.0, 0.55)
     check_close("D01 atan(0.2*2.7) 转角", angle, math.atan(0.54))
     check("D02 未饱和", saturated is False)
@@ -216,7 +216,7 @@ def test_steering():
 
 
 # ---------------------------------------------------------------- E 阿克曼
-def test_ackermann():
+def group_ackermann():
     left, right = core.ackermann_wheel_angles(0.2, 2.7, 1.5)
     inner = math.atan(0.54 / 0.85)
     outer = math.atan(0.54 / 1.15)
@@ -245,7 +245,7 @@ def test_ackermann():
 
 
 # ---------------------------------------------------------------- F 差速
-def test_diff_drive():
+def group_diff_drive():
     left, right = core.diff_drive_wheel_speeds(1.0, 0.5, 1.5)
     check_close("F01 左轮减速", left, 0.625)
     check_close("F02 右轮加速", right, 1.375)
@@ -270,7 +270,7 @@ def test_diff_drive():
 
 
 # ---------------------------------------------------------------- G 单帧推进
-def test_step_control():
+def group_step_control():
     params = make_params(max_accel=2.0, max_speed=5.0)
     state = core.ControlState()
     core.step_control(state, core.TwistCommand(1.0, 0.0), 0.1, params)
@@ -369,7 +369,7 @@ def test_step_control():
 
 
 # ---------------------------------------------------------------- H 模拟车辆
-def test_mock():
+def group_mock():
     params = make_params(model="bicycle")
     pose = core.Pose()
     state = core.ControlState(speed=1.0, steering=0.0, curvature=0.0)
@@ -418,7 +418,7 @@ def test_mock():
 
 
 # ---------------------------------------------------------------- I 四元数
-def test_quaternion():
+def group_quaternion():
     x, y, z, w = core.yaw_to_quaternion(0.0)
     check_close("I01 零偏航四元数 x", x, 0.0)
     check_close("I02 零偏航四元数 z", z, 0.0)
@@ -437,7 +437,7 @@ def test_quaternion():
 
 
 # ---------------------------------------------------------------- J 参数读取
-def test_from_params():
+def group_from_params():
     params = core.ControlParams.from_params(make_getter({}))
     check("J01 无参数时回落默认模型", params.model == "bicycle")
     check_close("J02 无参数时回落默认轴距", params.wheelbase, 2.7)
@@ -497,7 +497,7 @@ def test_from_params():
 
 
 # ---------------------------------------------------------------- K 工程文件
-def test_project_files():
+def group_project_files():
     package_xml = read_text(os.path.join(PKG, "package.xml"))
     check("K01 存在 package.xml", bool(package_xml))
     check("K02 包名为 twist_to_control",
@@ -593,13 +593,35 @@ def test_project_files():
         check("K47 本地不含 docs/index.md（首页已有链接，避免误覆盖）",
               not os.path.isfile(INDEX))
 
-    # 首页（docs/index.md）上游已经存在「扭转控制」链接，本模块不需要修改它；
-    # 这里反向校验本地**没有**放该文件，避免整体拖拽上传时误覆盖首页。
-    check("K48 本地不含 docs/index.md（首页无需改动，防止误覆盖）",
-          not os.path.isfile(INDEX))
-    check("K49 本地只放了需要上传的文件",
-          not os.path.isfile(os.path.join(ROOT, "docs", "index.md")))
 
+
+# ---------------------------------------------------------------- pytest 入口
+# check() 只把失败记进 FAILED 列表、本身不断言，所以直接把分组函数交给 pytest
+# 收集会永远是全绿（假绿）：pytest 只看函数有没有抛异常。这里给每个分组包一层
+# 真正会抛 AssertionError 的包装函数，让 `python3 -m pytest <本文件>` 可信。
+def _pytest_group(func):
+    def runner():
+        before = len(FAILED)
+        func()
+        new = FAILED[before:]
+        if new:
+            raise AssertionError(
+                u"本组失败 %d 项：\n%s" % (len(new), u"\n".join(new)))
+    runner.__name__ = "test_" + func.__name__[len("group_"):]
+    return runner
+
+
+test_defaults = _pytest_group(group_defaults)
+test_helpers = _pytest_group(group_helpers)
+test_curvature = _pytest_group(group_curvature)
+test_steering = _pytest_group(group_steering)
+test_ackermann = _pytest_group(group_ackermann)
+test_diff_drive = _pytest_group(group_diff_drive)
+test_step_control = _pytest_group(group_step_control)
+test_mock = _pytest_group(group_mock)
+test_quaternion = _pytest_group(group_quaternion)
+test_from_params = _pytest_group(group_from_params)
+test_project_files = _pytest_group(group_project_files)
 
 # ---------------------------------------------------------------- 主流程
 def main():
@@ -608,17 +630,17 @@ def main():
     print("包目录 %s" % PKG)
     print("-" * 46)
 
-    test_defaults()
-    test_helpers()
-    test_curvature()
-    test_steering()
-    test_ackermann()
-    test_diff_drive()
-    test_step_control()
-    test_mock()
-    test_quaternion()
-    test_from_params()
-    test_project_files()
+    group_defaults()
+    group_helpers()
+    group_curvature()
+    group_steering()
+    group_ackermann()
+    group_diff_drive()
+    group_step_control()
+    group_mock()
+    group_quaternion()
+    group_from_params()
+    group_project_files()
 
     print("=" * 46)
     print("通过 %d 项，失败 %d 项" % (len(PASSED), len(FAILED)))
