@@ -36,12 +36,12 @@
 
 | 模块 | 文件 | 作用 |
 |---|---|---|
-| 逆运动学 | `mujoco_arm_pick.py` | 解析 2 连杆 IK（`ik2`），解算水平目标 (q1, q2) |
-| 关节控制 | `mujoco_arm_pick.py` | 水平 PD（KP=100, KD=25）+ 升降 PD（KP=200, KD=20） |
-| 任务调度 | `mujoco_arm_pick.py` | 9 段时间轴：下降/夹取/抬升/移动/放下/收回 |
-| 抓取逻辑 | `mujoco_arm_pick.py` | 逻辑吸附：夹爪中心降到球心高度附近时锁定球位置 |
+| 逆运动学 | `main.py` | 解析 2 连杆 IK（`ik2`），解算水平目标 (q1, q2) |
+| 关节控制 | `main.py` | 水平 PD（KP=100, KD=25）+ 升降 PD（KP=200, KD=20） |
+| 任务调度 | `main.py` | 9 段时间轴：下降/夹取/抬升/移动/放下/收回 |
+| 抓取逻辑 | `main.py` | 逻辑吸附：夹爪中心降到球心高度附近时锁定球位置 |
 | 模型定义 | `arm_gripper.xml` | 两连杆臂 + 升降关节 + 夹爪 + 球 + A/B 托盘柱 |
-| 轨迹绘制 | `mujoco_arm_pick.py` | DLT 相机标定把末端 3D 位置投影到像素，逐帧画黄色轨迹 |
+| 轨迹绘制 | `main.py` | DLT 相机标定把末端 3D 位置投影到像素，逐帧画黄色轨迹 |
 
 ## 运行环境
 
@@ -57,7 +57,7 @@ pip3 install --user mujoco pillow numpy
 sudo apt install -y libosmesa6-dev        # 无显卡虚拟机需要
 
 # 2. 运行（生成 demo_pick.gif，201 帧 / 8.4 秒）
-MUJOCO_GL=osmesa python3 mujoco_arm_pick.py
+MUJOCO_GL=osmesa python3 main.py
 
 # 3. 查看效果图
 xdg-open demo_pick.gif
@@ -82,4 +82,4 @@ xdg-open demo_pick.gif
 
 > **生成的文件仅本地查看，不要直接提交。** 如需更新仓库里的演示图，请先降低 `FPS` / 分辨率，或二次压缩到 10 MB 以内再提交；脚本结束时也会打印生成体积并在超限时给出提示。
 
-详细说明见 [docs/mujoco_arm_pick.md](docs/mujoco_arm_pick.md)。
+详细说明见 [文档站页面](../../docs/arm/mujoco_arm_pick.md)。
