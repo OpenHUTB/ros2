@@ -1,0 +1,24 @@
+# ros_scenario_runner 的默认参数。
+# launch 里用 <rosparam command="load"> 载入，再用 <param> 逐项覆盖，
+# 所以这里改默认值会同时影响 roslaunch 和命令行覆盖。
+
+rate:
+  publish_hz: 20.0          # 指令发布频率，同时也是 mock 车辆的积分频率
+
+control:
+  use_mock_odom: true       # true = 用内置二维车辆模型；false = 真的订阅 /odom
+  sim_dt: 0.05              # 内置模型的积分步长（秒）
+
+vehicle:
+  max_speed: 5.0            # 内置车辆的最高速度 m/s
+  max_accel: 1.5            # 内置车辆的加速度上限 m/s^2
+  max_decel: 4.0            # 内置车辆的减速度上限 m/s^2
+  max_yaw_rate: 1.0         # 内置车辆的角速度上限 rad/s
+
+topic:
+  cmd_vel: /cmd_vel
+  odom: /odom
+  report: /scenario/report
+
+scenario:
+  file: ""                  # 由 launch 用 $(find ros_scenario_runner)/config/scenarios/... 覆盖
