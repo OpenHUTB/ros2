@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_wind_aware_delivery</name>
+  <version>1.0.0</version>
+  <description>
+    四旋翼风扰下物资精准空投：MuJoCo 吊挂/释放、几何控制、弹道与神经网络落点预测、
+    ROS Noetic 全链仿真。
+  </description>
+  <maintainer email="lxy@example.com">lxy</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rospkg</depend>
+
+  <export>
+    <build_type>catkin</build_type>
+  </export>
+</package>

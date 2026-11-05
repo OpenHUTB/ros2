@@ -1,0 +1,10 @@
+{
+  "model": "ImpactMLP(6-64-64-2)",
+  "samples": 6000,
+  "train_rmse_m": 0.01423,
+  "val_rmse_m": 0.0143,
+  "val_mae_m": 0.01089,
+  "zero_baseline_rmse_m": 0.86612,
+  "improvement_pct": 98.35,
+  "epochs": 110
+}
