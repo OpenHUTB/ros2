@@ -1,0 +1,32 @@
+<mujoco model="scene_button">
+  <!-- 场景 2：门铃式前推按键（立柱+悬臂+滑动的红色钮帽，指尖沿弧线自上前方 −y 向推压） -->
+  <include file="hand_model.xml"/>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.35 0.4 0.45" rgb2="0.4 0.45 0.5"
+             width="256" height="256"/>
+    <material name="floor" texture="grid" texuniform="true" reflectance="0.2"/>
+    <material name="stand" rgba="0.4 0.4 0.45 1" specular="0.4"/>
+    <material name="button" rgba="0.9 0.2 0.2 1" specular="0.6"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0.6 0.6 0.05" material="floor" condim="3"/>
+
+    <!-- 台架：立柱 + 悬臂，红色钮帽沿 -y 滑动（行程 6 mm，弹簧回位）；
+         钮帽中心 z=0.094 对准食指按压弧线 (y≈0.122, z≈0.089) -->
+    <body name="button_base" pos="0.018 0 0">
+      <geom name="g_pillar" type="box" size="0.012 0.010 0.046" pos="0 0.002 0.046"
+            material="stand" mass="0.4"/>
+      <geom name="g_arm" type="box" size="0.012 0.048 0.010" pos="0 0.054 0.094"
+            material="stand" mass="0.2"/>
+      <body name="button_cap" pos="0 0.128 0.094">
+        <joint name="j_button" type="slide" axis="0 -1 0" range="0 0.006"
+               stiffness="120" damping="0.6" armature="0"/>
+        <geom name="g_bcap" type="cylinder" size="0.014 0.006" euler="1.5708 0 0"
+              material="button" mass="0.02"/>
+        <site name="button_top" pos="0 -0.006 0" size="0.003" rgba="1 1 0 0.8"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

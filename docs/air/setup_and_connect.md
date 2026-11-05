@@ -9,7 +9,7 @@
 cd ~
 # 下载 miniconda 安装包
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-# 默认路径安装（用户主目录下）
+# 默认路径安装（用户主目录下）（建议去掉 -b 以便确认安装路径）
 bash Miniconda3-latest-Linux-x86_64.sh -b
 # 将 miniconda 添加到 PATH
 echo 'export PATH="~/miniconda3/bin:$PATH"' >> ~/.bashrc  && source ~/.bashrc
@@ -19,6 +19,10 @@ conda --version
 
 * 新建虚拟环境
 ```shell
+# 初始化conda
+conda init bash
+# 重新加载配置使生效
+source ~/.bashrc
 conda create -n nn_3.8 python=3.8 -y
 conda activate nn_3.8
 ```
@@ -49,6 +53,8 @@ source ~/.bashrc
 cd AbandonedPark/WindowsNoEditor/
 AbandonedPark.exe
 ```
+**注意：**
+请确保你已经下载并解压了 AirSim 的 AbandonedPark 环境包，这里的 cd 命令需要进入你解压该环境的实际目录。
 ![](../img/air/abandoned_park.png)
 
 ```shell
@@ -64,8 +70,8 @@ pip install airsim
 ```shell
 git clone https://github.com/OpenHUTB/air.git
 cd air/PythonClient/multirotor/
-# 其中 --host 后面是宿主机的 ip 地址，通过命令（ipconfig）进行查看
-python hello_drone.py --host 172.21.108.47
+# 其中 --host 后面是宿主机的 ip 地址，通过命令（ipconfig）进行查看，Windows 下请在 CMD 输入 ipconfig 查看，Linux/Max 输入 ifconfig查看
+python3 hello_drone.py --host<此处替换为你的宿主机IP>
 ```
 ![](../img/air/hello_drone.png)
 

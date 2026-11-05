@@ -1,0 +1,14 @@
+# PPO 导航部署参数（训练参数见 scripts/env.py 与 train.py 的命令行参数）
+#
+# 注意：nav/goal 由 launch/main.launch 的 goal_x/goal_y/goal_z 参数给出并覆盖本文件，
+#       这里不再重复配置，避免"两处默认值不一致"。要改目标点请用命令行参数：
+#         roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
+#       目标点是【绝对 ENU 坐标】，需写在无人机当前位置附近可达的地方。
+
+rate:
+  publish_hz: 10.0           # 策略推理 / 速度指令发布频率，须与训练 dt = 0.1 s 一致
+
+topic:
+  cmd_vel: "/uav/cmd_vel"    # 速度指令话题（世界系 ENU 速度，与桥接包一致）
+  odom: "/uav/odom"
+  lidar: "/lidar/points"

@@ -9,8 +9,10 @@
 
 使用方法:
   python3 main.py              # 默认启动独立仿真与键盘交互
+  python3 main.py --gui        # 启动 3D Viewer 交互视窗
   python3 main.py --ros2       # 启动 ROS2 节点集群
   python3 main.py --launch     # 自动调用 ros2 launch
+  python3 main.py --test       # 运行任务 1 仿真与控制单元测试
 """
 
 import os
@@ -19,13 +21,40 @@ import time
 import math
 import argparse
 import threading
+import subprocess
 import numpy as np
 
+def _run_script(script_path: str, desc: str = "测试") -> None:
+    """安全执行外部 Python 脚本并透传真实退出码，提前检查文件是否存在"""
+    if not os.path.isfile(script_path):
+        print(f"[ERROR] {desc}脚本不存在: {script_path}", file=sys.stderr)
+        print(f"[HINT] 请确认对应任务代码是否已合入，或检查脚本路径是否正确。", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[INFO] 正在启动{desc}: {os.path.basename(script_path)}...")
+    res = subprocess.run([sys.executable, script_path])
+    sys.exit(res.returncode)
+
+def _run_launch(launch_file: str, desc: str) -> None:
+    """安全执行 ros2 launch 并透传真实退出码，提前检查 launch 文件是否存在"""
+    launch_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "launch", launch_file)
+    if not os.path.isfile(launch_path):
+        print(f"[ERROR] Launch 文件不存在: {launch_path}", file=sys.stderr)
+        print(f"[HINT] 请确认对应任务代码是否已合入，或检查 launch 文件路径。", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[INFO] 正在通过 ros2 launch 启动{desc}...")
+    res = subprocess.run(["ros2", "launch", "rov_mujoco", launch_file])
+    sys.exit(res.returncode)
+
 def run_ros2_launch():
-    """使用 ros2 launch 启动"""
-    print("[INFO] 正在通过 ros2 launch 启动水下机器人模块...")
-    cmd = "ros2 launch rov_mujoco main.launch.py"
-    os.system(cmd)
+    """使用 ros2 launch 启动水下机器人基础仿真模块"""
+    _run_launch("main.launch.py", "水下机器人基础仿真模块")
+
+def run_task1_test():
+    """执行任务 1 自动化单元测试 (水动力仿真与 6-DOF 键盘运动控制)"""
+    test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_sim_teleop.py")
+    _run_script(test_path, "任务 1 仿真与遥控测试")
 
 def run_standalone():
     """独立运行仿真与键盘交互控制，并发布 ROS2 话题"""
@@ -315,23 +344,23 @@ def run_gui():
         pass
     print("\n[INFO] 仿真已安全结束。")
 
-def run_task2_launch():
-    """使用 ros2 launch 启动任务 2"""
-    print("[INFO] 正在通过 ros2 launch 启动任务 2 航迹跟踪与多传感器仿真...")
-    cmd = "ros2 launch rov_mujoco task2.launch.py"
-    os.system(cmd)
+def run_trajectory_tracking_launch():
+    """使用 ros2 launch 启动水下多传感器感知与 3D 轨迹跟踪系统 (任务 2)"""
+    _run_launch("trajectory_tracking.launch.py", "水下多传感器感知与 3D 轨迹跟踪仿真")
 
-def run_task2_test():
-    """执行任务 2 自动化测试与性能对比评测"""
-    test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_task2.py")
-    ret = os.system(f'"{sys.executable}" "{test_path}"')
-    if ret != 0:
-        sys.exit(ret)
+run_task2_launch = run_trajectory_tracking_launch
 
-def run_task2_gui():
-    """启动任务 2: 3D 可视化视窗下的水下多传感器感知与神经网络轨迹自主跟踪"""
+def run_trajectory_tracking_test():
+    """执行水下多传感器感知与 3D 轨迹跟踪自动化测试与性能对比评测 (任务 2)"""
+    test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_trajectory_tracking.py")
+    _run_script(test_path, "水下多传感器感知与 3D 轨迹跟踪测试")
+
+run_task2_test = run_trajectory_tracking_test
+
+def run_trajectory_tracking_gui():
+    """启动 3D 可视化视窗下的水下多传感器感知与神经网络 3D 轨迹自主跟踪"""
     print("=" * 65)
-    print("  水下机器人多传感器感知与神经网络 3D 轨迹跟踪系统 (任务 2)")
+    print("  水下机器人多传感器感知与神经网络 3D 轨迹跟踪系统")
     print("=" * 65)
 
     try:
@@ -363,7 +392,7 @@ def run_task2_gui():
     sim_node.data.qvel[sim_node.model.jnt_dofadr[sim_node.joint_id]: sim_node.model.jnt_dofadr[sim_node.joint_id] + 6] = 0.0
     mujoco.mj_forward(sim_node.model, sim_node.data)
 
-    print("\n[INFO] 正在拉起 MuJoCo 3D Viewer 渲染视窗 (任务 2 自主巡航跟踪模式)...")
+    print("\n[INFO] 正在拉起 MuJoCo 3D Viewer 渲染视窗 (自主巡航跟踪模式)...")
     print("系统状态:")
     print("  ▶ 控制算法: 深度神经网络 (NN MLP Policy, 10->64->64->4)")
     print("  ▶ 巡航轨迹: 3D 空间螺旋线立体巡检 (R=2.0m, Z=-1.0m~-3.0m)")
@@ -425,10 +454,10 @@ def run_task2_gui():
             import traceback
             traceback.print_exc()
 
-    print("\n\n>>> 仿真已结束，正在统计任务 2 航迹跟踪性能报表...")
+    print("\n\n>>> 仿真已结束，正在统计航迹跟踪性能报表...")
     summary = sim_node.evaluator.summary()
     print("=" * 65)
-    print("          任务 2 神经网络 3D 轨迹跟踪性能评价报告")
+    print("          神经网络 3D 轨迹跟踪性能评价报告")
     print("=" * 65)
     print(f"  ▶ 3D 空间均方根误差 (3D RMSE):  {summary['rmse_3d']:.4f} m")
     print(f"  ▶ 水平平面均方根误差 (XY RMSE):  {summary['rmse_xy']:.4f} m")
@@ -444,21 +473,17 @@ def run_task2_gui():
             rclpy.shutdown()
     except Exception:
         pass
-    print("[INFO] 任务 2 仿真已安全结束。")
+    print("[INFO] 轨迹跟踪仿真已安全结束。")
     os._exit(0)
 
 def run_task3_launch():
     """使用 ros2 launch 启动任务 3"""
-    print("[INFO] 正在通过 ros2 launch 启动任务 3 水下 SLAM 与自主导航系统...")
-    cmd = "ros2 launch rov_mujoco task3.launch.py"
-    os.system(cmd)
+    _run_launch("task3.launch.py", "任务 3 水下 SLAM 与自主导航系统")
 
 def run_task3_test():
     """执行任务 3 自动化测试与性能对比评测"""
     test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_task3.py")
-    ret = os.system(f'"{sys.executable}" "{test_path}"')
-    if ret != 0:
-        sys.exit(ret)
+    _run_script(test_path, "任务 3 SLAM与自主导航测试")
 
 def run_task3_gui():
     """启动任务 3: 3D 可视化视窗下的水下多波束声呐 SLAM 建图与神经网络自主导航"""
@@ -675,16 +700,12 @@ def run_task3_gui():
 
 def run_task4_launch():
     """使用 ros2 launch 启动任务 4"""
-    print("[INFO] 正在通过 ros2 launch 启动任务 4 端到端视觉控制系统...")
-    cmd = "ros2 launch rov_mujoco task4.launch.py"
-    os.system(cmd)
+    _run_launch("task4.launch.py", "任务 4 端到端视觉控制系统")
 
 def run_task4_test():
     """执行任务 4 自动化测试与性能对比评测"""
     test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test", "test_task4.py")
-    ret = os.system(f'"{sys.executable}" "{test_path}"')
-    if ret != 0:
-        sys.exit(ret)
+    _run_script(test_path, "任务 4 端到端视觉控制测试")
 
 def run_task4_gui(arch="nature_cnn", algo="sac"):
     """启动任务 4: 3D 可视化视窗下的基于深度神经网络端到端水下视觉伺服巡航"""
@@ -907,9 +928,10 @@ def main():
     parser.add_argument("--launch", action="store_true", help="调用 ros2 launch 启动仿真与键盘遥控节点")
     parser.add_argument("--gui", action="store_true", help="拉起 3D 可视化 Viewer 交互视窗 (6-DOF 键盘遥控)")
     parser.add_argument("--ros2", action="store_true", help="运行 ROS2 集成节点")
-    parser.add_argument("--task2", action="store_true", help="拉起任务 2: 3D 可视化视窗下的多传感器感知与神经网络自主航迹跟踪")
-    parser.add_argument("--launch2", action="store_true", help="调用 ros2 launch 启动任务 2")
-    parser.add_argument("--test2", action="store_true", help="运行任务 2 自动化感知与控制综合评测")
+    parser.add_argument("--test", "--test1", action="store_true", dest="test1", help="运行任务 1 仿真与 6-DOF 运动控制自动化验证测试")
+    parser.add_argument("--track", "--track-gui", "--task2", action="store_true", dest="track", help="拉起 3D 可视化视窗下的多传感器感知与神经网络 3D 轨迹自主跟踪 (任务 2)")
+    parser.add_argument("--launch-track", "--launch2", action="store_true", dest="launch_track", help="调用 ros2 launch 启动水下多传感器感知与 3D 轨迹跟踪系统 (任务 2)")
+    parser.add_argument("--eval-trajectory", "--test2", action="store_true", dest="eval_trajectory", help="运行水下多传感器感知与 3D 轨迹跟踪自动化测试与性能对比评测 (任务 2)")
     parser.add_argument("--task3", action="store_true", help="拉起任务 3: 3D 可视化视窗下的水下声呐 SLAM 栅格建图与神经网络自主导航")
     parser.add_argument("--launch3", action="store_true", help="调用 ros2 launch 启动任务 3")
     parser.add_argument("--test3", action="store_true", help="运行任务 3 自动化 SLAM 与导航规划综合评测")
@@ -932,12 +954,14 @@ def main():
         run_task3_launch()
     elif args.test3:
         run_task3_test()
-    elif args.task2:
-        run_task2_gui()
-    elif args.launch2:
-        run_task2_launch()
-    elif args.test2:
-        run_task2_test()
+    elif args.track:
+        run_trajectory_tracking_gui()
+    elif args.launch_track:
+        run_trajectory_tracking_launch()
+    elif args.eval_trajectory:
+        run_trajectory_tracking_test()
+    elif args.test1:
+        run_task1_test()
     elif args.launch:
         run_ros2_launch()
     elif args.gui:

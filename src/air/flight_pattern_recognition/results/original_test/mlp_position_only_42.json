@@ -1,0 +1,113 @@
+{
+  "accuracy": 0.37142857142857144,
+  "macro_f1": 0.31726568005637773,
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      2,
+      0,
+      10
+    ],
+    [
+      11,
+      0,
+      3,
+      0,
+      0
+    ],
+    [
+      5,
+      0,
+      0,
+      0,
+      9
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    [
+      1,
+      0,
+      3,
+      0,
+      10
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 0.10526315789473684,
+      "recall": 0.14285714285714285,
+      "f1": 0.12121212121212122
+    },
+    {
+      "class": "circle",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "class": "figure_eight",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 0.3448275862068966,
+      "recall": 0.7142857142857143,
+      "f1": 0.46511627906976755
+    }
+  ],
+  "model": "mlp_position_only_42",
+  "windows": 70,
+  "episodes": 5,
+  "accepted_coverage": 0.3,
+  "accepted_accuracy": 0.6666666666666666,
+  "episode_results": [
+    {
+      "episode": "episode_025",
+      "truth": "line",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_026",
+      "truth": "circle",
+      "majority_prediction": "line",
+      "correct": false
+    },
+    {
+      "episode": "episode_027",
+      "truth": "figure_eight",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_028",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_029",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 0.4,
+  "inference_median_ms": 0.021970999966924865,
+  "inference_p95_ms": 0.034865600019884306
+}

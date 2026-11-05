@@ -22,7 +22,7 @@
     <geom name="buoy_3" type="cylinder" size="0.12 1.5" pos="4.5 -4.5 -2.0" rgba="0.95 0.85 0.15 1" />
     <geom name="buoy_4" type="cylinder" size="0.12 1.5" pos="-4.5 -4.5 -2.0" rgba="0.15 0.65 0.95 1" />
 
-    <!-- 任务 3：水下立体管网与作业设施障碍区 (SLAM 建图与自主导航目标走廊) -->
+    <!-- 水下立体管网与作业设施障碍区 (SLAM 建图与自主导航目标走廊) -->
     <!-- 1. 海底主干油气管道与分支管道 -->
     <geom name="pipeline_main" type="cylinder" size="0.25 4.5" pos="0 3.2 -2.6" quat="0.707 0 0.707 0" material="mat_thruster_duct" />
     <geom name="pipeline_branch" type="cylinder" size="0.20 3.0" pos="3.0 1.0 -2.6" quat="0.707 0.707 0 0" material="mat_thruster_duct" />

@@ -1,0 +1,44 @@
+<mujoco model="simple_car">
+  <option timestep="0.01"/>
+
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+
+    <geom name="pole1" type="cylinder" pos="2 0 0.5" size="0.1 0.5" rgba="1 0 0 1"/>
+    <geom name="pole2" type="cylinder" pos="-2 0 0.5" size="0.1 0.5" rgba="0 1 0 1"/>
+    <geom name="pole3" type="cylinder" pos="0 2 0.5" size="0.1 0.5" rgba="0 0 1 1"/>
+    <geom name="pole4" type="cylinder" pos="0 -2 0.5" size="0.1 0.5" rgba="1 1 0 1"/>
+
+    <!-- 底盘稍微收回一点 (0.22 x 0.18)，保证转向灵活的同时不至于翻车 -->
+    <body name="car" pos="0 0 0.05">
+      <freejoint/>
+      <geom name="chassis" type="box" size="0.22 0.18 0.05" rgba="0.2 0.4 0.8 1"/>
+
+      <body name="wheel_fl" pos="0.15 0.18 -0.05">
+        <joint name="wheel_fl" type="hinge" axis="0 1 0" damping="0.1"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+      <body name="wheel_fr" pos="0.15 -0.18 -0.05">
+        <joint name="wheel_fr" type="hinge" axis="0 1 0" damping="0.1"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+      <body name="wheel_rl" pos="-0.15 0.18 -0.05">
+        <joint name="wheel_rl" type="hinge" axis="0 1 0" damping="0.1"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+      <body name="wheel_rr" pos="-0.15 -0.18 -0.05">
+        <joint name="wheel_rr" type="hinge" axis="0 1 0" damping="0.1"/>
+        <geom type="cylinder" size="0.05 0.03" euler="90 0 0" rgba="0.1 0.1 0.1 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- 电机上限拉到 20，实现狂暴动力 -->
+    <motor name="fl_motor" joint="wheel_fl" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
+    <motor name="fr_motor" joint="wheel_fr" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
+    <motor name="rl_motor" joint="wheel_rl" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
+    <motor name="rr_motor" joint="wheel_rr" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
+  </actuator>
+</mujoco>
