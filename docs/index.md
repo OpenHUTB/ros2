@@ -155,7 +155,7 @@ ROS每章节运行代码:
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
-* [多传感器融合跟踪（Radar+Camera+IMU）](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合，相机 30Hz 高频方位补偿雷达不足，融合比单传感器提升约 38%
+* [多传感器融合跟踪（Radar+Camera+IMU）](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合，相机 30Hz 高频方位补偿雷达不足，融合比单传感器提升约 32%（脚本实测可复现）
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 
