@@ -1,0 +1,31 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+    - Class: rviz/RobotModel
+      Name: RobotModel
+      Enabled: false
+      Description: "需要先发布 robot_description(URDF)。MuJoCo 场景默认用 MuJoCo 自带 viewer 显示。"
+    - Class: rviz/Marker
+      Name: CubeMarker
+      Enabled: false
+      Topic: /cube_marker
+  Global Options:
+    Fixed Frame: world
+    Background Color: 0.1 0.1 0.1
+  Views:
+    - Class: rviz/Orbit
+      Distance: 2.5
+      Focal Point: [0, 0, 0.5]
+      Yaw: 0.7
+      Pitch: -0.5

@@ -62,6 +62,7 @@ ROS每章节运行代码:
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+  *  MuJoCo+ROS UR5抓放轨迹规划(./chapter/chap8/mujoco_ur5_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 
