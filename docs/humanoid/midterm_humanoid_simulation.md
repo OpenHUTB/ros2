@@ -127,7 +127,7 @@ $$ I\,\ddot{e} + b\,\dot{e} + k_p\,e = I\,\ddot{q}_d + b\,\dot{q}_d - g(q) $$
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可）
 - Python >= 3.10
 - 系统库（Linux 无显示环境渲染需要）：`sudo apt install -y libosmesa6-dev`
-- MuJoCo 3.x、numpy、imageio + imageio-ffmpeg、pillow（预览 PNG）
+- MuJoCo 3.x、numpy、imageio + imageio-ffmpeg、pillow（预览 PNG）、pillow（预览 PNG）
 
 ### 5.2 安装依赖
 ```bash

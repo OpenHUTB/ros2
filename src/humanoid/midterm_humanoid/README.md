@@ -10,7 +10,7 @@
 ## 💻 运行环境
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可运行）
 - Python >= 3.10
-- 依赖版本：mujoco 3.x、numpy、imageio、imageio-ffmpeg、pillow（预览 PNG）
+- 依赖版本：mujoco 3.x、numpy、imageio、imageio-ffmpeg、pillow（预览 PNG）、pillow（预览 PNG）
 
 ## 📦 安装依赖
 ```bash
