@@ -30,6 +30,13 @@ class JointRecorder(Node):
         return os.path.expanduser(self.get_parameter('filename').value)
 
     def start_callback(self, request, response):
+        # 防重入：录制中再次调用 /start_record 直接拒绝，避免静默清空已录数据
+        if self.is_recording:
+            response.success = False
+            response.message = 'Recording already in progress. Call /stop_record first.'
+            self.get_logger().warn('=== /start_record ignored: recording already in progress ===')
+            return response
+
         self.is_recording = True
         self.recorded_data = []
         response.success = True
