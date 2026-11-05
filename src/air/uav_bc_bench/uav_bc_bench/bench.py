@@ -32,11 +32,21 @@ def _augment(images, rng):
 
 
 def _split(n, seed):
-    rng = np.random.default_rng(seed)
-    idx = rng.permutation(n)
+    """按时间顺序切成连续三段。
+
+    连续飞行的相邻帧高度相关，随机打乱会让邻帧同时落进训练集和测试集，
+    评估结果被时间泄漏抬高。这里 train/val/test = 前 80%/中 10%/后 10%，
+    每段的起始点再按 seed 做一点抖动，避免固定切点带来的偶然性。
+    """
     n_val = max(1, int(round(n * 0.1)))
     n_test = max(1, int(round(n * 0.1)))
-    return idx[n_val + n_test:], idx[:n_val], idx[n_val:n_val + n_test]
+    n_train = n - n_val - n_test
+    if n_train < 2:
+        raise ValueError(f'样本数 {n} 太少，无法切成 8:1:1')
+    jitter = 0 if seed == 0 else int(np.random.default_rng(seed).integers(0, max(1, n_val)))
+    a = max(2, n_train - jitter)
+    b = min(n - n_test, a + n_val + (jitter // 2))
+    return (np.arange(0, a), np.arange(a, b), np.arange(b, n))
 
 
 def _evaluate(model, loader, loss_fn):
@@ -69,7 +79,7 @@ def train_one(structure, use_augment, seed, images, targets, epochs, image_size,
     val_loader = loader(val_idx, images[val_idx], False)
     test_loader = loader(test_idx, images[test_idx], False)
 
-    model = build(structure)
+    model = build(structure, image_size=image_size)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     loss_fn = nn.MSELoss()
 
@@ -224,10 +234,20 @@ def main(argv=None):
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--structures', default='mlp,cnn,cnn_wide')
     parser.add_argument('--no-augment', action='store_true')
+    parser.add_argument('--image-size', type=int, default=64)
+    parser.add_argument('--synthetic', type=int, default=0,
+                        help='大于 0 时先在该目录生成等量合成样本，不依赖任何仿真数据')
     args = parser.parse_args(argv)
-    run_benchmark(args.dataset_dir, args.output_dir, epochs=args.epochs, seeds=args.seeds,
+    dataset_dir = args.dataset_dir
+    if args.synthetic > 0:
+        from .data import synthesize_dataset
+        dataset_dir = synthesize_dataset(os.path.join(args.output_dir, 'synthetic'),
+                                         samples=args.synthetic, seed=0)
+        print(f'[bench] 使用合成数据集 {dataset_dir}')
+    run_benchmark(dataset_dir, args.output_dir, epochs=args.epochs, seeds=args.seeds,
                   structures=[s for s in args.structures.split(',') if s],
-                  augment=not args.no_augment, batch_size=args.batch_size)
+                  augment=not args.no_augment, batch_size=args.batch_size,
+                  image_size=args.image_size)
 
 
 if __name__ == '__main__':
