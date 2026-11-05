@@ -70,6 +70,7 @@ nav:
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'
     - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
@@ -107,7 +108,7 @@ nav:
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
-    - 基于MuJoCo的AEB自动紧急制动仿真: './ground/mujoco_vehicle_aeb/mujoco_vehicle_aeb.md'
+    - 基于MuJoCo的AEB自动紧急制动仿真: './ground/mujoco_vehicle_aeb.md'
     - 打靶: './ground/mujoco_shooting.md'
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
@@ -142,6 +143,7 @@ nav:
     - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
+    - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
 - 空域载具:
     - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
     - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
