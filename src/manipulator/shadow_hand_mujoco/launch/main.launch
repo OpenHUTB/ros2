@@ -7,7 +7,7 @@
   <node pkg="shadow_hand_mujoco" type="main.py" name="shadow_hand_mujoco" output="screen" cwd="node"
         args="--duration $(arg duration)" unless="$(arg preview)"/>
   <node pkg="shadow_hand_mujoco" type="main.py" name="shadow_hand_mujoco_preview" output="screen" cwd="node"
-        args="--duration $(arg duration) --preview" if="$(arg preview)"/>
+        args="--preview" if="$(arg preview)"/>
 
   <!-- cwd="node" 下相对路径以 node 目录为基准：roslaunch 启动时视频落在 devel/lib/shadow_hand_mujoco/output/ -->
 </launch>
