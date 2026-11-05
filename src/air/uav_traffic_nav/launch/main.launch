@@ -1,0 +1,26 @@
+<launch>
+  <!-- 动态交通避障部署：策略节点 + （可选）车辆流转换节点
+
+       参数必须写在 <node> 外：roslaunch 会把 <node> 内的 <param>/<rosparam>
+       放进该节点的私有命名空间（/traffic_nav/...），而节点读的是根级键
+       （traffic_nav/weights、rate/publish_hz、topic/cmd_vel、traffic_feed/live_json），
+       与 config/traffic_nav.yaml 的顶层键一致。 -->
+  <arg name="goal_x" default="8.0"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="goal_z" default="1.2"/>
+  <arg name="weights" default=""/>
+  <arg name="live_json" default=""/>
+  <arg name="calibration_json" default=""/>
+
+  <rosparam command="load" file="$(find uav_traffic_nav)/config/traffic_nav.yaml"/>
+  <param name="traffic_nav/goal" value="[$(arg goal_x), $(arg goal_y), $(arg goal_z)]"/>
+  <param name="traffic_nav/weights" value="$(arg weights)"/>
+  <param name="traffic_feed/live_json" value="$(arg live_json)"/>
+  <param name="traffic_feed/calibration_json" value="$(arg calibration_json)"/>
+
+  <node pkg="uav_traffic_nav" type="traffic_nav_node.py" name="traffic_nav" output="screen"/>
+
+  <!-- 需要从 CARLA live.json 取车辆时启用 -->
+  <node if="$(eval arg('live_json') != '')"
+        pkg="uav_traffic_nav" type="traffic_feed_node.py" name="traffic_feed" output="screen"/>
+</launch>

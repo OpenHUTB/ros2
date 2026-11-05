@@ -1,0 +1,25 @@
+# uav_traffic_nav 部署参数
+#
+# 目标点用 launch 参数覆盖（traffic_nav/goal），这里给默认值：
+#   roslaunch uav_traffic_nav main.launch goal_x:=8.0 goal_y:=0.0 goal_z:=1.2
+
+rate:
+  publish_hz: 10.0            # 策略推理频率，须与训练 dt = 0.1 s 一致
+
+topic:
+  cmd_vel: "/uav/cmd_vel"     # 世界系 ENU 速度（桥接需 body_frame:=false）
+  odom: "/uav/odom"
+  lidar: "/lidar/points"
+  traffic: "/traffic/vehicles"
+
+traffic_nav:
+  weights: ""                 # 留空 -> <pkg>/models/bc_policy_s42.npz（DAgger 部署策略）
+  goal: [8.0, 0.0, 1.2]       # ENU 世界系目标点
+  safety_stop_m: 1.6          # 几何安全兜底：车辆进入该半径立即悬停
+
+traffic_feed:
+  live_json: ""               # CARLA 交通工具输出的 live.json 路径
+  calibration_json: ""        # 可选：calibration.json（提供 offset 对齐）
+  topic: "/traffic/vehicles"
+  rate_hz: 10.0
+  max_age_s: 1.0              # 超过该时长视为过期，发布空列表
