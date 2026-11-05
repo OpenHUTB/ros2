@@ -127,7 +127,7 @@ cd 你的工作空间 && catkin_make && source devel/setup.bash
 roslaunch tripod_mujoco main.launch
 ```
 包结构采用 `catkin_python_setup()` + `setup.py`：`src/tripod_mujoco/` 安装为 Python 包，
-`main.py` 以 `from tripod_mujoco.common import ...` 导入公共库；源码目录直跑时自动回退同目录 `common.py`。
+`main.py` 以 `from tripod_mujoco.common import ...` 导入公共库；模块根 `main.py` 为源码直跑入口（先把 `src/` 加入 `sys.path` 再转发到包内入口）。
 
 ---
 
