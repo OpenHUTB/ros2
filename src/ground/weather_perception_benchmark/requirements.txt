@@ -1,0 +1,5 @@
+carla==0.9.15
+numpy
+opencv-python
+matplotlib
+Pillow

@@ -1,0 +1,27 @@
+# CARLA 传感器感知 + 给定轨迹跟踪（神经网络版）—— 仿真参数
+carla_perception_control_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 道路丰富，适合轨迹跟踪演示
+    town: "Town05"
+    # 自车蓝图
+    ego_blueprint: "vehicle.tesla.model3"
+    # 同步模式固定步长（秒）
+    fixed_delta_seconds: 0.05
+    # 感知神经网络模型路径（由 main.py --mode train 生成）
+    model_path: "models/nn_percept.json"
+    # 是否使用控制神经网络（false 则改用纯跟踪作对比）
+    use_nn_control: true
+    # 控制量上限
+    throttle_max: 0.6
+    steer_max: 0.6
+    # 三路传感器参数
+    image_width: 640
+    image_height: 480
+    camera_fov: 90.0
+    depth_width: 512
+    depth_height: 256
+    lidar_channels: 32
+    lidar_range: 40.0

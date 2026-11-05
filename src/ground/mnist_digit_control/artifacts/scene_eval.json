@@ -1,0 +1,362 @@
+{
+  "summary": {
+    "scene_paper.mp4": {
+      "accuracy": 1.0,
+      "gated_accuracy": 1.0,
+      "detected_ratio": 1.0,
+      "mean_conf": 0.8938989881426096,
+      "mean_infer_ms": 0.1957020781162555
+    },
+    "scene_dark.mp4": {
+      "accuracy": 0.875,
+      "gated_accuracy": 0.875,
+      "detected_ratio": 1.0,
+      "mean_conf": 0.8866086071357131,
+      "mean_infer_ms": 0.18372682810507968
+    },
+    "scene_rotated.mp4": {
+      "accuracy": 1.0,
+      "gated_accuracy": 0.875,
+      "detected_ratio": 1.0,
+      "mean_conf": 0.8491227645426989,
+      "mean_infer_ms": 0.2116358437902477
+    },
+    "scene_screen.mp4": {
+      "accuracy": 1.0,
+      "gated_accuracy": 1.0,
+      "detected_ratio": 1.0,
+      "mean_conf": 0.9622535966336727,
+      "mean_infer_ms": 0.21523363277964336
+    }
+  },
+  "detail": {
+    "scene_paper.mp4": [
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.7977348193526268,
+        "mean_ms": 0.23298456244447152
+      },
+      {
+        "label": 9,
+        "majority": 9,
+        "gated_majority": 9,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.8870698288083076,
+        "mean_ms": 0.2176323123990187
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.6727482676506042,
+        "mean_ms": 0.168950625038633
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9140174239873886,
+        "mean_ms": 0.18535225012783485
+      },
+      {
+        "label": 0,
+        "majority": 0,
+        "gated_majority": 0,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.999121680855751,
+        "mean_ms": 0.20046568744191973
+      },
+      {
+        "label": 7,
+        "majority": 7,
+        "gated_majority": 7,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9271013773977757,
+        "mean_ms": 0.19342556248602705
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9582102485001087,
+        "mean_ms": 0.1937801874305478
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9951882585883141,
+        "mean_ms": 0.1730254375615914
+      }
+    ],
+    "scene_dark.mp4": [
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.7427572160959244,
+        "mean_ms": 0.21787881235013629
+      },
+      {
+        "label": 9,
+        "majority": 7,
+        "gated_majority": -1,
+        "correct": 0,
+        "gated_correct": 0,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.5997799634933472,
+        "mean_ms": 0.18195187504943533
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.8864569813013077,
+        "mean_ms": 0.16514862494432236
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9717062450945377,
+        "mean_ms": 0.19300668753885475
+      },
+      {
+        "label": 0,
+        "majority": 0,
+        "gated_majority": 0,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9990658313035965,
+        "mean_ms": 0.1784879999036093
+      },
+      {
+        "label": 7,
+        "majority": 7,
+        "gated_majority": 7,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9496626704931259,
+        "mean_ms": 0.18178050009964863
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9454811923205853,
+        "mean_ms": 0.16676156246830942
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9979587569832802,
+        "mean_ms": 0.18479856248632132
+      }
+    ],
+    "scene_rotated.mp4": [
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.8810919001698494,
+        "mean_ms": 0.2121078124446285
+      },
+      {
+        "label": 9,
+        "majority": 9,
+        "gated_majority": 9,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.7462226077914238,
+        "mean_ms": 0.22831368750075853
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.6962606720626354,
+        "mean_ms": 0.21616300000459887
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9961386770009995,
+        "mean_ms": 0.24980118763551218
+      },
+      {
+        "label": 0,
+        "majority": 0,
+        "gated_majority": 0,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.994322195649147,
+        "mean_ms": 0.19986174999075956
+      },
+      {
+        "label": 7,
+        "majority": 7,
+        "gated_majority": 7,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.997018575668335,
+        "mean_ms": 0.1807558126074582
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.8991240933537483,
+        "mean_ms": 0.19230150019211578
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": -1,
+        "correct": 1,
+        "gated_correct": 0,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.5828033946454525,
+        "mean_ms": 0.21378199994614988
+      }
+    ],
+    "scene_screen.mp4": [
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9489062577486038,
+        "mean_ms": 0.23826518753367054
+      },
+      {
+        "label": 9,
+        "majority": 9,
+        "gated_majority": 9,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9455218724906445,
+        "mean_ms": 0.21610225002177685
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9960704855620861,
+        "mean_ms": 0.2023666873469665
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9645927995443344,
+        "mean_ms": 0.22099587499724294
+      },
+      {
+        "label": 0,
+        "majority": 0,
+        "gated_majority": 0,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9986867271363735,
+        "mean_ms": 0.20246793764044924
+      },
+      {
+        "label": 7,
+        "majority": 7,
+        "gated_majority": 7,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.98774404078722,
+        "mean_ms": 0.2076417497391958
+      },
+      {
+        "label": 2,
+        "majority": 2,
+        "gated_majority": 2,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.8799436129629612,
+        "mean_ms": 0.20767143740840766
+      },
+      {
+        "label": 5,
+        "majority": 5,
+        "gated_majority": 5,
+        "correct": 1,
+        "gated_correct": 1,
+        "detected_ratio": 1.0,
+        "mean_conf": 0.9765629768371582,
+        "mean_ms": 0.22635793754943734
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+<!--
+  rov_pond.xml: 动态洋流环境下的 6-DOF 水下 ROV 仿真场景。
+  设计要点：
+  1. 只用 box / plane / cylinder / freejoint 等基本几何体，不引用任何外部 mesh/纹理文件；
+  2. 地面用 MuJoCo 内置 checker 纹理，保证前视相机画面有结构、不黑屏；
+  3. gravity 故意调小（-2 而非 -9.81），近似"中性浮力"水下环境，
+     精确的浮力/黏性阻尼/姿态自稳放在 sim_node 代码层施加（不依赖 MuJoCo 流体扩展）；
+  4. 洋流扰动也在代码层以时变力注入（见 common.py 的 WaterDynamics），
+     这样模型文件保持纯净、参数可通过 ROS 参数动态调整。
+-->
+<mujoco model="rov_pond">
+  <option timestep="0.002" gravity="0 0 -2"/>
+  <default>
+    <!-- density=200 让 ROV 质量≈5kg（默认1000会到25kg，响应太迟钝） -->
+    <geom condim="1" friction="0.1 0.1 0.1" density="200"/>
+  </default>
+
+  <asset>
+    <!-- 内置 checker 纹理：不引用外部图片文件，相机画面有方格可看 -->
+    <texture builtin="checker" rgb1="0.25 0.30 0.35" rgb2="0.10 0.12 0.16"
+             width="256" height="256" name="floor_tex"/>
+    <material texture="floor_tex" texrepeat="8 8" reflectance="0.05" name="floor_mat"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 6" dir="0 0 -1" diffuse="0.8 0.8 0.8" specular="0.2 0.2 0.2"/>
+
+    <!-- 池底 -->
+    <geom name="pool_floor" type="plane" size="5 5 0.1" material="floor_mat"/>
+
+    <!-- 四周围挡（半透明，防止 ROV 开出边界） -->
+    <geom name="wall_n" type="box" pos="0.0 4.9 0.5" size="5.0 0.1 0.5" rgba="0.3 0.5 0.7 0.25"/>
+    <geom name="wall_s" type="box" pos="0.0 -4.9 0.5" size="5.0 0.1 0.5" rgba="0.3 0.5 0.7 0.25"/>
+    <geom name="wall_e" type="box" pos="4.9 0.0 0.5" size="0.1 5.0 0.5" rgba="0.3 0.5 0.7 0.25"/>
+    <geom name="wall_w" type="box" pos="-4.9 0.0 0.5" size="0.1 5.0 0.5" rgba="0.3 0.5 0.7 0.25"/>
+
+    <!-- 若干礁石障碍：纯 box/cylinder，相机能看到 -->
+    <geom name="rock1" type="cylinder" pos="1.5 1.5 0.25" size="0.3 0.25" rgba="0.4 0.35 0.3 1"/>
+    <geom name="rock2" type="box" pos="-2.0 1.0 0.2" size="0.4 0.3 0.2" rgba="0.35 0.3 0.25 1"/>
+    <geom name="rock3" type="cylinder" pos="-1.0 -2.0 0.2" size="0.25 0.2" rgba="0.4 0.35 0.3 1"/>
+
+    <!-- ROV 本体：6-DOF freejoint，box 壳体 + 4 个推进器圆柱体
+         初始 z=0.5：在池底(z=0)以上、水面以下的水柱中间，不能贴在地面上 -->
+    <body name="rov" pos="0.0 0.0 0.5">
+      <freejoint/>
+      <geom name="hull" type="box" size="0.25 0.15 0.08" rgba="0.8 0.25 0.2 1"/>
+      <!-- 水平推进器：前后左右各一（视觉装饰，实际推力由代码 qfrc_applied 施加） -->
+      <geom name="thruster_fl" type="cylinder" pos="0.22 0.16 0.0" size="0.03 0.05" rgba="0.2 0.2 0.2 1"/>
+      <geom name="thruster_fr" type="cylinder" pos="0.22 -0.16 0.0" size="0.03 0.05" rgba="0.2 0.2 0.2 1"/>
+      <geom name="thruster_bl" type="cylinder" pos="-0.22 0.16 0.0" size="0.03 0.05" rgba="0.2 0.2 0.2 1"/>
+      <geom name="thruster_br" type="cylinder" pos="-0.22 -0.16 0.0" size="0.03 0.05" rgba="0.2 0.2 0.2 1"/>
+      <!-- 前视相机：朝 +x 方向（euler 绕 y 转 90°，使默认 -z 视线转到 +x） -->
+      <camera name="forward_cam" pos="0.26 0.0 0.05" euler="0.0 90.0 0.0" fovy="60"/>
+    </body>
+  </worldbody>
+
+  <!-- 说明：节点直接从 data.qpos/data.qvel 读位姿速度（见 sim_node.py），
+       不依赖 MJCF <sensor>，避免不同小版本 schema 差异。 -->
+</mujoco>
