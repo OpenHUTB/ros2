@@ -34,6 +34,8 @@
 
 ## 1. 入门 <span id="list"></span>
 
+* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
+
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
 
 * 教材：ROS教材.pdf
@@ -282,6 +284,3 @@ ___
 ___
 
 ## 参考文献
-
-
-* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
