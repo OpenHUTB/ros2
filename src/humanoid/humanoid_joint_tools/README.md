@@ -10,8 +10,7 @@
 ## 运行环境
 - 操作系统：Ubuntu 20.04
 - ROS 版本：ROS 2 Foxy
-- 依赖库：Python 3.8, `sensor_msgs`, `std_srvs`, `launch`, `launch_ros`, `rviz2`
-
+- 依赖库：Python 3.8, `sensor_msgs`, `std_srvs`, `launch`, `launch_ros`, `ament_index_python`, `robot_state_publisher`, `rviz2`
 ## 核心代码文件
 
 本模块包含以下核心文件，均已提交至仓库：
