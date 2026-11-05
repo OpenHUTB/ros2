@@ -151,6 +151,7 @@ nav:
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
 - 空域载具:
+    - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
     - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
