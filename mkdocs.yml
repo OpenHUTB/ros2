@@ -64,6 +64,7 @@ nav:
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
+        - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
     - 9. ROS 2:
         - 章节首页: './chapter/chap9.md'

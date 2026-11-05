@@ -1,0 +1,24 @@
+<package format="3">
+  <name>pocketsphinx</name>
+  <version>0.4.0</version>
+  <description>
+    This package is a simple wrapper around the pocketsphinx speech recognizer, 
+    using gstreamer and a Python-based interface. 
+  </description>
+  <author>Michael Ferguson</author>
+  <maintainer email="mike@vanadiumlabs.com">Michael Ferguson</maintainer>
+  <license>BSD</license>
+  <url type="website">http://ros.org/wiki/pocketsphinx</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend><!-- only needed for demos -->
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-pocketsphinx</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-pocketsphinx</exec_depend>
+  <exec_depend>gstreamer1.0-pocketsphinx</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 2">python-gst-1.0</exec_depend>
+  <exec_depend condition="$ROS_PYTHON_VERSION == 3">python3-gst-1.0</exec_depend>
+</package>
