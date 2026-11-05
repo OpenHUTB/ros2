@@ -11,14 +11,13 @@
 """
 import numpy as np
 
-try:
-    from go2_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
-except ImportError:
-    from common import setup_gl, load_with_camera, run_sim, parse_args
+# 按包导入：源码树直跑由模块根目录的 main.py 先把 src/ 加入 sys.path 后转发，
+# catkin 安装后由 setup.py / catkin 环境提供包路径。
+from go2_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 跟踪相机：正侧方跟随机身 base，距离拉远以容纳步态中的轻微转向
-CAM = ('<camera name="view0" mode="track" target="base" fovy="38" '
-       'pos="0 -2.4 0.6" xyaxes="1 0 0 0 0.28 0.96"/>')
+CAM = dict(name="view0", pos=(0, -2.4, 0.6), xyaxes=(1, 0, 0, 0, 0.28, 0.96),
+           fovy=38, mode="track", target="base")
 
 ROBOT = "unitree_go2"
 ENTRY = "scene"
