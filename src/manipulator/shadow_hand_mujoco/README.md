@@ -42,12 +42,12 @@ roslaunch shadow_hand_mujoco main.launch
 ```
 包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/shadow_hand_mujoco/`
 安装为 Python 包，`roslaunch` 下 `main.py` 以 `from shadow_hand_mujoco.common import ...` 导入公共库；
-源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
+模块根目录的 `main.py` 是源码树直跑入口（把 `src/` 加入 `sys.path` 后转发到包内入口）。
 
 ## 🔧 控制原理
 - 20 个执行器：16 个位置伺服（直接写目标角）+ 4 个腱执行器（手指 J0，范围 0~3.14）。
 - 动作：以初始关节角为基准，每根手指正弦开合
-  `qd = base + amp·sin(2π·freq·t + phase)`（位置伺服内部等效 PD：τ = KP·(q_d−q) − KD·q̇）。
+  `qd = base + amp·sin(2π·freq·t + phase)`（只写目标值，驱动力由执行器内部驱动模型产生）。
 - 幅度：中/远端屈曲关节（J3/J4/J5）0.55、拇指 0.40、手腕 0.22、其余 0.30；频率 0.5 Hz（2 秒一个循环）。
 - 公式与推导、性能实测见教程页 `docs/manipulator/shadow_hand_mujoco_simulation.md`。
 

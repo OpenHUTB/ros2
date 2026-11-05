@@ -6,14 +6,13 @@
 """
 import numpy as np
 
-try:
-    from shadow_hand_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
-except ImportError:
-    from common import setup_gl, load_with_camera, run_sim, parse_args
+# 按包导入：源码树直跑由模块根目录的 main.py 先把 src/ 加入 sys.path 后转发，
+# catkin 安装后由 setup.py / catkin 环境提供包路径。
+from shadow_hand_mujoco.common import setup_gl, load_with_camera, run_sim, parse_args
 
 # 固定相机：上前方 3/4 俯视，对准手掌中心（手平放于地面、沿 +x 展开）
-CAM = ('<camera name="view0" fovy="45" pos="0.35 -0.45 0.35" '
-       'xyaxes="0.936 0.352 0  -0.201 0.533 0.822"/>')
+CAM = dict(name="view0", pos=(0.35, -0.45, 0.35),
+           xyaxes=(0.936, 0.352, 0, -0.201, 0.533, 0.822), fovy=45)
 
 ROBOT = "shadow_hand"
 ENTRY = "scene_right"
