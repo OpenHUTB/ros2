@@ -143,6 +143,8 @@ cd src/ground/tripod_mujoco
 pip install -r requirements.txt
 python3 main.py            # 输出 output/sim_video.mp4
 python3 main.py --preview  # 只渲染 3 帧预览图到 output/preview/
+python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 8.0
+python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
 无显示器环境：`MUJOCO_GL=osmesa python3 main.py`（Windows 自动用 wgl）。
 
@@ -150,10 +152,12 @@ python3 main.py --preview  # 只渲染 3 帧预览图到 output/preview/
 ```bash
 cd 你的工作空间/src && ln -s 本仓库/src/ground/tripod_mujoco .
 cd 你的工作空间 && catkin_make && source devel/setup.bash
-roslaunch tripod_mujoco main.launch
+roslaunch tripod_mujoco main.launch                  # 默认（8.0 秒）
+roslaunch tripod_mujoco main.launch duration:=3.0    # 自定义时长
+roslaunch tripod_mujoco main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
 
-> 上表的 `catkin_make` 与 `roslaunch` 步骤未在重构后的代码上本地复测（本机无 ROS 环境），需在实际 ROS 环境确认；源码直跑 `python3 main.py` 已在 MuJoCo 3.2.3 与 3.17 两个版本实测通过。
+> 上表的 `catkin_make` 与 `roslaunch` 步骤未在重构后的代码上本地复测（本机无 ROS 环境），需在实际 ROS 环境确认；源码直跑 `python3 main.py` 已在 MuJoCo 3.2.3 与 3.17 两个版本实测通过；单元测试 `python3 -m unittest discover -s tests` 已在本机 MuJoCo 3.2.3 与 3.17 双版本通过（7 项）。
 包结构采用 `catkin_python_setup()` + `setup.py`：`src/tripod_mujoco/` 安装为 Python 包，
 `main.py` 以 `from tripod_mujoco.common import ...` 导入公共库；模块根 `main.py` 为源码直跑入口（先把 `src/` 加入 `sys.path` 再转发到包内入口）。
 
@@ -178,6 +182,7 @@ roslaunch tripod_mujoco main.launch
 
 ```
 src/ground/tripod_mujoco/
+├── tests/               # 单元测试（python -m unittest discover -s tests）
 ├── setup.py             # setuptools（catkin_python_setup）
 ├── package.xml          # catkin 包描述
 ├── CMakeLists.txt       # catkin_python_setup + 只安装 main.py
