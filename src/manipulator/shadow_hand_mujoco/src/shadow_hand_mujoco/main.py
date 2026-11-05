@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Shadow Hand 右手灵巧手：手指开合摆动（MuJoCo，不依赖 Gazebo）。
 
