@@ -139,7 +139,7 @@ roslaunch shadow_hand_mujoco main.launch
 | 视频规格 | 8 秒 / 30 fps / 240 帧 / 960×544 |
 | 端到端生成耗时（含仿真+渲染+编码） | 2.60 s |
 | 执行器规模 | 20 个（16 位置伺服 + 4 腱），nq=31 |
-| 启动验证 | `catkin_make` 通过；`roslaunch shadow_hand_mujoco main.launch` 正常启动；源码 `python3 main.py` 直接运行正常 |
+| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch shadow_hand_mujoco main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认 |
 
 ### 7.1 多参数（场景）对比
 
