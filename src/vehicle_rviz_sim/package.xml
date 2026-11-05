@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>vehicle_rviz_sim</name>
+  <version>0.0.1</version>
+  <description>Vehicle keyboard control simulation in rviz</description>
+  <maintainer email="student@todo.todo">student</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <exec_depend>rospy</exec_depend>
+</package>
