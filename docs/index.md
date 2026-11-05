@@ -155,7 +155,6 @@ ROS每章节运行代码:
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
-* [Go2 四足 MuJoCo 小跑仿真](./ground/go2_mujoco_simulation.md)
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 
