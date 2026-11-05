@@ -7,26 +7,28 @@
 """
 import os, math, sys
 os.environ.setdefault("MUJOCO_GL", "glfw")
-import numpy as np
 import mujoco
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import mujoco_arm_3d_single as m
+import main as m
 
 
-def _joint_qadr(model):
-    qa = {}
+def _joint_adr(model):
+    """按关节名查表得到 qpos / dof 地址，避免硬编码下标。"""
+    adr = {}
     for name in ('yaw', 'shoulder', 'elbow'):
         jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, name.encode())
-        qa[name] = model.jnt_qposadr[jid]
-    return qa
+        if jid < 0:
+            raise RuntimeError("joint %s not found" % name)
+        adr[name] = (model.jnt_qposadr[jid], model.jnt_dofadr[jid])
+    return adr
 
 
 def run_ik():
     """螺旋线上 8 个空间点：ik3 逆解 -> 写入 qpos -> 仿真器正解 -> 对比目标。"""
     model = mujoco.MjModel.from_xml_string(m.MODEL_XML)
     data = mujoco.MjData(model)
-    qa = _joint_qadr(model)
+    adr = _joint_adr(model)
     tip = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, b'tip')
 
     print("== IK 数值精度验证（螺旋线 8 个空间点） ==")
@@ -42,9 +44,9 @@ def run_ik():
         if q is None:
             print("  [FAIL] 点 %d 超出工作空间" % k)
             sys.exit(1)
-        data.qpos[qa['yaw']] = q[0]
-        data.qpos[qa['shoulder']] = q[1]
-        data.qpos[qa['elbow']] = q[2]
+        data.qpos[adr['yaw'][0]] = q[0]
+        data.qpos[adr['shoulder'][0]] = q[1]
+        data.qpos[adr['elbow'][0]] = q[2]
         mujoco.mj_forward(model, data)
         p = data.xpos[tip]
         err = math.hypot(p[0] - tx, p[1] - ty) * 1000.0
@@ -59,12 +61,16 @@ def run_ik():
 
 
 def run_gui():
-    """glfw 实时渲染：查看器完整播放螺旋线画线流程（216 帧 / 9 秒）。"""
+    """glfw 实时渲染：查看器完整播放螺旋线画线流程（216 帧 / 9 秒）。
+
+    驱动方式与主程序一致：IK 解直接写入 qpos 再 mj_forward（运动学驱动），
+    末端严格落在螺旋线上；不写死 dof 下标，全部按关节名查表。
+    """
     import mujoco.viewer
 
     model = mujoco.MjModel.from_xml_string(m.MODEL_XML)
     data = mujoco.MjData(model)
-    qa = _joint_qadr(model)
+    adr = _joint_adr(model)
     total = int(m.DURATION * m.FPS)
 
     print("== glfw 实时渲染验证（%d 帧 / %.1f 秒） ==" % (total, m.DURATION))
@@ -93,11 +99,13 @@ def run_gui():
             q = (q0, q[1], q[2])
             q_prev = q
 
-            data.ctrl[0] = m.KP * (q[0] - data.qpos[qa['yaw']]) - m.KD * data.qvel[0]
-            data.ctrl[1] = m.KP * (q[1] - data.qpos[qa['shoulder']]) - m.KD * data.qvel[1]
-            data.ctrl[2] = m.KP * (q[2] - data.qpos[qa['elbow']]) - m.KD * data.qvel[2]
-            for _ in range(3):
-                mujoco.mj_step(model, data)
+            data.qpos[adr['yaw'][0]] = q[0]
+            data.qpos[adr['shoulder'][0]] = q[1]
+            data.qpos[adr['elbow'][0]] = q[2]
+            data.qvel[adr['yaw'][1]] = 0.0
+            data.qvel[adr['shoulder'][1]] = 0.0
+            data.qvel[adr['elbow'][1]] = 0.0
+            mujoco.mj_forward(model, data)
             v.sync()
             n += 1
 

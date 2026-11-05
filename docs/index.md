@@ -11,6 +11,7 @@ title: 主页
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂](#arm)
 
 ---
 
@@ -110,6 +111,10 @@ ROS每章节运行代码:
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+
+## 7. 机械臂  <span id='arm'></span>
+
+* [三自由度机械臂空间螺旋线](./arm/mujoco_arm_3d.md) —— MuJoCo 三自由度机械臂沿三维圆柱空间螺旋线运动，逆解直接写入 qpos 保证末端严格跟随，并叠加末端轨迹线
 
 ___
 
