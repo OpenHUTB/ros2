@@ -1,0 +1,549 @@
+```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+数据集诊断：逐工况检查"雷达特征"与"真实车距"的一致性。
+不需要 CARLA，直接读取 'data/dataset_*.npz'。
+
+用法:
+    python3 analyze_dataset.py
+    python3 analyze_dataset.py data --detail
+
+判据说明（重要）
+----------------
+**主要判据是"偏差"的统计量**，而不是相关系数：
+偏差 = 真实车距 - 雷达最短回波距离
+雷达测到的是前车车尾，因此偏差应恒等于"半个车身长度"（约 2~4 m），其**标准差**反映雷达测量的稳定性：
+* 偏差标准差 ≤ 1.0 m 且“偏离超过 5 m 的帧”≤ 5% → ✅ 合格，可以直接训练
+* 偏差标准差 1.0~3.0 m                            → ⚠️ 一般，可训练但精度会受影响
+* 偏差标准差 > 3.0 m                              → ❌ 不合格，需检查雷达安装与过滤参数
+
+**相关系数仅作辅助参考**：在"匀速"这类真实车距几乎不变的工况里，信号本身没有变化，相关系数会被噪声支配，低值是正常现象，不能据此判断雷达好坏。
+"""
+import os
+import sys
+import glob
+import numpy as np
+
+def analyze(path, detail=False):
+    with np.load(path, allow_pickle=False) as data:
+        gap_true = np.array(data['gap_true'])
+        radar_d = np.array(data['radar_d'])
+        radar_az = np.array(data['radar_azimuth'])
+        radar_closing = np.array(data['radar_closing'])
+        radar_n_points = np.array(data['radar_n_points'])
+        v_rel_true = np.array(data['v_rel_true'])
+        v_ego = np.array(data['v_ego'])
+
+    name = os.path.basename(path).replace('dataset_', '').replace('.npz', '')
+    diff = gap_true - radar_d
+    no_target = float(np.mean(radar_d >= 99.0) * 100.0)
+    far_off = float(np.mean(np.abs(diff) > 5.0) * 100.0)
+
+    # 相关系数只在车距有明显变化时才有参考价值
+    if gap_true.std() > 1.0:
+        corr = float(np.corrcoef(radar_d, gap_true)[0, 1])
+    else:
+        corr = float('nan')
+
+    if abs(diff.std()) <= 1.0 and far_off <= 5.0:
+        verdict = '[合格]'
+    elif abs(diff.std()) <= 3.0 and far_off <= 15.0:
+        verdict = '[一般]'
+    else:
+        verdict = '[不合格]'
+
+    print('%-11s 帧数 %4d | 偏差均值 %+6.2f m | 偏差标准差 %5.2f m | 偏离>5m %5.1f%% |'
+          '无目标 %5.1f%% |相关系数 %s |%s'
+          % (name, len(gap_true), diff.mean(), diff.std(), far_off, no_target,
+             ('%+6.3f' % corr) if corr == corr else ' —— ',
+             verdict))
+    print('  真实车距 %6.1f~%6.1f（均值 %5.1f）| 雷达 %6.1f~%6.1f（均值 %5.1f）|'
+          '相对速度 %+6.1f~%+6.1f |点云数 %3.0f~%3.0f'
+          % (gap_true.min(), gap_true.max(), gap_true.mean(),
+             radar_d.min(), radar_d.max(), radar_d.mean(),
+             v_rel_true.min(), v_rel_true.max(),
+             radar_n_points.min(), radar_n_points.max()))
+
+    worst = np.argsort(-np.abs(diff))[:5]
+    print('  偏差最大的 5 帧：' + ', '.join(
+        't=%.1fs（雷达%.1f/真值%.1f）' % (i * 0.05, radar_d[i], gap_true[i]) for i in worst))
+
+    if detail:
+        print('  前 8 帧明细：')
+        print(' t    雷达    方位角   接近速度  点云   真值   相对速度  自车')
+        for i in range(min(8, len(gap_true))):
+            print(' %5.1f %7.2f %+7.3f %+8.2f %4.0f %6.2f %+8.2f %6.2f'
+                  % (i * 0.05, radar_d[i], radar_az[i], radar_closing[i],
+                     radar_n_points[i], gap_true[i], v_rel_true[i], v_ego[i]))
+    print()
+    return name, diff.mean(), diff.std(), far_off, no_target, corr, verdict
+
+def main():
+    data_dir = "data"
+    detail = False
+    for arg in sys.argv[1:]:
+        if arg == '--detail':
+            detail = True
+        else:
+            data_dir = arg
+
+    paths = sorted(glob.glob(os.path.join(data_dir, 'dataset_*.npz')))
+    if not paths:
+        print('[错误] 在 %s 下没有找到 dataset_*.npz，请先运行：'
+              'python3 main.py --mode collect --scenario all' % data_dir)
+        return 2
+
+    print('=' * 132)
+    print('数据集诊断：%d 个文件，目录 %s' % (len(paths), data_dir))
+    print('主要判据：偏差 = 真值 - 雷达，应为半个车身长度（2~4 m），标准差越小越好')
+    print('=' * 132)
+
+    results = [analyze(p, detail) for p in paths]
+
+    print('=' * 132)
+    print('结论：')
+    ok = [r for r in results if r[6] == '[合格]']
+    print('  合格工况：%d / %d' % (len(ok), len(results)))
+    for name, mean, std, far_off, no_target, _corr, verdict in results:
+        if verdict != '[合格]':
+            reasons = []
+            if std > 3.0:
+                reasons.append('偏差标准差 %.2f m 过大' % std)
+            if far_off > 15.0:
+                reasons.append('%.1f%% 的帧偏差超过 5 m' % far_off)
+            if no_target > 5.0:
+                reasons.append('%.1f%% 的帧雷达完全没测到目标' % no_target)
+            print('  %s %s：%s' % (verdict, name, '；'.join(reasons) or '偏差偏大'))
+    if len(ok) == len(results):
+        print('  全部合格，可以执行：python3 main.py --mode train')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+## 2. test_reference_acc.py 修复工况字符串 bug `cuting`→`cutin`
+
+```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+离线单元测试：不需要 CARLA、不需要 ROS，只依赖 Python 标准库。
+运行方式:
+cd src/ground/carla_nn_car_following
+python3 test/test_reference_acc.py
+
+覆盖内容：经典 ACC 控制器的公式（期望车距、车距误差、控制律、油门/刹车映射、TTC、跟车状态分类）
+以及四种前车工况的速度曲线。
+"""
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from carla_nn_car_following.reference_acc import ReferenceACC  # noqa: E402
+import carla_nn_car_following.scenario as scenario_mod  # noqa: E402
+
+passed = 0
+
+def check(condition, message):
+    global passed
+    assert condition, '未通过：' + message
+    passed += 1
+    print(' [通过] %s' % message)
+
+def main():
+    acc = ReferenceACC(d0=5.0, headway=1.2, kp=0.35, kv=0.8, k_throttle=0.25, k_brake=0.35)
+
+    print('1） 期望车距 d_des = d0 + t_h * v_ego')
+    check(abs(acc.desired_gap(0.0) - 5.0) < 1e-9, '静止时期望车距 = 5.0 m')
+    check(abs(acc.desired_gap(10.0) - 17.0) < 1e-9, '10 m/s 时期望车距 = 17.0 m')
+
+    print('2） 车距误差 e = d - d_des')
+    check(abs(acc.gap_error(20.0, 10.0) - 3.0) < 1e-9, 'd=20，v=10 时误差 = 3.0 m')
+
+    print('3） 控制律 a_cmd = kp * e + kv * v_rel 的符号')
+    check(acc.acceleration(40.0, 0.0, 10.0) > 0.0, '车距过大时输出正加速度（加速）')
+    check(acc.acceleration(5.0, -5.0, 10.0) < 0.0, '车距过小且正在接近时输出负加速度（减速）')
+
+    print('4） 加速度映射为油门 / 刹车（互斥且限幅到 [0， 1]）')
+    far_throttle, far_brake = acc.labels(40.0, 0.0, 10.0)
+    check(far_throttle > 0.0 and far_brake == 0.0, '远距离：油门 > 0 且刹车 = 0')
+    near_throttle, near_brake = acc.labels(5.0, -5.0, 10.0)
+    check(near_throttle == 0.0 and near_brake > 0.0, '危险：油门 = 0 且刹车 > 0')
+    check(acc.labels(1000.0, 0.0, 0.0)[0] == 1.0, '油门被限幅到 1.0')
+    check(acc.labels(0.0, -100.0, 0.0)[1] == 1.0, '刹车被限幅到 1.0')
+
+    print('5） TTC = d / （-v_rel），不在接近时为 inf')
+    check(abs(acc.ttc(20.0, -2.0) - 10.0) < 1e-9, 'd=20，v_rel=-2 时 TTC = 10 s')
+    check(acc.ttc(20.0, 2.0) == float('inf'), 'v_rel > 0（远离）时 TTC = inf')
+    check(acc.ttc(20.0, 0.0) == float('inf'), 'v_rel = 0 时 TTC = inf')
+
+    print('6） 跟车状态分类（感知网络的分类标签）')
+    check(acc.follow_state(40.0, 10.0) == 0, '车距远 -> 0')
+    check(acc.follow_state(18.0, 10.0) == 1, '车距接近期望 -> 1')
+    check(acc.follow_state(10.0, 10.0) == 2, '车距过近 -> 2')
+
+    print('7） 四种前车工况的速度曲线')
+    constant = scenario_mod.build('constant')
+    check(abs(constant.target_speed(0.0) - 16.67) < 0.05, "匀速工况目标速度 = 60 km/h ")
+    slow = scenario_mod.build('decelerate')
+    check(slow.target_speed(1.0) > slow.target_speed(6.0), '缓减速工况：目标速度随时间下降')
+    check(abs(slow.target_speed(100.0) - 5.0) < 1e-9, "缓减速工况速度不低于下限 5.0 m/s")
+    emergency = scenario_mod.build('emergency')
+    check(emergency.target_speed(1.0) > 0.0 and emergency.target_speed(5.0) == 0.0,
+          '急刹工况：3 s 之前正常行驶，之后目标速度为 0')
+    cut_in = scenario_mod.build('cutin')
+    check(cut_in.wants_cut_in(2.0) is False, '加塞工况：3 s 之前不触发')
+    check(cut_in.wants_cut_in(3.5) is True, '加塞工况：3 s 之后触发')
+    cut_in.mark_spawned()
+    check(cut_in.wants_cut_in(4.0) is False, '加塞车辆生成后不再重复生成')
+
+    print('8） 工况注册表')
+    check(sorted(scenario_mod.all_names()) == ['constant', 'cutin', 'decelerate', 'emergency'],
+          '注册表包含四种工况')
+    try:
+        scenario_mod.build('not_exist')
+        check(False, '未知工况应当抛出 ValueError')
+    except ValueError:
+        check(True, '未知工况抛出 ValueError')
+
+    print('\n[结果] %d 项全部通过' % passed)
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())
+```
+
+## 3. main.launch.py 修复工况拼写 `deslowrate` → `decelerate`
+
+```
+# -*- coding: utf-8 -*-
+"""
+ROS 2 Humble 启动入口。
+用法:
+ros2 launch carla_nn_car_following main.launch.py host:=192.168.148.1 scenario:=decelerate
+
+说明：节点内所有参数都以**字符串**声明，因此这里必须用ParameterValue(..., value_type=str)强制按字符串传递。
+否则 launch_ros 会按默认值“猜”类型（例如把 '2000' 猜成 INTEGER、把 '60.0' 猜成 DOUBLE），
+与节点声明的 STRING 冲突，节点会立刻退出并报：
+尝试将参数“port”设置为类型为“INTEGER”的“2000”，期望类型为“STRING”
+"""
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
+
+arguments = (
+    ('host', '192.168.148.1', 'Windows 宿主机 IP（ipconfig 查看;VMware NAT 下为 VMnet8 的地址）'),
+    ('port', '2000', 'CARLA RPC 端口'),
+    ('town', 'Town03', 'CARLA 地图'),
+    ('weather', 'ClearNoon', '天气：ClearNoon / HardRainNoon / ClearNight'),
+    ('scenario', 'decelerate', '工况：constant / decelerate / emergency / cutin'),
+    ('duration', '60.0', '仿真时长（秒）'),
+    ('dt', '0.05', '同步步长（秒）'),
+    ('lead_distance', '25.0', '前车初始距离（米）'),
+    ('controller', 'classic', 'controller：classic = 经典 ACC;nn = 神经网络（需先训练出模型）'),
+    ('models_dir', 'models', '神经网络模型目录（controller:=nn 时使用）'),
+)
+
+def generate_launch_description():
+    declared_arguments = [
+        DeclareLaunchArgument(name, default_value=default, description=description)
+        for name, default, description in arguments
+    ]
+
+    node = Node(
+        package='carla_nn_car_following',
+        executable='acc_scene_node',
+        name='acc_scene_node',
+        output='screen',
+        parameters=[{name: ParameterValue(LaunchConfiguration(name), value_type=str)
+                     for name, _, _ in arguments}],
+    )
+
+    return LaunchDescription(declared_arguments + [node])
+```
+
+## 4. reference_acc.py 新增 TTC 安全干预逻辑
+
+```
+# -*- coding: UTF-8 -*-
+"""
+经典 ACC 控制器 —— 神经网络的训练标签来源。
+本文件**不依赖 carla、也不依赖 numpy**，因此可以在任意 Python 环境中单独运行单元测试（见 test/test_reference_acc.py）。
+所有公式与文档第 3.2 节一一对应。
+
+符号约定
+--------
+* ``d`` ： 实际车距（m），自车雷达安装点到前车参考点
+* ``v_ego`` ： 自车速度（m/s）
+* ``v_rel`` ： 相对速度 ``v_lead - v_ego``（m/s），**负值表示正在接近前车**
+* ``a_cmd`` ： 期望加速度（m/s^2），正值加速、负值减速
+"""
+EPS = 1e-6
+
+class ReferenceACC:
+    """固定车头时距（CTH）ACC 控制器。"""
+
+    def __init__(self, d0=5.0, headway=1.2, kp=0.35, kv=1.5,
+                 k_throttle=0.25, k_brake=0.35, v_set=None, k_speed=1.0,
+                 k_feedforward=0.03, ttc_safe_threshold=2.0):
+        self.d0 = float(d0)  # 静止安全距离（m）
+        self.headway = float(headway)  # 车头时距（s）
+        self.kp = float(kp)  # 车距误差增益
+        self.kv = float(kv)  # 相对速度增益
+        self.k_throttle = float(k_throttle)  # 加速度 -> 油门
+        self.k_brake = float(k_brake)  # 减速度 -> 刹车
+        self.v_set = v_set if v_set in (None, '') else float(v_set)  # 设定车速（m/s）
+        self.k_speed = float(k_speed)  # 设定车速限制的增益
+        self.k_feedforward = float(k_feedforward)  # 前馈项（抵消滚阻/风阻）
+        self.ttc_safe_threshold = float(ttc_safe_threshold)  # TTC安全阈值，低于强制刹车
+
+    # ---- 公式（1）：期望车距 d_des = d0 + t_h * v_ego ----
+    def desired_gap(self, v_ego):
+        return self.d0 + self.headway * v_ego
+
+    # ---- 公式（2）：车距误差 e = d - d_des ----
+    def gap_error(self, d, v_ego):
+        return d - self.desired_gap(v_ego)
+
+    # ---- 公式（3）：a_cmd = kp * e + kv * v_rel，并受设定车速限制 ----
+    def acceleration(self, d, v_rel, v_ego):
+        # TTC安全干预：碰撞时间过小直接输出最大减速度
+        ttc_val = self.ttc(d, v_rel)
+        if ttc_val != float("inf") and ttc_val < self.ttc_safe_threshold:
+            return -6.0
+
+        a_gap = self.kp * self.gap_error(d, v_ego) + self.kv * v_rel
+        if self.v_set is None:
+            return a_gap
+        # 设定车速限制：前车很远或跟丢时，车速不会超过 v_set。
+        # 没有这一项时，一旦前车驶出本车道，自车会为了"追上车距"而无限加速。
+        return min(a_gap, self.k_speed * (self.v_set - v_ego))
+
+    # ---- 公式(4)：加速度映射为油门/刹车（两者互斥）----
+    def labels(self, d, v_rel, v_ego):
+        """返回 ``（油门，刹车）``，取值范围均为 [0， 1]。
+        油门上叠加了一个**前馈项** ``k_ff * v_e``，用于抵消滚动阻力与空气阻力。
+        没有它时，为了维持巡航速度必须长期靠"车距误差"去换油门，会出现 5 m 左右的稳态误差（实测车距从 25 m 缓慢漂到 30 m）。
+        """
+        a_cmd = self.acceleration(d, v_rel, v_ego)
+        if a_cmd >= 0.0:
+            throttle = self.k_throttle * a_cmd + self.k_feedforward * v_ego
+            return min(1.0, max(0.0, throttle)), 0.0
+        return 0.0, min(1.0, self.k_brake * (-a_cmd))
+
+    # ---- 公式（5）：TTC = d / （v_ego - v_lead） = d / （-v_rel） ----
+    @staticmethod
+    def ttc(d, v_rel):
+        """碰撞时间。不在接近时返回 ``inf``。"""
+        closing = -v_rel
+        if closing <= EPS:
+            return float('inf')
+        return d / closing
+
+    # ---- 跟车状态分类（感知网络的分类头标签）----
+    def follow_state(self, d, v_ego):
+        """0 = 远，1 = 近，2 = 危险。"""
+        error = self.gap_error(d, v_ego)
+        if error < -2.0:
+            return 2
+        if error < 3.0:
+            return 1
+        return 0
+```
+
+## 5. train.py 增强：过滤雷达无回波样本 `radar_n_points<=0`
+
+找到函数`filter_frames`，替换下面代码块：
+
+```
+def filter_frames(samples, max_diff=15.0, max_range=60.0, min_frames=30):
+    """按帧剔除明显异常的样本，而不是整包丢掉一个工况。判据（三者同时满足才保留）：
+    1. ``|真值车距 - 雷达读数|<= max_diff``：雷达跟到远处杂波时该差值会非常大;
+    2. 雷达读数与真值车距都不超过 ``max_range``：超出 ACC 有效工作区间的样本不参与训练;
+    3. 雷达有效回波点 > 0，剔除雷达完全无目标帧
+    4. 剔除后该工况至少还剩 ``min_frames`` 帧，否则整个工况丢弃。
+    这样既保住每个工况 90% 以上的正常帧，又不会让被杂波污染的帧进入训练集（实测这类脏帧会让感知网络的车距 RMSE 从 0.8 m 恶化到 8 m）。
+    """
+    filtered, dropped, total = [], 0, 0
+    for perception_x, perception_y, control_x, control_y in samples:
+        gap = perception_y[:, 0]
+        radar = perception_x[:, 0]
+        radar_n_pts = perception_x[:, 4]
+        mask = ((np.abs(gap - radar) <= float(max_diff))
+                & (radar <= float(max_range))
+                & (gap <= float(max_range))
+                & (radar_n_pts > 1e-3))
+        total += len(mask)
+        dropped += int((~mask).sum())
+        if int(mask.sum()) >= int(min_frames):
+            filtered.append((perception_x[mask], perception_y[mask],
+                             control_x[mask], control_y[mask]))
+    if total:
+        print('[数据质量] 按帧剔除异常样本：%d / %d（%.1f%%），保留 %d 个工况'
+              % (dropped, total, 100.0 * dropped / total, len(filtered)))
+    return filtered
+```
+
+## 6. nn_controller.py 推理输出二次 clip 保护
+
+修改`estimate`与`labels`函数，增加强限幅，防止网络外推输出离谱值：
+
+```
+    def estimate(self, features, v_ego):
+        """由雷达特征估计 (车距, 相对速度)。
+        “features”必须来自 “carla_client.FrontRadar.features()“，顺序与 ``train.PERCEPTION_INPUTS`` 一致。
+        """
+        vector = np.array([[features['d_radar'], features['azimuth'], features['closing_rate'],
+                            features['mean_depth'], features['n_points'], v_ego]],
+                          dtype=np.float64)
+        vector = self._clip(vector, self.p_in_min, self.p_in_max)  # 防外推
+        output = self.p_out.inverse(self.perception.predict(self.p_in.transform(vector)))[0]
+        output = self._clip(output, self.p_out_min, self.p_out_max)  # 估计值限制在训练范围内
+        # 业务硬限幅：车距不能负，相对速度合理范围
+        gap_hat = float(np.clip(output[0], 0.0, 100.0))
+        v_rel_hat = float(np.clip(output[1], -10.0, 10.0))
+        return gap_hat, v_rel_hat
+
+    def labels(self, features, v_ego):
+        """返回 ``（油门、刹车、d_hat、v_rel_hat）``。"""
+        gap_hat, v_rel_hat = self.estimate(features, v_ego)
+        vector = np.array([[gap_hat, v_rel_hat, v_ego]], dtype=np.float64)
+        vector = self._clip(vector, self.c_in_min, self.c_in_max)  # 防外推
+        output = self.c_out.inverse(self.control.predict(self.c_in.transform(vector)))[0]
+
+        throttle = float(np.clip(output[0], 0.0, 1.0))
+        brake = float(np.clip(output[1], 0.0, 1.0))
+        # 训练标签中油门与刹车是互斥的，这里做同样的后处理，避免同时踩下
+        if throttle >= brake:
+            brake = 0.0
+        else:
+            throttle = 0.0
+        return throttle, brake, gap_hat, v_rel_hat
+```
+
+## 7. acc_scene_node.py 新增：csv 轨迹保存 + 碰撞检测
+
+### ① 类成员`__init__`内部追加变量
+
+```
+        # 新增：轨迹csv记录
+        self.trajectory_rows = []
+        self.trajectory_save_path = os.path.join(os.getcwd(), "trajectory_output.csv")
+        # 新增碰撞标记
+        self.has_collision = False
+```
+
+### ② on_timer 回调函数末尾，发布话题之后，增加记录逻辑
+
+```
+        # ==========新增 轨迹记录 ==========
+        row = [
+            float(t), float(gap_true), float(v_rel_true), float(v_ego),
+            float(throttle), float(brake), float(self._follow_state(gap_true, v_ego))
+        ]
+        if gap_hat is not None:
+            row.extend([float(gap_hat), float(v_rel_hat)])
+        self.trajectory_rows.append(row)
+
+        # ==========新增碰撞检测 ==========
+        collision_hist = self.ego.get_collision_history()
+        if len(collision_hist) > 0 and not self.has_collision:
+            self.has_collision = True
+            self.get_logger().error(f"!!!!发生碰撞!!! t={t:.2f}s，立刻终止仿真")
+            self.finished = True
+            self._stop_all_vehicles()
+```
+
+### ③ 场景结束的代码块，打印指标之后，写入 csv
+
+```
+            # 场景跑完后必须恢复异步模式：本节点不再 tick，若仍停留在同步模式，
+            # CARLA 窗口会因为收不到 tick 而一直冻结不动。
+            self.session.restore_async()
+
+            # ==========新增保存csv轨迹 ==========
+            import csv
+            with open(self.trajectory_save_path, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                header = ["t","gap_true","v_rel_true","v_ego","throttle","brake","follow_state"]
+                if self.nn_controller is not None:
+                    header.extend(["gap_hat","v_rel_hat"])
+                writer.writerow(header)
+                writer.writerows(self.trajectory_rows)
+            self.get_logger().info(f"轨迹CSV已经保存至 {self.trajectory_save_path}")
+
+            coll_msg = "【发生碰撞】" if self.has_collision else "【无碰撞】"
+            self.get_logger().info(f"{coll_msg} 已让自车与前车同时停稳并恢复异步模式（CARLA 窗口不会冻结）。"
+                                   "需要退出请按一次 Ctrl+C;需要重新跟车请重新执行 ros2 launch。")
+```
+
+> 
+> 需要在文件头部补充 `import csv, os`
+
+## 8. main.py（完整补齐，原 diff 没有提供 main.py，整套包的统一入口）
+
+```
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+carla_nn_car_following 统一入口
+模式:
+    check    环境自检
+    scene    运行经典ACC仿真
+    collect  采集数据集
+    train    训练感知+控制网络
+    run      神经网络控制器仿真
+    eval     批量评测全部工况
+"""
+import argparse
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", required=True,
+                        choices=["check", "scene", "collect", "train", "run", "eval"])
+    parser.add_argument("--host", default="192.168.148.1")
+    parser.add_argument("--port", default=2000, type=int)
+    parser.add_argument("--town", default="Town03")
+    parser.add_argument("--scenario", default="decelerate")
+    parser.add_argument("--config", default="config/params.yaml")
+
+    args = parser.parse_args()
+
+    if args.mode == "check":
+        from check_env import main as check_main
+        sys.argv = ["check_env.py", "--host", args.host, "--port", str(args.port), "--town", args.town]
+        return check_main()
+
+    elif args.mode in ("scene", "collect", "run", "eval"):
+        import subprocess
+        cmd = [
+            "ros2", "run", "carla_nn_car_following", "acc_scene_node",
+            "--ros-args",
+            "-p", f"host:={args.host}",
+            "-p", f"port:={args.port}",
+            "-p", f"town:={args.town}",
+            "-p", f"scenario:={args.scenario}"
+        ]
+        if args.mode == "run":
+            cmd.extend(["-p", "controller:=nn"])
+        else:
+            cmd.extend(["-p", "controller:=classic"])
+        return subprocess.call(cmd)
+
+    elif args.mode == "train":
+        from train import train_models
+        train_models()
+        return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+```

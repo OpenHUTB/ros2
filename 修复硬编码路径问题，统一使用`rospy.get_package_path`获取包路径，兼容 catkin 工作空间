@@ -1,0 +1,276 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(quadruped_mujoco_rl)
+
+find_package(catkin REQUIRED COMPONENTS
+  rospy
+  std_msgs
+  geometry_msgs
+  sensor_msgs
+)
+
+catkin_package()
+
+# 安装python脚本
+catkin_install_python(PROGRAMS
+  scripts/main_train.py
+  scripts/main_test.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# 新增：安装config、launch、models资源文件，install后可被rospy定位
+install(DIRECTORY config launch models
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+<?xml version="1.0"?>
+<package format="2">
+  <name>quadruped_mujoco_rl</name>
+  <version>0.0.1</version>
+  <description>ROS‑MuJoCo Quadruped Robot Reinforcement Learning Simulation</description>
+  <maintainer email="ruan@todo.todo">ruan</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <!-- ROS系统依赖；mujoco、stable‑baselines3、pytorch使用pip安装 -->
+</package>
+
+# MuJoCo仿真配置
+simulation:
+  timestep: 0.002
+  gravity: [0, 0, -9.81]
+  num_substeps: 5
+  render_enable: true          # 是否开启MuJoCo窗口渲染
+  render_fps: 30
+  reset_height_threshold: 0.25 # 基座z低于该值判定机器人倒地，执行重置
+
+# 强化学习PPO超参数
+rl_params:
+  learning_rate: 0.0003
+  batch_size: 64
+  gamma: 0.99
+  n_steps: 2048
+  ent_coef: 0.01
+  max_episode_steps: 1000
+
+<launch>
+  <!-- 注意：外部包mujoco_ros_pkgs已失效，不再使用mujoco_ros_server，直接调用本包Python脚本 -->
+  <!-- 加载yaml参数到ROS参数服务器 -->
+  <rosparam file="$(find quadruped_mujoco_rl)/config/mujoco_params.yaml" command="load"/>
+
+  <!-- 仿真测试节点：带渲染 -->
+  <node name="quadruped_sim_node" pkg="quadruped_mujoco_rl" type="main_test.py" output="screen">
+    <param name="model_file" value="$(find quadruped_mujoco_rl)/models/quadruped.xml" />
+  </node>
+
+  <!-- 训练节点（需要训练时注释上面，取消下面） -->
+  <!--
+  <node name="quadruped_train_node" pkg="quadruped_mujoco_rl" type="main_train.py" output="screen">
+    <param name="model_file" value="$(find quadruped_mujoco_rl)/models/quadruped.xml"/>
+    <param name="load_trained_model" value="false"/>
+  </node>
+  -->
+</launch>
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import rospy
+import mujoco
+import mujoco.viewer
+import os
+from sensor_msgs.msg import JointState
+
+
+def main():
+    rospy.init_node('quadruped_rl_tester', anonymous=True)
+    rospy.loginfo("=== MuJoCo‑ROS 四足机器人仿真测试节点启动 ===")
+
+    # ========== 从ROS参数服务器读取配置 ==========
+    pkg_path = rospy.get_param("model_file", None)
+    if pkg_path is None:
+        # 兜底获取功能包路径
+        from rospkg import RosPack
+        rp = RosPack()
+        pkg_path = os.path.join(rp.get_path("quadruped_mujoco_rl"), "models", "quadruped.xml")
+
+    render_enable = rospy.get_param("/simulation/render_enable", True)
+    reset_height_thresh = rospy.get_param("/simulation/reset_height_threshold", 0.25)
+    sim_freq = int(1.0 / rospy.get_param("/simulation/timestep", 0.002))
+
+    # ========== 加载MuJoCo模型 ==========
+    if not os.path.exists(pkg_path):
+        rospy.logerr(f"模型文件不存在：{pkg_path}")
+        return
+    try:
+        model = mujoco.MjModel.from_xml_path(pkg_path)
+        data = mujoco.MjData(model)
+        rospy.loginfo(f"模型加载成功，关节数:{model.njnt} 自由度:{model.nv}")
+    except Exception as e:
+        rospy.logerr(f"MuJoCo模型加载异常: {str(e)}")
+        return
+
+    # ========== ROS话题发布：关节状态，支持RViz查看 ==========
+    joint_pub = rospy.Publisher("/quadruped/joint_states", JointState, queue_size=10)
+    joint_msg = JointState()
+    joint_msg.name = [model.joint(j).name for j in range(model.njnt)]
+
+    # ========== MuJoCo本地渲染窗口 ==========
+    viewer = None
+    if render_enable:
+        viewer = mujoco.viewer.launch_passive(model, data)
+        rospy.loginfo("MuJoCo渲染窗口已开启")
+
+    rate = rospy.Rate(sim_freq)
+
+    rospy.loginfo("仿真循环开始，虚拟机闪退请设置 export MUJOCO_GL=osmesa")
+    while not rospy.is_shutdown():
+        # 物理步进
+        mujoco.mj_step(model, data)
+
+        # 检测机器人倒地：基座z过低，重置仿真到keyframe home姿态
+        base_z = data.qpos[2]
+        if base_z < reset_height_thresh:
+            rospy.logwarn(f"机器人倒地 z={base_z:.3f}, 执行仿真重置")
+            mujoco.mj_resetDataKeyframe(model, data, model.keyframe("home").id)
+
+        # 发布关节状态ROS消息
+        joint_msg.header.stamp = rospy.Time.now()
+        joint_msg.position = data.qpos[:model.njnt]
+        joint_msg.velocity = data.qvel[:model.njnt]
+        joint_pub.publish(joint_msg)
+
+        # 打印状态日志，1秒一次
+        rospy.loginfo_throttle(1,
+                               f"sim_time:{data.time:.3f} | base_pos(x,y,z):{data.qpos[0]:.2f},{data.qpos[1]:.2f},{data.qpos[2]:.2f}")
+
+        # 更新渲染窗口
+        if viewer is not None and viewer.is_running():
+            viewer.sync()
+        elif viewer is not None and not viewer.is_running():
+            rospy.logwarn("MuJoCo渲染窗口被关闭，退出仿真")
+            break
+
+        rate.sleep()
+
+    if viewer is not None:
+        viewer.close()
+    rospy.loginfo("仿真节点正常退出")
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import rospy
+import mujoco
+import os
+from rospkg import RosPack
+# import gymnasium as gym
+# from stable_baselines3 import PPO
+
+class QuadrupedMujocoEnv:
+    """四足机器人MuJoCo仿真环境封装，适配SB3强化学习"""
+    def __init__(self, model_xml_path):
+        self.model = mujoco.MjModel.from_xml_path(model_xml_path)
+        self.data = mujoco.MjData(self.model)
+        self.home_key_id = self.model.keyframe("home").id
+        self.max_ep_step = rospy.get_param("/rl_params/max_episode_steps", 1000)
+        self.current_step = 0
+        self.reset_height = rospy.get_param("/simulation/reset_height_threshold",0.25)
+
+    def reset(self):
+        """环境重置，返回初始观测"""
+        mujoco.mj_resetDataKeyframe(self.model, self.data, self.home_key_id)
+        self.current_step = 0
+        obs = self._get_observation()
+        return obs
+
+    def _get_observation(self):
+        """获取观测空间：基座位姿、关节角度、关节速度"""
+        qpos = self.data.qpos.copy()
+        qvel = self.data.qvel.copy()
+        obs = list(qpos) + list(qvel)
+        return obs
+
+    def _compute_reward(self):
+        """奖励函数示例：向前行走奖励，惩罚倾倒、大动作"""
+        forward_reward = self.data.qvel[0] * 1.0
+        height_penalty = 0 if self.data.qpos[2] > self.reset_height else -10
+        action_penalty = sum(abs(self.data.ctrl)) * 0.001
+        reward = forward_reward + height_penalty - action_penalty
+        return reward
+
+    def step(self, action):
+        """执行一步仿真，action为关节控制指令"""
+        self.data.ctrl[:] = action
+        mujoco.mj_step(self.model, self.data)
+        self.current_step += 1
+
+        obs = self._get_observation()
+        reward = self._compute_reward()
+
+        done = False
+        # 终止条件：倒地 / 达到最大步数
+        if self.data.qpos[2] < self.reset_height or self.current_step >= self.max_ep_step:
+            done = True
+        info = {"sim_time": self.data.time, "base_z": self.data.qpos[2]}
+        return obs, reward, done, info
+
+
+def main():
+    rospy.init_node('quadruped_rl_trainer', anonymous=True)
+    rospy.loginfo("=== MuJoCo‑RL 训练节点启动 ===")
+
+    rp = RosPack()
+    model_file = os.path.join(rp.get_path("quadruped_mujoco_rl"), "models", "quadruped.xml")
+    env = QuadrupedMujocoEnv(model_file)
+
+    rate = rospy.Rate(int(1.0 / rospy.get_param("/simulation/timestep",0.002)))
+    rospy.loginfo("环境初始化完成，等待接入PPO算法")
+
+    # ============ 示例循环，接入SB3时注释替换 ============
+    obs = env.reset()
+    while not rospy.is_shutdown():
+        # 待替换：action = model.predict(obs)[0]
+        import numpy as np
+        action = np.zeros(env.model.nu)
+
+        obs, reward, done, info = env.step(action)
+        rospy.loginfo_throttle(2, f"step:{env.current_step} reward:{reward:.3f}, done:{done}")
+        if done:
+            obs = env.reset()
+        rate.sleep()
+
+    rospy.loginfo("训练节点退出")
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
+
+# Quadruped MuJoCo RL Control (ROS‑Noetic)
+Ubuntu20.04 + ROS Noetic + MuJoCo + A1四足机器人强化学习仿真
+
+## 依赖安装
+```bash
+# ROS依赖已写入package.xml
+pip install mujoco rospkg stable‑baselines3 torch
+
+cd ~/catkin_ws
+catkin_make
+source devel/setup.bash
+
+roscore
+cd ~/catkin_ws && source devel/setup.bash
+rosrun quadruped_mujoco_rl main_test.py
