@@ -250,6 +250,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
@@ -623,6 +625,9 @@
 </li>
 <li>
 <p><a href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a> —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律</p>
+</li>
+<li>
+<p><a href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）</a> —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m</p>
 </li>
 </ul>
 <h2 id="5">5. 空域载具 <span id="air_vehicle"></span></h2>
