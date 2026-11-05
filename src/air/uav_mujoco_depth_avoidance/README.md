@@ -53,7 +53,7 @@ python3 main.py --teleop --weights results/policy.npz   # 用 --demo 训练好�
 ### 4. 单元测试
 
 ```bash
-python3 main.py --test        # 24 passed，约 2 s
+python3 main.py --test        # 26 passed，约 5 s
 python3 -m pytest -q test
 ```
 
@@ -83,7 +83,7 @@ uav_mujoco_depth_avoidance/
 │   ├── policy.py                     # 控制律与闭环评价
 │   ├── teleop.py                     # 键盘遥操作
 │   └── node.py                       # ROS 2 节点
-├── test/test_uav_nav.py              # 24 项离线测试
+├── test/test_uav_nav.py              # 26 项离线测试
 └── requirements.txt
 ```
 

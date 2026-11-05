@@ -310,3 +310,44 @@ def test_raycast_and_gl_depth_agree(env):
     ray = env.depth()
     corr = float(np.corrcoef(gl.ravel(), ray.ravel())[0, 1])
     assert corr > 0.8, corr
+
+
+# ---------------------------------------------------------------- 训练不得污染调用方环境
+
+def test_training_restores_caller_environment(env):
+    """make_dataset() 会反复 set_scene()，训练完必须把场景/种子/起点原样还回去。"""
+    from uav_nav.train import train
+
+    env.reset(scene="slalom", seed=0)
+    before_scene, before_seed = env.scene, env.seed
+    before_pos = env.state().pos.copy()
+    before_depth = env.depth().copy()
+
+    train(env, epochs=1, n_train=16, n_val=8, log=lambda *a, **k: None)
+
+    assert (env.scene, env.seed) == (before_scene, before_seed), (env.scene, env.seed)
+    assert np.allclose(env.state().pos, before_pos, atol=1e-6), env.state().pos
+    assert np.allclose(env.depth(), before_depth, atol=1e-6)
+
+
+def test_build_policy_keeps_env_untouched(env, tmp_path):
+    """--teleop / ROS 节点用的 build_policy() 也不能把 env 留在数据集采样的状态。"""
+    import main as entry
+
+    from uav_nav.net import DepthCNN
+
+    env.reset(scene="gate", seed=2)
+    before = (env.scene, env.seed, env.state().pos.copy())
+
+    weights = tmp_path / "policy.npz"
+    DepthCNN(seed=0).save(weights)
+    entry.build_policy(env, str(weights), log=lambda *a, **k: None)
+    assert (env.scene, env.seed) == before[:2]
+    assert np.allclose(env.state().pos, before[2], atol=1e-6)
+
+    # 无权重时走现场训练分支，同样要还原
+    env.reset(scene="gate", seed=2)
+    before = (env.scene, env.seed, env.state().pos.copy())
+    entry.build_policy(env, "", epochs=1, n_train=8, log=lambda *a, **k: None)
+    assert (env.scene, env.seed) == before[:2]
+    assert np.allclose(env.state().pos, before[2], atol=1e-6)

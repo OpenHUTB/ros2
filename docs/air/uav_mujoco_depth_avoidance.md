@@ -158,7 +158,7 @@ v_x = v_{max}\cdot\mathrm{clip}\!\left(\frac{\hat c_M-c_{safe}}{c_{nom}-c_{safe}
 | `uav_nav/teleop.py` | 键盘遥操作（pygame 窗口 / 无窗口脚本化） |
 | `uav_nav/node.py` | ROS 2 节点：深度图、通行度、里程计发布，Twist 订阅 |
 | `main.py` | 课程入口：`--demo` / `--teleop` / `--test` / `--ros` |
-| `test/test_uav_nav.py` | 24 项离线测试（物理、传感器、网络、策略、权重往返、多种子与长跑、软渲染回退） |
+| `test/test_uav_nav.py` | 26 项离线测试（物理、传感器、网络、策略、权重往返、多种子与长跑、软渲染回退、训练不污染调用方环境） |
 
 几个关键实现点：
 
@@ -217,6 +217,8 @@ python3 main.py --teleop --weights results/policy.npz   # 直接用 --demo 训�
 
 > 这里加载的**一定是训练过的网络**：给了 `--weights` 就加载，没给就现场训练一次。
 > 早期版本直接 `DepthCNN()` 用随机权重画图与半自动控制，属于 bug（见 §7.5）。
+> 另外训练会反复采样数据集、改变 `env` 的场景与位姿，`train()` 结束时会**把场景/种子/起点原样还原**，
+> 否则窗口里开出来的会是最后一次数据集采样用的 `clutter` 场景（见 §7.7）。
 
 | 按键 | 作用 |
 | --- | --- |
@@ -231,7 +233,7 @@ python3 main.py --teleop --weights results/policy.npz   # 直接用 --demo 训�
 ### 6.4 单元测试
 
 ```bash
-python3 main.py --test          # 24 passed，约 2 s
+python3 main.py --test          # 26 passed，约 5 s
 python3 -m pytest -q test
 ```
 
@@ -400,6 +402,33 @@ label mean [1. 1. 1.]  label std [0. 0. 0.]
 > --platform manylinux2014_x86_64 --abi cp38 --only-binary=:all:` 拿到 wheel 与依赖
 > （`absl-py`、`etils`、`glfw`、`pyopengl`、`numpy`），拷进客户机后
 > `pip3 install --no-index --find-links=<目录> mujoco` 即可离线安装。
+
+### 7.7 训练不得污染调用方环境（`scene` / 起点被改掉）
+
+`train()` 里 `make_dataset()` 会为了采样本反复调用 `set_scene()`；训练结束后，
+调用方手里的 `env` 已经**不是**它原来的场景和位姿了。评审实测：
+
+```text
+DepthUavEnv('slalom') 经 build_policy() 后 -> scene=clutter, seed=1149, pos=(8.12, 0.07, 1.5)
+```
+
+而 `--teleop` 与 ROS 节点都把同一个 `env` 交给控制回路，于是节点日志写着 `scene=slalom`，
+实际却在 `clutter` 里、起点也不在 `(0,0)`——**日志与真实状态不一致**，比崩溃更难查。
+
+修复：
+
+1. `train()` 开头记住 `scene0, seed0`，训练结束 `env.reset(scene=scene0, seed=seed0)` 还原
+   （`reset()` 同时把位姿恢复到默认起点 `(0, 0, 1.5)`、偏航 0）；
+2. `build_policy()` 与 `node.py::_build_policy()` 再显式还原一次，并在日志里写明恢复结果；
+3. 回归测试两条：`test_training_restores_caller_environment`（训练前后 scene/seed/位姿/深度图逐项一致）、
+   `test_build_policy_keeps_env_untouched`（加载权重与现场训练两条分支都不能动 `env`）。
+
+修复后同样的复现命令：
+
+```text
+训练前: scene=slalom seed=0 pos=[0.  0.  1.5]
+训练后: scene=slalom seed=0 pos=[0.  0.  1.5]
+```
 
 ## 8. 局限与后续
 

@@ -72,13 +72,16 @@ def main() -> int:
 
             from .train import train
 
+            scene0, seed0 = self.env.scene, self.env.seed
             self.get_logger().info("未提供权重，现场训练 600 样本 × 8 轮（约 5 s）…")
             net, history, _ = train(self.env, epochs=8, n_train=600, n_val=150,
                                     log=lambda *a, **k: None)
+            self.env.reset(scene=scene0, seed=seed0)   # 训练会改场景/位姿，必须还原
             self.get_logger().info(
                 f"训练完成：train MSE {history[-1]['train_mse']:.5f}，"
                 f"验证 MAE(左/中/右) {history[-1]['val_mae_left']:.3f}/"
-                f"{history[-1]['val_mae_center']:.3f}/{history[-1]['val_mae_right']:.3f}")
+                f"{history[-1]['val_mae_center']:.3f}/{history[-1]['val_mae_right']:.3f}；"
+                f"场景恢复为 {scene0}，起点 (0, 0, 1.5)")
             return net
 
         def on_cmd(self, msg: Twist):

@@ -14,6 +14,10 @@ from .net import DepthCNN
 
 def train(env: DepthUavEnv, epochs: int = 14, n_train: int = 900, n_val: int = 200,
           batch: int = 32, lr: float = 2e-3, seed: int = 0, log=print):
+    # 记住调用方的场景与起点：make_dataset() 会反复 set_scene() 改掉 env 的状态，
+    # 训练完必须还原，否则 --teleop / ROS 节点会拿到"被数据集采样改过"的 env
+    # （评审实测：训练后 scene 变成 clutter、起点跑到 (8.12, 0.07)）。
+    scene0, seed0 = env.scene, env.seed
     x_tr, y_tr = make_dataset(env, n_train, seed=seed)
     x_va, y_va = make_dataset(env, n_val, seed=seed + 1000)
     net = DepthCNN(seed=seed)
@@ -41,6 +45,8 @@ def train(env: DepthUavEnv, epochs: int = 14, n_train: int = 900, n_val: int = 2
         log("epoch {epoch:>2}/{epochs}  mse={train_mse:.5f}  "
             "MAE(l/c/r)={val_mae_left:.3f}/{val_mae_center:.3f}/{val_mae_right:.3f}".format(
                 epochs=epochs, **row))
+
+    env.reset(scene=scene0, seed=seed0)      # 还原调用方的场景与起点位姿
     return net, history, (x_va, y_va)
 
 
