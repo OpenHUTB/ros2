@@ -1,0 +1,19 @@
+<launch>
+  <arg name="host" default="192.168.94.1"/>
+  <arg name="vehicle_name" default="Drone1"/>
+  <arg name="mission" default="straight_3m_up"/>
+  <arg name="mode" default="minimum_jerk"/>
+
+  <include file="$(find carlair_ros_bridge)/launch/main.launch">
+    <arg name="host" value="$(arg host)"/>
+    <arg name="vehicle_name" value="$(arg vehicle_name)"/>
+    <arg name="body_frame" value="false"/>
+    <arg name="publish_image" value="false"/>
+    <arg name="publish_lidar" value="false"/>
+  </include>
+
+  <include file="$(find uav_minimum_jerk_tracking)/launch/main.launch">
+    <arg name="mission" value="$(arg mission)"/>
+    <arg name="mode" value="$(arg mode)"/>
+  </include>
+</launch>

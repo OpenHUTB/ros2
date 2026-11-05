@@ -1,0 +1,13 @@
+<launch>
+  <!-- 仿真 + 自动跑方形路径，并把"里程计 vs 真值"的偏差打印出来。
+       用于没有键盘 TTY 的场合（远程/录屏/CI）演示话题真的在动。 -->
+  <node pkg="diff_drive_odom_calib" type="sim_node.py" name="sim_mujoco" output="screen"/>
+
+  <node pkg="diff_drive_odom_calib" type="demo_drive.py" name="demo_drive" output="screen"
+        args="" required="true">
+    <param name="side" value="2.0"/>
+    <param name="v" value="0.30"/>
+    <param name="w" value="0.80"/>
+    <param name="laps" value="1"/>
+  </node>
+</launch>
