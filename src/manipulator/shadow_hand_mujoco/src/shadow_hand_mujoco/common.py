@@ -9,6 +9,7 @@
 import os
 import platform
 import re
+from pathlib import Path
 
 import numpy as np
 
@@ -104,6 +105,46 @@ def _camera_tag(cam):
     return "<camera %s/>" % " ".join(attrs)
 
 
+def _model_dir(robot):
+    """定位 menagerie 模型目录。
+
+    优先用 mujoco_menagerie 包（它会按需下载到本地缓存）。该包的下载逻辑用
+    tarfile.extractall(..., filter="data")，而 filter 参数要 Python 3.11.4 以上
+    才有；Python 3.10（Ubuntu 22.04 默认）上会 TypeError。遇到这种情况不直接崩，
+    改为扫描本地已有缓存目录复用。
+    """
+    import mujoco_menagerie as mj
+
+    try:
+        return Path(mj.get(robot).path())
+    except TypeError:
+        pass
+
+    roots = []
+    if os.environ.get("MUJOCO_MENAGERIE_CACHE"):
+        roots.append(Path(os.environ["MUJOCO_MENAGERIE_CACHE"]))
+    if os.environ.get("LOCALAPPDATA"):
+        roots.append(Path(os.environ["LOCALAPPDATA"]) / "mujoco_menagerie")
+    if os.environ.get("XDG_CACHE_HOME"):
+        roots.append(Path(os.environ["XDG_CACHE_HOME"]) / "mujoco_menagerie")
+    roots += [Path.home() / ".cache" / "mujoco_menagerie",
+              Path.home() / ".local" / "share" / "mujoco_menagerie"]
+
+    for root in roots:
+        for models in (root / "cache" / "models", root / "models", root):
+            if not models.is_dir():
+                continue
+            for d in sorted(models.iterdir()):
+                if d.is_dir() and (d.name == robot or d.name.startswith(robot + "-")):
+                    return d
+
+    raise RuntimeError(
+        "未找到 %s 的模型：mujoco-menagerie 的下载解包在当前 Python %s 下不可用"
+        "（tarfile.extractall 的 filter 参数需 Python >= 3.11.4），"
+        "请升级 Python 或手动把模型放到 %s"
+        % (robot, platform.python_version(), roots[0]))
+
+
 def load_with_camera(robot, entry, cam, width=960, height=544):
     """加载 mujoco_menagerie 模型，并把自定义相机注入 MJCF 后编译。
 
@@ -126,9 +167,8 @@ def load_with_camera(robot, entry, cam, width=960, height=544):
     import tempfile
 
     import mujoco
-    import mujoco_menagerie as mj
 
-    src = (mj.get(robot).path() / f"{entry}.xml").resolve()
+    src = (_model_dir(robot) / f"{entry}.xml").resolve()
     text = _expand_includes(src.read_text(encoding="utf-8", errors="replace"), src.parent)
     text = _with_offscreen(text, width, height)
 
