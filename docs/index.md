@@ -140,6 +140,7 @@ ROS每章节运行代码:
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
+* [宇树 Go2 四足机器人 MuJoCo 小跑仿真](./ground/go2_mujoco_simulation.md) —— 12 个力矩电机 + 平面逆运动学足端椭圆轨迹，对角小跑步态
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
