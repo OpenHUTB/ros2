@@ -43,7 +43,8 @@ roslaunch midterm_humanoid main.launch
 源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
 
 ## 🔧 控制原理
-- 4 个关节均为位置伺服执行器（kp=20，带关节粘滞阻尼），控制律 τ = kp·(q_d − q) + damping。
+- 4 个关节均为位置伺服执行器（kp=20，带关节粘滞阻尼）：每个控制步把目标角写入 `data.ctrl`，
+  由执行器内置增益与阻尼决定跟踪特性（脚本不显式计算力矩）。
 - 节律控制：`ctrl = 幅度 × sin(2π·freq·t + 相位)`，freq=0.5 Hz（2 秒一个周期）。
 - 双腿交替踏步（幅度 0.55 rad、相位差 π），双臂交替摆动（幅度 0.70 rad）并与腿部错相。
 - kp 选择依据与实测跟踪误差对比见教程页 `docs/humanoid/midterm_humanoid_simulation.md`。
