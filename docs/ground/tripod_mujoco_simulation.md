@@ -146,7 +146,10 @@ python3 main.py --preview  # 只渲染 3 帧预览图到 output/preview/
 python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 8.0
 python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
-Linux 无显示环境默认自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
+- 依赖：Python >= 3.10；`mujoco 3.x`、`numpy`、`imageio` + `imageio-ffmpeg`、`pillow`（写预览 PNG 用；MP4 由 imageio-ffmpeg 自带的 ffmpeg 生成）
+- 系统库（Linux 无显示环境用 osmesa 渲染需要）：`sudo apt install -y libosmesa6-dev`
+
+Linux 无显示环境自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
 
 ### 5.2 作为 catkin 包 roslaunch 启动（ROS 环境）
 ```bash
