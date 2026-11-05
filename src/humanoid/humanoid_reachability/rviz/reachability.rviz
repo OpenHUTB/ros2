@@ -16,13 +16,6 @@ Visualization Manager:
       Cell Size: 0.5
       Color: 120; 120; 120
       Alpha: 0.35
-    - Class: rviz_default_plugins/TF
-      Enabled: true
-      Name: TF
-      Marker Scale: 0.6
-      Show Arrows: false
-      Show Axes: true
-      Show Names: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: Reachable Workspace
