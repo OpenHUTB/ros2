@@ -22,9 +22,10 @@ catkin_install_python(PROGRAMS
   scripts/keyboard_teleop.py
   scripts/uav_features.py
   scripts/lidar_perception.py
+  scripts/train_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY launch config models
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
