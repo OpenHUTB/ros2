@@ -40,7 +40,7 @@ roslaunch midterm_humanoid main.launch
 ```
 包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/midterm_humanoid/`
 安装为 Python 包，`roslaunch` 下 `main.py` 以 `from midterm_humanoid.common import ...` 导入公共库；
-源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
+模块根目录的 `main.py` 是源码树直跑入口（把 `src/` 加入 `sys.path` 后转发到包内入口）。
 
 ## 🔧 控制原理
 - 4 个关节均为位置伺服执行器（kp=20，带关节粘滞阻尼）：每个控制步把目标角写入 `data.ctrl`，
