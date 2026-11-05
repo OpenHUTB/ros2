@@ -10,6 +10,7 @@
 - ROS2 Humble
 - Python 3.10+
 - MuJoCo 3.12.0
+- WSL/无显示环境：运行前设置 `export MUJOCO_GL=osmesa`；需要窗口时使用 `LIBGL_ALWAYS_SOFTWARE=1 MUJOCO_GL=glfw`
 
 ## 安装
 

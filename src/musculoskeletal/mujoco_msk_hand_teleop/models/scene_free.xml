@@ -1,0 +1,16 @@
+<mujoco model="scene_free">
+  <!-- 场景 1：自由空间（指尖够物 / NN 到点测试） -->
+  <include file="hand_model.xml"/>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.35 0.4 0.45" rgb2="0.4 0.45 0.5"
+             width="256" height="256"/>
+    <material name="floor" texture="grid" texuniform="true" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" size="0.6 0.6 0.05" material="floor" condim="3"/>
+    <!-- 到达目标标记点（由 NN 控制节点动态更新位置） -->
+    <site name="target_marker" pos="0.02 0.22 0.16" size="0.008" rgba="1 0.1 0.1 0.5" type="sphere"/>
+  </worldbody>
+</mujoco>
