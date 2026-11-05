@@ -14,7 +14,14 @@
 | `verify_armball.py` | 验证脚本（IK 精度 / 上摆动作 / 全流程命中） |
 | `README.md` | 本项目说明 |
 | `docs/mujoco_arm_ball.md` | 设计与验证文档 |
-| `docs/mujoco_arm_demo.gif` | 效果图（投篮动画） |
+| `docs/mujoco_arm_demo.gif` | 效果图（投篮动画，见下） |
+
+## 效果图
+
+![机械臂投篮入筐演示](docs/mujoco_arm_demo.gif)
+
+机械臂先压到低位托球蓄力，随后快速上摆把球送出，球沿 65° 橙色抛物线飞入筐中，
+顶部状态条实时显示投篮序号与命中数。
 
 ## 运行
 
