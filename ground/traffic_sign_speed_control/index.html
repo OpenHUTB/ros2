@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>限速标志识别与神经网络限速控制 - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u9650\u901f\u6807\u5fd7\u8bc6\u522b\u4e0e\u795e\u7ecf\u7f51\u7edc\u9650\u901f\u63a7\u5236";
+        var mkdocs_page_input_path = "ground/traffic_sign_speed_control.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_reachability/">人形机器人双臂末端可达域分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/zmp_walk_planner/">简化双足步态动画演示</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_reach/">MuJoCo双关节肌肉骨骼手臂到达控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_vehicle_aeb/">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">限速标志识别与神经网络限速控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_2">功能</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">系统架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">环境与安装</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 一键启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 观察话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3-gif">3. 合成演示 GIF</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 完整演示</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">原理与公式</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1_1">1. 差速小车刚体动力学</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2-p">2. 预瞄 P 控制（横向）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 限速器与加速度限幅（纵向）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4-mujoco">4. MuJoCo 车载相机</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5-hsv">5. HSV 红色分割与圆形度</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6-cnndigitcnn">6. 字符 CNN（DigitCNN）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 滑窗防抖（多数票）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">算法流程</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_8">感知流水线</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">限速状态机</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">代码结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">训练与数据</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">多场景测试与性能评价</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_13">指标定义</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">检测器退化矩阵</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">场景端到端结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_16">端到端延迟</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_17">已知限制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_18">大模型使用声明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_19">相关模块</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_parallel_parking/">MuJoCo侧方停车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../mujoco_drone_distance_stop/">无人机制动旧入口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/UNav-sim_ue5/">水下机器人 Unreal Engine 5 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（合成视频演示）</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">限速标志识别与神经网络限速控制</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/traffic_sign_speed_control.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="_1">限速标志识别与神经网络限速控制</h1>
+<p>本模块对应课程任务（2）——传感器感知及运动控制：<strong>MuJoCo 物理仿真</strong>中车载相机采集
+前视图像，<strong>卷积神经网络（CNN）读取限速标志数值</strong>，控制器据此对差速小车实施闭环
+限速运动控制。</p>
+<blockquote>
+<p>与已有 CARLA 版交通标志识别模块的区别：<code>carla_traffic_sign_recognition</code> 与
+<code>carla_tsr_ros</code> 使用 YOLOv8 检测 <strong>stop sign 类别</strong>（刹车/直行二值控制）；
+本模块识别<strong>限速数值本身</strong>（字符级 0-9 CNN → 任意两位数组合），并实现
+<strong>连续速度闭环调节</strong>（限速值→目标速度→加速度限幅），感知与控制语义均不同。</p>
+</blockquote>
+<h2 id="_2">功能</h2>
+<ul>
+<li>MuJoCo 圆形赛道差速小车巡航（刚体动力学推进，预瞄 P 控制横向，速度闭环纵向）</li>
+<li>车载前视相机（320x240，10 Hz）：MuJoCo 离屏渲染标志牌，支持旋转/模糊/暗光/噪声退化</li>
+<li>感知流水线：HSV 红圈定位 → 圆内字符切分 → DigitCNN 字符识别 → 位值组合 → 滑窗防抖</li>
+<li>限速器：目标速度取巡航与限速的较小值，加速度限幅平滑减速，驶离视野后延时解除</li>
+<li>一键 launch 启动；预置 3 个场景（基准/强退化/密集牌序）；离屏渲染帧可一键合成 GIF</li>
+</ul>
+<h2 id="_3">系统架构</h2>
+<div class="mermaid">graph LR
+    W[world_node<br/>MuJoCo 动力学+相机渲染] -- "/camera/image_raw (Image)" --&gt; D[detector_node<br/>HSV定位+CNN识别]
+    D -- "/speed_limit (Int32)" --&gt; V[driver_node<br/>预瞄P控制+限速器]
+    V -- "/cmd_vel (Twist)" --&gt; W
+    W -- "/world/odom (Odometry)" --&gt; V
+</div>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>发布者</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/camera/image_raw</code></td>
+<td><code>sensor_msgs/Image</code></td>
+<td>world</td>
+<td>320x240 rgb8 前视图像，10 Hz</td>
+</tr>
+<tr>
+<td><code>/world/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>world</td>
+<td>位姿与速度真值，20 Hz</td>
+</tr>
+<tr>
+<td><code>/speed_limit</code></td>
+<td><code>std_msgs/Int32</code></td>
+<td>detector</td>
+<td>稳定限速值（km/h），-1 表示视野内无牌</td>
+</tr>
+<tr>
+<td><code>/speed_limit_conf</code></td>
+<td><code>std_msgs/Float32</code></td>
+<td>detector</td>
+<td>该值平均置信度</td>
+</tr>
+<tr>
+<td><code>/detector/debug</code></td>
+<td><code>sensor_msgs/Image</code></td>
+<td>detector</td>
+<td>带定位框的调试图像</td>
+</tr>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>driver</td>
+<td>速度控制指令</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_4">环境与安装</h2>
+<ul>
+<li>
+<p>Ubuntu 20.04 + ROS 2 Humble、Python 3.8、PyTorch ≥ 2.0 (CPU)、OpenCV、Pillow、MuJoCo ≥ 3.0（无头环境经 OSMesa 软渲染）</p>
+<p>cd ~/ts_ws/src
+git clone &lt;本仓库&gt;          # 或直接拷贝 src/ground/traffic_sign_speed_control
+cd ~/ts_ws
+pip3 install -r src/ground/traffic_sign_speed_control/requirements.txt
+colcon build --packages-select traffic_sign_speed_control
+source install/setup.bash</p>
+</li>
+</ul>
+<p>若 <code>models/sign_cnn.pth</code> 不存在，先训练（约 3 分钟，CPU）：</p>
+<pre><code>python3 src/ground/traffic_sign_speed_control/scripts/train_signs.py
+</code></pre>
+<h2 id="_5">运行步骤</h2>
+<h3 id="1">1. 一键启动</h3>
+<pre><code>ros2 launch traffic_sign_speed_control traffic_sign_speed_control.launch.py
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>launch 参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>render_mode</code></td>
+<td><code>file</code></td>
+<td><code>none</code> 不渲染；<code>file</code> 离屏写帧（<code>window</code> 已弃用，按 <code>file</code> 处理）</td>
+</tr>
+<tr>
+<td><code>frame_dir</code></td>
+<td><code>/tmp/ts_frames</code></td>
+<td>file 模式帧输出目录（PNG，用于合成 GIF）</td>
+</tr>
+<tr>
+<td><code>scene</code></td>
+<td><code>default</code></td>
+<td>预置场景：<code>default</code> / <code>degraded</code> / <code>dense</code></td>
+</tr>
+</tbody>
+</table>
+<p>启动后终端依次打印 world/detector/driver 的就绪日志。小车从角度 180° 处沿赛道
+逆时针巡航，驶近"30"牌减速、驶离后恢复巡航，再驶近"15"牌再次减速，如下图：</p>
+<p><img alt="运行画布" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_canvas.png"/></p>
+<p>（左：世界画布——圆形赛道、限速牌、红色小车、HUD、相机画中画；
+右下画中画：车载相机原始图像）</p>
+<p><img alt="相机视角" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_camera.png"/></p>
+<h3 id="2">2. 观察话题</h3>
+<pre><code>ros2 topic echo /speed_limit          # 接近标志时输出 30 / 15，其余为 -1
+ros2 topic echo /cmd_vel              # 限速生效时 linear.x 被压低
+</code></pre>
+<h3 id="3-gif">3. 合成演示 GIF</h3>
+<pre><code>ros2 run traffic_sign_speed_control main demo     # 需要 ffmpeg；frames/ 与 GIF 输出到当前工作目录
+</code></pre>
+<h3 id="4">4. 完整演示</h3>
+<p><img alt="演示动图" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_demo.gif"/></p>
+<p>指令序列：巡航 1.25 m/s（45 km/h 缩比）→ 识别"30"→ 减速至 0.83 m/s → 驶离恢复
+1.25 m/s → 识别"15"→ 减速至 0.42 m/s → 恢复巡航，基准场景限速区内零超速。</p>
+<h2 id="_6">原理与公式</h2>
+<h3 id="1_1">1. 差速小车刚体动力学</h3>
+<p>小车在 MuJoCo 中建模为刚体：底盘 + 两驱动轮（hinge 关节）+ 万向轮，<code>/cmd_vel</code>
+的 (v, ω) 按差速关系换算为左右轮目标转速，由速度执行器（velocity actuator）
+跟踪，物理以 2 ms 子步 implicitfast 积分推进（每 50 Hz 控制周期 10 个子步）：</p>
+<p>
+<script type="math/tex; mode=display">
+\omega_l = \frac{v - \omega \cdot b}{r},\qquad
+\omega_r = \frac{v + \omega \cdot b}{r}
+</script>
+</p>
+<p>其中 b 为半轮距（0.095 m），r 为驱动轮半径（0.035 m）。轮地摩擦产生实际
+纵向速度与偏航角速度，里程计由 free joint 位姿差分得到。</p>
+<h3 id="2-p">2. 预瞄 P 控制（横向）</h3>
+<p>设赛道圆心 C、半径 R。取车头前方弧长 L_d 处的预瞄点，计算预瞄点航向与当前
+航向的误差 e_θ（角度归一化到 (-π, π]），转角指令为：</p>
+<p>
+<script type="math/tex; mode=display">
+\omega = \mathrm{clip}(k\, e_\theta,\ -2.5,\ 2.5)
+</script>
+</p>
+<h3 id="3">3. 限速器与加速度限幅（纵向）</h3>
+<p>本平台为 <strong>1:10 缩比模型</strong>（赛道半径 2.5 m）：速度按几何相似缩放
+<code>v_sim = n / 36</code>（n 为牌面 km/h 标注），牌面数值沿用真实交通标注。设巡航速度
+v_c、感知限速 n，纵向控制为：</p>
+<p>
+<script type="math/tex; mode=display">
+v_{\mathrm{target}} = \min(v_c,\ n/36),\qquad
+v_{k+1} = \mathrm{clip}\left(v_k \pm a\,\Delta t,\ v_{\mathrm{target}}\right)
+</script>
+</p>
+<p>减速取 a = 1.6 m/s²，加速取 a = 1.0 m/s²，保证速度曲线连续可跟踪。</p>
+<h3 id="4-mujoco">4. MuJoCo 车载相机</h3>
+<p>相机刚体安装于车头（高 0.2 m，水平视场 90°，分辨率 320x240），由 MuJoCo
+离屏渲染器逐帧渲染。标志牌为边长 l_s = 0.6 m 的带纹理几何体，牌面中心
+距地 0.35 m；距离 d、水平偏角 α 时，针孔投影近似给出牌面中心的图像横坐标
+u 与牌面边长 s（像素）：</p>
+<p>
+<script type="math/tex; mode=display">
+u \approx \frac{W}{2} + f\tan\alpha,\qquad
+s \approx \frac{f \cdot l_s}{d},\qquad
+f = \frac{W/2}{\tan(45^\circ)}
+</script>
+</p>
+<p>渲染以 2 倍分辨率超采样后 INTER_AREA 降采样回 320x240，避免远处牌面数字
+笔画在缩采样中糊化；视距 4.5 m 外认为不可见（真值区间计算用）。</p>
+<h3 id="5-hsv">5. HSV 红色分割与圆形度</h3>
+<p>HSV 空间中红色分布在 H 两端，掩膜取 (0 ≤ H ≤ 8) 与 (172 ≤ H ≤ 180) 两区间并集
+（S ≥ 90，V ≥ 60）。对每个连通域以圆形度筛选标志牌（A 为面积、P 为周长）：</p>
+<p>
+<script type="math/tex; mode=display">
+c = \frac{4\pi A}{P^2} \ge 0.6
+</script>
+</p>
+<p>再用最小外接圆半径 r ∈ [15, 110] px 过滤。</p>
+<h3 id="6-cnndigitcnn">6. 字符 CNN（DigitCNN）</h3>
+<p>网络结构：<code>Conv(1→16,3×3)-ReLU-MaxPool2 → Conv(16→32,3×3)-ReLU-MaxPool2 → Dropout(0.25) → FC(2048→128)-ReLU → FC(128→10)</code>，
+输入 32×32 灰度图。推理取 softmax 最大概率类别及置信度：</p>
+<p>
+<script type="math/tex; mode=display">
+p_j = \frac{e^{z_j}}{\sum_k e^{z_k}},\qquad
+\hat{y} = \arg\max_j p_j
+</script>
+</p>
+<p>两位数牌面按位组合 value = 10·d1 + d2，单字符牌 value = d1。任一字符置信度
+低于 0.60 时整帧判无效。</p>
+<h3 id="7">7. 滑窗防抖（多数票）</h3>
+<p>检测值序列进入长度 N = 5 的滑动窗口，稳定值取窗口内票数最多的非负读数
+（≥ 2 票，同票数时置信度均值决胜），上锁与改判同规则；仅当整窗均为无牌（-1）
+时才解除。相比"连续 N 帧一致"，多数票容忍退化场景下的散乱误读与掉帧，
+同时防止单帧误读翻转已生效的限速。</p>
+<h2 id="_7">算法流程</h2>
+<h3 id="_8">感知流水线</h3>
+<div class="mermaid">graph TD
+    A[相机图像 320x240] --&gt; B[HSV 红色分割]
+    B --&gt; C{圆形度≥0.6 且 15≤r≤110?}
+    C -- 否 --&gt; Z[发布 -1]
+    C -- 是 --&gt; D[圆内暗色连通域字符切分]
+    D --&gt; E{1~2 个字符?}
+    E -- 否 --&gt; Z
+    E -- 是 --&gt; F[DigitCNN 逐字符分类]
+    F --&gt; G{置信度≥0.60?}
+    G -- 否 --&gt; Z
+    G -- 是 --&gt; H[位值组合 v=10d1+d2]
+    H --&gt; I[滑窗多数票防抖 N=5]
+    I --&gt; J[发布 /speed_limit]
+</div>
+<h3 id="_9">限速状态机</h3>
+<div class="mermaid">stateDiagram-v2
+    [*] --&gt; CRUISE
+    CRUISE --&gt; LIMITED: 检测到限速牌 n km/h
+    LIMITED --&gt; LIMITED: 持续可见（目标 min(v_c, n/36)）
+    LIMITED --&gt; CRUISE: 驶离视野且超过保持时间 1.2 s
+    CRUISE --&gt; CRUISE: 无牌 / 目标 v_c
+</div>
+<h2 id="_10">代码结构</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>类型</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>traffic_sign_speed_control/world_node.py</code></td>
+<td>节点</td>
+<td>构建 MuJoCo 世界、50 Hz 控制周期 mj_step 推进、里程计/相机话题发布、俯视画布渲染与帧输出</td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/mujoco_scene.py</code></td>
+<td>库</td>
+<td>运行时生成 MJCF（赛道纹理/限速牌/差速小车/相机）、物理推进与相机离屏渲染</td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/detector_node.py</code></td>
+<td>节点</td>
+<td>HSV 定位 → 字符切分 → CNN 推理 → 滑窗防抖，发布 <code>/speed_limit</code></td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/driver_node.py</code></td>
+<td>节点</td>
+<td>限速状态机与加速度限幅、预瞄 P 横向控制，发布 <code>/cmd_vel</code></td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/scene.py</code></td>
+<td>库</td>
+<td>3 个预置场景定义，支持 <code>/world/scene_config</code> 运行时热切换</td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/sign_render.py</code></td>
+<td>库</td>
+<td>标志牌纹理绘制（仿真材质与训练数据共用）、字符合成与增广、字符归一化</td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/model.py</code></td>
+<td>库</td>
+<td>DigitCNN 网络定义与推理预处理</td>
+</tr>
+<tr>
+<td><code>scripts/train_signs.py</code></td>
+<td>脚本</td>
+<td>合成数据集生成与 CNN 训练（约 3 分钟，CPU）</td>
+</tr>
+<tr>
+<td><code>scripts/evaluate_detector.py</code></td>
+<td>脚本</td>
+<td>检测器退化矩阵评测（6 种条件 × 10 类 × 100 张）</td>
+</tr>
+<tr>
+<td><code>scripts/run_scenes.py</code></td>
+<td>脚本</td>
+<td>多场景端到端评测（进程组管理，指标统计与画图）</td>
+</tr>
+<tr>
+<td><code>traffic_sign_speed_control/main.py</code> / <code>launch/</code></td>
+<td>入口</td>
+<td><code>ros2 run ... main</code> CLI（train/evaluate/scenes/demo）与三节点一键启动</td>
+</tr>
+</tbody>
+</table>
+<p>设计要点：</p>
+<ul>
+<li>手工构造 <code>sensor_msgs/Image</code>（rgb8，step = width*3），零 cv_bridge 依赖；</li>
+<li>训练与推理共用 <code>canonicalize_char()</code> 字符归一化（暗像素紧裁剪 → 方形白底 →
+  32×32），消除"训练字符带白边 / 相机字符满框"的分布不匹配；</li>
+<li>牌面以程序化纹理贴附 MuJoCo 几何体，同一套 <code>draw_limit_sign()</code> 同时生成
+  仿真材质与训练数据，保证两域字形一致；</li>
+<li>车载相机 2 倍超采样渲染后 INTER_AREA 降采样，避免远处牌面笔画缩采样糊化；
+  牌面与立杆设为无碰撞（contype=0），不干扰小车动力学；</li>
+<li><code>run_scenes.py</code> 以进程组管理三节点栈（start_new_session + killpg），保证多场景
+  连续评测无残留进程。</li>
+</ul>
+<h2 id="_11">训练与数据</h2>
+<p>训练数据完全由程序合成（无需外部数据集）：0-9 每类 400 张，DejaVu/Liberation
+粗体渲染 + 随机缩放平移 + 部分样本叠加红圈边缘模拟裁剪，再施加与相机相同的
+退化增广（旋转 ±18°、模糊 σ≤1.2、亮度扰动、噪声）。划分 80/10/10，
+Adam（lr=1e-3）、batch 128、15 epoch，CPU 训练约 3 分钟。</p>
+<p><img alt="样本网格" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_samples.png"/></p>
+<p><img alt="训练曲线" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_train_curve.png"/></p>
+<p><img alt="混淆矩阵" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_confusion.png"/></p>
+<p>测试集（400 张）准确率 99.5%（混淆矩阵仅 2 处错误：4→6、5→8），验证集 99.25%
+（合成同分布数据，下节退化矩阵给出更严格的逐条件泛化结果）。</p>
+<h2 id="_12">多场景测试与性能评价</h2>
+<h3 id="_13">指标定义</h3>
+<ul>
+<li><strong>识别延迟</strong>：牌进入相机视野真值时刻 → 防抖后 <code>/speed_limit</code> 首次等于牌值的时延；</li>
+<li><strong>达标时间</strong>：进入视野后，速度持续 1.0 s 满足误差不超过 max(0.05, 5%·v_lim) 的最短时间；</li>
+<li><strong>稳态误差</strong>：视野区间最后 2 s 内 |v − v_lim| 均值；</li>
+<li><strong>超速占比</strong>：达标之后区间内 v &gt; v_lim + 容差的采样占比。</li>
+</ul>
+<h3 id="_14">检测器退化矩阵</h3>
+<p>对 0-9 每个数字在 6 种退化条件下各生成 100 张合成样本（与训练增广同源但
+参数独立随机），字符级准确率：</p>
+<p><img alt="退化矩阵" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_degrade.png"/></p>
+<p>（数值由 <code>scripts/evaluate_detector.py</code> 评测生成）</p>
+<h3 id="_15">场景端到端结果</h3>
+<p>每个场景以 <code>render_mode:=none</code> 运行真实 ROS 系统 55 s（约 3–4 圈），注入场景后
+从小车复位起统计指标（由 <code>scripts/run_scenes.py</code> 生成场景 JSON 与速度曲线图）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>标志序列</th>
+<th>退化</th>
+<th>检出率</th>
+<th>平均识别延迟</th>
+<th>平均达标时间</th>
+<th>平均稳态误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>default</td>
+<td>30 → 15</td>
+<td>无</td>
+<td>100% (2/2)</td>
+<td>0.68 s</td>
+<td>1.33 s</td>
+<td>0.010 m/s</td>
+</tr>
+<tr>
+<td>degraded</td>
+<td>30 → 15</td>
+<td>旋转12°/模糊1.4/暗光/噪声</td>
+<td>100% (2/2)</td>
+<td>1.40 s</td>
+<td>2.95 s</td>
+<td>0.012 m/s</td>
+</tr>
+<tr>
+<td>dense</td>
+<td>30 → 15 → 20</td>
+<td>轻度</td>
+<td>100% (3/3)</td>
+<td>0.39 s</td>
+<td>1.66 s</td>
+<td>0.012 m/s</td>
+</tr>
+</tbody>
+</table>
+<p>分解到逐牌（检出后能否在可见区间内把速度稳住）：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>牌</th>
+<th>延迟 (s)</th>
+<th>达标时间 (s)</th>
+<th>稳态误差 (m/s)</th>
+<th>超速占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>default</td>
+<td>30</td>
+<td>0.90</td>
+<td>1.65</td>
+<td>0.012</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>default</td>
+<td>15</td>
+<td>0.45</td>
+<td>1.00</td>
+<td>0.008</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>degraded</td>
+<td>30</td>
+<td>1.15</td>
+<td>2.00</td>
+<td>0.012</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>degraded</td>
+<td>15</td>
+<td>1.66</td>
+<td>3.90</td>
+<td>0.012</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>dense</td>
+<td>30</td>
+<td>0.00</td>
+<td>2.83</td>
+<td>0.012</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>dense</td>
+<td>15</td>
+<td>0.81</td>
+<td>1.35</td>
+<td>0.013</td>
+<td>0%</td>
+</tr>
+<tr>
+<td>dense</td>
+<td>20</td>
+<td>0.35</td>
+<td>0.80</td>
+<td>0.012</td>
+<td>0%</td>
+</tr>
+</tbody>
+</table>
+<p>结果显示：<strong>感知全部命中</strong>（7/7 牌、三场景检出率均 100%），且全部牌在可见区间内
+完成限速整定，限速区内零超速；强退化场景仅使识别延迟增加约 0.5–1.2 s、达标时间
+相应延长（degraded-15 为 3.90 s），稳态误差保持在 0.012 m/s 量级。</p>
+<div class="admonition note">
+<p class="admonition-title">调参方向</p>
+<p>degraded-15 与 dense-30 的达标时间仍偏长（误读抑制与起步加速挤占减速窗口），
+可通过预瞄提前减速进一步压缩。</p>
+</div>
+<p>三场景速度跟踪曲线：</p>
+<p><img alt="default 场景速度曲线" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_scene_default.png"/></p>
+<p><img alt="degraded 场景速度曲线" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_scene_degraded.png"/></p>
+<p><img alt="dense 场景速度曲线" src="../../img/ground/traffic_sign_speed_control/traffic_sign_speed_control_scene_dense.png"/></p>
+<p>结果复现：</p>
+<pre><code>python3 src/ground/traffic_sign_speed_control/scripts/evaluate_detector.py
+python3 src/ground/traffic_sign_speed_control/scripts/run_scenes.py --duration 55
+</code></pre>
+<h3 id="_16">端到端延迟</h3>
+<p>感知单帧耗时（ROI 定位 + 字符切分 + CNN 推理）实测约 <strong>2.5 ms</strong>（CPU i5 级虚拟机
+6 核，20 帧均值），相机 10 Hz 下感知链路不构成瓶颈；从牌面进入视野到限速生效的
+端到端延迟主要由多数票防抖（5 帧窗口 ≈ 0.2–0.5 s）、小尺寸牌面的识别置信度积累与
+控制周期（0.05 s）共同决定。</p>
+<h2 id="_17">已知限制</h2>
+<ul>
+<li>MuJoCo 场景为程序化材质与光照渲染，未覆盖真实相机的畸变、曝光与运动模糊；</li>
+<li>限速作用域为"牌面可见区间"，未建模真实交规中区段限速的延续语义
+  （可通过增加"解除限速"牌类扩展）；</li>
+<li>字符分割对极端透视形变（牌面斜视 &gt; 45°）鲁棒性有限，牌面朝向已按来车方向
+  预瞄摆放以缓解；</li>
+<li>无 GPU 环境依赖 OSMesa 软件渲染，渲染帧率受 CPU 限制；</li>
+<li>训练与测试均基于同一程序化渲染管线，未验证真实相机实拍图像。</li>
+</ul>
+<h2 id="_18">大模型使用声明</h2>
+<p>使用 deep seek 辅助开发：ROS 2 节点与感知/控制代码的编写与调试、训练与评测
+脚本、教程文档整理；实验方案、参数选择与全部验证结论经作者实际运行确认。</p>
+<h2 id="_19">相关模块</h2>
+<ul>
+<li><a href="../carla_traffic_sign_recognition/">CARLA 交通标志识别（Windows 端脚本）</a></li>
+<li><a href="../carla_tsr_ros/">交通标志识别 ROS 封装</a></li>
+</ul></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_auto_light/" title="地面载具灯光自动控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mujoco_car_parking/" title="MuJoCo小车 倒车入库仿真">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../carla_auto_light/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mujoco_car_parking/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
