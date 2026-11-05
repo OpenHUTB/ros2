@@ -38,6 +38,8 @@ class PurePursuitNode(Node):
         self.declare_parameter("target_speed", 0.8)
         self.declare_parameter("path_file", "")
         self.declare_parameter("enable_avoidance", True)
+        # 曲率自适应前视：0 表示只用速度自适应（旧行为）
+        self.declare_parameter("curve_gain", 2.5)
         # 安全相关参数：角速度上限与两路话题的数据超时（秒）
         self.declare_parameter("max_angular", 1.8)
         self.declare_parameter("scan_timeout", 0.5)
@@ -64,7 +66,9 @@ class PurePursuitNode(Node):
             self.path = circle(radius=8.0)
         self.get_logger().info(f"载入参考路径，共 {len(self.path)} 个点")
 
-        self.controller = PurePursuitController()
+        self.controller = PurePursuitController(
+            curve_gain=float(self.get_parameter("curve_gain").value)
+        )
         self.avoider = ObstacleAvoider()
         self.pose = Pose()
         self.scan = None

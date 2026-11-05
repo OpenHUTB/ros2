@@ -24,7 +24,7 @@ ros2_pure_pursuit/
 │   ├── run_sim.py        # 单场景离线仿真与出图
 │   └── benchmark.py      # 4 路径 × 有无避障 基准矩阵
 ├── launch/nav.launch.py  # ROS2 启动文件
-├── tests/test_core.py    # 单元测试（27 项）
+├── tests/test_core.py    # 单元测试（30 项）
 ├── ci/run_ci.sh          # 一键检查（语法/依赖/测试/仿真/基准）
 ├── package.xml           # ROS2 包描述
 └── setup.py              # Python 包配置
@@ -52,9 +52,11 @@ ros2 launch ros2_pure_pursuit nav.launch.py
 
 ## 核心公式
 
-前视距离随速度自适应：
+前视距离随速度自适应，并随路径曲率缩短（`curve_gain=0` 关闭第二层）：
 
-$$L_d = \mathrm{clip}(0.45|v| + 0.6,\ 0.4,\ 2.5)$$
+$$L_{d,\text{speed}} = \mathrm{clip}(0.45|v| + 0.6,\ 0.4,\ 2.5)$$
+
+$$L_d = \mathrm{clip}\!\left(\frac{L_{d,\text{speed}}}{1 + 2.5\,|\kappa|\,0.8},\ L_{d,\min},\ 2.5\right)$$
 
 由纯追踪几何关系解出角速度：
 
@@ -85,8 +87,10 @@ $$v \leftarrow v \cdot (1 - 0.85 r),\qquad \omega_{\text{bias}} = \sigma \cdot 1
 
 | 避障 | 碰撞 | RMS 横向误差 | 前向最小测距 |
 | --- | :---: | ---: | ---: |
-| 开 | 否（4/4 安全通过） | 0.070 ~ 0.116 m | 0.711 ~ 0.742 m |
+| 开 | 否（4/4 安全通过） | 0.061 ~ 0.116 m | 0.659 ~ 0.727 m |
 | 关 | **是（4/4 全部碰撞）** | — | — |
 
-单元测试 27 项全部通过（`python3 tests/test_core.py`），覆盖运动学、纯追踪、避障、
-急停、话题超时与参数校验；一键 `bash ci/run_ci.sh` 五阶段全绿。
+对比 `curve_gain=0`（旧行为）：RMS 误差下降 11%~12%，最大横向误差下降 6%~12%（见 `docs/ground/ros2_pure_pursuit/index.md` 3.4 节扫参表）。
+
+单元测试 30 项全部通过（`python3 tests/test_core.py`），覆盖运动学、纯追踪、曲率自适应、
+避障、急停、话题超时与参数校验；一键 `bash ci/run_ci.sh` 五阶段全绿。

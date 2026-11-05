@@ -21,12 +21,19 @@ RESULTS = os.path.join(ROOT, "results")
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="纯追踪 + 避障基准矩阵")
+    ap.add_argument("--curve-gain", type=float, default=2.5,
+                    help="曲率自适应前视增益；0 = 只用速度自适应（旧行为）")
+    args = ap.parse_args()
+
     os.makedirs(RESULTS, exist_ok=True)
     rows = []
     for name in PATH_BUILDERS:
         for avoid in (True, False):
             metrics, traj, pts, ctes, risks, obstacles = run(
-                name, 0.9, avoid, max_steps=3000
+                name, 0.9, avoid, max_steps=3000, curve_gain=args.curve_gain
             )
             tag = name if avoid else f"{name}_noavoid"
             plot(name, traj, pts, ctes, risks, obstacles,

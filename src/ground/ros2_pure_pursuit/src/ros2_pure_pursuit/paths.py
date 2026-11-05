@@ -57,6 +57,42 @@ class Path:
         return float(cross / norm)
 
 
+    def curvature(self, index: int, span: float = 0.8) -> float:
+        """用 index 附近弧长 span 的三点估计路径曲率（1/m，带符号）。
+
+        三点外接圆曲率 ``kappa = 2 * A / (a * b * c)``，其中 A 是三角形带符号面积。
+        取"跨一段弧长"而不是相邻两点，是为了压掉离散化的锯齿噪声；
+        闭合路径用取模回绕，开放路径在端点处退化为可用点。
+        """
+        pts = self.points
+        n = len(pts)
+        if n < 3:
+            return 0.0
+
+        def walk(start: int, step: int, target: float) -> int:
+            acc, i = 0.0, start
+            while acc < target:
+                j = i + step
+                if self.closed:
+                    j %= n
+                elif j < 0 or j >= n:
+                    break
+                acc += float(np.linalg.norm(pts[j] - pts[i]))
+                i = j
+            return i
+
+        i0 = walk(index, -1, span * 0.5)
+        i2 = walk(index, +1, span * 0.5)
+        p0, p1, p2 = pts[i0], pts[index], pts[i2]
+        a = float(np.linalg.norm(p1 - p0))
+        b = float(np.linalg.norm(p2 - p1))
+        c = float(np.linalg.norm(p2 - p0))
+        if a * b * c < 1e-12:
+            return 0.0
+        cross = float((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]))
+        return 2.0 * cross / (a * b * c)
+
+
 def circle(radius: float = 8.0, n: int = 400) -> Path:
     """生成闭合圆形路径。"""
     t = np.linspace(0.0, 2.0 * np.pi, n)
