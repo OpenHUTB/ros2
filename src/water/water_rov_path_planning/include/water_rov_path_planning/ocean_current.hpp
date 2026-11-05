@@ -11,7 +11,7 @@ namespace water_rov_path_planning
  * @brief 洋流场模型
  *
  * 用二维向量场表示海底洋流。每个位置有一个流速向量（vx, vy），单位 m/s。
- * 支持多种洋流模式：均匀流、涡流、潮汐振荡。
+ * 支持多种洋流模式：均匀流、涡流、潮汐振荡、剪切流。
  * 用于路径规划时估算洋流对 ROV 的推力干扰。
  */
 class OceanCurrent

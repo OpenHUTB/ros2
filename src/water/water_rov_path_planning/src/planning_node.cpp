@@ -3,7 +3,7 @@
 #include <nav_msgs/msg/path.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <cv_bridge/cv_bridge.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.hpp>
 
 #include "water_rov_path_planning/heatmap.hpp"

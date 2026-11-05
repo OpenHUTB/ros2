@@ -68,18 +68,21 @@ void Heatmap::gridToWorld(int gx, int gy, double & wx, double & wy) const
 cv::Mat Heatmap::toColorImage() const
 {
   // 风险 0 -> 蓝色，0.5 -> 绿色，1.0 -> 红色，中间经绿、黄过渡
-  cv::Mat color(grid_size_, grid_size_, CV_8UC3);
+  // HSV 色相范围 0~179：H=120（蓝）→ H=0（红），中间 H=60（绿）
+  cv::Mat hsv(grid_size_, grid_size_, CV_8UC3);
   for (int y = 0; y < grid_size_; ++y) {
     for (int x = 0; x < grid_size_; ++x) {
       double r = risk_.at<double>(y, x);
-      // HSV 色相范围为 0~179：H=120(蓝) -> H=0(红)，0.5 处约为 H=60(绿)
       double h = 120.0 * (1.0 - r);
-      cv::Mat hsv(1, 1, CV_8UC3, cv::Scalar(h, 255, 255));
-      cv::Mat bgr;
-      cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
-      color.at<cv::Vec3b>(y, x) = bgr.at<cv::Vec3b>(0, 0);
+      hsv.at<cv::Vec3b>(y, x) = cv::Vec3b(
+        static_cast<uint8_t>(h),
+        255,
+        255
+      );
     }
   }
+  cv::Mat color;
+  cv::cvtColor(hsv, color, cv::COLOR_HSV2BGR);
   // 放大方便查看
   cv::Mat big;
   cv::resize(color, big, cv::Size(), 4, 4, cv::INTER_NEAREST);
