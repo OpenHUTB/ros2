@@ -14,13 +14,17 @@ from mujoco_uav_moving_pad_landing.landing import MODEL_PATH, run_demo, train_co
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="MuJoCo UAV visual landing on a moving platform")
-    parser.add_argument("mode", choices=("demo", "train"), nargs="?", default="demo")
+    parser.add_argument("mode", choices=("demo", "train", "teleop"), nargs="?", default="demo")
     parser.add_argument("--output", type=Path, default=Path("output"))
     parser.add_argument("--steps", type=int, default=180)
     parser.add_argument("--samples", type=int, default=5000)
     args = parser.parse_args()
     if args.mode == "train":
         result = train_controller(MODEL_PATH, samples=args.samples)
+    elif args.mode == "teleop":
+        from mujoco_uav_moving_pad_landing.teleop import run_keyboard_teleop
+
+        result = run_keyboard_teleop(args.output)
     else:
         if not MODEL_PATH.exists():
             train_controller(MODEL_PATH, samples=args.samples)

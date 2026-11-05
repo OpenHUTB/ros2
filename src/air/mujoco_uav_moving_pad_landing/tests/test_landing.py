@@ -7,6 +7,7 @@ from mujoco_uav_moving_pad_landing.landing import (
     expert_command,
     vision_features,
 )
+from mujoco_uav_moving_pad_landing.teleop import command_for_key
 
 
 def test_expert_command_is_bounded_and_descends_when_aligned():
@@ -36,6 +37,12 @@ def test_invalid_visual_marker_skips_trained_model():
 def test_nonfinite_features_produce_zero_velocity():
     features = np.array([0.3, np.nan, 0.5, 0.1, 0.1, 1.0], dtype=np.float32)
     np.testing.assert_array_equal(controller_command(features), np.zeros(3, dtype=np.float32))
+
+
+def test_keyboard_commands_are_bounded_and_quit_is_explicit():
+    np.testing.assert_allclose(command_for_key("w"), [0.35, 0.0, 0.0])
+    np.testing.assert_allclose(command_for_key("F"), [0.0, 0.0, -0.21])
+    assert command_for_key("q") is None
 
 
 def test_hsv_detector_finds_pad_and_uav_centers():
