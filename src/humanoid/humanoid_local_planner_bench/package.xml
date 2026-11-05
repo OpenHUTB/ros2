@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_local_planner_bench</name>
+  <version>1.0.0</version>
+  <description>人形足迹下的局部避障算法对比（DWA / APF），基于 MuJoCo 走廊窄门场景</description>
+  <maintainer email="L2008-by@users.noreply.github.com">L2008-by</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <!-- 运行依赖：
+       - numpy / matplotlib 走系统包（rosdep 可解析）
+       - MuJoCo 在本模块中一律用 pip 安装（Ubuntu 22.04 未提供 apt 包）：
+           python3 -m pip install --user "mujoco>=3.3"
+         下界取 3.3：3.2.x 的 mj_geomDistance 在「圆柱 vs box」上结果不对，
+         clearance() 会算出负值。
+         因此不写 <exec_depend>mujoco</exec_depend>，避免 rosdep 去找不存在的包。
+         完整清单见 requirements.txt，步骤见 README「安装与运行」。 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

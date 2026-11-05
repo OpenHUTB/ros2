@@ -7,10 +7,12 @@
 本模块聚焦于水下自主航行器（Autonomous Underwater Vehicle, AUV / ROV）在未知复杂水下环境中的**多模态自主感知**与**空间高精度航迹控制**两大核心能力：
 
 1. **水下多传感器感知系统**：
-   在 MuJoCo 物理引擎中建立高密度前视成像声呐（Forward-Looking Sonar）、前视光学相机（RGB Camera）、6 轴微机电惯导系统（IMU）以及高精度压阻式水深计。解算声学射线散射方程与水体光学衰减定律，通过 ROS 2 标准话题集群实时对外发布感知数据流。
+
+    在 MuJoCo 物理引擎中建立高密度前视成像声呐（Forward-Looking Sonar）、前视光学相机（RGB Camera）、6 轴微机电惯导系统（IMU）以及高精度压阻式水深计。解算声学射线散射方程与水体光学衰减定律，通过 ROS 2 标准话题集群实时对外发布感知数据流。
 
 2. **神经网络 3D 空间轨迹自主跟踪控制**：
-   设计 3D 空间立体螺旋巡检航迹（3D Helical Inspection Trajectory）与全域地毯式搜索巡航路径（Lawnmower Path）。构建深度神经网络（MLP Policy，10 维输入 \(\to\) 64 \(\to\) 64 \(\to\) 4 维控制推力）闭环轨迹跟踪控制器，支持 PyTorch 与 NumPy 双后端无缝切换。在“静水工况”与“三层剪切强洋流工况”双重场景下，与经典视线法（Line-of-Sight, LOS）+ 解耦 PID 控制器进行多维度的学术量化对比。
+
+    设计 3D 空间立体螺旋巡检航迹（3D Helical Inspection Trajectory）与全域地毯式搜索巡航路径（Lawnmower Path）。构建深度神经网络（MLP Policy，10 维输入 \(\to\) 64 \(\to\) 64 \(\to\) 4 维控制推力）闭环轨迹跟踪控制器，支持 PyTorch 与 NumPy 双后端无缝切换。在“静水工况”与“三层剪切强洋流工况”双重场景下，与经典视线法（Line-of-Sight, LOS）+ 解耦 PID 控制器进行多维度的学术量化对比。
 
 ```mermaid
 graph TD
@@ -73,10 +75,10 @@ graph TD
 \mathbf{d}_{w, i} = \mathbf{R}_{wb} \begin{bmatrix} \cos\theta_i \\ \sin\theta_i \\ 0 \end{bmatrix}
 \]
 
-利用 MuJoCo 高性能射线碰撞检测原语 `mj_ray`，求解声束与水下结构物（海底管线、基座结构体等）的最近相交距离 \(r_i\)：
+利用 MuJoCo 几何碰撞检测原语 `mj_ray`，传入声呐传感器空间坐标 \(\mathbf{p}_s\) 与波束方向 \(\mathbf{d}_{w, i}\)，排除 ROV 机体自身碰撞体（`bodyexclude`），求解声束与水下结构物（海底管线、基座结构等）几何表面的最近相交距离 \(r_i\)：
 
 \[
-r_i = \text{mj\_ray}(\text{model}, \text{data}, \mathbf{p}_s, \mathbf{d}_{w, i}, \text{bodyexclude}=\text{body\_id})
+r_i = \min \left\{ d > 0 \;\middle|\; \mathbf{p}_s + d \cdot \mathbf{d}_{w, i} \in \partial \mathcal{O}_{\text{env}} \right\}
 \]
 
 若未命中障碍物或超出量程，则截断为最大量程 \(R_{\max} = 15.0 \, \text{m}\)。
@@ -352,6 +354,17 @@ F_z = K_{p,z} e_{z} + K_{d,z} e_{vz} + K_{ff,z} \dot{z}_d \\
 ---
 
 ## 7. 运行与测试操作指引
+
+!!! tip "前置环境与依赖准备"
+    在运行本任务前，请先确保已完成 ROS 2 环境与基础功能包的安装与编译。如果您是初次运行该模块，请先阅读：
+    👉 [水下机器人物理仿真与键盘运动控制（任务一：环境配置与快速安装）](https://openhutb.github.io/ros2/water/rov_physical_simulation/)，完成核心依赖（MuJoCo 仿真库、NumPy、SciPy 等）的安装及工作空间构建：
+    ```bash
+    # 1. 安装核心 Python 依赖
+    pip3 install mujoco numpy scipy pyyaml
+    # 2. 编译 ROS 2 功能包并加载环境
+    colcon build --packages-select rov_mujoco --symlink-install
+    source install/setup.bash
+    ```
 
 功能包遵循 ROS 2 开源规范，所有主入口支持 `main.py` 原生参数调用与 `ros2 launch` 启动。
 

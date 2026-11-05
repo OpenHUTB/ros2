@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>gesture_control_drone</name>
+  <version>0.2.0</version>
+  <description>
+    手势控制 AirSim 无人机：用摄像头 + MediaPipe 识别手部手势，把识别结果转换成
+    指令 token 通过 ROS 话题发布，由控制节点调用 AirSim 多旋翼 API 完成
+    起飞（解锁 + 定高）/ 降落 / 悬停 / 前进 / 上升 / 下降 / 紧急停止，
+    并把载具位姿以 nav_msgs/Odometry（ENU）回传，可在 RViz 中观察。
+
+    手势与指令的唯一词表见 scripts/gesture_map.py（两端 import 同一份，
+    避免"感知端发中文、控制端比英文"这类接口错配）；AirSim 侧的全部动作、
+    指令超时保护与安全限幅集中在 scripts/drone_client.py。
+
+    mediapipe 与 airsim 没有 rosdep 键，用 pip 安装，见 requirements.txt（mediapipe 必须 0.10.x，1.x 已移除 mp.solutions）；
+    感知与控制逻辑不依赖 ROS，可用 tests/test_gesture_control_local.py 离线回归。
+  </description>
+  <maintainer email="desirable60@users.noreply.github.com">desirable60</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <!-- apt 里有的 Python 依赖（优先用 apt，避免 pip 与系统 ROS 冲突） -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <!-- gesture_demo.py 的单机演示窗口 -->
+  <exec_depend>python3-pygame</exec_depend>
+  <!-- mediapipe / airsim / pygame 没有 rosdep 键，见 requirements.txt -->
+
+  <export/>
+</package>

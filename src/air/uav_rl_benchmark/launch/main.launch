@@ -1,0 +1,31 @@
+<launch>
+  <!-- ============================================================
+       uav_rl_benchmark 统一启动入口：跑 RL 算法/结构对比实验
+         roslaunch uav_rl_benchmark main.launch
+         roslaunch uav_rl_benchmark main.launch steps:=200000
+
+       ⚠️ 这是【离线训练任务】，需要 torch / stable-baselines3：
+            pip install "stable-baselines3" "gymnasium" numpy pandas matplotlib
+          只装了 ROS 的机器上会在 /benchmark/status 报 ERROR 并退出（不静默失败）。
+
+       依赖 uav_ppo_nav 的训练环境（NavEnv），不改动它，保证对比只反映算法差异。
+       ============================================================ -->
+
+  <arg name="steps"           default="100000" doc="每个配置的训练步数预算"/>
+  <arg name="obstacles"       default="16"     doc="障碍物数量"/>
+  <arg name="eval_episodes"   default="100"    doc="最终评估回合数"/>
+  <arg name="eval_freq"       default="20000"  doc="训练中周期评估间隔（步）"/>
+  <arg name="during_episodes" default="20"     doc="周期评估回合数（画学习曲线用）"/>
+  <arg name="out"             default=""       doc="结果目录（留空=包内 results/）"/>
+
+  <node pkg="uav_rl_benchmark" type="main.py" name="uav_rl_benchmark" output="screen">
+    <param name="node_mode" value="true"/>
+    <param name="steps" value="$(arg steps)"/>
+    <param name="obstacles" value="$(arg obstacles)"/>
+    <param name="eval_episodes" value="$(arg eval_episodes)"/>
+    <param name="eval_freq" value="$(arg eval_freq)"/>
+    <param name="during_episodes" value="$(arg during_episodes)"/>
+    <param name="out" value="$(arg out)"/>
+    <env name="UAV_BENCH_NODE" value="1"/>
+  </node>
+</launch>

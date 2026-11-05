@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_car_nn_avoidance</name>
+  <version>1.0.0</version>
+  <description>
+    OpenHUTB 课程作业：MuJoCo 地面差速小车神经网络端到端避障。25 束前视射线加航向偏差
+    作为输入，纯 numpy 实现的 MLP 直接输出转向与油门，感知、决策、控制全程由网络完成，
+    推理时不含规则分支。
+  </description>
+  <maintainer email="zh070507@example.com">zh070507</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行期依赖：ROS 2 消息包 + 数值计算（MuJoCo 由 pip 安装） -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <!-- MuJoCo 由 pip 安装（python3-mujoco 非 ROS 包名，不在此声明） -->
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

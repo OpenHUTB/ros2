@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rooftop_landing</name>
+  <version>0.1.0</version>
+  <description>
+    屋顶降落：用机载 LiDAR 检测水平屋顶平面，取屋顶轮廓的**最大内切圆圆心**
+    （离边缘最远的点）作为安全降落点，控制无人机自主飞抵其上方并垂直降落在屋顶。
+
+    感知部分（PointCloud2 解析 + RANSAC 平面拟合 + 凸包 + polylabel 最大内切圆）
+    是不依赖 ROS 的纯函数，可在没有仿真器的机器上做完整回归测试，
+    见仓库 tests/test_rooftop_landing_local.py。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <!-- launch/main.launch 默认 use_rviz:=true，会启动 rviz 节点 -->
+  <exec_depend>rviz</exec_depend>
+
+  <export/>
+</package>

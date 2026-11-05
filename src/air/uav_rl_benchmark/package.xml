@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_rl_benchmark</name>
+  <version>0.1.0</version>
+  <description>
+    无人机导航强化学习对比实验：在**完全相同的环境与接口**下对比
+    (1) 同模型不同 RL 算法（PPO / SAC / TD3），
+    (2) 同算法不同网络结构（MLP 宽度与深度）。
+    复用 uav_ppo_nav 的 NavEnv，不改动环境本身，保证对比只反映算法/结构差异。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>uav_ppo_nav</exec_depend>
+
+  <export/>
+</package>
