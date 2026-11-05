@@ -14,7 +14,7 @@ from mujoco_uav_moving_pad_landing.landing import MODEL_PATH, run_demo, train_co
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="MuJoCo UAV visual landing on a moving platform")
-    parser.add_argument("mode", choices=("demo", "train", "teleop"), nargs="?", default="demo")
+    parser.add_argument("mode", choices=("demo", "train", "teleop", "navigate"), nargs="?", default="demo")
     parser.add_argument("--output", type=Path, default=Path("output"))
     parser.add_argument("--steps", type=int, default=180)
     parser.add_argument("--samples", type=int, default=5000)
@@ -25,6 +25,10 @@ def main() -> None:
         from mujoco_uav_moving_pad_landing.teleop import run_keyboard_teleop
 
         result = run_keyboard_teleop(args.output)
+    elif args.mode == "navigate":
+        from mujoco_uav_moving_pad_landing.navigation import run_slam_navigation
+
+        result = run_slam_navigation(args.output)
     else:
         if not MODEL_PATH.exists():
             train_controller(MODEL_PATH, samples=args.samples)
