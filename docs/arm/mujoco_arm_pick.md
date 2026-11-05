@@ -2,7 +2,7 @@
 
 功能包源码位于仓库的 src/mujoco_arm_pick 目录。
 
-![](../img/arm/mujoco_arm_pick.png)
+![](../img/arm/mujoco_arm_pick.gif)
 
 ## 1. 问题描述
 
