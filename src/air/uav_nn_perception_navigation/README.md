@@ -102,20 +102,22 @@ Windows 下中文用户名会导致 `Documents\AirSim\settings.json` 被覆盖�
 **键盘没反应**
 节点必须运行在真实终端里；通过管道或后台运行时读不到标准输入。
 
-## 感知节点
+## 神经网络控制器
 
-`lidar_perception.py` 从 AirSim 读取激光雷达点云，发布两路数据：
+### 训练
 
-| 话题 | 类型 | 说明 |
-| --- | --- | --- |
-| `/uav/lidar/scan` | `sensor_msgs/LaserScan` | 标准扫描，供 RViz 显示与 gmapping 建图 |
-| `/uav/lidar/features` | `std_msgs/Float32MultiArray` | 12 维扇区距离，供控制节点推理 |
+```bash
+python3 scripts/train_control.py --episodes 24 --steps 120 --epochs 200
+```
 
-主要参数：
+训练采用模仿学习：势场法专家在仿真中飞行采集样本，再训练三层 MLP 拟合专家策略。
+特征按训练集均值方差标准化，统计量随权重一并保存。
 
-| 参数 | 默认值 | 说明 |
-| --- | --- | --- |
-| `~scan_bins` | 180 | 扫描格数 |
-| `~scan_fov` | 360.0 | 扫描视场（度） |
-| `~scan_frame` | laser | 扫描坐标系，需与 base_link 区分 |
-| `~scan_source` | lidar | 扫描来源，可选 `depth`（深度相机反投影） |
+### 训练结果
+
+| 项目 | 数值 |
+| --- | --- |
+| 采集回合 | 24 回合 × 120 步 |
+| 样本数 | 2880 |
+| 验证损失 | 0.0026 |
+| 权重大小 | 24 KB |
