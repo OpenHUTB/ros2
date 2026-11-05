@@ -1,0 +1,260 @@
+"""ROS 2 simulation node for the MuJoCo auto-parking car."""
+
+from pathlib import Path
+from typing import Any
+
+from .camera_sensor import CameraSensor
+from .kinematics import CommandWatchdog, DriveGeometry
+from .lidar_sensor import Lidar2D
+from .resources import resolve_package_file
+from .simulator import MujocoSimulation
+
+
+def _load_ros_dependencies() -> dict[str, Any]:
+    """Import ROS modules only when the executable is launched."""
+    try:
+        import rclpy
+        from ament_index_python.packages import get_package_share_directory
+        from builtin_interfaces.msg import Time
+        from geometry_msgs.msg import TransformStamped, Twist
+        from nav_msgs.msg import Odometry
+        from rclpy.node import Node
+        from rosgraph_msgs.msg import Clock
+        from sensor_msgs.msg import Image, LaserScan
+        from std_msgs.msg import Header
+        from tf2_ros import TransformBroadcaster
+    except ImportError as exc:
+        raise RuntimeError(
+            '缺少 ROS 2 Humble Python 依赖 / ROS 2 Humble Python dependencies are required'
+        ) from exc
+    return {
+        'rclpy': rclpy,
+        'get_package_share_directory': get_package_share_directory,
+        'Time': Time,
+        'TransformStamped': TransformStamped,
+        'Twist': Twist,
+        'Odometry': Odometry,
+        'Node': Node,
+        'Clock': Clock,
+        'Image': Image,
+        'LaserScan': LaserScan,
+        'Header': Header,
+        'TransformBroadcaster': TransformBroadcaster,
+    }
+
+
+def _build_node_class(deps: dict[str, Any]) -> type:
+    Node = deps['Node']
+    Twist = deps['Twist']
+    Odometry = deps['Odometry']
+    Clock = deps['Clock']
+    Time = deps['Time']
+    Image = deps['Image']
+    LaserScan = deps['LaserScan']
+    Header = deps['Header']
+    TransformStamped = deps['TransformStamped']
+    TransformBroadcaster = deps['TransformBroadcaster']
+    get_package_share_directory = deps['get_package_share_directory']
+
+    class SimulationNode(Node):
+        """Advance MuJoCo at a fixed rate and expose ROS velocity control."""
+
+        def __init__(self) -> None:
+            super().__init__('mujoco_auto_parking_simulation')
+            self.declare_parameter('model_file', 'models/parking_lot.xml')
+            self.declare_parameter('wheel_radius', 0.08)
+            self.declare_parameter('track_width', 0.48)
+            self.declare_parameter('max_wheel_speed', 8.0)
+            self.declare_parameter('command_timeout', 0.5)
+            self.declare_parameter('publish_tf', True)
+            self.declare_parameter('sim_rate', 500.0)
+            self.declare_parameter('publish_rate', 50.0)
+            self.declare_parameter('enable_camera', True)
+            self.declare_parameter('camera_width', 320)
+            self.declare_parameter('camera_height', 240)
+            self.declare_parameter('enable_depth', True)
+            self.declare_parameter('lidar_beams', 120)
+            self.declare_parameter('lidar_range', 8.0)
+            self.declare_parameter('sensor_publish_divider', 5)
+
+            package_share = Path(
+                get_package_share_directory('mujoco_auto_parking')
+            )
+            model_path = resolve_package_file(
+                package_share,
+                str(self.get_parameter('model_file').value),
+            )
+            self._geometry = DriveGeometry(
+                wheel_radius=float(self.get_parameter('wheel_radius').value),
+                track_width=float(self.get_parameter('track_width').value),
+                max_wheel_speed=float(
+                    self.get_parameter('max_wheel_speed').value
+                ),
+            )
+            self._watchdog = CommandWatchdog(
+                float(self.get_parameter('command_timeout').value)
+            )
+            self._simulation = MujocoSimulation(model_path)
+            self._publish_tf = bool(self.get_parameter('publish_tf').value)
+            self._camera = CameraSensor(
+                self._simulation.model,
+                self._simulation.data,
+                camera_name='front_camera',
+                width=int(self.get_parameter('camera_width').value),
+                height=int(self.get_parameter('camera_height').value),
+                enable=bool(self.get_parameter('enable_camera').value),
+            )
+            self._enable_depth = bool(
+                self.get_parameter('enable_depth').value
+            )
+            self._lidar = Lidar2D(
+                self._simulation.model,
+                self._simulation.data,
+                body_name='chassis',
+                num_beams=int(self.get_parameter('lidar_beams').value),
+                max_range=float(self.get_parameter('lidar_range').value),
+            )
+            self._sensor_publish_divider = max(
+                1, int(self.get_parameter('sensor_publish_divider').value)
+            )
+            self._sensor_counter = 0
+
+            sim_rate = float(self.get_parameter('sim_rate').value)
+            publish_rate = float(self.get_parameter('publish_rate').value)
+            if sim_rate <= 0.0 or publish_rate <= 0.0:
+                raise ValueError('sim_rate and publish_rate must be positive')
+            self._steps_per_publish = max(
+                1, int(round(sim_rate / publish_rate))
+            )
+
+            self._odom_publisher = self.create_publisher(Odometry, '/odom', 10)
+            self._clock_publisher = self.create_publisher(Clock, '/clock', 10)
+            self._image_publisher = self.create_publisher(
+                Image, '/camera/image_raw', 10
+            )
+            self._depth_publisher = self.create_publisher(
+                Image, '/camera/depth', 10
+            )
+            self._scan_publisher = self.create_publisher(
+                LaserScan, '/scan', 10
+            )
+            self._tf_broadcaster = TransformBroadcaster(self)
+            self.create_subscription(Twist, '/cmd_vel', self._on_command, 10)
+            self.create_timer(1.0 / publish_rate, self._on_timer)
+            self.get_logger().info(
+                'MuJoCo 自动泊车仿真已启动 / auto-parking simulation started '
+                f'(sim {sim_rate:.0f} Hz, publish {publish_rate:.0f} Hz)'
+            )
+
+        def destroy_node(self) -> None:
+            self._camera.close()
+            super().destroy_node()
+
+        def _on_command(self, message: Any) -> None:
+            try:
+                self._watchdog.update(
+                    float(message.linear.x), float(message.angular.z)
+                )
+            except ValueError as exc:
+                self.get_logger().error(
+                    f'拒绝无效速度指令 / rejected invalid velocity command: {exc}'
+                )
+
+        def _on_timer(self) -> None:
+            linear, angular = self._watchdog.current()
+            left, right = self._geometry.wheel_speeds(linear, angular)
+            for _ in range(self._steps_per_publish):
+                self._simulation.apply_wheel_speeds(left, right)
+                self._simulation.step()
+            self._publish_state()
+            self._sensor_counter += 1
+            if self._sensor_counter % self._sensor_publish_divider == 0:
+                self._publish_sensors()
+
+        def _stamp(self) -> Any:
+            state = self._simulation.planar_state()
+            seconds = int(state.time)
+            timestamp = Time()
+            timestamp.sec = seconds
+            timestamp.nanosec = int((state.time - seconds) * 1_000_000_000)
+            return timestamp
+
+        def _publish_sensors(self) -> None:
+            header = Header()
+            header.stamp = self._stamp()
+            header.frame_id = 'front_camera'
+            rgb = self._camera.render_rgb()
+            self._image_publisher.publish(
+                self._camera.create_image_msg(header, rgb)
+            )
+            if self._enable_depth:
+                depth = self._camera.render_depth()
+                self._depth_publisher.publish(
+                    self._camera.create_depth_msg(header, depth)
+                )
+            scan = self._lidar.scan()
+            scan_header = Header()
+            scan_header.stamp = header.stamp
+            scan_header.frame_id = 'laser_link'
+            self._scan_publisher.publish(
+                self._lidar.create_laserscan_msg(scan_header)
+            )
+
+        def _publish_state(self) -> None:
+            state = self._simulation.planar_state()
+            quaternion = self._simulation.chassis_quaternion()
+            seconds = int(state.time)
+            timestamp = Time()
+            timestamp.sec = seconds
+            timestamp.nanosec = int((state.time - seconds) * 1_000_000_000)
+
+            odometry = Odometry()
+            odometry.header.stamp = timestamp
+            odometry.header.frame_id = 'odom'
+            odometry.child_frame_id = 'base_link'
+            odometry.pose.pose.position.x = state.x
+            odometry.pose.pose.position.y = state.y
+            odometry.pose.pose.orientation.w = quaternion[0]
+            odometry.pose.pose.orientation.x = quaternion[1]
+            odometry.pose.pose.orientation.y = quaternion[2]
+            odometry.pose.pose.orientation.z = quaternion[3]
+            odometry.twist.twist.linear.x = state.linear_velocity
+            odometry.twist.twist.angular.z = state.angular_velocity
+            self._odom_publisher.publish(odometry)
+
+            clock = Clock()
+            clock.clock = timestamp
+            self._clock_publisher.publish(clock)
+
+            if self._publish_tf:
+                transform = TransformStamped()
+                transform.header = odometry.header
+                transform.child_frame_id = odometry.child_frame_id
+                transform.transform.translation.x = state.x
+                transform.transform.translation.y = state.y
+                transform.transform.rotation = odometry.pose.pose.orientation
+                self._tf_broadcaster.sendTransform(transform)
+
+    return SimulationNode
+
+
+def main(args: list[str] | None = None) -> None:
+    """Run the ROS 2 simulation node."""
+    deps = _load_ros_dependencies()
+    rclpy = deps['rclpy']
+    node = None
+    rclpy.init(args=args)
+    try:
+        node = _build_node_class(deps)()
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

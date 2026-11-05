@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.csv -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.pt binary
+*.zip binary
+*.png binary
+# Preserve the exact pre-collection source bytes referenced by frozen_protocol.json.
+collect_final.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

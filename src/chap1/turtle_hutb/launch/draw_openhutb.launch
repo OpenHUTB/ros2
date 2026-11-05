@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node
+    pkg="turtlesim"
+    type="turtlesim_node"
+    name="turtlesim"
+    output="screen"
+  />
+
+  <node
+    pkg="turtle_hutb"
+    type="draw_openhutb.py"
+    name="draw_openhutb_node"
+    output="screen"
+    required="true"
+  />
+
+</launch>

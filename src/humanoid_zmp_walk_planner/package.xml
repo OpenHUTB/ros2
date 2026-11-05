@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>humanoid_zmp_walk_planner</name>
+  <version>0.0.0</version>
+  <description>Simplified Biped Walking Animation</description>
+  <maintainer email="2320842128@qq.com">student</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

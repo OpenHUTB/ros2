@@ -1,0 +1,13 @@
+# 核心依赖
+numpy>=1.21
+matplotlib>=3.5
+
+# 测试
+pytest>=7.0
+
+# ROS2 环境（不装 ROS2 时可注释，使用离线仿真即可）
+# rclpy>=3.3
+# geometry-msgs>=3.3
+# nav-msgs>=3.3
+# sensor-msgs>=3.3
+# std-msgs>=3.3

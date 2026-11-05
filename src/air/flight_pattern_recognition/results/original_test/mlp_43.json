@@ -1,0 +1,113 @@
+{
+  "accuracy": 0.7428571428571429,
+  "macro_f1": 0.675,
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      14
+    ],
+    [
+      0,
+      14,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      4,
+      10,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      14
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "class": "circle",
+      "precision": 0.7777777777777778,
+      "recall": 1.0,
+      "f1": 0.8750000000000001
+    },
+    {
+      "class": "figure_eight",
+      "precision": 1.0,
+      "recall": 0.7142857142857143,
+      "f1": 0.8333333333333333
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666
+    }
+  ],
+  "model": "mlp_43",
+  "windows": 70,
+  "episodes": 5,
+  "accepted_coverage": 0.9142857142857143,
+  "accepted_accuracy": 0.796875,
+  "episode_results": [
+    {
+      "episode": "episode_025",
+      "truth": "line",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_026",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_027",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_028",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_029",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 0.8,
+  "inference_median_ms": 0.0175544999478916,
+  "inference_p95_ms": 0.023306200097294963
+}

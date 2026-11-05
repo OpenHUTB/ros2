@@ -1,0 +1,27 @@
+{
+  "status": "frozen before fresh holdout collection",
+  "model": "gru_42; fixed before new data",
+  "threshold": "existing validation 99.5% quantile; persistence=3",
+  "holdout_episodes": 10,
+  "families": [
+    "chirp",
+    "mixed_turns"
+  ],
+  "severity_grid": [
+    0.03,
+    0.1,
+    0.3
+  ],
+  "cases": [
+    "clean",
+    "smooth_position_drift",
+    "velocity_bias",
+    "freeze",
+    "dropout"
+  ],
+  "policy": "No model, threshold or persistence changes based on fresh holdout; report failures and all levels",
+  "hashes": {
+    "config.json": "93e3ce8d6589551f7fff35e723cb06aeb970c378af5acaf9203fe857156badcd",
+    "model.pt": "9cdf37b0b503c07b9663948b6b62aaec116a23513c51fe07e4ab38649690b59b"
+  }
+}
