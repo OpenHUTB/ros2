@@ -24,7 +24,7 @@
 
 ## 2. 运行效果
 
-![三足机器人三角步态仿真](img/ground/tripod_mujoco/sim.gif)
+![三足机器人三角步态仿真](../img/ground/tripod_mujoco/sim.gif)
 
 - 视频分辨率 **960×544**、帧率 **30 fps**、时长 **8.0 s**，由脚本直接复现生成；
 - 起始 keyframe 中膝关节预屈 **-0.35 rad**（-20°），脚掌贴地、无初始穿透弹跳；
@@ -70,9 +70,35 @@ data.ctrl[i] = q_d[i]        # 只写目标角，力矩由执行器内部驱动�
 kp 增益见上表（30 / 50 / 50），关节阻尼由 `default`（1.0 N·m·s/rad）提供，
 两者共同决定跟踪刚度与抑振效果。9 个执行器各自带 `ctrlrange` 限幅，防止目标角越过机械限位。
 
+整体运动方程由 MuJoCo 按广义坐标求解：
+
+$$
+M(q)\,\ddot{q} + C(q,\dot{q})\,\dot{q} + g(q) = \tau_{act} + \tau_{contact}
+$$
+
+其中 $M(q)$ 为广义质量矩阵、$C(q,\dot{q})$ 含科氏力与关节阻尼、$g(q)$ 为重力项，
+$\tau_{contact}$ 为足端与地面的接触力。`position` 执行器的驱动力由执行器内部模型产生
+（`gainprm = kp`、`biasprm = [0, -kp, -kv]`，$k_v$ 来自关节 `damping`）：
+
+$$
+\tau_{act,i} = k_{p,i}\,(q_{d,i} - q_i) - k_{v,i}\,\dot{q}_i
+$$
+
+因此脚本只提供目标角 $q_{d,i}$，刚度 $k_{p,i}$ 与阻尼 $k_{v,i}$ 由模型参数决定，
+不存在脚本侧手写的 PD 环节。
+
 ### 4.2 三角步态相位轨迹
 
 第 `i` 条腿（i = 0,1,2，间隔 120°）的关节目标角由同一正弦基波错开 2π/3 相位产生：
+
+$$
+\varphi_i(t) = 2\pi f\,t + \frac{2\pi i}{3},\qquad
+q_{rot,i}(t) = A_{rot}\sin\varphi_i(t)
+$$
+
+$$
+q_{knee,i}(t) = K_{base} + L_{lift}\,\max\!\big(0,\ \sin\varphi_i(t)\big)
+$$
 
 ```
 phase_i(t) = 2π·freq·t + 2π·i/3
