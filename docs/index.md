@@ -183,7 +183,7 @@ ROS每章节运行代码:
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
-* [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成连续五次轨迹，并与线性参考对比跟踪误差和加加速度峰值
+* [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
