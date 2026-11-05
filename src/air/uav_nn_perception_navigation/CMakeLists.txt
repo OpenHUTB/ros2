@@ -20,6 +20,7 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/airsim_bridge.py
   scripts/keyboard_teleop.py
+  scripts/uav_features.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
