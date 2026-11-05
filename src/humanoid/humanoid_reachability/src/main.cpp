@@ -5,6 +5,7 @@
 #include <deque>
 #include <stdexcept>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -43,11 +44,13 @@ public:
 
     if (voxel_resolution_ <= 0.0 || slice_height_ <= 0.0 || publish_rate_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "voxel_resolution / slice_height / publish_rate 必须为正数，节点退出");
-      throw std::invalid_argument("invalid workspace parameters");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：voxel_resolution/slice_height/publish_rate 必须为正数");
+      return;
     }
     if (samples_per_arm_ <= 0) {
       RCLCPP_ERROR(get_logger(), "samples_per_arm 必须为正整数，节点退出");
-      throw std::invalid_argument("invalid samples_per_arm");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：samples_per_arm 必须为正整数");
+      return;
     }
 
     arms_ = make_default_arms();
@@ -69,14 +72,16 @@ public:
       "/demo_joint_angles", 10,
       std::bind(&ReachabilityNode::on_demo_joint_angles, this, std::placeholders::_1));
 
-    compute_workspace();
+    // 1 ms one-shot timer 做后台初始化，避免 spin 前同步阻塞约 20 s
+    init_timer_ = create_wall_timer(
+      std::chrono::milliseconds(1),
+      std::bind(&ReachabilityNode::init_callback, this));
 
     const auto period = std::chrono::duration<double>(1.0 / publish_rate_);
     timer_ = create_wall_timer(
       std::chrono::duration_cast<std::chrono::milliseconds>(period),
       std::bind(&ReachabilityNode::publish_all, this));
 
-    log_summary();
   }
 
 private:
@@ -91,6 +96,7 @@ private:
     const unsigned seed = static_cast<unsigned>(random_seed_);
 
     for (int side = 0; side < 2; ++side) {
+      // 7919 是质数，用它做偏移保证左右臂采样序列独立、不相关
       std::mt19937 rng(seed + 7919u * static_cast<unsigned>(side));
       grids_[side] = std::make_unique<VoxelGrid>(
         voxel_resolution_, slice_height_, shoulder_point(side));
@@ -102,10 +108,12 @@ private:
       grids_[side]->analyze();
     }
 
-    // 双臂体素并集体积（重叠区域只计一次）
+    // 双臂体素并集体积。遍历 keys 较少的一侧减少计算量。
     size_t overlap = 0;
-    for (const int64_t key : grids_[0]->keys()) {
-      if (grids_[1]->keys().count(key) != 0u) {
+    const int idx_small = grids_[0]->keys().size() <= grids_[1]->keys().size() ? 0 : 1;
+    const int idx_large = 1 - idx_small;
+    for (const int64_t key : grids_[idx_small]->keys()) {
+      if (grids_[idx_large]->keys().count(key) != 0u) {
         ++overlap;
       }
     }
@@ -119,6 +127,20 @@ private:
     RCLCPP_INFO(
       get_logger(), "双臂采样完成：每臂 %d 点，耗时 %.2f s（体素 %.3f m）",
       samples_per_arm_, elapsed, voxel_resolution_);
+  }
+
+  void init_callback()
+  {
+    if (init_timer_) {
+      init_timer_->cancel();
+      init_timer_.reset();
+    }
+    const auto start = std::chrono::steady_clock::now();
+    compute_workspace();
+    log_summary();
+    const auto elapsed = std::chrono::duration<double>(
+      std::chrono::steady_clock::now() - start).count();
+    RCLCPP_INFO(get_logger(), "初始化完成，耗时 %.2f s", elapsed);
   }
 
   void log_summary()
@@ -338,8 +360,9 @@ private:
 
     size_t stride = 1;
     if (max_display_voxels_ > 0 && surface.size() > static_cast<size_t>(max_display_voxels_)) {
-      stride = (surface.size() + static_cast<size_t>(max_display_voxels_) - 1) /
-               static_cast<size_t>(max_display_voxels_);
+      // 整数除法向下取整：surface.size()/max 约等于 1/N 抽稀比例；
+      // surface 接近 max 时 stride=1，不丢体素。
+      stride = surface.size() / static_cast<size_t>(max_display_voxels_);
     }
 
     const double z_span = std::max(1e-3, stats.max_bound.z() - stats.min_bound.z());
@@ -622,6 +645,7 @@ private:
   rclcpp::Publisher<PointStamped>::SharedPtr ee_left_pub_;
   rclcpp::Publisher<PointStamped>::SharedPtr ee_right_pub_;
   rclcpp::Subscription<Float64MultiArray>::SharedPtr demo_sub_;
+  rclcpp::TimerBase::SharedPtr init_timer_;  ///< one-shot 后台初始化
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
@@ -630,7 +654,13 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<humanoid_reachability::ReachabilityNode>());
+  try {
+    rclcpp::spin(std::make_shared<humanoid_reachability::ReachabilityNode>());
+  } catch (const std::exception & e) {
+    std::cerr << "ReachabilityNode 运行异常: " << e.what() << std::endl;
+    rclcpp::shutdown();
+    return 1;
+  }
   rclcpp::shutdown();
   return 0;
 }

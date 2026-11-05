@@ -2,6 +2,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -32,7 +33,8 @@ public:
 
     if (publish_hz_ <= 0.0 || period_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "publish_hz / period 必须为正数，节点退出");
-      throw std::invalid_argument("invalid demo parameters");
+      RCLCPP_ERROR(get_logger(), "参数校验失败：publish_hz/period 必须为正数");
+      return;
     }
 
     arms_ = make_default_arms();
@@ -93,7 +95,13 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<humanoid_reachability::ArmDemoNode>());
+  try {
+    rclcpp::spin(std::make_shared<humanoid_reachability::ArmDemoNode>());
+  } catch (const std::exception & e) {
+    std::cerr << "ArmDemoNode 运行异常: " << e.what() << std::endl;
+    rclcpp::shutdown();
+    return 1;
+  }
   rclcpp::shutdown();
   return 0;
 }

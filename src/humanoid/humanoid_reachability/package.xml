@@ -4,7 +4,7 @@
   <name>humanoid_reachability</name>
   <version>1.0.0</version>
   <description>基于 ROS 2 的 3D 人形机器人双臂关节末端可达域分析与可视化 (ROS 2 Humble)</description>
-  <maintainer email="Rafaye-71-star@users.noreply.github.com">nn</maintainer>
+  <maintainer email="Rafaye-71-star@users.noreply.github.com">Rafaye-71-star</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

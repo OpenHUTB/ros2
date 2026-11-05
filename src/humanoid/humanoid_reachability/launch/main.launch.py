@@ -13,12 +13,6 @@ def generate_launch_description():
     params_file = os.path.join(package_share, 'config', 'params.yaml')
     rviz_config = os.path.join(package_share, 'rviz', 'reachability.rviz')
 
-    declare_samples = DeclareLaunchArgument(
-        'samples_per_arm', default_value='200000',
-        description='每臂随机采样次数')
-    declare_resolution = DeclareLaunchArgument(
-        'voxel_resolution', default_value='0.03',
-        description='体素边长（m）')
     declare_use_rviz = DeclareLaunchArgument(
         'use_rviz', default_value='false',
         description='是否同时启动 RViz2')
@@ -27,10 +21,7 @@ def generate_launch_description():
         package='humanoid_reachability',
         executable='humanoid_reachability_node',
         name='humanoid_reachability',
-        parameters=[params_file, {
-            'samples_per_arm': LaunchConfiguration('samples_per_arm'),
-            'voxel_resolution': LaunchConfiguration('voxel_resolution'),
-        }],
+        parameters=[params_file],
         output='screen',
     )
 
@@ -52,8 +43,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        declare_samples,
-        declare_resolution,
         declare_use_rviz,
         reachability_node,
         arm_demo_node,
