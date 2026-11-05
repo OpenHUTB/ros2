@@ -2,7 +2,7 @@
 
 功能包源码位于仓库的 src/mujoco_arm_screw 目录。
 
-![](../../src/mujoco_arm_screw/docs/mujoco_arm_screw_demo.gif)
+![](../img/arm/mujoco_arm_screw.png)
 
 ## 1. 任务
 
