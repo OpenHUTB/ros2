@@ -96,8 +96,8 @@ def _camera_tag(cam):
         attrs.append('quat="%s"' % vec(cam["quat"]))
     if cam.get("fovy") is not None:
         attrs.append('fovy="%g"' % float(cam["fovy"]))
-    if cam.get("mode") == "track":
-        attrs.append('mode="track"')
+    if cam.get("mode") in ("track", "targetbody"):
+        attrs.append('mode="%s"' % cam["mode"])
         attrs.append('target="%s"' % cam["target"])
     return "<camera %s/>" % " ".join(attrs)
 
@@ -112,10 +112,11 @@ def _model_dir(robot):
     """
     import mujoco_menagerie as mj
 
+    reason = None
     try:
         return Path(mj.get(robot).path())
-    except TypeError:
-        pass
+    except Exception as exc:  # 网络、解包、权限等任何失败都退到本地缓存扫描
+        reason = exc
 
     roots = []
     if os.environ.get("MUJOCO_MENAGERIE_CACHE"):
@@ -133,13 +134,14 @@ def _model_dir(robot):
                 continue
             for d in sorted(models.iterdir()):
                 if d.is_dir() and (d.name == robot or d.name.startswith(robot + "-")):
+                    print("复用本地缓存模型:", d)
                     return d
 
     raise RuntimeError(
-        "未找到 %s 的模型：mujoco-menagerie 的下载解包在当前 Python %s 下不可用"
-        "（tarfile.extractall 的 filter 参数需 Python >= 3.11.4），"
-        "请升级 Python 或手动把模型放到 %s"
-        % (robot, platform.python_version(), roots[0]))
+        "未找到 %s 的模型：mujoco-menagerie 取模型失败（%r），本地缓存中也没有可复用目录。"
+        "Python %s 下 tarfile.extractall 的 filter 参数需 >= 3.11.4；可升级 Python，"
+        "或把模型手动放到 %s" % (robot, reason, platform.python_version(), roots[0])
+    ) from reason
 
 
 def load_with_camera(robot, entry, cam, width=960, height=544):
@@ -220,8 +222,9 @@ def run_sim(model, controller, duration=6.0, fps=30, video_path=None,
 
     frames = []
     t = 0.0
-    renderer = mujoco.Renderer(model, height, width)
+    renderer = None
     try:
+        renderer = mujoco.Renderer(model, height, width)
         for fi in range(nframes):
             for _ in range(sub):
                 controller(data, t)
@@ -239,7 +242,8 @@ def run_sim(model, controller, duration=6.0, fps=30, video_path=None,
                 frames.append(frame.copy())
                 print("预览帧:", path)
     finally:
-        renderer.close()
+        if renderer is not None:
+            renderer.close()
         if writer is not None:
             writer.close()
 
@@ -255,7 +259,9 @@ def _positive_seconds(text):
     try:
         value = float(text)
     except ValueError:
-        raise argparse.ArgumentTypeError("--duration 需要数字（秒）：%s" % text)
+        raise argparse.ArgumentTypeError(
+            "--duration 需要数字（秒）：%s" % text
+        ) from None
     if value <= 0:
         raise argparse.ArgumentTypeError("--duration 必须为正数（秒）：%s" % text)
     return value
