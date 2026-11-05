@@ -226,6 +226,7 @@ nav:
     - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
     - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
+    - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
