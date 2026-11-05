@@ -1,0 +1,40 @@
+<mujoco model="musculoskeletal_elbow">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+  <default>
+    <geom density="900" contype="0" conaffinity="0" rgba="0.65 0.7 0.78 1"/>
+    <joint damping="0.8" armature="0.01"/>
+  </default>
+  <worldbody>
+    <light pos="0 -1 1.5" dir="0 1 -1"/>
+    <body name="upper_arm" pos="0 0 1.0">
+      <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0 0 -0.30" size="0.035"/>
+      <body name="forearm" pos="0 0 -0.30">
+        <joint name="elbow_joint" type="hinge" axis="0 1 0" range="0.05 2.20"/>
+        <geom name="forearm_geom" type="capsule" fromto="0 0 0 0 0 -0.28" size="0.03"/>
+        <body name="payload" pos="0 0 -0.28">
+          <inertial pos="0 0 0" mass="0.001" diaginertia="1e-5 1e-5 1e-5"/>
+          <geom name="payload_geom" type="sphere" size="0.035" mass="0.001" rgba="0.85 0.25 0.2 1"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <tendon>
+    <fixed name="flexor_tendon">
+      <joint joint="elbow_joint" coef="-0.04"/>
+    </fixed>
+    <fixed name="extensor_tendon">
+      <joint joint="elbow_joint" coef="0.04"/>
+    </fixed>
+  </tendon>
+  <actuator>
+    <muscle name="flexor_muscle" tendon="flexor_tendon" ctrlrange="0 1" force="180" range="0.75 1.25"/>
+    <muscle name="extensor_muscle" tendon="extensor_tendon" ctrlrange="0 1" force="180" range="0.75 1.25"/>
+  </actuator>
+  <sensor>
+    <jointpos name="elbow_angle" joint="elbow_joint"/>
+    <jointvel name="elbow_velocity" joint="elbow_joint"/>
+    <actuatorfrc name="flexor_force" actuator="flexor_muscle"/>
+    <actuatorfrc name="extensor_force" actuator="extensor_muscle"/>
+  </sensor>
+</mujoco>

@@ -1,0 +1,17 @@
+# mjc_rov_sonar_cnn 参数
+sim_node:
+  ros__parameters:
+    odom_rate: 20.0
+    image_rate: 5.0
+    sonar_width: 64
+    sonar_height: 64
+    # 三类目标物位置（与 xml 一致），用于生成合成声呐图
+    rock_positions: [[1.5, 1.5], [-2.0, 1.0], [-1.0, -2.0]]
+    pipe_positions: [[2.5, -1.5], [-2.5, -1.0]]
+    wreck_positions: [[0.5, -2.5], [-0.5, 2.5]]
+
+classify_node:
+  ros__parameters:
+    weights_path: ""
+    image_topic: /rov_sonar/image_raw
+    result_topic: /rov_sonar/classification

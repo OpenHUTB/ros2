@@ -32,6 +32,32 @@ void check(bool ok, const char* what, int line) {
 
 #define CHECK(cond) check((cond), #cond, __LINE__)
 
+/// 检查「规划成功，且拿到了足够长的路径」。
+///
+/// ★ 为什么要这个宏（2026-10-13 在客户机上真的崩了）：
+///   这些用例原来只写 `CHECK(ok);`，**失败之后仍然继续往下走**去访问
+///   `path[nearest]` / `path.back()`。plan() 一旦返回 false，path 就是空的，
+///   那是**未定义行为** —— 实测表现为打印一行 [FAIL] 之后直接 Segmentation fault。
+///   这把"规划失败"这样一个可诊断的结果，伪装成了"算法崩溃"，排查时被它带偏过。
+///
+///   现在：失败就打印 PlanStats::reason 并**立即返回**。
+#define CHECK_PATH(ok, path, st)                                         \
+  do {                                                                   \
+    CHECK(ok);                                                           \
+    if (!ok) {                                                           \
+      std::printf("    [abort] plan() returned false -- stop this case " \
+                  "instead of touching an empty path\n");                \
+      std::printf("    [abort] reason = %s\n", (st).reason.c_str());      \
+      return;                                                            \
+    }                                                                    \
+    CHECK((path).size() >= 2);                                           \
+    if ((path).size() < 2) {                                             \
+      std::printf("    [abort] path has %zu point(s) -- nothing to "     \
+                  "check\n", (path).size());                             \
+      return;                                                            \
+    }                                                                    \
+  } while (0)
+
 typedef octree_uav_3d_pathfinding::OctreeAStar AStar;
 typedef octree_uav_3d_pathfinding::PlanStats PlanStats;
 
@@ -101,7 +127,7 @@ void caseOpenSpace() {
   PlanStats st;
   const bool ok = astar.plan(start, goal, path, st);
 
-  CHECK(ok);
+  CHECK_PATH(ok, path, st);
   CHECK(path.size() >= 2);
   // 注意：航点是**节点中心**，不是用户请求的 start / goal 本身。
   // 起点 (2,2,2) 落在边长 16 m 的粗节点里，该节点中心是 (8,8,8)，
@@ -128,14 +154,46 @@ void caseWallWithHole() {
   fillBox(tree, octomap::point3d(10, 9, 9), octomap::point3d(11, 11, 11), false);
   finish(tree);
 
+  // ---- 先把「跨分辨率约束」显式打出来（2026-10-14 加）----
+  //
+  // ★ 为什么必须打印：用例 2 是**薄墙**场景 —— 墙只有 1 个体素厚，而两侧
+  //   空旷区会被剪枝成大自由叶。对 A* 来说，一个粗自由叶要去够墙上的细体素时
+  //   k = 粗叶边长 / 细叶边长，一旦 k > k_max，按 P4 设计文档 §3.2 的
+  //   **保守近似**该方向会被直接放弃；若这条边又是唯一通路，规划就会无解。
+  //
+  //   这**不是算法 bug**，是 k_max 的既定取舍。但它会让本用例"无声地"失败，
+  //   所以把数字打出来：一眼就能看出失败到底是 k 超限，还是真的没有通路。
+  const double max_free = maxFreeLeafSize(tree);
+  const double res = tree.getResolution();
+  const double k_worst = max_free / res;
+  const AStar::Params params;   // 用例实际使用的参数（k_max 默认 4.0）
+  std::printf("    地图：分辨率 %.2f m，最大自由叶 %.2f m → 最坏 k = %.2f"
+              "（k_max = %.2f）%s\n",
+              res, max_free, k_worst, params.k_max,
+              (k_worst > params.k_max)
+                  ? "  ← 注意：k 超限，这些方向会被放弃（保守近似）"
+                  : "");
+
   const octomap::point3d start(2, 10, 10);
   const octomap::point3d goal(18, 10, 10);
-  AStar astar(tree, AStar::Params());
+  AStar astar(tree, params);
   std::vector<octomap::point3d> path;
   PlanStats st;
   const bool ok = astar.plan(start, goal, path, st);
 
-  CHECK(ok);
+  // 失败时把诊断也打出来 —— 否则只会看到一行 FAIL，无从判断是
+  // "k 超限导致无解" 还是 "起终点吸附失败" 还是 "地图里真没通路"
+  if (!ok) {
+    std::printf("    规划失败：reason = %s\n", st.reason.c_str());
+    dumpLeaf(astar, "起点", start);
+    dumpLeaf(astar, "终点", goal);
+    std::string detail;
+    const std::size_t bad = astar.selfCheckLookup(2000, detail);
+    std::printf("    findLeaf 自检：2000 个自由叶里 %zu 个查不回来%s%s\n", bad,
+                detail.empty() ? "" : " | ", detail.c_str());
+  }
+
+  CHECK_PATH(ok, path, st);
   // 穿墙点必须落在洞口附近：取路径中 x 最接近 10.5 的航点，检查它的 y、z
   // 是否落在洞口范围（洞开在 y, z ∈ [9, 11]）。
   //
@@ -201,7 +259,7 @@ void caseMultiResolution() {
   const bool ok = astar.plan(octomap::point3d(1, 1, 1),
                              octomap::point3d(19, 19, 19), path, st);
 
-  CHECK(ok);
+  CHECK_PATH(ok, path, st);
   const double gap = maxGap(path);
   std::printf("    相邻航点最大间距 = %.2f m（%.1f 倍分辨率）\n",
               gap, gap / tree.getResolution());
@@ -226,7 +284,7 @@ void caseStartInObstacle() {
   const bool ok = astar.plan(octomap::point3d(3, 3, 3),   // 正好在实心块里
                              octomap::point3d(18, 18, 18), path, st);
 
-  CHECK(ok);
+  CHECK_PATH(ok, path, st);
   CHECK(st.waypoints >= 1);
   std::printf("    吸附后成功：航点 %zu | 长度 %.2f m\n", st.waypoints, st.path_length);
 }
