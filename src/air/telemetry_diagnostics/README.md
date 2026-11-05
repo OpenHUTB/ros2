@@ -176,6 +176,17 @@ ros2 run telemetry_diagnostics telemetry_diagnostics --ros-args -p model:="$PWD/
 
 已通过 13 项单元/一致性测试、colcon 构建、ROS2 坏 JSON/NaN/断流集成测试、标准 launch 启动与干净退出。新版回放收到 361 条遥测、361 条评分、361 条诊断。从交付 ZIP 在另一目录重新解压后，数据准备、13 项测试、训练入口、构建与回放再次通过，最终 CSV 与原结果逐字节一致（同一台虚拟机，不冒充异机复测）。记录见 `results/release_validation.json`。实际话题记录见 `results/final_replay/`、`results/ros_robustness.json`、`results/live/`。`check_ros.py` 可独立订阅话题记录曲线；实时验证加 `--mode live`。
 
+### ROS 冒烟测试
+
+仓库里已有独立的冒烟脚本，在一个隔离的 ROS domain 上起节点、发坏 JSON 与真实观测流，订阅 `/uav/anomaly_score` 与 `/diagnostics` 校验输出：
+
+```bash
+source /opt/ros/humble/setup.bash
+python ros_smoke.py     # 需要 rclpy 与 diagnostic_msgs，结果写入 results/ros_smoke.log
+```
+
+它跑的是**在线链路**，需要 ROS 2 运行时；不装 ROS 的机器只能跑离线测试（`python -m unittest discover -s tests`）。仓库现有 CI 只有 `air_bridge_tests` 与 `deploy_page` 两个 workflow，尚未覆盖本模块：离线测试可以直接挂 `ubuntu-latest`，ROS 冒烟则要 `ros:humble` 容器，属于仓库级 CI 改造，单独提。
+
 ## 7. 文件与局限
 
 - `main.py` / `main.sh`：统一入口；`launch/`：ROS2 启动。
