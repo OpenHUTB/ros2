@@ -158,6 +158,7 @@ nav:
       - ROS 2 Action 任务接口: './air/uav_mission_safety_manager/mission_action.md'
       - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
+    - MuJoCo 无人机视觉着陆与同步建图导航: './air/mujoco_uav_moving_pad_landing.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - UAV mission energy budget: './air/uav_energy_budget.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
