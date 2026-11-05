@@ -1,9 +1,9 @@
-# ROS Noetic 语音控制示例
+# ROS Noetic 语音控制小乌龟
 
-教程见 `docs/chapter/chap8.md`。
+教程：docs/voice/pocketsphinx_noetic.md。
 
-本目录收录用户提供的 pocketsphinx 和 robot_voice 源码，保留原有包元数据。仅将这两个子目录复制到独立 catkin 工作空间的 src 中，不要复制本目录的 CATKIN_IGNORE。不要与第五章同名的 robot_voice 包放在同一工作空间。
+仅复制 pocketsphinx 和 robot_voice 到独立 catkin 工作空间 src，容器目录的 CATKIN_IGNORE 和 COLCON_IGNORE 不随包复制。两个源码包均包含 CMakeLists.txt，使用 catkin_install_python 注册程序。
 
-英文模型安装 pocketsphinx-en-us；可选中文模型单独存放于 ~/pocketsphinx_models，不在仓库内重复存储。原有演示 launch 文件是上游遗留示例，本章复现采用教程中的 rosrun 命令。
+英文控制使用 pocketsphinx/demo/voice_cmd.lm 和 voice_cmd.dic，而不是通用 en-us.lm.bin。前进口令为 forward，不使用 go。robot_voice 以 10Hz 发布指令，默认 1 秒无新命令归零，未知命令立即停止。旧 voice_cmd_vel.py 演示无命令超时，不作为默认控制节点。
 
-robot_voice 的 package.xml 许可证仍为 TODO，尚未替作者指定许可。
+原截图只作为旧版识别/订阅记录；本次修订尚待 Ubuntu catkin 构建和麦克风端到端复测。代码与文档由 OpenAI Codex 辅助编写。
