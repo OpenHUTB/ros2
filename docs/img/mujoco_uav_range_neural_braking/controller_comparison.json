@@ -1,0 +1,101 @@
+[
+  {
+    "scenario": "corridor",
+    "controller": "reference",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6295003423469856,
+    "final_speed_m_s": 5.731267988774968e-08,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 0.0
+  },
+  {
+    "scenario": "corridor",
+    "controller": "reference",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6294126821409645,
+    "final_speed_m_s": 6.906906041017035e-09,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 1.5
+  },
+  {
+    "scenario": "corridor",
+    "controller": "reference",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.629408963317414,
+    "final_speed_m_s": 2.0984174862634176e-09,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 3.0
+  },
+  {
+    "scenario": "corridor",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683622649959169,
+    "final_speed_m_s": 3.4410558197765757e-09,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 0.0
+  },
+  {
+    "scenario": "corridor",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683314968328444,
+    "final_speed_m_s": 2.678894077001709e-10,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 1.5
+  },
+  {
+    "scenario": "corridor",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683595557333417,
+    "final_speed_m_s": 6.362360908056502e-11,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 3.0
+  },
+  {
+    "scenario": "corridor",
+    "controller": "mlp",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.7484000130245079,
+    "final_speed_m_s": 0.015566702797502925,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 0.0
+  },
+  {
+    "scenario": "corridor",
+    "controller": "mlp",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.4596294931613487,
+    "final_speed_m_s": -0.056238739274966615,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 1.5
+  },
+  {
+    "scenario": "corridor",
+    "controller": "mlp",
+    "steps": 1000,
+    "collision_steps": 3,
+    "min_clearance_m": -0.004636489671487887,
+    "final_speed_m_s": -0.020617636176815404,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0,
+    "initial_speed_m_s": 3.0
+  }
+]
