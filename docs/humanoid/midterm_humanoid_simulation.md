@@ -175,7 +175,7 @@ roslaunch midterm_humanoid main.launch
 | 平均每帧渲染 | 5.9 ms/帧 |
 | 跟踪误差（kp=20） | 手臂 RMS 0.095 rad（≈5.4°），腿部 RMS 0.171 rad（≈9.8°） |
 | 依赖版本 | mujoco 3.2.3、numpy、imageio、imageio-ffmpeg |
-| 启动验证 | `catkin_make` 通过；`roslaunch midterm_humanoid main.launch` 正常启动；源码 `python3 main.py` 直接运行正常 |
+| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch midterm_humanoid main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认 |
 
 ### 7.2 关节角跟踪误差曲线
 
