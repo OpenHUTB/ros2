@@ -5,6 +5,7 @@ main.py —— 统一入口。
   collect   采集专家巡航数据（纯 Python，无需 ROS）
   train     训练 MLP（纯 Python）
   test      闭环评估，打印 MAE/成功率（纯 Python）
+  dagger    DAgger 数据聚合训练并逐轮对比（纯 Python）
   sim       启动 ROS 仿真节点
   teleop    启动 ROS 键盘控制节点
   cruise    启动 ROS MLP 巡航节点
@@ -53,6 +54,12 @@ def cmd_test(_args=None):
     print(f"[指标] 专家: MAE={r_expert['mae_position_m']}m 成功率={r_expert['all_waypoints_hit']}")
 
 
+def cmd_dagger(args):
+    from mjc_rov_current_teleop import dagger
+    dagger.run_dagger(DEFAULT_PARAMS, iterations=args.iterations,
+                      horizon=args.horizon, epochs=args.epochs)
+
+
 def cmd_sim(_args):
     from mjc_rov_current_teleop.sim_node import main as m
     m()
@@ -84,6 +91,14 @@ def build_parser():
 
     e = sub.add_parser("test", help="闭环评估")
     e.set_defaults(func=cmd_test)
+
+    d = sub.add_parser("dagger", help="DAgger 数据聚合训练")
+    d.add_argument("--iterations", type=int, default=4,
+                   help="聚合轮数（不含第 0 轮专家采样）")
+    d.add_argument("--horizon", type=int, default=6000,
+                   help="每轮闭环采样步数")
+    d.add_argument("--epochs", type=int, default=200)
+    d.set_defaults(func=cmd_dagger)
 
     s = sub.add_parser("sim", help="ROS 仿真节点")
     s.set_defaults(func=cmd_sim)
