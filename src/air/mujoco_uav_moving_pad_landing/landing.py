@@ -12,6 +12,7 @@ import cv2
 import mujoco
 import numpy as np
 from PIL import Image
+from .dataset import generate_grouped_samples, split_by_episode
 from sklearn.metrics import mean_squared_error
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
@@ -90,33 +91,34 @@ def controller_command(features: np.ndarray, model=None) -> np.ndarray:
     return np.asarray(model.predict(features.reshape(1, -1))[0], dtype=np.float32)
 
 
-def train_controller(path: Path = MODEL_PATH, samples: int = 5000, seed: int = 7) -> dict[str, float]:
-    """Fit and save an MLP using reproducible expert-command samples."""
-    rng = np.random.default_rng(seed)
-    x = np.column_stack(
-        [
-            rng.uniform(-0.42, 0.42, samples),
-            rng.uniform(-0.42, 0.42, samples),
-            rng.uniform(0.0, 1.0, samples),
-            rng.uniform(-0.18, 0.18, samples),
-            rng.uniform(-0.18, 0.18, samples),
-            np.ones(samples),
-        ]
-    ).astype(np.float32)
-    y = np.vstack([expert_command(row) for row in x])
-    split = int(samples * 0.8)
+def train_controller(path: Path = MODEL_PATH, samples: int = 5000, seed: int = 7) -> dict[str, float | int]:
+    """Fit and save an MLP with episode-level train/test isolation."""
+    if samples < 200:
+        raise ValueError("samples must be at least 200 to provide ten evaluation episodes")
+    x, y, groups = generate_grouped_samples(
+        expert_command, steps_per_episode=20, seed=seed, samples=samples
+    )
+    x_train, y_train, x_test, y_test, train_episodes, test_episodes = split_by_episode(
+        x, y, groups, seed=seed
+    )
     model = make_pipeline(
         StandardScaler(),
         MLPRegressor(hidden_layer_sizes=(24, 16), activation="tanh", solver="adam", alpha=0.0005,
                      learning_rate_init=0.003, max_iter=650, random_state=seed, early_stopping=True,
                      n_iter_no_change=20),
     )
-    model.fit(x[:split], y[:split])
-    predicted = model.predict(x[split:])
-    rmse = float(np.sqrt(mean_squared_error(y[split:], predicted)))
+    model.fit(x_train, y_train)
+    predicted = model.predict(x_test)
+    rmse = float(np.sqrt(mean_squared_error(y_test, predicted)))
     path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, path)
-    return {"train_samples": split, "test_samples": samples - split, "test_rmse_m_s": rmse}
+    return {
+        "train_samples": int(x_train.shape[0]),
+        "test_samples": int(x_test.shape[0]),
+        "train_episodes": train_episodes,
+        "test_episodes": test_episodes,
+        "test_rmse_m_s": rmse,
+    }
 
 
 def load_controller(path: Path = MODEL_PATH):

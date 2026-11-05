@@ -20,7 +20,7 @@ python -m pytest -q tests
 
 ## 场景与方法
 
-着陆场景由 MJCF 文件 `assets/moving_pad.xml` 定义。着陆平台沿 x/y 正弦轨迹移动，无人机由 MuJoCo 位置伺服关节驱动。OpenCV HSV 阈值从真实渲染图像中定位绿色平台和红色机体。训练集由固定随机种子采样的视觉观测与专家控制指令组成，并采用 80%/20% 留出集评估测试均方根误差。
+着陆场景由 MJCF 文件 `assets/moving_pad.xml` 定义。着陆平台沿 x/y 正弦轨迹移动，无人机由 MuJoCo 位置伺服关节驱动。OpenCV HSV 阈值从真实渲染图像中定位绿色平台和红色机体。训练集由固定随机种子采样的视觉观测与专家控制指令组成，并按完整 episode 划分 80% 训练集与 20% 测试集，防止相邻时刻跨集合。`--samples` 精确指定样本数，最少为 200。
 
 流程：渲染 RGB → HSV 区域定位 → 视觉误差与高度/平台速度组合 → MLP 推理 → MuJoCo 控制输出。
 
@@ -30,6 +30,6 @@ python -m pytest -q tests
 
 ## 仿真环境
 
-默认演示在 MuJoCo 仿真环境运行。一次 180 步演示持续 3.6 秒，落点接近误差约 0.295 m，最终高度约 0.235 m。这些结果对应本项目仿真场景，不代表真实飞行性能。
+默认演示在 MuJoCo 仿真环境运行。一次 180 步演示持续 3.6 秒，落点接近误差约 0.295 m，最终高度约 0.235 m。一次 1200 样本训练包含 48 个训练 episode 和 12 个测试 episode，测试 RMSE 为 0.036406 m/s。这些结果对应固定随机种子与本项目仿真场景，不代表真实飞行性能。
 
 English summary: A lightweight MuJoCo simulation with visual landing and line-oriented keyboard teleoperation.

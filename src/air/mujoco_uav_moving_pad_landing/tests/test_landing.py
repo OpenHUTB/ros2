@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
+import pytest
 
 from mujoco_uav_moving_pad_landing.landing import (
     controller_command,
     detect_colored_center,
     expert_command,
+    train_controller,
     vision_features,
 )
 from mujoco_uav_moving_pad_landing.teleop import command_for_key
@@ -43,6 +45,20 @@ def test_keyboard_commands_are_bounded_and_quit_is_explicit():
     np.testing.assert_allclose(command_for_key("w"), [0.35, 0.0, 0.0])
     np.testing.assert_allclose(command_for_key("F"), [0.0, 0.0, -0.21])
     assert command_for_key("q") is None
+
+
+def test_training_uses_exact_sample_count_and_grouped_holdout(tmp_path):
+    result = train_controller(tmp_path / "controller.joblib", samples=200)
+
+    assert result["train_samples"] == 160
+    assert result["test_samples"] == 40
+    assert result["train_episodes"] + result["test_episodes"] == 10
+    assert (tmp_path / "controller.joblib").is_file()
+
+
+def test_training_rejects_too_few_samples(tmp_path):
+    with pytest.raises(ValueError, match="at least 200"):
+        train_controller(tmp_path / "controller.joblib", samples=199)
 
 
 def test_hsv_detector_finds_pad_and_uav_centers():
