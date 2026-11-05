@@ -1,2 +1,4 @@
 # run-generated artifacts (mp4 / gif / preview frames), not committed
 output/
+__pycache__/
+*.pyc
