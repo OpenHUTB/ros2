@@ -114,6 +114,7 @@ nav:
     - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
     - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
+    - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
