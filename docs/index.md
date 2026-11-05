@@ -132,6 +132,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [AirSim Unity 无人机双柱连续 S 形绕行实验](./air/airsim_double_pillar_avoidance.md) —— 在前视深度反应式绕柱基础上增加绕行侧解锁与冷却状态机，使沿程后续柱子按自身位置重新选边，形成 S 形路径（已实飞到达目标、第二柱反向绕行验证；降落确认待复验）
+
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
