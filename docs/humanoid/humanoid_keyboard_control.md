@@ -219,5 +219,5 @@ q = data.qpos[root_qadr+3:root_qadr+7]   # 底盘四元数 (w,x,y,z)
 
 ## 7. 参考
 
-* [rov_mujoco 水下机器人模块](../water/rov_mujoco.md)：本包 ROS2 包结构惯例参考
+* [rov_mujoco 水下机器人模块](../water/rov_physical_simulation.md)：本包 ROS2 包结构惯例参考
 * [MuJoCo 文档：freejoint / motor / Renderer](https://mujoco.readthedocs.io/en/stable/XMLreference.html)
