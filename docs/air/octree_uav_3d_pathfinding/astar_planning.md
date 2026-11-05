@@ -202,6 +202,26 @@ ROS 节点只是它的一层外壳，负责收发话题、查 TF、把结果转�
 
 ## 8. 运行方法与效果
 
+### 8.1 准备工作空间
+
+本模块的功能包是 `octree_uav_3d_pathfinding`，按 catkin 的规则，它需要位于
+工作空间的 `src/` 之下。工作空间的建立见[环境配置与前置准备](./env_setup.md)，
+模块代码的准备有两种方式：
+
+```shell
+# 工作空间
+mkdir -p ~/uav_ws/src && cd ~/uav_ws && catkin_make && source devel/setup.bash
+
+# 方式一：克隆本仓库，把包软链接进工作空间
+git clone https://github.com/OpenHUTB/ros2.git ~/ros2
+ln -sfn ~/ros2/src/air/octree_uav_3d_pathfinding ~/uav_ws/src/octree_uav_3d_pathfinding
+```
+
+若代码已在别处，把 `ln` 的源路径换成实际路径即可；也可以直接把功能包目录
+拷贝到 `~/uav_ws/src/` 下。用软链接的好处是仓库更新后不必重新拷贝。
+
+### 8.2 编译与启动
+
 ```shell
 # 编译
 cd ~/uav_ws && catkin_make

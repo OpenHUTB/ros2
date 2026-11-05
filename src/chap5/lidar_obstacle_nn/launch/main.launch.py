@@ -2,7 +2,8 @@
 
 Brings up everything needed for a complete demonstration:
 
-    1. The Gazebo Fortress simulation world (obstacle_world.sdf)
+    1. The Gazebo Fortress simulation world (static obstacle_world.sdf
+       by default, or world:=dynamic for the controllable slide world)
        exposing a robot with a 2D LiDAR.
     2. The ros_gz bridge forwarding Gazebo /scan to ROS 2 /scan.
     3. The lidar_obstacle_nn inference node that loads the trained MLP
@@ -36,12 +37,13 @@ PACKAGE_SHARE = get_package_share_directory(PACKAGE)
 
 def generate_launch_description() -> LaunchDescription:
     # --- Arguments ----------------------------------------------------
-    world_path = LaunchConfiguration('world_path')
+    world = LaunchConfiguration('world')
     model_path = LaunchConfiguration('model_path')
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_gpu = LaunchConfiguration('use_gpu')
+    headless = LaunchConfiguration('headless')
+    render_engine = LaunchConfiguration('render_engine')
 
-    default_world = os.path.join(PACKAGE_SHARE, 'worlds', 'obstacle_world.sdf')
     default_model = os.path.join(PACKAGE_SHARE, 'models', 'lidar_mlp.pt')
 
     # --- Gazebo + bridge (delegated to sim.launch.py) ----------------
@@ -50,8 +52,10 @@ def generate_launch_description() -> LaunchDescription:
             os.path.join(PACKAGE_SHARE, 'launch', 'sim.launch.py')
         ),
         launch_arguments={
-            'world_path': world_path,
+            'world': world,
             'use_sim_time': use_sim_time,
+            'headless': headless,
+            'render_engine': render_engine,
         }.items(),
     )
 
@@ -67,6 +71,7 @@ def generate_launch_description() -> LaunchDescription:
                 'input_size': 360,
                 'danger_distance': 1.0,
                 'far_distance': 3.0,
+                'fallback_confidence': 0.45,
                 'use_gpu': use_gpu,
                 'use_sim_time': use_sim_time,
             },
@@ -80,9 +85,9 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                'world_path',
-                default_value=default_world,
-                description='Path to the Gazebo SDF world file.',
+                'world',
+                default_value='static',
+                description="Simulation world: 'static' or 'dynamic'.",
             ),
             DeclareLaunchArgument(
                 'model_path',
@@ -102,6 +107,24 @@ def generate_launch_description() -> LaunchDescription:
                     'because the MLP is small and CPU inference is fast; '
                     'also avoids CUDA capability-mismatch issues with '
                     'very recent GPUs.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                'headless',
+                default_value='false',
+                description=(
+                    'Run Gazebo on a virtual X server with xvfb-run. '
+                    'Use this instead of --headless-rendering so gpu_lidar '
+                    'still receives a rendering context.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                'render_engine',
+                default_value='ogre',
+                description=(
+                    "Ignition Rendering engine plugin. Default 'ogre' works "
+                    'in software-rendered VMs; use ogre2 with a working OpenGL '
+                    '3.3 driver.'
                 ),
             ),
             sim_launch,
