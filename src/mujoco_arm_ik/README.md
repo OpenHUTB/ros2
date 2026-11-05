@@ -24,7 +24,7 @@
 
 ## 演示效果
 
-![机械臂画圆演示](docs/mujoco_arm_demo.gif)
+![机械臂画圆演示](docs/mujoco_arm_ik_demo.gif)
 
 > 录制于 VMware Ubuntu 20.04 虚拟机（MuJoCo 离屏渲染，osmesa 软渲染）：
 > 机械臂末端沿圆形轨迹运动，黄色轨迹线逐渐画出一个完整正圆，与绿色参考圆重合。
