@@ -396,6 +396,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [无人机 IMU 与气压高度融合](./air/uav_altitude_sensor_fusion.md) —— 对比气压高度、加速度积分和一维卡尔曼融合，附高度响应图与误差指标
 * [无人机 L1 自适应高度控制仿真](./air/uav_l1_altitude_stabilization.md)
+* [无人机磁力计干扰自检与航向一致性门控](./air/uav_mag_interference_monitor.md) —— 起飞前用怠速/上油门两组整圈样本比较硬铁偏差，飞行中用 GNSS 航迹向与磁航向互检，异常时切换航向来源
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
