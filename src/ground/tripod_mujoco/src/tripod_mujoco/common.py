@@ -239,6 +239,19 @@ def run_sim(model, controller, duration=6.0, fps=30, video_path=None,
     return frames
 
 
+def _positive_seconds(text):
+    """--duration 只接受正数秒，避免 0/负数生成空视频。"""
+    import argparse
+
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError("--duration 需要数字（秒）：%s" % text)
+    if value <= 0:
+        raise argparse.ArgumentTypeError("--duration 必须为正数（秒）：%s" % text)
+    return value
+
+
 def parse_args():
     import argparse
 
@@ -246,7 +259,7 @@ def parse_args():
     ap.add_argument("--preview", action="store_true",
                     help="只跑 1.5 秒，输出 3 张 PNG 检查取景")
     ap.add_argument("--out", default=None, help="视频输出路径")
-    ap.add_argument("--duration", type=float, default=None,
+    ap.add_argument("--duration", type=_positive_seconds, default=None,
                     help="完整视频的仿真时长（秒），不填则用模块默认值")
     # roslaunch 会追加 __name:=、__log:= 等私有参数，须用 parse_known_args 忽略
     args, _ = ap.parse_known_args()

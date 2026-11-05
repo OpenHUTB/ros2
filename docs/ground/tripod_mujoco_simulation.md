@@ -156,6 +156,7 @@ roslaunch tripod_mujoco main.launch                  # 默认（8.0 秒）
 roslaunch tripod_mujoco main.launch duration:=3.0    # 自定义时长
 roslaunch tripod_mujoco main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
+> `cwd="node"` 下相对路径以 node 所在目录（`devel/lib/<pkg>/`）为基准，roslaunch 启动时视频输出到 `devel/lib/<pkg>/output/`；源码直跑时才落在模块的 `output/`。
 
 > 上表的 `catkin_make` 与 `roslaunch` 步骤未在重构后的代码上本地复测（本机无 ROS 环境），需在实际 ROS 环境确认；源码直跑 `python3 main.py` 已在 MuJoCo 3.2.3 与 3.17 两个版本实测通过；单元测试 `python3 -m unittest discover -s tests` 已在本机 MuJoCo 3.2.3 与 3.17 双版本通过（7 项）。
 包结构采用 `catkin_python_setup()` + `setup.py`：`src/tripod_mujoco/` 安装为 Python 包，
