@@ -1,0 +1,110 @@
+<mujoco model="diff_drive">
+  <!--
+    差速驱动机器人（ROS 1 + MuJoCo）。两轮差速 + 前后各一个万向支撑球。
+
+    这里刻意用**真实接触**而不是解析积分：
+      * 轮地之间有摩擦锥，急加速/急转弯时会打滑 —— 这正是里程计漂移的来源；
+      * 车体有质量、有惯性，起步和刹车有俯仰；
+      * 前后的万向球把支撑从"一条线"变成"四点"，车体不会自己翻。
+
+    几何要点（都是踩过坑的）：
+      1. 轮子放在车体两侧 y=±0.18，车体半宽 0.14 —— 留 0.01 间隙，
+         否则轮子与车体几何重叠，求解器会把车体顶起来。
+      2. 万向球球心 z=-0.070、半径 0.030 ⇒ 球底 -0.100，与驱动轮底严格等高，
+         否则支撑退化成一条线，俯仰无约束。
+      3. 质心放在支撑多边形内（x=+0.02），否则车体向后倒。
+      4. 出生高度 0.098 = 轮半径 - 2 mm，预置穿透让接触从第 0 步就稳定。
+
+    单位：米、弧度（compiler angle="radian"）
+  -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.7 0.7 0.7" ambient="0.35 0.35 0.35" specular="0 0 0"/>
+    <global azimuth="-150" elevation="-25" offwidth="1280" offheight="720"/>
+  </visual>
+
+  <default>
+    <geom friction="0.9 0.02 0.001" solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    <joint damping="0.05" armature="0.02"/>
+    <site rgba="0.9 0.2 0.2 1" size="0.01"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.62 0.64 0.66" rgb2="0.72 0.74 0.76" markrgb="0.9 0.9 0.9" mark="cross"/>
+    <material name="floor_mat" texture="grid" texrepeat="16 16" reflectance="0.02"/>
+    <material name="chassis" rgba="0.16 0.36 0.72 1"/>
+    <material name="tyre" rgba="0.08 0.08 0.08 1"/>
+    <material name="caster" rgba="0.35 0.35 0.35 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 6" dir="0 0 -1" directional="true"/>
+    <light pos="-3 -3 4" dir="1 1 -1" directional="false" diffuse="0.3 0.3 0.3"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="floor_mat"/>
+
+    <!-- 跟随相机放在世界坐标系里、用 targetbody 模式盯住机器人。
+         不能装在车体内部：那样相机随车一起转，且朝向容易算反 —— 实测渲染出全白。 -->
+    <camera name="chase" pos="-1.8 -1.8 1.3" mode="targetbody" target="robot" fovy="45"/>
+
+    <body name="robot" pos="0 0 0.098">
+      <freejoint name="root"/>
+
+      <!-- 车体 0.28 x 0.28 x 0.10，质心前移 0.02 落在支撑多边形内 -->
+      <geom name="chassis" type="box" pos="0.02 0 0.05" size="0.14 0.14 0.05"
+            material="chassis" mass="8.0"/>
+
+      <!-- 左右驱动轮 -->
+      <body name="wheel_l" pos="0 0.18 0">
+        <joint name="wheel_l_joint" type="hinge" axis="0 1 0"/>
+        <!-- 碰撞体用球：圆柱-平面在 MuJoCo 里是线接触，实测会粘滑振荡
+             （滑移率在 7 和 80 之间乱跳）。球-平面是解析接触，滚动精确稳定。
+             圆柱只作外观（不参与碰撞），看起来仍是轮子。 -->
+        <geom name="wheel_l_geom" type="sphere" size="0.10"
+              material="tyre" mass="0.6" friction="1.1 0.02 0.001"/>
+        <geom name="wheel_l_visual" type="cylinder" size="0.10 0.03" euler="1.5707963 0 0"
+              material="tyre" contype="0" conaffinity="0" group="2"/>
+      </body>
+      <body name="wheel_r" pos="0 -0.18 0">
+        <joint name="wheel_r_joint" type="hinge" axis="0 1 0"/>
+        <!-- 碰撞体用球：圆柱-平面在 MuJoCo 里是线接触，实测会粘滑振荡
+             （滑移率在 7 和 80 之间乱跳）。球-平面是解析接触，滚动精确稳定。
+             圆柱只作外观（不参与碰撞），看起来仍是轮子。 -->
+        <geom name="wheel_r_geom" type="sphere" size="0.10"
+              material="tyre" mass="0.6" friction="1.1 0.02 0.001"/>
+        <geom name="wheel_r_visual" type="cylinder" size="0.10 0.03" euler="1.5707963 0 0"
+              material="tyre" contype="0" conaffinity="0" group="2"/>
+      </body>
+
+      <!-- 前万向支撑球：极低摩擦，只承重不产生侧向力。
+           **只放一个**。放两个（前后各一）会让载荷被两个球分走，
+           驱动轮压不住地面：实测直行打滑 77.8%、原地转损失 61.6%。
+           三点支撑（两驱动轮 + 一个前万向球）是静定的，质心在 x=+0.02
+           落在[驱动轴, 万向球]之间，驱动轮承担约 85% 正压力。 -->
+      <geom name="caster_f" type="sphere" pos="0.13 0 -0.070" size="0.030"
+            friction="0.005 0.005 0.0001" mass="0.1" material="caster"/>
+
+      <!-- IMU 参考点（车体原点） -->
+      <site name="imu" pos="0 0 0"/>
+
+    </body>
+  </worldbody>
+
+  <actuator>
+    <velocity name="motor_l" joint="wheel_l_joint" kv="8" ctrlrange="-30 30" forcerange="-40 40"/>
+    <velocity name="motor_r" joint="wheel_r_joint" kv="8" ctrlrange="-30 30" forcerange="-40 40"/>
+  </actuator>
+
+  <sensor>
+    <jointvel name="vel_l" joint="wheel_l_joint"/>
+    <jointvel name="vel_r" joint="wheel_r_joint"/>
+    <framepos name="pos" objtype="body" objname="robot"/>
+    <framequat name="quat" objtype="body" objname="robot"/>
+    <gyro name="gyro" site="imu"/>
+    <accelerometer name="accel" site="imu"/>
+  </sensor>
+</mujoco>

@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "speed_0.0",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683622649959169,
+    "final_speed_m_s": 3.4410558197765757e-09,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0
+  },
+  {
+    "scenario": "speed_1.5",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683314968328444,
+    "final_speed_m_s": 2.678894077001709e-10,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0
+  },
+  {
+    "scenario": "speed_3.0",
+    "controller": "range",
+    "steps": 1000,
+    "collision_steps": 0,
+    "min_clearance_m": 0.6683595557333417,
+    "final_speed_m_s": 6.362360908056502e-11,
+    "invalid_sensor_steps": 0,
+    "max_height_error_m": 0.0
+  }
+]

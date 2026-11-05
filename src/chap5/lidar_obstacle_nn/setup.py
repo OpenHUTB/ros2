@@ -37,6 +37,7 @@ setup(
         # ~/.local that would shadow the one ROS 2 was built against.
         'numpy>=1.21,<2.0',
     ],
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'main = lidar_obstacle_nn.main:main',
