@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<robot name="student_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- SI units: meters and radians; x forward, y left, z up. -->
+  <xacro:property name="body_length" value="0.60"/>
+  <xacro:property name="body_width" value="0.36"/>
+  <xacro:property name="body_height" value="0.12"/>
+  <xacro:property name="wheel_radius" value="0.10"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <material name="blue"><color rgba="0.1 0.35 0.8 1"/></material>
+  <material name="black"><color rgba="0.08 0.08 0.08 1"/></material>
+  <material name="orange"><color rgba="1 0.45 0.05 1"/></material>
+  <material name="white"><color rgba="0.9 0.9 0.9 1"/></material>
+  <link name="base_footprint"/>
+  <joint name="footprint_to_base" type="fixed">
+    <parent link="base_footprint"/><child link="base_link"/>
+    <origin xyz="0 0 0.15"/>
+  </joint>
+  <link name="base_link">
+    <visual><geometry><box size="${body_length} ${body_width} ${body_height}"/></geometry><material name="blue"/></visual>
+    <collision><geometry><box size="${body_length} ${body_width} ${body_height}"/></geometry></collision>
+    <inertial>
+      <mass value="3"/>
+      <inertia ixx="${3*(body_width**2+body_height**2)/12}" ixy="0" ixz="0" iyy="${3*(body_length**2+body_height**2)/12}" iyz="0" izz="${3*(body_length**2+body_width**2)/12}"/>
+    </inertial>
+  </link>
+  <xacro:macro name="wheel" params="name x y">
+    <link name="${name}_link">
+      <visual>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="black"/>
+      </visual>
+      <!-- Offset hub marker makes wheel rotation visible in RViz. -->
+      <visual><origin xyz="0.05 0 0"/><geometry><box size="0.025 0.044 0.025"/></geometry><material name="orange"/></visual>
+      <collision><origin rpy="${pi/2} 0 0"/><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry></collision>
+      <inertial><mass value="0.2"/><inertia ixx="${0.2*(3*wheel_radius**2+wheel_width**2)/12}" ixy="0" ixz="0" iyy="${0.2*wheel_radius**2/2}" iyz="0" izz="${0.2*(3*wheel_radius**2+wheel_width**2)/12}"/></inertial>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/><child link="${name}_link"/>
+      <origin xyz="${x} ${y} -0.05"/><axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+  <xacro:wheel name="front_left_wheel" x="0.20" y="${body_width/2+wheel_width/2}"/>
+  <xacro:wheel name="rear_left_wheel" x="-0.20" y="${body_width/2+wheel_width/2}"/>
+  <xacro:wheel name="front_right_wheel" x="0.20" y="${-body_width/2-wheel_width/2}"/>
+  <xacro:wheel name="rear_right_wheel" x="-0.20" y="${-body_width/2-wheel_width/2}"/>
+  <link name="lidar_link">
+    <inertial><mass value="0.1"/><inertia ixx="0.000106" ixy="0" ixz="0" iyy="0.000106" iyz="0" izz="0.000151"/></inertial>
+    <visual><geometry><cylinder radius="0.055" length="0.06"/></geometry><material name="orange"/></visual>
+  </link>
+  <joint name="lidar_joint" type="fixed"><parent link="base_link"/><child link="lidar_link"/><origin xyz="0 0 0.09"/></joint>
+  <link name="front_marker_link">
+    <inertial><mass value="0.01"/><inertia ixx="0.0000133" ixy="0" ixz="0" iyy="0.00000142" iyz="0" izz="0.0000121"/></inertial><visual><geometry><box size="0.01 0.12 0.04"/></geometry><material name="white"/></visual></link>
+  <joint name="front_marker_joint" type="fixed"><parent link="base_link"/><child link="front_marker_link"/><origin xyz="0.305 0 0"/></joint>
+
+  <!-- Four wheel skid-steer: Gazebo physics publishes odom->base_footprint. -->
+  <gazebo reference="base_link"><material>Gazebo/Blue</material></gazebo>
+  <xacro:macro name="wheel_surface" params="name">
+    <gazebo reference="${name}_link">
+      <material>Gazebo/Black</material><mu1>0.8</mu1><mu2>0.4</mu2>
+      <kp>1000000</kp><kd>100</kd>
+    </gazebo>
+  </xacro:macro>
+  <xacro:wheel_surface name="front_left_wheel"/>
+  <xacro:wheel_surface name="rear_left_wheel"/>
+  <xacro:wheel_surface name="front_right_wheel"/>
+  <xacro:wheel_surface name="rear_right_wheel"/>
+  <gazebo>
+    <plugin name="drive" filename="libgazebo_ros_skid_steer_drive.so">
+      <robotNamespace>/</robotNamespace><updateRate>50</updateRate>
+      <leftFrontJoint>front_left_wheel_joint</leftFrontJoint>
+      <rightFrontJoint>front_right_wheel_joint</rightFrontJoint>
+      <leftRearJoint>rear_left_wheel_joint</leftRearJoint>
+      <rightRearJoint>rear_right_wheel_joint</rightRearJoint>
+      <wheelSeparation>0.40</wheelSeparation><wheelDiameter>0.20</wheelDiameter>
+      <torque>5</torque><commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic><odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_footprint</robotBaseFrame><broadcastTF>true</broadcastTF>
+    </plugin>
+    <plugin name="wheel_states" filename="libgazebo_ros_joint_state_publisher.so">
+      <robotNamespace>/</robotNamespace><updateRate>30</updateRate>
+      <jointName>front_left_wheel_joint,rear_left_wheel_joint,front_right_wheel_joint,rear_right_wheel_joint</jointName>
+    </plugin>
+  </gazebo>
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Orange</material>
+    <sensor name="laser" type="ray">
+      <pose>0 0 0 0 0 0</pose><always_on>true</always_on><update_rate>10</update_rate>
+      <visualize>false</visualize>
+      <ray>
+        <scan><horizontal><samples>360</samples><resolution>1</resolution><min_angle>-${pi}</min_angle><max_angle>${pi}</max_angle></horizontal></scan>
+        <range><min>0.12</min><max>8.0</max><resolution>0.01</resolution></range>
+        <noise><type>gaussian</type><mean>0</mean><stddev>0.005</stddev></noise>
+      </ray>
+      <plugin name="laser_ros" filename="libgazebo_ros_laser.so">
+        <robotNamespace>/</robotNamespace><topicName>scan</topicName><frameName>lidar_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>
