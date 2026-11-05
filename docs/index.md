@@ -219,6 +219,7 @@ ROS每章节运行代码:
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [无人机 AirSim 键盘遥控（ROS 2 Humble）](./air/uav_airsim_keyboard.md) —— termios 键盘节点 + 内置 AirSim 桥，含看门狗超时停车与起飞/降落服务
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
