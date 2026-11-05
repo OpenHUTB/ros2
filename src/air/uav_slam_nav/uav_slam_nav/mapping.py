@@ -268,9 +268,10 @@ class Mapping(Node):
     def _publish_map(self):
         """发布 OccupancyGrid：100 占据，0 自由，-1 未知。"""
         probability = self._probability()
+        flat = probability.ravel()
         data = np.full(self._n * self._n, -1, dtype=np.int8)
-        data[probability > self._occ_thresh] = 100
-        data[probability < self._free_thresh] = 0
+        data[flat > self._occ_thresh] = 100
+        data[flat < self._free_thresh] = 0
 
         msg = OccupancyGrid()
         msg.header.stamp = self.get_clock().now().to_msg()

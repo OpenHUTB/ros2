@@ -11,10 +11,13 @@
     camera_name: 'depth'     # settings.json 里为该载具定义的深度相机名
     publish_rate: 10.0       # 位姿/图像/深度发布频率
     depth_pixels_as_float: true
-    cmd_duration: 0.1        # 每条速度指令的作用时长，通常等于 1/控制频率
+    cmd_duration: 0.5        # 每条速度指令的作用时长；要覆盖一次采样周期的空档，
+                             # 否则两次指令之间无人机制动，实际速度只有设定值的零头
     connect_period: 2.0      # 连不上 AirSim 时的重试间隔
     pose_frame_id: airsim_ned
     camera_frame_id: uav_camera
+    takeoff_height: 1.5      # 相对原点的爬升高度（米），Blocks 场景地面在 z=+0.68
+    climb_speed: 1.5         # 起飞爬升速度（米/秒）
 
 /uav/mapping:
   ros__parameters:

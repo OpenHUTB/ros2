@@ -42,10 +42,12 @@ class AirSimSource(Node):
         self.declare_parameter('camera_name', '0')
         self.declare_parameter('publish_rate', 10.0)
         self.declare_parameter('depth_pixels_as_float', True)
-        self.declare_parameter('cmd_duration', 0.1)
+        self.declare_parameter('cmd_duration', 0.5)
         self.declare_parameter('connect_period', 2.0)
         self.declare_parameter('pose_frame_id', 'airsim_ned')
         self.declare_parameter('camera_frame_id', 'uav_camera')
+        self.declare_parameter('takeoff_height', 1.5)
+        self.declare_parameter('climb_speed', 1.5)
 
         self._ip = str(self.get_parameter('airsim_ip').value)
         self._port = int(self.get_parameter('airsim_port').value)
@@ -57,6 +59,8 @@ class AirSimSource(Node):
         self._connect_period = float(self.get_parameter('connect_period').value)
         self._pose_frame = str(self.get_parameter('pose_frame_id').value)
         self._camera_frame = str(self.get_parameter('camera_frame_id').value)
+        self._takeoff_height = float(self.get_parameter('takeoff_height').value)
+        self._climb_speed = float(self.get_parameter('climb_speed').value)
 
         self._lock = threading.Lock()
         self._client = None
@@ -70,6 +74,11 @@ class AirSimSource(Node):
         # 两个线程同时调用会报 "Existing exports of data" / "IOLoop is already running"。
         self._want_takeoff = False
         self._want_land = False
+        # “移动路标”位控：设定点沿速度方向前进，只在偏离已下发目标时重发一次
+        self._setpoint = None
+        self._last_sent = None
+        self._last_tick = time.monotonic()
+        self._last_cmd_time = 0.0
 
         self._pose_pub = self.create_publisher(PoseStamped, 'pose', 10)
         self._depth_pub = self.create_publisher(Image, 'depth', 5)
@@ -128,10 +137,25 @@ class AirSimSource(Node):
             try:
                 self._client.enableApiControl(True, vehicle_name=self._vehicle)
                 self._client.armDisarm(True, vehicle_name=self._vehicle)
-                self._client.takeoffAsync(
+                time.sleep(0.5)  # 解锁后 SimpleFlight 需要一点时间进入可控状态
+                # 实测：这套 Blocks 场景里 moveByVelocityZ 常常被忽略，但
+                # moveToPosition 稳定有效，所以起飞用位置指令一步到位。
+                target = -self._takeoff_height
+                self._client.moveToPositionAsync(
+                    0.0, 0.0, target, self._climb_speed,
                     timeout_sec=20.0, vehicle_name=self._vehicle).join()
+                z = float(self._client.getMultirotorState(
+                    vehicle_name=self._vehicle)
+                    .kinematics_estimated.position.z_val)
                 self._armed = True
-                self.get_logger().info('已起飞并解锁，可以接收 /uav/cmd_vel')
+                # 起飞后重新锚定路标，避免沿用地面时的旧设定点
+                self._setpoint = None
+                self._last_sent = None
+                self._last_tick = time.monotonic()
+                if abs(target - z) >= 0.3:
+                    self.get_logger().warn(f'起飞高度偏差较大，当前 {-z:.2f} m')
+                self.get_logger().info(
+                    f'已起飞并解锁（高度 {-z:.2f} m），可以接收 /uav/cmd_vel')
             except Exception as exc:  # noqa: BLE001 - 任何 RPC 异常都要保住节点
                 self.get_logger().error(f'起飞失败：{exc}')
 
@@ -208,13 +232,59 @@ class AirSimSource(Node):
             )
             if armed:
                 vx, vy, vz, yaw_rate = cmd
-                # 异步下发，不 .get()：命令已经交给 AirSim，等它执行完只会白占线程
-                client.moveByVelocityBodyFrameAsync(
-                    vx, vy, vz, self._cmd_duration, vehicle_name=self._vehicle)
-                if abs(yaw_rate) > 1e-3:
-                    client.rotateByYawRateAsync(
-                        math.degrees(yaw_rate), self._cmd_duration,
-                        vehicle_name=self._vehicle)
+                # 这套 Blocks 场景里速度指令会被忽略，位置指令才可靠；但位置
+                # 指令每帧重下发会让飞机几乎不动（控制器被反复重置）。实测
+                # 有效的办法是“移动路标”：维护一个沿速度方向前进的设定点，
+                # 只有设定点比上次下发的目标远出 0.6 m 时才重新下发一次。
+                pos = state.kinematics_estimated.position
+                quat = state.kinematics_estimated.orientation
+                _, _, yaw = airsim.to_eularian_angles(quat)
+                now = time.monotonic()
+                dt = min(0.5, max(0.01, now - self._last_tick))
+                self._last_tick = now
+                if self._setpoint is None:
+                    self._setpoint = (pos.x_val, pos.y_val, pos.z_val)
+                    self._last_sent = self._setpoint
+                cos_yaw = math.cos(yaw)
+                sin_yaw = math.sin(yaw)
+                world_vx = vx * cos_yaw - vy * sin_yaw
+                world_vy = vx * sin_yaw + vy * cos_yaw
+                sx, sy, sz = self._setpoint
+                # 速度为 0（悬停/到达）时不再推进路标，否则飞机越过终点还会继续飞
+                if math.hypot(math.hypot(vx, vy), vz) < 0.05:
+                    sx, sy, sz = pos.x_val, pos.y_val, pos.z_val
+                else:
+                    sx += world_vx * dt
+                    sy += world_vy * dt
+                    sz += vz * dt
+                # 路标不要跑得比飞机快太多，否则飞机会一直追不上
+                ox, oy, oz = sx - pos.x_val, sy - pos.y_val, sz - pos.z_val
+                offset = math.sqrt(ox * ox + oy * oy + oz * oz)
+                if offset > 1.5:
+                    sx = pos.x_val + ox / offset * 1.5
+                    sy = pos.y_val + oy / offset * 1.5
+                    sz = pos.z_val + oz / offset * 1.5
+                self._setpoint = (sx, sy, sz)
+                sent = self._last_sent
+                jump = math.dist(self._setpoint, sent)
+                # 即使路标没动也要周期性地重发：SimpleFlight 单条位置指令不会
+                # 一直生效，实测每 1 s 重发一次才能持续跟进。
+                stale = (now - self._last_cmd_time) > 1.0
+                if jump > 0.6 or stale:
+                    speed = max(0.8, math.sqrt(vx * vx + vy * vy + vz * vz))
+                    client.moveToPositionAsync(
+                        sx, sy, sz, speed, vehicle_name=self._vehicle)
+                    self._last_sent = self._setpoint
+                    self._last_cmd_time = now
+                    if abs(yaw_rate) > 0.05:
+                        client.rotateByYawRateAsync(
+                            math.degrees(yaw_rate), dt, vehicle_name=self._vehicle)
+                self._dbg = getattr(self, '_dbg', 0) + 1
+                if self._dbg % 10 == 0:
+                    self.get_logger().info(
+                        f'DBG pos=({pos.x_val:.2f},{pos.y_val:.2f},{pos.z_val:.2f}) '
+                        f'v=({vx:.2f},{vy:.2f},{vz:.2f}) '
+                        f'set=({sx:.2f},{sy:.2f},{sz:.2f})')
 
         self._publish_pose(state, stamp)
         if responses:

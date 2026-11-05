@@ -39,14 +39,19 @@ BUILDERS = {
 def _split_role(argv):
     """从命令行里取出 ``--role``，返回 (role, 去掉 role 后的参数列表)。
 
-    ROS2 自己的参数（``--ros-args`` 之后的部分）原样保留，交给 ``rclpy.init``。
+    只在 ``--ros-args`` 之前解析：ROS2 启动节点时会追加
+    ``--ros-args -r __node:=... -r __ns:=/uav --params-file ...``，
+    其中 ``-r`` 是重映射而不是 ``--role`` 的缩写，混在一起解析会误判。
     """
     role = 'all'
-    rest = []
-    index = 0
+    rest = argv[:1]
+    index = 1
     while index < len(argv):
         item = argv[index]
-        if item in ('--role', '-r') and index + 1 < len(argv):
+        if item == '--ros-args':
+            rest.extend(argv[index:])
+            break
+        if item == '--role' and index + 1 < len(argv):
             role = argv[index + 1]
             index += 2
             continue

@@ -147,8 +147,16 @@ class Planner(Node):
         if goal_cell is None:
             self.get_logger().error('目标点周围没有可通行的栅格，放弃本次规划')
             return
-        if self._is_blocked(start_cell):
-            self.get_logger().warn('起点位于障碍/膨胀区内，可能无法规划出路径')
+        # 无人机自己的位置常常正好压在膨胀区里（机身贴着地面时的深度点云
+        # 会把脚下标成障碍），起点也要就近挪到可通行栅格，否则每次都不可达。
+        free_start = self._nearest_free(start_cell)
+        if free_start is None:
+            self.get_logger().error('起点周围没有可通行的栅格，放弃本次规划')
+            return
+        if free_start != start_cell:
+            self.get_logger().warn(
+                f'起点位于障碍/膨胀区内，改用最近的可通行栅格 {free_start}')
+            start_cell = free_start
 
         begin = time.monotonic()
         cells = self._astar(start_cell, goal_cell)

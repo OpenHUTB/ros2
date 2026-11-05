@@ -151,6 +151,9 @@ class Controller(Node):
     def _vertical_speed(self, height):
         """高度保持：P 控制，NED 下向下为正，所以取负号。"""
         error = self._cruise_height - height
+        # 死区：几厘米的高度抖动不该让飞机一直上下打摆
+        if abs(error) < 0.25:
+            return 0.0
         return clamp(-self._kp_alt * error, -self._max_vz, self._max_vz)
 
     @staticmethod
