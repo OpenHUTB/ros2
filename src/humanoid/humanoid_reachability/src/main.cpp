@@ -55,6 +55,13 @@ public:
       rclcpp::shutdown();
       return;
     }
+    if (max_display_voxels_ < 0) {
+      // 负值转 size_t 会变成极大值，等同于不限制，这里直接按非法参数报错
+      RCLCPP_ERROR(get_logger(), "参数校验失败：max_display_voxels 不能为负数（0 表示不限制），节点退出");
+      params_valid_ = false;
+      rclcpp::shutdown();
+      return;
+    }
 
     arms_ = make_default_arms();
     for (int side = 0; side < 2; ++side) {

@@ -79,7 +79,7 @@ ros2 launch humanoid_reachability main.launch.py
 | `voxel_resolution` | 0.03 | 体素边长（m） |
 | `slice_height` | 0.05 | 高度切片厚度（m） |
 | `random_seed` | 2026 | 随机种子，保证结果可复现 |
-| `max_display_voxels` | 2500 | 单臂表面体素最大显示数量（超出后等间隔抽稀；设为 0 表示不限制） |
+| `max_display_voxels` | 2500 | 单臂表面体素最大显示数量（超出后等间隔抽稀；0 表示不限制，负值视为参数错误） |
 | `publish_rate` | 2.0 | 统计与 MarkerArray 发布频率（Hz） |
 | `publish_hz` | 20.0 | 演示节点关节角发布频率（Hz） |
 | `period` | 8.0 | 演示轨迹周期（s） |
