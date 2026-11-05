@@ -9,7 +9,6 @@ import rclpy
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry, Path as PathMsg
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 
 from ..encoder import N_OBS, encode
 from ..expert import LOOKAHEAD, steer

@@ -1,4 +1,6 @@
 """离线单元测试（不需要 ROS / MuJoCo）：观测编码、梯度、控制律、距离图。"""
+import math
+
 import numpy as np
 
 from policy_learning.encoder import N_OBS, PATCH, encode
@@ -58,6 +60,24 @@ def test_distance_map_and_descent():
     vals = [float(d[to_cell(g, x, y)[1], to_cell(g, x, y)[0]]) for x, y in path]
     assert all(b <= a + 1e-6 for a, b in zip(vals, vals[1:]))
     assert vals[-1] < vals[0]
+
+
+def test_astar_matches_value_descent():
+    """A* 与距离图下降应给出等长的路径，两条实现互为校验。"""
+    from policy_learning.planner import astar
+
+    g = planning_grid()
+    goal, start = (10.2, 10.2), (0.85, 3.05)
+    pa = astar(g, start, goal)
+    assert pa is not None
+
+    d = distance_map(g, goal)
+    pv = descend_path(d, g, start)
+    assert pv is not None
+
+    la = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pa, pa[1:]))
+    lv = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pv, pv[1:]))
+    assert abs(la - lv) < 0.5, (la, lv)
 
 
 def test_mlp_gradcheck():

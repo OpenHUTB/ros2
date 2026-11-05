@@ -9,8 +9,8 @@ from .main_train import main as train_main
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
-        argv = ["--all", "--episodes", "120", "--epochs", "150",
-                "--dagger", "2", "--dagger-episodes", "20"]
+        argv = ["--all", "--episodes", "200", "--epochs", "200",
+                "--dagger", "4", "--dagger-episodes", "20"]
     return train_main(argv)
 
 
