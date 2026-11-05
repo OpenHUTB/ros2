@@ -1,7 +1,13 @@
 <launch>
-  <!-- 时长与预览开关，避免必须改代码才能调 -->
-  <arg name="duration" default="8.0" description="完整视频的仿真时长（秒）"/>
-  <arg name="preview" default="false" description="只渲染 3 帧预览图，不写视频"/>
+  <!-- duration：完整视频时长（秒）；preview：只渲染 3 帧预览图、不写视频 -->
+  <arg name="duration" default="8.0" doc="完整视频的仿真时长（秒）"/>
+  <arg name="preview" default="false" doc="只渲染 3 帧预览图，不写视频"/>
+
+  <!-- 用 if/unless 拆成两条 node，不依赖 $(eval)，ROS1 各版本都能解析 -->
   <node pkg="shadow_hand_mujoco" type="main.py" name="shadow_hand_mujoco" output="screen" cwd="node"
-        args="--duration $(arg duration) $(eval '--preview' if arg('preview') == 'true' else '')"/>
+        args="--duration $(arg duration)" unless="$(arg preview)"/>
+  <node pkg="shadow_hand_mujoco" type="main.py" name="shadow_hand_mujoco" output="screen" cwd="node"
+        args="--duration $(arg duration) --preview" if="$(arg preview)"/>
+
+  <!-- cwd="node" 下相对路径以 node 目录为基准：roslaunch 启动时视频落在 devel/lib/shadow_hand_mujoco/output/ -->
 </launch>
