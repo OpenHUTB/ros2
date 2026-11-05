@@ -79,7 +79,7 @@ def grade() -> Scenario:
 
 
 def late_brake() -> Scenario:
-    """对照：不做曲线规划，一直跑到距站 700 m 才制动。"""
+    """对照：不做曲线规划，一直跑到距站 520 m 才制动（刹停约需 660 m，必然越位）。"""
     return Scenario(
         name='late_brake',
         title='晚制动（对照）',

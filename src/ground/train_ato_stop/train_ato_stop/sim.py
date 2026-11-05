@@ -93,7 +93,10 @@ def run(scenario: Scenario, spec: TrainSpec | None = None,
             cmd, note = command.accel, command.note
 
         if atp is not AtpState.NORMAL:
-            atp_time += dt
+            # 停车点附近允许速度趋近 0，那一段的越界没有意义，会和最后几米的
+            # 正常蠕动混在一起，所以与 over_permit 用同一条口径：距停车点 100 m 以外才计。
+            if x < scenario.stop_x - 100.0:
+                atp_time += dt
             if last_atp is not AtpState.INTERVENTION and atp is AtpState.INTERVENTION:
                 atp_events += 1
         last_atp = atp

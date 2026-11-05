@@ -53,7 +53,7 @@ def run_offline(output: str) -> dict:
 
 def _write_report(path: str, results: list[sim.SimResult]) -> None:
     lines = [
-        '| 场景 | 运行时间 | 最高速度 | 停车误差 | 牵引能耗 | ATP 介入 | 超速时长 |',
+        '| 场景 | 运行时间 | 最高速度 | 停车误差 | 牵引能耗 | ATP 介入 | 超线路限速时长 |',
         '|---|---|---|---|---|---|---|',
     ]
     for r in results:
