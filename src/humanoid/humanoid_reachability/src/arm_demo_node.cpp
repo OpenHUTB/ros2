@@ -2,9 +2,9 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <exception>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -14,11 +14,6 @@
 namespace humanoid_reachability
 {
 using std_msgs::msg::Float64MultiArray;
-
-namespace
-{
-constexpr double kPi = 3.14159265358979323846;
-}  // namespace
 
 /// 演示节点：在关节限位内生成连续正弦关节轨迹，供可达域节点做在线正运动学
 class ArmDemoNode : public rclcpp::Node
@@ -33,6 +28,7 @@ public:
 
     if (publish_hz_ <= 0.0 || period_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：publish_hz / period 必须为正数，节点退出");
+      rclcpp::shutdown();
       return;
     }
 

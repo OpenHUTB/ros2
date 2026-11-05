@@ -40,7 +40,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /reachable_workspace
+        Value: /humanoid_reachability/reachable_workspace
   Enabled: true
   Global Options:
     Background Color: 28; 30; 36

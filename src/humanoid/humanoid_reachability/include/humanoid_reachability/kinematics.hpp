@@ -10,6 +10,9 @@
 namespace humanoid_reachability
 {
 
+/// 圆周率常量，供运动学与演示节点共用，避免各文件重复定义
+constexpr double kPi = 3.14159265358979323846;
+
 /// 单臂自由度数目（肩 3 + 肘 1 + 腕 3）
 constexpr int kDof = 7;
 

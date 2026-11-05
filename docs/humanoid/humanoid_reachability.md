@@ -78,7 +78,7 @@ src/
    source install/setup.bash
    ```
 
-4. 启动节点（首次采样约 21 s，完成后才开始周期性发布）：
+4. 启动节点（节点立即进入 spin，工作空间计算由 1 ms one-shot timer 触发，采样约 21 s，此间不发布 MarkerArray）：
 
    ```
    ros2 launch humanoid_reachability main.launch.py
@@ -88,8 +88,8 @@ src/
 
    ```
    source install/setup.bash
-   ros2 topic echo /reachable_volume
-   ros2 topic echo /reachability_stats
+   ros2 topic echo /humanoid_reachability/reachable_volume
+   ros2 topic echo /humanoid_reachability/reachability_stats
    ```
 
 6. 可选：打开 RViz2 查看 MarkerArray（本虚拟机因 OGRE/llvmpipe 崩溃无法打开，见“运行效果”）：
@@ -103,12 +103,14 @@ src/
 | 话题 | 类型 | 说明 |
 | --- | --- | --- |
 | `/demo_joint_angles` | `std_msgs/msg/Float64MultiArray` | 输入：左臂 7 + 右臂 7 个关节角（rad） |
-| `/reachable_workspace` | `visualization_msgs/msg/MarkerArray` | 15 个标记：体素壳、切片、包围盒、骨架、轨迹、参考骨架 |
-| `/reachable_volume` | `std_msgs/msg/Float64MultiArray` | `[左臂体积, 右臂体积, 双臂并集体积]`（m³） |
-| `/reachable_bounds` | `std_msgs/msg/Float64MultiArray` | 左右臂包围盒，各 6 个值（xmin, xmax, ymin, ymax, zmin, zmax） |
-| `/reachability_stats` | `std_msgs/msg/String` | 采样数、体素、表面体素、体积、最大半径、包围盒汇总 |
-| `/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
-| `/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
+| `/humanoid_reachability/reachable_workspace` | `visualization_msgs/msg/MarkerArray` | 15 个标记：体素壳、切片、包围盒、骨架、轨迹、参考骨架 |
+| `/humanoid_reachability/reachable_volume` | `std_msgs/msg/Float64MultiArray` | `[左臂体积, 右臂体积, 双臂并集体积]`（m³） |
+| `/humanoid_reachability/reachable_bounds` | `std_msgs/msg/Float64MultiArray` | 左右臂包围盒，各 6 个值（xmin, xmax, ymin, ymax, zmin, zmax） |
+| `/humanoid_reachability/reachability_stats` | `std_msgs/msg/String` | 采样数、体素、表面体素、体积、最大半径、包围盒汇总 |
+| `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
+| `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
+
+命名约定：`humanoid_reachability_node` 的输出全部使用 `~/` 私有命名空间（实际解析为 `/humanoid_reachability/...`），多实例运行时互不抢占话题，也方便 remap；`/demo_joint_angles` 有意保持绝对路径，用于 `arm_demo_node` 与主节点之间松耦合，两个节点可以各自替换或单独启动。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -122,6 +124,8 @@ src/
 | `period` | 8.0 | 演示轨迹周期（s） |
 | `amplitude_scale` | 0.35 | 演示振幅相对关节限位半幅的系数 |
 
+以上参数只在 `config/params.yaml` 定义一处，launch 仅通过 `params_file` 加载，不再做硬编码覆盖；需要临时调整时请修改 yaml，或在单独启动节点时用 `--ros-args -p 参数名:=值`。
+
 ## 运行效果
 
 默认参数（每臂 200000 点、体素 0.03 m、切片 0.05 m、种子 2026）在该虚拟机上实测：
@@ -130,9 +134,9 @@ src/
 - 左臂：占用体素 **40409**（表面 25139），体积 **1.091 m³**，包围盒 x[-0.690, 0.690] y[-0.480, 0.900] z[0.720, 2.100]，最大伸展半径 **0.680 m**；
 - 右臂：占用体素 **40252**（表面 25149），体积 **1.087 m³**，包围盒 x[-0.690, 0.690] y[-0.900, 0.480] z[0.720, 2.100]，最大伸展半径 **0.680 m**；
 - 双臂并集体积 **1.760 m³**，重叠体素 **15480**（约 0.418 m³，占单臂体素 38.3%），说明正前方存在较大的双臂共享作业空间；
-- `/reachable_workspace` 的 15 个标记中，左右体素壳分别抽稀到 **2286 / 2287** 个立方体，切片各 28 层（140 个点），轨迹各 300 点。
+- `/humanoid_reachability/reachable_workspace` 的 15 个标记中，左右体素壳分别抽稀到 **2286 / 2287** 个立方体，切片各 28 层（140 个点），轨迹各 300 点。
 
-需要说明包围盒的口径：`/reachable_bounds` 与 MarkerArray 使用的是**占用体素的外沿**（体素中心 ± 半个体素，即 ±0.015 m），不是采样点的原始极值。因此左臂 y 上限为 0.900 m，比“肩点 0.20 m + 最大伸展半径 0.680 m = 0.880 m”多出约半个体素；x 上限 0.690 m 同理。这是体素统计的离散外扩，与最大伸展半径并不矛盾。
+需要说明包围盒的口径：`/humanoid_reachability/reachable_bounds` 与 MarkerArray 使用的是**占用体素的外沿**（体素中心 ± 半个体素，即 ±0.015 m），不是采样点的原始极值。因此左臂 y 上限为 0.900 m，比“肩点 0.20 m + 最大伸展半径 0.680 m = 0.880 m”多出约半个体素；x 上限 0.690 m 同理。这是体素统计的离散外扩，与最大伸展半径并不矛盾。
 
 ![双臂末端可达域分析动图](../../img/humanoid/humanoid_reachability/reachability_demo.gif)
 
@@ -146,9 +150,9 @@ src/
 
 - 干净工作空间编译通过：`Finished <<< humanoid_reachability [11.5s]`，`Summary: 1 package finished`；
 - 两个节点正常启动，采样完成后 `20.78 s` 内完成双臂统计；
-- `/reachable_volume`、`/reachable_bounds`、`/reachability_stats` 数值与 launch 日志一致；
-- `/reachable_workspace` 除首帧 1 个 `DELETEALL` 外，持续发布 15 个结构合法的标记，命名空间、`frame_id=world`、点集数量均已校验；
-- 左右臂末端坐标（`/demo_end_effector_left`、`/demo_end_effector_right` 与 300 点轨迹）随演示关节角连续变化；包围盒、体积与切片在采样阶段一次算出，运行期间保持不变。
+- `/humanoid_reachability/reachable_volume`、`/humanoid_reachability/reachable_bounds`、`/humanoid_reachability/reachability_stats` 数值与 launch 日志一致；
+- `/humanoid_reachability/reachable_workspace` 除首帧 1 个 `DELETEALL` 外，持续发布 15 个结构合法的标记，命名空间、`frame_id=world`、点集数量均已校验；
+- 左右臂末端坐标（`/humanoid_reachability/demo_end_effector_left`、`/humanoid_reachability/demo_end_effector_right` 与 300 点轨迹）随演示关节角连续变化；包围盒、体积与切片在采样阶段一次算出，运行期间保持不变。
 
 未完成 RViz2 人工视觉确认（原因见上）；动图由真实 MarkerArray 数据离线渲染，不含手工绘制的示意内容。机器人本体为程序内置的简化刚性臂链，不是 URDF 模型，也未包含碰撞体与自碰撞检测。
 

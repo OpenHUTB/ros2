@@ -60,16 +60,18 @@ ros2 launch humanoid_reachability main.launch.py
 | 话题 | 类型 | 说明 |
 | --- | --- | --- |
 | `/demo_joint_angles` | `std_msgs/msg/Float64MultiArray` | 输入：左臂 7 + 右臂 7 个关节角（rad） |
-| `/reachable_workspace` | `visualization_msgs/msg/MarkerArray` | 15 个标记：体素外壳、切片、包围盒、骨架、轨迹、静态参考骨架 |
-| `/reachable_volume` | `std_msgs/msg/Float64MultiArray` | `[左臂体积, 右臂体积, 双臂并集体积]`（m³） |
-| `/reachable_bounds` | `std_msgs/msg/Float64MultiArray` | 左臂、右臂包围盒，各 6 个值（xmin, xmax, ymin, ymax, zmin, zmax） |
-| `/reachability_stats` | `std_msgs/msg/String` | 多行汇总：每臂采样数、体素、表面体素、体积、最大半径、包围盒，末行为并集体积与重叠体素 |
-| `/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
-| `/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
+| `/humanoid_reachability/reachable_workspace` | `visualization_msgs/msg/MarkerArray` | 15 个标记：体素外壳、切片、包围盒、骨架、轨迹、静态参考骨架 |
+| `/humanoid_reachability/reachable_volume` | `std_msgs/msg/Float64MultiArray` | `[左臂体积, 右臂体积, 双臂并集体积]`（m³） |
+| `/humanoid_reachability/reachable_bounds` | `std_msgs/msg/Float64MultiArray` | 左臂、右臂包围盒，各 6 个值（xmin, xmax, ymin, ymax, zmin, zmax） |
+| `/humanoid_reachability/reachability_stats` | `std_msgs/msg/String` | 多行汇总：每臂采样数、体素、表面体素、体积、最大半径、包围盒，末行为并集体积与重叠体素 |
+| `/humanoid_reachability/demo_end_effector_left` | `geometry_msgs/msg/PointStamped` | 演示姿态下左臂末端参考点 |
+| `/humanoid_reachability/demo_end_effector_right` | `geometry_msgs/msg/PointStamped` | 演示姿态下右臂末端参考点 |
+
+话题命名约定：`humanoid_reachability_node` 自身的输出统一使用 `~/` 私有命名空间（即 `/humanoid_reachability/...`），因此同一工作空间启动多个实例时不会互相抢占话题，也便于用 `ros2 run ... --remap` 重映射；只有跨节点的 `/demo_joint_angles` 保持绝对路径，使 `arm_demo_node` 与主节点保持松耦合，任意一方都可以单独替换。
 
 ## 参数
 
-参数位于 `config/params.yaml`，可用 `ros2 launch ... samples_per_arm:=...` 覆盖前两项。
+参数统一写在 `config/params.yaml`，launch 只加载该文件、不再做任何硬编码覆盖，避免同一参数出现两处定义。需要临时调整时直接修改 yaml，或用 `ros2 run humanoid_reachability humanoid_reachability_node --ros-args -p samples_per_arm:=...` 单独启动节点。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -97,9 +99,9 @@ ros2 launch humanoid_reachability main.launch.py
 ros2 run rviz2 rviz2 -d ~/ros2_ws/install/humanoid_reachability/share/humanoid_reachability/rviz/reachability.rviz
 ```
 
-Fixed Frame 设为 `world`，MarkerArray 话题选择 `/reachable_workspace`。体素壳立方体按 `0.9 × voxel_resolution`（默认 0.027 m）绘制，留出缝隙避免相邻面重叠闪烁；左臂体素由青到绿、右臂由橙到红按高度渐变；切片为每层 x/y 范围的矩形线框，层内体素少于 5 个的切片不绘制；示例骨架与末端轨迹随演示节点实时更新；灰色 `body_skeleton` 为躯干/骨盆/下肢静态参考骨架，`body_head` 为半径 0.22 m 的半透明头部球（动图中按三向线框绘制），二者仅作空间参照，不参与可达域计算。
+Fixed Frame 设为 `world`，MarkerArray 话题选择 `/humanoid_reachability/reachable_workspace`（已在仓库配置中预填）。体素壳立方体按 `0.9 × voxel_resolution`（默认 0.027 m）绘制，留出缝隙避免相邻面重叠闪烁；左臂体素由青到绿、右臂由橙到红按高度渐变；切片为每层 x/y 范围的矩形线框，层内体素少于 5 个的切片不绘制；示例骨架与末端轨迹随演示节点实时更新；灰色 `body_skeleton` 为躯干/骨盆/下肢静态参考骨架，`body_head` 为半径 0.22 m 的半透明头部球（动图中按三向线框绘制），二者仅作空间参照，不参与可达域计算。
 
-若虚拟机显卡性能不足，可先只开数据话题（`/reachable_volume`、`/reachability_stats`）检查数值，再开 RViz2。
+若虚拟机显卡性能不足，可先只开数据话题（`/humanoid_reachability/reachable_volume`、`/humanoid_reachability/reachability_stats`）检查数值，再开 RViz2。
 
 > 本项目的验证虚拟机（VMware + llvmpipe）上 RViz2 启动即崩溃（`OGRE::UnimplementedException: pack to PF_UNKNOWN`、`AxisAlignedBox::setExtents` 断言），因此仓库动图由节点实际发布的 MarkerArray 数据在虚拟机内离线渲染，未做 RViz2 人工视觉确认。
 
@@ -113,7 +115,7 @@ Fixed Frame 设为 `world`，MarkerArray 话题选择 `/reachable_workspace`。�
 - 并集体积 1.760 m³，重叠体素 15480（约 0.418 m³，占单臂体素 38.3%）；
 - MarkerArray 稳定为 15 个标记（首帧另带 1 个 `DELETEALL` 清理旧显示），左右体素壳各抽稀到 2286 / 2287 个立方体，切片各 28 层。
 
-包围盒口径说明：`/reachable_bounds` 与 MarkerArray 使用占用体素的外沿（体素中心 ± 半个体素 = ±0.015 m），不是采样点原始极值。因此左臂 y 上限 0.900 m 会比“肩点 0.20 m + 最大伸展 0.680 m = 0.880 m”多出约半个体素，x 上限 0.690 m 同理；这是离散外扩，与最大伸展半径不矛盾。
+包围盒口径说明：`/humanoid_reachability/reachable_bounds` 与 MarkerArray 使用占用体素的外沿（体素中心 ± 半个体素 = ±0.015 m），不是采样点原始极值。因此左臂 y 上限 0.900 m 会比“肩点 0.20 m + 最大伸展 0.680 m = 0.880 m”多出约半个体素，x 上限 0.690 m 同理；这是离散外扩，与最大伸展半径不矛盾。
 
 ![双臂末端可达域分析动图](../../../docs/img/humanoid/humanoid_reachability/reachability_demo.gif)
 

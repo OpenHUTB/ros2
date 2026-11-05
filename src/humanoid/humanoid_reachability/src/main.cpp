@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cmath>
 #include <deque>
-#include <stdexcept>
+#include <exception>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -44,10 +44,13 @@ public:
 
     if (voxel_resolution_ <= 0.0 || slice_height_ <= 0.0 || publish_rate_ <= 0.0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：voxel_resolution / slice_height / publish_rate 必须为正数，节点退出");
+      // 在构造函数内直接请求关闭，避免 launch 层看到节点“启动成功却什么都不做”
+      rclcpp::shutdown();
       return;
     }
     if (samples_per_arm_ <= 0) {
       RCLCPP_ERROR(get_logger(), "参数校验失败：samples_per_arm 必须为正整数，节点退出");
+      rclcpp::shutdown();
       return;
     }
 
@@ -216,6 +219,10 @@ private:
 
   void publish_all()
   {
+    // one-shot timer 初始化完成前 grids_ 仍为空，跳过本帧发布
+    if (!grids_[0] || !grids_[1]) {
+      return;
+    }
     marker_pub_->publish(build_markers());
     volume_pub_->publish(build_volume_msg());
     bounds_pub_->publish(build_bounds_msg());
@@ -358,9 +365,8 @@ private:
 
     size_t stride = 1;
     if (max_display_voxels_ > 0 && surface.size() > static_cast<size_t>(max_display_voxels_)) {
-      // 整数除法向下取整：surface.size()/max 约等于 1/N 抽稀比例；
-      // surface 接近 max 时 stride=1，不丢体素。
-      stride = surface.size() / static_cast<size_t>(max_display_voxels_);
+      // 整数除法向下取整得到抽稀步长；显式钳到 >= 1，保证不会出现 stride=0（除零/死循环）
+      stride = std::max<size_t>(1, surface.size() / static_cast<size_t>(max_display_voxels_));
     }
 
     const double z_span = std::max(1e-3, stats.max_bound.z() - stats.min_bound.z());

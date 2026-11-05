@@ -7,8 +7,6 @@ namespace humanoid_reachability
 {
 namespace
 {
-constexpr double kPi = 3.14159265358979323846;
-
 double deg2rad(double deg)
 {
   return deg * kPi / 180.0;
@@ -73,6 +71,7 @@ ChainPoints forward_kinematics(const ArmModel & arm, const JointAngles & q)
   Eigen::Vector3d tool = transform * Eigen::Vector3d(arm.tool_offset, 0.0, 0.0);
   points[kDof + 1] = tool;
 
+  // 右臂复用左臂几何：先按左臂（shoulder_y > 0）做 FK，再整体把 y 取反得到镜像解
   if (arm.side < 0) {
     for (auto & point : points) {
       point.y() = -point.y();
