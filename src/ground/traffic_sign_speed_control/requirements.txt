@@ -1,0 +1,8 @@
+# 运行依赖（python3 -m pip install -r requirements.txt）
+# Ubuntu 也可用 apt 提供 numpy/opencv/Pillow（python3-numpy、python3-opencv、python3-pil）；
+# mujoco 无头环境需 OSMesa 支持（libosmesa6 / libglfw3）。
+mujoco>=3.0
+torch==2.4.1
+numpy
+opencv-python
+Pillow
