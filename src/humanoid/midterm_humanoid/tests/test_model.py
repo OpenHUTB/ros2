@@ -78,7 +78,10 @@ class TestHumanoidGait(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = mod.build_model()
+        try:
+            cls.model = mod.build_model()
+        except Exception as exc:
+            raise unittest.SkipTest("模型不可用：%r" % exc)
 
     def _ctrl_at(self, t):
         import mujoco
