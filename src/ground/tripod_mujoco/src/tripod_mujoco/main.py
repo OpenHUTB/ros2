@@ -140,14 +140,19 @@ def make_controller(model):
     return ctrl
 
 
+def build_model():
+    """构建模型（主流程与单元测试共用）。"""
+    return mujoco.MjModel.from_xml_string(XML)
+
+
 def main():
     args = parse_args()
-    model = mujoco.MjModel.from_xml_string(XML)
+    model = build_model()
     controller = make_controller(model)
     out = args.out or "output/sim_video.mp4"
     run_sim(
         model, controller,
-        duration=1.5 if args.preview else 8.0,
+        duration=1.5 if args.preview else (8 if args.duration is None else args.duration),
         fps=30,
         video_path=None if args.preview else out,
         preview_dir="output/preview" if args.preview else None,
