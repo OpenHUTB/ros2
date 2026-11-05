@@ -68,6 +68,7 @@ ROS每章节运行代码:
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
@@ -140,6 +141,7 @@ ROS每章节运行代码:
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
+* [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
