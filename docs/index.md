@@ -181,6 +181,7 @@ ROS每章节运行代码:
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+* [通信链路质量驱动的分级降级与失联返航](./air/uav_link_aware_degradation.md) —— 把遥控链路本身作为安全对象：命令年龄/投递率驱动 NORMAL→DEGRADED→RETURN→LAND，与沿用最后指令、超时悬停同场对照
 
 * [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
 

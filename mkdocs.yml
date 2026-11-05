@@ -171,6 +171,7 @@ nav:
     - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
     - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
+    - 通信链路质量驱动的分级降级与失联返航: './air/uav_link_aware_degradation.md'
     - 无人机火灾探测与自主巡检: './air/fire_detection_drone.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
     - 无人机目标高度限幅、变化率约束与超时保持: './air/uav_altitude_command_guard.md'

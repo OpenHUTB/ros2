@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_link_aware_degradation</name>
+  <version>0.1.0</version>
+  <description>
+    通信链路质量驱动的无人机分级降级与失联返航：用命令年龄、滑窗投递率、
+    抖动估计链路质量，按 NORMAL → DEGRADED → RETURN → LAND 四态切换指令来源，
+    并在 MuJoCo 走廊场景下与“沿用最后指令”“超时悬停”两种常见做法做对照。
+  </description>
+  <maintainer email="zqhuang76@users.noreply.github.com">zqhuang76</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>uav_mujoco_sim</depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
