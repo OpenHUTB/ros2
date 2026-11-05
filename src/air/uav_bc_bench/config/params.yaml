@@ -1,0 +1,10 @@
+uav_bc_bench:
+  ros__parameters:
+    dataset_dir: ~/.ros/uav_depth_track_nn/data
+    output_dir: ~/.ros/uav_bc_bench
+    epochs: 30
+    seeds: 3
+    batch_size: 32
+    structures: 'mlp,cnn,cnn_wide'
+    augment: true
+    image_size: 64
