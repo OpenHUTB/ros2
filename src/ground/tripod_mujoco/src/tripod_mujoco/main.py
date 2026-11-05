@@ -22,7 +22,7 @@ import mujoco  # noqa: E402
 
 XML = """
 <mujoco model="tripod_robot">
-  <compiler angle="degree" inertiafromgeom="true" autolimits="true"/>
+  <compiler angle="radian" inertiafromgeom="true" autolimits="true"/>
   <option timestep="0.002"/>
 
   <default>
@@ -41,8 +41,8 @@ XML = """
   <worldbody>
     <light directional="true" pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
     <geom name="ground" type="plane" size="5 5 0.1" material="mat_ground"/>
-    <camera name="view0" mode="track" target="torso" fovy="45"
-            pos="0 -2.0 0.9" xyaxes="1 0 0 0 0.28 0.96"/>
+    <camera name="view0" mode="targetbody" target="torso" fovy="45"
+            pos="1.15 -1.75 0.60"/>
 
     <body name="torso" pos="0 0 0.35">
       <freejoint/>
@@ -51,11 +51,11 @@ XML = """
 
       <!-- 腿1: 前方 0度 -->
       <body name="hip_1" pos="0.07 0 0">
-        <joint name="hip_abd_1" type="hinge" axis="0 1 0" range="-30 30"/>
-        <joint name="hip_rot_1" type="hinge" axis="0 0 1" range="-45 45"/>
+        <joint name="hip_abd_1" type="hinge" axis="0 1 0" range="-0.524 0.524"/>
+        <joint name="hip_rot_1" type="hinge" axis="0 0 1" range="-0.785 0.785"/>
         <geom name="hip_ball_1" type="sphere" size="0.03"/>
         <body name="thigh_1" pos="0.05 0 -0.05">
-          <joint name="knee_1" type="hinge" axis="0 1 0" range="-90 10"/>
+          <joint name="knee_1" type="hinge" axis="0 1 0" range="-1.571 0.175"/>
           <geom name="thigh_geom_1" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
           <body name="shin_1" pos="0 0 -0.16">
             <geom name="shin_geom_1" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
@@ -65,12 +65,12 @@ XML = """
       </body>
 
       <!-- 腿2: 左后方 120度 -->
-      <body name="hip_2" pos="-0.035 0.0606 0">
-        <joint name="hip_abd_2" type="hinge" axis="0 1 0" range="-30 30"/>
-        <joint name="hip_rot_2" type="hinge" axis="0 0 1" range="-45 45"/>
+      <body name="hip_2" pos="-0.035 0.0606 0" euler="0 0 2.0944">
+        <joint name="hip_abd_2" type="hinge" axis="0 1 0" range="-0.524 0.524"/>
+        <joint name="hip_rot_2" type="hinge" axis="0 0 1" range="-0.785 0.785"/>
         <geom name="hip_ball_2" type="sphere" size="0.03"/>
         <body name="thigh_2" pos="0.05 0 -0.05">
-          <joint name="knee_2" type="hinge" axis="0 1 0" range="-90 10"/>
+          <joint name="knee_2" type="hinge" axis="0 1 0" range="-1.571 0.175"/>
           <geom name="thigh_geom_2" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
           <body name="shin_2" pos="0 0 -0.16">
             <geom name="shin_geom_2" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
@@ -80,12 +80,12 @@ XML = """
       </body>
 
       <!-- 腿3: 右后方 240度 -->
-      <body name="hip_3" pos="-0.035 -0.0606 0">
-        <joint name="hip_abd_3" type="hinge" axis="0 1 0" range="-30 30"/>
-        <joint name="hip_rot_3" type="hinge" axis="0 0 1" range="-45 45"/>
+      <body name="hip_3" pos="-0.035 -0.0606 0" euler="0 0 4.1888">
+        <joint name="hip_abd_3" type="hinge" axis="0 1 0" range="-0.524 0.524"/>
+        <joint name="hip_rot_3" type="hinge" axis="0 0 1" range="-0.785 0.785"/>
         <geom name="hip_ball_3" type="sphere" size="0.03"/>
         <body name="thigh_3" pos="0.05 0 -0.05">
-          <joint name="knee_3" type="hinge" axis="0 1 0" range="-90 10"/>
+          <joint name="knee_3" type="hinge" axis="0 1 0" range="-1.571 0.175"/>
           <geom name="thigh_geom_3" type="capsule" size="0.025 0.08" pos="0 0 -0.08" material="mat_leg"/>
           <body name="shin_3" pos="0 0 -0.16">
             <geom name="shin_geom_3" type="capsule" size="0.02 0.07" pos="0 0 -0.07" material="mat_leg"/>
@@ -97,20 +97,20 @@ XML = """
   </worldbody>
 
   <actuator>
-    <position name="hip_abd_1" joint="hip_abd_1" kp="30" ctrlrange="-0.6 0.6"/>
-    <position name="hip_rot_1" joint="hip_rot_1" kp="50" ctrlrange="-1.0 1.0"/>
-    <position name="knee_1" joint="knee_1" kp="50" ctrlrange="-1.6 0.3"/>
-    <position name="hip_abd_2" joint="hip_abd_2" kp="30" ctrlrange="-0.6 0.6"/>
-    <position name="hip_rot_2" joint="hip_rot_2" kp="50" ctrlrange="-1.0 1.0"/>
-    <position name="knee_2" joint="knee_2" kp="50" ctrlrange="-1.6 0.3"/>
-    <position name="hip_abd_3" joint="hip_abd_3" kp="30" ctrlrange="-0.6 0.6"/>
-    <position name="hip_rot_3" joint="hip_rot_3" kp="50" ctrlrange="-1.0 1.0"/>
-    <position name="knee_3" joint="knee_3" kp="50" ctrlrange="-1.6 0.3"/>
+    <position name="hip_abd_1" joint="hip_abd_1" kp="30" ctrlrange="-0.524 0.524"/>
+    <position name="hip_rot_1" joint="hip_rot_1" kp="50" ctrlrange="-0.785 0.785"/>
+    <position name="knee_1" joint="knee_1" kp="50" ctrlrange="-1.571 0.175"/>
+    <position name="hip_abd_2" joint="hip_abd_2" kp="30" ctrlrange="-0.524 0.524"/>
+    <position name="hip_rot_2" joint="hip_rot_2" kp="50" ctrlrange="-0.785 0.785"/>
+    <position name="knee_2" joint="knee_2" kp="50" ctrlrange="-1.571 0.175"/>
+    <position name="hip_abd_3" joint="hip_abd_3" kp="30" ctrlrange="-0.524 0.524"/>
+    <position name="hip_rot_3" joint="hip_rot_3" kp="50" ctrlrange="-0.785 0.785"/>
+    <position name="knee_3" joint="knee_3" kp="50" ctrlrange="-1.571 0.175"/>
   </actuator>
 
   <keyframe>
-    <!-- freejoint 7 项 + 9 关节：hip_abd 0、hip_rot 0、knee -0.55 rad（初始屈膝，脚贴地） -->
-    <key name="stand" qpos="0 0 0.35 1 0 0 0 0 0 -0.55 0 0 -0.55 0 0 -0.55"/>
+    <!-- freejoint 7 项 + 9 关节：hip_abd 0、hip_rot 0、knee -0.35 rad（初始屈膝，脚贴地） -->
+    <key name="stand" qpos="0 0 0.38 1 0 0 0 0 0 -0.35 0 0 -0.35 0 0 -0.35"/>
   </keyframe>
 
   <visual>
@@ -120,9 +120,9 @@ XML = """
 """
 
 FREQ = 0.8       # 步频 Hz（三角步态）
-A_ROT = 0.45     # hip_rot 前后摆幅 rad（±25.8°，在 ±45° 限位内）
+A_ROT = 0.16     # hip_rot 前后摆幅 rad（±9°，小步幅保证开环也能站稳）
 KNEE_BASE = -0.35  # 屈膝基准 rad（-20°）
-LIFT = 0.45      # 摆动相额外屈膝抬脚 rad
+LIFT = 0.35      # 摆动相额外屈膝抬脚 rad
 
 
 def make_controller(model):
