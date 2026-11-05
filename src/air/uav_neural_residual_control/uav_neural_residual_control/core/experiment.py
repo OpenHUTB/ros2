@@ -28,6 +28,8 @@ __all__ = ["RunRecord", "run_once", "run_grid", "save_results", "load_results",
 #: 起点取在轨迹上（含初始偏航）。四旋翼的偏航力矩受混控预算约束，
 #: 从偏航误差 90° 的地方起飞会挤掉滚转/俯仰的权限、直接翻机（见 dataset.run）。
 START_ON_TRAJ = True
+#: START_ON_TRAJ=False 时的固定起点，与模块文档中的 (0, 0, 1.2) 一致
+START_POS = (0.0, 0.0, 1.2)
 SETTLE = 3.0
 DEFAULT_CONTROLLERS = ("pid", "geo", "geo_res", "geo_rls")
 DEFAULT_PAYLOADS = ("none", "light", "heavy", "extra")
