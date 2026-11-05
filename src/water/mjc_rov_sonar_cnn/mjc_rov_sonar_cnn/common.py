@@ -39,15 +39,19 @@ def generate_sonar_image(rov_xy: np.ndarray,
                         size: int = 64,
                         rock_intensity: float = 0.6,
                         pipe_intensity: float = 0.9,
-                        wreck_intensity: float = 0.35) -> np.ndarray:
+                        wreck_intensity: float = 0.35,
+                        noise_sigma: float = 0.05,
+                        rng=None) -> np.ndarray:
     """
     合成侧扫声呐图像：池底三类目标物在 ROV 视角下的灰度强度图。
     为什么这么做：真实侧扫声呐回波强度随目标物材质/距离变化，
     这里用高斯亮斑近似每类目标物的声呐回波，作为 CNN 的训练输入。
     各类强度作为参数传入，让数据集可以按 label 控制哪类亮。
 
-    返回 (size, size) uint8 灰度图。
+    ``rng`` 可传入 ``numpy.random.RandomState`` 以便复现噪声；不传时沿用全局随机数，
+    与旧行为一致。返回 (size, size) uint8 灰度图。
     """
+    noise_rng = rng if rng is not None else np.random
     img = np.zeros((size, size), dtype=np.float32)
     def to_px(x, y):
         cx = int((x + 5.0) / 10.0 * size)
@@ -68,6 +72,6 @@ def generate_sonar_image(rov_xy: np.ndarray,
     add_blobs(pipe_pos, pipe_intensity, sigma=2)
     add_blobs(wreck_pos, wreck_intensity, sigma=3)
 
-    img += np.random.randn(size, size) * 0.05
+    img += noise_rng.randn(size, size) * noise_sigma
     img = np.clip(img, 0, 1)
     return (img * 255).astype(np.uint8)

@@ -39,9 +39,9 @@ class SyntheticSonarDataset(Dataset):
     为什么用合成数据：真实声呐数据需要海试采集，课程环境不可能有；
     用 MuJoCo 场景几何生成合成图，CNN 学会"从声呐纹理分类目标物"这个任务。
     """
-    def __init__(self, n_samples=600):
+    def __init__(self, n_samples=600, seed=42):
         self.samples = []
-        rng = np.random.RandomState(42)
+        rng = np.random.RandomState(seed)
         for _ in range(n_samples):
             # 随机 ROV 位置
             rov_xy = np.array([rng.uniform(-4, 4), rng.uniform(-4, 4)])
@@ -101,15 +101,19 @@ def train_cnn(epochs: int = 30, lr: float = 1e-3):
     return history
 
 
-def test_cnn():
-    """在合成测试集上打印准确率。"""
+def test_cnn(seed=42, n_samples=200):
+    """在合成测试集上打印准确率。
+
+    注意：``seed`` 默认与训练集相同（42），此时测试样本是训练集的前 ``n_samples`` 张，
+    准确率会虚高。要测真实泛化请传一个不同的种子，例如 ``test_cnn(seed=1234)``。
+    """
     wpath = common.find_weights_path()
     if not wpath.exists():
         raise FileNotFoundError(f"找不到权重 {wpath}，请先运行: python3 main.py train")
     net = SonarCNN()
     net.load_state_dict(torch.load(wpath, map_location="cpu"))
     net.eval()
-    ds = SyntheticSonarDataset(n_samples=200)
+    ds = SyntheticSonarDataset(n_samples=n_samples, seed=seed)
     correct = 0
     with torch.no_grad():
         for img, label in ds:
@@ -118,5 +122,5 @@ def test_cnn():
             if pred == label:
                 correct += 1
     acc = correct / len(ds)
-    print(f"[test] 合成测试集准确率: {acc:.3f} ({correct}/{len(ds)})")
+    print(f"[test] 合成测试集准确率: {acc:.3f} ({correct}/{len(ds)})  seed={seed}")
     return acc
