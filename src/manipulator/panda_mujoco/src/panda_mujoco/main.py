@@ -64,7 +64,7 @@ def main():
     if args.preview:
         run_sim(model, ctrl, duration=1.6, fps=30, preview_dir="output/preview")
     else:
-        run_sim(model, ctrl, duration=8.0, fps=30, video_path=args.out or "output/panda_motion.mp4")
+        run_sim(model, ctrl, duration=(8.0 if args.duration is None else args.duration), fps=30, video_path=args.out or "output/panda_motion.mp4")
 
 
 if __name__ == "__main__":
