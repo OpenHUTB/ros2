@@ -21,7 +21,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 
 from uav_depth_track_nn.model import (DEFAULT_IMAGE_SIZE, DEFAULT_MAX_DEPTH,
-                                      TrackNet, preprocess_depth,
+                                      TrackNet, blend_command, preprocess_depth,
                                       reference_point, track_features)
 
 
