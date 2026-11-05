@@ -141,6 +141,8 @@ pip install -r requirements.txt
 cd src/humanoid/midterm_humanoid
 python3 main.py            # 输出 output/robot_sim.mp4
 python3 main.py --preview  # 只跑 1.5 秒，输出 3 张 PNG 检查取景
+python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 8.0
+python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
 无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
 
@@ -149,7 +151,9 @@ python3 main.py --preview  # 只跑 1.5 秒，输出 3 张 PNG 检查取景
 # 将本模块软链到工作空间 src 下，然后
 catkin_make
 source devel/setup.bash
-roslaunch midterm_humanoid main.launch
+roslaunch midterm_humanoid main.launch                  # 默认（8.0 秒）
+roslaunch midterm_humanoid main.launch duration:=3.0    # 自定义时长
+roslaunch midterm_humanoid main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
 
 ---
@@ -175,7 +179,7 @@ roslaunch midterm_humanoid main.launch
 | 平均每帧渲染 | 5.9 ms/帧 |
 | 跟踪误差（kp=20） | 手臂 RMS 0.095 rad（≈5.4°），腿部 RMS 0.171 rad（≈9.8°） |
 | 依赖版本 | mujoco 3.2.3、numpy、imageio、imageio-ffmpeg |
-| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch midterm_humanoid main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认 |
+| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch midterm_humanoid main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认；单元测试 `python3 -m unittest discover -s tests` 已在本机 MuJoCo 3.2.3 与 3.17 双版本通过（7 项） |
 
 ### 7.2 关节角跟踪误差曲线
 
@@ -204,6 +208,7 @@ kp=20 默认参数下，8 秒仿真（100 Hz 步进）四个关节的跟踪误�
 
 ```
 midterm_humanoid/
+├── tests/               # 单元测试（python -m unittest discover -s tests）
 ├── setup.py             # setuptools 配置（catkin_python_setup 需要）
 ├── package.xml          # catkin 包描述
 ├── CMakeLists.txt       # catkin_python_setup + 只安装 main.py 入口

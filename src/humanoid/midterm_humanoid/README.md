@@ -25,6 +25,8 @@ pip install -r requirements.txt
 cd src/humanoid/midterm_humanoid
 python3 main.py            # 输出 output/robot_sim.mp4
 python3 main.py --preview  # 只渲染 1.5 秒，输出 3 张预览 PNG 检查取景
+python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 8.0
+python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 python3 main.py --out 自定义.mp4
 ```
 无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
@@ -36,7 +38,9 @@ ln -s 本仓库路径/src/humanoid/midterm_humanoid .
 cd 你的工作空间
 catkin_make
 source devel/setup.bash
-roslaunch midterm_humanoid main.launch
+roslaunch midterm_humanoid main.launch                  # 默认（8.0 秒）
+roslaunch midterm_humanoid main.launch duration:=3.0    # 自定义时长
+roslaunch midterm_humanoid main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
 包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/midterm_humanoid/`
 安装为 Python 包，`roslaunch` 下 `main.py` 以 `from midterm_humanoid.common import ...` 导入公共库；
@@ -52,6 +56,7 @@ roslaunch midterm_humanoid main.launch
 ## 📄 文件结构
 ```
 midterm_humanoid/
+├── tests/               # 单元测试（python -m unittest discover -s tests）
 ├── setup.py             # setuptools 配置（catkin_python_setup 需要）
 ├── package.xml          # catkin 包描述
 ├── CMakeLists.txt       # catkin_python_setup + 只安装 main.py 入口
