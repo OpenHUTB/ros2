@@ -124,6 +124,7 @@ ROS每章节运行代码:
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
+* [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
