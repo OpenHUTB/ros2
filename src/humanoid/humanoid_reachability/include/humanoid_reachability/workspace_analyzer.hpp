@@ -52,6 +52,8 @@ public:
   Eigen::Vector3d voxel_center(int ix, int iy, int iz) const;
 
 private:
+  // pack/unpack: 每个轴用 21 bit 有符号编码 (±1048576 个体素)，
+  // 默认 0.03 m 分辨率可覆盖 ±31457 m，远超人形机器人可达域。
   static int64_t pack(int x, int y, int z);
   static void unpack(int64_t key, int & x, int & y, int & z);
 
