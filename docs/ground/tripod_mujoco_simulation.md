@@ -146,7 +146,7 @@ python3 main.py --preview  # 只渲染 3 帧预览图到 output/preview/
 python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 8.0
 python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
-无显示器环境：`MUJOCO_GL=osmesa python3 main.py`（Windows 自动用 wgl）。
+Linux 无显示环境默认自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
 
 ### 5.2 作为 catkin 包 roslaunch 启动（ROS 环境）
 ```bash
