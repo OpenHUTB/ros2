@@ -165,3 +165,14 @@ ros2 service call /uav_mission_safety_manager/dump_log std_srvs/srv/Trigger '{}'
 
 状态停留时长由相邻状态迁移的时间差累加，最后一次迁移到导出时刻的时长也计入。记录只影响可观测性，不改变控制行为。
 
+### 统计口径（环形缓冲丢弃旧事件后）
+
+`record_max_events` 是**有界**的：事件数超过上限后，最旧的事件被丢弃，`summary.dropped` 记录丢弃数量。因此：
+
+- `summary.events` 是**当前仍保留**的事件数，不是整段飞行的总事件数；
+- `state_durations_s` 只统计**保留区间**内的状态段——反映的是“最近一段时间的状态分布”，会短于整段飞行的真实时长；
+- `seq` 是全局单调递增序号（不因丢弃而回绕），从导出的 `seq` 区间可以判断这次结果覆盖的是哪一段。
+
+需要完整统计时，可以调大 `record_max_events`，或在飞行中定期调用 `dump_log`（每次导出当前缓冲区），再把多次导出按 `seq` 拼接。
+
+
