@@ -14,7 +14,7 @@
 | `verify_armscrew.py` | 验证脚本（IK 精度 / 全流程贴合与下沉 / glfw 实时渲染） |
 | `README.md` | 本项目说明 |
 | `docs/mujoco_arm_screw.md` | 设计与验证文档 |
-| `docs/mujoco_arm_demo.gif` | 效果图（拧螺丝动画，450 帧 / 15 秒） |
+| `docs/mujoco_arm_demo.gif` | 效果图（拧螺丝动画，150 帧 / 15 秒） |
 
 ## 运行
 
