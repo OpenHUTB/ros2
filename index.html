@@ -268,6 +268,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/carla_platoon/">多车协同编队（CARLA）</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -610,8 +612,9 @@
 <li><a href="ground/carla_auto_light/">地面载具灯光自动控制</a></li>
 <li><a href="ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a></li>
 <li><a href="ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a></li>
+<li><a href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a> —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照</li>
 <li>
-<p><a href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a> —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照</p>
+<p><a href="ground/carla_platoon/">多车协同编队（CARLA）</a> —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队</p>
 </li>
 <li>
 <p><a href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a> —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律</p>
