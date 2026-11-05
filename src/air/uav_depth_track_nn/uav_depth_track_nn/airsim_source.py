@@ -48,6 +48,8 @@ class AirSimSource(Node):
         self.declare_parameter('camera_frame_id', 'uav_camera')
         self.declare_parameter('takeoff_height', 1.5)
         self.declare_parameter('climb_speed', 1.5)
+        self.declare_parameter('setpoint_lead', 1.5)
+        self.declare_parameter('setpoint_jump', 0.6)
 
         self._ip = str(self.get_parameter('airsim_ip').value)
         self._port = int(self.get_parameter('airsim_port').value)
@@ -61,6 +63,8 @@ class AirSimSource(Node):
         self._camera_frame = str(self.get_parameter('camera_frame_id').value)
         self._takeoff_height = float(self.get_parameter('takeoff_height').value)
         self._climb_speed = float(self.get_parameter('climb_speed').value)
+        self._setpoint_lead = float(self.get_parameter('setpoint_lead').value)
+        self._setpoint_jump = float(self.get_parameter('setpoint_jump').value)
 
         self._lock = threading.Lock()
         self._client = None
@@ -148,7 +152,18 @@ class AirSimSource(Node):
                 # 实测：这套 Blocks 场景里 moveByVelocityZ 常常被忽略，但
                 # moveToPosition 稳定有效，所以起飞用位置指令一步到位。
                 target = -self._takeoff_height
-                z = 0.0
+                z = float(self._client.getMultirotorState(
+                    vehicle_name=self._vehicle)
+                    .kinematics_estimated.position.z_val)
+                if z > -1.0:
+                    # takeoffAsync 之后偶尔停在 0.8 m 左右，位置指令会被地面约束
+                    # 吃掉；先给 1.5 s 垂直速度把飞机"拔起来"，再切位置控制。
+                    try:
+                        self._client.moveByVelocityZAsync(
+                            0.0, 0.0, -1.0, 1.5,
+                            vehicle_name=self._vehicle).join()
+                    except Exception:  # noqa: BLE001
+                        pass
                 # moveToPosition 有时会在爬升途中提前返回，重试几次把高度补足，
                 # 否则飞机停在 0.8 m 左右，上层会一直认为"还没起飞"。
                 for _ in range(3):
@@ -274,17 +289,17 @@ class AirSimSource(Node):
                 # 路标不要跑得比飞机快太多，否则飞机会一直追不上
                 ox, oy, oz = sx - pos.x_val, sy - pos.y_val, sz - pos.z_val
                 offset = math.sqrt(ox * ox + oy * oy + oz * oz)
-                if offset > 1.5:
-                    sx = pos.x_val + ox / offset * 1.5
-                    sy = pos.y_val + oy / offset * 1.5
-                    sz = pos.z_val + oz / offset * 1.5
+                if offset > self._setpoint_lead:
+                    sx = pos.x_val + ox / offset * self._setpoint_lead
+                    sy = pos.y_val + oy / offset * self._setpoint_lead
+                    sz = pos.z_val + oz / offset * self._setpoint_lead
                 self._setpoint = (sx, sy, sz)
                 sent = self._last_sent
                 jump = math.dist(self._setpoint, sent)
                 # 即使路标没动也要周期性地重发：SimpleFlight 单条位置指令不会
                 # 一直生效，实测每 1 s 重发一次才能持续跟进。
                 stale = (now - self._last_cmd_time) > 1.0
-                if jump > 0.6 or stale:
+                if jump > self._setpoint_jump or stale:
                     speed = max(0.8, math.sqrt(vx * vx + vy * vy + vz * vz))
                     client.moveToPositionAsync(
                         sx, sy, sz, speed, vehicle_name=self._vehicle)

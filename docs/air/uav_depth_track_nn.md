@@ -78,8 +78,7 @@ ros2 launch uav_depth_track_nn main.launch.py airsim_port:=8080 vehicle_name:=dr
 | `lookahead_angle` | 0.55 | 前视相位（rad） |
 | `image_size` | 64 | 网络输入边长 |
 | `max_depth` | 40.0 | 深度截断（m），用于滤掉天空的 1e4 |
-| `stabilizer_gain` | 1.4 | 参考项增益 |
-| `max_residual` | 0.25 | 网络输出限幅（m/s） |
+| `stabilizer_gain` | 0.0 | 可选几何兜底项增益（默认关闭，见 5.4） |
 | `max_speed` | 2.0 | 合速度上限（m/s） |
 | `laps` | 2.0 | 采集圈数 |
 
@@ -138,14 +137,20 @@ $$
 
 $$
 \begin{aligned}
-v_x &= \operatorname{clip}\left(g\cdot 5 f_1 + \hat v_x,\; -v_{\max},\; v_{\max}\right)\\
-v_y &= \operatorname{clip}\left(g\cdot 5 f_2 + \hat v_y,\; -v_{\max},\; v_{\max}\right)\\
-v_z &= \operatorname{clip}\left(k_h(-h - z),\; -0.5,\; 0.5\right)
+(v_x, v_y) &= \operatorname{clip}\left(\pi_\theta(I, f),\; v_{\max}\right)\\
+v_z &= \operatorname{clip}\left(k_h(-h - z),\; -0.5,\; 0.5\right)\\
+\pi_\theta(I, f) &= \hat{\boldsymbol v} + g\cdot 5\,(f_1, f_2),\quad g=\texttt{stabilizer\_gain}=0
 \end{aligned}
 $$
 
-其中 $g$ 为 `stabilizer_gain`，$(\hat v_x, \hat v_y)$ 为网络输出并限幅到 `max_residual`。
-参考项提供基本跟踪能力，网络提供前馈修正；限幅保证网络在最坏情况下也不会把飞机带偏。
+采集端写进 CSV 的训练标签是**专家的完整动作** $\boldsymbol a=(v_x,v_y)$，所以推理端必须
+直接使用网络输出 $\hat{\boldsymbol v}$；如果再把同一条几何参考律加回去，专家动作就被算了
+两遍——这正是第一版实现的错误，已在本版删掉 `max_residual` 并把 `stabilizer_gain`
+默认置 0。保留 $g$ 这个参数只是为了换场景时能临时打开几何兜底，
+正常运行不要打开。
+
+$\operatorname{clip}(\cdot, v_{\max})$ 为按合速度等比缩放：当 $\|\hat{\boldsymbol v}\|>v_{\max}$ 时
+整体乘以 $v_{\max}/\|\hat{\boldsymbol v}\|$，保留方向不变。
 
 ### 5.5 训练目标
 
@@ -193,9 +198,9 @@ AirSim 的深度图里天空是 `1e4` 量级，不截断会让归一化后的有
 | 训练耗时 | 67.3 s（CPU，60 epoch） |
 | 测试 MSE | 0.0495 (m/s)² |
 | 测试 MAE | 0.1432 m/s |
-| 半径均值 | 3.36 m（参考 3.0 m） |
-| 半径 RMSE | 0.488 m |
-| 高度均值 / RMSE | 2.61 m / 0.305 m |
+| 半径均值 | 3.55 m（参考 3.0 m） |
+| 半径 RMSE | 0.750 m |
+| 高度均值 / RMSE | 2.58 m / 0.314 m |
 | 指令频率 | 10 Hz（550 条 / 55 s） |
 
 半径存在约 0.36 m 的系统性外偏，原因是位置设定点始终领先于飞机当前位置，
@@ -204,6 +209,7 @@ AirSim 的深度图里天空是 `1e4` 量级，不截断会让归一化后的有
 ## 9 已知限制
 
 * 只用了一个场景（AirSim Blocks），未做跨场景泛化测试。
-* 训练样本 555 帧，规模较小，网络主要学习参考项附近的修正量。
+* 训练样本 555 帧，规模较小：同一份数据上 CNN 的测试 MAE 约 0.25 m/s（见 `uav_bc_bench`），
+  闭环里 0.75 m 的半径 RMSE 主要来自位置设定点超前带来的系统性外偏，不是感知误差主导。
 * 深度相机与参考偏差同时输入，网络本身不承担完整的端到端映射；
   纯图像端到端的版本见任务 4 的 `uav_vision_nn`。

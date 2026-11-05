@@ -48,8 +48,7 @@ class TrackNode(Node):
         self.declare_parameter('angular_speed', 0.35)
         self.declare_parameter('lookahead_angle', 0.55)
         self.declare_parameter('max_speed', 2.0)
-        self.declare_parameter('stabilizer_gain', 1.4)
-        self.declare_parameter('max_residual', 0.6)
+        self.declare_parameter('stabilizer_gain', 0.0)
         self.declare_parameter('depth_timeout', 0.5)
 
         model_path = os.path.expanduser(str(self.get_parameter('model_path').value))
@@ -63,7 +62,6 @@ class TrackNode(Node):
         self._lookahead = float(self.get_parameter('lookahead_angle').value)
         self._max_speed = float(self.get_parameter('max_speed').value)
         self._stabilizer = float(self.get_parameter('stabilizer_gain').value)
-        self._max_residual = float(self.get_parameter('max_residual').value)
         self._depth_timeout = max(float(self.get_parameter('depth_timeout').value), 0.1)
 
         self._model = TrackNet.load(model_path, image_size=self._image_size)
@@ -135,19 +133,12 @@ class TrackNode(Node):
 
         net_vx = float(output[0, 0])
         net_vy = float(output[0, 1])
-        # 网络输出作为"残差"使用：把它限幅到 max_residual 后叠加到几何参考律上。
-        # 这样网络只在参考律附近做修正（它学到的主要是用深度图补偿横向偏差），
-        # 即使推理进入训练分布之外的区域，闭环也不会发散。
-        net_norm = math.hypot(net_vx, net_vy)
-        if net_norm > self._max_residual and net_norm > 1e-6:
-            net_vx *= self._max_residual / net_norm
-            net_vy *= self._max_residual / net_norm
-        vx = self._stabilizer * float(features[0]) * 5.0 + net_vx
-        vy = self._stabilizer * float(features[1]) * 5.0 + net_vy
-        speed = math.hypot(vx, vy)
-        if speed > self._max_speed:
-            vx *= self._max_speed / speed
-            vy *= self._max_speed / speed
+        # 训练标签是专家的完整动作（不是残差），所以推理必须直接使用网络输出。
+        # 若在推理时再叠加同一条几何律，等于把专家动作算了两遍。
+        # stabilizer_gain 默认 0，只在需要离线兜底（例如换了场景导致网络输出异常）
+        # 时手动打开。
+        vx, vy = blend_command((net_vx, net_vy), features,
+                               gain=self._stabilizer, max_speed=self._max_speed)
 
         vz = max(-0.5, min(0.5, 1.2 * (-self._height - self._pose.z)))
         self._publish(vx, vy, vz)

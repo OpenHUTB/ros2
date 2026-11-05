@@ -159,3 +159,20 @@ class TrackNet(nn.Module):
     def num_parameters(self):
         """可训练参数总量，写进训练指标便于对比模型规模。"""
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+
+def blend_command(net_v, features, gain=0.0, max_speed=2.0):
+    """把网络输出与可选的几何兜底项合成为最终速度指令。
+
+    ``gain=0``（默认）时返回的就是网络输出经过合速度限幅的结果：训练标签是专家的
+    完整动作，推理端不能再叠同一条几何律，否则专家分量会被计两次。
+    """
+    import math
+
+    vx = float(net_v[0]) + gain * 5.0 * float(features[0])
+    vy = float(net_v[1]) + gain * 5.0 * float(features[1])
+    speed = math.hypot(vx, vy)
+    if speed > max_speed and speed > 1e-6:
+        vx *= max_speed / speed
+        vy *= max_speed / speed
+    return vx, vy
