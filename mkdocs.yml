@@ -143,6 +143,7 @@ nav:
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
+    - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
     - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
