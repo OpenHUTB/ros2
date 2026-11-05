@@ -531,7 +531,7 @@ cp<span class="w"> </span>-r<span class="w"> </span>~/ros_exploring_src/robot_mr
 </code></pre></div>
 <p><img alt="确认 mrobot 功能包到位" src="../../../img/code/chap6/29_packages_copied.png"/></p>
 <h2 id="5-ros-noetic">5. 适配 ROS Noetic</h2>
-<p>教程最初基于 ROS Kinetic（Python2），在 Noetic（Python3）下需要做两处适配。</p>
+<p>教程最初基于 ROS Kinetic（Python2），在 Noetic（Python3）下需要做两处适配</p>
 <h3 id="51-python3">5.1 键盘脚本改为 Python3 并加可执行权限</h3>
 <p>原始 <code>mrobot_teleop/scripts/mrobot_teleop.py</code> 是 Python2 代码：</p>
 <ul>
@@ -561,7 +561,7 @@ ls<span class="w"> </span>-l<span class="w"> </span>~/catkin_ws/src/mrobot_teleo
 <h2 id="6">6. 编译工作空间</h2>
 <h3 id="61-move_base_msgs">6.1 缺少 move_base_msgs 的报错</h3>
 <p>首次 <code>catkin_make</code> 时，原始 <code>mrobot_navigation/CMakeLists.txt</code> 在 <code>find_package(... COMPONENTS ...)</code>
-中声明了 <code>move_base_msgs</code>。即使 gmapping 本身用不到它，catkin 在<strong>配置阶段</strong>仍会检查所有组件，
+中声明了 <code>move_base_msgs</code>即使 gmapping 本身用不到它，catkin 在<strong>配置阶段</strong>仍会检查所有组件，
 未安装时会直接报错：</p>
 <div class="highlight"><pre><span></span><code>-- Could NOT find move_base_msgs (missing: move_base_msgs_DIR)
 CMake Error ... Could not find the required component 'move_base_msgs'.
@@ -585,7 +585,7 @@ catkin_make
 <p>编译成功，末尾出现 <code>[100%] Built target ...</code>，中间的 Gazebo "deprecated" 黄色警告可忽略：</p>
 <p><img alt="catkin_make 编译成功" src="../../../img/code/chap6/32_make_success.png"/></p>
 <h2 id="7-slam">7. 启动激光 SLAM</h2>
-<p>打开 <strong>3 个终端</strong>，每个终端都先执行一次环境加载（若 <code>~/.bashrc</code> 已配置可省略）：</p>
+<p>打开 <strong>3个终端</strong>，每个终端都先执行一次环境加载（若 <code>~/.bashrc</code> 已配置可省略）：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/catkin_ws/devel/setup.bash
 </code></pre></div>
 <p><strong>终端 1 —— 启动 Gazebo（房间 + 小车）：</strong></p>
@@ -759,7 +759,7 @@ rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver
 <li><strong>全覆盖</strong>：规划路线走遍每个房间和角落，开门、过门时减速，减少灰色未知区；</li>
 <li><strong>走闭环</strong>：尽量回到经过的位置形成环路，利用回环修正累计误差；</li>
 <li><strong>必要时重跑</strong>：若出现明显重影，重启 gmapping 与 teleop 后慢速重建，可获得更干净的地图；</li>
-<li><strong>参数调优</strong>：环境更大时可适当增加 <code>particles</code>，并根据雷达量程调整 <code>maxUrange</code>、<code>maxRange</code>。</li>
+<li><strong>参数调优</strong>：环境更大时可适当增加 <code>particles</code>，并根据雷达量程调整 <code>maxUrange</code>、<code>maxRange</code></li>
 </ol>
 <h2 id="12">12. 常见问题</h2>
 <table>
@@ -812,7 +812,7 @@ rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver
 <p>本节完成了 gmapping 激光 SLAM 的完整流程：安装依赖 → 复制并适配功能包 → 编译 →
 三终端启动 Gazebo/gmapping/键盘 → 遥控遍历房间 → <code>map_saver</code> 保存地图，并解读了
 占据栅格地图与 <code>map.yaml</code> 的六个字段。下一节将基于保存的地图，使用 AMCL 进行定位并
-结合 move_base 实现地图内的自主导航。</p></div>
+结合 move_base 实现地图内的自主导航</p></div>
 </div>
 </div><footer>
 <hr/>
