@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_noise_footprint</name>
+  <version>0.1.0</version>
+  <description>
+    城市低空无人机噪声足迹评估与航线降噪。以桨盘功率经验公式估计声功率级，
+    叠加球面扩散与大气吸收得到任意接收点的声压级；沿航迹按 2 m 采样做能量
+    积分合成敏感点（学校/医院/居民区）的 LAeq,T，并栅格化提取 45/55/65 dB
+    噪声足迹等值线；再按代价择优施加三种降噪手段（抬升巡航高度、侧向平移
+    航线避开 200 m 缓冲区、起降爬升段更陡），约束航程增加不超过 15%；最后
+    用课程既有的 uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）闭环复飞
+    优化前后航迹，验证爬升角改变后仍可控，并用真实高度序列重新计算敏感点
+    噪声，证明结论来自闭环数据而非纸面值。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -172,6 +172,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
+* [城市低空噪声足迹评估与航线降噪](./air/uav_noise_footprint.md) —— 声源-传播模型与 2 m 采样航迹能量积分算敏感点 LAeq，marching squares 提 45/55/65 dB 足迹，三种降噪手段按代价贪心择优（航程增幅 ≤15%），MuJoCo 真飞后回灌真实高度重算
+
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
