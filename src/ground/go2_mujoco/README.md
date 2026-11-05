@@ -10,14 +10,23 @@
 ## 💻 运行环境
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可运行）
 - Python >= 3.10
-- 依赖版本：mujoco 3.x、mujoco-menagerie、imageio、imageio-ffmpeg、numpy
+- 依赖版本：mujoco 3.x、mujoco-menagerie、imageio、imageio-ffmpeg、numpy、pillow（预览 PNG）
 
 ## 📦 安装依赖
 ```bash
 cd src/ground/go2_mujoco
 pip install -r requirements.txt
 ```
+
+> Linux 无显示环境（虚拟机 / SSH）用 osmesa 软件渲染，需要系统库：`sudo apt install -y libosmesa6-dev`。
+> MP4 由 `imageio-ffmpeg` 自带的 ffmpeg 生成，无需另装；预览 PNG 用 Pillow，已列在 requirements.txt。
 > 模型由 `mujoco-menagerie` 首次运行时自动下载并缓存，无需手动准备。
+>
+> 注意：`mujoco-menagerie` 解包时用了 `tarfile.extractall(filter="data")`，该参数要求 Python >= 3.11.4。
+> Python 3.10（Ubuntu 20.04 / 22.04 默认）上首次下载会抛 TypeError；本模块会自动扫描本地缓存复用
+> 已有模型，缓存为空时请升级 Python，或手动把模型放到 `~/.cache/mujoco_menagerie/models/`（目录名以
+> `<robot>-` 开头）。
+
 
 ## 🚀 运行仿真
 
@@ -30,7 +39,7 @@ python3 main.py --duration 3     # 自定义完整视频时长（秒），不填
 python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 python3 main.py --out 自定义.mp4
 ```
-无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
+Linux 无显示环境默认自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
 
 ### 方式二：作为 catkin 包，用 roslaunch 启动（需 ROS 环境）
 ```bash

@@ -11,9 +11,6 @@ import platform
 import re
 from pathlib import Path
 
-import numpy as np
-
-
 def setup_gl(force=None):
     """在 import mujoco 之前调用，选择渲染后端。
 
@@ -190,52 +187,64 @@ def load_with_camera(robot, entry, cam, width=960, height=544):
             pass
 
 
-def write_video(frames, path, fps=30):
-    import imageio.v2 as iio
-
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    arr = np.stack(frames)
-    iio.mimsave(
-        path, arr, fps=fps, codec="libx264", quality=7,
-    )
-    print(f"视频已保存: {path}  ({len(frames)} 帧, {fps} fps)")
-
-
 def run_sim(model, controller, duration=6.0, fps=30, video_path=None,
             preview_dir=None, height=544, width=960):
-    """跑仿真并渲染。preview_dir 给定时，额外保存首/中/末三张 PNG 用于检查取景。"""
+    """跑仿真并渲染。
+
+    video_path 给定时边渲染边写 MP4，长视频不会把上千帧全留在内存里；
+    preview_dir 给定时额外保存首/中/末三张 PNG 用于检查取景（这时才需要 Pillow）。
+    返回 preview 保存的帧；没有 preview 时返回空列表。
+    """
     import mujoco
-    from PIL import Image
 
     data = mujoco.MjData(model)
     if model.nkey > 0:
         mujoco.mj_resetDataKeyframe(model, data, 0)
     controller(data, 0.0)
 
-    renderer = mujoco.Renderer(model, height, width)
     dt = model.opt.timestep
     sub = max(1, round(1.0 / fps / dt))
     nframes = int(duration * fps)
+    if nframes <= 0:
+        raise ValueError("duration=%r 太短，一帧都生成不了" % duration)
+
+    writer = None
+    if video_path:
+        import imageio.v2 as iio
+
+        os.makedirs(os.path.dirname(os.path.abspath(video_path)), exist_ok=True)
+        writer = iio.get_writer(video_path, fps=fps, codec="libx264", quality=7,
+                                macro_block_size=1)
+    if preview_dir:
+        os.makedirs(preview_dir, exist_ok=True)
 
     frames = []
     t = 0.0
-    for fi in range(nframes):
-        for _ in range(sub):
-            controller(data, t)
-            mujoco.mj_step(model, data)
-            t += dt
-        renderer.update_scene(data, camera="view0")
-        frames.append(renderer.render().copy())
-        if preview_dir:
-            if fi in {0, nframes // 2, nframes - 1}:
-                p = os.path.join(preview_dir, f"preview_{fi:03d}.png")
-                os.makedirs(preview_dir, exist_ok=True)
-                Image.fromarray(frames[-1]).save(p)
-                print("预览帧:", p)
-    renderer.close()
+    renderer = mujoco.Renderer(model, height, width)
+    try:
+        for fi in range(nframes):
+            for _ in range(sub):
+                controller(data, t)
+                mujoco.mj_step(model, data)
+                t += dt
+            renderer.update_scene(data, camera="view0")
+            frame = renderer.render()
+            if writer is not None:
+                writer.append_data(frame)
+            if preview_dir and fi in {0, nframes // 2, nframes - 1}:
+                from PIL import Image  # 只有预览模式需要 Pillow
+
+                path = os.path.join(preview_dir, "preview_%03d.png" % fi)
+                Image.fromarray(frame).save(path)
+                frames.append(frame.copy())
+                print("预览帧:", path)
+    finally:
+        renderer.close()
+        if writer is not None:
+            writer.close()
 
     if video_path:
-        write_video(frames, video_path, fps)
+        print("视频已保存: %s  (%d 帧, %d fps)" % (video_path, nframes, fps))
     return frames
 
 

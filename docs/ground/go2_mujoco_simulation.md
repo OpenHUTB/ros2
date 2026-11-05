@@ -106,7 +106,9 @@ $K_D$ 提供阻尼抑制足端轨迹切换时的冲击；实测中 Go2 以 0.1 m
 ### 5.1 环境依赖
 - Ubuntu 20.04 / 22.04 / 24.04（Windows 亦可）
 - Python >= 3.10
-- MuJoCo 3.x、mujoco-menagerie、imageio + imageio-ffmpeg、numpy
+- 系统库（Linux 无显示环境渲染需要）：`sudo apt install -y libosmesa6-dev`
+- MuJoCo 3.x、mujoco-menagerie、imageio + imageio-ffmpeg、numpy、pillow（预览 PNG）
+- 注意：`mujoco-menagerie` 的解包用到 `tarfile.extractall(filter="data")`，需要 Python >= 3.11.4；Python 3.10 上首次下载会抛 TypeError，模块会自动复用本地缓存，缓存为空时请升级 Python 或手动放置模型
 
 ### 5.2 安装依赖
 ```bash
@@ -124,7 +126,7 @@ python3 main.py --preview  # 只跑 1.6 秒，输出 3 张 PNG 检查取景
 python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 6.0
 python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
-无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
+Linux 无显示环境默认自动用 osmesa 软件渲染（需先 `sudo apt install -y libosmesa6-dev`），无需手动设 `MUJOCO_GL`；有显卡可用 `MUJOCO_GL=egl` 提速。Windows 自动 wgl，macOS 自动 cgl。
 
 方式二（catkin 包 + roslaunch，需 ROS 环境）：
 ```bash
