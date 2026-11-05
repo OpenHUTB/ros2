@@ -33,10 +33,10 @@
 
 | 模块 | 文件 | 作用 |
 |---|---|---|
-| 逆运动学 | `mujoco_arm_ik.py` | 解析 2 连杆 IK（`ik2`），实时解算 (q1, q2) |
-| 关节控制 | `mujoco_arm_ik.py` | 关节 PD 位置控制（KP=30, KD=8） |
+| 逆运动学 | `main.py` | 解析 2 连杆 IK（`ik2`），实时解算 (q1, q2) |
+| 关节控制 | `main.py` | 关节 PD 位置控制（KP=30, KD=8） |
 | 模型定义 | `arm_2link.xml` | 两连杆机械臂、地面、16 个绿色参考圆点 |
-| 轨迹绘制 | `mujoco_arm_ik.py` | 末端目标点透视投影到像素，逐帧画出黄色轨迹 |
+| 轨迹绘制 | `main.py` | 末端目标点透视投影到像素，逐帧画出黄色轨迹 |
 | 验证 | `verify_ik.py` | IK 数值精度互查（误差 0.0000mm）+ glfw 实时渲染 |
 
 ## 运行环境
@@ -53,7 +53,7 @@ pip3 install --user mujoco pillow numpy
 sudo apt install -y libosmesa6-dev        # 无显卡虚拟机需要
 
 # 2. 运行（生成 demo.gif，192 帧 / 8 秒）
-MUJOCO_GL=osmesa python3 mujoco_arm_ik.py
+MUJOCO_GL=osmesa python3 main.py
 
 # 3. 查看效果图
 xdg-open demo.gif
@@ -63,4 +63,4 @@ MUJOCO_GL=osmesa python3 verify_ik.py ik
 MUJOCO_GL=glfw   python3 verify_ik.py gui
 ```
 
-详细说明见 [docs/mujoco_arm_ik.md](docs/mujoco_arm_ik.md)。
+详细说明见 [文档站页面](../../docs/arm/mujoco_arm_ik.md)。

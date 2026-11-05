@@ -18,7 +18,7 @@ from mujoco import viewer
 
 MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "arm_2link.xml")
 
-# 与 mujoco_arm_ik.py 一致的参数
+# 与 main.py 一致的参数
 L1 = 0.30
 L2 = 0.30
 CX, CY = 0.30, 0.0
