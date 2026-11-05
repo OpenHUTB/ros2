@@ -1,0 +1,28 @@
+{
+  "train": {
+    "mae_m_s2": 0.14896175701623612,
+    "rmse_m_s2": 0.26094909858465043,
+    "max_abs_error_m_s2": 1.9428220227659312,
+    "samples": 21600
+  },
+  "validation": {
+    "mae_m_s2": 0.16830755671465486,
+    "rmse_m_s2": 0.3010891611662962,
+    "max_abs_error_m_s2": 1.741131442620814,
+    "samples": 7200
+  },
+  "test": {
+    "mae_m_s2": 0.14542639715104994,
+    "rmse_m_s2": 0.2604015966344941,
+    "max_abs_error_m_s2": 1.6714420743014684,
+    "samples": 7200
+  },
+  "features": [
+    "sensor_range_m",
+    "closing_speed_m_s"
+  ],
+  "target": "accel_m_s2",
+  "epochs": 350,
+  "hidden_size": 16,
+  "learning_rate": 0.003
+}
