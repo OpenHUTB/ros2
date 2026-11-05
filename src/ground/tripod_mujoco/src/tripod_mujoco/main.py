@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """三足仿生机器人 MuJoCo 仿真：三角步态交替迈步（MuJoCo，不依赖 Gazebo）。
 
