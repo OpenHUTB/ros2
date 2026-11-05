@@ -21,11 +21,13 @@ ROS 1（Noetic）+ Gazebo 的**二维激光雷达蒙特卡洛定位（MCL / 粒�
 ## 目录结构
 
 ```
+├── main.py                    统一入口（转发到 tools/ 下的三个脚本）
 ├── urdf/mcl_bot.urdf          差速机器人（两驱动轮 + 两个万向球 + 2D 激光）
 ├── worlds/mcl_room.world      Gazebo 场景（自动生成，纯内联几何，不需要联网下载模型）
 ├── maps/mcl_room.pgm/.yaml    占据栅格地图（由同一份墙体定义生成）
-├── config/scene_layout.py     **唯一真实来源**：墙体几何 + 出生点 + 雷达参数
+├── config/mcl.rviz            rviz 配置：地图 + 粒子云 + 激光 + 定位协方差 + 机器人模型
 ├── src/lidar_mcl_localization/
+│   ├── scene_layout.py        **唯一真实来源**：墙体几何 + 出生点 + 雷达参数
 │   ├── geometry.py            角度归一化、位姿复合、圆周平均
 │   ├── map_model.py           地图加载、射线投射、似然场（BFS 距离变换）
 │   ├── motion_model.py        里程计增量模型（α₁~α₄ 采样）
@@ -33,6 +35,7 @@ ROS 1（Noetic）+ Gazebo 的**二维激光雷达蒙特卡洛定位（MCL / 粒�
 │   ├── particle_filter.py     预测/加权/低方差重采样/Neff
 │   └── nn_motion.py           MLP（4→24→24→3，纯 NumPy 手写反传）
 ├── scripts/mcl_node.py        定位节点（订 /scan /odom，发 /mcl_pose /particles /tf）
+├── scripts/map_publisher.py   把 PGM 发布成 /map（OccupancyGrid，替代 map_server）
 ├── scripts/teleop.py          键盘遥控（termios）
 ├── scripts/goal_driver.py     用 MCL 位姿闭环走到目标点
 └── tools/
@@ -40,6 +43,16 @@ ROS 1（Noetic）+ Gazebo 的**二维激光雷达蒙特卡洛定位（MCL / 粒�
     ├── offline_demo.py        不开 ROS 的闭环自检
     └── run_experiment.py      采集数据 → 训练网络 → 四组对比 → 出图
 ```
+
+`main.py` 是给"不想开 ROS 也想看效果"的人用的薄入口（规范要求入口以 main 开头）：
+
+```bash
+cd src/ground/lidar_mcl_localization
+python3 main.py                # 默认：离线闭环自检（只需 NumPy）
+python3 main.py --experiment   # 训练神经网络 + 四组对比 + 出图（需要 MuJoCo）
+python3 main.py --scene        # 重新生成 Gazebo 场景与占据栅格地图
+```
+
 
 ## 运行环境
 

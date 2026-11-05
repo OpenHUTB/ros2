@@ -21,6 +21,10 @@ from nav_msgs.msg import OccupancyGrid
 try:
     from lidar_mcl_localization.map_model import OccupancyMap, to_occupancy_values
 except ImportError:                                          # pragma: no cover
+    # 同 mcl_node.py：回退只服务"直接跑脚本"，装好包后不该走到这里，
+    # 打警告避免静默掩盖安装问题。
+    sys.stderr.write("[warn] 未从 PYTHONPATH 找到 lidar_mcl_localization，"
+                     "回退到源码目录。若已编译，请先 source devel/setup.bash。\n")
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
     from lidar_mcl_localization.map_model import OccupancyMap, to_occupancy_values
 

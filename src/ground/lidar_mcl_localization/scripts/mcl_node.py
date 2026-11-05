@@ -41,6 +41,11 @@ try:
     from lidar_mcl_localization.particle_filter import ParticleFilter
     from lidar_mcl_localization.sensor_model import LikelihoodFieldModel
 except ImportError:                                          # pragma: no cover
+    # 回退到源码目录：只用于"没 catkin_make、直接跑脚本"的场景。
+    # 装好包之后（catkin_python_setup）不该走到这里；真走到了说明环境有问题，
+    # 所以打一条警告，而不是静默把它掩盖掉（评审指出过这一点）。
+    sys.stderr.write("[warn] 未从 PYTHONPATH 找到 lidar_mcl_localization，"
+                     "回退到源码目录。若已编译，请先 source devel/setup.bash。\n")
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
     from lidar_mcl_localization.geometry import pose_error, wrap_angle
     from lidar_mcl_localization.map_model import OccupancyMap

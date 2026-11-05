@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把 config/scene_layout.py 的唯一墙体定义，同时导出：
+"""把 src/lidar_mcl_localization/scene_layout.py 的唯一墙体定义，同时导出：
 
     worlds/mcl_room.world     Gazebo 11 场景（纯内联几何，不依赖 model:// 下载）
     maps/mcl_room.pgm         占据栅格（PGM P5，ROS map_server 约定）
@@ -21,14 +21,15 @@ import sys
 import numpy as np
 
 PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(PKG_ROOT, "config"))
+sys.path.insert(0, os.path.join(PKG_ROOT, "src"))
 
-from scene_layout import (LIDAR_RANGE_MAX, LIDAR_SAMPLES, MAP_PADDING,  # noqa: E402
-                          MAP_RESOLUTION, ROOM_SIZE, SPAWN, WALL_HEIGHT,
-                          WALL_THICKNESS, WALLS)
+from lidar_mcl_localization.scene_layout import (LIDAR_RANGE_MAX,  # noqa: E402
+                                                LIDAR_SAMPLES, MAP_PADDING,
+                                                MAP_RESOLUTION, ROOM_SIZE, SPAWN,
+                                                WALL_HEIGHT, WALL_THICKNESS, WALLS)
 
 WORLD_TEMPLATE = """<?xml version="1.0" ?>
-<!-- 由 tools/gen_scene.py 自动生成，请勿手改；改 config/scene_layout.py 后重新生成 -->
+<!-- 由 tools/gen_scene.py 自动生成，请勿手改；改 src/lidar_mcl_localization/scene_layout.py 后重新生成 -->
 <sdf version="1.6">
   <world name="mcl_room">
 

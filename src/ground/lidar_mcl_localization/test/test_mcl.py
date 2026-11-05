@@ -25,7 +25,6 @@ import numpy as np
 
 PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(PKG_ROOT, "src"))
-sys.path.insert(0, os.path.join(PKG_ROOT, "config"))
 
 from lidar_mcl_localization import nn_motion                       # noqa: E402
 from lidar_mcl_localization.geometry import (compose, pose_error,  # noqa: E402
@@ -37,8 +36,8 @@ from lidar_mcl_localization.nn_motion import (MotionMLP, NNMotionCorrector,  # n
                                               StandardScaler, correction_from_output,
                                               features_from_delta)
 from lidar_mcl_localization.particle_filter import ParticleFilter    # noqa: E402
+from lidar_mcl_localization.scene_layout import LIDAR_SAMPLES, SPAWN  # noqa: E402
 from lidar_mcl_localization.sensor_model import LikelihoodFieldModel, ScanMatcher  # noqa: E402
-from scene_layout import LIDAR_SAMPLES, SPAWN                        # noqa: E402
 
 MAP_PGM = os.path.join(PKG_ROOT, "maps", "mcl_room.pgm")
 MAX_RANGE = 8.0

@@ -22,7 +22,10 @@ from std_msgs.msg import Float32MultiArray
 try:
     from lidar_mcl_localization.geometry import wrap_angle
 except ImportError:                                          # pragma: no cover
+    # 同 mcl_node.py：回退只服务"直接跑脚本"，装好包后不该走到这里。
     import os
+    sys.stderr.write("[warn] 未从 PYTHONPATH 找到 lidar_mcl_localization，"
+                     "回退到源码目录。若已编译，请先 source devel/setup.bash。\n")
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
     from lidar_mcl_localization.geometry import wrap_angle
 

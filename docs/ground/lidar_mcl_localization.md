@@ -118,14 +118,19 @@ rosrun lidar_mcl_localization teleop.py
 # ④ 用定位结果闭环走到目标点（不是用真值！）
 rosrun lidar_mcl_localization goal_driver.py _goal_x:=2.0 _goal_y:=2.5
 
-# ⑤ 不开 ROS 也能跑
-python3 tools/gen_scene.py          # 由墙体定义重新生成 world + 地图
-python3 tools/offline_demo.py       # 闭环自检：MCL vs 纯里程计
-python3 tools/run_experiment.py     # 训练网络 + 四组对比 + 出图
+# ⑤ 不开 ROS 也能跑（main.py 是薄入口，转发到下面三个脚本）
+python3 main.py                     # 默认：离线闭环自检
+python3 main.py --scene             # 由墙体定义重新生成 world + 地图
+python3 main.py --experiment        # 训练网络 + 四组对比 + 出图（需要 MuJoCo）
+
+# 也可以直接调脚本
+python3 tools/gen_scene.py
+python3 tools/offline_demo.py
+python3 tools/run_experiment.py
 ```
 
 !!! tip "场景与地图由同一份定义生成"
-    墙体只写在 `config/scene_layout.py` 里，`tools/gen_scene.py` 同时导出
+    墙体只写在 `src/lidar_mcl_localization/scene_layout.py` 里，`tools/gen_scene.py` 同时导出
     `worlds/mcl_room.world` 与 `maps/mcl_room.pgm`。
     这样改了场景不会忘记改地图 —— 地图与场景不一致时，粒子滤波会稳定收敛到错误位置，
     而且看起来完全像"滤波器参数没调好"，极难排查。
@@ -134,7 +139,8 @@ python3 tools/run_experiment.py     # 训练网络 + 四组对比 + 出图
 
 | 文件 | 作用 |
 |---|---|
-| `config/scene_layout.py` | 墙体几何、出生点、雷达参数（**唯一真实来源**） |
+| `main.py` | 统一入口：`python3 main.py` 默认跑离线自检，`--scene` / `--experiment` 转发对应脚本 |
+| `src/.../scene_layout.py` | 墙体几何、出生点、雷达参数（**唯一真实来源**） |
 | `src/.../map_model.py` | PGM 加载、世界↔栅格变换、射线投射、似然场 |
 | `src/.../motion_model.py` | 里程计增量模型、神经网络修正钩子 |
 | `src/.../sensor_model.py` | 似然场观测模型、粗配准（ScanMatcher） |

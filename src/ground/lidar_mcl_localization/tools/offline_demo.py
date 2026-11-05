@@ -14,14 +14,13 @@ import numpy as np
 
 PKG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, os.path.join(PKG, "src"))
-sys.path.insert(0, os.path.join(PKG, "config"))
 
 from lidar_mcl_localization.geometry import compose, pose_error, wrap_angle   # noqa: E402
 from lidar_mcl_localization.map_model import OccupancyMap                    # noqa: E402
 from lidar_mcl_localization.motion_model import MotionModel, odometry_delta   # noqa: E402
 from lidar_mcl_localization.particle_filter import ParticleFilter             # noqa: E402
+from lidar_mcl_localization.scene_layout import LIDAR_SAMPLES, SPAWN          # noqa: E402
 from lidar_mcl_localization.sensor_model import LikelihoodFieldModel          # noqa: E402
-from scene_layout import LIDAR_SAMPLES, SPAWN                                  # noqa: E402
 
 PKG_ROOT = os.path.dirname(os.path.abspath(__file__))
 PGM = os.path.join(PKG_ROOT, "..", "maps", "mcl_room.pgm")

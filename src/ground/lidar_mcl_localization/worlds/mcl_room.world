@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!-- 由 tools/gen_scene.py 自动生成，请勿手改；改 config/scene_layout.py 后重新生成 -->
+<!-- 由 tools/gen_scene.py 自动生成，请勿手改；改 src/lidar_mcl_localization/scene_layout.py 后重新生成 -->
 <sdf version="1.6">
   <world name="mcl_room">
 
