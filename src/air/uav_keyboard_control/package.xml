@@ -5,6 +5,7 @@
   <description>
     任务①：无人机键盘控制模块。把终端按键转换为机体系速度指令，
     发布到 /uav/cmd_vel，由 carlair_ros_bridge 执行。
+    支持组合键、加速度平滑与 1/2/3 技能宏（起飞到 1.5 m / 原地 360° / 前进 3 m）。
   </description>
   <maintainer email="uav@example.com">uav</maintainer>
   <license>MIT</license>
@@ -13,9 +14,11 @@
 
   <build_depend>rospy</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
 
   <export/>
 </package>

@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_keyboard_control/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_keyboard_control/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
 
@@ -37,5 +39,12 @@ jobs:
             python3 tests/test_imu_local.py
           fi
 
-      - name: Byte-compile bridge scripts
-        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+      - name: Run keyboard control tests
+        run: |
+          python3 tests/test_keyboard_local.py
+          python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
+
+      - name: Byte-compile air scripts
+        run: |
+          python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+          python3 -m py_compile src/air/uav_keyboard_control/scripts/*.py
