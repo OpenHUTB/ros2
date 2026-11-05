@@ -77,9 +77,9 @@ xdg-open demo_pick.gif
 
 ## 效果图体积
 
-`demo_pick.gif` 由 201 帧 640×480 逐帧渲染合成，本地实测约 **15.5 MB**，超过仓库单文件 10 MB 的限制。
-仓库内 [docs/mujoco_arm_pick_demo.gif](docs/mujoco_arm_pick_demo.gif)（8.1 MB）是压缩后提交的版本。
+`demo_pick.gif` 由 201 帧 640×480 逐帧渲染合成，本地生成体积约 7.9 MB。
+按仓库规范（动图小于 5 MB），仓库内 [docs/mujoco_arm_pick_demo.gif](docs/mujoco_arm_pick_demo.gif)（3.3 MB）是二次压缩后提交的版本。
 
-> **生成的文件仅本地查看，不要直接提交。** 如需更新仓库里的演示图，请先降低 `FPS` / 分辨率，或二次压缩到 10 MB 以内再提交；脚本结束时也会打印生成体积并在超限时给出提示。
+> **生成的文件仅本地查看，不要直接提交。** 如需更新仓库里的演示图，请先降低 `FPS` / 分辨率，或压缩到 5 MB 以内再提交；脚本结束时也会打印生成体积并在超限时给出提示。
 
 详细说明见 [文档站页面](../../docs/arm/mujoco_arm_pick.md)。
