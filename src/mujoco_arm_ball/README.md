@@ -10,10 +10,10 @@
 
 | 文件 | 说明 |
 |---|---|
-| `mujoco_arm_ball_single.py` | 主程序（单文件，模型 XML 内嵌） |
+| `main.py` | 主程序（单文件，模型 XML 内嵌） |
 | `verify_armball.py` | 验证脚本（IK 精度 / 上摆动作 / 全流程命中） |
 | `README.md` | 本项目说明 |
-| `docs/mujoco_arm_ball.md` | 设计与验证文档 |
+| 文档站页面 | [docs/arm/mujoco_arm_ball.md](../../docs/arm/mujoco_arm_ball.md) |
 | `docs/mujoco_arm_ball_demo.gif` | 效果图（投篮动画，见下） |
 
 ## 效果图
@@ -27,11 +27,11 @@
 
 ```bash
 # 本机（Windows glfw 后端）
-python mujoco_arm_ball_single.py
+python main.py
 
 # 虚拟机 / 无显卡环境（osmesa 离屏渲染）
 # 若系统缺 libOSMesa：sudo apt-get update && sudo apt-get install -y libosmesa6
-MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python3 mujoco_arm_ball_single.py
+MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python3 main.py
 ```
 
 运行结束在同目录生成效果图 `demo_armball.gif`（450 帧 / 15.0 秒）。
