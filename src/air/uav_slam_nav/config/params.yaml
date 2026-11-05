@@ -1,0 +1,66 @@
+# uav_slam_nav 默认参数
+#
+# 键名是节点的完全限定名（/命名空间/节点名），所以每个节点只会读到属于自己的那一段。
+# 用 launch 的 params_file 参数可以整体替换本文件。
+
+/uav/airsim_source:
+  ros__parameters:
+    airsim_ip: 10.0.2.2      # VirtualBox NAT 下宿主机的地址；原生双系统改成宿主机局域网 IP
+    airsim_port: 41451
+    vehicle_name: ''
+    camera_name: 'depth'     # settings.json 里为该载具定义的深度相机名
+    publish_rate: 10.0       # 位姿/图像/深度发布频率
+    depth_pixels_as_float: true
+    cmd_duration: 0.1        # 每条速度指令的作用时长，通常等于 1/控制频率
+    connect_period: 2.0      # 连不上 AirSim 时的重试间隔
+    pose_frame_id: airsim_ned
+    camera_frame_id: uav_camera
+
+/uav/mapping:
+  ros__parameters:
+    resolution: 0.25         # 栅格分辨率（米/格）
+    map_size: 50.0           # 地图边长（米），地图以起飞点为原点居中
+    max_depth: 15.0          # 超过该深度的点丢弃，远处点噪声大
+    min_depth: 0.3
+    min_height: 0.2          # 只保留离地 0.2~6 m 的点（滤掉地面和云）
+    max_height: 6.0
+    hfov: 90.0               # AirSim 默认相机水平视场角
+    pixel_step: 6            # 深度图抽样步长，越大越快、越稀疏
+    max_rays: 1200           # 单帧最多发射的射线数，限制 CPU 占用
+    update_rate: 5.0         # 栅格积分频率
+    publish_rate: 2.0        # /map 发布频率
+    log_odds_occupied: 0.85  # 命中一次占据的置信度
+    log_odds_free: 0.40      # 穿过一次判为自由的置信度
+    log_odds_min: -5.0
+    log_odds_max: 5.0
+    occupied_thresh: 0.65
+    free_thresh: 0.20
+    pose_frame_id: airsim_ned
+    camera_offset_x: 0.0     # 相机相对机体重心的安装偏移（米）
+    camera_offset_y: 0.0
+    camera_offset_z: 0.0
+    output_dir: ~/.ros/uav_slam_nav
+    save_map: false          # 退出时是否把地图落盘成 PGM+YAML
+
+/uav/planner:
+  ros__parameters:
+    inflation_radius: 0.6    # 障碍膨胀半径（米），留出安全余量
+    allow_diagonal: true     # 允许 8 邻域对角移动
+    allow_unknown: true      # 未知区域当作可通行，便于边建图边规划
+    goal_tolerance: 0.5      # 目标点容差（米）
+    plan_period: 0.5         # 有新目标时的规划检查周期
+    max_expansions: 200000   # A* 扩展上限，防止病态地图卡死
+
+/uav/controller:
+  ros__parameters:
+    control_rate: 20.0       # 控制频率
+    lookahead: 1.5           # 纯追踪前视距离（米）
+    max_speed: 2.0           # 最大水平速度（米/秒）
+    min_speed: 0.3
+    goal_tolerance: 0.6      # 判定到达的半径（米）
+    cruise_height: 3.0       # 巡航高度（米，相对起飞点）
+    kp_altitude: 1.0         # 高度环比例增益
+    max_vertical_speed: 1.0  # 最大升降速度（米/秒）
+    kp_yaw: 1.5              # 航向环比例增益
+    max_yaw_rate: 1.0        # 最大偏航角速度（弧度/秒）
+    slowdown_distance: 3.0   # 距终点多少米开始线性降速

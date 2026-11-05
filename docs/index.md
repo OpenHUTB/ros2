@@ -219,6 +219,7 @@ ROS每章节运行代码:
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [无人机建图与自主导航（深度相机 + A*）](./air/uav_slam_nav.md) —— 深度相机反投影建图 + A* 规划 + 纯追踪控制，发布 OccupancyGrid 与 tf
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
