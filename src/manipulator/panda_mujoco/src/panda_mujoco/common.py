@@ -8,6 +8,7 @@
 """
 import os
 import platform
+import re
 
 import numpy as np
 
@@ -16,7 +17,7 @@ def setup_gl(force=None):
     """在 import mujoco 之前调用，选择渲染后端。
 
     - 已有 MUJOCO_GL 环境变量：尊重用户设置
-    - Windows：wgl（MuJoCo 3.17 在 Windows 上支持 wgl/glfw）
+    - Windows：wgl（MuJoCo 在 Windows 上支持 wgl）
     - macOS：cgl（系统原生 OpenGL 上下文，离屏可用）
     - Linux：默认 osmesa（软件渲染，虚拟机/SSH 无显示也能跑）；
       有独显可手动设 MUJOCO_GL=egl 提速
@@ -38,68 +39,115 @@ def setup_gl(force=None):
     return backend
 
 
-def xyaxes_to_quat(xyaxes):
-    """把 MJCF 的 xyaxes（相机 x/y 轴方向，6 个数）换算成四元数 [w, x, y, z]。"""
-    x = np.asarray(xyaxes[:3], dtype=float)
-    y = np.asarray(xyaxes[3:6], dtype=float)
-    x /= np.linalg.norm(x)
-    y -= x * np.dot(x, y)
-    y /= np.linalg.norm(y)
-    z = np.cross(x, y)
-    r = np.column_stack([x, y, z])
-    t = np.trace(r)
-    if t > 0:
-        s = np.sqrt(t + 1.0) * 2
-        w, qx, qy, qz = 0.25 * s, (r[2, 1] - r[1, 2]) / s, (r[0, 2] - r[2, 0]) / s, (r[1, 0] - r[0, 1]) / s
-    elif r[0, 0] > r[1, 1] and r[0, 0] > r[2, 2]:
-        s = np.sqrt(1.0 + r[0, 0] - r[1, 1] - r[2, 2]) * 2
-        w, qx, qy, qz = (r[2, 1] - r[1, 2]) / s, 0.25 * s, (r[0, 1] + r[1, 0]) / s, (r[0, 2] + r[2, 0]) / s
-    elif r[1, 1] > r[2, 2]:
-        s = np.sqrt(1.0 + r[1, 1] - r[0, 0] - r[2, 2]) * 2
-        w, qx, qy, qz = (r[0, 2] - r[2, 0]) / s, (r[0, 1] + r[1, 0]) / s, 0.25 * s, (r[1, 2] + r[2, 1]) / s
-    else:
-        s = np.sqrt(1.0 + r[2, 2] - r[0, 0] - r[1, 1]) * 2
-        w, qx, qy, qz = (r[1, 0] - r[0, 1]) / s, (r[0, 2] + r[2, 0]) / s, (r[1, 2] + r[2, 1]) / s, 0.25 * s
-    q = np.array([w, qx, qy, qz], dtype=float)
-    return q / np.linalg.norm(q)
+def _expand_includes(text, base_dir, depth=0):
+    """递归内联 MJCF 的 <include>。
+
+    去掉子文件的 <mujoco> 根标签，并把子文件的 meshdir / texturedir 改成
+    相对子文件目录的绝对路径。这样拼出来的完整 XML 放到任意目录都能编译，
+    不依赖原始目录层级（menagerie 的 scene.xml 只 include 一个机器人定义）。
+    """
+    if depth > 5:
+        raise RuntimeError("MJCF include 嵌套过深")
+
+    def repl(m):
+        inc = (base_dir / m.group(1)).resolve()
+        sub = inc.read_text(encoding="utf-8", errors="replace")
+        sub = re.sub(r"<mujoco[^>]*>", "", sub, count=1).replace("</mujoco>", "")
+        sub = re.sub(
+            r'(meshdir|texturedir)="([^"]+)"',
+            lambda mm: '%s="%s"' % (
+                mm.group(1), (inc.parent / mm.group(2)).resolve().as_posix()),
+            sub,
+        )
+        return _expand_includes(sub, inc.parent, depth + 1)
+
+    return re.sub(r'<include\s+file="([^"]+)"\s*/>', repl, text)
+
+
+def _with_offscreen(text, width, height):
+    """把离屏渲染分辨率写进 <visual><global offwidth offheight/>。
+
+    MuJoCo 的 Renderer 需要模型里声明离屏帧缓冲尺寸；menagerie 的 scene.xml
+    没有这一段，所以这里补上（已有 <global> 时合并属性，不覆盖原有设置）。
+    """
+    gw = 'offwidth="%d" offheight="%d"' % (width, height)
+
+    def merge(m):
+        inner = m.group(1)
+        return m.group(0) if "offwidth" in inner else "<global %s %s/>" % (inner.strip(), gw)
+
+    text, n = re.subn(r"<global\s+([^/>]*)/>", merge, text, count=1)
+    if n:
+        return text
+    if "<visual>" in text:
+        return text.replace("<visual>", "<visual>\n    <global %s/>" % gw, 1)
+    m = re.search(r"<mujoco[^>]*>", text)
+    insert = "\n  <visual>\n    <global %s/>\n  </visual>" % gw
+    return text[:m.end()] + insert + text[m.end():]
+
+
+def _camera_tag(cam):
+    """把相机参数字典渲染成一行 MJCF <camera> 标签。"""
+    def vec(values):
+        return " ".join("%g" % float(v) for v in values)
+
+    attrs = ['name="%s"' % cam.get("name", "view0"), 'pos="%s"' % vec(cam["pos"])]
+    if "xyaxes" in cam:
+        attrs.append('xyaxes="%s"' % vec(cam["xyaxes"]))
+    elif "quat" in cam:
+        attrs.append('quat="%s"' % vec(cam["quat"]))
+    if cam.get("fovy") is not None:
+        attrs.append('fovy="%g"' % float(cam["fovy"]))
+    if cam.get("mode") == "track":
+        attrs.append('mode="track"')
+        attrs.append('target="%s"' % cam["target"])
+    return "<camera %s/>" % " ".join(attrs)
 
 
 def load_with_camera(robot, entry, cam, width=960, height=544):
-    """加载 mujoco_menagerie 模型，注入自定义相机并设置离屏帧缓冲。
+    """加载 mujoco_menagerie 模型，并把自定义相机注入 MJCF 后编译。
 
-    通过 MuJoCo 的 MjSpec 在内存中修改模型：不向模型目录写任何临时文件
-    （menagerie 安装目录可能只读，旧实现会 PermissionError 且残留文件）。
+    相机注入方式：读出 menagerie 的入口 XML，递归内联 <include>、把 meshdir /
+    texturedir 改成绝对路径、在 <worldbody> 开头插入 <camera> 标签，写到系统
+    临时目录（tempfile）后编译，加载完立即删除临时文件。
+
+    menagerie 安装目录全程只读，不会残留任何文件（旧实现会往安装目录写
+    scene_view.xml，在只读安装或共享环境下会 PermissionError 并留垃圾）。
+    这里不用 MjSpec：它在 3.1 才引入，且 3.2.x 的相机属性（mode/targetbody）
+    尚不完整，直接用 MjModel.from_xml_path 兼容性最好。
 
     cam 为字典：
-        name  相机名（默认 "view0"）
-        pos   相机位置 [x, y, z]
+        name   相机名（默认 "view0"）
+        pos    相机位置 [x, y, z]
         xyaxes 或 quat  相机姿态（二选一）
-        fovy  视场角（可选）
-        mode  "track" 时为跟踪模式，配合 target（body 名）
+        fovy   视场角（可选）
+        mode   "track" 时为跟踪模式，配合 target（body 名）
     """
+    import tempfile
+
     import mujoco
     import mujoco_menagerie as mj
 
-    r = mj.get(robot)
-    xml_path = r.path() / f"{entry}.xml"
-    spec = mujoco.MjSpec.from_file(str(xml_path))
+    src = (mj.get(robot).path() / f"{entry}.xml").resolve()
+    text = _expand_includes(src.read_text(encoding="utf-8", errors="replace"), src.parent)
+    text = _with_offscreen(text, width, height)
 
-    c = spec.worldbody.add_camera()
-    c.name = cam.get("name", "view0")
-    c.pos = [float(v) for v in cam["pos"]]
-    if "xyaxes" in cam:
-        c.quat = xyaxes_to_quat(cam["xyaxes"]).tolist()
-    elif "quat" in cam:
-        c.quat = [float(v) for v in cam["quat"]]
-    if cam.get("fovy") is not None:
-        c.fovy = float(cam["fovy"])
-    if cam.get("mode") == "track":
-        c.mode = mujoco.mjtCamera.mjCAMERA_TRACKING
-        c.targetbody = cam["target"]
+    m = re.search(r"<worldbody[^>]*>", text)
+    if not m:
+        raise RuntimeError("%s 中没有 <worldbody>，无法注入相机" % src)
+    text = text[:m.end()] + "\n    " + _camera_tag(cam) + text[m.end():]
 
-    spec.visual.global_.offwidth = width
-    spec.visual.global_.offheight = height
-    return spec.compile()
+    fd, tmp = tempfile.mkstemp(prefix="mjscene_", suffix=".xml")
+    os.close(fd)
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(text)
+        return mujoco.MjModel.from_xml_path(tmp)
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 def write_video(frames, path, fps=30):
