@@ -1,0 +1,42 @@
+# uav_vision_nn 默认参数
+# 注意：YAML 里裸写的 ~ 是 null，所以带 ~ 的路径必须加引号，
+# 节点侧统一用 os.path.expanduser 展开。
+
+airsim_source:
+  ros__parameters:
+    airsim_ip: "10.0.2.2"      # VirtualBox NAT 下指向宿主机
+    airsim_port: 41451
+    vehicle_name: ""
+    frame_rate: 10.0           # /uav/image 发布频率
+    pose_rate: 20.0            # /uav/pose 发布频率
+    depth_rate: 5.0            # /uav/depth 发布频率
+    control_rate: 10.0         # 速度指令下发频率
+    enable_depth: true
+    cmd_timeout: 0.5           # 超过该时间无新指令则悬停
+    takeoff_height: 1.5        # 起飞爬升目标高度（米，NED 下为负）
+    climb_speed: 1.5           # 起飞爬升速度（m/s）
+
+uav_vision_node:
+  ros__parameters:
+    model_path: "~/.ros/uav_vision_nn/model.pth"
+    image_size: 64
+    max_speed: 2.0             # 输出限幅，单位 m/s
+    publish_rate: 10.0
+    device: "cpu"
+
+uav_vision_collect:
+  ros__parameters:
+    data_dir: "~/.ros/uav_vision_nn/data"
+    sample_rate: 2.0           # 每秒存几帧
+    mode: "waypoint"
+    waypoints: "0,0;5,0;5,5;0,5;0,0"   # NED 平面坐标，分号分隔
+    altitude: -3.0             # 巡航高度，NED 向下为负
+    max_speed: 2.0
+    gain: 0.9                  # 比例控制增益，单位 1/s
+    reach_radius: 0.5          # 判定到达航点的半径
+    control_rate: 10.0
+    auto_land: true            # 航点走完后自动请求降落
+    exit_delay: 3.0            # 请求降落后等待多少秒退出节点
+    land_service: "/uav/land"  # airsim_source 提供的降落服务
+    auto_takeoff: true         # 启动后自动起飞，一条命令跑完采集
+    takeoff_service: "/uav/takeoff"

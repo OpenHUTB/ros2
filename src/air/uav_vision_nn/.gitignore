@@ -1,0 +1,18 @@
+# 运行产物：模型权重、采集数据、训练曲线，均不入库
+*.pth
+*.pt
+data/
+*.png
+*.npy
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.eggs/
+*.egg-info/
+
+# colcon
+build/
+install/
+log/

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_vision_nn</name>
+  <version>0.2.0</version>
+  <description>
+    AirSim 无人机视觉端到端控制：单目图像经 CNN 直接回归机体系速度指令。
+    包含 AirSim-ROS2 桥、数据采集、离线训练与在线推理四个节点（ROS2 Humble）。
+  </description>
+  <maintainer email="dniuna@example.com">dniuna</maintainer>
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+
+  <!-- airsim 没有 rosdep key，按 README 用 pip3 安装；其余为 rosdep 可解析的依赖 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-torch</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
