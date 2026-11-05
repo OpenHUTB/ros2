@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # MuJoCo 侧方停车仿真：小车自动倒车入位
-import math, time, numpy as np, mujoco, mujoco.viewer
+import time, mujoco, mujoco.viewer
 
 XML = """
 <mujoco>
@@ -31,19 +31,17 @@ XML = """
       <geom name="rl" type="box" pos="-0.18 -0.13 0" size="0.04 0.02 0.04" rgba="0.1 0.1 0.1 1"/>
     </body>
   </worldbody>
-  <actuator>
-    <motor name="mx" joint="car_x" gear="5"/>
-    <motor name="my" joint="car_y" gear="5"/>
-    <motor name="myaw" joint="car_yaw" gear="5"/>
-  </actuator>
 </mujoco>
 """
 m = mujoco.MjModel.from_xml_string(XML)
 d = mujoco.MjData(m)
 
-car_x_q = m.joint("car_x").qposadr[0]
-car_y_q = m.joint("car_y").qposadr[0]
-car_yaw_q = m.joint("car_yaw").qposadr[0]
+x_qp = m.joint("car_x").qposadr[0]
+y_qp = m.joint("car_y").qposadr[0]
+yaw_qp = m.joint("car_yaw").qposadr[0]
+x_qv = m.joint("car_x").dofadr[0]
+y_qv = m.joint("car_y").dofadr[0]
+yaw_qv = m.joint("car_yaw").dofadr[0]
 
 # 关键帧：(时间, x, y, yaw)
 keyframes = [
@@ -65,19 +63,29 @@ def get_state(t):
             return x0 + (x1-x0)*s, y0 + (y1-y0)*s, yaw0 + (yaw1-yaw0)*s
     return keyframes[-1][1], keyframes[-1][2], keyframes[-1][3]
 
+dt = m.opt.timestep
+T_END = keyframes[-1][0]
 with mujoco.viewer.launch_passive(m, d) as viewer:
     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
     viewer.cam.distance = 7.0; viewer.cam.elevation = -50; viewer.cam.azimuth = 90
-    t0 = time.time()
     while viewer.is_running():
-        t = time.time() - t0
+        step_start = time.time()
+        t = min(d.time, T_END)
         tx, ty, tyaw = get_state(t)
-        cx = d.qpos[car_x_q]; cy = d.qpos[car_y_q]; cyaw = d.qpos[car_yaw_q]
-        err_x = tx - cx; err_y = ty - cy
-        err_yaw = (tyaw - cyaw + math.pi) % (2*math.pi) - math.pi
-        d.ctrl[0] = err_x * 5.0
-        d.ctrl[1] = err_y * 5.0
-        d.ctrl[2] = err_yaw * 8.0
+        px, py, pyaw = get_state(max(0.0, t - dt))
+
+        d.qpos[x_qp] = tx
+        d.qpos[y_qp] = ty
+        d.qpos[yaw_qp] = tyaw
+        d.qvel[x_qv] = (tx - px) / dt
+        d.qvel[y_qv] = (ty - py) / dt
+        d.qvel[yaw_qv] = (tyaw - pyaw) / dt
+
         mujoco.mj_step(m, d)
         viewer.cam.lookat[0] = 2.0; viewer.cam.lookat[1] = 0.3
         viewer.sync()
+
+        # 按仿真步长对齐墙钟，避免全速灌完 12 秒轨迹
+        slack = dt - (time.time() - step_start)
+        if slack > 0:
+            time.sleep(slack)
