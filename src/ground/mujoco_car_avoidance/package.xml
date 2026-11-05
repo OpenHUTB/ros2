@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_car_avoidance</name>
+  <version>1.0.0</version>
+  <description>
+    OpenHUTB 课程作业：MuJoCo 地面两轮小车射线感知与分级减速避障。
+    通过 mj_ray 构建前视射线扇面，测距结果经"本车道判定"后送入分级决策状态机
+    （巡航 / 分级减速 / 急刹 / 感知失效兜底），输出左右轮速完成闭环。
+  </description>
+  <maintainer email="openhutb_course@example.com">OpenHUTB Student</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行期依赖：只用 ROS 2 自带消息包，不引入第三方消息 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ap_cpp_ros</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 1 visualisation bridge for the AP-CPP active perception coverage
+    planner.  Runs the planner headlessly against the repository's field
+    definitions and publishes the resulting flight path and belief-map markers
+    for RViz.  Deliberately does not depend on AirSim.
+  </description>
+
+  <maintainer email="2865306093@qq.com">Xiangyuetang91</maintainer>
+  <license>MIT</license>
+
+  <url type="website">https://github.com/Xiangyuetang91/OverFOMO</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <export/>
+</package>

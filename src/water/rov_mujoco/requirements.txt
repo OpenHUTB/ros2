@@ -1,0 +1,6 @@
+﻿# rov_mujoco 水下机器人 MuJoCo 物理仿真与控制依赖
+# 开发与测试环境: Python 3.10 (向下兼容 Python 3.8, 向上兼容 Python 3.11)
+mujoco>=3.0.0
+numpy>=1.20.0
+scipy>=1.7.0
+pyyaml

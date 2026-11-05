@@ -1,0 +1,14 @@
+{
+  "platform": "Linux-5.15.0-139-generic-x86_64-with-glibc2.29",
+  "python": "3.8.10 (default, Mar 18 2025, 20:04:55) \n[GCC 9.4.0]",
+  "packages": {
+    "torch": "2.4.1+cpu",
+    "numpy": "1.24.4",
+    "matplotlib": "3.1.2",
+    "airsim": "1.8.1"
+  },
+  "ros_distro": "humble",
+  "vm_os": "Ubuntu 20.04.6",
+  "simulator": "Windows AirSim Blocks",
+  "validation_date": "2026-10-02"
+}

@@ -1,0 +1,13 @@
+mujoco_musculoskeletal_arm_reach:
+  ros__parameters:
+    model_file: models/arm.xml
+    publish_rate_hz: 100.0
+    physics_steps_per_tick: 5
+    payload_kg: 0.0
+    target_x_m: 0.38
+    target_z_m: -0.17
+    shoulder_kp: 32.0
+    shoulder_kd: 2.0
+    elbow_kp: 17.0
+    elbow_kd: 1.6
+    coactivation: 0.025

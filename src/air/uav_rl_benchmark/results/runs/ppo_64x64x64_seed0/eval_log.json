@@ -1,0 +1,68 @@
+[
+  {
+    "success_rate": 0.0,
+    "crash_rate": 0.0,
+    "timeout_rate": 1.0,
+    "mean_steps": 400.0,
+    "mean_reward": -1.960837443027009,
+    "mean_path_len": 0.8093506742308467,
+    "path_efficiency": 1.0,
+    "action_smoothness": 0.00013597875666591081,
+    "timesteps": 1
+  },
+  {
+    "success_rate": 0.0,
+    "crash_rate": 0.2,
+    "timeout_rate": 0.8,
+    "mean_steps": 346.45,
+    "mean_reward": -2.5269526842549177,
+    "mean_path_len": 9.257574717394991,
+    "path_efficiency": 0.6667793471120783,
+    "action_smoothness": 0.06671275229417895,
+    "timesteps": 20001
+  },
+  {
+    "success_rate": 0.05,
+    "crash_rate": 0.25,
+    "timeout_rate": 0.7,
+    "mean_steps": 292.85,
+    "mean_reward": -1.7831701681210455,
+    "mean_path_len": 9.414929255177071,
+    "path_efficiency": 0.660094581107348,
+    "action_smoothness": 0.12878472930573043,
+    "timesteps": 40001
+  },
+  {
+    "success_rate": 0.1,
+    "crash_rate": 0.35,
+    "timeout_rate": 0.55,
+    "mean_steps": 229.4,
+    "mean_reward": -2.3737611197336657,
+    "mean_path_len": 8.108352824980221,
+    "path_efficiency": 0.736212231201684,
+    "action_smoothness": 0.11839846387377584,
+    "timesteps": 60001
+  },
+  {
+    "success_rate": 0.1,
+    "crash_rate": 0.25,
+    "timeout_rate": 0.65,
+    "mean_steps": 266.05,
+    "mean_reward": -0.07612094554202349,
+    "mean_path_len": 8.542666997231581,
+    "path_efficiency": 0.7345384160952417,
+    "action_smoothness": 0.10503972495031459,
+    "timesteps": 80001
+  },
+  {
+    "success_rate": 0.4,
+    "crash_rate": 0.2,
+    "timeout_rate": 0.4,
+    "mean_steps": 179.15,
+    "mean_reward": 7.831185037796425,
+    "mean_path_len": 6.811362210967992,
+    "path_efficiency": 0.8206166695101249,
+    "action_smoothness": 0.12304916814420104,
+    "timesteps": 100001
+  }
+]

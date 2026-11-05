@@ -1,0 +1,18 @@
+test_stream_scores_equal_batch_with_bad_packet_recovery (test_consistency.ConsistencyTests) ... ok
+test_clean_labels_and_smooth_recovery (test_events.EventTests) ... ok
+test_delay_and_recovery_false_alarm (test_events.EventTests) ... ok
+test_preexisting_alarm_not_counted_as_detection (test_events.EventTests) ... ok
+test_dropout_is_missing_not_zero_measurement (test_injection.InjectionTests) ... ok
+test_freeze_retains_stale_source_time (test_injection.InjectionTests) ... ok
+test_no_labels_or_reference_in_observations (test_injection.InjectionTests) ... ok
+test_reproducible_and_original_unchanged (test_injection.InjectionTests) ... ok
+test_online_equals_offline_for_every_scenario (test_stream.StreamTests) ... ok
+test_backward_clock_flagged_and_history_reset (test_validation.ValidationTests) ... ok
+test_missing_fields_and_nonobject_do_not_crash (test_validation.ValidationTests) ... ok
+test_nonfinite_is_not_healthy (test_validation.ValidationTests) ... ok
+test_warmup_not_reported_as_model_ready (test_validation.ValidationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 2.696s
+
+OK

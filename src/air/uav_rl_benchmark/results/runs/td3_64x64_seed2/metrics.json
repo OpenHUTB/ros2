@@ -1,0 +1,18 @@
+{
+  "algo": "td3",
+  "arch": "64x64",
+  "seed": 2,
+  "steps": 100000,
+  "obstacles": 16,
+  "eval_episodes": 100,
+  "train_time_s": 550.9,
+  "train_fps": 181.5,
+  "success_rate": 0.04,
+  "crash_rate": 0.03,
+  "timeout_rate": 0.93,
+  "mean_steps": 376.08,
+  "mean_reward": -5.498,
+  "mean_path_len": 33.8056,
+  "path_efficiency": 0.2566,
+  "action_smoothness": 0.633
+}

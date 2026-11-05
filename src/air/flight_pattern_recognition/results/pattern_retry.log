@@ -1,0 +1,6 @@
+nohup: ignoring input
+Connected!
+Client Ver:1 (Min Req: 1), Server Ver:1 (Min Req: 1)
+
+{"episode_id": "episode_308", "family": "climb", "split": "final", "seed": 20261310, "amplitude": 0.9682461257484943, "omega": 0.42979310349838035, "phase": -1.3574223509797096, "samples": 361, "duration_sim_s": 17.982383616, "median_dt_s": 0.051001088, "max_dt_s": 0.051001088, "timestamps_strictly_increasing": true, "collision_count": 0, "coordinate_frame": "NED world; quaternion body FRD to NED; angular velocity body FRD", "source": "Windows Blocks / AirSim RPC getMultirotorState", "airsim_python_version": "1.8.1", "sha256": "b76d889d5b605d2d65737241ebdb7ac792a137f702531199a1c021530e075bc0"}
+LANDED_VERIFIED True
