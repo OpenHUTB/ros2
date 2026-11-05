@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_mujoco_arm_pickplace</name>
+  <version>1.0.0</version>
+  <description>
+    ROS Noetic + MuJoCo UR5e 简易臂 5 状态抓放演示：
+    复位 -&gt; 靠近 -&gt; 下降 -&gt; 抓取 -&gt; 抬升放置 -&gt; 循环。
+    物理核心与 ROS 解耦（pickplace_core.py 可无界面独立测试）。
+  </description>
+  <maintainer email="student@example.com">student</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
