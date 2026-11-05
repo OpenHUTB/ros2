@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂](#arm)
 
 ---
 
@@ -280,5 +281,9 @@ ___
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
 ___
+
+## 7. 机械臂  <span id='arm'></span>
+
+* [三自由度机械臂空间螺旋线](./arm/mujoco_arm_3d.md) —— MuJoCo 三自由度机械臂沿三维圆柱空间螺旋线运动，逆解直接写入 qpos 保证末端严格跟随，并叠加末端轨迹线
 
 ## 参考文献
