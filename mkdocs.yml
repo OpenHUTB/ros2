@@ -12,7 +12,7 @@ repo_url: https://github.com/OpenHUTB/ros2
 # 页面右上角添加直接编辑页面的按钮
 edit_uri: edit/master/docs/
 
-theme:
+theme:33333333333333
   name: readthedocs
   sticky_navigation: True
   navigation_depth: 3
@@ -74,7 +74,7 @@ nav:
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. MuJoCo 差速小车 go-to-goal: './chapter/diff_drive_go_to_goal.md'
-    - 差速小车走迷宫: mujoco_diff_drive_maze.md
+    - 差速小车走迷宫: chapter/mujoco_diff_drive_maze.md
 
 
 - 人形机器人:
