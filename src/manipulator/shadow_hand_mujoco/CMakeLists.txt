@@ -3,6 +3,9 @@ project(shadow_hand_mujoco)
 
 find_package(catkin REQUIRED)
 
+# catkin_package() 必须在使用 ${CATKIN_PACKAGE_*} 变量之前调用
+catkin_package()
+
 # install python package via setup.py (src/shadow_hand_mujoco/) so that
 # `from shadow_hand_mujoco.common import ...` works under roslaunch
 catkin_python_setup()
@@ -12,4 +15,3 @@ catkin_install_python(PROGRAMS src/shadow_hand_mujoco/main.py DESTINATION ${CATK
 # install launch files
 install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-catkin_package()
