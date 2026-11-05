@@ -196,4 +196,14 @@ python3 tests/test_camera_model_local.py  # CameraInfo/深度点云/相机 TF
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
 
+## 数据采集 demo_recorder
+
+`demo_recorder.py` 同步保存 RGB、深度和里程计，便于离线分析：
+
+```bash
+rosrun carlair_ros_bridge demo_recorder.py --output-dir /tmp/demo_data --max-frames 20
+```
+
+输出 `rgb/000001.png`、`depth/000001.npy`、`meta.csv`；数据文件不要提交到仓库。
+
 `test_imu_local.py` 用桩覆盖 IMU 的机体系 NED→FLU 轴变换、`sensor_msgs/Imu` 的字段与协方差，以及 CMakeLists / main.launch / bridge.yaml 的一致性。
