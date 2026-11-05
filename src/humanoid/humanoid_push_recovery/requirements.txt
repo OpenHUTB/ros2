@@ -1,0 +1,8 @@
+# humanoid_push_recovery 运行依赖
+mujoco>=3.0
+numpy
+pyyaml
+# 采集素材（关键帧/动图/时序CSV）另需
+# imageio
+# 说明：本模块不生成数据曲线图，因此不依赖 matplotlib；时序原始数据由
+#       `python3 main.py --capture <目录>` 导出为 recovery_series.csv，供自行绘图。

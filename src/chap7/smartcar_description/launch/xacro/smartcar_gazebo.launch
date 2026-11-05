@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- 启动参数 -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+
+  <!-- Gazebo 空世界 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+  </include>
+
+  <!-- 加载 xacro 模型 -->
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder '$(find smartcar_description)/urdf/xacro/smartcar.xacro'" />
+
+  <!-- 加载控制器参数 -->
+  <rosparam file="$(find smartcar_description)/config/smartcar_joint.yaml" command="load"/>
+
+  <!-- 机器人状态发布 -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- 加载五个控制器 -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+        args="joint_state_controller
+              rear_right_velocity_controller
+              rear_left_velocity_controller
+              right_bridge_position_controller
+              left_bridge_position_controller"/>
+
+  <!-- 将模型放入 Gazebo -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+        args="-urdf -model mrobot -param robot_description" output="screen"/>
+
+</launch>

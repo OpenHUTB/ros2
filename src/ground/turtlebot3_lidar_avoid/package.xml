@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>turtlebot3_lidar_avoid</name>
+  <version>0.1.0</version>
+  <description>
+    TurtleBot3 激光雷达自主避障 ROS 2 功能包 —— 机器人操作系统及应用课程作业。
+
+    基于 ROS 2 Humble 与 Gazebo 11，订阅 TurtleBot3 机载激光雷达
+    （sensor_msgs/LaserScan），按扇区划分提取前方/左侧/右侧最小距离，
+    通过有限状态机与势场法生成速度指令（geometry_msgs/Twist）并发布至
+    /cmd_vel，实现未知环境下的自主避障巡航。
+  </description>
+  <maintainer email="xjm666god@users.noreply.github.com">xjm666god</maintainer>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/OpenHUTB/ros2</url>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

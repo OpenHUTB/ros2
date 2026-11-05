@@ -1,0 +1,13 @@
+<launch>
+  <arg name="goal_x" default="10.0"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="goal_z" default="5.0"/>
+  <arg name="relative_goal" default="false"/>
+
+  <rosparam command="load" file="$(find uav_lidar_safety_corridor)/config/params.yaml"/>
+  <param name="nav/goal" value="[$(arg goal_x), $(arg goal_y), $(arg goal_z)]"/>
+  <param name="nav/relative_goal" value="$(arg relative_goal)"/>
+
+  <node pkg="uav_lidar_safety_corridor" type="main.py"
+        name="uav_lidar_safety_corridor" output="screen"/>
+</launch>

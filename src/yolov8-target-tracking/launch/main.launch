@@ -1,0 +1,7 @@
+<launch>
+    <!-- 1. 启动 YOLOv8 视觉感知节点 -->
+    <node name="yolo_detector" pkg="yolov8-target-tracking" type="scripts/main.py" output="screen" />
+
+    <!-- 2. 启动 目标跟随 控制节点 -->
+    <node name="main_follower" pkg="yolov8-target-tracking" type="scripts/main_follower.py" output="screen" />
+</launch>

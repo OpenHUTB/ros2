@@ -1,0 +1,18 @@
+{
+  "algo": "sac",
+  "arch": "64x64",
+  "seed": 0,
+  "steps": 100000,
+  "obstacles": 16,
+  "eval_episodes": 100,
+  "train_time_s": 815.5,
+  "train_fps": 122.6,
+  "success_rate": 0.22,
+  "crash_rate": 0.04,
+  "timeout_rate": 0.74,
+  "mean_steps": 313.52,
+  "mean_reward": 1.7562,
+  "mean_path_len": 24.3712,
+  "path_efficiency": 0.3452,
+  "action_smoothness": 0.5648
+}
