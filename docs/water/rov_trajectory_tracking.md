@@ -425,3 +425,21 @@ python3 eval_offline.py --duration 60 --max-rmse 0.2   # 当前全部通过
 ![离线闭环误差曲线](img/water/rov_trajectory_tracking_offline.png)
 
 指标写入 `results/offline_eval.json`，曲线写入 `results/offline_tracking.png`。对应单元测试不依赖 ROS：`python3 -m unittest discover -s test -p "test_offline_eval.py"`。
+
+### 7.4 异机复测记录
+
+本模块的离线评测在另一台机器上独立复跑过一次，用于确认「不依赖 ROS / 本机环境」这一点成立：
+
+| 项目 | 复测环境 |
+|---|---|
+| 系统 | Ubuntu 22.04.5（WSL2） |
+| Python | 3.10.12 |
+| NumPy | 1.21.5 |
+
+复测结论（与本文表格一致）：
+
+- `python3 -m unittest discover -s test -p "test_offline_eval.py" -v` → `Ran 6 tests in 0.529s`，**6/6 通过**
+- `python3 eval_offline.py --duration 60 --max-rmse 0.2` → `GATE PASS`，退出码 0
+- 四组 RMSE 复现一致：3D 螺旋 NN 0.133 / LOS 0.112，割草机 NN 0.122 / LOS 0.106（m）
+
+复测环境与开发环境（Windows 10 + Python 3.11 + NumPy 1.24）不同，说明这套评测只依赖 `numpy` 与 `matplotlib`，不挑平台；但代理模型仍是运动学近似，结论范围见上一节的说明。
