@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_depth_track_nn</name>
+  <version>0.1.0</version>
+  <description>
+    AirSim 无人机深度相机感知 + 给定轨迹跟踪：深度图与参考轨迹偏差经 CNN 回归出
+    机体系速度指令，沿参数化的圆轨迹闭环飞行，含 AirSim 桥、采集、训练、推理四个节点
+    （ROS 2 Humble）。
+  </description>
+  <maintainer email="dniuna@example.com">dniuna</maintainer>
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+
+  <!-- airsim 没有 rosdep key，按 README 用 pip3 安装；其余为 rosdep 可解析的依赖 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-torch</exec_depend>
+
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
