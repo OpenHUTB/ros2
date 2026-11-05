@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 PKG_DIR = Path(__file__).resolve().parent   # Python 包目录
-ROOT = PKG_DIR.parent                       # 源码包根（frames/GIF 输出位置）
+ROOT = PKG_DIR.parent                       # 源码包根
 
 
 def _scripts_dir():
@@ -44,11 +44,12 @@ def main():
     if mode == "scenes":
         sys.exit(sh([sys.executable, scripts / "run_scenes.py"] + sys.argv[2:]))
     if mode == "demo":
-        # 离屏渲染帧 + 合成 GIF（需 ffmpeg）。终端 Ctrl+C 会同时送达本进程与
+        # 离屏渲染帧 + 合成 GIF（需 ffmpeg），输出到当前工作目录，
+        # 避免写入安装空间（site-packages）。终端 Ctrl+C 会同时送达本进程与
         # launch 子进程：捕获中断，等 launch 退出后用已写入帧合成 GIF。
         import glob
-        frames = ROOT / "frames"
-        gif = ROOT / "traffic_sign_speed_control_demo.gif"
+        frames = Path.cwd() / "frames"
+        gif = Path.cwd() / "traffic_sign_speed_control_demo.gif"
         cmd = ["ros2", "launch", "traffic_sign_speed_control",
                "traffic_sign_speed_control.launch.py",
                "render_mode:=file", f"frame_dir:={frames}"]

@@ -41,15 +41,15 @@ graph LR
 - Ubuntu 20.04 + ROS 2 Humble、Python 3.8、PyTorch ≥ 2.0 (CPU)、OpenCV、Pillow、MuJoCo ≥ 3.0（无头环境经 OSMesa 软渲染）
 
     cd ~/ts_ws/src
-    git clone <本仓库>          # 或直接拷贝 src/traffic_sign_speed_control
+    git clone <本仓库>          # 或直接拷贝 src/ground/traffic_sign_speed_control
     cd ~/ts_ws
-    pip3 install -r src/traffic_sign_speed_control/requirements.txt
+    pip3 install -r src/ground/traffic_sign_speed_control/requirements.txt
     colcon build --packages-select traffic_sign_speed_control
     source install/setup.bash
 
 若 `models/sign_cnn.pth` 不存在，先训练（约 3 分钟，CPU）：
 
-    python3 src/traffic_sign_speed_control/scripts/train_signs.py
+    python3 src/ground/traffic_sign_speed_control/scripts/train_signs.py
 
 ## 运行步骤
 
@@ -80,7 +80,7 @@ graph LR
 
 ### 3. 合成演示 GIF
 
-    ros2 run traffic_sign_speed_control main demo     # 需要 ffmpeg
+    ros2 run traffic_sign_speed_control main demo     # 需要 ffmpeg；frames/ 与 GIF 输出到当前工作目录
 
 ### 4. 完整演示
 
@@ -309,8 +309,8 @@ Adam（lr=1e-3）、batch 128、15 epoch，CPU 训练约 3 分钟。
 
 结果复现：
 
-    python3 src/traffic_sign_speed_control/scripts/evaluate_detector.py
-    python3 src/traffic_sign_speed_control/scripts/run_scenes.py --duration 55
+    python3 src/ground/traffic_sign_speed_control/scripts/evaluate_detector.py
+    python3 src/ground/traffic_sign_speed_control/scripts/run_scenes.py --duration 55
 
 ### 端到端延迟
 
