@@ -1,0 +1,15 @@
+airsim_bridge:
+  host: '127.0.0.1'
+  port: 41451
+  vehicle_name: ''
+  camera_name: front_center
+  publish_rate: 5.0
+  command_timeout: 1.5
+  max_speed: 1.0
+ppo_planner:
+  control_rate: 2.0
+  sensor_timeout: 1.5
+  speed: 1.0
+  clearance: 3.0
+  goal_ned: [93.37, 0.79, -7.56]
+  goal_tolerance: 2.0

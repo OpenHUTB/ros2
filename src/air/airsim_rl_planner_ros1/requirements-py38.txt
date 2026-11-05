@@ -1,0 +1,11 @@
+# Python 3.8-compatible candidates; validate installation on Ubuntu Noetic.
+numpy==1.24.4
+opencv-python==4.10.0.84
+stable-baselines3==2.3.2
+gymnasium==0.29.1
+shimmy==1.3.0
+ultralytics==8.2.103
+torch==2.2.2
+torchvision==0.17.2
+msgpack-rpc-python==0.4.1
+airsim==1.8.1

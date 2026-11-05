@@ -1,4 +1,4 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -276,3 +276,6 @@ ___
 ___
 
 ## 参考文献
+
+
+* [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
