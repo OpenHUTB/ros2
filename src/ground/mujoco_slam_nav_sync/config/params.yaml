@@ -1,0 +1,8 @@
+mujoco_slam_nav_sync:
+  ros__parameters:
+    scene: maze          # maze | open
+    use_slam: true       # true=EKF-SLAM，false=纯里程计
+    slip: 0.0            # 轮滑率：0.0 / 0.05 / 0.10 / 0.20
+    weights: ""          # 训练好的 planner.npz；留空表示未训练网络（仅联调用）
+    rate_hz: 20.0
+    max_steps: 900       # 20 Hz -> 45 s

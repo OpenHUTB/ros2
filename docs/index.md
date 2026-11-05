@@ -103,6 +103,7 @@ ROS每章节运行代码:
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
+* [MuJoCo 差速车建图与导航同步仿真（EKF-SLAM + 神经网络局部规划）](./ground/mujoco_slam_nav_sync.md)
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
