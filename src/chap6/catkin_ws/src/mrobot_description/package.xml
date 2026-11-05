@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrobot_description</name>
+  <version>1.0.0</version>
+  <description>mrobot 机器人模型描述：arbotix 假仿真使用的简化版 URDF（含车身与激光雷达外形，不含 Gazebo 插件）</description>
+  <maintainer email="wkb@example.com">wkb</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>urdf</build_depend>
+  <build_depend>xacro</build_depend>
+
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>xacro</exec_depend>
+</package>
