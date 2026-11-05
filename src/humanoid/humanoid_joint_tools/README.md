@@ -53,9 +53,9 @@ src/
 * [查看 test_joint_recorder.py 代码](./test/test_joint_recorder.py)
 ## 功能说明 / Boundary behavior
 
-- 中文：录制节点通过 ROS 2 Service (std_srvs/Trigger) 控制起止。启动录制后，缓存 `/joint_states_raw` 数据；停止录制时，将数据序列化写入 `~/.ros/joint_traj.json`。回放节点提供 `/start_play` 服务，或在 `auto_play:=true` 时检测到新文件后自动回放一次；回放按录制帧的时间戳调度发布，播完最后一帧即停止，不循环。
+- 中文：录制节点通过 ROS 2 Service (std_srvs/Trigger) 控制起止。启动录制后，缓存 `/joint_states_raw` 数据；停止录制时，将数据序列化写入 `~/.ros/joint_traj.json`。回放节点提供 `/start_play` 服务；当 `auto_play:=true` 时，节点启动后若已存在录制文件会立即回放一次，此后每当文件被新的录制覆盖（内容变化）时再自动回放一次；回放按录制帧的时间戳调度发布，播完最后一帧即停止，不循环。
 
-- English: The recorder uses ROS 2 Services (std_srvs/Trigger) to start and stop recording. It caches `/joint_states_raw` and saves them to `~/.ros/joint_traj.json`. The player exposes a `/start_play` service (or auto-replays once when a new file is detected with `auto_play:=true`). Playback is scheduled by recorded frame timestamps and stops after the last frame, with no looping.
+- English: The recorder uses ROS 2 Services (std_srvs/Trigger) to start and stop recording. It caches `/joint_states_raw` and saves them to `~/.ros/joint_traj.json`. The player exposes a `/start_play` service; with `auto_play:=true`, it replays the existing file once shortly after startup and again whenever the file is replaced by a new recording (content change). Playback is scheduled by recorded frame timestamps and stops after the last frame, with no looping.
 
 ## 启动步骤
 
