@@ -51,6 +51,7 @@ nav:
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
 - ROS 教程:
+    - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
