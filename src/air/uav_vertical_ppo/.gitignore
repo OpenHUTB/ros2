@@ -5,3 +5,11 @@ install/
 log/
 outputs/
 *.egg-info/
+
+# Keep only the two gust comparison samples in version control.
+data/evaluation/*
+!data/evaluation/gust_ppo_101.csv
+!data/evaluation/gust_pd_101.csv
+data/training.monitor.csv
+data/training_config.json
+validation/

@@ -21,7 +21,7 @@ source install/setup.bash
 ros2 launch uav_vertical_ppo main.launch.py
 ```
 
-首次安装可用系统 Python 创建 `--system-site-packages` 虚拟环境，保留系统 ROS 包可见性。输出目录默认是 `outputs/`，不覆盖随包附带的数据。
+首次安装可用系统 Python 创建 `--system-site-packages` 虚拟环境，保留系统 ROS 包可见性。输出目录默认是 `outputs/`；随包提供预训练策略和两条抗扰对照样例，运行结果写入输出目录。
 
 ## 验证范围
 

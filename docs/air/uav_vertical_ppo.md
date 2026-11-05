@@ -46,7 +46,7 @@ PPO 采用 actor / critic 分离的双层 32 单元 MLP；策略输入 2 维、�
 
 $$r_t=1-2e_z^2-0.15v_z^2-0.01a_t^2.$$
 
-高度低于 0.15 m 或高于 4 m 提前终止并扣 20；正常回合 400 步、8 s。训练只使用无扰动场景。模型文件、训练配置和逐回合回报均随包保存。
+高度低于 0.15 m 或高于 4 m 提前终止并扣 20；正常回合 400 步、8 s。训练只使用无扰动场景。随包提供已训练策略。训练配置和逐回合回报写入指定输出目录。
 
 ```mermaid
 flowchart LR
@@ -104,9 +104,10 @@ ros2 topic echo /uav/hover_state --once
 | `models/vertical_quadrotor.xml` | 几何、惯量、传感器与推力执行器 |
 | `ros_node.py` | 推理定时器与状态发布 |
 | `data/hover_ppo.zip` | 训练得到的策略及价值网络 |
-| `data/training_config.json`、`training.monitor.csv` | 训练设置和回合回报 |
-| `data/evaluation/` | 27 个回合 CSV 和汇总指标 |
+| `data/evaluation/` | 同种子 gust 场景的 PPO 与 PD 两条可视化样例 |
 | `test/test_environment.py` | 传感器、种子、动作限幅与外力时段检查 |
+
+完整评估的 27 个回合 CSV、汇总指标和训练回报由运行入口写入 `outputs/`，不作为随包数据；文档表格保留三场景汇总结果。
 
 三项环境测试通过；ROS 包构建、安装后 launch 和话题接收通过。验证记录采用 Ubuntu 22.04 / Humble，不代表 Ubuntu 20.04 或真机验证。其他使用者仍需在自己的环境独立运行。
 
