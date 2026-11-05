@@ -1,0 +1,31 @@
+<mujoco model="diff_drive_maze">
+  <option timestep="0.01"/>
+  <default>
+    <joint armature="0.01"/>
+    <geom condim="4"/>
+  </default>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.9 0.9 0.9 1" friction="1.0 0.1 0.1"/>
+    <geom name="wall1" type="box" pos="0 0.5 0.25" size="0.1 1.5 0.25" rgba="0.5 0.5 0.5 1"/>
+    <geom name="wall2" type="box" pos="1.0 -1.0 0.25" size="1.0 0.1 0.25" rgba="0.5 0.5 0.5 1"/>
+    <geom name="goal" type="cylinder" pos="2 2 0.1" size="0.3 0.1" rgba="0 1 0 0.5"/>
+    <body name="robot" pos="-2 -2 0.1">
+      <freejoint name="robot_root"/>
+      <geom name="chassis" type="box" pos="0 0 0" size="0.15 0.1 0.05" rgba="0.2 0.4 0.8 1"/>
+      <inertial pos="0 0 0" mass="1.0" diaginertia="0.01 0.01 0.02"/>
+      <body name="left_wheel" pos="0 0.15 0">
+        <joint name="left_wheel" type="hinge" axis="0 1 0"/>
+        <geom name="left_wheel" type="cylinder" fromto="0 -0.04 0 0 0.04 0" size="0.05" rgba="0.2 0.2 0.2 1"/>
+      </body>
+      <body name="right_wheel" pos="0 -0.15 0">
+        <joint name="right_wheel" type="hinge" axis="0 1 0"/>
+        <geom name="right_wheel" type="cylinder" fromto="0 -0.04 0 0 0.04 0" size="0.05" rgba="0.2 0.2 0.2 1"/>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <velocity name="left_wheel" joint="left_wheel" kv="2"/>
+    <velocity name="right_wheel" joint="right_wheel" kv="2"/>
+  </actuator>
+</mujoco>
