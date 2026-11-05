@@ -143,7 +143,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
@@ -263,6 +263,36 @@
 <li class="toctree-l1"><a class="reference internal" href="../train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">扭转控制</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">这一页解决什么问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#twist_to_control">自主实现：twist_to_control 包</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_4">运动学公式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_5">四个容易踩的坑，以及本实现的处理</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">运行步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">离线回归测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">与已有模块的关系</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">说明</a>
+</li>
+</ul>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
@@ -447,6 +477,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">地面载具</li>
 <li class="breadcrumb-item active">扭转控制</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/twist_to_control.md"> 编辑页面</a>
@@ -460,9 +491,250 @@
 <h2 id="_2">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/carla_twist_to_control/">Carla 扭转控制</a></li>
-</ul></div>
+</ul>
+<h2 id="_3">这一页解决什么问题</h2>
+<p><code>/cmd_vel</code> 上的 <code>geometry_msgs/Twist</code> 是<strong>上层规划</strong>给出的意图：想让车以多快前进、
+以多大角速度转弯。但车本身并不认识"角速度"这个量——方向盘只能转到某个角度，
+油门只能给到某个速度，差速底盘只能控制左右轮各转多快。</p>
+<p>于是中间缺一层换算：</p>
+<div class="highlight"><pre><span></span><code>规划层            Twists（v, ω）        "我想怎么走"
+   │
+   ├── 本页实现的转换 ──┐
+   │                    │
+执行层            转向角 δ、轮速 v_l / v_r   "车实际怎么动"
+</code></pre></div>
+<p>缺了这一层会发生什么：把 <code>Twist</code> 直接发给一辆阿克曼底盘的车，<code>angular.z</code> 会被忽略，
+车只会直着开；即使某些控制器接受 <code>Twist</code>，它在低速时也会因为 <code>ω / v</code> 发散而输出
+离谱的转角。本页给出的实现就是把这一层补齐。</p>
+<h2 id="twist_to_control">自主实现：<code>twist_to_control</code> 包</h2>
+<p>对应源码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/twist_to_control"><code>src/ground/twist_to_control</code></a>。</p>
+<h3 id="_4">运动学公式</h3>
+<p>把车沿后轴看成一个质点，前后轴之间距离为轴距 <code>L</code>，前轮转角为 <code>δ</code>，
+则车体角速度与速度的关系是：</p>
+<div class="highlight"><pre><span></span><code>ω = v · tan(δ) / L
+</code></pre></div>
+<p>反过来，已知规划层给出的 <code>(v, ω)</code>，先求曲率 <code>k</code>，再求转角：</p>
+<div class="highlight"><pre><span></span><code>k = ω / v
+δ = atan(k · L)
+</code></pre></div>
+<p>曲率 <code>k</code> 的倒数就是转弯半径：<code>k = 0.5</code> 表示半径 2 米。这个量比转角更本质——
+它把"速度多快、转多急"两个量合并成了一个几何量，所以本实现内部始终以曲率为中心，
+不同的底盘模型只是在曲率之后分岔：</p>
+<table>
+<thead>
+<tr>
+<th>底盘模型</th>
+<th>由曲率到执行量的换算</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bicycle</code></td>
+<td><code>δ = atan(k · L)</code>，输出一个前轮转角</td>
+</tr>
+<tr>
+<td><code>ackermann</code></td>
+<td><code>δ_inner = atan(L·k/(1 - b·k/2))</code>、<code>δ_outer = atan(L·k/(1 + b·k/2))</code></td>
+</tr>
+<tr>
+<td><code>diff_drive</code></td>
+<td><code>v_left = v - ω·b/2</code>、<code>v_right = v + ω·b/2</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>diff_drive</code> 没有方向盘，<code>/vehicle/control</code> 里的转角字段仍按等效单车模型给出（方便与另
+两种模型对照），真正执行请看 <code>/vehicle/wheel_speed</code>。</p>
+<p>阿克曼几何中内侧轮必然比外侧轮转得更多（转弯半径更小），差速分配中转弯外侧轮
+必然比内侧轮转得更快。这两个关系都写进了回归测试。</p>
+<h3 id="_5">四个容易踩的坑，以及本实现的处理</h3>
+<p><strong>1. 低速奇点。</strong> <code>k = ω / v</code> 在 <code>v → 0</code> 时发散。速度 0.01 m/s、角速度 0.5 rad/s
+就解出曲率 50（半径 2 厘米），任何实车都做不到。</p>
+<p>处理：设死区 <code>min_speed</code>（默认 0.05 m/s），<code>|v|</code> 低于它时<strong>锁存上一帧曲率</strong>，
+并在诊断话题里把"锁存"标志置 1。这比直接输出 0 更合理——车在缓慢挪动时，
+方向盘应该保持刚才的角度，而不是突然回正。</p>
+<p><strong>2. 倒车方向。</strong> <code>v</code> 取负值时 <code>k = ω / v</code> 自动反号，因此转角方向自动正确。
+这一点不需要特殊分支，但很容易被"先取绝对值再算"的写法破坏，所以测试里专门
+校验了倒车时转角为负。</p>
+<p><strong>3. 双级限幅。</strong> 一次超限可能是两种完全不同的原因：路径本身太弯（曲率超限），
+或者方向盘转不到那么大（转角超限）。本实现分两级截断——先按 <code>max_curvature</code>
+截断曲率，再按 <code>max_steering</code> 截断转角，<code>control_info</code> 的"饱和"位合并上报两者。</p>
+<p><strong>4. 指令抖动。</strong> 相邻两帧 <code>Twist</code> 稍有差异，转角就会跳变，实车表现为方向盘来回摆。
+本实现同时限制加速度（<code>max_accel</code>）与转角变化率（<code>max_steering_rate</code>），
+让执行量逐帧逼近目标，<code>control_info</code> 的"速率受限"位标记当前是否还在追赶。</p>
+<h3 id="_6">参数</h3>
+<p>所有参数都在 <code>config/twist_to_control.yaml</code> 里给出默认值，并由 <code>launch/main.launch</code>
+用 17 个带 <code>doc</code> 的 <code>&lt;arg&gt;</code> 暴露，可以命令行覆盖。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model</code></td>
+<td><code>bicycle</code></td>
+<td>底盘模型：<code>bicycle</code> / <code>ackermann</code> / <code>diff_drive</code></td>
+</tr>
+<tr>
+<td><code>wheelbase</code></td>
+<td><code>2.7</code></td>
+<td>轴距 L（米）</td>
+</tr>
+<tr>
+<td><code>track_width</code></td>
+<td><code>1.5</code></td>
+<td>轮距 b（米）</td>
+</tr>
+<tr>
+<td><code>max_steering</code></td>
+<td><code>0.55</code></td>
+<td>前轮最大转角（弧度，约 31.5°）</td>
+</tr>
+<tr>
+<td><code>max_curvature</code></td>
+<td><code>1.0</code></td>
+<td>最大曲率（1/m），对应最小转弯半径 1 米</td>
+</tr>
+<tr>
+<td><code>max_speed</code></td>
+<td><code>5.0</code></td>
+<td>最大速度（m/s），正反向都限</td>
+</tr>
+<tr>
+<td><code>max_accel</code></td>
+<td><code>2.0</code></td>
+<td>纵向加速度上限（m/s²）</td>
+</tr>
+<tr>
+<td><code>max_steering_rate</code></td>
+<td><code>2.0</code></td>
+<td>转角变化率上限（rad/s）</td>
+</tr>
+<tr>
+<td><code>min_speed</code></td>
+<td><code>0.05</code></td>
+<td>曲率死区（m/s）</td>
+</tr>
+<tr>
+<td><code>timeout</code></td>
+<td><code>0.5</code></td>
+<td><code>/cmd_vel</code> 超时（秒）</td>
+</tr>
+<tr>
+<td><code>publish_hz</code></td>
+<td><code>20.0</code></td>
+<td>发布频率（Hz）</td>
+</tr>
+<tr>
+<td><code>use_mock_odom</code></td>
+<td><code>false</code></td>
+<td>是否启用内置运动学模拟</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">话题</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>方向</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>订阅</td>
+<td><code>linear.x</code>、<code>angular.z</code></td>
+</tr>
+<tr>
+<td><code>/vehicle/control</code></td>
+<td><code>std_msgs/Float64MultiArray</code></td>
+<td>发布</td>
+<td><code>[转角, 速度, 曲率]</code></td>
+</tr>
+<tr>
+<td><code>/vehicle/wheel_speed</code></td>
+<td><code>std_msgs/Float64MultiArray</code></td>
+<td>发布</td>
+<td><code>[左轮速, 右轮速]</code>，仅差速模型</td>
+</tr>
+<tr>
+<td><code>/vehicle/control_info</code></td>
+<td><code>std_msgs/Float64MultiArray</code></td>
+<td>发布</td>
+<td><code>[请求转角, 实发转角, 饱和, 锁存, 速率受限]</code></td>
+</tr>
+<tr>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>发布</td>
+<td>内置模拟位姿，仅 <code>use_mock_odom:=true</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">运行步骤</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 构建</span>
+cp<span class="w"> </span>-r<span class="w"> </span>src/ground/twist_to_control<span class="w"> </span>~/catkin_ws/src/
+<span class="nb">cd</span><span class="w"> </span>~/catkin_ws<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>/opt/ros/melodic/setup.bash<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+
+<span class="c1"># 终端 1</span>
+roslaunch<span class="w"> </span>twist_to_control<span class="w"> </span>main.launch
+
+<span class="c1"># 终端 2：发指令（持续发布，低于 timeout 的频率会被判为零速度）</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-r<span class="w"> </span><span class="m">10</span><span class="w"> </span>/cmd_vel<span class="w"> </span>geometry_msgs/Twist<span class="w"> </span><span class="s1">'{linear: {x: 1.0}, angular: {z: 0.5}}'</span>
+
+<span class="c1"># 终端 3：看输出</span>
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/vehicle/control
+</code></pre></div>
+<p>速度 1.0 m/s、角速度 0.5 rad/s、轴距 2.7 m 时，稳态曲率为 0.5、转角约为 0.933 rad
+（超过默认的 <code>max_steering</code> = 0.55，因此会被限幅并上报饱和）。把角速度降到 0.2
+即可得到约 0.495 rad 的转角，落在限幅之内。</p>
+<p>想看车真的按指令跑起来，不需要 CARLA：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>twist_to_control<span class="w"> </span>main.launch<span class="w"> </span>use_mock_odom:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>节点会自己按运动学积分位姿并发布 <code>/odom</code>，<code>rostopic echo /odom</code> 能看到
+位置沿圆弧推进。</p>
+<h3 id="_9">离线回归测试</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;仓库根目录&gt;
+python3<span class="w"> </span>tests/test_twist_to_control_local.py
+</code></pre></div>
+<p>测试只用标准库，覆盖参数默认值与读取、曲率换算（含倒车与死区）、转角与双级限幅、
+阿克曼内外轮关系、差速轮速守恒、逐帧推进（加速度限制、转角速率限制、锁存、饱和）、
+内置模拟（直线、定圆、倒车、<code>dt = 0</code>）、四元数往返，以及工程文件约定
+（launch 入口、yaml 键名、核心逻辑不依赖 rospy 等）。</p>
+<h3 id="_10">与已有模块的关系</h3>
+<p>本包与 <code>vehicle_pygame_teleop</code>、<code>waypoint_target_switcher</code> 是同一条链路的相邻环节：</p>
+<div class="highlight"><pre><span></span><code>vehicle_pygame_teleop   键盘 ──→ /cmd_vel ┐
+waypoint_target_switcher 路径点 ──→ /cmd_vel ┤
+                                                 ├──→ twist_to_control ──→ 转角 / 轮速
+</code></pre></div>
+<p>前两个模块负责<strong>产生</strong> <code>Twist</code>，本包负责把 <code>Twist</code> <strong>翻译</strong>成执行量，三者可以串起来跑，
+也可以单独使用。本包不修改上述任一模块。</p>
+<h2 id="_11">常见问题</h2>
+<p><strong>Q：<code>/vehicle/control</code> 一直是 0？</strong>
+A：<code>/cmd_vel</code> 需要持续发布。节点在 <code>timeout</code>（默认 0.5 s）收不到指令时按零速度处理，
+所以 <code>rostopic pub -r 1</code> 会被判为零速。</p>
+<p><strong>Q：转角一直是 0，但速度不为 0？</strong>
+A：<code>angular.z</code> 为 0。曲率只由 <code>angular.z / linear.x</code> 决定。</p>
+<p><strong>Q：低速时转角不动？</strong>
+A：<code>|v|</code> 低于 <code>min_speed</code> 时进入死区锁存，<code>control_info</code> 第 4 位为 1。</p>
+<p><strong>Q：<code>is neither a launch file in package</code>？</strong>
+A：新终端没 source 工作空间，先 <code>/opt/ros/melodic/setup.bash</code> 再 <code>devel/setup.bash</code>。</p>
+<h2 id="_12">说明</h2>
+<p>本模块使用大模型辅助编写代码、测试与文档，提交内容由本人负责。</p></div>
 </div>
 </div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../carla_platoon/" title="多车协同编队（CARLA）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mujoco_drone_distance_stop/" title="无人机制动旧入口">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -478,6 +750,8 @@
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../carla_platoon/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mujoco_drone_distance_stop/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
