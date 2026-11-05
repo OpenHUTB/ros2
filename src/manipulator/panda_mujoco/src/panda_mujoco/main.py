@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Franka Emika Panda 七轴机械臂：关节轨迹运动 + 夹爪开合（MuJoCo，不依赖 Gazebo）。
 
