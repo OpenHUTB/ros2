@@ -10,7 +10,7 @@ title: 主页
   - [肌肉骨骼人](#musculoskeletal)
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
-  - [水域载具](#water_vehicle)
+  - [水域载具](#water_vehicle)- [MuJoCo双自由度机械臂画正方形](./chapter/mujoco_two_dof_arm_square.md)
 
 ---
 
