@@ -199,6 +199,63 @@ with mujoco.viewer.launch_passive(model, data) as viewer:
 成功事例截图：
 ![alt text](../img/mujoco1.png)
 
+## 四、人形机器人站立示例
+
+小球只是验证"MuJoCo 能跑"。这一节再往前走一步：搭一个 10 关节的人形（骨盆 / 躯干 / 头 / 双腿 / 双臂），
+用 **PD + 重力补偿** 让它站住——这是后面所有步态、平衡控制的基础。
+
+### 1. 文件位置
+
+| 文件 | 作用 |
+|---|---|
+| [src/humanoid/mujoco_demo/scene_humanoid.py](../../src/humanoid/mujoco_demo/scene_humanoid.py) | 人形 MJCF（10 个铰链关节 + 自由关节） |
+| [src/humanoid/mujoco_demo/controller.py](../../src/humanoid/mujoco_demo/controller.py) | 纯控制逻辑：PD 力矩、重力补偿、倾角/站立判定 |
+| [src/humanoid/mujoco_demo/humanoid_stand.py](../../src/humanoid/mujoco_demo/humanoid_stand.py) | 入口：可视化 / 无头两种跑法 |
+
+### 2. 运行
+
+```bash
+# 可视化：应看到一个小人站在原地 5 s
+python3 src/humanoid/mujoco_demo/humanoid_stand.py
+
+# 无头：站住返回 0（可进脚本/CI）
+python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
+```
+
+### 3. 核心代码
+
+站着不动的关键就两行：
+
+```python
+# 1) PD：把关节拉回站立角（0）
+tau = kp * (q_des - q) - kd * qd
+# 2) 重力补偿：mj_rne 的偏置力前馈，否则腿会被自重压"软"
+tau += qfrc_bias
+```
+
+完整实现见 `controller.pd_torque()`；增益按关节给（腿 300/25，踝 150/12，肩 60/5，肘 40/3），
+力矩统一限幅 200 N·m。
+
+### 4. 运行效果
+
+无头模式实测输出（Windows + Python 3.13 + MuJoCo 3.17）：
+
+```text
+初始骨盆高度 1.042 m，关节 10 个，控制步数 2500
+结果: {'height': 1.04, 'base_height': 1.042, 'min_height': 1.039, 'tilt_deg': 0.58, 'upright': True}
+```
+
+5 s 内骨盆高度只下降 3 mm，倾角 0.58°，判定为"站住"。
+
+### 5. 测试
+
+```bash
+python3 tests/test_humanoid_stand_local.py
+```
+
+9 项：PD 方向 / 阻尼 / 前馈 / 饱和、四元数倾角、站立判定，以及一局 5 s 无头物理
+（没装 mujoco 时自动跳过物理部分）。
+
 ## 参考
 
 * [人形机器人的示例](https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_robot)
