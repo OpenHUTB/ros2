@@ -31,6 +31,6 @@ python -m pytest -q tests
 
 ## 仿真环境
 
-默认演示在 MuJoCo 仿真环境运行。一次 180 步演示持续 3.6 秒，落点接近误差约 0.295 m，最终高度约 0.235 m。一次 1200 样本训练包含 48 个训练 episode 和 12 个测试 episode，测试 RMSE 为 0.036406 m/s。一次二维导航运行到达目标，完成 38 个网格步，地图覆盖率为 99.22%。这些结果对应固定随机种子与本项目仿真场景，不代表真实飞行性能。
+默认演示在 MuJoCo 仿真环境运行。一次 180 步演示持续 3.6 秒，着陆接近误差为 0.3387 m，最终高度为 0.2348 m，着陆判定成功。一次 1200 样本训练包含 48 个训练 episode 和 12 个测试 episode，测试 RMSE 为 0.036406 m/s。一次二维导航运行到达目标，完成 38 个网格步，地图覆盖率为 99.22%。
 
 English summary: A lightweight MuJoCo UAV project with visual landing, keyboard teleoperation, and 2D lidar mapping with replanned navigation.
