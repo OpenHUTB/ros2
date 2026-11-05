@@ -102,22 +102,8 @@ def _camera_tag(cam):
     return "<camera %s/>" % " ".join(attrs)
 
 
-def _model_dir(robot):
-    """定位 menagerie 模型目录。
-
-    优先用 mujoco_menagerie 包（它会按需下载到本地缓存）。该包的下载逻辑用
-    tarfile.extractall(..., filter="data")，而 filter 参数要 Python 3.11.4 以上
-    才有；Python 3.10（Ubuntu 22.04 默认）上会 TypeError。遇到这种情况不直接崩，
-    改为扫描本地已有缓存目录复用。
-    """
-    import mujoco_menagerie as mj
-
-    reason = None
-    try:
-        return Path(mj.get(robot).path())
-    except Exception as exc:  # 网络、解包、权限等任何失败都退到本地缓存扫描
-        reason = exc
-
+def _cache_roots():
+    """mujoco-menagerie 可能存放模型的几个位置（按优先级）。"""
     roots = []
     if os.environ.get("MUJOCO_MENAGERIE_CACHE"):
         roots.append(Path(os.environ["MUJOCO_MENAGERIE_CACHE"]))
@@ -127,15 +113,53 @@ def _model_dir(robot):
         roots.append(Path(os.environ["XDG_CACHE_HOME"]) / "mujoco_menagerie")
     roots += [Path.home() / ".cache" / "mujoco_menagerie",
               Path.home() / ".local" / "share" / "mujoco_menagerie"]
+    return roots
 
+
+def _find_cached(roots, robot):
+    """在缓存目录里找已解包的模型，目录内确实有 XML 才算命中。"""
     for root in roots:
         for models in (root / "cache" / "models", root / "models", root):
             if not models.is_dir():
                 continue
             for d in sorted(models.iterdir()):
                 if d.is_dir() and (d.name == robot or d.name.startswith(robot + "-")):
-                    print("复用本地缓存模型:", d)
-                    return d
+                    if any(d.glob("*.xml")):
+                        return d
+    return None
+
+
+def _model_dir(robot):
+    """定位 menagerie 模型目录。
+
+    先扫本地缓存，命中就直接用、不发任何网络请求；未命中才交给
+    mujoco_menagerie 下载。这个顺序是必须的：mj.get() 即使模型已在缓存里也会
+    做一次远端校验，实测 MuJoCo 3.2.3 下 panda 每次启动要白等 130 s 以上，
+    缓存优先后是毫秒级。
+
+    首次下载在 Python < 3.11.4 上会因 tarfile.extractall(filter=...) 抛
+    TypeError（Ubuntu 20.04/22.04 默认 3.10），网络或权限也可能失败；这些
+    异常一律兜底为"再扫一次缓存"，最终仍找不到才带原因报错。
+    """
+    roots = _cache_roots()
+
+    cached = _find_cached(roots, robot)
+    if cached is not None:
+        print("复用本地缓存模型:", cached)
+        return cached
+
+    reason = None
+    try:
+        import mujoco_menagerie as mj
+
+        return Path(mj.get(robot).path())
+    except Exception as exc:  # 网络、解包、权限、Python 版本都可能失败
+        reason = exc
+
+    cached = _find_cached(roots, robot)  # 下载可能已解出一部分
+    if cached is not None:
+        print("复用本地缓存模型:", cached)
+        return cached
 
     raise RuntimeError(
         "未找到 %s 的模型：mujoco-menagerie 取模型失败（%r），本地缓存中也没有可复用目录。"
