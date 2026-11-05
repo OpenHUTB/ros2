@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """简易人形机器人 MuJoCo 仿真：原地踏步 + 交替摆臂（MuJoCo，不依赖 Gazebo）。
 
