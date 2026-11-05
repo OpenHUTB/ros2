@@ -13,7 +13,7 @@ viewer.cam.distance = 3.5
 viewer.cam.elevation = -20
 
 # PID参数已调好，符号已匹配模型方向
-angle_pid = PIDController(kp=12.0, ki=0.0, kd=3.5, output_min=-2.0, output_max=2.0)
+angle_pid = PIDController(kp=12.0, ki=0.05, kd=3.5, output_min=-2.0, output_max=2.0)
 pos_pid = PIDController(kp=0.5, ki=0.0, kd=0.1, output_min=-0.15, output_max=0.15)
 
 dt = model.opt.timestep
