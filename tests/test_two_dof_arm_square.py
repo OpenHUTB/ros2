@@ -18,5 +18,5 @@ def test_ee_pos_reachable():
     
     x = data.body('ee').xpos[0]
     y = data.body('ee').xpos[1]
-    assert 0.5 < x < 1.0
+    assert 0.5 =< x < 1.=0
     assert -0.1 < y < 0.1
