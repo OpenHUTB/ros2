@@ -176,6 +176,8 @@ ROS每章节运行代码:
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
+* [无人机磁力计干扰自检与航向一致性门控](./air/uav_mag_interference_monitor.md) —— 起飞前用怠速/上油门两组整圈样本比较硬铁偏差，飞行中用 GNSS 航迹向与磁航向互检，异常时切换航向来源
+
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
