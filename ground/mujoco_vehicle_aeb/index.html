@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>基于MuJoCo的自动紧急制动（AEB）TTC仿真 - 模拟器的 ROS 文档</title>
+<title>基于MuJoCo的AEB自动紧急制动仿真 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u57fa\u4e8eMuJoCo\u7684\u81ea\u52a8\u7d27\u6025\u5236\u52a8\uff08AEB\uff09TTC\u4eff\u771f";
+        var mkdocs_page_name = "\u57fa\u4e8eMuJoCo\u7684AEB\u81ea\u52a8\u7d27\u6025\u5236\u52a8\u4eff\u771f";
         var mkdocs_page_input_path = "ground/mujoco_vehicle_aeb.md";
         var mkdocs_page_url = null;
       </script>
@@ -135,7 +135,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">地面载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
@@ -170,7 +170,33 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rviz_plugin/">RVIZ Carla 插件</a>
 </li>
-<li class="toctree-l1"><a class="" href="mujoco_vehicle_aeb.md">基于MuJoCo的AEB自动紧急制动仿真</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">基于MuJoCo的AEB自动紧急制动仿真</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1 项目简介</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2 原理介绍</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-ttc">2.1 TTC碰撞时间公式</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22-aeb">2.2 AEB比例制动控制逻辑</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23-mujoco">2.3 MuJoCo模型说明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3 环境依赖</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4 编译与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5 运行效果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6 实验结果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7 文件结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8 大模型声明</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_shooting/">打靶</a>
 </li>
@@ -415,7 +441,8 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item active">基于MuJoCo的自动紧急制动（AEB）TTC仿真</li>
+<li class="breadcrumb-item">地面载具</li>
+<li class="breadcrumb-item active">基于MuJoCo的AEB自动紧急制动仿真</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ground/mujoco_vehicle_aeb.md"> 编辑页面</a>
 </li>
@@ -514,6 +541,10 @@ src/
 </code></pre></div>
 </div>
 </div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../rviz_plugin/" title="RVIZ Carla 插件"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mujoco_shooting/" title="打靶">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -529,6 +560,8 @@ src/
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../rviz_plugin/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mujoco_shooting/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
