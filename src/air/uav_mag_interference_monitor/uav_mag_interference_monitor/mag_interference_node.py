@@ -38,8 +38,10 @@ METERS_PER_DEG_LON = 111320.0
 class MagInterferenceNode(Node):
     """订阅磁场与 GNSS，输出经过一致性门控的推荐航向。"""
 
-    def __init__(self) -> None:
-        super().__init__("mag_interference_monitor")
+    def __init__(self, **kwargs) -> None:
+        # **kwargs 透传给 rclpy.Node（如 parameter_overrides），便于测试与
+        # launch 文件注入参数，不改变默认行为。
+        super().__init__("mag_interference_monitor", **kwargs)
         defaults = {
             "bias_x": 0.0,
             "bias_y": 0.0,
@@ -154,8 +156,14 @@ class MagInterferenceNode(Node):
         mag = self._latest_mag
         if mag is None:
             return
+        # 磁场缓存已过期时不再用旧数据冒充新观测：观测时间以磁力计自身的
+        # 时间戳为准（而不是触发本次回调的 GNSS 时间），否则 GNSS 正常流动
+        # 会不断刷新看门狗的 last_seen_t，把真正的磁场话题中断掩盖掉。
+        # 过期后的降级交给看门狗 note_timeout 统一处理。
+        if t - mag.t > self._monitor.cfg.stale_timeout:
+            return
         sample = FlightSample(
-            t=t,
+            t=mag.t,
             mx=mag.mx,
             my=mag.my,
             mz=mag.mz,
