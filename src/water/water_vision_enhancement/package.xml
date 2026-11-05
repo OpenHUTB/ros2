@@ -15,14 +15,13 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
 
-  <depend>opencv</depend>
+  <exec_depend>opencv</exec_depend>
 
   <!-- launch 中 static_transform_publisher（world → camera_frame） -->
   <exec_depend>tf2_ros</exec_depend>

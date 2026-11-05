@@ -54,7 +54,7 @@ public:
    * @param enhanced  增强后图像
    * @param contrast  输出：局部对比度（拉普拉斯方差）
    * @param colorfulness 输出：色彩丰富度
-   * @param psnr      输出：PSNR（dB），用于衡量与原图差异
+   * @param psnr      输出：PSNR（dB），衡量增强图与原图的相似性，值越高越相似
    */
   void computeMetrics(
     const cv::Mat & original, const cv::Mat & enhanced,

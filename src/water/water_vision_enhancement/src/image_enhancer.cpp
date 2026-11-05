@@ -159,7 +159,7 @@ void ImageEnhancer::computeMetrics(
   double sa = a_std[0], sb = b_std[0];
   colorfulness = std::sqrt(sa * sa + sb * sb) + 0.3 * std::sqrt(a * a + b * b);
 
-  // 3. PSNR（与原图差异）
+  // 3. PSNR（增强图与原图的相似性，dB 越高越相似）
   cv::Mat diff;
   cv::absdiff(original, enhanced, diff);
   diff.convertTo(diff, CV_32F);

@@ -10,7 +10,6 @@
 
 #include <opencv2/opencv.hpp>
 #include <string>
-#include <mutex>
 
 using namespace water_vision_enhancement;
 
@@ -105,8 +104,6 @@ public:
 private:
   void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
-
     // ROS Image -> cv::Mat
     cv::Mat frame;
     try {
@@ -193,7 +190,6 @@ private:
   std::shared_ptr<ObjectTracker> tracker_;
   cv::Rect2d init_bbox_;
   int frame_count_{0};
-  std::mutex mutex_;
 
   image_transport::Publisher enhanced_pub_;
   image_transport::Publisher tracking_vis_pub_;
