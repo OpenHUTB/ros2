@@ -22,6 +22,7 @@
    一个 executor 线程），并加超时与异常保护。
 """
 
+import math
 import threading
 import time
 
@@ -77,6 +78,13 @@ class AirSimBridge(Node):
         self._pose_timer = self.create_timer(1.0 / self._pose_rate, self._publish_pose)
         self._ctrl_timer = self.create_timer(1.0 / self._control_rate, self._control_cycle)
 
+        # “移动路标”位控：实测这套 Blocks 场景里速度指令经常被忽略，位置指令
+        # 才可靠；但位置指令每帧重发又会让飞机几乎不动，所以维护一个沿速度
+        # 方向前进的设定点，偏离已下发目标足够远时才重新下发一次。
+        self._setpoint = None
+        self._last_sent_at = 0.0
+        self._last_cycle = time.monotonic()
+
     # ------------------------------------------------------------------ 参数
     def _declare_parameters(self):
         self.declare_parameter('airsim_ip', '10.0.2.2')
@@ -88,6 +96,7 @@ class AirSimBridge(Node):
         self.declare_parameter('cmd_duration', 0.2)
         self.declare_parameter('rpc_timeout', 5.0)
         self.declare_parameter('enable_keyboard', True)
+        self.declare_parameter('takeoff_height', 1.5)
 
         self._ip = self.get_parameter('airsim_ip').value
         self._port = int(self.get_parameter('airsim_port').value)
@@ -97,6 +106,7 @@ class AirSimBridge(Node):
         self._cmd_timeout = float(self.get_parameter('cmd_timeout').value)
         self._cmd_duration = float(self.get_parameter('cmd_duration').value)
         self._timeout = float(self.get_parameter('rpc_timeout').value)
+        self._takeoff_height = float(self.get_parameter('takeoff_height').value)
         self.enable_keyboard = bool(self.get_parameter('enable_keyboard').value)
 
     # ------------------------------------------------------------- 话题回调
@@ -121,12 +131,43 @@ class AirSimBridge(Node):
         vz_ned = -vz_up
         try:
             with self._lock:
-                # 异步接口 + 不 join：指令在 AirSim 内部按 duration 执行
-                self._client.moveByVelocityBodyFrameAsync(
-                    vx, vy, vz_ned, self._cmd_duration, vehicle_name=self._vehicle)
+                state = self._client.getMultirotorState(vehicle_name=self._vehicle)
+                pos = state.kinematics_estimated.position
+                _, _, yaw = airsim.to_eularian_angles(
+                    state.kinematics_estimated.orientation)
+
+            dt = min(0.5, max(0.01, now - self._last_cycle))
+            self._last_cycle = now
+            if self._setpoint is None:
+                self._setpoint = (pos.x_val, pos.y_val, pos.z_val)
+            sx, sy, sz = self._setpoint
+            if math.hypot(math.hypot(vx, vy), vz_ned) > 1e-3:
+                # 机体系速度转到世界系：本体 x 前、y 右
+                sx += (vx * math.cos(yaw) - vy * math.sin(yaw)) * dt
+                sy += (vx * math.sin(yaw) + vy * math.cos(yaw)) * dt
+                sz += vz_ned * dt
+            else:
+                sx, sy, sz = pos.x_val, pos.y_val, pos.z_val
+            # 路标不能跑得比飞机快太多，否则一直被它甩在后面
+            ox, oy, oz = sx - pos.x_val, sy - pos.y_val, sz - pos.z_val
+            offset = math.sqrt(ox * ox + oy * oy + oz * oz)
+            if offset > 1.5:
+                sx = pos.x_val + ox / offset * 1.5
+                sy = pos.y_val + oy / offset * 1.5
+                sz = pos.z_val + oz / offset * 1.5
+            self._setpoint = (sx, sy, sz)
+
+            moved = math.dist(self._setpoint,
+                              getattr(self, '_sent_point', (1e9, 0, 0)))
+            if moved > 0.3 or (now - self._last_sent_at) > 0.5:
+                speed = max(0.8, math.sqrt(vx * vx + vy * vy + vz_ned * vz_ned))
+                self._client.moveToPositionAsync(
+                    sx, sy, sz, speed, vehicle_name=self._vehicle)
+                self._sent_point = self._setpoint
+                self._last_sent_at = now
                 if abs(yaw_rate) > 1e-3:
                     self._client.rotateByYawRateAsync(
-                        yaw_rate, self._cmd_duration, vehicle_name=self._vehicle)
+                        yaw_rate, dt, vehicle_name=self._vehicle)
         except Exception as exc:  # noqa: BLE001 - 网络抖动不应杀死节点
             self._warn_throttled('速度指令下发失败: %s' % exc)
 
@@ -158,8 +199,13 @@ class AirSimBridge(Node):
             with self._lock:
                 self._client.enableApiControl(True, vehicle_name=self._vehicle)
                 self._client.armDisarm(True, vehicle_name=self._vehicle)
-                self._client.takeoffAsync(timeout_sec=20.0,
-                                          vehicle_name=self._vehicle).join()
+                time.sleep(0.5)  # 解锁后 SimpleFlight 需要一点时间进入可控状态
+                # 这套 Blocks 场景里 takeoffAsync 有时只把飞机放到地面高度就
+                # 返回，位置指令更可靠，所以直接飞到一个起飞高度。
+                self._client.moveToPositionAsync(
+                    0.0, 0.0, -self._takeoff_height, 1.5,
+                    timeout_sec=20.0, vehicle_name=self._vehicle).join()
+            self._setpoint = None
             self._flying = True
             response.success = True
             response.message = '起飞完成，已进入悬停'
