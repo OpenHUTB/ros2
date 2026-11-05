@@ -74,6 +74,10 @@
         </link>
 
         <gazebo reference="${prefix}_wheel_link">
+            <mu1>100.0</mu1>
+            <mu2>100.0</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
             <material>Gazebo/Gray</material>
         </gazebo>
 
@@ -117,6 +121,10 @@
         </link>
 
         <gazebo reference="${prefix}_caster_link">
+            <mu1>0.0</mu1>
+            <mu2>0.0</mu2>
+            <kp>1000000.0</kp>
+            <kd>1.0</kd>
             <material>Gazebo/Black</material>
         </gazebo>
     </xacro:macro>
@@ -185,7 +193,7 @@
                 <wheelDiameter>${2*wheel_radius}</wheelDiameter>
                 <broadcastTF>1</broadcastTF>
                 <wheelTorque>30</wheelTorque>
-                <wheelAcceleration>1.8</wheelAcceleration>
+                <wheelAcceleration>2.0</wheelAcceleration>
                 <commandTopic>cmd_vel</commandTopic>
                 <odometryFrame>odom</odometryFrame> 
                 <odometryTopic>odom</odometryTopic> 

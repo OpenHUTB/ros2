@@ -1,0 +1,17 @@
+# turtlebot3_lidar_avoid —— Python 依赖
+
+# 本包运行于 ROS 2 Humble，以下 ROS 相关 Python 包随 ROS 2 桌面版一同安装，
+# 无需通过 pip 单独安装；此处列出便于环境检查。
+
+# ---- 运行期依赖（ROS 2 自带）----
+# rclpy               # ROS 2 Python 客户端库
+# sensor_msgs         # LaserScan 消息类型
+# geometry_msgs       # Twist 消息类型
+# std_msgs            # 基础消息类型
+
+# ---- 仿真环境（apt 安装）----
+# sudo apt install -y ros-humble-turtlebot3 ros-humble-turtlebot3-gazebo \
+#                     ros-humble-turtlebot3-description ros-humble-gazebo-ros-pkgs
+
+# ---- 本包不依赖任何第三方 pip 库 ----
+# 算法仅使用 Python 标准库 math 与 ROS 2 消息类型
