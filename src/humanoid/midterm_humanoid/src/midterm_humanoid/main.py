@@ -12,12 +12,9 @@
 """
 import numpy as np
 
-# 包方式安装（catkin_python_setup / setup.py）后按包导入；
-# 源码目录直接运行时回退到同目录的 common.py
-try:
-    from midterm_humanoid.common import setup_gl, run_sim, parse_args
-except ImportError:
-    from common import setup_gl, run_sim, parse_args
+# 按包导入：源码树直跑由模块根目录的 main.py 先把 src/ 加入 sys.path 后转发，
+# catkin 安装后由 setup.py / catkin 环境提供包路径。
+from midterm_humanoid.common import setup_gl, run_sim, parse_args
 
 setup_gl()  # 必须在 import mujoco 之前调用（无显示环境自动用 osmesa）
 
