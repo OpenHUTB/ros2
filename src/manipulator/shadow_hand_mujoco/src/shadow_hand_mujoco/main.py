@@ -58,10 +58,15 @@ def make_controller(model):
     return ctrl
 
 
+def build_model():
+    """加载模型（主流程与单元测试共用）。"""
+    return load_with_camera(ROBOT, ENTRY, CAM)
+
+
 def main():
     args = parse_args()
     gl = setup_gl()
-    model = load_with_camera(ROBOT, ENTRY, CAM)
+    model = build_model()
     print(f"渲染后端: {gl} | {ROBOT} ({model.nq} qpos, {model.nu} actuators)")
     ctrl = make_controller(model)
     if args.preview:
