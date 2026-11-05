@@ -13,6 +13,9 @@ python3 src/ground/mujoco_shooting/main.py
 
 # 无头跑一局：跑完打印结果，返回码 0 = 全部击倒（可进 CI）
 python3 src/ground/mujoco_shooting/main.py --headless --max-steps 12000
+
+# Linux 上没有显示服务（WSL2 / 服务器）时，给无头模式指定软件渲染
+MUJOCO_GL=osmesa python3 src/ground/mujoco_shooting/main.py --headless
 ```
 
 无头模式输出示例（本机实测）：
