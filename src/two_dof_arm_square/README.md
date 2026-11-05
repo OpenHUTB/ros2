@@ -9,7 +9,7 @@
 ### 有显示器（可视化窗口）
 ```bash
 python3 two_dof_arm_square.py
-python3 two_dof_arm_square.py --headless
+python3 two_dof_arm_square.py --headless```
 
 ## 作业要求
 
