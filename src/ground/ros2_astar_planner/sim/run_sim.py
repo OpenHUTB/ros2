@@ -22,18 +22,91 @@ from matplotlib import font_manager
 import numpy as np
 
 
+_CJK_FONT_FILES = (
+    # Linux
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJKsc-Regular.otf",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    # macOS
+    "/System/Library/Fonts/PingFang.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/Library/Fonts/Arial Unicode.ttf",
+    # Windows
+    "C:/Windows/Fonts/msyh.ttc",
+    "C:/Windows/Fonts/msyh.ttf",
+    "C:/Windows/Fonts/simhei.ttf",
+    "C:/Windows/Fonts/simsun.ttc",
+    "C:/Windows/Fonts/Deng.ttf",
+)
+
+_CJK_FONT_FAMILIES = (
+    "Noto Sans CJK SC",
+    "Noto Sans CJK JP",
+    "Source Han Sans SC",
+    "WenQuanYi Micro Hei",
+    "WenQuanYi Zen Hei",
+    "PingFang SC",
+    "Hiragino Sans GB",
+    "Microsoft YaHei",
+    "SimHei",
+    "SimSun",
+    "DengXian",
+    "Arial Unicode MS",
+)
+
+
+def _has_cjk_glyphs(path: str) -> bool:
+    """字体文件里是否真有中文字形（只看文件名不够，DejaVu 也会被误选）。"""
+    try:
+        from matplotlib.ft2font import FT2Font
+
+        return FT2Font(path).get_char_index(ord("路")) != 0
+    except Exception:  # noqa: BLE001 - 字体损坏时按不可用处理
+        return False
+
+
 def setup_chinese_font() -> None:
-    """让图里的中文正常显示（沙箱内为 Noto CJK；缺失时退回默认字体）。"""
-    for path in (
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-    ):
-        if os.path.exists(path):
+    """让图里的中文正常显示：按 Linux / macOS / Windows 依次探测可用中文字体。
+
+    找不到时明确告警（而不是静默退回 DejaVu Sans 导致图里全是方框）。
+    也可用环境变量 AHP_CJK_FONT 指定字体文件路径。
+    """
+    candidates = []
+    env_font = os.environ.get("AHP_CJK_FONT", "").strip()
+    if env_font:
+        candidates.append(env_font)
+    candidates.extend(_CJK_FONT_FILES)
+
+    for path in candidates:
+        if os.path.exists(path) and _has_cjk_glyphs(path):
             font_manager.fontManager.addfont(path)
             name = font_manager.FontProperties(fname=path).get_name()
             plt.rcParams["font.family"] = name
+            plt.rcParams["font.sans-serif"] = [name, "DejaVu Sans"]
             plt.rcParams["axes.unicode_minus"] = False
             return
+
+    for family in _CJK_FONT_FAMILIES:
+        try:
+            path = font_manager.findfont(
+                font_manager.FontProperties(family=family), fallback_to_default=False
+            )
+        except Exception:  # noqa: BLE001 - 该字体未安装
+            continue
+        if os.path.exists(path) and _has_cjk_glyphs(path):
+            plt.rcParams["font.family"] = family
+            plt.rcParams["font.sans-serif"] = [family, "DejaVu Sans"]
+            plt.rcParams["axes.unicode_minus"] = False
+            return
+
+    print(
+        "警告：未找到可用的中文字体，图中的中文会显示为方框。\n"
+        "      Linux: sudo apt install fonts-noto-cjk 或 fonts-wqy-microhei\n"
+        "      或设置环境变量 AHP_CJK_FONT=/path/to/font.ttf 手动指定字体。",
+        file=sys.stderr,
+    )
     plt.rcParams["font.family"] = "DejaVu Sans"
 
 

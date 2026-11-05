@@ -11,5 +11,8 @@ dependencies = ["numpy>=1.21"]
 license = { text = "MIT" }
 authors = [{ name = "ros2_astar_planner contributors" }]
 
-[tool.setuptools]
-packages = ["ros2_astar_planner"]
+[project.scripts]
+astar_planner_node = "ros2_astar_planner.node:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
