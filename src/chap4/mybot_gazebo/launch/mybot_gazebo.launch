@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+
+  <!-- 启动 Gazebo 空世界 -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find mybot_gazebo)/worlds/mybot_empty.world"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+
+  <!-- 展开 xacro，生成机器人描述 -->
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder $(find mybot_gazebo)/urdf/mybot.urdf.xacro"/>
+
+  <!-- 发布机器人关节和链接的 TF -->
+  <node name="robot_state_publisher"
+        pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        output="screen"/>
+
+  <!-- 将机器人模型插入 Gazebo；z=0.12 使驱动轮刚好接近地面 -->
+  <node name="spawn_mybot"
+        pkg="gazebo_ros"
+        type="spawn_model"
+        args="-urdf -param robot_description -model mybot -x 0 -y 0 -z 0.12"
+        output="screen"/>
+</launch>

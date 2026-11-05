@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mrobot_teleop</name>
+  <version>0.1.0</version>
+  <description>
+    mrobot 键盘遥控节点：读取键盘按键，将速度指令发布到 /cmd_vel，用于 SLAM 建图时手动驱动小车。
+  </description>
+
+  <maintainer email="hcx@todo.todo">hcx</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>

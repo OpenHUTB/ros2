@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 批量规划器对比入口。
+       先启动 main.launch，再在另一个终端运行本文件；或者把本文件 include 到
+       main.launch 中，用 run_eval:=true 控制。 -->
+
+  <arg name="targets" default="$(find moveit_arm_planning)/config/targets.yaml"/>
+  <arg name="repeats" default="3"/>
+  <arg name="timeout" default="5.0"/>
+  <arg name="out_dir" default="$(env HOME)/moveit_arm_results"/>
+
+  <node pkg="moveit_arm_planning" type="plan_eval.py" name="plan_eval" output="screen"
+        args="--targets $(arg targets) --repeats $(arg repeats) --timeout $(arg timeout) --out-dir $(arg out_dir)"/>
+</launch>
