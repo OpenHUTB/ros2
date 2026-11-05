@@ -21,6 +21,7 @@ catkin_install_python(PROGRAMS
   scripts/airsim_bridge.py
   scripts/keyboard_teleop.py
   scripts/uav_features.py
+  scripts/lidar_perception.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
