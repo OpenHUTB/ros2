@@ -39,11 +39,12 @@ roslaunch tripod_mujoco main.launch
 ```
 包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/tripod_mujoco/`
 安装为 Python 包，`roslaunch` 下 `main.py` 以 `from tripod_mujoco.common import ...` 导入公共库；
-源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
+模块根目录的 `main.py` 是源码树直跑入口（把 `src/` 加入 `sys.path` 后转发到包内入口）。
 
 ## 🔧 控制原理
-- 9 个关节（3×hip_abd / hip_rot / knee）均为位置伺服执行器，控制律
-  `qd = base + amp·sin(2π·freq·t + phase)`，等效 PD：τ = KP·(q_d−q) − KD·q̇。
+- 9 个关节（3×hip_abd / hip_rot / knee）均为位置伺服执行器：每个控制步把目标角
+  `qd = base + amp·sin(2π·freq·t + phase)` 写入 `data.ctrl[i]`，由执行器内置的
+  kp 增益与关节阻尼决定跟踪特性（脚本不显式计算力矩）。
 - 三角步态：三条腿相位差 2π/3，摆动相（sin>0）屈膝抬脚前迈，支撑相伸膝蹬地，
   任意时刻 1 腿摆动、2 腿支撑，步频 0.8 Hz。
 - 公式与推导、性能实测见教程页 `docs/ground/tripod_mujoco_simulation.md`。
