@@ -135,6 +135,7 @@ roslaunch go2_mujoco main.launch                  # 默认（6.0 秒）
 roslaunch go2_mujoco main.launch duration:=3.0    # 自定义时长
 roslaunch go2_mujoco main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
+> `cwd="node"` 下相对路径以 node 所在目录（`devel/lib/<pkg>/`）为基准，roslaunch 启动时视频输出到 `devel/lib/<pkg>/output/`；源码直跑时才落在模块的 `output/`。
 
 ---
 
