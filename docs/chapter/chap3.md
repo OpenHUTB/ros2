@@ -57,7 +57,7 @@ sudo rosdep init
 rosdep update
 ```
 
-> 若因网络问题失败，可使用 `fishros` 一键配置工具或手动替换 `rosdistro` 为国内镜像。
+若因网络问题失败，可使用 `fishros` 一键配置工具或手动替换 `rosdistro` 为国内镜像。
 
 ### 2.4 配置环境变量
 
@@ -273,7 +273,7 @@ roslaunch any_avoidance gazebo_test.launch
 启动命令与输出：
 
 ```bash
-$ rosrun gazebo_ros gazebo
+rosrun gazebo_ros gazebo
 context mismatch in svga_surface_destroy
 context mismatch in svga_surface_destroy
 ```

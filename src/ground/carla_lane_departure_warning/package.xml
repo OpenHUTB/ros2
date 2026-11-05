@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_lane_departure_warning</name>
+  <version>1.0.0</version>
+  <description>CARLA 车道偏离预警（LDW）：地图路点横向偏移 → 三级滞回状态机（normal/deviation/departure）→ 带方向跃迁事件</description>
+  <maintainer email="82540295@example.com">82540295</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

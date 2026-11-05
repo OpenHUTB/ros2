@@ -1,0 +1,19 @@
+// 人脸立牌的 OGRE 材质脚本
+// lighting off 使纹理不受场景光照影响，始终以全亮度渲染，保证五官清晰可见
+material face_board/face
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      ambient 1.0 1.0 1.0 1.0
+      diffuse 1.0 1.0 1.0 1.0
+      specular 0.0 0.0 0.0 1.0 0.0
+      texture_unit
+      {
+        texture face_texture.png
+      }
+    }
+  }
+}

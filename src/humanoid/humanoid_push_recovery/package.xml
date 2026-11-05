@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_push_recovery</name>
+  <version>0.1.0</version>
+  <description>人形机器人平衡与外力抗扰恢复功能包（ZMP/捕获点判据 + 踝/髋恢复策略）</description>
+  <maintainer email="L2008-by@users.noreply.github.com">L2008-by</maintainer>
+  <license>MIT</license>
+  <!-- balance/ 子包中的捕获点、支撑多边形、踝/髋策略改写自 Apache-2.0 开源项目，
+       详见 THIRD_PARTY_NOTICES.md 与 LICENSE_apache_2_0.txt -->
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
