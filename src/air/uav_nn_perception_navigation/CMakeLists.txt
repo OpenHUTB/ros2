@@ -23,6 +23,7 @@ catkin_install_python(PROGRAMS
   scripts/uav_features.py
   scripts/lidar_perception.py
   scripts/train_control.py
+  scripts/trajectory_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
