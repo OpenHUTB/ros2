@@ -1,0 +1,52 @@
+# uav_depth_track_nn 默认参数
+# 注意：YAML 里裸写的 ~ 是 null，带 ~ 的路径必须加引号，节点侧用 expanduser 展开。
+# 键名必须与节点全限定名一致：airsim_source 在 /uav 命名空间下。
+
+/uav/airsim_source:
+  ros__parameters:
+    airsim_ip: "10.0.2.2"        # VirtualBox NAT 下宿主机地址
+    airsim_port: 41451           # settings.json 的 ApiServerPort
+    vehicle_name: ""             # 多载具时填载具名
+    camera_name: "depth"         # settings.json 里的深度相机名
+    publish_rate: 10.0
+    depth_pixels_as_float: true
+    cmd_duration: 0.5            # 一条位置指令覆盖的时长（秒）
+    connect_period: 2.0
+    pose_frame_id: "airsim_ned"
+    camera_frame_id: "uav_camera"
+    takeoff_height: 1.5          # 起飞爬升高度（米）
+    climb_speed: 1.5             # 起飞爬升速度（m/s）
+
+uav_depth_track:
+  ros__parameters:
+    model_path: "~/.ros/uav_depth_track_nn/model/model.pth"
+    image_size: 64
+    max_depth: 40.0              # 深度归一化上限（米），天空会被截到这个值
+    control_rate: 10.0
+    center: "0,0"                # 给定圆轨迹的圆心（NED 平面）
+    radius: 3.0                  # 半径（米）
+    height: 2.5                  # 巡航高度（米）
+    angular_speed: 0.35          # 参考角速度（rad/s），0.35 约等于 1.05 m/s
+    lookahead_angle: 0.55        # 前视相位（rad），约 9.4°
+    max_speed: 2.0
+    stabilizer_gain: 1.4
+    max_residual: 0.25               # 输出限幅（m/s）
+    depth_timeout: 0.5           # 超过该时间没收到深度图就发零速度
+
+uav_depth_collect:
+  ros__parameters:
+    data_dir: "~/.ros/uav_depth_track_nn/data"
+    sample_rate: 5.0             # 每秒存几帧
+    control_rate: 10.0
+    center: "0,0"
+    radius: 3.0
+    height: 2.5
+    angular_speed: 0.35
+    lookahead_angle: 0.55
+    gain: 1.4                    # 专家比例增益
+    max_speed: 2.0
+    laps: 2.0                    # 采集圈数
+    image_size: 64               # 落盘的深度图边长
+    auto_takeoff: true
+    auto_land: true
+    exit_delay: 3.0
