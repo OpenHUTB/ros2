@@ -121,6 +121,8 @@ pip install -r requirements.txt
 cd src/ground/go2_mujoco
 python3 main.py            # 输出 output/go2_trot.mp4
 python3 main.py --preview  # 只跑 1.6 秒，输出 3 张 PNG 检查取景
+python3 main.py --duration 3     # 自定义完整视频时长（秒），不填则用默认 6.0
+python3 -m unittest discover -s tests -v   # 单元测试：模型结构、执行器、控制器
 ```
 无显示器 / SSH 环境：`MUJOCO_GL=osmesa python3 main.py`。
 
@@ -129,7 +131,9 @@ python3 main.py --preview  # 只跑 1.6 秒，输出 3 张 PNG 检查取景
 # 将本模块软链到工作空间 src 下，然后
 catkin_make
 source devel/setup.bash
-roslaunch go2_mujoco main.launch
+roslaunch go2_mujoco main.launch                  # 默认（6.0 秒）
+roslaunch go2_mujoco main.launch duration:=3.0    # 自定义时长
+roslaunch go2_mujoco main.launch preview:=true    # 只渲染 3 帧预览、不写视频
 ```
 
 ---
@@ -153,7 +157,7 @@ roslaunch go2_mujoco main.launch
 | 视频规格 | 6 秒 / 30 fps / 180 帧 / 960×544 |
 | 端到端生成耗时（含仿真+渲染+编码） | 2.60 s |
 | 前进速度 | 约 0.12 m/s（FREQ=1.1，A_X=0.10，LIFT=0.042） |
-| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch go2_mujoco main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认 |
+| 启动验证 | 源码 `python3 main.py` 已在本机实测通过（MuJoCo 3.2.3 与 3.17 两个版本）；`catkin_make` 与 `roslaunch go2_mujoco main.launch` 未在重构后的代码上本地复测（本机无 ROS 环境），需在 ROS 环境确认；单元测试 `python3 -m unittest discover -s tests` 已在本机 MuJoCo 3.2.3 与 3.17 双版本通过（5 项） |
 
 ### 7.1 多参数（场景）对比
 
@@ -171,6 +175,7 @@ roslaunch go2_mujoco main.launch
 
 ```
 go2_mujoco/
+├── tests/               # 单元测试（python -m unittest discover -s tests）
 ├── setup.py             # setuptools 配置（catkin_python_setup 需要）
 ├── package.xml          # catkin 包描述
 ├── CMakeLists.txt       # catkin_python_setup + 只安装 main.py 入口
