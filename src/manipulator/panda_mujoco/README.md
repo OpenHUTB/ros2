@@ -41,10 +41,11 @@ roslaunch panda_mujoco main.launch
 ```
 包结构说明：`catkin_python_setup()` + `setup.py` 会把 `src/panda_mujoco/`
 安装为 Python 包，`roslaunch` 下 `main.py` 以 `from panda_mujoco.common import ...` 导入公共库；
-源码目录直接运行时自动回退到同目录 `common.py`，两种方式均可用。
+模块根目录的 `main.py` 是源码树直跑入口（把 `src/` 加入 `sys.path` 后转发到包内入口）。
 
 ## 🔧 控制原理
-- 7 个臂关节为位置伺服执行器（等效 PD，增益 2000~4500），直接把目标角写进 `data.ctrl`。
+- 7 个臂关节为位置伺服执行器（增益 2000~4500），脚本只把目标角写进 `data.ctrl`，
+  驱动力由执行器内部驱动模型产生（不是脚本里的 PD 公式）。
 - 夹爪 actuator8 为腱执行器（0~255），按 8 秒周期正弦开合。
 - 轨迹：home 姿态 + 3 组增量位姿共 4 段循环（上抬 → 前伸 → 侧摆 → 归位），
   段间余弦缓动插值（q_d = q_a + (1−cos(πt/T))/2·(q_b−q_a)），首尾零速度避免力矩冲击。
