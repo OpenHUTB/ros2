@@ -206,7 +206,23 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_7">话题接口</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#_8">参数配置</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_9">车辆物理与运行参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">命令行覆盖示例</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">运动学模型与实现要点</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_12">目录结构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_13">离线测试</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_14">常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_15">参考</a>
 </li>
 </ul>
 </li>
@@ -481,17 +497,26 @@
 <li>空格键手刹急停；ESC、关闭窗口或 Ctrl+C 退出时自动发布零速度，避免车辆保持最后速度失控</li>
 <li>二维模拟窗口：网格地图、车身与车头朝向随动、实时线速度/角速度 HUD 显示</li>
 <li>标准 <code>/cmd_vel</code> 接口，可直接对接支持 Twist 指令的仿真器或真实底盘节点</li>
+<li>车辆物理参数（限速、加减速度、转向响应、发布频率、话题名）全部可通过配置文件与 launch 参数调整，无需改代码</li>
+<li>按键解释与运动学积分与 pygame 渲染解耦，核心逻辑可脱离 ROS 与显示器做离线回归测试</li>
 </ul>
 <h2 id="_3">环境准备</h2>
 <ul>
-<li>Ubuntu 20.04 + ROS Noetic（Python 3）</li>
+<li><strong>推荐</strong>：Ubuntu 20.04 + ROS Noetic（Python 3）</li>
+<li><strong>也可运行</strong>：Ubuntu 18.04 + ROS Melodic（Python 2.7）</li>
 <li>安装 pygame 依赖：</li>
 </ul>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+<span class="c1"># Ubuntu 20.04 + ROS Noetic：</span>
 sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python3-pygame
-<span class="c1"># 或使用 pip 安装：</span>
-pip3<span class="w"> </span>install<span class="w"> </span>pygame
+<span class="c1"># Ubuntu 18.04 + ROS Melodic（其 rospy 是 Python 2.7）：</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python-pygame
 </code></pre></div>
+<blockquote>
+<p><strong>关于 Melodic。</strong> 本模块只使用 Python 2.7 与 3.x 都支持的语法 —— 不用 f-string，也不引入 3.7+ 才有的 <code>from __future__ import annotations</code>，因此源码在 Noetic（Python 3）与 Melodic（Python 2.7）下都能运行。这一点不是小事：REP 151《Python 3 Support》规定 <strong>Noetic 才是第一个完全支持 Python 3 的 ROS 1 发行版</strong>，Melodic 及更早版本的 <code>rospy</code> 只有 Python 2.7 版本，含 3.7+ 语法的脚本会直接 <code>SyntaxError</code>。</p>
+<p>但要注意区分两件事：<strong>源码兼容 Python 2.7，不等于脚本会被 Python 2.7 启动</strong>。本模块脚本的 shebang 按 Noetic 约定写作 <code>#!/usr/bin/env python3</code>；在 Melodic 上需要让脚本由 <code>python2</code> 启动 —— 正常途径是 <code>catkin_install_python</code> 按发行版重写 shebang（REP 151 的多发行版做法）。若直接执行源码脚本，请显式指定解释器：<code>python2 "$(rospack find vehicle_pygame_teleop)/scripts/main.py"</code>。</p>
+<p>文档推荐的 apt 源 pygame 为 1.9.6，本模块的绘制接口（<code>draw.line</code> / <code>draw.circle</code> / <code>Surface</code> / <code>SRCALPHA</code> 等）在该版本下均可正常工作；代码中刻意不使用 <code>rect(..., border_radius=)</code> 这类 1.9.6 不支持的参数。</p>
+</blockquote>
 <h2 id="_4">构建与环境加载</h2>
 <p>将功能包放入 ROS 工作空间的 <code>src</code> 目录（例如 <code>~/catkin_ws/src</code>），然后编译并加载环境：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/catkin_ws
@@ -499,11 +524,14 @@ catkin_make
 <span class="nb">source</span><span class="w"> </span>devel/setup.bash
 </code></pre></div>
 <blockquote>
-<p>提示：若希望每个终端自动加载工作空间环境，可执行
-<code>echo "source ~/catkin_ws/devel/setup.bash" &gt;&gt; ~/.bashrc</code>。</p>
+<p>提示：若希望每个终端自动加载工作空间环境，可执行 <code>echo "source ~/catkin_ws/devel/setup.bash" &gt;&gt; ~/.bashrc</code>。</p>
 </blockquote>
 <h2 id="_5">启动运行</h2>
+<p>统一入口为 <code>launch/main.launch</code>，节点入口为 <code>scripts/main.py</code>：</p>
 <div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>vehicle_pygame_teleop<span class="w"> </span>main.launch
+</code></pre></div>
+<p>也可以只运行节点（前台）：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>vehicle_pygame_teleop<span class="w"> </span>main.py
 </code></pre></div>
 <p>启动后弹出二维模拟窗口，点击窗口获取键盘焦点即可控制车辆，画面中的车辆会随按键实时加速、转向和移动。</p>
 <h2 id="_6">按键说明</h2>
@@ -541,6 +569,7 @@ catkin_make
 </tr>
 </tbody>
 </table>
+<p>按键与 <code>/cmd_vel</code> 语义的对应关系：左转时 <code>angular.z</code> 为正，右转时为负；前进时 <code>linear.x</code> 为正，倒车时为负。倒车过程中左右转向的效果会整体反向（差速底盘特性），该行为可用参数 <code>vehicle/reverse_steer_invert</code> 关闭。</p>
 <h2 id="_7">话题接口</h2>
 <table>
 <thead>
@@ -560,24 +589,172 @@ catkin_make
 </tr>
 </tbody>
 </table>
-<h2 id="_8">参考</h2>
+<p>话题名与发布频率分别由 <code>topic/cmd_vel</code>、<code>rate/publish_hz</code> 参数决定，下表为默认值。</p>
+<h2 id="_8">参数配置</h2>
+<p>参数默认值集中在 <code>config/vehicle_pygame_teleop.yaml</code>，由 <code>main.launch</code> 加载，并由 launch <code>&lt;arg&gt;</code> 覆盖，因此在命令行即可临时调整，不必修改代码或配置文件。</p>
+<h3 id="_9">车辆物理与运行参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>默认值</th>
+<th>单位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vehicle/max_speed</code></td>
+<td><code>1.5</code></td>
+<td>m/s</td>
+<td>最大前进速度</td>
+</tr>
+<tr>
+<td><code>vehicle/max_reverse</code></td>
+<td><code>0.8</code></td>
+<td>m/s</td>
+<td>最大倒车速度</td>
+</tr>
+<tr>
+<td><code>vehicle/accel</code></td>
+<td><code>2.2</code></td>
+<td>m/s²</td>
+<td>油门与倒车加速度</td>
+</tr>
+<tr>
+<td><code>vehicle/brake</code></td>
+<td><code>4.5</code></td>
+<td>m/s²</td>
+<td>刹车减速度（倒车中踩油门时的制动也用它）</td>
+</tr>
+<tr>
+<td><code>vehicle/handbrake</code></td>
+<td><code>8.0</code></td>
+<td>m/s²</td>
+<td>空格手刹减速度</td>
+</tr>
+<tr>
+<td><code>vehicle/drag</code></td>
+<td><code>1.2</code></td>
+<td>m/s²</td>
+<td>无按键时的滑行阻力减速度</td>
+</tr>
+<tr>
+<td><code>vehicle/max_yaw_rate</code></td>
+<td><code>1.4</code></td>
+<td>rad/s</td>
+<td>最大偏航角速度（左转为正）</td>
+</tr>
+<tr>
+<td><code>vehicle/yaw_response</code></td>
+<td><code>8.0</code></td>
+<td>rad/s²</td>
+<td>转向响应角加速度，越大越"跟手"</td>
+</tr>
+<tr>
+<td><code>vehicle/reverse_steer_invert</code></td>
+<td><code>true</code></td>
+<td>—</td>
+<td>倒车时转向效果反向</td>
+</tr>
+<tr>
+<td><code>rate/publish_hz</code></td>
+<td><code>30.0</code></td>
+<td>Hz</td>
+<td><code>/cmd_vel</code> 发布频率</td>
+</tr>
+<tr>
+<td><code>topic/cmd_vel</code></td>
+<td><code>/cmd_vel</code></td>
+<td>—</td>
+<td>速度指令话题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">命令行覆盖示例</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 把最高速度提到 3 m/s、把发布频率改成 50Hz</span>
+roslaunch<span class="w"> </span>vehicle_pygame_teleop<span class="w"> </span>main.launch<span class="w"> </span>max_speed:<span class="o">=</span><span class="m">3</span>.0<span class="w"> </span>publish_hz:<span class="o">=</span><span class="m">50</span>.0
+
+<span class="c1"># 换话题名，接到 Carla 的车辆控制话题</span>
+roslaunch<span class="w"> </span>vehicle_pygame_teleop<span class="w"> </span>main.launch<span class="w"> </span>cmd_vel_topic:<span class="o">=</span>/carla/ego_vehicle/twist
+
+<span class="c1"># 关闭"倒车转向反向"，方便对比行为差异</span>
+roslaunch<span class="w"> </span>vehicle_pygame_teleop<span class="w"> </span>main.launch<span class="w"> </span>reverse_steer_invert:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>参数分层与优先级：<code>config</code> 里的 yaml 提供默认值 → 同名 launch <code>&lt;arg&gt;</code> 覆盖 → 代码内的常量是最后的兜底值，三者数值一致。节点用 <code>rospy.get_param("vehicle/max_speed")</code> 这类相对名读取，与 launch 中位于顶层的 <code>&lt;param&gt;</code>/<code>&lt;rosparam&gt;</code> 对应，可用 <code>rosparam get /vehicle/max_speed</code> 在运行时核对。</p>
+<h2 id="_11">运动学模型与实现要点</h2>
+<p>车辆按差速底盘（非完整约束）模型积分，每一帧执行三步：</p>
+<p><strong>1. 纵向速度。</strong> 手刹优先，按下空格时以 <code>handbrake</code> 减速到 0 且不响应油门/刹车；否则按油门、刹车、滑行三种情况更新：</p>
+<div class="highlight"><pre><span></span><code>油门：v ← min(max_speed,     v + accel·dt)        （若 v &lt; 0 则先以 brake 制动到 0）
+刹车：v ← max(-max_reverse,  v - accel·dt)        （若 v &gt; 0 则先以 brake 制动到 0）
+滑行：v ← v ∓ drag·dt                             （向 0 收敛）
+</code></pre></div>
+<p><strong>2. 转向角速度。</strong> 左转给目标值 <code>+max_yaw_rate</code>，右转给 <code>-max_yaw_rate</code>，再按 <code>yaw_response</code> 限幅逼近，避免角速度跳变：</p>
+<div class="highlight"><pre><span></span><code>ω ← ω + sign(ω* − ω) · min(|ω* − ω|, yaw_response·dt)
+</code></pre></div>
+<p>若本帧更新后的速度低于 <code>-0.02 m/s</code>（正在倒车）且 <code>reverse_steer_invert</code> 为真，则把目标角速度取反 —— 这正是倒车时"方向打反"的物理来源。</p>
+<p><strong>3. 运动学积分。</strong> 用欧拉法推进航向与位置（世界坐标，x 向东、y 向北，逆时针为正）：</p>
+<div class="highlight"><pre><span></span><code>θ ← θ + ω·dt
+x ← x + v·cos θ·dt
+y ← y + v·sin θ·dt
+</code></pre></div>
+<p>随后把 <code>(v, ω)</code> 直接映射为 <code>Twist.linear.x</code> 与 <code>Twist.angular.z</code> 发布，其余分量恒为 0。俯视画面把世界坐标映射到屏幕上车辆固定在窗口中心：每米对应 22 像素，y 轴方向取反，车体按 <code>yaw</code> 旋转绘制，因此画面中的运动方向与积分的世界坐标严格一致。</p>
+<p>其他实现细节：</p>
+<ul>
+<li>单帧 <code>dt</code> 上限截断为 0.1s：拖动窗口或系统卡顿时，不会因为一帧积分过大而让车辆"瞬移穿墙"。</li>
+<li>退出路径有三条（窗口关闭、ESC、Ctrl+C），都会被兜底为零速度；Ctrl+C 走 <code>rospy.on_shutdown</code> 回调，此阶段不能再使用 <code>rospy.sleep</code>，因此回调里以 <code>wait=False</code> 连发两条零速度。</li>
+<li>字体枚举失败时回退到 pygame 内置默认字体，保证节点在缺字体的环境里仍能启动。</li>
+</ul>
+<h2 id="_12">目录结构</h2>
+<div class="highlight"><pre><span></span><code>vehicle_pygame_teleop/
+├── CMakeLists.txt                     # 安装三个脚本与 launch/config
+├── package.xml                        # 依赖：rospy / geometry_msgs / python3-pygame
+├── README.md
+├── config/
+│   └── vehicle_pygame_teleop.yaml     # 全部可调参数（默认值）
+├── launch/
+│   └── main.launch                    # 统一入口：加载 yaml、暴露 &lt;arg&gt;、启动 main.py
+└── scripts/
+    ├── main.py                        # 入口（main.* 约定）
+    ├── teleop_core.py                 # 纯逻辑：参数、控制意图、运动学（不依赖 pygame/ROS）
+    └── vehicle_pygame_teleop.py       # 节点：pygame 渲染 + rospy 发布
+</code></pre></div>
+<h2 id="_13">离线测试</h2>
+<p><code>teleop_core.py</code> 不导入 pygame 与 rospy，因此核心逻辑可以在没有 ROS、没有仿真器、没有显示器的机器上直接跑离线回归（不需要 <code>roscore</code>，也不需要 pygame）：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;仓库根目录&gt;
+python3<span class="w"> </span>tests/test_vehicle_pygame_teleop_local.py<span class="w">   </span><span class="c1"># Noetic / 任意 Python 3</span>
+python2<span class="w"> </span>tests/test_vehicle_pygame_teleop_local.py<span class="w">   </span><span class="c1"># Melodic / Python 2.7</span>
+</code></pre></div>
+<p>测试覆盖参数默认值与覆盖、按键到控制意图的映射、油门/刹车/倒车/手刹/滑行的纵向行为、限速点、转向平滑与倒车反向、位置积分，以及工程文件约定（入口为 <code>main.py</code>、launch 加载 yaml 并暴露参数等）。全部通过时打印 <code>全部通过</code> 并以 0 退出；有失败项时打印失败清单并以 1 退出。</p>
+<h2 id="_14">常见问题</h2>
+<ul>
+<li><strong>窗口里的车不动</strong>：pygame 窗口需要键盘焦点，用鼠标点一下窗口再按键。</li>
+<li><strong><code>TypeError: rect() takes no keyword arguments</code></strong>：使用了 pygame 1.9.6 不支持的 <code>border_radius</code> 参数。本模块已避免该写法；若自行修改绘制代码请勿引入。</li>
+<li><strong>Ctrl+C 后车辆还在跑</strong>：确认最后一条 <code>/cmd_vel</code> 为零速度。本模块已把停车注册到 <code>rospy.on_shutdown</code>，可用
+  <code>rostopic echo /cmd_vel</code> 后按 Ctrl+C 验证最后一条 <code>linear.x</code> 是否为 0。</li>
+<li><strong>改了参数没生效</strong>：确认是通过 <code>roslaunch</code> 启动并传的是 launch <code>&lt;arg&gt;</code> 名（不带 <code>vehicle/</code> 前缀），例如 <code>max_speed:=3.0</code>；也可以直接编辑 <code>config/vehicle_pygame_teleop.yaml</code>。</li>
+<li><strong>找不到 <code>main.py</code></strong>：先在 <code>~/catkin_ws</code> 重新 <code>catkin_make</code> 并 <code>source devel/setup.bash</code>。</li>
+</ul>
+<h2 id="_15">参考</h2>
 <ul>
 <li><a href="https://www.pygame.org/docs/">pygame 官方文档</a></li>
 <li><a href="https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Twist.html">geometry_msgs/Twist 消息定义</a></li>
 <li><a href="https://wiki.ros.org/rospy/Tutorials">ROS 节点编写入门（rospy）</a></li>
-</ul></div>
+</ul>
+<hr/>
+<p><strong>大模型使用声明</strong>：本页文档与对应代码在整理参数化改造、离线测试与文档说明时使用了大模型辅助，提交内容由提交者负责。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../carla_tsr_ros/" title="交通标志识别 ROS 封装"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
 <a class="btn btn-neutral float-right" href="../../robot_tasks/teleop_control/" title="任务1 - 键盘控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr/>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
