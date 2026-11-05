@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """宇树 Go2 四足机器人 MuJoCo 仿真模块（OpenHUTB/ros2 仓库规范模块）。
 
