@@ -76,6 +76,7 @@ ROS每章节运行代码:
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
+* [人形机器人关节轨迹录制与回放工具](./humanoid/humanoid_joint_tools.md)
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
@@ -83,6 +84,7 @@ ROS每章节运行代码:
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
+
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
