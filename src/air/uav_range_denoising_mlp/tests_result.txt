@@ -1,0 +1,13 @@
+test_determinism (test_core.Checks.test_determinism) ... ok
+test_finite_prediction (test_core.Checks.test_finite_prediction) ... ok
+test_heldout_improves_raw (test_core.Checks.test_heldout_improves_raw) ... ok
+test_invalid_input (test_core.Checks.test_invalid_input) ... ok
+test_invalid_shape (test_core.Checks.test_invalid_shape) ... ok
+test_separate_sequences (test_core.Checks.test_separate_sequences) ... ok
+test_serialization (test_core.Checks.test_serialization) ... ok
+test_windows (test_core.Checks.test_windows) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.122s
+
+OK

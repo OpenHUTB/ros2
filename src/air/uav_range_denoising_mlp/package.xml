@@ -1,0 +1,4 @@
+<package format="2"><name>uav_range_denoising_mlp</name><version>0.1.0</version>
+<description>以独立合成序列训练和评估小型 MLP，和原始测距、滑动平均对比；ROS 只发布估计值，不控制飞行。</description><maintainer email="327714038+tanyongkang0618-spec@users.noreply.github.com">tanyongkang0618-spec</maintainer>
+<license>MIT</license><buildtool_depend>catkin</buildtool_depend>
+<depend>rospy</depend><depend>std_msgs</depend><depend>sensor_msgs</depend><exec_depend>python3-matplotlib</exec_depend><exec_depend>python3-numpy</exec_depend></package>
