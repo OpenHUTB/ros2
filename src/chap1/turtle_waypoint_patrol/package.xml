@@ -1,0 +1,8 @@
+<package format="2">
+<name>turtle_waypoint_patrol</name><version>0.1.0</version>
+<description>Closed-loop turtlesim waypoint patrol with task controls.</description>
+<maintainer email="327714038+tanyongkang0618-spec@users.noreply.github.com">tanyongkang0618-spec</maintainer>
+<license>MIT</license><buildtool_depend>catkin</buildtool_depend>
+<depend>rospy</depend><depend>geometry_msgs</depend><depend>std_msgs</depend><depend>std_srvs</depend><depend>turtlesim</depend>
+<exec_depend>python3-matplotlib</exec_depend>
+</package>
