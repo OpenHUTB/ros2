@@ -79,6 +79,7 @@ nav:
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
     - 人形足迹下的局部避障算法对比: './humanoid/humanoid_local_planner_bench.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
+    - 人形机器人关节轨迹录制与回放工具: './humanoid/humanoid_joint_tools.md'
     - 人形上下台阶步态仿真: './humanoid/humanoid_stair_climb.md'
     - ROS虚拟机器人圆形轨迹rviz可视化示例: './humanoid/ros_topic_demo/index.md'
     - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
@@ -122,6 +123,7 @@ nav:
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
+    - 任务4 - 端到端策略网络: robot_tasks/policy_learning/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
     - 端到端驾驶（图像到控制指令）: './ground/pix2cmd_end2end_driving.md'
@@ -140,10 +142,12 @@ nav:
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
     - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
+    - 限速标志识别与神经网络限速控制: './ground/traffic_sign_speed_control.md'
     - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
     - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
@@ -151,6 +155,7 @@ nav:
     - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
+    - 扭转控制: './ground/twist_to_control.md'
     - Sim-to-Real 域随机化（Domain Randomization）: './ground/mujoco_domain_rand.md'
 - 空域载具:
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
@@ -176,6 +181,7 @@ nav:
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
     - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
+    - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
