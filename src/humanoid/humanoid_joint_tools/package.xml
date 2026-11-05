@@ -4,7 +4,7 @@
   <name>humanoid_joint_tools</name>
   <version>0.0.1</version>
   <description>ROS 2 tool for recording and playing humanoid joint trajectories.</description>
-  <maintainer email="sousa0913@qq.com">Sousa-cc</maintainer>
+  <maintainer email="Sousa-cc@users.noreply.github.com">Sousa-cc</maintainer>
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
