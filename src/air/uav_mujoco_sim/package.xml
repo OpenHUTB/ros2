@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_mujoco_sim</name>
+  <version>0.1.0</version>
+  <description>
+    MuJoCo 3.12 四旋翼仿真底座，把仿真与传感器以标准 ROS2 Humble 话题对外暴露。
+    话题契约与课程既有的 carlair_ros_bridge 保持一致（/uav/odom、/camera/image_raw、
+    /camera/depth、/camera/seg、/lidar/points、/uav/cmd_vel、/uav/goal、/uav/status），
+    因此感知/规划/控制/端到端各算法模块对仿真器零耦合，换仿真器只换这一层。
+    含任务①的键盘遥控节点。
+  </description>
+  <maintainer email="eeexty@users.noreply.github.com">eeexty</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sensor_msgs_py</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <!-- 缺 <build_type> 时 colcon 会按"有没有 CMakeLists.txt"猜包类型，本包会被误判成 catkin 包 -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
+
