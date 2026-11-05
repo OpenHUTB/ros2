@@ -30,7 +30,7 @@
 | `main.py` | 主程序（XML 内嵌，单文件可直接运行） |
 | `verify_arm3d.py` | 验证脚本：`ik`（IK 精度）与 `gui`（glfw 实时渲染） |
 | `docs/mujoco_arm_3d_demo.gif` | 演示效果图（当前代码直接输出：216 帧 / 640×480） |
-| `docs/mujoco_arm_3d.md` | 模型、算法与验证详细说明 |
+| 文档站页面 | [`docs/arm/mujoco_arm_3d.md`](../../docs/arm/mujoco_arm_3d.md)（仓库文档站「机械臂」分类，含算法 / 参数 / 验证说明） |
 
 ## 运行
 
