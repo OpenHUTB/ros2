@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MUJOCO_GL=egl \
     AMENT_PREFIX_PATH=/workspace/ros_ws/install/mujoco_uav_moving_pad_landing:/opt/ros/humble \
     MUJOCO_LANDING_MODEL=/workspace/output/landing_controller.joblib \
+    MUJOCO_LANDING_IMAGE_MODEL=/workspace/output/image_controller.joblib \
     PYTHONUNBUFFERED=1
 
 RUN sed -i 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list \

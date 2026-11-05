@@ -159,7 +159,7 @@ ROS每章节运行代码:
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
-* [MuJoCo 无人机视觉着陆与同步建图导航](./air/mujoco_uav_moving_pad_landing.md) —— RGB/MLP 着陆控制、键盘遥控、2D 激光栅格导航与 ROS 2 Humble 接口。
+* [MuJoCo 无人机视觉着陆与同步建图导航](./air/mujoco_uav_moving_pad_landing.md) —— RGB 端到端着陆、移动平台神经控制、键盘遥控、激光神经导航与 ROS 2 Humble 接口。
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 

@@ -11,6 +11,7 @@ services:
     environment:
       MUJOCO_GL: egl
       AMENT_PREFIX_PATH: /workspace/ros_ws/install/mujoco_uav_moving_pad_landing:/opt/ros/humble
+      MUJOCO_LANDING_IMAGE_MODEL: /workspace/output/image_controller.joblib
     volumes:
       - ./output:/workspace/output:ro
-    command: ["bash", "-lc", ". /opt/ros/humble/setup.bash && . /workspace/ros_ws/install/setup.bash && ros2 launch mujoco_uav_moving_pad_landing landing.launch.py"]
+    command: ["bash", "-lc", ". /opt/ros/humble/setup.bash && . /workspace/ros_ws/install/setup.bash && ros2 launch mujoco_uav_moving_pad_landing landing.launch.py input_mode:=${LANDING_INPUT_MODE:-features}"]

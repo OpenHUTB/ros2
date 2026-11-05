@@ -24,6 +24,8 @@ MODULE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = Path(os.environ.get("MUJOCO_LANDING_MODEL", MODULE_DIR / "output" / "landing_controller.joblib")).expanduser()
 SCENE_PATH = MODULE_DIR / "assets" / "moving_pad.xml"
 DT = 0.02
+Z_GRAVITY_COMPENSATION_M = 0.15
+CONTACT_HEIGHT_M = 0.235
 
 
 def detect_colored_center(image_rgb: np.ndarray, color: str) -> tuple[float, float] | None:
@@ -128,7 +130,8 @@ def load_controller(path: Path = MODEL_PATH):
 class LandingSimulation:
     """MuJoCo plant with a sinusoidally moving mocap landing platform."""
 
-    def __init__(self, width: int = 320, height: int = 320):
+    def __init__(self, width: int = 320, height: int = 320, static_pad: bool = False):
+        self.static_pad = static_pad
         self.model = mujoco.MjModel.from_xml_path(str(SCENE_PATH))
         self.data = mujoco.MjData(self.model)
         self.renderer = mujoco.Renderer(self.model, height=height, width=width)
@@ -145,6 +148,9 @@ class LandingSimulation:
         mujoco.mj_forward(self.model, self.data)
 
     def _move_pad(self, time_s: float) -> np.ndarray:
+        if self.static_pad:
+            self.data.mocap_pos[self.pad_id] = [0.0, 0.0, 0.09]
+            return np.zeros(2, dtype=float)
         position = np.array([0.34 * math.sin(0.42 * time_s), 0.22 * math.sin(0.31 * time_s), 0.09])
         velocity = np.array([0.34 * 0.42 * math.cos(0.42 * time_s), 0.22 * 0.31 * math.cos(0.31 * time_s)])
         self.data.mocap_pos[self.pad_id] = position
@@ -160,11 +166,18 @@ class LandingSimulation:
         self.renderer.update_scene(self.data, camera="overhead")
         return self.renderer.render(), velocity
 
-    def step(self, command: np.ndarray, time_s: float) -> None:
+    def step(self, command: np.ndarray, time_s: float, compensate_gravity: bool = False) -> None:
         self._move_pad(time_s)
-        target = self.position + np.asarray(command, dtype=float) * DT * 3.0
+        command = np.asarray(command, dtype=float)
+        target = self.position + command * DT * 3.0
         target[0:2] = np.clip(target[0:2], -1.3, 1.3)
-        target[2] = np.clip(target[2], 0.22, 2.0)
+        if compensate_gravity:
+            target[2] = self.position[2] + command[2] * DT * 10.0
+            if command[2] >= -0.01 and target[2] <= CONTACT_HEIGHT_M + 0.06:
+                target[2] = max(target[2], CONTACT_HEIGHT_M)
+            target[2] = np.clip(target[2] + Z_GRAVITY_COMPENSATION_M, 0.22, 2.2)
+        else:
+            target[2] = np.clip(target[2], 0.22, 2.0)
         self.data.ctrl[self.ctrl_ids] = target
         mujoco.mj_step(self.model, self.data)
 
@@ -172,10 +185,24 @@ class LandingSimulation:
         self.renderer.close()
 
 
-def run_demo(output_dir: Path, steps: int = 180, controller_path: Path = MODEL_PATH) -> dict[str, object]:
+def run_demo(
+    output_dir: Path,
+    steps: int = 180,
+    controller_path: Path = MODEL_PATH,
+    end_to_end: bool = False,
+) -> dict[str, object]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    model = load_controller(controller_path)
-    sim = LandingSimulation()
+    if end_to_end:
+        from .image_controller import IMAGE_MODEL_PATH, load_image_controller, predict_image_command
+
+        image_model = load_image_controller(IMAGE_MODEL_PATH)
+        if image_model is None:
+            raise FileNotFoundError(f"image controller model not found: {IMAGE_MODEL_PATH}")
+        model = image_model
+    else:
+        predict_image_command = None
+        model = load_controller(controller_path)
+    sim = LandingSimulation(static_pad=end_to_end)
     frames: list[Image.Image] = []
     trace: list[dict[str, float]] = []
     try:
@@ -183,8 +210,12 @@ def run_demo(output_dir: Path, steps: int = 180, controller_path: Path = MODEL_P
             time_s = index * DT
             image, pad_velocity = sim.render(time_s)
             features = vision_features(image, sim.position[2], pad_velocity)
-            command = controller_command(features, model)
-            sim.step(command, time_s)
+            command = (
+                predict_image_command(image, model)
+                if end_to_end
+                else controller_command(features, model)
+            )
+            sim.step(command, time_s, compensate_gravity=end_to_end)
             if index % 3 == 0:
                 frames.append(Image.fromarray(image))
             trace.append({"time_s": time_s, "x_m": float(sim.position[0]), "y_m": float(sim.position[1]),
@@ -203,7 +234,8 @@ def run_demo(output_dir: Path, steps: int = 180, controller_path: Path = MODEL_P
         landing_success = fully_inside_pad and abs(float(sim.position[2]) - contact_height) <= 0.03
         result = {"steps": steps, "duration_s": round(steps * DT, 3),
                   "landing_approach_error_m": approach_error, "landing_success": landing_success,
-                  "final_altitude_m": float(sim.position[2]), "controller": "mlp" if model else "expert"}
+                  "final_altitude_m": float(sim.position[2]),
+                  "controller": "image_mlp" if end_to_end else ("mlp" if model else "expert")}
         (output_dir / "metrics.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         return result
     finally:
