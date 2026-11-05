@@ -49,7 +49,7 @@ class Assess(Node):
         self.create_subscription(Odometry,'/uav/odom',self.receive,100)
         self.create_subscription(String,'/landing/replay_done',self.end,10)
         path=Path(self.get_parameter('log').value);path.parent.mkdir(parents=True,exist_ok=True)
-        self.log=path.open('w');self.finished=False;self.count=0
+        self.log=path.open('w',encoding='utf-8');self.finished=False;self.count=0
     def receive(self,msg):
         stamp=msg.header.stamp;t=stamp.sec+stamp.nanosec/1e9
         p=msg.pose.pose.position;v=msg.twist.twist.linear;q=msg.pose.pose.orientation;w=msg.twist.twist.angular

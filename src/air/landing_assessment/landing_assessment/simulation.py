@@ -28,7 +28,7 @@ def angles(q):
 
 def make_model(seed):
     rng = np.random.default_rng(seed)
-    root = ET.fromstring((ROOT/'models/community_quadrotor.xml').read_text())
+    root = ET.fromstring((ROOT/'models/community_quadrotor.xml').read_text(encoding='utf-8'))
     root.find('option').set('timestep', '.001')
     root.find('option').set('integrator', 'implicitfast')
     world = root.find('worldbody')
@@ -128,7 +128,7 @@ def collect(output, final=False):
         name=f'episode_{seed}.npz';np.savez_compressed(output/name,raw=raw)
         meta.update(file=name,split=split,sha256=hashlib.sha256((output/name).read_bytes()).hexdigest())
         entries.append(meta)
-    (output/'manifest.json').write_text(json.dumps(entries,indent=2))
+    (output/'manifest.json').write_text(json.dumps(entries,indent=2),encoding='utf-8')
     print('Collected',len(entries),'actual MuJoCo landing experiments',flush=True)
 
 
