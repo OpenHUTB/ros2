@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>reverse_parking_planner</name>
+  <version>1.0.0</version>
+  <description>
+    不依赖 CARLA 的倒车入库轨迹规划器：按车位与车辆几何算出「圆弧 + 直线」的
+    倒车路径，并在终端打印断言结果与字符俯视图，可作为停车场类模块的离线回归工具。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>

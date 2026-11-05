@@ -1,0 +1,69 @@
+<launch>
+  <!-- 倒车入库规划器：不依赖 CARLA，启动后直接打印规划报告并发布路径。
+       所有参数都有默认值，不传任何 arg 时的行为与 config/parking_planner.yaml 一致。 -->
+
+  <arg name="slot_kind" default="perpendicular"
+       doc="车位类型，可选 perpendicular（垂直车位）或 parallel（平行车位）；当前规划器只实现垂直车位。"/>
+  <arg name="slot_width" default="2.50" doc="车位宽度，单位 m。"/>
+  <arg name="slot_length" default="5.30" doc="车位长度，单位 m。"/>
+  <arg name="slot_x" default="0.0" doc="车位中心 x 坐标，单位 m。"/>
+  <arg name="slot_y" default="0.0" doc="车位中心 y 坐标，单位 m。"/>
+  <arg name="slot_yaw" default="-1.5707963"
+       doc="停放时车头朝向（rad）；倒车入库后车头朝车道，默认 -pi/2。"/>
+
+  <arg name="wheelbase" default="2.70" doc="车辆轴距，单位 m。"/>
+  <arg name="length" default="4.50" doc="车长，单位 m。"/>
+  <arg name="width" default="1.80" doc="车宽，单位 m。"/>
+  <arg name="max_steer" default="0.55"
+       doc="最大前轮转角，单位 rad；决定最小转弯半径 = 轴距 / tan(最大转角)。"/>
+
+  <arg name="turn_radius" default="5.00"
+       doc="规划用的转弯半径，单位 m；不得小于车辆最小转弯半径。"/>
+  <arg name="entry_length" default="3.00"
+       doc="最后一段倒车直线的长度，单位 m。"/>
+  <arg name="step" default="0.10" doc="路径采样步长，单位 m。"/>
+
+  <arg name="tolerance" default="0.10" doc="终点位置容差，单位 m。"/>
+  <arg name="clearance" default="0.00"
+       doc="与邻车的最小间距下限，单位 m；填 0 表示只要不重叠即可。"/>
+  <arg name="max_path" default="12.00" doc="允许的最长倒车距离，单位 m。"/>
+
+  <arg name="publish_hz" default="10.0" doc="逐点回放路径的发布频率，单位 Hz。"/>
+  <arg name="frame_id" default="map" doc="发布消息使用的坐标系。"/>
+  <arg name="plan_topic" default="/parking/plan" doc="nav_msgs/Path 话题名（latched）。"/>
+  <arg name="report_topic" default="/parking/report"
+       doc="std_msgs/String 报告话题名（latched）。"/>
+  <arg name="point_topic" default="/parking/plan_point"
+       doc="geometry_msgs/PoseStamped 逐点回放话题名。"/>
+
+  <rosparam command="load" file="$(find reverse_parking_planner)/config/parking_planner.yaml"/>
+
+  <param name="slot/kind" value="$(arg slot_kind)"/>
+  <param name="slot/width" value="$(arg slot_width)"/>
+  <param name="slot/length" value="$(arg slot_length)"/>
+  <param name="slot/x" value="$(arg slot_x)"/>
+  <param name="slot/y" value="$(arg slot_y)"/>
+  <param name="slot/yaw" value="$(arg slot_yaw)"/>
+
+  <param name="vehicle/wheelbase" value="$(arg wheelbase)"/>
+  <param name="vehicle/length" value="$(arg length)"/>
+  <param name="vehicle/width" value="$(arg width)"/>
+  <param name="vehicle/max_steer" value="$(arg max_steer)"/>
+
+  <param name="plan/turn_radius" value="$(arg turn_radius)"/>
+  <param name="plan/entry_length" value="$(arg entry_length)"/>
+  <param name="plan/step" value="$(arg step)"/>
+
+  <param name="check/tolerance" value="$(arg tolerance)"/>
+  <param name="check/clearance" value="$(arg clearance)"/>
+  <param name="check/max_path" value="$(arg max_path)"/>
+
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="frame/id" value="$(arg frame_id)"/>
+  <param name="topic/plan" value="$(arg plan_topic)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/point" value="$(arg point_topic)"/>
+
+  <node pkg="reverse_parking_planner" type="main.py"
+        name="reverse_parking_planner" output="screen"/>
+</launch>
