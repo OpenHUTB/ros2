@@ -204,6 +204,8 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
 
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [植保无人机喷洒覆盖与参数评估](./air/uav_agri_spray.md) —— 旋转卡壳定扫描方向，障碍绕行与半圆转入，1 m 栅格高斯沉积算覆盖率/重叠率，扫 9 组速度-重叠参数给推荐值，MuJoCo 真飞重算实际沉积
+
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 

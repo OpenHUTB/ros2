@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_agri_spray</name>
+  <version>0.1.0</version>
+  <description>
+    Coverage path planning and spray deposition assessment for agricultural
+    UAV field operations. 植保喷洒作业覆盖与参数评估：以凸多边形田块（L 形
+    自动拆分子区）与圆形障碍为输入，用旋转卡壳求最小宽方向布置往返
+    （boustrophedon）扫描线，遇障碍沿外扩 5 m 边界圆弧绕行、行间以半圆弧
+    转入；1 m 栅格上按高斯沉积核（σ=喷幅/4）叠加相邻扫描线沉积，统计
+    覆盖率/重叠率/漏喷面积；在喷幅固定的前提下扫描速度×重叠率组合，输出
+    覆盖率-时长权衡表并推荐参数；最后抽推荐参数前 6 条扫描线在
+    uav_mujoco_sim 中真飞，用真实位置重算实际沉积栅格证明闭环。
+  </description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

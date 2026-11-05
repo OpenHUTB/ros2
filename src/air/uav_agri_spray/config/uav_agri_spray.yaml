@@ -1,0 +1,16 @@
+# uav_agri_spray key parameters (used by the ROS node; CLI has the same defaults)
+
+spray_node:
+  ros__parameters:
+    case: case_field_rect
+    odom_topic: /odom
+    status_topic: /uav_agri_spray/status
+    status_period_s: 0.5
+
+    # mission parameters (same defaults as core.planner.SprayConfig)
+    spray_width: 3.0        # m
+    overlap: 0.2
+    speed: 4.0              # m/s
+    alt: 2.5                # m
+    obstacle_margin: 5.0    # m
+    deposit_threshold: 0.5
