@@ -1,7 +1,7 @@
 {
   "regression": {
-    "rmse_fwd": 0.14808747172355652,
-    "rmse_lat": 0.19800063967704773
+    "rmse_fwd": 0.18510080873966217,
+    "rmse_lat": 0.18719951808452606
   },
   "closed_loop": {
     "expert": {
@@ -14,17 +14,17 @@
     },
     "net": {
       "episodes": 200,
-      "success_rate": 0.925,
-      "collision_rate": 0.06,
+      "success_rate": 0.935,
+      "collision_rate": 0.05,
       "timeout_rate": 0.015,
-      "length_mean": 6.307193314580035,
-      "steps_mean": 101.675
+      "length_mean": 6.260639595740483,
+      "steps_mean": 100.69
     }
   },
   "latency": {
-    "mean_ms": 0.02348319673910737,
-    "p95_ms": 0.024705077521502968
+    "mean_ms": 0.022022197488695383,
+    "p95_ms": 0.029054994229227256
   },
   "model_params": 89714,
-  "val_samples": 3684
+  "val_samples": 4970
 }

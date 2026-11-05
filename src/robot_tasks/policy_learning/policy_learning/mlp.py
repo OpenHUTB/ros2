@@ -11,9 +11,9 @@ __all__ = ["PolicyMLP"]
 
 
 class PolicyMLP:
-    """443 → 64 → 32 → 2，tanh 隐层，线性输出。"""
+    """884 → 96 → 48 → 2，tanh 隐层，线性输出。"""
 
-    def __init__(self, n_in: int = 443, n_h1: int = 96, n_h2: int = 48,
+    def __init__(self, n_in: int = 884, n_h1: int = 96, n_h2: int = 48,
                  n_out: int = 2, seed: int = 0):
         self.n_in, self.n_h1, self.n_h2, self.n_out = (
             int(n_in), int(n_h1), int(n_h2), int(n_out))

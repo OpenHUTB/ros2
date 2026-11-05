@@ -8,7 +8,8 @@ from typing import Dict, List
 import numpy as np
 
 from .encoder import encode
-from .expert import LOOKAHEAD, pure_pursuit, steer
+from .dataset import policy_action
+from .expert import pure_pursuit
 from .grid import build_grid, planning_grid, sample_free_pose, to_cell
 from .sim import collides, step
 from .value import descend_path, distance_map
@@ -77,10 +78,8 @@ def evaluate(net, n_episodes=50, seed=5000, max_steps=400) -> Dict:
             if kind == "expert":
                 controller = lambda pose, p=path: pure_pursuit(p, pose)
             else:
-                def net_ctrl(pose, gg=goal, dd=dist):
-                    p = net.predict(encode(g, pose, gg, dd))
-                    return steer(float(p[0]) * LOOKAHEAD, float(p[1]) * LOOKAHEAD)
-                controller = net_ctrl
+                controller = lambda pose, gg=goal, dd=dist: policy_action(
+                    net, encode(g, pose, gg, dd))
             r = run_episode(g_raw, controller, start, goal, max_steps)
             ok += int(r["success"])
             col += int(r["reason"] == "collision")

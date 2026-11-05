@@ -102,6 +102,26 @@ def test_mlp_save_load(tmp_path):
     assert np.allclose(net.predict(x), net2.predict(x), atol=1e-6)
 
 
+def test_policy_action_conversion():
+    """DAgger 采样必须和闭环评测走同一条转换，不能把归一化前视点当 (v, ω)。"""
+    from policy_learning.dataset import policy_action
+    from policy_learning.expert import LOOKAHEAD, steer
+
+    class _FakeNet:
+        def __init__(self, out):
+            self.out = np.asarray(out, np.float32)
+
+        def predict(self, obs):
+            return self.out
+
+    v, w = policy_action(_FakeNet([1.0, 0.0]), None)
+    ref = steer(LOOKAHEAD, 0.0)
+    assert abs(v - ref[0]) < 1e-6 and abs(w - ref[1]) < 1e-6
+
+    _, w2 = policy_action(_FakeNet([0.0, 0.5]), None)
+    assert abs(w2) > 0.5          # 侧向偏移应产生角速度
+
+
 def test_sim_step_forward():
     x, y, th = step((0.0, 0.0, 0.0), 0.5, 0.0, dt=0.1)
     assert abs(x - 0.05) < 1e-9 and abs(y) < 1e-9 and abs(th) < 1e-9

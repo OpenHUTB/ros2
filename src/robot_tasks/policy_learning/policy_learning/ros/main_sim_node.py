@@ -70,7 +70,7 @@ class SimNode(Node):
         msg.info.width = W
         msg.info.height = H
         msg.info.origin.orientation.w = 1.0
-        msg.data = (self.grid[::-1, :] * 100).astype(np.int8).ravel().tolist()
+        msg.data = (self.grid * 100).astype(np.int8).ravel().tolist()
         self.pub_map.publish(msg)
 
     def tick(self) -> None:

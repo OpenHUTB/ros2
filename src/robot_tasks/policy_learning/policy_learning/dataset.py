@@ -15,7 +15,7 @@ from .value import descend_path, distance_map
 GOAL_TOL = 0.25
 MIN_START_GOAL = 2.0
 
-__all__ = ["collect", "dagger", "merge", "split", "Dataset"]
+__all__ = ["collect", "dagger", "merge", "split", "policy_action", "Dataset"]
 
 
 class Dataset:
@@ -27,6 +27,16 @@ class Dataset:
 
     def __len__(self):
         return int(len(self.x))
+
+
+def policy_action(net, obs, lookahead: float = LOOKAHEAD):
+    """把网络的归一化前视点输出转成 (v, ω)。
+
+    DAgger 采样和闭环评测必须走同一条转换路径，否则采到的状态
+    不是策略真实运行时会到达的状态。
+    """
+    p = net.predict(obs)
+    return steer(float(p[0]) * lookahead, float(p[1]) * lookahead)
 
 
 def _plan(g, start_xy, goal_xy):
@@ -140,10 +150,10 @@ def dagger(net, episodes: int = 25, seed: int = 1,
             eps.append(done)
             kept += 1
 
-            a = net.predict(obs)
-            v_a = float(a[0]) + float(rng.normal(0.0, 0.10))
-            w_a = float(a[1]) + float(rng.normal(0.0, 0.15))
-            pose = step(pose, max(0.0, v_a), w_a)
+            v, w = policy_action(net, obs)
+            v += float(rng.normal(0.0, 0.10))       # 探索噪声加在速度上
+            w += float(rng.normal(0.0, 0.15))
+            pose = step(pose, max(0.0, v), w)
             if collides(g_raw, pose):
                 break
             if math.hypot(pose[0] - gx, pose[1] - gy) < GOAL_TOL:

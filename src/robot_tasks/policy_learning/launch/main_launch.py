@@ -42,7 +42,7 @@ def generate_launch_description():
         name="policy_node", output="screen",
         parameters=[{
             "model": LaunchConfiguration("model"),
-            "rate_hz": ParameterValue("10.0", value_type=float),
+            "rate_hz": 10.0,
         }],
     )
 
