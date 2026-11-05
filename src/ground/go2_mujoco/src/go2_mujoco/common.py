@@ -246,6 +246,8 @@ def parse_args():
     ap.add_argument("--preview", action="store_true",
                     help="只跑 1.5 秒，输出 3 张 PNG 检查取景")
     ap.add_argument("--out", default=None, help="视频输出路径")
+    ap.add_argument("--duration", type=float, default=None,
+                    help="完整视频的仿真时长（秒），不填则用模块默认值")
     # roslaunch 会追加 __name:=、__log:= 等私有参数，须用 parse_known_args 忽略
     args, _ = ap.parse_known_args()
     return args

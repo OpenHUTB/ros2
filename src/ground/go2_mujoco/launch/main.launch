@@ -1,3 +1,7 @@
 <launch>
-  <node pkg="go2_mujoco" type="main.py" name="go2_mujoco" output="screen" cwd="node"/>
+  <!-- 时长与预览开关，避免必须改代码才能调 -->
+  <arg name="duration" default="6.0" description="完整视频的仿真时长（秒）"/>
+  <arg name="preview" default="false" description="只渲染 3 帧预览图，不写视频"/>
+  <node pkg="go2_mujoco" type="main.py" name="go2_mujoco" output="screen" cwd="node"
+        args="--duration $(arg duration) $(eval '--preview' if arg('preview') == 'true' else '')"/>
 </launch>
