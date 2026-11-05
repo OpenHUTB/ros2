@@ -5,7 +5,7 @@ services:
       MUJOCO_GL: egl
     volumes:
       - ./output:/workspace/output
-    command: ["python3", "/workspace/mujoco_uav_moving_pad_landing/main.py", "demo", "--output", "/workspace/output", "--steps", "180"]
+    command: ["bash", "-lc", "python3 /workspace/mujoco_uav_moving_pad_landing/main.py train --samples 1200 && python3 /workspace/mujoco_uav_moving_pad_landing/main.py demo --output /workspace/output --steps 180"]
   ros_adapter:
     build: .
     environment:
