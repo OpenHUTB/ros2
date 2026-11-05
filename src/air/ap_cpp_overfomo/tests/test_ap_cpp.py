@@ -350,6 +350,31 @@ class TestPlanner(unittest.TestCase):
             conservative.evaluation.cumulative_information,
         )
 
+    def test_boustrophedon_route_keeps_both_endpoints_of_each_lane(self):
+        """A rectangle must sweep lane by lane, not collapse to one point.
+
+        Regression for #139: ``_cross_section()`` returned ``(lo, hi)`` but the
+        caller unpacked it as ``(cross, sweep)``, so every lane produced a
+        single pose on the ``lo`` edge and the route degenerated into repeated
+        copies of one point.
+        """
+        field = [(0.0, 0.0), (60.0, 0.0), (60.0, 60.0), (0.0, 60.0)]
+        route = RollingHorizonPlanner.boustrophedon_route(field, lane_spacing=10.0)
+
+        self.assertEqual(len(route) % 2, 0, "each lane must contribute two endpoints")
+        lanes = [route[i:i + 2] for i in range(0, len(route), 2)]
+        self.assertGreaterEqual(len(lanes), 2)
+
+        # Every lane sits on its own scan line instead of all collapsing to x=0.
+        cross_coords = [lane[0].x for lane in lanes]
+        self.assertEqual(cross_coords, sorted(cross_coords))
+        self.assertEqual(len(set(cross_coords)), len(cross_coords))
+
+        # Both ends of the scan line survive, at the requested cross coordinate.
+        for lane in lanes:
+            self.assertAlmostEqual(lane[0].x, lane[1].x, places=9)
+            self.assertEqual(sorted((lane[0].y, lane[1].y)), [0.0, 60.0])
+
     def test_plan_commits_only_the_execute_window(self):
         route = RollingHorizonPlanner.lawnmower_from_grid(self.grid, lane_spacing=6.0)
         result = self.planner.plan(route[0], reference_route=route, now=0.0)

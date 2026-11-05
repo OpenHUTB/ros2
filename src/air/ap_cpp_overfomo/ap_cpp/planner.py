@@ -984,4 +984,4 @@ class RollingHorizonPlanner:
         lo, hi = hits[0], hits[-1]
         if hi - lo < 1e-6:
             return []
-        return [(lo, hi)]
+        return [(cross, lo), (cross, hi)]
