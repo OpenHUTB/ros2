@@ -152,6 +152,7 @@ nav:
     - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
+    - 群体行人过街决策: './ground/pedestrian_group_crossing.md'
 - 空域载具:
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
