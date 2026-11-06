@@ -7,13 +7,14 @@
 
 - 操作系统：Ubuntu 20.04（实测）
 - ROS 版本：ROS 2 Humble
-- Python：3.10
-- 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带），绘图需要 `matplotlib`
+- Python：3.8（Ubuntu 20.04 自带版本）
+- 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带）；`main_plot` 另需 `python3-matplotlib`
 
 ## 2. 编译
 
 ```bash
-cd ~/hutb_ws
+cd ~/ros2                      # 仓库克隆目录，按实际路径调整
+source /opt/ros/humble/setup.bash
 colcon build --packages-select pid_auto_tuning
 source install/setup.bash
 ```
@@ -29,6 +30,9 @@ ros2 run pid_auto_tuning main
 实测输出（目标航向 90°）：
 
 ```
+被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
+目标航向: 90.0 deg
+
 继电器反馈实验: Ku=9.705, Tu=1.360s, 振荡幅值=0.066rad
 
 方案                 超调      上升      调节        稳态误差     IAE
@@ -38,9 +42,11 @@ ros2 run pid_auto_tuning main
 
 自动整定参数: Kp=6.308, Ki=1.784, Kd=1.3726
 手工试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
+
+阶跃响应数据已写入 resource/step_response.csv
 ```
 
-同时把两条阶跃曲线写入 `resource/step_response.csv`（列：`t_s`、`manual_theta_rad`、`auto_theta_rad`）。
+同时把两条阶跃曲线写入当前目录下的 `resource/step_response.csv`（列：`t_s`、`manual_theta_rad`、`auto_theta_rad`）。
 
 ### 3.2 绘制对比图
 
@@ -55,6 +61,7 @@ ros2 run pid_auto_tuning main_plot
 环境里有可用的 `rviz2` 时：
 
 ```bash
+cd ~/ros2                      # rviz 配置使用相对路径，需在仓库根目录执行
 ros2 launch pid_auto_tuning main_launch.py
 rviz2 -d src/ground/pid_auto_tuning/resource/pid_tuning.rviz
 ```
@@ -101,7 +108,3 @@ ros2 run pid_auto_tuning main_node --ros-args -p target_deg:=60.0 -p switch_peri
 - 被控对象是**一阶惯性 + 纯延迟**的航向模型，不含轮胎侧偏、道路坡度和侧风
 - 只在仿真与离线计算中验证，没有上真车
 - 控制量按角速度指令饱和处理，未建模电机死区
-
-## 7. 大模型声明
-
-本模块由作者编写并实际运行验证；写作过程中使用 AI 大模型辅助检查错误与润色文档表述。作者对提交内容的正确性与完整性负全部责任。

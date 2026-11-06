@@ -20,18 +20,19 @@ d(theta)/dt = omega
 
 - 操作系统：Ubuntu 20.04（实测）
 - ROS 版本：ROS 2 Humble
-- Python：3.10
-- 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带），绘图需要 `matplotlib`
+- Python：3.8（Ubuntu 20.04 自带版本）
+- 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带）；`main_plot` 另需 `python3-matplotlib`
 
 ## 3. 编译与运行步骤
 
 ```bash
-cd ~/hutb_ws
+cd ~/ros2                      # 仓库克隆目录，按实际路径调整
+source /opt/ros/humble/setup.bash
 colcon build --packages-select pid_auto_tuning
 source install/setup.bash
 ```
 
-一键跑完整流程（终端输出指标表，并写出 `resource/step_response.csv`）：
+一键跑完整流程（终端输出指标表，并在当前目录的 `resource/step_response.csv` 写入阶跃数据）：
 
 ```bash
 ros2 run pid_auto_tuning main
@@ -46,6 +47,7 @@ ros2 run pid_auto_tuning main_plot
 在 RViz 中用箭头显示当前航向与目标航向：
 
 ```bash
+cd ~/ros2                      # rviz 配置使用相对路径，需在仓库根目录执行
 ros2 launch pid_auto_tuning main_launch.py
 rviz2 -d src/ground/pid_auto_tuning/resource/pid_tuning.rviz
 ```
@@ -73,6 +75,9 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 `ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°）：
 
 ```
+被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
+目标航向: 90.0 deg
+
 继电器反馈实验: Ku=9.705, Tu=1.360s, 振荡幅值=0.066rad
 
 方案                 超调      上升      调节        稳态误差     IAE
@@ -82,6 +87,8 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 
 自动整定参数: Kp=6.308, Ki=1.784, Kd=1.3726
 手工试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
+
+阶跃响应数据已写入 resource/step_response.csv
 ```
 
 ![终端运行结果](../img/ground/pid_auto_tuning_terminal.png)
@@ -107,7 +114,7 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 | 稳态误差 | 末段 5% 样本均值与目标值之差 | rad |
 | IAE | 绝对误差积分 `Σ|e|·dt` | rad·s |
 
-整定时间由 `main` 的全程运行耗时衡量（继电器实验 60 s 仿真 + 候选参数筛选），在普通笔记本上数秒内完成。
+整定与对比在 `main` 的一次运行内完成：继电器实验按 60 s 仿真时长采集振荡，随后做候选参数网格搜索与两组闭环仿真，无需人工干预。
 
 ## 8. 简化假设
 
