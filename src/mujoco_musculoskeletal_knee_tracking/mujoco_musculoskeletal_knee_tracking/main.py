@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-mujoco_musculoskeletal_knee_tracking 主节点 (ROS 2 Humble, ament_python)
+"""mujoco_musculoskeletal_knee_tracking 主节点 (ROS 2 Humble, ament_python)
 
 功能:
   1. 加载单关节膝关节肌肉骨骼模型 (MuJoCo MJCF)
@@ -75,6 +74,8 @@ class KneeTrackingNode(Node):
         with open(model_path, "r", encoding="utf-8") as f:
             xml = f.read()
         self.model = mujoco.MjModel.from_xml_string(xml)
+        # 让 sim.dt 参数真正决定步长（否则只有时间轴变、物理步长仍是 XML 里的值）
+        self.model.opt.timestep = self.dt
         self.data = mujoco.MjData(self.model)
         self.i_flex = self.model.actuator("flexor").id
         self.i_ext = self.model.actuator("extensor").id
@@ -82,6 +83,7 @@ class KneeTrackingNode(Node):
         self.sim_time = 0.0
         self._ref_deg = self.bias
         self._use_external_ref = False
+        self._stopped = False
         self._ref_lock = threading.Lock()
         self._lock = threading.Lock()
 
@@ -93,18 +95,21 @@ class KneeTrackingNode(Node):
         self._act_pub = self.create_publisher(Float64MultiArray, "knee/activation", qos)
         self._torque_pub = self.create_publisher(Float64, "knee/torque", qos)
 
-        # 定时器: 每 0.02s 步进 4 步(50Hz 发布)
+        # 定时器: 每 dt*4 秒步进 4 步(约 50Hz 发布)
         self._steps = 4
         self.create_timer(self.dt * self._steps, self._on_tick)
 
         self.get_logger().info(
             f"膝关节肌肉骨骼轨迹跟踪已启动 | 模型: {model_path} | "
-            f"轨迹: {self.traj_type}(amp={self.amp}deg f={self.freq}Hz "
-            f"bias={self.bias}deg) | PD kp={self.kp} kd={self.kd}")
+            f"dt={self.dt}s | 轨迹: {self.traj_type}(amp={self.amp}deg "
+            f"f={self.freq}Hz bias={self.bias}deg) | PD kp={self.kp} kd={self.kd}")
 
     def _on_reference(self, msg):
         """外部目标角度(deg)订阅回调, 覆盖内置轨迹"""
         with self._ref_lock:
+            if not self._use_external_ref:
+                self.get_logger().info(
+                    "收到外部参考，切换到外部跟踪模式（不再受 sim.duration 限制）")
             self._use_external_ref = True
             self._ref_deg = float(msg.data)
 
@@ -117,24 +122,30 @@ class KneeTrackingNode(Node):
     def _on_tick(self):
         with self._lock:
             for _ in range(self._steps):
-                if self.sim_time >= self.duration:
+                with self._ref_lock:
+                    use_ext = self._use_external_ref
+                    ref_deg = self._ref_deg
+
+                # 内置轨迹跑完后停机；外部参考模式下不限制时长
+                if (not use_ext) and self.sim_time >= self.duration:
+                    if not self._stopped:
+                        self.get_logger().info(
+                            f"内置轨迹已到 {self.duration}s，执行安全停止；"
+                            "如需继续跟踪请发布 /knee/reference")
+                        self._stopped = True
                     self._safe_stop()
                     mujoco.mj_step(self.model, self.data)
                     continue
 
-                with self._ref_lock:
-                    if self._use_external_ref:
-                        ref_deg = self._ref_deg
-                    else:
-                        ref_deg = self._reference_deg(self.sim_time)
-                ref_rad = math.radians(ref_deg)
+                if not use_ext:
+                    ref_deg = self._reference_deg(self.sim_time)
 
                 q = self.data.qpos[0]
                 qd = self.data.qvel[0]
 
                 # PD -> 所需力矩 -> 拮抗肌肉激活 (含数值检查与屈曲限位保护)
                 flex, ext = pd_to_activation(
-                    ref_rad - q,
+                    math.radians(ref_deg) - q,
                     qd,
                     self.kp,
                     self.kd,
@@ -146,6 +157,9 @@ class KneeTrackingNode(Node):
                 self.data.ctrl[self.i_ext] = ext
                 mujoco.mj_step(self.model, self.data)
                 self.sim_time += self.dt
+
+                if use_ext:
+                    self._stopped = False
 
             self._publish(self.data.ctrl[self.i_flex], self.data.ctrl[self.i_ext])
 
