@@ -1,0 +1,6 @@
+<launch>
+  <node name="traffic_light_stop"
+        pkg="traffic_light_stop"
+        type="main.py"
+        output="screen"/>
+</launch>
