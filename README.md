@@ -4,7 +4,25 @@
 
 ## 环境配置
 
-运行 [`serve.bat`](https://github.com/OpenHUTB/ros2/blob/master/serve.bat)（即运行`mkdocs serve`，所做的修改同样需要运行该脚本验证[网页中](http://127.0.0.1:8000/)所修改内容的正确性），会打开浏览器显示主页，详情请参考[serve.bat](https://github.com/OpenHUTB/.github/blob/master/serve.bat)，文档撰写的约定请参考 [doc](https://github.com/OpenHUTB/doc) 仓库首页。
+在仓库根目录安装文档依赖并启动本地预览：
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m mkdocs serve --dev-addr 127.0.0.1:8000
+```
+
+然后打开 <http://127.0.0.1:8000/>。MkDocs 会监视文件变化并自动重新生成页面。仓库根目录未提供 `serve.bat`；Windows 用户可在 PowerShell 中使用 `py -m pip install -r requirements.txt` 和 `py -m mkdocs serve --dev-addr 127.0.0.1:8000`。
+
+Install the documentation dependencies from the repository root and start the local preview:
+
+```bash
+python -m pip install -r requirements.txt
+python -m mkdocs serve --dev-addr 127.0.0.1:8000
+```
+
+Then open <http://127.0.0.1:8000/>. MkDocs watches for file changes and rebuilds the pages automatically. No `serve.bat` is provided at the repository root. On Windows PowerShell, use `py -m pip install -r requirements.txt` and `py -m mkdocs serve --dev-addr 127.0.0.1:8000`.
+
+文档撰写约定请参考 [OpenHUTB/doc](https://github.com/OpenHUTB/doc)。
 
 
 ## 注意事项
@@ -23,8 +41,9 @@
     * 每个模块的相关文件放在以模块命名的文件夹内，必须支持 launch 启动，入口为main.开头，比如：main.py、main.cpp、main.bat、main.sh等
     * 每个模块需要在导航栏和首页添加跳转的链接
     * 模块名不能宽泛，需要具体，不然就和其他人的容易重复
-    * 仓库尽量保存文本文件，二进制文件需要慎重，图片约定使用.png且小于 3 MB，动图使用.gif且小于 5 MB，如运行需要示例数据，可以保存少量数据，大量数据可以通过提供永久网盘链接并说明下载链接和运行说明
+    * 仓库尽量保存文本文件，二进制文件需要慎重，图片约定使用.png且小于 3 MB，动图使用.gif且小于 10 MB，如运行需要示例数据，可以保存少量数据，大量数据可以通过提供永久网盘链接并说明下载链接和运行说明
 
 
 * 每次合并到主分支之前需要至少一名其他人 测试并同意（另一台机器修改部分的运行结果）
 * Github访问不稳定可以[使用Stem++、fastgithub进行加速（也可使用其他代理）](https://gitee.com/OpenHUTB/sw/releases/tag/up).
+
