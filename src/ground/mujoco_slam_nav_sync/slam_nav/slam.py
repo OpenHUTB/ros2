@@ -5,7 +5,8 @@ r"""EKF-SLAM：位姿 + 路标联合估计，外加一张对数几率占据栅�
 (距离, 方位) 观测：
 
 $$
-\mathbf{z} = \left[\sqrt{(m_x-x)^2+(m_y-y)^2},\ \operatorname{atan2}(m_y-y, m_x-x)-\theta\right]^\top
+\mathbf{z} = \left[\sqrt{(m_x-x)^2+(m_y-y)^2},\
+\operatorname{atan2}(m_y-y,\ m_x-x)-\theta\right]^\top
 $$
 
 路标位置对算法**未知**，第一次观测时按观测反投影初始化（$3\sigma$ 不确定性）。
@@ -16,7 +17,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .env import LIDAR_BEAMS, LIDAR_RANGE, PILLAR_RADIUS, wrap
+from .env import LIDAR_RANGE, PILLAR_RADIUS, wrap
 
 GRID_RES = 0.1
 GRID_X0, GRID_Y0 = -1.0, -7.0    # 栅格原点：覆盖 x∈[-1,13]、y∈[-7,7]，场地是 12x12
@@ -102,7 +103,7 @@ class OccupancyGrid:
 class EKFSLAM:
     """3 维位姿 + 2N 维路标的 EKF。"""
 
-    def __init__(self, n_landmarks: int = 6, init_pose=(0.0, 0.0, 0.0),
+    def __init__(self, n_landmarks: int = 8, init_pose=(0.0, 0.0, 0.0),
                  sigma_v: float = 0.25, sigma_w: float = 0.25,
                  sigma_r: float = 0.10, sigma_b: float = 0.04):
         self.n = n_landmarks
@@ -118,7 +119,6 @@ class EKFSLAM:
     # ---------------------------------------------------------------- 预测
     def predict(self, v: float, w: float, dt: float) -> None:
         th = self.mu[2]
-        F = np.eye(self.mu.size)
         self.mu[0] += v * np.cos(th) * dt
         self.mu[1] += v * np.sin(th) * dt
         self.mu[2] = wrap(th + w * dt)
@@ -241,6 +241,14 @@ def detect_landmarks(ranges: np.ndarray) -> list[tuple[float, float]]:
             clusters.append(cur)
             cur = [item]
     clusters.append(cur)
+
+    # 环回接缝：0 号与 N-1 号射线在 ±180° 处相邻，横跨接缝的柱子会被劈成两簇，
+    # 两簇可能各占一个路标槽位。按同样的距离判据把首尾簇并回去。
+    if len(clusters) > 1:
+        tail, head = clusters[-1][-1], clusters[0][0]
+        if np.hypot(tail[0] - head[0], tail[1] - head[1]) < 0.25:
+            clusters[0] = clusters[-1] + clusters[0]
+            clusters.pop()
 
     dets = []
     for c in clusters:

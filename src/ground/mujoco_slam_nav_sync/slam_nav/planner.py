@@ -7,7 +7,7 @@ import heapq
 import numpy as np
 
 from .env import wrap
-from .slam import GRID_H, GRID_RES, GRID_W, GRID_X0, GRID_Y0
+from .slam import GRID_RES, GRID_X0, GRID_Y0
 
 ORIGIN_X, ORIGIN_Y = GRID_X0, GRID_Y0
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .env import DiffDriveEnv, LIDAR_RANGE, wrap
+from .env import DiffDriveEnv, wrap
 from .net import features
 from .planner import astar, lookahead_point, lookahead_points, pure_pursuit
 from .slam import GRID_X0, GRID_Y0, OccupancyGrid, detect_landmarks, EKFSLAM
@@ -29,6 +29,7 @@ class NavConfig:
     steps: int = 1200               # 20 Hz -> 60 s
     replan_every: int = 10
     safe_dist: float = 0.7         # 正前方小于此距离就降速
+    dock_dist: float = 0.8         # 距目标小于此值改由比例控制器精确停靠
 
 
 @dataclass
@@ -167,7 +168,8 @@ def run_episode(env: DiffDriveEnv, net=None, use_slam: bool = True, slip: float 
     env.rng = np.random.default_rng(10007 * (seed + 1) + int(slip * 1000))
     truth0 = env.state().pos.copy()
     grid = OccupancyGrid()
-    ekf = EKFSLAM(init_pose=(truth0[0], truth0[1], 0.0))
+    ekf = EKFSLAM(init_pose=(truth0[0], truth0[1], 0.0),
+                  n_landmarks=len(env.lm_ids))
     dead_pose = np.array([truth0[0], truth0[1], 0.0])
 
     path = None
@@ -177,6 +179,7 @@ def run_episode(env: DiffDriveEnv, net=None, use_slam: bool = True, slip: float 
     stuck = 0
     w_filt = 0.0                      # 角速度一阶低通，抑制网络输出的抖动
 
+    prev_state = env.state()
     for step in range(cfg.steps):
         scan = env.scan()
         truth = env.state()
@@ -197,10 +200,15 @@ def run_episode(env: DiffDriveEnv, net=None, use_slam: bool = True, slip: float 
             targets = lookahead_points(path, pose, cfg.ld)
             target = targets[0] if targets else path[-1]
             if net is not None:
-                v, w = net.act(scan, pose, targets, cfg.v_max, cfg.w_max,
-                               goal=DiffDriveEnv.GOAL)
-                w_filt = 0.5 * w_filt + 0.5 * w
-                w = w_filt
+                if float(np.linalg.norm(pose[:2] - DiffDriveEnv.GOAL)) < cfg.dock_dist:
+                    # 末端接管：网络在终点附近会来回搜索（模仿学习的固有现象），
+                    # 最后 0.8 m 交给比例控制器精确停靠
+                    v, w = pure_pursuit(pose, DiffDriveEnv.GOAL, cfg.v_max, cfg.w_max)
+                else:
+                    v, w = net.act(scan, pose, targets, cfg.v_max, cfg.w_max,
+                                   goal=DiffDriveEnv.GOAL)
+                    w_filt = 0.5 * w_filt + 0.5 * w
+                    w = w_filt
                 v, w = govern(scan, v, w, cfg)      # 网络不管安全，护栏兜底
             else:
                 v, w, _ = expert_action(scan, pose, path, cfg, DiffDriveEnv.GOAL)
@@ -228,8 +236,11 @@ def run_episode(env: DiffDriveEnv, net=None, use_slam: bool = True, slip: float 
             stuck = 0
 
         state = env.step(v, w)
-        # 里程计推进（两种模式都用同一个漂移里程计）
-        v_o, w_o = env.odom(v, w, slip, odom_noise)
+        # 里程计推进（两种模式都用同一个漂移里程计）：
+        # 速度取自**位姿增量**（编码器读数），不是下发的指令——车被墙挡住时编码器不会继续计数
+        v_meas, w_meas = env.odom_from_motion(prev_state, state, cfg_steps_dt())
+        prev_state = state
+        v_o, w_o = env.odom(v_meas, w_meas, slip, odom_noise)
         dead_pose[0] += v_o * np.cos(dead_pose[2]) * cfg_steps_dt()
         dead_pose[1] += v_o * np.sin(dead_pose[2]) * cfg_steps_dt()
         dead_pose[2] = wrap(dead_pose[2] + w_o * cfg_steps_dt())

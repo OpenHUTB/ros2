@@ -303,3 +303,42 @@ def test_slam_beats_dead_reckoning_under_drift(env):
     # 死推算可能很早就撞墙，ATE 反而"看起来小"；比终点误差才有意义
     assert slam.final_dist < dead.final_dist
     assert not slam.crashed
+
+
+# ---------------------------------------------------------------- 评审回归（#847）
+def test_state_velocity_is_body_frame(env):
+    """车头朝 +y 前进时，state().v 必须仍是 0.5 m/s（编码器测的是前向速度）。
+
+    早期实现直接用 qvel[0]（世界系 x 速度），朝北走时会读成 0，里程计整段丢位移。
+    """
+    env.reset(pos=(5.0, 0.0), yaw=np.pi / 2)
+    for _ in range(int(2.0 / DT)):
+        env.step(0.5, 0.0)
+    s = env.state()
+    assert 0.35 < s.v < 0.65, f"前向速度 {s.v:.3f} 不对（应为 ~0.5）"
+    assert abs(s.pos[1]) > 0.7, "没有真的朝 +y 走"
+
+
+def test_ekf_slots_match_landmark_count(env):
+    """EKF 的路标槽位数必须等于场地里的柱子数，否则有柱子永远进不了地图。"""
+    ekf = EKFSLAM(n_landmarks=len(env.lm_ids))
+    assert len(env.lm_ids) == 8
+    assert ekf.mu.size == 3 + 2 * 8
+    assert EKFSLAM().mu.size == 3 + 2 * len(env.lm_ids), "默认槽位数要与场地一致"
+
+
+def test_landmark_detection_merges_seam_cluster():
+    """横跨 ±180° 的柱子会被劈在 0 号与 N-1 号射线上，必须并回一个簇。"""
+    fake = np.full(LIDAR_BEAMS, LIDAR_RANGE, dtype=np.float64)
+    fake[0] = 2.0
+    fake[-1] = 2.0
+    fake[-2] = 2.05
+    dets = detect_landmarks(fake)
+    assert len(dets) == 1, f"接缝处的柱子被拆成了 {len(dets)} 个路标"
+
+
+def test_odom_uses_measured_speed():
+    """odom() 只是把输入乘以 (1+slip)：调用方必须传实测速度，这里守住函数契约。"""
+    e = DiffDriveEnv("maze")
+    v, w = e.odom(0.4, 0.2, slip=0.05, noise=0.0)
+    assert abs(v - 0.42) < 1e-9 and abs(w - 0.21) < 1e-9

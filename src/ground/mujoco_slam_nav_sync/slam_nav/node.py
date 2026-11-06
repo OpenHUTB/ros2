@@ -30,17 +30,19 @@ def _default_weights() -> str:
 
 def _import_ros():
     import rclpy
-    from geometry_msgs.msg import PoseStamped, Twist
+    from geometry_msgs.msg import PoseStamped, TransformStamped, Twist
     from nav_msgs.msg import OccupancyGrid as OccupancyGridMsg, Odometry
     from rclpy.node import Node
     from sensor_msgs.msg import LaserScan
     from std_msgs.msg import String
-    return rclpy, Node, LaserScan, Odometry, OccupancyGridMsg, PoseStamped, Twist, String
+    from tf2_ros import TransformBroadcaster
+    return (rclpy, Node, LaserScan, Odometry, OccupancyGridMsg, PoseStamped, Twist,
+            String, TransformBroadcaster, TransformStamped)
 
 
 def main(argv=None) -> int:
-    (rclpy, Node, LaserScan, Odometry, OccupancyGridMsg,
-     PoseStamped, Twist, String) = _import_ros()
+    (rclpy, Node, LaserScan, Odometry, OccupancyGridMsg, PoseStamped, Twist,
+     String, TransformBroadcaster, TransformStamped) = _import_ros()
 
     class SlamNavNode(Node):
         def __init__(self):
@@ -58,6 +60,8 @@ def main(argv=None) -> int:
             rate = float(self.get_parameter("rate_hz").value)
             self.max_steps = int(self.get_parameter("max_steps").value)
             weights = self.get_parameter("weights").value
+            self.rate_hz = rate
+            self.done = False
 
             self.env = DiffDriveEnv(scene)
             self.cfg = NavConfig()
@@ -72,10 +76,12 @@ def main(argv=None) -> int:
                     "或用 weights 参数指定权重文件")
 
             self.grid = OccupancyGrid()
-            self.ekf = EKFSLAM(init_pose=(*DiffDriveEnv.START, 0.0))
+            self.ekf = EKFSLAM(init_pose=(*DiffDriveEnv.START, 0.0),
+                               n_landmarks=len(self.env.lm_ids))
             self.dead = np.array([*DiffDriveEnv.START, 0.0])
             self.step_i = 0
             self.path = None
+            self.prev_state = self.env.state()
 
             self.pub_scan = self.create_publisher(LaserScan, "scan", 10)
             self.pub_odom = self.create_publisher(Odometry, "odom", 10)
@@ -83,6 +89,7 @@ def main(argv=None) -> int:
             self.pub_map = self.create_publisher(OccupancyGridMsg, "map", 10)
             self.pub_cmd = self.create_publisher(Twist, "nav/cmd", 10)
             self.pub_status = self.create_publisher(String, "nav/status", 10)
+            self.tf_broadcaster = TransformBroadcaster(self)
             self.timer = self.create_timer(1.0 / rate, self.tick)
             self.get_logger().info(
                 f"场景={scene} 模式={'EKF-SLAM' if self.use_slam else 'dead-reckoning'} "
@@ -97,10 +104,13 @@ def main(argv=None) -> int:
             m.header.stamp = self._stamp()
             m.header.frame_id = "laser"
             m.angle_min = 0.0
-            m.angle_max = float(2.0 * np.pi)
+            # angle_max 必须等于最后一条射线的角度，否则区间与增量不自洽
+            m.angle_max = float(2.0 * np.pi - 2.0 * np.pi / LIDAR_BEAMS)
             m.angle_increment = float(2.0 * np.pi / LIDAR_BEAMS)
             m.range_min = 0.05
             m.range_max = float(LIDAR_RANGE)
+            m.time_increment = 0.0                     # 120 条射线同一时刻采样
+            m.scan_time = float(1.0 / max(self.rate_hz, 1e-3))
             m.ranges = [float(r) for r in scan]
             self.pub_scan.publish(m)
 
@@ -120,6 +130,7 @@ def main(argv=None) -> int:
             self.pub_map.publish(m)
 
         def _publish_odom(self, pose, v, w):
+            """轮式里程计（死推算）位姿，与 SLAM 位姿是两条独立的消息。"""
             m = Odometry()
             m.header.stamp = self._stamp()
             m.header.frame_id = "map"
@@ -132,22 +143,54 @@ def main(argv=None) -> int:
             m.twist.twist.angular.z = float(w)
             self.pub_odom.publish(m)
 
+        def _publish_pose(self, pose):
             p = PoseStamped()
-            p.header.stamp = m.header.stamp
+            p.header.stamp = self._stamp()
             p.header.frame_id = "map"
-            p.pose = m.pose.pose
+            p.pose.position.x = float(pose[0])
+            p.pose.position.y = float(pose[1])
+            p.pose.orientation.z = float(np.sin(pose[2] / 2))
+            p.pose.orientation.w = float(np.cos(pose[2] / 2))
             self.pub_pose.publish(p)
+
+        def _publish_tf(self, pose):
+            """map -> base_link（SLAM 位姿）+ base_link -> laser（静态外参）。
+
+            没有 TF 时 RViz 会报 `No transform from [laser] to [map]`，
+            `/scan` 与 `/map` 无法叠在一起显示。
+            """
+            t = TransformStamped()
+            t.header.stamp = self._stamp()
+            t.header.frame_id = "map"
+            t.child_frame_id = "base_link"
+            t.transform.translation.x = float(pose[0])
+            t.transform.translation.y = float(pose[1])
+            t.transform.rotation.z = float(np.sin(pose[2] / 2))
+            t.transform.rotation.w = float(np.cos(pose[2] / 2))
+            self.tf_broadcaster.sendTransform(t)
+
+            t2 = TransformStamped()
+            t2.header.stamp = t.header.stamp
+            t2.header.frame_id = "base_link"
+            t2.child_frame_id = "laser"
+            t2.transform.translation.z = 0.25          # 雷达安装高度，与 env.scan() 一致
+            t2.transform.rotation.w = 1.0
+            self.tf_broadcaster.sendTransform(t2)
 
         # ------------------------------------------------------------ 主循环
         def tick(self):
+            if self.done:
+                return
             if self.env.crashed or self.step_i >= self.max_steps:
+                self.done = True
+                self.timer.cancel()          # 结束后停表，避免每 50 ms 刷一条"结束"
                 self.get_logger().info(
                     f"结束：crashed={self.env.crashed} steps={self.step_i} "
-                    f"终点误差={float(np.linalg.norm(self.env.state().pos - DiffDriveEnv.GOAL)):.2f} m")
+                    "终点误差="
+                    f"{float(np.linalg.norm(self.env.state().pos - DiffDriveEnv.GOAL)):.2f} m")
                 return
 
             scan = self.env.scan()
-            truth = self.env.state()
 
             if self.use_slam:
                 self.ekf.observe(detect_landmarks(scan))
@@ -168,8 +211,11 @@ def main(argv=None) -> int:
             else:
                 v, w = 0.0, 0.6
 
-            self.env.step(v, w)
-            v_o, w_o = self.env.odom(v, w, self.slip, 0.003)
+            st = self.env.step(v, w)
+            # 里程计用位姿增量（编码器读数），不是下发的指令
+            v_meas, w_meas = self.env.odom_from_motion(self.prev_state, st, self.cfg_dt)
+            self.prev_state = st
+            v_o, w_o = self.env.odom(v_meas, w_meas, self.slip, 0.003)
             dt = self.cfg_dt
             self.dead += np.array([v_o * np.cos(self.dead[2]) * dt,
                                    v_o * np.sin(self.dead[2]) * dt, w_o * dt])
@@ -177,7 +223,9 @@ def main(argv=None) -> int:
                 self.ekf.predict(v_o, w_o, dt)
 
             self._publish_scan(scan, pose)
-            self._publish_odom(pose, v, w)
+            self._publish_odom(self.dead, v, w)     # /odom = 死推算
+            self._publish_pose(pose)                # /slam/pose = EKF-SLAM
+            self._publish_tf(pose)
             if self.step_i % 5 == 0:
                 self._publish_map()
 
@@ -188,7 +236,7 @@ def main(argv=None) -> int:
             err = float(np.linalg.norm(pose[:2] - self.env.state().pos))
             st = String()
             st.data = (f"mode={'slam' if self.use_slam else 'dead'} step={self.step_i} "
-                       f"dist={float(np.linalg.norm(self.env.state().pos - DiffDriveEnv.GOAL)):.2f} "
+                       f"dist={np.linalg.norm(self.env.state().pos - DiffDriveEnv.GOAL):.2f} "
                        f"ate={err:.2f} cmd=({v:.2f},{w:.2f})")
             self.pub_status.publish(st)
             if self.step_i % 20 == 0:

@@ -42,7 +42,7 @@ def run_demo(out_dir: str, n_train: int, epochs: int) -> int:
     print(f"参数量 {net.config()['params']}，权重已保存 {weights}")
 
     print("\n== 2/4 三种模式对照（专家 / 神经网络 × SLAM / 死推算）==")
-    cfg = NavConfig(steps=900)
+    cfg = NavConfig(steps=1200)
     runs = []
     trials = [
         ("expert + SLAM", dict(net=None, use_slam=True, slip=0.0)),
@@ -66,7 +66,7 @@ def run_demo(out_dir: str, n_train: int, epochs: int) -> int:
                      goal=DiffDriveEnv.GOAL)
 
     print("\n== 3/4 定位漂移扫描（SLAM vs 死推算）==")
-    records = sweep(env, net=net, slips=(0.0, 0.05, 0.10, 0.20), seeds=(0, 1, 2, 3, 4), cfg=cfg)
+    records = sweep(env, net=net, slips=(0.0, 0.05, 0.10, 0.20), seeds=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), cfg=cfg)
     agg = aggregate(records)
     plot_sweep(records, out / "sweep.png")
 

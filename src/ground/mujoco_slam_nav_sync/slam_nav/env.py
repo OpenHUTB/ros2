@@ -7,7 +7,7 @@
   再叠加高斯噪声。这样漂移是**里程计误差**，而不是把物理改坏——这也是真实轮滑的表现。
 * **雷达用 `mj_ray`**，不依赖 GL，因此本机与软件 OpenGL 的虚拟机结果一致
   （深度渲染在 VMware 下会静默失效，射线不会）。
-* 六个圆柱既是障碍也是 SLAM 的路标；路标位置对 SLAM **未知**，由观测反推。
+* 8 根圆柱（lm0…lm7）既是障碍也是 SLAM 的路标；位置对 SLAM **未知**，由观测反推。
 """
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ class DiffDriveEnv:
 
     # ---------------------------------------------------------------- 场景
     def set_scene(self, scene: str, seed: int = 0) -> None:
-        """`maze` 保留内部隔断；`open` 把隔断挪出场外（只留外围墙 + 六个路标）。"""
+        """`maze` 保留内部隔断；`open` 把隔断挪出场外（只留外围墙 + 全部路标）。"""
         if scene not in self.SCENES:
             raise ValueError(f"未知场景 {scene}，可选 {self.SCENES}")
         rng = np.random.default_rng(seed)
@@ -138,10 +138,17 @@ class DiffDriveEnv:
 
     # ---------------------------------------------------------------- 状态
     def state(self) -> State:
+        """`v` 是**车体前向速度**（编码器能测到的量），不是世界系 x 速度。
+
+        早期版本直接用 qvel[0]，车头朝北时里程计会读到 0；评审指出的"里程计喂指令速度"
+        问题也在这里——调用方应当把 `state.v/w` 喂给 `odom()`，而不是下发的指令。
+        """
         q = self.data.qpos
-        return State(pos=np.array(q[0:2]), yaw=yaw_of(q[3:7]),
-                     v=float(self.data.qvel[0]), w=float(self.data.qvel[5]),
-                     crashed=self.crashed)
+        yaw = yaw_of(q[3:7])
+        vx, vy = float(self.data.qvel[0]), float(self.data.qvel[1])
+        v_body = vx * np.cos(yaw) + vy * np.sin(yaw)
+        return State(pos=np.array(q[0:2]), yaw=yaw, v=v_body,
+                     w=float(self.data.qvel[5]), crashed=self.crashed)
 
     def landmarks(self) -> np.ndarray:
         """路标真实坐标（只用于评价，SLAM 不能用）。"""
@@ -186,7 +193,6 @@ class DiffDriveEnv:
 
     def step(self, v: float, w: float) -> State:
         """速度伺服：把 (v, w) 变成力与力矩；侧向速度强阻尼以模拟轮式约束。"""
-        R = self.data.xmat[self.body_id].reshape(3, 3)
         yaw = yaw_of(self.data.qpos[3:7])
         vel = np.array(self.data.qvel[0:2])
         v_des = np.array([v * np.cos(yaw), v * np.sin(yaw)])
@@ -218,9 +224,26 @@ class DiffDriveEnv:
                 self.crashed = True
                 return
 
+    def odom_from_motion(self, prev: "State", cur: "State", dt: float) -> tuple[float, float]:
+        """由相邻两帧位姿增量反推"编码器 + 陀螺"读数（不含滑差与噪声）。
+
+        直接用 `qvel[5]` 当角速度会低估约 3.5%：车体在行进中会轻微俯仰，`qvel[5]` 是
+        **车体系** z 轴角速度，投影到世界系航向变化并不相等。累计几次转弯就是 0.8 m 的
+        横向漂移——这正是 #847 评审后定位到的 SLAM ATE 变差原因。
+        """
+        dx, dy = cur.pos[0] - prev.pos[0], cur.pos[1] - prev.pos[1]
+        v = (dx * np.cos(prev.yaw) + dy * np.sin(prev.yaw)) / dt
+        w = wrap(cur.yaw - prev.yaw) / dt
+        return float(v), float(w)
+
     def odom(self, v: float, w: float, slip: float = 0.0,
              noise: float = 0.0) -> tuple[float, float]:
-        """轮式里程计：真实速度 × (1+轮滑率) + 高斯噪声。SLAM 只允许用这个。"""
+        """轮式里程计：**实测速度** × (1+轮滑率) + 高斯噪声。SLAM 只允许用这个。
+
+        `v, w` 必须是 `state().v` / `state().w`（编码器读到的实际轮速），不是下发的指令：
+        车被墙挡住时编码器不会继续计数，用指令速度会让里程计一路"穿墙前进"，
+        死推算基线会被高估成必然失败。
+        """
         v_meas = v * (1.0 + slip) + self.rng.normal(0.0, noise)
         w_meas = w * (1.0 + slip) + self.rng.normal(0.0, noise)
         return float(v_meas), float(w_meas)

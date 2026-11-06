@@ -60,7 +60,7 @@ def plot_training(history, path: Path) -> None:
     ax2.plot(ep, [h["mae_yaw"] for h in history], "^:", color="#eb5757", label="MAE yaw")
     ax2.set_ylabel("validation MAE (normalised)")
     lines = ax1.get_lines() + ax2.get_lines()
-    ax1.legend(lines, [l.get_label() for l in lines], loc="upper right", fontsize=8)
+    ax1.legend(lines, [ln.get_label() for ln in lines], loc="upper right", fontsize=8)
     ax1.grid(alpha=0.3)
     fig.suptitle("local planner MLP training (numpy only)")
     fig.tight_layout()
@@ -89,7 +89,8 @@ def save_gif(frames, path: Path, duration: int = 90) -> tuple[int, int]:
         # 第三栏：在线占据栅格（黑=未知，灰=空闲，白=占据）+ 车的位置
         # 白=空闲、黑=占据、灰=未知（与 ROS map_server 的观感一致）
         occ = np.clip((2.0 - logodds) / 4.0, 0, 1)
-        img = Image.fromarray((occ[::-1] * 255).astype(np.uint8)).resize((160, 160), Image.BILINEAR)
+        img = Image.fromarray((occ[::-1] * 255).astype(np.uint8))
+        img = img.resize((160, 160), Image.BILINEAR)
         canvas.paste(img.convert("RGB"), (376, 44))
         mx = 376 + int((pose[0] - (-1.0)) / 14.0 * 160)
         my = 44 + int((7.0 - pose[1]) / 14.0 * 160)

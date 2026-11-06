@@ -16,7 +16,7 @@ from .nav import NavConfig, run_episode
 SLIPS = (0.0, 0.05, 0.10, 0.20)
 
 
-def sweep(env: DiffDriveEnv, net=None, slips=SLIPS, seeds=(0, 1, 2, 3, 4), scene: str = "maze",
+def sweep(env: DiffDriveEnv, net=None, slips=SLIPS, seeds=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), scene: str = "maze",
           cfg: NavConfig | None = None, log=print) -> list[dict]:
     cfg = cfg or NavConfig()
     records = []
