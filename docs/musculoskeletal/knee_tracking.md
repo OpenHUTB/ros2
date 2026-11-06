@@ -1,7 +1,7 @@
 # 膝关节肌肉骨骼仿真与轨迹跟踪控制 (mujoco_musculoskeletal_knee_tracking)
 
 > 模块归属：**肌肉骨骼人 / 下肢** · 功能：**控制**
-> 运行环境：Ubuntu 20.04 + ROS 2 Humble + MuJoCo
+> 运行环境：Ubuntu 22.04 + ROS 2 Humble + Python 3.10 + MuJoCo 3.16.0
 
 本模块使用 MuJoCo 建立单关节**膝关节**肌肉骨骼模型，以**屈肌（腘绳肌近似）/ 伸肌（股四头肌近似）** 两条拮抗肌肉驱动胫骨，通过 PD 控制器实现正弦 / 阶跃轨迹跟踪，并发布关节角、肌肉激活与实际力矩。适合用于理解"肌肉如何通过肌腱驱动机器人关节、PD 控制器如何跟踪轨迹"。
 
@@ -49,7 +49,7 @@
 
 | 参数 | 默认 | 说明 |
 |------|------|------|
-| `sim.dt` | 0.005 | 仿真步长 [s] |
+| `sim.dt` | 0.005 | 仿真步长 [s]，会写入 `model.opt.timestep` |
 | `sim.duration` | 30.0 | 内置轨迹时长 [s] |
 | `trajectory.type` | sine | `sine` \| `step` |
 | `trajectory.amplitude_deg` | 40.0 | 轨迹幅值 [deg] |
@@ -60,9 +60,15 @@
 | `ctrl.max_torque` | 25.0 | 肌肉等效最大力矩 [N·m] |
 | `ctrl.limit_deg` | 90.0 | 屈曲限位 [deg] |
 
-## 4. 构建 (Build)
+**关于 `sim.duration`**：内置轨迹跑满 `duration` 后节点执行安全停止（激活归零，关节回落到下垂位）。
+一旦收到 `/knee/reference` 外部目标，就切换到外部跟踪模式，**不再受 `duration` 限制**。
+
+## 4. 依赖与构建 (Dependencies & Build)
 
 ```bash
+# Python 依赖（MuJoCo 通过 pip 安装，不是 rosdep key）
+python3 -m pip install -r requirements.txt
+
 cd ~/ros2_ws/src
 git clone <模块仓库> mujoco_musculoskeletal_knee_tracking
 cd ~/ros2_ws
@@ -96,15 +102,24 @@ ros2 topic pub /knee/reference std_msgs/Float64 "{data: 50.0}" --once
 
 ## 6. 离线演示 (Offline demo)
 
-不依赖 ROS2，直接生成运行效果 GIF / 评价图 / 指标：
+不依赖 ROS 2，直接生成运行效果 GIF / 评价图 / 指标：
 
 ```bash
-python3 simulate_tracking.py
+python3 simulate_tracking.py               # 带图形环境：生成 GIF + 曲线 + 指标
+python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲线与指标
 ```
 
-输出：`tracking.gif`（<10MB）、`tracking_eval.png`、`tracking_metrics.txt`。
+输出：`tracking.gif`（< 5 MB）、`tracking_eval.png`、`tracking_metrics.txt`。
 
-## 7. 数据与评价 (Data & Metrics)
+## 7. 运行效果 (Results)
+
+正弦轨迹跟踪（bias=30°、幅值 40°、0.4 Hz、PD kp=30 kd=3）：
+
+![轨迹跟踪评价](../img/mujoco_musculoskeletal_knee_tracking/tracking_eval.png)
+
+![轨迹跟踪动图](../img/mujoco_musculoskeletal_knee_tracking/tracking.gif)
+
+## 8. 数据与评价 (Data & Metrics)
 
 `tracking_metrics.txt` 报告：
 
@@ -112,25 +127,27 @@ python3 simulate_tracking.py
 - **超调量**：正方向超调；
 - **收敛时间**：误差首次进入 ±3° 的时间。
 
-默认 10s 正弦轨迹（bias=30° amp=40° f=0.4Hz，PD kp=30 kd=3）结果：
-RMSE ≈ 11°，收敛 ≈ 1.96s。PD 对正弦跟踪存在固有相位滞后，故 RMSE 非零属正常。
+默认 10 s 正弦轨迹（bias=30° amp=40° f=0.4 Hz，PD kp=30 kd=3）结果：
+RMSE ≈ 11°，收敛 ≈ 1.96 s。PD 对正弦跟踪存在固有相位滞后，故 RMSE 非零属正常。
 
-## 8. 故障处理 (Troubleshooting)
+## 9. 故障处理 (Troubleshooting)
 
 | 现象 | 可能原因 | 处理 |
 |------|----------|------|
-| 关节不运动 | `mujoco` 未安装 | `pip install mujoco` |
+| 关节不运动 | `mujoco` 未安装 | `python3 -m pip install -r requirements.txt` |
 | 跟踪幅值明显不足 | `kp` 过小或 `max_torque` 过大 | 增大 `kp`，确认 `max_torque` 约等于肌肉实际最大力矩（本模型 ≈25 N·m） |
 | 高频振荡 | `kd` 不足 | 增大 `kd` |
 | 触到限位剧烈冲击 | 轨迹幅值过大 | 控制轨迹保持在 `10°~70°` 内 |
 | 模型无法加载（中文路径） | 文件路径含特殊字符 | 用 `from_xml_string` 读取（本模块已内置），或使用纯英文路径 |
+| 远程/无图形环境报 OpenGL 错误 | 无渲染后端 | 加 `--no-render`，或设置 `MUJOCO_GL=egl` |
 
-## 9. 附：本地验证 (Local validation)
+## 10. 附：本地验证 (Local validation)
 
 ```bash
-python3 validate_model.py
+python3 validate_model.py               # 含渲染
+python3 validate_model.py --no-render   # 无图形环境
 ```
 
-验证：模型可加载、单独激活屈肌→屈曲、单独激活伸肌→伸展、无控制→0° 平衡、并输出 `model_render.png`。
+验证：模型可加载、单独激活屈肌→屈曲、单独激活伸肌→伸展、无控制→0° 平衡、并（可选）输出 `model_render.png`。
 
 > 本模块开发过程中使用了大模型辅助（代码生成与调试），并对提交内容负责。
