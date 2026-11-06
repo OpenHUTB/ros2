@@ -28,7 +28,11 @@ from .sim import (collect_demo, evaluate, rollout, stack_dataset,
 from .world import make_scene
 
 TRAIN_SCENES = ('straight', 'curve')
-POLICY_KINDS = ('oracle', 'pipe_slam', 'pipe_cnn', 'e2e', 'e2e_nogoal')
+# pipe_cnn（用 CNN 回归 (dx, dtheta) 替代几何检测）也能跑，但闭环里
+# 次次撞：回归量在 1 rad 级航向偏差下不可靠，|desired| 判据被逐帧抖动
+# 触发成"转一下、停一下"的振荡。它作为负面结果留在 make_policy 里，
+# 不进主对比（见 docs/water/rov_pipeline_follow.md 的负面结果一节）。
+POLICY_KINDS = ('oracle', 'pipe_slam', 'e2e', 'e2e_nogoal')
 
 
 def _log(msg):
@@ -234,9 +238,7 @@ def stage_figures(args, out, rows, net, percep, log):
         return
     # GIF：清水用经典流水线，浑水用 CNN 感知 —— 一张看建图，一张看
     # 学习式感知在几何检测失效时的表现
-    jobs = [('curve', 'pipe_slam', 6)]
-    if percep is not None:
-        jobs.append(('turbid', 'pipe_cnn', 5))
+    jobs = [('curve', 'pipe_slam', 6), ('turbid', 'pipe_slam', 5)]
     for scene, kind, stride in jobs:
         _log('  生成 %s（%s）的 GIF ...' % (scene, kind))
         frames, traj = [], []

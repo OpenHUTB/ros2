@@ -153,6 +153,7 @@ class PipeSlamPolicy:
         CNN 输出是归一化的 (dx/1.2, dtheta/1.5)，训练标签本来就是任务系，
         直接反归一化；几何检测器给的是车体系横向量，按巡检方向换算 ——
         两条感知路径在这一层之后完全同构。
+
         """
         if self.net is not None:
             x = _percep_input(obs['rgb'], obs.get('depth'))
@@ -236,15 +237,44 @@ class PipeSlamPolicy:
         return v, w
 
 
-def _percep_input(rgb, depth=None):
-    """感知网络输入：单帧灰度 + 深度（归一化）。"""
-    g = resize_gray(to_gray(rgb), E2EPolicy.IN_W, E2EPolicy.IN_H)
-    g = (g - 0.45) / 0.25
+GRAY_MEAN, GRAY_STD = 0.45, 0.25
+
+
+def frame_gray(rgb, w=None, h=None):
+    """采集端存进数据集的灰度帧：resize(to_gray(rgb))，值域 [0, 1]。"""
+    w = E2EPolicy.IN_W if w is None else w
+    h = E2EPolicy.IN_H if h is None else h
+    return resize_gray(to_gray(rgb), w, h)
+
+
+def net_gray(g):
+    """数据集里的灰度帧 → 网络输入：亮度归一化。
+
+    这层仿射变换必须**训练与部署用同一个函数**。早先部署端漏了它
+    （直接喂 [0,1] 原始灰度），而训练张量是 stack_dataset() 里归一化过的，
+    端到端策略因此在分布外推理：原地打转，12/12 全部失败。
+    """
+    return (g - GRAY_MEAN) / GRAY_STD
+
+
+def depth_feature(depth, w=None, h=None):
+    """训练集里 depths 的张成：深度 / 量程，再缩放到网络输入尺寸。"""
+    w = E2EPolicy.IN_W if w is None else w
+    h = E2EPolicy.IN_H if h is None else h
     if depth is None:
-        d = np.zeros((E2EPolicy.IN_H, E2EPolicy.IN_W), dtype=np.float32)
-    else:
-        d = resize_gray(np.clip(depth / P.CAM_RANGE_MAX, 0.0, 1.0).astype(np.float32),
-                        E2EPolicy.IN_W, E2EPolicy.IN_H)
+        return np.zeros((h, w), dtype=np.float32)
+    return resize_gray(np.clip(depth / P.CAM_RANGE_MAX, 0.0, 1.0).astype(np.float32),
+                       w, h)
+
+
+def _percep_input(rgb, depth=None):
+    """感知网络输入：单帧灰度 + 深度，与 stack_percep() 的样本同源。
+
+    注意感知网络这一路**不做**亮度归一化（stack_percep 存的是原始灰度），
+    与端到端那一路不同 —— 两条支路的张成各自与自己的训练集对齐。
+    """
+    g = frame_gray(rgb)
+    d = depth_feature(depth)
     return np.concatenate([g[None, :, :], d[None, :, :]], axis=0)
 
 
@@ -308,19 +338,15 @@ class E2EPolicy:
         self.t = 0.0
 
     def _input(self, rgb, depth=None, odom_pose=None, goal=None):
-        g = resize_gray(to_gray(rgb), self.IN_W, self.IN_H)
-        g = (g - 0.45) / 0.25
+        # 与 stack_dataset() 的张成逐位一致：原始灰度再过 net_gray 归一化
+        g = net_gray(frame_gray(rgb, self.IN_W, self.IN_H))
         self.buf.append(g)
         if len(self.buf) > self.FRAMES:
             self.buf.pop(0)
         while len(self.buf) < self.FRAMES:
             self.buf.insert(0, self.buf[0])
         gray = np.stack(self.buf, axis=0)
-        if depth is None:
-            d = np.zeros((self.IN_H, self.IN_W), dtype=np.float32)
-        else:
-            d = resize_gray(np.clip(depth / P.CAM_RANGE_MAX, 0.0, 1.0).astype(np.float32),
-                            self.IN_W, self.IN_H)
+        d = depth_feature(depth, self.IN_W, self.IN_H)
         gch = goal_channel(odom_pose, goal, self.IN_W, self.IN_H) if self.use_goal \
             else np.zeros((self.IN_H, self.IN_W), dtype=np.float32)
         return np.concatenate([gray, d[None, :, :], gch[None, :, :]], axis=0)
@@ -342,7 +368,12 @@ def make_policy(kind, world, net=None, percep_net=None):
     if kind == 'pipe_cnn':
         if percep_net is None:
             raise ValueError('pipe_cnn 策略需要已训练的感知 CNN 权重')
-        return PipeSlamPolicy(world, percep_net=percep_net)
+        pol = PipeSlamPolicy(world, percep_net=percep_net)
+        # 两条支路共用 PipeSlamPolicy，但必须能分别统计：类属性是
+        # 'pipe_slam'，实例上覆盖掉，否则评测 CSV 会把两支混成一行
+        pol.name = 'pipe_cnn'
+        pol.label = 'CNN perception + EKF-SLAM'
+        return pol
     if kind in ('e2e', 'e2e_nogoal'):
         if net is None:
             raise ValueError('%s 策略需要已训练的 CNN 权重' % kind)
