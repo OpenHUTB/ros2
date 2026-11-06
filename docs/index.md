@@ -173,6 +173,7 @@ ROS每章节运行代码:
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
+* [无人机神经网络感知、导航与端到端控制](./air/uav_nn_perception_navigation/index.md) —— 激光雷达 12 扇区特征 + MLP 策略，到达误差 0.76 m；gmapping 建图与导航同步；CNN 端到端视觉控制，自主飞行 10.89 m
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
