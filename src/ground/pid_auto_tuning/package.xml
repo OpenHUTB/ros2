@@ -4,7 +4,7 @@
   <name>pid_auto_tuning</name>
   <version>0.1.0</version>
   <description>差速小车航向 PID 参数自整定（继电器反馈法）与手工试凑对比</description>
-  <maintainer email="your_email@example.com">your_name</maintainer>
+  <maintainer email="Tan-aaa@users.noreply.github.com">Tan-aaa</maintainer>
   <license>Apache-2.0</license>
 
   <exec_depend>rclpy</exec_depend>
