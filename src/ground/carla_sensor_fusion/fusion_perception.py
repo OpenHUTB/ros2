@@ -221,7 +221,8 @@ def radar_points_to_observation(points, min_range=1.5, max_range=40.0,
     azimuth(rad，右为正)、俯仰 altitude(rad)、径向速度 velocity(m/s)。
     按 depth 过滤后做目标关联（评审点 4）：
       - pred=(r_pred, th_pred) 给出时，选离预测位置最近的、距离差 < gate 的点簇；
-      - 未给 pred 时退回最近若干点（bootstrap）。
+      - 未给 pred 时按深度做一维聚类，取「点数最多的回波簇」（bootstrap，
+        避免目标回波与近处道路杂波一起取均值导致初值偏离）。
     返回 None 表示本帧未检出。
     """
     if points is None or len(points) == 0:

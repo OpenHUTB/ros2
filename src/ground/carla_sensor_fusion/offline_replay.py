@@ -97,6 +97,7 @@ def run(args):
     n_fuse = 0
     err_sum = err_sq = 0.0
     metrics = []
+    next_cam = next_lid = next_rad = next_imu = 0.0
 
     for k in range(ticks):
         t = k * dt
@@ -112,8 +113,9 @@ def run(args):
             pred_r = float(math.hypot(px, py))
             pred_th = float(math.atan2(py, px))
 
-        # ---- 相机 30 Hz
-        if k % cam_every == 0:
+        # ---- 相机 30 Hz（按仿真时间调度，30 s ≈ 900 帧）
+        if t >= next_cam - 1e-9:
+            next_cam += 1.0 / 30.0
             counts["camera"] += 1
             mask = make_mask(args.image_width, args.image_height, bth,
                              args.camera_fov, rng)
@@ -122,10 +124,11 @@ def run(args):
             if th_cam is not None:
                 buffer.push("camera", t, th_cam)
 
-        # ---- LiDAR 10 Hz（方位与相机相反）
-        if k % lid_every == 0:
+        # ---- LiDAR 10 Hz（与相机同一方位约定：右为正）
+        if t >= next_lid - 1e-9:
+            next_lid += 0.1
             counts["lidar"] += 1
-            pts = make_lidar(br, -bth, rng)
+            pts = make_lidar(br, bth, rng)
             obs = lidar_points_to_observation(
                 pts, max_range=args.lidar_range,
                 pred=(pred_r, pred_th) if pred_r is not None else None)
@@ -134,7 +137,8 @@ def run(args):
                 buffer.push("lidar", t, obs)
 
         # ---- Radar 20 Hz（方位右为正，与相机一致）
-        if k % rad_every == 0:
+        if t >= next_rad - 1e-9:
+            next_rad += 0.05
             counts["radar"] += 1
             rpts = make_radar(br, bth, rng)
             rob = radar_points_to_observation(
@@ -145,7 +149,8 @@ def run(args):
                 buffer.push("radar", t, rob)
 
         # ---- IMU 100 Hz
-        if k % max(1, int(round(0.01 / dt))) == 0:
+        if t >= next_imu - 1e-9:
+            next_imu += 0.01
             counts["imu"] += 1
             yaw_obs = imu_compass_to_yaw(math.pi / 2.0 - yaw)
             last["yaw"] = (yaw_obs, t)
