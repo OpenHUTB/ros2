@@ -10,7 +10,7 @@
     用 slide_x + slide_z + hinge_y 三个关节把它约束在矢状面内。
     MuJoCo 没有 rosdep 键，需用 pip 安装。
   </description>
-  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <maintainer email="2930366365@qq.com">Tan-aaa</maintainer>
   <license>BSD-3-Clause</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
