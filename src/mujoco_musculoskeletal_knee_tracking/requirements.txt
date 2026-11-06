@@ -1,6 +1,0 @@
-# mujoco_musculoskeletal_knee_tracking 运行依赖
-# 安装：python3 -m pip install -r requirements.txt
-mujoco>=3.1
-numpy>=1.21
-matplotlib>=3.5
-Pillow>=9.0
