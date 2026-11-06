@@ -11,6 +11,7 @@ import os, sys, math
 os.environ.setdefault("MUJOCO_GL", "glfw")
 import numpy as np
 import mujoco
+import mujoco.viewer  # 显式导入子模块：`import mujoco` 不会自动加载 viewer，缺这句会报 AttributeError
 
 import main as m
 
