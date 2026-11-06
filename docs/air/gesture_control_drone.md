@@ -155,6 +155,34 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'takeoff'"   # 绕过识
 python3 tests/test_gesture_control_local.py
 ```
 
+数据集工具（为神经网络分类器准备训练数据，同样不需要 ROS / 摄像头）：
+
+```bash
+# 1) 用合成关键点验证整条流程（7 类 × N 个样本，临时文件跑完自动清理）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py selftest
+
+# 2) 查看一个采集会话的统计（每类样本数、缺失类别、特征均值/标准差）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py stats data/session_01.npz
+
+# 3) 合并多个会话（默认按固定种子打乱）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py merge data/all.npz \
+    data/session_01.npz data/session_02.npz
+```
+
+`selftest` 的真实输出（`log_to_png.py` 渲染，非系统截屏）：
+
+![数据集工具自测](../img/air/gesture_control_drone/run_dataset.png)
+
+其中第 [2] 步是**弱标签复判**：用 `gesture_detection.classify_landmarks` 对 7 只
+合成手逐个复判，必须 **7/7** 与期望类别一致。原因是 `extract_from_result()` 给真实
+数据打标签用的正是同一个函数——合成手一旦和它对不上，训练集的标签就是反的
+（历史上就踩过：合成手的手指画成朝下，张开手掌被判成握拳）。
+
+它负责三件事：把 MediaPipe 的 21 个关键点归一化成 **42 维**（减腕部 + 除手掌尺度，
+与距离/分辨率无关）、把采集会话存成 `.npz`（features + labels + meta）、
+以及按类分层划分训练/验证集（**样本数 < 2 的类别整类留在训练集**，
+避免"某类在训练集里消失"）。
+
 覆盖：脚本语法、**词表一致性**（7 手势→7 动作、10 条指令都有实现）、手势分类
 （含 OK / 拇指朝上朝下）、去抖/边沿/冷却、跨平台摄像头、**AirSim 全部动作**
 （解锁→定高→悬停顺序、机体系速度、偏航、返航回退、急停三语义）、**安全限幅**
