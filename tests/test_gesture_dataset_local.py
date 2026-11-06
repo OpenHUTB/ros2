@@ -263,6 +263,27 @@ def test_gesture_map_contract():
           "%s vs %s" % (list(gd.trainable_gestures()), map_gestures))
 
 
+def test_synthetic_hand_contract():
+    """合成手必须与规则法一致——否则"合成数据 + 弱标签"这条链是错的。
+
+    历史：早期 _make_synthetic_hand 把手指画成朝下（图像坐标 y 向下，
+    指尖 y 应更小才是"伸出"），导致张开手掌被判成握拳、7 种形态全错。
+    """
+    try:
+        import gesture_detection as gdet
+    except Exception as exc:                    # noqa: BLE001
+        check("跳过合成手复判（缺 cv2：%s）" % str(exc)[:40], True)
+        return
+
+    mapping = {"palm": "PALM_OPEN", "fist": "FIST", "point": "POINT",
+               "victory": "VICTORY", "thumbs_up": "THUMB_UP",
+               "thumbs_down": "THUMB_DOWN", "ok": "OK"}
+    for kind, want in mapping.items():
+        hand = gd._make_synthetic_hand(kind, seed=0)
+        pred = gdet.classify_landmarks([[int(x), int(y)] for x, y in hand])
+        check("合成手 %-11s -> %s" % (kind, want), pred == want, str(pred))
+
+
 def test_extract():
     class _Result(object):
         def __init__(self, landmarks, gesture):
@@ -289,6 +310,7 @@ def main():
         test_merge(tmp)
         test_stats_split()
         test_gesture_map_contract()
+        test_synthetic_hand_contract()
         test_extract()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

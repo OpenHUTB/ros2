@@ -286,33 +286,64 @@ def extract_from_result(result) -> Optional[Tuple[np.ndarray, str]]:
 # 命令行入口：不依赖 ROS，采集前/训练前都能直接跑
 # --------------------------------------------------------------------------- #
 def _make_synthetic_hand(kind, seed=0):
-    """生成一只"合成手"的关键点，仅用于 selftest（让评审不用摄像头就能看到效果）。"""
+    """生成一只"合成手"的关键点，仅用于 selftest（让评审不用摄像头就能看到效果）。
+
+    **坐标系必须和规则法一致**：图像坐标 y 向下，`finger_extended` 的判据是
+    ``指尖 y < PIP y``（指尖在上 = 伸出）。早期版本把手指画成朝下，结果整只手
+    上下颠倒——张开手掌被判成握拳、握拳被判成张开手掌，selftest 的"7 类各 N 个"
+    只验证了按名字数数，**完全没有验证弱标签链路**。
+
+    现在 selftest 会用 :func:`gesture_detection.classify_landmarks` 对每只合成手
+    复判一次，见 ``_cmd_selftest`` 的第 [2] 步。
+    """
     rng = np.random.RandomState(seed)
-    base = np.array([[0.0, 0.0], [10, 20], [15, 40], [18, 60], [20, 80],
-                     [40, 10], [42, 30], [44, 45], [46, 60],
-                     [0, 10], [0, 32], [0, 48], [0, 62],
-                     [-15, 12], [-17, 30], [-19, 44], [-21, 58],
-                     [-30, 18], [-32, 34], [-34, 46], [-36, 58]], dtype=np.float32)
-    if kind == "fist":                       # 手指收起来：指尖靠近掌根
-        for tip, mcp in ((8, 5), (12, 9), (16, 13), (20, 17)):
-            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
-    elif kind == "point":                    # 只伸食指
+    base = np.array([
+        [0.0, 0.0],                                                    # 0  腕
+        [12.0, -5.0], [22.0, 5.0], [32.0, 10.0], [50.0, 18.0],         # 1-4  拇指（朝右伸）
+        [-20.0, -45.0], [-20.0, -65.0], [-20.0, -75.0], [-20.0, -85.0],  # 5-8  食指
+        [0.0, -50.0], [0.0, -70.0], [0.0, -80.0], [0.0, -90.0],        # 9-12 中指
+        [15.0, -45.0], [15.0, -65.0], [15.0, -75.0], [15.0, -85.0],    # 13-16 无名指
+        [28.0, -40.0], [28.0, -58.0], [28.0, -66.0], [28.0, -74.0],    # 17-20 小指
+    ], dtype=np.float32)
+
+    folded = ((8, 5), (12, 9), (16, 13), (20, 17))
+
+    def fold_fingers():
+        """手指收起来：指尖落到 PIP **下方**（y 更大）。"""
+        for tip, mcp in folded:
+            base[tip] = base[mcp] + np.array([0.0, 20.0], dtype=np.float32)
+
+    def fold_thumb():
+        """拇指收起来：指尖 x 偏移小于 0.25*掌宽（掌宽 = 50）。"""
+        base[3] = np.array([18.0, -10.0], dtype=np.float32)
+        base[4] = np.array([25.0, -20.0], dtype=np.float32)
+
+    if kind == "palm":                       # 五指全伸 -> PALM_OPEN
+        pass
+    elif kind == "fist":                     # 全收 -> FIST
+        fold_fingers()
+        fold_thumb()
+    elif kind == "point":                    # 只伸食指 -> POINT
         for tip, mcp in ((12, 9), (16, 13), (20, 17)):
-            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
-    elif kind == "victory":                  # 食指 + 中指
+            base[tip] = base[mcp] + np.array([0.0, 20.0], dtype=np.float32)
+        fold_thumb()
+    elif kind == "victory":                  # 食指 + 中指 -> VICTORY
         for tip, mcp in ((16, 13), (20, 17)):
-            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
+            base[tip] = base[mcp] + np.array([0.0, 20.0], dtype=np.float32)
+        fold_thumb()
     elif kind in ("thumbs_up", "thumbs_down"):
-        # 四指全收起来，只竖大拇指
-        for tip, mcp in ((8, 5), (12, 9), (16, 13), (20, 17)):
-            base[tip] = base[mcp] + rng.normal(0, 1.5, 2)
-        sign = -1.0 if kind == "thumbs_up" else 1.0     # 图像 y 向下
-        base[2] = base[1] + np.array([2.0, 12.0 * sign], dtype=np.float32)
-        base[3] = base[2] + np.array([2.0, 14.0 * sign], dtype=np.float32)
-        base[4] = base[3] + np.array([1.0, 14.0 * sign], dtype=np.float32)
-    elif kind == "ok":                       # 拇指尖贴食指尖
-        base[4] = base[8] + rng.normal(0, 1.0, 2)
-    base += rng.normal(0, 0.8, base.shape)   # 一点抖动
+        fold_fingers()
+        # 拇指既要"伸出"（x 偏移 18 > 0.25*50）又要朝上/朝下（竖直偏移 > 0.15*50=7.5）
+        base[3] = np.array([32.0, 10.0], dtype=np.float32)
+        ty = -30.0 if kind == "thumbs_up" else 50.0
+        base[4] = np.array([50.0, ty], dtype=np.float32)
+    elif kind == "ok":                       # 拇指尖贴食指尖，中/无名/小指伸出 -> OK
+        base[4] = base[8] + np.array([2.0, 3.0], dtype=np.float32)
+        base[3] = np.array([32.0, 10.0], dtype=np.float32)
+    else:
+        raise ValueError("未知合成手型：%r" % kind)
+
+    base += rng.normal(0.0, 0.8, base.shape)     # 一点抖动
     return base
 
 
@@ -363,12 +394,30 @@ def _cmd_selftest(args):
     feats = np.stack(feats)
     labs = np.array(labs, dtype=np.int64)
 
-    print("[2] 统计")
+    print("[2] 弱标签复判（用规则法验证合成手，确保 fixture 与识别逻辑一致）")
+    try:
+        import gesture_detection as gdet
+    except Exception as exc:                       # noqa: BLE001
+        print("  跳过（缺依赖：%s）" % exc)
+        gdet = None
+    if gdet is not None:
+        hit = 0
+        for kind, name in mapping.items():
+            hand = _make_synthetic_hand(kind, seed=0)
+            pred = gdet.classify_landmarks([[int(x), int(y)] for x, y in hand])
+            hit += int(pred == name)
+            print("  %-12s 期望 %-11s 规则法 %-11s %s"
+                  % (kind, name, pred, "OK" if pred == name else "MISMATCH"))
+        if hit != len(mapping):
+            raise SystemExit("弱标签复判失败：%d/%d" % (hit, len(mapping)))
+        print("  弱标签复判 %d/%d 通过" % (hit, len(mapping)))
+
+    print("[3] 统计")
     st = dataset_stats(feats, labs)
     for g, n in st["counts"].items():
         print("  %-12s %5d" % (g, n))
 
-    print("[3] 存盘 + 读回 + 合并")
+    print("[4] 存盘 + 读回 + 合并")
     tmpdir = tempfile.mkdtemp(prefix="gesture_selftest_")
     p1 = save_session(os.path.join(tmpdir, "a.npz"), feats[: len(feats) // 2],
                       labs[: len(labs) // 2])
@@ -378,7 +427,7 @@ def _cmd_selftest(args):
     item = load_session(merged)
     print("  合并后样本数: %d" % item["features"].shape[0])
 
-    print("[4] 训练/验证划分")
+    print("[5] 训练/验证划分")
     xtr, ytr, xv, yv = split_train_val(item["features"], item["labels"], 0.25, seed=0)
     print("  训练 %d / 验证 %d" % (len(ytr), len(yv)))
 

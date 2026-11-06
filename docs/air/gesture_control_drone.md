@@ -173,6 +173,11 @@ python3 src/air/gesture_control_drone/scripts/gesture_dataset.py merge data/all.
 
 ![数据集工具自测](../img/air/gesture_control_drone/run_dataset.png)
 
+其中第 [2] 步是**弱标签复判**：用 `gesture_detection.classify_landmarks` 对 7 只
+合成手逐个复判，必须 **7/7** 与期望类别一致。原因是 `extract_from_result()` 给真实
+数据打标签用的正是同一个函数——合成手一旦和它对不上，训练集的标签就是反的
+（历史上就踩过：合成手的手指画成朝下，张开手掌被判成握拳）。
+
 它负责三件事：把 MediaPipe 的 21 个关键点归一化成 **42 维**（减腕部 + 除手掌尺度，
 与距离/分辨率无关）、把采集会话存成 `.npz`（features + labels + meta）、
 以及按类分层划分训练/验证集（**样本数 < 2 的类别整类留在训练集**，
