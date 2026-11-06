@@ -232,9 +232,17 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_4">实现</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">运行截图</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">无窗口评测</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">声明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">测试</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">参数</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">限制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">运行截图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">声明</a>
 </li>
 </ul>
 </li>
@@ -493,12 +501,22 @@
 <li>Windows 11 家庭版（Build 26200）</li>
 <li>Python 3.12.0</li>
 <li>pygame 2.5.2（SDL 2.28.3）</li>
+<li>复现环境：Python 3.13.14 + pygame 2.6.1（SDL 2.28.4），代码只用基础 API，2.5.2 起兼容</li>
 </ul>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">pygame</span><span class="o">==</span><span class="m">2</span>.5.2
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/ground/car_2d_target_tracker/requirements.txt
+<span class="c1"># 或固定旧版本：pip install pygame==2.5.2</span>
 </code></pre></div>
 <h2 id="_2">运行</h2>
-<p>代码位于 <code>src/ground/car_2d_target_tracker/main.py</code>，在仓库根目录下执行：</p>
+<p>代码位于 <code>src/ground/car_2d_target_tracker/main.py</code>，在仓库根目录下执行。
+命令里的 <code>python</code> 在 Linux/macOS 上通常写成 <code>python3</code>，Windows 也可以用 <code>py -3</code>；
+Windows 终端中文乱码时先执行 <code>chcp 65001</code>：</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>src/ground/car_2d_target_tracker/main.py
+</code></pre></div>
+<p>演示模式（自动跑三个场景并保存截图到 <code>demo_out/</code>）：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>src/ground/car_2d_target_tracker/main.py<span class="w"> </span>--demo
+</code></pre></div>
+<p>无窗口评测（不打开窗口，跑固定时长并写 <code>metrics.json</code>）：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>src/ground/car_2d_target_tracker/main.py<span class="w"> </span>--headless<span class="w"> </span>--duration<span class="w"> </span><span class="m">20</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--outdir<span class="w"> </span>demo_out
 </code></pre></div>
 <h2 id="_3">操作</h2>
 <table>
@@ -550,22 +568,130 @@ dtheta = omega * dt
 <li><code>target_angle = atan2(ty - y, tx - x)</code></li>
 <li><code>err = normalize(target_angle - theta)</code></li>
 <li><code>omega = clip(Kp * err, -max_steer, max_steer)</code></li>
-<li><code>v = max_speed * cos(err) * min(1, dist/120)</code></li>
+<li><code>v = max_speed * cos(err) * min(1, dist / 60)</code></li>
 <li>距离 &lt; 18px 则停车</li>
 </ol>
-<p>碰撞检测：小车新位置到每个障碍物圆心距离小于 <code>obstacle_r + car_r</code> 则放弃位移。</p>
-<h2 id="_5">运行截图</h2>
-<p>以下均为真实运行窗口截图。</p>
+<p><code>dist / 60</code> 里的 60 是减速距离 <code>SLOWDOWN_DISTANCE</code>。这个值不能太大：如果取
+120，目标以 60 px/s 移动时，小车在 40 px 外就把速度降到和目标一样，只能一直
+跟在后面，追不上。</p>
+<p>碰撞检测：小车新位置到每个障碍物圆心距离小于 <code>obstacle_r + car_r</code> 则放弃位移。
+撞上后小车原地转向（保持同一方向约 0.35 s，避免每帧来回抖），并按一次接触事件把
+<code>hits</code> 加一（持续贴墙只记一次）；手动模式同样允许贴墙原地转向，否则会卡死。</p>
+<h2 id="_5">无窗口评测</h2>
+<p><code>--headless</code> 使用 SDL dummy 驱动，不开窗口，按固定 60 Hz 步长跑完 <code>--duration</code>
+秒，输出 <code>metrics.json</code>：</p>
+<div class="highlight"><pre><span></span><code>steps=1200 time=20.00s arrived_once=True t_target=14.70s
+mean_dist=33.8px final_dist=20.2px path=1422.1px hits=0
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arrived</code></td>
+<td>最后一帧是否在 18 px 到达半径内（目标移动后会变化）</td>
+</tr>
+<tr>
+<td><code>arrived_once</code></td>
+<td>是否至少进入过一次 18 px 到达半径</td>
+</tr>
+<tr>
+<td><code>time_to_target</code></td>
+<td>第一次到达的时间，没到达为 <code>null</code></td>
+</tr>
+<tr>
+<td><code>mean_distance</code> / <code>final_distance</code></td>
+<td>全程平均 / 结束时与目标的距离</td>
+</tr>
+<tr>
+<td><code>path_length</code></td>
+<td>小车实际走过的路径长度</td>
+</tr>
+<tr>
+<td><code>collisions</code></td>
+<td>碰撞事件次数（一次持续接触只记一次）</td>
+</tr>
+</tbody>
+</table>
+<p>固定 <code>--seed</code> 后指标可完全复现，适合做回归对比。加 <code>--save-frame</code> 会保存
+<code>final_frame.png</code>。</p>
+<h2 id="_6">测试</h2>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>src/ground/car_2d_target_tracker/tests<span class="w"> </span>-v
+</code></pre></div>
+<p>14 个用例，覆盖角度归一化、自动追踪、到达判定、碰撞事件计数、手动贴墙转向、
+目标边界反弹、headless 指标与同种子确定性。</p>
+<h2 id="_7">参数</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MAX_SPEED</code></td>
+<td>180 px/s</td>
+<td>自动模式最大速度</td>
+</tr>
+<tr>
+<td><code>MAX_STEER</code></td>
+<td>3.5 rad/s</td>
+<td>自动模式最大转向角速度</td>
+</tr>
+<tr>
+<td><code>KP_TURN</code></td>
+<td>2.5</td>
+<td>朝向误差比例增益</td>
+</tr>
+<tr>
+<td><code>SLOWDOWN_DISTANCE</code></td>
+<td>60 px</td>
+<td>距目标多近开始线性减速</td>
+</tr>
+<tr>
+<td><code>ARRIVE_RADIUS</code></td>
+<td>18 px</td>
+<td>到达判定半径</td>
+</tr>
+<tr>
+<td><code>MANUAL_SPEED</code></td>
+<td>160 px/s</td>
+<td>手动模式速度</td>
+</tr>
+<tr>
+<td><code>FIXED_DT</code></td>
+<td>1/60 s</td>
+<td>headless/demo 固定步长</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_8">限制</h2>
+<ul>
+<li>自动模式是贪心追踪，没有全局路径规划；目标正好在障碍物正后方时可能卡住，
+  只能靠原地转向尝试脱困。</li>
+<li>目标不避障，可能穿过障碍物。</li>
+<li>窗口固定 900×600，没有缩放。</li>
+<li>碰撞检测只检查新位置，不检查车身扫过的区域。</li>
+</ul>
+<h2 id="_9">运行截图</h2>
+<p>以下截图由 <code>--demo</code> 实际运行生成（headless 模式保存）。</p>
 <p><strong>自动模式：小车追踪移动目标</strong></p>
-<p>绿色线为小车行驶轨迹，灰色圆为障碍物。左上角实时显示速度、角度、与目标距离。</p>
+<p>绿色线为小车行驶轨迹，灰色圆为障碍物。左上角实时显示速度、角度、与目标距离
+和碰撞次数 <code>hits</code>。</p>
 <p><img alt="auto chasing" src="../../img/ground/car_2d_tracker_1.png"/></p>
-<p><strong>自动模式：小车穿越障碍物间隙</strong></p>
-<p>小车从左侧出发，目标在右侧，沿直线穿过两个障碍物之间。</p>
+<p><strong>自动模式：小车穿过障碍物之间的空隙</strong></p>
+<p>小车从左下方出发，目标在右上方，绿色轨迹从两个障碍物之间穿过。</p>
 <p><img alt="avoiding" src="../../img/ground/car_2d_tracker_2.png"/></p>
 <p><strong>手动模式：WASD 控制</strong></p>
 <p>按空格切到手动模式（左上角黄色字样 MANUAL），方向键开车。</p>
 <p><img alt="manual" src="../../img/ground/car_2d_tracker_3.png"/></p>
-<h2 id="_6">声明</h2>
+<h2 id="_10">声明</h2>
 <p>本作业使用大模型辅助编写代码与文档。</p></div>
 </div>
 </div><footer>
