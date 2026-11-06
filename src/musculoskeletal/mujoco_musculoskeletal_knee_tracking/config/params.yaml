@@ -1,0 +1,20 @@
+mujoco_musculoskeletal_knee_tracking_node:
+  ros__parameters:
+    # 模型路径一般由包内自动定位, 如需覆盖可取消注释
+    # model_path: /path/to/muscle_knee.xml
+
+    sim:
+      dt: 0.005          # 仿真步长 [s]
+      duration: 30.0     # 内置轨迹仿真时长 [s]
+
+    trajectory:
+      type: sine         # sine | step
+      amplitude_deg: 40.0
+      frequency_hz: 0.4
+      bias_deg: 30.0
+
+    ctrl:
+      kp: 30.0           # 比例增益 [N·m/rad]
+      kd: 3.0            # 微分增益 [N·m·s/rad]
+      max_torque: 25.0   # 肌肉等效最大力矩 [N·m] (激活归一化分母)
+      limit_deg: 90.0    # 模型关节屈曲限位 [deg]
