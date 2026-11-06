@@ -1,0 +1,17 @@
+<launch>
+  <!-- 任务 1：键盘遥控。键盘节点需要真实终端，请在启动 roslaunch 的终端里按键 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="auto_takeoff" default="false"/>
+  <arg name="takeoff_height" default="4.0"/>
+
+  <node name="drone_bridge" pkg="uav_lidar_dqn_navigation" type="drone_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="$(arg auto_takeoff)"/>
+    <param name="takeoff_height" value="$(arg takeoff_height)"/>
+  </node>
+
+  <node name="teleop_keyboard" pkg="uav_lidar_dqn_navigation" type="teleop_keyboard.py"
+        output="screen" launch-prefix="bash -c 'sleep 2; exec &quot;$0&quot; &quot;$@&quot;'"/>
+</launch>
