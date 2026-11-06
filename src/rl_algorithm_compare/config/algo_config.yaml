@@ -1,0 +1,31 @@
+# RL 算法 / 网络结构对比配置（LunarLander-v2 环境）
+env: LunarLander-v2
+timesteps: 100000
+log_every: 2000
+eval_episodes: 10
+
+# 对比一：相同网络结构(MLP 64,64) 下的不同算法
+algorithms:
+  - name: PPO
+    algo: ppo
+    layers: "64,64"
+    tag: ppo_mlp64
+  - name: DQN
+    algo: dqn
+    layers: "64,64"
+    tag: dqn_mlp64
+  - name: SAC
+    algo: sac
+    layers: "64,64"
+    tag: sac_mlp64
+
+# 对比二：相同算法(PPO) 下的不同网络结构
+structures:
+  - name: MLP(64,64) 两层
+    algo: ppo
+    layers: "64,64"
+    tag: ppo_mlp64
+  - name: MLP(64,64,64,64) 四层
+    algo: ppo
+    layers: "64,64,64,64"
+    tag: ppo_mlp4

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_car_drive_fault</name>
+  <version>0.1.0</version>
+  <description>
+    OpenHUTB 课程作业：MuJoCo 地面差速小车单侧驱动失效（轮毂拖滞）检测与差速容错补偿。用 9 维位姿、
+    轮速与指令特征，纯 numpy 实现的 MLP 预测未来 1.0 s 内的跑偏概率，按风险对左右轮差速做 PD + 积分修正，
+    与"不干预"和"横向偏差门限"两种基线对比。
+  </description>
+  <maintainer email="3316083292@qq.com">zh070507</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行期依赖：ROS 2 消息包 + 数值计算（MuJoCo 由 pip 安装） -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <!-- MuJoCo 由 pip 安装（python3-mujoco 非 ROS 包名，不在此声明） -->
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

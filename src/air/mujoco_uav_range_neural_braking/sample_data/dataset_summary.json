@@ -1,0 +1,34 @@
+{
+  "seed": 2026,
+  "features": [
+    "sensor_range_m",
+    "closing_speed_m_s"
+  ],
+  "target": "accel_m_s2",
+  "splits": {
+    "train": {
+      "episodes": 18,
+      "rows": 21600,
+      "sha256": "fd1d7b6c38e220c5106066795589f4afd455e8464cfa816fd11d02f26e54cb56",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.6680994185095028
+    },
+    "validation": {
+      "episodes": 6,
+      "rows": 7200,
+      "sha256": "ea8e1431241d5cad1c34a76b5333c9240e4a231674475268c56592d26423271a",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.668174676834535
+    },
+    "test": {
+      "episodes": 6,
+      "rows": 7200,
+      "sha256": "39be12b1b390945c8e0ec43729ad20066a87e53fc1618b63b41c0167622de5fe",
+      "collision_steps": 0,
+      "invalid_sensor_steps": 0,
+      "minimum_clearance_m": 0.6680979991958524
+    }
+  }
+}

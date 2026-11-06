@@ -1,0 +1,19 @@
+<launch>
+  <!-- CARLA 服务器地址 -->
+  <arg name="carla_host" default="127.0.0.1" />
+  <arg name="carla_port" default="2000" />
+  <arg name="duration"  default="30.0" />
+  <arg name="save_dir"  default="$(find carla_traffic_light)/screenshots" />
+  <arg name="params"    default="$(find carla_traffic_light)/config/tl_params.yaml" />
+
+  <!-- 这些 arg 必须拼进 args 变成命令行参数。main.py 不 import rospy，
+       只认 argparse，写成 param 或 rosparam 标签只会挂到参数服务器上，
+       没有任何代码去读，看起来配置了其实不生效。
+       参数文件也走 $(find)：装包后脚本在 lib 目录下，靠自身位置推不到
+       share 里的 config，只有显式给路径才读得到。 -->
+  <node pkg="carla_traffic_light"
+        type="main.py"
+        name="carla_traffic_light"
+        output="screen"
+        args="--carla --host $(arg carla_host) --port $(arg carla_port) --duration $(arg duration) --save-dir $(arg save_dir) --params $(arg params)" />
+</launch>
