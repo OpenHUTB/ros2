@@ -5,7 +5,10 @@ import argparse
 import math
 import sys
 
-from survey_core import build_lawnmower_path, path_length, translate_path
+try:
+    from .survey_core import build_lawnmower_path, path_length, translate_path
+except ImportError:  # Direct ``python main.py`` execution from this directory.
+    from survey_core import build_lawnmower_path, path_length, translate_path
 
 
 def build_parser():

@@ -39,6 +39,9 @@ python src/air/drone_lawnmower_survey/main.py
 
 ![默认安全预览运行效果](../../../docs/img/air/drone_lawnmower_survey/preview.png)
 
+本次可复核的预览输出保存在
+[`validation/preview_validation.log`](validation/preview_validation.log)。
+
 确认航点后，启动 AirSim 场景并显式执行任务：
 
 ```bash
@@ -52,6 +55,31 @@ python src/air/drone_lawnmower_survey/main.py --execute \
 python src/air/drone_lawnmower_survey/main.py --execute \
   --ip 192.168.1.10 --port 41451 --vehicle Drone1
 ```
+
+## ROS 2 启动入口
+
+该目录是一个标准 `ament_python` 包，ROS 2 Humble 环境中可以从仓库根目录只构建
+本模块。启动文件默认执行安全预览，不连接 AirSim；只有显式传入 `execute:=true`
+才会把 `--execute` 传给脚本：
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/ros2
+colcon build --packages-select drone_lawnmower_survey --symlink-install
+source install/setup.bash
+ros2 launch drone_lawnmower_survey survey.launch.py
+ros2 launch drone_lawnmower_survey survey.launch.py \
+  length:=60 width:=40 lane_spacing:=8 altitude:=20 speed:=5
+```
+
+确认预览航点和 AirSim 场景后，才执行真实任务：
+
+```bash
+ros2 launch drone_lawnmower_survey survey.launch.py \
+  execute:=true ip:=127.0.0.1 port:=41451 vehicle:=Drone1
+```
+
+不使用 ROS 2 时，前面的 `python main.py` 命令与 launch 入口使用同一套参数和安全默认值。
 
 | 参数 | 默认值 | 说明 |
 | --- | ---: | --- |
@@ -71,6 +99,9 @@ python src/air/drone_lawnmower_survey/main.py --execute \
 ```bash
 python -m unittest discover -s src/air/drone_lawnmower_survey/tests -v
 ```
+
+ROS 2 包文件和 launch 文件可在没有 ROS 安装的环境中先做语法检查；完整的
+`colcon build` 和 `ros2 launch` 需要 Ubuntu 22.04 / ROS 2 Humble。
 
 ## 坐标与安全说明
 

@@ -30,6 +30,9 @@ python src/air/drone_lawnmower_survey/main.py \
 
 ![默认安全预览运行效果](../img/air/drone_lawnmower_survey/preview.png)
 
+本次验证的命令、环境和关键输出见源码目录中的
+[`validation/preview_validation.log`](../../src/air/drone_lawnmower_survey/validation/preview_validation.log)。
+
 所有尺寸、高度和速度必须是有限正数。`nan`、`inf`、零和负数会在连接仿真器前被拒绝。
 
 ## 执行勘测
@@ -48,6 +51,36 @@ python src/air/drone_lawnmower_survey/main.py --execute \
 > 当前模块不包含障碍物感知与避障。首次执行应选择空旷场景，先检查预览航点是否落在
 > 安全区域，再添加 `--execute`。
 
+## ROS 2 启动入口
+
+本模块提供标准 `ament_python` 包和 `survey.launch.py`。在 ROS 2 Humble 环境中从仓库
+根目录构建该包：
+
+```bash
+source /opt/ros/humble/setup.bash
+cd ~/ros2
+colcon build --packages-select drone_lawnmower_survey --symlink-install
+source install/setup.bash
+```
+
+默认 launch 只执行安全预览，不连接 AirSim：
+
+```bash
+ros2 launch drone_lawnmower_survey survey.launch.py \
+  length:=60 width:=40 lane_spacing:=8 altitude:=20 speed:=5
+```
+
+确认终端输出的航点后，启动 AirSim 场景并显式执行任务：
+
+```bash
+ros2 launch drone_lawnmower_survey survey.launch.py \
+  execute:=true ip:=127.0.0.1 port:=41451 vehicle:=Drone1
+```
+
+`execute` 默认是 `false`。launch 参数会映射到与 Python 入口相同的命令行参数，
+因此上述预览和实际执行步骤可以复现；真实飞行仍需安装 `airsim==1.8.1`，并先检查
+场景、载具名和航点范围。
+
 ## 测试
 
 ```bash
@@ -56,3 +89,7 @@ python -m unittest discover -s src/air/drone_lawnmower_survey/tests -v
 
 测试验证矩形边界覆盖、航向交替、实际间距上限、坐标平移、路径长度和非法参数拒绝，
 无需启动 AirSim。
+
+没有 ROS 2 的环境可以运行 Python 单元测试和 launch 文件编译检查；`colcon build`
+与 `ros2 launch` 需要 Ubuntu 22.04 / ROS 2 Humble。默认预览效果见上方航点输出和
+预览图，未将未验证的真实 AirSim 飞行描述为已完成。
