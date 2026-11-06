@@ -47,7 +47,7 @@ build.cmd
 
 #### 第 1 步：启动仿真器
 
-1. 打开 `E:\underwater\daima\UNav-Sim\Unreal\Environments\Blocks\Blocks.uproject`
+1. 打开 `(存储相应文件的磁盘):\UNav-Sim\Unreal\Environments\Blocks\Blocks.uproject`
 2. 等编辑器加载完（约 1 分钟）
 3. 点工具栏绿色 `Play` 按钮
 4. 确认：视口出现蓝色 `BlueROV2` 且没有报错弹窗
@@ -60,7 +60,7 @@ build.cmd
 
 #### 第 3 步：运行圆形轨迹控制器
 
-在命令行输入: `python E:\underwater\daima\UNav-Sim\circle_rov.py`
+在命令行输入: `python(存储相应文件的磁盘) :\UNav-Sim\circle_rov.py`
 
 - 运行 `90` 秒自动停止，半径 `2.5` 米，一圈约 `79` 秒
 - 脚本开头会自动把 `ROV` 重置回水面附近，不需要手动处理沉底问题
