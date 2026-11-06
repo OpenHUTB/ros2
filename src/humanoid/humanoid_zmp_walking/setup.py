@@ -18,7 +18,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='sousa',
-    maintainer_email='your_email@todo.todo',
+    maintainer_email='235034439+Sousa-cc@users.noreply.github.com',
     description='A lightweight ZMP based bipedal walking baseline',
     license='Apache License 2.0',
     tests_require=['pytest'],
