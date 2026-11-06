@@ -84,6 +84,7 @@ ROS每章节运行代码:
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
+* [人形机器人轻量级ZMP步行控制基线](./humanoid/humanoid_zmp_walking.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
