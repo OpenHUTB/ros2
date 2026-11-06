@@ -106,8 +106,8 @@ python3 main.py doctor
 
 ## 5. 实测记录
 
-环境：Ubuntu 20.04.6 LTS（VMware 虚拟机）、Python 3.8.10、ROS 2 Humble、
-MuJoCo 3.1.6（`pip3 install mujoco`）、NumPy 1.24.4、colcon 0.12.1。
+环境：Ubuntu 20.04.6 LTS（VMware 虚拟机）、Python 3.8.10、ROS 2 Humble
+（官方支持 22.04，本机在 20.04 下为源码编译安装）、MuJoCo 3.1.6（`pip3 install mujoco`）、NumPy 1.24.4、colcon 0.12.1。
 
 | 验证项 | 命令 | 结果 |
 | --- | --- | --- |
