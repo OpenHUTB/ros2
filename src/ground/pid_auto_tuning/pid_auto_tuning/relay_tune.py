@@ -6,10 +6,10 @@ from .plant import HeadingPlant
 
 
 def run_relay_feedback(plant_factory=None, setpoint=math.pi / 2.0,
-                       relay_amplitude=0.5, dt=0.01,
+                       relay_amplitude=0.5, dt=0.01, u_max=2.5,
                        t_max=60.0, measure_window=20.0):
     if plant_factory is None:
-        plant_factory = lambda: HeadingPlant(dt=dt)
+        plant_factory = lambda: HeadingPlant(dt=dt, u_max=u_max)
     plant = plant_factory()
     t = 0.0
     prev_sign = 1

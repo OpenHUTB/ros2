@@ -14,6 +14,12 @@ RULES = {
 }
 
 
+# 网格搜索范围
+KP_SCALES = (0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95)
+TI_SCALES = (0.4, 0.6, 0.9, 1.3, 1.9, 2.6, 3.2)
+TD_SCALES = (0.0, 0.08, 0.16, 0.25, 0.33)
+
+
 def gains_from_rule(ku, tu, rule):
     kp_scale, ti_scale, td_scale = rule
     kp = kp_scale * ku
@@ -26,7 +32,7 @@ def gains_from_rule(ku, tu, rule):
 def simulate_closed_loop(gains, plant_factory=None, setpoint=math.pi / 2.0,
                          t_end=8.0, dt=0.01, u_limit=2.5):
     if plant_factory is None:
-        plant_factory = lambda: HeadingPlant(dt=dt)
+        plant_factory = lambda: HeadingPlant(dt=dt, u_max=u_limit)
     kp, ki, kd = gains
     plant = plant_factory()
     pid = PIDController(kp, ki, kd, dt, u_limit=u_limit)
@@ -53,7 +59,8 @@ def simulate_closed_loop(gains, plant_factory=None, setpoint=math.pi / 2.0,
 
 
 def score(metrics):
-    if metrics['diverged']:
+    # 发散或仿真结束时仍未进入误差带的候选直接淘汰
+    if metrics['diverged'] or metrics['settle_time'] is None:
         return 1e6
     return (0.05 * metrics['overshoot_pct']
             + metrics['settle_time']
@@ -61,21 +68,35 @@ def score(metrics):
             + 0.5 * metrics['iae'])
 
 
-def select_best_gains(ku, tu, plant_factory=None, setpoint=math.pi / 2.0):
-    """先按三条经验规则试，再在 Ku/Tu 附近小范围网格搜索。"""
-    best = None
-    for rule in RULES.values():
-        gains = gains_from_rule(ku, tu, rule)
-        metrics = simulate_closed_loop(gains, plant_factory, setpoint)
-        if best is None or score(metrics) < score(best[1]):
-            best = (gains, metrics)
+def select_best_gains(ku, tu, plant_factory=None, setpoint=math.pi / 2.0,
+                      dt=0.01, u_limit=2.5):
+    """先按三条经验规则试，再在 Ku/Tu 附近网格搜索。
 
-    for kp_scale in (0.15, 0.25, 0.35, 0.45, 0.55, 0.65):
-        for ti_scale in (0.4, 0.6, 0.9, 1.3, 1.9, 2.6):
-            for td_scale in (0.0, 0.08, 0.16, 0.25):
+    返回 (gains, metrics, info)；info['hit_boundary'] 表示网格最优是否压在
+    搜索范围边界上，为 True 时应扩大 KP_SCALES/TI_SCALES/TD_SCALES 再确认。
+    """
+    best = None
+    for name, rule in RULES.items():
+        gains = gains_from_rule(ku, tu, rule)
+        metrics = simulate_closed_loop(gains, plant_factory, setpoint,
+                                       dt=dt, u_limit=u_limit)
+        info = {'source': name, 'scales': rule, 'hit_boundary': False}
+        if best is None or score(metrics) < score(best[1]):
+            best = (gains, metrics, info)
+
+    for kp_scale in KP_SCALES:
+        for ti_scale in TI_SCALES:
+            for td_scale in TD_SCALES:
                 gains = gains_from_rule(ku, tu, (kp_scale, ti_scale, td_scale))
-                metrics = simulate_closed_loop(gains, plant_factory, setpoint)
+                metrics = simulate_closed_loop(gains, plant_factory, setpoint,
+                                               dt=dt, u_limit=u_limit)
+                hit_boundary = (kp_scale in (KP_SCALES[0], KP_SCALES[-1])
+                                or ti_scale in (TI_SCALES[0], TI_SCALES[-1])
+                                or td_scale in (TD_SCALES[0], TD_SCALES[-1]))
+                info = {'source': 'grid',
+                        'scales': (kp_scale, ti_scale, td_scale),
+                        'hit_boundary': hit_boundary}
                 if score(metrics) < score(best[1]):
-                    best = (gains, metrics)
+                    best = (gains, metrics, info)
 
     return best

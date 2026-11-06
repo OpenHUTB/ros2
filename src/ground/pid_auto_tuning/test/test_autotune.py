@@ -2,7 +2,7 @@
 
 import math
 
-from pid_auto_tuning.autotune import gains_from_rule, select_best_gains, simulate_closed_loop
+from pid_auto_tuning.autotune import gains_from_rule, select_best_gains
 from pid_auto_tuning.metrics import analyze_response
 from pid_auto_tuning.plant import HeadingPlant
 from pid_auto_tuning.relay_tune import run_relay_feedback
@@ -23,6 +23,25 @@ def test_metrics_detect_overshoot_and_settle():
     metrics = analyze_response(t, y, target, 0.01)
     assert metrics['overshoot_pct'] > 15.0
     assert metrics['steady_state_error'] < 0.05
+    assert metrics['settle_time'] is not None
+
+
+def test_metrics_settle_none_when_never_converged():
+    # 响应一直为零、从未进入 ±2% 误差带：settle_time 与稳态误差应为 None
+    target = 1.0
+    t = [i * 0.01 for i in range(800)]
+    y = [0.5] * 800
+    metrics = analyze_response(t, y, target, 0.01)
+    assert metrics['settle_time'] is None
+    assert metrics['steady_state_error'] is None
+
+
+def test_metrics_rise_none_when_no_crossing():
+    target = 1.0
+    t = [i * 0.01 for i in range(200)]
+    y = [0.05] * 200
+    metrics = analyze_response(t, y, target, 0.01)
+    assert metrics['rise_time'] is None
 
 
 def test_relay_feedback_gives_positive_ku_and_tu():
@@ -37,6 +56,7 @@ def test_gains_are_positive_and_stable():
     kp, ki, kd = gains_from_rule(relay['ku'], relay['tu'], (0.2, 0.5, 0.33))
     assert kp > 0.0 and ki > 0.0 and kd > 0.0
 
-    gains, metrics = select_best_gains(relay['ku'], relay['tu'], setpoint=math.pi / 2.0)
+    gains, metrics, info = select_best_gains(relay['ku'], relay['tu'], setpoint=math.pi / 2.0)
     assert not metrics['diverged']
     assert metrics['steady_state_error'] < 0.05
+    assert 'hit_boundary' in info

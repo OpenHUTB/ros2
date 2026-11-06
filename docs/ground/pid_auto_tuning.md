@@ -1,5 +1,3 @@
-﻿title: 航向 PID 参数自整定与手工试凑对比
-
 # 航向 PID 参数自整定与手工试凑对比
 
 ## 1. 模块概述
@@ -47,9 +45,11 @@ ros2 run pid_auto_tuning main_plot
 在 RViz 中用箭头显示当前航向与目标航向：
 
 ```bash
-cd ~/ros2                      # rviz 配置使用相对路径，需在仓库根目录执行
-ros2 launch pid_auto_tuning main_launch.py
+cd ~/ros2                      # rviz 配置使用相对路径时需在仓库根目录执行
+ros2 launch pid_auto_tuning main.launch.py
 rviz2 -d src/ground/pid_auto_tuning/resource/pid_tuning.rviz
+# 或直接使用安装后的配置：
+# rviz2 -d "$(ros2 pkg prefix pid_auto_tuning)/share/pid_auto_tuning/rviz/pid_tuning.rviz"
 ```
 
 RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/markers`；绿色箭头是当前航向，红色箭头是目标航向，目标每 6 s 在 ±90° 之间切换。
@@ -72,21 +72,26 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 
 ## 6. 运行效果验证
 
-`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°）：
+`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°；最后一行路径随执行目录变化）：
 
 ```
 被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
 目标航向: 90.0 deg
 
 继电器反馈实验: Ku=9.705, Tu=1.360s, 振荡幅值=0.066rad
+参数筛选: 来源=grid, 比例=(kp:0.95, ti:3.2, td:0.16)（落在网格边界，建议扩大搜索范围复核）
 
-方案                 超调      上升      调节        稳态误差     IAE
+方案                 超调      上升       调节        稳态误差     IAE
 ----------------------------------------------------------
-手工试凑            62.7%   1.35s   8.00s   0.374rad    5.11
-自动整定             6.8%   0.70s   2.15s   0.006rad    1.26
+保守试凑            62.7%   1.35s    未收敛        —    5.11
+常规试凑            47.2%   0.73s   6.91s   0.005rad    2.41
+积极试凑            29.4%   0.68s   5.80s   0.009rad    1.75
+自动整定             3.6%   0.69s   1.61s   0.006rad    1.20
 
-自动整定参数: Kp=6.308, Ki=1.784, Kd=1.3726
-手工试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
+自动整定参数: Kp=9.219, Ki=2.118, Kd=2.0061
+保守试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
+常规试凑参数: Kp=1.500, Ki=0.800, Kd=0.0000
+积极试凑参数: Kp=3.000, Ki=1.000, Kd=0.0000
 
 阶跃响应数据已写入 resource/step_response.csv
 ```
@@ -97,10 +102,11 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 
 ![阶跃响应与误差收敛](../img/ground/pid_auto_tuning_response.png)
 
-从结果看：手工试凑只加了 P、I，超调 62.7%，8 s 内才进入 ±2% 误差带；
-自动整定在同等工况下把超调压到 6.8%，调节时间 2.15 s，稳态误差 0.006 rad。
+从结果看：三组手工试凑都只加 P、I，保守组超调 62.7% 且 8 s 仿真内未进入 ±2% 误差带，常规组超调 47.2%、调节 6.91 s，积极组超调 29.4%、调节 5.80 s；
+自动整定在同等工况下把超调压到 3.6%，调节时间 1.61 s，稳态误差 0.006 rad。
+该结论仅相对这三组手工参数成立，不构成对所有手工调参的普遍论断；网格搜索最优当前落在边界（kp = 0.95Ku、Ti = 3.2Tu），数值为网格内最优，程序会打印边界提示，换对象后应扩大网格复核。
 
-`ros2 launch pid_auto_tuning main_launch.py` 配合上面的 `rviz2` 命令，可以看到 RViz 中的网格与航向箭头，绿色为当前航向、红色为目标航向：
+`ros2 launch pid_auto_tuning main.launch.py` 配合上面的 `rviz2` 命令，可以看到 RViz 中的网格与航向箭头，绿色为当前航向、红色为目标航向：
 
 ![RViz 中的航向箭头](../img/ground/pid_auto_tuning_rviz.png)
 
@@ -110,8 +116,8 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 | --- | --- | --- |
 | 超调量 | `(峰值 - 目标值) / 目标值 × 100%` | % |
 | 上升时间 | 响应从 10% 到 90% 目标值所用时间 | s |
-| 调节时间 | 最后一次超出 ±2% 误差带之后的时间 | s |
-| 稳态误差 | 末段 5% 样本均值与目标值之差 | rad |
+| 调节时间 | 最后一次超出 ±2% 误差带之后的时间；仿真结束仍未进入误差带记为「未收敛」 | s |
+| 稳态误差 | 末段 5% 样本均值与目标值之差；未收敛时不输出 | rad |
 | IAE | 绝对误差积分 `Σ|e|·dt` | rad·s |
 
 整定与对比在 `main` 的一次运行内完成：继电器实验按 60 s 仿真时长采集振荡，随后做候选参数网格搜索与两组闭环仿真，无需人工干预。
@@ -121,3 +127,5 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 - 被控对象为一阶惯性 + 纯延迟的航向模型，不含轮胎侧偏、道路坡度与侧风
 - 仅在仿真与离线计算中验证，没有上真车
 - 控制量按角速度指令饱和处理，未建模电机死区
+- 未做对象参数摄动（K、T、τ ±20%）的鲁棒性验证，「换对象后重新整定」的效果未在摄动对象上复核
+- `main_plot` 弹窗依赖 python3-tk（matplotlib 默认 Tk 后端）；系统无中文字体（如 Noto Sans CJK）时图中中文显示为方块

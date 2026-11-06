@@ -32,15 +32,18 @@ class PidAutoTuningNode(Node):
         self.u_limit = float(self.get_parameter('u_limit').value)
         self.target = math.radians(target_deg)
 
-        self.heading_pub = self.create_publisher(Float64, '/pid_auto_tuning/heading', 10)
-        self.target_pub = self.create_publisher(Float64, '/pid_auto_tuning/target', 10)
-        self.marker_pub = self.create_publisher(MarkerArray, '/pid_auto_tuning/markers', 10)
+        self.heading_pub = self.create_publisher(Float64, '~/heading', 10)
+        self.target_pub = self.create_publisher(Float64, '~/target', 10)
+        self.marker_pub = self.create_publisher(MarkerArray, '~/markers', 10)
 
-        relay = run_relay_feedback(dt=self.dt, setpoint=self.target)
-        self.gains, _ = select_best_gains(relay['ku'], relay['tu'], setpoint=self.target)
+        relay = run_relay_feedback(dt=self.dt, setpoint=self.target, u_max=self.u_limit)
+        self.gains, _, info = select_best_gains(relay['ku'], relay['tu'],
+                                                setpoint=self.target,
+                                                dt=self.dt, u_limit=self.u_limit)
         self.get_logger().info(
             f'整定结果 Ku={relay["ku"]:.3f} Tu={relay["tu"]:.3f}s '
-            f'Kp={self.gains[0]:.3f} Ki={self.gains[1]:.3f} Kd={self.gains[2]:.4f}')
+            f'Kp={self.gains[0]:.3f} Ki={self.gains[1]:.3f} Kd={self.gains[2]:.4f}'
+            f'（网格边界命中: {info["hit_boundary"]}）')
 
         self.plant = HeadingPlant(dt=self.dt, u_max=self.u_limit)
         self.pid = PIDController(*self.gains, self.dt, u_limit=self.u_limit)
@@ -49,7 +52,7 @@ class PidAutoTuningNode(Node):
         self.last_switch = 0.0
 
         self.timer = self.create_timer(self.dt, self.on_timer)
-        self.get_logger().info('发布 /pid_auto_tuning/markers，RViz 中 Fixed Frame 设为 map')
+        self.get_logger().info('发布 ~/markers（实际话题 /pid_auto_tuning/markers），RViz 中 Fixed Frame 设为 map')
 
     def on_timer(self):
         self.elapsed += self.dt
