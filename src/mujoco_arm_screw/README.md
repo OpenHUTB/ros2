@@ -18,7 +18,8 @@
 | `verify_armscrew.py` | 验证脚本（IK 精度 / 全流程贴合与下沉 / glfw 实时渲染） |
 | `README.md` | 本项目说明 |
 | 文档站页面 | [docs/arm/mujoco_arm_screw.md](../../docs/arm/mujoco_arm_screw.md) |
-| `docs/mujoco_arm_screw_demo.gif` | 效果图（拧螺丝动画，150 帧 / 15 秒） |
+| `docs/mujoco_arm_screw_demo.gif` | 效果图（拧螺丝动画，仓库内演示版 150 帧 / 15 s；`main.py` 按 450 帧 / 约 15 s 渲染） |
+| `docs/img/arm/mujoco_arm_screw.gif` | 文档站配图副本（内容与上面的原件相同，供 mkdocs 构建引用：mkdocs 只构建 `docs/`，演示原件按仓库约定留在 `src/<包>/docs/`） |
 
 ## 运行
 
@@ -31,7 +32,7 @@ python main.py
 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python3 main.py
 ```
 
-运行结束在同目录生成效果图 `demo_armscrew.gif`（450 帧 / 15.0 秒）。
+运行结束在同目录生成效果图 `demo_armscrew.gif`（450 帧 / 约 15 s；GIF 导出时相同帧会被合并，实测约 421 帧 / 13.6 s）。
 
 ## 验证
 
