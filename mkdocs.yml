@@ -140,6 +140,7 @@ nav:
     - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
     - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
     - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
+    - 弯道自适应限速（CSL）: './ground/carla_curve_speed_limit.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
