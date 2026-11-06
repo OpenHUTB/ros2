@@ -4,12 +4,15 @@
   <name>humanoid_zmp_walking</name>
   <version>0.0.0</version>
   <description>A lightweight ZMP based bipedal walking baseline for Humanoid</description>
-  <maintainer email="your_email@todo.todo">sousa</maintainer>
+  <maintainer email="235034439+Sousa-cc@users.noreply.github.com">sousa</maintainer>
   <license>Apache License 2.0</license>
 
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <exec_depend>python3-pybullet</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
