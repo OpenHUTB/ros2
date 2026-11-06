@@ -28,6 +28,7 @@ MuJoCo 四轮执行器 / Four wheel actuators
 
 The package uses `ament_python`; its model, configuration, and launch files are installed into the package share directory. Runtime resource lookup uses the ROS 2 package index and does not depend on a user directory, a fixed workspace path, or a network address.
 
+
 ## 编码器与 IMU / Encoders and IMU
 
 MJCF 在车体中心定义三轴加速度计和陀螺仪。节点同时读取四个轮关节的位置与角速度，并通过局部随机数生成器加入固定种子的高斯噪声。MuJoCo 内部传感器保持无噪真值，噪声只施加于发布消息，因此实验可重复且便于比较原始状态。
@@ -84,6 +85,7 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 - 指令超时后轮速归零。 / Set wheel speeds to zero after command timeout.
 - 四轮目标速度按执行器上限等比例缩放。 / Scale all wheel targets proportionally to actuator limits.
 - 包资源路径经过边界检查。 / Validate package-resource paths against directory escape.
+
 
 ## 数据采集 / Data Collection
 

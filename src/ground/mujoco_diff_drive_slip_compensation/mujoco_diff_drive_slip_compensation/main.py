@@ -135,6 +135,16 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 String, 'scenario/episode_id', 10
             )
             self._tf_broadcaster = TransformBroadcaster(self)
+            self._encoder_publisher = self.create_publisher(
+                JointState, 'wheel/encoders', 10
+            )
+            self._imu_publisher = self.create_publisher(Imu, 'imu/data', 10)
+            self._friction_publisher = self.create_publisher(
+                Float64, 'scenario/friction', 10
+            )
+            self._episode_publisher = self.create_publisher(
+                String, 'scenario/episode_id', 10
+            )
             self.create_subscription(Twist, 'cmd_vel', self._on_command, 10)
             self.create_timer(self._simulation.timestep, self._on_timer)
             self.get_logger().info(
@@ -201,6 +211,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             clock.clock.nanosec = int((state.time - seconds) * 1_000_000_000)
             self._clock_publisher.publish(clock)
 
+
             positions, velocities = self._simulation.wheel_state()
             noisy_positions, noisy_velocities = self._sensor_noise.encoders(
                 positions, velocities
@@ -236,6 +247,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 imu.linear_acceleration_covariance[index] = acceleration_variance
                 imu.angular_velocity_covariance[index] = angular_variance
             self._imu_publisher.publish(imu)
+
 
             if self._publish_tf:
                 transform = TransformStamped()

@@ -34,11 +34,11 @@ sudo apt install libosmesa6
 
 水下动力学在代码层施加（不依赖 MuJoCo 流体扩展），每步向 `qfrc_applied` 叠加：
 
-1. **浮力补偿**：$F_z = m \cdot g$（近似中性浮力）
-2. **黏性阻尼**：$F_{lin} = -c_{lin} \cdot v$，$F_{ang} = -c_{ang} \cdot \omega$
+1. **浮力补偿**：`Fz = m·g`（近似中性浮力）
+2. **黏性阻尼**：`Flin = -clin·v`，`Fang = -cang·ω`
 3. **姿态自稳**：横滚/俯仰误差比例力矩
-4. **洋流扰动**：$F_x = a_x \sin(\omega_x t),\; F_y = a_y \sin(\omega_y t)$
-5. **速度闭环推力**：$F = K_p (v_{cmd} - v_{actual})$，限幅
+4. **洋流扰动**：`Fx = ax·sin(ωx·t)，Fy = ay·sin(ωy·t)`
+5. **速度闭环推力**：`F = Kp(vcmd - vactual)`，限幅
 
 ## 话题
 
