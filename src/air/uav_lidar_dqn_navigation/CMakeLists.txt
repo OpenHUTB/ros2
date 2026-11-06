@@ -17,6 +17,8 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/drone_bridge.py
   scripts/teleop_keyboard.py
+  scripts/lidar_features.py
+  scripts/lidar_scan_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
