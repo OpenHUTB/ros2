@@ -22,6 +22,9 @@ python3 src/humanoid/mujoco_demo/humanoid_stand.py
 
 # 3) 人形站立（无头，站住返回 0）
 python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
+
+# 4) Linux 无显示服务（WSL2 / 服务器）时，无头模式指定软件渲染
+MUJOCO_GL=osmesa python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
 ```
 
 无头输出示例（本机实测，Windows + Python 3.13 + MuJoCo 3.17）：
@@ -30,6 +33,9 @@ python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
 初始骨盆高度 1.042 m，关节 10 个，控制步数 2500
 结果: {'height': 1.04, 'base_height': 1.042, 'min_height': 1.039, 'tilt_deg': 0.58, 'upright': True}
 ```
+
+> 另在 Ubuntu 22.04.5（WSL2）+ Python 3.10.12 + MuJoCo 3.12.0 上复测：9 项测试全过，
+> 无头统计与上表一致；无显示服务，可视化模式未跑。
 
 ## 控制思路
 

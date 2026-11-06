@@ -220,6 +220,9 @@ python3 src/humanoid/mujoco_demo/humanoid_stand.py
 
 # 无头：站住返回 0（可进脚本/CI）
 python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
+
+# Linux 无显示服务（WSL2 / 服务器）时，无头模式需要指定软件渲染
+MUJOCO_GL=osmesa python3 src/humanoid/mujoco_demo/humanoid_stand.py --headless --seconds 5
 ```
 
 ### 3. 核心代码
@@ -247,6 +250,16 @@ tau += qfrc_bias
 
 5 s 内骨盆高度只下降 3 mm，倾角 0.58°，判定为"站住"。
 
+#### 验证记录
+
+| 环境 | 命令 | 结果 |
+|---|---|---|
+| Windows 10/11 + Python 3.13.5 + MuJoCo 3.17.0 | `python3 tests/test_humanoid_stand_local.py`<br>`python3 .../humanoid_stand.py --headless --seconds 5` | 9 项测试通过；2500 步，`height=1.04 / tilt=0.58° / upright=True`，退出码 0；可视化窗口实测可正常打开 |
+| Ubuntu 22.04.5（WSL2）+ Python 3.10.12 + MuJoCo 3.12.0 + NumPy 1.21.5 | `MUJOCO_GL=osmesa python3 tests/test_humanoid_stand_local.py`<br>`MUJOCO_GL=osmesa python3 .../humanoid_stand.py --headless --seconds 5` | 9 项测试通过（0.262 s）；无头统计与 Windows 完全一致；无显示服务故未跑可视化 |
+
+> 两个版本的 MuJoCo（3.12 / 3.17）给出同一组无头统计，说明该示例的 PD + 重力补偿不依赖特定版本；
+> WSL2 没有显示服务，可视化模式跑不了属预期，用 `MUJOCO_GL=osmesa` 走无头即可。
+
 ### 5. 测试
 
 ```bash
@@ -255,6 +268,9 @@ python3 tests/test_humanoid_stand_local.py
 
 9 项：PD 方向 / 阻尼 / 前馈 / 饱和、四元数倾角、站立判定，以及一局 5 s 无头物理
 （没装 mujoco 时自动跳过物理部分）。
+
+已在两个环境各跑一遍：Windows + MuJoCo 3.17 与 Ubuntu 22.04.5（WSL2）+ MuJoCo 3.12，
+均为 9/9 通过，无头统计一致（见上一节验证记录）。
 
 ## 参考
 
