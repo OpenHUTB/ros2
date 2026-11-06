@@ -13,8 +13,11 @@ class Contracts(unittest.TestCase):
         self.assertAlmostEqual(model.body_mass.sum(),EMPTY_MASS)
     def test_split_integrity(self):
         import json
+        import zipfile
         from pathlib import Path
-        items=json.loads((Path(__file__).resolve().parents[1]/'data/manifest.json').read_text())
+        root=Path(__file__).resolve().parents[1]
+        with zipfile.ZipFile(root/'assets/flights.zip') as zf:
+            items=json.loads(zf.read('data/manifest.json'))
         ids=[x['seed'] for x in items];self.assertEqual(len(ids),len(set(ids)))
         self.assertEqual({s:sum(x['split']==s for x in items) for s in ['train','validation','test','shift']},{'train':90,'validation':30,'test':30,'shift':30})
     def test_physics_known_mass(self):
