@@ -84,7 +84,7 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 手工试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
 ```
 
-![终端运行结果](../img/ground/pid_auto_tuning_terminal.gif)
+![终端运行结果](../img/ground/pid_auto_tuning_terminal.png)
 
 `ros2 run pid_auto_tuning main_plot` 的绘图窗口，左侧为航向角阶跃响应，右侧为航向误差收敛过程：
 
