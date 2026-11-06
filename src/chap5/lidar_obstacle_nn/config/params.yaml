@@ -18,6 +18,7 @@ lidar_obstacle_nn_inference:
     # collect_data.py.
     danger_distance: 1.0
     far_distance: 3.0
+    fallback_confidence: 0.45
 
     # Hardware acceleration. Default false: the MLP is tiny and CPU
     # inference is sub-millisecond. When true (and torch has working

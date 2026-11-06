@@ -1,0 +1,32 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/master/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Rov",
+  "ClockSpeed": 1,
+  "PawnPaths": {
+    "DefaultRov": {"PawnBP": "Class'/AirSim/Blueprints/BP_RovPawn.BP_RovPawn_C'"}
+  },
+  "Vehicles": {
+    "BlueROV2": {
+      "VehicleType": "rovsimple",
+      "DefaultVehicleState": "Armed",
+      "PawnPath": "DefaultRov",
+      "EnableCollisions": true,
+      "AllowAPIAlways": true,
+      "Cameras": {
+        "front_center": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 1280,
+              "Height": 720,
+              "FOV_Degrees": 90
+            }
+          ],
+          "X": 0.50, "Y": 0.0, "Z": 0.10,
+          "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
+        }
+      }
+    }
+  }
+}

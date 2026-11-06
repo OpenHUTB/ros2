@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_topic_demo</name>
+  <version>0.0.0</version>
+  <description>最简单的ROS自定义话题通信入门示例</description>
+  <maintainer email="zxy5240@users.noreply.github.com">zxy5240</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>rviz</depend>
+</package>

@@ -1,0 +1,32 @@
+<launch>
+  <!-- ============================================================
+       uav_route_cruise 统一启动入口（基于 PPO 的无人机固定路线巡航）
+         roslaunch uav_route_cruise main.launch
+
+       ⚠️ 前置条件（缺一不可）：
+         1) 先启动桥接，而且【必须】加 body_frame:=false ——
+            因为本节点输出的是【世界系 ENU】速度，桥接默认按机体系解释会导致乱飞：
+              roslaunch carlair_ros_bridge main.launch publish_image:=false body_frame:=false
+         2) 航线是【绝对 ENU 坐标】，要落在无人机当前所在的可达区域内。
+            默认航线是以原点为中心的 20 m × 14 m 圆角矩形（总长 62.8 m）。
+            如果无人机不在原点附近，请用 route_points 覆盖，或先把无人机飞到航线起点。
+       ============================================================ -->
+
+  <arg name="rate" default="20.0" doc="控制频率 (Hz)"/>
+  <arg name="speed_scale" default="1.0" doc="速度缩放（调试时可调小，如 0.5）"/>
+  <arg name="dry_run" default="false" doc="true 时只算不发指令（用于检查观测）"/>
+  <arg name="route" default="rect" doc="内置航线：rect 或 figure8"/>
+
+  <rosparam command="load" file="$(find uav_route_cruise)/config/route_cruise.yaml"/>
+  <param name="route_cruise/weights" value="$(find uav_route_cruise)/models/route_ppo_s0.npz"/>
+  <param name="route_cruise/route" value="$(arg route)"/>
+  <param name="route_cruise/rate" value="$(arg rate)"/>
+  <param name="route_cruise/speed_scale" value="$(arg speed_scale)"/>
+  <param name="route_cruise/dry_run" value="$(arg dry_run)"/>
+
+  <!-- 入口 main.py：通过环境变量告知真实源码目录，绕开 catkin wrapper 无法被
+       import 的问题（否则 import route_node 拿到 wrapper，没有 main）。 -->
+  <node pkg="uav_route_cruise" type="main.py" name="uav_route_cruise" output="screen">
+    <env name="UAV_ROUTE_SCRIPT_DIR" value="$(find uav_route_cruise)/scripts"/>
+  </node>
+</launch>

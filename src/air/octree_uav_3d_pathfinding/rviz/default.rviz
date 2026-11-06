@@ -45,7 +45,7 @@ Visualization Manager:
       Topic: /uav/path
       Color: 25; 255; 0
       Line Style: Lines
-      Line Width: 0.15
+      Line Width: 0.35
       Alpha: 1
       Queue Size: 5
     # P5 平滑后的路径：由 astar_planner 发布到 /uav/path_smooth。
@@ -57,7 +57,7 @@ Visualization Manager:
       Topic: /uav/path_smooth
       Color: 0; 200; 255
       Line Style: Lines
-      Line Width: 0.08
+      Line Width: 0.30
       Alpha: 1
       Queue Size: 5
     # A* 实际展开过的节点：由 astar_planner 发布。
@@ -69,6 +69,18 @@ Visualization Manager:
       Name: AStarExplored
       Topic: /uav/explored_markers
       Queue Size: 5
+    # P6 实际飞过的轨迹：由 path_follower 在到达终点时发布到 /uav/flown_path。
+    # 用黄色、更粗的线，与规划路径（绿/青）叠在一起就能看出前瞻跳点"切内角"的程度，
+    # 也就是节点日志里 max_dev 那一项的直观形态。
+    - Class: rviz/Path
+      Enabled: true
+      Name: FlownPath
+      Topic: /uav/flown_path
+      Color: 255; 210; 0
+      Line Style: Lines
+      Line Width: 0.45
+      Alpha: 1
+      Queue Size: 1
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: world
