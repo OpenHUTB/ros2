@@ -8,7 +8,7 @@ from .paths import resource
 
 
 def evaluate(path, output, disturbance_end=3.0, disturbance_window=1.0,
-             tolerance=0.15, hold_s=0.5):
+             tolerance=0.15, hold_s=0.5, max_gap_s=0.05):
     """计算指标并输出 summary.json、PNG 与 GIF."""
     import matplotlib
     matplotlib.use('Agg')
@@ -19,7 +19,7 @@ def evaluate(path, output, disturbance_end=3.0, disturbance_window=1.0,
     data = load_log(path)
     result = summarize(data, disturbance_end=disturbance_end,
                        tolerance=tolerance, hold_s=hold_s,
-                       disturbance_window=disturbance_window)
+                       disturbance_window=disturbance_window, max_gap_s=max_gap_s)
     output.mkdir(parents=True, exist_ok=True)
     (output / 'summary.json').write_text(
         json.dumps(result, indent=2), encoding='utf-8')
@@ -62,11 +62,20 @@ def main():
                         help='恢复判定的容差带半宽（米）')
     parser.add_argument('--hold', dest='hold_s', type=float, default=0.5,
                         help='确认恢复所需的连续保持时间（秒）')
+    parser.add_argument('--max-gap', dest='max_gap_s', type=float, default=0.05,
+                        help='允许的最大相邻采样间隙（秒），默认适用于 50 Hz 日志')
     parser.add_argument('--ros', action='store_true')
     args = parser.parse_args()
     if args.ros:
         from .ros_node import main as ros_main
-        ros_main()
+        ros_args = ['--ros-args']
+        for name, value in (
+                ('log_path', args.input), ('disturbance_end', args.disturbance_end),
+                ('disturbance_window', args.disturbance_window),
+                ('tolerance', args.tolerance), ('hold_s', args.hold_s),
+                ('max_gap_s', args.max_gap_s)):
+            ros_args.extend(['-p', f'{name}:={value}'])
+        ros_main(ros_args)
     else:
         evaluate(args.input, args.output, args.disturbance_end,
-                 args.disturbance_window, args.tolerance, args.hold_s)
+                 args.disturbance_window, args.tolerance, args.hold_s, args.max_gap_s)

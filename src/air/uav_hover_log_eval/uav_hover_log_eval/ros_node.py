@@ -20,13 +20,15 @@ def main(args=None):
             self.declare_parameter('disturbance_window', 1.0)
             self.declare_parameter('tolerance', 0.15)
             self.declare_parameter('hold_s', 0.5)
+            self.declare_parameter('max_gap_s', 0.05)
             self.result = summarize(
                 load_log(self.get_parameter('log_path').value),
                 disturbance_end=float(self.get_parameter('disturbance_end').value),
                 tolerance=float(self.get_parameter('tolerance').value),
                 hold_s=float(self.get_parameter('hold_s').value),
                 disturbance_window=float(
-                    self.get_parameter('disturbance_window').value))
+                    self.get_parameter('disturbance_window').value),
+                max_gap_s=float(self.get_parameter('max_gap_s').value))
             self.publisher = self.create_publisher(String, '/uav/hover_metrics', 10)
             self.timer = self.create_timer(1.0, self.publish)
 
@@ -42,6 +44,12 @@ def main(args=None):
         pass
     finally:
         if node:
-            node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
+            try:
+                node.destroy_node()
+            except KeyboardInterrupt:
+                pass
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except KeyboardInterrupt:
+            pass

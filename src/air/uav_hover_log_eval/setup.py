@@ -11,6 +11,7 @@ setup(
         ('share/uav_hover_log_eval/data', glob('data/*')),
     ],
     install_requires=['setuptools'], zip_safe=False,
+    tests_require=['pytest'],
     description='无人机定高日志误差与恢复时间评估', license='MIT',
     entry_points={'console_scripts': [
         'main = uav_hover_log_eval.cli:main',

@@ -11,6 +11,8 @@ python3 -m pip install -r requirements.txt
 python3 main.py
 # 口径可调：扰动结束时刻、扰动窗口、容差带、连续保持时间
 python3 main.py --disturbance-end 3.0 --tolerance 0.05 --hold 0.5
+# 采样间隙上限默认 0.05 s；更低频率日志需显式调整
+python3 main.py --max-gap 0.11 --input /path/to/10hz.csv
 ```
 
 ROS 2 使用系统 Python。构建工作空间时只选择本包，避免构建仓库内其他独立实验：
@@ -21,6 +23,7 @@ cd ~/ros2
 colcon build --packages-select uav_hover_log_eval
 source install/setup.bash
 ros2 launch uav_hover_log_eval main.launch.py
+ros2 launch uav_hover_log_eval main.launch.py tolerance:=0.05 max_gap_s:=0.05
 ```
 
 首次安装可用系统 Python 创建 `--system-site-packages` 虚拟环境，保留系统 ROS 包可见性。输出目录默认是 `outputs/`，不覆盖随包附带的数据。
