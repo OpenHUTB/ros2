@@ -111,6 +111,7 @@ nav:
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
+    - 交通信号灯识别与响应: './ground/carla_traffic_light.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
     - 基于MuJoCo的AEB自动紧急制动仿真: './ground/mujoco_vehicle_aeb.md'
     - 打靶: './ground/mujoco_shooting.md'
