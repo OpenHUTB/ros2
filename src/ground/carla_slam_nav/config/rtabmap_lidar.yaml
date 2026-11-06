@@ -1,0 +1,22 @@
+# RTAB-Map 激光 SLAM 关键参数（lidar 里程计建图模式）
+# 与 carla_slam.launch.py 配合使用。
+
+rtabmap:
+  ros__parameters:
+    frame_id: "base_footprint"
+    map_frame_id: "map"
+    odom_frame_id: "odom"
+    # 3D 点云 -> 局部占据栅格，用于回环检测与定位
+    subscribe_depth: false
+    subscribe_scan: false
+    subscribe_point_cloud: true
+    # 激光里程计：scan 匹配
+    odom_strategy: 1            # 1 = viso 激光点云匹配
+    approx_sync: true
+    queue_size: 20
+    # 建图分辨率
+    grid_cell_size: 0.1
+    # 回环检测距离阈值 (m)
+    loop_detector_space: 5.0
+    publish_tf: true
+    use_sim_time: true

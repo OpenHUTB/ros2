@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  Noetic(ROS1 / catkin) 版 package.xml
+  在 catkin 工作区构建时，用本文件覆盖包根目录的 ROS2 package.xml。
+-->
+<package format="2">
+  <name>carla_slam_nav</name>
+  <version>0.1.0</version>
+  <description>CARLA lidar SLAM (rtabmap_ros) + move_base navigation (Noetic/catkin)</description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>rtabmap_ros</exec_depend>
+  <exec_depend>move_base</exec_depend>
+  <exec_depend>rviz</exec_depend>
+</package>

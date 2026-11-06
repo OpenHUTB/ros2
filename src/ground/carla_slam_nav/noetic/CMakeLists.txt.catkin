@@ -1,0 +1,15 @@
+# Noetic(ROS1 / catkin) 版 CMakeLists.txt
+# 配合 noetic/package.xml.catkin 使用：roslaunch carla_slam_nav carla_slam_nav_noetic.launch
+
+cmake_minimum_required(VERSION 3.0.2)
+project(carla_slam_nav)
+
+find_package(catkin REQUIRED COMPONENTS
+  rospy std_msgs sensor_msgs nav_msgs geometry_msgs tf2_ros)
+
+catkin_package()
+
+# 安装 launch 与 config
+install(DIRECTORY noetic/ config/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  FILES_MATCHING PATTERN "*.launch" PATTERN "*.yaml")

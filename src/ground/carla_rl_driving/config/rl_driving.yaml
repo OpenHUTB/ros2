@@ -1,0 +1,26 @@
+# carla_rl_driving 运行参数（部署推理节点）
+# 与 CARLA ros-bridge 默认话题对齐；若你的 ego vehicle role_name 不同，请相应修改。
+
+carla_rl_infer_node:
+  ros__parameters:
+    # 订阅：前视 RGB 相机图像
+    image_topic: "/carla/ego_vehicle/rgb_view/image"
+    # 发布：阿克曼控制指令
+    control_topic: "/carla/ego_vehicle/ackermann_cmd"
+    # 训练好的策略权重（train.py 产物）
+    model_path: "models/ppo_cnn_town01.zip"
+    # 推理设备：cpu | cuda
+    device: "cpu"
+    # 控制频率 Hz
+    ctrl_rate: 20.0
+
+# 奖励塑形权重（与 reward.py 对应，可在 env 侧覆盖）
+reward:
+  w_forward: 1.0
+  w_centre: 0.15
+  w_heading: 0.20
+  w_steer: 0.05
+  w_accel: 0.05
+  collision: 10.0
+  offtrack: 5.0
+  target_speed: 5.0

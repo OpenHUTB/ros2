@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  Noetic(ROS1 / catkin) 版 package.xml
+  说明：仓库根目录的 package.xml 是 ROS2 Humble(ament, format=3) 用的。
+  在 Ubuntu 20.04 + ROS Noetic 的 catkin 工作区里构建本包时，
+  把本文件复制覆盖到包根目录（或将本包单独放进 catkin_ws/src），
+  再 catkin_make 即可支持 rosrun / roslaunch。
+-->
+<package format="2">
+  <name>carla_rl_driving</name>
+  <version>0.1.0</version>
+  <description>CARLA end-to-end RL driving (Noetic/catkin build)</description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>carla_msgs</build_depend>
+  <build_depend>cv_bridge</build_depend>
+
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>carla_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+</package>

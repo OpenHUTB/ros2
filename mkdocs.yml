@@ -17,12 +17,13 @@ extra_css: [extra.css]
 # mathjax用于单独公式展示
 extra_javascript:
   # - extra.js
-  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
-  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
-  - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
+  # 国内可达 CDN：原 cdnjs.cloudflare.com 在国内网络下无法加载导致公式/mermaid 不渲染
+  - https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - /js/mermaid.min.js
+  - https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js
+  - https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js
+  - https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
+  - https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js
   - js/umlconvert.js
 plugins:
 #  - mkdocs-video
@@ -120,6 +121,8 @@ nav:
     - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 端到端强化学习驾驶: './ground/rl_driving.md'
+    - SLAM建图与导航: './ground/slam_nav.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md

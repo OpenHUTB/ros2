@@ -1,0 +1,38 @@
+<launch>
+  <!--
+    Noetic(ROS1) 版 SLAM 建图 + 导航同步仿真
+    注意：Nav2 仅 ROS2；Noetic 上导航用经典 ROS1 导航栈 move_base，
+    SLAM 用 rtabmap_ros（ROS1）。话题与 CARLA ros-bridge 对齐。
+
+    运行：
+      source /opt/ros/noetic/setup.bash
+      roslaunch carla_slam_nav carla_slam_nav_noetic.launch
+  -->
+  <arg name="lidar_topic"   default="/carla/ego_vehicle/lidar"/>
+  <arg name="odom_topic"    default="/carla/ego_vehicle/odometry"/>
+  <arg name="base_frame"    default="base_footprint"/>
+
+  <!-- 1) SLAM：RTAB-Map（激光点云建图） -->
+  <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
+    <arg name="rtabmap_args" value="--delete_db_on_start"/>
+    <arg name="database_path" value="$(env HOME)/.ros/rtabmap_carla.db"/>
+    <arg name="frame_id" value="$(arg base_frame)"/>
+    <arg name="subscribe_rgb" value="false"/>
+    <arg name="subscribe_depth" value="false"/>
+    <arg name="subscribe_scan" value="false"/>
+    <arg name="subscribe_point_cloud" value="true"/>
+    <arg name="odom_topic" value="$(arg odom_topic)"/>
+    <arg name="queue_size" value="20"/>
+    <arg name="approx_sync" value="true"/>
+  </include>
+
+  <!-- 2) 导航：经典 move_base（全局 + 局部规划） -->
+  <node pkg="move_base" type="move_base" name="move_base" output="screen">
+    <rosparam command="load" file="$(find carla_slam_nav)/config/nav1_params.yaml"/>
+    <remap from="scan" to="$(arg lidar_topic)"/>
+    <remap from="odom" to="$(arg odom_topic)"/>
+  </node>
+
+  <!-- 3) RViz 可视化（手动打开即可，避免引用缺失配置文件） -->
+  <node pkg="rviz" type="rviz" name="rviz" output="screen" />
+</launch>

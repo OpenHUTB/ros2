@@ -1,0 +1,15 @@
+<launch>
+  <!-- Noetic(ROS1) 端到端推理启动 -->
+  <!-- 前置：CARLA 服务端 + ros-bridge 已运行，rgb_view/image 有数据。 -->
+  <arg name="model_path" default="models/ppo_cnn_town01.zip"/>
+  <arg name="image_topic" default="/carla/ego_vehicle/rgb_view/image"/>
+  <arg name="control_topic" default="/carla/ego_vehicle/ackermann_cmd"/>
+
+  <node pkg="carla_rl_driving" type="carla_rl_infer_noetic.py"
+        name="carla_rl_infer_noetic" output="screen"
+        args="--model $(arg model_path)
+              --image-topic $(arg image_topic)
+              --control-topic $(arg control_topic)">
+    <remap from="image" to="$(arg image_topic)"/>
+  </node>
+</launch>

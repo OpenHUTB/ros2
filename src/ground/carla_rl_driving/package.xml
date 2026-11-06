@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_rl_driving</name>
+  <version>0.1.0</version>
+  <description>
+    地面载具（CARLA）端到端强化学习自动驾驶：单目前视图像 -> 神经网络策略 -> 阿克曼控制指令。
+    覆盖任务二（传感器感知 + 给定轨迹/车道控制）与任务四（输入图像输出控制指令的端到端模型），
+    并支持「同模型不同 RL 算法（PPO vs SAC）」与「同 RL 算法不同网络结构（CNN vs CNN+LSTM）」两组对比实验。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- ROS2 (Humble) 运行时依赖 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>carla_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

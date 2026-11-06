@@ -1,0 +1,19 @@
+# Noetic(ROS1 / catkin) 版 CMakeLists.txt
+# 配合 noetic/package.xml.catkin 使用：构建后 rosrun carla_rl_driving carla_rl_infer_noetic.py
+
+cmake_minimum_required(VERSION 3.0.2)
+project(carla_rl_driving)
+
+find_package(catkin REQUIRED COMPONENTS
+  rospy std_msgs sensor_msgs geometry_msgs carla_msgs cv_bridge)
+
+catkin_package()
+
+# 安装 rospy 节点脚本
+catkin_install_python(PROGRAMS noetic/carla_rl_infer_noetic.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+# 安装 launch
+install(DIRECTORY noetic/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  FILES_MATCHING PATTERN "*.launch")

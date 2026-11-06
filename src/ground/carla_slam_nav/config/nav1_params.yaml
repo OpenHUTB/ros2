@@ -1,0 +1,38 @@
+# Noetic(ROS1) move_base 最小导航参数（与 carla_slam_nav_noetic.launch 配合）
+# 经典 ROS1 导航栈：全局规划 NavfnROS + 局部规划 DWA/Costmap.
+
+base_local_planner: "dwa_local_planner/DWAPlannerROS"
+
+# 全局代价地图
+global_costmap:
+  global_frame: map
+  robot_base_frame: base_footprint
+  update_frequency: 5.0
+  publish_frequency: 2.0
+  cost_scaling_factor: 3.0
+  inflation_radius: 1.0
+  obstacle_range: 2.5
+  raytrace_range: 3.0
+  footprint_padding: 0.05
+
+# 局部代价地图
+local_costmap:
+  global_frame: odom
+  robot_base_frame: base_footprint
+  update_frequency: 5.0
+  publish_frequency: 2.0
+  width: 5.0
+  height: 5.0
+  resolution: 0.1
+  inflation_radius: 0.5
+
+# DWA 局部控制器
+DWAPlannerROS:
+  max_vel_x: 0.8
+  min_vel_x: 0.0
+  max_vel_trans: 0.8
+  min_vel_trans: 0.1
+  acc_lim_x: 1.0
+  acc_lim_th: 1.0
+  xy_goal_tolerance: 0.3
+  yaw_goal_tolerance: 0.2
