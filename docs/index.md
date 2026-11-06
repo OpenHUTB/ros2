@@ -93,6 +93,7 @@ ROS每章节运行代码:
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [驾驶人接管准备度](./musculoskeletal/driver_takeover_readiness.md) —— 综合视线、双手、双脚和接管请求后的定向时间，输出可解释的分级准备度
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
