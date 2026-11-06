@@ -12,15 +12,8 @@ import math
 import os
 
 from .autotune import select_best_gains, simulate_closed_loop
+from .experiment import MANUAL_SETS, SETPOINT
 from .relay_tune import run_relay_feedback
-
-# 手工试凑的三组参数：都只用 P、I，没有微分项，覆盖保守/常规/积极三种水平
-MANUAL_SETS = [
-    ('保守试凑', (0.5, 0.4, 0.0)),
-    ('常规试凑', (1.5, 0.8, 0.0)),
-    ('积极试凑', (3.0, 1.0, 0.0)),
-]
-SETPOINT = math.pi / 2.0
 
 
 def _fmt(metrics):

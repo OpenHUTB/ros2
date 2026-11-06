@@ -10,15 +10,10 @@ import math
 import matplotlib.pyplot as plt
 
 from .autotune import select_best_gains, simulate_closed_loop
+from .experiment import MANUAL_SETS, SETPOINT
 from .relay_tune import run_relay_feedback
 
-MANUAL_SETS = [
-    ('保守试凑', (0.5, 0.4, 0.0)),
-    ('常规试凑', (1.5, 0.8, 0.0)),
-    ('积极试凑', (3.0, 1.0, 0.0)),
-]
 MANUAL_COLORS = ['tab:orange', 'tab:brown', 'tab:red']
-SETPOINT = math.pi / 2.0
 
 
 def main():
@@ -68,10 +63,6 @@ def main():
     ax2.legend(loc='upper right', fontsize=9)
 
     fig.tight_layout()
-    try:
-        fig.canvas.manager.toolbar.destroy()
-    except Exception:
-        pass
     plt.show()
 
 

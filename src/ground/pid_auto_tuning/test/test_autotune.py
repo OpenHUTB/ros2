@@ -44,6 +44,17 @@ def test_metrics_rise_none_when_no_crossing():
     assert metrics['rise_time'] is None
 
 
+def test_metrics_support_negative_target():
+    # 目标为负时响应向反方向变化，上升时间不能退化为 0
+    target = -1.0
+    t = [i * 0.01 for i in range(1000)]
+    y = [-(1.0 - math.exp(-2.5 * ti) * math.cos(6.0 * ti)) for ti in t]
+    metrics = analyze_response(t, y, target, 0.01)
+    assert metrics['rise_time'] > 0.05
+    assert metrics['overshoot_pct'] > 0.0
+    assert metrics['settle_time'] is not None
+
+
 def test_relay_feedback_gives_positive_ku_and_tu():
     relay = run_relay_feedback(setpoint=math.pi / 2.0)
     assert relay['ku'] > 0.0

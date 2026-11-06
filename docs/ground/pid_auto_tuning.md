@@ -42,7 +42,7 @@ ros2 run pid_auto_tuning main
 ros2 run pid_auto_tuning main_plot
 ```
 
-在 RViz 中用箭头显示当前航向与目标航向：
+可选：若环境中 `rviz2` 可用，可用箭头显示当前航向与目标航向。
 
 ```bash
 cd ~/ros2                      # rviz 配置使用相对路径时需在仓库根目录执行
@@ -70,9 +70,11 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 | `switch_period` | 6.0 | 目标航向切换周期（秒） |
 | `u_limit` | 2.5 | 角速度指令饱和上限（rad/s） |
 
+注：第 6 节的指标表由 `main` 以 `dt = 0.01` 计算；上面 `dt` 是 RViz 节点的默认步长，同一组参数下节点侧的指标会与此表略有差异。
+
 ## 6. 运行效果验证
 
-`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°；最后一行路径随执行目录变化）：
+`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°；最后一行为 CSV 的绝对路径，随执行目录不同而变化）：
 
 ```
 被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
@@ -93,7 +95,7 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 常规试凑参数: Kp=1.500, Ki=0.800, Kd=0.0000
 积极试凑参数: Kp=3.000, Ki=1.000, Kd=0.0000
 
-阶跃响应数据已写入 resource/step_response.csv
+阶跃响应数据已写入 /home/user/ros2/resource/step_response.csv
 ```
 
 ![终端运行结果](../img/ground/pid_auto_tuning_terminal.png)
@@ -120,7 +122,7 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 | 稳态误差 | 末段 5% 样本均值与目标值之差；未收敛时不输出 | rad |
 | IAE | 绝对误差积分 `Σ|e|·dt` | rad·s |
 
-整定与对比在 `main` 的一次运行内完成：继电器实验按 60 s 仿真时长采集振荡，随后做候选参数网格搜索与两组闭环仿真，无需人工干预。
+整定与对比在 `main` 的一次运行内完成：继电器实验按 60 s 仿真时长采集振荡，随后做候选参数网格搜索与四组闭环仿真（三组手工参数 + 自动整定），无需人工干预。
 
 ## 8. 简化假设
 

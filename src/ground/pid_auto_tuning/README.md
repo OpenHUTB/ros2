@@ -27,7 +27,7 @@ source install/setup.bash
 ros2 run pid_auto_tuning main
 ```
 
-实测输出（目标航向 90°；最后一行路径随执行目录变化）：
+实测输出（目标航向 90°；最后一行为 CSV 的绝对路径，随执行目录不同而变化）：
 
 ```
 被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
@@ -48,7 +48,7 @@ ros2 run pid_auto_tuning main
 常规试凑参数: Kp=1.500, Ki=0.800, Kd=0.0000
 积极试凑参数: Kp=3.000, Ki=1.000, Kd=0.0000
 
-阶跃响应数据已写入 resource/step_response.csv
+阶跃响应数据已写入 /home/user/ros2/resource/step_response.csv
 ```
 
 同时把四条阶跃曲线写入当前目录下的 `resource/step_response.csv`（列：`t_s`、三组手工参数与自动整定的 `*_theta_rad`）。
@@ -95,6 +95,8 @@ ros2 topic echo /pid_auto_tuning/heading --once
 | `dt` | 0.02 | 仿真步长（秒） |
 | `switch_period` | 6.0 | 目标航向切换周期（秒） |
 | `u_limit` | 2.5 | 角速度指令饱和上限（rad/s） |
+
+注：第 3.1 节的指标表由 `main` 以 `dt = 0.01` 计算；上面 `dt` 是 RViz 节点的默认步长，同一组参数下节点侧的指标会与此表略有差异。
 
 修改方式：
 
