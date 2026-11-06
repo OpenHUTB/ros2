@@ -4,7 +4,11 @@
 
 ## 环境配置
 
+### 本地文档预览 / Local documentation preview
+
 在仓库根目录安装文档依赖并启动本地预览：
+
+Install the documentation dependencies from the repository root and start the local preview:
 
 ```bash
 python3 -m pip install -r requirements.txt
@@ -13,14 +17,26 @@ python3 -m mkdocs serve --dev-addr 127.0.0.1:8000
 
 然后打开 <http://127.0.0.1:8000/>。MkDocs 会监视文件变化并自动重新生成页面。仓库根目录未提供 `serve.bat`；Windows 用户可在 PowerShell 中使用 `py -m pip install -r requirements.txt` 和 `py -m mkdocs serve --dev-addr 127.0.0.1:8000`。
 
-Install the documentation dependencies from the repository root and start the local preview:
+Then open <http://127.0.0.1:8000/>. MkDocs watches for file changes and rebuilds the pages automatically. No `serve.bat` is provided at the repository root. On Windows PowerShell, use `py -m pip install -r requirements.txt` and `py -m mkdocs serve --dev-addr 127.0.0.1:8000`.
+
+### ROS 2 示例开发 / ROS 2 example development
+
+构建仓库中的 ROS 2 示例前，先载入对应发行版环境，再按目标功能包的 README 安装依赖并构建。Humble 功能包可使用以下工作区流程：
+
+Before building a ROS 2 example in this repository, source the matching ROS distribution, then follow the target package README to install dependencies and build. For a Humble package, use this workspace workflow:
 
 ```bash
-python -m pip install -r requirements.txt
-python -m mkdocs serve --dev-addr 127.0.0.1:8000
+source /opt/ros/humble/setup.bash
+cd ~/ros2
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --packages-select <package_name>
+source install/setup.bash
+ros2 launch <package_name> <launch_file>
 ```
 
-Then open <http://127.0.0.1:8000/>. MkDocs watches for file changes and rebuilds the pages automatically. No `serve.bat` is provided at the repository root. On Windows PowerShell, use `py -m pip install -r requirements.txt` and `py -m mkdocs serve --dev-addr 127.0.0.1:8000`.
+发行版安装步骤见 [Ubuntu 20.04 与 ROS Noetic](docs/ubuntu20.04.md)，ROS 2 概念与教程见 [第 9 章](docs/chapter/chap9.md)。运行某个示例时，请使用该模块 README 中列出的包名、launch 文件和额外依赖。
+
+See [Ubuntu 20.04 and ROS Noetic setup](docs/ubuntu20.04.md) for the existing distribution setup guide and [Chapter 9](docs/chapter/chap9.md) for ROS 2 concepts and tutorials. For a specific example, use the package name, launch file, and additional dependencies documented by that module's README.
 
 文档撰写约定请参考 [OpenHUTB/doc](https://github.com/OpenHUTB/doc)。
 
