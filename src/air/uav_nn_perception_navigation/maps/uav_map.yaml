@@ -1,4 +1,4 @@
-image: /tmp/uav_map.pgm
+image: uav_map.pgm
 resolution: 0.100000
 origin: [-60.000000, -60.000000, 0.000000]
 negate: 0
