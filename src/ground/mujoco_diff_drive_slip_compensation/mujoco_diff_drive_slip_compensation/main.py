@@ -21,7 +21,7 @@ def _load_ros_dependencies() -> dict[str, Any]:
         from rosgraph_msgs.msg import Clock
         from sensor_msgs.msg import Imu, JointState
         from std_msgs.msg import Float64, String
-        import TransformBroadcaster
+        from tf2_ros import TransformBroadcaster
     except ImportError as exc:
         raise RuntimeError(
             '缺少 ROS 2 Humble Python 依赖 / ROS 2 Humble Python dependencies are required'
@@ -136,6 +136,16 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 String, 'scenario/episode_id', 10
             )
             self._tf_broadcaster = TransformBroadcaster(self)
+            self._encoder_publisher = self.create_publisher(
+                JointState, 'wheel/encoders', 10
+            )
+            self._imu_publisher = self.create_publisher(Imu, 'imu/data', 10)
+            self._friction_publisher = self.create_publisher(
+                Float64, 'scenario/friction', 10
+            )
+            self._episode_publisher = self.create_publisher(
+                String, 'scenario/episode_id', 10
+            )
             self.create_subscription(Twist, 'cmd_vel', self._on_command, 10)
             self.create_timer(self._simulation.timestep, self._on_timer)
             self.get_logger().info(
@@ -236,6 +246,44 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 imu.linear_acceleration_covariance[index] = acceleration_variance
                 imu.angular_velocity_covariance[index] = angular_variance
             self._imu_publisher.publish(imu)
+
+
+            positions, velocities = self._simulation.wheel_state()
+            noisy_positions, noisy_velocities = self._sensor_noise.encoders(
+                positions, velocities
+            )
+            encoders = JointState()
+            encoders.header.stamp = timestamp
+            encoders.name = list(MujocoSimulation.WHEEL_JOINT_NAMES)
+            encoders.position = list(noisy_positions)
+            encoders.velocity = list(noisy_velocities)
+            self._encoder_publisher.publish(encoders)
+
+            acceleration, angular_velocity = self._simulation.imu_state()
+            noisy_acceleration, noisy_angular = self._sensor_noise.imu(
+                acceleration, angular_velocity
+            )
+            imu = Imu()
+            imu.header.stamp = timestamp
+            imu.header.frame_id = 'imu_link'
+            imu.orientation_covariance[0] = -1.0
+            (
+                imu.linear_acceleration.x,
+                imu.linear_acceleration.y,
+                imu.linear_acceleration.z,
+            ) = noisy_acceleration
+            (
+                imu.angular_velocity.x,
+                imu.angular_velocity.y,
+                imu.angular_velocity.z,
+            ) = noisy_angular
+            acceleration_variance = self._noise_config.accelerometer_std ** 2
+            angular_variance = self._noise_config.gyroscope_std ** 2
+            for index in (0, 4, 8):
+                imu.linear_acceleration_covariance[index] = acceleration_variance
+                imu.angular_velocity_covariance[index] = angular_variance
+            self._imu_publisher.publish(imu)
+
 
             if self._publish_tf:
                 transform = TransformStamped()

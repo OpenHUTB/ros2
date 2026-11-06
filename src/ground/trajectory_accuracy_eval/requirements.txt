@@ -1,0 +1,7 @@
+# trajectory_accuracy_eval 依赖
+#
+# 核心算法与离线评估只依赖 numpy；matplotlib 仅用于出图（可加 --no-figures 跳过）。
+# Ubuntu 20.04 上建议用 apt 安装，避免干扰 ROS Noetic 的 Python 环境：
+#   sudo apt-get install -y python3-numpy python3-matplotlib
+numpy>=1.16
+matplotlib>=3.1

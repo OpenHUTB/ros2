@@ -35,6 +35,10 @@ mujoco_diff_drive_slip_compensation/
 │   ├── sensors.py
 │   ├── simulator.py
 │   └── slip_model.py
+│   ├── resources.py
+│   ├── scenarios.py
+│   ├── sensors.py
+│   └── simulator.py
 ├── test/
 ├── package.xml
 ├── requirements.txt

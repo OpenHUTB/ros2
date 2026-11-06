@@ -37,6 +37,7 @@ class MujocoSimulation:
         'right_front_joint',
         'right_rear_joint',
     )
+
     def __init__(self, model_path: Path) -> None:
         try:
             import mujoco
@@ -86,6 +87,7 @@ class MujocoSimulation:
         for actuator_id, command in zip(self._actuator_ids, commands):
             lower, upper = self.model.actuator_ctrlrange[actuator_id]
             self.data.ctrl[actuator_id] = float(np.clip(command, lower, upper))
+
 
     def set_ground_friction(self, coefficient: float) -> None:
         """Update sliding friction while preserving torsional/rolling values."""

@@ -1,0 +1,22 @@
+<launch>
+    <!-- 语音命令运动控制节点。
+         默认通过 /voice_cmd 话题 + 交互式终端接收指令；
+         无声卡/离线虚拟机环境下 tts_backend 使用 log，真实语音合成时可改 sdk。 -->
+
+    <arg name="voice_topic" default="/voice_cmd" />
+    <arg name="tts_topic" default="/voice_tts" />
+    <arg name="tts_backend" default="log" />
+    <arg name="enable_terminal" default="true" />
+
+    <node pkg="robot_voice" name="voice_control" type="voice_control.py" output="screen">
+        <remap from="voice_cmd" to="$(arg voice_topic)" />
+        <remap from="~tts_topic" to="$(arg tts_topic)" />
+
+        <param name="linear_speed" value="0.35" />
+        <param name="angular_speed" value="1.2" />
+        <param name="move_duration" value="1.5" />
+        <param name="tts_backend" value="$(arg tts_backend)" />
+        <param name="enable_terminal" value="$(arg enable_terminal)" />
+        <param name="tts_text" value="太阳当空照，花儿对我笑" />
+    </node>
+</launch>
