@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  muscle_knee.xml
+  单关节「膝关节」肌肉骨骼模型 (Musculoskeletal single-joint knee model)
+
+  组成:
+    - femur (股骨): 固定在髋端, 向下延伸
+    - tibia  (胫骨): 通过膝关节(hinge, 绕 x 轴) 连接到股骨
+    - flexor (屈肌, 近似腘绳肌) : 使膝关节屈曲 (关节角增大)
+    - extensor (伸肌, 近似股四头肌): 使膝关节伸展 (关节角减小)
+    - knee_wrap (关节圆柱): 肌腱绕过关节轴, 提供恒定正力矩臂,
+      避免肌腱在屈曲时长度趋零导致非物理被动力
+
+  坐标约定 (MuJoCo 默认, z 轴向上):
+    - 0°  = 完全伸展 (小腿沿 -z 竖直下垂, 自然平衡)
+    - 正角 = 屈曲 (小腿向 +y 抬起)
+  工作区间: 关节限位 -15°~90°, 控制轨迹建议 10°~70°
+-->
+<mujoco model="muscle_knee">
+  <compiler angle="degree"/>
+
+  <option gravity="0 0 -9.81" timestep="0.005" integrator="Euler"/>
+
+  <default>
+    <muscle ctrllimited="true" ctrlrange="0 1"/>
+    <geom density="1050" rgba="0.82 0.68 0.55 1" friction="0.6"/>
+  </default>
+
+  <worldbody>
+    <!-- 侧视相机: 从 y 正向沿 -y 观察膝关节模型 -->
+    <camera name="view" pos="0 1.1 -0.35" xyaxes="1 0 0 0 0 1" fovy="50"/>
+
+    <!-- 地面, 仅作视觉参照 -->
+    <geom name="ground" type="plane" size="1.2 1.2 0.02" pos="0 0 -0.02"
+          rgba="0.75 0.78 0.8 1" friction="1"/>
+
+    <!-- 股骨 (固定): 髋端在 z=+0.05, 膝端在 z=-0.35 -->
+    <body name="femur" pos="0 0 0">
+      <geom name="femur_geom" type="capsule"
+            fromto="0 0 0.05  0 0 -0.35" size="0.045" mass="3.2"
+            contype="0" conaffinity="0"/>
+
+      <!-- 膝关节中心点 (股骨末端) -->
+      <site name="femur_joint" pos="0 0 -0.35" size="0.008" rgba="0.2 0.6 0.9 1"/>
+
+      <!-- wrap 绕侧参考点 (固定在股骨上, 不随胫骨旋转):
+           前侧(y>0)供屈肌, 后侧(y<0)供伸肌, 用于稳定肌腱绕向 -->
+      <site name="knee_side_front" pos="0 0.08 -0.35" size="0.006" rgba="0.4 0.9 0.9 0.6"/>
+      <site name="knee_side_back" pos="0 -0.08 -0.35" size="0.006" rgba="0.4 0.9 0.9 0.6"/>
+
+      <!-- 肌腱锚点: 伸肌在后侧(y<0), 屈肌在前侧(y>0) -->
+      <site name="femur_ext" pos="0 -0.06 -0.27" size="0.008" rgba="0.9 0.3 0.3 1"/>
+      <site name="femur_flx" pos="0 0.06 -0.27" size="0.008" rgba="0.3 0.3 0.9 1"/>
+    </body>
+
+    <!-- 胫骨: 通过膝关节 (hinge, 绕 x 轴) 连接到股骨末端 -->
+    <body name="tibia" pos="0 0 -0.35">
+      <joint name="knee" type="hinge" axis="1 0 0" range="-15 90" damping="0.4"
+             armature="0.05"/>
+      <geom name="tibia_geom" type="capsule"
+            fromto="0 0 0  0 0 -0.40" size="0.04" mass="2.0"
+            contype="0" conaffinity="0"/>
+
+      <!-- 关节 wrap 圆柱: 轴向沿 x, 肌腱绕过它形成恒定力矩臂 -->
+      <geom name="knee_wrap" type="cylinder"
+            fromto="0.05 0 0  -0.05 0 0" size="0.035"
+            contype="0" conaffinity="0" rgba="0.5 0.5 0.5 0.5"/>
+
+      <site name="tibia_ext" pos="0 -0.06 -0.10" size="0.008" rgba="0.9 0.3 0.3 1"/>
+      <site name="tibia_flx" pos="0 0.06 -0.10" size="0.008" rgba="0.3 0.3 0.9 1"/>
+    </body>
+  </worldbody>
+
+  <!-- 肌腱: 绕关节 wrap 圆柱, 恒定力矩臂的拮抗双肌肉 -->
+  <tendon>
+    <spatial name="extensor_tendon" rgba="0.9 0.3 0.3 0.9" width="0.008">
+      <site site="femur_ext"/>
+      <geom geom="knee_wrap" sidesite="knee_side_back"/>
+      <site site="tibia_ext"/>
+    </spatial>
+    <spatial name="flexor_tendon" rgba="0.3 0.3 0.9 0.9" width="0.008">
+      <site site="femur_flx"/>
+      <geom geom="knee_wrap" sidesite="knee_side_front"/>
+      <site site="tibia_flx"/>
+    </spatial>
+  </tendon>
+
+  <actuator>
+    <!-- 伸肌 (股四头肌近似): 后侧肌腱绕包, 激活使膝关节伸展 -->
+    <muscle name="extensor" tendon="extensor_tendon" force="500"
+            lengthrange="0.15 0.30"/>
+    <!-- 屈肌 (腘绳肌近似): 前侧肌腱绕包, 激活使膝关节屈曲 -->
+    <muscle name="flexor" tendon="flexor_tendon" force="500"
+            lengthrange="0.15 0.30"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="knee_angle" joint="knee"/>
+    <jointvel name="knee_vel" joint="knee"/>
+  </sensor>
+</mujoco>
