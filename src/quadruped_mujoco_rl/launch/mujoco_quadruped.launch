@@ -1,0 +1,13 @@
+<launch>
+    <!-- 启动 MuJoCo 仿真服务器 -->
+    <node name="mujoco_server" pkg="mujoco_ros" type="mujoco_ros_server" output="screen">
+        <!-- 加载你存放在 models 文件夹里的四足机器人 MJCF 模型文件 -->
+        <param name="model_file" value="$(find quadruped_mujoco_rl)/models/quadruped.xml" />
+    </node>
+
+    <!-- 启动强化学习控制节点 -->
+    <node name="rl_controller" pkg="quadruped_mujoco_rl" type="main_test.py" output="screen">
+        <!-- 在这里传入模型权重路径等参数 -->
+        <param name="model_path" value="$(find quadruped_mujoco_rl)/models/ppo_quadruped.zip" />
+    </node>
+</launch>
