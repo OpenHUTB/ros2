@@ -1,0 +1,26 @@
+# mujoco_car_drive_fault 运行参数
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致：launch 加载本文件后，
+# 各节点只取与自己同名的分节。改这里的目标车速、失效侧和运行时长，
+# 不需要改 Python 源码，也不需要重新 colcon build。
+
+/mujoco_car_drive_fault_sim_bridge:
+  ros__parameters:
+    # 场景 XML（相对功能包 share/models 目录）：轮端拖滞 0.07 / 0.12 / 0.18
+    scene: "car_scene_fault_mid.xml"
+    # 失效侧：left 或 right
+    fault_side: "left"
+    # 0 表示用场景 XML 自带的拖滞量
+    fault_damping: 0.0
+    run_seconds: 6.0
+    control_hz: 50.0
+
+/mujoco_car_drive_fault_guard:
+  ros__parameters:
+    # 名义直行速度，补偿只改差速、不改总油门
+    v_target: 0.9
+    run_seconds: 6.0
+    # nn：网络前瞻门控；rule：轮速差门限（对照用）
+    mode: "nn"
+    # 留空表示从功能包 share/results 目录加载训练好的权重
+    model_path: ""

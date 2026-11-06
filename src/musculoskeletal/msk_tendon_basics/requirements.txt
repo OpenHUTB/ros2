@@ -1,0 +1,2 @@
+# 仅出图需要；不安装也能跑模型和输出 CSV（main.py 会自动跳过 PNG）
+matplotlib>=3.4
