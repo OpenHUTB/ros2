@@ -3,6 +3,7 @@
 
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.parameter import Parameter
 from std_msgs.msg import String
@@ -121,7 +122,7 @@ def main(args=None):
     node = UavModeNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         node.get_logger().info('uav_mode_node 被手动终止')
     finally:
         # ros2 launch 下 Ctrl+C 可能在销毁节点时再抛一次 KeyboardInterrupt

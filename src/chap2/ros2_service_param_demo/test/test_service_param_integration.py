@@ -107,4 +107,3 @@ def test_start_mode_rejects_runtime_change():
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
