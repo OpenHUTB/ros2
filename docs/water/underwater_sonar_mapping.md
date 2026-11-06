@@ -27,7 +27,8 @@ src/
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 ```
-2. 从 ros2 仓库拷贝模块代码到工作空间：
+2. 从 ros2 仓库拷贝模块代码到工作空间：                   
+("cp -r ~/OpenHUTB/ros2/src/....._mapping ~/ros2_ws/src/"中OPenHUTB是文件夹名，一般克隆ros2不会自带OPenHUTB文件夹，输入改指令时可以去掉"/OpenHUTB"部分)
 ```bash
 cp -r ~/OpenHUTB/ros2/src/underwater_sonar_mapping ~/ros2_ws/src/
 cd ~/ros2_ws
@@ -42,7 +43,7 @@ source install/setup.bash
 ros2 launch underwater_sonar_mapping main.launch.py
 ```
 5.运行效果（截图）
-![运行效果](../img/capture_4.png)
+![运行效果](../img/underwater_sonar_3d_mapping_run.png)
 
 效果说明：节点成功启动，基于模拟声呐数据生成了三维海底地形，并清晰标注了水下沉船/暗礁等障碍物位置，验证了声呐三维测绘与避障感知算法的可行性。
 

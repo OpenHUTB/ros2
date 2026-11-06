@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ros2_astar_planner"
+version = "1.0.0"
+description = "差速机器人栅格 A* 全局路径规划"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.21"]
+license = { text = "MIT" }
+authors = [{ name = "ros2_astar_planner contributors" }]
+
+[project.scripts]
+astar_planner_node = "ros2_astar_planner.node:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

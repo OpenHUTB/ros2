@@ -1,0 +1,8 @@
+# 演示脚本会生成这些输出，不进版本库
+/scripts/demo_out/
+/demo_out/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/

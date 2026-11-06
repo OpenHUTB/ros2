@@ -1,0 +1,15 @@
+# humanoid_stair_climb 参数文件
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致。
+# 这里的默认值要与 humanoid_stair_climb/config.py 保持一致，
+# 否则 ros2 launch 跑出来的指标会和 main.py --headless 对不上。
+
+/stair_climb_node:
+  ros__parameters:
+    control_hz: 50.0        # 控制频率
+    time_limit: 16.0        # 仿真时长上限，秒（与 config.TIME_LIMIT 一致）
+    hold: 2.0               # 到达平台后继续演示的时间，秒（与 config.HOLD_TIME 一致）
+    cycle_time: 1.4         # 一个完整步态周期
+    swing_ratio: 0.42       # 单腿摆动相占比
+    lift_height: 0.05       # 摆动相相对落点台阶面的抬腿余量
+    scene: ""               # 留空使用包内 models/stair_scene.xml

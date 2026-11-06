@@ -1,0 +1,16 @@
+mujoco_diff_drive_simulation:
+  ros__parameters:
+    model_file: models/diff_drive.xml
+    wheel_radius: 0.08
+    track_width: 0.42
+    max_wheel_speed: 20.0
+    command_timeout: 0.5
+    publish_tf: true
+    use_sim_time: true
+    random_seed: 25012
+    friction_coefficients: [0.25, 0.55, 0.90]
+    scenario_duration: 30.0
+    encoder_position_noise_std: 0.0005
+    encoder_velocity_noise_std: 0.005
+    accelerometer_noise_std: 0.02
+    gyroscope_noise_std: 0.002

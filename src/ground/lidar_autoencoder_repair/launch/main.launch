@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <!--
+      使用说明：
+        1. 先启动仿真环境：
+           roslaunch turtlebot3_gazebo turtlebot3_world.launch
+        2. 再启动本节点：
+           roslaunch lidar_autoencoder_repair main.launch
+        3. 若首次运行，请先离线训练权重：
+           cd src/lidar_autoencoder_repair/scripts && python3 train_autoencoder.py
+    -->
+    <node name="lidar_repair_node"
+          pkg="lidar_autoencoder_repair"
+          type="main.py"
+          output="screen" />
+</launch>
