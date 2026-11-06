@@ -1,0 +1,11 @@
+<launch>
+  <arg name="near" default="0.5"/>
+  <arg name="far" default="8.0"/>
+  <arg name="max_trail" default="300"/>
+  <node pkg="uav_camera_frustum_viz" type="frustum_node.py"
+        name="uav_camera_frustum_viz" output="screen">
+    <param name="near" value="$(arg near)"/>
+    <param name="far" value="$(arg far)"/>
+    <param name="max_trail" value="$(arg max_trail)"/>
+  </node>
+</launch>
