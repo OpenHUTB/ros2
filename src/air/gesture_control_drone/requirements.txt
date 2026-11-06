@@ -5,10 +5,12 @@
 #     sudo apt install -y python3-numpy python3-opencv python3-pil
 #
 # mediapipe 与 airsim 通常没有对应的 apt/rosdep 包，用 pip 安装：
-mediapipe>=0.10,<1.0   # 手势识别（本模块核心依赖）
-                       # ⚠ 必须 <1.0：mediapipe 1.x 移除了 mp.solutions
-                       #   （老 Hands 接口），装最新版会直接报
-                       #   AttributeError: module 'mediapipe' has no attribute 'solutions'
+mediapipe==0.10.21     # 手势识别（本模块核心依赖）
+                       # ⚠ 必须钉死这个版本：mp.solutions（老 Hands 接口）
+                       #   在 1.x 被移除，**0.10.x 的后期版本（如 0.10.35）也移除了**。
+                       #   `pip install "mediapipe>=0.10,<1.0"` 会装到 0.10.35，
+                       #   然后 `mp.solutions` 直接 AttributeError。
+                       #   已实测 0.10.21 可用（整条链路测试全绿）。
 airsim             # AirSim Python 客户端（只有 sdist，构建期要 import numpy/msgpackrpc）
                      # Linux 上按这个顺序装：
                      #   sudo apt install -y gcc python3-dev

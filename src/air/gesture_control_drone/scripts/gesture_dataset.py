@@ -361,6 +361,18 @@ def _cmd_stats(args):
     print("特征均值  : %+.4f   标准差: %.4f" % (st["feature_mean"], st["feature_std"]))
     if item["meta"].get("created_at"):
         print("采集时间  : %s" % item["meta"]["created_at"])
+    # 录制脚本会把"被丢弃的帧"记在 meta 里（按原因分），这里一并显示，
+    # 否则这些信息只有录制结束的小结里能看到。
+    dropped = item["meta"].get("dropped") or {}
+    if dropped:
+        print("丢弃原因  : %s" % ", ".join("%s=%d" % (k, v)
+                                           for k, v in sorted(dropped.items())))
+    if item["meta"].get("fps_actual") is not None:
+        print("实际采样率: %.1f Hz（目标 %s Hz）"
+              % (float(item["meta"]["fps_actual"]),
+                 item["meta"].get("fps_target", "?")))
+    if item["meta"].get("interrupted"):
+        print("注意      : 这次采集被中断过（Ctrl+C），样本是中断前的一部分")
     return 0
 
 
