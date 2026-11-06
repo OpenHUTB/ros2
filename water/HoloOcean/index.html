@@ -428,35 +428,39 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">快速入门</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">快速入门</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">示例</a>
+<li class="toctree-l2"><a class="reference internal" href="#_7">示例</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_7">操纵杆控制</a>
+<li class="toctree-l3"><a class="reference internal" href="#_8">操纵杆控制</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_8">航点跟踪</a>
+<li class="toctree-l3"><a class="reference internal" href="#_9">航点跟踪</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_9">深度、航向及速度指令</a>
+<li class="toctree-l3"><a class="reference internal" href="#_10">深度、航向及速度指令</a>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#holoocean_node">节点引用：holoocean_node</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_10">订阅的话题</a>
+<li class="toctree-l3"><a class="reference internal" href="#_11">订阅的话题</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_11">发布的话题</a>
+<li class="toctree-l3"><a class="reference internal" href="#_12">发布的话题</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_12">服务</a>
+<li class="toctree-l3"><a class="reference internal" href="#_13">服务</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_13">参数</a>
+<li class="toctree-l3"><a class="reference internal" href="#_14">参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">消息字段</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_14">记录传感器数据</a>
+<li class="toctree-l2"><a class="reference internal" href="#_16">记录传感器数据</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_15">注意</a>
+<li class="toctree-l2"><a class="reference internal" href="#_17">常见问题</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_16">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#_18">注意</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_19">参考与引用</a>
 </li>
 </ul>
 </li>
@@ -522,15 +526,17 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="ros2">水域载具 ROS2 接口</h1>
-<p>针对高保真海洋机器人模块 <a href="https://github.com/OpenHUTB/hutb/tree/hutb/Unreal/CarlaUE4/Plugins/HoloOcean">HoloOcean</a> 的 ROS 2 集成方案。该软件包将 HoloOcean Python API 与 ROS 2 网络连接起来，以 Topic（话题）形式发布传感器数据，并通过 Subscription（订阅）和 Service（服务）接收控制指令。</p>
+<p>针对高保真海洋机器人模拟器 <a href="https://github.com/byu-holoocean/HoloOcean">HoloOcean</a> 的
+ROS 2 集成方案。该软件包把 HoloOcean Python API 接到 ROS 2 网络上：传感器数据以
+Topic（话题）发布，控制指令通过 Subscription（订阅）和 Service（服务）接收。</p>
+<p>上游项目：<a href="https://github.com/byu-holoocean/holoocean-ros">byu-holoocean/holoocean-ros</a>。</p>
 <h2 id="holoocean-ros-001">HoloOcean ROS (0.0.1) 新特性</h2>
 <ul>
 <li>改进了游戏手柄（joystick）示例</li>
 <li>新增多代理（multi-agent）游戏手柄示例</li>
-<li>简化了代理指令（弃用 <code>command/control</code> 话题，改用 <code>command/agent</code>）</li>
+<li>简化代理指令：弃用 <code>command/control</code> 话题，改用 <code>command/agent</code></li>
 <li>新增传感器旋转指令</li>
-<li>修复了少量错误并改进了 Docker 配置</li>
-<li>软件包</li>
+<li>修复少量错误并改进 Docker 配置</li>
 </ul>
 <h2 id="_1">软件包</h2>
 <table>
@@ -543,7 +549,7 @@
 <tbody>
 <tr>
 <td><code>holoocean_main</code></td>
-<td>核心仿真节点：加载场景并施加环境更新节拍</td>
+<td>核心仿真节点：加载场景 JSON，启动 HoloOcean 并在后台线程中 tick</td>
 </tr>
 <tr>
 <td><code>holoocean_interfaces</code></td>
@@ -551,54 +557,110 @@
 </tr>
 <tr>
 <td><code>holoocean_examples</code></td>
-<td>示例节点：操纵杆控制、航点跟踪、深度/航向指令</td>
+<td>示例节点：手柄控制、航点跟踪、深度/航向/速度指令</td>
 </tr>
 </tbody>
 </table>
 <h2 id="_2">先决条件</h2>
 <ul>
-<li>ROS 2（已在 Humble 和 Jazzy 版本上测试）</li>
-<li>HoloOcean Python 软件包 — <a href="https://github.com/OpenHUTB/hutb/tree/hutb/Unreal/CarlaUE4/Plugins/HoloOcean">源代码</a> / <a href="https://openhutb.github.io/mujoco_plugin/underwater/">文档</a></li>
+<li>Ubuntu 22.04 + ROS 2 Humble，或 Ubuntu 24.04 + ROS 2 Jazzy（上游在 Humble 和
+  Jazzy 上测试过）</li>
+<li>HoloOcean Python 包，以及对应的 Unreal 世界包（有画面和无画面模式都需要场景资源）</li>
+<li>与 ROS 2 相同版本的 Python；<code>rclpy</code> 是编译扩展，不能和系统 Python 混用</li>
+<li>可选：NVIDIA GPU 和显示器；无显示器时用 <code>show_viewport: false</code> 跑无头模式</li>
 </ul>
-<p><strong>注意：</strong> 请避免在 ROS 2 和 HoloOcean 中使用 Python 虚拟环境（如 Conda），因为这可能导致运行时及依赖项问题。</p>
+<blockquote>
+<p><strong>关于 Conda：</strong> 不建议在 ROS 2 + HoloOcean 的组合里使用 Conda。如果必须使用，
+需要在同一个环境里安装与 ROS 2 版本匹配的 <code>rclpy</code>、<code>colcon-common-extensions</code>、
+<code>catkin_pkg</code> 和 <code>holoocean</code>，否则会出现 <code>rclpy</code> 导入失败或 ABI 不匹配。</p>
+</blockquote>
 <h2 id="_3">安装</h2>
 <h3 id="docker">Docker（推荐）</h3>
-<p>请参阅 <a href="../docker/">Docker 开发环境</a> 获取设置说明。提供<a href="../docker/">开发</a>和<a href="../docker_runtime/">运行时</a>两种配置。</p>
+<p>Docker 方式不需要在本机安装 ROS 2 和 HoloOcean，适合快速复现。参见：</p>
+<ul>
+<li><a href="../docker/">Docker 开发环境</a></li>
+<li><a href="../docker_runtime/">HoloOcean ROS2 运行时容器</a></li>
+</ul>
 <h3 id="_4">从源码安装</h3>
-<p>安装 HoloOcean 后，将此仓库克隆到您的 ROS 2 工作空间中：
-</p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
-<span class="nb">cd</span><span class="w"> </span>~/ros2/src/water
-<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
-conda<span class="w"> </span>activate<span class="w"> </span>nn_3.8
-colcon<span class="w"> </span>build
+<p>先安装 HoloOcean Python 包（详见 <a href="https://byu-holoocean.github.io/holoocean-docs/">HoloOcean 文档</a>），
+然后准备一个 ROS 2 工作空间。下面用稀疏克隆只取 <code>src/water</code>，避免把整个文档仓库
+拉下来：</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>~/holoocean_ws/src
+<span class="nb">cd</span><span class="w"> </span>~/holoocean_ws/src
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>--filter<span class="o">=</span>blob:none<span class="w"> </span>--sparse<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
+<span class="nb">cd</span><span class="w"> </span>ros2
+git<span class="w"> </span>sparse-checkout<span class="w"> </span><span class="nb">set</span><span class="w"> </span>src/water
+<span class="nb">cd</span><span class="w"> </span>~/holoocean_ws
+</code></pre></div>
+<p>编译前先确认 <code>holoocean</code> 能被当前 Python 导入：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import holoocean; print(holoocean.__file__)"</span>
+</code></pre></div>
+<p>然后编译三个包：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--base-paths<span class="w"> </span>src/ros2/src/water<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--packages-select<span class="w"> </span>holoocean_interfaces<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_examples
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
 </code></pre></div>
-<p>colcon build 报错：ModuleNotFoundError: No module named 'catkin_pkg'
-</p><div class="highlight"><pre><span></span><code><span class="c1"># sudo apt-get install python3-catkin-pkg</span>
+<p>如果用的是 Jazzy，把上面两处 <code>humble</code> 换成 <code>jazzy</code>，并把后面的
+<code>ros-humble-*</code> 依赖换成 <code>ros-jazzy-*</code>。</p>
+<p>如果只想要上游原版包，也可以把 <code>byu-holoocean/holoocean-ros</code> 克隆到
+<code>src/holoocean-ros</code>，再把 <code>--base-paths</code> 换成 <code>src/holoocean-ros</code>。</p>
+<p>示例节点还需要 <code>joy_linux</code>、<code>cv_bridge</code> 等运行时依赖，按需安装：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-humble-joy-linux<span class="w"> </span>ros-humble-cv-bridge<span class="w"> </span>ros-humble-rqt-image-view
 </code></pre></div>
-<h2 id="_5">快速入门</h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_launch.py
+<h4 id="_5">常见安装错误</h4>
+<p><code>colcon build</code> 报 <code>ModuleNotFoundError: No module named 'catkin_pkg'</code>：</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3-catkin-pkg
+<span class="c1"># 或者只装到当前 Python：</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>catkin_pkg
 </code></pre></div>
-<h2 id="_6">示例</h2>
-<h3 id="_7">操纵杆控制</h3>
-<p>使用 <code>Joy_linux</code> 包通过操纵杆控制 HoloOcean 中的代理。</p>
+<p>这个错误通常来自“系统 ROS 2 的 Python”和“当前激活的 Python”不是同一个。先
+<code>which python3</code>、<code>python3 -c "import rclpy"</code> 确认环境，再决定是否使用 Conda。</p>
+<h2 id="_6">快速入门</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>~/holoocean_ws/install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_launch.py
+</code></pre></div>
+<p>launch 默认做三件事：</p>
+<ul>
+<li>命名空间设为 <code>holoocean</code></li>
+<li>加载 <code>holoocean_main/config/ros_params.yaml</code></li>
+<li>默认场景是 <code>config/torpedo_fossen.json</code>，并打开 Unreal 视窗</li>
+</ul>
+<p>启动后另开一个终端验证：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>node<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>holoocean
+ros2<span class="w"> </span>topic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>holoocean
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/clock<span class="w"> </span>--once
+ros2<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">'reset|control_mode'</span>
+</code></pre></div>
+<p>正常情况下能看到 <code>holoocean_node</code>、<code>/holoocean/command/agent</code> 等话题、
+<code>/clock</code> 以及 <code>reset</code>、<code>control_mode</code> 两个服务。第一次启动要加载 Unreal 场景，
+可能需要几十秒。</p>
+<p>无显示器时，把 <code>config/ros_params.yaml</code> 里的 <code>show_viewport</code> 改成 <code>false</code>，或者直接
+运行节点并覆盖参数：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>holoocean_main<span class="w"> </span>holoocean_node<span class="w"> </span>--ros-args<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>show_viewport:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>-p<span class="w"> </span>scenario_path:<span class="o">=</span>config/torpedo_fossen.json
+</code></pre></div>
+<h2 id="_7">示例</h2>
+<h3 id="_8">操纵杆控制</h3>
+<p>使用 <code>joy_linux</code> 包通过手柄控制 HoloOcean 中的代理：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>joy_launch.py
 </code></pre></div>
-<p>请参阅<a href="../holoocean_examples/">水域载具示例</a>，获取完整的设置说明、按键映射及配置参考。</p>
+<p>完整按键映射和配置见<a href="../holoocean_examples/">水域载具示例</a>。</p>
 <p><img alt="Joystick multi-agent control" src="../../img/water/MultiAgentJoystick.png"/></p>
-<h3 id="_8">航点跟踪</h3>
-<p>根据预设的航点列表控制水面船舶。</p>
+<h3 id="_9">航点跟踪</h3>
+<p>根据预设航点列表控制水面船舶：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>waypoint_launch.py
 </code></pre></div>
 <p><img alt="Waypoint following" src="../../img/water/WAMV_Waypoints.png"/></p>
-<h3 id="_9">深度、航向及速度指令</h3>
-<p>利用 Fossen 控制器向鱼雷型 AUV 发送深度、航向及速度指令。</p>
+<h3 id="_10">深度、航向及速度指令</h3>
+<p>利用 Fossen 控制器向鱼雷型 AUV 发送深度、航向和速度指令：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>holoocean_examples<span class="w"> </span>command_launch.py
 </code></pre></div>
 <h2 id="holoocean_node">节点引用：<code>holoocean_node</code></h2>
-<p>加载场景 JSON 文件，启动 HoloOcean 环境，并在后台线程中驱动其运行（执行 tick 操作）。</p>
-<h3 id="_10">订阅的话题</h3>
+<p>加载场景 JSON 文件，启动 HoloOcean 环境，并在后台线程中持续 tick。下面的话题和
+服务名都是<strong>节点命名空间内的相对名称</strong>；launch 默认命名空间是 <code>holoocean</code>，
+完整名称要加 <code>/holoocean/</code> 前缀（<code>/clock</code> 是绝对话题，见下）。</p>
+<h3 id="_11">订阅的话题</h3>
 <table>
 <thead>
 <tr>
@@ -611,12 +673,12 @@ colcon<span class="w"> </span>build
 <tr>
 <td><code>command/agent</code></td>
 <td><code>AgentCommand</code></td>
-<td>针对所有代理的推进器/执行器指令（对于福森代理，<code>frame_id</code> 设为 <code>body</code> 的消息会被路由至福森的 <code>set_u_control</code> 接口）</td>
+<td>所有代理的推进器/执行器指令。<code>frame_id</code> 必须是代理名（如 <code>auv0</code>）；节点把 <code>frame_id</code> 直接当代理名，只有该代理在 <code>fossen_agents</code> 中才路由到 <code>set_u_control</code>，设成 <code>body</code> 不会命中</td>
 </tr>
 <tr>
 <td><code>command/sensor</code></td>
 <td><code>SensorCommand</code></td>
-<td>传感器配置指令（例如：摄像头旋转）</td>
+<td>传感器配置指令（例如摄像头旋转）</td>
 </tr>
 <tr>
 <td><code>depth</code></td>
@@ -640,7 +702,7 @@ colcon<span class="w"> </span>build
 </tr>
 </tbody>
 </table>
-<h3 id="_11">发布的话题</h3>
+<h3 id="_12">发布的话题</h3>
 <table>
 <thead>
 <tr>
@@ -652,18 +714,19 @@ colcon<span class="w"> </span>build
 <tbody>
 <tr>
 <td><code>&lt;agent&gt;/&lt;SensorName&gt;</code></td>
-<td>varies</td>
-<td>每个代理的传感器数据（见下文）</td>
+<td>取决于传感器</td>
+<td>每个代理的传感器数据</td>
 </tr>
 <tr>
 <td><code>/clock</code></td>
 <td><code>rosgraph_msgs/Clock</code></td>
-<td>模拟时间</td>
+<td>仿真时间（绝对话题）</td>
 </tr>
 </tbody>
 </table>
-<p>传感器话题名称遵循 <code>&lt;agent_name&gt;/&lt;sensor_name&gt;</code> 的格式。如果场景文件中未指定传感器名称，则默认使用传感器类型名称。</p>
-<h3 id="_12">服务</h3>
+<p>传感器话题名遵循 <code>&lt;agent_name&gt;/&lt;sensor_name&gt;</code>；如果场景 JSON 没有给传感器命名，
+默认使用传感器类型名。</p>
+<h3 id="_13">服务</h3>
 <table>
 <thead>
 <tr>
@@ -676,7 +739,7 @@ colcon<span class="w"> </span>build
 <tr>
 <td><code>reset</code></td>
 <td><code>std_srvs/Trigger</code></td>
-<td>重置模拟环境</td>
+<td>重置仿真环境</td>
 </tr>
 <tr>
 <td><code>control_mode</code></td>
@@ -685,7 +748,29 @@ colcon<span class="w"> </span>build
 </tr>
 </tbody>
 </table>
-<h3 id="_13">参数</h3>
+<p><code>SetControlMode</code> 请求：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vehicle_name</code></td>
+<td><code>string</code></td>
+<td>代理名（场景 JSON 里的 key）</td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td><code>int32</code></td>
+<td>0 = manualControl，1 = depthHeadingAutopilot，2 = headingAutopilot，3 = depthAutopilot</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">参数</h3>
 <table>
 <thead>
 <tr>
@@ -700,55 +785,149 @@ colcon<span class="w"> </span>build
 <td><code>scenario_path</code></td>
 <td>string</td>
 <td><code>""</code></td>
-<td>场景 JSON 文件的路径</td>
+<td>场景 JSON 路径；launch 的 params 文件默认 <code>config/torpedo_fossen.json</code>。直接运行节点时必须提供，空值会抛 <code>ValueError</code></td>
 </tr>
 <tr>
 <td><code>relative_path</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>相对于包的共享目录解析 <code>scenario_path</code></td>
+<td>相对于 <code>holoocean_main</code> 的 share 目录解析 <code>scenario_path</code></td>
 </tr>
 <tr>
 <td><code>show_viewport</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>显示虚幻引擎视窗</td>
+<td>显示 Unreal 视窗</td>
 </tr>
 <tr>
 <td><code>draw_arrow</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>在模拟中为每个福森代理绘制一个朝向箭头。</td>
+<td>给每个 Fossen 代理画朝向箭头</td>
+</tr>
+<tr>
+<td><code>draw_waypoints</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>预留参数，当前未使用：节点只声明/读取，未传给 <code>HolooceanInterface</code>，不会实际绘制航点</td>
 </tr>
 <tr>
 <td><code>render_quality</code></td>
 <td>int</td>
 <td><code>-1</code></td>
-<td>渲染质量：0 = 低，1 = 普通，2 = 高。-1 = 默认</td>
+<td>渲染质量：0 = 低，1 = 普通，2 = 高；-1 = 默认</td>
 </tr>
 <tr>
 <td><code>publish_commands</code></td>
 <td>bool</td>
 <td><code>true</code></td>
-<td>将计算出的控制面指令发布回 ROS</td>
+<td>把计算出的控制面指令发布回 ROS</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_14">记录传感器数据</h2>
+<h3 id="_15">消息字段</h3>
+<table>
+<thead>
+<tr>
+<th>消息</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AgentCommand</code></td>
+<td><code>header.frame_id</code>、<code>float64[] command</code></td>
+<td><code>frame_id</code> 是代理名；<code>command</code> 长度由载具控制方案决定</td>
+</tr>
+<tr>
+<td><code>SensorCommand</code></td>
+<td><code>agent_name</code>、<code>sensor_name</code>、<code>float64[3] rotation</code></td>
+<td><code>rotation</code> 为 <code>[roll, pitch, yaw]</code></td>
+</tr>
+<tr>
+<td><code>DesiredCommand</code></td>
+<td><code>header.frame_id</code>、<code>float64 data</code></td>
+<td>深度单位 m，航向单位度（NWU，-180~180），速度单位 RPM</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_16">记录传感器数据</h2>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/holoocean/auv0/RotationSensor<span class="w"> </span>/holoocean/auv0/LocationSensor
 </code></pre></div>
-<p>有关更多信息，请参阅 <a href="https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html">ROS 2 bag 文档</a>。</p>
-<h2 id="_15">注意</h2>
+<p>话题名取决于场景 JSON 里的代理名和传感器名。回放时如果要使用仿真时间：</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </span>&lt;bag&gt;<span class="w"> </span>--clock
+</code></pre></div>
+<p>更多用法见 <a href="https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools/Recording-And-Playing-Back-Data/Recording-And-Playing-Back-Data.html">ROS 2 bag 文档</a>。</p>
+<h2 id="_17">常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因 / 处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ModuleNotFoundError: catkin_pkg</code></td>
+<td>安装 <code>python3-catkin-pkg</code>，或确认当前 <code>python3</code> 就是 ROS 2 使用的 Python</td>
+</tr>
+<tr>
+<td><code>Package 'holoocean_main' not found</code></td>
+<td>没有 <code>source install/setup.bash</code>，或三个包没有编译成功</td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError: holoocean</code></td>
+<td>HoloOcean Python 包没装，或装到了另一个 Python 环境</td>
+</tr>
+<tr>
+<td><code>The 'scenario_path' parameter cannot be blank</code></td>
+<td>直接 <code>ros2 run</code> 时没有传 <code>scenario_path</code>；用 launch 的 params 文件或显式 <code>-p scenario_path:=...</code></td>
+</tr>
+<tr>
+<td>启动后没有画面</td>
+<td>检查 <code>show_viewport</code>、显卡驱动和 <code>DISPLAY</code>；无头模式本来就看不到视窗</td>
+</tr>
+<tr>
+<td><code>rclpy</code> 导入失败或 ABI 错误</td>
+<td>混用了 Conda/系统 Python；统一到 ROS 2 对应的 Python</td>
+</tr>
+<tr>
+<td>手柄没有反应</td>
+<td>检查 <code>/dev/input/js0</code> 权限，以及 <code>joy_linux</code> 节点是否在跑</td>
+</tr>
+<tr>
+<td>仿真时间和实际时间不一致</td>
+<td>正常现象，用 <code>/clock</code> 和 <code>use_sim_time</code> 同步节点</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_18">注意</h2>
 <ul>
-<li>模拟时间可能比实际时间（wall time）运行得更快或更慢。请使用 <code>/clock</code> 话题将节点与仿真时间<a href="https://design.ros2.org/articles/clock_and_time.html">同步</a>。</li>
+<li>仿真时间可能比实际时间（wall time）快或慢，节点应使用 <code>/clock</code> 订阅仿真时间，
+  并设置 <code>use_sim_time:=true</code>。</li>
+<li>HoloOcean 世界包体积较大，首次启动加载时间长；不要把它放在网盘挂载目录里直接跑。</li>
+<li>修改代码后重新 <code>colcon build</code> 并重新 <code>source install/setup.bash</code>，否则运行的还是旧版本。</li>
 </ul>
-<h2 id="_16">参考</h2>
+<h2 id="_19">参考与引用</h2>
 <ul>
-<li><a href="https://github.com/byu-holoocean/holoocean-ros">holoocean-ros</a></li>
+<li><a href="https://github.com/byu-holoocean/holoocean-ros">holoocean-ros 上游仓库</a></li>
 <li><a href="https://github.com/byu-holoocean/HoloOcean">HoloOcean 仓库</a></li>
 <li><a href="https://byu-holoocean.github.io/holoocean-docs/">HoloOcean 文档</a></li>
 <li><a href="https://docs.ros.org/en/humble/index.html">ROS 2 文档</a></li>
-</ul></div>
+</ul>
+<p>如果在本项目或 HoloOcean 上做研究，请引用：</p>
+<div class="highlight"><pre><span></span><code><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">meyers2025testing</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Testing and Evaluation of Underwater Vehicle Using Hardware-in-the-Loop Simulation with HoloOcean}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Meyers, Braden and Mangelson, Joshua G.}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{OCEANS 2025-Great Lakes}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{1--8}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2025}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">organization</span><span class="p">=</span><span class="s">{IEEE}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>上游项目由 Brigham Young University 的
+<a href="https://frostlab.byu.edu/">FRoStLab (Field Robotic Systems Lab)</a> 开发。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
