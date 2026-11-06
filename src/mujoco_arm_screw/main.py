@@ -42,13 +42,13 @@ MODEL_XML = r"""
     <!-- 三自由度空间机械臂（肩方位 + 肩俯仰 + 肘俯仰） -->
     <body name="base" pos="0 0 0">
       <geom name="basegeom" type="cylinder" size="0.052 0.016" pos="0 0 0.016" rgba="0.3 0.32 0.38 1"/>
-      <joint name="yaw" type="hinge" axis="0 0 1" pos="0 0 0.06" range="-180 180"/>
+      <joint name="yaw" type="hinge" axis="0 0 1" pos="0 0 0.06" range="-180 180" limited="true"/>
       <body name="shoulder" pos="0 0 0.06">
         <geom name="shoulderjoint" type="sphere" size="0.022" pos="0 0 0" rgba="0.45 0.45 0.5 1"/>
-        <joint name="pitch1" type="hinge" axis="0 -1 0" pos="0 0 0" range="-120 120"/>
+        <joint name="pitch1" type="hinge" axis="0 -1 0" pos="0 0 0" range="-120 120" limited="true"/>
         <body name="l1" pos="0 0 0">
           <geom name="link1" type="capsule" fromto="0 0 0 0.30 0 0" size="0.034" rgba="0.2 0.42 0.92 1"/>
-          <joint name="pitch2" type="hinge" axis="0 -1 0" pos="0.30 0 0" range="-150 150"/>
+          <joint name="pitch2" type="hinge" axis="0 -1 0" pos="0.30 0 0" range="-150 150" limited="true"/>
           <body name="l2" pos="0.30 0 0">
             <geom name="link2" type="capsule" fromto="0 0 0 0.30 0 0" size="0.027" rgba="0.95 0.55 0.12 1"/>
             <body name="tip" pos="0.30 0 0">
