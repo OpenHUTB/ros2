@@ -28,8 +28,8 @@ src/
         ├── humanoid_zmp_walking/       # 核心代码子目录
         │   ├── __init__.py             # Python 包初始化文件
         │   ├── zmp_generator.py        # ZMP 参考轨迹生成节点
-        │   ├── record.py               # 录制节点（占位）
-        │   └── play.py                 # PyBullet 仿真执行节点
+        │   └── play.py                 # PyBullet 仿真执行节点 
+        │ 
         ├── urdf/
         │   └── simple_humanoid.urdf    # 简化人形机器人模型
         ├── package.xml                 # ROS 2 功能包描述文件
@@ -45,7 +45,6 @@ src/
 
 * [查看 zmp_generator.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/zmp_generator.py)
 * [查看 play.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/play.py)
-* [查看 record.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/record.py)
 * [查看 main.launch.py 代码](../../src/humanoid/humanoid_zmp_walking/launch/main.launch.py)
 * [查看 simple_humanoid.urdf 代码](../../src/humanoid/humanoid_zmp_walking/urdf/simple_humanoid.urdf)
 * [查看 setup.py 代码](../../src/humanoid/humanoid_zmp_walking/setup.py)
