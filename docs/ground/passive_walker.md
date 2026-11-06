@@ -129,6 +129,3 @@ python3 main.py doctor
 
 ![MuJoCo 离屏渲染画面](../img/ground/passive_walker/01_simulation.gif)
 
-
-
-
