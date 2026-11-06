@@ -1,0 +1,15 @@
+<mujoco model="slope_car">
+  <option timestep="0.01"/>
+  <default>
+    <geom friction="0.2 0.1 0.1"/>
+  </default>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="ground" type="plane" size="3 2 0.1" rgba="0.3 0.3 0.3 1"/>
+    <geom name="slope" type="box" pos="-1 0 0.3" size="1 0.5 0.05" rgba="0.6 0.4 0.2 1" euler="0 20 0"/>
+    <body name="car" pos="-1.6 0 0.65">
+      <joint name="car_joint" type="free"/>
+      <geom type="box" size="0.15 0.12 0.05" rgba="0.1 0.4 0.8 1" mass="0.5"/>
+    </body>
+  </worldbody>
+</mujoco>
