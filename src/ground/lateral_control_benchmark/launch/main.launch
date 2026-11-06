@@ -1,0 +1,31 @@
+<launch>
+  <!-- 横向控制算法对比实验台：一键启动在线对比节点
+       用法:  roslaunch lateral_control_benchmark main.launch
+       换控制器: roslaunch lateral_control_benchmark main.launch controller:=pure_pursuit
+       换场景:   roslaunch lateral_control_benchmark main.launch scenario:=arc
+       观察:     rostopic echo /lateral_control/styles    # [横向偏差, 航向偏差, 前轮转角, 车速]
+                 rostopic echo /lateral_control/metrics   # [mean|e|, max|e|, RMS, 步数]
+                 rqt_plot /lateral_control/styles/data[0] # 横向偏差曲线
+  -->
+  <arg name="controller" default="stanley" doc="pure_pursuit / stanley / lqr"/>
+  <arg name="scenario" default="sine" doc="straight / arc / sine / lane_change"/>
+  <arg name="model" default="kinematic" doc="kinematic / dynamic"/>
+  <arg name="cruise_speed" default="8.0" doc="巡航速度 m/s"/>
+  <arg name="loop_path" default="true" doc="到达非闭合轨迹终点后是否重置回起点"/>
+  <arg name="rviz" default="false" doc="是否同时打开 RViz 观察参考路径"/>
+
+  <!-- 先加载参数文件（根键即节点名，因此会落在该节点的私有命名空间下），
+       再用 <arg>/<param> 覆盖，做到"文件给默认值、命令行给临时值" -->
+  <rosparam command="load" file="$(find lateral_control_benchmark)/config/params.yaml"/>
+
+  <node pkg="lateral_control_benchmark" type="lateral_control_node.py"
+        name="lateral_control_node" output="screen">
+    <param name="controller" value="$(arg controller)"/>
+    <param name="scenario" value="$(arg scenario)"/>
+    <param name="model" value="$(arg model)"/>
+    <param name="cruise_speed" value="$(arg cruise_speed)"/>
+    <param name="loop_path" value="$(arg loop_path)"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz" output="screen"/>
+</launch>
