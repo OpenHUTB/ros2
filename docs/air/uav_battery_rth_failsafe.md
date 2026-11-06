@@ -21,8 +21,13 @@ flowchart TD
 ## 运行
 
 ```bash
-cd src/air/uav_battery_rth_failsafe
-python3 main.py
+# 先在工作空间编译并加载环境
+colcon build --packages-select uav_battery_rth_failsafe
+source install/setup.bash
+
+ros2 run uav_battery_rth_failsafe battery_rth_node
+# 或
+ros2 launch uav_battery_rth_failsafe uav_battery_rth.launch.py
 ```
 
 订阅 `/drone/battery`、`/drone/position`, 发布 `/drone/setpoint_position`、`/drone/failsafe_state`。

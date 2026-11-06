@@ -31,10 +31,13 @@
 ## 运行
 
 ```bash
-cd src/air/uav_battery_rth_failsafe
-python3 main.py
+# 先在工作空间编译并加载环境
+colcon build --packages-select uav_battery_rth_failsafe
+source install/setup.bash
+
+ros2 run uav_battery_rth_failsafe battery_rth_node
 # 或
-ros2 launch launch/uav_battery_rth.launch.py
+ros2 launch uav_battery_rth_failsafe uav_battery_rth.launch.py
 ```
 
 ## 参数
