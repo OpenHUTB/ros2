@@ -1,0 +1,6 @@
+/**:
+  ros__parameters:
+    scene: slalom          # slalom / gate / clutter
+    use_policy: true       # true: 无速度指令时用神经网络策略自主飞行（网络一定是训练过的）
+    weights: ""            # 可选：训练好的 npz 路径（如 results/policy.npz），留空则现场训练
+    rate_hz: 20.0

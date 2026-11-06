@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 底盘模型：bicycle 用整车单车模型；ackermann 额外给出左右前轮各自的转角；
+       diff_drive 另外发布左右轮线速度（control 里的转角字段是等效单车转角，仅供参考） -->
+  <arg name="model" default="bicycle" doc="底盘模型，可选 bicycle / ackermann / diff_drive"/>
+  <arg name="wheelbase" default="2.7" doc="轴距 L，单位米，影响曲率与转角的关系"/>
+  <arg name="track_width" default="1.5" doc="轮距 b，单位米，用于阿克曼内外轮差与差速分配"/>
+
+  <arg name="max_steering" default="0.55" doc="前轮最大转角，单位弧度"/>
+  <arg name="max_curvature" default="1.0" doc="最大曲率，单位 1/米，对应最小转弯半径"/>
+  <arg name="max_speed" default="5.0" doc="最大速度，单位米每秒，正反向都限"/>
+  <arg name="max_accel" default="2.0" doc="纵向加速度上限，单位米每秒平方"/>
+  <arg name="max_steering_rate" default="2.0" doc="转向角变化率上限，单位弧度每秒"/>
+  <arg name="min_speed" default="0.05" doc="曲率死区速度，单位米每秒；绝对值小于它时锁存上一帧曲率"/>
+
+  <arg name="timeout" default="0.5" doc="cmd_vel 超时秒数，超时按零速度处理"/>
+  <arg name="publish_hz" default="20.0" doc="控制量发布频率，单位赫兹"/>
+
+  <arg name="cmd_vel_topic" default="/cmd_vel" doc="输入速度指令话题"/>
+  <arg name="control_topic" default="/vehicle/control" doc="输出控制量话题"/>
+  <arg name="wheel_topic" default="/vehicle/wheel_speed" doc="输出左右轮速话题，差速模型时发布"/>
+  <arg name="info_topic" default="/vehicle/control_info" doc="输出诊断话题"/>
+  <arg name="odom_topic" default="/odom" doc="内置模拟发布的里程计话题"/>
+  <arg name="use_mock_odom" default="false" doc="是否启用内置运动学模拟并发布里程计"/>
+
+  <rosparam command="load" file="$(find twist_to_control)/config/twist_to_control.yaml"/>
+
+  <param name="model/type" value="$(arg model)"/>
+  <param name="model/wheelbase" value="$(arg wheelbase)"/>
+  <param name="model/track_width" value="$(arg track_width)"/>
+  <param name="limit/max_steering" value="$(arg max_steering)"/>
+  <param name="limit/max_curvature" value="$(arg max_curvature)"/>
+  <param name="limit/max_speed" value="$(arg max_speed)"/>
+  <param name="limit/max_accel" value="$(arg max_accel)"/>
+  <param name="limit/max_steering_rate" value="$(arg max_steering_rate)"/>
+  <param name="limit/min_speed" value="$(arg min_speed)"/>
+  <param name="control/timeout" value="$(arg timeout)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/cmd_vel" value="$(arg cmd_vel_topic)"/>
+  <param name="topic/control" value="$(arg control_topic)"/>
+  <param name="topic/wheel_speed" value="$(arg wheel_topic)"/>
+  <param name="topic/control_info" value="$(arg info_topic)"/>
+  <param name="topic/odom" value="$(arg odom_topic)"/>
+  <param name="mock/enabled" value="$(arg use_mock_odom)"/>
+
+  <node pkg="twist_to_control" type="main.py" name="twist_to_control" output="screen"/>
+</launch>
