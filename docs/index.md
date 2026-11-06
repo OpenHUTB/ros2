@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂](#arm)
 
 ---
 
@@ -288,5 +289,9 @@ ___
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
 ___
+
+## 7. 机械臂  <span id='arm'></span>
+
+* [机械臂抓取搬运](./arm/mujoco_arm_pick.md) —— MuJoCo 机械臂自动完成抓取-搬运-放置全流程，把小球从 A 点托盘运到 B 点托盘
 
 ## 参考文献
