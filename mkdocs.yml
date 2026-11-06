@@ -88,6 +88,7 @@ nav:
     - 人形机器人跌倒预判与保护性倒地: './humanoid/humanoid_fall_protection.md'
     - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
+    - 人形机器人轻量级ZMP步行控制基线: './humanoid/humanoid_zmp_walking.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
