@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
-def cmd_run(args):
+def cmd_run(args, ros_args=None):
     from passive_walker.sim import format_summary, run_headless
 
     try:
@@ -27,24 +27,26 @@ def cmd_run(args):
         print("[FAIL] %s" % exc)
         return 1
     print(format_summary(info))
-    if info["distance_m"] < 0.5:
-        print("[FAIL] 20 s 内几乎没有前进，模型参数可能被改动")
+    # 实测约 1.2 m/s，阈值随 --seconds 缩放并留足余量，避免短时长被误判
+    min_distance = 0.4 * max(args.seconds, 1.0)
+    if info["distance_m"] < min_distance:
+        print("[FAIL] %.0f s 内只前进了 %.2f m（预期至少 %.1f m），模型参数可能被改动"
+              % (args.seconds, info["distance_m"], min_distance))
         return 1
     print("[OK] 被动行走运行正常（无执行器，仅靠重力和落地碰撞前进）")
     return 0
 
 
-def cmd_node(args):
+def cmd_node(args, ros_args=None):
     try:
         from passive_walker import sim_node
     except Exception as exc:
         print("[FAIL] 需要 ROS 2 环境（rclpy）：%s" % exc)
         return 1
-    sys.argv = [sys.argv[0]]
-    return sim_node.main(seconds=args.seconds, push=args.push)
+    return sim_node.main(args=ros_args or [], seconds=args.seconds, push=args.push)
 
 
-def cmd_doctor(args):
+def cmd_doctor(args, ros_args=None):
     print("=== Environment Doctor ===")
     try:
         import mujoco
@@ -90,11 +92,29 @@ def build_parser():
     return parser
 
 
+def split_ros_args(argv):
+    """把 --ros-args 区间的参数原样交给 rclpy（支持 remap 和命令行参数覆盖）。"""
+    if "--ros-args" not in argv:
+        return argv, None
+    i = argv.index("--ros-args")
+    user, rest = list(argv[:i]), list(argv[i + 1:])
+    ros = ["--ros-args"]
+    if "--" in rest:                      # -- 之后的参数仍属于本程序
+        j = rest.index("--")
+        ros += rest[:j]
+        user += rest[j + 1:]
+    else:
+        ros += rest
+    return user, ros
+
+
 def main(argv=None):
-    args = build_parser().parse_args(sys.argv[1:] if argv is None else argv)
+    raw = list(sys.argv[1:] if argv is None else argv)
+    user_args, ros_args = split_ros_args(raw)
+    args = build_parser().parse_args(user_args)
     if getattr(args, "func", None):
-        return args.func(args)
-    return cmd_node(args) if args.node else cmd_run(args)
+        return args.func(args, ros_args)
+    return cmd_node(args, ros_args) if args.node else cmd_run(args)
 
 
 if __name__ == "__main__":

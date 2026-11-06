@@ -3,7 +3,11 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+pytest.importorskip("mujoco")   # 干净机器上没装 mujoco 时整个文件跳过，而不是报错
 
 from passive_walker.sim import PassiveWalker  # noqa: E402
 

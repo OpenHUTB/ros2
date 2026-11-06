@@ -1,0 +1,4 @@
+[
+  "test/test_sim.py::test_no_actuator",
+  "test/test_sim.py::test_walks_downhill"
+]

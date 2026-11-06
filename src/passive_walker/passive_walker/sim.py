@@ -51,7 +51,10 @@ class PassiveWalker:
         self.data = mujoco.MjData(self.model)
         self.dt = float(self.model.opt.timestep)
         self.push_speed = float(push_speed)
-        self._hub_z0 = float(self.model.body_pos[1][2])   # 轮心初始世界高度
+        wheel = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "wheel")
+        if wheel < 0:                                    # 按名字找，避免 body 增删后索引错位
+            raise ValueError("模型里找不到名为 'wheel' 的 body")
+        self._hub_z0 = float(self.model.body_pos[wheel][2])   # 轮心初始世界高度
         self.n_spoke = self._count_tips()
         self.step_angle = 2.0 * math.pi / self.n_spoke
         self.reset()

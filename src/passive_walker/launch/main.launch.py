@@ -3,7 +3,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackagePrefix
 
 
 def generate_launch_description():
@@ -13,8 +13,7 @@ def generate_launch_description():
     # main.py 是普通命令行程序（非 ROS 节点），用 ExecuteProcess 启动，
     # 避免 Node 自动追加 --ros-args 导致 argparse 报错。
     main_py = PathJoinSubstitution([
-        FindPackageShare('passive_walker'), '..', '..',
-        'lib', 'passive_walker', 'main.py',
+        FindPackagePrefix('passive_walker'), 'lib', 'passive_walker', 'main.py',
     ])
 
     run = ExecuteProcess(
