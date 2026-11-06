@@ -1,5 +1,7 @@
 # 室内无人机测距制动与定高仿真 / Indoor UAV ranging, braking and altitude hold
 
+本目录是独立 Python/MuJoCo 模块，不作为 ament/colcon 包构建，不支持 `ros2 run`。独立仿真可直接运行 `python main.py`；ROS 2 Humble 环境可在本目录通过 launch 文件路径启动节点。 / This is a standalone Python/MuJoCo module, not an ament/colcon package, and it does not support `ros2 run`. Run `python main.py` for standalone simulation; in ROS 2 Humble, launch the node by its file path from this directory.
+
 ## 功能 / Features
 
 MuJoCo 纵向飞行模型保留重力、质量和碰撞。水平运动默认使用前向测距与距离差分速度进行连续制动，竖直方向采用重力补偿和 PD 定高反馈。朝向固定，不模拟姿态和电机动力学。控制基线用于检验制动行为与建立学习控制的实验参照。
@@ -25,7 +27,7 @@ ROS 环境中执行 / In a ROS environment:
 
 ```
 source /opt/ros/humble/setup.bash
-ros2 launch ./launch/main.launch.py output:=/tmp/uav_braking
+ros2 launch ./launch/ros_node.launch.py controller:=mlp model:=models/mlp_controller.json
 ```
 
 `trajectory.csv` 记录时间、间距、速度、高度和控制量，`summary.json` 汇总碰撞步数、最小间距和高度误差。 / `trajectory.csv` records time, clearance, speed, height and action. `summary.json` reports contact steps, minimum clearance and height error.

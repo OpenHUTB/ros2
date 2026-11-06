@@ -4,6 +4,8 @@
 
 Each CSV contains 24 uniformly selected rows from its split for schema inspection, not training. Regenerate complete data with `dataset.py` from the module root. Hashes in `dataset_summary.json` refer to the complete CSV files rather than these samples.
 
+四个控制器评测指标的参考快照保存在 `sample_data/metrics/`。重新运行 `evaluate.py` 时，生成文件写入模块根目录的 `results/`，该目录由 Git 忽略。 / Reference snapshots for the four controller evaluation metrics are stored in `sample_data/metrics/`. Running `evaluate.py` writes fresh outputs to the module's root `results/` directory, which Git ignores.
+
 ```
 python dataset.py --seed 2026 --episodes 30 --output datasets
 ```
