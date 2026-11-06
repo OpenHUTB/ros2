@@ -1,85 +1,77 @@
-# ROS Noetic Web远程遥控小车
+# ROS Noetic 网页远程遥控小车
 
-本模块在Gazebo仿真环境中搭建差速小车模型，搭载RGB相机；通过`rosbridge\_server`实现网页与ROS的WebSocket通信，`web\_video\_server`推送相机图像流，网页端支持W/A/S/D键盘遥控小车，实时查看车载相机画面。
-
+在 Gazebo 仿真环境中搭建搭载 RGB 相机的差速小车模型，通过 `rosbridge_server` 建立网页与 ROS 的 WebSocket 通信，`web_video_server` 推送相机图像流；网页端支持 W/A/S/D 键遥控小车，并实时查看车载相机画面。
 
 ## 运行环境
 
-- Ubuntu 20.04
-- ROS Noetic
-- Python 3.8
-- 依赖：`rospy`、`rosbridge\_server`、`web\_video\_server`、`xacro`、`gazebo\_ros`
+- 操作系统：Ubuntu 20.04.6 LTS
+- ROS：Noetic（1.17.4）
+- Python：3.8.10
+- 仿真器：Gazebo 11
+- 依赖包：`ros-noetic-rosbridge-server`、`ros-noetic-web-video-server`、`xacro`、`joint_state_publisher`、`robot_state_publisher`、`gazebo_ros`
 
+```bash
+sudo apt install ros-noetic-rosbridge-server ros-noetic-web-video-server
+```
 
 ## 构建
 
 ```bash
-
-mkdir -p \~/ros1\_ws/src
-
-cp -r <仓库路径>/src/web\_remote\_car \~/ros1\_ws/src/
-
-cd \~/ros1\_ws
-
+mkdir -p ~/ros1_ws/src
+cp -r <仓库路径>/src/ground/web_remote_car ~/ros1_ws/src/
+cd ~/ros1_ws
 source /opt/ros/noetic/setup.bash
-
-catkin\_make
-
+catkin_make
 source devel/setup.bash
-
 ```
 
 ## 启动
-```
-roslaunch web\_remote\_car start\_all.launch
 
-```
+终端 1，启动 Gazebo 仿真、小车模型、rosbridge、视频流服务：
 
-## 查看同步结果
-
+```bash
+roslaunch web_remote_car start_all.launch
 ```
 
-rostopic hz /camera/image\_raw
+终端 2，把前端页面用静态文件服务托管出来（前端页面不在 launch 里启动，需要单独起这个服务）：
 
-rostopic echo /cmd\_vel
-
+```bash
+cd ~/ros1_ws/src/web_remote_car/www
+python3 -m http.server 8000
 ```
-浏览器打开地址：`http://127.0.0.1:8000`
- 控制按键：W 前进、S 后退、A 左转、D 右转
-默认配置下，相机图像输出约 30Hz，`/cmd\_vel`由按键事件按需发布。
 
+浏览器打开 `http://127.0.0.1:8000`。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
 
-## 参数
+控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
 
-参数位于`launch/params.yaml`：
+## 端口与话题
 
-表格
-| 参数 | 默认值 | 说明 |
-
+| 项目 | 值 | 位置 |
 | --- | --- | --- |
+| rosbridge WebSocket | 9090 | `launch/web_bridge.launch` |
+| web_video_server 图像流 | 8080 | `launch/web_bridge.launch` |
+| 前端静态页面 | 8000 | 由上面的 `python3 -m http.server 8000` 提供 |
+| 相机图像话题 | `/front_camera/image_raw` | `urdf/car_cam.xacro`、`www/index.html` |
+| 速度控制话题 | `/cmd_vel` | `www/index.html` |
+| 线速度 / 角速度 | 0.3 m/s / 0.4 rad/s | `www/index.html` 中的 `SPEED` / `TURN_SPEED` |
 
-| `rosbridge\_port` | `9090` | rosbridge WebSocket 端口 |
+端口、话题在对应文件里是直接写死的常量，修改后需要同步改前端 `www/index.html` 里的 `BRIDGE_PORT`、`VIDEO_PORT`、`CAMERA_TOPIC`，重启 launch 后生效。
 
-| `video\_server\_port` | `8080` | web\_video\_server 端口 |
+## 验证
 
-| `camera\_topic` | `/camera/image\_raw` | 相机图像话题 |
-
-| `linear\_speed` | `0.5` | 小车线速度 |
-
-| `angular\_speed` | `0.8` | 小车角速度 |
-
-
-## 测试
+```bash
+rostopic hz /front_camera/image_raw     # 相机图像，实测约 30 Hz
+rostopic echo /cmd_vel                  # 按键时才有消息，按需发布
 ```
 
-cd \~/ros1\_ws
+## 已知限制
 
-source /opt/ros/noetic/setup.bash
+1. 仅支持单用户控制，多端同时下发速度指令会互相覆盖。
+2. 只有远程手动遥控，没有自主避障、路径规划、自动巡航。
+3. 相机只做原始图像推流，不含图像识别、目标检测处理。
+4. 模型为纯仿真差速车，未在实体硬件上部署验证。
+5. 前端没有断线自动重连，WebSocket 断开后需要手动刷新页面。
 
-source devel/setup.bash
+## 大模型辅助开发声明
 
-catkin\_make run\_tests\_web\_remote\_car
-
-catkin\_test\_results build/test\_results/web\_remote\_car
-
-```
+本模块的 Xacro 模型调试、Launch 文件编写、前端遥控页面代码、文档撰写与 Git 提交流程排错使用大模型辅助完成；控制方案、仿真模型结构与整体功能设计由作者完成，作者对全部内容负责。
