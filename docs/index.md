@@ -1,3 +1,4 @@
+
 title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
@@ -124,6 +125,7 @@ ROS每章节运行代码:
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
+
 * [网页远程遥控小车](./ground/web_remote_car.md)
 * [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
 * [端到端驾驶（图像到控制指令）](./ground/pix2cmd_end2end_driving.md)
