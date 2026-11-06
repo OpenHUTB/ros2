@@ -4,7 +4,9 @@
 
     python3 tools/plot_report.py landing.csv --out landing.png --title "正常降落"
 
-上图：高度-时间曲线 + 目标高度虚线；下图：垂直速度指令，并把告警画成竖线标注。
+上图：高度-时间曲线 + 目标高度虚线；下图：垂直速度指令。**每一条告警都画一条竖线**
+（同类告警在图例里标出次数，例如 ``CMD_NO_EFFECT ×7``），不会只画第一次。
+
 CSV 由节点参数 ``monitor/csv`` 生成，列为 ``t,phase,z,target_z,vz_cmd,status,alerts``
 （``alerts`` 里多条用 ``|`` 分隔）。
 """
@@ -15,19 +17,15 @@ import csv
 import os
 import sys
 
-LEVEL_OF = {
-    "INPUT_STALE": "error",
-    "CMD_NO_EFFECT": "error",
-    "DESCEND_STALL": "warn",
-    "FREE_FALL": "error",
-    "OVERSHOOT": "error",
-    "LANDING_TIMEOUT": "error",
-    "LANDED": "ok",
-}
-COLOR_OF = {"error": "#d62728", "warn": "#ff7f0e", "ok": "#2ca02c"}
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+
+from monitor_core import LEVEL_OF  # noqa: E402  与判据共用一份级别表，避免两份拷贝
+
+COLOR_OF = {"error": "#d62728", "warn": "#ff7f0e", "info": "#2ca02c"}
 
 
 def load(path):
+    """读 CSV，返回 (t, z, target, vz, alerts_per_row)。"""
     ts, zs, targets, vzs, codes = [], [], [], [], []
     with open(path, "r", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
@@ -49,6 +47,8 @@ def main(argv=None):
     ap.add_argument("--out", default="landing_monitor.png")
     ap.add_argument("--title", default="")
     ap.add_argument("--dpi", type=int, default=150)
+    ap.add_argument("--alerts", choices=("csv", "replay"), default="csv",
+                    help="csv=用 CSV 里记录的告警列；replay=用当前判据回放该段数据（推荐）")
     args = ap.parse_args(argv)
 
     import matplotlib
@@ -63,6 +63,13 @@ def main(argv=None):
     matplotlib.rcParams["axes.unicode_minus"] = False
 
     ts, zs, targets, vzs, codes = load(args.csv)
+    if args.alerts == "replay":
+        import replay_csv
+        _mon, _alerts = replay_csv.replay(args.csv)
+        codes = [[] for _ in ts]
+        for a in _alerts:
+            idx = min(range(len(ts)), key=lambda i: abs(ts[i] - a.t))
+            codes[idx].append(a.code)
     if not ts:
         print("CSV 里没有数据：%s" % args.csv)
         return 2
@@ -78,17 +85,24 @@ def main(argv=None):
     ax2.axhline(0.0, color="#bbbbbb", lw=0.8)
     ax2.set_xlabel("时间 (s)")
 
-    seen = set()
+    totals = {}
+    for cs in codes:
+        for code in cs:
+            totals[code] = totals.get(code, 0) + 1
+
+    labelled = set()
     for i, cs in enumerate(codes):
         for code in cs:
-            if code in seen:
-                continue
-            seen.add(code)
             level = LEVEL_OF.get(code, "warn")
-            color = COLOR_OF[level]
+            color = COLOR_OF.get(level, "#7f7f7f")
             for ax in (ax1, ax2):
-                ax.axvline(ts[i], color=color, ls=":", lw=1.1, alpha=0.85)
-            ax1.annotate(code, xy=(ts[i], zs[i]), xytext=(4, 8),
+                ax.axvline(ts[i], color=color, ls=":", lw=1.0, alpha=0.55)
+            if code in labelled:
+                continue
+            labelled.add(code)
+            n = totals[code]
+            text = code if n == 1 else "%s ×%d" % (code, n)
+            ax1.annotate(text, xy=(ts[i], zs[i]), xytext=(4, 8),
                          textcoords="offset points", fontsize=8, color=color,
                          rotation=90, va="bottom")
 
@@ -98,15 +112,15 @@ def main(argv=None):
     ax2.grid(alpha=0.25)
     ax1.legend(loc="upper right", fontsize=9)
     ax2.legend(loc="upper right", fontsize=9)
-    title = args.title or os.path.basename(args.csv)
-    fig.suptitle(title, fontsize=13)
+    fig.suptitle(args.title or os.path.basename(args.csv), fontsize=13)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
 
     out_dir = os.path.dirname(os.path.abspath(args.out))
     if out_dir and not os.path.isdir(out_dir):
         os.makedirs(out_dir)
     fig.savefig(args.out, dpi=args.dpi)
-    print("saved: %s（%d 个采样点，告警种类 %s）" % (args.out, len(ts), sorted(seen) or "无"))
+    print("saved: %s（%d 个采样点，告警统计 %s）"
+          % (args.out, len(ts), totals or "无"))
     return 0
 
 

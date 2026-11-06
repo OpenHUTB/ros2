@@ -1,6 +1,7 @@
 # uav_landing_monitor 默认参数
 # 注意：本文件由 launch/main.launch 以 <rosparam command="load"> 载入到节点私有命名空间，
 # 所以下面这些键在运行时是 /uav_landing_monitor/... （节点里读的是 ~xxx）。
+# 阈值拼错的键会在启动时报 WARN（不再静默用默认值），并用 loginfo 打印整份生效阈值。
 
 topic:
   odom: /uav/odom
@@ -12,37 +13,56 @@ topic:
   state: /uav/landing_monitor/state
 
 frame:
-  # 高度分量是否上为正（ENU）。桥接层若给 NED（下为正）就设 false。
+  # 高度分量是否上为正（ENU）。桥接层若给 NED（下为正），设 false：
+  # 节点会把「高度 / 速度指令 / 目标高度」三处一起换算，判据内部只有 ENU 一种坐标。
   z_up: true
 
 monitor:
   rate_hz: 10.0          # 判据计算频率
   state_hz: 2.0          # 状态话题发布频率
-  csv: ""                # 非空则把逐帧数据写成 CSV（t,phase,z,vz_cmd,status,alerts）
+  csv: ""                # 非空则把逐帧数据写成 CSV（t,phase,z,target_z,vz_cmd,status,alerts）
   verbose: true          # 告警同时打到 rosout
 
 target:
-  # auto      : 优先用 /rooftop_nn/landing_point 的 z，其次用 /uav/goal 的 z 减去 goal_offset_m
-  # landing   : 只用落点话题
-  # goal_offset: 只用目标点话题（z - goal_offset_m）
-  # fixed     : 只用下面的 z
+  # auto        : 优先用 /rooftop_nn/landing_point 的 z，其次用 /uav/goal 的 z 减 goal_offset_m
+  # landing     : 只用落点话题
+  # goal_offset : 只用目标点话题（z - goal_offset_m）
+  # fixed       : 只用下面的 z
   mode: auto
-  # z: 15.83            # 仅 mode=fixed 时使用（不要留 null，rosparam 无法编码 None）
-  goal_offset_m: 5.0     # /uav/goal 一般是“屋面上方安全高度”，减掉它才是屋面高度
+  # z: 15.83             # 仅 mode=fixed 时使用（不要留 null，rosparam 无法编码 None）
+  goal_offset_m: 5.0     # /uav/goal 一般是“屋面上方安全高度”，减掉它才是屋面高度；
+                         # 这是约定值，拿到落点话题时不会被用到，拿不到时启动日志会提示
 
 thresholds:
+  # --- 数据新鲜度 ---
   stale_input_s: 1.0            # 里程计超时
+  # --- “正在下降”的判据 ---
   cmd_min_vz: 0.15              # |vz| 小于它视为没在下降
-  cmd_effect_window_s: 2.0      # 指令-运动一致性观察窗
-  cmd_effect_ratio: 0.30        # 实际位移 < ratio × 期望 -> CMD_NO_EFFECT
+  cmd_change_eps: 0.10          # 指令变化超过它就重置观察窗（暂停后恢复 / 变速 / 重新接管）
+  # --- 指令-运动一致性（期望位移 = 窗口内指令积分 ∫|-vz|dt）---
+  cmd_effect_window_s: 2.0      # 观察窗
+  cmd_effect_ratio: 0.30        # 实际位移 < ratio × 期望 -> CMD_NO_EFFECT（设 0 关闭该判据）
   cmd_effect_min_expect_m: 0.15 # 期望位移太小不判，避免噪声
-  descend_grace_s: 1.5          # 刚进入下降的起动宽限期（飞控要时间加速，期间不判指令无效）
-  descend_stall_s: 2.0          # 状态说 DESCEND 但没指令的观察窗
-  descend_stall_eps_m: 0.10
+  descend_grace_s: 1.5          # 刚进入下降的起动宽限期（飞控要时间加速；宽限期内不算观察窗，
+                                # 但掉高判据照常工作）
+  # --- 下降停滞：指令消失、高度也不再变化、又没到目标 ---
+  descend_stall_s: 2.0          # 观察窗
+  descend_stall_eps_m: 0.10     # 窗口内高度变化小于它就算“没再下降”
+  # --- 掉高 ---
   free_fall_window_s: 0.6
   free_fall_rate: 1.2           # m/s，超过且没有对应指令 -> FREE_FALL
-  free_fall_cmd_slack: 0.6
-  landing_tol_m: 0.35           # 落地容差
-  overshoot_m: 0.30             # 低于目标这么多 -> OVERSHOOT
+  free_fall_cmd_slack: 0.6      # 指令本身大于它时不判掉高
+  # --- 落地 ---
+  landing_tol_m: 0.35           # 到位置容差
+  landed_stable_s: 0.8          # 到位置后还要稳这么久才报 Z_REACHED
+  landed_cmd_grace_s: 5.0       # 到位置后上游多久还不释放下降指令就报 CMD_NOT_RELEASED
+  overshoot_m: 0.30             # 低于目标这么多 -> OVERSHOOT（可重复，非一次性）
   timeout_s: 90.0               # 下降超时
-  alert_cooldown_s: 3.0         # 同类告警冷却
+  # --- 目标高度 ---
+  target_unknown_s: 8.0         # 这么久还拿不到目标高度就报 TARGET_UNKNOWN
+  # --- 告警节流 ---
+  alert_cooldown_s: 1.0         # 同一告警的再次触发冷却（配合“上升沿触发”避免刷屏）
+  # --- 桥接层状态用词（可选）---
+  # 桥接层 /uav/status 只有 READY/GOAL/GOAL_DONE/VELOCITY/HOVER 等，没有 DESCEND；
+  # 若某个桥接层确实会发 DESCEND，把关键字填在这里（逗号分隔），判据才会参考状态串。
+  status_descend_keywords: ""

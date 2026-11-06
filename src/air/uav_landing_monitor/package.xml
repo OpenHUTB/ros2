@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>uav_landing_monitor</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>无人机降落过程监控：在线判“速度指令 vs 实际高度变化”的一致性，输出告警、状态与 CSV 报告</description>
 
-  <maintainer email="uav@example.com">uav</maintainer>
+  <maintainer email="jaycrfgdsbfdfd@users.noreply.github.com">jaycrfgdsbfdfd</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -19,4 +19,6 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-nose</test_depend>
 </package>

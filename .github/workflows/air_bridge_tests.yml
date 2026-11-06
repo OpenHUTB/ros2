@@ -4,11 +4,13 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_landing_monitor/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_landing_monitor/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
 
@@ -37,5 +39,11 @@ jobs:
             python3 tests/test_imu_local.py
           fi
 
+      - name: Run uav_landing_monitor tests
+        run: python3 src/air/uav_landing_monitor/tests/test_uav_landing_monitor_local.py
+
       - name: Byte-compile bridge scripts
         run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+
+      - name: Byte-compile landing monitor scripts
+        run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py
