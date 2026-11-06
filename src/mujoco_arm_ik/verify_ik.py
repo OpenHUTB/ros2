@@ -14,6 +14,7 @@ import os, math, sys, time
 os.environ.setdefault("MUJOCO_GL", "glfw")
 import numpy as np
 import mujoco
+import mujoco.viewer  # 显式导入子模块：`import mujoco` 不会自动加载 viewer
 from mujoco import viewer
 
 MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "arm_2link.xml")
