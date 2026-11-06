@@ -13,6 +13,8 @@ catkin_package(
   CATKIN_DEPENDS rospy std_msgs nav_msgs geometry_msgs tf2_ros
 )
 
+catkin_python_setup()
+
 catkin_install_python(PROGRAMS
   scripts/trajectory_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
