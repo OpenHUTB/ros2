@@ -13,6 +13,16 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
+ add-mujoco-aeb
+# MuJoCo 运行日志
+*.TXT
+*.log
+
+# 只忽略仓库根目录下临时图片，保留子目录docs/img图片
+/*.png
+/*.jpg
+/*.gif
+
 
 # catkin 编译产物
 build/
@@ -81,3 +91,4 @@ Thumbs.db
 # 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
 # results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
 src/air/uav_camera_tracking/results/*.png
+ master
