@@ -1,0 +1,72 @@
+{
+  "model": "models/gru_42",
+  "rule": "alarmed steps with model_residual; hit = dominant \u2229 injected channel group",
+  "kinds": {
+    "position_drift": {
+      "alarmed": 350,
+      "hit": 347,
+      "rate": 0.9914
+    },
+    "velocity_spike": {
+      "alarmed": 287,
+      "hit": 152,
+      "rate": 0.5296
+    }
+  },
+  "examples": [
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "vx",
+        "vz"
+      ],
+      "score": 7.083,
+      "hit": false
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "vx",
+        "vz"
+      ],
+      "score": 5.843,
+      "hit": false
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 9.094,
+      "hit": true
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 7.901,
+      "hit": true
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 8.57,
+      "hit": true
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 8.335,
+      "hit": true
+    }
+  ]
+}
