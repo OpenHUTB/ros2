@@ -17,7 +17,8 @@ from . import params as P
 from .controllers import goal_reached
 from .gridmap import pipeline_mask, truth_grid
 from .kinematics import RovDrive, wrap
-from .policies import E2EPolicy, goal_channel, odom_delta
+from .policies import (E2EPolicy, depth_feature, frame_gray, goal_channel,
+                       net_gray, odom_delta)
 from .world import make_scene
 
 FRAME_W, FRAME_H = E2EPolicy.IN_W, E2EPolicy.IN_H
@@ -39,12 +40,21 @@ def _obs(world, rov, rgb, depth, lms, pipe, prev_odom, t):
 
 
 def rollout(scene_key, policy, seed=0, max_steps=None, record=False,
-            dagger_oracle=None, beta=0.0, on_frame=None):
-    """跑一个 episode，返回指标字典（可选返回逐步记录）。"""
+            dagger_oracle=None, beta=0.0, on_frame=None, start_offset=None):
+    """跑一个 episode，返回指标字典（可选返回逐步记录）。
+
+    start_offset=(dlat, dth) 给起点叠加横向/艏向偏置，只用于数据采集
+    造"非标称状态"样本（评测一律用 None，保证与标称起点可比）。
+    """
     world = make_scene(scene_key, seed)
     world.key = scene_key
     rng = np.random.default_rng(seed * 7919 + 13)
     rov = RovDrive(world.start)
+    if start_offset is not None:
+        dlat, dth = start_offset
+        start = world.start_pose(dlat, dth)
+        rov.pose = start.copy()
+        rov.odom = start.copy()
     policy.reset(world)
     if dagger_oracle is not None:
         dagger_oracle.reset(world)
@@ -81,9 +91,8 @@ def rollout(scene_key, policy, seed=0, max_steps=None, record=False,
             # DAgger：标签永远是专家动作，执行的是 student 与专家的混合动作
             ev, ew = dagger_oracle.act(obs)
             if record:
-                frames.append(camera.resize_gray(camera.to_gray(rgb), FRAME_W, FRAME_H))
-                depths.append(camera.resize_gray(
-                    np.clip(depth / P.CAM_RANGE_MAX, 0.0, 1.0), FRAME_W, FRAME_H))
+                frames.append(frame_gray(rgb, FRAME_W, FRAME_H))
+                depths.append(depth_feature(depth, FRAME_W, FRAME_H))
                 odoms.append(rov.odom.copy())
                 goals.append(world.goal.copy())
                 labels.append([ev / P.MAX_V, ew / P.MAX_W])
@@ -93,9 +102,8 @@ def rollout(scene_key, policy, seed=0, max_steps=None, record=False,
             w = beta * ew + (1.0 - beta) * w
         elif record:
             # 行为克隆：策略本身就是专家，动作即标签
-            frames.append(camera.resize_gray(camera.to_gray(rgb), FRAME_W, FRAME_H))
-            depths.append(camera.resize_gray(
-                np.clip(depth / P.CAM_RANGE_MAX, 0.0, 1.0), FRAME_W, FRAME_H))
+            frames.append(frame_gray(rgb, FRAME_W, FRAME_H))
+            depths.append(depth_feature(depth, FRAME_W, FRAME_H))
             odoms.append(rov.odom.copy())
             goals.append(world.goal.copy())
             labels.append([v / P.MAX_V, w / P.MAX_W])
@@ -200,17 +208,34 @@ def evaluate(kind, scenes=P.SCENES, seeds=(0, 1, 2), net=None, percep_net=None):
     return rows
 
 
-def collect_demo(scene_keys, seeds, steps_limit=None):
-    """用 Oracle 专家采集行为克隆数据（按 episode 返回帧序列与动作）。"""
+def collect_demo(scene_keys, seeds, steps_limit=None, jitter=None):
+    """用 Oracle 专家采集行为克隆数据（按 episode 返回帧序列与动作）。
+
+    jitter = (背离管道侧, 朝向管道侧) 会额外制造**非标称起始状态**：
+    专家轨迹的横向误差几乎恒为 0，只用它训出的横向回归器会均值坍缩成
+    "恒输出 0"。但把扰动混进行为克隆数据也会让端到端策略退化（实测
+    9/12 → 0/12，学生被大量"救偏"样本带偏），所以默认不扰动 —— 需要
+    时显式传 jitter，用于验证感知回归的数据覆盖问题。
+
+    两侧幅值不能对称：巡检偏置只有 0.9 m，朝管道那侧偏移超过 0.40 m
+    就会让起点落进"管道半径 0.18 + ROV 0.25"的接触区，第 0 步就判碰撞。
+    """
     from .policies import make_policy
     eps = []
-    for sc in scene_keys:
-        for sd in seeds:
-            world = make_scene(sc, sd)
-            pol = make_policy('oracle', world)
-            r = rollout(sc, pol, seed=sd, record=True,
-                        max_steps=steps_limit or int(P.ARRIVE_TIME_LIMIT / P.DT))
-            if len(r['frames']) < 5 or not r['reached_b']:
+    for i, sc in enumerate(scene_keys):
+        for j, sd in enumerate(seeds):
+            # 正负交替，两个方向都要有；奇偶按 (场景, 种子) 下标定
+            sign = 1.0 if (i + j) % 2 == 0 else -1.0
+            mag = 0.0 if jitter is None else (jitter[0] if sign > 0 else jitter[1])
+            r = None
+            for off in (mag, 0.5 * mag, 0.0):
+                pol = make_policy('oracle', make_scene(sc, sd))
+                r = rollout(sc, pol, seed=sd, record=True,
+                            start_offset=(sign * off, 0.0) if off else None,
+                            max_steps=steps_limit or int(P.ARRIVE_TIME_LIMIT / P.DT))
+                if r['reached_b'] and len(r['frames']) >= 5:
+                    break
+            if r is None or len(r['frames']) < 5 or not r['reached_b']:
                 continue
             eps.append({'frames': r['frames'], 'depths': r['depths'],
                         'odoms': r['odoms'], 'goals': r['goals'],
@@ -233,7 +258,7 @@ def stack_dataset(eps, frames_n=3):
         T = len(f)
         for i in range(T):
             idx = [max(0, i - k) for k in range(frames_n - 1, -1, -1)]
-            gray = (f[idx] - 0.45) / 0.25
+            gray = net_gray(f[idx])
             dep = (d[i][None] if d is not None else np.zeros((1, FRAME_H, FRAME_W), np.float32))
             gl = gls[i] if gls is not None and i < len(gls) else None
             gch = goal_channel(od[i] if od is not None and i < len(od) else None,

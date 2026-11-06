@@ -176,6 +176,21 @@ class World:
     def step(self, dt):
         self.t += dt
 
+    def start_pose(self, dlat=0.0, dth=0.0):
+        """起点在偏置巡检线上的横向/艏向偏置版本。
+
+        数据采集要用它做**起始扰动**：专家轨迹本身横向误差几乎恒为 0，
+        只用这种数据训出来的回归器会退化成恒输出 0（均值坍缩）——
+        部署时哪怕真的偏了 1.8 m，它也报"没偏"。
+        """
+        n0 = _left_normal(self.pipeline)[0]
+        t0 = self.pipeline[1] - self.pipeline[0]
+        t0 = t0 / (np.hypot(t0[0], t0[1]) or 1.0)
+        base = self.end_a[0] + n0[0] * P.FOLLOW_OFFSET
+        basey = self.end_a[1] + n0[1] * P.FOLLOW_OFFSET
+        return np.array([base + n0[0] * dlat, basey + n0[1] * dlat,
+                         math.atan2(t0[1], t0[0]) + dth])
+
     # ------------------------------------------------------------ 求交
     def raycast(self, origin, angles, max_range=None):
         """对一批射线求最近命中。
@@ -333,12 +348,7 @@ def make_scene(key, seed=0):
     w = World(ctrl, feats, start=(ctrl[0][0], ctrl[0][1], 0.0),
               current=current, turbid=turbid)
     # 起点放在偏置巡检路径上（管道左侧 FOLLOW_OFFSET），朝向沿巡检切向
-    n0 = _left_normal(w.pipeline)[0]
-    t0 = w.pipeline[1] - w.pipeline[0]
-    t0 = t0 / (np.hypot(t0[0], t0[1]) or 1.0)
-    w.start = np.array([w.end_a[0] + n0[0] * P.FOLLOW_OFFSET,
-                        w.end_a[1] + n0[1] * P.FOLLOW_OFFSET,
-                        math.atan2(t0[1], t0[0])])
+    w.start = w.start_pose()
     w.key = key
     return w
 
