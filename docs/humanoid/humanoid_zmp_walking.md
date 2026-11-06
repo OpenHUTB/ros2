@@ -43,12 +43,12 @@ src/
 
 完整代码请点击下方链接查看：
 
-* [查看 zmp_generator.py 代码](../../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/zmp_generator.py)
-* [查看 play.py 代码](../../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/play.py)
-* [查看 record.py 代码](../../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/record.py)
-* [查看 main.launch.py 代码](../../../src/humanoid/humanoid_zmp_walking/launch/main.launch.py)
-* [查看 simple_humanoid.urdf 代码](../../../src/humanoid/humanoid_zmp_walking/urdf/simple_humanoid.urdf)
-* [查看 setup.py 代码](../../../src/humanoid/humanoid_zmp_walking/setup.py)
+* [查看 zmp_generator.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/zmp_generator.py)
+* [查看 play.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/play.py)
+* [查看 record.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/record.py)
+* [查看 main.launch.py 代码](../../src/humanoid/humanoid_zmp_walking/launch/main.launch.py)
+* [查看 simple_humanoid.urdf 代码](../../src/humanoid/humanoid_zmp_walking/urdf/simple_humanoid.urdf)
+* [查看 setup.py 代码](../../src/humanoid/humanoid_zmp_walking/setup.py)
 
 ## 功能说明 / Boundary behavior
 
