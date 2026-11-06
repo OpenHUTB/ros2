@@ -1,0 +1,19 @@
+# reacher_track 训练参数配置
+# MuJoCo Reacher 机械臂目标跟踪：感知 -> MLP神经网络 -> 闭环控制
+
+# 演示数据采集
+demo_episodes: 400          # 生成演示的回合数
+demo_max_steps: 250         # 每回合最大控制步
+# 监督训练
+epochs: 600                 # 训练轮数
+batch: 64                   # 批量大小
+lr: 0.003                   # 学习率
+# MLP 网络结构(感知状态6维 -> 2关节扭矩)
+layers: "128,128"
+# DAgger 迭代
+dagger_iter: 2              # 迭代轮数
+dagger_episodes: 60         # 每轮收集的自身轨迹回合数
+# 部署评估
+eval_episodes: 30           # 评估回合数
+eval_max_steps: 200         # 评估最大控制步
+success_threshold: 0.05     # 成功判定的末端误差阈值(m)
