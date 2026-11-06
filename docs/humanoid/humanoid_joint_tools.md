@@ -46,12 +46,12 @@ src/
 
 完整代码请点击下方链接查看：
 
-* [查看 mock.py 代码](../../src/humanoid/humanoid_joint_tools/humanoid_joint_tools/mock.py)
-* [查看 record.py 代码](../../src/humanoid/humanoid_joint_tools/humanoid_joint_tools/record.py)
-* [查看 play.py 代码](../../src/humanoid/humanoid_joint_tools/humanoid_joint_tools/play.py)
-* [查看 main.launch.py 代码](../../src/humanoid/humanoid_joint_tools/launch/main.launch.py)
-* [查看 setup.py 代码](../../src/humanoid/humanoid_joint_tools/setup.py)
-* [查看 test_joint_recorder.py 代码](../../src/humanoid/humanoid_joint_tools/test/test_joint_recorder.py)
+* [查看 mock.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/humanoid_joint_tools/mock.py)
+* [查看 record.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/humanoid_joint_tools/record.py)
+* [查看 play.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/humanoid_joint_tools/play.py)
+* [查看 main.launch.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/launch/main.launch.py)
+* [查看 setup.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/setup.py)
+* [查看 test_joint_recorder.py 代码](https://github.com/OpenHUTB/ros2/blob/master/src/humanoid/humanoid_joint_tools/test/test_joint_recorder.py)
 
 ## 功能说明 / Boundary behavior
 
