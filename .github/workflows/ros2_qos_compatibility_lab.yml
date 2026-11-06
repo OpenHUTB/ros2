@@ -1,0 +1,75 @@
+name: ROS 2 QoS compatibility lab
+
+on:
+  push:
+    paths:
+      - 'src/chap2/ros2_qos_compatibility_lab/**'
+      - '.github/workflows/ros2_qos_compatibility_lab.yml'
+  pull_request:
+    paths:
+      - 'src/chap2/ros2_qos_compatibility_lab/**'
+      - '.github/workflows/ros2_qos_compatibility_lab.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Ubuntu 22.04 / ROS 2 Humble
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up ROS 2 Humble
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: humble
+
+      - name: Install package dependencies
+        run: |
+          source /opt/ros/humble/setup.bash
+          if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+            sudo rosdep init
+          fi
+          rosdep update
+          rosdep install \
+            --from-paths src/chap2/ros2_qos_compatibility_lab \
+            --ignore-src \
+            --rosdistro humble \
+            -y
+
+      - name: Build package
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build \
+            --packages-select ros2_qos_compatibility_lab \
+            --event-handlers console_direct+
+
+      - name: Run package tests
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test \
+            --packages-select ros2_qos_compatibility_lab \
+            --event-handlers console_direct+
+          colcon test-result --verbose
+
+      - name: Validate launch files and QoS communication
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          bash src/chap2/ros2_qos_compatibility_lab/test/run_runtime_validation.sh \
+            "${GITHUB_WORKSPACE}/ros2_qos_validation_logs"
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros2-qos-compatibility-lab-logs
+          path: |
+            log/
+            ros2_qos_validation_logs/
+          if-no-files-found: warn

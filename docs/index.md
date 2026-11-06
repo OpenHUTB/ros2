@@ -65,6 +65,8 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 
+ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros2_qos_compatibility_lab.md)
+
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
