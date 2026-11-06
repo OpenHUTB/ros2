@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_slope_car</name>
+  <version>0.0.0</version>
+  <description>MuJoCo小车滑斜坡项目：小车从斜坡顶端自由滑下，到达坡底后自动刹车停住</description>
+  <maintainer email="352797580@qq.com">Ri-kin08</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+
+  <export/>
+</package>
