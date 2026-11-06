@@ -216,6 +216,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#architecture">系统结构 / Architecture</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#imu-encoders-and-imu">编码器与 IMU / Encoders and IMU</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#environment-and-build">环境与构建 / Environment and Build</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#launch-and-inspect">启动与检查 / Launch and Inspect</a>
@@ -223,6 +225,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#parameters">参数 / Parameters</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#safety-boundaries">安全边界 / Safety Boundaries</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#data-collection">数据采集 / Data Collection</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-fields">数据字段 / Data Fields</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#verification-commands">验证命令 / Verification Commands</a>
 </li>
@@ -507,6 +515,9 @@ MuJoCo 四轮执行器 / Four wheel actuators
 </code></pre></div>
 <p>功能包使用 <code>ament_python</code>，模型、配置与 launch 文件均安装到包共享目录。运行时通过 ROS 2 包索引定位资源，不依赖用户目录、固定工作空间路径或网络地址。</p>
 <p>The package uses <code>ament_python</code>; its model, configuration, and launch files are installed into the package share directory. Runtime resource lookup uses the ROS 2 package index and does not depend on a user directory, a fixed workspace path, or a network address.</p>
+<h2 id="imu-encoders-and-imu">编码器与 IMU / Encoders and IMU</h2>
+<p>MJCF 在车体中心定义三轴加速度计和陀螺仪。节点同时读取四个轮关节的位置与角速度，并通过局部随机数生成器加入固定种子的高斯噪声。MuJoCo 内部传感器保持无噪真值，噪声只施加于发布消息，因此实验可重复且便于比较原始状态。</p>
+<p>The MJCF defines a three-axis accelerometer and gyroscope at the chassis centre. The node also reads position and angular velocity from all four wheel joints and applies seeded Gaussian noise through a local random generator. MuJoCo sensor values remain noise-free internally; noise is added only to published messages for reproducibility and comparison with the original state.</p>
 <h2 id="environment-and-build">环境与构建 / Environment and Build</h2>
 <p>目标环境为 Ubuntu 22.04、ROS 2 Humble、Python 3.10 和 MuJoCo 3.12.0。</p>
 <p>The target environment is Ubuntu 22.04, ROS 2 Humble, Python 3.10, and MuJoCo 3.12.0.</p>
@@ -565,6 +576,21 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <td style="text-align: right;"><code>true</code></td>
 <td>是否发布坐标变换 / whether to publish transforms</td>
 </tr>
+<tr>
+<td><code>random_seed</code></td>
+<td style="text-align: right;"><code>25012</code></td>
+<td>传感器噪声随机种子 / sensor-noise random seed</td>
+</tr>
+<tr>
+<td><code>friction_coefficients</code></td>
+<td style="text-align: right;"><code>[0.25, 0.55, 0.90]</code></td>
+<td>episode 摩擦序列 / episode friction sequence</td>
+</tr>
+<tr>
+<td><code>scenario_duration</code></td>
+<td style="text-align: right;"><code>30.0</code></td>
+<td>单个 episode 时长，单位 s / episode duration in seconds</td>
+</tr>
 </tbody>
 </table>
 <h2 id="safety-boundaries">安全边界 / Safety Boundaries</h2>
@@ -574,6 +600,24 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <li>四轮目标速度按执行器上限等比例缩放。 / Scale all wheel targets proportionally to actuator limits.</li>
 <li>包资源路径经过边界检查。 / Validate package-resource paths against directory escape.</li>
 </ul>
+<h2 id="data-collection">数据采集 / Data Collection</h2>
+<p>一条 launch 命令同时启动仿真、确定性激励指令和采集器：</p>
+<p>One launch command starts the simulation, deterministic excitation commands, and collector:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_diff_drive_slip_compensation<span class="w"> </span>collect.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>output_directory:<span class="o">=</span>data/raw
+</code></pre></div>
+<p>场景切换时车辆复位，新的 <code>episode_id</code> 与摩擦系数一起发布。采集器在编码器消息到达时组合最近的 IMU、指令、真实里程计和场景信息。每个 episode 独立写入 CSV，并在关闭时写入 JSON 清单。</p>
+<p>At each scenario transition, the vehicle is reset and a new <code>episode_id</code> is published with its friction coefficient. On each encoder message, the collector combines the latest IMU, command, ground-truth odometry, and scenario state. Each episode is written to its own CSV and receives a JSON manifest when closed.</p>
+<h3 id="data-fields">数据字段 / Data Fields</h3>
+<ul>
+<li>时间戳、episode、数据集划分、摩擦系数。 / Timestamp, episode, dataset split, and friction coefficient.</li>
+<li>线速度与角速度指令。 / Linear and angular velocity commands.</li>
+<li>四轮位置与角速度。 / Four-wheel positions and angular velocities.</li>
+<li>三轴加速度与角速度。 / Three-axis acceleration and angular velocity.</li>
+<li>真实二维位姿与速度。 / Ground-truth planar pose and velocity.</li>
+</ul>
+<p>数据集使用固定种子和 episode 标识的稳定哈希执行 70%/15%/15% 划分。划分单位是完整 episode，而不是单帧，因此相邻帧不会跨越训练、验证和测试集合。</p>
+<p>Dataset assignment uses a stable hash of the fixed seed and episode identifier with 70%/15%/15% ratios. The assignment unit is a complete episode rather than an individual frame, so adjacent frames cannot cross train, validation, and test sets.</p>
 <h2 id="verification-commands">验证命令 / Verification Commands</h2>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>src/ground/mujoco_diff_drive_slip_compensation/test<span class="w"> </span>-q
 python3<span class="w"> </span>-m<span class="w"> </span>compileall<span class="w"> </span>src/ground/mujoco_diff_drive_slip_compensation
