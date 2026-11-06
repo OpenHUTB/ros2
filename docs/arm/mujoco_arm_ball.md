@@ -150,6 +150,8 @@ v = sqrt( g d² / ( 2 cos²α (d tanα − h) ) )
 
 ## 11. 效果图
 
-`docs/mujoco_arm_demo.gif`：
+![效果图](../img/arm/mujoco_arm_ball.gif)
+
+`src/mujoco_arm_ball/docs/mujoco_arm_ball_demo.gif`：
 臂先压到低位托球蓄力，随后快速上摆把球送出，球沿 65° 橙色抛物线飞入筐中，
 顶部状态条实时显示投篮序号与命中数。
