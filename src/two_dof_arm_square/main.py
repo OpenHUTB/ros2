@@ -4,43 +4,45 @@ import numpy as np
 import math
 import time
 
-# 加载模型
 model = mj.MjModel.from_xml_path("two_dof_arm_square.xml")
 data = mj.MjData(model)
 
-# 正方形轨迹参数
-L1 = 0.5
-L2 = 0.5
-square_size = 0.3
-center_x = 0.5
+L1 = 0.4
+L2 = 0.25
+square_size = 0.2
+center_x = 0.4
 center_y = 0.0
 
 def ik(x, y):
-    # 逆运动学求解2R机械臂关节角
     r_sq = x**2 + y**2
     cos_q2 = (r_sq - L1**2 - L2**2) / (2*L1*L2)
-    cos_q2 = np.clip(cos_q2, -1, 1)
+    cos_q2 = max(-1.0, min(1.0, cos_q2))
     q2 = math.acos(cos_q2)
     q1 = math.atan2(y, x) - math.atan2(L2*math.sin(q2), L1 + L2*math.cos(q2))
     return q1, q2
 
 if __name__ == "__main__":
     v = viewer.launch_passive(model, data)
-    # 生成正方形四个角点
+    start_q1, start_q2 = ik(center_x - square_size/2, center_y - square_size/2)
+    data.ctrl[0] = start_q1
+    data.ctrl[1] = start_q2
+    for i in range(500):
+        mj.mj_step(model, data)
+        v.sync()
+        time.sleep(0.01)
     corners = [
         (center_x - square_size/2, center_y - square_size/2),
         (center_x + square_size/2, center_y - square_size/2),
         (center_x + square_size/2, center_y + square_size/2),
         (center_x - square_size/2, center_y + square_size/2),
     ]
-    total_steps = 4000
+    total_steps_per_edge = 1000
     step = 0
-    while v.is_running() and step < total_steps:
-        seg = step // 1000
-        t = (step % 1000) / 1000.0
-        x0, y0 = corners[seg]
-        x1, y1 = corners[(seg+1)%4]
-        # 线性插值
+    while v.is_running():
+        seg = step // total_steps_per_edge
+        t = (step % total_steps_per_edge) / total_steps_per_edge
+        x0, y0 = corners[seg % 4]
+        x1, y1 = corners[(seg+1) % 4]
         x = x0 + (x1-x0)*t
         y = y0 + (y1-y0)*t
         q1, q2 = ik(x, y)
@@ -49,4 +51,4 @@ if __name__ == "__main__":
         mj.mj_step(model, data)
         v.sync()
         step += 1
-        time.sleep(5)
+        time.sleep(0.005)
