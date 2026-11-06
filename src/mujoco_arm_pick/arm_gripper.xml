@@ -36,12 +36,12 @@
           <geom name="link2_g" type="capsule" fromto="0 0 0 0.27 0 0" size="0.028" rgba="0.85 0.55 0.2 1"/>
           <!-- 垂直升降关节（长行程：向下探到球心高度） -->
           <body name="lift" pos="0.3 0 0">
-            <joint name="lift_j" type="slide" axis="0 0 1" range="-0.20 0.15"/>
+            <joint name="lift_j" type="slide" axis="0 0 1" range="-0.20 0.15" limited="true"/>
             <!-- 升降连接杆（细，视觉用；球为 kinematic 无接触） -->
             <geom name="lift_conn" type="cylinder" size="0.006 0.10" pos="0 0 0.10" rgba="0.45 0.45 0.5 1"/>
             <!-- 夹爪（旋转钳，几何在球上方：与球完全无接触，吸附靠位置控制） -->
             <body name="gripper" pos="0 0 0.02">
-              <joint name="grip_j" type="hinge" axis="0 0 1" range="-0.55 0"/>
+              <joint name="grip_j" type="hinge" axis="0 0 1" range="-0.55 0" limited="true"/>
               <geom name="grip_base" type="box" size="0.012 0.018 0.012" pos="0.03 0 0.08" rgba="0.5 0.5 0.55 1"/>
               <geom name="finger1" type="box" size="0.02 0.005 0.02" pos="0.03 0.025 0.08" rgba="0.35 0.35 0.4 1"/>
               <geom name="finger2" type="box" size="0.02 0.005 0.02" pos="0.03 -0.025 0.08" rgba="0.35 0.35 0.4 1"/>
@@ -54,8 +54,8 @@
     </body>
   </worldbody>
   <actuator>
-    <motor name="shoulder_m" joint="shoulder" ctrlrange="-30 30" gear="1"/>
-    <motor name="elbow_m" joint="elbow" ctrlrange="-30 30" gear="1"/>
-    <motor name="lift_m" joint="lift_j" ctrlrange="-50 50" gear="1"/>
+    <motor name="shoulder_m" joint="shoulder" ctrlrange="-30 30" gear="1" ctrllimited="true"/>
+    <motor name="elbow_m" joint="elbow" ctrlrange="-30 30" gear="1" ctrllimited="true"/>
+    <motor name="lift_m" joint="lift_j" ctrlrange="-50 50" gear="1" ctrllimited="true"/>
   </actuator>
 </mujoco>
