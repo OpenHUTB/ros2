@@ -1,0 +1,14 @@
+# USV 仿真与神经网络控制参数
+usv_nn_node:
+  mode: nn            # nn | expert | manual
+  rate: 20             # 控制频率 (Hz)
+  seed: 7
+  # 激光雷达
+  n_beams: 91
+  fov_deg: 270
+  max_range: 12.0
+  # 建图
+  map_resolution: 0.5  # m/cell
+  map_half_extent: 25.0
+  # 网络
+  crop: 21             # 局部占据栅格边长（格）
