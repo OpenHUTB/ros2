@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-无人机遥操作与轨迹记录模拟程序
-==============================
-模拟通过键盘遥控多旋翼无人机完成一段巡航飞行，
-实时记录飞行状态数据，并生成轨迹图、高度图、速度图。
+预设航线飞行模拟器
+==================
+按预设时间表播放一段多旋翼巡航飞行（起飞-巡航-转弯-悬停-降落），
+逐帧记录飞行状态数据，并生成轨迹图、高度图、速度图、状态时间线。
+
+与仓库已有 drone_teleop / drone_ros_teleop / uav_keyboard_control 的区别：
+  以上三者均为真实键盘/手柄输入的实时遥控模块，本模块为离线开环脚本，
+  用于快速生成可复现的飞行数据集与可视化结果，不依赖任何仿真器或输入设备。
 
 输出：
   - flight_log.csv    逐帧飞行数据（位置/速度/状态/时间）
@@ -12,10 +16,16 @@
   - altitude.png      高度随时间变化曲线
   - velocity.png      三轴速度随时间变化曲线
   - state_timeline.png 飞行状态时间线
+
+用法：
+  python3 flight_path_simulator.py                    # 输出到当前目录
+  python3 flight_path_simulator.py --outdir results/  # 输出到指定目录
 """
 
 import csv
 import math
+import os
+import argparse
 import random
 from datetime import datetime
 
@@ -228,7 +238,7 @@ def plot_altitude(records, filename):
     ax.plot(times, alts, 'b-', linewidth=2)
 
     # 标记关键阶段
-    ax.axhline(y=3.0, color='g', linestyle='--', alpha=0.5, label='Hover Altitude (3m)')
+    ax.axhline(y=2.7, color='g', linestyle='--', alpha=0.5, label='Hover Altitude (~2.7m)')
 
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Altitude (m)')
@@ -322,25 +332,34 @@ def print_summary(records):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='预设航线飞行模拟器')
+    parser.add_argument('--outdir', type=str, default='.',
+                        help='输出目录（默认当前目录）')
+    args = parser.parse_args()
+
+    outdir = args.outdir
+    os.makedirs(outdir, exist_ok=True)
+
     print("="*50)
-    print("  无人机遥操作与轨迹记录 - 模拟程序")
+    print("  预设航线飞行模拟器")
     print("="*50)
     print(f"  控制频率: {CONTROL_RATE} Hz")
     print(f"  总时长:   {TOTAL_TIME} 秒")
-    print(f"  悬停高度: 3 m")
+    print(f"  悬停高度: ~2.7 m")
+    print(f"  输出目录: {outdir}")
     print()
 
     # 运行模拟
     records = run_simulation()
 
     # 输出 CSV
-    save_csv(records, 'flight_log.csv')
+    save_csv(records, os.path.join(outdir, 'flight_log.csv'))
 
     # 输出图表
-    plot_trajectory(records, 'trajectory.png')
-    plot_altitude(records, 'altitude.png')
-    plot_velocity(records, 'velocity.png')
-    plot_state_timeline(records, 'state_timeline.png')
+    plot_trajectory(records, os.path.join(outdir, 'trajectory.png'))
+    plot_altitude(records, os.path.join(outdir, 'altitude.png'))
+    plot_velocity(records, os.path.join(outdir, 'velocity.png'))
+    plot_state_timeline(records, os.path.join(outdir, 'state_timeline.png'))
 
     # 打印摘要
     print_summary(records)
