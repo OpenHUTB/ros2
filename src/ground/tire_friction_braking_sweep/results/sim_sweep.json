@@ -1,0 +1,89 @@
+{
+  "source": "carla",
+  "environment": {
+    "map": "Carla/Maps/Town10HD",
+    "vehicle": "vehicle.tesla.model3",
+    "server_version": "3ea2130ed",
+    "tick_dt_s": 0.05
+  },
+  "spec": {
+    "mass_kg": 1500.0,
+    "reference_speed_kmh": 50.0,
+    "brake_ratio": 1.0
+  },
+  "fit": {
+    "a_max_mps2": 14.599,
+    "mu_half": 2.2601,
+    "r2": 0.95635,
+    "rmse_mps2": 0.2464
+  },
+  "points": [
+    {
+      "tire_friction": 0.4,
+      "entry_speed_kmh": 50.39,
+      "distance_m": 44.991,
+      "decel_mps2": 2.178,
+      "friction_bound_mps2": 3.923,
+      "ideal_distance_m": 24.977,
+      "distance_ratio": 1.801,
+      "bottleneck": "附着受限"
+    },
+    {
+      "tire_friction": 0.6,
+      "entry_speed_kmh": 50.73,
+      "distance_m": 32.725,
+      "decel_mps2": 3.034,
+      "friction_bound_mps2": 5.884,
+      "ideal_distance_m": 16.877,
+      "distance_ratio": 1.939,
+      "bottleneck": "附着受限"
+    },
+    {
+      "tire_friction": 0.8,
+      "entry_speed_kmh": 50.11,
+      "distance_m": 24.517,
+      "decel_mps2": 3.952,
+      "friction_bound_mps2": 7.845,
+      "ideal_distance_m": 12.349,
+      "distance_ratio": 1.985,
+      "bottleneck": "附着受限"
+    },
+    {
+      "tire_friction": 1.0,
+      "entry_speed_kmh": 50.53,
+      "distance_m": 21.066,
+      "decel_mps2": 4.676,
+      "friction_bound_mps2": 9.807,
+      "ideal_distance_m": 10.045,
+      "distance_ratio": 2.097,
+      "bottleneck": "附着受限"
+    },
+    {
+      "tire_friction": 1.2,
+      "entry_speed_kmh": 50.11,
+      "distance_m": 18.697,
+      "decel_mps2": 5.182,
+      "friction_bound_mps2": 11.768,
+      "ideal_distance_m": 8.233,
+      "distance_ratio": 2.271,
+      "bottleneck": "附着受限"
+    },
+    {
+      "tire_friction": 1.6,
+      "entry_speed_kmh": 50.52,
+      "distance_m": 17.864,
+      "decel_mps2": 5.511,
+      "friction_bound_mps2": 15.691,
+      "ideal_distance_m": 6.275,
+      "distance_ratio": 2.847,
+      "bottleneck": "制动器受限"
+    }
+  ],
+  "range": {
+    "mu_min": 0.4,
+    "mu_max": 1.6,
+    "distance_min_m": 44.991,
+    "distance_max_m": 17.864,
+    "distance_reduction_percent": 60.29
+  }
+}
