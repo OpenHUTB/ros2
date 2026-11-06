@@ -31,6 +31,7 @@ install(FILES
   scripts/drone_client.py
   scripts/gesture_dataset.py
   scripts/gesture_session.py
+  scripts/gesture_train.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
