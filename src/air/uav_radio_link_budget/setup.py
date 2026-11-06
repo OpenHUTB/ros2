@@ -1,0 +1,3 @@
+from setuptools import find_packages,setup
+p="uav_radio_link_budget"
+setup(name=p,version="0.1.0",packages=find_packages(exclude=["tests"]),package_data={p:["sample_data/*.json"]},data_files=[("share/ament_index/resource_index/packages",["resource/"+p]),("share/"+p,["package.xml"]),("share/"+p+"/sample_data",[p+"/sample_data/radio_profile.json"]),("share/"+p+"/launch",["launch/main.launch.py"])],install_requires=["setuptools"],zip_safe=True,maintainer="useruseruser452",maintainer_email="useruseruser452@users.noreply.github.com",description="Free-space radio link budget for UAV data links.",license="MIT",entry_points={"console_scripts":[p+" = "+p+".main:main"]})
