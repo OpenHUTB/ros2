@@ -20,6 +20,8 @@ catkin_install_python(PROGRAMS
   scripts/lidar_scan_node.py
   scripts/train_dqn_nav.py
   scripts/dqn_nav_node.py
+  scripts/camera_node.py
+  scripts/train_dqn_e2e.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
