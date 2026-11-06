@@ -806,7 +806,7 @@ rosrun<span class="w"> </span>map_server<span class="w"> </span>map_saver
 <ol>
 <li><strong>慢速建图</strong>：线速度保持 0.2 m/s 左右，转弯采用点动，避免长按方向键；</li>
 <li><strong>不要误触加速键</strong>：<code>q/w/e</code> 会放大速度，开始前确认底部为 <code>speed 0.2</code>；</li>
-<li><strong>全覆盖</strong>：规划路线走遍每个房间和角落，开门、过门时减速，减少灰色未知区；</li>
+<li><strong>全覆盖遍历</strong>：规划路线走遍每个房间和角落，开门、过门时减速，减少地图上的灰色未知区域；</li>
 <li><strong>走闭环</strong>：尽量回到经过的位置形成环路，利用回环修正累计误差；</li>
 <li><strong>必要时重跑</strong>：若出现明显重影，重启 gmapping 与 teleop 后慢速重建，可获得更干净的地图；</li>
 <li><strong>参数调优</strong>：环境更大时可适当增加 <code>particles</code>，并根据雷达量程调整 <code>maxUrange</code>、<code>maxRange</code></li>
