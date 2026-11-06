@@ -4,7 +4,7 @@ package_name = 'airsim_drone_gimbal_teleop'
 
 setup(
     name=package_name,
-    version='0.0.1',
+    version='0.1.0',
     packages=[],
     py_modules=['main'],
     data_files=[
