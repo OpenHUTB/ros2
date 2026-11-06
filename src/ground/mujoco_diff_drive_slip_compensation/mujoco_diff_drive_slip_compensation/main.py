@@ -74,6 +74,7 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self.declare_parameter('accelerometer_noise_std', 0.02)
             self.declare_parameter('gyroscope_noise_std', 0.002)
 
+
             package_share = Path(
                 get_package_share_directory(
                     'mujoco_diff_drive_slip_compensation'
@@ -124,6 +125,16 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 Odometry, 'ground_truth/odom', 10
             )
             self._clock_publisher = self.create_publisher(Clock, '/clock', 10)
+            self._encoder_publisher = self.create_publisher(
+                JointState, 'wheel/encoders', 10
+            )
+            self._imu_publisher = self.create_publisher(Imu, 'imu/data', 10)
+            self._friction_publisher = self.create_publisher(
+                Float64, 'scenario/friction', 10
+            )
+            self._episode_publisher = self.create_publisher(
+                String, 'scenario/episode_id', 10
+            )
             self._tf_broadcaster = TransformBroadcaster(self)
             self._encoder_publisher = self.create_publisher(
                 JointState, 'wheel/encoders', 10
@@ -200,6 +211,41 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             clock.clock.sec = seconds
             clock.clock.nanosec = int((state.time - seconds) * 1_000_000_000)
             self._clock_publisher.publish(clock)
+            positions, velocities = self._simulation.wheel_state()
+            noisy_positions, noisy_velocities = self._sensor_noise.encoders(
+                positions, velocities
+            )
+            encoders = JointState()
+            encoders.header.stamp = timestamp
+            encoders.name = list(MujocoSimulation.WHEEL_JOINT_NAMES)
+            encoders.position = list(noisy_positions)
+            encoders.velocity = list(noisy_velocities)
+            self._encoder_publisher.publish(encoders)
+
+            acceleration, angular_velocity = self._simulation.imu_state()
+            noisy_acceleration, noisy_angular = self._sensor_noise.imu(
+                acceleration, angular_velocity
+            )
+            imu = Imu()
+            imu.header.stamp = timestamp
+            imu.header.frame_id = 'imu_link'
+            imu.orientation_covariance[0] = -1.0
+            (
+                imu.linear_acceleration.x,
+                imu.linear_acceleration.y,
+                imu.linear_acceleration.z,
+            ) = noisy_acceleration
+            (
+                imu.angular_velocity.x,
+                imu.angular_velocity.y,
+                imu.angular_velocity.z,
+            ) = noisy_angular
+            acceleration_variance = self._noise_config.accelerometer_std ** 2
+            angular_variance = self._noise_config.gyroscope_std ** 2
+            for index in (0, 4, 8):
+                imu.linear_acceleration_covariance[index] = acceleration_variance
+                imu.angular_velocity_covariance[index] = angular_variance
+            self._imu_publisher.publish(imu)
 
 
             positions, velocities = self._simulation.wheel_state()
