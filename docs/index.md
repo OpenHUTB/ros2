@@ -211,6 +211,7 @@ ROS每章节运行代码:
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
+* [基于 AprilTag 的无人机视觉精准降落](./air/uav_apriltag_landing.md) —— 下视相机检测地面标签，把像素偏差换算为平移量，先对准再分步降高
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
