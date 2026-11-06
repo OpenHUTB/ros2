@@ -1,0 +1,38 @@
+markdown
+  
+# RViz2 可视化小车URDF模型
+本节演示在ROS2环境中，使用RViz2加载小车URDF模型，查看机器人模型。
+
+## 1. 前置准备
+已经完成小车URDF模型文件编写，并且在功能包内配置好`setup.py`，可正常发布`robot_description`话题。
+
+## 2. 启动指令
+新建终端，进入工作空间并source环境：
+```bash
+cd ~/ros2_ws
+colcon build --packages-select diff_bot
+source install/setup.bash
+ 
+ 
+启动小车模型发布节点：
+ 
+bash
+  
+ros2 launch diff_bot rviz_car.launch.py
+ 
+ 
+3. RViz2操作步骤
+ 
+1. 启动RViz2；
+2. 设置  Fixed Frame  为  base_link ；
+3. 点击  Add ，选择  RobotModel ；
+4. 在RobotModel面板，设置  Description Topic  为  /robot_description ；
+5. 等待URDF模型加载，即可在视窗看到小车模型。
+ 
+4. 效果截图
+ 
+rviz小车可视化
+ 
+5. 常见问题
+
+- 看不到模型：检查Fixed Frame名称，确认URDF文件路径在 setup.py 中正确配置。
