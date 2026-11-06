@@ -1,0 +1,7 @@
+# 注意：OpenCV 4.9.x 是 NumPy 1.x 构建，需搭配 numpy<2
+torch==2.14.0
+torchvision==0.29.0
+ultralytics==8.4.160
+opencv-python==4.9.0.80
+numpy==1.26.4
+pillow
