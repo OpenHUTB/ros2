@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package format="3">
+  <name>tire_friction_braking_sweep</name>
+  <version>0.1.0</version>
+  <description>
+    轮胎附着系数与制动距离：在 CARLA/HUTB 中扫掠 tire_friction 并量取制动距离，
+    用两区段模型与弹性判据判断瓶颈在轮胎附着还是制动器，附离线演示与 PIL 效果图
+  </description>
+  <maintainer email="xy18574557330@users.noreply.github.com">xy18574557330</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

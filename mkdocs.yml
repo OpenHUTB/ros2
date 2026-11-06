@@ -160,6 +160,7 @@ nav:
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
     - 扭转控制: './ground/twist_to_control.md'
+    - 轮胎附着系数与制动距离扫掠实验: './ground/tire_friction_braking_sweep.md'
 - 空域载具:
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
