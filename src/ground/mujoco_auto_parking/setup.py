@@ -19,10 +19,7 @@ setup(
         (os.path.join('share', package_name), ['package.xml']),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
-        (
-            os.path.join('share', package_name, 'models'),
-            glob('models/*.xml') + glob('models/*.npz'),
-        ),
+        (os.path.join('share', package_name, 'models'), glob('models/*.xml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -37,10 +34,6 @@ setup(
             'main = mujoco_auto_parking.simulation_node:main',
             'simulation_node = mujoco_auto_parking.simulation_node:main',
             'keyboard_teleop_node = mujoco_auto_parking.keyboard_teleop_node:main',
-            'perception_node = mujoco_auto_parking.perception_node:main',
-            'trajectory_control_node = mujoco_auto_parking.trajectory_control_node:main',
-            'navigation_node = mujoco_auto_parking.navigation_node:main',
-            'end_to_end_node = mujoco_auto_parking.end_to_end_node:main',
         ],
     },
 )
