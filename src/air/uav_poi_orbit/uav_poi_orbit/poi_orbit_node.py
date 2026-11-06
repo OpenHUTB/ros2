@@ -2,7 +2,7 @@
 """
 无人机兴趣点(POI)环绕航拍节点.
 
-给定地面 POI 坐标、环绕半径、飞行高度, 自动生成圆周航点序列,
+给定地面 POI 坐标、环绕半径、飞行高度, 自动生成连续圆周航点序列,
 偏航角始终对准 POI(模拟云台俯视拍摄)。可选螺旋升降。
 
 话题:
@@ -16,6 +16,15 @@ from rclpy.node import Node
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Float64
 
+from .orbit_math import (
+    advance_angle,
+    compute_height,
+    compute_orbit_position,
+    compute_yaw_to_poi,
+    count_full_turns,
+    validate_params,
+)
+
 
 class PoiOrbitNode(Node):
     def __init__(self):
@@ -25,10 +34,11 @@ class PoiOrbitNode(Node):
         self.declare_parameter("poi_y", 0.0)
         self.declare_parameter("orbit_radius", 5.0)
         self.declare_parameter("orbit_height", 8.0)
-        self.declare_parameter("omega_dps", 15.0)   # 角速度 deg/s
-        self.declare_parameter("spiral", False)      # 是否螺旋升降
-        self.declare_parameter("spiral_height_delta", 2.0)  # 每圈高度变化
+        self.declare_parameter("omega_dps", 15.0)
+        self.declare_parameter("spiral", False)
+        self.declare_parameter("spiral_height_delta", 2.0)
         self.declare_parameter("waypoint_interval_s", 0.2)
+        self.declare_parameter("min_height", 0.5)
 
         self.poi = (
             float(self.get_parameter("poi_x").value),
@@ -36,13 +46,24 @@ class PoiOrbitNode(Node):
         )
         self.r = float(self.get_parameter("orbit_radius").value)
         self.h = float(self.get_parameter("orbit_height").value)
-        self.omega = math.radians(float(self.get_parameter("omega_dps").value))
+        self.omega_dps = float(self.get_parameter("omega_dps").value)
+        self.omega = math.radians(self.omega_dps)
         self.spiral = bool(self.get_parameter("spiral").value)
         self.spiral_dh = float(self.get_parameter("spiral_height_delta").value)
         self.dt = float(self.get_parameter("waypoint_interval_s").value)
+        self.min_h = float(self.get_parameter("min_height").value)
 
+        # 参数校验: 非法参数直接拒绝启动, 避免无人机按错误航线飞行
+        errors = validate_params(self.r, self.h, self.omega, self.dt, self.min_h)
+        if errors:
+            for e in errors:
+                self.get_logger().error(f"参数非法: {e}")
+            raise RuntimeError("POI 环绕参数校验失败: " + "; ".join(errors))
+
+        # 状态: angle 归一化, total_angle 连续累积用于螺旋高度
         self.angle = 0.0
-        self.turns = 0.0
+        self.total_angle = 0.0
+        self.last_turns = 0.0
 
         self.target_pub = self.create_publisher(
             PointStamped, "/drone/setpoint_position", 10)
@@ -51,27 +72,24 @@ class PoiOrbitNode(Node):
 
         self.timer = self.create_timer(self.dt, self._step)
         self.get_logger().info(
-            f"POI 环绕启动: POI={self.poi}, r={self.r}m, h={self.h}m, "
-            f"omega={self.get_parameter('omega_dps').value}deg/s")
+            f"POI 环绕启动: POI=({self.poi[0]:.1f},{self.poi[1]:.1f}), "
+            f"r={self.r}m, h={self.h}m, omega={self.omega_dps}deg/s, "
+            f"spiral={self.spiral}")
 
     def _step(self):
-        self.angle += self.omega * self.dt
-        if self.angle >= 2 * math.pi:
-            self.angle -= 2 * math.pi
-            self.turns += 1.0
-            self.get_logger().info(f"完成第 {self.turns:.0f} 圈")
+        self.angle, self.total_angle = advance_angle(
+            self.angle, self.total_angle, self.omega, self.dt)
 
-        # 圆周位置
-        x = self.poi[0] + self.r * math.cos(self.angle)
-        y = self.poi[1] + self.r * math.sin(self.angle)
+        turns = count_full_turns(self.total_angle)
+        if turns >= self.last_turns + 1.0:
+            self.last_turns = math.floor(turns)
+            self.get_logger().info(f"完成第 {int(turns)} 圈")
 
-        z = self.h
-        if self.spiral:
-            # 每转一圈抬升 spiral_dh
-            z = self.h + self.turns * self.spiral_dh
-
-        # 偏航对准 POI
-        yaw = math.atan2(self.poi[1] - y, self.poi[0] - x)
+        x, y = compute_orbit_position(
+            self.poi[0], self.poi[1], self.r, self.angle)
+        z = compute_height(
+            self.h, self.total_angle, self.spiral, self.spiral_dh, self.min_h)
+        yaw = compute_yaw_to_poi(self.poi[0], self.poi[1], x, y)
 
         msg = PointStamped()
         msg.header.stamp = self.get_clock().now().to_msg()

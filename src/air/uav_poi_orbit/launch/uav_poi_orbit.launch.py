@@ -1,11 +1,24 @@
-import os
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    main_py = os.path.join(script_dir, "..", "main.py")
     return LaunchDescription([
-        ExecuteProcess(cmd=["python3", main_py], output="screen")
+        Node(
+            package='uav_poi_orbit',
+            executable='poi_orbit_node',
+            name='uav_poi_orbit',
+            output='screen',
+            parameters=[{
+                'poi_x': 0.0,
+                'poi_y': 0.0,
+                'orbit_radius': 5.0,
+                'orbit_height': 8.0,
+                'omega_dps': 15.0,
+                'spiral': False,
+                'spiral_height_delta': 2.0,
+                'waypoint_interval_s': 0.2,
+                'min_height': 0.5,
+            }],
+        ),
     ])
