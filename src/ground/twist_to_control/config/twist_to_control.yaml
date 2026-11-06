@@ -1,0 +1,32 @@
+# twist_to_control 的默认参数
+# 不改任何参数时行为固定；下面每一项都能用 launch 的同名 <arg> 覆盖。
+# 参数名与 scripts/twist_core.py 中 ControlParams.from_params 读取的键一一对应。
+
+model:
+  type: bicycle          # 底盘模型，可选 bicycle / ackermann / diff_drive
+  wheelbase: 2.7         # 轴距 L（米），影响曲率与转角的关系
+  track_width: 1.5       # 轮距 b（米），用于阿克曼内外轮差与差速分配
+
+limit:
+  max_steering: 0.55       # 前轮最大转角（弧度），约 31.5 度
+  max_curvature: 1.0       # 最大曲率（1/米），对应最小转弯半径 1 米
+  max_speed: 5.0           # 最大速度（米/秒），正反向都按此限幅
+  max_accel: 2.0           # 纵向加速度上限（米/秒^2），用于速度平滑
+  max_steering_rate: 2.0   # 转向角变化率上限（弧度/秒），防止方向盘瞬移
+  min_speed: 0.05          # 曲率计算死区（米/秒），低于它锁存上一帧曲率
+
+control:
+  timeout: 0.5           # /cmd_vel 超时（秒），超时按零速度处理
+
+rate:
+  publish_hz: 20.0       # 控制量发布频率（赫兹）
+
+topic:
+  cmd_vel: /cmd_vel                    # 输入：geometry_msgs/Twist
+  control: /vehicle/control            # 输出：[前轮转角, 速度, 曲率]
+  wheel_speed: /vehicle/wheel_speed    # 输出：[左轮速, 右轮速]，差速模型时发布
+  control_info: /vehicle/control_info  # 输出：[请求转角, 实发转角, 饱和, 锁存, 速率受限]
+  odom: /odom                          # 内置模拟时的里程计
+
+mock:
+  enabled: false         # true 时内置运动学模拟，无 CARLA 也能跑通闭环
