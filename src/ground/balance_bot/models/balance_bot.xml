@@ -1,0 +1,105 @@
+<mujoco model="balance_bot">
+  <!--
+    两轮自平衡机器人（倒立摆式）。
+
+    结构极简，只有三个刚体：
+        base    底座（含电池/控制器），质心**在轮轴之上**
+        wheel_l / wheel_r  左右同轴驱动轮
+
+    为什么它在物理上会倒：
+        质心高于轮轴，重力矩会把底座越推越倾 —— 这就是倒立摆。
+        要靠轮子往倾斜方向"追"回来（跟人踩独轮车一个道理）。
+
+    几何要点（都是之前踩过的坑）：
+      1. 轮子碰撞体用**球**、圆柱只作外观：圆柱-平面在 MuJoCo 里是线接触，
+         会粘滑振荡（前一个模块实测滑移在 7%~80% 之间乱跳）。
+      2. 两轮同轴（x 都为 0），只差 y ±0.15，这样差速就能转向，
+         而前进方向只有一个自由度 —— 控制问题才是一维倒立摆。
+      3. 出生时给 0.02 rad 的初始倾角：完全竖直是平衡点，数值上永远不动，
+         不打破对称性就看不到任何动态。
+      4. 底座离地 0.05（轮半径），保证静止时只有两个轮子着地。
+
+    单位：米、弧度（compiler angle="radian"）
+  -->
+
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.75 0.75 0.75" ambient="0.35 0.35 0.35" specular="0 0 0"/>
+    <global azimuth="-140" elevation="-18"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.02 0.001" solref="0.02 1" solimp="0.92 0.96 0.001"/>
+    <joint damping="0.02" armature="0.01"/>
+    <site rgba="0.9 0.2 0.2 1" size="0.01"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.60 0.62 0.64" rgb2="0.72 0.74 0.76" markrgb="0.9 0.9 0.9" mark="cross"/>
+    <material name="floor_mat" texture="grid" texrepeat="20 20" reflectance="0.02"/>
+    <material name="body_mat" rgba="0.85 0.45 0.15 1"/>
+    <material name="tyre" rgba="0.08 0.08 0.08 1"/>
+    <material name="mast" rgba="0.25 0.25 0.28 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 6" dir="0 0 -1" directional="true"/>
+    <light pos="-3 -3 4" dir="1 1 -1" directional="false" diffuse="0.3 0.3 0.3"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="floor_mat"/>
+
+    <camera name="chase" pos="-1.6 -1.2 0.9" mode="targetbody" target="base" fovy="45"/>
+
+    <!-- ================= 机器人 ================= -->
+    <body name="base" pos="0 0 0.128">
+      <freejoint name="root"/>
+
+      <!-- 底座：0.26 x 0.18 x 0.10，重心在轮轴上方约 8 cm -->
+      <geom name="base_geom" type="box" pos="0 0 0.05" size="0.13 0.09 0.05"
+            material="body_mat" mass="4.0"/>
+
+      <!-- 立柱：把质心再抬高一点，让倒立摆特性更明显 -->
+      <geom name="mast_geom" type="box" pos="0 0 0.17" size="0.030 0.030 0.07"
+            material="mast" mass="1.2"/>
+
+      <!-- 左右驱动轮（同轴，差速转向） -->
+      <body name="wheel_l" pos="0 0.15 0">
+        <joint name="wheel_l_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_l_geom" type="sphere" size="0.05"
+              material="tyre" mass="0.5" friction="1.2 0.02 0.001"/>
+        <geom name="wheel_l_visual" type="cylinder" size="0.05 0.022" euler="1.5707963 0 0"
+              material="tyre" contype="0" conaffinity="0" group="2"/>
+      </body>
+      <body name="wheel_r" pos="0 -0.15 0">
+        <joint name="wheel_r_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_r_geom" type="sphere" size="0.05"
+              material="tyre" mass="0.5" friction="1.2 0.02 0.001"/>
+        <geom name="wheel_r_visual" type="cylinder" size="0.05 0.022" euler="1.5707963 0 0"
+              material="tyre" contype="0" conaffinity="0" group="2"/>
+      </body>
+
+      <!-- IMU 参考点（底座原点） -->
+      <site name="imu" pos="0 0 0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- 力矩控制：平衡靠"轮子往倾斜方向蹬"，用扭矩比用速度更接近真机 -->
+    <motor name="motor_l" joint="wheel_l_joint" gear="1" ctrlrange="-4 4"/>
+    <motor name="motor_r" joint="wheel_r_joint" gear="1" ctrlrange="-4 4"/>
+  </actuator>
+
+  <sensor>
+    <jointvel name="vel_l" joint="wheel_l_joint"/>
+    <jointvel name="vel_r" joint="wheel_r_joint"/>
+    <jointpos name="pos_l" joint="wheel_l_joint"/>
+    <jointpos name="pos_r" joint="wheel_r_joint"/>
+    <framepos name="pos" objtype="body" objname="base"/>
+    <framequat name="quat" objtype="body" objname="base"/>
+    <gyro name="gyro" site="imu"/>
+    <accelerometer name="accel" site="imu"/>
+  </sensor>
+</mujoco>
