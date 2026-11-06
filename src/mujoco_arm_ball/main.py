@@ -99,14 +99,14 @@ MODEL_XML = r"""
     <!-- 三自由度空间机械臂 -->
     <body name="base" pos="0 0 0">
       <geom name="basegeom" type="cylinder" size="0.058 0.030" pos="0 0 0.030" rgba="0.30 0.32 0.38 1"/>
-      <joint name="yaw" type="hinge" axis="0 0 1" pos="0 0 0.06" range="-180 180"/>
+      <joint name="yaw" type="hinge" axis="0 0 1" pos="0 0 0.06" range="-180 180" limited="true"/>
       <body name="shoulder" pos="0 0 0.06">
         <geom name="shoulderjoint" type="sphere" size="0.023" rgba="0.45 0.45 0.50 1"/>
-        <joint name="pitch1" type="hinge" axis="0 -1 0" range="-120 120"/>
+        <joint name="pitch1" type="hinge" axis="0 -1 0" range="-120 120" limited="true"/>
         <body name="l1" pos="0 0 0">
           <geom name="link1" type="capsule" fromto="0 0 0 0.30 0 0" size="0.033" rgba="0.20 0.42 0.92 1"/>
           <body name="l2" pos="0.30 0 0">
-            <joint name="pitch2" type="hinge" axis="0 -1 0" range="-150 150"/>
+            <joint name="pitch2" type="hinge" axis="0 -1 0" range="-150 150" limited="true"/>
             <geom name="link2" type="capsule" fromto="0 0 0 0.30 0 0" size="0.026" rgba="0.95 0.55 0.12 1"/>
             <body name="tip" pos="0.30 0 0">
               <geom name="tipball" type="sphere" size="0.023" rgba="0.90 0.15 0.15 1"/>
