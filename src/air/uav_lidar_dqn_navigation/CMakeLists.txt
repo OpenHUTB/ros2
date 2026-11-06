@@ -24,6 +24,7 @@ catkin_install_python(PROGRAMS
   scripts/train_dqn_nav.py
   scripts/camera_node.py
   scripts/train_dqn_e2e.py
+  scripts/dqn_e2e_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
