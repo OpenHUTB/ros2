@@ -24,7 +24,7 @@
 
 轮子用三个关节约束在矢状面内：
 
-```xml
+```
 <joint name="slide_x" type="slide" axis="1 0 0"/>
 <joint name="slide_z" type="slide" axis="0 0 1"/>
 <joint name="roll"    type="hinge" axis="0 1 0"/>
@@ -42,7 +42,7 @@
 
 ### 2.1 无 ROS 环境（只验证物理）
 
-```bash
+```
 python3 -m passive_walker.sim
 # 或
 python3 main.py --seconds 20 --push 0.3
@@ -50,14 +50,14 @@ python3 main.py --seconds 20 --push 0.3
 
 输出示例（Ubuntu 20.04 虚拟机 + MuJoCo 3.1.6 实测）：
 
-```text
+```
 无执行器 nu=0（0 表示完全被动）| 仿真 20.0 s | 前进 23.76 m | 步数 95 | 稳态速度 1.25 m/s | 轮心距坡面 0.468 m（0.464~0.480）
 [OK] 被动行走运行正常（无执行器，仅靠重力和落地碰撞前进）
 ```
 
 ### 2.2 ROS 2 节点
 
-```bash
+```
 colcon build --packages-select passive_walker
 source install/setup.bash
 ros2 run passive_walker main.py node --seconds 20
@@ -67,7 +67,7 @@ ros2 topic echo /passive_walker/steps
 
 或用 launch：
 
-```bash
+```
 ros2 launch passive_walker main.launch.py seconds:=20 push:=0.3
 ```
 
@@ -75,7 +75,7 @@ ros2 launch passive_walker main.launch.py seconds:=20 push:=0.3
 
 ### 2.3 环境自检
 
-```bash
+```
 python3 main.py doctor
 ```
 
