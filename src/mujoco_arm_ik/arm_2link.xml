@@ -43,7 +43,7 @@
     </body>
   </worldbody>
   <actuator>
-    <motor name="shoulder_m" joint="shoulder" ctrlrange="-15 15" gear="1"/>
-    <motor name="elbow_m" joint="elbow" ctrlrange="-15 15" gear="1"/>
+    <motor name="shoulder_m" joint="shoulder" ctrlrange="-15 15" gear="1" ctrllimited="true"/>
+    <motor name="elbow_m" joint="elbow" ctrlrange="-15 15" gear="1" ctrllimited="true"/>
   </actuator>
 </mujoco>
