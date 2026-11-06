@@ -157,6 +157,8 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../msk_tendon_basics/">肌肉-肌腱串联弹性实验</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
@@ -549,6 +551,9 @@
 <p>一块骨骼肌由<strong>收缩成分</strong>（肌纤维）和<strong>弹性成分</strong>（肌腱）串联组成。肌纤维主动
 收缩产生力，肌腱像弹簧一样储能并缓冲冲击。仿真中常把肌腱简化为串联弹性单元
 （series elasticity），或先忽略它、只建收缩成分。</p>
+<p>本版块用 <a href="../msk_tendon_basics/">肌肉-肌腱串联弹性实验</a> 把这一步补上：
+同样的激活度下，肌腱会被拉长、肌纤维会变短，传到关节上的力会小一点，
+但肌腱里存下了弹性势能。</p>
 <h3 id="22">2.2 激活度</h3>
 <p>神经系统不直接控制肌肉出力，而是发出<strong>神经指令</strong> <code>u</code>，使肌肉产生<strong>激活度</strong>
 <code>a ∈ [0, 1]</code>。激活度不能瞬时跳变，用一阶滞后描述：</p>
@@ -655,12 +660,24 @@
 <td>基本概念与工具</td>
 </tr>
 <tr>
+<td><a href="../msk_tendon_basics/">肌肉-肌腱串联弹性实验</a></td>
+<td>单关节 + 拮抗肌，肌腱的传力损失、储能与松手释放，32 个单元测试</td>
+</tr>
+<tr>
 <td><a href="../muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a></td>
 <td>单自由度关节 + 拮抗肌对，Hill 模型实现、134 个单元测试与实测数据</td>
 </tr>
 <tr>
 <td><a href="../msk_arm_reach/">MuJoCo 双关节肌肉骨骼手臂到达控制</a></td>
 <td>肩肘两自由度、六条肌肉、双关节肌与笛卡尔到达</td>
+</tr>
+<tr>
+<td><a href="../msk_human_walking_teleop/">MuJoCo 肌肉骨骼人键盘遥操作</a></td>
+<td>22 条 Hill 肌肉驱动 13 DoF 全身模型，行走/踢腿/蹲起</td>
+</tr>
+<tr>
+<td><a href="../msk_hand_teleop/">MuJoCo 肌肉骨骼灵巧手</a></td>
+<td>11 条肌肉驱动灵巧手，键盘遥操作与神经网络激活控制</td>
 </tr>
 </tbody>
 </table>
@@ -675,7 +692,7 @@
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../../humanoid/zmp_walk_planner/" title="简化双足步态动画演示"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../msk_human_walking_teleop/" title="MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../msk_tendon_basics/" title="肌肉-肌腱串联弹性实验">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -693,7 +710,7 @@
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../../humanoid/zmp_walk_planner/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../msk_human_walking_teleop/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../msk_tendon_basics/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
