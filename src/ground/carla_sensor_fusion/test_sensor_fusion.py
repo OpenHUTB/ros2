@@ -211,6 +211,26 @@ def test_lidar_radar_association():
     print("[OK] LiDAR/Radar 杂波下按 pred 锁定目标（非最近反射点）")
 
 
+def test_lidar_bearing_association():
+    """评审复测用例：两簇同距离、不同方位，预测方位必须参与关联。"""
+    import math
+    import numpy as np
+    from fusion_perception import lidar_points_to_observation
+    from sensor_fusion_core import wrap_angle
+    ang = 1.55
+    pts = np.array([
+        [10.0, 0.0, 0.0, 0.0], [10.6, 0.0, 0.0, 0.0], [11.2, 0.0, 0.0, 0.0],
+        [10.0 * math.cos(ang), 10.0 * math.sin(ang), 0.0, 0.0],
+        [10.6 * math.cos(ang), 10.6 * math.sin(ang), 0.0, 0.0],
+        [11.2 * math.cos(ang), 11.2 * math.sin(ang), 0.0, 0.0],
+    ])
+    obs = lidar_points_to_observation(pts, pred=(10.0, 0.0), gate=2.5, gate_ang=0.6)
+    assert obs is not None, "有目标簇时不应返回 None"
+    assert abs(wrap_angle(obs[1] - 0.0)) < 0.3, \
+        "pred 含 θ 时应锁定方位一致的目标簇（不应选中 1.55 rad 干扰簇）"
+    print("[OK] LiDAR 方位门限：同距不同方位时按预测方位关联，不被干扰簇带走")
+
+
 def run():
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

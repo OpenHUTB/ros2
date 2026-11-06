@@ -76,12 +76,17 @@ def mask_to_bearing(mask, fov_deg, target_tag=CARLA_TAG_VEHICLE,
 
 # ---------------------------------------------------------------- 点云聚类
 def voxel_downsample(points_xy, voxel=0.4):
-    """体素网格降采样，(N,2) → 每体素取均值，降低聚类复杂度。"""
-    if len(points_xy) == 0:
-        return points_xy
-    key = np.floor(points_xy / voxel).astype(int)
-    _, idx = np.unique(key, axis=0, return_index=True)
-    return points_xy[idx]
+    """体素网格降采样，(N,2) → 每体素取均值（与注释一致），降低聚类复杂度。"""
+    pts = np.asarray(points_xy, dtype=float)
+    if len(pts) == 0:
+        return pts
+    key = np.floor(pts / voxel).astype(int)
+    uniq, inv = np.unique(key, axis=0, return_inverse=True)
+    sums = np.zeros((len(uniq), 2), dtype=float)
+    counts = np.zeros(len(uniq), dtype=float)
+    np.add.at(sums, inv, pts)
+    np.add.at(counts, inv, 1.0)
+    return sums / counts[:, None]
 
 
 def cluster_points_2d(points_xy, eps=1.2, min_pts=3):
@@ -118,11 +123,14 @@ def cluster_points_2d(points_xy, eps=1.2, min_pts=3):
 
 def lidar_points_to_observation(points, min_range=1.5, max_range=40.0,
                                 z_min=-0.8, z_max=2.5,
-                                pred=None, gate=2.5, eps=1.2, min_pts=3):
+                                pred=None, gate=2.5, gate_ang=0.6,
+                                eps=1.2, min_pts=3):
     """LiDAR 点云 (N,4)[x,y,z,intensity]（LiDAR 坐标系）→ 目标观测 (r, θ)。
 
-    过滤距离/高度后做体素降采样 + 欧式聚类，再按簇质心关联（评审点 3）：
-      - pred=(r_pred,) 给出时，选 |簇距离 - r_pred| 最小且 < gate 的簇；
+    距离/高度过滤 → 体素降采样 → 欧式聚类，再按「半径 + 方位」双门限关联：
+      - pred=(r_pred, θ_pred)：簇心到预测点的距离差 <= gate(m) **且**方位差 <= gate_ang(rad)；
+        双门限内按 (距离差, 方位差) 字典序取最优（同距离不同方位时由方位决定）。
+      - pred=(r_pred,)：仅半径门限（兼容旧调用）。
       - 未给 pred 时退回最近簇（bootstrap）。
     返回 None 表示本帧未检出。
     """
@@ -141,9 +149,20 @@ def lidar_points_to_observation(points, min_range=1.5, max_range=40.0,
         return None
     if pred is not None:
         r_pred = float(pred[0])
-        best = min(clusters, key=lambda c: abs(float(np.hypot(*c[0])) - r_pred))
-        if abs(float(np.hypot(*best[0])) - r_pred) > gate:
+        th_pred = float(pred[1]) if len(pred) > 1 else None
+        cand = []
+        for c in clusters:
+            cr, cth = _polar(np.asarray(c[0]))
+            dr = abs(cr - r_pred)
+            dth = abs(wrap_angle(cth - th_pred)) if th_pred is not None else 0.0
+            if dr > gate:
+                continue
+            if th_pred is not None and dth > gate_ang:
+                continue
+            cand.append((dr, dth, c))
+        if not cand:
             return None
+        best = min(cand, key=lambda t: (t[0], t[1]))[2]
         cxy = np.asarray(best[0])
     else:
         cxy = np.asarray(min(clusters, key=lambda c: np.hypot(*c[0]))[0])
@@ -214,8 +233,19 @@ def radar_points_to_observation(points, min_range=1.5, max_range=40.0,
         return None
     depth, azimuth = depth[keep], azimuth[keep]
     if pred is None:
-        k = np.argsort(depth)[:min(n_nearest, depth.size)]
-        return float(depth[k].mean()), float(np.mean(azimuth[k]))
+        # bootstrap：按深度做一维聚类，取「点数最多的回波簇」，避免杂波点稀释目标
+        order = np.argsort(depth)
+        groups, cur = [], [int(order[0])]
+        for idx in order[1:]:
+            idx = int(idx)
+            if depth[idx] - depth[cur[-1]] <= 1.0:
+                cur.append(idx)
+            else:
+                groups.append(cur)
+                cur = [idx]
+        groups.append(cur)
+        best = max(groups, key=len)
+        return float(depth[best].mean()), float(np.mean(azimuth[best]))
 
     pref = _xy(float(pred[0]), float(pred[1]))
     pts_xy = np.stack([depth * np.cos(azimuth), depth * np.sin(azimuth)], axis=1)

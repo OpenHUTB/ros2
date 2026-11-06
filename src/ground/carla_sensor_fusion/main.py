@@ -72,7 +72,14 @@ def main(argv=None):
     p.add_argument("--timeout", type=float, default=30.0)
     p.add_argument("--map", default="Town03")
     p.add_argument("--seconds", type=float, default=30.0)
+    p.add_argument("--radar-hfov", type=float, default=30.0)
+    p.add_argument("--radar-range", type=float, default=40.0)
+    p.add_argument("--radar-tick", type=float, default=0.05)
     p.add_argument("--csv", default="carla_metrics.csv")
+
+    p = sub.add_parser("replay", help="无 CARLA 离线端到端回放（验证链路 + 产出指标）")
+    p.add_argument("--seconds", type=float, default=30.0)
+    p.add_argument("--csv", default="offline_replay_metrics.csv")
 
     sub.add_parser("test", help="离线最小测试（无需 CARLA）")
     sub.add_parser("doctor", help="依赖体检")
@@ -91,10 +98,16 @@ def main(argv=None):
         from carla_sensor_fusion import main as carla_main
         argv_c = ["--host", args.host, "--port", str(args.port),
                   "--timeout", str(args.timeout), "--map", args.map,
-                  "--seconds", str(args.seconds), "--csv", args.csv]
+                  "--seconds", str(args.seconds), "--csv", args.csv,
+                  "--radar-hfov", str(args.radar_hfov),
+                  "--radar-range", str(args.radar_range),
+                  "--radar-tick", str(args.radar_tick)]
         return carla_main(argv_c)
     if args.cmd == "test":
         return test()
+    if args.cmd == "replay":
+        from offline_replay import main as replay_main
+        return replay_main(["--seconds", str(args.seconds), "--csv", args.csv])
     return doctor()
 
 

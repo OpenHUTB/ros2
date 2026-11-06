@@ -24,6 +24,7 @@ carla_sensor_fusion/
 ├── carla_sensor_fusion.py   # CARLA 渲染版主脚本（真实传感器回调链路）
 ├── sim_2d_fusion.py         # 2D 轻量仿真版主脚本（生成动图 + 指标 CSV）
 ├── test_sensor_fusion.py    # 离线最小测试（无需 CARLA）
+├── offline_replay.py        # 无 CARLA 离线端到端回放（同链路产出指标）
 ├── launch/main.launch       # ROS launch 统一启动入口
 ├── package.xml / CMakeLists.txt / setup.py  # catkin 包配置（catkin_install_python 注册入口与依赖）
 ├── fusion_demo.gif          # 2D 版本地运行生成的动图（本地调试用）
@@ -42,6 +43,7 @@ python3 sim_2d_fusion.py                    # 生成 fusion_demo.gif + fusion_me
 python3 sim_2d_fusion.py --show             # 弹出窗口实时查看（自动切换交互后端）
 python3 main.py sim2d                       # 等价统一入口
 python3 main.py sim2d --warmup-frames 40    # RMSE 只统计收敛稳定段
+python3 main.py replay --seconds 30         # 无 CARLA 离线端到端回放（同链路，产出指标 CSV）
 ```
 
 ### CARLA 渲染版（需本机装 CARLA）
@@ -91,6 +93,8 @@ python3 main.py doctor      # 依赖体检
 - **本沙箱无 GPU / CARLA / ROS**：`carla_sensor_fusion.py` 的 CARLA 链路按官方 API 完整实现（真实传感器 listen 回调、队列缓冲、语义分割/点云/雷达点检测），但未在沙箱实跑，需本机启动 CARLA 后执行 `python3 main.py carla` 验证。
 - **2D 轻量版为合成传感器仿真**：传感器观测由真值加高斯噪声合成，用于算法演示与指标复现，不是真实物理传感器数据。文档/PR 已如实声明此定位，不夸大。
 - **目标关联与单目标前提**：相机按语义分割 ROI（以 EKF 预测方位为中心 ±80 px）取目标像素质心；LiDAR 体素降采样 + 欧式聚类后按预测距离门限选簇；Radar 按预测位置选反射点簇。首帧无预测时退回「最近簇 / 全图质心」bootstrap，故演示场景应只保留一个被跟踪车辆；同场多车时以 EKF 预测锁定目标。
+- **传感器时间戳同步**：`SensorHub` 每项入队为 `(frame, timestamp, payload)`，写入 `SyncBuffer` 使用回调的传感器 timestamp（不再用主循环时刻），融合网格按最近时间戳对齐。
+- **离线回放验证（本沙箱无 CARLA）**：`main.py replay --seconds 30` 用合成数据流驱动与 CARLA 版相同的感知→同步→标定→EKF 链路。实测 3000 ticks（camera 1000 / lidar 300 / radar 600 / imu 3000 帧），融合 567 次，估计 RMSE 0.125 m，CSV 见 `offline_replay_metrics.csv`；此为链路验证，非真实 CARLA 物理传感器结果。
 - **catkin 安装**：已补 `CMakeLists.txt`（`catkin_package()` + `catkin_install_python()` 安装入口与全部依赖模块 + 安装 launch）。沙箱无 ROS/catkin 无法编译，本机验证：`catkin_make && source devel/setup.bash && roslaunch carla_sensor_fusion main.launch mode:=sim2d`。
 
 ## 合规说明

@@ -292,18 +292,19 @@ def run(args):
                     last["cam"] = (th_cam, t)
                     cam_updated = th_cam is not None
                     if th_cam is not None:          # 无观测不入队，避免同步取到 None
-                        buffer.push("camera", t, th_cam)
+                        # 用传感器真实时间戳入队（item=(frame, timestamp, payload)）
+                        buffer.push("camera", cam_item[1], th_cam)
 
             lid_updated = False
             if lid_item is not None:
                 pts = decode_lidar_points(lid_item[2])
                 obs = lidar_points_to_observation(
                     pts, max_range=args.lidar_range,
-                    pred=(pred_r,) if pred_r is not None else None)
+                    pred=(pred_r, pred_th) if pred_r is not None else None)
                 last["lid"] = (obs, t)
                 lid_updated = obs is not None
                 if obs is not None:
-                    buffer.push("lidar", t, obs)
+                    buffer.push("lidar", lid_item[1], obs)
 
             rad_updated = False
             if rad_item is not None:
@@ -314,11 +315,11 @@ def run(args):
                 last["rad"] = (rob, t)
                 rad_updated = rob is not None
                 if rob is not None:
-                    buffer.push("radar", t, rob)
+                    buffer.push("radar", rad_item[1], rob)
 
             if imu_item is not None:
                 last["yaw"] = (imu_compass_to_yaw(imu_item[2]), t)
-                buffer.push("imu", t, last["yaw"][0])
+                buffer.push("imu", imu_item[1], last["yaw"][0])
 
             # ---- 在线外参标定：同一时刻有相机方位 + 雷达(Radar)观测就配对
             if (ext is None and cam_updated and rad_updated and
@@ -447,6 +448,12 @@ def main(argv=None):
     ap.add_argument("--lidar-tick", type=float, default=0.1)
     ap.add_argument("--imu-tick", type=float, default=0.01)
     ap.add_argument("--lidar-range", type=float, default=50.0)
+    ap.add_argument("--radar-hfov", type=float, default=30.0,
+                    help="CARLA Radar 水平视场(度)")
+    ap.add_argument("--radar-range", type=float, default=40.0,
+                    help="CARLA Radar 量程(m)")
+    ap.add_argument("--radar-tick", type=float, default=0.05,
+                    help="CARLA Radar 采样周期(s)")
     ap.add_argument("--calib-samples", type=int, default=12)
     ap.add_argument("--csv", default="carla_metrics.csv")
     args = ap.parse_args(argv)
