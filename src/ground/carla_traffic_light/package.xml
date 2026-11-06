@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_traffic_light</name>
+  <version>0.1.0</version>
+  <description>
+    CARLA 交通信号灯识别与响应：读取信号灯状态与停止线，按红灯停 / 黄灯判断
+    能否停住 / 绿灯行的规则决策，用 PI + 前馈的纵向控制器执行，并保存运行截图。
+  </description>
+
+  <maintainer email="zyfmy@example.com">zyfmy</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- 运行时不依赖任何 ROS 组件：scripts/main.py 是纯 argparse 脚本，不 import
+       rospy，也不收发任何 ROS 消息，roslaunch 只是把它当普通可执行文件拉起。
+       原先声明的 rospy / std_msgs / geometry_msgs 代码里一次都没用到，已删。
+       CARLA 客户端走 pip 或 CARLA 自带 PythonAPI 安装（见 README），不是
+       rosdep key，不在此声明。 -->
+  <export>
+  </export>
+</package>
