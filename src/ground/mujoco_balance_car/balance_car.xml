@@ -1,0 +1,42 @@
+<mujoco model="balance_car">
+    <option gravity="0 0 -9.81" timestep="0.002"/>
+    <default>
+        <geom condim="3" friction="1 0.05 0.01" solimp="0.9 0.95 0.01" solref="0.02 1"/>
+    </default>
+    <worldbody>
+        <light pos="0 0 3" dir="0 0 -1"/>
+        <geom type="plane" size="10 10 0.1" rgba="0.8 0.9 0.8 1"/>
+
+        <!-- 车体底盘 -->
+        <body name="chassis" pos="0 0 0.15">
+            <joint name="chassis_slide" type="slide" axis="1 0 0"/>
+            <!-- 尺寸调整为宽0.3长0.6高0.1，离地间隙留足 -->
+            <geom type="box" size="0.3 0.15 0.05" mass="1" rgba="0.2 0.5 0.8 1"/>
+
+            <!-- 左轮：用 fromto 语法确保绝对是一个沿着 Y 轴的圆柱体（真正的车轮） -->
+            <body name="left_wheel" pos="0 0.18 -0.07">
+                <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
+                <!-- 起点在y=0.15，终点在y=0.21，半径0.08 -->
+                <geom type="cylinder" fromto="0 -0.03 0  0 0.03 0" size="0.08" mass="0.2" rgba="0.1 0.1 0.1 1"/>
+            </body>
+
+            <!-- 右轮 -->
+            <body name="right_wheel" pos="0 -0.18 -0.07">
+                <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
+                <geom type="cylinder" fromto="0 -0.03 0  0 0.03 0" size="0.08" mass="0.2" rgba="0.1 0.1 0.1 1"/>
+            </body>
+
+            <!-- 倒立摆杆：确保初始是在正中间竖直的 -->
+            <body name="pole" pos="0 0 0.05">
+                <joint name="pole_joint" type="hinge" axis="0 1 0" damping="0.01"/>
+                <geom type="cylinder" fromto="0 0 0  0 0 0.5" size="0.02" mass="0.3" rgba="0.8 0.2 0.2 1"/>
+                <geom type="sphere" pos="0 0 0.5" size="0.04" mass="0.1" rgba="0.8 0.2 0.2 1"/>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <motor name="left_motor" joint="left_wheel_joint" ctrlrange="-5 5"/>
+        <motor name="right_motor" joint="right_wheel_joint" ctrlrange="-5 5"/>
+    </actuator>
+</mujoco>

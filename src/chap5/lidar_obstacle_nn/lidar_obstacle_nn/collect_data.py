@@ -53,19 +53,25 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Float64
 
-DEFAULT_SCAN_SIZE = 360
-DEFAULT_DANGER_DISTANCE = 1.0
-DEFAULT_FAR_DISTANCE = 3.0
+from lidar_obstacle_nn.scan_utils import (
+    CLASS_NAMES,
+    DEFAULT_DANGER_DISTANCE,
+    DEFAULT_FAR_DISTANCE,
+    DEFAULT_SCAN_MAX,
+    DEFAULT_SCAN_SIZE,
+    label_for_min_range,
+    prepare_scan,
+)
+
 DEFAULT_NUM_SAMPLES = 1000
 DEFAULT_PER_STATION = 150
-DEFAULT_MAX_RANGE = 30.0
 
 # Default motion-mode stations (joint position, class label).
 # Link pose x is 0.6 m at joint 0; the box is 0.4 m deep (half 0.2),
 # so surface distance = 0.6 + joint - 0.2 = joint + 0.4.
 #   joint 0.0 / 0.5 -> surface 0.4 / 0.9 m -> near  (< 1.0)
 #   joint 0.8 / 2.1 -> surface 1.2 / 2.5 m -> far
-#   joint 3.1 / 3.6 -> surface 3.5 / 4.2 m -> free (>= 3.0)
+#   joint 3.1 / 3.6 -> surface 3.5 / 4.0 m -> free (>= 3.0)
 DEFAULT_JOINT_POSITIONS = [0.0, 0.5, 0.8, 2.1, 3.1, 3.6]
 DEFAULT_STATION_LABELS = [0, 0, 1, 1, 2, 2]
 
@@ -155,9 +161,15 @@ class DataCollectorNode(Node):
                     'and have the same length (got %d joints, %d labels)'
                     % (len(joints), len(labels))
                 )
-            names = ['near', 'far', 'free']
+            if any(int(label) not in (0, 1, 2) for label in labels):
+                raise ValueError('station_labels values must be 0, 1 or 2')
             self._phases = [
-                (float(j), int(l), names[int(l)], float(j) + surface_offset)
+                (
+                    float(j),
+                    int(l),
+                    CLASS_NAMES[int(l)],
+                    float(j) + surface_offset,
+                )
                 for j, l in zip(joints, labels)
             ]
             self._phase_idx = 0
@@ -199,22 +211,18 @@ class DataCollectorNode(Node):
     # ------------------------------------------------------------------
     def _preprocess(self, ranges) -> np.ndarray:
         """Resample to scan_size and normalise inf/nan to max range."""
-        raw = np.asarray(ranges, dtype=np.float32)
-        if raw.size != self._scan_size:
-            idx = np.linspace(0, raw.size - 1, self._scan_size)
-            raw = np.interp(idx, np.arange(raw.size), raw).astype(np.float32)
-        # Replace inf / nan with the maximum range so the NN sees a
-        # well-conditioned vector (consistent with inference_node.py).
-        raw = np.nan_to_num(raw, nan=DEFAULT_MAX_RANGE, posinf=DEFAULT_MAX_RANGE,
-                            neginf=0.0)
-        return np.clip(raw, 0.0, DEFAULT_MAX_RANGE)
+        return prepare_scan(
+            ranges,
+            scan_size=self._scan_size,
+            scan_max=DEFAULT_SCAN_MAX,
+        )
 
     def _label_for(self, min_range: float) -> int:
-        if min_range < self._danger_distance:
-            return 0
-        if min_range >= self._far_distance:
-            return 2
-        return 1
+        return label_for_min_range(
+            min_range,
+            danger_distance=self._danger_distance,
+            far_distance=self._far_distance,
+        )
 
     # ------------------------------------------------------------------
     # Motion mode
@@ -329,15 +337,15 @@ class DataCollectorNode(Node):
             scan_size=self._scan_size,
             danger_distance=self._danger_distance,
             far_distance=self._far_distance,
-            class_names=np.asarray(['near', 'far', 'free']),
+            class_names=np.asarray(CLASS_NAMES),
             source=np.asarray('sim_dynamic' if self._motion_enabled else 'sim_static'),
             **extra,
         )
 
-        unique, counts = np.unique(labels, return_counts=True)
+        counts = np.bincount(labels, minlength=len(CLASS_NAMES))
         dist = ', '.join(
             '%s=%d' % (name, int(cnt))
-            for name, cnt in zip(['near', 'far', 'free'], counts)
+            for name, cnt in zip(CLASS_NAMES, counts)
         )
         self.get_logger().info(
             'Saved dataset: %s (shape=%s, %s)'

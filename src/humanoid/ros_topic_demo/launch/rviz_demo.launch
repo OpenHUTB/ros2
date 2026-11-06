@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="ros_topic_demo" type="trajectory_node.py" name="virtual_point" output="screen"/>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find ros_topic_demo)/config/rviz.rviz"/>
+</launch>
