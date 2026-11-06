@@ -9,6 +9,8 @@ Python 3.10 或 3.11；ROS 2 部分使用 Ubuntu 22.04 / Humble。先在模块�
 ```bash
 python3 -m pip install -r requirements.txt
 python3 main.py
+# 口径可调：扰动结束时刻、扰动窗口、容差带、连续保持时间
+python3 main.py --disturbance-end 3.0 --tolerance 0.05 --hold 0.5
 ```
 
 ROS 2 使用系统 Python。构建工作空间时只选择本包，避免构建仓库内其他独立实验：

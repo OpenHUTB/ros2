@@ -5,4 +5,5 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     """返回模块的默认启动描述."""
-    return LaunchDescription([Node(package='uav_hover_log_eval', executable='node', output='screen')])
+    return LaunchDescription([
+        Node(package='uav_hover_log_eval', executable='node', output='screen')])

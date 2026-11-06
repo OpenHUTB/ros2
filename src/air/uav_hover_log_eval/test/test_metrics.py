@@ -20,6 +20,23 @@ def test_recovery_requires_continuous_hold():
     assert result['recovery_s'] == pytest.approx(0.4)
     assert result['complete_8s_episode']
     assert result['tail_within_tolerance']
+    assert result['error_left_tolerance']
+    assert result['disturbance_peak_m'] == pytest.approx(0.3)
+
+
+def test_tolerance_changes_recovery_and_flag():
+    times = np.arange(0, 8.001, 0.02)
+    error = np.where(times < 3.4, 0.3, 0.)
+    data = np.column_stack((times, 1.5 + error, np.full(len(times), 1.5)))
+    loose = summarize(data, tolerance=0.35)
+    assert not loose['error_left_tolerance']
+    assert loose['recovery_s'] == pytest.approx(0.0)
+    assert loose['tail_ratio'] == 1.0
+
+
+def test_gap_breaks_complete_episode():
+    data = np.array([[0., 1.5, 1.5], [0.02, 1.5, 1.5], [8., 1.5, 1.5]])
+    assert not summarize(data)['complete_8s_episode']
 
 
 def test_invalid_csv_and_time(tmp_path):

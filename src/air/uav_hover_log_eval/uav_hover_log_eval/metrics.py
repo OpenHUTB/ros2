@@ -1,4 +1,4 @@
-"""校验定高日志，并从有限、单调的采样计算误差与恢复时间。"""
+"""校验定高日志，并从有限、单调的采样计算误差与扰动恢复指标。"""
 import csv
 import math
 from pathlib import Path
@@ -22,23 +22,34 @@ def load_log(path):
     return data
 
 
-def summarize(data, disturbance_end=3.0, tolerance=0.15, hold_s=0.5):
-    """按采样点计算 RMSE；恢复需连续保持，间隙过大不计作连续。"""
+def summarize(data, disturbance_end=3.0, tolerance=0.15, hold_s=0.5,
+              disturbance_window=1.0):
+    """按采样点统计误差与扰动峰值，恢复判定需连续保持."""
     values = np.asarray(data, dtype=float)
     if values.ndim != 2 or values.shape[1] != 3 or len(values) < 2:
         raise ValueError('需要至少两行、三列的定高数据')
     if not np.all(np.isfinite(values)) or np.any(np.diff(values[:, 0]) <= 0):
         raise ValueError('日志必须有限且时间严格递增')
-    if not all(math.isfinite(v) for v in (disturbance_end, tolerance, hold_s)) or tolerance <= 0 or hold_s <= 0:
-        raise ValueError('恢复参数必须有限，容差和保持时间必须为正')
+    params = (disturbance_end, tolerance, hold_s, disturbance_window)
+    if (not all(math.isfinite(v) for v in params)
+            or tolerance <= 0 or hold_s <= 0 or disturbance_window <= 0):
+        raise ValueError('恢复参数必须有限，容差、保持时间与扰动窗口必须为正')
+
     times, height, target = values.T
     error = height - target
     median_dt = float(np.median(np.diff(times)))
+
+    # 扰动窗口峰值偏差：抗扰能力的主指标，不受容差取值影响。
+    window = (times >= disturbance_end - disturbance_window) & (times < disturbance_end)
+    peak = float(np.max(np.abs(error[window]))) if window.any() else None
+    # 扰动结束后误差是否真的出过容差带：没出带时恢复时间只等于采样周期。
+    left_band = bool(np.any(np.abs(error[times >= disturbance_end]) > tolerance))
+
     start, recovered = None, None
     for i, (now, residual) in enumerate(zip(times, error)):
         if now < disturbance_end:
             continue
-        if abs(residual) > tolerance or (i and now - times[i-1] > 2.5 * median_dt):
+        if abs(residual) > tolerance or (i and now - times[i - 1] > 2.5 * median_dt):
             start = None
             continue
         if start is None:
@@ -46,13 +57,29 @@ def summarize(data, disturbance_end=3.0, tolerance=0.15, hold_s=0.5):
         if now - start >= hold_s - 1e-9:
             recovered = float(start - disturbance_end)
             break
+
     tail = times >= times[-1] - 1.0
-    complete = times[0] <= 0.021 and times[-1] >= 7.999
     tail_covered = times[-1] - times[tail][0] >= 0.95
-    return {'samples': len(times), 'duration_s': float(times[-1] - times[0]),
-            'rmse_m': float(np.sqrt(np.mean(error ** 2))),
-            'mae_m': float(np.mean(np.abs(error))),
-            'max_error_m': float(np.max(np.abs(error))),
-            'tail_within_tolerance': bool(tail_covered and np.all(np.abs(error[tail]) <= tolerance)),
-            'complete_8s_episode': bool(complete),
-            'recovery_s': recovered, 'tolerance_m': tolerance, 'hold_s': hold_s}
+    tail_error = np.abs(error[tail])
+    # 间隔上限取"总时长的 1/8"和"2.5 倍中位间隔"中更严的一个：
+    # 稀疏日志（少数几个点）会因此被判为不完整回合。
+    max_gap = min(0.125 * (times[-1] - times[0]), 2.5 * median_dt)
+    gap_ok = bool(np.all(np.diff(times) <= max_gap))
+    complete = bool(times[0] <= 0.05 and times[-1] >= 7.95 and gap_ok)
+    return {
+        'samples': len(times),
+        'duration_s': float(times[-1] - times[0]),
+        'rmse_m': float(np.sqrt(np.mean(error ** 2))),
+        'mae_m': float(np.mean(np.abs(error))),
+        'max_error_m': float(np.max(np.abs(error))),
+        'disturbance_peak_m': peak,
+        'error_left_tolerance': left_band,
+        'tail_within_tolerance': bool(tail_covered and np.all(tail_error <= tolerance)),
+        'tail_ratio': float(np.mean(tail_error <= tolerance)),
+        'complete_8s_episode': complete,
+        'recovery_s': recovered,
+        'tolerance_m': tolerance,
+        'hold_s': hold_s,
+        'disturbance_end_s': disturbance_end,
+        'disturbance_window_s': disturbance_window,
+    }
