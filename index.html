@@ -272,6 +272,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/lidar_mcl_localization/">基于 2D 激光雷达的蒙特卡洛定位（MCL）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
@@ -631,7 +633,12 @@
 <li><a href="ground/carla_auto_light/">地面载具灯光自动控制</a></li>
 <li><a href="ground/traffic_sign_speed_control/">限速标志识别与神经网络限速控制</a> —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价</li>
 <li><a href="ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a></li>
-<li><a href="ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a></li>
+<li>
+<p><a href="ground/lidar_mcl_localization/">基于 2D 激光雷达的蒙特卡洛定位（MCL）</a> —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m</p>
+</li>
+<li>
+<p><a href="ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a></p>
+</li>
 <li><a href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a> —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照</li>
 <li>
 <p><a href="ground/carla_platoon/">多车协同编队（CARLA）</a> —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队</p>
