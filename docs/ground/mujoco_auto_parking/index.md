@@ -101,7 +101,7 @@ mujoco_auto_parking/
 ## 文档工具与提交说明
 
 - 本模块按仓库根 `mkdocs.yml` 构建，`mkdocs build --clean` 已在本地通过；GitHub Pages 由仓库的 `OpenHUTB/actions-mkdocs` 工作流构建（该工作流使用 OpenHUTB 的 `hutb-doc` 发行版）。
-- Word 导出使用 `markdown + htmldocx + python-docx`，脚本为 `tools/export_word.py`；如果课程提供了 `Markdown2Anything` 专用版本，提交前可以用课程版本再导出一次做格式对照。
+- Word 导出使用 `markdown + htmldocx + python-docx`（`pip install markdown htmldocx python-docx`），脚本为 `src/ground/mujoco_auto_parking/tools/export_word.py`（在包目录下即 `tools/export_word.py`）。默认读取仓库 `docs/`，输出到 `docs/evidence/mujoco_auto_parking/mujoco_auto_parking_report.docx`；在 WSL 临时工作空间运行时设置 `AUTO_PARKING_DOCS_DIR=/path/to/ros2/docs`。如果课程提供了 `Markdown2Anything` 专用版本，提交前可以用课程版本再导出一次做格式对照。
 - GIF 和截图都来自真实 MuJoCo 渲染；`tools/make_gifs.py` 生成 GIF，`screenshots/` 下是从 GIF 提取的静态截图。
 - GitHub 的 commit message 不能直接嵌图；运行效果图放在 PR 正文和 `docs/img/ground/mujoco_auto_parking/`。如果老师要求 commit message 里也带图，推送前用 `git commit --amend` 在提交信息末尾补一行图片路径。
 

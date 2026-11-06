@@ -37,7 +37,7 @@ task4 exit=0
 
 ## Word 导出
 
-`mujoco_auto_parking_report.docx`：由 `tools/export_word.py` 将模块首页和四篇文档合并导出，`python-docx` 重新打开校验为 264 段、21 张表。LaTeX 公式以文本保留。
+`mujoco_auto_parking_report.docx`：由 `src/ground/mujoco_auto_parking/tools/export_word.py`（依赖 `markdown`、`htmldocx`、`python-docx`；非仓库目录运行时用 `AUTO_PARKING_DOCS_DIR` 指定 `docs` 路径）将模块首页和四篇文档合并导出，`python-docx` 重新打开校验为 264 段、21 张表。LaTeX 公式以文本保留。
 
 ## 演示 GIF
 

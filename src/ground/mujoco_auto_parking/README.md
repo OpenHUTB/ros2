@@ -161,7 +161,7 @@ ros2 launch mujoco_auto_parking task3.launch.py goal:=0.25,-1.2
 - 本地构建：在仓库根执行 `mkdocs build --clean`；
 - 一键回归：`bash tools/verify_all.sh`；
 - GIF 生成：`python3 tools/make_gifs.py`；
-- Word 导出：`python3 tools/export_word.py`；
+- Word 导出：先 `pip install markdown htmldocx python-docx`，再在仓库根运行 `python3 src/ground/mujoco_auto_parking/tools/export_word.py`（等价于先 `cd src/ground/mujoco_auto_parking` 再 `python3 tools/export_word.py`）；脚本默认读取仓库 `docs/` 并输出到 `docs/evidence/mujoco_auto_parking/`，在 WSL 临时工作空间运行时需设置 `AUTO_PARKING_DOCS_DIR=/path/to/ros2/docs`；
 - 实测证据：`docs/evidence/mujoco_auto_parking/`。
 
 ## 当前范围 / Scope
