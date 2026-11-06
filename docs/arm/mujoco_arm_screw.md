@@ -94,6 +94,8 @@ position 执行器均无法收敛（实测动态末端误差达 353 mm）。
 
 ## 9. 效果图
 
-`docs/mujoco_arm_demo.gif`（150 帧 / 15 s）：
+![效果图](../img/arm/mujoco_arm_screw.gif)
+
+`src/mujoco_arm_screw/docs/mujoco_arm_screw_demo.gif`（150 帧 / 15 s）：
 臂从上方伸下来，竖直刀头贴住螺丝顶，旋转 2.5 圈把螺丝拧入木板，
 顶部状态条实时显示圈数与深度。
