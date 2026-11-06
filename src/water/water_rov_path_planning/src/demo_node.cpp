@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <chrono>
 #include <cmath>
 #include <exception>
@@ -53,6 +54,13 @@ public:
     obstacle_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("obstacle", rclcpp::QoS(50));
     start_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("start", 10);
     goal_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("goal", 10);
+
+    // 用热力图作为“障碍物已被规划节点处理”的确认信号：
+    // 障碍物发布后，等到时间戳晚于发布时刻的热力图到达，再发终点触发规划，
+    // 避免 obstacle / goal 走不同话题时终点先到、按旧热力图规划
+    heatmap_sub_ = create_subscription<sensor_msgs::msg::Image>(
+      "heatmap", rclcpp::QoS(1),
+      std::bind(&DemoNode::heatmapCallback, this, std::placeholders::_1));
 
     // 轮询等待 planning_node 订阅就绪，代替固定时长的 sleep
     ready_timer_ = create_wall_timer(std::chrono::milliseconds(100),
@@ -127,10 +135,24 @@ private:
       publishPoint(obstacle_pub_, obstacle.first, obstacle.second);
     }
     publishPoint(start_pub_, start_x_, start_y_);
-    publishPoint(goal_pub_, goal_x_, goal_y_);
 
-    RCLCPP_INFO(get_logger(), "已发布起点和终点，等待规划结果...");
+    // 终点不立即发布：等一张时间戳晚于此刻的热力图，确认障碍物已被规划节点处理
+    confirm_after_ = now();
+    waiting_confirm_ = true;
+    RCLCPP_INFO(get_logger(), "已发布障碍物与起点，等待热力图刷新后发送终点...");
+  }
+
+  void heatmapCallback(const sensor_msgs::msg::Image::SharedPtr msg)
+  {
+    if (!waiting_confirm_) return;
+    // 留 0.1 s 余量，确保这张热力图是在障碍物回调处理完之后才发布的
+    if (rclcpp::Time(msg->header.stamp) <
+      confirm_after_ + rclcpp::Duration::from_seconds(0.1)) return;
+
+    waiting_confirm_ = false;
+    publishPoint(goal_pub_, goal_x_, goal_y_);
     demo_active_ = true;
+    RCLCPP_INFO(get_logger(), "热力图已刷新，发布终点，开始规划");
   }
 
   double world_size_ = 50.0;
@@ -142,10 +164,13 @@ private:
   int obstacle_seed_ = 42;
   bool params_valid_ = true;
   bool demo_active_ = false;
+  bool waiting_confirm_ = false;
+  rclcpp::Time confirm_after_{0, 0, RCL_ROS_TIME};
 
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr obstacle_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr goal_pub_;
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr heatmap_sub_;
   rclcpp::TimerBase::SharedPtr ready_timer_;
   rclcpp::TimerBase::SharedPtr replan_timer_;
 };

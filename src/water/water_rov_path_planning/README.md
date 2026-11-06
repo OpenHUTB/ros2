@@ -10,7 +10,9 @@
 2. **洋流场建模**：支持均匀流、涡流、潮汐振荡、剪切流四种洋流模式，计算每个位置的流速向量，评估洋流对 ROV 运动的推力干扰。
 3. **自适应路径规划**：基于 A* 算法，代价函数综合热力图风险、洋流推力（顺流奖励、逆流惩罚）和路径长度，自动避开高风险区，并在逆流段施加惩罚、顺流段给予奖励，规划出安全节能的路径。
 
-模块附带演示节点，按固定随机种子生成海底障碍物和起终点，自动触发路径规划。
+模块附带演示节点，按固定随机种子生成海底障碍物和起终点，自动触发路径规划；障碍物发布后先等待一张时间戳更新的热力图，确认障碍物已被规划节点处理，再发布终点触发规划，避免 `obstacle` 与 `goal` 走不同话题时终点先到。
+
+路径平滑采用 Jacobi 加权平均（每轮用上一轮结果整体更新，避免单向偏移），平滑后逐点、逐段中点以及段内按半格采样校验风险，任一点超过 `max_risk_threshold` 就整条回退到 A* 原始路径。
 
 ## 运行环境
 
@@ -42,7 +44,7 @@ src/water/water_rov_path_planning/
 ├── scripts/
 │   └── render_demo.py         # 订阅节点输出并离线渲染演示动图
 ├── test/
-│   └── test_core.cpp          # 热力图风险、顺逆流代价、平滑回退单元测试
+│   └── test_core.cpp          # 热力图风险、顺逆流代价、参考流速、平滑回退单元测试
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md
@@ -91,7 +93,7 @@ src/water/water_rov_path_planning/
    ros2 run rviz2 rviz2 -d install/water_rov_path_planning/share/water_rov_path_planning/rviz/path_planning.rviz
    ```
 
-6. 单元测试（热力图风险衰减、潮汐相位、顺逆流代价、平滑风险回退）：
+6. 单元测试（热力图风险衰减、潮汐相位、顺逆流代价、参考流速归一化、平滑风险回退）：
 
    ```
    colcon test --packages-select water_rov_path_planning
@@ -103,12 +105,13 @@ src/water/water_rov_path_planning/
 
 | 场景 | 路径点数 | 路径长度 | 加权累计代价 |
 | --- | --- | --- | --- |
-| 涡流（默认） | 81 | 40.10 m | 40.01 |
+| 涡流（默认） | 81 | 40.11 m | 40.28 |
 | 均匀流（+x 顺流） | 81 | 40.00 m | 30.40 |
+| 零流速基线（magnitude = 0） | 81 | 40.00 m | 40.00 |
 
-代价为米制口径下的加权累计值（长度、风险、洋流三项都乘以本步米数），量纲不是米，不要与“路径长度”列混淆；旧版本按格子数计为 80.02 / 60.80。
+代价为米制口径下的加权累计值（长度、风险、洋流三项都乘以本步米数，洋流项还按参考流速 `current_ref_speed` 归一化），量纲不是米，不要与“路径长度”列混淆；旧版本按格子数计为 80.02 / 60.80。
 
-默认涡流场景中，涡流中心 (25, 25) 的切向速度与 +x 路径方向近似垂直，洋流项净贡献约 -0.09，路径与直线距离 40.00 m 基本一致，因此该场景不能体现顺流节能；改用均匀流（`current_pattern:=uniform`、`current_magnitude:=0.4`、`current_direction:=0.0`）可观察到洋流补偿项生效，加权累计代价下降约 9.6。参数不在 launch 中重复定义，临时切换可用 `ros2 run ... --ros-args -p` 覆盖，或直接修改 `config/params.yaml`。
+默认涡流场景的加权累计代价 40.28 与零流速基线 40.00 只差 0.28，说明涡流中心 (25, 25) 的切向速度与 +x 方向近似垂直，洋流项净贡献接近 0，该场景不能体现顺流节能；改用均匀流（`current_pattern:=uniform`、`current_magnitude:=0.4`、`current_direction:=0.0`）时路径几何不变（40.00 m），加权累计代价由 40.00 降到 30.40，下降约 9.6，洋流补偿项生效。参数不在 launch 中重复定义，临时切换可用 `ros2 run ... --ros-args -p` 覆盖，或直接修改 `config/params.yaml`。
 
 ## 话题说明
 
@@ -133,8 +136,11 @@ src/water/water_rov_path_planning/
 | `obstacle_radius` | 2.0 | 障碍物影响半径（米） |
 | `risk_decay` | 0.15 | 风险高斯衰减系数 α |
 | `risk_weight` | 5.0 | 热力图风险权重 |
-| `current_weight` | 3.0 | 洋流权重 |
+| `current_weight` | 3.0 | 洋流权重（作用于归一化后的 \|v\|/`current_ref_speed`） |
 | `current_compensation` | 0.5 | 顺流奖励系数（0～1） |
+| `current_ref_speed` | 1.0 | 参考流速（m/s），把 \|v\| 归一化到无量纲 |
+| `length_weight` | 1.0 | 路径长度权重 |
+| `max_iterations` | 100000 | A* 最大迭代次数 |
 | `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
 | `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear） |
 | `current_magnitude` | 0.4 | 基础洋流流速（m/s） |

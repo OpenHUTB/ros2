@@ -60,7 +60,7 @@ TEST(PathPlannerCost, FavourableCrossAdverse)
   cp.world_size = 10.0;
   auto current = std::make_shared<OceanCurrent>(cp);
 
-  PathPlanner planner(PathPlanner::Params());
+  PathPlanner planner(PathPlanner::Params{});
   planner.setEnvironment(heatmap, current);
 
   // 单步 1 格 = 0.5 m，长度项 0.5
@@ -75,6 +75,50 @@ TEST(PathPlannerCost, FavourableCrossAdverse)
   EXPECT_LT(cross, adverse);
 }
 
+TEST(PathPlannerCost, ReferenceSpeedNormalizesMagnitude)
+{
+  Heatmap::Params hp;
+  hp.grid_size = 20;
+  hp.resolution = 0.5;
+  auto heatmap = std::make_shared<Heatmap>(hp);
+
+  OceanCurrent::Params cp;
+  cp.pattern = OceanCurrent::Pattern::UNIFORM;
+  cp.magnitude = 0.4;
+  cp.direction = 0.0;
+  cp.world_size = 10.0;
+  auto current = std::make_shared<OceanCurrent>(cp);
+
+  // 参考流速翻倍时，洋流项贡献减半，长度项不变
+  PathPlanner::Params pp;
+  pp.current_ref_speed = 2.0;
+  PathPlanner planner(pp);
+  planner.setEnvironment(heatmap, current);
+
+  EXPECT_NEAR(planner.stepCost(10, 10, 11, 10), 0.44, 1e-9);  // 顺流
+  EXPECT_NEAR(planner.stepCost(10, 10, 10, 11), 0.50, 1e-9);  // 横向
+  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 0.62, 1e-9);   // 逆流
+}
+
+TEST(PathPlannerSmooth, SegmentSamplingCatchesInteriorRisk)
+{
+  Heatmap::Params hp;
+  hp.grid_size = 100;
+  hp.resolution = 0.5;
+  auto heatmap = std::make_shared<Heatmap>(hp);
+  // 障碍物位于长段内部，离两端点和段中点都超过影响半径 2 m
+  heatmap->addObstacle(8.0, 10.0);
+
+  PathPlanner planner(PathPlanner::Params{});
+  planner.setEnvironment(heatmap, nullptr);
+
+  std::vector<PathPlanner::Point> path{{0.0, 10.0}, {10.0, 10.0}, {20.0, 10.0}};
+  // 端点与段中点均安全，只有按半格采样的段内检查能发现 8.0 m 处的风险
+  EXPECT_FALSE(planner.smoothPath(path, 1));
+  EXPECT_DOUBLE_EQ(path[1].x, 10.0);
+  EXPECT_DOUBLE_EQ(path[1].y, 10.0);
+}
+
 TEST(PathPlannerSmooth, JacobiAverageAndRiskFallback)
 {
   Heatmap::Params hp;
@@ -82,7 +126,7 @@ TEST(PathPlannerSmooth, JacobiAverageAndRiskFallback)
   hp.resolution = 0.5;
   auto heatmap = std::make_shared<Heatmap>(hp);
 
-  PathPlanner planner(PathPlanner::Params());
+  PathPlanner planner(PathPlanner::Params{});
   planner.setEnvironment(heatmap, nullptr);
 
   std::vector<PathPlanner::Point> path{{5.0, 5.0}, {6.0, 6.0}, {7.0, 5.0}};

@@ -26,9 +26,10 @@ public:
   struct Params
   {
     double risk_weight = 5.0;       // 热力图风险权重
-    double current_weight = 3.0;    // 洋流权重
+    double current_weight = 3.0;    // 洋流权重（作用于无量纲的 |v|/current_ref_speed）
     double length_weight = 1.0;     // 路径长度权重
     double current_compensation = 0.5; // 顺流奖励系数（0~1）
+    double current_ref_speed = 1.0;    // 参考流速（m/s），把 |v| 归一化到无量纲
     double max_risk_threshold = 0.7;   // 风险阈值，超过则不可通行
     int max_iterations = 100000;       // A* 最大迭代次数
   };
@@ -58,7 +59,7 @@ public:
   double getLastCost() const { return last_cost_; }
 
   /// 路径平滑：Jacobi 加权平均（用上一轮结果整体更新，避免单向偏移）；
-  /// 平滑后逐点与逐段检查风险，超阈值则回退到原始 A* 路径
+  /// 平滑后逐点、逐段中点以及段内按半格采样检查风险，任一点超阈值则回退到原始 A* 路径
   /// @return true 表示平滑结果安全可用，false 表示已回退到原始路径
   bool smoothPath(std::vector<Point> & path, int iterations = 3);
 

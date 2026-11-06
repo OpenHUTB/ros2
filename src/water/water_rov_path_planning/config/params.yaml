@@ -12,6 +12,10 @@ rov_planning_node:
     risk_weight: 5.0
     current_weight: 3.0
     current_compensation: 0.5
+    # 参考流速：洋流项用 |v|/current_ref_speed 归一化，使 current_weight 无量纲
+    current_ref_speed: 1.0
+    length_weight: 1.0
+    max_iterations: 100000
     max_risk_threshold: 0.7
 
     # 洋流场

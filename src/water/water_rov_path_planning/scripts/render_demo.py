@@ -23,9 +23,9 @@ class DemoRecorder(Node):
         self.path_points = []
         self.frames = []
         self.max_frames = 24
-        self.create_subscription(Image, '/heatmap', self.on_heatmap, 10)
-        self.create_subscription(Image, '/ocean_current', self.on_current, 10)
-        self.create_subscription(Path, '/planned_path', self.on_path, 10)
+        self.create_subscription(Image, 'heatmap', self.on_heatmap, 10)
+        self.create_subscription(Image, 'ocean_current', self.on_current, 10)
+        self.create_subscription(Path, 'planned_path', self.on_path, 10)
         self.get_logger().info('记录器启动，等待话题数据...')
 
     def on_heatmap(self, msg):

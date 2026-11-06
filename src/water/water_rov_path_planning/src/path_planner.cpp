@@ -61,8 +61,10 @@ double PathPlanner::stepCost(int from_gx, int from_gy, int to_gx, int to_gy) con
     // 洋流与移动方向的点积：顺流为正，逆流为负
     double dot = move_dir.dot(vel);
 
-    // 洋流项同样乘以本步米数，使三项都是“每米代价 × 距离”
-    double current_factor = params_.current_weight * current_mag * dist_m;
+    // 洋流项同样乘以本步米数，使三项都是“每米代价 × 距离”；
+    // |v| 先按参考流速归一化，current_weight 才是无量纲权重
+    double ref_speed = std::max(params_.current_ref_speed, 1e-9);
+    double current_factor = params_.current_weight * (current_mag / ref_speed) * dist_m;
     if (dot > 0) {
       // 顺流：降低代价
       cost -= params_.current_compensation * current_factor * dot;
@@ -210,15 +212,24 @@ bool PathPlanner::smoothPath(std::vector<Point> & path, int iterations)
       next[i].y = 0.5 * path[i].y + 0.25 * (path[i - 1].y + path[i + 1].y);
     }
 
-    // 平滑后逐点与逐段中点检查风险，超阈值则整条回退到原始 A* 路径
+    // 平滑后逐点、逐段中点以及段内按半格采样检查风险，任一点超阈值则整条回退到原始 A* 路径
+    const double sample_step = 0.5 * heatmap_->resolution();
     for (size_t i = 0; i < next.size(); ++i) {
       if (!pointSafe(next[i])) {
         path = original;
         return false;
       }
-      if (i + 1 < next.size()) {
-        Point mid{(next[i].x + next[i + 1].x) * 0.5, (next[i].y + next[i + 1].y) * 0.5};
-        if (!pointSafe(mid)) {
+      if (i + 1 >= next.size()) continue;
+
+      // 长段可能在中间跨过风险区，按半个格子采样逐段校验
+      double dx = next[i + 1].x - next[i].x;
+      double dy = next[i + 1].y - next[i].y;
+      double seg_len = std::sqrt(dx * dx + dy * dy);
+      int samples = static_cast<int>(std::ceil(seg_len / sample_step));
+      for (int s = 1; s < samples; ++s) {
+        double r = static_cast<double>(s) / samples;
+        Point p{next[i].x + dx * r, next[i].y + dy * r};
+        if (!pointSafe(p)) {
           path = original;
           return false;
         }

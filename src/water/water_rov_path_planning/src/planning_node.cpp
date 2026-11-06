@@ -30,6 +30,9 @@ public:
     declare_parameter("risk_weight", 5.0);
     declare_parameter("current_weight", 3.0);
     declare_parameter("current_compensation", 0.5);
+    declare_parameter("current_ref_speed", 1.0);
+    declare_parameter("length_weight", 1.0);
+    declare_parameter("max_iterations", 100000);
     declare_parameter("max_risk_threshold", 0.7);
     declare_parameter("current_pattern", "vortex");
     declare_parameter("current_magnitude", 0.4);
@@ -48,15 +51,20 @@ public:
     const double vortex_radius = get_parameter("vortex_radius").as_double();
     const double tidal_period = get_parameter("tidal_period").as_double();
     const double max_risk_threshold = get_parameter("max_risk_threshold").as_double();
+    const double current_ref_speed = get_parameter("current_ref_speed").as_double();
+    const double length_weight = get_parameter("length_weight").as_double();
+    const int max_iterations = get_parameter("max_iterations").as_int();
 
     if (grid_size <= 1 || resolution <= 0.0 || obstacle_radius < 0.0 ||
       risk_decay < 0.0 || current_magnitude < 0.0 || vortex_radius <= 0.0 ||
-      tidal_period <= 0.0 || max_risk_threshold <= 0.0 || max_risk_threshold >= 1.0)
+      tidal_period <= 0.0 || max_risk_threshold <= 0.0 || max_risk_threshold >= 1.0 ||
+      current_ref_speed <= 0.0 || length_weight <= 0.0 || max_iterations <= 0)
     {
       RCLCPP_ERROR(
         get_logger(),
         "参数校验失败：需满足 grid_size>1、resolution>0、obstacle_radius>=0、risk_decay>=0、"
-        "current_magnitude>=0、vortex_radius>0、tidal_period>0、0<max_risk_threshold<1，节点退出");
+        "current_magnitude>=0、vortex_radius>0、tidal_period>0、0<max_risk_threshold<1、"
+        "current_ref_speed>0、length_weight>0、max_iterations>0，节点退出");
       params_valid_ = false;
       rclcpp::shutdown();
       return;
@@ -89,6 +97,9 @@ public:
     pp.risk_weight = get_parameter("risk_weight").as_double();
     pp.current_weight = get_parameter("current_weight").as_double();
     pp.current_compensation = get_parameter("current_compensation").as_double();
+    pp.current_ref_speed = current_ref_speed;
+    pp.length_weight = length_weight;
+    pp.max_iterations = max_iterations;
     pp.max_risk_threshold = max_risk_threshold;
     planner_ = std::make_shared<PathPlanner>(pp);
     planner_->setEnvironment(heatmap_, current_);
