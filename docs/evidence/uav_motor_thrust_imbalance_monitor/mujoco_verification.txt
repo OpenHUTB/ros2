@@ -1,0 +1,20 @@
+MuJoCo 3.17.0（台架模型），步长 2 ms，遥测 100 Hz，总时长 12 s
+
+状态变化事件：
+    0.99 s  → MONITORING  (ok)
+    5.70 s  → IMBALANCE   (rpm_tracking_warn)
+    8.26 s  → EMERGENCY   (rpm_tracking_emergency)
+    9.86 s  → MONITORING  (recovered)
+
+检查项：
+  [PASS] 健康段先进入 MONITORING
+  [PASS] 中退化段检出 IMBALANCE（worst=2，含 EMA 平滑延迟）（首帧 t=5.7（阻尼从 t=3 渐变爬升，越过告警门限即检出））
+  [PASS] 深退化段升级 EMERGENCY 并建议紧急降落（首帧 t=8.26）
+  [PASS] 健康段 2 号转速跟踪误差 < 3%（峰值 2.0%）
+  [PASS] 中退化段稳态转速亏 ~11%（物理稳态 c/(kv+c)）（峰值 10.9%）
+  [PASS] 深退化段稳态转速亏 ~29%，拉力亏 > 40%（转速亏 28.7%，拉力亏 51.8%）
+  [PASS] 恢复段回到 MONITORING
+  [PASS] 全程无 NaN（仿真数值稳定）
+
+深退化段：2 号实测转速亏 28.7%（>24% 触发 EMERGENCY），对应拉力亏 51.8%——摩擦退化经物理引擎传导到推力输出，再被监测器从遥测中检出。
+适用范围：本脚本为台架（定基座）验证，覆盖转子动力学与转速遥测链路；自由飞姿态耦合与紧急降落决策链路由 ROS 冒烟测试与离线回放覆盖，未在 MuJoCo 自由飞场景验证。

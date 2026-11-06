@@ -1,0 +1,22 @@
+test_baseline_frozen_after_learning (test_motor_imbalance_monitor.BaselineTest.test_baseline_frozen_after_learning) ... ok
+test_init_then_monitoring_after_baseline_frames (test_motor_imbalance_monitor.BaselineTest.test_init_then_monitoring_after_baseline_frames) ... ok
+test_deviation_not_judged_far_from_hover (test_motor_imbalance_monitor.CommandDeviationTest.test_deviation_not_judged_far_from_hover) ... ok
+test_no_rpm_falls_back_to_deviation_only (test_motor_imbalance_monitor.CommandDeviationTest.test_no_rpm_falls_back_to_deviation_only) ... ok
+test_prop_loss_detected_by_cmd_deviation (test_motor_imbalance_monitor.CommandDeviationTest.test_prop_loss_detected_by_cmd_deviation) ... ok
+test_compensation_capped_and_saturates_command (test_motor_imbalance_monitor.CompensationTest.test_compensation_capped_and_saturates_command) ... ok
+test_clamp_commands_caps_and_floors (test_motor_imbalance_monitor.MappingTest.test_clamp_commands_caps_and_floors) ... ok
+test_expected_rpm_linear (test_motor_imbalance_monitor.MappingTest.test_expected_rpm_linear) ... ok
+test_plot_outputs_are_written (test_motor_imbalance_monitor.ReplayOutputTest.test_plot_outputs_are_written) ... ok
+test_non_finite_rejected (test_motor_imbalance_monitor.RobustnessTest.test_non_finite_rejected) ... ok
+test_out_of_order_ignored (test_motor_imbalance_monitor.RobustnessTest.test_out_of_order_ignored) ... ok
+test_stream_gap_after_dropout (test_motor_imbalance_monitor.RobustnessTest.test_stream_gap_after_dropout) ... ok
+test_watchdog_silent_before_timeout (test_motor_imbalance_monitor.RobustnessTest.test_watchdog_silent_before_timeout) ... ok
+test_watchdog_timeout_degrades_but_caps_at_imbalance (test_motor_imbalance_monitor.RobustnessTest.test_watchdog_timeout_degrades_but_caps_at_imbalance) ... ok
+test_wrong_length_rejected (test_motor_imbalance_monitor.RobustnessTest.test_wrong_length_rejected) ... ok
+test_ema_smooths_single_spike (test_motor_imbalance_monitor.TrackingErrorTest.test_ema_smooths_single_spike) ... ok
+test_warn_then_emergency_then_recover (test_motor_imbalance_monitor.TrackingErrorTest.test_warn_then_emergency_then_recover) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.084s
+
+OK

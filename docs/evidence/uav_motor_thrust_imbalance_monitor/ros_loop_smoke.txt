@@ -1,0 +1,19 @@
+test_esc_stream_timeout_watchdog_caps_at_imbalance (test_ros_loop_smoke.RosLoopSmokeTest.test_esc_stream_timeout_watchdog_caps_at_imbalance)
+纯断流（无动力故障）：看门狗逐拍降级至 IMBALANCE，不触发紧急降落。 ... ok
+test_full_flight_dropout_leaves_watchdog_trace (test_ros_loop_smoke.RosLoopSmokeTest.test_full_flight_dropout_leaves_watchdog_trace)
+全场景中的中断窗口应同样出现 stream_timeout（与深度衰减叠加）。 ... ok
+test_missing_rpm_telemetry_keeps_monitoring (test_ros_loop_smoke.RosLoopSmokeTest.test_missing_rpm_telemetry_keeps_monitoring)
+只有指令、无转速遥测：基线可学习、健康保持（降级观测但不误报）。 ... ok
+test_normal_input_learns_baseline_and_stays_healthy (test_ros_loop_smoke.RosLoopSmokeTest.test_normal_input_learns_baseline_and_stays_healthy)
+正常段：INIT → MONITORING，healthy=True，补偿为 0。 ... ok
+test_prop_loss_detected_by_command_deviation (test_ros_loop_smoke.RosLoopSmokeTest.test_prop_loss_detected_by_command_deviation)
+桨损：转速正常但 0 号指令持续偏高 → cmd_deviation → IMBALANCE。 ... ok
+test_recovery_after_degradation (test_ros_loop_smoke.RosLoopSmokeTest.test_recovery_after_degradation)
+电机恢复后应回到 MONITORING，紧急降落建议回落。 ... ok
+test_rpm_degradation_warns_then_emergency (test_ros_loop_smoke.RosLoopSmokeTest.test_rpm_degradation_warns_then_emergency)
+电机衰减：15% 跟踪误差 → IMBALANCE；28% → EMERGENCY + 紧急降落。 ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.061s
+
+OK

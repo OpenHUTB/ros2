@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_motor_thrust_imbalance_monitor</name>
+  <version>0.0.1</version>
+  <description>
+    多旋翼电机推力不对称检测：由 mixer 指令与 ESC 转速遥测区分电机/电调
+    性能衰减（RPM 跟踪误差）与螺旋桨损伤（指令相对基线偏移），输出
+    四态健康状态、逐电机补偿指令与紧急降落触发建议。纯标准库判据 +
+    ROS 2 节点 + 离线回放 + 单元测试 + ROS 话题闭环冒烟测试 + MuJoCo
+    台架验证。
+  </description>
+  <maintainer email="contributors@example.com">OpenHUTB contributors</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

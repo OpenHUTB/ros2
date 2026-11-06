@@ -181,6 +181,7 @@ ROS每章节运行代码:
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
+* [电机推力不对称监测与紧急降落触发](./air/uav_motor_thrust_imbalance_monitor.md) —— 从 mixer 指令与 ESC 转速区分电机衰减（RPM 跟踪误差）与桨损（指令偏移），四态状态机 + 补偿指令 + 紧急降落触发；含 ROS 话题闭环冒烟测试与 MuJoCo 台架验证
 
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
