@@ -68,6 +68,7 @@ ROS每章节运行代码:
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
@@ -75,17 +76,22 @@ ROS每章节运行代码:
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
+* [人形机器人关节轨迹录制与回放工具](./humanoid/humanoid_joint_tools.md)
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
+*  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
+* [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
+
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
+* [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
@@ -105,6 +111,7 @@ ROS每章节运行代码:
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
+* [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
@@ -118,6 +125,7 @@ ROS每章节运行代码:
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
+* [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
@@ -129,29 +137,45 @@ ROS每章节运行代码:
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
+* [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
+* [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
+* [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
+* [限速标志识别与神经网络限速控制](./ground/traffic_sign_speed_control.md) —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
+* [基于 2D 激光雷达的蒙特卡洛定位（MCL）](./ground/lidar_mcl_localization.md) —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m
+
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
+* [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
+* [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 
+* [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
+* [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+
+* [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
+
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
@@ -172,6 +196,8 @@ ROS每章节运行代码:
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
+
+* [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
@@ -255,6 +281,8 @@ ROS每章节运行代码:
 
 * [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
 
+* [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
+* [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 * [基于热力图的洋流干扰下 ROV 自适应路径规划](./water/water_rov_path_planning.md)
 
 ___

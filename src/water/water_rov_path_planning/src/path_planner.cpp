@@ -1,7 +1,7 @@
 #include "water_rov_path_planning/path_planner.hpp"
 #include <cmath>
+#include <limits>
 #include <queue>
-#include <unordered_map>
 #include <algorithm>
 
 namespace water_rov_path_planning
@@ -29,10 +29,13 @@ double PathPlanner::heuristic(int gx, int gy, int goal_gx, int goal_gy) const
 
 double PathPlanner::stepCost(int from_gx, int from_gy, int to_gx, int to_gy) const
 {
-  // 移动距离
+  if (!heatmap_) return std::numeric_limits<double>::infinity();
+
+  // 移动距离（格）与对应的实际距离（米）
   double dx = to_gx - from_gx;
   double dy = to_gy - from_gy;
-  double dist = std::sqrt(dx * dx + dy * dy);
+  double dist_cells = std::sqrt(dx * dx + dy * dy);
+  double dist_m = dist_cells * heatmap_->resolution();
 
   // 热力图风险代价
   double risk = heatmap_->getRisk(to_gx, to_gy);
@@ -40,25 +43,26 @@ double PathPlanner::stepCost(int from_gx, int from_gy, int to_gx, int to_gy) con
     return std::numeric_limits<double>::infinity();  // 不可通行
   }
 
-  // 洋流代价
-  double cost = params_.length_weight * dist;
-  cost += params_.risk_weight * risk * dist;
+  // 长度项与风险项都按“单位距离代价 × 本步米数”累加
+  double cost = params_.length_weight * dist_m;
+  cost += params_.risk_weight * risk * dist_m;
 
-  if (current_) {
+  if (current_ && dist_cells > 0.0) {
     double wx, wy;
     heatmap_->gridToWorld(to_gx, to_gy, wx, wy);
-    Eigen::Vector2d vel = current_->getVelocity(wx, wy);
+    // 规划时刻参与洋流计算，潮汐模式下才能反映当前相位
+    Eigen::Vector2d vel = current_->getVelocity(wx, wy, time_);
     double current_mag = vel.norm();
 
-    // 移动方向向量
+    // 移动方向单位向量
     Eigen::Vector2d move_dir(dx, dy);
     move_dir.normalize();
 
     // 洋流与移动方向的点积：顺流为正，逆流为负
     double dot = move_dir.dot(vel);
 
-    // 顺流奖励，逆流惩罚
-    double current_factor = params_.current_weight * current_mag;
+    // 洋流项同样乘以本步米数，使三项都是“每米代价 × 距离”
+    double current_factor = params_.current_weight * current_mag * dist_m;
     if (dot > 0) {
       // 顺流：降低代价
       cost -= params_.current_compensation * current_factor * dot;
@@ -108,7 +112,7 @@ bool PathPlanner::plan(const Point & start, const Point & goal, std::vector<Poin
 
   while (!open.empty() && iterations < params_.max_iterations) {
     iterations++;
-    auto [f, idx] = open.top();
+    int idx = open.top().second;
     open.pop();
 
     int gx = idx % n;
@@ -129,6 +133,14 @@ bool PathPlanner::plan(const Point & start, const Point & goal, std::vector<Poin
 
       int nidx = ny * n + nx;
       if (nodes[nidx].closed) continue;
+
+      // 对角移动时禁止贴着封禁格切角：两个正交邻居都必须可通行
+      if (dx8[i] != 0 && dy8[i] != 0) {
+        if (heatmap_->getRisk(nx, gy) > params_.max_risk_threshold ||
+            heatmap_->getRisk(gx, ny) > params_.max_risk_threshold) {
+          continue;
+        }
+      }
 
       double step = stepCost(gx, gy, nx, ny);
       if (std::isinf(step)) continue;
@@ -162,31 +174,60 @@ bool PathPlanner::plan(const Point & start, const Point & goal, std::vector<Poin
 
   last_cost_ = nodes[goal_gy * n + goal_gx].g;
 
-  // 路径平滑
+  // 路径平滑：Jacobi 加权平均；若平滑后侵入风险区，smoothPath 内部回退到上面的 A* 原始路径
   smoothPath(path);
   return true;
 }
 
-double PathPlanner::computePathCost(const std::vector<Point> & path) const
+double PathPlanner::pathLength(const std::vector<Point> & path) const
 {
-  double cost = 0.0;
+  double length = 0.0;
   for (size_t i = 1; i < path.size(); ++i) {
     double dx = path[i].x - path[i - 1].x;
     double dy = path[i].y - path[i - 1].y;
-    cost += std::sqrt(dx * dx + dy * dy);
+    length += std::sqrt(dx * dx + dy * dy);
   }
-  return cost;
+  return length;
 }
 
-void PathPlanner::smoothPath(std::vector<Point> & path, int iterations)
+bool PathPlanner::pointSafe(const Point & p) const
 {
-  if (path.size() < 3) return;
+  int gx, gy;
+  if (!heatmap_->worldToGrid(p.x, p.y, gx, gy)) return false;
+  return heatmap_->getRisk(gx, gy) <= params_.max_risk_threshold;
+}
+
+bool PathPlanner::smoothPath(std::vector<Point> & path, int iterations)
+{
+  if (path.size() < 3 || iterations <= 0 || !heatmap_) return true;
+
+  const std::vector<Point> original = path;
   for (int iter = 0; iter < iterations; ++iter) {
+    // Jacobi 更新：本轮全部用上一轮的点计算，避免第 i 点依赖已更新的第 i-1 点
+    std::vector<Point> next = path;
     for (size_t i = 1; i < path.size() - 1; ++i) {
-      path[i].x = 0.5 * path[i].x + 0.25 * (path[i - 1].x + path[i + 1].x);
-      path[i].y = 0.5 * path[i].y + 0.25 * (path[i - 1].y + path[i + 1].y);
+      next[i].x = 0.5 * path[i].x + 0.25 * (path[i - 1].x + path[i + 1].x);
+      next[i].y = 0.5 * path[i].y + 0.25 * (path[i - 1].y + path[i + 1].y);
     }
+
+    // 平滑后逐点与逐段中点检查风险，超阈值则整条回退到原始 A* 路径
+    for (size_t i = 0; i < next.size(); ++i) {
+      if (!pointSafe(next[i])) {
+        path = original;
+        return false;
+      }
+      if (i + 1 < next.size()) {
+        Point mid{(next[i].x + next[i + 1].x) * 0.5, (next[i].y + next[i + 1].y) * 0.5};
+        if (!pointSafe(mid)) {
+          path = original;
+          return false;
+        }
+      }
+    }
+
+    path.swap(next);
   }
+  return true;
 }
 
 }  // namespace water_rov_path_planning

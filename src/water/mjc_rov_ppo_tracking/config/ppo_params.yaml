@@ -1,0 +1,8 @@
+sim_node:
+  ros__parameters:
+    odom_rate: 20.0
+ppo_node:
+  ros__parameters:
+    weights_path: ""
+    target_x: 2.0
+    target_y: 0.0

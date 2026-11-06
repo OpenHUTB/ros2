@@ -20,7 +20,7 @@ public:
   enum class Pattern
   {
     UNIFORM,   // 均匀流
-    VORTEX,    // 涡流（顺时针/逆时针旋转）
+    VORTEX,    // 涡流（绕中心逆时针旋转）
     TIDAL,     // 潮汐振荡（随时间周期变化）
     SHEAR      // 剪切流（流速随位置变化）
   };
@@ -41,9 +41,6 @@ public:
 
   /// 获取某位置的洋流速度向量（vx, vy），单位 m/s
   Eigen::Vector2d getVelocity(double world_x, double world_y, double t = 0.0) const;
-
-  /// 计算洋流对 ROV 运动的代价（流速越大代价越高）
-  double getCost(double world_x, double world_y, double t = 0.0) const;
 
   /// 生成洋流场可视化图像（箭头图）
   cv::Mat toVectorImage(int img_size = 400) const;

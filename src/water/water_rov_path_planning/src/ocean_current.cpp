@@ -1,4 +1,5 @@
 #include "water_rov_path_planning/ocean_current.hpp"
+#include <algorithm>
 #include <cmath>
 
 namespace water_rov_path_planning
@@ -25,7 +26,7 @@ Eigen::Vector2d OceanCurrent::getVelocity(double world_x, double world_y, double
       double dy = world_y - params_.vortex_y;
       double r = std::sqrt(dx * dx + dy * dy);
       if (r < 0.01 || r > params_.vortex_radius) break;
-      // 切向速度（顺时针旋转）
+      // 切向速度（逆时针旋转：(vx, vy) ∝ (-dy, dx)）
       double tangential = m * (1.0 - r / params_.vortex_radius);
       vel.x() = -dy / r * tangential;
       vel.y() = dx / r * tangential;
@@ -52,19 +53,13 @@ Eigen::Vector2d OceanCurrent::getVelocity(double world_x, double world_y, double
   return vel;
 }
 
-double OceanCurrent::getCost(double world_x, double world_y, double t) const
-{
-  Eigen::Vector2d v = getVelocity(world_x, world_y, t);
-  // 代价与流速平方成正比
-  return v.squaredNorm();
-}
-
 cv::Mat OceanCurrent::toVectorImage(int img_size) const
 {
   cv::Mat img = cv::Mat::zeros(img_size, img_size, CV_8UC3);
   img.setTo(cv::Scalar(20, 20, 20));  // 深色背景
 
-  int step = img_size / 20;
+  // img_size < 20 时整数除法会得到 0，导致下面的循环步长无效（死循环）
+  int step = std::max(1, img_size / 20);
   for (int py = step; py < img_size; py += step) {
     for (int px = step; px < img_size; px += step) {
       double wx = (static_cast<double>(px) / img_size) * params_.world_size;
@@ -79,8 +74,9 @@ cv::Mat OceanCurrent::toVectorImage(int img_size) const
       int ex = px + static_cast<int>(arrow_len * std::cos(angle));
       int ey = py + static_cast<int>(arrow_len * std::sin(angle));
 
-      // 颜色：流速越大越亮
-      int intensity = static_cast<int>(std::min(mag / params_.magnitude, 1.0) * 255);
+      // 颜色：流速越大越亮（magnitude 为 0 时该点会因 mag<0.01 被跳过，这里仍做保护）
+      double mag_scale = std::max(params_.magnitude, 1e-9);
+      int intensity = static_cast<int>(std::min(mag / mag_scale, 1.0) * 255);
       cv::arrowedLine(img, cv::Point(px, py), cv::Point(ex, ey),
         cv::Scalar(intensity, 255 - intensity / 2, 255 - intensity), 1, cv::LINE_AA, 0, 0.3);
     }

@@ -1,63 +1,32 @@
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+
 
 def generate_launch_description():
     pkg_dir = get_package_share_directory('water_rov_path_planning')
     params_file = os.path.join(pkg_dir, 'config', 'params.yaml')
 
-    current_pattern_arg = DeclareLaunchArgument(
-        'current_pattern', default_value='vortex',
-        description='洋流模式：uniform / vortex / tidal / shear')
-
-    current_magnitude_arg = DeclareLaunchArgument(
-        'current_magnitude', default_value='0.4',
-        description='基础洋流流速（m/s）')
-
-    current_direction_arg = DeclareLaunchArgument(
-        'current_direction', default_value='0.0',
-        description='均匀流方向（弧度）')
-
-    # 规划节点
+    # 两个节点都只加载同一份 params.yaml，避免 launch 与 yaml 重复定义参数
     planning_node = Node(
         package='water_rov_path_planning',
         executable='planning_node',
         name='rov_planning_node',
         output='screen',
-        parameters=[
-            params_file,
-            {
-                'current_pattern': LaunchConfiguration('current_pattern'),
-                'current_magnitude': LaunchConfiguration('current_magnitude'),
-                'current_direction': LaunchConfiguration('current_direction'),
-            },
-        ],
+        parameters=[params_file],
     )
 
-    # 演示节点
     demo_node = Node(
         package='water_rov_path_planning',
         executable='demo_node',
         name='rov_demo_node',
         output='screen',
-        parameters=[{
-            'world_size': 50.0,
-            'num_obstacles': 12,
-            'start_x': 5.0,
-            'start_y': 25.0,
-            'goal_x': 45.0,
-            'goal_y': 25.0,
-            'obstacle_seed': 42,
-        }],
+        parameters=[params_file],
     )
 
     return LaunchDescription([
-        current_pattern_arg,
-        current_magnitude_arg,
-        current_direction_arg,
         planning_node,
         demo_node,
     ])

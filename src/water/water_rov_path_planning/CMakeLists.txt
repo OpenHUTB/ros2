@@ -29,6 +29,7 @@ add_library(rov_path_core STATIC
 target_include_directories(rov_path_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
+  ${OpenCV_INCLUDE_DIRS}
 )
 target_link_libraries(rov_path_core
   ${OpenCV_LIBS}
@@ -73,6 +74,16 @@ install(DIRECTORY launch config rviz scripts
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_core test/test_core.cpp)
+  if(TARGET test_core)
+    target_link_libraries(test_core rov_path_core)
+    ament_target_dependencies(test_core
+      rclcpp std_msgs geometry_msgs nav_msgs sensor_msgs
+      cv_bridge image_transport
+    )
+  endif()
 endif()
 
 ament_package()

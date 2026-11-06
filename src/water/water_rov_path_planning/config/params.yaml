@@ -4,7 +4,11 @@ rov_planning_node:
     grid_size: 100
     resolution: 0.5
 
-    # 路径规划权重
+    # 热力图模型（障碍物影响半径与风险衰减系数）
+    obstacle_radius: 2.0
+    risk_decay: 0.15
+
+    # 路径规划权重（长度、风险、洋流三项都按“单位距离代价 × 本步米数”累加）
     risk_weight: 5.0
     current_weight: 3.0
     current_compensation: 0.5
@@ -14,3 +18,18 @@ rov_planning_node:
     current_pattern: "vortex"
     current_magnitude: 0.4
     current_direction: 0.0
+    vortex_x: 25.0
+    vortex_y: 25.0
+    vortex_radius: 15.0
+    tidal_period: 60.0
+
+rov_demo_node:
+  ros__parameters:
+    # 演示场景（50 m x 50 m，随机 12 个障碍物）
+    world_size: 50.0
+    num_obstacles: 12
+    start_x: 5.0
+    start_y: 25.0
+    goal_x: 45.0
+    goal_y: 25.0
+    obstacle_seed: 42

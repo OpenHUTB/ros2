@@ -9,17 +9,17 @@ Visualization Manager:
     - Class: rviz_default_plugins/Image
       Name: Heatmap
       Topic:
-        Value: /rov/heatmap
+        Value: /heatmap
       Enabled: true
     - Class: rviz_default_plugins/Image
       Name: Ocean Current
       Topic:
-        Value: /rov/ocean_current
+        Value: /ocean_current
       Enabled: true
     - Class: rviz_default_plugins/Path
       Name: Planned Path
       Topic:
-        Value: /rov/planned_path
+        Value: /planned_path
       Color: 255; 255; 0
       Enabled: true
   Global Options:

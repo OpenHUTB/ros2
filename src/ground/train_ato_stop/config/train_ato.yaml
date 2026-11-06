@@ -1,0 +1,12 @@
+# ATO 回放参数
+train_ato_stop:
+  ros__parameters:
+    # 场景：flat / restriction / grade / late_brake
+    scenario: flat
+    # 速度折算到高度的系数，单位 m/(km/h)。160 km/h 会画到 640 m 高，
+    # 与 2.4 km 的线路长度搭配后比例比较舒服
+    speed_scale: 4.0
+    # 回放倍速，1.0 表示按 4 倍实时进度推进（每个周期固定跨若干仿真帧）
+    playback_rate: 1.0
+    # 每个控制周期跨过的仿真帧数（单帧 0.02 s）
+    frame_step: 10

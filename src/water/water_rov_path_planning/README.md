@@ -41,6 +41,8 @@ src/water/water_rov_path_planning/
 │   └── path_planning.rviz
 ├── scripts/
 │   └── render_demo.py         # 订阅节点输出并离线渲染演示动图
+├── test/
+│   └── test_core.cpp          # 热力图风险、顺逆流代价、平滑回退单元测试
 ├── CMakeLists.txt
 ├── package.xml
 └── README.md
@@ -79,8 +81,8 @@ src/water/water_rov_path_planning/
 4. 查看规划结果：
 
    ```
-   ros2 topic echo /rov/path_cost
-   ros2 topic echo /rov/planned_path
+   ros2 topic echo /path_cost
+   ros2 topic echo /planned_path
    ```
 
 5. 可选：RViz2 查看热力图和路径：
@@ -89,35 +91,47 @@ src/water/water_rov_path_planning/
    ros2 run rviz2 rviz2 -d install/water_rov_path_planning/share/water_rov_path_planning/rviz/path_planning.rviz
    ```
 
+6. 单元测试（热力图风险衰减、潮汐相位、顺逆流代价、平滑风险回退）：
+
+   ```
+   colcon test --packages-select water_rov_path_planning
+   ```
+
 ## 运行结果
 
 在 Ubuntu 20.04 + ROS 2 Humble 虚拟机上实测（环境静态，多次重规划结果一致）：
 
-| 场景 | 路径点数 | 路径长度 | 总代价 |
+| 场景 | 路径点数 | 路径长度 | 加权累计代价 |
 | --- | --- | --- | --- |
-| 涡流（默认） | 81 | 40.10 m | 80.02 |
-| 均匀流（+x 顺流） | 81 | 40.00 m | 60.80 |
+| 涡流（默认） | 81 | 40.10 m | 40.01 |
+| 均匀流（+x 顺流） | 81 | 40.00 m | 30.40 |
 
-默认涡流场景中，涡流中心 (25, 25) 的切向速度与 +x 路径方向近似垂直，洋流项净贡献约 -0.18，路径与直线距离 40.00 m 基本一致，因此该场景不能体现顺流节能；改用均匀流（current_pattern:=uniform、current_magnitude:=0.4、current_direction:=0.0）可观察到洋流补偿项生效，总代价下降约 19.2。
+代价为米制口径下的加权累计值（长度、风险、洋流三项都乘以本步米数），量纲不是米，不要与“路径长度”列混淆；旧版本按格子数计为 80.02 / 60.80。
+
+默认涡流场景中，涡流中心 (25, 25) 的切向速度与 +x 路径方向近似垂直，洋流项净贡献约 -0.09，路径与直线距离 40.00 m 基本一致，因此该场景不能体现顺流节能；改用均匀流（`current_pattern:=uniform`、`current_magnitude:=0.4`、`current_direction:=0.0`）可观察到洋流补偿项生效，加权累计代价下降约 9.6。参数不在 launch 中重复定义，临时切换可用 `ros2 run ... --ros-args -p` 覆盖，或直接修改 `config/params.yaml`。
 
 ## 话题说明
 
 | 话题 | 类型 | 方向 | 说明 |
 | --- | --- | --- | --- |
-| `/rov/obstacle` | `geometry_msgs/PointStamped` | 输入 | 障碍物位置（米） |
-| `/rov/start` | `geometry_msgs/PointStamped` | 输入 | 起点位置 |
-| `/rov/goal` | `geometry_msgs/PointStamped` | 输入 | 终点位置（触发规划） |
-| `/rov/planned_path` | `nav_msgs/Path` | 输出 | 规划路径 |
-| `/rov/heatmap` | `sensor_msgs/Image` | 输出 | 热力图可视化（蓝=安全，红=危险） |
-| `/rov/ocean_current` | `sensor_msgs/Image` | 输出 | 洋流场向量图 |
-| `/rov/path_cost` | `std_msgs/Float32MultiArray` | 输出 | [总代价, 路径长度(m), 路径点数] |
+| `/obstacle` | `geometry_msgs/PointStamped` | 输入 | 障碍物位置（米） |
+| `/start` | `geometry_msgs/PointStamped` | 输入 | 起点位置 |
+| `/goal` | `geometry_msgs/PointStamped` | 输入 | 终点位置（触发规划） |
+| `/planned_path` | `nav_msgs/Path` | 输出 | 规划路径 |
+| `/heatmap` | `sensor_msgs/Image` | 输出 | 热力图可视化（蓝=安全，红=危险） |
+| `/ocean_current` | `sensor_msgs/Image` | 输出 | 洋流场向量图 |
+| `/path_cost` | `std_msgs/Float32MultiArray` | 输出 | [加权累计代价, 路径长度(m), 路径点数] |
+
+代码中使用相对话题名（不带前导 `/`），默认解析到根命名空间，两个节点因此共享同一组名字；加 `__ns` 后可在同机并行运行多组实例，互不抢占。
 
 ## 主要参数
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `grid_size` | 100 | 热力图网格边长 |
+| `grid_size` | 100 | 热力图网格边长（格子数） |
 | `resolution` | 0.5 | 每个格子对应实际尺寸（米） |
+| `obstacle_radius` | 2.0 | 障碍物影响半径（米） |
+| `risk_decay` | 0.15 | 风险高斯衰减系数 α |
 | `risk_weight` | 5.0 | 热力图风险权重 |
 | `current_weight` | 3.0 | 洋流权重 |
 | `current_compensation` | 0.5 | 顺流奖励系数（0～1） |
@@ -125,3 +139,16 @@ src/water/water_rov_path_planning/
 | `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear） |
 | `current_magnitude` | 0.4 | 基础洋流流速（m/s） |
 | `current_direction` | 0.0 | 均匀流方向（弧度） |
+| `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米） |
+| `vortex_radius` | 15.0 | 涡流影响半径（米） |
+| `tidal_period` | 60.0 | 潮汐周期（秒） |
+
+演示节点参数定义在 `config/params.yaml` 的 `rov_demo_node` 段：`world_size`、`num_obstacles`、`obstacle_seed`、`start_x/start_y`、`goal_x/goal_y`。两类参数都只在 yaml 中定义一处，launch 只加载该文件；非法参数会在启动时报错并以非零退出码结束。
+
+## 已知限制
+
+- 热力图采用 \(R=\exp(-\alpha d^2)\) 并在影响半径处截断，边界处风险约 0.55 直接归零，代价场存在台阶，A* 可能沿截断边界行进。若要彻底消除，可将核函数改为归一化的 \(R=\max(\exp(-\alpha d^2)-\exp(-\alpha r^2),0)/(1-\exp(-\alpha r^2))\)，但会改变封禁半径与现有演示数据。
+- 启发函数使用欧氏距离，而边代价含风险项且顺流时可低于距离代价，当前权重下不满足可采纳性，A* 返回近优解而非全局最优。
+- 使用合成演示数据（随机障碍物 + 解析洋流场），未接入真实海底声呐或多波束数据。
+- 洋流场为稳态解析模型；潮汐模式有周期变化，规划时按当前时间计算，但未做真实海况下的验证。
+- 路径为全局一次性规划，演示节点每 5 秒触发一次重规划作为示意，未实现随洋流变化的连续动态重规划。

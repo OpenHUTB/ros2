@@ -2,10 +2,10 @@
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <chrono>
 #include <cmath>
-#include <thread>
+#include <exception>
+#include <random>
 #include <utility>
 #include <vector>
-#include <random>
 
 /**
  * @brief 演示节点：模拟海底环境
@@ -30,35 +30,83 @@ public:
 
     world_size_ = get_parameter("world_size").as_double();
     num_obstacles_ = get_parameter("num_obstacles").as_int();
+    start_x_ = get_parameter("start_x").as_double();
+    start_y_ = get_parameter("start_y").as_double();
+    goal_x_ = get_parameter("goal_x").as_double();
+    goal_y_ = get_parameter("goal_y").as_double();
+    obstacle_seed_ = get_parameter("obstacle_seed").as_int();
 
-    obstacle_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("/rov/obstacle", 10);
-    start_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("/rov/start", 10);
-    goal_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("/rov/goal", 10);
+    // 参数校验：避免负数量、零尺寸或起终点越界
+    if (world_size_ <= 4.0 || num_obstacles_ < 0 ||
+      start_x_ < 0.0 || start_x_ > world_size_ || start_y_ < 0.0 || start_y_ > world_size_ ||
+      goal_x_ < 0.0 || goal_x_ > world_size_ || goal_y_ < 0.0 || goal_y_ > world_size_)
+    {
+      RCLCPP_ERROR(
+        get_logger(),
+        "参数校验失败：world_size>4、num_obstacles>=0，且起点/终点需落在 [0, world_size] 内，节点退出");
+      params_valid_ = false;
+      rclcpp::shutdown();
+      return;
+    }
 
-    // 延迟启动，等 planning_node 就绪
-    timer_ = create_wall_timer(std::chrono::milliseconds(2000),
+    // 相对话题名，默认解析到根命名空间；障碍物队列加深到 50，容纳一次性发布的一批障碍物
+    obstacle_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("obstacle", rclcpp::QoS(50));
+    start_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("start", 10);
+    goal_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("goal", 10);
+
+    // 轮询等待 planning_node 订阅就绪，代替固定时长的 sleep
+    ready_timer_ = create_wall_timer(std::chrono::milliseconds(100),
       std::bind(&DemoNode::startDemo, this));
+
+    // 周期性重规划：独立定时器成员，构造时创建；演示开始前不发消息，
+    // 避免在自身回调里替换正在执行的定时器对象
+    replan_timer_ = create_wall_timer(std::chrono::seconds(5), [this]() {
+      if (!demo_active_) return;
+      publishPoint(goal_pub_, goal_x_, goal_y_);
+      RCLCPP_INFO(get_logger(), "触发重规划...");
+    });
   }
 
+  /// 参数校验是否通过；main 据此返回非零退出码，便于 launch 层识别失败
+  bool parameters_valid() const { return params_valid_; }
+
 private:
+  void publishPoint(
+    const rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr & publisher,
+    double x, double y)
+  {
+    geometry_msgs::msg::PointStamped msg;
+    msg.header.stamp = now();
+    msg.header.frame_id = "world";
+    msg.point.x = x;
+    msg.point.y = y;
+    msg.point.z = 0.0;
+    publisher->publish(msg);
+  }
+
   void startDemo()
   {
-    timer_->cancel();
+    // 三个发布者都有订阅者后再发数据，避免发现阶段丢消息
+    if (obstacle_pub_->get_subscription_count() == 0 ||
+      start_pub_->get_subscription_count() == 0 ||
+      goal_pub_->get_subscription_count() == 0)
+    {
+      RCLCPP_INFO_THROTTLE(
+        get_logger(), *get_clock(), 2000, "等待 rov_planning_node 订阅就绪...");
+      return;
+    }
 
-    std::mt19937 rng(get_parameter("obstacle_seed").as_int());
+    ready_timer_->cancel();
+
+    std::mt19937 rng(obstacle_seed_);
     std::uniform_real_distribution<double> dist(2.0, world_size_ - 2.0);
-
-    double start_x = get_parameter("start_x").as_double();
-    double start_y = get_parameter("start_y").as_double();
-    double goal_x = get_parameter("goal_x").as_double();
-    double goal_y = get_parameter("goal_y").as_double();
 
     RCLCPP_INFO(get_logger(), "=== ROV 路径规划演示开始 ===");
     RCLCPP_INFO(get_logger(), "海域尺寸: %.0f x %.0f m", world_size_, world_size_);
     RCLCPP_INFO(get_logger(), "起点: (%.1f, %.1f)  终点: (%.1f, %.1f)",
-      start_x, start_y, goal_x, goal_y);
+      start_x_, start_y_, goal_x_, goal_y_);
 
-    // 发布障碍物（避开起点和终点附近 5m）
+    // 生成障碍物（避开起点和终点附近 5m）
     RCLCPP_INFO(get_logger(), "正在生成 %d 个障碍物...", num_obstacles_);
     std::vector<std::pair<double, double>> obstacles;
     for (int i = 0; i < num_obstacles_; ++i) {
@@ -69,74 +117,49 @@ private:
         oy = dist(rng);
         tries++;
       } while (tries < 50 && (
-        (std::hypot(ox - start_x, oy - start_y) < 5.0) ||
-        (std::hypot(ox - goal_x, oy - goal_y) < 5.0)));
+        (std::hypot(ox - start_x_, oy - start_y_) < 5.0) ||
+        (std::hypot(ox - goal_x_, oy - goal_y_) < 5.0)));
       obstacles.emplace_back(ox, oy);
       RCLCPP_INFO(get_logger(), "  障碍物 %d: (%.1f, %.1f)", i + 1, ox, oy);
     }
 
-    // 重发 3 次，避免订阅端尚未完成发现时丢消息
-    for (int round = 0; round < 3; ++round) {
-      for (const auto & obstacle : obstacles) {
-        auto msg = geometry_msgs::msg::PointStamped();
-        msg.header.stamp = now();
-        msg.header.frame_id = "world";
-        msg.point.x = obstacle.first;
-        msg.point.y = obstacle.second;
-        msg.point.z = 0.0;
-        obstacle_pub_->publish(msg);
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    for (const auto & obstacle : obstacles) {
+      publishPoint(obstacle_pub_, obstacle.first, obstacle.second);
     }
-
-    // 等待 1 秒让热力图更新
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    // 发布起点
-    auto start_msg = geometry_msgs::msg::PointStamped();
-    start_msg.header.stamp = now();
-    start_msg.header.frame_id = "world";
-    start_msg.point.x = start_x;
-    start_msg.point.y = start_y;
-    start_pub_->publish(start_msg);
-
-    // 发布终点（触发规划）
-    auto goal_msg = geometry_msgs::msg::PointStamped();
-    goal_msg.header.stamp = now();
-    goal_msg.header.frame_id = "world";
-    goal_msg.point.x = goal_x;
-    goal_msg.point.y = goal_y;
-    goal_pub_->publish(goal_msg);
+    publishPoint(start_pub_, start_x_, start_y_);
+    publishPoint(goal_pub_, goal_x_, goal_y_);
 
     RCLCPP_INFO(get_logger(), "已发布起点和终点，等待规划结果...");
-
-    // 5 秒后重新发布终点触发重规划（演示周期性重规划）
-    timer_ = create_wall_timer(std::chrono::seconds(5),
-      [this, goal_x, goal_y]() {
-        auto goal_msg = geometry_msgs::msg::PointStamped();
-        goal_msg.header.stamp = now();
-        goal_msg.header.frame_id = "world";
-        goal_msg.point.x = goal_x;
-        goal_msg.point.y = goal_y;
-        goal_pub_->publish(goal_msg);
-        RCLCPP_INFO(get_logger(), "触发重规划...");
-      });
+    demo_active_ = true;
   }
 
-  double world_size_;
-  int num_obstacles_;
+  double world_size_ = 50.0;
+  int num_obstacles_ = 12;
+  double start_x_ = 5.0;
+  double start_y_ = 25.0;
+  double goal_x_ = 45.0;
+  double goal_y_ = 25.0;
+  int obstacle_seed_ = 42;
+  bool params_valid_ = true;
+  bool demo_active_ = false;
 
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr obstacle_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_pub_;
   rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr goal_pub_;
-  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr ready_timer_;
+  rclcpp::TimerBase::SharedPtr replan_timer_;
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<DemoNode>();
-  rclcpp::spin(node);
-  rclcpp::shutdown();
-  return 0;
+  try {
+    auto node = std::make_shared<DemoNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return node->parameters_valid() ? 0 : 1;
+  } catch (const std::exception & e) {
+    RCLCPP_FATAL(rclcpp::get_logger("demo_node"), "节点异常退出: %s", e.what());
+    return 1;
+  }
 }

@@ -45,35 +45,37 @@ public:
   void setEnvironment(std::shared_ptr<Heatmap> heatmap,
                       std::shared_ptr<OceanCurrent> current);
 
+  /// 设置规划时刻（秒），用于潮汐模式；规划前由调用方更新为当前时间
+  void setTime(double t) { time_ = t; }
+
   /// 规划路径（起点、终点为世界坐标），返回路径点列表
   bool plan(const Point & start, const Point & goal, std::vector<Point> & path);
 
-  /// 计算某段路径的总代价（用于评估）
-  double computePathCost(const std::vector<Point> & path) const;
+  /// 计算路径长度（单位：米），仅用于评估；A* 的加权累计代价见 getLastCost()
+  double pathLength(const std::vector<Point> & path) const;
 
-  /// 获取规划的路径代价
+  /// 获取规划的加权累计代价
   double getLastCost() const { return last_cost_; }
 
-  /// 路径平滑（迭代加权平均）
-  static void smoothPath(std::vector<Point> & path, int iterations = 3);
+  /// 路径平滑：Jacobi 加权平均（用上一轮结果整体更新，避免单向偏移）；
+  /// 平滑后逐点与逐段检查风险，超阈值则回退到原始 A* 路径
+  /// @return true 表示平滑结果安全可用，false 表示已回退到原始路径
+  bool smoothPath(std::vector<Point> & path, int iterations = 3);
+
+  /// 单步加权代价（米制口径：长度、风险、洋流三项都乘以本步米数），供测试与调试
+  double stepCost(int from_gx, int from_gy, int to_gx, int to_gy) const;
 
 private:
   Params params_;
   std::shared_ptr<Heatmap> heatmap_;
   std::shared_ptr<OceanCurrent> current_;
   double last_cost_ = 0.0;
-
-  // A* 节点
-  struct Node
-  {
-    int gx, gy;
-    double g, f;
-    int parent_x, parent_y;
-    bool in_open;
-  };
+  double time_ = 0.0;
 
   double heuristic(int gx, int gy, int goal_gx, int goal_gy) const;
-  double stepCost(int from_gx, int from_gy, int to_gx, int to_gy) const;
+
+  /// 判断世界坐标点所在格子的风险是否不超过阈值（出界视为不安全）
+  bool pointSafe(const Point & p) const;
 };
 
 }  // namespace water_rov_path_planning
