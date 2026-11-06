@@ -47,8 +47,18 @@
 
 其中 \(\boldsymbol{R}\)、\(\boldsymbol{t}\) 是 TF 树中 `world` ← `lidar_link` 的旋转与平移。
 这条 TF 链由桥接节点建立：`world → base_link` 由位姿动态广播，
-`base_link → lidar_link` 由雷达安装位置静态广播。旋转用四元数表示，
-节点里直接由四元数构造旋转矩阵：
+`base_link → lidar_link` 由雷达安装位置静态广播。
+
+>TF踩坑提示：
+>如果报`Transform timeout`，代表TF树缺失；
+排查命令：
+> ```shell
+> rosrun tf2_tools view_frames.py
+> ```
+> 看是否同时存在`world`、`base_link`、
+`lidar_link`坐标系。
+
+旋转用四元数表示，节点里直接由四元数构造旋转矩阵：
 
 ```cpp
 tf2::Quaternion rotation(q.x, q.y, q.z, q.w);
@@ -156,7 +166,7 @@ tree_.updateInnerOccupancy();
 | cloud_topic | /cloud_in | 输入点云话题 |
 | world_frame | world | 世界坐标系，地图与可视化都建立在该坐标系下 |
 | sensor_frame | lidar_link | 点云 `frame_id` 为空时的兜底坐标系 |
-| resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数** |
+| resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数；受性能约束请勿设置过小** |
 | max_range | 30.0 | 射线最大量程（m） |
 | min_range | 0.5 | 最小量程（m），更近的点直接丢弃 |
 | point_stride | 2 | 抽稀：每隔 N 个点取一个做射线投射 |
@@ -193,7 +203,7 @@ roslaunch octree_uav_3d_pathfinding main.launch
 ```
 
 > **前置条件**：宿主上的模拟器必须已经启动（见[环境配置与前置准备](./env_setup.md) 第 5 节），
-> 并且 `config/params.yaml` 里的 `host` 已改成你自己宿主机的 VMnet8 地址，否则桥接节点连不上。
+> 并且**`config/params.yaml` 里的 `host` 已改成你自己宿主机的 VMnet8 地址**，否则桥接节点连不上。
 
 只关心建图、不需要 RViz 时：
 
@@ -227,8 +237,8 @@ rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 30.0, y: 0.0, z: 15.0}"
 | 话题 | 类型 | 方向 | 说明 |
 |---|---|---|---|
 | /cloud_in | sensor_msgs/PointCloud2 | 订阅 | 激光雷达点云（`lidar_link` 系） |
-| /octomap_full | octomap_msgs/Octomap | 发布 | 完整八叉树地图（latched） |
-| /occupied_cells_vis_array | visualization_msgs/MarkerArray | 发布 | 占用体素可视化 |
+| /octomap_full | octomap_msgs/Octomap | 发布 | 完整八叉树地图（latched），路径规划使用这个话题 |
+| /occupied_cells_vis_array | visualization_msgs/MarkerArray | 发布 | 占用体素可视化，只用于显示，不能用于路径规划 |
 | /tf | tf2_msgs/TFMessage | 订阅 | 由桥接节点广播，用于把点云变换到世界系 |
 
 排查用命令：
@@ -243,7 +253,9 @@ rostopic hz /cloud_in
 # 看八叉树地图消息的频率
 rostopic hz /octomap_full
 ```
-
+>若收不到点云输入：
+请确认AirSim模拟器已启动、 params.yaml 的 host 地址配置正确、
+虚拟机与Windows主机网络互通。
 ---
 
 ## 参考
