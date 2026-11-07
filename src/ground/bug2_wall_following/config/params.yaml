@@ -1,0 +1,5 @@
+world: {w: 800, h: 600}
+start: [80, 500]
+goal: [720, 120]
+obstacle: [400, 300, 70]   # cx, cy, radius
+robot: {radius: 8, speed: 2.0, wall_margin: 20.0}
