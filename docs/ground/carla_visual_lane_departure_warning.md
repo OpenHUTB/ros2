@@ -1,12 +1,7 @@
 # CARLA 前视相机车道偏离预警（视觉横向偏移与地图真值对照）
 
-> 对应课程任务：对地面载具进行物理仿真，通过神经网络感知完成预警决策。
-
-本模块用一台前视 RGB 相机代替地图 API 取车道线：图像进网络，出左右两条车道边界的位置，
-折算成带符号横向偏移，再送进与仓库现有 `carla_lane_departure_warning` 完全相同的三级状态机。
-
-地图算出来的偏移不作输入，只作**对照真值**——同一帧里两边同时算，直接比误差。
-这样做的目的是把「视觉能不能替代地图」变成一个可以量化的问题，而不是一句主观判断。
+用前视 RGB 相机取车道线，回归左右边界位置并折算成带符号横向偏移，
+送进与 `carla_lane_departure_warning` 相同的三级状态机；地图偏移只作对照真值。
 
 ## 1 概述与目标
 
@@ -53,12 +48,12 @@ f = \frac{W/2}{\tan(\text{fov}/2)}, \qquad
 K = \begin{bmatrix} f & 0 & c_x \\ 0 & f & c_y \\ 0 & 0 & 1 \end{bmatrix}
 $$
 
-代入本项目参数（$W = 800$，$\text{fov} = 90°$）：$f = 400/\tan 45° = 400$ px，
-主点 $(c_x, c_y) = (400, 300)$。
+代入本项目参数（\(W = 800\)，\(\text{fov} = 90°\)）：\(f = 400/\tan 45° = 400\) px，
+主点 \((c_x, c_y) = (400, 300)\)。
 
 ### 2.2 世界坐标到像素坐标
 
-CARLA 的相机局部坐标系是「x 向前、y 向右、z 向上」。世界点 $P_w$ 先变换到相机坐标系：
+CARLA 的相机局部坐标系是「x 向前、y 向右、z 向上」。世界点 \(P_w\) 先变换到相机坐标系：
 
 $$
 P_c = T_{\text{cam}}^{-1} \cdot \begin{bmatrix} P_w \\ 1 \end{bmatrix}, \qquad P_c = (x, y, z)
@@ -70,24 +65,24 @@ $$
 u = c_x + f \cdot \frac{y}{x}, \qquad v = c_y - f \cdot \frac{z}{x}
 $$
 
-只有当 $x > 0$ 且 $(u, v)$ 落在图像范围内时，这个点才算可见。
+只有当 \(x > 0\) 且 \((u, v)\) 落在图像范围内时，这个点才算可见。
 
 图中绿点是地图算出的车道边界经上式投影到图像后的位置，能压在路面的白线上，
 说明内参和位姿的符号都对。
 
 ![车道边界投影到图像](../img/ground/carla_visual_lane_departure_warning/lane_projection.png)
 
-**几何直觉**：相机高 1.6 m、水平朝前时，地面上距离 $d$ 处的点满足
-$v = c_y + f \cdot h / d$。距离越远，v 越靠近画面中心线（300）；本项目关注 10 m 处的边界，
-对应 $v = 300 + 400 \times 1.6 / 10 = 364$，落在画面下半部。
+**几何直觉**：相机高 1.6 m、水平朝前时，地面上距离 \(d\) 处的点满足
+\(v = c_y + f \cdot h / d\)。距离越远，v 越靠近画面中心线（300）；本项目关注 10 m 处的边界，
+对应 \(v = 300 + 400 \times 1.6 / 10 = 364\)，落在画面下半部。
 
 ### 2.3 真值的定义
 
 真值不是人工标注，而是**同一帧里用地图算出来的**：
 
 1. 由自车位置取最近的车道路点 `waypoint`；
-2. 沿车道往前走到 10 m 处，得到该处的车道中心与车道宽度 $w$；
-3. 左右边界取「中心 ± $w/2$」；
+2. 沿车道往前走到 10 m 处，得到该处的车道中心与车道宽度 \(w\)；
+3. 左右边界取「中心 ± \(w/2\)」；
 4. 把这两个点投影到自车的横向轴上，得到「左边界横向位置」和「右边界横向位置」。
 
 带符号横向偏移定义为两者中点相对自车的偏移，左偏为正：
@@ -96,8 +91,8 @@ $$
 e = -\frac{y_{\text{left}} + y_{\text{right}}}{2}
 $$
 
-自车正好在车道中间时 $y_{\text{left}} \approx -1.75$、$y_{\text{right}} \approx +1.75$，$e = 0$；
-自车偏左时两个边界都相对右移，$e > 0$。
+自车正好在车道中间时 \(y_{\text{left}} \approx -1.75\)、\(y_{\text{right}} \approx +1.75\)，\(e = 0\)；
+自车偏左时两个边界都相对右移，\(e > 0\)。
 
 ### 2.4 采集时的三道过滤
 
@@ -107,8 +102,8 @@ $$
 
 | 过滤 | 判据 | 拦掉什么 |
 |---|---|---|
-| 车道宽 | $2.8 < w < 4.2$ m | 路口、鱼骨线、停车区 |
-| 自车居中 | $\lvert e \rvert < 0.8$ m（按当前路点算，不用 10 m 外的点） | 地图判错车道 |
+| 车道宽 | \(2.8 < w < 4.2\) m | 路口、鱼骨线、停车区 |
+| 自车居中 | \(\lvert e \rvert < 0.8\) m（按当前路点算，不用 10 m 外的点） | 地图判错车道 |
 | 边界有白线 | 边界处像素比左右各偏 14 px 处亮 12 灰度以上 | 路沿、没刷线的路段 |
 | 边界在画面内 | 两条边界都能投影进 800×600 | 弯道上跑到画面外的真值 |
 | 目标偏移 | 中点偏移小于 2.0 m | 同上，兜底 |
@@ -122,7 +117,7 @@ $$
 
 ### 2.5 网络结构
 
-输入是裁掉天空与车头后的路面条带，$32 \times 128$ 灰度图，展平成 4096 维：
+输入是裁掉天空与车头后的路面条带，\(32 \times 128\) 灰度图，展平成 4096 维：
 
 $$
 \mathbf{h}_1 = \text{ReLU}(W_1 \mathbf{x} + \mathbf{b}_1),\quad
@@ -130,7 +125,7 @@ $$
 \hat{\mathbf{y}} = W_3 \mathbf{h}_2 + \mathbf{b}_3
 $$
 
-尺寸为 $4096 \to 64 \to 32 \to 2$，参数量：
+尺寸为 \(4096 \to 64 \to 32 \to 2\)，参数量：
 
 $$
 4096 \times 64 + 64 + 64 \times 32 + 32 + 32 \times 2 + 2 = 264{,}354
@@ -142,7 +137,7 @@ $$
 L = \frac{1}{N}\sum_{i=1}^{N}\left(\hat{y}_i - y_i\right)^2
 $$
 
-权重用 He 正态初始化（$\sigma = \sqrt{2/n_{\text{in}}}$），优化器是带动量的随机梯度下降
+权重用 He 正态初始化（\(\sigma = \sqrt{2/n_{\text{in}}}\)），优化器是带动量的随机梯度下降
 （学习率 0.005、动量 0.9、批大小 256、120 轮）。
 
 **为什么输入要裁剪和缩放成这样**：如果把 800×600 整图直接缩到 64×36，
@@ -168,9 +163,9 @@ $$
 
 | 状态 | 进入条件 | 退出条件 |
 |---|---|---|
-| `normal` | $\lvert e \rvert < 0.5$ | $\lvert e \rvert \ge 0.5$ → `deviation`，$\lvert e \rvert \ge 0.9$ → `departure` |
-| `deviation` | $0.5 \le \lvert e \rvert < 0.9$ | $\lvert e \rvert < 0.3$ → `normal`，$\lvert e \rvert \ge 0.9$ → `departure` |
-| `departure` | $\lvert e \rvert \ge 0.9$ | $\lvert e \rvert < 0.65$ → `deviation` |
+| `normal` | \(\lvert e \rvert < 0.5\) | \(\lvert e \rvert \ge 0.5\) → `deviation`，\(\lvert e \rvert \ge 0.9\) → `departure` |
+| `deviation` | \(0.5 \le \lvert e \rvert < 0.9\) | \(\lvert e \rvert < 0.3\) → `normal`，\(\lvert e \rvert \ge 0.9\) → `departure` |
+| `departure` | \(\lvert e \rvert \ge 0.9\) | \(\lvert e \rvert < 0.65\) → `deviation` |
 
 滞回的作用是防止在阈值附近来回抖动时反复报警。状态跃迁时产生事件，
 事件名带上方向后缀：`deviation_start_left`、`departure_start_right`、`deviation_clear`、`departure_end`。
@@ -438,7 +433,7 @@ def fit(self, images, targets, epochs=120, batch_size=256, lr=0.005, momentum=0.
             self.weights[i] += velocity_w[i]
 ```
 
-反向传播在 `backward()` 里逐层做：$\delta = \delta_{\text{next}} W^{\top} \odot \mathbb{1}[z > 0]$。
+反向传播在 `backward()` 里逐层做：\(\delta = \delta_{\text{next}} W^{\top} \odot \mathbb{1}[z > 0]\)。
 
 ## 6 实验结果
 
