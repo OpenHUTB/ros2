@@ -41,7 +41,13 @@ src/drone_trajectory_logger/
 colcon build --packages-select drone_trajectory_logger
 source install/setup.bash
 ros2 launch drone_trajectory_logger main.launch.py
+
+# 无显示器 / 服务器环境：关掉实时绘图窗口
+ros2 launch drone_trajectory_logger main.launch.py enable_plot:=false
 ```
+
+完整参数表见 [主文档](../../docs/air/drone_trajectory_logger.md#参数说明)；
+`publish_rate` 与记录时长无关——识别节点按**节点时钟**给采样点打时间戳。
 
 自定义指令序列与导出位置：
 

@@ -28,7 +28,6 @@ class TrajectoryAnalyzer(Node):
         self.turn_step = float(self.declare_parameter('turn_step', 0.2).value)
         self.linear_deadband = float(self.declare_parameter('linear_deadband', 0.01).value)
         self.angular_deadband = float(self.declare_parameter('angular_deadband', 0.01).value)
-        self.sample_dt = float(self.declare_parameter('sample_dt', 1.0).value)
         self.enable_plot = bool(self.declare_parameter('enable_plot', True).value)
         self.export_on_shutdown = bool(self.declare_parameter('export_on_shutdown', True).value)
         self.export_every = int(self.declare_parameter('export_every', 0).value)
@@ -45,7 +44,7 @@ class TrajectoryAnalyzer(Node):
             angular_deadband=self.angular_deadband,
         )
         self.recorder = TrajectoryRecorder(
-            dt=self.sample_dt,
+            dt=1.0,   # 仅在未提供时间戳时作为回退；节点始终传真实时间戳
             output_dir=self.output_dir or None,
             csv_name=self.csv_name,
             json_name=self.json_name,
@@ -63,11 +62,17 @@ class TrajectoryAnalyzer(Node):
             self._init_plot()
 
     # -------------------------------------------------------------- 回调
+    def _now(self):
+        """节点时钟（秒）；使用仿真时间时会跟随 /clock。"""
+        return self.get_clock().now().nanoseconds / 1e9
+
     def listener_callback(self, msg):
         state = classify_state(msg.linear.x, msg.angular.z,
                                self.linear_deadband, self.angular_deadband)
         x, y, theta = self.integrator.step(msg.linear.x, msg.angular.z)
-        self.recorder.add(state, x, y, theta, msg.linear.x, msg.angular.z)
+        # 用真实时间戳记录：发布频率变化时，duration_s / 各状态时长不会被算错。
+        self.recorder.add(state, x, y, theta, msg.linear.x, msg.angular.z,
+                          timestamp=self._now())
 
         self.state_publisher.publish(String(data=state))
         self.get_logger().info(
@@ -86,8 +91,8 @@ class TrajectoryAnalyzer(Node):
             'turn_step': self.turn_step,
             'linear_deadband': self.linear_deadband,
             'angular_deadband': self.angular_deadband,
-            'sample_dt': self.sample_dt,
             'cmd_vel_topic': self.cmd_vel_topic,
+            'time_source': 'node_clock',
         }
         paths = self.recorder.export(params=params)
         self.get_logger().info('轨迹记录已导出：%s / %s' % (paths['csv'], paths['json']))
@@ -110,15 +115,17 @@ class TrajectoryAnalyzer(Node):
 
     # -------------------------------------------------------------- 绘图
     def _init_plot(self):
-        """延迟导入 matplotlib，没装或没有显示器时只告警、不退出。"""
+        """延迟导入 matplotlib；没装或没有显示器时只告警、不退出。"""
         try:
             import matplotlib.pyplot as plt
-        except ImportError:
-            self.get_logger().warn('未安装 matplotlib，已关闭实时绘图（记录照常进行）')
+            plt.ion()
+            figure, axes = plt.subplots()
+        except Exception as exc:  # ImportError / TclError / 无 DISPLAY 等
+            self.get_logger().warn(
+                '无法初始化绘图窗口（%s），已关闭实时绘图（记录照常进行）' % exc)
             self.enable_plot = False
+            self.plot = None
             return
-        plt.ion()
-        figure, axes = plt.subplots()
         line, = axes.plot([], [], 'b-', label='Drone Path')
         axes.set_xlim(-10, 10)
         axes.set_ylim(-10, 10)

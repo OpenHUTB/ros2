@@ -7,8 +7,9 @@
 A. ``classify_state``：9 种状态、死区、参数化死区
 B. ``PoseIntegrator``：固定步长积分、悬停不动、转向后前进方向正确
 C. 指令序列：解析、默认值、未知指令报错、指令 -> Twist 数值
-D. ``TrajectoryRecorder``：采样统计、折线距离、CSV / JSON 导出内容
-E. 工程文件：package.xml 依赖、setup.py 入口、launch 参数，纯逻辑模块不依赖 ROS
+D. ``TrajectoryRecorder``：采样统计、真实时间戳时长、CSV / JSON 导出内容
+E. ``publish_period``：频率 -> 周期，非法频率报错
+F. 工程文件：launch 参数与文档参数表一致、节点用节点时钟打时间戳、纯逻辑不依赖 ROS
 
 用法: python3 tests/test_drone_trajectory_logger_local.py
 """
@@ -17,8 +18,10 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 import tempfile
+import types
 
 PASS, FAIL = [], []
 
@@ -138,10 +141,16 @@ def test_recorder():
 
     totals = recorder.state_totals()
     check(set(totals) == {fs.STATE_FORWARD, fs.STATE_TURN_LEFT, fs.STATE_HOVER}, "统计覆盖 3 种状态")
+    check(abs(totals[fs.STATE_FORWARD]["duration_s"] - 3.0) < 1e-9, "前进时长 = 3 s")
+    check(abs(totals[fs.STATE_TURN_LEFT]["duration_s"] - 1.0) < 1e-9, "左转时长 = 1 s")
+    check(totals[fs.STATE_HOVER]["duration_s"] == 0.0, "最后一个采样点不计时长")
+    check(abs(sum(item["duration_s"] for item in totals.values()) - 4.0) < 1e-9,
+          "各状态时长之和 = 时间跨度")
     check(abs(sum(item["ratio"] for item in totals.values()) - 1.0) < 1e-6, "各状态占比之和为 1")
 
     summary = recorder.summary(params={"step_length": 0.5})
-    check(summary["sample_count"] == 5 and summary["duration_s"] == 5.0, "汇总的采样数/时长为 5")
+    check(summary["sample_count"] == 5 and summary["duration_s"] == 4.0,
+          "汇总时长 = 首末时间戳差（4 s）")
     check(summary["params"] == {"step_length": 0.5}, "汇总里带上参数快照")
     check(summary["bounding_box"]["x_max"] == 1.0, "包围盒 x_max 正确")
     check(summary["final_pose"]["theta_rad"] == 0.2, "终点朝向正确")
@@ -168,9 +177,76 @@ def test_recorder():
     check(empty.summary()["start_pose"] is None, "没有采样点时位姿为 None")
 
 
-# ============================================================= E. 工程文件
+# ============================================================= D2. 真实时间戳
+def test_timestamps():
+    print("== D2. 真实时间戳（发布频率变化不影响时长）==")
+    recorder = fs.TrajectoryRecorder(dt=1.0)
+    recorder.add(fs.STATE_FORWARD, 0.0, 0.0, 0.0, 1.0, 0.0, timestamp=10.0)
+    recorder.add(fs.STATE_FORWARD, 0.5, 0.0, 0.0, 1.0, 0.0, timestamp=10.1)
+    recorder.add(fs.STATE_TURN_LEFT, 1.0, 0.0, 0.2, 0.0, 1.0, timestamp=10.2)
+    recorder.add(fs.STATE_HOVER, 1.0, 0.0, 0.2, 0.0, 0.0, timestamp=10.3)
+
+    totals = recorder.state_totals()
+    check(abs(totals[fs.STATE_FORWARD]["duration_s"] - 0.2) < 1e-9,
+          "10 Hz 采样：前进时长 0.2 s（不再按 1 s/点计算）")
+    check(abs(totals[fs.STATE_TURN_LEFT]["duration_s"] - 0.1) < 1e-9, "左转时长 0.1 s")
+    summary = recorder.summary()
+    check(abs(summary["duration_s"] - 0.3) < 1e-9, "总时长 = 10.3 - 10.0 = 0.3 s")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        paths = recorder.export(output_dir=tmp)
+        with open(paths["csv"], encoding="utf-8") as handle:
+            lines = [line.rstrip("\n") for line in handle]
+        check(lines[1].split(",")[1] == "10.000", "CSV 记录真实时间戳 10.000")
+        check(lines[4].split(",")[1] == "10.300", "CSV 记录真实时间戳 10.300")
+
+
+# ============================================================= E. 发布周期
+def test_publish_period():
+    print("== E. publish_period 频率 -> 周期 ==")
+    # main.py 顶层 import rclpy / geometry_msgs，这里装最小桩以便离线导入
+    rclpy_mod = types.ModuleType("rclpy")
+    node_mod = types.ModuleType("rclpy.node")
+
+    class _Node(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+    node_mod.Node = _Node
+    rclpy_mod.node = node_mod
+    geometry_mod = types.ModuleType("geometry_msgs")
+    msg_mod = types.ModuleType("geometry_msgs.msg")
+
+    class _Twist(object):
+        pass
+
+    msg_mod.Twist = _Twist
+    geometry_mod.msg = msg_mod
+    saved = {name: sys.modules.get(name) for name in
+             ("rclpy", "rclpy.node", "geometry_msgs", "geometry_msgs.msg")}
+    sys.modules.update({"rclpy": rclpy_mod, "rclpy.node": node_mod,
+                        "geometry_msgs": geometry_mod, "geometry_msgs.msg": msg_mod})
+    try:
+        from drone_trajectory_logger import main as pub
+        check(pub.publish_period(1.0) == 1.0, "1 Hz -> 1 s")
+        check(abs(pub.publish_period(10.0) - 0.1) < 1e-12, "10 Hz -> 0.1 s")
+        for bad in (0.0, -1.0, float("nan"), float("inf")):
+            try:
+                pub.publish_period(bad)
+                check(False, "非法 publish_rate 应报错: %r" % (bad,))
+            except ValueError:
+                check(True, "非法 publish_rate 报 ValueError: %r" % (bad,))
+    finally:
+        for name, module in saved.items():
+            if module is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
+
+
+# ============================================================= F. 工程文件
 def test_project_files():
-    print("== E. 工程文件 ==")
+    print("== F. 工程文件与文档一致性 ==")
     with open(os.path.join(PKG, "package.xml"), encoding="utf-8") as handle:
         package_xml = handle.read()
     for dep in ("rclpy", "geometry_msgs", "std_msgs", "matplotlib"):
@@ -184,8 +260,29 @@ def test_project_files():
 
     with open(os.path.join(PKG, "launch", "main.launch.py"), encoding="utf-8") as handle:
         launch = handle.read()
-    for arg in ("publish_rate", "sequence", "enable_plot", "output_dir", "export_every"):
-        check("'%s'" % arg in launch, "launch 暴露参数 %s" % arg)
+    declared = set(re.findall(r"DeclareLaunchArgument\(\s*'([a-z0-9_]+)'", launch))
+    check(len(declared) >= 14, "launch 声明了完整的参数集（%d 个）" % len(declared))
+
+    docs_path = os.path.join(ROOT, "docs", "air", "drone_trajectory_logger.md")
+    with open(docs_path, encoding="utf-8") as handle:
+        docs = handle.read()
+    table = docs.split("## 参数说明", 1)[1].split("## ", 1)[0]
+    documented = set()
+    for line in table.splitlines():
+        match = re.match(r"\| `([a-z0-9_]+)`(?: / `([a-z0-9_]+)`)?", line)
+        if match:
+            documented.update(item for item in match.groups() if item)
+    check(declared == documented, "launch 参数与文档参数表完全一致（差集：%s）"
+          % sorted(declared ^ documented))
+    check("sample_dt" not in declared and "sample_dt" not in documented,
+          "不再暴露 sample_dt（记录改用真实时间戳）")
+
+    with open(os.path.join(PKG, "drone_trajectory_logger", "trajectory_analyzer.py"),
+              encoding="utf-8") as handle:
+        analyzer_source = handle.read()
+    check("get_clock().now()" in analyzer_source, "识别节点使用节点时钟")
+    check("timestamp=self._now()" in analyzer_source, "采样点带真实时间戳")
+    check("except Exception as exc" in analyzer_source, "绘图初始化失败会降级为无绘图")
 
     with open(os.path.join(PKG, "drone_trajectory_logger", "flight_state.py"),
               encoding="utf-8") as handle:
@@ -198,6 +295,8 @@ def main():
     test_pose_integrator()
     test_commands()
     test_recorder()
+    test_timestamps()
+    test_publish_period()
     test_project_files()
     print("\n==================== 结果 ====================")
     print("通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))

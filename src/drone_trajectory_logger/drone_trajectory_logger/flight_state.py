@@ -196,16 +196,33 @@ class TrajectoryRecorder(object):
             previous = sample
         return total
 
+    def _span_seconds(self):
+        """首末采样点之间的真实时间跨度（秒）。"""
+        if len(self.samples) < 2:
+            return 0.0
+        return max(0.0, self.samples[-1]["time_s"] - self.samples[0]["time_s"])
+
+    def _state_durations(self):
+        """按相邻采样点的**实际时间差**累计各状态时长；最后一个采样点不计时长。"""
+        durations = {state: 0.0 for state in self.state_counts}
+        for previous, current in zip(self.samples, self.samples[1:]):
+            delta = current["time_s"] - previous["time_s"]
+            if delta > 0:
+                durations[previous["state"]] += delta
+        return durations
+
     def state_totals(self):
-        """每种状态的次数、时长与占比。"""
+        """每种状态的次数、时长与占比（时长按真实时间戳累计）。"""
         count_all = len(self.samples)
+        durations = self._state_durations()
+        total = sum(durations.values())
         totals = {}
         for state in sorted(self.state_counts):
-            count = self.state_counts[state]
+            duration = durations.get(state, 0.0)
             totals[state] = {
-                "count": count,
-                "duration_s": round(count * self.dt, 3),
-                "ratio": round(count / count_all, 4) if count_all else 0.0,
+                "count": self.state_counts[state],
+                "duration_s": round(duration, 3),
+                "ratio": round(duration / total, 4) if total > 0 else 0.0,
             }
         return totals
 
@@ -214,9 +231,9 @@ class TrajectoryRecorder(object):
         count_all = len(self.samples)
         summary = {
             "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-            "dt": self.dt,
+            "duration_s": round(self._span_seconds(), 3),
+            "fallback_dt": self.dt,
             "sample_count": count_all,
-            "duration_s": round(count_all * self.dt, 3),
             "distance_m": round(self.distance_m, 4),
             "start_pose": self._pose(self.samples[0]) if count_all else None,
             "final_pose": self._pose(self.samples[-1]) if count_all else None,

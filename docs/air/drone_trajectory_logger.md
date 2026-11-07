@@ -88,10 +88,19 @@ ros2 launch drone_trajectory_logger main.launch.py \
 | `step_length` | `0.5` | 每个采样步的位移（米） |
 | `turn_step` | `0.2` | 每个采样步的转角（弧度） |
 | `linear_deadband` / `angular_deadband` | `0.01` | 判定为“静止”的死区 |
-| `sample_dt` | `1.0` | 记录时间步长（秒），用于统计时长 |
-| `enable_plot` | `true` | 是否打开 matplotlib 实时绘图（无显示器时可关掉） |
+| `enable_plot` | `true` | 是否打开 matplotlib 实时绘图（无显示器时设为 `false`） |
+| `export_on_shutdown` | `true` | 退出时是否自动导出记录 |
 | `export_every` | `0` | 每 N 个采样点导出一次，`0` 表示只在退出时导出 |
 | `output_dir` | 空 | 导出目录，留空则使用当前工作目录 |
+| `csv_name` / `json_name` | `drone_trajectory.csv` / `drone_trajectory_summary.json` | 导出文件名 |
+
+以上参数都可以直接写成 `ros2 launch drone_trajectory_logger main.launch.py <参数>:=<值>`；
+也可以用 `ros2 run drone_trajectory_logger analyzer --ros-args -p <参数>:=<值>` 单独启动某个节点。
+
+**关于时长统计**：识别节点用节点时钟（`self.get_clock().now()`）给每个采样点打真实时间戳，
+`duration_s` 与各状态时长都是相邻时间戳的差，**与 `publish_rate` 无关**——
+把发布频率改成 10 Hz 时，`time_s`/时长仍是真实秒数，只是采样更密。
+`publish_rate <= 0` 会在发布节点构造时直接报 `ValueError`，不会被静默切成别的周期。
 
 ## 本地测试
 
