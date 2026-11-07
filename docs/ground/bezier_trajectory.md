@@ -71,7 +71,7 @@ N_{i,p}(u) = (u-u_i)/(u_{i+p}-u_i) N_{i,p-1}(u) + (u_{i+p+1}-u)/(u_{i+p+1}-u_{i+
 | `bezier.py` | 核心算法：binomial、de_casteljau、bernstein、derivative、curvature、arc_length、bspline | ~150 |
 | `main.py` | pygame 可视化：网格、控制多边形、曲线、de Casteljau 动画、曲率条形图、HUD、录制 | ~200 |
 | `config.py` | 画布尺寸、颜色、控制点、采样参数 | ~40 |
-| `test_bezier.py` | 14 项离线单测 | ~120 |
+| `test_bezier.py` | 21 项离线单测 | ~120 |
 
 ### 可视化效果
 
@@ -108,7 +108,7 @@ cd bezier_trajectory
 python -m pytest test/ -v
 ```
 
-14 项单测覆盖：
+21 项单测覆盖：
 
 | 类别 | 测试项 |
 |---|---|
@@ -119,7 +119,7 @@ python -m pytest test/ -v
 | 曲率 | 直线曲率为零、曲线非负、弯曲曲线非零 |
 | 弧长 | 直线段长度精确、曲线为正且≥直线距离、空输入 |
 | 采样 | 采样数量、端点对齐 |
-| B 样条 | 基函数非负、凸包性、采样数量、不通过端点 |
+| B 样条 | 基函数非负、凸包性、采样数量、clamped 端点行为 |
 
 ## 大模型使用声明
 

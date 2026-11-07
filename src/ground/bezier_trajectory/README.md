@@ -45,7 +45,7 @@ bezier_trajectory/
 ├── launch/
 │   └── main.launch.py    # ROS 2 launch
 ├── test/
-│   └── test_bezier.py    # 离线单测 14 项
+│   └── test_bezier.py    # 离线单测 21 项
 ├── config/
 │   └── params.yaml
 ├── resource/
@@ -77,13 +77,6 @@ source install/setup.bash
 ros2 run bezier_trajectory main
 ```
 
-### 3. 启动 CARLA 服务端（另一终端，需 GPU）
-
-Windows 宿主：
-```cmd
-CarlaUE4.exe -quality-level=Low -windowed
-```
-
 ## 测试
 
 ```bash
@@ -91,7 +84,7 @@ cd bezier_trajectory
 python -m pytest test/ -v
 ```
 
-14 项离线单测覆盖：组合数、端点插值、de Casteljau 与 Bernstein 一致性、导数端点性质、曲率（直线为零/曲线非零）、弧长（直线/曲线下界）、采样计数、B 样条基函数非负性与凸包性。
+21 项离线单测覆盖：组合数、端点插值、de Casteljau 与 Bernstein 一致性、导数端点性质、曲率（直线为零/曲线非零）、弧长（直线/曲线下界）、采样计数、B 样条基函数非负性与凸包性、clamped B 样条端点行为。
 
 ## 大模型使用声明
 
