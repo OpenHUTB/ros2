@@ -42,6 +42,8 @@ log/
 
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
+# 包内自带/新采的样本数据要走版本库（data/ 规则会吃掉任意层级的 data/）
+!src/air/gesture_control_drone/data/*.npz
 
 # 仿真与训练产物（二进制大文件不入库，改用网盘链接）
 *.mp4
