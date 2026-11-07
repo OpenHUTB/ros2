@@ -1,0 +1,25 @@
+<mujoco model="car_follow">
+  <option timestep="0.01"/>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="ground" type="plane" size="5 5 0.1" rgba="0.3 0.3 0.3 1"/>
+    
+    <body name="lead_car" pos="0 0 0.05">
+      <joint name="lead_x" type="slide" axis="1 0 0" damping="0.3"/>
+      <joint name="lead_y" type="slide" axis="0 1 0" damping="0.3"/>
+      <geom type="box" size="0.15 0.12 0.05" rgba="0.2 0.5 0.8 1" mass="0.5"/>
+    </body>
+    
+    <body name="follow_car" pos="-1 0 0.05">
+      <joint name="follow_x" type="slide" axis="1 0 0" damping="0.3"/>
+      <joint name="follow_y" type="slide" axis="0 1 0" damping="0.3"/>
+      <geom type="box" size="0.15 0.12 0.05" rgba="0.8 0.2 0.2 1" mass="0.5"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="lead_x" joint="lead_x" gear="1.0"/>
+    <motor name="lead_y" joint="lead_y" gear="1.0"/>
+    <motor name="follow_x" joint="follow_x" gear="1.0"/>
+    <motor name="follow_y" joint="follow_y" gear="1.0"/>
+  </actuator>
+</mujoco>
