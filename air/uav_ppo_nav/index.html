@@ -356,6 +356,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#3">3. 训练</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 部署</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 安全速度包络（近障减速 / 急停）</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 验证</a>
 <ul>
@@ -622,10 +626,58 @@ roslaunch<span class="w"> </span>uav_ppo_nav<span class="w"> </span>main.launch<
 h1 = tanh(W1·h0 + b1)
 a  = clip(W2·h1 + b2, -1, 1)
 </code></pre></div>
+<h3 id="41">4.1 安全速度包络（近障减速 / 急停）</h3>
+<p>策略是在质点环境里训练的，部署到仿真或真机时再加一层<strong>与策略解耦</strong>的兜底：直接复用
+22 维观测里的 16 扇直方图，沿<strong>速度方向</strong>取净空（含相邻扇），据此限速。</p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>点云缺失 / 空点云 / 超过 <code>cloud_timeout</code> 未更新</td>
+<td><strong>零速度</strong>（fail-safe，不假设“无遮挡”）</td>
+</tr>
+<tr>
+<td><code>clearance &gt; slow_distance</code></td>
+<td>速度不变</td>
+</tr>
+<tr>
+<td><code>stop_distance &lt; clearance ≤ slow_distance</code></td>
+<td>水平速度按 <code>(clearance − stop) / (slow − stop)</code> 线性衰减</td>
+</tr>
+<tr>
+<td><code>clearance ≤ stop_distance</code></td>
+<td>水平速度清零（急停），垂直速度保留以便脱离</td>
+</tr>
+<tr>
+<td>水平速度 ≈ 0（悬停）</td>
+<td>不判定方向，也不急停</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>净空 = 扇形归一化值 × 12 m；速度方向按世界系 <code>atan2(vy, vx)</code> 分扇（0 = 正东，逆时针），与观测直方图完全一致；</li>
+<li>只缩放水平速度，垂直速度只做 <code>±1.5 m/s</code> 限幅；</li>
+<li>参数：<code>safety/enabled</code>（默认 <code>true</code>）、<code>safety/stop_distance</code>（0.8 m）、<code>safety/slow_distance</code>（3.0 m）、<code>safety/cloud_timeout</code>（0.5 s），launch 里可用 <code>safety_stop_distance:=</code> / <code>safety_cloud_timeout:=</code> 等覆盖；</li>
+<li><strong>传感器有效性优先于净空</strong>：节点按点云接收时刻算 age，缺失（<code>no_lidar</code>）、缺时间戳（<code>no_timestamp</code>）、过期（<code>stale_lidar</code>）时发布全零速度并 1 Hz 告警。这样“降级运行”不会退化成“蒙眼全速”；</li>
+<li>触发急停时按 1 Hz 打印 <code>logwarn</code>（含净空），便于区分“策略不敢走”和“包络把速度拦掉了”。</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># 调保守一些</span>
+roslaunch<span class="w"> </span>uav_ppo_nav<span class="w"> </span>main.launch<span class="w"> </span>safety_stop_distance:<span class="o">=</span><span class="m">1</span>.0<span class="w"> </span>safety_slow_distance:<span class="o">=</span><span class="m">3</span>.5
+<span class="c1"># 点云超时更严格（0.3 s）</span>
+roslaunch<span class="w"> </span>uav_ppo_nav<span class="w"> </span>main.launch<span class="w"> </span>safety_cloud_timeout:<span class="o">=</span><span class="m">0</span>.3
+<span class="c1"># 关掉兜底（仅用于对照实验）</span>
+roslaunch<span class="w"> </span>uav_ppo_nav<span class="w"> </span>main.launch<span class="w"> </span>safety_enabled:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
 <h2 id="5">5. 验证</h2>
 <h3 id="51-ros">5.1 本地桩测试（无需 ROS / 仿真器）</h3>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_ppo_nav_local.py<span class="w">        </span><span class="c1"># 20 项：直方图/世界系变换/动作映射/环境/策略</span>
-python3<span class="w"> </span>tests/test_ppo_nav_node_local.py<span class="w">   </span><span class="c1"># 20 项：部署节点（mock 掉 rospy 也能测）</span>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_ppo_nav_local.py<span class="w">        </span><span class="c1"># 直方图/世界系变换/动作映射/环境/策略</span>
+python3<span class="w"> </span>tests/test_ppo_nav_node_local.py<span class="w">   </span><span class="c1"># 部署节点（mock 掉 rospy 也能测）</span>
+python3<span class="w"> </span>tests/test_ppo_nav_safety_local.py<span class="w"> </span><span class="c1"># 安全包络：减速/急停/限幅/扇区/传感器失效（64 项）</span>
 </code></pre></div>
 <blockquote>
 <p>项数是<strong>不同断言的个数</strong>。所有断言都写在循环外——写进循环会靠重复执行把计数灌水
