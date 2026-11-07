@@ -232,6 +232,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
+* [预设航线飞行模拟器](./air/flight_path_simulator.md) —— 纯 Python 离线脚本，按预设时间表播放一段巡航飞行并生成数据集与可视化，不依赖 ROS/仿真器
+
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
