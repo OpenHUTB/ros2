@@ -29,6 +29,7 @@
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂](#arm)
 
 ---
 
@@ -293,5 +294,9 @@ ___
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
 ___
+
+## 7. 机械臂  <span id='arm'></span>
+
+* [机械臂拧螺丝](./arm/mujoco_arm_screw.md) —— MuJoCo 三自由度机械臂末端夹持螺丝刀，将螺丝连续旋转 2.5 圈拧入桌面螺孔（下沉 40 mm）
 
 ## 参考文献
