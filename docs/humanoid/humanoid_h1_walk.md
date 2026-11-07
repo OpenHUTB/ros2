@@ -202,12 +202,16 @@ python main.py --gif                   # 录制动图
 `python main.py --test` 跑完整固定序列（站立 3 s → 前进 6 s → 边走边左转 6 s →
 前进 4 s → 原地右转 5 s → 后退 4 s → 停止 3 s，共 31 s）：
 
-| 机型 | 最低骨盆 | 前进位移 | 末态高度 | 末态偏航 |
-|---|---|---|---|---|
-| H1 | 1.00 m | 3.28 m | 1.04 m | −0.34 rad |
-| H1_2 | 1.00 m | 2.52 m | 1.01 m | +1.22 rad |
+| 平台 / MuJoCo 版本 | 机型 | 最低骨盆 | 前进位移 | 末态高度 | 末态偏航 |
+|---|---|---|---|---|---|
+| Windows / 3.16.0 | H1 | 1.00 m | 3.28 m | 1.04 m | −0.34 rad |
+| Windows / 3.16.0 | H1_2 | 1.00 m | 2.52 m | 1.01 m | +1.22 rad |
+| Ubuntu Humble / 3.3.7 | H1 | 0.99 m | 2.93 m | 1.04 m | −0.29 rad |
+| Ubuntu Humble / 3.3.7 | H1_2 | 0.99 m | 3.15 m | 1.01 m | +1.07 rad |
 
-判定标准：骨盆最低点 > 0.5 m（没摔）且前进阶段位移 > 1.0 m（真在走）。两机型均 PASS。
+判定标准：骨盆最低点 > 0.5 m（没摔）且前进阶段位移 > 1.0 m（真在走），两平台均 PASS。
+两个 MuJoCo 版本的接触求解器实现不同（3.3.7 与 3.16.0 之间有过求解器默认参数调整），
+同一策略的步幅会有 10% 左右的差异，这属于仿真器差异而非策略行为变化。
 
 ### 6.2 指标对比
 
@@ -239,6 +243,30 @@ python main.py --gif                   # 录制动图
 | H1 | H1_2 |
 |---|---|
 | ![H1](../img/humanoid/humanoid_h1_walk.gif) | ![H1_2](../img/humanoid/humanoid_h1_2_walk.gif) |
+
+### 6.5 ROS 2 链路验证
+
+在 Ubuntu 22.04 + ROS 2 Humble 容器（`hutb-humble:dev`）里 `colcon build` 后，
+用 `ros2 launch humanoid_h1_walk main.launch.py routine:=true teleop:=false` 起两节点，
+实测：
+
+```
+$ ros2 node list
+/humanoid_h1_walk_policy
+/humanoid_h1_walk_sim
+
+$ ros2 topic hz /joint_states
+average rate: 49.999      # 目标 50 Hz，抖动 std dev 0.4 ms
+
+$ ros2 topic echo /odom --field pose.pose.position --once
+x: 1.9725688506855519
+y: 2.078898649677158
+z: 1.0319247295131657     # 骨盆高度 1.03 m，与仿真一致
+```
+
+策略节点日志：`已推理 750 帧，平均单帧 0.50 ms`，即推理占用控制周期的 2.5%，
+其余时间都在物理步进。`/humanoid/obs` 的 41 维数据正常发布，前 6 维是机身角速度
+与重力方向（$g_z \approx -1$ 表示直立）。
 
 ## 七、已知问题
 

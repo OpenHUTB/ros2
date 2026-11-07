@@ -237,6 +237,25 @@ $$
 | H1 | 3.76 m | 3.75 m |
 | H1_2 | 3.92 m | 4.18 m |
 
+### 6.4 实测（Ubuntu 22.04 + ROS 2 Humble）
+
+```
+$ colcon build --symlink-install --base-paths src/humanoid/humanoid_h1_walk
+Summary: 1 package finished
+
+$ ros2 launch humanoid_h1_walk main.launch.py routine:=true teleop:=false
+[sim_node]    h1 仿真节点已启动：10 个关节，控制频率 50 Hz（固定动作序列）
+[policy_node] h1 策略节点已启动：观测 41 维 → 动作 10 维
+
+$ ros2 topic hz /joint_states
+average rate: 49.999
+
+$ ros2 topic echo /odom --field pose.pose.position --once
+x: 1.97  y: 2.08  z: 1.03        # 骨盆 1.03 m，正在走
+
+[policy_node] 已推理 750 帧，平均单帧 0.50 ms
+```
+
 ## 7. 性能指标
 
 固定动作序列（站立 3 s → 前进 6 s → 边走边左转 6 s → 前进 4 s → 原地右转 5 s →
@@ -257,6 +276,11 @@ $$
 两个机型都在指令 0.5 m/s 下实际走出 0.44~0.47 m/s，误差主要来自起步/停止的
 加减速段；H1_2 多两个踝侧摆关节，转向时 wz 跟踪略差（0.142 vs 0.083），但
 CoT 更低（踝部主动发力减轻了髋膝负担）。
+
+上表是 Windows + MuJoCo 3.16.0 的结果。在 Ubuntu 22.04 + MuJoCo 3.3.7（ROS 2 Humble
+容器）里重跑，H1 为 0.41 m/s、H1_2 为 0.49 m/s，前进位移 2.93 / 3.15 m：两个 MuJoCo
+版本的接触求解器实现不同，同一策略的步幅会有约 10% 差异，但「不摔倒 + 能走」的判定
+两个平台都通过。
 
 与上游单进程实现的一致性：同一段固定序列，上游 `humanoid-walk` 的 `test_walk.py`
 报告 H1 走 3.3 m、H1_2 走 2.5 m，本模块为 3.28 m / 2.52 m，差异在数值积分误差量级。
