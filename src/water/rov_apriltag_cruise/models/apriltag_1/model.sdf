@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="apriltag_1">
+    <static>true</static>
+    <link name="link">
+      <visual name="backboard">
+        <pose>0 0 -0.02 0 0 0</pose>
+        <geometry>
+          <box><size>0.86 0.86 0.012</size></box>
+        </geometry>
+        <material>
+          <ambient>0.05 0.09 0.12 1</ambient>
+          <diffuse>0.06 0.10 0.14 1</diffuse>
+          <specular>0.02 0.02 0.02 1</specular>
+        </material>
+      </visual>
+      <visual name="tag_surface">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <plane><normal>0 0 1</normal><size>0.7 0.7</size></plane>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://apriltag_1/materials/scripts</uri>
+            <uri>model://apriltag_1/materials/textures</uri>
+            <name>RovSim/AprilTag1</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

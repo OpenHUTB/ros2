@@ -1,0 +1,241 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="underwater_apriltag">
+    <!-- 水下光照与雾效：蓝色环境光 + 线性水下雾 -->
+    <scene>
+      <ambient>0.30 0.45 0.58 1</ambient>
+      <background>0.01 0.07 0.13 1</background>
+      <shadows>true</shadows>
+      <fog>
+        <color>0.02 0.14 0.24 1</color>
+        <type>linear</type>
+        <density>0.025</density>
+      </fog>
+    </scene>
+
+    <gravity>0 0 0</gravity>
+
+    <!-- 第三人称观察视角：俯视 ROV 与三块 AprilTag 标牌 -->
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>2.0 -6.2 -1.4 0 -0.10 1.571</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <physics type="ode">
+      <max_step_size>0.002</max_step_size>
+      <real_time_update_rate>500</real_time_update_rate>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <light type="directional" name="underwater_sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 12 0 0 0</pose>
+      <diffuse>0.55 0.75 0.90 1</diffuse>
+      <specular>0.10 0.20 0.30 1</specular>
+      <attenuation>
+        <range>60</range>
+        <constant>0.9</constant>
+        <linear>0.02</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>-0.25 0.20 -0.95</direction>
+    </light>
+
+    <!-- 半透明水面 -->
+    <include>
+      <uri>model://water_surface</uri>
+      <name>water_surface</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- 海底沙地 -->
+    <model name="seabed">
+      <static>true</static>
+      <link name="link">
+        <pose>0 0 -6.7 0 0 0</pose>
+        <visual name="sand">
+          <geometry>
+            <box><size>30 30 0.4</size></box>
+          </geometry>
+          <material>
+            <ambient>0.40 0.38 0.30 1</ambient>
+            <diffuse>0.52 0.47 0.36 1</diffuse>
+            <specular>0.05 0.05 0.04 1</specular>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>30 30 0.4</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 礁石 -->
+    <model name="rock_0">
+      <static>true</static>
+      <pose>-5.5 4.5 -6.2 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>1.3</radius></sphere></geometry>
+          <material><ambient>0.20 0.22 0.24 1</ambient><diffuse>0.28 0.30 0.33 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_1">
+      <static>true</static>
+      <pose>6.5 -2.5 -6.3 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material><ambient>0.18 0.20 0.23 1</ambient><diffuse>0.26 0.28 0.32 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_2">
+      <static>true</static>
+      <pose>-3.0 -6.0 -6.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>0.8</radius></sphere></geometry>
+          <material><ambient>0.16 0.18 0.20 1</ambient><diffuse>0.24 0.26 0.29 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_3">
+      <static>true</static>
+      <pose>7.5 4.0 -6.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>1.1</radius></sphere></geometry>
+          <material><ambient>0.20 0.22 0.24 1</ambient><diffuse>0.29 0.31 0.34 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 海草 -->
+    <model name="kelp_0">
+      <static>true</static>
+      <pose>-6.2 0.5 -5.0 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.07</radius><length>3.0</length></cylinder></geometry>
+          <material><ambient>0.06 0.28 0.12 1</ambient><diffuse>0.08 0.36 0.16 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="kelp_1">
+      <static>true</static>
+      <pose>-6.0 -1.2 -5.2 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>2.6</length></cylinder></geometry>
+          <material><ambient>0.07 0.30 0.14 1</ambient><diffuse>0.10 0.40 0.18 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="kelp_2">
+      <static>true</static>
+      <pose>3.2 6.2 -5.3 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.07</radius><length>2.8</length></cylinder></geometry>
+          <material><ambient>0.06 0.28 0.12 1</ambient><diffuse>0.09 0.37 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 三个 AprilTag 标牌：法线朝向场景中心，便于 ROV 依次巡航识别 -->
+    <!-- 标牌 0：位于 +X 方向 -->
+    <include>
+      <uri>model://apriltag_0</uri>
+      <name>apriltag_0</name>
+      <pose>5.0 0.0 -2.2 1.5708 0 -1.5708</pose>
+    </include>
+    <model name="tagpole_0">
+      <static>true</static>
+      <pose>5.0 0.0 -4.55 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>3.9</length></cylinder></geometry>
+          <material><ambient>0.10 0.10 0.10 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 标牌 1：位于 120 度方位 -->
+    <include>
+      <uri>model://apriltag_1</uri>
+      <name>apriltag_1</name>
+      <pose>-2.5 4.33 -2.6 1.5708 0 0.5236</pose>
+    </include>
+    <model name="tagpole_1">
+      <static>true</static>
+      <pose>-2.5 4.33 -4.9 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>3.7</length></cylinder></geometry>
+          <material><ambient>0.10 0.10 0.10 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 标牌 2：位于 240 度方位 -->
+    <include>
+      <uri>model://apriltag_2</uri>
+      <name>apriltag_2</name>
+      <pose>-2.5 -4.33 -3.0 1.5708 0 2.618</pose>
+    </include>
+    <model name="tagpole_2">
+      <static>true</static>
+      <pose>-2.5 -4.33 -5.1 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>3.3</length></cylinder></geometry>
+          <material><ambient>0.10 0.10 0.10 1</ambient><diffuse>0.15 0.15 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 第三人称观察相机：正对场景中心，用于采集仿真展示画面 -->
+    <model name="scene_camera">
+      <static>true</static>
+      <pose>2.0 -6.2 -1.4 0 -0.10 1.5708</pose>
+      <link name="link">
+        <sensor name="camera" type="camera">
+          <pose>0 0 0 0 0 0</pose>
+          <update_rate>15</update_rate>
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image>
+              <width>960</width>
+              <height>540</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <ros>
+              <namespace>/scene</namespace>
+            </ros>
+            <cameraName>camera</cameraName>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>scene_camera_link</frameName>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- Gazebo 实体状态服务，供巡航节点设置 ROV 位姿 -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>30.0</update_rate>
+    </plugin>
+  </world>
+</sdf>

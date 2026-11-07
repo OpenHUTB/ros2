@@ -1,0 +1,14 @@
+material RovSim/WaterSurface
+{
+  technique
+  {
+    pass
+    {
+      scene_blend alpha_blend
+      depth_write off
+      ambient 0.04 0.22 0.36 0.35
+      diffuse 0.06 0.30 0.50 0.35
+      specular 0.30 0.55 0.70 0.35 40
+    }
+  }
+}
