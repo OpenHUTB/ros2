@@ -1,96 +1,127 @@
-# humanoid_zmp_walking 使用说明
-
-人形机器人轻量级 ZMP 步行控制基线（ROS 2 功能包）
+# 人形机器人轻量级 ZMP 步行控制基线
 
 ## 修改概述 / Overview
 
-- 中文：新增人形机器人轻量级 ZMP 步行控制基线。该模块包含轨迹生成节点与 PyBullet 仿真节点。生成节点以 100Hz 向 `/zmp_trajectory` 发布正弦参考信号；仿真节点加载 URDF 人形模型，订阅轨迹并通过位置控制驱动 4 个关节，可在 PyBullet GUI 中直观观察机器人腿部摆动过程。
-- English: Add a lightweight ZMP walking baseline for humanoid robots. It includes a trajectory generator and a PyBullet simulation node. The generator publishes sinusoidal reference signals to `/zmp_trajectory` at 100Hz; the simulator loads a URDF humanoid model, subscribes to the trajectory and drives 4 joints via position control, visualizing the leg swinging in the PyBullet GUI.
+- 中文：新增 `humanoid_zmp_walking` 模块，用线性倒立摆模型（LIPM）完成
+  「落脚点序列 → 平滑质心轨迹 → ZMP 反算 → 支撑多边形判定」的离线规划，
+  再由 ROS 2 话题把 6 个关节指令送入 PyBullet 仿真，观察 6 关节人形
+  模型执行该步态序列时的摆动与平衡表现。
+- English: A lightweight ZMP walking baseline built on the linear inverted
+  pendulum model (LIPM). It plans a footstep sequence, a ZMP reference and a
+  center-of-mass trajectory, verifies that the ZMP stays inside the support
+  polygon, and streams joint commands to a 6-joint humanoid in PyBullet.
 
 ## 运行环境
 
 - 操作系统：Ubuntu 20.04
 - ROS 版本：ROS 2 Foxy
-- 依赖库：Python 3.8，`rclpy`，`std_msgs`，`launch`，`launch_ros`，`ament_index_python`，`pybullet`
+- 依赖库：Python 3.8，`rclpy`，`std_msgs`，`launch`，`launch_ros`，
+  `ament_index_python`，`pybullet`
 
 ## 核心代码文件
 
-本模块包含以下核心文件，均已提交至仓库：
-
 ```
-src/
-└── humanoid/
-    └── humanoid_zmp_walking/
-        ├── launch/
-        │   └── main.launch.py          # 节点一键启动文件
-        ├── resource/
-        │   └── humanoid_zmp_walking    # resource 资源标识文件
-        ├── humanoid_zmp_walking/       # 核心代码子目录
-        │   ├── __init__.py             # Python 包初始化文件
-        │   ├── zmp_generator.py        # ZMP 参考轨迹生成节点
-        │   └── play.py                 # PyBullet 仿真执行节点 
-        │ 
-        ├── urdf/
-        │   └── simple_humanoid.urdf    # 简化人形机器人模型
-        ├── package.xml                 # ROS 2 功能包描述文件
-        ├── setup.cfg                   # 节点安装路径配置文件
-        └── setup.py                    # ROS 2 功能包构建配置文件
+src/humanoid/humanoid_zmp_walking/
+├── launch/
+│   └── main.launch.py          # 一键启动轨迹生成与仿真节点
+├── resource/
+│   └── humanoid_zmp_walking    # resource 资源标识文件
+├── humanoid_zmp_walking/
+│   ├── __init__.py
+│   ├── lipm.py                 # LIPM 正逆运算（ZMP <-> 质心加速度）
+│   ├── footstep.py             # 落脚点序列、支撑多边形判定
+│   ├── gait.py                 # 质心轨迹、ZMP 反算、关节相位
+│   ├── zmp_generator.py        # 轨迹生成节点
+│   └── play.py                 # PyBullet 仿真节点
+├── test/
+│   └── test_gait.py            # 步态与 LIPM 单元测试
+├── urdf/
+│   └── simple_humanoid.urdf    # 6 关节人形模型（含脚掌与踝关节）
+├── package.xml
+├── setup.cfg
+└── setup.py
 ```
 
 ## 核心代码内容
 
-本模块的核心代码已上传至仓库 `src/humanoid/humanoid_zmp_walking/` 目录下。
+- [lipm.py](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/lipm.py)
+- [footstep.py](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/footstep.py)
+- [gait.py](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/gait.py)
+- [zmp_generator.py](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/zmp_generator.py)
+- [play.py](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/play.py)
+- [main.launch.py](../../src/humanoid/humanoid_zmp_walking/launch/main.launch.py)
+- [simple_humanoid.urdf](../../src/humanoid/humanoid_zmp_walking/urdf/simple_humanoid.urdf)
+- [test_gait.py](../../src/humanoid/humanoid_zmp_walking/test/test_gait.py)
 
-完整代码请点击下方链接查看：
+## ZMP 计算说明
 
-* [查看 zmp_generator.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/zmp_generator.py)
-* [查看 play.py 代码](../../src/humanoid/humanoid_zmp_walking/humanoid_zmp_walking/play.py)
-* [查看 main.launch.py 代码](../../src/humanoid/humanoid_zmp_walking/launch/main.launch.py)
-* [查看 simple_humanoid.urdf 代码](../../src/humanoid/humanoid_zmp_walking/urdf/simple_humanoid.urdf)
-* [查看 setup.py 代码](../../src/humanoid/humanoid_zmp_walking/setup.py)
+1. `lipm.py` 实现零力矩点与质心的互算关系：
 
-## 功能说明 / Boundary behavior
+   `p = c - (z_c / g) * a`，以及反向的 `a = (c - p) / (z_c / g)`
 
-- 中文：生成节点周期性向 `/zmp_trajectory` 发布单自由度正弦参考角（幅度 0.2 rad，频率 0.5Hz 量级）；仿真节点接收数据后将其作为全部 4 个关节的目标位置，通过 `setJointMotorControl2` 位置控制驱动。机器人在重力作用下经历站立、摆动、倾倒的完整动力学过程，不倒置循环，行为由物理引擎实时解算。
-- English: The generator periodically publishes a single-DOF sinusoidal reference angle (amplitude 0.2 rad) to `/zmp_trajectory`. The simulator applies it as the target position of all 4 joints via `setJointMotorControl2` position control. Under gravity the robot goes through standing, swinging and falling, all solved by the physics engine in real time without looping.
+2. `footstep.py` 生成左右交替的落脚点序列。默认 `t_step = 1.0 s`，即每
+   1.0 s 落一步；其中摆动期 0.4 s、双脚支撑期 0.6 s，摆动期间由另一只
+   脚单独支撑。
+
+3. `gait.py` 先构造平滑的质心轨迹：前进方向匀速（加速度为 0），侧向按
+   步态周期做余弦摆动、幅度等于 `step_width`，摆动腿离地时质心位于支撑
+   脚上方；随后用 LIPM 关系 `p = c - (z_c / g) * a` 由质心二阶差分反算
+   ZMP。关节相位为左右髋反相、膝关节单向屈曲、踝关节抵消髋与膝的转角；
+   相位在 2 个步长（2 s）内转一周，对应关节正弦驱动频率 0.5 Hz。
+
+4. 支撑多边形取已落地脚掌矩形之并（脚掌 0.14 m × 0.12 m，中心间距
+   0.12 m，两矩形相接），逐采样点判定 ZMP 是否位于其内。默认参数下
+   （`com_height = 0.65 m`、`step_length = 0.10 m`、`step_width = 0.06 m`）
+   601 个采样点全部位于支撑域内，ZMP 侧向幅值约 ±0.099 m。
+
+## 环境说明：仿真不是实时的
+
+`play.py` 显式调用 `p.setTimeStep(1/240)` 作为固定步长，并在每个 ROS
+定时器回调里按实际经过时间累积、补足若干个固定步（单次上限 10 步），
+用于抵消 executor 调度抖动与 GUI 渲染开销。仿真时间因此不保证与墙钟
+严格同步，日志中的底盘高度反映的是仿真步内的状态。
+
+## 已知限制：仿真中会失稳
+
+本包的定位是**规划层基线**，只负责回答「ZMP 是否始终位于支撑多边形
+内」，不包含平衡控制器：
+
+- `zmp_generator` 输出的 ZMP 轨迹由质心轨迹反算得到，逐点判定已通过
+  （默认参数下 601 个采样点全部在支撑域内），这部分与仿真是否摔倒无关。
+- 模型只有绕 y 轴的俯仰关节（髋、膝、踝），没有侧向自由度，规划中的
+  横向质心摆动在物理上无法执行；单侧膝屈曲后支撑腿变短，躯干只能向
+  该侧倾斜。
+- `play.py` 是开环关节回放，没有 IMU、没有踝力矩反馈、没有接触力闭环，
+  因此机器人会在一段时间后失稳倒下。这是预期行为，不是规划失败。
+- 若要实现动态步行，需要在此基线上增加侧向自由度与基于 ZMP 误差的
+  平衡反馈，属于后续工作。
 
 ## 启动步骤
 
-1. 进入 ROS 2 工作空间
-
-```
-cd <你的 ROS 2 工作空间>
-```
-
-2. 编译功能包
-
-```
+```bash
 colcon build --packages-select humanoid_zmp_walking
 source install/setup.bash
-```
-
-3. 使用 launch 文件一键启动（轨迹生成 + PyBullet 仿真节点）
-
-```
 ros2 launch humanoid_zmp_walking main.launch.py
 ```
 
-4. 新开一个终端窗口，同样进入工作空间并加载环境，查看轨迹数据流
+无图形界面的环境可用 `ros2 run humanoid_zmp_walking play --ros-args -p use_gui:=false`。
 
-```
-cd <你的 ROS 2 工作空间>
-source install/setup.bash
-ros2 topic echo /zmp_trajectory
-```
+## 话题接口
+
+| 话题 | 类型 | 元素含义 |
+|------|------|----------|
+| `/zmp_trajectory` | `Float64MultiArray` | `[t, zmp_x, zmp_y, com_x, com_y, in_support]` |
+| `/joint_commands` | `Float64MultiArray` | `[左髋, 左膝, 左踝, 右髋, 右膝, 右踝]`（rad） |
 
 ## 运行效果
 
-节点启动后，PyBullet GUI 将显示人形机器人模型，腿部按正弦轨迹摆动；新开终端执行 `echo` 指令后，可持续打印 `/zmp_trajectory` 话题数据。
-
-1. **编译成功**
-
 ![编译成功](../img/humanoid/humanoid_zmp_walking/compile_success.png)
 
-2. **完整操作流程演示动图**
-
 ![完整演示动图](../img/humanoid/humanoid_zmp_walking/zmp_walking_demo.gif)
+
+## 测试
+
+```bash
+colcon test --packages-select humanoid_zmp_walking
+colcon test-result --verbose
+```
