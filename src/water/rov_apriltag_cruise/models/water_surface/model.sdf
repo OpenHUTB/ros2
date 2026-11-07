@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="water_surface">
+    <static>true</static>
+    <link name="link">
+      <visual name="surface">
+        <cast_shadows>false</cast_shadows>
+        <geometry>
+          <plane><normal>0 0 1</normal><size>60 60</size></plane>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://water_surface/materials/scripts</uri>
+            <uri>model://water_surface/materials/textures</uri>
+            <name>RovSim/WaterSurface</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
