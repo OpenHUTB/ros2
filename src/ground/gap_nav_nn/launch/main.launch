@@ -1,0 +1,13 @@
+<launch>
+  <!-- mode: nn | expert | manual -->
+  <arg name="mode" default="nn"/>
+  <arg name="rate" default="20"/>
+  <arg name="seed" default="0"/>
+
+  <node pkg="gap_nav_nn" type="gap_nav_node.py" name="gap_nav_node" output="screen">
+    <param name="mode" value="$(arg mode)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="model_dir" value="$(find gap_nav_nn)/models"/>
+  </node>
+</launch>
