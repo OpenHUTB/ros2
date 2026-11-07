@@ -115,7 +115,9 @@ class PpoNavNode(object):
         if self.latest_cloud is not None:
             pts = cloud_to_xyz(self.latest_cloud)
             hist = lidar_points_to_histogram(pts, drone_xy=pos[:2], drone_z=pos[2])
-            self.last_hist = hist
+            # 空点云（0 个点）说明传感器这帧什么都没返回，不能当成“无遮挡”放行：
+            # 策略观测仍用全 1 占位（保持 22 维接口），但安全层拿 None -> 输出零速度。
+            self.last_hist = hist if pts.shape[0] > 0 else None
         else:
             # 策略观测仍是 22 维，用"无遮挡"占位；但安全层必须知道没有真实数据，
             # 因此单独保存 None，由 SafetyEnvelope 输出零速度（fail-safe）。
