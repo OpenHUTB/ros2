@@ -89,6 +89,7 @@ ROS每章节运行代码:
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
@@ -111,6 +112,7 @@ ROS每章节运行代码:
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
+* [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
@@ -136,9 +138,11 @@ ROS每章节运行代码:
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
+* [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
@@ -152,6 +156,8 @@ ROS每章节运行代码:
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [限速标志识别与神经网络限速控制](./ground/traffic_sign_speed_control.md) —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
+* [基于 2D 激光雷达的蒙特卡洛定位（MCL）](./ground/lidar_mcl_localization.md) —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m
+
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
@@ -159,6 +165,7 @@ ROS每章节运行代码:
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
+* [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
@@ -274,17 +281,21 @@ ROS每章节运行代码:
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
 
-### 其他（环境、接口与容器）
+* [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+
+* [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
+
+* [水下 ROV 视觉引导的沉船结构巡检采样仿真](./water/rov_wreck_inspection.md)
+
+* [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
 
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
 
-* [WSL 跑通 HoloOcean2 的 ROS2 示例（无头模式）](./water/WSL_HoloOcean2_ROS2.md) —— 无 GPU 环境下用 `-nullrhi` 参数跑无头仿真
+* [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
+* [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
-* [Docker 开发环境](./water/docker.md) —— 开发容器与工作空间挂载
-
-* [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
 ___
 
