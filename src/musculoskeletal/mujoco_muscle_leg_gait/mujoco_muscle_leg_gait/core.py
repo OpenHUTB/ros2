@@ -207,7 +207,8 @@ def solve_joint_qp(A, tau, a_max: float = 1.0):
     n = A.shape[1]
     if np.allclose(tau, 0.0):
         return np.zeros(n)
-    for k in (1, 2, 3):
+    # 只用子集大小 >= 2：单条肌肉无法同时满足两个关节的力矩
+    for k in (2, 3):
         best = None
         for combo in itertools.combinations(range(n), k):
             As = A[:, combo]

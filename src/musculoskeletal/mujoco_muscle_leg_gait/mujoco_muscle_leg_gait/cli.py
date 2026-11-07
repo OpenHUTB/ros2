@@ -55,10 +55,15 @@ def cmd_gif(args):
          dict(every=25, lookat=(0, 0, -0.30), distance=1.15)),
     ]
     for fname, fn, kw in jobs:
-        rec = runs.Recorder(**kw)
-        fn(rec=rec)
-        size = rec.save(os.path.join(args.out, fname))
-        print(f"  {fname}  {len(rec.frames)} 帧, {size / 1e6:.2f} MB")
+        try:
+            rec = runs.Recorder(**kw)
+            fn(rec=rec)
+            size = rec.save(os.path.join(args.out, fname))
+            print(f"  {fname}  {len(rec.frames)} 帧, {size / 1e6:.2f} MB")
+        except Exception as exc:
+            print(f"  [跳过] {fname}: {exc}")
+            print("  无图形/远程环境请先设置 MUJOCO_GL=egl（或 osmesa）再重试；"
+                  "bench 与单元测试不受影响。")
 
 
 SCENES = {
