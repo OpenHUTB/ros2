@@ -4,9 +4,11 @@
 
     p = c - (z_c / g) * a
 
-反算 ZMP，再逐点判定 ZMP 是否落在支撑多边形内。由于侧向摆动的角频率
-被限制在 0.5 Hz 量级、前进方向加速度为零，ZMP 始终位于脚掌矩形并集内，
-属于准静态 ZMP 步行。
+反算 ZMP，再逐点判定 ZMP 是否落在支撑多边形内。支撑多边形只包含已落地
+的脚掌：摆动脚在摆动区间内被剔除，因此单脚支撑时段只有一只脚的矩形。
+
+关节运动与落脚时序对齐：每条腿在各自的摆动窗口内抬起，窗口长度等于
+t_swing，支撑相关节角为零。
 """
 
 import math
@@ -20,25 +22,19 @@ HIP_AMPLITUDE = 0.25
 KNEE_AMPLITUDE = 0.50
 ANKLE_AMPLITUDE = 0.60
 
+def leg_targets(progress):
+    """单腿的 3 个关节角；progress 为摆动进度，支撑相传 None。
 
-def joint_targets(phase):
-    """由步态相位生成 6 个关节目标角。
-
-    顺序为左髋、左膝、左踝、右髋、右膝、右踝。左右髋反相；膝关节只做
-    单向屈曲（非负）且与髋相位错开；踝关节抵消髋与膝的转角。
+    摆动期内髋、膝按 sin(pi * progress) 抬起，首末时刻为 0；膝关节只做
+    单向屈曲（非负）；踝关节抵消髋与膝的转角，使脚掌尽量保持水平。
     """
-    value = math.sin(phase)
-    left_hip = HIP_AMPLITUDE * value
-    right_hip = -HIP_AMPLITUDE * value
-    left_knee = KNEE_AMPLITUDE * max(0.0, value)
-    right_knee = KNEE_AMPLITUDE * max(0.0, -value)
-    left_ankle = max(-ANKLE_AMPLITUDE,
-                     min(ANKLE_AMPLITUDE, -left_hip - left_knee))
-    right_ankle = max(-ANKLE_AMPLITUDE,
-                      min(ANKLE_AMPLITUDE, -right_hip - right_knee))
-    return [left_hip, left_knee, left_ankle,
-            right_hip, right_knee, right_ankle]
-
+    if progress is None:
+        return [0.0, 0.0, 0.0]
+    lift = math.sin(math.pi * progress)
+    hip = HIP_AMPLITUDE * lift
+    knee = KNEE_AMPLITUDE * lift
+    ankle = max(-ANKLE_AMPLITUDE, min(ANKLE_AMPLITUDE, -hip - knee))
+    return [hip, knee, ankle]
 
 class GaitPlan:
     """准静态 ZMP 步态的规划结果。
@@ -83,13 +79,32 @@ class GaitPlan:
         """给定时刻的质心水平位置 (x, y)。
 
         前进方向匀速（加速度为 0，ZMP 在 x 上等于质心）；侧向按步态周期
-        做余弦摆动，使质心在摆动腿离地时位于支撑脚上方。
+        做余弦摆动，摆动中心取单脚支撑区间的中点，使质心在摆动腿离地
+        时位于支撑脚上方。
         """
-        sway_center = self.t_swing + (self.t_step - self.t_swing) / 2.0
+        sway_center = (self.t_step - self.t_swing) + self.t_swing / 2.0
         omega_sway = math.pi / self.t_step
         com_x = self.step_length * (t / self.t_step) - self.step_length / 2.0
         com_y = -self.step_width * math.cos(omega_sway * (t - sway_center))
         return com_x, com_y
+
+    def swing_progress(self, t, foot):
+        """返回 t 时刻该脚的摆动进度 [0, 1]；处于支撑相时返回 None。"""
+        for step in self.steps:
+            if step.foot == foot and step.swing_start <= t < step.swing_end:
+                return ((t - step.swing_start)
+                        / (step.swing_end - step.swing_start))
+        return None
+
+    def joint_targets(self, t):
+        """返回 t 时刻的 6 个关节目标角。
+
+        顺序为左髋、左膝、左踝、右髋、右膝、右踝。每条腿以各自的摆动
+        窗口驱动，因此抬腿窗口与落脚时序一致，支撑腿保持直立。
+        """
+        left = leg_targets(self.swing_progress(t, LEFT))
+        right = leg_targets(self.swing_progress(t, RIGHT))
+        return left + right
 
     def _sample(self):
         """采样质心轨迹，并用二阶差分反算 ZMP。
@@ -126,17 +141,43 @@ class GaitPlan:
                 / self.dt ** 2)
 
     def _landed_rects(self, t):
-        """返回时刻 t 已落地脚掌的矩形列表。"""
-        pos = {LEFT: (0.0, self.step_width),
-               RIGHT: (0.0, -self.step_width)}
-        for step in self.steps:
-            if t >= step.swing_end:
-                pos[step.foot] = (step.x, step.y)
-        return [foot_rect(p[0], p[1], self.foot_length, self.foot_width)
-                for p in pos.values()]
+        """返回时刻 t 已落地脚掌的矩形列表。
+
+        每只脚记录当前落点：尚未开始摆动时保留初始位置，摆动区间内整只
+        脚被剔除，落地后更新为新落点。
+        """
+        rects = []
+        for foot, initial_y in ((LEFT, self.step_width),
+                                (RIGHT, -self.step_width)):
+            foot_x, foot_y = 0.0, initial_y
+            in_swing = False
+            for step in self.steps:
+                if step.foot != foot:
+                    continue
+                if t < step.swing_start:
+                    break
+                if t < step.swing_end:
+                    in_swing = True
+                    break
+                foot_x, foot_y = step.x, step.y
+            if not in_swing:
+                rects.append(foot_rect(foot_x, foot_y,
+                                       self.foot_length, self.foot_width))
+        return rects
 
     def _check_support(self):
-        """逐点判定 ZMP 是否位于支撑多边形内。"""
-        self.in_support = [
-            zmp_inside_support(zmp, self._landed_rects(t))
-            for zmp, t in zip(self.zmp, self.t)]
+        """逐点判定 ZMP 是否位于支撑多边形内。
+
+        单脚支撑时段必须只剩支撑脚的矩形，否则判定方式本身有误，直接
+        抛出异常。
+        """
+        self.in_support = []
+        for zmp, t in zip(self.zmp, self.t):
+            rects = self._landed_rects(t)
+            in_single = any(step.swing_start <= t < step.swing_end
+                            for step in self.steps)
+            if in_single and len(rects) != 1:
+                raise ValueError(
+                    't={:.2f} s 处于单脚支撑区间，但支撑域包含 {} 个矩形'
+                    .format(t, len(rects)))
+            self.in_support.append(zmp_inside_support(zmp, rects))
