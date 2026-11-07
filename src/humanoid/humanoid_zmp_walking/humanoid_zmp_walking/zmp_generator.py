@@ -1,24 +1,69 @@
+import math
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
-import math
+
+from .gait import GaitPlan, joint_targets
+
 
 class ZmpGenerator(Node):
+    """发布 ZMP 参考轨迹与关节指令。
+
+    话题 zmp_trajectory（Float64MultiArray，6 个元素）：
+        [0] 时间戳
+        [1] ZMP x
+        [2] ZMP y
+        [3] 质心 x
+        [4] 质心 y
+        [5] ZMP 是否位于支撑多边形内（1 是 / 0 否）
+
+    话题 joint_commands（Float64MultiArray，6 个元素）：
+        左髋、左膝、左踝、右髋、右膝、右踝的目标角（rad）
+    """
+
     def __init__(self):
         super().__init__('zmp_generator_node')
-        self.get_logger().info('ZMP trajectory generator started')
-        self.publisher_ = self.create_publisher(Float64MultiArray, 'zmp_trajectory', 10)
-        self.dt = 0.01
+        self.declare_parameter('com_height', 0.65)
+        self.com_height = self.get_parameter('com_height').value
+        self.plan = GaitPlan(com_height=self.com_height)
+        self.get_logger().info(
+            'ZMP 步态规划已生成：{} 步，规划时长 {:.2f} s'.format(
+                len(self.plan.steps), self.plan.duration))
+        inside = all(self.plan.in_support)
+        self.get_logger().info(
+            'ZMP 支撑域判定：{}'.format('全部在支撑多边形内' if inside
+                                        else '存在越界采样点'))
+
+        self.zmp_pub = self.create_publisher(
+            Float64MultiArray, 'zmp_trajectory', 10)
+        self.joint_pub = self.create_publisher(
+            Float64MultiArray, 'joint_commands', 10)
+        self.dt = self.plan.dt
+        self.cycle = 2.0 * self.plan.t_step
         self.timer = self.create_timer(self.dt, self.timer_callback)
-        self.t = 0.0
+        self.start_time = self.get_clock().now()
 
     def timer_callback(self):
-        msg = Float64MultiArray()
-        # 幅度减半、频率减半，让机器人站得更稳
-        angle = math.sin(self.t * 0.5) * 0.2
-        msg.data = [float(angle)]
-        self.publisher_.publish(msg)
-        self.t += self.dt
+        elapsed = (self.get_clock().now() -
+                   self.start_time).nanoseconds * 1e-9
+        t = elapsed % self.plan.duration
+        index = min(int(t / self.plan.dt), len(self.plan.t) - 1)
+
+        zmp_x, zmp_y = self.plan.zmp[index]
+        com_x, com_y = self.plan.com[index]
+        message = Float64MultiArray()
+        message.data = [float(self.plan.t[index]),
+                        float(zmp_x), float(zmp_y),
+                        float(com_x), float(com_y),
+                        float(1.0 if self.plan.in_support[index] else 0.0)]
+        self.zmp_pub.publish(message)
+
+        phase = 2.0 * math.pi * (elapsed % self.cycle) / self.cycle
+        command = Float64MultiArray()
+        command.data = [float(angle) for angle in joint_targets(phase)]
+        self.joint_pub.publish(command)
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -30,6 +75,7 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
