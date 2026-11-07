@@ -1,0 +1,30 @@
+# 激光雷达点云语义分割模块参数
+# 所有值都是字符串，与节点内 declare_parameter(..., STRING) 对齐
+
+lidar_segmentation_node:
+  ros__parameters:
+    # 权重与数据
+    checkpoint: "models/seg_mlp.npz"
+    data: "data/dataset.npz"
+
+    # CARLA 连接
+    host: "127.0.0.1"
+    port: "2000"
+    town: "Town03"
+    vehicle: "vehicle.tesla.model3"
+    spawn_index: "0"
+    traffic: "12"
+
+    # 激光雷达（普通与语义两台必须一致，否则点对不上）
+    lidar_range: "60.0"
+    channels: "32"
+    points_per_second: "600000"
+    rotation: "20.0"
+    lidar_height: "2.4"
+
+    # 控制
+    corridor_width: "1.2"      # 车身走廊半宽，米
+    comfort_distance: "14.0"   # 大于这个距离全速
+    stop_distance: "5.0"       # 小于这个距离刹停
+    lookahead: "8.0"           # 纯跟踪预瞄距离
+    max_steer: "0.6"           # 最大前轮转角，弧度
