@@ -1,8 +1,8 @@
 # 无信号环岛汇入仿真 / Unsignalized Roundabout Entry
 
-本教程介绍固定随机种子的二维环岛车辆仿真，以及雷达间隙特征、神经网络汇入策略、占据栅格寻路和图像到控制模型。雷达特征与间隙策略已经接入无界面仿真控制循环；系统仍不包含 CARLA 场景、真实传感器接入或 ROS 话题闭环。
+本教程介绍固定随机种子的二维环岛车辆仿真，以及雷达间隙特征、神经网络汇入策略、占据栅格寻路和图像到控制模型。雷达特征、间隙策略、观测栅格和图像控制已经接入无界面仿真路径；系统仍不包含 CARLA 场景、真实传感器接入或 ROS 话题闭环。
 
-This tutorial covers a deterministic 2D roundabout vehicle simulation, radar gap features, a neural entry policy, occupancy-grid path planning, and an image-to-control model. Radar features and the gap policy now run in the headless simulation control loop. The system still does not include a CARLA scene, real sensor integration, or a closed-loop ROS topic interface.
+This tutorial covers a deterministic 2D roundabout vehicle simulation, radar gap features, a neural entry policy, occupancy-grid path planning, and an image-to-control model. Radar features, the gap policy, the observation grid, and image control now run through headless simulation paths. The system still does not include a CARLA scene, real sensor integration, or a closed-loop ROS topic interface.
 
 ![固定种子环岛仿真回放 / Deterministic roundabout simulation](../img/roundabout_demo.gif)
 
@@ -36,15 +36,15 @@ The gap policy maps four features through a 12-unit hidden layer and a Softmax o
 
 ## 4. 占据栅格与 A* / Occupancy Grid and A*
 
-Bresenham 射线将观测路径标记为空闲、命中终点标记为占据；最大量程未命中时终点保持为空闲。A* 使用八邻接搜索，只允许穿过已观测空闲单元，未知区域和障碍物均不可通行，并阻止对角线穿角。
+Bresenham 射线将观测路径标记为空闲、命中终点标记为占据；最大量程未命中时终点保持为空闲。每个仿真步整合 25 条射线并运行一次 A*，记录地图单元和路径长度。A* 使用八邻接搜索，只允许穿过已观测空闲单元，未知区域和障碍物均不可通行，并阻止对角线穿角。
 
-Bresenham ray updates mark traversed cells free and hit endpoints occupied; a maximum-range miss leaves its endpoint free. Eight-connected A* searches only observed-free cells, treats unknown cells as blocked, and prevents diagonal corner cutting.
+Bresenham ray updates mark traversed cells free and hit endpoints occupied; a maximum-range miss leaves its endpoint free. Each simulation step integrates 25 rays and runs A*, recording map cells and path length. Eight-connected A* searches only observed-free cells, treats unknown cells as blocked, and prevents diagonal corner cutting.
 
 ## 5. 图像到控制 / Image to Control
 
-端到端模型接受由仿真状态生成的 16×16 灰度观测，经 24 个隐藏单元映射为转向、油门和制动三个数值；固定教师数据集训练与留出评估已提供。当前尚未接入真实相机和车辆闭环。
+端到端模型接受由仿真状态生成的 16×16 灰度观测，经 24 个隐藏单元映射为转向、油门和制动三个数值；固定教师数据集训练与留出评估已提供，`image-model` 控制器可将输出送入仿真车辆。当前输入仍为合成观测。
 
-The image-to-control model accepts a 16×16 grayscale observation rendered from simulator state and predicts steering, throttle, and brake through a 24-unit hidden layer. Deterministic teacher-data training and holdout evaluation are included; real camera capture and vehicle closed-loop driving are not integrated.
+The image-to-control model accepts a 16×16 grayscale observation rendered from simulator state and predicts steering, throttle, and brake through a 24-unit hidden layer. Deterministic teacher-data training and holdout evaluation are included, and the `image-model` controller sends the output into the simulated vehicle. The input remains a synthetic observation.
 
 ## 6. 运行步骤 / Run the Simulation
 
@@ -59,6 +59,7 @@ python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360
 ```bash
 python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller gap-policy
 python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller baseline
+python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller image-model
 ```
 
 启动键盘窗口：
@@ -94,6 +95,6 @@ ros2 launch carla_nn_roundabout_entry main.launch.py
 | 19 | 63 | -1.835 |
 | 23 | 0 | 0.104 |
 
-The policy-controlled five-seed run recorded collisions in three of five scenarios, with 15.6 collision frames on average and a worst minimum clearance of -1.835 m. The fixed-throttle baseline records collisions in all five scenarios, with 18.8 frames on average and a worst minimum clearance of -2.072 m. These measurements do not indicate safe entry.
+The policy-controlled five-seed run recorded collisions in three of five scenarios, with 15.6 collision frames on average and a worst minimum clearance of -1.835 m. The fixed-throttle baseline records collisions in all five scenarios, with 18.8 frames on average and a worst minimum clearance of -2.072 m. A 12-step `image-model` run integrated 300 rays, completed 12 path searches, and produced 12 image-control frames. These measurements do not indicate safe entry.
 
 文档首页：<https://openhutb.github.io/ros2/>。源码与运行说明见 [模块 README](../../src/ground/carla_nn_roundabout_entry/README.md)。
