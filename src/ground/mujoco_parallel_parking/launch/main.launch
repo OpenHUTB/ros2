@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="mujoco_parallel_parking" type="main.py" name="mujoco_parallel_parking" output="screen"/>
-</launch>
