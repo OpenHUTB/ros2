@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_neural_vio_slam</name>
+  <version>0.1.0</version>
+  <description>
+    神经视觉惯性里程计 + 三后端 SLAM 对比。前端为 CNN + GRU（PyTorch 无关，
+    纯 numpy 前向与反向），输入深度图与 IMU 序列，输出相对位姿增量；
+    后端在同一前端、同一数据集上对比 EKF-SLAM、学习式观测模型的 EKF-SLAM
+    与 FastSLAM 1.0，并评估 GPS 中断下的退化。
+    依赖 uav_mujoco_sim 提供 /camera/depth、/lidar/points、IMU 与真值位姿。
+  </description>
+  <maintainer email="eeexty@users.noreply.github.com">eeexty</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sensor_msgs_py</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
