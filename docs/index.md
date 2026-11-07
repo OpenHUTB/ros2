@@ -97,6 +97,7 @@ ROS每章节运行代码:
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
+* [无信号环岛汇入仿真：二维基线、感知与策略](./ground/roundabout_nn.md)
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)

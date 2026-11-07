@@ -97,6 +97,7 @@ nav:
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
+    - 无信号环岛汇入仿真：二维基线、感知与策略 / Unsignalized Roundabout Entry: './ground/roundabout_nn.md'
     - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
