@@ -1,6 +1,0 @@
-pix2cmd_end2end_driving:
-  ros__parameters:
-    epochs: 8
-    n_train: 800
-    steps: 240
-    publish_images: true

@@ -70,7 +70,7 @@ $$
 图中绿点是地图算出的车道边界经上式投影到图像后的位置，能压在路面的白线上，
 说明内参和位姿的符号都对。
 
-![车道边界投影到图像](../img/ground/carla_visual_lane_departure_warning/lane_projection.png)
+![车道边界投影到图像](../img/ground/carla_visual_lane_departure_warning/visual_ldw_projection.png)
 
 **几何直觉**：相机高 1.6 m、水平朝前时，地面上距离 \(d\) 处的点满足
 \(v = c_y + f \cdot h / d\)。距离越远，v 越靠近画面中心线（300）；本项目关注 10 m 处的边界，
@@ -144,7 +144,7 @@ $$
 一条 10 像素宽的白线会被压到 0.8 像素，网络基本看不见它。
 裁剪后横向只缩 6.25 倍，白线还保留约 2 像素，同时分辨率不至于让纯 NumPy 训练慢到不可用。
 
-![网络实际看到的输入，按横向偏移从小到大排列](../img/ground/carla_visual_lane_departure_warning/lane_crop_samples.png)
+![网络实际看到的输入，按横向偏移从小到大排列](../img/ground/carla_visual_lane_departure_warning/visual_ldw_crop_samples.png)
 
 ### 2.6 镜像扩增
 

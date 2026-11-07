@@ -41,8 +41,6 @@ def generate_launch_description() -> LaunchDescription:
     model_path = LaunchConfiguration('model_path')
     use_sim_time = LaunchConfiguration('use_sim_time')
     use_gpu = LaunchConfiguration('use_gpu')
-    headless = LaunchConfiguration('headless')
-    render_engine = LaunchConfiguration('render_engine')
 
     default_model = os.path.join(PACKAGE_SHARE, 'models', 'lidar_mlp.pt')
 
@@ -54,8 +52,6 @@ def generate_launch_description() -> LaunchDescription:
         launch_arguments={
             'world': world,
             'use_sim_time': use_sim_time,
-            'headless': headless,
-            'render_engine': render_engine,
         }.items(),
     )
 
@@ -71,7 +67,6 @@ def generate_launch_description() -> LaunchDescription:
                 'input_size': 360,
                 'danger_distance': 1.0,
                 'far_distance': 3.0,
-                'fallback_confidence': 0.45,
                 'use_gpu': use_gpu,
                 'use_sim_time': use_sim_time,
             },
@@ -107,24 +102,6 @@ def generate_launch_description() -> LaunchDescription:
                     'because the MLP is small and CPU inference is fast; '
                     'also avoids CUDA capability-mismatch issues with '
                     'very recent GPUs.'
-                ),
-            ),
-            DeclareLaunchArgument(
-                'headless',
-                default_value='false',
-                description=(
-                    'Run Gazebo on a virtual X server with xvfb-run. '
-                    'Use this instead of --headless-rendering so gpu_lidar '
-                    'still receives a rendering context.'
-                ),
-            ),
-            DeclareLaunchArgument(
-                'render_engine',
-                default_value='ogre',
-                description=(
-                    "Ignition Rendering engine plugin. Default 'ogre' works "
-                    'in software-rendered VMs; use ogre2 with a working OpenGL '
-                    '3.3 driver.'
                 ),
             ),
             sim_launch,

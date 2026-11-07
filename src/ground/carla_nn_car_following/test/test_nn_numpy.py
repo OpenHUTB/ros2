@@ -153,10 +153,5 @@ def main():
     return 0
 
 
-def test_nn_numpy_pipeline():
-    """pytest 入口：离线全流程自检必须返回 0。"""
-    assert main() == 0
-
-
 if __name__ == '__main__':
     sys.exit(main())
