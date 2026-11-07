@@ -9,19 +9,29 @@ MuJoCo 只负责刚体动力学与地面接触，肌肉模型（激活、力-长
 
 ## 运行环境
 
-| 依赖 | 版本 | 说明 |
-|---|---|---|
-| Python | 3.8+ | 实测 3.14.3 |
-| MuJoCo | 3.0+ | 实测 3.16.0，`pip install mujoco` |
-| numpy | 1.20+ | 实测 2.5.4 |
-| Pillow | 9+ | 仅 `gif` 子命令需要 |
+| 依赖 | 版本 |
+|---|---|
+| 系统 | Ubuntu 22.04.5（ROS 2 Humble） |
+| Python | 3.10 |
+| MuJoCo | 3.16.0（`python3 -m pip show mujoco` 实测） |
+| numpy | 1.21.5 |
+
+安装 Python 依赖：
+
+```
+python3 -m pip install -r requirements.txt
+```
+
+`gif` 子命令需要图形环境；远程或无显示服务器时先设置 `MUJOCO_GL=egl`
+（或 `osmesa`），否则渲染会报 `an OpenGL platform library has not been loaded`，
+此时 `bench` 与单元测试不受影响。
 
 本模块**不依赖 ROS 运行**；仓库内提供 `launch/` 与 `package.xml` 只是为了与其他
 模块统一管理，`main.py` 可独立执行。
 
 ## 运行
 
-```bash
+```
 cd src/musculoskeletal/mujoco_muscle_leg_gait
 
 python3 main.py check                 # 四个模型自检（单关节/双关节/单腿/双腿）
@@ -32,7 +42,7 @@ python3 main.py gif --out gif         # 渲染 L1/L2/L5/L6 动图
 
 单元测试（不需要 ROS、不需要显卡）：
 
-```bash
+```
 python3 -m unittest discover -s tests -v
 ```
 
