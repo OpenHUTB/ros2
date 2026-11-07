@@ -1,4 +1,4 @@
-# 任务5：系统集成（System Integration）
+﻿# 任务5：系统集成（System Integration）
 
 ## 1. 模块概述
 
@@ -83,6 +83,7 @@ ros2 topic pub --once /integration/estop std_msgs/msg/Bool "{data: false}"
 | `max_linear` | 1.0 m/s | 线速度限幅 |
 | `max_angular` | 1.5 rad/s | 角速度限幅 |
 | `rate_hz` | 20 Hz | 输出频率 |
+| `mode` | auto | 启动时的模式，配合 launch 默认启动的策略节点 |
 
 launch 开关：`policy`（默认 true）、`keyboard`（默认 false）、`camera`（默认 false）、
 `nav`（默认 false）。缺哪个模块就把对应开关关掉，其余不受影响。
