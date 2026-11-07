@@ -1,0 +1,34 @@
+# vehicle_end_to_end_sim 仿真参数
+# 语义：感知 / 决策 / 物理层可调参数，与代码常量一致（config.py 为程序默认值）
+
+# 窗口
+width: 800
+height: 600
+fps: 60
+
+# 单位换算
+pixels_per_meter: 1.0
+
+# 车辆运动学（自行车模型）
+wheelbase_pixel: 7.0      # 轴距 L（像素）
+max_steer_rad: 0.785398   # 最大转向角 = pi/4，对应 steer 归一化到 [-1,1]
+
+# 感知（前方视野锥）
+vision_view_deg: 40.0     # 前方视野半角 ±40°
+
+# 决策阈值（像素距离）
+warn_dist_pixel: 300.0    # 预警线
+safe_brake_dist_pixel: 180.0  # 安全红线（触发 AEB）
+
+# 控制与加减速
+accel_step: 0.02          # 正常加速每帧速度增量
+brake_decel: 0.03         # AEB 恒减速度每帧速度递减
+steer_speed: 0.02         # 转向角变化速率
+target_speed_step_kmh: 10.0  # 设置界面 ↑/↓ 步长
+min_speed_kmh: 10.0
+
+# 障碍物（仿真世界坐标）
+obstacles:
+  - [400, 200]
+  - [300, 100]
+  - [500, 150]
