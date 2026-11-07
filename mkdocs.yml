@@ -65,7 +65,7 @@ nav:
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - MuJoCo双自由度机械臂画正方形: ./chapter/mujoco_two_dof_arm_square.md
 
-
+    - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
     - 9. ROS 2:
