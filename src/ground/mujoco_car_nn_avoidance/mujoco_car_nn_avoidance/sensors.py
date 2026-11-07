@@ -48,6 +48,10 @@ def _apply_sensor_noise(env, ranges):
 
     cfg.lidar_noise_sigma_m / cfg.lidar_dropout_prob 都为 0 时原样返回，
     不影响默认精度；随机数按 episode 固定种子，同一配置可复现。
+
+    顺序很关键：**先判丢束、只对有效回波加噪、最后把丢束项写回量程上限**。
+    若先写量程再加噪，丢束值会从 lidar_range_m 漂走（甚至读成更近的障碍），
+    「随机无回波」的语义就没了。
     """
     cfg = env.cfg
     sigma = float(getattr(cfg, "lidar_noise_sigma_m", 0.0))
@@ -59,12 +63,16 @@ def _apply_sensor_noise(env, ranges):
         rng = np.random.default_rng(int(getattr(cfg, "sensor_seed", 0)))
         env._sensor_rng = rng
     n = ranges.shape[0]
-    if dropout > 0.0:
-        ranges = ranges.copy()
-        ranges[rng.random(n) < dropout] = cfg.lidar_range_m
+    limit = float(cfg.lidar_range_m)
+    dropped = rng.random(n) < dropout if dropout > 0.0 else np.zeros(n, dtype=bool)
+    out = np.array(ranges, dtype=np.float32, copy=True)
     if sigma > 0.0:
-        ranges = ranges + rng.normal(0.0, sigma, n).astype(np.float32)
-    return np.clip(ranges, 0.0, cfg.lidar_range_m).astype(np.float32)
+        noise = rng.normal(0.0, sigma, n).astype(np.float32)
+        valid = ~dropped
+        out[valid] = np.clip(out[valid] + noise[valid], 0.0, limit)
+    if dropout > 0.0:
+        out[dropped] = limit
+    return out.astype(np.float32)
 
 
 def normalize_rays(rays, range_m):
