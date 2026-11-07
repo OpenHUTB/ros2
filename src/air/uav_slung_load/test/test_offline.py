@@ -67,6 +67,9 @@ class TestModel(unittest.TestCase):
 
         sim.data.qpos[0:7] = [0.0, 0.0, 1.5, 1.0, 0.0, 0.0, 0.0]
         sim.data.qpos[qadr] = 0.0
+        # 速度必须全零：qfrc_bias 同时包含重力项与科氏/离心项，
+        # 只有 qvel=0 时差分出来的才纯粹是重力刚度 K。
+        sim.data.qvel[:] = 0.0
         mujoco.mj_forward(sim.model, sim.data)
         M = np.zeros((sim.model.nv, sim.model.nv))
         mujoco.mj_fullM(sim.model, sim.data, M)
@@ -79,7 +82,7 @@ class TestModel(unittest.TestCase):
 
         k = (gravity_torque(1e-4) - gravity_torque(-1e-4)) / 2e-4
         period = 2.0 * np.pi * np.sqrt(m_qq / abs(k))
-        # 实测 1.4157 s，理论单摆 1.4185 s。容差 3% 既覆盖连杆质量分布
+        # 反算得 1.4157 s，理论单摆 1.4185 s。容差 3% 既覆盖连杆质量分布
         # 带来的偏差，又能真正卡住“时滞周期对不对”。
         self.assertLess(abs(period / SWING_PERIOD - 1.0), 0.03,
                         "反算摆周期 %.4f s 与 SWING_PERIOD %.4f s 不符" % (period, SWING_PERIOD))
