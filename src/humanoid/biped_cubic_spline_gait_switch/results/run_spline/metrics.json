@@ -1,0 +1,59 @@
+{
+  "duration_s": 33.5627,
+  "samples": 3244,
+  "switch_count": 5,
+  "switch_times": [
+    3.002,
+    9.002,
+    15.004,
+    21.012,
+    27.01
+  ],
+  "distance_m": 16.781,
+  "avg_speed_mps": 0.688,
+  "tracking_rms_rad": 0.071,
+  "per_joint_rms_rad": [
+    0.0655,
+    0.0896,
+    0.0564,
+    0.0629,
+    0.087,
+    0.0565
+  ],
+  "max_joint_vel_rad_s": 9.168,
+  "max_joint_acc_rad_s2_switch": 96.91,
+  "max_joint_jerk_rad_s3_switch": 8410.2,
+  "max_vel_jump_rad_s": 1.287,
+  "zmp_margin_min_m": -0.2502,
+  "zmp_margin_mean_m": 0.1422,
+  "flight_ratio": 0.044,
+  "step_count": 65,
+  "gaits": {
+    "fast_walk": {
+      "samples": 585,
+      "margin_min": -0.04549539089202881,
+      "tracking_rms": 0.08000903611407183
+    },
+    "run": {
+      "samples": 588,
+      "margin_min": -0.2502218782901764,
+      "tracking_rms": 0.10541211329054764
+    },
+    "stand": {
+      "samples": 917,
+      "margin_min": 0.07056257128715515,
+      "tracking_rms": 0.001317578339753878
+    },
+    "walk": {
+      "samples": 1154,
+      "margin_min": -0.1307503879070282,
+      "tracking_rms": 0.07092187634696528
+    }
+  },
+  "baseline": {
+    "max_joint_acc_rad_s2_switch": 415.14,
+    "max_joint_jerk_rad_s3_switch": 22112.3,
+    "max_vel_jump_rad_s": 4.951
+  },
+  "jerk_reduction_percent": 62.0
+}
