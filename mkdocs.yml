@@ -89,6 +89,7 @@ nav:
     - 人形机器人跌倒预判与保护性倒地: './humanoid/humanoid_fall_protection.md'
     - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
+    - 倒立摆 Cart-Pole 的 LQR 平衡控制: './humanoid/cartpole_lqr.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
@@ -166,6 +167,7 @@ nav:
     - 扭转控制: './ground/twist_to_control.md'
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
+    - 智能驾驶员模型 IDM 跟车与减速波: './ground/idm_car_following.md'
 - 空域载具:
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
@@ -231,6 +233,7 @@ nav:
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
     - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 单门深度视觉伺服（门中心回归）: './air/uav_gate_center_servo.md'
+    - 四旋翼高度 PD+ESO 抗扰控制: './air/quad_eso_hover.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:

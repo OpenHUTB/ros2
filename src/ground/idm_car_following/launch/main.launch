@@ -1,0 +1,4 @@
+<launch>
+  <!-- 教学示例：直接运行离线仿真脚本（无需启动 ROS 图）-->
+  <node pkg="idm_car_following" type="main.py" name="idm_car_following_demo" output="screen"/>
+</launch>

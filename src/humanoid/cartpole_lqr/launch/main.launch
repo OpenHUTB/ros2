@@ -1,0 +1,4 @@
+<launch>
+  <!-- 教学示例：直接运行离线仿真脚本（无需启动 ROS 图）-->
+  <node pkg="cartpole_lqr" type="main.py" name="cartpole_lqr_demo" output="screen"/>
+</launch>
