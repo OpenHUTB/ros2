@@ -8,6 +8,7 @@ ROS 2 的 `ament_python` 包，支持单航点、暂停/继续、返航自动降
 
 ## 文档入口
 
+- [任务日志与离线统计](../../../docs/air/uav_mission_safety_manager/mission_recording.md)：独立订阅记录 JSONL，离线导出 JSON/CSV；默认关闭，通过 `record_missions:=true` 启用；已完成 Humble demo 与 OpenHUTB Air 的记录、导出复测。
 - [ROS 2 Action 任务接口](../../../docs/air/uav_mission_safety_manager/mission_action.md)
 - [模块概览](../../../docs/air/uav_mission_safety_manager/overview.md)
 - [构建与运行教程](../../../docs/air/uav_mission_safety_manager/usage.md)：依赖、WSL 地址、命令话题、服务、离线与实际模拟器复测命令。
@@ -35,6 +36,8 @@ uav_mission_safety_manager/
 │   ├── state_machine.py
 │   ├── mission_action.py       # Action 目标、反馈、取消和结果
 │   ├── mission_queue.py        # 多航点队列校验与进度
+│   ├── mission_recorder.py     # 独立 ROS 状态记录节点
+│   ├── mission_recording.py    # JSONL 格式与离线统计 CLI
 │   ├── airsim_adapter.py
 │   ├── demo_adapter.py         # Humble 本地运动演示适配器
 │   └── mock_adapter.py
@@ -47,6 +50,8 @@ uav_mission_safety_manager/
     ├── ros_smoke.py
     ├── ros_queue_smoke.py
     ├── ros_action_smoke.py
+    ├── test_mission_recording.py
+    ├── ros_recording_smoke.py
     ├── live_airsim_validation.py
     └── ros_airsim_validation.py
 ```
