@@ -1,0 +1,29 @@
+{
+  "held_out_mse": null,
+  "scenarios": [
+    {
+      "start_x_m": -5.0,
+      "steps": 382,
+      "insertion_depth_m": 0.2706,
+      "over_inserted": false,
+      "final_speed_mps": 0.0162,
+      "pallet_clearance_m": -0.2706
+    },
+    {
+      "start_x_m": -4.0,
+      "steps": 333,
+      "insertion_depth_m": 0.2646,
+      "over_inserted": false,
+      "final_speed_mps": 0.0222,
+      "pallet_clearance_m": -0.2646
+    },
+    {
+      "start_x_m": -3.0,
+      "steps": 277,
+      "insertion_depth_m": 0.309,
+      "over_inserted": false,
+      "final_speed_mps": 0.0192,
+      "pallet_clearance_m": -0.309
+    }
+  ]
+}
