@@ -343,6 +343,22 @@ ros2 topic echo /visual_lane_departure_warning/offset
 ros2 topic echo /visual_lane_departure_warning/state
 ```
 
+`frames` 给 0 表示一直跑，给正数则跑完指定帧后节点自行退出，方便验收。实测输出：
+
+```text
+[visual_lane_departure_node-1] 帧   40 视觉 -0.06 m 地图 -0.29 m 误差 +0.23 m
+[visual_lane_departure_node-1] 帧   80 视觉 -0.06 m 地图 -0.02 m 误差 -0.04 m
+[visual_lane_departure_node-1] 统计跳过 101 帧（预热、车速过低或地图无有效车道）
+[visual_lane_departure_node-1] 样本 99 帧
+[visual_lane_departure_node-1] 横向偏移 MAE 0.223 m，RMSE 0.291 m
+[visual_lane_departure_node-1]   8-12 m/s     94 帧  MAE 0.229 m
+[visual_lane_departure_node-1]: process has finished cleanly
+```
+
+节点与 `main.py --demo` 用同一套统计口径：话题每帧都发，但误差只统计
+车道宽合理、偏移不超限、车速不低于 1 m/s 且已经过预热期的帧。
+否则路口那几帧（地图真值在两条车道之间跳）会把 MAE 从 0.2 拉高到 0.5。
+
 ### 4.9 常见问题
 
 | 现象 | 原因与解决 |
