@@ -9,7 +9,9 @@
 使用以下命令快捷下载模拟器：
 
 ```powershell
-curl -fsSL -o dl.bat https://openhutb.github.io/dl.bat && dl.bat
+$ErrorActionPreference = 'Stop'
+Invoke-WebRequest -Uri 'https://openhutb.github.io/dl.bat' -OutFile '.\dl.bat'
+& '.\dl.bat'
 ```
 
 下载完成后：
