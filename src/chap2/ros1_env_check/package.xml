@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros1_env_check</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 1 环境自检与文件卫生检查：一次性报告环境类问题（ROS 1/ROS 2 混用、没 source、
+    缺依赖、工作空间误判）与文件类问题（UTF-8 BOM、CRLF、脚本缺可执行位），
+    并给出对应修复命令。核心脚本只用 Python 标准库，**不需要 ROS 也能运行**。
+  </description>
+  <maintainer email="openhutb_course@example.com">OpenHUTB Student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- 刻意不声明 rospy / 任何 ROS 运行依赖：
+       本模块的用途正是"在还没 source 好 ROS 的机器上也能给出诊断"，
+       加上 rospy 依赖会让它无法在没装 ROS 的环境里使用。 -->
+  <test_depend>python3-pytest</test_depend>
+
+  <export/>
+</package>
