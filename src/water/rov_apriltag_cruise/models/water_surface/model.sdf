@@ -11,7 +11,6 @@
         <material>
           <script>
             <uri>model://water_surface/materials/scripts</uri>
-            <uri>model://water_surface/materials/textures</uri>
             <name>RovSim/WaterSurface</name>
           </script>
         </material>
