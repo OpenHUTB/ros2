@@ -35,6 +35,9 @@ colcon build --packages-select carla_nn_perception_control_slam
 source install/setup.bash
 
 # 3. 启动 CARLA 服务端（另一终端，需 GPU）
+# Windows 宿主机：
+CarlaUE4.exe -quality-level=Low -windowed
+# Linux：
 ./CarlaUE4.sh -quality-level=Low
 
 # 4. 运行单个任务
@@ -58,7 +61,7 @@ ros2 run carla_nn_perception_control_slam main --task 4 --mode drive --frames 70
 
 ## 权重文件
 
-YOLOv5m 权重（约 50MB）与训练好的 PilotNet 权重不随仓库提交，运行前放到：
+训练好的 PilotNet 权重（`models/pilotnet.pt`，约 1.6MB）已随仓库提交，任务 4 可直接进入 `drive` 推理模式。YOLOv5m 权重约 50MB，不随仓库提交，运行前放到：
 
 ```
 ~/models/yolov5m.pt          # 任务2 检测
@@ -92,3 +95,9 @@ carla_nn_perception_control_slam/
     ├── slam_nav.py          # 任务3
     └── e2e_pilotnet.py      # 任务4
 ```
+
+## 声明
+
+本模块的代码与文档在编写过程中使用了大语言模型辅助，包括代码结构建议、公式整理与文字润色。
+
+所有功能均已在 CARLA 0.9.13 + ROS 2 Humble / ROS 1 Noetic（Ubuntu 20.04）环境中实际运行验证，文中全部数值来自实测记录，没有估算或占位数据。作者已逐项核对提交内容，并对其负全部责任。
