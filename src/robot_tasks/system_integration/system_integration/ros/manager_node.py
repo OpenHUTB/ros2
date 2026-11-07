@@ -26,6 +26,7 @@ class ManagerNode(Node):
         self.declare_parameter('max_linear', 1.0)
         self.declare_parameter('max_angular', 1.5)
         self.declare_parameter('rate_hz', 20.0)
+        self.declare_parameter('mode', 'auto')
         self.declare_parameter('topic.manual', '/cmd_vel_manual')
         self.declare_parameter('topic.auto', '/cmd_vel_auto')
         self.declare_parameter('topic.cmd', '/cmd_vel')
@@ -37,6 +38,11 @@ class ManagerNode(Node):
             timeout=float(self.get_parameter('timeout').value),
             max_linear=float(self.get_parameter('max_linear').value),
             max_angular=float(self.get_parameter('max_angular').value))
+
+        # 启动模式由参数决定，默认 auto，配合 launch 默认启动的策略节点
+        init_mode = str(self.get_parameter('mode').value)
+        if not self.arb.set_mode(init_mode):
+            self.get_logger().warn('参数 mode 非法：%s，沿用 manual' % init_mode)
 
         self.create_subscription(
             Twist, str(self.get_parameter('topic.manual').value),
@@ -60,8 +66,9 @@ class ManagerNode(Node):
         self.create_timer(1.0 / hz, self.tick)
         self.last_mode = self.arb.mode
         self.get_logger().info(
-            '集成层就绪：超时 %.2f s，限幅 %.2f m/s / %.2f rad/s，%.1f Hz'
-            % (self.arb.timeout, self.arb.max_linear, self.arb.max_angular, hz))
+            '集成层就绪：模式 %s，超时 %.2f s，限幅 %.2f m/s / %.2f rad/s，%.1f Hz'
+            % (self.arb.mode, self.arb.timeout, self.arb.max_linear,
+               self.arb.max_angular, hz))
 
     # ---------- 回调 ----------
     def on_manual(self, msg: Twist):
