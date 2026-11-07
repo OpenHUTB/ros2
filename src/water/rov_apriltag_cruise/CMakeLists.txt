@@ -11,14 +11,25 @@ find_package(visualization_msgs REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+# 优先使用发行版软件包提供的 OpenCV（与 cv_bridge 同源，且含 contrib/ArUco）。
+# 不使用 /usr/local 下的自编译版本，避免其未编译 contrib 时缺 aruco，或与 cv_bridge 版本不一致。
+# 路径中的架构目录由 CMake 自动生成，x86_64 / aarch64 通用；若列举路径均不存在则退回默认搜索。
+foreach(_opencv_dir
+    "/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/cmake/opencv4"
+    "/usr/lib/cmake/opencv4"
+    "/usr/share/opencv4")
+  if(EXISTS "${_opencv_dir}/OpenCVConfig.cmake")
+    set(OpenCV_DIR "${_opencv_dir}" CACHE PATH "OpenCV config directory")
+    break()
+  endif()
+endforeach()
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs calib3d aruco highgui)
+message(STATUS "Using OpenCV ${OpenCV_VERSION} from ${OpenCV_DIR}")
+
 find_package(cv_bridge REQUIRED)
 
-# cv_bridge 依赖系统 OpenCV 4.2，此处显式指定同一套头文件与库，避免与 /usr/local 版本混用
-set(OPENCV_INCLUDE_DIR /usr/include/opencv4)
-set(OPENCV_LIB_DIR /usr/lib/x86_64-linux-gnu)
-
 add_executable(apriltag_detector_node src/apriltag_detector.cpp)
-target_include_directories(apriltag_detector_node PRIVATE ${OPENCV_INCLUDE_DIR})
+target_include_directories(apriltag_detector_node PRIVATE ${OpenCV_INCLUDE_DIRS})
 ament_target_dependencies(apriltag_detector_node
   rclcpp
   std_msgs
@@ -28,14 +39,7 @@ ament_target_dependencies(apriltag_detector_node
   tf2_ros
   cv_bridge
 )
-target_link_libraries(apriltag_detector_node
-  ${OPENCV_LIB_DIR}/libopencv_core.so
-  ${OPENCV_LIB_DIR}/libopencv_imgproc.so
-  ${OPENCV_LIB_DIR}/libopencv_imgcodecs.so
-  ${OPENCV_LIB_DIR}/libopencv_calib3d.so
-  ${OPENCV_LIB_DIR}/libopencv_aruco.so
-  ${OPENCV_LIB_DIR}/libopencv_highgui.so
-)
+target_link_libraries(apriltag_detector_node ${OpenCV_LIBS})
 
 install(TARGETS apriltag_detector_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
