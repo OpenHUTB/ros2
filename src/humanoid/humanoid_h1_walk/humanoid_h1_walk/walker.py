@@ -184,7 +184,12 @@ def load_torchscript(path: Path):
 class Walker:
     """一个机型 + 它对应的策略，负责「观测 → 动作 → PD → 物理」的闭环。"""
 
-    def __init__(self, robot: str, specs: Dict[str, RobotSpec] | None = None, load_policy: bool = True):
+    def __init__(
+        self,
+        robot: str,
+        specs: Dict[str, RobotSpec] | None = None,
+        load_policy: bool = True,
+    ):
         self.specs = specs or load_specs()
         if robot not in self.specs:
             raise KeyError(f"未知机型 {robot}，可选：{sorted(self.specs)}")

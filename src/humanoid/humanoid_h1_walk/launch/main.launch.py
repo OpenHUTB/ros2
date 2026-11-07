@@ -38,7 +38,9 @@ def generate_launch_description() -> LaunchDescription:
                 default_value="false",
                 description="在仿真节点内直接推理（单进程，等价上游 deploy_mujoco.py）",
             ),
-            DeclareLaunchArgument("publish_tf", default_value="true", description="是否发布 odom→base_link"),
+            DeclareLaunchArgument(
+                "publish_tf", default_value="true", description="是否发布 odom→base_link"
+            ),
             Node(
                 package="humanoid_h1_walk",
                 executable="sim_node",

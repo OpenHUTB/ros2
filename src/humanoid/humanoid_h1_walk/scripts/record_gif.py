@@ -25,7 +25,9 @@ from humanoid_h1_walk import Walker, load_specs, routine_command  # noqa: E402
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--robot", default="h1", choices=["h1", "h1_2"])
     parser.add_argument("--out", type=Path, default=Path("h1_walk.gif"))
     parser.add_argument("--seconds", type=float, default=14.0, help="录制时长（仿真秒）")

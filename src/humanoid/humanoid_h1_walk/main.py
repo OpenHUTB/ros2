@@ -44,14 +44,14 @@ def demo(robot: str) -> int:
 
     total = sum(seconds for _, seconds, _, _ in ROUTINE)
     label = None
-    vx_sum, samples, height_min, t_phase = 0.0, 0, 9.9, 0.0
+    vx_sum, samples, height_min = 0.0, 0, 9.9
     while walker.data.time < total:
         cmd, new_label = routine_command(walker.data.time)
         if new_label != label:
             if label is not None:
                 print(f"  {label:<12} 平均 vx {vx_sum / max(samples, 1):+.2f} m/s，"
                       f"最低骨盆 {height_min:.2f} m")
-            label, vx_sum, samples, height_min, t_phase = new_label, 0.0, 0, 9.9, walker.data.time
+            label, vx_sum, samples, height_min = new_label, 0.0, 0, 9.9
         walker.step(cmd)
         vx_sum += float(walker.base_lin_vel_body()[0])
         samples += 1

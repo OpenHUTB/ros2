@@ -53,7 +53,9 @@ def run_one(robot: str, specs) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--robot", action="append", choices=["h1", "h1_2"], help="只测指定机型，可重复")
     args = parser.parse_args()
 

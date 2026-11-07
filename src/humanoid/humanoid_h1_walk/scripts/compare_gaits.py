@@ -29,6 +29,11 @@ from humanoid_h1_walk import ROUTINE, Walker, load_specs, routine_command  # noq
 GRAVITY = 9.81
 
 
+def rmse(values) -> float:
+    """均方根误差；没有样本时返回 nan（对应阶段未出现）。"""
+    return float(np.sqrt(np.mean(np.square(values)))) if len(values) else float("nan")
+
+
 def rollout(robot: str, specs) -> dict:
     walker = Walker(robot, specs)
     spec = walker.spec
@@ -71,8 +76,8 @@ def rollout(robot: str, specs) -> dict:
         "net_m": displacement,
         "forward_speed": float(np.mean(forward_speed)) if forward_speed else float("nan"),
         "min_height": lowest,
-        "vx_rmse": float(np.sqrt(np.mean(np.square(forward_err)))) if forward_err else float("nan"),
-        "wz_rmse": float(np.sqrt(np.mean(np.square(yaw_err)))) if yaw_err else float("nan"),
+        "vx_rmse": rmse(forward_err),
+        "wz_rmse": rmse(yaw_err),
         "energy_j": energy,
         "cot": cot,
         "drift_y": float(abs(walker.data.qpos[1])),
@@ -80,20 +85,26 @@ def rollout(robot: str, specs) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--csv", type=Path, default=None, help="把指标写入 CSV")
     args = parser.parse_args()
 
     specs = load_specs()
     rows = [rollout(robot, specs) for robot in specs]
 
-    header = f"{'机型':<6}{'质量':>7}{'路径长':>8}{'前进均速':>9}{'最低高度':>9}{'vx RMSE':>9}{'wz RMSE':>9}{'CoT':>7}"
+    header = (
+        f"{'机型':<6}{'质量':>7}{'路径长':>8}{'前进均速':>9}"
+        f"{'最低高度':>9}{'vx RMSE':>9}{'wz RMSE':>9}{'CoT':>7}"
+    )
     print()
     print(header)
     print("-" * len(header) * 2)
     for r in rows:
         print(
-            f"{r['robot']:<6}{r['mass_kg']:>6.1f}kg{r['path_m']:>7.2f}m{r['forward_speed']:>8.2f}m/s"
+            f"{r['robot']:<6}{r['mass_kg']:>6.1f}kg{r['path_m']:>7.2f}m"
+            f"{r['forward_speed']:>8.2f}m/s"
             f"{r['min_height']:>8.2f}m{r['vx_rmse']:>8.3f}{r['wz_rmse']:>9.3f}{r['cot']:>7.2f}"
         )
     print()

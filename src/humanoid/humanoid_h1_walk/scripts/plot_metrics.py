@@ -36,12 +36,21 @@ def record(robot: str, specs) -> dict:
         h.append(walker.base_height)
         wz_cmd.append(float(cmd[2]))
         wz_act.append(float(walker.data.qvel[5]))
-    return {k: np.asarray(v) for k, v in
-            {"t": t, "v_cmd": v_cmd, "v_act": v_act, "h": h, "wz_cmd": wz_cmd, "wz_act": wz_act}.items()}
+    series = {
+        "t": t,
+        "v_cmd": v_cmd,
+        "v_act": v_act,
+        "h": h,
+        "wz_cmd": wz_cmd,
+        "wz_act": wz_act,
+    }
+    return {key: np.asarray(value) for key, value in series.items()}
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--out", type=Path, default=Path("metrics.png"))
     args = parser.parse_args()
 
