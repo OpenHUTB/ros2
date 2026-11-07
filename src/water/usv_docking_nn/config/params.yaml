@@ -1,0 +1,17 @@
+﻿# 无人艇自主靠泊参数
+usv_dock_node:
+  mode: nn          # nn | expert | manual
+  rate: 20          # 控制频率 (Hz)
+  seed: 0
+  # 激光雷达
+  n_beams: 91
+  fov_deg: 270
+  max_range: 12.0
+  # 泊位
+  berth_x: 17.5
+  berth_half_width: 3.45
+  tol_y: 0.45       # 横向容许偏差 (m)
+  tol_yaw: 0.15     # 艏向容许偏差 (rad)
+  # 末段
+  align_gate: 9.0   # 进入对准段的距离 (m)
+  stop_dist: 0.40

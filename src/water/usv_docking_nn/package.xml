@@ -1,0 +1,19 @@
+﻿<?xml version="1.0"?>
+<package format="2">
+  <name>usv_docking_nn</name>
+  <version>0.1.0</version>
+  <description>MuJoCo 无人艇自主靠泊：激光雷达 + 神经网络末段对准控制，ROS Noetic 封装</description>
+
+  <!-- 提交前请改成自己的姓名与邮箱 -->
+  <maintainer email="your_email@example.com">your_name</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+</package>

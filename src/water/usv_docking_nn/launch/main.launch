@@ -1,0 +1,13 @@
+﻿<launch>
+  <!-- mode: nn（神经网络） | expert（专家） | manual（订阅 /usv/cmd_vel） -->
+  <arg name="mode" default="nn"/>
+  <arg name="rate" default="20"/>
+  <arg name="seed" default="0"/>
+
+  <node pkg="usv_docking_nn" type="usv_dock_node.py" name="usv_dock_node" output="screen">
+    <param name="mode" value="$(arg mode)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="model_dir" value="$(find usv_docking_nn)/models"/>
+  </node>
+</launch>

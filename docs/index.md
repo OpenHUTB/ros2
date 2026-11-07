@@ -1,4 +1,4 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -285,6 +285,8 @@ ROS每章节运行代码:
 
 * [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
+
+* [无人艇自主靠泊：激光雷达与神经网络末段对准](./water/usv_docking_nn.md) —— 凹入式泊位，射线激光雷达 + 纯跟踪末段对准专家，行为克隆 MLP 复现，20 回合成功率 100%，末态横向误差 0.23 m
 
 ___
 
