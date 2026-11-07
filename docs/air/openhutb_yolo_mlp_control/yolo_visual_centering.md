@@ -36,13 +36,15 @@ ros2 topic echo /openhutb/visual_centering/status
 ros2 topic echo /openhutb/visual_centering/preview_cmd_vel
 ```
 
-## YOLO 窗口置顶
+## YOLO 窗口显示与置顶
 
 `start_topmost` 默认是 `true`。启动时可设置 `start_topmost:=false` 关闭置顶；运行中先让 YOLO 窗口获得焦点，再按 `T` 切换。置顶需要图形桌面和窗口管理器支持。在 WSLg 下程序优先调用 Windows 宿主窗口功能，不可用时使用 OpenCV 窗口接口。
 
 指标采用左上角两行小字显示 FPS、推理耗时、采集耗时及目标数，不绘制背景色块。YOLO 结果也发布到 `/openhutb/yolo/image`，可用 ROS 图像查看器显示。模拟器 F1/F2/F3 子视窗由模拟器渲染；当前 AirSim RPC 不提供将该 ROS 图像写入内置子视窗的接口，真正内嵌需要模拟器端支持。
 
-外部窗口按画面实际比例自动确定大小，默认最大显示宽度为 640 像素（16:9 画面为 640×360），不放大小图，不保留原先 1280×720 的显示区域。可设置 `window_width:=480` 进一步缩小。此参数只影响窗口显示，不改变检测输入或发布图像分辨率；窗口使用简洁界面，不显示 Qt 扩展工具栏。
+外部窗口按画面实际比例自动确定大小，默认最大显示宽度为 640 像素（16:9 画面为 640×360），不放大小图。可设置 `window_width:=480` 进一步缩小。此参数只影响窗口显示，不改变检测输入或发布图像分辨率；窗口使用简洁界面，不显示 Qt 扩展工具栏。
+
+视觉启动入口把发布图像等比例缩小至 640 像素宽，以减少 ROS 图像传输和 Python 消息转换开销；YOLO 图像订阅仅保留最新一帧，相机朝向不变，误差仍按图像尺寸归一化。
 
 ## 仿真控制
 
@@ -67,7 +69,11 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
   dry_run:=false
 ```
 
-退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态、水平位移保护触发时，控制器输出零速度；启用垂直居中时，高度保护（`altitude_limit`）也会输出零速度。
+退出 ROS 节点不会自动降落；由操作者按照仿真器流程接管无人机。目标丢失、检测或里程计过期，以及姿态、水平位移保护触发时，控制器输出零速度；启用垂直居中时，高度保护（`altitude_limit`）也会输出零速度。桥接的精确零指令清除滤波和待发送位移，命令中断另有看门狗；退出视觉模式时取消残留任务并恢复初始 API 控制状态。恢复 API 状态本身不能证明鼠标或键盘接管有效，应另行实测。
+
+若预览确认本机图像拍摄间隔会达到约 1 秒，可在受控慢速仿真中显式追加 `detection_timeout:=1.5 lock_timeout:=3.0`。这允许更长的帧间隔，但检测进程或图像完全中断时，最长检测停控等待也增加至 1.5 秒，另加控制周期和后端执行延迟；空检测到达时仍立即停控。默认 0.8 秒检测保护保持不变，不能将延长超时当作提高采集帧率的方法。
+
+移动车辆实验应先使用[车辆工具](traffic_tracking.md)造车，停止真值跟随及其他指令源，再按上文先预览后控制。CARLA 的位置只可用于场景准备和独立评估；默认控制器只订阅 YOLO 完整视觉观测、操作动作和无人机里程计，不接收车辆真值。固定相机和横向控制不能保证车辆驶离前方视野后仍可跟随，默认不启用距离保持与垂直居中，也不提供避障；默认 3 米位移保护保留，触发后应重新布置场景。
 
 ## 距离保持与垂直居中
 
@@ -78,8 +84,6 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
 **垂直居中**（`vertical_gain` > 0）：用检测框的纵向偏差控制升降，**启用后取代原有的定高保持**；目标在画面上方则爬升，在下方则下降。参数为 `vertical_gain`、`vertical_deadband`，升降速度仍受 `max_vertical_speed` 限制。
 
 **安全边界**：`max_altitude_change` 限制的是**相对跟踪起点高度的变化量**，并且**只在启用垂直居中（`vertical_gain` > 0）时生效**；超过该值控制器立即输出零速度并报告 `altitude_limit`。未启用垂直居中时该限制不会触发，高度仍按原有定高逻辑保持，正常爬升或高空作业不受影响。水平位移始终由 `max_displacement` 限制。
-
-若预览确认本机图像拍摄间隔会达到约 1 秒，可在受控慢速仿真中显式追加 `detection_timeout:=1.5 lock_timeout:=3.0`。这允许更长的帧间隔，但检测进程或图像完全中断时，最长检测停控等待也增加至 1.5 秒，另加控制周期和后端执行延迟；空检测到达时仍立即停控。默认 0.8 秒检测保护保持不变，不能将延长超时当作提高采集帧率的方法。
 
 ## 常用参数与状态
 
@@ -99,11 +103,9 @@ bash "$REPO_DIR/src/air/openhutb_yolo_mlp_control/main.sh" \
 | `max_altitude_change` | `3.0` | 启用垂直居中时，相对跟踪起点高度的最大变化，单位 m |
 | `start_topmost` | `true` | 启动时置顶 YOLO 窗口 |
 
-状态发布在 `/openhutb/visual_centering/status`，包含 `status`、`error_x`、`distance_error`、`forward_speed`、`velocity_ned`、`dry_run` 字段；`status` 取值包括 `tracking`、`centered`、`target_lost`、`odom_stale`、`displacement_limit`、`heading_changed`、`altitude_limit`。预览速度发布在 `/openhutb/visual_centering/preview_cmd_vel`。`centered` 表示水平偏差在死区内，且启用距离保持时面积误差也在死区内。
+状态发布在 `/openhutb/visual_centering/status`，包含 `status`、`error_x`、`distance_error`、`forward_speed`、`velocity_ned`、`dry_run` 字段；`status` 取值包括 `acquiring`、`tracking`、`centered`、`paused`、`target_lost`、`reselect_required`、`awaiting_image`、`odom_stale`、`displacement_limit`、`heading_changed`、`altitude_limit`；所有保护状态均输出零速度。预览速度发布在 `/openhutb/visual_centering/preview_cmd_vel`。`centered` 表示水平偏差在死区内，且启用距离保持时面积误差也在死区内。
 
-本模式仍不提供避障；需要绕障时请改用避障规划类模块。
-
-状态发布在 `/openhutb/visual_centering/status`，预览速度发布在 `/openhutb/visual_centering/preview_cmd_vel`。首次选择按类别和置信度筛选，再连续确认 `confirmation_frames` 帧（默认 3）才进入 `tracking` 或 `centered`。锁定后按归一化框中心距离（`association_gate`）和宽高变化比例（`max_size_ratio`，默认 1.8）关联；YOLO 的 `detection.id` 是逐帧编号，不作为车辆身份。
+首次选择按类别和置信度筛选，再连续确认 `confirmation_frames` 帧（默认 3）才进入 `tracking` 或 `centered`。锁定后按归一化框中心距离（`association_gate`）和宽高变化比例（`max_size_ratio`，默认 1.8）关联；YOLO 的 `detection.id` 是逐帧编号，不作为车辆身份。
 
 空检测、异常或过期帧立即输出零速度，短时丢失保留上一确认框，重新出现仍需连续确认，期间状态为 `acquiring`。超过 `lock_timeout`（默认 1 秒）没有可关联的有效观测后进入 `reselect_required`，不会按置信度自动追另一辆车；此时需操作者确认视野后显式重选。几何关联无法保证近似车辆交叉、重叠时身份不切换。旧图像配对适配路径中，检测先于图像到达时会有界暂存，等待期间停控。
 
@@ -118,10 +120,6 @@ ros2 topic pub --once /openhutb/visual_centering/action std_msgs/msg/String "{da
 ros2 topic pub --once /openhutb/visual_centering/action std_msgs/msg/String "{data: resume}"
 ros2 topic pub --once /openhutb/visual_centering/action std_msgs/msg/String "{data: reselect}"
 ```
-
-视觉启动入口把发布图像等比例缩小至 640 像素宽，以减少 ROS 图像传输和 Python 消息转换开销；YOLO 图像订阅仅保留最新一帧，相机朝向不变，误差仍按图像尺寸归一化。桥接的精确零指令清除滤波和待发送位移，命令中断另有看门狗；视觉模式退出时取消残留任务并恢复初始 API 控制状态。`paused`、`awaiting_image`、`target_lost`、`reselect_required`、`odom_stale` 和其他保护状态均不允许追踪运动。恢复 API 状态本身不能证明鼠标或键盘接管有效，应另行实测。
-
-移动车辆实验应先使用[车辆工具](traffic_tracking.md)造车，停止真值跟随及其他指令源，再按上文先预览后控制。CARLA 的位置只可用于场景准备和独立评估；默认控制器只订阅 YOLO 完整视觉观测、操作动作和无人机里程计，不接收车辆真值。固定相机和横向控制不能保证车辆驶离前方视野后仍可跟随，本次默认配置不启用上游已有的距离保持与垂直居中，也不提供避障；默认 3 米位移保护保留，触发后应重新布置场景。
 
 ## 可选双车干扰验证工具
 
@@ -154,21 +152,15 @@ python "$TOOL_DIR/two_car_observer.py" \
 
 输出包含 `result.json`、`scene.json`、`summary.json`、`launch.log` 和关键帧 PNG，均不提交到 Git。截图按拍摄时间戳匹配视觉状态；没有匹配图像时不会生成该阶段截图。`summary.json` 仅汇总保护状态非零输出和各阶段 car 数量，不自动判定身份保持通过；应检查 A/B 对应框、关联诊断、状态转换、实际位移和 `scene_cleaned.json`。缺少检测证据、场景提前结束或关键阶段未发生时应判为未充分验证，不能只看进程退出码。两车交叉、重叠或 B 置信度更高需另设场景验证。
 
+## 验证环境与结果
+
+2026-11-07 在 OpenHUTB 2.10.0 / Town10HD、WSL2 Ubuntu 22.04、ROS 2 Humble、Python 3.10 和 YOLO11n 下验证固定前视相机的水平居中。在线使用 `detection_timeout:=1.5 lock_timeout:=3.0`，距离保持与垂直居中关闭，保留默认 3 米位移保护。96 项单元测试、15 项 ROS 链路测试及功能包构建通过。
+
 2026-11-07 使用模块内场景驱动及安装后的观察器完成 55 秒完整在线闭环：双车可见阶段 22 帧均有两辆 car，长时隐藏阶段 8 帧只有 B，两车返回等待阶段 25 帧均有两辆 car；约 15.55 秒停控、17.30 秒短时恢复，33.30 秒进入显式重选等待，45.01 秒重选后于 45.70 秒恢复。保护状态非零控制输出数为 0，停控抽查区间及退出后 2 秒水平漂移为 0，六个阶段截图均与状态的拍摄时间戳匹配，三个控制节点干净退出，两车清理无错误。该结果仍限于关联范围外干扰车，不扩展到车辆交叉重叠身份保持。
 
-## 本次验证范围
+另有 65 秒单车慢速测试：车辆横向摆幅 ±0.7 米、最大速度约 0.07 m/s，居中时间（归一化水平误差绝对值 ≤0.08）占 90.5%，已确认目标状态占 98.8%，无人机最大水平位移约 0.75 米；短时漏检后重新确认恢复。故障测试覆盖 0.4 秒与 4 秒隐藏、显式重选、暂停和恢复，保护状态非零控制输出数为 0。单车结果采集于同步上游之前；同步后进行了 2,913 步默认水平模式回放比较，状态与控制输出一致，双车工具则在同步后的代码上重新完成在线验证。
 
-以下单车在线结果与截图采集于同步最新上游之前；同步后完成 93 项单元测试、15 项 ROS 链路测试及 2,913 步默认水平模式回放比较，另补充下述双车在线验证。
-
-2026-11-07 在 OpenHUTB Town10HD、固定前视相机和 YOLO11n 下，对收敛后的水平居中代码进行了独立构建与在线复测。场景车辆由 CARLA 设置位置并做横向正弦运动；控制目标仅来自 YOLO。使用 `detection_timeout:=1.5 lock_timeout:=3.0`，保留默认 3 米位移保护。
-
-同步上游前的本地单元测试 77 项及 ROS 链路测试 15 项通过，覆盖连续确认、几何歧义停控、短时恢复、长时丢失后显式重选、帧过期与乱序、暂停及桥接退出竞态。故障场景持续 65 秒，车辆横向摆幅 ±0.7 米，最大速度约 0.07 m/s；0.4 秒隐藏后先停控再确认恢复，4 秒隐藏后进入 `reselect_required`，车辆返回也不自动恢复，显式重选后恢复。暂停状态保持零追踪速度。所有保护状态的非零控制输出数为 0；短时停控、长时丢失等待和暂停的稳定区间均未测到水平位移。退出后 2 秒内水平漂移为 0，三个节点干净退出，API 控制状态恢复。
-
-同一小摆幅场景的无遮挡运行持续 65 秒，居中时间（归一化水平误差绝对值 ≤0.08）占 90.5%，已确认目标状态占 98.8%，无人机最大水平位移约 0.75 米；发生一次短暂漏检并重新确认恢复，未触发位移上限，所有保护状态均输出零速度，退出后 2 秒内水平漂移为 0。本轮未运行相同配置的修改前基线，以上数字只表示当前代码在该场景的表现。
-
-另一次较大摆幅场景在约 12 秒触发 3 米位移上限并停控，说明该配置不能覆盖任意长距离追车。本机使用 `simSetVehiclePose` 增量位置后端，本结果只验证仿真接口和视觉控制链路，不代表原生飞行动力学、避障能力或多车交叉身份保持；本轮无窗口测试也不替代图形窗口和人工键盘接管的单独检查。
-
-同步后另进行了 55 秒双车干扰在线验证：A 先锁定，再加入几何关联范围外的 B；A 短时隐藏时拒绝关联 B 并停控，A 返回后连续确认恢复；长时隐藏后进入 `reselect_required`，即使两车返回也等待显式重选。两车同时可见及返回等待阶段各记录到 21 帧双车检测，长时隐藏阶段记录到 8 帧仅 B 的检测；保护状态非零控制输出数为 0，长时停控稳定区间及退出后 2 秒内均未测到水平位移。本轮未出现 B 置信度高于 A 的有效样本，也未验证两车交叉重叠身份保持。
+较大摆幅场景在约 12 秒触发 3 米位移上限并停控。测试使用 `simSetVehiclePose` 增量位置后端，结果只验证仿真接口及视觉控制链路，不代表原生飞行动力学、避障或任意道路全程追车。没有同配置修改前基线，也未重新验证图形窗口及人工键盘接管；B 置信度高于 A、两车交叉或重叠时的身份保持仍需单独验证。
 
 返回[文档目录](README.md)。
 
