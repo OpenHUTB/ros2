@@ -122,6 +122,7 @@ nav:
     - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 基于 TTC 的前向目标跟踪紧急制动: './ground/carla_ttc_emergency_braking.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
