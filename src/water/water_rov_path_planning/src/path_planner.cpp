@@ -21,60 +21,83 @@ void PathPlanner::setEnvironment(std::shared_ptr<Heatmap> heatmap,
 
 double PathPlanner::heuristic(int gx, int gy, int goal_gx, int goal_gy) const
 {
-  // 欧氏距离
+  // 欧氏距离换算成米并乘长度权重，与 g 值的长度项同量纲
+  // （格子数乘以 resolution；resolution=0.5 时格子数口径会把 h 高估一倍，破坏搜索方向）
   double dx = gx - goal_gx;
   double dy = gy - goal_gy;
-  return std::sqrt(dx * dx + dy * dy);
+  return std::sqrt(dx * dx + dy * dy) * heatmap_->resolution() * params_.length_weight;
 }
 
 double PathPlanner::stepCost(int from_gx, int from_gy, int to_gx, int to_gy) const
 {
   if (!heatmap_) return std::numeric_limits<double>::infinity();
 
-  // 移动距离（格）与对应的实际距离（米）
-  double dx = to_gx - from_gx;
-  double dy = to_gy - from_gy;
-  double dist_cells = std::sqrt(dx * dx + dy * dy);
-  double dist_m = dist_cells * heatmap_->resolution();
-
-  // 热力图风险代价
+  // 目标格风险超阈值则不可通行
   double risk = heatmap_->getRisk(to_gx, to_gy);
   if (risk > params_.max_risk_threshold) {
-    return std::numeric_limits<double>::infinity();  // 不可通行
+    return std::numeric_limits<double>::infinity();
   }
 
-  // 长度项与风险项都按“单位距离代价 × 本步米数”累加
+  double wx0, wy0, wx1, wy1;
+  heatmap_->gridToWorld(from_gx, from_gy, wx0, wy0);
+  heatmap_->gridToWorld(to_gx, to_gy, wx1, wy1);
+  return segmentCost(wx0, wy0, wx1, wy1, risk);
+}
+
+double PathPlanner::segmentCost(double wx0, double wy0, double wx1, double wy1, double risk) const
+{
+  double dx = wx1 - wx0;
+  double dy = wy1 - wy0;
+  double dist_m = std::sqrt(dx * dx + dy * dy);
+
+  // 长度项与风险项都按“单位距离代价 × 本段米数”累加
   double cost = params_.length_weight * dist_m;
   cost += params_.risk_weight * risk * dist_m;
 
-  if (current_ && dist_cells > 0.0) {
-    double wx, wy;
-    heatmap_->gridToWorld(to_gx, to_gy, wx, wy);
+  if (current_ && dist_m > 0.0) {
     // 规划时刻参与洋流计算，潮汐模式下才能反映当前相位
-    Eigen::Vector2d vel = current_->getVelocity(wx, wy, time_);
-    double current_mag = vel.norm();
+    Eigen::Vector2d vel = current_->getVelocity(wx1, wy1, time_);
 
     // 移动方向单位向量
-    Eigen::Vector2d move_dir(dx, dy);
-    move_dir.normalize();
+    Eigen::Vector2d move_dir(dx / dist_m, dy / dist_m);
 
-    // 洋流与移动方向的点积：顺流为正，逆流为负
-    double dot = move_dir.dot(vel);
-
-    // 洋流项同样乘以本步米数，使三项都是“每米代价 × 距离”；
-    // |v| 先按参考流速归一化，current_weight 才是无量纲权重
+    // 无量纲流向对齐度：(û·v)/v_ref ≈ (|v|/v_ref)·cosθ，范围约 [-1, 1]。
+    // 点积先除以参考流速归一化，洋流项才是纯“每米代价 × 米数”，与长度项、风险项量纲一致
     double ref_speed = std::max(params_.current_ref_speed, 1e-9);
-    double current_factor = params_.current_weight * (current_mag / ref_speed) * dist_m;
-    if (dot > 0) {
-      // 顺流：降低代价
-      cost -= params_.current_compensation * current_factor * dot;
+    double align = std::max(-1.0, std::min(1.0, move_dir.dot(vel) / ref_speed));
+
+    if (align > 0) {
+      // 顺流：降低代价。奖励以长度项为上限，避免代价被截成 0 后 A* 把顺流边当免费移动
+      double reward = std::min(
+        params_.current_compensation * params_.current_weight * align,
+        params_.length_weight);
+      cost -= reward * dist_m;
     } else {
       // 逆流：增加代价
-      cost += current_factor * (-dot);
+      cost += params_.current_weight * (-align) * dist_m;
     }
   }
 
   return std::max(cost, 0.0);
+}
+
+double PathPlanner::pathCost(const std::vector<Point> & path) const
+{
+  if (!heatmap_ || path.size() < 2) return 0.0;
+
+  double total = 0.0;
+  for (size_t i = 1; i < path.size(); ++i) {
+    const Point & a = path[i - 1];
+    const Point & b = path[i];
+    // 风险取段中点所在格子；出界按 1.0 计，与 getRisk 的出界行为一致
+    int gx, gy;
+    double risk = 1.0;
+    if (heatmap_->worldToGrid((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, gx, gy)) {
+      risk = heatmap_->getRisk(gx, gy);
+    }
+    total += segmentCost(a.x, a.y, b.x, b.y, risk);
+  }
+  return total;
 }
 
 bool PathPlanner::plan(const Point & start, const Point & goal, std::vector<Point> & path)
@@ -174,10 +197,12 @@ bool PathPlanner::plan(const Point & start, const Point & goal, std::vector<Poin
   }
   std::reverse(path.begin(), path.end());
 
-  last_cost_ = nodes[goal_gy * n + goal_gx].g;
-
   // 路径平滑：Jacobi 加权平均；若平滑后侵入风险区，smoothPath 内部回退到上面的 A* 原始路径
   smoothPath(path);
+
+  // 平滑完成后再基于最终路径逐段重算代价，保证 getLastCost() 与 pathLength()
+  // 描述的是同一条几何路径（否则代价对应平滑前、长度对应平滑后，两者无法互相校验）
+  last_cost_ = pathCost(path);
   return true;
 }
 

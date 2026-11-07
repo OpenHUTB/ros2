@@ -29,6 +29,26 @@ TEST(HeatmapRisk, GaussianDecayAndRadius)
   EXPECT_DOUBLE_EQ(heatmap.getRisk(-1, 0), 1.0);
 }
 
+TEST(HeatmapGridMapping, NegativeAndBoundaryCoordinatesRejected)
+{
+  Heatmap::Params hp;
+  hp.grid_size = 100;
+  hp.resolution = 0.5;
+  Heatmap heatmap(hp);
+
+  int gx = -1, gy = -1;
+  // 负坐标必须判越界，不能被截断成 0 号格
+  EXPECT_FALSE(heatmap.worldToGrid(-0.2, 5.0, gx, gy));
+  EXPECT_FALSE(heatmap.worldToGrid(5.0, -0.2, gx, gy));
+  // 恰好在地图边上的坐标映射到 grid_size 号格，同样越界
+  EXPECT_FALSE(heatmap.worldToGrid(50.0, 5.0, gx, gy));
+  EXPECT_FALSE(heatmap.worldToGrid(5.0, 50.0, gx, gy));
+  // 边界内的点正常映射
+  ASSERT_TRUE(heatmap.worldToGrid(49.9, 0.0, gx, gy));
+  EXPECT_EQ(gx, 99);
+  EXPECT_EQ(gy, 0);
+}
+
 TEST(OceanCurrent, TidalPhaseDiffersFromStatic)
 {
   OceanCurrent::Params cp;
@@ -63,16 +83,41 @@ TEST(PathPlannerCost, FavourableCrossAdverse)
   PathPlanner planner(PathPlanner::Params{});
   planner.setEnvironment(heatmap, current);
 
-  // 单步 1 格 = 0.5 m，长度项 0.5
+  // 单步 1 格 = 0.5 m，长度项 0.5；洋流项按 (û·v)/v_ref 归一化：
+  // 顺流 0.5 - 0.5*3.0*0.4*0.5 = 0.20，横向 0.50，逆流 0.5 + 3.0*0.4*0.5 = 1.10
   double favourable = planner.stepCost(10, 10, 11, 10);  // 顺流
   double cross = planner.stepCost(10, 10, 10, 11);       // 横向
   double adverse = planner.stepCost(10, 10, 9, 10);      // 逆流
 
-  EXPECT_NEAR(favourable, 0.38, 1e-9);
+  EXPECT_NEAR(favourable, 0.20, 1e-9);
   EXPECT_NEAR(cross, 0.50, 1e-9);
-  EXPECT_NEAR(adverse, 0.74, 1e-9);
+  EXPECT_NEAR(adverse, 1.10, 1e-9);
   EXPECT_LT(favourable, cross);
   EXPECT_LT(cross, adverse);
+}
+
+TEST(PathPlannerCost, FavourableRewardCappedAtLengthTerm)
+{
+  Heatmap::Params hp;
+  hp.grid_size = 20;
+  hp.resolution = 0.5;
+  auto heatmap = std::make_shared<Heatmap>(hp);
+
+  OceanCurrent::Params cp;
+  cp.pattern = OceanCurrent::Pattern::UNIFORM;
+  cp.magnitude = 1.0;  // 等于参考流速，归一化对齐度饱和在 1
+  cp.direction = 0.0;
+  cp.world_size = 10.0;
+  auto current = std::make_shared<OceanCurrent>(cp);
+
+  PathPlanner planner(PathPlanner::Params{});
+  planner.setEnvironment(heatmap, current);
+
+  // 顺流奖励按公式为 0.5*3.0*1.0 = 1.5 倍长度项，被截到长度项本身：
+  // 代价最低为 0 而不是负数，A* 不会把强顺流边当免费移动
+  EXPECT_DOUBLE_EQ(planner.stepCost(10, 10, 11, 10), 0.0);
+  // 逆流不受截断影响：0.5 + 3.0*1.0*0.5 = 2.0
+  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 2.0, 1e-9);
 }
 
 TEST(PathPlannerCost, ReferenceSpeedNormalizesMagnitude)
@@ -95,9 +140,10 @@ TEST(PathPlannerCost, ReferenceSpeedNormalizesMagnitude)
   PathPlanner planner(pp);
   planner.setEnvironment(heatmap, current);
 
-  EXPECT_NEAR(planner.stepCost(10, 10, 11, 10), 0.44, 1e-9);  // 顺流
+  // 参考流速翻倍后对齐度减半：顺流 0.5-0.5*3.0*0.2*0.5 = 0.35，逆流 0.5+3.0*0.2*0.5 = 0.80
+  EXPECT_NEAR(planner.stepCost(10, 10, 11, 10), 0.35, 1e-9);  // 顺流
   EXPECT_NEAR(planner.stepCost(10, 10, 10, 11), 0.50, 1e-9);  // 横向
-  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 0.62, 1e-9);   // 逆流
+  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 0.80, 1e-9);   // 逆流
 }
 
 TEST(PathPlannerSmooth, SegmentSamplingCatchesInteriorRisk)

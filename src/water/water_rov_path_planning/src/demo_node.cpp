@@ -28,6 +28,9 @@ public:
     declare_parameter("goal_x", 45.0);
     declare_parameter("goal_y", 25.0);
     declare_parameter("obstacle_seed", 42);
+    // 与规划节点一致的网格参数，仅用于启动时交叉校验 world_size
+    declare_parameter("grid_size", 100);
+    declare_parameter("resolution", 0.5);
 
     world_size_ = get_parameter("world_size").as_double();
     num_obstacles_ = get_parameter("num_obstacles").as_int();
@@ -36,15 +39,24 @@ public:
     goal_x_ = get_parameter("goal_x").as_double();
     goal_y_ = get_parameter("goal_y").as_double();
     obstacle_seed_ = get_parameter("obstacle_seed").as_int();
+    const int grid_size = get_parameter("grid_size").as_int();
+    const double resolution = get_parameter("resolution").as_double();
 
-    // 参数校验：避免负数量、零尺寸或起终点越界
+    // 参数校验：避免负数量、零尺寸或起终点越界。
+    // 起终点必须严格小于 world_size：x == world_size 会映射到 grid_size 号格被判越界。
+    // world_size 还必须等于规划侧的 grid_size*resolution，否则改一个不改另一个
+    // 就会出现一半地图不可达
     if (world_size_ <= 4.0 || num_obstacles_ < 0 ||
-      start_x_ < 0.0 || start_x_ > world_size_ || start_y_ < 0.0 || start_y_ > world_size_ ||
-      goal_x_ < 0.0 || goal_x_ > world_size_ || goal_y_ < 0.0 || goal_y_ > world_size_)
+      start_x_ < 0.0 || start_x_ >= world_size_ || start_y_ < 0.0 || start_y_ >= world_size_ ||
+      goal_x_ < 0.0 || goal_x_ >= world_size_ || goal_y_ < 0.0 || goal_y_ >= world_size_ ||
+      grid_size <= 1 || resolution <= 0.0 ||
+      std::abs(world_size_ - grid_size * resolution) > 1e-6)
     {
       RCLCPP_ERROR(
         get_logger(),
-        "参数校验失败：world_size>4、num_obstacles>=0，且起点/终点需落在 [0, world_size] 内，节点退出");
+        "参数校验失败：需满足 world_size>4、num_obstacles>=0、起点/终点落在 [0, world_size) 内、"
+        "且 world_size 与规划节点的 grid_size*resolution（当前 %d x %.3f = %.3f m）一致，节点退出",
+        grid_size, resolution, grid_size * resolution);
       params_valid_ = false;
       rclcpp::shutdown();
       return;

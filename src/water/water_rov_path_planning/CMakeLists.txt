@@ -67,8 +67,14 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-install(DIRECTORY launch config rviz scripts
+install(DIRECTORY launch config rviz
   DESTINATION share/${PROJECT_NAME}
+)
+
+# 渲染脚本按可执行程序安装（install(DIRECTORY) 只复制不加执行位），
+# 安装后可直接 ros2 run water_rov_path_planning render_demo.py
+install(PROGRAMS scripts/render_demo.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

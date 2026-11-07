@@ -9,7 +9,7 @@
 ## 2. 运行环境
 
 - 操作系统：Ubuntu 20.04（虚拟机）
-- ROS 2 版本：Humble
+- ROS 2 版本：Humble（20.04 官方无二进制包，需按官方文档从源码编译安装）
 - 依赖库：rclcpp、nav_msgs、geometry_msgs、std_msgs、sensor_msgs、cv_bridge、image_transport、OpenCV 4.x、Eigen3
 - 演示动图渲染脚本依赖：python3-opencv、python3-numpy、python3-pil（由 rosdep 自动安装）
 
@@ -63,35 +63,40 @@ $$
 - **均匀流**：全海域流速大小方向一致，模拟开阔海域的定向洋流。
 - **涡流**：以某点为中心的旋转流，流速随距离中心增大而衰减，模拟海底涡旋。
 - **潮汐振荡**：流速随时间正弦变化，模拟潮汐周期。
-- **剪切流**：流速随坐标线性变化，模拟海峡中的流速梯度。
+- **剪切流**：流速随坐标线性变化，模拟海峡中的流速梯度；主流沿 x 方向，y 分量按 0.3 系数叠加，模拟较弱的横向次流。
 
 ### 4.3 自适应 A* 代价函数
 
-A* 的每步代价由三部分加权组成，权重分别为长度 1.0、风险 5.0、洋流 3.0；顺流奖励系数 \(k=0.5\)。三项都按"单位距离代价 × 本步米数"累加，量纲统一为加权累计代价（无量纲，不是米）：
-
-**逆流（\(\hat{u} \cdot v < 0\)）：**
+A* 的每步代价由三部分加权组成，权重分别为长度 1.0、风险 5.0、洋流 3.0；顺流奖励系数 \(k=0.5\)。三项都按"单位距离代价 × 本步米数"累加，量纲统一为加权累计代价（无量纲，不是米）。洋流项使用无量纲流向对齐度：
 
 $$
-C = w_l \cdot d_m + w_r \cdot R \cdot d_m + w_c \cdot |v| \cdot (-\hat{u} \cdot v) \cdot d_m
+a = \mathrm{clamp}\left(\frac{\hat{u} \cdot v}{v_{ref}},\ -1,\ 1\right) \approx \frac{|v|}{v_{ref}} \cdot \cos\theta
 $$
 
-**顺流（\(\hat{u} \cdot v > 0\)）：**
+**逆流（\(a < 0\)）：**
 
 $$
-C = w_l \cdot d_m + w_r \cdot R \cdot d_m - k \cdot w_c \cdot \frac{|v|}{v_{ref}} \cdot (\hat{u} \cdot v) \cdot d_m
+C = w_l \cdot d_m + w_r \cdot R \cdot d_m + w_c \cdot (-a) \cdot d_m
+$$
+
+**顺流（\(a > 0\)）：**
+
+$$
+C = w_l \cdot d_m + w_r \cdot R \cdot d_m - \min(k \cdot w_c \cdot a,\ w_l) \cdot d_m
 $$
 
 - \(d_m\) 为本步移动距离（米），等于格子距离乘以 `resolution`；
 - \(R\) 为目标格子的热力图风险（超过阈值 0.7 则不可通行）；
-- \(v\) 为该格子处的洋流速度向量（m/s），\(\hat{u}\) 为本步移动方向的单位向量，\(|v|\) 为流速大小；
-- \(v_{ref}\) 为参考流速（`current_ref_speed`，默认 1.0 m/s），用它把 \(|v|\) 归一化到无量纲，使 \(w_c\) 与长度权重 \(w_l\)、风险权重 \(w_r\) 在量纲上一致；
-- 横向洋流（点积接近 0）几乎不改变代价。
+- \(v\) 为该格子处的洋流速度向量（m/s），\(\hat{u}\) 为本步移动方向的单位向量；
+- \(v_{ref}\) 为参考流速（`current_ref_speed`，默认 1.0 m/s）。点积 \(\hat{u}\cdot v\) 先除以 \(v_{ref}\) 得到无量纲对齐度 \(a\)，洋流项才是纯"每米代价 × 米数"，与长度项、风险项量纲一致；启动时校验 `current_magnitude ≤ current_ref_speed`，保证 \(|a|\le 1\) 不被截断失真；
+- 顺流奖励以长度项为上限（\(\min(k \cdot w_c \cdot a, w_l)\)），边代价最低为 0 而不会变负，A* 不会把强顺流边当成免费移动；
+- 横向洋流（对齐度接近 0）几乎不改变代价。
 
-顺流奖励系数 \(k=0.5\) 使规划器倾向于选择顺流段，降低 ROV 推进能耗。均匀流（+x 顺流）场景下加权累计代价由零流速基线 40.00 降至 30.40，下降约 9.6（米制口径），可确认该系数生效。
+顺流奖励系数 \(k=0.5\) 使规划器倾向于选择顺流段，降低 ROV 推进能耗。均匀流（+x 顺流、流速 0.4 m/s）场景下每米顺流奖励 \(k \cdot w_c \cdot a = 0.5\times3.0\times0.4 = 0.6\)，即每米代价 0.4，加权累计代价由零流速基线 40.00 降至 16.00，可确认该系数生效。
 
-`/path_cost` 依次发布 `[加权累计代价, 路径长度(m), 路径点数]`，第二项才是米制路径长度，二者不要混用。规划器通过 `setTime()` 接收当前时间，潮汐模式下 A* 代价按规划时刻的流速计算，而不是固定用 t=0。
+`/path_cost` 依次发布 `[加权累计代价, 路径长度(m), 路径点数]`，代价在路径平滑完成后基于最终路径逐段重算，与第二项的米制路径长度是同一条几何路径的两个指标，可互相印证（零流速且沿途无风险时代价恰好等于长度）。规划器通过 `setTime()` 接收当前时间，潮汐模式下 A* 代价按规划时刻的流速计算，而不是固定用 t=0。
 
-需要说明的是，启发函数使用欧氏距离，而边代价含风险项（最高可达 6 倍距离）且顺流时可低于距离代价，因此在当前权重下启发函数不满足可采纳性，A* 返回的是该加权代价下的近优解，不保证全局最优。
+需要说明的是，启发函数为米制欧氏距离乘以 \(w_l\)，与 g 值的长度项同量纲；但顺流边代价最低可到 0（低于长度项），启发函数仍可能高估实际剩余代价，不满足可采纳性，A* 返回的是该加权代价下的近优解，不保证全局最优。另外可通行边的风险项最高为 \(1 + 5\times0.7 = 4.5\) 倍距离（风险阈值 0.7）。
 
 ### 4.4 路径平滑与安全校验
 
@@ -161,7 +166,7 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 | `/planned_path` | `nav_msgs/Path` | 输出 | 规划路径 |
 | `/heatmap` | `sensor_msgs/Image` | 输出 | 热力图可视化（蓝=安全，红=危险） |
 | `/ocean_current` | `sensor_msgs/Image` | 输出 | 洋流场向量图 |
-| `/path_cost` | `std_msgs/Float32MultiArray` | 输出 | [加权累计代价, 路径长度(m), 路径点数] |
+| `/path_cost` | `std_msgs/Float32MultiArray` | 输出 | [加权累计代价, 路径长度(m), 路径点数]，代价与长度均为平滑后最终路径的指标 |
 
 话题使用相对名（代码中不带前导 `/`），默认解析到根命名空间，`demo_node` 与 `planning_node` 因此共享同一组名字；用 `__ns` 加命名空间后可在同机并行运行多组实例，互不抢占。
 
@@ -171,15 +176,15 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 | `resolution` | 0.5 | 每个格子对应实际尺寸（米） |
 | `obstacle_radius` | 2.0 | 障碍物影响半径（米） |
 | `risk_decay` | 0.15 | 风险高斯衰减系数 α |
-| `risk_weight` | 5.0 | 热力图风险权重 |
-| `current_weight` | 3.0 | 洋流权重（作用于归一化后的 \|v\|/`current_ref_speed`） |
-| `current_compensation` | 0.5 | 顺流奖励系数（0～1） |
-| `current_ref_speed` | 1.0 | 参考流速（m/s），把 \|v\| 归一化到无量纲 |
+| `risk_weight` | 5.0 | 热力图风险权重（须 ≥ 0） |
+| `current_weight` | 3.0 | 洋流权重（须 ≥ 0，作用于无量纲对齐度 (û·v)/`current_ref_speed`） |
+| `current_compensation` | 0.5 | 顺流奖励系数（0～1，奖励以长度项为上限） |
+| `current_ref_speed` | 1.0 | 参考流速（m/s），把 û·v 归一化到无量纲 |
 | `length_weight` | 1.0 | 路径长度权重 |
 | `max_iterations` | 100000 | A* 最大迭代次数 |
 | `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
-| `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear） |
-| `current_magnitude` | 0.4 | 基础洋流流速（m/s） |
+| `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear，非法值报错退出） |
+| `current_magnitude` | 0.4 | 基础洋流流速（m/s，须 ≤ `current_ref_speed`） |
 | `current_direction` | 0.0 | 均匀流方向（弧度） |
 | `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米） |
 | `vortex_radius` | 15.0 | 涡流影响半径（米） |
@@ -192,10 +197,10 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 | `world_size` | 50.0 | 海域边长（米） |
 | `num_obstacles` | 12 | 随机障碍物数量 |
 | `obstacle_seed` | 42 | 障碍物随机种子 |
-| `start_x` / `start_y` | 5.0 / 25.0 | 起点坐标（米） |
-| `goal_x` / `goal_y` | 45.0 / 25.0 | 终点坐标（米） |
+| `start_x` / `start_y` | 5.0 / 25.0 | 起点坐标（米，须 ≥ 0 且 < `world_size`） |
+| `goal_x` / `goal_y` | 45.0 / 25.0 | 终点坐标（米，须 ≥ 0 且 < `world_size`） |
 
-以上两组参数都只在 `config/params.yaml` 的 `rov_planning_node` / `rov_demo_node` 段定义一处，launch 仅加载该文件。非法参数（`grid_size<=1`、`resolution<=0`、`current_magnitude<0`、`current_ref_speed<=0`、`length_weight<=0`、`max_iterations<=0`、`vortex_radius<=0`、`tidal_period<=0`、`num_obstacles<0`、`world_size<=4`、起终点越界等）会在启动时报错并以非零退出码结束，避免除零或未定义行为。
+以上两组参数都只在 `config/params.yaml` 的 `rov_planning_node` / `rov_demo_node` 段定义一处，launch 仅加载该文件。非法参数（`grid_size<=1`、`resolution<=0`、`current_magnitude<0`、`current_magnitude>current_ref_speed`、`current_ref_speed<=0`、`risk_weight<0`、`current_weight<0`、`current_compensation<0`、`length_weight<=0`、`max_iterations<=0`、`vortex_radius<=0`、`tidal_period<=0`、`num_obstacles<0`、`world_size<=4`、`world_size` 与 `grid_size*resolution` 不一致、非法 `current_pattern`、起终点越界等）会在启动时报错并以非零退出码结束，避免除零或未定义行为。
 
 ## 7. 运行效果
 
@@ -204,9 +209,9 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 - 绕开风险超过阈值 0.7 的区域（热力图红色核心），障碍物所在格子完全不可通行，风险低于阈值的过渡带允许通行；
 - 路径总长度略长于直线距离。
 
-需要说明的是，默认场景并不能体现顺流节能效果。起点与终点都沿 y=25 布置，而涡流中心位于 (25, 25)，该直线上各格子的切向速度沿 ±y 方向，与 +x 的移动方向点积约等于 0，洋流项对路径的净影响很小：加权累计代价 40.28，与零流速基线 40.00 只差 0.28；路径长度 40.11 m 与直线距离 40.00 m 基本一致，GIF 中路径近似直线穿过涡流。
+需要说明的是，涡流场景下直线路径的洋流项净贡献很小：起点与终点都沿 y=25 布置，而涡流中心位于 (25, 25)，该直线上各格子的切向速度沿 ±y 方向，与 +x 的移动方向对齐度约等于 0。但规划器会主动偏离直线去利用涡流场中的顺流段：最终路径长度 40.48 m，略长于直线 40.00 m，加权累计代价 37.25，低于零流速基线 40.00，差值 −2.75 即顺流段带来的净收益。
 
-在虚拟机上以默认参数（grid_size 100、resolution 0.5、涡流模式、基础流速 0.4 m/s、参考流速 1.0 m/s、障碍物种子 42、起点 (5, 25)、终点 (45, 25)）启动后连续运行，规划器输出稳定在：路径点数 81，路径长度 40.11 m，加权累计代价 40.28（米制口径；旧版本按格子数计为 80.02）。演示节点在订阅匹配后触发规划，之后每 5 秒重规划一次，由于环境静态，多次规划结果一致。
+在虚拟机上以默认参数（grid_size 100、resolution 0.5、涡流模式、基础流速 0.4 m/s、参考流速 1.0 m/s、障碍物种子 42、起点 (5, 25)、终点 (45, 25)）启动后连续运行，规划器输出稳定在：路径点数 81，路径长度 40.48 m，加权累计代价 37.25。演示节点在订阅匹配后触发规划，之后每 5 秒重规划一次，由于环境静态，多次规划结果一致。
 
 若要验证洋流补偿本身，可将洋流改为与路径同向的均匀流。参数不在 launch 中重复定义，临时验证时用 `--ros-args -p` 覆盖即可：
 
@@ -224,21 +229,21 @@ ros2 run water_rov_path_planning planning_node --ros-args \
 
 | 场景 | 路径点数 | 路径长度 | 加权累计代价 |
 | --- | --- | --- | --- |
-| 涡流（默认） | 81 | 40.11 m | 40.28 |
-| 均匀流（+x 顺流） | 81 | 40.00 m | 30.40 |
+| 涡流（默认） | 81 | 40.48 m | 37.25 |
+| 均匀流（+x 顺流） | 81 | 40.00 m | 16.00 |
 | 零流速基线（magnitude = 0） | 81 | 40.00 m | 40.00 |
 
-均匀流场景下加权累计代价由零点基线 40.00 降至 30.40，下降约 9.6（米制口径），即洋流补偿项在该场景下确实生效；两种场景的路径形状相同，因为障碍物分布与起终点不变。
+均匀流场景下加权累计代价由零点基线 40.00 降至 16.00：每米顺流奖励 \(k \cdot w_c \cdot a = 0.5\times3.0\times0.4 = 0.6\)，即每米代价 0.4，40 m 共 16.0，洋流补偿项在该场景下确实生效；两种场景的路径形状相同，因为障碍物分布与起终点不变。零流速场景沿途风险为 0，代价恰好等于路径长度，也印证了代价与长度是同一条平滑后路径的两个指标。
 
 ![运行演示](../img/water/water_rov_path_planning/demo.gif)
 
-> 上图为节点实际输出数据经 scripts/render_demo.py 离线渲染的三联对比动图（非 RViz 截图）：左侧 HEATMAP 为热力图（蓝=安全，红=危险），中间 OCEAN CURRENT 为洋流场向量图，右侧 PLANNED PATH 为叠加在热力图上的规划路径（黄色折线，绿色起点，红色终点）。
+> 上图为节点实际输出数据经 scripts/render_demo.py 离线渲染的三联对比动图（非 RViz 截图）：左侧 HEATMAP 为热力图（蓝=安全，红=危险），中间 OCEAN CURRENT 为洋流场向量图，右侧 PLANNED PATH 为叠加在热力图上的规划路径（黄色折线，绿色起点，红色终点）。复现方式：保持 `ros2 launch water_rov_path_planning main.launch.py` 运行（demo_node 与 planning_node 均在发布 `/heatmap`、`/ocean_current`、`/planned_path`），另开终端执行 `source install/setup.bash && ros2 run water_rov_path_planning render_demo.py`，脚本收齐三个话题后渲染 24 帧并输出到 `~/demo_rov_path_planning.gif`。
 
 ## 8. 验证范围说明
 
 本模块已在虚拟机上完成以下验证：节点正常启动、话题正常收发、热力图随障碍物添加正确更新、洋流场可视化正常输出、A* 在有障碍物和洋流的环境下成功规划出避开高风险区的路径、路径平滑后无明显锯齿。平滑改为 Jacobi 后增加了逐点、逐段中点及段内半格采样的风险校验，超阈值会回退到 A* 原始路径；对角移动要求两个正交邻居可通行，避免贴着封禁格切角。演示节点在发布障碍物后等待一张时间戳更新的热力图再发终点，避免 `goal` 先于 `obstacle` 到达。
 
-仓库新增 `test/test_core.cpp`，用 gtest 覆盖热力图风险衰减（r = 0、1.5、2.0、2.5 m）、潮汐相位、顺流/横向/逆流三种代价关系、参考流速归一化以及平滑风险回退（含长段内部风险采样），可用 `colcon test --packages-select water_rov_path_planning` 运行。
+仓库新增 `test/test_core.cpp`，用 gtest 覆盖热力图风险衰减（r = 0、1.5、2.0、2.5 m）、坐标边界（负坐标与恰好在地图边上的坐标均判越界）、潮汐相位、顺流/横向/逆流三种代价关系、顺流奖励以长度项为上限（强顺流边代价为 0 而非负数）、参考流速归一化以及平滑风险回退（含长段内部风险采样），可用 `colcon test --packages-select water_rov_path_planning` 运行。
 
 当前版本使用合成演示数据（随机障碍物 + 解析洋流场），尚未接入真实海底声呐或多波束数据；洋流场为稳态解析模型，未考虑时间动态变化（潮汐模式有周期变化但未做实测验证）；路径规划为全局一次性规划，未实现随洋流变化的动态重规划（演示节点 5 秒后会触发一次重规划作为示意）。
 

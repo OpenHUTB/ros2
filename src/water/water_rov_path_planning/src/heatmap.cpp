@@ -14,11 +14,6 @@ Heatmap::Heatmap(const Params & p)
   risk_ = cv::Mat::zeros(grid_size_, grid_size_, CV_64FC1);
 }
 
-void Heatmap::clear()
-{
-  risk_ = cv::Mat::zeros(grid_size_, grid_size_, CV_64FC1);
-}
-
 void Heatmap::addObstacle(double world_x, double world_y)
 {
   int gx, gy;
@@ -54,8 +49,10 @@ double Heatmap::getRisk(int gx, int gy) const
 
 bool Heatmap::worldToGrid(double wx, double wy, int & gx, int & gy) const
 {
-  gx = static_cast<int>(wx / resolution_);
-  gy = static_cast<int>(wy / resolution_);
+  // 先判负：static_cast<int> 向零截断会把 -0.2 之类的负坐标错算成 0 号格
+  if (wx < 0.0 || wy < 0.0) return false;
+  gx = static_cast<int>(std::floor(wx / resolution_));
+  gy = static_cast<int>(std::floor(wy / resolution_));
   return (gx >= 0 && gx < grid_size_ && gy >= 0 && gy < grid_size_);
 }
 

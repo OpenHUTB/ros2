@@ -28,9 +28,6 @@ public:
 
   explicit Heatmap(const Params & p);
 
-  /// 清空热力图，所有格子风险归零
-  void clear();
-
   /// 添加一个障碍物（世界坐标 x, y，单位米），自动扩散风险
   void addObstacle(double world_x, double world_y);
 

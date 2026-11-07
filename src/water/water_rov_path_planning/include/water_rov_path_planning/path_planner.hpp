@@ -26,10 +26,10 @@ public:
   struct Params
   {
     double risk_weight = 5.0;       // 热力图风险权重
-    double current_weight = 3.0;    // 洋流权重（作用于无量纲的 |v|/current_ref_speed）
+    double current_weight = 3.0;    // 洋流权重（作用于无量纲的 (û·v)/current_ref_speed）
     double length_weight = 1.0;     // 路径长度权重
     double current_compensation = 0.5; // 顺流奖励系数（0~1）
-    double current_ref_speed = 1.0;    // 参考流速（m/s），把 |v| 归一化到无量纲
+    double current_ref_speed = 1.0;    // 参考流速（m/s），把 (û·v) 归一化到无量纲
     double max_risk_threshold = 0.7;   // 风险阈值，超过则不可通行
     int max_iterations = 100000;       // A* 最大迭代次数
   };
@@ -52,10 +52,13 @@ public:
   /// 规划路径（起点、终点为世界坐标），返回路径点列表
   bool plan(const Point & start, const Point & goal, std::vector<Point> & path);
 
-  /// 计算路径长度（单位：米），仅用于评估；A* 的加权累计代价见 getLastCost()
+  /// 计算路径长度（单位：米），仅用于评估；与 getLastCost() 描述同一条平滑后路径
   double pathLength(const std::vector<Point> & path) const;
 
-  /// 获取规划的加权累计代价
+  /// 对给定路径按与 stepCost 相同的代价函数逐段重算加权累计代价
+  double pathCost(const std::vector<Point> & path) const;
+
+  /// 获取规划的加权累计代价（plan() 在平滑完成后基于最终路径逐段重算）
   double getLastCost() const { return last_cost_; }
 
   /// 路径平滑：Jacobi 加权平均（用上一轮结果整体更新，避免单向偏移）；
@@ -73,7 +76,11 @@ private:
   double last_cost_ = 0.0;
   double time_ = 0.0;
 
+  /// 启发函数：欧氏距离换算成米并乘长度权重，与 g 值的长度项同量纲
   double heuristic(int gx, int gy, int goal_gx, int goal_gy) const;
+
+  /// 一段世界坐标线段的加权代价（risk 由调用方按代表点取好）
+  double segmentCost(double wx0, double wy0, double wx1, double wy1, double risk) const;
 
   /// 判断世界坐标点所在格子的风险是否不超过阈值（出界视为不安全）
   bool pointSafe(const Point & p) const;

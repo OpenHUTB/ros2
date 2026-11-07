@@ -47,6 +47,9 @@ public:
     const double resolution = get_parameter("resolution").as_double();
     const double obstacle_radius = get_parameter("obstacle_radius").as_double();
     const double risk_decay = get_parameter("risk_decay").as_double();
+    const double risk_weight = get_parameter("risk_weight").as_double();
+    const double current_weight = get_parameter("current_weight").as_double();
+    const double current_compensation = get_parameter("current_compensation").as_double();
     const double current_magnitude = get_parameter("current_magnitude").as_double();
     const double vortex_radius = get_parameter("vortex_radius").as_double();
     const double tidal_period = get_parameter("tidal_period").as_double();
@@ -54,17 +57,34 @@ public:
     const double current_ref_speed = get_parameter("current_ref_speed").as_double();
     const double length_weight = get_parameter("length_weight").as_double();
     const int max_iterations = get_parameter("max_iterations").as_int();
+    const std::string pattern = get_parameter("current_pattern").as_string();
 
+    // 权重为负会把惩罚变成奖励（或反之）；current_magnitude 超过参考流速后归一化对齐度
+    // 饱和在 1，继续加大只会失去分辨能力，因此一并加上限
     if (grid_size <= 1 || resolution <= 0.0 || obstacle_radius < 0.0 ||
-      risk_decay < 0.0 || current_magnitude < 0.0 || vortex_radius <= 0.0 ||
-      tidal_period <= 0.0 || max_risk_threshold <= 0.0 || max_risk_threshold >= 1.0 ||
-      current_ref_speed <= 0.0 || length_weight <= 0.0 || max_iterations <= 0)
+      risk_decay < 0.0 || current_magnitude < 0.0 || current_magnitude > current_ref_speed ||
+      vortex_radius <= 0.0 || tidal_period <= 0.0 ||
+      max_risk_threshold <= 0.0 || max_risk_threshold >= 1.0 ||
+      current_ref_speed <= 0.0 || length_weight <= 0.0 || max_iterations <= 0 ||
+      risk_weight < 0.0 || current_weight < 0.0 || current_compensation < 0.0)
     {
       RCLCPP_ERROR(
         get_logger(),
         "参数校验失败：需满足 grid_size>1、resolution>0、obstacle_radius>=0、risk_decay>=0、"
-        "current_magnitude>=0、vortex_radius>0、tidal_period>0、0<max_risk_threshold<1、"
-        "current_ref_speed>0、length_weight>0、max_iterations>0，节点退出");
+        "0<=current_magnitude<=current_ref_speed、vortex_radius>0、tidal_period>0、"
+        "0<max_risk_threshold<1、current_ref_speed>0、length_weight>0、max_iterations>0、"
+        "risk_weight>=0、current_weight>=0、current_compensation>=0，节点退出");
+      params_valid_ = false;
+      rclcpp::shutdown();
+      return;
+    }
+
+    // current_pattern 白名单校验：非法值必须报错退出，不能静默退化成均匀流
+    if (pattern != "uniform" && pattern != "vortex" && pattern != "tidal" && pattern != "shear") {
+      RCLCPP_ERROR(
+        get_logger(),
+        "参数校验失败：current_pattern='%s' 非法，仅支持 uniform/vortex/tidal/shear，节点退出",
+        pattern.c_str());
       params_valid_ = false;
       rclcpp::shutdown();
       return;
@@ -79,7 +99,6 @@ public:
     heatmap_ = std::make_shared<Heatmap>(hp);
 
     OceanCurrent::Params ocp;
-    std::string pattern = get_parameter("current_pattern").as_string();
     if (pattern == "vortex") ocp.pattern = OceanCurrent::Pattern::VORTEX;
     else if (pattern == "tidal") ocp.pattern = OceanCurrent::Pattern::TIDAL;
     else if (pattern == "shear") ocp.pattern = OceanCurrent::Pattern::SHEAR;
@@ -94,9 +113,9 @@ public:
     current_ = std::make_shared<OceanCurrent>(ocp);
 
     PathPlanner::Params pp;
-    pp.risk_weight = get_parameter("risk_weight").as_double();
-    pp.current_weight = get_parameter("current_weight").as_double();
-    pp.current_compensation = get_parameter("current_compensation").as_double();
+    pp.risk_weight = risk_weight;
+    pp.current_weight = current_weight;
+    pp.current_compensation = current_compensation;
     pp.current_ref_speed = current_ref_speed;
     pp.length_weight = length_weight;
     pp.max_iterations = max_iterations;
@@ -150,6 +169,9 @@ private:
 
   void goalCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg)
   {
+    // 注意：这里持锁同步执行 A*，重规划期间 start/obstacle 回调会被阻塞。
+    // 100x100 网格下单次规划在百毫秒量级，演示场景可以接受；
+    // 若接入大网格或需要高频重规划，应改为异步执行
     std::lock_guard<std::mutex> lock(mutex_);
     goal_ = {msg->point.x, msg->point.y};
     RCLCPP_INFO(get_logger(), "设置终点 (%.1f, %.1f)，开始规划", goal_.x, goal_.y);
