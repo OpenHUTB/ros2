@@ -1,0 +1,188 @@
+{
+  "case": "case_farm_sparse",
+  "outcome": "ok",
+  "station_count": 12,
+  "description": "scattered farms 0.8-1.6 km out, multi-sortie with battery swaps",
+  "plan": {
+    "case": "case_farm_sparse",
+    "sortie_count": 6,
+    "swap_count": 5,
+    "total_duration_s": 3165.01,
+    "total_distance_m": 22275.05,
+    "unservable": [],
+    "sorties": [
+      {
+        "index": 0,
+        "stations": [
+          "S09",
+          "S08"
+        ],
+        "weights_kg": [
+          0.8,
+          1.1
+        ],
+        "legs_m": [
+          1513.27,
+          500.0,
+          1208.3
+        ],
+        "distance_m": 3221.58,
+        "flight_s": 357.95,
+        "hover_s": 40.0,
+        "payload_max_kg": 1.9,
+        "energy_frac": 0.2598,
+        "min_home_margin": 10.4
+      },
+      {
+        "index": 1,
+        "stations": [
+          "S12",
+          "S03"
+        ],
+        "weights_kg": [
+          1.3,
+          0.6
+        ],
+        "legs_m": [
+          1523.15,
+          2302.17,
+          1140.18
+        ],
+        "distance_m": 4965.5,
+        "flight_s": 551.72,
+        "hover_s": 40.0,
+        "payload_max_kg": 1.9,
+        "energy_frac": 0.3608,
+        "min_home_margin": 7.388
+      },
+      {
+        "index": 2,
+        "stations": [
+          "S02",
+          "S05"
+        ],
+        "weights_kg": [
+          1.2,
+          0.9
+        ],
+        "legs_m": [
+          1486.61,
+          1303.84,
+          1700.0
+        ],
+        "distance_m": 4490.45,
+        "flight_s": 498.94,
+        "hover_s": 40.0,
+        "payload_max_kg": 2.1,
+        "energy_frac": 0.3402,
+        "min_home_margin": 5.807
+      },
+      {
+        "index": 3,
+        "stations": [
+          "S04",
+          "S01"
+        ],
+        "weights_kg": [
+          1.0,
+          0.8
+        ],
+        "legs_m": [
+          1236.93,
+          583.1,
+          921.95
+        ],
+        "distance_m": 2741.98,
+        "flight_s": 304.66,
+        "hover_s": 40.0,
+        "payload_max_kg": 1.8,
+        "energy_frac": 0.219,
+        "min_home_margin": 12.881
+      },
+      {
+        "index": 4,
+        "stations": [
+          "S06",
+          "S07"
+        ],
+        "weights_kg": [
+          1.4,
+          0.7
+        ],
+        "legs_m": [
+          1000.0,
+          583.1,
+          1581.14
+        ],
+        "distance_m": 3164.23,
+        "flight_s": 351.58,
+        "hover_s": 40.0,
+        "payload_max_kg": 2.1,
+        "energy_frac": 0.2362,
+        "min_home_margin": 6.692
+      },
+      {
+        "index": 5,
+        "stations": [
+          "S11",
+          "S10"
+        ],
+        "weights_kg": [
+          0.9,
+          1.0
+        ],
+        "legs_m": [
+          1552.42,
+          707.11,
+          1431.78
+        ],
+        "distance_m": 3691.31,
+        "flight_s": 410.15,
+        "hover_s": 40.0,
+        "payload_max_kg": 1.9,
+        "energy_frac": 0.2872,
+        "min_home_margin": 8.24
+      }
+    ]
+  },
+  "check": {
+    "violations": []
+  },
+  "elapsed_s": 0.0,
+  "flight": {
+    "sortie_index": 0,
+    "sim_duration_s": 400.45,
+    "wall_time_s": 13.24,
+    "hover_count": 2,
+    "planned_total_dist_m": 3221.58,
+    "actual_total_dist_m": 3231.87,
+    "mean_arrival_error_m": 0.261,
+    "max_arrival_error_m": 0.782,
+    "legs": [
+      {
+        "seq": 0,
+        "from_id": "depot",
+        "to_id": "S09",
+        "planned_dist_m": 1513.27,
+        "actual_dist_m": 1516.73,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 1,
+        "from_id": "S09",
+        "to_id": "S08",
+        "planned_dist_m": 500.0,
+        "actual_dist_m": 503.4,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 2,
+        "from_id": "S08",
+        "to_id": "depot",
+        "planned_dist_m": 1208.3,
+        "actual_dist_m": 1211.74,
+        "arrival_error_m": 0.782
+      }
+    ]
+  }
+}

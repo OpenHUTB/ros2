@@ -1,0 +1,228 @@
+{
+  "case": "case_farm_heavy",
+  "outcome": "ok",
+  "station_count": 12,
+  "description": "5 near-capacity packages (>=2.2 kg) force one-per-sortie batching",
+  "plan": {
+    "case": "case_farm_heavy",
+    "sortie_count": 9,
+    "swap_count": 8,
+    "total_duration_s": 2137.04,
+    "total_distance_m": 10593.39,
+    "unservable": [],
+    "sorties": [
+      {
+        "index": 0,
+        "stations": [
+          "S10"
+        ],
+        "weights_kg": [
+          0.4
+        ],
+        "legs_m": [
+          269.26,
+          269.26
+        ],
+        "distance_m": 538.52,
+        "flight_s": 59.84,
+        "hover_s": 20.0,
+        "payload_max_kg": 0.4,
+        "energy_frac": 0.0387,
+        "min_home_margin": 74.742
+      },
+      {
+        "index": 1,
+        "stations": [
+          "S03"
+        ],
+        "weights_kg": [
+          2.4
+        ],
+        "legs_m": [
+          632.46,
+          632.46
+        ],
+        "distance_m": 1264.91,
+        "flight_s": 140.55,
+        "hover_s": 20.0,
+        "payload_max_kg": 2.4,
+        "energy_frac": 0.1124,
+        "min_home_margin": 29.986
+      },
+      {
+        "index": 2,
+        "stations": [
+          "S04"
+        ],
+        "weights_kg": [
+          2.2
+        ],
+        "legs_m": [
+          500.0,
+          500.0
+        ],
+        "distance_m": 1000.0,
+        "flight_s": 111.11,
+        "hover_s": 20.0,
+        "payload_max_kg": 2.2,
+        "energy_frac": 0.0897,
+        "min_home_margin": 38.604
+      },
+      {
+        "index": 3,
+        "stations": [
+          "S09",
+          "S06",
+          "S08"
+        ],
+        "weights_kg": [
+          0.7,
+          0.5,
+          0.6
+        ],
+        "legs_m": [
+          474.34,
+          721.11,
+          223.61,
+          494.97
+        ],
+        "distance_m": 1914.03,
+        "flight_s": 212.67,
+        "hover_s": 60.0,
+        "payload_max_kg": 1.8,
+        "energy_frac": 0.1713,
+        "min_home_margin": 23.189
+      },
+      {
+        "index": 4,
+        "stations": [
+          "S11"
+        ],
+        "weights_kg": [
+          0.9
+        ],
+        "legs_m": [
+          585.23,
+          585.23
+        ],
+        "distance_m": 1170.47,
+        "flight_s": 130.05,
+        "hover_s": 20.0,
+        "payload_max_kg": 0.9,
+        "energy_frac": 0.0804,
+        "min_home_margin": 33.456
+      },
+      {
+        "index": 5,
+        "stations": [
+          "S05"
+        ],
+        "weights_kg": [
+          2.3
+        ],
+        "legs_m": [
+          761.58,
+          761.58
+        ],
+        "distance_m": 1523.15,
+        "flight_s": 169.24,
+        "hover_s": 20.0,
+        "payload_max_kg": 2.3,
+        "energy_frac": 0.1296,
+        "min_home_margin": 24.605
+      },
+      {
+        "index": 6,
+        "stations": [
+          "S01"
+        ],
+        "weights_kg": [
+          2.3
+        ],
+        "legs_m": [
+          412.31,
+          412.31
+        ],
+        "distance_m": 824.62,
+        "flight_s": 91.62,
+        "hover_s": 20.0,
+        "payload_max_kg": 2.3,
+        "energy_frac": 0.0783,
+        "min_home_margin": 47.172
+      },
+      {
+        "index": 7,
+        "stations": [
+          "S12",
+          "S07"
+        ],
+        "weights_kg": [
+          0.6,
+          0.8
+        ],
+        "legs_m": [
+          608.28,
+          269.26,
+          403.11
+        ],
+        "distance_m": 1280.65,
+        "flight_s": 142.29,
+        "hover_s": 40.0,
+        "payload_max_kg": 1.4,
+        "energy_frac": 0.1113,
+        "min_home_margin": 32.311
+      },
+      {
+        "index": 8,
+        "stations": [
+          "S02"
+        ],
+        "weights_kg": [
+          2.2
+        ],
+        "legs_m": [
+          538.52,
+          538.52
+        ],
+        "distance_m": 1077.03,
+        "flight_s": 119.67,
+        "hover_s": 20.0,
+        "payload_max_kg": 2.2,
+        "energy_frac": 0.0953,
+        "min_home_margin": 35.7
+      }
+    ]
+  },
+  "check": {
+    "violations": []
+  },
+  "elapsed_s": 0.0,
+  "flight": {
+    "sortie_index": 0,
+    "sim_duration_s": 82.34,
+    "wall_time_s": 2.59,
+    "hover_count": 1,
+    "planned_total_dist_m": 538.52,
+    "actual_total_dist_m": 545.33,
+    "mean_arrival_error_m": 0.383,
+    "max_arrival_error_m": 0.767,
+    "legs": [
+      {
+        "seq": 0,
+        "from_id": "depot",
+        "to_id": "S10",
+        "planned_dist_m": 269.26,
+        "actual_dist_m": 272.66,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 1,
+        "from_id": "S10",
+        "to_id": "depot",
+        "planned_dist_m": 269.26,
+        "actual_dist_m": 272.68,
+        "arrival_error_m": 0.767
+      }
+    ]
+  }
+}

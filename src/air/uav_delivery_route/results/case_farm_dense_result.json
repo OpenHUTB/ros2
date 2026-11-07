@@ -1,0 +1,188 @@
+{
+  "case": "case_farm_dense",
+  "outcome": "ok",
+  "station_count": 12,
+  "description": "dense orchard belt, 12 close stations, light parcels, single sortie",
+  "plan": {
+    "case": "case_farm_dense",
+    "sortie_count": 1,
+    "swap_count": 0,
+    "total_duration_s": 533.22,
+    "total_distance_m": 2638.95,
+    "unservable": [],
+    "sorties": [
+      {
+        "index": 0,
+        "stations": [
+          "S10",
+          "S05",
+          "S06",
+          "S04",
+          "S09",
+          "S03",
+          "S12",
+          "S01",
+          "S11",
+          "S08",
+          "S07",
+          "S02"
+        ],
+        "weights_kg": [
+          0.19,
+          0.22,
+          0.12,
+          0.18,
+          0.24,
+          0.25,
+          0.22,
+          0.2,
+          0.17,
+          0.16,
+          0.2,
+          0.15
+        ],
+        "legs_m": [
+          321.4,
+          165.53,
+          194.16,
+          356.93,
+          130.38,
+          158.11,
+          123.69,
+          326.96,
+          145.6,
+          148.66,
+          252.98,
+          152.97,
+          161.55
+        ],
+        "distance_m": 2638.95,
+        "flight_s": 293.22,
+        "hover_s": 240.0,
+        "payload_max_kg": 2.3,
+        "energy_frac": 0.36,
+        "min_home_margin": 24.037
+      }
+    ]
+  },
+  "check": {
+    "violations": []
+  },
+  "elapsed_s": 0.0,
+  "flight": {
+    "sortie_index": 0,
+    "sim_duration_s": 535.72,
+    "wall_time_s": 16.79,
+    "hover_count": 12,
+    "planned_total_dist_m": 2638.95,
+    "actual_total_dist_m": 2683.39,
+    "mean_arrival_error_m": 0.059,
+    "max_arrival_error_m": 0.767,
+    "legs": [
+      {
+        "seq": 0,
+        "from_id": "depot",
+        "to_id": "S10",
+        "planned_dist_m": 321.4,
+        "actual_dist_m": 324.86,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 1,
+        "from_id": "S10",
+        "to_id": "S05",
+        "planned_dist_m": 165.53,
+        "actual_dist_m": 168.96,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 2,
+        "from_id": "S05",
+        "to_id": "S06",
+        "planned_dist_m": 194.16,
+        "actual_dist_m": 197.56,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 3,
+        "from_id": "S06",
+        "to_id": "S04",
+        "planned_dist_m": 356.93,
+        "actual_dist_m": 360.34,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 4,
+        "from_id": "S04",
+        "to_id": "S09",
+        "planned_dist_m": 130.38,
+        "actual_dist_m": 133.82,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 5,
+        "from_id": "S09",
+        "to_id": "S03",
+        "planned_dist_m": 158.11,
+        "actual_dist_m": 161.56,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 6,
+        "from_id": "S03",
+        "to_id": "S12",
+        "planned_dist_m": 123.69,
+        "actual_dist_m": 127.11,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 7,
+        "from_id": "S12",
+        "to_id": "S01",
+        "planned_dist_m": 326.96,
+        "actual_dist_m": 330.39,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 8,
+        "from_id": "S01",
+        "to_id": "S11",
+        "planned_dist_m": 145.6,
+        "actual_dist_m": 149.05,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 9,
+        "from_id": "S11",
+        "to_id": "S08",
+        "planned_dist_m": 148.66,
+        "actual_dist_m": 152.04,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 10,
+        "from_id": "S08",
+        "to_id": "S07",
+        "planned_dist_m": 252.98,
+        "actual_dist_m": 256.37,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 11,
+        "from_id": "S07",
+        "to_id": "S02",
+        "planned_dist_m": 152.97,
+        "actual_dist_m": 156.38,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 12,
+        "from_id": "S02",
+        "to_id": "depot",
+        "planned_dist_m": 161.55,
+        "actual_dist_m": 164.96,
+        "arrival_error_m": 0.767
+      }
+    ]
+  }
+}

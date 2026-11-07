@@ -1,0 +1,14 @@
+uav_delivery_route:
+  # 算法层参数（与 core.RouteConfig 对应）
+  cruise_speed_ms: 9.0
+  cruise_alt_m: 8.0
+  hover_s: 20.0          # 每站投递悬停
+  swap_s: 90.0           # 配送中心换电时长
+  payload_cap_kg: 2.5    # 载重上限
+  return_margin: 1.25    # 剩余电量 < 1.25 x 返航所需即触发换电
+  n_sectors: 3           # 最近邻分簇的方位角扇区数
+  # ROS 节点参数
+  case: case_farm_dense
+  odom_topic: /uav/odom
+  battery_topic: /uav/battery
+  dispatch_topic: /uav_delivery/dispatch
