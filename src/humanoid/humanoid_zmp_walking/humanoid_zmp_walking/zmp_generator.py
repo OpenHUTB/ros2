@@ -1,11 +1,8 @@
-import math
-
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
-from .gait import GaitPlan, joint_targets
-
+from .gait import GaitPlan
 
 class ZmpGenerator(Node):
     """发布 ZMP 参考轨迹与关节指令。
@@ -40,7 +37,6 @@ class ZmpGenerator(Node):
         self.joint_pub = self.create_publisher(
             Float64MultiArray, 'joint_commands', 10)
         self.dt = self.plan.dt
-        self.cycle = 2.0 * self.plan.t_step
         self.timer = self.create_timer(self.dt, self.timer_callback)
         self.start_time = self.get_clock().now()
 
@@ -59,11 +55,10 @@ class ZmpGenerator(Node):
                         float(1.0 if self.plan.in_support[index] else 0.0)]
         self.zmp_pub.publish(message)
 
-        phase = 2.0 * math.pi * (elapsed % self.cycle) / self.cycle
         command = Float64MultiArray()
-        command.data = [float(angle) for angle in joint_targets(phase)]
+        command.data = [float(angle)
+                        for angle in self.plan.joint_targets(t)]
         self.joint_pub.publish(command)
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -75,7 +70,6 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
