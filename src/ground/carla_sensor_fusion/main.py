@@ -84,7 +84,11 @@ def main(argv=None):
     sub.add_parser("test", help="离线最小测试（无需 CARLA）")
     sub.add_parser("doctor", help="依赖体检")
 
-    args = ap.parse_args(argv)
+    # roslaunch 启动节点时会注入 __name:= / __log:= 等 ROS remap 参数，
+    # 用 parse_known_args 忽略它们，避免 roslaunch 场景下 argparse 直接报错退出。
+    ap.add_argument("--ros", action="store_true",
+                     help="在 ROS 环境运行时发布 /usv/fusion/* 话题（供 roslaunch 验收）")
+    args, _ros_remaps = ap.parse_known_args(argv)
 
     if args.cmd == "sim2d":
         from sim_2d_fusion import main as sim_main
@@ -93,6 +97,8 @@ def main(argv=None):
                   "--warmup-frames", str(args.warmup_frames)]
         if args.show:
             argv_s.append("--show")
+        if getattr(args, "ros", False):
+            argv_s.append("--ros")
         return sim_main(argv_s)
     if args.cmd == "carla":
         from carla_sensor_fusion import main as carla_main

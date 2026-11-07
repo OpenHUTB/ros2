@@ -2,7 +2,7 @@
 
 针对单个移动目标做多传感器融合跟踪，覆盖 **外参标定 → 时间同步 → 载体运动补偿 → EKF 融合** 完整链路。
 
-> **本模块的交付范围（按评审建议收缩）**：已验证、可复现的能力是 **2D 合成仿真**（`main.py sim2d`）与 **离线端到端回放**（`main.py replay`），二者在无 CARLA、无 ROS 的普通 Python 环境即可跑出下文全部指标。仓库内的 `carla_sensor_fusion.py` 是接入真实 CARLA 传感器的**参考实现，未在真实 CARLA 环境中验证**（提交环境无 GPU / CARLA / ROS），不作为已验证能力对外承诺。
+> **本模块的交付范围（按评审建议收缩）**：已验证、可复现的能力是 **2D 合成仿真**（`main.py sim2d`）、**离线端到端回放**（`main.py replay`）与 **catkin/roslaunch 集成**（ROS Noetic 下 `catkin_make` + `roslaunch carla_sensor_fusion main.launch mode:=sim2d` 已实测通过，见「ROS 集成」一节）。仓库内的 `carla_sensor_fusion.py` 是接入真实 CARLA 传感器的**参考实现，未在真实 CARLA 引擎中验证**（无 GPU / CARLA server），不作为已验证能力对外承诺。
 
 同一套融合核心（`sensor_fusion_core.py`）被两个平台复用：
 
@@ -47,6 +47,59 @@ python3 main.py sim2d                       # 等价统一入口
 python3 main.py sim2d --warmup-frames 40    # RMSE 只统计收敛稳定段
 python3 main.py replay --seconds 30         # 无 CARLA 离线端到端回放（同链路，产出指标 CSV）
 ```
+
+### ROS 集成（catkin + roslaunch，已实测通过）
+
+```bash
+# 干净工作空间（ROS Noetic）
+mkdir -p ~/ws/src && cp -r <本模块> ~/ws/src/
+cd ~/ws && catkin_make
+source devel/setup.bash
+roslaunch carla_sensor_fusion main.launch mode:=sim2d
+```
+
+`main.launch` 以 `type="main.py"` 启动节点 `sensor_fusion`，`mode:=sim2d` 时按 2D 合成仿真跑 240 帧并**发布两个话题**：
+
+| 话题 | 类型 | 内容 |
+|---|---|---|
+| `/usv/fusion/estimate` | `std_msgs/Float32MultiArray` | `[px, py, vx, vy]` EKF 融合估计（世界系） |
+| `/usv/fusion/observation` | `std_msgs/Float32MultiArray` | `[r, θ]` 当前雷达观测（体坐标） |
+
+实测（Ubuntu 22.04 + RoboStack 的 ROS Noetic，rosversion 1.17.0、cmake 3.31.8）：
+
+```
+$ catkin_make
+-- Installing devel-space wrapper .../main.py to /tmp/ws/devel/lib/carla_sensor_fusion
+-- Installing devel-space wrapper .../carla_sensor_fusion.py to ...
+...（共 7 个脚本全部安装）
+-- Configuring done (2.7s) / -- Generating done (0.0s) / Build files written to /tmp/ws/build
+
+$ source devel/setup.bash && roslaunch carla_sensor_fusion main.launch mode:=sim2d
+process[master]: started with pid [3182]
+process[rosout-1]: started with pid [3192]
+process[sensor_fusion-2]: started with pid [3196]
+[ROS] 已发布话题：/usv/fusion/estimate（[px,py,vx,vy]）、/usv/fusion/observation（[r,θ]）
+[OK] 动图已生成: /home/user/.ros/fusion_demo.gif  (240 frames @ 30fps, 2514 KB)
+[OK] 2D 实测指标: 融合 RMSE=0.728 m  仅雷达 RMSE=1.072 m  提升≈32.1%（241 帧）
+[sensor_fusion-2] process has finished cleanly      ← 节点正常干净退出
+
+$ rosnode list      → /rosout  /sensor_fusion
+$ rostopic list     → /rosout /rosout_agg /usv/fusion/estimate /usv/fusion/observation
+$ rostopic info /usv/fusion/estimate
+Type: std_msgs/Float32MultiArray
+Publishers: * /sensor_fusion
+$ rostopic echo -n1 /usv/fusion/estimate
+data: [-2.347700834274292, 2.513563394546509, -8.636140823364258, 8.019859313964844]
+$ rostopic echo -n1 /usv/fusion/observation
+data: [-5.117683410644531, 4.607407569885254]
+```
+
+实测暴露并已修复的两个真实问题：
+
+1. `cmake_minimum_required(VERSION 3.0.10)` 在 CMake ≥ 4 上被拒绝（策略下限提升到 3.5），已改为 `3.5`。
+2. `main.py` 原先用 `parse_args`，遇到 roslaunch 注入的 `__name:=sensor_fusion`、`__log:=...` 会 `error: unrecognized arguments` 并以 exit code 2 退出；已改用 `parse_known_args` 忽略 remap 参数。
+
+非 ROS 环境下 `--ros` 不传即完全跳过话题发布，2D 仿真与离线回放行为不变。
 
 ### CARLA 参考实现（未在真实 CARLA 环境验证，仅供参考）
 
@@ -109,14 +162,14 @@ python3 main.py doctor      # 依赖体检
 - **真值同帧对齐**：主循环先按本帧 `t` 设置目标 / ego 位姿，再 `world.tick()`，使传感器回调帧与 `figure_eight(t)` 真值同帧对应（修复原先「先 tick 再挪车」的一拍错位）。
 - **传感器时间戳同步**：`SensorHub` 每项入队为 `(frame, timestamp, payload)`，写入 `SyncBuffer` 使用回调的传感器 timestamp（不再用主循环时刻），融合网格按最近时间戳对齐。
 - **离线回放验证（本沙箱无 CARLA）**：`main.py replay --seconds 30` 用合成数据流驱动与 CARLA 版相同的感知→同步→标定→EKF 链路。实测 3000 ticks（camera 900 / lidar 300 / radar 600 / imu 3000 帧），融合 578 次，估计 RMSE 0.053 m，CSV 见 `offline_replay_metrics.csv`；此为链路验证，非真实 CARLA 物理传感器结果。
-- **catkin / roslaunch 未实测**：`CMakeLists.txt`（`catkin_package()` + `catkin_install_python()` 安装入口与全部依赖模块 + 安装 launch）与 `package.xml` 已补齐，并用 `catkin_pkg` 解析 `package.xml` 通过、`cmake` 解析 CMakeLists 仅在 `find_package(catkin)` 处停止（语法无误）、按安装布局实跑 `main.py replay` 正常；但提交环境为 Ubuntu 22.04，`ros-noetic-*` 官方仅支持 20.04，无法安装 ROS1，故 `catkin_make` / `source devel/setup.bash` / `roslaunch carla_sensor_fusion main.launch mode:=sim2d` 均**未实跑**，需在 Ubuntu 20.04 + ROS Noetic 环境补测。
+- **catkin / roslaunch 已实测通过**：Ubuntu 22.04 上以 RoboStack 的 conda 发行版安装 ROS Noetic（rosversion 1.17.0、cmake 3.31.8），干净工作空间 `catkin_make` 7 个脚本全部安装成功；`source devel/setup.bash` + `roslaunch carla_sensor_fusion main.launch mode:=sim2d` 正常启动，`/sensor_fusion` 节点在线、`/usv/fusion/estimate` 与 `/usv/fusion/observation` 有真实数据、节点 `finished cleanly`（完整输出见「ROS 集成」一节）。
 
 ## AI 辅助声明
 
 本模块的代码与文档在编写过程中使用了 **豆包（Doubao）** 作为辅助工具。
 
 - **辅助范围**：代码骨架与调试建议、单元测试用例起草、文档与指标表述整理、Git 操作（提交 / 合并冲突）辅助。
-- **未由 AI 替代的部分**：算法方案与指标口径（采用全程统计而非掐头）、是否如实声明环境限制等判断由作者确认；代码作者已审阅并实际执行验证（`py_compile`、`main.py test` 11 项、`main.py replay --seconds 30`、`mkdocs build`）。
+- **未由 AI 替代的部分**：算法方案与指标口径（采用全程统计而非掐头）、是否如实声明环境限制等判断由作者确认；代码作者已审阅并实际执行验证（`py_compile`、`main.py test` 11 项、`main.py replay --seconds 30`、`catkin_make`、`roslaunch ... mode:=sim2d`、`mkdocs build`）。
 - **责任声明**：提交内容由作者本人负责；文中仿真指标均为脚本可复现结果，不含任何伪造的实跑日志。
 
 ## 合规说明

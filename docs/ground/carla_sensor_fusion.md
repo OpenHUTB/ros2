@@ -2,7 +2,7 @@
 
 针对单个移动目标做多传感器融合跟踪，覆盖 **外参标定 → 时间同步 → 载体运动补偿 → EKF 融合** 完整链路。
 
-> **本模块的交付范围（按评审建议收缩）**：已验证、可复现的能力是 **2D 合成仿真**（`main.py sim2d`）与 **离线端到端回放**（`main.py replay`），二者在无 CARLA、无 ROS 的普通 Python 环境即可跑出下文全部指标。仓库内的 `carla_sensor_fusion.py` 是接入真实 CARLA 传感器的**参考实现，未在真实 CARLA 环境中验证**（提交环境无 GPU / CARLA / ROS），不作为已验证能力对外承诺。
+> **本模块的交付范围（按评审建议收缩）**：已验证、可复现的能力是 **2D 合成仿真**（`main.py sim2d`）、**离线端到端回放**（`main.py replay`）与 **catkin/roslaunch 集成**（ROS Noetic 下已实测通过，见「ROS 集成」一节）。仓库内的 `carla_sensor_fusion.py` 是接入真实 CARLA 传感器的**参考实现，未在真实 CARLA 引擎中验证**（无 GPU / CARLA server），不作为已验证能力对外承诺。
 
 代码位于 `src/ground/carla_sensor_fusion/`，同一套融合核心被两个平台复用：
 
@@ -46,6 +46,50 @@ python3 main.py sim2d                       # 等价统一入口
 python3 main.py sim2d --warmup-frames 40    # RMSE 只统计前 40 帧之后的稳定段
 python3 main.py replay --seconds 30         # 无 CARLA 离线端到端回放（同链路，产出指标 CSV）
 ```
+
+### ROS 集成（catkin + roslaunch，已实测通过）
+
+```bash
+mkdir -p ~/ws/src && cp -r <本模块> ~/ws/src/
+cd ~/ws && catkin_make
+source devel/setup.bash
+roslaunch carla_sensor_fusion main.launch mode:=sim2d
+```
+
+`mode:=sim2d` 时节点 `sensor_fusion` 跑 240 帧并发布两个话题：
+
+| 话题 | 类型 | 内容 |
+|---|---|---|
+| `/usv/fusion/estimate` | `std_msgs/Float32MultiArray` | `[px, py, vx, vy]` EKF 融合估计（世界系） |
+| `/usv/fusion/observation` | `std_msgs/Float32MultiArray` | `[r, θ]` 当前雷达观测（体坐标） |
+
+实测环境 Ubuntu 22.04 + RoboStack 发行版 ROS Noetic（rosversion 1.17.0、cmake 3.31.8）：
+
+```
+$ catkin_make
+-- Installing devel-space wrapper .../main.py to /tmp/ws/devel/lib/carla_sensor_fusion
+...（7 个脚本全部安装）
+-- Build files have been written to: /tmp/ws/build
+
+$ roslaunch carla_sensor_fusion main.launch mode:=sim2d
+process[master]: started with pid [3182]
+process[rosout-1]: started with pid [3192]
+process[sensor_fusion-2]: started with pid [3196]
+[ROS] 已发布话题：/usv/fusion/estimate、/usv/fusion/observation
+[OK] 动图已生成: ... (240 frames @ 30fps, 2514 KB)
+[OK] 2D 实测指标: 融合 RMSE=0.728 m  仅雷达 RMSE=1.072 m  提升≈32.1%（241 帧）
+[sensor_fusion-2] process has finished cleanly
+
+$ rosnode list      → /rosout  /sensor_fusion
+$ rostopic list     → /rosout /rosout_agg /usv/fusion/estimate /usv/fusion/observation
+$ rostopic info /usv/fusion/estimate → Type: std_msgs/Float32MultiArray, Publishers: /sensor_fusion
+$ rostopic echo -n1 /usv/fusion/estimate
+data: [-2.347700834274292, 2.513563394546509, -8.636140823364258, 8.019859313964844]
+$ rostopic echo -n1 /usv/fusion/observation
+data: [-5.117683410644531, 4.607407569885254]
+```
+
+实测暴露并已修复的两个真实问题：`cmake_minimum_required` 3.0.10 → 3.5（CMake ≥4 拒绝旧策略下限）；`main.py` 改用 `parse_known_args` 以忽略 roslaunch 注入的 `__name:=` / `__log:=` remap 参数（此前会 exit code 2）。
 
 ### CARLA 参考实现（未在真实 CARLA 环境验证，仅供参考）
 
@@ -95,14 +139,14 @@ python3 main.py doctor      # 依赖体检
 - **真值同帧对齐**：主循环先按本帧 `t` 设置目标 / ego 位姿，再 `world.tick()`，使传感器回调帧与 `figure_eight(t)` 真值同帧对应（修复原先「先 tick 再挪车」的一拍错位）。
 - **传感器时间戳同步**：`SensorHub` 每项入队为 `(frame, timestamp, payload)`，写入 `SyncBuffer` 使用回调的传感器 timestamp（不再用主循环时刻），融合网格按最近时间戳对齐。
 - **离线回放验证（本沙箱无 CARLA）**：`main.py replay --seconds 30` 用合成数据流驱动与 CARLA 版相同的感知→同步→标定→EKF 链路。实测 3000 ticks（camera 900 / lidar 300 / radar 600 / imu 3000 帧），融合 578 次，估计 RMSE 0.053 m，CSV 见 `offline_replay_metrics.csv`；此为链路验证，非真实 CARLA 物理传感器结果。
-- **catkin / roslaunch 未实测**：`CMakeLists.txt`（`catkin_package()` + `catkin_install_python()` 安装入口与全部依赖模块 + 安装 launch）与 `package.xml` 已补齐，并用 `catkin_pkg` 解析 `package.xml` 通过、`cmake` 解析 CMakeLists 仅在 `find_package(catkin)` 处停止（语法无误）、按安装布局实跑 `main.py replay` 正常；但提交环境为 Ubuntu 22.04，`ros-noetic-*` 官方仅支持 20.04，无法安装 ROS1，故 `catkin_make` / `source devel/setup.bash` / `roslaunch carla_sensor_fusion main.launch mode:=sim2d` 均**未实跑**，需在 Ubuntu 20.04 + ROS Noetic 环境补测。
+- **catkin / roslaunch 已实测通过**：Ubuntu 22.04 + RoboStack 的 ROS Noetic，干净工作空间 `catkin_make` 7 个脚本全部安装成功；`roslaunch carla_sensor_fusion main.launch mode:=sim2d` 正常启动，`/sensor_fusion` 在线、两个 `/usv/fusion/*` 话题有真实数据、节点 `finished cleanly`。
 
 ## AI 辅助声明
 
 本模块的代码与文档在编写过程中使用了 **豆包（Doubao）** 作为辅助工具。
 
 - **辅助范围**：代码骨架与调试建议、单元测试用例起草、文档与指标表述整理、Git 操作（提交 / 合并冲突）辅助。
-- **未由 AI 替代的部分**：算法方案与指标口径（采用全程统计而非掐头）、是否如实声明环境限制等判断由作者确认；代码作者已审阅并实际执行验证（`py_compile`、`main.py test` 11 项、`main.py replay --seconds 30`、`mkdocs build`）。
+- **未由 AI 替代的部分**：算法方案与指标口径（采用全程统计而非掐头）、是否如实声明环境限制等判断由作者确认；代码作者已审阅并实际执行验证（`py_compile`、`main.py test` 11 项、`main.py replay --seconds 30`、`catkin_make`、`roslaunch ... mode:=sim2d`、`mkdocs build`）。
 - **责任声明**：提交内容由作者本人负责；文中仿真指标均为脚本可复现结果，不含任何伪造的实跑日志。
 
 ## 合规说明

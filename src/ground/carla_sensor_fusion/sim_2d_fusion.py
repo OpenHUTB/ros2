@@ -105,6 +105,8 @@ def main(argv=None):
                          "docs/img/ground/carla_sensor_fusion_demo.gif 已入库，如需更新可 --out 指定）")
     ap.add_argument("--show", action="store_true")
     ap.add_argument("--csv", default="fusion_metrics.csv")
+    ap.add_argument("--ros", action="store_true",
+                    help="在 ROS 环境中发布 /usv/fusion/estimate 与 /usv/fusion/observation")
     ap.add_argument("--warmup-frames", type=int, default=0,
                     help="统计 RMSE 时跳过前 N 帧（默认 0=全程统计；可设如 40 只评收敛稳定段）")
     args = ap.parse_args(argv)
@@ -144,6 +146,23 @@ def main(argv=None):
             run_fusion_step(buffer, ekf_fused, ekf_radar, sig_imu,
                             target_truth, t)
 
+    # ---------------- 可选：ROS 话题发布（roslaunch 验收用） ----------------
+    ros_pub = {"est": None, "obs": None, "msg": None}
+    if args.ros:
+        try:
+            import rospy
+            from std_msgs.msg import Float32MultiArray
+            rospy.init_node("sensor_fusion", disable_signals=True, anonymous=False)
+            ros_pub["msg"] = Float32MultiArray
+            ros_pub["est"] = rospy.Publisher(
+                "/usv/fusion/estimate", Float32MultiArray, queue_size=10)
+            ros_pub["obs"] = rospy.Publisher(
+                "/usv/fusion/observation", Float32MultiArray, queue_size=10)
+            print("[ROS] 已发布话题：/usv/fusion/estimate（[px,py,vx,vy]）、"
+                  "/usv/fusion/observation（[r,θ]）")
+        except Exception as e:                    # 非 ROS 环境不影响仿真
+            print(f"[ROS] 初始化失败，跳过话题发布：{e}")
+
     # ---------------- 绘图 ----------------
     fig, ax = plt.subplots(figsize=(12, 6.5), dpi=100)
     truth_traj = np.array([target_truth(t) for t in np.linspace(0, args.frames /
@@ -182,6 +201,15 @@ def main(argv=None):
                             sig_th_c, sig_imu, t, buffer)
         st_f, st_r, (obs_radar, cam_th), ages = run_fusion_step(
             buffer, ekf_fused, ekf_radar, sig_imu, target_truth, t)
+
+        if ros_pub["est"] is not None:
+            m = ros_pub["msg"]()
+            m.data = [float(st_f[0]), float(st_f[1]), float(st_f[2]), float(st_f[3])]
+            ros_pub["est"].publish(m)
+            o = ros_pub["msg"]()
+            if obs_radar:
+                o.data = [float(obs_radar[0][0]), float(obs_radar[0][1])]
+            ros_pub["obs"].publish(o)
 
         est_hist.append(st_f[:2])
         eh = np.asarray(est_hist)
@@ -224,7 +252,7 @@ def main(argv=None):
             f"({truth[0]:.1f},{truth[1]:.1f})\n"
             f"sync  radar {ages['radar']*1000:.0f}ms  camera "
             f"{ages['camera']*1000:.0f}ms  imu {ages['imu']*1000:.0f}ms\n"
-            f"calib  Δθ = {th_est:.2f}° (真 {np.degrees(th_cal):.2f}°)  "
+            f"calib  Δθ = {th_est:.2f}° (true {np.degrees(th_cal):.2f}°)  "
             f"t = ({tx_est:.2f},{ty_est:.2f}) m  res = {res_cal:.3f} m")
         return (est_line, radar_pts, cam_ray, info)
 

@@ -13,5 +13,5 @@
 
   <!-- 通过 main.py 统一入口调度两个平台 -->
   <node pkg="carla_sensor_fusion" type="main.py" name="sensor_fusion" output="screen"
-        args="$(arg mode)"/>
+        args="--ros $(arg mode)"/>
 </launch>

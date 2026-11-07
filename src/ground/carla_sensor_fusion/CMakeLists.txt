@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.10)
+cmake_minimum_required(VERSION 3.5)
 project(carla_sensor_fusion)
 
 find_package(catkin REQUIRED)
