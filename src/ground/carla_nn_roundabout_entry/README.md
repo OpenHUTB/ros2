@@ -1,6 +1,6 @@
 # 无信号环岛汇入仿真
 
-本模块以 Python 单轨运动学模型模拟车辆驶入无信号环岛时与环道车流的交互，提供固定随机种子回放、键盘接管、雷达间隙特征和神经网络策略控制。策略已接入无界面仿真循环；当前不包含 CARLA 场景、真实传感器数据或 ROS 话题闭环。
+本模块以 Python 单轨运动学模型模拟车辆驶入无信号环岛时与环道车流的交互，提供固定随机种子回放、键盘接管、雷达间隙特征、神经网络策略控制、观测栅格与图像控制。策略、地图更新和图像控制均可在无界面仿真循环中运行；当前不包含 CARLA 场景、真实传感器数据或 ROS 话题闭环。
 
 ![固定种子环岛仿真回放](assets/roundabout_demo.gif)
 
@@ -23,6 +23,7 @@ python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360
 ```bash
 python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller gap-policy
 python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller baseline
+python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360 --controller image-model
 ```
 
 启动键盘交互窗口：
@@ -43,7 +44,7 @@ ros2 launch carla_nn_roundabout_entry main.launch.py
 
 ## English
 
-This module uses a Python single-track kinematic model to simulate an unsignalized roundabout merge. It provides deterministic traffic replay, keyboard takeover, radar gap features, and neural policy control. The policy runs in the headless simulation loop; the current implementation does not include a CARLA scene, real sensor data, or a closed-loop ROS topic interface.
+This module uses a Python single-track kinematic model to simulate an unsignalized roundabout merge. It provides deterministic traffic replay, keyboard takeover, radar gap features, neural policy control, an observation grid, and image control. The policy, map update, and image control can run in the headless simulation loop; the current implementation does not include a CARLA scene, real sensor data, or a closed-loop ROS topic interface.
 
 Run the headless simulation from the repository root:
 
@@ -51,7 +52,7 @@ Run the headless simulation from the repository root:
 python3 src/ground/carla_nn_roundabout_entry/main.py --seed 7 --steps 360
 ```
 
-Select the controller explicitly with `--controller gap-policy` or `--controller baseline`.
+Select the controller explicitly with `--controller gap-policy`, `--controller image-model`, or `--controller baseline`.
 
 Start the keyboard-controlled window with `--gui`. Use W/Up to accelerate, S/Down to brake, and A/D or the arrow keys to steer. The command-line output reports elapsed time, vehicle state, collision frames, and minimum clearance. The same random seed reproduces the circulating traffic's initial state.
 
