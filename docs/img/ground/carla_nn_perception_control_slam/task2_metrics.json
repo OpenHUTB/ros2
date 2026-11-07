@@ -1,0 +1,10 @@
+{
+  "map": "Carla/Maps/Town10HD_Opt",
+  "frames": 70,
+  "elapsed_s": 33.8,
+  "avg_fps": 2.07,
+  "avg_detections": 2.14,
+  "max_detections": 6,
+  "min_front_distance_m": 2.22,
+  "min_ttc_s": 2.22
+}

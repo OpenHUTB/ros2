@@ -293,3 +293,7 @@ ___
 ___
 
 ## 参考文献
+
+## 无人车：神经网络感知 / 控制 / SLAM
+
+- [carla_nn_perception_control_slam](ground/carla_nn_perception_control_slam.md)：键盘运动控制、YOLOv5 感知与轨迹跟踪、激光建图与 A* 导航、PilotNet 端到端驾驶
