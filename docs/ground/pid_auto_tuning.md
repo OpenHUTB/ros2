@@ -21,6 +21,8 @@ d(theta)/dt = omega
 - Python：3.8（Ubuntu 20.04 自带版本）
 - 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带）；`main_plot` 另需 `python3-matplotlib`
 
+Humble 的官方二进制包只面向 Ubuntu 22.04，而本模块实测所用的 Ubuntu 20.04 虚拟机是仓库提供的环境（已预装 ROS 2 Humble，属预装/源码编译方式）。复现时请使用该虚拟机；若改用 22.04 安装官方二进制，Python 版本为 3.10，其余步骤一致。
+
 ## 3. 编译与运行步骤
 
 ```bash
@@ -30,7 +32,7 @@ colcon build --packages-select pid_auto_tuning
 source install/setup.bash
 ```
 
-一键跑完整流程（终端输出指标表，并在当前目录的 `resource/step_response.csv` 写入阶跃数据）：
+一键跑完整流程（终端输出指标表，并把阶跃数据写入 `~/.ros/pid_auto_tuning/step_response.csv`，可用 `--output-dir` 指定其他目录）：
 
 ```bash
 ros2 run pid_auto_tuning main
@@ -81,21 +83,21 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 目标航向: 90.0 deg
 
 继电器反馈实验: Ku=9.705, Tu=1.360s, 振荡幅值=0.066rad
-参数筛选: 来源=grid, 比例=(kp:0.95, ti:3.2, td:0.16)（落在网格边界，建议扩大搜索范围复核）
+参数筛选: 来源=grid, 比例=(kp:1.5, ti:3.2, td:0.16)（网格内部最优点）
 
 方案                 超调      上升       调节        稳态误差     IAE
 ----------------------------------------------------------
 保守试凑            62.7%   1.35s    未收敛        —    5.11
 常规试凑            47.2%   0.73s   6.91s   0.005rad    2.41
 积极试凑            29.4%   0.68s   5.80s   0.009rad    1.75
-自动整定             3.6%   0.69s   1.61s   0.006rad    1.20
+自动整定             1.7%   0.68s   1.13s   0.005rad    1.17
 
-自动整定参数: Kp=9.219, Ki=2.118, Kd=2.0061
+自动整定参数: Kp=14.557, Ki=3.345, Kd=3.1676
 保守试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
 常规试凑参数: Kp=1.500, Ki=0.800, Kd=0.0000
 积极试凑参数: Kp=3.000, Ki=1.000, Kd=0.0000
 
-阶跃响应数据已写入 /home/user/ros2/resource/step_response.csv
+阶跃响应数据已写入 /home/user/.ros/pid_auto_tuning/step_response.csv
 ```
 
 ![终端运行结果](../img/ground/pid_auto_tuning_terminal.png)
@@ -105,8 +107,8 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 ![阶跃响应与误差收敛](../img/ground/pid_auto_tuning_response.png)
 
 从结果看：三组手工试凑都只加 P、I，保守组超调 62.7% 且 8 s 仿真内未进入 ±2% 误差带，常规组超调 47.2%、调节 6.91 s，积极组超调 29.4%、调节 5.80 s；
-自动整定在同等工况下把超调压到 3.6%，调节时间 1.61 s，稳态误差 0.006 rad。
-该结论仅相对这三组手工参数成立，不构成对所有手工调参的普遍论断；网格搜索最优当前落在边界（kp = 0.95Ku、Ti = 3.2Tu），数值为网格内最优，程序会打印边界提示，换对象后应扩大网格复核。
+自动整定在同等工况下把超调压到 1.7%，调节时间 1.13 s，稳态误差 0.005 rad。
+该结论仅相对这三组手工参数成立，不构成对所有手工调参的普遍论断；网格上界已扩到 1.75Ku / 4.5Tu，最优点（kp = 1.5Ku、Ti = 3.2Tu）已进入内部，换对象后仍应复核是否压在边界。
 
 `ros2 launch pid_auto_tuning main.launch.py` 配合上面的 `rviz2` 命令，可以看到 RViz 中的网格与航向箭头，绿色为当前航向、红色为目标航向：
 

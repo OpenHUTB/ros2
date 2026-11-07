@@ -10,6 +10,8 @@
 - Python：3.8（Ubuntu 20.04 自带版本）
 - 依赖：`rclpy`、`std_msgs`、`visualization_msgs`（ROS 2 Desktop 自带）；`main_plot` 另需 `python3-matplotlib`
 
+Humble 的官方二进制包只面向 Ubuntu 22.04，而本模块实测所用的 Ubuntu 20.04 虚拟机是仓库提供的环境（已预装 ROS 2 Humble，属预装/源码编译方式）。复现时请使用该虚拟机；若改用 22.04 安装官方二进制，Python 版本为 3.10，其余步骤一致。
+
 ## 2. 编译
 
 ```bash
@@ -27,31 +29,31 @@ source install/setup.bash
 ros2 run pid_auto_tuning main
 ```
 
-实测输出（目标航向 90°；最后一行为 CSV 的绝对路径，随执行目录不同而变化）：
+实测输出（目标航向 90°；CSV 写入 `~/.ros/pid_auto_tuning/`，可用 `--output-dir` 覆盖）：
 
 ```
 被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
 目标航向: 90.0 deg
 
 继电器反馈实验: Ku=9.705, Tu=1.360s, 振荡幅值=0.066rad
-参数筛选: 来源=grid, 比例=(kp:0.95, ti:3.2, td:0.16)（落在网格边界，建议扩大搜索范围复核）
+参数筛选: 来源=grid, 比例=(kp:1.5, ti:3.2, td:0.16)（网格内部最优点）
 
 方案                 超调      上升       调节        稳态误差     IAE
 ----------------------------------------------------------
 保守试凑            62.7%   1.35s    未收敛        —    5.11
 常规试凑            47.2%   0.73s   6.91s   0.005rad    2.41
 积极试凑            29.4%   0.68s   5.80s   0.009rad    1.75
-自动整定             3.6%   0.69s   1.61s   0.006rad    1.20
+自动整定             1.7%   0.68s   1.13s   0.005rad    1.17
 
-自动整定参数: Kp=9.219, Ki=2.118, Kd=2.0061
+自动整定参数: Kp=14.557, Ki=3.345, Kd=3.1676
 保守试凑参数: Kp=0.500, Ki=0.400, Kd=0.0000
 常规试凑参数: Kp=1.500, Ki=0.800, Kd=0.0000
 积极试凑参数: Kp=3.000, Ki=1.000, Kd=0.0000
 
-阶跃响应数据已写入 /home/user/ros2/resource/step_response.csv
+阶跃响应数据已写入 /home/user/.ros/pid_auto_tuning/step_response.csv
 ```
 
-同时把四条阶跃曲线写入当前目录下的 `resource/step_response.csv`（列：`t_s`、三组手工参数与自动整定的 `*_theta_rad`）。
+同时把四条阶跃曲线写入 `~/.ros/pid_auto_tuning/step_response.csv`（列：`t_s`、三组手工参数与自动整定的 `*_theta_rad`；可用 `--output-dir` 指定输出目录）。
 
 「未收敛」表示该组参数在 8 s 仿真内没有进入 ±2% 误差带，此时不输出稳态误差。
 
@@ -120,5 +122,5 @@ ros2 run pid_auto_tuning main_node --ros-args -p target_deg:=60.0 -p switch_peri
 - 只在仿真与离线计算中验证，没有上真车
 - 控制量按角速度指令饱和处理，未建模电机死区
 - 未做对象参数摄动（K、T、τ ±20%）的鲁棒性验证，「换对象后重新整定」的效果未在摄动对象上复核
-- 网格搜索的最优参数当前落在搜索边界（kp = 0.95Ku、Ti = 3.2Tu），报告值为网格内最优，换对象后应扩大网格复核
+- 网格搜索上界已扩到 1.75Ku / 4.5Tu，本对象的最优点（kp = 1.5Ku、Ti = 3.2Tu）已进入内部；换对象后仍应复核是否压在边界
 - `main_plot` 弹窗依赖 python3-tk（matplotlib 默认 Tk 后端）；系统无中文字体（如 Noto Sans CJK）时图中中文显示为方块

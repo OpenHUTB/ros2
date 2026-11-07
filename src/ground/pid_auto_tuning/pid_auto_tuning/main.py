@@ -4,9 +4,10 @@
     python3 -m pid_auto_tuning.main
 或安装后：
     ros2 run pid_auto_tuning main
-结果写入当前目录下 resource/step_response.csv，并打印指标表。
+结果默认写入 ~/.ros/pid_auto_tuning/step_response.csv（可用 --output-dir 指定），并打印指标表。
 """
 
+import argparse
 import csv
 import math
 import os
@@ -27,7 +28,16 @@ def _fmt(metrics):
             f"{metrics['iae']:6.2f}")
 
 
-def main():
+def _default_output_dir():
+    return os.path.join(os.path.expanduser('~'), '.ros', 'pid_auto_tuning')
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description='继电器反馈 PID 自整定与手工试凑对比')
+    parser.add_argument('--output-dir', default=None,
+                        help='CSV 输出目录，默认 ~/.ros/pid_auto_tuning')
+    args, _ = parser.parse_known_args(argv)
+    output_dir = args.output_dir or _default_output_dir()
     print('被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)')
     print(f'目标航向: {math.degrees(SETPOINT):.1f} deg')
 
@@ -57,12 +67,12 @@ def main():
     for name, gains, _ in rows:
         print(f"{name}参数: Kp={gains[0]:.3f}, Ki={gains[1]:.3f}, Kd={gains[2]:.4f}")
 
-    path = _write_csv(rows, auto_metrics)
+    path = _write_csv(rows, auto_metrics, output_dir)
     print(f'\n阶跃响应数据已写入 {path}')
 
 
-def _write_csv(rows, auto):
-    path = os.path.abspath(os.path.join('resource', 'step_response.csv'))
+def _write_csv(rows, auto, output_dir):
+    path = os.path.abspath(os.path.join(output_dir, 'step_response.csv'))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)

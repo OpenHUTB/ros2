@@ -32,6 +32,15 @@ class PidAutoTuningNode(Node):
         self.u_limit = float(self.get_parameter('u_limit').value)
         self.target = math.radians(target_deg)
 
+        if self.dt <= 0.0:
+            raise SystemExit(f'参数 dt 必须大于 0，当前为 {self.dt}')
+        if self.switch_period <= 0.0:
+            raise SystemExit(f'参数 switch_period 必须大于 0，当前为 {self.switch_period}')
+        if self.u_limit <= 0.0:
+            raise SystemExit(f'参数 u_limit 必须大于 0，当前为 {self.u_limit}')
+        if not 0.0 < target_deg <= 180.0:
+            raise SystemExit(f'参数 target_deg 必须在 (0, 180] 范围内，当前为 {target_deg}')
+
         self.heading_pub = self.create_publisher(Float64, '~/heading', 10)
         self.target_pub = self.create_publisher(Float64, '~/target', 10)
         self.marker_pub = self.create_publisher(MarkerArray, '~/markers', 10)
