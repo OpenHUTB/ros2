@@ -31,8 +31,9 @@ ros2 launch mujoco_forklift_pallet_docking main.launch.py
 直接运行单一场景或多起点评估：
 
 ```bash
-python3 src/ground/mujoco_forklift_pallet_docking/main.py --mode run --start-x -4 --speed 2
-python3 src/ground/mujoco_forklift_pallet_docking/main.py --mode evaluate
+cd src/ground/mujoco_forklift_pallet_docking
+python3 main.py --mode run --start-x -4 --speed 2
+python3 main.py --mode evaluate
 ```
 
 ## 算法
@@ -66,8 +67,10 @@ MuJoCo 3.12.0 下，初速度 2 m/s，不同起始位置的运行记录：
 
 ## 源码位置
 
-- `src/ground/mujoco_forklift_pallet_docking/model.xml`：叉车、叉齿、托盘、相机和执行器。
-- `src/ground/mujoco_forklift_pallet_docking/mujoco_forklift_pallet_docking/policy.py`：图像策略与训练标签。
-- `src/ground/mujoco_forklift_pallet_docking/mujoco_forklift_pallet_docking/simulation.py`：MuJoCo 场景、相机渲染和多起点评估。
-- `src/ground/mujoco_forklift_pallet_docking/main.py`：程序入口。
-- `src/ground/mujoco_forklift_pallet_docking/launch/main.launch.py`：ROS 2 启动入口。
+核心文件位于 `src/ground/mujoco_forklift_pallet_docking/`：
+
+- `model.xml`：叉车、叉齿、托盘、相机和执行器。
+- `mujoco_forklift_pallet_docking/policy.py`：图像策略与训练标签。
+- `mujoco_forklift_pallet_docking/simulation.py`：MuJoCo 场景、相机渲染和多起点评估。
+- `main.py`：训练、运行和评估入口。
+- `launch/main.launch.py`：ROS 2 启动入口。
