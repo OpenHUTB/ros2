@@ -7,9 +7,10 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
+from .lipm import GRAVITY
+
 JOINT_NAMES = ('left_hip', 'left_knee', 'left_ankle',
                'right_hip', 'right_knee', 'right_ankle')
-
 
 class PlayNode(Node):
     """PyBullet 仿真执行节点：订阅关节指令并驱动人形模型。"""
@@ -24,12 +25,14 @@ class PlayNode(Node):
         self.accumulator = 0.0
         self.last_time = self.get_clock().now()
         self.targets = [0.0] * len(JOINT_NAMES)
-        self.report_counter = 0
+        self.running = True
+        self.sim_time = 0.0
+        self.last_report_time = 0.0
         self.last_zmp_valid = True
 
         self.client = self._connect()
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        p.setGravity(0, 0, -9.8)
+        p.setGravity(0, 0, -GRAVITY)
         p.setTimeStep(self.sim_dt)
         self.plane_id = p.loadURDF('plane.urdf')
         p.changeDynamics(self.plane_id, -1, lateralFriction=2.0)
@@ -95,11 +98,21 @@ class PlayNode(Node):
             raise RuntimeError('模型缺少关节: {}'.format(', '.join(missing)))
         return {name: mapping[name] for name in JOINT_NAMES}
 
+    def _stop(self, message):
+        """设置退出标志并关闭 rclpy，避免重复关闭。"""
+        if not self.running:
+            return
+        self.running = False
+        self.get_logger().info(message)
+        if rclpy.ok():
+            rclpy.shutdown()
+
     def simulation_step(self):
         """按实际经过时间补足固定步长的仿真步进。"""
+        if not self.running:
+            return
         if not p.isConnected(self.client):
-            self.get_logger().info('PyBullet 窗口已关闭，停止节点')
-            rclpy.shutdown()
+            self._stop('PyBullet 窗口已关闭，停止节点')
             return
         now = self.get_clock().now()
         elapsed = (now - self.last_time).nanoseconds * 1e-9
@@ -114,9 +127,9 @@ class PlayNode(Node):
                 self.accumulator -= self.sim_dt
                 steps += 1
         except Exception as error:
-            self.get_logger().error('仿真步进失败，停止节点：{}'.format(error))
-            rclpy.shutdown()
+            self._stop('仿真步进失败，停止节点：{}'.format(error))
             return
+        self.sim_time += steps * self.sim_dt
         if not self.camera_ready:
             self._setup_camera()
             self.camera_ready = True
@@ -129,10 +142,10 @@ class PlayNode(Node):
                 p.POSITION_CONTROL, targetPosition=target, force=8.0)
 
     def _report(self):
-        """每秒输出一次姿态与 ZMP 判定信息。"""
-        self.report_counter += 1
-        if self.report_counter % int(1.0 / self.sim_dt) != 0:
+        """每经过 1 s 仿真时间输出一次姿态与 ZMP 判定信息。"""
+        if self.sim_time - self.last_report_time < 1.0:
             return
+        self.last_report_time = self.sim_time
         position, _ = p.getBasePositionAndOrientation(self.robot_id)
         self.get_logger().info(
             '底盘高度 {:.3f} m，左髋 {:.2f} rad，右膝 {:.2f} rad，'
@@ -147,7 +160,6 @@ class PlayNode(Node):
     def command_callback(self, message):
         if len(message.data) >= len(JOINT_NAMES):
             self.targets = [float(value) for value in message.data[:6]]
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -165,8 +177,8 @@ def main(args=None):
         if p.isConnected(node.client):
             p.disconnect(node.client)
         node.destroy_node()
-        rclpy.shutdown()
-
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
