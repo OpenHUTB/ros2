@@ -58,7 +58,24 @@ python3 compare.py --out results
 
 # 渲染推理 gif（无 OpenGL 环境自动降级到 matplotlib 绘制）
 python3 render_gif.py --model results/dqn_mlp1.pkl --algo dqn --episodes 1
+
+# 多随机种子基准评测（均值 ± 标准差，结果写 results/benchmark/）
+python3 benchmark.py --seeds 0,1,2 --episodes 200
 ```
+
+`train.py` 也支持 `--seed` 复现单次训练；训练循环已抽成 `train_agent()`，供 `benchmark.py` 复用。
+
+## 基准评测
+
+单次训练曲线抖动很大，`benchmark.py` 对每组配置跑多个随机种子：
+
+```bash
+cd src/rl_algorithm_compare
+python3 -m rl_algorithm_compare.benchmark --seeds 0,1 --episodes 120
+python3 -m unittest discover -s test      # 19 个用例，不需要 MuJoCo
+```
+
+输出 `results/benchmark/summary.csv`（各配置均值/标准差/最值）与 `curves.csv`（跨种子平均曲线）。
 
 ## 结果
 
