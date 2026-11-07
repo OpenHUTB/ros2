@@ -3,7 +3,7 @@
 """吊挂负载控制对比评测：三种控制律 × 三种负载质量。
 
 场景：先在起点悬停 1 s，然后给 2 m 阶跃；记录 12 s 的摆角与位置指标。
-可选 ``--with-gust``：阶跃后在第 8 s 给负载一个 0.2 s 的横向阵风（6 N）。
+可选 ``--with-gust``：阶跃后在第 8 s 给负载一个 0.1 s 的横向阵风（1.5 N）。
 
 输出：终端表格 + ``results/eval_<时间戳>.csv``。
 """
@@ -26,7 +26,7 @@ FIELDS = ["scenario", "payload_kg", "controller", "swing_rms_deg", "swing_max_de
 
 
 def evaluate(seconds=12.0, masses=(0.1, 0.3, 0.5), target=(2.0, 0.0, 1.5),
-             step_time=1.0, with_gust=False, controllers=("pid", "zv", "swing")):
+             step_time=1.0, with_gust=False, controllers=("pd", "zv", "swing")):
     rows = []
     for mass in masses:
         sim = SlungSim(payload_mass=mass)

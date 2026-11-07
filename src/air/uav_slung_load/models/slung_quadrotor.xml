@@ -2,14 +2,15 @@
   吊挂负载四旋翼（X 型布局，世界系 ENU，机体系 FLU）。
 
   与 `air/uav_mujoco_sim/models/quadrotor.xml` 的机体、旋翼、执行器、混控约定保持一致，
-  在 base_link 下方增加一段刚性绳缆（两根铰接，等效二维摆）和一个球形负载：
+  在 base_link 下方挂一根刚性连杆近似绳缆（一个 cable 刚体 + 两个同点正交铰，
+  等效球摆）和一个球形负载：
 
     base_link（freejoint，0.95 kg）
       └── cable（swing_x 绕 y、swing_y 绕 x，各 ±1.2 rad，带阻尼）
             └── payload（球，0.3 kg，可运行时改质量做负载扫描）
 
   自由度：freejoint 6 + 两个摆铰 2 = 8；关节数 3；执行器 4（每桨推力 0～6 N）。
-  绳缆用“两铰 + 刚性连杆”近似（MuJoCo 没有原生绳索），所以摆长固定 0.5 m，
+  绳缆用“一个刚性连杆 + 两个同点正交铰”近似（MuJoCo 没有原生绳索），摆长固定 0.5 m，
   自然摆动周期 T = 2π√(L/g) ≈ 1.42 s，ZV 输入整形就按这个周期设时滞。
 
   混控（桨臂 a = 0.106 m，k_m 为反扭矩系数）：
@@ -98,7 +99,7 @@
         <site name="thrust4" class="drone" pos="0 0 0"/>
       </body>
 
-      <!-- 绳缆：两根铰等效二维摆，挂点在机体中心下方 3 cm -->
+      <!-- 绳缆：一个刚性连杆 + 两个同点正交铰等效球摆，挂点在机体中心下方 3 cm -->
       <body name="cable" pos="0 0 -0.03">
         <joint name="swing_x" type="hinge" axis="0 1 0" range="-1.2 1.2" damping="0.02" armature="0.0005"/>
         <joint name="swing_y" type="hinge" axis="1 0 0" range="-1.2 1.2" damping="0.02" armature="0.0005"/>
@@ -107,7 +108,8 @@
               material="cable_mat" contype="0" conaffinity="0"/>
 
         <body name="payload" pos="0 0 -0.5">
-          <inertial pos="0 0 0" mass="0.3" diaginertia="0.00043 0.00043 0.00043"/>
+          <!-- 惯量对应 0.3 kg 实心球（0.4·m·r²）；运行时改质量会按同公式同步重算 -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="0.000432 0.000432 0.000432"/>
           <geom name="payload_geom" type="sphere" size="0.06" material="payload_mat"
                 contype="0" conaffinity="0"/>
         </body>

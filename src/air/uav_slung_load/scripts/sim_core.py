@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """吊挂负载四旋翼仿真核心（无 ROS 依赖，可离线运行）。
 
-物理模型见 ``models/slung_quadrotor.xml``：四旋翼 + 二维摆绳缆 + 球形负载。
+物理模型见 ``models/slung_quadrotor.xml``：四旋翼 + 刚性连杆绳缆 + 球形负载。
 本模块只负责“推进仿真、读写状态、量测指标”，控制律在 ``controllers.py``。
 """
 
@@ -35,6 +35,8 @@ K_M = 0.005
 MAX_THRUST = 6.0
 #: 机体转动惯量（与 MJCF 的 diaginertia 一致）
 INERTIA = (0.0042, 0.0042, 0.0078)
+#: 负载球半径（m），改负载质量时按实心球 0.4·m·r² 同步重算惯量
+PAYLOAD_RADIUS = 0.06
 
 
 class SlungSim:
@@ -95,10 +97,10 @@ class SlungSim:
 
     @property
     def swing_vector(self):
-        """水平偏摆分量（rad），[x, y]，供控制律使用。"""
+        """水平偏摆分量（rad），[绕 y 轴摆角, 绕 x 轴摆角]，与 swing_angle 的
+        atan2 定义一致；供日志记录与摆角分解观察使用。"""
         d = self.cable_dir
-        return np.array([math.asin(max(-1.0, min(1.0, d[0]))),
-                         math.asin(max(-1.0, min(1.0, d[1])))])
+        return np.array([math.atan2(d[0], -d[2]), math.atan2(d[1], -d[2])])
 
     @property
     def swing_rate(self):
@@ -129,6 +131,10 @@ class SlungSim:
         mujoco.mj_resetData(self.model, self.data)
         self.data.qpos[:7] = [0.0, 0.0, 1.5, 1.0, 0.0, 0.0, 0.0]
         self.model.body_mass[self.payload_id] = self.payload_mass
+        # 质量变了，负载球惯量也要同步（实心球 I = 0.4·m·r²），否则三种负载
+        # 的对比就不是同一套物理（0.1 kg 的惯量会变成其实际值的 3 倍）
+        inertia = 0.4 * self.payload_mass * PAYLOAD_RADIUS ** 2
+        self.model.body_inertia[self.payload_id][:] = [inertia, inertia, inertia]
         # 改质量后刷新派生量（子树质量/质心），否则与编译期缓存不一致
         mujoco.mj_setConst(self.model, self.data)
         self.data.xfrc_applied[:] = 0.0

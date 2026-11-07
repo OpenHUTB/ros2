@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """生成效果图 GIF（离屏渲染，不需要显示器）。
 
-- ``demo_swing.gif``：摆角反馈控制器执行 2 m 平移的完整过程；
-- ``compare_pid_vs_swing.gif``：上下两格同帧对比（上：PID 基线，下：摆角反馈）。
+- ``demo_swing.gif``：摆角反馈控制器执行 3.5 m 平移的完整过程；
+- ``compare_pid_vs_swing.gif``：上下两格同帧对比（上：PD 基线，下：摆角反馈）。
 
 用法：``python3 scripts/make_gif.py --seconds 10 --fps 12``
 """
@@ -64,11 +64,11 @@ def render_episode(controller_name, seconds=8.0, fps=8, size=(480, 360),
 
 
 def render_pair(seconds=8.0, fps=8, size=(400, 300), payload_mass=0.1, distance=3.5):
-    """PID 与 swing 同步推进，返回上下两格的合成帧。"""
+    """PD 与 swing 同步推进，返回上下两格的合成帧。"""
     sims = {}
     ctrls = {}
     renderers = {}
-    for name in ("pid", "swing"):
+    for name in ("pd", "swing"):
         sim = SlungSim(payload_mass)
         sim.reset(payload_mass)
         ctrls[name] = CONTROLLERS[name]()
@@ -77,18 +77,18 @@ def render_pair(seconds=8.0, fps=8, size=(400, 300), payload_mass=0.1, distance=
         renderers[name] = mujoco.Renderer(sim.model, height=size[1], width=size[0])
     cam = make_camera()
     frames = []
-    hold = sims["pid"].base_pos.copy()
+    hold = sims["pd"].base_pos.copy()
     target = np.array([distance, 0.0, 1.5])
     next_frame = 0.0
-    while sims["pid"].time < seconds:
-        for name in ("pid", "swing"):
+    while sims["pd"].time < seconds:
+        for name in ("pd", "swing"):
             sim = sims[name]
             tgt = hold if sim.time < 1.0 else target
             sim.step(tgt, ctrls[name])
-        if sims["pid"].time >= next_frame:
-            cam.lookat[0] = float(sims["pid"].base_pos[0])
+        if sims["pd"].time >= next_frame:
+            cam.lookat[0] = float(sims["pd"].base_pos[0])
             imgs = []
-            for name in ("pid", "swing"):
+            for name in ("pd", "swing"):
                 renderers[name].update_scene(sims[name].data, camera=cam)
                 imgs.append(renderers[name].render().copy())
             gap = np.full((6, size[0], 3), 30, dtype=np.uint8)
@@ -110,7 +110,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="生成吊挂负载演示 GIF")
     parser.add_argument("--seconds", type=float, default=8.0)
     parser.add_argument("--fps", type=int, default=8)
-    parser.add_argument("--mass", type=float, default=0.3)
+    parser.add_argument("--mass", type=float, default=0.1)
     args = parser.parse_args(argv)
 
     os.makedirs(ASSETS, exist_ok=True)

@@ -2,7 +2,7 @@
 <package format="2">
   <name>uav_slung_load</name>
   <version>0.1.0</version>
-  <description>四旋翼吊挂负载的防摆控制对比（PID / ZV 输入整形 / 摆角反馈）</description>
+  <description>四旋翼吊挂负载的防摆控制对比（PD / ZV 输入整形 / 摆角反馈）</description>
   <maintainer email="noreply@hutb.edu.cn">OpenHUTB</maintainer>
   <license>MIT</license>
 

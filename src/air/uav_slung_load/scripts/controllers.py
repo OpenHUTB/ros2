@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 """三种吊挂负载控制律（同一套位置环，区别只在参考/反馈）：
 
-1. ``PidController``  —— 纯位置 PID，不感知负载摆动（基线）；
-2. ``ZvController``   —— 位置环 + ZV 输入整形，把阶跃拆成相隔半个摆动周期的两段；
+1. ``PdController``  —— 纯位置 PD（无积分项），不感知负载摆动（基线）；
+2. ``ZvController``  —— 位置环 + ZV 输入整形，把阶跃拆成相隔半个摆动周期的两段；
 3. ``SwingController``—— 位置环 + 负载摆角/速度反馈（“追着负载走”的阻尼项）。
+
+位置环刻意不加积分项：吊挂摆的等效干扰是持续存在的低频耦合，积分项会在摆的
+周期附近累积相位滞后，容易把系统推向极限环；稳态精度由姿态环内环与地面
+无扰动假设兜底，代价是存在厘米级稳态误差（见评测表中的位置 RMS）。
 
 三者共用 ``_attitude_and_mixer()``：位置环给出期望加速度，换算成期望姿态，
 再用 PD 姿态环 + 旋翼混控得到四个推力。因此对比只改变“如何使用负载状态”。
@@ -17,8 +21,8 @@ import numpy as np
 from sim_core import (ARM, INERTIA, K_M, MAX_THRUST, SWING_PERIOD)
 
 
-class PidController:
-    name = "pid"
+class PdController:
+    name = "pd"
 
     def __init__(self, kp_pos=0.5, kd_pos=1.4, kp_att=25.0, kd_att=7.0,
                  kp_yaw=8.0, kd_yaw=2.5, max_tilt_deg=25.0):
@@ -88,7 +92,7 @@ class PidController:
         return thrusts, tau_z
 
 
-class ZvController(PidController):
+class ZvController(PdController):
     """ZV（Zero Vibration）输入整形：两个 0.5 权重脉冲，间隔半个摆动周期。"""
 
     name = "zv"
@@ -116,7 +120,7 @@ class ZvController(PidController):
         return 0.5 * (target + delayed)
 
 
-class SwingController(PidController):
+class SwingController(PdController):
     """摆角/摆速反馈：把机体往负载的水平投影处拉，抑制摆动。"""
 
     name = "swing"
@@ -137,7 +141,7 @@ class SwingController(PidController):
 
 
 CONTROLLERS = {
-    "pid": PidController,
+    "pd": PdController,
     "zv": ZvController,
     "swing": SwingController,
 }

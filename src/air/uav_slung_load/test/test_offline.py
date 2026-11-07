@@ -44,6 +44,10 @@ class TestModel(unittest.TestCase):
         sim.reset(payload_mass=0.5)
         self.assertGreater(sim.total_mass, m_small)
         self.assertAlmostEqual(sim.total_mass - m_small, 0.2, places=6)
+        # 惯量必须随质量同步重算（实心球 I = 0.4·m·r²），否则不同负载的对比不是同一套物理
+        expected = 0.4 * 0.5 * 0.06 ** 2
+        self.assertAlmostEqual(float(sim.model.body_inertia[sim.payload_id][0]),
+                               expected, places=8)
 
     def test_swing_period(self):
         # 摆长 0.5 m，理论周期 2π√(L/g) ≈ 1.42 s
@@ -52,7 +56,7 @@ class TestModel(unittest.TestCase):
 
 class TestControllers(unittest.TestCase):
     def test_all_controllers_bounded(self):
-        for name in ("pid", "zv", "swing"):
+        for name in ("pd", "zv", "swing"):
             stats = _metrics(CONTROLLERS[name]())
             for key in ("swing_rms_deg", "pos_final_m", "thrust_max_n"):
                 self.assertTrue(np.isfinite(stats[key]), "%s 的 %s 非有限值" % (name, key))
@@ -60,16 +64,16 @@ class TestControllers(unittest.TestCase):
             self.assertLessEqual(stats["thrust_max_n"], 6.0 + 1e-6, "%s 推力超限" % name)
 
     def test_swing_feedback_reduces_swing(self):
-        pid = _metrics(CONTROLLERS["pid"]())
+        pd = _metrics(CONTROLLERS["pd"]())
         swing = _metrics(CONTROLLERS["swing"]())
-        self.assertLess(swing["swing_rms_deg"], pid["swing_rms_deg"])
-        self.assertLess(swing["residual_deg"], pid["residual_deg"])
+        self.assertLess(swing["swing_rms_deg"], pd["swing_rms_deg"])
+        self.assertLess(swing["residual_deg"], pd["residual_deg"])
         self.assertLess(swing["residual_deg"], 0.5)
 
     def test_zv_reduces_residual(self):
-        pid = _metrics(CONTROLLERS["pid"]())
+        pd = _metrics(CONTROLLERS["pd"]())
         zv = _metrics(CONTROLLERS["zv"]())
-        self.assertLess(zv["residual_deg"], pid["residual_deg"])
+        self.assertLess(zv["residual_deg"], pd["residual_deg"])
 
     def test_repeatable(self):
         a = _metrics(CONTROLLERS["swing"]())
