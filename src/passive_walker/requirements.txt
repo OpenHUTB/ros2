@@ -1,0 +1,6 @@
+# 固定到已验证版本：实测数据由 mujoco 3.1.6 + numpy 1.24.4 生成（见 docs/ground/passive_walker.md）
+mujoco==3.1.6
+numpy==1.24.4
+# 渲染演示 GIF（render.py）
+imageio==2.35.1
+pillow>=9.0
