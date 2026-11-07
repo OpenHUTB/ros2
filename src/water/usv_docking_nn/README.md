@@ -7,13 +7,36 @@ MuJoCo 无人艇自主靠泊：激光雷达 + 神经网络末段对准，ROS Noe
 - Ubuntu 20.04
 - ROS Noetic（`ros-noetic-ros-base`）
 - Python 3.8
-- MuJoCo 3.2.3（`pip3 install mujoco`）
-- numpy、matplotlib
+- MuJoCo 3.2.3、NumPy、Matplotlib
+
+## 安装
+
+```bash
+# 系统依赖（rosdep 可解析部分）
+sudo apt install python3-numpy python3-matplotlib python3-pil python3-yaml python3-rospkg
+
+# MuJoCo 不在 rosdep 中，必须用 pip 安装并锁定版本
+pip3 install mujoco==3.2.3
+```
+
+## 构建（catkin 工作空间）
+
+```bash
+mkdir -p ~/usv_ws/src && cp -r usv_docking_nn ~/usv_ws/src/
+cd ~/usv_ws && source /opt/ros/noetic/setup.bash && catkin_make
+source devel/setup.bash
+```
+
+`catkin_make` 会把节点安装到 `devel/lib/usv_docking_nn/`，把运行期脚本安装到
+`devel/share/usv_docking_nn/scripts/`，把 `launch`、`config`、`models` 安装到
+`devel/share/usv_docking_nn/`。节点通过 `rospkg` 定位包路径后导入这些脚本。
 
 ## 训练与评测
 
+仓库已附带训练好的权重，可直接跳过训练。
+
 ```bash
-cd scripts
+cd ~/usv_ws/src/usv_docking_nn/scripts
 python3 train.py --episodes 60 --epochs 40       # 约 3 分钟
 python3 evaluate.py --seeds 20
 ```
@@ -23,6 +46,7 @@ python3 evaluate.py --seeds 20
 ## 可视化
 
 ```bash
+cd ~/usv_ws/src/usv_docking_nn/scripts
 python3 main.py --mode nn --save-gif dock.gif --every 6
 python3 main.py --mode expert
 ```

@@ -25,6 +25,11 @@
 | NumPy | 1.17.4 |
 | Matplotlib | 3.1.2 |
 
+```bash
+sudo apt install python3-numpy python3-matplotlib python3-pil python3-yaml python3-rospkg
+pip3 install mujoco==3.2.3
+```
+
 ## 仿真场景
 
 场地为 48 m × 48 m 水域。码头位于 x ≈ 17.5 处，开口朝 -x 方向：
@@ -44,9 +49,24 @@ $$
 
 ## 运行步骤
 
+本包需要放在 catkin 工作空间的 `src/` 目录下才能构建：
+
 ```bash
-# 1. 训练（60 回合示范 + 40 epoch）
-cd src/water/usv_docking_nn/scripts
+# 0. 依赖与构建
+sudo apt install python3-numpy python3-matplotlib python3-pil python3-yaml python3-rospkg
+pip3 install mujoco==3.2.3          # MuJoCo 不在 rosdep 中，需 pip 安装
+mkdir -p ~/usv_ws/src && cp -r usv_docking_nn ~/usv_ws/src/
+cd ~/usv_ws && source /opt/ros/noetic/setup.bash && catkin_make
+source devel/setup.bash
+```
+
+构建后节点位于 `devel/lib/usv_docking_nn/`，运行期脚本位于
+`devel/share/usv_docking_nn/scripts/`，`launch`、`config`、`models` 位于
+`devel/share/usv_docking_nn/`；节点通过 `rospkg` 定位包路径后导入脚本。
+
+```bash
+# 1. 训练（仓库已附带训练好的权重，可跳过）
+cd ~/usv_ws/src/usv_docking_nn/scripts
 python3 train.py --episodes 60 --epochs 40
 
 # 2. 评测（专家 vs 神经网络，20 个相同起点）
@@ -55,8 +75,7 @@ python3 evaluate.py --seeds 20
 # 3. 可视化 / 导出 GIF
 python3 main.py --mode nn --save-gif dock.gif --every 6
 
-# 4. ROS 节点
-cd ~/usv_ws && catkin_make && source devel/setup.bash
+# 4. ROS 节点（权重随包提供，无需先训练）
 roslaunch usv_docking_nn main.launch mode:=nn
 ```
 

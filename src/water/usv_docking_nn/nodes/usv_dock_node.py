@@ -15,13 +15,35 @@ import sys
 
 import numpy as np
 import rospy
+import rospkg
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Float32MultiArray, Header, String
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "scripts"))
+
+
+def _package_scripts_dir():
+    """定位运行所需脚本目录。
+
+    安装空间：脚本由 CMakeLists.txt 安装到 <包>/share/usv_docking_nn/scripts，
+    用 rospkg 定位包路径后导入；
+    源码空间：回退到与本文件同级的 ../scripts。
+    """
+    try:
+        pkg = rospkg.RosPack().get_path("usv_docking_nn")
+        cand = os.path.join(pkg, "scripts")
+        if os.path.isdir(cand):
+            return cand
+    except Exception:
+        pass
+    return os.path.abspath(os.path.join(HERE, "..", "scripts"))
+
+
+SCRIPTS_DIR = _package_scripts_dir()
+PKG_DIR = os.path.abspath(os.path.join(SCRIPTS_DIR, ".."))
+sys.path.insert(0, SCRIPTS_DIR)
 
 from sim_core import (DockSim, N_BEAMS, ANGLE_MIN, ANGLE_MAX, MAX_RANGE,  # noqa: E402
                       thrust_from_twist, TOL_Y, TOL_YAW)
@@ -56,7 +78,7 @@ class DockNode(object):
         self.mode = rospy.get_param("~mode", "nn")
         self.rate_hz = rospy.get_param("~rate", 20.0)
         self.seed = rospy.get_param("~seed", 0)
-        self.model_dir = rospy.get_param("~model_dir", os.path.join(HERE, "..", "models"))
+        self.model_dir = rospy.get_param("~model_dir", os.path.join(PKG_DIR, "models"))
 
         self.sim = DockSim(seed=self.seed)
         self.obs = self.sim.reset(seed=self.seed)
