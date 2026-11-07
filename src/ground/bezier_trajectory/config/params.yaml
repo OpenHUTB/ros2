@@ -1,0 +1,21 @@
+# Bezier 曲线轨迹生成参数
+# 控制点序列（3 次 Bezier，4 个控制点）
+control_points:
+  - [120, 480]
+  - [250, 150]
+  - [650, 150]
+  - [780, 480]
+
+# B 样条对比控制点
+bspline_control_points:
+  - [120, 480]
+  - [300, 180]
+  - [600, 180]
+  - [780, 480]
+
+# 采样
+curve_samples: 200
+curvature_samples: 80
+
+# 动画
+anim_steps: 120

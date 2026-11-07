@@ -122,6 +122,7 @@ ROS每章节运行代码:
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [Bezier 曲线轨迹生成与可视化](./ground/bezier_trajectory.md) —— de Casteljau 算法与 Bernstein 多项式生成 Bezier 曲线，附 B 样条对比、曲率分析与弧长计算，纯 pygame 2D 可视化
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
