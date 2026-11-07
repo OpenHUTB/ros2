@@ -1,0 +1,22 @@
+<launch>
+  <!-- 任务 4：图像到控制指令的端到端视觉控制 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="altitude" default="4.0"/>
+
+  <node name="airsim_bridge" pkg="uav_nn_perception_navigation" type="airsim_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="false"/>
+  </node>
+
+  <node name="camera_perception" pkg="uav_nn_perception_navigation" type="camera_perception.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="camera_name" value="front_center"/>
+  </node>
+
+  <node name="end2end_control" pkg="uav_nn_perception_navigation" type="end2end_node.py" output="screen">
+    <param name="altitude" value="$(arg altitude)"/>
+  </node>
+</launch>
