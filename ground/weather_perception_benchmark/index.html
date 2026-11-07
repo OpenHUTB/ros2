@@ -292,6 +292,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#9-">9. 相机-激光雷达融合可行性实验</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 实验设计</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92">9.2 融合指标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#94">9.4 分析与结论</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
@@ -519,6 +531,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#9-">9. 相机-激光雷达融合可行性实验</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#91">9.1 实验设计</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#92">9.2 融合指标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#94">9.4 分析与结论</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
@@ -595,7 +619,7 @@
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">基于恶劣雨雾天气下多传感器感知性能对比实验</h1>
 <p>本文介绍一个基于 CARLA 0.9.15 与 OpenCV 的车载相机感知性能评测模块。模块以地面载具（ego 车辆）为感知平台，在车顶挂载 <code>sensor.camera.rgb</code> 相机（800×600，FOV 90°），通过 CARLA 天气 API 在<strong>同一场景、同一参考位姿</strong>下依次切换 <code>ClearNoon</code>（清晰）、<code>SoftRainNoon</code>（小雨）、<code>HardRainNoon</code>（大雨）、<code>HeavyFog</code>（浓雾）四档天气，对每档采集的图像计算亮度（灰度均值）、对比度（灰度标准差）、边缘密度（Canny 边缘像素占比）三个指标（每档连续取 5 帧平均），量化雨雾天气对车载视觉感知的退化程度；测量结束后车辆切换为自动驾驶，并录制恶劣天气下的行驶演示动图。</p>
-<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力；<strong>第三部分（第 8 节）</strong>在同一场景、同一参考位姿下同时挂载相机与激光雷达，用统一的退化率口径做跨传感器对比。</p>
+<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力；<strong>第三部分（第 8 节）</strong>在同一场景、同一参考位姿下同时挂载相机与激光雷达，用统一的退化率口径做跨传感器对比；<strong>第四部分（第 9 节）</strong>把雷达点云投影到相机图像上，检验融合在雨雾中的几何可用性与语义可用性。</p>
 <h2 id="1">1. 运行环境</h2>
 <table>
 <thead>
@@ -1283,6 +1307,163 @@ python<span class="w"> </span>main.py
 </ul>
 <p>本节源码位于
 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/weather_lidar_perception"><code>src/ground/weather_lidar_perception</code></a>，
+采集流程与指标口径与本文档一致，依赖与运行方式见该目录的 README。</p>
+<h2 id="9-">9. 相机-激光雷达融合可行性实验</h2>
+<p>第 8.5 节的结论是「相机 + 激光雷达的融合比单靠相机更可靠」。本节把这句话拆成可测量的两问：
+<strong>几何上投得上吗</strong>、<strong>语义上对得上吗</strong>。</p>
+<h3 id="91">9.1 实验设计</h3>
+<p>在同一辆车、同一参考位姿、同一四档天气下同时挂载三台传感器：</p>
+<table>
+<thead>
+<tr>
+<th>传感器</th>
+<th>安装位置</th>
+<th>参数与作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensor.camera.rgb</code></td>
+<td>x=1.5, z=2.4</td>
+<td>800×600、FOV 90°，待投影的图像（与前三部分一致）</td>
+</tr>
+<tr>
+<td><code>sensor.camera.depth</code></td>
+<td>x=1.5, z=2.4</td>
+<td>同机位同内参，仅用于把天空像素从覆盖率分母中剔除</td>
+</tr>
+<tr>
+<td><code>sensor.lidar.ray_cast</code></td>
+<td>x=0.0, z=2.6</td>
+<td>32 线、50 m 量程、20 Hz、100 万点/秒，待投影的点云</td>
+</tr>
+</tbody>
+</table>
+<p><strong>投影口径</strong>：两台传感器姿态相同、只差固定平移，因此雷达坐标系到相机坐标系只需平移换算；
+相机内参由 FOV 与分辨率反解，<code>fx = fy = (W/2)/tan(FOV/2) = 400</code>、主点 <code>(400, 300)</code>。
+投影公式为 <code>u = cx + fx·y/x</code>、<code>v = cy − fy·z/x</code>（z 轴向上，故 v 取负），只保留相机前方的点。</p>
+<p><strong>点云口径</strong>：雷达按渲染帧发布，单帧只含约 45° 扇形，因此把 <strong>0.3 s 窗口</strong>内累积的整圈点云
+（约 21~26 万点）取并集后再投影；四档天气使用完全相同的窗口，测量期间车辆保持静止。
+点密度比第 8 节提高到 100 万点/秒，目的是让 800×600 图像上的投影点足够密，
+否则覆盖率会被单帧采样随机性主导。</p>
+<h3 id="92">9.2 融合指标</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+<th>衡量什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>投影有效率</td>
+<td>相机前方点中落在图像范围内的比例</td>
+<td>几何链路是否正常</td>
+</tr>
+<tr>
+<td>天空误投率</td>
+<td>投到天空像素的点占比</td>
+<td>标定是否正确（正常应接近 0）</td>
+</tr>
+<tr>
+<td>图像覆盖率</td>
+<td>非天空像素中被至少一个投影点覆盖的比例</td>
+<td>雷达能标注多少图像区域</td>
+</tr>
+<tr>
+<td>近场 / 远端覆盖率</td>
+<td>只用 ≤20 m / ≥30 m 的点计算的覆盖率</td>
+<td>近场与远端的标注能力</td>
+</tr>
+<tr>
+<td>边缘命中率</td>
+<td>投影点落在图像 Canny 边缘 3 像素邻域内的比例</td>
+<td>几何对齐之后语义是否还对得上</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 实验结果</h3>
+<p>四档天气的投影叠加图（点按距离着色，暖色为远处）：</p>
+<p><img alt="" src="../img/ground/weather_fusion_overlay.png"/></p>
+<p>指标数据（同一参考位姿，0.3 s 窗口累积整圈点云）：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>点数</th>
+<th>投影有效率(%)</th>
+<th>天空误投率(%)</th>
+<th>图像覆盖率(%)</th>
+<th>近场覆盖(≤20m,%)</th>
+<th>远端覆盖(≥30m,%)</th>
+<th>边缘命中率(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ClearNoon</td>
+<td>255776</td>
+<td>57.4</td>
+<td>0.00</td>
+<td>5.59</td>
+<td>3.95</td>
+<td>1.23</td>
+<td>40.6</td>
+</tr>
+<tr>
+<td>SoftRainNoon</td>
+<td>241964</td>
+<td>58.8</td>
+<td>0.00</td>
+<td>5.59</td>
+<td>3.97</td>
+<td>1.21</td>
+<td>36.2</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>229816</td>
+<td>57.0</td>
+<td>0.00</td>
+<td>5.41</td>
+<td>3.91</td>
+<td>1.11</td>
+<td>21.0</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>211586</td>
+<td>58.0</td>
+<td>0.00</td>
+<td>5.42</td>
+<td>3.92</td>
+<td>1.11</td>
+<td>11.4</td>
+</tr>
+</tbody>
+</table>
+<p>指标柱状图与边缘命中率随距离的变化曲线：</p>
+<p><img alt="" src="../img/ground/weather_fusion_metrics.png"/></p>
+<h3 id="94">9.4 分析与结论</h3>
+<ul>
+<li><strong>几何链路在四档天气下完全稳定</strong>：投影有效率 57.0%~58.8%，波动来自点云角向分布的
+  随机性而非天气；天空误投率四档恒为 <strong>0.00%</strong>，说明外参与内参在整个系列的四档天气下都成立。</li>
+<li><strong>图像覆盖率几乎不受天气影响</strong>：5.59% → 5.42%（仅降 3%），近场覆盖率更是稳定在 3.9% 左右。
+  雷达能「标注」的图像面积基本保持，退化只体现在远端（≥30 m 由 1.23% 降到 1.11%）。</li>
+<li><strong>真正的退化发生在「对得上」这一侧</strong>：边缘命中率由 40.6% 降到 11.4%（降幅约 72%）。
+  同样的点、同样的几何位置，晴天时有四成落在建筑轮廓、车道线、车辆边界上，
+  浓雾里却只剩一成——不是点错了位，而是图像那一侧的结构已经被雾抹掉了。
+  曲线也印证这一点：晴天与小雨的边缘命中率随距离单调上升（远处是建筑轮廓密集区），
+  而浓雾在 15 m 之后从 38% 迅速塌到 25 m 的 5%、35 m 以上的 0。</li>
+<li><strong>与第 8 节对照</strong>：同一批天气下相机边缘密度损失 84%，融合的边缘命中率损失 72%——
+  两者在「语义结构」上的损失量级相当，融合略轻但谈不上免疫。融合真正的优势在另一半：
+  图像覆盖率四档几乎不变（5.59% → 5.42%），而相机那一侧的结构已经大面积消失。
+  雷达提供了稳定的深度与几何覆盖，却没有提供被雾遮挡的结构，
+  因此融合的价值集中在近中距离；远端应退化为雷达单模态。</li>
+</ul>
+<p>本节源码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/weather_sensor_fusion"><code>src/ground/weather_sensor_fusion</code></a>，
 采集流程与指标口径与本文档一致，依赖与运行方式见该目录的 README。</p></div>
 </div>
 </div><footer>
