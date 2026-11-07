@@ -72,8 +72,28 @@ class VisualLaneDepartureNode(Node):
         finally:
             self._stop.set()
 
+    @staticmethod
+    def _resolve_checkpoint(path):
+        """权重先按给定路径找，找不到再去包的 share 目录找。
+
+        ros2 launch 的工作目录不一定是包源码目录，默认值 models/lane_regressor.npz
+        在别处启动时会直接落空，这里补一条兜底路径。
+        """
+        if os.path.isfile(path):
+            return path
+        try:
+            from ament_index_python.packages import get_package_share_directory
+            share = get_package_share_directory('carla_visual_lane_departure_warning')
+            candidate = os.path.join(share, os.path.basename(path)) \
+                if os.path.isabs(path) else os.path.join(share, path)
+            if os.path.isfile(candidate):
+                return candidate
+        except Exception:                       # 没装 ament 索引时保持原样
+            pass
+        return path
+
     def _loop(self):
-        checkpoint = self._param('checkpoint')
+        checkpoint = self._resolve_checkpoint(self._param('checkpoint'))
         if not os.path.isfile(checkpoint):
             self.get_logger().error('找不到权重 %s，先跑 main.py --collect 与 --train'
                                     % checkpoint)

@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml', 'main.py']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch*')),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'models'), glob('models/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
