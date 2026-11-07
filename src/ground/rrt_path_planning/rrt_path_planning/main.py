@@ -26,7 +26,7 @@ def build_map() -> ObstacleMap:
     return ObstacleMap(C.OBSTACLES, C.WIDTH, C.HEIGHT)
 
 
-def build_planner() -> RRT:
+def build_planner(seed: int | None = None) -> RRT:
     return RRT(
         obs_map=build_map(),
         start=C.START,
@@ -34,7 +34,7 @@ def build_planner() -> RRT:
         step_size=C.STEP_SIZE,
         goal_radius=C.GOAL_RADIUS,
         goal_sample_rate=C.GOAL_SAMPLE_RATE,
-        seed=C.SEED,
+        seed=C.SEED if seed is None else seed,
     )
 
 
@@ -175,7 +175,16 @@ def main():
                         help="无显示设备环境（VM/CI）下离屏运行")
     parser.add_argument("--output", default="rrt_demo.gif",
                         help="录制模式下输出 gif 路径")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="随机种子（默认用 config.py 里的 SEED）")
+    parser.add_argument("--max-iter", type=int, default=None,
+                        help="最大迭代次数（默认用 config.py 里的 MAX_ITER）")
     args = parser.parse_args()
+
+    if args.seed is not None:
+        C.SEED = args.seed
+    if args.max_iter is not None:
+        C.MAX_ITER = args.max_iter
 
     headless = args.no_display or args.record or "SDL_VIDEODRIVER" in os.environ
     pygame.init()
@@ -189,7 +198,7 @@ def main():
         screen = pygame.display.set_mode((C.WIDTH, C.HEIGHT))
     pygame.display.set_caption("RRT Path Planning")
     clock = pygame.time.Clock()
-    planner = build_planner()
+    planner = build_planner(args.seed)
 
     if args.record or headless:
         # 录制 / 无头模式
