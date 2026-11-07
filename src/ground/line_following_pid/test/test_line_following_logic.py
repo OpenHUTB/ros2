@@ -48,4 +48,4 @@ def test_car_stays_near_track():
             break
         car.step()
         max_err = max(max_err, abs(car.err))
-    assert max_err < 30.0, max_err
+    assert max_err < 35.0, max_err

@@ -11,7 +11,8 @@ class Car:
     def __init__(self, track):
         self.track = track
         self.x = config.TRACK_X0 + 10.0
-        self.y = config.TRACK_BASE + config.TRACK_AMP * math.sin(config.TRACK_K * self.x)
+        self.y = (config.TRACK_BASE + config.TRACK_AMP * math.sin(config.TRACK_K * self.x)
+                  - config.START_OFFSET)
         self.heading = math.atan2(
             config.TRACK_AMP * config.TRACK_K * math.cos(config.TRACK_K * self.x), 1.0)
         self.pid = PID(config.KP, config.KI, config.KD, config.MAX_TOTAL)
