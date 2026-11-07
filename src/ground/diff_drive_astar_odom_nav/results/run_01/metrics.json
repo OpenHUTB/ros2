@@ -1,0 +1,16 @@
+{
+  "status": "SUCCEEDED",
+  "planned_length_m": 14.23,
+  "traveled_length_m": 13.539,
+  "traveled_odom_length_m": 13.539,
+  "duration_s": 25.05,
+  "final_error_m": 0.109,
+  "cross_track_rms_m": 0.058,
+  "cross_track_mean_abs_m": 0.0486,
+  "cross_track_max_m": 0.1362,
+  "odom_drift_final_m": 0.0,
+  "odom_drift_rms_m": 0.0,
+  "max_cmd_linear_mps": 0.75,
+  "plan_points": 233,
+  "samples": 502
+}

@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<robot name="diff_robot">
+  <!-- 两轮差速底盘：两个驱动轮 + 一个低摩擦万向支撑球。
+       里程计由 gazebo_ros_diff_drive 的编码器模式积分得到（odometry_source=1），
+       全局真值由 gazebo_ros_p3d 单独发布到 /ground_truth，二者不共享状态。 -->
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <mass value="1.5"/>
+      <inertia ixx="0.0097" ixy="0" ixz="0" iyy="0.0125" iyz="0" izz="0.0197"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <geometry><box size="0.30 0.26 0.10"/></geometry>
+      <material name="blue"><color rgba="0.15 0.35 0.75 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <geometry><box size="0.30 0.26 0.10"/></geometry>
+    </collision>
+  </link>
+
+  <link name="left_wheel">
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.00043" ixy="0" ixz="0" iyy="0.00081" iyz="0" izz="0.00043"/>
+    </inertial>
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.09" length="0.04"/></geometry>
+      <material name="dark"><color rgba="0.15 0.15 0.15 1"/></material>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.09" length="0.04"/></geometry>
+    </collision>
+  </link>
+
+  <link name="right_wheel">
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.00043" ixy="0" ixz="0" iyy="0.00081" iyz="0" izz="0.00043"/>
+    </inertial>
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.09" length="0.04"/></geometry>
+      <material name="dark"><color rgba="0.15 0.15 0.15 1"/></material>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.09" length="0.04"/></geometry>
+    </collision>
+  </link>
+
+  <link name="caster">
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00005" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005"/>
+    </inertial>
+    <visual>
+      <geometry><sphere radius="0.05"/></geometry>
+      <material name="gray"><color rgba="0.6 0.6 0.6 1"/></material>
+    </visual>
+    <collision>
+      <geometry><sphere radius="0.05"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+    <origin xyz="0 0.17 0.09" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.02" friction="0.0"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+    <origin xyz="0 -0.17 0.09" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="0.02" friction="0.0"/>
+  </joint>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster"/>
+    <origin xyz="0.12 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="left_wheel">
+    <mu1>1.0</mu1><mu2>1.0</mu2>
+    <kp>1000000.0</kp><kd>1.0</kd>
+  </gazebo>
+  <gazebo reference="right_wheel">
+    <mu1>1.0</mu1><mu2>1.0</mu2>
+    <kp>1000000.0</kp><kd>1.0</kd>
+  </gazebo>
+  <gazebo reference="caster">
+    <mu1>0.02</mu1><mu2>0.02</mu2>
+  </gazebo>
+
+  <!-- 差速驱动：编码器里程计 + 轮子 TF/关节状态 -->
+  <gazebo>
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+      <update_rate>50</update_rate>
+      <num_wheel_pairs>1</num_wheel_pairs>
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.34</wheel_separation>
+      <wheel_diameter>0.18</wheel_diameter>
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>4.0</max_wheel_acceleration>
+      <command_topic>cmd_vel</command_topic>
+      <odometry_topic>odom</odometry_topic>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+      <odometry_source>1</odometry_source>
+    </plugin>
+  </gazebo>
+
+  <!-- 全局真值（仅用于评估，不参与控制） -->
+  <gazebo>
+    <plugin name="ground_truth" filename="libgazebo_ros_p3d.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>odom:=ground_truth</remapping>
+      </ros>
+      <body_name>base_link</body_name>
+      <frame_name>world</frame_name>
+      <update_rate>50</update_rate>
+      <gaussian_noise>0.0</gaussian_noise>
+    </plugin>
+  </gazebo>
+</robot>
