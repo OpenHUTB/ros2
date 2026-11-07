@@ -105,21 +105,24 @@ TEST(PathPlannerCost, FavourableRewardCappedAtLengthTerm)
 
   OceanCurrent::Params cp;
   cp.pattern = OceanCurrent::Pattern::UNIFORM;
-  cp.magnitude = 1.0;  // 等于参考流速，归一化对齐度饱和在 1
+  cp.magnitude = 0.4;
   cp.direction = 0.0;
   cp.world_size = 10.0;
   auto current = std::make_shared<OceanCurrent>(cp);
 
-  PathPlanner planner(PathPlanner::Params{});
+  // 故意取 current_compensation=1.0，使 k*w_c*magnitude/v_ref = 1.0*3.0*0.4/1.0 = 1.2
+  // 越过 length_weight=1.0 的校验阈值；节点层会拒绝该组合，库层则截到长度项
+  PathPlanner::Params pp;
+  pp.current_compensation = 1.0;
+  PathPlanner planner(pp);
   planner.setEnvironment(heatmap, current);
 
-  // 顺流奖励按公式为 0.5*3.0*1.0 = 1.5 倍长度项，被截到长度项本身：
-  // 库层上限只保证代价不为负（此处恰为 0）。节点层另有启动校验
-  // current_compensation*current_weight*magnitude/current_ref_speed < length_weight，
-  // 默认参数（0.5*3.0*0.4/1.0 = 0.6 < 1.0）下不会出现 0 代价的免费顺流边
+  // 顺流奖励 1.0*3.0*0.4 = 1.2 倍长度项，被截到长度项本身：
+  // 库层上限只保证代价不为负（此处恰为 0），并不承诺非零；
+  // 默认参数（0.5*3.0*0.4/1.0 = 0.6 < 1.0）经节点校验后才不会出现 0 代价的免费顺流边
   EXPECT_DOUBLE_EQ(planner.stepCost(10, 10, 11, 10), 0.0);
-  // 逆流不受截断影响：0.5 + 3.0*1.0*0.5 = 2.0
-  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 2.0, 1e-9);
+  // 逆流不受截断影响：0.5 + 3.0*0.4*0.5 = 1.1
+  EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 1.1, 1e-9);
 }
 
 TEST(PathPlannerCost, ReferenceSpeedNormalizesMagnitude)

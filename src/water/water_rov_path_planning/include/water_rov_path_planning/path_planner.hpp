@@ -78,7 +78,9 @@ private:
   double last_cost_ = 0.0;
   double time_ = 0.0;
 
-  /// 启发函数：欧氏距离换算成米并乘长度权重，与 g 值的长度项同量纲
+  /// 启发函数：欧氏距离换算成米并乘长度权重，与 g 值的长度项同量纲。
+  /// 但顺流边每米代价可远低于长度项，h 仍可能高估实际剩余代价，
+  /// 因此不满足可采纳性，A* 返回的是近优解而非全局最优
   double heuristic(int gx, int gy, int goal_gx, int goal_gy) const;
 
   /// 一段世界坐标线段的加权代价（risk 由调用方按代表点取好）
