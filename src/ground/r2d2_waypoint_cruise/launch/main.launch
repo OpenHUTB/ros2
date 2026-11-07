@@ -1,0 +1,6 @@
+<launch>
+    <!-- R2D2 航点巡航仿真启动文件 -->
+    <node pkg="r2d2_waypoint_cruise" type="python" name="r2d2_waypoint_cruise"
+          output="screen" args="$(find r2d2_waypoint_cruise)/scripts/main.py">
+    </node>
+</launch>
