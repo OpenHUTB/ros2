@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 
 from mujoco_forklift_pallet_docking.policy import ImagePolicy, teacher_action
@@ -24,3 +26,19 @@ def test_camera_observes_pallet_from_different_distances():
     finally:
         far.close()
         near.close()
+
+
+def test_packaged_policy_checkpoint_round_trip(tmp_path: Path):
+    policy = ImagePolicy(seed=21)
+    images = np.zeros((1, 64, 64), dtype=np.uint8)
+    checkpoint = Path(__file__).parents[1] / "mujoco_forklift_pallet_docking" / "models" / "pallet_docking_policy.npz"
+    loaded = ImagePolicy.load(str(checkpoint))
+    output = loaded.predict(images)
+    assert output.shape == (1, 2)
+    assert np.all(np.isfinite(output))
+    assert np.all((output >= 0.0) & (output <= 1.0))
+
+    saved = tmp_path / "policy.npz"
+    policy.save(str(saved))
+    restored = ImagePolicy.load(str(saved))
+    assert np.array_equal(policy.predict(images), restored.predict(images))
