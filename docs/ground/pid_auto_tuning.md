@@ -32,6 +32,13 @@ colcon build --packages-select pid_auto_tuning
 source install/setup.bash
 ```
 
+运行单元测试（7 个用例，覆盖被控对象稳态、超调与调节检测、未收敛语义、上升时间缺失、负目标、继电器参数、参数生成与边界字段）：
+
+```bash
+colcon test --packages-select pid_auto_tuning
+colcon test-result --verbose
+```
+
 一键跑完整流程（终端输出指标表，并把阶跃数据写入 `~/.ros/pid_auto_tuning/step_response.csv`，可用 `--output-dir` 指定其他目录）：
 
 ```bash

@@ -21,6 +21,13 @@ colcon build --packages-select pid_auto_tuning
 source install/setup.bash
 ```
 
+运行单元测试（7 个用例：被控对象稳态、超调/调节检测、未收敛语义、上升时间缺失、负目标、继电器参数、参数生成与边界字段）：
+
+```bash
+colcon test --packages-select pid_auto_tuning
+colcon test-result --verbose
+```
+
 ## 3. 运行
 
 ### 3.1 一键跑完整流程（终端打印指标，不需要 RViz）
