@@ -28,6 +28,16 @@ catkin_install_python(PROGRAMS
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch/ config/ models/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# 注意：install(DIRECTORY <dir>/) 带尾斜杠会把目录**内容**平铺到目标目录，
+# 因此 launch、config、models 必须分别安装到各自的子目录，
+# 否则节点按 models/ 查找权重会失败。
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
+install(DIRECTORY config/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+)
+install(DIRECTORY models/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/models
+  PATTERN "__pycache__" EXCLUDE
 )
