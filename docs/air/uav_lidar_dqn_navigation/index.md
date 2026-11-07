@@ -92,6 +92,8 @@ $$
 
 实测：2.0 m/s 前进指令下位移 13.4 m，高度波动约 ±0.1 m。
 
+![键盘遥控](../../img/air/uav_lidar_dqn_navigation/gif1_teleop.gif)
+
 ## 4 任务二：雷达感知 + DQN 导航
 
 ### 4.1 状态设计
@@ -182,6 +184,8 @@ $$
 
 部署实测：目标 (15, 10)，从原点起飞后到达 (14.77, 9.21)，误差 0.83 m。
 
+![雷达感知与 DQN 导航](../../img/air/uav_lidar_dqn_navigation/gif2_dqn.gif)
+
 ## 5 任务三：建图与导航同步
 
 ### 5.1 TF 链与扫描
@@ -223,6 +227,8 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点累积 1 秒点�
 
 ![建图结果](../../img/air/uav_lidar_dqn_navigation/uav_map_preview.png)
 
+![SLAM 建图与导航同步](../../img/air/uav_lidar_dqn_navigation/gif3_slam.gif)
+
 ## 6 任务四：图像端到端 DQN
 
 ### 6.1 状态与网络
@@ -253,6 +259,8 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点累积 1 秒点�
 | 飞行耗时 | 约 45 s |
 
 部署时目标 (0,12)，从原点起飞后到达 (−2.41, 12.49)，误差 2.46 m，全程未发生碰撞。
+
+![图像端到端 DQN](../../img/air/uav_lidar_dqn_navigation/gif4_e2e.gif)
 与任务 2 的雷达策略（同场景误差 0.83 m）相比，纯图像输入的定位精度更依赖训练分布；
 在训练中出现过的目标方向上表现明显更好。
 
