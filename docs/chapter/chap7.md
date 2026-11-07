@@ -514,4 +514,84 @@ Gazebo 不会热加载模型，必须先 `killall gzserver gzclient`，再重新
 
 ---
 
+## 11. 阿克曼运动学离线验证与路径跟踪
+
+第 6 节的键盘遥控节点只在按键时算一次阿克曼解算，想验证"这套转向几何对不对""给定一条路线小车能不能跟住"，每次都得起 Gazebo 重新开一遍。这一节补两个**不需要 ROS** 的工具，直接在笔记本上跑。
+
+### 11.1 文件
+
+```text
+src/chap7/smartcar_control/
+├── scripts/ackermann_kinematics.py   # 阿克曼几何 + 自行车模型 + Pure Pursuit
+├── scripts/pure_pursuit_demo.py      # 三种路径的离线跟踪演示
+└── test/test_ackermann_kinematics.py # 36 个单元测试
+```
+
+`ackermann_kinematics.py` 里的公式与 C++ 节点逐项一致（轴距 0.1885 m、轮距 0.16 m、最大转角 0.4 rad、轮半径 0.025 m），所以离线算出来的四轮指令就是真车节点的指令。
+
+### 11.2 阿克曼几何
+
+给定虚拟前轮转角 $\delta$ 与轴距 $L$、轮距 $W$：
+
+$$
+\delta_{left}=\arctan\frac{L\tan\delta}{L-\tfrac12 W\tan\delta},\qquad
+\delta_{right}=\arctan\frac{L\tan\delta}{L+\tfrac12 W\tan\delta}
+$$
+
+$$
+v_{left}=v\left(1-\frac{W\tan\delta}{2L}\right),\qquad
+v_{right}=v\left(1+\frac{W\tan\delta}{2L}\right)
+$$
+
+内侧轮转角更大、速度更慢，外侧轮走更长的弧。曲率 $\kappa=\tan\delta/L$，最大转角对应最小转弯半径：
+
+$$
+R_{min}=\frac{L}{\tan\delta_{max}}=\frac{0.1885}{\tan 0.4}\approx 0.446\ \text{m}
+$$
+
+### 11.3 Pure Pursuit
+
+在路径上取前视距离 $L_d$ 处的点，用"车头指向它"的曲率跟踪：
+
+$$
+\kappa=\frac{2\sin\alpha}{L_d},\qquad \delta=\arctan(\kappa L)
+$$
+
+`simulate()` 用自行车模型积分，输出横向偏差、转向饱和比例等指标。
+
+### 11.4 运行
+
+```bash
+cd src/chap7/smartcar_control
+
+# 三种路径（圆、换道、双移线）
+python3 scripts/pure_pursuit_demo.py
+
+# 只跑圆周，调前视距离和车速
+python3 scripts/pure_pursuit_demo.py --path circle --lookahead 0.8 --speed 0.5
+
+# 单元测试
+python3 -m unittest discover -s test
+```
+
+实测（前视 0.5 m、车速 0.4 m/s）：
+
+| 路径 | 路径长 | 用时 | 横向偏差 RMS | 最大 | 转向饱和 |
+|---|---|---|---|---|---|
+| 圆周 R=1.0 m | 6.28 m | 15.61 s | **1.0 mm** | 2.1 mm | 0% |
+| 正弦换道 4 m / 0.6 m | 4.05 m | 10.03 s | **2.1 mm** | 2.7 mm | 0% |
+| 双移线 4.8 m | 5.47 m | 13.53 s | **13.5 mm** | 17.9 mm | 0% |
+
+阿克曼解算示例（$\delta=0.2$ rad、$v=0.4$ m/s）：左前轮 +0.218 rad、右前轮 +0.185 rad；左后轮 0.366 m/s、右后轮 0.434 m/s，换算成轮速 14.6 / 17.4 rad/s。
+
+### 11.5 与真车节点的关系
+
+* 同样的输入（车速 + 转角）→ 同样的四轮指令，可以直接对照 C++ 终端打印的
+  `left_speed / right_speed / left_angle / right_angle`；
+* 前视距离太小会在弯道画龙（`--lookahead 0.1` 时横向偏差明显变大），太大则切弯；
+* 想接到真车上，把 `PurePursuit.command()` 输出的 `(v, δ)` 送进原来的
+  `ackermann_angles / wheel_speeds` 即可，不需要改控制器接口。
+
+---
+
 本章完成了阿克曼四轮小车从 xacro 建模、xacro 旧语法修复、ros_control 控制器配置、阿克曼运动解算与键盘遥控，到激光雷达自扫故障排查和三传感器数据验证的完整流程，全部实验结果均在 Ubuntu 20.04 + ROS Noetic 环境下复现通过，工程代码位于仓库 `src/chap7` 目录。
