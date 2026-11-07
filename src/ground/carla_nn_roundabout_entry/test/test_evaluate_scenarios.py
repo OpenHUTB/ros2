@@ -24,6 +24,23 @@ def test_policy_controller_records_a_decision_for_each_step() -> None:
     assert result["policy_wait_frames"] + result["policy_enter_frames"] == 80
 
 
+def test_each_controller_integrates_ranges_and_runs_astar() -> None:
+    report = evaluate_scenarios([7], steps=6, controller="baseline")
+    result = report["results"][0]
+
+    assert result["map_rays_integrated"] == 6 * 25
+    assert result["map_free_cells"] > 0
+    assert result["path_search_frames"] == 6
+
+
+def test_image_model_controls_each_simulation_step() -> None:
+    report = evaluate_scenarios([7], steps=4, controller="image-model")
+    result = report["results"][0]
+
+    assert result["image_control_frames"] == 4
+    assert result["map_rays_integrated"] == 4 * 25
+
+
 
 
 def test_evaluation_requires_seeds() -> None:
