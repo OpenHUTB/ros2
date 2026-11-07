@@ -79,11 +79,11 @@ RViz 中 `Fixed Frame` 为 `map`，`MarkerArray` 话题为 `/pid_auto_tuning/mar
 | `switch_period` | 6.0 | 目标航向切换周期（秒） |
 | `u_limit` | 2.5 | 角速度指令饱和上限（rad/s） |
 
-注：第 6 节的指标表由 `main` 以 `dt = 0.01` 计算；上面 `dt` 是 RViz 节点的默认步长，同一组参数下节点侧的指标会与此表略有差异。
+注：第 6 节的指标表由 `main` 以 `dt = 0.01` 计算；上面 `dt` 是 RViz 节点的默认步长，同一组参数下节点侧的指标会与此表略有差异。节点启动时会校验参数，`dt`、`switch_period`、`u_limit` 需大于 0，`target_deg` 需在 (0, 180] 内，不满足时打印错误并以非零码退出。
 
 ## 6. 运行效果验证
 
-`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°；最后一行为 CSV 的绝对路径，随执行目录不同而变化）：
+`ros2 run pid_auto_tuning main` 的终端输出（航向角阶跃目标 90°；最后一行为 CSV 的绝对路径，默认位于 `~/.ros/pid_auto_tuning/`）：
 
 ```
 被控对象: 一阶惯性 + 纯延迟 (gain=1.0, tau=0.40s, delay=0.10s)
