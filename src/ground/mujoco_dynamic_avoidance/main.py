@@ -73,11 +73,12 @@ obstacles = [
 dt = m.opt.timestep
 T_END = 30.0
 min_clear = float("inf")
+reached = False
 
 with mujoco.viewer.launch_passive(m, d) as viewer:
     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
     viewer.cam.distance = 9.0; viewer.cam.elevation = -50; viewer.cam.azimuth = 90
-    while viewer.is_running():
+    while viewer.is_running() and d.time < T_END:
         step_start = time.time()
         t = min(d.time, T_END)
 
@@ -121,6 +122,8 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
         v = V_MAX * min(1.0, dist_goal / 1.0)
         if dist_goal < STOP:
             v = 0.0
+            reached = True
+            break
 
         vx = v * math.cos(yaw)
         vy = v * math.sin(yaw)
@@ -139,4 +142,9 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
         if slack > 0:
             time.sleep(slack)
 
-print(f"终点=({d.qpos[x_qp]:.2f},{d.qpos[y_qp]:.2f}) 最小车障间距={min_clear:.2f}m")
+elapsed = d.time
+final_dist = math.hypot(GOAL[0] - d.qpos[x_qp], GOAL[1] - d.qpos[y_qp])
+if reached:
+    print(f"已到达终点，用时 {elapsed:.1f} s，最小车障间距 {min_clear:.2f} m")
+else:
+    print(f"未到达目标：距终点 {final_dist:.2f} m，用时 {elapsed:.1f} s，最小车障间距 {min_clear:.2f} m")
