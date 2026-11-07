@@ -74,6 +74,10 @@ class VisualLaneDepartureNode(Node):
             self.get_logger().error('运行中断：%s' % error)
         finally:
             self._stop.set()
+            # 循环在后台线程里结束，主线程还停在 rclpy.spin()，
+            # 不主动关一次的话，--frames 跑完节点也不会退出
+            if rclpy.ok():
+                rclpy.shutdown()
 
     @staticmethod
     def _resolve_checkpoint(path):
