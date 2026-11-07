@@ -150,7 +150,7 @@ src/ground/trajectory_accuracy_eval/
 ```bash
 python3 test/test_traj_eval.py        # 自洽测试（41 项）
 python3 test/test_known_answer.py     # 已知答案对拍（7 项）
-python3 -m pytest test/ -q            # 或一次跑完（15 passed）
+python3 -m pytest test/ -q            # 或一次跑完（16 passed）
 ```
 
 > **Windows 用户**：默认控制台是 GBK，无法编码 `∘`/`⁻¹` 等符号。

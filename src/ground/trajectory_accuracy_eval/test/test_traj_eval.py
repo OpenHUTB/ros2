@@ -91,6 +91,25 @@ def check(cond: bool, msg: str) -> None:
     else:
         FAIL += 1
         print(_safe(f"  [FAIL] {msg}"))
+        # Direct execution aggregates failures in main(); pytest does not call
+        # main(), so the check must raise for pytest to report a non-zero exit.
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            raise AssertionError(msg)
+
+
+def test_check_failure_is_visible_to_pytest(monkeypatch) -> None:
+    global FAIL
+    previous_failures = FAIL
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "probe")
+    try:
+        try:
+            check(False, "expected check failure")
+        except AssertionError as exc:
+            assert str(exc) == "expected check failure"
+        else:
+            raise AssertionError("check() did not report its failure to pytest")
+    finally:
+        FAIL = previous_failures
 
 
 def close(actual: float, expected: float, tol: float, msg: str) -> None:
