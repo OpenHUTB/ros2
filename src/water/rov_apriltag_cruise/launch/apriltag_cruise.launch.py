@@ -68,6 +68,7 @@ def generate_launch_description():
         parameters=[{
             "marker_size": 0.6,
             "show_gui": show_camera_gui,
+            "use_sim_time": True,
         }],
     )
 
@@ -76,7 +77,10 @@ def generate_launch_description():
         executable="cruise_controller.py",
         name="cruise_controller",
         output="screen",
-        parameters=[{"config_file": os.path.join(pkg_share, "config", "cruise.yaml")}],
+        parameters=[{
+            "config_file": os.path.join(pkg_share, "config", "cruise.yaml"),
+            "use_sim_time": True,
+        }],
     )
 
     rviz = Node(
