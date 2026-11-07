@@ -399,9 +399,9 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#92-ros-airsim">9.2 虚拟机内 ROS → AirSim 真机飞行（实测）</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实跑才暴露的两个坑（已修）</a>
+<li class="toctree-l3"><a class="reference internal" href="#93">9.3 实跑才暴露的坑（已修）</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#94">9.4 真实手势 → 真机起降（完整链路）</a>
+<li class="toctree-l3"><a class="reference internal" href="#94">9.4</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#95">9.5 全部动作实机验证</a>
 </li>
@@ -413,7 +413,7 @@
 <ul>
 <li class="toctree-l3"><a class="reference internal" href="#101">10.1 先澄清一个容易误判的点</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#102">10.2 五个已知坑（都已处理）</a>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 已知坑（都已处理）</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#103-msgpack-rpc-blocks">10.3 本机实测（等价 msgpack-rpc 客户端 + 真机 Blocks）</a>
 </li>
@@ -921,6 +921,46 @@ python3<span class="w"> </span>src/air/gesture_control_drone/scripts/gesture_dat
 （解锁→定高→悬停顺序、机体系速度、偏航、返航回退、急停三语义）、<strong>安全限幅</strong>
 （限速/限高/限低）、<strong>RPC 超时保护</strong>、<strong>NED→ENU 状态转换</strong>、七种手势的端到端链路、
 <code>Odometry</code> 回传、以及工程文件约定。</p>
+<p>采集真实数据：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 采 60 秒 -&gt; /tmp/session_01.npz</span>
+<span class="c1"># （示例写到系统临时目录，避免在仓库里留下未跟踪的 data/）</span>
+python3<span class="w"> </span>src/air/gesture_control_drone/scripts/record_gesture_session.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>/tmp/session_01.npz<span class="w"> </span>--duration<span class="w"> </span><span class="m">60</span><span class="w"> </span>--camera<span class="w"> </span><span class="m">0</span>
+
+<span class="c1"># 看这一轮采得怎么样（每类数量 / 缺失类别 / 丢弃原因 / 实际采样率）</span>
+python3<span class="w"> </span>src/air/gesture_control_drone/scripts/gesture_dataset.py<span class="w"> </span>stats<span class="w"> </span>/tmp/session_01.npz
+</code></pre></div>
+<p>一次<strong>真实录制</strong>（25 秒、Integrated Camera、<code>--camera 1</code>、<code>--fps 10</code>）的输出：</p>
+<div class="highlight"><pre><span></span><code>[4s] 处理 32 帧，已收录 9 个样本
+[8s] 处理 64 帧，已收录 31 个样本
+[16s] 处理 128 帧，已收录 79 个样本
+[24s] 处理 192 帧，已收录 117 个样本
+本轮采集：121 个样本
+  PALM_OPEN      63
+  FIST           55
+  POINT           3  &lt;- 偏少（建议 &gt;= 30）
+  VICTORY         0  &lt;- 缺失
+  ...
+丢弃的帧：no_hand=75
+结论：还有类别缺失，建议补采
+实际采样率：7.7 Hz（目标 10 Hz，共 192 帧）
+</code></pre></div>
+<p><img alt="录制脚本实测" src="../../img/air/gesture_control_drone/run_recorder.png"/></p>
+<blockquote>
+<p>那次实际频率 7.7 Hz（目标 10 Hz）是 MediaPipe 单帧耗时导致的；脚本现在按
+<strong>截止时刻排程</strong>并把实际频率报出来，不会再让名义值骗人。</p>
+</blockquote>
+<p><strong>采集规范</strong>（直接影响能不能训出模型）：</p>
+<ul>
+<li>手离镜头 <strong>40~60 cm</strong>，手心正对镜头，手指朝上；</li>
+<li>每个手势保持 <strong>1~2 秒</strong>，之间手完全放下；</li>
+<li><strong>手势要交替做</strong>，不要"一种做完再做下一种"。原因不是"按类分层会漏掉类"，
+  而是 10 Hz 连拍的相邻帧几乎重复：一次性做完某一种，那段时间的样本彼此高度相似，
+  <strong>无论按时间划分还是随机划分</strong>，训练集与验证集都会互相泄漏，指标虚高。
+  单次采集只做一种手势的数据，建议按<strong>会话级留出</strong>（一次采集只进训练或只进验证）。</li>
+</ul>
+<p>仓库自带的 <code>data/session_host_121.npz</code>（121 个样本、25 秒、只覆盖 3/7 类）是
+<strong>采集链路的证据</strong>，不是可直接训练的数据集 —— <code>stats</code> 会如实报出 4 类缺失。</p>
 <h2 id="8">8. 常见问题</h2>
 <table>
 <thead>
@@ -1000,7 +1040,7 @@ python3<span class="w"> </span>tools/log_to_png.py<span class="w"> </span>/tmp/l
 <p><img alt="VM 内 ROS -&gt; AirSim 真机飞行" src="../../img/air/gesture_control_drone/run_vm.png"/></p>
 <p>这一步证明 <strong>ROS 节点 → AirSim → 真实起降</strong> 是通的；
 <code>摄像头 → MediaPipe → 手势</code> 这一段见下面的说明。</p>
-<h3 id="93">9.3 实跑才暴露的两个坑（已修）</h3>
+<h3 id="93">9.3 实跑才暴露的坑（已修）</h3>
 <ol>
 <li><strong><code>catkin_install_python</code> 不能用来装"辅助模块"</strong>
    它在 devel 空间给每个脚本生成的是<strong>启动器</strong>（<code>exec(compile(...))</code>），
@@ -1009,13 +1049,47 @@ python3<span class="w"> </span>tools/log_to_png.py<span class="w"> </span>/tmp/l
    → 现在只把 4 个入口（<code>main</code> / <code>gesture_ros_node</code> / <code>drone_control_node</code> /
    <code>gesture_demo</code>）交给 <code>catkin_install_python</code>，辅助模块改用 <code>install(FILES)</code>；
    节点里再加一段 <code>sys.path</code> 引导，保证从源码目录也能 import。</li>
-<li><strong>VMware 透传的摄像头默认格式读不到帧</strong>
+<li>
+<p><strong>VMware 透传的摄像头默认格式读不到帧</strong>
 <code>/dev/video0</code> 能 <code>open</code>，但 <code>cap.read()</code> 一直 <code>select() timeout</code>
    （默认 YUYV 720p 带宽不够）。→ <code>camera_utils.open_capture()</code> 现在默认设
    <strong>MJPG</strong>（可用 <code>GESTURE_CAMERA_FOURCC</code> 覆盖）并降到 640×480，
-   同一台机器上立刻出画面（<code>shape=(480, 640, 3)</code>）。</li>
+   同一台机器上立刻出画面（<code>shape=(480, 640, 3)</code>）。</p>
+</li>
+<li>
+<p><strong>张开手掌在"拇指朝侧面"时识别不出来</strong>
+<code>thumb_extended()</code> 用"拇指尖相对 IP 关节的 x 偏移 &gt; 0.25×掌宽"判断；手掌正对
+   镜头时这个偏移实测只有 <strong>约 0.1×掌宽</strong>，于是"四指伸直"走不进 <code>PALM_OPEN</code> 分支，
+   整只手返回 <code>NONE</code>（真人面对镜头举手，系统毫无反应）。</p>
+</li>
 </ol>
-<h3 id="94">9.4 真实手势 → 真机起降（完整链路）</h3>
+<p>改用<strong>拇指张开角</strong>（<code>mcp2→tip4</code> 与 <code>mcp2→index_mcp5</code> 的夹角）兜底。121 个真实
+   样本上的分布：</p>
+<table>
+<thead>
+<tr>
+<th>手势</th>
+<th>张开角范围</th>
+<th>中位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>张开手掌</td>
+<td>44.3° ~ 62.2°</td>
+<td>54.1°</td>
+</tr>
+<tr>
+<td>握拳</td>
+<td>0.1° ~ 136.6°</td>
+<td>8.8°</td>
+</tr>
+</tbody>
+</table>
+<p>阈值取 <strong>40°</strong>，并且<strong>只在四指伸直时</strong>才走这个兜底分支 —— 握拳的四指是弯的，
+   那些高角度的握拳帧根本进不来（实测非手掌误判 <strong>0 帧</strong>，手掌 63/63 命中）。</p>
+<p><img alt="张开手掌修复后的实机起降" src="../../img/air/gesture_control_drone/run_palm_fix.png"/></p>
+<h3 id="94">9.4</h3>
 <p>摄像头（Integrated Camera，USB 透传进虚拟机）→ MediaPipe → <code>/gesture_command</code>
 → 控制节点 → AirSim，<strong>全程由真人做手势触发</strong>：</p>
 <p><img alt="真实手势控制：6 次起飞 + 6 次降落" src="../../img/air/gesture_control_drone/run_gesture.png"/></p>
@@ -1121,7 +1195,7 @@ Python 客户端）不提供 <code>*Async</code> 方法，那时回退到同名�
 </tr>
 </tbody>
 </table>
-<h3 id="102">10.2 五个已知坑（都已处理）</h3>
+<h3 id="102">10.2 已知坑（都已处理）</h3>
 <ol>
 <li><strong>同步 <code>takeoff</code> / <code>land</code> 会阻塞到动作完成</strong>
    3 m 高度按 ~0.22 m/s 下降约需 14 s，放在调用线程里会把 ROS 回调/定时器堵住。
