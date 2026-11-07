@@ -102,6 +102,17 @@ launch 开关：`policy`（默认 true）、`keyboard`（默认 false）、`came
 | 8.0 | 解除急停 | 0.80 / 0.00 | auto | ok |
 | 9.5 | 自动再次超时 | 0.00 / 0.00 | auto | stale |
 
+在线集成实测（`ros2 launch system_integration main_launch.py` 默认配置）：
+
+| 检查项 | 命令 | 实测结果 |
+|---|---|---|
+| 状态行 | `ros2 topic echo /integration/status --once` | `mode=auto estop=0 source=auto reason=ok age=0.021` |
+| 速度出口频率 | `ros2 topic hz /cmd_vel` | 19.937 / 19.998 / 19.998 Hz（窗口 22 / 43 / 64） |
+| 手动通道隔离 | `ros2 topic info /cmd_vel_manual` | Publisher count: 0，Subscription count: 1 |
+
+未开启键盘时 `/cmd_vel_manual` 没有发布者，只有集成节点在订阅，说明四个模块的通道
+确实分开，不会互相覆盖。
+
 单元测试 9 项全部通过（不需要 ROS）：
 
 ```bash
