@@ -38,7 +38,7 @@ from std_msgs.msg import Bool                             # noqa: E402
 
 import policy as P                                        # noqa: E402
 from route import Route, make_route                       # noqa: E402
-from route_env import MAX_RANGE, N_SECTORS                 # noqa: E402
+from route_constants import MAX_RANGE, N_SECTORS         # noqa: E402
 
 
 def _pointcloud2_to_xyz(msg) -> np.ndarray:
