@@ -3,7 +3,6 @@
 LEFT = 'left'
 RIGHT = 'right'
 
-
 class Footstep:
     """单次落脚：摆动区间、落脚位置。"""
 
@@ -16,7 +15,6 @@ class Footstep:
         self.swing_end = swing_end
         self.x = x
         self.y = y
-
 
 def plan_footsteps(num_steps=6,
                    step_length=0.10,
@@ -41,21 +39,62 @@ def plan_footsteps(num_steps=6,
         foot = RIGHT if foot == LEFT else LEFT
     return steps
 
-
 def foot_rect(foot_x, foot_y, foot_length, foot_width):
     """返回脚掌矩形 (x_min, x_max, y_min, y_max)。"""
     return (foot_x - foot_length / 2.0, foot_x + foot_length / 2.0,
             foot_y - foot_width / 2.0, foot_y + foot_width / 2.0)
 
+def rect_corners(rect):
+    """返回矩形的四个角点。"""
+    x_min, x_max, y_min, y_max = rect
+    return [(x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
+
+def _cross(origin, a, b):
+    return ((a[0] - origin[0]) * (b[1] - origin[1])
+            - (a[1] - origin[1]) * (b[0] - origin[0]))
+
+def convex_hull(points):
+    """Andrew 单调链算法，返回逆时针排列的凸包顶点。"""
+    ordered = sorted(set(points))
+    if len(ordered) <= 2:
+        return ordered
+    lower = []
+    for point in ordered:
+        while (len(lower) >= 2
+               and _cross(lower[-2], lower[-1], point) <= 0.0):
+            lower.pop()
+        lower.append(point)
+    upper = []
+    for point in reversed(ordered):
+        while (len(upper) >= 2
+               and _cross(upper[-2], upper[-1], point) <= 0.0):
+            upper.pop()
+        upper.append(point)
+    return lower[:-1] + upper[:-1]
+
+def point_in_convex(point, polygon, tolerance=1e-9):
+    """判断点是否在逆时针凸多边形内（含边界）。"""
+    if len(polygon) < 3:
+        return False
+    for index, vertex in enumerate(polygon):
+        following = polygon[(index + 1) % len(polygon)]
+        if _cross(vertex, following, point) < -tolerance:
+            return False
+    return True
 
 def zmp_inside_support(zmp_pos, rects, margin=0.0):
-    """判断 ZMP 是否落在支撑多边形（各脚掌矩形之并）内。
+    """判断 ZMP 是否落在支撑多边形内。
 
-    rects 为 foot_rect 返回值组成的列表，margin 为向内收缩的安全裕度。
+    rects 为已落地脚掌的 foot_rect 返回值组成的列表。支撑多边形取这些
+    矩形的凸包：单脚支撑时退化为该脚矩形，双支撑时包含两脚之间的连桥
+    区域。margin 为向内收缩的安全裕度。
     """
-    for rect in rects:
-        x_min, x_max, y_min, y_max = rect
-        if (x_min + margin <= zmp_pos[0] <= x_max - margin
-                and y_min + margin <= zmp_pos[1] <= y_max - margin):
-            return True
-    return False
+    shrunk = []
+    for x_min, x_max, y_min, y_max in rects:
+        if x_max - x_min > 2.0 * margin and y_max - y_min > 2.0 * margin:
+            shrunk.append((x_min + margin, x_max - margin,
+                           y_min + margin, y_max - margin))
+    if not shrunk:
+        return False
+    corners = [corner for rect in shrunk for corner in rect_corners(rect)]
+    return point_in_convex(zmp_pos, convex_hull(corners))
