@@ -93,9 +93,9 @@ class TestShortestPath(unittest.TestCase):
                                  f"shortest > {name}")
 
     def test_radius_doubles_length(self):
-        """位姿与 R 同时缩放 2x，路径长度应翻倍。"""
+        """位姿坐标与 R 同时缩放 2x，路径长度应翻倍（yaw 不缩放）。"""
         _, _, len1 = shortest_path(self.start, self.end, self.radius)
-        s2 = (2.0 * self.start[0], 2.0 * self.start[1], self.start[1] - self.start[1] + self.start[0] - self.start[0] + self.start[2])
+        s2 = (2.0 * self.start[0], 2.0 * self.start[1], self.start[2])
         e2 = (2.0 * self.end[0], 2.0 * self.end[1], self.end[2])
         _, _, len2 = shortest_path(s2, e2, 2.0 * self.radius)
         self.assertAlmostEqual(len2, 2.0 * len1, places=3)
