@@ -77,9 +77,12 @@ ros2 run airsim_drone_gimbal_teleop drone_gimbal_teleop --ip 192.168.1.10 --take
 - 每帧读取按键，按 `command_from_actions()` 换算成 AirSim 的 NED 速度
   （`W` → `vx > 0`，`Q` → `vz < 0`），再用 `moveByVelocityAsync()` 下发；
   松开按键即停止，不会一直漂移；
-- 云台姿态用 `simSetCameraPose()` 设置，俯仰限制在 ±90°，偏航归一化到 ±180°；
-- 相机画面用 `simGetImages()` 获取，`pygame.surfarray` 转成窗口贴图；
-- `ESC` / `Ctrl+C` 都会走 `finally` 分支：`landAsync()` → `armDisarm(False)` → `enableApiControl(False)`。
+- 云台姿态用 `simSetCameraPose()` 设置，俯仰限制在 ±90°，偏航归一化到 `(-180, 180]`；
+- 相机画面用 `simGetImages()` 获取，`display_array()` 只做 x/y 轴转置
+  （`(H, W, 3) → (W, H, 3)`）后交给 `pygame.surfarray`；不能用 `np.rot90`，
+  那会把画面逆时针转 90°，预览方向就错了；
+- `ESC` / `Ctrl+C` 都会走 `finally` 分支：`landAsync()` → `armDisarm(False)` → `enableApiControl(False)`；
+  窗口初始化失败（例如没有 `DISPLAY`）、起飞异常等同样会触发，避免飞机保持解锁并占用 API 控制权。
 
 ## 常见问题
 
