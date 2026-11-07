@@ -22,7 +22,11 @@
 | Matplotlib | 3.1.2 |
 
 ```bash
-pip3 install mujoco numpy matplotlib
+# 系统依赖（rosdep 可解析部分）
+sudo apt install python3-numpy python3-matplotlib python3-pil python3-yaml python3-rospkg
+
+# MuJoCo 不在 rosdep 中，必须用 pip 安装并锁定版本
+pip3 install mujoco==3.2.3
 ```
 
 ## 仿真环境
@@ -35,9 +39,22 @@ pip3 install mujoco numpy matplotlib
 
 ## 运行步骤
 
+本包需要放在 catkin 工作空间的 `src/` 目录下才能构建：
+
 ```bash
-# 1. 训练（生成专家示范 + 训练网络）
-cd src/water/usv_mujoco_nn/scripts
+# 0. 构建（在工作空间根目录）
+mkdir -p ~/usv_ws/src && cp -r usv_mujoco_nn ~/usv_ws/src/
+cd ~/usv_ws && source /opt/ros/noetic/setup.bash && catkin_make
+source devel/setup.bash
+```
+
+构建后节点位于 `devel/lib/usv_mujoco_nn/`，运行期脚本位于
+`devel/share/usv_mujoco_nn/scripts/`，`launch`、`config`、`models` 位于
+`devel/share/usv_mujoco_nn/`；节点通过 `rospkg` 定位包路径后导入脚本，不依赖源码树的相对路径。
+
+```bash
+# 1. 训练（仓库已附带训练好的权重，可跳过）
+cd ~/usv_ws/src/usv_mujoco_nn/scripts
 python3 train.py --episodes 50 --steps 320 --epochs 45 --noise 0.15
 
 # 2. 评测（闭环成功率、碰撞率、路径比）
@@ -46,8 +63,7 @@ python3 evaluate.py --episodes 30
 # 3. 可视化运行
 python3 main.py --mode nn --save-gif demo.gif
 
-# 4. ROS 节点
-cd ~/usv_ws && catkin_make && source devel/setup.bash
+# 4. ROS 节点（权重随包提供，无需先训练）
 roslaunch usv_mujoco_nn main.launch mode:=nn
 ```
 

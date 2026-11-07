@@ -14,6 +14,7 @@ import sys
 
 import numpy as np
 import rospy
+import rospkg
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import OccupancyGrid, Odometry
 from sensor_msgs.msg import LaserScan
@@ -21,7 +22,28 @@ from std_msgs.msg import Header
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "scripts"))
+
+
+def _package_scripts_dir():
+    """定位运行所需脚本目录。
+
+    安装空间：脚本由 CMakeLists.txt 安装到 <包>/share/usv_mujoco_nn/scripts，
+    用 rospkg 定位包路径后导入；
+    源码空间：回退到与本文件同级的 ../scripts。
+    """
+    try:
+        pkg = rospkg.RosPack().get_path("usv_mujoco_nn")
+        cand = os.path.join(pkg, "scripts")
+        if os.path.isdir(cand):
+            return cand
+    except Exception:
+        pass
+    return os.path.abspath(os.path.join(HERE, "..", "scripts"))
+
+
+SCRIPTS_DIR = _package_scripts_dir()
+PKG_DIR = os.path.abspath(os.path.join(SCRIPTS_DIR, ".."))
+sys.path.insert(0, SCRIPTS_DIR)
 
 from sim_core import (USVSim, N_BEAMS, ANGLE_MIN, ANGLE_MAX, MAX_RANGE,  # noqa: E402
                       thrust_from_twist)
@@ -32,24 +54,11 @@ from policy import NNPolicy                                              # noqa:
 CROP = 21
 
 
-class NNPilot(object):
-    def __init__(self, model_dir):
-        self.net = MLP.load(os.path.join(model_dir, "planner_mlp.npz"))
-        z = np.load(os.path.join(model_dir, "norm_stats.npz"))
-        self.xm, self.xs, self.ym, self.ys = z["xm"], z["xs"], z["ym"], z["ys"]
-
-    def act(self, feat):
-        xn = (feat[None, :] - self.xm) / self.xs
-        yn = self.net.predict(xn)[0]
-        return (float(np.clip(yn[0] * self.ys[0] + self.ym[0], 0.0, 2.0)),
-                float(np.clip(yn[1] * self.ys[1] + self.ym[1], -1.2, 1.2)))
-
-
 class USVNode(object):
     def __init__(self):
         self.mode = rospy.get_param("~mode", "nn")
         self.rate_hz = rospy.get_param("~rate", 20.0)
-        self.model_dir = rospy.get_param("~model_dir", os.path.join(HERE, "..", "models"))
+        self.model_dir = rospy.get_param("~model_dir", os.path.join(PKG_DIR, "models"))
         self.seed = rospy.get_param("~seed", 7)
 
         self.sim = USVSim(seed=self.seed)
