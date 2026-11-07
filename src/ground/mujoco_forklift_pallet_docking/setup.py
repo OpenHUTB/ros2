@@ -8,7 +8,7 @@ setup(
     version="0.1.0",
     packages=[package_name],
     py_modules=["main"],
-    package_data={package_name: ["model.xml"]},
+    package_data={package_name: ["model.xml", "models/*.npz"]},
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
