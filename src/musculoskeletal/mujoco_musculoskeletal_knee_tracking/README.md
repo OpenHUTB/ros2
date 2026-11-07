@@ -32,13 +32,13 @@ tracking via PD-driven antagonistic muscles.
 | MuJoCo | 3.16.0（`pip install mujoco`） |
 | numpy / matplotlib / Pillow | 见 `requirements.txt` |
 
-```bash
+```
 python3 -m pip install -r requirements.txt
 ```
 
 ## 3. 构建与运行 (Build & Run)
 
-```bash
+```
 cd ~/ros2_ws/src
 git clone <本模块> mujoco_musculoskeletal_knee_tracking
 cd ~/ros2_ws
@@ -52,7 +52,7 @@ ros2 run mujoco_musculoskeletal_knee_tracking mujoco_musculoskeletal_knee_tracki
 
 查看输出：
 
-```bash
+```
 ros2 topic echo /knee/angle
 ros2 topic echo /knee/activation
 ros2 topic echo /knee/torque
@@ -67,13 +67,13 @@ ros2 topic echo /knee/torque
 | `knee/activation`| `std_msgs/Float64MultiArray` | 发布 | `[flexor, extensor]` 激活 |
 | `knee/torque`    | `std_msgs/Float64` | 发布 | 执行器广义力 |
 
-```bash
+```
 ros2 topic pub /knee/reference std_msgs/Float64 "{data: 50.0}" --once
 ```
 
 ## 5. 离线演示 (Offline demo, 不依赖 ROS 2)
 
-```bash
+```
 python3 simulate_tracking.py               # 生成 GIF + 曲线 + 指标
 python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲线与指标
 ```
@@ -102,7 +102,7 @@ RMSE ≈ 11°（PD 正弦跟踪固有滞后），收敛时间 ≈ 1.96 s。
 
 ## 7. 单元测试
 
-```bash
+```
 colcon test --packages-select mujoco_musculoskeletal_knee_tracking
 ```
 
@@ -110,7 +110,7 @@ colcon test --packages-select mujoco_musculoskeletal_knee_tracking
 
 ## 8. 本地验证
 
-```bash
+```
 python3 validate_model.py               # 含渲染
 python3 validate_model.py --no-render   # 无图形环境
 ```
