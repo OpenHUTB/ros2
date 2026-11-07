@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>potential_field_navigation</name>
+  <version>0.0.1</version>
+  <description>人工势场法导航 2D 仿真：引力与斥力合成、局部极小点逃逸、小车运动学。</description>
+  <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
+  <license>MIT</license>
+  <exec_depend>python3</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+</package>
