@@ -1,5 +1,7 @@
 # 肌肉驱动的下肢关节与步态
 
+本页不依赖 ROS，全部指标由 `python3 main.py bench` 在 Ubuntu 22.04.5 + Python 3.10 + MuJoCo 3.16.0 下复现。
+
 本页用一个模块串起六级递进实验：**单条肌肉 → 拮抗肌对 → 共激活刚度 → 双关节耦合 →
 负重站立 → 原地踏步**。与仓库已有模块的关系是：
 
@@ -162,13 +164,15 @@ $$
 
 ## 4 复现
 
-```bash
+```
 cd src/musculoskeletal/mujoco_muscle_leg_gait
 python3 main.py check
 python3 main.py bench --out out      # 复现 3.1-3.6 的全部数字
 python3 main.py gif --out gif        # 复现本页动图
 python3 -m unittest discover -s tests -v
 ```
+
+> `gif` 子命令需要图形环境。远程或无显示服务器时先设置 `MUJOCO_GL=egl`（或 `osmesa`），否则会报 `an OpenGL platform library has not been loaded`；`bench` 与单元测试不受影响。
 
 ## 5 已知限制
 
