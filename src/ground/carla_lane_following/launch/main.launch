@@ -1,0 +1,10 @@
+<launch>
+  <!-- 直连路线：本节点自己连 CARLA RPC，不经过 carla_ros_bridge -->
+  <arg name="host" default="127.0.0.1" doc="仿真器所在主机；虚拟机里跑填 Windows VMnet8 地址"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="map" default="Town10HD_Opt" doc="地图名；留空沿用服务端当前地图"/>
+  <arg name="python" default="python3.10" doc="必须能 import carla 的解释器"/>
+
+  <node pkg="carla_lane_following" type="main.py" name="carla_lane_following" output="screen"
+        args="--host $(arg host) --port $(arg port) --map $(arg map)"/>
+</launch>
