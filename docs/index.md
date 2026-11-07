@@ -294,6 +294,7 @@ ROS每章节运行代码:
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
+* [无人艇自主靠泊：激光雷达与神经网络末段对准](./water/usv_docking_nn.md) —— 凹入式泊位，射线激光雷达 + 纯跟踪末段对准专家，行为克隆 MLP 复现，20 回合成功率 100%，末态横向误差 0.23 m
 
 ___
 
