@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>drone_lawnmower_survey</name>
+  <version>0.2.0</version>
+  <description>AirSim 无人机弓字形区域勘测与安全预览。</description>
+  <maintainer email="xxbzy727749@users.noreply.github.com">xxbzy727749</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>launch</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
