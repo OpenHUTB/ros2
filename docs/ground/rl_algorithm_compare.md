@@ -174,11 +174,13 @@ src/rl_algorithm_compare/
 │   ├── nn.py                  # NumPy MLP + Adam
 │   ├── dqn.py                 # DQN 算法
 │   ├── reinforce.py           # REINFORCE 算法
-│   ├── train.py               # 训练 + 记录曲线
+│   ├── train.py               # 训练 + 记录曲线（含 train_agent 可复用入口）
+│   ├── benchmark.py           # 多随机种子基准评测（均值 ± 标准差）
 │   ├── evaluate.py            # 评估模型
 │   ├── compare.py             # 汇总对比曲线与表格
 │   ├── render_gif.py          # 渲染推理gif
 │   └── main.py                # 一键运行全流程入口
+├── test/test_benchmark.py     # 基准评测的单元测试（不需要 MuJoCo）
 ├── launch/main.launch.py
 ├── config/algo_config.yaml
 ├── results/                   # 训练曲线数据（csv）+ 训练好的模型（pkl）
@@ -235,3 +237,60 @@ self.q.adam_update(gW, gb)
 ## 10. 兼容性
 
 本模块仅依赖 MuJoCo 与 NumPy，可在 ROS2 Foxy/Humble + Python3.8/3.10 上运行；gif 渲染在无 OpenGL 环境自动回退到 matplotlib 状态动画，保证无显示器也能生成演示动图。
+
+## 11. 多随机种子基准评测
+
+### 11.1 为什么需要
+
+第 6 章的对比表来自**单次训练**。CartPole 的初始状态、ε-greedy 探索、经验回放采样全是随机的，同一条命令跑两遍，最终回报能差几十甚至上百：一条曲线看起来"收敛得很好"，很可能只是这一次初始化恰好合适。用单次结果下"哪个算法更好"的结论，说服力不够。
+
+`benchmark.py` 对每组配置跑多个随机种子，用**均值 ± 样本标准差**描述结果，并给出跨种子的平均学习曲线。
+
+### 11.2 实现
+
+`train.py` 里把训练循环抽成可复用的 `train_agent(algo, layers, episodes, seed=…)`：
+
+* 设了 `seed` 就固定 `numpy.random` 的全局状态，保证同配置重复跑得到同样的曲线；
+* 返回 `curve`（评估点 → 平均回报）、`final_return` 和训练好的 `agent`；
+* 原来的命令行行为不变，只是多了 `--seed`。
+
+`benchmark.py` 负责调度与统计：每个种子训练一次 → 汇总均值/标准差/最值 → 写 `summary.csv`；把各条曲线按评估回合对齐 → 写 `curves.csv`（含跨种子均值和标准差）。
+
+### 11.3 用法
+
+```bash
+cd src/rl_algorithm_compare
+
+# 默认三组配置（DQN 一层 / DQN 两层 / REINFORCE）× 3 个种子 × 120 回合
+python3 -m rl_algorithm_compare.benchmark
+
+# 指定种子、回合数与配置（分号分隔；逗号留给隐藏层列表）
+python3 -m rl_algorithm_compare.benchmark \
+    --seeds 0,1,2 --episodes 200 \
+    --configs "dqn:16;dqn:16,16;reinforce:16"
+
+# 单元测试（假训练器，不需要 MuJoCo）
+python3 -m unittest discover -s test
+```
+
+### 11.4 结果
+
+两组种子（0,1）、120 回合的同预算对比：
+
+| 配置 | 算法 | 均值 | 标准差 | 最小 | 最大 |
+|---|---|---|---|---|---|
+| dqn_mlp1 | DQN | **199.4** | 0.8 | 198.8 | 200.0 |
+| dqn_mlp2 | DQN | **196.9** | 4.0 | 194.1 | 199.8 |
+| reinforce_mlp1 | REINFORCE | 21.1 | 0.4 | 20.8 | 21.4 |
+
+三点观察：
+
+* **DQN 的种子间波动很小**（一层 ±0.8、两层 ±4.0），说明 120 回合已经稳定收敛到 200 步上限；
+* **REINFORCE 在 120 回合预算下还没学会**（22 步左右就倒），这与第 6 章"REINFORCE 需要 600 回合"一致——本节只比较**同一预算下的波动**，不改变第 6 章的结论；
+* 两层网络均值略低但标准差更大，说明小样本下"结构更深更好"并不成立，需要更多种子才能下结论。
+
+`summary.csv` 与 `curves.csv` 可以直接喂给 `compare.py` 或画图脚本。
+
+### 11.5 测试
+
+19 个用例覆盖：配置解析（含非法算法/隐藏层）、统计量（样本标准差、单元素、空输入）、曲线对齐（缺失评估点）、结果写入 CSV、种子透传，以及终端表格格式。全部用假训练器，秒级完成，不需要 MuJoCo。
