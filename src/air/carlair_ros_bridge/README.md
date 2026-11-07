@@ -196,4 +196,16 @@ python3 tests/test_camera_model_local.py  # CameraInfo/深度点云/相机 TF
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
 
+## 诊断工具 bridge_doctor
+
+`bridge_doctor.py` 检查 `/uav/odom`、`/camera/image_raw`、`/camera/depth`、`/lidar/points`
+的实际频率和 `world -> base_link` TF：
+
+```bash
+rosrun carlair_ros_bridge bridge_doctor.py --duration 5
+rosrun carlair_ros_bridge bridge_doctor.py --skip-tf
+```
+
+输出 `PASS / LOW / NO_DATA` 表格，有 FAIL 时退出码为 1。
+
 `test_imu_local.py` 用桩覆盖 IMU 的机体系 NED→FLU 轴变换、`sensor_msgs/Imu` 的字段与协方差，以及 CMakeLists / main.launch / bridge.yaml 的一致性。
