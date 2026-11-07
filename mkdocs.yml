@@ -154,6 +154,7 @@ nav:
     - 限速标志识别与神经网络限速控制: './ground/traffic_sign_speed_control.md'
     - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
     - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
+    - MuJoCo 动态障碍局部避障仿真: './ground/mujoco_dynamic_avoidance.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
     - 基于 2D 激光雷达的蒙特卡洛定位（MCL）: './ground/lidar_mcl_localization.md'
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
