@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>formation_keeping</name>
+  <version>0.0.1</version>
+  <description>多车编队保持 2D 仿真：领航者圆周轨迹、三角队形偏移、跟随者比例控制与队形误差统计。</description>
+  <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
+  <license>MIT</license>
+  <exec_depend>python3</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+</package>
