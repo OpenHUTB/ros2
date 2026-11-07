@@ -6,6 +6,7 @@
 节点计算机械臂式正向运动学、质心与 ZMP，并发布给控制/记录节点。
 """
 
+import json
 import math
 import time
 from collections import deque
@@ -16,7 +17,7 @@ from geometry_msgs.msg import PointStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, String
 
 from biped_cubic_spline_gait_switch.config_loader import (
     build_model, default_params_path, load_config)
@@ -60,6 +61,8 @@ class SimNode(Node):
         self.q = np.concatenate([init_left, init_right])
         self.q_des = self.q.copy()
         self.qd = np.zeros(6)
+        # 接触状态由控制器按规划相位给出（/gait_info），不再用踝高阈值判定
+        self.contacts_plan = [True, True]
 
         com_init = self.model.center_of_mass(0.0, self.hip_z, 0.0, self.q)
         self.com_x = float(com_init[0])
@@ -68,6 +71,7 @@ class SimNode(Node):
 
         self.create_subscription(JointState, "/joint_cmd", self.on_joint_cmd, 10)
         self.create_subscription(Float32MultiArray, "/base_cmd", self.on_base_cmd, 10)
+        self.create_subscription(String, "/gait_info", self.on_gait_info, 20)
 
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self.base_pub = self.create_publisher(Odometry, "/base_state", 10)
@@ -98,6 +102,15 @@ class SimNode(Node):
         if len(data) >= 4:
             self.lean = float(data[3])
 
+    def on_gait_info(self, msg: String):
+        try:
+            info = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        contacts = info.get("contacts")
+        if isinstance(contacts, (list, tuple)) and len(contacts) >= 2:
+            self.contacts_plan = [bool(contacts[0]), bool(contacts[1])]
+
     def step(self):
         now = time.time()
         dt = max(0.0005, min(0.02, now - self.last_step_time))
@@ -117,13 +130,14 @@ class SimNode(Node):
                 self.q = np.clip(self.q, self.q_min, self.q_max)
                 self.qd[out_low | out_high] = 0.0
 
-        contacts = []
+        # 接触与脚踏位置都按规划量（q_des 的 FK）计算，保证与支撑多边形同源
+        contacts = list(self.contacts_plan)
         feet = []
-        for idx, side in enumerate(("left", "right")):
-            fk = self.model.leg_fk((self.base_x, self.hip_z), self.q[3 * idx:3 * idx + 3])
+        for idx in range(2):
+            fk = self.model.leg_fk((self.base_x, self.hip_z),
+                                   self.q_des[3 * idx:3 * idx + 3])
             ankle = fk["ankle"]
             feet.append((float(ankle[0]), float(ankle[1])))
-            contacts.append(bool(ankle[1] - self.model.ankle_height < 0.012))
 
         com = self.model.center_of_mass(self.base_x, self.hip_z, self.lean, self.q)
         self.com_x = float(com[0])
@@ -145,7 +159,7 @@ class SimNode(Node):
             zmp_x = float(com_des[0]) - float(com_des[1]) * ax / self.gravity
 
         support_min, support_max = self.model.support_polygon(
-            self.base_x, self.hip_z, self.lean, self.q, contacts)
+            self.base_x, self.hip_z, self.lean, self.q_des, contacts)
         if support_min is None:
             margin = float("nan")
         else:
@@ -191,13 +205,11 @@ class SimNode(Node):
 
         metrics = Float32MultiArray()
         metrics.data = [
-            float(self.com_x), float(self.com_z), float(zmp_x),
-            float(margin) if not math.isnan(margin) else -1.0,
+            float(self.com_x), float(self.com_z), float(zmp_x), float(margin),
             float(feet[0][0]), float(feet[0][1]),
             float(feet[1][0]), float(feet[1][1]),
-            1.0 if contacts[0] else 0.0,
-            1.0 if contacts[1] else 0.0,
-            float(self.base_x), float(self.hip_z), float(margin),
+            float(contacts[0]), float(contacts[1]),
+            float(self.base_x), float(self.hip_z),
         ]
         self.metric_pub.publish(metrics)
 

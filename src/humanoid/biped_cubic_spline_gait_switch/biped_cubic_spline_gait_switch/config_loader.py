@@ -49,5 +49,15 @@ def build_schedule(cfg: dict) -> List[Tuple[str, float]]:
 
 
 def default_params_path() -> str:
+    """优先使用 ament share 目录（安装后 ros2 run 可直接启动），再回退源码目录。"""
+    try:
+        from ament_index_python.packages import (PackageNotFoundError,
+                                                  get_package_share_directory)
+        share = get_package_share_directory("biped_cubic_spline_gait_switch")
+        candidate = os.path.join(share, "config", "params.yaml")
+        if os.path.exists(candidate):
+            return candidate
+    except (ImportError, PackageNotFoundError, ValueError):
+        pass
     here = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(here, "..", "config", "params.yaml")

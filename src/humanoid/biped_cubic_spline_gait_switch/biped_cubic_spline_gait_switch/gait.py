@@ -3,9 +3,9 @@
 """多步态轨迹生成与平滑切换。
 
 - 每个步态由周期 T、支撑相占比、步长、抬脚高度、髋高与躯干前倾定义；
-- 摆动脚的位置由三次样条（smoothstep / 16u^2(1-u)^2）生成；
+- 摆动脚的位置由三次多项式（smoothstep / 16u^2(1-u)^2）生成；
 - 步态切换时，用三次 Hermite 样条把当前关节角/角速度平滑过渡到目标步态，
-  保证位置与速度连续（C1），避免直接切换带来的加速度/加加速度冲击。
+  保证位置与速度连续（C1），并输出解析角速度用于 /joint_cmd 前馈。
 """
 
 import math
@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from .kinematics import BipedModel
-from .spline import hermite_vector
+from .spline import hermite_vector, hermite_vector_derivative
 
 
 @dataclass
@@ -171,14 +171,17 @@ class GaitPlanner:
             tr = self.transition
             q = hermite_vector(t, tr["t0"], tr["q0"], tr["dq0"],
                                tr["t1"], tr["q1"], tr["dq1"])
+            dq = hermite_vector_derivative(t, tr["t0"], tr["q0"], tr["dq0"],
+                                           tr["t1"], tr["q1"], tr["dq1"])
             switching = True
             progress = (t - tr["t0"]) / max(tr["t1"] - tr["t0"], 1e-6)
         else:
             q = q_target
+            # 稳态段用后向差分；切换段使用 Hermite 解析导数，保证切换首拍
+            # 发布的速度等于上一拍速度而不是 0。
+            dq = (q - self.last_q) / max(dt, 1e-6)
             switching = False
             progress = 0.0
-
-        dq = (q - self.last_q) / max(dt, 1e-6)
         self.last_q = q.copy()
         self.last_dq = dq.copy()
         self.last_t = t
