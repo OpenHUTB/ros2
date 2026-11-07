@@ -1,0 +1,121 @@
+<mujoco model="musculoskeletal_arm_reach">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+  </visual>
+
+  <default>
+    <joint damping="0.18" armature="0.01"/>
+    <geom density="420" contype="0" conaffinity="0" rgba="0.72 0.78 0.84 1"/>
+    <muscle timeconst="0.025 0.055"/>
+  </default>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.72 0.82 0.92" rgb2="0.94 0.97 1" width="128" height="128"/>
+    <material name="bone" rgba="0.92 0.9 0.82 1" specular="0.35"/>
+    <material name="target" rgba="0.16 0.62 0.38 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="key" pos="0 -1.2 2.0" dir="0.3 0.6 -1" diffuse="0.85 0.85 0.85"/>
+    <camera name="front" pos="0.25 -1.0 0.55" xyaxes="1 0 0 0 0 1" fovy="48"/>
+    <body name="torso" pos="0 0 0.65">
+      <geom name="torso_geom" type="capsule" fromto="0 0 -0.08 0 0 0.08" size="0.055" material="bone"/>
+      <site name="s_shoulder_flex_o" pos="0 0 0.060" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+      <site name="s_shoulder_ext_o" pos="0 0 -0.060" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+      <site name="s_bi_flex_o" pos="0 0 -0.080" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+      <site name="s_bi_ext_o" pos="0 0 0.080" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+
+      <body name="upper_arm" pos="0 0 0">
+        <joint name="shoulder_joint" type="hinge" axis="0 1 0" range="-1.25 1.45"/>
+        <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0.30 0 0" size="0.040" material="bone"/>
+        <site name="s_shoulder_flex_i" pos="0.090 0 0.060" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+        <site name="s_shoulder_ext_i" pos="0.090 0 -0.060" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+        <site name="s_elbow_flex_o" pos="0.260 0 -0.050" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+        <site name="s_elbow_ext_o" pos="0.260 0 0.050" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+
+        <body name="forearm" pos="0.30 0 0">
+          <joint name="elbow_joint" type="hinge" axis="0 1 0" range="-0.10 2.30"/>
+          <geom name="forearm_geom" type="capsule" fromto="0 0 0 0.28 0 0" size="0.034" material="bone"/>
+          <site name="s_elbow_flex_i" pos="0.060 0 -0.050" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+          <site name="s_elbow_ext_i" pos="0.060 0 0.050" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+          <site name="s_bi_flex_i" pos="0.180 0 -0.060" size="0.004" rgba="0.78 0.22 0.18 0.8"/>
+          <site name="s_bi_ext_i" pos="0.180 0 0.060" size="0.004" rgba="0.20 0.42 0.78 0.8"/>
+          <site name="end_effector" pos="0.28 0 0" size="0.018" rgba="0.16 0.62 0.38 1"/>
+          <body name="payload" pos="0.28 0 0">
+            <inertial pos="0 0 0" mass="0.001" diaginertia="1e-5 1e-5 1e-5"/>
+            <geom name="payload_geom" type="sphere" size="0.022" mass="0.001" rgba="0.95 0.62 0.16 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <site name="reach_target" pos="0.38 -0.08 0.48" size="0.025" rgba="0.16 0.62 0.38 1"/>
+  </worldbody>
+
+  <tendon>
+    <fixed name="t_shoulder_flex">
+      <joint joint="shoulder_joint" coef="-0.060"/>
+    </fixed>
+    <fixed name="t_shoulder_ext">
+      <joint joint="shoulder_joint" coef="0.060"/>
+    </fixed>
+    <fixed name="t_elbow_flex">
+      <joint joint="elbow_joint" coef="-0.050"/>
+    </fixed>
+    <fixed name="t_elbow_ext">
+      <joint joint="elbow_joint" coef="0.050"/>
+    </fixed>
+    <fixed name="t_bi_flex">
+      <joint joint="shoulder_joint" coef="-0.030"/>
+      <joint joint="elbow_joint" coef="-0.040"/>
+    </fixed>
+    <fixed name="t_bi_ext">
+      <joint joint="shoulder_joint" coef="0.030"/>
+      <joint joint="elbow_joint" coef="0.040"/>
+    </fixed>
+
+    <!-- Visual-only routes; force transmission uses the fixed tendons above. -->
+    <spatial name="vis_shoulder_flex" width="0.0025" rgba="0.78 0.22 0.18 0.72">
+      <site site="s_shoulder_flex_o"/><site site="s_shoulder_flex_i"/>
+    </spatial>
+    <spatial name="vis_shoulder_ext" width="0.0025" rgba="0.20 0.42 0.78 0.72">
+      <site site="s_shoulder_ext_o"/><site site="s_shoulder_ext_i"/>
+    </spatial>
+    <spatial name="vis_elbow_flex" width="0.0025" rgba="0.78 0.22 0.18 0.72">
+      <site site="s_elbow_flex_o"/><site site="s_elbow_flex_i"/>
+    </spatial>
+    <spatial name="vis_elbow_ext" width="0.0025" rgba="0.20 0.42 0.78 0.72">
+      <site site="s_elbow_ext_o"/><site site="s_elbow_ext_i"/>
+    </spatial>
+    <spatial name="vis_bi_flex" width="0.0025" rgba="0.78 0.22 0.18 0.72">
+      <site site="s_bi_flex_o"/><site site="s_bi_flex_i"/>
+    </spatial>
+    <spatial name="vis_bi_ext" width="0.0025" rgba="0.20 0.42 0.78 0.72">
+      <site site="s_bi_ext_o"/><site site="s_bi_ext_i"/>
+    </spatial>
+  </tendon>
+
+  <actuator>
+    <muscle name="shoulder_flexor" tendon="t_shoulder_flex" ctrlrange="0 1" force="220" lengthrange="-0.09 0.09"/>
+    <muscle name="shoulder_extensor" tendon="t_shoulder_ext" ctrlrange="0 1" force="220" lengthrange="-0.09 0.09"/>
+    <muscle name="elbow_flexor" tendon="t_elbow_flex" ctrlrange="0 1" force="180" lengthrange="-0.12 0.12"/>
+    <muscle name="elbow_extensor" tendon="t_elbow_ext" ctrlrange="0 1" force="180" lengthrange="-0.12 0.12"/>
+    <muscle name="biarticular_flexor" tendon="t_bi_flex" ctrlrange="0 1" force="150" lengthrange="-0.14 0.14"/>
+    <muscle name="biarticular_extensor" tendon="t_bi_ext" ctrlrange="0 1" force="150" lengthrange="-0.14 0.14"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="shoulder_angle" joint="shoulder_joint"/>
+    <jointvel name="shoulder_velocity" joint="shoulder_joint"/>
+    <jointpos name="elbow_angle" joint="elbow_joint"/>
+    <jointvel name="elbow_velocity" joint="elbow_joint"/>
+    <actuatorfrc name="shoulder_flexor_force" actuator="shoulder_flexor"/>
+    <actuatorfrc name="shoulder_extensor_force" actuator="shoulder_extensor"/>
+    <actuatorfrc name="elbow_flexor_force" actuator="elbow_flexor"/>
+    <actuatorfrc name="elbow_extensor_force" actuator="elbow_extensor"/>
+    <actuatorfrc name="biarticular_flexor_force" actuator="biarticular_flexor"/>
+    <actuatorfrc name="biarticular_extensor_force" actuator="biarticular_extensor"/>
+  </sensor>
+</mujoco>

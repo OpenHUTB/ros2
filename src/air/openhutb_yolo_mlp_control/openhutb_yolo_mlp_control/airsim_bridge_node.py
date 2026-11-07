@@ -42,6 +42,14 @@ class AirSimBridgeNode(Node):
     def __init__(self):
         super().__init__('airsim_bridge')
 
+        # Opt-in mode for visual centering; existing trajectory launches keep
+        # their original behavior. Exact zero clears pending displacement.
+        self.declare_parameter('hold_heading', False)
+        self.hold_heading = bool(self.get_parameter('hold_heading').value)
+        self.declare_parameter('async_image_capture', False)
+        self.async_image_capture = bool(self.get_parameter('async_image_capture').value)
+        self._command_epoch = 0
+
         # ============================================================
         # 参数声明
         # ============================================================
@@ -274,6 +282,10 @@ class AirSimBridgeNode(Node):
                 port=port,
             )
         )
+        # A slow simGetImages must not block odometry, cmd_vel or watchdogs.
+        # Keep legacy trajectory launches unchanged unless explicitly enabled.
+        self.image_client = (airsim.MultirotorClient(ip=ip, port=port, timeout_value=2)
+                             if self.async_image_capture else self.sensor_client)
 
         self.get_logger().info(
             f'Connecting sensor RPC to '
@@ -295,6 +307,8 @@ class AirSimBridgeNode(Node):
         )
 
         flight_state = self.control_client.getMultirotorState()
+        self._heading_degrees = math.degrees(airsim.to_eularian_angles(
+            flight_state.kinematics_estimated.orientation)[2])
         flight_ready = bool(flight_state.ready)
 
         self._pose_control = (
@@ -483,7 +497,7 @@ class AirSimBridgeNode(Node):
         self.image_timer = (
             self.create_timer(
                 1.0 / image_hz,
-                self.publish_image,
+                self.request_image if self.async_image_capture else self.publish_image,
             )
         )
 
@@ -500,6 +514,12 @@ class AirSimBridgeNode(Node):
                 self.command_watchdog,
             )
         )
+        self._image_event = threading.Event()
+        self._image_worker = None
+        if self.async_image_capture:
+            self._image_worker = threading.Thread(target=self._image_worker_loop,
+                                                  name='airsim-image', daemon=True)
+            self._image_worker.start()
 
         self.get_logger().info(
             'Bridge ready; '
@@ -604,7 +624,7 @@ class AirSimBridgeNode(Node):
 
         try:
             responses = (
-                self.sensor_client
+                self.image_client
                 .simGetImages([
                     airsim.ImageRequest(
                         self.camera_name,
@@ -620,6 +640,9 @@ class AirSimBridgeNode(Node):
                 'simGetImages failed: '
                 f'{exc}'
             )
+            return
+
+        if self._stop_worker.is_set():
             return
 
         metric = Float32()
@@ -702,6 +725,19 @@ class AirSimBridgeNode(Node):
             msg
         )
 
+    def request_image(self):
+        # Timer ticks coalesce rather than queuing image RPCs.
+        self._image_event.set()
+
+    def _image_worker_loop(self):
+        while not self._stop_worker.is_set():
+            if not self._image_event.wait(timeout=0.1):
+                continue
+            self._image_event.clear()
+            if self._stop_worker.is_set():
+                break
+            self.publish_image()
+
     # ================================================================
     # ROS Twist 输入
     # ================================================================
@@ -733,6 +769,9 @@ class AirSimBridgeNode(Node):
             msg.linear.z
         )
 
+        if self.hold_heading and not all(math.isfinite(v) for v in (vx, vy, vz)):
+            vx = vy = vz = 0.0
+
         self._last_cmd_time = (
             time.monotonic()
         )
@@ -753,6 +792,13 @@ class AirSimBridgeNode(Node):
                 [vx, vy, vz],
                 dtype=np.float64,
             )
+
+            if self.hold_heading and not np.any(raw_cmd):
+                # Repeated zeros must not invalidate an in-flight hold request.
+                if self._latest_cmd != (0.0, 0.0, 0.0):
+                    self._command_epoch += 1
+                self._filtered_cmd[:] = 0.0
+                self._accumulated_delta[:] = 0.0
 
             # 指数速度平滑可削弱学习控制器在航点附近产生的急剧反向指令。
             alpha = self.command_smoothing
@@ -803,6 +849,7 @@ class AirSimBridgeNode(Node):
 
             with self._cmd_lock:
                 cmd = self._latest_cmd
+                epoch = self._command_epoch
 
                 delta = (
                     self._accumulated_delta
@@ -823,7 +870,7 @@ class AirSimBridgeNode(Node):
             # 姿态后备控制必须与旧的同步速度循环一致：每条新指令只执行一次
             # 短时积分。若累计到距离阈值后才执行，会产生明显跳变，并可能
             # 执行已经过期的指令。
-            if self._pose_control:
+            if self._pose_control and not self.hold_heading:
                 vx, vy, vz = cmd
                 delta = np.array(
                     [vx, vy, vz],
@@ -838,6 +885,9 @@ class AirSimBridgeNode(Node):
                     self._accumulated_delta[:] = 0.0
 
             # 不发送过小的位置目标。
+            if self._pose_control and lead <= 1e-9:
+                continue
+
             if (
                 not self._pose_control
                 and
@@ -905,6 +955,13 @@ class AirSimBridgeNode(Node):
                     self.max_position_speed,
                 )
 
+                # A stop may arrive while getMultirotorState is in flight.
+                # Do not dispatch that obsolete snapshot or subtract its delta.
+                if self.hold_heading:
+                    with self._cmd_lock:
+                        if epoch != self._command_epoch:
+                            continue
+
                 self.get_logger().info(
                     'Dispatching OpenHUTB '
                     'position move: '
@@ -933,6 +990,10 @@ class AirSimBridgeNode(Node):
                     )
                     self._last_move_future = None
                 else:
+                    heading_options = {}
+                    if self.hold_heading:
+                        heading_options['yaw_mode'] = airsim.YawMode(
+                            is_rate=False, yaw_or_rate=self._heading_degrees)
                     self._last_move_future = (
                         self.control_client
                         .moveToPositionAsync(
@@ -941,6 +1002,7 @@ class AirSimBridgeNode(Node):
                             float(target[2]),
                             float(speed),
                             timeout_sec=10.0,
+                            **heading_options,
                         )
                     )
 
@@ -952,7 +1014,7 @@ class AirSimBridgeNode(Node):
                 # 只减去本次已经发送的位移。工作线程准备 RPC 期间收到的
                 # 新指令仍保留在累计值中。
                 with self._cmd_lock:
-                    if not self._pose_control:
+                    if (not self._pose_control or self.hold_heading) and epoch == self._command_epoch:
                         self._accumulated_delta -= delta
 
             except Exception as exc:
@@ -975,12 +1037,16 @@ class AirSimBridgeNode(Node):
             > self.command_timeout
         ):
             with self._cmd_lock:
-                self._latest_cmd = None
+                self._latest_cmd = (0.0, 0.0, 0.0) if self.hold_heading else None
+                self._command_epoch += 1
                 self._filtered_cmd[:] = 0.0
 
                 self._accumulated_delta[
                     :
                 ] = 0.0
+
+            if self.hold_heading:
+                self._cmd_event.set()
 
             self._last_cmd_time = (
                 None
@@ -992,6 +1058,9 @@ class AirSimBridgeNode(Node):
     def destroy_node(self):
         self._stop_worker.set()
         self._cmd_event.set()
+        if getattr(self, '_image_worker', None) is not None:
+            self._image_event.set()
+            self._image_worker.join(timeout=3.0)
 
         if getattr(
             self,

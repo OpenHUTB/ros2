@@ -434,3 +434,23 @@ class MujocoSimNode(Node):
                 joint_state.position.append(float(self.data.qpos[qadr]))
                 joint_state.velocity.append(float(self.data.qvel[vadr]))
         self.pub_joint_states.publish(joint_state)
+
+
+def main(args=None):
+    """ROS2 节点入口：供 setup.py console_scripts 与 ros2 launch 调用。"""
+    rclpy.init(args=args)
+    node = None
+    try:
+        node = MujocoSimNode()
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

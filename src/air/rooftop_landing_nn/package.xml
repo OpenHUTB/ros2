@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rooftop_landing_nn</name>
+  <version>0.1.0</version>
+  <description>
+    学习型屋顶降落：机载 LiDAR 点云栅格化成高度图（高度 / 掩码 / 粗糙度三通道），
+    用一个三级下采样的小 CNN 在高度图上直接回归「最安全的屋顶落点」，
+    再控制无人机飞抵其上方并垂直降落。
+
+    与 rooftop_landing（RANSAC 平面 + 凸包 + polylabel 最大内切圆）的区别：
+    凸包会把 U 形 / L 形 / 带天井的**凹形屋顶填平**，点云稀疏时还会被拆碎；
+    本模块用学习的方式在退化点云下更稳（对比实验见 README）。
+
+    运行时只依赖 numpy：网络权重要么在 PyTorch 里训练、导出成
+    models/landing_cnn.npz，numpy 前向在 scripts/landing_cnn.py 里逐层复刻，
+    客户机不需要安装 torch。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+</package>
