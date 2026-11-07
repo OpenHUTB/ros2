@@ -25,7 +25,7 @@ mean_filter_pkg/                      <-- 项目根目录
 节点启动时支持以下参数配置：
 - `input_topic`: 订阅的输入话题，默认值为 `/sensor/raw`
 - `output_topic`: 发布的输出话题，默认值为 `/sensor/filtered`
-- `window_size`: 滑动窗口的大小，默认值为 `5`
+- `window_size`: 滑动窗口的大小，默认值为 `5`，必须为 ≥ 1 的整数；传入 0 或负数时节点会抛出 `ValueError` 并退出
 
 ## 🛠️ 依赖环境
 - Ubuntu 22.04
