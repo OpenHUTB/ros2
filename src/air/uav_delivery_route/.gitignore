@@ -1,0 +1,7 @@
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Runtime log; the committed results/*.json are the reference run
+results/run_log.txt
