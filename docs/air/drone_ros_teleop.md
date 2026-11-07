@@ -302,8 +302,8 @@ graph LR
     F --> O[vx, vy, vz, yaw_rate]
 ```
 
-* 模型网络结构见 [模型实现源码 (src/air/air_learning/model.py)](../../src/air/air_learning/model.py)；
-* 训练入口见 [训练脚本 (src/air/air_learning/train.py)](../../src/air/air_learning/train.py)。
+* 模型网络结构见 [模型实现源码 (src/air/air_learning/model.py)](https://github.com/OpenHUTB/ros2/blob/master/src/air/air_learning/model.py)；
+* 训练入口见 [训练脚本 (src/air/air_learning/train.py)](https://github.com/OpenHUTB/ros2/blob/master/src/air/air_learning/train.py)。
 
 训练采用 **MSE 损失 + Adam 优化器**（默认 30 轮、学习率 1e-3、批大小 16），数据集按 8:2 固定种子
 划分训练/验证集，只在验证集 Loss 创新低时落盘 `models/best_drone_model.pth`，保证可复现。
