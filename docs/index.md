@@ -297,6 +297,10 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
 * [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
+
+* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
+
+* [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 * [基于热力图的洋流干扰下 ROV 自适应路径规划](./water/water_rov_path_planning.md)
 
