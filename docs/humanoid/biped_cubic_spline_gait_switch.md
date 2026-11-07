@@ -70,7 +70,7 @@ ln -s /path/to/biped_cubic_spline_gait_switch ~/biped_ws/src/
 cd ~/biped_ws
 colcon build --packages-select biped_cubic_spline_gait_switch --symlink-install
 source install/setup.bash
-cd src/biped_cubic_spline_gait_switch
+cd src/humanoid/biped_cubic_spline_gait_switch
 python3 main.py
 ```
 
