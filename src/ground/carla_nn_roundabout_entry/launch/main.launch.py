@@ -6,7 +6,7 @@ import sys
 def generate_launch_description():
     return LaunchDescription([
         ExecuteProcess(
-            cmd=[sys.executable, "-m", "main", "--gui"],
+            cmd=[sys.executable, "-m", "carla_nn_roundabout_entry.main", "--steps", "360"],
             output="screen",
         )
     ])
