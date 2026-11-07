@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>line_following_pid</name>
+  <version>0.0.1</version>
+  <description>循线小车 PID 横向控制 2D 仿真：正弦赛道、自行车运动学、带限幅的 PID 循线。</description>
+  <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
+  <license>MIT</license>
+  <exec_depend>python3</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+</package>
