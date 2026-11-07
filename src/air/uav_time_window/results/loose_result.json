@@ -1,0 +1,405 @@
+[
+  {
+    "scenario": "loose",
+    "title": "宽时间窗",
+    "description": "与 tight 相同的任务布置，但窗口放宽到 200 s：绝大多数任务可以准点甚至早到（早到需悬停等待），分配退化为尽量少飞路的旅行商。",
+    "uavs": [
+      {
+        "uid": "UAV-1",
+        "x": 0.0,
+        "y": 0.0,
+        "speed": 8.0,
+        "endurance": 420.0
+      },
+      {
+        "uid": "UAV-2",
+        "x": 20.0,
+        "y": 0.0,
+        "speed": 9.0,
+        "endurance": 420.0
+      },
+      {
+        "uid": "UAV-3",
+        "x": 0.0,
+        "y": 20.0,
+        "speed": 10.0,
+        "endurance": 420.0
+      }
+    ],
+    "tasks": [
+      {
+        "tid": "L-A",
+        "x": 80,
+        "y": 60,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      },
+      {
+        "tid": "L-B",
+        "x": -70,
+        "y": 80,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      },
+      {
+        "tid": "L-C",
+        "x": 120,
+        "y": -40,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      },
+      {
+        "tid": "L-D",
+        "x": -100,
+        "y": -60,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      },
+      {
+        "tid": "L-E",
+        "x": 40,
+        "y": 140,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      },
+      {
+        "tid": "L-F",
+        "x": -140,
+        "y": 20,
+        "earliest": 60.0,
+        "latest": 260.0,
+        "service_time": 15.0,
+        "priority": 0
+      }
+    ],
+    "screen": [
+      {
+        "tid": "L-A",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      },
+      {
+        "tid": "L-B",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      },
+      {
+        "tid": "L-C",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      },
+      {
+        "tid": "L-D",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      },
+      {
+        "tid": "L-E",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      },
+      {
+        "tid": "L-F",
+        "infeasible": false,
+        "reason": "",
+        "reachable_by": [
+          "UAV-1",
+          "UAV-2",
+          "UAV-3"
+        ]
+      }
+    ],
+    "allocation": {
+      "greedy_assign": {
+        "UAV-1": [
+          "L-E",
+          "L-F",
+          "L-D",
+          "L-C",
+          "L-B",
+          "L-A"
+        ],
+        "UAV-2": [],
+        "UAV-3": []
+      },
+      "assign": {
+        "UAV-1": [
+          "L-E",
+          "L-F",
+          "L-D",
+          "L-C",
+          "L-B",
+          "L-A"
+        ],
+        "UAV-2": [],
+        "UAV-3": []
+      },
+      "greedy_objective": 0.0,
+      "final_objective": 0.0,
+      "swaps": 0,
+      "transfers": 0,
+      "rounds": 1,
+      "dropped": []
+    },
+    "greedy": {
+      "delay_total": 0.0,
+      "delay_max_uav": 0.0,
+      "delay_min_uav": 0.0,
+      "delay_spread": 0.0,
+      "objective": 0.0,
+      "hover_total": 41.8,
+      "n_early": 1,
+      "n_on_time": 5,
+      "n_late": 0
+    },
+    "final": {
+      "delay_total": 0.0,
+      "delay_max_uav": 0.0,
+      "delay_min_uav": 0.0,
+      "delay_spread": 0.0,
+      "objective": 0.0,
+      "hover_total": 41.8,
+      "n_early": 1,
+      "n_on_time": 5,
+      "n_late": 0
+    },
+    "per_uav": [
+      {
+        "uid": "UAV-1",
+        "tasks": [
+          "L-E",
+          "L-F",
+          "L-D",
+          "L-C",
+          "L-B",
+          "L-A"
+        ],
+        "lateness_total": 0.0,
+        "lateness_max": 0.0,
+        "wait_total": 41.8,
+        "makespan": 262.84,
+        "stops": [
+          {
+            "tid": "L-E",
+            "arrival": 18.2,
+            "wait": 41.8,
+            "serve_start": 60.0,
+            "departure": 75.0,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "early",
+            "lateness": 0.0
+          },
+          {
+            "tid": "L-F",
+            "arrival": 102.04,
+            "wait": 0.0,
+            "serve_start": 102.04,
+            "departure": 117.04,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "on-time",
+            "lateness": 0.0
+          },
+          {
+            "tid": "L-D",
+            "arrival": 128.22,
+            "wait": 0.0,
+            "serve_start": 128.22,
+            "departure": 143.22,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "on-time",
+            "lateness": 0.0
+          },
+          {
+            "tid": "L-C",
+            "arrival": 170.84,
+            "wait": 0.0,
+            "serve_start": 170.84,
+            "departure": 185.84,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "on-time",
+            "lateness": 0.0
+          },
+          {
+            "tid": "L-B",
+            "arrival": 213.93,
+            "wait": 0.0,
+            "serve_start": 213.93,
+            "departure": 228.93,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "on-time",
+            "lateness": 0.0
+          },
+          {
+            "tid": "L-A",
+            "arrival": 247.84,
+            "wait": 0.0,
+            "serve_start": 247.84,
+            "departure": 262.84,
+            "window": [
+              60.0,
+              260.0
+            ],
+            "status": "on-time",
+            "lateness": 0.0
+          }
+        ]
+      },
+      {
+        "uid": "UAV-2",
+        "tasks": [],
+        "lateness_total": 0,
+        "lateness_max": 0.0,
+        "wait_total": 0,
+        "makespan": 0.0,
+        "stops": []
+      },
+      {
+        "uid": "UAV-3",
+        "tasks": [],
+        "lateness_total": 0,
+        "lateness_max": 0.0,
+        "wait_total": 0,
+        "makespan": 0.0,
+        "stops": []
+      }
+    ],
+    "sim": {
+      "uids": [
+        "UAV-1"
+      ],
+      "arrivals": [
+        {
+          "uid": "UAV-1",
+          "tid": "L-E",
+          "planned": 18.2,
+          "actual": 17.2,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -1.0,
+          "status": "early"
+        },
+        {
+          "uid": "UAV-1",
+          "tid": "L-F",
+          "planned": 102.04,
+          "actual": 101.05,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -0.99,
+          "status": "on-time"
+        },
+        {
+          "uid": "UAV-1",
+          "tid": "L-D",
+          "planned": 128.22,
+          "actual": 127.25,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -0.97,
+          "status": "on-time"
+        },
+        {
+          "uid": "UAV-1",
+          "tid": "L-C",
+          "planned": 170.84,
+          "actual": 169.85,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -0.99,
+          "status": "on-time"
+        },
+        {
+          "uid": "UAV-1",
+          "tid": "L-B",
+          "planned": 213.93,
+          "actual": 212.95,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -0.98,
+          "status": "on-time"
+        },
+        {
+          "uid": "UAV-1",
+          "tid": "L-A",
+          "planned": 247.84,
+          "actual": 246.85,
+          "window": [
+            60.0,
+            260.0
+          ],
+          "deviation": -0.99,
+          "status": "on-time"
+        }
+      ],
+      "n_arrivals": 6,
+      "deviation_mean": 0.99,
+      "deviation_max": 1.0,
+      "missed": [],
+      "max_track_error": {
+        "UAV-1": 3.62
+      },
+      "steps": 27684,
+      "wall_time": 8.8
+    }
+  }
+]
