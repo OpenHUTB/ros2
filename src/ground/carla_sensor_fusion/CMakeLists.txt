@@ -17,6 +17,7 @@ catkin_install_python(PROGRAMS
   sensor_fusion_core.py
   fusion_perception.py
   test_sensor_fusion.py
+  offline_replay.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -259,10 +259,13 @@ def run(args):
         t_start = time.time()
 
         for k in range(args.ticks):
-            world.tick()
             t = k * dt
+            # 先按本帧时刻设置目标/ego 位姿，再 world.tick()：
+            # 让回调采到的传感器帧与本帧真值 figure_eight(t) 严格对齐，
+            # 而不是「先 tick 再挪车」导致传感器帧总落后真值一拍。
             drive_target(carla, target, t)
             drive_ego_sway(carla, ego, t)
+            world.tick()
 
             # ---- 目标关联：把 EKF 世界系估计转到 ego 体坐标，作为检测的目标门限（评审点 2/3/4）
             ego_tf = ego.get_transform()

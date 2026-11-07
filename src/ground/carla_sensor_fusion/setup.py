@@ -16,6 +16,7 @@ setup(
         "sim_2d_fusion",
         "carla_sensor_fusion",
         "test_sensor_fusion",
+        "offline_replay",
     ],
     install_requires=["numpy", "matplotlib"],
 )
