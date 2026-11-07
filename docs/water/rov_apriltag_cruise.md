@@ -10,7 +10,7 @@
 
 - **水下场景**：包含 3 块 AprilTag 标牌（ID 0/1/2）、礁石、海草、海底地形，模拟真实水下环境。
 - **视觉识别**：ROV 前视相机实时检测 AprilTag，输出标签 ID、相对位姿（x, y, z）与距离。
-- **姿态调整**：检测到标签后，ROV 自动调整航向与位置，使标签位于视野中心。
+- **姿态调整**：ROV 沿 `cruise.yaml` 中预置的航点运动学移动，并根据标签是否进入视野与检测距离，平滑调整机头朝向使标签居中（检测出的相对位姿用于判断可见性与朝向，不参与位置闭环）。
 - **定点巡航**：依次飞往 3 个标签点，到达后悬停识别，完成循环巡航。
 - **可视化**：RViz 实时显示巡航轨迹、标签坐标系、ROV 位姿与航点标记。
 
@@ -29,7 +29,7 @@ graph TD
 
     subgraph Control["巡航控制层"]
         Ctrl["巡航控制器<br/>cruise_controller.py"]
-        State["状态机: CRUISE → ALIGN → HOLD → NEXT"]
+        State["状态机: CRUISE → HOLD → DONE"]
     end
 
     subgraph Viz["可视化层"]
@@ -41,7 +41,7 @@ graph TD
     Cam -->|图像| Det
     Det -->|位姿| TF
     Det -->|识别结果| Ctrl
-    Ctrl -->|速度指令| ROV
+    Ctrl -->|set_entity_state 位姿| ROV
     ROV -->|位姿| RViz
     Det -->|识别画面| OpenCV
 ```
@@ -52,10 +52,10 @@ graph TD
 
 | 项目 | 版本 / 说明 |
 | :--- | :--- |
-| 操作系统 | Ubuntu 22.04 LTS (Jammy) |
+| 操作系统 | Ubuntu 20.04 LTS (Focal)（本模块实测环境）；Ubuntu 22.04 LTS 亦可 |
 | ROS 版本 | ROS 2 Humble Hawksbill |
 | 仿真器 | Gazebo Classic 11.13.0 |
-| 视觉库 | OpenCV 4.2 (ArUco 模块) |
+| 视觉库 | OpenCV 4.2（Ubuntu 20.04 系统包，含 ArUco 模块；22.04 对应 4.5.4） |
 | 编程语言 | C++ (检测节点) + Python (巡航控制器) |
 | 构建工具 | colcon / ament_cmake |
 | 显卡 | 支持 OpenGL 2.1+（虚拟机需开启 3D 加速） |
@@ -67,9 +67,9 @@ graph TD
     - `tf2_ros`（坐标变换）
     - `nav_msgs` / `visualization_msgs`（轨迹与标记）
 
-    若缺少 OpenCV ArUco 模块，请安装：
+    若缺少 OpenCV 的 ArUco 模块，请安装（ArUco 位于 `contrib` 包中，不存在独立的 `libopencv-aruco-dev`）：
     ```bash
-    sudo apt install libopencv-dev libopencv-aruco-dev
+    sudo apt install libopencv-dev libopencv-contrib-dev
     ```
 
 ---
@@ -201,24 +201,25 @@ detector_params_->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
 detector_params_->detectInvertedMarker = true;
 ```
 
-关键发现：本机 OpenCV 4.2 环境下，`detectInvertedMarker = true` 是稳定识别「白底黑标」AprilTag 的必要条件。
+关键发现：在 OpenCV 4.2 环境下实测，`detectInvertedMarker = true` 是稳定识别「白底黑标」AprilTag 的必要条件。
 
 ### 6.2 巡航状态机
 
-巡航控制器采用有限状态机（FSM）管理任务流程：
+巡航控制器采用三状态有限状态机（FSM）管理任务流程：
 
 | 状态 | 行为 |
 | :--- | :--- |
-| `CRUISE` | 向目标航点飞行，线速度 0.55 m/s |
-| `VISUAL ALIGN` | 检测到标签后，调整航向使标签居中 |
-| `HOLD` | 到达悬停点，保持位置 2.5 秒，持续识别 |
-| `NEXT` | 切换至下一航点，循环执行 |
+| `CRUISE` | 沿航点方向运动学移动（0.55 m/s，20 Hz 步进），并根据标签可见性调整机头朝向 |
+| `HOLD` | 到达悬停点后保持位置 2.5 秒，持续朝向标牌并输出 `VISUAL ALIGN` 状态文本 |
+| `DONE` | 非循环模式（`loop: false`）下全部航点完成后进入，停止运动 |
+
+航点切换由 `HOLD` 结束时 `index += 1` 完成，不设独立状态。
 
 ### 6.3 水下视觉增强
 
 - **雾效模拟**：Gazebo `<fog>` 标签设置 density=0.025，模拟水下能见度衰减。
 - **环境光**：ambient 设置为 (0.30, 0.45, 0.58)，模拟深水蓝绿色调。
-- **重力补偿**：世界重力设为 0，通过浮力与推力平衡实现中性浮力。
+- **运动方式**：世界重力设为 0，ROV 以运动学方式运动——控制器每 0.05 s 调用一次 `/gazebo/set_entity_state` 直接设置位姿，不含推力/浮力动力学插件。
 
 ---
 
