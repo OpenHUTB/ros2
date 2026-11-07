@@ -97,7 +97,7 @@ sequence = [
 
 ## 6. 运行效果
 
-![任务1 键盘运动控制](../../img/ground/carla_nn_perception_control_slam/task1_manual_control.gif)
+![任务1 键盘运动控制](../img/ground/carla_nn_perception_control_slam/task1_manual_control.gif)
 
 - 帧数：**110**，分辨率 400×300，gif 体积 **4.4MB**
 - 控制序列完整覆盖 加速 / 左转 / 直行 / 右转 / 制动 五种状态
@@ -203,7 +203,7 @@ for each frame:
 
 ## 6. 运行效果与性能
 
-![任务2 感知与轨迹控制](../../img/ground/carla_nn_perception_control_slam/task2_perception_tracking.gif)
+![任务2 感知与轨迹控制](../img/ground/carla_nn_perception_control_slam/task2_perception_tracking.gif)
 
 | 指标 | 数值 |
 |------|------|
@@ -325,9 +325,9 @@ STAGE3: for 110 frames
 
 ## 8. 运行效果与性能
 
-![任务3 SLAM 建图与导航](../../img/ground/carla_nn_perception_control_slam/task3_slam_navigation.gif)
+![任务3 SLAM 建图与导航](../img/ground/carla_nn_perception_control_slam/task3_slam_navigation.gif)
 
-![建图结果](../../img/ground/carla_nn_perception_control_slam/task3_slam_map.png)
+![建图结果](../img/ground/carla_nn_perception_control_slam/task3_slam_map.png)
 
 | 指标 | 数值 |
 |------|------|
@@ -445,7 +445,7 @@ drive:    load pilotnet.pt → 每帧:
 
 ## 7. 训练结果
 
-![训练曲线](../../img/ground/carla_nn_perception_control_slam/task4_train_curve.png)
+![训练曲线](../img/ground/carla_nn_perception_control_slam/task4_train_curve.png)
 
 ```
 epoch  1  train=0.01643  val=0.01142  steer_MAE=0.0843
@@ -458,7 +458,7 @@ steer_MAE     = 0.0855 (归一化) ≈ 2.99°
 
 ## 8. 端到端驾驶效果
 
-![任务4 端到端 PilotNet](../../img/ground/carla_nn_perception_control_slam/task4_e2e_pilotnet.gif)
+![任务4 端到端 PilotNet](../img/ground/carla_nn_perception_control_slam/task4_e2e_pilotnet.gif)
 
 | 指标 | 数值 |
 |------|------|
