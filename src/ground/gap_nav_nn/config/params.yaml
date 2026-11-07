@@ -1,0 +1,15 @@
+# 狭窄通道通行参数
+gap_nav_node:
+  mode: nn              # nn | expert | manual
+  rate: 20
+  seed: 0
+  # 激光雷达
+  n_beams: 91
+  fov_deg: 270
+  max_range: 8.0
+  # 隔墙开口（实测宽度 m）
+  gaps: [[-3.55, -2.85], [-0.70, 0.70], [2.00, 4.40]]
+  min_passable: 0.95    # 小于该宽度视为不可通行（车宽 0.6 + 余量）
+  robot_half_width: 0.30
+  goal_x: 6.0
+  goal_radius: 0.7
