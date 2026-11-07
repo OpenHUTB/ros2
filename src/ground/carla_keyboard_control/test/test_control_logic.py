@@ -96,6 +96,41 @@ def test_control_quantities_stay_in_valid_range():
             assert isinstance(reverse, bool)
 
 
+# ------------------------------------------------------------------ 终端按键解析
+def test_terminal_single_char_keys():
+    """终端单字符按键：W/S/A/D/Q/E → 对应控制动作，大写同样识别。"""
+    for ch, name in cc.TERMINAL_KEYS.items():
+        action, consumed = cc.parse_terminal_key(ch)
+        assert action == name, f"{ch!r} 应映射到 {name}"
+        assert consumed == 1
+    action, consumed = cc.parse_terminal_key('W')
+    assert action == 'fwd' and consumed == 1
+
+
+def test_terminal_arrow_keys_are_not_esc():
+    """方向键是 ESC 三字节序列：必须整段解析，首字节不能被当成退出。"""
+    cases = {'\x1b[A': 'fwd', '\x1b[B': 'rev',
+             '\x1b[C': 'right', '\x1b[D': 'left'}
+    for seq, name in cases.items():
+        action, consumed = cc.parse_terminal_key(seq)
+        assert action == name, f"{seq!r} 应映射到 {name}，不能触发退出"
+        assert consumed == 3
+
+
+def test_terminal_standalone_esc_quits():
+    """独立 ESC（后面没有 '['）才是退出。"""
+    action, consumed = cc.parse_terminal_key('\x1b')
+    assert action == 'quit' and consumed == 1
+
+
+def test_terminal_incomplete_and_unknown_inputs():
+    """不完整/未知输入：不崩溃、不残留、不误触发。"""
+    assert cc.parse_terminal_key('') == (None, 0)
+    assert cc.parse_terminal_key('\x1b[') == (None, 2)      # 等待补齐
+    assert cc.parse_terminal_key('\x1b[Z') == (None, 3)     # 未知序列整段忽略
+    assert cc.parse_terminal_key('x') == (None, 1)          # 未知单字符
+
+
 # ------------------------------------------------------------------ 与 ROS 节点一致性
 def test_ros_node_reuses_the_same_compose_control():
     """ROS 2 键盘节点必须复用同一份控制实现，否则两条路径行为会漂移。"""

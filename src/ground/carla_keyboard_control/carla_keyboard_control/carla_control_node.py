@@ -131,6 +131,11 @@ class CarlaControlNode(Node):
     # ------------------------------------------------------------------ 清理
     def destroy_node(self):
         try:
+            # 退出前先施加零控制并推进一帧：保证车辆收到「停车」指令，
+            # 而不是带着当前油门/转向被直接销毁（对比：键盘节点 Ctrl+C 后
+            # 不会再发指令，若这里不归零，物理仿真会残留最后一条控制）。
+            cc.apply_control(self.vehicle)
+            self.world.tick()
             for sensor in self._sensors:
                 sensor.stop()
                 sensor.destroy()
@@ -138,7 +143,7 @@ class CarlaControlNode(Node):
             settings = self.world.get_settings()
             settings.synchronous_mode = False
             self.world.apply_settings(settings)
-            self.get_logger().info("已释放自车与传感器资源")
+            self.get_logger().info("已施加零控制并释放自车与传感器资源")
         except Exception as exc:  # noqa: BLE001 - 退出阶段尽力清理
             self.get_logger().warn(f"清理资源时出现异常：{exc}")
         super().destroy_node()

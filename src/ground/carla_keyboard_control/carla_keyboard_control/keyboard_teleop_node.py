@@ -25,12 +25,8 @@ from carla_keyboard_control import carla_common as cc
 
 TOPIC = '/carla/ego_vehicle/vehicle_control_cmd'
 
-# 终端模式按键映射（单字符）
-TERMINAL_KEYS = {
-    'w': 'fwd', 's': 'rev',
-    'a': 'left', 'd': 'right',
-    'q': 'left_fine', 'e': 'right_fine',
-}
+# 终端模式按键映射与 ESC 序列解析统一放在 carla_common（纯函数，可单测）
+TERMINAL_KEYS = cc.TERMINAL_KEYS
 
 
 class KeyboardTeleopNode(Node):
@@ -109,7 +105,12 @@ def _has_display():
 
 
 def _terminal_loop(node):
-    """termios 原始模式读单键：无需图形界面，适合虚拟机 / SSH。
+    """termios 原始模式读键：无需图形界面，适合虚拟机 / SSH。
+
+    支持两类输入：
+      * 单字符 W/S/A/D/Q/E（点动：短暂保持再释放）
+      * 方向键 ←↑→↓（ESC + '[' + 字母 三字节序列，逐字节补齐后整段解析，
+        否则首字节 \x1b 会被当成 ESC 导致「按方向键 = 退出程序」）
 
     termios/tty 是 POSIX 专属模块，放在函数内部导入，使本模块在 Windows
     上也能被正常导入与打包（ROS 2 原生支持 Windows）。
@@ -127,20 +128,28 @@ def _terminal_loop(node):
     old = termios.tcgetattr(fd)
     try:
         tty.setraw(fd)
-        print("终端键盘遥控已启动：W/S/A/D 控制，ESC 或 Ctrl-C 退出")
+        print("终端键盘遥控已启动：W/S/A/D 或方向键控制，ESC 或 Ctrl-C 退出")
         while rclpy.ok() and not node._quit:
             rclpy.spin_once(node, timeout_sec=0.0)
             if select.select([sys.stdin], [], [], 0.02)[0]:
-                ch = sys.stdin.read(1)
-                if ch == '\x1b':          # ESC 退出
+                first = sys.stdin.read(1)
+                if not first:
+                    continue
+                buf = first
+                if first == '\x1b':
+                    # 转义序列可能分片到达：补齐最多 2 个后续字节（每字节 20ms）
+                    for _ in range(2):
+                        if not select.select([sys.stdin], [], [], 0.02)[0]:
+                            break
+                        buf += sys.stdin.read(1)
+                action, _consumed = cc.parse_terminal_key(buf)
+                if action == 'quit':
                     node._quit = True
                     break
-                low = ch.lower()
-                if low in TERMINAL_KEYS:
-                    name = TERMINAL_KEYS[low]
+                if action:
                     # 终端模式无「保持按下」语义，采用脉冲式点动
-                    node.keys[name] = True
-                    _pulse_off(node, name)
+                    node.keys[action] = True
+                    _pulse_off(node, action)
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
         print("\n终端键盘遥控已退出")

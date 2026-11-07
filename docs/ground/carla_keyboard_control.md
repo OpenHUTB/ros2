@@ -188,13 +188,20 @@ def _on_tick(self):
     self.pub_image.publish(img)
 ```
 
+节点销毁（`destroy_node`）时**先施加零控制并推进一帧**再释放自车与传感器资源：
+这样退出（Ctrl+C / 窗口关闭）时车辆收到明确的「停车」指令，而不是带着最后一条
+油门/转向被直接销毁，避免物理仿真残留控制量。
+
 ### 4.4 `keyboard_teleop_node.py` — 键盘遥控节点
 
 提供两种键盘后端，自动按环境选择：
 
 - **pygame 后端**：有图形界面（或 Windows 原生）时逐帧直读按键状态
   （`pygame.key.get_pressed()`）。
-- **终端后端**：无图形环境（虚拟机 / SSH）时用 `termios` 原始模式读单键并按点动下发。
+- **终端后端**：无图形环境（虚拟机 / SSH）时用 `termios` 原始模式读键并按点动下发。
+  支持单字符键（`W`/`S`/`A`/`D`/`Q`/`E`）与**方向键 `←` `↑` `→` `↓`** —— 方向键
+  是 `ESC + [ + 字母` 三字节序列，由 `carla_common.parse_terminal_key()` 逐字节
+  补齐后整段解析，避免首字节 `\x1b` 被误判为「ESC 退出」。
 
 !!! note "为什么 `termios` 要在函数内部导入"
     `termios` / `tty` 是 **POSIX 专属**模块，Windows 上没有。ROS 2 原生支持 Windows，
@@ -215,6 +222,8 @@ python3 -m pytest test/test_control_logic.py -v
 覆盖点包括：低速挂倒挡 / 有速度刹车、阈值边界与可配置性、油门与刹车互斥、
 转向方向与饱和、微调幅度小于全转向、所有按键组合下控制量落在合法区间，
 以及「ROS 节点确实复用了同一份实现」「POSIX 模块确实在函数内导入」等约束。
+终端按键解析（单字符映射、方向键 ESC 序列、独立 ESC 退出、未知序列忽略）由
+`carla_common.parse_terminal_key()` 纯函数覆盖，共 20 项断言。
 无需安装 CARLA 服务端即可运行。
 
 ---
@@ -397,6 +406,11 @@ bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1
 
 建议用 ScreenToGif 录制 10 秒操控过程作为演示动图（≤10 MB）。
 
+!!! tip "终端后端也支持方向键"
+    ROS 2 节点模式的终端后端（`--terminal`，适用于无图形界面的虚拟机 / SSH）
+    同样支持上表全部方向键：`←` `↑` `→` `↓` 作为 ESC 转义序列被自动解析，
+    与图形模式键位完全一致。
+
 ### 5.8 运行效果
 
 #### 交互模式运行画面
@@ -420,6 +434,17 @@ bash src/ground/carla_keyboard_control/main.sh --host 192.168.8.1
 | 直线加速（`th=0.6`） | ![](../img/ground/carla_keyboard_accel.png) |
 | 转向（`st=+0.6`） | ![](../img/ground/carla_keyboard_turn.png) |
 | 挂倒挡后退（`rev=1`） | ![](../img/ground/carla_keyboard_reverse.png) |
+
+#### 复现记录（Windows 宿主 + 虚拟机 ROS 2 Humble）
+
+在 Windows 宿主（CARLA 0.9.16 服务端）+ Ubuntu 22.04 虚拟机（Python 3.10、
+`pip3 install carla==0.9.16`）环境下按 5.6 模式 B 复现取证，以下为该环境
+无窗口模式直接导出的车头相机帧（640×480）：
+
+| 阶段 | 画面 |
+|---|---|
+| 演示序列早期（直线加速附近） | ![](../img/ground/carla_keyboard_fork_01.png) |
+| 演示序列后期（转向 / 减速段） | ![](../img/ground/carla_keyboard_fork_02.png) |
 
 #### 终端状态输出（可运行性证据）
 
@@ -449,6 +474,7 @@ x=  47.62 y=  -2.40 v= 0.22 m/s | th=0.5 st=+0.00 br=0.0 rev=1
 | 客户端连接崩溃 / `std::bad_alloc` | 客户端版本须与服务器一致（均为 0.9.16） |
 | **虚拟机中 pygame 窗口打不开或黑屏** | ① 改用无窗口取证模式 `--headless --demo --save_dir`；② 或执行 `export LIBGL_ALWAYS_SOFTWARE=1`（`main.sh` 已自动设置）；③ 根治：VMware「虚拟机设置 → 显示器 → 加速 3D 图形」勾选后重启 |
 | 键盘无反应 | 焦点需在控制窗口；或改用终端后端（ROS 2 节点模式支持 `--terminal`） |
+| 终端模式按 `↑↓←→` 无反应或直接退出 | 方向键是 `ESC + [ + 字母` 三字节序列：旧版读单字符会把首字节当 ESC。请使用含 `carla_common.parse_terminal_key()` 的版本（逐字节补齐后整段解析） |
 | 画面黑屏但程序在跑 | 宿主机 IP 填错；或地图正在切换，稍候 |
 | 运行很卡 | 虚拟机无 3D 加速；将 CARLA 服务端放在宿主机，虚拟机仅作客户端 |
 

@@ -48,6 +48,46 @@ FINE_STEER_RATIO = 0.25
 # 键盘按键名（standalone 与 ROS 键盘节点共用）
 KEY_NAMES = ("fwd", "rev", "left", "right", "left_fine", "right_fine")
 
+# 终端模式单字符按键映射（termios 原始模式无 keyup 事件，采用点动）
+TERMINAL_KEYS = {
+    'w': 'fwd', 's': 'rev',
+    'a': 'left', 'd': 'right',
+    'q': 'left_fine', 'e': 'right_fine',
+}
+# 终端模式方向键转义序列：ESC + '[' + 字母（三字节），首字节会被误判为 ESC，
+# 必须整段解析才能避免「按方向键 = 退出程序」。
+TERMINAL_ESCAPE_KEYS = {
+    '[A': 'fwd',      # ↑
+    '[B': 'rev',      # ↓
+    '[C': 'right',    # →
+    '[D': 'left',     # ←
+}
+
+
+def parse_terminal_key(buf):
+    """把终端原始输入解析为按键名或退出标记（纯函数，便于单元测试）。
+
+    返回 (action, consumed)：
+      action  ∈ KEY_NAMES | 'quit' | None
+      consumed 本次解析实际消耗的字符数（独立 ESC 为 1，方向键序列为 3，
+               单字符为 1，不可识别字符为 1）
+    约定：ESC 之后紧跟 '[' 的均按转义序列处理；未知序列整段忽略，
+    避免残留字节污染下一次解析。
+    """
+    if not buf:
+        return None, 0
+    if buf[0] == '\x1b':
+        if len(buf) >= 2 and buf[1] == '[':
+            if len(buf) >= 3:
+                name = TERMINAL_ESCAPE_KEYS.get(buf[1] + buf[2])
+                return (name, 3)
+            return None, 2  # 只读到 ESC+[，等待补齐；补不齐则忽略
+        return 'quit', 1    # 独立 ESC → 退出
+    low = buf[0].lower()
+    if low in TERMINAL_KEYS:
+        return TERMINAL_KEYS[low], 1
+    return None, 1
+
 # 安装提示：carla 0.9.16 已发布到 PyPI（含 cp310/cp311/cp312 与 win_amd64），
 # 无网络时也可改用随 CARLA 发行包附带的 wheel。
 CARLA_INSTALL_HINT = (
