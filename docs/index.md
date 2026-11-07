@@ -278,7 +278,9 @@ ROS每章节运行代码:
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
 
 * [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
-  
+
+* [水下 ROV 视觉引导的沉船结构巡检采样仿真](./water/rov_wreck_inspection.md)
+
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
