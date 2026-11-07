@@ -7,6 +7,10 @@
 Ubuntu20.04 + Python3 + mujoco
 
 ## 运行步骤
+
+!!! warning
+    下面命令需要在仓库根目录运行，不然会找不到文件。
+
 ```bash
 # 1. 安装依赖
 pip install mujoco
