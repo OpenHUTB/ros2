@@ -122,6 +122,9 @@ nav:
     - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 基于 TTC 的前向目标跟踪紧急制动: './ground/carla_ttc_emergency_braking.md'
+    - 语义分割车道线巡游与 PID 横向控制: './ground/carla_lane_following.md'
+    - 激光雷达点云 3D 目标检测与召回率评估: './ground/carla_lidar_obstacle_detection.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
@@ -177,6 +180,7 @@ nav:
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - UAV mission energy budget: './air/uav_energy_budget.md'
+    - AirSim 多旋翼航点飞行与到达误差评估: './air/airsim_multirotor_waypoint_nav.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
     - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
@@ -235,6 +239,7 @@ nav:
     - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
+    - MuJoCo 水下 ROV 串级定深控制: './water/mujoco_rov_depth_control.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
     - 手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比: './water/mjc_rov_ppo_tracking.md'
     - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'

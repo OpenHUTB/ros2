@@ -1,0 +1,22 @@
+# 无人机航点导航模块参数
+
+simulator:
+  host: "127.0.0.1"        # AirSim RPC 所在主机（Windows 上就是本机）
+  airsim_port: 41451        # AirSim RPC 端口
+  carla_port: 2000          # 同一个进程里 CARLA RPC 也开着，用于拍取证照片
+  map: "Town10HD_Opt"
+
+flight:
+  takeoff_height: 6.0       # 起飞后悬停高度（米，NED 里是 -z）
+  speed: 4.0                # 巡航速度 m/s
+  waypoints:                # 相对起飞点的航点（x 东、y 北，单位米）
+    - [25.0, 0.0]
+    - [25.0, 25.0]
+    - [0.0, 25.0]
+    - [0.0, 0.0]
+  arrive_tolerance: 2.0     # 到达判定半径（米）
+  timeout_per_waypoint: 45.0
+  log_interval: 0.2         # 位置采样间隔（秒）
+
+output:
+  save_dir: "docs"

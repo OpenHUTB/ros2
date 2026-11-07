@@ -1,0 +1,10 @@
+<launch>
+  <!-- 直连路线：不需要 carla_ros_bridge，本节点通过 CARLA Python API 直接连服务端 2000 端口 -->
+  <arg name="host" default="127.0.0.1" doc="仿真器所在主机 IP；虚拟机里跑填 Windows 的 VMnet8 地址（如 192.168.29.1）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口，与服务端 -carla-rpc-port 一致"/>
+  <arg name="map" default="Town10HD_Opt" doc="地图名；留空则沿用服务端当前地图"/>
+  <arg name="python" default="python3.10" doc="解释器，必须能 import carla（Noetic 的 python3.8 装不上 0.9.16 wheel）"/>
+
+  <node pkg="carla_ttc_emergency_braking" type="main.py" name="carla_ttc_emergency_braking" output="screen"
+        args="--host $(arg host) --port $(arg port) --map $(arg map)"/>
+</launch>

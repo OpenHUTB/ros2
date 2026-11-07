@@ -1,0 +1,27 @@
+# 水下 ROV 定深控制模块参数
+
+model:
+  mass: 15.0                 # ROV 质量 kg（设为近中性浮力）
+  size: [0.40, 0.30, 0.30]   # 机体尺寸 m
+  drag_linear: 12.0          # 线性阻尼系数 N/(m/s)
+  drag_quadratic: 25.0       # 二次阻尼系数 N/(m/s)^2
+  max_thrust: 80.0           # 垂向推进器最大推力 N
+  forward_thrust: 6.0        # 水平推进器推力 N（保持巡航）
+
+control:
+  dt: 0.002                  # 物理步长 s
+  control_every: 25          # 每多少个物理步更新一次控制（=50 Hz）
+  position_gain: 0.8         # 位置误差 -> 期望垂速（1/s）
+  velocity_gain: 4.0         # 垂速误差 -> 期望加速度（1/s）
+  max_vertical_speed: 1.0    # 限速 m/s，避免大深度指令把推进器打到饱和后冲过头
+  kp: 55.0                   # （保留）单环 PD 的等效比例增益，便于对照说明
+  kd: 40.0
+  ki: 4.0
+
+mission:
+  depth_setpoints: [-5.0, -5.0, -2.0, -2.0, -0.5, -0.5]   # 目标深度序列（负值=水下）
+  hold_time: 7.0             # 每个目标保持时长 s（同一目标连续两段 = 14 s，留足收敛时间）
+  settle_time: 4.0           # 判定稳态误差时只看最后这么多秒
+
+output:
+  save_dir: "docs"
