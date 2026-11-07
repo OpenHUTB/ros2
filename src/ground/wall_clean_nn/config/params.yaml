@@ -1,0 +1,15 @@
+﻿# 沿墙清扫参数
+wall_clean_node:
+  mode: nn           # nn | expert | manual
+  rate: 20           # 控制频率 (Hz)
+  seed: 0
+  # 激光雷达
+  n_beams: 61
+  fov_deg: 270
+  max_range: 7.0
+  # 房间与沿墙走廊
+  room_x: 12.0
+  room_y: 10.0
+  wall_offset: 0.85   # 期望离墙距离 (m)
+  wall_band: 1.0      # 目标清扫带宽 (m)
+  brush_radius: 0.75
