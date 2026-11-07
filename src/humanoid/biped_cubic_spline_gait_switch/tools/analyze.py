@@ -154,8 +154,17 @@ def compute_metrics(data, baseline=None):
     margin_mean = float(np.mean(margin)) if len(margin) else float("nan")
     flight_ratio = float(np.mean(~lc & ~rc))
 
-    left_steps = int(np.sum(np.diff(lc.astype(int)) > 0))
-    right_steps = int(np.sum(np.diff(rc.astype(int)) > 0))
+    raw_gait = data["gait"]
+    same_gait = np.array([raw_gait[i] == raw_gait[i - 1]
+                          for i in range(1, len(raw_gait))])
+
+    def count_steps(contact):
+        rises = np.diff(contact.astype(int)) > 0
+        # 排除步态切换边界处接触状态跳变产生的假上升沿
+        return int(np.sum(rises & same_gait))
+
+    left_steps = count_steps(np.asarray(data["lc"]) > 0.5)
+    right_steps = count_steps(np.asarray(data["rc"]) > 0.5)
     distance = float(base_x[-1] - base_x[0])
     duration = float(t[-1] - t[0])
     avg_speed = distance / max(duration, 1e-9)

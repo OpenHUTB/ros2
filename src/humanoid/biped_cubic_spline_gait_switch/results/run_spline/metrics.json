@@ -30,7 +30,7 @@
   "zmp_margin_min_m": -0.198,
   "zmp_margin_mean_m": 0.1126,
   "flight_ratio": 0.043,
-  "step_count": 55,
+  "step_count": 52,
   "metric_source": "command_qdes",
   "gaits": {
     "fast_walk": {
