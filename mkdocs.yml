@@ -97,6 +97,7 @@ nav:
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
+    - 冗余肌肉力分配（力矩跟踪）: './musculoskeletal/muscle_force_distribution.md'
 - 地面载具:
     - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
@@ -258,6 +259,9 @@ nav:
     - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
+    - 水面无人艇 LOS 视线制导: './water/usv_los_guidance.md'
+- 控制:
+    - 滑模控制（SMC）二阶系统鲁棒轨迹跟踪: 'control/sliding_mode_control.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
