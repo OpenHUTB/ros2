@@ -171,6 +171,8 @@ ROS每章节运行代码:
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
+* [动态障碍物避让：激光雷达帧间差分与神经网络时机决策](./ground/dyn_avoid_nn.md) —— 两个往复扫动的障碍，专家用前向仿真决定过线时机，行为克隆 MLP 仅凭两帧雷达推断运动，20 回合成功率 90% / 75%
+
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
