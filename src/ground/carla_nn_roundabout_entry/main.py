@@ -14,6 +14,8 @@ import numpy as np
 
 from carla_nn_roundabout_entry.policy import GapPolicy
 from carla_nn_roundabout_entry.sensors import closest_gap, raycast_ranges
+from carla_nn_roundabout_entry.slam_nav import OccupancyGrid
+from carla_nn_roundabout_entry.end_to_end import render_state_observation, train_and_evaluate_teacher
 from carla_nn_roundabout_entry.train_policy import training_data
 
 
@@ -99,6 +101,92 @@ def _trained_gap_policy() -> GapPolicy:
     return policy
 
 
+@lru_cache(maxsize=1)
+def _trained_image_model():
+    model, _ = train_and_evaluate_teacher(seed=11, samples=256, image_size=16, hidden=24, epochs=400)
+    return model
+
+
+class ObservationMapTracker:
+    """Integrate synthetic range observations into an occupancy grid and run A*."""
+
+    def __init__(self, resolution: float = 0.5) -> None:
+        self.resolution = resolution
+        self.origin = (-20.0, -20.0)
+        self.grid = OccupancyGrid(80, 80)
+        self.ray_count = 0
+        self.path_search_frames = 0
+        self.path_found_frames = 0
+        self.last_path_length_cells = 0
+
+    def _cell(self, x: float, y: float) -> tuple[int, int]:
+        return (
+            int(round((x - self.origin[0]) / self.resolution)),
+            int(round((y - self.origin[1]) / self.resolution)),
+        )
+
+    def observe(self, world: RoundaboutWorld) -> None:
+        ego = world.ego
+        circles = [(*car.position(*world.center), 1.1) for car in world.traffic]
+        ranges = raycast_ranges((ego.x, ego.y), ego.yaw, circles)
+        start = self._cell(ego.x, ego.y)
+        ray_count = len(ranges)
+        for index, distance in enumerate(ranges):
+            angle = ego.yaw - math.pi / 2 + math.pi * index / (ray_count - 1)
+            end_x = ego.x + distance * math.cos(angle)
+            end_y = ego.y + distance * math.sin(angle)
+            hit = distance < 30.0 - 1e-9
+            self.grid.integrate_ray(start, self._cell(end_x, end_y), hit=hit)
+        self.ray_count += ray_count
+
+        center_distance = min(ranges[ray_count // 2], 8.0)
+        goal = self._cell(
+            ego.x + center_distance * math.cos(ego.yaw),
+            ego.y + center_distance * math.sin(ego.yaw),
+        )
+        path = self.grid.plan(start, goal)
+        self.path_search_frames += 1
+        self.last_path_length_cells = len(path)
+        if path:
+            self.path_found_frames += 1
+
+    def metrics(self) -> dict[str, int | float]:
+        cells = [cell for row in self.grid.cells for cell in row]
+        return {
+            "map_resolution_m": self.resolution,
+            "map_rays_integrated": self.ray_count,
+            "map_free_cells": cells.count(OccupancyGrid.FREE),
+            "map_occupied_cells": cells.count(OccupancyGrid.OCCUPIED),
+            "path_search_frames": self.path_search_frames,
+            "path_found_frames": self.path_found_frames,
+            "path_length_cells": self.last_path_length_cells,
+        }
+
+
+class ImageModelController:
+    """Drive the synthetic world from a rendered state observation and MLP output."""
+
+    def __init__(self) -> None:
+        self.model = _trained_image_model()
+        self.control_frames = 0
+
+    def command(self, world: RoundaboutWorld) -> tuple[float, float, float]:
+        ego = world.ego
+        traffic = []
+        for car in world.traffic:
+            x, y = car.position(*world.center)
+            traffic.append((x, y, -car.speed * math.sin(car.angle), car.speed * math.cos(car.angle)))
+        image = render_state_observation(
+            (ego.x, ego.y, ego.yaw, ego.speed), traffic, image_size=16
+        )
+        steer, throttle, brake = self.model.predict(image[None, ...])[0]
+        self.control_frames += 1
+        return float(throttle), float(brake), float(steer)
+
+    def metrics(self) -> dict[str, int]:
+        return {"image_control_frames": self.control_frames}
+
+
 class GapAcceptanceController:
     """Use simulated range observations and a trained MLP for each control step."""
 
@@ -173,22 +261,31 @@ def run_headless_with_controller(
 ) -> dict[str, float | int]:
     if steps <= 0:
         raise ValueError("仿真步数必须为正数")
-    if controller not in {"gap-policy", "baseline"}:
-        raise ValueError("控制器必须为 gap-policy 或 baseline")
+    if controller not in {"gap-policy", "baseline", "image-model"}:
+        raise ValueError("控制器必须为 gap-policy、image-model 或 baseline")
 
     world = RoundaboutWorld(seed=seed)
     policy_controller = GapAcceptanceController() if controller == "gap-policy" else None
+    image_controller = ImageModelController() if controller == "image-model" else None
+    map_tracker = ObservationMapTracker()
     for index in range(steps):
+        map_tracker.observe(world)
         if policy_controller is None:
-            throttle, brake = 0.45, 0.0
-            steer = 0.28 if 80 <= index < 240 else 0.0
+            if image_controller is None:
+                throttle, brake = 0.45, 0.0
+                steer = 0.28 if 80 <= index < 240 else 0.0
+            else:
+                throttle, brake, steer = image_controller.command(world)
         else:
             throttle, brake, steer = policy_controller.command(world, index)
         world.step(throttle=throttle, brake=brake, steer=steer)
     metrics = world.metrics()
     metrics["controller_policy_frames"] = 0 if policy_controller is None else steps
+    metrics.update(map_tracker.metrics())
     if policy_controller is not None:
         metrics.update(policy_controller.metrics())
+    if image_controller is not None:
+        metrics.update(image_controller.metrics())
     return metrics
 
 
@@ -247,7 +344,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--steps", type=int, default=360)
     parser.add_argument("--gui", action="store_true", help="启动键盘交互窗口")
-    parser.add_argument("--controller", choices=("gap-policy", "baseline"), default="gap-policy")
+    parser.add_argument("--controller", choices=("gap-policy", "image-model", "baseline"), default="gap-policy")
     args = parser.parse_args()
     if args.gui:
         run_gui(args.seed)

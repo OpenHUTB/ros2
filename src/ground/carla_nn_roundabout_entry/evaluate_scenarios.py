@@ -44,7 +44,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="汇总多个固定种子的环岛仿真指标")
     parser.add_argument("--seeds", nargs="+", type=int, default=[3, 7, 11, 19, 23])
     parser.add_argument("--steps", type=int, default=360)
-    parser.add_argument("--controller", choices=("gap-policy", "baseline"), default="gap-policy")
+    parser.add_argument("--controller", choices=("gap-policy", "image-model", "baseline"), default="gap-policy")
     args = parser.parse_args()
     print(json.dumps(evaluate_scenarios(args.seeds, args.steps, args.controller), ensure_ascii=False, indent=2))
 
