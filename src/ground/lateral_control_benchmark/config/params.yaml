@@ -1,0 +1,19 @@
+# 横向控制对比实验台的运行参数（ROS 1 Noetic）
+# 由 launch/main.launch 加载，避免把魔法数字散落在代码里。
+
+lateral_control_node:
+  # 当前启用的横向控制器：pure_pursuit / stanley / lqr
+  controller: "stanley"
+  # 参考轨迹场景：straight / arc / sine / lane_change
+  scenario: "sine"
+  # 巡航速度（m/s），弯道会按侧向加速度上限自动降速
+  cruise_speed: 8.0
+  # 车辆模型：kinematic（运动学自行车）/ dynamic（二自由度动力学）
+  model: "kinematic"
+  # 初始横向偏移（m，左正）与初始航向偏差（rad）
+  initial_offset: 1.2
+  initial_heading_error: 0.10
+  # 控制与仿真频率（Hz）
+  rate_hz: 50.0
+  # 到达非闭合轨迹终点后是否重置回起点（true=持续演示；false=继续沿末段直行）
+  loop_path: true

@@ -3,6 +3,7 @@ import math
 import time
 
 from .state_machine import SafetyMachine, State
+from .mission_queue import MissionQueue
 
 
 class FlightController:
@@ -10,9 +11,12 @@ class FlightController:
               State.RETURNING, State.LANDING)
 
     def __init__(self, adapter, max_altitude=50.0, telemetry_timeout=2.0,
-                 clock=time.monotonic, operation_timeout=120.0):
+                 clock=time.monotonic, operation_timeout=120.0, recorder=None):
         self.adapter, self.clock = adapter, clock
-        self.machine = SafetyMachine(max_altitude, telemetry_timeout)
+        self.recorder = recorder
+        self.machine = SafetyMachine(
+            max_altitude, telemetry_timeout,
+            on_transition=recorder.state_changed if recorder is not None else None)
         self.operation_timeout = operation_timeout
         self.pending = self.sample = None
         self.last_telemetry = clock()
@@ -30,10 +34,21 @@ class FlightController:
         self.return_precision = False
         self.takeoff_result = None
         self.takeoff_rpc_result = None
+        self.mission_queue = MissionQueue()
+
+    def _dispatch_waypoint(self):
+        self.target, self.target_speed = self.mission_queue.waypoints[self.mission_queue.completed]
+        self.started = self.clock()
+        self._submit('goto', target=self.target, speed=self.target_speed)
 
     def _submit(self, command, **data):
         self.revision += 1
         self.pending = (command, self.adapter.submit(command, **data))
+
+    def _record(self, kind, detail=''):
+        """Append a mission milestone to the optional flight recorder."""
+        if self.recorder is not None:
+            self.recorder.record(kind, detail, state=self.machine.state.value)
 
     def _begin_landing(self):
         self.landing_result = None
@@ -52,12 +67,15 @@ class FlightController:
             raise ValueError('RPC dispatch pending; retry after it completes')
         allowed = {'connect': (State.IDLE,), 'armed': (State.ARMING,),
                    'airborne': (State.TAKEOFF,), 'goto': (State.EXECUTING,),
+                   'mission': (State.EXECUTING,),
+                   'cancel': (State.EXECUTING, State.PAUSED),
                    'pause': (State.EXECUTING,), 'resume': (State.PAUSED,),
                    'return': (State.EXECUTING, State.PAUSED),
                    'land': self.ACTIVE + (State.FAILSAFE,), 'reset': (State.LANDED,)}
         if event not in allowed or s not in allowed[event]:
             raise ValueError('Invalid event {} in {}'.format(event, s.value))
         if event == 'reset':
+            self.mission_queue = MissionQueue()
             self.machine.transition('reset')
             self.target = None
             self.target_speed = None
@@ -75,7 +93,26 @@ class FlightController:
             self.flight_started = True
             self.started = self.clock()
             self._submit('takeoff')
+        elif event == 'mission':
+            if self.target is not None or self.mission_queue.active:
+                raise ValueError('Cancel or finish the current target before starting a mission')
+            if self.home is None:
+                raise ValueError('Home position unavailable')
+            if set(data) != {'waypoints'}:
+                raise ValueError('mission requires only waypoints')
+            self.mission_queue.load(data['waypoints'], self.home[2], self.machine.max_altitude)
+            self._record('mission_loaded', 'waypoints=%d' % len(self.mission_queue.waypoints))
+            self._dispatch_waypoint()
+        elif event == 'cancel':
+            if not self.mission_queue.active:
+                raise ValueError('No active waypoint mission to cancel')
+            self.mission_queue.stop('CANCELED')
+            self._record('mission_canceled', 'completed=%d' % self.mission_queue.completed)
+            self.target = self.target_speed = None
+            self._submit('hover')
         elif event == 'goto':
+            if self.mission_queue.active:
+                raise ValueError('Cancel the waypoint mission before sending goto')
             target = tuple(float(data[k]) for k in ('x', 'y', 'z'))
             speed = float(data.get('speed', 3.0))
             if (not all(math.isfinite(v) for v in target + (speed,)) or
@@ -87,9 +124,13 @@ class FlightController:
             self._submit('goto', target=target, speed=speed)
         elif event == 'pause':
             self.machine.transition('pause')
+            if self.mission_queue.active:
+                self.mission_queue.state = 'PAUSED'
             self._submit('hover')
         elif event == 'resume':
             self.machine.transition('resume')
+            if self.mission_queue.active:
+                self.mission_queue.state = 'RUNNING'
             self.started = self.clock()
             if self.target:
                 self._submit('goto', target=self.target, speed=self.target_speed)
@@ -98,6 +139,7 @@ class FlightController:
         elif event == 'return':
             if self.home is None:
                 raise ValueError('Home position unavailable')
+            self.mission_queue.stop('CANCELED')
             self.target = (self.home[0], self.home[1],
                            min(self.position[2], self.home[2] - min(5.0, self.machine.max_altitude)))
             self.machine.transition('return')
@@ -107,12 +149,14 @@ class FlightController:
             self.started = self.clock()
             self._submit('goto', target=self.target, speed=self.target_speed)
         elif event == 'land':
+            self.mission_queue.stop('CANCELED')
             self.machine.transition('land')
             self.target = None
             self.target_speed = None
             self._begin_landing()
 
     def _fail(self, reason):
+        self.mission_queue.stop('ABORTED')
         self.last_error = reason
         self.machine.transition('failsafe', reason=reason)
         # No guaranteed automatic landing on connection loss. Explicit land may be retried.
@@ -184,6 +228,8 @@ class FlightController:
                       self.machine.state == State.EXECUTING and self.target is not None)
             if moving and now - self.started > self.operation_timeout:
                 self._fail('Flight operation timed out')
+        if self.machine.state == State.FAILSAFE:
+            self.mission_queue.stop('ABORTED')
 
     def _observe(self, data, now):
         position = tuple(float(v) for v in data['position'])
@@ -231,6 +277,20 @@ class FlightController:
                                   tuple(gain*v for v in error))
                     self._submit('velocity', velocity=correction, duration=0.3)
             elif distance <= 1.0:
+                if self.mission_queue.active:
+                    if now - self.started > self.operation_timeout:
+                        self._fail('Flight operation timed out')
+                        return
+                    self.mission_queue.completed += 1
+                    self._record('waypoint_reached',
+                                 'index=%d' % (self.mission_queue.completed - 1))
+                    if self.mission_queue.completed < len(self.mission_queue.waypoints):
+                        self._dispatch_waypoint()
+                        return
+                    self.mission_queue.state = 'COMPLETED'
+                    self._record('mission_completed',
+                                 'waypoints=%d' % len(self.mission_queue.waypoints))
+                    self._submit('hover')
                 self.target = None
                 self.target_speed = None
         elif s == State.LANDING:

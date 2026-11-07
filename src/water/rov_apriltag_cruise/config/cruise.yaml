@@ -1,0 +1,25 @@
+# ROV 定点巡航参数
+# tag: AprilTag 标牌在世界坐标系中的位置
+# goal: ROV 识别该标牌时保持的悬停点（位于标牌法线前方）
+waypoints:
+  - tag_id: 0
+    tag: [5.0, 0.0, -2.2]
+    goal: [3.2, 0.0, -2.2]
+    name: "TAG 0"
+  - tag_id: 1
+    tag: [-2.5, 4.33, -2.6]
+    goal: [-1.6, 2.77, -2.6]
+    name: "TAG 1"
+  - tag_id: 2
+    tag: [-2.5, -4.33, -3.0]
+    goal: [-1.6, -2.77, -3.0]
+    name: "TAG 2"
+
+start_pose: [0.0, 0.0, -2.2]
+start_yaw: 0.0
+max_speed: 0.55          # 巡航线速度 (m/s)
+hold_time: 2.5           # 到点后悬停识别时间 (s)
+detection_range: 4.5     # 进入视觉对准的距离阈值 (m)
+heading_rate: 1.1        # 姿态调整最大角速度 (rad/s)
+waypoint_tolerance: 0.08 # 到点判定阈值 (m)
+loop: true               # 巡航结束后是否循环
