@@ -16,5 +16,9 @@ setup(
     ],
     install_requires=['setuptools'], zip_safe=True,
     tests_require=['pytest'],
-    entry_points={'console_scripts': ['mission_manager = uav_mission_safety_manager.main:main']},
+    entry_points={'console_scripts': [
+        'mission_manager = uav_mission_safety_manager.main:main',
+        'mission_recorder = uav_mission_safety_manager.mission_recorder:main',
+        'mission_report = uav_mission_safety_manager.mission_recording:main',
+    ]},
 )
