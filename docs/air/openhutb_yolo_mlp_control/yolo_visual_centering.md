@@ -123,6 +123,39 @@ ros2 topic pub --once /openhutb/visual_centering/action std_msgs/msg/String "{da
 
 移动车辆实验应先使用[车辆工具](traffic_tracking.md)造车，停止真值跟随及其他指令源，再按上文先预览后控制。CARLA 的位置只可用于场景准备和独立评估；默认控制器只订阅 YOLO 完整视觉观测、操作动作和无人机里程计，不接收车辆真值。固定相机和横向控制不能保证车辆驶离前方视野后仍可跟随，本次默认配置不启用上游已有的距离保持与垂直居中，也不提供避障；默认 3 米位移保护保留，触发后应重新布置场景。
 
+## 可选双车干扰验证工具
+
+`tools/visual_validation` 提供独立场景驱动 `two_car_scene.py` 和 ROS 观察器 `two_car_observer.py`，构建时安装到功能包的 share 目录。工具不参与正常启动；场景驱动只通过 CARLA 造车、设置运动和记录真值，观察器启动原有视觉控制 launch 并记录视觉观测、状态、里程计及截图，不将车辆坐标送入控制器。
+
+适用场景为 OpenHUTB Town10HD、异步世界、固定前视相机。A 先确认，5 秒后显示 B；15–16 秒隐藏 A，30–35 秒再次隐藏 A，45 秒显式重选，55 秒结束。临时隐藏用于模拟不可见，不等同于真实障碍遮挡。B 根据无人机初始朝向放在 A 侧方 5 米，仍须检查两车均在视野内，且 B 位于关联范围外；检测不满足这些条件时不能认定验证通过。
+
+Windows 场景驱动和 WSL 观察器可以使用不同 Python 环境，通过同一个共享输出目录通信。每轮使用一个全新目录，禁止将输出放入任何 Git 工作区。先在 Windows PowerShell 启动场景（`CARLA_PYTHON` 为匹配模拟器版本的 Python，`REPO_DIR` 为 Windows 仓库绝对路径）：
+
+```powershell
+$CARLA_PYTHON = 'C:\path\to\python.exe'
+$REPO_DIR = 'D:\path\to\repository'
+$RUN_DIR = 'D:\visual_validation\two_car_001'
+& $CARLA_PYTHON "$REPO_DIR\src\air\openhutb_yolo_mlp_control\tools\visual_validation\two_car_scene.py" --output "$RUN_DIR"
+```
+
+确认输出目录出现 `scene_ready.json` 后，在已加载 ROS、项目 Python 环境及最新安装环境的 WSL 终端执行。`RUN_DIR` 必须指向上述同一 Windows 目录，`AIRSIM_IP` 与 `YOLO_MODEL` 按前文设置并验证：
+
+```bash
+export RUN_DIR=/mnt/d/visual_validation/two_car_001
+export TOOL_DIR="$(ros2 pkg prefix openhutb_yolo_mlp_control)/share/openhutb_yolo_mlp_control/tools/visual_validation"
+python "$TOOL_DIR/two_car_observer.py" \
+  --output "$RUN_DIR" --airsim-ip "$AIRSIM_IP" --model "$YOLO_MODEL" \
+  --prepare-pose
+```
+
+`--prepare-pose` 明确授权一次性布置仿真位置并将相机设为固定前视，保留机体朝向；它使用 Town10HD 的场景坐标换算，仅用于初始布置。结束后保留测试结束位置和固定相机安装方向，不自动恢复起点、不降落。若自行布置好观察位置和前视相机，可省略此选项。启动前停止所有其他控制器并停止手动操作；观察器只能检查当前 ROS domain 的已发现节点，不能排除其他 domain 或原生 API 控制源。默认不弹窗，追加 `--show-window` 显示 YOLO 窗口。
+
+正常结束或中断会请求清理本轮生成的两辆车；场景驱动也有独立超时，避免观察器异常退出后无限运行。不要强杀进程；需要提前停止时先在观察器终端按 Ctrl+C，等待控制 launch 退出，再等待场景清理。程序或模拟器被强制终止时仍可能残留车辆，不能据此声称清理成功；工具只销毁自己创建的 actor，不删除其他车辆。
+
+输出包含 `result.json`、`scene.json`、`summary.json`、`launch.log` 和关键帧 PNG，均不提交到 Git。截图按拍摄时间戳匹配视觉状态；没有匹配图像时不会生成该阶段截图。`summary.json` 仅汇总保护状态非零输出和各阶段 car 数量，不自动判定身份保持通过；应检查 A/B 对应框、关联诊断、状态转换、实际位移和 `scene_cleaned.json`。缺少检测证据、场景提前结束或关键阶段未发生时应判为未充分验证，不能只看进程退出码。两车交叉、重叠或 B 置信度更高需另设场景验证。
+
+2026-11-07 使用模块内场景驱动及安装后的观察器完成 55 秒完整在线闭环：双车可见阶段 22 帧均有两辆 car，长时隐藏阶段 8 帧只有 B，两车返回等待阶段 25 帧均有两辆 car；约 15.55 秒停控、17.30 秒短时恢复，33.30 秒进入显式重选等待，45.01 秒重选后于 45.70 秒恢复。保护状态非零控制输出数为 0，停控抽查区间及退出后 2 秒水平漂移为 0，六个阶段截图均与状态的拍摄时间戳匹配，三个控制节点干净退出，两车清理无错误。该结果仍限于关联范围外干扰车，不扩展到车辆交叉重叠身份保持。
+
 ## 本次验证范围
 
 以下单车在线结果与截图采集于同步最新上游之前；同步后完成 93 项单元测试、15 项 ROS 链路测试及 2,913 步默认水平模式回放比较，另补充下述双车在线验证。
