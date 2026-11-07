@@ -114,7 +114,9 @@ TEST(PathPlannerCost, FavourableRewardCappedAtLengthTerm)
   planner.setEnvironment(heatmap, current);
 
   // 顺流奖励按公式为 0.5*3.0*1.0 = 1.5 倍长度项，被截到长度项本身：
-  // 代价最低为 0 而不是负数，A* 不会把强顺流边当免费移动
+  // 库层上限只保证代价不为负（此处恰为 0）。节点层另有启动校验
+  // current_compensation*current_weight*magnitude/current_ref_speed < length_weight，
+  // 默认参数（0.5*3.0*0.4/1.0 = 0.6 < 1.0）下不会出现 0 代价的免费顺流边
   EXPECT_DOUBLE_EQ(planner.stepCost(10, 10, 11, 10), 0.0);
   // 逆流不受截断影响：0.5 + 3.0*1.0*0.5 = 2.0
   EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 2.0, 1e-9);
@@ -144,6 +146,27 @@ TEST(PathPlannerCost, ReferenceSpeedNormalizesMagnitude)
   EXPECT_NEAR(planner.stepCost(10, 10, 11, 10), 0.35, 1e-9);  // 顺流
   EXPECT_NEAR(planner.stepCost(10, 10, 10, 11), 0.50, 1e-9);  // 横向
   EXPECT_NEAR(planner.stepCost(10, 10, 9, 10), 0.80, 1e-9);   // 逆流
+}
+
+TEST(PathPlannerCost, PathCostSamplesMaxRiskAlongSegment)
+{
+  Heatmap::Params hp;
+  hp.grid_size = 100;
+  hp.resolution = 0.5;
+  hp.obstacle_radius = 2.0;
+  hp.risk_decay = 0.15;
+  auto heatmap = std::make_shared<Heatmap>(hp);
+  // 障碍物在长段端点附近：段 (5,10)-(13,10) 的中点是 (9,10)，离障碍物 3.5 m，
+  // 超出影响半径 2 m，只取段中点会漏掉这里的风险
+  heatmap->addObstacle(5.5, 10.0);
+
+  PathPlanner planner(PathPlanner::Params{});
+  planner.setEnvironment(heatmap, nullptr);
+
+  std::vector<PathPlanner::Point> path{{5.0, 10.0}, {13.0, 10.0}};
+  // 半格采样会命中风险 1.0 的障碍物格，整段按 1.0 * 8 m 计风险项：
+  // 长度 8 + 风险 5.0*1.0*8 = 48
+  EXPECT_NEAR(planner.pathCost(path), 48.0, 1e-9);
 }
 
 TEST(PathPlannerSmooth, SegmentSamplingCatchesInteriorRisk)

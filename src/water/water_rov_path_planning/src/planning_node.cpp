@@ -13,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <exception>
+#include <cmath>
 
 using namespace water_rov_path_planning;
 
@@ -58,22 +59,36 @@ public:
     const double length_weight = get_parameter("length_weight").as_double();
     const int max_iterations = get_parameter("max_iterations").as_int();
     const std::string pattern = get_parameter("current_pattern").as_string();
+    const double current_direction = get_parameter("current_direction").as_double();
+    const double vortex_x = get_parameter("vortex_x").as_double();
+    const double vortex_y = get_parameter("vortex_y").as_double();
+    const double world_extent = grid_size * resolution;
 
     // 权重为负会把惩罚变成奖励（或反之）；current_magnitude 超过参考流速后归一化对齐度
-    // 饱和在 1，继续加大只会失去分辨能力，因此一并加上限
+    // 饱和在 1，继续加大只会失去分辨能力，因此一并加上限。
+    // 最后一项保证最大顺流奖励严格小于长度项，从源头避免边代价恰好为 0 的“免费移动”边
     if (grid_size <= 1 || resolution <= 0.0 || obstacle_radius < 0.0 ||
       risk_decay < 0.0 || current_magnitude < 0.0 || current_magnitude > current_ref_speed ||
       vortex_radius <= 0.0 || tidal_period <= 0.0 ||
       max_risk_threshold <= 0.0 || max_risk_threshold >= 1.0 ||
       current_ref_speed <= 0.0 || length_weight <= 0.0 || max_iterations <= 0 ||
-      risk_weight < 0.0 || current_weight < 0.0 || current_compensation < 0.0)
+      risk_weight < 0.0 || current_weight < 0.0 ||
+      current_compensation < 0.0 || current_compensation > 1.0 ||
+      std::abs(current_direction) > 2.0 * std::acos(-1.0) ||
+      vortex_x < 0.0 || vortex_x > world_extent ||
+      vortex_y < 0.0 || vortex_y > world_extent ||
+      current_compensation * current_weight * current_magnitude / current_ref_speed >= length_weight)
     {
       RCLCPP_ERROR(
         get_logger(),
         "参数校验失败：需满足 grid_size>1、resolution>0、obstacle_radius>=0、risk_decay>=0、"
         "0<=current_magnitude<=current_ref_speed、vortex_radius>0、tidal_period>0、"
         "0<max_risk_threshold<1、current_ref_speed>0、length_weight>0、max_iterations>0、"
-        "risk_weight>=0、current_weight>=0、current_compensation>=0，节点退出");
+        "risk_weight>=0、current_weight>=0、0<=current_compensation<=1、"
+        "|current_direction|<=2π、涡流中心落在 [0, %.3f] m 内、"
+        "且 current_compensation*current_weight*current_magnitude/current_ref_speed < length_weight"
+        "（保证顺流边代价不为 0），节点退出",
+        world_extent);
       params_valid_ = false;
       rclcpp::shutdown();
       return;
@@ -104,9 +119,9 @@ public:
     else if (pattern == "shear") ocp.pattern = OceanCurrent::Pattern::SHEAR;
     else ocp.pattern = OceanCurrent::Pattern::UNIFORM;
     ocp.magnitude = current_magnitude;
-    ocp.direction = get_parameter("current_direction").as_double();
-    ocp.vortex_x = get_parameter("vortex_x").as_double();
-    ocp.vortex_y = get_parameter("vortex_y").as_double();
+    ocp.direction = current_direction;
+    ocp.vortex_x = vortex_x;
+    ocp.vortex_y = vortex_y;
     ocp.vortex_radius = vortex_radius;
     ocp.tidal_period = tidal_period;
     ocp.world_size = hp.grid_size * hp.resolution;
@@ -180,7 +195,8 @@ private:
 
   void replan()
   {
-    if (start_.x < 0 || goal_.x < 0) return;
+    // 四个分量都要判负：只判 x 时 y 为负会一路走到 plan() 才失败，浪费一次搜索
+    if (start_.x < 0 || start_.y < 0 || goal_.x < 0 || goal_.y < 0) return;
 
     // 把当前时间传给规划器，潮汐模式才能按当前相位计算洋流代价
     planner_->setTime(now().seconds());
@@ -212,7 +228,7 @@ private:
       cost_pub_->publish(cost_msg);
 
       RCLCPP_INFO(get_logger(),
-        "路径规划成功，点数 %zu，路径长度 %.2f m，加权累计代价 %.2f（无量纲）",
+        "路径规划成功，点数 %zu，路径长度 %.2f m，加权累计代价 %.2f（权重无量纲，代价按米制口径累计）",
         path.size(), length, planner_->getLastCost());
     } else {
       RCLCPP_WARN(get_logger(), "路径规划失败，可能终点在高风险区或无路可达");

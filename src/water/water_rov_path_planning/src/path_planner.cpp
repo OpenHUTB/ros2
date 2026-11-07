@@ -62,12 +62,15 @@ double PathPlanner::segmentCost(double wx0, double wy0, double wx1, double wy1, 
     Eigen::Vector2d move_dir(dx / dist_m, dy / dist_m);
 
     // 无量纲流向对齐度：(û·v)/v_ref ≈ (|v|/v_ref)·cosθ，范围约 [-1, 1]。
-    // 点积先除以参考流速归一化，洋流项才是纯“每米代价 × 米数”，与长度项、风险项量纲一致
+    // 点积先除以参考流速归一化，洋流项因此也是“每米代价 × 米数”，三项权重全程无量纲，
+    // 总代价按米制口径累加（量纲为米）
     double ref_speed = std::max(params_.current_ref_speed, 1e-9);
     double align = std::max(-1.0, std::min(1.0, move_dir.dot(vel) / ref_speed));
 
     if (align > 0) {
-      // 顺流：降低代价。奖励以长度项为上限，避免代价被截成 0 后 A* 把顺流边当免费移动
+      // 顺流：降低代价。这里的上限只用于防止边代价变成负数，并不保证边代价非零；
+      // “顺流边不为 0 代价”由节点启动校验保证：
+      // current_compensation*current_weight*magnitude/current_ref_speed < length_weight
       double reward = std::min(
         params_.current_compensation * params_.current_weight * align,
         params_.length_weight);
@@ -85,15 +88,29 @@ double PathPlanner::pathCost(const std::vector<Point> & path) const
 {
   if (!heatmap_ || path.size() < 2) return 0.0;
 
+  // 与 smoothPath 的安全校验口径一致：按半格步长采样整段并取最大风险，
+  // 避免只取段中点而漏掉端点附近的风险。
+  // 注意 A* 搜索时 stepCost 按目标格取风险，采样方式与此不同，
+  // 因此发布代价可能略大于搜索过程中累计的 g 值
+  const double sample_step = 0.5 * heatmap_->resolution();
   double total = 0.0;
   for (size_t i = 1; i < path.size(); ++i) {
     const Point & a = path[i - 1];
     const Point & b = path[i];
-    // 风险取段中点所在格子；出界按 1.0 计，与 getRisk 的出界行为一致
-    int gx, gy;
-    double risk = 1.0;
-    if (heatmap_->worldToGrid((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, gx, gy)) {
-      risk = heatmap_->getRisk(gx, gy);
+    double dx = b.x - a.x;
+    double dy = b.y - a.y;
+    double seg_len = std::sqrt(dx * dx + dy * dy);
+
+    double risk = 0.0;
+    int samples = std::max(1, static_cast<int>(std::ceil(seg_len / sample_step)));
+    for (int s = 0; s <= samples; ++s) {
+      double r = static_cast<double>(s) / samples;
+      int gx, gy;
+      if (!heatmap_->worldToGrid(a.x + dx * r, a.y + dy * r, gx, gy)) {
+        risk = 1.0;  // 出界按高风险，与 getRisk 的出界行为一致
+        break;
+      }
+      risk = std::max(risk, heatmap_->getRisk(gx, gy));
     }
     total += segmentCost(a.x, a.y, b.x, b.y, risk);
   }

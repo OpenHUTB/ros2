@@ -8,9 +8,11 @@ rov_planning_node:
     obstacle_radius: 2.0
     risk_decay: 0.15
 
-    # 路径规划权重（长度、风险、洋流三项都按“单位距离代价 × 本步米数”累加，三者均须 >= 0）
+    # 路径规划权重（长度、风险、洋流三项都按“单位距离代价 × 本步米数”累加，权重均无量纲）
     risk_weight: 5.0
     current_weight: 3.0
+    # 顺流奖励系数 k，取值 [0, 1]；且须满足 k*current_weight*current_magnitude/current_ref_speed < length_weight，
+    # 否则启动校验会拒绝（该条件保证顺流边代价严格大于 0，不会出现免费移动边）
     current_compensation: 0.5
     # 参考流速：洋流项用 (û·v)/current_ref_speed 归一化为无量纲对齐度，使 current_weight 无量纲
     current_ref_speed: 1.0
@@ -22,7 +24,9 @@ rov_planning_node:
     current_pattern: "vortex"
     # 基础流速（m/s），取值 [0, current_ref_speed]；超过参考流速后归一化对齐度饱和，校验会拒绝
     current_magnitude: 0.4
+    # 均匀流方向（弧度），须满足 |current_direction| <= 2π
     current_direction: 0.0
+    # 涡流中心坐标（米），须落在 [0, grid_size*resolution] 内
     vortex_x: 25.0
     vortex_y: 25.0
     vortex_radius: 15.0

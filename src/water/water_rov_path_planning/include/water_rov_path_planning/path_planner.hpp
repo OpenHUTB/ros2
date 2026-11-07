@@ -28,7 +28,7 @@ public:
     double risk_weight = 5.0;       // 热力图风险权重
     double current_weight = 3.0;    // 洋流权重（作用于无量纲的 (û·v)/current_ref_speed）
     double length_weight = 1.0;     // 路径长度权重
-    double current_compensation = 0.5; // 顺流奖励系数（0~1）
+    double current_compensation = 0.5; // 顺流奖励系数（0~1，且 k·w_c·magnitude/v_ref < w_l）
     double current_ref_speed = 1.0;    // 参考流速（m/s），把 (û·v) 归一化到无量纲
     double max_risk_threshold = 0.7;   // 风险阈值，超过则不可通行
     int max_iterations = 100000;       // A* 最大迭代次数
@@ -55,7 +55,9 @@ public:
   /// 计算路径长度（单位：米），仅用于评估；与 getLastCost() 描述同一条平滑后路径
   double pathLength(const std::vector<Point> & path) const;
 
-  /// 对给定路径按与 stepCost 相同的代价函数逐段重算加权累计代价
+  /// 对给定路径按与 stepCost 相同的代价函数逐段重算加权累计代价。
+  /// 风险按半格步长采样整段取最大值（与 smoothPath 的安全校验一致），
+  /// 而 A* 搜索按目标格取风险，两者采样方式不同，发布代价可能略大于搜索累计的 g 值
   double pathCost(const std::vector<Point> & path) const;
 
   /// 获取规划的加权累计代价（plan() 在平滑完成后基于最终路径逐段重算）

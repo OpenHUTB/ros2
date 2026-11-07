@@ -118,7 +118,7 @@ src/water/water_rov_path_planning/
 | 均匀流（+x 顺流） | 81 | 40.00 m | 16.00 |
 | 零流速基线（magnitude = 0） | 81 | 40.00 m | 40.00 |
 
-代价为平滑后最终路径上的加权累计值：长度、风险、洋流三项都按“单位距离代价 × 本段米数”累加，洋流项用无量纲对齐度 `(û·v)/current_ref_speed` 归一化，整体量纲不是米，不要与“路径长度”列混淆；两者都是同一条平滑后路径的指标，可互相印证（零流速且沿途无风险时代价恰好等于长度）。
+代价为平滑后最终路径上的加权累计值：三项权重全程无量纲，都按“单位距离代价 × 本段米数”累加，洋流项用无量纲对齐度 `(û·v)/current_ref_speed` 归一化，因此代价按米制口径累计、量纲为米（数值上可与路径长度直接比较），两者是同一条平滑后路径的指标（零流速且沿途无风险时代价恰好等于长度）。重算风险按半格步长采样整段取最大值，而 A* 搜索按目标格取风险，故发布代价可能略大于搜索累计的 g 值。
 
 默认涡流场景下路径不再完全沿直线：长度 40.48 m 略长于直线 40.00 m，代价 37.25 低于零流速基线 40.00，说明规划器利用涡流场中部分顺流段降低了代价。改用均匀流（`current_pattern:=uniform`、`current_magnitude:=0.4`、`current_direction:=0.0`）时路径几何不变（40.00 m），加权累计代价由 40.00 降到 16.00：每米顺流奖励 k·w_c·a = 0.5×3.0×0.4 = 0.6，即每米代价 1−0.6 = 0.4，40 m 共 16.0，洋流补偿项生效。参数不在 launch 中重复定义，临时切换可用 `ros2 run ... --ros-args -p` 覆盖，或直接修改 `config/params.yaml`。
 
@@ -146,15 +146,15 @@ src/water/water_rov_path_planning/
 | `risk_decay` | 0.15 | 风险高斯衰减系数 α |
 | `risk_weight` | 5.0 | 热力图风险权重（须 ≥ 0） |
 | `current_weight` | 3.0 | 洋流权重（须 ≥ 0，作用于无量纲对齐度 (û·v)/`current_ref_speed`） |
-| `current_compensation` | 0.5 | 顺流奖励系数（0～1，奖励以长度项为上限） |
+| `current_compensation` | 0.5 | 顺流奖励系数 k（0～1，且须 k·w_c·magnitude/v_ref < length_weight，保证顺流边代价不为 0） |
 | `current_ref_speed` | 1.0 | 参考流速（m/s），把 û·v 归一化到无量纲 |
 | `length_weight` | 1.0 | 路径长度权重 |
 | `max_iterations` | 100000 | A* 最大迭代次数 |
 | `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
 | `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear，非法值报错退出） |
 | `current_magnitude` | 0.4 | 基础洋流流速（m/s，须 ≤ `current_ref_speed`） |
-| `current_direction` | 0.0 | 均匀流方向（弧度） |
-| `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米） |
+| `current_direction` | 0.0 | 均匀流方向（弧度，须满足 \|current_direction\| ≤ 2π） |
+| `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米，须落在 [0, grid_size×resolution] 内） |
 | `vortex_radius` | 15.0 | 涡流影响半径（米） |
 | `tidal_period` | 60.0 | 潮汐周期（秒） |
 

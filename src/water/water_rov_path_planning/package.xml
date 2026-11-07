@@ -25,6 +25,10 @@
   <exec_depend>python3-pil</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ros2launch</exec_depend>
+  <!-- launch 文件直接 import 的模块需显式声明，不依赖 ros2launch 的传递依赖 -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

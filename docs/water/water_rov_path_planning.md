@@ -67,7 +67,7 @@ $$
 
 ### 4.3 自适应 A* 代价函数
 
-A* 的每步代价由三部分加权组成，权重分别为长度 1.0、风险 5.0、洋流 3.0；顺流奖励系数 \(k=0.5\)。三项都按"单位距离代价 × 本步米数"累加，量纲统一为加权累计代价（无量纲，不是米）。洋流项使用无量纲流向对齐度：
+A* 的每步代价由三部分加权组成，权重分别为长度 1.0、风险 5.0、洋流 3.0；顺流奖励系数 \(k=0.5\)。三项权重全程无量纲，都按"单位距离代价 × 本步米数"累加，因此总代价按米制口径累计，量纲为米（数值上可与路径长度直接比较）。洋流项使用无量纲流向对齐度：
 
 $$
 a = \mathrm{clamp}\left(\frac{\hat{u} \cdot v}{v_{ref}},\ -1,\ 1\right) \approx \frac{|v|}{v_{ref}} \cdot \cos\theta
@@ -88,15 +88,15 @@ $$
 - \(d_m\) 为本步移动距离（米），等于格子距离乘以 `resolution`；
 - \(R\) 为目标格子的热力图风险（超过阈值 0.7 则不可通行）；
 - \(v\) 为该格子处的洋流速度向量（m/s），\(\hat{u}\) 为本步移动方向的单位向量；
-- \(v_{ref}\) 为参考流速（`current_ref_speed`，默认 1.0 m/s）。点积 \(\hat{u}\cdot v\) 先除以 \(v_{ref}\) 得到无量纲对齐度 \(a\)，洋流项才是纯"每米代价 × 米数"，与长度项、风险项量纲一致；启动时校验 `current_magnitude ≤ current_ref_speed`，保证 \(|a|\le 1\) 不被截断失真；
-- 顺流奖励以长度项为上限（\(\min(k \cdot w_c \cdot a, w_l)\)），边代价最低为 0 而不会变负，A* 不会把强顺流边当成免费移动；
+- \(v_{ref}\) 为参考流速（`current_ref_speed`，默认 1.0 m/s）。点积 \(\hat{u}\cdot v\) 先除以 \(v_{ref}\) 得到无量纲对齐度 \(a\)，洋流项因此也是"每米代价 × 米数"，三项权重都无量纲，总代价量纲为米；启动时校验 `current_magnitude ≤ current_ref_speed`，保证 \(|a|\le 1\) 不被截断失真；
+- 顺流奖励以长度项为上限（\(\min(k \cdot w_c \cdot a, w_l)\)），该上限只保证边代价不为负，并不保证边代价非零；"顺流边不为 0 代价"由启动校验 \(k \cdot w_c \cdot \text{magnitude}/v_{ref} < w_l\) 保证（默认 0.5×3.0×0.4/1.0 = 0.6 < 1.0），因此合法参数下顺流边每米代价严格大于 0；
 - 横向洋流（对齐度接近 0）几乎不改变代价。
 
 顺流奖励系数 \(k=0.5\) 使规划器倾向于选择顺流段，降低 ROV 推进能耗。均匀流（+x 顺流、流速 0.4 m/s）场景下每米顺流奖励 \(k \cdot w_c \cdot a = 0.5\times3.0\times0.4 = 0.6\)，即每米代价 0.4，加权累计代价由零流速基线 40.00 降至 16.00，可确认该系数生效。
 
-`/path_cost` 依次发布 `[加权累计代价, 路径长度(m), 路径点数]`，代价在路径平滑完成后基于最终路径逐段重算，与第二项的米制路径长度是同一条几何路径的两个指标，可互相印证（零流速且沿途无风险时代价恰好等于长度）。规划器通过 `setTime()` 接收当前时间，潮汐模式下 A* 代价按规划时刻的流速计算，而不是固定用 t=0。
+`/path_cost` 依次发布 `[加权累计代价, 路径长度(m), 路径点数]`，代价在路径平滑完成后基于最终路径逐段重算，与第二项的米制路径长度是同一条几何路径的两个指标，可互相印证（零流速且沿途无风险时代价恰好等于长度）。重算风险时按半格步长采样整段并取最大值，与 `smoothPath` 的安全校验口径一致；而 A* 搜索中的 `stepCost` 按目标格取风险，两者采样方式不同，因此发布代价可能略大于搜索过程中累计的 g 值。规划器通过 `setTime()` 接收当前时间，潮汐模式下 A* 代价按规划时刻的流速计算，而不是固定用 t=0。
 
-需要说明的是，启发函数为米制欧氏距离乘以 \(w_l\)，与 g 值的长度项同量纲；但顺流边代价最低可到 0（低于长度项），启发函数仍可能高估实际剩余代价，不满足可采纳性，A* 返回的是该加权代价下的近优解，不保证全局最优。另外可通行边的风险项最高为 \(1 + 5\times0.7 = 4.5\) 倍距离（风险阈值 0.7）。
+需要说明的是，启发函数为米制欧氏距离乘以 \(w_l\)，与 g 值的长度项同量纲；但顺流边每米代价可低至 \(w_l - k \cdot w_c \cdot a > 0\)（远低于长度项），启发函数仍可能高估实际剩余代价，不满足可采纳性，A* 返回的是该加权代价下的近优解，不保证全局最优。另外可通行边的风险项最高为 \(1 + 5\times0.7 = 4.5\) 倍距离（风险阈值 0.7）。
 
 ### 4.4 路径平滑与安全校验
 
@@ -178,15 +178,15 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 | `risk_decay` | 0.15 | 风险高斯衰减系数 α |
 | `risk_weight` | 5.0 | 热力图风险权重（须 ≥ 0） |
 | `current_weight` | 3.0 | 洋流权重（须 ≥ 0，作用于无量纲对齐度 (û·v)/`current_ref_speed`） |
-| `current_compensation` | 0.5 | 顺流奖励系数（0～1，奖励以长度项为上限） |
+| `current_compensation` | 0.5 | 顺流奖励系数 k（0～1，且须 k·w_c·magnitude/v_ref < length_weight，保证顺流边代价不为 0） |
 | `current_ref_speed` | 1.0 | 参考流速（m/s），把 û·v 归一化到无量纲 |
 | `length_weight` | 1.0 | 路径长度权重 |
 | `max_iterations` | 100000 | A* 最大迭代次数 |
 | `max_risk_threshold` | 0.7 | 风险阈值，超过则不可通行 |
 | `current_pattern` | vortex | 洋流模式（uniform/vortex/tidal/shear，非法值报错退出） |
 | `current_magnitude` | 0.4 | 基础洋流流速（m/s，须 ≤ `current_ref_speed`） |
-| `current_direction` | 0.0 | 均匀流方向（弧度） |
-| `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米） |
+| `current_direction` | 0.0 | 均匀流方向（弧度，须满足 \|current_direction\| ≤ 2π） |
+| `vortex_x` / `vortex_y` | 25.0 / 25.0 | 涡流中心坐标（米，须落在 [0, grid_size×resolution] 内） |
 | `vortex_radius` | 15.0 | 涡流影响半径（米） |
 | `tidal_period` | 60.0 | 潮汐周期（秒） |
 
@@ -200,7 +200,7 @@ A* 输出的网格路径存在锯齿，通过 3 次 Jacobi 加权平均平滑中
 | `start_x` / `start_y` | 5.0 / 25.0 | 起点坐标（米，须 ≥ 0 且 < `world_size`） |
 | `goal_x` / `goal_y` | 45.0 / 25.0 | 终点坐标（米，须 ≥ 0 且 < `world_size`） |
 
-以上两组参数都只在 `config/params.yaml` 的 `rov_planning_node` / `rov_demo_node` 段定义一处，launch 仅加载该文件。非法参数（`grid_size<=1`、`resolution<=0`、`current_magnitude<0`、`current_magnitude>current_ref_speed`、`current_ref_speed<=0`、`risk_weight<0`、`current_weight<0`、`current_compensation<0`、`length_weight<=0`、`max_iterations<=0`、`vortex_radius<=0`、`tidal_period<=0`、`num_obstacles<0`、`world_size<=4`、`world_size` 与 `grid_size*resolution` 不一致、非法 `current_pattern`、起终点越界等）会在启动时报错并以非零退出码结束，避免除零或未定义行为。
+以上两组参数都只在 `config/params.yaml` 的 `rov_planning_node` / `rov_demo_node` 段定义一处，launch 仅加载该文件。非法参数（`grid_size<=1`、`resolution<=0`、`current_magnitude<0`、`current_magnitude>current_ref_speed`、`current_ref_speed<=0`、`risk_weight<0`、`current_weight<0`、`current_compensation` 不在 `[0,1]`、`|current_direction|>2π`、涡流中心不在 `[0, grid_size*resolution]` 内、`k*w_c*magnitude/v_ref >= length_weight`、`length_weight<=0`、`max_iterations<=0`、`vortex_radius<=0`、`tidal_period<=0`、`num_obstacles<0`、`world_size<=4`、`world_size` 与 `grid_size*resolution` 不一致、非法 `current_pattern`、起终点越界等）会在启动时报错并以非零退出码结束，避免除零或未定义行为。
 
 ## 7. 运行效果
 
