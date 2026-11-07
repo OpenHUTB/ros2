@@ -1,3 +1,6 @@
+# Copyright (c) 2026 汤湘粤 (学号: 2535030067)
+# SPDX-License-Identifier: MIT
+
 cmake_minimum_required(VERSION 3.0.2)
 project(drl_drone_path_planning)
 

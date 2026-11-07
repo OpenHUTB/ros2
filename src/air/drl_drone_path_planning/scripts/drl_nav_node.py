@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ROS 1 node: DRL-based optimal path finding for a quadrotor.
 
 The node subscribes to odometry and a 2-D laser scan, assembles the same 28-D
@@ -9,7 +10,7 @@ It also publishes the flown path and a short status string for RViz/rostopic.
 运行 DRL 策略（纯 NumPy 推理）或几何基线，输出机体系速度指令。支持多航点、
 障碍刹停、路径可视化与状态发布。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

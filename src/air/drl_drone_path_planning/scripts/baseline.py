@@ -11,7 +11,7 @@ two purposes:
 中文说明：纯几何基线（航点追踪 + 激光势场避障）。不依赖任何模型权重，既能在
 训练前验证 ROS 接口，也作为强化学习策略的可复现对照。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

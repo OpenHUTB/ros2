@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Offline evaluation for the DRL policy and the geometric baseline.
 
 Metrics are reported on the same environment used for training, so a policy
@@ -7,7 +8,7 @@ visible.  ``--baseline`` runs both controllers with identical seeds.
 中文说明：离线评估脚本，使用与训练完全相同的环境，对比 DRL 策略与几何基线。
 指标包括成功率、碰撞率、超时率、平均回报、平均步数与平均路径长度。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

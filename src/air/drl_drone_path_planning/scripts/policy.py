@@ -16,7 +16,7 @@ both forward passes without importing torch.
 导出成 `.npz`；（2）在 ROS 节点里用 NumPy 复现同一前向计算，避免在无人机机载
 环境安装 PyTorch。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations
@@ -112,7 +112,6 @@ def export_sb3_policy(model: Any, path: str) -> Dict[str, Any]:
         Export metadata (also stored inside the archive).
     """
     try:
-        import torch
         from torch import nn
     except ImportError as exc:  # pragma: no cover - training-only dependency
         raise ImportError(

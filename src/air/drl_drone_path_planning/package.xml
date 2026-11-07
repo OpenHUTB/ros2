@@ -7,8 +7,10 @@
     订阅里程计与激光雷达，使用训练好的策略输出机体系速度指令，
     支持多航点、障碍物避让、路径可视化，并提供纯几何基线用于对照。
   </description>
-  <maintainer email="2865306093@qq.com">汤湘粤</maintainer>
+  <!-- Copyright (c) 2026 汤湘粤 (学号: 2535030067) -->
+  <maintainer email="2865306093@qq.com">汤湘粤 (学号: 2535030067)</maintainer>
   <license>MIT</license>
+  <author email="2865306093@qq.com">汤湘粤 (学号: 2535030067)</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

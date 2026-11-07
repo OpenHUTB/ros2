@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Plot a top-down trajectory comparison between DRL and the baseline.
 
 This is an offline development utility (needs matplotlib); it is intentionally
@@ -6,7 +7,7 @@ pull in matplotlib.  Run it from the package root:
 
     python3 scripts/plot_results.py --model models/policy_weights.npz
 
-开发者：汤湘粤（学号 2535030067）
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 # drl_drone_path_planning
 
-> **开发者**：汤湘粤（学号 2535030067）
+> **开发者**：汤湘粤 (学号: 2535030067)
 > 基于深度强化学习（PPO / SAC）的四旋翼无人机最优路径查找模块
 > ROS 1 Noetic · Python 3 · NumPy 推理 · Stable-Baselines3 训练
 
@@ -160,7 +160,7 @@ drl_drone_path_planning/
 │   ├── train.py                # PPO/SAC 训练
 │   └── evaluate.py             # 离线评估
 └── tests/
-    └── test_core.py            # 11 个 NumPy/Gymnasium 单元测试
+    └── test_core.py            # 13 个 NumPy/Gymnasium 单元测试
 ```
 
 ## 5. 安装
@@ -307,7 +307,7 @@ PPO 用 100 万步训练（CPU 约 678 s），部署权重为 `models/policy_wei
 
 ## 11. English version
 
-**Developer:** Tang Xiangyue (student ID 2535030067)
+**Developer:** Tang Xiangyue (student ID: 2535030067)
 
 `drl_drone_path_planning` is a ROS 1 package for DRL-based optimal path
 finding with a quadrotor. It refactors the PyBullet/SB3 environment from
@@ -342,4 +342,4 @@ configuration reference and known limitations.
 
 ---
 
-**License:** MIT · **Maintainer:** 汤湘粤 (2535030067)
+**Copyright (c) 2026 汤湘粤 (学号: 2535030067).** Licensed under the MIT License.

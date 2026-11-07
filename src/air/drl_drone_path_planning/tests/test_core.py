@@ -7,7 +7,7 @@ Run with::
 These tests are NumPy/Gymnasium only -- they do not require ROS, PyTorch or a
 simulator, so they can run on any development machine.
 
-开发者：汤湘粤（学号 2535030067）
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

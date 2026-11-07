@@ -4,7 +4,7 @@
 训练环境（drone_env.py）和 ROS 部署节点（drl_nav_node.py）都从这里导入，
 从代码层面保证训练/部署的接口一致，避免出现「训练时好好的，部署时乱飞」。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

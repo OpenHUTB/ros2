@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Train PPO or SAC with Stable-Baselines3 and export a NumPy actor.
 
 The algorithm set and network layout follow the reference project
@@ -8,7 +9,7 @@ with a shared 256x256 MLP, automatic entropy tuning and ``tau = 0.005``.
 中文说明：使用 SB3 训练 PPO/SAC，训练结束后把 Actor 网络导出为纯 NumPy 的
 ``policy_weights.npz``，部署到只装了 ROS 的机器时无需 PyTorch。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

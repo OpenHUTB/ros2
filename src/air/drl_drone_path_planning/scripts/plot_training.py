@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Plot the evaluation curve produced by SB3's ``EvalCallback``.
 
 This is an offline development utility (needs matplotlib); the ROS deployment
@@ -5,7 +6,7 @@ does not use it.  Run after training:
 
     python3 scripts/plot_training.py --npz models/evaluations.npz
 
-开发者：汤湘粤（学号 2535030067）
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

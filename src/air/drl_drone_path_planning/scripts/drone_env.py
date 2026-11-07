@@ -15,7 +15,7 @@ verbatim with the ROS node (``drl_nav_node.py``).
 多航点奖励结构（距离塑形、进度奖励、朝向奖励、平滑惩罚、航点/终点奖励、碰撞惩罚），
 观测与动作定义与 ROS 部署节点完全一致。
 
-Developer: 汤湘粤 (2535030067)
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

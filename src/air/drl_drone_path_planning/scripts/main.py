@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ROS entry point for drl_drone_path_planning.
 
 ``catkin_install_python`` wraps this file, so ``__file__`` may point at the
@@ -5,7 +6,7 @@ generated wrapper.  The launch file exports ``DRL_NAV_SCRIPT_DIR`` with the
 real source directory; importing from that directory guarantees the node sees
 ``common.py``/``policy.py``/``baseline.py`` instead of the wrappers.
 
-开发者：汤湘粤（学号 2535030067）
+Developer: 汤湘粤 (学号: 2535030067)
 """
 
 from __future__ import annotations

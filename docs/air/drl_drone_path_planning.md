@@ -1,6 +1,6 @@
 # 基于深度强化学习的四旋翼无人机最优路径查找（drl_drone_path_planning）
 
-> **开发者**：汤湘粤（学号 2535030067）
+> **开发者**：汤湘粤 (学号: 2535030067)
 > **运行环境**：ROS 1 Noetic / Ubuntu 20.04（部署）；Python 3.9+（训练）
 > **上游参考**：[`zhaoran2000/DRL-drones`](https://github.com/zhaoran2000/DRL-drones)（`linux` 分支）
 
@@ -222,7 +222,7 @@ python3 scripts/train.py --algo PPO --timesteps 400000 --out models --seed 0
 
 # 3) 离线评估（需要 numpy / gymnasium）
 python3 scripts/evaluate.py --model models/policy_weights.npz \
-  --episodes 100 --baseline --json /tmp/drl_eval.json
+  --episodes 100 --baseline --json drl_eval.json
 
 # 4) 生成轨迹对比图（需要 matplotlib）
 python3 scripts/plot_results.py --model models/policy_weights.npz \

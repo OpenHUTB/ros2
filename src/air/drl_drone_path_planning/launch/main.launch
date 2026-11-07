@@ -2,6 +2,7 @@
   <!-- ============================================================
        drl_drone_path_planning 一键启动入口
          roslaunch drl_drone_path_planning main.launch
+       Maintainer: 汤湘粤 (学号: 2535030067)
 
        前置条件：已有节点发布里程计与激光雷达
          /uav/odom  (nav_msgs/Odometry)
