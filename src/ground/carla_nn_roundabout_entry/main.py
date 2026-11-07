@@ -8,6 +8,13 @@ import json
 import math
 import random
 from dataclasses import dataclass
+from functools import lru_cache
+
+import numpy as np
+
+from carla_nn_roundabout_entry.policy import GapPolicy
+from carla_nn_roundabout_entry.sensors import closest_gap, raycast_ranges
+from carla_nn_roundabout_entry.train_policy import training_data
 
 
 @dataclass
@@ -81,11 +88,108 @@ class RoundaboutWorld:
 
 
 def run_headless(seed: int, steps: int) -> dict[str, float | int]:
+    return run_headless_with_controller(seed, steps, controller="gap-policy")
+
+
+@lru_cache(maxsize=1)
+def _trained_gap_policy() -> GapPolicy:
+    features, labels = training_data(seed=7, samples=500)
+    policy = GapPolicy(seed=7)
+    policy.train(features, labels)
+    return policy
+
+
+class GapAcceptanceController:
+    """Use simulated range observations and a trained MLP for each control step."""
+
+    def __init__(self) -> None:
+        self.policy = _trained_gap_policy()
+        self.wait_frames = 0
+        self.enter_frames = 0
+        self.committed_enter_frames = 0
+        self.emergency_brake_frames = 0
+        self.merge_steps_remaining = 0
+
+    def command(self, world: RoundaboutWorld, step_index: int) -> tuple[float, float, float]:
+        ego = world.ego
+        circles = []
+        traffic = []
+        for car in world.traffic:
+            x, y = car.position(*world.center)
+            vx = -car.speed * math.sin(car.angle)
+            vy = car.speed * math.cos(car.angle)
+            circles.append((x, y, 1.1))
+            traffic.append((x, y, vx, vy))
+
+        ranges = raycast_ranges((ego.x, ego.y), ego.yaw, circles)
+        gap = closest_gap((ego.x, ego.y, ego.yaw, ego.speed), traffic)
+        front_range = min(ranges[10:15])
+        clearance = max(0.0, min(gap["gap_m"] - 2.2, front_range))
+        features = np.array([
+            min(clearance, 20.0) / 20.0,
+            min(gap["ttc_s"], 12.0) / 12.0,
+            ego.speed / 12.0,
+            max(-4.0, min(4.0, gap["lateral_m"])) / 4.0,
+        ])
+        decision = self.policy.decide(features)
+
+        if decision == "ENTER":
+            self.enter_frames += 1
+        else:
+            self.wait_frames += 1
+
+        if self.merge_steps_remaining == 0 and decision == "ENTER" and clearance >= 6.0 and gap["ttc_s"] >= 3.0:
+            self.merge_steps_remaining = 120
+
+        emergency = front_range <= 4.0 or gap["ttc_s"] <= 1.5
+        if emergency:
+            self.emergency_brake_frames += 1
+            throttle, brake = 0.0, 1.0
+        elif self.merge_steps_remaining > 0:
+            self.committed_enter_frames += 1
+            throttle, brake = 0.45, 0.0
+            self.merge_steps_remaining -= 1
+        elif decision == "ENTER" and clearance >= 6.0 and gap["ttc_s"] >= 3.0:
+            throttle, brake = 0.45, 0.0
+        else:
+            throttle, brake = 0.0, 0.7 if ego.speed > 0.2 else 0.0
+
+        steer = 0.28 if 80 <= step_index < 240 else 0.0
+        return throttle, brake, steer
+
+    def metrics(self) -> dict[str, int]:
+        return {
+            "policy_wait_frames": self.wait_frames,
+            "policy_enter_frames": self.enter_frames,
+            "committed_enter_frames": self.committed_enter_frames,
+            "emergency_brake_frames": self.emergency_brake_frames,
+        }
+
+
+def run_headless_with_controller(
+    seed: int,
+    steps: int,
+    controller: str = "gap-policy",
+) -> dict[str, float | int]:
+    if steps <= 0:
+        raise ValueError("仿真步数必须为正数")
+    if controller not in {"gap-policy", "baseline"}:
+        raise ValueError("控制器必须为 gap-policy 或 baseline")
+
     world = RoundaboutWorld(seed=seed)
+    policy_controller = GapAcceptanceController() if controller == "gap-policy" else None
     for index in range(steps):
-        steer = 0.28 if 80 <= index < 240 else 0.0
-        world.step(throttle=0.45, brake=0.0, steer=steer)
-    return world.metrics()
+        if policy_controller is None:
+            throttle, brake = 0.45, 0.0
+            steer = 0.28 if 80 <= index < 240 else 0.0
+        else:
+            throttle, brake, steer = policy_controller.command(world, index)
+        world.step(throttle=throttle, brake=brake, steer=steer)
+    metrics = world.metrics()
+    metrics["controller_policy_frames"] = 0 if policy_controller is None else steps
+    if policy_controller is not None:
+        metrics.update(policy_controller.metrics())
+    return metrics
 
 
 def run_gui(seed: int) -> None:
@@ -143,11 +247,13 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--steps", type=int, default=360)
     parser.add_argument("--gui", action="store_true", help="启动键盘交互窗口")
+    parser.add_argument("--controller", choices=("gap-policy", "baseline"), default="gap-policy")
     args = parser.parse_args()
     if args.gui:
         run_gui(args.seed)
     else:
-        print(json.dumps(run_headless(args.seed, args.steps), ensure_ascii=False, indent=2))
+        result = run_headless_with_controller(args.seed, args.steps, args.controller)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
