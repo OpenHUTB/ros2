@@ -175,6 +175,16 @@ rosrun ackermann_publisher ackermann_pub.py
 
 * **`rosrun` 找不到 `ackermann_pub.py`**：确认脚本已 `chmod +x` 且位于功能包 `scripts/` 目录内，并在 `catkin_make` 后重新 `source devel/setup.bash`。
 
+* **启动时报错 `KeyError: 'simple_pid'`**：simple-pid 2.0.x 与 carla-ros-bridge 不兼容，卸载后换装兼容版本：
+
+```bash
+# 1. 卸载不兼容的 2.0.1
+pip3 uninstall simple-pid -y
+
+# 2. 安装兼容旧版 0.2.2
+pip3 install simple-pid==0.2.2
+```
+
 ## 参考
 
 * [Carla 阿克曼控制（官方说明）](https://openhutb.github.io/doc/carla_ackermann_control/)
