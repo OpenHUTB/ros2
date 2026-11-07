@@ -1,3 +1,4 @@
+from glob import glob
 from setuptools import setup
 
 package_name = "carla_nn_roundabout_entry"
@@ -9,7 +10,7 @@ setup(
     py_modules=["main"],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
-        ("share/" + package_name, ["package.xml"]),
+        ("share/" + package_name, ["package.xml"] + glob("launch/*.launch.py")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
