@@ -38,6 +38,9 @@ class VisualLaneDepartureNode(Node):
         ('fov', '90.0'),
         ('frames', '0'),
         ('print_every', '20'),
+        ('settle', '40'),
+        ('min_speed', '1.0'),
+        ('max_offset', '0.8'),
     )
 
     def __init__(self):
@@ -114,6 +117,10 @@ class VisualLaneDepartureNode(Node):
         predictions, truths, speeds = [], [], []
         total = int(self._param('frames'))
         every = max(1, int(self._param('print_every')))
+        settle = int(self._param('settle'))
+        min_speed = float(self._param('min_speed'))
+        max_offset = float(self._param('max_offset'))
+        skipped = 0
         index = 0
 
         try:
@@ -134,9 +141,20 @@ class VisualLaneDepartureNode(Node):
                 truth = dataset.boundary_targets(waypoint, transform)
                 map_offset = -(truth[0] + truth[1]) / 2.0
 
-                predictions.append(predicted)
-                truths.append(truth)
-                speeds.append(float(self._actor.get_velocity().length()))
+                # 话题每帧都发，统计只算地图给了有效车道的帧：路口那种
+                # 真值在两条车道之间跳的帧算进去会把误差拉高，口径也会
+                # 与 main.py --demo 对不上
+                speed = float(self._actor.get_velocity().length())
+                usable = (2.8 < truth[1] - truth[0] < 4.2
+                          and abs(map_offset) <= max_offset
+                          and speed >= min_speed
+                          and index >= settle)
+                if usable:
+                    predictions.append(predicted)
+                    truths.append(truth)
+                    speeds.append(speed)
+                else:
+                    skipped += 1
 
                 state, event = machine.update(visual_offset)
                 self.offset_publisher.publish(Float32(data=float(visual_offset)))
@@ -156,6 +174,9 @@ class VisualLaneDepartureNode(Node):
         finally:
             cc.destroy_all(self._camera, self._actor)
             cc.restore_async(world)
+            if skipped:
+                self.get_logger().info(
+                    '统计跳过 %d 帧（预热、车速过低或地图无有效车道）' % skipped)
             self._publish_summary(predictions, truths, speeds)
 
     def _publish_summary(self, predictions, truths, speeds):
@@ -176,7 +197,10 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        # launch 收到 Ctrl-C 时已经关过一次，这里再关会抛
+        # RCLError: rcl_shutdown already called
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
