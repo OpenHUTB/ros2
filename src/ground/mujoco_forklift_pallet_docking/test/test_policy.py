@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
+from mujoco_forklift_pallet_docking import policy as policy_module
 from mujoco_forklift_pallet_docking.policy import ImagePolicy, teacher_action
 
 
@@ -31,7 +32,7 @@ def test_camera_observes_pallet_from_different_distances():
 def test_packaged_policy_checkpoint_round_trip(tmp_path: Path):
     policy = ImagePolicy(seed=21)
     images = np.zeros((1, 64, 64), dtype=np.uint8)
-    checkpoint = Path(__file__).parents[1] / "mujoco_forklift_pallet_docking" / "models" / "pallet_docking_policy.npz"
+    checkpoint = Path(policy_module.__file__).parent / "models" / "pallet_docking_policy.npz"
     loaded = ImagePolicy.load(str(checkpoint))
     output = loaded.predict(images)
     assert output.shape == (1, 2)
