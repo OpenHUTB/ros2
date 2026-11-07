@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>carla_nn_roundabout_entry</name>
+  <version>0.1.0</version>
+  <description>无信号环岛汇入的车辆仿真与神经网络控制示例</description>
+  <maintainer email=""> </maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+</package>
