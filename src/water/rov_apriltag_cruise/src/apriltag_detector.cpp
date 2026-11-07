@@ -154,7 +154,7 @@ private:
       if (!window_ready_) {
         cv::namedWindow("ROV Camera - AprilTag", cv::WINDOW_NORMAL);
         cv::resizeWindow("ROV Camera - AprilTag", 720, 540);
-        cv::moveWindow("ROV Camera - AprilTag", 1600, 70);
+        // 不指定窗口位置：由窗口管理器决定，避免在小分辨率屏幕上跑出屏幕外
         window_ready_ = true;
       }
       cv::imshow("ROV Camera - AprilTag", frame);
