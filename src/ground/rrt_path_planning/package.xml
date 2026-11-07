@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema" ?>
+<package format="3">
+  <name>rrt_path_planning</name>
+  <version>0.0.1</version>
+  <description>RRT 快速随机扩展树路径规划 2D 仿真：矩形障碍、随机采样扩展、目标偏置与路径回溯。</description>
+  <maintainer email="todo@todo.com">todo</maintainer>
+  <license>MIT</license>
+  <exec_depend>python3</exec_depend>
+  <exec_depend>python3-pygame</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+</package>

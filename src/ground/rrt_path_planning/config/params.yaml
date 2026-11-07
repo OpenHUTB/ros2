@@ -1,0 +1,13 @@
+map: {width: 900, height: 600}
+start: [80.0, 520.0]
+goal: [820.0, 80.0]
+goal_radius: 25.0
+step_size: 28.0
+max_iter: 2500
+goal_sample_rate: 0.08
+seed: 42
+obstacles:
+  - [180, 140, 80, 300]
+  - [360, 40, 80, 320]
+  - [540, 200, 80, 360]
+  - [700, 40, 60, 220]

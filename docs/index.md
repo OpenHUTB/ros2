@@ -167,6 +167,8 @@ ROS每章节运行代码:
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
+* [RRT 快速随机扩展树路径规划](./ground/rrt_path_planning.md) —— 矩形障碍空间下的 RRT 采样规划：随机树扩展、目标偏置、Liang-Barsky 碰撞检测与路径回溯，pygame 2D 可视化
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
