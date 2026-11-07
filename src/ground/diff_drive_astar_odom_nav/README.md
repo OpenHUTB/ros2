@@ -2,6 +2,8 @@
 
 在 Gazebo 中搭建一个两轮差速底盘与静态障碍场景：先用 A* 在静态占用栅格上规划一条全局路径，再由纯追踪控制器仅依据轮式里程计（`/odom`）反馈跟踪路径，最终用 Gazebo 真值（`/ground_truth`）离线评估跟踪精度。实验数据、图表与 GIF 均由一次真实运行自动生成。
 
+文档页：`docs/ground/diff_drive_astar_odom_nav.md`。
+
 ## 1. 与仓库已有模块的区别
 
 仓库已有 [`ros2_pure_pursuit`](../ros2_pure_pursuit) 验证纯追踪路径跟踪与反应式避障，但参考路径由外部给定，没有全局规划，也不含 Gazebo 底盘模型。
