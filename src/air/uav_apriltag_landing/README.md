@@ -26,12 +26,15 @@ pip install dt-apriltags opencv-python
 ## 运行步骤
 
 ```bash
-cd src/air/uav_apriltag_landing
+# 先在工作空间编译并加载环境
+colcon build --packages-select uav_apriltag_landing
+source install/setup.bash
+
 # 1. 先启动 AirSim 及无人机桥接(发布图像/高度, 订阅 setpoint)
 # 2. 启动降落节点
-python3 main.py
+ros2 run uav_apriltag_landing apriltag_landing_node
 # 或
-ros2 launch src/air/uav_apriltag_landing/launch/uav_apriltag_landing.launch.py
+ros2 launch uav_apriltag_landing uav_apriltag_landing.launch.py
 ```
 
 ## 降落状态机
@@ -54,7 +57,7 @@ flowchart TD
 |---|---|---|
 | `hover_height` | 5.0 | 搜索/对齐悬停高度(m) |
 | `align_pixel_tol` | 15.0 | 像素对齐容差(px) |
-| `descend_step` | 0.5 | 每次降高步长(m) |
+| `descend_step` | 0.3 | 每次降高步长(m) |
 | `landed_height` | 0.1 | 接地判定高度(m) |
 | `cam_fx/fy/cx/cy` | 500/500/320/240 | 相机内参 |
 
