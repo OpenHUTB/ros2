@@ -490,6 +490,44 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
 </li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与目标</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">1.1 运行环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 物理仿真</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21-modelsrov_sonar_poolxml">2.1 场景模型（models/rov_sonar_pool.xml）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 声呐图像合成</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 神经网络</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31-cnn">3.1 CNN 结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 数据集</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 训练与测试结果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4-ros">4. ROS 接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 运行步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 文件清单</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a>
@@ -685,8 +723,8 @@ ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_sonar_cnn<span cl
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../mjc_rov_ppo_tracking/" title="手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../mjc_rov_current_teleop/" title="动态洋流 ROV 键盘遥操与 MLP 巡航控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../mjc_rov_current_teleop/" title="动态洋流 ROV 键盘遥操与 MLP 巡航控制"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../mjc_rov_ppo_tracking/" title="手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -703,8 +741,8 @@ ros2<span class="w"> </span>run<span class="w"> </span>mjc_rov_sonar_cnn<span cl
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../mjc_rov_ppo_tracking/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../mjc_rov_current_teleop/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../mjc_rov_current_teleop/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../mjc_rov_ppo_tracking/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
