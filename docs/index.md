@@ -169,6 +169,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
+* [人工势场法路径规划](./ground/apf_path_planning.md) —— 目标引力 + 障碍物斥力 + 局部最小值逃逸，分段引力势避免远场发散，pygame 势场热图与路径生长动画
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)

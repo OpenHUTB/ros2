@@ -1,0 +1,10 @@
+# APF 路径规划参数
+apf:
+  ros__parameters:
+    k_att: 1.0
+    k_rep: 5000.0
+    d_thresh_att: 150.0
+    d_thresh_rep: 80.0
+    step_size: 4.0
+    max_iter: 2000
+    goal_tol: 10.0
