@@ -5,8 +5,8 @@
     python scripts/record_gif.py --robot h1_2 --seconds 12 --fps 20
 
 渲染走 MuJoCo 的 ``Renderer``（OpenGL 离屏），无需开窗口；Linux 无显卡时可用
-``MUJOCO_GL=osmesa`` 或 ``egl``。帧率与尺寸默认 25 fps / 480×360，10 s 的动图
-约 3~5 MB，符合课程「动图小于 10 MB」的要求。
+``MUJOCO_GL=osmesa`` 或 ``egl``。帧率与尺寸默认 18 fps / 288×216，10 s 的动图约 3 MB，
+满足仓库 PR 模板「GIF 小于 5 MB」的要求。
 """
 
 from __future__ import annotations
@@ -32,9 +32,9 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("h1_walk.gif"))
     parser.add_argument("--seconds", type=float, default=14.0, help="录制时长（仿真秒）")
     parser.add_argument("--skip", type=float, default=0.0, help="先空跑若干秒再开始录（跳过开场站立）")
-    parser.add_argument("--fps", type=int, default=25)
-    parser.add_argument("--width", type=int, default=480)
-    parser.add_argument("--height", type=int, default=360)
+    parser.add_argument("--fps", type=int, default=18)
+    parser.add_argument("--width", type=int, default=288)
+    parser.add_argument("--height", type=int, default=216)
     parser.add_argument(
         "--brighten",
         type=float,
