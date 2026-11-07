@@ -29,7 +29,8 @@ class Arm:
             self.last_status = "done"
             return self.last_status
 
-        elbow, tip = kinematics.forward_kinematics(self.q1, self.q2)
+        self.elbow, self.tip = kinematics.forward_kinematics(self.q1, self.q2)
+        elbow, tip = self.elbow, self.tip
         dist = math.hypot(tip[0] - target[0], tip[1] - target[1])
 
         if dist <= config.REACH_TOL:
