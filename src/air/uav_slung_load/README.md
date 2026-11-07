@@ -11,6 +11,14 @@
 
 三种控制律共用同一个姿态环与旋翼混控，唯一区别是“怎么用负载状态”，因此对比是可解释的。
 
+## 效果
+
+0.1 kg 负载、`+x` 方向 3.5 m 平移（镜头跟随机体）：
+
+| 摆角反馈控制器 | PID（上） vs 摆角反馈（下），同帧对比 |
+| --- | --- |
+| ![摆角反馈演示](../../../docs/img/air/uav_slung_load/demo_swing.gif) | ![PID 与摆角反馈对比](../../../docs/img/air/uav_slung_load/compare_pid_vs_swing.gif) |
+
 ## 1 目录结构
 
 ```
@@ -25,6 +33,7 @@ uav_slung_load/
 │   ├── sim_core.py             # 仿真核心、指标统计（无 ROS 依赖）
 │   ├── controllers.py          # pid / zv / swing 三种控制律
 │   ├── evaluate.py             # 3 种负载 × 3 种控制器，输出 CSV
+│   ├── make_gif.py             # 离屏渲染效果动图
 │   └── main.py                 # 演示 / 键盘模式
 ├── test/
 │   └── test_offline.py         # 离线自检（模型结构、指标对比、可重复性）
@@ -62,6 +71,9 @@ python3 scripts/main.py --mode demo --controller swing --no-viewer   # 无窗口
 
 # 键盘：W/S 前后、A/D 左右、R 复位、Q 退出
 python3 scripts/main.py --mode keyboard
+
+# 重新生成效果动图（离屏渲染，写到 docs/img/air/uav_slung_load/）
+python3 scripts/make_gif.py
 ```
 
 catkin 工作空间里也可以 `catkin_make --only-pkg-with-deps uav_slung_load`，入口脚本会装到

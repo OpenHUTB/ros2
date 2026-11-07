@@ -59,6 +59,13 @@ MuJoCo 没有原生绳索，绳缆用“两根带阻尼的铰接 + 刚性连杆�
 
 ## 5 结果
 
+下面是 0.1 kg 负载、`+x` 方向 3.5 m 平移的动态过程（镜头跟随机体）。对比动图上下两格为同一时刻：
+上格是 PID 基线，下格是摆角反馈。
+
+![摆角反馈演示](../img/air/uav_slung_load/demo_swing.gif)
+
+![PID 与摆角反馈同帧对比](../img/air/uav_slung_load/compare_pid_vs_swing.gif)
+
 2 m 阶跃（角度单位：度）：
 
 | 负载 | 控制 | 摆角 RMS | 摆角峰值 | 残余摆角 | 位置 RMS | 末端误差 | 调节时间 |

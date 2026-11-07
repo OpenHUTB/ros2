@@ -23,6 +23,7 @@
 
   <visual>
     <headlight ambient="0.38 0.38 0.40" diffuse="0.55 0.55 0.56" specular="0.15 0.15 0.15"/>
+    <quality shadowsize="2048" offsamples="8"/>
     <map znear="0.02" zfar="60"/>
   </visual>
 
@@ -40,6 +41,8 @@
   </default>
 
   <asset>
+    <texture name="sky" type="skybox" builtin="gradient" width="512" height="3072"
+             rgb1="0.62 0.72 0.84" rgb2="0.10 0.13 0.18"/>
     <texture name="grid" type="2d" builtin="checker" width="256" height="256"
              rgb1="0.42 0.46 0.42" rgb2="0.34 0.38 0.34"/>
     <material name="grid" texture="grid" texrepeat="12 12" reflectance="0.05"/>
@@ -51,7 +54,7 @@
 
   <worldbody>
     <light name="sun" pos="0 0 12" dir="-0.3 0.2 -1" directional="true"
-           diffuse="0.62 0.62 0.60" specular="0.25 0.25 0.25" castshadow="true"/>
+           diffuse="0.62 0.62 0.60" specular="0.25 0.25 0.25" castshadow="false"/>
     <light name="fill" pos="0 0 4" dir="0 0 -1" diffuse="0.30 0.30 0.32" castshadow="false"/>
 
     <geom name="floor" type="plane" size="0 0 0.05" material="grid" contype="0" conaffinity="0"/>

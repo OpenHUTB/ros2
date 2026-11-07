@@ -10,6 +10,7 @@ catkin_install_python(PROGRAMS
   scripts/evaluate.py
   scripts/sim_core.py
   scripts/controllers.py
+  scripts/make_gif.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
