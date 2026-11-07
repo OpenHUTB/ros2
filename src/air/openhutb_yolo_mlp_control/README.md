@@ -3,6 +3,10 @@
 该功能包使用 ROS 2 消息解耦 OpenHUTB/AirSim、YOLO 目标检测和 MLP 轨迹控制。  
 其中仅 `airsim_bridge` 直接调用 OpenHUTB/AirSim Python API，其余节点通过 ROS 2 话题交换数据。
 
+新增独立的 [YOLO 目标水平视觉居中模式](../../../docs/air/openhutb_yolo_mlp_control/yolo_visual_centering.md)，默认只预览控制量。
+入口为 `ros2 launch openhutb_yolo_mlp_control visual_centering.launch.py`。
+实际控制使用 `dry_run:=false`；完整用法见功能文档。
+
 ## 节点关系
 
 ```text
@@ -71,6 +75,8 @@ nc -vz "$AIRSIM_IP" 41451
 如果连接失败，请确认 OpenHUTB 已完全启动、防火墙允许访问 TCP 41451，并根据实际网络配置设置 Windows 主机地址。
 
 ## 运行 YOLO 感知
+
+启动前请按[相机分辨率配置](../../../docs/air/openhutb_yolo_mlp_control/setup.md#相机分辨率)将 RGB 相机设为 **1280×720**，并重启模拟器。默认的 **256×144** 图像会被固定大小的性能信息面板大面积遮挡，导致画面和文字显示不完整；仅调整 OpenCV 窗口大小不能解决此问题。
 
 YOLO 权重 `yolo11n.pt` 不包含在本仓库中，请提前下载并保存到本地，例如：
 
@@ -188,3 +194,11 @@ nc -vz "$AIRSIM_IP" 41451
 ```bash
 model_path:="$HOME/models/yolo11n.pt"
 ```
+
+## Traffic Manager 车辆轨迹与仿真位姿跟随
+
+辅助入口位于 `tools/traffic`：`main.py spawn` 生成汽车，`main.py record` 记录现有车辆，`main.py clean` 清理异常退出后残留的受管车辆，`plot_trajectories.py` 导出快照，`follow_vehicle.py` 显式启用仿真位姿跟随，`launch.ps1` 提供 Windows 前台启动入口。
+
+目标位置来自 CARLA 车辆坐标，尚未接入 YOLO 视觉闭环，也不能据此认定无人机动力学跟随已经验证通过。跟随使用增量位姿更新。
+
+完整的环境安装、车辆生成、记录、绘图、WSL 跟随及释放控制命令见[车辆轨迹与仿真跟随教程](../../../docs/air/openhutb_yolo_mlp_control/traffic_tracking.md)。

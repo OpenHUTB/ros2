@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_yolo_avoidance</name>
+  <version>1.0.0</version>
+  <description>
+    OpenHUTB 课程作业：CARLA 0.9.16 + YOLOv8 + ROS 2 Humble 的感知与减速避障示例。
+    三个独立节点：carla_camera_node（连接 CARLA、生成车辆、发布前视相机图像）、
+    yolo_detect_node（YOLOv8 推理，输出车辆检测框并估算距离）、
+    decision_control_node（按距离阈值下发油门/刹车指令，不做转向控制）。
+  </description>
+  <maintainer email="openhutb_course@example.com">OpenHUTB Student</maintainer>
+  <license>MIT</license>
+
+  <!-- 运行期依赖：ROS 2 Humble 自带的公共消息包，无需额外安装第三方消息 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,10 @@
+# 运行产物（--save-dir / --record 的输出）
+/results/
+/results_*/
+/record/
+/frames/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
