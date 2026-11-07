@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_deconflict</name>
+  <version>0.1.0</version>
+  <description>
+    低空多机 4D 航迹冲突检测与解脱。以起飞时刻、航路与巡航高度描述每架
+    无人机的 4D 航迹，按圆柱间隔模型（水平 + 垂直）解析求解两两最近接近，
+    再用地面等待 / 高度层调整 / 侧向绕行三种手段按代价择优消解冲突，
+    最后用课程既有的 uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）
+    闭环复飞，验证真实间隔是否达标。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

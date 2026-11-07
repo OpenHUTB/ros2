@@ -251,6 +251,8 @@ ROS每章节运行代码:
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
+* [低空多机 4D 航迹冲突检测与解脱](./air/uav_deconflict.md) —— 把任务描述成「起飞时刻 + 航路 + 巡航高度」的 4D 航迹，解析求解两两最近接近（CPA），用地面等待 / 高度层调整 / 侧向绕行按代价择优解脱
+
 
 
 * [禁飞区检测模块](no_fly_zone_check/index.md)
