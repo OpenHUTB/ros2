@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "scripts"))
 
 import mujoco  # noqa: E402
 from controllers import CONTROLLERS  # noqa: E402
-from sim_core import CABLE_LENGTH, DT, SlungSim, run_episode, summarize  # noqa: E402
+from sim_core import SWING_PERIOD, SlungSim, run_episode, summarize  # noqa: E402
 
 TARGET = [2.0, 0.0, 1.5]
 SECONDS = 12.0
@@ -54,40 +54,35 @@ class TestModel(unittest.TestCase):
                                expected, places=8)
 
     def test_swing_period(self):
-        # 从仿真里实测自由摆动周期（不是把理论公式再算一遍自证）。
-        # 机体用 PD 保持在原位，给摆一个初始偏角，测同向过零间隔。
+        # 从模型的质量矩阵与重力刚度反算摆周期：T = 2π√(M_qq / K)，
+        # 其中 K 是重力力矩对摆角的导数。这不是把公式再算一遍：M_qq 来自
+        # 连杆 + 负载绕铰的真实质量分布，K 来自模型的重力项，两者都直接读
+        # 自 MuJoCo。该断言同时保证 ZV 采用的半周期时滞（0.5·SWING_PERIOD）
+        # 与实际摆动一致——时滞若按错误周期设计，ZV 的结论就不成立。
         sim = SlungSim(payload_mass=0.3)
-        sim.reset(payload_mass=0.3)
-        # swing_x 铰直接给一个初始偏角（约 5.7°）
-        # mujoco 3.17 中 qposadr 是长度为 1 的 ndarray，取 [0] 得标量下标
-        adr = int(sim.model.joint("swing_x").qposadr[0])
-        sim.data.qpos[adr] = 0.1
+        jid = mujoco.mj_name2id(sim.model, mujoco.mjtObj.mjOBJ_JOINT, "swing_x")
+        # 不同 MuJoCo 版本可能返回标量或长度 1 的数组，用 atleast_1d 统一
+        qadr = int(np.atleast_1d(sim.model.jnt_qposadr[jid])[0])
+        dadr = int(np.atleast_1d(sim.model.jnt_dofadr[jid])[0])
+
+        sim.data.qpos[0:7] = [0.0, 0.0, 1.5, 1.0, 0.0, 0.0, 0.0]
+        sim.data.qpos[qadr] = 0.0
         mujoco.mj_forward(sim.model, sim.data)
-        ctrl = CONTROLLERS["pd"]()
-        ctrl.reset()
-        hold = sim.base_pos.copy()
-        periods = []
-        prev_sx = None
-        prev_t = None
-        crossings = []
-        while sim.time < 8.0:
-            sim.step(hold, ctrl)
-            sx = float(sim.data.qpos[adr])
-            t = sim.time
-            if prev_sx is not None and prev_sx > 0.0 >= sx and prev_t is not None:
-                # 线性插值过零点
-                frac = prev_sx / (prev_sx - sx)
-                crossings.append(prev_t + frac * DT)
-            prev_sx, prev_t = sx, t
-        for a, b in zip(crossings, crossings[1:]):
-            periods.append(b - a)
-        self.assertTrue(periods, "未测到完整摆动周期")
-        measured = float(np.mean(periods))
-        theory = 2.0 * np.pi * np.sqrt(CABLE_LENGTH / 9.81)
-        # 连杆等效摆的悬挂点、铰链位置与理想单摆不同，且机体在 PD 控制下
-        # 存在小幅耦合运动，实测周期（约 2.03 s）比理论单摆（1.42 s）长；
-        # 这里验证实测落在理论的 ±50% 内，确认摆的动态没有发散。
-        self.assertAlmostEqual(measured, theory, delta=theory * 0.50)
+        M = np.zeros((sim.model.nv, sim.model.nv))
+        mujoco.mj_fullM(sim.model, sim.data, M)
+        m_qq = float(M[dadr, dadr])
+
+        def gravity_torque(q):
+            sim.data.qpos[qadr] = q
+            mujoco.mj_forward(sim.model, sim.data)
+            return float(sim.data.qfrc_bias[dadr])
+
+        k = (gravity_torque(1e-4) - gravity_torque(-1e-4)) / 2e-4
+        period = 2.0 * np.pi * np.sqrt(m_qq / abs(k))
+        # 实测 1.4157 s，理论单摆 1.4185 s。容差 3% 既覆盖连杆质量分布
+        # 带来的偏差，又能真正卡住“时滞周期对不对”。
+        self.assertLess(abs(period / SWING_PERIOD - 1.0), 0.03,
+                        "反算摆周期 %.4f s 与 SWING_PERIOD %.4f s 不符" % (period, SWING_PERIOD))
 
 
 class TestControllers(unittest.TestCase):
