@@ -1,7 +1,6 @@
 title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
-
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
 <span id="submission-guide"></span>
@@ -29,13 +28,9 @@ title: 主页
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
-
 ---
-
 ## 1. 入门 <span id="list"></span>
-
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
-
 * 教材：ROS教材.pdf
 * 课件和视频：ROS资料.zip
 * 安装好 ros kinetic 的虚拟机（密码：rosindustrial）Ubuntu 16.04：*.ova
@@ -45,10 +40,7 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 * 补充：[Ubuntu 20.04 安装 ROS Noetic 详细教程](ubuntu20.04.md)
 
 [下载](https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html)并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 `lsb_release -a`）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。
-
-
 ROS每章节运行代码:
-
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
 * [第 2 章](./chapter/chap2.md) - ROS 基础
     * [ROS 2 话题发布订阅基础实验（talker/listener）](./chap2/ros2_pubsub_py.md)
@@ -63,12 +55,15 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
+<<<<<<< feature/humanoid-arm-ik
+ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
+=======
 
 
 ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
 
+>>>>>>> master
 ## 2. 人形机器人 <span id='humanoid'></span>
-
 * [人形机器人基础](./humanoid/humanoid_basics.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
@@ -82,6 +77,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [人形机器人手臂逆运动学（7-DOF IK + UR10 仿真）](./humanoid/arm_ik.md)
+* [人形机器人手臂逆运动学（7-DOF IK + UR10 仿真）](./humanoid/arm_ik.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
@@ -89,7 +86,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
-
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
@@ -98,7 +94,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
-
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
 * [生成对象](./ground/carla_spawn_objects.md)
@@ -205,7 +200,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
-
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
 
 * [八叉树上的 A* 全局寻路](./air/octree_uav_3d_pathfinding/astar_planning.md)
@@ -215,7 +209,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
 * [无人机键盘控制](./air/uav_keyboard_control.md)
-
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
 * [无人机定高日志误差与抗扰恢复时间评估](./air/uav_hover_log_eval.md)
 
@@ -266,23 +259,14 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
-
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
-
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
-
 * [WSL 跑通 HoloOcean2 的 ROS2 示例（无头模式）](./water/WSL_HoloOcean2_ROS2.md) —— 无 GPU 环境下用 `-nullrhi` 参数跑无头仿真
-
 * [Docker 开发环境](./water/docker.md) —— 开发容器与工作空间挂载
-
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
-
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
-
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
-
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
-
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
 
 * [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
@@ -303,9 +287,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
 
 ___
-
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
-
 ___
-
 ## 参考文献
