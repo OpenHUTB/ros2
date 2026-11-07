@@ -96,13 +96,6 @@ class SlungSim:
         return math.acos(max(-1.0, min(1.0, -float(self.cable_dir[2]))))
 
     @property
-    def swing_vector(self):
-        """水平偏摆分量（rad），[绕 y 轴摆角, 绕 x 轴摆角]，与 swing_angle 的
-        atan2 定义一致；供日志记录与摆角分解观察使用。"""
-        d = self.cable_dir
-        return np.array([math.atan2(d[0], -d[2]), math.atan2(d[1], -d[2])])
-
-    @property
     def swing_rate(self):
         return np.array([self.data.qvel[self.swing_x_v], self.data.qvel[self.swing_y_v]])
 
@@ -173,7 +166,7 @@ def run_episode(controller, target, seconds, payload_mass=0.3, gust=None, sim=No
     controller.reset()
     hold = sim.base_pos.copy()
     n_steps = int(round(seconds / DT))
-    log = {"t": [], "pos": [], "target": [], "swing": [], "swing_vec": [],
+    log = {"t": [], "pos": [], "target": [], "swing": [],
            "payload": [], "euler": [], "thrust": []}
     for _ in range(n_steps):
         tgt = hold if sim.time < step_time else np.asarray(target, dtype=float)
@@ -182,7 +175,6 @@ def run_episode(controller, target, seconds, payload_mass=0.3, gust=None, sim=No
         log["pos"].append(sim.base_pos)
         log["target"].append(tgt)
         log["swing"].append(sim.swing_angle)
-        log["swing_vec"].append(sim.swing_vector)
         log["payload"].append(sim.payload_pos)
         log["euler"].append(sim.euler)
         log["thrust"].append(sim._thrust.copy())

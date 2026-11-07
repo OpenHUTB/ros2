@@ -5,7 +5,7 @@
   在 base_link 下方挂一根刚性连杆近似绳缆（一个 cable 刚体 + 两个同点正交铰，
   等效球摆）和一个球形负载：
 
-    base_link（freejoint，0.95 kg）
+    base_link（freejoint，空机 0.85 kg，含 4×0.025 kg 旋翼共 0.95 kg）
       └── cable（swing_x 绕 y、swing_y 绕 x，各 ±1.2 rad，带阻尼）
             └── payload（球，0.3 kg，可运行时改质量做负载扫描）
 
