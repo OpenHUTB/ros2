@@ -1,4 +1,4 @@
-# 基于编码器与惯性测量单元的 MuJoCo 差速小车轮滑感知与神经网络轨迹补偿
+# MuJoCo 差速小车滑移仿真与数据集采集框架（编码器 + IMU）
 
 MuJoCo Differential-Drive Slip Perception and Neural Trajectory Compensation Using Wheel Encoders and an IMU
 
