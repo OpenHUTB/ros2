@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_benchmark_suite</name>
+  <version>0.1.0</version>
+  <description>CARLA 0.9.16 四份作业的统一调度入口与性能评价（真实测量：精度、时延、平滑度）ROS 2 功能包 —— 机器人操作系统及应用课程作业五</description>
+  <maintainer email="1636550364@qq.com">himyinjun1234</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+
+  <!-- 被调度与被评测的四个功能包。若某个包未随仓库一同获取，
+       本包仍可运行，但对应项会显示"缺失"或评测失败（不会崩溃）。 -->
+  <exec_depend>carla_keyboard_control</exec_depend>
+  <exec_depend>carla_perception_control</exec_depend>
+  <exec_depend>carla_mapping_navigation</exec_depend>
+  <exec_depend>carla_end_to_end_nn</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
