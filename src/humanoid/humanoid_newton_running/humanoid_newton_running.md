@@ -164,11 +164,11 @@ m = 31.614 kg, G = 310.14 N
 ### 效果图
 侧视图（left.gif）：匀速行走 → 加速跑步，身体随步伐起伏
 
-![侧视图](https://aka.doubaocdn.com/s/gXahv8VU8w)
+![侧视图](https://aka.doubaocdn.com/s/X8TKWk6dmO)
 
 俯视图（above.gif）：相机跟随，背景网格向后移动，体现前进速度
 
-![俯视图](https://aka.doubaocdn.com/s/xxhxui0H4y)
+![俯视图](https://aka.doubaocdn.com/s/HUrhC5WSWd)
 
 ## 八、模块边界与局限性
 1. **不含动力学平衡控制**：本模块采用直接设 qpos + `mj_forward` 的运动学驱动方式，不使用 `mj_step` 求解真实动力学。机器人不会摔倒，但也不验证真实受力平衡。
