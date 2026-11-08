@@ -1024,12 +1024,12 @@ ROS2 侧在 Ubuntu 20.04 + Humble 虚拟机中 <code>colcon build</code> 通过�
 <p>顺序不能反：先判占据再插值会把 <script type="math/tex">\infty</script> 插值成有限值，规划器就会往墙里走。</p>
 <hr/>
 <h2 id="9">9. 复现步骤</h2>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">                        </span><span class="c1"># 30 项，不需要 ROS</span>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--selftest<span class="w">                        </span><span class="c1"># 36 项，不需要 ROS</span>
 python<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--out<span class="w"> </span>data/seg_dataset.npz
 python<span class="w"> </span>main.py<span class="w"> </span>--train<span class="w">   </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--out<span class="w"> </span>data/
 python<span class="w"> </span>main.py<span class="w"> </span>--evaluate<span class="w"> </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span>--out<span class="w"> </span>results.json
 python<span class="w"> </span>main.py<span class="w"> </span>--figures<span class="w">  </span>--data<span class="w"> </span>data/seg_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span><span class="se">\</span>
-<span class="w">               </span>--outdir<span class="w"> </span>../docs/img/air/uav_semantic_mapping_nav
+<span class="w">               </span>--outdir<span class="w"> </span>../../../docs/img/air/uav_semantic_mapping_nav
 </code></pre></div>
 <p>ROS2 在线运行见包内 <code>README.md</code>。</p>
 <hr/>
