@@ -59,7 +59,7 @@ class TestSlipReflex(unittest.TestCase):
         res = extra.run_g6()
         self.assertLess(res["no_reflex"]["lift_mm"], 5.0)
         self.assertGreater(res["with_reflex"]["lift_mm"], 50.0)
-        self.assertGreater(res["with_reflex"]["reflex_events"], 0)
+        self.assertGreater(res["with_reflex"]["reflex_steps"], 0)
 
 
 class TestLoadSweep(unittest.TestCase):
