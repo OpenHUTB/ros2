@@ -1,4 +1,4 @@
-﻿"""六个递进实验（L1-L6）。每个实验返回指标字典，可单独调用。"""
+"""六个递进实验（L1-L6）。每个实验返回指标字典，可单独调用。"""
 
 from __future__ import annotations
 
@@ -185,7 +185,7 @@ def _simulate_legs(nlegs, seconds, targets, gscale, rec=None, kp=90.0, kd=9.0):
     rows = []
     for i in range(int(seconds / DT)):
         t = i * DT
-        umax = 0.0
+        umax = 0.0          # 本步内两腿的激活指令（控制器输出）最大值
         for s in sides:
             q = np.array([d.joint(f"hip_{s}").qpos[0], d.joint(f"knee_{s}").qpos[0]])
             qd = np.array([d.joint(f"hip_{s}").qvel[0], d.joint(f"knee_{s}").qvel[0]])
@@ -215,7 +215,7 @@ def run_l5(rec=None):
     rows = _simulate_legs(1, 4.0, lambda s, t: np.array([-0.12, 0.25]), 1.0, rec)
     z = rows[rows[:, 0] > 2.5, 1]
     return {"pelvis_z": float(z.mean()), "pelvis_z_std": float(z.std()),
-            "knee": float(rows[-1, 3]), "max_act": float(rows[-1, 4])}
+            "knee": float(rows[-1, 3]), "final_act": float(rows[-1, 4])}
 
 
 def run_l6(rec=None):
@@ -236,7 +236,7 @@ def run_l6(rec=None):
     foot = rows[:, 2]
     return {"pelvis_z": float(z.mean()), "pelvis_z_std": float(z.std()),
             "foot_clearance": float(foot.max() - foot.min()),
-            "max_act": float(rows[-1, 4])}
+            "final_act": float(rows[-1, 4])}
 
 
 # ---------------- 录制 ----------------
