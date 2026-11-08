@@ -1,0 +1,284 @@
+[
+  {
+    "scenario": "headon",
+    "title": "对头相遇",
+    "description": "两条平行走廊各有一对同高度对头机，中线相遇；同优先级按规则③各自右转 30° 互相从左側通过。",
+    "closed_loop": false,
+    "params": {
+      "horizon_s": 8.0,
+      "cpa_threshold_m": 40.0,
+      "turn_right_deg": 30.0,
+      "descend_m": 10.0,
+      "slow_fraction": 0.3,
+      "overtake_lateral_m": 20.0,
+      "decision_interval_s": 0.2,
+      "clear_hold_s": 3.0,
+      "recovery_min_s": 8.0
+    },
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "东向干线",
+        "start": [
+          -180.0,
+          0.0
+        ],
+        "end": [
+          180.0,
+          0.0
+        ],
+        "alt": 15.0,
+        "speed": 8.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 51.0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "西向干线",
+        "start": [
+          180.0,
+          0.0
+        ],
+        "end": [
+          -180.0,
+          0.0
+        ],
+        "alt": 15.0,
+        "speed": 8.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 51.0
+      },
+      {
+        "uid": "UAV-3",
+        "label": "东向支线",
+        "start": [
+          -180.0,
+          60.0
+        ],
+        "end": [
+          180.0,
+          60.0
+        ],
+        "alt": 15.0,
+        "speed": 8.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 51.0
+      },
+      {
+        "uid": "UAV-4",
+        "label": "西向支线",
+        "start": [
+          180.0,
+          60.0
+        ],
+        "end": [
+          -180.0,
+          60.0
+        ],
+        "alt": 15.0,
+        "speed": 8.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 51.0
+      }
+    ],
+    "baseline": {
+      "mode": "baseline",
+      "min_separation_m": 0.16,
+      "min_pair": [
+        "UAV-1",
+        "UAV-2"
+      ],
+      "min_sep_time_s": 28.5,
+      "decisions": 0,
+      "mean_deviation_m": 0.06,
+      "per_agent_deviation_m": {
+        "UAV-1": 0.06,
+        "UAV-2": 0.06,
+        "UAV-3": 0.06,
+        "UAV-4": 0.06
+      },
+      "below_threshold_samples": 20
+    },
+    "rules": {
+      "mode": "rules",
+      "min_separation_m": 15.52,
+      "min_pair": [
+        "UAV-2",
+        "UAV-4"
+      ],
+      "min_sep_time_s": 35.0,
+      "decisions": 12,
+      "mean_deviation_m": 15.36,
+      "per_agent_deviation_m": {
+        "UAV-1": 0.06,
+        "UAV-2": 30.31,
+        "UAV-3": 25.45,
+        "UAV-4": 5.63
+      },
+      "below_threshold_samples": 102,
+      "decision_log": [
+        {
+          "t": 18.0,
+          "uid": "UAV-2",
+          "other": "UAV-1",
+          "rule": "③对头",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则③对头相遇：与 UAV-1 航向差 180°、CPA 40m@8.0s，各自右转30°",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.92
+        },
+        {
+          "t": 18.0,
+          "uid": "UAV-4",
+          "other": "UAV-3",
+          "rule": "③对头",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则③对头相遇：与 UAV-3 航向差 180°、CPA 40m@8.0s，各自右转30°",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.92
+        },
+        {
+          "t": 19.2,
+          "uid": "UAV-2",
+          "other": "UAV-3",
+          "rule": "③对头",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则③对头相遇：与 UAV-3 航向差 153°、CPA 40m@8.0s，各自右转30°",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.65
+        },
+        {
+          "t": 19.2,
+          "uid": "UAV-3",
+          "other": "UAV-2",
+          "rule": "③对头",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则③对头相遇：与 UAV-2 航向差 153°、CPA 40m@8.0s，各自右转30°",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.54
+        },
+        {
+          "t": 19.8,
+          "uid": "UAV-1",
+          "other": "UAV-3",
+          "rule": "②左让右",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则②交叉相遇左让右：本机位于 UAV-3 右侧（叉积 57.6，右方机优先），保持航向航速（CPA 36m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 35.75
+        },
+        {
+          "t": 19.8,
+          "uid": "UAV-3",
+          "other": "UAV-1",
+          "rule": "②左让右",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则②交叉相遇左让右：UAV-1 位于本机右侧（叉积 -53.4），右转30°让行（CPA 36m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 35.76
+        },
+        {
+          "t": 21.6,
+          "uid": "UAV-2",
+          "other": "UAV-4",
+          "rule": "②左让右",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则②交叉相遇左让右：UAV-4 位于本机右侧（叉积 -49.6），右转30°让行（CPA 36m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 35.53
+        },
+        {
+          "t": 21.6,
+          "uid": "UAV-4",
+          "other": "UAV-2",
+          "rule": "②左让右",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则②交叉相遇左让右：本机位于 UAV-2 右侧（叉积 56.8，右方机优先），保持航向航速（CPA 35m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 35.48
+        },
+        {
+          "t": 37.0,
+          "uid": "UAV-1",
+          "other": "UAV-3",
+          "rule": "④追越",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则④追越：本机为前机，保速保向，由 UAV-3 从左侧追越（CPA 19m@3.4s）",
+          "cpa_t": 3.44,
+          "cpa_dist": 18.81
+        },
+        {
+          "t": 37.0,
+          "uid": "UAV-3",
+          "other": "UAV-1",
+          "rule": "④追越",
+          "action": {
+            "kind": "slow",
+            "value": 0.3
+          },
+          "reason": "规则④追越：须从左侧追越 UAV-1，本机现处其右侧，先减速30%保持间隔（CPA 19m@3.4s）",
+          "cpa_t": 3.42,
+          "cpa_dist": 18.89
+        },
+        {
+          "t": 38.8,
+          "uid": "UAV-2",
+          "other": "UAV-4",
+          "rule": "④追越",
+          "action": {
+            "kind": "slow",
+            "value": 0.3
+          },
+          "reason": "规则④追越：须从左侧追越 UAV-4，本机现处其右侧，先减速30%保持间隔（CPA 19m@3.0s）",
+          "cpa_t": 3.03,
+          "cpa_dist": 18.58
+        },
+        {
+          "t": 38.8,
+          "uid": "UAV-4",
+          "other": "UAV-2",
+          "rule": "④追越",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则④追越：本机为前机，保速保向，由 UAV-2 从左侧追越（CPA 19m@2.4s）",
+          "cpa_t": 2.39,
+          "cpa_dist": 18.66
+        }
+      ]
+    },
+    "wall_time_s": 0.5
+  }
+]

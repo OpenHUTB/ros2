@@ -184,6 +184,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+* [低空多机路权判定与让路恢复](./air/uav_right_of_way.md) —— 两机近距离相遇时的在线让路：优先级/左让右/对头右转/左侧追越，MuJoCo 真飞对比
 
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 

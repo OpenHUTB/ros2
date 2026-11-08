@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_right_of_way</name>
+  <version>0.1.0</version>
+  <description>
+    低空多机优先级通行权在线决策。两机近距离相遇时按优先级 / 左让右 /
+    对头各右转 / 追越从左侧四条规则即时产出让路动作（右转 30°、降高 10 m、
+    减速 30%、保向等）并给出可审计的决策理由；预测 8 s 内 CPA &lt; 40 m
+    即触发；脱离威胁后按余弦剖面平滑回到计划航路，恢复期间持续监视防止
+    二次冲突。用课程既有的 uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）
+    做基线（无规则直飞）与规则启用的闭环对比。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

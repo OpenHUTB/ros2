@@ -1,0 +1,19 @@
+# 通行权在线决策节点与算法层参数
+uav_ids: ["UAV-1", "UAV-2", "UAV-3", "UAV-4"]
+odom_prefix: "/uav"
+
+# 侵入判定：预测 horizon_s 秒内 CPA < cpa_threshold_m 即触发让路决策
+horizon_s: 8.0            # s
+cpa_threshold_m: 40.0     # m
+
+# 规则动作参数
+turn_right_deg: 30.0      # 右转角度
+descend_m: 10.0           # 降高幅度
+slow_fraction: 0.30       # 减速比例（速度降低 30%）
+overtake_lateral_m: 20.0  # 追越机从左侧通过时的横向偏置（m）
+
+# 决策与恢复
+decision_interval_s: 0.2  # 决策周期（s）
+clear_hold_s: 3.0         # 威胁消失后保持观察时长，之后开始恢复（s）
+recovery_min_s: 8.0       # 余弦剖面恢复的最短时长（s）
+stale_timeout: 1.0        # 超过该时长没收到某架里程计就不再参与决策（s）
