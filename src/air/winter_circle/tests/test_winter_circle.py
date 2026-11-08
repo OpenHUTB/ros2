@@ -1,5 +1,6 @@
 """Offline regression; mocks do not certify flight performance."""
 import contextlib
+import csv
 import importlib.util
 import io
 import math
@@ -93,6 +94,44 @@ class Regression(unittest.TestCase):
                 with self.assertRaises(FileExistsError):
                     m.main()
             initial.enableApiControl.assert_not_called()
+
+class CircleReplay(unittest.TestCase):
+    def test_half_and_full_lap_outputs_and_interval_csv(self):
+        # Fake RPC runs the real main() path. This is not AirSim flight evidence.
+        for laps, angles in [(0.5, [math.pi, math.pi/2, 0]),
+                             (1.0, [math.pi, math.pi/2, 0, -math.pi/2, -math.pi])]:
+            with self.subTest(laps=laps), tempfile.TemporaryDirectory() as d:
+                def state(x, y, z, landed=1):
+                    return NS(timestamp=20, landed_state=landed,
+                              kinematics_estimated=NS(position=NS(x_val=x,y_val=y,z_val=z)))
+                initial, startup, control, cleanup = [Mock() for _ in range(4)]
+                initial.getMultirotorState.return_value = state(0,0,0,0)
+                collision = NS(time_stamp=0,has_collided=False)
+                initial.simGetCollisionInfo.return_value = collision
+                initial.armDisarm.return_value = True
+                startup.takeoffAsync.return_value.get.return_value = True
+                startup.moveToZAsync.return_value.get.return_value = True
+                control.getMultirotorState.side_effect = [state(0,0,-3)] + [
+                    state(2+2*math.cos(a),2*math.sin(a),-3) for a in angles]
+                control.simGetCollisionInfo.return_value = collision
+                control.moveByVelocityZAsync.return_value.get.return_value = True
+                cleanup.hoverAsync.return_value.get.return_value = True
+                fake = NS(MultirotorClient=Mock(side_effect=[initial,startup,control,cleanup]),
+                          LandedState=NS(Landed=0), DrivetrainType=NS(MaxDegreeOfFreedom=0),
+                          YawMode=Mock())
+                log = Path(d)/'replay.csv'
+                output = io.StringIO()
+                with patch.object(sys,'argv',['winter_circle.py','--fly','--laps',str(laps),'--log',str(log)]), patch.dict(sys.modules,{'airsim':fake}), patch.object(m,'wait_deadline',side_effect=lambda deadline: deadline+0.1), contextlib.redirect_stdout(output):
+                    m.main()
+                label = 'Partial arc complete' if laps < 1 else 'Circle complete'
+                self.assertIn('%s: %.2f/%.2f laps' % (label,laps,laps),output.getvalue())
+                if laps < 1: self.assertNotIn('Circle complete',output.getvalue())
+                with log.open(newline='') as fh: rows = list(csv.DictReader(fh))
+                self.assertEqual(len(rows),len(angles))
+                self.assertTrue(all(float(row['loop_interval_s']) >= 0 for row in rows))
+                self.assertAlmostEqual(float(rows[-1]['progress_rad']),2*math.pi*laps)
+                self.assertEqual(control.moveByVelocityZAsync.call_count,len(angles)-1)
+                cleanup.hoverAsync.return_value.get.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

@@ -98,7 +98,7 @@ def main():
     # Exclusive creation preserves previous experimental evidence.
     log_file = log_path.open('x', newline='', encoding='utf-8')
     writer = csv.writer(log_file)
-    writer.writerow(['elapsed_s', 'state_timestamp_ns', 'x_ned_m', 'y_ned_m',
+    writer.writerow(['elapsed_s', 'loop_interval_s', 'state_timestamp_ns', 'x_ned_m', 'y_ned_m',
                      'z_ned_m', 'center_x_m', 'center_y_m', 'target_z_m',
                      'radius_error_m', 'height_error_m', 'progress_rad',
                      'command_vx_mps', 'command_vy_mps'])
@@ -130,6 +130,7 @@ def main():
             now = time.monotonic()
             if now - start > timeout or now - last > 2:
                 raise RuntimeError('Flight timeout / delayed control loop')
+            loop_interval = now - last
             last = now
             state = client.getMultirotorState(vehicle_name=vehicle)
             pos = state.kinematics_estimated.position
@@ -147,7 +148,7 @@ def main():
             ramp = min(1.0, (now - start) / 3.0)
             vx, vy = command(pos.x_val, pos.y_val, cx, cy, a.radius,
                              signed_omega * ramp, 0.5, a.speed)
-            writer.writerow([now - start, state.timestamp, pos.x_val, pos.y_val,
+            writer.writerow([now - start, loop_interval, state.timestamp, pos.x_val, pos.y_val,
                              pos.z_val, cx, cy, target_z,
                              math.hypot(pos.x_val - cx, pos.y_val - cy) - a.radius,
                              pos.z_val - target_z, progress, vx, vy])
@@ -161,7 +162,8 @@ def main():
                 yaw_mode=airsim.YawMode(False, 0), vehicle_name=vehicle), 'Velocity command')
             deadline = wait_deadline(deadline)
         completed = True
-        print('Circle complete')
+        label = 'Partial arc complete' if a.laps < 1 else 'Circle complete'
+        print('%s: %.2f/%.2f laps' % (label, progress / (2 * math.pi), a.laps))
     finally:
         log_file.close()
         print('Trajectory CSV:', log_path.resolve())
@@ -180,7 +182,7 @@ def main():
             except Exception as exc:
                 print('Could not confirm hover/landing:', exc)
                 if completed:
-                    raise RuntimeError('Circle finished, but hover/landing was not confirmed') from exc
+                    raise RuntimeError('Requested arc finished, but hover/landing was not confirmed') from exc
         # Keep API control while airborne so hover is not replaced by another mode.
 
 
