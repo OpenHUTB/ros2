@@ -109,6 +109,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转

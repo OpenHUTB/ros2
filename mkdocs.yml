@@ -106,6 +106,7 @@ nav:
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
+    - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
     - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
