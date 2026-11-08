@@ -144,3 +144,72 @@ $$
 原始数据与校验清单在 `assets/flights.zip`；`prepare` 解压后，`manifest.json` 记录每个文件的质量、推力比例与 SHA256，训练与评估前都会校验。
 
 ---
+
+## 4. 计算原理
+
+### 4.1 窗口与特征
+
+每个采样点是一行 \([t_k, z_k, v_k, f_k]\)：时间、高度、竖直速度、**指令推力**（N）。取最近 20 行，计算 19 个加速度差分：
+
+$$
+a_k = \frac{v_{k+1}-v_k}{\Delta t},\qquad k=0,\dots,18,\quad \Delta t = 0.05\ \text{s}
+$$
+
+特征向量把推力与加速度拼起来：
+
+$$
+\mathbf{x} = \big[f_0,\dots,f_{18},\ a_0,\dots,a_{18}\big]^{\top}\in\mathbb{R}^{38}
+$$
+
+**推力按前一时刻对齐**：第 \(k\) 条指令作用在 \([t_k, t_{k+1})\)，因此驱动 \(a_k\) 的是 \(f_k\)，不是 \(f_{k+1}\)。这个错位如果搞反，物理基线与网络都会系统性偏差。
+
+高度、真实质量、飞行编号、未来观测都**不进入**输入。
+
+### 4.2 物理基线（冲量法）
+
+对同一窗口用冲量关系：
+
+$$
+m_{\text{total}} = \frac{\sum_{k=0}^{18} f_k}{\sum_{k=0}^{18}\big(a_k + g\big)},
+\qquad
+\hat m_{\text{payload}} = m_{\text{total}} - 0.95
+$$
+
+分母里的 \(a_k + g\) 是"比力"：加速度加上重力，正是推力要克服的部分。基线**不含任何学习参数**，是这个问题的闭式解参考。
+
+### 4.3 网络
+
+$$
+\mathbf{h}_1=\tanh(\mathbf{W}_1\mathbf{x}+\mathbf{b}_1)\in\mathbb{R}^{48},\quad
+\mathbf{h}_2=\tanh(\mathbf{W}_2\mathbf{h}_1+\mathbf{b}_2)\in\mathbb{R}^{24},\quad
+\hat m = \mathbf{w}_3^{\top}\mathbf{h}_2 + b_3
+$$
+
+参数量 \(38\times48+48 + 48\times24+24 + 24+1 = 3073\)。
+
+输入先按训练集标准化：\(\tilde{\mathbf{x}} = (\mathbf{x}-\boldsymbol\mu)/\boldsymbol\sigma\)，\(\boldsymbol\sigma\) 下限 0.001。
+
+### 4.4 损失与训练目标
+
+$$
+\mathcal{L}(\theta)=\frac{1}{N}\sum_{n=1}^{N}\big(\hat m_n - m_n\big)^2
+$$
+
+直接对**以 kg 为单位**的质量做 MSE，而不是对归一化值——这样验证损失就是物理量，判读更直接（本次最好约 \(1.3\times10^{-5}\,\text{kg}^2\)，对应 RMSE ≈ 3.6 g）。
+
+### 4.5 评价指标
+
+$$
+\mathrm{MAE}_{\text{win}}=\frac{1}{N}\sum_{n}\big|\hat m_n-m_n\big|,\qquad
+\mathrm{RMSE}_{\text{win}}=\sqrt{\frac{1}{N}\sum_{n}\big(\hat m_n-m_n\big)^2}
+$$
+
+以及更贴近实际的**整次飞行平均误差**：
+
+$$
+\mathrm{MAE}_{\text{flight}}=\frac{1}{F}\sum_{i=1}^{F}\Big|\frac{1}{n_i}\sum_{k\in i}\hat m_k - m_i\Big|
+$$
+
+690 个窗口来自 30 次飞行、彼此重叠，**不是 690 次独立试验**。整次飞行平均把同一飞行的窗口先平均，回答的是"这一趟估得准不准"。
+
+---
