@@ -42,7 +42,8 @@ def cmd_bench(args):
               f"上升 {lv['rise_time_s']:.2f} s，末激活 {lv['final_activation']:.2f}")
     print(f"  G6 无反射 {res['g6']['no_reflex']['lift_mm']:.1f} mm / "
           f"有反射 {res['g6']['with_reflex']['lift_mm']:.1f} mm，"
-          f"加力 {res['g6']['with_reflex']['reflex_events']} 次")
+          f"加力 {res['g6']['with_reflex']['reflex_steps']} 步 "
+          f"(+{res['g6']['with_reflex']['reflex_activation_gain']:.2f} 激活)")
     for lv in res["g7"]["levels"]:
         print(f"  G7 {lv['mass_g']:.0f} g -> 最小激活 {lv['min_activation']}")
     print(f"  G8 手臂-夹爪抬升 {res['g8']['lift_mm']:.1f} mm")

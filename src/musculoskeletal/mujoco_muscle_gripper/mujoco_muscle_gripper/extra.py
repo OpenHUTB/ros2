@@ -78,7 +78,7 @@ def run_g6(obj_mass=0.04, u0=0.33):
         z_start = float(d.qpos[qa + 2])
         peak = 0.0
         u = u0                       # 起始激活：刚好在打滑边缘
-        reflex_events = 0
+        reflex_steps = 0        # 触发加力的**时间步**数（每步 +0.01 激活）
         lift_ref = 0.0
 
         for i in range(int(6.0 / DT)):
@@ -91,7 +91,7 @@ def run_g6(obj_mass=0.04, u0=0.33):
                 # 手掌已抬起但方块没跟上 -> 判为滑移，立刻加力
                 if (palm_z - lift_ref) > (obj_z - z_start) + 0.002:
                     u = float(np.clip(u + 0.01, 0.0, 1.0))
-                    reflex_events += 1
+                    reflex_steps += 1
                     lift_ref = palm_z
 
             ql = float(d.qpos[m.joint("flj").qposadr[0]])
@@ -105,7 +105,8 @@ def run_g6(obj_mass=0.04, u0=0.33):
             peak = max(peak, float(d.qpos[qa + 2]) - z_start)
 
         return {"lift_mm": peak * 1000, "final_activation": u,
-                "reflex_events": reflex_events}
+                "reflex_steps": reflex_steps,
+                "reflex_activation_gain": 0.01 * reflex_steps}
 
     out["no_reflex"] = sim(False)
     out["with_reflex"] = sim(True)
