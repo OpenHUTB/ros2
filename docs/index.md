@@ -130,6 +130,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+* [低空多机路权判定与让路恢复](./air/uav_right_of_way.md) —— 两机近距离相遇时的在线让路：优先级/左让右/对头右转/左侧追越，MuJoCo 真飞对比
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 

@@ -1,0 +1,258 @@
+[
+  {
+    "scenario": "overtake",
+    "title": "同高度追越",
+    "description": "快机在正后方追上慢机（同航路同高度），规则④要求追越机从左侧偏置通过、前机保速保向；通过后按余弦剖面回到原航路。",
+    "closed_loop": false,
+    "params": {
+      "horizon_s": 8.0,
+      "cpa_threshold_m": 40.0,
+      "turn_right_deg": 30.0,
+      "descend_m": 10.0,
+      "slow_fraction": 0.3,
+      "overtake_lateral_m": 20.0,
+      "decision_interval_s": 0.2,
+      "clear_hold_s": 3.0,
+      "recovery_min_s": 8.0
+    },
+    "plans": [
+      {
+        "uid": "UAV-1",
+        "label": "慢速巡检（前机）",
+        "start": [
+          -180.0,
+          0.0
+        ],
+        "end": [
+          180.0,
+          0.0
+        ],
+        "alt": 15.0,
+        "speed": 5.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 78.0
+      },
+      {
+        "uid": "UAV-2",
+        "label": "快速配送（追越机）",
+        "start": [
+          -220.0,
+          0.0
+        ],
+        "end": [
+          220.0,
+          0.0
+        ],
+        "alt": 15.0,
+        "speed": 9.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 54.9
+      },
+      {
+        "uid": "UAV-3",
+        "label": "慢速巡检 B（前机）",
+        "start": [
+          -180.0,
+          80.0
+        ],
+        "end": [
+          180.0,
+          80.0
+        ],
+        "alt": 15.0,
+        "speed": 5.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 78.0
+      },
+      {
+        "uid": "UAV-4",
+        "label": "快速配送 B（追越机）",
+        "start": [
+          -220.0,
+          80.0
+        ],
+        "end": [
+          220.0,
+          80.0
+        ],
+        "alt": 15.0,
+        "speed": 9.0,
+        "priority": 0,
+        "cruise_t0": 6.0,
+        "cruise_t1": 54.9
+      }
+    ],
+    "baseline": {
+      "mode": "baseline",
+      "min_separation_m": 0.04,
+      "min_pair": [
+        "UAV-1",
+        "UAV-2"
+      ],
+      "min_sep_time_s": 16.0,
+      "decisions": 0,
+      "mean_deviation_m": 0.05,
+      "per_agent_deviation_m": {
+        "UAV-1": 0.04,
+        "UAV-2": 0.05,
+        "UAV-3": 0.04,
+        "UAV-4": 0.05
+      },
+      "below_threshold_samples": 80
+    },
+    "rules": {
+      "mode": "rules",
+      "min_separation_m": 19.96,
+      "min_pair": [
+        "UAV-1",
+        "UAV-2"
+      ],
+      "min_sep_time_s": 16.0,
+      "decisions": 10,
+      "mean_deviation_m": 11.49,
+      "per_agent_deviation_m": {
+        "UAV-1": 0.04,
+        "UAV-2": 6.06,
+        "UAV-3": 35.17,
+        "UAV-4": 4.68
+      },
+      "below_threshold_samples": 129,
+      "decision_log": [
+        {
+          "t": 6.2,
+          "uid": "UAV-1",
+          "other": "UAV-2",
+          "rule": "④追越",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则④追越：本机为前机，保速保向，由 UAV-2 从左侧追越（CPA 29m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 28.56
+        },
+        {
+          "t": 6.2,
+          "uid": "UAV-2",
+          "other": "UAV-1",
+          "rule": "④追越",
+          "action": {
+            "kind": "overtake_left",
+            "value": 20.0
+          },
+          "reason": "规则④追越：从左侧追越 UAV-1，左偏20m保持间隔（正后方，CPA 29m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 29.15
+        },
+        {
+          "t": 6.2,
+          "uid": "UAV-3",
+          "other": "UAV-4",
+          "rule": "④追越",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则④追越：本机为前机，保速保向，由 UAV-4 从左侧追越（CPA 29m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 28.56
+        },
+        {
+          "t": 6.2,
+          "uid": "UAV-4",
+          "other": "UAV-3",
+          "rule": "④追越",
+          "action": {
+            "kind": "overtake_left",
+            "value": 20.0
+          },
+          "reason": "规则④追越：从左侧追越 UAV-3，左偏20m保持间隔（正后方，CPA 29m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 29.15
+        },
+        {
+          "t": 8.4,
+          "uid": "UAV-2",
+          "other": "UAV-3",
+          "rule": "②左让右",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则②交叉相遇左让右：本机位于 UAV-3 右侧（叉积 52.8，右方机优先），保持航向航速（CPA 40m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.6
+        },
+        {
+          "t": 8.4,
+          "uid": "UAV-3",
+          "other": "UAV-2",
+          "rule": "②左让右",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则②交叉相遇左让右：UAV-2 位于本机右侧（叉积 -71.2），右转30°让行（CPA 40m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.55
+        },
+        {
+          "t": 17.2,
+          "uid": "UAV-1",
+          "other": "UAV-3",
+          "rule": "②左让右",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则②交叉相遇左让右：本机位于 UAV-3 右侧（叉积 58.0，右方机优先），保持航向航速（CPA 40m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.63
+        },
+        {
+          "t": 17.2,
+          "uid": "UAV-3",
+          "other": "UAV-1",
+          "rule": "②左让右",
+          "action": {
+            "kind": "turn_right",
+            "value": 30.0
+          },
+          "reason": "规则②交叉相遇左让右：UAV-1 位于本机右侧（叉积 -47.3），右转30°让行（CPA 40m@8.0s）",
+          "cpa_t": 8.0,
+          "cpa_dist": 39.65
+        },
+        {
+          "t": 42.8,
+          "uid": "UAV-1",
+          "other": "UAV-3",
+          "rule": "④追越",
+          "action": {
+            "kind": "maintain",
+            "value": 0.0
+          },
+          "reason": "规则④追越：本机为前机，保速保向，由 UAV-3 从左侧追越（CPA 22m@0.1s）",
+          "cpa_t": 0.08,
+          "cpa_dist": 22.02
+        },
+        {
+          "t": 42.8,
+          "uid": "UAV-3",
+          "other": "UAV-1",
+          "rule": "④追越",
+          "action": {
+            "kind": "overtake_left",
+            "value": 20.0
+          },
+          "reason": "规则④追越：从左侧追越 UAV-1，左偏20m保持间隔（正后方，CPA 22m@0.1s）",
+          "cpa_t": 0.07,
+          "cpa_dist": 22.07
+        }
+      ]
+    },
+    "wall_time_s": 0.6
+  }
+]
