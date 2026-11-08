@@ -58,6 +58,7 @@ drl_nav:
   safety:
     enabled: true
     stop_distance: 0.8     # 正前方出现该距离内的障碍时刹停平移速度
+    scan_timeout: 1.0      # 超过该时间未收到 LaserScan 时发布零速（秒）
     front_half_angle: 0.79 # 正前方半角（rad，约 45°）
     avoid_distance: 2.0    # 几何基线的势场作用半径（米）
     avoid_gain: 1.5        # 几何基线的排斥增益

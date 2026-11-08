@@ -82,6 +82,11 @@ class DrlNavNode:
         self.command_frame = str(self.config.get("command_frame", "body")).lower()
         if self.command_frame not in ("body", "world"):
             raise ValueError("command_frame must be 'body' or 'world'")
+        self.scan_timeout = float(
+            self.config["safety"].get("scan_timeout", 1.0)
+        )
+        if self.scan_timeout <= 0.0:
+            raise ValueError("safety.scan_timeout must be positive")
 
         self.cmd_pub = rospy.Publisher(self.cmd_topic, Twist, queue_size=1)
         self.path_pub = rospy.Publisher(self.path_topic, Path, queue_size=1)
@@ -148,6 +153,10 @@ class DrlNavNode:
                     "1", "true", "yes", "on"
                 )
             config["safety"]["enabled"] = bool(safety_enabled)
+
+        scan_timeout = rospy.get_param("~scan_timeout", None)
+        if scan_timeout is not None:
+            config["safety"]["scan_timeout"] = float(scan_timeout)
         return config
 
     def _load_actor(self) -> Optional[NumpyActor]:
@@ -257,6 +266,7 @@ class DrlNavNode:
             scan_time = self.last_scan_time
         if odom is None:
             rospy.logwarn_throttle(3.0, "[drl_nav] waiting for %s", self.odom_topic)
+            self._publish_command(np.zeros(4, dtype=np.float64), 0.0)
             return
 
         pose = odom.pose.pose
@@ -270,6 +280,38 @@ class DrlNavNode:
         rpy = quat_to_rpy(quaternion)
         yaw = float(rpy[2])
 
+        now = rospy.Time.now()
+        scan_age = None
+        if scan_time is not None:
+            scan_age = max(0.0, (now - scan_time).to_sec())
+        scan_ready = (
+            histogram is not None
+            and scan_age is not None
+            and scan_age <= self.scan_timeout
+        )
+        if not scan_ready:
+            if histogram is None or scan_age is None:
+                rospy.logwarn_throttle(
+                    5.0,
+                    "[drl_nav] no LaserScan on %s; publishing zero velocity",
+                    self.scan_topic,
+                )
+            else:
+                rospy.logwarn_throttle(
+                    5.0,
+                    "[drl_nav] LaserScan on %s is stale (%.2f s > %.2f s); "
+                    "publishing zero velocity",
+                    self.scan_topic,
+                    scan_age,
+                    self.scan_timeout,
+                )
+            self._warned_scan = True
+            self._publish_command(np.zeros(4, dtype=np.float64), yaw)
+            return
+        if self._warned_scan:
+            rospy.loginfo("[drl_nav] fresh LaserScan received; resuming control")
+            self._warned_scan = False
+
         twist = odom.twist.twist
         linear = np.array([
             twist.linear.x, twist.linear.y, twist.linear.z
@@ -281,20 +323,6 @@ class DrlNavNode:
         angular_body = np.array([
             twist.angular.x, twist.angular.y, twist.angular.z
         ], dtype=np.float64)
-
-        if histogram is None:
-            if not self._warned_scan:
-                rospy.logwarn_throttle(
-                    5.0, "[drl_nav] no LaserScan yet; treating space as free"
-                )
-                self._warned_scan = True
-            histogram = np.ones(
-                int(self.config["observation"]["sectors"]), dtype=np.float32
-            )
-        elif scan_time is not None and rospy.Time.now() - scan_time > rospy.Duration(1.0):
-            rospy.logwarn_throttle(
-                5.0, "[drl_nav] scan is stale; reusing the last histogram"
-            )
 
         goal = self.waypoints[min(self.waypoint_index, len(self.waypoints) - 1)]
         distance = float(np.linalg.norm(goal - position))

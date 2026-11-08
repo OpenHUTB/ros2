@@ -1,6 +1,7 @@
 <launch>
   <!-- ============================================================
        drl_drone_path_planning 一键启动入口
+       ROS 1 Noetic（catkin + roslaunch）
          roslaunch drl_drone_path_planning main.launch
        Maintainer: 汤湘粤 (学号: 2535030067)
 
@@ -21,6 +22,8 @@
   <arg name="scan_topic"   default="/uav/scan"/>
   <arg name="cmd_topic"    default="/uav/cmd_vel"/>
   <arg name="safety_enabled" default="true" doc="正前方近距障碍时刹停平移速度"/>
+  <arg name="scan_timeout" default="1.0"
+       doc="超过该时间未收到 LaserScan 时发布零速（秒）"/>
   <arg name="use_goal_override" default="false"
        doc="true 时用下面的单目标点覆盖 YAML 中的航点序列"/>
   <arg name="goal_x" default="6.0"/>
@@ -42,6 +45,7 @@
     <param name="scan_topic" value="$(arg scan_topic)"/>
     <param name="cmd_topic" value="$(arg cmd_topic)"/>
     <param name="safety_enabled" value="$(arg safety_enabled)"/>
+    <param name="scan_timeout" value="$(arg scan_timeout)"/>
 
     <rosparam if="$(arg use_goal_override)" param="goal">
       [$(arg goal_x), $(arg goal_y), $(arg goal_z)]

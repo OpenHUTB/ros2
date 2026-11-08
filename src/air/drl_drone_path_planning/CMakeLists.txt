@@ -1,5 +1,6 @@
 # Copyright (c) 2026 汤湘粤 (学号: 2535030067)
 # SPDX-License-Identifier: MIT
+# ROS 1 Noetic 功能包，使用 catkin 构建。
 
 cmake_minimum_required(VERSION 3.0.2)
 project(drl_drone_path_planning)
@@ -37,3 +38,8 @@ install(DIRECTORY launch config models rviz
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )
+
+# tests/ 下是纯 Python unittest（ROS 依赖由测试内的桩替代）。
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_nosetests(tests)
+endif()

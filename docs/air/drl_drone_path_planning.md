@@ -53,7 +53,7 @@ r = 3·exp(-2d)/25 + 3000·Δd/25 + 3·orientation/25 + smoothness/25
            ├─► drl_drone_path_planning ──/uav/cmd_vel──► 飞控 / 桥接 ──► 无人机
 /uav/scan ─┘   ├─ 28 维观测拼装
                ├─ PPO/SAC Actor（NumPy 推理）
-               └─ 安全层（近距刹停）
+               └─ 安全层（激光超时零速 + 近距刹停）
                      │
                      ├─ ~path（已飞轨迹）
                      ├─ ~path_waypoints（航点）
@@ -136,11 +136,27 @@ tanh 压缩，最大偏差可达 0.24。
 节点启动时会校验观测维度；`mode:=drl` 下维度不匹配或权重缺失会**直接报错**，
 不会静默使用随机策略。
 
+### 3.6 安全停机
+
+节点在进入策略推理前检查激光数据是否可用：
+
+- 尚未收到 `LaserScan`，或最近一帧的时间戳超过 `safety.scan_timeout`（默认
+  1.0 s）时，直接发布线速度与角速度全 0 的 `geometry_msgs/Twist`，并输出告警；
+- 停机状态不会使用全 1 直方图或上一帧旧数据继续推理；
+- 收到新的实时 `LaserScan` 后自动恢复控制，并记录一次恢复日志。
+
+停机期间控制循环仍以 `control_rate` 持续发布零速，避免飞控因指令中断而保持
+上一个非零速度。该逻辑由 `tests/test_safety.py` 中的节点级测试覆盖。
+
 ## 4. 构建与运行
 
 ### 4.1 编译
 
+本功能包固定使用 ROS 1 Noetic 的 catkin / rospy / roslaunch 工具链。仓库中另有
+ROS 2 示例，但本包不依赖 ROS 2，也不使用 colcon 或 ament。
+
 ```bash
+sudo apt install python3-numpy python3-yaml python3-nose
 cd ~/catkin_ws/src
 ln -s /path/to/ros2/src/air/drl_drone_path_planning .
 cd ~/catkin_ws
@@ -214,7 +230,7 @@ python3 scripts/evaluate.py --model models/policy_weights.npz --episodes 100 --b
 ```bash
 cd src/air/drl_drone_path_planning
 
-# 1) 单元测试（只需 numpy / gymnasium，不需要 ROS）
+# 1) 单元测试（只需 numpy / gymnasium，不需要 ROS；共 16 项）
 python3 -m unittest discover -s tests -v
 
 # 2) 重新训练（需要 stable-baselines3 / torch）
@@ -236,8 +252,8 @@ python3 scripts/plot_results.py --model models/policy_weights.npz \
 2. **障碍模型简单**：只处理水平面内的圆柱，未建模斜面、楼梯、动态障碍；
    激光需由仿真器或真实雷达提供。
 3. **航点预先给定**：策略负责航点间局部避障，不做全局 SLAM / 建图。
-4. **仿真到实机有差距**：部署前应重新标定 `lidar_range`、速度上限和
-   `safety.stop_distance`，并保留与学习策略无关的安全层。
+4. **仿真到实机有差距**：部署前应重新标定 `lidar_range`、速度上限、
+   `safety.stop_distance` 和 `safety.scan_timeout`，并保留与学习策略无关的安全层。
 5. **未在本机运行 ROS launch**：本机为 Windows，仓库的 ROS 环境在 Ubuntu 虚拟机中；
    离线环境、单元测试和权重导出均已实际运行，`catkin_make` 与 `roslaunch`
    需要在虚拟机内按 §4.1–4.2 执行。

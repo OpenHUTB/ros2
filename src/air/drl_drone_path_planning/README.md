@@ -2,7 +2,7 @@
 
 > **开发者**：汤湘粤 (学号: 2535030067)
 > 基于深度强化学习（PPO / SAC）的四旋翼无人机最优路径查找模块
-> ROS 1 Noetic · Python 3 · NumPy 推理 · Stable-Baselines3 训练
+> ROS 1 Noetic（catkin / roslaunch）· Python 3 · NumPy 推理 · Stable-Baselines3 训练
 
 [中文](#1-项目简介) | [English](#english-version)
 
@@ -160,15 +160,19 @@ drl_drone_path_planning/
 │   ├── train.py                # PPO/SAC 训练
 │   └── evaluate.py             # 离线评估
 └── tests/
-    └── test_core.py            # 13 个 NumPy/Gymnasium 单元测试
+    ├── test_core.py            # 13 个 NumPy/Gymnasium 单元测试
+    └── test_safety.py          # 3 个激光缺失/超时安全停机测试
 ```
 
 ## 5. 安装
 
 ### 5.1 ROS 部署端（Ubuntu 20.04 + Noetic）
 
+本功能包固定使用 ROS 1 Noetic 的 catkin / rospy / roslaunch 工具链。仓库中另有
+ROS 2 示例，但本包不依赖 ROS 2，也不使用 colcon 或 ament。
+
 ```bash
-sudo apt install python3-numpy python3-yaml
+sudo apt install python3-numpy python3-yaml python3-nose
 cd ~/catkin_ws/src
 ln -s /path/to/ros2/src/air/drl_drone_path_planning .
 cd ~/catkin_ws
@@ -181,6 +185,7 @@ source devel/setup.bash
 ```bash
 cd src/air/drl_drone_path_planning
 pip install -r requirements.txt
+python3 -m unittest discover -s tests -v
 ```
 
 > 训练依赖 `gymnasium`、`stable-baselines3`、`torch`；部署只需要 `numpy`、`PyYAML`。
@@ -248,6 +253,8 @@ roslaunch drl_drone_path_planning main.launch rviz:=true
 
 `config/drl_nav.yaml` 的 `safety` 段提供一层与学习策略无关的保护：
 
+- 尚未收到激光数据，或最近一帧超过 `scan_timeout = 1.0 s` 未更新时，发布零速
+  `Twist` 并持续告警，不进入策略推理；收到新的实时激光数据后自动恢复；
 - 正前方 ±45° 内出现 `stop_distance = 0.8 m` 以内的障碍时，平移速度清零，
   保留偏航角速度用于脱离；
 - 到达最终航点后持续发布零速度并保持；
@@ -265,6 +272,7 @@ roslaunch drl_drone_path_planning main.launch rviz:=true
 | `observation.sectors` | `16` | 激光扇区数（改动后需重新训练） |
 | `observation.lidar_range` | `12.0 m` | 直方图量程 |
 | `safety.stop_distance` | `0.8 m` | 近距刹停阈值 |
+| `safety.scan_timeout` | `1.0 s` | 激光超时阈值，超时发布零速 |
 | `safety.avoid_distance` | `2.0 m` | 几何基线势场作用半径 |
 | `env.obstacles` | 5 个圆柱 | `[x, y, 半径, 高度]` |
 | `env.altitude_hold_band` | `0.3 m` | 高度保持辅助的启用带宽 |
