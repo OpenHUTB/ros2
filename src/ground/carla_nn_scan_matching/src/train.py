@@ -83,6 +83,10 @@ class SyntheticScanDataset(Dataset):
         return self.data[idx]
 
 def train():
+    # 固定随机种子以保证训练和验证集划分可复现
+    torch.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
     print("初始化合成数据集...")
     full_dataset = SyntheticScanDataset(num_samples=2000)
     
