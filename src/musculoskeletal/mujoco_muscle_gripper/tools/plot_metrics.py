@@ -9,7 +9,7 @@ import os
 import sys
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("Agg")  # noqa: E402
 import matplotlib.pyplot as plt
 
 
@@ -20,8 +20,8 @@ def plot_g1(d, outdir):
     fig, ax = plt.subplots(figsize=(5.6, 3.4))
     ax.plot(a, f, "o-", color="#4c78a8")
     ax.set_xlabel("muscle activation")
-    ax.set_ylabel("grip force (N)")
-    ax.set_title("activation -> grip force")
+    ax.set_ylabel("contact normal force (N, two fingers)")
+    ax.set_title("activation -> contact normal force (0 below contact)")
     ax.grid(alpha=0.3)
     fig.tight_layout()
     p = os.path.join(outdir, "g1_force_vs_activation.png")
