@@ -183,6 +183,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
