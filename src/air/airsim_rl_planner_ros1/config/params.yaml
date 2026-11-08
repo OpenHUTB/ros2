@@ -5,11 +5,12 @@ airsim_bridge:
   camera_name: front_center
   publish_rate: 5.0
   command_timeout: 1.5
-  max_speed: 1.0
+  max_speed: 0.5
 ppo_planner:
   control_rate: 2.0
   sensor_timeout: 1.5
-  speed: 1.0
+  speed: 0.5
   clearance: 3.0
-  goal_ned: [93.37, 0.79, -7.56]
+  goal_stop_enabled: false
+  goal_ned: [0.0, 0.0, 0.0]  # Set for the current scene before enabling goal stop.
   goal_tolerance: 2.0

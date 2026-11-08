@@ -1,4 +1,4 @@
-# Python 3.8-compatible candidates; validate installation on Ubuntu Noetic.
+# Python 3.8 candidates. venv OpenCV only; ROS Image codec uses NumPy, not cv_bridge.
 numpy==1.24.4
 opencv-python==4.10.0.84
 stable-baselines3==2.3.2

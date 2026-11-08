@@ -5,7 +5,7 @@ import time
 import airsim
 import numpy as np
 import rospy
-from cv_bridge import CvBridge
+from .image_codec import ImageCodec
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from .runtime import Node
 from .depth_guard import DepthGuard
@@ -20,7 +20,7 @@ class AirSimBridge(Node):
         super().__init__('airsim_bridge')
         defaults = dict(host='127.0.0.1', port=41451, vehicle_name='',
                         camera_name='front_center', publish_rate=5.0,
-                        command_timeout=1.5, max_speed=1.0)
+                        command_timeout=1.5, max_speed=0.5)
         for name, value in defaults.items():
             self.declare_parameter(name, value)
         self.param = lambda name: self.get_parameter(name).value
@@ -32,7 +32,7 @@ class AirSimBridge(Node):
         if not self.client.ping():
             raise RuntimeError('AirSim did not answer ping')
         self.vehicle = self.param('vehicle_name')
-        self.cv = CvBridge()
+        self.cv = ImageCodec()
         self.active = False
         self.last_command = 0.0
         self.holding = False
@@ -64,7 +64,8 @@ class AirSimBridge(Node):
                 self.guard_reason = reason
         if np.linalg.norm(xyz) < 1e-6:
             if not self.holding:
-                self.client.hoverAsync(vehicle_name=self.vehicle).join()
+                if self.client.hoverAsync(vehicle_name=self.vehicle).get() is not True:
+                    raise RuntimeError('Hover rejected by AirSim')
                 self.holding = True
             return
         duration = min(0.35, max(0.01, self.param('command_timeout') -
@@ -122,8 +123,12 @@ class AirSimBridge(Node):
             self.guard = DepthGuard()
             self.guard_sample = None
             self.client.enableApiControl(True, vehicle_name=self.vehicle)
-            self.client.armDisarm(True, vehicle_name=self.vehicle)
-            self.client.takeoffAsync(timeout_sec=15, vehicle_name=self.vehicle).join()
+            if not self.client.armDisarm(True, vehicle_name=self.vehicle):
+                raise RuntimeError('Arming rejected by AirSim')
+            # Same main thread: state publishing/watchdog pause during this RPC.
+            operation = airsim.MultirotorClient(ip=self.param('host'), port=self.param('port'), timeout_value=20)
+            if operation.takeoffAsync(timeout_sec=15, vehicle_name=self.vehicle).get() is not True:
+                raise RuntimeError('Takeoff rejected by AirSim')
             state = self.client.getMultirotorState(vehicle_name=self.vehicle)
             self.active = state.landed_state == airsim.LandedState.Flying
             self.last_command = 0.0
@@ -145,7 +150,10 @@ class AirSimBridge(Node):
         self.target_z = None
         self.holding = False
         try:
-            self.client.landAsync(timeout_sec=30, vehicle_name=self.vehicle).join()
+            # Keep the RPC timeout longer than the server-side landing deadline.
+            operation = airsim.MultirotorClient(ip=self.param('host'), port=self.param('port'), timeout_value=35)
+            if operation.landAsync(timeout_sec=30, vehicle_name=self.vehicle).get() is not True:
+                raise RuntimeError('Landing rejected by AirSim')
             state = self.client.getMultirotorState(vehicle_name=self.vehicle)
             response.success = state.landed_state == airsim.LandedState.Landed
             if response.success:
@@ -185,7 +193,7 @@ class AirSimBridge(Node):
             pose.pose.orientation.x, pose.pose.orientation.y = q.x_val, q.y_val
             pose.pose.orientation.z, pose.pose.orientation.w = q.z_val, q.w_val
             for publisher, array, encoding in ((self.rgb_pub, image, 'rgb8'), (self.depth_pub, distances, '32FC1')):
-                msg = self.cv.cv2_to_imgmsg(array, encoding)
+                msg = self.cv.to_message(array, encoding)
                 msg.header.stamp, msg.header.frame_id = stamp, 'front_camera_optical'
                 publisher.publish(msg)
             self.pose_pub.publish(pose)

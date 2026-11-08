@@ -1,10 +1,9 @@
 """Actual PPO inference using Auto_drone's legacy ten-element observation."""
-from pathlib import Path
 import time
 
 import numpy as np
 import rospy
-from cv_bridge import CvBridge
+from .image_codec import ImageCodec
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from .runtime import Node
 qos_profile_sensor_data = 1  # ROS 1 bounded queue depth
@@ -14,7 +13,7 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool
 from ultralytics import YOLO
 
-from .core import observation, velocity
+from .core import observation, velocity, model_path, goal_reached
 from .legacy_policy import load_policy
 
 
@@ -22,8 +21,8 @@ class PPOPlanner(Node):
     def __init__(self):
         super().__init__('ppo_planner')
         defaults = dict(policy_path='', yolo_path='', control_rate=2.0,
-                        sensor_timeout=1.5, speed=1.0, clearance=3.0,
-                        goal_ned=[93.37, 0.79, -7.56], goal_tolerance=2.0)
+                        sensor_timeout=1.5, speed=0.5, clearance=3.0,
+                        goal_stop_enabled=False, goal_ned=[0.0, 0.0, 0.0], goal_tolerance=2.0)
         for key, value in defaults.items():
             self.declare_parameter(key, value)
         self.param = lambda name: self.get_parameter(name).value
@@ -33,10 +32,7 @@ class PPOPlanner(Node):
         self.goal = np.asarray(self.param('goal_ned'), dtype=float)
         if self.goal.shape != (3,) or not np.all(np.isfinite(self.goal)):
             raise ValueError('goal_ned must contain three finite numbers')
-        paths = [Path(self.param(key)).expanduser() for key in ('policy_path', 'yolo_path')]
-        for path in paths:
-            if not path.is_file():
-                raise FileNotFoundError('Supply an existing model file: ' + str(path))
+        paths = [model_path(self.param(key), key) for key in ('policy_path', 'yolo_path')]
         self.policy = load_policy(str(paths[0]))
         if self.policy.observation_space.shape != (10,) or getattr(self.policy.action_space, 'n', None) != 5:
             raise ValueError('Expected Auto_drone policy with 10 observations and 5 discrete actions')
@@ -44,7 +40,7 @@ class PPOPlanner(Node):
         labels = set(self.yolo.names.values())
         if not {'building', 'tree', 'road'}.issubset(labels):
             self.get_logger().warning('YOLO lacks some legacy classes building/tree/road; their observation entries remain zero.')
-        self.cv = CvBridge()
+        self.cv = ImageCodec()
         self.data = {}
         self.enabled = False
         self.publisher = self.create_publisher(TwistStamped, 'drone/cmd_vel_ned', 1)
@@ -53,7 +49,8 @@ class PPOPlanner(Node):
             self.create_subscription(typ, topic, lambda msg, k=key: self.receive(k, msg), qos_profile_sensor_data)
         self.create_service(SetBool, 'planner/enable', self.enable)
         self.create_timer(1.0 / self.param('control_rate'), self.step)
-        self.get_logger().info('PPO loaded on CPU. Call planner/enable after takeoff. Goal is a stop condition, not a policy input.')
+        self.get_logger().info('PPO loaded on CPU. Call planner/enable after takeoff. Goal stop enabled: %s; goal is not a policy input.' % self.param('goal_stop_enabled'))
+        self.get_logger().warning('Policy has 5 actions; ascent/descent are intercepted by the front-only depth guard. speed is capped at 0.5 m/s by that guard.')
 
     def receive(self, key, msg):
         self.data[key] = (msg, time.monotonic())
@@ -92,7 +89,7 @@ class PPOPlanner(Node):
             position = np.array([p.x, p.y, p.z])
             if not np.all(np.isfinite(position)):
                 raise ValueError('Invalid position')
-            if self.data['collision'][0].data or np.linalg.norm(self.goal - position) < self.param('goal_tolerance'):
+            if self.data['collision'][0].data or goal_reached(position, self.goal, self.param('goal_tolerance'), self.param('goal_stop_enabled')):
                 self.enabled = False
                 self.publish((0, 0, 0))
                 self.get_logger().info('Stopped: collision or goal tolerance reached')
@@ -102,8 +99,8 @@ class PPOPlanner(Node):
             if (rgb_stamp.secs, rgb_stamp.nsecs) != (depth_stamp.secs, depth_stamp.nsecs):
                 self.publish((0, 0, 0))
                 return
-            bgr = self.cv.imgmsg_to_cv2(rgb_msg, desired_encoding='bgr8')
-            depth = self.cv.imgmsg_to_cv2(depth_msg, desired_encoding='32FC1')
+            bgr = self.cv.to_array(rgb_msg, desired_encoding='bgr8')
+            depth = self.cv.to_array(depth_msg, desired_encoding='32FC1')
             result = self.yolo.predict(bgr, verbose=False)[0]
             names = {self.yolo.names[int(cls)] for cls in result.boxes.cls.cpu().numpy()}
             obs = observation(names, depth, self.param('clearance'))

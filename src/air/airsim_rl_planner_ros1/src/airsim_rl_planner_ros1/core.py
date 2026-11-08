@@ -1,4 +1,5 @@
 """Pure, testable adapters for the legacy Auto_drone policy. Coordinates: NED."""
+from pathlib import Path
 import numpy as np
 
 ACTIONS = np.array([(1, 0, 0), (0, 1, 0), (0, -1, 0),
@@ -24,3 +25,16 @@ def velocity(action, speed):
     if index not in range(len(ACTIONS)):
         raise ValueError('Unsupported policy action')
     return ACTIONS[index] * speed
+
+
+def model_path(value, parameter):
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError('Set ' + parameter + ' to a trusted model file (absolute path recommended)')
+    path = Path(value).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(parameter + ' file not found: ' + str(path))
+    return path
+
+
+def goal_reached(position, goal, tolerance, enabled=False):
+    return bool(enabled and np.linalg.norm(np.asarray(goal) - position) < tolerance)
