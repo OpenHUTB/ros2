@@ -1,0 +1,13 @@
+<launch>
+  <!-- mode: nn（神经网络自主） | expert（A*+纯跟踪） | manual（订阅 /usv/cmd_vel） -->
+  <arg name="mode" default="nn"/>
+  <arg name="rate" default="20"/>
+  <arg name="seed" default="7"/>
+
+  <node pkg="usv_mujoco_nn" type="usv_nn_node.py" name="usv_nn_node" output="screen">
+    <param name="mode" value="$(arg mode)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="model_dir" value="$(find usv_mujoco_nn)/models"/>
+  </node>
+</launch>
