@@ -45,3 +45,58 @@
 | 仿真图 | `python render_validation.py` | `results/simulation.png` |
 
 ---
+
+## 2. 运行环境与快速开始
+
+### 2.1 环境
+
+| 项 | 配置 |
+|---|---|
+| 系统 | Ubuntu 20.04.6（VMware），6 核 / 8.5 GB |
+| ROS | ROS2 **Humble**（`/opt/ros/humble`，Python 3.8） |
+| 深度学习 | PyTorch **2.4.1+cpu** |
+| 仿真 | **MuJoCo 3.1.6**（CPU，无需下载场景） |
+| Python | 3.8.10，venv `--system-site-packages` |
+
+### 2.2 安装与自检
+
+```bash
+cd ~/ros2/src/air/payload_mass_estimation
+source /opt/ros/humble/setup.bash
+/usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
+source ~/uav_prediction_env/bin/activate
+python -m pip install -r requirements.txt      # 含 mujoco==3.1.6
+bash main.sh doctor
+bash main.sh prepare
+bash main.sh test
+bash main.sh build
+```
+
+`doctor` 检查 13 个模块，其中 **`mujoco` 只在重新采集时需要**：训练与评估只用 numpy + torch。但如果跳过安装，`doctor` 会直接失败——这是有意的，避免"以为能采集、实际不能"。
+
+`ROS_SETUP` 与 `UAV_ENV` 可覆盖 ROS setup 与虚拟环境路径。
+
+### 2.3 跑回放
+
+两个终端：
+
+```bash
+# 终端 1：订阅绘图（只写文件，不开窗口）
+MPLBACKEND=Agg python -m payload_mass_estimation.dashboard
+
+# 终端 2：回放 3 次测试飞行
+bash main.sh demo
+```
+
+回放约 36 秒。订阅端在无新消息 5 秒后落盘（最多等 90 秒），输出 `results/ros_subscriber.png`、`ros_subscriber.json`、`ros_node.json`。约定俗成的现象是：**台阶对应三次独立飞行的切换**，不代表飞行途中装卸货物。
+
+### 2.4 重新采集（可选）
+
+采集会覆盖同目录数据，**务必先复制项目目录**：
+
+```bash
+cp -r ~/ros2/src/air/payload_mass_estimation ~/paymass_run
+cd ~/paymass_run && bash main.sh collect && bash main.sh train && bash main.sh evaluate
+```
+
+---
