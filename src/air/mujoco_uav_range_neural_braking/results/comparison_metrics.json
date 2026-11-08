@@ -1,0 +1,98 @@
+{
+  "reference": [
+    {
+      "scenario": "speed_0.0",
+      "controller": "reference",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.6295003423469856,
+      "final_speed_m_s": 5.731267988774968e-08,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_1.5",
+      "controller": "reference",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.6294126821409645,
+      "final_speed_m_s": 6.906906041017035e-09,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_3.0",
+      "controller": "reference",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.629408963317414,
+      "final_speed_m_s": 2.0984174862634176e-09,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    }
+  ],
+  "range": [
+    {
+      "scenario": "speed_0.0",
+      "controller": "range",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.6683622649959169,
+      "final_speed_m_s": 3.4410558197765757e-09,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_1.5",
+      "controller": "range",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.6683314968328444,
+      "final_speed_m_s": 2.678894077001709e-10,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_3.0",
+      "controller": "range",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.6683595557333417,
+      "final_speed_m_s": 6.362360908056502e-11,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    }
+  ],
+  "mlp": [
+    {
+      "scenario": "speed_0.0",
+      "controller": "mlp",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.759475727533812,
+      "final_speed_m_s": 0.015898545585753675,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_1.5",
+      "controller": "mlp",
+      "steps": 1000,
+      "collision_steps": 0,
+      "min_clearance_m": 0.47043843651372796,
+      "final_speed_m_s": -0.05607397389807219,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    },
+    {
+      "scenario": "speed_3.0",
+      "controller": "mlp",
+      "steps": 1000,
+      "collision_steps": 4,
+      "min_clearance_m": -0.010628856909471907,
+      "final_speed_m_s": -0.004230652324528377,
+      "invalid_sensor_steps": 0,
+      "max_height_error_m": 0.0
+    }
+  ]
+}

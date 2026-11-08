@@ -45,3 +45,10 @@ $$
 ![运行截图](../../img/cha/no_fly_zone_check_airsim_result.png)
 
 **说明**：上图为本地启动 AirSim 1.8.1 模拟器并成功连接后的运行结果，获取到无人机位置并完成禁飞区检测
+
+## 2D 可视化
+无需启动 AirSim，直接生成禁飞区平面图（红圈为禁飞区，绿色三角为无人机位置）：
+    cd src/air/no_fly_zone_check
+    python visualize.py
+
+![禁飞区 2D 可视化](../../img/cha/no_fly_zone_check_visualization.png)
