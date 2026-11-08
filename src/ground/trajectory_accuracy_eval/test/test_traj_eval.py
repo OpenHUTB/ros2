@@ -98,16 +98,14 @@ def check(cond: bool, msg: str) -> None:
 
 
 def test_check_failure_is_visible_to_pytest(monkeypatch) -> None:
+    import pytest
+
     global FAIL
     previous_failures = FAIL
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "probe")
     try:
-        try:
+        with pytest.raises(AssertionError, match="expected check failure"):
             check(False, "expected check failure")
-        except AssertionError as exc:
-            assert str(exc) == "expected check failure"
-        else:
-            raise AssertionError("check() did not report its failure to pytest")
     finally:
         FAIL = previous_failures
 
