@@ -10,7 +10,8 @@
   2. 单独激活屈肌 -> 膝关节角增大（屈曲）
   3. 单独激活伸肌 -> 膝关节角减小（伸展）
   4. 无控制时关节角保持在 0 deg 附近
-  5. （可选）输出模型渲染图 model_render.png
+  5. 双向限位保护生效（到下限不再施加伸展力矩）
+  6. （可选）输出模型渲染图 results/model_render.png
 """
 import argparse
 import math
@@ -18,6 +19,9 @@ import os
 
 import mujoco
 import numpy as np
+
+from mujoco_musculoskeletal_knee_tracking import config_loader
+from mujoco_musculoskeletal_knee_tracking.controller import pd_to_activation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "mujoco_musculoskeletal_knee_tracking",
@@ -42,7 +46,7 @@ def step_ctrl(model, data, ctrl, steps, qpos0=None):
     return math.degrees(data.qpos[0])
 
 
-def render_preview(model, data):
+def render_preview(model, data, out_dir):
     """渲染一张图；无图形环境时降级为提示，不影响断言结果。"""
     try:
         renderer = mujoco.Renderer(model, 480, 640)
@@ -66,24 +70,45 @@ def render_preview(model, data):
     img = renderer.render()
     if img.max() < 10:
         print("[WARN] 渲染结果近乎全黑，请检查相机视角 / 几何位置")
+    renderer.close()
 
     import PIL.Image
-    out = os.path.join(HERE, "model_render.png")
+    os.makedirs(out_dir, exist_ok=True)
+    out = os.path.join(out_dir, "model_render.png")
     PIL.Image.fromarray(img).save(out)
     print(f"[OK] 已输出模型渲染图: {out}")
+
+
+def check_limits():
+    """双向限位：到上限不再给屈肌、到下限不再给伸肌。"""
+    _, ext_hi = pd_to_activation(0.5, 0.0, 30.0, 3.0, 17.5, limit_reached=True)
+    flex_lo, _ = pd_to_activation(-0.5, 0.0, 30.0, 3.0, 17.5,
+                                  limit_low_reached=True)
+    assert flex_lo == 0.0, "到下限后不应再施加伸展（负力矩）对应屈肌激活为 0"
+    print(f"[限位] 上限时伸肌激活={ext_hi:.2f}（应为 0，屈肌被清零）")
+    print(f"[限位] 下限时屈肌激活={flex_lo:.2f}（应为 0，伸肌被清零）")
+    flex_hi, _ = pd_to_activation(0.5, 0.0, 30.0, 3.0, 17.5, limit_reached=True)
+    assert flex_hi == 0.0, "到上限后屈肌应被清零"
+    _, ext_lo = pd_to_activation(-0.5, 0.0, 30.0, 3.0, 17.5,
+                                 limit_low_reached=True)
+    assert ext_lo == 0.0, "到下限后伸肌应被清零"
 
 
 def main():
     ap = argparse.ArgumentParser(description="膝关节模型本地验证")
     ap.add_argument("--no-render", action="store_true", help="跳过渲染（无图形环境）")
+    ap.add_argument("--out-dir", default=os.path.join(HERE, "results"))
     args = ap.parse_args()
 
+    cfg = config_loader.load(HERE)
     model = load_model()
     data = mujoco.MjData(model)
     n_act = model.nu
     print(f"[OK] 模型加载成功: {model.nq} 个广义坐标, {model.nu} 个执行器")
     print(f"     执行器: {[model.actuator(i).name for i in range(n_act)]}")
     print(f"     关节  : {[model.joint(i).name for i in range(model.njnt)]}")
+    print(f"     max_torque(参数)={cfg['ctrl.max_torque']} N·m"
+          f"  限位={cfg['ctrl.limit_low_deg']}~{cfg['ctrl.limit_deg']} deg")
     assert model.nq == 1, "期望单自由度模型"
     assert n_act == 2, "期望 2 个肌肉执行器"
 
@@ -107,8 +132,10 @@ def main():
     print(f"[自由] 无控制 2s -> 关节角 = {a_free:+.2f} deg (应≈0)")
     assert abs(a_free) < 3.0, "无控制时应停在伸展位附近"
 
+    check_limits()
+
     if not args.no_render:
-        render_preview(model, data)
+        render_preview(model, data, args.out_dir)
     else:
         print("[SKIP] 已按 --no-render 跳过渲染")
 

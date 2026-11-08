@@ -78,10 +78,11 @@ python3 simulate_tracking.py               # 生成 GIF + 曲线 + 指标
 python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲线与指标
 ```
 
-输出：`tracking.gif`（< 5 MB）、`tracking_eval.png`、`tracking_metrics.txt`。
+输出（默认 `results/`）：`tracking.gif`（< 5 MB）、`tracking_eval.png`、`tracking_step.png`、`tracking_metrics.txt`。
 
 默认结果（10 s 正弦，bias=30° amp=40° f=0.4 Hz，PD kp=30 kd=3）：
-RMSE ≈ 11°（PD 正弦跟踪固有滞后），收敛时间 ≈ 1.96 s。
+正弦段 RMSE ≈ 8.65°、最大误差 13.96°（参考持续变化，不适用超调/调节时间）。
+阶跃段（20°→50°）超调 0 %、未进入 ±2% 带、稳态下垂 −6.62°，主因是重力矩未做前馈补偿。
 
 ## 6. 参数 (Parameters, `config/params.yaml`)
 
@@ -95,7 +96,7 @@ RMSE ≈ 11°（PD 正弦跟踪固有滞后），收敛时间 ≈ 1.96 s。
 | `trajectory.bias_deg` | 30.0 | 轨迹偏置 [deg] |
 | `ctrl.kp` | 30.0 | 比例增益 [N·m/rad] |
 | `ctrl.kd` | 3.0 | 微分增益 [N·m·s/rad] |
-| `ctrl.max_torque` | 25.0 | 肌肉等效最大力矩 [N·m] |
+| `ctrl.max_torque` | 17.5 | 肌肉等效最大力矩 [N·m]，= 单肌 500 N × wrap 半径 0.035 m |
 | `ctrl.limit_deg` | 90.0 | 屈曲限位 [deg] |
 
 内置轨迹跑满 `sim.duration` 后节点执行安全停止；收到 `/knee/reference` 后切换到外部跟踪模式，不再受时长限制。

@@ -1,16 +1,22 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """离线轨迹跟踪仿真（不依赖 ROS 2，用于生成运行效果 GIF 与评价图）。
 
 用法:
     python3 simulate_tracking.py                # 渲染 GIF（需要图形环境）
     python3 simulate_tracking.py --no-render    # 无图形环境：只算指标与曲线图
-    python3 simulate_tracking.py --duration 10 --out-dir out
+    python3 simulate_tracking.py --duration 10 --out-dir results
 
-输出:
+输出（默认写到 results/）:
     tracking.gif            运行效果动图（< 5 MB，仅渲染时生成）
-    tracking_eval.png       目标 vs 实际 + 肌肉激活曲线
-    tracking_metrics.txt    RMSE / 超调量 / 稳定时间
+    tracking_eval.png       正弦跟踪：目标 vs 实际 + 肌肉激活
+    tracking_step.png       阶跃响应：超调与调节时间
+    tracking_metrics.txt    RMS / 最大误差 / 超调 / 调节时间 / 稳态误差
+
+指标口径说明:
+    正弦轨迹下不存在“超调”“调节时间”这类指标（参考一直在动），
+    因此正弦段只报告 RMS 与最大绝对误差；超调/调节时间/稳态误差
+    由单独的阶跃实验给出。
 """
 import argparse
 import math
@@ -21,15 +27,12 @@ import numpy as np
 import mujoco
 from PIL import Image
 
+from mujoco_musculoskeletal_knee_tracking import config_loader
 from mujoco_musculoskeletal_knee_tracking.controller import pd_to_activation
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "mujoco_musculoskeletal_knee_tracking",
                      "model", "muscle_knee.xml")
-
-DT = 0.005
-MAX_TORQUE = 25.0
-LIMIT_DEG = 90.0
 FRAME_EVERY = 8
 
 
@@ -41,14 +44,19 @@ def parse_args():
     ap = argparse.ArgumentParser(description="膝关节轨迹跟踪离线仿真")
     ap.add_argument("--no-render", action="store_true",
                     help="跳过 MuJoCo 渲染（无图形/远程环境使用）")
-    ap.add_argument("--duration", type=float, default=10.0, help="仿真时长 [s]")
-    ap.add_argument("--bias", type=float, default=30.0, help="轨迹偏置 [deg]")
-    ap.add_argument("--amp", type=float, default=40.0, help="轨迹幅值 [deg]")
-    ap.add_argument("--freq", type=float, default=0.4, help="正弦频率 [Hz]")
-    ap.add_argument("--kp", type=float, default=30.0)
-    ap.add_argument("--kd", type=float, default=3.0)
-    ap.add_argument("--out-dir", default=HERE)
+    ap.add_argument("--duration", type=float, default=None,
+                    help="正弦段仿真时长 [s]，默认取 params.yaml 的 10s")
+    ap.add_argument("--out-dir", default=os.path.join(HERE, "results"))
     return ap.parse_args()
+
+
+def make_model(dt):
+    with open(MODEL, "r", encoding="utf-8") as f:
+        xml = f.read()
+    model = mujoco.MjModel.from_xml_string(xml)
+    # 让 params.yaml 的 sim.dt 真正决定物理步长，保证时间轴与轨迹一致
+    model.opt.timestep = dt
+    return model
 
 
 def make_renderer(model, height=320, width=400):
@@ -62,32 +70,26 @@ def make_renderer(model, height=320, width=400):
         return None
 
 
-def main():
-    args = parse_args()
-    os.makedirs(args.out_dir, exist_ok=True)
-
-    with open(MODEL, "r", encoding="utf-8") as f:
-        xml = f.read()
-    model = mujoco.MjModel.from_xml_string(xml)
-    # 让参数里的步长真正生效，保证时间轴与轨迹基准一致
-    model.opt.timestep = DT
+def simulate(target_fn, duration, cfg, renderer=None):
+    """跑一段仿真。target_fn(t) 返回目标角度（deg）。"""
+    dt = cfg["sim.dt"]
+    model = make_model(dt)
     data = mujoco.MjData(model)
-
     i_flex = model.actuator("flexor").id
     i_ext = model.actuator("extensor").id
 
-    n = int(args.duration / DT)
-    times = np.linspace(0, args.duration, n)
-    ref = np.array([reference_deg(t, args.bias, args.amp, args.freq) for t in times])
+    n = int(round(duration / dt)) + 1
+    times = np.arange(n) * dt                 # 采样间隔严格等于 dt
+    ref = np.array([target_fn(t) for t in times])
+    # 初值对齐到轨迹起点，避免把启动瞬态算进跟踪误差
+    data.qpos[0] = math.radians(ref[0])
+    mujoco.mj_forward(model, data)
     ang = np.zeros(n)
     act_f = np.zeros(n)
     act_e = np.zeros(n)
 
-    renderer = None
-    if not args.no_render:
-        renderer = make_renderer(model)
-    frames = []
     cam = None
+    frames = []
     if renderer is not None:
         cam = mujoco.MjvCamera()
         cam.type = mujoco.mjtCamera.mjCAMERA_FREE
@@ -96,73 +98,198 @@ def main():
         cam.azimuth = 90.0
         cam.elevation = -10.0
 
+    lim_hi = math.radians(cfg["ctrl.limit_deg"])
+    lim_lo = math.radians(cfg["ctrl.limit_low_deg"])
+
     for i in range(n):
         q = data.qpos[0]
         qd = data.qvel[0]
         err = math.radians(ref[i]) - q
         flex, ext = pd_to_activation(
-            err, qd, args.kp, args.kd, MAX_TORQUE,
-            limit_reached=(math.degrees(q) >= LIMIT_DEG),
+            err, qd, cfg["ctrl.kp"], cfg["ctrl.kd"], cfg["ctrl.max_torque"],
+            limit_reached=(q >= lim_hi),
+            limit_low_reached=(q <= lim_lo),
         )
         data.ctrl[i_flex] = flex
         data.ctrl[i_ext] = ext
         mujoco.mj_step(model, data)
 
-        ang[i] = math.degrees(q)
+        ang[i] = math.degrees(data.qpos[0])
         act_f[i], act_e[i] = flex, ext
 
         if renderer is not None and i % FRAME_EVERY == 0:
             renderer.update_scene(data, camera=cam)
             frames.append(Image.fromarray(renderer.render().copy()))
 
-    # ---- 指标 ----
-    rmse = float(np.sqrt(np.mean((ang - ref) ** 2)))
-    overshoot = float(np.max(np.maximum(ang - ref, 0.0)))
-    settled = np.abs(ang - ref) < 3.0
-    settle = float(np.argmax(settled)) * DT if settled.any() else args.duration
-    metrics = (
-        f"RMSE     : {rmse:6.2f} deg\n"
-        f"正超调   : {overshoot:6.2f} deg\n"
-        f"收敛时间 : {settle:6.2f} s (误差<3deg)\n"
-        f"仿真时长 : {args.duration} s  步长: {DT} s\n"
-        f"轨迹     : 正弦 bias={args.bias} amp={args.amp} f={args.freq}Hz\n"
-        f"控制器   : PD kp={args.kp} kd={args.kd}  max_torque={MAX_TORQUE}\n"
-        f"渲染     : {'关闭 (--no-render)' if args.no_render else '开启'}\n"
+    return {"t": times, "ref": ref, "ang": ang,
+            "act_f": act_f, "act_e": act_e, "frames": frames}
+
+
+def metrics_sine(res):
+    err = res["ang"] - res["ref"]
+    return {
+        "rmse": float(np.sqrt(np.mean(err ** 2))),
+        "max_err": float(np.max(np.abs(err))),
+    }
+
+
+def metrics_step(res, t_step, target):
+    """阶跃响应：超调、调节时间(±2% 带宽)、稳态误差(下垂)。"""
+    t, ang = res["t"], res["ang"]
+    after = t >= t_step
+    y = ang[after]
+    tt = t[after]
+    start = res["ref"][0]
+    span = target - start
+    os_pct = float(max(0.0, (y.max() - target) / span * 100.0)) if span else 0.0
+
+    band = 0.02 * abs(span)
+    inside = np.abs(y - target) <= band
+    settle = None
+    for k in range(len(inside) - 1, -1, -1):
+        if not inside[k]:
+            settle = float(tt[k + 1] - t_step) if k + 1 < len(tt) else None
+            break
+    else:
+        settle = 0.0
+
+    # 补充：进入 ±5° 的时间（用来说明"能跟上大趋势，但停不到目标"）
+    loose = np.abs(y - target) <= 5.0
+    t_5 = float(tt[np.argmax(loose)] - t_step) if loose.any() else None
+
+    tail = y[-max(1, len(y) // 10):]
+    return {
+        "overshoot_pct": os_pct,
+        "settle_s": settle,
+        "settle_5deg_s": t_5,
+        "steady_err_deg": float(target - tail.mean()),   # 正=低于目标(下垂)
+    }
+
+
+def write_metrics(path, cfg, sine, step):
+    sym = '-' if step["steady_err_deg"] >= 0 else '+'
+    if step["settle_s"] is None:
+        settle_txt = ("未进入 ±2% 带"
+                      f"（稳态下垂 {abs(step['steady_err_deg']):.2f} deg 超出带宽")
+        if step["settle_5deg_s"] is not None:
+            settle_txt += f"；进入 ±5° 需 {step['settle_5deg_s']:.2f} s"
+        settle_txt += "）"
+    else:
+        settle_txt = f"{step['settle_s']:6.2f} s (±2% 带宽)"
+    text = (
+        "== 正弦跟踪（参考持续变化，不适用超调/调节时间）==\n"
+        f"RMSE        : {sine['rmse']:6.2f} deg\n"
+        f"最大绝对误差 : {sine['max_err']:6.2f} deg\n"
+        "\n== 阶跃响应（20deg -> 50deg）==\n"
+        f"超调        : {step['overshoot_pct']:6.2f} %\n"
+        f"调节时间    : {settle_txt}\n"
+        f"稳态误差    : {sym}{abs(step['steady_err_deg']):5.2f} deg"
+        f"（{'低于' if sym == '-' else '高于'}目标，"
+        "主因是重力矩未做前馈补偿：PD 在稳态误差为 0 时输出为 0）\n"
+        "\n== 参数 ==\n"
+        f"步长 sim.dt : {cfg['sim.dt']} s\n"
+        f"PD          : kp={cfg['ctrl.kp']} kd={cfg['ctrl.kd']}\n"
+        f"max_torque  : {cfg['ctrl.max_torque']} N·m"
+        "（= 单肌 500 N × wrap 半径 0.035 m）\n"
+        f"限位        : {cfg['ctrl.limit_low_deg']} ~ {cfg['ctrl.limit_deg']} deg\n"
     )
-    with open(os.path.join(args.out_dir, "tracking_metrics.txt"), "w", encoding="utf-8") as f:
-        f.write(metrics)
-    print(metrics)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return text
 
-    # ---- 评价图 ----
+
+def plot_sine(res, out, cfg):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 7))
+    axes[0].plot(res["t"], res["ref"], "--", label="reference", color="tab:green")
+    axes[0].plot(res["t"], res["ang"], "-", label="actual", color="tab:blue")
+    axes[0].set_ylabel("Knee angle [deg]")
+    axes[0].legend()
+    axes[0].grid(True)
+    axes[0].set_title(f"Sine tracking (PD kp={cfg['ctrl.kp']} kd={cfg['ctrl.kd']}, "
+                      f"max_torque={cfg['ctrl.max_torque']} N.m)")
+    axes[1].plot(res["t"], res["act_f"], label="flexor activation", color="tab:red")
+    axes[1].plot(res["t"], res["act_e"], label="extensor activation", color="tab:blue")
+    axes[1].set_ylabel("Muscle activation [0,1]")
+    axes[1].set_xlabel("Time [s]")
+    axes[1].legend()
+    axes[1].grid(True)
+    fig.tight_layout()
+    fig.savefig(out, dpi=110)
+    plt.close(fig)
+
+
+def plot_step(res, t_step, target, out, m):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 4.2))
+    ax.plot(res["t"], res["ref"], "--", label="reference", color="tab:green")
+    ax.plot(res["t"], res["ang"], "-", label="actual", color="tab:blue")
+    ax.axvline(t_step, color="gray", lw=0.8, ls=":")
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("Knee angle [deg]")
+    settle_txt = (f"settle {m['settle_s']:.2f}s" if m["settle_s"] is not None
+                  else "settle n/a (2% band)")
+    ax.set_title(f"Step 20->50 deg | overshoot {m['overshoot_pct']:.1f}% | "
+                 f"{settle_txt} | droop {m['steady_err_deg']:.2f} deg",
+                 fontsize=10)
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    fig.savefig(out, dpi=110)
+    plt.close(fig)
+
+
+def main():
+    args = parse_args()
+    cfg = config_loader.load(HERE)
+    dt = cfg["sim.dt"]
+    duration = args.duration if args.duration is not None else 10.0
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    # ---- 正弦段（含 GIF 渲染）----
+    renderer = None if args.no_render else make_renderer(
+        make_model(dt))
+    sine = simulate(
+        lambda t: reference_deg(t, cfg["trajectory.bias_deg"],
+                               cfg["trajectory.amplitude_deg"],
+                               cfg["trajectory.frequency_hz"]),
+        duration, cfg, renderer=renderer)
+    if renderer is not None:
+        renderer.close()
+    sine_m = metrics_sine(sine)
+
+    # ---- 阶跃段（不带渲染）----
+    t_step, start_deg = 0.5, 20.0
+    target_deg = 50.0
+    step = simulate(
+        lambda t: start_deg if t < t_step else target_deg,
+        t_step + 6.0, cfg)
+    step_m = metrics_step(step, t_step, target_deg)
+
+    text = write_metrics(os.path.join(args.out_dir, "tracking_metrics.txt"),
+                         cfg, sine_m, step_m)
+    print(text)
+
     try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-
-        fig, axes = plt.subplots(2, 1, figsize=(10, 7))
-        axes[0].plot(times, ref, "--", label="reference", color="tab:green")
-        axes[0].plot(times, ang, "-", label="actual", color="tab:blue")
-        axes[0].set_ylabel("Knee angle [deg]")
-        axes[0].legend()
-        axes[0].grid(True)
-        axes[0].set_title("Sine trajectory tracking (PD + antagonistic muscles)")
-        axes[1].plot(times, act_f, label="flexor activation", color="tab:red")
-        axes[1].plot(times, act_e, label="extensor activation", color="tab:blue")
-        axes[1].set_ylabel("Muscle activation [0,1]")
-        axes[1].set_xlabel("Time [s]")
-        axes[1].legend()
-        axes[1].grid(True)
-        fig.tight_layout()
-        fig.savefig(os.path.join(args.out_dir, "tracking_eval.png"), dpi=110)
-        print("已输出 tracking_eval.png")
+        plot_sine(sine, os.path.join(args.out_dir, "tracking_eval.png"), cfg)
+        plot_step(step, t_step, target_deg,
+                  os.path.join(args.out_dir, "tracking_step.png"), step_m)
+        print(f"已输出 {args.out_dir}/tracking_eval.png 与 tracking_step.png")
     except ImportError:
-        print("[WARN] 未安装 matplotlib，跳过 tracking_eval.png")
+        print("[WARN] 未安装 matplotlib，跳过曲线图")
 
     # ---- GIF ----
-    if renderer is not None and frames:
+    frames = sine["frames"]
+    if frames:
         gif = os.path.join(args.out_dir, "tracking.gif")
         frames[0].save(gif, save_all=True, append_images=frames[1:],
-                       duration=int(FRAME_EVERY * DT * 1000), loop=0,
+                       duration=int(FRAME_EVERY * dt * 1000), loop=0,
                        optimize=False)
         size_mb = os.path.getsize(gif) / 1e6
         print(f"已输出 tracking.gif ({size_mb:.2f} MB, {len(frames)} 帧)")
@@ -176,4 +303,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
