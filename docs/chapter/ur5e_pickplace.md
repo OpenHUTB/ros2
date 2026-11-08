@@ -6,7 +6,7 @@
 
 代码位置：`src/chap8/ros_mujoco_arm_pickplace/`。
 
-![5 状态抓放流程画面](../img/arm_pickplace.png)
+![Uploading arm_pickplace_demo.gif…]()
 
 ## 1. 与参考模块的区别
 
