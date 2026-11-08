@@ -28,7 +28,10 @@ python main.py                    # 全部 3 个算例，闭环总墙钟约 5 s
 python tools/make_gif.py          # 重录 docs 里的对比动图
 python -m pytest test/ -q         # 30 项测试
 
-# ROS 侧
+# ROS 侧（ROS 2 Humble 及以上，Windows 下需 WSL2 或原生 ROS 2 环境）
+cd ~/ros2_ws/src && git clone https://github.com/OpenHUTB/ros2.git
+cd ~/ros2_ws && colcon build --packages-select uav_emergency_drop \
+  && source install/setup.bash
 ros2 run uav_emergency_drop drop_node   # 订阅 /uav/odom，落点校验达标发 JSON 投放指令
 ros2 launch uav_emergency_drop main.launch.py
 ```
@@ -59,6 +62,9 @@ ros2 launch uav_emergency_drop main.launch.py
 
 横风那组更直观：12.92 m 的风偏全部由逆风偏移的越顶点补偿，
 投放后解析落点回到真实目标。
+
+口径说明：表中落点偏差均为弹道解析模型（质点平抛 + 常值风偏）的
+预测偏差，未含散布 σ 与投放物气动，不等同于实物命中精度。
 
 ## 代码结构
 
