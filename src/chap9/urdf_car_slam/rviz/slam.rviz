@@ -29,7 +29,7 @@ Visualization Manager:
       Robot Description: robot_description
     - Class: rviz/TF
       Name: TF
-      Enabled: false
+      Enabled: true
   Views:
     Current:
       Class: rviz/Orbit

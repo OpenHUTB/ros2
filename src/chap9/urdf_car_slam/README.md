@@ -1,8 +1,10 @@
-# 第九章：基于自建 URDF 小车的 GMapping SLAM
+# 自建四轮小车 Gazebo GMapping 建图实验（ROS Noetic）
 
 姓名：________ 学号：________ 班级：________
 
-本包承接已在 RViz 显示成功的四轮小车，新增 Gazebo Classic 物理驱动、二维激光、里程计和 GMapping。目标为教材第 9.3 节的仿真建图实验，不包含第九章的全部算法，也不包含自动导航。包名为 urdf_car_slam，与原 urdf_car_demo 分开。
+本页为独立实验。旧版“第九章”沿用作业编号，不对应本仓库目录：仓库第六章为 SLAM 与自主导航，第九章为 ROS 2。本实验使用 ROS 1 Noetic，不应按仓库第九章查找。源码暂保留原 `src/chap9/urdf_car_slam` 路径，避免破坏既有复现步骤。
+
+本包承接已在 RViz 显示成功的四轮小车，新增 Gazebo Classic 物理驱动、二维激光、里程计和 GMapping。本实验仅覆盖二维仿真建图，不包含自动导航。包名为 urdf_car_slam，与原 urdf_car_demo 分开。
 
 ## 一、环境与复制位置
 
@@ -121,6 +123,33 @@ rosrun gmapping slam_gmapping _base_frame:=base_footprint _odom_frame:=odom _map
 基于此前小车建模作业扩展，由 OpenAI Codex 辅助编写。
 
 - ROS Noetic 驱动插件源码：https://github.com/ros-simulation/gazebo_ros_pkgs/blob/noetic-devel/gazebo_plugins/src/gazebo_ros_skid_steer_drive.cpp
-- 算法教程目标：用户所提供教材第九章 GMapping 仿真建图部分。
+- 内容范围：自建小车的 GMapping 仿真建图；章节编号以所用教材目录为准。
 
 
+
+## PR #852 复核后的调整与证据补充
+
+- 初始高度改为可配置的 `spawn_z`，默认 0.01 米。模型中轮底在 `base_footprint` 的 z=0 附近；默认只保留 1 厘米生成间隙，减小旧值 0.04 米落地时的冲击。此调整尚未在 Gazebo 重新运行验证。生成后应等待车辆落稳、激光与 TF 正常，再开始遥控；可用 `roslaunch urdf_car_slam slam.launch spawn_z:=0.0` 比较接地表现。
+- RViz 默认开启 TF 显示，便于检查 `map → odom → base_footprint → base_link → lidar_link`。启动初期尚无第一帧地图时，map 相关变换可能暂未出现，不要人为补一条静态 map→odom。
+- 保留原来的三张截图，并明确它们仅证明初始地图与扫描匹配运行。尚无完整探索后的地图文件，不能当作完整建图验收。
+
+### 在虚拟机生成缺少的实测材料
+
+保持 `slam.launch` 运行，在键盘遥控终端慢速探索房间、经过障碍物的不同侧面，并尽量回到起点附近。先按 `k` 停车，再在另一个 Noetic 终端执行：
+
+```bash
+source /opt/ros/noetic/setup.bash
+source ~/urdf_car_ws/devel/setup.bash
+RUN_DIR="$HOME/urdf_car_maps/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$RUN_DIR"
+rosrun map_server map_saver -f "$RUN_DIR/car_gmapping"
+rostopic echo -n 1 /map/info > "$RUN_DIR/map_info.yaml"
+ls -lh "$RUN_DIR/car_gmapping.pgm" "$RUN_DIR/car_gmapping.yaml"
+echo "$RUN_DIR"
+```
+
+`map_saver` 等待地图时不要退出仿真；检查 `/map` 是否由正在运行的 GMapping 发布。地图文件来自实时 `/map`，不能把 Gazebo world 平面图替换成建图结果。
+
+补交该目录下的 `car_gmapping.pgm`、`car_gmapping.yaml` 和 `map_info.yaml`，另附探索后的 RViz 截图（Map、LaserScan、RobotModel、TF 和 Global Status 可见）。保留 YAML 对 PGM 的同目录引用。记录探索路线、是否回到起点及异常现象；如有录屏，也一起保留。
+
+当前材料缺口仍然存在：上述运行命令和配置修复不等于生成了实测地图。新版出生高度、TF 显示与完整探索过程均需在 ROS Noetic + Gazebo 中复测。使用 OpenAI Codex 辅助整理本次修改。
