@@ -131,17 +131,18 @@ def generate_launch_description():
     vision_node = Node(
         package="ant_colony_swarm",
         executable="vision_detector",
-        name="vision_detector"
+        output="screen"
     )
-    control_node = Node(
+    ctrl_node = Node(
         package="ant_colony_swarm",
         executable="swarm_control",
-        name="swarm_control"
+        output="screen"
     )
     return LaunchDescription([
         vision_node,
-        control_node
+        ctrl_node
     ])
+
 ```
 ## 4. package.xml
 ```python
