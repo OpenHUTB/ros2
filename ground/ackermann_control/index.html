@@ -170,7 +170,33 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">阿克曼控制</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#_2">简介</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_3">环境要求</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">配套代码</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_5">第一步：安装依赖</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#carla-1">第二步：启动 CARLA（终端 1）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#bridge-2">第三步：加载环境并启动 bridge（终端 2）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rostopic-3">第四步：rostopic 发布阿克曼命令（终端 3）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">第五步：创建发布功能包（终端 4）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#python">第六步：编写 Python 发布节点</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">第七步：编译并运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">运行效果</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ackermanndrive">AckermannDrive 字段说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">常见问题</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_9">参考</a>
 </li>
 </ul>
 </li>
@@ -518,9 +544,216 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">阿克曼控制</h1>
-<h2 id="_2">参考</h2>
+<h2 id="_2">简介</h2>
+<p>在 Ubuntu 20.04 上完成 CARLA 与 ROS 桥接后，通过 <code>ackermann_msgs/AckermannDrive</code> 消息向主车发布阿克曼控制命令（目标速度 + 转向角）。本文提供两种方式：先用 <code>rostopic pub</code> 命令行快速验证直行、转向与停止，再编写 Python 发布节点以固定频率持续发送控制指令。</p>
+<blockquote>
+<p>说明：下文命令中的 <code>~</code> 指你的主目录，请按实际安装位置调整路径。</p>
+</blockquote>
+<h2 id="_3">环境要求</h2>
 <ul>
-<li><a href="https://openhutb.github.io/doc/carla_ackermann_control/">Carla 阿克曼控制</a></li>
+<li>Ubuntu 20.04</li>
+<li>ROS Noetic</li>
+<li>CARLA（安装目录 <code>~/CARLA_0.9.13</code>；若通过 apt 系统安装则位于 <code>/opt/carla-simulator</code>）</li>
+<li>carla-ros-bridge（工作区 <code>~/carla-ros-bridge/catkin_ws</code>，已编译）</li>
+</ul>
+<h2 id="_4">配套代码</h2>
+<p>本教程对应的代码位于仓库 <code>src/ground/ackermann_publisher/</code> 目录，与下面各步骤的命令一一对应：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>代码文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装依赖</td>
+<td><code>src/ground/ackermann_publisher/install_deps.sh</code></td>
+</tr>
+<tr>
+<td>启动 CARLA</td>
+<td><code>src/ground/ackermann_publisher/start_carla.sh</code></td>
+</tr>
+<tr>
+<td>启动 ROS 桥与主车</td>
+<td><code>src/ground/ackermann_publisher/start_bridge.sh</code></td>
+</tr>
+<tr>
+<td>发布直行命令</td>
+<td><code>src/ground/ackermann_publisher/drive_straight.sh</code></td>
+</tr>
+<tr>
+<td>发布转向命令</td>
+<td><code>src/ground/ackermann_publisher/drive_turn.sh</code></td>
+</tr>
+<tr>
+<td>发布停止命令</td>
+<td><code>src/ground/ackermann_publisher/stop.sh</code></td>
+</tr>
+<tr>
+<td>创建发布功能包</td>
+<td><code>src/ground/ackermann_publisher/create_pkg.sh</code></td>
+</tr>
+<tr>
+<td>Python 发布节点（第六步代码）</td>
+<td><code>src/ground/ackermann_publisher/ackermann_pub.py</code></td>
+</tr>
+<tr>
+<td>编译并运行</td>
+<td><code>src/ground/ackermann_publisher/build_run.sh</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">第一步：安装依赖</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 阿克曼消息包</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-ackermann-msgs
+
+<span class="c1"># PID依赖（carla_ackermann_control用）</span>
+pip<span class="w"> </span>install<span class="w"> </span>simple-pid
+</code></pre></div>
+<h2 id="carla-1">第二步：启动 CARLA（终端 1）</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/CARLA_0.9.13
+
+./CarlaUE4.sh
+</code></pre></div>
+<blockquote>
+<p>apt 系统安装时将目录替换为 <code>/opt/carla-simulator</code>。</p>
+</blockquote>
+<p>等待 CARLA 窗口加载出地图画面。</p>
+<h2 id="bridge-2">第三步：加载环境并启动 bridge（终端 2）</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 先加载环境</span>
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/devel/setup.bash
+
+<span class="c1"># 启动 bridge 并生成一辆 ego 车</span>
+roslaunch<span class="w"> </span>carla_ros_bridge<span class="w"> </span>carla_ros_bridge_with_example_ego_vehicle.launch
+</code></pre></div>
+<p>运行成功后，CARLA 窗口会生成主车，manual control 面板显示 <code>ego_vehicle running</code>。</p>
+<h2 id="rostopic-3">第四步：rostopic 发布阿克曼命令（终端 3）</h2>
+<p>先加载环境：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+<span class="nb">source</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/devel/setup.bash
+</code></pre></div>
+<p><strong>直行</strong>：速度 3 m/s，转角 0 rad，以 10 Hz 发布：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 3.0, steering_angle: 0.0, steering_angle_velocity: 0.0, acceleration: 0.0, jerk: 0.0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<p><strong>转向</strong>：速度 2 m/s，转角 0.3 rad：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 2.0, steering_angle: 0.3, steering_angle_velocity: 0, acceleration: 0, jerk: 0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<p><strong>停止</strong>：目标速度 0：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>/carla/ego_vehicle/ackermann_cmd<span class="w"> </span>ackermann_msgs/AckermannDrive<span class="w"> </span><span class="s2">"{speed: 0.0, steering_angle: 0.0}"</span><span class="w"> </span>-r<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<h2 id="4">第五步：创建发布功能包（终端 4）</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws/src
+
+catkin_create_pkg<span class="w"> </span>ackermann_publisher<span class="w"> </span>rospy<span class="w"> </span>ackermann_msgs
+
+<span class="nb">cd</span><span class="w"> </span>ackermann_publisher
+mkdir<span class="w"> </span>scripts
+<span class="nb">cd</span><span class="w"> </span>scripts
+touch<span class="w"> </span>ackermann_pub.py
+chmod<span class="w"> </span>+x<span class="w"> </span>ackermann_pub.py
+</code></pre></div>
+<h2 id="python">第六步：编写 Python 发布节点</h2>
+<p>编辑 <code>ackermann_pub.py</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># ackermann_pub.py</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">from</span> <span class="nn">ackermann_msgs.msg</span> <span class="kn">import</span> <span class="n">AckermannDrive</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="c1"># 1. 初始化节点</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s2">"simple_ackermann_publisher"</span><span class="p">)</span>
+    <span class="c1"># 2. 创建发布器：话题名、消息类型、队列长度</span>
+    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s2">"/carla/ego_vehicle/ackermann_cmd"</span><span class="p">,</span> <span class="n">AckermannDrive</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c1"># 3. 设置发布频率 10Hz</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">"Ackermann发布节点启动，开始发送控制指令"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+        <span class="c1"># 构造阿克曼消息</span>
+        <span class="n">drive_msg</span> <span class="o">=</span> <span class="n">AckermannDrive</span><span class="p">()</span>
+        <span class="n">drive_msg</span><span class="o">.</span><span class="n">speed</span> <span class="o">=</span> <span class="mf">2.0</span>               <span class="c1"># 速度 m/s</span>
+        <span class="n">drive_msg</span><span class="o">.</span><span class="n">steering_angle</span> <span class="o">=</span> <span class="mf">0.2</span>      <span class="c1"># 转向角 rad，正数向右，负数向左</span>
+        <span class="n">drive_msg</span><span class="o">.</span><span class="n">steering_angle_velocity</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">drive_msg</span><span class="o">.</span><span class="n">acceleration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">drive_msg</span><span class="o">.</span><span class="n">jerk</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">drive_msg</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"发送: speed=</span><span class="si">{</span><span class="n">drive_msg</span><span class="o">.</span><span class="n">speed</span><span class="si">}</span><span class="s2">, steer=</span><span class="si">{</span><span class="n">drive_msg</span><span class="o">.</span><span class="n">steering_angle</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="_6">第七步：编译并运行</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/carla-ros-bridge/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+
+<span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
+rosrun<span class="w"> </span>ackermann_publisher<span class="w"> </span>ackermann_pub.py
+</code></pre></div>
+<p>节点启动后以 10 Hz 持续发送 <code>speed=2.0</code>、<code>steer=0.2</code> 的阿克曼命令，主车按该速度与转角行驶。</p>
+<h2 id="_7">运行效果</h2>
+<p>完整操作截图：CARLA 主车已生成、bridge 启动参数、三条 rostopic 命令与 Python 节点循环发送日志（<code>Ctrl+C</code> 正常退出）：</p>
+<p><img alt="完整操作与节点运行效果" src="../../img/ground/ackermann_publisher_demo.png"/></p>
+<h2 id="ackermanndrive">AckermannDrive 字段说明</h2>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>类型</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>speed</code></td>
+<td>float32</td>
+<td>目标速度（m/s）</td>
+<td><code>3.0</code> 直行；<code>0.0</code> 停止</td>
+</tr>
+<tr>
+<td><code>steering_angle</code></td>
+<td>float32</td>
+<td>目标转向角（rad），正数向右、负数向左</td>
+<td><code>0.3</code> 右转；<code>-0.3</code> 左转</td>
+</tr>
+<tr>
+<td><code>steering_angle_velocity</code></td>
+<td>float32</td>
+<td>转向角速度（rad/s）</td>
+<td><code>0.0</code></td>
+</tr>
+<tr>
+<td><code>acceleration</code></td>
+<td>float32</td>
+<td>目标加速度（m/s²）</td>
+<td><code>0.0</code></td>
+</tr>
+<tr>
+<td><code>jerk</code></td>
+<td>float32</td>
+<td>加加速度（m/s³）</td>
+<td><code>0.0</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_8">常见问题</h2>
+<ul>
+<li>
+<p><strong><code>apt install</code> 提示找不到 <code>ros-noetic-ackermann-msgs</code></strong>：先执行 <code>sudo apt update</code>，并确认已正确安装 ROS Noetic 软件源。</p>
+</li>
+<li>
+<p><strong><code>rostopic pub</code> 报错话题不存在</strong>：确认终端 3 已 <code>source</code> 桥接环境，且终端 2 的 <code>roslaunch</code> 正常运行、主车已生成。</p>
+</li>
+<li>
+<p><strong><code>rosrun</code> 找不到 <code>ackermann_pub.py</code></strong>：确认脚本已 <code>chmod +x</code> 且位于功能包 <code>scripts/</code> 目录内，并在 <code>catkin_make</code> 后重新 <code>source devel/setup.bash</code>。</p>
+</li>
+</ul>
+<h2 id="_9">参考</h2>
+<ul>
+<li><a href="https://openhutb.github.io/doc/carla_ackermann_control/">Carla 阿克曼控制（官方说明）</a></li>
+<li><a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a></li>
 </ul></div>
 </div>
 </div><footer>
