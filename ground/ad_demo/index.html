@@ -188,11 +188,27 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_3">场景执行</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#_4">拓展：四份作业的统一调度入口与量化性能评价</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_5">与本文示例的区别</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_6">复用本文的配置步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_7">本拓展新增的内容</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">运行本拓展模块</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">实测结果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_10">参考</a>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../carla_benchmark_suite/">作业综合整合与性能评价</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ros_scenario_runner/">ROS Scenario Runner</a>
 </li>
@@ -537,7 +553,171 @@ Arg xml is &lt;arg name="scenario_runner_path" default="$(env SCENARIO_RUNNER_PA
 The traceback for the exception was written to the log file
 </code></pre></div>
 <p>原因：必须指定<code>SCENARIO_RUNNER_PATH</code>，指向 scenario runner 的路径。</p>
-<h2 id="_4">参考</h2>
+<h2 id="_4">拓展：四份作业的统一调度入口与量化性能评价</h2>
+<p>本文的自动驾驶演示通过 <code>roslaunch</code> 拉起 <code>carla_ad_demo</code> 做<strong>单次</strong>演示（随机路线或场景执行），
+只输出运行日志、没有量化指标。下面是在该演示思路基础上<strong>自主实现</strong>的一套
+「四份作业统一调度 + 真实测量的性能评价」，
+代码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_benchmark_suite"><code>src/ground/carla_benchmark_suite</code></a>，
+详细介绍（指标定义、源码解析、完整实测数据）见
+<a href="../carla_benchmark_suite/">CARLA 作业综合整合与性能评价</a>。</p>
+<h3 id="_5">与本文示例的区别</h3>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>本文示例（自动驾驶演示）</th>
+<th>本拓展模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技术路线</td>
+<td><code>roslaunch carla_ad_demo</code></td>
+<td>CARLA Python API 直连 + 统一调度入口</td>
+</tr>
+<tr>
+<td>是否依赖 ros-bridge</td>
+<td>必须编译并运行 ros-bridge</td>
+<td><strong>不需要</strong>，仅需 <code>carla</code> Python 客户端</td>
+</tr>
+<tr>
+<td>是否依赖 scenario runner</td>
+<td><strong>需要</strong>，且必须设 <code>SCENARIO_RUNNER_PATH</code>（正是本文记录的报错原因）</td>
+<td><strong>不需要</strong></td>
+</tr>
+<tr>
+<td>功能范围</td>
+<td>单次演示（随机路线 / 场景执行）</td>
+<td><strong>统一调度 4 个子作业</strong> + 量化性能评价</td>
+</tr>
+<tr>
+<td>性能指标</td>
+<td>无（只有运行日志）</td>
+<td><strong>真实测量</strong>的精度 / 时延 / 平滑度 / 覆盖率指标表与对比图</td>
+</tr>
+<tr>
+<td>指标可复现性</td>
+<td>—</td>
+<td><code>--benchmark</code> 离线可复现，<strong>无需 CARLA 服务端</strong></td>
+</tr>
+<tr>
+<td>无 CARLA / 无图形界面时</td>
+<td>无法运行</td>
+<td><code>--list</code> 与 <code>--benchmark</code> 均可离线运行</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">复用本文的配置步骤</h3>
+<p>CARLA 服务端的启动、宿主机 IP 与端口 2000 的查看等步骤
+<strong>与已有示例完全一致，此处不再重复</strong>，请参考
+<a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a> 的
+「启动 Carla 服务器」与「使用 Carla 客户端启动 Ego Vehicle」小节；
+连接失败的排查见同一篇的「常见问题」小节。</p>
+<div class="admonition warning">
+<p class="admonition-title">不要从头到尾照做已有示例</p>
+<p>本文的演示需要 <strong>scenario runner</strong> 并设置 <code>SCENARIO_RUNNER_PATH</code>。
+本拓展模块<strong>不需要 scenario runner，也不需要 ros-bridge</strong>，
+本文的编译与环境变量步骤可以跳过。</p>
+</div>
+<h3 id="_7">本拓展新增的内容</h3>
+<ol>
+<li><strong>统一调度入口</strong>：一个命令拉起四份作业中的任意一个
+   （<code>control</code> / <code>perception</code> / <code>navigation</code> / <code>end_to_end</code>），
+   用 <code>--</code> 分隔透传子作业参数，子作业新增参数时无需改动本模块。</li>
+<li><strong>真实测量的性能评价</strong>：<code>--benchmark</code> 会<strong>实际训练并回放</strong>各模块，
+   量测感知准确率、控制 MSE、横向误差 RMSE、建图覆盖率、导航误差、
+   端到端 MAE 与方向一致率、转向平滑度 AoS、推理时延等指标。</li>
+<li><strong>离线可复现</strong>：全部评测不连接 CARLA 服务端即可完成，
+   适合在无 GPU 的虚拟机或 CI 中复现。</li>
+<li><strong>指标可视化</strong>：导出指标 JSON 与对比图；对比图按组内最大值归一化条长，
+   并用点阵标注真实数值，解决"小数值指标在图上看不见"的问题。</li>
+<li><strong>ROS 指标话题</strong>：把评测指标发布到 <code>/carla/benchmark/metrics</code>，便于记录到 rosbag。</li>
+<li><strong>副本一致性回归测试</strong>：<code>nn_models.py</code> 在各功能包内各有一份副本，
+   该测试在副本出现分歧时失败并列出差异文件，防止"修了一个包、忘了另一个包"。</li>
+</ol>
+<h3 id="_8">运行本拓展模块</h3>
+<p>除本文所需环境外，只需补装 CARLA 0.9.16 的 Python 客户端
+（各模块神经网络均为纯 numpy 实现，无需 TensorFlow/PyTorch）：</p>
+<div class="highlight"><pre><span></span><code>pip3<span class="w"> </span>install<span class="w"> </span>&lt;CARLA&gt;/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+</code></pre></div>
+<p>在线下查看模块总览并运行基准评测（<strong>不需要 CARLA 服务端</strong>）：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/ground/carla_benchmark_suite/main.py<span class="w"> </span>--list
+python3<span class="w"> </span>src/ground/carla_benchmark_suite/main.py<span class="w"> </span>--benchmark<span class="w"> </span>--save_dir<span class="w"> </span>~/shots<span class="w"> </span>--out<span class="w"> </span>~/shots/report.json
+</code></pre></div>
+<p>调度具体子作业（<code>--host</code> 的填法与本文一致：填宿主机 IP）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 作业二：离线取证</span>
+python3<span class="w"> </span>src/ground/carla_benchmark_suite/main.py<span class="w"> </span>--target<span class="w"> </span>perception<span class="w"> </span>--<span class="w"> </span>--headless<span class="w"> </span>--demo
+<span class="c1"># 作业三：在线建图 + NN 导航</span>
+python3<span class="w"> </span>src/ground/carla_benchmark_suite/main.py<span class="w"> </span>--target<span class="w"> </span>navigation<span class="w"> </span>--<span class="w"> </span>--mode<span class="w"> </span>run<span class="w"> </span>--host<span class="w"> </span><span class="m">172</span>.21.108.47<span class="w"> </span>--goal<span class="w"> </span><span class="s2">"20,8"</span>
+<span class="c1"># 作业四：训练端到端 CNN</span>
+python3<span class="w"> </span>src/ground/carla_benchmark_suite/main.py<span class="w"> </span>--target<span class="w"> </span>end_to_end<span class="w"> </span>--<span class="w"> </span>--mode<span class="w"> </span>train<span class="w"> </span>--epochs<span class="w"> </span><span class="m">60</span>
+</code></pre></div>
+<p>使用 launch 启动（ROS 2 / ROS 1）：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ROS 2：发布评测指标 / 调度子模块</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_benchmark_suite<span class="w"> </span>main.launch.py
+ros2<span class="w"> </span>launch<span class="w"> </span>carla_benchmark_suite<span class="w"> </span>main.launch.py<span class="w"> </span>target:<span class="o">=</span>navigation<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47
+<span class="c1"># ROS 1</span>
+roslaunch<span class="w"> </span>carla_benchmark_suite<span class="w"> </span>main.launch<span class="w"> </span>benchmark:<span class="o">=</span><span class="nb">true</span>
+roslaunch<span class="w"> </span>carla_benchmark_suite<span class="w"> </span>main.launch<span class="w"> </span>target:<span class="o">=</span>perception<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47
+</code></pre></div>
+<h3 id="_9">实测结果</h3>
+<p>本机实测（<code>--benchmark --epochs 60 --samples 60</code>，<strong>无需 CARLA 服务端</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作业二 感知</td>
+<td>感知 NN 准确率</td>
+<td>0.9850</td>
+</tr>
+<tr>
+<td>作业二 控制</td>
+<td>控制 NN MSE</td>
+<td>0.01893</td>
+</tr>
+<tr>
+<td>作业二 跟踪</td>
+<td>横向误差 RMSE</td>
+<td>0.9608 m</td>
+</tr>
+<tr>
+<td>作业三 建图</td>
+<td>建图覆盖率</td>
+<td>0.2919（占据格 1387）</td>
+</tr>
+<tr>
+<td>作业三 导航</td>
+<td>规划 NN MSE</td>
+<td>0.00610</td>
+</tr>
+<tr>
+<td>作业三 导航</td>
+<td>导航最近距离</td>
+<td>1.4539 m（阈值 1.5 m，已到达）</td>
+</tr>
+<tr>
+<td>作业四 端到端</td>
+<td>MAE / 方向一致率</td>
+<td>0.10093 / 0.9500</td>
+</tr>
+<tr>
+<td>作业四 端到端</td>
+<td>零输出基线 MAE</td>
+<td>0.40678（网络优于基线 4.0 倍）</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="各模块性能指标对比" src="../../img/ground/carla_bench_metric_summary.png"/></p>
+<p>完整的指标定义、横向对比与评价过程记录见
+<a href="../carla_benchmark_suite/">CARLA 作业综合整合与性能评价</a> 第 6 节。</p>
+<h2 id="_10">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/carla_ad_demo/">Carla 自动驾驶演示</a></li>
 </ul></div>
