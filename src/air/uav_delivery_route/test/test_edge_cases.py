@@ -9,8 +9,10 @@ from uav_delivery_route.core.cases import Case, Station
 from uav_delivery_route.core.checker import check_plan
 from uav_delivery_route.core.energy import (RETURN_MARGIN, EnergyModel,
                                             needs_early_return)
-from uav_delivery_route.core.planner import (RouteConfig, decide_next,
+from uav_delivery_route.core.planner import (FleetPlan, RouteConfig,
+                                             _sortie_cost, decide_next,
                                              plan_routes, sector_clusters,
+                                             sortie_home_margins,
                                              split_sorties)
 
 CFG = RouteConfig()
@@ -108,4 +110,59 @@ def test_decide_next_deliver_swap_done():
     assert d["action"] == "return_for_swap" and d["target"]["sid"] == "depot"
     # 全部服务完 -> done
     d = decide_next(plan, {"S1", "S2"}, (0.0, 0.0), 1.0, MODEL, CFG)
+    assert d["action"] == "done" and d["done"]
+
+
+def test_split_recomputes_full_load_trajectory():
+    # 评审反例：两个 1.2 kg 远站相距 1 m。旧账目把"已投递重量"当机上
+    # 剩余，两站被并进一个架次、报告裕量 1.28；按满载轨迹重算，第一站
+    # 投完的真实裕量只有 0.96，必须拆成两个架次
+    A = Station("A", 5700.0, 0.0, 1.2)
+    B = Station("B", 5701.0, 0.0, 1.2)
+    assert min(sortie_home_margins([A, B], (0.0, 0.0), MODEL, CFG)) < CFG.return_margin
+
+    case = Case("split", "two far 1.2 kg stations", stations=(A, B))
+    plan = plan_routes(case, CFG, MODEL)
+    assert plan.sortie_count == 2, plan.to_dict()
+    assert check_plan(plan, case, MODEL, CFG) == []
+    for so in plan.sorties:
+        real = min(sortie_home_margins(so.stations, plan.depot, MODEL, CFG))
+        assert real >= CFG.return_margin - 1e-9
+        assert math.isclose(real, so.min_home_margin, rel_tol=1e-6)
+
+
+def test_checker_recomputes_margin_independently():
+    # checker 不信任规划器报的 min_home_margin：手工构造"两远站塞进一个
+    # 架次、报告裕量无穷大"的账本，独立复算必须报违反
+    A = Station("A", 5700.0, 0.0, 1.2)
+    B = Station("B", 5701.0, 0.0, 1.2)
+    s = _sortie_cost([A, B], (0.0, 0.0), MODEL, CFG)
+    s.min_home_margin = math.inf
+    plan = FleetPlan("fake", (0.0, 0.0), [s], 0.0, 0.0, 0)
+    bad = check_plan(plan, Case("fake", "x", stations=(A, B)), MODEL, CFG)
+    assert any("home margin" in v for v in bad)
+
+
+def test_decide_next_returns_to_depot_between_sorties():
+    # 评审复现：第一架次送完停在现场，不能直接去送下一架次的站，
+    # 必须先回中心；全部送完也要回中心才算 done
+    A = Station("A", 5700.0, 0.0, 1.2)
+    B = Station("B", 5701.0, 0.0, 1.2)
+    case = Case("ret", "two far stations", stations=(A, B))
+    plan = plan_routes(case, CFG, MODEL)
+    assert plan.sortie_count == 2
+    d = decide_next(plan, {"A"}, (5700.0, 0.0), 0.8, MODEL, CFG)
+    assert d["action"] == "return_to_depot" and d["target"]["sid"] == "depot"
+    # 回到中心、电量不够飞下一架次计划账目 -> 先换电
+    e_next = plan.sorties[1].energy_frac
+    d = decide_next(plan, {"A"}, (0.0, 0.0), min(0.99, e_next * 0.5),
+                    MODEL, CFG)
+    assert d["action"] == "swap"
+    # 电量恢复 -> 开始下一架次
+    d = decide_next(plan, {"A"}, (0.0, 0.0), 1.0, MODEL, CFG)
+    assert d["action"] == "deliver" and d["sortie"] == 1
+    # 全部送完但人不在中心 -> 回中心而不是 done
+    d = decide_next(plan, {"A", "B"}, (5701.0, 0.0), 0.5, MODEL, CFG)
+    assert d["action"] == "return_to_depot"
+    d = decide_next(plan, {"A", "B"}, (0.0, 0.0), 0.5, MODEL, CFG)
     assert d["action"] == "done" and d["done"]

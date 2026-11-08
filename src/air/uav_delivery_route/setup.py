@@ -28,7 +28,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "main = uav_delivery_route.main:main",
+            "main = uav_delivery_route.cli:main",
             "dispatch = uav_delivery_route.ros.dispatch_node:main",
         ],
     },

@@ -91,7 +91,7 @@
         "hover_s": 60.0,
         "payload_max_kg": 1.8,
         "energy_frac": 0.1713,
-        "min_home_margin": 23.189
+        "min_home_margin": 27.457
       },
       {
         "index": 4,
@@ -170,7 +170,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 1.4,
         "energy_frac": 0.1113,
-        "min_home_margin": 32.311
+        "min_home_margin": 23.415
       },
       {
         "index": 8,
@@ -199,20 +199,21 @@
   "elapsed_s": 0.0,
   "flight": {
     "sortie_index": 0,
-    "sim_duration_s": 82.34,
-    "wall_time_s": 2.59,
+    "sim_duration_s": 89.34,
+    "physics_time_s": 89.34,
+    "wall_time_s": 1.36,
     "hover_count": 1,
     "planned_total_dist_m": 538.52,
-    "actual_total_dist_m": 545.33,
-    "mean_arrival_error_m": 0.383,
-    "max_arrival_error_m": 0.767,
+    "actual_total_dist_m": 538.58,
+    "mean_arrival_error_m": 0.008,
+    "max_arrival_error_m": 0.015,
     "legs": [
       {
         "seq": 0,
         "from_id": "depot",
         "to_id": "S10",
         "planned_dist_m": 269.26,
-        "actual_dist_m": 272.66,
+        "actual_dist_m": 269.28,
         "arrival_error_m": 0.0
       },
       {
@@ -220,8 +221,8 @@
         "from_id": "S10",
         "to_id": "depot",
         "planned_dist_m": 269.26,
-        "actual_dist_m": 272.68,
-        "arrival_error_m": 0.767
+        "actual_dist_m": 269.3,
+        "arrival_error_m": 0.015
       }
     ]
   }

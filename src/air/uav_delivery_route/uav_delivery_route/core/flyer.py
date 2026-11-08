@@ -25,8 +25,9 @@ REF_TAU = 0.5
 ATT_DAMPING = (-0.18, -0.18, -0.126)
 #: 起飞后参考轨迹在中心上空的整备悬停（s）
 SETTLE_S = 1.5
-#: 落回中心后的收尾悬停（s）
-TAIL_S = 1.0
+#: 落回中心后的收尾悬停（s）：9 m/s 巡航进近后要留够减速收敛时间，
+#  否则"到站误差"里混进的其实是还没刹完车的距离
+TAIL_S = 8.0
 
 
 def _load_backend():
@@ -124,6 +125,7 @@ class FlightReport:
     """Closed-loop stats for the flown sortie."""
     sortie_index: int
     sim_duration_s: float
+    physics_time_s: float          # MuJoCo 物理时钟，应与 sim_duration_s 一致
     wall_time_s: float
     legs: List[LegReport] = field(default_factory=list)
     hover_count: int = 0
@@ -147,6 +149,7 @@ class FlightReport:
     def to_dict(self) -> dict:
         return dict(sortie_index=self.sortie_index,
                     sim_duration_s=round(self.sim_duration_s, 2),
+                    physics_time_s=round(self.physics_time_s, 2),
                     wall_time_s=round(self.wall_time_s, 2),
                     hover_count=self.hover_count,
                     planned_total_dist_m=round(self.planned_total_m, 2),
@@ -157,11 +160,14 @@ class FlightReport:
 
 
 def fly_sortie(plan, sortie_index: int, cfg, hover_s: float | None = None,
-               dt: float = 0.01, substeps: int = 4, record_every: int = 2,
+               dt: float = 0.01, record_every: int = 2,
                max_steps: int = 200000, progress: bool = False) -> FlightReport:
     """Fly one sortie of the plan in MuJoCo and measure what really happened.
 
     ``hover_s`` 可覆盖配置里的投递悬停时长（冒烟测试用它压缩仿真）。
+    每次循环恰好推进一个控制周期：step_with_control 不传 n（默认 1），
+    内部执行 4 个 0.0025 s 物理子步，物理时钟与参考时钟一一对应
+    （回归见 test_fly_smoke.test_physics_clock_matches_report）。
     """
     Quadrotor, GeometricController, model_dir = _load_backend()
     if hover_s is not None:
@@ -213,7 +219,7 @@ def fly_sortie(plan, sortie_index: int, cfg, hover_s: float | None = None,
         target = np.asarray(p_ref, float).copy()
         target[2] = max(target[2], 0.05)
         thrusts = ctrl.act(quad, target, v_use, np.zeros(3), 0.0)
-        quad.step_with_control(thrusts, substeps)
+        quad.step_with_control(thrusts)
 
         pos = quad.qpos[:3]
         if seg["kind"] == "leg":
@@ -232,10 +238,17 @@ def fly_sortie(plan, sortie_index: int, cfg, hover_s: float | None = None,
                                      pseg["planned_m"], acc, err))
         pending_leg = None
     sim_t = n_steps * dt
+    physics_t = float(quad.time)
     rep = FlightReport(sortie_index=sortie_index, sim_duration_s=sim_t,
+                       physics_time_s=physics_t,
                        wall_time_s=time.time() - wall0,
                        legs=leg_reports,
                        hover_count=sum(1 for s in segs if s["kind"] == "hold") - 2)
+    if abs(physics_t - sim_t) > 1e-6:
+        # 物理时钟与参考时钟脱节说明每轮推进的控制周期数不对（曾把
+        # step_with_control 的 n 当物理子步用，导致时钟差 4 倍）
+        print("[flyer] [warn] physics clock %.3f s != report %.3f s"
+              % (physics_t, sim_t))
     print("[flyer] sortie %d: %d legs, sim %.0f s (wall %.1f s), "
           "actual %.0f m vs planned %.0f m, mean arrival err %.2f m"
           % (sortie_index, len(leg_reports), sim_t, rep.wall_time_s,

@@ -169,33 +169,53 @@ def _sortie_cost(sortie_stations: Sequence[Station], depot: Sequence[float],
                   min_home_margin=math.inf)
 
 
+def sortie_home_margins(stations: Sequence[Station], depot: Sequence[float],
+                        model: EnergyModel, cfg: RouteConfig) -> List[float]:
+    """逐站返航裕量：从配送中心满载出发、按序投递的完整载重/电量轨迹。
+
+    机上载重按"本架次全部包裹在中心一次装齐"计：飞往第 j 站时机上还有
+    第 j..n 站的包裹；投递完第 j 站后机上剩第 j+1..n 站的包裹，返程按
+    这个重量算。此前用"已投递包裹的重量"当剩余载重，顺序一变账目就错
+    （两个 1.2 kg 远站被并进一个架次，报告裕量 1.28、真实只有 0.96）。
+    """
+    margins: List[float] = []
+    battery = 1.0
+    pos = depot
+    for j, s in enumerate(stations):
+        aboard = sum(x.weight_kg for x in stations[j:])       # 到 s 时机上载重
+        cost = model.leg_frac(dist(pos, (s.x, s.y)), aboard,
+                              cfg.cruise_speed_ms)
+        cost += model.hover_frac(aboard, cfg.hover_s)
+        battery -= cost
+        after = sum(x.weight_kg for x in stations[j + 1:])    # 投递完 s 后剩余
+        need_home = model.leg_frac(dist((s.x, s.y), depot), after,
+                                   cfg.cruise_speed_ms)
+        margins.append(battery / need_home if need_home > 1e-12 else math.inf)
+        pos = (s.x, s.y)
+    return margins
+
+
 def split_sorties(depot: Sequence[float], order: List[Station],
                   model: EnergyModel, cfg: RouteConfig) -> List[Sortie]:
     """Walk the ordered stations, closing a sortie whenever battery or payload says so.
 
-    电量判据：若继续飞往下一站（含 20 s 悬停）后，剩余电量低于
-    1.25 x 该站返航所需，则先封口本架次回中心换电（90 s），再开新架次。
+    电量判据：把下一站试排进来后，从配送中心重算整条载重/电量轨迹，
+    任一站的返航裕量 < 1.25 即封口本架次（90 s 换电后重开新架次）。
     载重判据：本架次累计载重 + 下一站包裹 > 2.5 kg 时同样封口。
     特例：空架次时无条件接纳下一站，避免远超续航的站点造成死循环
     （此时 checker 会如实体检出台账违规）。
     """
     sorties: List[Sortie] = []
     cur: List[Station] = []
-    battery = 1.0
-    pos = depot
-    margin_min = math.inf
 
     def close():
-        nonlocal cur, battery, pos, margin_min
+        nonlocal cur
         if cur:
             s = _sortie_cost(cur, depot, model, cfg)
             s.index = len(sorties)
-            s.min_home_margin = margin_min
+            s.min_home_margin = min(sortie_home_margins(cur, depot, model, cfg))
             sorties.append(s)
             cur = []
-        battery = 1.0
-        pos = depot
-        margin_min = math.inf
 
     i = 0
     while i < len(order):
@@ -208,18 +228,10 @@ def split_sorties(depot: Sequence[float], order: List[Station],
             # 单件就超上限：无法装载，跳过（checker 会记录 unservable）
             i += 1
             continue
-        leg_in = dist(pos, (s.x, s.y))
-        cost = model.leg_frac(leg_in, carried + s.weight_kg, cfg.cruise_speed_ms)
-        cost += model.hover_frac(carried + s.weight_kg, cfg.hover_s)
-        after = carried  # 投递完 s 后机上剩余
-        need_home = model.leg_frac(dist((s.x, s.y), depot), after, cfg.cruise_speed_ms)
-        if cur and battery - cost < cfg.return_margin * need_home:
-            close()
+        candidate = cur + [s]
+        if cur and min(sortie_home_margins(candidate, depot, model, cfg)) < cfg.return_margin:
+            close()   # s 进不来本架次，重开新架次再试（循环里 continue 重试同一个 s）
             continue
-        battery -= cost
-        if need_home > 1e-12:
-            margin_min = min(margin_min, battery / need_home)
-        pos = (s.x, s.y)
         cur.append(s)
         i += 1
     close()
@@ -259,41 +271,69 @@ def plan_routes(case: Case, cfg: RouteConfig | None = None,
     return plan
 
 
+DEPOT_RADIUS_M = 2.0   # 判定"在配送中心"的水平半径，与节点到站半径一致
+
+
 def decide_next(plan: FleetPlan, visited: set, pos_xy: Sequence[float],
                 battery_frac: float, model: EnergyModel | None = None,
-                cfg: RouteConfig | None = None) -> dict:
+                cfg: RouteConfig | None = None,
+                at_depot: bool | None = None) -> dict:
     """Online dispatch decision; pure function used by the ROS node.
 
-    节点薄壳：给定已服务站集合、当前位置与电量，返回下一动作。
-    动作取值 deliver / return_for_swap / done；电量判据与离线规划一致
-    （剩余 < 1.25 x 返航所需即建议回中心换电）。
+    节点薄壳：给定已服务站集合、当前位置与电量，返回下一动作。动作取值：
+    deliver（去送下一站）/ return_for_swap（架次中途电量吃紧，回中心）/
+    return_to_depot（本架次送完，回中心装货换电，送完不等于任务结束）/
+    swap（在中心换电，等电量恢复）/ done（全部架次完成且已回中心）。
+    电量判据与离线规划一致（剩余 < 1.25 x 返航所需即建议回中心）。
     """
     model = model or EnergyModel()
     cfg = cfg or RouteConfig()
     depot = plan.depot
+    if at_depot is None:
+        at_depot = dist(pos_xy, depot) < DEPOT_RADIUS_M
 
+    def _act(action, k, target, done=False):
+        if target is not None:
+            d_tgt = round(dist(pos_xy, (target["x"], target["y"])), 2)
+        else:
+            d_tgt = 0.0
+        return dict(action=action, sortie=k, target=target,
+                    distance_to_target_m=d_tgt,
+                    battery_frac=round(battery_frac, 4), done=done)
+
+    depot_t = dict(sid="depot", x=depot[0], y=depot[1])
+
+    cur_k = None
     for k in range(len(plan.sorties)):
-        sortie = plan.sorties[k]
-        remaining = [s for s in sortie.stations if s.sid not in visited]
-        if not remaining:
-            continue
-        # 顺序投递：取本架次第一个未服务的站
-        nxt = remaining[0]
-        carried = sum(s.weight_kg for s in remaining)
-        leg_in = dist(pos_xy, (nxt.x, nxt.y))
-        cost = model.leg_frac(leg_in, carried, cfg.cruise_speed_ms)
-        cost += model.hover_frac(carried, cfg.hover_s)
-        need_home = model.leg_frac(dist((nxt.x, nxt.y), depot),
-                                   carried - nxt.weight_kg, cfg.cruise_speed_ms)
-        if battery_frac - cost < cfg.return_margin * need_home:
-            return dict(action="return_for_swap", sortie=k,
-                        target=dict(sid="depot", x=depot[0], y=depot[1]),
-                        distance_to_target_m=round(dist(pos_xy, depot), 2),
-                        battery_frac=round(battery_frac, 4), done=False)
-        return dict(action="deliver", sortie=k,
-                    target=dict(sid=nxt.sid, x=nxt.x, y=nxt.y),
-                    distance_to_target_m=round(leg_in, 2),
-                    battery_frac=round(battery_frac, 4), done=False)
-    return dict(action="done", sortie=-1, target=None,
-                distance_to_target_m=0.0,
-                battery_frac=round(battery_frac, 4), done=True)
+        if any(s.sid not in visited for s in plan.sorties[k].stations):
+            cur_k = k
+            break
+    if cur_k is None:
+        # 全部架次完成：必须先回中心才算收工（曾直接 done，无人机停在现场）
+        if at_depot:
+            return _act("done", -1, None, done=True)
+        return _act("return_to_depot", len(plan.sorties) - 1, depot_t)
+
+    sortie = plan.sorties[cur_k]
+    remaining = [s for s in sortie.stations if s.sid not in visited]
+    started = len(remaining) < len(sortie.stations)   # 本架次已送过至少一站
+
+    if not started and not at_depot:
+        # 新架次还没出发而人不在中心：上一架次送完（或中途被拉走），
+        # 必须先回中心装货——不能从现场直接飞去送下一架次的站
+        return _act("return_to_depot", cur_k, depot_t)
+    if not started and at_depot and battery_frac < sortie.energy_frac:
+        # 在中心但电量不够飞完新架次的计划账目：先换电
+        return _act("swap", cur_k, None)
+
+    nxt = remaining[0]
+    carried = sum(s.weight_kg for s in remaining)
+    leg_in = dist(pos_xy, (nxt.x, nxt.y))
+    cost = model.leg_frac(leg_in, carried, cfg.cruise_speed_ms)
+    cost += model.hover_frac(carried, cfg.hover_s)
+    need_home = model.leg_frac(dist((nxt.x, nxt.y), depot),
+                               carried - nxt.weight_kg, cfg.cruise_speed_ms)
+    if battery_frac - cost < cfg.return_margin * need_home:
+        return _act("return_for_swap", cur_k, depot_t)
+    return _act("deliver", cur_k,
+                dict(sid=nxt.sid, x=nxt.x, y=nxt.y))

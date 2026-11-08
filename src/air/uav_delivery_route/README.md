@@ -14,9 +14,9 @@ the real world. 一个配送中心 + 10~14 个收发站的末端物流场景：�
 # ROS 2 环境下可 colcon build，纯算法层无需安装即可直接运行
 cd src/air/uav_delivery_route
 python main.py --no-sim        # 秒级，仅算法层
-python main.py                 # 三个 case 全跑，含 MuJoCo 闭环真飞（约 40 s 墙钟）
+python main.py                 # 三个 case 全跑，含 MuJoCo 闭环真飞（约 16 s 墙钟）
 python main.py --case case_farm_sparse
-python -m pytest test/ -q      # 25 项测试全过
+python -m pytest test/ -q      # 29 项测试全过
 python tools/make_figures.py   # 从 results/*.json 生成 images/batches.png
 ```
 
@@ -60,7 +60,11 @@ launch 文件在 [launch/main.launch.py](launch/main.launch.py)，
   每段实际航程、到站误差（取该站悬停结束时刻）、全程耗时。
 - **在线调度**（[ros/dispatch_node.py](uav_delivery_route/ros/dispatch_node.py)）：
   薄壳节点，订阅 odom 与电量话题，判定逻辑复用 core 的 `decide_next`，
-  以 JSON 发布下一目标站与建议换电时机到 `/uav_delivery/dispatch`。
+  以 JSON 发布下一动作到 `/uav_delivery/dispatch`。动作带完整架次状态：
+  deliver（送下一站）/ return_for_swap（架次中途电量吃紧回中心）/
+  return_to_depot（本架次送完回中心装货换电）/ swap（在中心等换电完成）/
+  done（全部架次完成且已回中心）；到站判定要求在 2 m 半径内连续悬停
+  5 s（`confirm_s` 可配），路过半径边缘不算投递完成。
 
 三个 case 都在 [core/cases.py](uav_delivery_route/core/cases.py) 里用固定坐标（可复现）：
 `case_farm_dense`（站近包裹轻，单架次）、`case_farm_sparse`（0.8–1.6 km 远，
@@ -72,21 +76,21 @@ launch 文件在 [launch/main.launch.py](launch/main.launch.py)，
 
 - case_farm_dense —— 12 站，1 架次 0 换电
   - 计划：总航程 2638.95 m，任务总时长 533.22 s
-  - 真飞第 1 架次：仿真 535.72 s（墙钟 21.2 s），实际航程 2683.39 m
-    （比计划多 44.4 m，+1.7%），平均到站误差 0.059 m，最大 0.767 m
+  - 真飞第 1 架次：仿真 542.72 s（墙钟 8.1 s），实际航程 2639.51 m
+    （比计划多 0.56 m，+0.02%），平均到站误差 0.001 m，最大 0.015 m
 - case_farm_sparse —— 12 站，6 架次 5 次换电
   - 计划：总航程 22275.05 m，任务总时长 3165.01 s
-  - 真飞第 1 架次（3221.58 m 计划）：仿真 400.45 s（墙钟 14.4 s），
-    实际航程 3231.87 m（+10.3 m，+0.3%），平均到站误差 0.261 m，最大 0.782 m
+  - 真飞第 1 架次（3221.58 m 计划）：仿真 407.45 s（墙钟 6.3 s），
+    实际航程 3221.74 m（+0.16 m，+0.00%），平均到站误差 0.006 m，最大 0.017 m
 - case_farm_heavy —— 12 站，9 架次 8 次换电（5 件重包裹各占一架次）
   - 计划：总航程 10593.39 m，任务总时长 2137.04 s
-  - 真飞第 1 架次（538.52 m 计划）：仿真 82.34 s（墙钟 2.7 s），
-    实际航程 545.33 m（+6.8 m，+1.3%），平均到站误差 0.383 m，最大 0.767 m
+  - 真飞第 1 架次（538.52 m 计划）：仿真 89.34 s（墙钟 1.4 s），
+    实际航程 538.58 m（+0.06 m，+0.01%），平均到站误差 0.008 m，最大 0.015 m
 
 实际航程普遍略高于计划：几何控制器跟踪分段航迹存在微小超调与绕弯，
 量级在 0.3%–1.7%，说明计划层能耗/航程账目与真实飞行一致。
 
-测试（`python -m pytest test/ -q`，**25 项全过**）按 feature 分三个文件：
+测试（`python -m pytest test/ -q`，**29 项全过**）按 feature 分三个文件：
 [test_planner_basic.py](test/test_planner_basic.py)（分簇/最近邻/2-opt/切批/覆盖）、
 [test_edge_cases.py](test/test_edge_cases.py)（能耗线性、载重上限、超续航站、换电判据、调度决策）、
 [test_fly_smoke.py](test/test_fly_smoke.py)（MuJoCo 小规模冒烟，墙钟 < 3 s）。

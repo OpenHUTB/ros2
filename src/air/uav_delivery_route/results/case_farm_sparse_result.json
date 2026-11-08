@@ -31,7 +31,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 1.9,
         "energy_frac": 0.2598,
-        "min_home_margin": 10.4
+        "min_home_margin": 7.742
       },
       {
         "index": 1,
@@ -53,7 +53,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 1.9,
         "energy_frac": 0.3608,
-        "min_home_margin": 7.388
+        "min_home_margin": 9.044
       },
       {
         "index": 2,
@@ -75,7 +75,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 2.1,
         "energy_frac": 0.3402,
-        "min_home_margin": 5.807
+        "min_home_margin": 8.337
       },
       {
         "index": 3,
@@ -97,7 +97,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 1.8,
         "energy_frac": 0.219,
-        "min_home_margin": 12.881
+        "min_home_margin": 10.754
       },
       {
         "index": 4,
@@ -119,7 +119,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 2.1,
         "energy_frac": 0.2362,
-        "min_home_margin": 6.692
+        "min_home_margin": 10.977
       },
       {
         "index": 5,
@@ -141,7 +141,7 @@
         "hover_s": 40.0,
         "payload_max_kg": 1.9,
         "energy_frac": 0.2872,
-        "min_home_margin": 8.24
+        "min_home_margin": 7.748
       }
     ]
   },
@@ -151,20 +151,21 @@
   "elapsed_s": 0.0,
   "flight": {
     "sortie_index": 0,
-    "sim_duration_s": 400.45,
-    "wall_time_s": 13.24,
+    "sim_duration_s": 407.45,
+    "physics_time_s": 407.45,
+    "wall_time_s": 6.28,
     "hover_count": 2,
     "planned_total_dist_m": 3221.58,
-    "actual_total_dist_m": 3231.87,
-    "mean_arrival_error_m": 0.261,
-    "max_arrival_error_m": 0.782,
+    "actual_total_dist_m": 3221.74,
+    "mean_arrival_error_m": 0.006,
+    "max_arrival_error_m": 0.017,
     "legs": [
       {
         "seq": 0,
         "from_id": "depot",
         "to_id": "S09",
         "planned_dist_m": 1513.27,
-        "actual_dist_m": 1516.73,
+        "actual_dist_m": 1513.35,
         "arrival_error_m": 0.0
       },
       {
@@ -172,7 +173,7 @@
         "from_id": "S09",
         "to_id": "S08",
         "planned_dist_m": 500.0,
-        "actual_dist_m": 503.4,
+        "actual_dist_m": 500.03,
         "arrival_error_m": 0.0
       },
       {
@@ -180,8 +181,8 @@
         "from_id": "S08",
         "to_id": "depot",
         "planned_dist_m": 1208.3,
-        "actual_dist_m": 1211.74,
-        "arrival_error_m": 0.782
+        "actual_dist_m": 1208.37,
+        "arrival_error_m": 0.017
       }
     ]
   }

@@ -15,7 +15,9 @@ from uav_delivery_route.core.cases import Case, Station
 from uav_delivery_route.core.energy import EnergyModel
 from uav_delivery_route.core.planner import RouteConfig, plan_routes
 
-CFG = RouteConfig(hover_s=2.0)  # 压缩投递悬停，把冒烟测试控制在 10 s 内
+# 修好物理时钟后墙钟约为仿真时长的 1/70，真实 20 s 悬停也能秒级跑完，
+# 直接用与主程序一致的悬停时长
+CFG = RouteConfig(hover_s=20.0)
 
 
 @pytest.fixture(scope="module")
@@ -35,13 +37,20 @@ def test_backend_imports():
     assert model_dir
 
 
+def test_physics_clock_matches_report(report):
+    # 回归：曾把 step_with_control 的 n（控制周期数）当物理子步用，
+    # 物理时钟比报告时间快 4 倍。每轮只推进一个控制周期后两者必须一致
+    assert report.physics_time_s > 0.0
+    assert abs(report.physics_time_s - report.sim_duration_s) < 1e-6
+
+
 def test_fly_two_station_sortie(report):
     # 3 段 leg（中心->S1->S2->中心），到点误差小、实际航程接近计划
     assert len(report.legs) == 3
-    assert report.mean_arrival_error_m < 2.5
-    assert report.max_arrival_error_m < 4.0
+    assert report.mean_arrival_error_m < 0.5
+    assert report.max_arrival_error_m < 1.0
     ratio = report.actual_total_m / report.planned_total_m
-    assert 0.8 < ratio < 1.2
+    assert 0.9 < ratio < 1.15
     assert report.sim_duration_s > 0 and report.wall_time_s < 30.0
 
 

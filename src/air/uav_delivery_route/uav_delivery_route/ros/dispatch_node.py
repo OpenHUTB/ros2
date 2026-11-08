@@ -25,6 +25,9 @@ from uav_delivery_route.core.planner import RouteConfig, decide_next, plan_route
 
 #: 判定"已到站"的水平半径（m）
 ARRIVE_RADIUS_M = 2.0
+#: 悬停确认时长（s）：进入半径后须连续停留这么久才算投递完成，
+#  防止巡航路过半径边缘就把站标记成已服务
+CONFIRM_S = 5.0
 
 
 class DispatchNode(Node):
@@ -38,6 +41,7 @@ class DispatchNode(Node):
         self.declare_parameter("payload_cap_kg", 2.5)
         self.declare_parameter("return_margin", 1.25)
         self.declare_parameter("n_sectors", 3)
+        self.declare_parameter("confirm_s", CONFIRM_S)
         self.declare_parameter("odom_topic", "/uav/odom")
         self.declare_parameter("battery_topic", "/uav/battery")
         self.declare_parameter("dispatch_topic", "/uav_delivery/dispatch")
@@ -56,6 +60,9 @@ class DispatchNode(Node):
         self.pos = (0.0, 0.0)
         self.battery = 1.0
         self.visited: set = set()
+        self.confirm_s = float(p("confirm_s"))
+        self._near_since: float | None = None   # 进入当前目标半径的时刻
+        self._swap_until: float = 0.0           # 换电等待截止时刻
 
         self.create_subscription(Odometry, str(p("odom_topic")), self._on_odom, 10)
         self.create_subscription(Float32, str(p("battery_topic")), self._on_battery, 10)
@@ -73,17 +80,49 @@ class DispatchNode(Node):
     def _on_battery(self, msg: Float32) -> None:
         self.battery = float(msg.data)
 
+    def _now(self) -> float:
+        return self.get_clock().now().nanoseconds * 1e-9
+
     def _tick(self) -> None:
-        # 到站判定：水平距离进入半径即标记已服务
+        now = self._now()
+
+        # 换电等待：到截止时刻（或电量已恢复）才继续
+        if now < self._swap_until and self.battery < 0.95:
+            self._publish(dict(action="swap", sortie=-1, target=None,
+                               distance_to_target_m=0.0,
+                               battery_frac=round(self.battery, 4),
+                               done=False))
+            return
+        self._swap_until = 0.0
+
         d = decide_next(self.plan, self.visited, self.pos,
                         self.battery, self.model, self.cfg)
+
+        if d["action"] == "deliver" and d.get("target") is not None:
+            tgt = d["target"]
+            if math.hypot(self.pos[0] - tgt["x"],
+                          self.pos[1] - tgt["y"]) < ARRIVE_RADIUS_M:
+                # 悬停确认：连续停留 confirm_s 秒才算投递完成
+                if self._near_since is None:
+                    self._near_since = now
+                elif now - self._near_since >= self.confirm_s:
+                    self.visited.add(tgt["sid"])
+                    self._near_since = None
+                    d = decide_next(self.plan, self.visited, self.pos,
+                                    self.battery, self.model, self.cfg)
+            else:
+                self._near_since = None
+        else:
+            self._near_since = None
+
+        if d["action"] == "swap":
+            self._swap_until = now + self.cfg.swap_s
+            self.get_logger().info("swap: waiting %.0f s at depot"
+                                   % self.cfg.swap_s)
+        self._publish(d)
+
+    def _publish(self, d: dict) -> None:
         tgt = d.get("target")
-        if d["action"] == "deliver" and tgt is not None:
-            if math.hypot(self.pos[0] - tgt["x"], self.pos[1] - tgt["y"]) < ARRIVE_RADIUS_M:
-                self.visited.add(tgt["sid"])
-                d = decide_next(self.plan, self.visited, self.pos, self.battery,
-                                self.model, self.cfg)
-                tgt = d.get("target")
         msg = String(data=json.dumps(dict(action=d["action"], sortie=d["sortie"],
                                           target=tgt, battery_frac=d["battery_frac"],
                                           pos=dict(x=self.pos[0], y=self.pos[1]),

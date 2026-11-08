@@ -61,7 +61,7 @@
         "hover_s": 240.0,
         "payload_max_kg": 2.3,
         "energy_frac": 0.36,
-        "min_home_margin": 24.037
+        "min_home_margin": 31.336
       }
     ]
   },
@@ -71,20 +71,21 @@
   "elapsed_s": 0.0,
   "flight": {
     "sortie_index": 0,
-    "sim_duration_s": 535.72,
-    "wall_time_s": 16.79,
+    "sim_duration_s": 542.72,
+    "physics_time_s": 542.72,
+    "wall_time_s": 8.12,
     "hover_count": 12,
     "planned_total_dist_m": 2638.95,
-    "actual_total_dist_m": 2683.39,
-    "mean_arrival_error_m": 0.059,
-    "max_arrival_error_m": 0.767,
+    "actual_total_dist_m": 2639.51,
+    "mean_arrival_error_m": 0.001,
+    "max_arrival_error_m": 0.015,
     "legs": [
       {
         "seq": 0,
         "from_id": "depot",
         "to_id": "S10",
         "planned_dist_m": 321.4,
-        "actual_dist_m": 324.86,
+        "actual_dist_m": 321.48,
         "arrival_error_m": 0.0
       },
       {
@@ -92,7 +93,7 @@
         "from_id": "S10",
         "to_id": "S05",
         "planned_dist_m": 165.53,
-        "actual_dist_m": 168.96,
+        "actual_dist_m": 165.59,
         "arrival_error_m": 0.0
       },
       {
@@ -100,7 +101,7 @@
         "from_id": "S05",
         "to_id": "S06",
         "planned_dist_m": 194.16,
-        "actual_dist_m": 197.56,
+        "actual_dist_m": 194.19,
         "arrival_error_m": 0.0
       },
       {
@@ -108,7 +109,7 @@
         "from_id": "S06",
         "to_id": "S04",
         "planned_dist_m": 356.93,
-        "actual_dist_m": 360.34,
+        "actual_dist_m": 356.96,
         "arrival_error_m": 0.0
       },
       {
@@ -116,7 +117,7 @@
         "from_id": "S04",
         "to_id": "S09",
         "planned_dist_m": 130.38,
-        "actual_dist_m": 133.82,
+        "actual_dist_m": 130.44,
         "arrival_error_m": 0.0
       },
       {
@@ -124,7 +125,7 @@
         "from_id": "S09",
         "to_id": "S03",
         "planned_dist_m": 158.11,
-        "actual_dist_m": 161.56,
+        "actual_dist_m": 158.19,
         "arrival_error_m": 0.0
       },
       {
@@ -132,7 +133,7 @@
         "from_id": "S03",
         "to_id": "S12",
         "planned_dist_m": 123.69,
-        "actual_dist_m": 127.11,
+        "actual_dist_m": 123.73,
         "arrival_error_m": 0.0
       },
       {
@@ -140,7 +141,7 @@
         "from_id": "S12",
         "to_id": "S01",
         "planned_dist_m": 326.96,
-        "actual_dist_m": 330.39,
+        "actual_dist_m": 327.01,
         "arrival_error_m": 0.0
       },
       {
@@ -148,7 +149,7 @@
         "from_id": "S01",
         "to_id": "S11",
         "planned_dist_m": 145.6,
-        "actual_dist_m": 149.05,
+        "actual_dist_m": 145.67,
         "arrival_error_m": 0.0
       },
       {
@@ -156,7 +157,7 @@
         "from_id": "S11",
         "to_id": "S08",
         "planned_dist_m": 148.66,
-        "actual_dist_m": 152.04,
+        "actual_dist_m": 148.66,
         "arrival_error_m": 0.0
       },
       {
@@ -164,7 +165,7 @@
         "from_id": "S08",
         "to_id": "S07",
         "planned_dist_m": 252.98,
-        "actual_dist_m": 256.37,
+        "actual_dist_m": 252.99,
         "arrival_error_m": 0.0
       },
       {
@@ -172,7 +173,7 @@
         "from_id": "S07",
         "to_id": "S02",
         "planned_dist_m": 152.97,
-        "actual_dist_m": 156.38,
+        "actual_dist_m": 153.01,
         "arrival_error_m": 0.0
       },
       {
@@ -180,8 +181,8 @@
         "from_id": "S02",
         "to_id": "depot",
         "planned_dist_m": 161.55,
-        "actual_dist_m": 164.96,
-        "arrival_error_m": 0.767
+        "actual_dist_m": 161.59,
+        "arrival_error_m": 0.015
       }
     ]
   }

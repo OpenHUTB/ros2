@@ -13,7 +13,7 @@ from typing import List
 
 from .cases import Case
 from .energy import EnergyModel
-from .planner import FleetPlan, RouteConfig
+from .planner import FleetPlan, RouteConfig, sortie_home_margins
 
 
 def check_plan(plan: FleetPlan, case: Case, model: EnergyModel | None = None,
@@ -46,6 +46,13 @@ def check_plan(plan: FleetPlan, case: Case, model: EnergyModel | None = None,
         if so.payload_max_kg > cfg.payload_cap_kg + 1e-9:
             bad.append("%s: payload %.2f kg exceeds cap %.2f kg"
                        % (tag, so.payload_max_kg, cfg.payload_cap_kg))
+        # 3b) 返航裕量：checker 独立重算完整载重/电量轨迹，不信任规划器
+        # 报的 min_home_margin（切批账目曾与此处口径不一致而漏检）
+        real_min = min(sortie_home_margins(so.stations, plan.depot, model, cfg))
+        if real_min < cfg.return_margin - 1e-9:
+            bad.append("%s: home margin %.3f below required %.2f "
+                       "(reported %.3f)"
+                       % (tag, real_min, cfg.return_margin, so.min_home_margin))
         # 4) 单站包裹本身超重则该站不可服务
         for s in so.stations:
             if s.weight_kg > cfg.payload_cap_kg + 1e-9:
