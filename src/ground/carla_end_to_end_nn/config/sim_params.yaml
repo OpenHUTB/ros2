@@ -1,0 +1,29 @@
+# CARLA 端到端神经网络（图像 → 控制）—— 仿真参数
+#
+# 这里只列 ROS 2 节点真正 declare_parameter 过的键。节点没声明的键写进来也不会生效
+# （rclpy 对未声明的参数覆盖项直接忽略），所以相机分辨率那批参数目前由
+# carla_end_to_end_nn/main.py 的模块常量控制，见文件末尾的说明。
+carla_end_to_end_node:
+  ros__parameters:
+    # CARLA 服务端地址（Windows 宿主机运行 CarlaUE4；虚拟机填写宿主机 IP）
+    host: "127.0.0.1"
+    port: 2000
+    # 地图：Town05 车道线清晰，适合端到端视觉驾驶演示
+    town: "Town05"
+    # 端到端 CNN 模型路径（由 main.py --mode train 生成）
+    model_path: "models/cnn.json"
+    # 推理后端：numpy=纯 numpy SimpleCNN（默认，无需 TensorFlow）；tf=tf.keras
+    backend: "numpy"
+    # 固定油门（转向由 CNN 输出；此处油门保持恒定以便观察转向学习效果）
+    throttle: 0.45
+    # 是否把相机图像发布到话题
+    publish_image: true
+
+# 下面这些**不是** ROS 参数，由 main.py / carla_common.py 的模块常量控制，
+# 写在这里不会生效，因此没有列进 ros__parameters（列了会让人以为能改）：
+#
+#   image_width = 80    image_height = 60    camera_fov = 90.0
+#       —— 见 main.py 的 IMG_W / IMG_H，以及 carla_common.make_rgb_camera() 的默认 fov。
+#          端到端 CNN 的输入尺寸必须与训练时一致，改这里也不会改变网络结构。
+#   ego_blueprint = vehicle.tesla.model3（想换可用环境变量 CARLA_EGO_BP）
+#   fixed_delta_seconds = 0.05（同步模式步长，见 main.py 的 DT）
