@@ -428,3 +428,31 @@ ros2 launch payload_mass_estimation main.launch.py project_root:="$PWD"
 本项目**没有**直接接入 `carlair_ros_bridge`。接其他仿真器时，必须同时拿到**同步的竖直速度**与**以牛顿为单位的总推力**——只有 `/uav/odom` 不够。倾斜飞行还要把推力投影到竖直方向。
 
 ---
+
+## 9. 源代码解析
+
+| 文件 | 行数 | 职责 |
+|---|---:|---|
+| `payload_mass_estimation/data.py` | 25 | 窗口、加速度差分、冲量基线、在线 `Estimator` |
+| `payload_mass_estimation/experiment.py` | 84 | 采集调度、数据集、训练、评估、指标 |
+| `payload_mass_estimation/simulation.py` | 46 | MuJoCo 模型加载、固定控制器、飞行与可选渲染 |
+| `payload_mass_estimation/ros_nodes.py` | 51 | `Replay` 与 `Predict` 两个节点 |
+| `payload_mass_estimation/dashboard.py` | 24 | 订阅 `/payload/estimate`，结束后画图落盘 |
+| `main.py` | 18 | 统一入口（prepare/collect/train/evaluate/test/build/demo） |
+| `main.sh` | 6 | 加载 ROS 与 venv |
+| `course_environment.py` | 52 | `doctor` 与 colcon 构建 |
+| `render_validation.py` | 11 | 重新渲染 MuJoCo 场景图 |
+
+五个关键设计：
+
+**训练与在线共用一份特征代码。** `data.py` 的 `features()` 同时被 `experiment.dataset()` 与在线 `Estimator.step()` 调用，避免"离线一套、在线一套"的经典偏差。
+
+**推力错一位对齐。** `force = a[:-1, 3]`、`acceleration = np.diff(v)/DT`：第 \(k\) 条推力对应第 \(k\) 个加速度。这行代码决定了物理基线与网络的正确性。
+
+**标签不参与控制。** `simulation.collect()` 里载荷只影响 `inertial` 的质量；控制器读的是高度与速度。所以"载荷可被推断"不是自证。
+
+**物理基线是代码里的一等公民。** 它在 `evaluate()` 中与四个网络并列评估，输出同样的指标；不是文档里补的一句说明。
+
+**采集拒绝静默失败。** 飞行出现非有限值或高度低于 0.3 m 时直接 `raise`，而不是把坏样本混进训练集。
+
+---
