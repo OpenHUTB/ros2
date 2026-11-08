@@ -104,7 +104,7 @@ python3 main.py
 | fast_walk | 600 | -0.1442 | 0.0113 |
 | run | 600 | -0.2002 | 0.0168 |
 
-切换发生在 3 / 9 / 15 / 21 / 27 s。pytest 对 **5 次切换逐次断言**首拍速度与上一拍相同（使用规划器解析导数）；CSV 中 0.530 rad/s 的最大表观左右差出现在 21.006 s（快步→跑步），是因为 100 Hz 记录点在切换后 6 ms、过渡已开始演化，并非真实跳变。最大相邻采样 `qddes` 差 0.550 rad/s 出现在 21.126 s，属于 21.0 s 的切换窗口；直接切换同窗口为 149.811 rad/s。
+切换发生在 3 / 9 / 15 / 21 / 27 s。pytest 对 **5 次切换逐次断言**首拍速度与上一拍相同（使用规划器解析导数）；CSV 中 0.530 rad/s 的最大表观左右差出现在 21.006 s（跑步→行走），是因为 100 Hz 记录点在切换后 6 ms、过渡已开始演化，并非真实跳变。最大相邻采样 `qddes` 差 0.550 rad/s 出现在 21.126 s，属于 21.0 s 的切换窗口（跑步→行走）；直接切换同窗口为 149.811 rad/s。
 
 jerk/角加速度是差分指标，会随分析网格变化：Hermite 只保证 C1，过渡起止点的加速度仍有跳变，因此 jerk 同样不收敛。下表把同一份 100 Hz 记录插值到更细网格，仅用于说明分辨率敏感性；主结论采用切换时刻 `qddes` 左右极限差。
 
@@ -149,4 +149,4 @@ jerk/角加速度是差分指标，会随分析网格变化：Hermite 只保证 
 
 ## 复现说明
 
-`results/run_spline` 与 `results/run_direct` 均由 `main.py` 在本机实际运行产生，均包含 100 Hz、3401 条等间隔采样的 `trajectory.csv`；`run_spline` 还包含由分析脚本生成的 `metrics.json`、`metrics.md`、图表与 GIF。测试通过 `python3 -m pytest -q test` 验证三次 Hermite 插值与解析导数、运动学，以及完整 34 s 调度下全部 5 次切换的逐窗口速度连续性。
+`results/run_spline` 与 `results/run_direct` 由 `main.py` 在本机实际运行产生，均包含 100 Hz、3401 条等间隔采样的 `trajectory.csv`；`run_spline` 还包含分析脚本生成的 `metrics.json`、`metrics.md`、图表与 GIF。运行输出已通过 `.gitignore` 排除、不入库，文档所需图表保存在 `docs/img/`。测试通过 `python3 -m pytest -q test` 验证三次 Hermite 插值与解析导数、运动学，以及完整 34 s 调度下全部 5 次切换的逐窗口速度连续性。

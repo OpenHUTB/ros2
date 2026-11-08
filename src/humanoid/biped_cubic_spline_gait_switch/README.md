@@ -19,7 +19,7 @@
 
 ## 环境
 
-- Ubuntu 22.04，ROS 2 Humble，Python 3.8
+- Ubuntu 22.04，ROS 2 Humble，Python 3.10
 - 依赖：`numpy`、`pyyaml`、`matplotlib`、`Pillow`（`python3-pil`）
 - 无 Gazebo/MuJoCo 依赖，纯 Python 运动学 + 关节伺服仿真，可在无显示器环境运行
 
@@ -38,8 +38,7 @@ biped_cubic_spline_gait_switch/
 ├── launch/main.launch.py
 ├── tools/analyze.py        # 指标、图表、GIF
 ├── test/                   # pytest
-├── results/run_spline/     # 真实运行数据（三次样条）
-├── results/run_direct/     # 对照数据（直接切换）
+├── results/                # 本机运行输出（.gitignore，不入库）
 ├── main.py                 # 一键实验
 └── README.md
 ```
@@ -143,7 +142,7 @@ u = (t - t0) / T
 | fast_walk | 600 | -0.1442 | 0.0113 |
 | run | 600 | -0.2002 | 0.0168 |
 
-切换发生在 3 / 9 / 15 / 21 / 27 s。pytest 对 **5 次切换逐次断言**切换首拍速度与上一拍相同（使用规划器解析导数）；CSV 中 0.530 rad/s 的最大表观左右差出现在 21.006 s（快步→跑步），是因为 100 Hz 记录点在切换后 6 ms，过渡已经开始演化，并非真实跳变。最大相邻采样 `qddes` 差 0.550 rad/s 出现在 21.126 s，属于 21.0 s 的切换窗口；直接切换同窗口为 149.811 rad/s。
+切换发生在 3 / 9 / 15 / 21 / 27 s。pytest 对 **5 次切换逐次断言**切换首拍速度与上一拍相同（使用规划器解析导数）；CSV 中 0.530 rad/s 的最大表观左右差出现在 21.006 s（跑步→行走），是因为 100 Hz 记录点在切换后 6 ms，过渡已经开始演化，并非真实跳变。最大相邻采样 `qddes` 差 0.550 rad/s 出现在 21.126 s，属于 21.0 s 的切换窗口（跑步→行走）；直接切换同窗口为 149.811 rad/s。
 
 jerk/角加速度是 100 Hz 网格上的差分量，会随网格变化：Hermite 只保证 C1，过渡起止点的加速度仍有跳变，因此 jerk 同样不收敛。下表把同一份 100 Hz 记录插值到更细网格，说明分辨率敏感性；主结论采用切换时刻 `qddes` 左右极限差，而不是 jerk 降幅。
 
@@ -157,16 +156,16 @@ jerk/角加速度是 100 Hz 网格上的差分量，会随网格变化：Hermite
 
 ZMP 裕度为负是因为本仿真采用开环轨迹跟踪，没有加入平衡控制器；该指标由期望关节角的 FK 与规划接触相位得到，只用于衡量规划轨迹的几何关系，不代表真实接触力。
 
-图表见 `results/run_spline/`：
+图表见 `docs/img/biped_cubic_spline_gait_switch_*`（由 `results/run_spline` 生成）：
 
-- `joints.png`：期望/实际关节角
-- `velocity.png`：关节角速度
-- `jerk.png`：加加速度
-- `zmp.png`：质心、ZMP 与裕度
-- `feet.png`：双脚轨迹
-- `gait_timeline.png`：步态时间线
-- `comparison.png`：三次样条 vs 直接切换
-- `walking.gif`：行走动画
+- `*_joints.png`：期望/实际关节角
+- `*_velocity.png`：关节角速度
+- `*_jerk.png`：加加速度
+- `*_zmp.png`：质心、ZMP 与裕度
+- `*_feet.png`：双脚轨迹
+- `*_gait_timeline.png`：步态时间线
+- `*_comparison.png`：三次样条 vs 直接切换
+- `*_walking.gif`：行走动画
 
 ## 测试
 
@@ -179,7 +178,7 @@ python3 -m pytest -q test
 
 ## 复现说明
 
-`results/run_spline` 与 `results/run_direct` 均为本机实际运行产生：`main.py` 启动三个 ROS 2 节点，记录 34 s、3401 条 100 Hz 采样（时间戳严格等间隔），再由 `tools/analyze.py` 生成指标与图表。数据未手工修改。
+`results/run_spline` 与 `results/run_direct` 由 `main.py` 在本机实际运行产生（34 s、3401 条 100 Hz 采样，时间戳严格等间隔），再由 `tools/analyze.py` 生成指标与图表。运行输出已通过 `.gitignore` 排除，不入库；文档所需图表保存在 `docs/img/`。数据未手工修改。
 
 ## 大模型使用声明
 

@@ -106,10 +106,10 @@ def resample_data(data, rate):
 
 
 def switch_steps(values, t, switch_times):
-    """切换时刻左右极限差：最后一个切换前样本与第一个切换后样本之差。
+    """切换前后相邻样本差：最后一个切换前样本与第一个切换后样本之差。
 
-    这是真正的控制量不连续度；相邻采样差会随网格变细而缩小，不能用来
-    判断连续性。
+    这是 100 Hz 采样下的表观差，用于说明相邻采样的连续性强弱；真实左右
+    极限差由 pytest 对规划器解析导数的逐次断言验证。
     """
     steps = {}
     for ts in switch_times:
@@ -597,8 +597,8 @@ def write_markdown(metrics, out):
         lines.append("")
         lines.append("## 指标分辨率敏感性")
         lines.append("")
-        lines.append("差分指标依赖分析网格：网格越细，直接切换的位置阶跃会使 "
-                     "jerk 按 1/dt³ 增大，Hermite 切换则收敛。"
+        lines.append("差分指标依赖分析网格：网格越细，直接切换的位置阶跃与 "
+                     "Hermite 过渡端点的加速度跳变都会使 jerk 增大，两者都不收敛；"
                      "因此主结论采用切换时刻 qddes 的左右极限差。")
         lines.append("")
         lines.append("| 网格 (Hz) | 直接 jerk | Hermite jerk | 直接 acc | Hermite acc |")
