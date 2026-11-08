@@ -1,94 +1,81 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from std_msgs.msg import String
 from cv_bridge import CvBridge
 import cv2
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torchvision.transforms as transforms
 
-# ---------------------- CNN模型定义 ----------------------
-class SonarCNN(nn.Module):
-    def __init__(self, num_classes=3):
+class SonarCNN(torch.nn.Module):
+    def __init__(self, num_classes=4):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, 3, padding=1)
-        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
-        self.pool = nn.MaxPool2d(2,2)
-        self.fc1 = nn.Linear(32 * 32 * 32, 128)
-        self.fc2 = nn.Linear(128, num_classes)
-
+        self.features = torch.nn.Sequential(
+            torch.nn.Conv2d(3, 16, 3, padding=1),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            torch.nn.Conv2d(16, 32, 3, padding=1),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            torch.nn.Conv2d(32, 64, 3, padding=1),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+        )
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Flatten(),
+            torch.nn.Linear(64 * 60 * 80, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, num_classes)
+        )
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = self.features(x)
+        x = self.classifier(x)
         return x
 
-# 类别名称，可根据你的数据集修改
-CLASS_NAMES = ["rock", "fish", "wreck"]
-
-# ---------------------- ROS2节点 ----------------------
 class SonarInferNode(Node):
     def __init__(self):
         super().__init__('sonar_infer_node')
         self.bridge = CvBridge()
-
-        # 加载CNN模型
-        self.model = SonarCNN(num_classes=3)
+        self.model = SonarCNN(num_classes=4)
         self.model.eval()
-        self.get_logger().info("Sonar CNN model loaded")
-
-        # 订阅Gazebo相机图像话题
-        self.sub_img = self.create_subscription(
+        self.class_names = ["rock", "wreck", "pipe", "sand"]
+        self.transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((480,640)),
+            transforms.ToTensor(),
+        ])
+        # 订阅正确话题
+        self.sub = self.create_subscription(
             Image,
-            '/camera/image_raw',
+            "/sonar/sonar_camera/image_raw",
             self.image_callback,
             10
         )
-        self.get_logger().info("Sonar inference node started, waiting for image...")
+        self.pub = self.create_publisher(String, "/sonar/result", 10)
+        self.get_logger().info("声呐图像识别节点已启动，等待图像...")
 
     def image_callback(self, msg):
         try:
-            # ROS图像转OpenCV
-            cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            # 转为灰度图（声呐图像是单通道灰度）
-            gray_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-            # 缩放到模型输入尺寸
-            resized_img = cv2.resize(gray_img, (128,128))
-
-            # 图像转tensor，适配网络输入 [batch, channel, H, W]
-            tensor_img = torch.from_numpy(resized_img).float().unsqueeze(0).unsqueeze(0) / 255.0
-
-            # CNN推理
+            cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            img_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+            tensor_img = self.transform(img_rgb).unsqueeze(0)
             with torch.no_grad():
                 out = self.model(tensor_img)
                 pred_idx = torch.argmax(out, dim=1).item()
-                pred_class = CLASS_NAMES[pred_idx]
-
-            # 在ROS日志打印识别结果
-            self.get_logger().info(f"【识别结果】目标类别: {pred_class}")
-
-            # 可视化窗口（可选）
-            cv2.putText(cv_img, pred_class, (20,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0),2)
-            cv2.imshow("Sonar Image", cv_img)
-            cv2.waitKey(1)
-
+            res_name = self.class_names[pred_idx]
+            msg_out = String()
+            msg_out.data = f"识别结果：{res_name}"
+            self.pub.publish(msg_out)
+            self.get_logger().info(f"Sonar detect: {res_name}")
         except Exception as e:
-            self.get_logger().error(f"Image process error: {str(e)}")
-
+            self.get_logger().error(f"处理图像出错：{str(e)}")
 
 def main(args=None):
     rclpy.init(args=args)
     node = SonarInferNode()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-        cv2.destroyAllWindows()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
