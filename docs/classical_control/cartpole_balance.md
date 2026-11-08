@@ -35,9 +35,10 @@ src/cartpole_balance/
 
 - Ubuntu 20.04 + **ROS Noetic**(桌面完整版 `ros-noetic-desktop-full`)
 - Python 3 + `numpy`、`scipy`、`matplotlib`、`pillow`
+- 中文字体: GIF 标题含中文, Ubuntu 20.04 默认不带中文字体(会渲染成方框), 需装 `fonts-wqy-zenhei`; 未装时节点自动退回英文标题
 
 ```bash
-sudo apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pil
+sudo apt-get install -y python3-numpy python3-scipy python3-matplotlib python3-pil fonts-wqy-zenhei
 ```
 
 ## 编译与运行(逐步)
