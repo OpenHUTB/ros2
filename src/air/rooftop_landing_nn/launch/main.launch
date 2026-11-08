@@ -1,0 +1,61 @@
+<launch>
+  <!-- ============================================================
+       rooftop_landing_nn 统一启动入口（作业要求的 launch 启动）
+
+         roslaunch rooftop_landing_nn main.launch
+
+       前置条件（另开一个终端先启动桥接，否则收不到点云与里程计）：
+         roslaunch carlair_ros_bridge main.launch host:=<仿真器地址>
+
+       可选参数示例：
+         roslaunch rooftop_landing_nn main.launch safe_altitude:=6.0
+         roslaunch rooftop_landing_nn main.launch z_up:=false          # 若桥接层高度是 NED 下为正
+         roslaunch rooftop_landing_nn main.launch use_rviz:=false      # 不开 RViz
+         roslaunch rooftop_landing_nn main.launch rough_max:=-1        # 关掉"平坦度"硬约束
+         roslaunch rooftop_landing_nn main.launch accumulate_frames:=5 # 点云更稀时多累积几帧
+       ============================================================ -->
+
+  <arg name="safe_altitude"      default="5.0"   doc="高于屋顶的安全高度 (m)"/>
+  <arg name="descend_speed"      default="0.5"   doc="垂直下降速度 (m/s)"/>
+  <arg name="autostart"          default="true"  doc="启动后是否自动开始任务"/>
+  <arg name="z_up"               default="true"  doc="高度分量是否上为正（ENU）"/>
+  <arg name="lidar_to_world"     default="false" doc="点云是否为机体系局部坐标（true 时用 /uav/odom 位姿搬到世界系）"/>
+  <arg name="use_rviz"           default="true"  doc="是否同时启动 RViz"/>
+  <arg name="cells"              default="64"    doc="高度图边长（格）"/>
+  <arg name="size_m"             default="16.0"  doc="ROI 边长 (m)"/>
+  <arg name="accumulate_frames"  default="3"     doc="累积几帧点云推理一次"/>
+  <arg name="min_height_m"       default="1.0"   doc="落点高出参考面的下限 (m)"/>
+  <arg name="rough_max"          default="0.35"  doc="落点允许的最大粗糙度；-1 关闭"/>
+  <arg name="model_path"         default=""      doc="权重 npz 路径，留空用包内 models/landing_cnn.npz"/>
+  <arg name="tick_rate_hz"       default="10.0"  doc="主循环频率 (Hz)"/>
+
+  <!-- 注意：这些 param 必须写在 <node> 里面 —— 节点读的是私有参数（~perception/...），
+       写在 <node> 外面会变成全局参数 /perception/...，节点根本读不到（历史上踩过这个坑）。 -->
+  <node pkg="rooftop_landing_nn" type="main.py" name="rooftop_landing_nn"
+        output="screen" required="true">
+
+    <rosparam command="load" file="$(find rooftop_landing_nn)/config/rooftop_landing_nn.yaml"/>
+
+    <param name="model/path"                    value="$(arg model_path)"/>
+    <param name="approach/safe_altitude"        value="$(arg safe_altitude)"/>
+    <param name="descend/speed"                 value="$(arg descend_speed)"/>
+    <param name="mission/autostart"             value="$(arg autostart)"/>
+    <param name="mission/tick_rate_hz"          value="$(arg tick_rate_hz)"/>
+    <param name="frame/z_up"                    value="$(arg z_up)"/>
+    <param name="frame/lidar_to_world"          value="$(arg lidar_to_world)"/>
+    <param name="perception/cells"              value="$(arg cells)"/>
+    <param name="perception/size_m"             value="$(arg size_m)"/>
+    <param name="perception/accumulate_frames"  value="$(arg accumulate_frames)"/>
+    <param name="perception/min_height_m"       value="$(arg min_height_m)"/>
+    <param name="perception/rough_max"          value="$(arg rough_max)"/>
+
+    <!-- 权重文件走绝对路径：安装到 devel/install 之后也能找到 -->
+    <param name="model/path" value="$(find rooftop_landing_nn)/models/landing_cnn.npz"
+           if="$(eval arg('model_path') == '')"/>
+  </node>
+
+  <group if="$(arg use_rviz)">
+    <node pkg="rviz" type="rviz" name="rooftop_landing_nn_rviz"
+          args="-d $(find rooftop_landing_nn)/rviz/default.rviz"/>
+  </group>
+</launch>
