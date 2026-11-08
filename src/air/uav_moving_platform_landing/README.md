@@ -216,7 +216,16 @@ python3 tests/test_uav_moving_platform_landing_ros_sim.py
 
 第 1 个测试覆盖：速度估计（含噪声/延迟/跳点/断流）、曲率判定、下降剖面与接地时间
 （含升沉甲板的不动点解）、状态机（正常/超时/穿甲板/复飞/限幅）、四种策略的定量对照、
-包结构约定。
+包结构约定（含"必需文件确实被 git 跟踪"、"CMakeLists 里 install 的脚本都存在"、
+"package.xml 能被 catkin_pkg 解析"——这三条是补第一次提交漏提交 `CMakeLists.txt` 的教训）。
+
+包级检查（不需要编译器）：
+
+```bash
+rospack find uav_moving_platform_landing                    # 包可被发现
+roslaunch --files uav_moving_platform_landing main.launch    # launch XML 解析
+roslaunch uav_moving_platform_landing main.launch             # 60 个参数从 YAML 载入并起节点
+```
 
 ---
 

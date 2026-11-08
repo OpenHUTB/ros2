@@ -188,7 +188,7 @@ WAIT_DECK(0.0s) → ALIGN(1.3s) → DESCEND(5.1s) → TOUCHDOWN(11.7s，误差 0
 | --- | --- | --- |
 | 落点预测点随机横跳 1~2 m，状态机永远对不准 | `T = z/(v_d + v_deck_z)` 对平台**垂向**速度的放大倍数是 `T/v_d ≈ 15`，平台上真的是 0 时，估计器 0.05 m/s 的噪声就让 `T` 在 5~8 s 之间跳 | 垂向速度先一阶平滑 + 死区（<0.08 m/s 当平地），再进 `T` 的求解 |
 | 二次项一拟合就把相遇点甩飞 | 噪声也能拟合出"伪曲率"，往外推 6 s 误差被放大成几十米 | 位置外推**只用一次项**；加速度只用于"是否在转弯"的判定，且要 3 倍标准误显著 |
-| 转弯平台上检测不到曲率 | 4 m 半径、0.6 m/s 的圆周在 2.5 s 窗内拱高只有 4.5 cm，和 4 cm 噪声同量级 | 判曲率专用一条 **4 s 长窗**估计器（拱高 18 cm，检测率 113/115，直线 0 误报） |
+| 转弯平台上检测不到曲率 | 4 m 半径、0.6 m/s 的圆周在 2.5 s 窗内拱高约 **7.0 cm**，和 4 cm 噪声同量级 | 判曲率专用一条 **4 s 长窗**估计器（拱高 17.9 cm，检测率 113/115，直线 0 误报） |
 | 下降段飞机根本不往下走，卡在 2.3 m 直到超时 | 垂直指令按 `descend_profile(0)` 取的是**当前的**垂直速度（0） | 按控制周期一步步推进剖面：`vz = max(vz - a·dt, -v_d)` |
 | 一个 40 m 的 RPC 跳点把速度估计从 0.5 拉到 15.6 m/s | 跳点进了拟合矩阵，杠杆效应把整条直线拉歪，MAD 粗筛也救不回来 | 跳点**在进拟合之前**用"外推 + 1 m 闸门"挡掉 |
 | 对准段目标点从 12 m 外突然跳到 6 m，越调越乱 | 对准段用**当前高度**算 `T`（8 m→20 s，被上限截断），等降到 2.5 m 时 `T` 又变 6 s | 对准段一律用**目标巡航高度**算 `T`，与下降段无缝衔接 |
@@ -202,7 +202,9 @@ WAIT_DECK(0.0s) → ALIGN(1.3s) → DESCEND(5.1s) → TOUCHDOWN(11.7s，误差 0
 ```bash
 # 1) 离线回归：无 ROS、无仿真器、无 GPU
 python3 tests/test_uav_moving_platform_landing_local.py
-#    → 55 项断言全通过（速度估计 / 曲率 / 下降剖面 / 状态机 / 策略对照 / 包结构）
+#    → 58 项断言全通过（速度估计 / 曲率 / 下降剖面 / 状态机 / 策略对照 /
+#       包结构 + 入库状态 + CMakeLists 与 package.xml 一致性）
+#    其中「package.xml 解析」2 项需要 catkin_pkg，没有该库时自动跳过（56 通过 + 2 跳过）
 
 # 2) ROS 闭环：假桥接层
 roscore &
@@ -212,6 +214,22 @@ python3 tests/test_uav_moving_platform_landing_ros_sim.py
 # 3) 定量对照实验 + 出图
 python3 src/air/uav_moving_platform_landing/tools/evaluate.py
 ```
+
+另外两项与包结构有关的检查（本机实测）：
+
+```bash
+rospack find uav_moving_platform_landing      # → 包可被发现
+roslaunch --files uav_moving_platform_landing main.launch   # → launch XML 解析通过
+roslaunch uav_moving_platform_landing main.launch           # → 60 个参数从 YAML 载入、
+                                                            #   节点 main.py 正常启动
+```
+
+> `catkin_make` 没有在本机跑成：宿主机 RoboStack 的 cmake 是 4.x 且没有 MSVC/nmake
+> （`cmake_minimum_required(VERSION 3.0.2)` 会被 4.x 直接拒绝，也没有 C 编译器）。
+> **对照组**：用同样命令构建仓库里已合并的 `rooftop_landing` 也在同一步失败，说明是
+> 本机环境限制而不是本包的 CMakeLists 问题；Ubuntu 20.04 + Noetic（cmake 3.16）按常规
+> 流程构建。包内没有 C++ 代码与自定义 msg/srv，`CMakeLists.txt` 只做
+> `catkin_install_python` 与 launch/config 安装，离线测试会校验其中列出的脚本都真实存在。
 
 ---
 

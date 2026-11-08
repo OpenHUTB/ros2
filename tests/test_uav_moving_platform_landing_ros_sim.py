@@ -26,7 +26,7 @@ import time
 
 import numpy as np
 import rospy
-from geometry_msgs.msg import Point, PoseStamped, Twist
+from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from rosgraph_msgs.msg import Log
 from std_msgs.msg import String
@@ -43,7 +43,6 @@ S = {
     "vel": np.zeros(3),
     "cmd": np.zeros(3),
     "state": "",
-    "landed_error": None,
     "trace": [],
 }
 lock = threading.Lock()
@@ -76,11 +75,6 @@ def on_state(msg):
         S["state"] = data.get("state", "")
 
 
-def on_touchdown(msg):
-    with lock:
-        S["landed_error"] = S["landed_error"]   # 具体数值由真值算，这里只做标记
-
-
 def main():
     rospy.init_node("fake_carlair_bridge", anonymous=True, disable_signals=True)
 
@@ -89,7 +83,6 @@ def main():
     rospy.Subscriber("/rosout", Log, on_rosout, queue_size=500)
     rospy.Subscriber("/uav/cmd_vel", Twist, on_cmd, queue_size=1)
     rospy.Subscriber("/uav/moving_landing/state", String, on_state, queue_size=5)
-    rospy.Subscriber("/uav/moving_landing/touchdown", Point, on_touchdown, queue_size=1)
     rospy.sleep(1.5)                            # 等节点起来
 
     print("[bridge] 平台 %.1f m/s 直线运动，观测延迟 %.2f s、噪声 %.3f m，无人机初始高度 %.1f m"

@@ -269,9 +269,6 @@ def test_go_around():
     r = run_ctl(sim.LineMotion(v=(1.4, 0.0, 0.0)), strategy="predict",
                 latency=0.3, params=params)
     ctl = r["controller"]
-    names = [e["name"] for e in ctl.state_history and
-             [{"name": "STATE"}] or []]
-    del names
     hist_states = [s for (_, s, _) in ctl.state_history]
     check("复飞后能重新回到 DESCEND 或最终落地/放弃（状态机不死锁）",
           hist_states[-1] in (core.LANDED, core.ABORT), str(hist_states[-1]))
@@ -353,6 +350,20 @@ def test_no_stale_input_landing():
 # --------------------------------------------------------------------------- #
 # 5. 工程文件约定
 # --------------------------------------------------------------------------- #
+def _git_tracked_files():
+    """返回仓库里被 git 跟踪的文件路径集合；拿不到就返回 None。"""
+    import subprocess
+    try:
+        out = subprocess.check_output(["git", "ls-files"], cwd=REPO,
+                                      stderr=subprocess.DEVNULL)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    paths = set()
+    for line in out.decode("utf-8", "replace").splitlines():
+        paths.add(line.strip().replace("\\", "/"))
+    return paths or None
+
+
 def test_package_layout():
     files = [
         "CMakeLists.txt", "package.xml", "README.md",
@@ -363,6 +374,17 @@ def test_package_layout():
     ]
     missing = [f for f in files if not os.path.exists(os.path.join(PKG, f))]
     check("包结构完整（%d 个文件）" % len(files), not missing, str(missing))
+
+    # 光"磁盘上有"不够：文件被 .gitignore 吞掉时本地测试照样通过、仓库里却缺文件
+    # （本模块第一版就踩了 —— Windows 的 core.ignorecase 让 *.TXT 把 CMakeLists.txt
+    # 也忽略了）。这里再核一遍这些文件确实被 git 跟踪；没有 git 或不在仓库里就跳过。
+    tracked = _git_tracked_files()
+    if tracked is None:
+        print("[跳过] 没有可用的 git 仓库，跳过「文件已被 git 跟踪」检查")
+    else:
+        untracked = [f for f in files
+                     if "src/air/uav_moving_platform_landing/" + f not in tracked]
+        check("必需文件都已入库（不只是存在于磁盘）", not untracked, str(untracked))
 
     main_py = os.path.join(PKG, "scripts", "main.py")
     if os.path.exists(main_py):
@@ -379,6 +401,33 @@ def test_package_layout():
         check("launch 里有 main.py 节点", 'type="main.py"' in text, text[:80])
         check("launch 加了 cmd_vel 时长提醒参数（桥接层默认 0.1 s 会顶掉指令）",
               "cmd_duration" in text)
+
+    # CMakeLists 里列出的脚本必须真的存在（否则 catkin_install_python 会让构建失败）
+    cmake = os.path.join(PKG, "CMakeLists.txt")
+    if os.path.exists(cmake):
+        text = open(cmake, encoding="utf-8").read()
+        listed = [ln.strip() for ln in text.splitlines()
+                  if ln.strip().startswith("scripts/")]
+        absent = [f for f in listed if not os.path.exists(os.path.join(PKG, f))]
+        check("CMakeLists 里 install 的脚本都存在（%d 个）" % len(listed),
+              bool(listed) and not absent, str(absent))
+        check("CMakeLists 声明了 catkin 构建与 launch/config 安装",
+              all(k in text for k in ("catkin", "catkin_install_python", "install(")))
+
+    pkg_xml = os.path.join(PKG, "package.xml")
+    if os.path.exists(pkg_xml):
+        try:
+            from catkin_pkg.package import parse_package
+            pkg = parse_package(pkg_xml)
+            n_dep = len(pkg.exec_depends) + len(pkg.build_depends)
+            check("package.xml 能被 catkin_pkg 正常解析（name=%s，%d 个依赖）"
+                  % (pkg.name, n_dep),
+                  pkg.name == "uav_moving_platform_landing" and n_dep > 0)
+            check("package.xml 声明了 rospy 依赖",
+                  any(d.name == "rospy"
+                      for d in list(pkg.exec_depends) + list(pkg.build_depends)))
+        except ImportError:
+            print("[跳过] 没有 catkin_pkg，跳过 package.xml 解析检查")
 
 
 # --------------------------------------------------------------------------- #
