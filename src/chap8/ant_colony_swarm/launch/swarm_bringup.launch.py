@@ -4,12 +4,12 @@ from launch_ros.actions import Node
 def generate_launch_description():
     vision_node = Node(
         package="ant_colony_swarm",
-        executable="vision_detect_node",
+        executable="vision_detector",
         output="screen"
     )
     ctrl_node = Node(
         package="ant_colony_swarm",
-        executable="swarm_control_node",
+        executable="swarm_control",
         output="screen"
     )
     return LaunchDescription([
