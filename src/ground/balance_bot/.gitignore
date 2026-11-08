@@ -1,0 +1,4 @@
+results/
+docs_gif/
+__pycache__/
+*.pyc
