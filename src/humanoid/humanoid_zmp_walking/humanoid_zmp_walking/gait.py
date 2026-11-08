@@ -22,6 +22,7 @@ HIP_AMPLITUDE = 0.25
 KNEE_AMPLITUDE = 0.50
 ANKLE_AMPLITUDE = 0.60
 
+
 def leg_targets(progress):
     """单腿的 3 个关节角；progress 为摆动进度，支撑相传 None。
 
@@ -35,6 +36,7 @@ def leg_targets(progress):
     knee = KNEE_AMPLITUDE * lift
     ankle = max(-ANKLE_AMPLITUDE, min(ANKLE_AMPLITUDE, -hip - knee))
     return [hip, knee, ankle]
+
 
 class GaitPlan:
     """准静态 ZMP 步态的规划结果。

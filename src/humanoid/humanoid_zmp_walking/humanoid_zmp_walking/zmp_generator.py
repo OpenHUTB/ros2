@@ -4,6 +4,7 @@ from std_msgs.msg import Float64MultiArray
 
 from .gait import GaitPlan
 
+
 class ZmpGenerator(Node):
     """发布 ZMP 参考轨迹与关节指令。
 
@@ -60,6 +61,7 @@ class ZmpGenerator(Node):
                         for angle in self.plan.joint_targets(t)]
         self.joint_pub.publish(command)
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = ZmpGenerator()
@@ -70,6 +72,7 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

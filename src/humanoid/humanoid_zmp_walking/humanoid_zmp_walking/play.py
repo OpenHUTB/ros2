@@ -12,6 +12,7 @@ from .lipm import GRAVITY
 JOINT_NAMES = ('left_hip', 'left_knee', 'left_ankle',
                'right_hip', 'right_knee', 'right_ankle')
 
+
 class PlayNode(Node):
     """PyBullet 仿真执行节点：订阅关节指令并驱动人形模型。"""
 
@@ -161,6 +162,7 @@ class PlayNode(Node):
         if len(message.data) >= len(JOINT_NAMES):
             self.targets = [float(value) for value in message.data[:6]]
 
+
 def main(args=None):
     rclpy.init(args=args)
     try:
@@ -179,6 +181,7 @@ def main(args=None):
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

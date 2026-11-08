@@ -3,6 +3,7 @@
 LEFT = 'left'
 RIGHT = 'right'
 
+
 class Footstep:
     """单次落脚：摆动区间、落脚位置。"""
 
@@ -15,6 +16,7 @@ class Footstep:
         self.swing_end = swing_end
         self.x = x
         self.y = y
+
 
 def plan_footsteps(num_steps=6,
                    step_length=0.10,
@@ -39,19 +41,23 @@ def plan_footsteps(num_steps=6,
         foot = RIGHT if foot == LEFT else LEFT
     return steps
 
+
 def foot_rect(foot_x, foot_y, foot_length, foot_width):
     """返回脚掌矩形 (x_min, x_max, y_min, y_max)。"""
     return (foot_x - foot_length / 2.0, foot_x + foot_length / 2.0,
             foot_y - foot_width / 2.0, foot_y + foot_width / 2.0)
+
 
 def rect_corners(rect):
     """返回矩形的四个角点。"""
     x_min, x_max, y_min, y_max = rect
     return [(x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
 
+
 def _cross(origin, a, b):
     return ((a[0] - origin[0]) * (b[1] - origin[1])
             - (a[1] - origin[1]) * (b[0] - origin[0]))
+
 
 def convex_hull(points):
     """Andrew 单调链算法，返回逆时针排列的凸包顶点。"""
@@ -72,6 +78,7 @@ def convex_hull(points):
         upper.append(point)
     return lower[:-1] + upper[:-1]
 
+
 def point_in_convex(point, polygon, tolerance=1e-9):
     """判断点是否在逆时针凸多边形内（含边界）。"""
     if len(polygon) < 3:
@@ -81,6 +88,7 @@ def point_in_convex(point, polygon, tolerance=1e-9):
         if _cross(vertex, following, point) < -tolerance:
             return False
     return True
+
 
 def zmp_inside_support(zmp_pos, rects, margin=0.0):
     """判断 ZMP 是否落在支撑多边形内。
