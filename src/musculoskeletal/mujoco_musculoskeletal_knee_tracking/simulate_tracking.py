@@ -34,6 +34,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, "mujoco_musculoskeletal_knee_tracking",
                      "model", "muscle_knee.xml")
 FRAME_EVERY = 8
+DEFAULT_SIM_SECONDS = 10.0     # 离线仿真的正弦段时长，与节点 sim.duration 无关
 
 
 def reference_deg(t, bias, amp, freq):
@@ -44,8 +45,9 @@ def parse_args():
     ap = argparse.ArgumentParser(description="膝关节轨迹跟踪离线仿真")
     ap.add_argument("--no-render", action="store_true",
                     help="跳过 MuJoCo 渲染（无图形/远程环境使用）")
-    ap.add_argument("--duration", type=float, default=None,
-                    help="正弦段仿真时长 [s]，默认取 params.yaml 的 10s")
+    ap.add_argument("--duration", type=float, default=DEFAULT_SIM_SECONDS,
+                    help="正弦段仿真时长 [s]，默认 10 s（离线仿真专用，"
+                         "与节点内置轨迹的 sim.duration 无关）")
     ap.add_argument("--out-dir", default=os.path.join(HERE, "results"))
     return ap.parse_args()
 
@@ -249,7 +251,7 @@ def main():
     args = parse_args()
     cfg = config_loader.load(HERE)
     dt = cfg["sim.dt"]
-    duration = args.duration if args.duration is not None else 10.0
+    duration = args.duration
     os.makedirs(args.out_dir, exist_ok=True)
 
     # ---- 正弦段（含 GIF 渲染）----

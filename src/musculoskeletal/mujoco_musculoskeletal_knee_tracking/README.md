@@ -90,6 +90,7 @@ python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲�
 |------|------|------|
 | `sim.dt` | 0.005 | 仿真步长 [s]，会写入 `model.opt.timestep` |
 | `sim.duration` | 30.0 | 内置轨迹时长 [s] |
+| `sim.exit_after_duration` | false | true：内置轨迹跑完后节点自动退出 |
 | `trajectory.type` | sine | `sine` \| `step` |
 | `trajectory.amplitude_deg` | 40.0 | 轨迹幅值 [deg] |
 | `trajectory.frequency_hz` | 0.4 | 正弦频率 [Hz] |
@@ -97,7 +98,8 @@ python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲�
 | `ctrl.kp` | 30.0 | 比例增益 [N·m/rad] |
 | `ctrl.kd` | 3.0 | 微分增益 [N·m·s/rad] |
 | `ctrl.max_torque` | 17.5 | 肌肉等效最大力矩 [N·m]，= 单肌 500 N × wrap 半径 0.035 m |
-| `ctrl.limit_deg` | 90.0 | 屈曲限位 [deg] |
+| `ctrl.limit_deg` | 90.0 | 屈曲上限 [deg] |
+| `ctrl.limit_low_deg` | -15.0 | 伸展下限 [deg] |
 
 内置轨迹跑满 `sim.duration` 后节点执行安全停止；收到 `/knee/reference` 后切换到外部跟踪模式，不再受时长限制。
 

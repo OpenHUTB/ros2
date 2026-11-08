@@ -79,19 +79,18 @@ def render_preview(model, data, out_dir):
     print(f"[OK] 已输出模型渲染图: {out}")
 
 
-def check_limits():
-    """双向限位：到上限不再给屈肌、到下限不再给伸肌。"""
-    _, ext_hi = pd_to_activation(0.5, 0.0, 30.0, 3.0, 17.5, limit_reached=True)
-    flex_lo, _ = pd_to_activation(-0.5, 0.0, 30.0, 3.0, 17.5,
-                                  limit_low_reached=True)
-    assert flex_lo == 0.0, "到下限后不应再施加伸展（负力矩）对应屈肌激活为 0"
-    print(f"[限位] 上限时伸肌激活={ext_hi:.2f}（应为 0，屈肌被清零）")
-    print(f"[限位] 下限时屈肌激活={flex_lo:.2f}（应为 0，伸肌被清零）")
-    flex_hi, _ = pd_to_activation(0.5, 0.0, 30.0, 3.0, 17.5, limit_reached=True)
+def check_limits(cfg):
+    """双向限位：到上限不再给屈肌、到下限不再给伸肌（增益取 cfg）。"""
+    kp, kd = cfg["ctrl.kp"], cfg["ctrl.kd"]
+    mt = cfg["ctrl.max_torque"]
+    flex_hi, _ = pd_to_activation(0.5, 0.0, kp, kd, mt, limit_reached=True)
+    _, ext_lo = pd_to_activation(-0.5, 0.0, kp, kd, mt, limit_low_reached=True)
+    _, ext_hi = pd_to_activation(0.5, 0.0, kp, kd, mt, limit_reached=True)
+    flex_lo, _ = pd_to_activation(-0.5, 0.0, kp, kd, mt, limit_low_reached=True)
     assert flex_hi == 0.0, "到上限后屈肌应被清零"
-    _, ext_lo = pd_to_activation(-0.5, 0.0, 30.0, 3.0, 17.5,
-                                 limit_low_reached=True)
     assert ext_lo == 0.0, "到下限后伸肌应被清零"
+    print(f"[限位] 上限时屈肌激活={flex_hi:.2f}（应为 0），伸肌={ext_hi:.2f}")
+    print(f"[限位] 下限时伸肌激活={ext_lo:.2f}（应为 0），屈肌={flex_lo:.2f}")
 
 
 def main():
@@ -132,7 +131,7 @@ def main():
     print(f"[自由] 无控制 2s -> 关节角 = {a_free:+.2f} deg (应≈0)")
     assert abs(a_free) < 3.0, "无控制时应停在伸展位附近"
 
-    check_limits()
+    check_limits(cfg)
 
     if not args.no_render:
         render_preview(model, data, args.out_dir)
