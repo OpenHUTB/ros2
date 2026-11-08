@@ -508,3 +508,14 @@ bash main.sh demo        # 需要先开 dashboard
 `assets/flights.zip` 为自包含数据；`models/` 为权重、`meta.json` 与来源说明；`tests/` 为契约测试。
 
 ---
+
+## 13. 参考资料
+
+1. Mueller M., et al. *MuJoCo: A Physics Engine for Model-Based Control.* IROS 2012.
+2. OpenHUTB 社区四旋翼模型：[PR #178](https://github.com/OpenHUTB/ros2/pull/178)
+3. ROS 2 Humble 文档：<https://docs.ros.org/en/humble/>
+4. Goodfellow I., Bengio Y., Courville A. *Deep Learning.* MIT Press, 2016.（回归损失与基线比较）
+
+---
+
+**说明**：代码、实验脚本与文档在 OpenAI Codex 辅助下完成；指标与图片均来自本机实际运行。提交者负责检查与维护提交内容。
