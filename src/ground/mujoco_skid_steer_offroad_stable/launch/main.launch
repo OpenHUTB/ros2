@@ -1,0 +1,12 @@
+<launch>
+  <!-- MuJoCo 滑移转向越野小车定点巡航仿真：单进程，不发布话题，launch 仅做统一入口 -->
+  <arg name="headless" default="false" doc="true 时不打开 viewer，跑完直接出图"/>
+  <arg name="stabilize" default="false" doc="true 时启用俯仰差速补偿（实验性，默认关闭）"/>
+
+  <node pkg="mujoco_skid_steer_offroad_stable" type="main.py"
+        name="skid_steer_offroad" output="screen"
+        args="$(eval '--headless ' if arg('headless') == 'true' else '')$(eval '--stabilize' if arg('stabilize') == 'true' else '')">
+    <!-- 虚拟机常缺 OpenGL 硬件加速，强制 Mesa 软件渲染，避免启动黑屏 -->
+    <env name="LIBGL_ALWAYS_SOFTWARE" value="1"/>
+  </node>
+</launch>

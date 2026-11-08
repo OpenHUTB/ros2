@@ -101,6 +101,9 @@ yaw   = atan2(2(qw*qz + qx*qy), 1 - 2(qy^2 + qz^2))
 | `scripts/main.py` | 入口 | 模型加载、地形生成、控制主循环、数据记录、绘图与 viewer 渲染 |
 | `scripts/stable_controller.py` | 控制（实验性） | 俯仰差速补偿器，默认不启用 |
 | `models/skid_robot_offroad.xml` | 模型 | 小车本体、车轮、起伏地面、光源、固定全局相机、IMU 传感器、四轮速度执行器 |
+| `launch/main.launch` | 启动 | `roslaunch` 统一入口，透传 `headless` / `stabilize` 开关 |
+| `CMakeLists.txt` | 构建 | catkin 构建脚本，安装脚本、模型、launch 与依赖清单 |
+| `package.xml` | 构建 | catkin 包元信息（format 2，`buildtool_depend` 为 `catkin`） |
 | `run.sh` | 启动脚本 | 一键启动，设置软件渲染环境变量，透传命令行参数 |
 | `requirements.txt` | 依赖 | mujoco / numpy / matplotlib |
 | `traj_plot.png` | 输出 | 运行后自动生成，默认保存在功能包根目录 |
@@ -109,6 +112,10 @@ yaw   = atan2(2(qw*qz + qx*qy), 1 - 2(qy^2 + qz^2))
 
 ```text
 mujoco_skid_steer_offroad_stable/
+├── CMakeLists.txt
+├── package.xml
+├── launch/
+│   └── main.launch
 ├── models/
 │   └── skid_robot_offroad.xml
 ├── scripts/
@@ -118,17 +125,21 @@ mujoco_skid_steer_offroad_stable/
 └── run.sh
 ```
 
-## 5. 仿真运行步骤
+## 5. 构建与仿真运行步骤
 
 ### 5.1 支持与测试环境
 
 | 组件 | 版本 / 说明 |
 | --- | --- |
-| 操作系统 | Ubuntu 20.04（作者环境） / 22.04（本次复核环境） |
-| Python | 3.8+ |
+| 操作系统 | Ubuntu 20.04（作者环境，对应 ROS Noetic） / 22.04（本次复核环境，仅用于跑无头仿真） |
+| ROS | ROS Noetic（ROS 1）；本模块按 catkin 功能包组织，同仓库其他 catkin 模块用法一致 |
+| Python | 3.8+（Noetic 自带 3.8） |
 | MuJoCo | >= 3.0.0（本文数据在 3.17.0 上实测） |
 | 依赖库 | numpy、matplotlib |
+| 构建工具 | catkin（`catkin_make` 或 `catkin build`） |
 | 显卡 | 不需要，脚本支持 Mesa 软件渲染 |
+
+> 仓库名是 `ros2`，但本模块的运行时是 ROS Noetic（ROS 1），构建方式为 catkin，不依赖 colcon。
 
 > 本文第 6 节的实测数据在无窗口模式（`--headless`）下得到，与 viewer 画面使用同一套物理参数。
 
@@ -139,24 +150,68 @@ sudo apt update && sudo apt install -y python3-pip libgl1
 python3 -m pip install -r src/ground/mujoco_skid_steer_offroad_stable/requirements.txt
 ```
 
-### 5.3 启动仿真
+### 5.3 构建（编译）
+
+本模块是标准 catkin 功能包，需要放进 catkin 工作空间的 `src/` 下编译，编译后才可被 `roslaunch` / `rosrun` 按包名找到。
 
 ```bash
-# 方式 1：脚本一键启动（自动设置软件渲染）
-bash src/ground/mujoco_skid_steer_offroad_stable/run.sh
+# 1. 准备工作空间（已有可跳过，注意不要和仓库自带的其他包混在同一空间而相互拖累）
+mkdir -p ~/skid_ws/src
+cp -r src/ground/mujoco_skid_steer_offroad_stable ~/skid_ws/src/
 
-# 方式 2：直接运行主程序
+# 2. 加载 ROS 环境并编译
+source /opt/ros/noetic/setup.bash
+cd ~/skid_ws
+catkin_make
+
+# 3. 编译完成后加载本工作空间（每个新终端都要执行，或用 source devel/setup.bash 写进 ~/.bashrc）
+source devel/setup.bash
+```
+
+用 `catkin build`（catkin_tools）时换成：
+
+```bash
+source /opt/ros/noetic/setup.bash
+cd ~/skid_ws
+catkin build mujoco_skid_steer_offroad_stable
+source devel/setup.bash
+```
+
+编译产物与判据：
+
+| 检查项 | 期望结果 |
+| --- | --- |
+| 编译退出码 | 为 0，日志无 `CMake Error` / `error:` |
+| 包是否注册 | `rospack find mujoco_skid_steer_offroad_stable` 返回 `~/skid_ws/src/mujoco_skid_steer_offroad_stable` |
+| 脚本是否可执行 | `rosrun mujoco_skid_steer_offroad_stable main.py --help` 能打印参数说明 |
+| launch 是否可见 | `roslaunch mujoco_skid_steer_offroad_stable main.launch --args headless:=true` 能解析出节点 |
+
+> 本模块不发布话题、不依赖 `rospy`，编译只做安装与包注册；若只想快速看效果，也可跳过 catkin、直接 `python3 scripts/main.py`（见 5.4 方式 3）。
+
+### 5.4 启动仿真
+
+```bash
+# 方式 1：roslaunch 统一入口（带 viewer）
+roslaunch mujoco_skid_steer_offroad_stable main.launch
+
+# 方式 2：roslaunch 无窗口跑，跑完自动出图
+roslaunch mujoco_skid_steer_offroad_stable main.launch headless:=true
+
+# 方式 3：不经过 ROS，直接跑脚本（免编译）
+bash src/ground/mujoco_skid_steer_offroad_stable/run.sh
 python3 src/ground/mujoco_skid_steer_offroad_stable/scripts/main.py
 ```
 
-> 仿真窗口使用 XML 固定相机，小车全程在画面内，适合录制演示动图；关闭仿真窗口后自动弹出结果曲线图。脚本以自身路径定位模型，从任意目录启动均可。
+> 仿真窗口使用 XML 固定相机，小车全程在画面内，适合录制演示动图；关闭仿真窗口后自动弹出结果曲线图。脚本以自身路径定位模型（已做符号链接解析），从任意目录、devel 或 install 空间启动均可。
 
-### 5.4 命令行参数
+### 5.5 命令行参数
+
+`roslaunch` 的参数名为 `headless` / `stabilize`（布尔值），直接跑脚本时对应同名命令行开关：
 
 | 参数 | 说明 |
 | --- | --- |
-| `--headless` | 不打开 viewer，跑完直接出图（服务器、无显卡环境） |
-| `--stabilize` | 启用俯仰差速补偿（实验性，默认关闭） |
+| `headless:=true` / `--headless` | 不打开 viewer，跑完直接出图（服务器、无显卡环境） |
+| `stabilize:=true` / `--stabilize` | 启用俯仰差速补偿（实验性，默认关闭） |
 | `--model PATH` | 指定其他模型文件 |
 | `--no-plot` | 不生成曲线图 |
 | `--plot-path PATH` | 指定曲线图输出路径，默认功能包根目录 `traj_plot.png` |
@@ -164,6 +219,7 @@ python3 src/ground/mujoco_skid_steer_offroad_stable/scripts/main.py
 示例：
 
 ```bash
+roslaunch mujoco_skid_steer_offroad_stable main.launch headless:=true stabilize:=true
 bash src/ground/mujoco_skid_steer_offroad_stable/run.sh --headless
 ```
 
@@ -245,6 +301,10 @@ bash src/ground/mujoco_skid_steer_offroad_stable/run.sh --headless
 | 仿真一闪而过 | 实时节流按 walltime 计算，`--headless` 下不做节流属于正常现象 |
 | 曲线不弹出 | 无显示环境下 matplotlib 使用 Agg 后端，图只保存为 `traj_plot.png` |
 | 提示 No module named mujoco | 依赖未安装，执行 `python3 -m pip install -r src/ground/mujoco_skid_steer_offroad_stable/requirements.txt` |
+| `roslaunch` 报 `is neither a launch file in package` | 包没编译或没加载工作空间，按 5.3 节 `catkin_make` 后 `source devel/setup.bash`，再用 `rospack find mujoco_skid_steer_offroad_stable` 确认能查到 |
+| `rospack find` 查不到本包 | 目录没放进 catkin 工作空间的 `src/` 下，或当前终端没 `source`；检查路径是否在 `src/ground/` 里，并重新 `catkin_make` |
+| `catkin_make` 因其他包报错中断 | 本模块不依赖其他包，可用 `catkin_make --only-pkg-with-deps mujoco_skid_steer_offroad_stable`，或按 5.3 节单独建 `~/skid_ws` |
+| 运行报 `No module named stable_controller` | 脚本没走 `rosrun` / `roslaunch` 且不在包目录内，改用 5.4 节的方式 1/2/3 |
 | 停在目标外 0.4~0.5 m | 目标标记球仍是碰撞体，检查其 `contype/conaffinity` 是否为 0 |
 
 ## 10. 参考

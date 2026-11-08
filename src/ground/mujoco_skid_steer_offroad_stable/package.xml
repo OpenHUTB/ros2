@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_skid_steer_offroad_stable</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 滑移转向越野小车定点巡航仿真：随机起伏高度场激励车身姿态，距离闭环控制
+    四轮滑移直行，接近目标线性减速并在停车半径内制动，全程记录轨迹、姿态与轮速。
+  </description>
+
+  <maintainer email="yi-lu-ping-an@users.noreply.github.com">yi-lu-ping-an</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <!-- MuJoCo 与 matplotlib 由 pip 安装（无对应 rosdep 键，故不在此声明） -->
+
+  <export>
+  </export>
+</package>

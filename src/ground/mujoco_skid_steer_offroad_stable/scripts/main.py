@@ -20,14 +20,34 @@ import time
 import numpy as np
 import mujoco
 
-_HERE = os.path.dirname(os.path.abspath(__file__))
+# realpath 解析符号链接：devel 空间里 lib/<包名>/main.py 是指向源码的软链，
+# 只有还原出真实脚本路径，dirname 两次才落在源码包根目录而不是 devel/lib。
+_HERE = os.path.dirname(os.path.realpath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
 from stable_controller import AttitudeStableController  # noqa: E402
 
 PKG_DIR = os.path.dirname(_HERE)
-DEFAULT_MODEL = os.path.join(PKG_DIR, "models", "skid_robot_offroad.xml")
+
+
+def _find_model():
+    """定位 XML 模型，兼容源码目录、devel 空间与 install 空间三种摆放。"""
+    name = "skid_robot_offroad.xml"
+    candidates = [
+        # 源码 / devel 空间：<包根>/models/
+        os.path.join(PKG_DIR, "models", name),
+        # install 空间：<prefix>/share/<包名>/models/
+        os.path.join(os.path.dirname(PKG_DIR), "share",
+                     "mujoco_skid_steer_offroad_stable", "models", name),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return candidates[0]
+
+
+DEFAULT_MODEL = _find_model()
 PLOT_PATH = os.path.join(PKG_DIR, "traj_plot.png")
 
 WHEEL_RADIUS = 0.14      # m
