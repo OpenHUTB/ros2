@@ -123,11 +123,13 @@ def test_joint_range_matches_params():
 
 
 def test_max_torque_consistent_with_model():
-    """参数里的 max_torque 应等于 单肌力 × wrap 半径。"""
+    """参数里的 max_torque 应等于 单肌力 × wrap 半径（力从模型里读，不写死）。"""
     from mujoco_musculoskeletal_knee_tracking import config_loader
 
     cfg = config_loader.load(os.path.dirname(HERE))
     model = _load()
-    force = model.actuator("flexor").gainprm[0] if False else 500.0
-    wrap_r = model.geom("knee_wrap").size[0]
+    # MuJoCo 的 muscle 执行器把 force 存在 gainprm[2]
+    force = float(model.actuator_gainprm[model.actuator("flexor").id][2])
+    wrap_r = float(model.geom("knee_wrap").size[0])
+    assert force > 0.0
     assert abs(force * wrap_r - cfg["ctrl.max_torque"]) < 1e-6
