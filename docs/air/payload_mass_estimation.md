@@ -213,3 +213,51 @@ $$
 690 个窗口来自 30 次飞行、彼此重叠，**不是 690 次独立试验**。整次飞行平均把同一飞行的窗口先平均，回答的是"这一趟估得准不准"。
 
 ---
+
+## 5. 算法流程
+
+### 5.1 总体流程
+
+```mermaid
+flowchart TD
+    A[社区四旋翼模型<br/>机身质量 = 0.85 + 载荷] -->|MuJoCo 12 s 飞行| B[推力 / 高度 / 竖直速度<br/>20 Hz 记录]
+    B -->|按整次飞行划分| C[90 / 30 / 30 / 30]
+    C -->|20 点滑窗, 步长 10| D[38 维特征<br/>19 推力 + 19 加速度]
+    D -->|训练 4 个模型| E[mlp_42/43/44<br/>no_thrust_42]
+    D -->|同一窗口| F[物理冲量基线]
+    E -->|evaluate| G[窗口与整次飞行指标]
+    F --> G
+    D -->|ROS2 回放| H[payload_replay]
+    H -->|/payload/observation| I[payload_estimator]
+    I -->|/payload/estimate| J[dashboard 订阅曲线]
+```
+
+### 5.2 训练
+
+```
+输入: 训练/验证窗口 X, 标签 y(kg), 种子 s
+1  固定 torch 种子; 线程数 2
+2  μ, σ ← 训练集均值/标准差, σ 下限 0.001
+3  对 mlp_42/43/44 与 no_thrust_42:
+      no_thrust_42 只取加速度 19 维, 其余取 38 维
+      for epoch = 1..160:
+          打乱训练集, batch = 128, MSE 反传, Adam(lr = 0.001)
+          若验证 MSE 创新低 → 保存 model.pt 与 meta.json(含 μ, σ, 训练集均值)
+4  写出 loss.csv
+```
+
+### 5.3 在线估计
+
+```
+每条 /payload/observation:
+1  校验 4 个字段有限; 否则清空窗口
+2  若与上一条的时间差偏离 0.05 s 超过 25% → 清空窗口
+3  入队, 只保留最近 20 条
+4  不足 20 条 → 不输出
+5  计算 19 个加速度 → 38 维特征 → MLP → mass_kg
+   同时用冲量公式算 physics_kg
+6  发布 {stamp_s, mass_kg, physics_kg}
+7  断流 3 秒 → 保存 ros_node.json 并退出
+```
+
+---
