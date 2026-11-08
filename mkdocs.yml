@@ -69,7 +69,7 @@ nav:
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
-        - MuJoCo+ROS UR5抓放轨迹规划: './chapter/chap8/mujoco_ur5_pickplace.md'
+        - MuJoCo UR5e 关节空间抓放控制: './chapter/ur5e_pickplace.md'
     - 9. ROS 2:
         - 章节首页: './chapter/chap9.md'
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'

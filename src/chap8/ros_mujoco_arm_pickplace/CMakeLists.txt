@@ -19,14 +19,16 @@ catkin_install_python(PROGRAMS
   scripts/main_mujoco_bridge.py
   scripts/main_pick_fsm.py
   scripts/pickplace_core.py
+  scripts/pickplace_planner.py
   scripts/cubic_interpolator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-# launch 与模型文件安装到 share/<pkg>/
+# launch / 模型 / RViz 配置安装到 share/<pkg>/
+# 注意：rviz 配置在包根目录（rviz/ur5e.rviz），安装后位于 share/<pkg>/rviz/
 install(DIRECTORY
   launch
   models
-  src/rviz
+  rviz
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
