@@ -6,8 +6,7 @@
 
 代码位置：`src/chap8/ros_mujoco_arm_pickplace/`。
 
-<img width="1137" height="622" alt="arm_pickplace_demo" src="https://github.com/user-attachments/assets/708598f5-0934-4a4d-a6db-a170af9ebbcd" />
-
+<img src="../img/arm_pickplace.png" />
 
 ## 1. 与参考模块的区别
 
