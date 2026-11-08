@@ -32,7 +32,7 @@
 若 τ < 0 (需伸展):  extensor = clamp(−τ / max_torque), flexor = 0
 ```
 
-另含两类安全保护：**数值检查**（非法输入 → 激活归零）与**屈曲限位保护**（到限位且仍需屈曲 → 停屈肌）。
+另含两类安全保护：**数值检查**（非法输入 → 激活归零）与**双向限位保护**（到 90° 上限仍要屈曲 → 停屈肌；到 −15° 下限仍要伸展 → 停伸肌）。
 
 ## 2. 接口 (Interfaces)
 
@@ -57,8 +57,10 @@
 | `trajectory.bias_deg` | 30.0 | 轨迹偏置 [deg] |
 | `ctrl.kp` | 30.0 | 比例增益 [N·m/rad] |
 | `ctrl.kd` | 3.0 | 微分增益 [N·m·s/rad] |
-| `ctrl.max_torque` | 25.0 | 肌肉等效最大力矩 [N·m] |
-| `ctrl.limit_deg` | 90.0 | 屈曲限位 [deg] |
+| `ctrl.max_torque` | 17.5 | 肌肉等效最大力矩 [N·m]，= 单肌 500 N × wrap 半径 0.035 m |
+| `ctrl.limit_deg` | 90.0 | 屈曲上限 [deg] |
+| `ctrl.limit_low_deg` | -15.0 | 伸展下限 [deg] |
+| `sim.exit_after_duration` | false | true：内置轨迹跑完后节点自动退出 |
 
 **关于 `sim.duration`**：内置轨迹跑满 `duration` 后节点执行安全停止（激活归零，关节回落到下垂位）。
 一旦收到 `/knee/reference` 外部目标，就切换到外部跟踪模式，**不再受 `duration` 限制**。
@@ -109,7 +111,9 @@ python3 simulate_tracking.py               # 带图形环境：生成 GIF + 曲�
 python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲线与指标
 ```
 
-输出：`tracking.gif`（< 5 MB）、`tracking_eval.png`、`tracking_metrics.txt`。
+输出（默认写到 `results/`）：`tracking.gif`（< 5 MB）、`tracking_eval.png`（正弦段）、`tracking_step.png`（阶跃段）、`tracking_metrics.txt`。
+
+`simulate_tracking.py` 与 `validate_model.py` 的参数统一从 `config/params.yaml` 读取，改一处即同时生效。
 
 ## 7. 运行效果 (Results)
 
@@ -119,23 +123,43 @@ python3 simulate_tracking.py --no-render   # 无图形/远程环境：只出曲�
 
 ![轨迹跟踪动图](../img/mujoco_musculoskeletal_knee_tracking/tracking.gif)
 
+阶跃响应（20° → 50°，用于给出超调与调节时间）：
+
+![阶跃响应](../img/mujoco_musculoskeletal_knee_tracking/tracking_step.png)
+
 ## 8. 数据与评价 (Data & Metrics)
 
-`tracking_metrics.txt` 报告：
+指标分两段，口径不同：
 
-- **RMSE**：角度误差均方根（目标 vs 实际）；
-- **超调量**：正方向超调；
-- **收敛时间**：误差首次进入 ±3° 的时间。
+**正弦段**（bias=30°、amp=40°、0.4 Hz）——参考持续变化，**不存在超调/调节时间**，只报告：
 
-默认 10 s 正弦轨迹（bias=30° amp=40° f=0.4 Hz，PD kp=30 kd=3）结果：
-RMSE ≈ 11°，收敛 ≈ 1.96 s。PD 对正弦跟踪存在固有相位滞后，故 RMSE 非零属正常。
+- RMSE：角度误差均方根；
+- 最大绝对误差。
+
+**阶跃段**（20° → 50°）——用于给出超调、调节时间与稳态误差：
+
+- 超调：相对阶跃幅值的百分比；
+- 调节时间：进入并保持在 ±2% 带宽内的时间；
+- 稳态误差：末段平均值与目标之差。
+
+默认参数（PD kp=30 kd=3，max_torque=17.5 N·m）结果：
+
+| 指标 | 数值 |
+|---|---|
+| 正弦 RMSE | 8.65° |
+| 正弦最大绝对误差 | 13.96° |
+| 阶跃超调 | 0.0 % |
+| 阶跃调节时间 | 未进入 ±2% 带（进入 ±5° 需 0.22 s）|
+| 阶跃稳态误差 | −6.62°（低于目标）|
+
+**稳态下垂的主因是重力矩未做前馈补偿**：PD 在误差为 0 时输出为 0，维持屈曲姿态所需的重力矩只能靠残余误差换取。正弦段的 RMSE 则主要来自 PD 的相位滞后与同一重力矩偏差，两者叠加。
 
 ## 9. 故障处理 (Troubleshooting)
 
 | 现象 | 可能原因 | 处理 |
 |------|----------|------|
 | 关节不运动 | `mujoco` 未安装 | `python3 -m pip install -r requirements.txt` |
-| 跟踪幅值明显不足 | `kp` 过小或 `max_torque` 过大 | 增大 `kp`，确认 `max_torque` 约等于肌肉实际最大力矩（本模型 ≈25 N·m） |
+| 跟踪幅值明显不足 | `kp` 过小或 `max_torque` 过大 | 增大 `kp`，确认 `max_torque` 约等于肌肉实际最大力矩（本模型 = 500 N × 0.035 m = 17.5 N·m） |
 | 高频振荡 | `kd` 不足 | 增大 `kd` |
 | 触到限位剧烈冲击 | 轨迹幅值过大 | 控制轨迹保持在 `10°~70°` 内 |
 | 模型无法加载（中文路径） | 文件路径含特殊字符 | 用 `from_xml_string` 读取（本模块已内置），或使用纯英文路径 |
@@ -148,6 +172,12 @@ python3 validate_model.py               # 含渲染
 python3 validate_model.py --no-render   # 无图形环境
 ```
 
-验证：模型可加载、单独激活屈肌→屈曲、单独激活伸肌→伸展、无控制→0° 平衡、并（可选）输出 `model_render.png`。
+验证：模型可加载、单独激活屈肌→屈曲、单独激活伸肌→伸展、无控制→0° 平衡、双向限位生效，并（可选）输出 `results/model_render.png`。
+
+单元测试覆盖控制器纯逻辑与模型集成（模型加载、屈肌/伸肌方向、关节限位、`max_torque` 与模型参数一致性）：
+
+```bash
+python3 -m pytest test -q
+```
 
 > 本模块开发过程中使用了大模型辅助（代码生成与调试），并对提交内容负责。
