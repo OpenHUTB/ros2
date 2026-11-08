@@ -23,7 +23,10 @@ src/ant_colony_swarm
 
 ├── package.xml
 
-└── setup.py
+├── setup.py
+
+└── setup.cfg
+
 
 ## 环境依赖
 - ROS2 Humble
@@ -203,6 +206,13 @@ setup(
         ],
     },
 )
+```
+## 6.setup.cfg
+```python
+[develop]
+script_dir=$base/lib/ant_colony_swarm
+[install]
+install_scripts=$base/lib/ant_colony_swarm
 ```
 ### 编译与运行命令
 # 编译
