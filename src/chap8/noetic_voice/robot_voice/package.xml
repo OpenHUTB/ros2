@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>robot_voice</name><version>0.1.0</version>
+  <description>Noetic turtlesim voice control with command timeout.</description>
+  <maintainer email="3548501971@qq.com">syj133</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>geometry_msgs</depend><depend>rospy</depend><depend>std_msgs</depend>
+</package>
