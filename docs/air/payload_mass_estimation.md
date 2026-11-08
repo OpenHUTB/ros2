@@ -401,3 +401,30 @@ $$
 验证方法：重训后跑 `evaluate`，逐项比较 `metrics.json`。训练脚本固定 `torch.manual_seed(seed)`，数据顺序由 `torch.randperm` 决定，因此可复现。
 
 ---
+
+## 8. ROS2 接口
+
+| 话题 | 类型 | 字段 |
+|---|---|---|
+| `/payload/observation` | `std_msgs/String` JSON | `stamp_s`、`height_m`、`velocity_z_mps`、`command_thrust_n` |
+| `/payload/estimate` | `std_msgs/String` JSON | `stamp_s`、`mass_kg`、`physics_kg` |
+
+| 节点 | 可执行文件 | 职责 |
+|---|---|---|
+| `payload_replay` | `payload_replay` | 回放 3 段测试飞行（种子 40120–40122），20 Hz |
+| `payload_estimator` | `payload_estimator` | 维护 20 点窗口、推理、同时输出物理估计 |
+| 订阅绘图 | `-m payload_mass_estimation.dashboard` | 订阅 `/payload/estimate`，结束后落盘图片 |
+
+启动：
+
+```bash
+ros2 launch payload_mass_estimation main.launch.py project_root:="$PWD"
+```
+
+`main.launch.py` 通过 `SetEnvironmentVariable` 把 `PAYLOAD_PROJECT_ROOT` 传给两个节点，模型与数据路径都相对该根目录解析。
+
+**接口约定**：输入包把速度与推力放在**同一时间戳**下，间隔 0.05 s。估计器收到 20 个有效点后才输出；时间倒退、间隔异常、非有限值都会清空窗口。
+
+本项目**没有**直接接入 `carlair_ros_bridge`。接其他仿真器时，必须同时拿到**同步的竖直速度**与**以牛顿为单位的总推力**——只有 `/uav/odom` 不够。倾斜飞行还要把推力投影到竖直方向。
+
+---
