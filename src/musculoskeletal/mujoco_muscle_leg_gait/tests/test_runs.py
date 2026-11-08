@@ -31,7 +31,7 @@ class TestWeightBearing(unittest.TestCase):
     def test_single_leg_stands(self):
         res = runs.run_l5()
         self.assertGreater(res["pelvis_z"], -0.10)      # 没有塌下去
-        self.assertGreater(res["max_act"], 0.05)        # 确实在出力
+        self.assertGreater(res["final_act"], 0.05)      # 确实在出力
 
     def test_stepping_lifts_foot(self):
         res = runs.run_l6()
