@@ -34,6 +34,8 @@ title: 主页
 
 ## 1. 入门 <span id="list"></span>
 
+* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
+
 * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 
 * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
