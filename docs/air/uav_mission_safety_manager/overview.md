@@ -3,6 +3,7 @@
 单无人机控制模块，支持单航点与多航点队列、暂停/继续、返航降落，以及遥测超时和高度检查。原 AirSim 单航点流程在 Foxy 下验证；新增队列已在 Ubuntu 22.04 / ROS 2 Humble 下完成 demo 和 AirSim 手动复测。
 
 - [构建与运行](usage.md)
+- [任务日志与离线统计](mission_recording.md)：可选 JSONL 状态记录与 JSON/CSV 任务评估。
 - [测试结果与已知限制](airsim_validation.md)
 - [源码](https://github.com/OpenHUTB/ros2/tree/master/src/air/uav_mission_safety_manager)
 
@@ -129,8 +130,50 @@ RPC 派发尚未结束时，请求可能被拒绝，需要待 `command_pending=f
 
 ### 实测范围
 
-Ubuntu 22.04 / ROS 2 Humble 下构建通过，当前队列回归测试覆盖 54 项单元测试及 ROS 冒烟测试。测试包含 100 点上限、非零起点高度边界、非法装载的原子性，以及暂停、完成、取消和中止后的状态字段和不重复派发保证。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。
+Ubuntu 22.04 / ROS 2 Humble 下构建通过，当前队列回归测试覆盖 61 项单元测试及 ROS 冒烟测试。测试包含 100 点上限、非零起点高度边界、非法装载的原子性，以及暂停、完成、取消和中止后的状态字段和不重复派发保证。demo 手动验证了队列顺序执行、暂停恢复、取消、非法队列拒绝、返航和降落抢占。
 
 AirSim 手动验证了三航点顺序执行、执行中暂停/恢复、取消任务以及返航自动落地。非法高度输入由自动测试覆盖，未计为 AirSim 手动实测；普通航点完成采用 1 米到达容差。
 
 已知限制：起飞 RPC 返回 `False` 的既有异常未修复；未验证真机、碰撞或避障。Humble 演示无需安装历史 Foxy/Python 3.8 的 `requirements.txt`。
+
+## 飞行事件黑匣子
+
+新增可选的飞行事件记录，便于复盘和提交验收材料。记录内容：
+
+- 状态机的每次真实迁移（含 FAILSAFE 触发原因）；
+- 任务里程碑：`mission_loaded`、`waypoint_reached`、`mission_completed`、`mission_canceled`；
+- 外部下发的 `command` 事件。
+
+参数与用法：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `record_events` | `true` | 关闭后与旧版本行为完全一致 |
+| `record_max_events` | `500` | 环形缓冲上限，超出时丢弃最旧事件并计数 |
+| `record_dir` | 空（当前目录） | 导出目录 |
+| `dump_on_shutdown` | `true` | 节点退出时缓冲区非空则自动导出 |
+
+运行中可随时导出：
+
+```bash
+ros2 service call /uav_mission_safety_manager/dump_log std_srvs/srv/Trigger '{}'
+```
+
+返回两个文件路径：
+
+- `flight_events.csv`：`seq,time_s,kind,state,detail`，按时间排序的事件流；
+- `flight_events_summary.json`：事件计数、各状态停留时长、FAILSAFE 原因、完整事件列表。
+
+状态停留时长由相邻状态迁移的时间差累加，最后一次迁移到导出时刻的时长也计入。记录只影响可观测性，不改变控制行为。
+
+### 统计口径（环形缓冲丢弃旧事件后）
+
+`record_max_events` 是**有界**的：事件数超过上限后，最旧的事件被丢弃，`summary.dropped` 记录丢弃数量。因此：
+
+- `summary.events` 是**当前仍保留**的事件数，不是整段飞行的总事件数；
+- `state_durations_s` 只统计**保留区间**内的状态段——反映的是“最近一段时间的状态分布”，会短于整段飞行的真实时长；
+- `seq` 是全局单调递增序号（不因丢弃而回绕），从导出的 `seq` 区间可以判断这次结果覆盖的是哪一段。
+
+需要完整统计时，可以调大 `record_max_events`，或在飞行中定期调用 `dump_log`（每次导出当前缓冲区），再把多次导出按 `seq` 拼接。
+
+
