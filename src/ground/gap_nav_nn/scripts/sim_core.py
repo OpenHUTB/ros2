@@ -69,6 +69,15 @@ class GapSim(object):
             s = self.model.geom_size[gid]
             self.walls.append({"x": float(p[0]), "y": float(p[1]),
                                "hx": float(s[0]), "hy": float(s[1])})
+
+        # 由墙段之间的空隙推导开口，避免几何真值与模型文件两处维护
+        self.gaps = []
+        segs = sorted(self.walls, key=lambda w: w["y"])
+        for a, b in zip(segs, segs[1:]):
+            lo = a["y"] + a["hy"]
+            hi = b["y"] - b["hy"]
+            if hi - lo > 0.05:
+                self.gaps.append({"lo": float(lo), "hi": float(hi)})
         self.reset()
 
     # ---------------------------------------------------------------- 任务

@@ -20,6 +20,7 @@ catkin_install_python(PROGRAMS
   scripts/train.py
   scripts/evaluate.py
   scripts/main.py
+  scripts/probe.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

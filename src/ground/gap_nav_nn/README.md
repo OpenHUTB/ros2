@@ -41,6 +41,13 @@ python3 main.py --mode nn
 roslaunch gap_nav_nn main.launch mode:=nn
 ```
 
+`launch/main.launch` 用 `<rosparam>` 加载 `config/params.yaml` 到节点私有命名空间，
+节点通过 `rospy.get_param("~xxx")` 读取。以下参数可在命令行覆盖：
+
+```bash
+roslaunch gap_nav_nn main.launch mode:=expert min_passable:=2.0 v_max:=0.6 lookahead:=0.9
+```
+
 | 话题 | 类型 | 方向 |
 |---|---|---|
 | `/gap/scan` | `sensor_msgs/LaserScan` | 发布 |

@@ -9,11 +9,8 @@ sys.path.insert(0, HERE)
 from sim_core import GapSim, thrust_from_twist       # noqa: E402
 from oracle import build_path, GapExpert              # noqa: E402
 from nn import MLP                                    # noqa: E402
+from pilot import features                            # noqa: E402
 
-
-def features(sim, obs):
-    return np.concatenate([obs["scan"], [sim.goal_bearing(), min(sim.goal_distance(), 20.0),
-                                         obs["speed"]]]).astype(np.float64)
 
 
 def generate(sim, episodes, steps, seed=0, noise=0.0, verbose=True):

@@ -64,6 +64,15 @@ python3 main.py --mode expert --save-gif gap.gif --every 5
 roslaunch gap_nav_nn main.launch mode:=nn
 ```
 
+`launch/main.launch` 会用 `<rosparam>` 把 `config/params.yaml` 加载到节点私有命名空间，
+节点用 `rospy.get_param("~xxx")` 读取；`mode`、`min_passable`、`v_max`、`lookahead`
+都可以在命令行覆盖，例如只允许最宽的开口：
+
+```bash
+roslaunch gap_nav_nn main.launch mode:=expert min_passable:=2.0
+# [INFO] gap nav node ready: ... min_passable=2.00 ... gap_width=2.40
+```
+
 ## 算法原理
 
 ### 1. 平面动力学与推力标定
@@ -146,6 +155,7 @@ graph TD
 | `scripts/sim_core.py` | 雷达、开口真值、碰撞与到达判定 |
 | `scripts/oracle.py` | 开口筛选与选择 + 路径生成 + 纯跟踪 |
 | `scripts/nn.py` | 纯 NumPy 的 MLP 与 Adam |
+| `scripts/pilot.py` | 神经网络策略与特征抽取（节点/训练/评测/可视化共用） |
 | `scripts/train.py` | 采集专家示范并训练 |
 | `scripts/evaluate.py` | 专家 vs 神经网络闭环评测 |
 | `scripts/main.py` | 可视化与 GIF 导出 |
@@ -155,7 +165,7 @@ graph TD
 
 ## 实验结果
 
-训练：90 回合示范，验证集 MSE **0.059421**。
+训练：90 回合示范，验证集 MSE **0.059421**。训练好的权重 `gap_planner.npz`、`gap_norm.npz` 以及损失曲线数据 `gap_loss.npy` 都随包提交，`make_figures.py` 无需先训练即可运行。
 
 闭环评测（20 个随机任务）：
 
@@ -189,4 +199,4 @@ graph TD
 
 ## 声明
 
-本作业的代码与文档在编写过程中使用了大模型辅助。
+本作业的代码与文档在编写过程中使用了大模型辅助（DeepSeek）。

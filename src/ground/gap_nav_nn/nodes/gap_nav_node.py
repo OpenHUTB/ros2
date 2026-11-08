@@ -7,6 +7,9 @@
     /gap/state   std_msgs/String          approached / crossing / reached
 订阅：
     /gap/cmd_vel geometry_msgs/Twist      手动模式速度指令
+
+参数由 launch 从 config/params.yaml 加载到本节点私有命名空间，
+未提供时回退到代码默认值。
 """
 
 import os
@@ -39,43 +42,29 @@ PKG_DIR = os.path.abspath(os.path.join(SCRIPTS_DIR, ".."))
 sys.path.insert(0, SCRIPTS_DIR)
 
 from sim_core import (GapSim, N_BEAMS, ANGLE_MIN, ANGLE_MAX, MAX_RANGE,  # noqa: E402
-                      thrust_from_twist)
-from oracle import build_path, GapExpert                                  # noqa: E402
-from nn import MLP                                                        # noqa: E402
-
-
-class NNPilot(object):
-    def __init__(self, model_dir):
-        self.net = MLP.load(os.path.join(model_dir, "gap_planner.npz"))
-        z = np.load(os.path.join(model_dir, "gap_norm.npz"))
-        self.xm, self.xs, self.ym, self.ys = z["xm"], z["xs"], z["ym"], z["ys"]
-        self.v = self.w = None
-
-    def act(self, sim, obs):
-        feat = np.concatenate([obs["scan"], [sim.goal_bearing(),
-                                             min(sim.goal_distance(), 20.0), obs["speed"]]])
-        xn = (feat[None, :] - self.xm) / self.xs
-        yn = self.net.predict(xn)[0]
-        v = float(np.clip(yn[0] * self.ys[0] + self.ym[0], -0.3, 1.0))
-        w = float(np.clip(yn[1] * self.ys[1] + self.ym[1], -1.2, 1.2))
-        a = 0.5
-        self.v = a * v + (1 - a) * (self.v if self.v is not None else v)
-        self.w = a * w + (1 - a) * (self.w if self.w is not None else w)
-        return self.v, self.w
+                      MIN_PASSABLE, thrust_from_twist)
+from oracle import build_path, GapExpert, DEFAULTS                      # noqa: E402
+from pilot import NNPilot, features                                     # noqa: E402
 
 
 class GapNode(object):
     def __init__(self):
+        # —— 参数（config/params.yaml -> 节点私有命名空间）——
         self.mode = rospy.get_param("~mode", "nn")
-        self.rate_hz = rospy.get_param("~rate", 20.0)
-        self.seed = rospy.get_param("~seed", 0)
+        self.rate_hz = float(rospy.get_param("~rate", 20.0))
+        self.seed = int(rospy.get_param("~seed", 0))
+        self.min_passable = float(rospy.get_param("~min_passable", MIN_PASSABLE))
+        self.v_max = float(rospy.get_param("~v_max", DEFAULTS["v_max"]))
+        self.lookahead = float(rospy.get_param("~lookahead", DEFAULTS["lookahead"]))
         self.model_dir = rospy.get_param("~model_dir", os.path.join(PKG_DIR, "models"))
 
         self.sim = GapSim(seed=self.seed)
         rng = np.random.default_rng(self.seed)
         self.obs = self.sim.reset(None, None, rng)
-        self.path, self.gap = build_path(self.sim.start, self.sim.goal)
-        self.expert = GapExpert(self.path) if self.mode == "expert" else None
+        self.path, self.gap = build_path(self.sim.start, self.sim.goal,
+                                         self.sim.gaps, self.min_passable)
+        self.expert = (GapExpert(self.path, v_max=self.v_max, lookahead=self.lookahead)
+                       if self.mode == "expert" else None)
         self.pilot = NNPilot(self.model_dir) if self.mode == "nn" else None
 
         self.ext_v = 0.0
@@ -85,8 +74,10 @@ class GapNode(object):
         self.pub_scan = rospy.Publisher("/gap/scan", LaserScan, queue_size=1)
         self.pub_odom = rospy.Publisher("/gap/odom", Odometry, queue_size=1)
         self.pub_state = rospy.Publisher("/gap/state", String, queue_size=1, latch=True)
-        rospy.loginfo("gap nav node ready: mode=%s gap_width=%.2f rate=%.1fHz",
-                      self.mode, self.gap["width"] if self.gap else 0.0, self.rate_hz)
+        rospy.loginfo("gap nav node ready: mode=%s rate=%.1fHz min_passable=%.2f "
+                      "v_max=%.2f lookahead=%.2f gap_width=%.2f",
+                      self.mode, self.rate_hz, self.min_passable, self.v_max,
+                      self.lookahead, self.gap["width"] if self.gap else 0.0)
 
     def cb_cmd(self, msg):
         self.ext_v = msg.linear.x
@@ -130,7 +121,7 @@ class GapNode(object):
                 v, w = self.expert.act(self.sim.pose(), self.sim.speed(),
                                        self.sim.yaw_rate(), self.obs["scan"])
             else:
-                v, w = self.pilot.act(self.sim, self.obs)
+                v, w = self.pilot.act(features(self.sim, self.obs))
 
             tl, tr = thrust_from_twist(v, w)
             self.obs = self.sim.step(tl, tr)

@@ -9,32 +9,8 @@ sys.path.insert(0, HERE)
 from sim_core import GapSim, thrust_from_twist        # noqa: E402
 from oracle import build_path, GapExpert, choose_gap   # noqa: E402
 from nn import MLP                                     # noqa: E402
+from pilot import NNPilot, features                    # noqa: E402
 
-
-class NNPilot(object):
-    def __init__(self, model_dir):
-        self.net = MLP.load(os.path.join(model_dir, "gap_planner.npz"))
-        z = np.load(os.path.join(model_dir, "gap_norm.npz"))
-        self.xm, self.xs, self.ym, self.ys = z["xm"], z["xs"], z["ym"], z["ys"]
-        self.v = self.w = None
-
-    def reset(self):
-        self.v = self.w = None
-
-    def act(self, feat):
-        xn = (feat[None, :] - self.xm) / self.xs
-        yn = self.net.predict(xn)[0]
-        v = float(np.clip(yn[0] * self.ys[0] + self.ym[0], -0.3, 1.0))
-        w = float(np.clip(yn[1] * self.ys[1] + self.ym[1], -1.2, 1.2))
-        a = 0.5
-        self.v = a * v + (1 - a) * (self.v if self.v is not None else v)
-        self.w = a * w + (1 - a) * (self.w if self.w is not None else w)
-        return self.v, self.w
-
-
-def features(sim, obs):
-    return np.concatenate([obs["scan"], [sim.goal_bearing(), min(sim.goal_distance(), 20.0),
-                                         obs["speed"]]]).astype(np.float64)
 
 
 def run(policy, seed, steps=1200):

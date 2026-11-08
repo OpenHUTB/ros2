@@ -2,48 +2,51 @@
 
 专家可以看到开口的真实几何（宽度与中心），据此挑一个"过得去且绕路少"的开口，
 再沿 起点 → 开口中心 → 目标 的折线做纯跟踪。
+开口既可以由仿真模型推导（`GapSim.gaps`），也可以由参数显式给出。
+
 神经网络只有激光雷达，需要自己从扫描里认出哪些开口能过。
 """
 
 import numpy as np
 
-from sim_core import GAPS, MIN_PASSABLE, ROBOT_HALF_W
+from sim_core import GAPS, MIN_PASSABLE
+
+DEFAULTS = {"v_max": 0.80, "lookahead": 1.1, "k_alpha": 1.4}
 
 
 def wrap(a):
     return (a + np.pi) % (2 * np.pi) - np.pi
 
 
-def passable_gaps():
+def passable_gaps(gaps=None, min_passable=MIN_PASSABLE):
+    """筛出宽度不小于 min_passable 的开口，附带宽度与中心。"""
+    src = GAPS if gaps is None else gaps
     out = []
-    for g in GAPS:
+    for g in src:
         w = g["hi"] - g["lo"]
-        if w >= MIN_PASSABLE:
+        if w >= min_passable:
             out.append({"lo": g["lo"], "hi": g["hi"], "width": w,
                         "center": 0.5 * (g["lo"] + g["hi"])})
     return out
 
 
-def choose_gap(start, goal):
-    """按"绕路最少"挑选开口。"""
-    gaps = passable_gaps()
-    if not gaps:
+def choose_gap(start, goal, gaps=None, min_passable=MIN_PASSABLE):
+    """在可通行开口里挑"绕路最少"的一个。"""
+    cand = passable_gaps(gaps, min_passable)
+    if not cand:
         return None
     sy, gy = start[1], goal[1]
     best, best_cost = None, 1e9
-    for g in gaps:
+    for g in cand:
         cost = abs(g["center"] - sy) + abs(g["center"] - gy)
         if cost < best_cost:
             best, best_cost = g, cost
     return best
 
 
-def build_path(start, goal):
-    g = choose_gap(start, goal)
-    if g is None:
-        pts = [start, goal]
-    else:
-        pts = [start, (0.0, g["center"]), goal]
+def build_path(start, goal, gaps=None, min_passable=MIN_PASSABLE):
+    g = choose_gap(start, goal, gaps, min_passable)
+    pts = [start, goal] if g is None else [start, (0.0, g["center"]), goal]
     dense = [pts[0]]
     for i in range(1, len(pts)):
         a, b = pts[i - 1], pts[i]
@@ -54,11 +57,12 @@ def build_path(start, goal):
 
 
 class GapExpert(object):
-    def __init__(self, path, v_max=0.80, lookahead=1.1, k_alpha=1.4):
+    def __init__(self, path, v_max=DEFAULTS["v_max"], lookahead=DEFAULTS["lookahead"],
+                 k_alpha=DEFAULTS["k_alpha"]):
         self.path = path
-        self.v_max = v_max
-        self.lookahead = lookahead
-        self.k_alpha = k_alpha
+        self.v_max = float(v_max)
+        self.lookahead = float(lookahead)
+        self.k_alpha = float(k_alpha)
         self.k = 0
 
     def act(self, pose, speed=0.0, yaw_rate=0.0, scan=None):

@@ -46,7 +46,6 @@ ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2
 
 [下载](https://ww2.mathworks.cn/support/product/robotics/ros2-vm-installation-instructions-v9.html)并安装好 ROS 的虚拟机。此虚拟机基于 Linux （Ubuntu 20.04 `lsb_release -a`）操作系统，并已预先配置为支持使用 ROS （ROS 1 Noetic 和 ROS 2 Humble） 构建的应用程序。
 
-
 ROS每章节运行代码:
 
 * [第 1 章](./chapter/chap1/chap1.md) - 认识 ROS
@@ -63,7 +62,6 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
-
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
@@ -84,7 +82,6 @@ ROS每章节运行代码:
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
-
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
@@ -168,10 +165,10 @@ ROS每章节运行代码:
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
+* [狭窄通道通行：激光雷达开口辨识与神经网络选口穿行](./ground/gap_nav_nn.md) —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
-
-* [狭窄通道通行：激光雷达开口辨识与神经网络选口穿行](./ground/gap_nav_nn.md) —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
@@ -181,11 +178,9 @@ ROS每章节运行代码:
 
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 
-
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
-
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
 
@@ -258,7 +253,6 @@ ROS每章节运行代码:
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
-
 
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
