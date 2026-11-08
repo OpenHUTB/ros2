@@ -84,3 +84,51 @@ python src/air/winter_circle/winter_circle.py --fly --radius 2 --height 3 --spee
 </video>
 
 [下载原始运行录屏](../img/air/winter_circle/winter_circle_demo.mp4)
+
+## PR #850 复核后的改进
+
+本节记录代码修改，不代表新一轮在线飞行已通过。原视频与 `Circle complete` 记录属于旧版实测材料。
+
+### 客户端安装
+
+场景仍需自行准备 UE4.27 winter 工程及兼容的 AirSim 服务端；仓库不分发该场景。这里使用 PyPI `airsim==1.8.1` 客户端，不是 CARLA Python API。依赖清单在 `src/air/winter_circle/requirements.txt`。审核者使用过 Windows 11 / Python 3.10.21；以下固定版本组合尚未在全新环境验证。
+
+建议单独创建 Python 3.10 环境。在 Windows CMD、仓库根目录执行：
+
+```bat
+py -3.10 -m venv .venv-winter
+.venv-winter\Scripts\activate
+python -m pip install setuptools wheel numpy==1.24.4 msgpack-rpc-python==0.4.1
+python -m pip install --no-build-isolation -r src/air/winter_circle/requirements.txt
+python -c "import airsim; print(airsim.__file__)"
+```
+
+分步安装是因为 AirSim 旧版打包脚本会在构建时导入 NumPy 和 RPC 依赖。若已有来自官方 PythonClient 的 `airsim`，请用独立环境避免混装，并核对上面的导入路径。
+
+### 指令结果和控制周期
+
+连接失败会显示主机、端口和启动检查提示。起飞、爬升、速度、悬停、降落均调用 future 的 `.get()`，捕获 RPC 异常，并将非 True 返回值作为拒绝执行处理。速度指令改为 0.1 秒有限段，上一段确认完成才发送下一段，不积累未检查的 future。
+
+控制循环按单调时钟计算 0.1 秒目标截止时间，提前完成才等待；超时时重设基准，不连续补发。RPC 和仿真执行时间会降低实际频率，不能保证严格 10 Hz；两次循环间隔超过 2 秒会停止任务。
+
+`hoverAsync()` 没有 `timeout_sec` 参数，清理阶段单独创建 `timeout_value=3` 的 RPC 客户端，避免等待默认的一小时。该值是 msgpack-rpc 超时设置，受事件循环和重试影响，不是精确的墙钟三秒保证。起飞/爬升使用 40 秒 RPC 超时，降落使用 45 秒。失联时仍不能保证悬停命令送达，错误会打印出来。
+
+### 轨迹记录与复测
+
+默认 `--fly` 在当前目录创建 `winter_circle_trajectory.csv`，已有同名文件会拒绝覆盖。每次实验指定新文件名：
+
+```bat
+python src/air/winter_circle/winter_circle.py --fly --radius 2 --height 3 --speed 0.5 --laps 1 --log winter_run_01.csv
+```
+
+CSV 包含单调时钟经过时间、AirSim 状态时间戳、NED 位置、圆心、目标高度、半径误差、高度误差、累计极角及拟发送速度。正半径误差表示位于圆外；高度误差为 `z-target_z`，正值表示低于目标。行数据在发指令前落盘，表示观测和请求，不证明执行成功；异常时保留已写记录。预览模式不创建 CSV。
+
+离线回归命令（不需要 AirSim）：
+
+```bat
+python -m unittest discover -s src/air/winter_circle/tests -v
+```
+
+需要在 winter 中另行复测：失联提示、起飞、整圈飞行、终止悬停、可选降落，并提交 CSV 与录屏。当前没有新版在线实测结果，不报告实测轨迹精度，也不将离线检查视为飞行验收。
+
+本次修改在 Python 3.12 下运行上述 11 项离线回归，全部通过；包括 RPC 返回 False/异常、周期等待、起飞失败后的悬停尝试、连接失败提示和 CSV 防覆盖。尚未验证全新依赖安装或新版在线飞行。
