@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_time_window</name>
+  <version>0.1.0</version>
+  <description>
+    多机任务 4D 时间窗分配与延误均衡。N 架无人机为 M 个带时间窗
+    [earliest, latest] 与服务时长的任务点服务：先按最早截止优先（EDF）
+    生成贪心初始解，再做两任务互换与机间迁移的局部搜索改进；目标函数为
+    Σ正延误 + λ×(最大单机延误 − 最小单机延误)，在总延误最小化的同时
+    追求机间 max-min 公平。窗口不可达的任务（距离过远 / 窗口过窄）标记
+    并报告原因，不硬塞。任务序列进一步展开为 4D 航迹，用课程既有的
+    uav_mujoco_sim（MuJoCo 刚体模型 + 几何控制器）闭环真飞，统计每个
+    任务点的实际到达时刻与窗口偏差。
+  </description>
+  <maintainer email="326516287+usernamekkyy@users.noreply.github.com">黄家欣</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

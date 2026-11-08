@@ -242,6 +242,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
+* [低空多机任务时间窗分配与延误均衡](./air/uav_time_window.md) —— 带时间窗的多机任务分配（EDF 贪心 + 局部搜索），压总延误与机间延误极差，计划经 MuJoCo 闭环真飞复核到达时刻
+
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 
 * [四旋翼吊挂负载防摆控制](./air/uav_slung_load.md) —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°

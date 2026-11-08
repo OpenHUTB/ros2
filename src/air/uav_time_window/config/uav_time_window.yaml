@@ -1,0 +1,23 @@
+# 多机任务 4D 时间窗分配参数（算法层与 ROS 节点共用同一套缺省值）
+
+# 目标函数 = Σ正延误 + lambda × (最大单机延误 − 最小单机延误)
+# lambda 越大越强调机间延误均衡（max-min 公平）
+lambda_balance: 0.5
+
+# UAV 缺省参数
+default_speed: 8.0          # m/s，巡航速度
+default_endurance: 420.0    # s，续航（按巡航速度折算约 3.4 km 航程）
+service_time: 15.0          # s，单点服务时长（悬停投送等）
+
+# 悬停等待耗能折算：每悬停 1 s 计入成本 hover_weight 秒（等效延误）
+hover_weight: 0.2
+
+# 局部搜索
+max_improve_rounds: 200     # 最大改进轮数（互换/迁移）
+alt: 30.0                   # 巡航高度 m（4D 航迹用）
+climb_speed: 2.5            # 爬升/下降率 m/s
+
+# ROS 节点
+uav_ids: ["UAV-1", "UAV-2", "UAV-3"]
+odom_prefix: "/uav"
+period: 1.0                 # s，重排周期
