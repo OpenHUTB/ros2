@@ -45,18 +45,22 @@ class KneeTrackingNode(Node):
         self.declare_parameter("model_path", MODEL_PATH)
         self.declare_parameter("sim.dt", 0.005)
         self.declare_parameter("sim.duration", 30.0)
+        self.declare_parameter("sim.exit_after_duration", False)
         self.declare_parameter("trajectory.type", "sine")          # sine | step
         self.declare_parameter("trajectory.amplitude_deg", 40.0)
         self.declare_parameter("trajectory.frequency_hz", 0.4)
         self.declare_parameter("trajectory.bias_deg", 30.0)
         self.declare_parameter("ctrl.kp", 30.0)
         self.declare_parameter("ctrl.kd", 3.0)
-        self.declare_parameter("ctrl.max_torque", 25.0)            # 肌肉等效最大力矩 N·m
-        self.declare_parameter("ctrl.limit_deg", 90.0)             # 模型关节限位上限
+        # 模型实际最大关节力矩 = 单肌 500 N × wrap 半径 0.035 m = 17.5 N·m
+        self.declare_parameter("ctrl.max_torque", 17.5)
+        self.declare_parameter("ctrl.limit_deg", 90.0)             # 屈曲上限
+        self.declare_parameter("ctrl.limit_low_deg", -15.0)        # 伸展下限
 
         model_path = self.get_parameter("model_path").value
         self.dt = self.get_parameter("sim.dt").value
         self.duration = self.get_parameter("sim.duration").value
+        self.exit_after = bool(self.get_parameter("sim.exit_after_duration").value)
         self.traj_type = self.get_parameter("trajectory.type").value
         self.amp = self.get_parameter("trajectory.amplitude_deg").value
         self.freq = self.get_parameter("trajectory.frequency_hz").value
@@ -65,6 +69,7 @@ class KneeTrackingNode(Node):
         self.kd = self.get_parameter("ctrl.kd").value
         self.max_torque = self.get_parameter("ctrl.max_torque").value
         self.limit_deg = self.get_parameter("ctrl.limit_deg").value
+        self.limit_low_deg = self.get_parameter("ctrl.limit_low_deg").value
 
         if self.traj_type not in ("sine", "step"):
             self.get_logger().warn(f"未知轨迹类型 {self.traj_type}, 回退为 sine")
@@ -84,6 +89,7 @@ class KneeTrackingNode(Node):
         self._ref_deg = self.bias
         self._use_external_ref = False
         self._stopped = False
+        self.exit_requested = False
         self._ref_lock = threading.Lock()
         self._lock = threading.Lock()
 
@@ -133,6 +139,10 @@ class KneeTrackingNode(Node):
                             f"内置轨迹已到 {self.duration}s，执行安全停止；"
                             "如需继续跟踪请发布 /knee/reference")
                         self._stopped = True
+                        if self.exit_after:
+                            self.get_logger().info(
+                                "sim.exit_after_duration=true，节点将退出")
+                            self.exit_requested = True
                     self._safe_stop()
                     mujoco.mj_step(self.model, self.data)
                     continue
@@ -143,7 +153,7 @@ class KneeTrackingNode(Node):
                 q = self.data.qpos[0]
                 qd = self.data.qvel[0]
 
-                # PD -> 所需力矩 -> 拮抗肌肉激活 (含数值检查与屈曲限位保护)
+                # PD -> 所需力矩 -> 拮抗肌肉激活 (含数值检查与双向限位保护)
                 flex, ext = pd_to_activation(
                     math.radians(ref_deg) - q,
                     qd,
@@ -151,6 +161,7 @@ class KneeTrackingNode(Node):
                     self.kd,
                     self.max_torque,
                     limit_reached=(q >= math.radians(self.limit_deg)),
+                    limit_low_reached=(q <= math.radians(self.limit_low_deg)),
                 )
 
                 self.data.ctrl[self.i_flex] = flex
@@ -189,7 +200,10 @@ def main(args=None):
     rclpy.init(args=args)
     node = KneeTrackingNode()
     try:
-        rclpy.spin(node)
+        # 用 spin_once 轮询，便于 exit_after_duration 到点后干净退出
+        while rclpy.ok() and not node.exit_requested:
+            rclpy.spin_once(node, timeout_sec=0.1)
+        node.shutdown()
     except KeyboardInterrupt:
         node.shutdown()
     finally:

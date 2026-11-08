@@ -6,16 +6,18 @@ def clamp(x, lo=0.0, hi=1.0):
     return max(lo, min(hi, x))
 
 
-def pd_to_activation(error_rad, vel, kp, kd, max_torque, limit_reached=False):
+def pd_to_activation(error_rad, vel, kp, kd, max_torque,
+                     limit_reached=False, limit_low_reached=False):
     """
     将跟踪误差通过 PD 转化为拮抗肌肉激活 (flexor/extensor ∈ [0,1])。
 
     参数:
-      error_rad    : 目标角度 - 当前角度 [rad]
-      vel          : 关节角速度 [rad/s]
-      kp, kd       : 比例 / 微分增益
-      max_torque   : 肌肉等效最大力矩 [N·m] (激活归一化分母)
-      limit_reached: 是否已到达屈曲限位
+      error_rad        : 目标角度 - 当前角度 [rad]
+      vel              : 关节角速度 [rad/s]
+      kp, kd           : 比例 / 微分增益
+      max_torque       : 肌肉等效最大力矩 [N·m] (激活归一化分母)
+      limit_reached    : 是否已到屈曲上限 (q >= 上限)
+      limit_low_reached: 是否已到伸展下限 (q <= 下限)
     返回:
       (flexor, extensor) 激活值
     """
@@ -33,9 +35,11 @@ def pd_to_activation(error_rad, vel, kp, kd, max_torque, limit_reached=False):
         flex = 0.0
         ext = clamp(-torque / max_torque)
 
-    # 屈曲限位保护: 已到限位且仍需屈曲 -> 停止屈肌
+    # 双向限位保护: 到上限仍要屈曲 -> 停屈肌; 到下限仍要伸展 -> 停伸肌
     if limit_reached and torque > 0:
         flex = 0.0
+    if limit_low_reached and torque < 0:
+        ext = 0.0
 
     return flex, ext
 
