@@ -190,7 +190,7 @@ def _simulate_legs(nlegs, seconds, targets, gscale, rec=None, kp=90.0, kd=9.0):
             q = np.array([d.joint(f"hip_{s}").qpos[0], d.joint(f"knee_{s}").qpos[0]])
             qd = np.array([d.joint(f"hip_{s}").qvel[0], d.joint(f"knee_{s}").qvel[0]])
             ff = np.array([d.qfrc_bias[m.joint(f"hip_{s}").dofadr[0]],
-                           d.qfrc_bias[m.joint(f"knee_{s}").dofadr[0]]]) / nlegs
+                           d.qfrc_bias[m.joint(f"knee_{s}").dofadr[0]]])
             tau = joint_pd(q, qd, targets(s, t), np.zeros(2), kp, kd) + ff
             u = legs[s].activations_for(tau)
             umax = max(umax, float(u.max()))
