@@ -50,7 +50,9 @@ nav:
     - 首页: 'index.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
+    - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
+    - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
@@ -72,6 +74,7 @@ nav:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'
     - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
+    - 基于三次样条插值的双足多步态平滑切换: './humanoid/biped_cubic_spline_gait_switch.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
@@ -95,6 +98,9 @@ nav:
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
+    - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
+    - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
+    - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
     - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
@@ -111,6 +117,7 @@ nav:
     - 端到端神经网络图像驾驶: './ground/carla_end_to_end_nn.md'
     - 自动驾驶示例: './ground/ad_demo.md'
     - rostopic 手动驱动: './ground/rostopic_cruise.md'
+    - 作业综合整合与性能评价: './ground/carla_benchmark_suite.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
     - 交通信号灯识别与响应: './ground/carla_traffic_light.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
@@ -149,6 +156,7 @@ nav:
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
+    - 航向 PID 参数自整定与手工试凑对比: './ground/pid_auto_tuning.md'
     - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
     - 地面载具灯光自动控制: './ground/carla_auto_light.md'
     - 限速标志识别与神经网络限速控制: './ground/traffic_sign_speed_control.md'
@@ -162,6 +170,7 @@ nav:
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
     - 扭转控制: './ground/twist_to_control.md'
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
+    - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
 - 空域载具:
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
     - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
@@ -192,14 +201,18 @@ nav:
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
+    - 无人机定高日志误差与抗扰恢复时间评估: './air/uav_hover_log_eval.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
     - 神经残差动力学与学习式轨迹跟踪: './air/uav_neural_residual_control.md'
     - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
     - 基于 DQN 的无人机导航避障: './air/uav_dqn_nav.md'
+    - 城市动态交通下的无人机避障（PPO + DAgger）: './air/uav_traffic_nav.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
+    - AirSim无人机键盘遥控与机载云台控制模块: './airsim_drone_gimbal_teleop/README.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
+    - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
@@ -236,12 +249,22 @@ nav:
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
+    - 水下 ROV AprilTag 视觉定位与定点巡航仿真: './water/rov_apriltag_cruise.md'
+    - 水下 ROV 视觉引导的沉船结构巡检采样仿真: './water/rov_wreck_inspection.md'
     - 手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比: './water/mjc_rov_ppo_tracking.md'
     - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
     - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
+    - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
+    - 手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比: './water/mjc_rov_ppo_tracking.md'
+    - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
+    - 同一 ROV 任务 PPO 与 SAC 强化学习算法对比: './water/mjc_rov_rl_compare.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
+    - 水下多源融合组合导航 (EKF): './water/rov_ekf_navigation.md'
+    - 基于热力图的洋流干扰下 ROV 自适应路径规划: './water/water_rov_path_planning.md'
     - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
+    - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
 - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
@@ -258,3 +281,4 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
+          
