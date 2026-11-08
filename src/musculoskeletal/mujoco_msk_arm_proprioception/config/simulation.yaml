@@ -1,0 +1,9 @@
+mujoco_msk_arm_proprioception:
+  ros__parameters:
+    sample_rate_hz: 100.0
+    delay_s: 0.03
+    length_noise_std_m: 0.0005
+    velocity_noise_std_m_s: 0.005
+    force_noise_std_n: 0.2
+    tendon_extension_noise_std_m: 0.0001
+    random_seed: 0
