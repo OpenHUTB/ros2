@@ -13,7 +13,7 @@
 用法与原来的 main.py 完全一致，例如：
     python3 main.py --list
     python3 main.py --benchmark --out report.json
-    python3 main.py --module navigation -- --demo --headless
+    python3 main.py --target navigation -- --demo --headless
 """
 
 import os

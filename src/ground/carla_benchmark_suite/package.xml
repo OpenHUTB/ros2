@@ -12,12 +12,10 @@
 
   <exec_depend>ros2launch</exec_depend>
 
-  <!-- 被调度与被评测的四个功能包。若某个包未随仓库一同获取，
-       本包仍可运行，但对应项会显示"缺失"或评测失败（不会崩溃）。 -->
-  <exec_depend>carla_keyboard_control</exec_depend>
-  <exec_depend>carla_perception_control</exec_depend>
-  <exec_depend>carla_mapping_navigation</exec_depend>
-  <exec_depend>carla_end_to_end_nn</exec_depend>
+  <!-- 被调度与被评测的四个功能包同在本仓库 src/ground/ 下。
+       刻意不写 exec_depend：它们不是 rosdep key，写进去会让
+       rosdep install 报 "Cannot locate rosdep definition"。
+       包缺失时本包仍可运行，对应项显示"缺失"或评测失败（不会崩溃）。 -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

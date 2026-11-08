@@ -114,7 +114,10 @@ def test_sibling_nn_models_are_consistent():
     digests = {}
     for f in files:
         with open(f, "rb") as fh:
-            digests[f] = hashlib.md5(fh.read()).hexdigest()
+            # 统一行尾再比对：同一份内容在不同包里可能以 CRLF / LF 检出，
+            # 只比内容不比行尾，否则在 Windows 工作区会假报分歧。
+            data = fh.read().replace(b"\r\n", b"\n")
+        digests[f] = hashlib.md5(data).hexdigest()
 
     uniq = set(digests.values())
     assert len(uniq) == 1, (
@@ -262,8 +265,8 @@ def _pkg_root():
 def test_main_entries_are_executable():
     """main.* 必须有可执行位。
 
-    launch/main.launch 里是 <node type="main.py"> —— roslaunch 会直接执行该
-    文件并依赖首行 shebang；没有可执行位（实测曾为 100644）就会启动失败。
+    ROS 2 launch 经 `ros2 run` 调包内入口，要求 main.* 具备可执行位；
+    实测曾为 100644，直接执行会启动失败。
     """
     import subprocess
     names = ("main.py", "main.sh", "main.bat")
@@ -344,22 +347,25 @@ def test_empty_optional_value_does_not_abort():
     assert a.save_dir is None
 
 
-def test_main_launch_passes_declared_args_to_node():
-    """main.launch 声明的每个 <arg> 都必须被节点用到。
+def test_launch_file_declares_and_uses_args():
+    """main.launch.py 声明的每个参数都必须真正被用到。
 
-    漏传会让 follow:=true 之类的设置不起作用。
+    漏用会让 `host:=192.168.8.1` 之类的设置静默失效。
+    另断言不再提供 ROS 1 的 `launch/main.launch`：本包是 ament_python（format 3）
+    包，Noetic 的 catkin 环境里没有它的 package index，`roslaunch` 必然找不到该包
+    （评审在 Noetic 下复现，故 ROS 1 分支改为提示用 main.sh 直接运行）。
     """
     import re
-    text = open(os.path.join(_pkg_root(), "launch", "main.launch"),
+    root = _pkg_root()
+    assert not os.path.exists(os.path.join(root, "launch", "main.launch")), \
+        "ament_python 包不应再提供 catkin launch（roslaunch 找不到该包）"
+    text = open(os.path.join(root, "launch", "main.launch.py"),
                 encoding="utf-8").read()
-    declared = set(re.findall(r'<arg\s+name="([^"]+)"', text))
-    nodes = re.findall(r"<node\b.*?/>", text, re.S)
-    assert nodes, "main.launch 里没有找到 <node .../>"
-    passed = set()
-    for n in nodes:
-        passed |= set(re.findall(r"\$\(arg\s+([^)]+)\)", n))
-    missing = sorted(declared - passed)
-    assert not missing, f"这些已声明的 arg 没有透传给节点：{missing}"
+    declared = set(re.findall(r"DeclareLaunchArgument\(\s*'([^']+)'", text))
+    assert declared, "main.launch.py 里没有找到 DeclareLaunchArgument"
+    used = set(re.findall(r"LaunchConfiguration\('([^']+)'\)", text))
+    missing = sorted(declared - used)
+    assert not missing, f"这些已声明的 launch 参数没有被用到：{missing}"
 
 
 def test_main_sh_launch_dispatches_per_ros_version():
@@ -374,9 +380,11 @@ def test_main_sh_launch_dispatches_per_ros_version():
     assert "${@/--launch/}" not in sh, \
         "旧的 --launch 展开写法会留下空参数，应改成收集到数组再展开"
     assert "ros2 launch" in sh, "main.sh 应支持 ROS 2 的 ros2 launch"
-    assert "roslaunch" in sh, "main.sh 应支持 ROS 1 的 roslaunch"
     assert "ROS_VERSION" in sh, "应按 ROS_VERSION 选择 launch 命令"
     assert "launch_args" in sh, "其余参数应原样透传给 launch"
+    assert "roslaunch carla_benchmark_suite" not in sh, \
+        "ament_python 包在 Noetic 下 exec roslaunch 必然失败，应改为提示用 main.sh"
+    assert "不支持 --launch" in sh, "ROS 1 分支应给出明确的报错提示"
 
 
 def _lzw_decode(blob, min_code, npix):

@@ -29,7 +29,6 @@
     python3 main.py --target perception -- --headless --demo --save_dir ~/shots
     python3 main.py --target end_to_end -- --mode train --epochs 60
     ros2 launch carla_benchmark_suite main.launch.py target:=perception
-    roslaunch carla_benchmark_suite main.launch target:=navigation
 """
 
 import argparse
@@ -42,6 +41,7 @@ import time
 
 import numpy as np
 
+from carla_benchmark_suite.bitmap_font import draw_text
 from carla_benchmark_suite.gif_writer import rgb_frames_to_gif
 
 # 四个子模块：功能包名 → (相对本仓库的包目录, 说明, 硬性任务对应)
@@ -182,9 +182,17 @@ def bench_perception(epochs=150, **kw):
     sens, ctrl, _h = mod.train(fX, fY.astype(int), cX, cY, epochs=epochs, verbose=0)
     train_s = time.time() - t0
 
-    acc = float(np.mean(sens.predict(fX) == fY.astype(int)))
+    # 训练集指标（仅作参考，不进入汇总表）
+    acc_train = float(np.mean(sens.predict(fX) == fY.astype(int)))
     xin = (cX - ctrl.input_mu) / ctrl.input_sd
-    ctrl_mse = float(np.mean(np.square(ctrl.predict(xin).ravel() - cY)))
+    ctrl_mse_train = float(np.mean(np.square(ctrl.predict(xin).ravel() - cY)))
+
+    # 留出集：评审指出上面用的是训练输入，报出来的其实是训练集精度。
+    # 这里另生成一组同分布、不同种子的数据，只用于评估，不参与训练。
+    hX, hY, hcX, hcY = mod.synth_dataset(120, seed=1)
+    acc = float(np.mean(sens.predict(hX) == hY.astype(int)))
+    hin = (hcX - ctrl.input_mu) / ctrl.input_sd
+    ctrl_mse = float(np.mean(np.square(ctrl.predict(hin).ravel() - hcY)))
 
     # 轨迹跟踪回放（用模块内部的 DEMO_ROUTE 与运动学）
     wps = mod.interpolate_waypoints(mod.DEMO_ROUTE, step=2.0)
@@ -217,7 +225,9 @@ def bench_perception(epochs=150, **kw):
         lateral.append(mod._dist_to_polyline((x, y), wps))
 
     m = compute_metrics(steer=steers, speed=speeds, lateral_err=lateral)
-    m.update({"percept_acc": acc, "control_mse": ctrl_mse, "train_seconds": round(train_s, 2),
+    m.update({"percept_acc": acc, "percept_acc_train": acc_train,
+              "control_mse": ctrl_mse, "control_mse_train": ctrl_mse_train,
+              "holdout_n": int(len(hY)), "train_seconds": round(train_s, 2),
               "reached_goal": bool(math.hypot(goal[0] - x, goal[1] - y) < mod.GOAL_TOL)})
     return m
 
@@ -359,8 +369,8 @@ def run_benchmark(save_dir=None, out=None, which=None, epochs=None, samples=None
     print("  汇总")
     print("=" * 68)
     table = [
-        ("感知 NN 准确率", results.get("perception", {}).get("percept_acc"), "{:.4f}"),
-        ("控制 NN MSE", results.get("perception", {}).get("control_mse"), "{:.5f}"),
+        ("感知 NN 准确率(留出)", results.get("perception", {}).get("percept_acc"), "{:.4f}"),
+        ("控制 NN MSE(留出)", results.get("perception", {}).get("control_mse"), "{:.5f}"),
         ("横向误差 RMSE (m)", results.get("perception", {}).get("lateral_rmse"), "{:.4f}"),
         ("规划 NN MSE", results.get("navigation", {}).get("plan_mse"), "{:.5f}"),
         ("建图覆盖率", results.get("navigation", {}).get("known_ratio"), "{:.4f}"),
@@ -433,22 +443,26 @@ def metric_bars_canvas(results, width=760, height=420, progress=1.0):
 
     `progress` 用于合成文档动图：条长按比例缩放，从 0 长到 1。
     """
+    # 英文短名直接用位图画进图里：评审指出原先只有 1..8 序号，读不出对应指标
     groups = [
-        ("感知NN准确率", results.get("perception", {}).get("percept_acc"), 1.0, (66, 133, 244)),
-        ("控制NN MSE", results.get("perception", {}).get("control_mse"), None, (219, 68, 55)),
-        ("横向误差RMSE", results.get("perception", {}).get("lateral_rmse"), None, (244, 160, 0)),
-        ("规划NN MSE", results.get("navigation", {}).get("plan_mse"), None, (219, 68, 55)),
-        ("建图覆盖率", results.get("navigation", {}).get("known_ratio"), 1.0, (15, 157, 88)),
-        ("导航最近距离", results.get("navigation", {}).get("nav_min_dist"), None, (244, 160, 0)),
-        ("端到端MAE", results.get("end_to_end", {}).get("reg_mae"), None, (219, 68, 55)),
-        ("端到端方向一致率", results.get("end_to_end", {}).get("reg_sign_acc"), 1.0, (66, 133, 244)),
+        ("percept acc", results.get("perception", {}).get("percept_acc"), 1.0, (66, 133, 244)),
+        ("ctrl mse", results.get("perception", {}).get("control_mse"), None, (219, 68, 55)),
+        ("lat rmse (m)", results.get("perception", {}).get("lateral_rmse"), None, (244, 160, 0)),
+        ("plan mse", results.get("navigation", {}).get("plan_mse"), None, (219, 68, 55)),
+        ("map cover", results.get("navigation", {}).get("known_ratio"), 1.0, (15, 157, 88)),
+        ("cells", results.get("navigation", {}).get("occupied_cells"), None, (109, 76, 65)),
+        ("nav dist (m)", results.get("navigation", {}).get("nav_min_dist"), None, (244, 160, 0)),
+        ("e2e mae", results.get("end_to_end", {}).get("reg_mae"), None, (219, 68, 55)),
+        ("e2e sign", results.get("end_to_end", {}).get("reg_sign_acc"), 1.0, (66, 133, 244)),
+        ("e2e corr", results.get("end_to_end", {}).get("reg_corr"), 1.0, (15, 157, 88)),
     ]
     valid = [(n, float(v), cap, c) for n, v, cap, c in groups if v is not None]
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
+    draw_text(canvas, 10, 10, "CARLA homework modules: key metrics", (40, 40, 40))
     if not valid:
         return canvas
 
-    margin_l, margin_r, margin_t, margin_b = 150, 130, 20, 20
+    margin_l, margin_r, margin_t, margin_b = 168, 130, 34, 18
     n = len(valid)
     row_h = (height - margin_t - margin_b) / n
     max_v = max(v for _n, v, _c, _col in valid) or 1.0
@@ -463,9 +477,9 @@ def metric_bars_canvas(results, width=760, height=420, progress=1.0):
         frac = max(frac, 0.02) * prog               # 保证至少能看到一点
         x1 = int(margin_l + frac * bar_max)
         canvas[y0:y1, margin_l:x1] = color
-        # 左侧指标名用 5×7 点阵风格的可读标签（此处以纯色块占位，名称见文档表）
-        canvas[y0:y1, 8:margin_l - 10] = (238, 238, 240)
-        _draw_digits(canvas, 12, y0 + max(0, (y1 - y0 - 7) // 2), i + 1)
+        # 指标名：位图字体写像素，不依赖 matplotlib
+        canvas[y0:y1, 6:margin_l - 8] = (238, 238, 240)
+        draw_text(canvas, 12, y0 + max(0, (y1 - y0 - 15) // 2), name, (40, 40, 40))
         # 数值等条长基本到位后再显示，避免动图里数字乱跳
         if prog >= 0.98:
             _draw_text_value(canvas, x1 + 6, y0 + max(0, (y1 - y0 - 7) // 2), val)

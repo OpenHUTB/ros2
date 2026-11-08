@@ -41,7 +41,12 @@ if [ "$want_launch" = "1" ]; then
     if [ "${ROS_VERSION:-}" = "2" ] || [ -d /opt/ros/humble ]; then
         exec ros2 launch carla_benchmark_suite main.launch.py "${launch_args[@]}"
     elif [ "${ROS_VERSION:-}" = "1" ] || [ -d /opt/ros/noetic ]; then
-        exec roslaunch carla_benchmark_suite main.launch "${launch_args[@]}"
+        # 本包是 ament_python（format 3）包，Noetic 的 catkin 环境里没有它的
+        # package index，roslaunch 找不到该包。Noetic 下请直接用本脚本运行：
+        #   bash main.sh --benchmark
+        echo "本包为 ROS 2（ament_python）功能包：Noetic 下不支持 --launch。" >&2
+        echo "请改用 bash main.sh --benchmark 或 bash main.sh --target <模块>。" >&2
+        exit 1
     fi
     echo "未检测到 ROS 环境：请先 source /opt/ros/humble/setup.bash" >&2
     echo "或 source /opt/ros/noetic/setup.bash 后再用 --launch。" >&2

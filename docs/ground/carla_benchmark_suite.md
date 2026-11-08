@@ -101,7 +101,8 @@ $$
 各指标量纲差异极大（MSE 约 \(10^{-3}\)、准确率约 \(10^{0}\)、占据格数约 \(10^{3}\)），
 在同一张条形图上直接对比会导致小数值指标**完全看不见**。
 
-本模块的对比图按**组内最大值归一化**条长，并在条形右侧用点阵绘制**真实数值**，
+本模块的对比图按**组内最大值归一化**条长，左侧用位图字体标注**指标名**，
+在条形右侧用点阵绘制**真实数值**，
 保证既能直观比较、又能读到准确数字。
 
 ## 3. 算法流程
@@ -155,7 +156,7 @@ launch 文件**（复用其节点与参数定义，避免在本包内重复描�
 | 仿真器 | CARLA 0.9.16（仅在线调度子作业时需要；`--benchmark` 不需要） |
 | Python | 3.10+（CARLA 0.9.16 客户端 wheel 为 cp310/cp311/cp312） |
 | 依赖 | 仅 `numpy`（各模块神经网络均为纯 numpy 实现） |
-| ROS | ROS 1 Noetic 或 ROS 2 Humble（launch 封装） |
+| ROS | ROS 2 Humble（`ros2 launch`）；Noetic 下用 `main.sh` 直接运行，本包不提供 catkin launch |
 
 ### 5.2 新手路线：从已有示例到本模块
 
@@ -283,13 +284,11 @@ ros2 launch carla_benchmark_suite main.launch.py metrics_file:=$HOME/shots/repor
 # ROS 2：调度子模块（包含子包自己的 launch）
 ros2 launch carla_benchmark_suite main.launch.py target:=navigation host:=192.168.8.1
 
-# ROS 1
-roslaunch carla_benchmark_suite main.launch benchmark:=true save_dir:=$HOME/shots
-# 模式 D：ROS 1 Noetic —— 入口用 main.sh（会自动挑 python3.10）
-#   roslaunch 只能按 main.py 的 shebang 执行它，而 Noetic 的 python3 是 3.8，
-#   装不上 CARLA 0.9.16 的 cp310+ wheel，补了可执行位也会卡在 import carla。
-#   若系统 python3 本身已是 3.10+，也可用：
-#   roslaunch carla_benchmark_suite main.launch target:=perception host:=192.168.8.1
+# 模式 D：ROS 1 Noetic —— 用 main.sh 直接运行（不需要 ROS，也不需要 catkin 封装）
+#   本包是 ament_python（format 3）包，Noetic 的 catkin 环境里没有它的 package index，
+#   roslaunch 找不到该包，所以**不提供** ROS 1 launch；`--launch` 在 Noetic 下会明确报错。
+#   main.sh 会自动挑 python3.10（CARLA 0.9.16 的 wheel 是 cp310+）：
+bash src/ground/carla_benchmark_suite/main.sh --benchmark --save_dir ~/shots
 bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.168.8.1
 ```
 
@@ -298,11 +297,11 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
 ### 5.9 运行效果
 
 **各模块指标对比图**（条长按组内最大值归一化以免小数值不可见；
-条形右侧点阵为真实数值；左侧序号对应下方指标表）：
+左侧直接标注**指标名**与单位，条形右侧点阵为真实数值，共 10 项）：
 
 ![各模块性能指标对比](../img/ground/carla_bench_metric_summary.png)
 
-**动图：各模块指标逐条长出**（10 帧，26 KB。条形从 0 长到实测值，最后停住并标出数值，
+**动图：各模块指标逐条长出**（10 帧，37 KB。条形从 0 长到实测值，最后停住并标出数值，
 一眼能看出四份作业在"精度 / 误差 / 覆盖率"三个维度上的相对水平）：
 
 ![各模块性能指标对比动图](../img/ground/carla_bench_metric_summary.gif)
@@ -321,8 +320,11 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
     speed_mean                 = 7.03799
     lateral_rmse               = 0.21876
     lateral_max                = 1.21778
-    percept_acc                = 0.98750
-    control_mse                = 0.00350
+    percept_acc                = 0.97500
+    percept_acc_train          = 0.98750
+    control_mse                = 0.00339
+    control_mse_train          = 0.00350
+    holdout_n                  = 120
 
 ---- 评测 navigation：激光雷达占用栅格建图 + 神经网络规划导航 ----
     plan_mse                   = 0.00788
@@ -348,8 +350,8 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
 ====================================================================
   指标                                  数值
   --------------------------------------
-  感知 NN 准确率                       0.9875
-  控制 NN MSE                      0.00350
+  感知 NN 准确率(留出)                   0.9750
+  控制 NN MSE(留出)                  0.00339
   横向误差 RMSE (m)                   0.2188
   规划 NN MSE                      0.00788
   建图覆盖率                           0.2650
@@ -390,39 +392,42 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
 
 > 复现命令：`python3 src/ground/carla_benchmark_suite/main.py --benchmark \
 > --save_dir ~/shots --out ~/shots/report.json`（默认 perception 150 epoch /
-> navigation 60 epoch / end_to_end 40 epoch & 100 样本，约 100 秒，
+> navigation 60 epoch / end_to_end 40 epoch & 100 样本，约 2 分钟，
 > 绝大部分花在端到端 CNN 的纯 numpy 训练上）。
-> 上表的时延类指标与机器性能有关，换机器会有浮动；其余指标由固定随机种子
-> 决定，可逐位复现。
+>
+> 四个被评测的功能包（作业一~四）**都在本仓库** `src/ground/` 下，干净克隆即可复现
+> 全部 10 项指标；指标由固定随机种子决定，可逐位复现（时延类指标随机器浮动）。
+> 感知/控制两项报的是**留出集**（另生成 120 个样本、不同种子、不参与训练），
+> 训练集数值仅作对照。
 
 | 模块 | 指标 | 数值 |
 |---|---|---|
-| 作业二 感知 | 感知 NN 准确率 | **0.9875** |
-| 作业二 感知 | 控制 NN MSE | 0.00350 |
+| 作业二 感知 | 感知 NN 准确率（留出集） | **0.9750**（训练集 0.9875） |
+| 作业二 感知 | 控制 NN MSE（留出集） | 0.00339（训练集 0.00350） |
 | 作业二 感知 | 横向误差 RMSE | **0.2188 m** |
 | 作业二 感知 | 平均速度 | 7.0380 m/s |
 | 作业二 感知 | 转向 AoS（平滑度） | 0.01820 |
-| 作业三 建图 | 建图覆盖率 | **0.2715** |
-| 作业三 建图 | 占据格数 | 1261 |
-| 作业三 导航 | 规划 NN MSE | **0.00610** |
-| 作业三 导航 | 导航最近距离 | **1.4251 m**（阈值 1.5 m，已到达） |
-| 作业三 导航 | 单步推理时延 | 0.0386 ms |
+| 作业三 建图 | 建图覆盖率 | **0.2650** |
+| 作业三 建图 | 占据格数 | 1214 |
+| 作业三 导航 | 规划 NN MSE | **0.00788** |
+| 作业三 导航 | 导航最近距离 | **1.4161 m**（阈值 1.5 m，已到达） |
+| 作业三 导航 | 单步推理时延 | 0.0298 ms |
 | 作业四 端到端 | MAE | **0.14361** |
 | 作业四 端到端 | 方向一致率 | **0.9300** |
 | 作业四 端到端 | 相关系数 | **0.9896** |
 | 作业四 端到端 | 零输出基线 MAE | 0.40404（网络 MAE 是基线的 **1/2.8**） |
-| 作业四 端到端 | 单帧推理时延 | 2.3753 ms |
+| 作业四 端到端 | 单帧推理时延 | 2.8932 ms |
 
 ### 6.2 横向对比与观察
 
 | 观察 | 数据支撑 | 说明 |
 |---|---|---|
-| 感知/控制 NN 精度高 | 感知准确率 0.9875、控制 MSE 0.0035 | 分层方案在合成数据上表现稳定 |
+| 感知/控制 NN 精度高 | 留出集准确率 0.9750、控制 MSE 0.00339 | 分层方案在合成数据上表现稳定 |
 | 轨迹跟踪平滑 | AoS 0.0182、饱和率 0 | 弯道自适应减速有效，转向无抖动 |
-| 建图有效 | 覆盖率 0.2715、占据格 1261 | 6 秒左右的行驶即可覆盖约 27% 栅格 |
-| 规划 NN 实时性好 | 单步 0.0386 ms | MLP 体量小，远快于 50 ms 的仿真步长 |
+| 建图有效 | 覆盖率 0.2650、占据格 1214 | 6 秒左右的行驶即可覆盖约 27% 栅格 |
+| 规划 NN 实时性好 | 单步 0.0298 ms | MLP 体量小，远快于 50 ms 的仿真步长 |
 | 端到端显著优于基线 | MAE 0.1436 vs 基线 0.4040 | 网络确实学到了"图像 → 转向"，而非恒输出 0 |
-| 端到端推理较慢 | 2.38 ms/帧 | 纯 numpy 卷积无 GPU 加速；仍远快于 50 ms 步长 |
+| 端到端推理较慢 | 2.89 ms/帧 | 纯 numpy 卷积无 GPU 加速；仍远快于 50 ms 步长 |
 
 ### 6.3 评价过程中的两个关键教训
 
@@ -431,13 +436,14 @@ bash src/ground/carla_benchmark_suite/main.sh --target perception -- --host 192.
 | **原版用随机数造指标** | `np.random.seed(0)` 生成假的转向/速度/误差序列，指标与算法无关 | 改为**真实训练 + 回放**测量；指标可复现、可验证 |
 | **`nn_models.py` 多副本漂移** | 作业四修了 maxpool 梯度与 tanh 两处缺陷后，评价包仍用旧副本，端到端 MAE 一度测得 **36.12**（正常 <0.3） | 统一各包副本，并新增**副本一致性回归测试**，分歧即失败并列出差异文件 |
 | 指标量纲差异导致图不可读 | MSE 约 \(10^{-3}\)、占据格数约 \(10^{3}\)，同图对比时小数值完全看不见 | 对比图按**组内最大值归一化**条长，并用点阵标注真实数值 |
+| **报的是训练集精度** | 感知/控制 NN 直接在自己的训练输入上预测，0.9875 是训练集准确率，不是泛化精度 | 另生成 120 个样本（不同种子、不参与训练）作**留出集**，汇总表只报留出集，训练集数值留作对照 |
 
 ### 6.4 结论
 
 - **完整性**：四份作业（物理仿真与键盘控制、感知与控制 NN、建图与规划 NN、
   端到端 CNN）均可由本模块统一调度，且各自满足"算法为神经网络"的硬性要求。
-- **可复现性**：全部指标由 `--benchmark` 真实测量得到，无需 CARLA 服务端即可复现，
-  避免了用随机数造指标的无意义做法。
+- **可复现性**：四个被评测功能包都在本仓库内，`--benchmark` 一条命令即可复现全部
+  10 项指标（固定随机种子），无需 CARLA 服务端，也避免了用随机数造指标的做法。
 - **可验证性**：单元测试 23 项覆盖指标计算的数学正确性与副本一致性，
   其中指标计算的边界情形（空输入、单元素）与副本漂移都有回归测试保护。
 - **局限**：评测在合成数据上进行，用于验证算法正确性与链路可用性；

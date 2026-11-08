@@ -46,8 +46,7 @@ src/ground/carla_benchmark_suite/
 │   ├── nn_models.py                          # 与其它功能包保持一致的副本
 │   └── benchmark_node.py                     # ROS 2 节点（发布评测指标 / 调度子模块）
 ├── launch/
-│   ├── main.launch.py                        # ROS 2 Humble
-│   └── main.launch                           # ROS 1 Noetic
+│   └── main.launch.py                        # ROS 2 Humble
 ├── config/sim_params.yaml
 ├── resource/carla_benchmark_suite
 ├── setup.py / setup.cfg / package.xml
@@ -84,7 +83,7 @@ python3 main.py --target perception -- --headless --demo --save_dir ~/shots
 python3 main.py --target end_to_end -- --mode train --epochs 60
 python3 main.py --target navigation -- --mode run --host <宿主机IP> --goal "20,8"
 
-# ⑤ ROS 2 / ROS 1
+# ⑤ ROS 2（Humble）launch；Noetic 下用 main.sh，本包不提供 catkin launch
 ros2 launch carla_benchmark_suite main.launch.py                    # 发布评测指标
 ros2 launch carla_benchmark_suite main.launch.py target:=perception # 调度子模块
 bash main.sh --target navigation -- --host <宿主机IP>
@@ -95,7 +94,7 @@ bash main.sh --target navigation -- --host <宿主机IP>
 ## 4. 测试
 
 ```bash
-python3 test/test_benchmark_logic.py     # 11 项全部通过，无需 CARLA
+python3 test/test_benchmark_logic.py     # 23 项全部通过，无需 CARLA
 ```
 
 其中 `test_sibling_nn_models_are_consistent` 是**副本一致性回归测试**：
@@ -105,20 +104,27 @@ python3 test/test_benchmark_logic.py     # 11 项全部通过，无需 CARLA
 > 历史教训：作业四修复了 maxpool 反向传播与推理 tanh 两处缺陷后，
 > 性能评价包仍用旧副本，基准测试中端到端 MAE 一度测得 **36.12**（正常应 <0.3）。
 
-## 5. 实测指标（本机实测）
+## 5. 实测指标（`--benchmark` 一次跑完 10 项，合成数据，本机实测）
+
+> 四个被评测的功能包**都在本仓库** `src/ground/` 下，干净克隆后一条命令即可复现全部指标：
+
+```bash
+python3 src/ground/carla_benchmark_suite/main.py --benchmark \
+        --save_dir ~/shots --out ~/shots/report.json
+```
 
 | 指标 | 数值 |
 |---|---|
-| 感知 NN 准确率 | 0.9875 |
-| 控制 NN MSE | 0.00350 |
+| 感知 NN 准确率（留出集） | 0.9750（训练集 0.9875） |
+| 控制 NN MSE（留出集） | 0.00339（训练集 0.00350） |
 | 横向误差 RMSE | 0.2188 m |
-| 规划 NN MSE | 0.00610 |
-| 建图覆盖率 | 0.2919 |
-| 占据格数 | 1387 |
-| 导航最近距离 | 1.4251 m |
+| 规划 NN MSE | 0.00788 |
+| 建图覆盖率 | 0.2650 |
+| 占据格数 | 1214 |
+| 导航最近距离 | 1.4161 m |
 | 端到端 MAE | 0.14361 |
-| 端到端方向一致率 | 0.9500 |
-| 端到端相关系数 | 0.9920 |
+| 端到端方向一致率 | 0.9300 |
+| 端到端相关系数 | 0.9896 |
 
 ## 6. 与已有示例的关系
 
