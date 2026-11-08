@@ -21,7 +21,6 @@ class SyntheticScanDataset(Dataset):
         self.num_samples = num_samples
         self.scan_size = scan_size
         
-        # 定义一些障碍物线段
         self.obstacles = [
             ((2.0, 2.0), (2.0, 4.0)), ((2.0, 4.0), (4.0, 4.0)),
             ((4.0, 4.0), (4.0, 2.0)), ((4.0, 2.0), (2.0, 2.0)),
@@ -31,6 +30,29 @@ class SyntheticScanDataset(Dataset):
             ((5.0, 5.0), (5.0, 8.0)), ((5.0, 8.0), (8.0, 8.0)),
             ((8.0, 8.0), (8.0, 5.0)), ((8.0, 5.0), (5.0, 5.0))
         ]
+
+        # 预先生成并固定数据池（保证验证集每次评估的数据完全一致）
+        import random
+        random.seed(42)
+        self.data = []
+        for _ in range(num_samples):
+            x1 = random.uniform(-1.5, 1.5)
+            y1 = random.uniform(-1.5, 1.5)
+            theta1 = random.uniform(-math.pi, math.pi)
+            scan1 = self.get_scan(x1, y1, theta1)
+
+            dx = random.uniform(-0.2, 0.2)
+            dy = random.uniform(-0.1, 0.1)
+            dtheta = random.uniform(-0.1, 0.1)
+
+            x2 = x1 + dx * math.cos(theta1) - dy * math.sin(theta1)
+            y2 = y1 + dx * math.sin(theta1) + dy * math.cos(theta1)
+            theta2 = theta1 + dtheta
+            scan2 = self.get_scan(x2, y2, theta2)
+
+            inputs = np.stack([scan1, scan2], axis=0)
+            targets = np.array([dx, dy, dtheta], dtype=np.float32)
+            self.data.append((torch.from_numpy(inputs), torch.from_numpy(targets)))
 
     def ray_cast(self, start_pt, angle):
         max_range = 10.0
@@ -58,28 +80,7 @@ class SyntheticScanDataset(Dataset):
         return self.num_samples
 
     def __getitem__(self, idx):
-        # 随机生成起点
-        x1 = random.uniform(-1.5, 1.5)
-        y1 = random.uniform(-1.5, 1.5)
-        theta1 = random.uniform(-math.pi, math.pi)
-        scan1 = self.get_scan(x1, y1, theta1)
-
-        # 随机生成微小的位移（在局部坐标系下）
-        dx = random.uniform(-0.2, 0.2)
-        dy = random.uniform(-0.1, 0.1)
-        dtheta = random.uniform(-0.1, 0.1)
-
-        # 计算第二个位姿（转到全局坐标）
-        x2 = x1 + dx * math.cos(theta1) - dy * math.sin(theta1)
-        y2 = y1 + dx * math.sin(theta1) + dy * math.cos(theta1)
-        theta2 = theta1 + dtheta
-        scan2 = self.get_scan(x2, y2, theta2)
-
-        # 拼接输入 (2, 360)
-        inputs = np.stack([scan1, scan2], axis=0)
-        targets = np.array([dx, dy, dtheta], dtype=np.float32)
-        
-        return torch.from_numpy(inputs), torch.from_numpy(targets)
+        return self.data[idx]
 
 def train():
     print("初始化合成数据集...")

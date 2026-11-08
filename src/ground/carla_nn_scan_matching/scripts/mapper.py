@@ -40,12 +40,25 @@ class GridMapper:
         
         updated = False
         for i, r in enumerate(msg.ranges):
-            if r < msg.range_min or r > msg.range_max:
+            # 过滤掉 NaN, Inf 以及越界的非法值
+            if not math.isfinite(r) or r < msg.range_min or r > msg.range_max:
                 continue
                 
             angle = msg.angle_min + i * msg.angle_increment
             global_angle = theta + angle
             
+            # 沿射线将经过的格子标记为 free(0)，直到命中点
+            steps = int(r / self.resolution)
+            for step in range(steps):
+                free_x = x + step * self.resolution * math.cos(global_angle)
+                free_y = y + step * self.resolution * math.sin(global_angle)
+                gx = int((free_x - self.origin_x) / self.resolution)
+                gy = int((free_y - self.origin_y) / self.resolution)
+                if 0 <= gx < self.width and 0 <= gy < self.height:
+                    if self.grid[gy, gx] == -1:  # 不覆盖已有障碍物
+                        self.grid[gy, gx] = 0
+            
+            # 标记命中点为占据(100)
             obs_x = x + r * math.cos(global_angle)
             obs_y = y + r * math.sin(global_angle)
             
