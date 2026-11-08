@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from uav_emergency_drop.core.ballistics import (BallisticsCfg,
+                                                aim_release_point,
                                                 conditions_table,
                                                 fall_time, impact_point,
                                                 make_release_plan,
@@ -126,3 +127,31 @@ def test_release_window_rejects_lateral_offset():
     win = release_window((0.0, 30.0), (200.0, 30.0), (200.0, 0.0), plan)
     assert not win.feasible
     assert "realign" in win.advice
+
+
+def test_evaluate_drop_rejects_bad_states():
+    """评审反例：只查投影时，横偏/悬停/反向/掉高度都会照发投放指令。"""
+    plan = make_release_plan(30.0, 8.0)
+    seg_a, seg_b = (0.0, 0.0), (200.0, 0.0)
+    tgt = np.array([200.0, 0.0])
+    rel = aim_release_point(tgt, (8.0, 0.0), plan)
+    # 横向偏 100 m：预测落点偏 100 m，超接受半径
+    v = evaluate_drop((rel[0], 100.0, 30.05), (8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "accept" in v.reason
+    # 悬停：没有前进速度
+    v = evaluate_drop((rel[0], 0.0, 30.05), (0.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "speed" in v.reason
+    # 反向 8 m/s：航向背离进入段
+    v = evaluate_drop((rel[0], 0.0, 30.05), (-8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "heading" in v.reason
+    # 高度掉到 20 m，偏离计划投放高度 10 m，解析解不可信
+    v = evaluate_drop((rel[0], 0.0, 20.05), (8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "altitude" in v.reason
+    # 正常：理想释放点 + 标称速度，放行且落点在目标上
+    v = evaluate_drop((rel[0], 0.0, 30.05), (8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert v.release_now and v.predicted_impact is not None

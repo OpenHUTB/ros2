@@ -16,13 +16,18 @@ from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from .ballistics import ReleasePlan, impact_point, overflight_target
+from .ballistics import ReleasePlan, overflight_target
+from .trigger import evaluate_drop
 
 REF_TAU = 0.5                       # 参考速度一阶低通（s）
 ATT_DAMPING = (-0.18, -0.18, -0.126)  # 姿态阻尼，抑制航向/分段阶跃激励
 CLIMB_SPEED = 2.5                   # m/s
 CUT_LEN = 15.0                      # 航路点切角长度（m）
 GROUND_Z = 0.05
+#: 桥梁通道半宽（m）：过河段的参考/实际轨迹必须落在
+#: |x - bridge_x| <= 该值内。此前切角不受桥约束，参考轨迹在
+#: x≈253.9 就进入河带（桥中心 260），通道宽度也没定义过。
+BRIDGE_CHANNEL_HALF_M = 10.0
 
 
 def _load_backend():
@@ -107,15 +112,20 @@ def build_route(case):
 
     河流 case 先飞到桥梁入口、经桥梁通道过河，再从桥梁出口就近排序
     目标点——避免在急弯后立刻进入投放段（实测 105° 转弯后 7 s 仍有
-    振荡，落点偏差被放大到 26 m）。返回 (wps, true_targets, target_idx)，
-    target_idx[i] 是第 i 个投放点越顶点在 wps 中的下标。
+    振荡，落点偏差被放大到 26 m）。桥梁入口/出口两个航路点不做切角
+    （否则参考轨迹会斜穿河带、偏离桥中心线），过河段恒沿桥中心线。
+    返回 (wps, true_targets, target_idx, no_cut)，
+    target_idx[i] 是第 i 个投放点越顶点在 wps 中的下标，no_cut 是
+    禁止切角的航路点下标集合（过河测试用它复核通道约束）。
     """
     from .planner import route_order
     targets = case.top_targets(3)
     start = case.cargo.depot
     wps = [tuple(case.cargo.depot)]
+    no_cut: set = set()
     if case.river is not None:
         wps += [(case.bridge_x, case.river[0]), (case.bridge_x, case.river[1])]
+        no_cut = {len(wps) - 2, len(wps) - 1}
         start = (case.bridge_x, case.river[1])
     ordered = route_order(case.points, [p.pid for p in targets], start)
     pmap = {p.pid: p for p in targets}
@@ -126,12 +136,13 @@ def build_route(case):
         wps.append((float(wp[0]), float(wp[1])))
         true_targets.append(t)
         target_idx.append(len(wps) - 1)
-    return wps, true_targets, target_idx
+    return wps, true_targets, target_idx, no_cut
 
 
 def _build_legs(route: Sequence[Tuple[float, float]], h: float,
                 lead_m: float, climb_speed: float = CLIMB_SPEED,
-                cut_len: float = CUT_LEN):
+                cut_len: float = CUT_LEN,
+                no_cut: (set, frozenset, type(None)) = None):
     """构建段表：垂直爬升段 + 巡航段，内部航路点做切角圆滑。
 
     急转弯处参考速度方向阶跃会激励位置环振荡（实测 120° 转角超调
@@ -154,7 +165,10 @@ def _build_legs(route: Sequence[Tuple[float, float]], h: float,
         in_len.append(l_in)
         if j < len(route) - 1:
             u_out, l_out = _unit(route[j], route[j + 1])
-            c = min(cut_len, 0.35 * l_in, 0.35 * l_out, 0.8 * lead_m)
+            if no_cut and j in no_cut:
+                c = 0.0     # 桥梁等通道航路点不切角，过河段沿中心线
+            else:
+                c = min(cut_len, 0.35 * l_in, 0.35 * l_out, 0.8 * lead_m)
             cuts.append(c)
             path.append((route[j][0] - u_in[0] * c, route[j][1] - u_in[1] * c))
             path.append((route[j][0] + u_out[0] * c, route[j][1] + u_out[1] * c))
@@ -201,14 +215,15 @@ def fly_drop_route(route: Sequence[Tuple[float, float]],
                    plan: ReleasePlan,
                    target_idx: Optional[Sequence[int]] = None,
                    dt: float = 0.01, record_every: int = 5,
-                   tail: float = 6.0, progress: bool = False) -> FlyResult:
-    """按航线真飞并在每个投放点的理想释放点投一次。
+                   tail: float = 6.0, progress: bool = False,
+                   no_cut: Optional[set] = None) -> FlyResult:
+    """按航线真飞并在每个投放点的可行时机投一次。
 
     target_idx[i] 是第 i 个投放点越顶点在 route 中的下标（默认 1..n，
-    航线无绕行插入点时与此一致）。释放判据：计划位置沿进入段的弧长越过
-    理想释放点 s_ideal（弹道解析解给定的提前量处），记录 MuJoCo 真实
-    位置/速度，用弹道模型预测落点。巡航段逐时刻统计 |真实位置 − 计划
-    位置|。
+    航线无绕行插入点时与此一致）。释放判据：与 ROS 节点共用
+    evaluate_drop，用 MuJoCo 真实状态（位置/速度/高度）判定，预测落点
+    进入接受半径一半或越过理想释放点后仍达标才放行（只投一次）。
+    巡航段逐时刻统计 |真实位置 − 计划位置|。
 
     dt 必须等于 Quadrotor 控制周期（默认 0.01 s，内部 4 个 0.0025 s
     物理子步），每循环恰好推进一个控制周期，保证时钟与物理时间一致。
@@ -216,7 +231,8 @@ def fly_drop_route(route: Sequence[Tuple[float, float]],
     Quadrotor, GeometricController, model_dir = _load_backend()
     model_path = str(Path(model_dir) / "quadrotor.xml")
 
-    legs, drop_leg, drop_s = _build_legs(route, plan.h, plan.lead_m)
+    legs, drop_leg, drop_s = _build_legs(route, plan.h, plan.lead_m,
+                                         no_cut=no_cut)
     climb_s = legs[0]["length"] / CLIMB_SPEED
     if target_idx is None:
         target_idx = list(range(1, len(route)))
@@ -268,15 +284,26 @@ def fly_drop_route(route: Sequence[Tuple[float, float]],
         thrusts = ctrl.act(quad, p_use, v_use, np.zeros(3), 0.0)
         quad.step_with_control(thrusts, 1)
 
-        # 投放判定：计划位置越过该目标的理想释放点即投（只投一次）
+        # 投放判定：与 ROS 节点共用 evaluate_drop，用 MuJoCo 真实状态
+        # （位置/速度/高度）判定，落点校验不过不发指令（只投一次）。
+        # 此前按"计划位置越过理想释放点"触发，闭环没有验证节点真正
+        # 使用的判据链路。
         for i in range(len(true_targets)):
             if released[i]:
                 continue
             k = target_idx[i] - 1  # drop_leg/drop_s 以 route[1..] 为序
-            if seg_idx == drop_leg[k] and s >= drop_s[k]:
+            if seg_idx != drop_leg[k]:
+                continue
+            leg_k = legs[drop_leg[k]]
+            verdict = evaluate_drop(quad.qpos[:3], quad.qvel[:3],
+                                    np.asarray(leg_k["a"])[:2],
+                                    np.asarray(leg_k["b"])[:2],
+                                    true_targets[i], plan,
+                                    released[i])
+            if verdict.release_now:
                 rp = quad.qpos[:3].copy()
                 rv = quad.qvel[:3].copy()
-                imp = impact_point(rp[:2], rv[:2], plan)
+                imp = np.asarray(verdict.predicted_impact, dtype=float)
                 tgt = true_targets[i]
                 releases.append(DropRecord(
                     target=np.asarray(tgt, dtype=float).copy(),
@@ -321,3 +348,26 @@ def fly_drop_route(route: Sequence[Tuple[float, float]],
             [e for t_, e in err_log if t_ >= n_steps * dt - 0.8])
             ) if err_log else 0.0,
         sim_s=n_steps * dt, wall_s=time.time() - t0_wall)
+
+
+def bridge_channel_deviation(legs, river, bridge_x,
+                             half: float = BRIDGE_CHANNEL_HALF_M) -> float:
+    """过河段相对桥中心线的最大横向偏差（m），用于通道约束自检。"""
+    y_lo, y_hi = river
+    worst = 0.0
+    for leg in legs:
+        if leg["kind"] != "cruise":
+            continue
+        a = np.asarray(leg["a"])[:2]
+        b = np.asarray(leg["b"])[:2]
+        d = b - a
+        if abs(d[1]) < 1e-9:
+            if y_lo <= a[1] <= y_hi:
+                worst = max(worst, abs(float(a[0] - bridge_x)))
+            continue
+        for y_b in (y_lo, y_hi):
+            t = (y_b - a[1]) / d[1]
+            if 0.0 <= t <= 1.0:
+                x = a[0] + t * d[0]
+                worst = max(worst, abs(float(x - bridge_x)))
+    return worst

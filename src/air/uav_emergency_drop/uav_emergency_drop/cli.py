@@ -47,7 +47,7 @@ def run_algorithm(case):
     # 航线预检：沿闭环航线逐段检查提前量可行性（河流 case 含桥梁绕行）
     from .core.trigger import check_leg
     from .core.flyer import build_route
-    wps, _tt, _idx = build_route(case)
+    wps, _tt, _idx, _nc = build_route(case)
     leg_checks = []
     if case.river is not None:
         from .core.planner import segment_crosses_band
@@ -101,11 +101,12 @@ def run_case(name: str, sim: bool = True, progress: bool = False) -> dict:
         return result
 
     from .core.flyer import build_route, fly_drop_route
-    route, true_targets, target_idx = build_route(case)
+    route, true_targets, target_idx, no_cut = build_route(case)
     print("[trigger] %s: route %s" % (name,
           [[round(x), round(y)] for x, y in route]))
     fly = fly_drop_route(route, true_targets, case.plan,
-                         target_idx=target_idx, progress=progress)
+                         target_idx=target_idx, progress=progress,
+                         no_cut=no_cut)
     print("[flyer] %s: %d releases, impact err mean %.2f m, "
           "track err max %.2f m, wall %.1f s"
           % (name, len(fly.releases),

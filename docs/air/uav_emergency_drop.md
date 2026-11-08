@@ -9,7 +9,7 @@
 
 `uav_emergency_drop` 把这件事拆成三步：载货有限先送谁（加权贪心 +
 架次切分）、松手后落点在哪（平抛解析解 + 风偏 + 散布）、什么时候按
-投放键（释放区间解析求解）。最后整条链路在 MuJoCo 里真飞验证。
+投放键（真实状态落点校验）。最后整条链路在 MuJoCo 里真飞验证。
 
 源码位于
 [`src/air/uav_emergency_drop`](https://github.com/OpenHUTB/ros2/tree/master/src/air/uav_emergency_drop)，
@@ -26,7 +26,7 @@
 
 ![村庄群算例](../img/air/uav_emergency_drop/village.gif)
 
-*村庄群 8 点（h=30, v=8）：19.8 m → 0.1 m。*
+*村庄群 8 点（h=30, v=8）：19.8 m → 0.03 m。*
 
 绕河的算例里，直线穿河被禁飞带拦下，航线从桥上过，绕完桥再就近排序
 投放点（弯后 20 m 内不安排释放，转角切角圆滑——实测急弯后立即投放
@@ -34,14 +34,14 @@
 
 ![河对岸算例](../img/air/uav_emergency_drop/river.gif)
 
-*河对岸 6 点：20.6 m → 0.1 m。*
+*河对岸 6 点：20.5 m → 0.05 m。*
 
 8 m/s 东风的算例：12.92 m 的风偏全部由逆风偏移的越顶点补偿，
 投放后解析落点回到真实目标：
 
 ![横风算例](../img/air/uav_emergency_drop/wind.gif)
 
-*8 m/s 横风（h=20, v=6）：12.5 m → 0.1 m。*
+*8 m/s 横风（h=20, v=6）：12.5 m → 0.04 m。*
 
 三个算例的落点总览：
 
@@ -53,21 +53,24 @@
 
 **弹道（`core/ballistics.py`）**：平抛解析解。`t_fall = √(2h/g)`，
 前抛 `lead = v·t_fall`，风偏 `w·t_fall×0.8`，散布按经验取
-`σ = 0.15h`。释放判据不是"到点才投"，而是沿直飞航段解一个
-释放区间（释放太早落点越过目标、太近又不够前抛，区间外提示
-降速或绕行）。
+`σ = 0.15h`。释放判据不是"进了解析区间就投"，而是沿直飞航段解出
+理想释放点，到达该点时用真实位置/速度外推落点并逐项校验（状态有限、
+速度与航向沿进入段、高度接近计划值、落点偏差 ≤ 接受半径），全部
+达标才投放；区间不可行（提前量超出段长、航线横向偏出）提示降速或
+绕行。
 
 **选点与架次（`core/planner.py`）**：按紧迫度 × 需求加权贪心装填，
 一架装不完就封口换货（60 s 装载时间），架次内最近邻排序；交换改进
 （移 1 回填 k）只在严格变优时接受。河流算例的禁飞带绕行也在这一层。
 
 **闭环（`core/flyer.py`）**：`uav_mujoco_sim` 的 Quadrotor +
-GeometricController 真飞，dt = 0.01 s 与控制周期一致。计划位置沿航段
-越过理想释放点时记录 MuJoCo 真实位置/速度，喂给弹道模型预测落点。
+GeometricController 真飞，dt = 0.01 s 与控制周期一致。真实状态与
+ROS 节点共用同一套 `evaluate_drop` 判据，到达理想释放点且落点校验
+达标才投放，记录 MuJoCo 真实位置/速度，喂给弹道模型预测落点。
 
-**ROS 节点（`ros/drop_node.py`）**：薄壳，订阅 `/uav/odom`，进释放
-区间后在 `/uav_emergency_drop/drop` 发一条 JSON 投放指令；判定逻辑
-全部在 `core/trigger.py`，节点只做消息转换。
+**ROS 节点（`ros/drop_node.py`）**：薄壳，订阅 `/uav/odom`，落点
+校验达标后在 `/uav_emergency_drop/drop` 发一条 JSON 投放指令；判定
+逻辑全部在 `core/trigger.py`，节点只做消息转换。
 
 ---
 
@@ -75,9 +78,9 @@ GeometricController 真飞，dt = 0.01 s 与控制周期一致。计划位置沿
 
 | 算例 | 选点 | 送出 | 架次 | 落点偏差 mean / max | 投放窗口跟踪误差 | 末端悬停 |
 |---|---|---|---|---|---|---|
-| `case_aid_village` | 8/8 | 23 份 | 2 | 0.11 / 0.15 m | 0.08 m | 0.10 m |
-| `case_aid_river` | 6/6 | 17 份 | 2 | 0.10 / 0.11 m | 0.27 m | 0.09 m |
-| `case_aid_wind` | 6/6 | 17 份 | 2 | 0.10 / 0.11 m | 0.06 m | 0.00 m |
+| `case_aid_village` | 8/8 | 23 份 | 2 | 0.03 / 0.07 m | 0.08 m | 0.10 m |
+| `case_aid_river` | 6/6 | 17 份 | 2 | 0.05 / 0.08 m | 0.26 m | 0.09 m |
+| `case_aid_wind` | 6/6 | 17 份 | 2 | 0.04 / 0.05 m | 0.06 m | 0.00 m |
 
 弹道表（无风，h × v 网格）：
 
@@ -109,5 +112,5 @@ cd src/air/uav_emergency_drop
 python main.py                 # 三个算例各真飞一次，闭环墙钟约 5 s
 python main.py --no-sim        # 只跑算法层，秒级
 python tools/make_gif.py       # 重录上面四个图
-python -m pytest test/ -q      # 27 项测试
+python -m pytest test/ -q      # 30 项测试
 ```

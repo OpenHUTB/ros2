@@ -52,10 +52,11 @@ def run_case(name):
     from uav_emergency_drop.core.flyer import build_route, fly_drop_route
 
     case = _CASES[name]
-    route, true_targets, target_idx = build_route(case)
+    route, true_targets, target_idx, no_cut = build_route(case)
     # record_every 调小一点，出 gif 才不卡
     fly = fly_drop_route(route, true_targets, case.plan,
-                         target_idx=target_idx, record_every=5)
+                         target_idx=target_idx, record_every=5,
+                         no_cut=no_cut)
     return case, fly
 
 

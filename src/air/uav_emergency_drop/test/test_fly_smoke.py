@@ -5,7 +5,11 @@ import numpy as np
 import pytest
 
 from uav_emergency_drop.core.ballistics import make_release_plan
-from uav_emergency_drop.core.flyer import build_route, fly_drop_route
+import uav_emergency_drop.core.flyer as flyer_mod
+from uav_emergency_drop.core.flyer import (BRIDGE_CHANNEL_HALF_M,
+                                           _build_legs, build_route,
+                                           bridge_channel_deviation,
+                                           fly_drop_route)
 from uav_emergency_drop.core.cases import (CASE_AID_RIVER, CASE_AID_VILLAGE,
                                            CASE_AID_WIND)
 
@@ -53,7 +57,7 @@ def test_impact_error_bounded(smoke_flight):
 
 
 def test_wind_case_route_is_upwind_shifted():
-    route, targets, _idx = build_route(CASE_AID_WIND)
+    route, targets, _idx, _nc = build_route(CASE_AID_WIND)
     plan = CASE_AID_WIND.plan
     # 越顶点 = 真实目标 - drift（逆风偏移）
     for wp, tgt in zip(route[1:], targets):
@@ -64,7 +68,7 @@ def test_wind_case_route_is_upwind_shifted():
 def test_wind_case_smoke_flight_hits_target():
     """侧风 case 闭环：风补偿航线 + 弹道风偏应把落点拉回真实目标附近。"""
     case = CASE_AID_WIND
-    route, targets, idx = build_route(case)
+    route, targets, idx, no_cut = build_route(case)
     result = fly_drop_route(route[:idx[0] + 1], targets[:1], case.plan,
                             target_idx=[idx[0]], dt=0.01, record_every=5)
     assert len(result.releases) == 1
@@ -74,7 +78,7 @@ def test_wind_case_smoke_flight_hits_target():
 def test_river_route_goes_through_bridge():
     """河流 case 闭环航线必须经桥梁通道横穿禁飞带。"""
     case = CASE_AID_RIVER
-    route, targets, idx = build_route(case)
+    route, targets, idx, no_cut = build_route(case)
     y_lo, y_hi = case.river
     # 每段都不得横穿禁飞带
     for a, b in zip(route, route[1:]):
@@ -88,3 +92,46 @@ def test_river_route_goes_through_bridge():
     straight = sum(float(np.linalg.norm(wps[i + 1] - wps[i]))
                    for i in range(len(wps) - 1))
     assert detour_len > straight
+
+
+def test_releases_fire_through_evaluate_drop():
+    """闭环触发与 ROS 节点共用 evaluate_drop（此前按计划位置触发，
+    节点真正用的判据链路没被闭环覆盖）。"""
+    case = CASE_AID_WIND
+    route, targets, idx, no_cut = build_route(case)
+    calls = {"n": 0}
+    real = flyer_mod.evaluate_drop
+
+    def counting(*a, **k):
+        calls["n"] += 1
+        return real(*a, **k)
+
+    flyer_mod.evaluate_drop = counting
+    try:
+        result = fly_drop_route(route[:idx[0] + 1], targets[:1], case.plan,
+                                target_idx=[idx[0]], dt=0.01, record_every=5)
+    finally:
+        flyer_mod.evaluate_drop = real
+    assert calls["n"] > 100          # 每个控制周期都过一遍判定
+    assert len(result.releases) == 1
+
+
+def test_river_channel_reference_and_flight():
+    """过河段的参考轨迹与实际轨迹都必须落在桥通道半宽内。"""
+    case = CASE_AID_RIVER
+    route, targets, idx, no_cut = build_route(case)
+    legs, _dl, _ds = _build_legs(route, case.drop_h,
+                                 case.plan.lead_m, no_cut=no_cut)
+    ref_dev = bridge_channel_deviation(legs, case.river, case.bridge_x)
+    assert ref_dev <= BRIDGE_CHANNEL_HALF_M
+
+    result = fly_drop_route(route, targets, case.plan,
+                            target_idx=idx, dt=0.01, record_every=5,
+                            no_cut=no_cut)
+    assert len(result.releases) == 3
+    y_lo, y_hi = case.river
+    in_band = result.pos[(result.pos[:, 1] >= y_lo)
+                         & (result.pos[:, 1] <= y_hi)]
+    assert len(in_band) > 0
+    act_dev = float(np.max(np.abs(in_band[:, 0] - case.bridge_x)))
+    assert act_dev <= BRIDGE_CHANNEL_HALF_M + 1e-6
