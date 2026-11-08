@@ -34,6 +34,12 @@ title: 主页
 
 ## 1. 入门 <span id="list"></span>
 
+* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
+
+* [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
+
+* [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
+
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
 
 * 教材：ROS教材.pdf
@@ -62,6 +68,7 @@ ROS每章节运行代码:
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+  * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 
@@ -72,6 +79,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人基础](./humanoid/humanoid_basics.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
+* [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
@@ -82,10 +90,11 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
-* [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
+* [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -96,6 +105,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
+* [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
@@ -114,6 +125,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
+* [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
 * [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
@@ -173,6 +185,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
@@ -227,6 +241,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
 * [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
+* [城市动态交通下的无人机避障（PPO + DAgger）](./air/uav_traffic_nav.md) —— 用 CARLA 车流做动态障碍；规则专家示范 + 行为克隆 + DAgger，跨路成功率 48%±3.6%，高于贪心（39%）与速度障碍法（19%）
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
 
