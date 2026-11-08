@@ -456,3 +456,24 @@ ros2 launch payload_mass_estimation main.launch.py project_root:="$PWD"
 **采集拒绝静默失败。** 飞行出现非有限值或高度低于 0.3 m 时直接 `raise`，而不是把坏样本混进训练集。
 
 ---
+
+## 10. 复现步骤
+
+```bash
+cd ~/ros2/src/air/payload_mass_estimation
+source /opt/ros/humble/setup.bash
+source ~/uav_prediction_env/bin/activate
+
+bash main.sh doctor      # 13 个模块，含 mujoco
+bash main.sh prepare     # 解压语料
+bash main.sh test        # 8 项单元测试
+bash main.sh evaluate    # 用随附权重复现两张表
+bash main.sh build
+bash main.sh demo        # 需要先开 dashboard
+```
+
+纯 CPU 环境下：评估约 3 秒，8 项测试 0.14 秒，重训 4 个模型 **15.7 秒**，回放 36 秒。
+
+**注意**：`main.sh train` 会写入 `models/<name>/`，**覆盖随附权重**。要验证重训一致性，请先复制整个目录（第 2.4 节）。
+
+---
