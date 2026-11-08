@@ -6,7 +6,9 @@ import pytest
 from train_ato_stop import scenarios, sim
 from train_ato_stop.ato import AtpState, Ato, AtoConfig
 from train_ato_stop.profile import atp_permit_curve, build_profile
-from train_ato_stop.train import Segment, TrainSpec, braking_distance
+from train_ato_stop.train import (
+    Segment, TrainSpec, braking_distance, energy_kwh, grade_at,
+)
 
 
 # ------------------------------------------------------------------ 物理量
@@ -148,6 +150,34 @@ def test_晚制动对照必然越位且触发ATP():
 def test_能耗为正且量级合理():
     r = sim.run(scenarios.flat())
     assert 20.0 < r.metrics['energy_kwh'] < 200.0
+
+
+def test_能耗按实际需求牵引力而非最大牵引力计算():
+    spec = TrainSpec()
+    v, dt = 40.0, 0.5
+    expected = spec.resistance(v) * v * dt / 3.6e6
+    actual = energy_kwh(spec, v, dt)
+    assert actual == pytest.approx(expected)
+    assert energy_kwh(spec, v, dt, grade=8.0) > actual
+    assert energy_kwh(spec, v, dt, grade=-12.0) < actual
+    assert energy_kwh(spec, v, dt, accel=-1.0) == 0.0
+    max_force_estimate = spec.traction_force(v) * v * dt / 3.6e6
+    assert actual < max_force_estimate
+
+
+def test_闭环能耗与逐帧需求牵引力积分一致():
+    r = sim.run(scenarios.flat())
+    spec = TrainSpec()
+    # sim.run 在停车后额外追加一帧用于绘图；该帧不再推进物理步，也没有能耗。
+    energy_frames = r.frames[:-1] if r.frames[-1].note == '停车' else r.frames
+    expected = sum(
+        energy_kwh(spec=spec, v=f.v, dt=0.02,
+                   accel=following.accel,
+                   grade=grade_at(r.segments, f.x))
+        for f, following in zip(energy_frames, r.frames[1:])
+        if following.accel > 0.0
+    )
+    assert r.metrics['energy_kwh'] == pytest.approx(expected)
 
 
 def test_所有场景最高速度不超过限速():
