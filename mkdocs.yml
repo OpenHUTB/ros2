@@ -52,6 +52,7 @@ nav:
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
+    - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
     - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:

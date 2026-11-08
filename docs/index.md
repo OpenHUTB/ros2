@@ -34,6 +34,8 @@ title: 主页
 
 ## 1. 入门 <span id="list"></span>
 
+* [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
+
 * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
 
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
