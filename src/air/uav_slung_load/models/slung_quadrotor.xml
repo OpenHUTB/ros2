@@ -1,0 +1,137 @@
+<!--
+  吊挂负载四旋翼（X 型布局，世界系 ENU，机体系 FLU）。
+
+  与 `air/uav_mujoco_sim/models/quadrotor.xml` 的机体、旋翼、执行器、混控约定保持一致，
+  在 base_link 下方挂一根刚性连杆近似绳缆（一个 cable 刚体 + 两个同点正交铰，
+  等效球摆）和一个球形负载：
+
+    base_link（freejoint，空机 0.85 kg，含 4×0.025 kg 旋翼共 0.95 kg）
+      └── cable（swing_x 绕 y、swing_y 绕 x，各 ±1.2 rad，带阻尼）
+            └── payload（球，0.3 kg，可运行时改质量做负载扫描）
+
+  自由度：freejoint 6 + 两个摆铰 2 = 8；关节数 3；执行器 4（每桨推力 0～6 N）。
+  绳缆用“一个刚性连杆 + 两个同点正交铰”近似（MuJoCo 没有原生绳索），摆长固定 0.5 m，
+  自然摆动周期 T = 2π√(L/g) ≈ 1.42 s，ZV 输入整形就按这个周期设时滞。
+
+  混控（桨臂 a = 0.106 m，k_m 为反扭矩系数）：
+    T  = T1 + T2 + T3 + T4
+    τx = a(-T1 + T2 + T3 - T4)      τy = a(-T1 + T2 - T3 + T4)
+    τz = k_m(-T1 - T2 + T3 + T4)    （本模型桨只产生 z 向力，τz 在 Python 侧另加）
+-->
+<mujoco model="slung_quadrotor">
+  <compiler angle="radian" coordinate="local" autolimits="true"/>
+  <option timestep="0.0025" integrator="RK4" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight ambient="0.38 0.38 0.40" diffuse="0.55 0.55 0.56" specular="0.15 0.15 0.15"/>
+    <quality shadowsize="2048" offsamples="8"/>
+    <map znear="0.02" zfar="60"/>
+  </visual>
+
+  <default>
+    <default class="drone">
+      <geom rgba="0.15 0.15 0.18 1" contype="0" conaffinity="0"/>
+      <site rgba="0 0 0 0" size="0.005"/>
+    </default>
+    <default class="rotor">
+      <geom type="cylinder" size="0.064 0.006" rgba="0.1 0.1 0.12 1" contype="0" conaffinity="0"/>
+    </default>
+    <default class="prop">
+      <geom type="box" size="0.062 0.009 0.0015" rgba="0.75 0.78 0.82 0.55" contype="0" conaffinity="0"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="sky" type="skybox" builtin="gradient" width="512" height="3072"
+             rgb1="0.62 0.72 0.84" rgb2="0.10 0.13 0.18"/>
+    <texture name="grid" type="2d" builtin="checker" width="256" height="256"
+             rgb1="0.42 0.46 0.42" rgb2="0.34 0.38 0.34"/>
+    <material name="grid" texture="grid" texrepeat="12 12" reflectance="0.05"/>
+    <material name="body_mat" rgba="0.16 0.17 0.20 1" specular="0.5" shininess="0.4"/>
+    <material name="arm_mat" rgba="0.08 0.08 0.10 1"/>
+    <material name="cable_mat" rgba="0.75 0.60 0.25 1"/>
+    <material name="payload_mat" rgba="0.85 0.45 0.15 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="sun" pos="0 0 12" dir="-0.3 0.2 -1" directional="true"
+           diffuse="0.62 0.62 0.60" specular="0.25 0.25 0.25" castshadow="false"/>
+    <light name="fill" pos="0 0 4" dir="0 0 -1" diffuse="0.30 0.30 0.32" castshadow="false"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="grid" contype="0" conaffinity="0"/>
+
+    <body name="base_link" pos="0 0 1.5">
+      <freejoint name="root"/>
+      <inertial pos="0 0 0" mass="0.85" diaginertia="0.0042 0.0042 0.0078"/>
+
+      <geom name="body_geom" class="drone" type="box" size="0.055 0.055 0.028" material="body_mat"/>
+      <geom name="arm_fr" class="drone" type="capsule" fromto="0 0 0  0.106 -0.106 0" size="0.007" material="arm_mat"/>
+      <geom name="arm_fl" class="drone" type="capsule" fromto="0 0 0  0.106  0.106 0" size="0.007" material="arm_mat"/>
+      <geom name="arm_rl" class="drone" type="capsule" fromto="0 0 0 -0.106  0.106 0" size="0.007" material="arm_mat"/>
+      <geom name="arm_rr" class="drone" type="capsule" fromto="0 0 0 -0.106 -0.106 0" size="0.007" material="arm_mat"/>
+
+      <body name="rotor1" pos="0.106 -0.106 0.012">
+        <inertial pos="0 0 0" mass="0.025" diaginertia="3e-5 3e-5 3e-5"/>
+        <geom class="rotor" name="rotor1_hub"/>
+        <geom class="prop"  name="rotor1_b1"/>
+        <geom class="prop"  name="rotor1_b2" quat="0 0 0.7071 0.7071"/>
+        <site name="thrust1" class="drone" pos="0 0 0"/>
+      </body>
+      <body name="rotor2" pos="-0.106 0.106 0.012">
+        <inertial pos="0 0 0" mass="0.025" diaginertia="3e-5 3e-5 3e-5"/>
+        <geom class="rotor" name="rotor2_hub"/>
+        <geom class="prop"  name="rotor2_b1"/>
+        <geom class="prop"  name="rotor2_b2" quat="0 0 0.7071 0.7071"/>
+        <site name="thrust2" class="drone" pos="0 0 0"/>
+      </body>
+      <body name="rotor3" pos="0.106 0.106 0.012">
+        <inertial pos="0 0 0" mass="0.025" diaginertia="3e-5 3e-5 3e-5"/>
+        <geom class="rotor" name="rotor3_hub"/>
+        <geom class="prop"  name="rotor3_b1"/>
+        <geom class="prop"  name="rotor3_b2" quat="0 0 0.7071 0.7071"/>
+        <site name="thrust3" class="drone" pos="0 0 0"/>
+      </body>
+      <body name="rotor4" pos="-0.106 -0.106 0.012">
+        <inertial pos="0 0 0" mass="0.025" diaginertia="3e-5 3e-5 3e-5"/>
+        <geom class="rotor" name="rotor4_hub"/>
+        <geom class="prop"  name="rotor4_b1"/>
+        <geom class="prop"  name="rotor4_b2" quat="0 0 0.7071 0.7071"/>
+        <site name="thrust4" class="drone" pos="0 0 0"/>
+      </body>
+
+      <!-- 绳缆：一个刚性连杆 + 两个同点正交铰等效球摆，挂点在机体中心下方 3 cm -->
+      <body name="cable" pos="0 0 -0.03">
+        <joint name="swing_x" type="hinge" axis="0 1 0" range="-1.2 1.2" damping="0.02" armature="0.0005"/>
+        <joint name="swing_y" type="hinge" axis="1 0 0" range="-1.2 1.2" damping="0.02" armature="0.0005"/>
+        <inertial pos="0 0 -0.25" mass="0.02" diaginertia="1e-5 1e-5 1e-5"/>
+        <geom name="cable_geom" type="capsule" fromto="0 0 0  0 0 -0.5" size="0.004"
+              material="cable_mat" contype="0" conaffinity="0"/>
+
+        <body name="payload" pos="0 0 -0.5">
+          <!-- 惯量对应 0.3 kg 实心球（0.4·m·r²）；运行时改质量会按同公式同步重算 -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="0.000432 0.000432 0.000432"/>
+          <geom name="payload_geom" type="sphere" size="0.06" material="payload_mat"
+                contype="0" conaffinity="0"/>
+        </body>
+      </body>
+
+      <camera name="front_cam" pos="0.075 0 0.012" xyaxes="0 -1 0  0 0 1" fovy="70"/>
+      <site name="imu" class="drone" pos="0 0 0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <general name="thrust1" site="thrust1" gear="0 0 1 0 0 0" ctrlrange="0 6" ctrllimited="true"/>
+    <general name="thrust2" site="thrust2" gear="0 0 1 0 0 0" ctrlrange="0 6" ctrllimited="true"/>
+    <general name="thrust3" site="thrust3" gear="0 0 1 0 0 0" ctrlrange="0 6" ctrllimited="true"/>
+    <general name="thrust4" site="thrust4" gear="0 0 1 0 0 0" ctrlrange="0 6" ctrllimited="true"/>
+  </actuator>
+
+  <sensor>
+    <framequat    name="imu_quat" objtype="body" objname="base_link"/>
+    <gyro         name="imu_gyro" site="imu"/>
+    <framepos     name="gt_pos" objtype="body" objname="base_link"/>
+    <framelinvel  name="gt_linvel" objtype="body" objname="base_link"/>
+    <framepos     name="payload_pos" objtype="body" objname="payload"/>
+  </sensor>
+</mujoco>
