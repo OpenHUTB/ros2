@@ -1,0 +1,15 @@
+# 上行链路损伤参数（与 core/link.py 的 LinkProfile 字段一一对应）
+# 演示用“计划中断”档：120 ms 单向 + 抖动 + 偶发丢包 + 10~20 s 完全中断
+one_way_delay: 0.12
+jitter_std: 0.04
+loss_good: 0.05
+loss_bad: 0.30
+p_good_to_bad: 0.05
+p_bad_to_good: 0.30
+outages: "10.0:20.0"
+seed: 0
+rate_hz: 20.0
+
+# 已装订任务（与 MuJoCo 走廊场景对齐）
+mission_home: "-10.5,0.0,1.2"
+mission_waypoints: "-6.5,0.0,1.5|-1.5,0.0,1.5|3.0,0.0,1.5|6.0,0.0,1.5"
