@@ -1,0 +1,4 @@
+# MuJoCo 滑移转向越野小车定点巡航仿真依赖
+mujoco>=3.0.0
+numpy>=1.20
+matplotlib>=3.3

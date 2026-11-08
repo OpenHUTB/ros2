@@ -8,7 +8,7 @@
     <material name="ground_mat" rgba="0.45 0.38 0.3 1"/>
     <material name="wheel_mat" rgba="0.1 0.4 0.9 1"/>
     <material name="body_mat" rgba="0.8 0.8 0.8 1"/>
-    <hfield name="terrain" nrow="128" ncol="128" size="60 60 0.4 0.15"/>
+    <hfield name="terrain" nrow="512" ncol="512" size="60 60 0.4 0.15"/>
   </asset>
 
   <worldbody>
@@ -44,9 +44,10 @@
       </body>
     </body>
 
-    <!-- 红色目标标记球 -->
+    <!-- 红色目标标记球：仅用于显示，不参与碰撞（否则车头会顶住标记球停不到目标点） -->
     <body name="target_marker" pos="10 0 0.5">
-      <geom name="target_ball" type="sphere" size="0.2" rgba="1 0 0 1"/>
+      <geom name="target_ball" type="sphere" size="0.2" rgba="1 0 0 1"
+            contype="0" conaffinity="0"/>
     </body>
   </worldbody>
 
