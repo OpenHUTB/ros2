@@ -133,11 +133,12 @@ bgr = buf.reshape(resp.height, resp.width, 4)[:, :, :3]
 
 `DepthPlanar` 给出的是**沿光轴的平面深度**而不是透视深度，两者在针孔模型下满足
 
-```text
-Z_planar = Z_perspective · cos θ ,  θ 为该像素与光轴的夹角
-```
+$$
+Z_{\mathrm{planar}} = Z_{\mathrm{perspective}} \cos\theta,
+\quad \theta \text{ 为该像素与光轴的夹角}
+$$
 
-因此平面深度可以直接按针孔模型反投影：`[X, Y, Z]ᵀ = Z_planar · K⁻¹ · [u, v, 1]ᵀ`。
+因此平面深度可以直接按针孔模型反投影：$[X, Y, Z]^\top = Z_{\mathrm{planar}} K^{-1} [u, v, 1]^\top$。
 
 ### 6.2 点云：坐标系与位姿变换
 
@@ -211,6 +212,67 @@ roslaunch carlair_ros_bridge main.launch publish_image:=false
 ```shell
 python3 tests/test_sensors_local.py    # 80 项，全部通过
 ```
+
+### 6.6 IMU
+
+`imu_pub.py` 发布 `/imu`（`sensor_msgs/Imu`，默认 50 Hz）：
+
+- 姿态：ENU 世界系；
+- 角速度 / 线加速度：机体系 FLU，AirSim 的机体系 NED 经 `body_ned_to_flu` 转换；
+- 线加速度包含重力分量，纯运动加速度需使用方自行扣除；
+- `frame/imu` 默认 `base_link`，`rate/imu_hz` 默认 50。
+
+```bash
+rostopic hz /imu
+rostopic echo -n1 /imu
+```
+
+示例输出（悬停）：
+
+```text
+$ rostopic hz /imu
+average rate: 50.000
+	min: 0.019s max: 0.021s std dev: 0.00052s window: 50
+```
+
+### 6.7 相机模型与深度点云
+
+`camera_model_pub.py` 订阅 `/camera/image_raw` 与 `/camera/depth`，发布：
+
+| 话题 | 类型 | 说明 |
+|---|---|---|
+| `/camera/camera_info` | `sensor_msgs/CameraInfo` | 彩色相机内参 |
+| `/camera/depth/camera_info` | `sensor_msgs/CameraInfo` | 深度相机内参 |
+| `/camera/depth/points` | `sensor_msgs/PointCloud2` | 深度反投影点云，相机光学系 |
+
+针孔模型：
+
+$$
+f_x = f_y = \frac{W}{2\tan(\mathrm{FOV}/2)},
+\quad c_x = \frac{W}{2}, \quad c_y = \frac{H}{2}
+$$
+
+$$
+K = \begin{bmatrix}
+f_x & 0 & c_x \\
+0 & f_y & c_y \\
+0 & 0 & 1
+\end{bmatrix}
+$$
+
+深度反投影（`DepthPlanar` 的 Z 就是沿光轴深度）：
+
+$$
+X = \frac{(u-c_x)Z}{f_x}, \quad
+Y = \frac{(v-c_y)Z}{f_y}, \quad
+Z = Z_{\mathrm{depth}}
+$$
+
+点云过滤 `Z <= 0`、`Z >= 100 m` 和 65504 哨兵值；相机 TF 为 `base_link -> front_rgb/front_depth`，安装偏移由 `camera/mount_x/y/z` 配置。
+
+深度点云前视图（颜色表示距离）：
+
+![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
 
 ## 7. 运行验证
 
@@ -297,6 +359,20 @@ ValueError: 307200 exceeds max_array_len(131072)
 `max_array_len` / `max_bin_len` / `max_str_len` / `max_map_len` 放宽到 `2^31-1`；
 对不支持这些参数的 msgpack 老版本则探测后跳过。单元测试
 `tests/test_sensors_local.py` 的 F 组用桩 msgpack 覆盖了"新版注入 / 老版跳过 / 幂等"三条路径。
+
+### 7.3 本地测试与 CI
+
+桥接层的测试不依赖 ROS、仿真器或 GPU，依赖 `numpy` 和 `PyYAML`，可以直接在仓库根目录运行：
+
+```bash
+python3 tests/test_frames.py          # 坐标换算 7 项
+python3 tests/test_bridge_local.py    # 桥接状态机与工程文件 31 项
+python3 tests/test_sensors_local.py   # 图像/点云 80 项
+```
+
+`.github/workflows/air_bridge_tests.yml` 在 `src/air/carlair_ros_bridge/**` 或 `tests/**` 变更时自动执行上述测试，并额外做 `py_compile` 检查；如果存在 `tests/test_imu_local.py`（IMU 扩展），也会一起跑。
+
+![Air bridge tests](https://github.com/OpenHUTB/ros2/actions/workflows/air_bridge_tests.yml/badge.svg)
 
 ## 8. 效果图
 
