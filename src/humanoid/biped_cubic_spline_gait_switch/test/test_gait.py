@@ -99,23 +99,26 @@ def test_spline_is_smooth_over_full_schedule():
     assert switches == 5
     for t0 in starts:
         jump = window_max_jump(states, t0, t0 + 0.6)
-        assert jump < 0.5, "切换 %.1fs 处速度跳变 %.4f rad/s" % (t0, jump)
+        assert jump < 0.5, "切换 %.1fs 处相邻采样速度差 %.4f rad/s" % (t0, jump)
 
 
-def test_spline_velocity_is_continuous_at_switch():
-    _, states = run_planner("spline")
+def test_spline_velocity_is_continuous_at_all_switches():
+    planner, states = run_planner("spline")
     times, dq = state_arrays(states)
-    # walk -> fast_walk（9.0 s）与 fast_walk -> run（15.0 s）切换首拍速度应连续
-    for t_switch in (9.0, 15.0):
-        idx = int(np.argmin(np.abs(times - t_switch)))
-        assert np.allclose(dq[idx], dq[idx - 1], atol=1e-9)
+    starts = switch_starts(planner)
+    assert starts == [3.0, 9.0, 15.0, 21.0, 27.0]
+    # 五次切换首拍速度都应连续（左右极限相同）
+    for t_switch in starts:
+        idx = int(np.searchsorted(times, t_switch))
+        assert np.allclose(dq[idx], dq[idx - 1], atol=1e-9), \
+            "%.1f s 处速度不连续" % t_switch
 
 
 def test_direct_switch_has_jump_over_full_schedule():
     planner, states = run_planner("direct")
     starts = switch_starts(planner)
     jumps = [window_max_jump(states, t0, t0 + 0.6) for t0 in starts]
-    assert max(jumps) > 1.0, "直接切换未观察到速度跳变：%s" % jumps
+    assert max(jumps) > 1.0, "直接切换未观察到相邻采样速度差：%s" % jumps
 
 
 def test_walk_to_run_window_is_covered():

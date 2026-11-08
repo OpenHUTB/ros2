@@ -149,7 +149,7 @@ class LoggerNode(Node):
         self.csv_file.close()
         with open(os.path.join(self.output_dir, "status.json"), "w") as f:
             json.dump({"status": "finished", "samples": self.samples,
-                       "duration": elapsed, "mode": self.mode}, f,
+                       "duration": self.duration, "mode": self.mode}, f,
                       ensure_ascii=False, indent=2)
         self.get_logger().info("记录完成：%d 个采样，%.2f s" % (self.samples, elapsed))
         # 在回调内直接调用 rclpy.shutdown() 可能阻塞，放到独立线程中执行
