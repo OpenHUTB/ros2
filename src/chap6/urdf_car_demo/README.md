@@ -1,7 +1,5 @@
 # ROS Noetic：四轮小车 URDF 建模作业
 
-姓名：________ 学号：________ 班级：________
-
 本作业对应教材第 6.2–6.3 节（URDF/xacro）。目标为建立四轮小车，在 RViz 显示模型、检查 TF 树，并通过关节滑块观察车轮旋转。
 
 ## 1. 文件与环境
@@ -52,11 +50,37 @@ RViz 的 Fixed Frame 应为 `base_footprint`。若不显示模型，确认 Robot
 ```bash
 source /opt/ros/noetic/setup.bash
 source ~/urdf_car_ws/devel/setup.bash
-rosrun xacro xacro $(rospack find urdf_car_demo)/urdf/car.urdf.xacro > /tmp/student_car.urdf
-check_urdf /tmp/student_car.urdf
+rosrun xacro xacro "$(rospack find urdf_car_demo)/urdf/car.urdf.xacro" > /tmp/car.urdf
+check_urdf /tmp/car.urdf
 rostopic echo -n 1 /joint_states
 rosrun tf tf_echo base_link front_left_wheel_link
 ```
+
+### check_urdf 用户实测记录
+
+用户在 Ubuntu ROS Noetic 虚拟机中执行了以下命令，并提供了完整终端输出：
+
+```bash
+source /opt/ros/noetic/setup.bash
+source ~/urdf_car_ws/devel/setup.bash
+rosrun xacro xacro "$(rospack find urdf_car_demo)/urdf/car.urdf.xacro" > /tmp/car.urdf
+check_urdf /tmp/car.urdf
+```
+
+```text
+robot name is: student_car
+---------- Successfully Parsed XML ---------------
+root Link: base_footprint has 1 child(ren)
+    child(1):  base_link
+        child(1):  front_left_wheel_link
+        child(2):  front_marker_link
+        child(3):  front_right_wheel_link
+        child(4):  lidar_link
+        child(5):  rear_left_wheel_link
+        child(6):  rear_right_wheel_link
+```
+
+结果：展开后的 URDF 已由 `check_urdf` 成功解析；根链接是 `base_footprint`，其子链接为 `base_link`，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，不是结构检查生成的示例输出；它验证 URDF 解析与树结构，不代表关节滑块交互或动力学仿真已验收。原始输出另存于包内 `validation/check_urdf_output.txt`。
 
 ## 5. 模型原理与修改
 
@@ -82,7 +106,7 @@ rosrun tf tf_echo base_link front_left_wheel_link
 6. 自己修改的一个模型结构及前后对比。
 7. 遇到的问题与解决办法。
 
-本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；车轮滑块交互、TF 显示和 check_urdf 输出仍需分别记录。
+本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；check_urdf 实测输出已记录于第 4 节；车轮滑块交互和 TF 显示仍需分别记录。
 
 ## 7. 实测运行截图
 
