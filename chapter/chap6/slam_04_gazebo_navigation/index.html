@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../../img/favicon.ico" rel="shortcut icon"/>
+<title>6.4 Gazebo 仿真机器人导航 - 模拟器的 ROS 文档</title>
+<link href="../../../css/theme.css" rel="stylesheet"/>
+<link href="../../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "6.4 Gazebo \u4eff\u771f\u673a\u5668\u4eba\u5bfc\u822a";
+        var mkdocs_page_input_path = "chapter/chap6/slam_04_gazebo_navigation.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chap2/ros2_service_param_demo/">ROS2 服务与参数基础实验（uav_mode_node）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../urdf_car_modeling/">URDF 四轮小车建模与 RViz 显示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap4/">4. 机器人仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../">6. 机器人 SLAM 与自主导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/biped_cubic_spline_gait_switch/">基于三次样条插值的双足多步态平滑切换</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_joint_tools/">人形机器人关节轨迹录制与回放工具</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_reachability/">人形机器人双臂末端可达域分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/zmp_walk_planner/">简化双足步态动画演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../humanoid/humanoid_zmp_walking/">人形机器人轻量级 ZMP 步行控制基线</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_tendon_basics/">肌肉-肌腱串联弹性实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/msk_arm_reach/">MuJoCo双关节肌肉骨骼手臂到达控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/muscle_leg_gait/">肌肉驱动的下肢关节与步态</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../musculoskeletal/knee_tracking/">膝关节肌肉骨骼仿真与轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="" href="../../../muscle_arm_cocontraction_simulation.md">拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_benchmark_suite/">作业综合整合与性能评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_light/">交通信号灯识别与响应</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_vehicle_aeb/">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../robot_tasks/policy_learning/">任务4 - 端到端策略网络</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_drive_fault/">MuJoCo 地面差速小车单侧驱动失效检测与差速补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/pid_auto_tuning/">航向 PID 参数自整定与手工试凑对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/traffic_sign_speed_control/">限速标志识别与神经网络限速控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_parallel_parking/">MuJoCo侧方停车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/lidar_mcl_localization/">基于 2D 激光雷达的蒙特卡洛定位（MCL）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/twist_to_control/">扭转控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/mission_recording/">任务日志与离线统计</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_hover_log_eval/">无人机定高日志误差与抗扰恢复时间评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_traffic_nav/">城市动态交通下的无人机避障（PPO + DAgger）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../airsim_drone_gimbal_teleop/">AirSim无人机键盘遥控与机载云台控制模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../water/docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_apriltag_cruise/">水下 ROV AprilTag 视觉定位与定点巡航仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/rov_ekf_navigation/">水下多源融合组合导航 (EKF)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/UNav-sim_ue5/">水下机器人 Unreal Engine 5 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（合成视频演示）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item active">6.4 Gazebo 仿真机器人导航</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap6/slam_04_gazebo_navigation.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="64-gazebo">6.4 Gazebo 仿真机器人导航</h1>
+<p>本节把导航流程从 6.3 的 <strong>arbotix 假仿真</strong>搬回<strong>真实 Gazebo 物理世界</strong>：机器人在 Gazebo 中受到真实的
+物理约束，差速插件根据轮子转动计算里程计、激光插件发布真实的 <code>/scan</code>，<code>move_base</code> 据此进行<strong>实时避障</strong>。
+需要特别说明的是，尽管进入了真实 Gazebo，本节教程配套的定位环节<strong>仍然使用 <code>fake_localization</code>（完美定位），
+而不是 AMCL</strong>，因此 rviz 中无需设置初始位姿，直接下发 <code>2D Nav Goal</code> 即可。</p>
+<p>本节包含两个演示：先在教程自带的 <strong>cloister 回廊</strong>世界跑通真实导航，再把世界换成 6.1 自己创建的
+<strong>my_room 房间</strong>（教程中称 hourse.world），用自己 gmapping 建的地图导航。</p>
+<p>本节配套功能包位于仓库：</p>
+<div class="highlight"><pre><span></span><code>src/chap6/catkin_ws/src/mrobot_gazebo/       # 新增 cloister.world，Gazebo 启动 launch 支持外部覆盖世界
+src/chap6/catkin_ws/src/mrobot_navigation/   # 新增 move_base、fake_nav_cloister/hourse 演示、config/mrobot 与配套地图
+</code></pre></div>
+<h2 id="1">1. 本节目标</h2>
+<ol>
+<li>理解真实 Gazebo 导航与 arbotix 假仿真的区别，掌握真实里程计、真实激光与实时避障的数据流；</li>
+<li>理解为什么本节在真实 Gazebo 中仍使用 <code>fake_localization</code>，并理清完整 TF 坐标树；</li>
+<li>准备 cloister 回廊例程所需的世界、地图、代价地图配置与 launch；</li>
+<li>排查并修复 roslaunch 命令行无法覆盖 <code>world_name</code> 参数的问题；</li>
+<li>排查并修复 <code>fake_nav_hourse_demo.launch</code> 文件缺失的问题；</li>
+<li>在 cloister 与自建 my_room 两个世界中完成 <code>2D Nav Goal</code> 自主导航；</li>
+<li>记录当前保留的两类 TF 警告，作为后续优化项。</li>
+</ol>
+<h2 id="2">2. 背景知识</h2>
+<h3 id="21-gazebo-arbotix">2.1 真实 Gazebo 导航与 arbotix 假仿真的区别</h3>
+<p>6.3 的 arbotix 假仿真不启动 Gazebo，里程计、关节运动都是软件"算"出来的，且没有真实激光。本节则启动
+完整的 Gazebo 物理引擎，两者对比如下：</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>6.3 arbotix 假仿真</th>
+<th>6.4 Gazebo 真仿真</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>物理引擎</td>
+<td>不启动 Gazebo</td>
+<td>真实 Gazebo，含重力、碰撞、摩擦</td>
+</tr>
+<tr>
+<td>里程计 <code>/odom</code></td>
+<td>arbotix 软件积分</td>
+<td>差速插件依据轮子真实转动计算</td>
+</tr>
+<tr>
+<td>激光 <code>/scan</code></td>
+<td>无</td>
+<td>激光插件真实射线扫描</td>
+</tr>
+<tr>
+<td>实时避障</td>
+<td>主要靠静态地图</td>
+<td>静态地图 + 真实激光障碍，实时避障</td>
+</tr>
+<tr>
+<td>定位</td>
+<td>fake_localization</td>
+<td><strong>仍是 fake_localization</strong></td>
+</tr>
+<tr>
+<td>路径规划</td>
+<td>move_base</td>
+<td>move_base</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 真实里程计、激光与实时避障</h3>
+<p>Gazebo 机器人模型（<code>mrobot_gazebo/urdf</code>）中配置了两个关键插件：</p>
+<ul>
+<li><strong>差速驱动插件 <code>libgazebo_ros_diff_drive.so</code></strong>：订阅 <code>/cmd_vel</code>，驱动左右轮转动，根据轮子实际转角
+  计算并发布 <code>/odom</code> 里程计，同时广播 <code>odom → base_footprint</code> 的 TF，并发布 <code>/joint_states</code>；</li>
+<li><strong>激光插件 <code>libgazebo_ros_laser.so</code></strong>：在每个仿真周期发射射线，发布 <code>laser_link</code> 坐标系下的真实
+  <code>/scan</code> 数据。</li>
+</ul>
+<p><code>move_base</code> 的代价地图同时叠加静态地图与实时激光：当机器人运动时，激光不断标记/清除周围障碍，
+局部规划器据此滚动采样速度，遇到障碍会重新规划、绕开，实现真实的实时避障。</p>
+<h3 id="23-fake_localization">2.3 为什么仍使用 fake_localization</h3>
+<p>真实机器人通常用 <strong>AMCL（自适应蒙特卡洛定位）</strong> 解决"我在哪里"的问题，需要在 rviz 中先给出初始位姿
+（<code>2D Pose Estimate</code>），再通过粒子滤波逐步收敛。本节为了把重点放在 Gazebo 与 <code>move_base</code> 的联动上，
+沿用 <code>fake_localization</code>：</p>
+<ul>
+<li>它订阅里程计，把 <code>odom</code> 位姿直接包装成 AMCL 风格的 <code>/amcl_pose</code> 与 <code>/particlecloud</code>；</li>
+<li>不做概率估计，默认里程计即真实位姿，属于"完美定位"，因此启动后定位即准确，无需初始位姿。</li>
+</ul>
+<blockquote>
+<p>若希望体验真实粒子滤波定位，可自行编写 <code>amcl.launch</code>（或从配套源码 <code>ros_exploring</code> 中获取），将
+<code>fake_localization</code> 替换为 AMCL 并在 rviz 中设置初始位姿。这部分属于拓展内容，不在本节主线。</p>
+</blockquote>
+<h3 id="24-tf">2.4 数据流与 TF 坐标树</h3>
+<p>两个 launch 各管一摊：</p>
+<div class="highlight"><pre><span></span><code>终端 1  mrobot_laser_nav_gazebo.launch
+          ├─ Gazebo 加载世界（cloister 或 my_room）
+          ├─ 差速插件：订阅 /cmd_vel，发布 /odom、/joint_states 与 TF(odom→base_footprint)
+          ├─ 激光插件：发布 /scan（frame: laser_link）
+          └─ robot_state_publisher：发布机器人模型 TF
+
+终端 2  fake_nav_cloister_demo / fake_nav_hourse_demo.launch
+          ├─ map_server         加载静态地图
+          ├─ move_base          全局/局部规划、实时避障（config/mrobot）
+          ├─ fake_localization  包装 AMCL 风格定位
+          ├─ static_transform   map→odom 恒等变换
+          └─ rviz               可视化与 2D Nav Goal
+</code></pre></div>
+<p>完整 TF 树：</p>
+<div class="highlight"><pre><span></span><code>map
+ └── odom                 static_transform_publisher / fake_localization（map→odom）
+      └── base_footprint  Gazebo 差速插件（真实里程计）
+           └── base_link  robot_state_publisher（依据 URDF）
+                └── ... 轮、板件、laser_link ...
+</code></pre></div>
+<h2 id="3">3. 环境与依赖检查</h2>
+<p>开始前先确认工作空间环境加载正常，且导航所需的关键包都能被找到：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/home/wkb/catkin_ws/devel/setup.bash
+<span class="k">for</span><span class="w"> </span>p<span class="w"> </span><span class="k">in</span><span class="w"> </span>map_server<span class="w"> </span>move_base<span class="w"> </span>fake_localization<span class="w"> </span>amcl<span class="w"> </span>gazebo_ros<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span>rospack<span class="w"> </span>find<span class="w"> </span><span class="nv">$p</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"OK: </span><span class="nv">$p</span><span class="s2">"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"缺失: </span><span class="nv">$p</span><span class="s2">"</span>
+<span class="k">done</span>
+</code></pre></div>
+<p>五个包全部输出 <code>OK</code>，说明 6.2、6.3 安装的 <code>ros-noetic-navigation</code> 等依赖已满足，本节无需再安装新包：</p>
+<p><img alt="环境与依赖检查" src="../../../img/code/chap6/61_env_deps_check.png"/></p>
+<p>同时确认参考源码中 cloister 世界文件存在：</p>
+<div class="highlight"><pre><span></span><code>ls<span class="w"> </span>/home/wkb/ros_exploring_src/robot_mrobot/mrobot_gazebo/worlds/cloister.world
+</code></pre></div>
+<p><strong>阶段 A：cloister 回廊例程</strong></p>
+<h2 id="4-cloister">4. 准备 cloister 所需文件</h2>
+<h3 id="41-cloisterworld">4.1 复制 cloister.world</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">SRC</span><span class="o">=</span>/home/wkb/ros_exploring_src/robot_mrobot
+<span class="nv">G</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_gazebo
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_gazebo/worlds/cloister.world"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$G</span><span class="s2">/worlds/"</span>
+ls<span class="w"> </span>-l<span class="w"> </span><span class="s2">"</span><span class="nv">$G</span><span class="s2">/worlds/cloister.world"</span>
+</code></pre></div>
+<p>复制后 <code>cloister.world</code> 与原有的 <code>my_room.world</code> 并列存在：</p>
+<p><img alt="复制 cloister.world" src="../../../img/code/chap6/62_copy_cloister_world.png"/></p>
+<h3 id="42-launch">4.2 复制地图、代价地图配置与 launch</h3>
+<div class="highlight"><pre><span></span><code><span class="nv">SRC</span><span class="o">=</span>/home/wkb/ros_exploring_src/robot_mrobot
+<span class="nv">N</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_navigation
+<span class="c1"># cloister 地图</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_navigation/maps/cloister_gmapping.yaml"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/"</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_navigation/maps/cloister_gmapping.pgm"</span><span class="w">  </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/"</span>
+<span class="c1"># config/mrobot 代价地图配置</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/config/mrobot"</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_navigation/config/mrobot/"</span>*.yaml<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/config/mrobot/"</span>
+<span class="c1"># move_base 与 cloister 演示 launch</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_navigation/launch/move_base.launch"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/"</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$SRC</span><span class="s2">/mrobot_navigation/launch/fake_nav_cloister_demo.launch"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/"</span>
+</code></pre></div>
+<p>复制完成后，<code>maps</code> 中出现 cloister 地图、<code>config/mrobot</code> 下有四个参数文件、<code>launch</code> 中新增
+<code>move_base.launch</code> 与 <code>fake_nav_cloister_demo.launch</code>：</p>
+<p><img alt="复制导航文件" src="../../../img/code/chap6/63_copy_nav_files.png"/></p>
+<h2 id="5">5. 编译工作空间</h2>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/home/wkb/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>编译成功，末尾出现 <code>[100%] Built target ...</code>，无报错：</p>
+<p><img alt="catkin_make 编译成功" src="../../../img/code/chap6/64_catkin_make_success.png"/></p>
+<h2 id="6-world_name">6. 修复 world_name 命令行覆盖问题</h2>
+<h3 id="61">6.1 报错现象</h3>
+<p>最初尝试通过命令行把世界临时切换为 cloister：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">G</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_gazebo
+roslaunch<span class="w"> </span>mrobot_gazebo<span class="w"> </span>mrobot_laser_nav_gazebo.launch<span class="w"> </span>world_name:<span class="o">=</span><span class="nv">$G</span>/worlds/cloister.world
+</code></pre></div>
+<p>却直接抛出异常，Gazebo 未能启动：</p>
+<div class="highlight"><pre><span></span><code>RLException: Invalid &lt;arg&gt; tag: cannot override arg 'world_name', which has already been set.
+Arg xml is &lt;arg name="world_name" value="$(find mrobot_gazebo)/worlds/my_room.world"/&gt;
+</code></pre></div>
+<p><img alt="world_name 覆盖报错" src="../../../img/code/chap6/65_world_override_error.png"/></p>
+<h3 id="62">6.2 原因与修复</h3>
+<p>roslaunch 的 <code>&lt;arg&gt;</code> 有两种取值方式：</p>
+<ul>
+<li><code>&lt;arg name="x" value="..."/&gt;</code>：<strong>强制固定</strong>为该值，命令行无法覆盖；</li>
+<li><code>&lt;arg name="x" default="..."/&gt;</code>：外部未设置时使用默认值，<strong>允许命令行覆盖</strong>。</li>
+</ul>
+<p>原 launch 第 4 行使用的是 <code>value</code>，因此命令行传入同名参数会被拒绝。把它改为 <code>default</code> 即可，
+<code>my_room</code> 仍作为默认值，不传参数时行为不变：</p>
+<div class="highlight"><pre><span></span><code>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'s#&lt;arg name="world_name" value=#&lt;arg name="world_name" default=#'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>/home/wkb/catkin_ws/src/mrobot_gazebo/launch/mrobot_laser_nav_gazebo.launch
+grep<span class="w"> </span>-n<span class="w"> </span><span class="s1">'world_name'</span><span class="w"> </span>/home/wkb/catkin_ws/src/mrobot_gazebo/launch/mrobot_laser_nav_gazebo.launch
+</code></pre></div>
+<p>第 4 行变为 <code>default</code>，而 include 中传递参数的第 13 行保持 <code>value="$(arg world_name)"</code> 不变：</p>
+<p><img alt="arg default 修复" src="../../../img/code/chap6/66_arg_default_fix.png"/></p>
+<h2 id="7-cloister">7. 启动 cloister 导航</h2>
+<h3 id="71-1-gazebo-cloister">7.1 终端 1：启动 Gazebo + cloister</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/home/wkb/catkin_ws/devel/setup.bash
+<span class="nv">G</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_gazebo
+roslaunch<span class="w"> </span>mrobot_gazebo<span class="w"> </span>mrobot_laser_nav_gazebo.launch<span class="w"> </span>world_name:<span class="o">=</span><span class="nv">$G</span>/worlds/cloister.world
+</code></pre></div>
+<p>修复后命令行覆盖生效，Gazebo 启动，差速插件加载并打印 <code>DiffDrive</code> 配置，<code>urdf_spawner</code> 成功
+生成机器人模型：</p>
+<p><img alt="Gazebo 差速插件启动" src="../../../img/code/chap6/67_gazebo_diffdrive_start.png"/></p>
+<p>roslaunch 顶部的 <code>SUMMARY</code> 完整列出了参数与节点：<code>gazebo</code>、<code>joint_state_publisher</code>、
+<code>robot_state_publisher</code>、<code>urdf_spawner</code> 等，<code>/use_sim_time</code> 为 true：</p>
+<p><img alt="launch SUMMARY" src="../../../img/code/chap6/68_launch_summary.png"/></p>
+<h3 id="72-2-rviz">7.2 终端 2：启动导航 + rviz</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/home/wkb/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>mrobot_navigation<span class="w"> </span>fake_nav_cloister_demo.launch
+</code></pre></div>
+<p>rviz 启动后加载 cloister 静态地图，机器人位置正确，左侧包含 Map、Local/Global Plan、Pose Array、
+LaserScan、Goal Pose、Inflated Obstacles 等显示项。Gazebo 中可清晰看到 cloister 房间与机器人：</p>
+<p><img alt="Gazebo 房间视角" src="../../../img/code/chap6/69_gazebo_room_view.png"/></p>
+<h3 id="73-2d-nav-goal">7.3 下发 2D Nav Goal</h3>
+<ol>
+<li>点击 rviz 工具栏的 <strong>2D Nav Goal</strong>；</li>
+<li>在地图空旷处按下左键拖出目标方向，松开即下发目标；</li>
+<li>地图上出现全局/局部规划路径，Gazebo 中的机器人真实转动、沿路径移动并实时避障，rviz 同步；</li>
+<li>到达目标后终端出现 <code>Goal reached</code>，可多换几个目标点反复验证。</li>
+</ol>
+<p><strong>阶段 B：自建 my_room 房间导航</strong></p>
+<h2 id="8-fake_nav_hourse_demo">8. 修复 fake_nav_hourse_demo 文件缺失问题</h2>
+<h3 id="81">8.1 报错现象</h3>
+<p>进入自建房间演示时，执行：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>mrobot_navigation<span class="w"> </span>fake_nav_hourse_demo.launch
+</code></pre></div>
+<p>终端报错，导航未能启动：</p>
+<div class="highlight"><pre><span></span><code>RLException: [fake_nav_hourse_demo.launch] is neither a launch file in package [mrobot_navigation]
+nor is [mrobot_navigation] a launch file name
+</code></pre></div>
+<p><img alt="hourse launch 缺失报错" src="../../../img/code/chap6/70_hourse_launch_missing.png"/></p>
+<h3 id="82">8.2 诊断</h3>
+<p>先列出各目录，确认到底哪些文件就位：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">G</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_gazebo
+<span class="nv">N</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_navigation
+ls<span class="w"> </span><span class="s2">"</span><span class="nv">$G</span><span class="s2">/worlds/"</span>
+ls<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/"</span>
+ls<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/"</span>
+ls<span class="w"> </span>-R<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/config/"</span>
+</code></pre></div>
+<p>诊断结果显示 cloister 相关文件都已就位，但 <code>launch</code> 中确实没有 <code>fake_nav_hourse_demo.launch</code>，
+<code>maps</code> 中也没有 hourse 地图：</p>
+<p><img alt="诊断各目录" src="../../../img/code/chap6/71_diagnose_all.png"/></p>
+<h3 id="83-hourse_gmapping">8.3 准备 hourse_gmapping 地图</h3>
+<p>教程明确：<code>map.pgm、map.yaml、hourse_gmapping.pgm、hourse_gmapping.yaml</code> 都要有，对应后缀的文件
+内容相同。把自建房间地图复制为 hourse_gmapping，并修改 yaml 中的图片名：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">N</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_navigation
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/map.pgm"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/hourse_gmapping.pgm"</span>
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/map.yaml"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/hourse_gmapping.yaml"</span>
+sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'s/^image: map.pgm/image: hourse_gmapping.pgm/'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/hourse_gmapping.yaml"</span>
+</code></pre></div>
+<h3 id="84-fake_nav_hourse_demolaunch">8.4 创建 fake_nav_hourse_demo.launch</h3>
+<p>它与 cloister 版结构完全一致，唯一区别是地图默认值。复制 cloister 版并把地图名整体替换：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">N</span><span class="o">=</span>/home/wkb/catkin_ws/src/mrobot_navigation
+cp<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/fake_nav_cloister_demo.launch"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/fake_nav_hourse_demo.launch"</span>
+sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">'s/cloister_gmapping/hourse_gmapping/g'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/fake_nav_hourse_demo.launch"</span>
+</code></pre></div>
+<p>验证 hourse 地图 yaml 与 launch 地图参数：</p>
+<div class="highlight"><pre><span></span><code>cat<span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/maps/hourse_gmapping.yaml"</span>
+grep<span class="w"> </span><span class="s1">'arg name="map"'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$N</span><span class="s2">/launch/fake_nav_hourse_demo.launch"</span>
+</code></pre></div>
+<p>yaml 中 <code>image: hourse_gmapping.pgm</code>、<code>origin: [-13.8, -13.8, 0]</code>，launch 中地图默认值为
+<code>hourse_gmapping.yaml</code>：</p>
+<p><img alt="hourse 文件验证" src="../../../img/code/chap6/72_hourse_files_verify.png"/></p>
+<h2 id="9-my_room">9. 编译并启动 my_room 导航</h2>
+<h3 id="91">9.1 重新编译</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/home/wkb/catkin_ws
+catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+</code></pre></div>
+<p>编译成功，新增的 hourse launch 与地图被正确识别：</p>
+<p><img alt="再次 catkin_make 成功" src="../../../img/code/chap6/73_catkin_make_again.png"/></p>
+<h3 id="92-1-gazebo-my_room">9.2 终端 1：启动 Gazebo（默认 my_room）</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/home/wkb/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>mrobot_gazebo<span class="w"> </span>mrobot_laser_nav_gazebo.launch
+</code></pre></div>
+<p>不传 <code>world_name</code> 时默认加载自建的 my_room 世界。</p>
+<h3 id="93-2">9.3 终端 2：启动自建房间导航</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/home/wkb/catkin_ws/devel/setup.bash
+roslaunch<span class="w"> </span>mrobot_navigation<span class="w"> </span>fake_nav_hourse_demo.launch
+</code></pre></div>
+<p>rviz 与 Gazebo 同时运行，rviz 中加载自建房间地图，Gazebo 中为对应的 my_room 房间：</p>
+<p><img alt="rviz 与 Gazebo 导航" src="../../../img/code/chap6/74_rviz_gazebo_nav.png"/></p>
+<h3 id="94">9.4 在自己的地图中导航</h3>
+<p>点击 <strong>2D Nav Goal</strong> 在房间内设置目标点，机器人沿规划路径移动、避障，rviz 中可同时看到静态地图、
+实时激光点、全局/局部路径与膨胀障碍，到达后终端出现 <code>Goal reached</code>。这对应教程"机器人在自己建立的
+地图中正常运行"的结论：</p>
+<p><img alt="rviz 导航路径与激光" src="../../../img/code/chap6/75_rviz_nav_path_laser.png"/></p>
+<h2 id="10">10. 保留的警告与后续优化</h2>
+<p>当前导航流程已经跑通，终端中仍存在两类警告，按计划<strong>保留到后续修改</strong>，不影响本节主体功能。</p>
+<h3 id="101-frame_id">10.1 frame_id 以斜杠开头</h3>
+<div class="highlight"><pre><span></span><code>Warning: Invalid argument "/map" passed to canTransform argument target_frame
+- frame tf2 frame_ids cannot start with a '/'
+</code></pre></div>
+<p><code>config/mrobot</code> 的代价地图参数沿用了旧式坐标系名 <code>/map</code>、<code>/odom</code>、<code>/base_footprint</code>，而 tf2 规定
+frame_id 不能以 <code>/</code> 开头。后续优化时把这些 frame 名的前导斜杠去掉（话题名 <code>/scan</code> 是 ROS 话题、
+不是 frame，保持不变）。</p>
+<h3 id="102-tf_repeated_data">10.2 TF_REPEATED_DATA 冗余时间戳</h3>
+<div class="highlight"><pre><span></span><code>TF_REPEATED_DATA ignoring data with redundant timestamp for frame wheel_left_link
+(wheel_right_link) ...
+</code></pre></div>
+<p>Gazebo 差速插件与 launch 中的 <code>joint_state_publisher</code> 都在发布关节状态，相同时间戳的数据被 tf2 丢弃。
+后续可把 launch 里的 <code>joint_state_publisher</code> 节点注释掉，只让差速插件负责关节状态（launch 注释中已
+预留该说明）。</p>
+<h2 id="11">11. 关键参数解读</h2>
+<h3 id="111-costmap_common_paramsyaml">11.1 代价地图共用参数（costmap_common_params.yaml）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obstacle_range</code></td>
+<td><code>2.5</code></td>
+<td>2.5 m 内的障碍才被标记</td>
+</tr>
+<tr>
+<td><code>raytrace_range</code></td>
+<td><code>3.0</code></td>
+<td>3 m 内空闲区域被光线追踪清除</td>
+</tr>
+<tr>
+<td><code>robot_radius</code></td>
+<td><code>0.165</code></td>
+<td>机器人半径，用于膨胀</td>
+</tr>
+<tr>
+<td><code>inflation_radius</code></td>
+<td><code>0.1</code></td>
+<td>障碍膨胀半径</td>
+</tr>
+<tr>
+<td><code>observation_sources</code></td>
+<td><code>scan</code></td>
+<td>障碍观测来源，真实激光 <code>/scan</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="112">11.2 全局/局部代价地图</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>全局代价地图</th>
+<th>局部代价地图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>global_frame</code></td>
+<td><code>/map</code></td>
+<td><code>/odom</code></td>
+</tr>
+<tr>
+<td><code>robot_base_frame</code></td>
+<td><code>/base_footprint</code></td>
+<td><code>/base_footprint</code></td>
+</tr>
+<tr>
+<td><code>static_map</code></td>
+<td><code>true</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>rolling_window</code></td>
+<td><code>false</code></td>
+<td><code>true</code>（6 m × 6 m 滚动窗口）</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td><code>0.01</code></td>
+<td><code>0.01</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="113-base_local_planner_paramsyaml">11.3 局部规划器（base_local_planner_params.yaml）</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>取值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>controller_frequency</code></td>
+<td><code>3.0</code></td>
+<td>速度下发频率 3 Hz</td>
+</tr>
+<tr>
+<td><code>max_vel_x</code> / <code>min_vel_x</code></td>
+<td><code>0.3</code> / <code>0.05</code></td>
+<td>前向线速度上下限</td>
+</tr>
+<tr>
+<td><code>min_in_place_vel_theta</code></td>
+<td><code>0.5</code></td>
+<td>原地旋转最小角速度</td>
+</tr>
+<tr>
+<td><code>xy_goal_tolerance</code></td>
+<td><code>0.1</code></td>
+<td>位置容差 10 cm</td>
+</tr>
+<tr>
+<td><code>yaw_goal_tolerance</code></td>
+<td><code>0.1</code></td>
+<td>角度容差 0.1 rad</td>
+</tr>
+<tr>
+<td><code>sim_time</code></td>
+<td><code>1.0</code></td>
+<td>候选轨迹仿真时长 1 s</td>
+</tr>
+<tr>
+<td><code>dwa</code></td>
+<td><code>true</code></td>
+<td>采用 DWA 采样</td>
+</tr>
+<tr>
+<td><code>recovery_behavior_enabled</code></td>
+<td><code>false</code></td>
+<td>关闭恢复行为</td>
+</tr>
+</tbody>
+</table>
+<h2 id="12">12. 常见问题</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cannot override arg 'world_name'</code></td>
+<td>launch 用 <code>value</code> 固定了参数</td>
+<td>改为 <code>default</code>，即可命令行覆盖</td>
+</tr>
+<tr>
+<td><code>fake_nav_hourse_demo.launch is neither a launch file</code></td>
+<td>自建 launch 未创建</td>
+<td>复制 cloister 版并替换地图名</td>
+</tr>
+<tr>
+<td><code>frame_ids cannot start with a '/'</code></td>
+<td>旧式 frame 名带斜杠</td>
+<td>后续去掉 frame 前导斜杠（本节保留）</td>
+</tr>
+<tr>
+<td><code>TF_REPEATED_DATA ... wheel_link</code></td>
+<td>两个关节状态发布者</td>
+<td>后续注释 joint_state_publisher（本节保留）</td>
+</tr>
+<tr>
+<td>rviz 中机器人位置与地图有偏差</td>
+<td>地图 origin 与世界对齐问题</td>
+<td>不影响导航流程，后续结合建图校准</td>
+</tr>
+<tr>
+<td>机器人完全不动</td>
+<td>Gazebo 处于暂停或未 source</td>
+<td>确认 Gazebo 播放状态并 <code>source devel/setup.bash</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="13">13. 小结</h2>
+<p>本节在真实 Gazebo 物理世界中完成了自主导航：环境检查 → 准备 cloister 世界、地图、<code>config/mrobot</code>
+与 launch → 编译 → 修复 <code>world_name</code> 命令行覆盖问题 → 启动 cloister 导航并用 2D Nav Goal 实时避障 →
+修复 <code>fake_nav_hourse_demo</code> 缺失问题 → 在自建 my_room 房间、用自己 gmapping 建的地图完成导航。
+与 6.3 相比，本节的里程计、激光与避障都是真实物理仿真，但定位仍采用 <code>fake_localization</code> 完美定位。
+frame 斜杠与 TF 冗余两类警告已记录，留待后续优化。</p>
+<h2 id="_1">参考资料</h2>
+<ul>
+<li>ROS Wiki：move_base 官方文档，<a href="http://wiki.ros.org/move_base">http://wiki.ros.org/move_base</a></li>
+<li>ROS Wiki：fake_localization 官方文档，<a href="http://wiki.ros.org/fake_localization">http://wiki.ros.org/fake_localization</a></li>
+<li>ROS Wiki：amcl 自适应蒙特卡洛定位，<a href="http://wiki.ros.org/amcl">http://wiki.ros.org/amcl</a></li>
+<li>ROS Wiki：gazebo_ros 差速插件，<a href="http://wiki.ros.org/gazebo_ros_pkgs">http://wiki.ros.org/gazebo_ros_pkgs</a></li>
+<li>ROS Wiki：costmap_2d 代价地图，<a href="http://wiki.ros.org/costmap_2d">http://wiki.ros.org/costmap_2d</a></li>
+<li>《ROS 机器人开发实践》，配套源码 <code>ros_exploring</code>（作者 胡春旭）</li>
+<li>CSDN 教程：《机器人 SLAM 与自主导航（四）Gazebo 仿真机器人导航》</li>
+</ul></div>
+</div>
+</div><footer>
+<hr/>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+</span>
+</div>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../../..";</script>
+<script src="../../../js/theme_extra.js"></script>
+<script src="../../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../../js/umlconvert.js"></script>
+<script src="../../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+</body>
+</html>

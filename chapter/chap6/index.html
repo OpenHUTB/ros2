@@ -552,13 +552,15 @@ src/chap6/catkin_ws/src/mrobot_teleop/        # 键盘遥控节点（Python3）
 <li>加载带激光雷达的 mrobot 机器人；</li>
 <li>排查 Noetic 下 xacro 宏前缀、重复包、关节状态等常见问题；</li>
 <li>使用 gmapping（RBPF 粒子滤波）进行激光 SLAM 建图，并用 map_saver 保存地图；</li>
-<li>基于 arbotix 假仿真，使用 fake_localization + move_base 实现地图内定位、路径规划、实时避障与自主导航。</li>
+<li>基于 arbotix 假仿真，使用 fake_localization + move_base 实现地图内定位、路径规划、实时避障与自主导航；</li>
+<li>在真实 Gazebo 物理世界中，结合真实激光与里程计，使用 fake_localization + move_base 实现实时避障与自主导航。</li>
 </ul>
 <h2 id="_1">教程小节</h2>
 <ul>
 <li><a href="slam_01_environment_setup/">6.1 仿真环境搭建</a></li>
 <li><a href="slam_02_gmapping/">6.2 gmapping 激光 SLAM 建图</a></li>
 <li><a href="slam_03_navigation/">6.3 导航功能包与实时避障</a></li>
+<li><a href="slam_04_gazebo_navigation/">6.4 Gazebo 仿真机器人导航</a></li>
 </ul></div>
 </div>
 </div><footer>
