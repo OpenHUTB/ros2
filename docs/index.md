@@ -152,6 +152,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
 * [MuJoCo 叉车相机引导的托盘接近与低速插入](./ground/mujoco_forklift_pallet_docking.md)
+* [MuJoCo 叉车同步建图与自主导航](./ground/forklift_slam_nav.md)
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照

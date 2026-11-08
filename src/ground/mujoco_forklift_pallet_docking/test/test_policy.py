@@ -29,6 +29,32 @@ def test_camera_observes_pallet_from_different_distances():
         near.close()
 
 
+def test_manual_keys_drive_the_physics_stepper():
+    from mujoco_forklift_pallet_docking.simulation import ForkliftDockingSimulation
+
+    sim = ForkliftDockingSimulation(start_x=-4.0, speed=0.0)
+    try:
+        initial_x = sim.x
+        assert sim.manual_step("w")
+        assert sim.steps == 1
+        assert sim.data.ctrl[0] == 5.0
+        for _ in range(20):
+            sim.manual_step("w")
+        assert sim.x > initial_x
+        assert sim.manual_step("s")
+        assert sim.data.ctrl[0] == -10.0
+        for _ in range(40):
+            sim.manual_step("s")
+        assert sim.speed >= 0.0
+        assert sim.data.ctrl[0] == 0.0
+        assert sim.manual_step(" ")
+        assert sim.data.ctrl[0] == 0.0
+        assert not sim.manual_step("q")
+        assert sim.steps == 63
+    finally:
+        sim.close()
+
+
 def test_packaged_policy_checkpoint_round_trip(tmp_path: Path):
     policy = ImagePolicy(seed=21)
     images = np.zeros((1, 64, 64), dtype=np.uint8)
