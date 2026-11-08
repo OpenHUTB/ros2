@@ -45,8 +45,10 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
             f_est = _grip_force_estimate(mus, q, v)
             u = float(np.clip(u + ki * (target - f_est) * DT, 0.0, 1.0))
             mus.update_activation(u, DT)
+            qr = float(d.qpos[m.joint("frj").qposadr[0]])
+            vr = float(d.qvel[m.joint("frj").dofadr[0]])
             d.qfrc_applied[dfl] = muscle_force(mus, q, v)
-            d.qfrc_applied[m.joint("frj").dofadr[0]] = muscle_force(mus, q, v)
+            d.qfrc_applied[m.joint("frj").dofadr[0]] = muscle_force(mus, qr, vr)
             mujoco.mj_step(m, d)
             hist.append(f_est)
             if t90 is None and f_est >= 0.9 * target:

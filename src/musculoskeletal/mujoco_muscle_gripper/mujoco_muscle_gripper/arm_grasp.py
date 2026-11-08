@@ -10,16 +10,17 @@ from PIL import Image
 
 from .core import DT, HillMuscle, muscle_force
 
-TABLE_Z = -0.36
-OBJ_HALF = 0.015
-OBJ_Z = TABLE_Z + OBJ_HALF
+ARM_TABLE_Z = -0.36
+ARM_OBJ_HALF = 0.015
+ARM_OBJ_Z = ARM_TABLE_Z + ARM_OBJ_HALF
 GRASP_X = 0.15
-HAND_GRASP_Z = OBJ_Z + 0.045      # 手部原点高度，使手指夹住方块中部
+HAND_GRASP_Z = ARM_OBJ_Z + 0.045      # 手部原点高度，使手指夹住方块中部
 
 UPPER_L = 0.25
 FORE_L = 0.25
 
 
+# 手臂质量：上臂 / 前臂 / 手掌
 def arm_gripper_xml(arm_mass=(2.0, 1.2, 0.2)):
     mu, mf, mh = arm_mass
     return f"""
@@ -38,7 +39,7 @@ def arm_gripper_xml(arm_mass=(2.0, 1.2, 0.2)):
   </asset>
   <worldbody>
     <light pos="0.5 -0.8 1.2" dir="-0.2 0.4 -1"/>
-    <geom name="table" type="plane" size="1.5 1.5 0.01" pos="0 0 {TABLE_Z}"
+    <geom name="table" type="plane" size="1.5 1.5 0.01" pos="0 0 {ARM_TABLE_Z}"
           material="grid" friction="1.5 0.05 0.005"/>
     <body name="torso" pos="0 0 0">
       <geom type="box" size="0.06 0.05 0.10" pos="0 0 0.05"
@@ -78,9 +79,9 @@ def arm_gripper_xml(arm_mass=(2.0, 1.2, 0.2)):
         </body>
       </body>
     </body>
-    <body name="obj" pos="{GRASP_X} 0 {OBJ_Z}">
+    <body name="obj" pos="{GRASP_X} 0 {ARM_OBJ_Z}">
       <freejoint name="objfree"/>
-      <geom type="box" size="{OBJ_HALF} {OBJ_HALF} {OBJ_HALF}" mass="0.03"
+      <geom type="box" size="{ARM_OBJ_HALF} {ARM_OBJ_HALF} {ARM_OBJ_HALF}" mass="0.03"
             friction="1.5 0.05 0.005" solref="0.02 1" rgba="0.90 0.25 0.25 1"/>
     </body>
   </worldbody>

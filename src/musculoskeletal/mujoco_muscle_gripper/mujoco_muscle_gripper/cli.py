@@ -1,4 +1,4 @@
-﻿"""命令行入口：check / run / bench / gif。"""
+"""命令行入口：check / run / bench / gif。"""
 
 import argparse
 import json
@@ -93,4 +93,3 @@ def main(argv=None):
 
     args = ap.parse_args(argv)
     args.func(args)
-

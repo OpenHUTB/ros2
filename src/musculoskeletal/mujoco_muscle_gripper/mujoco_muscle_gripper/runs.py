@@ -8,9 +8,7 @@ import mujoco
 import numpy as np
 from PIL import Image
 
-from .core import (
-    DT, OBJ_HALF, TABLE_Z, HillMuscle, gripper_xml, muscle_force,
-)
+from .core import DT, SPRING, HillMuscle, gripper_xml, muscle_force
 
 LIFT_TARGET = 0.10      # 手掌抬升目标 (m)
 CLOSE_T = 1.5           # 闭合时间 (s)
@@ -29,7 +27,7 @@ def _make(friction=1.5, obj_mass=None, spring=None):
 
 def _simulate(activation, friction=1.5, obj_mass=None, rec=None, seconds=None,
               verbose=False):
-    """闭合 → 抬升；返回 (方块高度序列, 是否夹住, 峰值高度)。"""
+    """闭合 → 抬升；返回 (方块高度序列, 是否夹住, 起始高度 z_start)。"""
     m, d = _make(friction=friction, obj_mass=obj_mass)
     qa = m.jnt_qposadr[m.joint("objfree").id]
     dfl = m.joint("flj").dofadr[0]
@@ -77,24 +75,70 @@ def _simulate(activation, friction=1.5, obj_mass=None, rec=None, seconds=None,
     return np.array(heights), gripped, z_start
 
 
+def _finger_contact(m, d):
+    """返回 (手指-方块接触点数, 接触法向力合计)，直接读 MuJoCo 接触力。
+
+    手指与方块的 geom 未命名，因此按 **body 名** 匹配：
+    finger_l / finger_r 与 obj 之间的接触才算夹持接触。
+    """
+    body_names = {}
+    for i in range(m.nbody):
+        body_names[i] = m.body(i).name
+
+    def body_of(geom_id):
+        return body_names.get(int(m.geom_bodyid[geom_id]), "")
+
+    n = 0
+    total = 0.0
+    force6 = np.zeros(6)
+    fingers = {"fl", "fr"}
+    for i in range(d.ncon):
+        c = d.contact[i]
+        b1, b2 = body_of(c.geom1), body_of(c.geom2)
+        if "obj" not in (b1, b2):
+            continue
+        if not (fingers & {b1, b2}):
+            continue
+        mujoco.mj_contactForce(m, d, i, force6)
+        n += 1
+        total += abs(float(force6[0]))     # 法向分量
+    return n, total
+
+
 def run_g1():
-    """G1 肌肉激活 → 稳态夹持力（等长，不抬升）。"""
+    """G1 肌肉激活 → 稳态夹持力（等长，不抬升）。
+
+    夹持力取**手指与方块之间的真实接触法向力**（mj_contactForce），
+    而不是肌力：肌力要先扣掉回位弹簧力才作用到方块上，
+    且手指尚未接触方块时接触力为 0。
+    双指对称驱动，与 G2/G3/G6/G7 口径一致。
+    """
     rows = []
     for act in (0.05, 0.10, 0.20, 0.40, 0.80):
         m, d = _make()
         dfl = m.joint("flj").dofadr[0]
-        mus = HillMuscle()
+        dfr = m.joint("frj").dofadr[0]
+        mus_l, mus_r = HillMuscle(), HillMuscle()
         for _ in range(int(1.2 / DT)):
-            q = float(d.qpos[m.joint("flj").qposadr[0]])
-            v = float(d.qvel[dfl])
-            mus.update_activation(act, DT)
-            d.qfrc_applied[dfl] = muscle_force(mus, q, v)
+            ql = float(d.qpos[m.joint("flj").qposadr[0]])
+            qr = float(d.qpos[m.joint("frj").qposadr[0]])
+            mus_l.update_activation(act, DT)
+            mus_r.update_activation(act, DT)
+            d.qfrc_applied[dfl] = muscle_force(mus_l, ql, float(d.qvel[dfl]))
+            d.qfrc_applied[dfr] = muscle_force(mus_r, qr, float(d.qvel[dfr]))
             mujoco.mj_step(m, d)
-        # 夹持力约等于肌肉力（肌腱直接作用于滑块）
-        f = muscle_force(mus, float(d.qpos[m.joint("flj").qposadr[0]]),
-                         float(d.qvel[dfl]))
-        rows.append({"activation": act, "grip_force_n": float(f),
-                     "finger_travel_m": float(d.qpos[m.joint("flj").qposadr[0]])})
+
+        ql = float(d.qpos[m.joint("flj").qposadr[0]])
+        f_mus = muscle_force(mus_l, ql, float(d.qvel[dfl]))
+        f_spring = SPRING * ql
+        n_con, f_con = _finger_contact(m, d)
+        rows.append({"activation": act,
+                     "grip_force_n": float(f_con),            # 真实接触法向力合计
+                     "muscle_minus_spring_n": float(f_mus - f_spring),
+                     "muscle_n": float(f_mus),
+                     "spring_n": float(f_spring),
+                     "contact_points": int(n_con),
+                     "finger_travel_m": ql})
     return {"levels": rows}
 
 
