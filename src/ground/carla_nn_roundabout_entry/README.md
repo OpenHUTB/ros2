@@ -24,3 +24,18 @@ python3 -m carla_nn_roundabout_entry.main --mode demo
 - Python 3.8+
 - NumPy
 - （可选）matplotlib / imageio 仅用于生成文档图
+
+## 训练超参数（默认值）
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `--epochs` | 500 | 训练轮数 |
+| `--lr` | 0.02 | 学习率 |
+| `--samples` | 800 | 合成数据帧数（8:2 train/test 拆分） |
+| `--seed` | 11 | 随机种子，保证可复现 |
+
+复现示例：
+
+```bash
+python3 -m carla_nn_roundabout_entry.main --mode train --epochs 500 --lr 0.02 --samples 800 --seed 11
+```
