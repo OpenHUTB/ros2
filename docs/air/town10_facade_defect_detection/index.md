@@ -3,6 +3,21 @@
 模块将无人机巡航相机图像转换为可复查的幕墙候选区域，输出裂缝、污渍、剥落与玻璃构件的类别、
 置信度和像素边框。玻璃构件不计入病害数量；巡航采集与识别可分别运行，也可通过标准图像话题连接。
 
+## 与已有模块的关系
+
+本 PR 只新增识别层，不重复实现 MuJoCo 场景、网络、路线或采集封装：
+
+| 模块 | 职责 | 本 PR 的关系 |
+|---|---|---|
+| `src/air/mujoco_facade_capture`（#586 已合并） | MuJoCo 幕墙场景、无人机路线、网络/传感器采集与 ROS 封装 | 直接复用，不修改、不复制 |
+| `src/air/town10_facade_cruise_capture` | OpenHUTB Town10 原生巡航采集，输出 `capture_*.png` 和 `/town10/image_raw` | 消费其输出，不新增场景/路线 |
+| 本模块 `town10_facade_defect_detection` | ONNX 四类检测、带框图像/JSON、ROS 2 图像接口 | 新增的检测层 |
+
+#584/#585 的 MuJoCo 幕墙训练与闭环评估仍是独立模块；本模块不依赖它们，也不修改其代码。
+新的交互验证环境是本模块自带的 ROS 图像接口测试：`tests/verify_ros_topic.py` 发布带行补齐的
+`rgb8` 图像到 `/town10/image_raw`，校验输出的 `bgr8` 带框图像、时间戳/相机坐标系和 JSON 字段；
+场景、网络和路线仍由 `mujoco_facade_capture` / `town10_facade_cruise_capture` 提供。
+
 ## 识别效果
 
 ### 原生 Town10 在线巡航图像
@@ -108,6 +123,42 @@ Humble 图像接口验证已通过：640×360 RGB 输入每行含 7 字节补齐
 输出 BGR 图像和 JSON 保留输入时间戳、相机坐标系，样本得到 13 个候选框，病害数量为 9。
 [接口验证结果](ros_interface_result.json)
 
+## 测试与复现
+
+安装测试依赖：
+
+```bash
+python3 -m pip install --user pytest
+# Ubuntu/ROS 2 也可以：sudo apt install python3-pytest
+python3 -m pip install -r requirements.txt
+```
+
+运行：
+
+```bash
+python3 -m pytest -q
+colcon build --packages-select town10_facade_defect_detection
+colcon test --packages-select town10_facade_defect_detection
+colcon test-result --verbose
+```
+
+`setup.py` 已声明 `tests_require` 与 `extras_require={"test": ["pytest"]}`，
+`setup.cfg` 已设置 `testpaths = tests`；`colcon test` 现在会实际执行
+`tests/test_boundaries.py` 中的 8 个用例，而不是返回 0 tests。当前结果：
+
+```text
+8 passed
+Summary: 8 tests, 0 errors, 0 failures, 0 skipped
+```
+
+采集包 `town10_facade_cruise_capture` 的 18 个用例也已注册；对应的
+`colcon test --packages-select town10_facade_cruise_capture` 输出：
+
+```text
+18 passed
+Summary: 18 tests, 0 errors, 0 failures, 0 skipped
+```
+
 ## 验证数据与结果
 
 四类模型来源于补充的幕墙巡检实现包。完整人工标注有 132 张图像、1976 个框。
@@ -153,3 +204,8 @@ python evaluate.py --dataset /path/to/dataset_final --output evaluation
 类别顺序已从 ONNX 元数据核对为 `crack/stain/peel/glass`。
 模型 SHA-256 为 `de2fced0c5260ba31af51603f6c884f783572afed6e32fed5a76bdf699a5a97f`。
 代码及模型采用 AGPL-3.0，许可文本和模型来源随模块提供。
+
+## 大模型使用声明
+
+本模块代码及文档使用 AI 编程助手（大模型工具）辅助完成方案讨论、代码与文档起草、
+问题排查和评审修订。提交者负责检查验证，并对提交内容的正确性和完整性负责。

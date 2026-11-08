@@ -4,6 +4,21 @@
 巡航采集模块通过 `/town10/image_raw` 或 PNG/JPEG 文件接入；识别模块可独立运行。
 玻璃构件用于定位立面结构，**不计入病害数量**。
 
+## 与已有模块的关系
+
+本 PR 只新增识别层，不重复实现 MuJoCo 场景、网络、路线或采集封装：
+
+| 模块 | 职责 | 本 PR 的关系 |
+|---|---|---|
+| `src/air/mujoco_facade_capture`（#586 已合并） | MuJoCo 幕墙场景、无人机路线、网络/传感器采集与 ROS 封装 | 直接复用，不修改、不复制 |
+| `src/air/town10_facade_cruise_capture` | OpenHUTB Town10 原生巡航采集，输出 `capture_*.png` 和 `/town10/image_raw` | 消费其输出，不新增场景/路线 |
+| 本模块 `town10_facade_defect_detection` | ONNX 四类检测、带框图像/JSON、ROS 2 图像接口 | 新增的检测层 |
+
+#584/#585 的 MuJoCo 幕墙训练与闭环评估仍是独立模块；本模块不依赖它们，也不修改其代码。
+新的交互验证环境是本模块自带的 ROS 图像接口测试：`tests/verify_ros_topic.py` 发布带行补齐的
+`rgb8` 图像到 `/town10/image_raw`，校验输出的 `bgr8` 带框图像、时间戳/相机坐标系和 JSON 字段；
+场景、网络和路线仍由 `mujoco_facade_capture` / `town10_facade_cruise_capture` 提供。
+
 ## 原生 Town10 巡航图像
 
 OpenHUTB Town10 在线巡航完成 12 个航点，采集的 12 张相机图像全部通过本模块识别。
@@ -95,6 +110,42 @@ Humble 接口验证使用 640×360 的 `rgb8` 图像、1927 字节输入行步�
 收到 1920 字节行步幅的 `bgr8` 带框图像与 JSON，原时间戳和相机坐标系保持一致。
 该样本得到 13 个候选框，其中病害 9 个、玻璃构件 4 个。
 
+## 测试
+
+安装测试依赖：
+
+```bash
+python3 -m pip install --user pytest
+# Ubuntu/ROS 2 也可以：sudo apt install python3-pytest
+python3 -m pip install -r requirements.txt
+```
+
+运行：
+
+```bash
+python3 -m pytest -q
+colcon build --packages-select town10_facade_defect_detection
+colcon test --packages-select town10_facade_defect_detection
+colcon test-result --verbose
+```
+
+`setup.py` 已声明 `tests_require` 与 `extras_require={"test": ["pytest"]}`，
+`setup.cfg` 已设置 `testpaths = tests`；`colcon test` 现在会实际执行
+`tests/test_boundaries.py` 中的 8 个用例，而不是返回 0 tests。当前结果：
+
+```text
+8 passed
+Summary: 8 tests, 0 errors, 0 failures, 0 skipped
+```
+
+采集包 `town10_facade_cruise_capture` 的 18 个用例也已注册；对应的
+`colcon test --packages-select town10_facade_cruise_capture` 输出：
+
+```text
+18 passed
+Summary: 18 tests, 0 errors, 0 failures, 0 skipped
+```
+
 ## 数据与评价
 
 模型来自补充的幕墙巡检模型包，来源和 SHA-256 见 `models/facade_4class.json`。
@@ -142,3 +193,8 @@ python train.py --dataset /path/to/dataset_final --output training --epochs 60 -
 
 代码及随包模型按 AGPL-3.0 分发，完整文本见 `LICENSE`。
 模型原始来源与导出版本见 `models/README.md`。
+
+## 大模型使用声明
+
+本模块代码及文档使用 AI 编程助手（大模型工具）辅助完成方案讨论、代码与文档起草、
+问题排查和评审修订。提交者负责检查验证，并对提交内容的正确性和完整性负责。
