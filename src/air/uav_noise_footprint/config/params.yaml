@@ -1,0 +1,36 @@
+# 城市低空噪声足迹评估与航线降噪 —— 关键参数
+
+# 声学模型
+acoustic:
+  rotor_power: 300.0     # 桨盘功率 W（标定基准机型）
+  k_const: 70.73         # Lw = 10*log10(P) + K，标定使 100 m 处约 55 dB
+  alpha_db_per_100m: 0.5 # 大气吸收 α，dB/100 m @ 500 Hz
+
+# 暴露评估
+exposure:
+  sample_step: 2.0       # 航迹采样步长 m
+  grid_n: 200            # 足迹栅格 200 x 200
+  grid_pad: 150.0        # 栅格在航迹包络外的外扩 m
+  contour_levels: [45.0, 55.0, 65.0]
+
+# 降噪优化
+mitigate:
+  alt_raises: [30.0, 60.0]   # 手段一：抬升巡航高度候选
+  buffer: 200.0              # 手段二：敏感点缓冲区半径 m
+  climb_angle_base: 8.0      # 基线爬升角 deg
+  climb_angle_steep: 12.0    # 手段三：更陡爬升角 deg
+  max_path_increase: 0.15    # 约束：航程增加 ≤ 15%
+
+# 敏感点噪声限值（LAeq,T，dB(A)，昼间）
+limits:
+  residential: 60.0
+  school: 55.0
+  hospital: 55.0
+
+# 在线告警节点
+node:
+  uav_ids: ["UAV-1", "UAV-2"]
+  odom_prefix: "/uav"
+  alert_level_lp: 65.0    # 任一敏感点瞬时 Lp 超过该值即告警
+  tick_period: 0.5        # s
+  stale_timeout: 1.0      # s
