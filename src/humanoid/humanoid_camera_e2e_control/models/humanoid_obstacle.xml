@@ -1,0 +1,196 @@
+<!--
+  人形机器人避障场景 MJCF（humanoid_camera_e2e_control）
+  - 机器人：freejoint 底盘 + 15 关节双足人形（与 humanoid_keyboard_control 同一套姿态参数）
+  - 策略输入：运行时 MjvCamera（free 模式第三人称跟随视角）渲染的 RGB 图像，见 sim_core.render_front
+  - overview：worldbody 内固定第三方视角相机，仅用于演示 GIF / 关键帧录制
+  - 场景：左右交错彩色立柱形成蜿蜒通道，另放若干散块；CNN 由图像直接输出速度指令
+  - 控制：站姿 PD 伺服维持直立；前进为速度级改写底盘世界系线速度；转向为姿态级旋转四元数
+-->
+<mujoco model="humanoid_obstacle">
+  <compiler angle="radian" coordinate="local" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" iterations="50" integrator="Euler"/>
+
+  <default>
+    <joint armature="0.02" damping="1.5" frictionloss="0.5"/>
+    <motor ctrlrange="-250 250" ctrllimited="true"/>
+    <geom type="capsule" density="1000" friction="1.0 0.4 0.1" contype="1" conaffinity="1"/>
+  </default>
+
+  <worldbody>
+    <light dir="0 0 -1" diffuse="0.9 0.9 0.9" ambient="0.5 0.5 0.5"/>
+    <light pos="3 -3 5" dir="-0.5 0.5 -1" diffuse="0.7 0.7 0.7" ambient="0.3 0.3 0.3"/>
+    <geom name="ground" type="plane" size="10 10 0.02" rgba="0.66 0.66 0.70 1" friction="1.2 0.6 0.2"/>
+
+    <!-- 第三方固定视角相机（演示 / GIF 录制用；策略输入由运行时 MjvCamera 生成） -->
+    <camera name="overview" pos="2.2 4.8 2.6" xyaxes="-0.914 0.406 0 -0.118 -0.266 0.957" fovy="55"/>
+
+    <!-- ===== 左侧通道立柱（红），y=+1.0，x=1.6,2.8,4.0,5.2 ===== -->
+    <body name="pillar_l1" pos="1.6 1.0 0.6">
+      <geom name="pl1" type="cylinder" size="0.19 0.6" rgba="0.85 0.20 0.20 1"/>
+    </body>
+    <body name="pillar_l2" pos="2.8 1.0 0.6">
+      <geom name="pl2" type="cylinder" size="0.19 0.6" rgba="0.85 0.20 0.20 1"/>
+    </body>
+    <body name="pillar_l3" pos="4.0 1.0 0.6">
+      <geom name="pl3" type="cylinder" size="0.19 0.6" rgba="0.85 0.20 0.20 1"/>
+    </body>
+    <body name="pillar_l4" pos="5.2 1.0 0.6">
+      <geom name="pl4" type="cylinder" size="0.19 0.6" rgba="0.85 0.20 0.20 1"/>
+    </body>
+
+    <!-- ===== 右侧通道立柱（蓝），y=-1.0，x=2.2,3.4,4.6,5.8（交错，形成蜿蜒通道） ===== -->
+    <body name="pillar_r1" pos="2.2 -1.0 0.6">
+      <geom name="pr1" type="cylinder" size="0.19 0.6" rgba="0.20 0.35 0.85 1"/>
+    </body>
+    <body name="pillar_r2" pos="3.4 -1.0 0.6">
+      <geom name="pr2" type="cylinder" size="0.19 0.6" rgba="0.20 0.35 0.85 1"/>
+    </body>
+    <body name="pillar_r3" pos="4.6 -1.0 0.6">
+      <geom name="pr3" type="cylinder" size="0.19 0.6" rgba="0.20 0.35 0.85 1"/>
+    </body>
+    <body name="pillar_r4" pos="5.8 -1.0 0.6">
+      <geom name="pr4" type="cylinder" size="0.19 0.6" rgba="0.20 0.35 0.85 1"/>
+    </body>
+
+    <!-- 散落障碍物（绿块），供随机方向驾驶时观察 -->
+    <body name="block_a" pos="1.2 -1.9 0.25">
+      <geom name="ba" type="box" size="0.22 0.22 0.25" rgba="0.20 0.70 0.30 1"/>
+    </body>
+    <body name="block_b" pos="2.0 2.1 0.30">
+      <geom name="bb" type="box" size="0.24 0.24 0.30" rgba="0.20 0.70 0.30 1"/>
+    </body>
+    <body name="block_c" pos="4.9 -2.0 0.27">
+      <geom name="bc" type="box" size="0.22 0.22 0.27" rgba="0.20 0.70 0.30 1"/>
+    </body>
+
+    <!-- ==================== 人形机器人 ==================== -->
+    <body name="root" pos="0 0 0.95">
+      <freejoint name="root"/>
+
+      <!-- 骨盆 -->
+      <geom name="pelvis" type="box" size="0.10 0.13 0.06" pos="0 0 0.0" rgba="0.95 0.55 0.1 1" mass="6"/>
+
+      <!-- ===== 左腿 ===== -->
+      <body name="hip_l" pos="-0.02 0.16 -0.05">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+        <joint name="hip_roll_l" axis="1 0 0" range="-0.5 0.5"/>
+        <body name="hip2_l" pos="0 0 0.0">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="hip_pitch_l" axis="0 1 0" range="-1.7 1.7"/>
+          <body name="thigh_l" pos="0 0 -0.18">
+            <geom name="thigh_geom_l" fromto="0 0 0 0 0 -0.34" size="0.055" rgba="0.95 0.55 0.1 1" mass="3.2"/>
+            <body name="knee_l" pos="0 0 -0.34">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="knee_l" axis="0 1 0" range="-2.5 0"/>
+              <body name="shin_l" pos="0 0 -0.16">
+                <geom name="shin_geom_l" fromto="0 0 0 0 0 -0.30" size="0.045" rgba="0.95 0.55 0.1 1" mass="2.2"/>
+                <body name="ankle_l" pos="0 0 -0.30">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+                  <joint name="ankle_pitch_l" axis="0 1 0" range="-0.9 0.9"/>
+                  <body name="foot_l" pos="0.03 0 -0.03">
+                    <joint name="ankle_roll_l" axis="1 0 0" range="-0.6 0.6"/>
+                    <geom name="foot_geom_l" type="box" size="0.10 0.07 0.025" rgba="0.3 0.3 0.35 1" mass="1.0"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ===== 右腿（对称） ===== -->
+      <body name="hip_r" pos="-0.02 -0.16 -0.05">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+        <joint name="hip_roll_r" axis="1 0 0" range="-0.5 0.5"/>
+        <body name="hip2_r" pos="0 0 0.0">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="hip_pitch_r" axis="0 1 0" range="-1.7 1.7"/>
+          <body name="thigh_r" pos="0 0 -0.18">
+            <geom name="thigh_geom_r" fromto="0 0 0 0 0 -0.34" size="0.055" rgba="0.95 0.55 0.1 1" mass="3.2"/>
+            <body name="knee_r" pos="0 0 -0.34">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="knee_r" axis="0 1 0" range="-2.5 0"/>
+              <body name="shin_r" pos="0 0 -0.16">
+                <geom name="shin_geom_r" fromto="0 0 0 0 0 -0.30" size="0.045" rgba="0.95 0.55 0.1 1" mass="2.2"/>
+                <body name="ankle_r" pos="0 0 -0.30">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+                  <joint name="ankle_pitch_r" axis="0 1 0" range="-0.9 0.9"/>
+                  <body name="foot_r" pos="0.03 0 -0.03">
+                    <joint name="ankle_roll_r" axis="1 0 0" range="-0.6 0.6"/>
+                    <geom name="foot_geom_r" type="box" size="0.10 0.07 0.025" rgba="0.3 0.3 0.35 1" mass="1.0"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ===== 躯干 + 双臂 + 头 ===== -->
+      <body name="torso" pos="0 0 0.08">
+        <geom name="torso_geom" type="box" size="0.11 0.09 0.20" pos="0 0 0.20" rgba="0.95 0.55 0.1 1" mass="14"/>
+
+        <!-- 左臂 -->
+        <body name="arm_l" pos="-0.10 0.11 0.40">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="shoulder_pitch_l" axis="0 1 0" range="-1.5 1.5"/>
+          <body name="upper_l" pos="0 0 -0.14">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+            <geom name="upper_geom_l" fromto="0 0 0 0 0 -0.28" size="0.035" rgba="0.95 0.55 0.1 1" mass="1.0"/>
+            <body name="elbow_l" pos="0 0 -0.28">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="elbow_l" axis="0 1 0" range="-2.0 0"/>
+              <body name="fore_l" pos="0 0 -0.14">
+                <geom name="fore_geom_l" fromto="0 0 0 0 0 -0.28" size="0.03" rgba="0.95 0.55 0.1 1" mass="0.7"/>
+              </body>
+            </body>
+          </body>
+        </body>
+
+        <!-- 右臂 -->
+        <body name="arm_r" pos="-0.10 -0.11 0.40">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="shoulder_pitch_r" axis="0 1 0" range="-1.5 1.5"/>
+          <body name="upper_r" pos="0 0 -0.14">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+            <geom name="upper_geom_r" fromto="0 0 0 0 0 -0.28" size="0.035" rgba="0.95 0.55 0.1 1" mass="1.0"/>
+            <body name="elbow_r" pos="0 0 -0.28">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="elbow_r" axis="0 1 0" range="-2.0 0"/>
+              <body name="fore_r" pos="0 0 -0.14">
+                <geom name="fore_geom_r" fromto="0 0 0 0 0 -0.28" size="0.03" rgba="0.95 0.55 0.1 1" mass="0.7"/>
+              </body>
+            </body>
+          </body>
+        </body>
+
+        <!-- 头部关节（无机载相机；策略图像由运行时 MjvCamera 生成） -->
+        <body name="head" pos="0 0 0.40">
+<inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="neck" axis="0 1 0" range="-0.6 0.6"/>
+          <body name="head_box" pos="0 0 0.05">
+            <geom name="head_geom" type="sphere" size="0.09" rgba="0.3 0.3 0.35 1" mass="1.2"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="hip_roll_l" joint="hip_roll_l"/>
+    <motor name="hip_pitch_l" joint="hip_pitch_l"/>
+    <motor name="knee_l" joint="knee_l"/>
+    <motor name="ankle_pitch_l" joint="ankle_pitch_l"/>
+    <motor name="ankle_roll_l" joint="ankle_roll_l"/>
+    <motor name="hip_roll_r" joint="hip_roll_r"/>
+    <motor name="hip_pitch_r" joint="hip_pitch_r"/>
+    <motor name="knee_r" joint="knee_r"/>
+    <motor name="ankle_pitch_r" joint="ankle_pitch_r"/>
+    <motor name="ankle_roll_r" joint="ankle_roll_r"/>
+    <motor name="shoulder_pitch_l" joint="shoulder_pitch_l"/>
+    <motor name="elbow_l" joint="elbow_l"/>
+    <motor name="shoulder_pitch_r" joint="shoulder_pitch_r"/>
+    <motor name="elbow_r" joint="elbow_r"/>
+    <motor name="neck" joint="neck"/>
+  </actuator>
+</mujoco>
