@@ -79,4 +79,5 @@ depth_avoidance:
   max_range: 12.0           # 超过该距离的点忽略 m
   min_range: 0.5            # 近处地面/机身自反射过滤 m
   start_delay: 6.0          # 起飞后延迟接管，避免打断爬升 s
+  cloud_timeout: 0.5        # 点云超时，超时按 STOP 处理 s
   rate: 10.0                # 指令发布频率 Hz

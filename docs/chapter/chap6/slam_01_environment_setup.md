@@ -204,7 +204,7 @@ sudo apt install -y ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control \
 
 ## 8. 放置世界与房间模型
 
-为让仓库中的世界在任何机器上都能加载，把世界文件和房间模型放进功能包：
+为让仓库中的世界文件和房间模型在任何机器上都能加载，把世界文件和房间模型放进功能包：
 
 ```bash
 # 世界文件

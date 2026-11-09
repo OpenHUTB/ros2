@@ -11,11 +11,12 @@
    d >= slow_distance：按 forward_speed 前进。
 
 这是反应式安全层，不替代 uav_ppo_nav / octree 的全局规划；
-默认关闭，demo 时通过 enable_depth_avoidance:=true 打开。
+默认不在 main.launch 启动，demo 时通过 enable_depth_avoidance:=true 打开；
+节点内部 depth_avoidance/enabled 默认为 true。
 
 参数（默认值见 config/bridge.yaml）：
     depth_avoidance/enabled, forward_speed, slow_distance, stop_distance
-    depth_avoidance/lateral_limit, vertical_limit, max_range, rate
+    depth_avoidance/lateral_limit, vertical_limit, max_range, cloud_timeout, rate
     topic/depth_points, topic/cmd_vel
 """
 from __future__ import annotations
@@ -75,6 +76,8 @@ class DepthAvoidance(object):
         self.max_range = float(rospy.get_param("depth_avoidance/max_range", 12.0))
         self.min_range = float(rospy.get_param("depth_avoidance/min_range", 0.5))
         self.start_delay = float(rospy.get_param("depth_avoidance/start_delay", 6.0))
+        self.cloud_timeout = float(
+            rospy.get_param("depth_avoidance/cloud_timeout", 0.5))
         self.rate = rospy.Rate(float(rospy.get_param("depth_avoidance/rate", 10.0)))
         self.start_time = time.time()
 
@@ -85,6 +88,7 @@ class DepthAvoidance(object):
             self.topic_points, PointCloud2, self.cloud_cb, queue_size=1
         )
         self.points = None
+        self.last_cloud_time = None
         self.last_action = ""
         rospy.loginfo(
             "depth_avoidance: stop=%.1fm slow=%.1fm speed=%.1fm/s",
@@ -95,16 +99,41 @@ class DepthAvoidance(object):
         pts = list(point_cloud2.read_points(
             msg, field_names=("x", "y", "z"), skip_nans=True))
         self.points = np.asarray(pts, dtype=np.float32) if pts else np.empty((0, 3), np.float32)
+        self.last_cloud_time = time.time()
+
+    def _stop(self, reason):
+        if self.last_action != "STOP":
+            rospy.logwarn("depth_avoidance: %s -> STOP", reason)
+            self.last_action = "STOP"
+        msg = Twist()
+        msg.linear.x = 0.0
+        self.pub.publish(msg)
 
     def step_once(self):
-        if not self.enabled or self.points is None:
+        # 关闭、无数据、空点云、点云超时都按 STOP 处理，避免 fail-open
+        if not self.enabled:
+            self._stop("disabled")
+            return
+        now = time.time()
+        if self.points is None or self.last_cloud_time is None:
+            self._stop("no depth data")
+            return
+        if now - self.last_cloud_time > self.cloud_timeout:
+            self.points = None
+            self._stop("stale depth data")
+            return
+        if self.points.shape[0] == 0:
+            self._stop("empty depth cloud")
             return
         # 等自动起飞完成后再接管，避免把爬升中的速度打成 0
-        if time.time() - self.start_time < self.start_delay:
+        if now - self.start_time < self.start_delay:
             return
         d = nearest_distance(
             self.points, self.lateral_limit, self.vertical_limit,
             self.max_range, self.min_range)
+        if not math.isfinite(d):
+            self._stop("no corridor point")
+            return
         vx = compute_speed(
             d, self.stop_distance, self.slow_distance, self.forward_speed)
         msg = Twist()
