@@ -152,12 +152,15 @@ def main(argv: list[str] | None = None) -> int:
             summary = run_keyboard_demo(output, scenario=str(config.get("scenario", "sparse")))
             (output / "keyboard_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         elif args.mode == "train-segmentation":
+            args.output.resolve().mkdir(parents=True, exist_ok=True)
             summary = train_segmentation(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "segmentation_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         elif args.mode == "train-control":
+            args.output.resolve().mkdir(parents=True, exist_ok=True)
             summary = train_control(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "control_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         elif args.mode == "train-end-to-end":
+            args.output.resolve().mkdir(parents=True, exist_ok=True)
             summary = train_end_to_end(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "end_to_end_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         else:
@@ -176,7 +179,11 @@ def main(argv: list[str] | None = None) -> int:
             quality = audit_dataset(output)
             summary["dataset"]["quality_status"] = quality["status"]
             summary["evaluation"] = evaluate_scenarios(output)
-            summary["mapping"] = map_and_navigate(output)
+            summary["mapping"] = map_and_navigate(
+                output,
+                roof_width=route_config.roof_width,
+                roof_depth=route_config.roof_depth,
+            )
             summary["segmentation"] = train_segmentation(output, seed=dataset_config.seed)
             summary["control"] = train_control(output, seed=dataset_config.seed)
             summary["end_to_end"] = train_end_to_end(output, seed=dataset_config.seed)
@@ -191,4 +198,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
