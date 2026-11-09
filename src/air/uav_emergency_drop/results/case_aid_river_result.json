@@ -277,9 +277,9 @@
         ],
         "predicted_impact_m": [
           260.0,
-          250.02
+          250.0
         ],
-        "error_m": 0.02,
+        "error_m": 0.0,
         "t_release_s": 59.52
       },
       {
@@ -301,10 +301,10 @@
           4.24
         ],
         "predicted_impact_m": [
-          179.93,
-          300.04
+          179.95,
+          300.03
         ],
-        "error_m": 0.08,
+        "error_m": 0.06,
         "t_release_s": 70.85
       },
       {
@@ -326,20 +326,20 @@
           0.99
         ],
         "predicted_impact_m": [
-          340.06,
+          340.05,
           320.01
         ],
-        "error_m": 0.06,
+        "error_m": 0.05,
         "t_release_s": 88.51
       }
     ],
-    "impact_error_mean_m": 0.05,
-    "impact_error_max_m": 0.08,
+    "impact_error_mean_m": 0.04,
+    "impact_error_max_m": 0.06,
     "max_track_error_m": 18.78,
     "max_track_error_settled_m": 18.78,
     "max_track_error_release_m": 0.26,
     "final_hover_error_m": 0.09,
     "sim_duration_s": 97.0,
-    "wall_time_s": 1.6
+    "wall_time_s": 1.4
   }
 }

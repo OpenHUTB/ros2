@@ -82,6 +82,37 @@ def impact_point(pos_xy, vel_xy, plan: ReleasePlan) -> np.ndarray:
     return p + v * plan.t_fall + plan.drift
 
 
+def fall_time_from_state(z_rel: float, vz: float,
+                         cfg: BallisticsCfg = BallisticsCfg()) -> float:
+    """由实际离地高度与竖直速度解下落时间。
+
+    z 轴向上、重力向下：z(t) = z0 + vz·t − g·t²/2，令 z = 0 取正根。
+    vz 向上会显著拉长下落时间（落点随之前移），vz 向下则缩短；模型
+    仍按同一无阻力假设外推，落点偏差交给调用方用接受半径校验。
+    z_rel > 0 时判别式恒正，必可达地面。
+    """
+    if z_rel <= 0.0:
+        raise ValueError("state at/below ground: z_rel=%r" % z_rel)
+    return (vz + math.sqrt(vz * vz + 2.0 * cfg.g * z_rel)) / cfg.g
+
+
+def impact_point_state(pos_3d_rel, vel_3d, wind_xy=(0.0, 0.0),
+                       cfg: BallisticsCfg = BallisticsCfg()) -> np.ndarray:
+    """由真实三维状态预测落点（实际高度与竖直速度参与解算）。
+
+    pos/vel 为 (x, y, z) 三维，z 以地面为基准（调用方先减去地面高度）。
+    落点 = 水平位置 + 水平速度·t + 风速·t·wind_coeff，t 由
+    fall_time_from_state 解出——区别于 impact_point 用计划高度的
+    t_fall：真实释放状态偏离计划（掉高、竖直速度不为零）时落点会
+    随之偏移，偏差由调用方对照接受半径判定。
+    """
+    p = np.asarray(pos_3d_rel, dtype=float)
+    v = np.asarray(vel_3d, dtype=float)
+    t = fall_time_from_state(float(p[2]), float(v[2]), cfg)
+    w = np.asarray(wind_xy, dtype=float)
+    return p[:2] + v[:2] * t + w * t * cfg.wind_coeff
+
+
 def aim_release_point(target, vel_xy, plan: ReleasePlan) -> np.ndarray:
     """理想释放点：target − v·t_fall − drift（风偏反推）。"""
     t = np.asarray(target, dtype=float)

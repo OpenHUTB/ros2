@@ -243,10 +243,10 @@
           1.8
         ],
         "predicted_impact_m": [
-          140.03,
+          140.0,
           40.01
         ],
-        "error_m": 0.03,
+        "error_m": 0.01,
         "t_release_s": 28.16
       },
       {
@@ -268,10 +268,10 @@
           3.75
         ],
         "predicted_impact_m": [
-          240.03,
-          120.03
+          240.0,
+          120.02
         ],
-        "error_m": 0.04,
+        "error_m": 0.02,
         "t_release_s": 49.45
       },
       {
@@ -293,15 +293,15 @@
           -3.09
         ],
         "predicted_impact_m": [
-          340.04,
-          59.97
+          340.01,
+          59.98
         ],
-        "error_m": 0.05,
+        "error_m": 0.02,
         "t_release_s": 68.31
       }
     ],
-    "impact_error_mean_m": 0.04,
-    "impact_error_max_m": 0.05,
+    "impact_error_mean_m": 0.01,
+    "impact_error_max_m": 0.02,
     "max_track_error_m": 6.15,
     "max_track_error_settled_m": 4.17,
     "max_track_error_release_m": 0.06,

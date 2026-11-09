@@ -26,7 +26,7 @@ python main.py --no-sim           # 仅算法层：选点 + 架次 + 弹道表�
 python main.py --case case_aid_wind   # 单个算例（含 MuJoCo 闭环）
 python main.py                    # 全部 3 个算例，闭环总墙钟约 5 s
 python tools/make_gif.py          # 重录 docs 里的对比动图
-python -m pytest test/ -q         # 30 项测试
+python -m pytest test/ -q         # 31 项测试
 
 # ROS 侧（ROS 2 Humble 及以上，Windows 下需 WSL2 或原生 ROS 2 环境）
 cd ~/ros2_ws/src && git clone https://github.com/OpenHUTB/ros2.git
@@ -46,9 +46,9 @@ ros2 launch uav_emergency_drop main.launch.py
 
 | 算例 | 选点 | 送出 | 架次 | 落点偏差 mean / max |
 |---|---|---|---|---|
-| `case_aid_village`（h=30, v=8） | 8/8 | 23 份 | 2 | 0.03 / 0.07 m |
-| `case_aid_river`（河带绕桥） | 6/6 | 17 份 | 2 | 0.05 / 0.08 m |
-| `case_aid_wind`（东风 8 m/s, h=20, v=6） | 6/6 | 17 份 | 2 | 0.04 / 0.05 m |
+| `case_aid_village`（h=30, v=8） | 8/8 | 23 份 | 2 | 0.02 / 0.05 m |
+| `case_aid_river`（河带绕桥） | 6/6 | 17 份 | 2 | 0.04 / 0.06 m |
+| `case_aid_wind`（东风 8 m/s, h=20, v=6） | 6/6 | 17 份 | 2 | 0.01 / 0.02 m |
 
 提前量到底值不值这个钱，动图里看得很直：左栏不提前、飞过目标正上方
 才松手，落点平均偏出去 12~21 m；右栏按解析解提前 lead 米松手，
@@ -56,9 +56,9 @@ ros2 launch uav_emergency_drop main.launch.py
 
 | 算例 | 不提前直投 | 按解析解提前量 |
 |---|---|---|
-| 村庄群 | 19.8 m | 0.03 m |
-| 河对岸（绕桥） | 20.5 m | 0.05 m |
-| 8 m/s 横风 | 12.5 m | 0.04 m |
+| 村庄群 | 19.8 m | 0.02 m |
+| 河对岸（绕桥） | 20.5 m | 0.04 m |
+| 8 m/s 横风 | 12.5 m | 0.01 m |
 
 横风那组更直观：12.92 m 的风偏全部由逆风偏移的越顶点补偿，
 投放后解析落点回到真实目标。

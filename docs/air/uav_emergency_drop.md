@@ -26,7 +26,7 @@
 
 ![村庄群算例](../img/air/uav_emergency_drop/village.gif)
 
-*村庄群 8 点（h=30, v=8）：19.8 m → 0.03 m。*
+*村庄群 8 点（h=30, v=8）：19.8 m → 0.02 m。*
 
 绕河的算例里，直线穿河被禁飞带拦下，航线从桥上过，绕完桥再就近排序
 投放点（弯后 20 m 内不安排释放，转角切角圆滑——实测急弯后立即投放
@@ -34,14 +34,14 @@
 
 ![河对岸算例](../img/air/uav_emergency_drop/river.gif)
 
-*河对岸 6 点：20.5 m → 0.05 m。*
+*河对岸 6 点：20.5 m → 0.04 m。*
 
 8 m/s 东风的算例：12.92 m 的风偏全部由逆风偏移的越顶点补偿，
 投放后解析落点回到真实目标：
 
 ![横风算例](../img/air/uav_emergency_drop/wind.gif)
 
-*8 m/s 横风（h=20, v=6）：12.5 m → 0.04 m。*
+*8 m/s 横风（h=20, v=6）：12.5 m → 0.01 m。*
 
 三个算例的落点总览：
 
@@ -78,9 +78,9 @@ ROS 节点共用同一套 `evaluate_drop` 判据，到达理想释放点且落�
 
 | 算例 | 选点 | 送出 | 架次 | 落点偏差 mean / max | 投放窗口跟踪误差 | 末端悬停 |
 |---|---|---|---|---|---|---|
-| `case_aid_village` | 8/8 | 23 份 | 2 | 0.03 / 0.07 m | 0.08 m | 0.10 m |
-| `case_aid_river` | 6/6 | 17 份 | 2 | 0.05 / 0.08 m | 0.26 m | 0.09 m |
-| `case_aid_wind` | 6/6 | 17 份 | 2 | 0.04 / 0.05 m | 0.06 m | 0.00 m |
+| `case_aid_village` | 8/8 | 23 份 | 2 | 0.02 / 0.05 m | 0.08 m | 0.10 m |
+| `case_aid_river` | 6/6 | 17 份 | 2 | 0.04 / 0.06 m | 0.26 m | 0.09 m |
+| `case_aid_wind` | 6/6 | 17 份 | 2 | 0.01 / 0.02 m | 0.06 m | 0.00 m |
 
 弹道表（无风，h × v 网格）：
 
@@ -112,5 +112,5 @@ cd src/air/uav_emergency_drop
 python main.py                 # 三个算例各真飞一次，闭环墙钟约 5 s
 python main.py --no-sim        # 只跑算法层，秒级
 python tools/make_gif.py       # 重录上面四个图
-python -m pytest test/ -q      # 30 项测试
+python -m pytest test/ -q      # 31 项测试
 ```

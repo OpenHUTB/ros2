@@ -147,11 +147,46 @@ def test_evaluate_drop_rejects_bad_states():
     v = evaluate_drop((rel[0], 0.0, 30.05), (-8.0, 0.0, 0.0),
                       seg_a, seg_b, tgt, plan)
     assert not v.release_now and "heading" in v.reason
-    # 高度掉到 20 m，偏离计划投放高度 10 m，解析解不可信
-    v = evaluate_drop((rel[0], 0.0, 20.05), (8.0, 0.0, 0.0),
+    # 高度掉到 10 m：按实际高度解下落时间，落点前抛不足，偏差 8.4 m
+    # 超接受半径（高度偏差不再走独立宽松门槛，与接受半径同一把尺子）
+    v = evaluate_drop((rel[0], 0.0, 10.05), (8.0, 0.0, 0.0),
                       seg_a, seg_b, tgt, plan)
-    assert not v.release_now and "altitude" in v.reason
+    assert not v.release_now and "accept" in v.reason
     # 正常：理想释放点 + 标称速度，放行且落点在目标上
     v = evaluate_drop((rel[0], 0.0, 30.05), (8.0, 0.0, 0.0),
                       seg_a, seg_b, tgt, plan)
     assert v.release_now and v.predicted_impact is not None
+
+
+def test_evaluate_drop_uses_full_3d_state():
+    """评审反例：竖直速度被丢弃、高度只查范围时的三类漏放行。
+
+    平抛假设下竖直速度向上 10 m/s 会把下落时间从 2.47 s 拉到 3.69 s，
+    理想释放点上的落点前移约 9.77 m；竖直分量 NaN 与离地高度偏差
+    引入的误差也都应被同一把落点尺子拦下。
+    """
+    plan = make_release_plan(30.0, 8.0)
+    seg_a, seg_b = (0.0, 0.0), (200.0, 0.0)
+    tgt = np.array([200.0, 0.0])
+    rel = aim_release_point(tgt, (8.0, 0.0), plan)
+    # 竖直速度向上 10 m/s：实际落点偏约 9.8 m > 接受半径 6 m
+    v = evaluate_drop((rel[0], 0.0, 30.05), (8.0, 0.0, 10.0),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "impact" in v.reason
+    # 竖直速度 NaN：三维有限性直接拒绝
+    v = evaluate_drop((rel[0], 0.0, 30.05), (8.0, 0.0, float("nan")),
+                      seg_a, seg_b, tgt, plan)
+    assert not v.release_now and "non-finite" in v.reason
+    # 离地 35 m、接受半径 0.5 m：多下落 0.2 s 前抛多 1.59 m，超限
+    tight = BallisticsCfg(accept_radius=0.5)
+    v = evaluate_drop((rel[0], 0.0, 35.05), (8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan, cfg=tight)
+    assert not v.release_now and "impact" in v.reason
+    # 同样离地 35 m 但接受半径 6 m：偏差 1.59 m 在接受范围内，放行
+    v = evaluate_drop((rel[0], 0.0, 35.05), (8.0, 0.0, 0.0),
+                      seg_a, seg_b, tgt, plan)
+    assert v.release_now
+    # 小幅竖直下沉（闭环巡航抖动量级）：落点偏差 < 1 m，仍放行
+    v = evaluate_drop((rel[0], 0.0, 30.05), (8.0, 0.0, -0.5),
+                      seg_a, seg_b, tgt, plan)
+    assert v.release_now
