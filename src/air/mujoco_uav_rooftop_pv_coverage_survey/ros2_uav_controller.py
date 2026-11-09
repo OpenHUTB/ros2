@@ -316,10 +316,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         node = Controller()
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
         if node is not None:
             node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
     return 0
 
 
