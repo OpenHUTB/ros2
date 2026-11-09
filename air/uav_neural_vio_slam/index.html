@@ -310,7 +310,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../winter_circle/">winter 场景无人机圆周飞行</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a>
@@ -420,6 +420,68 @@
 <li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">神经视觉惯性里程计与三后端 SLAM 对比</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 模块定位</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 神经前端</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 网络结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 损失</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 训练</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34">3.4 前端精度</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 三个后端</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41-ekf-slam">4.1 EKF-SLAM</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 学习式观测噪声模型</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43-fastslam-10">4.3 FastSLAM 1.0</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 关联门限与观测噪声解耦</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 建图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 评测指标</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71-gps-1-s-05-m">7.1 GPS 正常（每 1 s 一次，σ=0.5 m）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72-gps">7.2 GPS 中断退化</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-fastslam">7.3 FastSLAM 为什么落后</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 源码解析</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81-landmarkspy">8.1 landmarks.py：从射线距离里挑出立柱</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82-nnpyim2col">8.2 nn.py：im2col 的维度顺序</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83-metricspy">8.3 metrics.py：形状误差的迭代最近点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84-ekf_slampy">8.4 ekf_slam.py：轨迹记录不含初始位姿</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 复现步骤</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 依赖</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
 <ul>
@@ -540,6 +602,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">空域载具</li>
 <li class="breadcrumb-item active">神经视觉惯性里程计与三后端 SLAM 对比</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/air/uav_neural_vio_slam.md"> 编辑页面</a>
@@ -550,48 +613,563 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="slam">神经视觉惯性里程计与三后端 SLAM 对比</h1>
-<div class="admonition note">
-<p class="admonition-title">占位页</p>
-<p>完整内容随本模块 PR 提交。</p>
-</div>
-<p>对应任务（2）传感器感知、任务（3）建图导航，命中对比实验①（同模型、不同 SLAM 算法）。
-GPS 拒止下用相机 + IMU 做神经 VIO，对比三种 SLAM 后端。</p>
-<h2 id="_1">与已有模块的区别</h2>
+<p>对应作业任务（2）<strong>传感器感知</strong>与任务（3）<strong>建图导航 + SLAM 同步仿真</strong>。
+对比实验①：<strong>同一模型、不同 SLAM 算法</strong>。</p>
+<p>前端是 CNN + GRU 的神经视觉惯性里程计，纯 numpy 手写前向与反向；三个后端
+共用同一前端、同一数据集，只换后端，对比定位精度、地图一致性与 GPS 拒止下的退化。</p>
+<hr/>
+<h2 id="1">1. 模块定位</h2>
+<p>GPS 拒止环境（室内、隧道、城市峡谷）下，位姿只能靠机载传感器推。本模块用
+深度相机 + IMU 做神经 VIO，再在<strong>同一前端</strong>上比较三种 SLAM 后端：</p>
 <table>
 <thead>
 <tr>
-<th>已有</th>
-<th>区别</th>
+<th>后端</th>
+<th>观测量</th>
+<th>地图表示</th>
+<th>复杂度</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>octree_uav_3d_pathfinding</code></td>
-<td>直接用真值位姿建图，无状态估计、无 SLAM 后端</td>
+<td>EKF-SLAM</td>
+<td>立柱的 (距离, 方位)</td>
+<td>单高斯，位姿 + 路标联合</td>
+<td>
+<script type="math/tex">O(M^2)</script>
+</td>
 </tr>
 <tr>
-<td><code>carla_slam_gmapping</code></td>
-<td>是车；gmapping 为黑箱，做不了"同前端换后端"的受控对比</td>
+<td>EKF-SLAM + 神经观测模型</td>
+<td>同上，噪声由网络给</td>
+<td>同上</td>
+<td>
+<script type="math/tex">O(M^2)</script>
+</td>
+</tr>
+<tr>
+<td>FastSLAM 1.0</td>
+<td>同上</td>
+<td>粒子云 + 逐粒子路标 EKF</td>
+<td>
+<script type="math/tex">O(PM)</script>
+</td>
 </tr>
 </tbody>
 </table>
-<p>课程内尚无"状态估计与建图分开评测"的工作。</p>
-<h2 id="_2">计划</h2>
+<p>课程内已有的 <code>octree_uav_3d_pathfinding</code> 直接用仿真器给的真值位姿建图，
+没有状态估计；<code>carla_slam_gmapping</code> 是车、且 gmapping 是黑箱，做不了"同前端
+换后端"的受控对比。课程内还没有把状态估计与建图分开评测的模块。</p>
+<hr/>
+<h2 id="2">2. 架构</h2>
+<div class="highlight"><pre><span></span><code>深度图 160×128 ─┐
+                ├─ CNN(3 层, stride 2) ─┐
+IMU 100 Hz ─────┘                       ├─ GRU(64) ─┬─ head_p → Δp_b (3)
+                                        │            ├─ head_r → Δrpy_b (3)
+                                        │            └─ head_s → log σ² (6)
+                                        │
+                                        └─→ ┬ EKF-SLAM
+                                            ├ EKF-SLAM + 神经观测模型
+                                            └ FastSLAM 1.0
+                                                     │
+                                                     └→ 位姿 + 路标 → 占用栅格
+</code></pre></div>
+<p>前端与后端之间只有 <code>(Δp_b, Δrpy_b, σ)</code> 一条接口，换后端不动前端一行。</p>
+<p><code>/camera/depth</code> 与 IMU 由底座 <code>uav_mujoco_sim</code> 提供；激光雷达的立柱观测由
+<code>landmarks.py</code> 从射线距离里检测。</p>
+<hr/>
+<h2 id="3">3. 神经前端</h2>
+<h3 id="31">3.1 网络结构</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>形状</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conv1</td>
+<td>2×48×64 → 8×22×30，5×5 /2</td>
+<td>2 通道输入（深度 + 有效掩码）</td>
+</tr>
+<tr>
+<td>Conv2</td>
+<td>8×22×30 → 16×10×14，3×3 /2</td>
+<td></td>
+</tr>
+<tr>
+<td>Conv3</td>
+<td>16×10×14 → 16×4×6，3×3 /2</td>
+<td></td>
+</tr>
+<tr>
+<td>IMU 分支</td>
+<td>10×6 → 64 → 64</td>
+<td>全连接 + ReLU</td>
+</tr>
+<tr>
+<td>融合</td>
+<td>64 + 64 → GRU(64)</td>
+<td></td>
+</tr>
+<tr>
+<td>head_p / head_r</td>
+<td>64 → 3</td>
+<td>位移 / 姿态增量</td>
+</tr>
+<tr>
+<td>head_s</td>
+<td>64 → 6</td>
+<td>log σ²，限幅 [−8, 4]</td>
+</tr>
+</tbody>
+</table>
+<p>深度输入两通道：归一化深度 + 有效掩码。无回波像素也记 0，掩码把"无回波"
+与"距离 0"分开。</p>
+<h3 id="32">3.2 损失</h3>
+<p>位移与姿态增量都用<strong>异方差高斯负对数似然</strong>：</p>
+<p>
+<script type="math/tex; mode=display">
+\mathcal{L} = \frac{1}{2}\sum_i \left[\frac{(y_i - \hat y_i)^2}{\sigma_i^2} + \log \sigma_i^2\right]
+</script>
+</p>
+<p>网络同时预测 <script type="math/tex">\sigma_i</script>：给后端提供逐帧不确定度，残差大的帧在损失里自动降权。
+<script type="math/tex">\log\sigma^2</script> 限幅在 <script type="math/tex">[-8,4]</script>；不加限幅时训练会把 <script type="math/tex">\sigma</script> 推向 0 换 loss
+（实测 20 轮内单帧精度退到 32 mm）。</p>
+<h3 id="33">3.3 训练</h3>
+<p>按<strong>定长片段</strong>（32 帧）切：片段内 GRU 隐状态连续、片段间清零。梯度只回传一步，
+隐状态相当于额外输入特征，与在线推理时只有历史信息一致。优化器 Adam
+（<script type="math/tex">\text{lr}=2\times10^{-3}</script>，梯度范数限幅 1.0），25 轮，验证集为第 3 集。</p>
+<h3 id="34">3.4 前端精度</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>逐帧位移增量 RMSE</td>
+<td>2.8 mm</td>
+</tr>
+<tr>
+<td>逐帧姿态增量 RMSE</td>
+<td>0.11°</td>
+</tr>
+<tr>
+<td>位移不确定度标定比</td>
+<td>6.6（偏保守）</td>
+</tr>
+</tbody>
+</table>
+<p>标定比偏大：网络的高斯假设覆盖不了偶发的无效深度帧，后端因此偏保守。</p>
+<p><img alt="" src="../../img/air/uav_neural_vio_slam/02_frontend.png"/></p>
+<hr/>
+<h2 id="4">4. 三个后端</h2>
+<h3 id="41-ekf-slam">4.1 EKF-SLAM</h3>
+<p>状态 <script type="math/tex">\mu = [x, y, \theta, m_{1x}, m_{1y}, \dots, m_{Mx}, m_{My}]^T</script>，
+协方差 <script type="math/tex">\Sigma \in \mathbb{R}^{(3+2M)^2}</script>。</p>
+<p><strong>预测</strong>只推进位姿，雅可比 <script type="math/tex">F</script> 传递位姿与路标的互协方差：</p>
+<p>
+<script type="math/tex; mode=display">
+\mu \leftarrow g(\mu, u), \qquad \Sigma \leftarrow F\Sigma F^\top + Q
+</script>
+</p>
+<p>均值走非线性转移，<script type="math/tex">F</script> 只用于协方差；用 <script type="math/tex">F</script> 乘 <script type="math/tex">\mu</script> 是一阶近似，整条轨迹会累积系统偏差。</p>
+<p><strong>观测更新</strong>用完整的联合协方差：</p>
+<p>
+<script type="math/tex; mode=display">
+S = H\Sigma H^\top + R, \quad K = \Sigma H^\top S^{-1}, \quad
+\mu \leftarrow \mu + K\nu, \quad \Sigma \leftarrow (I-KH)\Sigma
+</script>
+</p>
+<p><strong>新路标初始化</strong>传播位姿不确定度，补上与已有状态的互协方差：</p>
+<p>
+<script type="math/tex; mode=display">
+\Sigma_{\text{new}} = \begin{bmatrix}
+\Sigma & \Sigma J^\top \\ J\Sigma & J\Sigma J^\top + G_z R G_z^\top
+\end{bmatrix}
+</script>
+</p>
+<p>只写对角块时，回环处路标被当作真值，位姿无法修正。</p>
+<h3 id="42">4.2 学习式观测噪声模型</h3>
+<p>经典 EKF 用固定 <script type="math/tex">R = \mathrm{diag}(\sigma_r^2, \sigma_b^2)</script>，但实测测距噪声
+强烈依赖距离：</p>
+<table>
+<thead>
+<tr>
+<th>距离段</th>
+<th>真实 σ_r</th>
+<th>常数模型</th>
+<th>学习模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.8–2 m</td>
+<td>0.017 m</td>
+<td>0.100 m（<strong>悲观 5.8×</strong>）</td>
+<td>0.027 m</td>
+</tr>
+<tr>
+<td>2–4 m</td>
+<td>0.025 m</td>
+<td>0.100 m</td>
+<td>0.028 m</td>
+</tr>
+<tr>
+<td>4–6 m</td>
+<td>0.028 m</td>
+<td>0.100 m</td>
+<td>0.032 m</td>
+</tr>
+<tr>
+<td>6–8 m</td>
+<td>0.047 m</td>
+<td>0.100 m</td>
+<td>0.043 m</td>
+</tr>
+<tr>
+<td>8–10.5 m</td>
+<td>0.052 m</td>
+<td>0.100 m</td>
+<td>0.049 m</td>
+</tr>
+</tbody>
+</table>
+<p>模型在<strong>真值</strong>上训练：用真值位姿与真值路标配对，残差就是纯传感器误差。
+网络拟合的是 <script type="math/tex">\mathbb{E}[\log \mathrm{err}^2]</script>，换算成 <script type="math/tex">\sigma</script> 要补一个偏置：</p>
+<p>
+<script type="math/tex; mode=display">
+\log \sigma^2 = \mathbb{E}[\log \mathrm{err}^2] - \mathbb{E}[\log \chi^2_1],
+\qquad \mathbb{E}[\log \chi^2_1] = \psi(1/2) + \log 2 = -1.2704
+</script>
+</p>
+<p>写成 <script type="math/tex">\gamma=0.5772</script>（欧拉常数）会少补 0.693，<script type="math/tex">\sigma</script> 系统性低估
+<script type="math/tex">\sqrt{2}</script> 倍——实测标定比 0.69 而不是 1.0，就是这一项。</p>
+<p>方位残差重尾（1 m 处散布 2.3°，多数样本接近 0）；<script type="math/tex">\mathbb{E}[\log \mathrm{err}^2]</script>
+拟合的是典型误差而非标准差，训练后补一次标量方差标定
+<script type="math/tex">k = \overline{\mathrm{err}^2} / \overline{\hat\sigma^2}</script>。</p>
+<h3 id="43-fastslam-10">4.3 FastSLAM 1.0</h3>
+<p>每个粒子带一条轨迹假设与自己的一套路标 EKF。位姿表示不同：EKF 单高斯（单峰），
+FastSLAM 粒子集（多峰）。粒子权重按观测似然连乘：</p>
+<p>
+<script type="math/tex; mode=display">
+w^{(i)} \propto \prod_k \mathcal{N}(z_k; \hat z_k^{(i)}, S_k^{(i)})
+</script>
+</p>
+<p>两个工程细节：<strong>数据关联跨粒子共享</strong>（用加权平均地图做最近邻），
+<strong>路标更新用采样出的位姿当精确值</strong>（FastSLAM 1.0 的固有近似）。</p>
+<h3 id="44">4.4 关联门限与观测噪声解耦</h3>
+<p>χ² 门限的协方差 <script type="math/tex">S = H\Sigma H^\top + R</script> 依赖 <script type="math/tex">R</script>：噪声模型变准后 <script type="math/tex">R</script> 变小，
+<script type="math/tex">S</script> 变小，同一创新的马氏距离变大，更多真实观测被拒，每条被拒观测都生成一根
+假柱子。</p>
+<p>实测（第 0 集，3591 条观测）：</p>
+<table>
+<thead>
+<tr>
+<th>观测噪声</th>
+<th>关联成功</th>
+<th>新建路标</th>
+<th>真值 30 个</th>
+<th>接受时的 χ² 中位</th>
+<th>ATE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常数 R</td>
+<td>3517</td>
+<td>74</td>
+<td>44 个虚警</td>
+<td>0.55</td>
+<td>0.45 m</td>
+</tr>
+<tr>
+<td>学习 R（门限耦合）</td>
+<td>3375</td>
+<td><strong>216</strong></td>
+<td><strong>186 个虚警</strong></td>
+<td>1.21</td>
+<td>0.94 m</td>
+</tr>
+</tbody>
+</table>
+<p>门限改用<strong>固定几何尺度</strong>（<script type="math/tex">\sigma_r^{\text{gate}}=0.15</script> m,
+<script type="math/tex">\sigma_b^{\text{gate}}=0.045</script> rad）后，关联行为与噪声模型无关，两种后端之间
+只剩观测噪声模型这一个差异；即固定搜索半径。</p>
+<hr/>
+<h2 id="5">5. 建图</h2>
+<p>位姿 + 激光雷达射线 → 2D 对数几率占用栅格。整帧向量化：所有射线的采样点
+一次性算出来，用 <code>np.bincount</code> 把同一格的命中累加，每帧 4~6 ms。</p>
+<p>地图一致性用 IoU 评价，同时给两个分辨率：</p>
 <ul>
-<li>前端 CNN + GRU：IMU 序列 + 下采样深度图 → 相对位姿增量</li>
-<li>后端（同一前端、同一数据集）：EKF-SLAM / FastSLAM / 神经观测模型 SLAM</li>
-<li>位姿 + 激光雷达 → 占用栅格，rviz 实时可视化</li>
-<li>对比：ATE / RPE、地图 IoU、GPS 中断 5 / 15 / 30 s 的退化曲线</li>
+<li><strong>0.10 m 原生</strong>：墙只有一格宽，位姿差 0.4 m 就整体错开，量的是位姿误差</li>
+<li><strong>0.50 m 降采样</strong>：块内取最大（占据优先），才是"地图画得对不对"</li>
 </ul>
-<p>依赖：<a href="../uav_mujoco_sim/">uav_mujoco_sim</a></p></div>
+<hr/>
+<h2 id="6">6. 评测指标</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>定义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ATE 原始</td>
+<td>估计轨迹与真值轨迹逐点误差的 RMSE，不做任何对齐</td>
+</tr>
+<tr>
+<td>ATE 对齐</td>
+<td>先做 SE(2) 最优对齐（Umeyama）再算，排除整体漂移自由度</td>
+</tr>
+<tr>
+<td>RPE</td>
+<td>隔 <script type="math/tex">\Delta=1</script> s 比较相对运动：<script type="math/tex">E_i = (Q_i^{-1}Q_{i+\Delta})^{-1}(P_i^{-1}P_{i+\Delta})</script>
+</td>
+</tr>
+<tr>
+<td>路标 RMSE</td>
+<td>估计路标与真值路标的最近邻配对误差</td>
+</tr>
+<tr>
+<td>形状误差</td>
+<td>配对点对做 SE(2) 对齐后的残差，只反映地图形状</td>
+</tr>
+<tr>
+<td>地图 IoU</td>
+<td>占用栅格与真值栅格的交并比</td>
+</tr>
+</tbody>
+</table>
+<p>估计地图与真值地图要换到同一第一帧坐标系。只换轨迹不换路标会差一个首帧偏航
+旋转（本数据集 <code>yaw=0.965 rad</code>，10 m 处错开 9 m），最近邻配对退化为随机——
+实测 rmse 0.71 m ≈ 1 m 配对半径下随机配对的期望 <script type="math/tex">1/\sqrt2</script>。修正后 0.30 m，
+形状误差 0.148 m。</p>
+<hr/>
+<h2 id="7">7. 实测结果</h2>
+<p>平台：仿真侧 Windows 11 + Intel Core 5 220H（核显）；ROS 侧 Ubuntu 20.04 +
+Humble 虚拟机（<code>colcon build</code> 通过）。
+数据：5 集八字闭环航线，每集 80 s @10 Hz，每帧约 4.5 条立柱观测，30 根真值立柱。</p>
+<h3 id="71-gps-1-s-05-m">7.1 GPS 正常（每 1 s 一次，σ=0.5 m）</h3>
+<table>
+<thead>
+<tr>
+<th>后端</th>
+<th>ATE 原始</th>
+<th>ATE 对齐</th>
+<th>RPE</th>
+<th>路标 RMSE</th>
+<th>地图 IoU(0.5 m)</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>纯里程计（前端）</td>
+<td>10.936 m</td>
+<td>5.475 m</td>
+<td>0.377 m</td>
+<td>—</td>
+<td>0.08</td>
+<td>0 s</td>
+</tr>
+<tr>
+<td>EKF-SLAM</td>
+<td>0.470 m</td>
+<td>0.271 m</td>
+<td>0.165 m</td>
+<td>0.254 m</td>
+<td>0.44</td>
+<td>6 s</td>
+</tr>
+<tr>
+<td><strong>EKF-SLAM + 神经观测模型</strong></td>
+<td><strong>0.342 m</strong></td>
+<td><strong>0.146 m</strong></td>
+<td><strong>0.093 m</strong></td>
+<td><strong>0.249 m</strong></td>
+<td><strong>0.55</strong></td>
+<td>5 s</td>
+</tr>
+<tr>
+<td>FastSLAM 1.0</td>
+<td>3.827 m</td>
+<td>2.945 m</td>
+<td>0.380 m</td>
+<td>0.638 m</td>
+<td>0.18</td>
+<td>1 s</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>神经观测模型相对常数 R：ATE −27%，RPE −44%，地图 IoU +25%，
+  5 集里赢 4 集（第 2 集 0.603 vs 0.291 落后）</li>
+<li>EKF-SLAM 相对纯里程计：ATE 降低 23 倍</li>
+<li>FastSLAM 明显落后，且<strong>耗时只有 1 s</strong>（EKF 是 <script type="math/tex">O(M^2)</script>，FastSLAM 是 <script type="math/tex">O(PM)</script>）</li>
+</ul>
+<p><img alt="" src="../../img/air/uav_neural_vio_slam/03_trajectories.png"/></p>
+<p><em>（轨迹图与地图图为第 0 集，标题里的 ATE / IoU 是该集数值；上表与指标图为 5 集平均。）</em></p>
+<p><img alt="" src="../../img/air/uav_neural_vio_slam/04_metrics.png"/></p>
+<h3 id="72-gps">7.2 GPS 中断退化</h3>
+<table>
+<thead>
+<tr>
+<th>中断时长</th>
+<th>纯里程计</th>
+<th>EKF-SLAM</th>
+<th>EKF+神经观测</th>
+<th>FastSLAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 s</td>
+<td>10.936</td>
+<td>0.470</td>
+<td>0.342</td>
+<td>3.827</td>
+</tr>
+<tr>
+<td>5 s</td>
+<td>10.936</td>
+<td>0.487</td>
+<td>0.372</td>
+<td>5.005</td>
+</tr>
+<tr>
+<td>15 s</td>
+<td>10.936</td>
+<td>0.514</td>
+<td>0.479</td>
+<td>6.940</td>
+</tr>
+<tr>
+<td>30 s</td>
+<td>10.936</td>
+<td>0.568</td>
+<td>0.534</td>
+<td><strong>7.758</strong></td>
+</tr>
+</tbody>
+</table>
+<p>EKF 两个后端对 30 s 中断只退化 21%/56%（前端的位移增量精度本就到毫米级，
+时间足够长时靠路标观测就能维住）；FastSLAM 退化 103%，对绝对观测最敏感。</p>
+<h3 id="73-fastslam">7.3 FastSLAM 为什么落后</h3>
+<p>诊断数据（第 0 集，160 粒子）：</p>
+<table>
+<thead>
+<tr>
+<th>量</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>粒子位姿散布</td>
+<td>σ ≈ 0.03–0.08 m</td>
+</tr>
+<tr>
+<td>需要覆盖的不确定度</td>
+<td>0.4 m 量级</td>
+</tr>
+<tr>
+<td>重采样次数 / 800 帧</td>
+<td>432</td>
+</tr>
+<tr>
+<td>有效粒子数 <script type="math/tex">N_\text{eff}</script>
+</td>
+<td>118/160（权重接近均匀）</td>
+</tr>
+</tbody>
+</table>
+<p>粒子云宽 3~8 cm，需要覆盖的位姿不确定度是 0.4 m 量级。云宽由“过程噪声 ×
+√(重采样间隔)”决定：每帧 0.018 m、约每 2 帧重采样一次，锁在 3 cm 左右。
+GPS 似然在整个云上几乎相同（0.5 m 观测噪声对 3 cm 云宽），权重区分不出来，
+<script type="math/tex">N_\text{eff}</script> 接近满值。</p>
+<p>过程噪声、粒子数（160→2500）、重采样比都试过，ATE 在 1.0~2.8 m 波动、无单调
+改善：FastSLAM 1.0 用里程计提议分布的结构性局限，非调参问题。</p>
+<hr/>
+<h2 id="8">8. 源码解析</h2>
+<div class="highlight"><pre><span></span><code>uav_neural_vio_slam/core/
+├── nn.py           手写 Conv2d / GRUCell / Linear / Adam
+├── network.py      VioNet：前向、反向、高斯 NLL、限幅
+├── world.py        SLAM 基准世界（30 立柱）+ 八字闭环航线
+├── landmarks.py    激光雷达 → (距离, 方位) 观测
+├── dataset.py      数据采集与存取
+├── training.py     训练与在线推理
+├── ekf_slam.py     EKF-SLAM
+├── fastslam.py     FastSLAM 1.0
+├── obs_model.py    学习式观测噪声模型
+├── mapping.py      占用栅格
+├── metrics.py      ATE / RPE / 路标误差 / 地图 IoU
+└── experiment.py   四后端对比与 GPS 中断
+</code></pre></div>
+<h3 id="81-landmarkspy">8.1 <code>landmarks.py</code>：从射线距离里挑出立柱</h3>
+<p>判据是"细"：立柱在方位向只占几个波束，墙面、地面、大方柱连成一片；再加速度
+一致性（同一立柱在 ±15° 两层距离接近，地面不同）。不需要高度与姿态，可在线使用。</p>
+<p>两个实现细节：</p>
+<p><strong>水平距离</strong>。<code>detect</code> 输出乘过 cos 俯仰角的水平距离，与二维观测模型
+<script type="math/tex">r = \sqrt{(m_x-x)^2 + (m_y-y)^2}</script> 一致；−15° 层三维距离大 <script type="math/tex">\sec 15° - 1 = 3.5\%</script>，
+8 m 处 0.28 m 系统偏差。</p>
+<p><strong>整组生长</strong>。逐格判孤立会丢掉柱子中部、只剩两侧边缘（实测 1 m 处拆成
+1.01 m/+9° 与 1.02 m/+1°）；按候选簇整组生长后再判。</p>
+<h3 id="82-nnpyim2col">8.2 <code>nn.py</code>：im2col 的维度顺序</h3>
+<p><code>as_strided</code> 的<strong>维度顺序与 reshape 的目标一致</strong>。顺序不一致时 reshape 按内存序
+重新分组，布局被打乱；此时前向与反向仍互为转置、数值梯度校验通过（层相当于
+"核权重被置换过的卷积"），只有伴随恒等式</p>
+<p>
+<script type="math/tex; mode=display">
+\langle A, \text{col2im}(B)\rangle = \langle \text{im2col}(A), B\rangle
+</script>
+</p>
+<p>能发现（实测 8.11 vs 6.94）。<code>--selftest</code> 含这一项。</p>
+<h3 id="83-metricspy">8.3 <code>metrics.py</code>：形状误差的迭代最近点</h3>
+<p>两图之间差一个刚体变换，直接按原坐标做最近邻会因整体平移/旋转配错。
+<code>landmark_shape_rmse</code> 三步：点数相同时先 SE(2) 粗对齐 → 最近邻配对 →
+用配对点估变换再作用于全部点，迭代 3 次。扣掉整体漂移，剩下的是形状误差。</p>
+<h3 id="84-ekf_slampy">8.4 <code>ekf_slam.py</code>：轨迹记录不含初始位姿</h3>
+<p><code>reset()</code> 里写 <code>traj = [mu.copy()]</code> 会使估计轨迹整体错开一帧（1.4 m/s 下
+0.14 m 系统滞后）；只在 <code>record()</code> 里追加，与帧数一一对应。</p>
+<hr/>
+<h2 id="9">9. 复现步骤</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 仿真侧（Python ≥3.10）</span>
+python<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--out<span class="w"> </span>data/vio_dataset.npz
+python<span class="w"> </span>main.py<span class="w"> </span>--train<span class="w">   </span>--data<span class="w"> </span>data/vio_dataset.npz<span class="w"> </span>--out<span class="w"> </span>data/
+
+<span class="c1"># 任意机器（只需 numpy）</span>
+python<span class="w"> </span>main.py<span class="w"> </span>--selftest
+python<span class="w"> </span>main.py<span class="w"> </span>--evaluate<span class="w"> </span>--data<span class="w"> </span>data/vio_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span><span class="se">\</span>
+<span class="w">               </span>--out<span class="w"> </span>results.json<span class="w"> </span>--outage<span class="w"> </span><span class="m">5</span>,15,30
+python<span class="w"> </span>main.py<span class="w"> </span>--figures<span class="w">  </span>--data<span class="w"> </span>data/vio_dataset.npz<span class="w"> </span>--model<span class="w"> </span>data/<span class="w"> </span><span class="se">\</span>
+<span class="w">               </span>--outdir<span class="w"> </span>../docs/img/air/uav_neural_vio_slam<span class="w"> </span>--outage<span class="w"> </span><span class="m">5</span>,15,30
+</code></pre></div>
+<p>ROS2 在线运行见包内 <code>README.md</code>。</p>
+<hr/>
+<h2 id="10">10. 依赖</h2>
+<ul>
+<li><a href="../uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+  （提供 <code>/camera/depth</code>、<code>/lidar/points</code>、IMU 与真值位姿）</li>
+</ul></div>
 </div>
 </div><footer>
-<hr/>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../waypoint_tracking/" title="无人机航点轨迹跟踪（PID 控制）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../octree_uav_3d_pathfinding/env_setup/" title="环境配置与前置准备">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
@@ -601,6 +1179,8 @@ GPS 拒止下用相机 + IMU 做神经 VIO，对比三种 SLAM 后端。</p>
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../waypoint_tracking/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../octree_uav_3d_pathfinding/env_setup/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
