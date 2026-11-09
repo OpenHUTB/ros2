@@ -28,6 +28,7 @@ setup(
             'odom_tf = uav_slam_nav.odom_tf_node:main',
             'simple_nav = uav_slam_nav.simple_nav_node:main',
             'nav_relay = uav_slam_nav.nav_relay_node:main',
+            'main = uav_slam_nav.cli:main',
         ],
     },
 )
