@@ -221,3 +221,11 @@ ros2 topic pub -1 /camera_info sensor_msgs/msg/CameraInfo \
 - [OpenCV：Camera Calibration and 3D Reconstruction](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html)
 - [OpenCV：solvePnP 文档](https://docs.opencv.org/4.x/d5/d1f/calib3d_solvePnP.html)
 - [sensor_msgs/CameraInfo 消息定义](https://docs.ros.org/en/humble/p/sensor_msgs/msg/CameraInfo.html)
+
+## 大模型使用声明
+
+本模块的代码与文档在编写过程中使用了 Trae 辅助（代码起草、公式核对、文档撰写与绘图脚本调试）。
+
+已实际运行验证：`run_calibration`、`sweep_views`、`sweep_noise`、`project_cloud` 四个离线入口，
+以及 ROS 2 节点 `calibration_node`（用 `ros2 topic echo --once` 核对了发布内容）。
+文中所有数值均来自实际运行，未使用估计值或占位数据；作者对提交内容的正确性负责。
