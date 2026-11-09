@@ -55,16 +55,24 @@
        所以那时要传 body_frame:=lidar_link -->
   <arg name="body_frame" default="base_link"/>
 
+  <!-- 桥接节点接收"要飞到哪里"的话题。
+       默认 /uav/goal 与 P1'–P5 完全一致（用户发一个目标点，规划器规划、载具飞过去）。
+       P6 的闭环飞行由 full_demo.launch 把它设成 /uav/goal_cmd —— 那里由 path_follower
+       逐点下发航点，如果仍用 /uav/goal，astar_planner 会把每个航点当成新目标重新规划。 -->
+  <arg name="bridge_goal_topic" default="/uav/goal"/>
+
   <!-- 载入参数配置 -->
   <rosparam command="load"
             file="$(find octree_uav_3d_pathfinding)/config/params.yaml"/>
 
-  <!-- AirSim 桥接节点：订阅 /uav/goal，发布 /cloud_in、/ground_truth/odom 与 TF -->
+  <!-- AirSim 桥接节点：订阅目标点，发布 /cloud_in、/ground_truth/odom 与 TF -->
   <node if="$(arg bridge)"
         pkg="octree_uav_3d_pathfinding"
         type="airsim_bridge.py"
         name="airsim_bridge"
-        output="screen"/>
+        output="screen">
+    <param name="goal_topic" value="$(arg bridge_goal_topic)"/>
+  </node>
 
   <!-- 点云建图节点：/cloud_in → /octomap_full 与 /occupied_cells_vis_array -->
   <node if="$(arg mapping)"

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mjc_rov_ppo_tracking</name>
+  <version>0.0.1</version>
+  <description>
+    手写 PPO 强化学习 ROV 轨迹跟踪，与 PID 基线对比。
+    MuJoCo 仿真，PPO actor-critic 网络训练，离线对比 MAE。
+  </description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
