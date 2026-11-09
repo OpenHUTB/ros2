@@ -72,7 +72,7 @@ nav:
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
-    - 9. ROS 2: './chapter/chap9.md'
+    - 机器视觉多机器人蚁群编队: './task_description.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
 - 肌肉骨骼人:
