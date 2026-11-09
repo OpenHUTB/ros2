@@ -187,6 +187,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [winter 场景无人机圆周飞行](./air/winter_circle.md)
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
