@@ -11,10 +11,21 @@ from mujoco_uav_moving_pad_landing.teleop import command_for_key
 
 
 def test_expert_command_is_bounded_and_descends_when_aligned():
-    features = np.array([0.0, 0.0, 0.7, 0.0, 0.0], dtype=np.float32)
+    features = np.array([0.0, 0.0, 0.7, 0.0, 0.0, 1.0], dtype=np.float32)
     command = expert_command(features)
     assert np.all(np.abs(command[:2]) <= 0.55)
     assert command[2] < 0.0
+
+
+def test_expert_command_returns_zero_for_invalid_or_malformed_features():
+    invalid = np.array([0.1, -0.1, 0.7, 0.0, 0.0, 0.0], dtype=np.float32)
+    np.testing.assert_array_equal(expert_command(invalid), np.zeros(3, dtype=np.float32))
+    try:
+        expert_command(invalid[:5])
+    except ValueError as error:
+        assert "six" in str(error)
+    else:
+        raise AssertionError("expert command must reject a feature vector without validity")
 
 
 def test_missing_visual_markers_produce_finite_features():
