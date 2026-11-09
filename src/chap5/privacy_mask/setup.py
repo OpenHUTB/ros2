@@ -22,8 +22,9 @@ setup(
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [
-            "privacy_mask_node = privacy_mask.privacy_mask_node:main",
+        'console_scripts': [
+            'privacy_mask_main = privacy_mask.privacy_mask_node:main',
         ],
     },
+
 )
