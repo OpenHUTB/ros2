@@ -277,14 +277,23 @@ DEPOT_RADIUS_M = 2.0   # 判定"在配送中心"的水平半径，与节点到�
 def decide_next(plan: FleetPlan, visited: set, pos_xy: Sequence[float],
                 battery_frac: float, model: EnergyModel | None = None,
                 cfg: RouteConfig | None = None,
-                at_depot: bool | None = None) -> dict:
+                at_depot: bool | None = None,
+                departed: bool = False) -> dict:
     """Online dispatch decision; pure function used by the ROS node.
 
     节点薄壳：给定已服务站集合、当前位置与电量，返回下一动作。动作取值：
     deliver（去送下一站）/ return_for_swap（架次中途电量吃紧，回中心）/
-    return_to_depot（本架次送完，回中心装货换电，送完不等于任务结束）/
+    return_to_depot（本架次送完或本架次还没装货离仓，回中心装货换电）/
     swap（在中心换电，等电量恢复）/ done（全部架次完成且已回中心）。
-    电量判据与离线规划一致（剩余 < 1.25 x 返航所需即建议回中心）。
+
+    departed 由节点维护：本架次货物已装并已离仓（架次切换时复位）。
+    此前用"本架次是否已送过一站"推断是否已出发，去第一站途中会被
+    误判成"新架次还没出发"而要求返仓，首次投递永远完不成。
+
+    电量判据与离线规划一致：在中心看剩余电量够不够把"剩余架次账目"
+    （新架次 = 全账目；中途返仓 = 剩余站账目）从中心飞完并回中心，
+    不够就先换电——中途返仓到站后也能进入 swap，而不是原地反复
+    return_for_swap；在途看剩余 < 1.25 x 返航所需即建议回中心。
     """
     model = model or EnergyModel()
     cfg = cfg or RouteConfig()
@@ -316,15 +325,32 @@ def decide_next(plan: FleetPlan, visited: set, pos_xy: Sequence[float],
 
     sortie = plan.sorties[cur_k]
     remaining = [s for s in sortie.stations if s.sid not in visited]
-    started = len(remaining) < len(sortie.stations)   # 本架次已送过至少一站
 
-    if not started and not at_depot:
-        # 新架次还没出发而人不在中心：上一架次送完（或中途被拉走），
-        # 必须先回中心装货——不能从现场直接飞去送下一架次的站
+    def _remaining_need() -> float:
+        """从中心出发送完 remaining 并回中心所需电量（与离线同模型同公式）。"""
+        frac = 0.0
+        cur = depot
+        carried = sum(s.weight_kg for s in remaining)
+        for s in sortie.stations:
+            if s.sid in visited:
+                continue
+            frac += model.leg_frac(dist(cur, (s.x, s.y)), carried,
+                                   cfg.cruise_speed_ms)
+            frac += model.hover_frac(carried, cfg.hover_s)
+            carried -= s.weight_kg
+            cur = (s.x, s.y)
+        frac += model.leg_frac(dist(cur, depot), carried, cfg.cruise_speed_ms)
+        return frac
+
+    if at_depot:
+        # 在中心：电量不够飞完剩余账目就先换电。中途低电返仓到站后
+        # 同样落进这一分支进入 swap，不再要求"本架次还没开始"
+        if battery_frac < _remaining_need():
+            return _act("swap", cur_k, None)
+    elif not departed:
+        # 不在中心且本架次还没装货离仓：上一架次送完停在现场（或被
+        # 拉走），必须先回中心装货——不能从现场直接飞去送
         return _act("return_to_depot", cur_k, depot_t)
-    if not started and at_depot and battery_frac < sortie.energy_frac:
-        # 在中心但电量不够飞完新架次的计划账目：先换电
-        return _act("swap", cur_k, None)
 
     nxt = remaining[0]
     carried = sum(s.weight_kg for s in remaining)

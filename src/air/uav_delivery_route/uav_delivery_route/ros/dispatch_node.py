@@ -63,6 +63,8 @@ class DispatchNode(Node):
         self.confirm_s = float(p("confirm_s"))
         self._near_since: float | None = None   # 进入当前目标半径的时刻
         self._swap_until: float = 0.0           # 换电等待截止时刻
+        self._departed: bool = False            # 本架次已装货离仓（decide_next 用）
+        self._cur_sortie: int = 0               # 当前架次号，切换时复位 departed
 
         self.create_subscription(Odometry, str(p("odom_topic")), self._on_odom, 10)
         self.create_subscription(Float32, str(p("battery_topic")), self._on_battery, 10)
@@ -95,8 +97,7 @@ class DispatchNode(Node):
             return
         self._swap_until = 0.0
 
-        d = decide_next(self.plan, self.visited, self.pos,
-                        self.battery, self.model, self.cfg)
+        d = self._decide()
 
         if d["action"] == "deliver" and d.get("target") is not None:
             tgt = d["target"]
@@ -108,8 +109,7 @@ class DispatchNode(Node):
                 elif now - self._near_since >= self.confirm_s:
                     self.visited.add(tgt["sid"])
                     self._near_since = None
-                    d = decide_next(self.plan, self.visited, self.pos,
-                                    self.battery, self.model, self.cfg)
+                    d = self._decide()
             else:
                 self._near_since = None
         else:
@@ -120,6 +120,23 @@ class DispatchNode(Node):
             self.get_logger().info("swap: waiting %.0f s at depot"
                                    % self.cfg.swap_s)
         self._publish(d)
+
+    def _decide(self) -> dict:
+        """带 departed/架次切换维护的判定薄壳。
+
+        departed = 本架次货物已装并已离仓：deliver 动作即置位；架次号
+        变化（上一架次送完进入下一架次）时复位。中途返仓回中心后由
+        decide_next 的"在中心看剩余账目"分支进入 swap，不需要复位。
+        """
+        d = decide_next(self.plan, self.visited, self.pos,
+                        self.battery, self.model, self.cfg,
+                        departed=self._departed)
+        if d["sortie"] >= 0 and d["sortie"] != self._cur_sortie:
+            self._cur_sortie = d["sortie"]
+            self._departed = False
+        if d["action"] == "deliver":
+            self._departed = True
+        return d
 
     def _publish(self, d: dict) -> None:
         tgt = d.get("target")

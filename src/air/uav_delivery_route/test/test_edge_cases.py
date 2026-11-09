@@ -105,8 +105,9 @@ def test_decide_next_deliver_swap_done():
     visited: set = set()
     d = decide_next(plan, visited, (0.0, 0.0), 1.0, MODEL, CFG)
     assert d["action"] == "deliver" and d["target"]["sid"] == "S1"
-    # 电量告急：低于 1.25 x 返航所需 -> 建议回中心换电
-    d = decide_next(plan, {"S1"}, (400.0, 0.0), 0.05, MODEL, CFG)
+    # 电量告急：低于 1.25 x 返航所需 -> 建议回中心换电（已离仓在途）
+    d = decide_next(plan, {"S1"}, (400.0, 0.0), 0.05, MODEL, CFG,
+                    departed=True)
     assert d["action"] == "return_for_swap" and d["target"]["sid"] == "depot"
     # 全部服务完 -> done
     d = decide_next(plan, {"S1", "S2"}, (0.0, 0.0), 1.0, MODEL, CFG)
@@ -165,4 +166,50 @@ def test_decide_next_returns_to_depot_between_sorties():
     d = decide_next(plan, {"A", "B"}, (5701.0, 0.0), 0.5, MODEL, CFG)
     assert d["action"] == "return_to_depot"
     d = decide_next(plan, {"A", "B"}, (0.0, 0.0), 0.5, MODEL, CFG)
+    assert d["action"] == "done" and d["done"]
+
+
+def test_decide_next_first_sortie_en_route_delivers():
+    # 评审复现：单站满电，(0,0) 给 deliver；离仓在途不能被误判成
+    # "新架次还没出发"而要求返仓——首次投递必须能完成。
+    # departed 语义 = 本架次已装货离仓，节点在发出 deliver 时置位。
+    A = Station("A", 100.0, 0.0, 0.5)
+    case = Case("one", "single station", stations=(A,))
+    plan = plan_routes(case, CFG, MODEL)
+    assert plan.sortie_count == 1
+    # 在中心：装货出发
+    d = decide_next(plan, set(), (0.0, 0.0), 1.0, MODEL, CFG)
+    assert d["action"] == "deliver" and d["target"]["sid"] == "A"
+    # 刚离开 2 m 半径（节点已把 departed 置 True）：继续送，不许返仓
+    d = decide_next(plan, set(), (3.0, 0.0), 1.0, MODEL, CFG, departed=True)
+    assert d["action"] == "deliver" and d["target"]["sid"] == "A"
+    # 到站上空：仍然 deliver（由节点悬停确认后标记 visited）
+    d = decide_next(plan, set(), (100.0, 0.0), 1.0, MODEL, CFG, departed=True)
+    assert d["action"] == "deliver"
+    # 对照：同样位置但没装货离仓（上一架次被拉走）-> 必须先回中心
+    d = decide_next(plan, set(), (3.0, 0.0), 1.0, MODEL, CFG, departed=False)
+    assert d["action"] == "return_to_depot"
+
+
+def test_decide_next_mid_sortie_return_swaps_then_resumes():
+    # 评审复现：两站各 0.5 kg，送完 A 后中途低电返仓。到仓后必须进入
+    # swap（等待恢复），恢复后恢复同一架次继续送 B——而不是在原地
+    # 反复 return_for_swap（目标还是自己所在的仓库）。
+    A = Station("A", 100.0, 0.0, 0.5)
+    B = Station("B", 200.0, 0.0, 0.5)
+    case = Case("two", "two stations one sortie", stations=(A, B))
+    plan = plan_routes(case, CFG, MODEL)
+    assert plan.sortie_count == 1
+    # A、B 之间电量告急（低于 1.25 x 返航所需 + 去程）-> return_for_swap
+    d = decide_next(plan, {"A"}, (150.0, 0.0), 0.01, MODEL, CFG, departed=True)
+    assert d["action"] == "return_for_swap" and d["target"]["sid"] == "depot"
+    # 已经回到中心（哪怕本架次已 started）-> swap，等待换电
+    d = decide_next(plan, {"A"}, (0.0, 0.0), 0.01, MODEL, CFG, departed=True)
+    assert d["action"] == "swap" and d["sortie"] == 0
+    # 换电完成 -> 恢复同一架次（sortie 0）继续送 B
+    d = decide_next(plan, {"A"}, (0.0, 0.0), 1.0, MODEL, CFG, departed=True)
+    assert d["action"] == "deliver" and d["sortie"] == 0
+    assert d["target"]["sid"] == "B"
+    # B 送完回到中心 -> done
+    d = decide_next(plan, {"A", "B"}, (0.0, 0.0), 0.9, MODEL, CFG, departed=True)
     assert d["action"] == "done" and d["done"]
