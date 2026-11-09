@@ -187,6 +187,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
+* [winter 场景无人机圆周飞行](./air/winter_circle.md)
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
@@ -213,6 +214,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
+* [配置 AirSim 客户端环境并连接模拟器（Windows 本机 / WSL2）](./air/airsim_client_setup.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
@@ -231,6 +233,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
+* [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
