@@ -5,12 +5,14 @@ on:
     paths:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_slam_nav/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_slam_nav/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
 
@@ -47,3 +49,6 @@ jobs:
 
       - name: Byte-compile landing monitor scripts
         run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py
+
+      - name: Byte-compile slam_nav scripts
+        run: python3 -m py_compile src/air/uav_slam_nav/scripts/*.py
