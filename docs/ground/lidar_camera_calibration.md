@@ -83,7 +83,7 @@ $$
 
 | 话题 | 类型 | 说明 |
 | --- | --- | --- |
-| `/lidar_camera_calibration/extrinsics` | `std_msgs/String` | JSON：`rvec`、`t`、旋转/平移误差、重投影 RMSE、是否使用 `/camera_info` |
+| `/lidar_camera_calibration/extrinsics` | `std_msgs/String` | JSON 对象：`extrinsics`（内含 `rvec`、`t`、`frame`）、旋转/平移误差、重投影 RMSE、是否使用 `/camera_info` |
 
 ## 5. 运行步骤
 
@@ -202,7 +202,7 @@ ros2 topic pub -1 /camera_info sensor_msgs/msg/CameraInfo \
 
 1. `ros2 topic list | grep camera_info` 确认话题存在；
 2. `ros2 topic info <topic>` 确认类型是 `sensor_msgs/msg/CameraInfo`；
-3. 若相机内参不在 `/camera_info`，用 `-p camera_info_topic:=/your/topic` 指定。
+3. 若相机内参不在 `/camera_info`，用 `ros2 launch lidar_camera_calibration main.launch.py camera_info_topic:=/your/topic` 指定。
 
 ### 7.3 `ModuleNotFoundError: No module named 'lidar_camera_calibration'`
 

@@ -69,10 +69,10 @@ python3 -m lidar_camera_calibration.run_calibration --views 3
 | 平移误差 | 4.6 mm |
 | 重投影 RMSE | 2.35 px |
 
-摆位次数扫描（100 次蒙特卡洛中位数）：1 → 2.41°／4.2 cm，3 → 0.15°／3.2 mm，
-6 → 0.10°／2.1 mm。**单板共面时误差显著变大**，这是本模块最想说明的现象。
+摆位次数扫描（200 次蒙特卡洛中位数）：1 → 2.435°／4.28 cm，3 → 0.157°／3.2 mm，
+6 → 0.096°／2.1 mm。**单板共面时误差显著变大**，这是本模块最想说明的现象。
 
-噪声敏感性（3 摆位）：0 px + 0 cm → 0.11°／2.1 mm；2 px + 2 cm → 0.23°／4.8 mm。
+噪声敏感性（3 摆位，200 次中位数）：0 px + 0 cm → 0.107°／2.1 mm；2 px + 2 cm → 0.231°／4.8 mm。
 
 详细原理、参数与排错见
 [docs/ground/lidar_camera_calibration.md](../../../docs/ground/lidar_camera_calibration.md)。

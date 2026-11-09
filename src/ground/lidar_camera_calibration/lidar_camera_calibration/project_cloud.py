@@ -85,6 +85,7 @@ def main(argv=None) -> int:
     p.add_argument('--views', type=int, default=3)
     p.add_argument('--pixel-noise', type=float, default=1.0)
     p.add_argument('--range-noise', type=float, default=0.01)
+    p.add_argument('--trials', type=int, default=200)
     p.add_argument('--seed', type=int, default=0)
     ns = p.parse_args(sys.argv[1:] if argv is None else argv)
 
@@ -105,13 +106,13 @@ def main(argv=None) -> int:
 
     # 2) 噪声曲线
     from .calibration_core import noise_sweep, views_sweep
-    noise_rows = noise_sweep(trials=60, views=ns.views)
+    noise_rows = noise_sweep(trials=ns.trials, views=ns.views)
     noise_path = os.path.join(ns.out_dir, 'noise_sweep.png')
     _plot_noise(noise_rows, noise_path)
     print('噪声曲线: %s' % noise_path)
 
     # 3) 摆位次数曲线
-    view_rows = views_sweep(trials=60)
+    view_rows = views_sweep(trials=ns.trials)
     views_path = os.path.join(ns.out_dir, 'views_sweep.png')
     _plot_views(view_rows, views_path)
     print('摆位曲线: %s' % views_path)

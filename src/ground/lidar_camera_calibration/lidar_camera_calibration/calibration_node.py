@@ -128,10 +128,11 @@ class LidarCameraCalibrationNode(Node):
         self.get_logger().info(
             '标定完成: 旋转误差 %.3f°，平移误差 %.4f m，重投影 RMSE %.3f px'
             % (res.rot_error_deg, res.trans_error_m, res.rmse_px))
-        self.get_logger().info('估计外参: %s' % matrix_to_text(res.R_est, res.t_est))
+        ext_text = matrix_to_text(res.R_est, res.t_est)
+        self.get_logger().info('估计外参: %s' % ext_text)
 
         payload = {
-            'extrinsics': matrix_to_text(res.R_est, res.t_est),
+            'extrinsics': json.loads(ext_text),
             'rot_error_deg': round(res.rot_error_deg, 4),
             'trans_error_m': round(res.trans_error_m, 5),
             'rmse_px': round(res.rmse_px, 4),
