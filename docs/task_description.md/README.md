@@ -26,7 +26,9 @@ src/chap5/privacy_mask/
 
 ├── resource/
 
-│   └── privacy_mask
+│   ├── privacy_mask
+
+│   └── test.png
 
 ├── package.xml
 
@@ -42,16 +44,24 @@ docs/
 
 ├── README.md
 
-└── privacy_mask_demo.gif
+├── 原始输入图像.png
+
+├── YOLOv8n行人检测结果.png
+
+└── 高斯模糊隐私脱敏输出.png
 
 ## 依赖环境
 - ROS2 Humble
 - OpenCV-Python
-- ultralytics（YOLOv8）
+- ultralytics (YOLOv8)
 - rclpy、sensor_msgs
 
-## 运行步骤
+安装pip依赖：
 ```bash
+pip install ultralytics opencv-python
+```
+## 运行步骤
+```python
 colcon build --packages-select privacy_mask
 source install/setup.bash
 ros2 launch privacy_mask privacy_mask.launch.py
