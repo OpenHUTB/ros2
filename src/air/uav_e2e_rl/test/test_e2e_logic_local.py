@@ -78,5 +78,38 @@ class TestClip(unittest.TestCase):
         self.assertEqual(L.clip_action(-1.0, -9.0), (0.0, -1.0))
 
 
+class TestDeploySafety(unittest.TestCase):
+    """钉住部署端的深度急停和参数读取，防止再被 review 指出。"""
+
+    def _read(self, name):
+        path = os.path.join(PKG, "uav_e2e_rl", name)
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_deploy_subscribes_depth(self):
+        src = self._read("deploy_node.py")
+        self.assertIn('"/camera/depth"', src)
+
+    def test_deploy_has_emergency_stop(self):
+        src = self._read("deploy_node.py")
+        self.assertIn("is_collision", src)
+        self.assertIn("_publish_zero", src)
+        self.assertIn("collision_depth", src)
+
+    def test_deploy_uses_ament_index(self):
+        src = self._read("deploy_node.py")
+        self.assertIn("get_package_share_directory", src)
+        self.assertNotIn("catkin_ws", src)
+
+    def test_train_env_reads_ros_params(self):
+        src = self._read("train_env.py")
+        self.assertIn("get_parameter", src)
+        self.assertIn("declare_parameter", src)
+
+    def test_no_cv2_dependency(self):
+        for name in ("e2e_logic.py", "deploy_node.py", "train_env.py"):
+            self.assertNotIn("import cv2", self._read(name))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -25,7 +25,8 @@ class UAVEndToEndEnv(Env):
 
     def __init__(self, node=None):
         super().__init__()
-        self.cfg = dict(L.DEFAULT_CFG)
+        self._node = node or rclpy.create_node("e2e_rl_train")
+        self.cfg = self._load_cfg()
         self.observation_space = spaces.Box(
             low=0.0, high=1.0,
             shape=(1, self.cfg["img_h"], self.cfg["img_w"]), dtype=np.float32)
@@ -40,12 +41,22 @@ class UAVEndToEndEnv(Env):
         self._step = 0
         self._got_image = False
 
-        self._node = node or rclpy.create_node("e2e_rl_train")
         self._cmd = self._node.create_publisher(Twist, "/uav/cmd_vel", 10)
         self._node.create_subscription(Image, "/camera/image_raw", self._img_cb, 10)
         self._node.create_subscription(Image, "/camera/depth", self._depth_cb, 10)
         self._node.create_subscription(Odometry, "/uav/odom", self._odom_cb, 10)
         self._rate = self._node.create_rate(10.0)
+
+    def _load_cfg(self):
+        """从 ROS 参数读配置，没声明的参数保持 DEFAULT_CFG 里的值。"""
+        cfg = dict(L.DEFAULT_CFG)
+        names = ("img_w", "img_h", "forward_gain", "collision_penalty",
+                 "yaw_penalty", "collision_depth", "max_steps")
+        for name in names:
+            if not self._node.has_parameter(name):
+                self._node.declare_parameter(name, cfg[name])
+            cfg[name] = self._node.get_parameter(name).value
+        return cfg
 
     def _img_cb(self, msg: Image):
         self._img = L.preprocess_image(
@@ -105,26 +116,33 @@ class UAVEndToEndEnv(Env):
 
 
 def main():
-    import argparse
-    p = argparse.ArgumentParser()
-    p.add_argument("--timesteps", type=int, default=100000)
-    p.add_argument("--n-steps", type=int, default=256)
-    p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--out", default="")
-    args = p.parse_args()
-
     rclpy.init()
     from stable_baselines3 import PPO
     env = UAVEndToEndEnv()
+
+    node = env._node
+    node.declare_parameter("timesteps", 100000)
+    node.declare_parameter("n_steps", 256)
+    node.declare_parameter("batch_size", 64)
+    node.declare_parameter("learning_rate", 3e-4)
+    node.declare_parameter("seed", 42)
+    node.declare_parameter("out", "/tmp/ppo_e2e.zip")
+
+    timesteps = int(node.get_parameter("timesteps").value)
+    n_steps = int(node.get_parameter("n_steps").value)
+    batch_size = int(node.get_parameter("batch_size").value)
+    lr = float(node.get_parameter("learning_rate").value)
+    seed = int(node.get_parameter("seed").value)
+    out = node.get_parameter("out").value
+
     model = PPO("CnnPolicy", env, verbose=1,
-                n_steps=args.n_steps, batch_size=64,
-                learning_rate=3e-4, seed=args.seed,
+                n_steps=n_steps, batch_size=batch_size,
+                learning_rate=lr, seed=seed,
                 policy_kwargs=dict(normalize_images=False))
-    model.learn(total_timesteps=args.timesteps)
-    out = args.out or "/tmp/ppo_e2e.zip"
+    model.learn(total_timesteps=timesteps)
     model.save(out)
-    env._node.get_logger().info(f"saved: {out}")
-    env._node.destroy_node()
+    node.get_logger().info(f"saved: {out}")
+    node.destroy_node()
     rclpy.shutdown()
 
 
