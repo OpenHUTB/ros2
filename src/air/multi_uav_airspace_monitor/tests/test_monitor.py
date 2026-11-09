@@ -1,4 +1,10 @@
+import contextlib
+import io
+import json
+import os
+import tempfile
 import unittest
+from pathlib import Path
 
 from multi_uav_airspace_monitor.monitor import (
     UAVTrack,
@@ -8,6 +14,8 @@ from multi_uav_airspace_monitor.monitor import (
     pairwise_conflicts,
 )
 from multi_uav_airspace_monitor.scenario import build_demo_scenario
+
+import main as cli
 
 
 class MonitorTest(unittest.TestCase):
@@ -81,6 +89,94 @@ class MonitorTest(unittest.TestCase):
         track_b = UAVTrack("b", [0, 10], [[50, 0, 20], [-50, 0, 20]])
         with self.assertRaises(ValueError):
             pairwise_conflicts([track_a, track_b], horizon_s=0.0)
+
+    def test_warning_only_conflict_reports_warning(self):
+        # 两机保持 20 m 平行飞行：介于 critical(10) 与 warning(30) 之间，
+        # 状态应为 warning 而不是 critical。
+        summary = evaluate_scenario(
+            {
+                "horizon_s": 20.0,
+                "warning_distance_m": 30.0,
+                "critical_distance_m": 10.0,
+                "uavs": [
+                    {"id": "a", "times": [0, 20], "positions": [[0, 0, 20], [40, 0, 20]]},
+                    {"id": "b", "times": [0, 20], "positions": [[0, 20, 20], [40, 20, 20]]},
+                ],
+            }
+        )
+        self.assertEqual(summary["status"], "warning")
+        self.assertEqual([item["severity"] for item in summary["conflicts"]], ["warning"])
+
+    def test_minimum_separation_is_measured_inside_horizon(self):
+        # 全段最小间隔 0 m 出现在 20 s，但 horizon 只到 10 s：窗口内最近 50 m。
+        # minimum_separation_m 必须与 conflicts 用同一个窗口，否则会出现
+        # “status=safe 但 minimum_separation_m=0” 的自相矛盾输出。
+        times = [0.0, 20.0]
+        summary = evaluate_scenario(
+            {
+                "horizon_s": 10.0,
+                "warning_distance_m": 30.0,
+                "critical_distance_m": 10.0,
+                "uavs": [
+                    {"id": "a", "times": times, "positions": [[0, 0, 20], [0, 0, 20]]},
+                    {"id": "b", "times": times, "positions": [[100, 0, 20], [0, 0, 20]]},
+                ],
+            }
+        )
+        self.assertEqual(summary["status"], "safe")
+        self.assertEqual(summary["conflicts"], [])
+        self.assertAlmostEqual(summary["minimum_separation_m"], 50.0, places=3)
+        self.assertAlmostEqual(summary["minimum_separation_full_m"], 0.0, places=3)
+
+    def test_empty_scenario_is_rejected(self):
+        with self.assertRaises(ValueError):
+            evaluate_scenario({"uavs": []})
+        with self.assertRaises(ValueError):
+            evaluate_scenario({})
+
+    def test_check_command_exit_codes(self):
+        crossing = {
+            "horizon_s": 20.0,
+            "warning_distance_m": 30.0,
+            "critical_distance_m": 10.0,
+            "uavs": [
+                {"id": "a", "times": [0, 20], "positions": [[-50, 0, 20], [50, 0, 20]]},
+                {"id": "b", "times": [0, 20], "positions": [[50, 0, 20], [-50, 0, 20]]},
+            ],
+        }
+        far_apart = {
+            "horizon_s": 20.0,
+            "warning_distance_m": 30.0,
+            "critical_distance_m": 10.0,
+            "uavs": [
+                {"id": "a", "times": [0, 20], "positions": [[0, 0, 20], [20, 0, 20]]},
+                {"id": "b", "times": [0, 20], "positions": [[0, 400, 20], [20, 400, 20]]},
+            ],
+        }
+        for scenario, expected, status in (
+            (crossing, 1, "critical"),
+            (far_apart, 0, "safe"),
+        ):
+            handle, path = tempfile.mkstemp(suffix=".json", dir=os.path.dirname(__file__))
+            os.close(handle)
+            try:
+                Path(path).write_text(json.dumps(scenario), encoding="utf-8")
+                buffer = io.StringIO()
+                with contextlib.redirect_stdout(buffer):
+                    code = cli.run_check(Path(path))
+                self.assertEqual(code, expected)
+                self.assertEqual(json.loads(buffer.getvalue())["status"], status)
+            finally:
+                os.remove(path)
+
+        handle, path = tempfile.mkstemp(suffix=".json", dir=os.path.dirname(__file__))
+        os.close(handle)
+        try:
+            Path(path).write_text("{not json", encoding="utf-8")
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.run_check(Path(path)), 2)
+        finally:
+            os.remove(path)
 
 
 if __name__ == "__main__":

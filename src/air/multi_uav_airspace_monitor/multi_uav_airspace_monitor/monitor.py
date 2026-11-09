@@ -208,7 +208,7 @@ def pairwise_conflicts(
         raise ValueError("step_s must be positive")
     conflicts: list[Conflict] = []
     for index, track_a in enumerate(tracks):
-        for track_b in tracks[index + 1 :]:
+        for track_b in tracks[index + 1:]:
             times, positions_a, positions_b = _interpolate_pair(
                 track_a, track_b, step_s, horizon_s
             )
@@ -246,8 +246,36 @@ def _resolution_advisory(uav_a: str, uav_b: str, severity: str) -> str:
     return f"{uav_b}: reduce speed by 10% and maintain visual separation from {uav_a}"
 
 
+def _separations(
+    tracks: Sequence[UAVTrack], step_s: float, horizon_s: float | None
+) -> list[float]:
+    """Sample every pair on the same time window and collect pairwise distances."""
+    distances: list[float] = []
+    for index, track_a in enumerate(tracks):
+        for track_b in tracks[index + 1:]:
+            times, positions_a, positions_b = _interpolate_pair(
+                track_a, track_b, step_s, horizon_s
+            )
+            if len(times):
+                distances.extend(
+                    np.linalg.norm(positions_a - positions_b, axis=1).tolist()
+                )
+    return distances
+
+
 def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
-    """Evaluate a complete scenario dictionary and return a JSON-ready summary."""
+    """Evaluate a complete scenario dictionary and return a JSON-ready summary.
+
+    ``minimum_separation_m`` is measured inside the same ``horizon_s`` window the
+    conflict detector uses, so the number never contradicts ``conflicts``. The
+    whole common interval is reported separately as ``minimum_separation_full_m``.
+    """
+    if not isinstance(scenario, dict):
+        raise ValueError("scenario must be a mapping")
+    uavs = scenario.get("uavs")
+    if not uavs:
+        raise ValueError("scenario must contain at least one UAV track in 'uavs'")
+
     zones = [
         Zone(
             name=item["name"],
@@ -264,8 +292,11 @@ def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
             times=item["times"],
             positions=item["positions"],
         )
-        for item in scenario["uavs"]
+        for item in uavs
     ]
+
+    horizon_s = float(scenario.get("horizon_s", 10.0))
+    step_s = float(scenario.get("step_s", 0.25))
 
     alerts: list[Alert] = []
     for track in tracks:
@@ -273,32 +304,39 @@ def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
 
     conflicts = pairwise_conflicts(
         tracks,
-        horizon_s=float(scenario.get("horizon_s", 10.0)),
+        horizon_s=horizon_s,
         warning_m=float(scenario.get("warning_distance_m", 30.0)),
         critical_m=float(scenario.get("critical_distance_m", 10.0)),
-        step_s=float(scenario.get("step_s", 0.25)),
+        step_s=step_s,
     )
 
-    all_separations = []
-    for index, track_a in enumerate(tracks):
-        for track_b in tracks[index + 1 :]:
-            times, positions_a, positions_b = _interpolate_pair(track_a, track_b, 0.5)
-            if len(times):
-                all_separations.extend(
-                    np.linalg.norm(positions_a - positions_b, axis=1).tolist()
-                )
+    window_separations = _separations(tracks, step_s, horizon_s)
+    full_separations = _separations(tracks, step_s, None)
 
-    status = "safe"
-    if conflicts or any(alert.severity == "critical" for alert in alerts):
+    critical = any(alert.severity == "critical" for alert in alerts) or any(
+        conflict.severity == "critical" for conflict in conflicts
+    )
+    warning = any(alert.severity == "warning" for alert in alerts) or any(
+        conflict.severity == "warning" for conflict in conflicts
+    )
+    if critical:
         status = "critical"
-    elif any(alert.severity == "warning" for alert in alerts):
+    elif warning:
         status = "warning"
+    else:
+        status = "safe"
 
     return {
         "status": status,
         "uav_count": len(tracks),
         "zone_count": len(zones),
-        "minimum_separation_m": round(min(all_separations), 3) if all_separations else None,
+        "horizon_s": round(horizon_s, 3),
+        "minimum_separation_m": round(min(window_separations), 3)
+        if window_separations
+        else None,
+        "minimum_separation_full_m": round(min(full_separations), 3)
+        if full_separations
+        else None,
         "alerts": [alert.as_dict() for alert in alerts],
         "conflicts": [conflict.as_dict() for conflict in conflicts],
     }

@@ -17,6 +17,7 @@ from multi_uav_airspace_monitor.visualize import render_scenario
 
 
 def run_demo(output_dir: Path) -> int:
+    """Render the built-in scenario; returns 0 whenever the demo completes."""
     output_dir.mkdir(parents=True, exist_ok=True)
     scenario = build_demo_scenario()
     summary = render_scenario(scenario, output_dir / "demo_screenshot.png")
@@ -26,7 +27,8 @@ def run_demo(output_dir: Path) -> int:
     print("==> multi_uav_airspace_monitor")
     print(f"    status={summary['status']}")
     print(f"    uavs={summary['uav_count']} zones={summary['zone_count']}")
-    print(f"    minimum_separation_m={summary['minimum_separation_m']}")
+    print(f"    minimum_separation_m={summary['minimum_separation_m']}"
+          f" (horizon {summary['horizon_s']} s)")
     print(f"    alerts={len(summary['alerts'])} conflicts={len(summary['conflicts'])}")
     for conflict in summary["conflicts"]:
         print(
@@ -36,14 +38,26 @@ def run_demo(output_dir: Path) -> int:
     for alert in summary["alerts"]:
         print(f"    {alert['severity']}: {alert['message']}")
     print(f"    screenshot: {output_dir / 'demo_screenshot.png'}")
-    return 0 if summary["conflicts"] and summary["alerts"] else 1
+    return 0
 
 
 def run_check(config_path: Path) -> int:
-    scenario = json.loads(config_path.read_text(encoding="utf-8"))
-    summary = evaluate_scenario(scenario)
+    """Evaluate a scenario JSON; returns 1 when the result is critical."""
+    try:
+        scenario = json.loads(config_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        print(f"cannot read {config_path}: {exc}", file=sys.stderr)
+        return 2
+    except json.JSONDecodeError as exc:
+        print(f"{config_path} is not valid JSON: {exc}", file=sys.stderr)
+        return 2
+    try:
+        summary = evaluate_scenario(scenario)
+    except (KeyError, ValueError) as exc:
+        print(f"invalid scenario {config_path}: {exc}", file=sys.stderr)
+        return 2
     print(json.dumps(summary, indent=2, ensure_ascii=False))
-    return 0 if summary["status"] in {"safe", "warning", "critical"} else 1
+    return 1 if summary["status"] == "critical" else 0
 
 
 def main() -> int:

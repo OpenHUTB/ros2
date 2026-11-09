@@ -17,11 +17,11 @@ ROS 2、AirSim 或 GPU；ROS 2 节点只是可选外壳。
 
 ## 功能
 
-- GeoJSON/JSON 多边形禁飞区，支持 `floor_z`、`ceiling_z` 和水平缓冲区。
+- JSON 多边形禁飞区（顶点列表），支持 `floor_z`、`ceiling_z` 和水平缓冲区。
 - 多架无人机的 ENU 轨迹输入，逐点检查电子围栏。
 - 两两无人机最近接近距离、冲突时刻、告警等级（时间窗内取最小距离）。
 - 确定性冲突解脱建议（爬升/减速），便于后续接入规划器。
-- 输出 JSON 摘要和 PNG 俯视图，适合直接放入 PR 的运行效果。
+- 输出 JSON 摘要和 PNG 俯视图，适合直接作为 PR 的运行效果。
 
 ## 运行环境
 
@@ -29,6 +29,7 @@ ROS 2、AirSim 或 GPU；ROS 2 节点只是可选外壳。
 - `numpy`
 - `Pillow`
 
+本机实际验证：Windows 11 `10.0.26200`、Python `3.12.14`、NumPy `2.3.5`、Pillow `12.3.0`。
 离线演示不需要 ROS 2、AirSim、Unreal 或 GPU。
 
 ```bash
@@ -41,36 +42,47 @@ python -m pip install -r requirements.txt
 
 ```bash
 cd src/air/multi_uav_airspace_monitor
-python main.py demo
+python main.py demo                          # 生成 results/ 下的截图与 JSON
+python main.py check --config scenario.json  # 评估自己的场景
+python main.py demo --output /tmp/out        # 换输出目录
 ```
 
-本机 Windows 11 + Python 3.12 的实际输出：
+`main.py demo` 的实际输出：
 
 ```text
 ==> multi_uav_airspace_monitor
     status=critical
     uavs=4 zones=1
-    minimum_separation_m=0.0
+    minimum_separation_m=0.0 (horizon 20.0 s)
     alerts=3 conflicts=1
     conflict uav_alpha vs uav_beta: 0.00 m at 20.00 s
     screenshot: results/demo_screenshot.png
 ```
 
-运行效果：
+运行效果（图存放在文档目录，`results/` 不进仓库）：
 
-![multi-UAV airspace monitor](results/demo_screenshot.png)
+![multi-UAV airspace monitor](../../../docs/air/multi_uav_airspace_monitor/demo_screenshot.png)
 
 图中两条对角航迹在中心交叉，圆形标记为机间冲突；红色多边形为禁飞区，
 `uav_gamma` 进入禁飞区，`uav_alpha` 与 `uav_beta` 在 20 s 时最近距离为 0 m。
 
+命令退出码：
+
+| 命令 | 退出码 |
+| --- | --- |
+| `demo` | 完成即 0（场景是否安全由测试断言，不影响退出码） |
+| `check` | `critical` 返回 1；`safe` / `warning` 返回 0；读不到或解析不了场景返回 2 |
+
 ## 测试
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v     # 本机 15 个测试，约 0.04 s
 ```
 
-当前 8 个测试覆盖点在多边形内/外/边界、点到边距离、经纬度往返、禁飞区高度层、
-迎头冲突、平行安全航迹和演示场景。
+覆盖点在多边形内/外/边界、点到边距离、经纬度往返、禁飞区高度层、缓冲区、
+迎头冲突、平行安全航迹、窗口内告警与窗口外更近的接近、非法 `horizon_s`、
+只有 warning 级冲突时的状态、`minimum_separation_m` 与冲突同窗口、
+空场景拒绝、`check` 命令退出码和演示场景。
 
 ## ROS 2 节点
 
@@ -126,7 +138,12 @@ ros2 launch multi_uav_airspace_monitor main.launch.py
 }
 ```
 
-坐标统一为局部 ENU：`x` 东、`y` 北、`z` 上，单位米。
+坐标统一为局部 ENU：`x` 东、`y` 北、`z` 上，单位米。`uavs` 不能为空，每条航迹
+至少两个采样点且时间严格递增。
+
+输出的 `minimum_separation_m` 与冲突检测使用同一个 `horizon_s` 时间窗，
+`minimum_separation_full_m` 才是整段公共区间的最近距离——两者不一致时，
+说明更近的接近发生在时间窗之外。
 
 ## 已知限制
 
@@ -139,5 +156,5 @@ ros2 launch multi_uav_airspace_monitor main.launch.py
 
 ## 大模型使用声明
 
-本模块的代码、测试和文档在 OpenAI Codex 辅助下完成；运行结果与截图来自本机
-Windows 11 + Python 3.12 的实际执行。提交者需复核代码并对提交内容负责。
+本模块的代码、测试和文档在 OpenAI Codex 辅助下完成；冲突重建、缺陷修复与截图
+来自本机 Windows 11 + Python 3.12 的实际执行。提交者需复核代码并对提交内容负责。
