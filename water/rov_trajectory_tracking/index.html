@@ -520,6 +520,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#72">7.2 自动化测试验证指令</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#73-ros">7.3 无 ROS 的离线回归评测（新增）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#74">7.4 异机复测记录</a>
+</li>
 </ul>
 </li>
 </ul>
@@ -1041,7 +1045,97 @@ ros2<span class="w"> </span>launch<span class="w"> </span>rov_mujoco<span class=
 <li><strong>Ubuntu 22.04</strong>：默认使用系统 Python 3.10 环境即可直接运行。</li>
 <li><strong>Ubuntu 20.04</strong>：需使用 Python 3.8 执行指令，以保证与 ROS 2 C-extension (<code>_rclpy_pybind11.cpython-38</code>) 的 ABI 兼容性。</li>
 </ul>
-</div></div>
+</div>
+<h3 id="73-ros">7.3 无 ROS 的离线回归评测（新增）</h3>
+<p>上面的测试与仿真都要求 ROS 2 和 MuJoCo，在没有 ROS 的机器（Windows、纯 Python 环境）上一步都跑不了。新增的离线评测把现有的 NN / LOS 控制器、轨迹生成器接到一个<strong>一阶速度响应代理</strong>上，只依赖 <code>numpy</code> 和 <code>matplotlib</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 在模块目录下</span>
+python3<span class="w"> </span>eval_offline.py<span class="w"> </span>--duration<span class="w"> </span><span class="m">60</span>
+python3<span class="w"> </span>eval_offline.py<span class="w"> </span>--controllers<span class="w"> </span>nn<span class="w"> </span>--trajectories<span class="w"> </span>3d_helix<span class="w"> </span>--duration<span class="w"> </span><span class="m">30</span>
+</code></pre></div>
+<p>代理模型为 <code>m·dv/dt = R(yaw)·[fx, fy, 0] + [0, 0, fz] − c·v</code>、<code>I·dω/dt = τz − c_yaw·ω</code>，<strong>不是 MuJoCo 的 6-DOF 水动力</strong>，因此结果只用于回归和相对比较，不能替代仿真结论。评测从偏离参考点约 1 m 的位置出发，考察收敛过程与稳态误差。</p>
+<table>
+<thead>
+<tr>
+<th>航迹 / 控制器</th>
+<th style="text-align: right;">RMSE (m)</th>
+<th style="text-align: right;">最大误差 (m)</th>
+<th style="text-align: right;">末段误差 (m)</th>
+<th style="text-align: right;">偏航 RMSE (rad)</th>
+<th style="text-align: right;">平均控制量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3D 螺旋 / NN</td>
+<td style="text-align: right;">0.133</td>
+<td style="text-align: right;">1.370</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">0.110</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>3D 螺旋 / LOS+PID</td>
+<td style="text-align: right;">0.112</td>
+<td style="text-align: right;">1.370</td>
+<td style="text-align: right;">0.027</td>
+<td style="text-align: right;">0.110</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>割草机 / NN</td>
+<td style="text-align: right;">0.122</td>
+<td style="text-align: right;">1.370</td>
+<td style="text-align: right;">0.077</td>
+<td style="text-align: right;">0.242</td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr>
+<td>割草机 / LOS+PID</td>
+<td style="text-align: right;">0.106</td>
+<td style="text-align: right;">1.371</td>
+<td style="text-align: right;">0.022</td>
+<td style="text-align: right;">0.246</td>
+<td style="text-align: right;">20</td>
+</tr>
+</tbody>
+</table>
+<p>两个控制器都能把 1.4 m 的初始偏差在约 4 秒内收敛到 0.1 m 以内，差别主要在稳态残差：LOS+PID 为 0.027 / 0.022 m，NN 约 8 cm。这更像是训练环境的差异——NN 权值在 MuJoCo 中训练，而代理模型没有推进器布置、附加水质量等效应，网络没有补偿掉这部分稳态偏差；不能据此认为 NN 在 MuJoCo 中更差，两者在真实仿真里的对比仍以第 4 节为准。</p>
+<p>评测可以作为<strong>回归门禁</strong>使用：任一组合超过给定 RMSE 即返回非零退出码。</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>eval_offline.py<span class="w"> </span>--duration<span class="w"> </span><span class="m">60</span><span class="w"> </span>--max-rmse<span class="w"> </span><span class="m">0</span>.2<span class="w">   </span><span class="c1"># 当前全部通过</span>
+</code></pre></div>
+<p><img alt="离线闭环误差曲线" src="img/water/rov_trajectory_tracking_offline.png"/></p>
+<p>指标写入 <code>results/offline_eval.json</code>，曲线写入 <code>results/offline_tracking.png</code>。对应单元测试不依赖 ROS：<code>python3 -m unittest discover -s test -p "test_offline_eval.py"</code>。</p>
+<h3 id="74">7.4 异机复测记录</h3>
+<p>本模块的离线评测在另一台机器上独立复跑过一次，用于确认「不依赖 ROS / 本机环境」这一点成立：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>复测环境</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统</td>
+<td>Ubuntu 22.04.5（WSL2）</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10.12</td>
+</tr>
+<tr>
+<td>NumPy</td>
+<td>1.21.5</td>
+</tr>
+</tbody>
+</table>
+<p>复测结论（与本文表格一致）：</p>
+<ul>
+<li><code>python3 -m unittest discover -s test -p "test_offline_eval.py" -v</code> → <code>Ran 6 tests in 0.529s</code>，<strong>6/6 通过</strong></li>
+<li><code>python3 eval_offline.py --duration 60 --max-rmse 0.2</code> → <code>GATE PASS</code>，退出码 0</li>
+<li>四组 RMSE 复现一致：3D 螺旋 NN 0.133 / LOS 0.112，割草机 NN 0.122 / LOS 0.106（m）</li>
+</ul>
+<p>复测环境与开发环境（Windows 10 + Python 3.11 + NumPy 1.24）不同，说明这套评测只依赖 <code>numpy</code> 与 <code>matplotlib</code>，不挑平台；但代理模型仍是运动学近似，结论范围见上一节的说明。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
