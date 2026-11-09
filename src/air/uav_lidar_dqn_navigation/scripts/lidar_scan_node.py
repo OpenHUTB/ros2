@@ -25,7 +25,9 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
 
-from lidar_features import FOV_DEG, MAX_RANGE, extract_scan, sector_distances  # noqa: E402
+from lidar_features import (  # noqa: E402
+    FOV_DEG, MAX_RANGE, extract_scan, scan_angle_max, sector_distances,
+)
 
 _client_dir = os.environ.get('AIRSIM_PYTHON_CLIENT')
 if _client_dir and _client_dir not in sys.path:
@@ -78,8 +80,10 @@ class LidarScanNode(object):
                 scan.header.stamp = rospy.Time.now()
                 scan.header.frame_id = self.frame
                 scan.angle_min = math.radians(-FOV_DEG / 2.0)
-                scan.angle_max = math.radians(FOV_DEG / 2.0)
                 scan.angle_increment = math.radians(FOV_DEG / self.bins)
+                scan.angle_max = scan_angle_max(scan.angle_min,
+                                                scan.angle_increment,
+                                                self.bins)
                 scan.range_min = 0.15
                 scan.range_max = MAX_RANGE
                 scan.ranges = ranges.tolist()

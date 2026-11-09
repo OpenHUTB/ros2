@@ -7,7 +7,7 @@ DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。
 自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
 专家轨迹。
 
-本页先说明模块总体设计与已落地的键盘遥控（PR #892）；雷达感知、DQN 训练与部署、
+本页说明模块总体设计、键盘遥控（PR #892）与雷达感知（PR #893）；DQN 训练与部署、
 建图、端到端控制按依赖顺序在后续 PR 中补充。
 
 ## 1 运行环境
@@ -42,6 +42,9 @@ flowchart LR
     A[AirSim Blocks] -- msgpack-rpc --> B[drone_bridge]
     B -- /drone/odom, /drone/state --> C[teleop_keyboard]
     C -- /drone/cmd_vel --> B
+    A -- lidar_1 点云 --> D[lidar_scan_node]
+    D -- /drone/lidar/sectors --> E[DQN 控制（后续 PR）]
+    D -- /drone/lidar/scan --> F[gmapping（后续 PR）]
 ```
 
 桥接节点是模块唯一的 AirSim 客户端：它把 ROS 的机体系速度指令翻译成 AirSim 的
@@ -77,17 +80,44 @@ $$
 起飞与降落调用桥接节点提供的 `/drone/takeoff`、`/drone/land` 服务；高度由
 `moveByVelocityZAsync` 保持，避免松键后掉高。
 
-## 4 话题与服务
+## 4 雷达感知
+
+AirSim 的 `lidar_1` 水平视场 ±90°、16 线、量程 40 m。原始点云无法直接作为
+控制输入，也不可能直接扔给 SLAM —— 旋转式雷达单帧只覆盖一小段水平角。因此
+`lidar_features.py` 提供两种压缩方式：
+
+- **24 扇区特征**：把 ±90° 等分 24 份，每份取最近命中距离并除以量程，
+  得到 1 表示通畅、趋近 0 表示贴脸的归一化向量。位移与旋转不变性由机体系
+  表达保证，DQN 用它做局部避障。
+- **180° 扫描**：`extract_scan()` 把累积 1 秒的点云按角度装进 180 个 bin，
+  无命中的角度填 `max_range`，生成标准 `sensor_msgs/LaserScan` 供建图使用。
+
+扫描的角度参数按采样点计算：`angle_min = -90°`、`angle_increment = 1°`，
+最后一个采样点为 `angle_min + (bins - 1) * angle_increment = +89°`，
+即 180 个点覆盖 `[-90°, +89°]`，而不是 `[-90°, +90°]`。
+
+`scan.launch` 同时发布 `odom->base_link`（桥接节点，`publish_tf:=true`）和
+`base_link->laser`（静态 TF，雷达位于机体中心下方 0.5 m），因此单独检出本
+PR 即可在 RViz 中查看扫描；`map->odom` 要等 #922 的 gmapping 提供。
+
+```bash
+roslaunch uav_lidar_dqn_navigation main.launch mode:=scan
+rosrun rviz rviz   # Fixed Frame 选 odom，添加 LaserScan 订阅 /drone/lidar/scan
+```
+
+## 5 话题与服务
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
 | `/drone/cmd_vel` | geometry_msgs/Twist | 机体系速度指令 |
 | `/drone/odom` | nav_msgs/Odometry | ENU 位姿与速度 |
 | `/drone/state` | std_msgs/Float32MultiArray | NED 原始状态 |
+| `/drone/lidar/scan` | sensor_msgs/LaserScan | 180° 累积扫描 |
+| `/drone/lidar/sectors` | std_msgs/Float32MultiArray | 24 维扇区距离 |
 | `/drone/takeoff` | std_srvs/Trigger | 起飞 |
 | `/drone/land` | std_srvs/Trigger | 降落 |
 
-## 5 后续 PR
+## 6 后续 PR
 
 | PR | 内容 |
 | --- | --- |

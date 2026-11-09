@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 from lidar_features import (  # noqa: E402
     FOV_DEG, MAX_RANGE, NUM_SECTORS, STATE_DIM, build_state, extract_scan,
-    goal_state, min_obstacle_distance, sector_distances, velocity_state,
+    goal_state, min_obstacle_distance, scan_angle_max, sector_distances,
+    velocity_state,
 )
 
 
@@ -83,6 +84,17 @@ class TestScanAndState(unittest.TestCase):
     def test_min_obstacle(self):
         pts = np.array([[2.5, 0.0, 0.0]], dtype=np.float32)
         self.assertAlmostEqual(min_obstacle_distance(pts), 2.5, places=4)
+
+    def test_scan_angle_max_uses_bins_minus_one(self):
+        # 180 个 1° 的采样点覆盖 [-90°, +89°]，而不是 [-90°, +90°]
+        angle_min = math.radians(-FOV_DEG / 2.0)
+        angle_increment = math.radians(FOV_DEG / 180.0)
+        angle_max = scan_angle_max(angle_min, angle_increment, 180)
+        self.assertAlmostEqual(math.degrees(angle_max), 89.0, places=6)
+        self.assertAlmostEqual(
+            math.degrees(angle_min + angle_increment * 180), 90.0, places=6)
+        points = int(round((angle_max - angle_min) / angle_increment)) + 1
+        self.assertEqual(points, 180)
 
 
 if __name__ == '__main__':

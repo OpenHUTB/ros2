@@ -126,6 +126,16 @@ def extract_scan(points, bins=180, fov_deg=FOV_DEG, max_range=MAX_RANGE):
     return ranges
 
 
+def scan_angle_max(angle_min, angle_increment, bins):
+    """LaserScan 的 angle_max：bins 个采样点里最后一个点的角度。
+
+    ROS 的约定是 angle_max = angle_min + (bins - 1) * angle_increment，
+    180 个 1° 的点覆盖 [-90°, +89°]，写成 +90° 会让消费者按
+    (max - min) / increment + 1 算出 181 个点。
+    """
+    return angle_min + angle_increment * (bins - 1)
+
+
 def yaw_from_quaternion(q):
     """AirSim 四元数（NED）-> 偏航角（弧度，顺时针为正）。"""
     x, y, z, w = q.x_val, q.y_val, q.z_val, q.w_val

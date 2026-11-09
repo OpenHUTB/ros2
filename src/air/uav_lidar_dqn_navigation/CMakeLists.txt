@@ -17,10 +17,21 @@ catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/drone_bridge.py
   scripts/teleop_keyboard.py
-  scripts/lidar_features.py
   scripts/lidar_scan_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+# lidar_features 是被 import 的模块，不是可执行入口：
+# 若放进 catkin_install_python，catkin 会为它生成 wrapper，
+# `from lidar_features import ...` 实际拿到的是 wrapper 而不是源码。
+install(FILES
+  scripts/lidar_features.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_nosetests(test)
+endif()
 
 install(DIRECTORY launch config models maps
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
