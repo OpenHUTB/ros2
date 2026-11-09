@@ -140,6 +140,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
+* [ROS2 差速机器人卡死检测与自动脱困](./ground/ros2_stuck_recovery/index.md) —— 用指令/里程计/IMU/测距的一致性区分顶住、打滑、单轮悬空，分级执行倒车-转向-试探脱困，3 级失败停车上报；7 个场景 × 10 种子可离线复现
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
