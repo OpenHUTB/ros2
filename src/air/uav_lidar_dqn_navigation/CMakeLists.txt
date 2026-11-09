@@ -30,7 +30,8 @@ install(FILES
 )
 
 if(CATKIN_ENABLE_TESTING)
-  catkin_add_nosetests(test)
+  # 指向具体测试文件：部分环境里 nosetests 对目录收集会漏掉用例
+  catkin_add_nosetests(test/test_lidar_features.py)
 endif()
 
 install(DIRECTORY launch config models maps
