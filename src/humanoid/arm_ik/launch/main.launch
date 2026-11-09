@@ -1,0 +1,12 @@
+<launch>
+  <!-- 人形机器人手臂逆运动学演示：正运动学、三种逆解、可操作性分析 -->
+  <arg name="outdir" default="$(find arm_ik)/output" />
+
+  <!-- 注意：main.py 是普通 Python 脚本，不是 ROS 节点。
+       本 launch 文件仅作为 ROS 封装入口，便于用 roslaunch 统一启动。 -->
+  <node pkg="arm_ik"
+        type="main.py"
+        name="arm_ik_demo"
+        output="screen"
+        args="--outdir $(arg outdir)" />
+</launch>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>arm_ik</name>
+  <version>0.1.0</version>
+  <description>
+    人形机器人手臂逆运动学：7 自由度（肩3+肘1+腕3）DH 正运动学、
+    几何雅可比、伪逆/阻尼最小二乘/零空间三种逆解、Yoshikawa 可操作性分析。
+    纯 Python 实现，仅依赖 numpy + matplotlib。
+  </description>
+
+  <maintainer email="xjm666god@users.noreply.github.com">xjm666god</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+
+  <export>
+  </export>
+</package>
