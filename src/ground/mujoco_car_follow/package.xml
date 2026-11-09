@@ -2,13 +2,14 @@
 <package format="2">
   <name>mujoco_car_follow</name>
   <version>0.0.0</version>
-  <description>MuJoCo小车跟车项目：引导车走S形曲线，跟随车自动保持0.5米距离跟车</description>
+  <description>MuJoCo小车跟车项目：引导车走S形曲线，跟随车通过PD控制保持0.5米车心距跟车</description>
   <maintainer email="352797580@qq.com">Ri-kin08</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_python</buildtool_depend>
 
+  <build_depend>ament_cmake_python</build_depend>
+  <exec_depend>ament_cmake_python</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
 
