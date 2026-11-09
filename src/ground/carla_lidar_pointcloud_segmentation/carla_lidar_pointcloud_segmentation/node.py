@@ -226,7 +226,7 @@ def main(argv=None):
         'traffic': '12',
         'lidar_range': '60.0',
         'channels': '32',
-        'points_per_second': '600000',
+        'points_per_second': '200000',
         'rotation': '20.0',
         'lidar_height': '2.4',
         'corridor_width': '1.2',

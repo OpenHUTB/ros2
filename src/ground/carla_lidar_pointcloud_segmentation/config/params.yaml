@@ -17,7 +17,7 @@ lidar_segmentation_node:
     # 激光雷达（普通与语义两台必须一致，否则点对不上）
     lidar_range: "60.0"
     channels: "32"
-    points_per_second: "600000"
+    points_per_second: "200000"   # 与采集、训练保持同一密度；调大更密也更吃 CPU
     rotation: "20.0"
     lidar_height: "2.4"
 

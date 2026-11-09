@@ -101,25 +101,35 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
         print('[连接] keep_map 已开启，跳过重载，沿用当前地图 %s（请求的是 %s）'
               % (current, town))
     else:
-        print('[连接] 正在加载地图 %s（当前 %s），最长等 %.0f s...'
-              % (town, current or '未知', LOAD_WORLD_TIMEOUT))
-        client.set_timeout(max(timeout, LOAD_WORLD_TIMEOUT))
-        try:
-            world = client.load_world(town)
-            print('[连接] 地图加载完成')
-        except Exception as exc:      # noqa: BLE001
-            recovered = _attach_existing(host, port, timeout)
-            if recovered is None:
-                raise RuntimeError(
-                    '加载地图 %s 失败（%s），服务端已无响应。请先重启 CARLA。\n'
-                    '如果只想在已加载的地图上跑，加 --keep-map'
-                    '（launch 时用 keep_map:=true）跳过地图重载。' % (town, exc)) from exc
-            client, world = recovered
-            print('[连接] 加载地图 %s 失败（%s），已重建连接并沿用当前地图 %s 继续。'
-                  '要真正切换地图，请重启 CARLA、或在服务端手动切好地图后重试。'
-                  % (town, exc, world.get_map().name))
-        finally:
-            client.set_timeout(timeout)
+        if current is None:
+            raise RuntimeError('读不到服务端当前地图，请确认 CARLA 已启动、host 与 port 正确')
+        maps = _available_maps(client)
+        missing = maps is not None and not any(_same(item, town) for item in maps)
+        if missing:
+            # 资源不存在时盲目加载只会把服务端拖到无响应，直接沿用当前地图。
+            world = client.get_world()
+            print('[连接] 服务端没有地图 %s 的资源（可用：%s），跳过重载，继续用当前地图 %s'
+                  % (town, ', '.join(item.rsplit('/', 1)[-1] for item in maps), current))
+        else:
+            print('[连接] 正在加载地图 %s（当前 %s），最长等 %.0f s...'
+                  % (town, current or '未知', LOAD_WORLD_TIMEOUT))
+            client.set_timeout(max(timeout, LOAD_WORLD_TIMEOUT))
+            try:
+                world = client.load_world(town)
+                print('[连接] 地图加载完成')
+            except Exception as exc:      # noqa: BLE001
+                recovered = _attach_existing(host, port, timeout)
+                if recovered is None:
+                    raise RuntimeError(
+                        '加载地图 %s 失败（%s），服务端已无响应。请先重启 CARLA。\n'
+                        '如果只想在已加载的地图上跑，加 --keep-map'
+                        '（launch 时用 keep_map:=true）跳过地图重载。' % (town, exc)) from exc
+                client, world = recovered
+                print('[连接] 加载地图 %s 失败（%s），已重建连接并沿用当前地图 %s 继续。'
+                      '要真正切换地图，请重启 CARLA、或在服务端手动切好地图后重试。'
+                      % (town, exc, world.get_map().name))
+            finally:
+                client.set_timeout(timeout)
 
     if sync:
         settings = world.get_settings()

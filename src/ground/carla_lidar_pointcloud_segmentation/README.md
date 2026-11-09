@@ -154,6 +154,12 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     python3.10 main.py --demo --keep-map --checkpoint models/seg_mlp.npz
     CARLA_KEEP_MAP=1 ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
 
+`colcon build` 会把 `package.xml`、`main.py`、`launch`、`config` 和 `models` 一起装到
+`install/<pkg>/share/<pkg>/`，节点的默认权重从 share 目录取绝对路径，所以在任意目录下
+`ros2 run` 都能找到模型。
+
+采集、演示和节点默认都按 20 万点/秒，与训练数据保持同一密度；调大会更密，也更吃 CPU。
+
 超时可以用环境变量覆盖：
 
     CARLA_CONNECT_TIMEOUT=180 CARLA_LOAD_WORLD_TIMEOUT=600 \

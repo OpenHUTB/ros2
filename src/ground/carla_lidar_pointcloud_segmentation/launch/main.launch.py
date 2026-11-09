@@ -28,7 +28,7 @@ ARGUMENTS = (
     ('traffic', '12', 'NPC 车数量，0 表示不放'),
     ('lidar_range', '60.0', '激光雷达量程（米）'),
     ('channels', '32', '激光雷达线数'),
-    ('points_per_second', '600000', '激光雷达每秒点数'),
+    ('points_per_second', '200000', '激光雷达每秒点数'),
     ('rotation', '20.0', '激光雷达转速（Hz）'),
     ('lidar_height', '2.4', '激光雷达安装高度（米）'),
     ('corridor_width', '1.2', '车身走廊半宽（米）'),
