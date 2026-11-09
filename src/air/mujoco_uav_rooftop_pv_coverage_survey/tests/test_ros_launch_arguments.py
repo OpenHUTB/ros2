@@ -85,6 +85,7 @@ def test_live_launch_consumes_inputs_and_respects_config(tmp_path: Path, monkeyp
         node.publish_command()
 
     rclpy = ModuleType("rclpy")
+    rclpy.ok = lambda: True
     rclpy.init, rclpy.spin = init, spin
     rclpy.shutdown = lambda: observed.update(shutdown=True)
     modules = {"rclpy": rclpy}
