@@ -166,6 +166,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
+* [MuJoCo 动态障碍局部避障仿真](./ground/mujoco_dynamic_avoidance.md)
 * [CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）](./ground/carla_parking_lot.md) —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
