@@ -25,6 +25,7 @@ python3 main.py bench --out out       # 八组实验，导出 out/metrics.json
 python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
 python3 main.py manual               # 终端键盘控制
 python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
+python3 main.py neural --out out/neural # 采样、训练、独立测试和闭环评估
 python3 tools/plot_metrics.py out/metrics.json out
 python3 -m unittest discover -s tests # 13 项测试
 ```
@@ -34,6 +35,16 @@ python3 -m unittest discover -s tests # 13 项测试
 `W/S` 每次增减 0.05 肌肉激活，`R/F` 每次升降 10 mm，空格松开，`Q` 退出。
 肌肉激活限制为 0–1，抬升目标限制为 0–150 mm。每次操作推进 0.1 s 物理仿真，
 输出仿真时间、接触点数和双指实际接触力。交互模式需要终端；自动复现使用 `--keys`。
+
+### 神经网络力控制与图像策略
+
+力策略使用真实接触反馈训练单隐层网络，跟踪 2、4、8 N 目标；图像策略使用
+相机渲染的 16×16 灰度像素预测手指肌肉激活。手掌抬升按给定时间轨迹执行。
+两类数据均按完整仿真回合划分训练、验证和测试集，导出损失曲线、闭环 CSV、权重、
+相机截图和 GIF。默认固定随机种子 21，训练 200 轮。该命令包含独立 PI 基准对照。
+
+Ubuntu 22.04 / MuJoCo 3.3.7 实测：力策略测试 MSE 为 `1.377e-8`，
+图像闭环抬升 `98.11 mm`。输出目录内 `metrics.json` 保存完整参数及测量值。
 
 ## 八组实验
 
