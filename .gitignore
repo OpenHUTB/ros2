@@ -13,6 +13,19 @@ __pycache__/
 
 # 构建时 hooks.py 自动生成
 docs/requirements.txt
+ add-mujoco-aeb
+# MuJoCo 运行日志
+# 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
+# （新增 catkin 包时容易整个漏提交），这里显式放行这一个文件名。
+*.TXT
+*.log
+!CMakeLists.txt
+
+# 只忽略仓库根目录下临时图片，保留子目录docs/img图片
+/*.png
+/*.jpg
+/*.gif
+
 
 # catkin 编译产物
 build/
@@ -76,6 +89,7 @@ Thumbs.db
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
+ master
 
 # 例外：人形机器人相机端到端模块的 CNN 权重必须入库（评测机免重训）
 !src/humanoid/humanoid_camera_e2e_control/weights/*.pt
