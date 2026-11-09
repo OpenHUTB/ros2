@@ -1,10 +1,11 @@
-FROM osrf/ros:humble-desktop
+FROM ros:humble-ros-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /workspace/ros2
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-pip python3-venv libgl1-mesa-glx libegl1 libosmesa6 libosmesa6-dev \
+    python3-pip python3-venv python3-colcon-common-extensions \
+    libgl1-mesa-glx libegl1 libosmesa6 libosmesa6-dev \
     && apt-get clean
 
 COPY requirements.txt /tmp/requirements.txt
