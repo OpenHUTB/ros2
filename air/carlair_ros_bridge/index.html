@@ -395,6 +395,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#67">6.7 相机模型与深度点云</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#68-demo">6.8 深度避障 demo</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#7">7. 运行验证</a>
@@ -870,9 +872,6 @@ roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.
 <li>线加速度包含重力分量，纯运动加速度需使用方自行扣除；</li>
 <li><code>frame/imu</code> 默认 <code>base_link</code>，<code>rate/imu_hz</code> 默认 50。</li>
 </ul>
-<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>hz<span class="w"> </span>/imu
-rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>-n1<span class="w"> </span>/imu
-</code></pre></div>
 <p>示例输出（悬停）：</p>
 <div class="highlight"><pre><span></span><code>$ rostopic hz /imu
 average rate: 50.000
@@ -933,6 +932,21 @@ Z = Z_{\mathrm{depth}}
 <p>点云过滤 <code>Z &lt;= 0</code>、<code>Z &gt;= 100 m</code> 和 65504 哨兵值；相机 TF 为 <code>base_link -&gt; front_rgb/front_depth</code>，安装偏移由 <code>camera/mount_x/y/z</code> 配置。</p>
 <p>深度点云前视图（颜色表示距离）：</p>
 <p><img alt="深度点云前视图" src="../../img/air/carlair_ros_bridge/depth_points_front.png"/></p>
+<h3 id="68-demo">6.8 深度避障 demo</h3>
+<p><code>depth_avoidance.py</code> 订阅 <code>/camera/depth/points</code>，取前方走廊内最近点并发布 <code>/uav/cmd_vel</code>：</p>
+<div class="highlight"><pre><span></span><code>d = min(z),  |x| &lt;= lateral_limit, |y| &lt;= vertical_limit, min_range &lt;= z &lt;= max_range
+vx = 0                         , d &lt;= stop_distance
+vx = forward_speed * (d-stop)  , stop_distance &lt; d &lt; slow_distance
+vx = forward_speed             , d &gt;= slow_distance
+</code></pre></div>
+<p>默认参数：<code>forward_speed=1.5</code>、<code>slow_distance=4.0</code>、<code>stop_distance=2.0</code>、<code>lateral_limit=0.8</code>、<code>min_range=0.5</code>；起飞后 <code>start_delay=6 s</code> 再接管。</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span>&lt;Windows_IP&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>auto_takeoff:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>enable_depth_avoidance:<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>publish_lidar:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>publish_imu:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>start_selfcheck:<span class="o">=</span><span class="nb">false</span>
+
+rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/uav/cmd_vel
+</code></pre></div>
+<p><img alt="深度避障实测" src="../../img/air/carlair_ros_bridge/depth_avoidance_live.png"/></p>
 <h2 id="7">7. 运行验证</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 环境自检（5 项：airsim 包、连接、位姿、相机、激光雷达）</span>
 rosrun<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.py
