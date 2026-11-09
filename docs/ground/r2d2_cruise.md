@@ -41,14 +41,14 @@ python3 src/ground/r2d2_cruise/main.py --direct --duration 5 --log run.csv
 python3 -m pytest tests/test_r2d2_cruise_local.py -v
 ```
 
-用例覆盖三点：`--direct` 模式能跑出轨迹 CSV；5 秒内确实走出圆弧（位移、转角、转弯半径约 0.67 m）；车体高度稳定在 0.47 m 左右，不会因初始穿插被弹飞。
+用例覆盖三点：`--direct` 模式能跑出轨迹 CSV；5 秒内确实走出圆弧（折线弧长与解缠转角算出的半径约 0.80 m，稳态约 1.02 m）；车体高度稳定在 0.47 m 左右，不会因初始穿插被弹飞。
 
 ## ROS 接口说明
 本模块为独立 PyBullet 仿真脚本，不发布/订阅 ROS 话题。`package.xml` 与 `launch/main.launch` 用于满足仓库「模块支持 launch 启动、入口为 main 开头」的约定：roslaunch 仅作为统一启动入口调用 `main.py`，不依赖 ROS 运行时。
 
 ## 验收方法
 - 运行后弹出 PyBullet 可视化窗口，车体落下站稳后自动沿圆弧轨迹持续巡航，无需按键或人工干预；
-- `--direct --duration 5 --log run.csv` 能正常结束并写出 10 Hz 轨迹，转弯半径约 0.67 m；
+- `--direct --duration 5 --log run.csv` 能正常结束并写出 10 Hz 轨迹，起步阶段按折线弧长算的转弯半径约 0.80 m（稳态 15–20 s 约 1.02 m）；
 - `pytest tests/test_r2d2_cruise_local.py` 三个用例全部通过；
 - 关闭窗口或按 Ctrl+C：程序正常退出，无残留进程，仿真连接已释放；
 - 运行效果参考动图：

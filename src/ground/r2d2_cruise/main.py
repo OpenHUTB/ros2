@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import sys
 import time
 
@@ -104,11 +105,18 @@ def settle(client, seconds=SETTLE_TIME):
         p.stepSimulation()
 
 
-def run(robot_id, left_joints, right_joints, args, log_path):
-    """主循环：固定轮速驱动 + 可选轨迹记录。"""
+def run(robot_id, left_joints, right_joints, args, log_path, client):
+    """主循环：固定轮速驱动 + 可选轨迹记录。
+
+    client 必须显式传入：p.isConnected() 只检查默认连接（id=0），
+    多连接场景会判断错对象。
+    """
     writer = None
     fp = None
     if log_path:
+        parent = os.path.dirname(os.path.abspath(log_path))
+        if parent:
+            os.makedirs(parent, exist_ok=True)
         fp = open(log_path, "w", newline="", encoding="utf-8")
         writer = csv.writer(fp)
         writer.writerow(CSV_HEADER)
@@ -116,7 +124,7 @@ def run(robot_id, left_joints, right_joints, args, log_path):
     t = 0.0
     steps = 0
     try:
-        while p.isConnected():
+        while p.isConnected(client):
             if args.duration > 0 and t >= args.duration - 1e-9:
                 break
             set_wheel_speed(robot_id, left_joints, LEFT_SPEED)
@@ -147,6 +155,11 @@ def run(robot_id, left_joints, right_joints, args, log_path):
 
 def main(argv=None):
     args = parse_args(argv)
+    # DIRECT 模式没有窗口可关，--duration 缺省（0）会让循环永不结束并跑满一个核
+    if args.direct and args.duration <= 0:
+        print("--direct 模式必须同时指定 --duration（大于 0 秒）："
+              "没有可视化窗口，无法靠关窗结束仿真。", file=sys.stderr)
+        return 2
     client = connect(args)
     if client < 0:
         print("连接 PyBullet 失败", file=sys.stderr)
@@ -179,7 +192,7 @@ def main(argv=None):
             # 初始机位：略高处俯视小车，保证一打开就能看到车和地面
             p.resetDebugVisualizerCamera(cameraDistance=3.0, cameraYaw=55,
                                          cameraPitch=-32, cameraTargetPosition=[0, 0, 0.4])
-        steps, elapsed = run(robot_id, left_joints, right_joints, args, args.log)
+        steps, elapsed = run(robot_id, left_joints, right_joints, args, args.log, client)
         pos, yaw = base_state(robot_id)
         print("仿真结束：%d 步 / %.2f s，车体位置 (%.2f, %.2f, %.2f)，偏航角 %.2f rad"
               % (steps, elapsed, pos[0], pos[1], pos[2], yaw))

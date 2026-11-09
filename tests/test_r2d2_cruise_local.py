@@ -6,15 +6,19 @@
 --------
 1. 轮子关节名与 r2d2.urdf 一致（左右各 2 个，忘记改名也不会静默失效）
 2. `main.py --direct --duration N --log csv` 能跑通并写出轨迹
-3. 运动学验收：固定轮速差下确实在走圆弧（有位移、有偏航角、半径在合理范围）
+3. 运动学验收：固定轮速差下确实在走圆弧（用折线弧长与解缠后的转角算半径）
 4. 回归项：车体高度稳定在 0.47 m 左右（曾经因为按 0.2 m 生成导致插地弹飞）
+5. 参数校验：DIRECT 模式没给 --duration 时必须拒绝运行（否则循环不会结束）
 """
 from __future__ import annotations
 
 import csv
+import importlib.util
+import math
 import os
 import subprocess
 import sys
+from functools import lru_cache
 
 import pytest
 
@@ -25,6 +29,20 @@ PKG = os.path.normpath(os.path.join(_HERE, "..", "src", "ground", "r2d2_cruise")
 MAIN = os.path.join(PKG, "main.py")
 
 DURATION = 5.0
+
+
+@lru_cache(maxsize=1)
+def _load_main():
+    """按文件路径加载 main.py，避免依赖 sys.path 顺序（仓库里同名 main.py 很多）。"""
+    spec = importlib.util.spec_from_file_location("r2d2_cruise_main", MAIN)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _wrap(angle):
+    """把角度差归一化到 (-pi, pi]，用于跨 ±pi 的累计。"""
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
 
 
 def _run_headless(tmp_path):
@@ -60,19 +78,23 @@ def test_differential_drive_makes_a_circle(tmp_path):
     with open(log, encoding="utf-8") as fh:
         rows = [{k: float(v) for k, v in row.items()} for row in csv.DictReader(fh)]
 
-    first, last = rows[0], rows[-1]
-    dist = ((last["x"] - first["x"]) ** 2 + (last["y"] - first["y"]) ** 2) ** 0.5
-    dyaw = abs(last["yaw"] - first["yaw"])
+    # 弧长用折线累加（弦长会系统性偏短约 7%）；转角逐步解缠后再累加
+    path_length = 0.0
+    turn = 0.0
+    for previous, current in zip(rows, rows[1:]):
+        path_length += math.hypot(current["x"] - previous["x"], current["y"] - previous["y"])
+        turn += _wrap(current["yaw"] - previous["yaw"])
+    turn = abs(turn)
 
-    # 有前进位移，也有转向（不是原地打转，也不是走直线）
-    assert dist > 0.3, "5 秒内位移过小：%.3f m" % dist
-    assert 0.8 < dyaw < 2.5, "5 秒内转角异常：%.3f rad" % dyaw
+    assert path_length > 0.5, "5 秒内走过的弧长过小：%.3f m" % path_length
+    assert 0.8 < turn < 2.5, "5 秒内转角异常：%.3f rad" % turn
 
-    # 圆弧半径 = 弧长 / 转角，实测约 0.67 m
-    radius = dist / dyaw
-    assert 0.4 < radius < 1.2, "转弯半径异常：%.2f m（期望 ~0.67 m）" % radius
+    # 圆弧半径 = 弧长 / 转角；5 秒窗口（仍在加速）实测约 0.80 m
+    radius = path_length / turn
+    assert 0.4 < radius < 1.2, "转弯半径异常：%.2f m（5 秒窗口期望 ~0.80 m）" % radius
 
     # 轮速确实按左右差速给定
+    first = rows[0]
     assert abs(first["left_vel"] - 10.0) < 1.5
     assert abs(first["right_vel"] - 2.0) < 1.5
 
@@ -81,13 +103,15 @@ def test_differential_drive_makes_a_circle(tmp_path):
     assert min(heights) > 0.40 and max(heights) < 0.60, "车体高度异常：%.2f~%.2f" % (min(heights), max(heights))
 
 
+def test_direct_mode_requires_duration():
+    """DIRECT 没有窗口可关，--duration<=0 必须直接拒绝，不能进入死循环。"""
+    module = _load_main()
+    assert module.main(["--direct"]) == 2
+
+
 def test_wheel_joint_names_match_urdf():
     """按关节名找轮子的逻辑必须和 urdf 实际关节名对得上。"""
-    sys.path.insert(0, PKG)
-    try:
-        import main as r2d2_main
-    finally:
-        sys.path.pop(0)
+    r2d2_main = _load_main()
 
     import pybullet as p
     import pybullet_data
