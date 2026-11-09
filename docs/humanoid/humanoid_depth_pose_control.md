@@ -64,6 +64,10 @@ python3 main.py --train
 python3 main.py --demo --force 120 --direction 0
 ```
 
+![深度图姿态估计与平衡控制演示](../img/humanoid/humanoid_depth_pose_control/demo.gif)
+
+演示中实时渲染 64×64 深度图，左上角显示网络回归出的 pitch/roll/yaw 三个姿态角，比例控制器据此输出关节修正量，人形机器人在外力下保持躯干竖直。
+
 ### 4.6 ROS2 launch（Ubuntu 20.04 Humble）
 
 ```bash
