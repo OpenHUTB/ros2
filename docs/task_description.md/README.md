@@ -4,7 +4,7 @@
 
 ## 功能要求
 1. 节点内加载一张静态测试图片；
-2. 使用 YOLOv8n-seg 进行目标检测，仅筛选行人类别（类别id=0）；
+2. 使用 YOLOv8n 进行目标检测，仅筛选行人类别（类别id=0）；
 3. 对检测到的行人包围盒区域进行高斯模糊；
 4. 发布两个 CompressedImage 话题：
    - `/image_raw/compressed`：原始输入图像
@@ -20,7 +20,7 @@ src/chap5/privacy_mask/
 
 ├── privacy_mask/
 
-│   ├── _init_.py
+│   ├── __init__.py
 
 │   └── privacy_mask_node.py
 
