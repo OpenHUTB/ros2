@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Mbot 激光雷达避障节点（ROS 1 Noetic + Gazebo）。
+"""Mbot 激光雷达阈值避障节点（ROS 1 Noetic + Gazebo 11）。
 
-订阅 /scan，按前 / 左 / 右三个扇区的最小距离做阈值避障，
-向 /cmd_vel 发布 geometry_msgs/Twist。
+订阅 ``/scan``，按扇区最小距离 + 滞回状态机向 ``/cmd_vel`` 发布速度指令：
 
-本节点相对于已有模块 turtlebot3_lidar_avoid（ROS 2 Humble + TurtleBot3 Waffle）
-的差异：
-- 运行时：ROS 1 Noetic + catkin，适用于 Ubuntu 20.04 / ROS 1 环境；
-- 机器人：面向 Mbot（与 turtlebot3_lidar_avoid 面向 TurtleBot3 Waffle 不同）；
-- 实现：单文件实现，去除 ROS 2 参数服务器等特性，便于 ROS 1 初学者入门；
-- 安全：增加 NaN/Inf 过滤、异常长度检测、/scan 超时保护与 shutdown 停车。
+- 巡航 ``cruise``：前方安全 -> 直行；侧向过近时朝更宽一侧微调
+- 避障 ``avoid``：前方进入 ``safe_distance`` -> 减速并朝更宽一侧转向
+- 脱困 ``escape``：前方进入 ``danger_distance`` -> 倒车并朝更宽一侧转；
+  后方也被堵时改为原地旋转，避免在墙角/死角停死
+
+扇区边界按 ``angle_min`` / ``angle_increment`` 实时换算成角度，
+不假定束数与 ``angle_min``，因此 360 束、720 束以及 ``angle_min = -π``
+的雷达均可正常工作。
+
+全部参数通过 rosparam 读取（见 ``config/lidar_avoid.yaml``），可在线调参。
 """
 
 import math
@@ -20,24 +23,26 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
 
-# —— 参数（硬编码，单文件示例；实际项目可改为 rosparam） ——
-SAFE_DISTANCE = 0.8       # 进入避障阈值 (m)
-DANGER_DISTANCE = 0.25    # 紧急停车阈值 (m)
-CRUISE_SPEED = 0.30       # 正常直行速度 (m/s)
-AVOID_SPEED = 0.05        # 避障时线速度 (m/s)
-TURN_RATE = 1.0           # 避障角速度 (rad/s)
-SCAN_TIMEOUT_SEC = 1.5    # 无扫描数据超时阈值 (s)
-RANGE_MAX_CLIP = 3.5      # 距离上限裁剪 (m)
-
-# 正常 360° 激光雷达每个扇区大致对应：
-# front:   ranges[  0:15] + ranges[345:360]  → 正前方 ±15°
-# left:    ranges[ 15:60]                    → 左前方  15°~ 60°
-# right:   ranges[300:345]                  → 右前方 -60°~-15°
-FRONT_SLICE = list(range(0, 15)) + list(range(345, 360))
-LEFT_SLICE = list(range(15, 60))
-RIGHT_SLICE = list(range(300, 345))
-
-EXPECTED_SCAN_LEN = 360  # TurtleBot3 / Mbot 常见 360 束
+# 默认参数；launch/rosparam 未提供时使用这些值
+DEFAULT_PARAMS = {
+    'cruise_speed': 0.30,          # 巡航线速度 (m/s)
+    'avoid_speed': 0.10,           # 避障线速度 (m/s)
+    'reverse_speed': -0.12,        # 脱困倒车速度 (m/s)
+    'turn_rate': 1.20,             # 避障转向角速度 (rad/s)
+    'rotate_rate': 0.90,           # 脱困旋转角速度 (rad/s)
+    'safe_distance': 0.80,         # 进入避障阈值 (m)
+    'exit_distance': 1.00,         # 退出避障阈值 (m)，与进入阈值形成滞回
+    'danger_distance': 0.30,       # 进入脱困阈值 (m)
+    'danger_exit_distance': 0.50,  # 退出脱困阈值 (m)
+    'side_distance': 0.45,         # 侧向障碍影响转向的阈值 (m)
+    'rear_block_distance': 0.35,   # 后方受阻阈值，决定倒车还是原地旋转 (m)
+    'front_half_deg': 20.0,        # 前扇区半角 (°)
+    'side_deg': 60.0,              # 侧扇区外边界 (°)
+    'rear_deg': 150.0,             # 后扇区外边界 (°)
+    'scan_timeout': 1.5,           # /scan 超时停车的秒数
+    'range_max': 3.5,              # 距离上限裁剪 (m)
+    'control_rate': 10.0,          # watchdog 频率 (Hz)
+}
 
 
 class LidarAvoidNode:
@@ -46,27 +51,28 @@ class LidarAvoidNode:
     def __init__(self):
         rospy.init_node('mbot_lidar_avoid_node', anonymous=False)
 
+        # —— 参数全部走 rosparam，未配置时回落到默认值 ——
+        cfg = {}
+        for key, default in DEFAULT_PARAMS.items():
+            cfg[key] = float(rospy.get_param('~' + key, default))
+        self.cfg = cfg
+
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.sub = rospy.Subscriber('/scan', LaserScan, self._scan_callback)
 
-        # 安全相关状态
-        self._last_scan_time = None   # 最近一次收到 /scan 的 wall time
-        self._scan_ok = False         # 上一帧扫描是否通过合法性检查
+        self.state = 'cruise'         # cruise / avoid / escape
+        self._last_scan_time = None   # 最近一次收到有效 /scan 的墙钟时间
 
-        # 注册退出回调，保证 Ctrl+C / rosnode kill 时停车
+        # 定时 watchdog：无扫描数据时停车，同时保证控制频率稳定
+        self.timer = rospy.Timer(
+            rospy.Duration(1.0 / self.cfg['control_rate']), self._tick)
+
+        # Ctrl+C / rosnode kill 时保证停车
         rospy.on_shutdown(self._on_shutdown)
 
     # ------------------------------------------------------------------
-    # 工具函数
+    # 基础工具
     # ------------------------------------------------------------------
-    @staticmethod
-    def _valid_min(values):
-        """在 values 中筛选有限值后返回最小距离；全部非法返回 None。"""
-        filtered = [v for v in values if v is not None and math.isfinite(v)]
-        if not filtered:
-            return None
-        return min(min(filtered), RANGE_MAX_CLIP)
-
     @staticmethod
     def _zero_twist():
         t = Twist()
@@ -81,90 +87,183 @@ class LidarAvoidNode:
     def _publish_zero(self):
         self.pub.publish(self._zero_twist())
 
+    def _reset_state(self):
+        self.state = 'cruise'
+
     # ------------------------------------------------------------------
-    # 主逻辑
+    # 扇区计算（不依赖固定束数与 angle_min）
+    # ------------------------------------------------------------------
+    def _sector_mins(self, msg):
+        """按角度把扫描点归入前 / 左 / 右 / 左后 / 右后五个扇区。
+
+        返回各扇区最小合法距离（无数据记 range_max），以及合法点数量。
+        数据不可用（空、angle_increment 非法）时返回 None。
+        """
+        ranges = msg.ranges
+        if ranges is None or len(ranges) == 0:
+            return None
+
+        inc = msg.angle_increment
+        if not math.isfinite(inc) or inc <= 0.0:
+            return None
+
+        cap = self.cfg['range_max']
+        buckets = {k: [] for k in
+                   ('front', 'left', 'right', 'rear_left', 'rear_right')}
+        valid_total = 0
+
+        for i, value in enumerate(ranges):
+            if value is None:
+                continue
+            try:
+                if not math.isfinite(value) or value <= 0.0:
+                    continue
+            except TypeError:
+                continue
+            valid_total += 1
+
+            # 用索引换算真实角度，天然兼容任意束数与任意 angle_min
+            angle = msg.angle_min + i * inc
+            # 归一化到 [-π, π]，避免多圈角度溢出
+            angle = math.atan2(math.sin(angle), math.cos(angle))
+            deg = abs(math.degrees(angle))
+
+            if deg <= self.cfg['front_half_deg']:
+                buckets['front'].append(value)
+            elif deg <= self.cfg['side_deg']:
+                if angle > 0.0:
+                    buckets['left'].append(value)
+                else:
+                    buckets['right'].append(value)
+            elif deg <= self.cfg['rear_deg']:
+                if angle > 0.0:
+                    buckets['rear_left'].append(value)
+                else:
+                    buckets['rear_right'].append(value)
+
+        result = {}
+        for name, values in buckets.items():
+            result[name] = min(min(values), cap) if values else cap
+        result['valid_count'] = valid_total
+        return result
+
+    # ------------------------------------------------------------------
+    # 扫描回调
     # ------------------------------------------------------------------
     def _scan_callback(self, msg):
-        now = time.time()
-        self._last_scan_time = now
+        sec = self._sector_mins(msg)
 
-        # —— 1. 数据合法性检查 ——
-        # LaserScan 的 ranges 长度应与 angle_increment 覆盖角度一致；
-        # TurtleBot3/Mbot 标准 360° 雷达应为 360 束。
-        if msg.ranges is None or len(msg.ranges) != EXPECTED_SCAN_LEN:
-            rospy.logwarn_throttle(2.0,
-                '[mbot_lidar_avoid] 收到异常长度的扫描数据 len=%d，期望 %d，停车保护',
-                0 if msg.ranges is None else len(msg.ranges), EXPECTED_SCAN_LEN)
-            self._scan_ok = False
+        if sec is None or sec['valid_count'] == 0:
+            rospy.logwarn_throttle(
+                2.0,
+                '[mbot_gazebo_lidar_avoid] 扫描数据不可用'
+                '（空 / angle_increment 非法 / 全部 NaN），停车保护')
+            self._last_scan_time = None
+            self._reset_state()
             self._publish_zero()
             return
 
-        # —— 2. 三个扇区分别取最小有限值 ——
-        front = self._valid_min(msg.ranges[i] for i in FRONT_SLICE)
-        left = self._valid_min(msg.ranges[i] for i in LEFT_SLICE)
-        right = self._valid_min(msg.ranges[i] for i in RIGHT_SLICE)
+        self._last_scan_time = time.time()
+        self.pub.publish(self._decide(
+            front=sec['front'],
+            left=sec['left'],
+            right=sec['right'],
+            rear_left=sec['rear_left'],
+            rear_right=sec['rear_right']))
 
-        # 若所有扇区都没有有限距离（全部 NaN / Inf），视为异常 → 停车
-        if front is None and left is None and right is None:
-            rospy.logwarn_throttle(2.0,
-                '[mbot_lidar_avoid] 扫描数据全部为 NaN/Inf，停车保护')
-            self._scan_ok = False
-            self._publish_zero()
-            return
-
-        # 某一扇区缺数据时保守处理：取 RANGE_MAX_CLIP（视为安全空旷）
-        if front is None:
-            front = RANGE_MAX_CLIP
-        if left is None:
-            left = RANGE_MAX_CLIP
-        if right is None:
-            right = RANGE_MAX_CLIP
-
-        self._scan_ok = True
-
-        # —— 3. 决策 ——
-        twist = self._decide(front, left, right)
-        self.pub.publish(twist)
-
-    def _decide(self, front, left, right):
-        """基于三个扇区距离输出 Twist。"""
+    # ------------------------------------------------------------------
+    # 决策（带滞回与脱困分支）
+    # ------------------------------------------------------------------
+    def _decide(self, front, left, right, rear_left, rear_right):
+        cfg = self.cfg
         twist = Twist()
 
-        # 紧急停车：前方过近
-        if front < DANGER_DISTANCE:
-            twist.linear.x = 0.0
-            twist.angular.z = 0.0
+        # 脱困状态：前方恢复到 danger_exit_distance 以上才退出
+        if self.state == 'escape':
+            if front > cfg['danger_exit_distance']:
+                self.state = 'avoid'
+            else:
+                return self._escape_twist(left, right, rear_left, rear_right)
+
+        # 进入脱困：前方过近
+        if front < cfg['danger_distance']:
+            self.state = 'escape'
+            return self._escape_twist(left, right, rear_left, rear_right)
+
+        # 滞回：avoid -> cruise 需要前方大于 exit_distance，
+        # 避免在阈值附近反复切换造成转向抖动
+        if self.state == 'avoid':
+            if front > cfg['exit_distance']:
+                self.state = 'cruise'
+        elif front < cfg['safe_distance']:
+            self.state = 'avoid'
+
+        if self.state == 'avoid':
+            twist.linear.x = cfg['avoid_speed']
+            # 朝空间更宽的一侧转向；若某侧过近则强制避开该侧
+            if left >= cfg['side_distance'] and right < cfg['side_distance']:
+                twist.angular.z = cfg['turn_rate']
+            elif right >= cfg['side_distance'] and left < cfg['side_distance']:
+                twist.angular.z = -cfg['turn_rate']
+            else:
+                twist.angular.z = (
+                    cfg['turn_rate'] if left >= right else -cfg['turn_rate'])
             return twist
 
-        # 正常避障：前方小于安全阈值
-        if front < SAFE_DISTANCE:
-            twist.linear.x = AVOID_SPEED
-            # 朝两侧空间更宽的方向转
-            twist.angular.z = TURN_RATE if left > right else -TURN_RATE
-            return twist
-
-        # 直行
-        twist.linear.x = CRUISE_SPEED
+        # 巡航：前方安全
+        twist.linear.x = cfg['cruise_speed']
         twist.angular.z = 0.0
+
+        # 侧向贴得太近时轻微转向让开，避免擦碰侧向障碍
+        if left < cfg['side_distance'] and right > left:
+            twist.angular.z = -cfg['rotate_rate']
+        elif right < cfg['side_distance'] and left > right:
+            twist.angular.z = cfg['rotate_rate']
+        return twist
+
+    def _escape_twist(self, left, right, rear_left, rear_right):
+        """脱困：优先倒车并转向更宽侧；后方被堵则原地旋转。"""
+        cfg = self.cfg
+        twist = Twist()
+        block = cfg['rear_block_distance']
+
+        if rear_left < block and rear_right < block:
+            # 后方两侧都堵：原地旋转，朝前后合计空间更大的一侧
+            twist.linear.x = 0.0
+            if (left + rear_left) >= (right + rear_right):
+                twist.angular.z = cfg['rotate_rate']
+            else:
+                twist.angular.z = -cfg['rotate_rate']
+            return twist
+
+        # 正常脱困：倒车，同时转向远离更近的一侧
+        twist.linear.x = cfg['reverse_speed']
+        if left < cfg['side_distance']:
+            twist.angular.z = -cfg['rotate_rate']      # 左侧近 -> 向右转
+        elif right < cfg['side_distance']:
+            twist.angular.z = cfg['rotate_rate']       # 右侧近 -> 向左转
+        else:
+            twist.angular.z = 0.0
         return twist
 
     # ------------------------------------------------------------------
-    # 超时 & 退出保护
+    # 超时与退出保护
     # ------------------------------------------------------------------
-    def _watchdog_tick(self):
-        """由外部定时调用；若长时间没收到 /scan 则停车。"""
+    def _tick(self, _event=None):
+        """watchdog：从未收到扫描或超时未更新 -> 停车。"""
         if self._last_scan_time is None:
-            # 节点刚启动还没收到过数据 → 停车更安全
             self._publish_zero()
             return
         elapsed = time.time() - self._last_scan_time
-        if elapsed > SCAN_TIMEOUT_SEC:
-            rospy.logwarn_throttle(2.0,
-                '[mbot_lidar_avoid] %.1fs 未收到 /scan，停车保护', elapsed)
+        if elapsed > self.cfg['scan_timeout']:
+            rospy.logwarn_throttle(
+                2.0,
+                '[mbot_gazebo_lidar_avoid] %.1fs 未收到 /scan，停车保护', elapsed)
+            self._reset_state()
             self._publish_zero()
 
     def _on_shutdown(self):
-        rospy.loginfo('[mbot_lidar_avoid] 节点退出，发布零速度')
+        rospy.loginfo('[mbot_gazebo_lidar_avoid] 节点退出，发布零速度')
         try:
             self._publish_zero()
         except Exception:
@@ -172,15 +271,8 @@ class LidarAvoidNode:
 
 
 def main():
-    node = LidarAvoidNode()
-    # 用 Timer 10Hz 做 watchdog；既保证超时停车，也保证退出前最后发一次 0
-    rate = rospy.Rate(10.0)
-    try:
-        while not rospy.is_shutdown():
-            node._watchdog_tick()
-            rate.sleep()
-    except rospy.ROSInterruptException:
-        pass
+    LidarAvoidNode()
+    rospy.spin()
 
 
 if __name__ == '__main__':
