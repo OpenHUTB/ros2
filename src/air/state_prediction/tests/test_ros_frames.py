@@ -1,9 +1,5 @@
 import unittest
 import numpy as np
-import pytest
-
-pytest.importorskip("rclpy")
-
 from prediction.ros_nodes import enu,enu_flu_orientation,quat_product
 
 

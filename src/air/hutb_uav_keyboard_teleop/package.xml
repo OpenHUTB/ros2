@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hutb_uav_keyboard_teleop</name>
+  <version>0.1.0</version>
+  <description>
+    无人机(rotors firefly)物理仿真与键盘运动控制: 键盘->/joy->rotors_joy_interface->姿态速率控制器->电机
+    运行环境: Ubuntu 20.04 + ROS Noetic + Gazebo 11
+  </description>
+  <maintainer email="lb@hutb.edu.cn">lb</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>rotors_gazebo</build_depend>
+  <build_depend>rotors_control</build_depend>
+  <build_depend>rotors_joy_interface</build_depend>
+  <build_depend>robot_state_publisher</build_depend>
+  <build_depend>joint_state_publisher</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>rotors_gazebo</exec_depend>
+  <exec_depend>rotors_control</exec_depend>
+  <exec_depend>rotors_joy_interface</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+</package>

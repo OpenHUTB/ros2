@@ -10,7 +10,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from channels import KEYS  # noqa: E402  (常量拆到无 torch 依赖的模块)
+KEYS = ['px', 'py', 'pz', 'vx', 'vy', 'vz', 'ax', 'ay', 'az']
 
 
 class Predictor(nn.Module):

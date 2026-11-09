@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="mujoco_car_parking" type="main.py" name="mujoco_car_parking" output="screen"/>
-</launch>

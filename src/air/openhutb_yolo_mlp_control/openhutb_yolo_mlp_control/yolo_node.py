@@ -20,8 +20,6 @@ from vision_msgs.msg import (
     ObjectHypothesisWithPose,
 )
 
-from .window_topmost import is_wsl, set_wsl_topmost
-
 
 class YoloNode(Node):
     """仅接收和发布 ROS 消息的 YOLO 检测节点。"""
@@ -625,21 +623,13 @@ class YoloNode(Node):
                     self._apply_topmost()
 
     # ================================================================
-    # 可选窗口置顶：Windows / WSLg / OpenCV 后备
+    # Windows 窗口置顶
     # ================================================================
     def _apply_topmost(
         self,
     ):
         if not self.show_window:
             return
-
-        if is_wsl():
-            success, detail = set_wsl_topmost(self.window_name, self.topmost)
-            if success:
-                self.get_logger().info(
-                    f'Window topmost: {"ON" if self.topmost else "OFF"} (WSLg)')
-                return
-            self.get_logger().warning(f'WSLg topmost: {detail}; trying OpenCV fallback')
 
         # ------------------------------------------------------------
         # Windows：使用原生 Win32 API。
@@ -766,23 +756,16 @@ class YoloNode(Node):
                     ),
                 )
 
-                actual = cv2.getWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST)
-                if actual < 0 or bool(actual) != self.topmost:
-                    self.get_logger().warning(
-                        'This OpenCV/window-manager backend does not support topmost.')
-                else:
-                    self.get_logger().info(
-                        'Window topmost: '
-                        f'{"ON" if self.topmost else "OFF"}'
-                    )
+                self.get_logger().info(
+                    'Window topmost: '
+                    f'{"ON" if self.topmost else "OFF"}'
+                )
 
             except cv2.error as exc:
                 self.get_logger().warning(
                     'OpenCV topmost failed: '
                     f'{exc}'
                 )
-        else:
-            self.get_logger().warning('OpenCV has no WND_PROP_TOPMOST support.')
 
     # ================================================================
     # 清理资源

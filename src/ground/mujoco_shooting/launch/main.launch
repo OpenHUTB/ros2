@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="mujoco_shooting" type="main.py" name="mujoco_shooting" output="screen"/>
-</launch>

@@ -1,3 +1,0 @@
-sim_node:
-  ros__parameters:
-    odom_rate: 20.0

@@ -86,15 +86,15 @@ roslaunch uav_rl_benchmark main.launch steps:=200000
 | `[256,256]`（加宽） | 34% ± 2% | 191.2 | 0.66 | 0.194 | 110 s |
 | `[64,64,64]`（加深） | **37% ± 8%** | 189.1 | 0.76 | 0.161 | 105 s |
 
-![不同算法成功率](../img/air/uav_rl_benchmark/fig_success_by_algo.png)
+![不同算法成功率](img/air/uav_rl_benchmark/fig_success_by_algo.png)
 
-![不同网络结构成功率](../img/air/uav_rl_benchmark/fig_success_by_arch_ppo.png)
+![不同网络结构成功率](img/air/uav_rl_benchmark/fig_success_by_arch_ppo.png)
 
-![样本效率：成功率随训练步数变化](../img/air/uav_rl_benchmark/fig_learning_curves.png)
+![样本效率：成功率随训练步数变化](img/air/uav_rl_benchmark/fig_learning_curves.png)
 
-![训练成本对比](../img/air/uav_rl_benchmark/fig_cost.png)
+![训练成本对比](img/air/uav_rl_benchmark/fig_cost.png)
 
-![路径效率与动作平滑度的权衡](../img/air/uav_rl_benchmark/fig_tradeoff.png)
+![路径效率与动作平滑度的权衡](img/air/uav_rl_benchmark/fig_tradeoff.png)
 
 ## 4. 结论与讨论
 

@@ -1,0 +1,6 @@
+# PilotNet 端到端参数
+image_width: 160
+image_height: 96
+image_topic: /camera/rgb/image_raw
+steer_scale: 1.5     # 转向角上限 rad/s
+speed_scale: 0.22    # 线速度上限 m/s

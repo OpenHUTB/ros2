@@ -26,7 +26,6 @@ install(FILES
   scripts/policy.py
   scripts/env.py
   scripts/ppo_nav_node.py
-  scripts/safety.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

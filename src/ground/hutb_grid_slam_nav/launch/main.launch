@@ -1,0 +1,63 @@
+<launch>
+  <!-- 任务3: 建图与导航(SLAM)同步仿真
+       阶段一 phase:=slam  自研栅格 SLAM 建图(纯里程计积分, match_enabled=false)
+       阶段二 phase:=nav   加载已保存地图 + scan-to-map 定位 + move_base 导航
+       用法:
+         roslaunch hutb_grid_slam_nav main.launch phase:=slam
+         roslaunch hutb_grid_slam_nav main.launch phase:=nav -->
+  <env name="TURTLEBOT3_MODEL" value="waffle_pi"/>
+  <arg name="phase" default="slam" doc="slam: 建图阶段; nav: 导航阶段"/>
+  <arg name="map_file" default="$(find hutb_grid_slam_nav)/data/map.yaml"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find hutb_grid_slam_nav)/worlds/task3_world.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(env TURTLEBOT3_MODEL).urdf.xacro"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"
+        args="-urdf -model turtlebot3_$(env TURTLEBOT3_MODEL) -x -0.5 -y -0.5 -z 0.05 -param robot_description"/>
+
+  <!-- ================= 阶段一: SLAM 建图 ================= -->
+  <group if="$(eval arg('phase') == 'slam')">
+    <node name="lidar_slam" pkg="hutb_grid_slam_nav" type="main.py" output="screen">
+      <param name="match_enabled" value="false"/>
+    </node>
+    <node name="rviz" pkg="rviz" type="rviz" required="true"
+          args="-d $(find turtlebot3_slam)/rviz/turtlebot3_gmapping.rviz"/>
+  </group>
+
+  <!-- ================= 阶段二: 导航 ================= -->
+  <group if="$(eval arg('phase') == 'nav')">
+    <node name="lidar_slam" pkg="hutb_grid_slam_nav" type="main.py" output="screen">
+      <param name="load_map" value="$(find hutb_grid_slam_nav)/data/map.pgm"/>
+      <param name="fixed_map" value="true"/>
+      <param name="init_x" value="-0.5"/>
+      <param name="init_y" value="-0.5"/>
+      <param name="init_yaw" value="0.0"/>
+      <param name="match_enabled" value="false"/>
+    </node>
+    <node pkg="move_base" type="move_base" name="move_base" output="screen">
+      <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_waffle_pi.yaml" command="load" ns="global_costmap"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/costmap_common_params_waffle_pi.yaml" command="load" ns="local_costmap"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/local_costmap_params.yaml" command="load"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/global_costmap_params.yaml" command="load"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/move_base_params.yaml" command="load"/>
+      <rosparam file="$(find turtlebot3_navigation)/param/base_local_planner_params.yaml" command="load"/>
+      <remap from="cmd_vel" to="/cmd_vel"/>
+      <remap from="odom" to="/odom"/>
+    </node>
+    <node name="tb3_nav_goal" pkg="hutb_grid_slam_nav" type="nav_goal.py" output="screen">
+      <param name="goal_x" value="2.0"/>
+      <param name="goal_y" value="1.0"/>
+    </node>
+    <node name="rviz" pkg="rviz" type="rviz"
+          args="-d $(find turtlebot3_navigation)/rviz/turtlebot3_navigation.rviz"/>
+  </group>
+</launch>

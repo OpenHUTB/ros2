@@ -1,0 +1,26 @@
+<launch>
+  <!-- 任务2: 激光雷达感知 + 神经网络(MLP)运动控制
+       感知链路: LDS-01(/scan) -> 60维特征 -> MLP 前向 -> /cmd_vel
+       自建障碍世界(avoid_world.world), 不依赖外部 model:// 联网下载 -->
+  <env name="TURTLEBOT3_MODEL" value="waffle_pi"/>
+  <arg name="world" default="$(find hutb_lidar_nn_avoid)/worlds/avoid_world.world"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world)"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(env TURTLEBOT3_MODEL).urdf.xacro"/>
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"
+        args="-urdf -model turtlebot3_$(env TURTLEBOT3_MODEL) -x 0.0 -y 0.0 -z 0.05 -param robot_description"/>
+
+  <node name="nn_lidar_avoidance" pkg="hutb_lidar_nn_avoid" type="main.py" output="screen">
+    <param name="model_path" value="$(find hutb_lidar_nn_avoid)/models/lidar_mlp.npz"/>
+    <param name="linear_scale" value="0.22"/>
+  </node>
+</launch>

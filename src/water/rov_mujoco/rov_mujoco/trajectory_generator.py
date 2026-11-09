@@ -10,8 +10,9 @@
 import math
 from typing import Dict, Any
 import numpy as np
-# ROS 消息只在生成 nav_msgs/Path 时用到，放到方法内部导入，
-# 这样轨迹几何可以在没有 ROS 的机器上单独使用（离线评测/单元测试）。
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
+from std_msgs.msg import Header
 
 
 class TrajectoryGenerator:
@@ -93,11 +94,8 @@ class TrajectoryGenerator:
             "yaw_rate": float(yaw_rate_d),
         }
 
-    def generate_path_msg(self, header, duration: float = 45.0, num_points: int = 120):
+    def generate_path_msg(self, header: Header, duration: float = 45.0, num_points: int = 120) -> Path:
         """生成供 RViz 与 3D 渲染器展示的全局参考航线 (nav_msgs/Path)"""
-        from geometry_msgs.msg import PoseStamped
-        from nav_msgs.msg import Path
-
         path_msg = Path()
         path_msg.header = header
         path_msg.header.frame_id = "world"

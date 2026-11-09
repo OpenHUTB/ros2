@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hutb_lidar_nn_avoid</name>
+  <version>0.1.0</version>
+  <description>
+    TurtleBot3 激光雷达感知与神经网络(MLP)避障运动控制: /scan->60维特征->MLP(60-64-32-2)->/cmd_vel
+    运行环境: Ubuntu 20.04 + ROS Noetic + Gazebo 11
+  </description>
+  <maintainer email="lb@hutb.edu.cn">lb</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>gazebo_ros</build_depend>
+  <build_depend>xacro</build_depend>
+  <build_depend>turtlebot3_description</build_depend>
+  <build_depend>turtlebot3_gazebo</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+</package>

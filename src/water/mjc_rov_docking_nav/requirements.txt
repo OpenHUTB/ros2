@@ -1,5 +1,0 @@
-mujoco<3.2
-PyOpenGL
-numpy
-torch==2.4.1+cpu
-matplotlib

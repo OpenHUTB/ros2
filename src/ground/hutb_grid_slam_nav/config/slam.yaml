@@ -1,0 +1,7 @@
+# 自研栅格 SLAM 参数 (main.py 节点)
+resolution: 0.05     # 栅格分辨率 m/cell
+map_size: 40.0       # 地图边长 m
+l_occ: 0.9           # 命中栅格 log-odds 增量
+l_free: -0.4         # 射线穿过栅格增量
+match_enabled: true  # scan-to-map ICP 匹配定位开关
+fixed_map: false     # 加载已保存地图只定位不更新

@@ -18,7 +18,7 @@ setup(
         ),
         (
             'share/' + package_name,
-            ['package.xml', 'main.sh']
+            ['package.xml']
         ),
         (
             'share/' + package_name + '/launch',
@@ -31,11 +31,6 @@ setup(
         (
             'share/' + package_name + '/models',
             glob('models/*.pth')
-        ),
-        (
-            'share/' + package_name + '/tools/traffic',
-            glob('tools/traffic/*.py') + glob('tools/traffic/*.ps1')
-            + glob('tools/traffic/*.txt')
         ),
     ],
 
@@ -59,9 +54,6 @@ setup(
 
     entry_points={
         'console_scripts': [
-
-            'visual_centering = '
-            'openhutb_yolo_mlp_control.visual_centering_node:main',
 
             'airsim_bridge = '
             'openhutb_yolo_mlp_control.'

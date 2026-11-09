@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import nn
-from attribution import attribute
 from train_evaluate import KEYS
 
 
@@ -63,7 +62,7 @@ class ConsistencyDetector:
         self.previous = None; self.source = None; self.history = []; self.run = 0; self.arrival = 0
 
     def step(self, row):
-        c = self.config; score = None; valid = False; reason = 'warming_up'; extra = {'channels': {}, 'dominant': []}
+        c = self.config; score = None; valid = False; reason = 'warming_up'
         try:
             arrival = int(row['arrival_ns']); delivered = int(row['delivered'])
             if arrival < 0 or delivered not in (0, 1): raise ValueError()
@@ -87,7 +86,6 @@ class ConsistencyDetector:
                             with torch.no_grad(): score = float(self.model(torch.from_numpy(x[None])).item())
                             abnormal = score > c['threshold']
                             reason = 'model_residual' if abnormal else 'normal'
-                            extra = attribute(self.history[-1], c['scale'])
                     else:
                         self.history = []; reason = 'time_gap'
                 self.previous, self.source = z, stamp
@@ -97,4 +95,4 @@ class ConsistencyDetector:
         return {'arrival_ns': self.arrival, 'score': score, 'threshold': c['threshold'],
                 'alarm': bool(self.run >= c['persistence'] or reason == 'invalid_payload'),
                 'reason': reason, 'data_valid': bool(valid), 'model_ready': score is not None,
-                'consecutive': self.run, **extra}
+                'consecutive': self.run}
