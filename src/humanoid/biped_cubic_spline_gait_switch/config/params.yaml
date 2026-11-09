@@ -1,0 +1,79 @@
+# 双足机器人多步态平滑切换仿真参数
+biped:
+  thigh_length: 0.40       # m
+  shank_length: 0.40       # m
+  foot_length: 0.30        # m
+  ankle_height: 0.07       # m，踝关节离地高度
+  torso_length: 0.50       # m
+  masses:
+    torso: 12.0            # kg
+    thigh: 4.0
+    shank: 2.5
+    foot: 0.8
+
+joint_limits:
+  hip: [-1.2, 1.2]         # rad
+  knee: [0.0, 2.2]
+  ankle: [-1.0, 1.0]
+
+servo:
+  kp: 1200.0               # N*m/rad
+  kd: 48.0                 # N*m*s/rad
+  inertia: 0.30            # kg*m^2，等效关节惯量
+  rate: 500.0              # Hz，仿真步进频率
+  gravity: 9.81
+
+control:
+  rate: 200.0              # Hz
+  transition_time: 0.6     # s，步态切换过渡时长
+  mode: spline             # spline | direct
+  stand_foot_offset: 0.10  # m，站立时两脚前后偏移
+
+logging:
+  rate: 100.0
+
+simulation:
+  duration: 34.0           # s
+
+# 步态序列：站立 -> 行走 -> 快步 -> 跑步 -> 行走 -> 站立
+schedule:
+  - {gait: stand, duration: 3.0}
+  - {gait: walk, duration: 6.0}
+  - {gait: fast_walk, duration: 6.0}
+  - {gait: run, duration: 6.0}
+  - {gait: walk, duration: 6.0}
+  - {gait: stand, duration: 7.0}
+
+gaits:
+  stand:
+    cycle: 1.0
+    stance: 0.5
+    step: 0.0
+    clearance: 0.0
+    hip_height: 0.84
+    bob: 0.0
+    lean: 0.0
+  walk:
+    cycle: 1.2
+    stance: 0.62
+    step: 0.22
+    clearance: 0.10
+    hip_height: 0.82
+    bob: 0.02
+    lean: 0.06
+  fast_walk:
+    cycle: 0.9
+    stance: 0.58
+    step: 0.30
+    clearance: 0.13
+    hip_height: 0.80
+    bob: 0.025
+    lean: 0.10
+  run:
+    cycle: 0.6
+    stance: 0.38
+    step: 0.42
+    clearance: 0.18
+    hip_height: 0.78
+    bob: 0.035
+    lean: 0.16
