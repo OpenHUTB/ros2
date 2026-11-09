@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from mujoco_msk_arm_proprioception.ros_node import ArmProprioceptionNode
@@ -212,3 +213,27 @@ def test_invalid_moment_arm_count_is_rejected_at_startup():
             FakeJointState,
             FakeArray,
         )
+
+
+def test_physical_parameters_are_loaded_from_node_configuration():
+    node = FakeNode({
+        'moment_arms_flat': [0.01, -0.02] * 6,
+        'resting_lengths_m': [0.11] * 6,
+        'tendon_stiffness_n_m': [900.0] * 6,
+        'max_forces_n': [75.0] * 6,
+    })
+    implementation = ArmProprioceptionNode(
+        node,
+        FakeJointState,
+        FakeArray,
+    )
+    assert np.allclose(
+        implementation.model.moment_arms,
+        np.array([0.01, -0.02] * 6).reshape(6, 2),
+    )
+    assert np.allclose(implementation.model.resting_lengths_m, 0.11)
+    assert np.allclose(
+        implementation.model.tendon_stiffness_n_m,
+        900.0,
+    )
+    assert np.allclose(implementation.model.max_forces_n, 75.0)
