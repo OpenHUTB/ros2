@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>4. 机器人仿真 - 模拟器的 ROS 文档</title>
+<title>章节首页 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "4. \u673a\u5668\u4eba\u4eff\u771f";
+        var mkdocs_page_name = "\u7ae0\u8282\u9996\u9875";
         var mkdocs_page_input_path = "chapter/chap4.md";
         var mkdocs_page_url = null;
       </script>
@@ -49,12 +49,6 @@
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../urdf_car_modeling/">URDF 四轮小车建模与 RViz 显示</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -71,47 +65,41 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap3/">3. 机器人系统设计</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">4. 机器人仿真</a>
+<li class="toctree-l1 current"><a class="reference internal current">4. 机器人仿真</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#mbot-gazebo">mbot 小车 Gazebo 仿真</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">章节首页</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#mbot-gazebo">mbot 小车 Gazebo 仿真</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_1">工作空间挂载与编译</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#1">1. 克隆仓库并切换分支</a>
+<li class="toctree-l3"><a class="reference internal" href="#_1">工作空间挂载与编译</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#2-catkin">2. 创建 catkin 工作空间并软链接功能包</a>
+<li class="toctree-l3"><a class="reference internal" href="#_2">动图效果完整复现指南</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#3">3. 编译并加载环境</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#4_1">4. 验证包已就绪</a>
+<li class="toctree-l3"><a class="reference internal" href="#gazebo">Gazebo 移动机器人平台搭建与首次仿真</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">动图效果完整复现指南</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#1-gazebo">步骤 1（底盘物理环境）：启动 Gazebo 差分驱动小车</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#2-teleop">步骤 2（键盘遥控）：启动 teleop 键盘遥控节点</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#3_1">步骤 3（遥控交互）：键位映射</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#4_2">步骤 4（预期现象）</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#gazebo">Gazebo 移动机器人平台搭建与首次仿真</a>
+<li class="toctree-l2"><a class="reference internal" href="../urdf_car_modeling/">URDF 四轮小车建模与 RViz 显示</a>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
+<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../chap6/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap7/">7. 阿克曼四轮小车运动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
 <ul>
 <li class="toctree-l2"><a class="reference internal" href="../chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
 </li>
@@ -585,7 +573,8 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">4. 机器人仿真</li>
+<li class="breadcrumb-item">4. 机器人仿真</li>
+<li class="breadcrumb-item active">章节首页</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap4.md"> 编辑页面</a>
 </li>
@@ -762,7 +751,7 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../chap3/" title="3. 机器人系统设计"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap5/" title="5. 机器人感知">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../urdf_car_modeling/" title="URDF 四轮小车建模与 RViz 显示">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr>
 <div role="contentinfo">
@@ -780,7 +769,7 @@ rostopic<span class="w"> </span><span class="nb">echo</span><span class="w"> </s
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../chap3/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../chap5/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../urdf_car_modeling/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

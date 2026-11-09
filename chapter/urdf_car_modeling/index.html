@@ -49,32 +49,6 @@
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal current" href="#">URDF 四轮小车建模与 RViz 显示</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1. 文件与环境</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2-ubuntu">2. 安装与编译（Ubuntu 终端）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3">3. 观察效果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4">4. 实验检查</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#check_urdf">check_urdf 用户实测记录</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5. 模型原理与修改</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#6">6. 报告与截图（实际运行后填写）</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 实测运行截图</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -91,17 +65,47 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap3/">3. 机器人系统设计</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../chap4/">4. 机器人仿真</a>
+<li class="toctree-l1 current"><a class="reference internal current">4. 机器人仿真</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../chap4/">章节首页</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">URDF 四轮小车建模与 RViz 显示</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 文件与环境</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2-ubuntu">2. 安装与编译（Ubuntu 终端）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 观察效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 实验检查</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 模型原理与修改</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 已有实验材料</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 实测运行截图</a>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
+<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../chap6/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap7/">7. 阿克曼四轮小车运动控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
 <ul>
 <li class="toctree-l2"><a class="reference internal" href="../chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
 </li>
@@ -575,6 +579,7 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">4. 机器人仿真</li>
 <li class="breadcrumb-item active">URDF 四轮小车建模与 RViz 显示</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/urdf_car_modeling.md"> 编辑页面</a>
@@ -585,7 +590,7 @@
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
 <div><h1 id="ros-noetic-urdf">ROS Noetic：四轮小车 URDF 建模作业</h1>
-<p>本作业对应教材第 6.2–6.3 节（URDF/xacro）。目标为建立四轮小车，在 RViz 显示模型、检查 TF 树，并通过关节滑块观察车轮旋转。</p>
+<p>本页归入本站第 4 章“机器人仿真”，内容为四轮小车 URDF/xacro 建模、RViz 模型显示、TF 树检查与关节滑块观察。旧作业材料的教材编号与本站目录不同；源码保留在 <code>src/chap6/urdf_car_demo</code>。</p>
 <h2 id="1">1. 文件与环境</h2>
 <p>Ubuntu 20.04 + ROS Noetic，使用系统 ROS 环境。不要激活 AirSim Python 虚拟环境。</p>
 <div class="highlight"><pre><span></span><code>urdf_car_demo/
@@ -599,10 +604,18 @@
 <h2 id="2-ubuntu">2. 安装与编译（Ubuntu 终端）</h2>
 <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/noetic/setup.bash
 sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-noetic-xacro<span class="w"> </span>ros-noetic-robot-state-publisher<span class="w"> </span>ros-noetic-joint-state-publisher-gui<span class="w"> </span>ros-noetic-rviz<span class="w"> </span>liburdfdom-tools
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git<span class="w"> </span>ros-noetic-catkin<span class="w"> </span>ros-noetic-tf<span class="w"> </span>ros-noetic-xacro<span class="w"> </span>ros-noetic-robot-state-publisher<span class="w"> </span>ros-noetic-joint-state-publisher-gui<span class="w"> </span>ros-noetic-rviz<span class="w"> </span>liburdfdom-tools
 mkdir<span class="w"> </span>-p<span class="w"> </span>~/urdf_car_ws/src
 </code></pre></div>
-<p>将解压后的 <strong>urdf_car_demo</strong> 整个文件夹复制到 <code>~/urdf_car_ws/src/</code>，使 package.xml 位于 <code>~/urdf_car_ws/src/urdf_car_demo/package.xml</code>。</p>
+<p>源码位于本仓库 <code>src/chap6/urdf_car_demo</code>。首次获取仓库可执行：</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/OpenHUTB/ros2.git<span class="w"> </span>~/ros2-course-source
+</code></pre></div>
+<p>已有仓库时跳过克隆，并将下面的 <code>REPO_DIR</code> 改成实际仓库根目录。只复制单个包，不要把整个仓库的 <code>src</code> 放进 catkin 工作空间。目标位置已有同名包时先保留原文件，避免直接覆盖自己的修改。</p>
+<div class="highlight"><pre><span></span><code><span class="nv">REPO_DIR</span><span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/ros2-course-source"</span>
+<span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">"</span><span class="nv">$REPO_DIR</span><span class="s2">/src/chap6/urdf_car_demo/package.xml"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>cp<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="nv">$REPO_DIR</span><span class="s2">/src/chap6/urdf_car_demo"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/urdf_car_ws/src/"</span>
+</code></pre></div>
+<p>确认 <code>~/urdf_car_ws/src/urdf_car_demo/package.xml</code> 存在后再编译。使用作业压缩包时，也可将解压后的 <code>urdf_car_demo</code> 整个文件夹复制到该位置。</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/urdf_car_ws
 catkin_make
 <span class="nb">source</span><span class="w"> </span>devel/setup.bash
@@ -639,7 +652,8 @@ root Link: base_footprint has 1 child(ren)
         child(5):  rear_left_wheel_link
         child(6):  rear_right_wheel_link
 </code></pre></div>
-<p>结果：展开后的 URDF 已由 <code>check_urdf</code> 成功解析；根链接是 <code>base_footprint</code>，其子链接为 <code>base_link</code>，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，不是结构检查生成的示例输出；它验证 URDF 解析与树结构，不代表关节滑块交互或动力学仿真已验收。原始输出另存于包内 <code>validation/check_urdf_output.txt</code>。</p>
+<p>结果：展开后的 URDF 已由 <code>check_urdf</code> 成功解析；根链接是 <code>base_footprint</code>，其子链接为 <code>base_link</code>，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，验证了 URDF 解析与树结构。原始输出另存于包内 <code>validation/check_urdf_output.txt</code>。</p>
+<p><code>tf_echo</code> 会持续输出；观察后按 <code>Ctrl+C</code> 返回终端。<code>check_urdf</code> 验证静态模型树，<code>tf_echo</code> 检查运行中的 TF，二者用途不同。</p>
 <h2 id="5">5. 模型原理与修改</h2>
 <ul>
 <li>单位为米、弧度，坐标 x 向前、y 向左、z 向上。</li>
@@ -653,26 +667,24 @@ root Link: base_footprint has 1 child(ren)
 <li>修改轮半径时也要重新计算轮心位置与车体离地高度，避免轮子悬空或穿地。</li>
 </ul>
 <p>可作为个人扩展：改变车体配色、增加摄像头 link，或增加可转动雷达关节，并解释 TF 树变化。不要将单纯改变颜色描述成新的导航算法。</p>
-<h2 id="6">6. 报告与截图（实际运行后填写）</h2>
+<h2 id="6">6. 已有实验材料</h2>
 <ol>
-<li>实验目的、操作系统和 ROS 版本。</li>
-<li>包结构及 URDF/xacro 关键代码说明。</li>
-<li>整车 RViz 截图。</li>
-<li>关节滑块与车轮旋转前后对比截图。</li>
-<li>TF 坐标系或 check_urdf 输出截图。</li>
-<li>自己修改的一个模型结构及前后对比。</li>
-<li>遇到的问题与解决办法。</li>
+<li>Ubuntu 20.04 + ROS Noetic 环境说明。</li>
+<li>包结构及 URDF/xacro 模型说明。</li>
+<li>RViz 整车显示截图。</li>
+<li><code>check_urdf</code> 成功输出与 8 个链接的模型树。</li>
 </ol>
-<p>本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；check_urdf 实测输出已记录于第 4 节；车轮滑块交互和 TF 显示仍需分别记录。</p>
+<p>继续进行动态仿真可参考<a href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>。该实验使用独立包，运行前先在当前 launch 终端按 <code>Ctrl+C</code> 关闭模型显示。</p>
+<p>本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；<code>check_urdf</code> 实测输出记录于第 4 节。</p>
 <h2 id="7">7. 实测运行截图</h2>
 <p><img alt="Ubuntu ROS Noetic 下的 URDF 小车 RViz 显示结果" src="../../img/chap6/urdf_car_demo/rviz_car_result.png"/></p>
 <p>用户提供的运行截图显示，joint_state_publisher_gui、robot_state_publisher 与 RViz 已启动，RViz 的 Global Status 为 Ok，蓝色车体、黑色车轮、橙色雷达外形和白色车头标记正常显示。</p>
-<p>本截图证明模型显示已运行；未展示滑块操作或勾选 TF 的效果，不作为车轮交互和 TF 专项验证的完成记录。</p></div>
+<p>本截图记录了模型显示效果。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../../chap2/ros2_service_param_demo/" title="ROS2 服务与参数基础实验（uav_mode_node）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../urdf_car_gmapping/" title="自建小车 Gazebo GMapping 建图">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../chap4/" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../chap5/" title="5. 机器人感知">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -689,8 +701,8 @@ root Link: base_footprint has 1 child(ren)
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../../chap2/ros2_service_param_demo/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../urdf_car_gmapping/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../chap4/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../chap5/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
