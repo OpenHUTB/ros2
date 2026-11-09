@@ -32,6 +32,7 @@ class GroundFilterNode(object):
         self.iterations = int(rospy.get_param("~max_iterations", 120))
         self.min_range = float(rospy.get_param("~min_range", 0.5))
         self.max_range = float(rospy.get_param("~max_range", 60.0))
+        self.max_tilt_deg = float(rospy.get_param("~max_tilt_deg", 35.0))
         self.pub_ground = rospy.Publisher("/lidar/ground", PointCloud2, queue_size=2)
         self.pub_obstacles = rospy.Publisher("/lidar/obstacles", PointCloud2, queue_size=2)
         rospy.Subscriber("/lidar/points", PointCloud2, self.on_cloud, queue_size=1)
@@ -47,7 +48,12 @@ class GroundFilterNode(object):
         pts = pts[(r >= self.min_range) & (r <= self.max_range)]
         if len(pts) < 3:
             return
-        normal, d = fit_plane(pts, self.threshold, self.iterations)
+        try:
+            normal, d = fit_plane(pts, self.threshold, self.iterations,
+                                  max_tilt_deg=self.max_tilt_deg)
+        except ValueError as exc:
+            rospy.logwarn_throttle(5.0, "ground_filter: no ground plane (%s)", exc)
+            return
         ground_mask, obstacle_mask = split_cloud(pts, normal, d, self.threshold)
         frame = msg.header.frame_id or "world"
         stamp = msg.header.stamp

@@ -53,9 +53,32 @@ def test_empty():
         check(True, "少于 3 点报错")
 
 
+def test_tilt_constraint():
+    print("== D. 水平性约束 ==")
+    rng = np.random.default_rng(2)
+    # 300 个竖直墙面点（x=0）+ 120 个地面点：不加约束时 RANSAC 会选中墙面
+    wall = np.c_[np.zeros(300), rng.uniform(-8, 8, 300), rng.uniform(0.2, 6, 300)]
+    ground = np.c_[rng.uniform(-8, 8, 120), rng.uniform(-8, 8, 120),
+                   rng.normal(0, 0.02, 120)]
+    pts = np.vstack([wall, ground])
+    normal, d = ground_filter.fit_plane(pts, iterations=300, seed=3)
+    tilt = np.degrees(np.arccos(min(1.0, abs(float(normal[2])))))
+    check(tilt <= 35.0, "墙面占优时仍返回水平面（倾角 %.1f°）" % tilt)
+    check(normal[2] > 0, "法向量朝 +z")
+    check(abs(d) < 0.2, "平面贴地（d=%.3f）" % d)
+
+    # 全是竖直点时必须报错，而不是把墙当地面
+    try:
+        ground_filter.fit_plane(wall, iterations=200, seed=4)
+        check(False, "纯竖直点应报错")
+    except ValueError:
+        check(True, "纯竖直点报错")
+
+
 if __name__ == "__main__":
     test_fit()
     test_split()
     test_empty()
+    test_tilt_constraint()
     print("\n通过 %d 项，失败 %d 项" % (len(PASS), len(FAIL)))
     sys.exit(1 if FAIL else 0)
