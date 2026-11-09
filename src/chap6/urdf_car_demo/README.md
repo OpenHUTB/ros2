@@ -1,6 +1,6 @@
 # ROS Noetic：四轮小车 URDF 建模作业
 
-本作业对应教材第 6.2–6.3 节（URDF/xacro）。目标为建立四轮小车，在 RViz 显示模型、检查 TF 树，并通过关节滑块观察车轮旋转。
+本页归入本站第 4 章“机器人仿真”，内容为四轮小车 URDF/xacro 建模、RViz 模型显示、TF 树检查与关节滑块观察。旧作业材料的教材编号与本站目录不同；源码保留在 `src/chap6/urdf_car_demo`。
 
 ## 1. 文件与环境
 
@@ -22,11 +22,25 @@ urdf_car_demo/
 ```bash
 source /opt/ros/noetic/setup.bash
 sudo apt update
-sudo apt install ros-noetic-xacro ros-noetic-robot-state-publisher ros-noetic-joint-state-publisher-gui ros-noetic-rviz liburdfdom-tools
+sudo apt install git ros-noetic-catkin ros-noetic-tf ros-noetic-xacro ros-noetic-robot-state-publisher ros-noetic-joint-state-publisher-gui ros-noetic-rviz liburdfdom-tools
 mkdir -p ~/urdf_car_ws/src
 ```
 
-将解压后的 **urdf_car_demo** 整个文件夹复制到 `~/urdf_car_ws/src/`，使 package.xml 位于 `~/urdf_car_ws/src/urdf_car_demo/package.xml`。
+源码位于本仓库 `src/chap6/urdf_car_demo`。首次获取仓库可执行：
+
+```bash
+git clone --depth 1 https://github.com/OpenHUTB/ros2.git ~/ros2-course-source
+```
+
+已有仓库时跳过克隆，并将下面的 `REPO_DIR` 改成实际仓库根目录。只复制单个包，不要把整个仓库的 `src` 放进 catkin 工作空间。目标位置已有同名包时先保留原文件，避免直接覆盖自己的修改。
+
+```bash
+REPO_DIR="$HOME/ros2-course-source"
+test -f "$REPO_DIR/src/chap6/urdf_car_demo/package.xml" && \
+  cp -a "$REPO_DIR/src/chap6/urdf_car_demo" "$HOME/urdf_car_ws/src/"
+```
+
+确认 `~/urdf_car_ws/src/urdf_car_demo/package.xml` 存在后再编译。使用作业压缩包时，也可将解压后的 `urdf_car_demo` 整个文件夹复制到该位置。
 
 ```bash
 cd ~/urdf_car_ws
@@ -82,6 +96,8 @@ root Link: base_footprint has 1 child(ren)
 
 结果：展开后的 URDF 已由 `check_urdf` 成功解析；根链接是 `base_footprint`，其子链接为 `base_link`，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，不是结构检查生成的示例输出；它验证 URDF 解析与树结构，不代表关节滑块交互或动力学仿真已验收。原始输出另存于包内 `validation/check_urdf_output.txt`。
 
+`tf_echo` 会持续输出；观察后按 `Ctrl+C` 返回终端。`check_urdf` 验证静态模型树，`tf_echo` 检查运行中的 TF，二者用途不同。
+
 ## 5. 模型原理与修改
 
 - 单位为米、弧度，坐标 x 向前、y 向左、z 向上。
@@ -105,6 +121,8 @@ root Link: base_footprint has 1 child(ren)
 5. TF 坐标系或 check_urdf 输出截图。
 6. 自己修改的一个模型结构及前后对比。
 7. 遇到的问题与解决办法。
+
+继续进行动态仿真可参考[自建小车 Gazebo GMapping 建图](../../../docs/chapter/urdf_car_gmapping.md)。该实验使用独立包，运行前先在当前 launch 终端按 `Ctrl+C` 关闭模型显示。
 
 本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；check_urdf 实测输出已记录于第 4 节；车轮滑块交互和 TF 显示仍需分别记录。
 
