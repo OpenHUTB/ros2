@@ -103,6 +103,7 @@ nav:
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
+    - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
