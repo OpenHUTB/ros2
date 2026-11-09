@@ -14,7 +14,8 @@ topic:
 
 frame:
   # 高度分量是否上为正（ENU）。桥接层若给 NED（下为正），设 false：
-  # 节点会把「高度 / 速度指令 / 目标高度」三处一起换算，判据内部只有 ENU 一种坐标。
+  # 节点会把「高度 / 速度指令 / 目标高度」三处一起换算，判据内部只有 ENU 一种坐标；
+  # target/goal_offset_m 一律在换算成 ENU 之后再减（先减再取负会差 2 × offset）。
   z_up: true
 
 monitor:
@@ -50,8 +51,9 @@ thresholds:
   descend_stall_eps_m: 0.10     # 窗口内高度变化小于它就算“没再下降”
   # --- 掉高 ---
   free_fall_window_s: 0.6
-  free_fall_rate: 1.2           # m/s，超过且没有对应指令 -> FREE_FALL
-  free_fall_cmd_slack: 0.6      # 指令本身大于它时不判掉高
+  free_fall_rate: 1.2           # m/s，下降速率超过它才可能判 FREE_FALL
+  free_fall_cmd_slack: 1.0      # 还要"比指令快出松弛量"才算失控：只看 |vz| 会把
+                                # 正常下降略快于指令的情况误判成 error
   # --- 落地 ---
   landing_tol_m: 0.35           # 到位置容差
   landed_stable_s: 0.8          # 到位置后还要稳这么久才报 Z_REACHED
@@ -60,6 +62,12 @@ thresholds:
   timeout_s: 90.0               # 下降超时
   # --- 目标高度 ---
   target_unknown_s: 8.0         # 这么久还拿不到目标高度就报 TARGET_UNKNOWN
+  target_change_tol_m: 0.35     # 目标高度变化小于它视为落点话题的抖动：不重新装填、
+                                # 不会重复报 LANDED（NN 输出 cm 级抖动很常见）
+  # --- 复位（一个常驻节点连续监控多次降落）---
+  resume_climb_m: 1.0           # 比上一轮结束那一刻高出这么多才算"重新起飞"-> 复位
+                                # 另外两种情况也会复位：超时后下降指令重新出现、
+                                # 收到新的 /uav/goal
   # --- 告警节流 ---
   alert_cooldown_s: 1.0         # 同一告警的再次触发冷却（配合“上升沿触发”避免刷屏）
   # --- 桥接层状态用词（可选）---

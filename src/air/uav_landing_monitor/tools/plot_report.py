@@ -17,7 +17,8 @@ import csv
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+_PKG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_PKG, "scripts"))
 
 from monitor_core import LEVEL_OF  # noqa: E402  与判据共用一份级别表，避免两份拷贝
 

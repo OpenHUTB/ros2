@@ -24,7 +24,9 @@ install(DIRECTORY launch config scripts tools
   USE_SOURCE_PERMISSIONS
 )
 
-# 纯 python 回归测试（不依赖 ROS master / 仿真器），catkin_make run_tests 会一起跑
+# 纯 python 回归测试（不依赖 ROS master / 仿真器），catkin_make run_tests 会一起跑。
+# nose 只收集 test 开头的函数，场景函数都叫 scenario_*，所以文件里另外暴露了
+# test_all_scenarios() 作为收集入口（本地直跑仍会打印逐条结果）。
 if(CATKIN_ENABLE_TESTING)
   catkin_add_nosetests(tests/test_uav_landing_monitor_local.py)
 endif()

@@ -21,13 +21,13 @@
 | 告警码 | 级别 | 触发条件 |
 | --- | --- | --- |
 | `CMD_NO_EFFECT` | error | 窗口内**指令积分** ∫\|−vz\|dt ≥ `cmd_effect_min_expect_m`，但实际下降量 < `cmd_effect_ratio` × 期望值 |
-| `DESCEND_STALL` | warn | 已经开始下降后下降指令消失（\|vz\| < `cmd_min_vz`），窗口内高度也只变化 < `descend_stall_eps_m`，且仍未到目标高度 |
-| `FREE_FALL` | error | 高度下掉速率 > `free_fall_rate`，而速度指令远小于它（掉高 / 失控） |
+| `DESCEND_STALL` | warn | 已经开始下降后没有下降指令（\|vz\| < `cmd_min_vz`），窗口内高度也只变化 < `descend_stall_eps_m`，且仍未到目标高度 |
+| `FREE_FALL` | error | 高度下掉速率 > `free_fall_rate`，**且比指令快出 `free_fall_cmd_slack`**（掉高 / 失控） |
 | `Z_REACHED` | info | 高度进入目标 ± `landing_tol_m` 并稳定 `landed_stable_s`（"到位置了"，与上游是否松手无关） |
 | `LANDED` | info | `Z_REACHED` 且上游已释放下降指令（一次完整的落地） |
 | `CMD_NOT_RELEASED` | warn | 已到位置，但上游仍在发下降指令超过 `landed_cmd_grace_s` |
 | `OVERSHOOT` | error | 已低于目标高度超过 `overshoot_m`（可重复触发，不是一次性） |
-| `LANDING_TIMEOUT` | error | 从开始下降算起超过 `timeout_s` 仍未到位置 |
+| `LANDING_TIMEOUT` | error | 从开始下降算起超过 `timeout_s` 仍未到位置（**已经 `Z_REACHED` 就不再判**） |
 | `INPUT_STALE` | error | 里程计超过 `stale_input_s` 没有新数据 |
 | `TARGET_UNKNOWN` | warn | 启动后 `target_unknown_s` 内仍拿不到落地目标高度 |
 
@@ -39,18 +39,33 @@
   但 `FREE_FALL` 用的是完整高度历史，照常工作。
 * **告警是上升沿触发**：条件持续期间只报一次，条件消失后才可能再报（另有 `alert_cooldown_s`）。
   实测 90 s 的持续故障只产生 1 条 `CMD_NO_EFFECT`，不会刷屏。
-* **可复位**：落地/超时之后，只要飞机重新爬升超过 1 m，或目标高度发生变化，`reset()` 会自动
-  清掉一次性事件与告警历史和阶段，因此**一个常驻节点可以连续监控多次降落**。
+* **`active` 只表示"仍未恢复的异常"**：`Z_REACHED` / `LANDED` 是一次性 info 事件，不进 `active`，
+  否则看板会把"落地成功"显示成故障。
+* **可复位（三种触发）**：落地/超时之后，只要 ① 飞机重新爬升超过 `resume_climb_m`、
+  ② 超时之后**下降指令重新出现**（现场重试常常在同一高度再来一次，不会爬升）、
+  ③ 上游下发了新的 `/uav/goal`，`reset()` 就会清掉本轮阶段与告警并开始新一轮，
+  因此**一个常驻节点可以连续监控多次降落**。
+* **结论按"当前这一轮"算**：`report()["verdict"]` 只看本轮告警，上一轮的失败不会把下一轮的
+  干净落地也拖成 `fail`；历史轮次在 `report()["runs"]`，累计告警在 `report()["summary"]`。
+* **到位置之后不再判超时**：`Z_REACHED` 一旦成立，`timeout_s` 就不再适用 —— 上游不松手有
+  `CMD_NOT_RELEASED` 这个更准确的告警，不该同时拖成 `fail + ABORTED`。
+* **目标高度有抖动容差**：落点话题是神经网络输出，cm 级抖动很常见；变化小于
+  `target_change_tol_m`（默认 0.35 m）视为同一目标，不重新装填、不会重复报 `LANDED`。
 * **坐标只有一种**：核心判据内部一律 ENU（上为正）。`frame/z_up:=false`（NED）时，节点会把
-  **高度、速度指令、目标高度三处一起**换算（`monitor_core.to_enu`），不存在"z 换了、vz 没换"。
+  **高度、速度指令、目标高度三处一起**换算（`monitor_core.to_enu`），不存在"z 换了、vz 没换"；
+  且 **`target/goal_offset_m` 在换算成 ENU 之后才减**（`monitor_core.goal_target_z`）——
+  NED 下写成"先减 offset 再取负"会让目标高度差 2 × offset。
 * **不依赖 `DESCEND` 字样**：`carlair_ros_bridge` 的 `/uav/status` 只会发
   `READY / GOAL x y z / GOAL_DONE / GOAL_FAILED / VELOCITY / HOVER`，没有 `DESCEND`。
-  所以 `DESCEND_STALL` 用的是"指令消失 + 高度不再下降 + 还没到目标"这种可观测组合；
+  所以 `DESCEND_STALL` 用的是"没有下降指令 + 高度不再下降 + 还没到目标"这种可观测组合；
   只有当某个桥接层真的会发 `DESCEND` 时，才用 `thresholds/status_descend_keywords` 打开状态串判据。
 * **落地与"上游收手"分离**：`Z_REACHED` 只看物理高度，`LANDED` 才额外要求指令释放；
   上游落地后不清零指令时会给 `CMD_NOT_RELEASED` 警告，而不会把整次降落误判成超时失败。
 * **时钟兜底**：`use_sim_time=true` 但 `/clock` 没来时 `rospy.get_time()` 恒为 0，会让所有
-  时间判据失效。节点启动时会检测时间是否在推进，不推进就自动改用单调时钟并打 ERROR 日志。
+  时间判据失效。节点启动时会检测时间是否在推进，不推进就自动改用单调时钟并打 ERROR 日志；
+  `/clock` 比本节点晚起来时，每 5 s 复查一次并自动切回。
+* **CSV 时间列用节点自己的单调起点**（`monitor_core.CsvClock`），与 core 的"每轮 `t_first`"解耦：
+  自动复位不会让同一份 CSV 里的 `t` 跳回 0（否则画出来的高度曲线会往回跳）。
 
 ## 3. 运行
 
@@ -88,10 +103,12 @@ roslaunch uav_landing_monitor main.launch timeout_s:=30 stale_input_s:=0.5
 python3 tools/plot_report.py /tmp/landing.csv --out landing.png --title "正常降落"
 ```
 
-测试（纯 python，不需要 ROS / 仿真器；`catkin_make run_tests` 也会通过 `catkin_add_nosetests` 跑）：
+测试（纯 python，不需要 ROS / 仿真器；`catkin_make run_tests` 也会通过 `catkin_add_nosetests` 跑，
+文件里对 nose 暴露的入口是 `test_all_scenarios`）：
 
 ```bash
-python3 tests/test_uav_landing_monitor_local.py     # 预期 结果：67/67 通过
+python3 tests/test_uav_landing_monitor_local.py     # 预期 结果：110/110 通过
+python3 tools/replay_csv.py /tmp/landing.csv        # 把既有 CSV 喂回当前判据
 ```
 
 ## 4. 实测记录（并如实说明它不总是复现）
@@ -112,9 +129,10 @@ python3 tools/plot_report.py landing_normal.csv --alerts replay --out normal_run
 
 ![故障轮：下降指令无效](../img/air/uav_landing_monitor/stuck_run.png)
 
-这张图是**评审前版本**的真实记录（当时还是"逐帧报"，所以画出了 7 条同类告警）。当前版本改成
-**上升沿触发**：同一段持续故障只会报 1 条 `CMD_NO_EFFECT`，随后由 `LANDING_TIMEOUT` 收尾，
-告警不再刷屏（这一点有回归用例覆盖，见 `tests/` 里的"持续故障只报一次"）。
+这张图是**评审前版本**的真实记录（当时还是"逐帧报"，所以画出了 7 条同类告警），图底部已直接标注
+"旧判据录制"，不要把它当成当前行为。当前版本改成 **上升沿触发**：同一段持续故障只会报 1 条
+`CMD_NO_EFFECT`，随后由 `LANDING_TIMEOUT` 收尾，告警不再刷屏（这一点有回归用例覆盖，见
+`tests/` 里的"持续故障只报一次"）。
 
 ### 关于"飞机为什么不动"：只登记现象，不做因果结论
 
@@ -149,12 +167,29 @@ python3 tools/plot_report.py landing_normal.csv --alerts replay --out normal_run
   超时未拿到目标高度则报 `TARGET_UNKNOWN`。
 * "落地"只判定到高度层面（`Z_REACHED` + 指令释放），不判断是否真的踩在屋面上——
   落点几何是否正确属于 `rooftop_landing*` 模块的职责。
+* 超时后"在同一高度重试"的识别依赖**下降指令重新出现**这个边沿；如果上游从头到尾都没松过
+  下降指令，那在监控看来就是同一次连续故障（这也是符合直觉的）。
+
+## 7. 第二轮评审 6 个场景的复现
+
+下面几条都是把判据原样 import 后喂合成序列得到的（`tests/` 里各有用例断言）：
+
+```text
+1) NED + goal_offset：goal.z=-20（NED）、offset=5  ->  目标 15.00 m（旧写法算出 25.00 m）
+2) 干净落地之后 active=[]（旧版本会在"仍未恢复"里列 ['LANDED', 'Z_REACHED']）
+3) 到位置后上游一直不松手、跑满 100 s（timeout_s=90）：
+   Z_REACHED@0.7s -> CMD_NOT_RELEASED@2.7s -> CMD_NO_EFFECT@3.1s，LANDING_TIMEOUT 出现 0 次
+4) 超时 ABORTED 之后同一高度重试：CMD_NO_EFFECT 重新报出，阶段回到 DESCENDING，轮次 +1
+5) 落地后落点抖动 +0.02/+0.04/…（10 次）：LANDED 仍然只有 1 条，阶段保持 LANDED
+6) 第 1 轮断流判 fail、第 2 轮干净落地：verdict=ok，历史轮次里保留第 1 轮 fail
+```
 
 ## 附：大模型使用声明
 
 本模块的代码、测试与文档在编写过程中使用了大模型辅助（判据设计讨论、代码与文档起草、
-绘图脚本整理、以及按评审意见重构判据与补充回归用例）。所有结论均来自仓库内可复现的真实运行：
-`tests/test_uav_landing_monitor_local.py`（67 项断言，含评审提出的暂停/恢复、变速、
-低高度启动、第二次降落、到位置不松手、NED 换算、并发等场景）、以及第 4 节两轮 UE + AirSim
+绘图脚本整理、以及按两轮评审意见重构判据与补充回归用例）。所有结论均来自仓库内可复现的真实运行：
+`tests/test_uav_landing_monitor_local.py`（110 项断言，含评审提出的暂停/恢复、变速、
+低高度启动、第二次降落、到位置不松手、NED 换算与 goal_offset、超时后同高度重试、落点抖动、
+跨轮结论、CSV 时间列、active 语义、并发等场景）、以及第 4 节两轮 UE + AirSim
 真机运行（CSV 由节点参数 `monitor/csv` 生成，图由 `tools/plot_report.py` 从该 CSV 绘制）。
 作者对提交内容的正确性与完整性负全部责任。

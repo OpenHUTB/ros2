@@ -16,7 +16,8 @@ import csv
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+_PKG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_PKG, "scripts"))
 
 from monitor_core import LandingMonitor  # noqa: E402
 
@@ -63,8 +64,11 @@ def main(argv=None):
     monitor, alerts = replay(args.csv, args.target)
     rep = monitor.report()
     print("回放：%s" % args.csv)
-    print("结论：%s   阶段：%s   告警统计：%s" % (rep["verdict"], rep["phase"],
-                                          rep["alert_counts"] or "无"))
+    print("结论：%s   阶段：%s   告警统计：%s"
+          % (rep["verdict"], rep["phase"], rep["alert_counts"] or "无"))
+    for run in rep.get("runs", []):
+        print("  第 %d 轮：%s（%s，结束原因 %s）"
+              % (run["run"], run["verdict"], run["phase"], run.get("end_reason") or "-"))
     for a in alerts:
         print("  [%-5s] %-16s %7.2fs  %s" % (a.level, a.code, a.t, a.msg))
 
