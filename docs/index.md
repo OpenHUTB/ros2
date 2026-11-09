@@ -107,6 +107,7 @@ ROS每章节运行代码:
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
+* [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积，60 m 内召回率 1.0
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
