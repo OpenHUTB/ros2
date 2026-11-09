@@ -294,6 +294,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机航测任务规划（GSD/重叠度/WPML）](./air/survey_mission_planner.md) —— 由相机参数和目标 GSD 反算航高、航带间距、拍照间距与航点，导出 CSV/KML/WPML
 
+* [无人机航点任务飞行前校验](./air/uav_waypoint_preflight_validator.md) —— 检查 ENU 相对航点的高度、重复点、爬升角、转弯角、航程和保守 ETA，并输出 JSON 与 RViz 预览
+
 * [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
