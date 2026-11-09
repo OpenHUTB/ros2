@@ -6,6 +6,10 @@ MuJoCo Differential-Drive Slip Perception and Trajectory Compensation
 
 This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot. The entry point consumes `cmd_vel`, converts chassis commands to four wheel-speed targets, and publishes simulation time, ground-truth odometry, and transforms. It also publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
 
+## 仿真验证局限与分布偏移说明
+
+本功能包的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
+
 ## 环境 / Environment
 
 | 组件 / Component | 版本 / Version |

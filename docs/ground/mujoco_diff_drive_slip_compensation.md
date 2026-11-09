@@ -8,6 +8,10 @@ MuJoCo Differential-Drive Slip Perception and Neural Trajectory Compensation Usi
 
 The module uses MuJoCo 3.12.0 to model a four-wheel differential-drive robot and exposes velocity control, simulation time, ground-truth odometry, and transform interfaces in ROS 2 Humble. Wheel encoder and inertial measurement unit data form the primary observations for subsequent slip perception and trajectory compensation across multiple friction conditions.
 
+## 仿真验证局限与分布偏移说明
+
+本模块的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上测试。仿真摩擦模型、接触动力学与传感器噪声和真实世界存在差异，迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的指标仅对应 MuJoCo 样例测试划分，不代表实物性能。真实硬件验证列为后续工作。
+
 ## 系统结构 / Architecture
 
 ```text
