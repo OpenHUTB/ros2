@@ -4,7 +4,8 @@
   <name>ant_colony_swarm</name>
   <version>0.0.0</version>
   <description>基于机器视觉的多机器人蚁群编队仿真</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="2754586324@qq.com">Xavier-101666</maintainer>
+  <author email="2754586324@qq.com">Xavier-101666</author>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
