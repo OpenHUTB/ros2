@@ -55,3 +55,13 @@ docs/
 colcon build --packages-select privacy_mask
 source install/setup.bash
 ros2 launch privacy_mask privacy_mask.launch.py
+```
+## 效果图
+- 原始输入图像：
+![原始输入图像](原始输入图像.png)
+
+- YOLOv8n行人检测结果：
+![YOLOv8n行人检测结果](YOLOv8n行人检测结果.png)
+
+- 高斯模糊隐私脱敏输出：
+![高斯模糊隐私脱敏输出](高斯模糊隐私脱敏输出.png)
