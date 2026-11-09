@@ -1,0 +1,6 @@
+<launch>
+  <test test-name="uav_altitude_sensor_fusion_unittest"
+        pkg="uav_altitude_sensor_fusion"
+        type="test_altitude_filter.py"
+        time-limit="60.0"/>
+</launch>
