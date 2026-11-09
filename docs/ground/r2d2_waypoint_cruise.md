@@ -16,12 +16,16 @@
 # 1. 安装依赖
 pip install pybullet numpy
 
-# 2. 直接运行
-python3 src/ground/r2d2_waypoint_cruise/main.py
+# 2. 方式一：通过 main.sh 启动（推荐）
+cd src/ground/r2d2_waypoint_cruise && ./main.sh
 
-# 3. 或通过 ROS launch 启动（需 ROS 环境）
-#    将 src/ground/r2d2_waypoint_cruise 放入 catkin 工作空间的 src 后：
-#    catkin_make && roslaunch r2d2_waypoint_cruise main.launch
+# 3. 方式二：直接运行核心脚本
+python3 src/ground/r2d2_waypoint_cruise/src/r2d2_waypoint_cruise/cruise.py
+
+# 4. 方式三：ROS2 launch 启动（需 ROS2 环境）
+#    将包放入 ROS2 工作空间 src 后：
+#    colcon build && source install/setup.bash
+#    ros2 launch r2d2_waypoint_cruise cruise.launch.py
 ```
 
 运行后弹出 PyBullet 可视化窗口：R2D2 小车从起点出发，依次经过四个航点球标记，沿方形路径自动巡航巡逻。关闭仿真窗口或按 Ctrl+C 即可退出，程序自动保存轨迹数据并释放仿真连接。
@@ -41,7 +45,13 @@ R2D2 为四轮差速驱动模型，左右两侧车轮分别独立控制：
 4. **航点切换**：当距离小于阈值（0.3 m）时，自动切换到下一个航点。
 
 ## ROS 接口说明
-本模块为独立 PyBullet 仿真脚本，不发布/订阅 ROS 话题。`package.xml` 与 `launch/main.launch` 用于满足仓库「模块支持 launch 启动、入口为 main 开头」的约定：roslaunch 仅作为统一启动入口调用 `main.py`，不依赖 ROS 运行时。
+本模块为独立 PyBullet 仿真脚本，不发布/订阅 ROS 话题。包结构采用标准 ament_python ROS2 包格式（`setup.py` + `package.xml` + `resource/` + `launch/*.launch.py`），`ros2 launch` 仅作为统一启动入口调用仿真脚本，不依赖 ROS 运行时。
+
+## 运行测试
+```bash
+cd src/ground/r2d2_waypoint_cruise
+python3 tests/test_basic.py
+```
 
 ## 输出数据
 程序运行结束后，轨迹数据自动保存到 `/tmp/r2d2_cruise_trajectory.csv`，包含以下字段：
