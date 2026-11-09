@@ -7,8 +7,9 @@ uav_lidar_dqn_navigation 统一入口
     python3 main.py --mode teleop       # 任务 1 键盘遥控
     python3 main.py --mode bridge       # 只启动 AirSim 桥接
     python3 main.py --mode scan         # 雷达扫描发布（建图感知层）
+    python3 main.py --mode train        # 任务 2 DQN 策略训练
 
-本阶段实现桥接、遥控与雷达感知；DQN 训练/部署、建图与端到端控制
+本阶段实现桥接、遥控、雷达感知与 DQN 训练；DQN 部署、建图与端到端控制
 在后续 PR 中按层加入，并同步扩充这里的模式表。
 """
 
@@ -45,10 +46,18 @@ def run_scan():
     LidarScanNode().run()
 
 
+def run_train():
+    import train_dqn_nav
+    # myargv: [脚本, '--mode', 'train', 其余训练参数...]
+    sys.argv = ['train_dqn_nav.py'] + rospy.myargv()[3:]
+    train_dqn_nav.main()
+
+
 MODES = {
     'bridge': run_bridge,
     'teleop': run_teleop,
     'scan': run_scan,
+    'train': run_train,
 }
 
 
