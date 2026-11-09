@@ -64,7 +64,11 @@ MODES = {
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', required=True, choices=sorted(MODES.keys()))
-    args = parser.parse_args()
+    # 训练模式要把 --ip/--episodes 等参数透传给 train_dqn_nav.py，
+    # 顶层只能用 parse_known_args；其它模式仍对未知参数报错。
+    args, unknown = parser.parse_known_args()
+    if unknown and args.mode not in ('train', 'e2e_train'):
+        parser.error('unrecognized arguments: %s' % ' '.join(unknown))
 
     rospy.init_node('uav_lidar_dqn_' + args.mode)
     MODES[args.mode]()
