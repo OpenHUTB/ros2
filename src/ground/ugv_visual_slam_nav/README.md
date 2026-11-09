@@ -87,8 +87,13 @@ cd src/ground/ugv_visual_slam_nav
 python -m ugv_visual_slam_nav.main                 # 采集→BC→DAgger→评测→出图
 python -m ugv_visual_slam_nav.main --quick         # 少种子少轮次
 python -m ugv_visual_slam_nav.main --stage eval    # 只评测
-python -m pytest test/ -q                          # 45 个用例
+python -m pytest test/ -q                          # 46 个用例（无 rclpy 的机器上）
 ```
+
+测试口径：`test_offline.py` 40 个（纯 NumPy，不依赖 ROS）、`test_nodes_ros.py`
+6 个（用 `rclpy`/`ament`/`launch` 替身把节点真接起来跑）。后者一旦检测到本机
+装了**真实 rclpy** 就会主动 `pytest.skip`，所以在 Ubuntu + Humble 上是
+`40 passed, 6 skipped`，节点接线改由 `ros2 launch` 覆盖。
 
 产物：`results/compare_summary.csv`、`compare.png`、`training_curves.png`、
 `trajectories.png`、`corridor.gif`、`dynamic.gif`，权重写进 `models/e2e.npz`。
@@ -114,8 +119,11 @@ bug，`test_offline.py` 里专门写了注释说明。
 把路径推向通道中线，并且视线简化时用更保守的掩码，避免拉直的线段贴回边缘。
 
 **卡住必须能自己出来**。跟踪误差会把车带进膨胀区，此时 A\* 从原地无解。规划器
-会在 8 格内就近找可通行格当起点，策略层再兜一层"连续 15 步几乎没位移就
-原地转向 + 查图后退"的恢复动作，到点前还有一次"自转复核"的到点确认。
+会在 8 格内就近找可通行格当起点，再兜一层"连续 15 步几乎没位移就原地转向 +
+查图后退"的恢复动作，到点前还有一次"自转复核"的到点确认。这一层在
+`nav_guard.NavGuard`，**离线策略 `SlamNavPolicy` 与 `ros2 launch` 起的
+`nav_node` 共用同一份代码**（节点侧进入判据用 `GOAL_TOL` 0.35 m，策略侧更严到
+0.19 m），不再各写一套。
 
 **端到端为什么必须喂目标方位**。第一版端到端只吃 3 帧灰度，闭环成功率 0/12：
 三房间 S 形走廊里同一幅画面既可能对应"直行"也可能对应"左转"，正确动作取决于

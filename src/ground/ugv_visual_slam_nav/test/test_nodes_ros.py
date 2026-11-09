@@ -152,3 +152,49 @@ def test_teleop_and_e2e_launch(ros):
         mod = _load_launch(name)
         _ctx, nodes = ros.expand_launch(mod.generate_launch_description(), {})
         assert {n.kwargs['name'] for n in nodes} == expect
+
+
+# ------------------------------------------------------- 导航节点的恢复动作
+def test_nav_node_recovers_when_stuck(ros):
+    """位姿半天不动时必须输出原地转向，而不是继续往前顶。
+
+    这是 nav_node 与离线策略共用 `nav_guard.NavGuard` 的回归点：早先节点里
+    只有 goal → A* → pure_pursuit，没有卡住判据，文档里写的"卡死恢复"
+    在 launch 起来的节点上其实并不存在。
+    """
+    _install()
+    fake_ros.reset()
+    import rclpy
+    import numpy as np
+    from geometry_msgs.msg import Twist
+
+    rclpy.init()
+
+    from ugv_visual_slam_nav import params as P
+    from ugv_visual_slam_nav.nav_guard import NavGuard, STUCK_STEPS
+    from ugv_visual_slam_nav.nav_node import NavNode
+
+    assert issubclass(NavNode, NavGuard), '节点必须复用同一套守卫逻辑'
+
+    class Sink(rclpy.node.Node):
+        def __init__(self):
+            super().__init__('cmd_sink_stuck')
+            self.cmds = []
+            self.create_subscription(Twist, '/ugv/cmd_vel',
+                                     lambda m: self.cmds.append(m), 10)
+
+    nav = NavNode()
+    _sink = Sink()
+    nav.occ = np.zeros((P.GH, P.GW), dtype=np.int8)     # 全空地
+    nav.depth = np.full((24, 64), 5.0, dtype=np.float32)
+    nav.pose = np.array([5.0, 5.0, 0.0])                # 远离目标
+    nav.t = 100.0                                      # 跳过起步原地扫描
+
+    rig = fake_ros.Rig(dt=0.05)                        # 20 Hz：两步一个控制周期
+    for _ in range((STUCK_STEPS + 12) * 2):
+        nav.pose = np.array([5.0, 5.0, 0.0])           # 位姿一直不变
+        rig.step()
+
+    assert any(abs(m.angular.z) > 0.5 and m.linear.x <= 0.0
+               for m in _sink.cmds), '卡住后应原地转向或查图后退'
+    _close()

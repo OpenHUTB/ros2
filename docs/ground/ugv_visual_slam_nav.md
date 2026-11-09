@@ -203,6 +203,11 @@ $$
   EKF 吃到这批观测、漂移收敛后再做最终确认。真实机器人也会做这种
   "到点复核"动作。
 
+> 上面两条写在 `nav_guard.NavGuard` 里，**离线的 `SlamNavPolicy` 和
+> `ros2 launch` 起来的 `nav_node` 共用同一份状态机**（节点侧的差异只有
+> 进入判据沿用 `GOAL_TOL` 0.35 m，而不是策略侧更严的 0.19 m，避免换实现后
+> 反而停不下来）。早先两套各写一份、节点里并没有恢复逻辑，是这次改掉的。
+
 ## 9. 端到端 CNN
 
 结构（`cnn.py`，纯 NumPy，`im2col` + 手写反向，梯度用数值差分校验过）：
@@ -273,6 +278,15 @@ $$
 四场景 × 3 种子，同一批 episode 上四种策略的汇总（12 个 episode 的均值，
 完整逐条数据见包内 `results/compare_summary.csv`）：
 
+> **这张表是离线仿真的口径**：由 `python -m ugv_visual_slam_nav.main` 调用
+> `policies.SlamNavPolicy` 在逐帧可复现的仿真里跑出来，用来做策略间横向对比。
+> `ros2 launch ugv_visual_slam_nav main.launch.py` 起的是 `nav_node`——
+> 定位/建图换成 `slam_node`、感知换成话题输入，两者共用同一份
+> `nav_guard.NavGuard` 控制律，但**不是同一条执行路径**，因此本表的成功率
+> 不能直接当成 launch 的成功率。launch 侧单独的验收口径是：corridor/seed 0
+> 下三节点起来、10 Hz、能到点并停住（Humble 虚拟机复跑实测 65.6 s 到点，
+> 加上到点自转复核后约多 4 s）。
+
 | 策略 | 成功率 | 平均用时 | 平均路径长 | ATE (m) | 建图 IoU | 探索覆盖 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `oracle`（真值上界） | **12/12** | 65.2 s | 29.4 m | — | — | — |
@@ -337,14 +351,20 @@ ros2 launch ugv_visual_slam_nav e2e.launch.py goal_x:=18.4 goal_y:=4.2
 cd src/ground/ugv_visual_slam_nav
 python -m ugv_visual_slam_nav.main            # 全流程，约 10 分钟
 python -m ugv_visual_slam_nav.main --quick    # 少种子少轮次，约 2 分钟
-python -m pytest test/ -q                     # 45 个用例
+python -m pytest test/ -q                     # 46 个用例（无 rclpy 的机器上）
 ```
 
-`test/` 里有两类用例：`test_offline.py` 覆盖几何、检测、SLAM、建图、规划、
-控制与网络梯度（含数值差分校验），完全不依赖 ROS；`test_nodes_ros.py` 用一套
-严格的 `rclpy` / 消息 / `ament` / `launch` 替身把四个节点真跑一遍 —— 替身会
-检查「未 `rclpy.init` 就构造节点」「用了没声明的参数」「话题类型不一致」这些
-真实 ROS 会报的错，因此节点代码写错在这里就会失败。
+`test/` 里有两类用例，共 46 个：`test_offline.py` **40 个**，覆盖几何、检测、
+SLAM、建图、规划、控制与网络梯度（含数值差分校验），完全不依赖 ROS；
+`test_nodes_ros.py` **6 个**，用一套严格的 `rclpy` / 消息 / `ament` / `launch`
+替身把节点真跑一遍 —— 替身会检查「未 `rclpy.init` 就构造节点」「用了没声明的
+参数」「话题类型不一致」这些真实 ROS 会报的错，因此节点接线写错在这里就会失败。
+
+**口径要说清**：这 6 个只在**没有装 rclpy** 的机器上执行。`fake_ros.install()`
+一旦检测到真实 rclpy 就主动 `pytest.skip`（因为它替的是"没有 ROS"的场景），
+所以本地 Windows/裸 Python 是 `46 passed`，而 Ubuntu 22.04 + Humble 或 CI 的
+`ros:humble` 容器里是 **`40 passed, 6 skipped`**。装了 ROS 的机器上，节点接线
+由 `ros2 launch ugv_visual_slam_nav main.launch.py` 这条链路覆盖，不是靠单测。
 
 ## 13. 已知局限
 

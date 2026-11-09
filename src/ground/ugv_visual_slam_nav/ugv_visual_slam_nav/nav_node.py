@@ -2,6 +2,10 @@
 
 只依赖 /ugv/map、/ugv/slam_pose、/ugv/depth 三个话题，
 换掉 SLAM 节点也能工作（栅格从哪来它不关心）。
+
+卡住恢复与两段式到点确认直接复用 `nav_guard.NavGuard`——和离线策略
+`policies.SlamNavPolicy` 是同一份状态机，避免"文档说的"和"launch 跑的"
+是两套实现。
 """
 
 import math
@@ -14,15 +18,13 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 
 from . import params as P
-from .controllers import avoid_from_depth, goal_reached, pure_pursuit
+from .controllers import avoid_from_depth, pure_pursuit
 from .kinematics import wrap
+from .nav_guard import INFLATE_CELLS, REPLAN_PERIOD, NavGuard
 from .planner import astar, inflate, proximity_cost, simplify
 
-INFLATE_CELLS = 5
-REPLAN_PERIOD = 2.0
 
-
-class NavNode(Node):
+class NavNode(Node, NavGuard):
     def __init__(self):
         super().__init__('ugv_nav')
 
@@ -31,20 +33,21 @@ class NavNode(Node):
         self.declare_parameter('control_hz', 10.0)
         self.declare_parameter('spin_time', 1.6)
         self.declare_parameter('max_speed', 0.6)
+        self.declare_parameter('settle_goal', True)
 
         self.goal = (float(self.get_parameter('goal_x').value),
                      float(self.get_parameter('goal_y').value))
         self.rate = float(self.get_parameter('control_hz').value)
         self.spin_time = float(self.get_parameter('spin_time').value)
         self.max_v = float(self.get_parameter('max_speed').value)
+        self.settle_on = bool(self.get_parameter('settle_goal').value)
 
         self.occ = None
         self.pose = None
         self.depth = None
-        self.path = []
-        self.last_plan = -1e9
         self.t = 0.0
         self.done = False
+        self._reset_planner()
 
         qos = 10
         self.create_subscription(OccupancyGrid, '/ugv/map', self.on_map, qos)
@@ -94,6 +97,18 @@ class NavNode(Node):
             msg.poses.append(ps)
         self.pub_path.publish(msg)
 
+    # ------------------------------------------------------------------
+    def _cell_blocked(self, x, y):
+        """世界坐标点是否被占据：恢复动作后退前的安全检查用。"""
+        if self.occ is None:
+            return True
+        c = int(x / P.GRID_RES)
+        r = int(y / P.GRID_RES)
+        if not (0 <= r < P.GH and 0 <= c < P.GW):
+            return True
+        sub = self.occ[max(0, r - 2):r + 3, max(0, c - 2):c + 3]
+        return bool(sub.size) and bool((sub > 50).any())
+
     def tick(self):
         self.t += 1.0 / self.rate
         if self.occ is None or self.pose is None:
@@ -101,16 +116,31 @@ class NavNode(Node):
             return
 
         pose = self.pose
-        if goal_reached(pose, self.goal):
-            self._publish_cmd(0.0, 0.0)
-            if not self.done:
-                self.get_logger().info('已到达目标，用时 %.1fs' % self.t)
-                self.done = True
-            return
+
+        # 到点两段式确认：先原地自转复核，再最终停车。
+        # 进入判据沿用原来的 GOAL_TOL（而不是离线策略更严的 STOP_TOL），
+        # 保证换实现之后"能到点就能停"。
+        if self.settle_on:
+            settle = self._settle_goal(pose, self.goal, entry_tol=P.GOAL_TOL)
+            if settle is True:
+                self._publish_cmd(0.0, 0.0)
+                if not self.done:
+                    self.get_logger().info('已到达目标，用时 %.1fs' % self.t)
+                    self.done = True
+                return
+            if settle == 'spin':
+                self._publish_cmd(0.0, 1.0)
+                return
 
         # 起步先原地扫描一圈，把栅格攒起来
         if self.t < self.spin_time:
             self._publish_cmd(0.12, 1.0)
+            return
+
+        # 连续几步几乎没位移就进恢复模式（原地转向 → 查图后退）
+        if self._check_stuck(pose):
+            v, w = self._recovery_cmd(pose)
+            self._publish_cmd(v, w)
             return
 
         if self.t - self.last_plan >= REPLAN_PERIOD or not self.path:
@@ -132,6 +162,8 @@ class NavNode(Node):
             v = 0.22 * max(0.0, math.cos(a))
             w = float(np.clip(1.4 * a, -P.MAX_W, P.MAX_W))
 
+        # 记录"规划层希望走多快"：被避障砍到 0 却一直不动才是真卡住
+        self._last_v = float(v)
         v, w = avoid_from_depth(self.depth, v, w)
         v = float(np.clip(v, -P.MAX_V, self.max_v))
         self._publish_cmd(v, w)
