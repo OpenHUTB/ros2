@@ -26,7 +26,14 @@ roslaunch uav_gimbal_stabilization main.launch
 - `/uav/gimbal/state`：`geometry_msgs/Vector3`，当前角度和二维误差；
 - `/uav/gimbal/status`：`std_msgs/String`。
 
+`Vector3` 字段固定约定如下：
+
+- `target`：`x=pan` 目标角，`y=tilt` 目标角，`z=0`；
+- `cmd`：`x=pan` 角速度，`y=tilt` 角速度，`z=0`；
+- `state`：`x=当前 pan`，`y=当前 tilt`，`z=二维综合角误差`。
+
 默认结果写入 `~/.ros/uav_gimbal_stabilization/`，包括 CSV 和响应曲线。
+`duration` 和 `rate` 必须是有限正数；无有效样本时不会创建空的 CSV 或图片。
 
 ## 纯 Python 测试
 
@@ -45,8 +52,8 @@ cd src/air/uav_gimbal_stabilization
 python3 -m unittest discover -s test -v
 ```
 
-8 项测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性、闭环收敛、
-CSV 首条时间和离线参数校验。
+11 项测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性、闭环前后段
+误差下降、CSV 首条时间、非法时长/频率、空结果和离线参数校验。
 
 本次 50 Hz、12 s 闭环仿真的二维角误差 RMSE 为 `5.269°`，最大误差为 `7.764°`；
 该平滑目标轨迹未触发 60°/s 速率限幅，因此饱和比例为 `0`，限幅行为由单元测试覆盖。
@@ -59,3 +66,5 @@ CSV 首条时间和离线参数校验。
 ## AI 使用声明
 
 使用 Codex（OpenAI）辅助代码、测试和文档整理；算法参数、运行结果与提交内容由作者复核并负责。
+
+本包使用 MIT License，完整文本见 `LICENSE`。

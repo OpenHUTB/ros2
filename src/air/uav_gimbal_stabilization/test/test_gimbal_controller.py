@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import io
+import math
 import os
 import sys
+import tempfile
 import unittest
 from contextlib import redirect_stderr
 
@@ -13,6 +15,10 @@ for module_dir in (os.path.abspath(os.path.join(test_dir, "..", "scripts")), tes
 from gimbal_controller import AxisPID, GimbalController, angular_error  # noqa: E402
 from gimbal_sim import GimbalSimulation, target_angles  # noqa: E402
 from main import main as cli_main  # noqa: E402
+
+
+def _rmse(errors):
+    return math.sqrt(sum(error * error for error in errors) / len(errors))
 
 
 class GimbalControllerTest(unittest.TestCase):
@@ -37,6 +43,14 @@ class GimbalControllerTest(unittest.TestCase):
         self.assertEqual(metrics["samples"], 400)
         self.assertLess(metrics["rmse_deg"], 6.0)
         self.assertGreaterEqual(metrics["saturation_ratio"], 0.0)
+        window = len(simulation.rows) // 5
+        early_rmse = _rmse(
+            [row["error_deg"] for row in simulation.rows[:window]]
+        )
+        late_rmse = _rmse(
+            [row["error_deg"] for row in simulation.rows[-window:]]
+        )
+        self.assertLess(late_rmse, early_rmse * 0.85)
 
     def test_target_motion_is_deterministic(self):
         self.assertEqual(target_angles(0.0), target_angles(0.0))
@@ -50,10 +64,45 @@ class GimbalControllerTest(unittest.TestCase):
         simulation.run()
         self.assertEqual(simulation.rows[0]["t"], 0.0)
 
+    def test_invalid_simulation_parameters_are_rejected(self):
+        cases = (
+            {"duration": 0.0},
+            {"duration": float("nan")},
+            {"rate_hz": 0.0},
+            {"rate_hz": float("inf")},
+        )
+        for kwargs in cases:
+            with self.subTest(**kwargs):
+                with self.assertRaises(ValueError):
+                    GimbalSimulation(**kwargs)
+
+    def test_empty_results_do_not_write_outputs(self):
+        simulation = GimbalSimulation()
+        with tempfile.TemporaryDirectory() as folder:
+            csv_path = os.path.join(folder, "empty.csv")
+            plot_path = os.path.join(folder, "empty.png")
+            simulation.write_csv(csv_path)
+            simulation.plot(plot_path)
+            self.assertFalse(os.path.exists(csv_path))
+            self.assertFalse(os.path.exists(plot_path))
+
     def test_offline_cli_rejects_unknown_arguments(self):
         with redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 cli_main(["--duraton", "12"])
+
+    def test_offline_cli_rejects_invalid_limits(self):
+        cases = (
+            ("--duration", "0"),
+            ("--duration", "nan"),
+            ("--rate", "0"),
+            ("--rate", "inf"),
+        )
+        for option, value in cases:
+            with self.subTest(option=option, value=value):
+                with redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        cli_main([option, value])
 
 
 if __name__ == "__main__":

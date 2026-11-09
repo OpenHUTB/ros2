@@ -64,6 +64,16 @@ python3 scripts/main.py --duration 12 --rate 50 \
 | `/uav/gimbal/state` | `geometry_msgs/Vector3` | 当前角度与二维误差 |
 | `/uav/gimbal/status` | `std_msgs/String` | 运行状态和累计指标 |
 
+`Vector3` 字段含义：
+
+- `/uav/gimbal/target`：`x=pan` 目标角，`y=tilt` 目标角，`z=0`；
+- `/uav/gimbal/cmd`：`x=pan` 角速度，`y=tilt` 角速度，`z=0`；
+- `/uav/gimbal/state`：`x=当前 pan`，`y=当前 tilt`，`z=二维综合角误差`。
+
+`duration` 和 `rate` 必须是有限正数；没有有效样本时，CSV 和绘图函数会安全返回。
+ROS 节点的最终 `status` 同时给出 `samples`、`rmse_deg`、`max_error_deg` 和
+`saturation_ratio`。
+
 ## 结果指标
 
 - 二维角误差 RMSE；
@@ -102,9 +112,11 @@ cd src/air/uav_gimbal_stabilization
 python3 -m unittest discover -s test -v
 ```
 
-8 项测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性、闭环收敛、
-CSV 首条时间和离线参数校验。
+11 项测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性、闭环前后段
+误差下降、CSV 首条时间、非法时长/频率、空结果和离线参数校验。
 
 ## AI 使用声明
 
-使用 Codex 辅助代码、测试和文档整理；算法参数、运行结果与提交内容由作者复核并负责。
+使用 Codex（OpenAI）辅助代码、测试和文档整理；算法参数、运行结果与提交内容由作者复核并负责。
+
+本包采用 MIT License，完整许可证文本位于 `src/air/uav_gimbal_stabilization/LICENSE`。

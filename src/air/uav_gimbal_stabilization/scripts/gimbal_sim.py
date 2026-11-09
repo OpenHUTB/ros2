@@ -46,7 +46,11 @@ class GimbalSimulation:
     def __init__(self, duration=12.0, rate_hz=50.0, controller=None):
         self.duration = float(duration)
         self.rate_hz = float(rate_hz)
-        self.dt = 1.0 / max(self.rate_hz, 1.0)
+        if not math.isfinite(self.duration) or self.duration <= 0.0:
+            raise ValueError("duration must be finite and positive")
+        if not math.isfinite(self.rate_hz) or self.rate_hz <= 0.0:
+            raise ValueError("rate_hz must be finite and positive")
+        self.dt = 1.0 / self.rate_hz
         self.controller = controller or GimbalController()
         self.plant = GimbalPlant()
         self.elapsed = 0.0
@@ -98,7 +102,7 @@ class GimbalSimulation:
         }
 
     def write_csv(self, path):
-        if not path:
+        if not path or not self.rows:
             return
         path = os.path.expanduser(path)
         parent = os.path.dirname(path)
@@ -110,7 +114,7 @@ class GimbalSimulation:
             writer.writerows(self.rows)
 
     def plot(self, path):
-        if not path:
+        if not path or not self.rows:
             return
         from PIL import Image, ImageDraw, ImageFont
 

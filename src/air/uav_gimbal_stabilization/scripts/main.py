@@ -9,6 +9,7 @@ ROS:
 """
 
 import argparse
+import math
 import os
 import sys
 
@@ -45,8 +46,16 @@ def _ros_main(args, ros_args=None):
     metrics = simulation.metrics()
     simulation.write_csv(args.csv)
     simulation.plot(args.plot)
-    status = "DONE samples=%d rmse_deg=%.3f max_error_deg=%.3f" % (
-        metrics["samples"], metrics["rmse_deg"], metrics["max_error_deg"])
+    status = (
+        "DONE samples=%d rmse_deg=%.3f max_error_deg=%.3f "
+        "saturation_ratio=%.3f"
+        % (
+            metrics["samples"],
+            metrics["rmse_deg"],
+            metrics["max_error_deg"],
+            metrics["saturation_ratio"],
+        )
+    )
     status_pub.publish(String(data=status))
     rospy.loginfo(status)
 
@@ -61,9 +70,17 @@ def main(argv=None):
     raw_argv = list(sys.argv[1:] if argv is None else argv)
     if "--ros" in raw_argv:
         args, ros_args = parser.parse_known_args(raw_argv)
+        if not math.isfinite(args.duration) or args.duration <= 0.0:
+            parser.error("--duration must be finite and positive")
+        if not math.isfinite(args.rate) or args.rate <= 0.0:
+            parser.error("--rate must be finite and positive")
         _ros_main(args, ros_args)
         return 0
     args = parser.parse_args(raw_argv)
+    if not math.isfinite(args.duration) or args.duration <= 0.0:
+        parser.error("--duration must be finite and positive")
+    if not math.isfinite(args.rate) or args.rate <= 0.0:
+        parser.error("--rate must be finite and positive")
     _, metrics = run_simulation(
         duration=args.duration,
         rate_hz=args.rate,
