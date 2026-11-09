@@ -9,4 +9,6 @@ class CgTests(unittest.TestCase):
  def test_outside_longitudinal_limit_fails(self):q=copy.deepcopy(self.p);q["payloads"][1]["cg_m"][0]=10;r,e=check_cg(q);self.assertEqual(e,[]);self.assertFalse(r["feasible"])
  def test_excess_lateral_offset_fails(self):q=copy.deepcopy(self.p);q["payloads"][0]["cg_m"][1]=1;r,e=check_cg(q);self.assertEqual(e,[]);self.assertFalse(r["feasible"])
  def test_zero_payload_mass_rejected(self):q=copy.deepcopy(self.p);q["payloads"][0]["mass_kg"]=0;r,e=check_cg(q);self.assertTrue(e)
+ def test_overlarge_mass_is_rejected(self):q=copy.deepcopy(self.p);q["empty"]["mass_kg"]=1e308;q["payloads"][0]["mass_kg"]=1e308;r,e=check_cg(q);self.assertEqual(r,{});self.assertTrue(any("must not exceed" in x for x in e))
+ def test_nonfinite_combined_moment_is_rejected(self):q=copy.deepcopy(self.p);q["empty"]["cg_m"][0]=1e308;r,e=check_cg(q);self.assertEqual(r,{});self.assertTrue(any("combined mass and moments must be finite" in x for x in e))
 if __name__=="__main__":unittest.main(verbosity=2)

@@ -5,10 +5,12 @@ from importlib.resources import files
 import json,math,time
 from typing import Any,Dict,List
 DEFAULT_INPUT=files(__package__).joinpath("sample_data","cg_profile.json")
-def _number(v:Any,name:str,errors:List[str],positive=False)->float:
+MAX_MASS_KG=10000.0
+def _number(v:Any,name:str,errors:List[str],positive=False,maximum=None)->float:
  if type(v) not in (int,float) or not math.isfinite(float(v)): errors.append(f"{name} must be finite"); return 0.0
  n=float(v)
  if positive and n<=0: errors.append(f"{name} must be positive")
+ if maximum is not None and n>maximum: errors.append(f"{name} must not exceed {maximum:g}")
  return n
 def _vector(v:Any,name:str,errors:List[str])->tuple[float,float,float]:
  if not isinstance(v,list) or len(v)!=3 or any(type(x) not in (int,float) or not math.isfinite(float(x)) for x in v): errors.append(f"{name} must contain three finite numbers");return (0,0,0)
@@ -17,16 +19,18 @@ def check_cg(profile:Any)->tuple[Dict[str,Any],List[str]]:
  if not isinstance(profile,dict):return {},["profile must be a JSON object"]
  errors=[]; empty=profile.get("empty",{}); limits=profile.get("limits",{}); items=profile.get("payloads")
  if not isinstance(empty,dict) or not isinstance(limits,dict):return {},["empty and limits must be objects"]
- mass=_number(empty.get("mass_kg"),"empty.mass_kg",errors,True); cg=_vector(empty.get("cg_m"),"empty.cg_m",errors)
+ mass=_number(empty.get("mass_kg"),"empty.mass_kg",errors,True,MAX_MASS_KG); cg=_vector(empty.get("cg_m"),"empty.cg_m",errors)
  xmin=_number(limits.get("cg_x_min_m"),"limits.cg_x_min_m",errors); xmax=_number(limits.get("cg_x_max_m"),"limits.cg_x_max_m",errors); lateral=_number(limits.get("lateral_max_m"),"limits.lateral_max_m",errors,True)
  if xmin>=xmax: errors.append("cg_x_min_m must be less than cg_x_max_m")
  if not isinstance(items,list): errors.append("payloads must be a list");items=[]
  moments=[mass*cg[0],mass*cg[1],mass*cg[2]]; total=mass; rows=[]
  for i,item in enumerate(items):
   if not isinstance(item,dict): errors.append(f"payloads[{i}] must be an object");continue
-  m=_number(item.get("mass_kg"),f"payloads[{i}].mass_kg",errors,True); pos=_vector(item.get("cg_m"),f"payloads[{i}].cg_m",errors); total+=m
+  m=_number(item.get("mass_kg"),f"payloads[{i}].mass_kg",errors,True,MAX_MASS_KG); pos=_vector(item.get("cg_m"),f"payloads[{i}].cg_m",errors); total+=m
   for a in range(3):moments[a]+=m*pos[a]
   rows.append({"name":str(item.get("name",f"payload_{i}")),"mass_kg":m})
+ if not math.isfinite(total) or not all(math.isfinite(value) for value in moments):
+  errors.append("combined mass and moments must be finite")
  if errors:return {},errors
  combined=(moments[0]/total,moments[1]/total,moments[2]/total)
  front_margin=combined[0]-xmin; aft_margin=xmax-combined[0]; warnings=[]; feasible=front_margin>=0 and aft_margin>=0 and abs(combined[1])<=lateral

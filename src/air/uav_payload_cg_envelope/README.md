@@ -7,7 +7,7 @@
 
 ## Scope
 
-Combine empty-aircraft and payload masses to compute total mass, three-dimensional CG, longitudinal margins and lateral offset. The profile defines a simplified longitudinal/lateral envelope and does not replace the airframe manufacturer?s loading chart.
+Combine empty-aircraft and payload masses to compute total mass, three-dimensional CG, longitudinal margins and lateral offset. The profile defines a simplified longitudinal/lateral envelope and does not replace the airframe manufacturer's loading chart.
 
 ## Run
 
