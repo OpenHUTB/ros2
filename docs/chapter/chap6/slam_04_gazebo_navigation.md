@@ -380,7 +380,7 @@ TF_REPEATED_DATA ignoring data with redundant timestamp for frame wheel_left_lin
 (wheel_right_link) ...
 ```
 
-Gazebo 差速插件与 launch 中的 `joint_state_publisher` 都在发布关节状态，相同时间戳的数据被 `tf`2` 丢弃。
+Gazebo 差速插件与 launch 中的 `joint_state_publisher` 都在发布关节状态，相同时间戳的数据被 `tf2` 丢弃。
 后续可把 launch 里的 `joint_state_publisher` 节点注释掉，只让差速插件负责关节状态（launch 注释中已
 预留该说明）。
 
