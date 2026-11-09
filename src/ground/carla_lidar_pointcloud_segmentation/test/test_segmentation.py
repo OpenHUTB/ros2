@@ -18,6 +18,7 @@ from carla_lidar_pointcloud_segmentation import labels as L   # noqa: E402
 
 from carla_lidar_pointcloud_segmentation import metrics as M   # noqa: E402
 from carla_lidar_pointcloud_segmentation import model as MD   # noqa: E402
+from carla_lidar_pointcloud_segmentation import pipeline as P  # noqa: E402
 
 _passed = 0
 _failed = []
@@ -126,6 +127,13 @@ def main():
           len(x_tr) + len(x_val) == len(x) and len(x_val) == 90,
           '%d + %d' % (len(x_tr), len(x_val)))
 
+    tr_idx, val_idx = MD.train_val_indices(len(x), val_ratio=0.2, seed=1)
+    check('划分下标覆盖全部样本且不重复',
+          sorted(np.concatenate([tr_idx, val_idx]).tolist()) == list(range(len(x))),
+          '%d + %d' % (len(tr_idx), len(val_idx)))
+    check('下标划分与 train_val_split 结果一致',
+          np.array_equal(x[tr_idx], x_tr) and np.array_equal(x[val_idx], x_val))
+
     mlp = MD.MLP(n_in=9, hidden=(16,), n_out=3, seed=2)
     history = mlp.fit(x_tr, y_tr, epochs=40, batch_size=64, lr=0.05, seed=3)
     check('损失随训练下降', history['loss'][-1] < history['loss'][0],
@@ -133,6 +141,16 @@ def main():
     val_acc = float(np.mean(mlp.predict(x_val) == y_val))
     check('三簇数据验证准确率 > 0.9', val_acc > 0.9, '%.3f' % val_acc)
     check('训练历史长度等于轮数', len(history['acc']) == 40, str(len(history['acc'])))
+
+    # 距离必须和标签、特征一起用同一组下标切分，缺一个就会静默错位
+    result = P.train_eval(x, y, np.linspace(0.0, 50.0, len(x)),
+                          hidden=(8,), epochs=2, batch_size=64, seed=7)
+    in_range = sum(item['n'] for item in result['by_range'].values())
+    check('分距离评价覆盖全部验证点', in_range == result['n_val'],
+          '%d vs %d' % (in_range, result['n_val']))
+    check('每档都落在对应距离区间内',
+          all(key.endswith(' m') for key in result['by_range']),
+          str(list(result['by_range']))[:60])
 
     weights = [1.0, 1.0, 5.0]
     mlp2 = MD.MLP(n_in=9, hidden=(8,), n_out=3, seed=4)

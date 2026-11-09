@@ -125,7 +125,10 @@ def evaluate_by_range(ranges: Sequence[float], y_true: Sequence[int],
         raise ValueError('距离、真值、预测长度不一致')
     out: Dict[str, Dict[str, float]] = {}
     for lo, hi in zip(edges[:-1], edges[1:]):
-        mask = (r >= lo) & (r < hi)
+        # 最后一档用闭区间：最远的点正好等于最大边界，用 r < hi 会漏掉它，
+        # 各档点数加起来就比验证集少 1。
+        upper_ok = (r <= hi) if hi == edges[-1] else (r < hi)
+        mask = (r >= lo) & upper_ok
         key = '%.0f-%.0f m' % (lo, hi)
         if not mask.any():
             out[key] = {'n': 0, 'accuracy': float('nan'), 'macro_iou': float('nan')}

@@ -200,7 +200,8 @@ def make_args(tmpdir, frames=12):
         rotation=20.0, lidar_height=2.4, corridor_width=1.2,
         frames=frames, no_plot=True, record='', control=True,
         max_speed=8.0, comfort_distance=12.0, stop_distance=4.0,
-        lookahead=6.0, checkpoint=os.path.join(tmpdir, 'demo_model.npz'),
+        lookahead=6.0, start_throttle=0.45,
+        checkpoint=os.path.join(tmpdir, 'demo_model.npz'),
     )
 
 

@@ -1,6 +1,6 @@
 """逐点分类用的多层感知机（纯 NumPy 实现）。
 
-为什么不用 PyTorch：模型的输入只有 9 维特征，网络两层 32 个隐单元，参数量一万出头，
+为什么不用 PyTorch：模型的输入只有 9 维特征，网络两层 32 个隐单元，参数量 1508，
 用 NumPy 手写前向/反向足够快，训练完的权重是几百 KB 的 ``.npz``，
 符合"仓库只存文本和少量数据"的约定，也方便离线跑单测。
 
@@ -18,6 +18,25 @@ from typing import Dict, List, Sequence, Tuple
 import numpy as np
 
 
+def train_val_indices(n: int, val_ratio: float = 0.2,
+                      seed: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+    """返回 ``(训练集下标, 验证集下标)``。
+
+    划分规则只在这里实现一次：需要跟着 X、y 一起切的额外数组（比如距离）直接拿
+    这两个下标去取，不要再自己重放一遍随机数——重放要求两处 RNG 用法完全一致，
+    改一处就会静默错位。
+    """
+    if n <= 0:
+        raise ValueError('样本数必须为正')
+    if not 0.0 <= val_ratio < 1.0:
+        raise ValueError('验证集比例应在 [0, 1) 内')
+    n_val = int(round(n * val_ratio))
+    if n_val <= 0 or n_val >= n:
+        raise ValueError('样本太少（%d 个），无法划分验证集' % n)
+    idx = np.random.default_rng(seed).permutation(n)
+    return idx[n_val:], idx[:n_val]
+
+
 def train_val_split(features: np.ndarray, labels: np.ndarray, val_ratio: float = 0.2,
                     seed: int = 0) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """按比例随机划分训练/验证集，返回 ``(X_tr, y_tr, X_val, y_val)``。"""
@@ -25,15 +44,7 @@ def train_val_split(features: np.ndarray, labels: np.ndarray, val_ratio: float =
     labs = np.asarray(labels, dtype=int)
     if feats.shape[0] != labs.shape[0]:
         raise ValueError('特征与标签数量不一致')
-    if not 0.0 <= val_ratio < 1.0:
-        raise ValueError('验证集比例应在 [0, 1) 内')
-    n = feats.shape[0]
-    n_val = int(round(n * val_ratio))
-    if n_val <= 0 or n_val >= n:
-        raise ValueError('样本太少（%d 个），无法划分验证集' % n)
-    rng = np.random.default_rng(seed)
-    idx = rng.permutation(n)
-    val_idx, tr_idx = idx[:n_val], idx[n_val:]
+    tr_idx, val_idx = train_val_indices(feats.shape[0], val_ratio=val_ratio, seed=seed)
     return feats[tr_idx], labs[tr_idx], feats[val_idx], labs[val_idx]
 
 

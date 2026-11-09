@@ -78,7 +78,10 @@ def train_eval(X: np.ndarray, y: np.ndarray, r: np.ndarray,
     if not (X.shape[0] == y.size == r.size):
         raise ValueError('特征/标签/距离长度不一致')
 
-    x_tr, y_tr, x_val, y_val = MD.train_val_split(X, y, val_ratio=val_ratio, seed=seed)
+    tr_idx, val_idx = MD.train_val_indices(X.shape[0], val_ratio=val_ratio, seed=seed)
+    x_tr, y_tr = X[tr_idx], y[tr_idx]
+    x_val, y_val, r_val = X[val_idx], y[val_idx], r[val_idx]
+
     mean, std = F.standardize_fit(x_tr)
     x_tr_n = F.standardize_apply(x_tr, mean, std)
     x_val_n = F.standardize_apply(x_val, mean, std)
@@ -90,12 +93,6 @@ def train_eval(X: np.ndarray, y: np.ndarray, r: np.ndarray,
 
     pred_val = net.predict(x_val_n)
     report = M.evaluate(y_val, pred_val)
-
-    # 验证集的距离：用与 train_val_split 相同的排列取回（同一 seed、同一划分规则）
-    n = X.shape[0]
-    n_val = int(round(n * val_ratio))
-    perm = np.random.default_rng(seed).permutation(n)
-    r_val = r[perm[:n_val]]
 
     edges = M.range_edges(float(np.max(r_val)) if r_val.size else range_step, range_step)
     by_range = M.evaluate_by_range(r_val, y_val, pred_val, edges)
