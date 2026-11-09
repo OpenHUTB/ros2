@@ -47,11 +47,15 @@ $$
 法向力按准静态载荷转移算：纵向按 $m a_x h / L$ 在前后轴之间转移，侧向按侧倾刚度比
 （前 55%）分配到左右轮。附着椭圆限制纵向与侧向力的合成不超过 $\mu F_z$。
 
-制动力按**理想 ABS**处理，纵向力最多用掉附着的 90%，剩下的留给侧向：
+制动力按**理想 ABS**处理：制动时纵向附着只用掉峰值的 $k_{\mathrm{ABS}}$ 倍（0.90，
+代码里的 `TireSpec.abs_ratio`），剩下的留给侧向：
 
 $$
-F_x = -\text{brake} \cdot \min\left(F_{b,\max},\ 0.9\,\mu F_z\right)
+F_x = -b \cdot \min\left(F_{b,\max},\ k_{\mathrm{ABS}}\,\mu F_z\right),\qquad b \in [0,1]
 $$
+
+$F_{b,\max}$ 是制动器硬件的力上限，$k_{\mathrm{ABS}}\mu F_z$ 是轮胎这一端能承受的纵向
+附着上限，取两者较小的那个；$b$ 是踏板指令，实际输出在上限之内按比例给。
 
 不做这一条，全力制动时纵向力会把附着吃干，侧向力等于零，对开路面上 ESC 怎么打方向
 都没用 —— 早期版本就是这样，加 ESC 反而更容易甩。
@@ -63,8 +67,11 @@ $$
 参考横摆角速度取稳态运动学值，并用附着能提供的侧向加速度封顶：
 
 $$
-r_{\text{ref}} = \operatorname{clamp}\left(\frac{u \tan\delta}{L(1+Ku^2)},\ \pm\frac{0.9\mu g}{u}\right)
+r_{\text{ref}} = \operatorname{clamp}\left(\frac{u \tan\delta}{L(1+Ku^2)},\ \pm\frac{k_{\text{ref}}\,\mu g}{u}\right)
 $$
+
+$k_{\text{ref}}=0.9$ 是参考值的安全系数（`EscConfig.reference_margin`），和上面的
+$k_{\mathrm{ABS}}$ 不是一回事。
 
 误差 $e = r_{\text{ref}} - r$ 与侧偏角超限一起折算成需要的修正横摆力矩：
 
