@@ -23,7 +23,7 @@ AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍�
 | 系统 | Ubuntu 20.04（WSL2 亦可） |
 | ROS | Noetic |
 | Python | 3.8 |
-| 依赖 | numpy、msgpack-rpc-python |
+| 依赖 | numpy、torch>=1.13、msgpack-rpc-python |
 
 AirSim 与 ROS 的通信走 msgpack-rpc（默认 41451 端口）。WSL2 下需要把
 `airsim_ip` 设为 Windows 主机在 WSL 网段里的地址（`/proc/net/route` 的网关）。
