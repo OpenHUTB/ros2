@@ -315,3 +315,7 @@ Summary: 1 package finished [1.04s]
 - JARUS SORA：仅参考其“地面风险/空中风险”和运行边界的分层思想，本项目不声称符合 SORA；
 - 中国民航局 CCAR-92《民用无人驾驶航空器运行安全管理规则》：实际运行须遵循现行法规与地方空域管理要求；
 - OpenHUTB/ros2 的 `uav_mission_safety_manager`、`telemetry_diagnostics` 模块：本项目沿用其“可离线复现 + ROS 2 薄封装 + 明示验证边界”的工程风格。
+
+## 14. 大模型使用声明
+
+本项目使用 OpenAI Codex 辅助完成 ROS 2/Python 代码、单元测试、文档草稿、离线仿真与绘图脚本，以及 PR 描述整理。实验 CSV、ROS 2 运行数据和图表均由随附代码实际运行生成，未使用大模型生成或篡改实验数据。作者 Leclerc666 已逐项复核代码、参数和文档，并对提交内容、数据真实性及后续维护负责。
