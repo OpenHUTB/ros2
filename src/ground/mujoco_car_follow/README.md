@@ -1,7 +1,7 @@
 # mujoco_car_follow
 
-MuJoCo 双车跟车仿真：蓝色引导车沿 x 方向匀速前进、y 方向正弦摆动走出 S 形轨迹，
-红色跟随车通过 PD 控制自动调整位置，与引导车保持 **0.5 m 车心距**跟随。
+MuJoCo 双车跟车仿真：蓝色引导车在 **±3 m** 范围内往返前进、横向正弦摆动走出 S 形轨迹，
+红色跟随车通过 **前馈 + PD** 控制自动调整位置，与引导车保持 **0.5 m 的真实车心距**跟随。
 
 ## 运行环境
 
@@ -26,7 +26,7 @@ sudo apt install ros-humble-ament-index-python
 
 ```bash
 cd src/ground/mujoco_car_follow
-pip install mujoco==2.3.7
+pip install mujoco==2.3.7 numpy
 python3 scripts/main.py
 ```
 
@@ -52,26 +52,62 @@ ros2 launch mujoco_car_follow main.launch.py
 `scene.xml` 会安装到 `share/mujoco_car_follow/`，脚本优先通过
 `ament_index_python.get_package_share_directory()` 定位它。
 
+## 无显示器环境
+
+`mujoco.viewer.launch_passive` 需要窗口，纯服务器上可以用虚拟显示运行：
+
+```bash
+sudo apt install xvfb
+xvfb-run -a python3 scripts/main.py
+```
+
 ## 控制参数
 
 | 参数 | 含义 | 默认值 |
 | --- | --- | --- |
-| `TARGET` | 目标纵向车心距 | 0.5 m |
-| `KP_X` / `KD_X` | 纵向 PD 增益 | 1.2 / 0.6 |
-| `KP_Y` / `KD_Y` | 横向 PD 增益 | 1.5 / 0.6 |
-| `FMAX` | 单轴输出力限幅 | 1.0 N |
-| `DEADBAND` | 误差死区 | 0.02 m |
+| `TARGET` | 目标纵向车心距（真实中心距） | 0.5 m |
+| `LEAD_X_FORCE` | 引导车纵向推力 | 0.2 N |
+| `LEAD_Y_AMP` / `LEAD_Y_FREQ` | 横向正弦振幅 / 角频率 | 0.3 m / 2.0 rad/s |
+| `KP_X` / `KD_X` | 纵向 PD 增益 | 25.0 / 2.0 |
+| `KP_Y` / `KD_Y` | 横向 PD 增益 | 15.0 / 1.5 |
+| `FMAX` | 单电机输出限幅 | 1.0 N |
+| `X_LIMIT` | 引导车往返边界 | ±3.0 m |
+| `FF_RATE` | 前馈力每步最大变化量 | 0.02 N |
+| `LOG_INTERVAL` | 日志打印间隔 | 0.5 s |
 
-距离口径：0.5 m 指**两车中心（车心）之间的纵向距离**，车身长 0.30 m，
-因此前保险杠间隙约 0.20 m；横向偏差目标为 0。
+## 距离口径
+
+`dx` 是**两车车身中心（车心）之间的纵向距离**，按两车 body 的世界坐标计算：
+
+```
+世界坐标 = body 初始位置 + 关节位移 qpos
+dx = lead_x - follow_x
+```
+
+车身长 0.30 m，因此 0.5 m 车心距对应前保险杠间隙约 **0.20 m**。
+横向目标是两车横向对齐（偏差 0），实际残差见运行统计输出。
+
+## 控制原理
+
+1. 引导车：`ctrl_x = 0.2 * direction`（到 ±3 m 折返），`ctrl_y = 0.3*cos(2t)`
+2. 跟随车纵向：`ctrl = ff + KP_X*(dx - 0.5) - KD_X*v`
+   - 前馈项 `ff` 跟随引导车当前推力并做变化率限幅，抵消两车相同的阻尼负载，消除匀速段稳态误差
+   - PD 项负责收敛距离、抑制超调
+3. 跟随车横向：`ctrl = ctrl_lead_y + KP_Y*dy - KD_Y*v`，同速跟踪正弦
 
 ## 运行输出
 
-终端每帧打印一行，可直接作为测试验证日志：
+每 0.5 s 打印一行，避免每步都刷屏；关闭窗口后输出整段统计：
 
 ```
-车心距 dx=0.512 dy=0.003 | 引导(1.234,0.111) 跟随(0.722,-0.023)
+[t= 12.50s] 真实车心距=0.503 m  横向残差=+0.008 m | 引导(+1.230,+0.150) 跟随(+0.727,+0.142)
+
+===== 统计（去掉前 3 s 过渡段） =====
+纵向车心距：均值 0.497 m，最大偏差 0.053 m
+横向残差：均值 +0.000 m，最大偏差 0.032 m
 ```
+
+以上为 120 s 无头实测（`t=0.01 s`，含 ±3 m 折返瞬态）；匀速段偏差明显小于折返瞬间。
 
 ## AI 辅助声明
 
