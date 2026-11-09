@@ -41,11 +41,11 @@ def _float(row, name):
     return value
 
 
-def _int(row, name):
-    try:
-        return int(float(row[name]))
-    except (KeyError, TypeError, ValueError) as exc:
-        raise ValueError(f"字段 {name} 不是有效整数 / Field {name} is not an integer") from exc
+def _flag(row, name):
+    value = _float(row, name)
+    if value not in (0.0, 1.0):
+        raise ValueError(f"字段 {name} 必须为 0 或 1 / Field {name} must be 0 or 1")
+    return int(value)
 
 
 def _settling_time(rows, speed_threshold):
@@ -76,8 +76,8 @@ def summarize_trajectory(path, speed_threshold=0.05):
         "peak_abs_accel_m_s2": max(abs(value) for value in accelerations),
         "settling_time_s": _settling_time(rows, speed_threshold),
         "final_speed_m_s": speeds[-1],
-        "collision_steps": sum(_int(row, "collision") for row in rows),
-        "invalid_sensor_steps": sum(1 for row in rows if _int(row, "sensor_valid") == 0),
+        "collision_steps": sum(_flag(row, "collision") for row in rows),
+        "invalid_sensor_steps": sum(1 for row in rows if _flag(row, "sensor_valid") == 0),
         "speed_threshold_m_s": speed_threshold,
     }
 

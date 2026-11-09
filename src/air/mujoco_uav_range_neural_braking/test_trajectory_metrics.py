@@ -55,6 +55,17 @@ def test_summarize_trajectory_rejects_empty_or_incomplete_input(tmp_path):
     with pytest.raises(ValueError, match="缺少轨迹字段"):
         summarize_trajectory(incomplete)
 
+    for column, invalid_value in (("collision", "0.5"), ("sensor_valid", "inf")):
+        invalid = tmp_path / f"invalid_{column}.csv"
+        row = {
+            "time_s": "0", "range_m": "1", "speed_m_s": "0",
+            "accel_m_s2": "0", "collision": "0", "sensor_valid": "1",
+        }
+        row[column] = invalid_value
+        write_trajectory(invalid, [row])
+        with pytest.raises(ValueError, match="字段 .* 必须为有限值|字段 .* 必须为 0 或 1"):
+            summarize_trajectory(invalid)
+
 
 def test_cli_writes_json_metrics(tmp_path):
     path = tmp_path / "trajectory.csv"
