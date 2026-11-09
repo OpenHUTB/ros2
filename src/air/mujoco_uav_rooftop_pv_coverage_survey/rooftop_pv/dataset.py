@@ -105,6 +105,11 @@ def generate_dataset(
     sequence_ids = [f"{name}_sequence_000" for name in scenario_names]
     assignments = assign_splits(sequence_ids, dataset_config.seed)
     route = generate_lawnmower_route(route_config)
+    if dataset_config.frames_per_scene > len(route):
+        raise ValueError(
+            "frames_per_scene cannot exceed the number of route waypoints / "
+            "每个场景的帧数不能超过航线航点数"
+        )
     expert = FlightLineExpert(ExpertConfig(cruise_speed=route_config.speed))
     output.mkdir(parents=True, exist_ok=True)
     records: list[dict[str, object]] = []
@@ -141,6 +146,9 @@ def generate_dataset(
                         "frame_id": stem,
                         "scenario": scenario,
                         "sequence_id": sequence_id,
+                        "sequence_frame_count": dataset_config.frames_per_scene,
+                        "roof_width_m": route_config.roof_width,
+                        "roof_depth_m": route_config.roof_depth,
                         "frame_index": frame_index,
                         "split": assignments[sequence_id],
                         "rgb_path": rgb_relative.as_posix(),
@@ -178,3 +186,4 @@ def generate_dataset(
         "manifest": manifest_path.name,
         "splits": split_path.name,
     }
+
