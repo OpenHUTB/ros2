@@ -66,6 +66,7 @@ def run_episode(controller, trajectory_type='3d_helix', duration=60.0, dt=0.02,
         state = vehicle.step(state, out, dt)
         errors.append(float(np.linalg.norm(state['pos'] - ref['pos'])))
         yaw_errors.append(float(abs((ref['yaw'] - state['yaw'] + math.pi) % (2 * math.pi) - math.pi)))
+        # 注意：这里是力(N)与力矩(N·m)的混合量，只作为控制代价的相对指标，不是物理功
         commands.append(math.hypot(out['fx'], out['fy']) + abs(out['fz']) + abs(out['tau_z']))
         times.append(t)
 
@@ -78,7 +79,22 @@ def run_episode(controller, trajectory_type='3d_helix', duration=60.0, dt=0.02,
         'mean_error': float(errors.mean()),
         'final_error': float(errors[-1]),
         'yaw_rmse': float(np.sqrt(np.mean(np.square(yaw_errors)))),
-        'effort': float(np.mean(commands)),
+        'effort': float(np.mean(commands)),  # 力与力矩混合的相对量，不可当物理能量解读
         'times': times,
         'errors': errors.tolist(),
     }
+
+def check_gate(summary, max_rmse):
+    """返回未通过门禁的 (组合, RMSE) 列表，空列表表示通过。
+
+    RMSE 为 NaN/inf 时 ``rmse > max_rmse`` 是 False，会被静默放行——控制器发散
+    却显示 GATE PASS 是门禁最不该有的行为，所以非有限值一律算失败。
+    """
+    failures = []
+    for key, value in summary.items():
+        if key == 'config':
+            continue
+        rmse = float(value['rmse'])
+        if not math.isfinite(rmse) or rmse > max_rmse:
+            failures.append((key, rmse))
+    return failures

@@ -8,7 +8,7 @@ from rov_mujoco.nn_trajectory_controller import LOSTrajectoryController, NNTraje
 from rov_mujoco.offline_loop import FirstOrderROV, run_episode
 from rov_mujoco.trajectory_generator import TrajectoryGenerator
 
-from eval_offline import check_gate
+from rov_mujoco.offline_loop import check_gate
 
 
 class TrajectoryWithoutRosTests(unittest.TestCase):
@@ -33,6 +33,13 @@ class OfflineLoopTests(unittest.TestCase):
                    'config': {'duration': 60.0}}
         self.assertEqual([key for key, _ in check_gate(summary, 0.12)], ['3d_helix/nn'])
         self.assertEqual(check_gate(summary, 0.2), [])
+
+    def test_gate_rejects_non_finite_rmse(self):
+        """发散到 NaN/inf 的组合必须算失败：nan > x 恒为 False，会被静默放行"""
+        for bad in (float('nan'), float('inf'), float('-inf')):
+            summary = {'3d_helix/nn': {'rmse': bad}, 'config': {'duration': 60.0}}
+            failures = check_gate(summary, 10.0)
+            self.assertEqual(len(failures), 1, '非有限 RMSE %.1f 应被门禁拦下' % bad)
 
     def test_vehicle_is_stable_without_force(self):
         vehicle = FirstOrderROV()

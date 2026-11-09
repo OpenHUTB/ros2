@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from rov_mujoco.nn_trajectory_controller import LOSTrajectoryController, NNTrajectoryController
-from rov_mujoco.offline_loop import run_episode
+from rov_mujoco.offline_loop import check_gate, run_episode
 
 ROOT = Path(__file__).resolve().parent
 CONTROLLERS = {'nn': NNTrajectoryController, 'los': LOSTrajectoryController}
@@ -56,12 +56,6 @@ def figure(results, path):
     plt.close(fig)
 
 
-def check_gate(summary, max_rmse):
-    """返回超过门限的 (组合, RMSE) 列表，空列表表示通过。"""
-    return [(key, value['rmse']) for key, value in summary.items()
-            if key != 'config' and value['rmse'] > max_rmse]
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--controllers', default='nn,los')
@@ -83,6 +77,8 @@ def main():
         parser.error(f'unknown controllers: {unknown}')
 
     start_offset = tuple(float(v) for v in args.start_offset.split(','))
+    if len(start_offset) != 3:
+        parser.error('--start-offset 需要 3 个数字（x,y,z），收到 %d 个' % len(start_offset))
     results = evaluate(controllers, trajectories, args.duration, args.dt, start_offset)
     output = ROOT / args.output
     output.parent.mkdir(parents=True, exist_ok=True)
