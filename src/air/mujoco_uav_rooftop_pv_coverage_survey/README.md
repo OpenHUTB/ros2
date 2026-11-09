@@ -50,7 +50,7 @@ python3 -m venv .venv
 
 ## 接口边界
 
-场景坐标系采用屋顶局部 ENU，航点字段固定为 `x`、`y`、`z`、`yaw`、`speed` 与 `arrival_time`。该结构可直接映射到后续 ROS 2 Humble 的 `nav_msgs/Path`、`geometry_msgs/PoseStamped` 和控制话题，而不把 ROS 依赖引入数据生成层。
+场景坐标系采用屋顶局部 ENU，航点字段固定为 `x`、`y`、`z`、`yaw`、`speed` 与 `arrival_time`。ROS 2 Humble 控制节点使用 `nav_msgs/Path`、`geometry_msgs/PoseStamped` 和图像话题；数据生成入口可独立于 ROS 运行。
 
 ## Docker
 
@@ -90,12 +90,13 @@ source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_uav_rooftop_pv_coverage_survey
 source install/setup.bash
 ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_controller.launch.py
+ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_workflow.launch.py mode:=all output:=survey_data
 ```
 
-控制节点订阅 `Image`、`PoseStamped`、`Path`，发布 `Twist` 和状态；`segmentation_checkpoint`、`planning_checkpoint`、`control_checkpoint` 参数选择训练权重。输入缺失、超时或坐标系不一致时停车。数据生成不要求 ROS；实时消息控制运行于 ROS 2 Humble。
+控制节点订阅 `Image`、`PoseStamped`、`Path`，发布 `Twist` 和状态；`segmentation_checkpoint`、`planning_checkpoint`、`control_checkpoint` 参数选择分割、局部规划和特征控制权重；`end_to_end_checkpoint` 选择 RGB 到速度模型。所有控制模式要求有效新鲜图像；输入缺失、超时或坐标系不一致时停车。数据生成不要求 ROS；实时消息控制运行于 ROS 2 Humble。通用 workflow launch 可通过 `mode` 参数运行全部数据、训练、SLAM 与键盘模式。
 
 ## 运行结果
 
-Ubuntu 22.04 / ROS 2 Humble 容器内 44 项测试通过，完整流程生成三个场景的数据并通过质量审计；安装后的三个 MJCF 场景可在源码目录之外载入。真实 ROS 消息验收通过，三个训练权重可同时加载，速度有界且位姿超时后停车。虚拟显示器中向真实 MuJoCo 查看器发送 W/A/Space 事件，运动、转向、空格停止和超时停止均通过。
+Ubuntu 22.04 / ROS 2 Humble 容器内 51 项测试通过，完整流程生成三个场景的数据并通过质量审计；安装后的三个 MJCF 场景可在源码目录之外载入，workflow launch 场景启动及 Compose 完整流程运行成功。真实 ROS 消息验收通过，分割、局部规划与控制权重可同时加载；端到端模型直接从 RGB 消息生成有界速度，位姿超时后停车。虚拟显示器中向真实 MuJoCo 查看器发送 W/A/Space 事件，运动、转向、空格停止和超时停止均通过。
 
 完整原理、源码结构、截图与 GIF 见仓库文档 `docs/air/mujoco_uav_rooftop_pv_coverage_survey_day2.md`。
