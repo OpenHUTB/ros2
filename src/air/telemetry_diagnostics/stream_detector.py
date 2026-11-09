@@ -43,12 +43,14 @@ class Detector:
             self.run += 1
             return {'arrival_ns': 0, 'score': None, 'threshold': self.config['threshold'],
                     'alarm': True, 'reason': 'invalid_payload', 'consecutive': self.run,
-                    'data_valid': False, 'model_ready': False}
+                    'data_valid': False, 'model_ready': False,
+                    'channels': {}, 'dominant': []}
         c = self.config
         source = int(row['source_ns']) if int(row['delivered']) else None
         fresh = source is not None and (self.last_source is None or source > self.last_source)
         score = None
-        extra = {}
+        # 非残差路径（缺包/坏 JSON/预热）也要给出空字段，避免下游 KeyError
+        extra = {'channels': {}, 'dominant': []}
         reason = 'warming_up'
         if not fresh:
             reason = 'missing_packet' if source is None else 'stale_timestamp'

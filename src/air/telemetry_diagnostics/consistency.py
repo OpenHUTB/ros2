@@ -63,7 +63,7 @@ class ConsistencyDetector:
         self.previous = None; self.source = None; self.history = []; self.run = 0; self.arrival = 0
 
     def step(self, row):
-        c = self.config; score = None; valid = False; reason = 'warming_up'; extra = {}
+        c = self.config; score = None; valid = False; reason = 'warming_up'; extra = {'channels': {}, 'dominant': []}
         try:
             arrival = int(row['arrival_ns']); delivered = int(row['delivered'])
             if arrival < 0 or delivered not in (0, 1): raise ValueError()

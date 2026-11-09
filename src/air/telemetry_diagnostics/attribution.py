@@ -4,12 +4,15 @@
 位置差分速度与两端速度均值之差（px, py, pz），以及速度差分加速度与两端加速度均值之差
 （vx, vy, vz）。残差除以训练集尺度后取绝对值，归一化即得到各通道占比。
 这只是相关性归因，不是因果解释，也不能区分「传感器坏了」和「观测层注入了扰动」。
+
+使用限制（见 attribution_eval.py 的随机基线）：``dominant`` 只在**位置类**异常上可信
+（命中率 98.8%–99.1%，随机基线 50%–58%）；对**恒定速度偏置**命中率 4.3%–53.0%，
+低于 67.8%/51.2% 的随机基线，属于会误导的结果——速度偏置请只看 score/alarm，
+不要用 dominant 定位通道。
 """
 import numpy as np
 
-from train_evaluate import KEYS
-
-CHANNELS = KEYS[:6]
+from channels import CHANNELS
 DOMINANT_SHARE = 0.2
 TOP_CHANNELS = 2
 

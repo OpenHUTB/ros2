@@ -58,6 +58,19 @@ class AttributionTests(unittest.TestCase):
         self.assertTrue(all('channels' in r for r in ready))
         self.assertAlmostEqual(sum(ready[0]['channels'].values()), 1.0, places=2)
 
+    def test_invalid_payload_still_has_empty_fields(self):
+        """非残差路径（坏 JSON / 缺包）也要给出空字段，避免下游 KeyError"""
+        for detector in (Detector('models/gru_42'), ConsistencyDetector('models/consistency_42')):
+            result = detector.step({'arrival_ns': 1, 'delivered': 1, 'source_ns': -5})
+            self.assertEqual(result['channels'], {})
+            self.assertEqual(result['dominant'], [])
+
+    def test_chance_rate_matches_combinatorics(self):
+        from attribution_eval import chance_rate
+        self.assertAlmostEqual(chance_rate(['px']), 0.5)          # 1 个通道对 3 元组
+        self.assertAlmostEqual(chance_rate(['px', 'py']), 0.8)    # 2 个通道
+        self.assertEqual(chance_rate([]), 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
