@@ -9,6 +9,7 @@ NO_FLY_ZONES = [
     {'name': 'School',       'lat': 47.62, 'lon': -122.10, 'radius_m': 500},
 ]
 EARTH_RADIUS_M = 6371000
+MAX_ALLOWED_ALTITUDE_M = 120.0
 
 def distance_m(lat1, lon1, lat2, lon2):
     phi1, phi2 = math.radians(lat1), math.radians(lat2)
@@ -17,12 +18,15 @@ def distance_m(lat1, lon1, lat2, lon2):
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
     return 2 * EARTH_RADIUS_M * math.asin(math.sqrt(a))
 
-def check_no_fly_zone(lat, lon):
+def check_no_fly_zone(lat, lon, altitude):
     for zone in NO_FLY_ZONES:
         d = distance_m(lat, lon, zone['lat'], zone['lon'])
         if d <= zone['radius_m']:
-            return zone['name'], d
-    return None, None
+            if altitude > MAX_ALLOWED_ALTITUDE_M:
+                return zone['name'], d, 'severe'
+            else:
+                return zone['name'], d, 'inside'
+    return None, None, None
 
 def check_proximity(lat, lon, threshold=500):
     for zone in NO_FLY_ZONES:
@@ -32,7 +36,7 @@ def check_proximity(lat, lon, threshold=500):
             return zone['name'], dist_to_edge
     return None, None
 
-def log_violation(zone_name, lat, lon, dist):
+def log_violation(zone_name, lat, lon, dist, altitude, level):
     file_exists = False
     try:
         with open('violation_log.csv', 'r', encoding='utf-8') as f:
@@ -43,9 +47,9 @@ def log_violation(zone_name, lat, lon, dist):
     with open('violation_log.csv', 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         if not file_exists:
-            writer.writerow(['Time', 'Zone', 'Latitude', 'Longitude', 'Distance(m)'])
+            writer.writerow(['Time', 'Zone', 'Latitude', 'Longitude', 'Distance(m)', 'Altitude(m)', 'Level'])
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        writer.writerow([current_time, zone_name, round(lat, 5), round(lon, 5), round(dist, 2)])
+        writer.writerow([current_time, zone_name, round(lat, 5), round(lon, 5), round(dist, 2), round(altitude, 1), level])
 
 def main():
     print("[INFO] 正在连接 AirSim 模拟器 (127.0.0.1:41451)...")
@@ -62,13 +66,19 @@ def main():
     pos = state.kinematics_estimated.position
     drone_lat = 47.65 + pos.x_val * 0.00001
     drone_lon = -122.14 + pos.y_val * 0.00001
+    altitude = abs(pos.z_val)
     
-    print(f"[INFO] 从模拟器获取到无人机位置: ({drone_lat:.5f}, {drone_lon:.5f})")
+    print(f"[INFO] 从模拟器获取到无人机位置: ({drone_lat:.5f}, {drone_lon:.5f})，当前高度: {altitude:.1f} 米")
 
-    zone, dist = check_no_fly_zone(drone_lat, drone_lon)
-    if zone:
-        print(f"[警告] 无人机在禁飞区【{zone}】内，距离中心 {dist:.1f} 米！请立即返航！")
-        log_violation(zone, drone_lat, drone_lon, dist)
+    zone, dist, status = check_no_fly_zone(drone_lat, drone_lon, altitude)
+    
+    if status == 'severe':
+        print(f"[严重违规] 无人机已经违规闯入禁飞区【{zone}】，当前高度 {altitude:.1f} 米（已突破 120 米限高），极度危险，请立即迫降！")
+        log_violation(zone, drone_lat, drone_lon, dist, altitude, 'SEVERE')
+        print("[INFO] 违规记录已保存至 violation_log.csv")
+    elif status == 'inside':
+        print(f"[警告] 无人机已经违规闯入禁飞区【{zone}】，当前高度 {altitude:.1f} 米，请立即返航！")
+        log_violation(zone, drone_lat, drone_lon, dist, altitude, 'WARNING')
         print("[INFO] 违规记录已保存至 violation_log.csv")
     else:
         near_zone, near_dist = check_proximity(drone_lat, drone_lon)
