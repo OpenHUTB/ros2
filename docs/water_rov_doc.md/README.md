@@ -4,6 +4,8 @@ water是ROS2 Python功能包，用于水下ROV侧扫声呐图像目标识别，�
 ## 目录结构
 docs/
 
+├── water_rov_doc.md
+
 ├── README.md
 
 ├── gazebo_side_scan_sonar_simulation.jpg
@@ -18,10 +20,6 @@ src/water
 
 │   └── sonar_infer_node.py
 
-├── scripts/
-
-│   └── train_sonar.py
-
 ├── launch/
 
 │   └── rov.launch.py
@@ -30,13 +28,20 @@ src/water
 
 │   └── water
 
+├── scripts/
+
+│   └── train_sonar.py
+
 ├── worlds/
 
 │   └── underwater.world
 
 ├── package.xml
 
+├── setup.cfg
+
 └── setup.py
+
 
 ```
 
