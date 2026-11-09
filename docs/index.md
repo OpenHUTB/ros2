@@ -2,7 +2,9 @@ title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
-欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
+欢迎使用 OpenHUTB 的 ROS 文档 [@macenski2022robot]。
+
+文档环境初始化：[Ubuntu 一键安装与本地预览](./ubuntu_docs_setup.md)。
 
 <span id="submission-guide"></span>
 **提交项目之前**，请按以下指引自查，并阅读[仓库提交约定](https://github.com/OpenHUTB/ros2#注意事项)。PR 模板只列常见检查项；具体任务、模拟器和验收要求以仓库约定及维护者说明为准。
@@ -34,12 +36,6 @@ title: 主页
 
 ## 1. 入门 <span id="list"></span>
 
-* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
-
-* [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
-
-* [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
-
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
 
 * 教材：ROS教材.pdf
@@ -63,12 +59,15 @@ ROS每章节运行代码:
     * [ROS Noetic 环境自检与常见问题排查](./chap2/ros1_env_check/index.md)
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
+    * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
+    * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
-  * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
-  * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
+    * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
+    * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+    * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
 
@@ -83,7 +82,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
-* [人形机器人单目相机图像端到端神经网络控制](./humanoid/humanoid_camera_e2e_control.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
@@ -96,6 +94,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
+* [人形机器人单目相机端到端 CNN 控制](./humanoid/humanoid_camera_e2e_control.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -119,6 +118,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [地面载具物理仿真与键盘运动控制](./ground/carla_keyboard_control.md)
 * [CARLA+YOLOv8 目标检测感知与减速避障](./ground/carla_yolo_avoidance.md)
 * [阿克曼控制](./ground/ackermann_control.md)
+* [车道线检测（前视视觉）](./ground/carla_lane_keeping/lane_detection.md)
+* [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
@@ -188,8 +189,11 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
+* [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
 
 * [winter 场景无人机圆周飞行](./air/winter_circle.md)
 * [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
@@ -277,6 +281,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [手势控制无人机](./air/gesture_control_drone.md)
 
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
+
+* [无人机航测任务规划（GSD/重叠度/WPML）](./air/survey_mission_planner.md) —— 由相机参数和目标 GSD 反算航高、航带间距、拍照间距与航点，导出 CSV/KML/WPML
 
 * [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 

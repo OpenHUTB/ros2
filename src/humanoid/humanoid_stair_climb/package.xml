@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_stair_climb</name>
+  <version>1.0.0</version>
+  <description>人形上下台阶步态仿真：解析 IK + 分段足端轨迹，基于 MuJoCo 六级台阶场景</description>
+  <maintainer email="L2008-by@users.noreply.github.com">L2008-by</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <!-- 运行依赖：
+       - numpy 走系统包（rosdep 可解析）
+       - MuJoCo 在 Ubuntu 22.04 没有 apt 包，用 pip 装到用户目录，
+         具体命令见 requirements.txt 与 README「安装与运行」。
+         因此这里不写 mujoco 的 exec_depend，避免 rosdep 去找不存在的包。
+       注意：XML 注释里不能出现连续两个减号，pip 的用户安装选项不要写在这里。 -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

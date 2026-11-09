@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    双足步态生成与 ZMP 稳定性验证。起来的是两个节点：
+
+      1. bipedal_gait_demo  离线演示：跑一遍分析、打印指标、写 4 张曲线图到 outdir
+      2. bipedal_gait_zmp   ROS 节点：发质心/ZMP 轨迹、稳定裕度、支撑区间、落脚点
+
+    用法：
+      roslaunch bipedal_gait_zmp main.launch                 两个节点都起
+      roslaunch bipedal_gait_zmp main.launch demo:=false     只发话题
+      roslaunch bipedal_gait_zmp main.launch node:=false     只跑离线演示
+      roslaunch bipedal_gait_zmp main.launch playback_rate:=0.5   放慢一倍
+
+    给演示脚本附加参数走 args，取值见包内 README；写法注意不要在注释里出现
+    连续两个减号，XML 注释不允许，写了整个 launch 文件都解析不了。
+  -->
+
+  <arg name="demo" default="true" />
+  <arg name="node" default="true" />
+  <arg name="args" default="" />
+  <arg name="outdir" default="$(find bipedal_gait_zmp)/demo_out" />
+  <arg name="playback_rate" default="1.0" />
+  <arg name="loop" default="true" />
+
+  <!-- 离线演示：算一遍、出图，不需要 roscore 之外的东西 -->
+  <node if="$(arg demo)"
+    pkg="bipedal_gait_zmp"
+    type="main.py"
+    name="bipedal_gait_demo"
+    output="screen"
+    args="$(arg args) --outdir $(arg outdir)"
+  />
+
+  <!-- ROS 节点：把结果发布成话题，rqt_plot / RViz 可以直接看 -->
+  <node if="$(arg node)"
+    pkg="bipedal_gait_zmp"
+    type="gait_node.py"
+    name="bipedal_gait_zmp"
+    output="screen"
+  >
+    <param name="playback_rate" value="$(arg playback_rate)" />
+    <param name="loop" value="$(arg loop)" />
+  </node>
+
+</launch>
