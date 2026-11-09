@@ -234,7 +234,7 @@ CARLA 提供两台激光雷达：
     python3 test/test_buffers.py
     python3 test/test_demo_offline.py
 
-六个文件末行分别输出 `[结果] 27 / 26 / 49 / 31 / 22 / 15 项全部通过`，共 170 项。
+六个文件末行分别输出 `[结果] 27 / 26 / 53 / 31 / 22 / 15 项全部通过`，共 174 项。
 
 其中 `test_buffers.py` 校验雷达缓冲区的解析：把手工构造的字节串喂进解析函数，
 确认 4 个 float32 的普通点和 6 个 32 位整数的语义点都能按预期取出，
@@ -282,6 +282,17 @@ CARLA 提供两台激光雷达：
 节点发布 `/lidar/segmented`（带类别强度的点云）、`/lidar/free_distance`、
 `/lidar/drivable_ratio`、`/vehicle/control`，并直接给自车下发油门、刹车和转角。
 
+`config/params.yaml` 里的参数都会真正生效：连接、雷达、控制三组一共 18 个，节点启动时
+逐个声明并读出实际值，不再被代码里的默认值覆盖。用 launch 时可以在命令行覆盖其中任意
+一项，例如 `host:=192.168.148.1 traffic:=6 comfort_distance:=18`。
+
+切地图这一步单独给了 300 s 超时：`load_world` 一旦超时，这个客户端就不能再用了
+（后续报 streaming client connection failed），严重时服务端也会一起无响应。真的失败
+时程序会重建连接、退回当前地图继续，并打印实际使用的地图；也可以直接跳过重载：
+
+    python3 main.py --demo --keep-map
+    CARLA_KEEP_MAP=1 ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
+
 ## 5. 参数说明
 
 | 参数 | 默认值 | 说明 |
@@ -289,6 +300,7 @@ CARLA 提供两台激光雷达：
 | `--host` | 127.0.0.1 | CARLA 服务端地址 |
 | `--port` | 2000 | RPC 端口 |
 | `--town` | Town03 | 地图，Town03 有路口和环岛，场景比较全 |
+| `--keep-map` | 关 | 不重载地图，直接用服务端当前地图；`load_world` 卡死时的应急开关 |
 | `--vehicle` | vehicle.tesla.model3 | 自车 |
 | `--spawn-index` | 0 | 出生点索引，被占用时换一个 |
 | `--traffic` | 12 | NPC 车数量，0 表示不放 |
@@ -307,6 +319,7 @@ CARLA 提供两台激光雷达：
 | `--comfort-distance` | 12.0 | 开始减速的距离（米） |
 | `--stop-distance` | 4.0 | 速度系数降到 0 的距离（米） |
 | `--lookahead` | 6.0 | 纯跟踪的预瞄距离（米） |
+| `--start-throttle` | 0.45 | 静止起步时的油门下限，车重起不来时调大 |
 | `--record` | 空 | 逐帧存 PNG 的目录，用于合成动图 |
 | `--no-plot` | 关 | 演示时不弹三维散点图 |
 
@@ -442,7 +455,9 @@ CARLA 提供两台激光雷达：
 * `object_tag` 的编号依赖 CARLA 版本，换版本要重新核对 `labels.MEASURED_TAG_TABLE`；
 * 行人、杆子在 40 m 外只有几个点，逐点分类必然吃亏，这由分距离曲线如实呈现；
 * 语义雷达要多渲染一遍，采集 300 帧实测 49 秒，比单雷达慢；
-* 网络只有 1508 个参数，属于"轻量基线"，不是精度上限。
+* 网络只有 1508 个参数，属于"轻量基线"，不是精度上限；
+* `load_world` 在部分机器上会卡到超时并把服务端拖到无响应，此时只能用 `--keep-map`
+  在当前地图上跑；这是 CARLA 服务端的问题，本模块只能做到失败后重建连接、不静默崩掉。
 
 ## 7. 源码解析
 

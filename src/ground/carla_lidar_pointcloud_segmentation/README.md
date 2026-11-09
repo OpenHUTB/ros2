@@ -125,7 +125,8 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     ims[0].save('demo.gif', save_all=True, append_images=ims[1:], duration=80, loop=0, optimize=True)"
 
 调参：`--comfort-distance`（默认 12 m，越大越早减速）、`--lookahead`
-（默认 6 m，越大越平顺但过弯会切内道）、`--max-speed`（默认 8 m/s）。
+（默认 6 m，越大越平顺但过弯会切内道）、`--max-speed`（默认 8 m/s）、
+`--start-throttle`（默认 0.45，静止起步的油门下限，车重或上坡起不来时调大）。
 
 ### 4.6 ROS 2 节点
 
@@ -136,6 +137,28 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 
     ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
 
+两种方式用的是同一组参数，`config/params.yaml` 里写的值会真正生效（不再被代码里的
+默认值覆盖）：连接用 `host` / `port` / `town` / `vehicle` / `spawn_index` / `traffic`，
+雷达用 `lidar_range` / `channels` / `points_per_second` / `rotation` / `lidar_height`，
+控制用 `corridor_width` / `comfort_distance` / `stop_distance` / `lookahead` /
+`max_steer` / `max_speed`。用 launch 时可以直接在命令行覆盖，例如：
+
+    ros2 launch carla_lidar_pointcloud_segmentation main.launch.py \
+        host:=192.168.148.1 traffic:=6 comfort_distance:=18 max_speed:=6
+
+连接与切图：连接超时默认 120 s，切换地图单独给 300 s。`load_world` 卡住时客户端会
+直接不可用（后续报 streaming client connection failed），严重时服务端也会一起无响应，
+所以要一次给够。切图失败时会重建连接、退回当前地图继续，并打印实际使用的地图。
+确实需要跳过重载时：
+
+    python3.10 main.py --demo --keep-map --checkpoint models/seg_mlp.npz
+    CARLA_KEEP_MAP=1 ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
+
+超时可以用环境变量覆盖：
+
+    CARLA_CONNECT_TIMEOUT=180 CARLA_LOAD_WORLD_TIMEOUT=600 \
+        ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
+
 ## 5. 离线单元测试
 
     python3.10 test/test_features.py
@@ -145,7 +168,7 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     python3.10 test/test_buffers.py
     python3.10 test/test_demo_offline.py
 
-每个文件末行输出 `[结果] N 项全部通过`，六个文件共 170 项。
+每个文件末行输出 `[结果] N 项全部通过`，六个文件共 174 项。
 
 其中 `test_demo_offline.py` 用假的 `carla` 模块把 `--demo` 的整条循环跑一遍，
 控制量、统计指标、清理流程都能在没有 CARLA 的机器上验证。
