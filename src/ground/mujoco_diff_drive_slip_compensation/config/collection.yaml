@@ -1,0 +1,12 @@
+mujoco_slip_data_collector:
+  ros__parameters:
+    output_directory: data/raw
+    split_seed: 25012
+    random_seed: 25012
+    flush_interval: 100
+
+slip_collection_command_profile:
+  ros__parameters:
+    use_sim_time: true
+    publish_rate: 20.0
+    profile_period: 12.0

@@ -1,0 +1,59 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+      Plane Cell Count: 30
+      Cell Size: 1
+      Color: 80; 80; 80
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: LiDAR
+      Topic: /lidar/points
+      Queue Size: 5
+      Style: Boxes
+      Size (m): 0.16
+      Position Transformer: XYZ
+      Color Transformer: AxisColor
+      Axis: Z
+      Autocompute Intensity Bounds: true
+      Alpha: 1
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Name: rooftop_nn
+      Topic: /rooftop_nn/markers
+    - Class: rviz/TF
+      Enabled: false
+      Name: TF
+  Global Options:
+    Background Color: 18; 20; 26
+    Fixed Frame: world
+    Frame Rate: 30
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 26
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 4
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Near Clip Distance: 0.01
+      Pitch: 0.5
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz)
+      Yaw: 0.85
+    Saved: ~
+Window Geometry:
+  Height: 780
+  Width: 640

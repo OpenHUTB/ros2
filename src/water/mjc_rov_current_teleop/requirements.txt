@@ -1,0 +1,13 @@
+# Python 依赖（Python 3.8.10 可用）
+# 安装命令（阿里云镜像，避免 PyPI 直连超时）：
+#   pip3 install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
+# torch 必须装 CPU 版，Python3.8 最高 2.4.1：
+#   pip3 install torch==2.4.1+cpu torchvision==0.19.1+cpu \
+#     -i https://mirrors.aliyun.com/pypi/simple/ \
+#     --extra-index-url https://download.pytorch.org/whl/cpu
+mujoco<3.2
+PyOpenGL
+numpy
+torch==2.4.1+cpu
+torchvision==0.19.1+cpu
+opencv-python
