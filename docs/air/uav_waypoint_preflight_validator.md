@@ -10,8 +10,8 @@
 航点轨迹跟踪解决“已有航点如何飞”，本模块解决“这组航点是否适合提交给控制器”。
 任务文件统一使用相对起飞点的 ENU 坐标：
 
-- `x`：前；
-- `y`：左；
+- `x`：东；
+- `y`：北；
 - `z`：上；
 - 单位：米。
 
@@ -73,12 +73,16 @@ roslaunch uav_waypoint_preflight_validator main.launch \
 
 节点默认校验一次后退出；合法任务退出码为 `0`，存在阻塞错误时退出码为 `2`。
 
+Marker 坐标是相对起飞点的 ENU 偏移。默认 `marker_frame=world` 只适用于 RViz 的
+`world` 原点与起飞点重合、坐标轴也同向的场景。如果真实地图原点不同，请将
+`marker_frame` 设为一个原点在起飞点且轴向为 ENU 的 TF frame，或关闭 Marker 发布。
+
 ## 5. ROS Noetic 实测
 
 已在 Ubuntu 20.04 + ROS Noetic 的独立 catkin 工作空间验证：
 
 - `catkin_make` 通过；
-- `catkin_make run_tests_uav_waypoint_preflight_validator` 的 17 项测试通过；
+- `catkin_make run_tests_uav_waypoint_preflight_validator` 的 18 项测试通过；
 - `roslaunch uav_waypoint_preflight_validator main.launch` 正常启动、发布结果并退出；
 - 合法示例返回 `status=VALID`、`errors=[]`、`warnings=[]`；
 - 4 个航点、总航程 `11.640 m`、保守 ETA `8.904 s`。
@@ -105,7 +109,7 @@ roslaunch uav_waypoint_preflight_validator main.launch \
 python3 -m unittest discover -s test -v
 ```
 
-17 项测试覆盖任务解析、坐标约定、非法数值、高度范围、重复航点、爬升角、
+18 项测试覆盖任务解析、坐标约定、非法数值、高度范围、重复航点、爬升角、
 转弯角、总航程、配置参数、路径展开和 JSON 往返。
 
 ## 8. 已知限制

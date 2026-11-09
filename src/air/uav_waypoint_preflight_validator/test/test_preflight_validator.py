@@ -60,6 +60,10 @@ class ValidatorTest(unittest.TestCase):
             sum(item["code"] == "E006" for item in report["errors"]), 2
         )
 
+    def test_numeric_string_coordinates_are_rejected(self):
+        report = validate_mission_data(mission([[0, 0, 2], ["3", "0", "2"]]))
+        self.assertIn("E006", [item["code"] for item in report["errors"]])
+
     def test_altitude_bounds(self):
         report = validate_mission_data(mission(
             [[0, 0, 2], [2, 0, 25]],

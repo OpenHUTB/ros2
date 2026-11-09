@@ -32,8 +32,8 @@ ANGLE_LIMITS = (
 
 
 def _finite_number(value):
-    if isinstance(value, bool):
-        raise ValueError("布尔值不是有效数值")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("只接受 int/float，布尔值和字符串均无效")
     number = float(value)
     if not math.isfinite(number):
         raise ValueError("数值必须有限")

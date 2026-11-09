@@ -38,7 +38,7 @@ waypoints:
   - [6.0, 5.0, 2.5]
 ```
 
-坐标单位为米。`x` 为前、`y` 为左、`z` 为上，原点为起飞点。
+坐标单位为米。`x` 为东、`y` 为北、`z` 为上，原点为起飞点。
 不写 `frame` 或使用其他坐标系会被拒绝，避免把 World/ENU 绝对坐标与相对坐标混用。
 
 ## 离线校验 / Offline Validation
@@ -89,6 +89,10 @@ roslaunch uav_waypoint_preflight_validator main.launch \
 节点默认在发布一次结果后退出：合法任务退出码为 `0`，存在阻塞错误时退出码为 `2`。
 设置 `exit_after_publish:=false` 可保持节点运行并缓存结果。
 
+Marker 坐标是相对起飞点的 ENU 偏移。默认 `marker_frame=world` 只适用于 RViz 的
+`world` 原点与起飞点重合、坐标轴也同向的场景；如果真实地图原点不同，应传入一个
+以起飞点为原点且轴向为 ENU 的 TF frame，或关闭 Marker 预览。
+
 已在 Ubuntu 20.04 + ROS Noetic 的干净工作空间验证：`catkin_make` 通过，
 `catkin_make run_tests_uav_waypoint_preflight_validator` 通过，`roslaunch` 成功
 启动并发布结果。合法示例返回 `VALID`、4 个航点、11.640 m、ETA 8.904 s，
@@ -112,7 +116,7 @@ roslaunch uav_waypoint_preflight_validator main.launch \
 python3 -m unittest discover -s test -v
 ```
 
-17 项测试覆盖合法任务、缺失文件、YAML 错误、坐标系、非法数值、高度、重复点、
+18 项测试覆盖合法任务、缺失文件、YAML 错误、坐标系、非法数值、高度、重复点、
 过陡爬升、急转弯、普通警告、总航程、非法限制参数、路径展开和 JSON 往返。
 
 ## 边界 / Limitations
