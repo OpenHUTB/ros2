@@ -51,3 +51,15 @@ class TinyImageController(nn.Module):
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
         return self.head(self.encoder(images))
+
+
+class TinyWaypointPlanner(nn.Module):
+    """Route-relative observations to local target offsets in body metres / 局部目标规划网络。"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.net = nn.Sequential(nn.Linear(3, 32), nn.Tanh(), nn.Linear(32, 32),
+                                 nn.Tanh(), nn.Linear(32, 2))
+
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
+        return self.net(features)
