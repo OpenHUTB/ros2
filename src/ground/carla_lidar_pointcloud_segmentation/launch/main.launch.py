@@ -26,7 +26,17 @@ ARGUMENTS = (
     ('vehicle', 'vehicle.tesla.model3', '自车 blueprint'),
     ('spawn_index', '0', '出生点索引'),
     ('traffic', '12', 'NPC 车数量，0 表示不放'),
+    ('lidar_range', '60.0', '激光雷达量程（米）'),
+    ('channels', '32', '激光雷达线数'),
+    ('points_per_second', '600000', '激光雷达每秒点数'),
+    ('rotation', '20.0', '激光雷达转速（Hz）'),
+    ('lidar_height', '2.4', '激光雷达安装高度（米）'),
     ('corridor_width', '1.2', '车身走廊半宽（米）'),
+    ('comfort_distance', '14.0', '大于该距离全速（米）'),
+    ('stop_distance', '5.0', '小于该距离刹停（米）'),
+    ('lookahead', '8.0', '纯跟踪预瞄距离（米）'),
+    ('max_steer', '0.6', '最大前轮转角（弧度）'),
+    ('max_speed', '8.0', '目标车速上限（米/秒）'),
 )
 
 

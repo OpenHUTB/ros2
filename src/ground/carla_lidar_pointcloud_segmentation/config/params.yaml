@@ -3,9 +3,8 @@
 
 lidar_segmentation_node:
   ros__parameters:
-    # 权重与数据
+    # 权重
     checkpoint: "models/seg_mlp.npz"
-    data: "data/dataset.npz"
 
     # CARLA 连接
     host: "127.0.0.1"
@@ -28,3 +27,4 @@ lidar_segmentation_node:
     stop_distance: "5.0"       # 小于这个距离刹停
     lookahead: "8.0"           # 纯跟踪预瞄距离
     max_steer: "0.6"           # 最大前轮转角，弧度
+    max_speed: "8.0"           # 目标车速上限，米/秒

@@ -35,12 +35,14 @@ from . import model as MD
 
 
 def _declare(node, rclpy_mod, name, default):
-    """统一按字符串声明参数，避免与 launch 的类型推断打架。"""
-    from rclpy.parameter import Parameter
-    if not node.has_parameter(name):
-        node.declare_parameter(name, Parameter.Type.STRING)
-    node.set_parameters([Parameter(name, Parameter.Type.STRING, str(default))])
-    return default
+    """按字符串声明参数，返回最终生效的值。
+
+    只声明、不回落：用默认值声明之后，如果 ``--params-file`` 或 launch 传了同名
+    参数，rclpy 会用外部值覆盖初值，``get_parameter`` 拿到的就是外部值。
+    再手动 ``set_parameters`` 一次反而会把 yaml 里的配置冲掉。
+    """
+    node.declare_parameter(name, str(default))
+    return node.get_parameter(name).value
 
 
 def build_path_ahead(carla, world, ego, count=20, spacing=2.0):
@@ -67,7 +69,10 @@ class LidarSegmentationNode:
     """
 
     def __init__(self, rclpy_mod, node_cls, checkpoint, host, port, town,
-                 vehicle, spawn_index, traffic, corridor_width, max_speed=8.0):
+                 vehicle, spawn_index, traffic, corridor_width, max_speed=8.0,
+                 lidar_range=60.0, channels=32, points_per_second=600000,
+                 rotation=20.0, lidar_height=2.4, comfort_distance=14.0,
+                 stop_distance=5.0, lookahead=8.0, max_steer=0.6):
         self.rclpy = rclpy_mod
         self.node = node_cls('lidar_segmentation_node')
         log = self.node.get_logger()
@@ -96,17 +101,26 @@ class LidarSegmentationNode:
         if traffic > 0:
             self.traffic = cc.spawn_traffic(self.world, self.client, count=traffic)
 
-        common = dict(lidar_range=60.0, channels=32, points_per_second=600000,
-                      rotation_frequency=20.0, sensor_tick=0.0)
+        common = dict(lidar_range=lidar_range, channels=channels,
+                      points_per_second=points_per_second,
+                      rotation_frequency=rotation, sensor_tick=0.0)
         self.sensor, self.queue = cc.attach_lidar(
-            self.world, self.ego, cc.lidar_blueprint(self.world, semantic=False, **common))
+            self.world, self.ego, cc.lidar_blueprint(self.world, semantic=False, **common),
+            height=lidar_height)
         self.corridor_width = corridor_width
         self.max_speed = max_speed
+        self.lidar_range = lidar_range
+        self.comfort_distance = comfort_distance
+        self.stop_distance = stop_distance
+        self.lookahead = lookahead
+        self.max_steer = max_steer
         for _ in range(5):
             self.world.tick()
 
         self.timer = self.node.create_timer(0.05, self.step)
-        log.info('节点已启动：地图 %s，走廊半宽 %.2f m' % (town, corridor_width))
+        log.info('节点已启动：地图 %s，走廊半宽 %.2f m，量程 %.0f m，'
+                 '舒适距离 %.1f m，停车距离 %.1f m'
+                 % (town, corridor_width, lidar_range, comfort_distance, stop_distance))
 
     # ------------------------------------------------------------------ 主循环
     def step(self):
@@ -125,7 +139,8 @@ class LidarSegmentationNode:
         feats = F.point_features(points, ground_z=F.estimate_ground_z(points))
         classes = self.net.predict(F.standardize_apply(feats, self.mean, self.std))
 
-        free = control.free_distance(points, classes, half_width=self.corridor_width)
+        free = control.free_distance(points, classes, half_width=self.corridor_width,
+                                     x_max=self.lidar_range)
         ratio = control.drivable_ratio(classes, points=points)
 
         self.pub_cloud.publish(_to_cloud2(points, classes, PointCloud2, PointField))
@@ -133,7 +148,8 @@ class LidarSegmentationNode:
         self.pub_ratio.publish(Float32(data=float(ratio)))
 
         # 速度：距离 -> 系数 -> 目标车速 -> 简单 P 控制
-        factor = control.speed_factor(free, comfort=14.0, stop=5.0)
+        factor = control.speed_factor(free, comfort=self.comfort_distance,
+                                      stop=self.stop_distance)
         velocity = self.ego.get_velocity()
         speed = math.sqrt(velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2)
         target = self.max_speed * factor
@@ -146,8 +162,8 @@ class LidarSegmentationNode:
         yaw = math.radians(transform.rotation.yaw)
         pose = (transform.location.x, transform.location.y, yaw)
         path = build_path_ahead(carla, self.world, self.ego)
-        delta = control.pure_pursuit(pose, path, wheelbase=2.9, lookahead=8.0)
-        steer = control.normalized_steer(delta, max_steer=0.6)
+        delta = control.pure_pursuit(pose, path, wheelbase=2.9, lookahead=self.lookahead)
+        steer = control.normalized_steer(delta, max_steer=self.max_steer)
 
         self.ego.apply_control(carla.VehicleControl(throttle=throttle, brake=brake,
                                                     steer=steer))
@@ -198,7 +214,8 @@ def main(argv=None):
     from rclpy.node import Node
 
     rclpy.init(args=argv)
-    node = Node('lidar_segmentation_params')
+    # 名字必须和 config/params.yaml 里的小节同名，否则 --params-file 不会生效。
+    node = Node('lidar_segmentation_node')
     defaults = {
         'checkpoint': 'models/seg_mlp.npz',
         'host': cc.DEFAULT_HOST,
@@ -207,7 +224,17 @@ def main(argv=None):
         'vehicle': cc.EGO_BLUEPRINT,
         'spawn_index': '0',
         'traffic': '12',
+        'lidar_range': '60.0',
+        'channels': '32',
+        'points_per_second': '600000',
+        'rotation': '20.0',
+        'lidar_height': '2.4',
         'corridor_width': '1.2',
+        'comfort_distance': '14.0',
+        'stop_distance': '5.0',
+        'lookahead': '8.0',
+        'max_steer': '0.6',
+        'max_speed': '8.0',
     }
     for name, value in defaults.items():
         _declare(node, rclpy, name, value)
@@ -219,7 +246,14 @@ def main(argv=None):
         checkpoint=params['checkpoint'], host=params['host'], port=int(params['port']),
         town=params['town'], vehicle=params['vehicle'],
         spawn_index=int(params['spawn_index']), traffic=int(params['traffic']),
-        corridor_width=float(params['corridor_width']))
+        corridor_width=float(params['corridor_width']),
+        max_speed=float(params['max_speed']),
+        lidar_range=float(params['lidar_range']), channels=int(params['channels']),
+        points_per_second=int(params['points_per_second']),
+        rotation=float(params['rotation']), lidar_height=float(params['lidar_height']),
+        comfort_distance=float(params['comfort_distance']),
+        stop_distance=float(params['stop_distance']),
+        lookahead=float(params['lookahead']), max_steer=float(params['max_steer']))
     try:
         rclpy.spin(runner.node)
     except KeyboardInterrupt:
