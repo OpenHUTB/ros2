@@ -14,7 +14,8 @@ class UavRangeNode(Node):
 
     def __init__(self, controller="mlp", model_path=None, period=0.01):
         super().__init__("uav_range_braking")
-        self.simulation = Simulation(Scenario(), controller=controller, model_path=model_path)
+        self.scenario = Scenario()
+        self.simulation = Simulation(self.scenario, controller=controller, model_path=model_path)
         self.range_pub = self.create_publisher(Float32, "uav/front_range_m", 10)
         self.control_pub = self.create_publisher(Float32, "uav/braking_accel_m_s2", 10)
         self.state_pub = self.create_publisher(Float64MultiArray, "uav/state", 10)
@@ -31,11 +32,15 @@ class UavRangeNode(Node):
         self.range_pub.publish(range_msg)
         self.control_pub.publish(control_msg)
         self.state_pub.publish(state_msg)
+        if self.simulation.data.time >= self.scenario.duration:
+            self.timer.cancel()
+            self.get_logger().info("仿真时长已结束 / Simulation duration reached")
+            rclpy.shutdown()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--controller", choices=("range", "mlp"), default="mlp")
+    parser.add_argument("--controller", choices=("reference", "range", "mlp"), default="mlp")
     parser.add_argument("--model", type=Path, default=None)
     args, ros_args = parser.parse_known_args()
     rclpy.init(args=ros_args)
@@ -44,7 +49,8 @@ def main():
         rclpy.spin(node)
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
