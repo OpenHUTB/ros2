@@ -144,6 +144,24 @@ seed42 在最轻微 0.03 强度下，位置漂移平均检出延迟 0.323 秒、
 ![分强度检出率](results/final/severity_recall.png)
 ![消融与误报权衡](results/final/ablation.png)
 
+### 通道归因
+
+报警时除评分外，还会给出 6 个残差通道（p*、v*）的占比 `channels` 与主导通道 `dominant`（占比 ≥20% 的前两个），两个检测器都输出这两个字段；非残差路径（坏 JSON/缺包/预热）给空字典与空列表，字段不会缺失。归因只用残差，不看注入标签。
+
+`dominant` 最多 2 个通道、从 6 个里选，随机命中率本身就有 50%（选 1 个）到 80%（选 2 个），所以必须和基线比：
+
+| 检测器 | 注入类型 | 报警步 | 给出 dominant | 命中率 | 随机基线 |
+|---|---|---:|---:|---:|---:|
+| GRU 预测残差 | 位置漂移（p*） | 350 | 100% | **99.1%** | 58.2% |
+| GRU 预测残差 | 速度偏置（v*） | 287 | 100% | 53.0% | 67.8% |
+| 一致性残差 | 位置漂移（p*） | 343 | 100% | **98.8%** | 50.6% |
+| 一致性残差 | 速度偏置（v*） | 348 | 100% | 4.3% | 51.2% |
+
+**口径**：位置漂移的归因显著高于随机基线，可用；速度偏置 53.0%/4.3% 低于基线 67.8%/51.2%，**不可用**——恒定偏置只在差分残差的起止边缘出现，平台段被噪声主导。所以 API 上 `dominant` 只对位置类异常可信，速度偏置请看 `score`/`alarm`。
+
+![通道归因命中率与随机基线](results/attribution_hit.png)
+
+复现：`python attribution_eval.py --detectors gru,consistency`，结果写入 `results/attribution_eval.json`。
 ## 6. ROS2 接口、实时接入和验证
 
 | 话题 | 类型 | 用途 |
@@ -165,6 +183,17 @@ ros2 run telemetry_diagnostics telemetry_diagnostics --ros-args -p model:="$PWD/
 本机实际验证了实时桥接读取已落地无人机；**最终异常展示采用真实飞行数据回放**，未宣称进行了在线飞行故障注入。安全边界：本模块不控制飞行；只有 `collect_holdout.py` 是明确的仿真飞行采集程序，需先确认使用仿真器且无人机已落地。
 
 已通过 13 项单元/一致性测试、colcon 构建、ROS2 坏 JSON/NaN/断流集成测试、标准 launch 启动与干净退出。新版回放收到 361 条遥测、361 条评分、361 条诊断。从交付 ZIP 在另一目录重新解压后，数据准备、13 项测试、训练入口、构建与回放再次通过，最终 CSV 与原结果逐字节一致（同一台虚拟机，不冒充异机复测）。记录见 `results/release_validation.json`。实际话题记录见 `results/final_replay/`、`results/ros_robustness.json`、`results/live/`。`check_ros.py` 可独立订阅话题记录曲线；实时验证加 `--mode live`。
+
+### ROS 冒烟测试
+
+仓库里已有独立的冒烟脚本，在一个隔离的 ROS domain 上起节点、发坏 JSON 与真实观测流，订阅 `/uav/anomaly_score` 与 `/diagnostics` 校验输出：
+
+```bash
+source /opt/ros/humble/setup.bash
+python ros_smoke.py     # 需要 rclpy 与 diagnostic_msgs，结果写入 results/ros_smoke.log
+```
+
+它跑的是**在线链路**，需要 ROS 2 运行时；不装 ROS 的机器只能跑离线测试（`python -m unittest discover -s tests`）。仓库现有 CI 只有 `air_bridge_tests` 与 `deploy_page` 两个 workflow，尚未覆盖本模块：离线测试可以直接挂 `ubuntu-latest`，ROS 冒烟则要 `ros:humble` 容器，属于仓库级 CI 改造，单独提。
 
 ## 7. 文件与局限
 

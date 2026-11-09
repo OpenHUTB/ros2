@@ -28,6 +28,10 @@ class Config:
         # group1=地面/路面屏蔽，group2=自车屏蔽（与 XML 约定一致；
         # 车放 group2 是为了渲染可见——group3 会被 Renderer 默认屏蔽）
         self.lidar_geom_groups = (1, 0, 0, 1, 1, 1)
+        # 传感器退化参数（0 表示理想传感器，默认不影响精度）；--robustness 会扫描这些值
+        self.lidar_noise_sigma_m = 0.0    # 测距高斯噪声标准差 m
+        self.lidar_dropout_prob = 0.0     # 单束随机丢失概率（丢束按量程处理）
+        self.sensor_seed = 2026           # 噪声随机种子，保证同配置可复现
 
         # ---- 场景文件（多场景测试） ----
         self.scenes = [
