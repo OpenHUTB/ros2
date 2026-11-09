@@ -359,6 +359,8 @@
 <ul>
 <li class="toctree-l3"><a class="reference internal" href="#71-windows">7.1 跨平台可移植性（Windows 控制台编码）</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#72-pytest">7.2 pytest 失败传播</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#8">8. 已知限制</a>
@@ -924,7 +926,7 @@ roslaunch<span class="w"> </span>trajectory_accuracy_eval<span class="w"> </span
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>test/test_traj_eval.py<span class="w">       </span><span class="c1"># 自洽测试：41 项检查</span>
 python3<span class="w"> </span>test/test_known_answer.py<span class="w">    </span><span class="c1"># 已知答案对拍：7 项</span>
 <span class="c1"># 或按 pytest 的方式一次跑完</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test/<span class="w"> </span>-q<span class="w">           </span><span class="c1"># 15 passed</span>
+python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test/<span class="w"> </span>-q<span class="w">           </span><span class="c1"># 16 passed</span>
 </code></pre></div>
 <p><strong>自洽测试</strong>（<code>test_traj_eval.py</code>，41 项）：SE2 运算、Umeyama 对齐（含镜像数据不产生反射）、
 ATE（同轨迹为 0 / 随噪声单调增大 / 整体平移被对齐消除）、RPE 与解析值对照、漂移率解析值、
@@ -1007,16 +1009,22 @@ ATE（同轨迹为 0 / 随噪声单调增大 / 整体平移被对齐消除）、
 <td>UTF-8（Linux / 现代终端）</td>
 <td>41 项通过</td>
 <td>7 项通过</td>
-<td>15 passed</td>
+<td>16 passed</td>
 </tr>
 <tr>
 <td>GBK（Windows 默认）</td>
 <td>41 项通过</td>
 <td>7 项通过</td>
-<td>15 passed</td>
+<td>16 passed</td>
 </tr>
 </tbody>
 </table>
+<h3 id="72-pytest">7.2 pytest 失败传播</h3>
+<p>早期 <code>check()</code> 失败时只增加全局 <code>FAIL</code> 计数，退出码由脚本入口 <code>main()</code> 决定；
+但 pytest 不调用 <code>main()</code>，所以内部已经打印 <code>[FAIL]</code> 的用例仍可能显示为通过。</p>
+<p>现在 pytest 设置 <code>PYTEST_CURRENT_TEST</code> 时，<code>check()</code> 会直接抛出
+<code>AssertionError</code>，使 pytest 正确返回非零；直接运行脚本时仍由 <code>main()</code> 汇总全部
+检查后统一退出。新增的 <code>[9] pytest 兼容性</code> 用例专门守住这条失败传播路径。</p>
 <h2 id="8">8. 已知限制</h2>
 <ol>
 <li><strong>对齐不估尺度</strong>（默认）：这是刻意设计，见 2.1 节；需要时可 <code>with_scale=True</code>。</li>
