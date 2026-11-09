@@ -138,3 +138,30 @@ Windows OpenHUTB Air / WSL2 Ubuntu 22.04 / ROS 2 Humble。使用 [PR #656](https
 本地辅助脚本以 heredoc 执行 Python 后调用 `input()`，因标准输入已被脚本占用而出现 `EOFError`，任务仍保持暂停；之后手动恢复并取消。158.439 秒包含截图和排查等待，不能写成预设的 3 秒。状态查询还遇到不支持的 CLI 参数及等待无输出。以上是辅助操作问题，保留取证限制，未据此追加不存在的成功结果。
 
 起飞 RPC 返回 `False`，位置遥测确认上升约 1.53 m 并进入 `EXECUTING`；既有异常没有修复。上述采样距离不代表精确航程、飞行误差或避障验证。本轮与首次集成验证分别记录，不沿用第四次 PR 的飞行数据。
+
+
+## Action 最终取消状态补充复测 {#cancel-result-validation}
+
+针对上一轮交互操作未取得 Action 最终取消状态的问题，使用第五次 PR 的已安装程序，在 OpenHUTB Air / WSL2 Ubuntu 22.04 / ROS 2 Humble 下重新执行集成复测。测试客户端保留 GoalHandle，在暂停、恢复后调用 `cancel_goal_async()`，再直接等待 `get_result_async()`；没有使用状态话题查询来推断结果。
+
+实际输出：
+
+```text
+three_waypoints: SUCCEEDED, completed=3; takeoff_rpc_result=False
+FINAL_CANCEL_RESULT: status=5, queue_state=CANCELED
+pause_resume_client_cancel: CANCELED; final status=5 verified by get_result_async()
+return_interrupt: Action ABORTED, queue CANCELED, then LANDED
+PASS: separate recorder, JSONL, pause timing, terminal deduplication, JSON/CSV exports
+```
+
+本轮起点 NED `[0,0,11.164961]`，三航点相对起点的水平偏移依次为 `[1,0]`、`[2,0]`、`[2,1]`，z 为起点上方 3 m，速度 0.3 m/s。随后朝起点方向提交慢速任务，暂停约 3 秒、恢复并取消；最后新任务由返航抢占，独立 AirSim 遥测确认 Landed，最终距本轮起点约 0.05590 m。上述数值仅属于本轮场景。
+
+控制节点与记录器分别运行，落地后均正常停止。记录器直接运行安装入口，避免只向 `ros2 run` 父进程发信号的旧收尾问题。JSONL footer 和报告样本数均为 **298**，三个任务均为 `airsim`、`start_partial=false`，实际报告入口成功导出 JSON/CSV：
+
+| 任务 | 队列终态 | 完成/总数 | 观测时长 (s) | 观测暂停 (s) | 采样距离 (m) |
+| --- | --- | --- | --- | --- | --- |
+| 三航点 | COMPLETED | 3/3 | 10.599 | 0.000 | 2.989 |
+| 暂停恢复后客户端取消 | CANCELED | 0/1 | 3.601 | 3.199 | 0.266 |
+| 返航抢占 | CANCELED | 0/1 | 0.002 | 0.000 | 0.000 |
+
+这轮明确补充了 Action 最终 `status=5 / CANCELED` 的直接证据，不改变上一轮查询未取得结果的事实，也不混用 482、6536 与 298 条样本的统计。起飞 RPC 仍返回 `False`，遥测确认已离地；落地后 collision_info 报告屋顶对象接触，不宣称无碰撞或避障验证。原始日志、终端输出和导出报告保留本地，不纳入仓库。

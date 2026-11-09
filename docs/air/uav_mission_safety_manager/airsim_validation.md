@@ -13,7 +13,7 @@
 | 安全状态机 | Foxy 单航点、暂停恢复、返航落地、RPC 传输中断检测 | 下文安全状态机阶段 |
 | 多航点队列与可靠性 | Humble / AirSim 三航点、执行中暂停恢复、取消和返航落地；边界校验由自动测试覆盖 | [队列实测证据](validation/waypoint_queue_airsim_validation.md) |
 | ROS 2 Action | AirSim 三航点成功、客户端取消、返航抢占及最终落地 | [Action 接口与验证范围](mission_action.md) |
-| 日志与离线统计 | 首次集成验证生成 482 条状态样本；交互手动复测生成 6536 条样本，两轮分别导出三个任务 | [日志教程与本轮统计](mission_recording.md#manual-validation) |
+| 日志与离线统计 | 首次集成验证生成 482 条状态样本；交互手动复测生成 6536 条样本；最终取消状态补充复测生成 298 条样本，各轮分别导出三个任务 | [日志教程与本轮统计](mission_recording.md#manual-validation) |
 
 历史测试数量属于对应版本，不应解释为当前完整代码在全部环境下重新通过相同验证。新增队列、Action 和记录统计没有在 Foxy 或真机上验证。
 
@@ -73,6 +73,12 @@ OpenHUTB Air 集成验证记录 482 条状态样本；footer 计数一致，JSON
 控制节点、记录器、状态观察和任务命令分别在交互终端运行。三航点成功；慢速任务暂停后恢复，通过标准 Action 取消服务接受取消并观察到队列 `CANCELED`；新任务被返航服务抢占，Action 结果为 `ABORTED`，随后状态话题确认 `LANDED`。
 
 正常停止记录器后，JSONL footer 与报告均为 6536 条样本；JSON/CSV 成功导出三个任务，均为 `adapter_mode=airsim`、`start_partial=false`。本轮没有取得取消目标的 Action 最终 `status=5`，不将队列取消等同于 Action 最终状态验证。具体统计与辅助脚本问题见[日志教程](mission_recording.md#manual-validation)。
+
+### Action 最终取消状态补充复测
+
+针对交互手动复测未取得最终取消状态的问题，重新运行第五次 PR 的 AirSim 集成流程。客户端保留 GoalHandle，暂停/恢复后调用取消并直接读取 `get_result_async()`，实际输出 `FINAL_CANCEL_RESULT: status=5, queue_state=CANCELED`。三航点 `SUCCEEDED`、返航抢占 Action `ABORTED` 及独立遥测确认 Landed 均通过。
+
+本轮独立记录器正常停止，footer 与报告均为 298 条样本，三个任务的 JSON/CSV 成功导出；所有任务模式为 `airsim`、`start_partial=false`。这补齐了最终取消状态的直接证据，不将上一轮未取到结果改写为通过。详细输出、统计及起飞和接触限制见[最终取消状态补充复测](mission_recording.md#cancel-result-validation)。
 
 ## 当前已知限制
 
