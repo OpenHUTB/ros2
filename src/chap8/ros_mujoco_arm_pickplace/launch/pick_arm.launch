@@ -1,0 +1,30 @@
+<launch>
+  <!--
+    pick_arm.launch —— UR5e MuJoCo 抓放演示（ROS Noetic）
+    运行前请确保：
+      1) 已安装 mujoco:   pip3 install mujoco
+      2) 已编译本包:      catkin_make && source devel/setup.bash
+    可选参数：
+      model_path: MuJoCo XML 路径（默认自动查找）
+      viewer    : 是否打开 MuJoCo 可视化窗口，默认 true；viewer:=false 纯后台运行
+  -->
+  <arg name="model_path" default="$(find ros_mujoco_arm_pickplace)/models/ur5e.xml"/>
+  <arg name="viewer" default="true"/>
+
+  <!-- MuJoCo 仿真桥：驱动物理 + 发布 /joint_states -->
+  <node name="mujoco_bridge" pkg="ros_mujoco_arm_pickplace" type="main_mujoco_bridge.py"
+        output="screen" respawn="true">
+    <param name="model_path" value="$(arg model_path)"/>
+    <param name="viewer" value="$(arg viewer)"/>
+  </node>
+
+  <!-- 5 状态抓放状态机：纯决策（不加载 MuJoCo 模型）+ 发布 /joint_target /grasp_signal /cube_reset -->
+  <node name="pick_fsm" pkg="ros_mujoco_arm_pickplace" type="main_pick_fsm.py"
+        output="screen" respawn="true"/>
+
+  <!-- RViz 可视化（可选）：需要先发布 robot_description/URDF 才能显示机械臂模型，
+       仅 /joint_states 可用于查看关节角曲线。默认关闭。
+       配置文件名在包根目录：rviz/ur5e.rviz（安装后位于 share/ros_mujoco_arm_pickplace/rviz/） -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find ros_mujoco_arm_pickplace)/rviz/ur5e.rviz"/> -->
+</launch>

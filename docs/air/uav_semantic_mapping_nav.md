@@ -301,12 +301,12 @@ base[probability > 0.7] = inf      # 已知占据
 ## 9. 复现步骤
 
 ```bash
-python main.py --selftest                        # 30 项，不需要 ROS
+python main.py --selftest                        # 36 项，不需要 ROS
 python main.py --collect --out data/seg_dataset.npz
 python main.py --train   --data data/seg_dataset.npz --out data/
 python main.py --evaluate --data data/seg_dataset.npz --model data/ --out results.json
 python main.py --figures  --data data/seg_dataset.npz --model data/ \
-               --outdir ../docs/img/air/uav_semantic_mapping_nav
+               --outdir ../../../docs/img/air/uav_semantic_mapping_nav
 ```
 
 ROS2 在线运行见包内 `README.md`。
