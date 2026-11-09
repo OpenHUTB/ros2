@@ -9,12 +9,13 @@
 
 | 依赖 | 版本 |
 |---|---|
-| Python | 3.8+（实测 3.14.3） |
-| MuJoCo | 3.0+（实测 3.16.0） |
-| numpy | 1.20+ |
-| Pillow / matplotlib | 仅 `gif` 与出图需要 |
+| Ubuntu / ROS 2 | 22.04 / Humble，Docker 中构建和 launch 验收通过 |
+| Python | 3.10 |
+| MuJoCo | 3.3.7 |
+| numpy | 1.26.4 |
+| Pillow / matplotlib | 11.3.0 / 3.9.4 |
 
-不依赖 ROS 运行；`launch/` 与 `package.xml` 只是与其他模块统一的包装。
+可通过主脚本独立运行，也可构建为 ROS 2 包并使用 `main.launch.py` 启动。
 
 ## 运行
 
@@ -22,13 +23,28 @@
 python3 main.py check                 # 模型自检
 python3 main.py run --scene g2        # 单个实验
 python3 main.py bench --out out       # 八组实验，导出 out/metrics.json
-python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
+python3 main.py gif --out gif         # 抓取、打滑与手臂联合抓取三段动图
 python3 main.py manual               # 终端键盘控制
 python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
 python3 main.py neural --out out/neural # 采样、训练、独立测试和闭环评估
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 13 项测试
+python3 -m unittest discover -s tests # 18 项测试
 ```
+
+### Docker 与 ROS 2
+
+在本模块目录执行：
+
+```bash
+docker build -t muscle-gripper:humble .
+docker run --rm muscle-gripper:humble
+docker run --rm --entrypoint bash muscle-gripper:humble -c 'source /opt/ros/humble/setup.bash && source /ws/install/setup.bash && ros2 launch mujoco_muscle_gripper main.launch.py mode:=neural out:=/tmp/neural'
+```
+
+`mode` 支持 `check`、`run`、`bench`、`manual`、`neural`、`gif`；
+`scene` 选择 G1–G8，`out` 指定结果目录，`keys` 指定键盘回放序列。
+保存结果时将主机目录绑定到容器 `/results`。Docker 中已完成 18 项测试，
+并通过键盘、八场景与神经网络三种模式的真实 launch 验收。
 
 ### 键盘控制
 
@@ -55,8 +71,8 @@ Ubuntu 22.04 / MuJoCo 3.3.7 实测：力策略测试 MSE 为 `1.377e-8`，
 | 0.05 | 1.17 N | 1.17 N | 0.00 N | 0 |
 | 0.10 | 2.29 N | 2.29 N | 0.00 N | 0 |
 | 0.20 | 4.32 N | 4.32 N | 0.00 N | 0 |
-| 0.40 | 7.70 N | 7.35 N | **0.70 N** | 8 |
-| 0.80 | 14.65 N | 8.46 N | **12.38 N** | 8 |
+| 0.40 | 7.67 N | 7.42 N | **0.50 N** | 8 |
+| 0.80 | 14.13 N | 9.20 N | **9.86 N** | 8 |
 
 夹持力取**手指与方块之间的真实接触法向力**（`mj_contactForce`），而不是肌力：
 肌力要先扣掉 800 N/m 的回位弹簧力才作用到方块上。前三档手指行程只有 1.5–5.4 mm，
@@ -72,13 +88,13 @@ Ubuntu 22.04 / MuJoCo 3.3.7 实测：力策略测试 MSE 为 `1.377e-8`，
 | **0.40** | **97.8 mm** | 夹住 |
 | 0.80 | 98.2 mm | 夹住 |
 
-**阈值在 0.2 与 0.4 之间**：0.2 时手指还未接触方块（接触力 0），0.4 时每指真实法向力约 0.35 N 起就能夹住。
+**阈值在 0.2 与 0.4 之间**：0.2 时手指还未接触方块（接触力 0），0.4 时每指真实法向力约 0.25 N 起就能夹住。
 
 ### G3 摩擦系数的影响
 
 | 摩擦 μ | 激活 0.4 时抬升 |
 |---|---|
-| 0.3 | 6.4 mm（抬 6 mm 就滑脱） |
+| 0.3 | 3.7 mm（滑脱） |
 | 0.8 | 97.8 mm |
 | 1.5 | 97.8 mm |
 
@@ -90,7 +106,7 @@ Ubuntu 22.04 / MuJoCo 3.3.7 实测：力策略测试 MSE 为 `1.377e-8`，
 
 | 指标 | 数值 |
 |---|---|
-| 抬升高度 | 95.4 mm |
+| 抬升高度 | 95.3 mm |
 | **松开后掉落时间** | **0.16 s** |
 
 ### G5 抓持力闭环
@@ -110,7 +126,7 @@ PI 调节激活，反馈取 `mj_contactForce` 测得的双指接触法向力合�
 | 配置 | 抬升高度 | 加力步数 |
 |---|---|---|
 | 无反射 | **0 mm（抓不住）** | 0 |
-| 有反射 | **86.2 mm** | 6 步（每步 +0.01，合计 +0.06 激活）|
+| 有反射 | **86.0 mm** | 6 步（每步 +0.01，合计 +0.06 激活）|
 
 判据：手掌已抬起但方块没跟上（相对位移 > 2 mm）即判为滑移，立即提高激活。
 
@@ -146,8 +162,12 @@ mujoco_muscle_gripper/
 ├── mujoco_muscle_gripper/
 │   ├── core.py       # Hill 肌肉、MJCF、手指几何
 │   ├── runs.py       # G1-G4 与录制
+│   ├── extra.py      # G5-G8 与真实接触反馈
+│   ├── manual.py     # 键盘控制
+│   ├── neural.py     # 神经网络采样、训练与闭环评价
 │   └── cli.py
-├── tests/            # 13 项测试
+├── Dockerfile        # Humble 固定运行环境
+├── tests/            # 18 项测试
 └── tools/plot_metrics.py
 ```
 

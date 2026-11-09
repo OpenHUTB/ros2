@@ -1,0 +1,193 @@
+{
+  "g1": {
+    "levels": [
+      {
+        "activation": 0.05,
+        "grip_force_n": 0.0,
+        "muscle_minus_spring_n": 8.881784197001252e-16,
+        "muscle_n": 1.1734380087369616,
+        "spring_n": 1.1734380087369607,
+        "contact_points": 0,
+        "finger_travel_m": 0.001466797510921201
+      },
+      {
+        "activation": 0.1,
+        "grip_force_n": 0.0,
+        "muscle_minus_spring_n": 1.7763568394002505e-15,
+        "muscle_n": 2.287177773685769,
+        "spring_n": 2.2871777736857672,
+        "contact_points": 0,
+        "finger_travel_m": 0.002858972217107209
+      },
+      {
+        "activation": 0.2,
+        "grip_force_n": 0.0,
+        "muscle_minus_spring_n": 3.019806626980426e-14,
+        "muscle_n": 4.315644584992125,
+        "spring_n": 4.315644584992095,
+        "contact_points": 0,
+        "finger_travel_m": 0.0053945557312401185
+      },
+      {
+        "activation": 0.4,
+        "grip_force_n": 0.5042385242943215,
+        "muscle_minus_spring_n": 0.25211926281088193,
+        "muscle_n": 7.674870600327384,
+        "spring_n": 7.422751337516502,
+        "contact_points": 8,
+        "finger_travel_m": 0.009278439171895627
+      },
+      {
+        "activation": 0.8,
+        "grip_force_n": 9.860319821763095,
+        "muscle_minus_spring_n": 4.930159924181552,
+        "muscle_n": 14.13210345174924,
+        "spring_n": 9.201943527567687,
+        "contact_points": 8,
+        "finger_travel_m": 0.011502429409459608
+      }
+    ]
+  },
+  "g2": {
+    "levels": [
+      {
+        "activation": 0.05,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "activation": 0.1,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "activation": 0.2,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "activation": 0.4,
+        "lift_mm": 97.80585502424837,
+        "gripped": true
+      },
+      {
+        "activation": 0.8,
+        "lift_mm": 98.22473075368396,
+        "gripped": true
+      }
+    ]
+  },
+  "g3": {
+    "levels": [
+      {
+        "friction": 0.3,
+        "activation": 0.1,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "friction": 0.3,
+        "activation": 0.4,
+        "lift_mm": 3.725462248208106,
+        "gripped": false
+      },
+      {
+        "friction": 0.8,
+        "activation": 0.1,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "friction": 0.8,
+        "activation": 0.4,
+        "lift_mm": 97.8058550242484,
+        "gripped": true
+      },
+      {
+        "friction": 1.5,
+        "activation": 0.1,
+        "lift_mm": -0.0024524999999997465,
+        "gripped": false
+      },
+      {
+        "friction": 1.5,
+        "activation": 0.4,
+        "lift_mm": 97.80585502424837,
+        "gripped": true
+      }
+    ]
+  },
+  "g4": {
+    "lift_mm": 95.2692816655356,
+    "drop_after_release_s": 0.15799999999999992
+  },
+  "g5": {
+    "levels": [
+      {
+        "target_n": 2.0,
+        "steady_n": 1.9999885033782343,
+        "steady_err_n": -1.1496621765694215e-05,
+        "rise_time_s": 0.5760000000000001,
+        "final_activation": 0.473800293118085,
+        "contact_points": 8,
+        "force_source": "mj_contactForce_bilateral_sum"
+      },
+      {
+        "target_n": 4.0,
+        "steady_n": 3.9999952610657092,
+        "steady_err_n": -4.73893429076e-06,
+        "rise_time_s": 0.445,
+        "final_activation": 0.5534677066746618,
+        "contact_points": 8,
+        "force_source": "mj_contactForce_bilateral_sum"
+      },
+      {
+        "target_n": 8.0,
+        "steady_n": 7.999969563711576,
+        "steady_err_n": -3.043628842380741e-05,
+        "rise_time_s": 0.3895,
+        "final_activation": 0.7126684340242369,
+        "contact_points": 8,
+        "force_source": "mj_contactForce_bilateral_sum"
+      }
+    ]
+  },
+  "g6": {
+    "no_reflex": {
+      "lift_mm": 0.0,
+      "final_activation": 0.33,
+      "reflex_steps": 0,
+      "reflex_activation_gain": 0.0
+    },
+    "with_reflex": {
+      "lift_mm": 86.03276656971533,
+      "final_activation": 0.39000000000000007,
+      "reflex_steps": 6,
+      "reflex_activation_gain": 0.06
+    }
+  },
+  "g7": {
+    "levels": [
+      {
+        "mass_g": 10.0,
+        "min_activation": 0.38,
+        "gripped": true
+      },
+      {
+        "mass_g": 30.0,
+        "min_activation": 0.38,
+        "gripped": true
+      },
+      {
+        "mass_g": 60.0,
+        "min_activation": 0.4,
+        "gripped": true
+      }
+    ]
+  },
+  "g8": {
+    "obj_start_z": -0.34510775542021505,
+    "obj_end_z": -0.25748965735305906,
+    "lift_mm": 87.61809806715598
+  }
+}
