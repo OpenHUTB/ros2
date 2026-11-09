@@ -7,5 +7,5 @@
 
   <node pkg="uav_altitude_sensor_fusion" type="main.py"
         name="uav_altitude_sensor_fusion" output="screen"
-        args="sim --ros --duration $(arg duration) --rate $(arg rate) --seed $(arg seed) --csv $(arg csv) --plot $(arg plot)"/>
+        args="--ros --duration $(arg duration) --rate $(arg rate) --seed $(arg seed) --csv $(arg csv) --plot $(arg plot)"/>
 </launch>

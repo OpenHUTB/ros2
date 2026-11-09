@@ -29,12 +29,14 @@ class AltitudeFilterTest(unittest.TestCase):
         simulation = AltitudeSimulation(duration=12.0, rate_hz=50.0)
         metrics = simulation.run()
         self.assertEqual(metrics["samples"], 600)
-        self.assertLess(metrics["fused_rmse"], metrics["baro_rmse"])
-        self.assertLess(metrics["fused_rmse"], 0.5)
+        self.assertLess(metrics["fused_rmse"], metrics["baro_rmse"] * 0.95)
 
-    def test_truth_is_deterministic(self):
+    def test_truth_takes_off_from_ground_and_reaches_hover(self):
+        self.assertEqual(truth_at(0.0), (0.0, 0.0, 0.0))
+        self.assertEqual(truth_at(8.0), (8.0, 0.0, 0.0))
         self.assertEqual(truth_at(2.0), truth_at(2.0))
-        self.assertTrue(truth_at(2.0)[0] > 0.0)
+        self.assertGreater(truth_at(2.0)[0], 0.0)
+        self.assertGreater(truth_at(2.0)[1], 0.0)
 
     def test_rmse(self):
         self.assertAlmostEqual(rmse([1.0, 2.0], [0.0, 0.0]), (2.5) ** 0.5)

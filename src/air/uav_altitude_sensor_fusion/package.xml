@@ -12,5 +12,4 @@
   <depend>std_msgs</depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-pil</exec_depend>
-  <test_depend>python3-nose</test_depend>
 </package>

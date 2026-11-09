@@ -9,11 +9,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from altitude_sim import AltitudeSimulation, run_simulation  # noqa: E402
 
 
-def ros_main(args):
+def ros_main(args, ros_args=None):
     import rospy
     from std_msgs.msg import Float32, String
 
-    rospy.init_node("uav_altitude_sensor_fusion", anonymous=False)
+    node_argv = None
+    if ros_args is not None:
+        node_argv = [sys.argv[0]] + list(ros_args)
+    rospy.init_node(
+        "uav_altitude_sensor_fusion", anonymous=False, argv=node_argv
+    )
     simulation = AltitudeSimulation(args.duration, args.rate, args.seed)
     baro_pub = rospy.Publisher("/uav/altitude/barometer", Float32, queue_size=1)
     estimate_pub = rospy.Publisher("/uav/altitude/estimate", Float32, queue_size=1)
@@ -40,16 +45,15 @@ def ros_main(args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="UAV altitude sensor fusion")
-    parser.add_argument("mode", nargs="?", default="sim", choices=["sim"])
     parser.add_argument("--duration", type=float, default=12.0)
     parser.add_argument("--rate", type=float, default=50.0)
     parser.add_argument("--seed", type=int, default=3)
     parser.add_argument("--csv", default="")
     parser.add_argument("--plot", default="")
     parser.add_argument("--ros", action="store_true", help=argparse.SUPPRESS)
-    args = parser.parse_args(argv)
+    args, ros_args = parser.parse_known_args(argv)
     if args.ros:
-        ros_main(args)
+        ros_main(args, ros_args)
         return 0
     _, metrics = run_simulation(
         duration=args.duration,

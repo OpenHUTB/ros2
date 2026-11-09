@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import math
 import os
 
 import numpy as np
@@ -12,10 +11,20 @@ from altitude_filter import AltitudeKalman, rmse
 
 
 def truth_at(t):
-    """Smooth takeoff-like ascent to 8 m with a slow final hover."""
-    altitude = 8.0 * (1.0 - math.exp(-max(float(t), 0.0) / 2.0))
-    velocity = 4.0 * math.exp(-max(float(t), 0.0) / 2.0)
-    acceleration = -2.0 * math.exp(-max(float(t), 0.0) / 2.0)
+    """Smooth takeoff from rest to an 8 m hover over 8 s."""
+    t = max(float(t), 0.0)
+    duration = 8.0
+    target_altitude = 8.0
+    if t >= duration:
+        return target_altitude, 0.0, 0.0
+    u = t / duration
+    altitude = target_altitude * (10.0 * u**3 - 15.0 * u**4 + 6.0 * u**5)
+    velocity = target_altitude * (
+        30.0 * u**2 - 60.0 * u**3 + 30.0 * u**4
+    ) / duration
+    acceleration = target_altitude * (
+        60.0 * u - 180.0 * u**2 + 120.0 * u**3
+    ) / (duration ** 2)
     return altitude, velocity, acceleration
 
 
@@ -41,19 +50,22 @@ class AltitudeSimulation:
         self.integrated_velocity = 0.0
 
     def step(self):
-        truth, true_velocity, true_acceleration = truth_at(self.elapsed)
+        t = self.elapsed
+        truth, true_velocity, true_acceleration = truth_at(t)
         barometer = truth + self.barometer_bias + self.rng.normal(0.0, 0.35)
         acceleration = true_acceleration + self.accel_bias + self.rng.normal(0.0, 0.10)
         if self.filter is None:
             self.filter = AltitudeKalman(initial_altitude=barometer)
-            self.integrated_altitude = barometer
+            # The baseline comparison knows the true initial state. This keeps
+            # the integrated result from inheriting an unrelated initial offset.
+            self.integrated_altitude = truth
+            self.integrated_velocity = true_velocity
         self.integrated_velocity += acceleration * self.dt
         self.integrated_altitude += self.integrated_velocity * self.dt
         self.filter.predict(acceleration, self.dt)
         fused, filtered_velocity = self.filter.update(barometer)
-        self.elapsed += self.dt
         row = {
-            "t": self.elapsed,
+            "t": t,
             "truth": truth,
             "barometer": barometer,
             "accel_integrated": self.integrated_altitude,
@@ -64,6 +76,7 @@ class AltitudeSimulation:
             "integrated_error": self.integrated_altitude - truth,
         }
         self.rows.append(row)
+        self.elapsed += self.dt
         return row
 
     def run(self):
@@ -106,42 +119,162 @@ class AltitudeSimulation:
     def plot(self, path):
         if not path:
             return
-        from PIL import Image, ImageDraw
+        from PIL import Image, ImageDraw, ImageFont
 
-        width, height = 900, 620
+        def make_font(size):
+            try:
+                return ImageFont.truetype("DejaVuSans.ttf", size)
+            except OSError:
+                try:
+                    return ImageFont.load_default(size=size)
+                except TypeError:
+                    return ImageFont.load_default()
+
+        font = make_font(17)
+        small_font = make_font(14)
+        title_font = make_font(21)
+        width, height = 1200, 780
         image = Image.new("RGB", (width, height), "white")
         draw = ImageDraw.Draw(image)
-        left, top, panel_h = 75, 35, 235
-        panel_w = width - left - 30
+        left, right = 105, 50
+        top = 65
+        panel_w = width - left - right
+        altitude_h = 375
+        error_top = 520
+        error_h = 175
+
+        colors = {
+            "truth": (31, 78, 216),
+            "barometer": (224, 138, 28),
+            "accel_integrated": (128, 70, 180),
+            "fused": (214, 48, 48),
+        }
+        labels = {
+            "truth": "True altitude",
+            "barometer": "Barometer",
+            "accel_integrated": "Acceleration integration",
+            "fused": "Kalman fusion",
+        }
 
         def x_of(t):
             return left + panel_w * t / max(self.duration, 1e-9)
 
-        def panel(panel_top, values, color, y_min, y_max, label):
-            draw.rectangle((left, panel_top, left + panel_w, panel_top + panel_h),
-                           outline=(180, 180, 180))
-            draw.text((left, panel_top - 20), label, fill="black")
+        def y_of(value, panel_top, panel_height, y_min, y_max):
             span = max(y_max - y_min, 1e-9)
+            return panel_top + panel_height * (1.0 - (value - y_min) / span)
+
+        def draw_panel(panel_top, panel_height, y_min, y_max, title):
+            draw.rectangle(
+                (left, panel_top, left + panel_w, panel_top + panel_height),
+                outline=(150, 150, 150),
+                width=1,
+            )
+            draw.text((left, panel_top - 34), title, fill="black", font=title_font)
+            for tick in range(5):
+                ratio = tick / 4.0
+                y = panel_top + panel_height * ratio
+                value = y_max - (y_max - y_min) * ratio
+                draw.line(
+                    (left, y, left + panel_w, y), fill=(232, 232, 232), width=1
+                )
+                draw.text(
+                    (12, y - 9), "%.1f" % value, fill=(70, 70, 70), font=small_font
+                )
+            for tick in range(7):
+                value = self.duration * tick / 6.0
+                x = x_of(value)
+                draw.line(
+                    (x, panel_top, x, panel_top + panel_height),
+                    fill=(240, 240, 240),
+                    width=1,
+                )
+                draw.text(
+                    (x - 10, panel_top + panel_height + 8),
+                    "%.0f" % value,
+                    fill=(70, 70, 70),
+                    font=small_font,
+                )
+
+        def draw_series(key, panel_top, panel_height, y_min, y_max, width_px=3):
             points = [
-                (x_of(row["t"]), panel_top + panel_h * (1.0 - (value - y_min) / span))
-                for row, value in zip(self.rows, values)
+                (
+                    x_of(row["t"]),
+                    y_of(row[key], panel_top, panel_height, y_min, y_max),
+                )
+                for row in self.rows
             ]
             if len(points) > 1:
-                draw.line(points, fill=color, width=2)
+                draw.line(points, fill=colors[key], width=width_px)
 
         all_values = [row["truth"] for row in self.rows] + [
             row["barometer"] for row in self.rows
+        ] + [row["accel_integrated"] for row in self.rows] + [
+            row["fused"] for row in self.rows
         ]
-        low, high = min(all_values) - 1.0, max(all_values) + 1.0
-        panel(top + 25, [row["truth"] for row in self.rows],
-              (30, 90, 220), low, high, "true altitude (blue)")
-        panel(top + 25, [row["fused"] for row in self.rows],
-              (220, 90, 30), low, high, "")
-        errors = [row["fused_error"] for row in self.rows]
-        panel(top + panel_h + 95, errors, (200, 40, 40),
-              min(errors) - 0.2, max(errors) + 0.2, "fused error (m)")
-        draw.text((left, height - 28),
-                  "time: 0 s to %.1f s" % self.duration, fill="black")
+        altitude_low = min(all_values) - 0.5
+        altitude_high = max(all_values) + 0.5
+        draw_panel(
+            top,
+            altitude_h,
+            altitude_low,
+            altitude_high,
+            "Altitude comparison (m)",
+        )
+        for key in ("truth", "barometer", "accel_integrated", "fused"):
+            draw_series(key, top, altitude_h, altitude_low, altitude_high)
+
+        legend_x = left + panel_w - 330
+        legend_y = top + 14
+        for index, key in enumerate(
+            ("truth", "barometer", "accel_integrated", "fused")
+        ):
+            item_y = legend_y + index * 25
+            draw.line(
+                (legend_x, item_y + 8, legend_x + 38, item_y + 8),
+                fill=colors[key],
+                width=4,
+            )
+            draw.text(
+                (legend_x + 48, item_y),
+                labels[key],
+                fill=(35, 35, 35),
+                font=small_font,
+            )
+
+        error_keys = ("baro_error", "integrated_error", "fused_error")
+        error_values = [
+            row[key] for row in self.rows for key in error_keys
+        ]
+        error_low = min(error_values) - 0.25
+        error_high = max(error_values) + 0.25
+        draw_panel(
+            error_top,
+            error_h,
+            error_low,
+            error_high,
+            "Height error (m)",
+        )
+        for key in error_keys:
+            source = {
+                "baro_error": "barometer",
+                "integrated_error": "accel_integrated",
+                "fused_error": "fused",
+            }[key]
+            points = [
+                (
+                    x_of(row["t"]),
+                    y_of(row[key], error_top, error_h, error_low, error_high),
+                )
+                for row in self.rows
+            ]
+            if len(points) > 1:
+                draw.line(points, fill=colors[source], width=2)
+        draw.text(
+            (left + panel_w / 2 - 28, height - 32),
+            "time (s)",
+            fill="black",
+            font=font,
+        )
         path = os.path.expanduser(path)
         parent = os.path.dirname(path)
         if parent:
