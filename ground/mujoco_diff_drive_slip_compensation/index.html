@@ -261,6 +261,8 @@
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#overview">模块概述 / Overview</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_1">仿真验证局限与分布偏移说明</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#architecture">系统结构 / Architecture</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#imu-encoders-and-imu">编码器与 IMU / Encoders and IMU</a>
@@ -279,7 +281,15 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#slip-perception-training">滑移感知训练 / Slip-Perception Training</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#training-workflow">训练流程 / Training Workflow</a>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#verification-commands">验证命令 / Verification Commands</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_2">大模型使用声明</a>
 </li>
 </ul>
 </li>
@@ -612,6 +622,8 @@
 <h2 id="overview">模块概述 / Overview</h2>
 <p>该模块使用 MuJoCo 3.12.0 构建四轮差速小车，在 ROS 2 Humble 中提供统一的速度控制、仿真时钟、真实里程计与坐标变换接口。系统以编码器和惯性测量单元数据为主要观测量，后续可在多摩擦条件下建立轮滑感知与轨迹补偿流程。</p>
 <p>The module uses MuJoCo 3.12.0 to model a four-wheel differential-drive robot and exposes velocity control, simulation time, ground-truth odometry, and transform interfaces in ROS 2 Humble. Wheel encoder and inertial measurement unit data form the primary observations for subsequent slip perception and trajectory compensation across multiple friction conditions.</p>
+<h2 id="_1">仿真验证局限与分布偏移说明</h2>
+<p>本模块的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上测试。仿真摩擦模型、接触动力学与传感器噪声和真实世界存在差异，迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的指标仅对应 MuJoCo 样例测试划分，不代表实物性能。真实硬件验证列为后续工作。</p>
 <h2 id="architecture">系统结构 / Architecture</h2>
 <div class="highlight"><pre><span></span><code>/cmd_vel
    |
@@ -730,12 +742,52 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 </ul>
 <p>数据集使用固定种子和 episode 标识的稳定哈希执行 70%/15%/15% 划分。划分单位是完整 episode，而不是单帧，因此相邻帧不会跨越训练、验证和测试集合。</p>
 <p>Dataset assignment uses a stable hash of the fixed seed and episode identifier with 70%/15%/15% ratios. The assignment unit is a complete episode rather than an individual frame, so adjacent frames cannot cross train, validation, and test sets.</p>
+<h2 id="slip-perception-training">滑移感知训练 / Slip-Perception Training</h2>
+<p>训练器读取第一天生成的 CSV 与 JSON manifest，逐 episode 验证格式版本、行数、时间戳单调性和 split 一致性。窗口长度默认为 12 帧；窗口只从一个 episode 内滑动，不在 episode 或 train/validation/test 边界连接样本。归一化均值和标准差只由 train episode 计算。</p>
+<p>The trainer reads the CSV and JSON manifests produced by the collection pipeline and validates schema version, row count, monotonic timestamps, and split consistency per episode. The default window contains 12 frames. Windows never cross episode or train/validation/test boundaries. Feature means and standard deviations are fitted only on train episodes.</p>
+<p>当前实现采用紧凑的 temporal-window MLP：tanh 隐藏层连接可训练线性输出头，使用 Huber 损失抑制极少数大滑移比例对常规样本的影响。纵向滑移率标签由编码器轮速与 MuJoCo 真实车体速度计算：</p>
+<p>The current model is a compact temporal-window MLP with a tanh hidden layer and a trainable linear skip head. Huber loss limits the influence of rare high-slip ratios. The longitudinal target is derived from encoder wheel speed and MuJoCo ground-truth chassis speed:</p>
+<p>
+<script type="math/tex; mode=display">
+\bar{\omega}_t = \frac{\omega_{LF,t}+\omega_{LR,t}+\omega_{RF,t}+\omega_{RR,t}}{4},\qquad
+s_t = \operatorname{clip}\left(1-\frac{v^{truth}_t}{r\bar{\omega}_t},-0.5,0.5\right).
+</script>
+</p>
+<p>当 <code>|r ω̄| &lt; 0.15 m/s</code> 时将标签置零，以避免低速除法放大噪声。训练按固定随机种子打乱 train 窗口，使用 validation MAE 选择模型；测试 episode 不参与归一化或参数选择。模型以轻量 JSON 参数文件保存，不提交权重文件。</p>
+<p>Targets are set to zero when <code>|r ω̄| &lt; 0.15 m/s</code> to avoid amplifying noise through division near standstill. Train windows are shuffled with a fixed seed, validation MAE selects the model, and test episodes are excluded from normalization and parameter selection. The compact parameters are saved as JSON and no trained weights are committed.</p>
+<h3 id="training-workflow">训练流程 / Training Workflow</h3>
+<div class="highlight"><pre><span></span><code>episode CSV + manifest
+        |
+validate schema / split / timestamps
+        |
+episode-local windows + slip labels
+        |
+train-only normalization -&gt; MLP fitting
+        |
+validation selection -&gt; held-out test metrics
+        |
+slip_model.json + training_metrics.json
+</code></pre></div>
+<p>生成同格式 MuJoCo 样例数据并训练： / Generate matching MuJoCo sample episodes and train:</p>
+<div class="highlight"><pre><span></span><code>generate_slip_sample_data<span class="w"> </span>--output<span class="w"> </span>data/sample<span class="w"> </span>--episodes-per-split<span class="w"> </span><span class="m">4</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">12</span>
+train_slip_model<span class="w"> </span>--data<span class="w"> </span>data/sample<span class="w"> </span>--output<span class="w"> </span>data/models/slip-v1<span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span>
+</code></pre></div>
+<p>使用 ROS 2 收集数据训练： / Train from ROS 2 collected data:</p>
+<div class="highlight"><pre><span></span><code>train_slip_model<span class="w"> </span>--data<span class="w"> </span>data/raw<span class="w"> </span>--output<span class="w"> </span>data/models/slip-v1<span class="w"> </span>--epochs<span class="w"> </span><span class="m">300</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_diff_drive_slip_compensation<span class="w"> </span>train.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>data_directory:<span class="o">=</span>data/raw<span class="w"> </span>output_directory:<span class="o">=</span>data/models/slip-v1
+</code></pre></div>
+<p>默认数据集与输出目录为相对路径，需在 ROS 2 工作空间根目录（或功能包目录）下执行 launch，或通过对应参数传入绝对路径。</p>
+<p>本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 <code>MAE=0.0272</code>、<code>RMSE=0.0440</code>、<code>F1=0.774</code>、<code>accuracy=0.969</code>，CPU 单窗口推理中位数为 <code>0.0103 ms</code>。该表仅代表样例测试，不代表其他摩擦和实机性能。样例生成器的 train/validation/test 三个划分使用同一组摩擦系数 <code>0.02 / 0.08 / 0.4 / 0.9</code>，测试集摩擦条件训练时均已出现，样例指标属同分布内插，不代表未见过的摩擦条件。</p>
+<p>The measured local run used 12 episodes (four complete episodes per split), a 12-frame window, 24 hidden units, and a 300-epoch maximum with early stopping on validation MAE. Its isolated test split contained 916 windows and measured <code>MAE=0.0272</code>, <code>RMSE=0.0440</code>, <code>F1=0.774</code>, <code>accuracy=0.969</code>, and <code>0.0103 ms</code> median CPU inference per window. These measurements apply only to this sample split, not other friction settings or physical hardware.</p>
 <h2 id="verification-commands">验证命令 / Verification Commands</h2>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>src/ground/mujoco_diff_drive_slip_compensation/test<span class="w"> </span>-q
 python3<span class="w"> </span>-m<span class="w"> </span>compileall<span class="w"> </span>src/ground/mujoco_diff_drive_slip_compensation
 colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--packages-select<span class="w"> </span>mujoco_diff_drive_slip_compensation
 colcon<span class="w"> </span>test-result<span class="w"> </span>--verbose
-</code></pre></div></div>
+</code></pre></div>
+<h2 id="_2">大模型使用声明</h2>
+<p>本功能包开发过程中使用豆包（Doubao）辅助生成代码草稿、文档文案与测试用例；全部代码、数据集划分与指标均经作者人工复核，训练权重与样例数据由本地 MuJoCo 流程生成，未由大模型直接产出。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
