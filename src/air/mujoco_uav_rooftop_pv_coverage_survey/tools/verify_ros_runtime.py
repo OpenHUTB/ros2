@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 import signal
 import subprocess
@@ -14,18 +15,20 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
 
-def verify(output: Path, *, trained: bool = False) -> dict:
+def verify(output: Path, *, trained: bool = False, end_to_end: bool = False) -> dict:
     output.mkdir(parents=True, exist_ok=True)
     package = "mujoco_uav_rooftop_pv_coverage_survey"
     command = ["ros2", "launch", package, "rooftop_pv_controller.launch.py"]
-    if trained:
+    if trained or end_to_end:
         command = ["ros2", "run", package, "rooftop_pv_controller", "--ros-args",
                    "-p", f"control_checkpoint:={output / 'day2/control.pt'}",
                    "-p", f"segmentation_checkpoint:={output / 'day2/segmentation.pt'}",
                    "-p", f"planning_checkpoint:={output / 'day2/planning.pt'}"]
-    label = "trained" if trained else "launch"
+    if end_to_end:
+        command += ["-p", f"end_to_end_checkpoint:={output / 'day2/end_to_end.pt'}"]
+    label = "end_to_end" if end_to_end else "trained" if trained else "launch"
     log = (output / f"ros_{label}.log").open("w", encoding="utf-8")
-    process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     rclpy.init()
     node = rclpy.create_node("rooftop_runtime_acceptance")
     commands, reports = [], []
@@ -72,31 +75,36 @@ def verify(output: Path, *, trained: bool = False) -> dict:
             route_pub.publish(route)
             image_pub.publish(image)
 
-        spin_until(lambda: any(r.get("state") == "tracking" and r.get("perception", {}).get("state") == "ready"
+        expected_controller = "trained_image" if end_to_end else "trained_mlp" if trained else "geometric_tracking_no_checkpoint"
+        spin_until(lambda: any(r.get("state") == "tracking" and r.get("controller") == expected_controller and r.get("perception", {}).get("state") == "ready"
                                for r in reports), publish=publish)
-        tracking = next(r for r in reversed(reports) if r.get("state") == "tracking")
+        tracking = next(r for r in reversed(reports) if r.get("state") == "tracking" and r.get("controller") == expected_controller)
         assert any(forward > 0 for forward, _ in commands)
         assert all(0 <= forward <= 1.0 and abs(turn) <= 1.2 for forward, turn in commands)
-        if not trained:
+        if not trained and not end_to_end:
             assert any(turn < 0 for _, turn in commands)
             assert tracking["perception"]["pv_pixel_ratio"] == 1.0
         else:
-            assert tracking["controller"] == "trained_mlp"
+            assert tracking["controller"] == ("trained_image" if end_to_end else "trained_mlp")
             assert tracking["perception"]["source"] == "trained_segmentation"
         spin_until(lambda: reports[-1].get("state") == "stale_pose" and commands[-1] == (0.0, 0.0), timeout=5.0)
         result = {"passed": True, "mode": label, "samples": len(commands), "tracking": tracking,
-                  "timeout_stop": True, "installed_launch": not trained}
+                  "timeout_stop": True, "installed_launch": not (trained or end_to_end)}
         (output / f"ros_{label}_acceptance.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         return result
     finally:
         node.destroy_node()
         rclpy.shutdown()
-        process.send_signal(signal.SIGINT)
+        os.killpg(process.pid, signal.SIGINT)
         try:
             process.wait(timeout=10)
         except subprocess.TimeoutExpired:
-            process.terminate()
+            os.killpg(process.pid, signal.SIGTERM)
             process.wait(timeout=5)
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
         log.close()
 
 
@@ -104,5 +112,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--trained", action="store_true")
+    parser.add_argument("--end-to-end", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(verify(args.output, trained=args.trained), sort_keys=True))
+    print(json.dumps(verify(args.output, trained=args.trained, end_to_end=args.end_to_end), sort_keys=True))
