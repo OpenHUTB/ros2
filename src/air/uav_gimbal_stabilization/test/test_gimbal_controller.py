@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
+import io
 import os
 import sys
 import unittest
+from contextlib import redirect_stderr
 
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "scripts")
-))
+test_dir = os.path.dirname(os.path.abspath(__file__))
+for module_dir in (os.path.abspath(os.path.join(test_dir, "..", "scripts")), test_dir):
+    if os.path.isdir(module_dir):
+        sys.path.insert(0, module_dir)
 
 from gimbal_controller import AxisPID, GimbalController, angular_error  # noqa: E402
 from gimbal_sim import GimbalSimulation, target_angles  # noqa: E402
+from main import main as cli_main  # noqa: E402
 
 
 class GimbalControllerTest(unittest.TestCase):
@@ -41,6 +45,16 @@ class GimbalControllerTest(unittest.TestCase):
     def test_combined_error(self):
         self.assertAlmostEqual(angular_error(3.0, 4.0, 0.0, 0.0), 5.0)
 
+    def test_csv_time_starts_at_zero(self):
+        simulation = GimbalSimulation(duration=0.04, rate_hz=50.0)
+        simulation.run()
+        self.assertEqual(simulation.rows[0]["t"], 0.0)
+
+    def test_offline_cli_rejects_unknown_arguments(self):
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                cli_main(["--duraton", "12"])
+
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(argv=[sys.argv[0]])

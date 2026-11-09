@@ -51,7 +51,7 @@ roslaunch uav_gimbal_stabilization main.launch
 
 ```bash
 cd src/air/uav_gimbal_stabilization
-python3 scripts/main.py sim --duration 12 --rate 50 \
+python3 scripts/main.py --duration 12 --rate 50 \
   --csv /tmp/gimbal.csv --plot /tmp/gimbal.png
 ```
 
@@ -73,14 +73,37 @@ python3 scripts/main.py sim --duration 12 --rate 50 \
 
 ![两轴云台跟踪响应](../img/air/uav_gimbal_stabilization/response.png)
 
+本次 50 Hz、12 s 离线闭环仿真的结果：
+
+| 项目 | 结果 |
+|---|---:|
+| 样本数 | 600 |
+| 二维角误差 RMSE | 5.269° |
+| 最大角误差 | 7.764° |
+| 速率饱和比例 | 0 |
+
+响应图上方面板同时给出 pan、tilt 的目标与响应，下方给出二维角误差。当前平滑目标
+轨迹没有触发 60°/s 的速率上限，饱和处理通过单元测试中的大幅阶跃输入单独验证。
+
 ## 测试
+
+catkin 自动测试：
+
+```bash
+cd ~/catkin_ws
+catkin_make run_tests_uav_gimbal_stabilization
+catkin_test_results
+```
+
+单独运行 unittest：
 
 ```bash
 cd src/air/uav_gimbal_stabilization
-python3 test/test_gimbal_controller.py
+python3 -m unittest discover -s test -v
 ```
 
-测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性和闭环收敛。
+8 项测试覆盖 PID 速率限幅、死区、双轴误差、目标轨迹确定性、闭环收敛、
+CSV 首条时间和离线参数校验。
 
 ## AI 使用声明
 

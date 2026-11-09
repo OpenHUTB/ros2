@@ -2,7 +2,7 @@
 """UAV gimbal stabilization entry point.
 
 Pure simulation:
-    python3 main.py sim --duration 12 --plot response.png
+    python3 main.py --duration 12 --plot response.png
 
 ROS:
     roslaunch uav_gimbal_stabilization main.launch
@@ -16,12 +16,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gimbal_sim import GimbalSimulation, run_simulation  # noqa: E402
 
 
-def _ros_main(args):
+def _ros_main(args, ros_args=None):
     import rospy
     from geometry_msgs.msg import Vector3
     from std_msgs.msg import String
 
-    rospy.init_node("uav_gimbal_stabilization", anonymous=False)
+    node_argv = None
+    if ros_args is not None:
+        node_argv = [sys.argv[0]] + list(ros_args)
+    rospy.init_node(
+        "uav_gimbal_stabilization", anonymous=False, argv=node_argv
+    )
     simulation = GimbalSimulation(args.duration, args.rate)
     target_pub = rospy.Publisher("/uav/gimbal/target", Vector3, queue_size=1)
     cmd_pub = rospy.Publisher("/uav/gimbal/cmd", Vector3, queue_size=1)
@@ -48,18 +53,17 @@ def _ros_main(args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="UAV gimbal stabilization")
-    sub = parser.add_subparsers(dest="mode", required=True)
-    p_sim = sub.add_parser("sim", help="synthetic closed-loop simulation")
-    p_sim.add_argument("--duration", type=float, default=12.0)
-    p_sim.add_argument("--rate", type=float, default=50.0)
-    p_sim.add_argument("--csv", default="")
-    p_sim.add_argument("--plot", default="")
-    p_sim.add_argument("--ros", action="store_true", help=argparse.SUPPRESS)
-    args = parser.parse_args(argv)
-
-    if args.ros:
-        _ros_main(args)
+    parser.add_argument("--duration", type=float, default=12.0)
+    parser.add_argument("--rate", type=float, default=50.0)
+    parser.add_argument("--csv", default="")
+    parser.add_argument("--plot", default="")
+    parser.add_argument("--ros", action="store_true", help=argparse.SUPPRESS)
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    if "--ros" in raw_argv:
+        args, ros_args = parser.parse_known_args(raw_argv)
+        _ros_main(args, ros_args)
         return 0
+    args = parser.parse_args(raw_argv)
     _, metrics = run_simulation(
         duration=args.duration,
         rate_hz=args.rate,

@@ -53,16 +53,16 @@ class GimbalSimulation:
         self.rows = []
 
     def step(self):
-        target_pan, target_tilt = target_angles(self.elapsed)
+        t = self.elapsed
+        target_pan, target_tilt = target_angles(t)
         current = self.plant.state
         command = self.controller.command(
             target_pan, target_tilt, current.pan, current.tilt, self.dt
         )
         state = self.plant.step(command, self.dt)
-        self.elapsed += self.dt
         error = angular_error(target_pan, target_tilt, state.pan, state.tilt)
         row = {
-            "t": self.elapsed,
+            "t": t,
             "target_pan": target_pan,
             "target_tilt": target_tilt,
             "pan": state.pan,
@@ -73,6 +73,7 @@ class GimbalSimulation:
             "saturated": int(command.pan_saturated or command.tilt_saturated),
         }
         self.rows.append(row)
+        self.elapsed += self.dt
         return row
 
     def run(self):
@@ -111,45 +112,180 @@ class GimbalSimulation:
     def plot(self, path):
         if not path:
             return
-        from PIL import Image, ImageDraw
+        from PIL import Image, ImageDraw, ImageFont
 
-        width, height = 900, 600
+        def make_font(size):
+            try:
+                return ImageFont.truetype("DejaVuSans.ttf", size)
+            except OSError:
+                try:
+                    return ImageFont.load_default(size=size)
+                except TypeError:
+                    return ImageFont.load_default()
+
+        font = make_font(17)
+        small_font = make_font(14)
+        title_font = make_font(21)
+        width, height = 1200, 760
         image = Image.new("RGB", (width, height), "white")
         draw = ImageDraw.Draw(image)
-        margin_left, margin_top, panel_h = 75, 35, 235
-        panel_w = width - margin_left - 30
+        left, right = 105, 50
+        top = 60
+        panel_w = width - left - right
+        panel_h = 330
+        error_top = 500
+        error_h = 190
 
         def x_of(t):
-            return margin_left + panel_w * t / max(self.duration, 1e-9)
+            return left + panel_w * t / max(self.duration, 1e-9)
 
-        def draw_panel(top, values, color, y_min, y_max, title):
-            draw.rectangle((margin_left, top, margin_left + panel_w, top + panel_h),
-                           outline=(180, 180, 180))
-            draw.text((margin_left, top - 20), title, fill="black")
+        def y_of(value, panel_top, panel_height, y_min, y_max):
             span = max(y_max - y_min, 1e-9)
-            points = [
-                (x_of(row["t"]), top + panel_h * (1.0 - (value - y_min) / span))
-                for row, value in zip(self.rows, values)
-            ]
-            if len(points) > 1:
-                draw.line(points, fill=color, width=2)
+            return panel_top + panel_height * (1.0 - (value - y_min) / span)
 
-        pan_values = [row["target_pan"] for row in self.rows] + [
-            row["pan"] for row in self.rows
-        ]
-        pan_min = min(pan_values) - 2.0
-        pan_max = max(pan_values) + 2.0
-        first_top = margin_top + 25
-        second_top = first_top + panel_h + 70
-        draw_panel(first_top, [row["target_pan"] for row in self.rows],
-                   (30, 90, 220), pan_min, pan_max, "pan target (blue)")
-        draw_panel(first_top, [row["pan"] for row in self.rows],
-                   (220, 90, 30), pan_min, pan_max, "")
+        def draw_panel(panel_top, panel_height, y_min, y_max, title, show_x=False):
+            draw.rectangle(
+                (left, panel_top, left + panel_w, panel_top + panel_height),
+                outline=(150, 150, 150),
+                width=1,
+            )
+            draw.text((left, panel_top - 32), title, fill="black", font=title_font)
+            for tick in range(5):
+                ratio = tick / 4.0
+                y = panel_top + panel_height * ratio
+                value = y_max - (y_max - y_min) * ratio
+                draw.line((left, y, left + panel_w, y), fill=(232, 232, 232))
+                draw.text(
+                    (12, y - 9),
+                    "%.1f" % value,
+                    fill=(70, 70, 70),
+                    font=small_font,
+                )
+            for tick in range(7):
+                value = self.duration * tick / 6.0
+                x = x_of(value)
+                draw.line(
+                    (x, panel_top, x, panel_top + panel_height),
+                    fill=(240, 240, 240),
+                )
+                if show_x:
+                    draw.text(
+                        (x - 10, panel_top + panel_height + 8),
+                        "%.0f" % value,
+                        fill=(70, 70, 70),
+                        font=small_font,
+                    )
+
+        def draw_series(
+            key,
+            panel_top,
+            panel_height,
+            y_min,
+            y_max,
+            color,
+            width_px=2,
+            dashed=False,
+        ):
+            points = [
+                (
+                    x_of(row["t"]),
+                    y_of(row[key], panel_top, panel_height, y_min, y_max),
+                )
+                for row in self.rows
+            ]
+            if dashed:
+                for index, (start, end) in enumerate(zip(points, points[1:])):
+                    if (index // 4) % 2 == 0:
+                        draw.line((start, end), fill=color, width=width_px)
+            elif len(points) > 1:
+                draw.line(points, fill=color, width=width_px)
+
+        colors = {
+            "target_pan": (66, 133, 244),
+            "pan": (13, 71, 161),
+            "target_tilt": (251, 140, 0),
+            "tilt": (216, 27, 96),
+        }
+        all_angles = []
+        for key in colors:
+            all_angles.extend(row[key] for row in self.rows)
+        angle_low = min(all_angles) - 2.0
+        angle_high = max(all_angles) + 2.0
+        draw_panel(
+            top,
+            panel_h,
+            angle_low,
+            angle_high,
+            "Pan and tilt tracking (deg)",
+        )
+        draw_series("target_pan", top, panel_h, angle_low, angle_high,
+                    colors["target_pan"], dashed=True)
+        draw_series("pan", top, panel_h, angle_low, angle_high, colors["pan"])
+        draw_series("target_tilt", top, panel_h, angle_low, angle_high,
+                    colors["target_tilt"], dashed=True)
+        draw_series("tilt", top, panel_h, angle_low, angle_high, colors["tilt"])
+
+        legend_x = left + 18
+        legend_y = top + 14
+        legends = (
+            ("target_pan", "Pan target", True),
+            ("pan", "Pan response", False),
+            ("target_tilt", "Tilt target", True),
+            ("tilt", "Tilt response", False),
+        )
+        draw.rectangle(
+            (legend_x - 6, legend_y - 6, legend_x + 205, legend_y + 104),
+            fill="white",
+            outline=(205, 205, 205),
+        )
+        for index, (key, label, dashed) in enumerate(legends):
+            item_y = legend_y + index * 24
+            if dashed:
+                for offset in range(0, 40, 12):
+                    draw.line(
+                        (legend_x + offset, item_y + 8,
+                         legend_x + min(offset + 7, 40), item_y + 8),
+                        fill=colors[key],
+                        width=3,
+                    )
+            else:
+                draw.line(
+                    (legend_x, item_y + 8, legend_x + 40, item_y + 8),
+                    fill=colors[key],
+                    width=3,
+                )
+            draw.text(
+                (legend_x + 48, item_y),
+                label,
+                fill=(35, 35, 35),
+                font=small_font,
+            )
+
         errors = [row["error_deg"] for row in self.rows]
-        draw_panel(second_top, errors, (200, 40, 40),
-                   0.0, max(max(errors) + 1.0, 1.0), "2-axis error (deg)")
-        draw.text((margin_left, height - 28),
-                  "time: 0 s to %.1f s" % self.duration, fill="black")
+        error_high = max(max(errors) + 1.0, 1.0)
+        draw_panel(
+            error_top,
+            error_h,
+            0.0,
+            error_high,
+            "Two-axis angular error (deg)",
+            show_x=True,
+        )
+        draw_series(
+            "error_deg",
+            error_top,
+            error_h,
+            0.0,
+            error_high,
+            (198, 40, 40),
+            width_px=3,
+        )
+        draw.text(
+            (left + panel_w / 2 - 28, height - 30),
+            "time (s)",
+            fill="black",
+            font=font,
+        )
         path = os.path.expanduser(path)
         parent = os.path.dirname(path)
         if parent:

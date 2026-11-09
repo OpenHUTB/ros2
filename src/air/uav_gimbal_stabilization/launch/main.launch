@@ -6,5 +6,5 @@
 
   <node pkg="uav_gimbal_stabilization" type="main.py"
         name="uav_gimbal_stabilization" output="screen"
-        args="sim --ros --duration $(arg duration) --rate $(arg rate) --csv $(arg csv) --plot $(arg plot)"/>
+        args="--ros --duration $(arg duration) --rate $(arg rate) --csv $(arg csv) --plot $(arg plot)"/>
 </launch>
