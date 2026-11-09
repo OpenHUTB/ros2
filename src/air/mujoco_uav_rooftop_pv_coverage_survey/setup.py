@@ -7,7 +7,7 @@ setup(
     name=package_name,
     version="0.1.0",
     packages=find_packages(),
-    py_modules=["ros2_uav_controller"],
+    py_modules=["ros2_uav_controller", "main"],
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
         (f"share/{package_name}", ["package.xml"]),
@@ -16,5 +16,6 @@ setup(
         (f"share/{package_name}/assets/mjcf", glob("assets/mjcf/*.xml")),
     ],
     install_requires=["setuptools"],
-    entry_points={"console_scripts": ["rooftop_pv_controller = ros2_uav_controller:main"]},
+    entry_points={"console_scripts": ["rooftop_pv_controller = ros2_uav_controller:main",
+                                      "rooftop_pv_pipeline = main:main"]},
 )
