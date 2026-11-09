@@ -97,6 +97,6 @@ ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_workflow.launch.py 
 
 ## 运行结果
 
-Ubuntu 22.04 / ROS 2 Humble 容器内 51 项测试通过，完整流程生成三个场景的数据并通过质量审计；安装后的三个 MJCF 场景可在源码目录之外载入，workflow launch 场景启动及 Compose 完整流程运行成功。真实 ROS 消息验收通过，分割、局部规划与控制权重可同时加载；端到端模型直接从 RGB 消息生成有界速度，位姿超时后停车。虚拟显示器中向真实 MuJoCo 查看器发送 W/A/Space 事件，运动、转向、空格停止和超时停止均通过。
+Ubuntu 22.04 / ROS 2 Humble 容器内 55 项测试通过，完整流程生成三个场景的数据并通过质量审计；安装后的三个 MJCF 场景可在源码目录之外载入，workflow launch 场景启动及 Compose 完整流程运行成功。真实 ROS 消息验收通过，分割、局部规划与控制权重可同时加载；端到端模型直接从 RGB 消息生成有界速度，位姿超时后停车。虚拟显示器中向真实 MuJoCo 查看器发送 W/A/Space 事件，运动、转向、空格停止和超时停止均通过。
 
 完整原理、源码结构、截图与 GIF 见仓库文档 `docs/air/mujoco_uav_rooftop_pv_coverage_survey_day2.md`。
