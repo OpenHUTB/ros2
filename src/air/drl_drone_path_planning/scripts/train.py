@@ -39,9 +39,9 @@ def parse_args() -> argparse.Namespace:
         description="Train PPO/SAC for drl_drone_path_planning"
     )
     parser.add_argument("--algo", choices=("PPO", "SAC"), default="PPO")
-    parser.add_argument("--timesteps", type=int, default=600000)
+    parser.add_argument("--timesteps", type=int, default=1000000)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--ent-coef", type=float, default=0.005,
+    parser.add_argument("--ent-coef", type=float, default=0.003,
                         help="PPO exploration coefficient")
     parser.add_argument("--eval-freq", type=int, default=20000)
     parser.add_argument("--config", default=DEFAULT_CONFIG_PATH)
@@ -59,8 +59,8 @@ def build_model(algo: str,
                 env: Any,
                 seed: int,
                 device: str,
-                ent_coef: float = 0.005) -> Any:
-    """Create an SB3 model with the reference project's hyperparameters."""
+                ent_coef: float = 0.003) -> Any:
+    """Create an SB3 model with the configured training hyperparameters."""
     from stable_baselines3 import PPO, SAC
     from torch import nn
 

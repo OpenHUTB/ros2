@@ -99,13 +99,15 @@ yaw_rate  = a[3] · max_yaw_rate = a[3] · 0.8 rad/s
 
 ### 3.4 网络与训练超参数
 
-**PPO**（与参考 `PBDroneSimulator.setup_agent()` 对齐）
+**PPO**（其余参数与参考 `PBDroneSimulator.setup_agent()` 对齐）
 
 ```text
 policy / value 网络：256 × 256，Tanh
 learning_rate 3e-4，n_steps 2048，batch 256，n_epochs 10
-gamma 0.99，gae_lambda 0.95，clip_range 0.2，ent_coef 0.01
+gamma 0.99，gae_lambda 0.95，clip_range 0.2，ent_coef 0.003
 ```
+
+`ent_coef 0.003` 为实际训练使用值。
 
 **SAC**
 
@@ -195,7 +197,7 @@ python3 -m unittest discover -s tests -v
 
 ```bash
 # PPO（默认）
-python3 scripts/train.py --algo PPO --timesteps 400000 --out models
+python3 scripts/train.py --algo PPO --timesteps 1000000 --out models
 
 # SAC
 python3 scripts/train.py --algo SAC --timesteps 200000 --out models
@@ -310,7 +312,7 @@ PPO 用 100 万步训练（CPU 约 678 s），部署权重为 `models/policy_wei
 3. **航点是预先给定的**：策略在 4 个航点之间做局部避障，不做全局 SLAM / 建图。
 4. **仿真到实机存在差距**：观测做了裁剪与归一化，实机部署前应重新标定
    `lidar_range`、速度上限，并保留安全层。
-5. **SAC 训练较慢**：默认给 PPO 的 40 万步预算；SAC 建议至少 20 万步，且
+5. **SAC 训练较慢**：默认给 PPO 的 100 万步预算；SAC 建议至少 20 万步，且
    在 CPU 上训练时间明显更长。
 
 ## 11. English version
@@ -341,7 +343,7 @@ Quick start:
 ```bash
 roslaunch drl_drone_path_planning main.launch            # auto: DRL or baseline
 roslaunch drl_drone_path_planning main.launch mode:=baseline
-python3 scripts/train.py --algo PPO --timesteps 400000 --out models
+python3 scripts/train.py --algo PPO --timesteps 1000000 --out models
 python3 scripts/evaluate.py --model models/policy_weights.npz --episodes 100 --baseline
 ```
 

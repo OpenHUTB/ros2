@@ -108,7 +108,7 @@ def main() -> None:
     if not os.path.isfile(args.model):
         raise SystemExit(
             "policy weights not found: %s\n"
-            "train first: python3 train.py --algo PPO --timesteps 200000" % args.model
+            "train first: python3 train.py --algo PPO --timesteps 1000000" % args.model
         )
     actor = NumpyActor(args.model)
     print("[eval] model: %s" % actor.describe())

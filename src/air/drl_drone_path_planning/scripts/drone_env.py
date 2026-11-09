@@ -42,6 +42,7 @@ from common import (
     build_observation,
     load_config,
     observation_dim,
+    observation_layout,
     path_length,
     raycast_histogram,
     world_to_body,
@@ -98,8 +99,12 @@ class DronePathEnv(gym.Env):
         self.action_space = spaces.Box(
             low=-1.0, high=1.0, shape=(4,), dtype=np.float32
         )
+        observation_low = np.full(self.observation_dim, -1.0, dtype=np.float32)
+        observation_low[observation_layout(self.sectors)["lidar"]] = 0.0
         self.observation_space = spaces.Box(
-            low=-1.0, high=1.0, shape=(self.observation_dim,), dtype=np.float32
+            low=observation_low,
+            high=np.ones(self.observation_dim, dtype=np.float32),
+            dtype=np.float32,
         )
 
         # Internal state (initialised in reset()).

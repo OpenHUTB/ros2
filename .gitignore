@@ -64,6 +64,10 @@ trajectories/*.json
 # 但部署必需的权重文件要保留
 !**/models/*.npz
 
+# drl_drone_path_planning 的评估/汇总产物可重新生成，不入库
+src/air/drl_drone_path_planning/models/evaluations.npz
+src/air/drl_drone_path_planning/models/train_summary.json
+
 # 训练日志与轨迹中间数据（由 train.py / eval.py / plot_results.py 重新生成）
 *.log
 **/models/traj_*.csv

@@ -55,7 +55,7 @@ def baseline_action(observation: Sequence[float],
     # 势场排斥：只在安全半径内、且只对前向半平面的障碍生效。
     # 直方图值 free = 最近距离 / 量程，因此 clearance = free * 量程。
     lidar_range = max(float(cfg["observation"]["lidar_range"]), 1e-6)
-    avoid_distance = float(cfg["safety"].get("avoid_distance", 2.0))
+    avoid_distance = max(float(cfg["safety"].get("avoid_distance", 2.0)), 1e-6)
     gain = float(cfg["safety"].get("avoid_gain", 1.5))
     repulsive_x = 0.0
     repulsive_y = 0.0
