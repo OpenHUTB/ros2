@@ -11,7 +11,7 @@ import time
 import numpy as np
 
 from rooftop_pv.expert import ExpertConfig, ExpertInput, FlightLineExpert, wrap_angle
-from rooftop_pv.models import TinyMLP, TinyUNet, TinyWaypointPlanner
+from rooftop_pv.models import TinyImageController, TinyMLP, TinyUNet, TinyWaypointPlanner
 from rooftop_pv.planning import planning_features
 
 
@@ -53,6 +53,21 @@ def predict_waypoint(model: TinyWaypointPlanner, cross_track: float, heading: fl
     return waypoint
 
 
+def predict_image_command(model: TinyImageController, rgb: np.ndarray) -> tuple[float, float]:
+    """Apply trained image-to-command weights / 使用已训练图像到控制权重。"""
+    import torch
+    from torch.nn import functional as F
+
+    image = torch.from_numpy(rgb.astype(np.float32).transpose(2, 0, 1))[None] / 255.0
+    image = F.interpolate(image, size=(120, 160), mode="bilinear", align_corners=False)
+    with torch.inference_mode():
+        output = model(image)[0]
+    command = float(output[0]), float(output[1])
+    if not all(math.isfinite(value) for value in command):
+        raise ValueError("image control prediction is not finite")
+    return command
+
+
 def image_rgb(message) -> np.ndarray:
     """Decode common ROS Image layouts, including row padding / 解析带行填充的 ROS 图像。"""
     channels = {"rgb8": 3, "bgr8": 3, "rgba8": 4, "bgra8": 4, "mono8": 1}
@@ -78,7 +93,8 @@ class TrackingCore:
     """ROS-independent safety and route tracking state / 独立于 ROS 的安全与航迹状态。"""
 
     def __init__(self, *, max_speed=1.0, max_yaw_rate=1.2, waypoint_tolerance=0.5,
-                 input_timeout=1.0, control_model=None, segmentation_model=None, planning_model=None):
+                 input_timeout=1.0, control_model=None, segmentation_model=None, planning_model=None,
+                 end_to_end_model=None):
         values = (max_speed, max_yaw_rate, waypoint_tolerance, input_timeout)
         if any(not math.isfinite(value) or value <= 0 for value in values):
             raise ValueError("bounds, tolerance and timeout must be finite and positive")
@@ -86,6 +102,7 @@ class TrackingCore:
         self.tolerance, self.timeout = float(waypoint_tolerance), float(input_timeout)
         self.model, self.segmentation_model = control_model, segmentation_model
         self.planning_model = planning_model
+        self.image_model, self.rgb = end_to_end_model, None
         self.pose, self.pose_frame, self.pose_time = None, "", -math.inf
         self.route, self.route_frame, self.target_index = [], "", 0
         self.last_image_time = -math.inf
@@ -117,6 +134,8 @@ class TrackingCore:
         import torch
         from torch.nn import functional as F
 
+        if rgb.ndim != 3 or rgb.shape[2] != 3 or min(rgb.shape[:2]) < 1 or not math.isfinite(now):
+            raise ValueError("image must be a nonempty RGB array with a finite reception time")
         if self.segmentation_model is None:
             values = rgb.astype(np.int16)
             mask = (values[:, :, 2] > values[:, :, 0] + 10) & (values[:, :, 2] > values[:, :, 1] + 10)
@@ -126,12 +145,15 @@ class TrackingCore:
             with torch.inference_mode():
                 mask = (torch.sigmoid(self.segmentation_model(image))[0, 0] > 0.5).numpy()
         self.last_image_time = now
+        self.rgb = rgb.copy()
         self.perception = {"state": "ready", "source": self.perception_source,
                            "pv_pixel_ratio": float(mask.mean()), "pv_pixels": int(mask.sum())}
 
     def command(self, now: float) -> tuple[float, float, dict]:
-        status = {"controller": "trained_mlp" if self.model is not None else "geometric_tracking_no_checkpoint",
-                  "planner": "trained_local_waypoint" if self.planning_model is not None else "route_geometry",
+        status = {"controller": "trained_image" if self.image_model is not None else
+                  ("trained_mlp" if self.model is not None else "geometric_tracking_no_checkpoint"),
+                  "planner": "direct_image_policy" if self.image_model is not None else
+                  ("trained_local_waypoint" if self.planning_model is not None else "route_geometry"),
                   "perception": dict(self.perception), "target_index": self.target_index}
         if now - self.last_image_time > self.timeout and status["perception"]["state"] == "ready":
             status["perception"]["state"] = "stale_image"
@@ -147,6 +169,10 @@ class TrackingCore:
         final = self.route[-1]
         if math.hypot(final[0] - x, final[1] - y) <= self.tolerance:
             return 0.0, 0.0, {**status, "state": "arrived", "target_index": len(self.route) - 1}
+        if self.rgb is None or self.perception["state"] != "ready":
+            return 0.0, 0.0, {**status, "state": "waiting_image"}
+        if now - self.last_image_time > self.timeout:
+            return 0.0, 0.0, {**status, "state": "stale_image"}
         while self.target_index < len(self.route) - 1:
             tx, ty = self.route[self.target_index]
             if math.hypot(tx - x, ty - y) > self.tolerance:
@@ -162,14 +188,16 @@ class TrackingCore:
         distance = math.hypot(target[0] - x, target[1] - y)
         turn_error = wrap_angle(math.atan2(target[1] - y, target[0] - x) - yaw)
         control_cross_track, control_heading, control_distance = cross_track, heading_error, distance
-        if self.planning_model is not None:
+        if self.planning_model is not None and self.image_model is None:
             along_distance = max(0.0, (target[0] - x) * math.cos(path_heading) +
                                  (target[1] - y) * math.sin(path_heading))
             local_target = predict_waypoint(self.planning_model, cross_track, heading_error, along_distance)
             turn_error = math.atan2(local_target[1], local_target[0])
             control_cross_track, control_heading, control_distance = 0.0, -turn_error, math.hypot(*local_target)
             status["planned_local_waypoint_m"] = list(local_target)
-        if self.model is not None:
+        if self.image_model is not None:
+            forward, turn = predict_image_command(self.image_model, self.rgb)
+        elif self.model is not None:
             forward, turn = predict_command(self.model, control_cross_track, control_heading, control_distance)
         else:
             forward = self.max_speed * max(0.0, math.cos(turn_error)) * min(1.0, control_distance)
@@ -224,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:
                 "image_topic": "/camera/image_raw", "pose_topic": "/uav/pose", "route_topic": "/uav/route",
                 "command_topic": "/cmd_vel", "status_topic": "/rooftop_pv/status",
                 "control_checkpoint": "", "segmentation_checkpoint": "", "planning_checkpoint": "",
+                "end_to_end_checkpoint": "",
                 "max_speed": 1.0, "max_yaw_rate": 1.2, "waypoint_tolerance": 0.5,
                 "input_timeout": 1.0, "control_period": 0.1,
             }
@@ -233,9 +262,11 @@ def main(argv: list[str] | None = None) -> int:
             control = load_checkpoint(Path(p["control_checkpoint"]), TinyMLP) if p["control_checkpoint"] else None
             segmentation = load_checkpoint(Path(p["segmentation_checkpoint"]), TinyUNet) if p["segmentation_checkpoint"] else None
             planning = load_checkpoint(Path(p["planning_checkpoint"]), TinyWaypointPlanner) if p["planning_checkpoint"] else None
+            end_to_end = load_checkpoint(Path(p["end_to_end_checkpoint"]), TinyImageController) if p["end_to_end_checkpoint"] else None
             self.core = TrackingCore(**{name: float(p[name]) for name in
                                      ("max_speed", "max_yaw_rate", "waypoint_tolerance", "input_timeout")},
-                                     control_model=control, segmentation_model=segmentation, planning_model=planning)
+                                     control_model=control, segmentation_model=segmentation, planning_model=planning,
+                                     end_to_end_model=end_to_end)
             period = float(p["control_period"])
             if not math.isfinite(period) or period <= 0:
                 raise ValueError("control_period must be finite and positive")
