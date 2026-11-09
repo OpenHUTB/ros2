@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+data/
+saved_models/
+build/
+install/
+log/
+*.npz

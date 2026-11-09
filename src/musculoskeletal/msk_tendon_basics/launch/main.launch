@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    肌肉-肌腱串联弹性基础实验。模块本身只用 Python，不依赖 rospy，
+    launch 只提供和其他模块一致的启动方式与输出目录。
+
+    用法：
+      roslaunch msk_tendon_basics main.launch
+    快速模式的参数写法见 README（XML 注释里不能出现连续两个减号）。
+  -->
+
+  <arg name="args" default="" />
+  <arg name="outdir" default="$(find msk_tendon_basics)/demo_out" />
+
+  <node
+    pkg="msk_tendon_basics"
+    type="main.py"
+    name="msk_tendon_basics"
+    output="screen"
+    args="$(arg args) --outdir $(arg outdir)"
+  />
+</launch>
