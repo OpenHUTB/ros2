@@ -13,6 +13,7 @@ setup(
             ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
+        (os.path.join("share", package_name, "resource"), glob("resource/test.png")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -23,7 +24,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         'console_scripts': [
-            'privacy_mask_main = privacy_mask.privacy_mask_node:main',
+            'main = privacy_mask.privacy_mask_node:main',
         ],
     },
 
