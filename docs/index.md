@@ -105,6 +105,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [肌肉驱动的夹爪抓取：真实接触抓取](./musculoskeletal/msk_gripper.md)
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
