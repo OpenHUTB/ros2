@@ -137,13 +137,17 @@ python3 -m diff_drive_astar_odom_nav.geometry .
 > 说明：Gazebo 的刚性轮地接触是理想模型，编码器里程计积分结果与真值几乎完全一致，因此漂移为 0；控制回路仍然只使用 `/odom`，真值仅用于事后评估。横向误差主要来自纯追踪在栅格折线拐角处的切角。
 
 
-![轨迹对比](results/run_01/trajectory.png)
+![Gazebo 实际运行画面](../../../docs/img/diff_drive_astar_odom_nav_gazebo.png)
 
-![误差曲线](results/run_01/error.png)
+> Gazebo Classic 11 中加载 `worlds/static_obstacles.world` 并生成 `urdf/diff_robot.urdf` 后的实际运行画面（3D 视口与底部实时状态栏），不是手工绘制的示意图。
+
+![轨迹对比](../../../docs/img/diff_drive_astar_odom_nav_trajectory.png)
+
+![误差曲线](../../../docs/img/diff_drive_astar_odom_nav_error.png)
 
 ![速度指令](results/run_01/speed.png)
 
-![运行动画](results/run_01/trajectory.gif)
+![运行动画](../../../docs/img/diff_drive_astar_odom_nav_trajectory.gif)
 
 ## 8. 测试
 

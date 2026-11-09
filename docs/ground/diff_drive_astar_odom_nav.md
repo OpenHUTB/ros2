@@ -110,6 +110,14 @@ python3 -m diff_drive_astar_odom_nav.geometry .
 | 里程计漂移 最终 / RMS | 0.0 / 0.0 cm |
 | 最大线速度指令 | 0.75 m/s |
 
+### 6.1 Gazebo 实际运行画面
+
+![Gazebo 实际运行画面](../img/diff_drive_astar_odom_nav_gazebo.png)
+
+> 上图是在 Gazebo Classic 11 中加载 `worlds/static_obstacles.world`、生成 `urdf/diff_robot.urdf` 后的真实运行画面（含 3D 视口与底部实时状态栏），不是手工绘制的示意图。
+
+### 6.2 轨迹与误差
+
 ![轨迹对比](../img/diff_drive_astar_odom_nav_trajectory.png)
 
 ![横向误差与里程计漂移](../img/diff_drive_astar_odom_nav_error.png)
@@ -126,7 +134,7 @@ python3 -m pytest -q test        # 17 项：A*、纯追踪、地图/场景一致
 python3 main.py --out results/run_01
 ```
 
-一次运行自动产出 `trajectory.csv`、`plan.csv`、`metrics.json`、`metrics.md`、`trajectory.png`、`error.png`、`speed.png`、`trajectory.gif`。仓库内 `results/run_01` 为真实运行结果，未手工修改。
+一次运行自动产出 `trajectory.csv`、`plan.csv`、`metrics.json`、`metrics.md`、`trajectory.png`、`error.png`、`speed.png`、`trajectory.gif`。仓库内 `results/run_01` 保留 CSV 与指标文件，`trajectory.png`、`error.png`、`trajectory.gif` 只保存在 `docs/img/`，避免同一二进制重复入库；`results/run_01` 中数据为真实运行结果，未手工修改。
 
 ## 8. 大模型使用声明
 
