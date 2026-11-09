@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_lane_keeping</name>
+  <version>0.0.1</version>
+
+  <description>
+    基于前视视觉的车道线检测与车道保持（CARLA / ROS Noetic）。
+    纯 numpy 实现的透视变换与车道线拟合，不依赖 OpenCV 与深度学习，
+    输出横向偏差、航向偏差与车道曲率，并可闭环输出转向指令。
+  </description>
+
+  <maintainer email="wu_200706@163.com">OpenHUTB</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+
+  <!-- carla_msgs 提供 CarlaEgoVehicleControl；缺失时控制器会自动退回发布 Twist -->
+  <exec_depend>carla_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
