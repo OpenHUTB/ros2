@@ -28,6 +28,7 @@ setup(
         '/ MuJoCo 差速小车轮滑感知与轨迹补偿'
     ),
     license='Apache-2.0',
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'main = mujoco_diff_drive_slip_compensation.main:main',

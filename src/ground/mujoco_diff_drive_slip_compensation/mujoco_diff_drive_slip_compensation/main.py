@@ -257,7 +257,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             episode = String()
             episode.data = episode_id
             self._episode_publisher.publish(episode)
-
     return SimulationNode
 
 

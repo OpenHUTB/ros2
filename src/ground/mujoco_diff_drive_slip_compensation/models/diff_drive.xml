@@ -43,7 +43,6 @@
     <velocity name="right_front" joint="right_front_joint" kv="2"/>
     <velocity name="right_rear" joint="right_rear_joint" kv="2"/>
   </actuator>
-
   <sensor>
     <accelerometer name="imu_accelerometer" site="imu_site" noise="0"/>
     <gyro name="imu_gyroscope" site="imu_site" noise="0"/>

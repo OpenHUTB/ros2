@@ -168,7 +168,9 @@ ros2 launch mujoco_diff_drive_slip_compensation train.launch.py \
   data_directory:=data/raw output_directory:=data/models/slip-v1
 ```
 
-本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 `MAE=0.0272`、`RMSE=0.0440`、`F1=0.774`、`accuracy=0.969`，CPU 单窗口推理中位数为 `0.0103 ms`。该表仅代表样例测试，不代表其他摩擦和实机性能。
+默认数据集与输出目录为相对路径，需在 ROS 2 工作空间根目录（或功能包目录）下执行 launch，或通过对应参数传入绝对路径。
+
+本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 `MAE=0.0272`、`RMSE=0.0440`、`F1=0.774`、`accuracy=0.969`，CPU 单窗口推理中位数为 `0.0103 ms`。该表仅代表样例测试，不代表其他摩擦和实机性能。样例生成器的 train/validation/test 三个划分使用同一组摩擦系数 `0.02 / 0.08 / 0.4 / 0.9`，测试集摩擦条件训练时均已出现，样例指标属同分布内插，不代表未见过的摩擦条件。
 
 The measured local run used 12 episodes (four complete episodes per split), a 12-frame window, 24 hidden units, and a 300-epoch maximum with early stopping on validation MAE. Its isolated test split contained 916 windows and measured `MAE=0.0272`, `RMSE=0.0440`, `F1=0.774`, `accuracy=0.969`, and `0.0103 ms` median CPU inference per window. These measurements apply only to this sample split, not other friction settings or physical hardware.
 
@@ -180,3 +182,7 @@ python3 -m compileall src/ground/mujoco_diff_drive_slip_compensation
 colcon test --packages-select mujoco_diff_drive_slip_compensation
 colcon test-result --verbose
 ```
+
+## 大模型使用声明
+
+本功能包开发过程中使用豆包（Doubao）辅助生成代码草稿、文档文案与测试用例；全部代码、数据集划分与指标均经作者人工复核，训练权重与样例数据由本地 MuJoCo 流程生成，未由大模型直接产出。
