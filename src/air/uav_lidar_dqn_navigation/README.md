@@ -12,9 +12,9 @@ AirSim + ROS Noetic。模块最终包含四项能力：
 与监督式回归方案不同，本模块的控制器全部由**强化学习**训练得到：智能体在
 AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略。
 
-本 PR 在训练流程之上加入 DQN 在线部署与 gmapping 建图：`dqn_nav_node.py`
-加载训练好的权重复现导航，`slam.launch` 把雷达扫描接到 gmapping 上边飞边建图，
-建图时自动降低速度保证扫描重叠。图像端到端控制按依赖顺序在下一个 PR 加入。
+本 PR 补齐第四项能力：前置相机话题与图像端到端 DQN，同时补上模块文档与四项
+演示动图。至此四项任务全部可独立运行，模块文档见
+`docs/air/uav_lidar_dqn_navigation/index.md`。
 
 ## 运行环境
 
@@ -59,6 +59,9 @@ roslaunch uav_lidar_dqn_navigation main.launch mode:=dqn
 
 # 任务 3 gmapping 建图 + DQN 导航同步
 roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
+
+# 任务 4 图像端到端 DQN
+roslaunch uav_lidar_dqn_navigation main.launch mode:=e2e
 ```
 
 也可以直接用统一入口 `main.py`：
@@ -145,6 +148,16 @@ near_miss），随仓库一起提交。权重约定：
 逐回合数据见 `models/train_nav_log.csv`。`dqn_nav.pt` 与 `dqn_nav_best.pt`
 的 SHA-256 相同，确认交付的是最佳权重而不是最后一回合覆盖的结果。
 
+任务 4 的端到端网络直接吃 84×84 灰度图（外加 7 维目标与速度辅助量），
+用同样的 Double DQN 流程训练：
+
+```bash
+rosrun uav_lidar_dqn_navigation train_dqn_e2e.py --episodes 120
+rosrun uav_lidar_dqn_navigation main.py --mode e2e_train --episodes 120
+```
+
+权重保存为 `models/dqn_e2e.pt`。
+
 ## 话题与服务
 
 | 名称 | 类型 | 说明 |
@@ -154,6 +167,8 @@ near_miss），随仓库一起提交。权重约定：
 | `/drone/state` | std_msgs/Float32MultiArray | NED 原始状态 |
 | `/drone/lidar/scan` | sensor_msgs/LaserScan | 180° 累积扫描（建图） |
 | `/drone/lidar/sectors` | std_msgs/Float32MultiArray | 24 维扇区距离（控制） |
+| `/drone/image_raw` | sensor_msgs/Image | 前置相机图像 |
+| `/drone/goal` | geometry_msgs/PointStamped | NED 目标点 |
 | `/drone/takeoff` | std_srvs/Trigger | 起飞到 `takeoff_height` |
 | `/drone/land` | std_srvs/Trigger | 降落 |
 
@@ -168,6 +183,9 @@ scripts/dqn_network.py       Dueling 网络与动作空间
 scripts/dqn_agent.py         经验回放 / 目标网络 / Double DQN
 scripts/train_dqn_nav.py     任务 2 训练
 scripts/dqn_nav_node.py      任务 2 部署（加载权重在线导航）
+scripts/camera_node.py       前置相机话题
+scripts/train_dqn_e2e.py     任务 4 端到端训练
+scripts/dqn_e2e_node.py      任务 4 端到端部署
 scripts/main.py              统一入口
 test/test_lidar_features.py  特征工程单元测试（不依赖 AirSim）
 launch/teleop.launch         键盘遥控启动文件
@@ -175,14 +193,19 @@ launch/scan.launch           雷达感知启动文件
 launch/train.launch          DQN 训练启动文件
 launch/dqn.launch            任务 2 DQN 导航启动文件
 launch/slam.launch           任务 3 建图 + 导航启动文件
-launch/main.launch           统一启动入口（本阶段支持 teleop / scan / dqn / slam）
+launch/e2e.launch            任务 4 图像端到端启动文件
+launch/main.launch           统一启动入口（teleop / scan / dqn / slam / e2e）
 ```
 
-## 后续 PR
+## 模块 PR 划分
 
 | PR | 内容 |
 | --- | --- |
-| #932 | 图像端到端 DQN 与模块文档、演示动图 |
+| #892 | 模块骨架与键盘遥控 |
+| #893 | 雷达扇区特征与扫描话题 |
+| #918 | DQN 训练流程与模型权重 |
+| #922 | DQN 导航部署与 gmapping 建图 |
+| #932 | 图像端到端 DQN 与文档动图 |
 
 ## 实测结果
 
