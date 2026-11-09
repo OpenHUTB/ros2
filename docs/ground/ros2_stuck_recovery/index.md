@@ -46,7 +46,8 @@
 
 本模块是 `/cmd_vel` 的**守护层**：正常时透传任务指令（仍然限幅），检测到卡死时接管输出、
 执行脱困动作，成功后交回控制权。算法全部在 `detect.py` / `recovery.py`（纯 NumPy），
-`node.py` 只做话题收发，因此没装 ROS 也能跑全部测试。
+每周期"里程计可用性 → 检测 → 脱困"的决策在 `guard.py`，`node.py` 只做话题收发，
+因此没装 ROS 也能跑全部测试——包括启动期里程计缺失这类边界。
 
 ## 3. 卡死检测：三路证据与确认时长
 
@@ -124,11 +125,19 @@ $$d_{back}(L) = \min\big(0.22 + 0.10\,(L-1),\ 0.52\big)\ \text{m}, \qquad \theta
 | 前进 / 倒车 / 转向限幅 | 0.30 / 0.15 / 1.20 | `robot.clamp_twist` |
 | 倒车距离硬上限 | 0.52 m（无后向传感器） | `RecoveryConfig.back_wall_margin` |
 | 里程计超时 | 0.5 s → 立即零速 | `RecoverySupervisor.step` |
+| 从未收到里程计 | 零速（fail closed），不采信任何检测证据 | `guard.OdomWatch` / `guard.evaluate` |
 | 单级动作超时 | 倒车 3.0 s / 转向 3.5 s / 试探 0.6 s | `RecoveryConfig` |
 | 倒车"倒不动"判定 | 1.2 s 内位移 < 0.02 m（覆盖反向加速过程） | `RecoveryConfig.stall_time` |
 
 最后一条也是仿真暴露的缺陷：最初用 0.6 s 判"倒不动"，但从 +0.11 m/s 反转到 −0.14 m/s 需要约
 0.42 s 的加速过程，车还没动起来就被判定失败并连续升级，直接 `ABORT`。
+
+**"从未收到里程计"单独列为一条约束**，因为它不能用"超时"来表达。早期实现用时间戳初值 `0`
+表示"还没收到"，再把年龄算成 `now - last if last > 0 else 0`——于是"从未收到"被算成 `0` s，
+也就是"数据刚刚更新过"，stale 保护形同虚设：只要任务层在 `/odom` 之前就发速度，指令会
+原样透传到底盘。现在由 `OdomWatch` 区分"未收到"与"已收到但超时"，未收到时年龄取 `inf`，
+直接落到零速分支；同时清空检测器缓冲，避免黑屏期"有指令零位移"的假证据在恢复瞬间被
+误判成卡死、触发一次无谓的倒车。回归测试见 `tests/test_guard.py`。
 
 ## 6. 运行方式
 
@@ -233,13 +242,14 @@ ros2 launch ros2_stuck_recovery recovery.launch.py
 
 ## 9. 测试与可复现性
 
-`python3 -m pytest tests -q` 共 **62 项**，全部通过（0.9 s）：
+`python3 -m pytest tests -q` 共 **70 项**，全部通过（1.5 s）：
 
 | 测试文件 | 覆盖内容 |
 |---|---|
 | `test_core.py` | 运动学（整圆回起点、纯转不移位）、非对称限幅、轮速正反解、扇区取值边界、状态机全流程、ABORT 与解除、记忆升级、动作族轮换、限幅不越界 |
 | `test_detect.py` | 三类故障判定、优先级、确认时长、起步暂态不误报、纯转向不误报、缺传感器降级、贴墙平行不误报、`reset` 语义 |
 | `test_scenarios.py` | 7 个场景期望行为、关掉脱困必然失败、检测类型与注入故障一致、永久故障不产生虚假脱困、多种子稳健性、参数敏感性自检 |
+| `test_guard.py` | 启动期无里程计必须零速、未收到 ≠ 刚更新、黑屏期不积累假证据、恢复后立刻透传、运行中中断按超时停车 |
 
 关键回归项（都是仿真里先暴露出来的真实缺陷）：
 
@@ -252,6 +262,8 @@ ros2 launch ros2_stuck_recovery recovery.launch.py
 | `test_wall_hug_does_not_alarm` | 贴墙平行不许误报 |
 | `test_acceleration_transient_does_not_alarm` | 起步指令滞后不算卡死 |
 | `test_stale_odom_stops_immediately` | 里程计超时零速 |
+| `test_no_odom_never_passes_command_through` | 启动期没有 `/odom` 时，任务层 0.25 m/s 也必须输出零速 |
+| `test_no_odom_does_not_poison_detector` | 里程计恢复瞬间不得拿黑屏期样本判卡死（否则无端倒车） |
 
 ## 10. 局限与展望
 

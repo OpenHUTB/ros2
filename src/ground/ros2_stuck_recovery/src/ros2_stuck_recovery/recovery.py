@@ -136,7 +136,13 @@ class RecoverySupervisor:
         self._imu_gap = imu_gap
         if odom_age > cfg.stale_odom:
             self.state = STATE_STALE
-            return Command(0.0, 0.0, STATE_STALE, f"里程计 {odom_age:.2f}s 未更新，停车", True, self.level)
+            # 启动期尚未收到里程计时 age 为 inf，不能打印成 "infs"
+            note = (
+                f"里程计 {odom_age:.2f}s 未更新，停车"
+                if math.isfinite(odom_age)
+                else "尚未收到里程计数据，停车（fail closed）"
+            )
+            return Command(0.0, 0.0, STATE_STALE, note, True, self.level)
 
         if self.state == STATE_STALE:
             self.state = STATE_CRUISE

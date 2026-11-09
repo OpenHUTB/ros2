@@ -15,7 +15,8 @@ from __future__ import annotations
 import json
 import math
 
-from .detect import DetectorConfig, Sample, StuckDetector
+from .detect import DetectorConfig, StuckDetector
+from .guard import OdomWatch, evaluate, odom_available
 from .recovery import RecoveryConfig, RecoverySupervisor
 from .robot import Limits, Twist
 from .sensors import FRONT_SECTOR, front_range
@@ -60,7 +61,7 @@ class StuckRecoveryNode:
         self.w_imu = None
         self.range_front = None
         self.task_cmd = Twist()
-        self._last_odom_t = 0.0
+        self.watch = OdomWatch()
         self._last_pose = (0.0, 0.0, 0.0)
 
         self.pub_cmd = n.create_publisher(TwistMsg, n.get_parameter("cmd_topic").value, 10)
@@ -85,7 +86,7 @@ class StuckRecoveryNode:
         self.pose = (p.x, p.y, yaw)
         self.v_odom = msg.twist.twist.linear.x
         self.w_odom = msg.twist.twist.angular.z
-        self._last_odom_t = self._now()
+        self.watch.update(self._now())
 
     def on_imu(self, msg) -> None:
         self.w_imu = msg.angular_velocity.z
@@ -110,21 +111,18 @@ class StuckRecoveryNode:
 
     def tick(self) -> None:
         now = self._now()
-        odom_age = now - self._last_odom_t if self._last_odom_t > 0.0 else 0.0
-        sample = Sample(
-            t=now,
-            v_cmd=self.task_cmd.v,
-            w_cmd=self.task_cmd.w,
+        out, verdict, odom_age = evaluate(
+            now,
+            self.task_cmd,
+            self.watch,
+            self.detector,
+            self.supervisor,
             v_odom=self.v_odom,
             w_odom=self.w_odom,
             w_imu=self.w_imu,
             range_front=self.range_front,
+            pose=self.pose,
         )
-        verdict = self.detector.update(sample)
-        imu_gap = 0.0
-        if self.w_imu is not None:
-            imu_gap = abs(self.w_odom - self.w_imu)
-        out = self.supervisor.step(now, self.task_cmd, verdict, odom_age, self.pose, imu_gap)
 
         msg = self._twist_msg()
         msg.linear.x = out.v
@@ -140,7 +138,9 @@ class StuckRecoveryNode:
                     "slip_ratio": round(verdict.slip_ratio, 3),
                     "note": out.note,
                     "cmd": [round(out.v, 3), round(out.w, 3)],
-                    "odom_age": round(odom_age, 2),
+                    # 未收到里程计时 age=inf，JSON 里用 null 表示"不可用"
+                    "odom_age": round(odom_age, 2) if odom_age < float("inf") else None,
+                    "odom_ok": odom_available(odom_age, self.supervisor.cfg.stale_odom),
                 }
             )
             self.pub_status.publish(self._string_msg(data=json.dumps(status, ensure_ascii=False)))

@@ -33,6 +33,7 @@ ros2_stuck_recovery/
 │   ├── detect.py               #   三路一致性卡死检测
 │   ├── recovery.py             #   分级脱困状态机
 │   ├── sensors.py              #   激光扇区取值等消息规整
+│   ├── guard.py                #   每周期决策（里程计可用性 → 检测 → 脱困），可离线测
 │   └── node.py                 #   ROS2 节点（薄封装）
 ├── sim/                        # 仿真与实验
 │   ├── stuck_world.py          #   含"顶住/打滑/单轮失抓地"故障的 2D 世界
@@ -40,7 +41,7 @@ ros2_stuck_recovery/
 │   ├── experiments.py          #   闭环评估（真值评分，在线只用里程计）
 │   ├── run_sim.py              #   跑场景 + 出图
 │   └── benchmark.py            #   多种子对照表（Markdown/CSV）
-├── tests/                      # 62 项单元/集成测试
+├── tests/                      # 70 项单元/集成测试
 ├── ci/run_ci.sh                # 五阶段自检
 └── docs_figs/                  # 生成的配图与基准表
 ```
@@ -118,6 +119,11 @@ ros2 launch ros2_stuck_recovery recovery.launch.py
 
 通道 A 优先于 C：里程计"完全不动"和"编码器说在走"是互斥的两种证据。
 通道 C 的"最近接近过"这一条是为了把**贴墙平行行驶**（测距恒定但从未接近）排除掉。
+
+**里程计不可用时（含还未收到首条 `/odom`）一律 fail closed**：`OdomWatch` 用"是否收到过"
+而不是"时间戳是否为 0"来表示可用性，未收到时年龄取 `inf`，直接落到 stale 分支输出零速；
+同时清空检测器缓冲，避免黑屏期"有指令零位移"的假证据在里程计恢复瞬间被误判成卡死。
+启动期任务层先发速度指令也不会被透传到底盘。
 
 ## 脱困策略（要点）
 
