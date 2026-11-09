@@ -286,3 +286,32 @@ def setattr_nested(msg, path, value):
     for part in parts[:-1]:
         msg = getattr(msg, part)
     setattr(msg, parts[-1], value)
+
+
+# ----------------------------------------------------------------------
+# 3. 回归：/uav/cmd_vel 必须和离线 _post 一样限幅
+# ----------------------------------------------------------------------
+def test_controller_node_clips_cmd_vel():
+    """控制器直接吐出大指令时（e2e 发散就会发生），发出去的 Twist 不能超过
+    V_MAX / VZ_MAX。早先 _publish_cmd 不做限幅，仿真节点记录的就是
+    「没裁过的指令」，ROS 侧 CSV 的 mean_speed 和离线表不是同一个量。"""
+    _boot()
+    import numpy as np
+    from geometry_msgs.msg import Twist
+    from uav_camera_tracking import params as P
+    from uav_camera_tracking.controller_node import ControllerNode
+
+    fake_ros.set_param_overrides({'uav_controller': {'mode': 'expert'}})
+    ctrl = ControllerNode()
+    got = []
+    ctrl.create_subscription(Twist, '/uav/cmd_vel', got.append, 10)
+
+    ctrl._publish_cmd(np.array([99.0, -99.0, 88.0]))
+    fake_ros.Rig().pump()
+
+    assert got, '订阅端没有收到 cmd_vel'
+    m = got[-1]
+    assert abs(m.linear.x) <= P.V_MAX + 1e-9, m.linear.x
+    assert abs(m.linear.y) <= P.V_MAX + 1e-9, m.linear.y
+    assert abs(m.linear.z) <= P.VZ_MAX + 1e-9, m.linear.z
+    assert abs(m.angular.z) <= P.YAW_RATE_MAX + 1e-9, m.angular.z

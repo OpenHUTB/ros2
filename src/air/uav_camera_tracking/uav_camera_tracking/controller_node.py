@@ -173,13 +173,20 @@ class ControllerNode(Node):
         yaw_rate = float(np.clip((yaw_des - self.yaw) / P.DT,
                                  -P.YAW_RATE_MAX, P.YAW_RATE_MAX))
 
+        # 与离线 BaseController._post 同一套限幅：水平 ±V_MAX、垂直 ±VZ_MAX。
+        # 不限幅的话 e2e 发散时会把 17 m/s 的指令直接发出去，仿真节点记录的
+        # mean_speed 也就成了「没裁过的指令」，没法和离线 CSV 比。
+        vx = float(np.clip(cmd[0], -P.V_MAX, P.V_MAX))
+        vy = float(np.clip(cmd[1], -P.V_MAX, P.V_MAX))
+        vz = float(np.clip(cmd[2], -P.VZ_MAX, P.VZ_MAX))
+
         msg = Twist()
-        msg.linear.x = float(cmd[0])
-        msg.linear.y = float(cmd[1])
-        msg.linear.z = float(cmd[2])
+        msg.linear.x = vx
+        msg.linear.y = vy
+        msg.linear.z = vz
         msg.angular.z = yaw_rate
         self.pub.publish(msg)
-        self.v_prev = cmd
+        self.v_prev = np.array([vx, vy, vz])
 
 
 def main(argv=None):
