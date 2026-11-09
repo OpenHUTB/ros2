@@ -13,6 +13,7 @@ setup(
         (f"share/{package_name}", ["package.xml"]),
         (f"share/{package_name}/launch", glob("launch/*.py")),
         (f"share/{package_name}/config", glob("config/*.yaml")),
+        (f"share/{package_name}/assets/mjcf", glob("assets/mjcf/*.xml")),
     ],
     install_requires=["setuptools"],
     entry_points={"console_scripts": ["rooftop_pv_controller = ros2_uav_controller:main"]},
