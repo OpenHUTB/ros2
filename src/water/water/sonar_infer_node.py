@@ -1,31 +1,30 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
 from cv_bridge import CvBridge
 import cv2
 import torch
-import torchvision.transforms as transforms
+import torch.nn as nn
 
-class SonarCNN(torch.nn.Module):
-    def __init__(self, num_classes=4):
+class SonarCNN(nn.Module):
+    def __init__(self, num_classes=3):
         super().__init__()
-        self.features = torch.nn.Sequential(
-            torch.nn.Conv2d(3, 16, 3, padding=1),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
-            torch.nn.Conv2d(16, 32, 3, padding=1),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
-            torch.nn.Conv2d(32, 64, 3, padding=1),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 16, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
         )
-        self.classifier = torch.nn.Sequential(
-            torch.nn.Flatten(),
-            torch.nn.Linear(64 * 28 * 28, 128),
-            torch.nn.ReLU(),
-            torch.nn.Linear(128, num_classes)
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64 * 32 * 32, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_classes)
         )
 
     def forward(self, x):
@@ -33,50 +32,46 @@ class SonarCNN(torch.nn.Module):
         x = self.classifier(x)
         return x
 
-
 class SonarInferNode(Node):
     def __init__(self):
         super().__init__("sonar_infer_node")
         self.bridge = CvBridge()
-        self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor()
-        ])
-        # 模型初始化 + 加载权重（重点新增）
-        self.model = SonarCNN(num_classes=4)
-        self.model.load_state_dict(torch.load("sonar_cnn_weights.pth", map_location=torch.device("cpu")))
-        self.model.eval()
-
         self.sub_img = self.create_subscription(
             Image,
-            "/sonar_image",
-            self.image_callback,
+            "/sonar/image",
+            self.img_callback,
             10
         )
-        self.pub_result = self.create_publisher(String, "/sonar_rec_result", 10)
-        self.class_names = ["class0", "class1", "class2", "class3"]
-        self.get_logger().info("声呐CNN推理节点启动，权重加载成功")
+        self.get_logger().info("声呐识别节点已启动")
 
-    def image_callback(self, msg):
+        self.model = SonarCNN(num_classes=3)
+        weight_path = "sonar_cnn_weights.pth"
         try:
-            cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            img_rgb = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-            tensor_img = self.transform(img_rgb).unsqueeze(0)
-            with torch.no_grad():
-                out = self.model(tensor_img)
-                pred_idx = torch.argmax(out, dim=1).item()
-            res_msg = String()
-            res_msg.data = self.class_names[pred_idx]
-            self.pub_result.publish(res_msg)
-            self.get_logger().info(f"识别结果：{self.class_names[pred_idx]}")
+            self.model.load_state_dict(torch.load(weight_path, map_location=torch.device("cpu")))
+            self.get_logger().info("权重文件加载成功")
         except Exception as e:
-            self.get_logger().error(f"推理出错：{str(e)}")
+            self.get_logger().warn(f"权重加载失败: {e}, 使用随机初始化权重")
+        self.model.eval()
 
+        self.class_names = ["rock", "pipe", "sand"]
+
+    def img_callback(self, msg):
+        cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        img = cv2.resize(cv_img, (256,256))
+        img_tensor = torch.from_numpy(img).permute(2,0,1).float() / 255.0
+        img_tensor = img_tensor.unsqueeze(0)
+
+        with torch.no_grad():
+            out = self.model(img_tensor)
+            pred_idx = torch.argmax(out, dim=1).item()
+        res = self.class_names[pred_idx]
+        self.get_logger().info(f"检测目标: {res}")
 
 def main(args=None):
     rclpy.init(args=args)
     node = SonarInferNode()
     rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == "__main__":
