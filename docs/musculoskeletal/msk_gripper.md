@@ -439,3 +439,5 @@ MSE 在原始动作尺度上计算：力反馈网络对应激活增量，视觉�
 高度曲线与[视觉闭环 CSV](./msk_gripper_data/visual_closed_loop.csv)使用同一时序数据：
 
 ![视觉控制的实际方块抬升曲线](../img/msk_gripper/neural_visual_lift.png)
+
+补充运行记录：[模型自检、机械臂实验与动图入口](./msk_gripper_data/docker_other_modes.log)。三个补充 launch 进程正常退出，三段动图分别为 2.99、1.01、2.77 MB；结合前述记录，六种入口模式均完成容器运行。
