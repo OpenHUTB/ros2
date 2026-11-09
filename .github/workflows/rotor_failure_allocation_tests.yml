@@ -1,4 +1,4 @@
-name: Rotor failure allocation tests
+﻿name: Rotor failure allocation tests
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
         run: python3 -m py_compile main.py uav_rotor_failure_allocation/*.py launch/main.launch.py
 
   windows-console:
-    name: Windows console (chcp 936) smoke test
+    name: Windows smoke test (GBK stdio)
     runs-on: windows-latest
     defaults:
       run:
@@ -97,5 +97,6 @@ jobs:
           chcp 936
           python -c "import sys; print('stdout', sys.stdout.encoding)"
           python main.py --output "$env:TEMP/rotor_out_936"
+
 
 
