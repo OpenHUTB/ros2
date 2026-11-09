@@ -176,6 +176,7 @@ def test_mlp_rejects_wrong_window_shape():
 
 
 def test_sample_generator_writes_episode_isolated_splits(tmp_path: Path):
+    pytest.importorskip('mujoco')
     model_path = Path(__file__).parents[1] / 'models' / 'diff_drive.xml'
 
     episode_ids = generate_dataset(

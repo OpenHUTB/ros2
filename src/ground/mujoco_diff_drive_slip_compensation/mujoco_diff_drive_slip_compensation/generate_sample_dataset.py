@@ -145,6 +145,7 @@ def main(args: list[str] | None = None) -> None:
     parser.add_argument('--seed', type=int, default=25012)
     parser.add_argument('--episodes-per-split', type=int, default=4)
     parser.add_argument('--duration', type=float, default=12.0)
+    parser.add_argument('--sample-every-steps', type=int, default=10)
     options = parser.parse_args(args)
     episode_ids = generate_dataset(
         options.output,
@@ -152,6 +153,7 @@ def main(args: list[str] | None = None) -> None:
         seed=options.seed,
         episodes_per_split=options.episodes_per_split,
         duration_seconds=options.duration,
+        sample_every_steps=options.sample_every_steps,
     )
     print(f'generated {len(episode_ids)} episodes in {options.output}')
 

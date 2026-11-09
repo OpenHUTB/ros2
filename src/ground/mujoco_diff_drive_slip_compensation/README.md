@@ -2,7 +2,7 @@
 
 MuJoCo Differential-Drive Slip Perception and Trajectory Compensation
 
-本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础：入口接收 `cmd_vel`，通过差速运动学计算四轮目标转速，并发布仿真时钟、真实里程计和坐标变换；同时发布带可复现噪声的编码器和惯性测量单元数据。多摩擦采集入口按完整 episode 轮换场景、复位车辆、执行确定性激励指令，并把同步观测写入按 episode 隔离的数据文件。
+本 ROS 2 功能包提供一个四轮差速小车的 MuJoCo 仿真基础：当前入口接收 `cmd_vel`，通过差速运动学计算四轮目标转速，并发布仿真时钟、真实里程计和坐标变换；同时发布带可复现噪声的编码器和惯性测量单元数据。多摩擦采集入口按完整 episode 轮换场景、复位车辆、执行确定性激励指令，并把同步观测写入按 episode 隔离的数据文件。
 
 This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot. The entry point consumes `cmd_vel`, converts chassis commands to four wheel-speed targets, and publishes simulation time, ground-truth odometry, and transforms. It also publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
 
@@ -91,7 +91,6 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | MuJoCo 真实状态 / MuJoCo ground truth |
 | 发布 / Publish | `/clock` | `rosgraph_msgs/msg/Clock` | 仿真时钟 / simulation clock |
 | 发布 / Publish | `/tf` | `tf2_msgs/msg/TFMessage` | `odom` 到 `base_link` / `odom` to `base_link` |
-
 | 发布 / Publish | `/wheel/encoders` | `sensor_msgs/msg/JointState` | 四轮位置与速度 / four-wheel positions and velocities |
 | 发布 / Publish | `/imu/data` | `sensor_msgs/msg/Imu` | 三轴加速度与角速度 / three-axis acceleration and angular velocity |
 | 发布 / Publish | `/scenario/friction` | `std_msgs/msg/Float64` | 当前滑动摩擦系数 / active sliding-friction coefficient |
@@ -103,7 +102,6 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/cmd_vel/compensated` | `geometry_msgs/msg/Twist` | 滑移补偿后的速度指令 / slip-compensated velocity command |
 | 发布 / Publish | `/slip/estimate` | `std_msgs/msg/Float64` | 当前窗口滑移估计 / current window slip estimate |
 | 发布 / Publish | `/slip/status` | `std_msgs/msg/String` | 预热、停机或正常状态 / warm-up, stop, or ready status |
-
 
 速度指令超过 `command_timeout` 未更新时，节点将四轮目标速度清零。非有限数值和越出包资源目录的模型路径会被拒绝。
 
@@ -119,7 +117,6 @@ python3 -m compileall src/ground/mujoco_diff_drive_slip_compensation
 ROS 2 环境中的完整验收还应包含 `colcon test` 与启动后的话题检查。
 
 Full acceptance in a ROS 2 environment also includes `colcon test` and topic inspection after launch.
-
 
 ## 多摩擦数据采集 / Multi-friction Data Collection
 
@@ -152,18 +149,9 @@ train_slip_model --data data/raw --output data/models/slip-v1 --epochs 300
 # For generated samples, replace data/raw with data/sample.
 ```
 
-启动在线补偿链路：
+默认数据集与输出目录为相对路径，需在 ROS 2 工作空间根目录（或功能包目录）下执行 launch，或通过对应 launch 参数传入绝对路径。
 
-Launch the online compensation path:
-
-```bash
-ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
-  model_file:=data/models/slip-v1/slip_model.json
-```
-
-节点同时订阅编码器、IMU、里程计和原始 `/cmd_vel`。传感器时间戳过期、回退或窗口尚未填满时发布零速；窗口就绪后，模型输出限制在 `[-0.5, 0.5]`，线速度补偿比例与线/角加速度均受参数约束。
-
-The node subscribes to encoders, IMU, odometry, and raw `/cmd_vel`. It publishes zero velocity when timestamps are stale, move backwards, or the temporal window is not full. Once ready, the model output is bounded to `[-0.5, 0.5]`, and both the linear correction scale and linear/angular acceleration are parameter-limited.
+The default dataset and output directories are relative paths; launch from the ROS 2 workspace root (or the package directory), or pass absolute paths through the matching launch arguments.
 
 The temporal-window MLP uses four wheel rates, left/right wheel-rate aggregates, the velocity command, and six IMU axes. For the terminal frame of each window, the supervised longitudinal slip target is:
 
@@ -180,4 +168,29 @@ Samples with encoder-derived linear speed below `0.15 m/s` receive a zero target
 
 The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 hidden units, and 300 epochs measured `MAE 0.0272`, `RMSE 0.0440`, `F1 0.774`, `accuracy 0.969`, and `0.0103 ms` median inference per window on the local CPU. These values describe that generated held-out split; deployment data should be evaluated independently.
 
-使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。样例生成器使用的摩擦系数为 `(0.02, 0.08, 0.4, 0.9)`，ROS 2 采集场景使用 `(0.25, 0.55, 0.90)`，二者摩擦覆盖范围不同。
+使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。
+
+样例生成器的 train/validation/test 三个划分使用同一组摩擦系数 `0.02 / 0.08 / 0.4 / 0.9`，测试集摩擦条件在训练阶段均已出现，样例指标属于同分布内插结果，不代表未见过的摩擦条件下的表现。
+
+The train, validation, and test splits of the sample generator use the same friction set `0.02 / 0.08 / 0.4 / 0.9`; every test friction condition appears during training, so sample metrics are in-distribution interpolation and do not represent unseen friction conditions.
+
+## 在线补偿 / Online Compensation
+
+启动在线补偿链路：
+
+Launch the online compensation path:
+
+```bash
+ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \
+  model_file:=data/models/slip-v1/slip_model.json
+```
+
+节点同时订阅编码器、IMU、里程计和原始 `/cmd_vel`。传感器时间戳过期、回退或窗口尚未填满时发布零速；窗口就绪后，模型输出限制在 `[-0.5, 0.5]`，线速度补偿比例与线/角加速度均受参数约束。
+
+The node subscribes to encoders, IMU, odometry, and raw `/cmd_vel`. It publishes zero velocity when timestamps are stale, move backwards, or the temporal window is not full. Once ready, the model output is bounded to `[-0.5, 0.5]`, and both the linear correction scale and linear/angular acceleration are parameter-limited.
+
+## 大模型使用声明 / AI Tooling Statement
+
+本功能包开发过程中使用豆包（Doubao）辅助生成代码草稿、文档文案与测试用例；全部代码、数据集划分与指标均经作者人工复核，训练权重与样例数据由本地 MuJoCo 流程生成，未由大模型直接产出。
+
+Doubao was used during development to assist with code drafts, documentation wording, and test cases. All code, dataset splits, and metrics were reviewed by the author; trained weights and sample data were generated by the local MuJoCo workflow and were not produced directly by the AI tool.
