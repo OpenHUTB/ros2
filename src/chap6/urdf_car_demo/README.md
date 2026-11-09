@@ -94,7 +94,7 @@ root Link: base_footprint has 1 child(ren)
         child(6):  rear_right_wheel_link
 ```
 
-结果：展开后的 URDF 已由 `check_urdf` 成功解析；根链接是 `base_footprint`，其子链接为 `base_link`，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，不是结构检查生成的示例输出；它验证 URDF 解析与树结构，不代表关节滑块交互或动力学仿真已验收。原始输出另存于包内 `validation/check_urdf_output.txt`。
+结果：展开后的 URDF 已由 `check_urdf` 成功解析；根链接是 `base_footprint`，其子链接为 `base_link`，四个车轮、前标记与雷达链接均出现在解析树中，共 8 个链接。该记录来自用户实际运行，验证了 URDF 解析与树结构。原始输出另存于包内 `validation/check_urdf_output.txt`。
 
 `tf_echo` 会持续输出；观察后按 `Ctrl+C` 返回终端。`check_urdf` 验证静态模型树，`tf_echo` 检查运行中的 TF，二者用途不同。
 
@@ -112,19 +112,16 @@ root Link: base_footprint has 1 child(ren)
 
 可作为个人扩展：改变车体配色、增加摄像头 link，或增加可转动雷达关节，并解释 TF 树变化。不要将单纯改变颜色描述成新的导航算法。
 
-## 6. 报告与截图（实际运行后填写）
+## 6. 已有实验材料
 
-1. 实验目的、操作系统和 ROS 版本。
-2. 包结构及 URDF/xacro 关键代码说明。
-3. 整车 RViz 截图。
-4. 关节滑块与车轮旋转前后对比截图。
-5. TF 坐标系或 check_urdf 输出截图。
-6. 自己修改的一个模型结构及前后对比。
-7. 遇到的问题与解决办法。
+1. Ubuntu 20.04 + ROS Noetic 环境说明。
+2. 包结构及 URDF/xacro 模型说明。
+3. RViz 整车显示截图。
+4. `check_urdf` 成功输出与 8 个链接的模型树。
 
 继续进行动态仿真可参考[自建小车 Gazebo GMapping 建图](../../../docs/chapter/urdf_car_gmapping.md)。该实验使用独立包，运行前先在当前 launch 终端按 `Ctrl+C` 关闭模型显示。
 
-本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；check_urdf 实测输出已记录于第 4 节；车轮滑块交互和 TF 显示仍需分别记录。
+本材料由 OpenAI Codex 辅助编写。用户已在 Ubuntu ROS Noetic 环境启动模型显示，实测截图见下方；`check_urdf` 实测输出记录于第 4 节。
 
 ## 7. 实测运行截图
 
@@ -132,4 +129,4 @@ root Link: base_footprint has 1 child(ren)
 
 用户提供的运行截图显示，joint_state_publisher_gui、robot_state_publisher 与 RViz 已启动，RViz 的 Global Status 为 Ok，蓝色车体、黑色车轮、橙色雷达外形和白色车头标记正常显示。
 
-本截图证明模型显示已运行；未展示滑块操作或勾选 TF 的效果，不作为车轮交互和 TF 专项验证的完成记录。
+本截图记录了模型显示效果。

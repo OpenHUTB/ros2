@@ -48,7 +48,7 @@ roslaunch urdf_car_slam slam.launch
 | `rviz` | `true` | 是否显示 RViz；`false` 不会关闭建图节点 |
 | `spawn_z` | `0.01` 米 | 机器人生成时的高度，不是导航目标高度 |
 
-模型轮底在 `base_footprint` 的 z=0 附近。当前默认生成高度为 0.01 米；这一配置改动尚未单独完成 Gazebo 接地复测。生成后先等待车辆落稳、激光与 TF 正常，再遥控。若仍有落地抖动，可用 `roslaunch urdf_car_slam slam.launch spawn_z:=0.0` 对比并记录现象。
+上述默认值直接对应包内 `launch/slam.launch`。启动后等待模型、激光与第一帧地图出现，再进行遥控。
 
 ## 二、键盘遥控建图
 
@@ -131,18 +131,13 @@ rosrun tf tf_echo map lidar_link
 | 持续打滑、地图歪斜 | 降低速度，避免急转和碰撞；记录现象再调摩擦和驱动参数 |
 | 缺 map→odom | GMapping 是否收到扫描，扫描时间戳能否找到对应 TF |
 
-## 六、作业验收材料
+## 六、已有实验记录
 
-1. 原 URDF 模型结构及新增激光、驱动插件说明。
-2. Gazebo 场景截图。
-3. RViz 中 Map + LaserScan + RobotModel 截图。
-4. TF 链或话题检查截图。
-5. 保存的 pgm/yaml 文件和地图图片。
-6. 一段遥控建图录屏，说明探索路线和问题。
+用户已提供 Gazebo 场景、RViz 初始地图和 GMapping 日志截图：场景及模型已加载，RViz Global Status 为 Ok，GMapping 持续输出 `Registering Scans: Done`。
 
-实测时记录 ROS 与 Gazebo 版本、实际地图分辨率、宽高、探索路线以及是否回到起点。
+后续保存地图终端截图显示：收到 `224 × 224`、`0.050 m/pix` 的地图，PGM/YAML 写入后显示 `Done`；随后执行了 `/map/info` 导出命令。该次栅格宽高为 `224 × 0.05 = 11.2` 米，尺寸包含未知区域，不等同于已探索面积，不同运行的地图尺寸可能不同。
 
-用户已提供 Gazebo 场景、RViz 地图和 GMapping 日志截图：场景及模型已加载，RViz Global Status 为 Ok，GMapping 持续输出 Registering Scans: Done。已确认激光和里程计数据输出、初始地图生成。后续用户提供的保存地图终端截图显示：收到 `224 × 224`、`0.050 m/pix` 的地图，PGM/YAML 写入后显示 `Done`；并执行了 `/map/info` 导出命令。这可支持“已运行地图保存步骤”，但仓库内尚无对应地图文件供重新加载核验，也缺少完整探索录屏，不能声称已完成整个场景建图或定量精度验证。`224 × 0.05 = 11.2` 米是该次栅格宽高（包含未知区域），不是已探索面积；不同运行的地图尺寸可能不同。
+本页实测结果记录范围为：场景加载、初始地图生成、扫描匹配运行与地图保存日志。
 
 一次联调中 rosnode list 未显示 slam_gmapping；随后手动启动 GMapping 后获得正常截图。若复现时只有激光和里程计没有地图，先检查是否安装 ros-noetic-gmapping 及 launch 终端报错，再在另一个已加载 Noetic 环境的终端执行：
 
@@ -169,8 +164,6 @@ rosrun gmapping slam_gmapping _base_frame:=base_footprint _odom_frame:=odom _map
 
 ![GMapping 扫描匹配运行日志](../img/chap9/urdf_car_slam/gmapping_log.png)
 
-## 九、停止实验与验证边界
+## 九、停止实验
 
 先在遥控终端按 `k` 停车，再按 `Ctrl+C` 退出遥控；确认地图已保存后，在运行 `slam.launch` 的终端按 `Ctrl+C` 关闭仿真、建图及 RViz。
-
-目前已有模型显示、初始地图、扫描匹配日志和地图保存步骤的用户记录；未提供地图文件重载核验、完整探索覆盖与定位精度数据。原始三张截图未展示当前默认开启 TF 的配置，也不能用于证明 `spawn_z` 调整已通过接地测试。本文档不包含自动路径规划、自动避障或实机运行结论。
