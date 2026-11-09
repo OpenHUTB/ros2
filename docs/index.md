@@ -270,6 +270,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
+* [四旋翼单桨失效推力分配可行域](./air/uav_rotor_failure_allocation.md) —— 用静态推力分配模型算单桨失效后还能出多大力矩：零力矩最大推力从 4·f_max 掉到 2·f_max（正好减半），换算出失效后仍能悬停的门槛 T/W ≥ 2，并给出菱形→三角形收缩的滚转/俯仰可达集合
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 * [手势控制无人机](./air/gesture_control_drone.md)

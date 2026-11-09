@@ -1,0 +1,23 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "matplotlib": "3.11.2",
+  "scope": "offline: python3 main.py + pytest test (no ROS, no simulator)",
+  "result": {
+    "pytest_passed": 14,
+    "pytest_failed": 0,
+    "hover_thrust_per_rotor_n": 4.9033,
+    "max_thrust_zero_moment_healthy_n": 39.2266,
+    "max_thrust_zero_moment_after_failure_n": 19.6133,
+    "forced_yaw_after_failure_nm": 0.3138,
+    "feasible_area_healthy_nm2": 24.0426,
+    "feasible_area_after_failure_nm2": 6.0106,
+    "pass": true
+  },
+  "ros_validation": {
+    "checked": false,
+    "reason": "本机没有 ROS 2 环境, 只做了 py_compile 语法检查"
+  },
+  "independent_machine_review": false
+}
