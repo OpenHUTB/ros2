@@ -38,7 +38,8 @@ def validate_profile(profile: Any) -> Tuple[List[str], List[str]]:
     if not isinstance(firmware, dict):
         errors.append("firmware must be an object")
     else:
-        if firmware.get("stack") not in {"px4", "ardupilot"}:
+        stack = firmware.get("stack")
+        if not isinstance(stack, str) or stack not in {"px4", "ardupilot"}:
             errors.append("firmware.stack must be px4 or ardupilot")
         if not isinstance(firmware.get("version"), str) or not firmware["version"]:
             errors.append("firmware.version must be a non-empty string")
@@ -110,7 +111,12 @@ def validate_profile(profile: Any) -> Tuple[List[str], List[str]]:
         errors.append("failsafe must be an object")
     else:
         for name in ("rc_loss", "data_link_loss"):
-            if failsafe.get(name) not in {"return", "loiter", "hold"}:
+            value = failsafe.get(name)
+            if not isinstance(value, str) or value not in {
+                "return",
+                "loiter",
+                "hold",
+            }:
                 errors.append(f"failsafe.{name} must be return, loiter or hold")
         minimum_battery = failsafe.get("minimum_battery_percent")
         if type(minimum_battery) is not int or not 10 <= minimum_battery <= 50:
