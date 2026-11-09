@@ -502,11 +502,15 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_6">运行效果</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_7">违规日志记录</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_8">距离预警</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#3d">3D 禁飞区检测</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_7">低空违规测试（默认高度）</a>
+<li class="toctree-l3"><a class="reference internal" href="#_9">低空违规测试（默认高度）</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_8">高空严重违规测试</a>
+<li class="toctree-l3"><a class="reference internal" href="#_10">高空严重违规测试</a>
 </li>
 </ul>
 </li>
@@ -655,12 +659,20 @@ python main.py
 <p>程序启动后会尝试连接 AirSim 模拟器。</p>
 <p><img alt="运行截图" src="../../img/cha/airsim_connect_success.png"/></p>
 <p><strong>说明</strong>：上图为本地启动 AirSim 1.8.1 模拟器并成功连接后的运行结果，获取到无人机位置并完成禁飞区检测</p>
+<h2 id="_7">违规日志记录</h2>
+<p>当检测到无人机违规进入禁飞区时，程序会自动将违规时间、禁飞区名称、经纬度及距离信息记录到当前目录的 <code>violation_log.csv</code> 文件中。</p>
+<p>终端输出示例：
+    [警告] 无人机已经违规闯入禁飞区【Airport】，当前高度 0.7 米，请立即返航！
+    [INFO] 违规记录已保存至 violation_log.csv</p>
+<h2 id="_8">距离预警</h2>
+<p>当无人机距离禁飞区边缘小于 500 米时，系统会输出预警提示，提醒飞手提前规避。</p>
+<p><img alt="距离预警示例" src="../../img/cha/proximity_warning.png"/></p>
 <h2 id="3d">3D 禁飞区检测</h2>
 <p>除了平面坐标外，模块还引入了高度判断。当无人机在禁飞区内且高度超过 120 米时，系统会输出严重违规警告，确保低空空域安全。</p>
-<h3 id="_7">低空违规测试（默认高度）</h3>
+<h3 id="_9">低空违规测试（默认高度）</h3>
 <p>直接运行 <code>python main.py</code>，无人机位于地面（约 0.7 米），触发普通违规警告。</p>
 <p><img alt="低空违规测试" src="../../img/cha/3d_test_low_altitude.png"/></p>
-<h3 id="_8">高空严重违规测试</h3>
+<h3 id="_10">高空严重违规测试</h3>
 <p>临时将代码中的高度变量设为 <code>150.0</code> 米，系统准确识别并触发严重违规警告。</p>
 <p><img alt="高空严重违规测试" src="../../img/cha/3d_test_high_altitude.png"/></p>
 <h2 id="2d">2D 可视化</h2>
