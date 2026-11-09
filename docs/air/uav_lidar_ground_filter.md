@@ -31,12 +31,19 @@ roslaunch uav_lidar_ground_filter main.launch \
 | `max_iterations` | 120 | RANSAC 迭代次数 |
 | `min_range` | 0.5 | 最小水平距离 m |
 | `max_range` | 60.0 | 最大水平距离 m |
+| `max_tilt_deg` | 35.0 | 地面法向量与 +z 的最大夹角；超限的墙面/斜面不当成地面 |
 
 ## 测试
 
 ```bash
 python3 test/test_ground_filter_local.py
-# 7/7 通过
+# 11/11 通过
 ```
 
-覆盖 RANSAC 平面拟合、地面/障碍掩码、比例统计和少于 3 点的异常。
+覆盖 RANSAC 平面拟合、地面/障碍掩码、比例统计、少于 3 点的异常、墙面点数占优时仍返回水平面、纯竖直点报错等场景。
+
+## 大模型使用声明
+
+- 工具：DeepSeek Harness（代码助手）。
+- 辅助范围：文档结构整理、边界测试补充和评审意见回复；RANSAC 核心逻辑、参数和安全行为由作者复核。
+- 责任声明：提交者对代码、测试结果和文档内容负责；大模型生成内容已逐项检查，不替代真实 ROS 环境下的构建与运行验证。
