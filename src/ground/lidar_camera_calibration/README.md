@@ -79,7 +79,7 @@ python3 -m lidar_camera_calibration.run_calibration --views 3
 
 ## 附：大模型使用声明
 
-本模块的代码与文档在编写过程中使用了 Trae 辅助（代码起草、公式核对、文档撰写与绘图脚本调试）。
+本模块的代码与文档在编写过程中使用了 Trae 辅助。
 
 已实际运行验证：`run_calibration`、`sweep_views`、`sweep_noise`、`project_cloud` 四个离线入口，
 以及 ROS 2 节点 `calibration_node`（用 `ros2 topic echo --once` 核对了发布内容）。
