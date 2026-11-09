@@ -337,7 +337,7 @@ ros2 topic pub /mujoco_car_avoidance/cmd_vel geometry_msgs/Twist \
 | 平均速度 \(\bar v\) | \(0.48\,\text{m/s}\)（含长距离低速接近段） |
 | 最大减速度 \(a_{\text{brake}}^{\max}\) | \(5.93\,\text{m/s}^2\)（见下方说明） |
 | 停车耗时 \(t_{\text{stop}}\) | \(9.96\,\text{s}\) |
-| 实时率 \(\rho\) | 100.0 |
+| 实时率 \(\rho\) | 100.0% |
 | 是否碰撞 | 否 |
 
 > **关于最大减速度 5.93 m/s²**：常规减速段按 \(a_{\text{brake}} = 3.5\,\text{m/s}^2\) 限幅；
