@@ -124,8 +124,10 @@ roslaunch mbot_gazebo_lidar_avoid main.launch x:=1.0 y:=0.5 yaw:=1.57
 # 方式一：直接编辑 yaml 后重新启动
 roslaunch mbot_gazebo_lidar_avoid main.launch
 
-# 方式二：rosnode kill 后由 roslaunch 自动重启，或手工重启节点
+# 方式二：结束节点后重新 roslaunch 整个 launch
+# （launch 未配置 respawn="true"，rosnode kill 之后不会自动重启）
 rosnode kill /mbot_lidar_avoid_node
+roslaunch mbot_gazebo_lidar_avoid main.launch
 ```
 
 ## 控制逻辑

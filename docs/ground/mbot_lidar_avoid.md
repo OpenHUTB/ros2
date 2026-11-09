@@ -191,7 +191,7 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 崩溃导致 `/clock` 不再更新，节点仍会在 `scan_timeout` 秒后持续发布零速度，
 不会让最后一条 `cmd_vel` 滞留在控制器里。
 
-## 8.4 话题与 TF
+### 8.4 话题与 TF
 
 | 方向 | 话题 / TF | 发布者 | 说明 |
 | :--- | :--- | :--- | :--- |
@@ -218,7 +218,7 @@ python3 -m pytest tests/test_mbot_lidar_avoid.py -v
 - **回调与发布链路**：真实 `_scan_callback` → `Publisher.publish`
 - **异常输入**：NaN/Inf 过滤、全 NaN、空 `ranges`、`angle_increment` 非法
 - **控制行为**：滞回不抖动、脱困倒车、后方受阻原地旋转、侧向让开
-- **安全保护**：扫描超时、未收到扫描、shutdown 停车
+- **安全保护**：扫描超时（墙钟 watchdog，不依赖 `/clock`）、未收到扫描、shutdown 停车
 - **工程完整性**：launch 内容、CMakeLists 安装规则、`package.xml` 与 `LICENSE`
 
 仿真集成测试 `tests/test_mbot_lidar_avoid_launch.py`（需要 ROS Noetic + Gazebo）：

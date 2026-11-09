@@ -540,6 +540,10 @@ def test_package_xml_metadata_complete():
 
     assert os.path.isfile(os.path.join(PKG, 'LICENSE')), '声明 MIT 但缺少 LICENSE'
 
+    # 两个 gazebo 插件 .so 来自 gazebo_plugins 包，必须在依赖里声明
+    deps = {e.text.strip() for e in root.findall('exec_depend')}
+    assert 'gazebo_plugins' in deps, 'package.xml 缺少 gazebo_plugins 依赖'
+
 
 def test_parameters_come_from_rosparam():
     """同名参数通过 rosparam 覆盖后应生效，验证没有硬编码残留。"""

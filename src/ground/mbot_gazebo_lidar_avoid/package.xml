@@ -19,6 +19,8 @@
   <depend>sensor_msgs</depend>
 
   <exec_depend>gazebo_ros</exec_depend>
+  <!-- libgazebo_ros_diff_drive.so / libgazebo_ros_laser.so 由 gazebo_plugins 提供 -->
+  <exec_depend>gazebo_plugins</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>urdf</exec_depend>
   <exec_depend>rosparam</exec_depend>
