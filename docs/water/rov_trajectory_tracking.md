@@ -422,7 +422,7 @@ python3 eval_offline.py --controllers nn --trajectories 3d_helix --duration 30
 python3 eval_offline.py --duration 60 --max-rmse 0.2   # 当前全部通过
 ```
 
-![离线闭环误差曲线](img/water/rov_trajectory_tracking_offline.png)
+![离线闭环误差曲线](../img/water/rov_trajectory_tracking_offline.png)
 
 指标写入 `results/offline_eval.json`，曲线写入 `results/offline_tracking.png`。对应单元测试不依赖 ROS：`python3 -m unittest discover -s test -p "test_offline_eval.py"`。
 

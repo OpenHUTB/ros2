@@ -1,0 +1,17 @@
+{
+  "note": "已知问题清单：登记在此的问题不计入 tools/check_docs.py 的退出码。每条只能消化一条问题，问题修好后请删除对应条目（工具会提示条目已过期）。",
+  "entries": [
+    {
+      "code": "nav-missing",
+      "path": "mkdocs.yml",
+      "message_contains": "./muscle_arm_cocontraction_simulation.md",
+      "reason": "页面本身还没提交，导航项在 #1015 里处理"
+    },
+    {
+      "code": "link-missing",
+      "path": "docs/humanoid/humanoid_keyboard_control.md",
+      "message_contains": "../water/rov_mujoco.md",
+      "reason": "目标页面不存在（源码在 src/water/rov_mujoco），该指向哪一页要作者确认"
+    }
+  ]
+}

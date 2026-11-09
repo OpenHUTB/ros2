@@ -1,0 +1,47 @@
+name: Tools tests
+
+on:
+  push:
+    paths:
+      - 'tools/**'
+      - 'tests/test_check_docs_local.py'
+      - 'mkdocs.yml'
+      - 'docs/**'
+      - '.github/workflows/tools_tests.yml'
+  pull_request:
+    paths:
+      - 'tools/**'
+      - 'tests/test_check_docs_local.py'
+      - 'mkdocs.yml'
+      - 'docs/**'
+      - '.github/workflows/tools_tests.yml'
+
+jobs:
+  check_docs:
+    name: check_docs tests (no ROS / network)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: python3 -m pip install --upgrade pip pyyaml pytest
+
+      - name: Run unit tests with pytest
+        run: python3 -m pytest tests/test_check_docs_local.py -v
+
+      - name: Run unit tests with the built-in runner
+        run: python3 tests/test_check_docs_local.py
+
+      # 真实仓库检查: 已知问题登记在 tools/check_docs_baseline.json,
+      # 只有新增错误才会让这一步失败（警告不算失败）。
+      - name: Check the real repository
+        run: python3 tools/check_docs.py --baseline tools/check_docs_baseline.json
+
+      - name: Byte-compile the tool
+        run: python3 -m py_compile tools/check_docs.py
