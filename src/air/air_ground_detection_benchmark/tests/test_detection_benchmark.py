@@ -39,6 +39,21 @@ class DetectionBenchmarkTests(unittest.TestCase):
         self.assertAlmostEqual(localization_error, 0.0)
         self.assertAlmostEqual(matched_iou, 1.0)
 
+    def test_setup_installs_sample_data_from_package_path(self):
+        module_root = Path(__file__).resolve().parents[1]
+        setup_text = (module_root / "setup.py").read_text(encoding="utf-8")
+        sample = (
+            module_root
+            / "air_ground_detection_benchmark"
+            / "sample_data"
+            / "sample_frames.json"
+        )
+        self.assertTrue(sample.is_file())
+        self.assertIn(
+            '"air_ground_detection_benchmark/sample_data/sample_frames.json"',
+            setup_text,
+        )
+
     def test_metrics_are_grouped_by_altitude_and_pitch(self):
         frames = [
             {

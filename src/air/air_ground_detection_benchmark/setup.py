@@ -13,7 +13,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         (
             "share/" + package_name + "/sample_data",
-            ["sample_data/sample_frames.json"],
+            ["air_ground_detection_benchmark/sample_data/sample_frames.json"],
         ),
         ("share/" + package_name + "/launch", ["launch/main.launch.py"]),
     ],
