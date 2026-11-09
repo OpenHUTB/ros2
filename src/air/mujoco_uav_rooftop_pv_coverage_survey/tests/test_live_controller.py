@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import torch
 
-from ros2_uav_controller import TrackingCore, image_rgb, load_checkpoint, main, predict_command
+from ros2_uav_controller import TrackingCore, image_rgb, load_checkpoint, main, predict_command, predict_image_command
 from rooftop_pv.dataset import DatasetConfig, generate_dataset
 from rooftop_pv.models import TinyImageController, TinyMLP, TinyUNet
 from rooftop_pv.route import RouteConfig
@@ -24,6 +24,8 @@ def test_tracking_stops_for_missing_stale_mismatched_or_finished_input():
     core.set_route([(0.0, 0.0), (10.0, 0.0)], "odom")
     assert core.command(0.0)[2]["state"] == "frame_mismatch"
     core.set_route([(0.0, 0.0), (10.0, 0.0)], "map")
+    assert core.command(0.0)[2]["state"] == "waiting_image"
+    core.set_image(np.zeros((4, 4, 3), dtype=np.uint8), 0.0)
     forward, turn, status = core.command(0.0)
     assert 0 < forward <= core.max_speed
     assert -core.max_yaw_rate <= turn < 0
@@ -99,3 +101,39 @@ def test_replay_without_checkpoint_uses_deterministic_expert(tmp_path: Path, cap
     main(["--replay", str(replay)])
     assert capsys.readouterr().out == first
     assert json.loads(first)["controller"] == "geometric_expert"
+
+
+@pytest.mark.parametrize("model_class", [None, TinyMLP, TinyImageController])
+def test_all_live_controllers_require_a_fresh_image(model_class):
+    kwargs = {}
+    if model_class is TinyMLP:
+        kwargs["control_model"] = model_class()
+    elif model_class is TinyImageController:
+        kwargs["end_to_end_model"] = model_class()
+    core = TrackingCore(**kwargs)
+    core.set_pose(0.0, 0.0, 0.0, "map", 0.0)
+    core.set_route([(0.0, 0.0), (10.0, 0.0)], "map")
+    assert core.command(0.0)[:2] == (0.0, 0.0)
+    assert core.command(0.0)[2]["state"] == "waiting_image"
+    core.set_image(np.zeros((4, 4, 3), dtype=np.uint8), 0.0)
+    core.set_pose(0.0, 0.0, 0.0, "map", 2.0)
+    assert core.command(2.0)[:2] == (0.0, 0.0)
+    assert core.command(2.0)[2]["state"] == "stale_image"
+
+
+def test_live_image_controller_uses_trained_checkpoint(tmp_path):
+    generate_dataset(tmp_path, RouteConfig(), DatasetConfig(frames_per_scene=3, image_width=16, image_height=16))
+    result = train_end_to_end(tmp_path, epochs=1)
+    model = load_checkpoint(tmp_path / result["checkpoint"], TinyImageController)
+    rgb = np.full((8, 10, 3), 80, dtype=np.uint8)
+    expected = predict_image_command(model, rgb)
+    core = TrackingCore(end_to_end_model=model, max_speed=0.2, max_yaw_rate=0.1)
+    core.set_pose(0.0, 0.0, 0.0, "map", 0.0)
+    core.set_route([(0.0, 0.0), (5.0, 0.0)], "map")
+    core.set_image(rgb, 0.0)
+    forward, turn, status = core.command(0.0)
+    assert forward == pytest.approx(max(0.0, min(0.2, expected[0])))
+    assert turn == pytest.approx(max(-0.1, min(0.1, expected[1])))
+    assert status["controller"] == "trained_image"
+    assert status["state"] == "tracking"
+    assert (forward, turn) != (0.2, 0.0)
