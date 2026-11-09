@@ -1,0 +1,4 @@
+numpy
+PyYAML
+# carla 客户端从 CARLA 发行版安装（见 docs：set_up_and_connect_to_carla）：
+#   pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-*.whl

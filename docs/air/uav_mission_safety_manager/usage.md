@@ -8,8 +8,8 @@
 
 ```bash
 source /opt/ros/foxy/setup.bash
-rosdep install --from-paths src/air/uav_mission_safety_manager --ignore-src --rosdistro foxy -r -y
-colcon build --symlink-install --packages-select uav_mission_safety_manager
+rosdep install --from-paths src/air/uav_mission_interfaces src/air/uav_mission_safety_manager --ignore-src --rosdistro foxy -r -y
+colcon build --symlink-install --packages-up-to uav_mission_safety_manager
 source install/setup.bash
 ```
 
