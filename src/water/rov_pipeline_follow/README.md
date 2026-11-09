@@ -98,8 +98,12 @@ cd src/water/rov_pipeline_follow
 python -m rov_pipeline_follow.main                 # 采集→BC→DAgger→评测→出图
 python -m rov_pipeline_follow.main --quick         # 少种子少轮次
 python -m rov_pipeline_follow.main --stage eval    # 只评测
-python -m pytest test/ -q                          # 55 个用例
+python -m pytest test/ -q                          # 无 rclpy：55 passed；装了 rclpy：49 passed, 6 skipped
 ```
+
+`test/test_nodes_ros.py` 的 6 个用例用 `fake_ros` 替身，检测到真实 `rclpy` 会自动
+skip，所以在 Ubuntu + Humble 上看到 `49 passed, 6 skipped` 是正常的；这 6 个用例
+对应的端到端行为用下面的 `ros2 launch` 验证。
 
 训练数据只来自清水场景（`straight` / `curve`），浑水（`turbid`）与横流
 （`current`）**只做测试**——检验的是泛化，不是背布局。
@@ -162,10 +166,13 @@ python -m pytest test/ -q                          # 55 个用例
 | 端到端 CNN | 3/3 | 3/3 | 3/3 | 0/3 | **9/12** |
 | 端到端（目标通道置零） | 3/3 | 3/3 | 3/3 | 0/3 | **9/12** |
 
-清水里经典流水线横向误差 0.11 m、ATE 0.29 m，往返 34 m 之后回环闭合误差
-只有 0.04 m。两类策略拿到同样的分数，但失败维度完全不同：流水线崩在横流
-（SLAM 定位），端到端崩在浑水（没见过的图像分布）。另有 pipe_cnn（CNN 回归
-替代几何检测）作为负面结果记录在文档 §7.3。
+清水里经典流水线横向误差 0.11 m（直管）/ 0.27 m（S 弯）、ATE 0.29 / 0.50 m，
+往返 34 m 之后直管回环闭合误差只有 0.04 m。两类策略拿到同样的分数，但失败维度
+完全不同：流水线崩在横流（SLAM 定位），端到端崩在浑水（没见过的图像分布）。
+另有 pipe_cnn（CNN 回归替代几何检测）作为负面结果记录在文档 §7.3。
+
+"目标通道置零"那一行与不置零同为 9/12、逐场景方向不一致，**不能当作消融有效的
+证据**——它说明的是端到端策略并不依赖该通道。
 
 ## 已知局限
 
