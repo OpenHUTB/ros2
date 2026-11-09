@@ -378,10 +378,27 @@ def test_launch_spawns_mbot_and_loads_params():
 
 def test_urdf_has_diff_drive_and_laser():
     tree = ET.parse(os.path.join(PKG, 'urdf', 'mbot_lidar.urdf'))
-    text = ET.tostring(tree.getroot(), encoding='unicode')
+    plugins = list(tree.getroot().iter('plugin'))
 
-    assert 'gazebo_ros_diff_drive' in text
-    assert 'libgazebo_ros_laser.so' in text
+    # 插件必须用 filename（缺 filename 会让 Gazebo 解析 URDF->SDF 失败、spawn 不成功）
+    filenames = []
+    for plugin in plugins:
+        filename = plugin.get('filename')
+        assert filename, '插件 %r 缺少 filename' % plugin.get('name')
+        filenames.append(filename)
+
+    assert 'libgazebo_ros_diff_drive.so' in filenames
+    assert 'libgazebo_ros_laser.so' in filenames
+
+
+def test_readme_does_not_build_repo_root():
+    """README 不能推荐用仓库根目录直接 catkin_make（会把 ROS2/CARLA/MuJoCo 包一起编译）。"""
+    with open(os.path.join(PKG, 'README.md'), 'r', encoding='utf-8') as f:
+        readme = f.read()
+
+    assert '不要直接用仓库根目录' in readme
+    assert 'catkin_make --only-pkg-with-deps' in readme
+    assert '~/mbot_ws' in readme
 
 
 def test_cmakelists_installs_launch_and_config():

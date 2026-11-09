@@ -24,29 +24,42 @@ sudo apt install -y ros-noetic-gazebo-ros ros-noetic-gazebo-ros-pkgs \
 
 ## 构建
 
-本包位于仓库的 `src/ground/mbot_gazebo_lidar_avoid`，需要放进 catkin 工作空间的 `src/` 下才能编译。
+本包必须放进 catkin 工作空间的 `src/` 下才能编译。**不要直接用仓库根目录 `catkin_make`**：
+仓库的 `src/` 里还有 ROS 2（ament）以及依赖 CARLA / MuJoCo 的包，会被一起配置并大概率失败。
 
-方式一：直接把仓库作为工作空间（仓库根目录即 catkin 工作空间）：
+方式一（推荐）：新建独立工作空间，只放入本包：
 
 ```bash
-cd <仓库根目录>
+mkdir -p ~/mbot_ws/src
+cp -r <仓库根目录>/src/ground/mbot_gazebo_lidar_avoid ~/mbot_ws/src/
+cd ~/mbot_ws
 catkin_make
 source devel/setup.bash
 ```
 
-方式二：已经有一个 `~/catkin_ws`，把本包软链接进去：
+方式二：已有 `~/catkin_ws`，把本包软链接进去：
 
 ```bash
-ln -s <仓库根目录>/src/ground/mbot_gazebo_lidar_avoid ~/catkin_ws/src/mbot_gazebo_lidar_avoid
+mkdir -p ~/catkin_ws/src
+ln -s <仓库根目录>/src/ground/mbot_gazebo_lidar_avoid \
+      ~/catkin_ws/src/mbot_gazebo_lidar_avoid
 cd ~/catkin_ws
 catkin_make
+source devel/setup.bash
+```
+
+方式三：确实要在多包仓库里原地编译时，只构建本包及其依赖：
+
+```bash
+cd <仓库根目录>
+catkin_make --only-pkg-with-deps mbot_gazebo_lidar_avoid
 source devel/setup.bash
 ```
 
 安装到 install 空间（可选，用于验证资源文件是否正确安装）：
 
 ```bash
-cd ~/catkin_ws
+cd ~/mbot_ws
 catkin_make install
 source install/setup.bash
 ```
@@ -125,14 +138,22 @@ rosparam set /mbot_lidar_avoid_node/safe_distance 1.0
 
 ## 测试
 
-仓库级 pytest 测试（桩化 rospy，不需要 ROS / Gazebo）：
+离线单元测试（桩化 rospy，不需要 ROS / Gazebo）：
 
 ```bash
 python3 -m pytest tests/test_mbot_lidar_avoid.py -v
 ```
 
-覆盖扫描回调、发布链路、超时停车、退出停车、滞回、脱困分支、
-不同束数 / `angle_min` 的扇区换算，以及 launch / 资源文件的安装完整性。
+仿真集成测试（需要 ROS Noetic + Gazebo）。默认只做静态校验（URDF 插件属性、launch 节点解析）；
+设置 `MBOT_LAUNCH_TEST=1` 后会真正拉起 Gazebo（headless），验证 `/scan`、`/odom`、`/cmd_vel` 是否连通：
+
+```bash
+# 静态校验
+python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
+
+# 端到端：自动启动与关闭 Gazebo
+MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
+```
 
 ## 许可证
 

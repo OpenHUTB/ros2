@@ -59,12 +59,15 @@ src/ground/mbot_gazebo_lidar_avoid/
 
 ## 5. 构建
 
-本包必须放进 catkin 工作空间的 `src/` 下才能编译。
+本包必须放进 catkin 工作空间的 `src/` 下才能编译。**不要直接用仓库根目录 `catkin_make`**：
+仓库 `src/` 中还有 ROS 2（ament）以及依赖 CARLA / MuJoCo 的包，会被一起配置并大概率失败。
 
-方式一：以仓库根目录作为 catkin 工作空间：
+方式一（推荐）：新建独立工作空间，只放入本包：
 
 ```bash
-cd <仓库根目录>
+mkdir -p ~/mbot_ws/src
+cp -r <仓库根目录>/src/ground/mbot_gazebo_lidar_avoid ~/mbot_ws/src/
+cd ~/mbot_ws
 catkin_make
 source devel/setup.bash
 ```
@@ -80,10 +83,18 @@ catkin_make
 source devel/setup.bash
 ```
 
+方式三：确实要在多包仓库里原地编译时，只构建本包及其依赖：
+
+```bash
+cd <仓库根目录>
+catkin_make --only-pkg-with-deps mbot_gazebo_lidar_avoid
+source devel/setup.bash
+```
+
 验证安装空间（可选）：
 
 ```bash
-cd ~/catkin_ws
+cd ~/mbot_ws
 catkin_make install
 source install/setup.bash
 ```
@@ -189,6 +200,16 @@ python3 -m pytest tests/test_mbot_lidar_avoid.py -v
 - **控制行为**：滞回不抖动、脱困倒车、后方受阻原地旋转、侧向让开
 - **安全保护**：扫描超时、未收到扫描、shutdown 停车
 - **工程完整性**：launch 内容、CMakeLists 安装规则、`package.xml` 与 `LICENSE`
+
+仿真集成测试 `tests/test_mbot_lidar_avoid_launch.py`（需要 ROS Noetic + Gazebo）：
+
+```bash
+# 静态校验：URDF 插件 filename、check_urdf、roslaunch --nodes 解析
+python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
+
+# 端到端：自动启动 headless Gazebo，验证 /scan、/odom、/cmd_vel 有数据
+MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
+```
 
 ## 10. 实验指标
 

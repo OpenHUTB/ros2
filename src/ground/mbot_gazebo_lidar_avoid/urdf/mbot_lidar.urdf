@@ -176,7 +176,7 @@
 
   <!-- 底盘差速驱动插件 -->
   <gazebo>
-    <plugin name="diff_drive" type="gazebo_ros_diff_drive">
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
       <left_joint>left_wheel_joint</left_joint>
       <right_joint>right_wheel_joint</right_joint>
       <wheel_separation>0.38</wheel_separation>
