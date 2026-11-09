@@ -86,6 +86,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [人形机器人手臂逆运动学（7-DOF IK + UR10 仿真）](./humanoid/arm_ik.md)
 <<<<<<< feature/humanoid-arm-ik
 * [人形机器人手臂逆运动学（7-DOF IK + UR10 仿真）](./humanoid/arm_ik.md)
 * [人形机器人手臂逆运动学（7-DOF IK + UR10 仿真）](./humanoid/arm_ik.md)
