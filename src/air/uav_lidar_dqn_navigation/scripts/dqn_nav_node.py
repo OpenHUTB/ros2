@@ -41,7 +41,8 @@ def _package_path():
 
 from dqn_agent import DQNAgent  # noqa: E402
 from dqn_network import ACTIONS, ACTION_NAMES, NUM_ACTIONS  # noqa: E402
-from lidar_features import goal_state, velocity_state  # noqa: E402
+from lidar_features import MAX_RANGE, goal_state, velocity_state  # noqa: E402
+from safety_shield import select_action  # noqa: E402
 
 
 class DQNNavNode(object):
@@ -49,7 +50,8 @@ class DQNNavNode(object):
         self.rate_hz = float(rospy.get_param('~rate', 10.0))
         self.model_path = rospy.get_param(
             '~model_path', os.path.join(_package_path(), 'models', 'dqn_nav.pt'))
-        self.safety_dist = float(rospy.get_param('~safety_dist', 0.8))
+        # 硬兜底：贴到 0.35 m 才强制悬停；1.0 m 内由安全层屏蔽前向动作
+        self.safety_dist = float(rospy.get_param('~safety_dist', 0.35))
         # 建图时降低速度：hector 的扫描匹配假设帧间位移很小
         self.speed_scale = float(rospy.get_param('~speed_scale', 1.0))
         self.goal = (rospy.get_param('~goal_x', 15.0),
@@ -105,17 +107,18 @@ class DQNNavNode(object):
             state = self._build_state()
             action = 0
             if os.path.exists(self.model_path):
-                action = self.agent.act(state, epsilon=0.0)
+                # 安全层先把会撞的动作屏蔽，再在剩余动作里取 Q 最大
+                action = select_action(self.agent.q_values(state), self.sectors)
 
-            # 安全兜底：贴得太近就悬停，交给下一拍重新决策
-            nearest = float(np.min(self.sectors)) * 40.0
+            # 硬兜底：已经贴到 0.35 m 就悬停，交给下一拍重新决策
+            nearest = float(np.min(self.sectors)) * MAX_RANGE
             if nearest < self.safety_dist:
                 action = 0
 
-            vx, yaw_rate, vz = ACTIONS[action]
+            vx, yaw_rate = ACTIONS[action]
             cmd = Twist()
             cmd.linear.x = float(vx) * self.speed_scale
-            cmd.linear.z = float(vz) * self.speed_scale
+            cmd.linear.z = 0.0
             cmd.angular.z = float(yaw_rate)
             self.cmd_pub.publish(cmd)
             self.act_pub.publish(Int32(data=int(action)))

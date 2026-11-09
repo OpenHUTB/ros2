@@ -130,7 +130,8 @@ $$
 经验回放缓冲区打散样本相关性，目标网络 `θ⁻` 定期从在线网络软/硬更新，
 损失为 Huber 形式，探索用 ε-greedy 并随回合衰减。
 
-奖励由三部分组成：接近目标为正、远离为负，碰撞大幅扣分，到达目标给终止奖励。
+奖励由距离进度、朝向对齐、时间惩罚、近障惩罚四部分组成：1.2 m 内障碍按距离
+线性扣分，0.5 m 内按事故终止（-20），碰撞 -30，到达目标 +60。
 训练入口：
 
 ```bash
@@ -138,8 +139,9 @@ roslaunch uav_lidar_dqn_navigation train.launch episodes:=200
 rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 ```
 
-权重与日志写入 `models/`：`dqn_nav.pt`（最新）、`dqn_nav_best.pt`（近 20 回合
-成功率最高）、`train_nav_log.csv`（每回合累计奖励、步数、是否成功）。
+权重与日志写入 `models/`：`dqn_nav.pt`（当前最佳，部署默认加载）、
+`dqn_nav_best.pt`（同一份最佳权重）、`dqn_nav_last.pt`（最后一回合）、
+`train_nav_log.csv`（每回合累计奖励、步数、成功/碰撞/近失标记）。
 
 ## 6 DQN 导航部署
 
@@ -147,8 +149,13 @@ rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 按训练时的同一套特征拼出 32 维状态，取 Q 值最大的动作下发 `/drone/cmd_vel`。
 权重默认从包内 `models/dqn_nav.pt` 加载，可用 `~model_path` 覆盖。
 
-安全策略：前向最小障碍距离小于 0.8 m 时强制悬停，不执行网络输出；速度按
-`speed_scale` 缩放，建图时用 0.5 兼顾扫描重叠。
+安全层（`safety_shield.py`）：DQN 学的是“朝目标飞”，障碍进入训练分布外的
+近距范围时 Q 值区分度会变小。部署时先用 24 扇区距离屏蔽会撞的动作——
+正前方 1.0 m 内有障碍时禁用直行/左前/右前，单侧 0.9 m 内有障碍时禁用该侧
+斜向动作，再在剩余动作里取 Q 最大；贴到 0.35 m 时强制悬停。这样既保留
+学习到的导航偏好，又不会贴着墙直行。
+
+速度按 `speed_scale` 缩放，建图时用 0.5 兼顾扫描重叠。
 
 ```bash
 # 纯导航，目标点 (15, 10)

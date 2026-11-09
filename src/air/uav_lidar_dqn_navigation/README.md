@@ -95,6 +95,12 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
 hector_slam 不做里程计融合、依赖扫描匹配初值，在本场景的稀疏 180° 雷达上
 实测会跟丢、地图呈扇形，因此改用 gmapping；对比实验见模块文档。
 
+### 部署安全层
+
+`dqn_nav_node.py` 在取 Q 最大动作前先用 `safety_shield.py` 过滤：正前方
+1.0 m 内禁用直行与两个斜向动作，单侧 0.9 m 内禁用该侧斜向动作，贴到 0.35 m
+强制悬停。屏蔽后仍在剩余动作里取 Q 最大，转向/悬停仍由网络决定。
+
 ## 训练
 
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
