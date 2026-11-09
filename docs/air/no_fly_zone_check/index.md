@@ -42,6 +42,28 @@ $$
 
 程序启动后会尝试连接 AirSim 模拟器。
 
-![运行截图](../../img/cha/no_fly_zone_check_airsim_result.png)
+![运行截图](../../img/cha/airsim_connect_success.png)
 
 **说明**：上图为本地启动 AirSim 1.8.1 模拟器并成功连接后的运行结果，获取到无人机位置并完成禁飞区检测
+
+## 3D 禁飞区检测
+
+除了平面坐标外，模块还引入了高度判断。当无人机在禁飞区内且高度超过 120 米时，系统会输出严重违规警告，确保低空空域安全。
+
+### 低空违规测试（默认高度）
+直接运行 `python main.py`，无人机位于地面（约 0.7 米），触发普通违规警告。
+
+![低空违规测试](../../img/cha/3d_test_low_altitude.png)
+
+### 高空严重违规测试
+临时将代码中的高度变量设为 `150.0` 米，系统准确识别并触发严重违规警告。
+
+![高空严重违规测试](../../img/cha/3d_test_high_altitude.png)
+
+## 2D 可视化
+
+无需启动 AirSim，直接生成禁飞区平面图（红圈为禁飞区，绿色三角为无人机位置）：
+    cd src/air/no_fly_zone_check
+    python visualize.py
+
+![禁飞区 2D 可视化](../../img/cha/no_fly_zone_check_visualization.png)
