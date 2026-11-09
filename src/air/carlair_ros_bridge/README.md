@@ -54,6 +54,7 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   （载具惯性系，NED 世界系），与 `/uav/odom` 同源，建图/规划无需额外外参；
   若改为 `SensorLocalFrame`，需把 `sensor/lidar_frame` 同步改为 `sensor_local`，
   桥接层会用 `LidarData.pose` 把点云变换到惯性系后再转 ENU；
+
 - 点云可选环形滤波（`lidar/min_range`、`max_range`）与体素降采样（`lidar/voxel_leaf`）；
 - **IMU**：`/imu` 的姿态是 ENU 世界系，角速度和线加速度已从 AirSim 机体系 NED
   转成 ROS 机体系 FLU（前-左-上）；线加速度包含重力分量，做纯运动加速度时需自行扣除。
@@ -63,6 +64,14 @@ Windows（有显卡）                      Ubuntu 20.04 虚拟机
   `fx = W / (2·tan(FOV/2))`，主点在图像中心；深度按 `X=(u-cx)Z/fx`、`Y=(v-cy)Z/fy` 反投影，
   过滤 `Z<=0`、`Z>=100 m` 和 65504 哨兵值。相机 TF 为 `base_link → front_rgb/front_depth`，
   安装偏移由 `camera/mount_x/y/z` 配置（默认 0.3/0/0.1 m）。
+- **里程计协方差**：`/uav/odom` 的 pose/twist 对角协方差已填（位置/速度 0.01，姿态/角速度 0.1），可直接给 robot_localization/EKF 使用；严格标定时按实际噪声替换。
+- **深度避障**：`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方
+  `|x|<=lateral_limit`、`|y|<=vertical_limit`、`min_range<=z<=max_range` 走廊内最近点；
+  `d<=stop_distance` 停车，`stop<d<slow` 线性减速，`d>=slow` 全速。
+  默认关闭，demo 时加 `enable_depth_avoidance:=true`。无点云、空点云或点云超时
+  （`cloud_timeout`）时发布 0 速度，避免 fail-open。
+- **一键 demo**：`roslaunch carlair_ros_bridge depth_demo.launch host:=<Windows_IP>`，
+  自动起 `main.launch` 和 RViz，直接看 `/camera/depth/points` 与避障过程。
 - **性能**：`settings.json` 里雷达的 `Range` 与 `Range` 之外的 `PointsPerSecond` 直接决定
   仿真器每帧的射线投射开销。默认给了 `Range: 15.0`、`PointsPerSecond: 40000`
   （只比上游策略用到的 12 m 略大）；若在楼群等高密度场景下发现单步 RPC 变慢，
@@ -185,6 +194,7 @@ python3 tests/test_bridge_local.py    # 桥接状态机与工程文件  31 项
 python3 tests/test_sensors_local.py   # 图像/点云与工程文件   80 项
 python3 tests/test_imu_local.py       # IMU 轴变换/消息/工程文件
 python3 tests/test_camera_model_local.py  # CameraInfo/深度点云/相机 TF
+python3 tests/test_depth_avoidance_local.py  # 深度避障逻辑
 ```
 
 `test_sensors_local.py` 用桩替代 `rospy` 与 `sensor_msgs`，覆盖：
@@ -195,5 +205,17 @@ python3 tests/test_camera_model_local.py  # CameraInfo/深度点云/相机 TF
 - 环形滤波、体素降采样、`PointCloud2` 字节布局（`point_step=12`、字段偏移 0/4/8、小端 float32）；
 - 两个节点 `step_once()` 的发布行为与参数一致性；
 - `_raise_msgpack_limits` 补丁：新版 msgpack 注入长度上限、老版跳过、幂等。
+
+## 诊断工具 bridge_doctor
+
+`bridge_doctor.py` 检查 `/uav/odom`、`/camera/image_raw`、`/camera/depth`、`/lidar/points`
+的实际频率和 `world -> base_link` TF：
+
+```bash
+rosrun carlair_ros_bridge bridge_doctor.py --duration 5
+rosrun carlair_ros_bridge bridge_doctor.py --skip-tf
+```
+
+输出 `PASS / LOW / NO_DATA` 表格，有 FAIL 时退出码为 1。
 
 `test_imu_local.py` 用桩覆盖 IMU 的机体系 NED→FLU 轴变换、`sensor_msgs/Imu` 的字段与协方差，以及 CMakeLists / main.launch / bridge.yaml 的一致性。
