@@ -64,6 +64,7 @@ nav:
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
     - 9. ROS 2: './chapter/chap9.md'
 - 人形机器人:
+    - 人形机器人视觉通行感知与室内巡检: './humanoid/humanoid_visual_patrol/index.md'
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'

@@ -4,6 +4,8 @@
 
 欢迎使用 OpenHUTB 的  ROS 文档 [@macenski2022robot]。
 
+人形机器人示例：[视觉通行感知与室内巡检](./humanoid/humanoid_visual_patrol/index.md)，包含 MuJoCo G1、RGB 分割控制、同步 SLAM 导航和图像速度策略。
+
 <span id="submission-guide"></span>
 **提交项目之前**，请按以下指引自查，并阅读[仓库提交约定](https://github.com/OpenHUTB/ros2#注意事项)。PR 模板只列常见检查项；具体任务、模拟器和验收要求以老师及维护者说明为准。
 
