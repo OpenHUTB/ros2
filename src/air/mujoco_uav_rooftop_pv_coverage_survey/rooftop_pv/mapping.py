@@ -51,6 +51,6 @@ def map_and_navigate(dataset: Path, grid_size: int = 64) -> dict[str, Any]:
         "route_frames": len(rows),
         "route_replay_progress": float(completed_frames / total_expected) if total_expected else 0.0,
         "sensor": "downward_rgb_pv_mask",
-        "slam_mode": "synchronized_pose_fusion",
+        "mapping_mode": "synchronized_pose_fusion",
     }
 
