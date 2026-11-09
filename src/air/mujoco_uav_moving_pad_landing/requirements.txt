@@ -4,3 +4,4 @@ opencv-python-headless==4.10.0.84
 scikit-learn==1.6.1
 Pillow==11.1.0
 joblib==1.4.2
+pytest>=7,<9
