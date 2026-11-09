@@ -71,7 +71,7 @@ ros2 launch uav_e2e_rl e2e_deploy.launch.py
 - 权重路径 `model_path` 参数留空时，用 `ament_index_python.get_package_share_directory` 定位 `share/uav_e2e_rl/models/ppo_e2e.zip`
 - 第一帧图像到之前不预测（避免全黑图乱输出）
 - 动作裁剪到 [0,2] / [-1,1]
-- **急停**：`/camera/depth` 前向扇区最小深度 < `collision_depth`（默认 0.6 m）时直接发零速，覆盖模型的输出
+- 急停：`/camera/depth` 前向扇区最小深度 < `collision_depth`（默认 0.6 m）时直接发零速，不管模型输出什么
 
 ## 参数
 
