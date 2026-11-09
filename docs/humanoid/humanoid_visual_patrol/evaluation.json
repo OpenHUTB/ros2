@@ -969,5 +969,125 @@
       0.0011569717898964882
     ],
     "scope": "synthetic occupancy maps; not visual training scenes"
+  },
+  "perception_9": {
+    "mode": "perception",
+    "scene_seed": 9,
+    "simulated_seconds": 31.439999999993454,
+    "wall_seconds": 4.430427312850952,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.5020529612010725,
+      -0.9344328852960936,
+      0.7773054296349473
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.03544455567901597
+  },
+  "perception_10": {
+    "mode": "perception",
+    "scene_seed": 10,
+    "simulated_seconds": 30.41999999999402,
+    "wall_seconds": 3.4013195037841797,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.502263401781641,
+      -1.1874273503767911,
+      0.7735630895421056
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.05658640509787874
+  },
+  "perception_11": {
+    "mode": "perception",
+    "scene_seed": 11,
+    "simulated_seconds": 30.819999999993797,
+    "wall_seconds": 3.7954225540161133,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.50444187888058,
+      -0.9793791840700157,
+      0.7678394853311956
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.021790147097236014
+  },
+  "perception_12": {
+    "mode": "perception",
+    "scene_seed": 12,
+    "simulated_seconds": 30.699999999993864,
+    "wall_seconds": 3.201212167739868,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.501021051329815,
+      -1.1233923591479789,
+      0.7770555982312694
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.04592932339707591
+  },
+  "end2end_9": {
+    "mode": "end2end",
+    "scene_seed": 9,
+    "simulated_seconds": 29.559999999994496,
+    "wall_seconds": 2.964218854904175,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.505344022030739,
+      -0.5925750182237367,
+      0.7767791604811192
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.03564252525587454
+  },
+  "end2end_10": {
+    "mode": "end2end",
+    "scene_seed": 10,
+    "simulated_seconds": 29.99999999999425,
+    "wall_seconds": 15.170369863510132,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.502644446115033,
+      -0.21897350089130785,
+      0.771064878556972
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.05675195153087234
+  },
+  "end2end_11": {
+    "mode": "end2end",
+    "scene_seed": 11,
+    "simulated_seconds": 30.619999999993908,
+    "wall_seconds": 3.099447011947632,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.504029707618278,
+      -0.7136290023136964,
+      0.7776695657480839
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.026391199870822925
+  },
+  "end2end_12": {
+    "mode": "end2end",
+    "scene_seed": 12,
+    "simulated_seconds": 31.13999999999362,
+    "wall_seconds": 2.786536693572998,
+    "fallen": false,
+    "reached": true,
+    "final_position": [
+      7.504242986277308,
+      -0.8676467751623445,
+      0.7774885119970814
+    ],
+    "collision_steps": 0,
+    "odometry_error_m": 0.0451717146363518
   }
 }

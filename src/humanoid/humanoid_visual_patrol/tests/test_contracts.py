@@ -9,6 +9,19 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from patrol.vision import mask_command
 
 
+def test_deployed_perception_stops_when_segmentation_finds_no_floor():
+    import torch
+    from patrol.vision import VisionPolicy
+    policy = VisionPolicy(Path(__file__).resolve().parents[1] / 'models/perception.pt', 'perception')
+    class NoFloor(torch.nn.Module):
+        def forward(self, image):
+            return torch.full((1, 1, 96, 128), -100.0)
+    policy.net = NoFloor()
+    command, mask = policy.command(np.zeros((96,128,3), dtype=np.uint8))
+    assert not mask.any()
+    assert np.array_equal(command, [0, 0])
+
+
 def test_no_floor_does_not_command_forward_motion():
     assert mask_command(np.zeros((96,128),dtype=np.uint8))[0] == 0
 

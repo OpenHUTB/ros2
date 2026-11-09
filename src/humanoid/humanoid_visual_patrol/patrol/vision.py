@@ -80,6 +80,10 @@ class VisionPolicy:
             mask = (output.sigmoid()[0, 0].numpy()>.5).astype(np.float32)
             with torch.inference_mode():
                 command = self.controller(torch.from_numpy(mask)[None,None])[0].numpy()
+            # A learned controller can extrapolate a forward command even when
+            # segmentation detects no floor. Stop on this unambiguous failure.
+            if not mask.any():
+                command = np.zeros(2, dtype=np.float32)
             return np.clip(command,[0,-.45],[.3,.45]), mask
         command = output[0].numpy()
         return np.clip(command, [0, -.45], [.3, .45]), None

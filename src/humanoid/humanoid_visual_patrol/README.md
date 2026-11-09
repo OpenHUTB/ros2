@@ -13,13 +13,14 @@
 | 建图导航 | `launch/main.launch` 默认 navigation | 模拟雷达及积分里程计 → gmapping → CostNet 辅助 A* → move_base → G1 |
 | 端到端 | `--mode end2end` | RGB → ImageController → 前进/转向速度 → 预训练步态 |
 
-任务二的分割与语义控制网络分别训练，规则通道选择只用于生成示范及对照；任务三使用经典 gmapping、CostNet 辅助全局 A* 和 move_base 局部避障，是混合规划方案，并非神经网络 SLAM。任务四直接输出高层速度，不是图像到关节力矩。底层步态是第三方预训练策略，不计作本项目训练成果。
+任务二的分割与语义控制网络分别训练，规则通道选择只用于生成示范及对照；部署时若分割图完全没有地面像素，额外的规则保护会将速度和转向置零，并不代表网络自身能处理这种情况。该保护不覆盖少量误分割或所有障碍。任务三使用经典 gmapping、CostNet 辅助全局 A* 和 move_base 局部避障，是混合规划方案，并非神经网络 SLAM。任务四直接输出高层速度，不是图像到关节力矩。底层步态是第三方预训练策略，不计作本项目训练成果。
 
 本示例的终线是通行测试终点，场景标记不触发巡检事件。
 
 ## 已验证环境
 
 - 当前复现步骤仅验证源码空间运行，不保证 catkin install 空间运行。
+- `catkin_make` 源码空间构建通过；`catkin_make install` 构建通过，但安装空间只有 scripts/launch/config，不含 `models/` 与 `patrol` 包，因此仍按源码空间运行。
 - Windows 11，Python 3.11.15，MuJoCo 3.2.0，PyTorch 2.15.0+cpu：物理仿真、图像采集、训练、离屏录像。
 - WSL2 Ubuntu 20.04.5，ROS Noetic，Python 3.8.10：gmapping、move_base 和 ROS 桥。
 - Windows 和 WSL 用子进程标准输入输出连接，不需要开放网络端口给仿真器。
@@ -90,7 +91,7 @@ Ctrl+C 退出 launch 后桥接进程会关闭其仿真子进程。
 ## 本地验证
 
 ```bash
-python -m pip install pytest
+python -m pip install -r requirements-dev.txt
 # Linux: export HUMANOID_ASSETS=/path/to/unitree_rl_gym
 # PowerShell: $env:HUMANOID_ASSETS='F:/path/to/unitree_rl_gym'
 python -m pytest tests -q
