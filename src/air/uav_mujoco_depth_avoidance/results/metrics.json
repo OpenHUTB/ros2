@@ -1,0 +1,184 @@
+{
+  "training": [
+    {
+      "epoch": 1,
+      "train_mse": 0.019376,
+      "val_mae_left": 0.0872,
+      "val_mae_center": 0.0786,
+      "val_mae_right": 0.0711
+    },
+    {
+      "epoch": 2,
+      "train_mse": 0.008334,
+      "val_mae_left": 0.0643,
+      "val_mae_center": 0.0702,
+      "val_mae_right": 0.0528
+    },
+    {
+      "epoch": 3,
+      "train_mse": 0.005885,
+      "val_mae_left": 0.0508,
+      "val_mae_center": 0.0616,
+      "val_mae_right": 0.0537
+    },
+    {
+      "epoch": 4,
+      "train_mse": 0.004685,
+      "val_mae_left": 0.0399,
+      "val_mae_center": 0.0546,
+      "val_mae_right": 0.0433
+    },
+    {
+      "epoch": 5,
+      "train_mse": 0.003923,
+      "val_mae_left": 0.0371,
+      "val_mae_center": 0.0526,
+      "val_mae_right": 0.0418
+    },
+    {
+      "epoch": 6,
+      "train_mse": 0.003382,
+      "val_mae_left": 0.0352,
+      "val_mae_center": 0.0488,
+      "val_mae_right": 0.0379
+    },
+    {
+      "epoch": 7,
+      "train_mse": 0.003142,
+      "val_mae_left": 0.0321,
+      "val_mae_center": 0.0545,
+      "val_mae_right": 0.0382
+    },
+    {
+      "epoch": 8,
+      "train_mse": 0.00301,
+      "val_mae_left": 0.0338,
+      "val_mae_center": 0.047,
+      "val_mae_right": 0.0388
+    },
+    {
+      "epoch": 9,
+      "train_mse": 0.002674,
+      "val_mae_left": 0.0301,
+      "val_mae_center": 0.0443,
+      "val_mae_right": 0.0377
+    },
+    {
+      "epoch": 10,
+      "train_mse": 0.002514,
+      "val_mae_left": 0.0292,
+      "val_mae_center": 0.0423,
+      "val_mae_right": 0.0377
+    },
+    {
+      "epoch": 11,
+      "train_mse": 0.002358,
+      "val_mae_left": 0.0292,
+      "val_mae_center": 0.0418,
+      "val_mae_right": 0.0392
+    },
+    {
+      "epoch": 12,
+      "train_mse": 0.002254,
+      "val_mae_left": 0.0294,
+      "val_mae_center": 0.0491,
+      "val_mae_right": 0.0357
+    },
+    {
+      "epoch": 13,
+      "train_mse": 0.002254,
+      "val_mae_left": 0.0322,
+      "val_mae_center": 0.039,
+      "val_mae_right": 0.0357
+    },
+    {
+      "epoch": 14,
+      "train_mse": 0.002214,
+      "val_mae_left": 0.0298,
+      "val_mae_center": 0.0553,
+      "val_mae_right": 0.036
+    }
+  ],
+  "results": {
+    "matrix": {
+      "slalom": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 174.2,
+        "steps_std": 3.2,
+        "min_clearance_mean": 0.072,
+        "min_clearance_min": 0.07,
+        "path_mean": 13.85,
+        "path_std": 0.03
+      },
+      "gate": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 214.0,
+        "steps_std": 22.8,
+        "min_clearance_mean": 0.057,
+        "min_clearance_min": 0.028,
+        "path_mean": 13.95,
+        "path_std": 0.1
+      },
+      "clutter": {
+        "runs": 5,
+        "success_rate": 1.0,
+        "collisions": 0,
+        "steps_mean": 202.0,
+        "steps_std": 19.9,
+        "min_clearance_mean": 0.064,
+        "min_clearance_min": 0.047,
+        "path_mean": 13.98,
+        "path_std": 0.15
+      }
+    },
+    "soak": {
+      "scene": "clutter",
+      "total_steps": 3030,
+      "simulated_seconds": 151.5,
+      "episodes": 15,
+      "collisions": 0,
+      "successes": 15,
+      "min_clearance": 0.047,
+      "total_path_m": 209.7
+    },
+    "scenes": [
+      {
+        "scene": "slalom",
+        "success": true,
+        "crashed": false,
+        "steps": 171,
+        "traveled_x": 13.600603334992586,
+        "min_clearance": 0.07,
+        "mean_pred_error": 0.0429,
+        "mean_speed": 1.637,
+        "path_length": 13.81
+      },
+      {
+        "scene": "gate",
+        "success": true,
+        "crashed": false,
+        "steps": 215,
+        "traveled_x": 13.602962846622093,
+        "min_clearance": 0.062,
+        "mean_pred_error": 0.0313,
+        "mean_speed": 1.324,
+        "path_length": 14.02
+      },
+      {
+        "scene": "clutter",
+        "success": true,
+        "crashed": false,
+        "steps": 175,
+        "traveled_x": 13.603793255306934,
+        "min_clearance": 0.061,
+        "mean_pred_error": 0.0417,
+        "mean_speed": 1.592,
+        "path_length": 13.79
+      }
+    ]
+  }
+}
