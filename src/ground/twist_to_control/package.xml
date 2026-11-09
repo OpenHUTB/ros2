@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>twist_to_control</name>
+  <version>1.0.0</version>
+  <description>
+    把 geometry_msgs/Twist 速度指令换算成车辆真正能执行的转向角与轮速。
+    支持单车模型、阿克曼转向几何与差速底盘三种输出；内置低速奇点处理、
+    曲率与转角双级限幅、加速度与转角速率限制、指令超时保护，
+    并提供完全离线可跑的回归测试。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+</package>

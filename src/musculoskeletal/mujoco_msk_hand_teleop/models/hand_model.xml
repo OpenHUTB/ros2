@@ -1,0 +1,173 @@
+<mujoco model="msk_hand_body">
+  <!-- 肌肉骨骼灵巧手本体模型（被各场景 include） -->
+  <compiler angle="radian" inertiafromgeom="true"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <default>
+    <joint damping="0.08" armature="0.001"/>
+    <geom rgba="0.85 0.65 0.5 1" friction="1.2 0.02 0.001"/>
+    <muscle timeconst="0.04 0.08"/>
+  </default>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.65 0.78 0.9" rgb2="0.9 0.95 1" width="128" height="128"/>
+    <material name="skin" rgba="0.92 0.72 0.58 1" specular="0.3" shininess="0.4"/>
+    <material name="bone" rgba="0.95 0.95 0.92 1" specular="0.5"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 -0.3 0.6" dir="0 0.3 -1" diffuse="0.8 0.8 0.8" specular="0.2 0.2 0.2"/>
+
+    <!-- 固定安装臂：模拟实验台支架 -->
+    <body name="forearm" pos="0 0.12 0.265">
+      <geom name="g_forearm" type="capsule" fromto="0 0 0.10 0 0 -0.05" size="0.016"
+            material="skin" mass="0.25"/>
+      <!-- 腕部肌肉起点（固定于前臂） -->
+      <site name="s_wrist_flex_o"  pos="0 0.030 -0.115"  size="0.003" rgba="0.9 0.75 0.3 1"/>
+      <site name="s_wrist_ext_o"   pos="0 0.030 -0.020"  size="0.003" rgba="0.7 0.85 0.95 1"/>
+      <site name="s_wrist_yaw_l_o" pos="-0.045 0.030 -0.050" size="0.003" rgba="0.8 0.6 0.9 1"/>
+      <site name="s_wrist_yaw_r_o" pos="0.045 0.030 -0.050"  size="0.003" rgba="0.8 0.6 0.9 1"/>
+      <!-- 腕关节 1：屈伸（绕 x 轴，正方向 = 手指向下屈） -->
+      <body name="hand" pos="0 0 -0.05">
+        <joint name="j_wrist_pitch" type="hinge" axis="-1 0 0" range="-0.6 1.2" stiffness="1.5"/>
+        <geom name="g_wrist" type="cylinder" size="0.014 0.012" material="skin" mass="0.05"/>
+        <!-- 腕关节 2：偏摆（绕 z 轴） -->
+        <body name="palm" pos="0 0 0">
+          <joint name="j_wrist_yaw" type="hinge" axis="0 0 1" range="-0.7 0.7"/>
+          <geom name="g_palm" type="box" pos="0 0.045 -0.012" size="0.035 0.05 0.012"
+                material="skin" mass="0.08"/>
+          <!-- 指部肌肉起点（固定于掌骨） -->
+          <site name="s_index_flex_o"  pos="0.018 0.080 -0.032" size="0.003" rgba="0.9 0.75 0.3 1"/>
+          <site name="s_index_ext_o"   pos="0.018 0.080 0.010"  size="0.003" rgba="0.7 0.85 0.95 1"/>
+          <site name="s_middle_flex_o" pos="-0.008 0.083 -0.032" size="0.003" rgba="0.9 0.75 0.3 1"/>
+          <site name="s_middle_ext_o"  pos="-0.008 0.083 0.010"  size="0.003" rgba="0.7 0.85 0.95 1"/>
+          <site name="s_thumb_flex_o"  pos="0.033 0.030 -0.036" size="0.003" rgba="0.9 0.75 0.3 1"/>
+          <site name="s_thumb_ext_o"   pos="0.033 0.030 0.024"  size="0.003" rgba="0.7 0.85 0.95 1"/>
+          <site name="s_thumb_add_o"   pos="-0.010 0.028 -0.020" size="0.003" rgba="0.8 0.6 0.9 1"/>
+          <!-- 腕部肌肉止点（随掌骨运动） -->
+          <site name="s_wrist_flex_i"  pos="0 0.070 -0.014" size="0.003" rgba="0.9 0.75 0.3 1"/>
+          <site name="s_wrist_ext_i"   pos="0 0.070 0.010"  size="0.003" rgba="0.7 0.85 0.95 1"/>
+          <site name="s_wrist_yaw_l_i" pos="-0.037 0.075 -0.002" size="0.003" rgba="0.8 0.6 0.9 1"/>
+          <site name="s_wrist_yaw_r_i" pos="0.037 0.075 -0.002"  size="0.003" rgba="0.8 0.6 0.9 1"/>
+
+          <!-- ================= 食指 ================= -->
+          <body name="index_prox" pos="0.018 0.095 -0.012">
+            <joint name="j_index_mcp" type="hinge" axis="-1 0 0" range="-0.15 1.75" stiffness="0.12"/>
+            <geom name="g_index_prox" type="capsule" fromto="0 0 0 0 0.045 0" size="0.008"
+                  material="skin" mass="0.02"/>
+            <body name="index_mid" pos="0 0.045 0">
+              <joint name="j_index_pip" type="hinge" axis="-1 0 0" range="-0.1 1.75" stiffness="0.12"/>
+              <geom name="g_index_mid" type="capsule" fromto="0 0 0 0 0.035 0" size="0.007"
+                    material="skin" mass="0.015"/>
+              <geom name="g_index_tip" type="sphere" pos="0 0.035 0" size="0.0075"
+                    material="bone" mass="0.005" friction="1.5 0.02 0.001"/>
+              <site name="tip_index" pos="0 0.042 0" size="0.004" rgba="1 0 0 0.6"/>
+              <site name="s_index_flex_i" pos="0 0.018 0" size="0.002" rgba="0.9 0.75 0.3 1"/>
+              <site name="s_index_ext_i"  pos="0 0.010 0" size="0.002" rgba="0.7 0.85 0.95 1"/>
+            </body>
+          </body>
+
+          <!-- ================= 中指 ================= -->
+          <body name="middle_prox" pos="-0.008 0.098 -0.012">
+            <joint name="j_middle_mcp" type="hinge" axis="-1 0 0" range="-0.15 1.75" stiffness="0.12"/>
+            <geom name="g_middle_prox" type="capsule" fromto="0 0 0 0 0.048 0" size="0.008"
+                  material="skin" mass="0.02"/>
+            <body name="middle_mid" pos="0 0.048 0">
+              <joint name="j_middle_pip" type="hinge" axis="-1 0 0" range="-0.1 1.75" stiffness="0.12"/>
+              <geom name="g_middle_mid" type="capsule" fromto="0 0 0 0 0.038 0" size="0.007"
+                    material="skin" mass="0.015"/>
+              <geom name="g_middle_tip" type="sphere" pos="0 0.038 0" size="0.0075"
+                    material="bone" mass="0.005" friction="1.5 0.02 0.001"/>
+              <site name="tip_middle" pos="0 0.045 0" size="0.004" rgba="0 0.4 1 0.6"/>
+              <site name="s_middle_flex_i" pos="0 0.018 0" size="0.002" rgba="0.9 0.75 0.3 1"/>
+              <site name="s_middle_ext_i"  pos="0 0.010 0" size="0.002" rgba="0.7 0.85 0.95 1"/>
+            </body>
+          </body>
+
+          <!-- ================= 拇指 ================= -->
+          <body name="thumb_prox" pos="0.033 0.035 -0.006">
+            <joint name="j_thumb_abd" type="hinge" axis="0 0 -1" range="-0.5 0.9" stiffness="0.08"/>
+            <geom name="g_thumb_prox" type="capsule" fromto="0 0 0 0 0.042 0" size="0.009"
+                  material="skin" mass="0.02"/>
+            <body name="thumb_mid" pos="0 0.042 0">
+              <joint name="j_thumb_mcp" type="hinge" axis="-1 0 0" range="-0.1 1.6" stiffness="0.12"/>
+              <geom name="g_thumb_mid" type="capsule" fromto="0 0 0 0 0.032 0" size="0.008"
+                    material="skin" mass="0.015"/>
+              <geom name="g_thumb_tip" type="sphere" pos="0 0.032 0" size="0.008"
+                    material="bone" mass="0.005" friction="1.5 0.02 0.001"/>
+              <site name="tip_thumb" pos="0 0.039 0" size="0.004" rgba="0 1 0 0.6"/>
+              <site name="s_thumb_flex_i" pos="0 0.014 0" size="0.002" rgba="0.9 0.75 0.3 1"/>
+              <site name="s_thumb_ext_i"  pos="0 0.010 0" size="0.002" rgba="0.7 0.85 0.95 1"/>
+              <site name="s_thumb_add_i"  pos="0 0.014 0" size="0.002" rgba="0.8 0.6 0.9 1"/>
+            </body>
+          </body>
+
+          <!-- 拇指对掌目标点（捏合参考） -->
+          <site name="pinch_ref" pos="0.018 0.135 -0.052" size="0.005" rgba="1 0 1 0.5"/>
+
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- 解剖嵌套部位间不参与碰撞（否则初始互相穿透导致求解器发散） -->
+  <contact>
+    <exclude body1="forearm" body2="hand"/>
+    <exclude body1="forearm" body2="palm"/>
+    <exclude body1="palm" body2="thumb_prox"/>
+    <exclude body1="palm" body2="thumb_mid"/>
+  </contact>
+
+  <!-- ================= 空间腱（按解剖走向路由，muscle 拉向缩短方向） ================= -->
+  <tendon>
+    <spatial name="t_index_flex" width="0.0025" rgba="0.9 0.75 0.3 0.6">
+      <site site="s_index_flex_o"/><site site="s_index_flex_i"/>
+    </spatial>
+    <spatial name="t_index_ext" width="0.0025" rgba="0.7 0.85 0.95 0.6">
+      <site site="s_index_ext_o"/><site site="s_index_ext_i"/>
+    </spatial>
+    <spatial name="t_middle_flex" width="0.0025" rgba="0.9 0.75 0.3 0.6">
+      <site site="s_middle_flex_o"/><site site="s_middle_flex_i"/>
+    </spatial>
+    <spatial name="t_middle_ext" width="0.0025" rgba="0.7 0.85 0.95 0.6">
+      <site site="s_middle_ext_o"/><site site="s_middle_ext_i"/>
+    </spatial>
+    <spatial name="t_thumb_flex" width="0.0025" rgba="0.9 0.75 0.3 0.6">
+      <site site="s_thumb_flex_o"/><site site="s_thumb_flex_i"/>
+    </spatial>
+    <spatial name="t_thumb_ext" width="0.0025" rgba="0.7 0.85 0.95 0.6">
+      <site site="s_thumb_ext_o"/><site site="s_thumb_ext_i"/>
+    </spatial>
+    <spatial name="t_thumb_add" width="0.0025" rgba="0.8 0.6 0.9 0.6">
+      <site site="s_thumb_add_o"/><site site="s_thumb_add_i"/>
+    </spatial>
+    <spatial name="t_wrist_flex" width="0.003" rgba="0.9 0.75 0.3 0.7">
+      <site site="s_wrist_flex_o"/><site site="s_wrist_flex_i"/>
+    </spatial>
+    <spatial name="t_wrist_ext" width="0.003" rgba="0.7 0.85 0.95 0.7">
+      <site site="s_wrist_ext_o"/><site site="s_wrist_ext_i"/>
+    </spatial>
+    <spatial name="t_wrist_yaw_l" width="0.003" rgba="0.8 0.6 0.9 0.7">
+      <site site="s_wrist_yaw_l_o"/><site site="s_wrist_yaw_l_i"/>
+    </spatial>
+    <spatial name="t_wrist_yaw_r" width="0.003" rgba="0.8 0.6 0.9 0.7">
+      <site site="s_wrist_yaw_r_o"/><site site="s_wrist_yaw_r_i"/>
+    </spatial>
+  </tendon>
+
+  <!-- ================= Hill 型肌肉执行器（11 条，range 由 tune 脚本注入） ================= -->
+  <actuator>
+    <muscle name="m_index_flex"  tendon="t_index_flex"  force="22"/>
+    <muscle name="m_index_ext"   tendon="t_index_ext"   force="14"/>
+    <muscle name="m_middle_flex" tendon="t_middle_flex" force="24"/>
+    <muscle name="m_middle_ext"  tendon="t_middle_ext"  force="14"/>
+    <muscle name="m_thumb_flex"  tendon="t_thumb_flex"  force="18"/>
+    <muscle name="m_thumb_ext"   tendon="t_thumb_ext"   force="12"/>
+    <muscle name="m_thumb_add"   tendon="t_thumb_add"   force="10"/>
+    <muscle name="m_wrist_flex"  tendon="t_wrist_flex"  force="30"/>
+    <muscle name="m_wrist_ext"   tendon="t_wrist_ext"   force="20"/>
+    <muscle name="m_wrist_yaw_l" tendon="t_wrist_yaw_l" force="16"/>
+    <muscle name="m_wrist_yaw_r" tendon="t_wrist_yaw_r" force="16"/>
+  </actuator>
+
+</mujoco>

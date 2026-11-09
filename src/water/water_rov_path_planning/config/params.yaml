@@ -1,0 +1,47 @@
+rov_planning_node:
+  ros__parameters:
+    # 热力图网格
+    grid_size: 100
+    resolution: 0.5
+
+    # 热力图模型（障碍物影响半径与风险衰减系数）
+    obstacle_radius: 2.0
+    risk_decay: 0.15
+
+    # 路径规划权重（长度、风险、洋流三项都按“单位距离代价 × 本步米数”累加，权重均无量纲）
+    risk_weight: 5.0
+    current_weight: 3.0
+    # 顺流奖励系数 k，取值 [0, 1]；且须满足 k*current_weight*current_magnitude/current_ref_speed < length_weight，
+    # 否则启动校验会拒绝（该条件保证顺流边代价严格大于 0，不会出现免费移动边）
+    current_compensation: 0.5
+    # 参考流速：洋流项用 (û·v)/current_ref_speed 归一化为无量纲对齐度，使 current_weight 无量纲
+    current_ref_speed: 1.0
+    length_weight: 1.0
+    max_iterations: 100000
+    max_risk_threshold: 0.7
+
+    # 洋流场（current_pattern 仅支持 uniform/vortex/tidal/shear）
+    current_pattern: "vortex"
+    # 基础流速（m/s），取值 [0, current_ref_speed]；超过参考流速后归一化对齐度饱和，校验会拒绝
+    current_magnitude: 0.4
+    # 均匀流方向（弧度），须满足 |current_direction| <= 2π
+    current_direction: 0.0
+    # 涡流中心坐标（米），须落在 [0, grid_size*resolution] 内
+    vortex_x: 25.0
+    vortex_y: 25.0
+    vortex_radius: 15.0
+    tidal_period: 60.0
+
+rov_demo_node:
+  ros__parameters:
+    # 演示场景（50 m x 50 m，随机 12 个障碍物）
+    world_size: 50.0
+    num_obstacles: 12
+    start_x: 5.0
+    start_y: 25.0
+    goal_x: 45.0
+    goal_y: 25.0
+    obstacle_seed: 42
+    # 与 rov_planning_node 保持一致的网格参数，启动时交叉校验 world_size == grid_size * resolution
+    grid_size: 100
+    resolution: 0.5
