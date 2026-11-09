@@ -12,10 +12,16 @@
 不假定束数与 ``angle_min``，因此 360 束、720 束以及 ``angle_min = -π``
 的雷达均可正常工作。
 
-全部参数通过 rosparam 读取（见 ``config/lidar_avoid.yaml``），可在线调参。
+全部参数在节点启动时通过 rosparam 读取（见 ``config/lidar_avoid.yaml``）；
+修改后需重启节点（或重新 roslaunch）才生效，本节点不支持运行时动态重配置。
+
+超时保护使用**墙钟**（``time.time()``）+ 独立线程，与 ``/clock`` 解耦：
+即使 Gazebo 暂停物理、仿真时钟停走或 gzserver 崩溃，节点仍会在
+``scan_timeout`` 秒后发布零速度，不会让最后一条指令滞留。
 """
 
 import math
+import threading
 import time
 
 import rospy
@@ -63,9 +69,9 @@ class LidarAvoidNode:
         self.state = 'cruise'         # cruise / avoid / escape
         self._last_scan_time = None   # 最近一次收到有效 /scan 的墙钟时间
 
-        # 定时 watchdog：无扫描数据时停车，同时保证控制频率稳定
-        self.timer = rospy.Timer(
-            rospy.Duration(1.0 / self.cfg['control_rate']), self._tick)
+        # 墙钟 watchdog：与 /clock 无关，仿真暂停/时钟停走时仍能触发停车
+        self._stop_event = threading.Event()
+        self._watchdog_thread = None
 
         # Ctrl+C / rosnode kill 时保证停车
         rospy.on_shutdown(self._on_shutdown)
@@ -73,6 +79,25 @@ class LidarAvoidNode:
     # ------------------------------------------------------------------
     # 基础工具
     # ------------------------------------------------------------------
+    def start(self):
+        """启动墙钟 watchdog 线程（不依赖 rospy.Timer，因此不受仿真时钟影响）。"""
+        if self._watchdog_thread is not None:
+            return
+        self._watchdog_thread = threading.Thread(
+            target=self._watchdog_loop, name='scan_watchdog')
+        self._watchdog_thread.daemon = True
+        self._watchdog_thread.start()
+
+    def _watchdog_loop(self):
+        period = 1.0 / max(self.cfg['control_rate'], 1.0)
+        while not self._stop_event.is_set():
+            # 用 Event.wait 而不是 rospy.sleep：后者受 /clock 影响
+            if self._stop_event.wait(period):
+                return
+            if rospy.is_shutdown():
+                return
+            self._tick()
+
     @staticmethod
     def _zero_twist():
         t = Twist()
@@ -249,8 +274,8 @@ class LidarAvoidNode:
     # ------------------------------------------------------------------
     # 超时与退出保护
     # ------------------------------------------------------------------
-    def _tick(self, _event=None):
-        """watchdog：从未收到扫描或超时未更新 -> 停车。"""
+    def _tick(self):
+        """watchdog：从未收到扫描或超时未更新 -> 停车（按墙钟计时）。"""
         if self._last_scan_time is None:
             self._publish_zero()
             return
@@ -264,6 +289,7 @@ class LidarAvoidNode:
 
     def _on_shutdown(self):
         rospy.loginfo('[mbot_gazebo_lidar_avoid] 节点退出，发布零速度')
+        self._stop_event.set()
         try:
             self._publish_zero()
         except Exception:
@@ -271,7 +297,8 @@ class LidarAvoidNode:
 
 
 def main():
-    LidarAvoidNode()
+    node = LidarAvoidNode()
+    node.start()
     rospy.spin()
 
 

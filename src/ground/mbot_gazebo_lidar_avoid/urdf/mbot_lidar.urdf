@@ -28,8 +28,11 @@
     </collision>
   </link>
 
+  <!-- base_footprint 落在地面：轮子/万向轮最低点在 base_link 下方 0.11 m
+       （轮心 z=-0.05 且半径 0.06；万向轮球心 z=-0.095 且半径 0.015），
+       因此 base_footprint 需要比 base_link 低 0.11 m，/odom 的 z 才不会带 10 cm 偏置 -->
   <joint name="base_footprint_to_base_link" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0.11" rpy="0 0 0"/>
     <parent link="base_footprint"/>
     <child link="base_link"/>
   </joint>
@@ -201,7 +204,7 @@
       <robotBaseFrame>base_footprint</robotBaseFrame>
       <publishOdomTF>true</publishOdomTF>
       <publishWheelTF>true</publishWheelTF>
-      <publishWheelJointState>false</publishWheelJointState>
+      <publishWheelJointState>true</publishWheelJointState>
       <publishTf>1</publishTf>
     </plugin>
   </gazebo>

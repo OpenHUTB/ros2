@@ -7,7 +7,7 @@ A. 扇区换算：360 束 / angle_min=0；720 束 / angle_min=-π（不因束数
 B. 扫描回调与发布链路：真实的 _scan_callback -> Publisher.publish
 C. 异常输入：NaN/Inf 过滤、全 NaN、空 ranges、angle_increment 非法
 D. 控制行为：滞回不抖动、脱困倒车、后方受阻原地旋转、侧向让开
-E. 安全保护：/scan 超时停车、从未收到扫描停车、shutdown 停车
+E. 安全保护：/scan 超时停车（墙钟、与 /clock 解耦）、从未收到扫描停车、shutdown 停车
 F. 工程完整性：launch 内容、CMakeLists 安装规则、package.xml 与 LICENSE
 
 用法:
@@ -34,7 +34,6 @@ MAIN_PY = os.path.join(SCRIPTS, 'main.py')
 PARAMS = {}
 PUBLISHERS = []
 SUBSCRIBERS = []
-TIMERS = []
 SHUTDOWN_HOOKS = []
 
 
@@ -99,12 +98,6 @@ def _install_stubs():
 
     rospy.Subscriber = _subscriber
 
-    def _timer(period, callback, *a, **k):
-        TIMERS.append(callback)
-        return types.SimpleNamespace(callback=callback, period=period)
-
-    rospy.Timer = _timer
-
     def _on_shutdown(cb):
         SHUTDOWN_HOOKS.append(cb)
 
@@ -147,12 +140,10 @@ def make_node(**overrides):
     PARAMS.update({k: float(v) for k, v in overrides.items()})
     PUBLISHERS.clear()
     SUBSCRIBERS.clear()
-    TIMERS.clear()
     SHUTDOWN_HOOKS.clear()
     node = module.LidarAvoidNode()
     node._publishers = PUBLISHERS
     node._subscribers = SUBSCRIBERS
-    node._timers = TIMERS
     node._shutdown_hooks = SHUTDOWN_HOOKS
     return node
 
@@ -224,10 +215,34 @@ def test_callback_publishes_to_publisher():
     assert twist.linear.x > 0.0
 
 
-def test_timer_watchdog_registered():
+def test_watchdog_is_wall_clock_thread():
+    """watchdog 必须是墙钟线程：rospy.Timer 跟随 /clock，仿真暂停后就不再触发。"""
+    with open(MAIN_PY, 'r', encoding='utf-8') as f:
+        src = f.read()
+    assert 'rospy.Timer(' not in src, 'watchdog 不能用 rospy.Timer（受 /clock 影响）'
+    assert 'threading.Thread' in src, 'watchdog 应改为墙钟线程'
+
+    node = make_node(control_rate=50.0)
+    node.start()
+    thread = node._watchdog_thread
+    assert thread is not None, 'start() 未创建 watchdog 线程'
+    assert thread.daemon, 'watchdog 线程应为 daemon'
+
+    node._on_shutdown()
+    thread.join(2.0)
+    assert not thread.is_alive(), 'shutdown 后 watchdog 线程应退出'
+
+
+def test_timeout_parks_without_sim_clock():
+    """仿真时钟停走（时钟冻结）时，按墙钟仍要停车。"""
     node = make_node()
-    assert node._timers, '未注册 watchdog Timer'
-    assert node._shutdown_hooks, '未注册 shutdown 回调'
+    node._last_scan_time = time.time() - 3.0
+
+    # 只依赖 time.time()，不读 rospy.get_rostime()，因此 /clock 冻结不影响判断
+    node._tick()
+    twist = last_pub(node)
+    assert twist.linear.x == 0.0
+    assert twist.angular.z == 0.0
 
 
 # ------------------------------------------------------------------ C. 异常输入
@@ -322,21 +337,11 @@ def test_side_obstacle_steers_away():
 
 
 # ------------------------------------------------------------------ E. 安全保护
-def test_scan_timeout_parks():
-    node = make_node()
-    node._last_scan_time = time.time() - 3.0
-
-    node._timers[0]()
-    twist = last_pub(node)
-    assert twist.linear.x == 0.0
-    assert twist.angular.z == 0.0
-
-
 def test_no_scan_yet_parks():
     node = make_node()
     assert node._last_scan_time is None
 
-    node._timers[0]()
+    node._tick()
     twist = last_pub(node)
     assert twist.linear.x == 0.0
 
@@ -418,6 +423,11 @@ def test_urdf_diff_drive_uses_ros1_camel_case():
     assert diff.find('updateRate').text == '100'
     assert diff.find('odometrySource').text == 'world'
 
+    # 里程计以 base_footprint 为基座，轮子关节状态要发布，
+    # 否则 /joint_states 无发布者、robot_state_publisher 发不出轮子 TF
+    assert diff.find('robotBaseFrame').text == 'base_footprint'
+    assert diff.find('publishWheelJointState').text == 'true'
+
     # 禁止出现的 ROS 2 snake_case 参数
     ros2_keys = {
         'left_joint', 'right_joint', 'wheel_separation', 'wheel_diameter',
@@ -443,16 +453,23 @@ def test_urdf_has_base_footprint():
 
     # 必须有一个 joint 把 base_footprint 连接到 base_link
     joints = list(tree.getroot().iter('joint'))
-    found = False
+    found = None
     for j in joints:
         parent = j.find('parent')
         child = j.find('child')
         if (parent is not None and child is not None and
                 parent.get('link') == 'base_footprint' and
                 child.get('link') == 'base_link'):
-            found = True
+            found = j
             break
-    assert found, '缺少 base_footprint -> base_link 的固定关节'
+    assert found is not None, '缺少 base_footprint -> base_link 的固定关节'
+
+    # base_footprint 必须落在地面：轮子最低点在 base_link 下方 0.11 m，
+    # 偏移为 0 会让 /odom 的 z 停在 0.11，接导航栈时多出 10 cm 偏置
+    origin = found.find('origin')
+    assert origin is not None, 'base_footprint -> base_link 关节缺少 origin'
+    z = float(origin.get('xyz').split()[2])
+    assert abs(z - 0.11) < 1e-9, '/odom 会带 %.2f m 的 z 偏置，应为 0.11' % z
 
 
 def test_readme_does_not_build_repo_root():

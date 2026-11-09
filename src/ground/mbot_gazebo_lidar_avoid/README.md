@@ -94,7 +94,9 @@ roslaunch mbot_gazebo_lidar_avoid main.launch x:=1.0 y:=0.5 yaw:=1.57
 
 ## 参数
 
-所有参数在 `config/lidar_avoid.yaml` 中，键名与节点名一致，可运行时修改：
+所有参数在 `config/lidar_avoid.yaml` 中，键名与节点名一致，
+由 launch 在启动时一次性加载。节点只在初始化时读取参数，
+**`rosparam set` 之后不会生效**；改完 yaml 或参数后需要重新 `roslaunch`（或 `rosnode kill` 后重启节点）：
 
 | 参数 | 默认值 | 说明 |
 | :--- | :--- | :--- |
@@ -116,10 +118,14 @@ roslaunch mbot_gazebo_lidar_avoid main.launch x:=1.0 y:=0.5 yaw:=1.57
 | `range_max` | 3.5 | 距离上限裁剪 (m) |
 | `control_rate` | 10.0 | watchdog 频率 (Hz) |
 
-在线调参示例：
+修改参数后需重启节点使新值生效（本节点未实现动态重配置）：
 
 ```bash
-rosparam set /mbot_lidar_avoid_node/safe_distance 1.0
+# 方式一：直接编辑 yaml 后重新启动
+roslaunch mbot_gazebo_lidar_avoid main.launch
+
+# 方式二：rosnode kill 后由 roslaunch 自动重启，或手工重启节点
+rosnode kill /mbot_lidar_avoid_node
 ```
 
 ## 控制逻辑
@@ -134,7 +140,18 @@ rosparam set /mbot_lidar_avoid_node/safe_distance 1.0
 | `escape` | 前方 < `danger_distance` | 倒车并转向远离更近一侧；后方两侧都堵则原地旋转 |
 
 `/scan` 超过 `scan_timeout` 秒未更新、扫描为空、`angle_increment` 非法或全部为 NaN/Inf 时，
-节点发布零速度并告警。
+节点发布零速度并告警。超时判断使用墙钟（`time.time()`）+ 独立 watchdog 线程，不读 `/clock`，
+因此 Gazebo 暂停物理、仿真时钟停走或 gzserver 崩溃时同样会触发停车，最后一条指令不会滞留。
+
+话题与 TF：
+
+| 方向 | 话题 / TF | 发布者 |
+| :--- | :--- | :--- |
+| 订阅 | `/scan` | `libgazebo_ros_laser.so` |
+| 发布 | `/cmd_vel` | `mbot_lidar_avoid_node` |
+| 发布 | `/odom` | `libgazebo_ros_diff_drive.so` |
+| 发布 | `/joint_states` | `libgazebo_ros_diff_drive.so`（`publishWheelJointState=true`） |
+| 发布 | `/tf` | 差速插件 + `robot_state_publisher`（`odom → base_footprint → base_link → laser_link` 及左右轮） |
 
 ## 测试
 
