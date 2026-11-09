@@ -97,6 +97,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 
 
+* [简易人形机器人 MuJoCo 仿真（原地踏步 + 交替摆臂）](./humanoid/midterm_humanoid_simulation.md) —— 4 关节位置伺服，内联 XML 建模，离屏渲染 8 秒视频
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)

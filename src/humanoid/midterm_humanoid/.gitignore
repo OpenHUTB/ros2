@@ -1,0 +1,4 @@
+# 运行生成的仿真产物（mp4 / gif / 预览帧），不入库
+output/
+__pycache__/
+*.pyc
