@@ -1211,7 +1211,7 @@ python<span class="w"> </span>main.py
 <p>退化率沿用第 7.2 节的同口径定义：<code>退化率 = (晴朗基准 − 当前值) / 晴朗基准 × 100%</code>。</p>
 <h3 id="83">8.3 实验结果</h3>
 <p>四档天气下同一场景、同一机位的点云 BEV 俯视图（按高度 z 着色，浓雾档外圈点已明显变稀）：</p>
-<p><img alt="" src="../img/ground/weather_lidar_bev.png"/></p>
+<p><img alt="" src="../../img/ground/weather_lidar_perception/weather_lidar_bev.png"/></p>
 <p>相机与雷达指标原始数值（同一参考位姿；相机取 5 帧平均，雷达在 0.2 s 窗口内累积成整圈）：</p>
 <table>
 <thead>
@@ -1336,7 +1336,7 @@ python<span class="w"> </span>main.py
 </tbody>
 </table>
 <p>相机与雷达退化率对照柱状图：</p>
-<p><img alt="" src="../img/ground/weather_multisensor_degradation.png"/></p>
+<p><img alt="" src="../../img/ground/weather_lidar_perception/weather_multisensor_degradation.png"/></p>
 <h3 id="84">8.4 建模口径与对照实验</h3>
 <p>需要如实说明雷达退化的来源：<strong>CARLA 引擎本身不会按天气改变激光回波</strong>——
 <code>atmosphere_attenuation_rate</code> 默认恒为 0.004，雨雾粒子只参与画面渲染、并不遮挡激光射线，
