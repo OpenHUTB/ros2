@@ -106,12 +106,19 @@ class DQNAgent(object):
             'state_dim': self.state_dim,
             'action_dim': self.action_dim,
             'model': self.online.state_dict(),
+            # 续训需要优化器动量与步数，否则 Adam 状态归零
+            'optimizer': self.optimizer.state_dict(),
+            'steps': self.steps,
         }, path)
 
     def load(self, path):
         ckpt = torch.load(path, map_location=self.device)
         self.online.load_state_dict(ckpt['model'])
         self.target.load_state_dict(ckpt['model'])
+        if 'optimizer' in ckpt:
+            self.optimizer.load_state_dict(ckpt['optimizer'])
+        if 'steps' in ckpt:
+            self.steps = int(ckpt['steps'])
         return ckpt
 
 

@@ -76,8 +76,11 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
 ## 训练
 
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
-上一步动作 1），动作为 6 个离散速度指令。网络为 Dueling 结构（128-128），
-训练用 Double DQN 目标、经验回放与 Huber 损失。
+上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
+网络为 Dueling 结构（128-128），训练用 Double DQN 目标、经验回放与 Huber 损失。
+
+奖励由四部分组成：距离进度、朝向对齐、时间惩罚、近障惩罚。1.2 m 内障碍
+按距离线性扣分；0.5 m 内按事故终止（-20），避免策略学到“贴墙继续飞”。
 
 ```bash
 # 一键训练（200 回合）
@@ -88,8 +91,16 @@ rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 rosrun uav_lidar_dqn_navigation main.py --mode train --episodes 200
 ```
 
-训练日志写入 `models/train_nav_log.csv`，权重保存为 `models/dqn_nav.pt`，
-每 20 回合刷新一次 `models/dqn_nav_best.pt`（近 20 回合成功率最高时）。
+训练日志写入 `models/train_nav_log.csv`（每回合一行，含 success / collision /
+near_miss），随仓库一起提交。权重约定：
+
+| 文件 | 含义 |
+| --- | --- |
+| `dqn_nav.pt` | 当前最佳（近 20 回合成功率最高），部署默认加载 |
+| `dqn_nav_best.pt` | 同上，显式保留一份 |
+| `dqn_nav_last.pt` | 最后一回合的权重，仅供对比 |
+
+`--resume` 会同时恢复 Adam 优化器与步数，断点续训不会重置动量。
 
 ## 话题与服务
 

@@ -72,12 +72,18 @@ class DQNTrainer(object):
         self.max_steps = max_steps
         self.free_points = self._load_free_points(free_points)
         self.log_path = os.path.join(MODEL_DIR, 'train_nav_log.csv')
+        self.log_header = ['episode', 'steps', 'reward', 'distance', 'success',
+                           'collision', 'near_miss', 'epsilon', 'loss']
         os.makedirs(MODEL_DIR, exist_ok=True)
+        if os.path.exists(self.log_path):
+            with open(self.log_path) as f:
+                first = f.readline().strip().split(',')
+            if first != self.log_header:
+                # 旧日志列数不同，先备份，避免追加出坏 CSV
+                os.replace(self.log_path, self.log_path + '.bak')
         if not os.path.exists(self.log_path):
             with open(self.log_path, 'w', newline='') as f:
-                csv.writer(f).writerow(
-                    ['episode', 'steps', 'reward', 'distance', 'success',
-                     'collision', 'epsilon', 'loss'])
+                csv.writer(f).writerow(self.log_header)
 
     @staticmethod
     def _load_free_points(path):
@@ -152,7 +158,7 @@ class DQNTrainer(object):
                     info.time_stamp > getattr(self, 'collision_baseline', 0))
 
     def send_action(self, action_idx):
-        vx_body, yaw_rate, vz_up = ACTIONS[action_idx]
+        vx_body, yaw_rate = ACTIONS[action_idx]
         st = self.read_state()
         yaw = st['yaw']
         c, s = math.cos(yaw), math.sin(yaw)
@@ -205,11 +211,13 @@ class DQNTrainer(object):
             reward += 0.4 * (math.cos(bearing) - math.cos(prev_bearing))
             reward -= 0.03
 
+            # 近障惩罚：1.2 m 内随距离线性加重，逼策略提前转向而不是贴脸直行
             obstacle = min_obstacle_distance(points2, MAX_RANGE)
-            if obstacle < 1.5:
-                reward -= 0.3 * (1.5 - obstacle) / 1.5
+            if obstacle < 1.2:
+                reward -= 1.2 * (1.2 - obstacle) / 1.2
 
             collided = self.has_collided()
+            near_miss = obstacle < 0.5
             done = False
             if collided:
                 reward -= 30.0
@@ -217,6 +225,11 @@ class DQNTrainer(object):
             elif dist < GOAL_TOL:
                 reward += 60.0
                 success = True
+                done = True
+            elif near_miss:
+                # 训练里没有部署时的安全层，0.5 m 以内按事故处理，
+                # 否则策略会学到“贴墙继续前进也没事”
+                reward -= 20.0
                 done = True
             elif max(abs(st2['pos'][0]), abs(st2['pos'][1])) > WORLD_LIMIT:
                 reward -= 20.0
@@ -241,6 +254,7 @@ class DQNTrainer(object):
             'distance': prev_dist,
             'success': success,
             'collision': collided,
+            'near_miss': near_miss,
             'loss': loss,
         }
 
@@ -285,16 +299,26 @@ class DQNTrainer(object):
                                         round(result['distance'], 3),
                                         int(result['success']),
                                         int(result['collision']),
+                                        int(result['near_miss']),
                                         round(epsilon, 4),
                                         round(result['loss'], 5)])
 
+            # dqn_nav.pt 永远是可部署的“当前最佳”；最后一回合另存 last
             if ep % 20 == 0:
-                self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav.pt'))
+                self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav_last.pt'))
             if len(successes) >= 20 and rate > best_rate:
                 best_rate = rate
                 self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav_best.pt'))
+                self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav.pt'))
 
-        self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav.pt'))
+        self.agent.save(os.path.join(MODEL_DIR, 'dqn_nav_last.pt'))
+        if best_rate > 0.0 and os.path.exists(
+                os.path.join(MODEL_DIR, 'dqn_nav_best.pt')):
+            # 保证交付权重就是最佳权重
+            best = os.path.join(MODEL_DIR, 'dqn_nav_best.pt')
+            with open(best, 'rb') as src, open(
+                    os.path.join(MODEL_DIR, 'dqn_nav.pt'), 'wb') as dst:
+                dst.write(src.read())
         print('训练完成，最佳近 20 回合成功率 %.0f%%' % (best_rate * 100))
 
 
