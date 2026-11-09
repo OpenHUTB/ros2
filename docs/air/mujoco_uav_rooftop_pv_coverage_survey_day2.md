@@ -97,7 +97,7 @@ python3 src/air/mujoco_uav_rooftop_pv_coverage_survey/main.py --mode keyboard-in
 
 无窗口批处理可使用确定性键序列回放。另在 Xvfb 虚拟显示器中向真实 GLFW 查看器发送 `W/A/Space` 键盘事件，记录到 229 个轨迹样本：最大位移 5.6737 m、转向 1.5210 rad；空格后的 153 个样本无位移，输入超时后的 7 个样本保持停止。该验收通过真实查看器事件链路执行，GIF 包含 53 个不同画面。
 
-![固定键序列的实际相机回放](../img/air/mujoco_uav_rooftop_pv_coverage_survey/keyboard_demo.gif)
+![真实键盘事件控制的相机记录](../img/air/mujoco_uav_rooftop_pv_coverage_survey/keyboard_interactive.gif)
 
 ![真实查看器按键事件与运动记录](../img/air/mujoco_uav_rooftop_pv_coverage_survey/keyboard_motion_contact_sheet.png)
 
@@ -110,9 +110,12 @@ source /opt/ros/humble/setup.bash
 colcon build --packages-select mujoco_uav_rooftop_pv_coverage_survey
 source install/setup.bash
 ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_controller.launch.py
+ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_workflow.launch.py mode:=all output:=survey_data
 ```
 
-节点订阅 `sensor_msgs/Image`、`geometry_msgs/PoseStamped` 和 `nav_msgs/Path`，发布 `geometry_msgs/Twist` 与 JSON 状态消息。配置中的 `segmentation_checkpoint`、`planning_checkpoint` 和 `control_checkpoint` 指向训练权重；未配置权重时，状态明确标识颜色基线与几何跟踪。坐标系不一致、输入过期或尚未获得有效图像、位姿和路径时，控制输出停车指令。
+节点订阅 `sensor_msgs/Image`、`geometry_msgs/PoseStamped` 和 `nav_msgs/Path`，发布 `geometry_msgs/Twist` 与 JSON 状态消息。配置中的 `segmentation_checkpoint`、`planning_checkpoint` 和 `control_checkpoint` 指向训练权重；`end_to_end_checkpoint` 选择直接从 RGB 预测速度的模型，状态标识为 `trained_image`。未配置权重时，状态明确标识颜色基线与几何跟踪。所有模式均要求有效且未过期的图像；坐标系不一致、输入过期或尚未获得有效位姿和路径时，控制输出停车指令。
+
+`rooftop_pv_workflow.launch.py` 接受 `mode`、`output` 和 `scenario` 参数，通过安装的 `rooftop_pv_pipeline` 入口启动数据、训练、SLAM 和键盘模式；控制节点使用独立的 `rooftop_pv_controller.launch.py`。
 
 | 参数| 用途|
 |---|---|
@@ -123,6 +126,7 @@ ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_controller.launch.p
 | `status_topic` | 控制和感知状态|
 | `control_checkpoint` | 训练后的 MLP 权重|
 | `planning_checkpoint` | 训练后的局部航点规划权重|
+| `end_to_end_checkpoint` | 训练后的 RGB 到速度模型权重 |
 | `segmentation_checkpoint` | 训练后的分割权重|
 | `input_timeout` | 输入超时停车|
 
@@ -155,7 +159,9 @@ ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_controller.launch.p
 | 局部航点规划 MSE| 0.10398 |
 | 局部航点误差（m）| 0.41047 |
 
-本轮 Ubuntu/Humble 容器中 44 项测试通过，完整入口生成四个训练权重文件。`colcon build` 后，在源码目录之外成功载入三种已安装 MJCF。已安装 launch 的真实 ROS 消息验收确认图像、位姿与路径输入可产生非零且有界的速度，并在位姿过期时停车；另一轮节点验收同时加载分割、规划和控制三个训练权重，状态分别报告 `trained_segmentation`、`trained_local_waypoint` 与 `trained_mlp`。两次 ROS 验收均记录 `passed=true`。
+本轮 Ubuntu/Humble 容器中 51 项测试通过，完整入口生成四个训练权重文件。`colcon build` 后，在源码目录之外成功载入三种已安装 MJCF，并由安装后的 workflow launch 运行场景。Docker 镜像将功能包安装到 `/opt/rooftop_pv`，默认通过真实 ROS launch 执行完整流程，Compose 运行成功并保留 `artifacts/day2/day2_summary.json`。
+
+ROS 消息验收确认图像、位姿与路径输入可产生非零且有界的速度，并在位姿过期时停车。训练模式同时加载分割、规划和控制三个权重，状态分别报告 `trained_segmentation`、`trained_local_waypoint` 与 `trained_mlp`。端到端模式加载图像控制权重，真实 RGB 消息产生有界速度，状态为 `trained_image`，位姿超时停车通过。安装启动、训练模型控制和端到端图像控制三轮 ROS 验收均记录 `passed=true`。
 
 最新完整入口的稀疏布局 SLAM 运行完成四个航点，记录七个地标和 136 次重复观测，位置 RMSE 为 0.06606 m。上面的三场景表对应独立保存的多场景运行，因此保留各自数值。
 
