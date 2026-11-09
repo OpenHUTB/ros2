@@ -17,6 +17,10 @@
 
   <buildtool_depend>ament_python</buildtool_depend>
 
+  <!-- 策略推理依赖 PyTorch（CPU 版即可）。Ubuntu 源没有稳定的对应 deb 包，
+       故不写成 rosdep 键，请用 pip 安装：
+         pip install torch --index-url https://download.pytorch.org/whl/cpu -->
+
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>

@@ -27,6 +27,10 @@ setup(
         "numpy<3",
         "mujoco>=3.1",
         "pyyaml",
+        # 策略推理依赖 PyTorch。这里故意不写死，避免 pip 自动拉取 200 MB+
+        # 的 CUDA 版；请按 README 安装 CPU 版：
+        #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+        # "torch>=2.0",
     ],
     zip_safe=True,
     maintainer="OpenHUTB contributor",

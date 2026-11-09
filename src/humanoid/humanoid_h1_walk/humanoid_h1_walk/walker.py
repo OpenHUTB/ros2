@@ -21,8 +21,16 @@ from typing import Dict, List, Tuple
 
 import mujoco
 import numpy as np
-import torch
 import yaml
+
+try:
+    import torch
+except ImportError as exc:  # pragma: no cover - 仅在环境缺依赖时触发
+    raise ImportError(
+        "humanoid_h1_walk 需要 PyTorch 才能加载 TorchScript 策略。\n"
+        "请安装 CPU 版（约 200 MB，无需 CUDA）：\n"
+        "  pip install torch --index-url https://download.pytorch.org/whl/cpu"
+    ) from exc
 
 #: 策略训练时的步态周期（秒），观测最后两维是它的 sin/cos 相位
 GAIT_PERIOD = 0.8
