@@ -12,8 +12,7 @@
 - Python 3.8
 
 ## 文件结构
-```
-
+'''
 src/
 └── figure8_sim/
 ├── package.xml
@@ -23,8 +22,7 @@ src/
 │   └── figure8.launch
 └── scripts/
 └── main.py
-
-```
+'''
 
 ## 运行步骤
 1. 打开终端，编译工作空间：catkin_make
