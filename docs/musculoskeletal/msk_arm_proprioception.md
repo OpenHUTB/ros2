@@ -30,6 +30,10 @@
 所有数组长度均为 6，顺序为肩屈肌、肩伸肌、肘屈肌、肘伸肌、
 双关节屈肌、双关节伸肌。
 
+节点只有在三个输入都至少收到一帧有效消息后才发布。任何回调发现缺失关节、
+非数值、NaN/Inf 或维度错误时，会打印 warning、撤销对应输入的就绪状态并
+跳过该帧，不会让异常传播到 ROS executor。
+
 ## 2. 串联弹性肌腱
 
 当前采用线性集总模型：
@@ -130,6 +134,20 @@ ros2 topic echo /proprioception/golgi_force --once
 | `force_noise_std_n` | `0.2` | GTO 力标准差 |
 | `tendon_extension_noise_std_m` | `0.0001` | 肌腱伸长标准差 |
 | `random_seed` | `0` | 噪声随机种子 |
+| `velocity_filter_tau_s` | `0.02` | 肌梭速度低通时间常数 |
+| `muscle_names` | 六条肌肉 | 输入数组顺序契约 |
+| `moment_arms_flat` | 12 个系数 | `6 x 2` 力臂矩阵展开 |
+| `resting_lengths_m` | 六个长度 | 肌肉-肌腱静息长度 |
+| `tendon_stiffness_n_m` | 六个刚度 | 串联肌腱刚度 |
+| `max_forces_n` | 六个峰值力 | 共收缩刚度计算参数 |
+
+参数来源：
+
+- `moment_arms_flat` 直接对应第一个模块 fixed tendon 的肩、肘关节系数；
+- `max_forces_n` 与第一个模块 MuJoCo muscle actuator 的 `force` 一致；
+- `resting_lengths_m` 和 `tendon_stiffness_n_m` 是集总模型的初始标定值，
+  不是实验测量值，应通过肌腱拉伸试验或参数辨识替换；
+- `muscle_names` 必须与上述六肌肉顺序完全一致，否则节点拒绝启动。
 
 ## 7. 测试与实验
 

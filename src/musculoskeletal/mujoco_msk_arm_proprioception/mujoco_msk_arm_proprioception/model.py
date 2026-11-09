@@ -92,12 +92,18 @@ class ProprioceptionModel:
 
     def __init__(
         self,
+        muscle_names: Iterable[str] = MUSCLE_NAMES,
         moment_arms: np.ndarray = DEFAULT_MOMENT_ARMS,
         resting_lengths_m: np.ndarray = DEFAULT_REST_LENGTHS_M,
         tendon_stiffness_n_m: np.ndarray = DEFAULT_TENDON_STIFFNESS_N_M,
         max_forces_n: np.ndarray = DEFAULT_MAX_FORCES_N,
         velocity_filter_tau_s: float = 0.02,
     ) -> None:
+        muscle_names = tuple(muscle_names)
+        if muscle_names != MUSCLE_NAMES:
+            raise ValueError(
+                'muscle order must match the documented six-muscle order'
+            )
         moment_arms = np.asarray(moment_arms, dtype=float)
         if moment_arms.shape != (len(MUSCLE_NAMES), 2):
             raise ValueError('moment_arms must have shape (6, 2)')
@@ -128,6 +134,7 @@ class ProprioceptionModel:
         if not isfinite(velocity_filter_tau_s) or velocity_filter_tau_s <= 0.0:
             raise ValueError('velocity filter time constant must be positive')
 
+        self.muscle_names = muscle_names
         self.moment_arms = moment_arms
         self.resting_lengths_m = resting_lengths_m
         self.tendon_stiffness_n_m = tendon_stiffness_n_m
@@ -233,11 +240,23 @@ class ProprioceptionModel:
 
 def coactivation_joint_stiffness(
     coactivation: float,
+    muscle_names: Iterable[str] = MUSCLE_NAMES,
+    moment_arms: np.ndarray = DEFAULT_MOMENT_ARMS,
     max_forces_n: np.ndarray = DEFAULT_MAX_FORCES_N,
     resting_lengths_m: np.ndarray = DEFAULT_REST_LENGTHS_M,
     active_stiffness_gain: float = 4.0,
 ) -> np.ndarray:
     """Return joint stiffness from symmetric agonist-antagonist activation."""
+    muscle_names = tuple(muscle_names)
+    if muscle_names != MUSCLE_NAMES:
+        raise ValueError(
+            'muscle order must match the documented six-muscle order'
+        )
+    moment_arms = np.asarray(moment_arms, dtype=float)
+    if moment_arms.shape != (len(MUSCLE_NAMES), 2):
+        raise ValueError('moment_arms must have shape (6, 2)')
+    if not np.all(np.isfinite(moment_arms)):
+        raise ValueError('moment_arms values must be finite')
     if not isfinite(coactivation) or not 0.0 <= coactivation <= 1.0:
         raise ValueError('coactivation must be in [0, 1]')
     max_forces_n = _vector(
@@ -260,7 +279,7 @@ def coactivation_joint_stiffness(
     )
     activation = np.full(len(MUSCLE_NAMES), float(coactivation))
     return (
-        DEFAULT_MOMENT_ARMS.T
+        moment_arms.T
         @ np.diag(muscle_stiffness * activation)
-        @ DEFAULT_MOMENT_ARMS
+        @ moment_arms
     )

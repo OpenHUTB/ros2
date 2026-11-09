@@ -6,7 +6,14 @@ from typing import Optional
 
 import numpy as np
 
-from .model import MUSCLE_NAMES, ProprioceptionModel
+from .model import (
+    DEFAULT_MAX_FORCES_N,
+    DEFAULT_MOMENT_ARMS,
+    DEFAULT_REST_LENGTHS_M,
+    DEFAULT_TENDON_STIFFNESS_N_M,
+    MUSCLE_NAMES,
+    ProprioceptionModel,
+)
 from .sensor import NoisyDelayedProprioception
 
 
@@ -31,6 +38,14 @@ class ArmProprioceptionNode:
             'force_noise_std_n': 0.2,
             'tendon_extension_noise_std_m': 0.0001,
             'random_seed': 0,
+            'velocity_filter_tau_s': 0.02,
+            'muscle_names': list(MUSCLE_NAMES),
+            'moment_arms_flat': DEFAULT_MOMENT_ARMS.ravel().tolist(),
+            'resting_lengths_m': DEFAULT_REST_LENGTHS_M.tolist(),
+            'tendon_stiffness_n_m': (
+                DEFAULT_TENDON_STIFFNESS_N_M.tolist()
+            ),
+            'max_forces_n': DEFAULT_MAX_FORCES_N.tolist(),
         }
         for name, value in defaults.items():
             node.declare_parameter(name, value)
@@ -39,7 +54,37 @@ class ArmProprioceptionNode:
         if sample_rate_hz <= 0.0 or sample_rate_hz > 1000.0:
             raise ValueError('sample_rate_hz must be within (0, 1000]')
         self.sample_period_s = 1.0 / sample_rate_hz
-        self.model = ProprioceptionModel()
+        muscle_names = tuple(
+            str(name) for name in node.get_parameter('muscle_names').value
+        )
+        moment_arms_flat = np.asarray(
+            node.get_parameter('moment_arms_flat').value,
+            dtype=float,
+        )
+        if moment_arms_flat.shape != (len(MUSCLE_NAMES) * 2,):
+            raise ValueError(
+                'moment_arms_flat must contain 12 coefficients'
+            )
+        moment_arms = moment_arms_flat.reshape(len(MUSCLE_NAMES), 2)
+        self.model = ProprioceptionModel(
+            muscle_names=muscle_names,
+            moment_arms=moment_arms,
+            resting_lengths_m=np.asarray(
+                node.get_parameter('resting_lengths_m').value,
+                dtype=float,
+            ),
+            tendon_stiffness_n_m=np.asarray(
+                node.get_parameter('tendon_stiffness_n_m').value,
+                dtype=float,
+            ),
+            max_forces_n=np.asarray(
+                node.get_parameter('max_forces_n').value,
+                dtype=float,
+            ),
+            velocity_filter_tau_s=float(
+                node.get_parameter('velocity_filter_tau_s').value
+            ),
+        )
         self.sensor = NoisyDelayedProprioception(
             sample_period_s=self.sample_period_s,
             delay_s=float(node.get_parameter('delay_s').value),
@@ -114,36 +159,47 @@ class ArmProprioceptionNode:
             'Waiting for /joint_states, /muscle_forces, /muscle_activations'
         )
 
-    def _joint_state_callback(self, message) -> None:
-        positions = {}
-        velocities = {}
-        velocity_values = message.velocity
-        if len(velocity_values) != len(message.name):
-            velocity_values = [0.0] * len(message.name)
-        for name, position, velocity in zip(
-            message.name,
-            message.position,
-            velocity_values,
-        ):
-            positions[name] = float(position)
-            velocities[name] = float(velocity)
-        required = ('shoulder_joint', 'elbow_joint')
-        if not all(name in positions for name in required):
-            self.node.get_logger().warning(
-                'joint_states is missing shoulder_joint or elbow_joint'
-            )
-            return
-        values = np.array(
-            [
-                positions['shoulder_joint'],
-                positions['elbow_joint'],
-                velocities['shoulder_joint'],
-                velocities['elbow_joint'],
-            ]
+    @property
+    def inputs_ready(self) -> bool:
+        return (
+            self._received_joint_state
+            and self._received_forces
+            and self._received_activations
         )
-        if not np.all(np.isfinite(values)):
+
+    def _joint_state_callback(self, message) -> None:
+        try:
+            positions = {}
+            velocities = {}
+            velocity_values = message.velocity
+            if len(velocity_values) != len(message.name):
+                velocity_values = [0.0] * len(message.name)
+            for name, position, velocity in zip(
+                message.name,
+                message.position,
+                velocity_values,
+            ):
+                positions[name] = float(position)
+                velocities[name] = float(velocity)
+            required = ('shoulder_joint', 'elbow_joint')
+            if not all(name in positions for name in required):
+                raise ValueError(
+                    'missing shoulder_joint or elbow_joint'
+                )
+            values = np.array(
+                [
+                    positions['shoulder_joint'],
+                    positions['elbow_joint'],
+                    velocities['shoulder_joint'],
+                    velocities['elbow_joint'],
+                ]
+            )
+            if not np.all(np.isfinite(values)):
+                raise ValueError('contains non-finite values')
+        except Exception as error:
+            self._received_joint_state = False
             self.node.get_logger().warning(
-                'joint_states contains non-finite values'
+                'joint_states rejected: %s' % error
             )
             return
         self._joint_position = values[:2].copy()
@@ -151,42 +207,44 @@ class ArmProprioceptionNode:
         self._received_joint_state = True
 
     def _force_callback(self, message) -> None:
-        values = self._validated_muscle_array(message, 'muscle_forces')
-        if values is None:
+        try:
+            values = self._validated_muscle_array(message)
+        except Exception as error:
+            self._received_forces = False
+            self.node.get_logger().warning(
+                'muscle_forces rejected: %s' % error
+            )
             return
         self._muscle_forces = np.maximum(values, 0.0)
         self._received_forces = True
 
     def _activation_callback(self, message) -> None:
-        values = self._validated_muscle_array(
-            message,
-            'muscle_activations',
-        )
-        if values is None:
+        try:
+            values = self._validated_muscle_array(message)
+        except Exception as error:
+            self._received_activations = False
+            self.node.get_logger().warning(
+                'muscle_activations rejected: %s' % error
+            )
             return
         self._activations = np.clip(values, 0.0, 1.0)
         self._received_activations = True
 
-    def _validated_muscle_array(self, message, topic: str):
-        values = np.asarray(message.data, dtype=float)
+    def _validated_muscle_array(self, message):
+        try:
+            values = np.asarray(message.data, dtype=float)
+        except (TypeError, ValueError) as error:
+            raise ValueError('values must be numeric') from error
         if values.shape != (len(MUSCLE_NAMES),):
-            self.node.get_logger().warning(
-                '%s must contain %d values' % (topic, len(MUSCLE_NAMES))
+            raise ValueError(
+                'must contain %d values' % len(MUSCLE_NAMES)
             )
-            return None
         if not np.all(np.isfinite(values)):
-            self.node.get_logger().warning(
-                '%s contains non-finite values' % topic
-            )
-            return None
+            raise ValueError('contains non-finite values')
         return values
 
     def _tick(self) -> None:
-        if not (
-            self._received_joint_state
-            and self._received_forces
-            and self._received_activations
-        ):
+        if not self.inputs_ready:
             return
         try:
             sample = self.model.estimate(
@@ -199,7 +257,7 @@ class ArmProprioceptionNode:
                 dt_s=self.sample_period_s,
             )
             sensed = self.sensor.measure(sample)
-        except ValueError as error:
+        except Exception as error:
             self.node.get_logger().warning(
                 'Proprioception update rejected: %s' % error
             )

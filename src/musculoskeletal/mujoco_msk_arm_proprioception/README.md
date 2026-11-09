@@ -27,6 +27,18 @@ biarticular_flexor
 biarticular_extensor
 ```
 
+物理参数全部位于 `config/simulation.yaml`：
+
+| 参数 | 当前值来源 |
+| --- | --- |
+| `moment_arms_flat` | 与第一个模块 fixed tendon 的肩/肘关节系数一致 |
+| `resting_lengths_m` | 集总模型的初始标定值 |
+| `tendon_stiffness_n_m` | 初始集总刚度，需按平台标定 |
+| `max_forces_n` | 与第一个模块 MuJoCo muscle actuator 的峰值力一致 |
+
+静息长度和肌腱刚度不是生物实验测量值，而是可替换的初始参数。实际平台应
+通过肌腱拉伸试验或参数辨识更新 YAML。
+
 ## ROS 2 接口
 
 | 话题 | 类型 | 方向 | 内容 |
@@ -40,6 +52,8 @@ biarticular_extensor
 | `/proprioception/tendon_extension` | `std_msgs/msg/Float64MultiArray` | 发布 | 六维肌腱伸长，单位 m |
 
 本节点在 100 Hz 定时器中发布传感器输出，不创建 service、action 或 TF。
+只有三个输入都至少收到一帧有效消息后才发布；任一回调遇到 NaN、维度错误或
+非数值数据时会记录 warning、撤销对应输入的就绪状态并跳过该帧。
 
 ## 构建与运行
 
@@ -68,7 +82,8 @@ ros2 topic echo /proprioception/golgi_force --once
 rqt_graph
 ```
 
-参数位于 `config/simulation.yaml`：采样率、延迟、四类噪声标准差和随机种子。
+参数位于 `config/simulation.yaml`：采样率、延迟、四类噪声标准差、随机种子、
+肌肉顺序、12 个力臂系数以及四组物理参数。
 
 ## 实验
 

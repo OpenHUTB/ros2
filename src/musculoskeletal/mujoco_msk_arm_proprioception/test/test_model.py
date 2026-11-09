@@ -80,3 +80,17 @@ def test_invalid_force_vector_is_rejected(forces):
             muscle_forces_n=forces,
             dt_s=0.01,
         )
+
+
+def test_wrong_muscle_order_is_rejected():
+    with pytest.raises(ValueError, match='muscle order'):
+        ProprioceptionModel(
+            muscle_names=(
+                'shoulder_extensor',
+                'shoulder_flexor',
+                'elbow_flexor',
+                'elbow_extensor',
+                'biarticular_flexor',
+                'biarticular_extensor',
+            )
+        )
