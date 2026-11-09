@@ -245,21 +245,23 @@ MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
 
 ## 11. 运行效果
 
-以下截图来自 Ubuntu 20.04 + ROS Noetic + Gazebo 11 虚拟机的真实运行（`roslaunch mbot_gazebo_lidar_avoid main.launch`）：
+以下截图来自 Ubuntu 20.04 + ROS Noetic + Gazebo 11 虚拟机的真实运行（`roslaunch mbot_gazebo_lidar_avoid main.launch`）。
+
+**Gazebo 仿真画面**：
 
 ![避障运行截图](./mbot_lidar_avoid_run.png)
 
-截图只包含 Gazebo 窗口：封闭场地、三块障碍物，以及机器人位置周围的蓝色激光扫描扇形
-（URDF 中 `<visualize>true</visualize>` 的效果），底部状态栏 `Real Time Factor: 0.91`、
-`Sim Time: 00:00:45.321`。此截图不含 `rqt_graph` 与终端窗口。
+封闭场地、三块障碍物，以及机器人位置周围的蓝色激光扫描扇形（URDF 中
+`<visualize>true</visualize>` 的效果），底部状态栏 `Real Time Factor: 0.91`、
+`Sim Time: 00:00:45.321`。
 
-同一台机器上的启动日志与话题实测（`roslaunch` 启动后采集）：
+**同一台机器上的终端实测**（launch 启动后采集）：
+
+![终端实测截图](./mbot_lidar_avoid_terminal.png)
 
 ```text
-$ grep -c WARN /tmp/launch.log
+$ grep -c WARN /tmp/launch5.log
 0
-$ grep -E 'ERROR|KDL' /tmp/launch.log
-（无输出）
 
 $ rostopic list | grep -E 'scan|odom|cmd_vel|joint_states'
 /cmd_vel
@@ -268,26 +270,33 @@ $ rostopic list | grep -E 'scan|odom|cmd_vel|joint_states'
 /scan
 
 $ rostopic info /joint_states
+Type: sensor_msgs/JointState
+
 Publishers:
- * /gazebo (http://ubuntu:39803/)
+ * /gazebo (http://ubuntu:35159/)
+
 Subscribers:
- * /robot_state_publisher (http://ubuntu:35675/)
+ * /robot_state_publisher (http://ubuntu:34601/)
 
-$ timeout 8 rostopic hz /scan | tail -2
+$ timeout 5 rostopic hz /scan | tail -2
 average rate: 10.000
-	min: 0.098s max: 0.102s std dev: 0.00082s window: 67
+	min: 0.094s max: 0.106s std dev: 0.00242s window: 32
 
-$ rostopic echo -n 1 /odom/pose/pose/position
-x: -3.318942598991395
-y: 3.0892870496548657
-z: 1.3599388173635152e-06          # base_footprint 在地面，不再有 0.11 m 偏置
-
-$ timeout 5 rosrun tf tf_echo odom base_footprint | grep Translation
-- Translation: [-3.485, 2.199, 0.000]
-
-$ timeout 5 rosrun tf tf_echo base_link left_wheel_link | grep Translation
-- Translation: [-0.000, 0.190, -0.050]   # 轮子 TF 正常，旋转量随里程计变化
+$ timeout 3 rosrun tf tf_echo odom base_footprint | grep -A1 Translation | head -2
+- Translation: [3.409, 0.206, 0.000]
+- Rotation: in Quaternion [-0.000, -0.000, 0.721, 0.693]
 ```
+
+`odom -> base_footprint` 的平移 z 为 `0.000`（`/odom` 里约 1e-06），说明 `base_footprint`
+确实落在接地平面，不再有 10 cm 偏置。
+
+**rqt_graph 计算图**：
+
+![rqt_graph 截图](./mbot_lidar_avoid_rqtgraph.png)
+
+`mbot_lidar_avoid_node` 从 `/scan` 取数据、向 `/cmd_vel` 发指令。`/scan`、`/odom`、
+`/joint_states` 的发布者都显示为 `/gazebo`，因为两个 Gazebo 插件都挂在同一个
+gzserver 节点名下；`/robot_state_publisher` 订阅 `/joint_states` 并发布轮子 TF。
 
 `WARN` 计数为 0，说明差速插件已按 ROS 1 参数名完整配置：`wheelTorque` 10、`wheelAcceleration` 3.0、
 `updateRate` 100、`odometrySource` world、`publishTf` 1、`publishWheelJointState` true、
