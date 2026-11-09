@@ -12,16 +12,17 @@
 5. 通过 launch 文件一键启动节点。
 
 ## 功能包结构
-privacy_mask/
+src/chap5/privacy_mask/
 
-├── privacy_mask/
-
-│   ├── __init__.py
-
-│   └── privacy_mask_node.py
 ├── launch/
 
 │   └── privacy_mask.launch.py
+
+├── privacy_mask/
+
+│   ├── _init_.py
+
+│   └── privacy_mask_node.py
 
 ├── resource/
 
@@ -34,6 +35,14 @@ privacy_mask/
 ├── setup.py
 
 └── README.md
+
+docs/
+
+├── task_description.md
+
+├── README.md
+
+└── privacy_mask_demo.gif
 
 ## 依赖环境
 - ROS2 Humble
