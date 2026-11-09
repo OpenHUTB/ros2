@@ -654,11 +654,21 @@ build.cmd
 <p>另开一个命令行窗口输入: <code>netstat -ano | findstr ":41451"</code></p>
 <p>看到 <code>LISTENING</code> 就说明 <code>API</code> 服务在线。</p>
 <h4 id="3">第 3 步：运行圆形轨迹控制器</h4>
-<p>在命令行输入: <code>python(存储相应文件的磁盘) :\UNav-Sim\circle_rov.py</code></p>
+<h5 id="apython">方案 A：Python脚本方案</h5>
+<p>在命令行输入: <code>python E:\underwater\daima\UNav-Sim\circle_rov.py</code></p>
+<p><strong>注：命令中路径改为自己电脑文件实际存放地址</strong></p>
 <ul>
 <li>运行 <code>90</code> 秒自动停止，半径 <code>2.5</code> 米，一圈约 <code>79</code> 秒</li>
 <li>脚本开头会自动把 <code>ROV</code> 重置回水面附近，不需要手动处理沉底问题</li>
 </ul>
+<h5 id="b-c-hellorov">方案 B：官方 C++ HelloROV 示例方案</h5>
+<p>在PowerShell中运行存储相应文件的磁盘
+例如：</p>
+<p><code>E:\underwater\daima\UNav-Sim\HelloRov\build\x64\Release\HelloRov.exe</code></p>
+<p><strong>注：命令中路径改为自己电脑文件实际存放地址</strong></p>
+<p>如果ROV已经沉底，推进器可能推不动，所以单独执行下面这条重置命令:</p>
+<div class="highlight"><pre><span></span><code><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">"import airsim; c=airsim.MultirotorClient(); c.confirmConnection(); c.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0,0,-0.5), airsim.Quaternionr(0,0,0,1)), True)"</span>
+</code></pre></div>
 <h4 id="4-ue">第 4 步：在 UE 视口里看</h4>
 <ol>
 <li>鼠标点一下视口中的画面</li>
