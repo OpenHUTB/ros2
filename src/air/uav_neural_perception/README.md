@@ -2,12 +2,7 @@
 
 前视 CNN 行为克隆视觉导航：`/camera/image_raw` → CNN → `/uav/cmd_vel`。**ROS2 Humble (ament_python)**。
 
-## 安全约束
-
-- 权重缺失或加载失败时节点**安全停止**（fatal + exit 1），不创建发布者、不进入推理循环；
-- 随机权重只在离线自检显式 `allow_random=True` 时使用，部署侧固定 `False`；
-- 模型输出 NaN/inf/长度异常时丢弃本帧，不下发速度；
-- 合法但超界的输出经 `sanitize_action` 限幅到 `max_vx/max_vy/max_yaw`。
+权重缺失或加载失败节点直接退出（fatal+exit1），不创建发布者。输出 NaN/inf 或长度异常时丢帧，不下发速度；合法但超界的输出按 `max_vx/max_vy/max_yaw` 限幅。
 
 ## 运行
 
@@ -51,7 +46,7 @@ test/test_perception_local.py
 python3 test/test_perception_local.py
 ```
 
-18 个用例跑过（torch 相关的 1 个在 CI 没装 torch 时自动 skip）。覆盖：sanitize_action 限幅/NaN/inf/长度异常、权重缺失抛错、Image 解码（rgb8/bgr8/mono8）、normalize 往返、包结构静态断言（ament_python、无 CMakeLists、无 rospy/CvBridge）。
+18 个用例跑过（torch 相关的 1 个在 CI 没装 torch 时自动 skip）。
 
 ## 说明
 
