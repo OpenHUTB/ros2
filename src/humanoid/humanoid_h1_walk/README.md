@@ -50,7 +50,16 @@ colcon build --packages-select humanoid_h1_walk
 source install/setup.bash
 ```
 
-模型、网格与权重已随仓库提供，**无需联网下载**。
+模型、网格与权重已随仓库提供，**无需联网下载**。两个策略文件与上游
+`unitree_rl_gym@276801e4` 的 `deploy/pre_train/{h1,h1_2}/motion.pt` 字节一致，可直接校验：
+
+| 文件 | 大小 | SHA-256 |
+|---|---|---|
+| `weights/h1_motion.pt` | 139,345 B | `44a0fbceb81f3877833ae9a398d039bea1759cb0d3c8188181013885f70589eb` |
+| `weights/h1_2_motion.pt` | 145,745 B | `ea3003268d5d2e4b5004eb26d0969fbfdedced265ceeec7bf0b335309259cc80` |
+
+> 仓库根 `.gitignore` 有全局 `*.pt` 规则，本模块已在其中加入白名单
+> `!src/humanoid/humanoid_h1_walk/weights/*.pt`，否则权重会被静默忽略。
 
 ## 4. 运行
 
@@ -255,6 +264,15 @@ x: 1.97  y: 2.08  z: 1.03        # 骨盆 1.03 m，正在走
 
 [policy_node] 已推理 750 帧，平均单帧 0.50 ms
 ```
+
+同样的流程在**从远端干净克隆**的工作空间复跑过（排除本地残留文件），
+`colcon list` 识别为 `(ros.ament_python)`、`ros2 pkg prefix` 指向 `install/humanoid_h1_walk`、
+`install/.../share/humanoid_h1_walk/weights/` 下有 2 个 `.pt`，
+`robot:=h1_2` 也能正常起两节点（单帧 0.62 ms）。
+
+> 若 `colcon list` 把本包识别成 `(python)` 而不是 `(ros.ament_python)`，
+> 说明 `package.xml` 解析失败（例如注释里出现连续的 `--`），
+> 此时不会生成 `ament_prefix_path` 钩子，`ros2 launch` 会报 `Package not found`。
 
 ## 7. 性能指标
 

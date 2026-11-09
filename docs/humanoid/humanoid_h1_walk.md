@@ -17,7 +17,7 @@
 | ROS | ROS 2 Humble |
 | 控制频率 | 50 Hz（每周期 10 个 2 ms 物理步） |
 | 入口 | `main.py`（`--demo / --gui / --test / --compare / --gif / --ros`） |
-| 权重 | `weights/h1_motion.pt`（137 KB）、`weights/h1_2_motion.pt`（143 KB） |
+| 权重 | `weights/h1_motion.pt`（139,345 B）、`weights/h1_2_motion.pt`（145,745 B），随仓库提供 |
 
 任务定位：课程任务「**物理仿真 + 运动控制**」。速度指令 $[v_x, v_y, \omega_z]$ 由
 `/cmd_vel` 或键盘给出，神经网络输出 10/12 个腿部关节的目标角，PD 控制器把它变成力矩。
@@ -54,9 +54,17 @@ humanoid_h1_walk/
 │   ├── compare_gaits.py        机型对比（速度跟踪、能耗）
 │   ├── record_gif.py           离屏渲染录动图
 │   └── plot_metrics.py         指标曲线
-├── assets/h1/, assets/h1_2/    模型 XML 与网格（52 MB）
-├── weights/                    两机型的 TorchScript 策略
+├── assets/h1/, assets/h1_2/    模型 XML 与网格（52 MB，75 个 STL，全部被 scene.xml 引用）
+├── weights/                    两机型的 TorchScript 策略（284 KB，随仓库提供）
 └── THIRD_PARTY.md              上游来源与许可
+```
+
+两个策略文件与上游 `unitree_rl_gym@276801e4` 的 `deploy/pre_train/{h1,h1_2}/motion.pt`
+字节一致，可用 SHA-256 校验：
+
+```
+44a0fbceb81f3877833ae9a398d039bea1759cb0d3c8188181013885f70589eb  weights/h1_motion.pt
+ea3003268d5d2e4b5004eb26d0969fbfdedced265ceeec7bf0b335309259cc80  weights/h1_2_motion.pt
 ```
 
 ## 四、核心实现
@@ -267,6 +275,27 @@ z: 1.0319247295131657     # 骨盆高度 1.03 m，与仿真一致
 策略节点日志：`已推理 750 帧，平均单帧 0.50 ms`，即推理占用控制周期的 2.5%，
 其余时间都在物理步进。`/humanoid/obs` 的 41 维数据正常发布，前 6 维是机身角速度
 与重力方向（$g_z \approx -1$ 表示直立）。
+
+为排除本地残留文件的影响，上述流程在**从远端干净克隆**的工作空间又完整跑了一遍：
+
+```
+$ colcon list --base-paths src/humanoid/humanoid_h1_walk
+humanoid_h1_walk	src/humanoid/humanoid_h1_walk	(ros.ament_python)
+
+$ ros2 pkg prefix humanoid_h1_walk
+/ws/install/humanoid_h1_walk
+
+$ ls install/humanoid_h1_walk/share/humanoid_h1_walk/weights/
+h1_2_motion.pt  h1_motion.pt        # setup.py 的 glob("weights/*.pt") 生效
+
+$ ros2 launch humanoid_h1_walk main.launch.py robot:=h1_2 routine:=true teleop:=false
+[h1_2 策略节点已启动：.../weights/h1_2_motion.pt，观测 47 维 → 动作 12 维]
+[h1_2 仿真节点已启动：12 个关节，控制频率 50 Hz]
+[已推理 250 帧，平均单帧 0.62 ms，动作范数 3.040]
+
+$ ros2 topic hz /joint_states
+average rate: 49.989 / 50.001     # std dev 0.4 ms
+```
 
 ## 七、已知问题
 
