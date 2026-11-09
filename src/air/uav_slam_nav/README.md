@@ -48,7 +48,7 @@ test/test_uav_slam_nav_local.py
 - `slam_toolbox` 发 `map -> odom`。
 - `odom_tf` 把 `/uav/odom` 发成 `odom -> base_link`。
 - launch 里加了一个 `odom -> world` 的静态单位变换，把 bridge 点云里的 `world` frame 接到树上。
-- nav2 配置里 global costmap 用 `map`、local costmap 用 `odom`，`robot_base_frame` 统一 `base_link`（上一版 global_frame 一个 map 一个 world 的问题已修）。
+- nav2 配置里 global costmap 用 `map`、local costmap 用 `odom`，`robot_base_frame` 统一 `base_link`。
 
 ## 参数
 
@@ -75,4 +75,4 @@ ros2 launch uav_slam_nav slam_nav.launch.py
 python3 test/test_uav_slam_nav_local.py
 ```
 
-22 个用例，不依赖 ROS，CI 直接跑。覆盖点云投影、扇区测距、兜底决策、仲裁、TF 矩阵，以及三条静态断言（`simple_nav` 不许直发 `/uav/cmd_vel`、`nav_relay` 是 `/uav/cmd_vel` 唯一发布者、`points_to_scan` 用 tf2）。
+22 个用例，不依赖 ROS，CI 直接跑。
