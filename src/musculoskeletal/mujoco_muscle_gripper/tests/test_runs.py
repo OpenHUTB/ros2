@@ -52,6 +52,9 @@ class TestForceLoop(unittest.TestCase):
             self.assertAlmostEqual(lv["steady_n"], lv["target_n"], delta=0.2)
             self.assertGreater(lv["rise_time_s"], 0.0)
             self.assertLess(lv["rise_time_s"], 1.5)
+            self.assertEqual(lv["force_source"], "mj_contactForce_bilateral_sum")
+            self.assertGreater(lv["contact_points"], 0)
+            self.assertLess(lv["final_activation"], 0.99)
 
 
 class TestSlipReflex(unittest.TestCase):
