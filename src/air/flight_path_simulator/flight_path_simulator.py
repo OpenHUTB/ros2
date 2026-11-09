@@ -49,8 +49,9 @@ START_X = 0.0
 START_Y = 0.0
 START_Z = 0.0  # 地面 z=0
 
-# 起飞后悬停高度（NED 坐标系：z 向下为正，所以离地 3m 对应 z = -3）
-HOVER_Z = -3.0  # NED 下 z=-3 表示离地 3m
+# 悬停高度（离地高度，正数）。NED 坐标系 z 向下为正，因此 z = -HOVER_ALT
+HOVER_ALT = 2.7
+HOVER_Z = -HOVER_ALT  # 到达该高度即切换为悬停
 
 # 随机种子，保证可复现
 random.seed(42)
@@ -58,7 +59,10 @@ np.random.seed(42)
 
 
 class DroneSimulator:
-    """简易多旋翼动力学模拟器"""
+    """开环运动学积分模型：按速度指令积分位置，叠加高斯噪声。
+
+    不含质量/推力/姿态/速度环滞后，因此不构成完整的动力学模型。
+    """
 
     def __init__(self):
         # 状态：位置 (x, y, z)，速度 (vx, vy, vz)，偏航角 theta
@@ -152,7 +156,7 @@ def run_simulation():
         # 起飞阶段：垂直上升，直到到达悬停高度附近再切换到悬停
         if label == "takeoff":
             # NED 下 z 越负高度越高；到达目标高度附近就停止上升
-            if drone.z <= HOVER_Z + 0.3:  # z 接近 -3m 时停止
+            if drone.z <= HOVER_Z:  # z 到达 -2.7（离地 2.7m）即停止上升
                 cmd_vz = 0.0
                 label = "hover"
 

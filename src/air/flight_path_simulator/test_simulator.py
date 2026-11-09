@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from flight_path_simulator import run_simulation, CONTROL_RATE, TOTAL_TIME
+from flight_path_simulator import run_simulation, CONTROL_RATE, TOTAL_TIME, HOVER_ALT
 
 
 def test_basic_output():
@@ -22,11 +22,11 @@ def test_basic_output():
         f"帧数异常: {len(records)} != {expected_frames}"
     print(f"[PASS] 帧数 = {len(records)} (期望 ~{expected_frames})")
 
-    # 2. 最大高度在合理范围 (2~4m)
+    # 2. 最大高度应贴合设定的悬停高度 HOVER_ALT（允许一个离散步长的越过量）
     max_alt = max(r["altitude_m"] for r in records)
-    assert 2.0 <= max_alt <= 4.0, \
-        f"最大高度异常: {max_alt:.2f}m 不在 2~4m 范围内"
-    print(f"[PASS] 最大高度 = {max_alt:.2f}m")
+    assert abs(max_alt - HOVER_ALT) <= 0.1, \
+        f"最大高度异常: {max_alt:.2f}m 偏离设定悬停高度 {HOVER_ALT}m 超过 0.1m"
+    print(f"[PASS] 最大高度 = {max_alt:.2f}m (设定 {HOVER_ALT}m)")
 
     # 3. 最后一帧应该是 landed/grounded 状态
     final_state = records[-1]["state"]
@@ -39,6 +39,23 @@ def test_basic_output():
     assert max_speed <= 5.0, \
         f"水平速度过高: {max_speed:.2f} m/s"
     print(f"[PASS] 最大水平速度 = {max_speed:.2f} m/s")
+
+    # 5. 总航程在合理范围（巡航 2.5m/s × 约 14s ≈ 35m，含转弯段）
+    dist = 0.0
+    for i in range(1, len(records)):
+        dx = records[i]["pos_x"] - records[i - 1]["pos_x"]
+        dy = records[i]["pos_y"] - records[i - 1]["pos_y"]
+        dist += (dx * dx + dy * dy) ** 0.5
+    assert 25.0 <= dist <= 50.0, \
+        f"总航程异常: {dist:.2f}m 不在 25~50m 范围内"
+    print(f"[PASS] 总航程 = {dist:.2f}m")
+
+    # 6. 状态序列应覆盖起飞、巡航、转弯、降落四个关键阶段
+    seen = {r["state"] for r in records}
+    required = {"takeoff", "forward", "turn_right", "landing"}
+    missing = required - seen
+    assert not missing, f"状态序列缺失: {missing}"
+    print(f"[PASS] 状态序列完整 = {sorted(seen)}")
 
     print("\n全部测试通过！")
 
