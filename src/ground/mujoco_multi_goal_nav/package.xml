@@ -1,14 +1,10 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="3">
+<package format="2">
   <name>mujoco_multi_goal_nav</name>
   <version>0.0.0</version>
   <description>MuJoCo小车多目标导航项目</description>
   <maintainer email="352797580@qq.com">Ri-kin08</maintainer>
   <license>MIT</license>
 
-  <buildtool_depend>ament_python</buildtool_depend>
-
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 </package>
