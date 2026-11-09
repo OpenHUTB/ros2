@@ -49,3 +49,7 @@ $$
 
 禁飞区在 `main.py` 顶部的 `NO_FLY_ZONES` 列表中定义。
 
+## 2D 可视化
+无需启动 AirSim，直接生成禁飞区平面图：
+    cd src/air/no_fly_zone_check
+    python visualize.py

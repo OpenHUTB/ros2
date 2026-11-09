@@ -15,8 +15,11 @@ __pycache__/
 docs/requirements.txt
  add-mujoco-aeb
 # MuJoCo 运行日志
+# 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
+# （新增 catkin 包时容易整个漏提交），这里显式放行这一个文件名。
 *.TXT
 *.log
+!CMakeLists.txt
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
 /*.png

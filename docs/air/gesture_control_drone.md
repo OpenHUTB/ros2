@@ -155,11 +155,86 @@ rostopic pub -1 /gesture_command std_msgs/String "data: 'takeoff'"   # 绕过识
 python3 tests/test_gesture_control_local.py
 ```
 
+数据集工具（为神经网络分类器准备训练数据，同样不需要 ROS / 摄像头）：
+
+```bash
+# 1) 用合成关键点验证整条流程（7 类 × N 个样本，临时文件跑完自动清理）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py selftest
+
+# 2) 查看一个采集会话的统计（每类样本数、缺失类别、特征均值/标准差）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py stats data/session_01.npz
+
+# 3) 合并多个会话（默认按固定种子打乱）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py merge data/all.npz \
+    data/session_01.npz data/session_02.npz
+```
+
+`selftest` 的真实输出（`log_to_png.py` 渲染，非系统截屏）：
+
+![数据集工具自测](../img/air/gesture_control_drone/run_dataset.png)
+
+其中第 [2] 步是**弱标签复判**：用 `gesture_detection.classify_landmarks` 对 7 只
+合成手逐个复判，必须 **7/7** 与期望类别一致。原因是 `extract_from_result()` 给真实
+数据打标签用的正是同一个函数——合成手一旦和它对不上，训练集的标签就是反的
+（历史上就踩过：合成手的手指画成朝下，张开手掌被判成握拳）。
+
+它负责三件事：把 MediaPipe 的 21 个关键点归一化成 **42 维**（减腕部 + 除手掌尺度，
+与距离/分辨率无关）、把采集会话存成 `.npz`（features + labels + meta）、
+以及按类分层划分训练/验证集（**样本数 < 2 的类别整类留在训练集**，
+避免"某类在训练集里消失"）。
+
 覆盖：脚本语法、**词表一致性**（7 手势→7 动作、10 条指令都有实现）、手势分类
 （含 OK / 拇指朝上朝下）、去抖/边沿/冷却、跨平台摄像头、**AirSim 全部动作**
 （解锁→定高→悬停顺序、机体系速度、偏航、返航回退、急停三语义）、**安全限幅**
 （限速/限高/限低）、**RPC 超时保护**、**NED→ENU 状态转换**、七种手势的端到端链路、
 `Odometry` 回传、以及工程文件约定。
+
+采集真实数据：
+
+```bash
+# 采 60 秒 -> /tmp/session_01.npz
+# （示例写到系统临时目录，避免在仓库里留下未跟踪的 data/）
+python3 src/air/gesture_control_drone/scripts/record_gesture_session.py \
+    --out /tmp/session_01.npz --duration 60 --camera 0
+
+# 看这一轮采得怎么样（每类数量 / 缺失类别 / 丢弃原因 / 实际采样率）
+python3 src/air/gesture_control_drone/scripts/gesture_dataset.py stats /tmp/session_01.npz
+```
+
+一次**真实录制**（25 秒、Integrated Camera、`--camera 1`、`--fps 10`）的输出：
+
+```
+[4s] 处理 32 帧，已收录 9 个样本
+[8s] 处理 64 帧，已收录 31 个样本
+[16s] 处理 128 帧，已收录 79 个样本
+[24s] 处理 192 帧，已收录 117 个样本
+本轮采集：121 个样本
+  PALM_OPEN      63
+  FIST           55
+  POINT           3  <- 偏少（建议 >= 30）
+  VICTORY         0  <- 缺失
+  ...
+丢弃的帧：no_hand=75
+结论：还有类别缺失，建议补采
+实际采样率：7.7 Hz（目标 10 Hz，共 192 帧）
+```
+
+![录制脚本实测](../img/air/gesture_control_drone/run_recorder.png)
+
+> 那次实际频率 7.7 Hz（目标 10 Hz）是 MediaPipe 单帧耗时导致的；脚本现在按
+> **截止时刻排程**并把实际频率报出来，不会再让名义值骗人。
+
+**采集规范**（直接影响能不能训出模型）：
+
+* 手离镜头 **40~60 cm**，手心正对镜头，手指朝上；
+* 每个手势保持 **1~2 秒**，之间手完全放下；
+* **手势要交替做**，不要"一种做完再做下一种"。原因不是"按类分层会漏掉类"，
+  而是 10 Hz 连拍的相邻帧几乎重复：一次性做完某一种，那段时间的样本彼此高度相似，
+  **无论按时间划分还是随机划分**，训练集与验证集都会互相泄漏，指标虚高。
+  单次采集只做一种手势的数据，建议按**会话级留出**（一次采集只进训练或只进验证）。
+
+仓库自带的 `data/session_host_121.npz`（121 个样本、25 秒、只覆盖 3/7 类）是
+**采集链路的证据**，不是可直接训练的数据集 —— `stats` 会如实报出 4 类缺失。
 
 ## 8. 常见问题
 
@@ -218,7 +293,7 @@ python3 tools/log_to_png.py /tmp/local_test.log \
 这一步证明 **ROS 节点 → AirSim → 真实起降** 是通的；
 `摄像头 → MediaPipe → 手势` 这一段见下面的说明。
 
-### 9.3 实跑才暴露的两个坑（已修）
+### 9.3 实跑才暴露的坑（已修）
 
 1. **`catkin_install_python` 不能用来装"辅助模块"**
    它在 devel 空间给每个脚本生成的是**启动器**（`exec(compile(...))`），
@@ -233,7 +308,25 @@ python3 tools/log_to_png.py /tmp/local_test.log \
    **MJPG**（可用 `GESTURE_CAMERA_FOURCC` 覆盖）并降到 640×480，
    同一台机器上立刻出画面（`shape=(480, 640, 3)`）。
 
-### 9.4 真实手势 → 真机起降（完整链路）
+3. **张开手掌在"拇指朝侧面"时识别不出来**
+   `thumb_extended()` 用"拇指尖相对 IP 关节的 x 偏移 > 0.25×掌宽"判断；手掌正对
+   镜头时这个偏移实测只有 **约 0.1×掌宽**，于是"四指伸直"走不进 `PALM_OPEN` 分支，
+   整只手返回 `NONE`（真人面对镜头举手，系统毫无反应）。
+
+   改用**拇指张开角**（`mcp2→tip4` 与 `mcp2→index_mcp5` 的夹角）兜底。121 个真实
+   样本上的分布：
+
+   | 手势 | 张开角范围 | 中位 |
+   |---|---|---|
+   | 张开手掌 | 44.3° ~ 62.2° | 54.1° |
+   | 握拳 | 0.1° ~ 136.6° | 8.8° |
+
+   阈值取 **40°**，并且**只在四指伸直时**才走这个兜底分支 —— 握拳的四指是弯的，
+   那些高角度的握拳帧根本进不来（实测非手掌误判 **0 帧**，手掌 63/63 命中）。
+
+   ![张开手掌修复后的实机起降](../img/air/gesture_control_drone/run_palm_fix.png)
+
+### 9.4 
 
 摄像头（Integrated Camera，USB 透传进虚拟机）→ MediaPipe → `/gesture_command`
 → 控制节点 → AirSim，**全程由真人做手势触发**：
@@ -330,7 +423,7 @@ Python 客户端）不提供 `*Async` 方法，那时回退到同名同步方法
 | `moveToZAsync(z, v)` | `moveToZ` | `moveToZ(z, velocity, timeout, yaw_mode, lookahead, adaptive, vehicle_name)` —— **7 个参数** |
 | `goHomeAsync(timeout)` | `goHome` | `goHome(timeout, vehicle_name)`，阻塞 |
 
-### 10.2 五个已知坑（都已处理）
+### 10.2 已知坑（都已处理）
 
 1. **同步 `takeoff` / `land` 会阻塞到动作完成**
    3 m 高度按 ~0.22 m/s 下降约需 14 s，放在调用线程里会把 ROS 回调/定时器堵住。
