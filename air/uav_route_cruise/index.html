@@ -477,6 +477,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_traffic_nav/">城市动态交通下的无人机避障（PPO + DAgger）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../uav_experiments/">无人机ppo模块研究</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../drone_teleop/">无人机终端键盘遥控器</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
@@ -1333,7 +1335,7 @@ L = -L^{\text{CLIP}} + c_v\,\mathbb{E}_t\big[(V_\phi(s_t) - R_t)^2\big] - c_e\,\
 不能说「80.0%」</strong> —— 那个 80.0% 是 s1 在 eval seed=1001（恰好是训练期评估用的那个种子）
 下的结果，换种子就拿不到了。这一点已在 PR 描述里更正。</p>
 <h3 id="_14">运行效果动图</h3>
-<p><img alt="运行效果" src="uav_route_cruise/route_cruise_demo.gif"/></p>
+<p><img alt="运行效果" src="../../img/air/uav_route_cruise/route_cruise_demo.gif"/></p>
 <p>同一场景下两个策略的逐帧对比（scripts/make_gif.py 生成，90 帧 / 0.8 MB）：</p>
 <ul>
 <li><strong>左图</strong>：蓝实线是 PPO、红虚线是纯跟踪；红圆是压在航线上必须绕行的障碍。
