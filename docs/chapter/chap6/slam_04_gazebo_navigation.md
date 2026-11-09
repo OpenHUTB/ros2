@@ -67,7 +67,7 @@ Gazebo 机器人模型（`mrobot_gazebo/urdf`）中配置了两个关键插件�
 
 ### 2.4 数据流与 TF 坐标树
 
-两个 launch 各管一摊：
+两个 launch 各管一边：
 
 ```text
 终端 1  mrobot_laser_nav_gazebo.launch
@@ -169,7 +169,7 @@ source devel/setup.bash
 
 ### 6.1 报错现象
 
-最初尝试通过命令行把世界临时切换为 cloister：
+最初尝试通过命令行把世界文件临时切换为 cloister：
 
 ```bash
 G=/home/wkb/catkin_ws/src/mrobot_gazebo
@@ -232,8 +232,7 @@ source /home/wkb/catkin_ws/devel/setup.bash
 roslaunch mrobot_navigation fake_nav_cloister_demo.launch
 ```
 
-rviz 启动后加载 cloister 静态地图，机器人位置正确，左侧包含 Map、Local/Global Plan、Pose Array、
-LaserScan、Goal Pose、Inflated Obstacles 等显示项。Gazebo 中可清晰看到 cloister 房间与机器人：
+rviz 启动后加载 cloister 静态地图，机器人位置正确，左侧包含 `Map`、`Local/Global Plan`、`Pose Array`、`LaserScan`、`Goal Pose`、`Inflated Obstacles` 等显示项。Gazebo 中可清晰看到 cloister 房间与机器人：
 
 ![Gazebo 房间视角](../../img/code/chap6/69_gazebo_room_view.png)
 
@@ -370,7 +369,7 @@ Warning: Invalid argument "/map" passed to canTransform argument target_frame
 - frame tf2 frame_ids cannot start with a '/'
 ```
 
-`config/mrobot` 的代价地图参数沿用了旧式坐标系名 `/map`、`/odom`、`/base_footprint`，而 tf2 规定
+`config/mrobot` 的代价地图参数沿用了旧式坐标系名 `/map`、`/odom`、`/base_footprint`，而 `tf2` 规定
 frame_id 不能以 `/` 开头。后续优化时把这些 frame 名的前导斜杠去掉（话题名 `/scan` 是 ROS 话题、
 不是 frame，保持不变）。
 
@@ -381,7 +380,7 @@ TF_REPEATED_DATA ignoring data with redundant timestamp for frame wheel_left_lin
 (wheel_right_link) ...
 ```
 
-Gazebo 差速插件与 launch 中的 `joint_state_publisher` 都在发布关节状态，相同时间戳的数据被 tf2 丢弃。
+Gazebo 差速插件与 launch 中的 `joint_state_publisher` 都在发布关节状态，相同时间戳的数据被 `tf2` 丢弃。
 后续可把 launch 里的 `joint_state_publisher` 节点注释掉，只让差速插件负责关节状态（launch 注释中已
 预留该说明）。
 
