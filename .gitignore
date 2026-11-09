@@ -68,6 +68,13 @@ trajectories/*.json
 # 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
 !src/ground/lidar_autoencoder_repair/models/*.pt
 
+# 视觉通行模块的四个部署权重（约 17 KB、40 KB、61 KB、1.64 MB）
+!src/humanoid/humanoid_visual_patrol/models/perception.pt
+!src/humanoid/humanoid_visual_patrol/models/end2end.pt
+!src/humanoid/humanoid_visual_patrol/models/mask_controller.pt
+!src/humanoid/humanoid_visual_patrol/models/planner.pt
+src/humanoid/humanoid_visual_patrol/results/
+
 # 编辑器 / 系统
 .vscode/
 .idea/
