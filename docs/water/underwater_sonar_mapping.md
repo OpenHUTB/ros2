@@ -50,11 +50,11 @@ ros2 launch underwater_sonar_mapping main.launch.py \
 
 ## 无界面渲染
 
-在模块目录执行：
+生成的图片默认保存到用户主目录：
 
 ```bash
 python3 -m underwater_sonar_mapping.scene \
-  --output docs/img/underwater_sonar_3d_mapping_run.png \
+  --output "$HOME/underwater_sonar.png" \
   --dpi 150
 ```
 

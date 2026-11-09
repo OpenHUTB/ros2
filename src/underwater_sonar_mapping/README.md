@@ -26,7 +26,7 @@ ros2 launch underwater_sonar_mapping main.launch.py
 
 ```bash
 python3 -m underwater_sonar_mapping.scene \
-  --output docs/img/underwater_sonar_3d_mapping_run.png
+  --output "$HOME/underwater_sonar.png"
 ```
 
 也可以从 ROS 参数指定保存位置：
