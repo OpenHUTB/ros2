@@ -12,7 +12,7 @@ Q / E   右转 / 左转      yaw_rate      rad/s
 ESC / Ctrl-C             退出
 ```
 
-松开按键后保持 `hold_timeout`（默认 0.3s），超时自动发零速悬停。这就是"状态锁存 + 超时悬停"。
+松开按键后保持 `hold_timeout`（默认 0.3s），超时自动发零速悬停。
 
 ## 运行
 
@@ -59,7 +59,7 @@ test/test_keyboard_local.py
 python3 test/test_keyboard_local.py   # 19 个用例，不依赖 ROS / 终端
 ```
 
-CI 直接跑。覆盖：8 个键的映射、大小写、未知键/方向键转义序列、锁存保持/超时/刷新/覆盖、包结构静态断言（ament_python、无 CMakeLists、无 rospy、yaml 参数名和节点对齐）。
+CI 直接跑。
 
 ## 限制
 
