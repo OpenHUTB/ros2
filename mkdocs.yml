@@ -67,7 +67,10 @@ nav:
     - 6. 机器人 SLAM 与自主导航:
         - 章节首页: './chapter/chap6.md'
         - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
-    - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
+    - 7. 阿克曼四轮小车运动控制:
+        - 章节首页: './chapter/chap7.md'
+        - Dubins 最短路径（最小转弯半径约束）: './chap7/ackermann_dubins_path.md'
+        - 阿克曼小车 MPC 轨迹跟踪: './chap7/ackermann_mpc_tracking.md'
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
@@ -76,6 +79,7 @@ nav:
     - 9. ROS 2:
         - 章节首页: './chapter/chap9.md'
         - Gazebo 仿真相机与图像话题验证: './chapter/chap9/gazebo_camera_sim.md'
+        - ROS 2 生命周期节点（托管节点状态机）: './chap9/ros2_lifecycle_node.md'
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
     - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'

@@ -1,0 +1,1 @@
+# 仅用 Python 标准库；ROS 2 相关依赖由 package.xml 声明

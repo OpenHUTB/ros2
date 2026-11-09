@@ -64,11 +64,14 @@ ROS每章节运行代码:
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
+    * [Dubins 最短路径：车轮不能横着走，最短路线就变了](./chap7/ackermann_dubins_path.md) —— 最小转弯半径约束下的六种基本情形，几何构造 + 端点闭环校验
+    * [阿克曼小车 MPC 轨迹跟踪：为什么要提前几步打方向](./chap7/ackermann_mpc_tracking.md) —— 带转角与转向速率约束的预测控制，与 Stanley 同场对比
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
     * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
+    * [ROS 2 生命周期节点：让「启动」变成一件可以检查的事](./chap9/ros2_lifecycle_node.md) —— configure / activate 状态机与发布门控
 
 
 ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
