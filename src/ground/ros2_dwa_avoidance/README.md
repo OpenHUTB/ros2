@@ -1,4 +1,4 @@
-# ROS 2 差速机器人 A* 全局规划 + DWA 局部避障
+﻿# ROS 2 差速机器人 A* 全局规划 + DWA 局部避障
 
 `ros2_dwa_avoidance` 在 ROS 2 Humble 下实现两层导航：
 
@@ -119,7 +119,7 @@ A*+DWA 5/5 成功，纯 DWA 4/5，反应式基线 1/3。纯 DWA 在窄走廊中�
 慢 1–3 s（绕行与保守跟踪的代价），换来的是窄走廊中的通过能力和更短的绕行路径。
 最小离障距离 0.30–1.14 m，均不小于规划器要求的 0.30 m。
 
-![轨迹对比](figures/trajectories.png)
+![轨迹对比](../../../docs/img/ground/ros2_dwa_avoidance/trajectories.png)
 
 ### ROS 2 节点实测（Ubuntu 20.04 + Foxy）
 
@@ -147,3 +147,4 @@ A*+DWA 5/5 成功，纯 DWA 4/5，反应式基线 1/3。纯 DWA 在窄走廊中�
 作者已在离线仿真中实际运行全部基准与单元测试，并在 Ubuntu 20.04 + ROS 2 Foxy
 下完成 `colcon build`、单元测试与 `/scan`+`/odom`→`/cmd_vel` 闭环运行；
 对提交内容的正确性与完整性负全部责任。
+
