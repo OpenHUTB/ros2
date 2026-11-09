@@ -40,9 +40,23 @@ cd ~/ros1_ws/src/web_remote_car/www
 python3 -m http.server 8000
 ```
 
-浏览器打开 `http://127.0.0.1:8000`或点击打开文件index.html。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
+浏览器打开 `http://127.0.0.1:8000/index.html`（`http.server` 打开根路径只列目录，带 `/index.html` 才直接进遥控面板）。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
 
 控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
+
+### 局域网其他电脑访问
+
+1. 虚拟机网络用桥接模式，NAT 模式下局域网其他机器访问不到虚拟机。
+2. `launch/web_bridge.launch` 已给 rosbridge 配 `address=0.0.0.0`，启动后核对 `netstat -tulpn | grep 9090`，必须是 `0.0.0.0:9090`，只有 `127.0.0.1:9090` 说明没监听外网。
+3. 放行端口：
+
+```bash
+sudo ufw allow 9090/tcp
+sudo ufw allow 8080/tcp
+sudo ufw allow 8000/tcp
+```
+
+其他电脑打开 `http://<虚拟机IP>:8000/index.html`，自动连 `ws://<虚拟机IP>:9090`。网页与 rosbridge 不在同一台机器时，用 `?bridge=<IP>:9090` 指定。
 
 ## 端口与话题
 

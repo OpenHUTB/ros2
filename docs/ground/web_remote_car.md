@@ -64,6 +64,41 @@ cd ~/ros1_ws/src/web_remote_car/www
 python3 -m http.server 8000
 ```
 
+`python3 -m http.server` 打开根路径只会列出目录，**要带 `/index.html` 才会直接进入遥控面板**：
+
+```text
+http://127.0.0.1:8000/index.html
+```
+
+### 5.1 局域网内其他电脑访问
+
+只在虚拟机本机测试，到上面这一步就够了。要让同一局域网的其他电脑也能操作，需要确认三件事：
+
+1. 虚拟机网络用**桥接模式**。NAT 模式下局域网里的其他机器访问不到虚拟机 IP。
+2. rosbridge 必须监听所有网卡。`launch/web_bridge.launch` 里已经写了 `<param name="address" value="0.0.0.0"/>`，启动后核对：
+
+```bash
+netstat -tulpn | grep 9090
+```
+
+输出必须是 `0.0.0.0:9090`（或 `:::9090`）。如果只有 `127.0.0.1:9090`，说明没监听外网，其他机器连不上。
+
+3. 防火墙放行三个端口：
+
+```bash
+sudo ufw allow 9090/tcp   # rosbridge WebSocket
+sudo ufw allow 8080/tcp   # web_video_server 图像流
+sudo ufw allow 8000/tcp   # 前端静态页面
+```
+
+然后在其他电脑上打开 `http://<虚拟机IP>:8000/index.html`，页面自动连 `ws://<虚拟机IP>:9090`，不需要改代码。
+
+如果网页所在主机和跑 rosbridge 的主机不是同一台，用地址栏参数显式指定：
+
+```text
+http://<网页IP>:8000/index.html?bridge=<rosbridge所在IP>:9090
+```
+
 ## 6. 查看结果
 
 新开终端查看话题：
@@ -75,9 +110,9 @@ rostopic echo /cmd_vel
 rostopic hz /front_camera/image_raw
 ```
 
-浏览器打开 `http://127.0.0.1:8000`或点击打开文件index.html，默认控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
+浏览器打开 `http://127.0.0.1:8000/index.html`，默认控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
 
-页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，浏览器地址填哪台机器的 IP，前端就连哪台机器，不需要改代码。
+页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，浏览器地址填哪台机器的 IP，前端就连哪台机器，不需要改代码。页面顶部会显示当前实际连接的 `ws://` 地址，连接异常时原地给出排查提示，不会一直停在“正在连接”。
 
 默认端口与话题：
 
@@ -131,6 +166,8 @@ rostopic hz /front_camera/image_raw
 | --- | --- | --- |
 | 启动报找不到 `rosbridge_server` / `web_video_server` | 未安装对应包 | `sudo apt install ros-noetic-rosbridge-server ros-noetic-web-video-server` |
 | 浏览器打不开 `http://127.0.0.1:8000` | 没起静态文件服务 | 在 `www` 目录执行 `python3 -m http.server 8000` |
+| 打开 `...:8000` 只看到文件列表，不进遥控页 | `http.server` 默认就是目录浏览 | 访问 `...:8000/index.html` |
+| 本机能控制，别的电脑一直停在“正在连接” | 访问地址用了 127.0.0.1（那指对方自己的电脑），或 rosbridge 没监听外网、防火墙拦截 | 用 `http://<虚拟机IP>:8000/index.html` 访问；`netstat -tulpn` 里 9090 要显示 `0.0.0.0:9090`；`sudo ufw allow 9090/tcp` |
 | 网页提示连接断开 | rosbridge 未运行或端口被占用 | `rostopic list` 确认 ROS 正常，检查 9090 端口 |
 | 网页看不到相机画面 | 视频流话题与 xacro 中的话题不一致 | 核对 `urdf/car_cam.xacro` 的 `imageTopicName` 与 `index.html` 的 `CAMERA_TOPIC` |
 | 按键控制小车不动 | `/cmd_vel` 没有消息或差速插件未加载 | `rostopic echo /cmd_vel` 排查，检查 xacro 中 `libgazebo_ros_diff_drive.so` 插件 |
