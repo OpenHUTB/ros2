@@ -81,6 +81,11 @@ def generate_dataset(
     sequence_ids = [f"{name}_sequence_000" for name in scenario_names]
     assignments = assign_splits(sequence_ids, dataset_config.seed)
     route = generate_lawnmower_route(route_config)
+    if dataset_config.frames_per_scene > len(route):
+        raise ValueError(
+            "frames_per_scene cannot exceed the number of route waypoints / "
+            "每个场景的帧数不能超过航线航点数"
+        )
     expert = FlightLineExpert(ExpertConfig(cruise_speed=route_config.speed))
     output.mkdir(parents=True, exist_ok=True)
     records: list[dict[str, object]] = []
