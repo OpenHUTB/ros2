@@ -104,6 +104,7 @@ yaw   = atan2(2(qw*qz + qx*qy), 1 - 2(qy^2 + qz^2))
 | `launch/main.launch` | 启动 | `roslaunch` 统一入口，透传 `headless` / `stabilize` 开关 |
 | `CMakeLists.txt` | 构建 | catkin 构建脚本，安装脚本、模型、launch 与依赖清单 |
 | `package.xml` | 构建 | catkin 包元信息（format 2，`buildtool_depend` 为 `catkin`） |
+| `README.md` | 说明 | 包内速查：依赖、构建、运行、参数 |
 | `run.sh` | 启动脚本 | 一键启动，设置软件渲染环境变量，透传命令行参数 |
 | `requirements.txt` | 依赖 | mujoco / numpy / matplotlib |
 | `traj_plot.png` | 输出 | 运行后自动生成，默认保存在功能包根目录 |
@@ -114,6 +115,7 @@ yaw   = atan2(2(qw*qz + qx*qy), 1 - 2(qy^2 + qz^2))
 mujoco_skid_steer_offroad_stable/
 ├── CMakeLists.txt
 ├── package.xml
+├── README.md
 ├── launch/
 │   └── main.launch
 ├── models/
@@ -145,27 +147,35 @@ mujoco_skid_steer_offroad_stable/
 
 ### 5.2 安装依赖
 
+以下命令在**仓库根目录**执行（pip 依赖与 ROS 无关，不需要等编译完成）：
+
 ```bash
 sudo apt update && sudo apt install -y python3-pip libgl1
 python3 -m pip install -r src/ground/mujoco_skid_steer_offroad_stable/requirements.txt
 ```
 
-### 5.3 构建（编译）
-
-本模块是标准 catkin 功能包，需要放进 catkin 工作空间的 `src/` 下编译，编译后才可被 `roslaunch` / `rosrun` 按包名找到。
+若已按 5.3 节把包拷进了工作空间，也可以直接装包内那份清单：
 
 ```bash
-# 1. 准备工作空间（已有可跳过，注意不要和仓库自带的其他包混在同一空间而相互拖累）
+python3 -m pip install -r ~/skid_ws/src/mujoco_skid_steer_offroad_stable/requirements.txt
+```
+
+### 5.3 构建（编译）
+
+本模块是标准 catkin 功能包，需要放进 catkin 工作空间的 `src/` 下编译，编译后才可被 `roslaunch` / `rosrun` 按包名找到。第 1 步在**仓库根目录**执行，第 2、3 步在**工作空间**执行：
+
+```bash
+# 1. 仓库根目录：把包拷进工作空间（已有工作空间可跳过）
 mkdir -p ~/skid_ws/src
 cp -r src/ground/mujoco_skid_steer_offroad_stable ~/skid_ws/src/
 
-# 2. 加载 ROS 环境并编译
+# 2. 工作空间：加载 ROS 环境后编译
 source /opt/ros/noetic/setup.bash
 cd ~/skid_ws
 catkin_make
 
-# 3. 编译完成后加载本工作空间（每个新终端都要执行，或用 source devel/setup.bash 写进 ~/.bashrc）
-source devel/setup.bash
+# 3. 每个新终端都要执行（也可以写进 ~/.bashrc）
+source ~/skid_ws/devel/setup.bash
 ```
 
 用 `catkin build`（catkin_tools）时换成：
@@ -174,7 +184,7 @@ source devel/setup.bash
 source /opt/ros/noetic/setup.bash
 cd ~/skid_ws
 catkin build mujoco_skid_steer_offroad_stable
-source devel/setup.bash
+source ~/skid_ws/devel/setup.bash
 ```
 
 编译产物与判据：
@@ -190,14 +200,20 @@ source devel/setup.bash
 
 ### 5.4 启动仿真
 
+`roslaunch` / `rosrun` 会在需要时自动拉起 ROS master，不需要另开 `roscore`。执行前确认当前终端已 `source ~/skid_ws/devel/setup.bash`：
+
 ```bash
 # 方式 1：roslaunch 统一入口（带 viewer）
 roslaunch mujoco_skid_steer_offroad_stable main.launch
 
 # 方式 2：roslaunch 无窗口跑，跑完自动出图
 roslaunch mujoco_skid_steer_offroad_stable main.launch headless:=true
+```
 
-# 方式 3：不经过 ROS，直接跑脚本（免编译）
+不经过 ROS、免编译直跑（在**仓库根目录**执行；已在包目录里时把路径换成 `run.sh` / `scripts/main.py`）：
+
+```bash
+# 方式 3：脚本一键启动（自动设置软件渲染）
 bash src/ground/mujoco_skid_steer_offroad_stable/run.sh
 python3 src/ground/mujoco_skid_steer_offroad_stable/scripts/main.py
 ```
@@ -304,7 +320,7 @@ bash src/ground/mujoco_skid_steer_offroad_stable/run.sh --headless
 | `roslaunch` 报 `is neither a launch file in package` | 包没编译或没加载工作空间，按 5.3 节 `catkin_make` 后 `source devel/setup.bash`，再用 `rospack find mujoco_skid_steer_offroad_stable` 确认能查到 |
 | `rospack find` 查不到本包 | 目录没放进 catkin 工作空间的 `src/` 下，或当前终端没 `source`；检查路径是否在 `src/ground/` 里，并重新 `catkin_make` |
 | `catkin_make` 因其他包报错中断 | 本模块不依赖其他包，可用 `catkin_make --only-pkg-with-deps mujoco_skid_steer_offroad_stable`，或按 5.3 节单独建 `~/skid_ws` |
-| 运行报 `No module named stable_controller` | 脚本没走 `rosrun` / `roslaunch` 且不在包目录内，改用 5.4 节的方式 1/2/3 |
+| 运行报 `No module named stable_controller` | 只把 `main.py` 单独拷出去跑会丢掉同目录依赖；从包内 `scripts/` 目录运行，或用 5.4 节的方式 1/2/3 |
 | 停在目标外 0.4~0.5 m | 目标标记球仍是碰撞体，检查其 `contype/conaffinity` 是否为 0 |
 
 ## 10. 参考
