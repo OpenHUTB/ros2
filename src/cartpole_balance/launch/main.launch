@@ -1,0 +1,24 @@
+<launch>
+  <!-- cartpole_balance 一键启动: LQR控制器 + 倒立摆物理仿真 + 可视化
+       入口约定: launch 以 main 开头
+       用法:  roslaunch cartpole_balance main.launch
+       验证:  另开终端
+                 rostopic echo /cartpole/state     看到 theta 收敛到 0(摆杆竖直)
+                 rostopic echo /cartpole/cmd       看到控制器输出的力
+                 rqt_graph                         看节点/话题关系
+       动图:   ~/cartpole_balance.gif  (可视化节点自动保存)
+  -->
+
+  <!-- 节点1: LQR控制器, 订阅状态, 计算最优控制力并发布到 /cartpole/cmd -->
+  <node pkg="cartpole_balance" type="balance_controller.py"
+        name="balance_controller" output="screen"/>
+
+  <!-- 节点2: 物理仿真, 订阅控制力, 积分动力学, 以50Hz发布 /cartpole/state -->
+  <node pkg="cartpole_balance" type="cartpole_sim.py"
+        name="cartpole_sim" output="screen"/>
+
+  <!-- 节点3: 可视化, 订阅状态, 画出小车+摆杆并保存 GIF -->
+  <node pkg="cartpole_balance" type="cartpole_visualizer.py"
+        name="cartpole_visualizer" output="screen"/>
+
+</launch>

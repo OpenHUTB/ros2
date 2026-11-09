@@ -1,0 +1,4 @@
+tag,final_episode,max_return,final_mean_return
+dqn_mlp1,300,200.0,160.61
+dqn_mlp2,300,200.0,199.45
+reinforce_mlp1,600,200.0,199.1

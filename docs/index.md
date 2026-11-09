@@ -1,4 +1,4 @@
-﻿title: 主页
+title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
 
@@ -34,6 +34,12 @@
 
 ## 1. 入门 <span id="list"></span>
 
+* [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
+
+* [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
+
+* [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
+
 ROS 相关资料（[网盘下载地址](https://pan.baidu.com/s/1viua4SZ7tP2DtU2XlCRKPg?pwd=hutb)）：
 
 * 教材：ROS教材.pdf
@@ -62,14 +68,18 @@ ROS每章节运行代码:
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
   * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+  * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
+
+ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
+* [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
@@ -80,21 +90,26 @@ ROS每章节运行代码:
 * [人形上下台阶步态仿真](./humanoid/humanoid_stair_climb.md)
 * [ROS虚拟机器人圆形轨迹rviz可视化示例](./humanoid/ros_topic_demo/index.md)
 * [人形机器人全身逆运动学与可操作性](./humanoid/whole_body_ik.md)
+* [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
 * [人形机器人跌倒预判与保护性倒地](./humanoid/humanoid_fall_protection.md)
 * [人形机器人 3D 碰撞体边界检测可视化](./humanoid/humanoid_collision_boundary.md)
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
-* [人形机器人双臂末端可达域分析](./humanoid/humanoid_reachability.md)
+* [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
+* [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+ - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
 * [MNIST 手写数字视觉感知与机器人运动控制](./ground/mnist_digit_control.md) —— CNN 识别手写数字为运动指令，防抖确认后控制 turtlesim 平移/旋转
@@ -110,11 +125,14 @@ ROS每章节运行代码:
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [自动驾驶示例](./ground/ad_demo.md)
 * [rostopic 手动驱动](./ground/rostopic_cruise.md)
+* [作业综合整合与性能评价](./ground/carla_benchmark_suite.md)
 * [ROS Scenario Runner](./ground/ros_scenario_runner.md)
+* [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
 * [打靶](./ground/mujoco_shooting.md)
 * [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
 
@@ -136,9 +154,11 @@ ROS每章节运行代码:
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
 * [MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速](./ground/mujoco_car_rollover_guard.md)
+* [MuJoCo 地面差速小车单侧驱动失效检测与差速补偿](./ground/mujoco_car_drive_fault.md)
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [神经网络强化学习DQN改进算法对比（MuJoCo CartPole）](./ground/rl_dqn_improvement.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
@@ -147,21 +167,30 @@ ROS每章节运行代码:
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
 * [MuJoCo 侧方停车仿真](./ground/mujoco_parallel_parking.md)
+* [CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）](./ground/carla_parking_lot.md) —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
+* [航向 PID 参数自整定与手工试凑对比](./ground/pid_auto_tuning.md) —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [限速标志识别与神经网络限速控制](./ground/traffic_sign_speed_control.md) —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
+* [基于 2D 激光雷达的蒙特卡洛定位（MCL）](./ground/lidar_mcl_localization.md) —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m
+
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
+* [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
+* [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+
+* [winter 场景无人机圆周飞行](./air/winter_circle.md)
+* [AirSim ROS 1 Noetic PPO 联调](./air/airsim_rl_planner_ros1.md)
 * [无人机制动旧入口](./ground/mujoco_drone_distance_stop.md)
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
@@ -187,6 +216,7 @@ ROS每章节运行代码:
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
 * [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
+* [配置 AirSim 客户端环境并连接模拟器（Windows 本机 / WSL2）](./air/airsim_client_setup.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
@@ -203,11 +233,15 @@ ROS每章节运行代码:
 
 * [空域模拟器的 ROS 封装器](./air/ros_pkgs.md)
 * [无人机与 ROS 的桥接模块](./air/carlair_ros_bridge.md)
+* [无人机 LiDAR 地面/障碍分割](./air/uav_lidar_ground_filter.md)
 * [无人机屋顶降落](./air/rooftop_landing.md) —— 用机载 LiDAR 检测屋顶平面，取轮廓的最大内切圆圆心作为降落点，自主飞抵其上方后垂直降落
 * [无人机屋顶降落（学习型落点选择）](./air/rooftop_landing_nn.md) —— 用点云高度图 + 小 CNN 直接回归屋顶落点；凹形屋顶（U/L/天井）与稀疏点云下比凸包最大内切圆更稳，附三组消融对比
+* [无人机降落过程监控（指令-运动一致性）](./air/uav_landing_monitor.md) —— 在线校验「速度指令 vs 实际高度变化」，抓“喊了不动 / 掉得没人管 / 超时没落地”这类静默故障，输出告警、状态 JSON 与 CSV 报告
+* [移动平台（车/船）精准降落](./air/uav_moving_platform_landing.md) —— 只吃一路带延迟的平台位置，在线估速度、预测相遇点，落点误差 0.03 m（追实测位置的朴素做法 0.48 m 且落不准），附四种制导策略的定量对照
 * [无人机键盘控制](./air/uav_keyboard_control.md)
 
 * [基于 PPO 的无人机导航避障](./air/uav_ppo_nav.md)
+* [无人机定高日志误差与抗扰恢复时间评估](./air/uav_hover_log_eval.md)
 
 * [基于 PPO 的无人机固定路线巡航](./air/uav_route_cruise.md) —— 沿给定闭合航线巡航，遇压在航线上的障碍时临时偏离绕行
 
@@ -215,8 +249,12 @@ ROS每章节运行代码:
 
 * [神经残差动力学与学习式轨迹跟踪](./air/uav_neural_residual_control.md)
 * [基于 DQN 的无人机导航避障](./air/uav_dqn_nav.md) —— 与 PPO 同环境同观测，仅替换为 DQN 离散动作算法，用于端到端模型/算法对比
+* [城市动态交通下的无人机避障（PPO + DAgger）](./air/uav_traffic_nav.md) —— 用 CARLA 车流做动态障碍；规则专家示范 + 行为克隆 + DAgger，跨路成功率 48%±3.6%，高于贪心（39%）与速度障碍法（19%）
+* [无人机ppo模块研究](./air/uav_experiments.md) —— 把键盘控制、PPO 导航、算法对比、航线巡航、动态交通五个实验合并到一页；各实验独立页面仍然保留
 
 * [无人机终端键盘遥控器](./air/drone_teleop.md)
+
+* [AirSim无人机键盘遥控与机载云台控制模块](./airsim_drone_gimbal_teleop/README.md)
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
@@ -224,7 +262,11 @@ ROS每章节运行代码:
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
+* [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
+
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
+
+* [四旋翼吊挂负载防摆控制](./air/uav_slung_load.md) —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
@@ -270,19 +312,37 @@ ROS每章节运行代码:
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
-  
+
+* [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
+
+* [水下 ROV 视觉引导的沉船结构巡检采样仿真](./water/rov_wreck_inspection.md)
+
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
 
 * [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
 
+* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
+* [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
+
+* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
+
+* [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
+* [基于热力图的洋流干扰下 ROV 自适应路径规划](./water/water_rov_path_planning.md)
+
+* [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
 
 ___
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
 ___
+
+## 7. 经典控制 <span id='classical_control'></span>
+
+* [倒立摆平衡小车 (cart-pole, LQR 最优控制)](./classical_control/cartpole_balance.md) —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制
+
 
 ## 参考文献

@@ -1,0 +1,35 @@
+<launch>
+  <!-- 场景运行器：一条 roslaunch 就能把一份场景跑完并打出判定报告。
+       所有可调项都做成了 arg，不传就是 config/scenario_runner.yaml 里的默认值。 -->
+
+  <arg name="scenario_file"
+       default="$(find ros_scenario_runner)/config/scenarios/demo_brake_stop.yaml"
+       doc="场景脚本路径，换一个文件就换一个场景"/>
+  <arg name="publish_hz" default="20.0" doc="指令发布频率，单位 Hz"/>
+  <arg name="use_mock_odom" default="true"
+       doc="true 用内置二维车辆模型；false 时订阅真实车辆的 odom 话题"/>
+  <arg name="sim_dt" default="0.05" doc="内置模型的积分步长，单位秒"/>
+  <arg name="max_speed" default="5.0" doc="内置车辆最高速度，单位 m/s"/>
+  <arg name="max_accel" default="1.5" doc="内置车辆加速度上限，单位 m/s^2"/>
+  <arg name="max_decel" default="4.0" doc="内置车辆减速度上限，单位 m/s^2"/>
+  <arg name="max_yaw_rate" default="1.0" doc="内置车辆角速度上限，单位 rad/s"/>
+  <arg name="cmd_vel_topic" default="/cmd_vel" doc="速度指令发布话题"/>
+  <arg name="odom_topic" default="/odom" doc="车辆状态话题（内置模式会发布，外部模式会订阅）"/>
+  <arg name="report_topic" default="/scenario/report" doc="判定报告话题，latched 发布"/>
+
+  <rosparam command="load" file="$(find ros_scenario_runner)/config/scenario_runner.yaml"/>
+
+  <param name="scenario/file" value="$(arg scenario_file)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="control/use_mock_odom" value="$(arg use_mock_odom)"/>
+  <param name="control/sim_dt" value="$(arg sim_dt)"/>
+  <param name="vehicle/max_speed" value="$(arg max_speed)"/>
+  <param name="vehicle/max_accel" value="$(arg max_accel)"/>
+  <param name="vehicle/max_decel" value="$(arg max_decel)"/>
+  <param name="vehicle/max_yaw_rate" value="$(arg max_yaw_rate)"/>
+  <param name="topic/cmd_vel" value="$(arg cmd_vel_topic)"/>
+  <param name="topic/odom" value="$(arg odom_topic)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+
+  <node pkg="ros_scenario_runner" type="main.py" name="ros_scenario_runner" output="screen"/>
+</launch>
