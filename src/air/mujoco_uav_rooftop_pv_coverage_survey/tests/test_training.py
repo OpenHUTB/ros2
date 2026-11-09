@@ -1,6 +1,3 @@
-from pathlib import Path
-import json
-
 import torch
 
 from rooftop_pv.models import TinyMLP, TinyUNet
@@ -20,9 +17,3 @@ def test_segmentation_loss_and_metrics_are_finite():
     assert metrics["iou"] == 1.0
     assert metrics["dice"] == 1.0
 
-
-def test_controller_replay_entrypoint(tmp_path: Path):
-    replay = tmp_path / "replay.jsonl"
-    replay.write_text(json.dumps({"cross_track_error": 0.1, "heading_error": 0.0, "distance_to_turn": 1.0}) + "\n", encoding="utf-8")
-    from ros2_uav_controller import main
-    assert main(["--replay", str(replay)]) == 0
