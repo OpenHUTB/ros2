@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_speed_control</name>
+  <version>0.1.0</version>
+  <description>
+    纵向速度控制：按路径曲率自动限速与速度跟踪。
+    纯 numpy 实现，不依赖 OpenCV 与深度学习框架。
+  </description>
+
+  <maintainer email="457099742@qq.com">zyfmy</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+
+  <export>
+  </export>
+</package>
