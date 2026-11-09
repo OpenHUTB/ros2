@@ -587,12 +587,20 @@
     B --&gt;|电量 &lt;= 15%| C
     C --&gt;|电量 &lt;= 8%| D[EMERGENCY_LAND 就近迫降]
 </div>
-<h2 id="_2">运行</h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/uav_battery_rth_failsafe
-python3<span class="w"> </span>main.py
+<h2 id="_2">仿真平台</h2>
+<p>按仓库推荐的两套底座设计, <strong>不使用 Gazebo</strong>: MuJoCo(<code>src/air/uav_mujoco_sim</code>, Humble, 推荐主平台)
+与 AirSim(<code>src/air/drone_airsim_bringup</code>, Noetic, 跨版本需 ros1_bridge)。
+模块只依赖电量与位置两条话题, 换底座时不改代码, 只改话题名参数。</p>
+<h2 id="_3">构建与运行</h2>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>uav_battery_rth_failsafe
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>run<span class="w"> </span>uav_battery_rth_failsafe<span class="w"> </span>battery_rth_node
+<span class="c1"># 或</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>uav_battery_rth_failsafe<span class="w"> </span>uav_battery_rth.launch.py
 </code></pre></div>
-<p>订阅 <code>/drone/battery</code>、<code>/drone/position</code>, 发布 <code>/drone/setpoint_position</code>、<code>/drone/failsafe_state</code>。</p>
-<p>详细参数见模块 <code>README.md</code>。</p></div>
+<p>订阅 <code>/drone/battery</code>、<code>/drone/position</code>, 发布 <code>/drone/setpoint_position</code>、<code>/drone/failsafe_state</code>;
+四条话题名都可用参数 <code>battery_topic</code> / <code>position_topic</code> / <code>setpoint_topic</code> / <code>state_topic</code> 覆盖。</p>
+<p>详细参数、与 MuJoCo / AirSim 的话题映射见模块 <code>README.md</code>。</p></div>
 </div>
 </div><footer>
 <hr/>
