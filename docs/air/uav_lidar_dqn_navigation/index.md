@@ -7,8 +7,9 @@ DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。
 自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
 专家轨迹。
 
-本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）与 DQN 策略训练
-（PR #918）；DQN 部署、建图、端到端控制按依赖顺序在后续 PR 中补充。
+本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）、DQN 策略训练
+（PR #918）、DQN 在线部署与 gmapping 建图（PR #922）；图像端到端控制按依赖顺序
+在后续 PR 中补充。
 
 ## 1 运行环境
 
@@ -43,8 +44,10 @@ flowchart LR
     B -- /drone/odom, /drone/state --> C[teleop_keyboard]
     C -- /drone/cmd_vel --> B
     A -- lidar_1 点云 --> D[lidar_scan_node]
-    D -- /drone/lidar/sectors --> E[DQN 控制（后续 PR）]
-    D -- /drone/lidar/scan --> F[gmapping（后续 PR）]
+    D -- /drone/lidar/sectors --> E[dqn_nav_node]
+    D -- /drone/lidar/scan --> F[gmapping]
+    E -- /drone/cmd_vel --> B
+    F -- map->odom TF --> B
 ```
 
 桥接节点是模块唯一的 AirSim 客户端：它把 ROS 的机体系速度指令翻译成 AirSim 的
@@ -138,7 +141,51 @@ rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 权重与日志写入 `models/`：`dqn_nav.pt`（最新）、`dqn_nav_best.pt`（近 20 回合
 成功率最高）、`train_nav_log.csv`（每回合累计奖励、步数、是否成功）。
 
-## 6 话题与服务
+## 6 DQN 导航部署
+
+`dqn_nav_node.py` 每 10 Hz 读一次 `/drone/lidar/sectors` 与 `/drone/odom`，
+按训练时的同一套特征拼出 32 维状态，取 Q 值最大的动作下发 `/drone/cmd_vel`。
+权重默认从包内 `models/dqn_nav.pt` 加载，可用 `~model_path` 覆盖。
+
+安全策略：前向最小障碍距离小于 0.8 m 时强制悬停，不执行网络输出；速度按
+`speed_scale` 缩放，建图时用 0.5 兼顾扫描重叠。
+
+```bash
+# 纯导航，目标点 (15, 10)
+roslaunch uav_lidar_dqn_navigation main.launch mode:=dqn
+
+# 临时改目标点
+roslaunch uav_lidar_dqn_navigation dqn.launch goal_x:=10 goal_y:=15
+```
+
+目标点也可以通过 `/drone/goal`（`geometry_msgs/PointStamped`，NED）随时修改，
+`dqn.launch` 里的 `goal_publisher` 只是演示用的定时发布。
+
+## 7 gmapping 建图
+
+`scan.launch` 提供 `odom->base_link->laser`，gmapping 在此基础上发布
+`map->odom`，形成 `map->odom->base_link->laser` 完整 TF 链。
+
+| 参数 | 值 | 说明 |
+| --- | --- | --- |
+| `maxUrange` | 39 m | 略大于雷达有效量程，否则 30~40 m 回波被丢弃 |
+| `maxRange` | 40 m | 与 `lidar_features.MAX_RANGE` 保持一致 |
+| `particles` | 50 | 稀疏雷达下比默认 30 稳定 |
+| `linearUpdate` / `angularUpdate` | 0.2 m / 0.1 rad | 位姿增量触发更新 |
+| `delta` | 0.05 m | 栅格分辨率 |
+
+选择 gmapping 而不是 hector_slam 的原因：hector 不做里程计融合、依赖扫描匹配
+初值，在 180° 稀疏雷达 + 快速偏航下实测会跟丢，地图呈扇形；gmapping 用里程计
+做运动先验、粒子滤波修正，本场景建出 1136×1104 栅格、5751 个占用格。
+
+建图演示沿 (0,0) → (0,20) → (16,20) 绕行，全程约 3 分钟：
+
+```bash
+roslaunch uav_lidar_dqn_navigation main.launch mode:=slam
+rosrun map_server map_saver -f ~/uav_map   # 或订阅 /map 自行保存
+```
+
+## 8 话题与服务
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
@@ -150,11 +197,10 @@ rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
 | `/drone/takeoff` | std_srvs/Trigger | 起飞 |
 | `/drone/land` | std_srvs/Trigger | 降落 |
 
-## 7 后续 PR
+## 9 后续 PR
 
 | PR | 内容 |
 | --- | --- |
-| #922 | DQN 导航节点与 gmapping 建图链路 |
 | #932 | 图像端到端 DQN 与演示动图 |
 
 ## 大模型使用声明
