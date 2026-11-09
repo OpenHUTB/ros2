@@ -143,15 +143,20 @@ def _run_scene(cfg, scene, net, max_sim_t=30.0):
     env.reset()
     sim_t = 0.0
     reached = False
-    min_clearance = 1e9
+    min_clearance = 1e9          # 含传感器噪声的测量值
+    min_clearance_true = 1e9     # 无噪声的真实离障（安全指标用这个）
     max_steer = 0.0
     while sim_t < max_sim_t:
         rays = ray_scan(env)
+        # 同一时刻再取一次无噪声射线：最小离障不能用含噪值，否则 σ 越大越容易
+        # 采到噪声极值（被 clip 到 0），看起来像「擦到障碍」，其实只是极值统计
+        true_rays = ray_scan(env, noisy=False)
         x = build_state(rays, env.yaw(), cfg)
         steer, throttle = net.predict(x)
         steer = float(steer)
         max_steer = max(max_steer, abs(steer))
         min_clearance = min(min_clearance, float(np.min(rays)))
+        min_clearance_true = min(min_clearance_true, float(np.min(true_rays)))
         wl, wr = env.desired_wheel_vel(steer, throttle)
         env.step_vel(wl, wr)
         # 一次 step_vel 推进一个控制周期（steps_per_control 个物理步）
@@ -163,7 +168,8 @@ def _run_scene(cfg, scene, net, max_sim_t=30.0):
         "scene": scene,
         "success": reached,
         "time_s": round(sim_t, 2),
-        "min_clearance_m": round(min_clearance, 3),
+        "min_clearance_true_m": round(min_clearance_true, 3),
+        "min_clearance_measured_m": round(min_clearance, 3),
         "max_steer": round(max_steer, 3),
         "final_x": round(float(env.pos()[0]), 2),
     }
@@ -179,9 +185,9 @@ def evaluate(cfg, max_sim_t=30.0):
         w.writeheader()
         w.writerows(rows)
     for r in rows:
-        print("[{}] success={} time={}s min_clearance={}m max_steer={}".format(
+        print("[{}] success={} time={}s min_clearance_true={}m min_clearance_measured={}m max_steer={}".format(
             r["scene"], r["success"], r["time_s"],
-            r["min_clearance_m"], r["max_steer"]))
+            r["min_clearance_true_m"], r["min_clearance_measured_m"], r["max_steer"]))
     print("评测报告 -> results/eval_report.csv")
     try:
         plot_eval(rows)
@@ -197,7 +203,7 @@ def plot_eval(rows):
 
     scenes = [r["scene"].replace("car_scene_", "").replace(".xml", "") for r in rows]
     times = [r["time_s"] for r in rows]
-    clearances = [r["min_clearance_m"] for r in rows]
+    clearances = [r["min_clearance_true_m"] for r in rows]
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
     ax1.bar(scenes, times,
             color=["#4a90d9" if r["success"] else "#d9534f" for r in rows])
@@ -220,28 +226,36 @@ DROPOUT_LEVELS = (0.0, 0.10, 0.20)
 
 
 def robustness(cfg, max_sim_t=30.0):
-    """扫描测距噪声与丢束比例，统计多场景通过率。"""
+    """扫描测距噪声与丢束比例，统计多场景通过率与**真实**最小离障。"""
     ensure_results()
     net = MLP.load(RESULTS / "mlp_weights.npz")
+    original = (cfg.lidar_noise_sigma_m, cfg.lidar_dropout_prob)
     rows = []
-    for sigma in NOISE_LEVELS:
-        for dropout in DROPOUT_LEVELS:
-            cfg.lidar_noise_sigma_m = sigma
-            cfg.lidar_dropout_prob = dropout
-            results = [_run_scene(cfg, scene, net, max_sim_t) for scene in cfg.scenes]
-            success = sum(1 for r in results if r["success"])
-            rows.append({
-                "noise_sigma_m": sigma,
-                "dropout": dropout,
-                "success_rate": round(success / len(results), 3),
-                "mean_time_s": round(float(np.mean([r["time_s"] for r in results])), 2),
-                "min_clearance_m": round(float(np.min([r["min_clearance_m"] for r in results])), 3),
-                # 最小间距 < 0.10 m 视为擦碰：通过率相同，但安全裕度已耗尽
-                "grazed_scenes": sum(1 for r in results if r["min_clearance_m"] < 0.10),
-            })
-            print("[noise={:.2f}m dropout={:.0%}] success={}/{} time={}s clearance={}m".format(
-                sigma, dropout, success, len(results),
-                rows[-1]["mean_time_s"], rows[-1]["min_clearance_m"]))
+    try:
+        for sigma in NOISE_LEVELS:
+            for dropout in DROPOUT_LEVELS:
+                cfg.lidar_noise_sigma_m = sigma
+                cfg.lidar_dropout_prob = dropout
+                results = [_run_scene(cfg, scene, net, max_sim_t) for scene in cfg.scenes]
+                success = sum(1 for r in results if r["success"])
+                true_clearance = float(np.min([r["min_clearance_true_m"] for r in results]))
+                rows.append({
+                    "noise_sigma_m": sigma,
+                    "dropout": dropout,
+                    "success_rate": round(success / len(results), 3),
+                    "mean_time_s": round(float(np.mean([r["time_s"] for r in results])), 2),
+                    # 安全指标用无噪声的真实离障；测量值只作对照，噪声会把它压到 0
+                    "min_clearance_true_m": round(true_clearance, 3),
+                    "min_clearance_measured_m": round(
+                        float(np.min([r["min_clearance_measured_m"] for r in results])), 3),
+                    "grazed_scenes": sum(1 for r in results if r["min_clearance_true_m"] < 0.10),
+                })
+                print("[noise={:.2f}m dropout={:.0%}] success={}/{} time={}s true_clearance={}m (measured {}m)".format(
+                    sigma, dropout, success, len(results),
+                    rows[-1]["mean_time_s"], rows[-1]["min_clearance_true_m"],
+                    rows[-1]["min_clearance_measured_m"]))
+    finally:
+        cfg.lidar_noise_sigma_m, cfg.lidar_dropout_prob = original
     with open(RESULTS / "robustness.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
@@ -265,10 +279,11 @@ def plot_robustness(rows):
     for r in rows:
         i = DROPOUT_LEVELS.index(r["dropout"])
         j = NOISE_LEVELS.index(r["noise_sigma_m"])
-        grid[i, j] = r["min_clearance_m"]
+        grid[i, j] = r["min_clearance_true_m"]
         success[i, j] = r["success_rate"]
     fig, ax = plt.subplots(figsize=(7.4, 3.9))
-    im = ax.imshow(grid, cmap="RdYlGn", vmin=0.0, vmax=1.0, aspect="auto")
+    vmax = max(1.0, float(np.ceil(grid.max() * 4) / 4))  # 真实离障可能 > 1 m
+    im = ax.imshow(grid, cmap="RdYlGn", vmin=0.0, vmax=vmax, aspect="auto")
     for i in range(grid.shape[0]):
         for j in range(grid.shape[1]):
             ax.text(j, i, "{:.2f} m\n{:.0f}%".format(grid[i, j], 100 * success[i, j]),

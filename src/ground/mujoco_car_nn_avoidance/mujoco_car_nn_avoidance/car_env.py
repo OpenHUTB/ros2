@@ -27,8 +27,11 @@ class CarEnv:
         self.load(scene_name, xml_path)
 
     # ---------- 加载与重置 ----------
-    @staticmethod
-    def _load_model(xml_path):
+    # 只对「路径打不开」类错误回退；XML 语法错误应当直接抛出，不能被静默重试
+    _PATH_ERRORS = ('resource not found', 'Error opening file', 'No such file', 'cannot open')
+
+    @classmethod
+    def _load_model(cls, xml_path):
         """加载场景 XML。
 
         MuJoCo 默认走 OS 文件系统读取，路径含非 ASCII 字符（例如中文目录）时会报
@@ -37,7 +40,10 @@ class CarEnv:
         """
         try:
             return mujoco.MjModel.from_xml_path(str(xml_path))
-        except ValueError:
+        except ValueError as exc:
+            message = str(exc)
+            if not any(token in message for token in cls._PATH_ERRORS):
+                raise
             from pathlib import Path
             text = Path(xml_path).read_text(encoding="utf-8")
             return mujoco.MjModel.from_xml_string(text)
