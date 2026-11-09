@@ -238,6 +238,26 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_6">技术说明</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#carla_1">自主实现：不依赖 CARLA 的倒车入库规划器</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_7">目录结构</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">路径怎么算出来</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_11">运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_12">离线测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#carla_2">与 CARLA 方案的分工</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_13">常见问题</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
@@ -629,7 +649,218 @@ ros2 launch carla_parking_lot parking_lot.launch.py host:=192.168.1.100
 <li>使用 <code>world.debug.draw_string()</code> 标注车位编号</li>
 <li>使用 <code>world.get_spectator()</code> 获取并移动镜头</li>
 <li>车位坐标通过在 CARLA 窗口中飞镜头手动读取获得</li>
-</ul></div>
+</ul>
+<h2 id="carla_1">自主实现：不依赖 CARLA 的倒车入库规划器</h2>
+<p>上面的流程门槛不低：要一台有 GPU 的 Windows 机器跑 CARLA 服务端，要 Ubuntu 22.04 +
+ROS 2 Humble + Python 3.10 跑客户端，还要放行 2000 端口。如果只是想回答「这台车能不能
+停进这个车位、会不会蹭到旁边的车、要倒多少米」这类问题，其实不需要整个仿真器。</p>
+<p><code>src/ground/reverse_parking_planner</code> 就是把这部分<strong>只跟几何有关</strong>的逻辑单独拿出来做成了
+一个 ROS 1 包：给定车位尺寸、车辆几何和转弯半径，算出一次倒车入库的完整路径，在终端
+打印断言结果和字符俯视图，并把路径发布成 <code>nav_msgs/Path</code>。它不订阅任何话题，不依赖
+CARLA，也没有图形界面，<code>roslaunch</code> 一跑就能出结果。</p>
+<h3 id="_7">目录结构</h3>
+<div class="highlight"><pre><span></span><code>src/ground/reverse_parking_planner/
+├── CMakeLists.txt
+├── package.xml
+├── README.md
+├── config/parking_planner.yaml
+├── launch/main.launch
+└── scripts/
+    ├── main.py                  # 入口
+    ├── parking_planner_node.py  # 读参数、算路径、发消息
+    └── parking_core.py          # 几何核心（纯标准库，可离线测）
+</code></pre></div>
+<h3 id="_8">路径怎么算出来</h3>
+<p>全程倒车，所以路径只有两段，长度恒为 <code>R·pi/2 + entry_length</code>：</p>
+<ol>
+<li>目标位姿 <code>T</code> 在车位正中，车头朝向车道 —— 倒车入库停好之后车头是朝外的；</li>
+<li>倒车行驶方向与车头相反，从 <code>T</code> 沿行驶方向反向退 <code>entry_length</code> 米得到 <code>J</code>，
+   此时车头已经对准车位，只剩最后一小段直线；</li>
+<li>圆心 <code>C</code> 取在 <code>J</code> 行车方向的右侧 <code>turn_radius</code> 米处，起点 <code>S = C − R·travel</code>；</li>
+<li>圆弧从 <code>S</code> 右转 90° 到 <code>J</code>，再从 <code>J</code> 倒车 <code>entry_length</code> 米到 <code>T</code>。</li>
+</ol>
+<p>规划前会先校验 <code>turn_radius</code> 是否小于车辆最小转弯半径
+<code>wheelbase / tan(max_steer)</code>（默认 <code>2.70 / tan(0.55) ≈ 4.40 m</code>）。小于就直接抛
+<code>ParkingError</code>，不会给出一个物理上开不出来的路径。</p>
+<p>默认参数下的关键量：路径长 <code>5·π/2 + 3 = 10.854 m</code>，转角 90°，起点 <code>(5.000, −5.750)</code>，
+终点 <code>(0.000, 2.250)</code>，采样 110 个点。</p>
+<h3 id="_9">参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>slot/width</code> / <code>slot/length</code></td>
+<td><code>2.50</code> / <code>5.30</code></td>
+<td>车位宽 / 长（m）</td>
+</tr>
+<tr>
+<td><code>slot/x</code> / <code>slot/y</code> / <code>slot/yaw</code></td>
+<td><code>0.0</code> / <code>0.0</code> / <code>−1.5707963</code></td>
+<td>车位中心与车头朝向</td>
+</tr>
+<tr>
+<td><code>vehicle/wheelbase</code></td>
+<td><code>2.70</code></td>
+<td>轴距（m）</td>
+</tr>
+<tr>
+<td><code>vehicle/length</code> / <code>vehicle/width</code></td>
+<td><code>4.50</code> / <code>1.80</code></td>
+<td>车长 / 车宽（m）</td>
+</tr>
+<tr>
+<td><code>vehicle/max_steer</code></td>
+<td><code>0.55</code></td>
+<td>最大前轮转角（rad）</td>
+</tr>
+<tr>
+<td><code>plan/turn_radius</code></td>
+<td><code>5.00</code></td>
+<td>规划用转弯半径（m）</td>
+</tr>
+<tr>
+<td><code>plan/entry_length</code></td>
+<td><code>3.00</code></td>
+<td>最后一段倒车直线长度（m）</td>
+</tr>
+<tr>
+<td><code>plan/step</code></td>
+<td><code>0.10</code></td>
+<td>采样步长（m）</td>
+</tr>
+<tr>
+<td><code>check/tolerance</code></td>
+<td><code>0.10</code></td>
+<td>终点位置容差（m）</td>
+</tr>
+<tr>
+<td><code>check/clearance</code></td>
+<td><code>0.00</code></td>
+<td>与邻车间距下限（m）</td>
+</tr>
+<tr>
+<td><code>check/max_path</code></td>
+<td><code>12.00</code></td>
+<td>允许的最长倒车距离（m）</td>
+</tr>
+<tr>
+<td><code>rate/publish_hz</code></td>
+<td><code>10.0</code></td>
+<td>逐点回放频率（Hz）</td>
+</tr>
+<tr>
+<td><code>topic/plan</code> / <code>topic/report</code> / <code>topic/point</code></td>
+<td><code>/parking/plan</code> 等</td>
+<td>输出话题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">话题</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/parking/plan</code></td>
+<td><code>nav_msgs/Path</code></td>
+<td>完整路径，latched，可直接在 RViz 里看</td>
+</tr>
+<tr>
+<td><code>/parking/report</code></td>
+<td><code>std_msgs/String</code></td>
+<td>报告全文（断言 + 俯视图），latched</td>
+</tr>
+<tr>
+<td><code>/parking/plan_point</code></td>
+<td><code>geometry_msgs/PoseStamped</code></td>
+<td>按 <code>rate/publish_hz</code> 逐点回放</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">运行</h3>
+<div class="highlight"><pre><span></span><code>catkin_make
+<span class="nb">source</span><span class="w"> </span>devel/setup.bash
+roslaunch<span class="w"> </span>reverse_parking_planner<span class="w"> </span>main.launch
+</code></pre></div>
+<p>默认参数下的真实输出：</p>
+<div class="highlight"><pre><span></span><code>倒车入库规划报告
+车辆：长 4.50 m，宽 1.80 m，轴距 2.70 m，最小转弯半径 4.40 m
+车位：垂直车位 2.50 m x 5.30 m（宽 x 长），转弯半径 5.00 m，直线段 3.00 m
+起点：Pose(x=5.000, y=-5.750, yaw=3.142)
+终点：Pose(x=-0.000, y=2.250, yaw=-1.571)
+路径：倒车 10.85 m，转角 90.0 度，采样 110 个
+最小间距：0.494 m
+断言：4 通过 / 0 失败（共 4 条）
+  [PASS] 终点精度  偏差 0.000 m，容差 0.10 m
+  [PASS] 无碰撞  与邻车最小间距 0.494 m，下限 0.00 m
+  [PASS] 曲率上限  曲率 0.200 1/m，车辆上限 0.227 1/m
+  [PASS] 路径长度  倒车 10.85 m，上限 12.00 m
+结论：PASSED
+</code></pre></div>
+<p>反例：把车位缩到比车还窄，<code>无碰撞</code> 会立刻失败。</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>reverse_parking_planner<span class="w"> </span>main.launch<span class="w"> </span>slot_width:<span class="o">=</span><span class="m">1</span>.7
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>车位：垂直车位 1.70 m x 5.30 m（宽 x 长），转弯半径 5.00 m，直线段 3.00 m
+断言：3 通过 / 1 失败（共 4 条）
+  [FAIL] 无碰撞  与邻车最小间距 0.000 m，下限 0.00 m
+结论：FAILED
+</code></pre></div>
+<h3 id="_12">离线测试</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_reverse_parking_planner_local.py
+</code></pre></div>
+<p>只依赖标准库，不需要 ROS、CARLA 或显示器，覆盖参数读取、路径几何、碰撞检测、四种断言、
+报告格式、俯视图，以及 <code>package.xml</code> / <code>CMakeLists.txt</code> / <code>main.launch</code> 的结构约定。</p>
+<h3 id="carla_2">与 CARLA 方案的分工</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>reverse_parking_planner</code></th>
+<th>本页上面的 CARLA 流程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>依赖</td>
+<td>ROS 1 + Python（无 GPU）</td>
+<td>CARLA 0.9.16 + ROS 2 Humble + Python 3.10</td>
+</tr>
+<tr>
+<td>输出</td>
+<td>终端报告 + 路径话题</td>
+<td>在 Town04 里画出车位线框</td>
+</tr>
+<tr>
+<td>用途</td>
+<td>规划逻辑的离线回归</td>
+<td>场景可视化演示</td>
+</tr>
+</tbody>
+</table>
+<p>两者不冲突：CARLA 负责「看起来对不对」，这个包负责「数值上停不停得进去」。</p>
+<h3 id="_13">常见问题</h3>
+<ul>
+<li><strong><code>ParkingError: 转弯半径 3.000 m 小于车辆最小转弯半径 4.404 m</code></strong>
+<code>plan/turn_radius</code> 比车能转的最小半径还小。调大 <code>turn_radius</code>，或调大
+  <code>vehicle/max_steer</code>（例如 <code>0.70</code>）。</li>
+<li><strong><code>[FAIL] 无碰撞</code></strong>
+  车位太窄或直线段太短，车身切入时会碰到邻车。加大 <code>slot_width</code> 或 <code>entry_length</code>。</li>
+<li><strong>Melodic 上日志里出现 <code>UnicodeEncodeError</code></strong>
+  给 rospy 打非 ASCII 日志必须传 byte str，节点里已用 <code>_log()</code> 统一转换；如果你在别的
+  节点里自己写 <code>rospy.loginfo("中文 %s", x)</code>，在 Python 2.7 下会踩同样的坑。</li>
+</ul>
+<p>所使用具体的大模型声明：使用大模型辅助代码编写、测试编写与文档整理，提交内容由本人负责。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
