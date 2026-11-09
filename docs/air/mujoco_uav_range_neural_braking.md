@@ -92,7 +92,17 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 
 ## 检查与文件职责
 
-21 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为和 MLP 多速度评测。
+24 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为、MLP 多速度评测和场景扫描。
+
+## 场景扫描
+
+`scenario_sweep.py` 复用仿真模型，组合扫描初始位置、障碍物位置、初速度和高度，并输出逐场景结果与碰撞汇总：
+
+```
+python scenario_sweep.py --controller range --start-x -8,-7 --wall-x 0 --speed 0,1.5 --height 1.2 --output results/range_sweep.json
+```
+
+输出包含场景数量、发生碰撞的场景数、最大碰撞步数、最小间距以及每个场景的完整指标。
 
 | 文件 | 职责 |
 | --- | --- |
@@ -100,6 +110,7 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 | `simulation.py` | 物理步进、控制与指标 |
 | `main.py` | 运行与轨迹导出 |
 | `evaluate.py` | 多速度闭环比较与图形 |
+| `scenario_sweep.py` | 多参数场景扫描与汇总 |
 | `dataset.py` | 回合采样与划分 |
 | `mlp.py`、`train.py` | 神经模型、训练与误差计算 |
 | `launch/main.launch.py` | 仿真启动、控制器和权重参数 |
