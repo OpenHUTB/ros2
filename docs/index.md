@@ -256,6 +256,7 @@ ROS每章节运行代码:
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
+* [AirSim 多旋翼航点飞行与到达误差评估](air/airsim_multirotor_waypoint_nav.md) —— 起飞 → 4 航点 → 降落，最大到达误差 0.17 m
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
