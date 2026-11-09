@@ -1,0 +1,7 @@
+e2e_rl:
+  ros__parameters:
+    model_path: ""          # 留空则用 share/uav_e2e_rl/models/ppo_e2e.zip
+    img_w: 64
+    img_h: 48
+    collision_depth: 0.6    # 前方深度小于这个算撞（米）
+    max_steps: 500
