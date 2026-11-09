@@ -8,6 +8,7 @@ rooftop_pv_controller:
     control_checkpoint: ""
     segmentation_checkpoint: ""
     planning_checkpoint: ""
+    end_to_end_checkpoint: ""
     max_speed: 1.0
     max_yaw_rate: 1.2
     waypoint_tolerance: 0.5
