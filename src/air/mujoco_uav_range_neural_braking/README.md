@@ -38,6 +38,18 @@ ros2 launch ./launch/ros_node.launch.py controller:=mlp model:=models/mlp_contro
 
 Target speed follows the remaining braking distance. Acceleration is a clipped velocity-feedback command and horizontal force equals mass times acceleration. The 0.8 m parameter is a braking reference, not a guaranteed final clearance.
 
+## ROS 2 话题 / ROS 2 topics
+
+节点发布以下话题：`/uav/front_range_m`（`Float32`，前向测距，米）、`/uav/braking_accel_m_s2`（`Float32`，水平控制加速度，米/秒²）和 `/uav/state`（`Float64MultiArray`，依次为仿真时间秒、传感器测距米、闭合速度米/秒和高度米）。节点运行至场景设定时长后停止发布并退出。
+
+The node publishes `/uav/front_range_m` (`Float32`, forward range in metres), `/uav/braking_accel_m_s2` (`Float32`, horizontal control acceleration in m/s²), and `/uav/state` (`Float64MultiArray`, ordered as simulation time in seconds, sensor range in metres, closing speed in m/s, and altitude in metres). Publishing stops and the node exits when the configured scenario duration is reached.
+
+查看状态 / Inspect the state:
+
+```
+ros2 topic echo /uav/state
+```
+
 原路径 `src/ground/mujoco_drone_distance_stop/main.py` 继续转发至本模块。 / The original entry point forwards to this module.
 
 ## 结果与文档 / Results and documentation
