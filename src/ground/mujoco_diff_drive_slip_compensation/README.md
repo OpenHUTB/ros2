@@ -8,7 +8,9 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 
 ## 仿真验证局限与分布偏移说明
 
+ feat/mujoco-slip-online-compensation
 本功能包的轮滑感知模型、在线补偿策略与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
+本功能包的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
 
 ## 环境 / Environment
 
@@ -128,7 +130,6 @@ The default scenarios use sliding-friction coefficients `0.25`, `0.55`, and `0.9
 ros2 launch mujoco_diff_drive_slip_compensation collect.launch.py \
   output_directory:=data/raw
 ```
-
 每个 episode 生成同名 `.csv` 和 `.json`。CSV 保存指令、四轮编码器、IMU、摩擦系数和真实位姿；JSON 记录数据格式版本、划分、行数、随机种子、Python、MuJoCo 和功能包版本。`data/` 默认被 Git 忽略。
 
 Each episode produces matching `.csv` and `.json` files. The CSV stores commands, four-wheel encoders, IMU measurements, friction, and ground-truth pose. The JSON records schema version, split, row count, random seed, and Python, MuJoCo, and package versions. `data/` is ignored by Git by default.

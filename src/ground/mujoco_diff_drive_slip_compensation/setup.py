@@ -52,6 +52,7 @@ setup(
                 'online_slip_compensation = '
                 'mujoco_diff_drive_slip_compensation.online_compensation:main'
             ),
+
         ],
     },
 )
