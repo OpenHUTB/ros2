@@ -85,17 +85,29 @@ python3 scripts/main.py --duration 12 --rate 50
 气压高度持续修正，但仍受气压计 `0.45 m` 常值偏置限制。滤波器状态不含偏置项，
 因此该实验不能消除这个常值误差。
 
-响应图同时给出真值、原始气压高度、加速度积分高度和融合高度，并附三类高度误差
-曲线、图例及坐标刻度。
+响应图上层比较真值、原始气压高度和融合高度；加速度积分单独放在中间面板，避免其
+较大漂移压缩另外三条曲线；下层比较气压和融合误差。融合曲线使用较细的红色虚线，
+因此气压曲线在两者接近时仍可辨认。
 
 ## 测试
+
+catkin 自动测试：
+
+```bash
+cd ~/catkin_ws
+catkin_make run_tests_uav_altitude_sensor_fusion
+catkin_test_results
+```
+
+单独运行 unittest：
 
 ```bash
 python3 -m unittest discover -s test -v
 ```
 
-共 5 项测试，包含起飞真值边界、滤波器预测、静止偏置收敛、RMSE 以及融合效果
-相对气压高度的改善检查。
+共 6 项测试，包含起飞真值边界、滤波器预测、静止偏置收敛、RMSE、融合效果相对
+气压高度的改善检查，以及离线 CLI 对错误参数的拒绝。`main.py` 只在 `--ros` 分支
+接收 roslaunch 附加参数，纯 Python 模式仍使用严格参数解析。
 
 ## 范围限制
 

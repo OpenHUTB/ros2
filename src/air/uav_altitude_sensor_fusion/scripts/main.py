@@ -51,10 +51,12 @@ def main(argv=None):
     parser.add_argument("--csv", default="")
     parser.add_argument("--plot", default="")
     parser.add_argument("--ros", action="store_true", help=argparse.SUPPRESS)
-    args, ros_args = parser.parse_known_args(argv)
-    if args.ros:
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    if "--ros" in raw_argv:
+        args, ros_args = parser.parse_known_args(raw_argv)
         ros_main(args, ros_args)
         return 0
+    args = parser.parse_args(raw_argv)
     _, metrics = run_simulation(
         duration=args.duration,
         rate_hz=args.rate,

@@ -34,6 +34,16 @@ python3 scripts/main.py --duration 12 --rate 50
 
 ## 测试
 
+catkin 自动测试：
+
+```bash
+cd ~/catkin_ws
+catkin_make run_tests_uav_altitude_sensor_fusion
+catkin_test_results
+```
+
+也可以单独运行 unittest：
+
 ```bash
 python3 -m unittest discover -s test -v
 ```
