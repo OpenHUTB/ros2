@@ -138,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
             summary = train_segmentation(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "segmentation_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         else:
+            args.output.resolve().mkdir(parents=True, exist_ok=True)
             summary = train_control(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "control_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     except (KeyError, TypeError, ValueError, OSError, RuntimeError) as exc:
