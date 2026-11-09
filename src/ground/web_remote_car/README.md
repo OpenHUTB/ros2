@@ -27,20 +27,29 @@ source devel/setup.bash
 
 ## 启动
 
-终端 1，启动 Gazebo 仿真、小车模型、rosbridge、视频流服务：
+一条命令拉起全部服务（仿真、小车模型、rosbridge、视频流、前端页面）：
 
 ```bash
 roslaunch web_remote_car start_all.launch
 ```
 
-终端 2，把前端页面用静态文件服务托管出来（前端页面不在 launch 里启动，需要单独起这个服务）：
+前端静态页面由 `scripts/web_server.py` 节点托管（已写进 `launch/web_bridge.launch`），监听 `0.0.0.0:8000`，启动日志会打印：
+
+```text
+[INFO] 本机访问：http://127.0.0.1:8000/
+[INFO] 局域网访问：http://192.168.1.102:8000/
+```
+
+浏览器直接打开日志里的地址即可，不需要再另开终端跑 `python3 -m http.server`。8000 被占用时用 `roslaunch web_remote_car start_all.launch frontend_port:=8001` 换端口，`bridge_port`（默认 9090）、`video_port`（默认 8080）同样可以命令行覆盖；改了视频端口要在地址里带 `?video=<IP>:<端口>`。页面里的 rosbridge 地址与视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
+
+只想单独调试前端、不起仿真时，仍可手动起静态服务（必须在 `www` 目录）：
 
 ```bash
 cd ~/ros1_ws/src/web_remote_car/www
 python3 -m http.server 8000
 ```
 
-浏览器打开 `http://127.0.0.1:8000/`，`http.server` 遇到目录会自动返回 `index.html`，直接进遥控面板（等价于 `http://127.0.0.1:8000/index.html`）。这个服务必须在 `www` 目录下启动，在包根目录启动只会看到文件列表。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
+## 操作
 
 控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
 
@@ -64,7 +73,7 @@ sudo ufw allow 8000/tcp
 | --- | --- | --- |
 | rosbridge WebSocket | 9090 | `launch/web_bridge.launch` |
 | web_video_server 图像流 | 8080 | `launch/web_bridge.launch` |
-| 前端静态页面 | 8000 | 由上面的 `python3 -m http.server 8000` 提供 |
+| 前端静态页面 | 8000 | `launch/web_bridge.launch` 的 `frontend_port`，由 `scripts/web_server.py` 提供 |
 | 相机图像话题 | `/front_camera/image_raw` | `urdf/car_cam.xacro`、`www/index.html` |
 | 速度控制话题 | `/cmd_vel` | `www/index.html` |
 | 线速度 / 角速度 | 0.3 m/s / 0.4 rad/s | `www/index.html` 中的 `SPEED` / `TURN_SPEED` |

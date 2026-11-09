@@ -27,3 +27,9 @@ install(DIRECTORY launch urdf www
     PATTERN "*.js"
 )
 
+# 前端静态页面服务节点，被 launch/web_bridge.launch 调用
+catkin_install_python(PROGRAMS
+  scripts/web_server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
