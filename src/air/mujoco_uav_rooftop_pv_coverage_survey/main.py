@@ -134,6 +134,7 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
             )
         elif args.mode == "train-segmentation":
+            args.output.resolve().mkdir(parents=True, exist_ok=True)
             summary = train_segmentation(args.output.resolve(), seed=int(config.get("seed", 20261016)))
             (args.output.resolve() / "segmentation_metrics.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
         else:
