@@ -1,0 +1,11 @@
+<mujoco model="multi_goal">
+  <option timestep="0.005"/>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <geom name="ground" type="plane" size="5 5 0.1" rgba="0.3 0.3 0.3 1" friction="1.0 0.1 0.1"/>
+    <body name="car" pos="0 0 0.05">
+      <joint name="car_joint" type="free"/>
+      <geom type="box" size="0.1 0.08 0.05" rgba="0.2 0.5 0.8 1" mass="1.0"/>
+    </body>
+  </worldbody>
+</mujoco>
