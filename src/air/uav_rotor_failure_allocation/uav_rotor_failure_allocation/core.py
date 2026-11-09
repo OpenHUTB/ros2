@@ -17,6 +17,25 @@ import math
 
 import numpy as np
 
+# failed_rotor 的合法取值: -1 表示四桨完好, 0..3 表示该编号的桨失效.
+FAILED_ROTOR_VALUES = (-1, 0, 1, 2, 3)
+
+
+def validate_failed_rotor(value, allow_healthy=True):
+    """校验并归一化 failed_rotor.
+
+    CLI 与 ROS 节点共用这一处校验: 过去的条件只拦 >= 0 的非法值, -2、-100 这类
+    整数会被后续逻辑当成"四桨完好"而静默通过.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+        raise ValueError('failed_rotor 必须是整数（-1 或 0..3）')
+    rotor = int(value)
+    if rotor not in FAILED_ROTOR_VALUES:
+        raise ValueError('failed_rotor 必须是 -1（四桨完好）或 0..3（失效桨编号）')
+    if rotor == -1 and not allow_healthy:
+        raise ValueError('这里需要 0..3 的失效桨编号，-1 表示完好')
+    return rotor
+
 
 class QuadrotorAllocator:
     """X 型四旋翼的推力分配、偏航权限与失效后可达力矩集合."""
@@ -192,6 +211,9 @@ class QuadrotorAllocator:
             slopes = self._inverse[:, 1:3]
             count = 4
         else:
+            # 单桨失效后偏航不可控, 该参数没有意义; 静默忽略会让调用方以为约束生效.
+            if float(yaw) != 0.0:
+                raise ValueError('单桨失效后偏航不可控, yaw 必须为 0')
             remaining = self._remaining_rotors(failed_rotor)
             reduced = np.linalg.inv(self._matrix[:3][:, remaining])
             offset = reduced @ np.array([total, 0.0, 0.0])
@@ -250,8 +272,7 @@ class QuadrotorAllocator:
     def _remaining_rotors(self, failed_rotor):
         if failed_rotor is None:
             raise ValueError('failed_rotor 不能为空')
-        if not isinstance(failed_rotor, (int, np.integer)) or not 0 <= failed_rotor < 4:
-            raise ValueError('failed_rotor 必须是 0..3 的整数')
+        validate_failed_rotor(failed_rotor, allow_healthy=False)
         return [i for i in range(4) if i != int(failed_rotor)]
 
     def _within_limits(self, thrusts, tolerance=1e-9):

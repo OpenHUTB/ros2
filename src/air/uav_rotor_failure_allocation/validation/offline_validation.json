@@ -3,10 +3,19 @@
   "python": "3.12.14",
   "numpy": "2.3.5",
   "matplotlib": "3.11.2",
-  "scope": "offline: python3 main.py + pytest test (no ROS, no simulator)",
+  "pillow": "12.3.0",
+  "scope": "offline: pytest test (19) + main.py --gif + PYTHONIOENCODING=gbk run; no ROS, no simulator",
   "result": {
-    "pytest_passed": 14,
+    "pytest_passed": 19,
     "pytest_failed": 0,
+    "cli_outputs": [
+      "feasible_set.png",
+      "yaw_authority.png",
+      "authority_margin.png",
+      "feasible_set.gif",
+      "report.json"
+    ],
+    "gbk_console_run": true,
     "hover_thrust_per_rotor_n": 4.9033,
     "max_thrust_zero_moment_healthy_n": 39.2266,
     "max_thrust_zero_moment_after_failure_n": 19.6133,
@@ -15,9 +24,16 @@
     "feasible_area_after_failure_nm2": 6.0106,
     "pass": true
   },
+  "ci": {
+    "workflow": ".github/workflows/rotor_failure_allocation_tests.yml",
+    "jobs": [
+      "Allocation tests + CLI (ubuntu, python 3.8, 含 GBK 输出步骤)",
+      "Windows console (chcp 936)"
+    ]
+  },
   "ros_validation": {
     "checked": false,
-    "reason": "本机没有 ROS 2 环境, 只做了 py_compile 语法检查"
+    "reason": "本机没有 ROS 2 环境；已做 py_compile 与 failed_rotor 参数边界单测，colcon build / launch / 话题收发等待另一位使用者在 Ubuntu 22.04 + Humble 上复现"
   },
   "independent_machine_review": false
 }

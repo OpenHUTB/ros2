@@ -3,6 +3,8 @@
 所有期望值都能手算: X 型布局的分配矩阵、mg/4 的悬停解、κ·mg 的被动偏航、
 4·f_max 与 2·f_max 的零力矩推力上限、菱形/三角形的解析面积.
 """
+import io
+import json
 import math
 import sys
 from pathlib import Path
@@ -12,7 +14,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from uav_rotor_failure_allocation.core import QuadrotorAllocator  # noqa: E402
+from uav_rotor_failure_allocation import cli  # noqa: E402
+from uav_rotor_failure_allocation.core import (  # noqa: E402
+    QuadrotorAllocator,
+    validate_failed_rotor,
+)
 
 DIAMOND_EXTENT = 0.25 * (2.0 * 9.80665) / math.sqrt(2.0)  # L·mg/√2 ≈ 3.467 N·m
 
@@ -178,3 +184,75 @@ def test_invalid_parameters_are_rejected():
         QuadrotorAllocator().allocate([1.0, 0.0, 0.0])
     with pytest.raises(ValueError):
         QuadrotorAllocator().max_thrust_zero_moment(4)
+
+
+def test_failed_rotor_validation():
+    """-1 表示完好, 0..3 表示失效桨; 其余值（尤其 -2）必须报错而不是当成完好."""
+    assert validate_failed_rotor(-1) == -1
+    for rotor in range(4):
+        assert validate_failed_rotor(rotor) == rotor
+        assert validate_failed_rotor(np.int64(rotor)) == rotor
+    for bad in (-2, -100, 4, 7, 3.5, True, None, '2'):
+        with pytest.raises(ValueError):
+            validate_failed_rotor(bad)
+    with pytest.raises(ValueError):
+        validate_failed_rotor(-1, allow_healthy=False)
+
+
+def test_failed_polygon_rejects_yaw(quad):
+    """单桨失效后偏航不可控, 传非零 yaw 时必须报错, 不能静默忽略."""
+    assert quad.feasible_polygon(failed_rotor=0).shape == (3, 2)
+    with pytest.raises(ValueError):
+        quad.feasible_polygon(yaw=0.3, failed_rotor=0)
+    # 完好时 yaw 仍然生效: 偏航需求越大, 可达集合越小
+    healthy_wide = quad.polygon_area(quad.feasible_polygon(yaw=0.0))
+    healthy_narrow = quad.polygon_area(quad.feasible_polygon(yaw=0.9 * quad.max_yaw_torque()))
+    assert healthy_narrow < healthy_wide
+
+
+def test_print_summary_is_gbk_safe(quad):
+    """Windows 默认 GBK 控制台下打印不能抛 UnicodeEncodeError."""
+    report = cli.summarize(quad, 0)
+    raw = io.BytesIO()
+    wrapper = io.TextIOWrapper(raw, encoding='gbk', errors='strict')
+    original = sys.stdout
+    sys.stdout = wrapper
+    try:
+        cli.print_summary(report)
+        wrapper.flush()
+    finally:
+        sys.stdout = original
+    text = raw.getvalue().decode('gbk')
+    assert '四旋翼单桨失效推力分配可行性' in text
+    assert 'N·m' in text
+    assert '(N·m)^2' in text
+
+
+def test_cli_smoke_writes_outputs(tmp_path):
+    """跑一遍真实入口: 出 3 张 PNG、GIF 和 report.json（无显示环境也能跑）."""
+    pytest.importorskip('matplotlib')
+    output = tmp_path / 'out'
+    assert cli.main(['--output', str(output), '--gif']) == 0
+    names = sorted(path.name for path in output.iterdir())
+    assert names == [
+        'authority_margin.png',
+        'feasible_set.gif',
+        'feasible_set.png',
+        'report.json',
+        'yaw_authority.png',
+    ]
+    report = json.loads((output / 'report.json').read_text(encoding='utf-8'))
+    assert report['healthy']['max_thrust_zero_moment_over_mg'] == pytest.approx(2.0)
+    assert report['failure']['max_thrust_zero_moment_over_mg'] == pytest.approx(1.0)
+
+
+def test_configure_console_tolerates_streams_without_reconfigure():
+    """stdout 被换成不支持 reconfigure 的对象时不能抛异常."""
+    original = sys.stdout
+    sys.stdout = io.StringIO()
+    try:
+        assert cli._configure_console() is None
+    finally:
+        sys.stdout = original
+
+

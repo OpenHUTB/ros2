@@ -10,7 +10,8 @@
 
 ## 环境与运行
 
-离线部分只需要 Python 3.8 及以上、NumPy 与 Matplotlib，不需要 ROS、飞控或仿真器：
+离线部分需要 Python 3.8 及以上、NumPy、Matplotlib 与 Pillow（见 `requirements.txt`），
+不需要 ROS、飞控或仿真器：
 
 ```bash
 cd src/air/uav_rotor_failure_allocation
@@ -26,6 +27,10 @@ python3 main.py --failed-rotor 2     # 指定失效哪个桨 (0..3)
 `authority_margin.png`、`report.json`，加 `--gif` 再输出 `feasible_set.gif`。
 用 `--output <目录>` 改输出位置。
 
+控制台编码：Windows 默认中文代码页（GBK）下也能直接运行。单位统一用 `N·m`、`(N·m)^2`
+这类 GBK 可编码的写法，入口还会把 stdout/stderr 的 `errors` 放宽为 `replace`，
+遇到终端不支持的字符只显示成 `?`，不会抛 `UnicodeEncodeError`。
+
 ROS 2 部分使用 Ubuntu 22.04 / Humble 与系统 Python：
 
 ```bash
@@ -39,7 +44,8 @@ ros2 launch uav_rotor_failure_allocation main.launch.py
 节点订阅 `uav/desired_wrench`（`geometry_msgs/WrenchStamped`，只取 `force.z` 作为总推力），
 发布 `uav/rotor_thrust`（`std_msgs/Float64MultiArray`，四桨推力 N）与
 `uav/allocation_status`（`std_msgs/String`，`ok` / `infeasible`）。参数 `failed_rotor`
-取 `-1` 表示四桨完好，取 `0..3` 表示该桨失效；`max_thrust` 取 0 时按 T/W = 2 推算。
+取 `-1` 表示四桨完好，取 `0..3` 表示该桨失效，其它值启动即报错；`max_thrust` 取 0 时
+按 T/W = 2 推算。
 
 ## 测试
 
@@ -48,15 +54,24 @@ python3 -m pip install -r requirements-dev.txt
 python3 -m pytest test -v
 ```
 
-14 项检查，覆盖分配矩阵、mg/4 悬停解、分配往返、推力上限、零力矩推力上限、
+19 项检查，覆盖分配矩阵、mg/4 悬停解、分配往返、推力上限、零力矩推力上限、
 单桨失效悬停解与被动偏航、低推重比不可悬停、偏航权限公式三段、菱形/三角形可行域、
-可行域与逐点分配的一致性（随机采样 4000 点）、参数校验。
+可行域与逐点分配的一致性（随机采样 4000 点）、参数校验，以及：
+
+- `failed_rotor` 取值校验（`-2`、`4`、`True`、`'2'` 都必须报错，不能当成完好）；
+- 单桨失效时给 `feasible_polygon()` 传非零 `yaw` 必须报错（偏航不可控，不能静默忽略）；
+- GBK 控制台下打印余量表不抛 `UnicodeEncodeError`；
+- `main.py` 冒烟测试：真的写出 3 张 PNG、GIF 和 `report.json`。
 
 ## 验证范围
 
-离线算法在 Windows 11 / Python 3.12 / NumPy 2.3.5 / Matplotlib 3.11.2 上运行，
-`python3 -m pytest test -v` 14 项通过，`main.py` 生成的图与表见文档页。
-未验证的部分：ROS 2 节点未在本机运行（本机没有 ROS 环境，只做了语法检查），
+离线算法在 Windows 11 / Python 3.12.14 / NumPy 2.3.5 / Matplotlib 3.11.2 / Pillow 12.3.0
+上运行，`python3 -m pytest test -v` 19 项通过，`main.py` 生成的图与表见文档页；
+CI（`.github/workflows/rotor_failure_allocation_tests.yml`）在 Ubuntu + Python 3.8 上跑
+同一套测试、`main.py` 冒烟和 GBK 输出，另有一个 `windows-latest` + `chcp 936` 的控制台任务。
+
+未验证的部分：ROS 2 节点未在本机运行（本机没有 ROS 环境，只做了语法检查与参数边界测试），
+`colcon build` / launch / 话题收发需要另一位使用者在 Ubuntu 22.04 + Humble 上复现；
 未在真机或 PX4/ArduPilot 上对比，未覆盖双桨及以上失效、桨叶卡死/风车阻力、
 气动干扰与姿态环动态——这些都要另做带动力学的仿真或试飞才能下结论。
 

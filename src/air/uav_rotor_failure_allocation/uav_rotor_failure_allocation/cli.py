@@ -4,6 +4,7 @@
 """
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -112,7 +113,7 @@ def print_summary(report):
           % (healthy['roll_pitch_extent_nm'][0], healthy['roll_pitch_extent_nm'][1]))
     print('       偏航力矩权限 %.4f N·m (κ·mg = %.4f)'
           % (healthy['max_yaw_torque_nm'], p['torque_ratio_m'] * hover))
-    print('       可达力矩集合面积 %.3f N²·m²' % healthy['feasible_area_nm2'])
+    print('       可达力矩集合面积 %.3f (N·m)^2' % healthy['feasible_area_nm2'])
     print()
     print('[失效#%d] 悬停解 f = [%s] N (%s)'
           % (failure['failed_rotor'],
@@ -125,7 +126,7 @@ def print_summary(report):
     print('        不可控偏航 %+.4f N·m' % failure['forced_yaw_torque_nm'])
     print('        滚转/俯仰力矩权限 ±%.3f / ±%.3f N·m'
           % (failure['roll_pitch_extent_nm'][0], failure['roll_pitch_extent_nm'][1]))
-    print('        可达力矩集合面积 %.3f N²·m² (完好时的 %.1f%%)'
+    print('        可达力矩集合面积 %.3f (N·m)^2 (完好时的 %.1f%%)'
           % (failure['feasible_area_nm2'], 100.0 * failure['area_ratio_to_healthy']))
     print()
     print('[推重比扫描] T/W   零力矩最大推力/mg   失效后能否悬停')
@@ -279,7 +280,24 @@ def make_gif(allocator, output):
     return path
 
 
-def main():
+def _configure_console():
+    """容错处理终端编码: Windows 默认 GBK 控制台下遇到未收录字符时用 '?' 代替, 不让 CLI 崩.
+
+    只放宽 errors, 不改 encoding: 改成 UTF-8 会在 GBK 终端里显示乱码.
+    stdout/stderr 被重定向到文件或测试替身时 reconfigure 可能不可用, 忽略即可.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, 'reconfigure', None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(errors='replace')
+        except (ValueError, OSError):  # pragma: no cover - 流不支持重配置时
+            pass
+
+
+def main(argv=None):
+    _configure_console()
     parser = argparse.ArgumentParser(description='四旋翼单桨失效推力分配与姿态权限评估')
     parser.add_argument('--output', type=Path, default=Path('outputs'))
     parser.add_argument('--mass', type=float, default=DEFAULTS['mass'], help='整机质量 kg')
@@ -291,11 +309,11 @@ def main():
     parser.add_argument('--failed-rotor', type=int, default=0, help='失效旋翼编号 0..3')
     parser.add_argument('--gif', action='store_true', help='额外生成偏航扫描 GIF')
     parser.add_argument('--ros', action='store_true', help='改为启动 ROS 2 节点')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.ros:
         from .ros_node import main as ros_main
         ros_main()
-        return
+        return 0
 
     allocator = build_allocator(args)
     report = summarize(allocator, args.failed_rotor)
@@ -312,3 +330,4 @@ def main():
     print()
     print('已写入: ' + ', '.join(path.name for path in written) + ', report.json')
     print('输出目录: %s' % args.output.resolve())
+    return 0

@@ -4,7 +4,7 @@ from geometry_msgs.msg import WrenchStamped
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray, String
 
-from .core import QuadrotorAllocator
+from .core import QuadrotorAllocator, validate_failed_rotor
 
 # 参数名与默认值, 启动时读取一次; failed_rotor 取 -1 表示四桨完好.
 PARAMETERS = (('mass', 2.0), ('arm_length', 0.25), ('torque_ratio', 0.016),
@@ -24,9 +24,9 @@ class RotorAllocationNode(Node):
             arm_length=self.get_parameter('arm_length').value,
             torque_ratio=self.get_parameter('torque_ratio').value,
             max_thrust=max_thrust)
-        self.failed_rotor = int(self.get_parameter('failed_rotor').value)
-        if self.failed_rotor >= 0 and self.failed_rotor not in (0, 1, 2, 3):
-            raise ValueError('failed_rotor 必须为 -1 或 0..3')
+        # 校验放在 core 里, 便于在没有 ROS 的环境下直接测试参数边界
+        self.failed_rotor = validate_failed_rotor(
+            self.get_parameter('failed_rotor').value)
         self.thrusts = self.create_publisher(Float64MultiArray, 'uav/rotor_thrust', 10)
         self.status = self.create_publisher(String, 'uav/allocation_status', 10)
         self.subscription = self.create_subscription(

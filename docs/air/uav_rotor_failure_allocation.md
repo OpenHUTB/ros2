@@ -23,7 +23,7 @@
 
 ## 1. 运行环境
 
-离线部分需要 Python 3.8 及以上、NumPy 与 Matplotlib，不需要 ROS、飞控或仿真器：
+离线部分需要 Python 3.8 及以上、NumPy、Matplotlib 与 Pillow（见 `requirements.txt`），不需要 ROS、飞控或仿真器：
 
 ```bash
 cd src/air/uav_rotor_failure_allocation
@@ -40,16 +40,18 @@ python3 main.py --gif
        零力矩最大总推力 39.23 N (2.00 mg)
        滚转/俯仰力矩权限 ±3.467 / ±3.467 N·m
        偏航力矩权限 0.3138 N·m (κ·mg = 0.3138)
-       可达力矩集合面积 24.043 N²·m²
+       可达力矩集合面积 24.043 (N·m)^2
 
 [失效#0] 悬停解 f = [0.00, 9.81, 0.00, 9.81] N (可行)
         零力矩最大总推力 19.61 N (1.00 mg), 悬停余量 0.0%
         不可控偏航 +0.3138 N·m
         滚转/俯仰力矩权限 ±3.467 / ±3.467 N·m
-        可达力矩集合面积 6.011 N²·m² (完好时的 25.0%)
+        可达力矩集合面积 6.011 (N·m)^2 (完好时的 25.0%)
 ```
 
 改机型只需换参数：`python3 main.py --mass 3.0 --arm-length 0.35 --max-thrust 18.0`。
+
+控制台编码：Windows 默认中文代码页（GBK）下也能直接跑。面积单位用 `(N·m)^2`（`²` 不在 GBK 字符集里），入口再把 stdout/stderr 的 `errors` 放宽为 `replace`，遇到终端不支持的字符只显示成 `?`，不会抛 `UnicodeEncodeError`；CI 里有 `chcp 936` 的 Windows 任务和 `PYTHONIOENCODING=gbk` 的 Linux 任务各跑一遍。
 
 ## 2. 模型
 
@@ -147,7 +149,7 @@ ros2 launch uav_rotor_failure_allocation main.launch.py
 ros2 launch uav_rotor_failure_allocation main.launch.py failed_rotor:=2
 ```
 
-节点订阅 `uav/desired_wrench`（`geometry_msgs/WrenchStamped`，只取 `force.z` 作为总推力，水平力不参与分配），发布 `uav/rotor_thrust`（`std_msgs/Float64MultiArray`，四桨推力，N）与 `uav/allocation_status`（`std_msgs/String`，`ok` / `infeasible`）。参数为 `mass`、`arm_length`、`torque_ratio`、`max_thrust`、`failed_rotor`；`failed_rotor=-1` 表示四桨完好，`0..3` 表示该桨失效，`max_thrust=0` 时按 T/W = 2 反推。
+节点订阅 `uav/desired_wrench`（`geometry_msgs/WrenchStamped`，只取 `force.z` 作为总推力，水平力不参与分配），发布 `uav/rotor_thrust`（`std_msgs/Float64MultiArray`，四桨推力，N）与 `uav/allocation_status`（`std_msgs/String`，`ok` / `infeasible`）。参数为 `mass`、`arm_length`、`torque_ratio`、`max_thrust`、`failed_rotor`；`failed_rotor=-1` 表示四桨完好，`0..3` 表示该桨失效，**其它值（包括 `-2`）启动即报错**，不会被当成完好；`max_thrust=0` 时按 T/W = 2 反推。
 
 这个节点只做分配计算，不直接驱动电调：真实接入需要在飞控里做同样的分配，并把 `infeasible` 状态接到降级策略（降高度、转前飞、开伞或就近迫降）。
 
@@ -159,10 +161,11 @@ python3 -m pip install -r requirements-dev.txt
 python3 -m pytest test -v
 ```
 
-14 项检查全部通过，期望值都能手算对上：分配矩阵与 mg/4 悬停解、分配往返一致、推力上限判定、$4f_{max}$/$2f_{max}$ 两个上限、单桨失效的悬停解与 ±κ·mg 被动偏航（四个桨逐一验证，符号交替）、T/W = 1.6 时失效不可悬停、偏航权限公式的三段取值、菱形/三角形可行域的面积与顶点、可行域与逐点分配的一致性（两组各 2000 点随机采样，无一例矛盾），以及参数校验。
+19 项检查全部通过，期望值都能手算对上：分配矩阵与 mg/4 悬停解、分配往返一致、推力上限判定、$4f_{max}$/$2f_{max}$ 两个上限、单桨失效的悬停解与 ±κ·mg 被动偏航（四个桨逐一验证，符号交替）、T/W = 1.6 时失效不可悬停、偏航权限公式的三段取值、菱形/三角形可行域的面积与顶点、可行域与逐点分配的一致性（两组各 2000 点随机采样，无一例矛盾）、参数校验；另外补了 `failed_rotor` 取值校验（`-2/4/True/'2'` 都必须报错）、单桨失效时传非零 `yaw` 必须报错、GBK 控制台下打印不崩，以及真的写出 3 张 PNG/GIF/JSON 的 `main.py` 冒烟测试。
 
-- 已验证：Windows 11 / Python 3.12.14 / NumPy 2.3.5 / Matplotlib 3.11.2 下 `python3 main.py --gif` 与 `python3 -m pytest test -v`；
-- 未验证：ROS 2 节点没有在本机运行（本机无 ROS 环境，只做了 `py_compile` 语法检查），Ubuntu 22.04 / Humble 的构建与话题收发需要另一位使用者复现；
+- 已验证：Windows 11 / Python 3.12.14 / NumPy 2.3.5 / Matplotlib 3.11.2 / Pillow 12.3.0 下 `python3 main.py --gif`、`python3 -m pytest test -v`（19 passed）与 `PYTHONIOENCODING=gbk` 复跑；
+- CI：`.github/workflows/rotor_failure_allocation_tests.yml` 在 Ubuntu + Python 3.8 上按 `requirements-dev.txt` 装依赖、跑测试与 `main.py` 冒烟（出 PNG/GIF/JSON）、再跑一次 GBK 输出，另有 `windows-latest` + `chcp 936` 的控制台任务；
+- 未验证：ROS 2 节点没有在本机运行（本机无 ROS 环境，只做了 `py_compile` 语法检查与参数边界单测），Ubuntu 22.04 / Humble 的 `colcon build`、launch 与话题收发需要另一位使用者在另一台机器复现（`validation/offline_validation.json` 里 `independent_machine_review` 仍为 `false`，等这次复核）；
 - 未覆盖：双桨及以上失效、桨叶卡死（风车阻力）、气动干扰、姿态环动态与电池功率限制。这些都是静态模型之外的问题，要做得靠带动力学的仿真或试飞。
 
 ## 使用声明
