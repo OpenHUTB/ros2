@@ -23,7 +23,10 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install test dependencies\n        run: python3 -m pip install --upgrade pip numpy\n\n      - name: Run frustum geometry tests
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy
+
+      - name: Run frustum geometry tests
         run: python3 src/air/uav_camera_frustum_viz/test/test_frustum_local.py
 
       - name: Byte-compile frustum scripts
