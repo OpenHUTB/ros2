@@ -276,6 +276,7 @@ ROS每章节运行代码:
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+* [MuJoCo 水下 ROV 串级定深控制](./water/mujoco_rov_depth_control.md) —— 浮力/阻尼显式建模，三段定深稳态误差 0.013 m
   
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
