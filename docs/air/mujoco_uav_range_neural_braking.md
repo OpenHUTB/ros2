@@ -90,9 +90,20 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 
 ![神经制动过程](../img/mujoco_uav_range_neural_braking/mlp_braking.gif)
 
+## 轨迹指标分析
+
+`trajectory_metrics.py` 可从主入口生成的 CSV 计算单次运行指标，并可将结果写入 JSON：
+
+```
+python main.py --headless --controller range --output results/range
+python trajectory_metrics.py results/range/trajectory.csv --output results/range/metrics.json
+```
+
+制动距离定义为初始表面间距减去记录到的最小表面间距，结果下限为 0；超调量为最小表面间距小于 0 的部分；峰值加速度为轨迹中加速度绝对值的最大值。调节时间取速度首次进入默认 ±0.05 米/秒区间，且后续采样均保持在该区间的时刻。JSON 同时记录末速度、碰撞步数和无效测距步数。
+
 ## 检查与文件职责
 
-21 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为和 MLP 多速度评测。
+24 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为、MLP 多速度评测和轨迹指标计算。
 
 | 文件 | 职责 |
 | --- | --- |
@@ -100,6 +111,7 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 | `simulation.py` | 物理步进、控制与指标 |
 | `main.py` | 运行与轨迹导出 |
 | `evaluate.py` | 多速度闭环比较与图形 |
+| `trajectory_metrics.py` | 单次轨迹的制动指标计算 |
 | `dataset.py` | 回合采样与划分 |
 | `mlp.py`、`train.py` | 神经模型、训练与误差计算 |
 | `launch/main.launch.py` | 仿真启动、控制器和权重参数 |
