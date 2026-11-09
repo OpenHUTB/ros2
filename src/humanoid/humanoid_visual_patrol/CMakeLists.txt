@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(humanoid_visual_patrol)
+find_package(catkin REQUIRED)
+catkin_package()
+catkin_install_python(PROGRAMS scripts/ros_bridge.py scripts/task_runner.py scripts/neural_planner.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(DIRECTORY launch config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
