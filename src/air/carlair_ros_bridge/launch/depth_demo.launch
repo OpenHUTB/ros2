@@ -1,0 +1,15 @@
+<launch>
+  <arg name="host" default="192.168.94.1" doc="运行 CarlaAir 的机器 IP"/>
+
+  <include file="$(find carlair_ros_bridge)/launch/main.launch">
+    <arg name="host" value="$(arg host)"/>
+    <arg name="auto_takeoff" value="true"/>
+    <arg name="enable_depth_avoidance" value="true"/>
+    <arg name="publish_lidar" value="false"/>
+    <arg name="publish_imu" value="false"/>
+    <arg name="start_selfcheck" value="false"/>
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz_depth_demo"
+        args="-d $(find carlair_ros_bridge)/rviz/depth_demo.rviz"/>
+</launch>

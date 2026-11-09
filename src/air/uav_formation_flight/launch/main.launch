@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ============================================================
+       无人机编队飞行 —— 启动入口（Leader-Follower + 队形保持）
+
+       用法：
+         roslaunch uav_formation_flight main.launch mission:=line_straight
+         roslaunch uav_formation_flight main.launch mission:=triangle_circle
+         roslaunch uav_formation_flight main.launch mission:=switch_shape
+         roslaunch uav_formation_flight main.launch mission:=line_straight kp:=0.6 kd:=0.1
+
+       前置条件：
+         宿主 Windows 上已启动 OpenHUTB 模拟器（AirSim 多旋翼模式，RPC 41451），
+         settings.json 的 Vehicles 中声明了 airsim/leader 与 airsim/followers；
+         config/params.yaml 的 airsim/ip 指向宿主机地址。
+         模拟器是 Windows 程序，不在这里启动。
+
+       运行内容：
+         1) 加载 config/params.yaml（airsim / flight / pid / shapes / missions）
+         2) 用命令行参数覆盖任务名与 PID 增益
+         3) formation_controller 三架依次起飞，长机跟踪航点，僚机跟踪队形偏移
+       ============================================================ -->
+
+  <!-- 任务名：line_straight（一字横队直线）/ triangle_circle（三角绕圆）/
+       switch_shape（横队 -> 三角 -> 纵队） -->
+  <arg name="mission" default="line_straight"
+       doc="编队任务名，取值见 config/params.yaml 的 missions 段"/>
+
+  <!-- PID 增益：这里的默认值会【覆盖】config/params.yaml 的 pid 段，
+       所以两处必须一致；临时试另一组增益时用命令行覆盖即可。 -->
+  <arg name="kp" default="0.4" doc="比例增益"/>
+  <arg name="ki" default="0.02" doc="积分增益"/>
+  <arg name="kd" default="0.05" doc="微分增益"/>
+
+  <!-- 日志目录：轨迹 CSV 与指标文件写入位置 -->
+  <arg name="log_dir" default="$(env HOME)/uav_formation_flight_logs"
+       doc="实验日志目录"/>
+
+  <!-- 1) 参数文件：/airsim、/flight、/pid、/shapes、/missions -->
+  <rosparam command="load"
+            file="$(find uav_formation_flight)/config/params.yaml"/>
+
+  <!-- 2) 参数覆盖：任务名是字符串必须写成 type="str"，增益是浮点数写成 type="double" -->
+  <param name="mission" value="$(arg mission)" type="str"/>
+  <param name="pid/kp" value="$(arg kp)" type="double"/>
+  <param name="pid/ki" value="$(arg ki)" type="double"/>
+  <param name="pid/kd" value="$(arg kd)" type="double"/>
+  <param name="log_dir" value="$(arg log_dir)" type="str"/>
+
+  <!-- 3) 主节点：编队控制 -->
+  <node pkg="uav_formation_flight" type="formation_controller.py"
+        name="formation_controller" output="screen"/>
+
+</launch>

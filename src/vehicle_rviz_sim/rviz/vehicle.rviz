@@ -1,0 +1,23 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Displays:
+    - Class: rviz/Marker
+      Enabled: true
+      Name: Marker
+      Topic: /vehicle_marker
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+  Global Options:
+    Fixed Frame: map
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 10
+      Name: Current View
