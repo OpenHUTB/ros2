@@ -6,15 +6,9 @@ uav_lidar_dqn_navigation 统一入口
 用法：
     python3 main.py --mode teleop       # 任务 1 键盘遥控
     python3 main.py --mode bridge       # 只启动 AirSim 桥接
-    python3 main.py --mode scan         # 雷达扫描发布（建图用）
-    python3 main.py --mode dqn          # 任务 2 DQN 导航策略部署
-    python3 main.py --mode train        # 任务 2 DQN 训练
-    python3 main.py --mode slam         # 任务 3 hector_slam 建图
-    python3 main.py --mode camera       # 前置相机话题
-    python3 main.py --mode e2e          # 任务 4 图像端到端 DQN 部署
-    python3 main.py --mode e2e_train    # 任务 4 端到端 DQN 训练
 
-launch 文件通过 args 传入 --mode，保证每个功能都能用 launch 一键启动。
+本阶段只实现桥接与遥控；雷达感知、DQN 训练/部署、建图与端到端控制
+在后续 PR 中按层加入，并同步扩充这里的模式表。
 """
 
 import argparse
@@ -45,53 +39,9 @@ def run_teleop():
     KeyboardTeleop().run()
 
 
-def run_scan():
-    from lidar_scan_node import LidarScanNode
-    LidarScanNode().run()
-
-
-def run_dqn():
-    from dqn_nav_node import DQNNavNode
-    DQNNavNode().run()
-
-
-def run_train():
-    import train_dqn_nav
-    sys.argv = ['train_dqn_nav.py'] + rospy.myargv()[2:]
-    train_dqn_nav.main()
-
-
-def run_slam():
-    from lidar_scan_node import LidarScanNode
-    LidarScanNode().run()
-
-
-def run_camera():
-    from camera_node import CameraNode
-    CameraNode().run()
-
-
-def run_e2e():
-    from dqn_e2e_node import DQNE2ENode
-    DQNE2ENode().run()
-
-
-def run_e2e_train():
-    import train_dqn_e2e
-    sys.argv = ['train_dqn_e2e.py'] + rospy.myargv()[2:]
-    train_dqn_e2e.main()
-
-
 MODES = {
     'bridge': run_bridge,
     'teleop': run_teleop,
-    'scan': run_scan,
-    'slam': run_slam,
-    'dqn': run_dqn,
-    'train': run_train,
-    'camera': run_camera,
-    'e2e': run_e2e,
-    'e2e_train': run_e2e_train,
 }
 
 
