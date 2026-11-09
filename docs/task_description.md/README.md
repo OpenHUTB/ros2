@@ -44,3 +44,8 @@ source install/setup.bash
 ros2 launch ant_colony_swarm swarm_bringup.launch.py
 
 ## 运行效果图
+![视觉检测节点启动日志](视觉检测节点启动日志.png)
+图1 视觉检测节点启动，等待图像输入
+
+![蚁群编队机器人仿真环境](蚁群编队机器人仿真环境.png)
+图2 Gazebo仿真环境下双机器人加载场景
