@@ -148,5 +148,42 @@
   "check": {
     "violations": []
   },
-  "elapsed_s": 0.0
+  "elapsed_s": 0.0,
+  "flight": {
+    "sortie_index": 0,
+    "sim_duration_s": 407.45,
+    "physics_time_s": 407.45,
+    "wall_time_s": 6.18,
+    "hover_count": 2,
+    "planned_total_dist_m": 3221.58,
+    "actual_total_dist_m": 3221.74,
+    "mean_arrival_error_m": 0.006,
+    "max_arrival_error_m": 0.017,
+    "legs": [
+      {
+        "seq": 0,
+        "from_id": "depot",
+        "to_id": "S09",
+        "planned_dist_m": 1513.27,
+        "actual_dist_m": 1513.35,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 1,
+        "from_id": "S09",
+        "to_id": "S08",
+        "planned_dist_m": 500.0,
+        "actual_dist_m": 500.03,
+        "arrival_error_m": 0.0
+      },
+      {
+        "seq": 2,
+        "from_id": "S08",
+        "to_id": "depot",
+        "planned_dist_m": 1208.3,
+        "actual_dist_m": 1208.37,
+        "arrival_error_m": 0.017
+      }
+    ]
+  }
 }
