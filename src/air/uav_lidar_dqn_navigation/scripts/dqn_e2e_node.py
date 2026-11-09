@@ -96,10 +96,10 @@ class DQNE2ENode(object):
             if os.path.exists(self.model_path):
                 action = self.agent.act(self._state_pair(), epsilon=0.0)
 
-            vx, yaw_rate, vz = ACTIONS[action]
+            vx, yaw_rate = ACTIONS[action]
             cmd = Twist()
             cmd.linear.x = float(vx)
-            cmd.linear.z = float(vz)
+            cmd.linear.z = 0.0
             cmd.angular.z = float(yaw_rate)
             self.cmd_pub.publish(cmd)
             self.act_pub.publish(Int32(data=int(action)))
