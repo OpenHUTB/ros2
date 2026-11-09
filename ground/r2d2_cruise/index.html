@@ -194,11 +194,13 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_3">运行步骤（从仓库根目录执行）</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#_4">本地自检</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#ros">ROS 接口说明</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">验收方法</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">验收方法</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#_6">说明</a>
 </li>
 </ul>
 </li>
@@ -564,32 +566,49 @@
 </blockquote>
 <h2 id="_2">运行环境（已验证）</h2>
 <ul>
-<li>Ubuntu 20.04</li>
+<li>Ubuntu 20.04 / Windows 10</li>
 <li>Python 3.8</li>
-<li>pybullet 3.x（<code>pip install pybullet</code>）</li>
+<li>pybullet 3.2.5</li>
 </ul>
+<p>PyPI 上的 pybullet 只提供 Linux 轮子，Windows 直接 <code>pip install pybullet</code> 会转本地编译（需要 MSVC）。Windows 建议用 conda-forge：</p>
+<div class="highlight"><pre><span></span><code>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>r2d2<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8<span class="w"> </span>pybullet
+conda<span class="w"> </span>activate<span class="w"> </span>r2d2
+</code></pre></div>
 <h2 id="_3">运行步骤（从仓库根目录执行）</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 1. 安装依赖</span>
-pip<span class="w"> </span>install<span class="w"> </span>pybullet
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>src/ground/r2d2_cruise/requirements.txt
 
 <span class="c1"># 2. 直接运行（推荐）</span>
 python3<span class="w"> </span>src/ground/r2d2_cruise/main.py
 
-<span class="c1"># 3. 或通过 ROS launch 启动（需 ROS 环境）</span>
+<span class="c1"># 3. 无图形环境自检：跑 5 秒并把轨迹写成 CSV</span>
+python3<span class="w"> </span>src/ground/r2d2_cruise/main.py<span class="w"> </span>--direct<span class="w"> </span>--duration<span class="w"> </span><span class="m">5</span><span class="w"> </span>--log<span class="w"> </span>run.csv
+
+<span class="c1"># 4. 或通过 ROS launch 启动（需 ROS 环境）</span>
 <span class="c1">#    将 src/ground/r2d2_cruise 放入 catkin 工作空间的 src 后：</span>
 <span class="c1">#    catkin_make &amp;&amp; roslaunch r2d2_cruise main.launch</span>
 </code></pre></div>
-<p>运行后弹出 PyBullet 可视化窗口：小车沿圆弧轨迹持续圆周巡航行驶。关闭仿真窗口或按 Ctrl+C 即可退出，程序会自动释放仿真连接。</p>
+<p>运行后弹出 PyBullet 可视化窗口：车体先落下站稳，随后小车沿圆弧轨迹持续圆周巡航行驶。关闭仿真窗口或按 Ctrl+C 即可退出，程序会自动释放仿真连接。</p>
+<h2 id="_4">本地自检</h2>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/test_r2d2_cruise_local.py<span class="w"> </span>-v
+</code></pre></div>
+<p>用例覆盖三点：<code>--direct</code> 模式能跑出轨迹 CSV；5 秒内确实走出圆弧（折线弧长与解缠转角算出的半径约 0.80 m，稳态约 1.02 m）；车体高度稳定在 0.47 m 左右，不会因初始穿插被弹飞。</p>
 <h2 id="ros">ROS 接口说明</h2>
 <p>本模块为独立 PyBullet 仿真脚本，不发布/订阅 ROS 话题。<code>package.xml</code> 与 <code>launch/main.launch</code> 用于满足仓库「模块支持 launch 启动、入口为 main 开头」的约定：roslaunch 仅作为统一启动入口调用 <code>main.py</code>，不依赖 ROS 运行时。</p>
-<h2 id="_4">验收方法</h2>
+<h2 id="_5">验收方法</h2>
 <ul>
-<li>运行后弹出 PyBullet 可视化窗口，小车自动沿圆弧轨迹持续巡航，无需按键或人工干预；</li>
+<li>运行后弹出 PyBullet 可视化窗口，车体落下站稳后自动沿圆弧轨迹持续巡航，无需按键或人工干预；</li>
+<li><code>--direct --duration 5 --log run.csv</code> 能正常结束并写出 10 Hz 轨迹，起步阶段按折线弧长算的转弯半径约 0.80 m（稳态 15–20 s 约 1.02 m）；</li>
+<li><code>pytest tests/test_r2d2_cruise_local.py</code> 三个用例全部通过；</li>
 <li>关闭窗口或按 Ctrl+C：程序正常退出，无残留进程，仿真连接已释放；</li>
 <li>运行效果参考动图：</li>
 </ul>
 <p><img alt="自动巡航仿真动图" src="../../img/ground/r2d2_cruise.gif"/></p>
-<h2 id="_5">说明</h2>
+<ul>
+<li>可视化窗口运行截图（相机跟随车体）：</li>
+</ul>
+<p><img alt="可视化窗口运行截图" src="../../img/ground/r2d2_cruise_run.png"/></p>
+<h2 id="_6">说明</h2>
 <p>本作业的代码与文档在编写过程中使用了 AI 大模型辅助，本人已核对并确认提交内容，对提交内容负责。</p></div>
 </div>
 </div><footer>
