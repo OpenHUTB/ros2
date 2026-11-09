@@ -341,6 +341,35 @@ ros2 topic echo /cmd_vel
 
 以上数值均为真实仿真输出，可在本地执行 `python3 main.py --eval` 复现，不是手工填写。
 
+### 7.4 传感器噪声鲁棒性（新增）
+
+7.1 的评测假设射线测距是理想值。真实激光雷达有测距噪声，也会随机丢束，而端到端策略把 25 束距离直接当输入，因此新增了这组评测：扫描 6 档噪声 × 3 档丢束，每个组合跑全部 3 个场景。
+
+```bash
+python3 main.py --robustness     # 结果写 results/robustness.csv 与 robustness.png
+```
+
+安全指标用**无噪声的真实离障**（`min_clearance_true_m`：同一时刻再取一次 `ray_scan(env, noisy=False)`），含噪测量值只作对照：
+
+| 测距噪声 σ (m) | 丢束 0% | 丢束 10% | 丢束 20% |
+|---|---:|---:|---:|
+| 0.00 | 0.934 | 1.026 | 1.135 |
+| 0.05 | 0.917 | 1.104 | 0.920 |
+| 0.10 | 0.999 | 1.108 | 1.102 |
+| 0.20 | 0.981 | 1.166 | 1.093 |
+| 0.30 | 1.041 | 1.058 | 0.963 |
+| 0.40 | 1.108 | 1.149 | 1.008 |
+
+表中为真实最小离障 (m)；18 个组合的到达成功率**全部是 100%**。
+
+**结论：这套端到端策略对测距噪声与丢束是鲁棒的。** 真实最小离障在 0.92–1.17 m 之间波动（波动来自不同噪声下轨迹的细微差异），没有随噪声增大而单调下降，也没有出现擦碰。
+
+**一个反例值得单独说**：如果直接用含噪射线算最小离障，σ=0.40、不丢束时会得到 0.000 m——看起来像「擦到障碍」，其实是极值统计的假象：25 束 × 约 1500 步共 3.7 万个样本，σ=0.4 时 `P(noise < −0.93) ≈ 1%`，几乎必然出现一次被 clip 到 0 的采样。同一组配置的真实离障是 1.108 m。所以安全指标必须用无噪射线，含噪值只能当「传感器读数」，不能当「离障」。
+
+> 口径说明：丢束语义是「先判丢束、只对有效回波加噪、最后把丢束项写回量程上限」，`test_sensor_noise.py` 有断言保证丢束值精确等于量程；`_apply_sensor_noise` 已拆到不依赖 mujoco 的 `sensor_noise.py`，纯逻辑测试在没装 MuJoCo 的机器上也能跑。
+
+![传感器噪声下的真实最小离障与成功率](img/ground/mujoco_car_nn_avoidance_robustness.png)
+
 ## 8. 常见问题
 
 | 现象 | 原因与处理 |
@@ -352,6 +381,7 @@ ros2 topic echo /cmd_vel
 | 静止时射线报出 0.3 m 左右的"近障碍" | 射线打到了自车轮子；检查自车 geom group 2 与 `bodyexclude` 是否生效，可先跑 `python3 tools/check_scene.py` |
 | ROS 启动报 `ParseXML: Error opening file` | 场景 XML 未随包安装；确认 `setup.py` 的 `data_files` 已打包 `models/*.xml`，重新 `colcon build` |
 | `--test` 中场景测试被跳过 | 当前环境没装 MuJoCo，纯逻辑测试照常执行，场景与传感器测试自动跳过；装好 MuJoCo 后会全部运行 |
+| 路径含中文/空格时报 `mjParseXML: resource not found` | MuJoCo 默认走 OS 文件系统读取，非 ASCII 路径会失败；`CarEnv._load_model` 已回落到「读文本 + `from_xml_string`」，场景不引用外部网格，结果等价 |
 | 未装 MuJoCo 时 `main.py --test` 起不来 | 先用 `python3 main.py --test --logic-only` 跑纯逻辑单测；也可直接 `python3 -m unittest discover -s test -p "test_*.py"`；采集、评测、演示、场景冒烟命令需要先装好 MuJoCo |
 
 ## 9. 参考

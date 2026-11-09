@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot name="student_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- SI units: meters and radians; x forward, y left, z up. -->
+  <xacro:property name="body_length" value="0.60"/>
+  <xacro:property name="body_width" value="0.36"/>
+  <xacro:property name="body_height" value="0.12"/>
+  <xacro:property name="wheel_radius" value="0.10"/>
+  <xacro:property name="wheel_width" value="0.04"/>
+  <material name="blue"><color rgba="0.1 0.35 0.8 1"/></material>
+  <material name="black"><color rgba="0.08 0.08 0.08 1"/></material>
+  <material name="orange"><color rgba="1 0.45 0.05 1"/></material>
+  <material name="white"><color rgba="0.9 0.9 0.9 1"/></material>
+  <link name="base_footprint"/>
+  <joint name="footprint_to_base" type="fixed">
+    <parent link="base_footprint"/><child link="base_link"/>
+    <origin xyz="0 0 0.15"/>
+  </joint>
+  <link name="base_link">
+    <visual><geometry><box size="${body_length} ${body_width} ${body_height}"/></geometry><material name="blue"/></visual>
+    <collision><geometry><box size="${body_length} ${body_width} ${body_height}"/></geometry></collision>
+    <inertial>
+      <mass value="3"/>
+      <inertia ixx="${3*(body_width**2+body_height**2)/12}" ixy="0" ixz="0" iyy="${3*(body_length**2+body_height**2)/12}" iyz="0" izz="${3*(body_length**2+body_width**2)/12}"/>
+    </inertial>
+  </link>
+  <xacro:macro name="wheel" params="name x y">
+    <link name="${name}_link">
+      <visual>
+        <origin rpy="${pi/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <material name="black"/>
+      </visual>
+      <!-- Offset hub marker makes wheel rotation visible in RViz. -->
+      <visual><origin xyz="0.05 0 0"/><geometry><box size="0.025 0.044 0.025"/></geometry><material name="orange"/></visual>
+      <collision><origin rpy="${pi/2} 0 0"/><geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry></collision>
+      <inertial><mass value="0.2"/><inertia ixx="${0.2*(3*wheel_radius**2+wheel_width**2)/12}" ixy="0" ixz="0" iyy="${0.2*wheel_radius**2/2}" iyz="0" izz="${0.2*(3*wheel_radius**2+wheel_width**2)/12}"/></inertial>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/><child link="${name}_link"/>
+      <origin xyz="${x} ${y} -0.05"/><axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+  <xacro:wheel name="front_left_wheel" x="0.20" y="${body_width/2+wheel_width/2}"/>
+  <xacro:wheel name="rear_left_wheel" x="-0.20" y="${body_width/2+wheel_width/2}"/>
+  <xacro:wheel name="front_right_wheel" x="0.20" y="${-body_width/2-wheel_width/2}"/>
+  <xacro:wheel name="rear_right_wheel" x="-0.20" y="${-body_width/2-wheel_width/2}"/>
+  <link name="lidar_link">
+    <visual><geometry><cylinder radius="0.055" length="0.06"/></geometry><material name="orange"/></visual>
+  </link>
+  <joint name="lidar_joint" type="fixed"><parent link="base_link"/><child link="lidar_link"/><origin xyz="0 0 0.09"/></joint>
+  <link name="front_marker_link"><visual><geometry><box size="0.01 0.12 0.04"/></geometry><material name="white"/></visual></link>
+  <joint name="front_marker_joint" type="fixed"><parent link="base_link"/><child link="front_marker_link"/><origin xyz="0.305 0 0"/></joint>
+</robot>

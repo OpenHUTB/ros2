@@ -7,6 +7,10 @@
 Ubuntu20.04 + Python3 + mujoco
 
 ## 运行步骤
+
+!!! warning
+    下面命令需要在仓库根目录运行，不然会找不到文件。
+
 ```bash
 # 1. 安装依赖
 pip install mujoco
@@ -15,6 +19,10 @@ pip install mujoco
 python3 src/ground/mujoco_shooting/main.py
 ```
 
+安装后可以用这个命令检查是否装好：
+```bash
+python3 -c "import mujoco; print(mujoco.__version__)"
+```
 运行后弹出 MuJoCo 可视化窗口：绿色激光开场扫描，随后炮塔自动锁定靶子发射小球，靶子逐个倒下，全部击倒后自动停止。
 
 ![打靶仿真动图](../img/ground/mujoco_shooting.gif)
