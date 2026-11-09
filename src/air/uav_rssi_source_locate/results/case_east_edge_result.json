@@ -1,0 +1,85 @@
+{
+  "case": "east_edge",
+  "note": "东北边：信标贴近区界",
+  "outcome": "ok",
+  "algorithm": {
+    "area_m": [
+      220.0,
+      160.0
+    ],
+    "alt_m": 20.0,
+    "grid_step_m": 30.0,
+    "detect_range_m": 43.29,
+    "link_budget": [
+      {
+        "distance_m": 5.0,
+        "rssi_dbm": -55.5,
+        "inverted_m": 5.06,
+        "error_m": 0.06
+      },
+      {
+        "distance_m": 10.0,
+        "rssi_dbm": -62.0,
+        "inverted_m": 10.0,
+        "error_m": 0.0
+      },
+      {
+        "distance_m": 20.0,
+        "rssi_dbm": -68.5,
+        "inverted_m": 19.74,
+        "error_m": -0.26
+      },
+      {
+        "distance_m": 30.0,
+        "rssi_dbm": -72.5,
+        "inverted_m": 30.01,
+        "error_m": 0.01
+      },
+      {
+        "distance_m": 43.29,
+        "rssi_dbm": -76.0,
+        "inverted_m": 43.29,
+        "error_m": 0.0
+      }
+    ],
+    "trilateration": {
+      "n_samples": 8,
+      "feasible": true,
+      "estimate_xy": [
+        215.0,
+        150.0
+      ],
+      "error_m": 0.0,
+      "residual_m": 0.009
+    },
+    "naive_best_waypoint": {
+      "estimate_xy": [
+        200.0,
+        170.0
+      ],
+      "peak_rssi_dbm": -73.0,
+      "error_m": 25.0,
+      "n_waypoints": 13
+    }
+  },
+  "closed_loop": {
+    "simulated": true,
+    "outcome": "ok",
+    "beacon_xy": [
+      215.0,
+      150.0
+    ],
+    "estimate_xy": [
+      214.7,
+      149.78
+    ],
+    "localization_error_m": 0.37,
+    "residual_m": 0.353,
+    "n_measurements": 31,
+    "detected_at_s": 81.87,
+    "verified": true,
+    "sim_duration_s": 200.9,
+    "wall_time_s": 3.2,
+    "case": "east_edge"
+  }
+}

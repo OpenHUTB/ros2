@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_rssi_source_locate</name>
+  <version>0.1.0</version>
+  <description>
+    UAV search and RSSI trilateration of a hidden radio beacon with MuJoCo
+    closed loop. 隐藏无线信标的无人机搜索与三边定位：按对数距离路损模型
+    从量化 RSSI 反演距离，扩张方形搜索至首次检测，再以估计点为圆心收
+    缩测量圈做阻尼最小二乘定位，最后用 uav_mujoco_sim 闭环真飞验证，
+    并给出"取最强信号航点"朴素基线的同口径对比。
+  </description>
+  <maintainer email="327592576+KKK555-MAX@users.noreply.github.com">蒋宇鑫</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
