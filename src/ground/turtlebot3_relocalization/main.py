@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-sim_2d_relocalization.py —— 轻量 2D 粒子滤波重定位仿真（matplotlib 渲染）
+main.py —— 轻量 2D 粒子滤波重定位仿真（matplotlib 渲染）
 ==================================================================================
 与 Gazebo/TurtleBot3 版共用同一套重定位核心（reloc_core.ParticleFilter，AMCL 风格）：
   - 机器人只知道环境地图、不知道自己初始在哪（未知位姿）；
@@ -12,8 +12,8 @@ sim_2d_relocalization.py —— 轻量 2D 粒子滤波重定位仿真（matplotl
 纯里程计漂移。
 
 运行：
-    python3 sim_2d_relocalization.py            # 生成 relocalization_demo.gif
-    python3 sim_2d_relocalization.py --show     # 弹出窗口实时查看
+    python3 main.py            # 生成 relocalization_demo.gif
+    python3 main.py --show     # 弹出窗口实时查看
 依赖：numpy, matplotlib, Pillow
 """
 import argparse
@@ -56,7 +56,7 @@ def true_pose_at(s):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--frames", type=int, default=200)
+    ap.add_argument("--frames", type=int, default=240)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--npart", type=int, default=1000)
     ap.add_argument("--out", default="relocalization_demo.gif")

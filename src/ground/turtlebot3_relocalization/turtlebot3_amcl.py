@@ -9,7 +9,7 @@ turtlebot3_amcl.py —— 高精度定位与重定位（AMCL 式粒子滤波）�
 输出高精度 /amcl_pose 供导航（Nav2）使用。
 
 核心算法（栅格地图距离场 + likelihood field 权重 + 低方差重采样粒子滤波）
-与 2D 轻量版 sim_2d_relocalization.py 完全共用 reloc_core.ParticleFilter，
+与 2D 轻量版 main.py 完全共用 reloc_core.ParticleFilter，
 本文件只做『ROS2 数据接入 + 地图构建 + 话题收发』。
 
 使用前提（本机 Gazebo，本仓库不提供运行环境）:

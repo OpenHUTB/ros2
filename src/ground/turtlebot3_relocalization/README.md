@@ -4,7 +4,7 @@
 > 用激光雷达 + 粒子滤波做全局定位/重定位，并持续修正里程计累积漂移。
 > 仿真平台：**Gazebo / TurtleBot3**（渲染版）＋ **2D 轻量版**（本仓库可直接跑、出动图）。
 
-![重定位效果](docs/img/ground/turtlebot3_relocalization_demo.gif)
+![重定位效果](../../../docs/img/ground/turtlebot3_relocalization_demo.gif)
 
 ## 解决什么问题
 
@@ -24,7 +24,8 @@
 | 文件 | 说明 |
 |------|------|
 | `reloc_core.py` | **共享核心**：栅格地图+距离场、激光 raycast、likelihood field 权重、低方差重采样粒子滤波（只依赖 numpy） |
-| `sim_2d_relocalization.py` | 2D 轻量重定位仿真，可直接运行并生成效果动图（真实跑出，算法核心与渲染版共用） |
+| `main.py` | **入口**：2D 轻量重定位仿真，可直接运行并生成效果动图（真实跑出，算法核心与渲染版共用） |
+| `package.xml` / `setup.py` / `setup.cfg` | ament_python 包配置：`colcon build` 后可 `ros2 run turtlebot3_relocalization turtlebot3_amcl` |
 | `turtlebot3_amcl.py` | **Gazebo/TurtleBot3 渲染版**：ROS2 节点，订阅 /map /odom /scan，输出 /amcl_pose 与粒子云（本机运行） |
 | `requirements.txt` | Python 依赖 |
 
@@ -34,8 +35,8 @@
 
 ```
 pip install -r requirements.txt
-python3 sim_2d_relocalization.py                 # 默认 240 帧 @30fps，输出动图
-python3 sim_2d_relocalization.py --frames 300 --fps 20
+python3 main.py                 # 默认 240 帧 @30fps，输出动图
+python3 main.py --frames 300 --fps 20
 ```
 
 运行后 stdout 第一行为 GIF 绝对路径（可直接 `$(...) | head -1` 取用），
@@ -45,13 +46,17 @@ python3 sim_2d_relocalization.py --frames 300 --fps 20
 ### Gazebo/TurtleBot3 渲染版（需本机 ROS2 + Gazebo）
 
 ```bash
+# 0) 在 ROS2 工作空间构建本包（ament_python）
+colcon build --packages-select turtlebot3_relocalization
+source install/setup.bash
+
 # 1) 启动 TurtleBot3 世界 + 地图服务器（发布 /map）
 # 2) 在另一个终端让机器人移动（发布 /scan /odom）
-ros2 run <你的包> turtlebot3_amcl.py
+ros2 run turtlebot3_relocalization turtlebot3_amcl
 # 3) RViz 添加 /amcl_pose（PoseWithCovariance）与 /particle_cloud（PoseArray）查看收敛
 ```
 
-> **重要说明**：本仓库沙箱无 GPU / CARLA / ROS / Gazebo，**渲染版无法在沙箱实跑**。
+> **重要说明**：本仓库沙箱无 GPU / ROS2 / Gazebo，**渲染版无法在沙箱实跑**；该节点的 rclpy 接口与话题定义按 ROS2 规范编写，但未在真实 ROS2 + Gazebo 环境执行。
 > 上文动图由**共用同一算法核心的 2D 轻量版真实运行**产出；Gazebo 渲染效果请在本机验证。
 
 ## 结果
