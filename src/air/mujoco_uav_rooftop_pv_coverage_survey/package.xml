@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mujoco_uav_rooftop_pv_coverage_survey</name>
+  <version>0.1.0</version>
+  <description>Bilingual MuJoCo rooftop PV sensing and route planning example.</description>
+  <maintainer email="cwq319@users.noreply.github.com">cwq319</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
