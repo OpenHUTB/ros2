@@ -2,7 +2,7 @@
 
 [运行与复测命令](usage.md) · [模块概览](overview.md)
 
-本文按实际验证阶段汇总结果。首次 Foxy 测试保留原日期和环境，后续队列、Action 与日志功能在 Humble 下分别验证；文档更新不代表重新执行全部历史测试。
+本文按实际验证阶段汇总结果。首次 Foxy 测试保留原环境和结果，后续队列、Action 与日志功能在 Humble 下分别验证；文档更新不代表重新执行全部历史测试。
 
 ## 当前功能与验证范围
 
@@ -10,18 +10,17 @@
 
 | 阶段 | 已验证内容 | 详细说明 |
 | --- | --- | --- |
-| 安全状态机 | Foxy 单航点、暂停恢复、返航落地、RPC 传输中断检测 | 下文 2026-10-19 历史记录 |
+| 安全状态机 | Foxy 单航点、暂停恢复、返航落地、RPC 传输中断检测 | 下文安全状态机阶段 |
 | 多航点队列与可靠性 | Humble / AirSim 三航点、执行中暂停恢复、取消和返航落地；边界校验由自动测试覆盖 | [队列实测证据](validation/waypoint_queue_airsim_validation.md) |
-| ROS 2 Action | 2026-10-28 AirSim 三航点成功、客户端取消、返航抢占及最终落地 | [Action 接口与验证范围](mission_action.md) |
-| 日志与离线统计 | 2026-11-02 验证记录流程；2026-11-06 手动复测生成 6536 条状态样本并导出三个任务 | [日志教程与本轮统计](mission_recording.md#manual-validation) |
+| ROS 2 Action | AirSim 三航点成功、客户端取消、返航抢占及最终落地 | [Action 接口与验证范围](mission_action.md) |
+| 日志与离线统计 | 首次集成验证生成 482 条状态样本；交互手动复测生成 6536 条样本，两轮分别导出三个任务 | [日志教程与本轮统计](mission_recording.md#manual-validation) |
 
 历史测试数量属于对应版本，不应解释为当前完整代码在全部环境下重新通过相同验证。新增队列、Action 和记录统计没有在 Foxy 或真机上验证。
 
-## 2026-10-19：Foxy 安全控制验证
+## 安全状态机阶段（PR #472）
 
 ### 测试环境
 
-- 测试日期：2026-10-19。
 - Windows OpenHUTB Air 场景、WSL2 Ubuntu 20.04.6、ROS2 Foxy、Python 3.8.10。
 - AirSim Python 客户端 1.8.1、msgpack-rpc-python 0.4.1、numpy 1.17.4、tornado 4.5.3。
 - 模拟器具体构建版本未确认；结果仅适用于本次模拟场景。
@@ -45,11 +44,31 @@
 
 依赖清单补充后，已在独立 Python 3.8 环境按安装说明完成初始化，`pip check` 及 AirSim、NumPy、RPC、OpenCV 导入检查通过；Foxy 构建、29 项单元测试和 ROS 冒烟测试再次通过。此检查未重跑实际飞行，不代表以清单中的 OpenCV 版本完成了飞行验证。
 
-## 2026-10-28：Humble / AirSim Action 验证
+## 多航点队列阶段（PR #508）
+
+在 WSL2 Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10.12 与 Windows OpenHUTB Air 下，手动验证三航点顺序执行、执行中暂停/恢复、执行中取消和返航自动落地。三航点使用 0.5 m/s，完成数依次为 0、1、2、3，最终 `COMPLETED`；暂停恢复用例使用 0.2 m/s，保留目标、索引与速度，恢复后完成。取消后清空目标，旧航点未再次派发。
+
+本轮起点 `home_z=11.196125`，航点 z=8.2。原始状态流共 5742 条；记录从起飞后 `EXECUTING` 开始，没有覆盖连接起飞，也没有命令时间戳。最终位置约 `[-0.008804,-0.030834,11.205312]`。详细采样证据及限制见[队列实测记录](validation/waypoint_queue_airsim_validation.md)。这些位置仅对应本轮场景。
+
+## 队列可靠性阶段（PR #542）
+
+对 `home_z` 和 `max_altitude` 增加有限数值检查，要求最大高度大于零；非法参数或航点被拒绝时保持原队列不变。构建和当时的 54 项单元测试通过，队列 ROS 冒烟、服务响应与安全超时冒烟通过。回归覆盖非零起点高度、100 点上限、非法装载原子性及暂停和终态计数语义。
+
+该阶段独立的 AirSim 手动复测覆盖执行中暂停/恢复、三航点完成、取消和返航落地。暂停时 `completed=0`、`current_index=0`、`remaining=3`，目标与 0.2 m/s 指令速度保留；完成时为 `COMPLETED`、3/3、剩余 0；取消后目标与速度清空，索引为 `null`、剩余 0。返航后最终距本轮记录起点约 0.0343 m。非法高度只由自动测试覆盖，不算 AirSim 实测。结果来源见 [PR #542](https://github.com/OpenHUTB/ros2/pull/542)。
+
+## ROS 2 Action 阶段（PR #613）
 
 环境为 WSL2 Ubuntu 22.04.5、ROS 2 Humble、Python 3.10.12 与 Windows OpenHUTB Air。三航点 Action 为 `SUCCEEDED / COMPLETED`，完成 3/3；GoalHandle 客户端取消为 `CANCELED`；返航服务抢占为 Action `ABORTED`、队列 `CANCELED`，随后遥测确认 `LANDED`。本轮没有手动验证 Action 暂停/恢复，该项由当时 demo 测试覆盖。
 
-## 2026-11-06：Humble / AirSim 记录与统计复测
+## 任务日志与离线统计阶段（PR #656）
+
+### 首次集成验证
+
+Humble 两包构建、依赖检查、63 项单元测试（原有 54 项与新增 9 项）、独立记录器 ROS 冒烟、原 Action 冒烟及文档构建通过。demo 通过实际 launch 启动控制器与独立记录器，覆盖完成、暂停恢复后客户端取消、返航抢占与最终落地，正常关闭后解析 JSONL 并执行报告入口。
+
+OpenHUTB Air 集成验证记录 482 条状态样本；footer 计数一致，JSON/CSV 导出三个任务，均为 `airsim`、`start_partial=false`。三航点 Action `SUCCEEDED`，暂停恢复后客户端取消 `CANCELED`，返航抢占为 Action `ABORTED`、队列 `CANCELED`，最终由独立遥测确认 Landed。具体数值及收尾限制见[首次集成验证](mission_recording.md#integration-validation)。
+
+### 交互手动复测
 
 控制节点、记录器、状态观察和任务命令分别在交互终端运行。三航点成功；慢速任务暂停后恢复，通过标准 Action 取消服务接受取消并观察到队列 `CANCELED`；新任务被返航服务抢占，Action 结果为 `ABORTED`，随后状态话题确认 `LANDED`。
 
