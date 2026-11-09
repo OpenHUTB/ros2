@@ -54,5 +54,3 @@ def test_all_mode_writes_complete_summary(tmp_path: Path):
     assert summary["mapping"]["route_replay_progress"] == 1.0
     assert (output / summary["keyboard"]["gif"]).is_file()
     assert summary["slam"]["completed_waypoints"] == summary["slam"]["total_waypoints"]
-
-
