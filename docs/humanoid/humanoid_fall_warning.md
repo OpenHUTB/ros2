@@ -58,6 +58,10 @@ python3 main.py --train
 python3 main.py --demo
 ```
 
+![跌倒预警演示](../img/humanoid/humanoid_fall_warning/demo.gif)
+
+演示中左上角实时显示网络输出的 `p_normal` / `p_fall`，当 `p_fall > 0.6` 时人形机器人变为预警红色并切换到紧急下蹲姿态（髋屈 + 膝屈 + 踝背屈）。
+
 ### 4.5 ROS2 launch
 
 ```bash
