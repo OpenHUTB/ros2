@@ -159,7 +159,7 @@ ros2 launch mujoco_uav_rooftop_pv_coverage_survey rooftop_pv_workflow.launch.py 
 | 局部航点规划 MSE| 0.10398 |
 | 局部航点误差（m）| 0.41047 |
 
-本轮 Ubuntu/Humble 容器中 51 项测试通过，完整入口生成四个训练权重文件。`colcon build` 后，在源码目录之外成功载入三种已安装 MJCF，并由安装后的 workflow launch 运行场景。Docker 镜像将功能包安装到 `/opt/rooftop_pv`，默认通过真实 ROS launch 执行完整流程，Compose 运行成功并保留 `artifacts/day2/day2_summary.json`。
+本轮 Ubuntu/Humble 容器中 55 项测试通过，完整入口生成四个训练权重文件。`colcon build` 后，在源码目录之外成功载入三种已安装 MJCF，并由安装后的 workflow launch 运行场景。Docker 镜像将功能包安装到 `/opt/rooftop_pv`，默认通过真实 ROS launch 执行完整流程，Compose 运行成功并保留 `artifacts/day2/day2_summary.json`。
 
 ROS 消息验收确认图像、位姿与路径输入可产生非零且有界的速度，并在位姿过期时停车。训练模式同时加载分割、规划和控制三个权重，状态分别报告 `trained_segmentation`、`trained_local_waypoint` 与 `trained_mlp`。端到端模式加载图像控制权重，真实 RGB 消息产生有界速度，状态为 `trained_image`，位姿超时停车通过。安装启动、训练模型控制和端到端图像控制三轮 ROS 验收均记录 `passed=true`。
 
