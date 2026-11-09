@@ -214,6 +214,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
+* [AirLib 传感器消息回归](./air/airlib_message_regression.md) —— 在 ROS 桥接前校验 IMU、GPS、LiDAR 和里程计数据契约
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
 
