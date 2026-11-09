@@ -192,17 +192,37 @@
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#_2">参考</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">拓展：自行实现「给定轨迹的神经网络跟踪控制」</a>
+<li class="toctree-l2"><a class="reference internal" href="#_3">自主实现：带动态目标点切换的路径点发布器</a>
 <ul>
-<li class="toctree-l3"><a class="reference internal" href="#_4">与本文示例的区别</a>
+<li class="toctree-l3"><a class="reference internal" href="#ros-bridge-waypoint-publisher">与 ros-bridge 的 waypoint publisher 的区别</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_5">复用本文的配置步骤</a>
+<li class="toctree-l3"><a class="reference internal" href="#_4">话题接口</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_6">本拓展新增的内容</a>
+<li class="toctree-l3"><a class="reference internal" href="#_5">参数</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_7">运行本拓展模块</a>
+<li class="toctree-l3"><a class="reference internal" href="#_6">运行</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_8">实测结果</a>
+<li class="toctree-l3"><a class="reference internal" href="#_7">动态切换目标点</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_8">路线文件</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_9">离线测试</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_10">运行效果</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_11">拓展：自行实现「给定轨迹的神经网络跟踪控制」</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_12">与本文示例的区别</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_13">复用本文的配置步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_14">本拓展新增的内容</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_15">运行本拓展模块</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_16">实测结果</a>
 </li>
 </ul>
 </li>
@@ -579,14 +599,240 @@
 <ul>
 <li><a href="https://openhutb.github.io/doc/carla_waypoint/">Carla 路径点发布器</a></li>
 </ul>
-<h2 id="_3">拓展：自行实现「给定轨迹的神经网络跟踪控制」</h2>
+<h2 id="_3">自主实现：带动态目标点切换的路径点发布器</h2>
+<p>本文的 waypoint publisher 来自 <code>carla_ros_bridge</code>：它把地图导出的道路中心线<strong>整条</strong>
+发出来，车辆开向哪个点、什么时候换目标，都要由另一个节点自己算。下面是在同一页
+基础上<strong>自主实现</strong>的替代方案 —— 一个<strong>不依赖 ros-bridge、也不依赖 CARLA</strong> 的 ROS 包，
+除了发布路径点，还把「当前目标点」单独发布出来，并支持运行期间<strong>动态目标点切换</strong>。</p>
+<p>代码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/waypoint_target_switcher"><code>src/ground/waypoint_target_switcher</code></a>。</p>
+<h3 id="ros-bridge-waypoint-publisher">与 ros-bridge 的 waypoint publisher 的区别</h3>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>本文示例（ros-bridge）</th>
+<th>本模块</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>依赖</td>
+<td>必须编译并运行 <code>carla_ros_bridge</code></td>
+<td><strong>不需要</strong>，只依赖 rospy / geometry_msgs / nav_msgs / std_msgs</td>
+</tr>
+<tr>
+<td>发布内容</td>
+<td>整条中心线路径点</td>
+<td>路径点 <strong>+ 当前目标点 + 当前下标</strong></td>
+</tr>
+<tr>
+<td>目标点管理</td>
+<td>无（由订阅方自己决定）</td>
+<td><code>sequential</code> / <code>loop</code> / <code>manual</code> 三种推进模式</td>
+</tr>
+<tr>
+<td>动态切换</td>
+<td>无</td>
+<td>按序号跳转 / 手动下一个 / 就近吸附</td>
+</tr>
+<tr>
+<td>到达判定</td>
+<td>无</td>
+<td>订阅 <code>/odom</code>，进入 <code>target_tolerance</code> 半径即推进</td>
+</tr>
+<tr>
+<td>无 CARLA 时</td>
+<td>必须连仿真器</td>
+<td>内置模拟车辆，<code>mock_enabled:=true</code> 即可跑通</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">话题接口</h3>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>话题</th>
+<th>消息类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>发布</td>
+<td><code>/waypoints</code></td>
+<td><code>geometry_msgs/PoseArray</code></td>
+<td>全部路径点（latched，晚连上的节点也能收到）</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/waypoint/target</code></td>
+<td><code>geometry_msgs/PoseStamped</code></td>
+<td>当前目标点</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/waypoint/current_index</code></td>
+<td><code>std_msgs/Int32</code></td>
+<td>当前目标点下标（0 起算），变化时才发</td>
+</tr>
+<tr>
+<td>发布</td>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>仅 <code>mock/enabled: true</code> 时由本模块模拟发布</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/waypoint/set_index</code></td>
+<td><code>std_msgs/Int32</code></td>
+<td>切换到第 N 个点（<strong>1 起算</strong>，越界忽略）</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/waypoint/next</code></td>
+<td><code>std_msgs/Empty</code></td>
+<td>手动前进一个</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/waypoint/snap_nearest</code></td>
+<td><code>std_msgs/Empty</code></td>
+<td>吸附到离当前位置最近的点</td>
+</tr>
+<tr>
+<td>订阅</td>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>真实 / 仿真位姿</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>默认值</th>
+<th>单位</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rate/publish_hz</code></td>
+<td><code>10.0</code></td>
+<td>Hz</td>
+<td>目标点 / 状态的发布频率</td>
+</tr>
+<tr>
+<td><code>frame/id</code></td>
+<td><code>map</code></td>
+<td>—</td>
+<td>路径点坐标系</td>
+</tr>
+<tr>
+<td><code>control/mode</code></td>
+<td><code>sequential</code></td>
+<td>—</td>
+<td><code>sequential</code> / <code>loop</code> / <code>manual</code></td>
+</tr>
+<tr>
+<td><code>control/target_tolerance</code></td>
+<td><code>1.0</code></td>
+<td>m</td>
+<td>到达判定阈值；<code>&lt;= 0</code> 关闭自动推进</td>
+</tr>
+<tr>
+<td><code>control/start_index</code></td>
+<td><code>0</code></td>
+<td>—</td>
+<td>初始目标点下标（超范围自动夹住）</td>
+</tr>
+<tr>
+<td><code>control/autostart</code></td>
+<td><code>true</code></td>
+<td>—</td>
+<td>启动后立即开始</td>
+</tr>
+<tr>
+<td><code>route/file</code></td>
+<td><code>""</code></td>
+<td>—</td>
+<td>路线文件路径；留空用内置示例路线</td>
+</tr>
+<tr>
+<td><code>mock/enabled</code></td>
+<td><code>false</code></td>
+<td>—</td>
+<td><code>true</code> 时自带模拟车辆并发布 <code>/odom</code></td>
+</tr>
+<tr>
+<td><code>mock/speed</code></td>
+<td><code>2.0</code></td>
+<td>m/s</td>
+<td>模拟车辆速度</td>
+</tr>
+</tbody>
+</table>
+<p>完整清单（含话题重映射）见模块内的 <code>config/waypoint_target_switcher.yaml</code>。</p>
+<h3 id="_6">运行</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 默认：内置示例路线（10 m 见方环路、8 个点）</span>
+roslaunch<span class="w"> </span>waypoint_target_switcher<span class="w"> </span>main.launch
+
+<span class="c1"># 让目标点自动依次切换（内置模拟车辆，不需要 CARLA）</span>
+roslaunch<span class="w"> </span>waypoint_target_switcher<span class="w"> </span>main.launch<span class="w"> </span>mock_enabled:<span class="o">=</span><span class="nb">true</span>
+
+<span class="c1"># 循环模式 + 到达阈值 0.5 m</span>
+roslaunch<span class="w"> </span>waypoint_target_switcher<span class="w"> </span>main.launch<span class="w"> </span>mock_enabled:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>mode:<span class="o">=</span>loop<span class="w"> </span>target_tolerance:<span class="o">=</span><span class="m">0</span>.5
+</code></pre></div>
+<h3 id="_7">动态切换目标点</h3>
+<p>运行期间在任意终端执行（下标 <strong>1 起算</strong>）：</p>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/waypoint/set_index<span class="w"> </span>std_msgs/Int32<span class="w"> </span><span class="s2">"data: 3"</span><span class="w">   </span><span class="c1"># 跳到第 3 个</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/waypoint/next<span class="w"> </span>std_msgs/Empty<span class="w"> </span><span class="s2">"{}"</span><span class="w">             </span><span class="c1"># 下一个</span>
+rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/waypoint/snap_nearest<span class="w"> </span>std_msgs/Empty<span class="w"> </span><span class="s2">"{}"</span><span class="w">     </span><span class="c1"># 就近吸附</span>
+</code></pre></div>
+<p><code>sequential</code> 模式走完最后一个点后停止推进并在终端提示；这时可以随时用 <code>set_index</code>
+重新指定目标，或改用 <code>mode:=loop</code> 循环跑。</p>
+<h3 id="_8">路线文件</h3>
+<p>纯文本，每行一个点 <code>x y yaw</code>（<code>yaw</code> 可省略，默认 0），<code>#</code> 之后是注释：</p>
+<div class="highlight"><pre><span></span><code># x y yaw
+0.0   0.0   0.0
+5.0   0.0   0.0
+10.0  10.0  0.0
+</code></pre></div>
+<p>随包提供 <code>config/demo_route.txt</code> 作为格式样例（与内置示例路线一致）。用纯文本而不是
+YAML，是为了让「读路线」不依赖 PyYAML，手改和离线测试都更省事。</p>
+<h3 id="_9">离线测试</h3>
+<p>核心逻辑（路线解析、目标点推进、到达判定、模拟车辆步进、四元数互转）都在
+<code>scripts/waypoint_core.py</code>，该文件<strong>不导入 rospy</strong>，因此可以在没有 ROS、没有 CARLA、
+没有图形界面的机器上回归：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;仓库根目录&gt;
+python3<span class="w"> </span>tests/test_waypoint_target_switcher_local.py<span class="w">   </span><span class="c1"># Noetic / 任意 Python 3</span>
+python2<span class="w"> </span>tests/test_waypoint_target_switcher_local.py<span class="w">   </span><span class="c1"># Melodic / Python 2.7</span>
+</code></pre></div>
+<p>全部通过时打印 <code>全部通过</code> 并以 0 退出。</p>
+<h3 id="_10">运行效果</h3>
+<p><code>roslaunch waypoint_target_switcher main.launch mock_enabled:=true</code> 启动后，终端会按到达
+顺序打印目标点切换过程（内置路线的 8 个点依次推进，<code>sequential</code> 模式走完后停止）：</p>
+<div class="highlight"><pre><span></span><code>[INFO] 路径点发布器已启动：8 个路径点，模式=sequential，到达阈值=1.00m，频率=10.0Hz
+[INFO] 内置模拟车辆已启用：/odom 由本节点发布，速度 2.0 m/s
+[INFO] 到达第 1 个路径点 → 目标切换为第 2 个
+[INFO] 到达第 2 个路径点 → 目标切换为第 3 个
+...
+[INFO] 已到达最后一个路径点，路线结束（可发 /waypoint/set_index 重新指定）
+</code></pre></div>
+<p>在 rviz 里可以同时显示 <code>PoseArray</code>（整条路线）与 <code>PoseStamped</code>（当前目标点），
+目标点会随着推进一格一格跳过去。</p>
+<h2 id="_11">拓展：自行实现「给定轨迹的神经网络跟踪控制」</h2>
 <p>本文的路径点发布器只负责<strong>发布</strong>路径点，车辆如何沿路径点行驶由其它节点决定。
 下面是在该功能基础上<strong>自主实现</strong>的一套「传感器感知 + 给定轨迹跟踪」控制，
 代码位于
 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/carla_perception_control"><code>src/ground/carla_perception_control</code></a>，
 详细介绍（计算原理、源码解析、性能评价）见
 <a href="../carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>。</p>
-<h3 id="_4">与本文示例的区别</h3>
+<h3 id="_12">与本文示例的区别</h3>
 <table>
 <thead>
 <tr>
@@ -633,7 +879,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="_5">复用本文的配置步骤</h3>
+<h3 id="_13">复用本文的配置步骤</h3>
 <p>CARLA 服务端的启动、宿主机 IP 与端口 2000 的查看、虚拟机网络设置等步骤
 <strong>与已有示例完全一致，此处不再重复</strong>，请参考
 <a href="../../set_up_and_connect_to_carla/">设置并连接到 Carla 模拟器</a> 的
@@ -645,7 +891,7 @@
 <strong>ros-bridge 路线</strong>（需要 catkin 编译 ros-bridge）。本拓展模块<strong>不依赖 ros-bridge</strong>，
 这些步骤可以跳过。</p>
 </div>
-<h3 id="_6">本拓展新增的内容</h3>
+<h3 id="_14">本拓展新增的内容</h3>
 <ol>
 <li><strong>感知神经网络</strong>：三路传感器（RGB 相机、深度相机、32 线激光雷达）压缩为 4 维归一化特征，
    由 MLP 分类器（4→12→3）输出障碍方向（无目标 / 偏左 / 偏右）。</li>
@@ -659,7 +905,7 @@
 <li><strong>离线取证模式</strong>：<code>--headless --demo</code> 无需 CARLA、无需图形界面即可跑通全链路，
    并导出损失/误差曲线 PNG。</li>
 </ol>
-<h3 id="_7">运行本拓展模块</h3>
+<h3 id="_15">运行本拓展模块</h3>
 <p>除本文所需环境外，只需补装 CARLA 0.9.16 的 Python 客户端
 （神经网络为纯 numpy 实现，无需 TensorFlow/PyTorch）：</p>
 <div class="highlight"><pre><span></span><code>pip3<span class="w"> </span>install<span class="w"> </span>&lt;CARLA&gt;/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
@@ -685,7 +931,7 @@ ros2<span class="w"> </span>launch<span class="w"> </span>carla_perception_contr
 <span class="c1"># ROS 1</span>
 roslaunch<span class="w"> </span>carla_perception_control<span class="w"> </span>main.launch<span class="w"> </span>host:<span class="o">=</span><span class="m">172</span>.21.108.47
 </code></pre></div>
-<h3 id="_8">实测结果</h3>
+<h3 id="_16">实测结果</h3>
 <p>离线取证模式实测（<code>--epochs 300 --sim_time 90</code>，无需 CARLA）：</p>
 <table>
 <thead>
