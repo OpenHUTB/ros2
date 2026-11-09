@@ -124,8 +124,8 @@ def quat_derivative(q: np.ndarray, omega_body: np.ndarray) -> np.ndarray:
 
 
 def wrap_angle(a: float) -> float:
-    while a > math.pi:
-        a -= 2 * math.pi
-    while a < -math.pi:
-        a += 2 * math.pi
-    return a
+    """把角度包装到 [-pi, pi)，用 fmod 一次完成，避免 while 循环。"""
+    a = math.fmod(a + math.pi, 2.0 * math.pi)
+    if a < 0.0:
+        a += 2.0 * math.pi
+    return a - math.pi

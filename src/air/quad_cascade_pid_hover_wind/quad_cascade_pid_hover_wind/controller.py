@@ -131,13 +131,34 @@ class CascadeController:
         fx, fy = ax, ay
         fz = az + g
         fz = max(fz, 1e-3)
-        # 小角度近似：phi = (ax*sin(yaw) - ay*cos(yaw)) / fz
-        # theta = (ax*cos(yaw) + ay*sin(yaw)) / fz
-        phi = (fx * math.sin(yaw) - fy * math.cos(yaw)) / fz
-        theta = (fx * math.cos(yaw) + fy * math.sin(yaw)) / fz
+        # 精确解算 tan(phi)/tan(theta)，不使用小角度近似，
+        # 避免大姿态角时期望姿态偏离真实推力方向
+        phi = math.atan2(fx * math.sin(yaw) - fy * math.cos(yaw), fz)
+        theta = math.atan2(fx * math.cos(yaw) + fy * math.sin(yaw), fz)
         phi = max(-0.5, min(0.5, phi))
         theta = max(-0.5, min(0.5, theta))
         return phi, theta, yaw
+
+    def _reallocate(self, thrusts: np.ndarray, u_des: np.ndarray) -> np.ndarray:
+        """限幅后的推力重分配。
+
+        把期望 wrench 拆成总推力部分（均分到 4 个旋翼）与力矩部分，
+        保持总推力不变，将力矩部分按可行域等比缩放，使限幅后的实际
+        总推力/三轴力矩尽量接近控制器输出。
+        """
+        max_thrust = self.p.k_f * self.p.max_omega ** 2
+        base = np.clip(self.mixer @ np.array([u_des[0], 0.0, 0.0, 0.0]),
+                       0.0, max_thrust)
+        delta = self.mixer @ np.array([0.0, u_des[1], u_des[2], u_des[3]])
+        # 求 alpha ∈ [0,1]，使 base + alpha * delta 落在推力限幅内
+        alpha = 1.0
+        for i in range(4):
+            if delta[i] > 1e-12:
+                alpha = min(alpha, (max_thrust - base[i]) / delta[i])
+            elif delta[i] < -1e-12:
+                alpha = min(alpha, (0.0 - base[i]) / delta[i])
+        alpha = max(0.0, min(1.0, alpha))
+        return np.clip(base + alpha * delta, 0.0, max_thrust)
 
     def compute(self, pos: np.ndarray, vel: np.ndarray, quat: np.ndarray,
                 omega: np.ndarray, pos_des: np.ndarray, dt: float) -> np.ndarray:
@@ -176,8 +197,10 @@ class CascadeController:
         # 5. 混控：[T, Mx, My, Mz] -> 4 个旋翼推力
         u = np.array([thrust_des, moments[0], moments[1], moments[2]])
         thrusts = self.mixer @ u
-        # 推力不能为负，且要保证总推力可实现
-        thrusts = np.clip(thrusts, 0.0, None)
+        # 推力不能为负、不能超过单旋翼上限；限幅后用伪逆在其余旋翼间重分配，
+        # 尽量复现期望总推力与三轴力矩
+        max_thrust = p.k_f * p.max_omega ** 2
+        thrusts = self._reallocate(np.clip(thrusts, 0.0, max_thrust), u)
         omega_cmd = thrust_to_omega(thrusts, p.k_f, p.min_omega, p.max_omega)
 
         self.diag = {

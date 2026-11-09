@@ -4,7 +4,7 @@
   <name>quad_cascade_pid_hover_wind</name>
   <version>0.1.0</version>
   <description>基于串级 PID 的四旋翼航点定点悬停与抗风扰仿真</description>
-  <maintainer email="user@todo.todo">OpenHUTB ROS contribution</maintainer>
+  <maintainer email="3568385516@qq.com">Toeting</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
@@ -13,10 +13,11 @@
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>ament_index_python</depend>
   <depend>python3-numpy</depend>
   <depend>python3-yaml</depend>
   <depend>python3-matplotlib</depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 

@@ -5,6 +5,7 @@
 import os
 from typing import Tuple
 
+import numpy as np
 import yaml
 
 from .controller import ControllerGains, build_gains_from_dict
@@ -28,8 +29,8 @@ def build_params(cfg: dict) -> Tuple[QuadParams, WindParams, ControllerGains, di
     )
     w = cfg["wind"]
     wp = WindParams(
-        mean=__import__("numpy").array(w["mean"], float),
-        gust_magnitude=__import__("numpy").array(w["gust_magnitude"], float),
+        mean=np.array(w["mean"], float),
+        gust_magnitude=np.array(w["gust_magnitude"], float),
         gust_start=float(w["gust_start"]),
         gust_duration=float(w["gust_duration"]),
         turbulence_sigma=float(w["turbulence_sigma"]),

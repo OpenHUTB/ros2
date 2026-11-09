@@ -39,6 +39,8 @@ class ControllerNode(Node):
                                       yaw_control=yaw_control)
 
         self.rate = float(self.get_parameter("rate").value)
+        # 控制器固定步长：PID 积分/微分用标称周期，避免调度抖动污染 dt
+        self.dt_ctrl = 1.0 / self.rate
         self.odom: Optional[Odometry] = None
         self.manual_target: Optional[np.ndarray] = None
 
@@ -49,8 +51,8 @@ class ControllerNode(Node):
         self.create_subscription(Odometry, "/odom", self.on_odom, 10)
         self.create_subscription(PoseStamped, "/goal_pose", self.on_goal, 10)
 
-        self.timer = self.create_timer(1.0 / self.rate, self.update)
-        self.last_t = None
+        self.timer = self.create_timer(self.dt_ctrl, self.update)
+        self.last_info_time = -5.0  # 上一次发布 /nav_info 的时间戳
         self.get_logger().info("串级 PID 控制节点已启动：%.0f Hz，%d 个航点"
                                % (self.rate, len(wps)))
 
@@ -65,12 +67,7 @@ class ControllerNode(Node):
         if self.odom is None:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
-        if self.last_t is None:
-            self.last_t = now
-            return
-        dt = now - self.last_t
-        self.last_t = now
-        dt = min(dt, 0.1)
+        dt = self.dt_ctrl
 
         p = self.odom.pose.pose.position
         o = self.odom.pose.pose.orientation
@@ -96,7 +93,9 @@ class ControllerNode(Node):
         self.target_pub.publish(tp)
 
         err = np.linalg.norm(pos - target)
-        if int(now) % 5 == 0:
+        # 按时间间隔限频发布（200 Hz 下不能按整数秒判断，否则每秒连发数百次）
+        if now - self.last_info_time >= 5.0:
+            self.last_info_time = now
             self.info_pub.publish(String(
                 data="target=(%.2f,%.2f,%.2f) err=%.2fm" % (
                     target[0], target[1], target[2], err)))

@@ -15,7 +15,7 @@ import rclpy
 from geometry_msgs.msg import Point, Vector3Stamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from std_msgs.msg import Float32MultiArray, String
+from std_msgs.msg import Float32MultiArray
 
 
 class LoggerNode(Node):
@@ -41,7 +41,6 @@ class LoggerNode(Node):
         self.create_subscription(Vector3Stamped, "/wind", self.on_wind, 10)
         self.create_subscription(Float32MultiArray, "/cmd_motors", self.on_cmd, 10)
         self.create_subscription(Point, "/target", self.on_target, 10)
-        self.create_subscription(String, "/nav_info", lambda m: None, 10)
 
         self.start_time = time.time()
         self.rows = []

@@ -108,12 +108,10 @@ class Quadrotor:
         total_thrust = np.array([0.0, 0.0, np.sum(thrust)])  # 机体系
         force_body = total_thrust.copy()
 
-        # 力矩（机体系）
+        # 力矩（机体系）：向量化计算 sum(r_i × [0, 0, T_i])
         r = self.ROTOR_POS * p.arm
-        tau_rotor = np.zeros(3)
-        for i in range(4):
-            f_i = np.array([0.0, 0.0, thrust[i]])
-            tau_rotor += np.cross(r[i], f_i)
+        thrust_vecs = np.column_stack([np.zeros(4), np.zeros(4), thrust])
+        tau_rotor = np.sum(np.cross(r, thrust_vecs), axis=0)
         tau_yaw = np.array([0.0, 0.0, np.sum(reaction)])
         moment_body = tau_rotor + tau_yaw
 

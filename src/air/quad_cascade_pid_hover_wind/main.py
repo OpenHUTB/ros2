@@ -43,9 +43,13 @@ def main():
         shutil.rmtree(out_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    # 干净环境：避免 ROS1 noetic 污染
+    # 干净环境：去掉 ROS1 noetic 路径；LD_LIBRARY_PATH 采用前置追加，
+    # 保留用户原有的库路径，避免覆盖系统其他依赖
     base_env = os.environ.copy()
-    base_env["LD_LIBRARY_PATH"] = "/opt/ros/humble/lib:/usr/lib/x86_64-linux-gnu"
+    extra_ld = ["/opt/ros/humble/lib", "/usr/lib/x86_64-linux-gnu"]
+    existing_ld = [p for p in base_env.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+                   if p and p not in extra_ld]
+    base_env["LD_LIBRARY_PATH"] = os.pathsep.join(extra_ld + existing_ld)
     ros1_paths = [p for p in base_env.get("PYTHONPATH", "").split(":") if "noetic" not in p]
     base_env["PYTHONPATH"] = ":".join(ros1_paths)
 
