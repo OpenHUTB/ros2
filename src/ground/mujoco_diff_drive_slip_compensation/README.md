@@ -6,6 +6,10 @@ MuJoCo Differential-Drive Slip Perception and Trajectory Compensation
 
 This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel differential-drive robot. The entry point consumes `cmd_vel`, converts chassis commands to four wheel-speed targets, and publishes simulation time, ground-truth odometry, and transforms. It also publishes encoder and inertial measurement unit data with reproducible noise. The multi-friction collection entry point rotates scenarios by complete episode, resets the vehicle, executes a deterministic excitation profile, and writes synchronized observations to episode-isolated files.
 
+## 仿真验证局限与分布偏移说明
+
+本功能包的轮滑感知模型、在线补偿策略与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上进行测试。仿真中的摩擦模型、接触动力学与传感器噪声和真实世界存在差异，模型迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的 MAE、RMSE、F1、准确率与推理耗时仅对应 MuJoCo 样例测试划分，不能直接代表实物性能。真实硬件数据集验证作为后续工作。
+
 ## 环境 / Environment
 
 | 组件 / Component | 版本 / Version |
@@ -20,8 +24,15 @@ This ROS 2 package provides a MuJoCo simulation foundation for a four-wheel diff
 
 ```text
 mujoco_diff_drive_slip_compensation/
-├── config/simulation.yaml
-├── launch/main.launch.py
+├── config/
+│   ├── simulation.yaml
+│   ├── collection.yaml
+│   └── compensation.yaml
+├── launch/
+│   ├── main.launch.py
+│   ├── collect.launch.py
+│   ├── train.launch.py
+│   └── compensate.launch.py
 ├── models/diff_drive.xml
 ├── mujoco_diff_drive_slip_compensation/
 │   ├── kinematics.py
@@ -34,11 +45,9 @@ mujoco_diff_drive_slip_compensation/
 │   ├── scenarios.py
 │   ├── sensors.py
 │   ├── simulator.py
-│   └── slip_model.py
-│   ├── resources.py
-│   ├── scenarios.py
-│   ├── sensors.py
-│   └── simulator.py
+│   ├── slip_model.py
+│   ├── compensation.py
+│   └── online_compensation.py
 ├── test/
 ├── package.xml
 ├── requirements.txt
@@ -89,6 +98,8 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | 发布 / Publish | `/scenario/episode_id` | `std_msgs/msg/String` | 当前完整 episode 标识 / active complete-episode identifier |
 | 订阅 / Subscribe | `/imu/data` | `sensor_msgs/msg/Imu` | 在线补偿的惯性输入 / IMU input for online compensation |
 | 订阅 / Subscribe | `/ground_truth/odom` | `nav_msgs/msg/Odometry` | 时间同步与新鲜度检查 / freshness and synchronization check |
+| 订阅 / Subscribe | `/wheel/encoders` | `sensor_msgs/msg/JointState` | 在线补偿的轮速输入 / wheel-speed input for online compensation |
+| 发布 / Publish | `/cmd_vel/raw` | `geometry_msgs/msg/Twist` | 原始指令回显，便于对比 / raw command echo for comparison |
 | 发布 / Publish | `/cmd_vel/compensated` | `geometry_msgs/msg/Twist` | 滑移补偿后的速度指令 / slip-compensated velocity command |
 | 发布 / Publish | `/slip/estimate` | `std_msgs/msg/Float64` | 当前窗口滑移估计 / current window slip estimate |
 | 发布 / Publish | `/slip/status` | `std_msgs/msg/String` | 预热、停机或正常状态 / warm-up, stop, or ready status |
@@ -169,4 +180,4 @@ Samples with encoder-derived linear speed below `0.15 m/s` receive a zero target
 
 The reproducible 12-episode sample run with seed `25012`, 12-frame windows, 24 hidden units, and 300 epochs measured `MAE 0.0272`, `RMSE 0.0440`, `F1 0.774`, `accuracy 0.969`, and `0.0103 ms` median inference per window on the local CPU. These values describe that generated held-out split; deployment data should be evaluated independently.
 
-使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。
+使用随机种子 `25012`、12 帧窗口、24 个隐藏单元和 300 轮训练的 12-episode 样例运行，在本机 CPU 测得 `MAE 0.0272`、`RMSE 0.0440`、`F1 0.774`、`准确率 0.969`、单窗口推理中位耗时 `0.0103 ms`。该结果仅对应本次生成的隔离测试划分，部署数据应独立评价。样例生成器使用的摩擦系数为 `(0.02, 0.08, 0.4, 0.9)`，ROS 2 采集场景使用 `(0.25, 0.55, 0.90)`，二者摩擦覆盖范围不同。

@@ -8,10 +8,21 @@ MuJoCo Differential-Drive Slip Perception and Neural Trajectory Compensation Usi
 
 The module uses MuJoCo 3.12.0 to model a four-wheel differential-drive robot and exposes velocity control, simulation time, ground-truth odometry, and transform interfaces in ROS 2 Humble. Wheel encoder and inertial measurement unit data form the primary observations for subsequent slip perception and trajectory compensation across multiple friction conditions.
 
+## 仿真验证局限与分布偏移说明
+
+本模块的轮滑感知模型、在线补偿策略与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上测试。仿真摩擦模型、接触动力学与传感器噪声和真实世界存在差异，迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的指标仅对应 MuJoCo 样例测试划分，不代表实物性能。真实硬件验证列为后续工作。
+
 ## 系统结构 / Architecture
 
 ```text
-/cmd_vel
+/cmd_vel (raw)
+   |
+   v
+在线滑移补偿节点 / Online slip compensation
+   | 订阅 /wheel/encoders, /imu/data, /ground_truth/odom
+   | 另发布 /cmd_vel/raw, /slip/estimate, /slip/status
+   v
+/cmd_vel/compensated
    |
    v
 差速运动学 / Differential kinematics
@@ -22,6 +33,7 @@ MuJoCo 四轮执行器 / Four wheel actuators
    +----> /ground_truth/odom
    +----> /clock
    +----> /tf
+   +----> /wheel/encoders, /imu/data
 ```
 
 功能包使用 `ament_python`，模型、配置与 launch 文件均安装到包共享目录。运行时通过 ROS 2 包索引定位资源，不依赖用户目录、固定工作空间路径或网络地址。
@@ -78,6 +90,11 @@ ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
 | `random_seed` | `25012` | 传感器噪声随机种子 / sensor-noise random seed |
 | `friction_coefficients` | `[0.25, 0.55, 0.90]` | episode 摩擦序列 / episode friction sequence |
 | `scenario_duration` | `30.0` | 单个 episode 时长，单位 s / episode duration in seconds |
+| `model_file`（在线补偿节点） | `data/models/slip-v1/slip_model.json` | 离线训练生成的滑移模型 JSON，相对启动目录；需先运行 `train_slip_model` 生成 / offline-trained slip model JSON, relative to the launch working directory; produced by `train_slip_model` first |
+| `sensor_timeout_seconds`（在线补偿节点） | `0.2` | 传感器或指令允许的最大时间差，单位 s / maximum allowed sensor or command age in seconds |
+| `max_linear_scale`（在线补偿节点） | `1.5` | 线速度补偿比例上限 / upper bound on the linear compensation scale |
+| `max_linear_acceleration`（在线补偿节点） | `1.5` | 线速度加速度限幅，单位 m/s² / linear acceleration limit in m/s² |
+| `max_angular_acceleration`（在线补偿节点） | `3.0` | 角速度加速度限幅，单位 rad/s² / angular acceleration limit in rad/s² |
 
 ## 安全边界 / Safety Boundaries
 
@@ -164,23 +181,24 @@ ros2 launch mujoco_diff_drive_slip_compensation train.launch.py \
   data_directory:=data/raw output_directory:=data/models/slip-v1
 ```
 
-本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 `MAE=0.0272`、`RMSE=0.0440`、`F1=0.774`、`accuracy=0.969`，CPU 单窗口推理中位数为 `0.0103 ms`。该表仅代表样例测试，不代表其他摩擦和实机性能。
+本机样例配置为 12 个 episode、每个 split 4 个完整 episode、12 帧窗口、24 个隐藏单元和 300 轮上限。实际提前停止于验证集不再改善时。隔离测试集含 916 个窗口，测得 `MAE=0.0272`、`RMSE=0.0440`、`F1=0.774`、`accuracy=0.969`，CPU 单窗口推理中位数为 `0.0103 ms`。该表仅代表样例测试，不代表其他摩擦和实机性能。样例生成器使用的摩擦系数为 `(0.02, 0.08, 0.4, 0.9)`，ROS 2 采集场景使用 `(0.25, 0.55, 0.90)`，二者摩擦覆盖范围不同。
 
 The measured local run used 12 episodes (four complete episodes per split), a 12-frame window, 24 hidden units, and a 300-epoch maximum with early stopping on validation MAE. Its isolated test split contained 916 windows and measured `MAE=0.0272`, `RMSE=0.0440`, `F1=0.774`, `accuracy=0.969`, and `0.0103 ms` median CPU inference per window. These measurements apply only to this sample split, not other friction settings or physical hardware.
 
 ## 在线补偿 / Online Compensation
 
-`online_slip_compensation` 使用与离线训练相同的 12 维特征顺序，订阅 `/wheel/encoders`、`/imu/data`、`/ground_truth/odom` 和原始 `/cmd_vel`。里程计在这里仅用于时间同步与新鲜度检查，不作为模型输入。模型窗口完整且所有消息时间戳在 `sensor_timeout_seconds` 内时，节点发布 `/cmd_vel/compensated`、`/slip/estimate` 和 `/slip/status`。
+`online_slip_compensation` 使用与离线训练相同的 12 维特征顺序，订阅 `/wheel/encoders`、`/imu/data`、`/ground_truth/odom` 和原始 `/cmd_vel`。里程计在这里仅用于时间同步与新鲜度检查，不作为模型输入。节点同时回显原始指令到 `/cmd_vel/raw`，便于与补偿后指令对比。模型窗口完整且所有消息时间戳在 `sensor_timeout_seconds` 内时，节点发布 `/cmd_vel/compensated`、`/slip/estimate` 和 `/slip/status`。
 
-The `online_slip_compensation` node keeps the offline 12-feature order and subscribes to `/wheel/encoders`, `/imu/data`, `/ground_truth/odom`, and raw `/cmd_vel`. Odometry is used for synchronization and freshness only, not as a model feature. When the window is full and all messages are fresh, it publishes `/cmd_vel/compensated`, `/slip/estimate`, and `/slip/status`.
+The `online_slip_compensation` node keeps the offline 12-feature order and subscribes to `/wheel/encoders`, `/imu/data`, `/ground_truth/odom`, and raw `/cmd_vel`. Odometry is used for synchronization and freshness only, not as a model feature. It echoes the raw command to `/cmd_vel/raw` for comparison with the compensated command. When the window is full and all messages are fresh, it publishes `/cmd_vel/compensated`, `/slip/estimate`, and `/slip/status`.
 
 补偿策略为：
 
 The compensation policy is:
 
 1. 传感器或指令缺失、时间戳回退、时间差超过阈值、输入非有限时，清空窗口并发布零速。 / Missing data, timestamp rollback, stale data, or non-finite input clears the window and publishes zero velocity.
-2. `v_out = v_cmd / max(1-s, 0.5)`，再限制最大线速度比例。 / Compute `v_out = v_cmd / max(1-s, 0.5)` and then cap the linear scale.
-3. 对线速度和角速度应用独立加速度限幅，避免模型输出造成突变。 / Apply independent linear and angular acceleration limits to prevent abrupt commands.
+2. 滑动窗口尚未收满（默认 12 帧）时处于预热状态，节点发布零速，不透传原始 `/cmd_vel`；窗口就绪后再输出补偿指令。 / During warm-up before the 12-frame window is full, the node publishes zero velocity and does not pass through the raw `/cmd_vel`; compensated commands are emitted only after the window is ready.
+3. `v_out = v_cmd / max(1-s, 0.5)`，再限制最大线速度比例。 / Compute `v_out = v_cmd / max(1-s, 0.5)` and then cap the linear scale.
+4. 对线速度和角速度应用独立加速度限幅，避免模型输出造成突变。 / Apply independent linear and angular acceleration limits to prevent abrupt commands.
 
 ```bash
 ros2 launch mujoco_diff_drive_slip_compensation compensate.launch.py \

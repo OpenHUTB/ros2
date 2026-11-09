@@ -65,6 +65,11 @@ def _build_node_class(deps: dict[str, Any]) -> type:
             self.declare_parameter('max_angular_acceleration', 3.0)
             model_path = Path(str(self.get_parameter('model_file').value))
             if not model_path.is_file():
+                self.get_logger().error(
+                    f'未找到滑移模型 / slip model not found: {model_path}；'
+                    '请先运行 train_slip_model 生成模型文件 / '
+                    'train the slip model before launching compensation'
+                )
                 raise FileNotFoundError(f'slip model not found: {model_path}')
             model = TemporalSlipMlp.load(model_path)
             self._policy = SlipCompensationPolicy(
@@ -178,10 +183,15 @@ def main(args: list[str] | None = None) -> None:
     """Run the online slip-compensation ROS node."""
     deps = _load_ros_dependencies()
     rclpy = deps['rclpy']
-    node = _build_node_class(deps)()
+    node = None
     rclpy.init(args=args)
     try:
+        node = _build_node_class(deps)()
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()

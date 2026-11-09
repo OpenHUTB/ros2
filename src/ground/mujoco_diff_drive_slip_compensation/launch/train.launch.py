@@ -8,10 +8,14 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Expose dataset and artifact paths as launch arguments."""
+    """Expose dataset, artifact, and training hyperparameters as launch arguments."""
     return LaunchDescription([
         DeclareLaunchArgument('data_directory', default_value='data/raw'),
         DeclareLaunchArgument('output_directory', default_value='data/models'),
+        DeclareLaunchArgument('window_size', default_value='12'),
+        DeclareLaunchArgument('hidden_size', default_value='24'),
+        DeclareLaunchArgument('epochs', default_value='300'),
+        DeclareLaunchArgument('seed', default_value='25012'),
         ExecuteProcess(
             cmd=[
                 sys.executable,
@@ -19,6 +23,10 @@ def generate_launch_description() -> LaunchDescription:
                 'mujoco_diff_drive_slip_compensation.slip_model',
                 '--data', LaunchConfiguration('data_directory'),
                 '--output', LaunchConfiguration('output_directory'),
+                '--window-size', LaunchConfiguration('window_size'),
+                '--hidden-size', LaunchConfiguration('hidden_size'),
+                '--epochs', LaunchConfiguration('epochs'),
+                '--seed', LaunchConfiguration('seed'),
             ],
             output='screen',
         ),
