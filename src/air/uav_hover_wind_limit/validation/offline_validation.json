@@ -1,0 +1,28 @@
+{
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "matplotlib": "3.11.2",
+  "scope": "offline: pytest test (13) + main.py --output docs/img/air/uav_hover_wind_limit + PYTHONIOENCODING=gbk run; no ROS, no simulator",
+  "result": {
+    "pytest_passed": 13,
+    "pytest_failed": 0,
+    "cli_outputs": ["wind_vs_tilt.png", "capability.png", "report.json"],
+    "gbk_console_run": true,
+    "default_max_wind_m_s": 9.9773,
+    "default_max_wind_beaufort": 5,
+    "default_thrust_to_weight": 1.1034,
+    "default_thrust_increase_percent": 10.34,
+    "gust_plus_3m_s_extra_tilt_deg": 13.27,
+    "pass": true
+  },
+  "ci": {
+    "workflow": ".github/workflows/uav_hover_wind_limit_tests.yml",
+    "jobs": ["Wind limit tests + CLI (ubuntu, python 3.8, 含 GBK 步骤)", "Windows smoke test (GBK stdio)"]
+  },
+  "ros_validation": {
+    "checked": false,
+    "reason": "本模块是纯离线核算，没有 ROS 节点；不需要 ROS 侧验证"
+  },
+  "independent_machine_review": false
+}

@@ -1,0 +1,85 @@
+name: Hover wind limit tests
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_hover_wind_limit/**'
+      - '.github/workflows/uav_hover_wind_limit_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_hover_wind_limit/**'
+      - '.github/workflows/uav_hover_wind_limit_tests.yml'
+
+jobs:
+  test:
+    name: Wind limit tests + CLI (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/air/uav_hover_wind_limit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      # 按 README 的方式装依赖：requirements 文件缺失会直接失败
+      - name: Install dependencies from requirements-dev.txt
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: python3 -m pytest test -v
+
+      - name: Run main.py smoke test
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python3 main.py --output "${RUNNER_TEMP}/wind_out"
+          test -s "${RUNNER_TEMP}/wind_out/wind_vs_tilt.png"
+          test -s "${RUNNER_TEMP}/wind_out/capability.png"
+          test -s "${RUNNER_TEMP}/wind_out/report.json"
+
+      # 模拟 Windows 中文控制台：ASCII 单位 + errors=replace，不得崩溃
+      - name: Run main.py with GBK stdout
+        env:
+          MPLBACKEND: Agg
+          PYTHONIOENCODING: gbk
+        run: python3 main.py --output "${RUNNER_TEMP}/wind_gbk"
+
+      - name: Byte-compile the module
+        run: python3 -m py_compile main.py uav_hover_wind_limit/*.py
+
+  windows:
+    name: Windows smoke test (GBK stdio)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src/air/uav_hover_wind_limit
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest test -v
+
+      - name: Run main.py with GBK stdout
+        env:
+          MPLBACKEND: Agg
+          PYTHONIOENCODING: gbk
+        run: python main.py --output "$env:TEMP/wind_out"

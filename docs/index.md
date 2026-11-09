@@ -233,6 +233,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
+* [悬停抗风能力核算（倾角与推重比余量）](./air/uav_hover_wind_limit.md) —— 用 tanθ = ρ·CdA·V²/(2mg) 反解最大倾角下的抗风上限（默认机型 9.98 m/s、蒲福 5 级），并给出所需推重比 1/cosθ 与阵风附加倾角
+
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
 * [点云转八叉树占用地图](./air/octree_uav_3d_pathfinding/occupancy_mapping.md)
