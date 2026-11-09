@@ -42,10 +42,16 @@ def validate_message(message: Any) -> List[str]:
         return ["message must be a JSON object"]
     errors: List[str] = []
     kind = message.get("type")
-    if kind not in {"imu", "gps", "lidar", "odometry"}:
+    if not isinstance(kind, str) or kind not in {
+        "imu",
+        "gps",
+        "lidar",
+        "odometry",
+    }:
         return [f"unsupported message type: {kind!r}"]
-    if not message.get("frame_id"):
-        errors.append("frame_id must not be empty")
+    frame_id = message.get("frame_id")
+    if not isinstance(frame_id, str) or not frame_id:
+        errors.append("frame_id must be a non-empty string")
     timestamp_ns = message.get("timestamp_ns")
     if type(timestamp_ns) is not int or timestamp_ns < 0:
         errors.append("timestamp_ns must be a non-negative integer")
@@ -124,7 +130,8 @@ def validate_dataset(
     count = 0
     for count, message in enumerate(messages, start=1):
         errors = validate_message(message)
-        label = message.get("type", "unknown") if isinstance(message, dict) else "unknown"
+        raw_label = message.get("type", "unknown") if isinstance(message, dict) else "unknown"
+        label = raw_label if isinstance(raw_label, str) else repr(raw_label)
         status = "PASS" if not errors else "FAIL"
         print(f"{count:02d} {label:<10} {status}")
         for error in errors:

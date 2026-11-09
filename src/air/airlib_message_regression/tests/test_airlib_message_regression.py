@@ -66,6 +66,43 @@ class AirLibMessageRegressionTests(unittest.TestCase):
         errors = validate_message(message)
         self.assertTrue(any("timestamp_ns" in error for error in errors))
 
+    def test_non_string_message_types_are_rejected_without_exception(self):
+        for kind in ([], None, 123):
+            with self.subTest(kind=kind):
+                errors = validate_message({"type": kind})
+                self.assertEqual(errors, [f"unsupported message type: {kind!r}"])
+
+    def test_non_string_frame_ids_are_rejected_without_exception(self):
+        for frame_id in (123, [], None):
+            with self.subTest(frame_id=frame_id):
+                message = copy.deepcopy(self.messages[0])
+                message["frame_id"] = frame_id
+                errors = validate_message(message)
+                self.assertTrue(
+                    any("frame_id must be a non-empty string" in error for error in errors)
+                )
+
+    def test_dataset_non_string_type_is_reported_without_exception(self):
+        count, failures = validate_dataset([{"type": []}])
+        self.assertEqual(count, 1)
+        self.assertTrue(any("unsupported message type: []" in error for error in failures))
+
+    def test_cli_non_string_type_returns_structured_error(self):
+        import io
+        import tempfile
+        from contextlib import redirect_stdout
+        from airlib_message_regression.main import main
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid_type.json"
+            path.write_text('{"messages": [{"type": []}]}', encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(["--input", str(path)])
+        self.assertEqual(exit_code, 1)
+        self.assertIn("unsupported message type: []", output.getvalue())
+        self.assertNotIn("Traceback", output.getvalue())
+
     def test_empty_main_input_is_rejected(self):
         import io
         import tempfile
