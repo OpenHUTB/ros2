@@ -56,7 +56,7 @@ Yoshikawa 可操作性椭球（w=0.0057，半轴 [0.065, 0.247, 0.353]）：
 
 ![可操作性vs关节角](img/arm_ik/manipulability_vs_q.png)
 
-## 仿真数据采集（UR10 机械臂水果采摘）
+## UR10 机械臂环境展示（水果采摘场景截图）
 
 为验证机械臂操作类具身机器人场景，在虚拟机（Ubuntu 22.04 + Gazebo 11）中加载 UR10 机械臂水果采摘世界（`Ur10FixedFruitPickingworld.world`：UR10 + 苹果树 3 颗红苹果 + 木箱 + 草地），以三个相机视角采集仿真数据：
 
