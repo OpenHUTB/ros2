@@ -260,10 +260,12 @@ header:
     nsecs: 302000000
   frame_id: "odom"
 child_frame_id: "base_footprint"
+# pose / twist 字段省略
 
-$ timeout 5 rosrun tf tf_echo odom base_link | tail -6
+$ timeout 5 rosrun tf tf_echo odom base_link | grep -A2 Translation
 - Translation: [1.503, -3.410, 0.110]
 - Rotation: in Quaternion [-0.000, -0.000, 0.011, 1.000]
+- Rotation: in RPY (radian) [-0.000, 0.000, 0.023]
 ```
 
 `WARN` 计数为 0，说明差速插件已按 ROS 1 参数名完整配置：`wheelTorque` 10、`wheelAcceleration` 3.0、
