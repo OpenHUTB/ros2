@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   sensor_msgs
   geometry_msgs
+  actionlib_msgs
+  move_base_msgs
   tf2_ros
   tf2_geometry_msgs
 )
@@ -18,6 +20,7 @@ catkin_install_python(PROGRAMS
   scripts/nav_relay.py
   scripts/simple_nav.py
   scripts/demo.py
+  scripts/nav_logic.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

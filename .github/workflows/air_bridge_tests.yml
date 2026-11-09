@@ -52,3 +52,6 @@ jobs:
 
       - name: Byte-compile slam_nav scripts
         run: python3 -m py_compile src/air/uav_slam_nav/scripts/*.py
+
+      - name: Run uav_slam_nav tests
+        run: python3 src/air/uav_slam_nav/tests/test_uav_slam_nav_local.py

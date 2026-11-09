@@ -60,11 +60,27 @@
     <param name="shutdown_costmaps" value="false"/>
   </node>
 
-  <!-- move_base 速度 -> /uav/cmd_vel（z 清零保持定高 + 软件限幅） -->
+  <!-- move_base 失败时的兜底节点 -->
+  <!-- 只在 /move_base/status 显示当前目标失败时输出，正常时完全不发指令；
+       发到 /simple_nav/cmd_vel，由 nav_relay 仲裁，不直接碰 /uav/cmd_vel -->
+  <node pkg="uav_slam_nav" type="simple_nav.py" name="simple_nav" output="screen">
+    <param name="stop_distance" value="1.0"/>
+    <param name="turn_rate" value="0.6"/>
+    <param name="max_vx" value="0.5"/>
+    <param name="max_yaw" value="0.6"/>
+    <param name="front_sector_deg" value="120"/>
+    <param name="side_sector_deg" value="60"/>
+    <param name="status_timeout" value="1.0"/>
+    <param name="scan_timeout" value="0.5"/>
+  </node>
+
+  <!-- move_base 速度 -> /uav/cmd_vel：唯一发布者，做兜底/move_base 仲裁 + z 清零 + 限幅 -->
   <!-- 限幅值与键盘控制包限速对齐，防止 move_base 出过大速度 -->
   <node pkg="uav_slam_nav" type="nav_relay.py" name="nav_relay" output="screen">
     <param name="max_vx" value="0.8"/>
     <param name="max_vy" value="0.5"/>
     <param name="max_yaw" value="0.6"/>
+    <param name="stale_timeout" value="0.5"/>
+    <param name="rate" value="20.0"/>
   </node>
 </launch>
