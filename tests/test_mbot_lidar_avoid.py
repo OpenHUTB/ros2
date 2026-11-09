@@ -404,20 +404,35 @@ def test_urdf_diff_drive_uses_ros1_camel_case():
     # 必须出现的 ROS 1 驼峰参数
     ros1_keys = {
         'leftJoint', 'rightJoint', 'wheelSeparation', 'wheelDiameter',
+        'wheelTorque', 'wheelAcceleration', 'updateRate', 'odometrySource',
         'commandTopic', 'odometryTopic', 'odometryFrame', 'robotBaseFrame',
-        'publishOdom', 'publishOdomTF', 'publishWheelTF',
+        'publishOdomTF', 'publishWheelTF', 'publishTf',
+        'publishWheelJointState', 'rosDebugLevel',
     }
     for key in ros1_keys:
         assert diff.find(key) is not None, 'diff_drive 缺少 ROS 1 参数 <%s>' % key
+
+    # 参数值必须真的写进 URDF，否则插件会退回默认值（扭矩 5 / 加速度 0）
+    assert diff.find('wheelTorque').text == '10'
+    assert diff.find('wheelAcceleration').text == '3.0'
+    assert diff.find('updateRate').text == '100'
+    assert diff.find('odometrySource').text == 'world'
 
     # 禁止出现的 ROS 2 snake_case 参数
     ros2_keys = {
         'left_joint', 'right_joint', 'wheel_separation', 'wheel_diameter',
         'command_topic', 'odometry_topic', 'odometry_frame', 'robot_base_frame',
         'publish_odom', 'publish_odom_tf', 'publish_wheel_tf',
+        'max_wheel_torque', 'max_wheel_acceleration', 'update_rate',
+        'odometry_source',
     }
     for key in ros2_keys:
         assert diff.find(key) is None, 'diff_drive 不应使用 ROS 2 参数 <%s>' % key
+
+    # 这些不是 ROS 1 插件的合法参数，写进去会被静默忽略
+    invalid_keys = {'maxWheelTorque', 'maxWheelAcceleration', 'publishOdom'}
+    for key in invalid_keys:
+        assert diff.find(key) is None, 'diff_drive 含无效参数 <%s>' % key
 
 
 def test_urdf_has_base_footprint():

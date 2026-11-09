@@ -225,13 +225,56 @@ MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
 
 ## 11. 运行效果
 
-以下截图来自另一台 Ubuntu 20.04 + ROS Noetic + Gazebo 11 虚拟机的真实运行：
+以下截图来自 Ubuntu 20.04 + ROS Noetic + Gazebo 11 虚拟机的真实运行（`roslaunch mbot_gazebo_lidar_avoid main.launch`）：
 
 ![避障运行截图](./mbot_lidar_avoid_run.png)
 
-- 左侧为 Gazebo 场景（Mbot 差速底盘 + 顶部激光雷达）
-- 右侧为 `rqt_graph` 节点图，可见 `/mbot_lidar_avoid_node` 订阅 `/scan`、发布 `/cmd_vel`
-- 终端日志显示节点正常运行，无 `Required attribute[filename]` 或 KDL 警告
+截图只包含 Gazebo 窗口：封闭场地、三块障碍物，以及机器人顶部激光雷达的蓝色扫描扇形
+（URDF 中 `<visualize>true</visualize>` 的效果），底部状态栏 `Real Time Factor: 1.00`、
+`Sim Time: 00:01:45.275`。此截图不含 `rqt_graph` 与终端窗口。
+
+同一台机器上的启动日志与话题实测（`roslaunch` 启动后采集）：
+
+```text
+$ grep -c WARN /tmp/launch.log
+0
+$ grep -E 'ERROR|KDL' /tmp/launch.log
+（无输出）
+
+$ rostopic list | grep -E 'scan|odom|cmd_vel|tf'
+/cmd_vel
+/odom
+/scan
+/tf
+/tf_static
+
+$ timeout 8 rostopic hz /scan | tail -2
+average rate: 10.000
+	min: 0.095s max: 0.105s std dev: 0.00114s window: 76
+
+$ rostopic echo -n 1 /odom
+header:
+  seq: 6898
+  stamp:
+    secs: 69
+    nsecs: 302000000
+  frame_id: "odom"
+child_frame_id: "base_footprint"
+
+$ timeout 5 rosrun tf tf_echo odom base_link | tail -6
+- Translation: [1.503, -3.410, 0.110]
+- Rotation: in Quaternion [-0.000, -0.000, 0.011, 1.000]
+```
+
+`WARN` 计数为 0，说明差速插件已按 ROS 1 参数名完整配置：`wheelTorque` 10、`wheelAcceleration` 3.0、
+`updateRate` 100、`odometrySource` world、`publishTf` 1、`publishWheelJointState` false、
+`publishOdomTF` / `publishWheelTF` true、`rosDebugLevel` na。若写成 `maxWheelTorque` /
+`maxWheelAcceleration` / `publishOdom`（ROS 1 插件并不识别这些名字），插件会退回默认扭矩 5、
+默认加速度 0，并逐项打印 `missing <wheelTorque> default is 5` 之类的 WARN。
+
+TF 树为 `odom -> base_footprint -> base_link -> laser_link`：`publishOdomTF` 由差速插件发布
+`odom -> base_footprint`（`robotBaseFrame` 设为 `base_footprint`），`robot_state_publisher`
+再发布 `base_footprint -> base_link` 等固定关节，因此 `base_link` 不会出现两个父坐标系。
 
 端到端集成测试输出（`MBOT_LAUNCH_TEST=1`）：
 
@@ -243,7 +286,7 @@ PASS  test_urdf_valid_with_check_urdf
 PASS  test_launch_nodes_resolvable
 PASS  test_gazebo_topics_end_to_end
 
-结果: 6 通过, 0 跳过, 0 失败
+6 passed in 15.35 seconds
 ```
 
 `test_gazebo_topics_end_to_end` 会真实启动 headless Gazebo，确认 `/scan`、`/odom` 有数据，发 `cmd_vel` 直行 3 秒后 `/odom` 位移增长 > 0.01 m，验证驱动插件与避障节点工作正常。
