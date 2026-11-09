@@ -20,6 +20,20 @@ import rospy
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
+class _NoCacheHandler(SimpleHTTPRequestHandler):
+    """禁止浏览器缓存页面。
+
+    SimpleHTTPRequestHandler 默认允许浏览器缓存 index.html，
+    改了页面后用户刷新还是旧版本（表现为“明明改了还是连不上”）。
+    """
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        SimpleHTTPRequestHandler.end_headers(self)
+
+
 def _local_ips():
     """尽力猜出本机对外的 IP，用来在日志里直接打印可访问地址。"""
     ips = []
@@ -67,7 +81,7 @@ def main():
         rospy.logfatal("找不到前端页面：%s", index_html)
         raise SystemExit(1)
 
-    handler = functools.partial(SimpleHTTPRequestHandler, directory=web_dir)
+    handler = functools.partial(_NoCacheHandler, directory=web_dir)
     try:
         httpd = ThreadingHTTPServer((address, port), handler)
     except OSError as exc:

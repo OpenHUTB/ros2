@@ -67,6 +67,8 @@ sudo ufw allow 8000/tcp
 
 其他电脑打开 `http://<虚拟机IP>:8000/`，自动连 `ws://<虚拟机IP>:9090`。网页与 rosbridge 不在同一台机器时，用 `?bridge=<IP>:9090` 指定。
 
+前端页面不引用任何公网 CDN 资源：`www/index.html` 用浏览器原生 `WebSocket` 直接收发 rosbridge 的 JSON 协议帧（`{"op":"advertise"}` / `{"op":"publish"}`），因此只有内网、连不上外网的机器也能正常连接；旧版本从 `cdn.jsdelivr.net` 加载 `roslib.js`，取不到时页面会一直停在“正在连接”。浏览器如果还显示旧页面，按 `Ctrl+F5` 强制刷新（`scripts/web_server.py` 已加 `Cache-Control: no-store`）。
+
 ## 端口与话题
 
 | 项目 | 值 | 位置 |

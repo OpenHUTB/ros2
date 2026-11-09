@@ -185,6 +185,8 @@ rostopic hz /front_camera/image_raw
 | 浏览器打不开，提示“无法连接 / 拒绝连接” | `frontend_http` 节点没起来（launch 未启动、端口被占、或包没重新 `catkin_make` 导致 node 找不到） | 看 `roslaunch` 日志里有没有 `前端页面目录` 那几行；`ss -tlnp \| grep 8000` 确认在监听；端口被占就 `roslaunch web_remote_car start_all.launch frontend_port:=8001` |
 | 打开 `...:8000` 只看到文件列表，不进遥控页 | 用的是手动 `http.server` 且启动目录是包根目录 | `cd` 到 `www` 目录重新启动；或直接访问 `...:8000/index.html`；推荐直接用 launch 自带的服务 |
 | 本机能控制，别的电脑一直停在“正在连接” | 访问地址用了 127.0.0.1（那指对方自己的电脑），或 rosbridge 没监听外网、防火墙拦截 | 用 `http://<虚拟机IP>:8000/index.html` 访问；`netstat -tulpn` 里 9090 要显示 `0.0.0.0:9090`；`sudo ufw allow 9090/tcp` |
+| 页面能打开，但一直停在“正在连接 rosbridge…”，按 F12 控制台报 `ROSLIB is not defined` | 2026-11-09 之前的版本从公网 CDN（`cdn.jsdelivr.net`）加载 `roslib.js`，只有内网 / 无外网的机器（虚拟机、校园网）取不到，`ROSLIB` 为 `undefined`，连接函数抛异常，页面就永远不会进入连接成功，也来不及弹出超时提示 | 本次已改为零依赖实现（用浏览器原生 `WebSocket` 直接说 rosbridge 的 JSON 协议，不再引用任何 CDN 脚本）；更新代码后 `catkin_make` 并重启 `start_all.launch`，浏览器按 `Ctrl+F5` 强制刷新旧页面 |
+| 改了 `www/index.html`，浏览器里还是旧页面 | `SimpleHTTPRequestHandler` 默认允许缓存 | 本次已给 `scripts/web_server.py` 加上 `Cache-Control: no-store`；旧版本抓过的页面仍需按一次 `Ctrl+F5` |
 | 网页提示连接断开 | rosbridge 未运行或端口被占用 | `rostopic list` 确认 ROS 正常，检查 9090 端口 |
 | 网页看不到相机画面 | 视频流话题与 xacro 中的话题不一致 | 核对 `urdf/car_cam.xacro` 的 `imageTopicName` 与 `index.html` 的 `CAMERA_TOPIC` |
 | 按键控制小车不动 | `/cmd_vel` 没有消息或差速插件未加载 | `rostopic echo /cmd_vel` 排查，检查 xacro 中 `libgazebo_ros_diff_drive.so` 插件 |
