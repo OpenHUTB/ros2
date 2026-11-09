@@ -52,7 +52,7 @@ class HoverWindLimit:
     """给定质量、阻力面积与最大倾角时的悬停抗风核算."""
 
     def __init__(self, mass=2.0, drag_area=0.15, max_tilt_deg=25.0,
-                 gravity=G0, rho=RHO0):
+                 gravity=G0, rho=RHO0, available_tw=None):
         values = (mass, drag_area, max_tilt_deg, gravity, rho)
         if not all(math.isfinite(v) for v in values):
             raise ValueError('质量、阻力面积、倾角、重力与密度必须为有限数值')
@@ -64,11 +64,15 @@ class HoverWindLimit:
             raise ValueError('最大倾角必须在 (0, 90) 度之间')
         if gravity <= 0.0 or rho <= 0.0:
             raise ValueError('重力加速度与空气密度必须为正')
+        if available_tw is not None:
+            if not math.isfinite(available_tw) or available_tw <= 1.0:
+                raise ValueError('实际可用推重比必须大于 1（否则任何倾角都无法悬停）')
         self.mass = float(mass)
         self.drag_area = float(drag_area)
         self.max_tilt_deg = float(max_tilt_deg)
         self.gravity = float(gravity)
         self.rho = float(rho)
+        self.available_tw = None if available_tw is None else float(available_tw)
 
     # ------------------------------------------------------------------ 基本量
 
@@ -96,13 +100,41 @@ class HoverWindLimit:
         return math.sqrt(ratio)
 
     @property
+    def achievable_tilt_deg(self):
+        """实际可用推重比能支持的最大倾角 acos(1/(T/W)); 未给定时为 None."""
+        if self.available_tw is None:
+            return None
+        return math.degrees(math.acos(1.0 / self.available_tw))
+
+    @property
+    def effective_tilt_deg(self):
+        """真正起作用的倾角上限: 姿态限制与实际推力余量取小."""
+        achievable = self.achievable_tilt_deg
+        if achievable is None:
+            return self.max_tilt_deg
+        return min(self.max_tilt_deg, achievable)
+
+    @property
+    def tilt_limited_by(self):
+        """有效倾角是被谁限制的: 'tilt_limit' 还是 'thrust_margin'."""
+        achievable = self.achievable_tilt_deg
+        if achievable is None or self.max_tilt_deg <= achievable:
+            return 'tilt_limit'
+        return 'thrust_margin'
+
+    @property
     def max_wind_m_s(self):
-        """最大倾角对应的抗风上限 (m/s)."""
-        return self.wind_for_tilt(self.max_tilt_deg)
+        """有效倾角对应的抗风上限 (m/s)."""
+        return self.wind_for_tilt(self.effective_tilt_deg)
 
     @property
     def thrust_to_weight(self):
-        """维持最大倾角悬停所需的最小推重比 T/W = 1 / cos(theta_max)."""
+        """维持有效倾角悬停所需的最小推重比 T/W = 1 / cos(theta_effective)."""
+        return 1.0 / math.cos(math.radians(self.effective_tilt_deg))
+
+    @property
+    def tilt_limit_thrust_to_weight(self):
+        """姿态限制本身要求的推重比 1 / cos(theta_max)."""
         return 1.0 / math.cos(math.radians(self.max_tilt_deg))
 
     @property
@@ -123,10 +155,10 @@ class HoverWindLimit:
         return peak - base
 
     def tilt_sweep(self, points=7):
-        """0..theta_max 之间均匀取点的 (倾角, 风速) 列表."""
+        """0..有效倾角 之间均匀取点的 (倾角, 风速) 列表."""
         if points < 2:
             raise ValueError('至少取 2 个点')
-        step = self.max_tilt_deg / (points - 1)
+        step = self.effective_tilt_deg / (points - 1)
         return [(index * step, self.wind_for_tilt(index * step)) for index in range(points)]
 
     def report(self):
@@ -134,6 +166,7 @@ class HoverWindLimit:
         sweep = self.tilt_sweep()
         gust_wind = 3.0
         gust = self.gust_tilt_deg(self.max_wind_m_s, gust_wind)
+        achievable = self.achievable_tilt_deg
         return {
             'parameters': {
                 'mass_kg': round(self.mass, 4),
@@ -141,6 +174,15 @@ class HoverWindLimit:
                 'max_tilt_deg': round(self.max_tilt_deg, 4),
                 'air_density_kg_m3': round(self.rho, 6),
                 'gravity_m_s2': self.gravity,
+                'available_thrust_to_weight': (None if self.available_tw is None
+                                               else round(self.available_tw, 4)),
+            },
+            'tilt_budget': {
+                'effective_tilt_deg': round(self.effective_tilt_deg, 4),
+                'achievable_tilt_deg': None if achievable is None else round(achievable, 4),
+                'limited_by': self.tilt_limited_by,
+                'required_thrust_to_weight': round(self.thrust_to_weight, 4),
+                'tilt_limit_thrust_to_weight': round(self.tilt_limit_thrust_to_weight, 4),
             },
             'weight_n': round(self.weight_n, 4),
             'max_wind_m_s': round(self.max_wind_m_s, 4),
@@ -153,6 +195,18 @@ class HoverWindLimit:
                 'base_wind_m_s': round(self.max_wind_m_s, 4),
                 'gust_delta_m_s': gust_wind,
                 'extra_tilt_deg': round(gust, 3),
-                'total_tilt_deg': round(self.max_tilt_deg + gust, 3),
+                'total_tilt_deg': round(self.effective_tilt_deg + gust, 3),
             },
+            'notes': [
+                '风包线只描述给定倾角下的悬停能力; 海拔升高使阻力减小、风包线变大, '
+                '但不代表整机能力变强: 旋翼最大推力也随密度下降, 实际可用推重比要单独给出',
+                '需要看推力余量对倾角的约束时, 传入 available_thrust_to_weight, '
+                '有效倾角按 min(theta_max, acos(1/TW)) 计算',
+            ],
         }
+
+
+def build_limits(mass, drag_area, max_tilt_deg, altitude_m=0.0, available_tw=None):
+    """按海拔换算空气密度后建立核算对象（CLI 与 ROS 节点共用）."""
+    return HoverWindLimit(mass=mass, drag_area=drag_area, max_tilt_deg=max_tilt_deg,
+                          rho=air_density(altitude_m), available_tw=available_tw)

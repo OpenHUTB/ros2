@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_hover_wind_limit</name>
+  <version>0.1.0</version>
+  <description>
+    悬停抗风能力核算：给定质量、阻力面积与最大倾角，按 tan(theta) = rho*CdA*V^2/(2mg)
+    反解能悬停的最大风速、所需推重比与阵风附加倾角；可选传入实际可用推重比，
+    按 min(theta_max, acos(1/TW)) 限制有效倾角。
+  </description>
+  <maintainer email="3909057723@qq.com">xy18574557330</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

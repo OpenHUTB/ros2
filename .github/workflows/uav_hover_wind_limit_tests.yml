@@ -1,4 +1,4 @@
-name: Hover wind limit tests
+﻿name: Hover wind limit tests
 
 on:
   push:
@@ -52,7 +52,7 @@ jobs:
         run: python3 main.py --output "${RUNNER_TEMP}/wind_gbk"
 
       - name: Byte-compile the module
-        run: python3 -m py_compile main.py uav_hover_wind_limit/*.py
+        run: python3 -m py_compile main.py uav_hover_wind_limit/*.py launch/main.launch.py
 
   windows:
     name: Windows smoke test (GBK stdio)
@@ -83,3 +83,4 @@ jobs:
           MPLBACKEND: Agg
           PYTHONIOENCODING: gbk
         run: python main.py --output "$env:TEMP/wind_out"
+
