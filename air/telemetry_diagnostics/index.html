@@ -366,6 +366,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#4">4. 自包含数据与训练复现</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 独立测试结果与消融</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_3">通道归因：报警时指出可疑通道（新增）</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6-ros2">6. ROS2 接口、实时接入和验证</a>
 </li>
@@ -714,6 +718,64 @@ python<span class="w"> </span>main.py<span class="w"> </span>report
 <p><img alt="验证损失" src="results/final/loss.png"/>
 <img alt="分强度检出率" src="results/final/severity_recall.png"/>
 <img alt="消融与误报权衡" src="results/final/ablation.png"/></p>
+<h3 id="_3">通道归因：报警时指出可疑通道（新增）</h3>
+<p>原来的输出只有「异常评分 + 是否报警」，现场看到报警还要自己判断问题出在位置还是速度。新增的归因把 6 维残差（位置差分 3 通道、速度差分 3 通道）除以训练集尺度再归一化，得到每个通道的占比，取占比 ≥20% 的前两个作为主导通道；GRU 预测残差检测器与跨通道一致性检测器都输出 <code>channels</code> 和 <code>dominant</code> 字段（非残差路径给空字典/空列表，不会缺字段）。</p>
+<p>归因只用检测器残差，不看注入标签；标签只用于下面的命中率统计。测试集里 <code>position_drift</code> 注入 p<em>、<code>velocity_spike</code> 注入 v</em>，命中即主导通道落在对应组内。</p>
+<p><strong>必须和随机基线比</strong>：<code>dominant</code> 最多 2 个通道、从 6 个里选，随机选 1 个的期望命中率是 50%，随机选 2 个是 80%。下表的「随机基线」按每条报警实际给出的通道数 <code>k</code> 逐条算（<code>1 − C(3,k)/C(6,k)</code>）再平均，不是常数。</p>
+<table>
+<thead>
+<tr>
+<th>检测器</th>
+<th>注入类型</th>
+<th style="text-align: right;">报警步 <code>alarmed_total</code></th>
+<th style="text-align: right;">给出 dominant 的比例</th>
+<th style="text-align: right;">命中率</th>
+<th style="text-align: right;">随机基线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GRU 预测残差</td>
+<td>位置漂移（p*）</td>
+<td style="text-align: right;">350</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"><strong>99.1%</strong></td>
+<td style="text-align: right;">58.2%</td>
+</tr>
+<tr>
+<td>GRU 预测残差</td>
+<td>速度偏置（v*）</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">53.0%</td>
+<td style="text-align: right;">67.8%</td>
+</tr>
+<tr>
+<td>一致性残差</td>
+<td>位置漂移（p*）</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"><strong>98.8%</strong></td>
+<td style="text-align: right;">50.6%</td>
+</tr>
+<tr>
+<td>一致性残差</td>
+<td>速度偏置（v*）</td>
+<td style="text-align: right;">348</td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;">4.3%</td>
+<td style="text-align: right;">51.2%</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="通道归因命中率与随机基线" src="results/attribution_hit.png"/></p>
+<p>结论分两半，差别很大：</p>
+<ul>
+<li><strong>位置漂移可用</strong>：两种检测器都在 98.8%–99.1%，显著高于 50%–58% 的随机基线。</li>
+<li><strong>速度偏置不可用</strong>：GRU 53.0% 低于基线 67.8%，一致性检测器只有 4.3%，远低于 51.2%——<strong>比随机猜还差</strong>。这不是「弱但有效」，而是会误导。原因是恒定速度偏置在差分残差里只出现在起止边缘，平台段残差接近噪声，归因被模型噪声主导。</li>
+</ul>
+<p>因此 API 上的口径是：<strong><code>dominant</code> 只在位置类异常上可信；速度偏置请只看 <code>score</code>/<code>alarm</code>，不要用 <code>dominant</code> 定位通道。</strong> 若要让速度方向也可归因，需要引入绝对状态一致性（与积分预测比对），属于下一步工作。</p>
+<p>归因是<strong>相关性</strong>分摊，不是因果解释，也无法区分「传感器故障」与「观测层注入」。复现命令：<code>python attribution_eval.py --detectors gru,consistency</code>，结果写入 <code>results/attribution_eval.json</code>。</p>
 <h2 id="6-ros2">6. ROS2 接口、实时接入和验证</h2>
 <table>
 <thead>
