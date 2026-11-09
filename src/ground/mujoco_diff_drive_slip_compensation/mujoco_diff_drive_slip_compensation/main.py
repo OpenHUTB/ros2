@@ -124,16 +124,6 @@ def _build_node_class(deps: dict[str, Any]) -> type:
                 Odometry, 'ground_truth/odom', 10
             )
             self._clock_publisher = self.create_publisher(Clock, '/clock', 10)
-            self._encoder_publisher = self.create_publisher(
-                JointState, 'wheel/encoders', 10
-            )
-            self._imu_publisher = self.create_publisher(Imu, 'imu/data', 10)
-            self._friction_publisher = self.create_publisher(
-                Float64, 'scenario/friction', 10
-            )
-            self._episode_publisher = self.create_publisher(
-                String, 'scenario/episode_id', 10
-            )
             self._tf_broadcaster = TransformBroadcaster(self)
             self._encoder_publisher = self.create_publisher(
                 JointState, 'wheel/encoders', 10
