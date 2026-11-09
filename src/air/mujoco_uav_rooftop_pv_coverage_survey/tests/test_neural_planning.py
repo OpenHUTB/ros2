@@ -5,6 +5,7 @@ import math
 
 import pytest
 import torch
+import numpy as np
 
 from ros2_uav_controller import TrackingCore, load_checkpoint
 from rooftop_pv.models import TinyWaypointPlanner
@@ -51,6 +52,7 @@ def test_planning_checkpoint_reloads_and_measures_held_out_waypoints(tmp_path):
     assert core.command(0.0)[:2] == (0.0, 0.0)
     core.set_pose(0.0, 0.4, 0.0, "map", 0.0)
     core.set_route([(0.0, 0.0), (5.0, 0.0)], "map")
+    core.set_image(np.zeros((4, 4, 3), dtype=np.uint8), 0.0)
     forward, turn, status = core.command(0.0)
     assert 0 < forward <= core.max_speed
     assert -core.max_yaw_rate <= turn < 0
