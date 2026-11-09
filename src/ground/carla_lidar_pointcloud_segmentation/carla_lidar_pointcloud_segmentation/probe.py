@@ -93,7 +93,8 @@ def _spawn_reference_actors(world, ego):
 
 def run_probe(args):
     """实测标签编号，打印对照表。"""
-    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt)
+    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt,
+                          keep_map=getattr(args, 'keep_map', None))
     cc.enable_sync_traffic_manager(client)
     sensors = []
     ego = None

@@ -25,6 +25,12 @@ DEFAULT_TOWN = os.environ.get('CARLA_MAP', 'Town03')
 EGO_BLUEPRINT = os.environ.get('CARLA_EGO_BP', 'vehicle.tesla.model3')
 
 DT = 0.05      # 同步步长，20 Hz
+# 连接与加载地图的超时。load_world 在机械盘或开着其它客户端的机器上经常要
+# 40 s 以上，60 s 会偶发超时；可以用环境变量覆盖。
+CONNECT_TIMEOUT = float(os.environ.get('CARLA_CONNECT_TIMEOUT', '120'))
+# 切地图单独给足时间：load_world 卡住时客户端会一直等，超时后这个 client
+# 基本就废了（后续 RPC 报 streaming client connection failed），所以要一次给够。
+LOAD_WORLD_TIMEOUT = float(os.environ.get('CARLA_LOAD_WORLD_TIMEOUT', '300'))
 
 
 def check_carla():
@@ -35,10 +41,39 @@ def check_carla():
             '  pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-*.whl')
 
 
+def _attach_existing(host, port, timeout):
+    """用新客户端抓当前 world，供 load_world 失败后恢复现场。
+
+    服务端已经无响应（超时、streaming client connection failed）时返回 ``None``，
+    上层据此给出"重启 CARLA"的提示，而不是拿着一个坏掉的 client 继续跑。
+    """
+    try:
+        client = carla.Client(host, port)
+        client.set_timeout(timeout)
+        world = client.get_world()
+        world.get_map()
+        return client, world
+    except Exception:      # noqa: BLE001
+        return None
+
+
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
-            sync=True, dt=DT, timeout=60.0, force_reload=False):
-    """连接服务端并（按需）加载地图，返回 ``(client, world)``。"""
+            sync=True, dt=DT, timeout=CONNECT_TIMEOUT, force_reload=False,
+            keep_map=None):
+    """连接服务端并（按需）加载地图，返回 ``(client, world)``。
+
+    ``keep_map=True`` 时完全不调用 ``load_world``，直接用服务端当前地图；
+    传 ``None`` 表示读环境变量 ``CARLA_KEEP_MAP``（ROS 节点走这条路）。
+
+    切换地图为什么单独处理：``load_world`` 要几十秒，一旦超时，这个 client 就
+    不可用了（后续调用报 streaming client connection failed），严重时服务端也会
+    一起无响应。所以这里给它单独的 ``LOAD_WORLD_TIMEOUT``，失败后重建客户端、
+    退回当前地图继续，并把实际使用的地图打印出来。
+    """
     check_carla()
+    if keep_map is None:
+        keep_map = os.environ.get('CARLA_KEEP_MAP', '').strip().lower() in (
+            '1', 'true', 'yes', 'on')
     client = carla.Client(host, port)
     client.set_timeout(timeout)
     try:
@@ -61,16 +96,37 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
     if current and _same(current, town) and not force_reload:
         world = client.get_world()
         print('[连接] 服务端已在地图 %s，跳过重载' % current)
+    elif keep_map and current:
+        world = client.get_world()
+        print('[连接] keep_map 已开启，跳过重载，沿用当前地图 %s（请求的是 %s）'
+              % (current, town))
     else:
-        print('[连接] 正在加载地图 %s（当前 %s）...' % (town, current or '未知'))
-        world = client.load_world(town)
-        print('[连接] 地图加载完成')
+        print('[连接] 正在加载地图 %s（当前 %s），最长等 %.0f s...'
+              % (town, current or '未知', LOAD_WORLD_TIMEOUT))
+        client.set_timeout(max(timeout, LOAD_WORLD_TIMEOUT))
+        try:
+            world = client.load_world(town)
+            print('[连接] 地图加载完成')
+        except Exception as exc:      # noqa: BLE001
+            recovered = _attach_existing(host, port, timeout)
+            if recovered is None:
+                raise RuntimeError(
+                    '加载地图 %s 失败（%s），服务端已无响应。请先重启 CARLA。\n'
+                    '如果只想在已加载的地图上跑，加 --keep-map'
+                    '（launch 时用 keep_map:=true）跳过地图重载。' % (town, exc)) from exc
+            client, world = recovered
+            print('[连接] 加载地图 %s 失败（%s），已重建连接并沿用当前地图 %s 继续。'
+                  '要真正切换地图，请重启 CARLA、或在服务端手动切好地图后重试。'
+                  % (town, exc, world.get_map().name))
+        finally:
+            client.set_timeout(timeout)
 
     if sync:
         settings = world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = dt
         world.apply_settings(settings)
+    print('[连接] 实际使用地图 %s' % world.get_map().name)
     return client, world
 
 

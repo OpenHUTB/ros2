@@ -39,9 +39,11 @@ def corridor_mask(points: np.ndarray, half_width: float = 1.2,
 
 def free_distance(points: np.ndarray, classes: np.ndarray, half_width: float = 1.2,
                   x_min: float = 1.0, x_max: float = 50.0) -> float:
-    """走廊内最近的阻挡物距离；没有阻挡物时返回 ``x_max``。
+    """走廊内最近的阻挡物距离；量程内没有阻挡物时返回 ``x_max``。
 
     注意只统计"挡住路"的三类，可行驶面的点（路面本身）不算障碍。
+    返回 ``x_max`` 表示"一直到量程尽头都通畅"，调用方应把 ``x_max`` 传成雷达
+    量程（而不是随手写 50），否则这个值会和真实视野对不上。
     """
     pts = np.asarray(points, dtype=float)
     cls = np.asarray(classes, dtype=int)

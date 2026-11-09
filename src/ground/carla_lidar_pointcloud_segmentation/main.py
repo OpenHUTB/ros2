@@ -60,6 +60,10 @@ def build_parser():
     parser.add_argument('--host', default='127.0.0.1', help='CARLA 服务端地址')
     parser.add_argument('--port', type=int, default=2000, help='CARLA 服务端端口')
     parser.add_argument('--town', default='Town03', help='地图名')
+    parser.add_argument('--keep-map', action='store_true', default=None,
+                        help='不重载地图，直接用 CARLA 当前地图'
+                             '（load_world 卡死或崩溃时的应急开关；'
+                             '不传则读环境变量 CARLA_KEEP_MAP）')
     parser.add_argument('--vehicle', default='vehicle.tesla.model3', help='自车 blueprint')
     parser.add_argument('--spawn-index', type=int, default=0, help='出生点索引')
     parser.add_argument('--traffic', type=int, default=12, help='NPC 车数量，0 表示不放')
@@ -101,6 +105,8 @@ def build_parser():
                         help='到这个距离刹停（米）')
     parser.add_argument('--lookahead', type=float, default=6.0,
                         help='纯跟踪前视距离（米）')
+    parser.add_argument('--start-throttle', type=float, default=0.45,
+                        help='静止起步时的油门下限，车太重时可以调大')
     return parser
 
 

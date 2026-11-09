@@ -54,7 +54,8 @@ def _read_matched(raw_q, sem_q, timeout=10.0, max_skew=10):
 
 def run_collect(args):
     """采集成对点云并存盘。"""
-    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt)
+    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt,
+                          keep_map=getattr(args, 'keep_map', None))
     cc.enable_sync_traffic_manager(client)
     sensors, actors = [], []
     started = time.time()
@@ -177,6 +178,10 @@ def _print_demo_summary(stats, args):
     print('演示汇总：%d 帧' % free.size)
     print('  前方余量：最小 %.1f m，平均 %.1f m'
           % (free.min(), free.mean()))
+    no_obstacle = int(stats.get('no_obstacle', 0))
+    if no_obstacle:
+        print('  量程内无阻挡：%d / %d 帧（余量按量程上限计，速度系数为 1）'
+              % (no_obstacle, free.size))
     print('  触发刹车（刹车量 > 0.1）的帧：%d / %d'
           % (stats['brake_frames'], free.size))
     if stats['speed']:
@@ -201,8 +206,14 @@ def run_demo(args):
     if os.path.isfile(stats_path):
         with np.load(stats_path) as data:
             mean, std = data['mean'], data['std']
+    else:
+        # 训练和推理必须用同一组均值方差，缺了就退化成零均值单位方差，
+        # 预测会整体偏掉。这里必须显式说一声，不能悄悄跑。
+        print('[演示] 警告：找不到标准化统计量 %s，按零均值单位方差继续，'
+              '分割结果会明显变差（训练时应与权重一起生成）' % stats_path)
 
-    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt)
+    client, world = cc.connect(args.host, args.port, args.town, sync=True, dt=args.dt,
+                          keep_map=getattr(args, 'keep_map', None))
     cc.enable_sync_traffic_manager(client)
     sensors, actors = [], []
     plot = None
@@ -255,7 +266,7 @@ def run_demo(args):
             # 库的机器上也要能跑，所以不能在模块顶部 import carla。
             import carla as carla_module
         stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': [],
-                 'speed': []}
+                 'speed': [], 'no_obstacle': 0}
         for frame in range(args.frames):
             world.tick()
             try:
@@ -264,7 +275,12 @@ def run_demo(args):
                 continue
             points = cc.points_from_raw(data)
             classes = segment_frame(net, points, mean, std)
-            free = control.free_distance(points, classes, half_width=args.corridor_width)
+            # 走廊长度取雷达量程：量程外本来就没有点，写死 50 m 会让
+            # "没有障碍物"被误当成"前方恰好 50 m 通畅"。
+            free = control.free_distance(points, classes, half_width=args.corridor_width,
+                                         x_max=args.lidar_range)
+            if free >= args.lidar_range:
+                stats['no_obstacle'] += 1
             ratio = control.drivable_ratio(classes, points=points)
             factor = control.speed_factor(free, comfort=args.comfort_distance,
                                           stop=args.stop_distance)
@@ -300,9 +316,10 @@ def run_demo(args):
                 brake = float(np.clip(-error / max(args.max_speed, 1e-3), 0.0, 1.0)) + 0.0
                 # 起步死区：车辆静止时需要的油门比"速度误差除以最大速度"大得多，
                 # 按比例算出来只有 0.02~0.05，车根本动不了，于是一直停着。
-                # 只要还想走（速度系数不为 0），就给一个能起步的油门下限。
+                # 只要还想走（速度系数不为 0），就给一个能起步的油门下限；
+                # 这个下限和车型、路面有关，做成命令行参数，别写死在循环里。
                 if factor > 0.05 and speed < 0.5:
-                    throttle = max(throttle, 0.45)
+                    throttle = max(throttle, getattr(args, 'start_throttle', 0.45))
                     brake = 0.0
                 command = carla_module.VehicleControl(throttle=throttle, brake=brake,
                                                       steer=steer)
