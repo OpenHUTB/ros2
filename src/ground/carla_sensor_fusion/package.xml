@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>carla_sensor_fusion</name>
+  <version>0.1.0</version>
+  <description>
+    多传感器融合跟踪（Radar + Camera + IMU）：外参标定、时间同步与 EKF 融合。
+    2D 轻量合成仿真与 CARLA 渲染版共用同一套融合核心。
+  </description>
+  <maintainer email="zqhuang76@users.noreply.github.com">zqhuang76</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+</package>

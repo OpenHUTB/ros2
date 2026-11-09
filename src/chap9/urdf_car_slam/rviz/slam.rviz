@@ -1,0 +1,42 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Fixed Frame: map
+    Background Color: 48; 48; 48
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 20
+    - Class: rviz/Map
+      Name: Map
+      Enabled: true
+      Topic: /map
+      Alpha: 0.8
+    - Class: rviz/LaserScan
+      Name: LaserScan
+      Enabled: true
+      Topic: /scan
+      Size (m): 0.03
+      Style: Points
+    - Class: rviz/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Robot Description: robot_description
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 13
+      Pitch: 1.2
+      Yaw: 0.8
+      Focal Point: {X: 0, Y: 0, Z: 0}
+Window Geometry:
+  Width: 1100
+  Height: 750
