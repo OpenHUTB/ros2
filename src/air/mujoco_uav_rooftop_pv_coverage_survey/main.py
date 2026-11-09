@@ -27,7 +27,21 @@ from rooftop_pv.slam import run_slam_navigation
 
 
 MODULE_ROOT = Path(__file__).resolve().parent
-DEFAULT_CONFIG = MODULE_ROOT / "config" / "survey.yaml"
+
+
+def default_config() -> Path:
+    """Resolve source checkout or installed ROS package configuration."""
+    local = MODULE_ROOT / "config" / "survey.yaml"
+    if local.is_file():
+        return local
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        return Path(get_package_share_directory("mujoco_uav_rooftop_pv_coverage_survey")) / "config" / "survey.yaml"
+    except (ImportError, LookupError):
+        return local
+
+
+DEFAULT_CONFIG = default_config()
 
 
 def read_config(path: Path) -> dict[str, Any]:
