@@ -1,0 +1,20 @@
+{
+  "battery": {"capacity_wh": 150.0, "reserve_fraction": 0.2, "efficiency": 0.9},
+  "aircraft": {
+    "empty_mass_kg": 3.2,
+    "payload_kg": 0.8,
+    "mass_power_exponent": 0.5,
+    "hover_power_w": 320.0,
+    "climb_extra_power_w": 210.0,
+    "climb_rate_ms": 3.0,
+    "cruise_power_w": 280.0,
+    "cruise_airspeed_ms": 14.0
+  },
+  "headwind_ms": 3.0,
+  "segments": [
+    {"name": "climb", "kind": "climb", "altitude_m": 80.0},
+    {"name": "survey", "kind": "cruise", "distance_m": 5000.0},
+    {"name": "hover", "kind": "hover", "duration_s": 120.0},
+    {"name": "return", "kind": "cruise", "distance_m": 5000.0}
+  ]
+}
