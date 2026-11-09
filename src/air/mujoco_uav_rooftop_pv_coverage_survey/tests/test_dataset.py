@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from rooftop_pv.dataset import DatasetConfig, assign_splits, generate_dataset
@@ -17,6 +18,15 @@ def test_split_assignment_is_reproducible_and_sequence_isolated() -> None:
     assert first == second
     assert set(first.values()) == {"train", "validation", "test"}
     assert set(first) == set(sequence_ids)
+
+
+def test_dataset_rejects_more_frames_than_route_waypoints(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="frames_per_scene"):
+        generate_dataset(
+            tmp_path,
+            RouteConfig(strip_spacing=4.0, edge_margin=1.0),
+            DatasetConfig(frames_per_scene=100, image_width=32, image_height=24),
+        )
 
 
 def test_end_to_end_dataset_has_aligned_rgb_masks_and_complete_manifest(tmp_path: Path) -> None:
@@ -62,3 +72,4 @@ def test_mask_positive_pixels_correspond_to_blue_panels(tmp_path: Path) -> None:
         assert float(panel_pixels[:, 2].mean()) > float(panel_pixels[:, 0].mean())
         checked += 1
     assert checked > 0
+
