@@ -602,7 +602,7 @@
 <p><img alt="LiDAR 障碍物分类系统数据流" src="../../../img/chap5/lidar_obstacle_nn/system_dataflow.png"/></p>
 <p>仿真激光雷达生成 360 束 2D 扫描，<code>ros_gz_bridge</code> 把 Gazebo 消息转换为 ROS 2 <code>sensor_msgs/LaserScan</code>，<code>inference_node</code> 加载训练好的 MLP 权重做推理，发布类别字符串和置信度。</p>
 <h2 id="2">2. 环境要求与安装</h2>
-<p>下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该兼容性镜像不能替代标准 Humble 安装流程。</p>
+<p>下表是正式部署目标环境。本次实际复测使用预装 VMware 镜像，环境和结果见第 7 节；该镜像中的 Humble 是手工预装到 <code>/opt/ros/humble</code> 的目录，不受 dpkg 管理，也不是容器或 WSL，不能替代标准 Humble 安装流程。</p>
 <table>
 <thead>
 <tr>
@@ -960,6 +960,10 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <tr>
 <td>Python 版本</td>
 <td>3.8.10</td>
+</tr>
+<tr>
+<td>Humble 安装方式</td>
+<td>手工预装 <code>/opt/ros/humble</code> 目录，不受 dpkg 管理；非容器、非 WSL</td>
 </tr>
 <tr>
 <td>Gazebo 版本</td>
