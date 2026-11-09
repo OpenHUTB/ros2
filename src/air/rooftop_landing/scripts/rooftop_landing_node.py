@@ -71,8 +71,9 @@ class RooftopLandingNode(object):
         self.min_area = float(g("perception/min_roof_area", 8.0))
         self.min_height = float(g("perception/min_height", 0.5))
         self.height_mode = g("perception/min_height_mode", "relative")
-        self.ground_margin = float(g("perception/ground_margin", 1.0))
-        self.max_planes = int(g("perception/max_planes", 5))
+        self.ground_margin = float(g("perception/ground_margin", 4.0))
+        self.require_ground = bool(g("perception/require_ground_reference", True))
+        self.max_planes = int(g("perception/max_planes", 15))
         self.min_radius = float(g("perception/min_landing_radius", 0.6))
         self.prefer = g("perception/prefer", "highest")
         self.cluster_cell = float(g("perception/cluster_cell", 1.0))
@@ -127,10 +128,10 @@ class RooftopLandingNode(object):
         rospy.loginfo("[rooftop_landing] 已启动，状态=%s，高度约定 z_up=%s"
                       % (self.state, self.z_up))
         rospy.loginfo("[rooftop_landing] 屋顶高度判定：mode=%s"
-                      "（ground_margin=%.1f m，min_height=%.2f m 仅 absolute 模式生效），"
-                      "主循环 %.1f Hz"
+                      "（ground_margin=%.1f m，min_height=%.2f m 仅 absolute 模式生效，"
+                      "require_ground_reference=%s），主循环 %.1f Hz"
                       % (self.height_mode, self.ground_margin, self.min_height,
-                         self.tick_hz))
+                         self.require_ground, self.tick_hz))
         rospy.loginfo("[rooftop_landing] 订阅 %s / %s / %s；发布 %s / %s"
                       % (self.t_lidar, self.t_odom, self.t_status,
                          self.t_goal, self.t_cmd))
@@ -261,6 +262,7 @@ class RooftopLandingNode(object):
             cluster_cell=self.cluster_cell,
             cluster_min_points=self.cluster_min_points,
             min_height_mode=self.height_mode, ground_margin=self.ground_margin,
+            require_ground_reference=self.require_ground,
             info=info)
         rospy.loginfo("[rooftop_landing] 点云 %d 点，检测到 %d 个候选水平面"
                       % (len(cloud), len(roofs)))
@@ -273,6 +275,13 @@ class RooftopLandingNode(object):
         elif self.height_mode != "relative":
             rospy.loginfo("[rooftop_landing] 高度基准：绝对阈值 %.2f m"
                           % info.get("threshold", self.min_height))
+        elif self.require_ground:
+            # 只有 1 个水平面：分不清是地面还是屋顶 ⇒ 本次不产生候选
+            rospy.logwarn_throttle(
+                5.0, "[rooftop_landing] 只提取到 %d 个水平面，无法确定地面基准，"
+                     "本次不降落（继续搜索）；若本场景确实只有屋顶、看不到地面，"
+                     "可设 perception/require_ground_reference:=false"
+                     % info.get("planes", 0))
         else:
             rospy.loginfo("[rooftop_landing] 只提取到 %d 个水平面，"
                           "无法确定地面基准，本次不做高度过滤"
