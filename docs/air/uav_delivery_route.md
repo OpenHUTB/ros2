@@ -71,7 +71,7 @@ python main.py                      # 三个 case + MuJoCo 闭环（约 16 s）
 python main.py --no-sim             # 仅算法层（秒级）
 python main.py --case case_farm_heavy
 python tools/make_figures.py        # 从 results/*.json 重新生成图片
-python -m pytest test/ -q           # 29 项（含 MuJoCo 冒烟）
+python -m pytest test/ -q           # 31 项（含 MuJoCo 冒烟）
 bash tools/ci_tests.sh              # CI 入口：无 mujoco 时冒烟用例自动跳过
 ros2 run uav_delivery_route dispatch     # 在线调度节点
 ```

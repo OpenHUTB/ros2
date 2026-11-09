@@ -16,7 +16,7 @@ cd src/air/uav_delivery_route
 python main.py --no-sim        # 秒级，仅算法层
 python main.py                 # 三个 case 全跑，含 MuJoCo 闭环真飞（约 16 s 墙钟）
 python main.py --case case_farm_sparse
-python -m pytest test/ -q      # 29 项测试全过
+python -m pytest test/ -q      # 31 项测试全过
 python tools/make_figures.py   # 从 results/*.json 生成 images/batches.png
 ```
 
@@ -90,10 +90,11 @@ launch 文件在 [launch/main.launch.py](launch/main.launch.py)，
 实际航程普遍略高于计划：几何控制器跟踪分段航迹存在微小超调与绕弯，
 量级在 0.3%–1.7%，说明计划层能耗/航程账目与真实飞行一致。
 
-测试（`python -m pytest test/ -q`，**29 项全过**）按 feature 分三个文件：
+测试（`python -m pytest test/ -q`，**31 项全过**）按 feature 分三个文件：
 [test_planner_basic.py](test/test_planner_basic.py)（分簇/最近邻/2-opt/切批/覆盖）、
 [test_edge_cases.py](test/test_edge_cases.py)（能耗线性、载重上限、超续航站、换电判据、调度决策）、
 [test_fly_smoke.py](test/test_fly_smoke.py)（MuJoCo 小规模冒烟，墙钟 < 3 s）。
+只装 numpy/matplotlib/pyyaml/pytest 的干净环境 27 passed, 1 skipped（冒烟文件整体跳过）。
 架次划分与各架次航程对比图见
 [images/batches.png](images/batches.png)，由
 [tools/make_figures.py](tools/make_figures.py) 从 results JSON 生成。
