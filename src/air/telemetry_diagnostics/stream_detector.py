@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import numpy as np
 import torch
+from attribution import attribute
 from train_evaluate import KEYS, Predictor
 
 
@@ -42,11 +43,14 @@ class Detector:
             self.run += 1
             return {'arrival_ns': 0, 'score': None, 'threshold': self.config['threshold'],
                     'alarm': True, 'reason': 'invalid_payload', 'consecutive': self.run,
-                    'data_valid': False, 'model_ready': False}
+                    'data_valid': False, 'model_ready': False,
+                    'channels': {}, 'dominant': []}
         c = self.config
         source = int(row['source_ns']) if int(row['delivered']) else None
         fresh = source is not None and (self.last_source is None or source > self.last_source)
         score = None
+        # 非残差路径（缺包/坏 JSON/预热）也要给出空字段，避免下游 KeyError
+        extra = {'channels': {}, 'dominant': []}
         reason = 'warming_up'
         if not fresh:
             reason = 'missing_packet' if source is None else 'stale_timestamp'
@@ -72,6 +76,7 @@ class Detector:
                         score = float(np.sqrt(np.mean((residual / c['residual_scale']) ** 2)))
                         abnormal = score > c['threshold']
                         reason = 'model_residual' if abnormal else 'normal'
+                        extra = attribute(residual, c['residual_scale'])
                     self.features.append(np.r_[(z[:3] - self.previous[:3]) / dt, z[3:9]])
                     self.features = self.features[-c['history']:]
             self.previous, self.last_source = z, source
@@ -79,4 +84,4 @@ class Detector:
         return {'arrival_ns': int(row['arrival_ns']), 'score': score,
                 'threshold': c['threshold'], 'alarm': self.run >= c['persistence'],
                 'reason': reason, 'consecutive': self.run, 'data_valid': fresh,
-                'model_ready': score is not None}
+                'model_ready': score is not None, **extra}
