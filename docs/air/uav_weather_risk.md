@@ -223,6 +223,10 @@ Summary: 1 package finished [1.04s]
 
 这张图的左图来自 `/uav_weather_risk/odom` 的实际轨迹，颜色来自 `/uav_weather_risk/assessment`；右图的真实风速、融合风速和风险分数来自同一时间段的话题流，不是离线重算。
 
+![VM 内 RViz2 实际渲染](../img/air/uav_weather_risk/rviz_humble_effect.png)
+
+上图是在 VM 的 Xvfb 显示中实际启动 RViz2 后抓取的窗口，不是宿主机生成的示意图。RViz2 订阅 `/uav_weather_risk/markers`，画面中可以看到风险等级文字、风险包络、风矢量和预测轨迹。
+
 运行中抓取的一条有效评估消息：
 
 ```json
@@ -266,13 +270,13 @@ Summary: 1 package finished [1.04s]
 
 - Ubuntu 22.04.5 / ROS 2 Humble 下 `colcon build`、`ros2 launch` 和 5 个话题的实际运行；
 - 49.2 秒、486 个 `/uav_weather_risk/odom` 样本的 ROS 2 运行数据录制与绘图；
+- VM 内 Xvfb + RViz2 实际加载 `/uav_weather_risk/markers` 并抓取渲染截图；
 - 12 项核心 `unittest`；
 - 60 秒离线端到端运行，CSV、summary、PNG、GIF 均由同一 `seed=42` 生成；
 - `package.xml` 使用 `ament_python`，入口、launch、config、resource 和 README 齐备。
 
 尚未完成：
 
-- 没有 RViz2 图形界面的截图；`/uav_weather_risk/markers` 话题已确认存在，但 MarkerArray 的实际渲染未做视觉验收。
 - 没有真实气象数据、AirSim 飞行或实机测试。
 - 还应由另一名同学在另一台机器复跑一次并确认干净退出。
 
