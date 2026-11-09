@@ -53,6 +53,10 @@ python3 main.py --train
 python3 main.py --demo
 ```
 
+![多帧时序端到端平衡控制演示](../img/humanoid/humanoid_temporal_e2e/demo.gif)
+
+演示中窗口为最近连续 3 帧（每帧下采样到 16×16），拼接成 768 维输入，网络直接输出 15 维关节目标角，由站姿 PD 控制器执行，机器人在连续外力扰动下保持平衡。
+
 ### 4.5 ROS2 launch
 
 ```bash
