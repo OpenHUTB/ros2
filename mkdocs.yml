@@ -17,13 +17,12 @@ extra_css: [extra.css]
 # mathjax用于单独公式展示
 extra_javascript:
   # - extra.js
-  # 国内可达 CDN：原 cdnjs.cloudflare.com 在国内网络下无法加载导致公式/mermaid 不渲染
-  - https://cdn.bootcdn.net/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
   - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js
-  - https://cdn.bootcdn.net/ajax/libs/raphael/2.2.7/raphael.min.js
-  - https://cdn.bootcdn.net/ajax/libs/underscore.js/1.8.3/underscore-min.js
-  - https://cdn.bootcdn.net/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
-  - https://cdn.bootcdn.net/ajax/libs/flowchart/1.6.5/flowchart.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
+  - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
   - js/umlconvert.js
 plugins:
 #  - mkdocs-video
@@ -53,9 +52,6 @@ nav:
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
-    - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
-    - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
-    - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
@@ -63,12 +59,17 @@ nav:
         - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
         - ROS Noetic 环境自检与常见问题排查: 'chap2/ros1_env_check/index.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
-    - 4. 机器人仿真: './chapter/chap4.md'
+    - 4. 机器人仿真:
+        - 章节首页: './chapter/chap4.md'
+        - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
     - 5. 机器人感知: './chapter/chap5.md'
-    - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
+    - 6. 机器人 SLAM 与自主导航:
+        - 章节首页: './chapter/chap6.md'
+        - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
+        - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
         - MuJoCo UR5e 关节空间抓放控制: './chapter/ur5e_pickplace.md'
     - 9. ROS 2:
@@ -103,6 +104,7 @@ nav:
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
+    - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
@@ -116,6 +118,8 @@ nav:
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
     - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
     - 阿克曼控制: './ground/ackermann_control.md'
+    - 车道线检测（前视视觉）: './ground/carla_lane_keeping/lane_detection.md'
+    - 车道保持控制: './ground/carla_lane_keeping/lane_keeping_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
@@ -170,6 +174,7 @@ nav:
     - 限速标志识别与神经网络限速控制: './ground/traffic_sign_speed_control.md'
     - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
     - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
+    - MuJoCo 动态障碍局部避障仿真: './ground/mujoco_dynamic_avoidance.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
     - 基于 2D 激光雷达的蒙特卡洛定位（MCL）: './ground/lidar_mcl_localization.md'
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
@@ -234,6 +239,7 @@ nav:
     - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
+    - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
