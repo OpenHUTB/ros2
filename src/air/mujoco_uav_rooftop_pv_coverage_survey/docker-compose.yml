@@ -7,3 +7,6 @@ services:
       - ./artifacts:/workspace/ros2/artifacts
     environment:
       MUJOCO_GL: "osmesa"
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      ROS_DOMAIN_ID: "79"
