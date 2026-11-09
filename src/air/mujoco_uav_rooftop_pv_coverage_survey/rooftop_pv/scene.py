@@ -8,7 +8,18 @@ from typing import Any
 
 SCENARIOS = ("sparse", "dense", "occluded")
 MODULE_ROOT = Path(__file__).resolve().parent.parent
-SCENE_ROOT = MODULE_ROOT / "assets" / "mjcf"
+SOURCE_SCENE_ROOT = MODULE_ROOT / "assets" / "mjcf"
+
+
+def _scene_root() -> Path:
+    try:
+        from ament_index_python.packages import get_package_share_directory
+    except ImportError:
+        return SOURCE_SCENE_ROOT
+    try:
+        return Path(get_package_share_directory("mujoco_uav_rooftop_pv_coverage_survey")) / "assets" / "mjcf"
+    except LookupError:
+        return SOURCE_SCENE_ROOT
 
 
 def scenario_path(name: str) -> Path:
@@ -16,7 +27,9 @@ def scenario_path(name: str) -> Path:
     if name not in SCENARIOS:
         choices = ", ".join(SCENARIOS)
         raise ValueError(f"unknown scenario {name!r}; choose one of {choices} / 未知场景")
-    path = SCENE_ROOT / f"rooftop_{name}.xml"
+    path = _scene_root() / f"rooftop_{name}.xml"
+    if not path.is_file() and SOURCE_SCENE_ROOT != path.parent:
+        path = SOURCE_SCENE_ROOT / f"rooftop_{name}.xml"
     if not path.is_file():
         raise FileNotFoundError(f"scenario file is missing / 场景文件缺失: {path}")
     return path
@@ -53,3 +66,4 @@ def set_drone_pose(model: Any, data: Any, x: float, y: float, altitude: float, y
         math.sin(yaw / 2.0),
     )
     mujoco.mj_forward(model, data)
+
