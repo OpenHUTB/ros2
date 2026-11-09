@@ -160,6 +160,7 @@ nav:
     - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
     - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
     - 弯道自适应限速（CSL）: './ground/carla_curve_speed_limit.md'
+    - 闯红灯预警（RLW）: './ground/carla_red_light_warning.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
@@ -239,6 +240,7 @@ nav:
     - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
+    - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
