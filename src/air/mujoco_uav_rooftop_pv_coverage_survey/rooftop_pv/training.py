@@ -12,7 +12,30 @@ from PIL import Image
 import torch
 from torch.nn import functional as F
 
-from .models import TinyImageController, TinyMLP, TinyUNet
+from .models import TinyImageController, TinyMLP, TinyUNet, TinyWaypointPlanner
+from .planning import planning_features, route_waypoint_target
+
+
+def _save_checkpoint(model, dataset: Path, filename: str, epochs: int, seed: int, metadata=None) -> str:
+    """Save trained parameters with their model contract / 保存训练权重及模型契约。"""
+    dataset.mkdir(parents=True, exist_ok=True)
+    torch.save({
+        "format_version": 1,
+        "model": type(model).__name__,
+        "epochs": epochs,
+        "seed": seed,
+        "state_dict": model.state_dict(),
+        **(metadata or {}),
+    }, dataset / filename)
+    return filename
+
+
+def _validate_training_data(dataset: Path, epochs: int) -> None:
+    if epochs < 1:
+        raise ValueError("epochs must be positive / 训练轮数必须为正")
+    for split in ("train", "test"):
+        if not _records(dataset, split):
+            raise ValueError(f"dataset has no {split} frames / 数据集缺少 {split} 帧")
 
 
 def _records(dataset: Path, split: str) -> list[dict[str, Any]]:
@@ -51,6 +74,7 @@ def segmentation_metrics(prediction: torch.Tensor, target: torch.Tensor) -> dict
 
 
 def train_segmentation(dataset: Path, epochs: int = 2, seed: int = 20261016) -> dict[str, Any]:
+    _validate_training_data(dataset, epochs)
     torch.manual_seed(seed)
     model = TinyUNet()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -77,10 +101,12 @@ def train_segmentation(dataset: Path, epochs: int = 2, seed: int = 20261016) -> 
     result = {key: float(np.mean([item[key] for item in metrics])) for key in metrics[0]}
     result["inference_ms"] = float(np.mean(elapsed))
     result.update({"epochs": epochs, "train_frames": len(train_rows), "test_frames": len(test_rows)})
+    result["checkpoint"] = _save_checkpoint(model, dataset, "segmentation.pt", epochs, seed)
     return result
 
 
 def train_control(dataset: Path, epochs: int = 30, seed: int = 20261016) -> dict[str, Any]:
+    _validate_training_data(dataset, epochs)
     torch.manual_seed(seed)
     model = TinyMLP()
     optimizer = torch.optim.Adam(model.parameters(), lr=2e-3)
@@ -97,11 +123,13 @@ def train_control(dataset: Path, epochs: int = 30, seed: int = 20261016) -> dict
     test_targets = torch.tensor([[r["expert_command"][k] for k in ("forward_speed", "yaw_rate")] for r in test_rows], dtype=torch.float32)
     with torch.no_grad():
         predictions = model(test_features)
-    return {"mse": float(F.mse_loss(predictions, test_targets)), "epochs": epochs, "train_frames": len(train_rows), "test_frames": len(test_rows)}
+    return {"mse": float(F.mse_loss(predictions, test_targets)), "epochs": epochs, "train_frames": len(train_rows), "test_frames": len(test_rows),
+            "checkpoint": _save_checkpoint(model, dataset, "control.pt", epochs, seed)}
 
 
 def train_end_to_end(dataset: Path, epochs: int = 12, seed: int = 20261016) -> dict[str, Any]:
     """Train RGB-to-command model and report held-out command MSE / 训练图像到控制网络并报告测试误差。"""
+    _validate_training_data(dataset, epochs)
     torch.manual_seed(seed)
     model = TinyImageController()
     optimizer = torch.optim.Adam(model.parameters(), lr=2e-3)
@@ -131,4 +159,50 @@ def train_end_to_end(dataset: Path, epochs: int = 12, seed: int = 20261016) -> d
         "test_frames": len(test_rows),
         "input": "rgb_image",
         "output": ["forward_speed", "yaw_rate"],
+        "checkpoint": _save_checkpoint(model, dataset, "end_to_end.pt", epochs, seed),
     }
+
+
+def train_planning(dataset: Path, epochs: int = 100, seed: int = 20261016) -> dict[str, Any]:
+    """Imitate route lookahead targets, with complete sequences held out from training.
+
+    学习航线专家的局部航点偏移；测试序列不参与梯度更新或输入归一化。
+    """
+    _validate_training_data(dataset, epochs)
+    train_rows, test_rows = _records(dataset, "train"), _records(dataset, "test")
+    for row in train_rows + test_rows:
+        if not row.get("sequence_id"):
+            raise ValueError("planning training requires sequence_id for sequence isolation")
+    train_sequences = sorted({row["sequence_id"] for row in train_rows})
+    test_sequences = sorted({row["sequence_id"] for row in test_rows})
+    if set(train_sequences) & set(test_sequences):
+        raise ValueError("train and test sequences overlap / 训练与测试序列重叠")
+
+    def tensors(rows):
+        state = [[row["expert_input"][key] for key in
+                  ("cross_track_error", "heading_error", "distance_to_turn")] for row in rows]
+        return (torch.tensor([planning_features(*values) for values in state], dtype=torch.float32),
+                torch.tensor([route_waypoint_target(*values) for values in state], dtype=torch.float32))
+
+    torch.manual_seed(seed)
+    model = TinyWaypointPlanner()
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-3)
+    features, targets = tensors(train_rows)
+    for _ in range(epochs):
+        optimizer.zero_grad()
+        loss = F.mse_loss(model(features), targets)
+        loss.backward()
+        optimizer.step()
+    model.eval()
+    test_features, test_targets = tensors(test_rows)
+    with torch.inference_mode():
+        predictions = model(test_features)
+        waypoint_error = torch.linalg.vector_norm(predictions - test_targets, dim=1)
+    contract = {"input": ["cross_track_error_m", "heading_error_rad", "lookahead_distance_m"],
+                "output": ["body_forward_offset_m", "body_left_offset_m"],
+                "target": "route_expert_2m_lookahead_waypoint",
+                "train_sequences": train_sequences, "test_sequences": test_sequences}
+    return {**contract, "epochs": epochs, "train_frames": len(train_rows), "test_frames": len(test_rows),
+            "mse": float(F.mse_loss(predictions, test_targets)),
+            "waypoint_error_m": float(waypoint_error.mean()),
+            "checkpoint": _save_checkpoint(model, dataset, "planning.pt", epochs, seed, contract)}
