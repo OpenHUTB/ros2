@@ -24,6 +24,39 @@ def test_mode_switch_selects_other_source():
     assert st['source'] == 'auto'
 
 
+def test_switch_to_never_fed_source():
+    """切到另一路，但那一帧都没发过，应输出零而不是沿用上一路的速度。"""
+    arb = VelocityArbiter(timeout=5.0)
+    arb.feed_manual(0.9, 0.3, now=0.0)
+    assert arb.step(now=0.1)[:2] == (0.9, 0.3)
+
+    arb.set_mode('auto')
+    v, w, st = arb.step(now=0.2)
+    assert (v, w) == (0.0, 0.0)
+    assert st['reason'] == 'no_data'
+
+
+def test_switch_to_stale_source():
+    """切到另一路，但它的数据已经过期，同样要回零。"""
+    arb = VelocityArbiter(timeout=0.5)
+    arb.feed_manual(0.9, 0.0, now=0.0)
+    arb.feed_auto(-0.4, 0.2, now=0.0)
+    arb.set_mode('auto')
+
+    v, w, st = arb.step(now=0.4)
+    assert (v, w) == (-0.4, 0.2) and st['reason'] == 'ok'
+
+    v, w, st = arb.step(now=1.0)
+    assert (v, w) == (0.0, 0.0)
+    assert st['reason'] == 'stale'
+
+
+def test_feed_rejects_unknown_source():
+    arb = VelocityArbiter()
+    assert arb.feed('teleop', 0.5, 0.0) is False
+    assert arb.is_stale(now=0.0) is True
+
+
 def test_watchdog_zero_after_timeout():
     arb = VelocityArbiter(timeout=0.5)
     arb.feed_manual(0.8, 0.0, now=0.0)
