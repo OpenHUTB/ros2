@@ -269,6 +269,32 @@ def test_all_nan_parks():
     assert node.state == 'cruise'
 
 
+def test_all_inf_means_open_space_and_keeps_cruising():
+    """空旷场地雷达全是 inf（无回波）时不能判为“数据不可用”而停车。"""
+    node = make_node()
+    scan = make_scan(360, 0.0)
+    scan.ranges = [float('inf')] * 360
+
+    sec = node._sector_mins(scan)
+    assert sec is not None
+    assert sec['valid_count'] == 360
+    assert abs(sec['front'] - node.cfg['range_max']) < 1e-9
+
+    twist = feed(node, scan)
+    assert node.state == 'cruise'
+    assert twist.linear.x > 0.0
+
+
+def test_negative_inf_still_filtered():
+    """-inf 不是“无回波”，应按无效点丢弃。"""
+    node = make_node()
+    scan = make_scan(360, 0.0)
+    scan.ranges = [float('-inf')] * 360
+
+    twist = feed(node, scan)
+    assert twist.linear.x == 0.0
+
+
 def test_empty_ranges_parks():
     node = make_node()
     twist = feed(node, LaserScan(ranges=[], angle_min=0.0,
@@ -427,6 +453,9 @@ def test_urdf_diff_drive_uses_ros1_camel_case():
     # 否则 /joint_states 无发布者、robot_state_publisher 发不出轮子 TF
     assert diff.find('robotBaseFrame').text == 'base_footprint'
     assert diff.find('publishWheelJointState').text == 'true'
+    # 轮子 TF 已由 robot_state_publisher 根据 /joint_states 发布，
+    # 插件自己再发一份就会重复，实测刷 TF_REPEATED_DATA
+    assert diff.find('publishWheelTF').text == 'false'
 
     # 禁止出现的 ROS 2 snake_case 参数
     ros2_keys = {

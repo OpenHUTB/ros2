@@ -180,7 +180,8 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 
 | 保护类型 | 触发条件 | 行为 |
 | :--- | :--- | :--- |
-| NaN/Inf 过滤 | 扫描点非有限值或 ≤ 0 | 跳过该点 |
+| NaN / 非正值过滤 | 扫描点为 NaN、`-inf` 或 ≤ 0 | 跳过该点 |
+| 无回波 | 扫描点为 `+inf` | 按 `range_max` 处理（空旷场地不会误判为数据不可用） |
 | 数据不可用 | `ranges` 为空、`angle_increment` 非法、无任何合法点 | 停车并告警 |
 | 扫描超时 | 超过 `scan_timeout` 秒未收到 `/scan` | 停车并告警（10 Hz 墙钟 watchdog） |
 | 未就绪 | 节点启动后尚未收到扫描 | 停车 |
@@ -216,20 +217,28 @@ python3 -m pytest tests/test_mbot_lidar_avoid.py -v
 
 - **扇区换算**：360 束 / `angle_min=0`；720 束 / `angle_min=-π`；左右扇区不错位
 - **回调与发布链路**：真实 `_scan_callback` → `Publisher.publish`
-- **异常输入**：NaN/Inf 过滤、全 NaN、空 `ranges`、`angle_increment` 非法
+- **异常输入**：NaN / `-inf` 过滤、`+inf` 按 `range_max` 视为空旷、全 NaN、空 `ranges`、`angle_increment` 非法
 - **控制行为**：滞回不抖动、脱困倒车、后方受阻原地旋转、侧向让开
 - **安全保护**：扫描超时（墙钟 watchdog，不依赖 `/clock`）、未收到扫描、shutdown 停车
 - **工程完整性**：launch 内容、CMakeLists 安装规则、`package.xml` 与 `LICENSE`
+
+离线用例共 29 个（`29 passed`）。
 
 仿真集成测试 `tests/test_mbot_lidar_avoid_launch.py`（需要 ROS Noetic + Gazebo）：
 
 ```bash
 # 静态校验：URDF 插件 filename、check_urdf、roslaunch --nodes 解析
+# 端到端用例默认跳过 -> 5 passed, 1 skipped
 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
 
 # 端到端：自动启动 headless Gazebo，验证 /scan、/odom、/cmd_vel 有数据
+# 全部 6 个用例执行 -> 6 passed
 MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
 ```
+
+端到端用例使用独立的 `ROS_MASTER_URI` / `GAZEBO_MASTER_URI`（随机空闲端口）和独立进程组，
+因此不会干扰同机上已经运行的 rosmaster / Gazebo；结束时只 `SIGINT` 自己的进程组，
+不使用 `pkill -f gzserver` 这类会误伤其他实例的清理方式。
 
 ## 10. 实验指标
 
@@ -300,7 +309,7 @@ gzserver 节点名下；`/robot_state_publisher` 订阅 `/joint_states` 并发�
 
 `WARN` 计数为 0，说明差速插件已按 ROS 1 参数名完整配置：`wheelTorque` 10、`wheelAcceleration` 3.0、
 `updateRate` 100、`odometrySource` world、`publishTf` 1、`publishWheelJointState` true、
-`publishOdomTF` / `publishWheelTF` true、`rosDebugLevel` na。若写成 `maxWheelTorque` /
+`publishOdomTF` true、`publishWheelTF` false、`rosDebugLevel` na。若写成 `maxWheelTorque` /
 `maxWheelAcceleration` / `publishOdom`（ROS 1 插件并不识别这些名字），插件会退回默认扭矩 5、
 默认加速度 0，并逐项打印 `missing <wheelTorque> default is 5` 之类的 WARN。
 
@@ -308,9 +317,21 @@ TF 树为 `odom -> base_footprint -> base_link -> laser_link`：`publishOdomTF` 
 `odom -> base_footprint`（`robotBaseFrame` 设为 `base_footprint`），`robot_state_publisher`
 再发布 `base_footprint -> base_link` 等固定关节，因此 `base_link` 不会出现两个父坐标系。
 
-`publishWheelJointState` 打开后，差速插件自己发布 `/joint_states`（两个驱动轮），
+`publishWheelJointState` 打开后，差速插件发布 `/joint_states`（两个驱动轮），
 `robot_state_publisher` 据此发布轮子 TF，RViz 中轮子会随里程计转动，无需额外的
-`joint_state_publisher`。
+`joint_state_publisher`。`publishWheelTF` 必须设为 **false**：插件自己也发
+`base_link -> *_wheel_link` 的话，同一个 TF 就有两个发布者，实测会持续刷
+`TF_REPEATED_DATA`（`msg received out-of-order`）。
+
+实测对比（headless 启动后 `rostopic hz /tf`）：
+
+```text
+publishWheelTF = false   ->  average rate: 148.693   # odom TF + robot_state_publisher 的轮子 TF
+publishWheelTF = true    ->  average rate: 349.450   # 轮子 TF 又被插件发了一遍
+```
+
+两种配置下 `tf_echo base_link left_wheel_link` 都能解析出 `[0.000, 0.190, -0.050]`，
+说明轮子 TF 由 `robot_state_publisher` 提供即可，关掉插件的重复发布不影响显示。
 
 ### 11.1 暂停物理后的停车保护
 
@@ -343,7 +364,7 @@ PASS  test_urdf_valid_with_check_urdf
 PASS  test_launch_nodes_resolvable
 PASS  test_gazebo_topics_end_to_end
 
-6 passed in 22.65 seconds
+6 passed in 21.70 seconds
 ```
 
 `test_gazebo_topics_end_to_end` 会真实启动 headless Gazebo，确认 `/scan`、`/odom` 有数据，发 `cmd_vel` 直行 3 秒后 `/odom` 位移增长 > 0.01 m，验证驱动插件与避障节点工作正常。

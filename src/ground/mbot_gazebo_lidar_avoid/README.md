@@ -141,8 +141,9 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 | `avoid` | 前方 < `safe_distance` | 减速并朝更宽一侧转向；前方 > `exit_distance` 才退出 |
 | `escape` | 前方 < `danger_distance` | 倒车并转向远离更近一侧；后方两侧都堵则原地旋转 |
 
-`/scan` 超过 `scan_timeout` 秒未更新、扫描为空、`angle_increment` 非法或全部为 NaN/Inf 时，
-节点发布零速度并告警。超时判断使用墙钟（`time.time()`）+ 独立 watchdog 线程，不读 `/clock`，
+`/scan` 超过 `scan_timeout` 秒未更新、扫描为空、`angle_increment` 非法或全部为 NaN / 非正值时，
+节点发布零速度并告警。`+inf`（无回波）按 `range_max` 处理，因此空旷场地不会被误判为数据不可用。
+超时判断使用墙钟（`time.time()`）+ 独立 watchdog 线程，不读 `/clock`，
 因此 Gazebo 暂停物理、仿真时钟停走或 gzserver 崩溃时同样会触发停车，最后一条指令不会滞留。
 
 话题与 TF：
@@ -153,7 +154,7 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 | 发布 | `/cmd_vel` | `mbot_lidar_avoid_node` |
 | 发布 | `/odom` | `libgazebo_ros_diff_drive.so` |
 | 发布 | `/joint_states` | `libgazebo_ros_diff_drive.so`（`publishWheelJointState=true`） |
-| 发布 | `/tf` | 差速插件 + `robot_state_publisher`（`odom → base_footprint → base_link → laser_link` 及左右轮） |
+| 发布 | `/tf` | 差速插件发 `odom → base_footprint`；`robot_state_publisher` 发 `base_footprint → base_link → laser_link` 及左右轮（`publishWheelTF=false`，避免轮子 TF 重复发布） |
 
 ## 测试
 

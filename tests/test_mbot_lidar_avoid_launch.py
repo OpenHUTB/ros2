@@ -49,9 +49,9 @@ def skip(reason):
     raise _Skip(reason)
 
 
-def _run(cmd, timeout=30):
+def _run(cmd, timeout=30, env=None):
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          text=True, timeout=timeout)
+                          text=True, timeout=timeout, env=env)
 
 
 def _ros_available():
@@ -114,31 +114,78 @@ def test_launch_nodes_resolvable():
 
 
 # ---------------------------------------------------------------- 端到端
-def _topic_exists(topic):
-    result = _run(['rostopic', 'list'], timeout=15)
+def _topic_exists(topic, env=None):
+    result = _run(['rostopic', 'list'], timeout=15, env=env)
     return topic in result.stdout.split()
 
 
-def _wait_topics(topics, timeout=90):
+def _wait_topics(topics, timeout=90, env=None):
     deadline = time.time() + timeout
     missing = list(topics)
     while time.time() < deadline:
-        missing = [t for t in topics if not _topic_exists(t)]
+        missing = [t for t in topics if not _topic_exists(t, env=env)]
         if not missing:
             return []
         time.sleep(3)
     return missing
 
 
+def _free_port():
+    """找一个空闲端口，给测试专用的 rosmaster / gzserver 用，避免撞上已有的 ROS/Gazebo。"""
+    import socket
+    sock = socket.socket()
+    sock.bind(('127.0.0.1', 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
+
+
+def _stop_process_tree(proc):
+    """只清理本测试拉起的进程组，不要 pkill 同机其他 Gazebo。"""
+    if proc.poll() is None:
+        if os.name != 'nt':
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+            except ProcessLookupError:
+                pass
+        else:
+            proc.terminate()
+    try:
+        proc.wait(timeout=30)
+        return
+    except subprocess.TimeoutExpired:
+        pass
+    if os.name != 'nt':
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    else:
+        proc.kill()
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        pass
+
+
 def test_gazebo_topics_end_to_end():
-    """真实启动 Gazebo，确认机器人被生成、/odom 有数据，且发 cmd_vel 后位移增长。"""
+    """真实启动 Gazebo，确认机器人被生成、/odom 有数据，且发 cmd_vel 后位移增长。
+
+    用独立的 ROS_MASTER_URI / GAZEBO_MASTER_URI 跑，互不干扰：
+    同机上已有的 rosmaster、Gazebo 不会被影响，测试也不会被它们的同名话题带偏。
+    """
     if os.environ.get('MBOT_LAUNCH_TEST') != '1':
         skip('未设置 MBOT_LAUNCH_TEST=1，跳过真实仿真')
     if shutil.which('roslaunch') is None or not _ros_available():
         skip('当前环境没有 roslaunch / 未 source ROS')
 
-    kwargs = {}
+    env = dict(os.environ)
+    env['ROS_MASTER_URI'] = 'http://127.0.0.1:%d' % _free_port()
+    env['GAZEBO_MASTER_URI'] = 'http://127.0.0.1:%d' % _free_port()
+
+    kwargs = {'env': env}
     if os.name != 'nt':
+        # 独立进程组：结束后整组回收，不会误杀同机其他 Gazebo
         kwargs['start_new_session'] = True
 
     proc = subprocess.Popen(
@@ -146,14 +193,14 @@ def test_gazebo_topics_end_to_end():
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, **kwargs)
 
     try:
-        missing = _wait_topics(['/scan', '/odom', '/cmd_vel'], timeout=120)
+        missing = _wait_topics(['/scan', '/odom', '/cmd_vel'], timeout=180, env=env)
         assert not missing, '以下话题无发布者：%s' % ', '.join(missing)
 
         # 确认 /odom 确实有数据（不是空话题）
-        odom0 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30)
+        odom0 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30, env=env)
         assert odom0.returncode == 0, '未收到 /odom 数据'
 
-        scan = _run(['rostopic', 'echo', '-n', '1', '/scan'], timeout=30)
+        scan = _run(['rostopic', 'echo', '-n', '1', '/scan'], timeout=30, env=env)
         assert scan.returncode == 0, '未收到 /scan 数据'
         assert 'frame_id' in scan.stdout
 
@@ -162,7 +209,7 @@ def test_gazebo_topics_end_to_end():
             ['rostopic', 'pub', '-r', '10', '/cmd_vel',
              'geometry_msgs/Twist',
              '{linear: {x: 0.2, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
         try:
             time.sleep(3)
         finally:
@@ -170,7 +217,7 @@ def test_gazebo_topics_end_to_end():
             pub.wait(timeout=5)
 
         # 再取一次 /odom，检查位移
-        odom1 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30)
+        odom1 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30, env=env)
         assert odom1.returncode == 0, '未收到第二次 /odom 数据'
 
         # 解析两次 odom 的 pose.position.x，确认位移增长
@@ -185,19 +232,10 @@ def test_gazebo_topics_end_to_end():
         moved = abs(x1 - x0)
         assert moved > 0.01, '发 cmd_vel 后位移仅 %.4f m，说明 /odom 或驱动插件异常' % moved
 
-        vel = _run(['rostopic', 'echo', '-n', '1', '/cmd_vel'], timeout=30)
+        vel = _run(['rostopic', 'echo', '-n', '1', '/cmd_vel'], timeout=30, env=env)
         assert vel.returncode == 0, '未收到 /cmd_vel 数据'
     finally:
-        if os.name != 'nt' and proc.poll() is None:
-            os.killpg(os.getpgid(proc.pid), signal.SIGINT)
-        else:
-            proc.terminate()
-        try:
-            proc.wait(timeout=25)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        if os.name != 'nt':
-            _run(['pkill', '-f', 'gzserver'], timeout=10)
+        _stop_process_tree(proc)
 
 
 # ---------------------------------------------------------------- 直接运行

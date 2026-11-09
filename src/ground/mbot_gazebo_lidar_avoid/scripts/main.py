@@ -141,10 +141,15 @@ class LidarAvoidNode:
             if value is None:
                 continue
             try:
-                if not math.isfinite(value) or value <= 0.0:
-                    continue
-            except TypeError:
+                value = float(value)
+            except (TypeError, ValueError):
                 continue
+            # NaN 与非正值（含 -inf）视为无效点；+inf 是“无回波”，
+            # 按 range_max 处理，否则空旷场地会整帧被判成数据不可用而一直停车
+            if math.isnan(value) or value <= 0.0:
+                continue
+            if math.isinf(value):
+                value = cap
             valid_total += 1
 
             # 用索引换算真实角度，天然兼容任意束数与任意 angle_min
@@ -182,7 +187,7 @@ class LidarAvoidNode:
             rospy.logwarn_throttle(
                 2.0,
                 '[mbot_gazebo_lidar_avoid] 扫描数据不可用'
-                '（空 / angle_increment 非法 / 全部 NaN），停车保护')
+                '（空 / angle_increment 非法 / 全部 NaN 或非正值），停车保护')
             self._last_scan_time = None
             self._reset_state()
             self._publish_zero()

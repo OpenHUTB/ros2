@@ -203,7 +203,9 @@
       <odometryFrame>odom</odometryFrame>
       <robotBaseFrame>base_footprint</robotBaseFrame>
       <publishOdomTF>true</publishOdomTF>
-      <publishWheelTF>true</publishWheelTF>
+      <!-- 轮子 TF 交给 robot_state_publisher（订阅本插件的 /joint_states）发布，
+           这里必须关闭，否则 base_link -> *_wheel_link 有两个发布者，刷 TF_REPEATED_DATA -->
+      <publishWheelTF>false</publishWheelTF>
       <publishWheelJointState>true</publishWheelJointState>
       <publishTf>1</publishTf>
     </plugin>
