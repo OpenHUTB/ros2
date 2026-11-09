@@ -391,6 +391,55 @@ def test_urdf_has_diff_drive_and_laser():
     assert 'libgazebo_ros_laser.so' in filenames
 
 
+def test_urdf_diff_drive_uses_ros1_camel_case():
+    """ROS 1 的 libgazebo_ros_diff_drive.so 只认驼峰参数，ROS 2 的 snake_case 会静默失败。"""
+    tree = ET.parse(os.path.join(PKG, 'urdf', 'mbot_lidar.urdf'))
+    diff = None
+    for p in tree.getroot().iter('plugin'):
+        if p.get('filename') == 'libgazebo_ros_diff_drive.so':
+            diff = p
+            break
+    assert diff is not None, '找不到 diff_drive 插件'
+
+    # 必须出现的 ROS 1 驼峰参数
+    ros1_keys = {
+        'leftJoint', 'rightJoint', 'wheelSeparation', 'wheelDiameter',
+        'commandTopic', 'odometryTopic', 'odometryFrame', 'robotBaseFrame',
+        'publishOdom', 'publishOdomTF', 'publishWheelTF',
+    }
+    for key in ros1_keys:
+        assert diff.find(key) is not None, 'diff_drive 缺少 ROS 1 参数 <%s>' % key
+
+    # 禁止出现的 ROS 2 snake_case 参数
+    ros2_keys = {
+        'left_joint', 'right_joint', 'wheel_separation', 'wheel_diameter',
+        'command_topic', 'odometry_topic', 'odometry_frame', 'robot_base_frame',
+        'publish_odom', 'publish_odom_tf', 'publish_wheel_tf',
+    }
+    for key in ros2_keys:
+        assert diff.find(key) is None, 'diff_drive 不应使用 ROS 2 参数 <%s>' % key
+
+
+def test_urdf_has_base_footprint():
+    """根链接应为 dummy base_footprint，避免 KDL 警告。"""
+    tree = ET.parse(os.path.join(PKG, 'urdf', 'mbot_lidar.urdf'))
+    links = [link.get('name') for link in tree.getroot().iter('link')]
+    assert 'base_footprint' in links, '缺少 base_footprint 根链接'
+
+    # 必须有一个 joint 把 base_footprint 连接到 base_link
+    joints = list(tree.getroot().iter('joint'))
+    found = False
+    for j in joints:
+        parent = j.find('parent')
+        child = j.find('child')
+        if (parent is not None and child is not None and
+                parent.get('link') == 'base_footprint' and
+                child.get('link') == 'base_link'):
+            found = True
+            break
+    assert found, '缺少 base_footprint -> base_link 的固定关节'
+
+
 def test_readme_does_not_build_repo_root():
     """README 不能推荐用仓库根目录直接 catkin_make（会把 ROS2/CARLA/MuJoCo 包一起编译）。"""
     with open(os.path.join(PKG, 'README.md'), 'r', encoding='utf-8') as f:
@@ -399,6 +448,40 @@ def test_readme_does_not_build_repo_root():
     assert '不要直接用仓库根目录' in readme
     assert 'catkin_make --only-pkg-with-deps' in readme
     assert '~/mbot_ws' in readme
+
+
+def test_readme_and_yaml_params_consistent():
+    """README 参数表与 config/lidar_avoid.yaml 的键和默认值必须一一对应。"""
+    import yaml
+
+    with open(os.path.join(PKG, 'config', 'lidar_avoid.yaml'), 'r', encoding='utf-8') as f:
+        yaml_cfg = yaml.safe_load(f)
+    node_cfg = yaml_cfg['mbot_lidar_avoid_node']
+
+    with open(os.path.join(PKG, 'README.md'), 'r', encoding='utf-8') as f:
+        readme = f.read()
+
+    # 从 README 参数表提取 "参数 | 默认值" 行
+    import re
+    pattern = re.compile(r'\|\s*`([a-z_]+)`\s*\|\s*([\d.\-]+)\s*\|')
+    readme_params = {}
+    for m in pattern.finditer(readme):
+        key = m.group(1)
+        value = float(m.group(2))
+        readme_params[key] = value
+
+    # 键集合一致
+    yaml_keys = set(node_cfg.keys())
+    readme_keys = set(readme_params.keys())
+    assert yaml_keys == readme_keys, 'README 与 yaml 参数不一致: %s vs %s' % (
+        sorted(readme_keys - yaml_keys), sorted(yaml_keys - readme_keys))
+
+    # 默认值一致
+    for key in yaml_keys:
+        yv = float(node_cfg[key])
+        rv = readme_params[key]
+        assert abs(yv - rv) < 1e-9, '参数 %s 不一致: yaml=%.4f, README=%.4f' % (
+            key, yv, rv)
 
 
 def test_cmakelists_installs_launch_and_config():

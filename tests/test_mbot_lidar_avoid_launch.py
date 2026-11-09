@@ -131,7 +131,7 @@ def _wait_topics(topics, timeout=90):
 
 
 def test_gazebo_topics_end_to_end():
-    """真实启动 Gazebo，确认机器人被生成且雷达/里程计有数据。"""
+    """真实启动 Gazebo，确认机器人被生成、/odom 有数据，且发 cmd_vel 后位移增长。"""
     if os.environ.get('MBOT_LAUNCH_TEST') != '1':
         skip('未设置 MBOT_LAUNCH_TEST=1，跳过真实仿真')
     if shutil.which('roslaunch') is None or not _ros_available():
@@ -149,12 +149,41 @@ def test_gazebo_topics_end_to_end():
         missing = _wait_topics(['/scan', '/odom', '/cmd_vel'], timeout=120)
         assert not missing, '以下话题无发布者：%s' % ', '.join(missing)
 
+        # 确认 /odom 确实有数据（不是空话题）
+        odom0 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30)
+        assert odom0.returncode == 0, '未收到 /odom 数据'
+
         scan = _run(['rostopic', 'echo', '-n', '1', '/scan'], timeout=30)
         assert scan.returncode == 0, '未收到 /scan 数据'
         assert 'frame_id' in scan.stdout
 
-        odom = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30)
-        assert odom.returncode == 0, '未收到 /odom 数据'
+        # 发 cmd_vel 让机器人直行，等待 3 秒
+        pub = subprocess.Popen(
+            ['rostopic', 'pub', '-r', '10', '/cmd_vel',
+             'geometry_msgs/Twist',
+             '{linear: {x: 0.2, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        try:
+            time.sleep(3)
+        finally:
+            pub.terminate()
+            pub.wait(timeout=5)
+
+        # 再取一次 /odom，检查位移
+        odom1 = _run(['rostopic', 'echo', '-n', '1', '/odom'], timeout=30)
+        assert odom1.returncode == 0, '未收到第二次 /odom 数据'
+
+        # 解析两次 odom 的 pose.position.x，确认位移增长
+        import re
+        def _extract_x(text):
+            m = re.search(r'x:\s*([-+]?\d*\.?\d+)', text)
+            return float(m.group(1)) if m else None
+
+        x0 = _extract_x(odom0.stdout)
+        x1 = _extract_x(odom1.stdout)
+        assert x0 is not None and x1 is not None, '无法从 /odom 解析 x'
+        moved = abs(x1 - x0)
+        assert moved > 0.01, '发 cmd_vel 后位移仅 %.4f m，说明 /odom 或驱动插件异常' % moved
 
         vel = _run(['rostopic', 'echo', '-n', '1', '/cmd_vel'], timeout=30)
         assert vel.returncode == 0, '未收到 /cmd_vel 数据'

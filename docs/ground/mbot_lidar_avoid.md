@@ -223,6 +223,31 @@ MBOT_LAUNCH_TEST=1 python3 -m pytest tests/test_mbot_lidar_avoid_launch.py -v
 | 脱困倒车速度 | −0.12 m/s |
 | 转向 / 旋转角速度 | 1.20 / 0.90 rad/s |
 
-## 11. 许可证
+## 11. 运行效果
+
+以下截图来自另一台 Ubuntu 20.04 + ROS Noetic + Gazebo 11 虚拟机的真实运行：
+
+![避障运行截图](./mbot_lidar_avoid_run.png)
+
+- 左侧为 Gazebo 场景（Mbot 差速底盘 + 顶部激光雷达）
+- 右侧为 `rqt_graph` 节点图，可见 `/mbot_lidar_avoid_node` 订阅 `/scan`、发布 `/cmd_vel`
+- 终端日志显示节点正常运行，无 `Required attribute[filename]` 或 KDL 警告
+
+端到端集成测试输出（`MBOT_LAUNCH_TEST=1`）：
+
+```text
+PASS  test_urdf_plugins_have_filename
+PASS  test_diff_drive_plugin_is_gazebo_ros_impl
+PASS  test_launch_refers_to_existing_files
+PASS  test_urdf_valid_with_check_urdf
+PASS  test_launch_nodes_resolvable
+PASS  test_gazebo_topics_end_to_end
+
+结果: 6 通过, 0 跳过, 0 失败
+```
+
+`test_gazebo_topics_end_to_end` 会真实启动 headless Gazebo，确认 `/scan`、`/odom` 有数据，发 `cmd_vel` 直行 3 秒后 `/odom` 位移增长 > 0.01 m，验证驱动插件与避障节点工作正常。
+
+## 12. 许可证
 
 MIT License，见 `src/ground/mbot_gazebo_lidar_avoid/LICENSE`。
