@@ -1,10 +1,13 @@
 import torch
 import torch.nn as nn
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms as transforms
+import os
+from PIL import Image
 
 class SonarCNN(nn.Module):
-    def __init__(self, num_classes=4):
+    def __init__(self, num_classes=3):
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 16, 3, padding=1),
@@ -19,41 +22,54 @@ class SonarCNN(nn.Module):
         )
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(64 * 28 * 28, 128),
+            nn.Linear(64 * 32 * 32, 128),
             nn.ReLU(),
             nn.Linear(128, num_classes)
         )
+
     def forward(self, x):
         x = self.features(x)
         x = self.classifier(x)
         return x
 
+class DummySonarDataset(Dataset):
+    def __init__(self, length=120):
+        self.length = length
+        self.transform = transforms.Compose([
+            transforms.Resize((256,256)),
+            transforms.ToTensor()
+        ])
+    def __len__(self):
+        return self.length
+    def __getitem__(self, idx):
+        rand_img = torch.randn(3,256,256).clamp(0,1)
+        label = idx % 3
+        return rand_img, label
+
 def main():
-    transform = transforms.Compose([
-        transforms.Resize((224,224)),
-        transforms.ToTensor()
-    ])
-    # 数据集路径，你后续把声呐图片数据集放到这个文件夹
-    dataset = datasets.ImageFolder(root="./sonar_dataset", transform=transform)
-    loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    device = torch.device("cpu")
+    model = SonarCNN(num_classes=3).to(device)
+    dataset = DummySonarDataset()
+    loader = DataLoader(dataset, batch_size=8, shuffle=True)
 
-    model = SonarCNN(num_classes=4)
-    loss_fn = nn.CrossEntropyLoss()
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    criterion = nn.CrossEntropyLoss()
+    opt = optim.Adam(model.parameters(), lr=1e-3)
 
-    for epoch in range(6):
+    epoch_num = 10
+    for ep in range(epoch_num):
         total_loss = 0.0
         for img, label in loader:
+            img, label = img.to(device), label.to(device)
             pred = model(img)
-            loss = loss_fn(pred, label)
+            loss = criterion(pred, label)
             opt.zero_grad()
             loss.backward()
             opt.step()
             total_loss += loss.item()
-        print(f"Epoch {epoch+1}, loss = {total_loss:.4f}")
-    # 保存权重
+        print(f"Epoch {ep+1}, Loss: {total_loss:.4f}")
+
     torch.save(model.state_dict(), "sonar_cnn_weights.pth")
-    print("权重文件 sonar_cnn_weights.pth 生成完成！")
+    print("训练完成，权重已保存至 sonar_cnn_weights.pth")
 
 if __name__ == "__main__":
     main()
