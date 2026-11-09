@@ -1,8 +1,6 @@
 # 自建四轮小车 Gazebo GMapping 建图实验（ROS Noetic）
 
-姓名：________ 学号：________ 班级：________
-
-本页为独立实验。旧版“第九章”沿用作业编号，不对应本仓库目录：仓库第六章为 SLAM 与自主导航，第九章为 ROS 2。本实验使用 ROS 1 Noetic，不应按仓库第九章查找。源码暂保留原 `src/chap9/urdf_car_slam` 路径，避免破坏既有复现步骤。
+本页归入本站第 6 章“机器人 SLAM 与自主导航”，使用 ROS 1 Noetic。旧作业编号与本站章节不同，源码保留在 `src/chap9/urdf_car_slam`；目录名 `chap9` 不代表本实验使用 ROS 2。
 
 本包承接已在 RViz 显示成功的四轮小车，新增 Gazebo Classic 物理驱动、二维激光、里程计和 GMapping。本实验仅覆盖二维仿真建图，不包含自动导航。包名为 urdf_car_slam，与原 urdf_car_demo 分开。
 
@@ -13,11 +11,25 @@ Ubuntu 20.04 + ROS Noetic + Gazebo Classic（通常为 11）。打开普通 Ubun
 ```bash
 source /opt/ros/noetic/setup.bash
 sudo apt update
-sudo apt install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-plugins ros-noetic-xacro ros-noetic-robot-state-publisher ros-noetic-gmapping ros-noetic-map-server ros-noetic-rviz ros-noetic-teleop-twist-keyboard liburdfdom-tools
+sudo apt install git ros-noetic-catkin ros-noetic-tf ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-plugins ros-noetic-xacro ros-noetic-robot-state-publisher ros-noetic-gmapping ros-noetic-map-server ros-noetic-rviz ros-noetic-teleop-twist-keyboard liburdfdom-tools
 mkdir -p ~/urdf_car_ws/src
 ```
 
-把本包的 **urdf_car_slam** 文件夹复制到 `~/urdf_car_ws/src/`。可以和 urdf_car_demo 同处工作空间，但不要同时启动两套模型。
+源码位于本仓库 `src/chap9/urdf_car_slam`。首次获取仓库可执行：
+
+```bash
+git clone --depth 1 https://github.com/OpenHUTB/ros2.git ~/ros2-course-source
+```
+
+已有仓库时跳过克隆，将 `REPO_DIR` 改成实际仓库根目录；从上一节建模实验继续时可复用同一份仓库。仅复制本包，不要复制整个仓库的 `src`。目标位置已有同名包时先保留原文件，避免直接覆盖自己的修改。
+
+```bash
+REPO_DIR="$HOME/ros2-course-source"
+test -f "$REPO_DIR/src/chap9/urdf_car_slam/package.xml" && \
+  cp -a "$REPO_DIR/src/chap9/urdf_car_slam" "$HOME/urdf_car_ws/src/"
+```
+
+确认 `~/urdf_car_ws/src/urdf_car_slam/package.xml` 存在。也可将作业压缩包中的 `urdf_car_slam` 文件夹解压到该位置。本包可以与 `urdf_car_demo` 同处工作空间，但不要同时启动两套模型；无需预先启动建模实验。
 
 ```bash
 cd ~/urdf_car_ws
@@ -27,6 +39,16 @@ roslaunch urdf_car_slam slam.launch
 ```
 
 将打开 Gazebo 和 RViz。启动初期等机器人生成、激光与第一张地图出现后再移动；Gazebo 必须处于播放状态。虚拟机性能不足时先关闭其他仿真，或使用 `roslaunch urdf_car_slam slam.launch gui:=false` 保留 Gazebo 后台和 RViz。
+
+### 启动参数
+
+| 参数 | 默认值 | 用途 |
+| --- | --- | --- |
+| `gui` | `true` | 是否显示 Gazebo 窗口；`false` 时物理仿真仍运行 |
+| `rviz` | `true` | 是否显示 RViz；`false` 不会关闭建图节点 |
+| `spawn_z` | `0.01` 米 | 机器人生成时的高度，不是导航目标高度 |
+
+上述默认值直接对应包内 `launch/slam.launch`。启动后等待模型、激光与第一帧地图出现，再进行遥控。
 
 ## 二、键盘遥控建图
 
@@ -48,12 +70,20 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py _speed:=0.15 _turn:=0.4 _r
 
 ```bash
 source /opt/ros/noetic/setup.bash
-mkdir -p ~/urdf_car_maps
-rosrun map_server map_saver -f ~/urdf_car_maps/car_gmapping
-ls -lh ~/urdf_car_maps/car_gmapping.*
+source ~/urdf_car_ws/devel/setup.bash
+RUN_DIR="$HOME/urdf_car_maps/$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$RUN_DIR"
+rosrun map_server map_saver -f "$RUN_DIR/car_gmapping"
+rostopic echo -n 1 /map/info > "$RUN_DIR/map_info.yaml"
+ls -lh "$RUN_DIR/car_gmapping.pgm" "$RUN_DIR/car_gmapping.yaml" "$RUN_DIR/map_info.yaml"
+echo "$RUN_DIR"
 ```
 
-应生成 car_gmapping.pgm 和 car_gmapping.yaml。两者一起提交；yaml 记录分辨率和原点，不能只交图片。若 map_saver 一直等待地图，先排查 /map。查看图片可运行 `xdg-open ~/urdf_car_maps/car_gmapping.pgm`。
+保存前先在遥控终端按 `k` 停车。应生成 `car_gmapping.pgm` 和 `car_gmapping.yaml`；`map_info.yaml` 保存实时话题元数据。前两个文件须保持同目录，检查 YAML 中 `image` 指向正确的 PGM，不能只交图片。截图不能代替地图文件。
+
+`map_saver` 会等待 `/map`；此时不要关闭仿真，先按第五节检查地图发布者。后续命令等待它完成后再执行。查看图片可在同一终端运行 `xdg-open "$RUN_DIR/car_gmapping.pgm"`；换终端后需重新设置 `RUN_DIR` 为实际保存目录。
+
+保存的数据来自实时 `/map`，不能以 Gazebo world 平面图替代。即使已生成 PGM，也要通过探索后的截图或录屏说明覆盖范围；文件生成本身不证明整个房间已完成建图。
 
 ## 四、系统结构与坐标系
 
@@ -64,7 +94,7 @@ Gazebo 关节状态 → /joint_states → robot_state_publisher → 各部件 TF
 /scan + odom TF → slam_gmapping → /map、map→odom
 ```
 
-完整 TF 主链为 `map → odom → base_footprint → base_link → lidar_link`。原车的雷达只有外形，现在增加 ray 传感器，发布 sensor_msgs/LaserScan。无需给 map→odom 或 odom→base_footprint 添加静态 TF，否则会与 SLAM/驱动冲突。
+完整 TF 主链为 `map → odom → base_footprint → base_link → lidar_link`。原车的雷达只有外形，现在增加 ray 传感器，发布 sensor_msgs/LaserScan。RViz 当前配置默认开启 TF 显示。启动初期第一帧地图尚未出现时，map 相关变换可能暂时缺失。不要给 map→odom 或 odom→base_footprint 添加静态 TF，否则会与 SLAM/驱动冲突。
 
 四轮滑移转向由 gazebo_ros_skid_steer_drive 驱动。此插件使用 Gazebo 世界位姿生成仿真里程计，是便于入门的理想化里程计实验；不是实机编码器里程计性能验证。GMapping 从激光和里程计 TF 建图，没有预先加载 world 的栅格地图。
 
@@ -72,9 +102,13 @@ Gazebo 关节状态 → /joint_states → robot_state_publisher → 各部件 TF
 
 ## 五、分层检查与排错
 
-另开终端，先 source /opt/ros/noetic/setup.bash，再检查：
+另开终端，先加载 ROS 环境，再检查节点、话题及坐标变换：
 
 ```bash
+source /opt/ros/noetic/setup.bash
+source ~/urdf_car_ws/devel/setup.bash
+rosnode list
+rostopic info /map
 rostopic hz /clock
 rostopic hz /scan
 rostopic hz /odom
@@ -84,7 +118,7 @@ rosrun tf tf_echo odom base_footprint
 rosrun tf tf_echo map lidar_link
 ```
 
-每个 hz 命令观察几秒后 Ctrl+C，再执行下一条。
+每个 `hz` 和 `tf_echo` 命令都会持续输出，观察几秒后按 `Ctrl+C` 再执行下一条。`rostopic list` 中有 `/map` 名称并不证明已有地图发布；还要检查 `rostopic info /map` 的 Publishers、`rosnode list` 中的 `/slam_gmapping` 以及 `/map/info` 是否收到数据。
 
 | 现象 | 检查 |
 | --- | --- |
@@ -97,18 +131,13 @@ rosrun tf tf_echo map lidar_link
 | 持续打滑、地图歪斜 | 降低速度，避免急转和碰撞；记录现象再调摩擦和驱动参数 |
 | 缺 map→odom | GMapping 是否收到扫描，扫描时间戳能否找到对应 TF |
 
-## 六、作业验收材料
+## 六、已有实验记录
 
-1. 原 URDF 模型结构及新增激光、驱动插件说明。
-2. Gazebo 场景截图。
-3. RViz 中 Map + LaserScan + RobotModel 截图。
-4. TF 链或话题检查截图。
-5. 保存的 pgm/yaml 文件和地图图片。
-6. 一段遥控建图录屏，说明探索路线和问题。
+用户已提供 Gazebo 场景、RViz 初始地图和 GMapping 日志截图：场景及模型已加载，RViz Global Status 为 Ok，GMapping 持续输出 `Registering Scans: Done`。
 
-实验记录：ROS 版本________，Gazebo 版本________，实际地图分辨率________，地图宽高________，是否回到起点________。
+后续保存地图终端截图显示：收到 `224 × 224`、`0.050 m/pix` 的地图，PGM/YAML 写入后显示 `Done`；随后执行了 `/map/info` 导出命令。该次栅格宽高为 `224 × 0.05 = 11.2` 米，尺寸包含未知区域，不等同于已探索面积，不同运行的地图尺寸可能不同。
 
-用户已提供 Gazebo 场景、RViz 地图和 GMapping 日志截图：场景及模型已加载，RViz Global Status 为 Ok，GMapping 持续输出 Registering Scans: Done。已确认激光和里程计数据输出、初始地图生成；尚未提供完整探索录屏和保存的 pgm/yaml，不能声称已完成整个场景建图或定量精度验证。
+本页实测结果记录范围为：场景加载、初始地图生成、扫描匹配运行与地图保存日志。
 
 一次联调中 rosnode list 未显示 slam_gmapping；随后手动启动 GMapping 后获得正常截图。若复现时只有激光和里程计没有地图，先检查是否安装 ros-noetic-gmapping 及 launch 终端报错，再在另一个已加载 Noetic 环境的终端执行：
 
@@ -123,7 +152,8 @@ rosrun gmapping slam_gmapping _base_frame:=base_footprint _odom_frame:=odom _map
 基于此前小车建模作业扩展，由 OpenAI Codex 辅助编写。
 
 - ROS Noetic 驱动插件源码：https://github.com/ros-simulation/gazebo_ros_pkgs/blob/noetic-devel/gazebo_plugins/src/gazebo_ros_skid_steer_drive.cpp
-- 内容范围：自建小车的 GMapping 仿真建图；章节编号以所用教材目录为准。
+- 前置说明：[四轮小车 URDF 建模与 RViz 显示](urdf_car_modeling.md)。
+- 内容范围：自建小车的 GMapping 仿真建图；本站入口位于第 6 章。
 
 
 ## 八、用户实测截图
@@ -134,30 +164,6 @@ rosrun gmapping slam_gmapping _base_frame:=base_footprint _odom_frame:=odom _map
 
 ![GMapping 扫描匹配运行日志](../img/chap9/urdf_car_slam/gmapping_log.png)
 
+## 九、停止实验
 
-## PR #852 复核后的调整与证据补充
-
-- 初始高度改为可配置的 `spawn_z`，默认 0.01 米。模型中轮底在 `base_footprint` 的 z=0 附近；默认只保留 1 厘米生成间隙，减小旧值 0.04 米落地时的冲击。此调整尚未在 Gazebo 重新运行验证。生成后应等待车辆落稳、激光与 TF 正常，再开始遥控；可用 `roslaunch urdf_car_slam slam.launch spawn_z:=0.0` 比较接地表现。
-- RViz 默认开启 TF 显示，便于检查 `map → odom → base_footprint → base_link → lidar_link`。启动初期尚无第一帧地图时，map 相关变换可能暂未出现，不要人为补一条静态 map→odom。
-- 保留原来的三张截图，并明确它们仅证明初始地图与扫描匹配运行。尚无完整探索后的地图文件，不能当作完整建图验收。
-
-### 在虚拟机生成缺少的实测材料
-
-保持 `slam.launch` 运行，在键盘遥控终端慢速探索房间、经过障碍物的不同侧面，并尽量回到起点附近。先按 `k` 停车，再在另一个 Noetic 终端执行：
-
-```bash
-source /opt/ros/noetic/setup.bash
-source ~/urdf_car_ws/devel/setup.bash
-RUN_DIR="$HOME/urdf_car_maps/$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$RUN_DIR"
-rosrun map_server map_saver -f "$RUN_DIR/car_gmapping"
-rostopic echo -n 1 /map/info > "$RUN_DIR/map_info.yaml"
-ls -lh "$RUN_DIR/car_gmapping.pgm" "$RUN_DIR/car_gmapping.yaml"
-echo "$RUN_DIR"
-```
-
-`map_saver` 等待地图时不要退出仿真；检查 `/map` 是否由正在运行的 GMapping 发布。地图文件来自实时 `/map`，不能把 Gazebo world 平面图替换成建图结果。
-
-补交该目录下的 `car_gmapping.pgm`、`car_gmapping.yaml` 和 `map_info.yaml`，另附探索后的 RViz 截图（Map、LaserScan、RobotModel、TF 和 Global Status 可见）。保留 YAML 对 PGM 的同目录引用。记录探索路线、是否回到起点及异常现象；如有录屏，也一起保留。
-
-当前材料缺口仍然存在：上述运行命令和配置修复不等于生成了实测地图。新版出生高度、TF 显示与完整探索过程均需在 ROS Noetic + Gazebo 中复测。使用 OpenAI Codex 辅助整理本次修改。
+先在遥控终端按 `k` 停车，再按 `Ctrl+C` 退出遥控；确认地图已保存后，在运行 `slam.launch` 的终端按 `Ctrl+C` 关闭仿真、建图及 RViz。

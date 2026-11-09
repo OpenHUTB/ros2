@@ -52,9 +52,6 @@ nav:
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
-    - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
-    - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
-    - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
         - 章节首页: './chapter/chap2.md'
@@ -62,12 +59,17 @@ nav:
         - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
         - ROS Noetic 环境自检与常见问题排查: 'chap2/ros1_env_check/index.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
-    - 4. 机器人仿真: './chapter/chap4.md'
+    - 4. 机器人仿真:
+        - 章节首页: './chapter/chap4.md'
+        - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
     - 5. 机器人感知: './chapter/chap5.md'
-    - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
+    - 6. 机器人 SLAM 与自主导航:
+        - 章节首页: './chapter/chap6.md'
+        - 自建小车 Gazebo GMapping 建图: './chapter/urdf_car_gmapping.md'
     - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
+        - PocketSphinx 语音控制小乌龟: './voice/pocketsphinx_noetic.md'
         - MoveIt 六自由度机械臂运动规划: './chapter/chap8/moveit_arm_planning.md'
         - MuJoCo UR5e 关节空间抓放控制: './chapter/ur5e_pickplace.md'
     - 9. ROS 2:
