@@ -2,14 +2,8 @@
 <!-- Mbot 差速底盘 + 2D 激光雷达（自包含，仅依赖 gazebo_ros 插件） -->
 <robot name="mbot_lidar">
 
-  <!-- dummy base_footprint 作为根链接，避免 KDL 警告 -->
-  <link name="base_footprint">
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="0.01"/>
-      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
-    </inertial>
-  </link>
+  <!-- dummy base_footprint 作为根链接（无惯性参数），避免 KDL 警告 -->
+  <link name="base_footprint"/>
 
   <link name="base_link">
     <inertial>
