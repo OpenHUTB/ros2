@@ -97,6 +97,8 @@ nav:
     - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
+- 四足机器人:
+    - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
@@ -160,6 +162,7 @@ nav:
     - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
     - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
     - 弯道自适应限速（CSL）: './ground/carla_curve_speed_limit.md'
+    - 闯红灯预警（RLW）: './ground/carla_red_light_warning.md'
     - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
     - 激光雷达感知与神经网络避障: './ground/hutb_lidar_nn_avoid.md'
     - 自研栅格 SLAM 建图与导航: './ground/hutb_grid_slam_nav.md'
