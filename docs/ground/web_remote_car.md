@@ -64,11 +64,13 @@ cd ~/ros1_ws/src/web_remote_car/www
 python3 -m http.server 8000
 ```
 
-`python3 -m http.server` 打开根路径只会列出目录，**要带 `/index.html` 才会直接进入遥控面板**：
+必须在 `www` 目录下启动这个服务。`http.server` 遇到目录会自动返回 `index.html`，所以访问根路径就直接进入遥控面板：
 
 ```text
-http://127.0.0.1:8000/index.html
+http://127.0.0.1:8000/
 ```
+
+如果在包根目录（`web_remote_car/`）里启动，打开只会看到一个文件列表，要点进 `www/index.html` 才到遥控页——这是启动目录不对造成的，不是页面本身的问题。
 
 ### 5.1 局域网内其他电脑访问
 
@@ -91,7 +93,7 @@ sudo ufw allow 8080/tcp   # web_video_server 图像流
 sudo ufw allow 8000/tcp   # 前端静态页面
 ```
 
-然后在其他电脑上打开 `http://<虚拟机IP>:8000/index.html`，页面自动连 `ws://<虚拟机IP>:9090`，不需要改代码。
+然后在其他电脑上打开 `http://<虚拟机IP>:8000/`，页面自动连 `ws://<虚拟机IP>:9090`，不需要改代码。
 
 如果网页所在主机和跑 rosbridge 的主机不是同一台，用地址栏参数显式指定：
 
@@ -110,7 +112,7 @@ rostopic echo /cmd_vel
 rostopic hz /front_camera/image_raw
 ```
 
-浏览器打开 `http://127.0.0.1:8000/index.html`，默认控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
+浏览器打开 `http://127.0.0.1:8000/`（等价于 `http://127.0.0.1:8000/index.html`），默认控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
 
 页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，浏览器地址填哪台机器的 IP，前端就连哪台机器，不需要改代码。页面顶部会显示当前实际连接的 `ws://` 地址，连接异常时原地给出排查提示，不会一直停在“正在连接”。
 
@@ -166,7 +168,7 @@ rostopic hz /front_camera/image_raw
 | --- | --- | --- |
 | 启动报找不到 `rosbridge_server` / `web_video_server` | 未安装对应包 | `sudo apt install ros-noetic-rosbridge-server ros-noetic-web-video-server` |
 | 浏览器打不开 `http://127.0.0.1:8000` | 没起静态文件服务 | 在 `www` 目录执行 `python3 -m http.server 8000` |
-| 打开 `...:8000` 只看到文件列表，不进遥控页 | `http.server` 默认就是目录浏览 | 访问 `...:8000/index.html` |
+| 打开 `...:8000` 只看到文件列表，不进遥控页 | 服务在包根目录启动，那里的目录里没有 `index.html` | `cd` 到 `www` 目录重新启动；或直接访问 `...:8000/index.html` |
 | 本机能控制，别的电脑一直停在“正在连接” | 访问地址用了 127.0.0.1（那指对方自己的电脑），或 rosbridge 没监听外网、防火墙拦截 | 用 `http://<虚拟机IP>:8000/index.html` 访问；`netstat -tulpn` 里 9090 要显示 `0.0.0.0:9090`；`sudo ufw allow 9090/tcp` |
 | 网页提示连接断开 | rosbridge 未运行或端口被占用 | `rostopic list` 确认 ROS 正常，检查 9090 端口 |
 | 网页看不到相机画面 | 视频流话题与 xacro 中的话题不一致 | 核对 `urdf/car_cam.xacro` 的 `imageTopicName` 与 `index.html` 的 `CAMERA_TOPIC` |

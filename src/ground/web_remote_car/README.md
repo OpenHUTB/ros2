@@ -40,7 +40,7 @@ cd ~/ros1_ws/src/web_remote_car/www
 python3 -m http.server 8000
 ```
 
-浏览器打开 `http://127.0.0.1:8000/index.html`（`http.server` 打开根路径只列目录，带 `/index.html` 才直接进遥控面板）。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
+浏览器打开 `http://127.0.0.1:8000/`，`http.server` 遇到目录会自动返回 `index.html`，直接进遥控面板（等价于 `http://127.0.0.1:8000/index.html`）。这个服务必须在 `www` 目录下启动，在包根目录启动只会看到文件列表。页面里的 rosbridge 地址和视频流地址由当前访问的主机名自动拼接，换机器访问不需要改代码。
 
 控制按键：W 前进、S 后退、A 左转、D 右转、空格停止，方向键等效。
 
@@ -56,7 +56,7 @@ sudo ufw allow 8080/tcp
 sudo ufw allow 8000/tcp
 ```
 
-其他电脑打开 `http://<虚拟机IP>:8000/index.html`，自动连 `ws://<虚拟机IP>:9090`。网页与 rosbridge 不在同一台机器时，用 `?bridge=<IP>:9090` 指定。
+其他电脑打开 `http://<虚拟机IP>:8000/`，自动连 `ws://<虚拟机IP>:9090`。网页与 rosbridge 不在同一台机器时，用 `?bridge=<IP>:9090` 指定。
 
 ## 端口与话题
 
