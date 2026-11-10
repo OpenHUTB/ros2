@@ -15,6 +15,7 @@
 6. 误差模型 + 评估的端到端一致性（无误差→近零；2% 尺度→RPE≈2%）
 7. CSV 读写往返
 8. 异常输入
+9. pytest 兼容性（失败检查必须使 pytest 返回非零）
 """
 
 from __future__ import annotations
@@ -91,6 +92,9 @@ def check(cond: bool, msg: str) -> None:
     else:
         FAIL += 1
         print(_safe(f"  [FAIL] {msg}"))
+        # 直接运行由 main() 汇总 FAIL；pytest 不经过 main()，因此必须主动抛异常。
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            raise AssertionError(msg)
 
 
 def close(actual: float, expected: float, tol: float, msg: str) -> None:
@@ -282,6 +286,21 @@ def test_errors() -> None:
         check(False, "未知轨迹类型应报错")
     except KeyError:
         check(True, "未知轨迹类型抛 KeyError")
+
+
+# ------------------------------------------------------- 9 pytest 兼容性
+def test_check_failure_is_visible_to_pytest(monkeypatch) -> None:
+    import pytest
+
+    print("\n[9] pytest 兼容性")
+    global FAIL
+    previous_failures = FAIL
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "probe")
+    try:
+        with pytest.raises(AssertionError, match="expected check failure"):
+            check(False, "expected check failure")
+    finally:
+        FAIL = previous_failures
 
 
 def main() -> int:
