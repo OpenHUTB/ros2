@@ -250,14 +250,17 @@ def _tick(self):
 
 ### 5.1 支持环境
 
-| 配置 | Ubuntu 20.04 教学虚拟机 | Ubuntu 22.04 / WSL2 |
+| 配置 | Ubuntu 22.04（推荐） | Ubuntu 20.04 |
 |---|---|---|
-| ROS 2 | Humble（预装） | Humble |
-| Python | **3.8**（与 rclpy ABI 绑定） | 3.10 |
-| 图形 | 可纯终端（模式 A） | 可纯终端 |
+| ROS 2 | **Humble**（官方对应） | **Foxy**（官方对应）；预装 Humble 的镜像亦可，但未实测 |
+| Python | 3.10（系统自带） | 3.8（Foxy）；预装 Humble 镜像同样是 3.8 |
+| 图形 | 可纯终端（模式 A） | 可纯终端（模式 A） |
 
-> 20.04 里如果切到 Python 3.10 会报 `_rclpy_pybind11` 缺失；
-> 用 `conda deactivate` 回到系统 3.8 即可。
+> Humble 的官方发行版是 22.04，20.04 的官方对应是 Foxy——这两条别写反。
+> 本模块只依赖 `rclpy` / `nav_msgs` / `tf2_ros` 等公共 API；20.04 里若切换 Python 版本会报
+> `_rclpy_pybind11` 缺失（rclpy 的 ABI 与发行版自带解释器绑定）。
+>
+> 已实测（`--check`）：**Windows 11 + Python 3.12.14 + MuJoCo 4.0.0**，相对误差 19.4% ≤ 25%，通过。
 
 ### 5.2 依赖
 
@@ -274,9 +277,25 @@ cd ~/ros2
 colcon build --packages-select rov_handling_eval --symlink-install
 source install/setup.bash
 
-# 自检：物理加载 + 单轴终端速度是否落在解析解 ±15% 内
-python3 src/water/rov_handling_eval/test/test_handling.py
+# 单元测试（不需要 ROS，也不需要 MuJoCo）
+python3 -m unittest discover -s src/water/rov_handling_eval/test -p "test_*.py" -v
+
+# 自由漂移自检（需要 pip 装 mujoco）：实测速度 vs 解析终端速度
+python3 src/water/rov_handling_eval/main.py --check
 ```
+
+自检实际输出（Windows 11 / Python 3.12 / MuJoCo 4.0.0）：
+
+```
+=== 自由漂移自检（无速度环）===
+净浮力        : +2.70 N (about +0.27 kg)
+解析终端速度  : +0.206 m/s
+实测平均速度  : +0.166 m/s (3.0 s, 位移 +0.499 m)
+相对误差      : 19.4% (判据 <= 25%: 通过)
+```
+
+> 自检必须关掉速度环（`use_velocity_control=False`）：带速度环时它会主动把上浮刹住，
+> 测到的只是"速度环把漂移压到多小"，而不是终端速度。这一条是本模块修过的真实 bug。
 
 ### 5.4 三种运行模式
 
@@ -415,6 +434,7 @@ tools/calc_estimates.py              # 第 7 节数值的生成脚本
 
 > **本模块的验证边界**（写在最前面，避免误解）：
 > `dynamics.py` / `current_model.py` 有 24 项单元测试，可在**没有 ROS、没有 MuJoCo** 的机器上跑；
-> MuJoCo 内核与三个 ROS 节点需要在你本机 `colcon build` 后实跑，
-> 第 6 节的表格就是留给实测填的。第一次跑请先执行 `./main.sh --check`——
-> 它会把"实测漂移速度"和"解析解"直接对比，坐标系或浮力符号搞反会立刻报错。
+> `main.py --check` 已实测通过（Windows 11 + Python 3.12 + MuJoCo 4.0.0，19.4% ≤ 25%）；
+> MuJoCo 内核与三个 ROS 节点需要在你本机 `colcon build` 后实跑，第 6 节的表格就是留给实测填的。
+> 第一次跑请先执行 `./main.sh --check`——它会把"实测漂移速度"和"解析解"直接对比，
+> 坐标系或浮力符号搞反会立刻报错。

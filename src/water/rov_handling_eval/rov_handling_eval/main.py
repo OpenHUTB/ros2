@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """单进程终端模式（模式 A）：不依赖 ROS，能直接在虚拟机/无显卡环境跑。
 
 用途有三个：
@@ -46,14 +46,37 @@ def build_env(params: VehicleParams, start_depth: float):
     return mujoco, model, data
 
 
-def step(mujoco, model, data, body_id, params, cmd, current, dt, depth_hold, R_out):
+def _say(text=""):
+    """在 GBK 等窄编码控制台上安全打印。
+
+    Windows 默认控制台是 GBK，遇到 `²`、`η` 这类字符会抛 UnicodeEncodeError。
+    这里捕获后用 replace 降级，保证自检不会因为一个单位符号而崩掉。
+    """
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        enc = getattr(sys.stdout, "encoding", None) or "ascii"
+        print(text.encode(enc, "replace").decode(enc))
+
+
+def step(mujoco, model, data, body_id, params, cmd, current, dt, depth_hold, R_out,
+         use_velocity_control=True):
+    """推进一个物理步。
+
+    ``use_velocity_control=False`` 是**自由漂移**模式：不加任何控制力/力矩，
+    只留阻力与浮力。自检必须走这条路径——否则速度环会主动把"上浮"刹住，
+    测到的就不是终端速度，而是"速度环把漂移压到多小"。
+    """
     q = data.qpos[3:7]
     R = quat_to_matrix(q[0], q[1], q[2], q[3])
     R_out[0] = R
     v_body = R.T @ np.asarray(data.qvel[0:3], dtype=float)
     w_body = np.asarray(data.qvel[3:6], dtype=float)
     v_rel = v_body - R.T @ current
-    f_body, tau_body = velocity_control(cmd, v_body, w_body, params)
+    if use_velocity_control:
+        f_body, tau_body = velocity_control(cmd, v_body, w_body, params)
+    else:
+        f_body, tau_body = np.zeros(3), np.zeros(3)
     f_body = f_body + drag_force(v_rel, params.k())
     tau_body = tau_body + drag_torque(w_body, params.drag_angular)
     f_world = R @ f_body
@@ -66,7 +89,10 @@ def step(mujoco, model, data, body_id, params, cmd, current, dt, depth_hold, R_o
 
 
 def run_check(params: VehicleParams, start_depth: float, seconds: float = 3.0, dt: float = 0.002):
-    """自由漂移自检：把实测漂移速度与解析解对比，顺带检查符号。"""
+    """自由漂移自检：把实测漂移速度与解析解对比，顺带检查符号。
+
+    注意走的是 ``use_velocity_control=False``：只保留阻力与浮力，不接管速度。
+    """
     mujoco, model, data = build_env(params, start_depth)
     body = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "rov")
     R = [np.eye(3)]
@@ -74,29 +100,30 @@ def run_check(params: VehicleParams, start_depth: float, seconds: float = 3.0, d
     cur = np.zeros(3)
     n = int(seconds / dt)
     for _ in range(n):
-        step(mujoco, model, data, body, params, zero, cur, dt, False, R)
+        step(mujoco, model, data, body, params, zero, cur, dt, False, R,
+             use_velocity_control=False)
 
     z0, z1 = -start_depth, float(data.qpos[2])
     measured = (z1 - z0) / (n * dt)             # 正 = 上浮
     predicted = math.copysign(params.terminal_speed(2), params.net_buoyancy())
 
-    print("=== 自由漂移自检 ===")
-    print("净浮力        : %+.2f N（≈ %+.2f kg）" % (params.net_buoyancy(),
-                                                    params.net_buoyancy() / 9.81))
-    print("解析终端速度  : %+.3f m/s" % predicted)
-    print("实测平均速度  : %+.3f m/s（%.1f s 内位移 %+.3f m）"
-          % (measured, seconds, z1 - z0))
+    _say("=== 自由漂移自检（无速度环）===")
+    _say("净浮力        : %+.2f N (about %+.2f kg)" % (params.net_buoyancy(),
+                                                       params.net_buoyancy() / 9.81))
+    _say("解析终端速度  : %+.3f m/s" % predicted)
+    _say("实测平均速度  : %+.3f m/s (%.1f s, 位移 %+.3f m)"
+         % (measured, seconds, z1 - z0))
     ok = True
     if abs(predicted) > 0.02:
         if predicted * measured <= 0:
-            print("❌ 方向相反：浮力/重力的符号或 z 轴方向错了")
+            _say("[FAIL] 方向相反：浮力/重力的符号或 z 轴方向错了")
             ok = False
         else:
             err = abs(measured - predicted) / abs(predicted)
-            print("相对误差      : %.1f%%（判据 ≤ 25%%：%s）"
-                  % (err * 100, "通过" if err <= 0.25 else "不通过"))
+            _say("相对误差      : %.1f%% (判据 <= 25%%: %s)"
+                 % (err * 100, "通过" if err <= 0.25 else "不通过"))
             ok = err <= 0.25
-    print("整流垂向阻力  : %.2f N·s²/m²" % params.k()[2])
+    _say("整流垂向阻力  : %.2f N s^2/m^2" % params.k()[2])
     return ok
 
 
@@ -171,10 +198,16 @@ def run_interactive(params: VehicleParams, start_depth: float, gui: bool,
                 if now - last_hud > 1.0 / hud_hz:
                     last_hud = now
                     eta = current_authority(params, float(np.linalg.norm(cur[:2])))
-                    sys.stdout.write(
-                        "\r深度 %5.2f m | v(%.2f,%.2f,%.2f) | 倍率 %.1f %s | η(x,y,z)=%.2f,%.2f,%.2f   "
-                        % (-float(data.qpos[2]), v_body[0], v_body[1], v_body[2],
-                           scale, "定深" if hold else "   ", eta[0], eta[1], eta[2]))
+                    line = ("\r深度 %5.2f m | v(%.2f,%.2f,%.2f) | 倍率 %.1f %s | "
+                            "eta(x,y,z)=%.2f,%.2f,%.2f   "
+                            % (-float(data.qpos[2]), v_body[0], v_body[1], v_body[2],
+                               scale, "定深" if hold else "   ",
+                               eta[0], eta[1], eta[2]))
+                    try:
+                        sys.stdout.write(line)
+                    except UnicodeEncodeError:      # GBK 控制台：去掉无法编码的字符
+                        enc = getattr(sys.stdout, "encoding", None) or "ascii"
+                        sys.stdout.write(line.encode(enc, "replace").decode(enc))
                     sys.stdout.flush()
 
                 # 实时节流（500 Hz 物理，按真实时间推进）
