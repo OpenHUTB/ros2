@@ -1,7 +1,14 @@
 """纯 Python 单测，不依赖 ROS。"""
 import math
+import os
+import sys
 import unittest
-from ugv_slam_nav.nav_logic import clamp, relay, sector_speed, Limits
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PKG = os.path.normpath(os.path.join(HERE, ".."))
+sys.path.insert(0, PKG)
+
+from ugv_slam_nav.nav_logic import clamp, relay, sector_speed, Limits  # noqa: E402
 
 
 class TestClamp(unittest.TestCase):
