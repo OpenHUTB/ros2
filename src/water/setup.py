@@ -26,7 +26,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Xavier-101666',
-    maintainer_email='234207381+Xavier-101666@users.noreply.github.com',
+    maintainer_email='2754586324@qq.com',
     description='ROS2 package for underwater ROV sonar image classification (CNN)',
     license='Apache-2.0',
     tests_require=['pytest'],
