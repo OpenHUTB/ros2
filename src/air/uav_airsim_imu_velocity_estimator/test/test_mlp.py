@@ -78,17 +78,17 @@ def test_prediction_correlates_with_truth():
     """在真实数据集上跑一遍，预测应跟真值同向；R² 0.45 时相关系数约 0.67。"""
     net = _build_net()
     d = np.load(DATA)
-    X = np.asarray(d["X"], dtype=np.float32)
+    # dataset.py 存盘时写的是 X=(X - x_mean)/x_std，X 已经是标准化后的，
+    # 这里不能再减一次均值，否则等于二次标准化，相关系数会被压到 0.5 以下。
+    xn = np.asarray(d["X"], dtype=np.float32)
     Y = np.asarray(d["Y"], dtype=np.float32).ravel()
-    mean = np.asarray(d["x_mean"], dtype=np.float32)
-    std = np.asarray(d["x_std"], dtype=np.float32)
 
-    xn = (X - mean) / std
     preds = np.array([float(np.asarray(net.forward(xn[i:i + 1])).ravel()[0])
                       for i in range(xn.shape[0])])
     corr = float(np.corrcoef(preds, Y)[0, 1])
-    assert corr > 0.3, "预测与真值相关系数只有 %.3f，疑似权重未加载或输入未标准化" % corr
-    print("  (数据集 %d 条，预测-真值相关系数 %.3f)" % (X.shape[0], corr))
+    assert corr > 0.3, "预测与真值相关系数只有 %.3f，疑似权重未加载" % corr
+    print("  (数据集 %d 条，预测-真值相关系数 %.3f，对应 R² %.3f)"
+          % (xn.shape[0], corr, corr ** 2))
 
 
 def main():
