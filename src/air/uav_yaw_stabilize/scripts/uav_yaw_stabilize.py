@@ -79,13 +79,39 @@ def main():
 
     times = np.array(times); yaws = np.array(yaws); torques = np.array(torques)
 
-    steady_err = np.degrees(np.mean(np.abs(np.pi/4 - yaws[400:650])))
-    overshoot = np.degrees(np.max(yaws[:700]) - np.pi/4)
-    gust_rec = np.degrees(np.max(np.abs(np.pi/4 - yaws[500:700])))
+    # --- Step response metrics (before gust, t < 5s) ---
+    # Gust torque acts at t=5..6s, so step windows must end before t=5s.
+    # Steady-state error over 4.0-4.9s.
+    step_mask = (times >= 4.0) & (times < 4.9)
+    steady_err = np.degrees(np.mean(np.abs(np.pi / 4 - yaws[step_mask])))
+    # Overshoot over 0-5s (before gust onset).
+    pre_gust = yaws[times < 5.0]
+    overshoot = np.degrees(np.max(pre_gust) - np.pi / 4)
+
+    # --- Gust metrics (5-6s) ---
+    gust_mask = (times >= 5.0) & (times < 6.0)
+    gust_peak = np.degrees(np.max(np.abs(np.pi / 4 - yaws[gust_mask])))
+
+    # --- Recovery after gust (t > 6s) ---
+    # Residual 0.9s after gust ends (t=6.9s, before the second step at t=7s).
+    res_mask = (times >= 6.9) & (times < 7.0)
+    residual = np.degrees(np.max(np.abs(np.pi / 4 - yaws[res_mask])))
+    # Recovery time: first time after t=6s the error returns within 1% band
+    # of the 45 deg heading.
+    band = np.radians(0.01 * 45.0)
+    post_gust = times >= 6.0
+    rec_idx = np.where(post_gust & (np.abs(np.pi / 4 - yaws) <= band))[0]
+    recovery_time = (times[rec_idx[0]] - 6.0) if len(rec_idx) else None
+
     print(f"Final yaw: {np.degrees(yaws[-1]):.1f} deg (target -30)")
-    print(f"Steady error at 45deg: {steady_err:.2f} deg")
-    print(f"Max overshoot to 45deg: {overshoot:.2f} deg")
-    print(f"Recovery after gust: {gust_rec:.2f} deg")
+    print(f"Step steady error (4.0-4.9s): {steady_err:.3f} deg")
+    print(f"Step overshoot (0-5s): {overshoot:.3f} deg")
+    print(f"Gust peak (5-6s): {gust_peak:.3f} deg")
+    print(f"Residual 0.9s after gust: {residual:.3f} deg")
+    if recovery_time is not None:
+        print(f"Recovery time to 1% band: {recovery_time:.2f} s")
+    else:
+        print("Recovery time to 1% band: not reached before next step")
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
     tgt = np.array([yaw_profile(t) for t in times])
