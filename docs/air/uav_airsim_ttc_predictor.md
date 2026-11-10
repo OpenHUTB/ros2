@@ -8,7 +8,7 @@
 
 ## 2. 演示
 
-![demo](../../img/uav/ttc/demo.gif)
+![demo](../img/uav/ttc/demo.gif)
 
 动图由 `simGetImages(ImageType.Scene)` 逐帧截取真实 Blocks 画面合成，102 帧，3.0 MB。无人机以 1.4 m/s 逼近方块墙，网络预测 TTC 从 5.5 s 降到 1.6 s 后触发安全停。
 
