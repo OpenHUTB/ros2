@@ -136,6 +136,7 @@ ROS每章节运行代码:
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [无人机电机绕组热保护](./air/uav_motor_temp_guard.md) —— 用一阶 RC 热模型和电流估算绕组温度，过温建议降额或降落
 
 
 
