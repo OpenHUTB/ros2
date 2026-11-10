@@ -128,6 +128,16 @@ JSON 汇总场景数量、碰撞场景数、最大碰撞步数和最小间距，
 
 场景扫描新增 4 项自动化测试，覆盖参数组合、空输入校验、CSV 字段与逐场景数据，以及命令行 JSON/CSV 输出。
 
+可直接对扫描 CSV 做参数分组分析，无需重跑仿真：
+
+```
+python scenario_analysis.py sample_data/scenario_sweep.csv --output sample_data/scenario_sensitivity.json
+```
+
+分析结果按起点、障碍位置、初速度和高度分别汇总样本数、平均/最差间距和样本碰撞占比，并按分组平均间距跨度排序。每次只按一个参数分组，其他参数合并统计；该结果用于描述当前扫描网格，不代表因果敏感度或实际碰撞概率。样例分析见 `sample_data/scenario_sensitivity.json`。
+
+分组分析新增 4 项自动化测试，覆盖统计口径、输入校验和命令行 JSON 输出。
+
 ```mermaid
 flowchart LR
     A[起点位置、障碍位置、初速度、高度] --> B[组合场景参数]
@@ -135,6 +145,7 @@ flowchart LR
     C --> D[记录间距、速度、碰撞指标]
     D --> E[生成 JSON 汇总]
     D --> F[生成逐场景 CSV]
+    F --> G[分组统计与鲁棒性排序]
 ```
 
 | 文件 | 职责 |

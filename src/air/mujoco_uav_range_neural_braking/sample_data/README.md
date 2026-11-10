@@ -15,3 +15,9 @@ python dataset.py --seed 2026 --episodes 30 --output datasets
 ```
 python scenario_sweep.py --controller range --start-x=-8,-7 --wall-x 0 --speed 0,1.5 --height 1.2 --output results/range_sweep.json --csv-output sample_data/scenario_sweep.csv
 ```
+
+`scenario_sensitivity.json` 从扫描 CSV 后处理生成，按起点、障碍位置、初速度和高度分别汇总平均/最差间距、样本碰撞占比，并按分组平均间距跨度排序。每个参数单独分组，其余参数合并；碰撞占比只描述当前扫描样本，不是实际碰撞概率。可用以下命令重建：
+
+```
+python scenario_analysis.py sample_data/scenario_sweep.csv --output sample_data/scenario_sensitivity.json
+```
