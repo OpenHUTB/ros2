@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>5. 机器人感知 - 模拟器的 ROS 文档</title>
+<title>章节首页 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "5. \u673a\u5668\u4eba\u611f\u77e5";
+        var mkdocs_page_name = "\u7ae0\u8282\u9996\u9875";
         var mkdocs_page_input_path = "chapter/chap5.md";
         var mkdocs_page_url = null;
       </script>
@@ -75,57 +75,27 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">5. 机器人感知</a>
+<li class="toctree-l1 current"><a class="reference internal current">5. 机器人感知</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">目录结构</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">章节首页</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#_1">目录结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#face_follower">第一部分：视觉追踪 face_follower</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#_2">节点逻辑</a>
+<li class="toctree-l3"><a class="reference internal" href="#face_follower">第一部分：视觉追踪 face_follower</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_3">话题接口</a>
+<li class="toctree-l3"><a class="reference internal" href="#voice_control">第二部分：语音控制 voice_control</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#launch">关键参数（launch 可配）</a>
+<li class="toctree-l3"><a class="reference internal" href="#_7">环境准备与工作空间配置</a>
 </li>
-</ul>
+<li class="toctree-l3"><a class="reference internal" href="#_8">运行与测试指南（闭环复现）</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#voice_control">第二部分：语音控制 voice_control</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#_4">节点逻辑</a>
+<li class="toctree-l3"><a class="reference internal" href="#_11">常见问题</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_5">命令映射</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_6">话题接口</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#tts-tts_backend">TTS 兼容策略（tts_backend 参数）</a>
+<li class="toctree-l3"><a class="reference internal" href="#ros-2">相关模块：基于 ROS 2 与神经网络的感知</a>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">环境准备与工作空间配置</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#1">1. 克隆仓库并切换分支</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#2-catkin">2. 创建 catkin 工作空间并软链接功能包</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#3">3. 编译并加载环境</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#4-launch">4. 验证包与 launch 文件已就绪</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_8">运行与测试指南（闭环复现）</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#_9">方案一：仿真底座与视觉跟踪（人脸闭环）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#roslaunch-stdin">方案二：语音控制交互（解决 roslaunch 吞 stdin 问题）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_10">（可选）一键拉起</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_11">常见问题</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#ros-2">相关模块：基于 ROS 2 与神经网络的感知</a>
+<li class="toctree-l2"><a class="reference internal" href="../../privacy_mask/">行人隐私脱敏视觉检测节点</a>
 </li>
 </ul>
 </li>
@@ -708,7 +678,8 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">5. 机器人感知</li>
+<li class="breadcrumb-item">5. 机器人感知</li>
+<li class="breadcrumb-item active">章节首页</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap5.md"> 编辑页面</a>
 </li>
@@ -1203,7 +1174,15 @@ rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </
 <li>传感器：360 束 2D GPU LiDAR（<code>sensor_msgs/LaserScan</code>）</li>
 <li>神经网络：三层 PyTorch MLP（360→128→128→3）</li>
 <li>任务：把每条扫描分类为 <code>near</code> / <code>far</code> / <code>free</code> 三类</li>
-<li>源代码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn"><code>src/chap5/lidar_obstacle_nn/</code></a></li>
+<li>
+<p>源代码：<a href="https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn"><code>src/chap5/lidar_obstacle_nn/</code></a></p>
+</li>
+<li>
+<p><a href="../../privacy_mask/">行人隐私脱敏视觉检测节点</a></p>
+</li>
+<li>功能包：<code>src/chap5/privacy_mask/</code></li>
+<li>模型：Ultralytics YOLOv8n 目标检测（COCO person 类，权重按文档第 5 节准备，不入版本库）</li>
+<li>任务：检测静态图片中的行人并对包围盒做高斯模糊，发布 <code>/image_raw/compressed</code> 与 <code>/image_masked/compressed</code></li>
 </ul>
 <p>后续规划方向（占位）：相机目标检测（YOLOv8 + Gazebo 仿真相机）、深度相机避障 NN、
 激光雷达 + 相机融合感知、感知→运动控制闭环。</p></div>
@@ -1211,7 +1190,7 @@ rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../urdf_car_modeling/" title="URDF 四轮小车建模与 RViz 显示"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap6/" title="6. 机器人 SLAM 与自主导航">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="../../privacy_mask/" title="行人隐私脱敏视觉检测节点">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr>
 <div role="contentinfo">
@@ -1229,7 +1208,7 @@ rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../urdf_car_modeling/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../chap6/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../../privacy_mask/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
