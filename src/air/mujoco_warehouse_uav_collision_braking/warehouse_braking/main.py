@@ -40,6 +40,7 @@ def main(argv=None):
     parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--train", action="store_true", help="训练MLP / Train MLP")
+    parser.add_argument("--epochs", type=int, default=80, help="训练轮数 / Training epochs")
     parser.add_argument("--evaluate", action="store_true", help="评估模型 / Evaluate model")
     parser.add_argument("--dataset", type=Path, default=Path("dataset"))
     parser.add_argument("--model", type=Path, default=Path("model"))
@@ -52,7 +53,7 @@ def main(argv=None):
         print(json.dumps(benchmark(args.model / "risk_speed_mlp.npz", args.output / "benchmark.json"), indent=2))
     elif args.train:
         from .train_model import train
-        print(json.dumps(train(args.dataset, args.model, epochs=80, seed=args.seed), indent=2))
+        print(json.dumps(train(args.dataset, args.model, epochs=args.epochs, seed=args.seed), indent=2))
     elif args.evaluate:
         from .evaluate_model import evaluate
         print(json.dumps(evaluate(args.dataset, args.model), indent=2))

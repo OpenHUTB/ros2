@@ -56,6 +56,7 @@ class RiskSpeedMLP:
             error[np.arange(len(risk)), risk] -= 1.0
             error /= len(x)
             speed_error = (speed - target_speed) * (speed * (3.0 - speed) / 3.0)
+            speed_error /= len(x)
             gradient = np.column_stack([error, 0.1 * speed_error])
             gradients_w = []
             gradients_b = []
