@@ -34,6 +34,12 @@ mean_filter_pkg/
 └── setup.cfg
 ```
 
+## 运行环境
+
+- WSL2 Ubuntu 22.04
+- ROS 2 Humble
+- Python 3.10（Humble 官方二进制自带）
+
 ## 编译与运行
 
 在工作空间根目录执行：
@@ -71,7 +77,14 @@ ros2 topic echo /sensor/filtered
 
 ## 测试
 
-在已 source 工作空间的环境中执行：
+依赖 `setup.cfg` 中的 `[tool:pytest]` 配置，`colcon test` 会自动走 pytest：
+
+```bash
+colcon test --packages-select mean_filter_pkg
+colcon test-result --verbose --test-result-base build/mean_filter_pkg
+```
+
+也可以直接在包目录里运行 pytest：
 
 ```bash
 cd src/chap2/mean_filter_pkg

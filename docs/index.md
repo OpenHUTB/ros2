@@ -69,7 +69,6 @@ ROS每章节运行代码:
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
-ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_py](./chap2/ros2_pubsub_py.md)
 ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>

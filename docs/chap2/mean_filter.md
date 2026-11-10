@@ -47,10 +47,10 @@ mean_filter_pkg/
 
 ## 依赖环境
 
-- Ubuntu 22.04
-- ROS2 Humble
-- Python 3
-- `rclpy`、`std_msgs`、`launch`、`launch_ros`（ROS2 自带）
+- WSL2 Ubuntu 22.04
+- ROS 2 Humble
+- Python 3.10（系统默认，Humble 官方二进制）
+- `rclpy`、`std_msgs`、`launch`、`launch_ros`（ROS 2 自带）
 
 ## 编译与运行步骤
 
@@ -95,16 +95,16 @@ ros2 topic pub -r 2 --times 5 /sensor/raw std_msgs/msg/Float64 "{data: 20.0}"
 ros2 topic echo /sensor/filtered
 ```
 
-当窗口为 5 时，输出依次为：
+当窗口为 5 时，输出依次为（`ros2 topic echo /sensor/filtered` 的实际打印格式）：
 
 ```text
-10.0000
-10.0000
-13.3333
-15.0000
-16.0000
-18.0000
-20.0000
+data: 10.0000
+data: 10.0000
+data: 13.3333
+data: 15.0000
+data: 16.0000
+data: 18.0000
+data: 20.0000
 ```
 
 即窗口未填满前按已有样本平均，窗口填满后表现为线性爬升，
