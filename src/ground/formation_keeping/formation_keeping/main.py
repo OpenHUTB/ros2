@@ -41,7 +41,7 @@ def draw(screen, team):
     for p, c in zip(team.followers, colors):
         pygame.draw.circle(screen, c, (int(p[0]), int(p[1])), 7)
 
-    font = pygame.font.SysFont("simhei", 19)
+    font = pygame.font.SysFont(["simhei", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "sans-serif"], 19)
     line1 = "多车编队保持  步数 %d  队形误差 %.2f px" % (team.step_count, team.error())
     line2 = "领航者圆周半径 %.0f px   跟随者增益 %.2f   收敛阈值 %.0f px" % (
         config.RADIUS, config.GAIN, config.TOL)
