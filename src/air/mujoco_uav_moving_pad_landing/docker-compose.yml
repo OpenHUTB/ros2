@@ -1,0 +1,16 @@
+services:
+  landing:
+    build: .
+    environment:
+      MUJOCO_GL: egl
+    volumes:
+      - ./output:/workspace/output
+    command: ["python3", "/workspace/mujoco_uav_moving_pad_landing/main.py", "demo", "--output", "/workspace/output", "--steps", "180"]
+  ros_adapter:
+    build: .
+    environment:
+      MUJOCO_GL: egl
+      AMENT_PREFIX_PATH: /workspace/ros_ws/install/mujoco_uav_moving_pad_landing:/opt/ros/humble
+    volumes:
+      - ./output:/workspace/output:ro
+    command: ["bash", "-lc", ". /opt/ros/humble/setup.bash && . /workspace/ros_ws/install/setup.bash && ros2 launch mujoco_uav_moving_pad_landing landing.launch.py"]
