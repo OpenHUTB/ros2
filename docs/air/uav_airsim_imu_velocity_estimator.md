@@ -190,8 +190,11 @@ ros2 launch uav_airsim_imu_velocity_estimator main.launch.py
 
 ```bash
 python3 test/test_mlp.py
-# 5/5 通过（其中一条在 720 条真实样本上复算，预测-真值相关系数约 0.485）
+# 5/5 通过（其中一条在 720 条真实样本上复算，预测-真值相关系数 0.702，
+#          对应 R² 0.493；比验证集 R² 0.453 略高是因为含训练集样本）
 ```
+
+注意 `imu_vel_data.npz` 里的 `X` **存盘时已经标准化过**（`X=(X - x_mean)/x_std`），复算时直接用它，不要再按 `x_mean/x_std` 处理一遍，否则二次标准化会把相关系数压到 0.5 以下。
 
 文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页，可直接从站点导航进入。
 
