@@ -113,6 +113,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+* [ROS2 TurtleBot3 激光雷达避障实验](./ros2_turtlebot3_obstacle.md) —— 订阅 /scan 雷达数据，前方距离小于 0.5m 时转向避障
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
