@@ -32,7 +32,9 @@ class PredictorNode(Node):
     def _cb(self, msg):
         d = np.frombuffer(msg.data, dtype=np.float32).reshape(msg.height, msg.width)
         p, r, y = self.pred.predict_from_depth(d)
-        target = self.ctrl.target_for(p, r)
+        # 三个角都要交给控制器：早期版本这里写的是 target_for(p, r)，yaw 用默认 0，
+        # 等于把颈部跟随整条支路丢掉，节点输出与 standalone 的 controller 不一致。
+        target = self.ctrl.target_for(p, r, y)
         out = Float64MultiArray()
         out.data = target.tolist()
         self.pub.publish(out)
