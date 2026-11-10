@@ -10,7 +10,7 @@ from .model import RiskSpeedMLP
 from .simulation import DT, WarehouseSimulation, expert_target
 
 
-def run_learned(model, scenario, speed=1.2, duration=8.0):
+def run_controller(model, scenario, controller, speed=1.2, duration=8.0):
     sim = WarehouseSimulation(scenario, speed=speed)
     previous = None
     predicted_risks = []
@@ -23,7 +23,13 @@ def run_learned(model, scenario, speed=1.2, duration=8.0):
         reference_target, reference_risk = expert_target(ranges, sim.data.qvel[0], speed)
         predicted_risks.append(int(probability[0].argmax()))
         reference_risks.append(reference_risk)
-        sim.step(min(float(learned_target[0]), reference_target))
+        if controller == "reference":
+            command = reference_target
+        elif controller == "learned":
+            command = float(learned_target[0])
+        else:
+            command = min(float(learned_target[0]), reference_target)
+        sim.step(command)
         previous = ranges
     return {"collision": bool(sim.collision), "final_speed_mps": float(sim.data.qvel[0]),
             "risk_agreement": float(np.mean(np.asarray(predicted_risks) == reference_risks)),
@@ -32,7 +38,13 @@ def run_learned(model, scenario, speed=1.2, duration=8.0):
 
 def benchmark(model_path: Path, output: Path):
     model = RiskSpeedMLP.load(model_path)
-    result = {scenario: run_learned(model, scenario) for scenario in ("static", "crossing", "narrow")}
+    result = {
+        controller: {
+            scenario: run_controller(model, scenario, controller)
+            for scenario in ("static", "crossing", "narrow")
+        }
+        for controller in ("reference", "learned", "bounded_learned")
+    }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
