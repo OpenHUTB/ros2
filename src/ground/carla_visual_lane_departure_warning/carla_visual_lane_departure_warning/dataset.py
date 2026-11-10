@@ -13,8 +13,9 @@ from . import carla_common as cc
 from . import geometry as geo
 from .model import INPUT_H, INPUT_W
 
-# 真值取车头前方 10 m 处的左右边界
-TARGET_DISTANCE = 10.0
+# 真值取车头前方 5 m 处的左右边界。10 m 时弯道上的横向位移会整段算进标签，
+# 实测左右边界均值能差出 0.6 m，5 m 把这个曲率项缩到原来的四分之一
+TARGET_DISTANCE = 5.0
 
 # 裁剪比例：上边界切掉天空，下边界切掉引擎盖（实测引擎盖前沿在第 555 行附近）
 CROP_TOP = 0.55
