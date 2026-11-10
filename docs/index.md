@@ -96,6 +96,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
 * [肌肉驱动的关节控制与 Hill 肌肉模型](./musculoskeletal/muscle_joint_control.md)
+* [肌肉疲劳建模：持续收缩下的肌力衰减与恢复](./musculoskeletal/muscle_fatigue.md) —— 在 Hill 模型上叠加疲劳因子，对比持续与间歇收缩的力衰减
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
