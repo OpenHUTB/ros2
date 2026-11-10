@@ -187,7 +187,7 @@ def place(client, vehicle, pos, yaw, altitude, tries=6):
 
 
 def run_episode(client, policy, vehicle, start, goal, altitude, timeout,
-                use_safety, trace_fh=None):
+                use_safety, trace_fh=None, inject_step=-1):
     yaw = math.atan2(goal[1] - start[1], goal[0] - start[0])
     placed = place(client, vehicle, start, yaw, altitude)
     osc = safety_shield.OscillationDetector()
@@ -203,6 +203,8 @@ def run_episode(client, policy, vehicle, start, goal, altitude, timeout,
     final_error = float('inf')
     steps = 0
     success = False
+    fault_step = -1
+    fault_handled = False
     t0 = time.time()
 
     while time.time() - t0 < timeout:
@@ -225,6 +227,11 @@ def run_episode(client, policy, vehicle, start, goal, altitude, timeout,
         feat = build_feature_vector(points, cur, goal_arr, yaw_now)
         raw = policy.act(feat)
 
+        # 故障注入：在第 N 步把网络输出换成 NaN，检验安全层能否接管
+        if inject_step >= 0 and steps == inject_step:
+            raw = np.full(3, np.nan, dtype=np.float32)
+            fault_step = steps
+
         expert = expert_action(feat)
         dev_history.append(float(np.linalg.norm(raw - expert)))
 
@@ -236,6 +243,8 @@ def run_episode(client, policy, vehicle, start, goal, altitude, timeout,
             if result.active:
                 shield_steps += 1
                 reasons[result.reason] = reasons.get(result.reason, 0) + 1
+            if fault_step >= 0 and result.reason == 'non_finite':
+                fault_handled = True
             vx, vy, yaw_rate = result.as_tuple()
             reason = result.reason
 
@@ -289,11 +298,18 @@ def run_episode(client, policy, vehicle, start, goal, altitude, timeout,
         'collision_steps': collisions,
         'shield_steps': shield_steps,
         'shield_reasons': ';'.join('%s:%d' % kv for kv in sorted(reasons.items())),
-        'expert_dev_mean': round(float(np.mean(dev_history)), 3)
-        if dev_history else float('nan'),
-        'expert_dev_max': round(float(np.max(dev_history)), 3)
-        if dev_history else float('nan'),
+        'fault_step': fault_step,
+        'fault_handled': 1 if fault_handled else 0,
+        'expert_dev_mean': round(float(np.mean(_finite(dev_history))), 3)
+        if _finite(dev_history) else float('nan'),
+        'expert_dev_max': round(float(np.max(_finite(dev_history))), 3)
+        if _finite(dev_history) else float('nan'),
     }
+
+
+def _finite(values):
+    """去掉故障注入产生的 NaN，避免污染统计。"""
+    return [v for v in values if np.isfinite(v)]
 
 
 def summarize(rows, use_safety):
@@ -328,10 +344,14 @@ def main():
     parser.add_argument('--vehicle', default='Drone_1')
     parser.add_argument('--model', default='controller.pt')
     parser.add_argument('--pairs', type=int, default=len(DEFAULT_PAIRS))
+    # 自定义起终点：每行 sx,sy,gx,gy（NED，米），用于障碍/故障注入场景
+    parser.add_argument('--pairs-file', default=None)
     parser.add_argument('--start-index', type=int, default=0)
     parser.add_argument('--timeout', type=float, default=60.0)
     parser.add_argument('--altitude', type=float, default=4.0)
     parser.add_argument('--no-shield', action='store_true')
+    # 在第 N 个控制步注入 NaN，检验安全层接管（-1 表示不注入）
+    parser.add_argument('--inject-fault', type=int, default=-1)
     parser.add_argument('--out', default=os.path.join('eval', 'multi_target.csv'))
     parser.add_argument('--summary', default=None)
     parser.add_argument('--trace-dir', default=None)
@@ -342,7 +362,19 @@ def main():
 
     client = connect(args.ip, args.vehicle)
 
-    pairs = DEFAULT_PAIRS[:max(1, min(args.pairs, len(DEFAULT_PAIRS)))]
+    if args.pairs_file:
+        pairs = []
+        with open(args.pairs_file, 'r', encoding='utf-8') as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                sx, sy, gx, gy = [float(v) for v in line.split(',')[:4]]
+                pairs.append(((sx, sy), (gx, gy)))
+        if not pairs:
+            raise SystemExit('--pairs-file 里没有有效航线')
+    else:
+        pairs = DEFAULT_PAIRS[:max(1, min(args.pairs, len(DEFAULT_PAIRS)))]
     rows = []
 
     for index in range(args.start_index, len(pairs)):
@@ -362,14 +394,15 @@ def main():
 
         try:
             result = run_episode(client, policy, args.vehicle, start, goal,
-                                 args.altitude, timeout, use_safety, trace_fh)
+                                 args.altitude, timeout, use_safety, trace_fh,
+                                 inject_step=args.inject_fault)
         except Exception as exc:
             # 仿真器偶发超时会让 msgpack 流错位，重建连接后继续下一组
             print('    运行异常，重建连接后继续: %s' % exc)
             result = {'placed': False, 'success': False, 'final_error': float('nan'),
                       'min_error': float('nan'), 'duration': 0.0, 'steps': 0,
                       'path_length': 0.0, 'collided': 1, 'collision_steps': 0,
-                      'shield_steps': 0,
+                      'shield_steps': 0, 'fault_step': -1, 'fault_handled': 0,
                       'shield_reasons': 'aborted', 'expert_dev_mean': float('nan'),
                       'expert_dev_max': float('nan')}
             try:
@@ -393,8 +426,8 @@ def main():
     fields = ['index', 'start_x', 'start_y', 'goal_x', 'goal_y', 'distance',
               'placed', 'success', 'final_error', 'min_error', 'duration',
               'steps', 'path_length', 'collided', 'collision_steps',
-              'shield_steps', 'shield_reasons', 'expert_dev_mean',
-              'expert_dev_max']
+              'shield_steps', 'shield_reasons', 'fault_step', 'fault_handled',
+              'expert_dev_mean', 'expert_dev_max']
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, 'w', newline='', encoding='utf-8') as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
