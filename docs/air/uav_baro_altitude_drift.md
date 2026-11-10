@@ -63,3 +63,7 @@ CALM → DRIFT (7.2s) → BARO_LOST (10.0s) → DRIFT (12.2s) → WATCH (12.9s) 
 使用大模型辅助完成代码、测试和文档初稿；作者已复核状态机与风险公式，对提交内容负责。
 
 作者：2535010018
+
+### 风险与状态曲线
+
+![气压计漂移监测曲线](../img/air/uav_baro_altitude_drift/runtime.png)

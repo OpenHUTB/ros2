@@ -1,0 +1,12 @@
+uav_compass_sim:
+  ros__parameters:
+    rate_hz: 10.0
+    duration_s: 0.0
+uav_compass_interference_guard:
+  ros__parameters:
+    suspect_risk: 0.35
+    biased_risk: 0.60
+    lost_risk: 0.82
+    switch_frames: 3
+    min_gps_speed_mps: 3.0
+    output_csv: /tmp/uav_compass_runtime.csv
