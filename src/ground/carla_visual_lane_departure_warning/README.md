@@ -57,11 +57,13 @@ python3.10 main.py --probe --host 192.168.148.1 --frames 40 --every 10
 ### 2. 采集数据集
 
 ```bash
-python3.10 main.py --collect --host 192.168.148.1 --frames 4000 --every 1 \
-    --data data/lane_dataset.npz
+python3.10 main.py --collect --host 192.168.148.1 --frames 4000 \
+    --lane-change 80 --max-offset 2.0 --data data/lane_dataset.npz
 ```
 
-自车挂在自动驾驶上跑，每帧存一张 32×128 的灰度图和左右边界真值，共三类数据：
+自车挂在自动驾驶上，由交通管理器周期性强制变道，让横向偏移扫过量程；只贴车道中心
+跑的话标签全是 0，网络只会学成「永远输出 0」。每帧存一张 32×128 的灰度图和左右边界
+真值，共三类数据：
 `images`、`targets`、`speeds`。采集时会把不可用的帧丢掉并打印原因：
 车道宽异常、自车不在地图给的车道里、边界上没画线、边界出了画面、偏移过大。
 
@@ -76,15 +78,16 @@ python3.10 main.py --train --data data/lane_dataset.npz \
 
 训练默认 120 轮，并自动做左右镜像扩增（样本翻倍），纯 NumPy 跑十几秒。
 训练完打印偏移误差，并把权重和 `models/metrics.json` 落盘。
-仓库里已经带了一份训练好的权重，验证集横向偏移平均误差 0.096 m。注意这个数和
-在线演示的口径不同：训练与验证是拿「前方 10 m 边界中点」比的，在线真值改成了
-自车位置到中心线的垂距，弯道上两者差 0.5 m 量级；网络目前仍回归 10 m 处的边界，
-弯道上的这部分偏差要重训才能消掉。
+仓库里已经带了一份训练好的权重，验证集横向偏移平均误差 0.122 m。训练目标是自车
+前方 5 m 处的左右边界，在线真值用的是自车位置到中心线的垂距，两者还差一个曲率项；
+实测变道演示的平均误差 0.317 m，其中车道内（偏移小于 0.3 m）为 0.19 m，压线时
+误差明显变大，原因与改进方向写在 `docs/ground/carla_visual_lane_departure_warning.md`
+的实验结果一节。
 
 ### 4. 在线演示
 
 ```bash
-python3.10 main.py --demo --host 192.168.148.1 --frames 300 \
+python3.10 main.py --demo --host 192.168.148.1 --frames 300 --lane-change 60 \
     --checkpoint models/lane_regressor.npz \
     --record out/frames --save-metrics out/demo_metrics.json
 ```
