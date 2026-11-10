@@ -1,0 +1,31 @@
+# 速度曲线规划（speed_profile_check）的默认参数。
+# 不改任何一个参数时，与之前写在代码里的默认行为完全一致。
+
+# 这一段开多远、想巡航多快、起步时已经有多少速度
+scene:
+  distance: 120.0            # 目标行驶距离（m）
+  cruise_speed_kmh: 40.0     # 巡航速度（km/h）
+  start_speed_kmh: 0.0       # 初速（km/h），停车起步就是 0
+
+# 车辆能力
+vehicle:
+  accel: 1.2                 # 加速度上限（m/s^2）
+  decel: 2.0                 # 减速度上限（m/s^2）
+
+# 判定用的约束
+check:
+  speed_limit_kmh: 50.0      # 该路段限速（km/h）
+  time_budget: 30.0          # 这一段允许的用时（s）
+  tolerance: 0.5             # 距离允许误差（m）
+
+# 仿真与频率
+sim:
+  dt: 0.05                   # 采样步长（s）
+
+rate:
+  publish_hz: 5.0            # 报告重发频率（Hz）
+
+# 话题
+topic:
+  profile: /speed/profile    # 速度曲线（std_msgs/String，字符图）
+  report: /speed/report      # 报告（std_msgs/String）
