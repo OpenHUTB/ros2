@@ -4,7 +4,7 @@
   <name>airsim_multirotor_waypoint_nav</name>
   <version>0.1.0</version>
   <description>多旋翼无人机航点飞行：AirSim RPC + 航点到达误差评估（OpenHUTB 空地一体模式）</description>
-  <maintainer email="cx3238842481@qq.com">chenxi</maintainer>
+  <maintainer email="user@todo.todo">user</maintainer>
   <license>MIT</license>
 
   <exec_depend>ros2launch</exec_depend>
