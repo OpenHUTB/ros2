@@ -196,6 +196,7 @@ nav:
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
+    - 刹车距离核算: './ground/braking_distance_check.md'
     - 换挡策略与闭环控制: './ground/gear_shift_policy.md'
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
