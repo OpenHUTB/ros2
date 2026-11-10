@@ -420,9 +420,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#4">4 雷达感知</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#5">5 话题与服务</a>
+<li class="toctree-l2"><a class="reference internal" href="#5-dqn">5 DQN 策略训练</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#6-pr">6 后续 PR</a>
+<li class="toctree-l2"><a class="reference internal" href="#6">6 话题与服务</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7-pr">7 后续 PR</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_2">大模型使用声明</a>
 </li>
@@ -639,8 +641,8 @@ DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。</p>
 <p>与监督学习路线不同，本模块的控制器由<strong>深度强化学习</strong>训练得到：智能体在仿真场景中
 自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
 专家轨迹。</p>
-<p>本页说明模块总体设计、键盘遥控（PR #892）与雷达感知（PR #893）；DQN 训练与部署、
-建图、端到端控制按依赖顺序在后续 PR 中补充。</p>
+<p>本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）与 DQN 策略训练
+（PR #918）；DQN 部署、建图、端到端控制按依赖顺序在后续 PR 中补充。</p>
 <h2 id="1">1 运行环境</h2>
 <table>
 <thead>
@@ -761,7 +763,33 @@ PR 即可在 RViz 中查看扫描；<code>map-&gt;odom</code> 要等 #922 的 gm
 <div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>main.launch<span class="w"> </span>mode:<span class="o">=</span>scan
 rosrun<span class="w"> </span>rviz<span class="w"> </span>rviz<span class="w">   </span><span class="c1"># Fixed Frame 选 odom，添加 LaserScan 订阅 /drone/lidar/scan</span>
 </code></pre></div>
-<h2 id="5">5 话题与服务</h2>
+<h2 id="5-dqn">5 DQN 策略训练</h2>
+<p>状态 <code>s</code> 为 32 维：24 个扇区距离、目标相对量（水平距离、方位角正余弦、高度差，
+共 4 维）、机体系速度 3 维、上一步动作 1 维。动作为 6 个离散速度指令
+（悬停、直行、左前、右前、原地左转、原地右转），由 <code>dqn_network.py</code> 统一定义。</p>
+<p>网络采用 Dueling 结构：两层 128 维全连接后分成状态价值 <code>V(s)</code> 与优势
+<code>A(s,a)</code>，输出</p>
+<p>
+<script type="math/tex; mode=display">
+Q(s,a) = V(s) + A(s,a) - \frac{1}{|A|}\sum_{a'} A(s,a')
+</script>
+</p>
+<p>训练用 Double DQN 目标抑制过估计：</p>
+<p>
+<script type="math/tex; mode=display">
+y = r + \gamma \, Q_{\theta^-}\!\left(s', \arg\max_{a'} Q_\theta(s', a')\right)
+</script>
+</p>
+<p>经验回放缓冲区打散样本相关性，目标网络 <code>θ⁻</code> 定期从在线网络软/硬更新，
+损失为 Huber 形式，探索用 ε-greedy 并随回合衰减。</p>
+<p>奖励由三部分组成：接近目标为正、远离为负，碰撞大幅扣分，到达目标给终止奖励。
+训练入口：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>train.launch<span class="w"> </span>episodes:<span class="o">=</span><span class="m">200</span>
+rosrun<span class="w"> </span>uav_lidar_dqn_navigation<span class="w"> </span>train_dqn_nav.py<span class="w"> </span>--episodes<span class="w"> </span><span class="m">200</span>
+</code></pre></div>
+<p>权重与日志写入 <code>models/</code>：<code>dqn_nav.pt</code>（最新）、<code>dqn_nav_best.pt</code>（近 20 回合
+成功率最高）、<code>train_nav_log.csv</code>（每回合累计奖励、步数、是否成功）。</p>
+<h2 id="6">6 话题与服务</h2>
 <table>
 <thead>
 <tr>
@@ -808,7 +836,7 @@ rosrun<span class="w"> </span>rviz<span class="w"> </span>rviz<span class="w">  
 </tr>
 </tbody>
 </table>
-<h2 id="6-pr">6 后续 PR</h2>
+<h2 id="7-pr">7 后续 PR</h2>
 <table>
 <thead>
 <tr>
@@ -817,14 +845,6 @@ rosrun<span class="w"> </span>rviz<span class="w"> </span>rviz<span class="w">  
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>#893</td>
-<td>雷达扇区特征与扫描话题发布</td>
-</tr>
-<tr>
-<td>#918</td>
-<td>DQN 策略训练流程与模型权重</td>
-</tr>
 <tr>
 <td>#922</td>
 <td>DQN 导航节点与 gmapping 建图链路</td>
