@@ -11,7 +11,13 @@
 | 输出 | 偏航角速率 `ω ∈ [-1, 1] rad/s`，目标高度增量 `Δz ∈ [-1, 1]` |
 | 与仓库已有模块的区别 | `uav_ppo_nav` 是强化学习导航、`octree_uav_3d_pathfinding` 是八叉树路径规划，本模块是**单目深度图直接回归控制量**的反应式避障，不使用地图、不训练奖励函数 |
 
-## 2. 问题定义
+## 2. 演示
+
+![demo](../img/uav/depth_avoid/demo.gif)
+
+动图由 `simGetImages(ImageType.Scene)` 逐帧截取真实 Blocks 画面合成，180 帧，4.1 MB。无人机从 (-24, 0) 起飞后绕方块墙外围飞完一整圈，全程最小深度维持在 0.25 左右，只有一次擦边降到 0.10。
+
+## 3. 问题定义
 
 无人机在方块墙场景中朝前飞，每 0.25 s 取一帧深度图，输出「往哪拐、要不要爬升」，目标是**不撞墙**并把最小深度维持在安全距离以上。
 
@@ -23,7 +29,7 @@ $$D(p) = \frac{\min(d(p),\, d_{\max})}{d_{\max}},\qquad d_{\max} = 20\ \text{m}$
 
 $D = 1$ 表示远处或天空，$D \to 0$ 表示贴脸障碍。
 
-## 3. 专家策略（标签来源）
+## 4. 专家策略（标签来源）
 
 专家**只读深度图**，不看真值位姿，因此标签里不含任何位姿信息——这一点是刻意设计的，用来避免「网络其实在读答案」的泄漏问题。
 
@@ -49,7 +55,7 @@ $$\Delta z = 0.5 + 0.5u$$
 
 最后对 $\omega$ 做半步平滑 $\omega \leftarrow 0.5\,\omega_{\text{prev}} + 0.5\,\omega$，避免一帧一个极端值。
 
-## 4. 网络结构
+## 5. 网络结构
 
 ```
 输入 1×64×64
@@ -77,7 +83,7 @@ $$\theta_t = \theta_{t-1} - \eta\,\frac{\hat m_t}{\sqrt{\hat v_t} + \epsilon}$$
 
 训练时做**左右翻转增强**：深度图水平镜像、$\omega$ 取反，等价于免费多一倍样本，也让网络学到左右对称性。
 
-## 5. 控制执行
+## 6. 控制执行
 
 每步把网络输出还原成物理量：
 
@@ -91,7 +97,7 @@ $$v_x = v\cos\psi,\qquad v_y = v\sin\psi$$
 
 $$v_z = \mathrm{clip}\big(0.8\,(z_{\text{target}} - z),\ -1.5,\ 1.5\big)$$
 
-## 6. 算法流程
+## 7. 算法流程
 
 ```
 1. 启动 AirSim Blocks（SimMode=Multirotor，SimpleFlight）
@@ -100,7 +106,7 @@ $$v_z = \mathrm{clip}\big(0.8\,(z_{\text{target}} - z),\ -1.5,\ 1.5\big)$$
 4. 演示：加载权重 → 网络闭环控制 → 每步存 Scene 相机真实画面 → 合成 gif
 ```
 
-## 7. 实测踩坑（影响代码写法的地方）
+## 8. 实测踩坑（影响代码写法的地方）
 
 这些都是在 Blocks 场景里一步步测出来的，代码里的写法都是被它们逼出来的：
 
@@ -115,7 +121,7 @@ $$v_z = \mathrm{clip}\big(0.8\,(z_{\text{target}} - z),\ -1.5,\ 1.5\big)$$
 | 节点发布的控制量一直是噪声 | `DepthPolicyNet.load()` 是 classmethod，`self.net.load(path)` 丢弃了返回的新实例，`self.net` 还是随机权重 | 改成 `self.net = DepthPolicyNet.load(path)`，并加单元测试断言加载前后预测不同 |
 | 深度图进节点报维度不匹配 | 网络 `fc1` 绑定 64×64，收到 640×480 的 DepthPlanar 直接前向会错 | 按 `msg.height / msg.width` 取尺寸，非 64×64 时缩放到 64×64 |
 
-## 8. 结果
+## 9. 结果
 
 | 指标 | 数值 |
 |---|---|
@@ -132,9 +138,9 @@ $$v_z = \mathrm{clip}\big(0.8\,(z_{\text{target}} - z),\ -1.5,\ 1.5\big)$$
 
 R² 只有 0.298 是诚实的数字：专家在开阔区大量输出 $\omega \approx 0$，网络对这类样本接近「输出常数」，而真正有信息量的是靠近墙的那部分。调高动作加权能继续提升，但会让远离障碍时的行为过于激进，这里保留当前设置。
 
-## 9. 复现步骤
+## 10. 复现步骤
 
-### 9.1 环境
+### 10.1 环境
 
 - Windows 10/11（AirSim 预编译包只有 Windows/Linux，这里用 Windows）
 - Python 3.13 + `airsim==1.8.1`、`numpy`、`pillow`
@@ -164,7 +170,7 @@ R² 只有 0.298 是诚实的数字：专家在开阔区大量输出 $\omega \ap
 
 > `SimMode` 必须是 `Multirotor`。默认配置加载的是**汽车**，此时 `getMultirotorState()` 会报 "server could not find function"。
 
-### 9.2 跑起来
+### 10.2 跑起来
 
 ```bash
 pip install airsim==1.8.1 numpy pillow
@@ -176,7 +182,7 @@ python main.py --demo --steps 180 --gif demo.gif      # 约 2 分钟
 python main.py --eval
 ```
 
-### 9.3 ROS 2 启动
+### 10.3 ROS 2 启动
 
 ```bash
 colcon build --packages-select uav_airsim_depth_obstacle_avoidance
@@ -186,7 +192,7 @@ ros2 launch uav_airsim_depth_obstacle_avoidance main.launch.py z_ref:=-5.0
 
 节点订阅 `/uav/depth`（`sensor_msgs/Image`，float32 64×64），发布 `/uav/cmd`（`Float32MultiArray`，`[ω, z_target]`）。
 
-## 10. 源码解析
+## 11. 源码解析
 
 ### `env.py` — AirSim 封装
 
@@ -247,7 +253,7 @@ python3 src/air/uav_airsim_depth_obstacle_avoidance/test/test_cnn.py
 
 文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页。
 
-## 11. 局限
+## 12. 局限
 
 - 只在 Blocks 场景验证过，换 AbandonedPark / CityEnviron 需要重新采集
 - 专家是反应式单帧决策，没有绕行规划，遇到凹形障碍可能来回震荡
