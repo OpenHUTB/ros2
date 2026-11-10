@@ -119,7 +119,10 @@ def _run_node(node_type: type, args: Optional[List[str]]) -> None:
         pass
     finally:
         if node is not None:
-            node.destroy_node()
+            try:
+                node.destroy_node()
+            except KeyboardInterrupt:
+                pass
         if rclpy.ok():
             rclpy.shutdown()
 
