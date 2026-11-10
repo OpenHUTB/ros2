@@ -27,7 +27,14 @@ bash main.sh manual   # 仅启动仿真
 ros2 run gazebo_diff_drive_teleop teleop_keyboard
 ```
 
-键盘按键 / Keys：`w/x` 前进/后退，`a/d` 左转/右转，`s` 停止，`+/-` 调整线速度，`q` 退出。
+键盘按键 / Keys：`w/x` 或 `↑/↓` 前进/后退，`a/d` 或 `←/→` 左转/右转，`s`/空格 停止，`+/-` 调整线速度，`q` 或 `Ctrl-C` 退出（退出前自动停车）。
+
+可通过 ROS 2 参数调整速度与话题：
+
+```bash
+ros2 run gazebo_diff_drive_teleop teleop_keyboard --ros-args \
+  -p linear_speed:=0.2 -p angular_speed:=0.8 -p cmd_vel_topic:=/cmd_vel
+```
 
 ## 验证 / Verification
 ```bash

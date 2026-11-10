@@ -19,7 +19,8 @@ fi
 
 cd "$WS_ROOT"
 echo "==> 编译 gazebo_diff_drive_teleop 包"
-colcon build --packages-select gazebo_diff_drive_teleop
+# 只扫描 src/，避免把 scr/ 下的同名备份包也扫描进来导致“重复包名”错误
+colcon build --base-paths src --packages-select gazebo_diff_drive_teleop
 source install/setup.bash
 
 MODE="${1:-demo}"
