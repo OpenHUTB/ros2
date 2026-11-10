@@ -140,15 +140,52 @@ python3 generate_gif.py
 # 默认输出：本模块目录下的 demo_test.gif（834 帧 / 480×360）
 ```
 
-### 5.7 ROS2 launch（Ubuntu 20.04 Humble）
+### 5.7 ROS2 launch（Ubuntu 22.04 LTS + ROS 2 Humble）
+
+Humble 的官方目标系统就是 Ubuntu 22.04（jammy）。实测环境：Ubuntu 22.04.5 LTS、ROS 2 Humble ros-base、MuJoCo 3.17.0。
 
 ```bash
+# 1. 依赖（rosdep 会装 pip、numpy、rclpy 等；mujoco 无 rosdep 定义，走 pip）
+sudo rosdep init && rosdep update      # 首次
+rosdep install --from-paths src --ignore-src -y
+pip install -r src/humanoid/humanoid_e2e_recovery/requirements.txt
+
+# 2. 构建
 colcon build --packages-select humanoid_e2e_recovery
 source install/setup.bash
+
+# 3. 启动双节点
 ros2 launch humanoid_e2e_recovery main.launch.py
 ```
 
-话题语义：`/e2e/torque_delta`（`std_msgs/Float64MultiArray`，15 维 N·m），由仿真节点叠加到 PD 输出上。
+话题语义：
+
+- `/front_camera/image`（`sensor_msgs/Image`，mono8 64×64），仿真节点发布
+- `/torque_delta`（`std_msgs/Float64MultiArray`，15 维 N·m），预测节点发布，由仿真节点叠加到 PD 输出上
+
+实测结果（1800 步 / 30 s 仿真时间，2 核机器约 0.24 倍实时）：
+
+| 项目 | 结果 |
+| --- | --- |
+| `rosdep check --from-paths src --ignore-src` | All system dependencies have been satisfied |
+| `colcon build` | Finished `humanoid_e2e_recovery` [1.5s] |
+| `/front_camera/image` 频率 | 22.9 Hz（min 0.033 s / max 0.054 s） |
+| `/torque_delta` | 15 维，踝 pitch 约 +55.0 N·m |
+| 30 s 闭环 | `root_z` 1.075→1.088 m，最大倾角峰值 5.9°，末 5 s 稳态 3.9°，`crashed=False`，跌倒 0 次 |
+
+仿真节点每秒打印一行状态，用于离线核对闭环是否真的站稳：
+
+```
+t=  1.00s root_z=1.075m tilt=5.6deg max_tilt=5.6deg ankle_tau=+55.0N*m crashed=False
+t= 30.00s root_z=1.077m tilt=3.9deg max_tilt=5.9deg ankle_tau=+55.0N*m crashed=False
+```
+
+跌倒时额外打一次 `ERROR`（含时间与根高），判据是 `root_z < 0.6`。
+
+两点踩坑记录：
+
+- `package.xml` 不要写 `python3-mujoco`——`rosdep resolve mujoco` 与 `rosdep resolve python3-mujoco` 都返回 `no rosdep rule`，`rosdep check` 会直接报 `Cannot locate rosdep definition`。mujoco 走 `requirements.txt` 的 pip 安装，`package.xml` 只声明 `python3-pip`。
+- `<buildtool_depend>ament_python</buildtool_depend>` 也不该写（`ament_python` 不是 rosdep key），构建方式由 `<build_type>ament_python</build_type>` 决定。
 
 ### 5.8 单元测试
 
