@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""UAV L1 Adaptive Altitude Controller Simulation."""
+"""UAV L1 Adaptive Altitude Controller Simulation.
+
+Simulates a point-mass UAV altitude channel under gust disturbance
+using an L1 adaptive controller (PD feedback + disturbance estimation).
+"""
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -7,6 +11,7 @@ import matplotlib.pyplot as plt
 
 
 class UAVAltitudePlant:
+    """Simplified point-mass altitude dynamics (vertical only)."""
     def __init__(self, mass=1.0, dt=0.01):
         self.m = mass
         self.dt = dt
@@ -22,26 +27,26 @@ class UAVAltitudePlant:
 
 
 class L1AltitudeController:
-    def __init__(self, dt=0.01, k=2.0, c=2.0):
+    """L1 adaptive altitude controller: PD feedback + disturbance compensation."""
+    def __init__(self, dt=0.01, kp=12.0, kd=6.0, gamma=20.0):
         self.dt = dt
-        self.k = k
-        self.c = c
-        self.x_hat = 0.0
-        self.v_hat = 0.0
+        self.kp = kp
+        self.kd = kd
+        self.gamma = gamma
         self.theta_hat = 0.0
-        self.u = 0.0
 
     def update(self, z_setpoint, z_meas, v_meas):
-        z_err = z_meas - self.x_hat
-        self.theta_hat += self.k * z_err * self.dt
-        self.u = self.k * (z_setpoint - z_meas) - self.c * v_meas - self.theta_hat
-        accel = self.u - 9.81 + self.theta_hat
-        self.v_hat += accel * self.dt
-        self.x_hat += self.v_hat * self.dt
+        e = z_setpoint - z_meas
+        feedback = self.kp * e - self.kd * v_meas
+        # L1 adaptation: estimate lumped disturbance
+        self.theta_hat += self.gamma * e * self.dt
+        self.theta_hat = 0.95 * self.theta_hat + 0.05 * (self.gamma * e * self.dt * 10)
+        self.u = 9.81 + feedback + self.theta_hat
         return self.u
 
 
 def gust(t):
+    """Gust: step at t=5s (+2 m/s^2), sine at t=8s."""
     base = 0.0
     if t > 5.0:
         base += 2.0
@@ -68,13 +73,22 @@ def main():
     print(f"Final altitude: {z[-1]:.3f} m (target 5.0)")
     print(f"Max overshoot: {np.max(z)-5.0:.3f} m")
     print(f"Steady-state error: {abs(z[-1]-5.0):.4f} m")
+    post_gust = t > 5.0
+    print(f"Max deviation after gust: {np.max(np.abs(z[post_gust]-5.0)):.3f} m")
+
     fig, ax = plt.subplots(3, 1, figsize=(8,8), sharex=True)
-    ax[0].plot(t,z); ax[0].axhline(5,color='r',ls='--')
-    ax[0].set_ylabel('Altitude (m)')
-    ax[1].plot(t,u,color='g'); ax[1].set_ylabel('Thrust (N)')
-    ax[2].plot(t,d,color='orange'); ax[2].set_ylabel('Disturbance')
-    ax[2].set_xlabel('Time (s)')
-    plt.tight_layout(); plt.savefig('altitude_response.png', dpi=150)
+    ax[0].plot(t, z, label="Altitude", linewidth=1.5)
+    ax[0].axhline(5.0, color='r', ls='--', label="Setpoint (5m)")
+    ax[0].set_ylabel("Altitude (m)")
+    ax[0].set_title("UAV L1 Adaptive Altitude Control under Gust Disturbance")
+    ax[0].legend(); ax[0].grid(True, alpha=0.3)
+    ax[1].plot(t, u, color='g', linewidth=1.5)
+    ax[1].set_ylabel("Thrust (N)"); ax[1].grid(True, alpha=0.3)
+    ax[2].plot(t, d, color='orange', linewidth=1.5)
+    ax[2].set_ylabel("Disturbance (m/s^2)"); ax[2].set_xlabel("Time (s)")
+    ax[2].grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig("altitude_response.png", dpi=150)
     print("Saved altitude_response.png")
 
 
