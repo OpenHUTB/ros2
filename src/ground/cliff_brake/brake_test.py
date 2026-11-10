@@ -7,6 +7,7 @@
   2) 无制动对照：验证越过边缘后车辆真实坠落（z 方向自由度存在）
 
 用法：python3 brake_test.py
+pytest：python3 -m pytest src/ground/cliff_brake/brake_test.py -q
 注意：模型与控制参数须与 cliff_brake_sim.py 保持一致（改动请同步）。
 """
 import mujoco
@@ -98,6 +99,30 @@ def run_fall(drive_force):
         if data.qpos[zadr] < -1.0:               # 已坠落到下层平台附近
             return data.time, data.qpos[zadr]
     return None, None
+
+
+def test_low_drive_force_stops_before_cliff():
+    """15 N / 20 N 巡航在安全包络内，制动应把车停在悬崖前。"""
+    for force in (15.0, 20.0):
+        status, v_trigger, margin = run_brake(force)
+        assert status == "STOPPED", (force, status, margin)
+        assert v_trigger is not None and v_trigger > 0.0
+        assert margin is not None and margin > 0.0, (force, margin)
+
+
+def test_high_drive_force_exceeds_brake_envelope():
+    """50 N / 100 N 已超出 100 N 制动力上限，车辆应真实坠落。"""
+    for force in (50.0, 100.0):
+        status, v_trigger, margin = run_brake(force)
+        assert status == "FELL", (force, status, margin)
+        assert v_trigger is not None and v_trigger > 0.0
+
+
+def test_without_brake_vehicle_falls_off_cliff():
+    """无制动对照：恒驱动力直冲，车辆应越过边缘并坠落到下层平台。"""
+    t_fall, z_fall = run_fall(15.0)
+    assert t_fall is not None and 0.0 < t_fall < 30.0
+    assert z_fall is not None and z_fall < -1.0
 
 
 if __name__ == '__main__':
