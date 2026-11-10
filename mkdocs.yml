@@ -205,6 +205,7 @@ nav:
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
+    - 差速小车双侧墙通道居中 PD 巡航仿真: './ground/diff_drive_corridor_centering.md'
 - 空域载具:
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
