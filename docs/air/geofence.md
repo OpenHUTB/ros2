@@ -1,56 +1,130 @@
 # 基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统
 
-## 1. 项目简介
-本项目是一个基于 ROS 2 的独立安全监控层模块。系统旨在为无人机等移动机器人提供实时的禁飞区（电子围栏）检测。通过订阅载具的实时位姿与动态下发的禁飞区多边形边界，系统利用**射线法（Ray Casting）**实时判断载具状态，并输出 `SAFE`（安全）、`WARN`（接近预警）、`CRITICAL`（侵入告警）三级安全响应。
+## 项目简介
 
-## 2. 目录结构
-项目采用标准的 `ament_python` ROS 2 包结构：
+本项目是一个基于 ROS 2 的独立安全监控层模块。系统旨在为无人机等移动机器人提供实时的禁飞区（电子围栏）检测。通过订阅载具的实时位姿与动态下发的禁飞区多边形边界，系统利用**射线法（Ray Casting）**实时判断载具是否侵入禁飞区，并输出 `SAFE`（安全）或 `CRITICAL`（侵入告警）两级安全状态。
+
+## 功能与原理
+
+节点在收到 `/geofence` 的多边形后缓存顶点，在收到 `/odom` 的载具位置后：
+
+1. 校验两条话题的 `header.frame_id` 是否与期望的 `expected_frame_id` 一致（默认 `map`）；
+2. 用射线法判断当前位置是否在多边形内部（边界点一律返回 `False`，仅内部点返回 `True`）；
+3. 在状态变化时发布 `/geofence_status`，内容为 `SAFE` 或 `CRITICAL`。
+
+## 项目目录结构
 
 ```text
 src/air/
 └── geofence_demo/
-    ├── geofence_demo/            # Python 核心源码目录
-    │   ├── __init__.py           # 声明为 Python 模块
-    │   └── geofence_node.py      # 核心检测节点代码
-    ├── launch/                   # 启动脚本目录
-    │   └── geofence.launch.py    # 一键启动节点脚本
-    ├── resource/                 # ROS 2 索引资源目录
-    ├── test/                     # 代码规范与自动化测试目录
-    ├── package.xml               # 包依赖与元数据声明
-    ├── setup.cfg                 # 编译配置文件
-    └── setup.py                  # 编译脚本与程序入口点配置
+    ├── geofence_demo/
+    │   ├── __init__.py
+    │   └── geofence_node.py        # 核心检测节点
+    ├── launch/
+    │   └── geofence.launch.py      # 启动脚本
+    ├── resource/
+    ├── test/
+    │   ├── test_geofence_logic.py  # 多边形判定单元测试
+    │   ├── test_flake8.py
+    │   └── test_pep257.py
+    ├── package.xml
+    ├── setup.cfg
+    └── setup.py
 ```
 
-## 3. 运行与验证过程
-3.1 编译工作空间
+## 依赖环境
+
+- **操作系统**：Ubuntu 22.04 / WSL2
+- **ROS 版本**：ROS 2 Humble
+- **Python**：Python 3
+
+## 编译与运行步骤
+
+1. **编译工作空间**
+
 ```bash
-colcon build --symlink-install
+colcon build --packages-select geofence_demo --symlink-install
 source install/setup.bash
 ```
-3.2 启动节点与测试
-打开终端 A 启动节点：
+
+2. **启动核心节点**
+
+在终端 1 中启动禁飞区检测节点：
+
 ```bash
 ros2 launch geofence_demo geofence.launch.py
 ```
-打开终端 B 发布禁飞区 (X:2~4, Y:2~4 矩形)：
+
+3. **发布禁飞区边界**
+
+终端 2 发布矩形禁飞区（X:2~4, Y:2~4）：
+
 ```bash
 ros2 topic pub /geofence geometry_msgs/msg/PolygonStamped "{
   header: {frame_id: 'map'},
   polygon: {
-    points: [{x: 2.0, y: 2.0}, {x: 4.0, y: 2.0}, {x: 4.0, y: 4.0}, {x: 2.0, y: 4.0}]
+    points: [{x: 2.0, y: 2.0}, {x: 4.0, y: 2.0},
+             {x: 4.0, y: 4.0}, {x: 2.0, y: 4.0}]
   }
 }" -r 1
 ```
-打开终端 C 发布载具位置：
+
+4. **发布载具位置并验证状态**
+
+终端 3，先测试安全状态：
+
 ```bash
-# 正常状态 (SAFE)
-ros2 topic pub /odom nav_msgs/msg/Odometry "{pose: {pose: {position: {x: 0.0, y: 0.0}}}}" -r 2
-
-# 报警状态 (CRITICAL) - 按 Ctrl+C 停止上一条，再执行此条
-ros2 topic pub /odom nav_msgs/msg/Odometry "{pose: {pose: {position: {x: 3.0, y: 3.0}}}}" -r 2
+ros2 topic pub /odom nav_msgs/msg/Odometry \
+  "{header: {frame_id: 'map'}, pose: {pose: {position: {x: 0.0, y: 0.0}}}}" -r 2
 ```
-## 运行效果图
 
-![安全状态运行效果图片](./img/air/test_safe_status.png)
+再测试入侵状态（在围栏内部 (3, 3)）：
 
-![报警状态运行效果图片](./img/air/test_critical_alert.png)
+```bash
+ros2 topic pub /odom nav_msgs/msg/Odometry \
+  "{header: {frame_id: 'map'}, pose: {pose: {position: {x: 3.0, y: 3.0}}}}" -r 2
+```
+
+## 话题接口说明
+
+| 方向 | 话题 | 类型 | 说明 |
+|------|------|------|------|
+| 订阅 | `/odom` | `nav_msgs/Odometry` | 载具实时位置，`header.frame_id` 需与期望一致 |
+| 订阅 | `/geofence` | `geometry_msgs/PolygonStamped` | 禁飞区多边形边界 |
+| 发布 | `/geofence_status` | `std_msgs/String` | `SAFE` / `CRITICAL` 分级安全状态 |
+
+## 坐标系要求
+
+节点通过参数 `expected_frame_id` 指定期望的坐标系（默认 `map`）。
+若 `/odom` 和 `/geofence` 两条话题的 `frame_id` 与期望不一致，
+节点会输出警告并跳过检测。需先用 tf2 将两者变换到同一坐标系。
+
+## 自动化测试
+
+在已 source 工作空间的环境中执行：
+
+```bash
+# 方式一：使用 colcon test
+colcon test --packages-select geofence_demo
+colcon test-result --verbose --test-result-base build/geofence_demo
+
+# 方式二：直接运行 pytest
+cd src/air/geofence_demo
+python3 -m pytest test -v
+```
+
+测试覆盖：
+
+* 多边形判定对边界点、空多边形、退化多边形的处理；
+* 矩形内部点返回 `True`、外部点返回 `False`；
+* 顺时针/逆时针顶点顺序结果一致。
+
+## 运行效果展示
+
+### 1. 安全状态
+
+![安全状态运行效果](../img/air/test_safe_status.png)
+
+### 2. 入侵告警
+
+![入侵告警运行效果](../img/air/test_critical_alert.png)

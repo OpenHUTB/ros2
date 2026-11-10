@@ -1,4 +1,4 @@
-# Copyright 2026 Your Name
+# Copyright 2026 Toeting
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 
 """禁飞区检测与安全预警节点."""
 
+import math
+
 from geometry_msgs.msg import PolygonStamped
 from nav_msgs.msg import Odometry
 import rclpy
@@ -21,13 +23,41 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 
+def _point_on_segment(px, py, ax, ay, bx, by, eps=1e-9):
+    """判断点 (px,py) 是否在线段 (ax,ay)-(bx,by) 上（含端点）."""
+    cross = (bx - ax) * (py - ay) - (by - ay) * (px - ax)
+    if abs(cross) > eps:
+        return False
+    dot = (px - ax) * (bx - ax) + (py - ay) * (by - ay)
+    if dot < -eps:
+        return False
+    seg_len2 = (bx - ax) ** 2 + (by - ay) ** 2
+    if dot > seg_len2 + eps:
+        return False
+    return True
+
+
 def is_point_in_polygon(x, y, polygon):
-    """使用射线法判断点是否在多边形内."""
+    """
+    使用射线法判断点是否在凸/简单多边形内部.
+
+    * 顶点顺序不影响结果（顺时针/逆时针均可）
+    * 边界（落在边上或顶点）一律返回 False，仅内部返回 True
+    * 空多边形、退化多边形（< 3 点）返回 False
+    """
     if not polygon or len(polygon) < 3:
         return False
 
-    inside = False
+    # 先显式排除边界点，保证语义一致
     n = len(polygon)
+    for i in range(n):
+        ax, ay = polygon[i]
+        bx, by = polygon[(i + 1) % n]
+        if _point_on_segment(x, y, ax, ay, bx, by):
+            return False
+
+    # 射线法：向右发射，统计穿过次数
+    inside = False
     p1x, p1y = polygon[0]
     for i in range(1, n + 1):
         p2x, p2y = polygon[i % n]
@@ -36,7 +66,9 @@ def is_point_in_polygon(x, y, polygon):
                 if x <= max(p1x, p2x):
                     if p1y != p2y:
                         xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1x == p2x or x <= xints:
+                        if p1x == p2x or x <= xints:
+                            inside = not inside
+                    elif p1x == p2x and x <= p1x:
                         inside = not inside
         p1x, p1y = p2x, p2y
     return inside
@@ -48,6 +80,12 @@ class GeofenceNode(Node):
     def __init__(self):
         """初始化订阅者和发布者."""
         super().__init__('geofence_node')
+
+        # 可通过参数指定期望的坐标系 frame_id，为空则不校验
+        self.declare_parameter('expected_frame_id', 'map')
+        self.expected_frame_id = self.get_parameter(
+            'expected_frame_id').get_parameter_value().string_value
+
         self.odom_sub = self.create_subscription(
             Odometry, '/odom', self.odom_callback, 10)
         self.geofence_sub = self.create_subscription(
@@ -57,20 +95,39 @@ class GeofenceNode(Node):
 
         self.current_x = 0.0
         self.current_y = 0.0
+        self.odom_frame_id = None
         self.polygon_points = []
+        self.geofence_frame_id = None
         self.last_status = None
-        self.get_logger().info('🛡️ 禁飞区检测节点已启动，等待数据...')
+        self.get_logger().info('禁飞区检测节点已启动，等待数据...')
 
     def geofence_callback(self, msg):
-        """接收围栏多边形顶点."""
+        """接收围栏多边形顶点并记录 frame_id."""
+        self.geofence_frame_id = msg.header.frame_id
         self.polygon_points = [(p.x, p.y) for p in msg.polygon.points]
-        self.get_logger().info(
-            f'📥 收到新的禁飞区配置，共 {len(self.polygon_points)} 个顶点')
+        if self.polygon_points:
+            self.get_logger().info(
+                f'收到新的禁飞区配置，共 {len(self.polygon_points)} 个顶点，'
+                f'frame_id={self.geofence_frame_id}')
 
     def odom_callback(self, msg):
         """接收载具位置并进行判断."""
         self.current_x = msg.pose.pose.position.x
         self.current_y = msg.pose.pose.position.y
+        self.odom_frame_id = msg.header.frame_id
+
+        # 坐标系一致性校验：要求 odom 与 geofence 在同一 frame_id 下
+        if (self.expected_frame_id and
+                self.odom_frame_id is not None and
+                self.geofence_frame_id is not None):
+            if (self.odom_frame_id != self.geofence_frame_id or
+                    self.odom_frame_id != self.expected_frame_id):
+                self.get_logger().warn(
+                    f'坐标系不一致！odom={self.odom_frame_id}, '
+                    f'geofence={self.geofence_frame_id}, '
+                    f'expected={self.expected_frame_id}；'
+                    f'请先用 tf2 转换到同一坐标系再检测。')
+                return
 
         if not self.polygon_points:
             return
@@ -83,13 +140,13 @@ class GeofenceNode(Node):
             status_msg = String()
             if inside:
                 status_msg.data = (
-                    f'🚨 [CRITICAL] 闯入禁飞区！坐标: '
+                    f'[CRITICAL] 闯入禁飞区！坐标: '
                     f'({self.current_x:.1f}, {self.current_y:.1f})'
                 )
                 self.get_logger().error(status_msg.data)
             else:
                 status_msg.data = (
-                    f'✅ [SAFE] 安全。坐标: '
+                    f'[SAFE] 安全。坐标: '
                     f'({self.current_x:.1f}, {self.current_y:.1f})'
                 )
                 self.get_logger().info(status_msg.data)
@@ -102,9 +159,13 @@ def main(args=None):
     """节点主入口."""
     rclpy.init(args=args)
     node = GeofenceNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == '__main__':
