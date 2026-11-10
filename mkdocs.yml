@@ -249,6 +249,7 @@ nav:
     - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'
     - 移动平台（车/船）精准降落: './air/uav_moving_platform_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - 无人机定高日志误差与抗扰恢复时间评估: './air/uav_hover_log_eval.md'
     - 基于深度强化学习的无人机最优路径查找: './air/drl_drone_path_planning.md'
