@@ -89,5 +89,10 @@ def run_test():
     print("\n✅ 洋流拖曳方向回归测试全部通过！")
 
 
+def test_ocean_current_drag_direction():
+    """pytest 入口：复用与独立运行完全相同的 run_test() 检查。"""
+    run_test()
+
+
 if __name__ == "__main__":
     run_test()
