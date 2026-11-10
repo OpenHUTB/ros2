@@ -1,12 +1,3 @@
- privacy
-# 5. 机器人感知
-
-本章示例代码位于 `src/chap5/`。
-
-## 5.1 行人隐私脱敏视觉检测节点
-
-- [行人隐私脱敏视觉检测节点](privacy_mask/README.md)：基于 YOLOv8n 检测静态图片中的行人，
-  对行人包围盒做高斯模糊，并发布 `/image_raw/compressed` 与 `/image_masked/compressed` 两个压缩图像话题。
 # 第五章：ROS + OpenCV 视觉追踪与语音控制
 
 本章在第四章两轮差速小车（mbot）底盘之上，实现两大部分实验：
@@ -380,6 +371,10 @@ roslaunch robot_vision mbot_intelligence.launch
   - 任务：把每条扫描分类为 `near` / `far` / `free` 三类
   - 源代码：[`src/chap5/lidar_obstacle_nn/`](https://github.com/OpenHUTB/ros2/tree/master/src/chap5/lidar_obstacle_nn)
 
+- [行人隐私脱敏视觉检测节点](../privacy_mask/README.md)
+  - 功能包：`src/chap5/privacy_mask/`
+  - 模型：YOLOv8n 目标检测（COCO person 类，权重 `yolov8n.pt` 随包安装）
+  - 任务：检测静态图片中的行人并对包围盒做高斯模糊，发布 `/image_raw/compressed` 与 `/image_masked/compressed`
+
 后续规划方向（占位）：相机目标检测（YOLOv8 + Gazebo 仿真相机）、深度相机避障 NN、
 激光雷达 + 相机融合感知、感知→运动控制闭环。
- master

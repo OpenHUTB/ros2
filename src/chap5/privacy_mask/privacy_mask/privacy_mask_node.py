@@ -15,6 +15,7 @@ from ultralytics import YOLO
 
 PERSON_CLASS_ID = 0  # COCO 数据集中 person 的类别 id
 
+
 class PrivacyMaskNode(Node):
     """发布原始图像与行人模糊图像。"""
 
@@ -33,6 +34,10 @@ class PrivacyMaskNode(Node):
         self.img_path = self.get_parameter("image_path").value
         self.model_path = self.get_parameter("model_path").value
         self.blur_kernel = int(self.get_parameter("blur_kernel").value)
+        # 偶数核会让 cv2.GaussianBlur 直接抛 cv2.error，这里提前拦下
+        if self.blur_kernel < 3 or self.blur_kernel % 2 == 0:
+            raise RuntimeError(
+                f"blur_kernel 必须是不小于 3 的奇数，当前为 {self.blur_kernel}")
         self.person_count = 0
 
         self.pub_raw = self.create_publisher(
@@ -107,6 +112,7 @@ class PrivacyMaskNode(Node):
         self.pub_raw.publish(self.to_msg(self.img_origin))
         self.pub_masked.publish(self.to_msg(self.img_masked))
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = None
@@ -115,7 +121,7 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-    except RuntimeError as exc:
+    except (RuntimeError, cv2.error) as exc:
         rclpy.logging.get_logger("privacy_mask_node").error(str(exc))
         raise SystemExit(1)
     finally:

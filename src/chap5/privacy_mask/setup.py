@@ -23,7 +23,7 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="Xavier-101666",
+    maintainer="刘琪",
     maintainer_email="2754586324@qq.com",
     description="基于 YOLOv8 的行人隐私脱敏 ROS 2 节点",
     license="Apache-2.0",
@@ -31,7 +31,7 @@ setup(
     entry_points={
         "console_scripts": [
             # 可执行名与 launch 文件中的 executable 保持一致
-            "privacy_mask_main = privacy_mask.privacy_mask_node:main",
+            "privacy_mask_main = privacy_mask.main:main",
         ],
     },
 )
