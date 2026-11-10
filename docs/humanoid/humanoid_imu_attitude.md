@@ -84,7 +84,7 @@ DURATION=20 ./run_eval.sh
 
 单场景也可以直接用 launch：
 
-```bash
+```
 ros2 launch humanoid_imu_attitude main.launch.py \
   profile:=fast duration:=20 out_dir:=results
 ```
@@ -135,7 +135,7 @@ ros2 launch humanoid_imu_attitude main.launch.py \
 
 ## 复现与验证
 
-```bash
+```
 # 单元测试（全部通过后再提交）
 colcon test --packages-select humanoid_imu_attitude
 colcon test-result --verbose
