@@ -65,6 +65,8 @@ python3 main.py --module full --scene sparse --gif --render-every 4
 | `colcon build` | 3.52 s，exit 0 |
 | `ros2 launch ... module:=full` | 两节点启动，`probe.py` 收到命令与状态 |
 | 深度话题频率 | 10.03 Hz |
+| `main.py --module full --scene unseen` | exit 0，456 步成功 / 最小间隙 1.389 m / 46 次重规划 / 37.2 s |
+| `main.py --module e2e --scene unseen` | exit 0，到达目标 / 最小间隙 1.204 m / 28.3 s |
 
 ## 5. 在这一过程中修掉的两个真实兼容性问题
 
