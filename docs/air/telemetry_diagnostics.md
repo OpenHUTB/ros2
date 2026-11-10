@@ -483,3 +483,14 @@ bash main.sh demo          # 另开 dashboard
 `assets/flight_corpus.zip` 为自包含语料；`models/` 为权重与配置；`tests/` 为单元与一致性测试。
 
 ---
+
+## 13. 参考资料
+
+1. Cho K., et al. *Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation.* EMNLP 2014.（GRU）
+2. Chandola V., Banerjee A., Kumar V. *Anomaly Detection: A Survey.* ACM Computing Surveys, 2009.
+3. ROS 2 诊断消息规范：<https://docs.ros.org/en/humble/Tutorials/Demos/Quality-of-Service.html>
+4. OpenHUTB AirSim ROS 桥接示例：<https://github.com/OpenHUTB/ros2/tree/master/src/air/air_teleop>
+
+---
+
+**说明**：本项目代码、环境排查与文档在 OpenAI Codex 辅助下完成；指标来自实际运行，截图与动图来自实际窗口，未生成或伪造实验图。提交者负责检查与维护提交内容。
