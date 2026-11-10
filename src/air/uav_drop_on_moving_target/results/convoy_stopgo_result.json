@@ -1,0 +1,82 @@
+{
+  "case": "convoy_stopgo",
+  "title": "中途停车 6 s 再起步",
+  "vehicle_speed_mps": 6.0,
+  "uav_speed_mps": 10.0,
+  "alt_m": 30.0,
+  "wind_mps": [
+    0.0,
+    0.0
+  ],
+  "t_fall_s": 2.473,
+  "scatter_sigma_m": 4.5,
+  "algorithm": {
+    "feasible": true,
+    "t_release_s": 45.03,
+    "release_m": [
+      235.26,
+      0.0
+    ],
+    "aim_m": [
+      260.0,
+      0.0
+    ],
+    "impact_m": [
+      259.99,
+      0.0
+    ],
+    "vehicle_at_impact_m": [
+      260.0,
+      0.0
+    ],
+    "miss_m": 0.01,
+    "min_miss_m": 0.01,
+    "cross_error_m": 0.0,
+    "t_fall_s": 2.473,
+    "naive_t_release_s": 45.05,
+    "naive_miss_m": 0.23,
+    "uniform_miss_m": 36.0,
+    "tangent_miss_m": 0.0,
+    "advice": ""
+  },
+  "closed_loop": {
+    "simulated": true,
+    "releases": [
+      {
+        "t_release_s": 45.03,
+        "release_pos_m": [
+          235.3,
+          0.0,
+          30.0
+        ],
+        "release_vel_mps": [
+          10.0,
+          0.0,
+          -0.0
+        ],
+        "t_fall_s": 2.473,
+        "impact_m": [
+          260.03,
+          0.0
+        ],
+        "vehicle_at_release_m": [
+          260.0,
+          0.0
+        ],
+        "vehicle_at_impact_m": [
+          260.0,
+          0.0
+        ],
+        "error_m": 0.03,
+        "reason": ""
+      }
+    ],
+    "impact_error_mean_m": 0.03,
+    "impact_error_max_m": 0.03,
+    "max_track_error_m": 0.34,
+    "max_error_near_release_m": 0.0,
+    "final_track_error_m": 0.0,
+    "sim_duration_s": 51.0,
+    "wall_time_s": 0.8
+  }
+}

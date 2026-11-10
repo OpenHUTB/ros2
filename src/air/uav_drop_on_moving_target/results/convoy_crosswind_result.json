@@ -1,0 +1,82 @@
+{
+  "case": "convoy_crosswind",
+  "title": "6 m/s 侧风下的车队",
+  "vehicle_speed_mps": 6.0,
+  "uav_speed_mps": 10.0,
+  "alt_m": 30.0,
+  "wind_mps": [
+    6.0,
+    0.0
+  ],
+  "t_fall_s": 2.473,
+  "scatter_sigma_m": 4.5,
+  "algorithm": {
+    "feasible": true,
+    "t_release_s": 48.31,
+    "release_m": [
+      268.1,
+      20.0
+    ],
+    "aim_m": [
+      292.83,
+      20.0
+    ],
+    "impact_m": [
+      304.7,
+      20.0
+    ],
+    "vehicle_at_impact_m": [
+      304.7,
+      20.0
+    ],
+    "miss_m": 0.0,
+    "min_miss_m": 0.0,
+    "cross_error_m": 0.0,
+    "t_fall_s": 2.473,
+    "naive_t_release_s": 44.6,
+    "naive_miss_m": 14.84,
+    "uniform_miss_m": null,
+    "tangent_miss_m": 0.0,
+    "advice": ""
+  },
+  "closed_loop": {
+    "simulated": true,
+    "releases": [
+      {
+        "t_release_s": 48.32,
+        "release_pos_m": [
+          268.2,
+          20.0,
+          30.0
+        ],
+        "release_vel_mps": [
+          10.0,
+          0.0,
+          -0.0
+        ],
+        "t_fall_s": 2.473,
+        "impact_m": [
+          304.8,
+          20.0
+        ],
+        "vehicle_at_release_m": [
+          289.92,
+          20.0
+        ],
+        "vehicle_at_impact_m": [
+          304.76,
+          20.0
+        ],
+        "error_m": 0.04,
+        "reason": ""
+      }
+    ],
+    "impact_error_mean_m": 0.04,
+    "impact_error_max_m": 0.04,
+    "max_track_error_m": 0.34,
+    "max_error_near_release_m": 0.0,
+    "final_track_error_m": 0.0,
+    "sim_duration_s": 54.3,
+    "wall_time_s": 0.8
+  }
+}

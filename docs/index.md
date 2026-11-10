@@ -196,6 +196,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 
 * [低空载具的 ROS 示例教程](https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/)
 * [手势控制无人机](./air/gesture_control_drone.md)
+* [给行驶中的车队投送物资](./air/uav_drop_on_moving_target.md) —— 平抛弹道 + 车辆未来位置预测 + 投放时刻解算，MuJoCo 真飞三个车队算例落点误差 0.01~0.04 m
 
 * [AP-CPP 主动感知覆盖路径规划](./ap_cpp_overfomo.md) —— 基于 AirSim 的无人机主动感知覆盖路径规划，在 OverFOMO 自适应覆盖规划的基础上进一步决定「该去哪里看」
 
