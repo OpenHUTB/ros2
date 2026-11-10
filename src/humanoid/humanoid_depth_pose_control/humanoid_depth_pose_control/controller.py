@@ -5,8 +5,15 @@ from .sim import DEFAULT_STAND_TARGET
 
 
 class ProportionalController:
-    """根据预测的躯干pitch/roll/yaw角，输出关节修正目标。"""
-    def __init__(self, kp_ankle=2.0, kp_hip=1.5, kp_neck=0.8):
+    """根据预测的躯干pitch/roll/yaw角，输出关节修正目标。
+
+    增益按实测标定：站姿平衡（sim.step 的 ankle strategy）已经在做踝关节修正，
+    控制器再叠一层同向踝修正相当于把增益加大。原实现用 kp_ankle=2.0 /
+    kp_hip=1.5，实测把无扰动站姿从 1.7° 拖到 40°、比不加控制还差 20 倍；
+    现在的 0.2 / 0.1 在 2.4 s 无扰动下倾角 6.5°，40 N 推力存活 950 步
+    （1.90 s），比纯平衡层的 913 步略好。
+    """
+    def __init__(self, kp_ankle=0.2, kp_hip=0.1, kp_neck=0.3):
         self.kp_ankle = kp_ankle
         self.kp_hip = kp_hip
         self.kp_neck = kp_neck
