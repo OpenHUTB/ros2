@@ -213,6 +213,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机多传感器感知与给定轨迹跟踪控制](./air/uav_perception_trajectory.md) —— 任务(2)：激光雷达/深度相机感知 + 前馈+PID 轨迹跟踪
+* [无人机物理仿真与键盘运动控制](./air/uav_physical_simulation.md) —— 任务(1)：多旋翼物理仿真 + 机体系速度指令的键盘操控
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
 
