@@ -317,6 +317,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
+* [AirSim 无人机 IMU 速度估计（MLP）](./air/uav_airsim_imu_velocity_estimator.md) —— IMU 5 帧 30 维进，单隐层 MLP 出速度大小，验证 R² 0.453、实飞 MAE 1.32 m/s
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
