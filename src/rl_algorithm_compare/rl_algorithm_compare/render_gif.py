@@ -13,6 +13,7 @@ import os
 import pickle
 import sys
 
+import mujoco
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
