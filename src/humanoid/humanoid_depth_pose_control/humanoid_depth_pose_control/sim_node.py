@@ -47,6 +47,13 @@ class SimNode(Node):
         m.data = d.astype(np.float32).tobytes()
         m.header.stamp = self.get_clock().now().to_msg()
         self.pub.publish(m)
+        # joint_state 之前只声明了发布器、从未 publish，话题是空的。
+        # 这里发实际关节角，便于下游（含离线回放）观察跟随误差；
+        # 与 joint_target 同为 15 维、同序。
+        js = Float64MultiArray()
+        js.data = [float(v) for v in
+                   self.sim.data.qpos[self.sim.qpos_js:self.sim.qpos_js + 15]]
+        self.pub_j.publish(js)
 
 
 def main():

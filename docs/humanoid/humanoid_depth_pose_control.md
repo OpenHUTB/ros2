@@ -191,16 +191,26 @@ ros2 launch humanoid_depth_pose_control main.launch.py
 |---|---|
 | `colcon build --packages-select` | 1.41 s Finished |
 | 节点 | `/depth_sim_node`、`/depth_predictor_node` 均正常起 |
-| `/depth_image` | 64×64 `32FC1`，17–19 Hz |
-| `/joint_target` | 15 维 `Float64MultiArray`，13.4 Hz |
+| `/depth_image` | 64×64 `32FC1`，4096 元素/帧，20.9 Hz |
+| `/joint_state` | 15 维实际关节角，与 target 同序，20.7 Hz |
+| `/joint_target` | 15 维 `Float64MultiArray`，20.7 Hz |
+| 站立段跟随误差 | `\|state−target\|` 均值最大 0.198 rad（膝），其余 ≤0.062 |
 | 数值健康 | 无 NaN、全 finite；yaw 经颈部（第 15 维 0.023–0.029）真实生效 |
 | 无扰动闭环存活 | 4.04 s 后倒地（max_tilt 67.3°、root_z 1.076→0.584），倒地后深度图恒定 0.5803 |
 
-修掉的一处真实缺陷：`setup.cfg` 的 `[develop] script_dir` 原先写的是 Windows 绝对路径
-`C:\新建文件夹\机器人作业2\src\humanoid\humanoid_depth_pose_control`，setuptools 因此把
-可执行文件装进 `install/<pkg>/bin/`，`ros2 launch` 报 `libexec directory ... does not exist`
-直接起不来。改成 `$base/lib/humanoid_depth_pose_control` 后才通 —— 也就是说此前“build
-通过”只证明能编译，没证明链路真能跑。
+修掉的两处真实缺陷：
+
+1. `setup.cfg` 的 `[develop] script_dir` 原先写的是 Windows 绝对路径
+   `C:\新建文件夹\机器人作业2\src\humanoid\humanoid_depth_pose_control`，setuptools 因此把
+   可执行文件装进 `install/<pkg>/bin/`，`ros2 launch` 报 `libexec directory ... does not exist`
+   直接起不来。改成 `$base/lib/humanoid_depth_pose_control` 后才通 —— 此前“build 通过”只
+   证明能编译，没证明链路真能跑。
+2. `sim_node` 声明了 `/joint_state` 发布器却从未 `publish`，话题一直是空的。现在每 tick 发
+   实际关节角（`qpos[7:22]`，15 维、与 `joint_target` 同序），站定段膝关节稳态偏差约
+   0.198 rad —— 重力下垂造成的 PD 稳态误差，不发布这个量就看不到。
+
+上表为**单实例独跑**的结果；两套节点同时活着时频率会叠加（`/joint_target` 出现两个
+publisher、帧率翻倍），验证链路前应确认每类节点只有一个实例。
 
 链路语义与 standalone 一致：同样 250 步站定后，每步更新（standalone 口径）4.03 s 倒，
 每 5 步更新（`sim_node` 现状）4.04 s 倒，频率不是主因；关掉平衡层降到 3.16 s，
