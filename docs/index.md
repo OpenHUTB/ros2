@@ -70,6 +70,7 @@ ROS每章节运行代码:
     * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
+* [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
 ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
@@ -205,6 +206,9 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 * [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
+* [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
+
+* [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
@@ -221,13 +225,16 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [Town10 幕墙图像病害识别](./air/town10_facade_defect_detection/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
+* [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
+* [无人机测距制动轨迹指标分析](./air/mujoco_uav_braking_metrics.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
+* [无人机载荷重心偏移与配平监测](./air/uav_payload_balance_guard.md) —— 利用左右推力差、滚转修正和横摆响应估计横向重心偏移，输出配平和安全包线告警
 * [AirLib 传感器消息回归](./air/airlib_message_regression.md) —— 在 ROS 桥接前校验 IMU、GPS、LiDAR 和里程计数据契约
 * [无人机 GPS 欺骗与定位完整性监测](./air/uav_gps_integrity_guard.md) —— 融合位置跳变、速度一致性和 IMU 差异，输出 GPS 可信、交叉检查或拒绝建议
 
@@ -314,6 +321,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 * [MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制](./air/uav_vertical_ppo.md)
 
+* [无人机执行器故障注入与控制退化观测](./air/uav_actuator_fault_sim.md) —— 在 MuJoCo 底座上插入可编程的桨故障（完全失效 / 推力衰减 / 卡死 / 渐进退化）与 IMU 故障，实测"单桨完全失效 0.64 s 必坠、把损失推力均摊给其余三桨也救不回来"，为后续神经容错飞行模块提供数据与评测台
 * [四旋翼吊挂负载防摆控制](./air/uav_slung_load.md) —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务

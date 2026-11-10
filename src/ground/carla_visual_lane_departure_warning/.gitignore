@@ -1,0 +1,10 @@
+# 采集数据与运行产物不入库
+data/
+out/
+figures/
+__pycache__/
+
+# 训练好的权重入库（仓库顶层 .gitignore 也为 models/*.npz 开了白名单），
+# 否则别人克隆下来没法直接跑 --demo
+!models/
+!models/*.npz

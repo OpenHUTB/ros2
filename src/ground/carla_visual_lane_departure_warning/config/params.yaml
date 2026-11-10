@@ -1,0 +1,17 @@
+# 相机与训练参数，供 ROS 节点与 launch 读取；命令行参数优先
+carla_host: '127.0.0.1'
+carla_port: '2000'
+town: 'Town03'
+vehicle: 'vehicle.tesla.model3'
+spawn_index: '0'
+
+# 相机：与采集时一致，改了就得分数据集重训
+image_width: '800'
+image_height: '600'
+fov: '90.0'
+camera_height: '1.6'
+
+# 真值取车头前方 10 m 处的左右车道边界
+target_distance: '10.0'
+
+checkpoint: 'models/lane_regressor.npz'
