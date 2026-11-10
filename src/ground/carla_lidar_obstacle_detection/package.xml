@@ -4,7 +4,7 @@
   <name>carla_lidar_obstacle_detection</name>
   <version>0.1.0</version>
   <description>地面车激光雷达 3D 目标检测：语义点云实例分组 + 多帧累积 + 召回率评估，直连 CARLA</description>
-  <maintainer email="cx3238842481@qq.com">chenxi</maintainer>
+  <maintainer email="user@todo.todo">user</maintainer>
   <license>MIT</license>
 
   <exec_depend>ros2launch</exec_depend>
