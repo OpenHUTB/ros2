@@ -1,0 +1,7 @@
+uav_alt_sim:
+  ros__parameters:
+    rate_hz: 10.0
+    duration_s: 0.0
+uav_baro_watch:
+  ros__parameters:
+    output_csv: /tmp/uav_baro_runtime.csv
