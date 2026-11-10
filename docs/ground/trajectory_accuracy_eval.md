@@ -255,7 +255,7 @@ traj_eval_node:
 python3 test/test_traj_eval.py       # 自洽测试：41 项检查
 python3 test/test_known_answer.py    # 已知答案对拍：7 项
 # 或按 pytest 的方式一次跑完
-python3 -m pytest test/ -q           # 15 passed
+python3 -m pytest test/ -q           # 16 passed
 ```
 
 **自洽测试**（`test_traj_eval.py`，41 项）：SE2 运算、Umeyama 对齐（含镜像数据不产生反射）、
@@ -298,8 +298,17 @@ Windows 默认控制台是 GBK，无法编码 `∘`、`⁻`、`¹` 这类数学�
 
 | 控制台编码 | `test/test_traj_eval.py` | `test/test_known_answer.py` | `pytest test/` |
 |---|---|---|---|
-| UTF-8（Linux / 现代终端） | 41 项通过 | 7 项通过 | 15 passed |
-| GBK（Windows 默认） | 41 项通过 | 7 项通过 | 15 passed |
+| UTF-8（Linux / 现代终端） | 41 项通过 | 7 项通过 | 16 passed |
+| GBK（Windows 默认） | 41 项通过 | 7 项通过 | 16 passed |
+
+### 7.2 pytest 失败传播
+
+早期 `check()` 失败时只增加全局 `FAIL` 计数，退出码由脚本入口 `main()` 决定；
+但 pytest 不调用 `main()`，所以内部已经打印 `[FAIL]` 的用例仍可能显示为通过。
+
+现在 pytest 设置 `PYTEST_CURRENT_TEST` 时，`check()` 会直接抛出
+`AssertionError`，使 pytest 正确返回非零；直接运行脚本时仍由 `main()` 汇总全部
+检查后统一退出。新增的 `[9] pytest 兼容性` 用例专门守住这条失败传播路径。
 
 ## 8. 已知限制
 

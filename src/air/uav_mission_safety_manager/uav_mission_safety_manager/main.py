@@ -1,4 +1,5 @@
 import json
+import os
 import time
 
 import rclpy
@@ -9,6 +10,7 @@ from std_srvs.srv import Trigger
 from .airsim_adapter import AirSimAdapter
 from .controller import FlightController
 from .demo_adapter import DemoAdapter
+from .flight_recorder import FlightRecorder
 from .mission_action import MissionAction
 from .state_machine import SafetyMachine, State
 
@@ -21,6 +23,10 @@ class MissionNode(Node):
         operation_timeout = self.declare_parameter('operation_timeout', 120.0).value
         use_airsim = self.declare_parameter('use_airsim', False).value
         use_demo = self.declare_parameter('use_demo_adapter', False).value
+        record_events = self.declare_parameter('record_events', True).value
+        self.record_dir = self.declare_parameter('record_dir', '').value
+        record_max_events = self.declare_parameter('record_max_events', 500).value
+        self.dump_on_shutdown = self.declare_parameter('dump_on_shutdown', True).value
         if use_airsim and use_demo:
             raise ValueError('use_airsim and use_demo_adapter are mutually exclusive')
         self.adapter_mode = 'airsim' if use_airsim else 'demo' if use_demo else 'state_only'
@@ -31,10 +37,14 @@ class MissionNode(Node):
                         DemoAdapter() if use_demo else None)
         if use_demo:
             self.get_logger().warning('DEMO adapter: local kinematics only; no AirSim or real vehicle')
+        self.recorder = (FlightRecorder(record_max_events, clock=time.monotonic)
+                         if record_events else None)
         self.controller = FlightController(
             self.adapter, max_altitude, timeout,
-            operation_timeout=operation_timeout) if self.adapter else None
-        self.machine = self.controller.machine if self.controller else SafetyMachine(max_altitude, timeout)
+            operation_timeout=operation_timeout, recorder=self.recorder) if self.adapter else None
+        observer = self.recorder.state_changed if self.recorder else None
+        self.machine = (self.controller.machine if self.controller else
+                        SafetyMachine(max_altitude, timeout, on_transition=observer))
         self.status_pub = self.create_publisher(String, '~/status', 10)
         self.create_subscription(String, '~/command', self.command_cb, 10)
         # Synthetic external telemetry is deliberately ignored in AirSim mode.
@@ -45,6 +55,7 @@ class MissionNode(Node):
                             ('return_home', 'return'), ('land', 'land'), ('cancel', 'cancel')]:
             self.control_services.append(self.create_service(
                 Trigger, '~/' + name, lambda req, res, e=event: self.service_cb(e, res)))
+        self.dump_service = self.create_service(Trigger, '~/dump_log', self.dump_log_cb)
         self.last_telemetry = time.monotonic()
         self.mission_action = MissionAction(self)
         self.create_timer(0.2, self.timer_cb)
@@ -73,6 +84,30 @@ class MissionNode(Node):
             self.controller.request(event, **data)
         else:
             self.machine.transition(event, **data)
+        if self.recorder is not None:
+            self.recorder.record('command', event, state=self.machine.state.value)
+
+    def dump_log(self):
+        """Export the recorded event timeline; returns (csv_path, json_path)."""
+        if self.recorder is None:
+            raise RuntimeError('Flight recording disabled (record_events:=false)')
+        directory = self.record_dir or '.'
+        os.makedirs(directory, exist_ok=True)
+        csv_path = os.path.join(directory, 'flight_events.csv')
+        json_path = os.path.join(directory, 'flight_events_summary.json')
+        self.recorder.write_csv(csv_path)
+        self.recorder.write_json(json_path)
+        return csv_path, json_path
+
+    def dump_log_cb(self, request, response):
+        try:
+            csv_path, json_path = self.dump_log()
+            response.success = True
+            response.message = '{}; {}'.format(csv_path, json_path)
+        except (OSError, RuntimeError, ValueError) as exc:
+            response.success = False
+            response.message = str(exc)
+        return response
 
     def service_cb(self, event, response):
         try:
@@ -124,6 +159,13 @@ def main(args=None):
         node.mission_action.server.destroy()
         if node.adapter:
             node.adapter.close()
+        if node.dump_on_shutdown and node.recorder is not None and node.recorder.events:
+            try:
+                csv_path, json_path = node.dump_log()
+                node.get_logger().info(
+                    'Flight log written: {} / {}'.format(csv_path, json_path))
+            except (OSError, RuntimeError, ValueError) as exc:
+                node.get_logger().error('Flight log export failed: {}'.format(exc))
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
