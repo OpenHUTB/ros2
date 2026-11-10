@@ -236,6 +236,43 @@ python3 src/air/gesture_control_drone/scripts/gesture_dataset.py stats /tmp/sess
 仓库自带的 `data/session_host_121.npz`（121 个样本、25 秒、只覆盖 3/7 类）是
 **采集链路的证据**，不是可直接训练的数据集 —— `stats` 会如实报出 4 类缺失。
 
+训练与评估（纯 numpy，不需要 PyTorch）：
+
+```bash
+# 用仓库自带的真实样本训练（42 -> 64 -> 7 的两层 MLP，默认 epochs=200）
+python3 src/air/gesture_control_drone/scripts/gesture_train.py
+
+# 三种划分方式 + 多数类基线并排对比
+python3 src/air/gesture_control_drone/scripts/gesture_train.py --compare
+```
+
+默认把模型写到**包内的 `models/`**（`.gitignore` 里有 `!**/models/*.npz` 例外），
+不会在仓库根目录丢文件；要换位置用 `--out`。
+
+真实样本（121 个、3 类）上的输出：
+
+```
+划分方式                训练acc      验证acc      样本数
+time                1.000      0.972       36
+stratified          1.000      0.972       36
+random              1.000      0.972       36
+多数类基线                   -      0.722
+```
+
+![训练与评估](../img/air/gesture_control_drone/run_train.png)
+
+**为什么还要报"多数类基线"**：验证集是 26 PALM + 9 FIST + 1 POINT，全猜 PALM 就已经
+**0.722**。0.972 只有和它并排看才知道模型确实学到了东西（尤其 POINT 只有 3 个样本、
+召回 0.00）。
+
+**为什么默认按时间划分**：相邻帧几乎一样，随机划分会让训练集和验证集共享同一段
+视频。这个现象是在**另一份时序窗口数据**上观察到的（按时间划分 0.167、随机划分
+0.972，**未随本仓库提交**）；本仓库这份逐帧样本因为手势交替出现，三种划分都是
+0.972 —— 所以 `--compare` 会把三个数都打出来，让数据自己说话。
+
+> 注意：`gesture_dataset.py merge` 默认会打乱顺序，合并后的数据集就不再有采集时间
+> 信息，`--split time` 会退化成随机划分（训练脚本会打印提示）。
+
 ## 8. 常见问题
 
 | 现象 | 原因与处理 |
