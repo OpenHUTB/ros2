@@ -155,6 +155,27 @@ def sway_steer(sway, freq, state, now, offset):
     return max(-0.6, min(0.6, state['sign'] * 0.9 * (target - offset)))
 
 
+def save_dataset(args, images, targets, speeds, skipped_width, skipped_offset,
+                 skipped_paint):
+    """把采到的样本落盘并打印丢弃统计。"""
+    if not images:
+        raise RuntimeError('一帧也没采到，检查 --every 和地图是否有可行驶车道')
+    dataset = {
+        'images': np.asarray(images, dtype=np.uint8),
+        'targets': np.asarray(targets, dtype=np.float32),
+        'speeds': np.asarray(speeds, dtype=np.float32),
+    }
+    os.makedirs(os.path.dirname(args.data) or '.', exist_ok=True)
+    np.savez_compressed(args.data, **dataset)
+    print('\n写出 %s' % args.data)
+    print('  图像 %s，真值 %s' % (dataset['images'].shape, dataset['targets'].shape))
+    print('  丢弃：车道宽异常 %d，自车不在车道中间 %d，边界没画线 %d'
+          % (skipped_width, skipped_offset, skipped_paint))
+    mean = dataset['targets'].mean(axis=0)
+    print('  左边界均值 %+.2f m，右边界均值 %+.2f m' % (mean[0], mean[1]))
+    return dataset
+
+
 def collect(args):
     """连 CARLA 采数据。图像与真值在同一帧取，逐帧配对。"""
     client, world = cc.connect(args.host, args.port, args.town)
@@ -236,27 +257,14 @@ def collect(args):
                       % (len(images), index + 1, args.frames,
                          skipped_width, skipped_offset, skipped_paint))
     finally:
+        # 先落盘再清理：交通管理器强制变道后，清理阶段偶尔会因为 actor 已经被销毁
+        # 而直接 C++ abort，那种崩溃 try/except 捕不回来，数据必须先写下去
+        payload = save_dataset(args, images, targets, speeds, skipped_width,
+                               skipped_offset, skipped_paint)
         cc.destroy_all(camera, ego)
         cc.restore_async(world)
 
-    if not images:
-        raise RuntimeError('一帧也没采到，检查 --every 和地图是否有可行驶车道')
-
-    dataset = {
-        'images': np.asarray(images, dtype=np.uint8),
-        'targets': np.asarray(targets, dtype=np.float32),
-        'speeds': np.asarray(speeds, dtype=np.float32),
-    }
-    os.makedirs(os.path.dirname(args.data) or '.', exist_ok=True)
-    np.savez_compressed(args.data, **dataset)
-
-    print('\n写出 %s' % args.data)
-    print('  图像 %s，真值 %s' % (dataset['images'].shape, dataset['targets'].shape))
-    print('  丢弃：车道宽异常 %d，自车不在车道中间 %d，边界没画线 %d'
-          % (skipped_width, skipped_offset, skipped_paint))
-    mean = dataset['targets'].mean(axis=0)
-    print('  左边界均值 %+.2f m，右边界均值 %+.2f m' % (mean[0], mean[1]))
-    return dataset
+    return payload
 
 
 def load(path):
