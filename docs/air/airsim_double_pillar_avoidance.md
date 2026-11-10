@@ -12,7 +12,7 @@
 - 越过一根柱子（连续 6 帧 `advance`）后解锁侧向选择，并设 4 帧冷却：冷却期内即使画面里还有刚越过柱子的残留深度，也不立即重新锁侧，避免在柱间走廊反向摇头。
 - 修正评审 #597 指出的常量不一致：被堵时扫描偏航速率不再硬编码 15°/s，与 `smooth_yaw_rate` 共用 `MAX_YAW_RATE = 12.0`。
 - 飞行日志新增 `pillars_cleared` 列；`events.jsonl` 新增 `pillar_cleared` 事件，`goal_reached` 事件的 reason 记录清除柱数。
-- **起飞与降落改用开环速度通道判定**（实飞暴露的环境缺陷，见"验证操作与结果"）：本机 AirSim Unity 插件的 `landed_state` 在空中仍上报 Landed，导致 `takeoffAsync`/`moveToZAsync` 误报失败、`landAsync` 挂到超时。起飞改为触发后以 `moveByVelocityAsync` 比例爬升并按实测高度判定；降落改为开环下降到起飞前高度附近后 best-effort 调 `landAsync`。
+- **起飞与降落改用开环速度通道判定**（实飞暴露的环境缺陷，见"验证操作与结果"）：本机 AirSim Unity 插件的 `landed_state` 在空中仍上报 Landed，导致 `takeoffAsync`/`moveToZAsync` 误报失败、`landAsync` 挂到超时。起飞改为触发后以 `moveByVelocityAsync` 比例爬升并按实测高度判定；降落改为开环下降后连续采样 1 s，要求高度稳定在起飞前高度 ±0.35 m、高度波动 ≤0.12 m、垂直速度 ≤0.15 m/s、`landed_state=Landed` 且 `armDisarm(False)` 返回成功，任一项不满足即保留控制权并记 `landing_unconfirmed`（不再只凭单个高度采样宣告确认）。
 
 深度解码、径向转光轴投影、通道膨胀、候选方向评分、进度看门狗全部沿用单柱版本，未调整绕行速度和障碍安全距离。
 
@@ -39,7 +39,7 @@
 & $py .\src\air\airsim_double_pillar_avoidance\main.py --route goal --goal-x 38 --goal-y 0 --altitude 3 --speed 1.2 --stop-distance 3 --curve-distance 2 --safety-margin 1.5 --vehicle-radius 0.6 --timeout 180
 ```
 
-场景要点：出生点 Unity X=-320、Z=212；文档布置 pillar_1 (-322.5,4,226)、pillar_2 (-317.5,4,244)，Scale (2,361,2)、保留 Box Collider。**实际飞行场景共有三根高柱**（录屏可见；除文档两根外，场景中另有一根既有柱子，与 #597 单柱实验遗留布局一致），下文结果均按真实三柱场景记录。
+场景要点：出生点 Unity X=-320、Z=212；文档布置 pillar_1 (-322.5,4,226)、pillar_2 (-317.5,4,244)，Scale (2,361,2)、保留 Box Collider。**实际飞行场景共有三根高柱**（录屏可见；除文档两根外，第三根沿用 #597 单柱实验遗留布置：Unity (-320, 4, 229)、Scale (2, 361, 2)，与 pillar_1 沿航线相隔约 3 m），下文结果均按真实三柱场景记录。
 
 ### 验证操作与结果
 
@@ -54,7 +54,7 @@
 | 横向偏移 | 相对航线最大 +3.28 m（东）/ -3.21 m（西），符号翻转 ≥2 次 ✓ |
 | 碰撞 | 飞行中无新增碰撞中止 ✓ |
 | 巡航高度 | z≈-5.05 m（约离地 4.3 m），高于请求的 3 m：`takeoffAsync` 自身爬升与模块开环爬升叠加所致，属已知偏差，未影响绕行 |
-| 降落 | **两次运行均在到点后 `landAsync` 30 s 超时、`landing_unconfirmed`**；根因是插件 `landed_state` 空中仍报 Landed。代码已改为开环下降＋实测高度判定，**该修复尚未实飞验证** |
+| 降落 | **两次运行均在到点后 `landAsync` 30 s 超时、`landing_unconfirmed`**；根因是插件 `landed_state` 空中仍报 Landed。代码已改为开环下降＋稳定接地判据（1 s 采样、高度波动 ≤0.12 m、垂直速度 ≤0.15 m/s、`landed_state=Landed`、检查 `armDisarm` 返回值），**该修复尚未实飞验证** |
 
 结论：核心命题（越过一柱后解锁、下一柱反向重选形成 S 路径）在真实三柱场景得到验证；到点判据满足；降落确认环节修复后未复飞，验收不完整。
 
@@ -64,13 +64,13 @@
 & $pythonExe -m unittest -v test_avoidance
 ```
 
-24 项离线测试全部通过（`Ran 24 tests ... OK`），涵盖深度解码往返、通道膨胀、完全堵塞、绕行侧保持、偏航限幅、参数校验、运行目录隔离，以及 `SlalomState` 的锁侧、解锁、冷却、连续两柱反向重选与两次清除计数。这些测试验证算法逻辑，不能替代仿真飞行。
+32 项离线测试全部通过（`Ran 32 tests ... OK`），涵盖深度解码往返、通道膨胀、完全堵塞、绕行侧保持、偏航限幅、参数校验、运行目录隔离，`SlalomState` 的锁侧、解锁、冷却、连续两柱反向重选与两次清除计数，**被 `blocked_hover`/`scan_for_exit` 打断时连续清空帧必须归零的回归用例**，以及降落确认判据（稳定接地、Flying 状态、高度振荡、垂直速度过快、高空、空采样六类）。这些测试验证算法逻辑，不能替代仿真飞行。
 
 ## 运行效果
 
 ![用户实际运行录屏（连续 S 形绕行）](../img/air/airsim_double_pillar_avoidance/flight_demo.gif)
 
-动图来自用户实际运行录制（原始 11,584,830 字节、522×766、844 帧、每帧 100 ms，超出仓库 10 MB 限制）。为压到限制内做了等比缩放与抽帧：长边缩至 420（286×420），每 3 帧保留 1 帧并把被丢弃帧的时长合并进保留帧，得 282 帧、总时长仍为 84400 ms（时间比例不变，未加速），输出 8,987,406 字节（<10 MB），未使用生成图冒充。观察重点：起飞爬升、依次绕过各柱且第二柱明显改走航线另一侧（S 段）、到点后下降阶段因 landAsync 超时未能完成降落确认。
+动图来自用户实际运行录制（原始 11,584,830 字节、522×766、844 帧、每帧 100 ms）。仓库 README 要求动图小于 **5 MB**；为压到限制内做了等比缩放与抽帧：先缩到 286×420、每 3 帧保留 1 帧（282 帧），仍为 8.99 MB；再按评审意见二次压缩到 **240×352、每 2 帧保留 1 帧（141 帧）**，并把被丢弃帧的时长合并进保留帧，总时长约 84.3 s（时间比例不变，未加速），输出 **2,876,334 字节（<5 MB）**，读回校验帧数与时长，未使用生成图冒充。观察重点：起飞爬升、依次绕过各柱且第二柱明显改走航线另一侧（S 段）、到点后下降阶段因 landAsync 超时未能完成降落确认。
 
 ## 已知限制与尚未验证内容
 
@@ -89,13 +89,13 @@
 ## 提交前检查
 
 - [x] 源码与教程分别放在 `src/air/airsim_double_pillar_avoidance` 与 `docs/air`，新增文件使用英文下划线命名。
-- [x] 提供 main.py、launch/run_demo.ps1、requirements.txt、README、24 项离线测试与模块 .gitignore；ROS launch 不适用于本次直接 API 实验。
+- [x] 提供 main.py、launch/run_demo.ps1、requirements.txt、README、32 项离线测试与模块 .gitignore；ROS launch 不适用于本次直接 API 实验。
 - [x] 在 `mkdocs.yml` 空域载具段与首页 `docs/index.md` 各新增一条跳转入口。
 - [x] 实飞两次到达目标（误差 0.74 m），保留真实 flight.csv 与 events.jsonl，未把虚拟环境、`__pycache__`、根目录 artifacts 运行产物作为源码提交。
-- [x] 真实录屏压缩为 8.99 MB 的合法多帧 GIF（<10 MB，282 帧、总时长不变），读回校验帧数与体积；未用生成图冒充。
+- [x] 真实录屏压缩为 2,876,334 字节的多帧 GIF（<5 MB，141 帧、240×352、总时长约 84.3 s），读回校验帧数与体积；未用生成图冒充。
 - [ ] 降落修复后的完整实飞（到 `Landing confirmed: True`）未验证，不虚报完成。
 - [ ] 两柱净场景复验、巡航高度精调未做。
-- [ ] 未运行 `mkdocs build --strict`：本机未安装 mkdocs；提交者需按仓库根 `requirements.txt` 安装后执行 `mkdocs serve --livereload` 确认本页、GIF 与两处导航入口返回 200。
+- [x] 已按仓库根 `requirements.txt` 安装 mkdocs 依赖并执行 `mkdocs build`（11.7 s 通过）；`mkdocs serve -a 127.0.0.1:8011` 下本页与首页均返回 HTTP 200，GIF 引用与导航入口存在。
 - [x] 检查 `git diff --check` 无空白错误；本次仅新增本模块文件、报告与两处导航入口，未删除公共文件。
 
 ## 大模型使用声明

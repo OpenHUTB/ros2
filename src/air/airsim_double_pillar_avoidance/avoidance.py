@@ -71,27 +71,30 @@ class SlalomState:
     def update(self, reason: str, steer_angle: float,
                release_frames: int = RELEASE_FRAMES) -> bool:
         """Advance one control step; return True when a pillar was just cleared."""
-        if reason == "curve_around_obstacle":
+        if reason != "advance":
+            # Any interrupted frame (a curve or a blocked scan) breaks the run of
+            # consecutive clear frames. Without this reset a single blocked_hover
+            # between advance frames would still count towards pillar_cleared.
             self.clear_frames = 0
-            if self.cooldown > 0:
-                # Still crossing the gap: stay unlocked, let the planner pick
-                # freely without committing to a side yet.
-                self.cooldown -= 1
-            elif self.side == 0:
-                self.side = 1 if steer_angle >= 0 else -1
+            if reason == "curve_around_obstacle":
+                if self.cooldown > 0:
+                    # Still crossing the gap: stay unlocked, let the planner pick
+                    # freely without committing to a side yet.
+                    self.cooldown -= 1
+                elif self.side == 0:
+                    self.side = 1 if steer_angle >= 0 else -1
             return False
-        if reason == "advance":
-            if self.cooldown > 0:
-                self.cooldown -= 1
-            self.clear_frames += 1
-            if self.side and self.clear_frames >= release_frames:
-                # The locked side has served this pillar; free the choice so a
-                # pillar on the opposite side is bypassed the other way (an S).
-                self.side = 0
-                self.cooldown = SIDE_COOLDOWN_FRAMES
-                self.pillars_cleared += 1
-                self.clear_frames = 0
-                return True
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        self.clear_frames += 1
+        if self.side and self.clear_frames >= release_frames:
+            # The locked side has served this pillar; free the choice so a
+            # pillar on the opposite side is bypassed the other way (an S).
+            self.side = 0
+            self.cooldown = SIDE_COOLDOWN_FRAMES
+            self.pillars_cleared += 1
+            self.clear_frames = 0
+            return True
         return False
 
 
@@ -257,6 +260,26 @@ def decode_unity_depth(values: list[float], near: float = 0.3,
         normalized = linear / scale + near_over_far
         decoded.append(normalized * far)
     return decoded
+
+
+def landing_is_confirmed(zs: list[float], vz: float, state_is_landed: bool,
+                         ground_z: float, near_tolerance: float = 0.35,
+                         spread_tolerance: float = 0.12,
+                         vz_tolerance: float = 0.15) -> bool:
+    """A low altitude alone is not a landing: require a stable, slow touchdown.
+
+    The altitude must stay within ``spread_tolerance`` over several samples
+    (not just dip below the ground line), the vertical speed must be small, and
+    the vehicle must not report Flying. Unity's landed_state is unreliable in
+    the other direction (it can report Landed while airborne), so it is only
+    one of the required signals; the caller still checks that disarming works.
+    """
+    if not zs:
+        return False
+    near = abs(zs[-1] - ground_z) <= near_tolerance
+    stable = max(zs) - min(zs) <= spread_tolerance
+    slow = abs(vz) <= vz_tolerance
+    return bool(near and stable and slow and state_is_landed)
 
 
 def check_new_collision(collision, initial_timestamp: int) -> None:
@@ -514,14 +537,33 @@ def fly(args: argparse.Namespace) -> None:
                     except Exception as error:
                         land_result = False
                         print(f"landAsync best-effort failed: {type(error).__name__}: {error}")
-                    final_z = client.getMultirotorState(**vehicle).kinematics_estimated.position.z_val
-                    # Within 0.5 m of the pre-takeoff ground height means it came down.
-                    landed = final_z > (ground_z - 0.5)
+                    # A single low-altitude sample is not a landing: sample the
+                    # altitude, vertical speed and landed_state over 1 s and only
+                    # confirm a stable, slow touchdown. The disarm result is
+                    # checked separately before reporting success.
+                    readings = []
+                    sample = None
+                    for _ in range(5):
+                        sample = client.getMultirotorState(**vehicle)
+                        z = sample.kinematics_estimated.position.z_val
+                        velocity = getattr(sample.kinematics_estimated, "linear_velocity", None)
+                        vz = getattr(velocity, "z_val", 0.0) if velocity is not None else 0.0
+                        readings.append((z, vz))
+                        time.sleep(0.2)
+                    zs = [z for z, _ in readings]
+                    state = getattr(sample, "landed_state", None)
+                    state_is_landed = state == airsim.LandedState.Landed
+                    landed = landing_is_confirmed(zs, readings[-1][1], state_is_landed,
+                                                  ground_z)
                     print(f"Landing confirmed: {landed} "
-                          f"(final_z={final_z:.2f}, ground_z={ground_z:.2f}, "
+                          f"(final_z={zs[-1]:.2f}, ground_z={ground_z:.2f}, "
+                          f"spread={max(zs) - min(zs):.2f}, "
+                          f"vz={readings[-1][1]:+.2f}, landed_state={state}, "
                           f"landAsync={land_result})")
                 if landed:
-                    client.armDisarm(False, **vehicle)
+                    if not bool(client.armDisarm(False, **vehicle)):
+                        landed = False
+                        print("Disarm rejected; landing unconfirmed")
                 else:
                     print("Landing unconfirmed: API control retained; stop Unity Play before retrying")
             except Exception as error:

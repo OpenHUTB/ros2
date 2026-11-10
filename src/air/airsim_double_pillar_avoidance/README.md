@@ -2,7 +2,7 @@
 
 [实验报告](../../../docs/air/airsim_double_pillar_avoidance.md)。本模块使用 AirSim Python RPC，无需 ROS。launch/run_demo.ps1 是 Windows PowerShell 启动器，不是 ROS launch。
 
-> 实飞状态：2026-11-06 用户在本机 Unity 实飞两次均到达目标（终点误差 0.74 m，绕行了 3 根柱，第二柱反向重选形成 S 段），核心逻辑已验证。遗留缺陷：到点后 `landAsync` 30 s 超时、`landing_unconfirmed`（根因是插件 `landed_state` 空中仍报 Landed）。代码已把起飞/降落改用开环速度通道＋实测高度判定，**该降落修复尚未复飞验证**。详见[实验报告](../../../docs/air/airsim_double_pillar_avoidance.md)。
+> 实飞状态：2026-11-06 用户在本机 Unity 实飞两次均到达目标（终点误差 0.74 m，绕行了 3 根柱，第二柱反向重选形成 S 段），核心逻辑已验证。遗留缺陷：到点后 `landAsync` 30 s 超时、`landing_unconfirmed`（根因是插件 `landed_state` 空中仍报 Landed）。代码已把起飞/降落改用开环速度通道；降落确认改为连续采样 1 s、要求高度稳定在起飞前高度附近、垂直速度小、`landed_state=Landed` 且 `armDisarm(False)` 返回成功，任一不满足即保留控制权，**该降落修复尚未复飞验证**。详见[实验报告](../../../docs/air/airsim_double_pillar_avoidance.md)。
 
 ## 0. 与单柱版本的关系
 
@@ -117,7 +117,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 
 实飞输出顺序（本机三柱场景，2026-11-06）：Connected → After takeoff request → After climb → advance / curve_around_obstacle → `Avoidance side locked: +1`（第一柱）→ `Pillar cleared (1); side unlocked` → `Avoidance side locked: -1`（第二柱反向，S 段成立）→ `Pillar cleared (2)` → `Pillar cleared (3)` → Goal reached。终端 CSV 的 `pillars_cleared` 列随绕行递增，到点事件 `goal_reached` 的 reason 记录清除柱数。相邻两柱的锁侧符号相反即说明解锁生效。碰撞、无安全通道或无水平进展会中止并尝试降落，不要把异常降落当成成功。
 
-**已知偏差**：实飞巡航高度 z≈-5.05 m（约离地 4.3 m），高于 `--altitude 3` 请求值，因 `takeoffAsync` 自身爬升与模块开环爬升叠加；到点后 `landAsync` 会 30 s 超时（插件 `landed_state` 空中仍报 Landed），代码已改用开环下降＋实测高度判定，但该降落修复尚未复飞。
+**已知偏差**：实飞巡航高度 z≈-5.05 m（约离地 4.3 m），高于 `--altitude 3` 请求值，因 `takeoffAsync` 自身爬升与模块开环爬升叠加；到点后 `landAsync` 会 30 s 超时（插件 `landed_state` 空中仍报 Landed），代码已改用开环下降＋1 s 稳定接地采样＋`landed_state`/`armDisarm` 双重校验，但该降落修复尚未复飞。
 
 ## 6. 验收与故障排查
 
@@ -140,7 +140,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 | 相邻两柱锁同一侧 | 冷却帧数过小、`preferred_heading` 过强，或下一柱近侧被判定不安全 |
 | 巡航高度高于 --altitude | takeoffAsync 与开环爬升叠加，实测约高 1.3 m，未精调 |
 | No horizontal progress | 柱间走廊宽度、重复柱子、CSV；局部算法不保证所有场景可达 |
-| Landing unconfirmed / landAsync 超时 | 插件 landed_state 不可靠；已改开环下降判定，复现者确认 final_z 是否回到 ground_z 附近 |
+| Landing unconfirmed / landAsync 超时 | 插件 landed_state 不可靠；现按 1 s 采样判稳定接地并检查 armDisarm 返回值，final_z 接近 ground_z、无高度波动且 disarm 成功才会确认 |
 
 ## 7. 离线测试
 
@@ -152,7 +152,7 @@ Push-Location .\src\air\airsim_double_pillar_avoidance
 Pop-Location
 ```
 
-24 项测试覆盖深度解码往返、通道膨胀、完全堵塞、绕行侧保持、偏航限幅、参数校验、运行目录隔离，以及新增的 SlalomState 解锁/冷却/双柱两次清除时序。这些测试只验证算法逻辑，不能替代仿真飞行。
+32 项测试覆盖深度解码往返、通道膨胀、完全堵塞、绕行侧保持、偏航限幅、参数校验、运行目录隔离，SlalomState 的解锁/冷却/双柱两次清除时序，被 `blocked_hover`/`scan_for_exit` 打断时连续清空帧归零的回归用例，以及降落确认判据（稳定接地、Flying、高度振荡、垂直速度过快、高空、空采样）。这些测试只验证算法逻辑，不能替代仿真飞行。
 
 ## 大模型使用声明
 

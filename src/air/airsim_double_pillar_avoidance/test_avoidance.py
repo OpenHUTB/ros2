@@ -7,8 +7,8 @@ import unittest
 from types import SimpleNamespace
 from avoidance import (SlalomState, ProgressWatchdog, create_run_directory, record_event,
                        decode_unity_depth, plan, route_from_start, check_new_collision,
-                       smooth_yaw_rate, parse_args, MAX_YAW_RATE, RELEASE_FRAMES,
-                       SIDE_COOLDOWN_FRAMES)
+                       smooth_yaw_rate, parse_args, landing_is_confirmed,
+                       MAX_YAW_RATE, RELEASE_FRAMES, SIDE_COOLDOWN_FRAMES)
 
 
 class CollisionTests(unittest.TestCase):
@@ -142,7 +142,54 @@ class SlalomStateTests(unittest.TestCase):
         for _ in range(RELEASE_FRAMES):
             state.update("advance", 0.0)
         self.assertEqual(state.pillars_cleared, 2)
-        self.assertEqual(state.side, 0)
+
+    def test_blocked_frame_breaks_the_clear_streak(self):
+        state = SlalomState()
+        state.update("curve_around_obstacle", 0.5)
+        for _ in range(RELEASE_FRAMES - 1):
+            self.assertFalse(state.update("advance", 0.0))
+        # blocked_hover is an interruption: the streak must restart at zero, so
+        # the following advance frame must not clear the pillar.
+        self.assertFalse(state.update("blocked_hover", 0.0))
+        self.assertFalse(state.update("advance", 0.0))
+        self.assertEqual(state.pillars_cleared, 0)
+        self.assertEqual(state.side, 1)
+        self.assertEqual(state.clear_frames, 1)
+
+    def test_scan_frame_also_breaks_the_clear_streak(self):
+        state = SlalomState()
+        state.update("curve_around_obstacle", -0.5)
+        for _ in range(RELEASE_FRAMES - 1):
+            state.update("advance", 0.0)
+        self.assertFalse(state.update("scan_for_exit", 0.0))
+        self.assertFalse(state.update("advance", 0.0))
+        self.assertEqual(state.pillars_cleared, 0)
+        self.assertEqual(state.side, -1)
+
+
+class LandingTests(unittest.TestCase):
+    def test_stable_touchdown_is_confirmed(self):
+        self.assertTrue(landing_is_confirmed([-0.22, -0.24, -0.23, -0.23, -0.22],
+                                             0.01, True, 0.0))
+
+    def test_flying_state_is_not_a_landing(self):
+        self.assertFalse(landing_is_confirmed([-0.22, -0.24, -0.23, -0.23, -0.22],
+                                              0.01, False, 0.0))
+
+    def test_altitude_oscillation_is_not_a_landing(self):
+        self.assertFalse(landing_is_confirmed([-0.10, -0.35, -0.12, -0.33, -0.15],
+                                              0.01, True, 0.0))
+
+    def test_fast_descent_is_not_a_landing(self):
+        self.assertFalse(landing_is_confirmed([-0.20, -0.22, -0.23, -0.22, -0.21],
+                                              -0.9, True, 0.0))
+
+    def test_high_altitude_is_not_a_landing(self):
+        self.assertFalse(landing_is_confirmed([-1.3, -1.3, -1.3, -1.3, -1.3],
+                                              0.0, True, 0.0))
+
+    def test_empty_samples_are_not_a_landing(self):
+        self.assertFalse(landing_is_confirmed([], 0.0, True, 0.0))
 
 
 class WatchdogTests(unittest.TestCase):
