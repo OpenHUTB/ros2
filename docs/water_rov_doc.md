@@ -43,41 +43,22 @@ pip install opencv-python -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```bash
 colcon build --packages-select water
 source install/setup.bash
-```
-
-## 训练（必须先有真实数据集）
-
-数据集按类别子文件夹组织：
-
-```
-dataset/
-├── rock/*.jpg
-├── pipe/*.jpg
-└── sand/*.jpg
-```
 
 ```bash
 cd src/water
+python3 -m water.train_sonar --data /path/to/dataset --epochs 20 \
+    --out weights/sonar_cnn_weights.pth
+cd ../..
+colcon build --packages-select water     # 重新编译，把 weights/*.pth 装进 share/water/weights
+source install/setup.bash
+```
+
+训练脚本会打印 `class_to_idx`，节点的 `classes` 参数顺序必须与之相同。
+
+## 运行
+
+```bash
 ros2 launch water rov.launch.py
-```
-
-确认数据链路：
-
-```bash
-ros2 topic hz /sonar/camera/image_raw     # 应为 15 Hz 左右
-ros2 topic echo /sonar/result --once      # 带标注的结果图
-rqt_image_view                            # 选 /sonar/result 查看
-```
-
-常用参数覆盖：
-
-```bash
-ros2 run water sonar_infer_node --ros-args \
-  -p weight_file:=/absolute/path/sonar_cnn_weights.pth \
-  -p image_topic:=/sonar/camera/image_raw \
-  -p infer_period:=0.5 \
-  -p device:=cuda \
-  -p classes:="[rock,pipe,sand]"
 ```
 
 ## 效果图
@@ -85,12 +66,3 @@ ros2 run water sonar_infer_node --ros-args \
 ![Gazebo 水下仿真场景](img/sonar_gazebo_simulation.jpg)
 
 ![声呐识别节点运行输出](img/sonar_infer_output.jpg)
-
-## 常见问题
-
-| 现象 | 原因 | 处理 |
-|---|---|---|
-| Gazebo 打开后世界为空 / 报 world 解析错误 | world 文件未安装或 SDF 语法错误 | 确认 `install/water/share/water/worlds/underwater.world` 存在；`gz sdf -k src/water/worlds/underwater.world` 自检 |
-| 节点一直无输出、`ros2 topic hz` 无数据 | 订阅话题与实际话题不一致 | 用 `ros2 topic list | grep sonar` 确认真实话题名，再改 `-p image_topic:=` |
-| 启动即报"未找到权重文件" | 未训练或未重新 colcon build | 先训练到 `weights/`，再 `colcon build` 安装 |
-| 图像全黑 | 相机贴住海床或场景过暗 | 已通过 `<static>true</static>` 固定 ROV；可调高 `rov` 的 pose z 值 |
