@@ -7,8 +7,8 @@ DQN 导航、SLAM 建图与导航同步、图像端到端 DQN 控制。
 自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略，不需要人工标注
 专家轨迹。
 
-本页说明模块总体设计、键盘遥控（PR #892）与雷达感知（PR #893）；DQN 训练与部署、
-建图、端到端控制按依赖顺序在后续 PR 中补充。
+本页说明模块总体设计、键盘遥控（PR #892）、雷达感知（PR #893）与 DQN 策略训练
+（PR #918）；DQN 部署、建图、端到端控制按依赖顺序在后续 PR 中补充。
 
 ## 1 运行环境
 
@@ -105,7 +105,40 @@ roslaunch uav_lidar_dqn_navigation main.launch mode:=scan
 rosrun rviz rviz   # Fixed Frame 选 odom，添加 LaserScan 订阅 /drone/lidar/scan
 ```
 
-## 5 话题与服务
+## 5 DQN 策略训练
+
+状态 `s` 为 32 维：24 个扇区距离、目标相对量（水平距离、方位角正余弦、高度差，
+共 4 维）、机体系速度 3 维、上一步动作 1 维。动作为 6 个离散速度指令
+（悬停、直行、左前、右前、原地左转、原地右转），由 `dqn_network.py` 统一定义。
+
+网络采用 Dueling 结构：两层 128 维全连接后分成状态价值 `V(s)` 与优势
+`A(s,a)`，输出
+
+$$
+Q(s,a) = V(s) + A(s,a) - \frac{1}{|A|}\sum_{a'} A(s,a')
+$$
+
+训练用 Double DQN 目标抑制过估计：
+
+$$
+y = r + \gamma \, Q_{\theta^-}\!\left(s', \arg\max_{a'} Q_\theta(s', a')\right)
+$$
+
+经验回放缓冲区打散样本相关性，目标网络 `θ⁻` 定期从在线网络软/硬更新，
+损失为 Huber 形式，探索用 ε-greedy 并随回合衰减。
+
+奖励由三部分组成：接近目标为正、远离为负，碰撞大幅扣分，到达目标给终止奖励。
+训练入口：
+
+```bash
+roslaunch uav_lidar_dqn_navigation train.launch episodes:=200
+rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
+```
+
+权重与日志写入 `models/`：`dqn_nav.pt`（最新）、`dqn_nav_best.pt`（近 20 回合
+成功率最高）、`train_nav_log.csv`（每回合累计奖励、步数、是否成功）。
+
+## 6 话题与服务
 
 | 名称 | 类型 | 说明 |
 | --- | --- | --- |
@@ -117,12 +150,10 @@ rosrun rviz rviz   # Fixed Frame 选 odom，添加 LaserScan 订阅 /drone/lidar
 | `/drone/takeoff` | std_srvs/Trigger | 起飞 |
 | `/drone/land` | std_srvs/Trigger | 降落 |
 
-## 6 后续 PR
+## 7 后续 PR
 
 | PR | 内容 |
 | --- | --- |
-| #893 | 雷达扇区特征与扫描话题发布 |
-| #918 | DQN 策略训练流程与模型权重 |
 | #922 | DQN 导航节点与 gmapping 建图链路 |
 | #932 | 图像端到端 DQN 与演示动图 |
 
