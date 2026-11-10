@@ -376,3 +376,29 @@ flowchart TD
 | 交付 ZIP 异目录复测 | 上游记录：准备、测试、训练入口、构建、回放全部通过，最终 CSV 逐字节一致 |
 
 ---
+
+## 8. ROS2 接口
+
+| 话题 | 类型 | 用途 |
+|---|---|---|
+| `/uav/telemetry` | `std_msgs/String` JSON | 整数纳秒源时间、到达时间、9 个飞行量 |
+| `/uav/anomaly_score` | `std_msgs/String` JSON | 分数、阈值、报警、原因、数据有效性、模型就绪、`channels`、`dominant` |
+| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | 标准诊断等级与键值 |
+| `/uav/replay_status` | `std_msgs/String` JSON | 回放完成通知 |
+
+| 节点 | 职责 |
+|---|---|
+| `telemetry_diagnostics` | 订阅遥测、维护 8 步历史、打分、发布报警与诊断 |
+| `telemetry_replay` | 回放 CSV，按源时间戳发布；丢包时真的跳过 |
+| `dashboard` | 订阅 `/uav/anomaly_score`，画分数与报警曲线（Tk 窗口） |
+
+异常处理约定：
+
+- 输入非有限值或坏 JSON → `reason=invalid_payload`，输出 ERROR 诊断，**节点不崩**；
+- 源时间戳不前进 → `stale_timestamp`，清空历史；
+- 回放结束后发 `complete=true`，仪表盘显示 `REPLAY COMPLETE`；
+- `live_source.py` 只读仿真状态，**不解锁、不起飞、不发控制**。
+
+接入其他仿真器需要同时拿到**同步的位置、速度、加速度与源时间戳**。只有 `/uav/odom` 不够——没有加速度通道时，速度残差这一半特征无法计算。
+
+---
