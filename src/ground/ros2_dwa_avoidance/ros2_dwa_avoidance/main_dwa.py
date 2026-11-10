@@ -21,10 +21,11 @@ import math
 import time
 
 import rclpy
-from geometry_msgs.msg import PoseStamped, Twist
+from geometry_msgs.msg import PoseStamped, TransformStamped, Twist
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
+from tf2_ros import TransformBroadcaster
 
 from .dwa_core import DWAParams, RobotState, scan_points_from_ranges
 from .hybrid_planner import AStarDWAController
@@ -63,7 +64,7 @@ class DwaAvoidanceNode(Node):
         self.declare_parameter("control_rate", 10.0)
         self.declare_parameter("replan_period", 1.00)
         self.declare_parameter("lookahead", 1.20)
-        self.declare_parameter("map_half_size", 8.00)
+        self.declare_parameter("map_half_size", 10.00)
         self.declare_parameter("data_timeout", 0.50)
         self.declare_parameter("max_scan_points", 120)
 
@@ -91,6 +92,7 @@ class DwaAvoidanceNode(Node):
         self._window_center = (self.state.x, self.state.y)
 
         self.cmd_pub = self.create_publisher(Twist, str(self.get_parameter("cmd_topic").value), 10)
+        self.tf_broadcaster = TransformBroadcaster(self)
         self.create_subscription(LaserScan, str(self.get_parameter("scan_topic").value),
                                  self.on_scan, 10)
         self.create_subscription(Odometry, str(self.get_parameter("odom_topic").value),
@@ -135,6 +137,16 @@ class DwaAvoidanceNode(Node):
         self.state.w = msg.twist.twist.angular.z
         self.last_odom_time = time.monotonic()
 
+        # Publish odom -> base_link so RViz can show the RobotModel.
+        transform = TransformStamped()
+        transform.header.stamp = msg.header.stamp
+        transform.header.frame_id = "odom"
+        transform.child_frame_id = "base_link"
+        transform.transform.translation.x = pos.x
+        transform.transform.translation.y = pos.y
+        transform.transform.rotation = msg.pose.pose.orientation
+        self.tf_broadcaster.sendTransform(transform)
+
     def on_scan(self, msg: LaserScan) -> None:
         self.scan_msg = msg
         self.last_scan_time = time.monotonic()
@@ -170,9 +182,6 @@ class DwaAvoidanceNode(Node):
         if self.scan_msg is None or self.last_scan_time is None or \
                 now - self.last_scan_time > self.data_timeout:
             self._stop("no fresh /scan")
-            return
-        if self.goal is None:
-            self._stop("no goal")
             return
 
         if math.hypot(self.goal[0] - self.state.x, self.goal[1] - self.state.y) <= \
@@ -222,3 +231,4 @@ def main(args=None) -> None:
 
 if __name__ == "__main__":
     main()
+

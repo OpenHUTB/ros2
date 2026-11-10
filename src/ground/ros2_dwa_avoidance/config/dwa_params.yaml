@@ -1,4 +1,4 @@
-﻿dwa_avoidance:
+dwa_avoidance:
   ros__parameters:
     scan_topic: /scan
     odom_topic: /odom

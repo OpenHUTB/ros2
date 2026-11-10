@@ -17,7 +17,7 @@
 反应式基线 1/3；ROS 2 话题级闭环测试在 2.5 m 走廊中两次运行均到达目标、无碰撞。
 
 * 源代码目录：[`src/ground/ros2_dwa_avoidance`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/ros2_dwa_avoidance)
-* 一键离线复现：`cd src/ground/ros2_dwa_avoidance && python3 sim.py`
+* 一键离线复现：`cd src/ground/ros2_dwa_avoidance && python3 -m ros2_dwa_avoidance.sim --no-figures`
 * 一键测试：`python3 -m unittest discover -s test -v`（18 项，全部通过）
 
 ## 1. 目标与系统架构
@@ -175,8 +175,8 @@ ros2 topic echo /cmd_vel
 ```bash
 cd src/ground/ros2_dwa_avoidance
 python3 -m pip install -r requirements.txt   # numpy, matplotlib
-python3 sim.py                               # 主基准 + 参数扫描
-python3 sim.py --skip-sweep                  # 只跑主基准
+python3 -m ros2_dwa_avoidance.sim --no-figures   # 写 results/sweep，不需要 matplotlib
+python3 -m ros2_dwa_avoidance.sim                # 完整运行，额外生成 figures/
 python3 -m unittest discover -s test -v      # 18 项单元测试
 ```
 
@@ -250,28 +250,31 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 ## 9. 参数灵敏度
 
 固定 A* 层，扫描 `predict_time ∈ {1.0,1.5,2.0,2.5,3.0}` s 与
-`max_v ∈ {0.5,0.8,1.1}` m/s，在 corridor/doorway/clutter 三个场景各跑一次，共 36 次：
+`max_v ∈ {0.5,0.8,1.1}` m/s，在 corridor/doorway/clutter 三个场景各跑一次，
+共 **5 × 3 × 3 = 45 次**：
 
-| predict_time | 平均完成时间（v_max=0.8） | 成功率 | 最小间隙 |
+| predict_time | 平均完成时间（3 场景，v_max=0.8） | 成功率 | corridor 最小间隙 |
 | --- | --- | --- | --- |
-| 1.0 s | 15.1 s | 3/3 | 0.33 m |
-| 1.5 s | 18.2 s | 3/3 | 0.32 m |
-| 2.0 s | 25.1 s | 3/3 | 0.32 m |
-| 2.5 s | 31.7 s | 3/3 | 0.33 m |
-| 3.0 s | 39.0 s | 3/3 | 0.31 m |
+| 1.0 s | 15.1 s | 3/3 | 0.327 m |
+| 1.5 s | 18.2 s | 3/3 | 0.316 m |
+| 2.0 s | 25.1 s | 3/3 | 0.325 m |
+| 2.5 s | 31.7 s | 3/3 | 0.328 m |
+| 3.0 s | 39.0 s | 3/3 | 0.314 m |
 
 ![参数扫描](../img/ground/ros2_dwa_avoidance/parameter_sweep.png)
 
 结论：在已有 A* 路线的前提下，**缩短预测时域能显著提高通行速度，成功率不降**。
 时域从 1.5 s 增到 3.0 s，平均时间从 18.2 s 增到 39.0 s，翻了一倍多；
 原因是恒定 $(v,\omega)$ 的长时域预测会放大航向代价，规划器倾向于选小速度。
-所有 36 次组合都成功，最小间隙稳定在 0.31–0.33 m，说明结果对参数不敏感、
-可复现性好。实际部署建议 `predict_time=1.0–1.5 s`。
+所有 45 次组合都成功，最小间隙范围是 **0.302–0.600 m**
+（corridor 0.314–0.328 m、doorway 0.535–0.600 m、clutter 0.302–0.344 m）；
+成功率对参数不敏感，但间隙随场景差异很大，不能概括为“稳定在 0.31–0.33 m”。
+实际部署建议 `predict_time=1.0–1.5 s`。
 
 ## 10. 复现与测试
 
-* `python3 sim.py`：5 场景 × 3 控制器 + 36 组参数扫描，输出 `results.json`、
-  `sweep.json` 与 `figures/`；场景与随机种子固定，结果可逐位复现。
+* `python3 -m ros2_dwa_avoidance.sim --no-figures`：5 场景 × 3 控制器 + **45 次**参数扫描，
+  输出 `results.json`、`sweep.json`；完整运行额外生成 `figures/`。场景与随机种子固定，结果可逐位复现。
 * `python3 -m unittest discover -s test -v`：18 项测试，覆盖角度归一化、
   动态窗口边界、轨迹预测几何、碰撞可行性、被围困时的旋转恢复、A* 绕墙/无解、
   路径简化、前视点投影、混合规划器到达目标。
@@ -311,6 +314,15 @@ TEST_EXIT=0
 | --- | --- | --- | --- | --- |
 | 1 | 成功，无碰撞 | 26.1 s | 11.93 m | 0.300 m |
 | 2 | 成功，无碰撞 | 20.3 s | 11.91 m | 0.337 m |
+
+另一位同学在 Ubuntu 22.04 + ROS 2 Humble 上复现同一测试，得到 18.7 s / 18.9 s、
+path 11.91 m、min_clear 0.313 / 0.316 m。路径一致说明是同一场景，
+但完成时间在 18.7–26.1 s 之间波动（约 ±30%），主要来自机器调度和 Gazebo/仿真节奏，
+**不能把某个时间点当作算法差异的验收基线**。
+
+`test/ros_integration_test.py` 的文件名不匹配 `unittest` 默认的 `test*.py`，
+所以 18 项单测**不包含**它，需要手动运行。节点现在也会发布 `odom → base_link` TF，
+RViz2 里可以直接显示 RobotModel。
 
 第一次 ROS 运行时，节点曾在第一个障碍前以 0.01 m/s 的速度“蹭”了 60 s；
 定位到 DWA 在“存在可行慢速样本”时不会触发旋转恢复，加入第 3 节的防蠕动规则后，

@@ -1,4 +1,4 @@
-﻿# ROS 2 差速机器人 A* 全局规划 + DWA 局部避障
+# ROS 2 差速机器人 A* 全局规划 + DWA 局部避障
 
 `ros2_dwa_avoidance` 在 ROS 2 Humble 下实现两层导航：
 
@@ -77,10 +77,13 @@ ros2 topic echo /goal_pose
 ```bash
 cd src/ground/ros2_dwa_avoidance
 python3 -m pip install -r requirements.txt
-python3 sim.py                      # 5 个场景 + 12 组参数扫描，写 results.json / sweep.json / figures/
-python3 sim.py --skip-sweep         # 只跑主基准
-python3 -m unittest discover -s test -v   # 18 项单元测试
+python3 -m ros2_dwa_avoidance.sim --no-figures   # 只写 results.json / sweep.json，不依赖 matplotlib
+python3 -m ros2_dwa_avoidance.sim                # 完整运行，额外生成 figures/
+python3 -m unittest discover -s test -v          # 18 项单元测试
 ```
+
+`--no-figures` 会把 `results.json` 和 `sweep.json` 写完后跳过绘图，适合只装了 NumPy 的机器；
+`test/ros_integration_test.py` 文件名不匹配 `test*.py`，**不在 18 项单测内**，需要按第 6 节手动运行。
 
 ## 5. 参数
 
@@ -117,18 +120,24 @@ A*+DWA 5/5 成功，纯 DWA 4/5，反应式基线 1/3。纯 DWA 在窄走廊中�
 在 U 形陷阱中它依靠“低速停滞时朝自由侧旋转”的恢复行为勉强脱困，
 但比 A* 版本多花 6 s、多走 4.7 m。A* 层在门洞、障碍场和动态场景中比纯 DWA
 慢 1–3 s（绕行与保守跟踪的代价），换来的是窄走廊中的通过能力和更短的绕行路径。
-最小离障距离 0.30–1.14 m，均不小于规划器要求的 0.30 m。
+最小离障距离 0.30–1.14 m。注意 0.30 m 正是 `robot_radius(0.22)+safety_margin(0.08)`
+的规划阈值；主基准中纯 DWA 有 3 个成功回合分别停在 0.300/0.301/0.302 m，
+是“贴着阈值通过”而不是独立的安全裕度证据。#1079 的贴边比例（密度 13 时纯 DWA 100%）
+进一步印证了这一点。
 
 ![轨迹对比](../../../docs/img/ground/ros2_dwa_avoidance/trajectories.png)
 
 ### ROS 2 节点实测（Ubuntu 20.04 + Foxy）
 
 * `colcon build --packages-select ros2_dwa_avoidance`：通过；
-* `python3 -m unittest discover -s test -v`：18 项通过；
+* `python3 -m unittest discover -s test -v`：18 项通过（不含 ROS 闭环测试）；
 * `test/ros_integration_test.py` 发布 `/scan`（180 束）与 `/odom`，节点发布 `/cmd_vel`，
-  2.5 m 走廊场景两次运行均在 20.3–26.1 s 到达终点，最小间隙 0.30–0.34 m，无碰撞。
+  2.5 m 走廊场景本机两次 20.3 s / 26.1 s 到达，最小间隙 0.30–0.34 m，无碰撞；
+  另一位同学在 Humble 上复现为 18.7 s / 18.9 s（同场景、path 11.91 m）。
+  **完成时间受机器调度影响可达 ±30%，不宜当作算法差异的验收基线。**
 
-参数扫描（`predict_time` × `max_v`，走廊/门洞/障碍场各一次，共 36 次）：
+参数扫描（`predict_time` 5 档 × `max_v` 3 档 × 3 个场景，共 **45 次**；
+下表的平均时间按三个场景取平均，成功率 3/3）：
 
 | predict_time | 平均完成时间（v_max=0.8） | 成功率 |
 | --- | --- | --- |

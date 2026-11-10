@@ -417,8 +417,6 @@ def run_main_benchmark(output: str, figure_dir: str) -> Dict[str, object]:
             "steps": r.steps,
         })
 
-    os.makedirs(figure_dir, exist_ok=True)
-    _plot_trajectories(results, figure_dir)
     payload = {
         "config": params.__dict__,
         "results": summary,
@@ -427,8 +425,13 @@ def run_main_benchmark(output: str, figure_dir: str) -> Dict[str, object]:
             "commands": r.commands,
         } for r in results},
     }
+    # Write the data first: a missing matplotlib must not throw away a finished
+    # benchmark run.
     with open(output, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, ensure_ascii=False, indent=2)
+    if figure_dir:
+        os.makedirs(figure_dir, exist_ok=True)
+        _plot_trajectories(results, figure_dir)
     return payload
 
 
@@ -451,10 +454,11 @@ def run_parameter_sweep(output: str, figure_dir: str) -> List[Dict[str, object]]
                     "min_clearance_m": res.min_clearance,
                     "path_length_m": res.path_length,
                 })
-    os.makedirs(figure_dir, exist_ok=True)
-    _plot_parameter_sweep(rows, figure_dir)
     with open(output, "w", encoding="utf-8") as fh:
         json.dump(rows, fh, ensure_ascii=False, indent=2)
+    if figure_dir:
+        os.makedirs(figure_dir, exist_ok=True)
+        _plot_parameter_sweep(rows, figure_dir)
     return rows
 
 
@@ -545,15 +549,18 @@ def main() -> None:
     parser.add_argument("--figdir", default="figures")
     parser.add_argument("--sweep-out", default="sweep.json")
     parser.add_argument("--skip-sweep", action="store_true")
+    parser.add_argument("--no-figures", action="store_true",
+                        help="skip matplotlib plots; results JSON is still written")
     args = parser.parse_args()
 
-    payload = run_main_benchmark(args.out, args.figdir)
+    figdir = "" if args.no_figures else args.figdir
+    payload = run_main_benchmark(args.out, figdir)
     for row in payload["results"]:
         print("{scenario:9s} {controller:10s} success={success} collision={collision} "
               "time={time_s:5.1f}s path={path_length_m:6.2f}m clear={min_clearance_m:5.2f}m"
               .format(**row))
     if not args.skip_sweep:
-        run_parameter_sweep(args.sweep_out, args.figdir)
+        run_parameter_sweep(args.sweep_out, figdir)
         print("parameter sweep written to", args.sweep_out)
 
 
