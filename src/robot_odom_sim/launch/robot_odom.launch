@@ -1,0 +1,7 @@
+<launch>
+    <!-- 启动底层运动学仿真节点 -->
+    <node name="robot_odom_sim" pkg="robot_odom_sim" type="main.py" output="screen" />
+    
+    <!-- 启动键盘控制节点 (可选：如果你不需要在 launch 里开键盘，可以删掉这行) -->
+    <node name="teleop_test" pkg="robot_odom_sim" type="teleop_test.py" output="screen" launch-prefix="xterm -e" />
+</launch>
