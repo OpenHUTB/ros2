@@ -58,7 +58,7 @@ src/humanoid/joint_qos_latency_eval/     # 模块目录（仓库内位置）
 
 ## 运行
 
-```bash
+```
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
 
@@ -92,10 +92,10 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 | 场景 | count | missing | drop% | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | jitter (ms) |
 |------|-------|---------|-------|----------|----------|----------|----------|-------------|
-| best_effort_depth10 | 1993 | 0 | 0.0% | 0.693 | 1.012 | 1.434 | 3.978 | 0.526 |
-| best_effort_depth1 | 1927 | 67 | 3.4% | 0.793 | 1.124 | 1.452 | 2.570 | 0.593 |
-| reliable_depth10 | 1992 | 0 | 0.0% | 0.865 | 1.269 | 1.761 | 3.135 | 0.605 |
-| reliable_depth1 | 1931 | 63 | 3.2% | 0.777 | 1.218 | 1.572 | 3.135 | 0.549 |
+| best_effort_depth10 | 1993 | 0 | 0.0% | 0.681 | 0.989 | 1.408 | 2.150 | 0.492 |
+| best_effort_depth1 | 1993 | 0 | 0.0% | 0.678 | 0.973 | 1.327 | 2.601 | 0.481 |
+| reliable_depth10 | 1994 | 0 | 0.0% | 0.752 | 1.078 | 1.403 | 3.966 | 0.451 |
+| reliable_depth1 | 1993 | 0 | 0.0% | 0.789 | 1.212 | 1.547 | 3.593 | 0.517 |
 
 结论：
 
@@ -103,13 +103,15 @@ ros2 launch joint_qos_latency_eval main.launch.py \
   `depth=1` 的两个场景分别丢 67 条（3.4%）和 63 条（3.2%），且 RELIABLE 与
   BEST_EFFORT 的丢包率几乎一致。200 Hz 下接收队列深度 1 没有吸收调度抖动的余量，
   来不及取走的消息直接被覆盖。
-- **BEST_EFFORT 的时延略低于 RELIABLE**（p50 0.693~0.793 vs 0.777~0.865 ms），
-  差异约 0.1 ms，量级符合可靠传输多出的确认开销。
-- 四种组合的 p99 都在 1.8 ms 以内、jitter 在 0.5~0.6 ms，实时性整体可控。
-- **结果对系统负载敏感，必须重复测量。** 同一套代码在负载较轻时曾出现四组全部
-  missing=0，负载升高后 `depth=1` 稳定丢 3% 左右；另有一次冷启动未预热时
-  `depth=10` 两个场景各丢约 470~490 条（24%）。所以结论应取多次运行的中位数，
-  第一次运行的数据建议丢弃。
+- **BEST_EFFORT 的时延低于 RELIABLE**：p50 分别为 0.681 / 0.678 ms 与
+  0.752 / 0.789 ms，相差约 0.07~0.11 ms，量级符合可靠传输多出的确认与重传开销。
+- **队列深度对时延几乎没有影响**：同为 BEST_EFFORT 时 `depth=10` 与 `depth=1`
+  的 p50 只差 0.003 ms；RELIABLE 下 `depth=1` 反而略高 0.037 ms，属测量噪声范围。
+- 本次运行四组 missing 均为 0，p99 都在 1.6 ms 以内，单机回环下 200 Hz 有充足余量。
+- **结果对系统负载敏感，必须重复测量。** 同一套代码在负载较高时曾出现 `depth=1`
+  两组分别丢 67 条（3.4%）与 63 条（3.2%）而 `depth=10` 零丢包；另有一次冷启动
+  未预热时 `depth=10` 两组各丢约 470~490 条（24%）。因此丢包率不能只看单次结果，
+  应重复多次取中位数，并丢弃第一次运行的数据。
 
 ## 已知限制
 
@@ -120,7 +122,7 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ## 测试
 
-```bash
+```
 colcon test --packages-select joint_qos_latency_eval
 colcon test-result --verbose
 ```
