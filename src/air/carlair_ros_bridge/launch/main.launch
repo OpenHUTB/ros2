@@ -16,6 +16,7 @@
   <arg name="publish_camera_model" default="true"  doc="是否启动相机模型节点（CameraInfo/TF/深度点云）"/>
   <arg name="publish_lidar" default="true"         doc="是否启动激光雷达点云发布节点"/>
   <arg name="publish_imu"   default="true"         doc="是否启动 IMU 发布节点"/>
+  <arg name="enable_depth_avoidance" default="false" doc="是否启动深度避障 demo 节点"/>
   <arg name="voxel_leaf"    default="0.0"          doc="点云体素降采样边长 m，0 表示不降采样"/>
 
   <!-- 载入默认配置（话题名/频率/限速/坐标系），再用命令行参数覆盖 -->
@@ -48,6 +49,10 @@
 
   <!-- 指令下发：/uav/cmd_vel（速度）与 /uav/goal（目标点），含超时悬停保护 -->
   <node pkg="carlair_ros_bridge" type="cmd_vel_sub.py" name="uav_cmd_vel_sub" output="screen"/>
+
+  <!-- 深度避障 demo：/camera/depth/points -> /uav/cmd_vel（默认关闭） -->
+  <node if="$(arg enable_depth_avoidance)" pkg="carlair_ros_bridge" type="depth_avoidance.py"
+        name="uav_depth_avoidance" output="screen"/>
 
   <!-- 环境自检（可选，一次性输出五项检查结果） -->
   <node if="$(arg start_selfcheck)" pkg="carlair_ros_bridge" type="main.py"
