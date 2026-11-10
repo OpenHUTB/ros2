@@ -1,0 +1,33 @@
+# 场景：加速到 3 m/s 的同时左转，检查航向与里程
+#
+# 该场景用来演示 angular 通道：
+#   roslaunch ros_scenario_runner main.launch \
+#       scenario_file:=$(find ros_scenario_runner)/config/scenarios/demo_turn_arc.yaml
+
+scenario:
+  name: 恒速左转弯
+  duration: 6.0
+
+  initial: {x: 0.0, y: 0.0, yaw: 0.0, speed: 0.0}
+
+  steps:
+    - at: 0.5
+      name: 加速并左转
+      command: {linear: 3.0, angular: 0.5}
+
+  expects:
+    - type: reach_speed
+      value: 3.0
+      tolerance: 0.05
+    - type: max_speed
+      value: 3.0
+      tolerance: 0.1
+    - type: final_speed
+      value: 3.0
+      tolerance: 0.05
+    - type: distance
+      min: 12.0
+      max: 15.0
+    - type: heading
+      value: 2.75
+      tolerance: 0.15
