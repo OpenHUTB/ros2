@@ -5,6 +5,7 @@ setup(
     packages=find_packages(),
     data_files=[
         ("share/formation_keeping", ["package.xml"]),
+        ("share/formation_keeping/launch", ["launch/main.launch.py"]),
         ("share/ament_index/resource_index/packages", ["resource/formation_keeping"]),
     ],
     install_requires=["pygame>=2.0"],
