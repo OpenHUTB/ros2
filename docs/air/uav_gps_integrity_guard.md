@@ -63,6 +63,12 @@ VALID → SUSPECT → REJECTED → VALID
 
 其中欺骗段风险约 0.41 到 0.46，水平精度从约 4.8 m 增至 7.5 m；恢复后风险回到 0.23 以下。
 
+VM 内实际终端截图同时记录了 Ubuntu 22.04.5、ROS 2 Humble、`colcon build`、8 项单元测试、两个节点启动、状态迁移和实际 CSV 尾部：
+
+![ROS 2 Humble 虚拟机实际终端截图](../img/air/uav_gps_integrity_guard/runtime_vm_terminal.png)
+
+根据同一轮 ROS 2 CSV 生成的完整性曲线：
+
 ![ROS 2 Humble 实际 GPS 完整性状态](../img/air/uav_gps_integrity_guard/runtime_integrity.png)
 
 ## 5. 限制
