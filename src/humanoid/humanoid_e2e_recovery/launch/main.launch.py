@@ -1,4 +1,4 @@
-﻿"""main.launch.py —— 同时启动仿真节点与端到端推理节点。"""
+"""main.launch.py —— 同时启动仿真节点与端到端推理节点。"""
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
