@@ -191,6 +191,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [MuJoCo 小车跟车仿真](./ground/mujoco_car_follow.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
+* [线性 MPC 路径跟踪与纯追踪对比](./ground/mpc_path_tracking.md) —— 线性时变 MPC + 箱约束 QP（坐标下降）；40 s 闭环横向 RMSE 0.212 m、稳态 0.008 m，最大偏航角速度 0.904 vs 纯追踪的 1.200 rad/s，代价 27.2 ms/step
 * [航向 PID 参数自整定与手工试凑对比](./ground/pid_auto_tuning.md) —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
