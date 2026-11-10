@@ -15,9 +15,11 @@ from .simulation import ANGLES, DT, MAX_RANGE, WarehouseSimulation, expert_targe
 class SensorNode(Node):
     def __init__(self):
         super().__init__("warehouse_ranging")
-        for key, value in [("scenario", "static"), ("duration", 8.0), ("output", "/tmp/warehouse_braking")]:
+        for key, value in [("scenario", "static"), ("duration", 8.0), ("output", "/tmp/warehouse_braking"),
+                           ("cruise_speed", 1.2)]:
             self.declare_parameter(key, value)
-        self.sim = WarehouseSimulation(self.get_parameter("scenario").value, speed=1.2)
+        self.cruise_speed = float(self.get_parameter("cruise_speed").value)
+        self.sim = WarehouseSimulation(self.get_parameter("scenario").value, speed=self.cruise_speed)
         self.scan_pub = self.create_publisher(LaserScan, "/warehouse/scan", 10)
         self.pose_pub = self.create_publisher(PoseStamped, "/warehouse/pose", 10)
         self.velocity_pub = self.create_publisher(TwistStamped, "/warehouse/reference_velocity", 10)
@@ -29,7 +31,7 @@ class SensorNode(Node):
     def tick(self):
         stamp = self.get_clock().now().to_msg()
         ranges = self.sim.ranges()
-        target, risk = expert_target(ranges, self.sim.data.qvel[0], 1.2)
+        target, risk = expert_target(ranges, self.sim.data.qvel[0], self.cruise_speed)
         scan = LaserScan()
         scan.header.stamp, scan.header.frame_id = stamp, "uav_base"
         scan.angle_min, scan.angle_max = float(ANGLES[0]), float(ANGLES[-1])
@@ -69,4 +71,5 @@ def main(args=None):
             rclpy.spin_once(node, timeout_sec=0.1)
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
