@@ -45,13 +45,13 @@ def main():
     g.add_argument("--train", action="store_true")
     g.add_argument("--demo", action="store_true")
 
-    ap.add_argument("--episodes", type=int, default=6)
-    ap.add_argument("--steps", type=int, default=80)
+    ap.add_argument("--episodes", type=int, default=10)
+    ap.add_argument("--steps", type=int, default=70)
     ap.add_argument("--epochs", type=int, default=60)
     ap.add_argument("--lr", type=float, default=5e-4)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--gif", default="demo.gif")
-    ap.add_argument("--speed", type=float, default=1.6)
+    ap.add_argument("--speed", type=float, default=1.4)
     args = ap.parse_args()
 
     if args.collect:
