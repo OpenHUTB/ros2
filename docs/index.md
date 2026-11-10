@@ -317,6 +317,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
+* [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
