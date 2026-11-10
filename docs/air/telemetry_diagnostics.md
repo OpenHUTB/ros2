@@ -33,3 +33,56 @@
 **与相邻项目的界限**：上游的[飞行状态预测（PR #121）](https://github.com/OpenHUTB/ros2/pull/121)预测未来轨迹；本项目判断当前数据是否自洽。两者可以串联，但本项目不依赖它，`prepare` 之后即可独立运行。
 
 ---
+
+## 2. 运行环境与快速开始
+
+### 2.1 环境
+
+| 项 | 配置 |
+|---|---|
+| 系统 | Ubuntu 20.04.6（VMware），6 核 / 8.5 GB |
+| ROS | ROS2 **Humble**（`/opt/ros/humble`，Python 3.8） |
+| 深度学习 | PyTorch **2.4.1+cpu** |
+| 可视化 | Tk + matplotlib（不用 RViz2，本机缺 Ogre） |
+
+### 2.2 安装与自检
+
+```bash
+cd ~/ros2/src/air/telemetry_diagnostics
+source /opt/ros/humble/setup.bash
+/usr/bin/python3 -m venv --system-site-packages ~/uav_prediction_env
+source ~/uav_prediction_env/bin/activate
+python -m pip install -r requirements.txt
+bash main.sh doctor
+bash main.sh build
+```
+
+`doctor` 检查 13 个模块（含 `launch_ros` 依赖的 `lark`），打印实际解释器并写 `artifacts/environment.json`。
+
+常见故障：`launch_ros: No module named 'lark'` → 在本模块目录、已激活的环境中重跑 `pip install -r requirements.txt`。不要跳过检查硬上。
+
+### 2.3 最快演示
+
+```bash
+python main.py prepare     # 解压语料并生成 70 个开发场景
+python main.py build
+bash main.sh demo          # 回放，约 28 秒
+```
+
+另一个终端（同一环境、`DISPLAY` 可用）：
+
+```bash
+python main.py dashboard
+```
+
+也可以一次启动：
+
+```bash
+source install/setup.bash
+ros2 launch telemetry_diagnostics main.launch.py \
+  model:="$PWD/models/consistency_42" csv:="$PWD/sample/observations.csv" plot:=true
+```
+
+演示约 18 秒仿真时间加启动等待，脚本自动退出并清理子进程。`sample/evaluation_only.csv` 不会送给诊断节点——避免"演示数据泄漏进评估"。
+
+---
