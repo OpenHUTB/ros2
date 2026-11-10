@@ -61,10 +61,12 @@ ROS每章节运行代码:
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
+    * [行人隐私脱敏视觉检测节点](./privacy_mask/README.md)
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+    * [机器视觉多机器人蚁群编队](./ant/README.md)
     * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
     * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
@@ -112,6 +114,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+* [毫米波雷达目标跟踪与前碰撞预警（TTC/FCW）](./ground/radar_ttc_fcw.md) —— 用多普勒速度分离静止杂波，多帧关联估计 TTC 并输出 SAFE/WARN/STOP 分级预警
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
@@ -347,6 +350,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
+
+* [基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统](./air/geofence.md)
 
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度
 * [无人机深度相机轨迹跟踪（CNN 行为克隆）](./air/uav_depth_track_nn.md) —— 深度相机感知 + 给定圆轨迹跟踪，CNN 输出速度指令
