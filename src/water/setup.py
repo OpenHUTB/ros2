@@ -13,8 +13,9 @@ data_files = [
     ('share/' + package_name + '/worlds', ['worlds/underwater.world']),
 ]
 
-# 训练产出的权重：存在才安装，避免权重还没训练时 colcon build 失败
-weight_files = glob.glob(os.path.join('weights', '*.pth'))
+# 训练产出的权重与类别表：存在才安装，避免权重还没训练时 colcon build 失败
+weight_files = (glob.glob(os.path.join('weights', '*.pth'))
+                + glob.glob(os.path.join('weights', '*.json')))
 if weight_files:
     data_files.append(('share/' + package_name + '/weights', weight_files))
 

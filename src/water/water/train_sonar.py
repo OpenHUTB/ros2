@@ -5,14 +5,15 @@
     ├── rock/*.jpg
     ├── pipe/*.jpg
     └── sand/*.jpg
-子文件夹名按字母序即为类别索引，训练结束会打印 class_to_idx，
-节点端 classes 参数顺序需与之保持一致。
+子文件夹名按字母序即为类别索引，训练结束会把该顺序写入 weights/classes.json，
+推理节点默认读取它，无需手工对齐。
 
 用法：
-    python3 train_sonar.py --data ../../../dataset --epochs 20 --out weights/sonar_cnn_weights.pth
+    ros2 run water train_sonar --data ./dataset --epochs 20 --out src/water/weights/sonar_cnn_weights.pth
 """
 
 import argparse
+import json
 import os
 import random
 
@@ -134,6 +135,13 @@ def main():
             print(f"  已保存最优权重 -> {out_path} (val_acc={best_acc:.4f})")
 
     print(f"训练完成，最优验证准确率 {best_acc:.4f}，权重: {out_path}")
+
+    # 类别顺序与权重一起保存：ImageFolder 按文件夹名排序，模型输出下标依赖这个顺序，
+    # 推理节点默认读取该文件，避免用户自己填 classes 顺序填错导致类别标错
+    classes_json = os.path.join(os.path.dirname(out_path), "classes.json")
+    with open(classes_json, "w", encoding="utf-8") as f:
+        json.dump(classes, f, ensure_ascii=False, indent=2)
+    print(f"类别顺序已保存 -> {classes_json}")
 
 
 if __name__ == "__main__":

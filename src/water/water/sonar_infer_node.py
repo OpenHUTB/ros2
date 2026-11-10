@@ -1,5 +1,6 @@
 """声呐图像 CNN 推理节点：订阅相机图像，定时推理并发布带标注的结果图。"""
 
+import json
 import os
 
 import cv2
@@ -25,10 +26,10 @@ class SonarInferNode(Node):
         self.declare_parameter("weight_file", "")
         self.declare_parameter("input_size", 256)
         self.declare_parameter("infer_period", 0.5)   # 秒，2 Hz 推理，避免 15 Hz 图像把 CPU 打满
-        self.declare_parameter("classes", ["rock", "pipe", "sand"])
+        # 仅在缺少 classes.json 时作为回退；默认顺序与 ImageFolder 字母序一致
+        self.declare_parameter("classes", ["pipe", "rock", "sand"])
         self.declare_parameter("device", "cpu")
 
-        self.classes = list(self.get_parameter("classes").value)
         self.input_size = int(self.get_parameter("input_size").value)
         self.device = str(self.get_parameter("device").value)
 
@@ -38,9 +39,23 @@ class SonarInferNode(Node):
                 get_package_share_directory("water"), "weights", "sonar_cnn_weights.pth")
         if not os.path.isfile(weight_file):
             raise FileNotFoundError(
-                f"未找到权重文件: {weight_file}。请先按 docs/water_rov_doc.md"
-                "「数据集与权重说明」采集数据并训练，"
+                f"未找到权重文件: {weight_file}。请先按 "
+                "docs/water/rov_gazebo_sonar_cnn.md「数据集与权重说明」采集数据并训练，"
                 "或用 -p weight_file:=<绝对路径> 指定。")
+
+        # 类别顺序优先取训练时保存的 classes.json，其次才是参数
+        classes_json = os.path.join(os.path.dirname(weight_file), "classes.json")
+        if os.path.isfile(classes_json):
+            with open(classes_json, encoding="utf-8") as f:
+                self.classes = [str(c) for c in json.load(f)]
+            self.get_logger().info(
+                f"从 {classes_json} 读取类别顺序: {self.classes}")
+        else:
+            self.classes = [str(c) for c in self.get_parameter("classes").value]
+            self.get_logger().warning(
+                "未找到 classes.json，回退为参数 classes 的顺序: "
+                f"{self.classes}；该顺序必须与训练时 ImageFolder 的字母序一致，"
+                "否则类别会被标错。")
 
         # 权重缺失/结构不符时直接报错，绝不降级为随机权重输出假结果
         self.model = load_model(weight_file, len(self.classes), self.input_size, self.device)

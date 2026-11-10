@@ -20,7 +20,7 @@ src/water
 │   └── rov.launch.py
 ├── worlds/
 │   └── underwater.world
-├── weights/                  # 训练输出目录（*.pth，可选安装）
+├── weights/                  # 训练输出目录（*_weights.pth + classes.json，存在才安装）
 ├── resource/
 │   └── water
 ├── package.xml
@@ -94,18 +94,31 @@ dataset/
 cd ~/ros2_ws
 ros2 run water train_sonar --data /path/to/dataset --epochs 20 \
     --out src/water/weights/sonar_cnn_weights.pth
-colcon build --packages-select water     # 重新编译，把 weights/*.pth 装进 share/water/weights
+colcon build --packages-select water     # 重新编译，把 weights/*.pth 与 classes.json 装进 share/water/weights
 source install/setup.bash
 ```
 
-训练脚本会打印 `class_to_idx`，节点的 `classes` 参数顺序必须与之相同。
+### 类别顺序（重要）
+
+`ImageFolder` 按文件夹名**字母序**编号，`rock/pipe/sand` 三目录实际得到
+`{'pipe': 0, 'rock': 1, 'sand': 2}`，并不是 `rock/pipe/sand`。
+
+为避免这类静默错标，训练结束会自动把类别顺序写入权重同目录的 `classes.json`：
+
+```json
+["pipe", "rock", "sand"]
+```
+
+推理节点默认读取权重同目录的 `classes.json` 并打印 `从 ... 读取类别顺序`；只有该文件
+缺失时才回退到 `classes` 参数（并打印警告）。因此**不要手工调整 `classes` 参数**，
+除非你确认与训练时的字母序一致。
 
 ## 运行
 
 启动前确认权重已装进安装空间，否则节点会直接报错退出：
 
 ```bash
-ls install/water/share/water/weights          # 应看到 sonar_cnn_weights.pth
+ls install/water/share/water/weights          # 应看到 sonar_cnn_weights.pth 与 classes.json
 ros2 launch water rov.launch.py
 ```
 
@@ -117,28 +130,28 @@ ros2 topic echo /sonar/result --once      # 带标注的结果图
 rqt_image_view                            # 选 /sonar/result 查看
 ```
 
-常用参数覆盖：
+常用参数覆盖（`classes` 一般不用改，见上一节）：
 
 ```bash
 ros2 run water sonar_infer_node --ros-args \
   -p weight_file:=/absolute/path/sonar_cnn_weights.pth \
   -p image_topic:=/sonar/camera/image_raw \
   -p infer_period:=0.5 \
-  -p device:=cuda \
-  -p classes:="[rock,pipe,sand]"
+  -p device:=cuda
 ```
 
 ## 效果图
 
-![Gazebo 水下仿真场景](img/sonar_gazebo_simulation.jpg)
+![Gazebo 水下仿真场景](../img/sonar_gazebo_simulation.jpg)
 
-![声呐识别节点运行输出](img/sonar_infer_output.jpg)
+![声呐识别节点运行输出](../img/sonar_infer_output.jpg)
 
 ## 常见问题
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | Gazebo 打开后世界为空 / 报 world 解析错误 | world 文件未安装或 SDF 语法错误 | 确认 `install/water/share/water/worlds/underwater.world` 存在；`gz sdf -k src/water/worlds/underwater.world` 自检 |
-| 节点一直无输出、`ros2 topic hz` 无数据 | 订阅话题与实际话题不一致 | 用 `ros2 topic list | grep sonar` 确认真实话题名，再改 `-p image_topic:=` |
+| 节点一直无输出、`ros2 topic hz` 无数据 | 订阅话题与实际话题不一致 | 用 `ros2 topic list \| grep sonar` 确认真实话题名，再改 `-p image_topic:=` |
 | 启动即报"未找到权重文件" | 未训练、未重新 colcon build，或权重路径不对 | 按「数据集与权重说明」采集数据并训练，权重放到 `src/water/weights/` 后重新 `colcon build`；或用 `-p weight_file:=<绝对路径>` 指定 |
+| 类别标签总是固定错位（rock/pipe 互换） | 训练与推理的类别顺序不一致 | 确认权重同目录有 `classes.json`；没有就重跑训练生成，不要手填 `classes` |
 | 图像全黑 | 相机贴住海床或场景过暗 | 已通过 `<static>true</static>` 固定 ROV；可调高 `rov` 的 pose z 值 |
