@@ -129,8 +129,9 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 结论：
 
-- **BEST_EFFORT 的时延略低于 RELIABLE**：同 depth 成对看，p50 分别低
-  0.026 ms（depth=10）与 0.028 ms（depth=1），量级符合可靠传输多出的确认开销。
+- **观测到 BEST_EFFORT 的 p50 略低于 RELIABLE**：同 depth 成对看，分别低
+  0.026 ms（depth=10）与 0.028 ms（depth=1），但差异与噪声同量级，
+  不足以归因于可靠传输的确认开销。
 - **队列深度的影响与可靠性差异同量级**：`depth=1` 的 p50 比 `depth=10` 高
   0.053 ms（BEST_EFFORT）与 0.055 ms（RELIABLE），都在 0.05 ms 的噪声边界内。
 - **`reliable_transient_local` 的 p50（0.816 ms）介于 `reliable_depth10` 与
