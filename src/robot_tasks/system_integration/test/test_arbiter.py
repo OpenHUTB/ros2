@@ -51,6 +51,33 @@ def test_switch_to_stale_source():
     assert st['reason'] == 'stale'
 
 
+def test_feed_rejects_non_finite():
+    """NaN / inf 不能进入仲裁层：NaN 的比较恒为 False，会绕过限幅直接下发。"""
+    arb = VelocityArbiter(timeout=10.0)
+    assert arb.feed_manual(float('nan'), 0.0, now=0.0) is False
+    assert arb.feed_manual(0.0, float('nan'), now=0.0) is False
+    assert arb.feed_auto(float('inf'), 0.0, now=0.0) is False
+    assert arb.feed_auto(0.0, float('-inf'), now=0.0) is False
+
+    v, w, st = arb.step(now=0.1)
+    assert (v, w) == (0.0, 0.0)
+    assert st['reason'] == 'no_data'
+
+
+def test_feed_rejects_non_finite_time():
+    arb = VelocityArbiter(timeout=1.0)
+    assert arb.feed_manual(0.5, 0.0, now=float('nan')) is False
+    assert arb.step(now=0.1)[:2] == (0.0, 0.0)
+
+
+def test_finite_values_still_accepted_after_reject():
+    arb = VelocityArbiter(timeout=10.0)
+    assert arb.feed_manual(float('nan'), 0.0, now=0.0) is False
+    assert arb.feed_manual(0.6, 0.2, now=0.1) is True
+    v, w, st = arb.step(now=0.2)
+    assert (v, w) == (0.6, 0.2) and st['reason'] == 'ok'
+
+
 def test_feed_rejects_unknown_source():
     arb = VelocityArbiter()
     assert arb.feed('teleop', 0.5, 0.0) is False
