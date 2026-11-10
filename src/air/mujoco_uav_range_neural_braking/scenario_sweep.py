@@ -1,12 +1,20 @@
 """扫描多组无人机场景并汇总结果。Sweep UAV scenarios and summarize outcomes."""
 
 import argparse
+import csv
 import itertools
 import json
 import math
 from pathlib import Path
 
 from simulation import Scenario, Simulation
+
+
+CSV_FIELDS = (
+    "scenario", "controller", "start_x_m", "wall_x_m", "initial_speed_m_s", "height_m",
+    "steps", "collision_steps", "min_clearance_m", "final_speed_m_s",
+    "invalid_sensor_steps", "max_height_error_m",
+)
 
 
 def _values(value, name):
@@ -46,6 +54,16 @@ def run_sweep(start_xs=(-8.0, -7.0), wall_xs=(0.0,), speeds=(0.0, 1.5), heights=
     }
 
 
+def write_sweep_csv(report, output):
+    """将逐场景指标写入固定列序的 CSV。"""
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=CSV_FIELDS, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(report["scenarios"])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--controller", choices=("reference", "range", "mlp"), default="range")
@@ -55,6 +73,7 @@ def main():
     parser.add_argument("--speed", default="0,1.5", help="逗号分隔的初速度 / comma-separated initial speeds")
     parser.add_argument("--height", default="1.2", help="逗号分隔的飞行高度 / comma-separated altitudes")
     parser.add_argument("--output", type=Path, default=None, help="可选 JSON 输出路径 / optional JSON output path")
+    parser.add_argument("--csv-output", type=Path, default=None, help="可选逐场景 CSV 输出路径 / optional per-scenario CSV output path")
     args = parser.parse_args()
     result = run_sweep(
         _values(args.start_x, "start-x"), _values(args.wall_x, "wall-x"),
@@ -65,6 +84,8 @@ def main():
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload + "\n", encoding="utf-8")
+    if args.csv_output:
+        write_sweep_csv(result, args.csv_output)
     print(payload)
 
 

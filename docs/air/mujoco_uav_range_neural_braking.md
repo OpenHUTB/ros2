@@ -119,19 +119,22 @@ python train.py --data datasets --output models --epochs 350 --hidden-size 16
 `scenario_sweep.py` 复用仿真模型，组合扫描初始位置、障碍物位置、初速度和高度，并输出逐场景结果与碰撞汇总：
 
 ```
-python scenario_sweep.py --controller range --start-x -8,-7 --wall-x 0 --speed 0,1.5 --height 1.2 --output results/range_sweep.json
+python scenario_sweep.py --controller range --start-x=-8,-7 --wall-x 0 --speed 0,1.5 --height 1.2 --output results/range_sweep.json --csv-output sample_data/scenario_sweep.csv
 ```
 
-输出包含场景数量、发生碰撞的场景数、最大碰撞步数、最小间距以及每个场景的完整指标。
+JSON 汇总场景数量、碰撞场景数、最大碰撞步数和最小间距，并保留逐场景完整指标；CSV 将场景参数与仿真指标整理为固定列，便于表格筛选和对比。
 
-场景扫描新增 3 项自动化测试，覆盖参数组合、空输入校验和命令行 JSON 输出。
+样例 CSV 由上述 MuJoCo 场景实际运行生成，包含起点位置、障碍位置、初速度、高度、步数、碰撞步数、最小间距和高度误差。
+
+场景扫描新增 4 项自动化测试，覆盖参数组合、空输入校验、CSV 字段与逐场景数据，以及命令行 JSON/CSV 输出。
 
 ```mermaid
 flowchart LR
     A[起点位置、障碍位置、初速度、高度] --> B[组合场景参数]
     B --> C[逐场景运行 MuJoCo 仿真]
     C --> D[记录间距、速度、碰撞指标]
-    D --> E[汇总并写出 JSON]
+    D --> E[生成 JSON 汇总]
+    D --> F[生成逐场景 CSV]
 ```
 
 | 文件 | 职责 |
