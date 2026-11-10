@@ -1,0 +1,324 @@
+[
+  {
+    "partition": "raw",
+    "episode": "episode_000",
+    "actual_csv_rows": 281,
+    "sha256": "286161799a1b0e773d543c6439a9aaf9509b6f6e8dfbb188062ed20f1d04298f",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_001",
+    "actual_csv_rows": 281,
+    "sha256": "2ac990de7695b56c4cc72ee3d9f989c689b9298ff91c16bd51643ee7d6816fa9",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_002",
+    "actual_csv_rows": 281,
+    "sha256": "e57a6d8d04beba1b0a455bc580ef1f25e5223463a9e492d76b77740425767f97",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_003",
+    "actual_csv_rows": 281,
+    "sha256": "a9d4b5563b9a4ccee2f10d8dc82fe5204a35bd18f211ed70b1f138bd4cfd0472",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_004",
+    "actual_csv_rows": 281,
+    "sha256": "91d320c7bc4b2d746f3e1faea9f7b1acecb8939944177a54898fb6c89a7a4a8f",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_005",
+    "actual_csv_rows": 281,
+    "sha256": "c0f99a51830eb9edb029919e7ac5b9feeaed8bcb8d4bb7e4e77e079757c42ef6",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_006",
+    "actual_csv_rows": 281,
+    "sha256": "1a0597ec12b4f075ea5f4ebc04b7db380a70d18d704c976b342538502e42c354",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_007",
+    "actual_csv_rows": 281,
+    "sha256": "50c56d53d08034f712a9b8bf37e30f8267dd0b86ecfeb095eda91c804c7386f1",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_008",
+    "actual_csv_rows": 281,
+    "sha256": "289d955f8ab011e081541180f8b1bf77bbe79e15335ce8ba2ff272c8947a6e03",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_009",
+    "actual_csv_rows": 281,
+    "sha256": "585e93e6a6d8b34e856302a5cf9f5495bf057114b187e650383b1df3567994ba",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_010",
+    "actual_csv_rows": 281,
+    "sha256": "cc6e4d25a343c5e1cb8e3ad024898d65cd7626320624b4d26360b369a50ea6c0",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_011",
+    "actual_csv_rows": 281,
+    "sha256": "a52c4a3b5de43fd834b6b807b4e025232b34b4cef91413f0d893fdd1623b9444",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_012",
+    "actual_csv_rows": 281,
+    "sha256": "e64244fd2fe5d21f75e2f052c717a95814406c4273444535c8dd59a7301f4e9e",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_013",
+    "actual_csv_rows": 281,
+    "sha256": "5a33f95d6a85c6d217de2bdf8097396df0da12ee3a1e8bf820ac178baedfc79c",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_014",
+    "actual_csv_rows": 281,
+    "sha256": "38c053d103992ef7558c1c4dbe2f4ef6155e9cdfc4caf19cfa185bcb2866f791",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_015",
+    "actual_csv_rows": 281,
+    "sha256": "3bee7a16479668b4a4206d40b408cfca04a5956c7fab053b93270fa88b58c537",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_016",
+    "actual_csv_rows": 281,
+    "sha256": "51f1650c7ec515265ee2c06278a0b4eb99360f63bcc1e5602d3b95b748368075",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_017",
+    "actual_csv_rows": 281,
+    "sha256": "2294426231a9be127beadcee837b81649cfb8ecf729c71cc891ac7299395c583",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_018",
+    "actual_csv_rows": 281,
+    "sha256": "483fda590dbce8108ba353242ca21df667e5a094fe1d57b290d80bca169f9c25",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_019",
+    "actual_csv_rows": 281,
+    "sha256": "2bb10a60dc0b533a68328b91f505694f4b813d37dd6ee0315c4cdae36d702b16",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_020",
+    "actual_csv_rows": 281,
+    "sha256": "028db295e790b632878b2b09cac30c7d697320b8ac58cab0f227adec5129c9cf",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_021",
+    "actual_csv_rows": 281,
+    "sha256": "0a99e3e3307b150a31ff0709d2321368b1897355b8de441006be8318c33fb70b",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_022",
+    "actual_csv_rows": 281,
+    "sha256": "e3f551cfcd2a68b89514647266f275c0cdf796219f05bb90d7f3e55d2fd528e1",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_023",
+    "actual_csv_rows": 281,
+    "sha256": "e18c8c4880500a916bb6794cc27194d5d5a708e030931de66c209583cf4db01f",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_024",
+    "actual_csv_rows": 281,
+    "sha256": "59deacbc9bcd26abc1e795affb3487a0ee63d6cef743a424d57a6bb9f5fcbb64",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_025",
+    "actual_csv_rows": 281,
+    "sha256": "cecd4b4ae964c6ddf7d2b07ff4eb00033e833e83485385161fb32e844d546f5c",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_026",
+    "actual_csv_rows": 281,
+    "sha256": "fecd7e6e50586cd2790aa071d22fd9beb8b3ed050e650110cf530464c3ad9bd4",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_027",
+    "actual_csv_rows": 281,
+    "sha256": "4875b809a36ead336c2641e549f051f37a29c1c8a4be3e9b0b5be2c6ef2a3764",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_028",
+    "actual_csv_rows": 281,
+    "sha256": "d5c3d95c8dbc28578a28092a3da242c1ab9b4b0e94e8b76ae576994dad19abb0",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "raw",
+    "episode": "episode_029",
+    "actual_csv_rows": 281,
+    "sha256": "ff836970d3ffcf65234f0332d8f6b343f288f622255979c815c1bdf6f02bfaa1",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_300",
+    "actual_csv_rows": 361,
+    "sha256": "77216bf8ce4943eca255cf0e2ba1e8e1f8c1253bf4e04222400e2e80faa3f900",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_301",
+    "actual_csv_rows": 361,
+    "sha256": "b341978ba6e1012a97c4a942d59831026255c37e83a6b23e423c9d317e7432c6",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_302",
+    "actual_csv_rows": 361,
+    "sha256": "f146b54892531937b1bf5ffcc73a2d403e45f89c899d1c2a1734513f52c2c59d",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_303",
+    "actual_csv_rows": 361,
+    "sha256": "416c3ade009a4c02fb5caff2e5dca4f34cdefca761a7cc7aa6767d62ef6d5a26",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_304",
+    "actual_csv_rows": 361,
+    "sha256": "932431560dc1efbbbf98bcf4c8057024a0eb2723a7bc0c75c21c9c1aa01709a6",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_305",
+    "actual_csv_rows": 361,
+    "sha256": "7b03e51ee928b6908bf6a712a008a8cc6aee72a450cd17ac5f3e79566aa44ede",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_306",
+    "actual_csv_rows": 361,
+    "sha256": "24ff62b919d774c47cbb227944779c5b932107c4248a435c9a005e1f9f66347c",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_307",
+    "actual_csv_rows": 361,
+    "sha256": "937231dbf912444e1fe400933413eff51595b68a4e864d09d88456938a6fd7e0",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_308",
+    "actual_csv_rows": 361,
+    "sha256": "b76d889d5b605d2d65737241ebdb7ac792a137f702531199a1c021530e075bc0",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_309",
+    "actual_csv_rows": 361,
+    "sha256": "5d06d59d871f5a3025ed5c98301cd7f252fd92e73606bedb288510ff2209e945",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_310",
+    "actual_csv_rows": 361,
+    "sha256": "a37a3b5dcc8ca2cb29b2fee1aa36aa5fadb435193c4390ee712188d2b3a52216",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_311",
+    "actual_csv_rows": 362,
+    "sha256": "e8b36ed86ffe5b49ffcbf9401f4b487584e8ca5d640e6b2e2316facc59407acc",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_312",
+    "actual_csv_rows": 361,
+    "sha256": "24ff3c5322312a162a29021805f786a4d0766e943f6900d6758396d6266a5cec",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_313",
+    "actual_csv_rows": 361,
+    "sha256": "ec0231cf671b8306d9216ca1adf58b1b06f2db1eb39352be66068ab248d052ee",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "final_raw",
+    "episode": "episode_314",
+    "actual_csv_rows": 361,
+    "sha256": "7caee6c70e5315e42c261e8905fa7dfe83d1305418834988e7370b984e5f532a",
+    "included_in_model_evaluation": true
+  },
+  {
+    "partition": "rejected_raw",
+    "episode": "episode_308",
+    "actual_csv_rows": 361,
+    "sha256": "458477bef0626ad340c9c77fa16c623e5d101d272d8fe7184b9498eb18b758a0",
+    "included_in_model_evaluation": false
+  }
+]

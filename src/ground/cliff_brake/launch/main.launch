@@ -1,0 +1,6 @@
+<launch>
+  <!-- 一键启动三节点：物理仿真 + 决策 + 监视（自动启动 ROS master） -->
+  <node pkg="cliff_brake" type="cliff_brake_sim.py" name="cliff_brake_sim" output="screen"/>
+  <node pkg="cliff_brake" type="brake_controller.py" name="brake_controller" output="screen"/>
+  <node pkg="cliff_brake" type="brake_monitor.py" name="brake_monitor" output="screen"/>
+</launch>

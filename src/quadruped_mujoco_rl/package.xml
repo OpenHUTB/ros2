@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>quadruped_mujoco_rl</name>
+  <version>0.0.1</version>
+  <description>ROS-based MuJoCo Quadruped Reinforcement Learning Control</description>
+  <maintainer email="ruan@todo.todo">ruan</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>mujoco</exec_depend>
+</package>
