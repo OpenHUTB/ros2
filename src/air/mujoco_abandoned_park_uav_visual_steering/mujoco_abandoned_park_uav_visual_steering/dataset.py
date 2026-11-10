@@ -32,6 +32,7 @@ class DatasetConfig:
     stop_margin_m: float
     path_end_y_m: float
     split_ratios: dict[str, float]
+    terminal_start_distance_m: float = 0.1
 
     @classmethod
     def from_yaml(cls, path: Path) -> "DatasetConfig":
@@ -74,6 +75,10 @@ class DatasetConfig:
             ),
             path_end_y_m=float(raw.get("path_end_y_m")),
             split_ratios=ratios,
+            terminal_start_distance_m=_range_float(
+                raw.get("terminal_start_distance_m", 0.1),
+                "terminal_start_distance_m", 0.001, float("inf")
+            ),
         )
 
 
@@ -94,25 +99,43 @@ class FrameRecord:
     z_m: float
     yaw_radians: float
     sha256: str
+    scene_group: str
+    start_region: str
 
 
 def deterministic_episode_splits(config: DatasetConfig) -> dict[int, str]:
-    """Assign whole episodes to splits / 按完整回合划分数据集。"""
-    episode_ids = list(range(config.episodes))
-    random.Random(config.seed).shuffle(episode_ids)
-    train_count = round(config.episodes * config.split_ratios["train"])
-    validation_count = round(config.episodes * config.split_ratios["validation"])
-    train_count = min(max(1, train_count), config.episodes - 2)
-    validation_count = min(max(1, validation_count), config.episodes - train_count - 1)
-    splits: dict[int, str] = {}
-    for index, episode_id in enumerate(episode_ids):
-        if index < train_count:
-            splits[episode_id] = "train"
-        elif index < train_count + validation_count:
-            splits[episode_id] = "validation"
-        else:
-            splits[episode_id] = "test"
-    return splits
+    """Keep every offset's start/end variants in one split / 同偏移起终点变体不跨集合。"""
+    offsets = list(dict.fromkeys(
+        config.initial_lateral_offsets_m[index % len(config.initial_lateral_offsets_m)]
+        for index in range(config.episodes)
+    ))
+    if len(offsets) < 3:
+        raise ValueError("at least three scene groups are required / 至少需要三个场景组")
+    negative = [value for value in offsets if value < 0.0]
+    positive = [value for value in offsets if value > 0.0]
+    # Stratification preserves left/right corrections in each default split.
+    # 分层划分使默认配置的各集合均包含左右纠偏场景。
+    buckets = [negative, positive] if min(len(negative), len(positive)) >= 3 else [offsets]
+    rng = random.Random(config.seed)
+    groups: dict[float, str] = {}
+    for bucket in buckets:
+        rng.shuffle(bucket)
+        train_count = min(max(1, round(len(bucket) * config.split_ratios["train"])), len(bucket) - 2)
+        validation_count = min(
+            max(1, round(len(bucket) * config.split_ratios["validation"])),
+            len(bucket) - train_count - 1,
+        )
+        for index, offset in enumerate(bucket):
+            groups[offset] = (
+                "train" if index < train_count else
+                "validation" if index < train_count + validation_count else "test"
+            )
+    for offset in offsets:
+        groups.setdefault(offset, "train")
+    return {
+        index: groups[config.initial_lateral_offsets_m[index % len(config.initial_lateral_offsets_m)]]
+        for index in range(config.episodes)
+    }
 
 
 def collect_dataset(
@@ -143,7 +166,12 @@ def collect_dataset(
                 episode_id % len(dataset_config.initial_lateral_offsets_m)
             ]
             offset = base_offset + offset_rng.uniform(-0.025, 0.025)
-            simulation.reset(offset)
+            terminal = (episode_id // len(dataset_config.initial_lateral_offsets_m)) % 2 == 1
+            initial_y_m = (
+                dataset_config.path_end_y_m - dataset_config.terminal_start_distance_m
+                if terminal else simulation_config.initial_position[1]
+            )
+            simulation.reset(offset, initial_y_m=initial_y_m)
             for frame_id in range(dataset_config.frames_per_episode):
                 state = simulation.state()
                 decision = expert.decide(state["x_m"], state["y_m"], state["yaw_radians"])
@@ -168,6 +196,8 @@ def collect_dataset(
                         z_m=state["z_m"],
                         yaw_radians=state["yaw_radians"],
                         sha256=hashlib.sha256(absolute_path.read_bytes()).hexdigest(),
+                        scene_group=f"offset:{base_offset:.6g}",
+                        start_region="terminal" if terminal else "approach",
                     )
                 )
                 if decision.label is SteeringLabel.STOP:
@@ -182,13 +212,15 @@ def collect_dataset(
         writer.writeheader()
         writer.writerows(asdict(record) for record in records)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "seed": dataset_config.seed,
         "episodes": dataset_config.episodes,
         "frames": len(records),
         "image_format": "PNG RGB8",
         "image_size": [simulation_config.render_width, simulation_config.render_height],
         "episode_splits": {str(key): value for key, value in sorted(split_map.items())},
+        "split_unit": "initial_lateral_offset_group",
+        "terminal_start_distance_m": dataset_config.terminal_start_distance_m,
     }
     _write_json(output_dir / "manifest.json", manifest)
     quality = inspect_dataset(output_dir)
@@ -212,14 +244,24 @@ def inspect_dataset(dataset_dir: Path) -> dict[str, Any]:
     hash_mismatches: list[str] = []
     hashes: Counter[str] = Counter()
     episode_split_sets: dict[str, set[str]] = {}
+    group_split_sets: dict[str, set[str]] = {}
+    hash_split_sets: dict[str, set[str]] = {}
+    labels_by_split = {name: Counter() for name in ("train", "validation", "test")}
+    missing_scene_groups: list[str] = []
     for row in rows:
         image_path = dataset_dir / row["image_path"]
         episode_split_sets.setdefault(row["episode_id"], set()).add(row["split"])
+        if not row.get("scene_group"):
+            missing_scene_groups.append(row["image_path"])
+        else:
+            group_split_sets.setdefault(row["scene_group"], set()).add(row["split"])
+        labels_by_split.setdefault(row["split"], Counter())[row["label"]] += 1
         if not image_path.is_file():
             missing_paths.append(row["image_path"])
             continue
         digest = hashlib.sha256(image_path.read_bytes()).hexdigest()
         hashes[digest] += 1
+        hash_split_sets.setdefault(digest, set()).add(row["split"])
         if digest != row["sha256"]:
             hash_mismatches.append(row["image_path"])
         try:
@@ -234,7 +276,16 @@ def inspect_dataset(dataset_dir: Path) -> dict[str, Any]:
     expected_labels = {label.value for label in SteeringLabel}
     missing_labels = sorted(expected_labels - set(labels))
     duplicate_groups = sum(1 for count in hashes.values() if count > 1)
-    passed = not any((missing_paths, invalid_images, hash_mismatches, leakage, missing_labels))
+    group_leakage = sorted(group for group, values in group_split_sets.items() if len(values) > 1)
+    hash_leakage = sorted(digest for digest, values in hash_split_sets.items() if len(values) > 1)
+    missing_labels_by_split = {
+        name: sorted(expected_labels - set(counts)) for name, counts in labels_by_split.items()
+    }
+    passed = not any((
+        missing_paths, invalid_images, hash_mismatches, leakage, missing_labels,
+        group_leakage, hash_leakage, missing_scene_groups,
+        any(missing_labels_by_split.values()),
+    ))
     return {
         "status": "passed" if passed else "failed",
         "status_zh": "通过" if passed else "未通过",
@@ -247,6 +298,11 @@ def inspect_dataset(dataset_dir: Path) -> dict[str, Any]:
         "episode_split_leakage": leakage,
         "missing_labels": missing_labels,
         "duplicate_hash_groups": duplicate_groups,
+        "scene_group_split_leakage": group_leakage,
+        "cross_split_duplicate_hashes": hash_leakage,
+        "missing_scene_groups": missing_scene_groups,
+        "split_label_counts": {name: dict(sorted(counts.items())) for name, counts in labels_by_split.items()},
+        "missing_labels_by_split": missing_labels_by_split,
     }
 
 

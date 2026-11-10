@@ -54,7 +54,8 @@ class PathCenterExpert:
 
     def decide(self, x_m: float, y_m: float, yaw_radians: float) -> ExpertDecision:
         """Return steering and label for the current pose / 根据当前姿态返回转向量与标签。"""
-        lateral_error = -float(x_m)
+        # Positive yaw turns left and decreases world x. / 正偏航向左转并减小世界 x。
+        lateral_error = float(x_m)
         heading_error = -float(yaw_radians)
         safe_limit = self.path_half_width_m - self.stop_margin_m
         if abs(x_m) >= safe_limit or y_m >= self.path_end_y_m:
@@ -67,9 +68,9 @@ class PathCenterExpert:
                 1.0,
             )
         )
-        if steering < -self.steering_threshold:
+        if steering > self.steering_threshold:
             label = SteeringLabel.LEFT
-        elif steering > self.steering_threshold:
+        elif steering < -self.steering_threshold:
             label = SteeringLabel.RIGHT
         else:
             label = SteeringLabel.STRAIGHT
