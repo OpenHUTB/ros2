@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_waypoint_preflight_validator</name>
+  <version>0.1.0</version>
+  <description>
+    无人机 ENU 相对航点任务的飞行前几何、高度与转弯可行性校验。
+  </description>
+
+  <maintainer email="Qinfy-fly@users.noreply.github.com">Qinfy-fly</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <test_depend>python3-nose</test_depend>
+</package>

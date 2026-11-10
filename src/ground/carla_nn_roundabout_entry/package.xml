@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_nn_roundabout_entry</name>
+  <version>0.0.1</version>
+  <description>环岛汇入场景下的相机端到端驾驶（图像→方向/油门/制动），轻量离线版，无需 CARLA 即可训练与评估。</description>
+  <maintainer email="asdfghjkl384@example.com">asdfghjkl384</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
