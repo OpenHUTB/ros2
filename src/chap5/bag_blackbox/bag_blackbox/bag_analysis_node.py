@@ -1,89 +1,200 @@
-#!/usr/bin/env python3
-import rosbag
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.interpolate import interp1d
-import rospy
+"""离线读取 bag 数据，绘制速度对比、速度误差与激光点云图。"""
+
 import os
 
-def main():
-    rospy.init_node("bag_analysis_node")
-    bag_path = rospy.get_param("~bag_path", "./robot_run.bag")
-    save_dir = rospy.get_param("~save_dir", "./docs/img/")
-    os.makedirs(save_dir, exist_ok=True)
+import matplotlib
+matplotlib.use("Agg")  # 无显示环境下直接保存图片
 
-    time_cmd = []
-    vel_cmd = []
-    time_odom = []
-    vel_odom = []
-    lidar_x = []
-    lidar_y = []
+import matplotlib.pyplot as plt
+import numpy as np
+import rclpy
+from rclpy.node import Node
 
-    bag = rosbag.Bag(bag_path, 'r')
-    for topic, msg, t in bag.read_messages(topics=['/cmd_vel', '/odom', '/scan']):
-        t_sec = t.to_sec()
-        if topic == "/cmd_vel":
-            v = msg.linear.x
-            time_cmd.append(t_sec)
-            vel_cmd.append(v)
-        elif topic == "/odom":
-            v = msg.twist.twist.linear.x
-            time_odom.append(t_sec)
-            vel_odom.append(v)
-        elif topic == "/scan":
-            ranges = np.array(msg.ranges)
-            angles = np.linspace(msg.angle_min, msg.angle_max, len(ranges))
-            valid = np.isfinite(ranges)
-            r_valid = ranges[valid]
-            ang_valid = angles[valid]
-            x = r_valid * np.cos(ang_valid)
-            y = r_valid * np.sin(ang_valid)
-            lidar_x = x
-            lidar_y = y
-    bag.close()
+TOPIC_VEL_CMD = "/cmd_vel"
+TOPIC_ODOM = "/odom"
+TOPIC_SCAN = "/scan"
 
-    # 图1 指令速度vs实际速度
-    plt.figure(figsize=(10,5))
-    plt.plot(time_cmd, vel_cmd, label="Command velocity (m/s)")
-    plt.plot(time_odom, vel_odom, label="Actual velocity (m/s)")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Velocity (m/s)")
-    plt.title("Command vs Actual Velocity")
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(save_dir, "command_vs_actual_velocity.png"), dpi=300, bbox_inches="tight")
-    plt.close()
 
-    # 图2 速度误差
-    if len(time_cmd) > 1 and len(time_odom) > 1:
-        t_min = max(min(time_cmd), min(time_odom))
-        t_max = min(max(time_cmd), max(time_odom))
+class BagAnalysisNode(Node):
+    """bag 离线分析节点。"""
+
+    def __init__(self):
+        super().__init__("bag_analysis_node")
+        self.declare_parameter("bag_path", "./robot_run.bag")
+        self.declare_parameter("save_dir", "./docs/img")
+        self.declare_parameter("max_lidar_points", 200000)
+
+    def run(self):
+        """执行完整分析流程，出错时由 main() 统一处理。"""
+        bag_path = self.get_parameter("bag_path").value
+        save_dir = self.get_parameter("save_dir").value
+        if not os.path.isfile(bag_path):
+            raise RuntimeError(
+                f"找不到 bag 文件：{bag_path}。请先用 ros2 bag record 录制，"
+                "或通过 bag_path 参数指定已有 bag 的路径。")
+        os.makedirs(save_dir, exist_ok=True)
+
+        data = self.read_bag(bag_path)
+        produced = []
+        produced += self.plot_velocity(data, save_dir)
+        produced += self.plot_velocity_error(data, save_dir)
+        produced += self.plot_lidar(data, save_dir)
+        if not produced:
+            raise RuntimeError(
+                "bag 中没有找到可用数据（/cmd_vel、/odom、/scan），未生成任何图表。")
+        self.get_logger().info(
+            f"共生成 {len(produced)} 张图，输出目录：{os.path.abspath(save_dir)}")
+
+    def read_bag(self, bag_path):
+        """用 rosbags 读取 bag（同时支持 ROS 1 与 ROS 2 格式）。"""
+        try:
+            from pathlib import Path
+
+            from rosbags.highlevel import AnyReader
+        except ImportError as exc:
+            raise RuntimeError(
+                "缺少 rosbags 依赖，请执行："
+                "pip install rosbags -i https://pypi.tuna.tsinghua.edu.cn/simple"
+            ) from exc
+
+        time_cmd, vel_cmd = [], []
+        time_odom, vel_odom = [], []
+        lidar_x, lidar_y = [], []
+
+        with AnyReader([Path(bag_path)]) as reader:
+            wanted = (TOPIC_VEL_CMD, TOPIC_ODOM, TOPIC_SCAN)
+            connections = [c for c in reader.connections if c.topic in wanted]
+            if not connections:
+                raise RuntimeError(
+                    f"bag 中不包含 {', '.join(wanted)} 任一话题，无法分析。")
+            start_ns = None
+            for connection, timestamp, rawdata in reader.messages(
+                    connections=connections):
+                if start_ns is None:
+                    start_ns = timestamp
+                stamp = (timestamp - start_ns) * 1e-9
+                msg = reader.deserialize(rawdata, connection.msgtype)
+                if connection.topic == TOPIC_VEL_CMD:
+                    time_cmd.append(stamp)
+                    vel_cmd.append(msg.linear.x)
+                elif connection.topic == TOPIC_ODOM:
+                    time_odom.append(stamp)
+                    vel_odom.append(msg.twist.twist.linear.x)
+                else:
+                    # 关键修复：点云按帧累积，而不是每帧覆盖
+                    ranges = np.asarray(msg.ranges, dtype=np.float64)
+                    if ranges.size == 0:
+                        continue
+                    angles = np.linspace(
+                        msg.angle_min, msg.angle_max, ranges.size)
+                    valid = (np.isfinite(ranges)
+                             & (ranges >= msg.range_min)
+                             & (ranges <= msg.range_max))
+                    if not valid.any():
+                        continue
+                    lidar_x.append(ranges[valid] * np.cos(angles[valid]))
+                    lidar_y.append(ranges[valid] * np.sin(angles[valid]))
+
+        limit = int(self.get_parameter("max_lidar_points").value)
+        if lidar_x:
+            xs = np.concatenate(lidar_x)
+            ys = np.concatenate(lidar_y)
+            if xs.size > limit > 0:
+                idx = np.random.default_rng(0).choice(xs.size, limit, replace=False)
+                xs, ys = xs[idx], ys[idx]
+            lidar_x, lidar_y = xs, ys
+        else:
+            lidar_x, lidar_y = np.empty(0), np.empty(0)
+
+        self.get_logger().info(
+            f"读取完成：/cmd_vel {len(vel_cmd)} 条，/odom {len(vel_odom)} 条，"
+            f"激光点 {lidar_x.size} 个")
+        return {
+            "time_cmd": np.asarray(time_cmd),
+            "vel_cmd": np.asarray(vel_cmd),
+            "time_odom": np.asarray(time_odom),
+            "vel_odom": np.asarray(vel_odom),
+            "lidar_x": lidar_x,
+            "lidar_y": lidar_y,
+        }
+
+    def save_figure(self, fig, path):
+        fig.savefig(path, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        self.get_logger().info(f"已保存：{path}")
+        return [path]
+
+    def plot_velocity(self, data, save_dir):
+        if data["time_cmd"].size == 0 or data["time_odom"].size == 0:
+            self.get_logger().warning("/cmd_vel 或 /odom 无数据，跳过速度对比图")
+            return []
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(data["time_cmd"], data["vel_cmd"], label="Command velocity")
+        ax.plot(data["time_odom"], data["vel_odom"], label="Actual velocity")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Velocity (m/s)")
+        ax.set_title("Command vs Actual Velocity")
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        return self.save_figure(
+            fig, os.path.join(save_dir, "command_vs_actual_velocity.png"))
+
+    def plot_velocity_error(self, data, save_dir):
+        t_cmd, v_cmd = data["time_cmd"], data["vel_cmd"]
+        t_odom, v_odom = data["time_odom"], data["vel_odom"]
+        if t_cmd.size < 2 or t_odom.size < 2:
+            self.get_logger().warning(
+                "/cmd_vel 或 /odom 数据不足两条，跳过速度误差图")
+            return []
+        t_min = max(t_cmd.min(), t_odom.min())
+        t_max = min(t_cmd.max(), t_odom.max())
+        if t_max <= t_min:
+            self.get_logger().warning("两个话题时间区间不重叠，跳过速度误差图")
+            return []
         t_sample = np.linspace(t_min, t_max, 500)
-        f_cmd = interp1d(time_cmd, vel_cmd, kind="linear", fill_value="extrapolate")
-        f_odom = interp1d(time_odom, vel_odom, kind="linear", fill_value="extrapolate")
-        v_cmd_interp = f_cmd(t_sample)
-        v_odom_interp = f_odom(t_sample)
-        err = v_cmd_interp - v_odom_interp
-        plt.figure(figsize=(10,5))
-        plt.plot(t_sample, err, color="#d62728")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Velocity Error (m/s)")
-        plt.title("Velocity Error (cmd - odom)")
-        plt.grid(True, alpha=0.3)
-        plt.savefig(os.path.join(save_dir, "velocity_error_curve.png"), dpi=300, bbox_inches="tight")
-        plt.close()
+        err = (np.interp(t_sample, t_cmd, v_cmd)
+               - np.interp(t_sample, t_odom, v_odom))
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(t_sample, err, color="#d62728")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Velocity Error (m/s)")
+        ax.set_title("Velocity Error (cmd - odom)")
+        ax.grid(True, alpha=0.3)
+        return self.save_figure(
+            fig, os.path.join(save_dir, "velocity_error_curve.png"))
 
-    # 图3 激光点云
-    plt.figure(figsize=(6,6))
-    plt.scatter(lidar_x, lidar_y, s=1, c="#1f77b4")
-    plt.xlabel("X (m)")
-    plt.ylabel("Y (m)")
-    plt.title("LiDAR Point Cloud")
-    plt.axis("equal")
-    plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(save_dir, "lidar_point_cloud.png"), dpi=300, bbox_inches="tight")
-    plt.close()
-    rospy.loginfo("✅ 图表保存完成！")
+    def plot_lidar(self, data, save_dir):
+        if data["lidar_x"].size == 0:
+            self.get_logger().warning("/scan 无有效数据，跳过点云图")
+            return []
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.scatter(data["lidar_x"], data["lidar_y"], s=1, c="#1f77b4")
+        ax.set_xlabel("X (m)")
+        ax.set_ylabel("Y (m)")
+        ax.set_title("LiDAR Point Cloud")
+        ax.axis("equal")
+        ax.grid(True, alpha=0.3)
+        return self.save_figure(
+            fig, os.path.join(save_dir, "lidar_point_cloud.png"))
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = None
+    try:
+        node = BagAnalysisNode()
+        node.run()
+    except KeyboardInterrupt:
+        pass
+    except (RuntimeError, OSError, ValueError) as exc:
+        rclpy.logging.get_logger("bag_analysis_node").error(str(exc))
+        raise SystemExit(1)
+    finally:
+        if node is not None:
+            node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
