@@ -59,7 +59,9 @@ def build_parser():
     # CARLA 连接
     parser.add_argument('--host', default='127.0.0.1', help='CARLA 服务端地址')
     parser.add_argument('--port', type=int, default=2000, help='CARLA 服务端端口')
-    parser.add_argument('--town', default='Town03', help='地图名')
+    parser.add_argument('--town', default=None,
+                        help='地图名；不填沿用服务端当前地图。切图可能很慢，'
+                             '失败会把服务端拖到无响应')
     parser.add_argument('--keep-map', action='store_true', default=None,
                         help='不重载地图，直接用 CARLA 当前地图'
                              '（load_world 卡死或崩溃时的应急开关；'
@@ -80,11 +82,15 @@ def build_parser():
 
     # 数据与模型
     parser.add_argument('--frames', type=int, default=300, help='采集/演示帧数')
+    parser.add_argument('--free-window', type=int, default=5,
+                        help='前方余量的中值滤波帧数，1 表示不过滤')
     parser.add_argument('--out-dir', default='data', help='数据集输出目录')
     parser.add_argument('--data', default=os.path.join('data', 'dataset.npz'),
                         help='训练用数据集路径')
     parser.add_argument('--checkpoint', default=DEFAULT_CHECKPOINT,
                         help='权重路径（models/ 下的 npz 会入库，方便免训复现）')
+    parser.add_argument('--force', action='store_true',
+                        help='允许覆盖已存在的权重文件')
     parser.add_argument('--epochs', type=int, default=30, help='训练轮数')
     parser.add_argument('--lr', type=float, default=0.01, help='学习率')
     parser.add_argument('--hidden', default='32,32', help='隐层宽度，逗号分隔')
@@ -171,6 +177,14 @@ def run_train(args, points, tags, frames, source):
     print('数据来源：%s' % source)
     print('=' * 60)
     print(P.format_report(result))
+
+    # 默认权重是入库文件，原地覆盖会让仓库里的模型悄悄变样；要重训就显式
+    # 加 --force，或者把 --checkpoint 指到别的目录。
+    if (os.path.exists(args.checkpoint) and not args.force
+            and not args.self_check):
+        raise SystemExit(
+            '权重已存在：%s\n要覆盖请加 --force，或用 --checkpoint 指到别的目录'
+            '（例如 --checkpoint out/seg_mlp.npz）。' % args.checkpoint)
 
     out_dir = os.path.dirname(os.path.abspath(args.checkpoint))
     os.makedirs(out_dir, exist_ok=True)

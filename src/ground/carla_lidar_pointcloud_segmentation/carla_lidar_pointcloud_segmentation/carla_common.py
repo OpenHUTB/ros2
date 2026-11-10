@@ -21,7 +21,8 @@ except ImportError:      # 没装 carla 库时不影响离线部分
 
 DEFAULT_HOST = os.environ.get('CARLA_HOST', '127.0.0.1')
 DEFAULT_PORT = int(os.environ.get('CARLA_PORT', '2000'))
-DEFAULT_TOWN = os.environ.get('CARLA_MAP', 'Town03')
+# 默认为空：不切图，沿用服务端当前地图。切图要显式给 town。
+DEFAULT_TOWN = os.environ.get('CARLA_MAP', '')
 EGO_BLUEPRINT = os.environ.get('CARLA_EGO_BP', 'vehicle.tesla.model3')
 
 DT = 0.05      # 同步步长，20 Hz
@@ -41,22 +42,6 @@ def check_carla():
             '  pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-*.whl')
 
 
-def _attach_existing(host, port, timeout):
-    """用新客户端抓当前 world，供 load_world 失败后恢复现场。
-
-    服务端已经无响应（超时、streaming client connection failed）时返回 ``None``，
-    上层据此给出"重启 CARLA"的提示，而不是拿着一个坏掉的 client 继续跑。
-    """
-    try:
-        client = carla.Client(host, port)
-        client.set_timeout(timeout)
-        world = client.get_world()
-        world.get_map()
-        return client, world
-    except Exception:      # noqa: BLE001
-        return None
-
-
 def _available_maps(client):
     """服务端能加载的地图列表；读不到时返回 ``None``（老版本没有这个接口）。"""
     try:
@@ -68,20 +53,22 @@ def _available_maps(client):
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
             sync=True, dt=DT, timeout=CONNECT_TIMEOUT, force_reload=False,
             keep_map=None):
-    """连接服务端并（按需）加载地图，返回 ``(client, world)``。
+    """连接服务端，返回 ``(client, world)``。
 
-    ``keep_map=True`` 时完全不调用 ``load_world``，直接用服务端当前地图；
-    传 ``None`` 表示读环境变量 ``CARLA_KEEP_MAP``（ROS 节点走这条路）。
+    默认**不切图**：``town`` 为空就沿用服务端当前地图。CARLA 的
+    ``get_available_maps()`` 只说明地图包在磁盘上，不代表这台机器能把它加载完；
+    ``load_world`` 一旦卡住，服务端会把后续客户端一起拖死，只能重启。所以切图
+    必须显式给 ``town``，而且失败时直接报错退出，不留在半死状态里继续采数据。
 
-    切换地图分三步：先问服务端有哪些地图资源，缺资源就直接沿用当前地图（盲目
-    ``load_world`` 会把服务端拖死）；真要加载时用单独的 ``LOAD_WORLD_TIMEOUT``；
-    万一仍然失败，再尝试重建客户端，服务端已无响应就明确提示重启并用
-    ``--keep-map`` 兜底。
+    ``keep_map=True`` 时即使给了 ``town`` 也不切；传 ``None`` 表示读环境变量
+    ``CARLA_KEEP_MAP``。
     """
     check_carla()
     if keep_map is None:
         keep_map = os.environ.get('CARLA_KEEP_MAP', '').strip().lower() in (
             '1', 'true', 'yes', 'on')
+    want = (town or '').strip()
+
     client = carla.Client(host, port)
     client.set_timeout(timeout)
     try:
@@ -95,49 +82,45 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
             settings.fixed_delta_seconds = None
             current_world.apply_settings(settings)
             print('[连接] 检测到服务端停在同步模式（上次退出异常），已恢复异步')
-    except Exception:      # noqa: BLE001
-        current = None
+    except Exception as exc:      # noqa: BLE001
+        raise RuntimeError(
+            '连不上服务端或读不到当前地图（%s）。确认 CARLA 已启动、host 与 port 正确。'
+            % exc) from exc
 
-    def _same(name, want):
-        return bool(name) and (name == want or name.endswith('/' + want))
+    def _same(name, target):
+        return bool(name) and (name == target or name.endswith('/' + target))
 
-    if current and _same(current, town) and not force_reload:
-        world = client.get_world()
-        print('[连接] 服务端已在地图 %s，跳过重载' % current)
-    elif keep_map and current:
-        world = client.get_world()
-        print('[连接] keep_map 已开启，跳过重载，沿用当前地图 %s（请求的是 %s）'
-              % (current, town))
-    else:
-        if current is None:
-            raise RuntimeError('读不到服务端当前地图，请确认 CARLA 已启动、host 与 port 正确')
-        maps = _available_maps(client)
-        missing = maps is not None and not any(_same(item, town) for item in maps)
-        if missing:
-            # 资源不存在时盲目加载只会把服务端拖到无响应，直接沿用当前地图。
-            world = client.get_world()
-            print('[连接] 服务端没有地图 %s 的资源（可用：%s），跳过重载，继续用当前地图 %s'
-                  % (town, ', '.join(item.rsplit('/', 1)[-1] for item in maps), current))
+    if not want or keep_map or (_same(current, want) and not force_reload):
+        if want and keep_map:
+            print('[连接] keep_map 已开启，跳过重载，沿用当前地图 %s（请求的是 %s）'
+                  % (current, want))
+        elif want:
+            print('[连接] 服务端已在地图 %s，跳过重载' % current)
         else:
-            print('[连接] 正在加载地图 %s（当前 %s），最长等 %.0f s...'
-                  % (town, current or '未知', LOAD_WORLD_TIMEOUT))
-            client.set_timeout(max(timeout, LOAD_WORLD_TIMEOUT))
-            try:
-                world = client.load_world(town)
-                print('[连接] 地图加载完成')
-            except Exception as exc:      # noqa: BLE001
-                recovered = _attach_existing(host, port, timeout)
-                if recovered is None:
-                    raise RuntimeError(
-                        '加载地图 %s 失败（%s），服务端已无响应。请先重启 CARLA。\n'
-                        '如果只想在已加载的地图上跑，加 --keep-map'
-                        '（launch 时用 keep_map:=true）跳过地图重载。' % (town, exc)) from exc
-                client, world = recovered
-                print('[连接] 加载地图 %s 失败（%s），已重建连接并沿用当前地图 %s 继续。'
-                      '要真正切换地图，请重启 CARLA、或在服务端手动切好地图后重试。'
-                      % (town, exc, world.get_map().name))
-            finally:
-                client.set_timeout(timeout)
+            print('[连接] 未指定地图，沿用服务端当前地图 %s' % current)
+        world = client.get_world()
+    else:
+        maps = _available_maps(client)
+        if maps is not None and not any(_same(item, want) for item in maps):
+            raise RuntimeError(
+                '服务端没有地图 %s 的资源，不盲试 load_world'
+                '（卡住会把服务端拖到无响应）。\n'
+                '  CARLA 提供的地图：%s\n'
+                '  不传 --town 就沿用当前地图 %s。'
+                % (want, ', '.join(item.rsplit('/', 1)[-1] for item in maps), current))
+        print('[连接] 正在加载地图 %s（当前 %s），最长等 %.0f s...'
+              % (want, current, LOAD_WORLD_TIMEOUT))
+        client.set_timeout(max(timeout, LOAD_WORLD_TIMEOUT))
+        try:
+            world = client.load_world(want)
+        except Exception as exc:      # noqa: BLE001
+            raise RuntimeError(
+                '加载地图 %s 失败（%s）。服务端这时通常已无响应，请重启 CARLA。\n'
+                '  不切图就不要传 --town，默认沿用当前地图 %s。'
+                % (want, exc, current)) from exc
+        finally:
+            client.set_timeout(timeout)
+        print('[连接] 地图加载完成')
 
     if sync:
         settings = world.get_settings()

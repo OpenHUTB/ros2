@@ -86,7 +86,7 @@ class LidarSegmentationNode:
                  vehicle, spawn_index, traffic, corridor_width, max_speed=8.0,
                  lidar_range=60.0, channels=32, points_per_second=200000,
                  rotation=20.0, lidar_height=2.4, comfort_distance=14.0,
-                 stop_distance=5.0, lookahead=8.0, max_steer=0.6):
+                 stop_distance=5.0, lookahead=8.0, max_steer=0.6, free_window=5):
         self.rclpy = rclpy_mod
         self.node = node_cls('lidar_segmentation_node')
         log = self.node.get_logger()
@@ -128,6 +128,8 @@ class LidarSegmentationNode:
         self.stop_distance = stop_distance
         self.lookahead = lookahead
         self.max_steer = max_steer
+        # 余量中值滤波：单帧误分不该让刹车跟着抖
+        self.free_filter = control.MedianFilter(free_window)
         for _ in range(5):
             self.world.tick()
 
@@ -153,8 +155,8 @@ class LidarSegmentationNode:
         feats = F.point_features(points, ground_z=F.estimate_ground_z(points))
         classes = self.net.predict(F.standardize_apply(feats, self.mean, self.std))
 
-        free = control.free_distance(points, classes, half_width=self.corridor_width,
-                                     x_max=self.lidar_range)
+        free = self.free_filter(control.free_distance(
+            points, classes, half_width=self.corridor_width, x_max=self.lidar_range))
         ratio = control.drivable_ratio(classes, points=points)
 
         self.pub_cloud.publish(_to_cloud2(points, classes, PointCloud2, PointField))
@@ -249,6 +251,7 @@ def main(argv=None):
         'lookahead': '8.0',
         'max_steer': '0.6',
         'max_speed': '8.0',
+        'free_window': '5',
     }
     for name, value in defaults.items():
         _declare(node, rclpy, name, value)
@@ -267,7 +270,8 @@ def main(argv=None):
         rotation=float(params['rotation']), lidar_height=float(params['lidar_height']),
         comfort_distance=float(params['comfort_distance']),
         stop_distance=float(params['stop_distance']),
-        lookahead=float(params['lookahead']), max_steer=float(params['max_steer']))
+        lookahead=float(params['lookahead']), max_steer=float(params['max_steer']),
+        free_window=int(params['free_window']))
     try:
         rclpy.spin(runner.node)
     except KeyboardInterrupt:

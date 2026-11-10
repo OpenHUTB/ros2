@@ -265,6 +265,9 @@ def run_demo(args):
             # 延迟导入：只有装了 CARLA 才会走到这里。--self-check 在没有 carla
             # 库的机器上也要能跑，所以不能在模块顶部 import carla。
             import carla as carla_module
+        # 单帧里少量点被误判成障碍物时，余量会从 30 m 掉到 4 m，下一帧又跳回来，
+        # 直接拿它算速度系数就是一脚急刹。先过一遍中值再往下走。
+        smooth_free = control.MedianFilter(getattr(args, 'free_window', 5))
         stats = {'free': [], 'lateral': [], 'brake_frames': 0, 'gap_true': [],
                  'speed': [], 'no_obstacle': 0}
         for frame in range(args.frames):
@@ -277,8 +280,8 @@ def run_demo(args):
             classes = segment_frame(net, points, mean, std)
             # 走廊长度取雷达量程：量程外本来就没有点，写死 50 m 会让
             # "没有障碍物"被误当成"前方恰好 50 m 通畅"。
-            free = control.free_distance(points, classes, half_width=args.corridor_width,
-                                         x_max=args.lidar_range)
+            free = smooth_free(control.free_distance(
+                points, classes, half_width=args.corridor_width, x_max=args.lidar_range))
             if free >= args.lidar_range:
                 stats['no_obstacle'] += 1
             ratio = control.drivable_ratio(classes, points=points)

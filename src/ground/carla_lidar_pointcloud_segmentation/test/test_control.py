@@ -124,6 +124,18 @@ def main():
     check('按走廊统计更好', abs(C.drivable_ratio(cls2, half_width=4.0, points=pts2) - 1.0) < 1e-9,
           '%.3f' % C.drivable_ratio(cls2, half_width=4.0, points=pts2))
 
+    # 中值滤波：单帧跳变要压掉，真实的变化要跟得上
+    spike = C.MedianFilter(5)
+    for value in (30.0, 30.0, 4.0, 30.0, 30.0):
+        smoothed = spike(value)
+    check('单帧跳变被中值滤掉', smoothed > 20.0, '%.2f m' % smoothed)
+    ramp = C.MedianFilter(5)
+    for value in (10.0, 9.0, 8.0, 7.0, 6.0):
+        smoothed = ramp(value)
+    check('连续变小跟得上', abs(smoothed - 8.0) < 1e-9, '%.2f m' % smoothed)
+    check('单帧输入原样返回', C.MedianFilter(3)(12.5) == 12.5)
+    check('窗口非正时退化为 1 帧', C.MedianFilter(0).window == 1)
+
     print('\n' + '=' * 72)
     if _failed:
         print('[结果] %d 项通过，%d 项失败' % (_passed, len(_failed)))

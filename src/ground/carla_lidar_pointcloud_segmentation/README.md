@@ -84,13 +84,20 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 
 先启动 CARLA 服务端（Windows 上双击 `CarlaUE4.exe`），然后在虚拟机里：
 
-    python3.10 main.py --collect --host 192.168.148.1 --town Town03 --frames 300
+    python3.10 main.py --collect --host 192.168.148.1 --frames 300
+
+默认沿用服务端当前地图，不会切图。要切图再显式加 `--town Town03`：CARLA 切图很慢，
+加载失败时服务端会失去响应，只能重启，所以不把切图当作默认行为。
 
 生成 `data/dataset.npz`，里面是 `points / tags / frames` 三个数组。
 
 ### 4.4 训练与评价
 
     python3.10 main.py --train --data data/dataset.npz --epochs 30
+
+默认 `--checkpoint` 指向入库的 `models/seg_mlp.npz`。为了避免一次试跑就把仓库里的
+权重覆盖掉，目标文件已存在时训练会直接退出；确认要覆盖就加 `--force`，或者用
+`--checkpoint out/seg_mlp.npz` 写到别的地方。
 
 148 万点、30 轮：虚拟机约 1 分 40 秒，宿主机约 70 秒。终端打印逐类 IoU/精确率/召回率、混淆矩阵、
 分距离档准确率，并写出四个文件：
@@ -106,7 +113,7 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 
 ### 4.5 闭环演示
 
-    python3.10 main.py --demo --checkpoint models/seg_mlp.npz --host 192.168.148.1 --town Town03 --frames 150
+    python3.10 main.py --demo --checkpoint models/seg_mlp.npz --host 192.168.148.1 --frames 150
 
 自车由分割结果驱动：走廊内最近阻挡物距离经 `speed_factor` 换成目标车速，
 再折算成油门；参考轨迹取当前车道中心线往前 30 m，用纯跟踪算转角。
@@ -126,7 +133,9 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 
 调参：`--comfort-distance`（默认 12 m，越大越早减速）、`--lookahead`
 （默认 6 m，越大越平顺但过弯会切内道）、`--max-speed`（默认 8 m/s）、
-`--start-throttle`（默认 0.45，静止起步的油门下限，车重或上坡起不来时调大）。
+`--start-throttle`（默认 0.45，静止起步的油门下限，车重或上坡起不来时调大）、
+`--free-window`（默认 5，前方余量的中值滤波帧数；单帧误分会让余量瞬间从 30 m 掉到
+几米，不过滤的话刹车会跟着抖，1 表示关闭）。
 
 ### 4.6 ROS 2 节点
 
@@ -141,15 +150,18 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
 默认值覆盖）：连接用 `host` / `port` / `town` / `vehicle` / `spawn_index` / `traffic`，
 雷达用 `lidar_range` / `channels` / `points_per_second` / `rotation` / `lidar_height`，
 控制用 `corridor_width` / `comfort_distance` / `stop_distance` / `lookahead` /
-`max_steer` / `max_speed`。用 launch 时可以直接在命令行覆盖，例如：
+`max_steer` / `max_speed` / `free_window`。用 launch 时可以直接在命令行覆盖，例如：
 
     ros2 launch carla_lidar_pointcloud_segmentation main.launch.py \
         host:=192.168.148.1 traffic:=6 comfort_distance:=18 max_speed:=6
 
-连接与切图：连接超时默认 120 s，切换地图单独给 300 s。切图前先问服务端有哪些地图
-资源，没有目标地图就直接沿用当前地图，不去盲目加载（`load_world` 卡住会把客户端和
-服务端一起拖死）；真要加载时失败会尝试重建连接，服务端已无响应则提示重启。
-确实需要跳过重载时：
+连接与切图：默认不切图。连接超时默认 120 s，真要切图时单独给 300 s。
+`get_available_maps()` 只说明地图包在磁盘上，不代表这台机器能把它加载完（实测列表里
+有 Town03 照样会加载失败），所以它只用来提前拦掉「资源根本不存在」的情况，不当作
+能加载的保证。切换失败时直接报错退出，不留在半死状态里继续采数据——`load_world` 一旦
+卡住，CARLA 会把后续客户端一起拖死，只能重启。
+
+已经在服务端手动切好图、想跳过重载时，传 `--keep-map`（这时即使给了 `--town` 也不切）：
 
     python3.10 main.py --demo --keep-map --checkpoint models/seg_mlp.npz
     CARLA_KEEP_MAP=1 ros2 launch carla_lidar_pointcloud_segmentation main.launch.py
@@ -174,7 +186,7 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     python3.10 test/test_buffers.py
     python3.10 test/test_demo_offline.py
 
-每个文件末行输出 `[结果] N 项全部通过`，六个文件共 174 项。
+每个文件末行输出 `[结果] N 项全部通过`，六个文件共 178 项。
 
 其中 `test_demo_offline.py` 用假的 `carla` 模块把 `--demo` 的整条循环跑一遍，
 控制量、统计指标、清理流程都能在没有 CARLA 的机器上验证。

@@ -9,7 +9,7 @@ lidar_segmentation_node:
     # CARLA 连接
     host: "127.0.0.1"
     port: "2000"
-    town: "Town03"
+    town: ""                   # 留空沿用服务端当前地图；填了才会切图（慢且可能卡死）
     vehicle: "vehicle.tesla.model3"
     spawn_index: "0"
     traffic: "12"
@@ -28,3 +28,4 @@ lidar_segmentation_node:
     lookahead: "8.0"           # 纯跟踪预瞄距离
     max_steer: "0.6"           # 最大前轮转角，弧度
     max_speed: "8.0"           # 目标车速上限，米/秒
+    free_window: "5"           # 前方余量中值滤波帧数，1 表示不过滤

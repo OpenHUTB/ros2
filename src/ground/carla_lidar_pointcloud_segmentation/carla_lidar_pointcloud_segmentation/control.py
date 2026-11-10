@@ -15,12 +15,31 @@ from __future__ import annotations
 import math
 from typing import Sequence, Tuple
 
+import collections
+
 import numpy as np
 
 from .labels import DRIVABLE, OBSTACLE, PEDESTRIAN, VEHICLE
 
 # 会挡住车的类别：车辆、行人、障碍物
 BLOCKING_CLASSES = (VEHICLE, PEDESTRIAN, OBSTACLE)
+
+
+class MedianFilter:
+    """最近 N 帧的中值，用来压掉单帧抖动。
+
+    `free_distance` 偶尔会因为少量点被误分成障碍物，从 30 m 一下掉到 4 m，
+    下一帧又跳回来。直接拿它算速度系数就是一脚急刹，取最近 5 帧的中值可以把
+    这种单帧跳变滤掉，代价是两帧左右的延迟。
+    """
+
+    def __init__(self, window=5):
+        self.window = max(1, int(window))
+        self.values = collections.deque(maxlen=self.window)
+
+    def __call__(self, value):
+        self.values.append(float(value))
+        return float(np.median(self.values))
 
 
 def corridor_mask(points: np.ndarray, half_width: float = 1.2,

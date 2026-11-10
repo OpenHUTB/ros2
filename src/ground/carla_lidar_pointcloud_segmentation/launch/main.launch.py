@@ -22,7 +22,7 @@ ARGUMENTS = (
     ('checkpoint', 'models/seg_mlp.npz', '训练好的权重路径'),
     ('host', '127.0.0.1', 'Windows 宿主机 IP（VMware NAT 下是 VMnet8 的地址）'),
     ('port', '2000', 'CARLA RPC 端口'),
-    ('town', 'Town03', 'CARLA 地图'),
+    ('town', '', '地图；留空沿用服务端当前地图，填了才会切图'),
     ('vehicle', 'vehicle.tesla.model3', '自车 blueprint'),
     ('spawn_index', '0', '出生点索引'),
     ('traffic', '12', 'NPC 车数量，0 表示不放'),
@@ -37,6 +37,7 @@ ARGUMENTS = (
     ('lookahead', '8.0', '纯跟踪预瞄距离（米）'),
     ('max_steer', '0.6', '最大前轮转角（弧度）'),
     ('max_speed', '8.0', '目标车速上限（米/秒）'),
+    ('free_window', '5', '前方余量的中值滤波帧数，1 表示不过滤'),
 )
 
 
