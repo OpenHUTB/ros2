@@ -1,42 +1,106 @@
 #!/usr/bin/env python3
-"""UAV yaw stabilization PID simulation."""
+"""UAV Yaw Stabilization PD Controller Simulation.
+
+Simulates a simplified UAV yaw channel under wind gust torque
+using a PD heading stabilizer with angle wrapping.
+"""
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-print("=== UAV Yaw Stabilization ===")
-import sys
-print(f"Python: {sys.version.split()[0]} NumPy")
 
-dt = 0.01
-t_end = 15.0
-yaw = 0.0  # radians
-yaw_rate = 0.0
-target = np.pi/4  # 45 degrees
-kp, kd = 3.0, 2.0  # PD controller
-Izz = 0.02  # moment of inertia
+class UAVYawPlant:
+    """Simplified UAV yaw dynamics (rotational about Z)."""
+    def __init__(self, Izz=0.02, dt=0.01):
+        self.Izz = Izz
+        self.dt = dt
+        self.yaw = 0.0
+        self.yaw_rate = 0.0
 
-times, ys, rs = [], [], []
-for t in np.arange(0, t_end, dt):
-    # Target changes: turn to 45deg at t=0, then to -30deg at t=7
-    if t < 7: target = np.pi/4
-    else: target = -np.pi/6
+    def step(self, torque, disturbance=0.0):
+        accel = (torque + disturbance) / self.Izz
+        self.yaw_rate += accel * self.dt
+        self.yaw += self.yaw_rate * self.dt
+        # Wrap to [-pi, pi]
+        while self.yaw > np.pi:
+            self.yaw -= 2 * np.pi
+        while self.yaw < -np.pi:
+            self.yaw += 2 * np.pi
+        return self.yaw, self.yaw_rate
 
-    err = target - yaw
-    # Wind gust disturbance (torque) at t=5
-    torque_dist = 0.0
-    if t > 5 and t < 6: torque_dist = 0.5
-    if t > 10: torque_dist += 0.2 * np.sin(2*np.pi*0.8*(t-10))
 
-    torque = kp*err - kd*yaw_rate + torque_dist
-    yaw_accel = torque / Izz
-    yaw_rate += yaw_accel * dt
-    yaw += yaw_rate * dt
-    # Normalize angle
-    while yaw > np.pi: yaw -= 2*np.pi
-    while yaw < -np.pi: yaw += 2*np.pi
-    times.append(t); ys.append(yaw); rs.append(yaw_rate)
+class PDYawController:
+    """PD yaw stabilizer."""
+    def __init__(self, dt=0.01, kp=3.0, kd=2.0):
+        self.dt = dt
+        self.kp = kp
+        self.kd = kd
 
-ys = np.array(ys); times = np.array(times)
-print(f"Final yaw: {np.degrees(ys[-1]):.1f} deg (target -30)")
-print(f"Steady error at 45deg: {np.degrees(np.mean(np.abs(np.pi/4 - ys[400:650]))):.2f} deg")
-print(f"Max overshoot to 45deg: {np.degrees(np.max(ys[:700]) - np.pi/4):.2f} deg")
-print(f"Recovery after gust: {np.degrees(np.max(np.abs(np.pi/4 - ys[500:700]))):.2f} deg")
+    def update(self, yaw_target, yaw_meas, yaw_rate_meas):
+        err = yaw_target - yaw_meas
+        return self.kp * err - self.kd * yaw_rate_meas
+
+
+def yaw_profile(t):
+    """Step heading: 45 deg for t<7, then -30 deg."""
+    if t < 7.0:
+        return np.pi / 4
+    else:
+        return -np.pi / 6
+
+
+def wind_torque(t):
+    """Gust torque at t=5..6, oscillating after t=10."""
+    td = 0.0
+    if 5.0 < t < 6.0:
+        td = 0.5
+    if t > 10.0:
+        td += 0.2 * np.sin(2 * np.pi * 0.8 * (t - 10.0))
+    return td
+
+
+def main():
+    print("=== UAV Yaw Stabilization ===")
+    import sys
+    print(f"Python: {sys.version.split()[0]} NumPy")
+
+    dt = 0.01
+    t_end = 15.0
+    plant = UAVYawPlant(dt=dt)
+    ctrl = PDYawController(dt=dt)
+
+    times, yaws, torques = [], [], []
+    for t in np.arange(0, t_end, dt):
+        target = yaw_profile(t)
+        u = ctrl.update(target, plant.yaw, plant.yaw_rate)
+        y, r = plant.step(u, wind_torque(t))
+        times.append(t); yaws.append(y); torques.append(u)
+
+    times = np.array(times); yaws = np.array(yaws); torques = np.array(torques)
+
+    steady_err = np.degrees(np.mean(np.abs(np.pi/4 - yaws[400:650])))
+    overshoot = np.degrees(np.max(yaws[:700]) - np.pi/4)
+    gust_rec = np.degrees(np.max(np.abs(np.pi/4 - yaws[500:700])))
+    print(f"Final yaw: {np.degrees(yaws[-1]):.1f} deg (target -30)")
+    print(f"Steady error at 45deg: {steady_err:.2f} deg")
+    print(f"Max overshoot to 45deg: {overshoot:.2f} deg")
+    print(f"Recovery after gust: {gust_rec:.2f} deg")
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+    tgt = np.array([yaw_profile(t) for t in times])
+    ax1.plot(times, np.degrees(tgt), 'r--', label='target')
+    ax1.plot(times, np.degrees(yaws), 'b-', label='actual')
+    ax1.set_ylabel('Yaw (deg)'); ax1.legend(); ax1.grid(alpha=0.3)
+    ax1.set_title('UAV Yaw Stabilization PD')
+    ax2.plot(times, torques, 'g-', label='torque')
+    ax2.set_ylabel('Torque (N·m)'); ax2.set_xlabel('Time (s)')
+    ax2.legend(); ax2.grid(alpha=0.3)
+    fig.tight_layout()
+    out = "yaw_response.png"
+    fig.savefig(out, dpi=100)
+    print(f"Saved: {out}")
+
+
+if __name__ == "__main__":
+    main()
