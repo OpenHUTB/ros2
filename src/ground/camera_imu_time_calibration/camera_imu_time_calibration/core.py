@@ -341,7 +341,7 @@ def _quat_to_grid(t_src, q_src, t_dst) -> np.ndarray:
     return out / norms
 
 
-def attitude_error(offset_used: float, sim: dict, grid_rate: float = 200.0) -> dict:
+def attitude_error(offset_used: float, sim: dict) -> dict:
     """把相机角速度按 ``offset_used`` 对齐后积分，与真值姿态比较。
 
     流程：相机角速度重采样到统一网格 → 零阶保持积分 → 与真值姿态求夹角。
@@ -366,7 +366,9 @@ def attitude_error(offset_used: float, sim: dict, grid_rate: float = 200.0) -> d
     for axis in range(3):
         w_on_grid[:, axis] = np.interp(t_grid, t_src, w_cam[:, axis])
 
-    q_true = integrate_attitude(t_grid, omega(t_grid))
+    # 真值必须取仿真实际使用的轨迹：simulate() 会按 excitation 缩放，
+    # 这里若重新调用 omega(t_grid)，excitation != 1 时真值幅值会偏大。
+    q_true = integrate_attitude(t_grid, sim["w_true"])
     q_est = integrate_attitude(t_grid, w_on_grid)
 
     dot = np.abs(np.sum(q_true * q_est, axis=1))

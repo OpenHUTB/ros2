@@ -110,6 +110,19 @@ class TestAttitude(unittest.TestCase):
         self.assertAlmostEqual(a['max_deg'], b['max_deg'], places=6)
         self.assertLess(a['max_deg'], 1.5)
 
+    def test_truth_attitude_follows_excitation(self):
+        """弱激励下，误差统计用的真值必须与仿真轨迹一致（含 excitation 缩放）。
+
+        回归测试：原实现用 omega(t) 重算真值，激励 0.5 且完全补偿时会把
+        0.014° 的离散化残差报成 18.7°，因为真值幅值是仿真用的两倍。
+        """
+        for excitation in (0.5, 0.1):
+            sim = core.simulate(seed=0, excitation=excitation,
+                                cam_noise=0.0, imu_noise=0.0, offset=0.050)
+            err = core.attitude_error(0.050, sim)
+            self.assertLess(err['rms_deg'], 0.1,
+                            msg=f'excitation={excitation} 时残余误差应趋于 0')
+
 
 if __name__ == '__main__':
     unittest.main()
