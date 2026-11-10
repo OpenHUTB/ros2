@@ -15,7 +15,7 @@ R=0.30R_{confidence}+0.22R_{entropy}+0.20R_{latency}
 \quad +0.16R_{freshness}+0.07R_{light}+0.05R_{missing}
 \]
 
-当任务预期存在目标但检测数为零时，额外提高风险并立即进入 `BLIND`。帧年龄超过 1.4 秒、推理延迟超过 480 毫秒也会立即进入盲区状态。
+当任务预期存在目标但检测数为零时，`R_missing=0.55`，按公式贡献 `0.05×0.55=0.0275` 的风险并立即进入 `BLIND`。帧年龄超过 1.4 秒、推理延迟超过 480 毫秒也会立即进入盲区状态。
 
 状态：
 
@@ -45,9 +45,11 @@ ros2 launch uav_perception_confidence_guard main.launch.py duration:=20
 
 CSV 默认写入 `/tmp/uav_perception_confidence_runtime.csv`。
 
+当 `duration` 大于 0 时，模拟器结束会触发整个 launch 自动关闭；默认 `duration:=0.0` 表示持续运行，此时使用 `Ctrl+C` 手动停止。
+
 ## 4. Humble 虚拟机实测
 
-Ubuntu 22.04.5 / ROS 2 Humble 下真实构建成功，VM 内 9 项 `unittest` 全部通过。`ros2 launch` 启动两个节点，运行 20 秒并记录 100 条状态。
+Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10.12 下真实构建成功，VM 内 10 项 `unittest` 全部通过。`ros2 launch ... duration:=20` 启动两个节点并在约 20 秒后自动退出。
 
 实际状态迁移：
 
@@ -57,7 +59,7 @@ NOMINAL → DEGRADED → BLIND → DEGRADED → NOMINAL
 
 故障段预测目标存在但检测数为零，推理延迟接近 520 ms，帧年龄超过 1.4 s；恢复后置信度回到 0.91，延迟降至 42 ms。
 
-VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、9 项单元测试、两个节点启动、感知状态迁移和 CSV 尾部：
+VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、10 项单元测试、两个节点启动、感知状态迁移、自动退出和 CSV 尾部：
 
 ![ROS 2 Humble 虚拟机感知置信度实测终端](../img/air/uav_perception_confidence_guard/runtime_vm_terminal.png)
 

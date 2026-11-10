@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import asdict
 import csv
 import json
+import os
 from pathlib import Path
+import signal
 
 import rclpy
 from rclpy.node import Node
@@ -35,7 +37,7 @@ class PerceptionConfidenceSimulator(Node):
         )
         if self.duration_s > 0.0 and elapsed >= self.duration_s:
             self.get_logger().info(f"perception scenario completed after {elapsed:.2f} s")
-            rclpy.shutdown()
+            os.kill(os.getpid(), signal.SIGINT)
 
 
 class PerceptionConfidenceGuardNode(Node):

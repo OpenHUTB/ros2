@@ -91,7 +91,6 @@ class PerceptionConfidenceGuard:
             + 0.16 * freshness_risk
             + 0.07 * illumination_risk
             + 0.05 * missing_risk
-            + missing_risk
         )
         if missing_expected or sample.frame_age_ms >= 1400.0 or sample.latency_ms >= 480.0:
             desired = "BLIND"

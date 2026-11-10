@@ -20,6 +20,10 @@ class PerceptionConfidenceTests(unittest.TestCase):
         result = PerceptionConfidenceGuard().evaluate(self.sample(count=0))
         self.assertEqual(result.state, "BLIND")
 
+    def test_missing_expected_target_risk_matches_formula(self):
+        result = PerceptionConfidenceGuard().evaluate(self.sample(count=0))
+        self.assertAlmostEqual(result.risk, 0.0275, places=6)
+
     def test_missing_target_not_expected_is_not_immediate_blind(self):
         result = PerceptionConfidenceGuard().evaluate(
             self.sample(count=0, expected=False)
