@@ -301,14 +301,24 @@ cd ~/uav_ws/src && catkin_init_workspace
 cd ~/uav_ws && catkin_make
 ```
 
-本模块的功能包为 `octree_uav_3d_pathfinding`，把它放到工作空间里即可：
+本模块的功能包为 `octree_uav_3d_pathfinding`，位于本仓库的
+`src/air/octree_uav_3d_pathfinding`。按 catkin 的规则它必须位于工作空间的
+`src/` 之下，因此先把仓库克隆下来，再把功能包软链接进工作空间：
 
 ```shell
-# 将本模块放入 ~/uav_ws/src/
+# 克隆本仓库
+git clone https://github.com/OpenHUTB/ros2.git ~/ros2
+
+# 把功能包软链接到工作空间的 src/ 下
+ln -sfn ~/ros2/src/air/octree_uav_3d_pathfinding ~/uav_ws/src/octree_uav_3d_pathfinding
+
 # 编译
 cd ~/uav_ws && catkin_make
 source devel/setup.bash
 ```
+
+若代码已在别处，把 `ln` 的源路径换成实际路径即可；也可以直接把功能包目录
+拷贝到 `~/uav_ws/src/` 下。用软链接的好处是仓库更新后不必重新拷贝。
 
 编译成功时，日志里会先列出工作空间中的包（`-- ~~ traversing 1 packages`），
 最后以 `Built target` 结束 —— 后者出现即表示编译完成：

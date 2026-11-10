@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hill_start_assist</name>
+  <version>1.0.0</version>
+  <description>
+    ROS 1（Noetic）差速 AGV 坡道起步辅助：MuJoCo 12° 斜坡 + 4 轮两轴车辆，
+    四轮轮角保持 PD + 坡度前馈，抑制松开刹车后的后溜。
+  </description>
+  <maintainer email="zxy5240@users.noreply.github.com">OpenHUTB Student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <test_depend>python3-numpy</test_depend>
+
+  <export/>
+</package>

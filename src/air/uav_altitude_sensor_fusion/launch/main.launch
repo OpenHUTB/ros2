@@ -1,0 +1,11 @@
+<launch>
+  <arg name="duration" default="12.0"/>
+  <arg name="rate" default="50.0"/>
+  <arg name="seed" default="3"/>
+  <arg name="csv" default="$(env HOME)/.ros/uav_altitude_sensor_fusion/altitude_metrics.csv"/>
+  <arg name="plot" default="$(env HOME)/.ros/uav_altitude_sensor_fusion/altitude_response.png"/>
+
+  <node pkg="uav_altitude_sensor_fusion" type="main.py"
+        name="uav_altitude_sensor_fusion" output="screen"
+        args="--ros --duration $(arg duration) --rate $(arg rate) --seed $(arg seed) --csv $(arg csv) --plot $(arg plot)"/>
+</launch>

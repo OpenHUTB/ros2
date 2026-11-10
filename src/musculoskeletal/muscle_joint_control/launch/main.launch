@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+    肌肉驱动的关节控制演示。模块本身只用 Python 标准库，不依赖 rospy，
+    这里用 launch 统一入口与输出目录，便于和其他模块一样被 roslaunch 拉起。
+
+    用法：
+      roslaunch muscle_joint_control main.launch
+    需要给脚本附加参数时通过 args 传入，可选项见包内 README。
+    这里不写以减号开头的命令行示例：XML 注释内不允许连续两个减号，
+    写了会让整个 launch 文件无法被解析。
+  -->
+
+  <!-- 透传给 main.py 的额外参数 -->
+  <arg name="args" default="" />
+
+  <!-- 曲线输出目录，默认放在包内 demo_out/ -->
+  <arg name="outdir" default="$(find muscle_joint_control)/demo_out" />
+
+  <node
+    pkg="muscle_joint_control"
+    type="main.py"
+    name="muscle_joint_control"
+    output="screen"
+    args="$(arg args) --outdir $(arg outdir)"
+  />
+
+</launch>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_ppo_locomotion</name>
+  <version>0.2.0</version>
+  <description>
+    MuJoCo 物理仿真下的 Unitree G1 人形机器人 PPO 神经网络平衡控制模块。
+    解析平衡基元负责维持双足站立，PPO 残差策略叠加其上；神经网络输入 40 维
+    状态（姿态、速度、关节、步态相位、质心偏差），输出 12 维残差动作。
+    ROS 2 接口提供 /joint_states、/odom、/humanoid/obs 与上半身键盘控制。
+    说明：本模块实现稳定站立平衡，行走尚未实现（原因见 README 5.3 节）。
+  </description>
+
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
