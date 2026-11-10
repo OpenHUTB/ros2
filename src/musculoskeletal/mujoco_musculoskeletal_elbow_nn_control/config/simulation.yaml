@@ -1,0 +1,11 @@
+/**:
+  ros__parameters:
+    model_file: models/elbow.xml
+    publish_rate_hz: 100.0
+    forearm_load_kg: 0.0
+    target_angle_rad: 0.8
+    kp: 12.0
+    kd: 0.5
+    torque_scale: 2.0
+    coactivation: 0.03
+    seed: 25012

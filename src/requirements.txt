@@ -6,3 +6,4 @@ airsim
 opencv-python   # 相机图像编解码与存取（drone_ros_node / record_dataset.py）
 torch           # 行为克隆 CNN 训练（第二阶段）
 torchvision     # 图像预处理与数据集加载（第二阶段）
+matplotlib

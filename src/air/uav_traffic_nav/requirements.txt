@@ -1,0 +1,7 @@
+# uav_traffic_nav 离线训练与评测依赖（不含 ROS）
+numpy>=1.24
+gymnasium>=0.29
+stable-baselines3>=2.0
+torch>=2.0
+matplotlib>=3.7
+pytest>=7.0

@@ -1,0 +1,5 @@
+# ROS Noetic (Ubuntu 20.04) 下的 Python 依赖
+# 安装：pip3 install --user -r requirements.txt
+mujoco>=2.3.3
+numpy>=1.19
+pytest>=6.0

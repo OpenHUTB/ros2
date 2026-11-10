@@ -1,0 +1,7 @@
+mujoco<3.2
+PyOpenGL
+numpy
+torch==2.4.1+cpu
+torchvision==0.19.1+cpu
+opencv-python
+matplotlib

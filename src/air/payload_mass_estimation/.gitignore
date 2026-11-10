@@ -1,0 +1,10 @@
+data/
+results/
+artifacts/
+build/
+install/
+log/
+__pycache__/
+*.pyc
+*.log
+models/*/loss.csv

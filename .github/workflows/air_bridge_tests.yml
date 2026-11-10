@@ -1,0 +1,57 @@
+name: Air bridge tests
+
+on:
+  push:
+    paths:
+      - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_e2e_rl/**'
+      - 'tests/**'
+      - '.github/workflows/air_bridge_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/carlair_ros_bridge/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_e2e_rl/**'
+      - 'tests/**'
+      - '.github/workflows/air_bridge_tests.yml'
+
+jobs:
+  test:
+    name: Local tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install test dependencies
+        run: python3 -m pip install --upgrade pip numpy pyyaml
+
+      - name: Run bridge tests
+        run: |
+          python3 tests/test_frames.py
+          python3 tests/test_bridge_local.py
+          python3 tests/test_sensors_local.py
+          if [ -f tests/test_imu_local.py ]; then
+            python3 tests/test_imu_local.py
+          fi
+
+      - name: Run uav_landing_monitor tests
+        run: python3 src/air/uav_landing_monitor/tests/test_uav_landing_monitor_local.py
+
+      - name: Byte-compile e2e_rl scripts
+        run: python3 -m py_compile src/air/uav_e2e_rl/uav_e2e_rl/*.py src/air/uav_e2e_rl/test/*.py src/air/uav_e2e_rl/launch/*.py src/air/uav_e2e_rl/setup.py
+
+      - name: Run uav_e2e_rl tests
+        run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
+
+      - name: Byte-compile bridge scripts
+        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+
+      - name: Byte-compile landing monitor scripts
+        run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py
