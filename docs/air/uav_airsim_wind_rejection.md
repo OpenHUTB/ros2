@@ -127,6 +127,17 @@ source install/setup.bash
 ros2 launch uav_airsim_wind_rejection main.launch.py
 ```
 
+不需要 AirSim 也能先自检网络与权重（约 2 秒）：
+
+```bash
+python3 test/test_mlp.py
+# 5/5 通过（在 600 条真实样本上复算，两个输出维度与真值的相关系数均为 0.999）
+```
+
+注意 `wind_data.npz` 里的 `X` **存盘时已经标准化过**（`X=(X - x_mean)/x_std`），复算时直接用它，不要再按 `x_mean/x_std` 处理一遍，否则相当于二次标准化，结果会明显偏低。
+
+文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页。
+
 ## 10. 踩坑记录
 
 | # | 现象 | 原因 | 解决 |
