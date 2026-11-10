@@ -283,6 +283,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机机载云台目标丢失重捕获与视轴误差评估](./air/uav_gimbal_reacquisition.md)
 
+* [无人机视觉感知置信度退化保护](./air/uav_perception_confidence_guard.md) —— 综合检测置信度、预测熵、推理延迟和帧陈旧度，识别感知退化并输出保持或返航建议
+
 * [无人机应急着陆点安全评估](./air/uav_emergency_landing_selector.md) —— 从坡度、粗糙度、障碍、人员风险和能量裕量中筛选安全落点，附 ROS 2 Humble 实际 launch 验证
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
