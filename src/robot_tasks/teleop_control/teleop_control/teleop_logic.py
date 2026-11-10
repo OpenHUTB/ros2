@@ -72,6 +72,6 @@ class TeleopCommandState:
             raise ValueError("now must be a finite monotonic timestamp")
         if self._last_input_at is None or self._velocity == ZERO_VELOCITY:
             return None
-        if timestamp - self._last_input_at >= self.command_timeout_sec:
+        if timestamp >= self._last_input_at + self.command_timeout_sec:
             return self.stop()
         return None
