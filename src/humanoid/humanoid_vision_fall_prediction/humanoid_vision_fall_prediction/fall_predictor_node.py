@@ -30,8 +30,10 @@ def _weights_path() -> str:
             return p
     except Exception:
         pass
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        "..", "..", "..", "..", "models_trained", "fall_predictor.npz")
+    # 源码回退路径：上一级即包根目录（models_trained/ 所在处）。
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(
+        os.path.join(here, "..", "models_trained", "fall_predictor.npz"))
 
 
 class FallPredictorNode(Node):

@@ -37,8 +37,10 @@ def _model_path() -> str:
             return p
     except Exception:
         pass
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        "..", "..", "..", "..", "models", "humanoid_camera.xml")
+    # 源码回退路径：__file__ 在 <pkg>/humanoid_vision_fall_prediction/ 内，
+    # 上一级才是包根目录（models/ 所在处）。此前多退 3 级会指到仓库根，模型必然找不到。
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(here, "..", "models", "humanoid_camera.xml"))
 
 
 class VisionSimNode(Node):
