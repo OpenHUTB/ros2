@@ -207,6 +207,8 @@ nav:
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
 
 - 空域载具:
+    - 无人机多传感器感知与给定轨迹跟踪控制: './air/uav_perception_trajectory.md'
+    - 无人机物理仿真与键盘运动控制: './air/uav_physical_simulation.md'
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
     - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
