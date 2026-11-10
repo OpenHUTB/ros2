@@ -1,4 +1,4 @@
 <launch>
     <node name="figure8_sim" pkg="figure8_sim" type="main.py" output="screen"/>
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find figure8_sim)/rviz_config.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find figure8_sim)/rviz/rviz_config.rviz"/>
 </launch>
