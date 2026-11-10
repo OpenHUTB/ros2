@@ -181,18 +181,19 @@ def run(args):
                                        state, event)
                 Image.fromarray(frame_image).save(
                     os.path.join(record_dir, 'frame_%04d.png' % frame))
+        # 汇总放在清理之前：清理阶段 CARLA 偶尔会因为 actor 已销毁而直接
+        # C++ abort，那种崩溃 try/except 捕不回来，报告必须先打出来
+        if not visual_series:
+            print('一帧也没跑，检查 --frames')
+            return 1
+
+        print('\n跳过 %d 帧（地图无有效车道），统计只用 %d 帧'
+              % (skipped, len(visual_series)))
+        report(visual_series, map_series, speeds, visual_events, map_events, args)
+        return 0
     finally:
         cc.destroy_all(camera, ego)
         cc.restore_async(world)
-
-    if not visual_series:
-        print('一帧也没跑，检查 --frames')
-        return 1
-
-    print('\n跳过 %d 帧（地图无有效车道），统计只用 %d 帧'
-          % (skipped, len(visual_series)))
-    report(visual_series, map_series, speeds, visual_events, map_events, args)
-    return 0
 
 
 def report(visual_series, map_series, speeds, visual_events, map_events, args):

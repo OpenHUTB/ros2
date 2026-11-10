@@ -177,12 +177,13 @@ class VisualLaneDepartureNode(Node):
                            visual_offset - map_offset))
                 index += 1
         finally:
+            # 汇总先发，清理后做：清理阶段偶尔会 C++ abort，日志不能丢
+            self._publish_summary(visual_series, map_series, speeds)
             cc.destroy_all(self._camera, self._actor)
             cc.restore_async(world)
             if skipped:
                 self.get_logger().info(
                     '统计跳过 %d 帧（预热、车速过低或地图无有效车道）' % skipped)
-            self._publish_summary(visual_series, map_series, speeds)
 
     def _publish_summary(self, visual_series, map_series, speeds):
         """跑完把误差发到 /statistics，方便录屏时直接看到结论。"""
