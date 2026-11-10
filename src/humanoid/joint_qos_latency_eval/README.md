@@ -58,7 +58,7 @@ src/humanoid/joint_qos_latency_eval/     # 模块目录（仓库内位置）
 
 ## 运行
 
-```
+```bash
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
 
@@ -82,8 +82,8 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 | 指标 | 含义 |
 |------|------|
 | `count` | 收到条数 |
-| `missing` | 由序号间隔推算的丢失条数 |
-| `drop%` | `missing / (count + missing)` |
+| `missing` | 序号区间内未到达的条数：`max(seq)+1 - 去重后的序号数`，乱序重发不会重复计数 |
+| `drop%` | `missing / (max(seq) + 1)` |
 | `p50 / p95 / p99 / max` | 单程时延分位数与最大值（ms） |
 | `jitter` | 相邻到达间隔的样本标准差（ms），衡量周期稳定性 |
 | `ooo` | 到达顺序与序号顺序相反的次数 |
@@ -99,10 +99,6 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 结论：
 
-- **队列深度是丢包的主因，可靠性策略不是。** `depth=10` 的两个场景 missing 为 0，
-  `depth=1` 的两个场景分别丢 67 条（3.4%）和 63 条（3.2%），且 RELIABLE 与
-  BEST_EFFORT 的丢包率几乎一致。200 Hz 下接收队列深度 1 没有吸收调度抖动的余量，
-  来不及取走的消息直接被覆盖。
 - **BEST_EFFORT 的时延低于 RELIABLE**：p50 分别为 0.681 / 0.678 ms 与
   0.752 / 0.789 ms，相差约 0.07~0.11 ms，量级符合可靠传输多出的确认与重传开销。
 - **队列深度对时延几乎没有影响**：同为 BEST_EFFORT 时 `depth=10` 与 `depth=1`
@@ -122,7 +118,7 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ## 测试
 
-```
+```bash
 colcon test --packages-select joint_qos_latency_eval
 colcon test-result --verbose
 ```
