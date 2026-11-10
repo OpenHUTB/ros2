@@ -1,0 +1,19 @@
+# uav_dynamic_safety_guard 节点参数
+# 话题与坐标系约定沿用 uav_mujoco_sim / carlair_ros_bridge。
+
+model: ""                  # 策略权重 .npz；留空用包内 share/.../data/dynamic_policy_seq.npz
+
+topic:
+  lidar: "/lidar/points"          # XYZ float32，世界轴向、相对机体中心
+  odom: "/uav/odom"
+  cmd_in: "/uav/cmd_vel_nominal"  # 标称指令（机体系）
+  cmd_out: "/uav/cmd_vel"         # 修正后的指令（机体系）
+  goal: "/uav/goal"
+  status: "/guard/status"
+
+rate_hz: 20.0
+max_horiz: 4.0
+max_vert: 2.0
+guard_m: 0.0               # 最近回波低于该值时直接刹停（0 关闭）
+dir_guard: 0.0             # 指令方向回波低于该值时按比例减速（0 关闭）
+stale_s: 0.5               # 点云/里程计超过该时长未更新则输出零指令

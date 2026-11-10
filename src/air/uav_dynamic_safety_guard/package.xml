@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>uav_dynamic_safety_guard</name>
+  <version>0.1.0</version>
+  <description>
+    动态障碍下的时序神经安全层。订阅 360° 激光点云、里程计与标称速度指令，
+    用三帧距离栅格与神经网络修正会撞上（运动）障碍的指令。几何教师用场景
+    真值做 0.6 s 外推生成示范，学生只看到雷达序列。依赖 uav_mujoco_sim 提供
+    /lidar/points、/uav/odom 与 /uav/cmd_vel。
+  </description>
+  <maintainer email="3037013261@qq.com">yanfan117</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>uav_mujoco_sim</exec_depend>
+
+  <test_depend>ament_pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
