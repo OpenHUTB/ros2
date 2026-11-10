@@ -61,7 +61,6 @@ ROS每章节运行代码:
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
 * [第 5 章](./chapter/chap5.md) - 机器人感知
-    * [行人隐私脱敏视觉检测节点](./privacy_mask/README.md)
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
