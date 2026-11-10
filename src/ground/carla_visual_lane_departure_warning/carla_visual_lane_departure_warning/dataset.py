@@ -123,9 +123,13 @@ def paint_score(gray, point, pose, k, half=1, offset=14):
     height, width = gray.shape
     if not (0 <= row < height):
         return -999.0
+    left_lo, left_hi = max(0, col - offset - half), min(width, col - offset + half + 1)
+    right_lo, right_hi = max(0, col + offset - half), min(width, col + offset + half + 1)
+    if left_lo >= left_hi or right_lo >= right_hi:
+        return -999.0
     centre = gray[row, max(0, col - half):min(width, col + half + 1)].mean()
-    left = gray[row, max(0, col - offset - half):min(width, col - offset + half + 1)].mean()
-    right = gray[row, max(0, col + offset - half):min(width, col + offset + half + 1)].mean()
+    left = gray[row, left_lo:left_hi].mean()
+    right = gray[row, right_lo:right_hi].mean()
     return float(centre - 0.5 * (left + right))
 
 
@@ -160,11 +164,21 @@ def collect(args):
 
     sway = getattr(args, 'sway', 0.0)
     sway_state = {'sign': 0.0, 'start': None, 'probed': False, 'count': 0}
+    lane_change_every = getattr(args, 'lane_change', 0)
+    manager = None
     if sway > 0.0:
         import carla
         ego.set_autopilot(False)
         print('[采集] 关闭自动驾驶，横向摆动 ±%.2f m，频率 %.2f Hz'
               % (sway, args.sway_freq), flush=True)
+    elif lane_change_every > 0:
+        # 车始终开在车道里，靠变道瞬态把偏移扫过 0 -> ±1.75 -> 0，
+        # 比强行摆动稳，也不会把车开到路肩上
+        manager = client.get_trafficmanager()
+        manager.set_synchronous_mode(True)
+        ego.set_autopilot(True, manager.get_port())
+        print('[采集] 每 %d 帧强制变道一次，用变道瞬态覆盖大偏移' % lane_change_every,
+              flush=True)
 
     images, targets, speeds = [], [], []
     skipped_width = 0
@@ -187,12 +201,17 @@ def collect(args):
                     steer=sway_steer(sway, args.sway_freq, sway_state,
                                      index * args.dt,
                                      lane_offset(waypoint, transform))))
+            if manager is not None and index % lane_change_every == 0:
+                direction = (index // lane_change_every) % 2 == 0
+                manager.force_lane_change(ego, direction)
             if index % args.every:
                 continue
 
             rgb = cc.image_to_array(image)
             left, right = boundary_targets(waypoint, transform)
-            if not (2.8 < right - left < 4.2):
+            # 用地图给的车道宽判断，别用投影后的边界间距：车一转向、一压线，投影出来的
+            # 间距会被拉长，变道和弯道上能把整段数据都判成「宽度异常」
+            if not (2.8 < waypoint.lane_width < 4.2):
                 skipped_width += 1
                 continue
             # 自车相对当前车道中心的偏移，用垂距；往前看 10 m 会把曲率算进来
