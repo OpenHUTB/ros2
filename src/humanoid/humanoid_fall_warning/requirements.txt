@@ -1,0 +1,5 @@
+# humanoid_fall_warning 运行依赖（Ubuntu 22.04 + ROS 2 Humble 验证）
+mujoco>=3.0          # 仿真与渲染，实测 4.0.0
+numpy>=1.24          # 纯 NumPy MLP，实测 1.26.4
+imageio>=2.31        # 演示 gif 写出
+Pillow>=9.0          # 在真实渲染帧上叠加概率文字
