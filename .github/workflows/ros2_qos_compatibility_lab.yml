@@ -42,7 +42,6 @@ jobs:
             --from-paths src/chap2/ros2_qos_compatibility_lab \
             --ignore-src \
             --rosdistro humble \
-            --skip-keys ament_python \
             -y
 
       - name: Build package

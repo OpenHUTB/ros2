@@ -36,9 +36,12 @@ GitHub Actions 的 Ubuntu 22.04 runner 上完成：
 | 构建 | `colcon build` 通过 |
 | 包测试 | `colcon test` 通过（8 项） |
 | 端到端验证 | 两个 launch、QoS 诊断、通信恢复和话题检查均通过 |
+| 独立复测 | Ubuntu 22.04.5 WSL2 + Humble + Python 3.10.12，构建和运行验证均通过 |
 
 完整运行和验证日志：
 [ROS 2 QoS compatibility lab #42765405305](https://github.com/acai-y/ros2/actions/runs/42765405305)。
+独立复测记录见
+[PR #630 评论](https://github.com/OpenHUTB/ros2/pull/630#issuecomment-6631329153)。
 
 工作流每次推送都会重新执行构建、测试、两个 launch 和话题验证，并把完整日志上传为
 `ros2-qos-compatibility-lab-logs` artifact。
@@ -180,6 +183,8 @@ bash <仓库路径>/src/chap2/ros2_qos_compatibility_lab/test/run_runtime_valida
 
 脚本会验证不兼容场景没有消息、兼容场景持续收到消息、独立检查器能够诊断端点、
 `ros2 topic info --verbose` 同时显示两种 Reliability，以及话题频率约为 1 Hz。
+191-hong 已在 Ubuntu 22.04.5 WSL2 + ROS 2 Humble + Python 3.10.12 上独立运行
+`colcon build` 和该脚本，全部通过。
 
 ## 8. 范围与限制
 

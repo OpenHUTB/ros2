@@ -183,6 +183,11 @@ bash <仓库路径>/src/chap2/ros2_qos_compatibility_lab/test/run_runtime_valida
 [运行 #42765405305](https://github.com/acai-y/ros2/actions/runs/42765405305)
 保存完整日志和 `ros2-qos-compatibility-lab-logs` artifact。
 
+191-hong 还在 Ubuntu 22.04.5（WSL2）+ ROS 2 Humble + Python 3.10.12 上对
+PR head `a624964f` 完成了独立复测：8 项离线测试、`colcon build` 和
+`run_runtime_validation.sh` 全部通过，详见
+[PR #630 验证评论](https://github.com/OpenHUTB/ros2/pull/630#issuecomment-6631329153)。
+
 ## 8. 常见问题
 
 | 现象 | 可能原因 | 处理方法 |
