@@ -4,7 +4,7 @@
   <name>mujoco_rov_depth_control</name>
   <version>0.1.0</version>
   <description>水下 ROV 串级定深控制：MuJoCo 刚体 + 显式浮力/阻尼建模，20 Hz 控制</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="cx3238842481@qq.com">chenxi</maintainer>
   <license>MIT</license>
 
   <exec_depend>ros2launch</exec_depend>

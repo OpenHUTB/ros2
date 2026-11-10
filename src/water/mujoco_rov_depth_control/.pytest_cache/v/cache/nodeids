@@ -1,0 +1,3 @@
+[
+  "test/test_mujoco_rov_depth_control.py::test_short_simulation_regression"
+]
