@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_scenario_runner</name>
+  <version>1.0.0</version>
+  <description>
+    把一次驾驶写成 YAML 场景脚本：按时序发布 /cmd_vel、记录轨迹、逐条判定断言。
+    内置二维车辆模型，不依赖 CARLA 也能复现；同一份场景也能接真实车辆做回归。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
