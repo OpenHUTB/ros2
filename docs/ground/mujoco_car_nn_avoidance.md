@@ -368,7 +368,7 @@ python3 main.py --robustness     # 结果写 results/robustness.csv 与 robustne
 
 > 口径说明：丢束语义是「先判丢束、只对有效回波加噪、最后把丢束项写回量程上限」，`test_sensor_noise.py` 有断言保证丢束值精确等于量程；`_apply_sensor_noise` 已拆到不依赖 mujoco 的 `sensor_noise.py`，纯逻辑测试在没装 MuJoCo 的机器上也能跑。
 
-![传感器噪声下的真实最小离障与成功率](img/ground/mujoco_car_nn_avoidance_robustness.png)
+![传感器噪声下的真实最小离障与成功率](../img/ground/mujoco_car_nn_avoidance_robustness.png)
 
 ## 8. 常见问题
 
