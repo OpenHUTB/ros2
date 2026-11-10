@@ -1,0 +1,29 @@
+# 无人机感知与轨迹跟踪控制参数
+
+## 轨迹
+traj:   figure8     # 轨迹类型: line / helix / figure8
+radius: 5.0         # 轨迹半径 (m)
+omega:  0.4         # 角频率 (rad/s)
+z:      -5.0        # 飞行高度（NED 系，负值向上）
+cycles: 3           # 轨迹周期数，到达后降落
+
+## PID 增益
+# 整定基准：控制周期 dt = 0.1 s，速度环时间常数 τ ≈ 0.45 s。
+# 周期或桥接 cmd_duration 改变时必须重新整定，否则会震荡。
+kp: 0.8
+ki: 0.05            # 过大 → 积分饱和；本模块已在饱和时冻结积分
+kd: 0.25            # 过大 → 放大雷达噪声
+
+## 限制
+v_max: 3.0          # 速度饱和上限 (m/s)
+dt:    0.1          # 控制周期 (s)，须与 carlair_ros_bridge 的 cmd_duration 一致
+
+## 感知安全阈值（扇形直方图归一化值，1 = 无遮挡）
+s_safe: 0.6         # 高于此值：全速跟踪轨迹
+s_min:  0.25        # 低于此值：停止（避免碰撞）
+                    # 两者之间：线性缩放，保证速度连续无跳变
+
+## 话题
+cmd_topic:   /uav/cmd_vel
+lidar_topic: /lidar/points
+odom_topic:  /uav/odom
