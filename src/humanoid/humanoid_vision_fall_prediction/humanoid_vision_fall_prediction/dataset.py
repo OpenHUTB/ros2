@@ -41,9 +41,9 @@ def _downsample_gray(img: np.ndarray, size: int = 16) -> np.ndarray:
 
 
 def collect_dataset(model_path: str, out_path: str,
-                    samples_per_class: int = 300,
+                    total_samples: int = 300,
                     force_min: float = 80.0, force_max: float = 220.0,
-                    normal_ratio: float = 0.25,
+                    normal_ratio: float = 0.2,
                     image_h: int = 64, image_w: int = 64,
                     kp: float = 60.0, kd: float = 6.0,
                     seed: int = 0, verbose: bool = True) -> str:
@@ -54,7 +54,7 @@ def collect_dataset(model_path: str, out_path: str,
     X_list, y_list = [], []
 
     # normal 类（小推力或无推）
-    n_normal = int(samples_per_class * normal_ratio)
+    n_normal = int(total_samples * normal_ratio)
     for _ in range(n_normal):
         sim.reset()
         # 先自由站立 0.5s 稳定
@@ -74,11 +74,20 @@ def collect_dataset(model_path: str, out_path: str,
         X_list.append(_downsample_gray(img))
         y_list.append(0)
 
-    # 4 个方向类
-    n_per_dir = (samples_per_class - n_normal) // 4
-    for ang in PUSH_DIRECTIONS_DEG:
+    # 4 个方向类：把 (总数 - normal) 均分到 4 个方向，余数依次补给前几个方向。
+    # 旧版直接 //4 会把余数丢掉，导致 --samples 300 只采到 299 个样本。
+    n_dir_total = total_samples - n_normal
+    n_per_dir_base, n_extra = divmod(n_dir_total, 4)
+    # 每次试验在若干倾角阶段各取一帧，覆盖 3°→26° 的整个倾倒过程。
+    # 早期版本只在 7° 附近取一帧：demo 里机器人倾到 50° 时图像完全落在
+    # 训练分布之外，预测置信度只有 0.3，控制器阈值（0.7）从不触发，
+    # “分级修正”因此在任何推扰下都等于没开。
+    STAGES = (0.05, 0.12, 0.25, 0.45)  # 弧度，对应约 3°/7°/14°/26°
+    for dir_idx, ang in enumerate(PUSH_DIRECTIONS_DEG):
         label = DIR_TO_LABEL[ang]
-        for _ in range(n_per_dir):
+        n_frames = n_per_dir_base + (1 if dir_idx < n_extra else 0)
+        n_trials = max(1, n_frames // len(STAGES))
+        for _ in range(n_trials):
             sim.reset()
             for _ in range(250):
                 sim.step()
@@ -86,20 +95,15 @@ def collect_dataset(model_path: str, out_path: str,
             fx = f * np.cos(np.radians(ang))
             fy = f * np.sin(np.radians(ang))
             sim.apply_push((fx, fy, 0.0), duration_steps=40)
-            # 推力后再走 100 步（0.2s），取一帧
-            for _ in range(100):
-                sim.step()
-            if sim.fallen():
-                # 跌倒了就用跌倒前最后一帧（重置后取推力后 50 步）
-                sim.reset()
-                for _ in range(250):
+            for thr in STAGES:
+                for _ in range(300):
+                    if abs(sim.torso_tilt()) >= thr or sim.fallen():
+                        break
                     sim.step()
-                sim.apply_push((fx, fy, 0.0), duration_steps=40)
-                for _ in range(50):
-                    sim.step()
-            img = sim.render_front(gray=True)
-            X_list.append(_downsample_gray(img))
-            y_list.append(label)
+                X_list.append(_downsample_gray(sim.render_front(gray=True)))
+                y_list.append(label)
+                if sim.fallen():
+                    break
 
             if verbose and (len(y_list) % 100 == 0):
                 print(f"  [collect] 已采集 {len(y_list)} 样本...")
