@@ -8,7 +8,7 @@
 
 ## 2. 演示
 
-![demo](../../img/uav/wind_reject/demo.gif)
+![demo](../img/uav/wind_reject/demo.gif)
 
 动图由 `simGetImages(ImageType.Scene)` 逐帧截取真实 Blocks 画面合成，150 帧，3.9 MB。画面中无人机顶着 15 m/s 侧风悬停，可见方块墙随位移滑动。
 
