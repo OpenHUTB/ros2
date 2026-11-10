@@ -61,6 +61,17 @@ def test_fatigue_recovers_under_rest_vs_load():
     assert phi_load < 0.8
 
 
+def test_force_velocity_never_negative():
+    """缩短速度超过上限后力必须停在 0：收缩元件只能拉，不能推。"""
+    assert force_velocity(1.0) == 0.0
+    for v_n in (1.0, 1.2, 1.5, 3.0, 10.0):
+        assert force_velocity(v_n) >= 0.0
+    # 总力同样不能被负的力-速度因子带成推力
+    params = MuscleParams()
+    for v_n in (1.2, 1.5):
+        assert muscle_force(1.0, 1.0, v_n, params) >= 0.0
+
+
 if __name__ == "__main__":
     for name in list(globals()):
         if name.startswith("test_"):

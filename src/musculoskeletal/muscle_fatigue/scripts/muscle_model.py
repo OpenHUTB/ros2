@@ -140,13 +140,16 @@ def force_length_passive(l_n, k=5.0, l_max=1.6):
 
 
 def force_velocity(v_n):
-    """力-速度因子，等长 (v_n=0) 为 1，向心收缩下降，离心收缩上升。"""
+    """力-速度因子，等长 (v_n=0) 为 1，向心收缩下降，离心收缩上升。
+
+    v_n >= 1（缩短速度达到上限）后该因子会被夹取到 0：收缩元件只能拉不能推，
+    Hill 曲线在 v_n > 1 处外推会给出负值，必须截断，否则总力变成推力。
+    """
     if v_n >= 0.0:
         f = 0.3125 / (v_n + 0.25) - 0.25
-    else:
-        x = min(1.0, -v_n)
-        f = 1.0 + 0.4 * x / (0.25 + x)
-    return f
+        return max(0.0, f)
+    x = min(1.0, -v_n)
+    return 1.0 + 0.4 * x / (0.25 + x)
 
 
 def muscle_force(a, l_n, v_n, params):
