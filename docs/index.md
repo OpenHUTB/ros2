@@ -113,6 +113,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+* [Turtlebot3 激光雷达避障](./ground/tb3_lidar_obstacle.md) —— 订阅 /scan 按角度反查正前方距离，低于安全距离时停止转向
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
 * [手动控制](./set_up_and_connect_to_carla.md)
@@ -213,6 +214,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机激光雷达避障（固定阈值版）](./air/uav_lidar_avoid.md) —— 保留全向最小距离 + 固定阈值策略，修正 set_velocity、.distance 与自反射误触发三个问题
+* [无人机激光雷达分扇区避障与梯形速度巡航](./air/uav_lidar_cruise.md) —— 把全向最小距离拆成前/左/右三扇区，用梯形速度规划替换阶跃指令，实现减速、转向、通过的行为链
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
 
