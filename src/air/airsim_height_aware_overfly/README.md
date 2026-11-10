@@ -107,7 +107,7 @@ Landing confirmed: True
 
 每次飞行在 `artifacts/height_aware_overfly/` 下新建“时间戳_随机后缀”目录，终端打印 Run evidence 路径：
 
-- `flight.csv`：22 列，含 `z`、`lift_m`（相对巡航高度的实测抬升）、`speed`、`climb`、`clearance_m`、`top_height_m`、`overhead_m`、`mode`、`overfly_active`、`overfly_hold`、`overfly_done`、`overfly_armed`；
+- `flight.csv`：22 列，含 `z`、`lift_m`（相对巡航高度的实测抬升）、`speed`、`climb`、`clearance_m`、`top_height_m`（相对相机）、`overhead_m`、`mode`、`overfly_active`、`overfly_hold`、`overfly_done`、`overfly_armed`；
 - `events.jsonl`：`mission_started`、`overfly_started`、`overfly_completed`、`overfly_hold_done`、`lateral_bypass`、`overfly_failed`、`overfly_disarmed`、`goal_reached`、`abort`/`timeout`/`interrupted` 及降落确认事件；
 - `settings.json`：本次命令的全部参数。
 

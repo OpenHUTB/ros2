@@ -128,7 +128,7 @@ Pop-Location
 
 两次事件序列一致：`mission_started → overfly_started (climb≈2.1, top≈0.04–0.11) → overfly_completed (hold=2.06/2.14) → overfly_hold_done (travelled=5.22/5.25) → goal_reached → landing_confirmed`；无新增碰撞、无 `overfly_failed`。`flight.csv` 中 `overfly_hold=1` 的保持段持续约 5 m 路程，`mode` 依次为 `advance → overfly → advance`。
 
-证据文件（第二次运行，随 PR 提交）：[flight.csv](airsim_height_aware_overfly/flight.csv)（22 列，含 `lift_m`、`top_height_m`、`overfly_hold`）、[events.jsonl](airsim_height_aware_overfly/events.jsonl)、[settings.json](airsim_height_aware_overfly/settings.json)。
+证据文件（第二次运行，随 PR 提交）：[flight.csv](airsim_height_aware_overfly/flight.csv)（22 列，含 `lift_m`、`top_height_m`（相对相机）、`overfly_hold`）、[events.jsonl](airsim_height_aware_overfly/events.jsonl)、[settings.json](airsim_height_aware_overfly/settings.json)。
 
 ![高度自适应越障实飞](../img/air/airsim_height_aware_overfly/flight_demo.webp)
 

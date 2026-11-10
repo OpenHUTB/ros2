@@ -15,8 +15,9 @@ chooses between three behaviours:
   curve    - obstacle is too tall (or overfly is disarmed), bypass laterally
 
 Overflying is a deliberate climb into space the camera has verified is free, so
-it is guarded three ways: the required climb (top edge plus body radius and
-safety margin) must fit under ``--max-climb`` and the absolute ``--max-altitude``,
+it is guarded three ways: the required climb (top edge plus the camera mount
+offset plus body radius and safety margin) must fit under ``--max-climb`` and
+the absolute ``--max-altitude``,
 free space above the top edge must actually be visible so the top can be
 trusted, and repeated failed climbs disarm overfly for the rest of the mission
 rather than letting the vehicle keep climbing at an obstacle. A committed climb
