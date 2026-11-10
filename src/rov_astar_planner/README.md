@@ -52,7 +52,7 @@ ros2 run rov_astar_planner astar_node.py
 
 节点启动后，A* 算法会立即在地图中进行搜索，并在终端打印出计算出的最优路径坐标点：
 
-![实验效果图](../../docs/image/rov_astar_planner.jpg)
+![实验效果图](../../docs/water/images/rov_astar_planner.png)
 ## 七、实验总结
 
 本次实验成功在 ROS 2 框架下开发了独立的 A* 路径规划节点。实验结果表明，A* 算法能够有效地避开地图中的预设障碍物，并规划出一条从起点到终点的最优路径。该模块的完成为后续将路径规划算法与 MuJoCo 物理仿真、声呐 SLAM 结合，实现水下机器人的全自动闭环导航打下了坚实基础。

@@ -52,7 +52,7 @@ ros2 run rov_astar_planner astar_node.py
 
 节点启动后，A* 算法会立即在地图中进行搜索，并在终端打印出计算出的最优路径坐标点：
 
-![实验效果图](image/rov_astar_planner.jpg)
+![实验效果图](images/rov_astar_planner.png)
 
 ## 七、实验总结
 
