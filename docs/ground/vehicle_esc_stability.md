@@ -59,6 +59,48 @@ RViz2 里的回放。上下两条车道并排跑同一条路，两辆车同时�
 极限，车不会失稳。它证明的是另一件事：ESC 在正常工况下不乱动，介入 4.96 s 但只把
 横摆跟踪误差压掉三分之二，没有把车拽出驾驶员想要的轨迹。
 
+## 消融：稳定到底来自差动制动还是减速
+
+侧偏角能从 89.2° 掉到 3.8°，也可能是「ESC 顺便把车速降下来了」的结果 —— 慢车本来
+就不容易甩。为了把这两件事分开，把 ESC 拆成两半各跑一次双移线：
+
+| 配置 | 最大侧偏角 | 最大路径偏离 | 终速 | 甩尾 |
+|---|---|---|---|---|
+| 无 ESC | 89.20° | 17.02 m | 34.53 km/h | 是 |
+| ESC 默认 | **3.79°** | **0.59 m** | 95.62 km/h | 否 |
+| 只留横摆差动制动（`speed_brake_gain=0`、`throttle_cut=1`） | **3.86°** | **0.61 m** | 95.62 km/h | 否 |
+| 只留降速降扭（横摆环增益全清零） | 89.20° | 17.02 m | 34.53 km/h | 是 |
+
+结论是稳定性来自横摆差动制动，不是减速：把降速降扭关掉，指标几乎不变（3.79° → 3.86°）；
+反过来把横摆环清零，结果和完全不开 ESC 一模一样。
+
+最后一行完全一致不是巧合 —— 降速降扭这一路是挂在横摆环输出上的附属动作：四轮补刹车
+要求强度大于 `throttle_cut`，降扭也要求强度超过阈值。横摆环清零后强度恒为 0，这两条
+根本不会触发，所以它等于没开 ESC。换句话说，这个实现里「降速」不是独立的一道保险，
+而是横摆环打满之后的兜底。
+
+差动制动和单纯减速的本质区别，可以看跑完的终速：双移线起步 96 km/h，默认配置跑完
+95.62 km/h，只留差动制动也是 95.62 km/h —— ESC 并没有把车刹慢，稳定性是横摆力矩给
+的。倒是关掉 ESC 之后终速掉到 34.53 km/h，因为车已经横着走了，轮胎侧偏和空气阻力
+把动能吃掉了。所以「ESC 靠减速稳住车」这个直觉在这里不成立。
+
+复现：
+
+```python
+from vehicle_esc_stability import params, scenarios, sim
+
+sc = scenarios.lane_change()
+yaw_only = params.EscConfig(speed_brake_gain=0.0, throttle_cut=1.0)
+decel_only = params.EscConfig(yaw_gain=0.0, yaw_integral_gain=0.0,
+                              yaw_rate_gain=0.0, sideslip_gain=0.0,
+                              split_mu_feedforward=0.0)
+
+for cfg in (None, yaw_only, decel_only):
+    r = sim.run(sc, esc_enabled=True, esc_config=cfg)
+    print(r.metrics['max_beta_deg'], r.metrics['max_cross_track_m'],
+          r.metrics['final_speed_kph'])
+```
+
 ## 车辆模型
 
 平面三自由度，状态是 $(x, y, \psi, u, v, r)$：位置、横摆角、纵向车速、侧向车速、
