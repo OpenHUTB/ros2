@@ -113,15 +113,16 @@ launch 开关：`policy`（默认 true）、`keyboard`（默认 false）、`came
 未开启键盘时 `/cmd_vel_manual` 没有发布者，只有集成节点在订阅，说明四个模块的通道
 确实分开，不会互相覆盖。
 
-单元测试 9 项全部通过（不需要 ROS）：
+单元测试 15 项全部通过（不需要 ROS）：
 
 ```bash
 colcon test --packages-select system_integration
-# test_arbiter.py ......... [100%]
+# test_arbiter.py ............... [100%]
 ```
 
 覆盖：手动直通、模式切换、看门狗回零、无数据、急停与恢复、限幅、
-模式别名与非法值、计数器、演示场景可运行。
+模式别名与非法值、计数器、切到未发过数据的通道、切到已过期的通道、
+非法数据源、非有限值（NaN/inf）被拒收、演示场景可运行。
 
 ## 6. 已知限制
 
