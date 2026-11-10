@@ -257,6 +257,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
+* [无人机相机云台两轴稳定控制](./air/uav_gimbal_stabilization.md) —— 二维目标视线 PID 跟踪、角速度限幅和死区控制，附仿真指标与 CSV
+
 * [无人机 IMU 与气压高度融合](./air/uav_altitude_sensor_fusion.md) —— 对比气压高度、加速度积分和一维卡尔曼融合，附高度响应图与误差指标
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
