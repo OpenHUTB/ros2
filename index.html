@@ -359,6 +359,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ultrasonic_rear_alert/">倒车雷达分级告警</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/lane_change_feasibility/">换道可行性判定</a>
@@ -902,8 +904,9 @@
 <li><a href="ground/diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a> —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 <code>/odom</code> 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移</li>
 <li><a href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）</a> —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m</li>
 <li><a href="ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a></li>
+<li><a href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a> —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验</li>
 <li>
-<p><a href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a> —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验</p>
+<p><a href="ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a> —— 用前视图像估计横向偏移，并与地图真值逐帧对照</p>
 </li>
 <li>
 <p><a href="ground/hill_start_assist/">差速 AGV 坡道起步辅助（防溜车）</a> —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m</p>
