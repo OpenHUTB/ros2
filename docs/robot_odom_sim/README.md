@@ -8,25 +8,28 @@
 - ROS Noetic
 - Python 3.8
 
-##文件结构
-'''
+## 文件结构
+```
 src/
 └── robot_odom_sim/
     ├── package.xml
     ├── CMakeLists.txt
-    ├── scripts/
-    │   ├── main.py
-    │   └── teleop_test.py
-    └── docs/
-        ├── README.md
-        └── robot_odom.gif
-'''
+    └── scripts/
+        ├── main.py
+        └── teleop_test.py
+
+docs/robot_odom_sim/
+├── README.md
+└── robot_odom.gif
+```
+
 ## 运行步骤
-1. 打开终端，启动 ROS 核心：roscore
-2. 新开终端，启动 Rviz，将 Fixed Frame 设为 map，并添加 TF 和 Odometry 插件。
-3. 新开终端，运行底层仿真节点：rosrun robot_odom_sim main.py
-4. 新开终端，运行键盘控制节点：rosrun robot_odom_sim teleop_test.py
-5. 鼠标点击终端，使用 W/A/S/D 控制机器人在 Rviz 中移动，观察里程计轨迹。
+1. 编译工作空间：`catkin_make`，并加载环境：`source devel/setup.bash`
+2. 打开终端，启动 ROS 核心：`roscore`
+3. 新开终端，启动 Rviz，将 Fixed Frame 设为 map，并添加 TF 和 Odometry 插件。
+4. 新开终端，运行底层仿真节点：`rosrun robot_odom_sim main.py`
+5. 新开终端，运行键盘控制节点：`rosrun robot_odom_sim teleop_test.py`
+6. 鼠标点击终端，使用 W/A/S/D 控制机器人在 Rviz 中移动，观察里程计轨迹。
 
 ## 运行结果
 ![运行效果](robot_odom.gif)
