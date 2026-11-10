@@ -1,42 +1,98 @@
 #!/usr/bin/env python3
-"""ROV depth hold PID simulation."""
+"""ROV Depth Hold PID Controller Simulation.
+
+Simulates a simplified ROV vertical channel under buoyancy disturbance
+and wave slosh using a PID depth-hold controller.
+"""
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-print("=== ROV Depth Hold PID ===")
-import sys
-print(f"Python: {sys.version.split()[0]} NumPy")
 
-dt = 0.01
-t_end = 20.0
-depth = 0.0  # starts at surface
-vel = 0.0
-target = 2.0  # hold at 2m depth
-kp, ki, kd = 8.0, 1.0, 4.0
-integral = 0.0
-prev_err = 0.0
+class ROVDepthPlant:
+    """Simplified ROV vertical dynamics (mass + added mass)."""
+    def __init__(self, mass=5.0, dt=0.01):
+        self.m = mass
+        self.dt = dt
+        self.depth = 0.0
+        self.vel = 0.0
 
-times, ds, us = [], [], []
-for t in np.arange(0, t_end, dt):
-    # Buoyancy disturbance: at t=5, a payload shifts causing upward force
-    disturbance = 0.0
-    if t > 5 and t < 8: disturbance = -1.5  # upward (negative depth direction)
-    if t > 12: disturbance += 0.5 * np.sin(2*np.pi*0.3*(t-12))  # wave slosh
+    def step(self, thrust, disturbance=0.0):
+        accel = thrust / self.m + disturbance
+        self.vel += accel * self.dt
+        self.depth = max(0.0, self.depth + self.vel * self.dt)
+        return self.depth, self.vel
 
-    err = target - depth
-    integral += err * dt
-    integral = np.clip(integral, -1, 1)
-    deriv = (err - prev_err) / dt
-    prev_err = err
-    thrust = kp*err + ki*integral + kd*deriv
 
-    # ROV dynamics: mass=5kg, added mass effect
-    accel = thrust/5.0 + disturbance
-    vel += accel * dt
-    depth += vel * dt
-    depth = max(0, depth)
-    times.append(t); ds.append(depth); us.append(thrust)
+class PIDDepthController:
+    """PID depth hold controller with anti-windup."""
+    def __init__(self, dt=0.01, kp=8.0, ki=1.0, kd=4.0, i_limit=1.0):
+        self.dt = dt
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.i_limit = i_limit
+        self.integral = 0.0
+        self.prev_err = 0.0
 
-ds = np.array(ds); times = np.array(times); us = np.array(us)
-print(f"Final depth: {ds[-1]:.3f} m (target {target})")
-print(f"Steady error after 15s: {np.mean(np.abs(target - ds[1500:])):.3f} m")
-print(f"Max deviation after disturbance: {np.max(np.abs(target - ds[500:1500])):.3f} m")
+    def update(self, depth_target, depth_meas, vel_meas):
+        err = depth_target - depth_meas
+        self.integral = np.clip(self.integral + err * self.dt,
+                                -self.i_limit, self.i_limit)
+        deriv = (err - self.prev_err) / self.dt
+        self.prev_err = err
+        return self.kp * err + self.ki * self.integral + self.kd * deriv
+
+
+def buoyancy_disturbance(t):
+    """Upward payload shift at t=5..8, wave slosh after t=12."""
+    d = 0.0
+    if 5.0 < t < 8.0:
+        d = -1.5
+    if t > 12.0:
+        d += 0.5 * np.sin(2 * np.pi * 0.3 * (t - 12.0))
+    return d
+
+
+def main():
+    print("=== ROV Depth Hold PID ===")
+    import sys
+    print(f"Python: {sys.version.split()[0]} NumPy")
+
+    dt = 0.01
+    t_end = 20.0
+    target = 2.0
+    plant = ROVDepthPlant(dt=dt)
+    ctrl = PIDDepthController(dt=dt)
+
+    times, depths, thrusts = [], [], []
+    for t in np.arange(0, t_end, dt):
+        u = ctrl.update(target, plant.depth, plant.vel)
+        d, v = plant.step(u, buoyancy_disturbance(t))
+        times.append(t); depths.append(d); thrusts.append(u)
+
+    times = np.array(times); depths = np.array(depths); thrusts = np.array(thrusts)
+
+    steady_err = np.mean(np.abs(target - depths[1500:]))
+    max_dev = np.max(np.abs(target - depths[500:1500]))
+    print(f"Final depth: {depths[-1]:.3f} m (target {target})")
+    print(f"Steady error after 15s: {steady_err:.3f} m")
+    print(f"Max deviation after disturbance: {max_dev:.3f} m")
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+    ax1.axhline(y=target, color='r', ls='--', label='target')
+    ax1.plot(times, depths, 'b-', label='depth')
+    ax1.set_ylabel('Depth (m)'); ax1.legend(); ax1.grid(alpha=0.3)
+    ax1.set_title('ROV Depth Hold PID')
+    ax2.plot(times, thrusts, 'g-', label='thrust')
+    ax2.set_ylabel('Thrust (N)'); ax2.set_xlabel('Time (s)')
+    ax2.legend(); ax2.grid(alpha=0.3)
+    fig.tight_layout()
+    out = "depth_response.png"
+    fig.savefig(out, dpi=100)
+    print(f"Saved: {out}")
+
+
+if __name__ == "__main__":
+    main()
