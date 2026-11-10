@@ -4,7 +4,7 @@
 e2e_predictor_node.py —— 端到端视觉平衡：MLP 推理节点
 =====================================================
 订阅：front_camera/image  (sensor_msgs/msg/Image, mono8)
-发布：joint_targets        (std_msgs/msg/Float64MultiArray, 15 维)
+发布：torque_delta        (std_msgs/msg/Float64MultiArray, 15 维关节力矩增量 N·m)
 """
 from __future__ import annotations
 import os
@@ -40,7 +40,7 @@ class E2EPredictorNode(Node):
             weights = _weights_path()
 
         self.predictor = E2EPredictor(weights)
-        self.target_pub = self.create_publisher(Float64MultiArray, 'joint_targets', 10)
+        self.tau_pub = self.create_publisher(Float64MultiArray, 'torque_delta', 10)
 
         self.create_subscription(Image, 'front_camera/image', self._img_cb, 10)
         self.get_logger().info(f'e2e_predictor_node 启动, weights={weights}')
@@ -52,11 +52,11 @@ class E2EPredictorNode(Node):
             return
         # uint8 [0,255] → float [0,1]，与训练数据一致
         img_float = arr.astype(np.float32) / 255.0
-        target = self.predictor.predict_from_image(img_float)
+        tau = self.predictor.predict_from_image(img_float)
 
         out = Float64MultiArray()
-        out.data = target.tolist()
-        self.target_pub.publish(out)
+        out.data = tau.tolist()
+        self.tau_pub.publish(out)
 
 
 def main(args=None):

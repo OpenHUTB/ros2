@@ -4,7 +4,7 @@
 e2e_sim_node.py —— 端到端视觉平衡：MuJoCo 仿真节点
 ===================================================
 发布：/front_camera/image  (sensor_msgs/msg/Image, mono8)
-订阅：/joint_targets       (std_msgs/msg/Float64MultiArray, 15 维关节目标角)
+订阅：/torque_delta      (std_msgs/msg/Float64MultiArray, 15 维关节力矩增量 N·m)
 """
 from __future__ import annotations
 import os
@@ -46,24 +46,24 @@ class E2ESimNode(Node):
         self.sim.reset()
 
         self.img_pub = self.create_publisher(Image, 'front_camera/image', 10)
-        self.latest_target = DEFAULT_STAND_TARGET.copy()
+        self.latest_tau = np.zeros(15)
 
         self.create_subscription(
-            Float64MultiArray, 'joint_targets', self._target_cb, 10)
+            Float64MultiArray, 'torque_delta', self._tau_cb, 10)
 
         self.timer = self.create_timer(0.01, self._step)
         self.get_logger().info(
             f'e2e_sim_node 启动, model={model_path}, '
             f'steps_per_tick={SIM_STEPS_PER_TICK}')
 
-    def _target_cb(self, msg: Float64MultiArray):
+    def _tau_cb(self, msg: Float64MultiArray):
         arr = np.array(msg.data, dtype=np.float64)
         if arr.shape[0] == 15:
-            self.latest_target = arr
+            self.latest_tau = arr
 
     def _step(self):
         for _ in range(SIM_STEPS_PER_TICK):
-            self.sim.step(target=self.latest_target)
+            self.sim.step(target=DEFAULT_STAND_TARGET, torque_extra=self.latest_tau)
 
         gray = self.sim.render_front(gray=True)  # shape=(64,64), [0,1] float
         img_msg = Image()
