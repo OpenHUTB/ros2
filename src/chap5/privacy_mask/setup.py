@@ -26,7 +26,7 @@ setup(
     maintainer="刘琪",
     maintainer_email="2754586324@qq.com",
     description="基于 YOLOv8 的行人隐私脱敏 ROS 2 节点",
-    license="Apache-2.0",
+    license="AGPL-3.0",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
