@@ -4,6 +4,7 @@
 
 - **观测（22 维）**：激光雷达 16 方向扇形直方图（16）+ 目标相对位置（3）+ 世界系速度（3）
 - **动作（4 维）**：世界系（ENU）速度 `[vx, vy, vz, yaw_rate]`，归一化到 `[-1,1]`
+- **安全包络**：部署侧与策略解耦的兜底——沿速度方向看扇形净空，近障按比例减速、过近水平急停；点云缺失或超过 `cloud_timeout` 未更新时直接输出零速度（fail-safe）；`safety/enabled:=false` 可关闭
 - **训练**：轻量质点环境（纯 numpy，`scripts/env.py`），几分钟训完
 - **部署**：CarlaAir/AirSim 仿真器，经 `carlair_ros_bridge` 走 ROS 话题，纯 numpy 推理（无需 torch/sb3）
 
@@ -76,12 +77,17 @@ roslaunch uav_ppo_nav main.launch goal_x:=16.6 goal_y:=5.4 goal_z:=-10.0
 | `rate/publish_hz` | 10.0 | 策略推理/发布频率（须与训练 `dt=0.1 s` 一致） |
 | `topic/cmd_vel` | `/uav/cmd_vel` | 速度指令话题（世界系速度） |
 | `nav/weights` | `models/policy_weights.npz` | 策略权重路径 |
+| `safety/enabled` | `true` | 安全包络开关 |
+| `safety/stop_distance` | 0.8 | 前方净空小于该值（米）时水平速度清零 |
+| `safety/slow_distance` | 3.0 | 前方净空小于该值（米）时按比例衰减水平速度 |
+| `safety/cloud_timeout` | 0.5 | 点云超过该时间未更新（秒）视为过期 -> 输出零速度 |
 
 ## 本地测试（无需 ROS / 仿真器 / GPU）
 
 ```bash
-python3 tests/test_ppo_nav_local.py        # 20 项：直方图/世界系变换/动作映射/环境/策略
-python3 tests/test_ppo_nav_node_local.py   # 20 项：部署节点（mock 掉 rospy）
+python3 tests/test_ppo_nav_local.py        # 直方图/世界系变换/动作映射/环境/策略
+python3 tests/test_ppo_nav_node_local.py   # 部署节点（mock 掉 rospy）
+python3 tests/test_ppo_nav_safety_local.py # 安全包络：减速/急停/限幅/扇区/传感器失效（64 项）
 ```
 
 > 项数 = **不同断言的个数**；断言一律写在循环外，不含靠循环重复执行灌水的计数。

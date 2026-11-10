@@ -1,0 +1,7 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "RpcEnabled": true,
+  "ApiServerPort": 41451,
+  "Vehicles": {"Drone1": {"VehicleType": "SimpleFlight", "X": 0, "Y": 0, "Z": 0}}
+}

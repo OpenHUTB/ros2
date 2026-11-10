@@ -1,0 +1,19 @@
+# steering_actuator_lag 参数默认值
+# 改参数不需要改代码：launch 里的同名 <arg> 会覆盖这里的值。
+actuator:
+  time_constant: 0.25        # 一阶惯性时间常数 (s)，越大越慢
+  dead_band_deg: 0.30        # 死区半宽 (度)，误差小于它就不再动作
+  max_rate_deg: 60.0         # 打角速率上限 (度/s)
+  center_rate_deg: 40.0      # 回正速率上限 (度/s)，与打角独立
+  max_angle_deg: 35.0        # 机械最大转角 (度)
+test:
+  step_deg: 20.0             # 阶跃指令幅值 (度)
+  dwell_seconds: 5.0         # 阶跃保持时长 (s)，之后指令归零回正
+  steady_tolerance_deg: 0.50 # 稳态误差容差 (度)
+  rise_limit_seconds: 1.00   # 上升时间上限 (s)，指到 90% 的用时
+  center_limit_seconds: 1.50 # 回正时间上限 (s)
+  center_tolerance_deg: 0.50 # 回正判定容差 (度)
+sim:
+  step: 0.01                 # 积分步长 (s)
+rate:
+  publish_hz: 10.0           # 发完报告后的保活频率 (Hz)

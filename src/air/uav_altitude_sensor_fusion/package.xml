@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_altitude_sensor_fusion</name>
+  <version>0.1.0</version>
+  <description>IMU and barometer altitude fusion simulation for a UAV.</description>
+
+  <maintainer email="thestella17@users.noreply.github.com">thestella17</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <test_depend>rostest</test_depend>
+</package>

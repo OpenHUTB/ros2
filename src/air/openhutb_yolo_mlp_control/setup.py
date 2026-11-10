@@ -32,6 +32,15 @@ setup(
             'share/' + package_name + '/models',
             glob('models/*.pth')
         ),
+        (
+            'share/' + package_name + '/tools/traffic',
+            glob('tools/traffic/*.py') + glob('tools/traffic/*.ps1')
+            + glob('tools/traffic/*.txt')
+        ),
+        (
+            'share/' + package_name + '/tools/visual_validation',
+            glob('tools/visual_validation/*.py')
+        ),
     ],
 
     install_requires=[

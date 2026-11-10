@@ -12,8 +12,27 @@ def box(x=480, y=240, label='car', score=0.9):
 
 
 class ControllerTests(unittest.TestCase):
-    def ready(self, yaw=0, x=480):
+    def test_initial_candidate_survives_alternating_confidence(self):
         c = CenteringController()
+        for i in range(3):
+            c.update_detections([box(480, score=.9 if i == 0 else .6),
+                                 box(100, score=.7 if i == 0 else .99)], 640, 480, i*.2)
+        self.assertIsNotNone(c.target)
+        self.assertGreater(c.target[0], 0)
+    def test_timer_expiry_during_acquisition_preserves_capture_continuity(self):
+        c = CenteringController()
+        c.update_pose(0, 0, -3, 0, 1)
+        c.update_detections([box()], 640, 480, 0)
+        self.assertEqual(c.step(.81)[0], (0, 0, 0))
+        self.assertEqual(c.confirmations, 1)
+        c.update_detections([box()], 640, 480, .7)
+        c.step(1.51)
+        self.assertEqual(c.confirmations, 2)
+        c.update_detections([box()], 640, 480, 1.4)
+        self.assertIsNotNone(c.target)
+
+    def ready(self, yaw=0, x=480):
+        c = CenteringController(Settings(confirmation_frames=1))
         c.update_pose(0, 0, -3, yaw, 0)
         c.update_detections([box(x)], 640, 480, 0)
         return c
@@ -77,6 +96,10 @@ class ControllerTests(unittest.TestCase):
         c.update_detections([box(100)], 640, 480, 0.2)
         self.assertIsNone(c.target)
         c.update_detections([box(100)], 640, 480, 1.2)
+        self.assertIsNone(c.target)
+        self.assertEqual(c.step(1.2)[0], (0, 0, 0))
+        c.reset_target()
+        c.update_detections([box(100)], 640, 480, 1.3)
         self.assertLess(c.target[0], 0)
 
     def test_displacement_and_heading_guards(self):
@@ -100,7 +123,7 @@ class ControllerTests(unittest.TestCase):
                 Settings(**kwargs)
 
     def test_acceleration_ramp_and_reverse(self):
-        c = CenteringController(Settings(gain=1.8, max_speed=0.8,
+        c = CenteringController(Settings(confirmation_frames=1, gain=1.8, max_speed=0.8,
                                          max_acceleration=1.2))
         c.update_pose(0, 0, -3, 0, 0)
         c.update_detections([box()], 640, 480, 0)
@@ -114,7 +137,7 @@ class ControllerTests(unittest.TestCase):
         self.assertAlmostEqual(c.step(.35)[0][1], .30)
 
     def test_ramp_never_delays_stop_or_survives_target_loss(self):
-        c = CenteringController(Settings(max_acceleration=1.2))
+        c = CenteringController(Settings(confirmation_frames=1, max_acceleration=1.2))
         c.update_pose(0, 0, -3, 0, 0)
         c.update_detections([box()], 640, 480, 0)
         c.step(0)
@@ -160,6 +183,216 @@ class ControllerTests(unittest.TestCase):
             y += cmd[1]*0.05
         self.assertEqual(status, 'centered')
         self.assertLess(abs(actual_error), abs(first)/3)
+
+    def test_confirmation_loss_recovery_and_long_loss(self):
+        c = CenteringController()
+        for t in (0, .2):
+            c.update_pose(0, 0, -3, 0, t)
+            c.update_detections([box()], 640, 480, t)
+            self.assertEqual(c.step(t)[1], 'acquiring')
+            self.assertEqual(c.step(t)[0], (0, 0, 0))
+        c.update_detections([box()], 640, 480, .4)
+        self.assertEqual(c.step(.4)[1], 'tracking')
+        c.update_detections([], 640, 480, .5)
+        self.assertEqual(c.step(.5)[0], (0, 0, 0))
+        for t in (.6, .7):
+            c.update_pose(0, 0, -3, 0, t)
+            c.update_detections([box(475)], 640, 480, t)
+            self.assertIsNone(c.target)
+        c.update_detections([box(470)], 640, 480, .8)
+        self.assertIsNotNone(c.target)
+        c.update_pose(0, 0, -3, 0, 2)
+        c.update_detections([box(100)], 640, 480, 2)
+        self.assertEqual(c.step(2)[1], 'reselect_required')
+
+    def test_size_gate_duplicate_and_pause_reset_confirmation(self):
+        c = self.ready()
+        c.update_detections([Box(480, 240, 240, 300, .99, 'car')], 640, 480, .1)
+        self.assertIsNone(c.target)
+        c.update_detections([box()], 640, 480, .1)
+        self.assertIsNone(c.target)
+        c.set_paused(True)
+        self.assertEqual(c.step(.1)[1], 'paused')
+        c.set_paused(False)
+        self.assertEqual(c.step(.1)[0], (0, 0, 0))
+
+    def test_confidence_alternation_does_not_change_locked_vehicle(self):
+        c = self.ready()
+        for i in range(1, 20):
+            now = i*.1
+            c.update_detections([box(480, score=.51 if i%2 else .99),
+                                 box(100, score=.99 if i%2 else .51)], 640, 480, now)
+            self.assertAlmostEqual(c.target[0], .5)
+
+    def test_confirmation_cannot_be_completed_by_timer_or_old_frames(self):
+        c = CenteringController()
+        c.update_pose(0, 0, -3, 0, 0)
+        c.update_detections([box()], 640, 480, 0)
+        for now in (.01, .02, .03):
+            self.assertEqual(c.step(now)[0], (0, 0, 0))
+        c.update_detections([box()], 640, 480, 0)
+        self.assertEqual(c.confirmations, 0)
+        c.update_detections([box()], 640, 480, .1)
+        c.update_detections([], 640, 480, .2)
+        c.update_detections([box()], 640, 480, .3)
+        self.assertEqual(c.confirmations, 1)
+
+    def test_ambiguous_recovery_stops_without_changing_anchor(self):
+        c = self.ready()
+        anchor = c.last_lock
+        c.update_detections([box(470), box(490)], 640, 480, .1)
+        self.assertEqual(c.selection_reason, 'ambiguous_association')
+        self.assertEqual(c.step(.1)[0], (0, 0, 0))
+        self.assertEqual(c.last_lock, anchor)
+
+    def test_recovery_confirmation_tracks_sequential_motion(self):
+        c = self.ready()
+        c.settings = Settings(confirmation_frames=3)
+        c.clear_detection()
+        for t, x in ((.1, 450), (.2, 400)):
+            c.update_detections([box(x)], 640, 480, t)
+            self.assertIsNone(c.target)
+        # Last frame is beyond the original anchor's association gate, but
+        # matches the consecutive recovery observations.
+        c.update_detections([box(350)], 640, 480, .3)
+        self.assertIsNotNone(c.target)
+        self.assertEqual(c.selection_reason, 'accepted')
+
+    def test_matching_recovery_frames_keep_memory_without_moving_anchor(self):
+        c = self.ready()
+        c.settings = Settings(confirmation_frames=3)
+        anchor = c.last_lock
+        c.clear_detection()
+        for t in (.6, 1.2):
+            c.update_detections([box(470)], 640, 480, t)
+            self.assertIsNone(c.target)
+            self.assertEqual(c.last_lock, anchor)
+        c.update_detections([box(470)], 640, 480, 1.8)
+        self.assertIsNotNone(c.target)
+        self.assertFalse(c.lock_expired)
+
+
+class DepthAndVerticalTests(unittest.TestCase):
+    """Opt-in depth keeping and vertical centering; defaults stay unchanged."""
+
+    def controller(self, **kwargs):
+        c = CenteringController(Settings(confirmation_frames=1, **kwargs))
+        c.update_pose(0, 0, -3, 0, 0)
+        return c
+
+    @staticmethod
+    def sized(width, height, x=320, y=240):
+        return Box(x, y, width, height, 0.9, 'car')
+
+    def test_defaults_keep_no_forward_motion(self):
+        c = self.controller()
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        self.assertEqual(c.step(0)[0][0], 0)
+        self.assertEqual(c.last_forward_speed, 0)
+
+    def test_far_target_moves_forward(self):
+        c = self.controller(target_area=0.1)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)  # area ~ 0.026
+        self.assertGreater(c.step(0)[0][0], 0)
+        self.assertGreater(c.last_distance_error, 0)
+
+    def test_near_target_backs_off(self):
+        c = self.controller(target_area=0.1)
+        c.update_detections([self.sized(300, 300)], 640, 480, 0)  # area ~ 0.29
+        self.assertLess(c.step(0)[0][0], 0)
+        self.assertLess(c.last_distance_error, 0)
+
+    def test_forward_speed_limited(self):
+        c = self.controller(target_area=0.1, distance_gain=50.0)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        self.assertAlmostEqual(c.step(0)[0][0], 0.5)  # max_forward_speed
+
+    def test_forward_rotates_with_yaw(self):
+        c = self.controller(target_area=0.1)
+        c.update_pose(0, 0, -3, math.pi/2, 0)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        cmd = c.step(0)[0]
+        self.assertAlmostEqual(cmd[0], 0, places=7)
+        self.assertAlmostEqual(cmd[1], 0.5)
+
+    def test_centered_needs_both_axes(self):
+        far = self.controller(target_area=0.1)
+        far.update_detections([self.sized(80, 100)], 640, 480, 0)
+        self.assertEqual(far.step(0)[1], 'tracking')
+        on_range = self.controller(target_area=0.1)
+        on_range.update_detections([self.sized(175, 175)], 640, 480, 0)
+        self.assertEqual(on_range.step(0)[1], 'centered')
+
+    def test_vertical_centering_climbs_for_high_target(self):
+        c = self.controller(vertical_gain=1.0)
+        c.update_detections([self.sized(80, 100, y=100)], 640, 480, 0)
+        self.assertLess(c.step(0)[0][2], 0)  # NED: negative z climbs
+
+    def test_vertical_centering_descends_for_low_target(self):
+        c = self.controller(vertical_gain=1.0)
+        c.update_detections([self.sized(80, 100, y=400)], 640, 480, 0)
+        self.assertGreater(c.step(0)[0][2], 0)
+
+    def test_vertical_centering_overrides_altitude_hold(self):
+        # Pose equals origin, so the altitude hold would output exactly zero.
+        c = self.controller(vertical_gain=1.0)
+        c.update_detections([self.sized(80, 100, y=400)], 640, 480, 0)
+        self.assertNotEqual(c.step(0)[0][2], 0)
+
+    def test_vertical_deadband_holds_level(self):
+        c = self.controller(vertical_gain=1.0)
+        c.update_detections([self.sized(80, 100, y=240)], 640, 480, 0)
+        self.assertEqual(c.step(0)[0][2], 0)
+
+    def test_altitude_limit_guard(self):
+        c = self.controller(vertical_gain=1.0)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        c.step(0)
+        c.update_pose(0, 0, -7, 0, 0.1)  # 4 m above the origin altitude
+        self.assertEqual(c.step(0.1)[1], 'altitude_limit')
+
+    def test_altitude_limit_inactive_without_vertical_centering(self):
+        # Regression: the guard must not change the default behaviour.
+        c = self.controller()  # vertical_gain == 0
+        c.update_detections([self.sized(80, 100, x=480)], 640, 480, 0)
+        c.step(0)
+        c.update_pose(0, 0, -7, 0, 0.1)  # 4 m above the origin altitude
+        cmd, status, _ = c.step(0.1)
+        self.assertEqual(status, 'tracking')
+        self.assertGreater(cmd[1], 0)  # lateral centering still commanding
+
+    def test_forward_diagnostics_are_read_only(self):
+        c = self.controller()
+        for name in ('last_forward_speed', 'last_distance_error'):
+            with self.assertRaises(AttributeError):
+                setattr(c, name, 1.0)
+
+    def test_guard_zeroes_forward_component(self):
+        c = self.controller(target_area=0.1)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        self.assertGreater(c.step(0)[0][0], 0)
+        c.update_pose(3, 0, -3, 0, 0.1)
+        self.assertEqual(c.step(0.1)[0], (0, 0, 0))
+        self.assertEqual(c.last_forward_speed, 0)
+
+    def test_target_loss_drops_seen_area(self):
+        c = self.controller(target_area=0.1)
+        c.update_detections([self.sized(80, 100)], 640, 480, 0)
+        c.step(0)
+        c.clear_detection()
+        self.assertIsNone(c.seen_area)
+        self.assertEqual(c.step(0.05)[1], 'target_lost')
+
+    def test_new_settings_validation(self):
+        for kwargs in ({'target_area': -0.1}, {'distance_gain': -1.0},
+                       {'vertical_gain': -1.0}, {'distance_deadband': -0.1},
+                       {'vertical_deadband': -0.1}, {'max_forward_speed': 0.0},
+                       {'max_altitude_change': 0.0}, {'target_area': float('nan')},
+                       {'distance_deadband': 1.0}, {'vertical_deadband': 1.0}):
+            with self.assertRaises(ValueError):
+                Settings(**kwargs)
+        # Zero is the documented way to disable each opt-in feature.
+        Settings(target_area=0.0, vertical_gain=0.0)
 
 
 if __name__ == '__main__':

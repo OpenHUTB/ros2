@@ -1,0 +1,2 @@
+data: '{"valid": true, "target_available": true, "input_age_s": {"odom": 0.04218287599996984, "weather": 0.04174450899972726}, "level": 0, "level_name": "NOMINAL", "score": 0.0, "probabilities": {"wind": 0.0, "tilt": 0.0, "position": 0.0, "control": 0.0}, "predicted_p95": {"wind_mps": 9.173430330639825, "tilt_deg": 14.71183228153007, "position_error_m": 0.8204419199317134, "control_saturation": 0.5149782321384386}, "dominant_factor": "wind", "reason": "wind above 11.0 m/s in 0% of 64 rollouts over 10.0 s", "horizon_s": 10.0, "samples": 64}'
+---

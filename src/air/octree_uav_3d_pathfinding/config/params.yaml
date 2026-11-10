@@ -208,8 +208,12 @@ path_follower:
   # 距当前航点该距离内就切到下一个航点（m）。
   # **必须明显大于 finish_tolerance**，否则退化成"每点停稳"，动图会一顿一顿
   lookahead: 1.5
-  # 判定"到达终点"的距离（m）。约 2 倍地图分辨率
-  finish_tolerance: 0.5
+  # 判定"到达终点"的距离（m）。
+  # **不能只按"约 2 倍地图分辨率"取**：AirSim 的位置环有稳态误差，本机实测
+  # 悬停在距目标 0.86 m 处就不再收敛。取 0.5 时末点永远够不着，只能等满
+  # per_point_timeout 才收尾 —— 实测把 duration 从 8 s 拖到 21 s、mean_speed
+  # 从 2.27 拉到 1.23 m/s。取 1.0 = 实测稳态误差 + 余量。
+  finish_tolerance: 1.0
   # 单个航点超时（s）。超时跳过；终点超时则直接结束
   per_point_timeout: 15.0
 
