@@ -1,6 +1,6 @@
 # AirSim Unity 无人机高度自适应越障实验（设计、离线验证与实飞结果）
 
-> **状态（2026-11-09）：代码、52 项离线测试与两次实飞均已完成。** 2026-11-09 在本机 Unity 两次实飞均越障到点（第 5 节），录屏见同节；本文结论只覆盖这一静态矮墙场景，高柱水平绕行仍待实飞。
+> **状态（2026-11-10）：代码、57 项离线测试与两次实飞均已完成。** 2026-11-09 在本机 Unity 两次实飞均越障到点（第 5 节），录屏见同节；本文结论只覆盖这一静态矮墙场景，高柱水平绕行仍待实飞。
 
 ## 1. 问题与动机
 
@@ -50,14 +50,14 @@ overhead   = d * (c - row_top) / f - top_height
 先用与单柱模块相同的膨胀扫掠体测试计算前向通道距离，膨胀半径 `r = 机体半径 + 安全间距`。**所有**进入该扫掠体的障碍（按通道入口距离判断，而不是只看图像中部窄带）都参与越障可行性判断：
 
 ```text
-climb_needed = max(0, max(top_height) + r)
+climb_needed = max(0, max(top_height) + camera_offset + r)
 overfly_ok   = armed
                and 存在进入扫掠体的障碍
                and climb_needed <= min(max_climb, max_altitude - cruise_altitude)
                and min(overhead) > 0
 ```
 
-满足时输出 `overfly`；否则若通道畅通输出 `advance`；再否则在候选方向里按目标方向、上次航向、绕行侧迟滞和净空评分，输出 `curve`；没有可用方向时输出 `blocked` 并原地扫描。用整幅图而不是中部窄带聚合障碍，是为了挡住“正前方矮墙可越、侧方 1.8 m 处高杆在膨胀半径内”这一危险组合。
+`camera_offset` 是相机相对机体原点的安装高度，连接时用 `simGetCameraInfo` 实测（本机约 **0.49 m**）。`top_height` 是相对相机的，而 `r` 是相对机体的，两者不能直接相加；漏掉这个偏移会让实际净空比配置的 `r` 少 0.49 m。满足时输出 `overfly`；否则若通道畅通输出 `advance`；再否则在候选方向里按目标方向、上次航向、绕行侧迟滞和净空评分，输出 `curve`；没有可用方向时输出 `blocked` 并原地扫描。用整幅图而不是中部窄带聚合障碍，是为了挡住“正前方矮墙可越、侧方 1.8 m 处高杆在膨胀半径内”这一危险组合。
 
 ### 2.3 越障状态机
 
@@ -105,11 +105,11 @@ Push-Location .\src\air\airsim_height_aware_overfly
 Pop-Location
 ```
 
-结果：**52 项全部通过**。覆盖范围：
+结果：**57 项全部通过**。覆盖范围：
 
 - 深度解码：线性/sRGB 往返、非法值与坏标定、Unity 自下而上缓冲区的行翻转；
 - 相机几何与列顶边恢复、地面行排除、死像素、全无效图像；
-- 通道膨胀、远处障碍不参与、矮墙越障、高墙/预算/天花板/顶边不可见时改水平绕行、侧向高杆否决越障；
+- 通道膨胀、远处障碍不参与、矮墙越障、高墙/预算/天花板/顶边不可见时改水平绕行、侧向高杆否决越障、相机安装偏移计入预算与 committed 目标；
 - 越障状态机：3 帧提交、只升不降、完成、绕行/扫描清空帧不误判完成、两次失败解除、越障后保持高度与新爬升取消保持、10 s 进度宽限；
 - 看门狗、运行目录隔离、事件日志、偏航限幅、参数校验。
 
@@ -123,6 +123,8 @@ Pop-Location
 | --- | --- | --- | --- | --- | --- | --- |
 | 09:15:09 | 33.1 s | 2.14 m | 2.05 m | 5.25 m | 231.33（误差 0.67 m） | `landing_confirmed` |
 | 09:16:55 | 32.6 s | 2.06 m | 1.97 m | 5.22 m | 231.42（误差 0.58 m） | `landing_confirmed` |
+
+**这两次运行是相机偏移修正前采集的。** 当时 committed 2.06/2.14 m 按 `top + 2.1` 计算，实际机体净空只有约 1.53/1.61 m（少算了一个 0.49 m 的相机安装偏移）。代码现已把偏移计入 `climb_needed` 与 committed 目标，复飞时 committed 会约 2.6 m、净空恢复到 2.1 m；该修正有 5 项新增离线测试覆盖，**尚未复飞**。
 
 两次事件序列一致：`mission_started → overfly_started (climb≈2.1, top≈0.04–0.11) → overfly_completed (hold=2.06/2.14) → overfly_hold_done (travelled=5.22/5.25) → goal_reached → landing_confirmed`；无新增碰撞、无 `overfly_failed`。`flight.csv` 中 `overfly_hold=1` 的保持段持续约 5 m 路程，`mode` 依次为 `advance → overfly → advance`。
 
@@ -148,7 +150,7 @@ Pop-Location
 ## 7. 提交前检查
 
 - [x] 源码在 `src/air/airsim_height_aware_overfly`，文档在 `docs/air`，使用英文下划线命名。
-- [x] 提供 `main.py`、`launch/run_demo.ps1`、`requirements.txt`、`README.md` 和 52 项离线测试。
+- [x] 提供 `main.py`、`launch/run_demo.ps1`、`requirements.txt`、`README.md` 和 57 项离线测试。
 - [x] 矮墙越障实飞两次（2026-11-09），真实数据、录屏与 CSV/事件日志已写入第 5 节。
 - [ ] 高柱水平绕行实飞（待补）。
 - [ ] `mkdocs build` 与页面链接检查（文档入口已加入 `mkdocs.yml` 和 `docs/index.md`；本机未安装 mkdocs）。

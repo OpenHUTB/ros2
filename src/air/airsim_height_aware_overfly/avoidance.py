@@ -352,6 +352,18 @@ def lateral_clearance(profiles: list[ColumnProfile], width: int, height: int,
     return clearance
 
 
+def committed_climb(top_height: float, camera_offset: float, radius: float) -> float:
+    """Climb above cruise needed for the body to clear an obstacle top.
+
+    ``top_height`` is measured above the **camera**, so the camera's mount
+    offset above the body origin must be added before comparing with the body
+    radius and margin. Without it the vehicle commits ``top + radius``, which
+    leaves only ``radius - camera_offset`` of real clearance (0.49 m less on
+    this Unity build).
+    """
+    return max(0.0, top_height + camera_offset + radius)
+
+
 def plan_height_aware(profiles: list[ColumnProfile], width: int, height: int, fov: float,
                       goal_angle: float, max_speed: float = 1.0,
                       stop_distance: float = 3.0, safety_margin: float = 1.5,
@@ -359,6 +371,7 @@ def plan_height_aware(profiles: list[ColumnProfile], width: int, height: int, fo
                       avoidance_side: int = 0, curve_distance: float = 2.0,
                       max_climb: float = 2.0, max_altitude: float = 6.0,
                       cruise_altitude: float = 3.0, overfly_armed: bool = True,
+                      camera_offset: float = 0.0,
                       free_distance: float = 25.0) -> Command:
     """Choose advance / overfly / curve / blocked from the column profiles.
 
@@ -374,7 +387,7 @@ def plan_height_aware(profiles: list[ColumnProfile], width: int, height: int, fo
     if width < 16 or height < 8 or len(profiles) != width:
         raise ValueError("Invalid or empty depth image")
     if (not 30 <= fov <= 140 or max_speed <= 0 or stop_distance < 1
-            or safety_margin < 0 or vehicle_radius <= 0):
+            or safety_margin < 0 or vehicle_radius <= 0 or camera_offset < 0):
         raise ValueError("Invalid planner settings")
     if max_climb < 0 or max_altitude <= cruise_altitude:
         raise ValueError("Altitude budget must allow cruise plus a positive climb")
@@ -413,8 +426,9 @@ def plan_height_aware(profiles: list[ColumnProfile], width: int, height: int, fo
 
     # An obstacle already below the camera by more than the body radius needs no
     # climb at all; clamping keeps the committed target from going negative and
-    # turning an overfly into a descent.
-    climb_needed = max(0.0, top_height + radius)
+    # turning an overfly into a descent. The camera mount offset is part of the
+    # budget: top_height is camera-relative, the radius is body-relative.
+    climb_needed = committed_climb(top_height, camera_offset, radius)
     headroom = max_altitude - cruise_altitude
     # overhead > 0 means the camera actually saw free space above the top edge.
     # If the obstacle fills the analysed band, top_row stops at row_top and
@@ -548,6 +562,17 @@ def fly(args: argparse.Namespace) -> None:
                                   pixels_as_float=True, compress=False)
     info = client.simGetCameraInfo(args.camera, **vehicle)
     fov = info.fov
+    # The camera is mounted above the body origin, while top_height is measured
+    # relative to the camera. Measure the offset once (NED z down: the camera is
+    # more negative than the body) and add it to every climb budget.
+    camera_offset = 0.0
+    try:
+        camera_z = info.pose.position.z_val
+        body_z = client.getMultirotorState(**vehicle).kinematics_estimated.position.z_val
+        camera_offset = max(0.0, body_z - camera_z)
+    except AttributeError:
+        camera_offset = 0.0
+    print(f"Camera mount offset: {camera_offset:.2f} m above the body origin")
 
     def read_frame():
         responses = client.simGetImages([request], **vehicle)
@@ -564,7 +589,8 @@ def fly(args: argparse.Namespace) -> None:
     plan_height_aware(profiles, width, height, fov, 0, args.speed, args.stop_distance,
                       args.safety_margin, args.vehicle_radius,
                       curve_distance=args.curve_distance, max_climb=args.max_climb,
-                      max_altitude=args.max_altitude, cruise_altitude=args.altitude)
+                      max_altitude=args.max_altitude, cruise_altitude=args.altitude,
+                      camera_offset=camera_offset)
     print(f"Obstacle buffer: body radius {args.vehicle_radius:.2f} m + "
           f"surface clearance {args.safety_margin:.2f} m; "
           f"climb budget {args.max_climb:.2f} m under ceiling {args.max_altitude:.2f} m")
@@ -703,13 +729,13 @@ def fly(args: argparse.Namespace) -> None:
                     args.speed, args.stop_distance, args.safety_margin, args.vehicle_radius,
                     wrap(preferred_heading - yaw) if preferred_heading is not None else 0,
                     avoidance_side, args.curve_distance, args.max_climb, args.max_altitude,
-                    args.altitude, overfly.armed)
+                    args.altitude, overfly.armed, camera_offset=camera_offset)
 
                 # Commit to, hold, and finish a climb; disarm after failures.
                 if cmd.mode == "overfly":
                     was_active = overfly.active
-                    climb = max(0.0, cmd.top_height + args.vehicle_radius
-                                + args.safety_margin)
+                    climb = committed_climb(cmd.top_height, camera_offset,
+                                            args.vehicle_radius + args.safety_margin)
                     if overfly.request(climb):
                         overfly.climb_started = time.monotonic()
                         if not was_active:

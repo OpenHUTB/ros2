@@ -9,7 +9,7 @@
 本模块沿用 PR #597（`src/air/airsim_obstacle_avoidance`）的深度解码、通道膨胀、偏航平滑、看门狗和“锁定绕行侧”思路，但增加了一个决策维度：**高度**。
 
 - 单柱与双柱版本只扫描图像中部竖直带，巡航高度全程锁定；任何障碍都只能水平绕行，遇到矮墙也要绕一大圈。
-- 本模块扫描整幅图像，逐列恢复障碍顶边相对相机的高度 `top_height`，用 `climb_needed = max(0, top_height + 机体半径 + 安全间距)` 判断能否从上方通过（顶边低于相机时不需要额外的抬升）。
+- 本模块扫描整幅图像，逐列恢复障碍顶边相对相机的高度 `top_height`，用 `climb_needed = max(0, top_height + 相机安装偏移 + 机体半径 + 安全间距)` 判断能否从上方通过（顶边低于相机时不需要额外的抬升；相机偏移约 0.49 m，见第 2 节）。
 - 四种行为：`advance` 通道畅通；`overfly` 先原地爬升到顶边之上再通过，越过后再保持越障高度飞行 `--overfly-hold-distance`（默认 5 m）才下降；`curve` 障碍太高或越障已解除，水平绕行；`blocked` 无安全方向，原地扫描。
 
 与相邻模块的边界：`uav_lidar_safety_corridor` 用 LiDAR 和 ROS 选安全高度；`uav_altitude_command_guard` 只做高度指令限幅；`octree_uav_3d_pathfinding` 做八叉树全局寻路。本模块只做前视深度图的局部决策，不建图、不做全局规划。
@@ -48,7 +48,7 @@ PYTHONPATH 指向 `PythonClient`，不是 Unity 工程。Python 3.13 不适合�
 
 **高度必须按实测巡航高度换算。** `After climb` 打印的是**机体**的 NED 高度 `z`，不是相机高度。前视相机 0 装在机体原点上方约 **0.49 m**（本机用 `simGetCameraInfo` 与 `getMultirotorState` 实测：机体 z=-0.761 时相机 z=-1.253），所以相机世界高度 ≈ `|z| + 0.49`。2026-11-09 两次实飞 `z≈-5.0~-5.3`，相机约 5.5~5.8 m；6 m 矮墙顶只比相机高约 0.2~0.5 m，`flight.csv` 的 `top_height_m` 0.04~0.11 m 与之一致（顶边像素混叠会再低一两行，约 0.09 m/行）。
 
-第 3 节先空场景飞一次读 `z`，再按 `墙顶 Y ≈ |z| + 0.5 ~ 1.0`（相机上方 0~0.5 m）放墙；`柱顶 Y ≈ |z| + 4`（相机上方约 3.5 m，`climb_needed` 约 5.6 m，超出 `--max-climb 4.5` 判为太高）。墙顶比相机高 0~1.5 m 都能越；高于约 2.4 m（即高于 `|z| + 2.9`）时超出 `--max-climb 4.5`，直接判为太高；顶边低于相机超过约 2.1 m（机体半径+间距）时 `climb_needed` 归零、不再抬升。四周至少留 5 m 空旷，飞行高度内不要放其他物体。
+第 3 节先空场景飞一次读 `z`，再按 `墙顶 Y ≈ |z| + 0.5 ~ 1.0`（相机上方 0~0.5 m）放墙；`柱顶 Y ≈ |z| + 4`（相机上方约 3.5 m，`climb_needed` 约 5.6 m，超出 `--max-climb 4.5` 判为太高）。模块连接时用 `simGetCameraInfo` 实测相机偏移，并把它计入 `climb_needed` 和 committed 目标——否则实际净空会比配置的 `机体半径 + 安全间距` 少 0.49 m。墙顶比相机高 0~1.5 m 都能越；高于约 2.4 m（即高于 `|z| + 2.9`）时超出 `--max-climb 4.5`，直接判为太高；顶边低于相机超过约 2.1 m（机体半径+间距）时 `climb_needed` 归零、不再抬升。四周至少留 5 m 空旷，飞行高度内不要放其他物体。
 
 航线取 Unity `X=-320`（即 `--goal-y 0`）。墙在 `Z=227`，目标取北向 +20 m（Unity `Z=232`），保证越过墙体后再到点。
 
@@ -91,7 +91,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 
 ```text
 advance ... → overfly_obstacle（top≈0~1.0 m，本机 0.04~0.11，overhead>0）
-Overfly committed: climb ≈ top + 2.1 m
+Overfly committed: climb ≈ top + 0.49（相机偏移）+ 2.1 m ≈ 2.6 m
 overfly_obstacle: forward=0.00 ... lift 逐帧上升
 overfly_obstacle: forward>0 ... 越过墙顶
 Overfly completed (1); holding 3.1 m for 5.0 m past the obstacle
@@ -135,7 +135,7 @@ Push-Location .\src\air\airsim_height_aware_overfly
 Pop-Location
 ```
 
-52 项测试覆盖：深度解码（线性/sRGB 往返、非法值、自下而上缓冲区的行翻转）、相机几何、列顶边恢复、地面行排除、死像素与全无效图像、通道膨胀、矮墙越障判定、高墙/预算/天花板/顶边不可见时的水平绕行、侧向障碍否决越障、越障状态机的保持/提交/只升不降/完成/清空帧中断/失败解除/越障后保持高度与新爬升取消保持、爬升进度宽限、看门狗、运行目录与事件日志、偏航限幅和参数校验。这些测试只验证算法逻辑，不能替代仿真飞行。
+57 项测试覆盖：深度解码（线性/sRGB 往返、非法值、自下而上缓冲区的行翻转）、相机几何、列顶边恢复、地面行排除、死像素与全无效图像、通道膨胀、矮墙越障判定、高墙/预算/天花板/顶边不可见时的水平绕行、侧向障碍否决越障、相机安装偏移计入 climb 预算与 committed 目标、越障状态机的保持/提交/只升不降/完成/清空帧中断/失败解除/越障后保持高度与新爬升取消保持、爬升进度宽限、看门狗、运行目录与事件日志、偏航限幅和参数校验。这些测试只验证算法逻辑，不能替代仿真飞行。
 
 ## 7. 已知限制
 

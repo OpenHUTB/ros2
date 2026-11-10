@@ -11,9 +11,9 @@ from types import SimpleNamespace
 from avoidance import (GROUND_ROWS_DEFAULT, MAX_YAW_RATE, OVERFLY_DONE_FRAMES,
                        OVERFLY_HOLD_FRAMES, OVERFLY_MAX_FAILS, OverflyState,
                        ProgressWatchdog, analyze_columns, camera_geometry,
-                       check_new_collision, create_run_directory, decode_unity_depth,
-                       flip_rows, parse_args, plan_height_aware, record_event,
-                       route_from_start, smooth_yaw_rate)
+                       check_new_collision, committed_climb, create_run_directory,
+                       decode_unity_depth, flip_rows, parse_args, plan_height_aware,
+                       record_event, route_from_start, smooth_yaw_rate)
 
 WIDTH, HEIGHT, FOV = 160, 90, 90.0
 FREE = 50.0
@@ -39,9 +39,10 @@ def analyze(image):
 
 
 def command(profiles, goal=0.0, max_climb=3.5, max_altitude=7.0,
-            cruise=3.0, armed=True, stop=3.0):
+            cruise=3.0, armed=True, stop=3.0, offset=0.0):
     return plan_height_aware(profiles, WIDTH, HEIGHT, FOV, goal, 1.2, stop, 1.5, 0.6,
-                             0.0, 0, 2.0, max_climb, max_altitude, cruise, armed)
+                             0.0, 0, 2.0, max_climb, max_altitude, cruise, armed,
+                             camera_offset=offset)
 
 
 class CollisionTests(unittest.TestCase):
@@ -206,6 +207,35 @@ class PlannerTests(unittest.TestCase):
             plan_height_aware(profiles[:10], WIDTH, HEIGHT, FOV, 0)
         with self.assertRaises(ValueError):
             plan_height_aware(profiles, WIDTH, HEIGHT, FOV, 0, free_distance=2.0)
+        with self.assertRaises(ValueError):
+            plan_height_aware(profiles, WIDTH, HEIGHT, FOV, 0, camera_offset=-0.1)
+
+    def test_camera_offset_counts_against_the_climb_budget(self):
+        # Top 0.8 m above the camera: 2.9 m needed without the mount offset
+        # (fits max-climb 3.0), 3.39 m with the measured 0.49 m offset (does not).
+        profiles = analyze(paint(blank_frame(), 6.0, 0.8))
+        self.assertEqual(command(profiles, max_climb=3.0).reason, "overfly_obstacle")
+        self.assertEqual(command(profiles, max_climb=3.0, offset=0.49).reason,
+                         "curve_around_obstacle")
+
+    def test_camera_offset_increases_the_needed_climb(self):
+        profiles = analyze(paint(blank_frame(), 6.0, 1.0))
+        base = committed_climb(
+            max(p.top_height for p in profiles if p.valid), 0.0, 2.1)
+        shifted = committed_climb(
+            max(p.top_height for p in profiles if p.valid), 0.49, 2.1)
+        self.assertAlmostEqual(shifted - base, 0.49, places=6)
+
+
+class CommittedClimbTests(unittest.TestCase):
+    def test_offset_is_added_to_the_committed_climb(self):
+        self.assertAlmostEqual(committed_climb(0.04, 0.49, 2.1), 2.63, places=6)
+
+    def test_below_camera_clamps_to_zero(self):
+        self.assertEqual(committed_climb(-3.0, 0.49, 2.1), 0.0)
+
+    def test_zero_offset_matches_the_old_formula(self):
+        self.assertAlmostEqual(committed_climb(1.0, 0.0, 2.1), 3.1, places=6)
 
 
 
