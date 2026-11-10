@@ -6,15 +6,15 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../img/favicon.ico" rel="shortcut icon"/>
-<title>基于 ROS 的无人车自动画圆仿真 - 模拟器的 ROS 文档</title>
+<title>基于 ROS TF 树与轮式里程计的机器人速度积分仿真 - 模拟器的 ROS 文档</title>
 <link href="../css/theme.css" rel="stylesheet"/>
 <link href="../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u57fa\u4e8e ROS \u7684\u65e0\u4eba\u8f66\u81ea\u52a8\u753b\u5706\u4eff\u771f";
-        var mkdocs_page_input_path = "auto_circle_sim/README.md";
+        var mkdocs_page_name = "\u57fa\u4e8e ROS TF \u6811\u4e0e\u8f6e\u5f0f\u91cc\u7a0b\u8ba1\u7684\u673a\u5668\u4eba\u901f\u5ea6\u79ef\u5206\u4eff\u771f";
+        var mkdocs_page_input_path = "robot_odom_sim/README.md";
         var mkdocs_page_url = null;
       </script>
 <!--[if lt IE 9]>
@@ -645,51 +645,50 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href=".."></a></li>
-<li class="breadcrumb-item active">基于 ROS 的无人车自动画圆仿真</li>
+<li class="breadcrumb-item active">基于 ROS TF 树与轮式里程计的机器人速度积分仿真</li>
 <li class="wy-breadcrumbs-aside">
-<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/auto_circle_sim/README.md"> 编辑页面</a>
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/robot_odom_sim/README.md"> 编辑页面</a>
 </li>
 </ul>
 <hr/>
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="ros">基于 ROS 的无人车自动画圆仿真</h1>
-<h2 id="_1">运行环境</h2>
+<div><h1 id="ros-tf">基于 ROS TF 树与轮式里程计的机器人速度积分仿真</h1>
+<h2 id="_1">项目介绍</h2>
+<p>本项目在 ROS 底层实现了一个基于速度指令（Twist）直接积分的轮式里程计仿真节点。节点接收键盘发布的 <code>/cmd_vel</code> 速度指令，通过前向欧拉积分计算得出机器人位姿，并实时发布 <code>nav_msgs/Odometry</code> 消息以及 <code>/odom</code> 到 <code>/base_link</code> 的 TF 坐标变换。加入超时保护，无指令时自动停止。</p>
+<h2 id="_2">运行环境</h2>
 <ul>
 <li>Ubuntu 20.04</li>
 <li>ROS Noetic</li>
 <li>Python 3.8</li>
 </ul>
-<h2 id="_2">文件结构</h2>
-<div class="highlight"><pre><span></span><code>src/
-└── auto_circle_sim/
+<h2 id="_3">文件结构</h2>
+<div class="highlight"><pre><span></span><code>src/robot_odom_sim/
 ├── package.xml
 ├── CMakeLists.txt
 ├── launch/
-│   └── auto_circle_sim.launch
+│   └── robot_odom.launch
 ├── rviz/
-│   └── auto_circle.rviz
+│   └── robot_odom.rviz
 └── scripts/
-└── main.py
+├── main.py
+└── teleop_test.py
+
+docs/robot_odom_sim/
+├── README.md
+└── robot_odom.gif
 </code></pre></div>
-<h2 id="_3">依赖安装</h2>
-<ol>
-<li>安装 pynput：
-   pip install pynput</li>
-<li>安装 ROS Noetic（Ubuntu 环境）。</li>
-</ol>
 <h2 id="_4">运行步骤</h2>
 <ol>
-<li>打开终端，进入工作空间，输入 <code>source devel/setup.bash</code></li>
-<li>输入 <code>roslaunch auto_circle_sim auto_circle_sim.launch</code></li>
-<li>rviz 会自动打开并加载 Marker 显示，</li>
-<li>观察红色方块自动画出圆形轨迹</li>
+<li>编译并加载环境：<code>catkin_make</code> 和 <code>source devel/setup.bash</code></li>
+<li>一键启动仿真、键盘控制与 Rviz：<code>roslaunch robot_odom_sim robot_odom.launch</code></li>
+<li>在弹出的键盘控制终端中，使用 W/A/S/D 控制机器人在 Rviz 中移动。</li>
 </ol>
 <h2 id="_5">运行结果</h2>
-<p><img alt="运行效果" src="vehicle_circle.gif"/></p>
-<h2 id="_6">大模型声明</h2>
-<p>代码由本人参考 ROS 官方文档和课程资料编写，未使用大模型生成。</p></div>
+<p><em>(这里放你压缩到 5MB 以下的动图)</em></p>
+<h2 id="_6">大模型使用声明</h2>
+<p>代码与文档编写过程中使用了大模型进行辅助生成，核心逻辑与测试已由本人独立完成并验证。</p></div>
 </div>
 </div><footer>
 <hr/>
