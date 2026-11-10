@@ -62,7 +62,7 @@ def evaluate_model(model: LightweightSteeringCNN, loader: DataLoader, device: st
     matrix = confusion_matrix(actual, predicted, labels=list(range(len(model.labels))))
     return {
         "accuracy": float(accuracy_score(actual, predicted)),
-        "macro_f1": float(f1_score(actual, predicted, average="macro", zero_division=0)),
+        "macro_f1": float(f1_score(actual, predicted, labels=list(range(len(model.labels))), average="macro", zero_division=0)),
         "confusion_matrix": matrix.tolist(),
         "inference_latency_ms_mean": float(np.mean(latencies)),
         "inference_latency_ms_p95": float(np.percentile(latencies, 95)),
@@ -82,6 +82,10 @@ def train(dataset_dir: Path, output_dir: Path, epochs: int = 8, seed: int = 2501
     test_rows = [row for row in rows if row["split"] == "test"]
     if not train_rows or not validation_rows or not test_rows:
         raise ValueError("all three episode-isolated splits are required / 三个回合隔离集合均不能为空")
+    from mujoco_abandoned_park_uav_visual_steering.dataset import inspect_dataset
+    quality = inspect_dataset(dataset_dir)
+    if quality["status"] != "passed":
+        raise ValueError("dataset quality checks failed / 数据集质量检查未通过")
     model = LightweightSteeringCNN().to(device)
     train_loader = DataLoader(FrameDataset(train_rows, dataset_dir, labels), batch_size=16, shuffle=True, generator=torch.Generator().manual_seed(seed))
     validation_loader = DataLoader(FrameDataset(validation_rows, dataset_dir, labels), batch_size=32, shuffle=False)
@@ -110,7 +114,10 @@ def train(dataset_dir: Path, output_dir: Path, epochs: int = 8, seed: int = 2501
             torch.save({"state_dict": model.state_dict(), "image_height": 90, "image_width": 160, "labels": labels, "seed": seed}, output_dir / "lightweight_steering_cnn.pt")
     model = LightweightSteeringCNN.load_checkpoint(output_dir / "lightweight_steering_cnn.pt", device)
     metrics = evaluate_model(model, test_loader, device)
-    result = {"seed": seed, "epochs": epochs, "labels": labels, "train_samples": len(train_rows), "validation_samples": len(validation_rows), "test_samples": len(test_rows), "history": history, "test": metrics}
+    import hashlib
+    checkpoint_hash = hashlib.sha256((output_dir / "lightweight_steering_cnn.pt").read_bytes()).hexdigest()
+    metadata_hash = hashlib.sha256((dataset_dir / "metadata.csv").read_bytes()).hexdigest()
+    result = {"seed": seed, "epochs": epochs, "labels": labels, "train_samples": len(train_rows), "validation_samples": len(validation_rows), "test_samples": len(test_rows), "history": history, "test": metrics, "checkpoint_sha256": checkpoint_hash, "dataset_metadata_sha256": metadata_hash, "dataset_quality": quality}
     (output_dir / "metrics.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result
 

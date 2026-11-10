@@ -46,6 +46,8 @@ class LightweightSteeringCNN(nn.Module):
     @classmethod
     def load_checkpoint(cls, path: Path, device: str = "cpu") -> "LightweightSteeringCNN":
         checkpoint: dict[str, Any] = torch.load(path, map_location=device, weights_only=True)
+        if tuple(checkpoint.get("labels", ())) != cls.labels:
+            raise ValueError("checkpoint labels must be LEFT, STRAIGHT, RIGHT, STOP / 权重标签顺序不匹配")
         model = cls(int(checkpoint["image_height"]), int(checkpoint["image_width"]))
         model.load_state_dict(checkpoint["state_dict"])
         model.to(device)
