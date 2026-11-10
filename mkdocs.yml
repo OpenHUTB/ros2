@@ -255,6 +255,7 @@ nav:
     - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机编队飞行: './air/uav_formation_flight.md'
     - 神经安全过滤器: './air/uav_neural_safety_filter.md'
+    - 无人机控制权限饱和与积分饱和监测: './air/uav_control_authority_guard.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
     - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
