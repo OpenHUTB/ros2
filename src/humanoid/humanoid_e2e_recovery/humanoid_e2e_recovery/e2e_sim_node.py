@@ -56,6 +56,13 @@ class E2ESimNode(Node):
             f'e2e_sim_node 启动, model={model_path}, '
             f'steps_per_tick={SIM_STEPS_PER_TICK}')
 
+        # 闭环可观测性：每 1 s 打一行站姿状态，跌倒只报一次 ERROR。
+        # 没有这条日志，ROS 侧无法证明"站住了"，只能看图像猜。
+        self.t_sim = 0.0
+        self._next_log_t = 0.0
+        self._fall_reported = False
+        self._max_tilt = 0.0
+
     def _tau_cb(self, msg: Float64MultiArray):
         arr = np.array(msg.data, dtype=np.float64)
         if arr.shape[0] == 15:
@@ -64,6 +71,23 @@ class E2ESimNode(Node):
     def _step(self):
         for _ in range(SIM_STEPS_PER_TICK):
             self.sim.step(target=DEFAULT_STAND_TARGET, torque_extra=self.latest_tau)
+        self.t_sim += SIM_STEPS_PER_TICK * self.sim.model.opt.timestep
+
+        tilt = abs(np.degrees(self.sim.torso_tilt()))
+        self._max_tilt = max(self._max_tilt, tilt)
+
+        if self.t_sim >= self._next_log_t:
+            self._next_log_t += 1.0
+            self.get_logger().info(
+                f't={self.t_sim:6.2f}s root_z={self.sim.root_z:.3f}m '
+                f'tilt={tilt:.1f}deg max_tilt={self._max_tilt:.1f}deg '
+                f'ankle_tau={float(self.latest_tau[3]):+.1f}N*m crashed={self.sim.fallen()}')
+
+        if self.sim.fallen() and not self._fall_reported:
+            self._fall_reported = True
+            self.get_logger().error(
+                f'跌倒：t={self.t_sim:.2f}s root_z={self.sim.root_z:.3f}m '
+                f'tilt={tilt:.1f}deg（判据 root_z<0.6）')
 
         gray = self.sim.render_front(gray=True)  # shape=(64,64), [0,1] float
         img_msg = Image()
