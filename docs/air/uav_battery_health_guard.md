@@ -57,6 +57,12 @@ HEALTHY → DEGRADED → LIMIT_LOAD → DEGRADED → HEALTHY
 
 故障段单体不平衡达到约 0.159 V，温度超过 60°C，内阻明显上升；恢复后不平衡降至约 0.02 V。
 
+VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、9 项单元测试、两个节点启动、电池状态迁移和 CSV 尾部：
+
+![ROS 2 Humble 虚拟机电池健康实测终端](../img/air/uav_battery_health_guard/runtime_vm_terminal.png)
+
+根据同一轮 CSV 生成的电池健康曲线：
+
 ![ROS 2 Humble 实际电池健康状态](../img/air/uav_battery_health_guard/runtime_health.png)
 
 ## 5. 限制
