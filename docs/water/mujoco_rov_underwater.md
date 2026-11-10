@@ -77,7 +77,7 @@ ros2 launch rov_mujoco_slam mujoco_rov_launch.py
 
 ## 六、运行效果
 
-![终端运行输出](image/mujoco_rov_underwater.jpg)
+![终端运行输出](images/mujoco_rov_underwater.png)
 
 ## 七、实验总结
 本次实验成功在 ROS 2 框架下配置了 MuJoCo 物理引擎环境，加载了水下机器人 MJCF 模型，实现了基于 Python 节点的物理仿真步进。

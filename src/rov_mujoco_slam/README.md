@@ -77,7 +77,7 @@ ros2 launch rov_mujoco_slam mujoco_rov_launch.py
 
 ## 六、运行效果
 
-![终端运行输出](../../docs/image/mujoco_rov_underwater.jpg)
+![终端运行输出](../../docs/water/images/mujoco_rov_underwater.png)
 
 ## 七、实验总结
 
