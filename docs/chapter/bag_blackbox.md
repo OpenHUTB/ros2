@@ -43,7 +43,7 @@ src/chap5/bag_blackbox/
 ## 环境与依赖
 
 - Ubuntu 22.04 + ROS 2 Humble + Python 3.10
-- 依赖：`rclpy`、`sensor_msgs`、`cv_bridge`、`opencv-python`、`numpy`、`matplotlib`，以及需要 pip 安装的 `rosbags`
+- 依赖：`rclpy`、`sensor_msgs`、`cv_bridge`、`python3-opencv`、`python3-numpy`、`python3-matplotlib`，以及需要 pip 安装的 `rosbags`
 
 `rosbags` 在 rosdep 中没有对应 key，因此未写入 `package.xml`，需手动 pip 安装：
 
@@ -92,7 +92,7 @@ ros2 bag record -o robot_run /cmd_vel /odom /scan
 
 ```bash
 ros2 run bag_blackbox image_record_main --ros-args \
-    -p save_dir:=./img_save -p min_interval:=1.0 -p max_images:=50
+    -p image_save_dir:=./img_save -p min_interval:=1.0 -p max_images:=50
 ```
 
 ### 4. 离线分析并出图
@@ -131,7 +131,7 @@ ls -l ./output
 | `save_dir` | `./output` | 图表输出目录，默认写到运行目录下的 `output/`，不污染仓库 |
 | `max_lidar_points` | `200000` | 点云绘图上限，超出随机降采样，launch 与 `--ros-args` 均可覆盖 |
 | `image_topic` | `/camera/image_raw` | 图像录制订阅的话题 |
-| `save_dir`（录制节点） | `./img_save` | 图像保存目录（PNG） |
+| `image_save_dir`（录制节点） | `./img_save` | 图像保存目录（PNG），与分析节点的 `save_dir` 区分 |
 | `min_interval` | `1.0` | 最短保存间隔（秒） |
 | `max_images` | `100` | 最多保存张数，0 表示不限 |
 

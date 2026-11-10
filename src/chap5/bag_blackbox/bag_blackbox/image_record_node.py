@@ -16,12 +16,12 @@ class ImageRecordNode(Node):
     def __init__(self):
         super().__init__("image_record_node")
         self.declare_parameter("image_topic", "/camera/image_raw")
-        self.declare_parameter("save_dir", "./img_save")
+        self.declare_parameter("image_save_dir", "./img_save")
         self.declare_parameter("min_interval", 1.0)  # 最短保存间隔（秒）
         self.declare_parameter("max_images", 100)    # 最多保存张数，0 表示不限
 
         topic = self.get_parameter("image_topic").value
-        self.save_dir = self.get_parameter("save_dir").value
+        self.save_dir = self.get_parameter("image_save_dir").value
         os.makedirs(self.save_dir, exist_ok=True)
 
         self.bridge = CvBridge()

@@ -51,51 +51,23 @@ class BagAnalysisNode(Node):
         try:
             from pathlib import Path
 
-            from rosbags.highlevel import AnyReader
+            from rosbags.highlevel.anyreader import AnyReader, AnyReaderError
         except ImportError as exc:
             raise RuntimeError(
                 "缺少 rosbags 依赖，请执行：pip install rosbags"
                 "（国内网络可加 -i https://pypi.tuna.tsinghua.edu.cn/simple，"
                 "该源不通时改用官方源 https://pypi.org/simple）") from exc
 
-        time_cmd, vel_cmd = [], []
-        time_odom, vel_odom = [], []
-        lidar_x, lidar_y = [], []
+        # 空目录、普通文件等非法输入会抛 AnyReaderError，统一转成友好提示
+        try:
+            with AnyReader([Path(bag_path)]) as reader:
+                raw = self.parse_bag(reader)
+        except AnyReaderError as exc:
+            raise RuntimeError(
+                f"无法读取 bag：{bag_path}（{exc}）。请传入 "
+                "`ros2 bag record -o` 生成的目录，或有效的 .bag 文件。") from exc
 
-        with AnyReader([Path(bag_path)]) as reader:
-            wanted = (TOPIC_VEL_CMD, TOPIC_ODOM, TOPIC_SCAN)
-            connections = [c for c in reader.connections if c.topic in wanted]
-            if not connections:
-                raise RuntimeError(
-                    f"bag 中不包含 {', '.join(wanted)} 任一话题，无法分析。")
-            start_ns = None
-            for connection, timestamp, rawdata in reader.messages(
-                    connections=connections):
-                if start_ns is None:
-                    start_ns = timestamp
-                stamp = (timestamp - start_ns) * 1e-9
-                msg = reader.deserialize(rawdata, connection.msgtype)
-                if connection.topic == TOPIC_VEL_CMD:
-                    time_cmd.append(stamp)
-                    vel_cmd.append(msg.linear.x)
-                elif connection.topic == TOPIC_ODOM:
-                    time_odom.append(stamp)
-                    vel_odom.append(msg.twist.twist.linear.x)
-                else:
-                    # 关键修复：点云按帧累积，而不是每帧覆盖
-                    ranges = np.asarray(msg.ranges, dtype=np.float64)
-                    if ranges.size == 0:
-                        continue
-                    angles = np.linspace(
-                        msg.angle_min, msg.angle_max, ranges.size)
-                    valid = (np.isfinite(ranges)
-                             & (ranges >= msg.range_min)
-                             & (ranges <= msg.range_max))
-                    if not valid.any():
-                        continue
-                    lidar_x.append(ranges[valid] * np.cos(angles[valid]))
-                    lidar_y.append(ranges[valid] * np.sin(angles[valid]))
-
+        lidar_x, lidar_y = raw["lidar_x"], raw["lidar_y"]
         limit = int(self.get_parameter("max_lidar_points").value)
         if lidar_x:
             xs = np.concatenate(lidar_x)
@@ -108,13 +80,61 @@ class BagAnalysisNode(Node):
             lidar_x, lidar_y = np.empty(0), np.empty(0)
 
         self.get_logger().info(
-            f"读取完成：/cmd_vel {len(vel_cmd)} 条，/odom {len(vel_odom)} 条，"
-            f"激光点 {lidar_x.size} 个")
+            f"读取完成：/cmd_vel {len(raw['vel_cmd'])} 条，"
+            f"/odom {len(raw['vel_odom'])} 条，激光点 {lidar_x.size} 个")
         return {
-            "time_cmd": np.asarray(time_cmd),
-            "vel_cmd": np.asarray(vel_cmd),
-            "time_odom": np.asarray(time_odom),
-            "vel_odom": np.asarray(vel_odom),
+            "time_cmd": np.asarray(raw["time_cmd"]),
+            "vel_cmd": np.asarray(raw["vel_cmd"]),
+            "time_odom": np.asarray(raw["time_odom"]),
+            "vel_odom": np.asarray(raw["vel_odom"]),
+            "lidar_x": lidar_x,
+            "lidar_y": lidar_y,
+        }
+
+    def parse_bag(self, reader):
+        """遍历 bag 中指定话题的消息，按话题累积时间序列。"""
+        time_cmd, vel_cmd = [], []
+        time_odom, vel_odom = [], []
+        lidar_x, lidar_y = [], []
+
+        wanted = (TOPIC_VEL_CMD, TOPIC_ODOM, TOPIC_SCAN)
+        connections = [c for c in reader.connections if c.topic in wanted]
+        if not connections:
+            raise RuntimeError(
+                f"bag 中不包含 {', '.join(wanted)} 任一话题，无法分析。")
+        start_ns = None
+        for connection, timestamp, rawdata in reader.messages(
+                connections=connections):
+            if start_ns is None:
+                start_ns = timestamp
+            stamp = (timestamp - start_ns) * 1e-9
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            if connection.topic == TOPIC_VEL_CMD:
+                time_cmd.append(stamp)
+                vel_cmd.append(msg.linear.x)
+            elif connection.topic == TOPIC_ODOM:
+                time_odom.append(stamp)
+                vel_odom.append(msg.twist.twist.linear.x)
+            else:
+                # 关键修复：点云按帧累积，而不是每帧覆盖
+                ranges = np.asarray(msg.ranges, dtype=np.float64)
+                if ranges.size == 0:
+                    continue
+                angles = np.linspace(
+                    msg.angle_min, msg.angle_max, ranges.size)
+                valid = (np.isfinite(ranges)
+                         & (ranges >= msg.range_min)
+                         & (ranges <= msg.range_max))
+                if not valid.any():
+                    continue
+                lidar_x.append(ranges[valid] * np.cos(angles[valid]))
+                lidar_y.append(ranges[valid] * np.sin(angles[valid]))
+
+        return {
+            "time_cmd": time_cmd,
+            "vel_cmd": vel_cmd,
+            "time_odom": time_odom,
+            "vel_odom": vel_odom,
             "lidar_x": lidar_x,
             "lidar_y": lidar_y,
         }
