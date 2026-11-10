@@ -5,11 +5,12 @@
 这是路径规划算法示例。它不读取 MuJoCo 位姿或传感器数据，也不执行物理飞行、激光建图或 SLAM。
 
 ```bash
+python -m pip install -r requirements.txt
 python navigation.py
 python -m pip install -r requirements-dev.txt
 python -m pytest -q test_navigation.py
 ```
 
-默认运行会将路线指标写入 `output/grid_navigation.json`。测试覆盖障碍绕行、不可达目标、输入校验和路线终点。
+默认运行会将路线指标写入 `output/grid_navigation.json`，并生成 PNG 路线图 `output/grid_navigation.png`。测试覆盖障碍绕行、不可达目标、输入校验、路线终点和 PNG 渲染。
 
 English: The example plans a four-connected A* route on a supplied occupancy grid and advances along discrete cells. It does not model flight dynamics or consume simulated sensor data.

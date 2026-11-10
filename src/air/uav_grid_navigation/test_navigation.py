@@ -1,6 +1,6 @@
 import pytest
 
-from navigation import plan_route, simulate_route
+from navigation import plan_route, render_route, simulate_route
 
 
 def test_astar_finds_shortest_route_around_obstacle():
@@ -33,3 +33,14 @@ def test_route_metrics_report_discrete_goal_reach():
     assert result["goal_reached"] is True
     assert result["step_count"] == 2
     assert result["final_cell"] == [1, 1]
+
+
+def test_route_renderer_writes_a_png(tmp_path):
+    from PIL import Image
+
+    output = tmp_path / "map.png"
+    render_route([[0, 0], [0, 0]], [(0, 0), (1, 1)], (0, 0), (1, 1), output, cell_size=24)
+
+    with Image.open(output) as image:
+        assert image.format == "PNG"
+        assert image.size == (84, 116)

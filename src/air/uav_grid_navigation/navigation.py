@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from PIL import Image, ImageDraw
+
 Cell = tuple[int, int]
 Grid = Sequence[Sequence[int]]
 
@@ -77,11 +79,71 @@ def demo_grid() -> tuple[list[list[int]], Cell, Cell]:
     return grid, (1, 1), (10, 6)
 
 
+def render_route(
+    grid: Grid,
+    route: Sequence[Cell],
+    start: Cell,
+    goal: Cell,
+    output: Path,
+    cell_size: int = 48,
+) -> None:
+    """将占据栅格、规划路线、起点和终点渲染为 PNG。"""
+    if cell_size < 12:
+        raise ValueError("cell_size must be at least 12 pixels")
+    height, width = len(grid), len(grid[0])
+    margin = 18
+    header_height = 34
+    footer_height = 34
+    grid_left = margin
+    grid_top = header_height
+    image = Image.new(
+        "RGB",
+        (width * cell_size + 2 * margin, height * cell_size + header_height + footer_height),
+        "#ffffff",
+    )
+    draw = ImageDraw.Draw(image)
+    route_cells = set(route)
+    draw.text(
+        (margin, 9),
+        f"UAV A* ROUTE | {max(0, len(route) - 1)} STEPS | {'GOAL REACHED' if route and route[-1] == goal else 'NO ROUTE'}",
+        fill="#26383d",
+    )
+    for y, row in enumerate(grid):
+        for x, occupied in enumerate(row):
+            left = grid_left + x * cell_size
+            top = grid_top + (height - y - 1) * cell_size
+            right, bottom = left + cell_size - 1, top + cell_size - 1
+            color = "#34444a" if occupied else ("#5fb6a9" if (x, y) in route_cells else "#f4f6f5")
+            draw.rectangle((left, top, right, bottom), fill=color, outline="#c7d1d0", width=1)
+
+    radius = max(4, cell_size // 4)
+    for cell, color in ((start, "#2468a2"), (goal, "#d4674f")):
+        x, y = cell
+        center_x = grid_left + x * cell_size + cell_size // 2
+        center_y = grid_top + (height - y - 1) * cell_size + cell_size // 2
+        draw.ellipse(
+            (center_x - radius, center_y - radius, center_x + radius, center_y + radius),
+            fill=color,
+            outline="white",
+            width=2,
+        )
+    legend_y = grid_top + height * cell_size + 11
+    legend = (("Route", "#5fb6a9"), ("Obstacle", "#34444a"), ("Start", "#2468a2"), ("Goal", "#d4674f"))
+    for index, (label, color) in enumerate(legend):
+        left = margin + index * 112
+        draw.rectangle((left, legend_y, left + 11, legend_y + 11), fill=color)
+        draw.text((left + 16, legend_y + 1), label, fill="#26383d")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    image.save(output, format="PNG")
+
+
 def main(output: Path = Path("output/grid_navigation.json")) -> None:
     grid, start, goal = demo_grid()
     result = simulate_route(grid, start, goal)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    route = [tuple(cell) for cell in result["route"]]
+    render_route(grid, route, start, goal, output.with_name("grid_navigation.png"))
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
