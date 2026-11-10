@@ -4,7 +4,7 @@
   <name>water</name>
   <version>0.0.0</version>
   <description>CNN based sonar image underwater target recognition</description>
-  <maintainer email="2754586324@qq.com">Xavier-101666</maintainer>
+  <maintainer email="234207381+Xavier-101666@users.noreply.github.com">Xavier-101666</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
