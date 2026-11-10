@@ -1,0 +1,16 @@
+<launch>
+  <!-- 任务 2 训练：训练过程需要独占 AirSim，建议在前台终端运行并用 Ctrl-C 结束 -->
+  <arg name="airsim_ip" default="172.25.176.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="episodes" default="200"/>
+  <arg name="max_steps" default="200"/>
+  <arg name="seed" default="0"/>
+  <arg name="free_points" default="$(find uav_lidar_dqn_navigation)/maps/free_points.json"/>
+
+  <!-- 需要断点续训时，直接用 rosrun train_dqn_nav.py 并传 resume 参数 -->
+  <node name="train_dqn_nav" pkg="uav_lidar_dqn_navigation" type="main.py"
+        args="--mode train --ip $(arg airsim_ip) --vehicle $(arg vehicle_name)
+              --episodes $(arg episodes) --max-steps $(arg max_steps)
+              --seed $(arg seed) --free-points $(arg free_points)"
+        output="screen"/>
+</launch>
