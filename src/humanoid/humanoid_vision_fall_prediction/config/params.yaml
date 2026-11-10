@@ -11,14 +11,15 @@ sim:
 
 # 站姿 PD 控制（维持站立）
 standing:
-  # 目标关节角（弧度）：近似直立
+  # 目标关节角（弧度）：近似直立。三组角度按“踝角 ≈ -(髋角 + 膝角)”配平，
+  # 与 sim.py 的 DEFAULT_STAND_TARGET 保持同一组实测值（3 s 站立倾角 1.5°）。
   qpos_target:
-    hip_pitch_l: 0.05
-    knee_l: -0.10
-    ankle_pitch_l: -0.05
-    hip_pitch_r: 0.05
-    knee_r: -0.10
-    ankle_pitch_r: -0.05
+    hip_pitch_l: 0.22
+    knee_l: -0.05
+    ankle_pitch_l: 0.14
+    hip_pitch_r: 0.22
+    knee_r: -0.05
+    ankle_pitch_r: 0.14
   kp: 60.0
   kd: 6.0
 
@@ -31,8 +32,10 @@ collect:
   push_duration: 0.08
   # 每次试验最大步数
   max_steps: 1500
-  # 每个类别的样本数
-  samples_per_class: 300
+  # 采集的总样本数（normal 占 normal_ratio，其余均分到 4 个方向）
+  total_samples: 1500
+  # normal 类别占比（0.2 → 5 类完全均衡，每类 300 张）
+  normal_ratio: 0.2
   # 5 类标签：0=正常, 1=前倒, 2=后倒, 3=左倒, 4=右倒
   labels: ["normal", "forward", "backward", "left", "right"]
 
@@ -43,8 +46,10 @@ nn:
   hidden1: 128
   hidden2: 64
   output_dim: 5
-  learning_rate: 0.01
-  epochs: 80
+  # lr 0.01 时验证准确率逐轮剧烈震荡（best 1.00 / worst 0.20），改用 0.005
+  # 并配合 train.py 的学习率衰减（每 50 轮 ×0.8）
+  learning_rate: 0.005
+  epochs: 300
   batch_size: 64
 
 # 推理与控制
