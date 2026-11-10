@@ -1,0 +1,42 @@
+{
+  "messages": [
+    {
+      "type": "imu",
+      "frame_id": "drone_imu",
+      "timestamp_ns": 1000000000,
+      "linear_acceleration": [0.0, 0.0, -9.81],
+      "angular_velocity": [0.01, -0.02, 0.03],
+      "orientation": [0.0, 0.0, 0.0, 1.0]
+    },
+    {
+      "type": "gps",
+      "frame_id": "drone_gps",
+      "timestamp_ns": 1000000010,
+      "latitude": 28.2201,
+      "longitude": 112.9422,
+      "altitude": 35.5,
+      "status": 0
+    },
+    {
+      "type": "lidar",
+      "frame_id": "drone_lidar",
+      "timestamp_ns": 1000000020,
+      "point_step": 16,
+      "fields": [
+        {"name": "x", "offset": 0, "datatype": 7, "count": 1},
+        {"name": "y", "offset": 4, "datatype": 7, "count": 1},
+        {"name": "z", "offset": 8, "datatype": 7, "count": 1},
+        {"name": "intensity", "offset": 12, "datatype": 7, "count": 1}
+      ],
+      "points": [8.0, 0.0, 1.0, 0.8, 0.0, 8.0, 1.0, 0.6, -8.0, 0.0, 1.0, 0.4]
+    },
+    {
+      "type": "odometry",
+      "frame_id": "world",
+      "timestamp_ns": 1000000030,
+      "position": [12.0, 4.0, 30.0],
+      "orientation": [0.0, 0.0, 0.0, 1.0],
+      "linear_velocity": [2.0, 0.0, -0.1]
+    }
+  ]
+}

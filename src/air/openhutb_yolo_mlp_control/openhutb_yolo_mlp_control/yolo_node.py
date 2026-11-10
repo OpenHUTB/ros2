@@ -10,15 +10,18 @@ import numpy as np
 import rclpy
 import torch
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
+from .visual_observation import encode_observation
 from ultralytics import YOLO
 from vision_msgs.msg import (
     Detection2D,
     Detection2DArray,
     ObjectHypothesisWithPose,
 )
+
+from .window_topmost import is_wsl, set_wsl_topmost
 
 
 class YoloNode(Node):
@@ -33,6 +36,7 @@ class YoloNode(Node):
         self.declare_parameter('model_path', 'yolo11n.pt')
         self.declare_parameter('confidence', 0.30)
         self.declare_parameter('image_size', 640)
+        self.declare_parameter('observation_topic', '/openhutb/visual_observation')
 
         self.declare_parameter(
             'input_image_topic',
@@ -53,6 +57,7 @@ class YoloNode(Node):
 
         self.declare_parameter('show_window', True)
         self.declare_parameter('start_topmost', True)
+        self.declare_parameter('window_width', 640)
         self.declare_parameter(
             'window_name',
             'OpenHUTB + YOLO',
@@ -74,6 +79,9 @@ class YoloNode(Node):
         self.show_window = bool(
             self.get_parameter('show_window').value
         )
+        self.window_width = int(self.get_parameter('window_width').value)
+        if self.window_width < 160:
+            raise ValueError('window_width must be at least 160 pixels')
         self.topmost = bool(
             self.get_parameter('start_topmost').value
         )
@@ -127,7 +135,7 @@ class YoloNode(Node):
             Image,
             image_topic,
             self.image_callback,
-            qos_profile_sensor_data,
+            QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT),
         )
 
         self.capture_sub = self.create_subscription(
@@ -142,6 +150,8 @@ class YoloNode(Node):
             detections_topic,
             10,
         )
+        self.observation_pub = self.create_publisher(
+            String, self.get_parameter('observation_topic').value, 1)
 
         self.annotated_pub = self.create_publisher(
             Image,
@@ -212,13 +222,7 @@ class YoloNode(Node):
         if self.show_window:
             cv2.namedWindow(
                 self.window_name,
-                cv2.WINDOW_NORMAL,
-            )
-
-            cv2.resizeWindow(
-                self.window_name,
-                1280,
-                720,
+                cv2.WINDOW_AUTOSIZE | cv2.WINDOW_GUI_NORMAL,
             )
 
             # 让 HighGUI / Qt 后端先处理一个事件周期，确保可以取得
@@ -396,7 +400,6 @@ class YoloNode(Node):
                 detection.id = (
                     f'{self.frame_id}-{index}'
                 )
-
                 cx = (
                     x1 + x2
                 ) / 2.0
@@ -457,6 +460,10 @@ class YoloNode(Node):
         self.detection_pub.publish(
             detection_array
         )
+        observation = String()
+        observation.data = encode_observation(
+            detection_array, msg.width, msg.height)
+        self.observation_pub.publish(observation)
 
         # ------------------------------------------------------------
         # 绘制检测结果
@@ -495,36 +502,14 @@ class YoloNode(Node):
         # ------------------------------------------------------------
         # 信息叠加层
         # ------------------------------------------------------------
-        cv2.rectangle(
-            annotated,
-            (15, 15),
-            (540, 190),
-            (0, 0, 0),
-            -1,
-        )
-
         info = [
-            f'FPS: {self.fps:.1f}',
-            f'YOLO: {inference_ms:.1f} ms',
-            f'AirSim: {self.last_capture_ms:.1f} ms',
-            f'Objects: {object_count}',
-            f'GPU: {self.gpu_name}',
+            f'FPS {self.fps:.1f} | YOLO {inference_ms:.0f} ms',
+            f'Capture {self.last_capture_ms:.0f} ms | Objects {object_count}',
         ]
-
-        y = 45
-
-        for text in info:
-            cv2.putText(
-                annotated,
-                text,
-                (30, y),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                (0, 255, 0),
-                2,
-            )
-
-            y += 32
+        for index, text in enumerate(info):
+            cv2.putText(annotated, text, (8, 16 + 17*index),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1,
+                        cv2.LINE_AA)
 
         # ------------------------------------------------------------
         # 发布标注后的图像
@@ -566,9 +551,16 @@ class YoloNode(Node):
         # OpenCV 显示与键盘处理
         # ------------------------------------------------------------
         if self.show_window:
+            height, width = annotated.shape[:2]
+            display = annotated
+            if width > self.window_width:
+                display = cv2.resize(
+                    annotated, (self.window_width,
+                                max(1, round(height*self.window_width/width))),
+                    interpolation=cv2.INTER_AREA)
             cv2.imshow(
                 self.window_name,
-                annotated,
+                display,
             )
 
             key = cv2.waitKeyEx(1)
@@ -623,13 +615,21 @@ class YoloNode(Node):
                     self._apply_topmost()
 
     # ================================================================
-    # Windows 窗口置顶
+    # 可选窗口置顶：Windows / WSLg / OpenCV 后备
     # ================================================================
     def _apply_topmost(
         self,
     ):
         if not self.show_window:
             return
+
+        if is_wsl():
+            success, detail = set_wsl_topmost(self.window_name, self.topmost)
+            if success:
+                self.get_logger().info(
+                    f'Window topmost: {"ON" if self.topmost else "OFF"} (WSLg)')
+                return
+            self.get_logger().warning(f'WSLg topmost: {detail}; trying OpenCV fallback')
 
         # ------------------------------------------------------------
         # Windows：使用原生 Win32 API。
@@ -756,16 +756,23 @@ class YoloNode(Node):
                     ),
                 )
 
-                self.get_logger().info(
-                    'Window topmost: '
-                    f'{"ON" if self.topmost else "OFF"}'
-                )
+                actual = cv2.getWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST)
+                if actual < 0 or bool(actual) != self.topmost:
+                    self.get_logger().warning(
+                        'This OpenCV/window-manager backend does not support topmost.')
+                else:
+                    self.get_logger().info(
+                        'Window topmost: '
+                        f'{"ON" if self.topmost else "OFF"}'
+                    )
 
             except cv2.error as exc:
                 self.get_logger().warning(
                     'OpenCV topmost failed: '
                     f'{exc}'
                 )
+        else:
+            self.get_logger().warning('OpenCV has no WND_PROP_TOPMOST support.')
 
     # ================================================================
     # 清理资源

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>urdf_car_slam</name><version>0.1.0</version>
+  <description>Four-wheel car Gazebo and GMapping exercise for ROS Noetic.</description>
+  <maintainer email="student@example.com">Student</maintainer><license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>xacro</exec_depend><exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend><exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>gmapping</exec_depend><exec_depend>map_server</exec_depend>
+  <exec_depend>rviz</exec_depend><exec_depend>teleop_twist_keyboard</exec_depend>
+</package>

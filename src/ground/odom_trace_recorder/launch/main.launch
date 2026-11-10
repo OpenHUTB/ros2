@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 记录时长（秒）。到点自动结算，不需要手动 Ctrl+C。 -->
+  <arg name="record_seconds" default="8.0" doc="记录多少秒后自动结算并输出报告"/>
+  <arg name="record_rate" default="20.0" doc="采样率 Hz，也是内置模拟车辆发 /odom 的频率"/>
+  <arg name="use_mock" default="true" doc="true 表示节点自己发 /odom（不接外部仿真器）"/>
+  <arg name="mock_radius" default="6.0" doc="内置模拟车辆的转弯半径 m"/>
+  <arg name="mock_speed" default="2.0" doc="内置模拟车辆的线速度 m/s"/>
+  <arg name="min_samples" default="100" doc="采样点少于该值则「采样完整」断言不通过"/>
+  <arg name="max_error" default="0.20" doc="与参考圆弧逐点比对的误差上限 m"/>
+  <arg name="length_tolerance" default="0.50" doc="允许的里程相对偏差 m"/>
+  <arg name="reference_radius" default="6.0" doc="参考圆弧半径 m，改它可以让「误差在限」失败"/>
+  <arg name="csv_path" default="/tmp/trace.csv" doc="轨迹 CSV 的落盘路径"/>
+  <arg name="odom_topic" default="/odom" doc="里程计话题"/>
+  <arg name="replay_topic" default="/trace/replay" doc="回放用的 nav_msgs/Path 话题"/>
+  <arg name="report_topic" default="/trace/report" doc="报告文本话题"/>
+
+  <rosparam command="load" file="$(find odom_trace_recorder)/config/trace_recorder.yaml"/>
+
+  <param name="record/seconds" value="$(arg record_seconds)"/>
+  <param name="record/rate" value="$(arg record_rate)"/>
+  <param name="mock/enabled" value="$(arg use_mock)"/>
+  <param name="mock/radius" value="$(arg mock_radius)"/>
+  <param name="mock/speed" value="$(arg mock_speed)"/>
+  <param name="check/min_samples" value="$(arg min_samples)"/>
+  <param name="check/max_error" value="$(arg max_error)"/>
+  <param name="check/length_tolerance" value="$(arg length_tolerance)"/>
+  <param name="check/reference_radius" value="$(arg reference_radius)"/>
+  <param name="trace/csv_path" value="$(arg csv_path)"/>
+  <param name="topic/odom" value="$(arg odom_topic)"/>
+  <param name="topic/replay" value="$(arg replay_topic)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+
+  <node pkg="odom_trace_recorder" type="main.py" name="odom_trace_recorder" output="screen"/>
+</launch>
