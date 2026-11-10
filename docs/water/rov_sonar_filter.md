@@ -36,7 +36,7 @@ ros2 run rov_sonar_filter filter_node.py
 
 ## 六、运行效果
 
-![运行效果图](image/rov_sonar_filter.jpg)
+![运行效果图](images/rov_sonar_filter.png)
 
 ## 七、实验总结
 
