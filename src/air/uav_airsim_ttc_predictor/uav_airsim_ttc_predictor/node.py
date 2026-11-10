@@ -24,20 +24,29 @@ class TtcNode(Node):
         self.declare_parameter("ttc_max", TTC_MAX)
         self.ttc_max = float(self.get_parameter("ttc_max").value)
 
-        self.net = DepthPolicyNet()
-        self.net.load(self.get_parameter("weights").value)
+        # load() 是 classmethod，返回新的已加载实例；必须接住返回值
+        self.net = DepthPolicyNet.load(self.get_parameter("weights").value)
+        self.get_logger().info("已加载权重 %s" % self.get_parameter("weights").value)
 
         self.pub = self.create_publisher(Float32, "/uav/ttc", 10)
         self.create_subscription(Image, "/uav/depth", self.on_depth, 10)
         self.get_logger().info("TTC 预测节点就绪")
 
     def on_depth(self, msg: Image):
-        # 期望 float32 单通道，按 30 m 归一化后缩放
+        # 期望 float32 单通道，按 30 m 归一化后缩放到 64x64。
+        # 尺寸以 msg.height / msg.width 为准：AirSim DepthPlanar 默认 640x480，
+        # 不是正方形，用 sqrt(msg.data.size) 会得到 554 并直接 ValueError。
         raw = np.frombuffer(msg.data, dtype=np.float32)
-        n = int(np.sqrt(raw.size))
-        arr = raw.reshape(n, n)
-        idx = (np.linspace(0, n - 1, SIZE)).astype(int)
-        small = np.clip(arr[np.ix_(idx, idx)] / 30.0, 0.0, 1.0)
+        h = int(msg.height)
+        w = int(msg.width)
+        if h <= 0 or w <= 0 or h * w != raw.size:
+            # 消息头没填尺寸时退化成单列，至少不会崩
+            self.get_logger().warn("深度图尺寸与消息头不符，按 1 x %d 处理" % raw.size)
+            h, w = 1, int(raw.size)
+        arr = raw.reshape(h, w)
+        idx_h = np.linspace(0, h - 1, SIZE).astype(int)
+        idx_w = np.linspace(0, w - 1, SIZE).astype(int)
+        small = np.clip(arr[np.ix_(idx_h, idx_w)] / 30.0, 0.0, 1.0)
         pred = float(self.net.forward(small.astype(np.float32))[0]) * self.ttc_max
         out = Float32()
         out.data = pred
