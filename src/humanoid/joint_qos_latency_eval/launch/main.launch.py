@@ -6,7 +6,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 PACKAGE = 'joint_qos_latency_eval'
@@ -18,7 +18,8 @@ def generate_launch_description():
         DeclareLaunchArgument('sub_profile', default_value='reliable_depth10'),
         DeclareLaunchArgument('rate_hz', default_value='200.0'),
         DeclareLaunchArgument('duration', default_value='10.0'),
-        DeclareLaunchArgument('csv_path', default_value=''),
+        # 默认落到 results/launch.csv（相对当前工作目录），保证 launch 跑完有产出
+        DeclareLaunchArgument('csv_path', default_value='results/launch.csv'),
         Node(
             package=PACKAGE,
             executable='joint_qos_pub',
@@ -39,6 +40,10 @@ def generate_launch_description():
                 'qos_profile': LaunchConfiguration('sub_profile'),
                 'duration': LaunchConfiguration('duration'),
                 'csv_path': LaunchConfiguration('csv_path'),
+                # 应发总条数作为 missing/drop% 的分母
+                'expected_msgs': PythonExpression(
+                    ['int(', LaunchConfiguration('rate_hz'),
+                     ' * ', LaunchConfiguration('duration'), ')']),
             }],
         ),
     ])
