@@ -64,6 +64,7 @@ class UavSimulation:
             raise FileNotFoundError(f"MuJoCo model not found / 找不到 MuJoCo 模型: {model_path}")
         self.config = config
         self.model = mujoco.MjModel.from_xml_path(str(model_path))
+        self.model.opt.timestep = config.timestep_seconds
         self.data = mujoco.MjData(self.model)
         self.body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "uav")
         self.camera_id = mujoco.mj_name2id(
@@ -85,12 +86,16 @@ class UavSimulation:
         """Return a copy of UAV world position / 返回无人机世界坐标副本。"""
         return self.data.qpos[:3].copy()
 
-    def reset(self, lateral_offset_m: float = 0.0) -> None:
+    def reset(self, lateral_offset_m: float = 0.0, initial_y_m: float | None = None) -> None:
         """Reset to the configured pose / 重置至配置姿态。"""
         if abs(lateral_offset_m) > self.config.path_half_width_m * 1.8:
             raise ValueError("lateral offset is outside the scene / 横向偏移超出场景范围")
         mujoco.mj_resetData(self.model, self.data)
         x, y, z = self.config.initial_position
+        if initial_y_m is not None:
+            if not np.isfinite(initial_y_m):
+                raise ValueError("initial_y_m must be finite / 初始纵向坐标必须有限")
+            y = float(initial_y_m)
         self.data.qpos[:3] = (x + lateral_offset_m, y, z)
         self._yaw_radians = np.deg2rad(self.config.initial_yaw_degrees)
         self._write_yaw_quaternion()

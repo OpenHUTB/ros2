@@ -69,4 +69,4 @@ class SynchronizedSlamNavigation:
         self.slam.integrate_odometry(dx, dy, dyaw)
         self.slam.update_scan(hits)
         current = self.slam._cell(self.slam.pose.x, self.slam.pose.y)
-        return self.planner.predict(self.slam.grid, current, self.goal)
+        return self.planner.predict(self.slam.grid, current, self.goal, self.slam.pose.yaw)

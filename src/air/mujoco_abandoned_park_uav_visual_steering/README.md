@@ -1,91 +1,156 @@
-# MuJoCo abandoned-park UAV visual steering
+# MuJoCo 失落公园无人机视觉转向 / MuJoCo abandoned-park UAV visual steering
 
-失落公园林荫步道场景下基于轻量卷积神经网络的 MuJoCo 无人机端到端视觉转向控制。
+模块在林荫步道场景中提供确定性无人机运动、前视相机和转向控制接口，场景由 MuJoCo 3.12.0 加载。
 
-End-to-End Visual Steering Control for a MuJoCo UAV in an Abandoned-Park Tree-Lined Path Using a Lightweight CNN.
+The module provides deterministic UAV motion, a forward-camera model, and steering interfaces in a tree-lined path scene loaded by MuJoCo 3.12.0.
 
-## Scope / 范围
+## 功能范围 / Scope
 
-The current module provides a lightweight MJCF park scene, a camera-equipped quadrotor, deterministic headless flight, and stable interfaces for RGB collection and steering commands. Neural-network training and ROS 2 runtime nodes are introduced in later stages.
+本分支整合数据采集、CNN 训练、ROS 2 图像控制接口及真实相机闭环评价，并提供建图与导航辅助接口。
 
-当前模块提供轻量 MJCF 公园场景、带前视相机的四旋翼、确定性无窗口飞行，以及 RGB 采集和转向指令所需的稳定接口。神经网络训练与 ROS 2 运行节点在后续阶段接入。
+This branch integrates data collection, CNN training, the ROS 2 image-control interface, and camera-based closed-loop evaluation, with mapping and navigation helper interfaces.
 
-## Environment / 环境
+## 坐标、时间与相机 / Coordinates, timing, and camera
 
-- Python 3.10
+步道沿世界坐标 (+Y) 延伸，横向坐标为 (X)。正归一化转向量增加航向角，使无人机向左转；负值向右转。指令范围为 `[-1, 1]`，对应 ROS 的正 `angular.z` 左转约定。无人机位置更新使用：
+
+The path runs along world (+Y), with lateral position (X). Positive normalized steering increases yaw and turns left; negative steering turns right. The range is `[-1, 1]`, consistent with positive ROS `angular.z` for a left turn. Position updates follow:
+
+$$
+\theta_{t+1}=\theta_t+u_t\omega_{\max}\Delta t,\qquad
+x_{t+1}=x_t-v_t\sin\theta_{t+1}\Delta t,\qquad
+y_{t+1}=y_t+v_t\cos\theta_{t+1}\Delta t.
+$$
+
+`timestep_seconds` 写入 MuJoCo 模型的物理步长，控制周期由 `control_hz` 与物理步数共同确定。基础运动过程没有随机扰动；`seed` 字段用于数据采集与划分阶段的可复现性，不改变基础运动方程。
+
+`timestep_seconds` sets the MuJoCo model timestep. The control period is determined by `control_hz` and the number of physics steps. Base motion contains no random disturbance; `seed` supports reproducible data collection and splitting without changing the motion equations.
+
+MJCF 中的 `fovy=78` 表示垂直视场角。以默认 320 × 180 宽高比计算，水平视场角约为 110°：
+
+The MJCF `fovy=78` specifies the vertical field of view. At the default 320 × 180 aspect ratio, the horizontal field of view is approximately 110°:
+
+$$
+\mathrm{FOV}_h=2\arctan\left(\frac{W}{H}\tan\frac{\mathrm{FOV}_v}{2}\right).
+$$
+
+## 运行环境 / Environment
+
+- Python 3.10 或更新版本 / Python 3.10 or later
 - MuJoCo 3.12.0
-- NumPy, Pillow, PyYAML and pytest
+- NumPy、Pillow、PyYAML / NumPy, Pillow, and PyYAML
+- 训练和推理使用 PyTorch CPU 与 scikit-learn / Training and inference use CPU PyTorch and scikit-learn
+- ROS 2 Humble 与 Ubuntu 22.04 用于 ROS 节点 / ROS 2 Humble on Ubuntu 22.04 for ROS nodes
 
 ```bash
 cd src/air/mujoco_abandoned_park_uav_visual_steering
 python -m pip install -r requirements.txt
-```
-
-## Run / 运行
-
-The unified entry point runs a complete deterministic simulation episode and prints a bilingual JSON summary.
-
-统一入口运行完整的确定性仿真回合，并输出中英双语 JSON 摘要。
-
-```bash
 python main.py --steps 120 --steering 0.0
+python -m pytest tests -q
 ```
 
-Collect the reproducible RGB dataset and rerun its quality gate:
+配置与场景路径默认相对模块目录解析，运行不依赖调用终端所在目录。
 
-采集可复现 RGB 数据集并重新执行质量检查：
+Default configuration and scene paths resolve relative to the module directory, independently of the caller's working directory.
+
+## RGB 数据与专家监督 / RGB data and expert supervision
+
+采集器从前视相机读取 RGB8 PNG 图像，并生成 `metadata.csv`、`manifest.json` 和 `quality_report.json`。专家使用横向位置与航向误差形成负反馈：
+
+The collector reads RGB8 PNG frames from the forward camera and writes `metadata.csv`, `manifest.json`, and `quality_report.json`. The expert uses lateral position and heading error in a negative-feedback controller:
+
+$$
+u_t=\operatorname{clip}(k_x x_t-k_\theta\theta_t,-1,1).
+$$
+
+因此，位于步道右侧的无人机得到正转向量和 `LEFT` 标签，位于左侧得到负转向量和 `RIGHT` 标签。安全边界外或到达终点时输出 `STOP`。数据同时包含常规起点与终点前起点；终点停车标签来自实际推进后到达终点的状态。
+
+A UAV on the right of the path receives positive steering and the `LEFT` label; one on the left receives negative steering and `RIGHT`. The expert emits `STOP` outside the safe corridor or at the path end. Collection includes regular starts and starts near the endpoint; endpoint stop labels follow actual movement to the endpoint.
+
+同一初始横向偏移的回合属于同一场景组，整组只分配至训练、验证或测试中的一个集合。质量检查同时检查回合隔离、场景组隔离、跨集合图像哈希、图像可读性及每个集合的四类标签覆盖。
+
+Episodes sharing an initial lateral offset form one scenario group, assigned wholly to training, validation, or test. Quality checks cover episode isolation, scenario-group isolation, cross-split image hashes, image readability, and four-class coverage within each split.
 
 ```bash
 python main.py --mode collect --output data/park_rgb
 python main.py --mode quality --output data/park_rgb
 ```
 
-Train the lightweight CNN and replay frames through the same interface:
+## CNN 训练与权重契约 / CNN training and checkpoint contract
 
-使用同一入口训练轻量 CNN 并回放图像：
+图像缩放为 160 × 90 并归一化至 `[0, 1]`。轻量 CNN 通过三组卷积、池化和全连接层预测四类标签，使用带类别权重的交叉熵训练：
+
+Images are resized to 160 × 90 and normalized to `[0, 1]`. A lightweight CNN uses convolution, pooling, and fully connected layers to predict four labels and is trained with class-weighted cross-entropy:
+
+$$
+\hat y=\operatorname{softmax}(f_\theta(I)),\qquad
+\mathcal L=-\sum_{c=1}^{4}w_c y_c\log\hat y_c.
+$$
+
+统一入口支持训练与离线图像回放：
+
+The unified entry point supports training and offline image replay:
 
 ```bash
 python main.py --mode train --output data/park_rgb --checkpoint models/weights/lightweight_steering_cnn.pt --epochs 8
 python main.py --mode replay --checkpoint models/weights/lightweight_steering_cnn.pt --images data/park_rgb/images
-python main.py --mode evaluate --output evaluation/scenarios.json
-python main.py --mode keyboard --steps 4
 ```
 
-The model consumes normalized RGB tensors and predicts four classes. A predicted class is mapped to `geometry_msgs/Twist`: LEFT and RIGHT use opposite `angular.z`, STRAIGHT uses zero angular velocity, and STOP sets `linear.x` to zero.
+验证集用于选择权重，测试集用于最终分类评价。Accuracy、固定四类 macro-F1 和 4 × 4 混淆矩阵使用相同标签序号；即使某类没有出现在预测结果中，macro-F1 仍保留该类。加载权重时要求保存的标签严格为 `LEFT, STRAIGHT, RIGHT, STOP`，缺失或顺序不符时拒绝加载，防止控制含义被交换。
 
-模型输入归一化 RGB 张量并预测四类标签。预测结果映射为 `geometry_msgs/Twist`：LEFT 与 RIGHT 使用相反的 `angular.z`，STRAIGHT 的角速度为零，STOP 将 `linear.x` 设为零。
+Validation selects the checkpoint; the test split provides final classification metrics. Accuracy, fixed-four-class macro-F1, and the 4 × 4 confusion matrix share the same class indices. Macro-F1 retains every class even when a class is absent from predictions. Checkpoints must store the exact label order `LEFT, STRAIGHT, RIGHT, STOP`; missing or reordered labels are rejected to preserve control semantics.
 
-The collector writes PNG frames, `metadata.csv`, `manifest.json`, and `quality_report.json`. Splits are assigned by episode to prevent adjacent frames from leaking across training, validation, and test sets. Generated data remains outside version control.
+本次固定种子 CNN 训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。
 
-采集器写出 PNG 图像、`metadata.csv`、`manifest.json` 和 `quality_report.json`。数据按完整回合划分，避免相邻帧跨越训练集、验证集和测试集。生成数据不纳入版本控制。
+The recorded fixed-seed CNN run trained for 16 epochs (19.60 s) with 312/78/78 train, validation, and test images split by scenario group. Accuracy on the independent 78-image test set was 64.10%, with a four-class macro-F1 of 67.42%; single-frame inference latency averaged 0.356 ms (P95 0.416 ms).
 
-Run the checks with:
+## ROS 2 图像控制接口 / ROS 2 image-control interface
 
-执行检查：
+节点订阅 `sensor_msgs/Image` 并发布 `geometry_msgs/Twist`：`LEFT` 对应正 `angular.z`，`RIGHT` 对应负值，`STRAIGHT` 的角速度为零，`STOP` 的线速度和角速度均为零。包安装包括节点、launch 文件与参数配置，launch 从安装后的包共享目录解析配置。
+
+The node subscribes to `sensor_msgs/Image` and publishes `geometry_msgs/Twist`: `LEFT` maps to positive `angular.z`, `RIGHT` to negative, `STRAIGHT` to zero angular velocity, and `STOP` to zero linear and angular velocity. Installation includes the node, launch file, and parameter configuration; launch resolves configuration from the installed package share directory.
+
+从仓库工作空间根目录构建，提供训练所得权重：
+
+Build from the repository workspace root and supply the trained checkpoint:
 
 ```bash
-python -m pytest tests -q
+colcon build --packages-select mujoco_abandoned_park_uav_visual_steering
+source install/setup.bash
+ros2 launch mujoco_abandoned_park_uav_visual_steering main.launch.py \
+  checkpoint:=/absolute/path/lightweight_steering_cnn.pt
 ```
 
-## Layout / 目录
+缺少有效权重、图像解码失败、推理异常或图像流超过超时阈值时，节点发布零速度。图像问题消除后，下一张有效图像可恢复正常控制；缺少权重时保持零速，提供有效权重后重新启动节点。
 
-- `models/scene.xml`: quadrotor and tree-lined park MJCF / 四旋翼与林荫公园 MJCF
-- `config/simulation.yaml`: reproducible runtime parameters / 可复现运行参数
-- `launch/module.yaml`: ROS 2 Humble integration contract / ROS 2 Humble 集成契约
-- `mujoco_abandoned_park_uav_visual_steering/`: reusable Python interfaces / 可复用 Python 接口
-- `tests/`: behavioral and entry-point checks / 行为与入口检查
-- `train.py`, `model.py`: lightweight CNN training and checkpoint format / 轻量 CNN 训练与权重格式
-- `ros_node.py`, `launch/main.launch.py`: ROS 2 Humble image-to-Twist interface / ROS 2 Humble 图像转 Twist 接口
-- `evaluation.py`: straight, curve, and obstacle scenario comparison / 直道、弯道与障碍物场景对比
-- `navigation.py`: sensor occupancy mapping, A* navigation, and keyboard commands / 传感器占用建图、A* 导航与键盘控制
-- `slam.py`: synchronized odometry-plus-range SLAM and neural planning loop / 同步里程计、测距 SLAM 与神经网络规划闭环
-- `neural_navigation.py`: MLP local planner; A* is retained only as a baseline / MLP 局部规划器，A* 仅作为基线
-- `Dockerfile`: Ubuntu ROS 2 Humble image with CNN runtime dependencies / 含 CNN 运行依赖的 Ubuntu ROS 2 Humble 镜像
+The node publishes zero velocity when a valid checkpoint is unavailable, image decoding or inference fails, or the image stream exceeds the timeout threshold. A subsequent valid image can resume control after image-related faults. Without a checkpoint, the node remains stopped; restart it with a valid checkpoint to enable inference.
 
-## Coordinate and command convention / 坐标与指令约定
+## MuJoCo 三场景闭环评价 / Three-scenario MuJoCo closed-loop evaluation
 
-The path extends along positive Y. Positive normalized steering turns the vehicle to its right and negative steering turns left. The camera output contract is RGB8 at 320 x 180. Paths are resolved relative to `main.py`, so the command does not depend on the caller's working directory.
+`evaluation.py` 在直道、正弦曲道和带中心柱障碍的三种独立 MuJoCo 场景中评价控制器。每个初始横向偏移分别运行规则控制与 CNN 控制；CNN 在每一步从当前前视相机图像推理，再将动作送回仿真，生成自己的独立轨迹。
 
-步道沿 Y 轴正方向延伸。正归一化转向量使无人机右转，负值使其左转。相机输出接口为 320 x 180 的 RGB8 图像。所有路径均相对 `main.py` 解析，因此运行命令不依赖调用者的工作目录。
+`evaluation.py` evaluates the controllers in separate MuJoCo scenes containing a straight path, a sinusoidal curved path, and a center-column obstacle. Rule and CNN controllers run separately from each initial lateral offset. At every CNN step, the current forward-camera frame is inferred and the resulting action is applied to the simulation, producing an independent trajectory.
+
+```bash
+python main.py --mode evaluate \
+  --checkpoint models/weights/lightweight_steering_cnn.pt \
+  --output evaluation/scenarios.json
+```
+
+每回合记录位置、航向、标签、横向误差、前进距离及 CNN 推理次数。成功回合须同时满足：最大横向误差小于安全走廊界限、无人机中心到柱体中心的水平距离始终大于 0.5 m，以及沿 Y 方向的实际进度至少达到该时长理论前进距离的 60%。报告由这些轨迹统计平均横向误差和成功率，并记录权重 SHA-256；缺少权重时不生成 CNN 分数。
+
+Each episode records position, yaw, labels, lateral error, forward progress, and CNN inference count. Success requires all of the following: maximum lateral error below the safe corridor bound, horizontal UAV-to-column-center clearance greater than 0.5 m throughout the episode, and Y-axis progress of at least 60% of the theoretical forward distance for that duration. Mean lateral error and success rate are computed from these trajectories, with the checkpoint SHA-256 recorded. No CNN scores are produced without a checkpoint.
+
+## 建图与导航辅助接口 / Mapping and navigation helper interfaces
+
+`navigation.py` 提供占用栅格射线更新与四邻域 A* 基线；`slam.py` 积分里程计并把测距射线端点投影到全局栅格。`SynchronizedSlamNavigation.step` 顺序更新里程计、扫描和地图，再调用 MLP 局部策略。该接口处理给定的里程计和测距数据，不包含扫描匹配或回环优化。
+
+`navigation.py` provides occupancy-grid ray updates and a four-connected A* baseline. `slam.py` integrates odometry and projects range endpoints into the global grid. `SynchronizedSlamNavigation.step` updates odometry, scans, and the map in order before calling the local MLP policy. This interface consumes supplied odometry and range data; scan matching and loop-closure optimization are not part of it.
+
+导航 MLP 由 `train_neural_navigation.py` 使用 A* 首步监督训练。固定种子 `250102` 下，训练集为 1,200 张随机可达地图，留出测试集为 300 张地图，各训练 24 轮；训练准确率为 83.94%，留出地图准确率为 82.78%。保存的权重为 3,457 字节。
+
+`train_neural_navigation.py` trains the navigation MLP using A* first-step supervision. With fixed seed `250102`, training used 1,200 randomly generated reachable maps and evaluation used 300 held-out maps for 24 epochs; training accuracy was 83.94% and held-out-map accuracy was 82.78%. The saved checkpoint is 3,457 bytes.
+
+[建图与 A* 导航动图 / Mapping and A* navigation GIF](../../../docs/img/air/mujoco_abandoned_park_uav_visual_steering/mapping_navigation_demo.gif)
 
 

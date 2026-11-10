@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -47,6 +48,17 @@ def test_steering_changes_heading_and_lateral_position(
 def test_invalid_steering_is_rejected(configured_simulation: UavSimulation) -> None:
     with pytest.raises(ValueError, match="steering"):
         configured_simulation.step(1.01)
+
+
+def test_timestep_configuration_overrides_model_xml() -> None:
+    config = SimulationConfig.from_yaml(MODULE_ROOT / "config" / "simulation.yaml")
+    simulation = UavSimulation(MODULE_ROOT / "models" / "scene.xml", replace(
+        config, timestep_seconds=0.005
+    ))
+    assert simulation.model.opt.timestep == pytest.approx(0.005)
+    assert simulation.control_steps == 10
+    simulation.step()
+    assert simulation.state()["time_seconds"] == pytest.approx(0.05)
 
 
 def test_main_entry_runs_complete_simulation() -> None:
