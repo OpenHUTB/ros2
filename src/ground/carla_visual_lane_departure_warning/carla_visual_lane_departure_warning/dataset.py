@@ -129,12 +129,42 @@ def paint_score(gray, point, pose, k, half=1, offset=14):
     return float(centre - 0.5 * (left + right))
 
 
+def sway_steer(sway, freq, state, now, offset):
+    """采集时的闭环摆动：先探出转向符号，再按正弦目标做比例控制。
+
+    自动驾驶只会让车贴着车道中心跑，采出来的标签几乎全在 0 附近，网络最后
+    只能学会「永远输出 0」。采集时主动左右摆，偏移才能覆盖到 ±sway。
+    """
+    probe_frames = 15
+    probe_steer = 0.25
+    if not state['probed']:
+        if state['start'] is None:
+            state['start'] = offset
+        if state['count'] < probe_frames:
+            state['count'] += 1
+            return probe_steer
+        delta = offset - state['start']
+        state['sign'] = 1.0 if probe_steer * delta > 0 else -1.0
+        state['probed'] = True
+        return 0.0
+    target = sway * math.sin(2.0 * math.pi * freq * now)
+    return max(-0.6, min(0.6, state['sign'] * 0.9 * (target - offset)))
+
+
 def collect(args):
     """连 CARLA 采数据。图像与真值在同一帧取，逐帧配对。"""
     client, world = cc.connect(args.host, args.port, args.town)
     cc.enable_sync(world, args.dt)
     ego = cc.spawn_ego(world, client, args.vehicle, args.spawn_index)
     camera, frames = cc.attach_camera(world, ego, args.width, args.height, args.fov)
+
+    sway = getattr(args, 'sway', 0.0)
+    sway_state = {'sign': 0.0, 'start': None, 'probed': False, 'count': 0}
+    if sway > 0.0:
+        import carla
+        ego.set_autopilot(False)
+        print('[采集] 关闭自动驾驶，横向摆动 ±%.2f m，频率 %.2f Hz'
+              % (sway, args.sway_freq), flush=True)
 
     images, targets, speeds = [], [], []
     skipped_width = 0
@@ -146,13 +176,21 @@ def collect(args):
         for index in range(args.frames):
             world.tick()
             image = frames.get(timeout=5.0)
+
+            transform = ego.get_transform()
+            waypoint = world.get_map().get_waypoint(transform.location,
+                                                    project_to_road=True)
+            # 摆动每一拍都要施加，被 every 跳过的帧也不能撒手
+            if sway > 0.0:
+                ego.apply_control(carla.VehicleControl(
+                    throttle=args.throttle,
+                    steer=sway_steer(sway, args.sway_freq, sway_state,
+                                     index * args.dt,
+                                     lane_offset(waypoint, transform))))
             if index % args.every:
                 continue
 
             rgb = cc.image_to_array(image)
-            transform = ego.get_transform()
-            waypoint = world.get_map().get_waypoint(transform.location,
-                                                    project_to_road=True)
             left, right = boundary_targets(waypoint, transform)
             if not (2.8 < right - left < 4.2):
                 skipped_width += 1
