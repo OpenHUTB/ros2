@@ -85,6 +85,14 @@ class TestScanAndState(unittest.TestCase):
         pts = np.array([[2.5, 0.0, 0.0]], dtype=np.float32)
         self.assertAlmostEqual(min_obstacle_distance(pts), 2.5, places=4)
 
+    def test_scan_orientation_matches_ros(self):
+        # 机身右侧 y=+10 应落在 angle_min 端（ranges[0]），左侧 y=-10 落在另一端
+        pts = np.array([[0.0, 10.0, 0.0], [0.0, -10.0, 0.0]], dtype=np.float32)
+        ranges = extract_scan(pts, bins=180)
+        self.assertAlmostEqual(float(ranges[0]), 10.0, places=3)
+        self.assertAlmostEqual(float(ranges[-1]), 10.0, places=3)
+        self.assertAlmostEqual(float(ranges[90]), MAX_RANGE, places=3)
+
     def test_scan_angle_max_uses_bins_minus_one(self):
         # 180 个 1° 的采样点覆盖 [-90°, +89°]，而不是 [-90°, +90°]
         angle_min = math.radians(-FOV_DEG / 2.0)
