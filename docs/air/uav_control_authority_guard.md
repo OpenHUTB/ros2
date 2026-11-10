@@ -53,6 +53,12 @@ NOMINAL → REDUCED_AUTHORITY → CRITICAL_AUTHORITY → REDUCED_AUTHORITY → N
 
 故障段控制风险达到约 0.66，电机饱和接近 0.96；恢复后控制权限比例回到 0.95 左右。
 
+VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、8 项单元测试、两个节点启动、实际状态迁移和 CSV 尾部：
+
+![ROS 2 Humble 虚拟机控制权限实测终端](../img/air/uav_control_authority_guard/runtime_vm_terminal.png)
+
+根据同一轮 CSV 生成的控制权限曲线：
+
 ![ROS 2 Humble 实际控制权限状态](../img/air/uav_control_authority_guard/runtime_authority.png)
 
 ## 5. 限制
