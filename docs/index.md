@@ -134,6 +134,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
+* [刹车距离核算](./ground/braking_distance_check.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
