@@ -216,6 +216,7 @@ nav:
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - AirLib 传感器消息回归: './air/airlib_message_regression.md'
     - UAV mission energy budget: './air/uav_energy_budget.md'
+    - UAV wind triangle: './air/uav_wind_triangle.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
     - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
     - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
