@@ -5,19 +5,25 @@
 ----
 OpenHUTB 的空地一体模式（CarlaAir）把 CARLA 与 AirSim 合到同一个 UE4 进程里：
 CARLA 在 2000 端口，AirSim 在 41451 端口，两套 API 共享同一个世界。
-所以这个模块只用 AirSim 客户端飞无人机，同时借用 CARLA 客户端拍取证照片。
+本模块只用 AirSim 客户端飞无人机。
 
 流程
 ----
 1. 连接 AirSim，接管控制权（enableApiControl / armDisarm）；
-2. takeoff 到指定高度；
-3. 依次飞 4 个航点（相对起飞点的方形航线），每个航点记录到达误差与耗时；
-4. 回到起点上方悬停、降落；
-5. 输出 `flight_log.csv`（NED 位置/速度）、`trajectory.png`（3D 轨迹 + 俯视）、`summary.md`。
+2. takeoff 到指定高度，记录**起飞点**作为航点原点；
+3. 航点为「相对起飞点的东/北偏移」，依次飞越，途中由采样线程持续记录位置与速度；
+4. 每个航点用**三维**误差（含高度）判定到达，要求连续 N 次采样都在容差内；
+5. 回到起飞点上方悬停、降落；
+6. 输出 flight_log.csv（全程采样）、trajectory.png（3D + 俯视）、summary.md。
+
+依赖（版本敏感）
+----------------
+    pip install msgpack-rpc-python "msgpack<1.0" "tornado<5"
+msgpack>=1 去掉了 `encoding` 参数、tornado>=5 去掉了 `tornado.platform.auto`，
+msgpackrpc 0.4.1 两者都不兼容；缺依赖时本模块会给出明确提示而不是抛 ImportError。
 
 运行
 ----
-    # 先用 CarlaAir 模式启动仿真器（带 settings.json 的 Multirotor 配置）
     python main.py --host 127.0.0.1
 """
 import argparse
@@ -52,12 +58,12 @@ def _output_root():
 
 DEFAULT_PARAMS = _resolve_params()
 
-# msgpack-rpc-python 0.4.1（AirSim 的 RPC 依赖）只兼容 tornado<5，
-# 而系统 Python 里装的是 tornado 6（Jupyter 需要）。把 tornado 4.5.3 放在 deps/ 里，
-# 只对本模块生效，不动系统环境。
-DEPS = os.path.join(HERE, "deps")
-if os.path.isdir(DEPS) and DEPS not in sys.path:
-    sys.path.insert(0, DEPS)
+DEP_HINT = (
+    "[uav] 缺少 AirSim 客户端依赖。请安装：\n"
+    "      pip install msgpack-rpc-python \"msgpack<1.0\" \"tornado<5\"\n"
+    "      （msgpack>=1 去掉了 encoding 参数、tornado>=5 去掉了 tornado.platform.auto，\n"
+    "        msgpackrpc 0.4.1 都不兼容）"
+)
 
 
 def load_params(path):
@@ -69,8 +75,8 @@ def build_argparser():
     p = argparse.ArgumentParser(description="AirSim 无人机航点飞行实验")
     p.add_argument("--host", default=None, help="AirSim RPC 主机")
     p.add_argument("--port", type=int, default=None, help="AirSim RPC 端口")
-    p.add_argument("--save-dir", default=None)
-    p.add_argument("--params", default=DEFAULT_PARAMS)
+    p.add_argument("--save-dir", default=None, help="证据输出目录")
+    p.add_argument("--params", default=DEFAULT_PARAMS, help="参数文件")
     return p
 
 
@@ -84,9 +90,17 @@ def merge_params(cfg, args):
     return cfg
 
 
-def connect(host, port, timeout=20.0):
+def import_airsim():
+    try:
+        import airsim  # noqa: WPS433
+        return airsim
+    except Exception as exc:                      # noqa: BLE001
+        print(DEP_HINT)
+        raise SystemExit("import airsim 失败: %r" % (exc,))
+
+
+def connect(airsim, host, port, timeout=20.0):
     """连 AirSim；OpenHUTB 的 AirSim 端口要等无人机世界加载完才可用，所以带重试。"""
-    import airsim
     client = airsim.MultirotorClient(ip=host, port=port, timeout_value=timeout)
     for attempt in range(10):
         try:
@@ -99,14 +113,6 @@ def connect(host, port, timeout=20.0):
     raise RuntimeError("AirSim RPC 连不上，确认仿真器是用 CarlaAir 模式（Multirotor）启动的")
 
 
-def planar_error(position, target_xy):
-    """航点到目标的平面距离（纯函数，便于单元测试）。
-
-    position: (x, y, z)，NED 坐标；target_xy: (x, y)
-    """
-    return math.hypot(position[0] - target_xy[0], position[1] - target_xy[1])
-
-
 def position_of(client):
     kin = client.getMultirotorState().kinematics_estimated
     p = kin.position
@@ -114,7 +120,21 @@ def position_of(client):
     return (p.x_val, p.y_val, p.z_val), (v.x_val, v.y_val, v.z_val)
 
 
-def save_plot(rows, waypoints, out_png, meta):
+def distance_3d(position, target):
+    """三维距离（含高度）。纯函数，便于单元测试。
+
+    position: (x, y, z)，NED；target: (x, y, z)
+    """
+    return math.sqrt(sum((position[i] - target[i]) ** 2 for i in range(3)))
+
+
+def absolute_waypoints(home, offsets, altitude):
+    """把「相对起飞点的水平偏移」换算成 NED 绝对目标点。纯函数，便于单元测试。"""
+    return [(home[0] + float(dx), home[1] + float(dy), -abs(float(altitude)))
+            for dx, dy in offsets]
+
+
+def save_plot(rows, waypoints, home, out_png, meta):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -125,26 +145,26 @@ def save_plot(rows, waypoints, out_png, meta):
 
     fig = plt.figure(figsize=(11, 5))
     ax1 = fig.add_subplot(1, 2, 1, projection="3d")
-    ax1.plot(xs, ys, zs, color="#2c7fb8", lw=1.6)
-    ax1.scatter([0], [0], [0], marker="^", c="#f39c12", s=80, label="start")
-    for i, (wx, wy) in enumerate(waypoints):
-        ax1.scatter([wx], [wy], [meta["altitude"]], c="#c0392b", s=40)
-        ax1.text(wx, wy, meta["altitude"], "W%d" % (i + 1), fontsize=8)
+    ax1.plot(xs, ys, zs, color="#2c7fb8", lw=1.4, label="flight path")
+    ax1.scatter([home[0]], [home[1]], [meta["altitude"]], marker="^", c="#f39c12", s=70, label="takeoff")
+    for i, (wx, wy, wz) in enumerate(waypoints):
+        ax1.scatter([wx], [wy], [-wz], c="#c0392b", s=30)
+        ax1.text(wx, wy, -wz, "W%d" % (i + 1), fontsize=8)
     ax1.set_xlabel("east x (m)")
     ax1.set_ylabel("north y (m)")
     ax1.set_zlabel("altitude (m)")
-    ax1.set_title("3D trajectory")
+    ax1.set_title("3D trajectory (%d samples)" % len(rows))
     ax1.legend(fontsize=8)
 
     ax2 = fig.add_subplot(1, 2, 2)
-    ax2.plot(xs, ys, color="#2c7fb8", lw=1.6, label="flight path")
-    ax2.scatter([0], [0], marker="^", c="#f39c12", s=80, label="start")
-    for i, (wx, wy) in enumerate(waypoints):
-        ax2.scatter([wx], [wy], c="#c0392b", s=40)
+    ax2.plot(xs, ys, color="#2c7fb8", lw=1.4, label="flight path")
+    ax2.scatter([home[0]], [home[1]], marker="^", c="#f39c12", s=70, label="takeoff")
+    for i, (wx, wy, _wz) in enumerate(waypoints):
+        ax2.scatter([wx], [wy], c="#c0392b", s=30)
         ax2.text(wx + 0.6, wy + 0.6, "W%d" % (i + 1), fontsize=8)
     ax2.set_xlabel("east x (m)")
     ax2.set_ylabel("north y (m)")
-    ax2.set_title("top view: max arrival error %.2f m" % meta["max_error"])
+    ax2.set_title("top view: max 3D arrival error %.2f m" % meta["max_error"])
     ax2.grid(alpha=.3)
     ax2.set_aspect("equal", adjustable="box")
     ax2.legend(fontsize=8)
@@ -157,8 +177,7 @@ def _hutb_client_installed():
     """只有装了配套 hutb 客户端，才敢去连 OpenHUTB 的 CARLA 端口。
 
     上游 carla 客户端（0.9.13/0.9.15/0.9.16）与 OpenHUTB 2.10.x 协议不兼容，
-    会在 get_world() 处 std::bad_alloc 直接 abort（进程级崩溃，Python 捕获不到），
-    所以这里先判断，避免把一次可选截图变成整个实验的崩溃。
+    会在 get_world() 处 std::bad_alloc 直接 abort（进程级崩溃，Python 捕获不到）。
     """
     try:
         import importlib.metadata as md
@@ -191,14 +210,103 @@ def capture_from_carla(cfg, save_path):
         return None
 
 
+def fly_to(client, target, cfg, sampler_rows, phase, t0):
+    """下发一次位置指令后，在主循环里边采样边等到达（不做后台线程 RPC）。
+
+    返回 (最终三维误差, 是否闭锁到达, 耗时)。moveToPositionAsync 不 join：
+    指令已在飞控里执行，我们只负责轮询状态，避免阻塞导致无法采样。
+    """
+    flight = cfg["flight"]
+    tol = float(flight["arrive_tolerance"])
+    hits_needed = int(flight.get("consecutive_hits", 3))
+    interval = float(flight.get("log_interval", 0.1))
+    timeout = float(flight["timeout_per_waypoint"])
+
+    try:
+        client.moveToPositionAsync(target[0], target[1], target[2], float(flight["speed"]))
+    except Exception as exc:                    # noqa: BLE001
+        print("[uav] 位置指令异常: %s" % exc)
+
+    t_wp = time.time()
+    deadline = t_wp + timeout
+    err = float("inf")
+    hits = 0
+    while time.time() < deadline:
+        p, v = position_of(client)
+        err = distance_3d(p, target)
+        hits = hits + 1 if err <= tol else 0
+        sampler_rows.append({"t": round(time.time() - t0, 3), "phase": phase,
+                             "x": round(p[0], 3), "y": round(p[1], 3), "z": round(p[2], 3),
+                             "vx": round(v[0], 3), "vy": round(v[1], 3), "vz": round(v[2], 3),
+                             "err": round(err, 3)})
+        if hits >= hits_needed:
+            # 进入容差后先下发悬停指令（把速度压到 0），再观察 settle_time 秒取中位误差，
+            # 否则「飞越航点」过程中的瞬时距离会被误当成到达精度。
+            try:
+                client.hoverAsync()
+            except Exception:                  # noqa: BLE001
+                pass
+            settle = float(flight.get("settle_time", 1.5))
+            t_settle = time.time()
+            settled = []
+            while time.time() - t_settle < settle:
+                p2, v2 = position_of(client)
+                e2 = distance_3d(p2, target)
+                settled.append(e2)
+                sampler_rows.append({"t": round(time.time() - t0, 3), "phase": phase + "_settle",
+                                     "x": round(p2[0], 3), "y": round(p2[1], 3), "z": round(p2[2], 3),
+                                     "vx": round(v2[0], 3), "vy": round(v2[1], 3), "vz": round(v2[2], 3),
+                                     "err": round(e2, 3)})
+                time.sleep(interval)
+            settled.sort()
+            median = settled[len(settled) // 2] if settled else err
+            # 稳态偏差修正：AirSim 内置位置控制在悬停时有约 1 m 的稳态偏差，
+            # 这里按实测偏差把目标点反向补偿一次/两次，再复测（类似位置环的积分项）。
+            corrections = 0
+            while median > float(flight.get("fine_tolerance", 0.5)) and corrections < 2:
+                p3, _v3 = position_of(client)
+                tx = target[0] + (target[0] - p3[0])
+                ty = target[1] + (target[1] - p3[1])
+                tz = target[2] + (target[2] - p3[2])
+                try:
+                    client.moveToPositionAsync(tx, ty, tz, float(flight["speed"]))
+                except Exception:              # noqa: BLE001
+                    break
+                time.sleep(0.5)
+                try:
+                    client.hoverAsync()
+                except Exception:              # noqa: BLE001
+                    pass
+                settled = []
+                t_settle = time.time()
+                while time.time() - t_settle < settle:
+                    p4, v4 = position_of(client)
+                    e4 = distance_3d(p4, target)
+                    settled.append(e4)
+                    sampler_rows.append({"t": round(time.time() - t0, 3),
+                                         "phase": phase + "_fix%d" % (corrections + 1),
+                                         "x": round(p4[0], 3), "y": round(p4[1], 3), "z": round(p4[2], 3),
+                                         "vx": round(v4[0], 3), "vy": round(v4[1], 3), "vz": round(v4[2], 3),
+                                         "err": round(e4, 3)})
+                    time.sleep(interval)
+                settled.sort()
+                median = settled[len(settled) // 2] if settled else median
+                corrections += 1
+            return median, True, time.time() - t_wp
+        time.sleep(interval)
+    return err, False, time.time() - t_wp
+
+
 def run(cfg):
+    airsim = import_airsim()
     out_cfg = cfg["output"]
     save_dir = os.path.join(_output_root(), out_cfg["save_dir"])
     os.makedirs(save_dir, exist_ok=True)
     sim = cfg["simulator"]
     flight = cfg["flight"]
+    ev = cfg["evaluation"]
 
-    client = connect(sim["host"], int(sim["airsim_port"]))
+    client = connect(airsim, sim["host"], int(sim["airsim_port"]))
 
     print("[uav] 接管控制权")
     client.enableApiControl(True)
@@ -210,75 +318,94 @@ def run(cfg):
     client.moveToZAsync(-altitude, float(flight["speed"])).join()
     time.sleep(1.0)
 
+    home, _ = position_of(client)
+    offsets = [(float(w[0]), float(w[1])) for w in flight["waypoints"]]
+    waypoints = absolute_waypoints(home, offsets, altitude)
+    print("[uav] 起飞点 NED=(%.2f, %.2f, %.2f)，航点为相对起飞点偏移 %s"
+          % (home[0], home[1], home[2], offsets))
+
     rows = []
     t0 = time.time()
-    waypoints = [(float(w[0]), float(w[1])) for w in flight["waypoints"]]
     errors = []
     durations = []
-
-    def sample(phase):
-        p, v = position_of(client)
-        rows.append({"t": round(time.time() - t0, 3), "phase": phase,
-                     "x": round(p[0], 3), "y": round(p[1], 3), "z": round(p[2], 3),
-                     "vx": round(v[0], 3), "vy": round(v[1], 3), "vz": round(v[2], 3)})
-
-    sample("takeoff")
+    reached = []
+    max_flight = float(flight.get("max_flight_time", 150.0))
 
     try:
-        for i, (wx, wy) in enumerate(waypoints):
-            wp_t0 = time.time()
-            print("[uav] 飞往航点 %d/%d (%.1f, %.1f)" % (i + 1, len(waypoints), wx, wy))
-            client.moveToPositionAsync(wx, wy, -altitude, float(flight["speed"])).join()
-            # 到达判定：连续采样直到进入容差或超时
-            deadline = time.time() + float(flight["timeout_per_waypoint"])
-            err = float("inf")
-            while time.time() < deadline:
-                p, _v = position_of(client)
-                err = planar_error(p, (wx, wy))
-                sample("wp%d" % (i + 1))
-                if err <= float(flight["arrive_tolerance"]):
-                    break
-                time.sleep(float(flight["log_interval"]))
+        for i, target in enumerate(waypoints):
+            elapsed = time.time() - t0
+            if elapsed > max_flight:
+                print("[uav] 超过总飞行时限 %.0f s，中止" % max_flight)
+                break
+            print("[uav] 飞往航点 %d/%d：相对起飞点偏移 (%.1f, %.1f)"
+                  % (i + 1, len(waypoints), offsets[i][0], offsets[i][1]))
+            err, ok_wp, dur = fly_to(client, target, cfg, rows, "wp%d" % (i + 1), t0)
             errors.append(err)
-            durations.append(time.time() - wp_t0)
-            print("[uav] 航点 %d 到达误差 %.2f m，耗时 %.1f s" % (i + 1, err, durations[-1]))
+            durations.append(dur)
+            reached.append(ok_wp)
+            print("[uav] 航点 %d 三维到达误差 %.2f m（容差 %.1f m），%s，耗时 %.1f s"
+                  % (i + 1, err, float(flight["arrive_tolerance"]),
+                     "已闭锁到达" if ok_wp else "超时未闭锁", dur))
 
-        print("[uav] 返回起点上方并降落")
-        client.moveToPositionAsync(0, 0, -altitude, float(flight["speed"])).join()
-        sample("return")
+        print("[uav] 返回起飞点上方并降落")
+        client.moveToPositionAsync(home[0], home[1], -altitude, float(flight["speed"]))
+        deadline = time.time() + 20.0
+        while time.time() < deadline:
+            p, v = position_of(client)
+            rows.append({"t": round(time.time() - t0, 3), "phase": "return",
+                         "x": round(p[0], 3), "y": round(p[1], 3), "z": round(p[2], 3),
+                         "vx": round(v[0], 3), "vy": round(v[1], 3), "vz": round(v[2], 3),
+                         "err": round(distance_3d(p, (home[0], home[1], -altitude)), 3)})
+            if distance_3d(p, (home[0], home[1], -altitude)) <= float(flight["arrive_tolerance"]):
+                break
+            time.sleep(float(flight.get("log_interval", 0.1)))
         client.landAsync().join()
         time.sleep(2.0)
-        sample("landed")
+        p, v = position_of(client)
+        rows.append({"t": round(time.time() - t0, 3), "phase": "landed",
+                     "x": round(p[0], 3), "y": round(p[1], 3), "z": round(p[2], 3),
+                     "vx": round(v[0], 3), "vy": round(v[1], 3), "vz": round(v[2], 3),
+                     "err": 0.0})
     finally:
         client.armDisarm(False)
         client.enableApiControl(False)
 
     with open(os.path.join(save_dir, "flight_log.csv"), "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(fh, fieldnames=["t", "phase", "x", "y", "z", "vx", "vy", "vz", "err"])
         writer.writeheader()
         writer.writerows(rows)
 
     max_error = max(errors) if errors else -1.0
-    total_time = rows[-1]["t"]
+    total_time = rows[-1]["t"] if rows else 0.0
     meta = {"max_error": max_error, "altitude": altitude}
-    save_plot(rows, waypoints, os.path.join(save_dir, "trajectory.png"), meta)
+    save_plot(rows, waypoints, home, os.path.join(save_dir, "trajectory.png"), meta)
 
     map_name = capture_from_carla(cfg, os.path.join(save_dir, "spectator.png"))
 
+    all_reached = (len(errors) == len(waypoints) and all(reached)
+                   and max_error <= float(ev["pass_max_error"]))
     with open(os.path.join(save_dir, "summary.md"), "w", encoding="utf-8") as fh:
         fh.write("无人机航点飞行实验摘要\n")
-        fh.write("地图: %s\n" % (map_name or "n/a"))
-        fh.write("航点: %s\n" % waypoints)
+        fh.write("地图: %s\n" % (map_name or "n/a（未安装 hutb 客户端，跳过 CARLA 截图）"))
+        fh.write("起飞点 NED: (%.2f, %.2f, %.2f)\n" % home)
+        fh.write("航点（相对起飞点偏移）: %s\n" % offsets)
         fh.write("巡航高度: %.1f m，巡航速度: %.1f m/s\n" % (altitude, float(flight["speed"])))
-        fh.write("各航点到达误差(m): %s\n" % ", ".join("%.2f" % e for e in errors))
+        fh.write("到达判定: 三维误差 <= %.1f m 且连续 %d 次采样命中；单点超时 %.0f s，总时长上限 %.0f s\n"
+                 % (float(flight["arrive_tolerance"]), int(flight.get("consecutive_hits", 3)),
+                    float(flight["timeout_per_waypoint"]), max_flight))
+        fh.write("各航点三维到达误差(m): %s\n" % ", ".join("%.2f" % e for e in errors))
+        fh.write("各航点是否闭锁到达: %s\n" % ", ".join("是" if r else "否" for r in reached))
         fh.write("各航点耗时(s): %s\n" % ", ".join("%.1f" % d for d in durations))
-        fh.write("全程耗时: %.1f s，采样点: %d\n" % (total_time, len(rows)))
-        fh.write("最大到达误差: %.2f m\n" % max_error)
+        fh.write("全程时长: %.1f s，采样点: %d（间隔 %.2f s）\n"
+                 % (total_time, len(rows), float(flight.get("log_interval", 0.1))))
+        fh.write("最大三维到达误差: %.2f m（PASS 阈值 %.2f m）\n"
+                 % (max_error, float(ev["pass_max_error"])))
+        fh.write("结论: %s\n" % ("PASS" if all_reached else "FAIL"))
 
-    ok = errors and max_error <= 3.0
-    print("[uav] 最大到达误差 %.2f m，全程 %.1f s" % (max_error, total_time))
-    print("[uav] 结论：%s" % ("PASS（航点全部到达）" if ok else "FAIL（有航点未能到达）"))
-    return 0 if ok else 1
+    print("[uav] 最大三维到达误差 %.2f m（阈值 %.2f m），全程 %.1f s，采样 %d 点"
+          % (max_error, float(ev["pass_max_error"]), total_time, len(rows)))
+    print("[uav] 结论：%s" % ("PASS（航点全部到达）" if all_reached else "FAIL（有航点未能到达）"))
+    return 0 if all_reached else 1
 
 
 def main():
