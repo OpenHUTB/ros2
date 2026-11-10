@@ -51,10 +51,20 @@
 <li class="toctree-l2"><a class="reference internal" href="#5">5. 空域载具 </a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 水域载具  </a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">感知</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">规划</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_3">控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_4">其他（环境、接口与容器）</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#7">7. 经典控制 </a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
+<li class="toctree-l2"><a class="reference internal" href="#_5">参考文献</a>
 </li>
 </ul>
 </li>
@@ -1074,6 +1084,67 @@
 </li>
 </ul>
 <h2 id="6">6. 水域载具  <span id="water_vehicle"></span></h2>
+<h3 id="_1">感知</h3>
+<ul>
+<li>
+<p><a href="water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a></p>
+</li>
+<li>
+<p><a href="water/rov_apriltag_cruise/">水下 ROV AprilTag 视觉定位与定点巡航仿真</a></p>
+</li>
+<li>
+<p><a href="water/rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a></p>
+</li>
+<li>
+<p><a href="water/rov_pipeline_follow/">水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）</a> —— 140° 广角前视相机 + 逐列深度，色度编码应答器做 EKF-SLAM，级联控制沿管道偏置 0.9 m 完成 A→B→A 往返；四场景（直管/弯管/横流/浑水）× 五策略对比，含 CNN 感知与端到端策略消融</p>
+</li>
+<li>
+<p><a href="water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a></p>
+</li>
+<li>
+<p><a href="water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a></p>
+</li>
+<li>
+<p><a href="water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）</a> —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点</p>
+</li>
+<li>
+<p><a href="water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a> —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点</p>
+</li>
+</ul>
+<h3 id="_2">规划</h3>
+<ul>
+<li>
+<p><a href="water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a></p>
+</li>
+<li>
+<p><a href="water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a></p>
+</li>
+<li>
+<p><a href="water/water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a></p>
+</li>
+</ul>
+<h3 id="_3">控制</h3>
+<ul>
+<li>
+<p><a href="water/holoocean_examples/">水域载具示例（手柄 / 航点 / 深度航向指令）</a> —— 多代理手柄控制、相机 HUD 与配置文件结构</p>
+</li>
+<li>
+<p><a href="water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a></p>
+</li>
+<li>
+<p><a href="water/rov_handling_eval/">水下 ROV 六自由度手操与抗流能力评测仿真</a> —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验</p>
+</li>
+<li>
+<p><a href="water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a></p>
+</li>
+<li>
+<p><a href="water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a></p>
+</li>
+<li>
+<p><a href="water/mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a></p>
+</li>
+</ul>
+<h3 id="_4">其他（环境、接口与容器）</h3>
 <ul>
 <li>
 <p><a href="water/HoloOcean/">水域载具 ROS2 接口</a></p>
@@ -1090,58 +1161,6 @@
 <li>
 <p><a href="water/docker_runtime/">HoloOcean ROS2 运行时容器</a> —— 用 <code>build_container.sh</code> 构建运行时镜像</p>
 </li>
-<li>
-<p><a href="water/holoocean_examples/">水域载具示例（手柄 / 航点 / 深度航向指令）</a> —— 多代理手柄控制、相机 HUD 与配置文件结构</p>
-</li>
-<li>
-<p><a href="water/rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a></p>
-</li>
-<li>
-<p><a href="water/rov_handling_eval/">水下 ROV 六自由度手操与抗流能力评测仿真</a> —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验</p>
-</li>
-<li>
-<p><a href="water/rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a></p>
-</li>
-<li>
-<p><a href="water/rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a></p>
-</li>
-<li>
-<p><a href="water/rov_apriltag_cruise/">水下 ROV AprilTag 视觉定位与定点巡航仿真</a></p>
-</li>
-<li>
-<p><a href="water/rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a></p>
-</li>
-<li>
-<p><a href="water/underwater_sonar_mapping/">新增水下三维地形测绘模块</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a></p>
-</li>
-<li>
-<p><a href="water/mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a></p>
-</li>
-<li><a href="water/water_vision_enhancement/">浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）</a> —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点</li>
-<li>
-<p><a href="water/water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a></p>
-</li>
-<li>
-<p><a href="water/usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a> —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点</p>
-</li>
-<li>
-<p><a href="water/rov_pipeline_follow/">水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）</a> —— 140° 广角前视相机 + 逐列深度，色度编码应答器做 EKF-SLAM，级联控制沿管道偏置 0.9 m 完成 A→B→A 往返；四场景（直管/弯管/横流/浑水）× 五策略对比，含 CNN 感知与端到端策略消融</p>
-</li>
 </ul>
 <hr/>
 <p>如果对文档中的任何问题可以在 <a href="https://github.com/OpenHUTB/ros2">本文档的源码仓库</a> 中的 <a href="https://github.com/OpenHUTB/ros2/issues">问题</a> 页面讨论或者提交 <a href="https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md">拉取请求</a> 直接修改文档。</p>
@@ -1150,7 +1169,7 @@
 <ul>
 <li><a href="classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR 最优控制)</a> —— 用 LQR 让倒立摆从倾斜被拉回竖直保持不倒,演示 ROS 发布/订阅闭环与最优控制</li>
 </ul>
-<h2 id="_1">参考文献</h2>
+<h2 id="_5">参考文献</h2>
 <div class="footnote">
 <hr/>
 <ol>
