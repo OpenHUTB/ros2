@@ -6,7 +6,7 @@
   <description>基于 YOLOv8 的行人隐私脱敏 ROS 2 节点：检测静态图片中的行人，对包围盒做高斯模糊，并发布原图与脱敏图两个压缩图像话题。</description>
 
   <!-- TODO: 换成真实姓名与邮箱，仓库检查项要求维护信息真实 -->
-  <maintainer email="your_name@example.com">Your Name</maintainer>
+  <maintainer email="2754586324@qq.com">Xavier-101666</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
