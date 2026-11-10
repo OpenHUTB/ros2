@@ -317,6 +317,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
+* [AirSim 无人机碰撞时间 TTC 预测（CNN）](./air/uav_airsim_ttc_predictor.md) —— 前视深度 64×64 进，手写 CNN 出 TTC 秒数，实飞 MAE 1.36 s
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
