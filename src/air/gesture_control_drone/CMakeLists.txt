@@ -20,6 +20,7 @@ catkin_install_python(PROGRAMS
   scripts/drone_control_node.py
   scripts/gesture_demo.py
   scripts/record_gesture_session.py
+  scripts/gesture_train.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
