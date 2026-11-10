@@ -48,7 +48,7 @@ PYTHONPATH 指向 `PythonClient`，不是 Unity 工程。Python 3.13 不适合�
 
 **高度必须按实测巡航高度换算。** `After climb` 打印的是**机体**的 NED 高度 `z`，不是相机高度。前视相机 0 装在机体原点上方约 **0.49 m**（本机用 `simGetCameraInfo` 与 `getMultirotorState` 实测：机体 z=-0.761 时相机 z=-1.253），所以相机世界高度 ≈ `|z| + 0.49`。2026-11-09 两次实飞 `z≈-5.0~-5.3`，相机约 5.5~5.8 m；6 m 矮墙顶只比相机高约 0.2~0.5 m，`flight.csv` 的 `top_height_m` 0.04~0.11 m 与之一致（顶边像素混叠会再低一两行，约 0.09 m/行）。
 
-第 3 节先空场景飞一次读 `z`，再按 `墙顶 Y ≈ |z| + 0.5 ~ 1.0`（相机上方 0~0.5 m）放墙；`柱顶 Y ≈ |z| + 4`（相机上方约 3.5 m，`climb_needed` 约 5.6 m，超出 `--max-climb 4.5` 判为太高）。模块连接时用 `simGetCameraInfo` 实测相机偏移，并把它计入 `climb_needed` 和 committed 目标——否则实际净空会比配置的 `机体半径 + 安全间距` 少 0.49 m。墙顶比相机高 0~1.5 m 都能越；高于约 2.4 m（即高于 `|z| + 2.9`）时超出 `--max-climb 4.5`，直接判为太高；顶边低于相机超过约 2.1 m（机体半径+间距）时 `climb_needed` 归零、不再抬升。四周至少留 5 m 空旷，飞行高度内不要放其他物体。
+第 3 节先空场景飞一次读 `z`，再按 `墙顶 Y ≈ |z| + 0.5 ~ 1.0`（相机上方 0~0.5 m）放墙；`柱顶 Y ≈ |z| + 4`（相机上方约 3.51 m，`climb_needed` ≈ 3.51 + 0.49 + 2.1 ≈ 6.1 m，超出 `--max-climb 4.5` 判为太高）。模块连接时用 `simGetCameraInfo` 实测相机偏移（0.49 m），并把它计入 `climb_needed` 和 committed 目标——否则实际净空会比配置的 `机体半径 + 安全间距` 少 0.49 m。按 `--max-climb 4.5`，能越的顶边最多比相机高 4.5 − 0.49 − 2.1 ≈ 1.9 m，即墙顶高于 `|z| + 2.4` 时判太高；顶边低于相机超过 0.49 + 2.1 ≈ 2.6 m 时 `climb_needed` 归零、不再抬升。四周至少留 5 m 空旷，飞行高度内不要放其他物体。
 
 航线取 Unity `X=-320`（即 `--goal-y 0`）。墙在 `Z=227`，目标取北向 +20 m（Unity `Z=232`），保证越过墙体后再到点。
 
@@ -85,7 +85,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 & .\src\air\airsim_height_aware_overfly\launch\run_demo.ps1 -Python $pythonExe -AirSimClient (Join-Path $airSimRoot 'PythonClient')
 ```
 
-`--altitude 3` 是起飞后再升高 3 m，不是绝对离地高度；`--max-climb 4.5` 是单次越障允许的最大抬升，必须大于 `机体半径 + 安全间距 + 障碍顶边`（默认 0.6+1.5=2.1 m，再加顶边高度）。`--max-altitude 10` 是相对起飞点的绝对上限，须大于 `altitude + max_climb`。
+`--altitude 3` 是起飞后再升高 3 m，不是绝对离地高度；`--max-climb 4.5` 是单次越障允许的最大抬升，必须大于 `机体半径 + 安全间距 + 相机偏移 + 障碍顶边`（0.6 + 1.5 + 0.49 ≈ 2.6 m，再加顶边高度）。`--max-altitude 10` 是相对起飞点的绝对上限，须大于 `altitude + max_climb`。
 
 变体 A 的预期终端顺序：
 
@@ -94,7 +94,7 @@ advance ... → overfly_obstacle（top≈0~1.0 m，本机 0.04~0.11，overhead>0
 Overfly committed: climb ≈ top + 0.49（相机偏移）+ 2.1 m ≈ 2.6 m
 overfly_obstacle: forward=0.00 ... lift 逐帧上升
 overfly_obstacle: forward>0 ... 越过墙顶
-Overfly completed (1); holding 3.1 m for 5.0 m past the obstacle
+Overfly completed (1); holding 2.6 m for 5.0 m past the obstacle
 advance ...（保持越障高度继续飞行）
 Overfly hold complete; descending to cruise altitude
 Goal reached

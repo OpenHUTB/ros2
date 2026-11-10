@@ -93,7 +93,7 @@ overfly_ok   = armed
 | `--ground-rows` | 12 | 图像底部按地面处理的行数 |
 | `--timeout` | 180 | 任务超时，秒 |
 
-复现命令为了给墙高标定留 ±0.5 m 余量，显式使用 `--max-climb 4.5 --max-altitude 10`；默认值 3.5/7 对应更紧的预算。`max-climb` 必须大于 `vehicle-radius + safety-margin + 顶边高度`，否则永远不会触发越障。
+复现命令为了给墙高标定留 ±0.5 m 余量，显式使用 `--max-climb 4.5 --max-altitude 10`；默认值 3.5/7 对应更紧的预算。`max-climb` 必须大于 `vehicle-radius + safety-margin + 相机偏移 + 顶边高度`（0.6 + 1.5 + 0.49 ≈ 2.6 m，再加顶边），否则永远不会触发越障。
 
 ## 4. 离线验证（已完成）
 
