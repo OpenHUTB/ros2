@@ -47,6 +47,22 @@ def test_summarize_detects_out_of_order():
             _row(1, 1_010_000_000, gap=-1)]
     summary = summarize(rows)
     assert summary['out_of_order'] == 1
+    # 乱序不等于丢包：0/1/2 全部到达，missing 必须为 0
+    assert summary['missing'] == 0
+    assert summary['expected'] == 3
+
+
+def test_reordering_does_not_inflate_missing():
+    """按 gap 累加会把乱序报文重复计为丢失，去了重之后不应虚高。"""
+    seqs = (1, 2, 3, 6, 5, 7)
+    rows = [_row(seqs[0], 1_000_000_000, gap=seqs[0] + 1)]
+    for prev, cur in zip(seqs, seqs[1:]):
+        rows.append(_row(cur, 1_000_000_000 + 5_000_000 * len(rows),
+                         gap=cur - prev))
+    summary = summarize(rows)
+    assert summary['missing'] == 2  # 只缺 0 与 4
+    assert summary['expected'] == 8
+    assert summary['out_of_order'] == 1
 
 
 def test_summarize_latency_extremes():
