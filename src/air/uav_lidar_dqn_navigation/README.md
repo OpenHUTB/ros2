@@ -11,9 +11,9 @@ AirSim + ROS Noetic。模块最终包含四项能力：
 与监督式回归方案不同，本模块的控制器全部由**强化学习**训练得到：智能体在
 AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍”为奖励信号优化策略。
 
-本 PR 在模块骨架之上加入雷达感知层：24 扇区特征提取、180° 累积扫描发布，
-以及对应的启动文件。DQN 训练与部署、建图、端到端控制按依赖顺序在后续 PR 中
-逐层加入，README 与模块文档随之下沉。
+本 PR 在感知层之上加入 DQN 策略训练：Dueling Double DQN 网络、经验回放、
+目标网络与 ε-greedy 探索，训练好的权重落在 `models/`。DQN 部署、建图、
+端到端控制按依赖顺序在后续 PR 中逐层加入，README 与模块文档随之下沉。
 
 ## 运行环境
 
@@ -23,7 +23,7 @@ AirSim 场景里自行探索，以“接近目标、朝向对齐、避开障碍�
 | 系统 | Ubuntu 20.04（WSL2 亦可） |
 | ROS | Noetic |
 | Python | 3.8 |
-| 依赖 | numpy、msgpack-rpc-python |
+| 依赖 | numpy、torch>=1.13、msgpack-rpc-python |
 
 AirSim 与 ROS 的通信走 msgpack-rpc（默认 41451 端口）。WSL2 下需要把
 `airsim_ip` 设为 Windows 主机在 WSL 网段里的地址（`/proc/net/route` 的网关）。
@@ -73,6 +73,50 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
   静态 TF，单独检出本 PR 也能在 RViz 里正常显示。完整建图链路（`map->odom`
   由 gmapping 提供）见 PR #922。
 
+## 训练
+
+任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
+上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
+网络为 Dueling 结构（128-128），训练用 Double DQN 目标、经验回放与 Huber 损失。
+
+奖励由四部分组成：距离进度、朝向对齐、时间惩罚、近障惩罚。1.2 m 内障碍
+按距离线性扣分；0.5 m 内按事故终止（-20），避免策略学到“贴墙继续飞”。
+
+```bash
+# 一键训练（200 回合）
+roslaunch uav_lidar_dqn_navigation train.launch episodes:=200
+
+# 等价的手动方式
+rosrun uav_lidar_dqn_navigation train_dqn_nav.py --episodes 200
+rosrun uav_lidar_dqn_navigation main.py --mode train --episodes 200
+```
+
+训练日志写入 `models/train_nav_log.csv`（每回合一行，含 success / collision /
+near_miss），随仓库一起提交。权重约定：
+
+| 文件 | 含义 |
+| --- | --- |
+| `dqn_nav.pt` | 当前最佳（近 20 回合成功率最高），部署默认加载 |
+| `dqn_nav_best.pt` | 同上，显式保留一份 |
+| `dqn_nav_last.pt` | 最后一回合的权重，仅供对比 |
+
+`--resume` 会同时恢复 Adam 优化器与步数，断点续训不会重置动量。
+
+### 本次训练结果（seed 0，交付权重）
+
+| 指标 | 数值 |
+| --- | --- |
+| 回合数 | 200 |
+| 整体成功率 | 62.5% |
+| 末 50 回合成功率 | 94% |
+| 末 20 回合成功率 | 100% |
+| 碰撞次数（全程） | 28 |
+| 首次成功 | 第 21 回合 |
+| 末 20 回合平均步数 / 奖励 | 78.8 / 144.7 |
+
+逐回合数据见 `models/train_nav_log.csv`。`dqn_nav.pt` 与 `dqn_nav_best.pt`
+的 SHA-256 相同，确认交付的是最佳权重而不是最后一回合覆盖的结果。
+
 ## 话题与服务
 
 | 名称 | 类型 | 说明 |
@@ -92,10 +136,14 @@ scripts/drone_bridge.py      AirSim <-> ROS 桥接
 scripts/teleop_keyboard.py   任务 1 键盘遥控
 scripts/lidar_features.py    雷达特征工程（24 扇区 / 扫描）
 scripts/lidar_scan_node.py   雷达扫描话题发布
+scripts/dqn_network.py       Dueling 网络与动作空间
+scripts/dqn_agent.py         经验回放 / 目标网络 / Double DQN
+scripts/train_dqn_nav.py     任务 2 训练
 scripts/main.py              统一入口
 test/test_lidar_features.py  特征工程单元测试（不依赖 AirSim）
 launch/teleop.launch         键盘遥控启动文件
 launch/scan.launch           雷达感知启动文件
+launch/train.launch          DQN 训练启动文件
 launch/main.launch           统一启动入口（本阶段支持 teleop / scan）
 ```
 
@@ -103,8 +151,6 @@ launch/main.launch           统一启动入口（本阶段支持 teleop / scan�
 
 | PR | 内容 |
 | --- | --- |
-| #893 | 雷达扇区特征与扫描话题发布 |
-| #918 | DQN 策略训练流程与模型权重 |
 | #922 | DQN 导航节点与 gmapping 建图链路 |
 | #932 | 图像端到端 DQN 与模块文档、演示动图 |
 

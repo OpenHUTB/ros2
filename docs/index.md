@@ -67,6 +67,7 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
     * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+    * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
@@ -136,6 +137,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [定点停车](./ground/fixed_point_stop.md)
 * [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
 * [打靶](./ground/mujoco_shooting.md)
 * [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
@@ -275,11 +277,17 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [AirSim无人机键盘遥控与机载云台控制模块](./airsim_drone_gimbal_teleop/README.md)
 
+* [无人机机载云台目标丢失重捕获与视轴误差评估](./air/uav_gimbal_reacquisition.md)
+
+* [无人机应急着陆点安全评估](./air/uav_emergency_landing_selector.md) —— 从坡度、粗糙度、障碍、人员风险和能量裕量中筛选安全落点，附 ROS 2 Humble 实际 launch 验证
+
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
+
+* [无人机通信链路退化保护与断联风险预测](./air/uav_link_outage_guard.md) —— 融合 RSSI、延迟、丢包与遥测陈旧度，预测链路风险并输出降速、保持或返航建议
 
 * [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
 
@@ -332,6 +340,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
 
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
+
+* [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
 
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
