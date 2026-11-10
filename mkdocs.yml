@@ -191,6 +191,7 @@ nav:
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
+    - 倒车雷达分级告警: './ground/ultrasonic_rear_alert.md'
 - 空域载具:
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
