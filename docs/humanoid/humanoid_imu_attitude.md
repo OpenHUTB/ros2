@@ -57,7 +57,7 @@
 | `humanoid_imu_attitude/evaluate.py` | 误差统计、CSV 汇总、对比图、单步耗时 |
 | `launch/main.launch.py` | 一次启动仿真 + 两个滤波器 |
 | `run_eval.sh` | 三个场景连续评测 |
-| `test/` | 四元数恒等式、轨迹一致性、两滤波器收敛性共 36 项断言 |
+| `test/` | 四元数恒等式、轨迹一致性、两滤波器收敛性共 14 个用例 |
 
 话题与参数：
 
@@ -91,7 +91,7 @@ ros2 launch humanoid_imu_attitude main.launch.py \
 
 ## 运行效果
 
-编译与 36 项单元测试（`colcon test-result` 全绿）：
+编译与 14 个单元测试用例（`colcon test-result` 全绿）：
 
 ![编译与测试](../img/humanoid/humanoid_imu_attitude/compile_test.png)
 
