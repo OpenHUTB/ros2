@@ -2,7 +2,7 @@
 
 [实验报告](../../../docs/air/airsim_height_aware_overfly.md)。本模块使用 AirSim Python RPC，无需 ROS。launch/run_demo.ps1 是 Windows PowerShell 启动器，不是 ROS launch。
 
-> **实飞状态：2026-11-09 完成两次矮墙越障实飞，均越障到点并确认降落。** committed 爬升 2.06/2.14 m，实测抬升 1.97/2.05 m，越障后保持高度 5.22/5.25 m，到点误差 0.58/0.67 m；证据见 [报告第 5 节](../../../docs/air/airsim_height_aware_overfly.md) 与 `docs/air/airsim_height_aware_overfly/` 下的 CSV/事件日志。高柱水平绕行尚未实飞。
+> **实飞状态：2026-11-09 完成两次矮墙越障实飞，均越障到点并确认降落。** committed 爬升 2.06/2.14 m，实测抬升 1.97/2.05 m，越障后保持高度 5.22/5.25 m，到点误差 0.58/0.67 m；证据见 [报告第 5 节](../../../docs/air/airsim_height_aware_overfly.md) 与 `docs/air/airsim_height_aware_overfly/` 下的 CSV/事件日志。这两次数据是相机偏移修正前采集的（当时实际净空约 1.53/1.61 m）；代码现已把 0.49 m 偏移计入 committed 目标，复飞时约 2.6 m、净空恢复 2.1 m，**尚未复飞**。高柱水平绕行尚未实飞。
 
 ## 0. 与单柱、双柱版本的关系
 
