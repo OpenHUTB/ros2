@@ -33,10 +33,6 @@ _CONFIGS = {
 }
 
 
-def profile_names():
-    return list(_CONFIGS)
-
-
 def make(name):
     """按名称构造 QoSProfile；未知名称抛 KeyError 并列出可用项。"""
     try:

@@ -11,6 +11,7 @@ import os
 import time
 
 import rclpy
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 
@@ -21,19 +22,28 @@ from .stats import summarize
 CSV_FIELDS = ('seq', 'stamp_ns', 'recv_ns', 'latency_ms', 'gap')
 
 
+def _declare_float(node, name, default):
+    """不带默认值声明（NOT_SET），int/double 参数都能收；见 joint_pub.py。"""
+    node.declare_parameter(name)
+    value = node.get_parameter(name).value
+    return default if value is None else float(value)
+
+
 class JointCommandSubscriber(Node):
 
     def __init__(self):
         super().__init__('joint_qos_sub')
+        self.duration = _declare_float(self, 'duration', 10.0)
         self.declare_parameter('qos_profile', DEFAULT_PROFILE)
-        self.declare_parameter('duration', 10.0)
         self.declare_parameter('topic', '/joint_commands')
         self.declare_parameter('csv_path', '')
+        # 发布端应发总条数（RATE × DURATION）；0 表示退化为按序号区间统计
+        self.declare_parameter('expected_msgs', 0)
 
         profile_name = str(self.get_parameter('qos_profile').value)
-        self.duration = float(self.get_parameter('duration').value)
         topic = str(self.get_parameter('topic').value)
         self.csv_path = str(self.get_parameter('csv_path').value)
+        self.expected_msgs = int(self.get_parameter('expected_msgs').value)
 
         self.rows = []
         self._last_seq = None
@@ -87,7 +97,7 @@ class JointCommandSubscriber(Node):
             return None
         self._finalized = True
         written = self.write_csv()
-        summary = summarize(self.rows)
+        summary = summarize(self.rows, self.expected_msgs)
         try:
             if summary['count'] == 0:
                 # 零消息也要落 CSV（仅表头），否则该场景会在汇总表里整行消失，
@@ -95,9 +105,11 @@ class JointCommandSubscriber(Node):
                 self.get_logger().warning(
                     'received 0 messages, csv contains header only')
             self.get_logger().info(
-                'received %d, missing %d, p99 %.3f ms, max %.3f ms, jitter %.3f ms'
-                % (summary['count'], summary['missing'], summary['latency_p99_ms'],
-                   summary['latency_max_ms'], summary['jitter_ms']))
+                'received %d, missing %d (expected %d), p99 %.3f ms, '
+                'max %.3f ms, jitter %.3f ms'
+                % (summary['count'], summary['missing'], summary['expected'],
+                   summary['latency_p99_ms'], summary['latency_max_ms'],
+                   summary['jitter_ms']))
             if written:
                 self.get_logger().info('csv written to %s' % written)
         except Exception:  # pylint: disable=broad-except
@@ -111,12 +123,17 @@ class JointCommandSubscriber(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = JointCommandSubscriber()
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
     try:
+        # 用常驻 executor 而不是模块级 spin_once：后者每次调用都要对全局
+        # executor 增删节点，1 ms 轮询下每秒上千次，开销会计入被测时延与抖动。
         while rclpy.ok() and not node.deadline_reached():
-            rclpy.spin_once(node, timeout_sec=0.001)
+            executor.spin_once(timeout_sec=0.001)
     except KeyboardInterrupt:
         pass
     finally:
+        executor.remove_node(node)
         node.finalize()
         node.destroy_node()
         if rclpy.ok():
