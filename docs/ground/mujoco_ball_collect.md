@@ -11,8 +11,14 @@ Ubuntu20.04 + Python3 + mujoco
 # 1. 安装依赖
 pip install mujoco
 
-# 2. 运行仿真（源码位于 src/ground/mujoco_ball_collect/main.py）
-python3 src/ground/mujoco_ball_collect/main.py
+# 2. 进入模块目录运行仿真
+cd src/ground/mujoco_ball_collect
+python3 main.py
+```
+
+无显示环境（服务器 / SSH）可加 `HEADLESS=1` 跳过可视化窗口：
+```bash
+HEADLESS=1 python3 main.py
 ```
 
 运行后弹出 MuJoCo 可视化窗口：小车在场地内自动收集 6 个小球，球逐个弹入车上绿色收集筐，全部收完后小车自动停车。

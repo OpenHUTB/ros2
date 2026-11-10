@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # MuJoCo 搜集小球仿真：差速小车在平面上自动收集散布的小球
 # 运行: python3 main.py  (Ubuntu 20.04 / mujoco 2.3.7)
+# 无显示/服务器环境: HEADLESS=1 python3 main.py
 import math
+import os
 import time
 import mujoco
 import mujoco.viewer
@@ -102,6 +104,7 @@ V_MAX = 26.0
 V_MIN = 3.0
 TURN_K = 4.0
 ANIM_STEPS = 26
+MAX_STEPS = 62000
 
 m = mujoco.MjModel.from_xml_string(XML)
 d = mujoco.MjData(m)
@@ -123,7 +126,24 @@ def yaw_from_quat(q):
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
-with mujoco.viewer.launch_passive(m, d) as viewer:
+# headless：无显示环境（如服务器/SSH）或显式 HEADLESS=1 时不弹窗，纯跑仿真
+HEADLESS = (os.environ.get("HEADLESS", "0") == "1") or "DISPLAY" not in os.environ
+
+
+class _NoViewer(object):
+    """无显示环境下的空可视化桩：is_running 恒真，sync 空操作。"""
+
+    def is_running(self):
+        return True
+
+    def sync(self):
+        pass
+
+
+if HEADLESS:
+    viewer = _NoViewer()
+else:
+    viewer = mujoco.viewer.launch_passive(m, d)
     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
     viewer.cam.distance = 6.5
     viewer.cam.elevation = -50
@@ -131,7 +151,9 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
     viewer.cam.lookat[0] = 0.0
     viewer.cam.lookat[1] = 0.0
     viewer.cam.lookat[2] = 0.05
-    n = 0
+
+n = 0
+try:
     while viewer.is_running():
         cx = d.qpos[0]
         cy = d.qpos[1]
@@ -168,11 +190,15 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
                 print("step=%d 全部小球已收集完毕！" % n)
             mujoco.mj_step(m, d)
             viewer.sync()
-            time.sleep(0.002)
+            if not HEADLESS:
+                time.sleep(0.002)
             n += 1
-            if n > 62000:
+            if n > MAX_STEPS:
+                break
+            if HEADLESS and collected_n == N_BALL:
                 break
             continue
+
         bx = d.qpos[BALL_START + target * BALL_POS_SLICE]
         by = d.qpos[BALL_START + target * BALL_POS_SLICE + 1]
 
@@ -234,12 +260,18 @@ with mujoco.viewer.launch_passive(m, d) as viewer:
         mujoco.mj_step(m, d)
 
         viewer.sync()
-        time.sleep(0.002)
+        if not HEADLESS:
+            time.sleep(0.002)
         if n % 2000 == 0:
             print("step=%d 已收集=%d/%d" % (n, collected_n, N_BALL))
         n += 1
-        if n > 62000:
+        if n > MAX_STEPS:
             print("超时，已收集=%d/%d" % (collected_n, N_BALL))
             break
+        if HEADLESS and collected_n == N_BALL:
+            break
+finally:
+    if not HEADLESS:
+        viewer.close()
 
 print("完成：收集 %d/%d 个球" % (collected_n, N_BALL))
