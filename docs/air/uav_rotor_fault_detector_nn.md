@@ -236,13 +236,23 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 ### 6.2 不用 ROS 直接跑
 
+权重 `results/detector.pt`（167 KB）随仓库提交，所以 clone 下来就能直接评测、出图：
+
 ```bash
 python main.py --selftest                        # 51 项自检
-python main.py --gen-data results/detector_dataset.npz --episodes 240
-python main.py --train --threads 8
-python main.py --eval test
+python main.py --eval test                       # 用仓库里的权重
 python main.py --demo results/detection_demo.gif
 ```
+
+要复现训练再跑这两步（CPU 约 26 s + 52 s）：
+
+```bash
+python main.py --gen-data results/detector_dataset.npz --episodes 240
+python main.py --train --threads 8
+```
+
+数据集 7 MB 不入库（见 `results/.gitignore`），权重和指标 json/csv 入库。缺文件时命令行会
+直接打印上面这两条补救命令，不会只抛 `FileNotFoundError`。
 
 Windows / Ubuntu 都能跑，`main.bat` / `main.sh` 是等价入口。
 
@@ -261,6 +271,13 @@ ros2 launch uav_rotor_fault_detector_nn detector.launch.py
 ros2 launch uav_rotor_fault_detector_nn detector.launch.py \
     fault:=degradation rotor:=2 severity:=0.4 duration:=12.0
 ```
+
+参数分两层，避免"两处都能改同一项"的歧义：`config/detector.yaml` 是默认值真源（13 个参数全在
+里面，顶层用 `/**` 通配节点名），`detector.launch.py` 只把最常改的 6 个（`scene` / `fault` /
+`rotor` / `onset` / `severity` / `duration`）做成 launch argument 覆盖同名项；`seed` / `dt` /
+`substeps` / `imu_noise` / `checkpoint` / `window` / `publish_rate` 只改 yaml 或用
+`--ros-args -p 名字:=值`。节点按 cwd → 包目录 → 安装后的 share 目录依次找 `checkpoint`，
+所以 `ros2 launch` 从任意目录启动都能加载权重。
 
 话题表见 [模块 README](https://github.com/OpenHUTB/ros2/tree/master/src/air/uav_rotor_fault_detector_nn)。
 

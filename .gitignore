@@ -65,6 +65,11 @@ trajectories/*.json
 # 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
 !src/humanoid/humanoid_ppo_locomotion/weights/*.pt
 
+# 例外：无人机桨故障健康度估计的推理权重必须入库（167 KB）。
+# 数据集 7 MB 不入库，但这个权重不入库的话 --eval / --demo / ros2 launch
+# 一启动就 FileNotFoundError，评审只能先自己训 52 s。
+!src/air/uav_rotor_fault_detector_nn/results/detector.pt
+
 # 编辑器 / 系统
 .vscode/
 .idea/

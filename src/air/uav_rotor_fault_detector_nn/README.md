@@ -61,18 +61,32 @@ uav_rotor_fault_detector_nn/
 
 ## 快速开始
 
+已经 clone 下来就能直接跑评测与动图——训练好的权重 `results/detector.pt`（167 KB）随仓库提交：
+
 ```bash
 pip install -r requirements.txt
 
-python main.py --selftest                       # 51 项自检，不需要 ROS
-python main.py --gen-data results/detector_dataset.npz --episodes 240   # 约 26 s
-python main.py --train --threads 8              # 约 52 s（CPU）
-python main.py --eval test                      # 测试集报告
+python main.py --selftest                        # 51 项自检，不需要 ROS
+python main.py --eval test                       # 测试集报告（用仓库里的权重）
 python main.py --demo results/detection_demo.gif # 真值 vs 估计对比动图
-python tools/gen_figures.py                     # 训练曲线、分故障指标图
+
+# 想从头复现训练，再跑这两步（CPU 约 26 s + 52 s）
+python main.py --gen-data results/detector_dataset.npz --episodes 240
+python main.py --train --threads 8
+
+python tools/gen_figures.py                      # 训练曲线、分故障指标图
 ```
 
-`--gen-data` 写出的数据集约 7 MB，不入库；`results/` 里只提交权重和动图。
+产物约定：
+
+| 文件 | 是否入库 | 说明 |
+| --- | --- | --- |
+| `results/detector.pt` | **是**（167 KB） | 推理权重，缺了 `--eval` / `--demo` / `ros2 launch` 都没法跑 |
+| `results/detector.json` / `detector_metrics.json` / `detector_by_fault.csv` | 是 | 训练元信息与评测指标（纯文本） |
+| `results/detector_dataset.npz` | 否（7 MB） | `--gen-data` 现场重建，约 26 s；见 `results/.gitignore` |
+| `results/detection_demo.gif` | 否 | 演示动图，正式的那份在 `docs/img/air/uav_rotor_fault_detector_nn/` |
+
+缺权重或数据集时，命令行会直接打印上面那两条补救命令，不会只抛一个 `FileNotFoundError`。
 
 ## ROS2 启动
 
@@ -94,8 +108,13 @@ ros2 launch uav_rotor_fault_detector_nn detector.launch.py fault:=degradation ro
 | `/uav/cmd_vel` | `geometry_msgs/Twist` | 订阅 | 速度指令（换算成悬停目标点） |
 | `/uav/goal` | `geometry_msgs/Point` | 订阅 | 直接给悬停目标 |
 
-参数（`config/detector.yaml`）：`scene`、`fault`、`rotor`、`onset`、`severity`、`imu_noise`、
-`checkpoint`、`window`、`duration`、`publish_rate`。
+参数分两层：`config/detector.yaml` 是默认值真源（13 个参数全在里面，顶层用 `/**` 通配节点名），
+`detector.launch.py` 只把演示时最常改的 6 个（`scene` / `fault` / `rotor` / `onset` / `severity` /
+`duration`）做成 launch argument 覆盖同名项。`seed` / `dt` / `substeps` / `imu_noise` /
+`checkpoint` / `window` / `publish_rate` 只能改 yaml，或临时用 `--ros-args -p 名字:=值`。
+
+节点按 cwd → 包目录 → 安装后的 share 目录依次找 `checkpoint`，所以 `ros2 launch` 从任意目录启动
+都能加载权重。
 
 ## 输入特征与网络
 

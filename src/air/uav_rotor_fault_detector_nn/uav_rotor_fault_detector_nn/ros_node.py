@@ -53,7 +53,15 @@ def _resolve_checkpoint(value: str) -> str:
     for candidate in candidates:
         if candidate.is_file():
             return str(candidate)
-    return value  # 交给 HealthEstimator 抛它自己的 FileNotFoundError
+
+    tried = ", ".join(str(c) for c in [_PKG_ROOT / value] + candidates[1:]) or value
+    raise RuntimeError(
+        f"找不到检查点 {value}。权重（167 KB）随仓库提交，若确实缺失，按两步重建"
+        f"（CPU 约 26 s + 52 s）：\n"
+        f"    python main.py --gen-data results/detector_dataset.npz --episodes 240\n"
+        f"    python main.py --train --threads 8\n"
+        f"也可以用 -p checkpoint:=/绝对路径 指定。已尝试：{tried}"
+    )
 
 
 class _FlightLoop:

@@ -19,6 +19,30 @@ DEFAULT_DATA = "results/detector_dataset.npz"
 DEFAULT_CHECKPOINT = "results/detector.pt"
 
 
+def _missing_hint(kind: str, path: str) -> str:
+    """产物缺失时给一条能直接照抄的补救命令，而不是抛 FileNotFoundError。"""
+    if kind == "checkpoint":
+        return (
+            f"找不到检查点：{path}\n"
+            "权重（167 KB）随仓库提交，若确实缺失，按两步重建（CPU 约 26 s + 52 s）：\n"
+            "    python main.py --gen-data results/detector_dataset.npz --episodes 240\n"
+            "    python main.py --train --threads 8"
+        )
+    return (
+        f"找不到数据集：{path}\n"
+        "数据集 7 MB 不入库，先重建（240 次飞行，约 26 s）：\n"
+        "    python main.py --gen-data results/detector_dataset.npz --episodes 240"
+    )
+
+
+def _require(path: str, kind: str) -> int:
+    """存在返回 0，否则打印补救命令并返回退出码 2。"""
+    if Path(path).is_file():
+        return 0
+    print(_missing_hint(kind, path), file=sys.stderr)
+    return 2
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="main.py",
@@ -109,6 +133,9 @@ def cmd_gen_data(args: argparse.Namespace) -> int:
 def cmd_train(args: argparse.Namespace) -> int:
     from .train import TrainConfig, train_detector
 
+    code = _require(args.data, "data")
+    if code:
+        return code
     cfg = TrainConfig(
         epochs=args.epochs,
         batch_size=args.batch_size,
@@ -124,6 +151,9 @@ def cmd_train(args: argparse.Namespace) -> int:
 def cmd_eval(args: argparse.Namespace) -> int:
     from .evaluate import evaluate_checkpoint, format_report, save_prediction_csv, save_report
 
+    code = _require(args.checkpoint, "checkpoint") or _require(args.data, "data")
+    if code:
+        return code
     split = args.eval or "test"
     result = evaluate_checkpoint(args.checkpoint, args.data, split)
     print(format_report(result))
@@ -136,6 +166,9 @@ def cmd_eval(args: argparse.Namespace) -> int:
 def cmd_demo(args: argparse.Namespace) -> int:
     from .render import make_detection_gif
 
+    code = _require(args.checkpoint, "checkpoint")
+    if code:
+        return code
     out = Path(args.demo)
     started = time.time()
     path = make_detection_gif(
