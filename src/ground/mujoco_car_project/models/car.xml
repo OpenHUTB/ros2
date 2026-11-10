@@ -1,16 +1,40 @@
 <mujoco model="simple_car">
   <option timestep="0.01"/>
+  
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="4096" offsamples="8"/>
+    <headlight ambient="0.3 0.3 0.3" diffuse="0.6 0.6 0.6" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="10 10" reflectance="0.2"/>
+  </asset>
 
   <worldbody>
-    <light pos="0 0 5" dir="0 0 -1"/>
-    <geom name="floor" type="plane" size="5 5 0.1" rgba="0.8 0.8 0.8 1"/>
+    <!-- 【视角拉近】：把 y 和 z 从 -8/8 拉近到 -5/5，视野更聚焦在小车周围 -->
+    <camera name="front_camera" pos="0 -5 5" euler="45 0 0" fovy="60"/>
 
-    <geom name="pole1" type="cylinder" pos="2 0 0.5" size="0.1 0.5" rgba="1 0 0 1"/>
-    <geom name="pole2" type="cylinder" pos="-2 0 0.5" size="0.1 0.5" rgba="0 1 0 1"/>
-    <geom name="pole3" type="cylinder" pos="0 2 0.5" size="0.1 0.5" rgba="0 0 1 1"/>
-    <geom name="pole4" type="cylinder" pos="0 -2 0.5" size="0.1 0.5" rgba="1 1 0 1"/>
+    <light pos="0 0 5" dir="0 0 -1" diffuse="0.8 0.8 0.8" castshadow="true"/>
+    <geom name="floor" type="plane" size="10 10 0.1" material="grid"/>
 
-    <!-- 底盘稍微收回一点 (0.22 x 0.18)，保证转向灵活的同时不至于翻车 -->
+    <!-- 【场景替换】：撤掉四个柱子，换成测试场障碍物 -->
+    
+    <!-- 1. 右侧的货箱堆 -->
+    <geom name="crate_red" type="box" pos="2.5 1.5 0.3" size="0.3 0.3 0.3" rgba="0.7 0.2 0.2 1"/>
+    <geom name="crate_blue" type="box" pos="2.5 0.8 0.15" size="0.3 0.3 0.15" rgba="0.2 0.4 0.7 1"/>
+    
+    <!-- 2. 左侧的灰色隔离墙 -->
+    <geom name="wall1" type="box" pos="-2.5 1.0 0.3" size="0.1 1.2 0.3" rgba="0.5 0.5 0.5 1"/>
+    <geom name="wall2" type="box" pos="-2.5 -1.5 0.3" size="0.1 0.8 0.3" rgba="0.5 0.5 0.5 1"/>
+
+    <!-- 3. 前后方的橙色路障锥 -->
+    <geom name="cone_up" type="cylinder" pos="0 3 0.15" size="0.1 0.15" rgba="1 0.5 0 1"/>
+    <geom name="cone_down" type="cylinder" pos="0 -3 0.15" size="0.1 0.15" rgba="1 0.5 0 1"/>
+
+    <!-- ===== 小车本体 (保持原样) ===== -->
     <body name="car" pos="0 0 0.05">
       <freejoint/>
       <geom name="chassis" type="box" size="0.22 0.18 0.05" rgba="0.2 0.4 0.8 1"/>
@@ -33,9 +57,8 @@
       </body>
     </body>
   </worldbody>
-
+  
   <actuator>
-    <!-- 电机上限拉到 20，实现狂暴动力 -->
     <motor name="fl_motor" joint="wheel_fl" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
     <motor name="fr_motor" joint="wheel_fr" gear="1" ctrllimited="true" ctrlrange="-20 20"/>
     <motor name="rl_motor" joint="wheel_rl" gear="1" ctrllimited="true" ctrlrange="-20 20"/>

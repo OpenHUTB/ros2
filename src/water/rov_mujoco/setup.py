@@ -37,6 +37,9 @@ setup(
             'keyboard_teleop_node = rov_mujoco.keyboard_teleop_node:main',
             'sonar_slam_node = rov_mujoco.sonar_slam_node:main',
             'autonomous_navigation_node = rov_mujoco.autonomous_navigation_node:main',
+            # EKF 多源融合导航
+            'sensor_sim_node = rov_mujoco.sensor_sim_node:main',
+            'ekf_nav_node = rov_mujoco.ekf_node:main',
         ],
     },
 )

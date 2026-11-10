@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mujoco_muscle_gripper</name>
+  <version>0.1.0</version>
+  <description>
+    肌肉驱动的两指夹爪：Hill 肌肉驱动手指合拢，与方块产生真实接触摩擦，
+    定量测量夹持力、抬升阈值与打滑条件。
+  </description>
+  <maintainer email="lyzzzz0921@users.noreply.github.com">lyzzzz0921</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
