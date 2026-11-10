@@ -29,6 +29,11 @@ def _declare_float(node, name, default):
     或 launch 里 ``duration:=10`` 传进来的是 int，若按 double 静态声明会直接
     抛 InvalidParameterTypeException。Foxy 的 ParameterDescriptor 没有
     dynamic_typing 字段（Humble 才有），所以用这种方式兼容两种写法。
+
+    注意：这是为兼容 Foxy 保留的有意写法。在 Humble 及以上运行会打印
+    "declaring a parameter only providing its name is deprecated" 警告，
+    属预期、不影响功能；若未来只支持 Humble+，可改为
+    ``ParameterDescriptor(dynamic_typing=True)``。
     """
     node.declare_parameter(name)
     value = node.get_parameter(name).value

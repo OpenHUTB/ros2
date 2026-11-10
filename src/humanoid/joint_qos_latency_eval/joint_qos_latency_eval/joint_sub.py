@@ -23,7 +23,10 @@ CSV_FIELDS = ('seq', 'stamp_ns', 'recv_ns', 'latency_ms', 'gap')
 
 
 def _declare_float(node, name, default):
-    """不带默认值声明（NOT_SET），int/double 参数都能收；见 joint_pub.py。"""
+    """不带默认值声明（NOT_SET），int/double 参数都能收；见 joint_pub.py。
+
+    为兼容 Foxy 的有意写法；Humble+ 会打一条 deprecation 警告，属预期。
+    """
     node.declare_parameter(name)
     value = node.get_parameter(name).value
     return default if value is None else float(value)
