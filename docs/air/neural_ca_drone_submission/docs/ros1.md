@@ -158,7 +158,7 @@ A: 未执行 `pip3 install -e .`，或在错误的 Python 环境里。
 A: 忘记 `source devel/setup.bash`。
 
 **Q: 深度图是空的**
-A: `sim_bridge` 未启动，或 `scene` 参数拼写错误（只接受四个场景名）。
+A: `sim_bridge` 未启动，或 `scene` 参数拼写错误（只接受五个场景名）。
 
 **Q: 控制频率不稳**
 A: 虚拟机 CPU 争抢导致；把 `rate:=5` 可稳定，但轨迹会变粗糙。

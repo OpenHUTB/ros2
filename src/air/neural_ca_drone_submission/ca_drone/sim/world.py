@@ -320,11 +320,36 @@ def _corridor() -> World:
     return World("corridor", np.array([2.0, 0.0, 3.0]), np.array([49.0, 0.0, 3.0]), objs)
 
 
+def _unseen() -> World:
+    """Held-out scene: never used to collect training data.
+
+    Two offset gates on *opposite* sides compared with the corridor scene, plus
+    a deterministic pillar field.  It is the zero-shot generalisation check for
+    the four learnt modules.
+    """
+    objs: List[Obstacle] = []
+    for x, gap in ((14.0, 3.4), (30.0, -3.4)):
+        left = gap - 3.0
+        right = gap + 3.0
+        objs.append(_box(x, (-22.0 + left) / 2, 1.0, max(0.5, left + 22.0), 6.0,
+                         "concrete_dark"))
+        objs.append(_box(x, (right + 22.0) / 2, 1.0, max(0.5, 22.0 - right), 6.0,
+                         "concrete"))
+    pillars = [
+        (7.0, 2.5, 0.9), (9.5, -2.2, 0.8), (20.0, 3.2, 1.0), (22.0, -3.4, 0.9),
+        (24.0, 0.6, 0.7), (38.0, 3.0, 0.9), (41.0, -2.8, 1.0), (44.0, 1.5, 0.8),
+    ]
+    for i, (x, y, radius) in enumerate(pillars):
+        objs.append(_cyl(x, y, radius, 6.0, ("rust", "steel", "teal")[i % 3]))
+    return World("unseen", np.array([2.0, 0.0, 3.0]), np.array([49.0, 0.0, 3.0]), objs)
+
+
 SCENES: Dict[str, callable] = {
     "sparse": _sparse,
     "dense": _dense,
     "dynamic": _dynamic,
     "corridor": _corridor,
+    "unseen": _unseen,
 }
 
 

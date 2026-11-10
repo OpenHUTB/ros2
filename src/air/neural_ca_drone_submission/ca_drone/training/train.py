@@ -117,7 +117,7 @@ def train_planner(data: Dict[str, np.ndarray], epochs: int = 12, batch: int = 12
     return {"model": model, "history": history}
 
 
-def train_control(data: Dict[str, np.ndarray], epochs: int = 40, batch: int = 128,
+def train_control(data: Dict[str, np.ndarray], epochs: int = 60, batch: int = 128,
                   lr: float = 2e-3, seed: int = 0, verbose: bool = True) -> Dict:
     X, Y = data["x"], data["y"]
     tr, va = _split(len(X), 0.15, seed)
@@ -149,7 +149,7 @@ def train_control(data: Dict[str, np.ndarray], epochs: int = 40, batch: int = 12
     return {"model": model, "history": history}
 
 
-def train_e2e(data: Dict[str, np.ndarray], epochs: int = 10, batch: int = 16,
+def train_e2e(data: Dict[str, np.ndarray], epochs: int = 12, batch: int = 16,
               lr: float = 1.5e-3, seed: int = 0, verbose: bool = True) -> Dict:
     X, G, Y = data["depth"], data["goal"], data["cmd"]
     tr, va = _split(len(X), 0.15, seed)

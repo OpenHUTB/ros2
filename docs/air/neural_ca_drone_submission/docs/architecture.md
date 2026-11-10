@@ -150,4 +150,4 @@ python main.py --module e2e       --scene dynamic
 | `control` | `control` | 专家路径 + 控制网络跟踪 |
 | `e2e` | `e2e` | 端到端闭环 |
 | `full` | `full` | 感知 + 规划 + 控制闭环 |
-| `demo` | — | 四场景快速巡检 |
+| `demo` | — | 五场景快速巡检 |

@@ -4,7 +4,7 @@
 
 回答三个问题：
 
-1. **分层神经方案（full）能否在四个场景稳定到达目标？**
+1. **分层神经方案（full）能否在五个场景（含留出场景）稳定到达目标？**
 2. 与几何专家（expert）相比，神经方案在安全性、平滑性、计算量上如何？
 3. 端到端（e2e）与分层方案相比，差距在哪里？
 
@@ -21,7 +21,7 @@
 
 | 因素 | 设置 |
 | --- | --- |
-| 场景 | sparse / dense / dynamic / corridor |
+| 场景 | sparse / dense / dynamic / corridor（训练分布内）+ unseen（留出） |
 | 随机种子 | 0, 1, 2（动态障碍相位、感知噪声、采样位姿） |
 | 最大步数 | 650（65 s @10 Hz） |
 | 控制限幅 | 1.2 m/s |
@@ -32,8 +32,19 @@
 | 硬件 | 4 核 CPU / 16 GB，无 GPU |
 | 软件 | Python 3.10（Windows）、3.8（Ubuntu 20.04 虚拟机） |
 
-每个 (场景, 方法) 组合跑 3 个种子，共 \(4\times4\times3=48\) 回合。
+每个 (场景, 方法) 组合跑 3 个种子，共 \(5\times4\times3=60\) 回合。
 统计时对种子取均值，成功率/碰撞率取比例。
+
+### 3.1 训练/评测划分
+
+| 场景 | 是否进入训练集 | 用途 |
+| --- | --- | --- |
+| sparse / dense / dynamic / corridor | 是（`collect.py` 写死） | **in-distribution** 主表 |
+| unseen | **否** | **zero-shot** 泛化检查（§results 4.4） |
+
+四个数据集（perception / planner / control / e2e）的场景列表都在
+`ca_drone/data/collect.py` 中显式写为前四个名字，新增 `unseen` 不会自动泄漏进训练集；
+`unseen` 也不参与调参。报告时把两者分开，避免把“在训练地图上 100%”说成泛化性能。
 
 ## 4. 指标定义
 
@@ -48,18 +59,19 @@
 ## 5. 复现命令
 
 ```bash
-# 数据（可跳过，仓库外可再生成）
+# 数据（可跳过，仓库外可再生成；约 15 s）
 python tools/make_data.py --out data --e2e-episodes 60 --e2e-limit 14000
 
-# 训练（约 12 min）
+# 训练（默认轮数与随附权重一致：perception 4 / planner 12 / control 60 / e2e 12；
+# 合计约 10 min，4 核 CPU）
 python tools/train.py --module all --data data --weights weights
 
-# 评测（48 回合，约 8 min）
+# 评测（60 回合，约 2 min）
 python tools/evaluate.py --scenes all --modes expert,control,full,e2e \
     --seeds 3 --out results
 
 # 图表
-python tools/plot_results.py --results results --out docs/assets/figs
+python tools/make_figs.py
 ```
 
 ## 6. 公平性说明

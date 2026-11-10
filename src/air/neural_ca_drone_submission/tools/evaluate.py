@@ -23,7 +23,7 @@ import numpy as np  # noqa: E402
 
 from ca_drone.pipeline import NeuralStack, run_episode  # noqa: E402
 
-SCENES = ["sparse", "dense", "dynamic", "corridor"]
+SCENES = ["sparse", "dense", "dynamic", "corridor", "unseen"]
 
 
 def main() -> int:

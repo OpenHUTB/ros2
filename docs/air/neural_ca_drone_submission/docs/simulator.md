@@ -153,6 +153,6 @@ c=(o_x-c_x)^2+(o_y-c_y)^2-r^2
 
 | 文件 | 内容 |
 | --- | --- |
-| `ca_drone/sim/world.py` | `Box`、`Cylinder`、`Mover`、`World`、`raycast`、四个场景 |
+| `ca_drone/sim/world.py` | `Box`、`Cylinder`、`Mover`、`World`、`raycast`、五个场景 |
 | `ca_drone/sim/drone.py` | 动力学、碰撞、间隙统计 |
 | `ca_drone/render/scene.py` | 相机、投影、深度图、HUD、`compose_frame` |

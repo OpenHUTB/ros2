@@ -25,7 +25,9 @@ import numpy as np  # noqa: E402
 from ca_drone.training import train as T  # noqa: E402
 
 DATASETS = ["perception", "planner", "control", "e2e"]
-DEFAULT_EPOCHS = {"perception": 4, "planner": 12, "control": 40, "e2e": 10}
+# Must match the shipped weights and docs/results.md.  Keep this table in sync
+# with the defaults of the train_* functions in ca_drone/training/train.py.
+DEFAULT_EPOCHS = {"perception": 4, "planner": 12, "control": 60, "e2e": 12}
 
 
 def _load(data_dir: str, name: str):

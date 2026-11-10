@@ -30,7 +30,7 @@ from ca_drone.models.planner import predict_field  # noqa: E402
 from ca_drone.sim.world import Box, Cylinder, make_world  # noqa: E402
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "assets", "figs")
-SCENES = ["sparse", "dense", "dynamic", "corridor"]
+SCENES = ["sparse", "dense", "dynamic", "corridor", "unseen"]
 FONT = "C:/Windows/Fonts/consola.ttf" if os.name == "nt" else "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 
 
@@ -207,7 +207,7 @@ def training_curves() -> None:
 def bench_figure() -> None:
     import csv
     rows = list(csv.DictReader(open(os.path.join("results", "planner_bench.csv"))))
-    scenes = SCENES
+    scenes = [s for s in SCENES if any(r["scene"] == s for r in rows)]
     classical = [int(next(r["expanded"] for r in rows if r["scene"] == s and r["method"] == "classical")) for s in scenes]
     neural = [int(next(r["expanded"] for r in rows if r["scene"] == s and r["method"] == "neural" and float(r["weight"]) == 1.15)) for s in scenes]
     x = np.arange(len(scenes))

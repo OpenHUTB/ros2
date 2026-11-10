@@ -54,8 +54,11 @@ python tools/train.py --module all --data data --weights weights
 python tools/train.py --module perception --epochs 4
 python tools/train.py --module planner --epochs 12
 python tools/train.py --module control --epochs 60
-python tools/train.py --module e2e --epochs 10
+python tools/train.py --module e2e --epochs 12
 ```
+
+以上轮数就是 `ca_drone/training/train.py` 的默认值，也是随附权重实际训练的轮数；
+`--epochs` 可省略，写出来是为了让读者一眼看到口径。
 
 预期最终指标：
 
@@ -63,8 +66,8 @@ python tools/train.py --module e2e --epochs 10
 | --- | --- | --- |
 | perception | val IoU | 0.956 |
 | planner | val MAE / R² | 2.52 m / 0.910 |
-| control | val MAE / 角度 | 0.036 m/s / 1.9° |
-| e2e | val MAE | 0.055 m/s |
+| control | val MAE / 角度 | 0.0356 m/s / 1.9° |
+| e2e | val MAE | 0.0348 m/s |
 
 ## 4. 评测（约 1.5 分钟）
 
@@ -72,8 +75,9 @@ python tools/train.py --module e2e --epochs 10
 python tools/evaluate.py --scenes all --modes expert,control,full,e2e --seeds 3
 ```
 
-输出 `results/episodes.csv`（48 行）与 `results/summary.json`。
-预期：expert / control / full 成功率 100%，e2e 25%。
+输出 `results/episodes.csv`（60 行 = 5 场景 × 4 方法 × 3 种子）与
+`results/summary.json`。预期：expert / control / full 成功率 100%，e2e 40%
+（dynamic 与留出的 unseen）。
 
 ## 5. 图表与文档
 

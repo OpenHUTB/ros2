@@ -14,7 +14,7 @@
 | 到达容差 | 1.4 m |
 | 回合上限 | 650 步（65 s） |
 
-## 2. 四个场景
+## 2. 五个场景
 
 ### 2.1 sparse（稀疏）
 
@@ -65,6 +65,20 @@
 问题从“不可能通过”变成“跟踪精度问题”，才有评测意义。
 
 ![corridor 场景](../../../img/air/neural_ca_drone_submission/assets/figs/scene_corridor.png)
+{: .figure-caption }
+
+### 2.5 unseen（留出场景，零样本）
+
+`unseen` **不参与任何训练数据采集**：`ca_drone/data/collect.py` 的四个数据集都把
+场景名写死为前四个，新增场景不会自动进入训练集。它用于回答“网络是不是只记住了
+训练地图”：
+
+- 两扇门开在与 corridor **相反**的一侧（\(x=14\) 门中心 \(+3.4\)，
+  \(x=30\) 门中心 \(-3.4\)），门宽 6.0 m；
+- 门之间夹 8 根确定性柱阵（半径 0.7–1.0 m），迫使规划器做非对称绕行；
+- 布局固定、无随机、无动障碍，保证任何机器上可复现。
+
+![unseen 场景](../../../img/air/neural_ca_drone_submission/assets/figs/scene_unseen.png)
 {: .figure-caption }
 
 ## 3. 坐标与可视化约定

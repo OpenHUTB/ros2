@@ -106,7 +106,7 @@ y_n\log\sigma(z_n)+(1-y_n)\log\big(1-\sigma(z_n)\big)\Big],
 
 `ca_drone/data/collect.py::perception_dataset`：
 
-1. 在四个场景中随机采样无人机位姿 \((x,y,\psi)\)，高度固定 3 m；
+1. 在训练用的四个场景中随机采样无人机位姿 \((x,y,\psi)\)，高度固定 3 m；
 2. 用 `World.raycast` 渲染 48×64 深度图；
 3. 真值 mask：射线命中的对象 id ≥ 0 且距离 < 11.5 m；
 4. **主动加噪**，模拟真实深度相机：

@@ -25,7 +25,7 @@ python main.py --module e2e --scene dynamic --gif
 # 分层全链路 + GIF
 python main.py --module full --scene sparse --gif
 
-# 四场景巡检，各生成一个 GIF
+# 五场景巡检，各生成一个 GIF
 python main.py --module demo
 ```
 
@@ -86,14 +86,14 @@ saved runs/20261110_120102_full/full_sparse.gif (8.93 MB, 109 frames)
 # 1) 生成数据（约 30 s）
 python tools/make_data.py --out data --e2e-episodes 60 --e2e-limit 14000
 
-# 2) 训练四个网络（CPU，约 12 min）
+# 2) 训练四个网络（CPU，约 10 min）
 python tools/train.py --module all --data data --weights weights
 
-# 3) 批量评测（4 场景 × 3 模式 × 3 种子）
-python tools/evaluate.py --scenes all --modes expert,full,e2e --seeds 3
+# 3) 批量评测（5 场景 × 4 模式 × 3 种子 = 60 回合）
+python tools/evaluate.py --scenes all --modes expert,control,full,e2e --seeds 3
 
 # 4) 生成图表与 GIF
-python tools/plot_results.py --results results --out docs/assets/figs
+python tools/make_figs.py
 python main.py --module demo --render-every 4
 ```
 
