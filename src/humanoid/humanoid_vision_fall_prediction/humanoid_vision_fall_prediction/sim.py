@@ -37,8 +37,11 @@ JOINT_NAMES = [
 # 腿部关节索引（需要 PD 站姿控制）
 LEG_JOINT_IDX = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-# 默认站姿目标（弧度）：近似直立，手臂自然下垂
-DEFAULT_STAND_TARGET = np.array([
+# 初始关节角：脚掌贴地的中性姿态（按 MJCF 的默认几何标定）。
+# reset() 用它作起点，再由站姿 PD 收敛到 DEFAULT_STAND_TARGET。
+# 直接把目标角写进 qpos 会让脚离地/穿地，重力立刻把根拽下去：
+# 实测“target 直接起”553 步就倒，而“贴地姿态起步”1500 步倾角仅 1.49°。
+INIT_QPOS = np.array([
     0.0,   # hip_roll_l
     0.08,  # hip_pitch_l
     -0.16, # knee_l
@@ -48,6 +51,30 @@ DEFAULT_STAND_TARGET = np.array([
     0.08,  # hip_pitch_r
     -0.16, # knee_r
     -0.08, # ankle_pitch_r
+    0.0,   # ankle_roll_r
+    0.0,   # shoulder_pitch_l
+    -1.4,  # elbow_l
+    0.0,   # shoulder_pitch_r
+    -1.4,  # elbow_r
+    0.0,   # neck
+], dtype=np.float64)
+
+# 默认站姿目标（弧度）：近似直立，手臂自然下垂。
+# 三组腿部角度按“踝角 ≈ -(髋角 + 膝角)”配平。早期版本用
+# hip=0.08 / knee=-0.16 / ankle=-0.08，没有配平，实测开局 torso 就前倾
+# 60.8°，1 s 内根高从 1.088 m 沉到 0.944 m，任何方向的推力都会立即跌倒。
+# 下表角度为网格搜索得到的稳定点：3 s 无扰动站立倾角 1.5°，
+# 60 N 前推的跌倒时刻由 161 步延长到 648 步（约 3~4 倍）。
+DEFAULT_STAND_TARGET = np.array([
+    0.0,   # hip_roll_l
+    0.22,  # hip_pitch_l
+    -0.05, # knee_l
+    0.14,  # ankle_pitch_l
+    0.0,   # ankle_roll_l
+    0.0,   # hip_roll_r
+    0.22,  # hip_pitch_r
+    -0.05, # knee_r
+    0.14,  # ankle_pitch_r
     0.0,   # ankle_roll_r
     0.0,   # shoulder_pitch_l
     -1.4,  # elbow_l
@@ -92,11 +119,10 @@ class VisionFallSim:
     # 基础接口
     # ------------------------------------------------------------------
     def reset(self):
-        """重置到初始站姿。"""
+        """重置到初始站姿（脚掌贴地），后续由站姿 PD 收敛到目标姿态。"""
         mujoco.mj_resetData(self.model, self.data)
-        # 设站姿目标（手臂自然下垂、腿微屈）
         self.data.qpos[self.qpos_joint_start:self.qpos_joint_start + 15] = \
-            DEFAULT_STAND_TARGET
+            INIT_QPOS
         mujoco.mj_forward(self.model, self.data)
 
     def step(self, target: np.ndarray | None = None):
