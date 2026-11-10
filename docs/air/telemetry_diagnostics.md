@@ -402,3 +402,37 @@ flowchart TD
 接入其他仿真器需要同时拿到**同步的位置、速度、加速度与源时间戳**。只有 `/uav/odom` 不够——没有加速度通道时，速度残差这一半特征无法计算。
 
 ---
+
+## 9. 源代码解析
+
+| 文件 | 行数 | 职责 |
+|---|---:|---|
+| `consistency.py` | 98 | 残差、8 步窗口、GRU/MLP、在线 `ConsistencyDetector` |
+| `train_consistency.py` | 94 | 训练、验证选模、阈值标定 |
+| `evaluate_consistency.py` | 104 | 冻结模型的事件级评估与消融 |
+| `report_final.py` | 41 | 汇总表与三张图 |
+| `telemetry_data.py` | 100 | 语料解压、校验、场景生成 |
+| `holdout_evaluate.py` | 128 | 注入与旧版评估 |
+| `collect_holdout.py` | 186 | 真实仿真采集（唯一会控制无人机的脚本） |
+| `ros_diagnostics.py` | 133 | ROS2 推理节点 |
+| `attribution.py` | 32 | 残差通道占比与 `dominant` 归因 |
+| `channels.py` | 12 | 残差通道定义 |
+| `attribution_eval.py` | 118 | 归因命中率与随机基线评估 |
+| `live_source.py` | 40 | 只读实时桥接 |
+| `dashboard.py` | 74 | Tk 看板 |
+| `check_ros.py` | 49 | 独立订阅与记录 |
+| `main.py` / `main.sh` | 51 / 27 | 统一入口 |
+
+五个关键设计：
+
+**残差只依赖相邻两帧。** `residual()` 不需要历史缓冲区之外的任何状态，在线与离线共用同一函数——这消除了"离线一套、在线一套"的经典偏差。
+
+**规则与网络分工明确。** `step()` 里时间戳类异常直接 `abnormal=True`，网络只在 `reason='model_residual'` 时出现。归因清楚，消融才有意义。
+
+**阈值来自正常验证集，不是测试集。** `config.json` 里写死 `threshold`，`evaluate` 先校验 `final_protocol.json` 的哈希，防止"边评估边调参"。
+
+**冻结模型有哈希保护。** `final_protocol.json` 记录权重与阈值哈希，重训不会自动替换部署模型——这是本实验"最终测试只跑一次"承诺的技术保证。
+
+**采集脚本与诊断脚本分离。** 只有 `collect_holdout.py` 会控制仿真无人机，其余全部只读。安全边界写在代码结构里，而不是文档里。
+
+---
