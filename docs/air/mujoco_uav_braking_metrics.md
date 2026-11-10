@@ -42,4 +42,4 @@ flowchart LR
 
 ## 文件与测试
 
-工具文件为 `src/air/mujoco_uav_range_neural_braking/trajectory_metrics.py`。新增测试覆盖指标计算、输入校验和 JSON 输出；模块测试共 24 项。
+工具文件为 `src/air/mujoco_uav_range_neural_braking/trajectory_metrics.py`。新增测试覆盖指标计算、输入校验和 JSON 输出。
