@@ -1,16 +1,20 @@
-# 低空无人机二维栅格路径规划
+# MuJoCo 无人机栅格激光建图与路径重规划
 
-本模块在预先给定的二维占据栅格上使用四邻域 A* 寻路，并按离散格点逐步推进路线。障碍物由输入栅格提供，结果包含航点序列、离散步数和是否到达目标。
+本模块在 MuJoCo 平面场景中控制无人机模型沿 A* 航点移动。控制循环读取 MuJoCo 位姿，使用 `mj_ray` 获取 180 束虚拟激光测距，更新占据栅格，并在每个航点重新规划路线。
 
-这是路径规划算法示例。它不读取 MuJoCo 位姿或传感器数据，也不执行物理飞行、激光建图或 SLAM。
+## 环境与运行
+
+支持 Python 3.10 及以上版本。安装运行和测试依赖后，执行导航并运行测试：
 
 ```bash
 python -m pip install -r requirements.txt
-python navigation.py
 python -m pip install -r requirements-dev.txt
+python navigation.py
 python -m pytest -q test_navigation.py
 ```
 
-默认运行会将路线指标写入 `output/grid_navigation.json`，并生成 PNG 路线图 `output/grid_navigation.png`。测试覆盖障碍绕行、不可达目标、输入校验、路线终点和 PNG 渲染。
+默认场景为 24×16 栅格，包含三组矩形障碍物。MuJoCo 的位置执行器逐段跟踪 A* 航点；每到达一个格点，程序读取新位姿、采集激光测距并更新地图，再计算后续路线。
 
-English: The example plans a four-connected A* route on a supplied occupancy grid and advances along discrete cells. It does not model flight dynamics or consume simulated sensor data.
+运行结果写入 `output/`：`navigation_map.png` 为最终占据栅格与实际行进路线，`navigation_run.gif` 展示地图和航点进度，`trajectory.json` 保存 MuJoCo 位姿轨迹，`navigation_metrics.json` 记录目标到达、地图覆盖率、扫描次数和重规划次数。
+
+English: The MuJoCo planar UAV follows A* waypoints using simulated position feedback. At each waypoint, 180 virtual lidar rays update the occupancy grid and the planner computes the next route. Outputs include the final map, an animated route, pose telemetry, and navigation metrics.

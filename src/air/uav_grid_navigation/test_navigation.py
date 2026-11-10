@@ -1,6 +1,7 @@
 import pytest
 
 from navigation import plan_route, render_route, simulate_route
+from simulation import run_mujoco_navigation
 
 
 def test_astar_finds_shortest_route_around_obstacle():
@@ -44,3 +45,19 @@ def test_route_renderer_writes_a_png(tmp_path):
     with Image.open(output) as image:
         assert image.format == "PNG"
         assert image.size == (84, 116)
+
+
+def test_mujoco_navigation_maps_and_reaches_goal(tmp_path):
+    result = run_mujoco_navigation(tmp_path)
+
+    assert result["goal_reached"] is True
+    assert result["navigation_steps"] > 0
+    assert result["lidar_scans"] > 1
+    assert result["replans"] > 0
+    assert result["map_coverage"] == 1.0
+    assert result["final_x_cell"] == 21
+    assert result["final_y_cell"] == 13
+    assert (tmp_path / "navigation_map.png").is_file()
+    assert (tmp_path / "navigation_run.gif").is_file()
+    assert (tmp_path / "trajectory.json").is_file()
+    assert (tmp_path / "navigation_metrics.json").is_file()
