@@ -225,6 +225,10 @@ AirSim 旋转雷达单帧只覆盖一小段方位，扫描节点累积 1 秒点�
 最后一个角度是 `angle_min + (bins - 1) * angle_increment = +89°`。写成 `+90°`
 会让按 `(max-min)/increment + 1` 计算的消费者得到 181 个点。
 
+`ranges` 的顺序同样按 ROS 约定生成：`ranges[0]` 对应 `angle_min`（-90°，机身
+右侧），最后一个元素对应 `angle_max`。AirSim 的 `atan2(y, x)` 正角在右侧，
+生成扫描时取负对齐 ROS 的“左正”，避免 gmapping 建出左右镜像的地图。
+
 ### 5.2 gmapping 参数
 
 | 参数 | 值 |
