@@ -90,14 +90,7 @@ class FallPredictorMLP:
         dW1 = X.T @ dz1
         db1 = dz1.sum(axis=0)
 
-        # SGD + 动量
-        for dW, db, vW, vb, W, b in [
-            (dW1, db1, self._vW1, self._vb1, self.W1, self.b1),
-            (dW2, db2, self._vW2, self._vb2, self.W2, self.b2),
-            (dW3, db3, self._vW3, self._vb3, self.W3, self.b3),
-        ]:
-            pass  # 占位，下面统一更新
-
+        # SGD + 动量（各层分别更新）
         self._vW1 = self.momentum * self._vW1 - lr * dW1
         self._vb1 = self.momentum * self._vb1 - lr * db1
         self.W1 += self._vW1
