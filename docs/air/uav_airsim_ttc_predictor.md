@@ -96,7 +96,8 @@ $$
 | `dataset.py` | 标签速度用「指令 0.5 + 差分 0.5」抑制噪声；每回合随机起点与速度 |
 | `train.py` | 逐样本 SGD（Adam 一步一样本），按验证 MSE 留最优，报 R² |
 | `demo.py` | 在线预测 + 安全停 + gif；`to_gif()` 超 10 MB 自动抽帧 |
-| `node.py` | 订阅 `/uav/depth`（`sensor_msgs/Image`，float32），发布 `/uav/ttc`（`std_msgs/Float32`） |
+| `node.py` | 订阅 `/uav/depth`（`sensor_msgs/Image`，float32），发布 `/uav/ttc`（`std_msgs/Float32`）。权重用 `self.net = DepthPolicyNet.load(path)` 接住 classmethod 返回的新实例；深度图尺寸按 `msg.height / msg.width` 取，不假设正方形 |
+| `test/test_cnn.py` | 5 条单元测试：前向形状、tanh 范围、`im2col`/`col2im` 互逆、`load()` 返回已训练实例、640×480 非正方形缩放 |
 
 ## 8. 踩坑记录
 
@@ -104,6 +105,8 @@ $$
 |---|---|---|---|
 | 1 | `im2col` 报 `too many values to unpack` | 数据存成 (N,1,64,64)，多了一维 | 训练端 squeeze 掉通道维 |
 | 2 | `load_state(weights)` 报 `string indices must be integers` | 传了路径而非数组字典 | 改用 `DepthPolicyNet.load(path)` 类方法 |
+| 2b | 节点发布的 TTC 一直是噪声 | `load()` 是 classmethod 返回新实例，`self.net.load(path)` 丢弃了返回值，`self.net` 仍是随机权重（`demo.py` 写对了，`node.py` 漏了） | 改成 `self.net = DepthPolicyNet.load(path)`；`test/test_cnn.py` 里加一条断言「加载前后的预测必须不同」防回归 |
+| 2c | 深度图 `reshape` 报 `ValueError` | AirSim DepthPlanar 默认 640×480，`int(sqrt(307200))=554`，`554×554≠307200` | 改用 `msg.height / msg.width` 取尺寸，尺寸不符时降级为单列并告警 |
 | 3 | 初版 R² 只有 0.319，实飞 MAE 6.85 s | TTC 标签用位置差分速度，噪声 ±2 m/s 直接放大到标签上 | 标签改用「指令速度与差分各半」并钳位 |
 | 4 | 演示第 3 步就误触发安全停 | 网络预测在起步瞬间骤降 | 提高标签质量后 R² 升到 0.606，同时放低阈值到 1.8 s |
 | 5 | 采集到一半 Blocks 进程消失 | 仿真长时间运行后崩溃 | 重启 Blocks，等 41451 重新 LISTEN 再采 |
@@ -138,6 +141,15 @@ colcon build --packages-select uav_airsim_ttc_predictor
 source install/setup.bash
 ros2 launch uav_airsim_ttc_predictor main.launch.py
 ```
+
+不需要 AirSim 也能先自检网络和权重（约 1 秒）：
+
+```bash
+python3 test/test_cnn.py
+# 5/5 通过
+```
+
+文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页，可直接从站点导航进入。
 
 ## 10. 局限与改进
 
