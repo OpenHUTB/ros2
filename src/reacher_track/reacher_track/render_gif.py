@@ -10,8 +10,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from reacher_env import ReacherEnv, forward_kinematics
-from nn import MLP
+try:                       # 作为包导入（python -m / pytest）
+    from .nn import MLP
+    from .reacher_env import ReacherEnv, forward_kinematics
+except ImportError:        # 作为脚本直接运行（main.py 的用法）
+    from nn import MLP
+    from reacher_env import ReacherEnv, forward_kinematics
 
 
 def make_policy(net, Xstat, Ystat):

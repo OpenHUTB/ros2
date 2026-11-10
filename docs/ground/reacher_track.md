@@ -156,7 +156,20 @@ ros2 run reacher_track main               # 编译安装后推荐
 # 或：ros2 launch reacher_track main.launch.py
 ```
 
-依次执行数据采集 → 训练 → DAgger → 评估。
+依次执行数据采集 → 训练 → DAgger → 评估。四步的中间产物（`demo.npz`、
+`mlp.npz`、`eval_summary.csv`、误差曲线）落在 `~/.ros/reacher_track`，
+可用环境变量 `REACHER_RUN_DIR` 改目录。
+
+**快速模式**（CI / 冒烟验证，几十秒跑完，判据不变）：
+
+```bash
+RT_DEMO_EPISODES=8 RT_MAX_STEPS=60 RT_EPOCHS=5 RT_DAGGER_ITER=1 \
+RT_DAGGER_EPISODES=4 RT_EVAL_EPISODES=3 ros2 launch reacher_track main.launch.py
+```
+
+> 说明：launch 与 `main` 都用 `python3 -m reacher_track.<stage>` 调各阶段，
+> 不再依赖「源码就在 share 目录旁边」这个假设——`colcon install` 之后源码
+> 并不在 install 树里，按脚本路径调用会直接 "can't open file"。
 
 ### 5.2 分步运行
 
@@ -177,6 +190,26 @@ python3 reacher_track/render_gif.py     # 渲染 reacher_ep0.gif / reacher_ep1.g
 目标跟踪动图（机械臂末端误差从约 0.20m 收敛到约 0.03m）：
 
 ![Reacher 神经网络目标跟踪动图](../img/reacher_track/reacher_ep0.gif)
+
+### 5.3 测试与 CI
+
+```bash
+cd ~/ros2_ws/src/reacher_track
+python3 -m pytest test/ -q        # 15 个用例，约 1 s；没装 mujoco 时 8 个
+```
+
+| 用例文件 | 覆盖 | 需要 mujoco |
+|---|---|---|
+| `test_nn.py` | MLP 批量/逐条前向一致、**反向梯度 vs 中心差分数值梯度**、存档读档无损、Adam 是否真的降低损失 | 否 |
+| `test_geometry.py` | IK↔FK 在可达**圆环**内自洽（内半径 \|L1−L2\|=0.03 m 不可达）、超距目标夹到最大臂展、`find_model_path` 在任意 CWD 可用 | 否 |
+| `test_env.py` | `state()` 六维语义与 FK 一致、`step()` 把扭矩夹到 ±2.0、reset 语义、专家 IK+PD 5 回合全部 <5 cm | 是 |
+| `test_pipeline.py` | 极小规模跑通采集→训练→DAgger→评估，`eval_summary.csv` 两行数值有限 | 是 |
+
+`.github/workflows/ros2_reacher_track.yml` 在 `ros:humble` 容器里执行：
+单测 → `colcon build` → **install 布局硬断言**（`launch/main.launch.py`、
+`config/algo_config.yaml`、`models/reacher.xml`、`lib/reacher_track/main`
+及其可执行位、resource marker，缺一即红）→ `ros2 launch` 快速模式跑完四步
+并校验 `eval_summary.csv`。tab 与缩进类问题在单测阶段就会暴露，不必等真机。
 
 ## 6. 实验结果与性能评价
 

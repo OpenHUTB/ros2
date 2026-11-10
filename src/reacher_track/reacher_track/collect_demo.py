@@ -5,12 +5,20 @@ collect_demo.py
 对每个 episode: 随机初始关节角 + 随机目标, PD 控制跟踪至收敛,
 记录 (感知状态, PD控制动作) 数据对, 供 MLP 监督学习逼近该控制律。
 """
+import os
+
 import numpy as np
 
-from reacher_env import ReacherEnv
+try:                       # 作为包导入（python -m / pytest）
+    from .reacher_env import ReacherEnv
+except ImportError:        # 作为脚本直接运行（main.py / launch 的用法）
+    from reacher_env import ReacherEnv
 
 
 def main(n_eps=400, max_steps=250, seed=0):
+    # 环境变量只用于「快速模式」（CI / 冒烟验证），不改变默认实验规模
+    n_eps = int(os.environ.get('RT_DEMO_EPISODES', n_eps))
+    max_steps = int(os.environ.get('RT_MAX_STEPS', max_steps))
     np.random.seed(seed)
     env = ReacherEnv("models/reacher.xml")
     X, Y = [], []

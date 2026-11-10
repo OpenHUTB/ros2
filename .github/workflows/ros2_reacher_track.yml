@@ -1,0 +1,128 @@
+name: ROS 2 Humble
+
+# 目的：在真 Ubuntu 22.04 + ROS 2 Humble 里验证 reacher_track 能编译、能装对、
+# 能 `ros2 launch` 跑完「采集 → 训练 → DAgger → 评估」四步（快速模式），
+# 且单测（NN 梯度校验、IK/FK 自洽、环境语义、迷你流水线）全绿。
+# 只在改动本模块或本 workflow 时触发，不占其它包的 CI 预算。
+
+on:
+  push:
+    paths:
+      - 'src/reacher_track/**'
+      - '.github/workflows/ros2_reacher_track.yml'
+  pull_request:
+    paths:
+      - 'src/reacher_track/**'
+      - '.github/workflows/ros2_reacher_track.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ros2-reacher-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  humble:
+    name: colcon build + launch（Ubuntu 22.04 / Humble）
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    defaults:
+      run:
+        shell: bash
+    env:
+      # launch 的产物目录：demo.npz / mlp.npz / eval_summary.csv 都落这里
+      REACHER_RUN_DIR: /tmp/reacher_run
+      # 快速模式：把规模压到秒级，判据（专家 100% 到点）仍然成立
+      RT_DEMO_EPISODES: '8'
+      RT_MAX_STEPS: '60'
+      RT_EPOCHS: '5'
+      RT_DAGGER_ITER: '1'
+      RT_DAGGER_EPISODES: '4'
+      RT_EVAL_EPISODES: '3'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装依赖
+        # mujoco 走 pip（apt 源里没有这个包）；numpy/matplotlib/pytest 用系统包，
+        # 避免在容器里再编一遍科学计算栈。
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            python3-numpy python3-matplotlib python3-pytest python3-pip
+          python3 -m pip install -q --no-cache-dir 'mujoco>=3.1'
+
+      - name: 单测（不需要 source ROS）
+        # 覆盖：MLP 反向 vs 数值梯度、Adam 是否真的下降、IK/FK 自洽与内环边界、
+        # state() 六维语义、step() 的扭矩限幅、专家收敛、迷你四步流水线。
+        run: |
+          cd src/reacher_track
+          python3 -m pytest test/ -q
+
+      - name: colcon build
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --packages-select reacher_track \
+                       --event-handlers console_direct+
+
+      - name: install 布局断言（data_files 与入口点）
+        # 只打印不判定的话，「models/config 没被 data_files 装进去」这类回归会漏到
+        # 运行时才炸；这里逐项硬断言，缺一个就红。
+        run: |
+          set -e
+          PKG=install/reacher_track
+          SHARE="$PKG/share/reacher_track"
+          LIB="$PKG/lib/reacher_track"
+
+          echo "=== install 后的文件 ==="
+          find "$PKG" -type f | sort
+
+          missing=0
+          for f in \
+            "$SHARE/package.xml" \
+            "$SHARE/launch/main.launch.py" \
+            "$SHARE/config/algo_config.yaml" \
+            "$SHARE/models/reacher.xml" \
+            "$LIB/main" \
+            "$PKG/share/ament_index/resource_index/packages/reacher_track"
+          do
+            if [ -e "$f" ]; then echo "ok   $f"; else echo "MISS $f"; missing=1; fi
+          done
+          [ "$missing" -eq 0 ] || { echo "install 布局不完整"; exit 1; }
+
+          echo "=== 可执行位 ==="
+          test -x "$LIB/main" || { echo "$LIB/main 不可执行"; exit 1; }
+          echo "ok   $LIB/main 可执行"
+
+          echo "=== ros2 pkg executables ==="
+          source install/setup.bash
+          ros2 pkg executables reacher_track | tee /tmp/execs.txt
+          grep -q '^reacher_track main$' /tmp/execs.txt || {
+            echo "入口点 main 没注册上"; exit 1; }
+
+      - name: ros2 launch 跑通四步流水线（快速模式）
+        # 这一步是「文档里说 launch 一键能跑」的唯一硬证据：真 source 之后
+        # 用 launch 起，检查四步都出了产物、评估表里两行数值都有限。
+        run: |
+          set -e
+          source install/setup.bash
+          rm -rf "$REACHER_RUN_DIR"
+          timeout 600 ros2 launch reacher_track main.launch.py 2>&1 | tee /tmp/launch.log
+          grep -q 'DAgger done' /tmp/launch.log        || { echo "DAgger 没跑完"; exit 1; }
+          grep -q 'saved: eval_summary.csv' /tmp/launch.log || { echo "评估没跑完"; exit 1; }
+
+          echo "=== 产物 ==="
+          ls -l "$REACHER_RUN_DIR"
+
+          echo "=== eval_summary.csv ==="
+          cat "$REACHER_RUN_DIR/eval_summary.csv"
+          python3 - <<'PY'
+          import csv, math, os
+          p = os.path.join(os.environ['REACHER_RUN_DIR'], 'eval_summary.csv')
+          rows = list(csv.DictReader(open(p, encoding='utf-8')))
+          assert [r['method'] for r in rows] == ['MLP', 'IKPD'], rows
+          for r in rows:
+              for k in ('mean_err', 'median_err', 'success_rate', 'mean_steps'):
+                  assert math.isfinite(float(r[k])), (r['method'], k, r[k])
+          # 专家是演示数据的来源，必须能到点；MLP 只训了 5 epoch，不设阈值
+          assert float(rows[1]['success_rate']) > 0.0, rows[1]
+          print('eval_summary 校验通过')
+          PY

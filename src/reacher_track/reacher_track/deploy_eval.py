@@ -5,13 +5,19 @@ deploy_eval.py
 "感知(关节编码器+目标检测) -> 神经网络 -> 扭矩控制" 的闭环,
 评估多回合末端跟踪误差, 并对比逆运动学+PD 控制。
 """
+import os
+
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from reacher_env import ReacherEnv
-from nn import MLP
+try:                       # 作为包导入（python -m / pytest）
+    from .nn import MLP
+    from .reacher_env import ReacherEnv
+except ImportError:        # 作为脚本直接运行（main.py / launch 的用法）
+    from nn import MLP
+    from reacher_env import ReacherEnv
 
 
 def make_policy(net, Xstat, Ystat):
@@ -44,6 +50,9 @@ def run_episode(env, policy, max_steps=200, use_pd=False):
 
 
 def main(n_eps=30, max_steps=200, seed=0):
+    # 环境变量只用于「快速模式」（CI / 冒烟验证），不改变默认实验规模
+    n_eps = int(os.environ.get('RT_EVAL_EPISODES', n_eps))
+    max_steps = int(os.environ.get('RT_MAX_STEPS', max_steps))
     np.random.seed(seed)
     env = ReacherEnv("models/reacher.xml")
     net = MLP([6, 128, 128, 2])

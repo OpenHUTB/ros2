@@ -4,9 +4,14 @@ train_mlp.py
 监督学习: 用演示数据(感知状态 -> PD控制动作) 训练 MLP 神经网络,
 使网络学出"从感知状态到关节扭矩"的映射, 从而在部署时仅凭网络即可闭环跟踪目标。
 """
+import os
+
 import numpy as np
 
-from nn import MLP, Adam
+try:                       # 作为包导入（python -m / pytest）
+    from .nn import MLP, Adam
+except ImportError:        # 作为脚本直接运行（main.py / launch 的用法）
+    from nn import MLP, Adam
 
 
 def load_demo():
@@ -15,6 +20,8 @@ def load_demo():
 
 
 def main(epochs=600, batch=64, lr=3e-3, seed=0):
+    # 环境变量只用于「快速模式」（CI / 冒烟验证），不改变默认实验规模
+    epochs = int(os.environ.get('RT_EPOCHS', epochs))
     np.random.seed(seed)
     X, Y = load_demo()
     n = len(X)

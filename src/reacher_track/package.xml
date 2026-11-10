@@ -7,6 +7,10 @@
   <maintainer email="3248146937@qq.com">6lebron23</maintainer>
   <license>MIT</license>
   <exec_depend>python3</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <!-- mujoco 没有 rosdep key，需 pip 安装：python3 -m pip install 'mujoco>=3.1' -->
+  <test_depend>python3-pytest</test_depend>
   <export>
     <build_type>ament_python</build_type>
   </export>

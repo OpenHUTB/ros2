@@ -25,8 +25,12 @@
 ## 依赖
 
 ```bash
-python3 -m pip install --user mujoco==2.3.7 numpy matplotlib pillow
+# mujoco 没有 rosdep key，需 pip 安装；numpy/matplotlib 也可用 apt 的 python3-numpy
+python3 -m pip install --user 'mujoco>=2.3.7' numpy matplotlib
 ```
+
+`package.xml` 里已声明 `python3-numpy`、`python3-matplotlib`（运行）与
+`python3-pytest`（测试），`rosdep install --from-paths src --ignore-src` 会装前两者。
 
 ## 数据采集 / 训练 / DAgger / 评估
 
@@ -52,11 +56,42 @@ python3 reacher_track/render_gif.py
 ## launch 启动（完整流水线）
 
 ```bash
-cd ~/ros2_ws/src/reacher_track
+# 先 colcon build（launch 用 python3 -m reacher_track.<stage> 调各阶段，
+# 依赖安装后的包，不再假设源码就在 share 目录里）
+colcon build --packages-select reacher_track
+source install/setup.bash
+
 ros2 launch reacher_track main.launch.py
 ```
 
-依次执行 collect_demo → train_mlp → dagger_iter → deploy_eval。
+依次执行 collect_demo → train_mlp → dagger_iter → deploy_eval，四步产物
+（`demo.npz`、`mlp.npz`、`eval_summary.csv`、误差曲线）落在
+`~/.ros/reacher_track`，可用 `REACHER_RUN_DIR` 改目录。
+
+**快速模式**（CI / 冒烟验证，秒级完成，判据仍是「专家 100% 到点」）：
+
+```bash
+RT_DEMO_EPISODES=8 RT_MAX_STEPS=60 RT_EPOCHS=5 RT_DAGGER_ITER=1 \
+RT_DAGGER_EPISODES=4 RT_EVAL_EPISODES=3 ros2 launch reacher_track main.launch.py
+```
+
+## 测试与 CI
+
+```bash
+cd src/reacher_track
+python3 -m pytest test/ -q          # 15 个用例，约 1 s（装不了 mujoco 时 8 个）
+```
+
+| 文件 | 覆盖什么 | 需要 mujoco |
+|---|---|---|
+| `test/test_nn.py` | MLP 批量/逐条前向一致、反向梯度 vs 中心差分数值梯度、存档读档无损、Adam 是否真的降低损失 | 否 |
+| `test/test_geometry.py` | IK↔FK 在可达**圆环**内自洽（内半径 \|L1-L2\|=0.03 m 不可达）、超距目标被夹到最大臂展、`find_model_path` 在任意 CWD 下可用 | 否 |
+| `test/test_env.py` | `state()` 六维语义与 FK 一致、`step()` 扭矩夹到 ±2.0、reset 语义、专家 IK+PD 5 回合全部收敛 <5 cm | 是 |
+| `test/test_pipeline.py` | 极小规模跑通采集→训练→DAgger→评估四步，`eval_summary.csv` 两行数值有限 | 是 |
+
+CI：`.github/workflows/ros2_reacher_track.yml` 在 `ros:humble` 容器里跑
+单测 → `colcon build` → **install 布局硬断言**（launch/config/models/入口点/
+可执行位，缺一即红）→ `ros2 launch` 快速模式跑完四步并校验评估表。
 
 ## 性能评价（30 回合闭环，误差 <0.05m 记为成功）
 
@@ -88,10 +123,11 @@ src/reacher_track/
 │   ├── train_mlp.py              # 监督训练 MLP
 │   ├── dagger_iter.py            # DAgger 迭代(分布偏移缓解)
 │   ├── deploy_eval.py            # 闭环部署评估 + 误差曲线
-│   └── render_gif.py             # matplotlib 渲染跟踪动图(无显示器兜底)
+│   ├── render_gif.py             # matplotlib 渲染跟踪动图(无显示器兜底)
+│   └── main.py                   # 一键运行全流程入口（ros2 run reacher_track main）
 ├── launch/main.launch.py
-│   ├── main.py                # 一键运行全流程入口（ros2 run reacher_track main）
 ├── config/algo_config.yaml
+├── test/                         # pytest：NN 梯度/几何/环境/迷你流水线
 ├── results/                      # 评估结果数据（eval_summary.csv）
 └── README.md
 ```

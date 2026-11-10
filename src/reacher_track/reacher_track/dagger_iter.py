@@ -9,10 +9,16 @@ DAgger(Dataset Aggregation) 迭代训练: 解决监督学习闭环的"分布偏�
   3. 与原始演示数据合并, 重新训练 MLP
   4. 重复 2 轮, 最终 MLP 在部署分布上也准确 -> 闭环稳定
 """
+import os
+
 import numpy as np
 
-from reacher_env import ReacherEnv, inverse_kinematics
-from nn import MLP, Adam
+try:                       # 作为包导入（python -m / pytest）
+    from .nn import MLP, Adam
+    from .reacher_env import ReacherEnv, inverse_kinematics
+except ImportError:        # 作为脚本直接运行（main.py / launch 的用法）
+    from nn import MLP, Adam
+    from reacher_env import ReacherEnv, inverse_kinematics
 
 
 def make_policy(net, Xstat, Ystat):
@@ -76,6 +82,11 @@ def train_mlp(X, Y, dims, epochs=400, lr=3e-3, seed=0):
 
 
 def main(iter_n=2, n_eps=60, max_steps=150, epochs=400, lr=3e-3):
+    # 环境变量只用于「快速模式」（CI / 冒烟验证），不改变默认实验规模
+    iter_n = int(os.environ.get('RT_DAGGER_ITER', iter_n))
+    n_eps = int(os.environ.get('RT_DAGGER_EPISODES', n_eps))
+    max_steps = int(os.environ.get('RT_MAX_STEPS', max_steps))
+    epochs = int(os.environ.get('RT_EPOCHS', epochs))
     np.random.seed(0)
     env = ReacherEnv("models/reacher.xml")
     net = MLP([6, 128, 128, 2])
