@@ -54,6 +54,26 @@
 
 **前置条件：** 已启动模拟器并完成与 AirSim 的连接（参见[建立虚拟机和空域载具之间的连接](./setup_and_connect.md)），且已安装 `airsim` Python 包。
 
+### OpenHUTB 模拟器下载与启动
+
+Windows PowerShell 5.1 和 PowerShell 7 均可使用以下命令下载并启动脚本：
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Invoke-WebRequest -Uri 'https://openhutb.github.io/dl.bat' -OutFile '.\dl.bat'
+& '.\dl.bat'
+```
+
+下载完成后，运行 `StartOpenHUTB.bat` 启动模拟器；关闭时运行 `StopOpenHUTB.bat`。
+
+Ubuntu 下可运行：
+
+```bash
+curl -fsSL -o dl.sh https://openhutb.github.io/dl.sh && chmod +x dl.sh && ./dl.sh
+```
+
+下载完成后运行 `./CarlaUE4.sh` 启动模拟器。
+
 ```shell
 # 拉取仓库并进入仓库根目录
 git clone https://github.com/OpenHUTB/ros2.git
