@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>airsim_drone_gimbal_teleop</name>
+  <version>0.2.0</version>
+  <description>AirSim 无人机键盘遥控与机载云台相机预览控制模块</description>
+  <maintainer email="325837027+LJH0786@users.noreply.github.com">LJH0786</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- Python 依赖：pygame/numpy 可用 rosdep 安装；airsim 只能 pip 安装（见 README） -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pygame</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
