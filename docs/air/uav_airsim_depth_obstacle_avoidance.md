@@ -112,6 +112,8 @@ $$v_z = \mathrm{clip}\big(0.8\,(z_{\text{target}} - z),\ -1.5,\ 1.5\big)$$
 | 高度震荡 ±1.5 m | 速度指令要求机体大幅倾斜 | 增益降到 0.8，`vz` 限幅 ±1.5 |
 | 小步位置指令直接返回不执行 | 目标点仅 0.6 m 时 `moveToPositionAsync` 判定已到达 | 不用于逐步控制，只用于摆位 |
 | 网络永远输出 0 | 动作分布集中在 0，回归均值 | 动作加权 `w = 1 + 3|ω|` + 翻转增强 |
+| 节点发布的控制量一直是噪声 | `DepthPolicyNet.load()` 是 classmethod，`self.net.load(path)` 丢弃了返回的新实例，`self.net` 还是随机权重 | 改成 `self.net = DepthPolicyNet.load(path)`，并加单元测试断言加载前后预测不同 |
+| 深度图进节点报维度不匹配 | 网络 `fc1` 绑定 64×64，收到 640×480 的 DepthPlanar 直接前向会错 | 按 `msg.height / msg.width` 取尺寸，非 64×64 时缩放到 64×64 |
 
 ## 8. 结果
 
@@ -213,6 +215,35 @@ ros2 launch uav_airsim_depth_obstacle_avoidance main.launch.py z_ref:=-5.0
 ### `node.py` — ROS 2 节点
 
 订阅深度图，推理后发布 `[ω, z_target]`。权重路径可通过 `weights` 参数覆盖。
+
+两处必须注意（初版都踩过）：
+
+1. **必须接住 `load()` 的返回值**。`DepthPolicyNet.load()` 是 `@classmethod`，内部 `net = cls()` 后 `load_state()` 再 `return net`，所以它是「造一个新实例并返回」，不是原地修改。写成 `self.net.load(path)` 会把返回值丢掉，`self.net` 留在 `__init__` 里的随机初始化状态，节点发布的就是噪声：
+
+   ```python
+   self.net = DepthPolicyNet()                    # 错：随机权重
+   self.net.load(self.get_parameter("weights").value)
+   
+   self.net = DepthPolicyNet.load(              # 对：接住新实例
+       self.get_parameter("weights").value)
+   ```
+
+2. **不能假设深度图是正方形**。网络第一层 `fc1 = Linear(8 * 15 * 15, 64)` 绑定在 64×64 输入上，收到 AirSim 原始的 640×480 时直接前向会维度不匹配。节点按消息头取尺寸，非 64×64 时用与训练一致的最近邻索引缩放：
+
+   ```python
+   h, w = int(msg.height), int(msg.width)
+   idx_h = np.linspace(0, h - 1, SIZE).astype(int)
+   idx_w = np.linspace(0, w - 1, SIZE).astype(int)
+   depth = depth[np.ix_(idx_h, idx_w)]
+   ```
+
+`test/test_cnn.py` 里有 5 条单元测试覆盖这两点（其中 `test_load_returns_trained_instance` 断言「加载前后预测必须不同」，`test_nonsquare_depth_resize` 断言 640×480 能缩放到 64×64），不需要 AirSim 也能跑：
+
+```bash
+python3 src/air/uav_airsim_depth_obstacle_avoidance/test/test_cnn.py
+```
+
+文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页。
 
 ## 11. 局限
 
