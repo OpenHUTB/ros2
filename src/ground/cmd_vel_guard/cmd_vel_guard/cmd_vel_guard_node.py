@@ -33,7 +33,7 @@ def _is_finite_twist(msg):
 
 
 class CmdVelGuard(Node):
-        """限幅、急停、超时、非法值拦截四道保护的速度监督节点。"""
+    """限幅、急停、超时、非法值拦截四道保护的速度监督节点。"""
 
     def __init__(self):
         super().__init__('cmd_vel_guard')
