@@ -9,6 +9,7 @@
 * 源代码目录：[`src/ground/ros2_pure_pursuit`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/ros2_pure_pursuit)
 * 一键复现：`cd src/ground/ros2_pure_pursuit && python3 sim/run_sim.py --path eight`
 * 一键检查：`bash ci/run_ci.sh`（语法 → 依赖 → 测试 → 仿真 → 基准，五阶段）
+* CI：修改本模块时，GitHub Actions 会自动执行上面的 `ci/run_ci.sh`（见 `.github/workflows/ground_planner_tests.yml`）。
 
 ## 1. 目标与系统架构
 
