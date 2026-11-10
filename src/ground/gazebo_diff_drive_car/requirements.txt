@@ -1,0 +1,16 @@
+# gazebo_diff_drive_car —— Python 依赖
+
+# 本包运行于 ROS 2 Humble，ROS 相关包随桌面版安装，无需 pip 单独安装。
+
+# ---- 运行期依赖（ROS 2 自带）----
+# rclpy                 # ROS 2 Python 客户端库
+# sensor_msgs           # LaserScan / Image
+# geometry_msgs         # Twist
+# nav_msgs              # Odometry
+
+# ---- 第三方库（apt 安装，深度图处理使用）----
+# sudo apt install -y python3-numpy
+
+# ---- 仿真依赖（apt 安装）----
+# sudo apt install -y ros-humble-gazebo-ros ros-humble-gazebo-plugins \
+#                     ros-humble-robot-state-publisher ros-humble-xacro
