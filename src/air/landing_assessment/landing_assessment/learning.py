@@ -8,6 +8,9 @@ import torch
 from torch import nn
 from .data import prepare,WINDOW,PHASES
 
+# 载荷预测区间的目标覆盖率：1-alpha = 90%
+ALPHA=0.1
+
 class Network(nn.Module):
     def __init__(self,kind='mlp',channels=12):
         super().__init__();self.kind=kind
@@ -26,7 +29,7 @@ def normalized(x,meta):
     return np.clip((z-np.asarray(meta['mean']))/np.asarray(meta['std']),-10,10).astype(np.float32)
 
 def load(folder):
-    folder=Path(folder);meta=json.loads((folder/'meta.json').read_text())
+    folder=Path(folder);meta=json.loads((folder/'meta.json').read_text(encoding='utf-8'))
     net=Network(meta['kind'],len(meta['channels']))
     net.load_state_dict(torch.load(folder/'model.pt',map_location='cpu',weights_only=True));net.eval()
     return net,meta
@@ -36,6 +39,28 @@ def predict(net,meta,x):
         logits,value=net(tensor(normalized(x,meta)))
     quality=np.maximum(0,np.expm1(value.numpy()*meta['qstd']+meta['qmean']))
     return logits.softmax(-1).numpy(),quality
+
+
+def conformal_quantile(residuals,alpha=ALPHA):
+    """split conformal：在标定集残差上取第 ceil((n+1)(1-alpha)) 小的绝对残差。
+
+    返回 (q, 次序统计量序号, 标定样本数)。q 的含义是：新的预测值有约 1-alpha 的概率
+    落在 ±q 之内，前提是标定样本与新样本可交换（同一仿真分布、同一切分流程）。
+    """
+    values=np.sort(np.abs(np.asarray(residuals,dtype=float)))
+    n=len(values)
+    if n==0:raise ValueError('Calibration set is empty')
+    order=min(n,int(np.ceil((n+1)*(1-alpha))))
+    return float(values[order-1]),order,n
+
+
+def interval(meta,point):
+    """把点预测扩展成标定后的闭区间；未标定的旧模型退化为退化区间。"""
+    point=float(point)
+    conformal=meta.get('conformal') or {}
+    q=conformal.get('q')
+    if q is None:return point,point
+    return max(0.,point-float(q)),point+float(q)
 
 def train(folder='data/raw',output='models/trained',epochs=100):
     torch.set_num_threads(1);sets=prepare(folder);tr,va=sets['train'],sets['val']
@@ -67,14 +92,26 @@ def train(folder='data/raw',output='models/trained',epochs=100):
             history.append([epoch,float(loss),float(score)])
             if float(score)<best:
                 best=float(score);torch.save(net.state_dict(),out/'model.pt');meta['best_epoch']=epoch
-        (out/'meta.json').write_text(json.dumps(meta,indent=2))
+        # 用验证集标定载荷预测区间（best checkpoint，而非最后一轮权重）
+        net.load_state_dict(torch.load(out/'model.pt',map_location='cpu',weights_only=True));net.eval()
+        with torch.no_grad():
+            _,vq_best=net(vqx)
+        predicted=np.maximum(0,np.expm1(vq_best.numpy()*meta['qstd']+meta['qmean']))
+        q,order,n=conformal_quantile(predicted-va['qy'])
+        meta['conformal']={'alpha':ALPHA,'coverage_target':1-ALPHA,'q':q,
+                           'order_statistic':order,'calibration_episodes':n,
+                           'policy':'split conformal on validation episodes, absolute residual in body weights'}
+        # 风险分级阈值取训练集峰值载荷的 P75/P90，避免手填物理量
+        meta['risk_thresholds']={'elevated':float(np.percentile(tr['qy'],75)),
+                                 'high':float(np.percentile(tr['qy'],90))}
+        (out/'meta.json').write_text(json.dumps(meta,indent=2),encoding='utf-8')
         np.savetxt(out/'loss.csv',history,delimiter=',',header='epoch,train_loss,val_loss',comments='')
         print(label,'validation loss',round(best,4),'epoch',meta['best_epoch'],flush=True)
     # Fit the physical-feature regression once, using only the training episodes.
     def design(x):
         vz=x[:,-1,3];return np.c_[np.ones(len(vz)),abs(vz),vz*vz]
     matrix=design(tr['qx']);coef=np.linalg.solve(matrix.T@matrix+.001*np.eye(3),matrix.T@tr['qy'])
-    (Path(output)/'baselines.json').write_text(json.dumps({'mean':float(tr['qy'].mean()),'speed_quadratic':coef.tolist()}))
+    (Path(output)/'baselines.json').write_text(json.dumps({'mean':float(tr['qy'].mean()),'speed_quadratic':coef.tolist()}),encoding='utf-8')
 
 def metrics(y,p):
     confusion=np.zeros((4,4),int)
@@ -88,7 +125,7 @@ def rules(x):
 
 def evaluate(folder='data/raw',models='models/trained',output='results'):
     torch.set_num_threads(1);sets=prepare(folder);out=Path(output);out.mkdir(parents=True,exist_ok=True)
-    report={};rows=[];baselines=json.loads((Path(models)/'baselines.json').read_text())
+    report={};rows=[];baselines=json.loads((Path(models)/'baselines.json').read_text(encoding='utf-8'))
     for split,values in sets.items():
         if split=='train':continue
         report[split]={}
@@ -96,23 +133,28 @@ def evaluate(folder='data/raw',models='models/trained',output='results'):
         for model in sorted(Path(models).iterdir()):
             if not (model/'model.pt').exists():continue
             net,meta=load(model);prob,_=predict(net,meta,values['x']);_,quality=predict(net,meta,values['qx'])
-            candidates.append((model.name,prob.argmax(1),quality))
+            q=(meta.get('conformal') or {}).get('q')
+            candidates.append((model.name,prob.argmax(1),quality,q))
         vz=values['qx'][:,-1,3]
-        candidates += [('speed_quadratic_rules',rules(values['x']),np.c_[np.ones(len(vz)),abs(vz),vz*vz]@baselines['speed_quadratic']),
-                       ('train_mean_rules',rules(values['x']),np.repeat(baselines['mean'],len(vz)))]
-        for name,phase,quality in candidates:
+        candidates += [('speed_quadratic_rules',rules(values['x']),np.c_[np.ones(len(vz)),abs(vz),vz*vz]@baselines['speed_quadratic'],None),
+                       ('train_mean_rules',rules(values['x']),np.repeat(baselines['mean'],len(vz)),None)]
+        for name,phase,quality,q in candidates:
             item=metrics(values['y'],phase);error=quality-values['qy']
             item.update(impact_mae=float(np.mean(abs(error))),impact_rmse=float(np.sqrt(np.mean(error**2))),
                         episodes=len(values['qy']),phase_windows=len(phase))
+            if q is not None:
+                item.update(interval_q_body_weights=float(q),interval_width_body_weights=2*float(q),
+                            interval_coverage=float(np.mean(np.abs(error)<=q)),
+                            interval_target_coverage=1-ALPHA)
             report[split][name]=item
             for ep,true,pred in zip(values['qepisode'],values['qy'],quality):
-                rows.append([split,name,int(ep),float(true),float(pred)])
+                rows.append([split,name,int(ep),float(true),float(pred),float(q) if q is not None else ''])
         if 'mlp_42' in report[split]:
             net,meta=load(Path(models)/'mlp_42');phase,_=predict(net,meta,values['x'])
             np.savez_compressed(out/(split+'_phase_predictions.npz'),y=values['y'],pred=phase.argmax(1),episode=values['episode'])
-    (out/'metrics.json').write_text(json.dumps(report,indent=2))
-    with (out/'impact_predictions.csv').open('w',newline='') as f:
-        writer=csv.writer(f);writer.writerow(['split','model','episode','true_peak_load_factor','predicted_peak_load_factor']);writer.writerows(rows)
+    (out/'metrics.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+    with (out/'impact_predictions.csv').open('w',newline='',encoding='utf-8') as f:
+        writer=csv.writer(f);writer.writerow(['split','model','episode','true_peak_load_factor','predicted_peak_load_factor','interval_half_width_body_weights']);writer.writerows(rows)
     print(json.dumps(report,indent=2))
 
 if __name__=='__main__':

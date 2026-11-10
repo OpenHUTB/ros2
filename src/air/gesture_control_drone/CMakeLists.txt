@@ -19,6 +19,7 @@ catkin_install_python(PROGRAMS
   scripts/gesture_ros_node.py
   scripts/drone_control_node.py
   scripts/gesture_demo.py
+  scripts/record_gesture_session.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -28,10 +29,12 @@ install(FILES
   scripts/gesture_gate.py
   scripts/gesture_map.py
   scripts/drone_client.py
+  scripts/gesture_dataset.py
+  scripts/gesture_session.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(DIRECTORY launch config
+install(DIRECTORY launch config data
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
 )

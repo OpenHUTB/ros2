@@ -27,6 +27,9 @@ gesture_control_drone/
     ├── gesture_detection.py   手势识别（唯一实现，纯函数可离线单测）
     ├── camera_utils.py        跨平台摄像头
     ├── drone_client.py        ★ AirSim 多旋翼封装（连接/动作/限幅/超时/状态）
+    ├── gesture_dataset.py    关键点数据集工具（归一化 / npz / 统计 / 划分）
+    ├── record_gesture_session.py  采集：摄像头 -> 特征+弱标签 -> npz
+    ├── gesture_session.py    采集会话的纯逻辑（累积/统计/落盘，可离线测）
     └── gesture_demo.py        无 ROS 单机演示（pygame 虚拟无人机）
 ```
 

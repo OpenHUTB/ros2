@@ -89,5 +89,10 @@ def main():
     return 0
 
 
+def test_reference_acc():
+    """pytest 入口：参考 ACC 与工况自检必须返回 0。"""
+    assert main() == 0
+
+
 if __name__ == '__main__':
     sys.exit(main())

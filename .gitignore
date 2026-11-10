@@ -1,5 +1,6 @@
 # 虚拟环境
 venv/
+.venv/
 
 # mkdocs 构建产物
 site/
@@ -15,8 +16,11 @@ __pycache__/
 docs/requirements.txt
  add-mujoco-aeb
 # MuJoCo 运行日志
+# 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
+# （新增 catkin 包时容易整个漏提交），这里显式放行这一个文件名。
 *.TXT
 *.log
+!CMakeLists.txt
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
 /*.png
@@ -63,6 +67,10 @@ trajectories/*.json
 **/models/*.ckpt
 # 但部署必需的权重文件要保留
 !**/models/*.npz
+
+# drl_drone_path_planning 的评估/汇总产物可重新生成，不入库
+src/air/drl_drone_path_planning/models/evaluations.npz
+src/air/drl_drone_path_planning/models/train_summary.json
 
 # 训练日志与轨迹中间数据（由 train.py / eval.py / plot_results.py 重新生成）
 *.log
