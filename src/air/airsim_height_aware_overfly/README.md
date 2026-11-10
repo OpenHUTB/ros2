@@ -90,7 +90,7 @@ Get-NetTCPConnection -State Listen -LocalPort 41451
 变体 A 的预期终端顺序：
 
 ```text
-advance ... → overfly_obstacle（top≈+0.5~1.0 m，overhead>0）
+advance ... → overfly_obstacle（top≈0~1.0 m，本机 0.04~0.11，overhead>0）
 Overfly committed: climb ≈ top + 2.1 m
 overfly_obstacle: forward=0.00 ... lift 逐帧上升
 overfly_obstacle: forward>0 ... 越过墙顶
