@@ -40,7 +40,7 @@ class VisualLaneDepartureNode(Node):
         ('print_every', '20'),
         ('settle', '40'),
         ('min_speed', '1.0'),
-        ('max_offset', '0.8'),
+        ('max_offset', '1.6'),
     )
 
     def __init__(self):
@@ -118,7 +118,8 @@ class VisualLaneDepartureNode(Node):
             int(self._param('height')), float(self._param('fov')))
 
         machine = lanes.LaneDepartureStateMachine()
-        predictions, truths, speeds = [], [], []
+        speeds = []
+        visual_series, map_series = [], []
         total = int(self._param('frames'))
         every = max(1, int(self._param('print_every')))
         settle = int(self._param('settle'))
@@ -142,20 +143,20 @@ class VisualLaneDepartureNode(Node):
                 transform = self._actor.get_transform()
                 waypoint = world.get_map().get_waypoint(transform.location,
                                                         project_to_road=True)
-                truth = dataset.boundary_targets(waypoint, transform)
-                map_offset = -(truth[0] + truth[1]) / 2.0
+                # 真值取自车到中心线的垂距，不用 10 m 前瞻
+                map_offset = dataset.lane_offset(waypoint, transform)
 
                 # 话题每帧都发，统计只算地图给了有效车道的帧：路口那种
                 # 真值在两条车道之间跳的帧算进去会把误差拉高，口径也会
                 # 与 main.py --demo 对不上
                 speed = float(self._actor.get_velocity().length())
-                usable = (2.8 < truth[1] - truth[0] < 4.2
+                usable = (2.8 < waypoint.lane_width < 4.2
                           and abs(map_offset) <= max_offset
                           and speed >= min_speed
                           and index >= settle)
                 if usable:
-                    predictions.append(predicted)
-                    truths.append(truth)
+                    visual_series.append(visual_offset)
+                    map_series.append(map_offset)
                     speeds.append(speed)
                 else:
                     skipped += 1
@@ -169,7 +170,7 @@ class VisualLaneDepartureNode(Node):
                     self.get_logger().info('事件 %s（视觉偏移 %+.2f m，地图 %+.2f m）'
                                            % (event, visual_offset, map_offset))
 
-                if index % every == 0 and predictions:
+                if index % every == 0 and visual_series:
                     self.get_logger().info(
                         '帧 %4d 视觉 %+.2f m 地图 %+.2f m 误差 %+.2f m'
                         % (index, visual_offset, map_offset,
@@ -181,13 +182,14 @@ class VisualLaneDepartureNode(Node):
             if skipped:
                 self.get_logger().info(
                     '统计跳过 %d 帧（预热、车速过低或地图无有效车道）' % skipped)
-            self._publish_summary(predictions, truths, speeds)
+            self._publish_summary(visual_series, map_series, speeds)
 
-    def _publish_summary(self, predictions, truths, speeds):
+    def _publish_summary(self, visual_series, map_series, speeds):
         """跑完把误差发到 /statistics，方便录屏时直接看到结论。"""
-        if not predictions:
+        if not visual_series:
             return
-        result = metrics.evaluate(np.array(predictions), np.array(truths), speeds)
+        result = metrics.evaluate_offsets(np.array(visual_series),
+                                          np.array(map_series), speeds)
         self._summary = result
         self.get_logger().info(metrics.format_report(result))
 

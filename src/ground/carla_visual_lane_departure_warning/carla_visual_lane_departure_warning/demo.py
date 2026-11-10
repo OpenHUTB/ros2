@@ -102,7 +102,7 @@ def run(args):
     visual_machine = lanes.LaneDepartureStateMachine()
     map_machine = lanes.LaneDepartureStateMachine()
     visual_events, map_events = [], []
-    predictions, truths, speeds = [], [], []
+    speeds = []
     visual_series, map_series = [], []
     settle = max(0, args.settle)
     skipped = 0
@@ -132,8 +132,9 @@ def run(args):
             transform = ego.get_transform()
             waypoint = world.get_map().get_waypoint(transform.location,
                                                     project_to_road=True)
-            truth = dataset.boundary_targets(waypoint, transform)
-            map_offset = offset_from_boundaries(truth[0], truth[1])
+            # 真值取自车位置的垂距：往前看 10 m 的话，弯道上那段弧会被算成
+            # 偏移，车摆在正中也能读出一米多，真值自己先报警
+            map_offset = dataset.lane_offset(waypoint, transform)
             if sway > 0.0:
                 steer = sway_steer(args, frame, now, map_offset, sway_state)
                 ego.apply_control(carla.VehicleControl(
@@ -145,7 +146,7 @@ def run(args):
                       % (frame, '左' if direction else '右'), flush=True)
             # 地图这一帧给的车道不合理（路口、宽路段、判错车道）时，
             # 拿它当真值算误差没有意义，直接跳过
-            if not (2.8 < truth[1] - truth[0] < 4.2) or abs(map_offset) > args.max_offset:
+            if not (2.8 < waypoint.lane_width < 4.2) or abs(map_offset) > args.max_offset:
                 skipped += 1
                 continue
 
@@ -157,8 +158,6 @@ def run(args):
                                  + (1.0 - args.smooth) * visual_offset)
             previous_visual = visual_offset
 
-            predictions.append(predicted)
-            truths.append(truth)
             visual_series.append(visual_offset)
             map_series.append(map_offset)
             speeds.append(float(ego.get_velocity().length()))
@@ -186,21 +185,20 @@ def run(args):
         cc.destroy_all(camera, ego)
         cc.restore_async(world)
 
-    if not predictions:
+    if not visual_series:
         print('一帧也没跑，检查 --frames')
         return 1
 
     print('\n跳过 %d 帧（地图无有效车道），统计只用 %d 帧'
-          % (skipped, len(predictions)))
-    report(predictions, truths, speeds, visual_events, map_events, args,
-           visual_series, map_series)
+          % (skipped, len(visual_series)))
+    report(visual_series, map_series, speeds, visual_events, map_events, args)
     return 0
 
 
-def report(predictions, truths, speeds, visual_events, map_events, args,
-           visual_series, map_series):
+def report(visual_series, map_series, speeds, visual_events, map_events, args):
     """汇总误差与事件一致性，并把指标写成 json。"""
-    result = metrics.evaluate(np.array(predictions), np.array(truths), speeds)
+    result = metrics.evaluate_offsets(np.array(visual_series),
+                                      np.array(map_series), speeds)
     print('\n' + metrics.format_report(result))
 
     comparison = lanes.compare_events(visual_events, map_events,

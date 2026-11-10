@@ -45,8 +45,9 @@ def build_parser():
                         help='探路图的输出目录')
     parser.add_argument('--no-augment', action='store_true',
                         help='关闭左右镜像扩增')
-    parser.add_argument('--max-offset', type=float, default=0.8,
-                        help='自车相对车道中心的最大允许偏移（米）')
+    parser.add_argument('--max-offset', type=float, default=1.6,
+                        help='真值偏移超过它就不计入统计（米）；默认 1.6，'
+                             '比 depart_enter 0.9 宽，大偏移样本不丢')
     parser.add_argument('--min-paint', type=float, default=12.0,
                         help='边界处的最小线亮度增益，低于它认为没画线')
     parser.add_argument('--settle', type=int, default=40,

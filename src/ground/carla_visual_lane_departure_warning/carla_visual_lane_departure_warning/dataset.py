@@ -62,6 +62,17 @@ def boundary_targets(waypoint, ego_transform, distance=TARGET_DISTANCE):
     return float(left @ ego_right), float(right @ ego_right)
 
 
+def lane_offset(waypoint, ego_transform):
+    """自车到当前车道中心线的垂距，左偏为正，与预测偏移同口径。
+
+    取自车所在位置的路点（distance=0）再投影，而不是沿车道往前看 10 m：
+    弯道上 10 m 外那段弧的横向位移会整段算进偏移量，车摆在车道正中也能
+    读出 1 m 以上，真值自己就先报警了。
+    """
+    left, right = boundary_targets(waypoint, ego_transform, distance=0.0)
+    return -(left + right) / 2.0
+
+
 def boundary_points(waypoint, distance=TARGET_DISTANCE):
     """沿车道往前走到 distance 处，返回左右边界点的世界坐标。"""
     node = waypoint
@@ -145,12 +156,8 @@ def collect(args):
             if not (2.8 < right - left < 4.2):
                 skipped_width += 1
                 continue
-            # 自车相对当前车道中心的偏移，弯道上用 10 m 处的点会带系统性偏差
-            lateral_now = geo.lateral_offset(
-                (transform.location.x, transform.location.y),
-                math.radians(transform.rotation.yaw),
-                (waypoint.transform.location.x, waypoint.transform.location.y),
-                math.radians(waypoint.transform.rotation.yaw))
+            # 自车相对当前车道中心的偏移，用垂距；往前看 10 m 会把曲率算进来
+            lateral_now = lane_offset(waypoint, transform)
             if abs(lateral_now) > args.max_offset:
                 skipped_offset += 1
                 continue
