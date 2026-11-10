@@ -1,0 +1,42 @@
+<launch>
+  <!-- 换挡策略与扭矩需求：参数都能在命令行覆盖 -->
+  <arg name="upshift_rpm" default="2600.0" doc="升挡转速线，单位 rpm"/>
+  <arg name="downshift_rpm" default="1500.0" doc="降挡转速线，必须低于升挡线"/>
+  <arg name="min_dwell" default="0.50" doc="每次换挡后最短保持时间，单位 s"/>
+  <arg name="max_speed" default="30.00" doc="定速段车速，单位 m/s"/>
+  <arg name="accel" default="1.00" doc="加速段加速度，单位 m/s²"/>
+  <arg name="decel" default="2.00" doc="减速段减速度，单位 m/s²"/>
+  <arg name="hold_seconds" default="2.00" doc="定速段保持时长，单位 s"/>
+  <arg name="redline_rpm" default="6500.0" doc="红线转速，超过即判转速越界"/>
+  <arg name="peak_torque" default="220.0" doc="发动机峰值扭矩，单位 N·m"/>
+  <arg name="final_drive" default="4.10" doc="主减速比"/>
+  <arg name="step" default="0.05" doc="仿真步长，单位 s"/>
+  <arg name="closed_loop" default="true" doc="true=闭环执行（踏板 → 受限扭矩 → 车速积分）；false=开环反推扭矩"/>
+  <arg name="throttle_gain" default="2.00" doc="速度偏差到油门的增益，单位 1/(m/s)"/>
+  <arg name="brake_gain" default="2.00" doc="速度偏差到刹车的增益，单位 1/(m/s)"/>
+  <arg name="max_cmd_accel" default="2.00" doc="单帧最大指令加速度，单位 m/s²"/>
+  <arg name="track_tolerance" default="2.50" doc="闭环跟踪误差容差，单位 m/s"/>
+  <arg name="publish_hz" default="10.0" doc="保活与重发频率，单位 Hz"/>
+
+  <rosparam command="load" file="$(find gear_shift_policy)/config/gear_shift_policy.yaml"/>
+
+  <param name="policy/upshift_rpm" value="$(arg upshift_rpm)"/>
+  <param name="policy/downshift_rpm" value="$(arg downshift_rpm)"/>
+  <param name="policy/min_dwell" value="$(arg min_dwell)"/>
+  <param name="policy/redline_rpm" value="$(arg redline_rpm)"/>
+  <param name="profile/max_speed" value="$(arg max_speed)"/>
+  <param name="profile/accel" value="$(arg accel)"/>
+  <param name="profile/decel" value="$(arg decel)"/>
+  <param name="profile/hold_seconds" value="$(arg hold_seconds)"/>
+  <param name="engine/peak_torque" value="$(arg peak_torque)"/>
+  <param name="gearbox/final_drive" value="$(arg final_drive)"/>
+  <param name="sim/step" value="$(arg step)"/>
+  <param name="sim/closed_loop" value="$(arg closed_loop)"/>
+  <param name="driver/throttle_gain" value="$(arg throttle_gain)"/>
+  <param name="driver/brake_gain" value="$(arg brake_gain)"/>
+  <param name="driver/max_cmd_accel" value="$(arg max_cmd_accel)"/>
+  <param name="check/track_tolerance" value="$(arg track_tolerance)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+
+  <node pkg="gear_shift_policy" type="main.py" name="gear_shift_policy" output="screen"/>
+</launch>

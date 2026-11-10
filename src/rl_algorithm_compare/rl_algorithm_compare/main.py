@@ -12,12 +12,16 @@
 """
 import argparse
 import os
+import sys
 
 # 默认结果目录：包源码根目录下的 results/（不随当前工作目录漂移）
 _DEFAULT_OUT = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
 
-import sys
+# 支持 `python3 main.py` 直接运行，与 train.py / evaluate.py 的写法一致：
+# 脚本所在目录是包目录，父目录才是能 import rl_algorithm_compare 的位置。
+if __package__ in (None, ''):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from rl_algorithm_compare.compare import main as compare_main
 from rl_algorithm_compare.evaluate import main as evaluate_main
