@@ -1,0 +1,11 @@
+# Demo parameters for ground_wall_follower_pid.
+# Loaded via launch/ros2 run parameter overrides; kept here for reference.
+wall_follower:
+  ros__parameters:
+    target_distance: 0.5
+    forward_safety: 0.4
+    max_linear: 0.3
+    max_angular: 1.0
+    kp: 1.2
+    ki: 0.0
+    kd: 0.15
