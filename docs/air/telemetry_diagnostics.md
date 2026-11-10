@@ -130,3 +130,93 @@ ros2 launch telemetry_diagnostics main.launch.py \
 若按窗口随机划分，同一段飞行的相邻窗口会同时出现在训练与测试里，模型只要记住"这段航迹的形状"就能作弊。本实验按**完整飞行片段**分组，再在片段内切窗口。
 
 ---
+
+## 4. 计算原理
+
+### 4.1 跨通道一致性残差
+
+对相邻两条观测 \(t-1, t\)（时间差 \(\Delta t\)）：
+
+$$
+\mathbf{r}_p=\frac{\mathbf{p}_t-\mathbf{p}_{t-1}}{\Delta t}-\frac{\mathbf{v}_{t-1}+\mathbf{v}_t}{2},
+\qquad
+\mathbf{r}_v=\frac{\mathbf{v}_t-\mathbf{v}_{t-1}}{\Delta t}-\frac{\mathbf{a}_{t-1}+\mathbf{a}_t}{2}
+$$
+
+两个残差各 3 维，拼成 6 维：
+
+$$
+\mathbf{r}_t=\big[\mathbf{r}_p^\top,\ \mathbf{r}_v^\top\big]^\top\in\mathbb{R}^6
+$$
+
+物理含义：位置的差分应当等于速度的中点值；速度的差分应当等于加速度的中点值。正常飞行里两者都接近 0，漂移或偏置会让残差系统性偏离。
+
+\(\Delta t\) 不在 \(0.01\sim0.15\) s 之内时丢弃该窗口——太短无法差分，太长说明中间丢包。
+
+### 4.2 尺度归一与保号对数
+
+训练集正常样本给出每个通道的尺度 \(s_j\)，再做保号对数变换：
+
+$$
+\tilde r_j=\operatorname{sign}(r_j)\cdot\log\!\Big(1+\frac{|r_j|}{s_j}\Big)
+$$
+
+保号是为了不丢失"偏高/偏低"的方向信息；对数是为了压缩大残差的动态范围，让网络不被少数尖峰主导。
+
+### 4.3 时序模型
+
+取最近 **8** 个残差向量组成序列 \(\mathbf{R}=[\tilde{\mathbf r}_{t-7},\dots,\tilde{\mathbf r}_t]\in\mathbb{R}^{8\times6}\)：
+
+$$
+\mathbf{h}_k=\mathrm{GRU}\big(\tilde{\mathbf r}_{t-7+k},\ \mathbf{h}_{k-1}\big),\quad k=1..8,\qquad
+z=\mathbf{w}^\top\mathbf{h}_8+b
+$$
+
+隐藏单元 16，参数量 \(3\times(16\times6+16\times16+2\times16)+17=1{,}169\)。输出 \(z\) 是 logit，不是概率——阈值也定义在同一尺度上。
+
+### 4.4 训练目标
+
+正常样本记 0，注入异常样本记 1：
+
+$$
+\mathcal{L}=\frac{1}{N}\sum_{n=1}^{N}\Big[-\big(y_n\log\sigma(z_n)+(1-y_n)\log(1-\sigma(z_n))\big)\Big]
+$$
+
+20 轮，按**验证集 BCE** 选模型（不是按准确率，避免阈值未定时的偏置）。
+
+### 4.5 阈值与报警
+
+$$
+\tau=\operatorname{Quantile}_{99.5\%}\big(\{z_i\}_{i\in\text{正常验证}}\big)
+$$
+
+报警需要**连续 3 次** \(z>\tau\)：
+
+$$
+\text{alarm}_t=\mathbb{1}\Big[\sum_{k=0}^{2}\mathbb{1}(z_{t-k}>\tau)=3\Big]
+$$
+
+单次越阈值不报警，是为了压掉尖峰引起的误报；代价是延迟增加约 2 个采样周期（本实验为 0.1 s 量级）。
+
+### 4.6 事件级指标
+
+$$
+\text{Precision}=\frac{TP}{TP+FP},\qquad
+\text{Recall}=\frac{TP}{N_{\text{events}}},\qquad
+F_1=\frac{2PR}{P+R}
+$$
+
+- **检出（TP）**：异常区间内**新出现**的报警；
+- **假阳性（FP）**：正常时段新出现的报警；
+- 异常发生前就已持续的报警**不算检出**（否则一直报警就能刷满分）；
+- **延迟**只对检出事件统计；漏检单独报。
+
+正常误报率按**分钟**归一：
+
+$$
+\text{FP/min}=\frac{\#\text{正常时段的报警}}{\sum_{\text{正常场景}}\text{时长}/60}
+$$
+
+只用 10 个唯一正常场景，避免变体前缀重复计数。
+
+---
