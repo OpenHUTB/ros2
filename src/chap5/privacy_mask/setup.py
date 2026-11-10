@@ -1,4 +1,4 @@
-from glob import glob
+﻿from glob import glob
 import os
 
 from setuptools import setup
@@ -23,7 +23,7 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="Xavier-101666",
+    maintainer="刘琪",
     maintainer_email="2754586324@qq.com",
     description="基于 YOLOv8 的行人隐私脱敏 ROS 2 节点",
     license="AGPL-3.0",

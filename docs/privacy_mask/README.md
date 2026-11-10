@@ -1,4 +1,4 @@
-# 行人隐私脱敏视觉检测节点
+﻿# 行人隐私脱敏视觉检测节点
 
 基于 YOLOv8n 的 ROS 2 视觉节点：加载一张静态测试图片，用目标检测模型找出画面中的行人，
 对行人包围盒区域执行高斯模糊完成隐私脱敏，并把原图与脱敏图分别以压缩图像话题发布，
@@ -31,11 +31,11 @@ src/chap5/privacy_mask/
 │   └── privacy_mask.launch.py      # 启动文件
 ├── privacy_mask/
 │   ├── __init__.py
+│   ├── main.py                     # 可执行入口（console_scripts 指向此处）
 │   └── privacy_mask_node.py        # 节点实现
 ├── resource/
 │   ├── privacy_mask                # ament 资源索引标记文件
-│   ├── test.png                    # 测试图片
-│   └── yolov8n.pt                  # 模型权重，随包安装
+│   └── test.png                    # 测试图片
 ├── package.xml
 ├── setup.cfg
 └── setup.py
@@ -56,11 +56,20 @@ pip install "ultralytics==8.3.*" "numpy<2" -i https://pypi.tuna.tsinghua.edu.cn/
 
 ## 5. 模型文件
 
-节点默认读取 `share/privacy_mask/resource/yolov8n.pt`，该权重已随功能包提供，
-由 `setup.py` 中的 `glob("resource/*.pt")` 安装到 share 目录，无需联网下载。
+按照仓库约定，模型权重不直接提交到 git。首次运行前请任选一种方式准备 `yolov8n.pt`：
 
-如果 `resource/yolov8n.pt` 缺失，节点会打印警告并回退为 `YOLO("yolov8n.pt")` 自动下载，
-离线环境会因此启动失败，此时请先补齐权重文件再重新 `colcon build`。
+1. 从 Ultralytics 官方发布页下载：
+   <https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.pt>，
+   放到 `src/chap5/privacy_mask/resource/` 后重新执行 `colcon build`，
+   `setup.py` 中的 `glob("resource/*.pt")` 会把它安装到 share 目录；
+2. 直接启动节点：`load_model()` 在本地文件缺失时会回退为 `YOLO("yolov8n.pt")`
+   自动下载到当前运行目录（此方式需要联网，离线环境请用方式 1）。
+
+也可以通过参数直接指定已有权重，无需重新构建：
+
+```bash
+ros2 launch privacy_mask privacy_mask.launch.py model_path:=/path/to/yolov8n.pt
+```
 
 ## 6. 构建与运行
 
@@ -113,13 +122,13 @@ rqt_image_view
 ## 9. 验证范围与限制
 
 - 已验证：`colcon build` 通过，节点正常启动，两个话题持续发布图像，行人区域被模糊；
-- 已验证：`resource/` 中的图片与模型均随包安装，离线环境可运行；
+- 已验证：`resource/` 中的图片随包安装，模型按第 5 节准备后离线环境可运行；
 - 未验证：真实相机视频流、多人重叠场景、不同分辨率与光照条件下的稳定性；
 - 当前实现基于检测包围盒而非像素级分割，包围盒内的背景也会被模糊；
 - 仅支持静态图片，不订阅相机话题，也不支持视频流输入。
 
 ## 10. 许可证
 
-本功能包随包分发的 Ultralytics YOLOv8n 模型权重（`resource/yolov8n.pt`）以
-**AGPL-3.0** 发布。为与权重许可证保持一致，本包源代码同样采用 **AGPL-3.0**，
-详见 `package.xml` 与 `setup.py` 中的 `license` 字段。
+本包依赖的 Ultralytics YOLOv8 推理框架以 **AGPL-3.0** 发布。为与依赖许可证
+保持一致，本包源代码同样采用 **AGPL-3.0**，详见 `package.xml` 与 `setup.py`
+中的 `license` 字段。
