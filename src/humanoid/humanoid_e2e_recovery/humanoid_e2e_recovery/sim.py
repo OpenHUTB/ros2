@@ -24,7 +24,7 @@ DEFAULT_STAND_TARGET = np.array([
 
 
 class E2ESim:
-    def __init__(self, model_path: str, kp: float = 60.0, kd: float = 6.0,
+    def __init__(self, model_path: str, kp: float = 300.0, kd: float = 30.0,
                  image_h: int = 64, image_w: int = 64):
         if mujoco is None:
             raise RuntimeError("mujoco 未安装")
@@ -44,25 +44,49 @@ class E2ESim:
         self.data.qpos[self.qpos_j0:self.qpos_j0+15] = DEFAULT_STAND_TARGET
         mujoco.mj_forward(self.model, self.data)
 
-    def step(self, target: np.ndarray | None = None):
+    def step(self, target: np.ndarray | None = None, torque_extra: np.ndarray | None = None):
+        """关节 PD 追踪 target；torque_extra 为额外的 15 维力矩增量（端到端网络输出）。
+
+        平衡所需的前馈量由 target / torque_extra 提供，仿真器本身不做任何平衡补偿，
+        保证 --demo 完全由网络驱动。
+        """
         if target is None:
             target = DEFAULT_STAND_TARGET
         qj = self.data.qpos[self.qpos_j0:self.qpos_j0+15]
         qv = self.data.qvel[self.qvel_j0:self.qvel_j0+15]
         tau = np.clip(self.kp * (target - qj) - self.kd * qv, -280, 280)
-        self.data.ctrl[:] = tau
+        if torque_extra is not None:
+            tau = tau + np.asarray(torque_extra, dtype=np.float64)
+        self.data.ctrl[:] = np.clip(tau, -300, 300)
         mujoco.mj_step(self.model, self.data)
 
-    def apply_push(self, force_xyz, steps=40):
+    def apply_push(self, force_xyz, steps=40, target=None, balance=None):
+        """持续施加外力。balance 可传一个 callable(sim)->15 维力矩增量，
+        使推扰期间仍由控制器维持平衡（否则推扰的几十毫秒内就会失稳）。"""
         bid = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "torso")
         for _ in range(max(1, int(steps))):
             self.data.xfrc_applied[bid, :3] = list(force_xyz)
-            self.step()
+            extra = balance(self) if balance is not None else None
+            self.step(target=target, torque_extra=extra)
         self.data.xfrc_applied[bid, :3] = [0, 0, 0]
 
     @property
     def root_z(self):
         return float(self.data.qpos[2])
+
+    @property
+    def pelvis_x(self):
+        """骨盆（root 自由关节）相对世界原点的水平位移，用于踝策略平衡。"""
+        return float(self.data.qpos[0])
+
+    @property
+    def pelvis_vx(self):
+        return float(self.data.qvel[0])
+
+    @property
+    def tilt_rate(self):
+        """躯干前后倾角速度（绕 y 轴的 qvel[4]）。"""
+        return float(self.data.qvel[4])
 
     def fallen(self, z_th=0.6):
         return self.root_z < z_th
