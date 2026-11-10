@@ -1,7 +1,6 @@
 """地理围栏多边形检测算法单元测试."""
 
-import pytest
-
+from geofence_demo.geofence_node import _point_on_segment
 from geofence_demo.geofence_node import is_point_in_polygon
 
 
@@ -35,19 +34,34 @@ def test_inside_critical_rectangle():
 
 
 def test_same_rectangle_same_answer():
-    """同一条矩形围栏不能因遍历方向/起点不同而出现 Self-contradiction."""
-    poly = [(2.0, 2.0), (4.0, 2.0), (4.0, 4.0), (2.0, 4.0)]
-    # 内部点
-    assert is_point_in_polygon(3.0, 3.0, poly) is True
-    # 外部点 (2.5, 2.5) 也是内部
-    assert is_point_in_polygon(2.5, 2.5, poly) is True
-    # 明显外部
-    assert is_point_in_polygon(1.0, 1.0, poly) is False
-    assert is_point_in_polygon(5.0, 5.0, poly) is False
-
-
-def test_clockwise_polygon():
-    """顺时针顶点顺序的矩形应与逆时针结果一致."""
+    """起点旋转或遍历方向反转后，同一点的判定结果必须不变."""
+    ccw = [(2.0, 2.0), (4.0, 2.0), (4.0, 4.0), (2.0, 4.0)]
     poly_cw = [(2.0, 2.0), (2.0, 4.0), (4.0, 4.0), (4.0, 2.0)]
-    assert is_point_in_polygon(3.0, 3.0, poly_cw) is True
-    assert is_point_in_polygon(1.0, 1.0, poly_cw) is False
+    variants = [
+        ccw,
+        ccw[1:] + ccw[:1],  # 起点后移一位
+        ccw[2:] + ccw[:2],
+        poly_cw,            # 顺时针
+        poly_cw[3:] + poly_cw[:3],
+    ]
+    for polygon in variants:
+        assert is_point_in_polygon(3.0, 3.0, polygon) is True
+        assert is_point_in_polygon(2.5, 2.5, polygon) is True
+        assert is_point_in_polygon(1.0, 1.0, polygon) is False
+        assert is_point_in_polygon(5.0, 5.0, polygon) is False
+
+
+def test_duplicate_vertices_do_not_break_detection():
+    """重复顶点（零长度边）不能让整个围栏失效、恒返回 SAFE."""
+    polygon = [
+        (2.0, 2.0), (4.0, 2.0), (4.0, 2.0),
+        (4.0, 4.0), (4.0, 4.0), (2.0, 4.0),
+    ]
+    assert is_point_in_polygon(3.0, 3.0, polygon) is True
+    assert is_point_in_polygon(1.0, 1.0, polygon) is False
+
+
+def test_degenerate_edge_is_not_boundary():
+    """零长度边不构成有效边界，任意点都不应被判为落在其上."""
+    assert _point_on_segment(3.0, 3.0, 4.0, 2.0, 4.0, 2.0) is False
+    assert _point_on_segment(0.0, 0.0, 0.0, 0.0, 0.0, 0.0) is False

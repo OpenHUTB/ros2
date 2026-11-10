@@ -9,8 +9,8 @@
 节点在收到 `/geofence` 的多边形后缓存顶点，在收到 `/odom` 的载具位置后：
 
 1. 校验两条话题的 `header.frame_id` 是否与期望的 `expected_frame_id` 一致（默认 `map`）；
-2. 用射线法判断当前位置是否在多边形内部（边界点一律返回 `False`，仅内部点返回 `True`）；
-3. 在状态变化时发布 `/geofence_status`，内容为 `SAFE` 或 `CRITICAL`。
+2. 用射线法判断当前位置是否在多边形内部（边界点一律返回 `False`，仅内部点返回 `True`；重复顶点产生的零长度边会被忽略）；
+3. 状态变化时立即发布 `/geofence_status`，消息体只放枚举字符串 `SAFE` 或 `CRITICAL`，载具坐标写入日志；发布者使用 `TRANSIENT_LOCAL` QoS，后启动的订阅者也能收到最近一次状态；收到新围栏后会重新发布一次当前状态。
 
 ## 项目目录结构
 
@@ -91,13 +91,22 @@ ros2 topic pub /odom nav_msgs/msg/Odometry \
 |------|------|------|------|
 | 订阅 | `/odom` | `nav_msgs/Odometry` | 载具实时位置，`header.frame_id` 需与期望一致 |
 | 订阅 | `/geofence` | `geometry_msgs/PolygonStamped` | 禁飞区多边形边界 |
-| 发布 | `/geofence_status` | `std_msgs/String` | `SAFE` / `CRITICAL` 分级安全状态 |
+| 发布 | `/geofence_status` | `std_msgs/String` | `SAFE` / `CRITICAL` 分级安全状态，`TRANSIENT_LOCAL` QoS（latched） |
 
 ## 坐标系要求
 
 节点通过参数 `expected_frame_id` 指定期望的坐标系（默认 `map`）。
 若 `/odom` 和 `/geofence` 两条话题的 `frame_id` 与期望不一致，
 节点会输出警告并跳过检测。需先用 tf2 将两者变换到同一坐标系。
+
+## 边界语义
+
+落在多边形边上或顶点上的位置按 `SAFE` 处理，这是有意选择：把围栏边界视为
+"仍在围栏内"，避免载具贴着边界飞行时反复触发告警。
+
+这一选择的代价是边界外侧紧邻的一条窄带同样不会告警。如果实际场景需要一个
+缓冲带，可以把判定改成"到围栏边界距离小于阈值即 `CRITICAL`"，或单独输出
+`WARN` 级别。
 
 ## 自动化测试
 
@@ -117,7 +126,9 @@ python3 -m pytest test -v
 
 * 多边形判定对边界点、空多边形、退化多边形的处理；
 * 矩形内部点返回 `True`、外部点返回 `False`；
-* 顺时针/逆时针顶点顺序结果一致。
+* 起点旋转、顺时针/逆时针顶点顺序变化时结果一致；
+* 重复顶点（零长度边）不会让围栏整体失效；
+* 零长度边不会被误判为有效边界。
 
 ## 运行效果展示
 

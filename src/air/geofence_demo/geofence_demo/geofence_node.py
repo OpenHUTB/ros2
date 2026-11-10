@@ -14,24 +14,27 @@
 
 """禁飞区检测与安全预警节点."""
 
-import math
-
 from geometry_msgs.msg import PolygonStamped
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_msgs.msg import String
 
 
 def _point_on_segment(px, py, ax, ay, bx, by, eps=1e-9):
     """判断点 (px,py) 是否在线段 (ax,ay)-(bx,by) 上（含端点）."""
+    seg_len2 = (bx - ax) ** 2 + (by - ay) ** 2
+    if seg_len2 <= eps:
+        # 退化边（重复顶点）不构成边界，否则任意点都会被判为"在边上"，
+        # 进而让整个围栏恒返回 False（永远 SAFE）
+        return False
     cross = (bx - ax) * (py - ay) - (by - ay) * (px - ax)
     if abs(cross) > eps:
         return False
     dot = (px - ax) * (bx - ax) + (py - ay) * (by - ay)
     if dot < -eps:
         return False
-    seg_len2 = (bx - ax) ** 2 + (by - ay) ** 2
     if dot > seg_len2 + eps:
         return False
     return True
@@ -42,6 +45,7 @@ def is_point_in_polygon(x, y, polygon):
     使用射线法判断点是否在凸/简单多边形内部.
 
     * 顶点顺序不影响结果（顺时针/逆时针均可）
+    * 重复顶点（零长度边）会被忽略，不影响判定
     * 边界（落在边上或顶点）一律返回 False，仅内部返回 True
     * 空多边形、退化多边形（< 3 点）返回 False
     """
@@ -68,8 +72,6 @@ def is_point_in_polygon(x, y, polygon):
                         xints = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
                         if p1x == p2x or x <= xints:
                             inside = not inside
-                    elif p1x == p2x and x <= p1x:
-                        inside = not inside
         p1x, p1y = p2x, p2y
     return inside
 
@@ -91,7 +93,10 @@ class GeofenceNode(Node):
         self.geofence_sub = self.create_subscription(
             PolygonStamped, '/geofence', self.geofence_callback, 10)
         self.status_pub = self.create_publisher(
-            String, '/geofence_status', 10)
+            String, '/geofence_status',
+            # 状态是"当前值"语义：用 TRANSIENT_LOCAL 做 latched，
+            # 后启动的订阅者也能立即拿到最近一次状态
+            QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
 
         self.current_x = 0.0
         self.current_y = 0.0
@@ -106,6 +111,8 @@ class GeofenceNode(Node):
         self.geofence_frame_id = msg.header.frame_id
         self.polygon_points = [(p.x, p.y) for p in msg.polygon.points]
         if self.polygon_points:
+            # 围栏更新后重发一次当前状态，避免新旧围栏状态相同时不重发
+            self.last_status = None
             self.get_logger().info(
                 f'收到新的禁飞区配置，共 {len(self.polygon_points)} 个顶点，'
                 f'frame_id={self.geofence_frame_id}')
@@ -137,22 +144,20 @@ class GeofenceNode(Node):
         current_status = 'CRITICAL' if inside else 'SAFE'
 
         if current_status != self.last_status:
+            # 消息体只放枚举字符串，坐标写进日志，便于下游直接比较
             status_msg = String()
-            if inside:
-                status_msg.data = (
-                    f'[CRITICAL] 闯入禁飞区！坐标: '
-                    f'({self.current_x:.1f}, {self.current_y:.1f})'
-                )
-                self.get_logger().error(status_msg.data)
-            else:
-                status_msg.data = (
-                    f'[SAFE] 安全。坐标: '
-                    f'({self.current_x:.1f}, {self.current_y:.1f})'
-                )
-                self.get_logger().info(status_msg.data)
-
+            status_msg.data = current_status
             self.status_pub.publish(status_msg)
             self.last_status = current_status
+
+            if inside:
+                self.get_logger().error(
+                    f'闯入禁飞区！坐标: '
+                    f'({self.current_x:.1f}, {self.current_y:.1f})')
+            else:
+                self.get_logger().info(
+                    f'安全。坐标: '
+                    f'({self.current_x:.1f}, {self.current_y:.1f})')
 
 
 def main(args=None):

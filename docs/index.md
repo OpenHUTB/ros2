@@ -314,6 +314,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
+
 * [基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统](./air/geofence.md)
 
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度

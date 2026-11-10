@@ -46,6 +46,15 @@ ros2 launch geofence_demo geofence.launch.py expected_frame_id:=odom
 默认期望都为 `map`。若坐标系不一致，节点会告警并跳过检测，
 需要先通过 tf2 将坐标变换到同一 frame_id 下。
 
+## 边界与状态语义
+
+落在围栏边上或顶点上的位置按 `SAFE` 处理，这是有意选择：把边界视为"仍在围栏内"，
+避免贴边飞行时反复告警；代价是边界外侧紧邻的窄带同样不告警，如需缓冲带可改为
+按到边界的距离判定。
+
+`/geofence_status` 的消息体只有 `SAFE` / `CRITICAL` 枚举字符串，载具坐标写入日志，
+便于下游直接比较；发布者使用 `TRANSIENT_LOCAL` QoS，后启动的订阅者也能拿到当前状态。
+
 ## 测试
 
 ```bash
@@ -62,4 +71,4 @@ cd src/air/geofence_demo && python3 -m pytest test -v
 |------|------|------|------|
 | 订阅 | `/odom` | `nav_msgs/Odometry` | 载具实时位置 |
 | 订阅 | `/geofence` | `geometry_msgs/PolygonStamped` | 禁飞区多边形 |
-| 发布 | `/geofence_status` | `std_msgs/String` | `SAFE` / `CRITICAL` 状态输出 |
+| 发布 | `/geofence_status` | `std_msgs/String` | `SAFE` / `CRITICAL` 状态输出，`TRANSIENT_LOCAL` QoS |
