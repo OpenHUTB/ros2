@@ -43,11 +43,6 @@ source install/setup.bash
 ros2 launch ant_colony_swarm swarm_bringup.launch.py
 ```
 ## 运行效果图
+![视觉检测节点启动]https://github.com/Xavier-101666/ros2/blob/ant/docs/img/vision_detect_startup.png
 
-视觉检测节点启动，输出红色标记中心坐标与面积：
-
-![视觉检测节点启动](https://raw.githubusercontent.com/Xavier-101666/ros2/ant/docs/img/vision_detect_startup.png)
-
-Gazebo 中跟随机器人锁定领航者红色标记并编队跟随：
-
-![Gazebo 蚁群编队场景](https://raw.githubusercontent.com/Xavier-101666/ros2/ant/docs/img/swarm_gazebo_scene.png)
+![Gazebo 蚁群编队场景]https://github.com/Xavier-101666/ros2/blob/ant/docs/img/swarm_gazebo_scene.png
