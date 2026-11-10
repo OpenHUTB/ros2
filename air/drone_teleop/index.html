@@ -483,6 +483,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#_3">按键映射表</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_4">启动命令</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#openhutb">OpenHUTB 模拟器下载与启动</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_5">参考</a>
 </li>
@@ -764,6 +768,17 @@
 </ul>
 <h2 id="_4">启动命令</h2>
 <p><strong>前置条件：</strong> 已启动模拟器并完成与 AirSim 的连接（参见<a href="../setup_and_connect/">建立虚拟机和空域载具之间的连接</a>），且已安装 <code>airsim</code> Python 包。</p>
+<h3 id="openhutb">OpenHUTB 模拟器下载与启动</h3>
+<p>Windows PowerShell 5.1 和 PowerShell 7 均可使用以下命令下载并启动脚本：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$ErrorActionPreference</span> <span class="p">=</span> <span class="s1">'Stop'</span>
+<span class="nb">Invoke-WebRequest</span> <span class="n">-Uri</span> <span class="s1">'https://openhutb.github.io/dl.bat'</span> <span class="n">-OutFile</span> <span class="s1">'.\dl.bat'</span>
+<span class="p">&amp;</span> <span class="s1">'.\dl.bat'</span>
+</code></pre></div>
+<p>下载完成后，运行 <code>StartOpenHUTB.bat</code> 启动模拟器；关闭时运行 <code>StopOpenHUTB.bat</code>。</p>
+<p>Ubuntu 下可运行：</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-fsSL<span class="w"> </span>-o<span class="w"> </span>dl.sh<span class="w"> </span>https://openhutb.github.io/dl.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>dl.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>./dl.sh
+</code></pre></div>
+<p>下载完成后运行 <code>./CarlaUE4.sh</code> 启动模拟器。</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># 拉取仓库并进入仓库根目录</span>
 git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OpenHUTB/ros2.git
 <span class="nb">cd</span><span class="w"> </span>ros2
