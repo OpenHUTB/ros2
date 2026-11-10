@@ -80,5 +80,5 @@ colcon test --packages-select humanoid_imu_attitude
 colcon test-result --verbose
 ```
 
-共 36 项断言：四元数恒等式与欧拉角往返、轨迹解析角速度一致性、两种滤波器在静态
+共 14 个用例（18 条断言）：四元数恒等式与欧拉角往返、轨迹解析角速度一致性、两种滤波器在静态倾斜下的收敛性、动态输入下的误差上界。
 倾斜下的收敛性、动态输入下的误差上界。
