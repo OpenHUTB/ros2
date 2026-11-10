@@ -37,7 +37,7 @@ ROS每章节运行代码:
 * [第 2 章](./chapter/chap2.md) - ROS 基础
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
-* [第 5 章](./chapter/chap5.md) - 机器人感知
+* [第 5 章](./chapter/chap5.md) - 机器人感知（含[行人隐私脱敏视觉检测节点](./privacy_mask/README.md)）
 * [第 6 章](./chapter/chap6.md) - 机器人 SLAM 与自主导航
 * [第 7 章](./chapter/chap7.md) - 机械臂控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
