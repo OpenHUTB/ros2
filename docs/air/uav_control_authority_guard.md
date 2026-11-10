@@ -41,6 +41,8 @@ ros2 launch uav_control_authority_guard main.launch.py duration:=18
 
 CSV 默认写入 `/tmp/uav_control_authority_runtime.csv`。
 
+当 `duration` 大于 0 时，模拟器结束会触发整个 launch 自动关闭；默认 `duration:=0.0` 表示持续运行，此时使用 `Ctrl+C` 手动停止。
+
 ## 4. Humble 虚拟机实测
 
 Ubuntu 22.04.5 / ROS 2 Humble 下真实构建成功，VM 内 8 项 `unittest` 全部通过。`ros2 launch` 启动两个节点，运行 18 秒并记录 180 条状态。
