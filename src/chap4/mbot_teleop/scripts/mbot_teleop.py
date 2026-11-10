@@ -100,6 +100,11 @@ if __name__=="__main__":
                 th = 0
                 control_speed = 0
                 control_turn = 0
+                # 急停：以 20Hz 连续发布 5 次全 0 的 Twist，确保差速驱动插件彻底打死刹车
+                stop_twist = Twist()
+                for _ in range(5):
+                    pub.publish(stop_twist)
+                    rospy.sleep(0.05)
             else:
                 count = count + 1
                 if count > 4:

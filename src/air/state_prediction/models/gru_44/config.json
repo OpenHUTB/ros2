@@ -1,0 +1,11 @@
+{
+  "variant": "gru",
+  "seed": 44,
+  "max_epochs": 45,
+  "best_validation_loss": 0.0191543847322464,
+  "optimizer": "Adam",
+  "learning_rate": 0.002,
+  "batch_size": 128,
+  "early_stopping_patience": 8,
+  "manifest_sha256": "2f01011101bc7fbfdcfb5d66a29048a3b1e5cbdcf469b2516cc97f5e998495e5"
+}

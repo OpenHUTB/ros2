@@ -1,0 +1,23 @@
+{
+  "primary_model": "mlp_42",
+  "selection": "MLP vs GRU selected on original validation loss; seed 42 predefined, not chosen by final test",
+  "created_utc": "2026-10-02T15:31:14.702439+00:00",
+  "sha256": {
+    "models/gru_43/model.pt": "b76ef04ab8ce39b1bc9cd43fcb6cfe45c880dc7e161817be1e2b2f2b1c1711a3",
+    "models/mlp_42/model.pt": "737ba7658f77e44b72d64889fc21629e84f26dad3b1231780f7c3e1e5dc911c7",
+    "models/mlp_44/model.pt": "3fe29f360f01bdb626f314bd31db7e2022ea1f157eec5676573cda9964a65043",
+    "models/gru_42/model.pt": "27d08707f47803cf2ebd8be3f6e6ea4a81640268cda45f50fa4927e002813004",
+    "models/mlp_position_only_42/model.pt": "b0826ff6ef696231f4270c3f83ed4ea63dfad5bb0a0d693d6e11913e92e143db",
+    "models/mlp_43/model.pt": "bed7950be44b5d09d241e3338f7d0427d4924f8be1426bb1286f7ad92432c189",
+    "models/gru_43/config.json": "20e53f62cd0edb605b1dc0e8e653c247ff11d8b1f3b742927b0595e99b74879b",
+    "models/mlp_42/config.json": "4b68cec6ad4e2d1403c65e09ea0adf8c0182e0beeaba1d20b216960124c2b05f",
+    "models/mlp_44/config.json": "ee6aa7278a994b7a89b00fb438d5c372876d99251a91f1443786a04634a7900e",
+    "models/gru_42/config.json": "b15a3405e0e8870819db52f2ac07bf33c41798047bdbe795cb1c1ee50863fb22",
+    "models/mlp_position_only_42/config.json": "5b830052056eadefb5b193d91edf2f27e8eb8bf225dad0fb1ce5109775760f0c",
+    "models/mlp_43/config.json": "58ee8e8f68572a314252b66cb3cf87941f4e555e66823ada44bea0a3fcba6a22",
+    "train.py": "f894857752e9e3940b4a3d4431724d55d325468019010c0f54cf01fa71488edf",
+    "pattern_model.py": "2cdda20f9f7d5854b3fedc190023fd7bb4bb6be85d3c5a075d078dcde3a63de5",
+    "pattern_data.py": "580f34fb9127e9256a90977c7d4ee4e64bec7a0754f4abefdee0a7307266cee3",
+    "collect_final.py": "691821b377185c1951c48483e701fe428b7c4588f0fb9a262a9956ad7766ae21"
+  }
+}

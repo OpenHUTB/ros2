@@ -1,0 +1,5 @@
+numpy>=1.20
+# 代码使用 model.joint("...").qposadr、body_subtreemass 等 3.x 接口，2.x 不兼容
+mujoco>=3.2.0,<4
+# 仅 make_gif.py 生成演示动图需要
+imageio>=2.9.0
