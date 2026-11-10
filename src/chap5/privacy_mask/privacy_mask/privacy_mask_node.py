@@ -20,31 +20,31 @@ class PrivacyMaskNode(Node):
     """发布原始图像与行人模糊图像。"""
 
     def __init__(self):
-        super().__init__("privacy_mask_node")
+        super().__init__('privacy_mask_node')
 
-        pkg_dir = get_package_share_directory("privacy_mask")
+        pkg_dir = get_package_share_directory('privacy_mask')
         self.declare_parameter(
-            "image_path", os.path.join(pkg_dir, "resource", "test.png"))
+            'image_path', os.path.join(pkg_dir, 'resource', 'test.png'))
         self.declare_parameter(
-            "model_path", os.path.join(pkg_dir, "resource", "yolov8n.pt"))
+            'model_path', os.path.join(pkg_dir, 'resource', 'yolov8n.pt'))
         # 0 表示按包围盒尺寸自动选择核大小；显式给值时必须是不小于 3 的奇数
-        self.declare_parameter("blur_kernel", 0)
-        self.declare_parameter("publish_period", 0.1)  # 单位秒
+        self.declare_parameter('blur_kernel', 0)
+        self.declare_parameter('publish_period', 0.1)  # 单位秒
 
-        self.img_path = self.get_parameter("image_path").value
-        self.model_path = self.get_parameter("model_path").value
-        self.blur_kernel = int(self.get_parameter("blur_kernel").value)
+        self.img_path = self.get_parameter('image_path').value
+        self.model_path = self.get_parameter('model_path').value
+        self.blur_kernel = int(self.get_parameter('blur_kernel').value)
         if self.blur_kernel != 0 and (
                 self.blur_kernel < 3 or self.blur_kernel % 2 == 0):
             raise RuntimeError(
-                f"blur_kernel 需为 0（自动）或不小于 3 的奇数，"
-                f"当前为 {self.blur_kernel}")
+                f'blur_kernel 需为 0（自动）或不小于 3 的奇数，'
+                f'当前为 {self.blur_kernel}')
         self.person_count = 0
 
         self.pub_raw = self.create_publisher(
-            CompressedImage, "/image_raw/compressed", 10)
+            CompressedImage, '/image_raw/compressed', 10)
         self.pub_masked = self.create_publisher(
-            CompressedImage, "/image_masked/compressed", 10)
+            CompressedImage, '/image_masked/compressed', 10)
 
         self.img_origin = self.load_image(self.img_path)
         self.model = self.load_model(self.model_path)
@@ -54,21 +54,21 @@ class PrivacyMaskNode(Node):
         self.raw_bytes = self.encode(self.img_origin)
         self.masked_bytes = self.encode(self.img_masked)
 
-        period = float(self.get_parameter("publish_period").value)
+        period = float(self.get_parameter('publish_period').value)
         if period <= 0.0:
-            raise RuntimeError(f"publish_period 必须大于 0，当前为 {period}")
+            raise RuntimeError(f'publish_period 必须大于 0，当前为 {period}')
         self.timer = self.create_timer(period, self.timer_cb)
         self.get_logger().info(
-            f"图片：{self.img_path}，模型：{self.model_path}，"
-            f"行人目标数：{self.person_count}，发布周期：{period}s")
+            f'图片：{self.img_path}，模型：{self.model_path}，'
+            f'行人目标数：{self.person_count}，发布周期：{period}s')
 
     def load_image(self, path):
         """读取测试图片，失败时直接抛异常，避免节点空转。"""
         img = cv2.imread(path)
         if img is None:
             raise RuntimeError(
-                f"无法读取测试图片：{path}。请确认 resource/test.png 存在，"
-                "并重新执行 colcon build 安装到 share 目录。")
+                f'无法读取测试图片：{path}。请确认 resource/test.png 存在，'
+                '并重新执行 colcon build 安装到 share 目录。')
         return img
 
     def load_model(self, path):
@@ -76,8 +76,8 @@ class PrivacyMaskNode(Node):
         if os.path.exists(path):
             return YOLO(path)
         self.get_logger().warning(
-            f"未找到本地模型 {path}，回退为自动下载 yolov8n.pt（需要联网）")
-        return YOLO("yolov8n.pt")
+            f'未找到本地模型 {path}，回退为自动下载 yolov8n.pt（需要联网）')
+        return YOLO('yolov8n.pt')
 
     def kernel_size(self, roi_width, roi_height):
         """返回高斯核大小：参数为 0 时按包围盒短边自适应，否则用固定值。"""
@@ -115,17 +115,17 @@ class PrivacyMaskNode(Node):
 
     def encode(self, img):
         """把 OpenCV 图像编码成 JPEG 字节串。"""
-        ok, buffer = cv2.imencode(".jpg", img)
+        ok, buffer = cv2.imencode('.jpg', img)
         if not ok:
-            raise RuntimeError("JPEG 编码失败，请检查图像是否为空")
+            raise RuntimeError('JPEG 编码失败，请检查图像是否为空')
         return buffer.tobytes()
 
     def to_msg(self, data):
         """用缓存的 JPEG 数据拼出带当前时间戳的压缩图像消息。"""
         msg = CompressedImage()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "camera"
-        msg.format = "jpeg"
+        msg.header.frame_id = 'camera'
+        msg.format = 'jpeg'
         msg.data = data
         return msg
 
@@ -143,7 +143,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     except (RuntimeError, cv2.error) as exc:
-        rclpy.logging.get_logger("privacy_mask_node").error(str(exc))
+        rclpy.logging.get_logger('privacy_mask_node').error(str(exc))
         raise SystemExit(1)
     finally:
         if node is not None:
@@ -152,5 +152,5 @@ def main(args=None):
             rclpy.shutdown()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

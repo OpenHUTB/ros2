@@ -2,5 +2,5 @@
 
 from privacy_mask.privacy_mask_node import main
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
