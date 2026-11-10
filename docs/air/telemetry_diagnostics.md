@@ -470,3 +470,16 @@ bash main.sh demo          # 另开 dashboard
 9. **不是安全组件**：不参与飞控，没有失效保护，不能用于实机决策。
 
 ---
+
+## 12. 维护说明
+
+1. 权重与阈值有哈希保护（`final_protocol.json`），改模型后必须同步更新，否则 `evaluate` 会拒绝运行；
+2. 新增异常类型要同时更新注入代码、评估分组与第 7.2 节的表；
+3. 阈值必须只在**正常验证集**上标定，不能在测试集上调；
+4. 图片放在 `docs/img/air/telemetry_diagnostics/`（仓库 `.gitignore` 忽略 `*.gif`，只对该目录开白名单）；
+5. `results/`、`artifacts/`、`build/`、`install/`、`log/` 都不入库；
+6. 第一版实验（`train_evaluate.py`、`holdout_evaluate.py` 与根目录旧结果）保留作为记录，**不要与新版的成绩混用**。
+
+`assets/flight_corpus.zip` 为自包含语料；`models/` 为权重与配置；`tests/` 为单元与一致性测试。
+
+---
