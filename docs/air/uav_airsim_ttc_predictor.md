@@ -174,6 +174,8 @@ python3 test/test_cnn.py
 # 5/5 通过
 ```
 
+> **CI 不覆盖本模块的测试。** `.github/workflows/air_bridge_tests.yml` 的 `paths` 只列了 `src/air/carlair_ros_bridge/**`、`uav_landing_monitor/**`、`uav_e2e_rl/**` 和 `tests/**`，本模块的 `test/` 不在触发范围内；`deploy_page.yml` 只在 `master` 触发并带 `if: github.repository == 'OpenHUTB/ros2'`，fork 的分支不会跑。所以上面这条必须本地手动执行，仓库 CI 的绿灯**不代表**本模块测试通过。
+
 文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页，可直接从站点导航进入。
 
 ## 10. 局限与改进
