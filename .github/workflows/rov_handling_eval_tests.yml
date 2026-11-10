@@ -1,0 +1,51 @@
+name: rov_handling_eval tests
+
+# 只跑本模块的单元测试与自由漂移自检，覆盖“纯数学层 + --check 集成路径”。
+# 之所以要装 mujoco：--check 会真的推 3 s 物理，这正是之前被 review 指出的缺口。
+
+on:
+  push:
+    paths:
+      - "src/water/rov_handling_eval/**"
+      - "docs/water/rov_handling_eval.md"
+      - ".github/workflows/rov_handling_eval_tests.yml"
+  pull_request:
+    paths:
+      - "src/water/rov_handling_eval/**"
+      - "docs/water/rov_handling_eval.md"
+      - ".github/workflows/rov_handling_eval_tests.yml"
+
+jobs:
+  test:
+    name: unittest + self-check (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            python: "3.10"
+          - os: windows-latest
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install runtime deps
+        working-directory: src/water/rov_handling_eval
+        run: python -m pip install -r requirements.txt
+
+      - name: Unit tests (no ROS required)
+        working-directory: src/water/rov_handling_eval
+        run: python -m unittest discover -s test -p "test_*.py" -v
+
+      - name: Syntax check
+        working-directory: src/water/rov_handling_eval
+        run: python -m compileall -q rov_handling_eval launch
+
+      - name: Free-drift self-check (with velocity control disabled)
+        working-directory: src/water/rov_handling_eval
+        run: python -m rov_handling_eval.main --check

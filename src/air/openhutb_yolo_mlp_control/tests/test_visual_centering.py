@@ -12,8 +12,27 @@ def box(x=480, y=240, label='car', score=0.9):
 
 
 class ControllerTests(unittest.TestCase):
-    def ready(self, yaw=0, x=480):
+    def test_initial_candidate_survives_alternating_confidence(self):
         c = CenteringController()
+        for i in range(3):
+            c.update_detections([box(480, score=.9 if i == 0 else .6),
+                                 box(100, score=.7 if i == 0 else .99)], 640, 480, i*.2)
+        self.assertIsNotNone(c.target)
+        self.assertGreater(c.target[0], 0)
+    def test_timer_expiry_during_acquisition_preserves_capture_continuity(self):
+        c = CenteringController()
+        c.update_pose(0, 0, -3, 0, 1)
+        c.update_detections([box()], 640, 480, 0)
+        self.assertEqual(c.step(.81)[0], (0, 0, 0))
+        self.assertEqual(c.confirmations, 1)
+        c.update_detections([box()], 640, 480, .7)
+        c.step(1.51)
+        self.assertEqual(c.confirmations, 2)
+        c.update_detections([box()], 640, 480, 1.4)
+        self.assertIsNotNone(c.target)
+
+    def ready(self, yaw=0, x=480):
+        c = CenteringController(Settings(confirmation_frames=1))
         c.update_pose(0, 0, -3, yaw, 0)
         c.update_detections([box(x)], 640, 480, 0)
         return c
@@ -77,6 +96,10 @@ class ControllerTests(unittest.TestCase):
         c.update_detections([box(100)], 640, 480, 0.2)
         self.assertIsNone(c.target)
         c.update_detections([box(100)], 640, 480, 1.2)
+        self.assertIsNone(c.target)
+        self.assertEqual(c.step(1.2)[0], (0, 0, 0))
+        c.reset_target()
+        c.update_detections([box(100)], 640, 480, 1.3)
         self.assertLess(c.target[0], 0)
 
     def test_displacement_and_heading_guards(self):
@@ -100,7 +123,7 @@ class ControllerTests(unittest.TestCase):
                 Settings(**kwargs)
 
     def test_acceleration_ramp_and_reverse(self):
-        c = CenteringController(Settings(gain=1.8, max_speed=0.8,
+        c = CenteringController(Settings(confirmation_frames=1, gain=1.8, max_speed=0.8,
                                          max_acceleration=1.2))
         c.update_pose(0, 0, -3, 0, 0)
         c.update_detections([box()], 640, 480, 0)
@@ -114,7 +137,7 @@ class ControllerTests(unittest.TestCase):
         self.assertAlmostEqual(c.step(.35)[0][1], .30)
 
     def test_ramp_never_delays_stop_or_survives_target_loss(self):
-        c = CenteringController(Settings(max_acceleration=1.2))
+        c = CenteringController(Settings(confirmation_frames=1, max_acceleration=1.2))
         c.update_pose(0, 0, -3, 0, 0)
         c.update_detections([box()], 640, 480, 0)
         c.step(0)
@@ -161,12 +184,99 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(status, 'centered')
         self.assertLess(abs(actual_error), abs(first)/3)
 
+    def test_confirmation_loss_recovery_and_long_loss(self):
+        c = CenteringController()
+        for t in (0, .2):
+            c.update_pose(0, 0, -3, 0, t)
+            c.update_detections([box()], 640, 480, t)
+            self.assertEqual(c.step(t)[1], 'acquiring')
+            self.assertEqual(c.step(t)[0], (0, 0, 0))
+        c.update_detections([box()], 640, 480, .4)
+        self.assertEqual(c.step(.4)[1], 'tracking')
+        c.update_detections([], 640, 480, .5)
+        self.assertEqual(c.step(.5)[0], (0, 0, 0))
+        for t in (.6, .7):
+            c.update_pose(0, 0, -3, 0, t)
+            c.update_detections([box(475)], 640, 480, t)
+            self.assertIsNone(c.target)
+        c.update_detections([box(470)], 640, 480, .8)
+        self.assertIsNotNone(c.target)
+        c.update_pose(0, 0, -3, 0, 2)
+        c.update_detections([box(100)], 640, 480, 2)
+        self.assertEqual(c.step(2)[1], 'reselect_required')
+
+    def test_size_gate_duplicate_and_pause_reset_confirmation(self):
+        c = self.ready()
+        c.update_detections([Box(480, 240, 240, 300, .99, 'car')], 640, 480, .1)
+        self.assertIsNone(c.target)
+        c.update_detections([box()], 640, 480, .1)
+        self.assertIsNone(c.target)
+        c.set_paused(True)
+        self.assertEqual(c.step(.1)[1], 'paused')
+        c.set_paused(False)
+        self.assertEqual(c.step(.1)[0], (0, 0, 0))
+
+    def test_confidence_alternation_does_not_change_locked_vehicle(self):
+        c = self.ready()
+        for i in range(1, 20):
+            now = i*.1
+            c.update_detections([box(480, score=.51 if i%2 else .99),
+                                 box(100, score=.99 if i%2 else .51)], 640, 480, now)
+            self.assertAlmostEqual(c.target[0], .5)
+
+    def test_confirmation_cannot_be_completed_by_timer_or_old_frames(self):
+        c = CenteringController()
+        c.update_pose(0, 0, -3, 0, 0)
+        c.update_detections([box()], 640, 480, 0)
+        for now in (.01, .02, .03):
+            self.assertEqual(c.step(now)[0], (0, 0, 0))
+        c.update_detections([box()], 640, 480, 0)
+        self.assertEqual(c.confirmations, 0)
+        c.update_detections([box()], 640, 480, .1)
+        c.update_detections([], 640, 480, .2)
+        c.update_detections([box()], 640, 480, .3)
+        self.assertEqual(c.confirmations, 1)
+
+    def test_ambiguous_recovery_stops_without_changing_anchor(self):
+        c = self.ready()
+        anchor = c.last_lock
+        c.update_detections([box(470), box(490)], 640, 480, .1)
+        self.assertEqual(c.selection_reason, 'ambiguous_association')
+        self.assertEqual(c.step(.1)[0], (0, 0, 0))
+        self.assertEqual(c.last_lock, anchor)
+
+    def test_recovery_confirmation_tracks_sequential_motion(self):
+        c = self.ready()
+        c.settings = Settings(confirmation_frames=3)
+        c.clear_detection()
+        for t, x in ((.1, 450), (.2, 400)):
+            c.update_detections([box(x)], 640, 480, t)
+            self.assertIsNone(c.target)
+        # Last frame is beyond the original anchor's association gate, but
+        # matches the consecutive recovery observations.
+        c.update_detections([box(350)], 640, 480, .3)
+        self.assertIsNotNone(c.target)
+        self.assertEqual(c.selection_reason, 'accepted')
+
+    def test_matching_recovery_frames_keep_memory_without_moving_anchor(self):
+        c = self.ready()
+        c.settings = Settings(confirmation_frames=3)
+        anchor = c.last_lock
+        c.clear_detection()
+        for t in (.6, 1.2):
+            c.update_detections([box(470)], 640, 480, t)
+            self.assertIsNone(c.target)
+            self.assertEqual(c.last_lock, anchor)
+        c.update_detections([box(470)], 640, 480, 1.8)
+        self.assertIsNotNone(c.target)
+        self.assertFalse(c.lock_expired)
+
 
 class DepthAndVerticalTests(unittest.TestCase):
     """Opt-in depth keeping and vertical centering; defaults stay unchanged."""
 
     def controller(self, **kwargs):
-        c = CenteringController(Settings(**kwargs))
+        c = CenteringController(Settings(confirmation_frames=1, **kwargs))
         c.update_pose(0, 0, -3, 0, 0)
         return c
 
