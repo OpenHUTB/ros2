@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_perception_trajectory</name>
+  <version>1.0.0</version>
+  <description>
+    无人机多传感器感知与给定轨迹跟踪控制。对应课程任务（2）：
+    使用传感器（激光雷达、深度相机）获取的数据进行感知，
+    对无人机进行运动控制（感知、给定轨迹的控制）。
+  </description>
+
+  <maintainer email="2011570342@qq.com">Mjm-peter</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>carlair_ros_bridge</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+</package>
