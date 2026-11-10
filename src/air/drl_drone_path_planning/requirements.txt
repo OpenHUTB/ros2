@@ -1,0 +1,8 @@
+# 部署端（ROS 节点）只需要 numpy + PyYAML
+numpy>=1.24
+PyYAML>=6.0
+
+# 训练端（可选）
+gymnasium>=0.29,<1.0
+stable-baselines3>=2.2
+torch>=2.0
