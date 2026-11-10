@@ -407,6 +407,8 @@ python3 test/test_mlp.py
 
 另外本模块 `MLP.forward()` 的**输出层是线性**（头部注释写明：姿态角集中在 0 附近，tanh 会饱和并导致梯度消失），所以单元测试断言的是「隐层被 tanh 压进 [-1,1]、最终输出有限」，而不是像 imu / wind 那样断言输出落在 [-1,1]。
 
+> **CI 不覆盖本模块的测试。** `.github/workflows/air_bridge_tests.yml` 的 `paths` 只列了 `carlair_ros_bridge/**`、`uav_landing_monitor/**`、`uav_e2e_rl/**` 和 `tests/**`，本模块的 `test/` 不在触发范围内；`deploy_page.yml` 只在 `master` 触发且带 `if: github.repository == 'OpenHUTB/ros2'`。上面这条需要本地手动执行，仓库 CI 的绿灯不代表本模块测试通过。
+
 文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页。
 
 ## 10. 局限与改进方向
