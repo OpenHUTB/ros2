@@ -14,7 +14,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
-from passive_walker.sim import PassiveWalker, format_summary
+from passive_walker.sim import PassiveWalker, format_summary, validate_finite, validate_positive
 
 TOPIC_NAME = "passive_walker/steps"
 
@@ -28,9 +28,10 @@ class PassiveWalkerNode(Node):
         self.declare_parameter("push", float(push))         # 初始推力（m/s）
         self.declare_parameter("period", float(period))     # 每个回调推进的仿真时间（秒）
 
-        self.total = float(self.get_parameter("seconds").value)
-        self.period = float(self.get_parameter("period").value)
-        self.sim = PassiveWalker(push_speed=float(self.get_parameter("push").value))
+        self.total = validate_positive("seconds", self.get_parameter("seconds").value)
+        self.period = validate_positive("period", self.get_parameter("period").value)
+        push = validate_finite("push", self.get_parameter("push").value)
+        self.sim = PassiveWalker(push_speed=push)
 
         self.pub = self.create_publisher(Int32, TOPIC_NAME, 10)
         self.timer = self.create_timer(self.period, self.on_timer)
@@ -42,27 +43,34 @@ class PassiveWalkerNode(Node):
     def on_timer(self):
         if self.finished:
             return
-        self.sim.run(self.period)
+        remaining = self.total - float(self.sim.data.time)
+        if remaining <= max(1e-12, self.total * 1e-12):
+            self.finished = True
+            self.timer.cancel()
+            return
+        self.sim.run(min(self.period, remaining))
         msg = Int32()
         msg.data = int(self.sim.steps)
         self.pub.publish(msg)
-        if self.sim.data.time >= self.total:
+        if self.sim.data.time >= self.total - max(1e-12, self.total * 1e-12):
             self.finished = True
             self.timer.cancel()
             self.get_logger().info(format_summary(self.sim.summary()))
 
 
-def main(args=None, seconds=20.0, push=0.3):
+def main(args=None, seconds=20.0, push=0.3, period=0.1):
     rclpy.init(args=args)
-    node = PassiveWalkerNode(seconds=seconds, push=push)
+    node = None
     try:
+        node = PassiveWalkerNode(seconds=seconds, push=push, period=period)
         # 到达设定时长后节点自行结束，ros2 run / launch 才能正常退出
         while rclpy.ok() and not node.finished:
             rclpy.spin_once(node, timeout_sec=0.05)
     except KeyboardInterrupt:
         pass
     finally:
-        node.destroy_node()
+        if node is not None:
+            node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
     return 0
