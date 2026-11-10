@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+
+<html class="writer-html5" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="../../img/favicon.ico" rel="shortcut icon"/>
+<title>水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端） - 模拟器的 ROS 文档</title>
+<link href="../../css/theme.css" rel="stylesheet"/>
+<link href="../../css/theme_extra.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
+<link href="../../extra.css" rel="stylesheet"/>
+<script>
+        // Current page data
+        var mkdocs_page_name = "\u6c34\u4e0b ROV \u6d77\u5e95\u7ba1\u9053\u5f80\u8fd4\u5de1\u68c0\uff08\u89c6\u89c9\u611f\u77e5 + EKF-SLAM + \u7aef\u5230\u7aef\uff09";
+        var mkdocs_page_input_path = "water/rov_pipeline_follow.md";
+        var mkdocs_page_url = null;
+      </script>
+<!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body class="wy-body-for-nav" role="document">
+<div class="wy-grid-for-nav">
+<nav class="wy-nav-side stickynav" data-toggle="wy-nav-shift">
+<div class="wy-side-scroll">
+<div class="wy-side-nav-search">
+<a class="icon icon-home" href="../.."> 模拟器的 ROS 文档
+        </a><div role="search">
+<form action="../../search.html" class="wy-form" id="rtd-search-form" method="get">
+<input aria-label="Search docs" name="q" placeholder="搜索文档" title="Type search term here" type="text"/>
+</form>
+</div>
+</div>
+<div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+<p class="caption"><span class="caption-text">入门</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../..">首页</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu_docs_setup/">Ubuntu 文档环境初始化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu20.04/">安装 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chap2/ros2_service_param_demo/">ROS2 服务与参数基础实验（uav_mode_node）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">ROS 教程</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap1/chap1/">1. 认识 ROS</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap2/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_message_time_sync/">ROS Noetic 多传感器话题时间同步</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_parameter_sine_wave/">ROS Noetic 运行参数热更新（正弦信号）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap2/ros1_env_check/">ROS Noetic 环境自检与常见问题排查</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap3/">3. 机器人系统设计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">4. 机器人仿真</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap4/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/urdf_car_modeling/">URDF 四轮小车建模与 RViz 显示</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap5/">5. 机器人感知</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap6/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap8/mujoco_arm_screw/">机械臂拧螺丝仿真</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">人形机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_basics/">人形机器人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/biped_cubic_spline_gait_switch/">基于三次样条插值的双足多步态平滑切换</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_keyboard_control/">人形机器人键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/panda_keyboard_control/">键盘操控仿真机械臂</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_push_recovery/">人形机器人平衡控制与外力抗扰恢复</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_ppo_locomotion/">人形机器人 PPO 神经网络平衡控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_lidar_nn_perception/">人形机器人 2D 激光雷达 CNN 感知与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_local_planner_bench/">人形足迹下的局部避障算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/mujoco_hopper_demo/">MuJoCo单足弹跳机器人简单仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_joint_tools/">人形机器人关节轨迹录制与回放工具</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_stair_climb/">人形上下台阶步态仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/ros_topic_demo/">ROS虚拟机器人圆形轨迹rviz可视化示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../waypoint_publisher/">ROS2 Humble 路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/whole_body_ik/">人形机器人全身逆运动学与可操作性</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_reachability/">人形机器人双臂末端可达域分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_fall_protection/">人形机器人跌倒预判与保护性倒地</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_collision_boundary/">人形机器人 3D 碰撞体边界检测可视化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/zmp_walk_planner/">简化双足步态动画演示</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../humanoid/humanoid_zmp_walking/">人形机器人轻量级 ZMP 步行控制基线</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">四足机器人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quadruped_mujoco_rl/">MuJoCo 四足机器人运动控制与步态评估</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">肌肉骨骼人</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/musculoskeletal_basics/">肌肉骨骼人基础</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_tendon_basics/">肌肉-肌腱串联弹性实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_human_walking_teleop/">MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_hand_teleop/">MuJoCo肌肉骨骼灵巧手遥操作与NN控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_reach/">MuJoCo双关节肌肉骨骼手臂到达控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_arm_proprioception/">MuJoCo肌肉骨骼手臂本体感觉与串联弹性肌腱</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_joint_control/">肌肉驱动的关节控制与 Hill 肌肉模型</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/msk_gripper/">肌肉驱动的夹爪抓取</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/muscle_leg_gait/">肌肉驱动的下肢关节与步态</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../musculoskeletal/knee_tracking/">膝关节肌肉骨骼仿真与轨迹跟踪</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">地面载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_conda_env_guide/">ROS与Conda环境排错指南</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_scan_matching/">基于 1D CNN 的激光雷达 SLAM</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_pure_pursuit/">ROS2 差速机器人纯追踪路径跟踪与反应式避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../set_up_and_connect_to_carla/">手动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mnist_digit_control/">MNIST 手写数字视觉感知与机器人运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_spawn_objects/">生成对象</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_keyboard_control/">地面载具物理仿真与键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_yolo_avoidance/">CARLA+YOLOv8 目标检测感知与减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ackermann_control/">阿克曼控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_keeping/lane_detection/">车道线检测（前视视觉）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_keeping/lane_keeping_control/">车道保持控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_perception_control/">传感器感知与给定轨迹跟踪（神经网络版）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/r2d2_cruise/">R2D2小车 自动巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/waypoint/">路径点发布器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_mapping_navigation/">激光雷达建图与神经网络规划导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_agent/">自动驾驶代理</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_end_to_end_nn/">端到端神经网络图像驾驶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_roundabout_entry/">环岛汇入端到端驾驶（图像→控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ad_demo/">自动驾驶示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rostopic_cruise/">rostopic 手动驱动</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_benchmark_suite/">作业综合整合与性能评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros_scenario_runner/">ROS Scenario Runner</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_light/">交通信号灯识别与响应</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rviz_plugin/">RVIZ Carla 插件</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/fixed_point_stop/">定点停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/web_remote_car/">网页远程遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_vehicle_aeb/">基于MuJoCo的AEB自动紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_shooting/">打靶</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_traffic_sign_recognition/">交通标志识别（Windows 端脚本）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_parking_lot/">停车场场景生成</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/yolov8_target_tracking/">YOLOv8 视觉感知目标跟随</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/teleop_control/">任务1 - 键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/sensor_perception/">任务2 - 模拟传感器数据源</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/navigation_slam/">任务3 - 导航与路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../robot_tasks/policy_learning/">任务4 - 端到端策略网络</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pcl_recorder/">点云地图创建</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_lidar_avoid/">TurtleBot3 激光雷达自主避障（ROS 2）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pix2cmd_end2end_driving/">端到端驾驶（图像到控制指令）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_rollover_guard/">MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_drive_fault/">MuJoCo 地面差速小车单侧驱动失效检测与差速补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/car_2d_target_tracker/">2D 小车目标追踪仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_nn_car_following/">神经网络自适应跟车(ACC)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_mujoco_locomotion/">MuJoCo Locomotion 强化学习对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_aeb_braking/">自动紧急制动（AEB）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_bsd_blind_spot/">盲区监测（BSD）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_lane_departure_warning/">车道偏离预警（LDW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_curve_speed_limit/">弯道自适应限速（CSL）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_red_light_warning/">闯红灯预警（RLW）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/ugv_visual_slam_nav/">视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/pid_auto_tuning/">航向 PID 参数自整定与手工试凑对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_auto_light/">地面载具灯光自动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/traffic_sign_speed_control/">限速标志识别与神经网络限速控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_parking/">MuJoCo小车 倒车入库仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_parallel_parking/">MuJoCo侧方停车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_dynamic_avoidance/">MuJoCo 动态障碍局部避障仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_mcl_localization/">基于 2D 激光雷达的蒙特卡洛定位（MCL）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_vehicle_dynamics_test/">地面载具动力性测试</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_traffic_light_stop/">MuJoCo 红绿灯启停小车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_car_follow/">MuJoCo 小车跟车仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_platoon/">多车协同编队（CARLA）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/twist_to_control/">扭转控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/lidar_camera_calibration/">相机-激光雷达外参标定</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">空域载具</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../air/winter_circle/">winter 场景无人机圆周飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_rl_planner_ros1/">AirSim ROS 1 Noetic PPO 联调</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/mujoco_drone_distance_stop/">无人机制动旧入口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_uav_range_neural_braking/">无人机测距制动与神经控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_cruise_capture/">Town10立面自主巡航与图像采集</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/town10_facade_defect_detection/">Town10幕墙图像病害识别</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_obstacle_avoidance/">AirSim Unity 无人机曲线绕柱避障实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/mujoco_facade_capture/">MuJoCo无人机幕墙定距扫描</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">无人机任务管理与安全状态机</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/overview/">模块概览</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/usage/">构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_action/">ROS 2 Action 任务接口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/mission_recording/">任务日志与离线统计</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/uav_mission_safety_manager/airsim_validation/">AirSim 实测记录</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/landing_assessment/">无人机着陆阶段识别与接地载荷预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/fixed_wing_sitl_preflight/">Fixed-wing SITL preflight</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/payload_mass_estimation/">无人机载荷质量估计</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airlib_message_regression/">AirLib 传感器消息回归</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_energy_budget/">UAV mission energy budget</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/flight_pattern_recognition/">无人机飞行轨迹类型识别与 ROS2 自动任务日志</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_gate_racing_e2e/">深度图端到端穿越门竞速</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_depth_avoidance/">无人机深度相机神经网络避障（MuJoCo）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/telemetry_diagnostics/">无人机遥测异常检测与 ROS2 在线诊断</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_weather_risk/">低空多源气象扰动影响预测与风险分级</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/fire_detection_drone/">无人机火灾探测与自主巡检</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/airsim_client_setup/">配置 AirSim 客户端环境并连接模拟器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/setup_and_connect/">建立虚拟机和空域载具之间的连接</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_command_guard/">无人机目标高度限幅、变化率约束与超时保持</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_dqn_navigation/">无人机雷达DQN建图与端到端控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/ros_pkgs/">空域模拟器的 ROS 封装器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/carlair_ros_bridge/">无人机与 ROS 的桥接模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_ground_filter/">无人机 LiDAR 地面/障碍分割</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_lidar_safety_corridor/">无人机激光雷达三维安全走廊与自适应高度避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_altitude_sensor_fusion/">无人机 IMU 与气压高度融合</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing/">无人机屋顶降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rooftop_landing_nn/">无人机屋顶降落（学习型落点选择）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_landing_monitor/">无人机降落过程监控（指令-运动一致性）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_moving_platform_landing/">移动平台（车/船）精准降落</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_keyboard_control/">无人机键盘控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_ppo_nav/">基于 PPO 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_hover_log_eval/">无人机定高日志误差与抗扰恢复时间评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drl_drone_path_planning/">基于深度强化学习的无人机最优路径查找</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_rl_benchmark/">强化学习对比实验（PPO/SAC/TD3）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_residual_control/">神经残差动力学与学习式轨迹跟踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_route_cruise/">基于 PPO 的无人机固定路线巡航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dqn_nav/">基于 DQN 的无人机导航避障</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_traffic_nav/">城市动态交通下的无人机避障（PPO + DAgger）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_experiments/">无人机ppo模块研究</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_teleop/">无人机终端键盘遥控器</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_ros_teleop/">基于 ROS 消息解耦的无人机键盘遥控</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../airsim_drone_gimbal_teleop/">AirSim无人机键盘遥控与机载云台控制模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_gimbal_reacquisition/">无人机机载云台目标丢失重捕获与视轴误差评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_emergency_landing_selector/">无人机应急着陆点安全评估</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/state_prediction/">基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_link_outage_guard/">无人机通信链路退化保护与断联风险预测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_safety_filter/">神经安全过滤器</a>
+</li>
+<li class="toctree-l1"><a class="" href="https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/">低空载具的 ROS 示例教程</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/gesture_control_drone/">手势控制无人机</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ap_cpp_overfomo/">AP-CPP 主动感知覆盖路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/survey_mission_planner/">无人机航测任务规划（GSD/重叠度/WPML）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_waypoint_preflight_validator/">无人机航点任务飞行前校验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/waypoint_tracking/">无人机航点轨迹跟踪（PID 控制）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_neural_vio_slam/">神经视觉惯性里程计与三后端 SLAM 对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">空域载具八叉树三维寻路</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/env_setup/">环境配置与前置准备</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/flight_control/">AirSim 载具与位置控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/occupancy_mapping/">点云转八叉树占用地图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/astar_planning/">八叉树上的 A* 全局寻路</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_smoothing/">安全裕度与路径平滑</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/octree_uav_3d_pathfinding/path_following/">路径跟踪与闭环飞行</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal">YOLO 感知与无人机控制</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_trajectory_control/">YOLO 感知与八字轨迹控制</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/yolo_visual_centering/">YOLO 目标视觉伺服：居中与距离保持</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../air/openhutb_yolo_mlp_control/traffic_tracking/">Traffic Manager 车辆轨迹与 AirSim 跟随</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/no_fly_zone_check/">禁飞区检测</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/multi_uav_airspace_monitor/">多无人机空域监测（多边形禁飞区与机间冲突）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_dynamic_geofence_guard/">无人机动态电子围栏预测预警</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/allocnet_teleop/">AllocNet 四旋翼避障规划与键盘遥操作</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_semantic_mapping_nav/">语义分割建图与语义路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/drone_trajectory_logger/">状态识别与轨迹绘制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ground/weather_perception_benchmark/">恶劣雨雾天气下多传感器感知性能对比实验</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_depth_track_nn/">无人机深度相机轨迹跟踪（CNN 行为克隆）</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">水域载具</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具 ROS2 接口</a>
+</li>
+<li class="toctree-l1"><a class="reference internal">环境搭建</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../HoloOcean-Windows-Setup/">HoloOcean Windows 本机环境搭建</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../WSL_HoloOcean2_ROS2/">WSL跑通HoloOcean2的ROS2示例方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../docker/">Docker 开发环境</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../docker_runtime/">HoloOcean ROS2 运行时容器</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../holoocean_examples/">水域载具示例</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_gazebo_sim/">水下ROV仿真键盘控制与摄像头目标追踪</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_handling_eval/">水下 ROV 六自由度手操与抗流能力评测仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_apriltag_cruise/">水下 ROV AprilTag 视觉定位与定点巡航仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_current_teleop/">动态洋流 ROV 键盘遥操与 MLP 巡航控制</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_sonar_cnn/">侧扫声呐图像仿真与 CNN 海底目标分类</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_ppo_tracking/">手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_docking_nav/">水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../mjc_rov_rl_compare/">同一 ROV 任务 PPO 与 SAC 强化学习算法对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../underwater_sonar_mapping/">新增水下三维地形测绘模块</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rov_ekf_navigation/">水下多源融合组合导航 (EKF)</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water_rov_path_planning/">基于热力图的洋流干扰下 ROV 自适应路径规划</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../UNav-sim_ue5/">水下机器人 Unreal Engine 5 仿真</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../water_vision_enhancement/">浑浊水体视觉增强与目标追踪（合成视频演示）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 概述与核心能力</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 海底仿真世界与传感器建模</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#21">2.1 管道几何与胶囊求交</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#22">2.2 三自由度水下运动学</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#23">2.3 广角前视相机的逐列投射</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 感知：颜色编码应答器与管道分割</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#31">3.1 归一化色度空间</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#32">3.2 管道掩膜：为什么不能用"橙通道占优"</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#33">3.3 拒识比分类更难</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#34-cnn">3.4 管道拟合与 CNN 感知支路</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4-ekf-slam">4. EKF-SLAM 与占据栅格建图</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 往返巡检控制</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#51">5.1 级联律</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#52-vs">5.2 任务系 vs 车体系的符号</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#53">5.3 横向积分项是抗流的唯一手段</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#54">5.4 折返是一次显式机动</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6-dagger">6. 端到端策略与 DAgger</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实验与结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#71">7.1 协议</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#72">7.2 失败归因</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#73-cnn">7.3 负面结果：用 CNN 回归几何量替代几何检测</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 一键运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 总结</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">经典控制</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR)</a>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ubuntu2004-local-llm-deploy/">自装ubuntu20.04本地大模型部署教程</a>
+</li>
+</ul>
+</div>
+</div>
+</nav>
+<section class="wy-nav-content-wrap" data-toggle="wy-nav-shift">
+<nav aria-label="Mobile navigation menu" class="wy-nav-top" role="navigation">
+<i class="fa fa-bars" data-toggle="wy-nav-top"></i>
+<a href="../..">模拟器的 ROS 文档</a>
+</nav>
+<div class="wy-nav-content">
+<div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
+<ul class="wy-breadcrumbs">
+<li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
+<li class="breadcrumb-item">水域载具</li>
+<li class="breadcrumb-item active">水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）</li>
+<li class="wy-breadcrumbs-aside">
+<a href="https://github.com/OpenHUTB/ros2/edit/master/docs/water/rov_pipeline_follow.md"> 编辑页面</a>
+</li>
+</ul>
+<hr/>
+</div>
+<div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
+<div class="section" itemprop="articleBody">
+<div><h1 id="rov-ekf-slam">水下 ROV 海底管道往返巡检：视觉感知 + EKF-SLAM + 学习式控制</h1>
+<hr/>
+<h2 id="1">1. 概述与核心能力</h2>
+<p>海底输油/输气管线是海洋工程里最需要常态巡检的基础设施之一：管线埋在浑浊水体里、
+没有 GPS、能见度通常不到 3 m，而巡检本身有一个很硬的约束——<strong>必须走完再走回来</strong>。
+A→B 单程跟踪做得好，不代表 B→A 能做；"管道在我的左边"这句话在两个方向上指的是
+两个相反的横向方向，任何一处符号没转过来，ROV 就会在返程慢慢把管道推进自己的壳体。</p>
+<div class="admonition note">
+<p class="admonition-title">仿真器说明（重要）</p>
+<p>本模块<strong>不依赖任何 3D 引擎</strong>。海床、管道、相机与 ROV 动力学全部由仓库内<strong>自研的
+解析式仿真器</strong>实现：相机是几何光线投射，管道求交是"线段 + 半径"的闭式解，推进器是
+一阶滞后模型。它不是 HoloOcean / Gazebo / MuJoCo / CARLA 场景——这样做的目的是让
+全链路在任意装了 ROS 2 的机器上逐位复现（CI 里也是这么跑的），代价是水动力与成像
+比真实引擎简化，结论只在"相对比较"意义上成立。仓库里 <code>water_vision_enhancement</code>
+同样是合成数据、未接 HoloOcean，有先例。</p>
+</div>
+<p>本模块构建一台三自由度 ROV 的完整巡检链路，四种海底场景（直管 / S 弯 / 横流 / 浑水）
+下对比五种策略，核心能力有四块：</p>
+<ol>
+<li><strong>解析式海底仿真与传感器建模</strong>：</li>
+</ol>
+<p>24 m × 16 m 海床平面，管道由 Catmull-Rom 样条生成稠密折线，相机光线与管道做
+   "线段 + 半径"的<strong>胶囊闭式求交</strong>，与圆柱应答器做二次方程求交。相机是 140° 广角
+   前视，128 × 96 分辨率，输出 RGB 与逐列常数深度（等价于一台 128 线单行深度
+   传感器）。ROV 侧建推进器一阶滞后、海流位移、浑水滑移三件事，全部纯 NumPy，
+   不需要 Gazebo / HoloOcean / CARLA，任何装了 ROS 2 的机器都能逐位复现。</p>
+<ol>
+<li><strong>颜色编码视觉感知与管道几何拟合</strong>：</li>
+</ol>
+<p>海底布设 10 根颜色编码的声应答器做路标。检测端在<strong>归一化色度空间</strong>做最近邻
+   分类（对光照强度不敏感），管道用归一化色度距离单独判据分割，再用三条硬判据
+   （严格连续列段、每列 ≥2 像素、距离 ≤8 m）拒识散斑噪声。管道像素做二次曲线
+   拟合，输出"横向偏置 + 航向偏差"两个量直接喂控制器。</p>
+<ol>
+<li><strong>EKF-SLAM 与占据栅格同步建图</strong>：</li>
+</ol>
+<p>状态 = 位姿 + 全部已观测应答器，首次观测按标准公式做<strong>状态增广</strong>并保留与位姿的
+   相关性。往返任务里这一点是刚需：回程再次看到去程初始化过的应答器时，正相关性
+   就是位姿能被拉回起点的唯一信息来源，也就是回环闭合误差（<code>loop_err</code>）能收敛
+   而不是线性漂移的原因。栅格图由 SLAM 位姿增量写入，对数几率模型 + 管道胶囊
+   真值算出覆盖率与 IoU。</p>
+<ol>
+<li><strong>往返巡检控制与端到端对照</strong>：</li>
+</ol>
+<p>级联控制 <code>desired = dtheta + atan2(KP_LAT·dx_err, 1.4) + i_lat</code>，大角度时原地
+   回转，横向积分项抗海流稳态偏差，折返用显式机动而不是让误差自然反号。并排训练
+   一个纯 NumPy 卷积网络做端到端（图像 → 速度指令），BC + 3 轮 DAgger，用来量化
+   "学习式策略在同一个任务上离经典流水线还有多远"。</p>
+<div class="mermaid">graph TD
+    subgraph World["解析式海底世界 World"]
+        Pipe["Catmull-Rom 弯管<br/>胶囊闭式求交"]
+        LM["10 色声应答器<br/>圆柱求交"]
+        Cur["海流场<br/>0.18 m/s 慢摆动"]
+    end
+
+    subgraph Sensor["广角前视相机 128x96 / FOV 140°"]
+        RGB["RGB (rgb8)"]
+        Depth["逐列常数深度 (32FC1)"]
+    end
+
+    subgraph Perception["感知 Perception"]
+        Chroma["归一化色度最近邻<br/>10 类应答器 ID"]
+        Mask["管道橙分割<br/>色度距离 &lt; 0.13"]
+        Reject["列段连续性 / 每列≥2px / ≤8m<br/>散斑拒识"]
+        Fit["二次曲线拟合<br/>dx_err, dtheta"]
+    end
+
+    subgraph SLAM["EKF-SLAM 节点 rov_slam"]
+        Pred["里程计预测<br/>Q = 0.004²/0.012²"]
+        Aug["状态增广<br/>保留位姿相关性"]
+        Gate["马氏距离门限 13.8<br/>协方差膨胀 x1.8"]
+        Grid["对数几率占据栅格"]
+    end
+
+    subgraph Control["巡检控制 rov_control"]
+        Mission["任务阶段 go / return<br/>按弧长进度翻转"]
+        Cascade["级联律 + 横向积分<br/>抗海流稳态偏差"]
+        Turn["折返机动<br/>背离管道定方向回转"]
+    end
+
+    Pipe --&gt; RGB
+    LM --&gt; RGB
+    Pipe --&gt; Depth
+    RGB --&gt; Chroma
+    RGB --&gt; Mask
+    Mask --&gt; Reject --&gt; Fit
+    Chroma --&gt; Aug
+    Depth --&gt; Aug
+    Pred --&gt; Aug --&gt; Gate --&gt; Grid
+    Fit --&gt; Cascade
+    Mission --&gt; Cascade
+    Cascade --&gt; Turn
+    Turn --&gt;|/rov/cmd_vel| Cur
+</div>
+<hr/>
+<h2 id="2">2. 海底仿真世界与传感器建模</h2>
+<h3 id="21">2.1 管道几何与胶囊求交</h3>
+<p>管道用 Catmull-Rom 样条从 5 个控制点插值成 160 段稠密折线（<code>samples_per_seg=40</code>）。
+渲染时不能把管道当成"零宽度的线"——真实管线有 0.18 m 半径，侧面看过去有厚度，
+而这层厚度恰好是横向偏置估计能成立的原因。</p>
+<p>射线与"线段 + 半径"胶囊的最近命中距离有闭式解。设射线 <code>o + t·d</code>、管道段 <code>p1 + s·ê</code>，
+把 <code>|o + t·d − (p1 + s·ê)|²</code> 对 <code>t</code>、<code>s</code> 联合最小化，正交条件给出 <code>t = D + B·s</code>
+（<code>B = ê·d</code>，<code>D = m·d</code>，<code>m = p1 − o</code>），代入后 <code>s* = (E + B·D)/(1 − B²)</code>，
+<code>s</code> 夹到 <code>[0, L]</code> 即自动处理端点。整段只做一次向量化点积，128 条射线对 160 段
+共 2 万个求交在毫秒级完成，这是整条流水线能跑满 10 Hz 的前提。</p>
+<p>应答器是半径 0.10 m、高 0.90 m 的立柱，射线与圆柱在俯视平面上的求交就是一个
+二次方程取近根。高度用于可见性判定：<strong>0.90 m 这个数字是被调试出来的</strong>——早期
+设定 0.65 m 时，相机平面在 0.45 m，只比应答器顶端低 0.2 m，远距离上立柱几乎
+退化成一条线，8 m 外基本检测不到，SLAM 在直管中段就丢了观测。</p>
+<h3 id="22">2.2 三自由度水下运动学</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># kinematics.py（节选）</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s</span> <span class="o">+</span> <span class="p">(</span><span class="n">v_cmd</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">/</span> <span class="n">SURGE_TAU</span>          <span class="c1"># 推进器一阶滞后，SURGE_TAU = 0.6 s</span>
+<span class="n">pose</span> <span class="o">+=</span> <span class="n">R</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">@</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">current</span> <span class="o">*</span> <span class="n">dt</span>    <span class="c1"># 海流是纯位移，不进里程计</span>
+<span class="n">th</span>   <span class="o">+=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">dt</span>
+<span class="n">odom</span> <span class="o">+=</span> <span class="n">R</span><span class="p">(</span><span class="n">th</span><span class="p">)</span> <span class="o">@</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">dt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>                   <span class="c1"># 里程计只积分推力，看不到海流</span>
+</code></pre></div>
+<p>关键的一点写在最后一行：<strong>海流漂移不进入里程计</strong>。真实 ROV 若无 DVL，惯导只能
+积分推进器指令，横流造成的位移完全不可观测——这正是 <code>current</code> 场景里 SLAM 必须
+靠视觉观测把位姿拉回来的物理来源。浑水场景额外把滑移系数放大到 1.25，模拟
+悬浮泥沙造成的推进效率下降。</p>
+<h3 id="23">2.3 广角前视相机的逐列投射</h3>
+<p>相机 128 × 96、FOV 140°（焦距 ≈ 23 像素）。140° 是被任务逼出来的：横向偏置
+0.9 m 跟管时，管道在近距离会跑到视野边缘，90° 视场下当 ROV 稍微偏出就会丢管道。</p>
+<p>渲染时取 128 个列方向各投一条射线，得到每列的命中距离后<strong>逐列填充一个常数深度</strong>
+——这就是"单行深度传感器"的等价物。选择逐列常数而不是真实深度图，是为了让
+几何感知与 CNN 感知站到同一个信息量上：CNN 拿到的深度通道也是这块逐列信息，
+两者的差异只剩"谁更会从颜色里抠结构"，而不是"谁多拿了一份深度"。</p>
+<p>浑水用线性雾化模拟：<code>c_obs = (1 − α)·c_obj + α·c_water</code>，<code>α = 0.55</code>，并按距离
+加权。这是简化的前向散射模型（没有体积散射积分），因此下文的结论对 CNN 感知
+是偏乐观的，已在"已知局限"里注明。</p>
+<hr/>
+<h2 id="3">3. 感知：颜色编码应答器与管道分割</h2>
+<h3 id="31">3.1 归一化色度空间</h3>
+<p>RGB 绝对值随光照衰减剧烈变化，水下尤其如此。所有分类都在归一化色度
+<code>c = rgb / Σrgb</code> 上做，把"亮度"这个维度彻底消掉。10 色调色板按三条约束挑选：</p>
+<table>
+<thead>
+<tr>
+<th>约束</th>
+<th>阈值</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>两两间距</td>
+<td>≥ 0.19</td>
+<td>分类阈值 0.10，留一倍噪声余量</td>
+</tr>
+<tr>
+<td>离水色（蓝绿）</td>
+<td>≥ 0.20</td>
+<td>水背景不能被误分类成应答器</td>
+</tr>
+<tr>
+<td>离管道橙</td>
+<td>≥ 0.19</td>
+<td>管道与应答器互不混淆</td>
+</tr>
+</tbody>
+</table>
+<p>这三条不是凑出来的。最初调色板里有"灰蓝"和"青"两个颜色，与水体背景的色度
+距离只有 0.089 和 0.137，结果整幅水背景被判成应答器，真正的应答器淹没在大块
+背景里检测不出来——现象是 SLAM 在 <code>current</code> / <code>turbid</code> 场景下 ATE 从 0.3 m
+暴涨到 2~4 m，而清水场景完全正常，极难定位。换成 10 色、并把水体自身色度也作为
+一个"必须排除的类"后问题消失。白色同样被淘汰过：饱和度 0.04 过不了
+<code>SAT_TH = 0.34</code> 的门限，最后换成春绿 <code>[0.20, 0.85, 0.50]</code>。</p>
+<h3 id="32">3.2 管道掩膜：为什么不能用"橙通道占优"</h3>
+<p>第一版判断管道用的是"R 通道显著大于 G、B"。这在清水里没问题，但红色应答器
+<code>[0.85, 0.15, 0.10]</code> 的 R 通道占比 0.77，比管道橙的 0.65 还高——整根红色应答器
+被当成管道，ROV 从起点就开始绕着它打转，<code>pipe_slam</code> 在直管场景 12 次里只成功
+1 次且耗时 220 s（打满时间上限）。</p>
+<p>改成归一化色度上的<strong>欧氏距离</strong>判据：<code>‖c − c_pipe‖ &lt; 0.13</code>，其中
+<code>c_pipe = [0.647, 0.317, 0.033]</code>。红色 <code>[0.773, 0.136, 0.091]</code> 到管道橙的距离
+是 0.30，安全地落在门限外。</p>
+<h3 id="33">3.3 拒识比分类更难</h3>
+<p>真正让 SLAM 崩掉的不是分类错误，而是<strong>虚假观测</strong>：浑水场景下渲染噪声会形成
+几十像素的随机色块，检测端把它当成一根 11.6 m 外的应答器，EKF 用一条这样的
+观测就把位姿初始化到 <code>(16.45, 20.18)</code>——离真值 6 m 开外，之后再也拉不回来。</p>
+<p>三条硬判据把这类观测全部拒掉：</p>
+<ol>
+<li><strong>严格连续列段</strong>：同一根立柱在相邻列上必须连续出现，断一列就切断；</li>
+<li><strong>每列 ≥2 像素</strong>：散斑在单列上通常只有 1 个像素；</li>
+<li><strong>观测距离 ≤ 8 m</strong>：超过 8 m 的检测即使是真的也不可信（信噪比太低）。</li>
+</ol>
+<p>第 2 条最有效。实测加了这三条之后，<code>pipe_slam</code> 在直管 / 弯管两个清水场景的
+ATE 从 0.9~1.4 m 降到 0.28~0.63 m，<code>current</code> 场景从"完全失效"变成"能跑完但
+横向偏差偏大"。</p>
+<h3 id="34-cnn">3.4 管道拟合与 CNN 感知支路</h3>
+<p>管道像素按列取中位行，做一次二次曲线拟合 <code>u(row) = a + b·v + c·v²</code>，从曲线在
+图像底部与中部的斜率/截距反解出横向偏置 <code>dx_err</code> 与航向偏差 <code>dtheta</code>。用二次
+而不是直线，是因为 140° 广角下管道在图像里明显弯曲，直线拟合在近距离会系统性
+低估横向偏置。</p>
+<p>几何方法在清水里很准（直管横向误差 0.11 m），浑水里退化但不失效：雾化把管道
+颜色按 0.55 的比例混进水色，色度判据给出的是断续的列段，横向误差涨到 2.0 m、
+成功率从 3/3 掉到 2/3。我们同时训练了一条 CNN 感知支路（<code>percep.npz</code>，2 通道
+输入：灰度 + 逐列深度）直接回归 <code>(dx_err, dtheta)</code>，想看看"学习式感知能不能
+把这块补回来"——结果是 0/12，原因见 §7.3。</p>
+<hr/>
+<h2 id="4-ekf-slam">4. EKF-SLAM 与占据栅格建图</h2>
+<p>状态向量 <code>μ = [x, y, θ, m₁x, m₁y, …, m_kx, m_ky]</code>，协方差 <code>Σ</code> 随应答器数量
+增广。预测步吃里程计增量（不是绝对位姿），更新步吃"距离 + 方位"观测：</p>
+<ul>
+<li>测距噪声 <code>σ_r = 0.05 + 0.02·r</code>（米），方位噪声 <code>σ_b = 20 mrad</code>；</li>
+<li>数据关联用<strong>马氏距离门限 13.8</strong>（2 自由度卡方分布的 99.9% 分位）；</li>
+<li>被连续拒绝的观测不丢弃而是<strong>协方差膨胀 ×1.8</strong>（"自我怀疑"机制）：如果同一个
+  应答器连续 3 次被拒，说明更可能是自己的位姿错了而不是观测错了，此时膨胀协方差
+  让滤波器愿意被观测拉走。这一条在折返瞬间尤其重要——那时位姿误差最大，观测最
+  不可靠，纯硬门限会把所有观测都拒掉，滤波器彻底失去约束。</li>
+</ul>
+<p>过程噪声 <code>Q = diag(0.004², 0.004², 0.012²)</code> 是权衡结果：ROV 的里程计误差来自
+推进器滞后与未知海流，是系统性漂移而非白噪声。Q 给小了滤波器不信任观测、越漂越远；
+Q 给大了滤波器把每个含噪观测当真、末端定位同样劣化。按测距/方位噪声标定后，
+这组取值在两个方向上都最稳。</p>
+<p>栅格 240 × 160（0.1 m/格），对数几率模型 <code>L ← L + hit/miss</code>，夹在 <code>[−4, 4]</code>。
+真值图用的是<strong>管道胶囊</strong>而不是中心线——早期版本 <code>pipeline_mask</code> 只标中心线，
+导致"管道覆盖率"这个指标永远偏低（管道本体有 0.36 m 宽，中心线只占其中一列），
+看起来像建图漏检，实际上是评测写错了。</p>
+<hr/>
+<h2 id="5">5. 往返巡检控制</h2>
+<h3 id="51">5.1 级联律</h3>
+<div class="highlight"><pre><span></span><code><span class="n">desired</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">dtheta</span> <span class="o">+</span> <span class="n">atan2</span><span class="p">(</span><span class="n">KP_LAT</span> <span class="o">*</span> <span class="n">dx_err</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">))</span>   <span class="c1"># 航向 + 横向修正</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">KP_TH</span> <span class="o">*</span> <span class="n">desired</span>                                     <span class="c1"># KP_TH = 1.9</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">MAX_V</span> <span class="o">*</span> <span class="n">clip</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.55</span><span class="o">*|</span><span class="n">dx_err</span><span class="o">|</span> <span class="o">-</span> <span class="mf">0.50</span><span class="o">*|</span><span class="n">desired</span><span class="o">|</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+</code></pre></div>
+<p><code>atan2(KP_LAT·dx_err, 1.4)</code> 这一项是"横向误差 → 期望航向"的映射，1.4 是收敛距离
+尺度：<code>dx_err = 1.4 m</code> 时正好偏 45°。用 <code>atan2</code> 而不是线性比例，是为了让大偏差
+时转角有上界（±90°），不会因为误差突然跳变而给出荒谬的转向指令。</p>
+<p><strong>大角度必须原地回转</strong>：<code>|desired| &gt; SPIN_ENTER(0.70)</code> 时把 <code>v</code> 压到 0，
+<code>SPIN_EXIT(0.45)</code> 才恢复前进——两个阈值不同构成迟滞，避免在阈值附近抖动。
+这条在折返时是救命的：边前进边大角度转，ROV 会画一个大弧扫到管壁上。</p>
+<h3 id="52-vs">5.2 任务系 vs 车体系的符号</h3>
+<p>这是整个作业里最贵的 bug。控制器需要的是<strong>任务系</strong>下的横向误差（相对巡检方向），
+而检测器给出的是<strong>车体系</strong>下的（管道在车体左边还是右边）。单向跟踪时两者恰好
+一致，往返任务里返程符号必须翻转：</p>
+<div class="highlight"><pre><span></span><code><span class="n">dx_err</span> <span class="o">=</span> <span class="n">mdir</span> <span class="o">*</span> <span class="p">(</span><span class="n">FOLLOW_OFFSET</span> <span class="o">-</span> <span class="n">lat</span><span class="p">)</span>     <span class="c1"># mdir = +1 去程 / -1 返程</span>
+<span class="n">dtheta</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">atan2</span><span class="p">(</span><span class="n">mdir</span><span class="o">*</span><span class="n">ty</span><span class="p">,</span> <span class="n">mdir</span><span class="o">*</span><span class="n">tx</span><span class="p">)</span> <span class="o">-</span> <span class="n">th</span><span class="p">)</span>
+</code></pre></div>
+<p>第一版直接用 <code>lat</code>（管道在车体系的横坐标）当误差，结果是：去程 12/12 完美，
+返程 0/12 全部失败——ROV 一路把管道往右推，横向距离从 0.88 m 掉到 0.38 m
+（管道半径 0.18 + ROV 半径 0.25 = 0.43 m 就已接触），最后压进管壁。修改后
+<code>oracle</code> 12/12，直管横向误差 0.03 m。</p>
+<p>同样的问题也污染过评测指标：<code>lat_rmse</code> 最初算的是 <code>abs(lat)</code>，那是"到管道的
+距离"，恒等于 0.9 左右（因为偏置巡检本来就在 0.9 m 处），根本反映不了跟踪
+好坏。改成 <code>abs(lat − FOLLOW_OFFSET)</code> 之后直管场景报出 0.03 m，指标才恢复意义。</p>
+<h3 id="53">5.3 横向积分项是抗流的唯一手段</h3>
+<p>横流 0.18 m/s、推力上限 0.55 m/s，稳态横向偏差稳定停在 0.3 m 左右。纯比例
+控制消不掉它，因为偏差的<strong>来源（流速）不在误差信号里</strong>——误差收敛到 0 时
+ROV 仍在被推走，只是推力把这一位移压到了一个平衡点。</p>
+<p>加一路积分（<code>KI_LAT = 0.05</code>，<code>I_LAT_MAX = 0.5</code>）后稳态偏差压到 0.1 m 以内：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 回转/大偏差期间 step() 在积分之前就 return，积分自动冻结</span>
+<span class="n">i_lat</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">i_lat</span> <span class="o">+</span> <span class="n">KI_LAT</span> <span class="o">*</span> <span class="n">DT</span> <span class="o">*</span> <span class="n">dx_err</span><span class="p">,</span> <span class="o">-</span><span class="n">I_LAT_MAX</span><span class="p">,</span> <span class="n">I_LAT_MAX</span><span class="p">)</span>
+<span class="n">desired</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">dtheta</span> <span class="o">+</span> <span class="n">atan2</span><span class="p">(</span><span class="n">KP_LAT</span><span class="o">*</span><span class="n">dx_err</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">)</span> <span class="o">+</span> <span class="n">i_lat</span><span class="p">)</span>
+</code></pre></div>
+<p>两个细节：<strong>积分在回转期间冻结</strong>，否则折返瞬间那个"看起来巨大"的横向偏差会把
+积分项直接冲到限幅，然后一直带着一个 0.5 rad 的偏置飞到返程终点；<strong>积分必须先
+限幅再叠加</strong>，否则一次持续 3 s 的大偏差就能让积分项吃掉全部控制余量。抗流是否
+真的起作用，看 <code>current</code> 场景的横向误差与清水场景的差距就知道了——二者差距被
+压到 0.1 m 量级以内，说明稳态偏差确实是被积分项而不是被某个巧合抵消的。</p>
+<h3 id="54">5.4 折返是一次显式机动</h3>
+<p>管道走到端点 B 时，视野里只剩端头那一小段，拟合出来的航向偏差是垃圾值。如果
+仅靠"任务方向反号"，控制器会基于这个垃圾值让 ROV 原地打转，甚至蹭到管口。</p>
+<p>做法是在相位翻转的瞬间调 <code>begin_turnaround(dir)</code>：按"管道在鼻子哪一侧"决定
+旋转方向（往背离管道的那边转，保证肚子里有空间），一直转到航向误差 &lt; <code>SPIN_EXIT</code>
+才交回正常级联控制。<code>return</code> 结束回到 A 时同样处理，只是因为到 A 就结束了、
+不需要再转回来。</p>
+<p>阶段推进不用"到点距离"而用<strong>弧长进度</strong>：偏置巡检时 ROV 永远到不了端点本身
+（端点就在管道正上方，而 ROV 在 0.9 m 外），用距离判据永不触发。现在
+<code>s ≥ length − 0.8</code> 翻到 <code>return</code>，<code>s ≤ 0.8</code> 判定完成。</p>
+<hr/>
+<h2 id="6-dagger">6. 端到端策略与 DAgger</h2>
+<p>网络是纯 NumPy 实现的 4 层卷积 + 全连接（im2col 前向，手写反向），输入 5 通道：</p>
+<table>
+<thead>
+<tr>
+<th>通道</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–2</td>
+<td>连续 3 帧灰度（128 × 96，/255）</td>
+</tr>
+<tr>
+<td>3</td>
+<td>逐列常数深度（归一化）</td>
+</tr>
+<tr>
+<td>4</td>
+<td>当前目标方位（HUD 式，由里程计位姿与任务端点算出）</td>
+</tr>
+</tbody>
+</table>
+<p>输出 2 维：<code>(v/MAX_V, ω/MAX_W)</code>，都在 <code>[-1, 1]</code>。</p>
+<p>训练流程：专家数据 → 行为克隆（40 epoch）→ 3 轮 DAgger（β = 0.7 / 0.35 / 0）
+→ 保存 <code>e2e.npz</code>。感知网络（2 通道：灰度 + 深度）走同一条数据流水线，DAgger
+产生的"学生视角帧"也会同步微调它——学生看到的分布才是部署分布。</p>
+<p>第 4 通道（目标方位）的动机来自地面那次端到端实验：走廊里同一幅画面既可能对应
+"直行"也可能对应"左转"，正确动作取决于目标在哪儿，而目标不在图像里，结果
+行为克隆学到均值后撞墙。给一路由里程计算出的目标方位（不需要地图、不需要 SLAM）
+之后才起来。</p>
+<p><strong>但这次消融没复现那个结论</strong>：<code>e2e_nogoal</code> 用同一份权重把第 4 通道置零，
+结果同样是 9/12（直管横向误差 0.08 m vs 0.04 m，弯管 0.16 m vs 0.21 m，
+互有胜负）。原因很清楚——<strong>管道本身就是一条连续的引导线</strong>，紧跟它就能走完
+全程，唯一需要判断方向的是端点折返，而端头几何在图像里是可见的。地面那次
+"不可辨识"是因为走廊没有任何连续引导物。所以这路通道在这里是锦上添花而不是
+必要条件；我们保留它，是因为它把"任务级目标"显式喂进策略，换成多航点巡检时
+会立刻变成刚需。</p>
+<hr/>
+<h2 id="7">7. 实验与结果</h2>
+<h3 id="71">7.1 协议</h3>
+<ul>
+<li>场景 4 个：<code>straight</code>（直管）、<code>curve</code>（S 弯）、<code>current</code>（横流 0.18 m/s）、
+  <code>turbid</code>（雾化 α = 0.55）；</li>
+<li>种子 3 个（0/1/2），应答器布点与管道微扰随种子变化；</li>
+<li>策略 4 个进主对比：<code>oracle</code>（真值位姿 + 真值横向误差，上界）、<code>pipe_slam</code>
+  （几何检测 + EKF-SLAM）、<code>e2e</code>、<code>e2e_nogoal</code>（把目标方位通道置零做消融）；
+  另有一条 <code>pipe_cnn</code>（CNN 回归 (dx, dtheta) 替代几何检测）不进主对比，
+  结果与归因单列在 §7.3；</li>
+<li><strong>训练数据只来自清水场景</strong>（<code>straight</code> + <code>curve</code>），<code>current</code> / <code>turbid</code>
+  只做测试——检验泛化，不是背布局。</li>
+</ul>
+<p>指标：成功率（走完 A→B→A 且不碰撞）、横向误差 RMSE（相对巡检偏置线）、
+ATE、回环闭合误差、管道覆盖率、建图 IoU。</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>场景</th>
+<th>成功率</th>
+<th>横向误差 (m)</th>
+<th>ATE (m)</th>
+<th>回环误差 (m)</th>
+<th>管道覆盖</th>
+<th>建图 IoU</th>
+<th>用时 (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Oracle（真值）</td>
+<td>直管</td>
+<td>3/3</td>
+<td>0.03</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>66</td>
+</tr>
+<tr>
+<td>Oracle（真值）</td>
+<td>S 弯</td>
+<td>3/3</td>
+<td>0.11</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>99</td>
+</tr>
+<tr>
+<td>Oracle（真值）</td>
+<td>横流</td>
+<td>3/3</td>
+<td>0.35</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>80</td>
+</tr>
+<tr>
+<td>Oracle（真值）</td>
+<td>浑水</td>
+<td>3/3</td>
+<td>0.11</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>99</td>
+</tr>
+<tr>
+<td>几何感知 + EKF-SLAM</td>
+<td>直管</td>
+<td>3/3</td>
+<td>0.11</td>
+<td>0.29</td>
+<td>0.04</td>
+<td>0.12</td>
+<td>0.19</td>
+<td>69</td>
+</tr>
+<tr>
+<td>几何感知 + EKF-SLAM</td>
+<td>S 弯</td>
+<td>3/3</td>
+<td>0.27</td>
+<td>0.50</td>
+<td>0.05</td>
+<td>0.24</td>
+<td>0.24</td>
+<td>96</td>
+</tr>
+<tr>
+<td>几何感知 + EKF-SLAM</td>
+<td>横流</td>
+<td>1/3</td>
+<td>0.47</td>
+<td>2.76</td>
+<td>3.43</td>
+<td>0.09</td>
+<td>0.05</td>
+<td>59</td>
+</tr>
+<tr>
+<td>几何感知 + EKF-SLAM</td>
+<td>浑水</td>
+<td>2/3</td>
+<td>0.37</td>
+<td>1.87</td>
+<td>0.05</td>
+<td>0.13</td>
+<td>0.05</td>
+<td>118</td>
+</tr>
+<tr>
+<td>端到端 CNN</td>
+<td>直管</td>
+<td>3/3</td>
+<td>0.04</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>79</td>
+</tr>
+<tr>
+<td>端到端 CNN</td>
+<td>S 弯</td>
+<td>3/3</td>
+<td>0.21</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>109</td>
+</tr>
+<tr>
+<td>端到端 CNN</td>
+<td>横流</td>
+<td>3/3</td>
+<td>0.28</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>85</td>
+</tr>
+<tr>
+<td>端到端 CNN</td>
+<td>浑水</td>
+<td>0/3</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>88</td>
+</tr>
+<tr>
+<td>端到端（目标通道置零）</td>
+<td>直管</td>
+<td>3/3</td>
+<td>0.08</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>79</td>
+</tr>
+<tr>
+<td>端到端（目标通道置零）</td>
+<td>S 弯</td>
+<td>3/3</td>
+<td>0.16</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>111</td>
+</tr>
+<tr>
+<td>端到端（目标通道置零）</td>
+<td>横流</td>
+<td>3/3</td>
+<td>0.30</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>85</td>
+</tr>
+<tr>
+<td>端到端（目标通道置零）</td>
+<td>浑水</td>
+<td>0/3</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>44</td>
+</tr>
+</tbody>
+</table>
+<p>（误差列只统计成功回合；<code>—</code> 表示该策略不产生这个量，例如端到端不起地图。）</p>
+<blockquote>
+<p><strong>消融这一行不能当作"目标通道有用"的证据</strong>：<code>e2e</code> 与 <code>e2e_nogoal</code> 都是 9/12，
+逐种子看直管 0.040 / 0.077 m、S 弯 0.213 / 0.157 m、清水均值 0.127 / 0.117 m，
+方向互相矛盾，属随机波动。这一行的实际结论是<strong>反过来的</strong>：本任务里端到端策略
+并不依赖显式目标方位通道，去掉它不掉点。不要把"含消融"读成"消融有效"。</p>
+</blockquote>
+<p>合计：<strong>oracle 12/12、几何流水线 9/12、端到端 9/12、端到端置零 9/12</strong>。</p>
+<p>三条结论：</p>
+<ol>
+<li><strong>经典流水线在清水里已经接近上界</strong>：直管横向误差 0.11 m（oracle 0.03 m）、
+   ATE 0.29 m、回环误差 0.04 m；S 弯则分别是 0.27 m / 0.50 m / 0.05 m——
+   弯道的近端拟合偏差让横向误差翻了一倍多，所以"0.11 m"只对直管成立。
+   即便在直管，往返 34 m 之后位姿还能对回起点 4 cm，靠的就是去程初始化过的
+   应答器在返程被再次观测。</li>
+<li><strong>两类策略的失败位置完全不同</strong>：流水线在横流崩（1/3，ATE 2.76 m）、
+   在浑水掉到 2/3，都是<strong>定位/建图</strong>的问题；端到端在清水/弯管/横流 9/9 全过，
+   唯独浑水 0/3，是<strong>图像分布</strong>的问题。同样是 9/12，失败原因不在一个维度上。</li>
+<li><strong>目标方位消融没有显著差异</strong>（9/12 vs 9/12，直管横向误差 0.04 vs 0.08 m）。
+   这和地面那次端到端实验的结论相反，原因见 §6 末尾。</li>
+</ol>
+<p><img alt="四场景 × 四策略对比：成功率 / 横向跟踪误差 / SLAM 定位误差 / 管道建图覆盖" src="../../img/water/rov_pipeline_follow_compare.png"/></p>
+<p><img alt="往返回合轨迹对比（直管，seed 0）：oracle、几何流水线、端到端" src="../../img/water/rov_pipeline_follow_trajectories.png"/></p>
+<p><img alt="训练曲线：感知网络 / 行为克隆 / 三轮 DAgger" src="../../img/water/rov_pipeline_follow_training.png"/></p>
+<p><img alt="S 弯巡检演示（几何流水线，含 EKF-SLAM 栅格叠加）" src="../../img/water/rov_pipeline_follow_curve.gif"/></p>
+<p><img alt="浑水巡检演示（同一套几何流水线）" src="../../img/water/rov_pipeline_follow_turbid.gif"/></p>
+<p>（对比图中的误差取全部回合的平均，含失败回合，因此 (b) 里浑水一组的
+流水线柱子是 0.80 m；上面表格只统计成功回合，两处口径不同。）</p>
+<h3 id="72">7.2 失败归因</h3>
+<p><strong>横流场景（流水线 1/3）</strong>：ATE 冲到 2.76 m、回环误差 3.43 m，两个失败回合里
+有一个直接把 ROV 带到 11 m 开外。这条链路的信息全部来自视觉观测，而横流下
+ROV 相对应答器的位移持续变化，观测更新率跟不上漂移，滤波器被"协方差膨胀 ×1.8"
+的自我怀疑机制带着一起漂——膨胀本意是让滤波器在折返时能接受观测，副作用是
+在长时间无观测的段里把先验也放软了。更关键的是<strong>阶段推进用的是 SLAM 位姿</strong>：
+位姿漂 2 m 之后，"到达 B 端"这个判定本身就错了，折返机动在错误的位置触发，
+后面再怎么控制都没用。这是本任务里位姿误差与控制决策耦合最紧的地方。</p>
+<p><strong>浑水场景（流水线 2/3，端到端 0/3）</strong>：流水线靠几何检测仍然完成了 2/3，
+因为线性雾化保留了颜色比例关系，色度判据只是变糙（横向误差 0.37 m）；失败的
+那一次是感知连续丢失超过 3 s 触发了 A* 兜底，而在建得不好的栅格上规划出来的
+路径把它带偏了。端到端则是一次都没成：训练集只有清水，浑水的对比度分布完全
+不同，网络输出的速度指令在 32~150 s 内累计偏到压管为止。<strong>学习式策略的失败
+是分布问题，不是算法问题</strong>——这一点在"训练/测试场景刻意不重叠"的设计下被
+放大了，也正是这个设计想要暴露的东西。</p>
+<p><strong>直管/弯管（流水线 6/6）</strong>：横向误差 0.11 / 0.27 m，都在 <code>LAT_OK = 0.45</code> 的
+合格线内；弯管会更差一些，因为偏置 0.9 m 的巡检线在弯道内侧会被管道自身"挤"
+短，二次曲线拟合在近端有系统性偏差。</p>
+<h3 id="73-cnn">7.3 负面结果：用 CNN 回归几何量替代几何检测</h3>
+<p>我们试过把感知整条换掉：训练一个 2 通道（灰度 + 逐列深度）的卷积网络直接回归
+<code>(dx_err, dtheta)</code>，输出接同一套级联控制。两版都失败，但<strong>失败原因不同</strong>，
+值得记下来。</p>
+<p><strong>第一版：均值坍缩。</strong> 用纯专家数据训练（BC 留出 MSE 1.1e-3），闭环 12/12
+全部超时且<strong>位移为零</strong>——220 s 打满，终点距起点 0.98 m，即根本没动。原因是
+专家轨迹本身的横向误差几乎恒为 0（直管 0.034 m、弯管 0.114 m），MSE 意义下
+最优解就是"恒输出 0"。把 ROV 直接摆在偏 1.77 m 的位置上测试，网络仍报 -0.01：
+它不是没学会，是<strong>没学过"偏了"是什么样子</strong>。行为克隆的经典陷阱，在"回归一个
+几乎恒为 0 的量"时尤其致命。</p>
+<p><strong>第二版：能回归，但闭环抖。</strong> 采集时给起点加 ±0.55 / 0.35 m 的横向偏置
+（两侧幅值刻意不对称：偏置线只有 0.9 m，朝管道那侧超过 0.40 m 起点就在接触区里），
+标签覆盖到 ±0.5 m。网络确实学会了：偏 0.25 m 报 0.25 m，偏 0.45 m 报 0.53 m。
+但闭环仍是 0/12，失败模式变成<strong>4~6 s 内撞上应答器</strong>：逐帧记录显示回归量帧间
+抖动达 ±0.3 m，<code>|desired| &gt; 0.70</code> 的回转判据被抖动反复触发，ROV 进入"转一下、
+停一下"的状态，横向漂移 1.0 m 后撞上路侧 1.8 m 外的应答器。</p>
+<p>结论不是"网络太小"（BC 留出误差已经在 1e-3 量级），而是<strong>几何量回归对帧间
+一致性要求极高</strong>，而逐帧独立回归天然给不出这种一致性；解析几何方法（列段拟合）
+则天然是连续的。因此主对比保留几何检测，CNN 感知作为对照与后续改进的入口
+保留在代码里（<code>make_policy('pipe_cnn')</code>、<code>use_cnn:=true</code>）。</p>
+<p>顺带一个代价：这批起始扰动样本会污染端到端策略的数据分布（学生被大量"救偏"
+样本带偏，实测 9/12 → 0/12），所以 <code>collect_demo</code> 默认不扰动，需要时显式传
+<code>jitter=</code> 复现本节的实验。</p>
+<hr/>
+<h2 id="8">8. 一键运行</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 离线流水线（不需要 ROS）</span>
+<span class="nb">cd</span><span class="w"> </span>src/water/rov_pipeline_follow
+python<span class="w"> </span>-m<span class="w"> </span>rov_pipeline_follow.main<span class="w">              </span><span class="c1"># 采集→训练→评测→出图，约 25 min</span>
+python<span class="w"> </span>-m<span class="w"> </span>rov_pipeline_follow.main<span class="w"> </span>--quick<span class="w">      </span><span class="c1"># 快速版，约 3 min</span>
+python<span class="w"> </span>-m<span class="w"> </span>rov_pipeline_follow.main<span class="w"> </span>--stage<span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="c1"># 只评测</span>
+
+<span class="c1"># ROS 2 闭环（Humble）</span>
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>rov_pipeline_follow
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>rov_pipeline_follow<span class="w"> </span>main.launch.py<span class="w"> </span>scene:<span class="o">=</span>curve<span class="w"> </span>seed:<span class="o">=</span><span class="m">0</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>rov_pipeline_follow<span class="w"> </span>main.launch.py<span class="w"> </span>scene:<span class="o">=</span>turbid<span class="w"> </span>use_cnn:<span class="o">=</span><span class="nb">true</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>rov_pipeline_follow<span class="w"> </span>teleop.launch.py<span class="w">        </span><span class="c1"># 键盘遥控</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>rov_pipeline_follow<span class="w"> </span>e2e.launch.py<span class="w">           </span><span class="c1"># 端到端策略</span>
+
+<span class="c1"># 测试</span>
+python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test/<span class="w"> </span>-q<span class="w">      </span><span class="c1"># 无 rclpy：55 passed；装了 rclpy：49 passed, 6 skipped</span>
+</code></pre></div>
+<p><code>test/test_nodes_ros.py</code> 的 6 个用例走的是 <code>fake_ros</code> 替身（在 <code>fake_ros.install()</code>
+检测到真实 <code>rclpy</code> 时会主动 <code>pytest.skip</code>），所以<strong>在 Ubuntu + Humble 上跑出来是
+<code>49 passed, 6 skipped</code>，不是 55 passed</strong>；那 6 个用例要验证的端到端行为请用
+<code>ros2 launch</code> 走 §8 的冒烟，CI 里两段都覆盖。</p>
+<p>CI（<code>.github/workflows/ros2_rov_pipeline_follow.yml</code>）在 <code>ros:humble</code> 容器里跑：
+离线测试 → <code>colcon build</code> → install 布局硬断言 → 四场景各 180 s 真 launch 冒烟
+→ 权重加载冒烟 → 离线闭环回归（oracle 直管 + pipe_slam 弯管必须走完）。</p>
+<hr/>
+<h2 id="9">9. 总结</h2>
+<p>这个任务真正的难点不在"怎么跟踪管道"，而在<strong>往返</strong>这两个字带来的三个连锁问题：
+任务系与车体系的符号、折返瞬间的观测失效、以及海流造成的稳态偏差。三个都不是
+加一层网络能解决的，必须回到几何与控制里去修。</p>
+<p>同时它也划出了两条技术路线的边界，而且边界的位置不一样：</p>
+<ul>
+<li>解析几何 + EKF-SLAM 的边界在<strong>定位</strong>——清水直管横向误差 0.11 m（S 弯 0.27 m），
+  往返 34 m 后位姿还能对回 4 cm；横流下位姿漂 2.8 m，因为阶段推进用的是 SLAM 位姿，
+  位姿一错，折返时机就错，后面全崩；</li>
+<li>端到端的边界在<strong>图像分布</strong>——清水/弯管/横流 9/9 全过，浑水 0/3，训练时
+  没见过雾化就真的不会。</li>
+</ul>
+<p>两者拿到同样的分数（各 9/12），但失败的维度完全不同，这比"谁高谁低"更有
+信息量：要提升鲁棒性，流水线该补的是 DVL/声学定位，端到端该补的是域随机化。</p></div>
+</div>
+</div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../water_vision_enhancement/" title="浑浊水体视觉增强与目标追踪（合成视频演示）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../usv_mujoco_nn/" title="水面无人艇：激光雷达建图与神经网络局部规划">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
+<hr>
+<div role="contentinfo">
+<!-- Copyright etc -->
+<p>OpenHUTB 版权所有 © 2026</p>
+</div>
+</hr></footer>
+</div>
+</div>
+</section>
+</div>
+<div aria-label="Versions" class="rst-versions" role="note">
+<span class="rst-current-version" data-toggle="rst-current-version">
+<span>
+<a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
+</span>
+<span><a href="../water_vision_enhancement/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../usv_mujoco_nn/" style="color: #fcfcfc">后一页 »</a></span>
+</span>
+</div>
+<script src="../../js/jquery-3.6.0.min.js"></script>
+<script>var base_url = "../..";</script>
+<script src="../../js/theme_extra.js"></script>
+<script src="../../js/theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script>
+<script src="../../js/umlconvert.js"></script>
+<script src="../../search/main.js"></script>
+<script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+<script>mermaid.initialize({});</script></body>
+</html>
