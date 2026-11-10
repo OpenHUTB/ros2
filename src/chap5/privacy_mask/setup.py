@@ -1,31 +1,37 @@
-from setuptools import setup
-import os
 from glob import glob
+import os
+
+from setuptools import setup
 
 package_name = "privacy_mask"
 
 setup(
     name=package_name,
-    version="0.0.0",
+    version="0.1.0",
     packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages",
-            ["resource/" + package_name]),
+         ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
-        (os.path.join("share", package_name, "resource"), glob("resource/test.png")),
+        (os.path.join("share", package_name, "launch"),
+         glob("launch/*.launch.py")),
+        # resource 下的 png 与模型权重要一起安装到 share，否则节点找不到文件
+        (os.path.join("share", package_name, "resource"),
+         glob("resource/*.png")),
+        (os.path.join("share", package_name, "resource"),
+         glob("resource/*.pt")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="user",
-    maintainer_email="user@todo.todo",
-    description="YOLO pedestrian privacy mask",
+    maintainer="Your Name",
+    maintainer_email="your_name@example.com",
+    description="基于 YOLOv8 的行人隐私脱敏 ROS 2 节点",
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        'console_scripts': [
-            'main = privacy_mask.privacy_mask_node:main',
+        "console_scripts": [
+            # 可执行名与 launch 文件中的 executable 保持一致
+            "privacy_mask_main = privacy_mask.privacy_mask_node:main",
         ],
     },
-
 )
