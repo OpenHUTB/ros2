@@ -222,11 +222,6 @@ python3 tests/test_sensors_local.py    # 80 项，全部通过
 - 线加速度包含重力分量，纯运动加速度需使用方自行扣除；
 - `frame/imu` 默认 `base_link`，`rate/imu_hz` 默认 50。
 
-```bash
-rostopic hz /imu
-rostopic echo -n1 /imu
-```
-
 示例输出（悬停）：
 
 ```text
@@ -273,6 +268,30 @@ $$
 深度点云前视图（颜色表示距离）：
 
 ![深度点云前视图](../img/air/carlair_ros_bridge/depth_points_front.png)
+
+### 6.8 深度避障 demo
+
+`depth_avoidance.py` 订阅 `/camera/depth/points`，取前方走廊内最近点并发布 `/uav/cmd_vel`：
+
+```text
+d = min(z),  |x| <= lateral_limit, |y| <= vertical_limit, min_range <= z <= max_range
+vx = 0                         , d <= stop_distance
+vx = forward_speed * (d-stop)  , stop_distance < d < slow_distance
+vx = forward_speed             , d >= slow_distance
+```
+
+默认参数：`forward_speed=1.5`、`slow_distance=4.0`、`stop_distance=2.0`、`lateral_limit=0.8`、`min_range=0.5`；起飞后 `start_delay=6 s` 再接管。
+
+```bash
+roslaunch carlair_ros_bridge main.launch host:=<Windows_IP> \
+  auto_takeoff:=true enable_depth_avoidance:=true \
+  publish_lidar:=false publish_imu:=false start_selfcheck:=false
+
+rostopic echo /uav/cmd_vel
+```
+
+![深度避障实测](../img/air/carlair_ros_bridge/depth_avoidance_live.png)
+
 
 ## 7. 运行验证
 

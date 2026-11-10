@@ -202,3 +202,7 @@ model_path:="$HOME/models/yolo11n.pt"
 目标位置来自 CARLA 车辆坐标，尚未接入 YOLO 视觉闭环，也不能据此认定无人机动力学跟随已经验证通过。跟随使用增量位姿更新。
 
 完整的环境安装、车辆生成、记录、绘图、WSL 跟随及释放控制命令见[车辆轨迹与仿真跟随教程](../../../docs/air/openhutb_yolo_mlp_control/traffic_tracking.md)。
+
+## 可选双车干扰验证
+
+`tools/visual_validation` 提供 CARLA 双车场景驱动与 ROS 观察器，可复现目标丢失、干扰车可见及显式重选流程。需要匹配版本 CARLA API 和已构建的 ROS/YOLO 环境，不随正常控制入口自动运行。命令及清理说明见[视觉居中文档](../../../docs/air/openhutb_yolo_mlp_control/yolo_visual_centering.md#可选双车干扰验证工具)。输出必须位于 Git 工作区之外。
