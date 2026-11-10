@@ -66,6 +66,7 @@ ROS每章节运行代码:
     * [自建小车 Gazebo GMapping 建图](./chapter/urdf_car_gmapping.md)
 * [第 7 章](./chapter/chap7.md) - 阿克曼四轮小车运动控制
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
+    * [机器视觉多机器人蚁群编队](./ant/README.md)
     * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
     * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
