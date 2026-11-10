@@ -44,8 +44,17 @@ devel/.built_by
 # colcon 构建产物
 log/
 
+# main.py 在仓库根目录创建的临时 colcon 工作区（可重建，不入库）
+build_quad_ws/
+
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
+# 包内自带/新采的样本数据要走版本库（示例：gesture_control_drone/data/*.npz）。
+# 注意 git 的规则：**父目录被排除时，不能反排除其中的文件**，所以必须先把
+# 目录本身反排除回来，下面那条文件级例外才会生效
+# （已用 `git add --dry-run` 实测：只写文件级例外不生效）。
+!src/air/gesture_control_drone/data/
+!src/air/gesture_control_drone/data/*.npz
 
 # 仿真与训练产物（二进制大文件不入库，改用网盘链接）
 *.mp4
@@ -85,6 +94,9 @@ src/air/drl_drone_path_planning/models/train_summary.json
 
 # 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
 !src/ground/lidar_autoencoder_repair/models/*.pt
+
+# 例外：人形 H1/H1_2 行走模块的 TorchScript 策略必须入库（137/143 KB，免重训）
+!src/humanoid/humanoid_h1_walk/weights/*.pt
 
 # 编辑器 / 系统
 .vscode/
