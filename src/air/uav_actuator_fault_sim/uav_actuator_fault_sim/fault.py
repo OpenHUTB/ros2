@@ -34,6 +34,9 @@ import numpy as np
 #: 旋翼数量（与 uav_mujoco_sim 的 QuadParams 一致）
 ROTOR_COUNT = 4
 
+#: 传感器基准噪声（rad/s）。实际噪声强度 = 本值 × (noise_scale − 1)
+SENSOR_NOISE_BASE = 0.02
+
 #: 支持的故障类型
 FAULT_KINDS: Tuple[str, ...] = ("loss", "degradation", "stuck", "progressive")
 
@@ -121,23 +124,34 @@ class RotorFault:
 
 @dataclass(frozen=True)
 class SensorFault:
-    """传感器故障（只影响感知链路，不影响动力学）。
+    """传感器故障：篡改**控制器读到的** IMU 角速度，不改变动力学。
 
-    PR2（故障检测网络）用它做"传感器侧"故障类别，和旋翼故障区分开。
+    它接在控制回路上：``runner`` 把 ``sense_omega()`` 的输出当作控制器的角速度反馈，
+    所以零偏 / 噪声 / 丢包都会真实影响飞行结果，而不是只写在结果里。
+
+    PR2（故障检测网络）也用这类故障做"传感器侧"的负样本。
     """
 
-    #: IMU 陀螺零偏，rad/s
+    #: IMU 陀螺零偏，rad/s（作用在机体 x 轴上，即滚转通道）
     gyro_bias: float = 0.0
     #: IMU 噪声放大倍数（1.0 = 不放大）
     noise_scale: float = 1.0
-    #: 采样丢包概率
+    #: 采样丢包概率（丢包时沿用上一帧读数）
     dropout: float = 0.0
+    #: 故障注入时刻，秒
+    onset: float = 2.0
+    #: 从 0 到满量级的过渡时长，秒（0 = 立即生效）
+    ramp: float = 0.5
 
     def __post_init__(self) -> None:
         if self.noise_scale <= 0.0:
             raise ValueError(f"noise_scale 必须为正，收到 {self.noise_scale}")
         if not 0.0 <= self.dropout <= 1.0:
             raise ValueError(f"dropout 必须在 [0,1]，收到 {self.dropout}")
+        if self.onset < 0.0:
+            raise ValueError(f"onset 不能为负，收到 {self.onset}")
+        if self.ramp < 0.0:
+            raise ValueError(f"ramp 不能为负，收到 {self.ramp}")
 
     @property
     def active(self) -> bool:
@@ -161,7 +175,10 @@ class FaultSpec:
     @property
     def earliest_onset(self) -> Optional[float]:
         """最早一条故障的注入时刻；无故障返回 ``None``。"""
-        return min((f.onset for f in self.rotor_faults), default=None)
+        onsets = [f.onset for f in self.rotor_faults]
+        if self.sensor.active:
+            onsets.append(self.sensor.onset)
+        return min(onsets, default=None)
 
     def describe(self) -> str:
         if not self.rotor_faults:
@@ -219,6 +236,44 @@ class FaultInjector:
         onset = self.spec.earliest_onset
         return onset is not None and t >= onset
 
+    # ------------------------------------------------------------------ #
+    # 传感器侧：把 IMU 角速度读数改成"故障后"的值
+    # ------------------------------------------------------------------ #
+    def sensor_alpha(self, t: float) -> float:
+        """传感器故障的过渡系数，``0`` 表示尚未生效，``1`` 表示完全生效。"""
+        sf = self.spec.sensor
+        if not sf.active or t < sf.onset:
+            return 0.0
+        return 1.0 if sf.ramp <= 0.0 else min(1.0, (t - sf.onset) / sf.ramp)
+
+    def sense_omega(
+        self,
+        omega: Sequence[float],
+        t: float,
+        rng: Optional[np.random.Generator] = None,
+        prev: Optional[Sequence[float]] = None,
+    ) -> np.ndarray:
+        """控制器这一拍读到的角速度：真实值叠加零偏/噪声，丢包时沿用上一帧。
+
+        ``rng`` 为 ``None`` 时不产生噪声与丢包（便于确定性测试）。
+        时间未到 ``onset`` 时原样返回真实值。
+        """
+        alpha = self.sensor_alpha(t)
+        w = np.asarray(omega, dtype=float).reshape(3).copy()
+        if alpha <= 0.0:
+            return w
+
+        sf = self.spec.sensor
+        if (prev is not None and sf.dropout > 0.0 and rng is not None
+                and rng.random() < sf.dropout):
+            return np.asarray(prev, dtype=float).reshape(3).copy()
+
+        if sf.gyro_bias:
+            w[0] += sf.gyro_bias * alpha          # 零偏作用在滚转通道
+        if sf.noise_scale != 1.0 and rng is not None:
+            w += rng.normal(0.0, SENSOR_NOISE_BASE * (sf.noise_scale - 1.0), size=3)
+        return w
+
     def worst_case_gain(self) -> float:
         """从开始到永久：所有桨中可能出现的最小增益（用于快速判"是否救得回来"）。"""
         g_min = 1.0
@@ -263,9 +318,13 @@ def progressive_decay(rotor: int = 2, rate: float = 0.25, onset: float = 2.0) ->
     return FaultSpec(rotor_faults=(RotorFault(rotor, "progressive", onset, rate),))
 
 
-def sensor_gyro_bias(bias: float = 0.05) -> FaultSpec:
-    """仅 IMU 陀螺零偏，旋翼健康 —— PR2 的传感器故障负样本。"""
-    return FaultSpec(sensor=SensorFault(gyro_bias=bias))
+def sensor_gyro_bias(bias: float = 0.1, onset: float = 2.0) -> FaultSpec:
+    """仅 IMU 陀螺零偏、旋翼全部健康 —— 传感器侧故障的对照场景。
+
+    默认 0.1 rad/s（约 5.7 °/s）：积分成姿态估计漂移后，悬停水平漂移约 0.31 m 而不坠机；
+    加到 0.2 rad/s 以上会因姿态估计跑偏而坠地，可用来扫"从不坠到坠"的边界。
+    """
+    return FaultSpec(sensor=SensorFault(gyro_bias=bias, onset=onset))
 
 
 def combine(*specs: FaultSpec) -> FaultSpec:

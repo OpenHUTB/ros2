@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, List, Optional, Tuple
 
 import numpy as np
@@ -94,6 +94,83 @@ class _TrackCamera:
 
 
 
+def _quat_mul(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """两个 (w,x,y,z) 四元数相乘。"""
+    aw, ax, ay, az = a
+    bw, bx, by, bz = b
+    return np.array([
+        aw * bw - ax * bx - ay * by - az * bz,
+        aw * bx + ax * bw + ay * bz - az * by,
+        aw * by - ax * bz + ay * bw + az * bx,
+        aw * bz + ax * by - ay * bx + az * bw,
+    ])
+
+
+def _integrate_quat(quat: np.ndarray, omega: np.ndarray, dt: float) -> np.ndarray:
+    """用角速度积分一阶更新姿态：q ← q ⊗ [1, ½dt·ω]。
+
+    这就是真实 IMU 姿态估计的做法，也让陀螺零偏的后果体现出来：
+    零偏不会让机身立刻倾斜，而是让**姿态估计**越飘越远，控制器据错误的姿态纠偏，
+    最终表现为水平漂移。
+    """
+    dq = np.array([1.0, 0.5 * dt * omega[0], 0.5 * dt * omega[1], 0.5 * dt * omega[2]])
+    q = _quat_mul(np.asarray(quat, dtype=float), dq)
+    norm = float(np.linalg.norm(q))
+    return q / norm if norm > 1e-9 else np.array([1.0, 0.0, 0.0, 0.0])
+
+
+class _SensedQuad:
+    """给控制器看的"带传感器故障的机体"。
+
+    控制器（``GeometricController.act``）只用到 ``quad.state()`` 和 ``quad.params``，
+    所以这里做成一个薄代理：位置、速度照抄真实状态，**角速度与姿态换成 IMU 故障后的值**：
+
+    * 角速度叠加零偏、噪声，丢包时沿用上一帧；
+    * 姿态由故障后的角速度积分得到（陀螺零偏 → 姿态估计漂移）。
+
+    动力学仍由真实 ``Quadrotor`` 推进，所以传感器故障只经控制回路影响飞行，
+    不会凭空改变物理——这正是"传感器坏了"的语义。
+    """
+
+    def __init__(self, quad, injector, rng, dt: float = 0.01):
+        self._quad = quad
+        self._inj = injector
+        self._rng = rng
+        self._dt = float(dt)
+        self.t = 0.0
+        self._prev: Optional[np.ndarray] = None
+        self._quat_hat: Optional[np.ndarray] = None
+        #: 最近一帧被篡改过的角速度（记录用）
+        self.last_sensed: Optional[np.ndarray] = None
+
+    @property
+    def params(self):
+        return self._quad.params
+
+    @property
+    def data(self):
+        return self._quad.data
+
+    @property
+    def model(self):
+        return self._quad.model
+
+    def state(self):
+        st = self._quad.state()
+        w = self._inj.sense_omega(st.omega, self.t, self._rng, self._prev)
+        self._prev = w
+        self.last_sensed = w
+
+        if not self._inj.spec.sensor.active:
+            self._quat_hat = None
+            return replace(st, omega=w)      # 无传感器故障：控制器看到真值，基线保持干净
+
+        if self._quat_hat is None:           # 故障那一拍从真实姿态起算
+            self._quat_hat = np.asarray(st.quat, dtype=float).copy()
+        self._quat_hat = _integrate_quat(self._quat_hat, w, self._dt)
+        return replace(st, omega=w, quat=self._quat_hat)
+
+
 def _default_controller_factory(api: BaseAPI) -> ControllerFactory:
     """基线：底座自带的几何控制器（不含任何容错逻辑）。"""
     return lambda quad: api.GeometricController(quad.params)
@@ -162,10 +239,13 @@ def run_case(
             raise ValueError(f"未知相机 {cfg.camera!r}，可选：'fpv' / 'track'")
 
     n_steps = int(round(cfg.duration / cfg.dt))
+    rng = np.random.default_rng(int(case.seed) * 1000 + 7)   # 传感器噪声/丢包专用随机流
+    sensed = _SensedQuad(quad, injector, rng, cfg.dt)
     t_hist = np.empty(n_steps)
     pos = np.empty((n_steps, 3))
     vel = np.empty((n_steps, 3))
     omega = np.empty((n_steps, 3))
+    omega_sensed = np.empty((n_steps, 3))
     euler = np.empty((n_steps, 3))
     thrusts = np.empty((n_steps, 4))
     desired = np.empty((n_steps, 4))
@@ -178,7 +258,9 @@ def run_case(
 
     for k in range(n_steps):
         t = k * cfg.dt
-        u_cmd = np.asarray(ctrl.act(quad, target, v_d, a_d, cfg.yaw_d), dtype=float)
+        sensed.t = t
+        # 控制器读的是 sensed（带传感器故障）的状态，不是仿真真值
+        u_cmd = np.asarray(ctrl.act(sensed, target, v_d, a_d, cfg.yaw_d), dtype=float)
         u_act = injector.apply(u_cmd, t)
         quad.apply_rotor_thrust(u_act)
         quad.step(1)
@@ -188,6 +270,7 @@ def run_case(
         pos[k] = st.pos
         vel[k] = st.vel
         omega[k] = st.omega
+        omega_sensed[k] = sensed.last_sensed if sensed.last_sensed is not None else st.omega
         euler[k] = np.degrees([st.roll, st.pitch, st.yaw])
         thrusts[k] = u_act
         desired[k] = u_cmd
@@ -208,10 +291,11 @@ def run_case(
         thrusts=thrusts,
         health=health,
         target=target,
-        onset=injector.spec.earliest_onset if injector.spec.rotor_faults else None,
+        onset=injector.spec.earliest_onset,
         scenario=case.fault_scenario,
         scene=case.physical_scene,
         desired=desired,
+        omega_sensed=omega_sensed,
         frames=frames,
     )
 

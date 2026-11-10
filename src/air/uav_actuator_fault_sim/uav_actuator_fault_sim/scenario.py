@@ -111,8 +111,8 @@ FAULT_SCENARIOS: Dict[str, FaultScenario] = {
     ),
     "sensor_bias": FaultScenario(
         name="sensor_bias",
-        description="仅 IMU 陀螺零偏 +0.05 rad/s，旋翼全部健康：传感器侧故障的对照",
-        make=lambda rotor=0, onset=0.0, severity=0.05: sensor_gyro_bias(severity),
+        description="仅 IMU 陀螺零偏 +0.1 rad/s、旋翼全部健康：零偏积分成姿态漂移，水平漂移约 0.31 m 但不坠机",
+        make=lambda rotor=0, onset=2.0, severity=0.1: sensor_gyro_bias(severity, onset),
         learnable=True,
     ),
     "healthy": FaultScenario(

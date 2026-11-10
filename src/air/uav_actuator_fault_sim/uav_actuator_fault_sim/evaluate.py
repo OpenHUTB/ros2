@@ -79,19 +79,26 @@ def format_table(results: Sequence[FlightResult]) -> str:
 
 
 def format_summary(results: Sequence[FlightResult]) -> str:
-    """按故障场景分组的生存率汇总。"""
+    """按故障场景分组的生存率汇总。
+
+    末两列（水平漂移、位置 RMSE）是给传感器故障留的：IMU 零偏既不改变高度、
+    也不导致坠机，只有这两个指标能把它和 healthy 区分开。
+    """
     groups = group_summary(results, key="scenario")
-    lines = [f"{'故障':<22}{'样本':>5}{'存活率':>9}{'平均最低高度m':>15}{'平均坠地延时s':>15}"]
-    lines.append("-" * 68)
+    head = (f"{'故障':<22}{'样本':>5}{'存活率':>9}{'平均最低高度m':>15}"
+            f"{'平均坠地延时s':>15}{'平均水平漂移m':>15}{'平均位置RMSE':>14}")
+    lines = [head, "-" * 97]
     for name, agg in groups.items():
         lines.append(
             f"{name:<22}{int(agg['n']):>5}{agg['survival_rate']:>9.2f}"
             f"{agg['mean_min_alt']:>15.2f}{agg['mean_crash_delay']:>15.2f}"
+            f"{agg['mean_drift']:>15.3f}{agg['mean_pos_rmse']:>14.2f}"
         )
     total = aggregate(results)
-    lines.append("-" * 68)
+    lines.append("-" * 97)
     lines.append(f"{'合计':<22}{int(total['n']):>5}{total['survival_rate']:>9.2f}"
-                 f"{total['mean_min_alt']:>15.2f}{total['mean_crash_delay']:>15.2f}")
+                 f"{total['mean_min_alt']:>15.2f}{total['mean_crash_delay']:>15.2f}"
+                 f"{total['mean_drift']:>15.3f}{total['mean_pos_rmse']:>14.2f}")
     return "\n".join(lines)
 
 

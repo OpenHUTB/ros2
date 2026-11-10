@@ -102,11 +102,46 @@ def _check_flight() -> List[Tuple[str, bool, str]]:
     ]
 
 
+def _check_sensor() -> List[Tuple[str, bool, str]]:
+    """传感器故障必须真的进入控制回路，而不是只写在结果里。"""
+    from .runner import RunConfig, run_case
+    from .scenario import make_case
+
+    inj = F.FaultInjector(F.sensor_gyro_bias(0.1, onset=2.0), max_thrust=_MAX_THRUST)
+    true_w = np.array([0.0, 0.0, 0.0])
+
+    # 时间没到 onset：读数应等于真值
+    before = inj.sense_omega(true_w, 1.0)
+    # 过渡期内：介于 0 与满量级之间
+    during = inj.sense_omega(true_w, 2.25)
+    # 过渡结束后：x 轴等于完整零偏
+    after = inj.sense_omega(true_w, 4.0)
+
+    healthy = run_case(make_case("open_ground", "healthy", seed=0), RunConfig(duration=5.0))
+    biased = run_case(make_case("open_ground", "sensor_bias", seed=0), RunConfig(duration=5.0))
+    drift_gap = abs(biased.horizontal_drift - healthy.horizontal_drift)
+    quat_changed = (biased.omega_sensed is not None
+                    and float(np.max(np.abs(biased.omega_sensed - biased.omega))) > 0.05)
+
+    return [
+        ("故障生效前 IMU 读数等于真值", float(np.max(np.abs(before))) < 1e-12,
+         f"|ω| = {float(np.max(np.abs(before))):.2e}"),
+        ("过渡期零偏按比例生效", 0.0 < float(during[0]) < 0.1,
+         f"ωx = {float(during[0]):.4f} rad/s"),
+        ("过渡结束后零偏到位", abs(float(after[0]) - 0.1) < 1e-9,
+         f"ωx = {float(after[0]):.4f} rad/s"),
+        ("飞行中 IMU 读数被篡改", quat_changed, "max|ω_sensed − ω_true| > 0.05"),
+        ("传感器故障改变飞行结果（水平漂移）", drift_gap > 0.05,
+         f"健康 {healthy.horizontal_drift:.3f} m → 零偏 {biased.horizontal_drift:.3f} m"),
+    ]
+
+
 def run_selftest(verbose: bool = True) -> int:
     """跑全部自检，返回进程退出码（0 = 全通过）。"""
     groups = [
         ("故障算子", _check_fault_shapes()),
         ("推力裁剪", _check_clipping()),
+        ("传感器故障", _check_sensor()),
         ("用例矩阵", _check_matrix()),
         ("飞行闭环", _check_flight()),
     ]

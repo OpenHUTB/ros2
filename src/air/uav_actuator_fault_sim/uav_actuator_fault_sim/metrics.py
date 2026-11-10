@@ -49,6 +49,9 @@ class FlightResult:
     #: 控制器下发的期望桨推力 N，形状 (N, 4)；与 ``thrusts``（故障后实际值）对照，
     #: 可算出分配器"想给"和"真给到"的差
     desired: Optional[np.ndarray] = None
+    #: 控制器读到的角速度 rad/s，形状 (N, 3)。无传感器故障时与 ``omega`` 相同，
+    #: 有故障时是叠加了零偏/噪声/丢包之后的读数，用来证明故障确实进了控制回路
+    omega_sensed: Optional[np.ndarray] = None
     #: 采样得到的 RGB 帧（仅当 record_frames=True）
     frames: List[np.ndarray] = field(default_factory=list)
 
@@ -158,6 +161,7 @@ def aggregate(results: Sequence[FlightResult]) -> Dict[str, float]:
         ``mean_crash_delay``故障到坠地的平均时间，秒（仅统计坠地样本）
         ``mean_touchdown``  平均触地速度，m/s（仅统计坠地样本）
         ``mean_pos_rmse``   平均位置 RMSE，米
+        ``mean_drift``      平均水平漂移，米（传感器故障靠这一列才看得出来）
         ``mean_effort``     平均控制能量
     """
     n = len(results)
@@ -174,6 +178,7 @@ def aggregate(results: Sequence[FlightResult]) -> Dict[str, float]:
         "mean_crash_delay": float(np.mean(delays)) if delays else 0.0,
         "mean_touchdown": float(np.mean(speeds)) if speeds else 0.0,
         "mean_pos_rmse": float(np.mean([r.position_rmse for r in results])),
+        "mean_drift": float(np.mean([r.horizontal_drift for r in results])),
         "mean_effort": float(np.mean([r.control_effort for r in results])),
     }
 

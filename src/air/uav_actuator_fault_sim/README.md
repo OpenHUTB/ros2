@@ -124,14 +124,18 @@ $$T_i^{\text{act}}(t) = g_i(t)\,u_i^{\text{cmd}}(t) + b_i(t), \qquad T_i^{\text{
 
 其中 $\alpha(t)=\min\left(1, \frac{t-t_0}{r}\right)$ 是注入过渡（`ramp`，$r=0$ 时直接生效）。
 
-传感器故障 `SensorFault(gyro_bias, noise_scale, dropout)` 作用于 IMU 读数，用于后续做
-"传感器 + 执行器复合故障"的鲁棒性实验。
+传感器故障 `SensorFault(gyro_bias, noise_scale, dropout)` 不进推力通道，而是**篡改控制器读到的
+IMU 角速度**，再把被污染的角速度积分成控制器的姿态估计（`runner._SensedQuad`）。这样零偏会先让
+姿态估计漂、再由反馈把真实姿态带偏：0.1 rad/s 的零偏悬停 8 s 漂 0.309 m 但不坠机，0.2 rad/s
+以上就真的飞不回来。只改读数、不积分姿态的话漂移只有 1 cm，等于没有故障——所以"接进回路"这一步
+是必须的。
 
 ## 复现实验的命令与产物
 
-- `results/comparison.csv` —— 35 条用例的指标表（`python main.py --eval`）
+- `results/comparison.csv` —— 35 条用例的指标表（`python main.py --eval`），含水平漂移与位置 RMSE
 - `results/fault_comparison.gif` —— 并排演示动图（`python main.py --gif`）
-- `python -m pytest test -q` —— 45 个单元/闭环测试
+- `python -m pytest test -q` —— 60 个单元/闭环测试
+- `python main.py --selftest` —— 19 项分组件自检（含"传感器故障确实进入控制回路"一组）
 
 ## 设计约束
 

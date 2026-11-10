@@ -95,6 +95,50 @@ def _altitude_figure(results, out_path: Path) -> bool:
     return True
 
 
+def _sensor_sweep_figure(out_path: Path, seconds: float = 8.0) -> bool:
+    """陀螺零偏 → 悬停水平漂移：证明传感器故障真的改变了飞行结果。"""
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("跳过零偏曲线：未安装 matplotlib（pip install matplotlib）")
+        return False
+
+    from uav_actuator_fault_sim.runner import run_case
+    from uav_actuator_fault_sim.scenario import make_case
+
+    biases = [0.0, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30]
+    drifts, crashed = [], []
+    for b in biases:
+        case = make_case("open_ground", "sensor_bias", seed=0, onset=2.0, severity=b)
+        r = run_case(case, cfg=RunConfig(duration=seconds))
+        drifts.append(float(r.horizontal_drift))
+        crashed.append(bool(r.crashed))
+
+    fig, ax = plt.subplots(figsize=(5.2, 3.0), dpi=170)
+    ax.plot(biases, [d if not c else float("nan") for d, c in zip(drifts, crashed)],
+            "-o", color="#2e8b57", markersize=4, linewidth=1.4, label="no crash")
+    ax.plot(biases, [d if c else float("nan") for d, c in zip(drifts, crashed)],
+            "x", color="#d62728", markersize=7, label="crash")
+    for b, d, c in zip(biases, drifts, crashed):
+        if c:
+            ax.annotate(f"{d:.1f}", xy=(b, d), textcoords="offset points",
+                        xytext=(4, 4), fontsize=6.5, color="#d62728")
+    ax.set_xlabel("IMU gyro bias (rad/s)")
+    ax.set_ylabel("horizontal drift after 8 s (m)")
+    ax.set_title("Sensor fault enters the control loop: drift grows with bias", fontsize=8.5)
+    ax.set_ylim(-0.6, max(drifts) * 1.15)     # 顶部留白，否则最大值的标注被裁
+    ax.grid(alpha=0.25)
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path)
+    plt.close(fig)
+    return True
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out-dir", default=str(_REPO_ROOT / "docs" / "img"
@@ -120,6 +164,10 @@ def main(argv=None) -> int:
     png = out_dir / "altitude_response.png"
     if _altitude_figure(results, png):
         print(f"曲线图 → {png}")
+
+    sweep = out_dir / "sensor_bias_sweep.png"
+    if _sensor_sweep_figure(sweep, seconds=args.seconds):
+        print(f"零偏曲线 → {sweep}")
 
     if not args.skip_gif:
         gif = out_dir / "fault_comparison.gif"
