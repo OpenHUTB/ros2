@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """速度指令安全监督节点。
 
-订阅原始速度指令 /cmd_vel_raw，经过三道保护后发布到 /cmd_vel：
+订阅原始速度指令 /cmd_vel_raw，经过四道保护后发布到 /cmd_vel：
 1. 限幅：线速度、角速度超过参数上限时截断；
-2. 急停：/emergency_stop 为 true 时输出零速度；
-3. 超时保护：超过 cmd_timeout 秒没有收到新指令时输出零速度。
-
-非有限的数值（NaN / Inf）一律按零速度处理。
+2. 急停：/emergency_stop 为 true 时输出零速度并清除缓存；
+3. 超时保护：超过 cmd_timeout 秒没有收到新指令时输出零速度；
+4. 非法值拦截：指令含 NaN / Inf 时输出零速度。
 """
 
 import math
@@ -173,7 +172,7 @@ def main(args=None):
     except ValueError as exc:
         logger.fatal('参数非法，节点退出: %s' % exc)
         rclpy.shutdown()
-        return
+        raise SystemExit(1)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
