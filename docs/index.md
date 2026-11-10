@@ -206,6 +206,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 * [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
 
+* [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
