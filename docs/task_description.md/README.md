@@ -44,11 +44,11 @@ docs/
 
 ├── README.md
 
-├── 原始输入图像.png
+├── raw_input.png
 
-├── YOLOv8n行人检测结果.png
+├── yolo_detection_result.png
 
-└── 高斯模糊隐私脱敏输出.png
+└── masked_output.png
 
 ## 依赖环境
 - ROS2 Humble
@@ -67,11 +67,15 @@ source install/setup.bash
 ros2 launch privacy_mask privacy_mask.launch.py
 ```
 ## 效果图
-- 原始输入图像：
-![原始输入图像](原始输入图像.png)
 
-- YOLOv8n行人检测结果：
-![YOLOv8n行人检测结果](YOLOv8n行人检测结果.png)
+- 原始输入图像：
+
+![raw input](raw_input.png)
+
+- YOLOv8n 行人检测结果：
+
+![yolov8n detection result](yolo_detection_result.png)
 
 - 高斯模糊隐私脱敏输出：
-![高斯模糊隐私脱敏输出](高斯模糊隐私脱敏输出.png)
+
+![masked output](masked_output.png)
