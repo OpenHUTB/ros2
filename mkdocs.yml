@@ -280,12 +280,14 @@ nav:
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
     - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
+        - 背景与总体方案: 'air/octree_uav_3d_pathfinding/overview.md'
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
         - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
         - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
+        - 与 ROS 2 / Nav2 的对应关系: 'air/octree_uav_3d_pathfinding/ros2_nav2.md'
     - YOLO 感知与无人机控制:
         - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
         - YOLO 目标视觉伺服：居中与距离保持: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'

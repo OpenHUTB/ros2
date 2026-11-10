@@ -31,6 +31,56 @@
 > 自己写插入逻辑，才能把"坐标变换 → 射线投射 → 概率更新"这条链路逐一展示出来；
 > 相应地，节点名也叫 `pointcloud_to_octomap` 而不是直接复用 `octomap_server`。
 
+### 1.1 运行节点与话题关系
+
+建图节点要拿到点云，还要把点云变换到世界坐标系，所以它同时依赖桥接节点发布的
+点云与 TF。`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图除模拟器以外的全部节点。
+
+```mermaid
+graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM -->|"RPC 41451 取点云与位姿"| BR
+
+    BR -->|"/cloud_in<br/>PointCloud2 10 Hz"| MAP
+    BR -->|"TF world→base_link→lidar_link"| MAP
+
+    MAP -->|"/octomap_full<br/>Octomap latched"| PLAN
+    MAP -->|"/occupied_cells_vis_array"| RVIZ
+
+    PLAN -->|"/uav/path"| RVIZ
+```
+
+| 节点 | 对本节点的作用 |
+|---|---|
+| `airsim_bridge` | 发布 `/cloud_in`（原始点云）与 TF，是本节点全部输入的来源 |
+| `pointcloud_to_octomap` | 订阅点云，查 TF 变换到世界系后插入八叉树，输出 `/octomap_full` |
+| `astar_planner` | 订阅 `/octomap_full`，是下游唯一使用者 |
+| `rviz` | 显示体素与点云，用于人工检查地图是否正确 |
+
+#### 为什么建图节点还需要 TF
+
+点云的 `frame_id` 是 `lidar_link`，而地图必须在 `world` 下维护（见 §2）。
+节点每帧查一次 `world ← lidar_link` 的变换，查不到就**跳过该帧并告警**——
+它不会崩，但地图也长不起来。所以启动顺序上桥接节点必须先起来。
+
+查不到 TF 时的典型日志是 `Lookup would require extrapolation into the future` 或
+`frame does not exist`，用 `rosrun tf2_tools view_frames` 可以看当前的 TF 树是否完整。
+
+查看实际运行的节点与话题关系：
+
+```shell
+rosrun rqt_graph rqt_graph        # 节点—话题图
+rosrun rqt_tf_tree rqt_tf_tree    # TF 树
+```
+
 ---
 
 ## 2. 坐标变换：从传感器坐标系到世界坐标系
