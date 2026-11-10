@@ -183,6 +183,7 @@ nav:
     - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
     - MuJoCo 动态障碍局部避障仿真: './ground/mujoco_dynamic_avoidance.md'
     - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
+    - RTK 双差整周模糊度固定（LAMBDA）: './ground/rtk_ambiguity_resolution.md'
     - 基于 2D 激光雷达的蒙特卡洛定位（MCL）: './ground/lidar_mcl_localization.md'
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
     - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'

@@ -195,6 +195,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [地面载具灯光自动控制](./ground/carla_auto_light.md)
 * [限速标志识别与神经网络限速控制](./ground/traffic_sign_speed_control.md) —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价
 * [轨迹/里程计精度评估（ATE/RPE）](./ground/trajectory_accuracy_eval.md)
+* [RTK 双差整周模糊度固定（LAMBDA）](./ground/rtk_ambiguity_resolution.md) —— 双差浮点解 + LAMBDA 去相关 + ratio 检验；20 历元窗口基线误差 160.51 mm → 0.89 mm，错误固定 0%，附 2/5/10/20/40 历元的收敛对照
 * [基于 2D 激光雷达的蒙特卡洛定位（MCL）](./ground/lidar_mcl_localization.md) —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m
 
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
