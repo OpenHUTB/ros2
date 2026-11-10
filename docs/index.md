@@ -323,6 +323,15 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [MuJoCo无人机幕墙定距扫描](air/mujoco_facade_capture/index.md)
 
+* [基于神经网络的无人机感知—规划—控制避障](./air/neural_ca_drone_submission/docs/index.md) —— 深度图 CNN 感知、神经启发式 A* 规划与模仿学习控制的分层避障，附端到端对照
+  * [任务与方案](./air/neural_ca_drone_submission/docs/overview.md)
+  * [模块一 感知：深度图 → 占用栅格](./air/neural_ca_drone_submission/docs/perception.md)
+  * [模块二 规划：神经启发式 A*](./air/neural_ca_drone_submission/docs/planning.md)
+  * [模块三 控制：模仿学习控制器](./air/neural_ca_drone_submission/docs/control.md)
+  * [模块四 端到端：深度图 → 速度](./air/neural_ca_drone_submission/docs/e2e.md)
+  * [实验与结果](./air/neural_ca_drone_submission/docs/results.md)
+  * [演示动图与录制](./air/neural_ca_drone_submission/docs/gifs.md)
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
