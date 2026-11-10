@@ -11,10 +11,26 @@ export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
 
 mkdir -p "${LOG_DIR}"
 
+signal_background_group() {
+  local signal="$1"
+  local pid="$2"
+  kill "-${signal}" -- "-${pid}" 2>/dev/null \
+    || kill "-${signal}" "${pid}" 2>/dev/null \
+    || true
+}
+
 cleanup() {
   local pid
   for pid in "${background_pids[@]:-}"; do
-    kill -INT "${pid}" 2>/dev/null || true
+    signal_background_group INT "${pid}"
+  done
+  sleep 1
+  for pid in "${background_pids[@]:-}"; do
+    signal_background_group TERM "${pid}"
+  done
+  sleep 1
+  for pid in "${background_pids[@]:-}"; do
+    signal_background_group KILL "${pid}"
   done
   for pid in "${background_pids[@]:-}"; do
     wait "${pid}" 2>/dev/null || true
@@ -120,12 +136,12 @@ pass "compatible Reliability demo exchanges messages"
 
 PUBLISHER_LOG="${LOG_DIR}/endpoint_publisher.log"
 SUBSCRIBER_LOG="${LOG_DIR}/endpoint_subscriber.log"
-ros2 run "${PACKAGE}" demo_publisher --ros-args \
+setsid ros2 run "${PACKAGE}" demo_publisher --ros-args \
   -p "topic:=${TOPIC}" \
   -p reliability:=best_effort \
   -p durability:=volatile >"${PUBLISHER_LOG}" 2>&1 &
 background_pids+=("$!")
-ros2 run "${PACKAGE}" demo_subscriber --ros-args \
+setsid ros2 run "${PACKAGE}" demo_subscriber --ros-args \
   -p "topic:=${TOPIC}" \
   -p reliability:=reliable \
   -p durability:=volatile >"${SUBSCRIBER_LOG}" 2>&1 &
