@@ -1,10 +1,10 @@
-"""纯 NumPy 的小型 CNN，用于「深度图 -> 避障动作」回归。
+"""纯 NumPy 的小型 CNN，用于「深度图 -> 碰撞剩余时间 TTC」回归。
 
 结构（输入 1×64×64）::
 
-    Conv(1->8, 5x5, stride 2) -> ReLU -> MaxPool(2) -> FC(8*15*15 -> 64) -> ReLU -> FC(64 -> 2) -> tanh
+    Conv(1->8, 5x5, stride 2) -> ReLU -> MaxPool(2) -> FC(8*15*15 -> 64) -> ReLU -> FC(64 -> 1) -> tanh
 
-两个输出分别是 **偏航角速度** 与 **目标高度**，都归一化到 [-1, 1]。
+**单输出**：归一化的 TTC（`tanh` 后落在 [-1, 1]，节点里再乘以 `TTC_MAX` 换算成秒）。
 
 不依赖 PyTorch / TensorFlow，便于在任何装了 numpy 的机器上复现；
 梯度全部手写，前向/反向都在 ``forward`` / ``backward`` 里可对照检查。
