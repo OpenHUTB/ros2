@@ -46,14 +46,16 @@ R=0.34R_{speed}+0.28R_{IMU}+0.23R_{accuracy}+0.15R_{jump}
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-select uav_gps_integrity_guard
 source install/setup.bash
-ros2 launch uav_gps_integrity_guard main.launch.py duration:=18
+ros2 launch uav_gps_integrity_guard main.launch.py duration:=15
 ```
 
 CSV 默认写入 `/tmp/uav_gps_integrity_runtime.csv`。
 
+当 `duration` 大于 0 时，模拟器结束后 launch 会通过进程退出事件自动关闭两个节点。默认 `duration:=0.0` 表示持续运行，此时使用 `Ctrl+C` 手动停止。
+
 ## 4. Humble 虚拟机实测
 
-在 Ubuntu 22.04.5 / ROS 2 Humble 中实际构建，VM 内 8 项 `unittest` 全部通过。`ros2 launch` 启动两个节点，连续运行 18 秒，记录 90 条有效状态。
+在 Ubuntu 22.04.5 / ROS 2 Humble / Python 3.10.12 中实际构建，VM 内 16 项 `unittest` 全部通过。`ros2 launch ... duration:=15` 启动两个节点并自动退出，本次截图对应的 CSV 共 76 行（1 行表头和 75 条有效状态）。
 
 实际状态迁移：
 
@@ -63,11 +65,11 @@ VALID → SUSPECT → REJECTED → VALID
 
 其中欺骗段风险约 0.41 到 0.46，水平精度从约 4.8 m 增至 7.5 m；恢复后风险回到 0.23 以下。
 
-VM 内实际终端截图同时记录了 Ubuntu 22.04.5、ROS 2 Humble、`colcon build`、8 项单元测试、两个节点启动、状态迁移和实际 CSV 尾部：
+VM 内实际终端截图同时记录了 Ubuntu 22.04.5、ROS 2 Humble、`colcon build`、16 项单元测试、两个节点启动、状态迁移、自动退出和实际 CSV 尾部：
 
 ![ROS 2 Humble 虚拟机实际终端截图](../img/air/uav_gps_integrity_guard/runtime_vm_terminal.png)
 
-根据同一轮 ROS 2 CSV 生成的完整性曲线：
+根据同一轮 15 秒 ROS 2 CSV 生成的完整性曲线：
 
 ![ROS 2 Humble 实际 GPS 完整性状态](../img/air/uav_gps_integrity_guard/runtime_integrity.png)
 
