@@ -3,9 +3,13 @@
 <package format="3">
   <name>formation_keeping</name>
   <version>0.0.1</version>
-  <description>多车编队保持 2D 仿真：领航者圆周轨迹、三角队形偏移、跟随者比例控制与队形误差统计。</description>
+  <description>多车编队保持 2D 仿真演示（非 ROS 节点包）：基于 pygame 的领航者圆周轨迹、三角队形偏移、跟随者比例控制与队形误差统计可视化。</description>
   <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
   <license>MIT</license>
+  <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>python3</exec_depend>
   <test_depend>python3-pytest</test_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
 </package>
