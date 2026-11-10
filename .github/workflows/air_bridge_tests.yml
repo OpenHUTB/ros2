@@ -5,7 +5,6 @@ on:
     paths:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
-      - 'src/air/uav_neural_perception/**'
       - 'src/air/uav_e2e_rl/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
@@ -13,7 +12,6 @@ on:
     paths:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
-      - 'src/air/uav_neural_perception/**'
       - 'src/air/uav_e2e_rl/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
@@ -46,11 +44,6 @@ jobs:
       - name: Run uav_landing_monitor tests
         run: python3 src/air/uav_landing_monitor/tests/test_uav_landing_monitor_local.py
 
-      - name: Byte-compile perception scripts
-        run: python3 -m py_compile src/air/uav_neural_perception/uav_neural_perception/*.py src/air/uav_neural_perception/test/*.py src/air/uav_neural_perception/launch/*.py src/air/uav_neural_perception/setup.py
-
-      - name: Run uav_neural_perception tests
-        run: python3 src/air/uav_neural_perception/test/test_perception_local.py
       - name: Byte-compile e2e_rl scripts
         run: python3 -m py_compile src/air/uav_e2e_rl/uav_e2e_rl/*.py src/air/uav_e2e_rl/test/*.py src/air/uav_e2e_rl/launch/*.py src/air/uav_e2e_rl/setup.py
 
