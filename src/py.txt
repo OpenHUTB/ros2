@@ -60,7 +60,5 @@ def main():
             lidar.stop()
         drone.set_velocity(carla.Vector3D(0,0,0))
 
-if 
-__name__ == "__main__
-":
+if __name__ == "__main__":
     main()
