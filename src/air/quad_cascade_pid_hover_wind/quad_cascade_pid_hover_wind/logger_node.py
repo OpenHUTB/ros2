@@ -93,6 +93,10 @@ class LoggerNode(Node):
             self.finish()
 
     def finish(self):
+        # 幂等：t >= duration 时 log() 已调用一次，
+        # KeyboardInterrupt 路径可能再次进入，避免重写输出文件
+        if self.status == "finished":
+            return
         header = ["time", "x", "y", "z", "vx", "vy", "vz",
                   "roll", "pitch", "yaw", "wx", "wy", "wz",
                   "wind_x", "wind_y", "wind_z",

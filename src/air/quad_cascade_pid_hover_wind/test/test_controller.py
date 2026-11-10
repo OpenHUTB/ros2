@@ -1,7 +1,9 @@
 import math
+import os
 
 import numpy as np
 import pytest
+import yaml
 
 from quad_cascade_pid_hover_wind.controller import (CascadeController,
                                                       ControllerGains, PIDGains,
@@ -9,20 +11,15 @@ from quad_cascade_pid_hover_wind.controller import (CascadeController,
                                                       build_gains_from_dict)
 from quad_cascade_pid_hover_wind.dynamics import QuadParams, Quadrotor, WindParams
 
+PARAMS_PATH = os.path.join(os.path.dirname(__file__), os.pardir,
+                           "config", "params.yaml")
+
 
 @pytest.fixture
 def setup():
-    cfg = {
-        "position_pid": {"kp": [2.0, 2.0, 3.5], "ki": [0.0, 0.0, 0.4],
-                         "kd": [2.5, 2.5, 4.0], "i_max": [0.5, 0.5, 1.0],
-                         "out_max": [4.0, 4.0, 6.0]},
-        "attitude_pid": {"kp": [12.0, 12.0, 8.0], "ki": [0.5, 0.5, 0.3],
-                         "kd": [0, 0, 0], "i_max": [0.5, 0.5, 0.5],
-                         "out_max": [4.0, 4.0, 3.0]},
-        "rate_pid": {"kp": [0.18, 0.18, 0.10], "ki": [0, 0, 0],
-                     "kd": [0, 0, 0], "i_max": [0.05, 0.05, 0.05],
-                     "out_max": [1.5, 1.5, 0.8]},
-    }
+    # 直接从 config/params.yaml 加载增益，避免测试参数与实际配置漂移
+    with open(PARAMS_PATH, "r") as f:
+        cfg = yaml.safe_load(f)
     p = QuadParams()
     quad = Quadrotor(p, WindParams())
     gains = build_gains_from_dict(cfg)
@@ -101,14 +98,17 @@ def test_thrust_reallocation_reduces_wrench_error(setup):
     """大力矩需求导致部分旋翼限幅时，重分配应保持总推力并降低 wrench 偏差。"""
     p, ctrl = setup
     u = np.array([p.mass * p.gravity, 1.4, 1.4, 0.0])  # 接近 rate 环限幅的大力矩
+    min_thrust = p.k_f * p.min_omega ** 2
     max_thrust = p.k_f * p.max_omega ** 2
     realloc = ctrl._reallocate(u)
     raw = ctrl.mixer @ u
-    clipped = np.clip(raw, 0.0, max_thrust)
+    clipped = np.clip(raw, min_thrust, max_thrust)
     alloc_pinv = np.linalg.pinv(ctrl.mixer)
     err_clipped = np.linalg.norm(alloc_pinv @ clipped - u)
     err_realloc = np.linalg.norm(alloc_pinv @ realloc - u)
-    assert np.all(realloc >= -1e-9) and np.all(realloc <= max_thrust + 1e-9)
+    # 重分配结果应落在与 thrust_to_omega 一致的可行域内
+    assert np.all(realloc >= min_thrust - 1e-9)
+    assert np.all(realloc <= max_thrust + 1e-9)
     # 总推力保持
     assert math.isclose(float(np.sum(realloc)), u[0], rel_tol=1e-6)
     assert err_realloc < err_clipped
