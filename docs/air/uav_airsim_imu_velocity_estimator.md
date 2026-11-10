@@ -186,6 +186,15 @@ ros2 launch uav_airsim_imu_velocity_estimator main.launch.py
 
 节点需要外部把 AirSim 的 IMU 转发到 `/uav/imu`（可用 `airsim_ros_pkgs` 或自建桥接），估计结果从 `/uav/velocity_est` 取。
 
+没有 AirSim 也能先自检网络与权重（约 2 秒）：
+
+```bash
+python3 test/test_mlp.py
+# 5/5 通过（其中一条在 720 条真实样本上复算，预测-真值相关系数约 0.485）
+```
+
+文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页，可直接从站点导航进入。
+
 ## 10. 源码解析
 
 ### `env.py`
@@ -202,6 +211,10 @@ ros2 launch uav_airsim_imu_velocity_estimator main.launch.py
 - `backward()`：从输出层倒推，`dW = np.outer(h_prev, d)`，`d = d @ W.T`，隐层再乘 $(1-h^2)$。逐样本训练，不用矩阵乘——批量维度会引入额外转置错误。
 - `Adam.step()`：标准一阶/二阶矩估计加偏差校正。
 - `save/load`：`np.savez_compressed`，键名 `W0/W1/b0/b1`。
+
+  这里 `load()` 是**普通实例方法**（`def load(self, path)` 内部 `self.load_state(...)`，原地改 `self.W/self.b`），所以 `node.py` 里写 `self.net.load(wpath)` 是对的。同仓库里 CNN 版的 `DepthPolicyNet.load()` 是 `@classmethod`（返回新实例），两者写法不同，移植代码时容易混——`test/test_mlp.py` 的 `test_load_changes_weights` 就是用来钉住这件事的：加载前后 `W0` 必须不同、同一个输入的前向输出也必须不同。
+
+  另外注意隐层实际只有 32 维、输出 1 维（`30 -> 32 -> 1`），不是早期草稿里的 `30 -> 64 -> 32 -> 3`；`imu_vel.npz` 里 `W0` 形状 `(30, 32)`、`W1` 形状 `(32, 1)` 可以对上。
 
 ### `dataset.py`
 
