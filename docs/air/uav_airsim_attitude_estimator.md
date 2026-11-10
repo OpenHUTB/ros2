@@ -395,6 +395,20 @@ ros2 launch uav_airsim_attitude_estimator main.launch.py
 - 训练完的验证 R² 应在 0.5~0.7 之间。**如果出现 1.000，说明标签泄漏了**，检查是否误把真值当输入
 - 演示 MAE 应在 1° 左右。**如果明显高于离线误差**，检查采集与演示的飞行状态是否一致
 
+不需要 AirSim 也能先自检网络与权重（约 2 秒）：
+
+```bash
+python3 test/test_mlp.py
+# 5/5 通过（在 660 条真实样本上复算：先按 x_mean/x_std 标准化、
+#          前向后按 y_std/y_mean 反标准化，两分量相关系数 0.799 / 0.900）
+```
+
+注意本模块的数据集是**唯一没有在存盘时标准化**的一个——`attitude_data.npz` 里 `X`/`Y` 是原始值，标准化参数单独存在 `attitude.npz` 的 `x_mean/x_std/y_mean/y_std` 里；而 imu / wind 的数据集存盘时 `X` 已经标准化过。混用两种约定会得到明显偏低的相关系数。
+
+另外本模块 `MLP.forward()` 的**输出层是线性**（头部注释写明：姿态角集中在 0 附近，tanh 会饱和并导致梯度消失），所以单元测试断言的是「隐层被 tanh 压进 [-1,1]、最终输出有限」，而不是像 imu / wind 那样断言输出落在 [-1,1]。
+
+文档入口：`mkdocs.yml` 的「空域载具」和 `docs/index.md` 第 5 节都已登记本页。
+
 ## 10. 局限与改进方向
 
 1. **roll 幅度受场景限制**。Blocks 只有方块墙和球体，`moveByVelocityAsync` 在低速下侧倾仅 ±3°，roll 标签方差远小于 pitch。要真正验证 roll 估计，需要换一个能做横滚机动的场景或直接给角速度指令。
