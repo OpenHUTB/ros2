@@ -20,7 +20,7 @@ setup(
     zip_safe=True,
     maintainer='Toeting',
     maintainer_email='toeting@users.noreply.github.com',
-    description='ROS2 滑动窗口均值滤波节点，用于传感器数据平滑',
+    description='ROS 2 滑动窗口均值滤波节点，用于传感器数据平滑',
     license='Apache-2.0',
     entry_points={
         'console_scripts': [

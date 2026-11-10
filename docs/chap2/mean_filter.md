@@ -1,8 +1,8 @@
-# ROS2 传感器数据均值滤波 (Mean Filter) 节点
+# ROS 2 传感器数据均值滤波 (Mean Filter) 节点
 
 ## 项目简介
 
-本项目基于 ROS2 (Humble) 和 Python (rclpy) 实现一个**滑动窗口均值滤波节点**。
+本项目基于 ROS 2 (Humble) 和 Python (rclpy) 实现一个**滑动窗口均值滤波节点**。
 节点订阅原始的传感器数据话题，使用固定长度的滑动窗口计算均值，
 从而抑制数据中的突变噪声，并将平滑后的结果发布出去。
 
@@ -142,4 +142,4 @@ python3 -m pytest test -v
   或改用 `Float64MultiArray` 扩展；
 * 均值滤波无法抑制与信号同频段的噪声，需要更强抑噪时可改用中值滤波或低通滤波；
 * 若话题没有数据，请先确认发布端与订阅端使用同一 ROS_DOMAIN_ID，
-  且终端只 source 了当前 ROS2 版本的环境。
+  且终端只 source 了当前 ROS 2 版本的环境。

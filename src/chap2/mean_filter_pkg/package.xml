@@ -3,7 +3,7 @@
 <package format="3">
   <name>mean_filter_pkg</name>
   <version>0.1.0</version>
-  <description>ROS2 滑动窗口均值滤波节点，用于传感器数据平滑</description>
+  <description>ROS 2 滑动窗口均值滤波节点，用于传感器数据平滑</description>
   <maintainer email="toeting@users.noreply.github.com">Toeting</maintainer>
   <license>Apache-2.0</license>
 
@@ -16,6 +16,7 @@
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
+  <test_depend>ament_python</test_depend>
   <test_depend>python3-pytest</test_depend>
 
   <export>
