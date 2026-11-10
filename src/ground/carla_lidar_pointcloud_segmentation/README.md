@@ -146,9 +146,9 @@ Pedestrians=12。这个模式会在自车前方放一辆已知车辆、右侧放
     ros2 launch carla_lidar_pointcloud_segmentation main.launch.py \
         host:=192.168.148.1 traffic:=6 comfort_distance:=18 max_speed:=6
 
-连接与切图：连接超时默认 120 s，切换地图单独给 300 s。`load_world` 卡住时客户端会
-直接不可用（后续报 streaming client connection failed），严重时服务端也会一起无响应，
-所以要一次给够。切图失败时会重建连接、退回当前地图继续，并打印实际使用的地图。
+连接与切图：连接超时默认 120 s，切换地图单独给 300 s。切图前先问服务端有哪些地图
+资源，没有目标地图就直接沿用当前地图，不去盲目加载（`load_world` 卡住会把客户端和
+服务端一起拖死）；真要加载时失败会尝试重建连接，服务端已无响应则提示重启。
 确实需要跳过重载时：
 
     python3.10 main.py --demo --keep-map --checkpoint models/seg_mlp.npz

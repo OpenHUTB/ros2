@@ -286,9 +286,10 @@ CARLA 提供两台激光雷达：
 逐个声明并读出实际值，不再被代码里的默认值覆盖。用 launch 时可以在命令行覆盖其中任意
 一项，例如 `host:=192.168.148.1 traffic:=6 comfort_distance:=18`。
 
-切地图这一步单独给了 300 s 超时：`load_world` 一旦超时，这个客户端就不能再用了
-（后续报 streaming client connection failed），严重时服务端也会一起无响应。真的失败
-时程序会重建连接、退回当前地图继续，并打印实际使用的地图；也可以直接跳过重载：
+切地图分三步：先查服务端有哪些地图资源，缺资源直接沿用当前地图，不盲目加载
+（`load_world` 一旦卡住，这个客户端就不能再用了，后续报 streaming client connection
+failed，严重时服务端也会一起无响应）；真要加载时用 300 s 超时，失败后重建连接，
+服务端已无响应就提示重启。也可以直接跳过重载：
 
     python3 main.py --demo --keep-map
     CARLA_KEEP_MAP=1 ros2 launch carla_lidar_pointcloud_segmentation main.launch.py

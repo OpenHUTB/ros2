@@ -57,6 +57,14 @@ def _attach_existing(host, port, timeout):
         return None
 
 
+def _available_maps(client):
+    """服务端能加载的地图列表；读不到时返回 ``None``（老版本没有这个接口）。"""
+    try:
+        return list(client.get_available_maps())
+    except Exception:      # noqa: BLE001
+        return None
+
+
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
             sync=True, dt=DT, timeout=CONNECT_TIMEOUT, force_reload=False,
             keep_map=None):
@@ -65,10 +73,10 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, town=DEFAULT_TOWN,
     ``keep_map=True`` 时完全不调用 ``load_world``，直接用服务端当前地图；
     传 ``None`` 表示读环境变量 ``CARLA_KEEP_MAP``（ROS 节点走这条路）。
 
-    切换地图为什么单独处理：``load_world`` 要几十秒，一旦超时，这个 client 就
-    不可用了（后续调用报 streaming client connection failed），严重时服务端也会
-    一起无响应。所以这里给它单独的 ``LOAD_WORLD_TIMEOUT``，失败后重建客户端、
-    退回当前地图继续，并把实际使用的地图打印出来。
+    切换地图分三步：先问服务端有哪些地图资源，缺资源就直接沿用当前地图（盲目
+    ``load_world`` 会把服务端拖死）；真要加载时用单独的 ``LOAD_WORLD_TIMEOUT``；
+    万一仍然失败，再尝试重建客户端，服务端已无响应就明确提示重启并用
+    ``--keep-map`` 兜底。
     """
     check_carla()
     if keep_map is None:

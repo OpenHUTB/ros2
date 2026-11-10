@@ -23,6 +23,7 @@
 """
 
 import math
+import os
 import sys
 
 import numpy as np
@@ -32,6 +33,19 @@ from . import control
 from . import features as F
 from . import labels as L
 from . import model as MD
+
+
+def _default_checkpoint():
+    """优先用安装目录里的权重；在源码目录里直接跑时回落到相对路径。"""
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        candidate = os.path.join(get_package_share_directory(
+            'carla_lidar_pointcloud_segmentation'), 'models', 'seg_mlp.npz')
+        if os.path.isfile(candidate):
+            return candidate
+    except Exception:      # noqa: BLE001
+        pass
+    return os.path.join('models', 'seg_mlp.npz')
 
 
 def _declare(node, rclpy_mod, name, default):
@@ -70,7 +84,7 @@ class LidarSegmentationNode:
 
     def __init__(self, rclpy_mod, node_cls, checkpoint, host, port, town,
                  vehicle, spawn_index, traffic, corridor_width, max_speed=8.0,
-                 lidar_range=60.0, channels=32, points_per_second=600000,
+                 lidar_range=60.0, channels=32, points_per_second=200000,
                  rotation=20.0, lidar_height=2.4, comfort_distance=14.0,
                  stop_distance=5.0, lookahead=8.0, max_steer=0.6):
         self.rclpy = rclpy_mod
@@ -217,7 +231,7 @@ def main(argv=None):
     # 名字必须和 config/params.yaml 里的小节同名，否则 --params-file 不会生效。
     node = Node('lidar_segmentation_node')
     defaults = {
-        'checkpoint': 'models/seg_mlp.npz',
+        'checkpoint': _default_checkpoint(),
         'host': cc.DEFAULT_HOST,
         'port': str(cc.DEFAULT_PORT),
         'town': cc.DEFAULT_TOWN,
