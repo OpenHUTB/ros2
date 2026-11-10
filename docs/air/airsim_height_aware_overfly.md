@@ -117,7 +117,7 @@ Pop-Location
 
 ## 5. 实飞验证（2026-11-09）
 
-环境：Windows 11、Python 3.9.13、AirSim 1.8.1 Unity、Unity 2019.3.12f1、SimpleFlight；场景为 DroneDemo，出生点 Unity `(-320, 3, 212)`，障碍为 8 m 宽、6 m 高、0.4 m 厚的矮墙（Unity `(-320, 3, 227)`，Scale `(8, 6, 0.4)`），目标北向 +20 m（Unity Z=232），命令见[模块 README](https://github.com/OpenHUTB/ros2/blob/master/src/air/airsim_height_aware_overfly/README.md) 第 4 节。两次连续实飞均完成越障（巡航车辆 z≈-5.0～-5.3，墙顶略高于巡航相机，顶边读数 0.04～0.11 m）：
+环境：Windows 11、Python 3.9.13、AirSim 1.8.1 Unity、Unity 2019.3.12f1、SimpleFlight；场景为 DroneDemo，出生点 Unity `(-320, 3, 212)`，障碍为 8 m 宽、6 m 高、0.4 m 厚的矮墙（Unity `(-320, 3, 227)`，Scale `(8, 6, 0.4)`），目标北向 +20 m（Unity Z=232），命令见[模块 README](https://github.com/OpenHUTB/ros2/blob/master/src/air/airsim_height_aware_overfly/README.md) 第 4 节。两次连续实飞均完成越障：巡航时机体 z≈-5.0～-5.3，相机 0 装在机体原点上方约 0.49 m（`simGetCameraInfo` 实测），故相机约 5.5～5.8 m，6 m 墙顶只比相机高约 0.2～0.5 m，`top_height_m` 读数 0.04～0.11 m（顶边像素混叠会再低一两行，约 0.09 m/行）：
 
 | 运行（本地时间） | 时长 | committed 爬升 | 实测 `lift_m` 峰值 | 越障后保持 | 到点位置（目标 232） | 降落 |
 | --- | --- | --- | --- | --- | --- | --- |
