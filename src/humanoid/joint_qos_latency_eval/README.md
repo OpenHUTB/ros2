@@ -58,56 +58,90 @@ src/humanoid/joint_qos_latency_eval/     # 模块目录（仓库内位置）
 
 ## 运行
 
+`run_sweep.sh` 用相对路径写 `results/`，**需要在包目录下执行**，否则结果会落到
+当前工作目录：
+
 ```bash
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
+cd src/humanoid/joint_qos_latency_eval
 
 # 单个场景（两端分进程，时延才可信）
 ros2 run joint_qos_latency_eval joint_qos_sub --ros-args -p qos_profile:=best_effort_depth1 -p csv_path:=results/be1.csv &
 ros2 run joint_qos_latency_eval joint_qos_pub --ros-args -p qos_profile:=best_effort_depth1 -p rate_hz:=200 -p duration:=10
 
-# 批量场景
-DURATION=10 RATE=200 bash run_sweep.sh
+# 批量场景：每个场景重复 REPEATS 次，按场景取中位数
+DURATION=10 RATE=200 REPEATS=3 bash run_sweep.sh
 
-# 或者用 launch 一次起两端
-ros2 launch joint_qos_latency_eval main.launch.py \
-  pub_profile:=best_effort_depth1 sub_profile:=best_effort_depth1 duration:=10 \
-  csv_path:=results/be1.csv
+# 也可以只跑指定场景
+PROFILES="reliable_depth10 best_effort_depth1" bash run_sweep.sh
 ```
 
-运行效果图见 `docs/img/humanoid/joint_qos_latency_eval/effect.png`，展示 `run_sweep.sh` 跑完打印的对比表。
+单次结果对系统负载很敏感（冷启动未预热时曾丢 24%），因此脚本默认 `REPEATS=3`，
+CSV 命名 `results/<profile>.r<N>.csv`，最后用 `qos_summarize --median` 汇总中位数。
+也可以手动汇总：
+
+```bash
+ros2 run joint_qos_latency_eval qos_summarize results/be1.csv          # 每次运行一行
+ros2 run joint_qos_latency_eval qos_summarize --median results/*.csv   # 按 profile 取中位数
+# 追加 --expected N 用应发总数作分母（run_sweep.sh 已自动带上）
+```
+
+用 launch 一次起两端也可以（发布端会先等订阅者匹配，最多 `start_timeout` 秒，
+避免把 DDS 发现的几十毫秒算成丢包；`csv_path` 可省略，默认 `results/launch.csv`）：
+
+```bash
+ros2 launch joint_qos_latency_eval main.launch.py \
+  pub_profile:=best_effort_depth1 sub_profile:=best_effort_depth1 duration:=10
+```
+
+数值参数 `rate_hz` / `duration` 传整数或小数均可（`duration:=10` 与
+`duration:=10.0` 等价），节点内部统一转成 float。
+
+运行效果图见 `docs/img/humanoid/joint_qos_latency_eval/effect.png`，展示 `run_sweep.sh`
+跑完打印的对比表。
 
 ## 指标定义
 
 | 指标 | 含义 |
 |------|------|
 | `count` | 收到条数 |
-| `missing` | 序号区间内未到达的条数：`max(seq)+1 - 去重后的序号数`，乱序重发不会重复计数 |
-| `drop%` | `missing / (max(seq) + 1)` |
+| `missing` | 未到达的条数：`expected_msgs - 去重后的序号数`，乱序重发不会重复计数 |
+| `drop%` | `missing / expected_msgs`。`expected_msgs = rate_hz × duration` 为应发总数（`run_sweep.sh` / launch 自动传入），因此末尾丢包与发布端欠触发都会计入；未传 `expected_msgs` 时分母退化为 `max(seq) + 1` |
 | `p50 / p95 / p99 / max` | 单程时延分位数与最大值（ms） |
 | `jitter` | 相邻到达间隔的样本标准差（ms），衡量周期稳定性 |
 | `ooo` | 到达顺序与序号顺序相反的次数 |
+| `gap`（CSV 列） | 与上一条消息的序号差，仅供排查；统计层按 `seq` 去重，不依赖该列 |
 
-## 实测结果（Ubuntu 20.04 / ROS 2 Foxy 单机回环，200 Hz × 10 s）
+`count < expected_msgs` 时分两种原因：发布定时器欠触发（发布端退出日志里的
+`published N (target X Hz, actual Y Hz)` 可核对）与传输丢失；前者是调度问题，
+后者才是 QoS 问题。
+
+## 实测结果（Ubuntu 20.04 / ROS 2 Foxy 单机回环，200 Hz × 10 s，3 次取中位数）
 
 | 场景 | count | missing | drop% | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | jitter (ms) |
 |------|-------|---------|-------|----------|----------|----------|----------|-------------|
-| best_effort_depth10 | 1993 | 0 | 0.0% | 0.681 | 0.989 | 1.408 | 2.150 | 0.492 |
-| best_effort_depth1 | 1993 | 0 | 0.0% | 0.678 | 0.973 | 1.327 | 2.601 | 0.481 |
-| reliable_depth10 | 1994 | 0 | 0.0% | 0.752 | 1.078 | 1.403 | 3.966 | 0.451 |
-| reliable_depth1 | 1993 | 0 | 0.0% | 0.789 | 1.212 | 1.547 | 3.593 | 0.517 |
+| best_effort_depth10 | 1993 | 7 | 0.4% | 0.756 | 1.162 | 1.862 | 6.355 | 0.676 |
+| best_effort_depth1 | 1990 | 10 | 0.5% | 0.809 | 1.202 | 1.792 | 3.880 | 0.585 |
+| reliable_depth10 | 1993 | 7 | 0.4% | 0.782 | 1.185 | 1.665 | 4.948 | 0.525 |
+| reliable_depth1 | 1993 | 7 | 0.4% | 0.837 | 1.307 | 1.866 | 3.748 | 0.594 |
+| reliable_transient_local | 1991 | 9 | 0.4% | 0.816 | 1.291 | 1.760 | 3.890 | 0.595 |
 
 结论：
 
-- **BEST_EFFORT 的时延低于 RELIABLE**：p50 分别为 0.681 / 0.678 ms 与
-  0.752 / 0.789 ms，相差约 0.07~0.11 ms，量级符合可靠传输多出的确认与重传开销。
-- **队列深度对时延几乎没有影响**：同为 BEST_EFFORT 时 `depth=10` 与 `depth=1`
-  的 p50 只差 0.003 ms；RELIABLE 下 `depth=1` 反而略高 0.037 ms，属测量噪声范围。
-- 本次运行四组 missing 均为 0，p99 都在 1.6 ms 以内，单机回环下 200 Hz 有充足余量。
-- **结果对系统负载敏感，必须重复测量。** 同一套代码在负载较高时曾出现 `depth=1`
-  两组分别丢 67 条（3.4%）与 63 条（3.2%）而 `depth=10` 零丢包；另有一次冷启动
-  未预热时 `depth=10` 两组各丢约 470~490 条（24%）。因此丢包率不能只看单次结果，
-  应重复多次取中位数，并丢弃第一次运行的数据。
+- **BEST_EFFORT 的时延略低于 RELIABLE**：同 depth 成对看，p50 分别低
+  0.026 ms（depth=10）与 0.028 ms（depth=1），量级符合可靠传输多出的确认开销。
+- **队列深度的影响与可靠性差异同量级**：`depth=1` 的 p50 比 `depth=10` 高
+  0.053 ms（BEST_EFFORT）与 0.055 ms（RELIABLE），都在 0.05 ms 的噪声边界内。
+- **`reliable_transient_local` 的 p50（0.816 ms）介于 `reliable_depth10` 与
+  `reliable_depth1` 之间**，本实验分辨不出持久性本身的独立影响。
+- **missing 主要是发布定时器欠触发，不是传输丢失。** 15 次运行里 11 次
+  `published == received`（真实丢失 0 条），其余 4 次各差 1~3 条；`expected` 分母
+  （2000）与 `count`（约 1992）的差来自定时器实际只跑到 198.9~199.4 Hz
+  （发布端日志的 `actual Hz` 可核对）。注意此前一轮 `best_effort_depth10`
+  曾单次真实丢 301 条（15.3%）而相邻两次为 0——丢包率必须重复测量取中位数。
+- p99 中位数 1.7~1.9 ms，max 中位数 3.7~6.4 ms；单机回环下 200 Hz
+  有充足余量。
 
 ## 已知限制
 
@@ -123,4 +157,4 @@ colcon test --packages-select joint_qos_latency_eval
 colcon test-result --verbose
 ```
 
-单元测试只覆盖 `protocol` 与 `stats`，不启动 ROS；话题链路的验证属于运行期测试。
+14 个用例（`protocol` 4 个 + `stats` 10 个），不启动 ROS；话题链路的验证属于运行期测试。

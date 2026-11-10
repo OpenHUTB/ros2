@@ -19,7 +19,7 @@ setup(
     maintainer='sousa',
     maintainer_email='235034439+Sousa-cc@users.noreply.github.com',
     description='关节指令的 QoS 与时延影响评估',
-    license='Apache License 2.0',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
