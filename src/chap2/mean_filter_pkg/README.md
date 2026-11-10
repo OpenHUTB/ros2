@@ -77,7 +77,9 @@ ros2 topic echo /sensor/filtered
 
 ## 测试
 
-依赖 `setup.cfg` 中的 `[tool:pytest]` 配置，`colcon test` 会自动走 pytest：
+本包为 `ament_python` 构建类型，`package.xml` 中声明了
+`<test_depend>ament_python</test_depend>` 与 `python3-pytest`，
+因此 `colcon test` 会发现并运行 `test/` 下的 pytest 用例：
 
 ```bash
 colcon test --packages-select mean_filter_pkg

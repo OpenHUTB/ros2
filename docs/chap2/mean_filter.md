@@ -95,16 +95,24 @@ ros2 topic pub -r 2 --times 5 /sensor/raw std_msgs/msg/Float64 "{data: 20.0}"
 ros2 topic echo /sensor/filtered
 ```
 
-当窗口为 5 时，输出依次为（`ros2 topic echo /sensor/filtered` 的实际打印格式）：
+当窗口为 5 时，`ros2 topic echo /sensor/filtered` 实际打印如下
+（`std_msgs/Float64` 按 Python float 原样输出，不作小数位对齐）：
 
 ```text
-data: 10.0000
-data: 10.0000
-data: 13.3333
-data: 15.0000
-data: 16.0000
-data: 18.0000
-data: 20.0000
+data: 10.0
+---
+data: 10.0
+---
+data: 13.333333333333334
+---
+data: 15.0
+---
+data: 16.0
+---
+data: 18.0
+---
+data: 20.0
+---
 ```
 
 即窗口未填满前按已有样本平均，窗口填满后表现为线性爬升，
@@ -112,7 +120,16 @@ data: 20.0000
 
 ## 自动化测试
 
-在已 source 工作空间的环境中执行：
+本包为 `ament_python` 构建类型，`package.xml` 中声明了
+`<test_depend>ament_python</test_depend>` 与 `python3-pytest`，
+因此在已 source 工作空间的环境中执行：
+
+```bash
+colcon test --packages-select mean_filter_pkg
+colcon test-result --verbose --test-result-base build/mean_filter_pkg
+```
+
+也可以直接在包目录里运行 pytest：
 
 ```bash
 cd src/chap2/mean_filter_pkg
