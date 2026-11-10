@@ -1,0 +1,102 @@
+﻿name: Rotor failure allocation tests
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_rotor_failure_allocation/**'
+      - '.github/workflows/rotor_failure_allocation_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_rotor_failure_allocation/**'
+      - '.github/workflows/rotor_failure_allocation_tests.yml'
+
+jobs:
+  test:
+    name: Allocation tests + CLI (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/air/uav_rotor_failure_allocation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      # 按 README 的方式装依赖：两个 requirements 文件必须存在，否则这一步就会失败
+      - name: Install dependencies from requirements-dev.txt
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+
+      - name: Run allocation tests
+        run: python3 -m pytest test -v
+
+      # 真实命令行入口：出 PNG/GIF/JSON，顺便覆盖 matplotlib 与 Pillow 路径
+      - name: Run main.py smoke test
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python3 main.py --output "${RUNNER_TEMP}/rotor_out" --gif
+          test -s "${RUNNER_TEMP}/rotor_out/feasible_set.png"
+          test -s "${RUNNER_TEMP}/rotor_out/feasible_set.gif"
+          test -s "${RUNNER_TEMP}/rotor_out/report.json"
+
+      # 模拟 Windows 中文控制台（GBK）：非 ASCII 单位不得让 CLI 崩溃
+      - name: Run main.py with GBK stdout
+        env:
+          MPLBACKEND: Agg
+          PYTHONIOENCODING: gbk
+        run: python3 main.py --output "${RUNNER_TEMP}/rotor_gbk"
+
+      - name: Byte-compile the module
+        run: python3 -m py_compile main.py uav_rotor_failure_allocation/*.py launch/main.launch.py
+
+  windows-console:
+    name: Windows smoke test (GBK stdio)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: src/air/uav_rotor_failure_allocation
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Show console encoding
+        run: |
+          python -c "import sys, locale; print('stdout', sys.stdout.encoding, 'preferred', locale.getpreferredencoding(False))"
+
+      # 用 PYTHONIOENCODING=gbk 稳定复现 GBK 编码路径（runner 的默认代码页不可控）；
+      # 以前这里打印 N²·m² 会抛 UnicodeEncodeError。
+      - name: Run main.py with GBK stdout
+        env:
+          MPLBACKEND: Agg
+          PYTHONIOENCODING: gbk
+        run: python main.py --output "$env:TEMP/rotor_out"
+
+      # 再试一次真实中文代码页；runner 上 chcp 有时不可用，所以这一步只作参考，不阻断。
+      - name: Run main.py under chcp 936 (informational)
+        continue-on-error: true
+        env:
+          MPLBACKEND: Agg
+        run: |
+          chcp 936
+          python -c "import sys; print('stdout', sys.stdout.encoding)"
+          python main.py --output "$env:TEMP/rotor_out_936"
+
+
+
