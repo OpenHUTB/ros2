@@ -45,9 +45,9 @@ python main.py            :: 或 main.bat；参数同 AEB（--host/--port/--map/
 [lane] 已连接 127.0.0.1:2000 | 地图 Carla/Maps/Town10HD_Opt
 [lane] 选定起点 spawn[61]（score=0.0，初始偏移 0.041）
 [lane] 开始巡线：目标车速 8.0 m/s
-[lane] 标注帧 -> lane_016.2s.png（offset=0.034 steer=0.046）
-[lane] 平均横向偏移 0.0423，丢失 61/383 帧
-[lane] 结论：PASS（车道保持稳定）
+[lane] 标注帧 -> lane_018.3s.png（offset=0.048 steer=0.061）
+[lane] 达到设定时长 20.0s，正常结束
+[lane] 平均偏移 0.0858（315/315 帧测到，丢线 0.0%），时长 20.0s/20.0s，结论：PASS
 ```
 
 ## 7. 输出文件
@@ -55,7 +55,7 @@ python main.py            :: 或 main.bat；参数同 AEB（--host/--port/--map/
 | 文件 | 内容 |
 |---|---|
 | `docs/lane_*.png` | 标注帧：车道线掩码高亮 + 中心线 + offset/steer 文本 |
-| `docs/run_log.csv` | 逐帧 `t / offset / steer / speed_kmh / lost` |
+| `docs/run_log.csv` | 逐帧 `t / offset(真实测量) / offset_used(控制用) / steer / speed_kmh / lost / source` |
 | `docs/result.png` | 横向偏移、转向、车速三联曲线 |
 | `docs/summary.md` | 帧数、丢线帧数、平均/最大横向偏移 |
 
@@ -101,3 +101,14 @@ carla_lane_following/
 因此本模块在连接前会做一次预检（`check_client_compat`），发现是上游客户端 + OpenHUTB 服务端时，
 打印明确提示并以退出码 2 结束，而不是产生 core dump。
 在 Linux 上要真正跑通，需要用 OpenHUTB 源码自行编译 libcarla（`make PythonAPI`，cp38/cp310 均可）。
+
+## 11. 关于「跑多远」与统计口径（2026-11-10 按评审意见修正）
+
+- **统计口径**：只有「两侧都看不到车道线（source=none）」才算丢线；单侧可见时用历史车道宽度
+  补另一侧（source=left_only/right_only），这是常规车道跟踪做法。CSV 里 `offset` 只记本帧
+  真实测量值，`offset_used` 才记用于控制的平滑值，均值只用真实测量帧计算。
+- **为什么只跑 20 s**：这条路线在约 20 s（约 160 m）之后进入无标线路段，40 s 版本实测
+  丢线 287/635 帧（45.2%），无法作为车道保持的验证。因此实验时长设为 20 s 并要求跑满；
+  若提前结束，判据直接判 FAIL（`evaluation.require_complete`）。
+- **车速**：目标 8 m/s，实测平均 23.1 km/h（6.4 m/s）、最大 24.2 km/h，受该路段车辆限速与
+  弯道影响达不到目标值，README 不再宣称「达到 29 km/h」。
