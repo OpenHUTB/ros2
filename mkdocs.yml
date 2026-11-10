@@ -172,6 +172,7 @@ nav:
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
+    - IMU 噪声 Allan 方差辨识与倾角滤波整定: './ground/imu_allan_noise_identification.md'
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
     - 差速 AGV 坡道起步辅助（防溜车）: './ground/hill_start_assist.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'

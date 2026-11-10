@@ -1,0 +1,10 @@
+imu_sim:
+  ros__parameters:
+    rate_hz: 100.0
+    duration_s: 0.0
+    seed: 0
+allan_identifier:
+  ros__parameters:
+    max_samples: 36000
+    cluster_points: 20
+    output_csv: /tmp/allan_identifier.csv
