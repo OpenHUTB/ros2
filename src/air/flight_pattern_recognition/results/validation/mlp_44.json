@@ -1,0 +1,113 @@
+{
+  "accuracy": 0.8428571428571429,
+  "macro_f1": 0.8219533508099751,
+  "confusion_matrix": [
+    [
+      4,
+      0,
+      0,
+      0,
+      10
+    ],
+    [
+      0,
+      14,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      13,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      14
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 1.0,
+      "recall": 0.2857142857142857,
+      "f1": 0.4444444444444445
+    },
+    {
+      "class": "circle",
+      "precision": 0.9333333333333333,
+      "recall": 1.0,
+      "f1": 0.9655172413793104
+    },
+    {
+      "class": "figure_eight",
+      "precision": 1.0,
+      "recall": 0.9285714285714286,
+      "f1": 0.962962962962963
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 0.5833333333333334,
+      "recall": 1.0,
+      "f1": 0.7368421052631579
+    }
+  ],
+  "model": "mlp_44",
+  "windows": 70,
+  "episodes": 5,
+  "accepted_coverage": 0.8857142857142857,
+  "accepted_accuracy": 0.9193548387096774,
+  "episode_results": [
+    {
+      "episode": "episode_020",
+      "truth": "line",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_021",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_022",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_023",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_024",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 0.8,
+  "inference_median_ms": 0.020046999992473502,
+  "inference_p95_ms": 0.048657950037522824
+}

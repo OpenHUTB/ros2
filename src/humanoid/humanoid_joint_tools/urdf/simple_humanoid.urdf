@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="simple_humanoid">
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.2 0.2 0.4"/></geometry>
+      <material name="blue"><color rgba="0 0 1 1"/></material>
+    </visual>
+  </link>
+
+  <link name="left_arm">
+    <visual>
+      <geometry><cylinder length="0.3" radius="0.03"/></geometry>
+      <material name="red"><color rgba="1 0 0 1"/></material>
+    </visual>
+  </link>
+  <joint name="left_shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="left_arm"/>
+    <origin xyz="0 0.12 0.2" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.14" upper="3.14" effort="10" velocity="10"/>
+  </joint>
+
+  <link name="right_arm">
+    <visual>
+      <geometry><cylinder length="0.3" radius="0.03"/></geometry>
+      <material name="green"><color rgba="0 1 0 1"/></material>
+    </visual>
+  </link>
+  <joint name="right_shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="right_arm"/>
+    <origin xyz="0 -0.12 0.2" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.14" upper="3.14" effort="10" velocity="10"/>
+  </joint>
+</robot>

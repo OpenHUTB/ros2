@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>muscle_joint_control</name>
+  <version>1.0.0</version>
+
+  <description>
+    肌肉驱动的单自由度关节控制：Hill 肌肉模型（激活动力学、力-长度、力-速度）、
+    拮抗肌对与 PD 到激活度的分派、关节刚度与工作点判定、共激活-刚度权衡分析。
+    只用 Python 标准库，不依赖 MuJoCo / ROS / matplotlib。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

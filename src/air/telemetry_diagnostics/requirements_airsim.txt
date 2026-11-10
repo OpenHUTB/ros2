@@ -1,0 +1,2 @@
+# Optional simulator client; install requirements.txt first.
+airsim==1.8.1

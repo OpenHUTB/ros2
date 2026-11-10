@@ -1,0 +1,6 @@
+# CARLA 传感器感知与给定轨迹跟踪（神经网络版）—— 运行时依赖
+#
+# 感知/控制神经网络为纯 numpy 实现，无需 TensorFlow / PyTorch；
+# carla 客户端模块不在 PyPI 的 0.9.16 版本中，需从 CARLA 0.9.16 Linux 发行包安装：
+#   pip3 install <CARLA>/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-manylinux_2_31_x86_64.whl
+numpy>=1.21

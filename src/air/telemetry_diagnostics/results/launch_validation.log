@@ -1,0 +1,10 @@
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/2026-09-29-22-58-08-903198-ubuntu-23169
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [telemetry_diagnostics-1]: process started with pid [23215]
+[INFO] [telemetry_replay-2]: process started with pid [23217]
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT) again, ignoring...
+[INFO] [telemetry_diagnostics-1]: process has finished cleanly [pid 23215]
+[INFO] [telemetry_replay-2]: process has finished cleanly [pid 23217]
+/opt/ros/humble/bin/ros2:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  from pkg_resources import load_entry_point

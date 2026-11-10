@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>trajectory_accuracy_eval</name>
+  <version>1.0.0</version>
+  <description>
+    轨迹 / 里程计精度评估工具：计算 ATE（绝对轨迹误差）、RPE（相对位姿误差）与终点漂移率，
+    用于量化轮式里程计的标定效果与 SLAM/里程计的精度。核心算法为纯 NumPy 实现，
+    不依赖 ROS 与任何外部仿真器；另提供 ROS 1 (Noetic) 在线评估节点与演示用数据源。
+  </description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <test_depend>python3-numpy</test_depend>
+</package>
