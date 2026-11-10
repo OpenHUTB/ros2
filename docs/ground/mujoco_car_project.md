@@ -85,7 +85,7 @@ python3 scripts/main.py
 
 运行节点后，将会弹出一个 MuJoCo 渲染窗口，展示蓝色小车和地面参照物。按下 W/A/S/D 可以控制小车在平面上流畅运动，松开按键小车立即刹停。
 
-![键盘控制小车运行效果](../img/mujoco_car.gif)
+![键盘控制小车运行效果](../img/mujoco_car_project.gif)
 
 ## 八、总结
 
