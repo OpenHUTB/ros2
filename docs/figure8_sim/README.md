@@ -8,24 +8,24 @@
 - ROS Noetic
 - Python 3.8
 
-
 ## 文件结构
-'''
+```
 src/
 └── figure8_sim/
-├── package.xml
-├── CMakeLists.txt
-├── rviz_config.rviz
-├── launch/
-│   └── figure8.launch
-└── scripts/
-└── main.py
-'''
+    ├── package.xml
+    ├── CMakeLists.txt
+    ├── rviz/
+    │   └── rviz_config.rviz
+    ├── launch/
+    │   └── figure8_sim.launch
+    └── scripts/
+        └── main.py
+```
 
 ## 运行步骤
-1. 编译工作空间：catkin_make
-2. 加载环境变量：source devel/setup.bash
-3. 一键启动仿真：roslaunch figure8_sim figure8.launch
+1. 编译工作空间：`catkin_make`
+2. 加载环境变量：`source devel/setup.bash`
+3. 一键启动仿真：`roslaunch figure8_sim figure8_sim.launch`
 4. 观察 Rviz 窗口，蓝色小车将自动沿着 8 字型轨迹平稳运动。
 
 ## 运行结果
