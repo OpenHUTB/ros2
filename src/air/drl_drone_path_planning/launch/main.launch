@@ -1,0 +1,61 @@
+<launch>
+  <!-- ============================================================
+       drl_drone_path_planning 一键启动入口
+       ROS 1 Noetic（catkin + roslaunch）
+         roslaunch drl_drone_path_planning main.launch
+       Maintainer: 汤湘粤 (学号: 2535030067)
+
+       前置条件：已有节点发布里程计与激光雷达
+         /uav/odom  (nav_msgs/Odometry)
+         /uav/scan  (sensor_msgs/LaserScan)
+       本节点输出 /uav/cmd_vel (geometry_msgs/Twist，机体系)。
+
+       mode:=auto 时：存在 models/policy_weights.npz 就用 DRL 策略，
+       否则自动退回几何基线，保证未训练时也能验证 ROS 接口。
+       ============================================================ -->
+
+  <arg name="config"       default="$(find drl_drone_path_planning)/config/drl_nav.yaml"
+       doc="YAML 配置文件路径"/>
+  <arg name="mode"         default="auto"   doc="auto | drl | baseline"/>
+  <arg name="control_rate" default="10.0"   doc="控制频率 Hz，须与训练 dt=0.1 s 一致"/>
+  <arg name="odom_topic"   default="/uav/odom"/>
+  <arg name="scan_topic"   default="/uav/scan"/>
+  <arg name="cmd_topic"    default="/uav/cmd_vel"/>
+  <arg name="safety_enabled" default="true" doc="正前方近距障碍时刹停平移速度"/>
+  <arg name="scan_timeout" default="1.0"
+       doc="超过该时间未收到 LaserScan 时发布零速（秒）"/>
+  <arg name="use_goal_override" default="false"
+       doc="true 时用下面的单目标点覆盖 YAML 中的航点序列"/>
+  <arg name="goal_x" default="6.0"/>
+  <arg name="goal_y" default="0.0"/>
+  <arg name="goal_z" default="2.0"/>
+  <arg name="rviz" default="false" doc="是否同时启动 RViz"/>
+  <arg name="use_sim_time" default="false"/>
+
+  <param name="/use_sim_time" value="$(arg use_sim_time)"/>
+
+  <node pkg="drl_drone_path_planning" type="main.py"
+        name="drl_drone_path_planning" output="screen">
+    <param name="config_file" value="$(arg config)"/>
+    <param name="model_path"
+           value="$(find drl_drone_path_planning)/models/policy_weights.npz"/>
+    <param name="mode" value="$(arg mode)"/>
+    <param name="control_rate" value="$(arg control_rate)"/>
+    <param name="odom_topic" value="$(arg odom_topic)"/>
+    <param name="scan_topic" value="$(arg scan_topic)"/>
+    <param name="cmd_topic" value="$(arg cmd_topic)"/>
+    <param name="safety_enabled" value="$(arg safety_enabled)"/>
+    <param name="scan_timeout" value="$(arg scan_timeout)"/>
+
+    <rosparam if="$(arg use_goal_override)" param="goal">
+      [$(arg goal_x), $(arg goal_y), $(arg goal_z)]
+    </rosparam>
+
+    <!-- 让入口脚本找到真实源码目录，绕开 catkin wrapper 的 import 问题 -->
+    <env name="DRL_NAV_SCRIPT_DIR"
+         value="$(find drl_drone_path_planning)/scripts"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz"
+        name="drl_nav_rviz" args="-d $(find drl_drone_path_planning)/rviz/drl_nav.rviz"/>
+</launch>
