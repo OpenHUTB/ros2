@@ -89,6 +89,11 @@ class JointCommandSubscriber(Node):
         written = self.write_csv()
         summary = summarize(self.rows)
         try:
+            if summary['count'] == 0:
+                # 零消息也要落 CSV（仅表头），否则该场景会在汇总表里整行消失，
+                # 让读者无法区分“跑了但没收到”和“根本没跑”。
+                self.get_logger().warning(
+                    'received 0 messages, csv contains header only')
             self.get_logger().info(
                 'received %d, missing %d, p99 %.3f ms, max %.3f ms, jitter %.3f ms'
                 % (summary['count'], summary['missing'], summary['latency_p99_ms'],
@@ -112,8 +117,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        if node.rows:
-            node.finalize()
+        node.finalize()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

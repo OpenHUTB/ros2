@@ -43,8 +43,12 @@ def summarize(rows):
         }
 
     latency = [float(r['latency_ms']) for r in rows]
-    missing = sum(max(0, int(r['gap']) - 1) for r in rows)
-    expected = count + missing
+    # 发布端序号从 0 递增，完整序列即 [0, max_seq]。这里按去重后的序号数算缺口，
+    # 而不是累加相邻 gap：乱序到达（如 1,2,3,6,5,7）时同一个序号会被前后两条
+    # 报文各算一次缺口，得出偏高的丢包率。
+    seqs = [int(r['seq']) for r in rows]
+    expected = max(seqs) + 1
+    missing = max(0, expected - len(set(seqs)))
     out_of_order = sum(1 for prev, cur in zip(rows, rows[1:])
                        if int(cur['seq']) < int(prev['seq']))
 
