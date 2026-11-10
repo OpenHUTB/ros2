@@ -331,6 +331,48 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
+### 感知
+
+* [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
+
+* [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
+
+* [水下 ROV 视觉引导的沉船结构巡检采样仿真](./water/rov_wreck_inspection.md)
+
+* [水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）](./water/rov_pipeline_follow.md) —— 140° 广角前视相机 + 逐列深度，色度编码应答器做 EKF-SLAM，级联控制沿管道偏置 0.9 m 完成 A→B→A 往返；四场景（直管/弯管/横流/浑水）× 五策略对比，含 CNN 感知与端到端策略消融
+
+* [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
+
+* [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
+
+* [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
+
+* [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
+
+### 规划
+
+* [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
+
+* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
+
+* [基于热力图的洋流干扰下 ROV 自适应路径规划](./water/water_rov_path_planning.md)
+
+### 控制
+
+* [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
+
+* [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
+
+* [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
+
+* [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
+
+* [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
+
+* [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
+
+### 其他（环境、接口与容器）
+
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
 
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
@@ -340,39 +382,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [Docker 开发环境](./water/docker.md) —— 开发容器与工作空间挂载
 
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
-
-* [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
-
-* [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
-
-* [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
-
-* [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
-
-* [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
-
-* [水下 ROV AprilTag 视觉定位与定点巡航仿真](./water/rov_apriltag_cruise.md)
-
-* [水下 ROV 视觉引导的沉船结构巡检采样仿真](./water/rov_wreck_inspection.md)
-
-* [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
-
-* [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
-
-* [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
-
-* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
-* [手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比](./water/mjc_rov_ppo_tracking.md)
-
-* [水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航](./water/mjc_rov_docking_nav.md)
-
-* [同一 ROV 任务 PPO 与 SAC 强化学习算法对比](./water/mjc_rov_rl_compare.md)
-* [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
-* [基于热力图的洋流干扰下 ROV 自适应路径规划](./water/water_rov_path_planning.md)
-
-* [水面无人艇：激光雷达建图与神经网络局部规划](./water/usv_mujoco_nn.md) —— MuJoCo 三自由度船体，射线激光雷达 + log-odds 占据栅格建图，MLP 输出局部目标点实现自主避障，封装为 ROS Noetic 节点
-
-* [水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）](./water/rov_pipeline_follow.md) —— 140° 广角前视相机 + 逐列深度，色度编码应答器做 EKF-SLAM，级联控制沿管道偏置 0.9 m 完成 A→B→A 往返；四场景（直管/弯管/横流/浑水）× 五策略对比，含 CNN 感知与端到端策略消融
 
 ___
 
