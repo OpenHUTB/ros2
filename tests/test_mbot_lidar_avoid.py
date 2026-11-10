@@ -245,6 +245,33 @@ def test_timeout_parks_without_sim_clock():
     assert twist.angular.z == 0.0
 
 
+def test_state_machine_is_guarded_by_lock():
+    """callback 与 watchdog 都会改 state，两条路径都必须持同一把锁。"""
+    node = make_node()
+    assert hasattr(node, '_state_lock'), '缺少保护 self.state 的锁'
+
+    real = node._state_lock
+    depth = {'enter': 0}
+
+    class _Recording:
+        def __enter__(self):
+            depth['enter'] += 1
+            return real.__enter__()
+
+        def __exit__(self, *exc):
+            return real.__exit__(*exc)
+
+    node._state_lock = _Recording()
+
+    feed(node, make_scan(360, 0.0, default=0.75))
+    after_callback = depth['enter']
+    assert after_callback >= 1, '扫描回调未在锁内更新状态'
+
+    node._last_scan_time = time.time() - 3.0
+    node._tick()
+    assert depth['enter'] > after_callback, 'watchdog 未在锁内复位状态/停车'
+
+
 # ------------------------------------------------------------------ C. 异常输入
 def test_nan_inf_filtered():
     node = make_node()

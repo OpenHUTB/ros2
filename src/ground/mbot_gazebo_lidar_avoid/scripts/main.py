@@ -69,6 +69,13 @@ class LidarAvoidNode:
         self.state = 'cruise'         # cruise / avoid / escape
         self._last_scan_time = None   # 最近一次收到有效 /scan 的墙钟时间
 
+        # 状态机跨两个线程：rospy 订阅线程跑 _scan_callback，本类的 watchdog
+        # 线程跑 _tick。两者都会改 self.state 并发布 /cmd_vel，若不加锁，可能
+        # 出现 callback 刚把 escape 改成 avoid、watchdog 又 _reset_state() 改回
+        # cruise 的交错，使上一帧的脱困指令被下一帧的巡航指令覆盖。
+        # 用 RLock（可重入）：callback 内部还会再调用 _decide / _reset_state。
+        self._state_lock = threading.RLock()
+
         # 墙钟 watchdog：与 /clock 无关，仿真暂停/时钟停走时仍能触发停车
         self._stop_event = threading.Event()
         self._watchdog_thread = None
@@ -113,7 +120,8 @@ class LidarAvoidNode:
         self.pub.publish(self._zero_twist())
 
     def _reset_state(self):
-        self.state = 'cruise'
+        with self._state_lock:
+            self.state = 'cruise'
 
     # ------------------------------------------------------------------
     # 扇区计算（不依赖固定束数与 angle_min）
@@ -181,25 +189,26 @@ class LidarAvoidNode:
     # 扫描回调
     # ------------------------------------------------------------------
     def _scan_callback(self, msg):
-        sec = self._sector_mins(msg)
+        with self._state_lock:
+            sec = self._sector_mins(msg)
 
-        if sec is None or sec['valid_count'] == 0:
-            rospy.logwarn_throttle(
-                2.0,
-                '[mbot_gazebo_lidar_avoid] 扫描数据不可用'
-                '（空 / angle_increment 非法 / 全部 NaN 或非正值），停车保护')
-            self._last_scan_time = None
-            self._reset_state()
-            self._publish_zero()
-            return
+            if sec is None or sec['valid_count'] == 0:
+                rospy.logwarn_throttle(
+                    2.0,
+                    '[mbot_gazebo_lidar_avoid] 扫描数据不可用'
+                    '（空 / angle_increment 非法 / 全部 NaN 或非正值），停车保护')
+                self._last_scan_time = None
+                self._reset_state()
+                self._publish_zero()
+                return
 
-        self._last_scan_time = time.time()
-        self.pub.publish(self._decide(
-            front=sec['front'],
-            left=sec['left'],
-            right=sec['right'],
-            rear_left=sec['rear_left'],
-            rear_right=sec['rear_right']))
+            self._last_scan_time = time.time()
+            self.pub.publish(self._decide(
+                front=sec['front'],
+                left=sec['left'],
+                right=sec['right'],
+                rear_left=sec['rear_left'],
+                rear_right=sec['rear_right']))
 
     # ------------------------------------------------------------------
     # 决策（带滞回与脱困分支）
@@ -208,37 +217,38 @@ class LidarAvoidNode:
         cfg = self.cfg
         twist = Twist()
 
-        # 脱困状态：前方恢复到 danger_exit_distance 以上才退出
-        if self.state == 'escape':
-            if front > cfg['danger_exit_distance']:
-                self.state = 'avoid'
-            else:
+        with self._state_lock:
+            # 脱困状态：前方恢复到 danger_exit_distance 以上才退出
+            if self.state == 'escape':
+                if front > cfg['danger_exit_distance']:
+                    self.state = 'avoid'
+                else:
+                    return self._escape_twist(left, right, rear_left, rear_right)
+
+            # 进入脱困：前方过近
+            if front < cfg['danger_distance']:
+                self.state = 'escape'
                 return self._escape_twist(left, right, rear_left, rear_right)
 
-        # 进入脱困：前方过近
-        if front < cfg['danger_distance']:
-            self.state = 'escape'
-            return self._escape_twist(left, right, rear_left, rear_right)
+            # 滞回：avoid -> cruise 需要前方大于 exit_distance，
+            # 避免在阈值附近反复切换造成转向抖动
+            if self.state == 'avoid':
+                if front > cfg['exit_distance']:
+                    self.state = 'cruise'
+            elif front < cfg['safe_distance']:
+                self.state = 'avoid'
 
-        # 滞回：avoid -> cruise 需要前方大于 exit_distance，
-        # 避免在阈值附近反复切换造成转向抖动
-        if self.state == 'avoid':
-            if front > cfg['exit_distance']:
-                self.state = 'cruise'
-        elif front < cfg['safe_distance']:
-            self.state = 'avoid'
-
-        if self.state == 'avoid':
-            twist.linear.x = cfg['avoid_speed']
-            # 朝空间更宽的一侧转向；若某侧过近则强制避开该侧
-            if left >= cfg['side_distance'] and right < cfg['side_distance']:
-                twist.angular.z = cfg['turn_rate']
-            elif right >= cfg['side_distance'] and left < cfg['side_distance']:
-                twist.angular.z = -cfg['turn_rate']
-            else:
-                twist.angular.z = (
-                    cfg['turn_rate'] if left >= right else -cfg['turn_rate'])
-            return twist
+            if self.state == 'avoid':
+                twist.linear.x = cfg['avoid_speed']
+                # 朝空间更宽的一侧转向；若某侧过近则强制避开该侧
+                if left >= cfg['side_distance'] and right < cfg['side_distance']:
+                    twist.angular.z = cfg['turn_rate']
+                elif right >= cfg['side_distance'] and left < cfg['side_distance']:
+                    twist.angular.z = -cfg['turn_rate']
+                else:
+                    twist.angular.z = (
+                        cfg['turn_rate'] if left >= right else -cfg['turn_rate'])
+                return twist
 
         # 巡航：前方安全
         twist.linear.x = cfg['cruise_speed']
@@ -281,22 +291,24 @@ class LidarAvoidNode:
     # ------------------------------------------------------------------
     def _tick(self):
         """watchdog：从未收到扫描或超时未更新 -> 停车（按墙钟计时）。"""
-        if self._last_scan_time is None:
-            self._publish_zero()
-            return
-        elapsed = time.time() - self._last_scan_time
-        if elapsed > self.cfg['scan_timeout']:
-            rospy.logwarn_throttle(
-                2.0,
-                '[mbot_gazebo_lidar_avoid] %.1fs 未收到 /scan，停车保护', elapsed)
-            self._reset_state()
-            self._publish_zero()
+        with self._state_lock:
+            if self._last_scan_time is None:
+                self._publish_zero()
+                return
+            elapsed = time.time() - self._last_scan_time
+            if elapsed > self.cfg['scan_timeout']:
+                rospy.logwarn_throttle(
+                    2.0,
+                    '[mbot_gazebo_lidar_avoid] %.1fs 未收到 /scan，停车保护', elapsed)
+                self._reset_state()
+                self._publish_zero()
 
     def _on_shutdown(self):
         rospy.loginfo('[mbot_gazebo_lidar_avoid] 节点退出，发布零速度')
         self._stop_event.set()
         try:
-            self._publish_zero()
+            with self._state_lock:
+                self._publish_zero()
         except Exception:
             pass  # 退出时 Publisher 可能已失效，忽略
 

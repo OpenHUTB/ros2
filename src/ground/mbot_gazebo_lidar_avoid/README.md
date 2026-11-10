@@ -158,6 +158,10 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 
 ## 测试
 
+测试文件放在仓库根目录 `tests/`，与本仓库既有的离线逻辑测试约定一致
+（`tests/test_twist_to_control_local.py` 等 46 个用例同样在根 `tests/` 下测 `src/` 里的节点，
+CI 作业 `Local tests (no ROS / simulator)` 亦以 `tests/**` 触发）。
+
 离线单元测试（桩化 rospy，不需要 ROS / Gazebo）：
 
 ```bash

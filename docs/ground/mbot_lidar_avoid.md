@@ -207,6 +207,13 @@ roslaunch mbot_gazebo_lidar_avoid main.launch
 
 ## 9. 测试
 
+**测试位置说明**：本模块的测试放在仓库根目录 `tests/` 下，这是本仓库**离线逻辑测试**的既定约定，
+而不是遗漏：`master` 的 `tests/` 目录已有 46 个同类回归测试（例如 `tests/test_twist_to_control_local.py`
+测的正是 `src/ground/twist_to_control` 这个包），`.github/workflows/air_bridge_tests.yml`
+的 `Local tests (no ROS / simulator)` 作业也以 `paths: tests/**` 触发。
+包内 `test/`（如 `src/air/uav_landing_monitor/tests/`）放的是需要 ROS 环境的包内用例；
+本模块的离线用例桩化了 `rospy`，与 `test_*_local.py` 同属一类，因此跟仓库根目录的用例放在一起。
+
 仓库级 pytest 测试位于 `tests/test_mbot_lidar_avoid.py`，桩化 `rospy`，不需要 ROS / Gazebo：
 
 ```bash
@@ -219,10 +226,11 @@ python3 -m pytest tests/test_mbot_lidar_avoid.py -v
 - **回调与发布链路**：真实 `_scan_callback` → `Publisher.publish`
 - **异常输入**：NaN / `-inf` 过滤、`+inf` 按 `range_max` 视为空旷、全 NaN、空 `ranges`、`angle_increment` 非法
 - **控制行为**：滞回不抖动、脱困倒车、后方受阻原地旋转、侧向让开
-- **安全保护**：扫描超时（墙钟 watchdog，不依赖 `/clock`）、未收到扫描、shutdown 停车
+- **安全保护**：扫描超时（墙钟 watchdog，不依赖 `/clock`）、未收到扫描、shutdown 停车、
+  状态机读写加锁（callback 与 watchdog 线程共用一把 `threading.RLock`）
 - **工程完整性**：launch 内容、CMakeLists 安装规则、`package.xml` 与 `LICENSE`
 
-离线用例共 29 个（`29 passed`）。
+离线用例共 30 个（`30 passed`）。
 
 仿真集成测试 `tests/test_mbot_lidar_avoid_launch.py`（需要 ROS Noetic + Gazebo）：
 
@@ -303,9 +311,11 @@ $ timeout 3 rosrun tf tf_echo odom base_footprint | grep -A1 Translation | head 
 
 ![rqt_graph 截图](./mbot_lidar_avoid_rqtgraph.png)
 
-`mbot_lidar_avoid_node` 从 `/scan` 取数据、向 `/cmd_vel` 发指令。`/scan`、`/odom`、
-`/joint_states` 的发布者都显示为 `/gazebo`，因为两个 Gazebo 插件都挂在同一个
-gzserver 节点名下；`/robot_state_publisher` 订阅 `/joint_states` 并发布轮子 TF。
+`mbot_lidar_avoid_node` 从 `/scan` 取数据、向 `/cmd_vel` 发指令。`/scan` 与 `/joint_states`
+的发布者都显示为 `/gazebo`，因为两个 Gazebo 插件都挂在同一个 gzserver 节点名下；
+`/robot_state_publisher` 订阅 `/joint_states` 并发布轮子 TF。图中没有 `/odom` 这条边，
+是因为它当时没有订阅者、被 rqt_graph 的 “Dead sinks” 选项隐藏，并非没有发布
+（`test_gazebo_topics_end_to_end` 会断言 `/odom` 持续有数据）。
 
 `WARN` 计数为 0，说明差速插件已按 ROS 1 参数名完整配置：`wheelTorque` 10、`wheelAcceleration` 3.0、
 `updateRate` 100、`odometrySource` world、`publishTf` 1、`publishWheelJointState` true、
@@ -336,23 +346,31 @@ publishWheelTF = true    ->  average rate: 349.450   # 轮子 TF 又被插件发
 ### 11.1 暂停物理后的停车保护
 
 watchdog 用墙钟线程，不依赖 `/clock`。实测把物理暂停后（`/scan` 停止更新），节点仍在
-1.5 秒内把速度清零：
+`scan_timeout`（1.5 s）内把速度清零。下面是与截图逐字对应的实测输出：
+
+![暂停物理后的 /cmd_vel 实测](./mbot_lidar_avoid_pause.png)
 
 ```text
-$ rostopic echo -n 1 /cmd_vel          # 暂停前，外部手动下发
-linear:
-  x: 0.3
-
+$ rostopic echo -n 1 /cmd_vel/linear/x      # 巡航态
+0.3
+---
 $ rosservice call /gazebo/pause_physics
-
-$ sleep 4; rostopic echo -n 3 /cmd_vel  # 暂停后
-  x: 0.0
-  z: 0.0
-  x: 0.0
-  z: 0.0
-  x: 0.0
-  z: 0.0
+$ sleep 4; rostopic echo -n 3 /cmd_vel/linear/x   # 暂停 4s 后
+0.0
+---
+0.0
+---
+0.0
+---
+$ grep -cE "WARN|ERROR" /tmp/launch6.log
+0
+$ grep -c TF_REPEATED_DATA /tmp/launch6.log
+0
 ```
+
+`/gazebo/pause_physics` 是 `std_srvs/Empty`，调用成功时不打印内容，因此第二行命令下面没有输出。
+暂停后连续 3 帧都是 `0.0`，说明 watchdog 在墙钟上正常触发；同一份日志里 `WARN|ERROR` 与
+`TF_REPEATED_DATA` 都是 0。
 
 端到端集成测试输出（`MBOT_LAUNCH_TEST=1`）：
 
@@ -364,8 +382,10 @@ PASS  test_urdf_valid_with_check_urdf
 PASS  test_launch_nodes_resolvable
 PASS  test_gazebo_topics_end_to_end
 
-6 passed in 21.70 seconds
+6 passed in 15.52 seconds
 ```
+
+（耗时为虚拟机 Noetic 环境的一次实测，随机器性能变化；不带 `MBOT_LAUNCH_TEST` 时为 `5 passed, 1 skipped`。）
 
 `test_gazebo_topics_end_to_end` 会真实启动 headless Gazebo，确认 `/scan`、`/odom` 有数据，发 `cmd_vel` 直行 3 秒后 `/odom` 位移增长 > 0.01 m，验证驱动插件与避障节点工作正常。
 

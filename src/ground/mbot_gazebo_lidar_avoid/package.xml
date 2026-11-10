@@ -24,5 +24,4 @@
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>urdf</exec_depend>
   <exec_depend>rosparam</exec_depend>
-  <exec_depend>python3</exec_depend>
 </package>

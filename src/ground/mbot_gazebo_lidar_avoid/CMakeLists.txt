@@ -14,5 +14,6 @@ catkin_install_python(
 install(DIRECTORY launch config urdf worlds
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-install(FILES README.md LICENSE
+# README 是源码级说明，不装进 install 空间；LICENSE 需随包分发
+install(FILES LICENSE
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
