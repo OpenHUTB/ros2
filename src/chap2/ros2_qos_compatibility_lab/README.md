@@ -25,25 +25,23 @@
 
 ## 1. 验证环境
 
-本次提交在当前 Windows 11 工作区完成了纯 Python 测试：
+纯 Python 测试可以在 Windows 开发环境中运行；ROS 2 构建、launch 和通信验证在
+GitHub Actions 的 Ubuntu 22.04 runner 上完成：
 
 | 项目 | 版本 |
 |---|---|
-| 操作系统 | Windows 11 |
-| Python | 3.10.11 |
-| 测试框架 | Python 标准库 `unittest` |
-| 离线测试结果 | 8 项通过 |
-
-ROS 2 节点和 launch 的目标运行环境为：
-
-| 项目 | 版本或说明 |
-|---|---|
 | 操作系统 | Ubuntu 22.04 |
 | ROS 2 | Humble |
-| Python | 3.10（同时避免使用 Python 3.9 以上专有类型语法） |
+| Python | 3.10 |
+| 构建 | `colcon build` 通过 |
+| 包测试 | `colcon test` 通过（8 项） |
+| 端到端验证 | 两个 launch、QoS 诊断、通信恢复和话题检查均通过 |
 
-当前工作区没有安装 ROS 2，因此本 README 不把离线测试结果当作 ROS 2 在线通信验证。
-提交 PR 前应在上述目标环境中运行启动和话题通信检查，并补充真实运行截图。
+完整运行和验证日志：
+[ROS 2 QoS compatibility lab #42765405305](https://github.com/acai-y/ros2/actions/runs/42765405305)。
+
+工作流每次推送都会重新执行构建、测试、两个 launch 和话题验证，并把完整日志上传为
+`ros2-qos-compatibility-lab-logs` artifact。
 
 ## 2. 构建
 
@@ -170,6 +168,18 @@ source install/setup.bash
 colcon test --packages-select ros2_qos_compatibility_lab
 colcon test-result --verbose
 ```
+
+运行端到端 launch 和通信验证：
+
+```bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+bash <仓库路径>/src/chap2/ros2_qos_compatibility_lab/test/run_runtime_validation.sh \
+  "$PWD/ros2_qos_validation_logs"
+```
+
+脚本会验证不兼容场景没有消息、兼容场景持续收到消息、独立检查器能够诊断端点、
+`ros2 topic info --verbose` 同时显示两种 Reliability，以及话题频率约为 1 Hz。
 
 ## 8. 范围与限制
 

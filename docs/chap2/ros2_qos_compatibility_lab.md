@@ -161,8 +161,27 @@ colcon test --packages-select ros2_qos_compatibility_lab
 colcon test-result --verbose
 ```
 
-本页中的 ROS 2 日志是运行预期格式。当前代码快照在 Windows 工作区完成了离线测试，
-ROS 2 在线启动应由提交者在 Ubuntu + Humble 环境复测后补充真实截图。
+端到端验证可直接运行：
+
+```bash
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+bash <仓库路径>/src/chap2/ros2_qos_compatibility_lab/test/run_runtime_validation.sh \
+  "$PWD/ros2_qos_validation_logs"
+```
+
+脚本会自动检查以下结果：
+
+1. 默认 `BEST_EFFORT -> RELIABLE` 场景报告 `QoS INCOMPATIBLE`，且订阅者没有消息；
+2. 两边改为 `RELIABLE` 后报告 `QoS COMPATIBLE`，订阅者持续收到消息；
+3. 独立检查器能够发现已有话题上的不兼容端点；
+4. `ros2 topic info --verbose` 同时显示发布者 `BEST_EFFORT` 和订阅者 `RELIABLE`；
+5. `ros2 topic hz` 显示发布频率约为 1 Hz。
+
+项目已在 GitHub Actions 的 Ubuntu 22.04 + ROS 2 Humble runner 上完成真实构建、
+包测试和上述端到端验证，并通过
+[运行 #42765405305](https://github.com/acai-y/ros2/actions/runs/42765405305)
+保存完整日志和 `ros2-qos-compatibility-lab-logs` artifact。
 
 ## 8. 常见问题
 
