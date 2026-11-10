@@ -1,0 +1,18 @@
+<launch>
+  <!--
+    mujoco_arm_screw.launch —— 三自由度机械臂拧螺丝演示（ROS 1 / catkin）
+    运行前请确保：
+      1) 已安装 Python 依赖：pip3 install -r requirements.txt
+         （mujoco / numpy / pillow；无显卡环境另需可用的 GL 后端）
+      2) 已编译本包:  catkin_make && source devel/setup.bash
+    可选参数：
+      gl : MuJoCo 渲染后端，默认 glfw（Ubuntu 22.04.5 + Xvfb 实测可用）；
+           osmesa 在 PyOpenGL 下会报 'NoneType' object has no attribute 'glGetError'
+  -->
+  <arg name="gl" default="glfw"/>
+
+  <node name="mujoco_arm_screw" pkg="mujoco_arm_screw" type="main.py"
+        output="screen" respawn="false">
+    <env name="MUJOCO_GL" value="$(arg gl)"/>
+  </node>
+</launch>

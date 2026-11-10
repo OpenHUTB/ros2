@@ -1,0 +1,24 @@
+{
+  "samples": 896,
+  "status": {
+    "total_frames": 1424,
+    "tracking_frames": 1162,
+    "detection_frames": 1164,
+    "track_ratio": 0.8160112359550562,
+    "loss_events": 3,
+    "reacquisition_events": 3,
+    "reacquisition_times_s": [
+      3.9000000000000554,
+      4.7500000000000675,
+      3.8999999999997783
+    ],
+    "los_rms_deg": 1.9615829185191311,
+    "pixel_rms_px": 20.971563648689934,
+    "max_los_error_deg": 23.81966736129554,
+    "state_counts": {
+      "SEARCH": 5,
+      "TRACK": 1168,
+      "LOST": 251
+    }
+  }
+}
