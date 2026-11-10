@@ -114,7 +114,6 @@ nav:
     - ROS与Conda环境排错指南: './ground/ros_conda_env_guide.md'
     - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
     - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
-    - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
     - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
@@ -189,6 +188,7 @@ nav:
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
+    - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
 - 空域载具:
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
