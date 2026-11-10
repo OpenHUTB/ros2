@@ -22,7 +22,7 @@
 
 ## 2. 演示动图
 
-![姿态估计演示](../../img/uav/attitude/demo.gif)
+![姿态估计演示](../img/uav/attitude/demo.gif)
 
 无人机在 Blocks 场景里沿螺旋航线飞行（偏航速率随时间正弦变化，机体随之侧倾），每一步取当前 IMU 窗送进网络，把估计出的 `roll` / `pitch` 与 AirSim 真值对比。画面是 AirSim 前视相机每步真实截取的一帧，共 150 步加 10 帧降落补充。
 
