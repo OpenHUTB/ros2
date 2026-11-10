@@ -97,6 +97,7 @@ nav:
     - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
+    - 人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比: './humanoid/humanoid_imu_attitude.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
