@@ -219,6 +219,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
 
+* [无人机电芯健康与不平衡预警](./air/uav_battery_health_guard.md) —— 根据单体电压差、温度、内阻和负载压降识别弱电芯，输出限载或就近降落建议
+
 
 * [无人机任务管理与安全状态机](./air/uav_mission_safety_manager/overview.md)
 
