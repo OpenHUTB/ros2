@@ -57,6 +57,12 @@ NOMINAL → DEGRADED → BLIND → DEGRADED → NOMINAL
 
 故障段预测目标存在但检测数为零，推理延迟接近 520 ms，帧年龄超过 1.4 s；恢复后置信度回到 0.91，延迟降至 42 ms。
 
+VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、9 项单元测试、两个节点启动、感知状态迁移和 CSV 尾部：
+
+![ROS 2 Humble 虚拟机感知置信度实测终端](../img/air/uav_perception_confidence_guard/runtime_vm_terminal.png)
+
+根据同一轮 CSV 生成的感知置信度曲线：
+
 ![ROS 2 Humble 实际感知置信度状态](../img/air/uav_perception_confidence_guard/runtime_confidence.png)
 
 ## 5. 限制
