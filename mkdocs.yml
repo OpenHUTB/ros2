@@ -63,7 +63,9 @@ nav:
     - 4. 机器人仿真:
         - 章节首页: './chapter/chap4.md'
         - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
-    - 5. 机器人感知: './chapter/chap5.md'
+    - 5. 机器人感知:
+        - 章节首页: './chapter/chap5.md'
+        - 行人隐私脱敏视觉检测节点: 'privacy_mask/README.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
     - 7. 机械臂控制: './chapter/chap7.md'
     - 8. ROS 机器人综合应用: './chapter/chap8.md'
