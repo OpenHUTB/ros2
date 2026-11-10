@@ -47,12 +47,18 @@ cd scripts
 
 python3 run_locomotion.py --mode stand --seconds 3          # 站立基线
 python3 run_locomotion.py --mode stand --seconds 3 --disturbance 60   # 抗扰
-python3 run_locomotion.py --mode trot --seconds 8           # 对角步态（约 0.79 m/s）
-python3 tune_gait.py --trials 150 --seconds 4               # 参数搜索
+python3 run_locomotion.py --mode trot --direction forward --seconds 8
+python3 run_locomotion.py --mode trot --direction backward --seconds 8
+python3 tune_gait.py --trials 150 --seconds 4 --direction backward
 
 source /opt/ros/humble/setup.bash                           # ROS 2 入口
 python3 locomotion_node.py
+ros2 topic pub -1 /cmd_vel geometry_msgs/Twist "{linear: {x: -0.3}}"  # 后退
 ```
+
+ROS 2 节点将 linear.x 的符号映射为方向：正值前进、负值后退，方向切换时
+重置步态相位；绝对值仍用于缩放步态幅度。纯 Python 实验使用 --direction
+选择方向，参数扫描也会按目标方向计算得分。
 
 实测数据、参数扫描结果与未验证项见
 [文档第八节](https://openhutb.github.io/ros2/quadruped_mujoco_rl/)。
