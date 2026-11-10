@@ -1,0 +1,16 @@
+uwb_sim:
+  ros__parameters:
+    rate_hz: 20.0
+    duration_s: 0.0
+    seed: 0
+    speed: 0.45
+uwb_fusion:
+  ros__parameters:
+    anchor_x: [6.0, -6.0, -6.0, 6.0]
+    anchor_y: [4.0, 4.0, -4.0, -4.0]
+    range_sigma: 0.04
+    gate_chi2: 6.635
+    use_gating: true
+    process_sigma_v: 0.05
+    process_sigma_omega: 0.07
+    output_csv: /tmp/uwb_range_odom_fusion.csv
