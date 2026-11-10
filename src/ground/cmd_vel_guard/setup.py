@@ -20,7 +20,7 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='OpenHUTB',
-    maintainer_email='openhutb@todo.todo',
+    maintainer_email='234208483+gfdklzr@users.noreply.github.com',
     description='速度指令安全监督节点：限幅、急停与超时保护',
     license='Apache-2.0',
     tests_require=['pytest'],

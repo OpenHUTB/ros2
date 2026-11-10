@@ -4,16 +4,16 @@
   <name>cmd_vel_guard</name>
   <version>0.1.0</version>
   <description>速度指令安全监督节点：限幅、急停与超时保护</description>
-  <maintainer email="openhutb@todo.todo">OpenHUTB</maintainer>
+  <maintainer email="234208483+gfdklzr@users.noreply.github.com">OpenHUTB</maintainer>
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
   <test_depend>python3-pytest</test_depend>
 
   <export>
