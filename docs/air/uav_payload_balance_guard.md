@@ -62,6 +62,12 @@ BALANCED → ADJUST_TRIM → OFFSET_WARNING → UNSTABLE
 
 故障段估算横向重心偏移约 0.186 m，滚转修正超过 20°，横摆速度约 1.5 m/s；恢复后偏移降至 0.012 m。
 
+VM 内实际终端截图同时记录了 Ubuntu/ROS 版本、`colcon build`、9 项单元测试、两个节点启动、重心状态迁移和 CSV 尾部：
+
+![ROS 2 Humble 虚拟机载荷重心实测终端](../img/air/uav_payload_balance_guard/runtime_vm_terminal.png)
+
+根据同一轮 CSV 生成的载荷重心曲线：
+
 ![ROS 2 Humble 实际载荷重心状态](../img/air/uav_payload_balance_guard/runtime_balance.png)
 
 ## 5. 限制
