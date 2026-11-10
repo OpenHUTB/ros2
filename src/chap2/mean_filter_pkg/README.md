@@ -78,14 +78,17 @@ ros2 topic echo /sensor/filtered
 ## 测试
 
 本包为 `ament_python` 构建类型，`package.xml` 中声明了
-`<test_depend>ament_python</test_depend>` 与 `python3-pytest`，
-因此 `colcon test` 会发现并运行 `test/` 下的 pytest 用例：
+`<test_depend>ament_python</test_depend>` 与 `python3-pytest`。
+colcon 默认用 `python3 -m unittest` 收集用例，pytest 风格的文件必须显式指定
+`--python-testing pytest` 才会执行：
 
 ```bash
-colcon test --packages-select mean_filter_pkg
+colcon test --packages-select mean_filter_pkg --python-testing pytest
 colcon test-result --verbose --test-result-base build/mean_filter_pkg
 ```
 
+`setup.cfg` 中的 `[tool:pytest]` 只对直接运行 pytest 生效，不会改变 colcon
+的测试运行器，所以不加 `--python-testing pytest` 时收集到的是 0 个用例。
 也可以直接在包目录里运行 pytest：
 
 ```bash
