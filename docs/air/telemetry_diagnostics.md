@@ -220,3 +220,51 @@ $$
 只用 10 个唯一正常场景，避免变体前缀重复计数。
 
 ---
+
+## 5. 算法流程
+
+### 5.1 总体流程
+
+```mermaid
+flowchart TD
+    A[assets/flight_corpus.zip<br/>50 段真实飞行] -->|prepare: 校验 SHA256| B[开发场景 + 注入变体]
+    B -->|按片段分组| C[训练 26 段 / 验证 9 段]
+    C -->|8 步残差窗口| D[训练一致性 GRU / MLP]
+    C -->|正常验证分数| E[阈值 = 99.5% 分位]
+    D --> E
+    E --> F[冻结模型 + 阈值<br/>final_protocol.json]
+    B -->|200 事件 + 10 正常| G[evaluate: 事件级指标]
+    D --> G
+    D --> H[ROS2: telemetry_diagnostics]
+    H -->|/uav/anomaly_score| I[dashboard 窗口]
+    H -->|/diagnostics| J[标准诊断消息]
+```
+
+### 5.2 训练
+
+```
+输入: 训练窗口 R (8×6), 标签 y, 尺度 s, 种子
+1  用训练集正常样本估计 s（逐通道）
+2  变换 R → sign(r)·log1p(|r|/s)
+3  打乱, batch, BCE 反传, Adam
+4  每轮在验证集算 BCE, 保留最优
+5  用最优模型对正常验证集打分, 取 99.5% 分位作为阈值
+6  与持久化参数一起写入 models/<name>/{model.pt,config.json}
+```
+
+### 5.3 在线推理
+
+```
+每条 /uav/telemetry:
+1  解析 JSON; 坏 JSON / 非有限值 → reason=invalid_payload, alarm=True
+2  delivered=0 或源时间戳倒退 → 清空历史, alarm=True
+3  Δt 不在 [0.01, 0.15] → 清空历史, reason=time_gap
+4  追加残差, 只保留最近 8 条
+5  不足 8 条 → model_ready=False, 不报警
+6  否则打分; z>τ 且连续 3 次 → alarm=True
+7  发布 /uav/anomaly_score 与 /diagnostics
+```
+
+**规则与网络的分工**写在代码里：时间戳类异常由规则直接判 `True`，网络只负责 `model_residual`。
+
+---
