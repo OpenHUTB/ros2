@@ -13,4 +13,5 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>mujoco</exec_depend>
+  <test_depend>python3-pytest</test_depend>
 </package>
