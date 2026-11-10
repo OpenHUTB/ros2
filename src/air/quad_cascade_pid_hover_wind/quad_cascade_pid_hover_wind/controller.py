@@ -139,7 +139,7 @@ class CascadeController:
         theta = max(-0.5, min(0.5, theta))
         return phi, theta, yaw
 
-    def _reallocate(self, thrusts: np.ndarray, u_des: np.ndarray) -> np.ndarray:
+    def _reallocate(self, u_des: np.ndarray) -> np.ndarray:
         """限幅后的推力重分配。
 
         把期望 wrench 拆成总推力部分（均分到 4 个旋翼）与力矩部分，
@@ -197,10 +197,9 @@ class CascadeController:
         # 5. 混控：[T, Mx, My, Mz] -> 4 个旋翼推力
         u = np.array([thrust_des, moments[0], moments[1], moments[2]])
         thrusts = self.mixer @ u
-        # 推力不能为负、不能超过单旋翼上限；限幅后用伪逆在其余旋翼间重分配，
-        # 尽量复现期望总推力与三轴力矩
-        max_thrust = p.k_f * p.max_omega ** 2
-        thrusts = self._reallocate(np.clip(thrusts, 0.0, max_thrust), u)
+        # 推力不能为负、不能超过单旋翼上限；在保持总推力的前提下，
+        # 将力矩部分按可行域等比缩放重分配，尽量复现期望三轴力矩
+        thrusts = self._reallocate(u)
         omega_cmd = thrust_to_omega(thrusts, p.k_f, p.min_omega, p.max_omega)
 
         self.diag = {

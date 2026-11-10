@@ -101,10 +101,10 @@ def test_thrust_reallocation_reduces_wrench_error(setup):
     """大力矩需求导致部分旋翼限幅时，重分配应保持总推力并降低 wrench 偏差。"""
     p, ctrl = setup
     u = np.array([p.mass * p.gravity, 1.4, 1.4, 0.0])  # 接近 rate 环限幅的大力矩
-    raw = ctrl.mixer @ u
     max_thrust = p.k_f * p.max_omega ** 2
+    realloc = ctrl._reallocate(u)
+    raw = ctrl.mixer @ u
     clipped = np.clip(raw, 0.0, max_thrust)
-    realloc = ctrl._reallocate(clipped, u)
     alloc_pinv = np.linalg.pinv(ctrl.mixer)
     err_clipped = np.linalg.norm(alloc_pinv @ clipped - u)
     err_realloc = np.linalg.norm(alloc_pinv @ realloc - u)

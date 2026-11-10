@@ -104,6 +104,7 @@ class LoggerNode(Node):
             writer.writerow(header)
             writer.writerows(self.rows)
 
+        self.status = "finished"
         info = {
             "duration_s": round(time.time() - self.start_time, 2),
             "samples": len(self.rows),
@@ -114,7 +115,6 @@ class LoggerNode(Node):
         with open(os.path.join(self.out_dir, "run_info.json"), "w") as f:
             json.dump(info, f, indent=2, ensure_ascii=False)
         self.get_logger().info("记录完成：%d 条 -> %s" % (len(self.rows), path))
-        self.status = "finished"
         # 写一个完成标志
         with open(os.path.join(self.out_dir, "status.json"), "w") as f:
             json.dump({"status": "finished", "samples": len(self.rows)}, f)
