@@ -103,6 +103,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 * [人形机器人深度图姿态估计与平衡控制](./humanoid/humanoid_depth_pose_control.md)
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
+* [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
