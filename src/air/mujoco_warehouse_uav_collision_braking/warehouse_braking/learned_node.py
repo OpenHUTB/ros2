@@ -21,8 +21,10 @@ class LearnedControllerNode(Node):
         super().__init__("warehouse_learned_controller")
         self.declare_parameter("model", "model/risk_speed_mlp.npz")
         self.declare_parameter("duration", 8.0)
+        self.declare_parameter("cruise_speed", 1.2)
         self.model = RiskSpeedMLP.load(Path(self.get_parameter("model").value))
         self.duration = float(self.get_parameter("duration").value)
+        self.cruise_speed = float(self.get_parameter("cruise_speed").value)
         self.started_at = self.get_clock().now()
         self.previous_ranges = None
         self.speed = 0.0
@@ -46,9 +48,9 @@ class LearnedControllerNode(Node):
             return
         closing = np.zeros(9) if self.previous_ranges is None else np.clip(
             (self.previous_ranges - ranges) / max(message.scan_time, 0.02), -10, 10)
-        features = np.concatenate([ranges, closing, [self.speed, 1.2]])[None, :]
+        features = np.concatenate([ranges, closing, [self.speed, self.cruise_speed]])[None, :]
         probability, speed = self.model.predict(features)
-        safety_speed, reference_risk = expert_target(ranges, self.speed, 1.2)
+        safety_speed, reference_risk = expert_target(ranges, self.speed, self.cruise_speed)
         command = min(float(speed[0]), safety_speed)
         output = TwistStamped()
         output.header = message.header
