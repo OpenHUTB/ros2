@@ -135,6 +135,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [交通信号灯识别与响应](./ground/carla_traffic_light.md)
 * [RVIZ Carla 插件](./ground/rviz_plugin.md)
 * [扭转控制](./ground/twist_to_control.md)
+* [换道可行性判定](./ground/lane_change_feasibility.md)
 * [倒车雷达分级告警](./ground/ultrasonic_rear_alert.md)
 * [里程计轨迹记录](./ground/odom_trace_recorder.md)
 * [转向执行器滞后](./ground/steering_actuator_lag.md)
