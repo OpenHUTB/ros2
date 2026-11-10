@@ -21,17 +21,21 @@ catkin_install_python(PROGRAMS
   scripts/airsim_bridge.py
   scripts/keyboard_teleop.py
   scripts/lidar_perception.py
-  scripts/train_control.py
   scripts/trajectory_control.py
   scripts/eval_multi_target.py
+  scripts/camera_perception.py
+  scripts/end2end_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 # 被 import 的模块不是可执行入口：若放进 catkin_install_python，
 # catkin 会为它生成 wrapper，import 拿到的是 wrapper 而不是源码。
+# train_control 被 train_end2end import，train_end2end 又被 end2end_node import。
 install(FILES
   scripts/uav_features.py
   scripts/safety_shield.py
+  scripts/train_control.py
+  scripts/train_end2end.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
