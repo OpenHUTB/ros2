@@ -57,9 +57,12 @@ class E2EMLP:
     def predict(self, X):
         return self.forward(X)
 
-    def save(self, path):
-        np.savez(path, W1=self.W1, b1=self.b1, W2=self.W2, b2=self.b2,
-                 W3=self.W3, b3=self.b3)
+    def save(self, path, extra: dict | None = None):
+        payload = dict(W1=self.W1, b1=self.b1, W2=self.W2, b2=self.b2,
+                       W3=self.W3, b3=self.b3)
+        if extra:
+            payload.update(extra)
+        np.savez(path, **payload)
 
     def load(self, path):
         d = np.load(path)
