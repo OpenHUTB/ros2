@@ -12,15 +12,20 @@ import mujoco
 from humanoid_vision_fall_prediction.sim import VisionFallSim
 from humanoid_vision_fall_prediction.predictor import FallPredictor
 from humanoid_vision_fall_prediction.controller import BalanceController
+from main import _load_params, _apply_standing_params
 
 MODEL = os.path.join(HERE, "models", "humanoid_camera.xml")
 WEIGHTS = os.path.join(HERE, "models_trained", "fall_predictor.npz")
 
 
 def generate(out_gif: str, force: float = 120.0, direction_deg: float = 0.0):
+    _apply_standing_params()
+    pred_cfg = _load_params().get("predict", {}) or {}
     sim = VisionFallSim(MODEL)
     predictor = FallPredictor(WEIGHTS)
-    ctrl = BalanceController()
+    ctrl = BalanceController(
+        gain=float(pred_cfg.get("balance_tau_gain", 0.6)),
+        confidence_threshold=float(pred_cfg.get("confidence_threshold", 0.70)))
 
     renderer = mujoco.Renderer(sim.model, height=360, width=480)
     cam_id = mujoco.mj_name2id(sim.model, mujoco.mjtObj.mjOBJ_CAMERA, "overview")

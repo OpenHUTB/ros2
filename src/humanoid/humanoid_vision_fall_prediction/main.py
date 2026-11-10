@@ -7,7 +7,7 @@ main.py —— 人形机器人视觉跌倒预测与分级平衡控制（standalo
 用法::
 
     python3 main.py --check                          # 自检
-    python3 main.py --collect --samples 300          # 采集数据集
+    python3 main.py --collect --samples 1500         # 采集数据集（总样本数）
     python3 main.py --train                           # 训练神经网络
     python3 main.py --demo --force 150 --direction 0 # 演示：前向推扰+视觉预测+平衡控制
     python3 main.py --demo --no-viewer               # 无图形界面（服务器/CI）
@@ -42,8 +42,10 @@ DATA_DIR = os.path.join(HERE, "data")
 WEIGHTS_DIR = os.path.join(HERE, "models_trained")
 DATASET_PATH = os.path.join(DATA_DIR, "fall_dataset.npz")
 WEIGHTS_PATH = os.path.join(WEIGHTS_DIR, "fall_predictor.npz")
-# --check 专用临时权重路径：避免覆盖正式训练好的 models_trained/fall_predictor.npz
+# --check 专用临时权重/数据路径：避免覆盖正式训练好的
+# models_trained/fall_predictor.npz 与 data/fall_dataset.npz
 _CHECK_WEIGHTS = os.path.join(DATA_DIR, "_check_weights.npz")
+_CHECK_DATASET = os.path.join(DATA_DIR, "_check_dataset.npz")
 
 
 def _load_params():
@@ -80,61 +82,81 @@ def run_check() -> int:
           f"(nq={sim.model.nq}, nu={sim.model.nu})")
 
     sim.reset()
+    stand_z0 = float(sim.root_z)
     for _ in range(500):
         sim.step()
-    drift = abs(sim.root_z - 1.088)
-    check("无扰动站立 1s 不跌倒", not sim.fallen(),
-          f"(根高 {sim.root_z:.3f} m)")
+    settle_cm = (stand_z0 - sim.root_z) * 100.0
+    stand_tilt_deg = float(np.degrees(sim.torso_tilt()))
+    # 早期版本只判断 not fallen，另算了一个 drift 却从未用于断言（死变量），
+    # 因此“开局前倾 61°、1 s 内沉 14 cm”也被判为 PASS。这里同时约束躯干倾角。
+    check("无扰动站立 1s 不跌倒且姿态稳定",
+          (not sim.fallen()) and abs(stand_tilt_deg) < 10.0,
+          f"(根高 {stand_z0:.3f}→{sim.root_z:.3f} m, 下沉 {settle_cm:.1f} cm, "
+          f"躯干倾角 {stand_tilt_deg:.2f}°)")
 
     img = sim.render_front(gray=True)
     check("前视相机渲染", img.shape == (64, 64), f"(shape={img.shape})")
 
-    # 快速小数据集训练（仅验证流程，输出到临时路径，不覆盖正式权重）
-    os.makedirs(DATA_DIR, exist_ok=True)
-    collect_dataset(MODEL_PATH, DATASET_PATH, samples_per_class=60,
+    # 采集流程验证：写到临时文件，绝不覆盖正式数据集
+    # （审阅意见指出旧版 --check 直接把 60 个样本写进 data/fall_dataset.npz）
+    collect_dataset(MODEL_PATH, _CHECK_DATASET, total_samples=40,
                     force_min=100.0, force_max=200.0, verbose=False)
-    check("数据集采集", os.path.isfile(DATASET_PATH), f"({DATASET_PATH})")
+    d = np.load(_CHECK_DATASET)
+    check("数据集采集", len(d["y"]) == 40 and d["X"].shape[1] == 256,
+          f"(n={len(d['y'])}, 分布={np.bincount(d['y']).tolist()})")
 
-    log = train_model(DATASET_PATH, _CHECK_WEIGHTS, epochs=10, verbose=False)
-    # 5 类随机猜基线 = 0.2；--check 只验证训练流程，不要求高精度
-    check("MLP 训练可收敛", log["final_val_acc"] >= 0.2,
-          f"(val_acc={log['final_val_acc']:.3f}, 随机基线=0.2)")
+    # 收敛性用合成可分数据验证：真实数据集规模小，验证准确率受划分随机性
+    # 影响很大，不适合做反向传播正确性的判据。旧断言只要求 val_acc ≥ 0.2
+    # （恰好是 5 类随机基线），几乎不构成验证。
+    rng = np.random.default_rng(0)
+    centers = rng.normal(0.5, 0.25, size=(5, 256))
+    syn_x = np.concatenate([centers[c] + rng.normal(0, 0.02, size=(200, 256))
+                            for c in range(5)])
+    syn_y = np.repeat(np.arange(5), 200)
+    np.savez(_CHECK_DATASET, X=syn_x.astype(np.float32), y=syn_y)
+    log = train_model(_CHECK_DATASET, _CHECK_WEIGHTS, epochs=30, verbose=False)
+    check("MLP 反向传播可收敛（合成可分数据）", log["best_val_acc"] >= 0.9,
+          f"(val_acc={log['best_val_acc']:.3f}, 随机基线=0.2)")
 
     predictor = FallPredictor(_CHECK_WEIGHTS)
     label, cls, conf = predictor.predict_from_image(img)
     check("推理接口", label in LABEL_NAMES and 0.0 <= conf <= 1.0,
           f"(label={label}, conf={conf:.3f})")
 
-    ctrl = BalanceController()
+    pred_cfg = params.get("predict", {}) or {}
+    ctrl = BalanceController(
+        gain=float(pred_cfg.get("balance_tau_gain", 0.6)),
+        confidence_threshold=float(pred_cfg.get("confidence_threshold", 0.70)))
     target = ctrl.target_for(cls, conf)
     check("平衡控制输出", target.shape == (15,), f"(shape={target.shape})")
 
-    # 对照实验：用正式训练权重（如果存在）验证开/关修正的跌倒率差异
+    # 对照实验：正式权重下做 2 力 × 4 方向的开/关修正统计
     if os.path.isfile(WEIGHTS_PATH):
         prod_predictor = FallPredictor(WEIGHTS_PATH)
-        fell_with = _run_push_trial(prod_predictor, ctrl, use_correction=True,
-                                    force=100.0)
-        fell_without = _run_push_trial(prod_predictor, ctrl,
-                                       use_correction=False, force=100.0)
-        check("对照实验：开修正跌倒率 ≤ 关修正",
-              fell_with <= fell_without,
-              f"(开修正跌倒={fell_with}, 关修正跌倒={fell_without})")
+        stats = _ablation(prod_predictor, ctrl, max_steps=800)
+        on, off = stats["on"], stats["off"]
+        check("对照实验：开修正平均存活步数 ≥ 关修正",
+              on["mean_survive"] >= off["mean_survive"],
+              f"(开修正 {on['mean_survive']:.0f} 步/跌倒率 {on['fall_rate']*100:.0f}% | "
+              f"关修正 {off['mean_survive']:.0f} 步/跌倒率 {off['fall_rate']*100:.0f}% | "
+              f"n={on['n']})")
+        delta = abs(on["mean_survive"] - off["mean_survive"])
+        if delta < 0.05 * max(1.0, off["mean_survive"]):
+            print(f"        注：开/关修正仅相差 {delta:.0f} 步（< 5%），说明视觉修正"
+                  f"对跌倒结局没有显著影响，原因见 README「已知局限」。")
     else:
-        # 无正式权重时只验证对照流程不崩
-        fell_with = _run_push_trial(predictor, ctrl, use_correction=True,
-                                    force=80.0)
-        fell_without = _run_push_trial(predictor, ctrl,
-                                       use_correction=False, force=80.0)
+        stats = _ablation(predictor, ctrl, forces=(80.0,), max_steps=500)
         check("对照实验流程可运行（无正式权重时）",
-              isinstance(fell_with, bool) and isinstance(fell_without, bool),
-              f"(开修正跌倒={fell_with}, 关修正跌倒={fell_without})")
+              stats["on"]["n"] == stats["off"]["n"] == 4,
+              f"(n={stats['on']['n']})")
 
     sim.close()
-    # 清理临时权重
-    try:
-        os.remove(_CHECK_WEIGHTS)
-    except OSError:
-        pass
+    # 清理临时权重与临时数据集
+    for path in (_CHECK_WEIGHTS, _CHECK_DATASET):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
     print(f"\n结论：自检{'通过' if ok else '存在问题'}。")
     return 0 if ok else 1
 
@@ -142,8 +164,11 @@ def run_check() -> int:
 def _run_push_trial(predictor: FallPredictor, ctrl: BalanceController,
                     use_correction: bool = True,
                     force: float = 100.0, direction_deg: float = 0.0,
-                    max_steps: int = 1500) -> bool:
-    """单次推扰试验，返回是否跌倒。use_correction=False 时只用站姿 PD。"""
+                    max_steps: int = 1500, return_steps: bool = False):
+    """单次推扰试验。返回是否跌倒；return_steps=True 时返回存活步数。
+
+    存活步数 ≈ max_steps 表示撑到上限没倒，可直接用于开/关修正的对照统计。
+    """
     sim = VisionFallSim(MODEL_PATH)
     sim.reset()
     for _ in range(250):
@@ -151,7 +176,7 @@ def _run_push_trial(predictor: FallPredictor, ctrl: BalanceController,
     rad = np.radians(direction_deg)
     sim.apply_push((force * np.cos(rad), force * np.sin(rad), 0.0),
                    duration_steps=40)
-    for _ in range(max_steps):
+    for i in range(max_steps):
         img = sim.render_front(gray=True)
         if use_correction:
             _, cls, conf = predictor.predict_from_image(img)
@@ -161,9 +186,36 @@ def _run_push_trial(predictor: FallPredictor, ctrl: BalanceController,
         sim.step(target=target)
         if sim.fallen():
             sim.close()
-            return True
+            return i if return_steps else True
     sim.close()
-    return False
+    return max_steps if return_steps else False
+
+
+def _ablation(predictor: FallPredictor, ctrl: BalanceController,
+              forces=(80.0, 140.0),
+              directions=(0.0, 180.0, 90.0, 270.0),
+              max_steps: int = 1200) -> dict:
+    """开/关视觉修正的多点对照统计。
+
+    旧版只跑一次 push 并比较 `fell_with <= fell_without`，两边都跌时该条件
+    恒成立（True <= True），属于空断言。这里改用“平均存活步数 + 跌倒率”：
+    存活步数越大越好，撑满 max_steps 记满分。
+    """
+    result = {}
+    for name, use in (("on", True), ("off", False)):
+        survives = []
+        for force in forces:
+            for deg in directions:
+                survives.append(_run_push_trial(
+                    predictor, ctrl, use_correction=use, force=force,
+                    direction_deg=deg, max_steps=max_steps, return_steps=True))
+        fell = sum(1 for s in survives if s < max_steps)
+        result[name] = {
+            "mean_survive": float(np.mean(survives)),
+            "fall_rate": fell / len(survives),
+            "n": len(survives),
+        }
+    return result
 
 
 # ----------------------------------------------------------------------
@@ -174,7 +226,10 @@ def run_demo(force: float = 150.0, direction_deg: float = 0.0,
     """施加一次推扰，视觉预测 + 平衡控制。"""
     sim = VisionFallSim(MODEL_PATH)
     predictor = FallPredictor(WEIGHTS_PATH)
-    ctrl = BalanceController()
+    pred_cfg = _load_params().get("predict", {}) or {}
+    ctrl = BalanceController(
+        gain=float(pred_cfg.get("balance_tau_gain", 0.6)),
+        confidence_threshold=float(pred_cfg.get("confidence_threshold", 0.70)))
 
     sim.reset()
     # 稳定站立 1s
@@ -198,6 +253,17 @@ def run_demo(force: float = 150.0, direction_deg: float = 0.0,
     recover_time = None
     fell_at = None
     predict_log = []
+
+    # 真正打开 MuJoCo 被动可视化窗口。早期版本这里是 `if viewer: pass`，
+    # 什么都没做，所以 --no-viewer 这个开关实际毫无意义。
+    viewer_handle = None
+    if viewer:
+        try:
+            import mujoco.viewer
+            viewer_handle = mujoco.viewer.launch_passive(sim.model, sim.data)
+        except Exception as exc:  # 无显示或该平台不支持 GUI 时降级
+            print(f"[WARN] 可视化窗口启动失败（{exc}），改为无窗口运行")
+            viewer_handle = None
 
     for i in range(2000):
         img = sim.render_front(gray=True)
@@ -224,9 +290,11 @@ def run_demo(force: float = 150.0, direction_deg: float = 0.0,
         if recover_time is None and i > 100 and tilt < 0.05 and not sim.fallen():
             recover_time = float(sim.data.time)
 
-        if viewer and i % 20 == 0:
-            # 用 overview 相机辅助观察（可选）
-            pass
+        if viewer_handle is not None and i % 5 == 0:
+            try:
+                viewer_handle.sync()
+            except Exception:
+                viewer_handle = None
 
     metrics = {
         "force_n": force, "direction_deg": direction_deg,
@@ -242,8 +310,30 @@ def run_demo(force: float = 150.0, direction_deg: float = 0.0,
         else:
             print(f"\n[结果] 恢复成功, 最大倾角 {np.degrees(max_tilt):.1f}°, "
                   f"恢复时间 {recover_time}s")
+    if viewer_handle is not None:
+        try:
+            viewer_handle.close()
+        except Exception:
+            pass
     sim.close()
     return metrics
+
+
+def _apply_standing_params() -> None:
+    """把 params.yaml 的 standing.qpos_target 写入 DEFAULT_STAND_TARGET。
+
+    DEFAULT_STAND_TARGET 是模块级 ndarray，controller 引用的是同一对象，
+    因此原地赋值即可让配置全局生效。此前 params.yaml 的 standing / collect /
+    nn / predict 四段都没有被任何代码读取，改 yaml 不会有任何效果。
+    """
+    st = (_load_params().get("standing", {}) or {}).get("qpos_target", {}) or {}
+    idx = {"hip_roll_l": 0, "hip_pitch_l": 1, "knee_l": 2,
+           "ankle_pitch_l": 3, "ankle_roll_l": 4, "hip_roll_r": 5,
+           "hip_pitch_r": 6, "knee_r": 7, "ankle_pitch_r": 8,
+           "ankle_roll_r": 9}
+    for name, i in idx.items():
+        if name in st:
+            DEFAULT_STAND_TARGET[i] = float(st[name])
 
 
 def main():
@@ -252,7 +342,8 @@ def main():
     parser.add_argument("--collect", action="store_true", help="采集数据集")
     parser.add_argument("--train", action="store_true", help="训练神经网络")
     parser.add_argument("--demo", action="store_true", help="演示推扰+预测+控制")
-    parser.add_argument("--samples", type=int, default=300, help="采集样本数/类")
+    parser.add_argument("--samples", type=int, default=1500,
+                        help="采集的总样本数（normal 占 normal_ratio，其余均分到 4 个方向）")
     parser.add_argument("--force", type=float, default=150.0, help="推扰力 (N)")
     parser.add_argument("--direction", type=float, default=0.0,
                         help="推扰方向（度；0=前,90=左,180=后,270=右）")
@@ -267,18 +358,28 @@ def main():
         sys.exit(subprocess.run(["ros2", "launch", "humanoid_vision_fall_prediction",
                                  "main.launch.py"]).returncode)
 
+    _apply_standing_params()
+
     if args.check:
         sys.exit(run_check())
 
     if args.collect:
+        cfg = _load_params().get("collect", {}) or {}
         os.makedirs(DATA_DIR, exist_ok=True)
         collect_dataset(MODEL_PATH, DATASET_PATH,
-                         samples_per_class=args.samples)
+                        total_samples=args.samples,
+                        normal_ratio=float(cfg.get("normal_ratio", 0.2)),
+                        force_min=float(cfg.get("force_min", 80.0)),
+                        force_max=float(cfg.get("force_max", 220.0)))
         return
 
     if args.train:
+        cfg = _load_params().get("nn", {}) or {}
         os.makedirs(WEIGHTS_DIR, exist_ok=True)
-        train_model(DATASET_PATH, WEIGHTS_PATH)
+        train_model(DATASET_PATH, WEIGHTS_PATH,
+                    epochs=int(cfg.get("epochs", 300)),
+                    lr=float(cfg.get("learning_rate", 0.005)),
+                    batch_size=int(cfg.get("batch_size", 64)))
         return
 
     if args.demo:
