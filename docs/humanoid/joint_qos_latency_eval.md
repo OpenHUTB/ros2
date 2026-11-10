@@ -57,7 +57,7 @@
 Ubuntu 20.04 + ROS 2 Foxy，Python 3.8，无需第三方依赖。脚本需在包目录下执行，
 否则 `results/` 会落到当前工作目录：
 
-```bash
+```
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
 cd src/humanoid/joint_qos_latency_eval
@@ -66,7 +66,7 @@ DURATION=10 RATE=200 REPEATS=3 bash run_sweep.sh
 
 单场景也可以用 launch 一次起两端（CSV 默认写到 `results/launch.csv`）：
 
-```bash
+```
 ros2 launch joint_qos_latency_eval main.launch.py \
   pub_profile:=best_effort_depth1 sub_profile:=best_effort_depth1 duration:=10
 ```
@@ -77,6 +77,8 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 ## 运行效果
 
 ![编译与测试](../img/humanoid/joint_qos_latency_eval/compile_test.png)
+
+![启动冒烟](../img/humanoid/joint_qos_latency_eval/launch_demo.png)
 
 ![五场景对比表](../img/humanoid/joint_qos_latency_eval/effect.png)
 
@@ -109,7 +111,7 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ## 测试
 
-```bash
+```
 colcon test --packages-select joint_qos_latency_eval
 colcon test-result --verbose
 ```
