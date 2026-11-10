@@ -63,7 +63,7 @@ CSV 默认写入 `/tmp/uav_gps_integrity_runtime.csv`。
 VALID → SUSPECT → REJECTED → VALID
 ```
 
-其中欺骗段风险约 0.41 到 0.46，水平精度从约 4.8 m 增至 7.5 m；恢复后风险回到 0.23 以下。
+进入 `SUSPECT` 后风险约为 0.41–0.46；进入 `SUSPECT` 前仍有低于 0.35 的过渡样本。水平精度从约 4.8 m 增至 7.5 m，恢复后风险回到 0.23 以下。
 
 VM 内实际终端截图同时记录了 Ubuntu 22.04.5、ROS 2 Humble、`colcon build`、16 项单元测试、两个节点启动、状态迁移、自动退出和实际 CSV 尾部：
 
