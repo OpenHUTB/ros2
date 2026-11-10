@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turning_sweep_check</name>
+  <version>1.0.0</version>
+  <description>
+    车辆转弯扫掠包络校验器：由轴距、轮距、前后悬与转弯半径，算出内轮差、
+    外摆与所需通道宽度，并用四条断言判断这个弯能不能过。纯几何计算，
+    不依赖 CARLA，不需要 GPU 与显示器。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
