@@ -46,6 +46,9 @@ class CmdVelSubscriber(object):
         self.max_v = float(rospy.get_param("control/max_vert_speed", 3.0))
         self.max_yaw = float(rospy.get_param("control/max_yaw_rate", 1.0))
         self.body_frame = bool(rospy.get_param("control/body_frame", True))
+        # 单条速度指令的持续时长（秒）。应与上游策略的控制周期一致：
+        # 训练环境的 dt 是 0.1 s，所以默认 0.1，避免"指令作用时间比训练时长"导致的过冲震荡。
+        self.cmd_duration = float(rospy.get_param("control/cmd_duration", 0.1))
         self.goal_speed = float(rospy.get_param("control/goal_speed", 2.0))
         auto_takeoff = bool(rospy.get_param("control/auto_takeoff", True))
 
@@ -119,9 +122,11 @@ class CmdVelSubscriber(object):
             try:
                 if self.body_frame:
                     # 机体系：ROS(前/左/上) -> AirSim(前/右/下) 由 SimClient 处理
-                    self.sim.move_by_velocity_body(vx, vy, vz, duration=0.2, yaw_rate=wz)
+                    self.sim.move_by_velocity_body(vx, vy, vz,
+                                                   duration=self.cmd_duration, yaw_rate=wz)
                 else:
-                    self.sim.move_by_velocity_enu((vx, vy, vz), duration=0.2, yaw_rate=wz)
+                    self.sim.move_by_velocity_enu((vx, vy, vz),
+                                                  duration=self.cmd_duration, yaw_rate=wz)
                 if self.is_hovering:
                     self._publish_status("VELOCITY")
                     self.is_hovering = False

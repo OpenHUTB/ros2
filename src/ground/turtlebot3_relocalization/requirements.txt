@@ -1,0 +1,7 @@
+# 2D 轻量重定位仿真核心依赖
+numpy>=1.23
+matplotlib>=3.6
+Pillow>=9.0
+
+# Gazebo/TurtleBot3 渲染版（turtlebot3_amcl.py）额外需要（本机运行）
+# rclpy 与 sensor_msgs/nav_msgs/geometry_msgs 随 ROS2 一起安装

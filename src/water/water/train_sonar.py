@@ -65,8 +65,11 @@ def build_loaders(args):
     train_set = Subset(train_set, train_idx)
     val_set = Subset(val_set, val_idx)
 
-    if len(set(targets)) < 2:
-        raise RuntimeError("数据集类别数不足 2，请检查子文件夹结构")
+    # 划分后训练集必须仍包含全部类别，否则 CrossEntropy 无法正常收敛
+    train_labels = {base.targets[i] for i in train_idx}
+    if len(train_labels) < 2:
+        raise RuntimeError(
+            "训练集类别数不足 2，请检查子文件夹结构或减小 --val-ratio")
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, num_workers=2)

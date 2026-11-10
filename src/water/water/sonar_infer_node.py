@@ -38,7 +38,8 @@ class SonarInferNode(Node):
                 get_package_share_directory("water"), "weights", "sonar_cnn_weights.pth")
         if not os.path.isfile(weight_file):
             raise FileNotFoundError(
-                f"未找到权重文件: {weight_file}。请先运行 train_sonar 训练，"
+                f"未找到权重文件: {weight_file}。请先按 docs/water_rov_doc.md"
+                "「数据集与权重说明」采集数据并训练，"
                 "或用 -p weight_file:=<绝对路径> 指定。")
 
         # 权重缺失/结构不符时直接报错，绝不降级为随机权重输出假结果

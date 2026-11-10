@@ -34,6 +34,7 @@ setup(
         'console_scripts': [
             'sonar_infer_node = water.sonar_infer_node:main',
             'train_sonar = water.train_sonar:main',
+            'capture_dataset = water.capture_dataset:main',
         ],
     },
 )

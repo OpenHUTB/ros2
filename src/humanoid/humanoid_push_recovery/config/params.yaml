@@ -1,0 +1,69 @@
+# 人形机器人平衡与抗扰恢复参数配置
+# ==================================
+# standalone（main.py）与 ROS2 共用本文件，避免两套参数不一致：
+#   * standalone：main.py 读取 `/balance_sim_node` 段的 ros__parameters
+#     （见 sim_core.load_params，它同时兼容 /** 与扁平结构）；
+#   * ROS2：main.launch.py 把本文件作为参数文件传给 balance_sim_node，
+#     再由 launch 参数（visualize:=false 等）覆盖其中的个别项。
+#
+# 平衡控制器输出的是**关节力矩**（N·m）而非关节目标角度：踝 pitch 关节行程只有
+# ±0.9 rad，用关节目标表达平衡修正需要下发远超行程的角度（如 3 rad）才会产生
+# 足够力矩，既不合理又会被限位截断。力矩量纲下，限幅直接表示关节力矩权限。
+
+/balance_sim_node:
+  ros__parameters:
+    # --- 仿真 ---
+    sim_rate: 500.0          # 物理步进频率 (Hz)，与模型 timestep 一致
+    publish_rate: 30.0       # ROS2 话题发布频率 (Hz)
+    visualize: true          # 是否打开 MuJoCo 可视化窗口（无图形界面时设为 false）
+
+    # --- 站姿 PD ---
+    kp: 120.0                # 关节比例增益（力矩 = kp·位置误差 − kv·角速度）
+    kv: 6.0                  # 关节微分增益
+    kp_roll: 400.0           # 髋/踝 roll 关节单独加强（抗侧倾）
+    torque_limit: 300.0      # 关节总力矩限幅 (N·m)
+
+    # --- 跌倒判据 ---
+    fall_height: 0.85        # 根高低于此值判为跌倒 (m)
+    fall_tilt: 0.55          # 躯干倾角超过此值判为跌倒 (rad)
+
+    # --- 平衡控制器：踝策略（矢状面），力矩量纲 N·m ---
+    # 倾角 PD 项来自上游开源实现（见 THIRD_PARTY_NOTICES.md），输入为躯干轴倾角
+    # lean_x（前倾为正）及其低通速率
+    kp_ankle_lean: 300.0     # 倾角 → 踝力矩 (N·m/rad)
+    kd_ankle_lean: 0.0      # 倾角速率 → 踝力矩 (N·m·s/rad)
+    # 质心反馈项：纯倾角 PD 会留下稳态倾角偏差，加入后静立漂移 0.65 mm
+    kp_ankle: 5400.0         # 质心偏移 → 踝力矩 (N·m/m)
+    kd_ankle: 1440.0         # 质心速度 → 踝力矩 (N·m·s/m)
+    ankle_torque_limit: 300.0  # 踝 pitch 力矩限幅 (N·m)
+
+    # --- 平衡控制器：踝策略（侧向）---
+    # roll 关节的力矩权限明显大于 pitch，沿用 pitch 增益会把机器人「抛离地面」，
+    # 故单独整定并单独限幅
+    kp_ankle_roll_lean: 270.0
+    kd_ankle_roll_lean: 0.0
+    kp_ankle_roll: 4800.0
+    kd_ankle_roll: 600.0
+    ankle_roll_torque_limit: 180.0
+
+    # --- 平衡控制器：髋策略 ---
+    hip_enable: true         # 是否启用髋策略（false = 仅踝策略，用于对照实验）
+    kp_hip: 480.0
+    kd_hip: 72.0
+    hip_torque_limit: 54.0
+    kp_hip_roll: 1600.0
+    kd_hip_roll: 240.0
+    hip_roll_torque_limit: 180.0
+    hip_relax: 0.0           # 髋策略一阶松弛系数，0 = 关闭（本站默认）
+
+    # --- 扰动默认值 ---
+    push_duration: 0.08      # 扰动持续时间 (s)，0.08 s 量级接近冲量式推扰
+    push_force: 120.0        # 默认扰动力 (N)：standalone `main.py` 与遥控节点使用
+    push_direction_deg: 0.0  # 默认扰动方向：0° = +x 前向，90° = +y 左侧
+
+/push_teleop_node:
+  ros__parameters:
+    force: 120.0             # 遥控节点初始推扰力度 (N)
+    force_step: 20.0         # `+` / `-` 键的力度步进 (N)
+    force_min: 20.0
+    force_max: 400.0

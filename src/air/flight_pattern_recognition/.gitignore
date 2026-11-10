@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+build/
+install/
+log/
+data/raw/
+data/final_raw/
+data/rejected_raw/
+data/retry_raw/
+data/prepared/
+models/retrained*/
+.venv/
+!artifacts/review_oct08_validation.json

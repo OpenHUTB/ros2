@@ -1,0 +1,44 @@
+{
+  "deployment_model": "consistency_42",
+  "frozen_before_final_collection": true,
+  "final_episodes": [
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209
+  ],
+  "training": "original train20 plus diagnostic flights100-105; original val5 plus diagnostic flights106-109",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "epochs": 20,
+  "severity_grid": [
+    0.03,
+    0.1,
+    0.3
+  ],
+  "axes": [
+    "x",
+    "y",
+    "z"
+  ],
+  "policy": "No tuning after final collection; later seed43/44 and MLP use same fixed training recipe",
+  "model_hashes": {
+    "models/consistency_42/config.json": "ea30022c3cecca8dacaa4a543919acfaa3694039b236387f9048cc6cac525c8f",
+    "models/consistency_42/model.pt": "e5214d749d8f57c0dc74ce5c831be9db3a8d16c0bacc16a062979528335848ff",
+    "models/consistency_43/config.json": "104fdd661de887dd3853b573d4355d9e350c2a2af4b26130d93c650a98dc0ad3",
+    "models/consistency_43/model.pt": "c11dd428779901d94a0e1df83f8c3f0e4b679e3dc5b27e35f25cf7a8d06476be",
+    "models/consistency_44/config.json": "c9461f1f92237da2998e112595a353d8329a79e7d29c36f4128376674ad05a9e",
+    "models/consistency_44/model.pt": "edeb5022b85f262d3d094e4d61249346bf70ff560900d75dbc3c1d0e01512976",
+    "models/consistency_mlp_42/config.json": "166cb30512977ee8fb99d40979d374458813c299b464660348b5ed04bdaf2062",
+    "models/consistency_mlp_42/model.pt": "70beed53c71f04751b17dfe8418211ed59a3d1fd04bfc7cc81c8faf1a67a1ec9"
+  }
+}

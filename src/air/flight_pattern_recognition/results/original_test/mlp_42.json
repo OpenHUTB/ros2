@@ -1,0 +1,113 @@
+{
+  "accuracy": 0.7571428571428571,
+  "macro_f1": 0.7162187088274046,
+  "confusion_matrix": [
+    [
+      2,
+      0,
+      0,
+      0,
+      12
+    ],
+    [
+      0,
+      14,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      5,
+      9,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      14
+    ]
+  ],
+  "per_class": [
+    {
+      "class": "line",
+      "precision": 1.0,
+      "recall": 0.14285714285714285,
+      "f1": 0.25
+    },
+    {
+      "class": "circle",
+      "precision": 0.7368421052631579,
+      "recall": 1.0,
+      "f1": 0.8484848484848484
+    },
+    {
+      "class": "figure_eight",
+      "precision": 1.0,
+      "recall": 0.6428571428571429,
+      "f1": 0.782608695652174
+    },
+    {
+      "class": "climb",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "class": "stop_go",
+      "precision": 0.5384615384615384,
+      "recall": 1.0,
+      "f1": 0.7000000000000001
+    }
+  ],
+  "model": "mlp_42",
+  "windows": 70,
+  "episodes": 5,
+  "accepted_coverage": 0.8285714285714286,
+  "accepted_accuracy": 0.7931034482758621,
+  "episode_results": [
+    {
+      "episode": "episode_025",
+      "truth": "line",
+      "majority_prediction": "stop_go",
+      "correct": false
+    },
+    {
+      "episode": "episode_026",
+      "truth": "circle",
+      "majority_prediction": "circle",
+      "correct": true
+    },
+    {
+      "episode": "episode_027",
+      "truth": "figure_eight",
+      "majority_prediction": "figure_eight",
+      "correct": true
+    },
+    {
+      "episode": "episode_028",
+      "truth": "climb",
+      "majority_prediction": "climb",
+      "correct": true
+    },
+    {
+      "episode": "episode_029",
+      "truth": "stop_go",
+      "majority_prediction": "stop_go",
+      "correct": true
+    }
+  ],
+  "episode_accuracy": 0.8,
+  "inference_median_ms": 0.01767750001135937,
+  "inference_p95_ms": 0.04682690009190072
+}

@@ -1,0 +1,13 @@
+uav_yaw_command_guard:
+  ros__parameters:
+    control_rate_hz: 20.0
+    max_yaw_rate_deg_s: 90.0
+    target_timeout_s: 1.0
+    current_timeout_s: 1.0
+    output_csv: /tmp/uav_yaw_command_guard_runtime.csv
+
+uav_yaw_demo_sim:
+  ros__parameters:
+    rate_hz: 20.0
+    duration_s: 8.0
+    plant_yaw_rate_deg_s: 120.0
