@@ -530,7 +530,9 @@ def run(cfg):
     lead.destroy(); ego.destroy()
     print("[aeb] 实验结束，证据已写入 %s" % save_dir)
 
-    ok = meta["final_distance"] > 2.0 and meta["brake_time"] > 0
+    ev = cfg["evaluation"]
+    ok = (meta["final_distance"] >= float(ev["min_stop_distance"])
+          and (meta["brake_time"] > 0 or not bool(ev["require_brake"])))
     print("[aeb] 结论：%s" % ("PASS（制动成功，未发生碰撞）" if ok else "FAIL（未能安全停住）"))
     return 0 if ok else 1
 

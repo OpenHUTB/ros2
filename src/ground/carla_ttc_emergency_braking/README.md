@@ -52,8 +52,8 @@ python main.py                 :: 或 main.bat / bash main.sh
 [aeb] 自动选择直路段：spawn[75]（方向偏差 0.0°）
 [aeb] 前车 vehicle.audi.tt 位于前方 110.5 m
 [aeb] 开始实验：巡航油门 0.75，TTC 阈值 1.60s
-[aeb] >>> 触发制动 t=4.22s dist=21.9m speed=50.3km/h ttc=1.56s
-[aeb] >>> 停稳 t=6.68s 距前车 4.9 m（地面真值 4.9 m）
+[aeb] >>> 触发制动 t=4.31s dist=22.0m speed=48.6km/h ttc=1.63s
+[aeb] >>> 停稳 t=5.93s 距前车 7.3 m（地面真值 7.3 m）
 [aeb] 结论：PASS（制动成功，未发生碰撞）
 ```
 
@@ -108,3 +108,11 @@ carla_ttc_emergency_braking/
 因此本模块在连接前会做一次预检（`check_client_compat`），发现是上游客户端 + OpenHUTB 服务端时，
 打印明确提示并以退出码 2 结束，而不是产生 core dump。
 在 Linux 上要真正跑通，需要用 OpenHUTB 源码自行编译 libcarla（`make PythonAPI`，cp38/cp310 均可）。
+
+## 10. 验收判据（写进配置，不硬编码）
+
+`config/params.yaml` 的 `evaluation:` 段：
+- `min_stop_distance: 2.0`（米）——停稳后距前车小于该值视为追尾；
+- `require_brake: true`——实验过程中必须真的触发过制动。
+
+代码只读配置，不再写死 `final_distance > 2.0`。
