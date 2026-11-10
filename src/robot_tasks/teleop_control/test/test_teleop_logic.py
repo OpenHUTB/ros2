@@ -52,6 +52,13 @@ def test_repeated_key_refreshes_watchdog_deadline():
     assert state.expire(now=1.9) == ZERO_VELOCITY
 
 
+def test_watchdog_stops_at_deadline_when_subtraction_would_round_down():
+    state = TeleopCommandState(command_timeout_sec=0.5)
+    state.handle_key("w", now=0.2)
+
+    assert state.expire(now=0.7) == ZERO_VELOCITY
+
+
 @pytest.mark.parametrize("value", [0.0, -1.0, math.inf, -math.inf, math.nan])
 def test_motion_and_timeout_parameters_must_be_positive_and_finite(value):
     with pytest.raises(ValueError):
