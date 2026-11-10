@@ -31,6 +31,7 @@ title: 主页
   - [地面载具](#ground_vehicle)
   - [空域载具](#air_vehicle)
   - [水域载具](#water_vehicle)
+  - [机械臂与灵巧手](#manipulator)
 
 ---
 
@@ -374,6 +375,10 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）](./water/rov_pipeline_follow.md) —— 140° 广角前视相机 + 逐列深度，色度编码应答器做 EKF-SLAM，级联控制沿管道偏置 0.9 m 完成 A→B→A 往返；四场景（直管/弯管/横流/浑水）× 五策略对比，含 CNN 感知与端到端策略消融
 
 ___
+
+## 7. 机械臂与灵巧手 <span id='manipulator'></span>
+
+* [Panda 机械臂 MuJoCo 仿真](./manipulator/panda_mujoco_simulation.md)
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
