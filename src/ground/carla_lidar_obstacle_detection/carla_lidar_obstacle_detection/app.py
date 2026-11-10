@@ -390,6 +390,8 @@ def run(cfg):
                 truth_v += 1 if actor.type_id.startswith("vehicle.") else 0
                 truth_w += 1 if actor.type_id.startswith("walker.") else 0
 
+    mean_recall = float(np.mean([min(r["vehicles"] / max(truth_v, 1), 1.0) for r in rows]))
+
     with open(os.path.join(save_dir, "summary.md"), "w", encoding="utf-8") as fh:
         fh.write("激光雷达检测实验摘要\n")
         fh.write("地图: %s\n" % world.get_map().name)
@@ -399,6 +401,7 @@ def run(cfg):
         fh.write("60 m 内真值: 车 %d / 人 %d\n" % (truth_v, truth_w))
         fh.write("召回率（最佳帧）: 车 %.2f / 人 %.2f\n"
                  % (n_vehicle / max(truth_v, 1), n_walker / max(truth_w, 1)))
+        fh.write("平均召回率（14 帧，非最佳帧）: %.2f\n" % mean_recall)
         fh.write("平均每帧: 检出 %.1f 个目标，其中车辆 %.1f 辆\n"
                  % (sum(r["detected"] for r in rows) / len(rows), avg_veh))
 
@@ -418,7 +421,9 @@ def run(cfg):
     except RuntimeError:
         pass
 
-    ok = n_vehicle >= 4 and len(best_dets) >= 4
+    ev = cfg["evaluation"]
+    ok = (truth_v > 0 and mean_recall >= float(ev["min_mean_recall"])
+          and float(np.mean([r["vehicles"] for r in rows])) >= float(ev["min_mean_vehicles"]))
     print("[lidar] 最佳帧检出 %d 个目标（车 %d / 人 %d），60 m 内真值 车 %d / 人 %d"
           % (len(best_dets), n_vehicle, n_walker, truth_v, truth_w))
     print("[lidar] 结论：%s" % ("PASS（检测器稳定输出多目标）" if ok else "FAIL（检出目标过少）"))

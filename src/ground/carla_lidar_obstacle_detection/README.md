@@ -44,8 +44,8 @@ python main.py           :: 或 main.bat
 [lidar] 已连接 127.0.0.1:2000 | 地图 Carla/Maps/Town10HD_Opt
 [lidar] 主车出生于 spawn[11]
 [lidar] 布置目标：车 6 辆（8~35 m 内的出生点，候选 6 个）
-[lidar] scan 13:  38800 点 -> 检出 4 个目标（车 2 / 人 0）
-[lidar] 最佳帧检出 6 个目标（车 5 / 人 0），60 m 内真值 车 6 / 人 0
+[lidar] scan 13:  45208 点 -> 检出 5 个目标（车 4 / 人 0）
+[lidar] 最佳帧检出 7 个目标（车 6 / 人 0），60 m 内真值 车 6 / 人 0
 [lidar] 结论：PASS（检测器稳定输出多目标）
 ```
 
@@ -100,3 +100,11 @@ carla_lidar_obstacle_detection/
 因此本模块在连接前会做一次预检（`check_client_compat`），发现是上游客户端 + OpenHUTB 服务端时，
 打印明确提示并以退出码 2 结束，而不是产生 core dump。
 在 Linux 上要真正跑通，需要用 OpenHUTB 源码自行编译 libcarla（`make PythonAPI`，cp38/cp310 均可）。
+
+## 10. 验收判据（写进配置，不硬编码）
+
+`config/params.yaml` 的 `evaluation:` 段：
+- `min_mean_recall: 0.6`——14 帧**平均**召回率下限（不用最佳帧，避免樱桃挑选）；
+- `min_mean_vehicles: 3.0`——平均每帧检出的车辆数下限。
+
+summary 里同时给出「最佳帧召回率」和「14 帧平均召回率」，后者才是判据。

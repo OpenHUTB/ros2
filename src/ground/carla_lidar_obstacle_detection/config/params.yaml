@@ -29,3 +29,7 @@ detect:
 
 output:
   save_dir: "docs"
+
+evaluation:
+  min_mean_recall: 0.6      # 14 帧平均召回率下限（不取最佳帧，避免樱桃挑选）
+  min_mean_vehicles: 3.0    # 平均每帧检出的车辆数下限
