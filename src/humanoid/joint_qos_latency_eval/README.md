@@ -61,7 +61,7 @@ src/humanoid/joint_qos_latency_eval/     # 模块目录（仓库内位置）
 `run_sweep.sh` 用相对路径写 `results/`，**需要在包目录下执行**，否则结果会落到
 当前工作目录：
 
-```bash
+```
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
 cd src/humanoid/joint_qos_latency_eval
