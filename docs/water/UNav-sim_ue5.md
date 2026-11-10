@@ -100,3 +100,8 @@ python -c "import airsim; c=airsim.MultirotorClient(); c.confirmConnection(); c.
 | Python 脚本 | 等下自动停（90 秒）或 `Ctrl+C` |
 | HelloRov.exe | `Stop-Process -Name HelloRov -Force` |
 | 退出仿真 | 点编辑器 Stop （停止 Play） |
+
+## 注意事项
+- 不要关闭弹出的黑色控制台窗口 （HelloRov 方案 B 会有）——关了等于停止控制
+- 如果你自己调参数，改 circle_rov.py 顶部的`RADIUS` 、`OMEGA` （半径、角速度）就行
+- 每次都从第 3 步开始（控制器会自动重置 ROV），不需要重开编辑器
