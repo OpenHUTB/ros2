@@ -5,6 +5,7 @@ import os
 import cv2
 import rclpy
 from cv_bridge import CvBridge
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 
@@ -41,7 +42,7 @@ class ImageRecordNode(Node):
             return
         try:
             cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            path = os.path.join(self.save_dir, f"img_{self.count:04d}.jpg")
+            path = os.path.join(self.save_dir, f"img_{self.count:04d}.png")
             cv2.imwrite(path, cv_img)
         except Exception as exc:  # 图像编码失败不应导致节点退出
             self.get_logger().error(f"图像转换或保存失败：{exc}")
@@ -57,7 +58,7 @@ def main(args=None):
     try:
         node = ImageRecordNode()
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         if node is not None:

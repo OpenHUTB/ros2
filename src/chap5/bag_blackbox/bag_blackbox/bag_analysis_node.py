@@ -20,18 +20,19 @@ class BagAnalysisNode(Node):
 
     def __init__(self):
         super().__init__("bag_analysis_node")
-        self.declare_parameter("bag_path", "./robot_run.bag")
-        self.declare_parameter("save_dir", "./docs/img")
+        self.declare_parameter("bag_path", "./robot_run")
+        self.declare_parameter("save_dir", "./output")
         self.declare_parameter("max_lidar_points", 200000)
 
     def run(self):
         """执行完整分析流程，出错时由 main() 统一处理。"""
         bag_path = self.get_parameter("bag_path").value
         save_dir = self.get_parameter("save_dir").value
-        if not os.path.isfile(bag_path):
+        if not os.path.exists(bag_path):
             raise RuntimeError(
-                f"找不到 bag 文件：{bag_path}。请先用 ros2 bag record 录制，"
-                "或通过 bag_path 参数指定已有 bag 的路径。")
+                f"找不到 bag 路径：{bag_path}。`ros2 bag record -o xxx` 生成的是"
+                "目录，可直接把这个目录传给 bag_path；也可指定已有 bag 的"
+                "目录或 .bag 文件。")
         os.makedirs(save_dir, exist_ok=True)
 
         data = self.read_bag(bag_path)
@@ -53,9 +54,9 @@ class BagAnalysisNode(Node):
             from rosbags.highlevel import AnyReader
         except ImportError as exc:
             raise RuntimeError(
-                "缺少 rosbags 依赖，请执行："
-                "pip install rosbags -i https://pypi.tuna.tsinghua.edu.cn/simple"
-            ) from exc
+                "缺少 rosbags 依赖，请执行：pip install rosbags"
+                "（国内网络可加 -i https://pypi.tuna.tsinghua.edu.cn/simple，"
+                "该源不通时改用官方源 https://pypi.org/simple）") from exc
 
         time_cmd, vel_cmd = [], []
         time_odom, vel_odom = [], []

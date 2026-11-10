@@ -12,8 +12,8 @@
 
 ## 实验目标
 
-1. 搭建图像录制节点，订阅相机话题并按固定间隔保存图像；
-2. 录制 bag 数据包，包含 `/cmd_vel`、`/odom`、`/scan` 与相机话题；
+1. 搭建图像录制节点，订阅相机话题并按固定间隔保存图像（PNG，单独存盘，不写入 bag）；
+2. 录制 bag 数据包，包含 `/cmd_vel`、`/odom`、`/scan` 三路话题；
 3. 离线读取 bag，提取控制指令、里程计、激光雷达数据；
 4. 可视化绘制：指令速度-实际速度曲线、速度误差曲线、激光雷达点云；
 5. 分析机器人运动误差、卡顿、障碍物干扰现象。
@@ -43,10 +43,14 @@ src/chap5/bag_blackbox/
 ## 环境与依赖
 
 - Ubuntu 22.04 + ROS 2 Humble + Python 3.10
-- 依赖：`rclpy`、`sensor_msgs`、`cv_bridge`、`opencv-python`、`numpy`、`matplotlib`、`scipy`、`rosbags`
+- 依赖：`rclpy`、`sensor_msgs`、`cv_bridge`、`opencv-python`、`numpy`、`matplotlib`，以及需要 pip 安装的 `rosbags`
+
+`rosbags` 在 rosdep 中没有对应 key，因此未写入 `package.xml`，需手动 pip 安装：
 
 ```bash
 sudo apt install -y python3-opencv ros-humble-cv-bridge
+pip install rosbags                       # 官方源
+# 若官方源慢，可改用国内镜像；该镜像返回 403 时请退回官方源
 pip install rosbags -i https://pypi.tuna.tsinghua.edu.cn/simple
 python3 -c "from rosbags.highlevel import AnyReader; print('rosbags ok')"
 ```
@@ -76,13 +80,15 @@ source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
-再开终端录制（录制 30 秒左右，Ctrl+C 结束）：
+再开终端录制（录制 30 秒左右，Ctrl+C 结束）。注意 `-o` 名后面**不要再加 `.bag`**，这里只录三路传感器/控制话题：
 
 ```bash
-ros2 bag record -o robot_run.bag /cmd_vel /odom /scan
+ros2 bag record -o robot_run /cmd_vel /odom /scan
 ```
 
-若要同时录制相机图像，另开终端先启动图像录制节点：
+该命令生成同名的 `robot_run/` **目录**（内部是 `metadata.yaml` 与 `.db3`），分析时把目录路径传给 `bag_path` 即可。
+
+相机图像不写入 bag，另开终端启动图像录制节点，按间隔存成 PNG：
 
 ```bash
 ros2 run bag_blackbox image_record_main --ros-args \
@@ -93,14 +99,14 @@ ros2 run bag_blackbox image_record_main --ros-args \
 
 ```bash
 ros2 launch bag_blackbox bag_blackbox.launch.py \
-    bag_path:=./robot_run.bag save_dir:=./docs/img
+    bag_path:=./robot_run save_dir:=./output
 ```
 
 也可以用参数形式单独运行：
 
 ```bash
 ros2 run bag_blackbox bag_blackbox_main --ros-args \
-    -p bag_path:=./robot_run.bag -p save_dir:=./docs/img
+    -p bag_path:=./robot_run -p save_dir:=./output -p max_lidar_points:=200000
 ```
 
 终端会打印读取到的消息条数、激光点数量以及每张图的保存路径。若 bag 路径不存在或话题缺失，节点会给出中文错误并以退出码 1 结束。
@@ -108,7 +114,7 @@ ros2 run bag_blackbox bag_blackbox_main --ros-args \
 ### 5. 查看结果
 
 ```bash
-ls -l ./docs/img
+ls -l ./output
 ```
 
 输出三张图：
@@ -121,11 +127,11 @@ ls -l ./docs/img
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `bag_path` | `./robot_run.bag` | 待分析的 bag 路径 |
-| `save_dir` | `./docs/img` | 图表输出目录 |
-| `max_lidar_points` | `200000` | 点云绘图上限，超出随机降采样 |
+| `bag_path` | `./robot_run` | 待分析的 bag 目录（`ros2 bag record -o` 生成的目录）或 `.bag` 文件 |
+| `save_dir` | `./output` | 图表输出目录，默认写到运行目录下的 `output/`，不污染仓库 |
+| `max_lidar_points` | `200000` | 点云绘图上限，超出随机降采样，launch 与 `--ros-args` 均可覆盖 |
 | `image_topic` | `/camera/image_raw` | 图像录制订阅的话题 |
-| `save_dir`（录制节点） | `./img_save` | 图像保存目录 |
+| `save_dir`（录制节点） | `./img_save` | 图像保存目录（PNG） |
 | `min_interval` | `1.0` | 最短保存间隔（秒） |
 | `max_images` | `100` | 最多保存张数，0 表示不限 |
 
