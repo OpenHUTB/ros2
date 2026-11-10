@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>tb3_lidar_obstacle</name>
+  <version>0.1.0</version>
+  <description>
+    TurtleBot3 激光雷达避障 ROS 2 功能包 —— 机器人操作系统及应用课程作业。
+
+    基于 ROS 2 Humble 与 Gazebo，订阅 TurtleBot3 机载激光雷达数据，
+    按角度反查正前方距离，距离小于阈值时转向避障，否则直行。
+  </description>
+  <maintainer email="Mjm-peter@users.noreply.github.com">Mjm-peter</maintainer>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/OpenHUTB/ros2</url>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <exec_depend>ros2launch</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>turtlebot3_description</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
