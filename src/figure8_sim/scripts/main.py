@@ -23,7 +23,7 @@ def draw_figure8():
         marker.pose.position.z = 0.2
         
         dx = 2.0 * math.cos(t)
-        dy = math.cos(2*t)
+        dy = 2.0* math.cos(2*t)
         theta = math.atan2(dy, dx)
         marker.pose.orientation.z = math.sin(theta / 2)
         marker.pose.orientation.w = math.cos(theta / 2)
