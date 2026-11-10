@@ -1,23 +1,24 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001//XMLSchema"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>water</name>
   <version>0.0.0</version>
   <description>CNN based sonar image underwater target recognition</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="234207381+Xavier-101666@users.noreply.github.com">Xavier-101666</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
-  <depend>rclpy</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>cv_bridge</depend>
-  <depend>gazebo_ros</depend>
-  <depend>torch</depend>
-  <depend>opencv-python</depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <!-- torch / torchvision 不是 rosdep key，需用 pip 安装，见 docs/water_rov_doc.md -->
 
-  <test_depend>ament_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
