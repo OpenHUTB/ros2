@@ -55,6 +55,8 @@ src/ground/cmd_vel_guard/
 
 `/guard_status` 取值：`waiting`（尚未收到指令）、`ok`、`clamped`（已截断）、`timeout`、`estop`、`invalid`（收到 `NaN`/`Inf`）。
 
+输出的 `/cmd_vel` 只包含 `linear.x`、`linear.y`、`angular.z` 三个分量，`linear.z`、`angular.x`、`angular.y` 恒为 0，适配差速与阿克曼底盘；上游若有其他分量需求，需要另行扩展。
+
 ## 编译
 
 ```bash
