@@ -2,20 +2,60 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-def generate_launch_description():
+
+def launch_setup(context, *args, **kwargs):
     pkg_dir = get_package_share_directory("privacy_mask")
+
+    # 只把用户在命令行显式传入（非空）的参数交给节点，其余走节点自带默认值
+    parameters = {}
+    image_path = LaunchConfiguration("image_path").perform(context)
+    if image_path:
+        parameters["image_path"] = image_path
+    else:
+        parameters["image_path"] = os.path.join(
+            pkg_dir, "resource", "test.png")
+
+    model_path = LaunchConfiguration("model_path").perform(context)
+    if model_path:
+        parameters["model_path"] = model_path
+    else:
+        parameters["model_path"] = os.path.join(
+            pkg_dir, "resource", "yolov8n.pt")
+
+    blur_kernel = LaunchConfiguration("blur_kernel").perform(context)
+    if blur_kernel:
+        parameters["blur_kernel"] = int(blur_kernel)
+
+    publish_period = LaunchConfiguration("publish_period").perform(context)
+    if publish_period:
+        parameters["publish_period"] = float(publish_period)
 
     node = Node(
         package="privacy_mask",
-        # 关键修复：必须与 setup.py 中 console_scripts 的可执行名完全一致
         executable="privacy_mask_main",
-        parameters=[{
-            # 与 resource/ 中实际文件名保持一致（原文件写成了 test.jpg）
-            "image_path": os.path.join(pkg_dir, "resource", "test.png"),
-            "model_path": os.path.join(pkg_dir, "resource", "yolov8n.pt"),
-        }],
+        parameters=[parameters],
         output="screen",
     )
-    return LaunchDescription([node])
+    return [node]
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            "image_path", default_value="",
+            description="测试图片路径，留空则使用 share/privacy_mask/resource/test.png"),
+        DeclareLaunchArgument(
+            "model_path", default_value="",
+            description="YOLOv8 权重路径，留空则使用 share/privacy_mask/resource/yolov8n.pt"),
+        DeclareLaunchArgument(
+            "blur_kernel", default_value="",
+            description="高斯核大小，留空或 0 表示按包围盒尺寸自适应，须为不小于 3 的奇数"),
+        DeclareLaunchArgument(
+            "publish_period", default_value="",
+            description="话题发布周期（秒），留空则使用 0.1"),
+        OpaqueFunction(function=launch_setup),
+    ])

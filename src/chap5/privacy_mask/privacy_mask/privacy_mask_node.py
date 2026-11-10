@@ -23,21 +23,22 @@ class PrivacyMaskNode(Node):
         super().__init__("privacy_mask_node")
 
         pkg_dir = get_package_share_directory("privacy_mask")
-        # 参数默认值直接指向安装后的 share 目录，launch 文件也可以覆盖
         self.declare_parameter(
             "image_path", os.path.join(pkg_dir, "resource", "test.png"))
         self.declare_parameter(
             "model_path", os.path.join(pkg_dir, "resource", "yolov8n.pt"))
-        self.declare_parameter("blur_kernel", 21)      # 高斯核大小，必须为奇数
-        self.declare_parameter("publish_period", 0.1)  # 发布周期，单位秒
+        # 0 表示按包围盒尺寸自动选择核大小；显式给值时必须是不小于 3 的奇数
+        self.declare_parameter("blur_kernel", 0)
+        self.declare_parameter("publish_period", 0.1)  # 单位秒
 
         self.img_path = self.get_parameter("image_path").value
         self.model_path = self.get_parameter("model_path").value
         self.blur_kernel = int(self.get_parameter("blur_kernel").value)
-        # 偶数核会让 cv2.GaussianBlur 直接抛 cv2.error，这里提前拦下
-        if self.blur_kernel < 3 or self.blur_kernel % 2 == 0:
+        if self.blur_kernel != 0 and (
+                self.blur_kernel < 3 or self.blur_kernel % 2 == 0):
             raise RuntimeError(
-                f"blur_kernel 必须是不小于 3 的奇数，当前为 {self.blur_kernel}")
+                f"blur_kernel 需为 0（自动）或不小于 3 的奇数，"
+                f"当前为 {self.blur_kernel}")
         self.person_count = 0
 
         self.pub_raw = self.create_publisher(
@@ -49,7 +50,13 @@ class PrivacyMaskNode(Node):
         self.model = self.load_model(self.model_path)
         self.img_masked = self.mask_pedestrians(self.img_origin)
 
+        # 静态图只编码一次，定时器里仅更新时间戳，避免每帧重复 JPEG 编码
+        self.raw_bytes = self.encode(self.img_origin)
+        self.masked_bytes = self.encode(self.img_masked)
+
         period = float(self.get_parameter("publish_period").value)
+        if period <= 0.0:
+            raise RuntimeError(f"publish_period 必须大于 0，当前为 {period}")
         self.timer = self.create_timer(period, self.timer_cb)
         self.get_logger().info(
             f"图片：{self.img_path}，模型：{self.model_path}，"
@@ -72,6 +79,15 @@ class PrivacyMaskNode(Node):
             f"未找到本地模型 {path}，回退为自动下载 yolov8n.pt（需要联网）")
         return YOLO("yolov8n.pt")
 
+    def kernel_size(self, roi_width, roi_height):
+        """返回高斯核大小：参数为 0 时按包围盒短边自适应，否则用固定值。"""
+        if self.blur_kernel > 0:
+            return self.blur_kernel
+        # 取短边的 40%，保证人脸等细节无法辨认；上限 199 控制单帧耗时
+        size = min(int(min(roi_width, roi_height) * 0.4), 199)
+        size = max(size, 21)
+        return size + 1 if size % 2 == 0 else size
+
     def mask_pedestrians(self, img):
         """检测行人并对包围盒做高斯模糊，返回脱敏后的图像。"""
         masked = img.copy()
@@ -84,33 +100,38 @@ class PrivacyMaskNode(Node):
             for box in result.boxes:
                 if int(box.cls[0]) != PERSON_CLASS_ID:
                     continue
-                # 关键修复：把坐标裁剪到图像范围内，否则越界坐标会产生错误 ROI
+                # 坐标裁剪到图像范围内，避免越界坐标取到错误的 ROI
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                 x1, y1 = max(0, x1), max(0, y1)
                 x2, y2 = min(width, x2), min(height, y2)
                 if x2 - x1 < 2 or y2 - y1 < 2:
                     continue
+                kernel = self.kernel_size(x2 - x1, y2 - y1)
                 roi = masked[y1:y2, x1:x2]
                 masked[y1:y2, x1:x2] = cv2.GaussianBlur(
-                    roi, (self.blur_kernel, self.blur_kernel), 0)
+                    roi, (kernel, kernel), 0)
                 self.person_count += 1
         return masked
 
-    def to_msg(self, img):
-        """把 OpenCV 图像编码为 sensor_msgs/CompressedImage。"""
+    def encode(self, img):
+        """把 OpenCV 图像编码成 JPEG 字节串。"""
         ok, buffer = cv2.imencode(".jpg", img)
         if not ok:
             raise RuntimeError("JPEG 编码失败，请检查图像是否为空")
+        return buffer.tobytes()
+
+    def to_msg(self, data):
+        """用缓存的 JPEG 数据拼出带当前时间戳的压缩图像消息。"""
         msg = CompressedImage()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "camera"
         msg.format = "jpeg"
-        msg.data = buffer.tobytes()
+        msg.data = data
         return msg
 
     def timer_cb(self):
-        self.pub_raw.publish(self.to_msg(self.img_origin))
-        self.pub_masked.publish(self.to_msg(self.img_masked))
+        self.pub_raw.publish(self.to_msg(self.raw_bytes))
+        self.pub_masked.publish(self.to_msg(self.masked_bytes))
 
 
 def main(args=None):
@@ -129,6 +150,7 @@ def main(args=None):
             node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
