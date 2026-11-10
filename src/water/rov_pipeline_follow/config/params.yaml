@@ -1,0 +1,33 @@
+# 一次装好全部节点参数，例如：
+#   ros2 run rov_pipeline_follow sim --ros-args --params-file <此文件>
+# 或在自己的 launch 里把 yaml 直接传给 Node(parameters=[<路径>])。
+rov_sim:
+  ros__parameters:
+    scene: straight          # straight | curve | current | turbid
+    seed: 0
+    rate_hz: 10.0
+    publish_tf: true
+
+rov_slam:
+  ros__parameters:
+    scene: straight          # 必须与 sim 一致：初始位姿取自场景定义
+    seed: 0
+    map_rate_hz: 2.0
+    occ_threshold: 0.62
+    publish_tf: true
+
+rov_control:
+  ros__parameters:
+    scene: straight          # 必须与 sim 一致：任务阶段推进用
+    seed: 0
+    control_hz: 10.0
+    use_cnn: false           # true 时用 CNN 感知（percep.npz）
+    percep_model_path: ''    # 留空则用 share/rov_pipeline_follow/models/percep.npz
+
+rov_e2e:
+  ros__parameters:
+    model_path: ''           # 留空则用 share/rov_pipeline_follow/models/e2e.npz
+    scene: straight
+    seed: 0
+    control_hz: 10.0
+    max_speed: 0.45
