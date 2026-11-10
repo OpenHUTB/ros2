@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find web_remote_car)/launch/main.launch"/>
+    <include file="$(find web_remote_car)/launch/web_bridge.launch"/>
+</launch>
+
