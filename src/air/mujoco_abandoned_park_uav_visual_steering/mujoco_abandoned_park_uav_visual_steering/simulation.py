@@ -64,6 +64,7 @@ class UavSimulation:
             raise FileNotFoundError(f"MuJoCo model not found / 找不到 MuJoCo 模型: {model_path}")
         self.config = config
         self.model = mujoco.MjModel.from_xml_path(str(model_path))
+        self.model.opt.timestep = config.timestep_seconds
         self.data = mujoco.MjData(self.model)
         self.body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "uav")
         self.camera_id = mujoco.mj_name2id(

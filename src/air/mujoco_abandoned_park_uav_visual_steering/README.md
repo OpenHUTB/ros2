@@ -1,56 +1,54 @@
-# MuJoCo abandoned-park UAV visual steering
+# MuJoCo 失落公园无人机视觉转向 / MuJoCo abandoned-park UAV visual steering
 
-失落公园林荫步道场景下基于轻量卷积神经网络的 MuJoCo 无人机端到端视觉转向控制。
+模块在林荫步道场景中提供确定性无人机运动、前视相机和转向控制接口，场景由 MuJoCo 3.12.0 加载。
 
-End-to-End Visual Steering Control for a MuJoCo UAV in an Abandoned-Park Tree-Lined Path Using a Lightweight CNN.
+The module provides deterministic UAV motion, a forward-camera model, and steering interfaces in a tree-lined path scene loaded by MuJoCo 3.12.0.
 
-## Scope / 范围
+## 功能范围 / Scope
 
-The current module provides a lightweight MJCF park scene, a camera-equipped quadrotor, deterministic headless flight, and stable interfaces for RGB collection and steering commands. Neural-network training and ROS 2 runtime nodes are introduced in later stages.
+本分支提供 MJCF 场景、确定性运动学仿真、配置校验及统一仿真入口。相机已建模，RGB 采集与神经网络训练接口由后续数据阶段接入。
 
-当前模块提供轻量 MJCF 公园场景、带前视相机的四旋翼、确定性无窗口飞行，以及 RGB 采集和转向指令所需的稳定接口。神经网络训练与 ROS 2 运行节点在后续阶段接入。
+This branch provides the MJCF scene, deterministic kinematic simulation, configuration validation, and one simulation entry point. The camera is modeled; RGB collection and neural-network training interfaces are introduced in the data stages.
 
-## Environment / 环境
+## 坐标、时间与相机 / Coordinates, timing, and camera
 
-- Python 3.10
+步道沿世界坐标 (+Y) 延伸，横向坐标为 (X)。正归一化转向量增加航向角，使无人机向左转；负值向右转。指令范围为 `[-1, 1]`，对应 ROS 的正 `angular.z` 左转约定。无人机位置更新使用：
+
+The path runs along world (+Y), with lateral position (X). Positive normalized steering increases yaw and turns left; negative steering turns right. The range is `[-1, 1]`, consistent with positive ROS `angular.z` for a left turn. Position updates follow:
+
+$$
+\theta_{t+1}=\theta_t+u_t\omega_{\max}\Delta t,\qquad
+x_{t+1}=x_t-v_t\sin\theta_{t+1}\Delta t,\qquad
+y_{t+1}=y_t+v_t\cos\theta_{t+1}\Delta t.
+$$
+
+`timestep_seconds` 写入 MuJoCo 模型的物理步长，控制周期由 `control_hz` 与物理步数共同确定。基础运动过程没有随机扰动；`seed` 字段用于数据采集与划分阶段的可复现性，不改变基础运动方程。
+
+`timestep_seconds` sets the MuJoCo model timestep. The control period is determined by `control_hz` and the number of physics steps. Base motion contains no random disturbance; `seed` supports reproducible data collection and splitting without changing the motion equations.
+
+MJCF 中的 `fovy=78` 表示垂直视场角。以默认 320 × 180 宽高比计算，水平视场角约为 110°：
+
+The MJCF `fovy=78` specifies the vertical field of view. At the default 320 × 180 aspect ratio, the horizontal field of view is approximately 110°:
+
+$$
+\mathrm{FOV}_h=2\arctan\left(\frac{W}{H}\tan\frac{\mathrm{FOV}_v}{2}\right).
+$$
+
+## 运行环境 / Environment
+
+- Python 3.10 或更新版本 / Python 3.10 or later
 - MuJoCo 3.12.0
-- NumPy, Pillow, PyYAML and pytest
+- NumPy、Pillow、PyYAML / NumPy, Pillow, and PyYAML
 
 ```bash
 cd src/air/mujoco_abandoned_park_uav_visual_steering
 python -m pip install -r requirements.txt
-```
-
-## Run / 运行
-
-The unified entry point runs a complete deterministic simulation episode and prints a bilingual JSON summary.
-
-统一入口运行完整的确定性仿真回合，并输出中英双语 JSON 摘要。
-
-```bash
 python main.py --steps 120 --steering 0.0
-```
-
-Run the checks with:
-
-执行检查：
-
-```bash
 python -m pytest tests -q
 ```
 
-## Layout / 目录
+配置与场景路径默认相对模块目录解析，运行不依赖调用终端所在目录。
 
-- `models/scene.xml`: quadrotor and tree-lined park MJCF / 四旋翼与林荫公园 MJCF
-- `config/simulation.yaml`: reproducible runtime parameters / 可复现运行参数
-- `launch/module.yaml`: ROS 2 Humble integration contract / ROS 2 Humble 集成契约
-- `mujoco_abandoned_park_uav_visual_steering/`: reusable Python interfaces / 可复用 Python 接口
-- `tests/`: behavioral and entry-point checks / 行为与入口检查
-
-## Coordinate and command convention / 坐标与指令约定
-
-The path extends along positive Y. Positive normalized steering turns the vehicle to its right and negative steering turns left. The camera output contract is RGB8 at 320 x 180. Paths are resolved relative to `main.py`, so the command does not depend on the caller's working directory.
-
-步道沿 Y 轴正方向延伸。正归一化转向量使无人机右转，负值使其左转。相机输出接口为 320 x 180 的 RGB8 图像。所有路径均相对 `main.py` 解析，因此运行命令不依赖调用者的工作目录。
+Default configuration and scene paths resolve relative to the module directory, independently of the caller's working directory.
 
 
