@@ -47,13 +47,12 @@ class DynamicZone:
 @dataclass(frozen=True)
 class GeofenceConfig:
     horizon_s: float = 10.0
-    time_step_s: float = 0.1
     warning_margin_m: float = 5.0
     critical_margin_m: float = 1.5
 
     def __post_init__(self) -> None:
-        if self.horizon_s <= 0.0 or self.time_step_s <= 0.0:
-            raise ValueError("prediction horizon and time step must be positive")
+        if self.horizon_s <= 0.0:
+            raise ValueError("prediction horizon must be positive")
         if not 0.0 <= self.critical_margin_m < self.warning_margin_m:
             raise ValueError("margins must satisfy 0 <= critical < warning")
 

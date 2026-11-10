@@ -46,7 +46,6 @@ class DynamicGeofenceGuardNode(Node):
         super().__init__("uav_dynamic_geofence_guard")
         for name, value in (
             ("horizon_s", 8.0),
-            ("time_step_s", 0.10),
             ("warning_margin_m", 5.0),
             ("critical_margin_m", 1.5),
         ):
@@ -55,7 +54,6 @@ class DynamicGeofenceGuardNode(Node):
         self.guard = GeofenceGuard(
             GeofenceConfig(
                 horizon_s=float(self.get_parameter("horizon_s").value),
-                time_step_s=float(self.get_parameter("time_step_s").value),
                 warning_margin_m=float(self.get_parameter("warning_margin_m").value),
                 critical_margin_m=float(self.get_parameter("critical_margin_m").value),
             )

@@ -90,7 +90,7 @@ VM 内 9 项 `unittest` 全部通过。`ros2 launch` 实际启动动态围栏仿
 CLEAR → WARNING → CRITICAL → BREACH → CRITICAL → WARNING → CLEAR
 ```
 
-最近预测净空约 -1.39 m，说明按当前恒定速度外推会穿过围栏边界；随后围栏轨迹弯回并逐渐远离，系统恢复到 `CLEAR`。
+实际状态首次进入 `BREACH` 时预测净空约 **-1.39 m**，之后继续下探，整轮记录的最低值约 **-2.11 m**（见 CSV 和曲线）；随后围栏轨迹弯回并逐渐远离，系统恢复到 `CLEAR`。
 
 ![ROS 2 Humble 实际动态围栏净空曲线](../img/air/uav_dynamic_geofence_guard/runtime_clearance.png)
 
