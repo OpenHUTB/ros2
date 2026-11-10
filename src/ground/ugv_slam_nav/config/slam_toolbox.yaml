@@ -1,0 +1,10 @@
+slam_toolbox:
+  ros__parameters:
+    odom_frame: odom
+    base_frame: base_footprint
+    map_frame: map
+    use_sim_time: true
+    resolution: 0.05
+    max_laser_range: 8.0
+    minimum_time_interval: 0.5
+    transform_publish_period: 0.05

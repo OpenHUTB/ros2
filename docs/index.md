@@ -125,6 +125,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
+* [地面无人车 SLAM 建图与导航](./ground/ugv_slam_nav.md) —— turtlebot3 + slam_toolbox + nav2
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [环岛汇入端到端驾驶（图像→控制）](./ground/carla_nn_roundabout_entry.md)
