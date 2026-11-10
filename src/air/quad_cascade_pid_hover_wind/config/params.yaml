@@ -1,0 +1,67 @@
+# 四旋翼串级 PID 航点悬停与抗风扰仿真参数
+quadcopter:
+  mass: 1.2            # kg
+  arm_length: 0.18     # m，机臂长度（旋翼中心到机身中心）
+  ixx: 0.012           # kg*m^2，绕 x 轴转动惯量
+  iyy: 0.012           # kg*m^2
+  izz: 0.022           # kg*m^2
+  k_f: 3.2e-6          # N/(rad/s)^2，推力系数 T = k_f * omega^2
+  k_tau: 6.5e-8        # N*m/(rad/s)^2，反扭系数
+  min_omega: 200.0     # rad/s
+  max_omega: 1100.0    # rad/s
+  motor_tau: 0.04      # s，电机一阶响应时间常数
+  hover_omega: 760.0   # rad/s，悬停时单旋翼转速（约等于 sqrt(mg/(4 k_f)))
+
+wind:
+  mean: [2.0, 1.0, 0.0]      # m/s，恒定风（世界系）
+  gust_magnitude: [4.0, 2.0, 0.0]  # m/s，阵风幅值
+  gust_start: 18.0           # s，阵风开始
+  gust_duration: 6.0         # s，阵风持续
+  turbulence_sigma: 0.4      # m/s，湍流标准差
+  turbulence_bandwidth: 1.0  # rad/s，湍流带宽
+  drag_coeff: 0.35           # 等效阻力系数（用于气动阻力）
+  frontal_area: 0.12         # m^2，等效迎风面积
+  air_density: 1.225         # kg/m^3
+
+position_pid:
+  kp: [2.0, 2.0, 3.5]        # x, y, z 位置环比例
+  ki: [0.3, 0.3, 0.4]        # 位置环积分：xy 给较小 ki 以消除风扰稳态误差
+  kd: [2.5, 2.5, 4.0]        # 位置环微分（速度反馈）
+  i_max: [0.5, 0.5, 1.0]     # 积分限幅（抗饱和）
+  out_max: [4.0, 4.0, 6.0]   # m/s^2，期望加速度限幅
+
+attitude_pid:
+  kp: [12.0, 12.0, 8.0]      # roll, pitch, yaw 姿态环比例
+  ki: [0.5, 0.5, 0.3]
+  kd: [0.0, 0.0, 0.0]
+  i_max: [0.5, 0.5, 0.5]
+  out_max: [4.0, 4.0, 3.0]   # rad/s，期望角速率限幅
+
+rate_pid:
+  kp: [0.18, 0.18, 0.10]     # roll, pitch, yaw 角速率环比例（输出 N*m）
+  ki: [0.0, 0.0, 0.0]
+  kd: [0.0, 0.0, 0.0]
+  i_max: [0.05, 0.05, 0.05]
+  out_max: [1.5, 1.5, 0.8]   # N*m
+
+waypoints:
+  points:
+    - [0.0, 0.0, 1.5]
+    - [2.5, 0.0, 1.5]
+    - [2.5, 2.5, 1.5]
+    - [0.0, 2.5, 1.5]
+    - [0.0, 0.0, 1.5]
+  acceptance_radius: 0.25    # m，到达判定半径
+  hover_time: 2.0            # s，每个航点悬停时间
+  yaw_control: false         # 是否控制偏航（默认不控，保持航向）
+
+initial_pose:
+  position: [0.0, 0.0, 0.0]
+  yaw: 0.0                   # rad
+
+simulation:
+  dt: 0.002                  # s，动力学积分步长（500 Hz）
+  duration: 40.0             # s，单次实验时长
+  ctrl_rate: 200.0           # Hz，控制器运行频率
+  log_rate: 50.0             # Hz，日志记录频率
+  gravity: 9.81              # m/s^2

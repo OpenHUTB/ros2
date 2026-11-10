@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
 from geometry_msgs.msg import PointStamped, Twist
+from rclpy.executors import ExternalShutdownException
+from rclpy.node import Node
+
 
 class SwarmControlNode(Node):
     def __init__(self):
@@ -21,17 +23,23 @@ class SwarmControlNode(Node):
         if area > 10:
             err = cx - self.img_center
             twist.angular.z = -self.kp_ang * err
-            twist.linear.x = 0.2 - abs(err)*self.kp_lin
+            twist.linear.x = 0.2 - abs(err) * self.kp_lin
             if twist.linear.x < 0.05:
                 twist.linear.x = 0.05
         self.cmd_pub.publish(twist)
 
+
 def main():
     rclpy.init()
     node = SwarmControlNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
+
 
 if __name__ == "__main__":
     main()
