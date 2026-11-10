@@ -312,6 +312,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
+* [基于串级PID的四旋翼航点定点悬停与抗风扰仿真](./air/quad_cascade_pid_hover_wind.md) —— 纯 Python 6 自由度四旋翼刚体动力学仿真，位置-姿态-角速率串级 PID 闭环，含恒定风/阵风/湍流扰动，验证航点跟踪与定点悬停的抗风扰能力
+
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
 * [无人机通信链路退化保护与断联风险预测](./air/uav_link_outage_guard.md) —— 融合 RSSI、延迟、丢包与遥测陈旧度，预测链路风险并输出降速、保持或返航建议

@@ -44,6 +44,9 @@ devel/.built_by
 # colcon 构建产物
 log/
 
+# main.py 在仓库根目录创建的临时 colcon 工作区（可重建，不入库）
+build_quad_ws/
+
 # 行为克隆数据集（图像与标签，体积大不入库）
 data/
 # 包内自带/新采的样本数据要走版本库（示例：gesture_control_drone/data/*.npz）。

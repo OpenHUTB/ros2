@@ -279,6 +279,8 @@ nav:
     - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点任务飞行前校验: './air/uav_waypoint_preflight_validator.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
     - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
