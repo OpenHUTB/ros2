@@ -379,6 +379,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/turning_sweep_check/">转弯扫掠校验</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/turtlebot3_relocalization/">高精度定位与重定位（AMCL 式粒子滤波）</a>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">空域载具</span></p>
 <ul>
@@ -901,8 +903,9 @@
 </li>
 <li><a href="ground/train_ato_stop/">列车 ATO 自动运行与站台精确停车</a> —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照</li>
 <li><a href="ground/carla_platoon/">多车协同编队（CARLA）</a> —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队</li>
+<li><a href="ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证</a> —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）</li>
 <li>
-<p><a href="ground/carla_sensor_fusion/">多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证</a> —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）</p>
+<p><a href="ground/turtlebot3_relocalization/">高精度定位与重定位（AMCL 式粒子滤波）</a></p>
 </li>
 <li>
 <p><a href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a> —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律</p>
