@@ -1,0 +1,35 @@
+<mujoco model="car_follow">
+  <option timestep="0.01"/>
+  <worldbody>
+    <light pos="0 0 5" dir="0 0 -1"/>
+    <!-- 地面覆盖 ±12 m，引导车在 ±3 m 内往返，保证全程都在可视范围内 -->
+    <geom name="ground" type="plane" size="12 12 0.1" rgba="0.3 0.3 0.3 1"/>
+
+    <!-- 引导车：初始位于原点 -->
+    <body name="lead_car" pos="0 0 0.05">
+      <joint name="lead_x" type="slide" axis="1 0 0" damping="0.3"
+             limited="true" range="-6 6"/>
+      <joint name="lead_y" type="slide" axis="0 1 0" damping="0.3"
+             limited="true" range="-3 3"/>
+      <geom name="lead_body" type="box" size="0.15 0.12 0.05"
+            rgba="0.2 0.5 0.8 1" mass="0.5"/>
+    </body>
+
+    <!-- 跟随车：初始位于引导车后方 1 m，车身中心距由代码按世界坐标计算 -->
+    <body name="follow_car" pos="-1 0 0.05">
+      <joint name="follow_x" type="slide" axis="1 0 0" damping="0.3"
+             limited="true" range="-6 6"/>
+      <joint name="follow_y" type="slide" axis="0 1 0" damping="0.3"
+             limited="true" range="-3 3"/>
+      <geom name="follow_body" type="box" size="0.15 0.12 0.05"
+            rgba="0.8 0.2 0.2 1" mass="0.5"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="motor_lead_x" joint="lead_x" gear="1.0" ctrlrange="-2 2" ctrllimited="true"/>
+    <motor name="motor_lead_y" joint="lead_y" gear="1.0" ctrlrange="-2 2" ctrllimited="true"/>
+    <motor name="motor_follow_x" joint="follow_x" gear="1.0" ctrlrange="-2 2" ctrllimited="true"/>
+    <motor name="motor_follow_y" joint="follow_y" gear="1.0" ctrlrange="-2 2" ctrllimited="true"/>
+  </actuator>
+</mujoco>

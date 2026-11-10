@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mnist_digit_control</name>
+  <version>1.0.0</version>
+  <description>
+    基于 MNIST 手写数字 CNN 的视觉感知与机器人运动控制：
+    摄像头（或虚拟相机视频）画面中的手写数字经 CNN 识别为指令，
+    经防抖确认后控制 turtlesim 机器人完成平移、旋转等动作。
+    属于任务(2)：使用传感器（摄像头）数据进行感知并对机器人进行运动控制。
+  </description>
+  <maintainer email="247221616@qq.com">Thirin-glitch</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>turtlesim</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,8 @@
+# uav_dqn_nav 实验结果汇总（100 回合评估，贪心策略）
+# 环境：Ubuntu 20.04 / ROS Noetic 虚拟机（6 核 8.6 GB），NavEnv 与 PPO 逐行一致
+# 训练：DQN 35 动作，40 万步，ε 衰减 25 万步，16 障碍或 6 障碍
+# 评估命令示例：
+#   python3 scripts/main.py --eval --weights models/models35/policy_weights.npz --episodes 100 --obstacles 16
+scenario,success_rate,crash_out,timeout,avg_steps,avg_reward,weights
+16障碍,4.0%,8,88,363.2,-19.2,models/models35/policy_weights.npz
+6障碍,0.0%,64,36,200.8,-27.0,models/models6/policy_weights.npz
