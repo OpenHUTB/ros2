@@ -341,6 +341,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 雨雾天气下的自适应感知降级策略</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101">10.1 实验设计</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 判据与指标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#103">10.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#104">10.4 分析与结论</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
@@ -684,6 +696,18 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 雨雾天气下的自适应感知降级策略</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101">10.1 实验设计</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#102">10.2 判据与指标</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#103">10.3 实验结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#104">10.4 分析与结论</a>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_gate_center_servo/">单门深度视觉伺服（门中心回归）</a>
@@ -789,7 +813,7 @@
 <div class="section" itemprop="articleBody">
 <div><h1 id="_1">基于恶劣雨雾天气下多传感器感知性能对比实验</h1>
 <p>本文介绍一个基于 CARLA 0.9.15 与 OpenCV 的车载相机感知性能评测模块。模块以地面载具（ego 车辆）为感知平台，在车顶挂载 <code>sensor.camera.rgb</code> 相机（800×600，FOV 90°），通过 CARLA 天气 API 在<strong>同一场景、同一参考位姿</strong>下依次切换 <code>ClearNoon</code>（清晰）、<code>SoftRainNoon</code>（小雨）、<code>HardRainNoon</code>（大雨）、<code>HeavyFog</code>（浓雾）四档天气，对每档采集的图像计算亮度（灰度均值）、对比度（灰度标准差）、边缘密度（Canny 边缘像素占比）三个指标（每档连续取 5 帧平均），量化雨雾天气对车载视觉感知的退化程度；测量结束后车辆切换为自动驾驶，并录制恶劣天气下的行驶演示动图。</p>
-<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力；<strong>第三部分（第 8 节）</strong>在同一场景、同一参考位姿下同时挂载相机与激光雷达，用统一的退化率口径做跨传感器对比；<strong>第四部分（第 9 节）</strong>把雷达点云投影到相机图像上，检验融合在雨雾中的几何可用性与语义可用性。</p>
+<p>本文档为系列实验教程：<strong>第一部分（第 1~6 节）</strong>为相机感知性能对比基准实验，量化四档天气的退化程度；<strong>第二部分（第 7 节）</strong>为图像增强恢复实验，验证经典增强算法能挽回多少感知能力；<strong>第三部分（第 8 节）</strong>在同一场景、同一参考位姿下同时挂载相机与激光雷达，用统一的退化率口径做跨传感器对比；<strong>第四部分（第 9 节）</strong>把雷达点云投影到相机图像上，检验融合在雨雾中的几何可用性与语义可用性；<strong>第五部分（第 10 节）</strong>把前四部分的结论落地成一个可运行的策略：先由图像判别天气等级，再在相机主导 / 融合 / 雷达主导之间自动切换。</p>
 <h2 id="1">1. 运行环境</h2>
 <table>
 <thead>
@@ -1555,7 +1579,7 @@ python<span class="w"> </span>main.py
 </table>
 <h3 id="93">9.3 实验结果</h3>
 <p>四档天气的投影叠加图（点按距离着色，暖色为远处）：</p>
-<p><img alt="" src="../img/ground/weather_fusion_overlay.png"/></p>
+<p><img alt="" src="../../img/ground/weather_fusion_result/weather_fusion_overlay.png"/></p>
 <p>指标数据（同一参考位姿，0.3 s 窗口累积整圈点云）：</p>
 <table>
 <thead>
@@ -1614,7 +1638,7 @@ python<span class="w"> </span>main.py
 </tbody>
 </table>
 <p>指标柱状图与边缘命中率随距离的变化曲线：</p>
-<p><img alt="" src="../img/ground/weather_fusion_metrics.png"/></p>
+<p><img alt="" src="../../img/ground/weather_fusion_result/weather_fusion_metrics.png"/></p>
 <h3 id="94">9.4 分析与结论</h3>
 <ul>
 <li><strong>几何链路在四档天气下完全稳定</strong>：投影有效率 57.0%~58.8%，波动来自点云角向分布的
@@ -1634,6 +1658,225 @@ python<span class="w"> </span>main.py
 </ul>
 <p>本节源码位于
 <a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/weather_sensor_fusion"><code>src/ground/weather_sensor_fusion</code></a>，
+采集流程与指标口径与本文档一致，依赖与运行方式见该目录的 README。</p>
+<h2 id="10">10. 雨雾天气下的自适应感知降级策略</h2>
+<p>前四部分依次回答了「相机退化多少」「增强能补回多少」「雷达比相机强多少」「融合还能不能用」。
+本节把结论落地成一个可运行的策略：<strong>不依赖天气真值</strong>，只从图像判别当前天气等级，
+再据此在感知模式之间自动切换——晴天用相机、雨天用融合、浓雾退化为雷达。</p>
+<h3 id="101">10.1 实验设计</h3>
+<p>在同一辆车、同一参考位姿、同一四档天气下挂载相机与 32 线激光雷达，
+并在 ego 正前方按固定距离逐辆放置目标车作为待检测对象。</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标车</td>
+<td><code>vehicle.tesla.model3</code>，摆放在 ego 正前方车道中心，距离 10 / 16 / 22 / 28 / 34 / 40 m</td>
+</tr>
+<tr>
+<td>测量方式</td>
+<td><strong>同一时刻只放一辆目标车</strong>，测完销毁再测下一档距离</td>
+</tr>
+<tr>
+<td>RGB 相机</td>
+<td>800×600、FOV 90°，x=1.5、z=2.4</td>
+</tr>
+<tr>
+<td>激光雷达</td>
+<td>32 线、50 m、20 Hz、60 万点/秒，x=0.0、z=2.6</td>
+</tr>
+<tr>
+<td>雷达衰减系数</td>
+<td>按天气档位递增 0.004 / 0.01 / 0.03 / 0.06</td>
+</tr>
+</tbody>
+</table>
+<p>目标车逐辆摆放而不是一次摆 6 辆，是因为同一参考位姿下 6 辆车的投影几乎完全重叠：
+一旦纵向排成一列，后车就被前车挡住，投影框里装的其实是前车车身，判据会失真；
+若左右错开，又会把车摆到路缘和绿化带上。逐车测量消除了这两个干扰，
+每个距离档拿到的都是「该目标单独存在时」的数据。</p>
+<p>雷达按渲染帧发布，需在 <strong>0.2 s 时间窗</strong>内累积成整圈点云；整个测量期间车辆全程刹停，
+保证四档天气看到的是同一场景、同一参考位姿。</p>
+<h3 id="102">10.2 判据与指标</h3>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>判据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>天气判别</td>
+<td>当前帧边缘密度 / 晴天基准边缘密度，按 0.85 / 0.50 / 0.19 三档阈值分档</td>
+</tr>
+<tr>
+<td>相机可检出</td>
+<td>目标投影框内与框外环形背景的平均亮度对比度 ≥ 0.10</td>
+</tr>
+<tr>
+<td>雷达可检出</td>
+<td>目标 3D 包围盒（外扩 0.25 m）内回波点数 ≥ 5</td>
+</tr>
+<tr>
+<td>融合检出</td>
+<td>相机与雷达取并集</td>
+</tr>
+<tr>
+<td>自适应检出</td>
+<td>按判别出的天气选择模式，取该模式的检出结果</td>
+</tr>
+<tr>
+<td>检出率</td>
+<td>6 个距离档中被检出的比例</td>
+</tr>
+</tbody>
+</table>
+<p>天气判别只用<strong>当前图像</strong>的边缘密度与现场测得的晴天基准之比，不需要任何天气先验；
+三个阈值取在四档实测比值（1.00 / 0.77 / 0.24 / 0.16）相邻两档之间并向下取整，避免某一档恰好压在阈值上。</p>
+<p>相机判据没有用「框线上有强梯度像素的比例」，是因为近距离目标的框线恰好落在车身平滑面上：
+晴天也会判成不可检出（实测 10 m 处只有 0.46）。改成「框内外亮度差」后，
+判据直接对应目标还能不能从背景里分出来，雨雾的退化恰好就体现在这个差值被压缩上。</p>
+<p>雷达阈值取 5 点，是因为 32 线雷达在 40 m 处对轿车只剩 20~30 个回波点（垂直分辨率限制），
+再用 12 点会把「雷达其实还能看到」的目标判成丢失。</p>
+<h3 id="103">10.3 实验结果</h3>
+<p>四档天气的检出叠加图（蓝框为相机检出，灰框为相机未检出，红点为雷达回波，图中为 28 m 目标）：</p>
+<p><img alt="" src="../../img/ground/weather_adaptive_perception/weather_adaptive_detection.png"/></p>
+<p>天气判别与各模式检出率：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>边缘密度</th>
+<th>相对晴天</th>
+<th>判别结果</th>
+<th>采用模式</th>
+<th>相机(%)</th>
+<th>雷达(%)</th>
+<th>融合(%)</th>
+<th>自适应(%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ClearNoon</td>
+<td>0.1391</td>
+<td>1.00</td>
+<td>ClearNoon</td>
+<td>相机</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+</tr>
+<tr>
+<td>SoftRainNoon</td>
+<td>0.1076</td>
+<td>0.77</td>
+<td>SoftRainNoon</td>
+<td>融合</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>0.0329</td>
+<td>0.24</td>
+<td>HardRainNoon</td>
+<td>融合</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>0.0219</td>
+<td>0.16</td>
+<td>HeavyFog</td>
+<td>雷达</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>100.0</td>
+<td>100.0</td>
+</tr>
+</tbody>
+</table>
+<p>传感器自身的退化量（6 个距离档统计）：</p>
+<table>
+<thead>
+<tr>
+<th>天气</th>
+<th>相机对比度均值</th>
+<th>雷达回波总点数</th>
+<th>雷达平均回波强度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ClearNoon</td>
+<td>0.291</td>
+<td>1476</td>
+<td>0.913</td>
+</tr>
+<tr>
+<td>SoftRainNoon</td>
+<td>0.208</td>
+<td>1476</td>
+<td>0.799</td>
+</tr>
+<tr>
+<td>HardRainNoon</td>
+<td>0.184</td>
+<td>1288</td>
+<td>0.526</td>
+</tr>
+<tr>
+<td>HeavyFog</td>
+<td>0.033</td>
+<td>1342</td>
+<td>0.302</td>
+</tr>
+</tbody>
+</table>
+<p>其中浓雾档的相机对比度按距离依次为 0.096 / 0.049 / 0.025 / 0.008 / 0.010 / 0.009，
+10 m 处已低于 0.10 的判据阈值，因此 6 个距离档全部判为不可检出。</p>
+<p>检出率对比、天气判别特征与逐距离的对比度/回波点数曲线：</p>
+<p><img alt="" src="../../img/ground/weather_adaptive_perception/weather_adaptive_metrics.png"/></p>
+<h3 id="104">10.4 分析与结论</h3>
+<ul>
+<li><strong>天气判别在四档上全部正确</strong>：边缘密度比值 1.00 / 0.77 / 0.24 / 0.16，与第一部分实测的退化幅度
+  （1.00 / 0.79 / 0.31 / 0.16）基本一致。判据只依赖图像本身与现场测得的晴天基准，
+  不需要外部天气信息，换一条街道也不必重新标定阈值。</li>
+<li><strong>相机在浓雾中完全失效，雷达不失效</strong>：相机检出率 100% → 100% → 100% → 0%，
+  目标-背景对比度均值由 0.291 压到 0.033（-89%）；雷达检出率四档都是 100%。</li>
+<li><strong>相机对下雨并不敏感，对起雾才敏感</strong>：大雨下相机对比度仅由 0.291 降到 0.184（-37%），
+  6 个距离档仍全部可检出。这与第一部分「大雨边缘密度下降 69%」并不矛盾——
+  全局纹理被雨幕抹平，但一个大面积均色目标与路面的亮度差仍在；到了浓雾，
+  散射把目标与背景的亮度拉到同一水平，可检出性才整体崩塌。</li>
+<li><strong>雷达退化体现在回波质量而非可检出性</strong>：回波总点数四档为 1476 / 1476 / 1288 / 1342（波动 ±13%），
+  但平均回波强度由 0.913 降到 0.302（-67%）。衰减建模削弱的是强度，点数只随距离和丢点概率小幅变化，
+  所以距离档上的检出结果不变。这与第 8 节「雷达退化幅度小于相机」、第 9 节「融合几何覆盖几乎不变、
+  语义对齐明显退化」的结论一致。</li>
+<li><strong>自适应策略在四档天气都达到了该天气下的最优水平</strong>：晴天只用相机即达 100%，
+  大雨、浓雾由融合/雷达补齐，四档均为 100%；作为对照，纯相机在浓雾下是 0%。</li>
+<li>需要说明的边界：在本场景下「始终融合」与自适应策略的检出率相同（都是 100%），
+  自适应带来的不是更高的召回，而是<strong>晴天不必付出雷达的代价</strong>——
+  雷达需要 0.2 s 窗口累积整圈点云，相机单帧即可；同时雷达在 34~40 m 的回波点数已降到 20~30 个，
+  属于勉强可用，融合的价值主要集中在近中距离。</li>
+<li>局限：可检出性判据使用真值包围盒，衡量的是「该天气下目标还剩多少可被检出的结构」，
+  而不是完整检测器的端到端召回。这样可以把天气的影响与检测器自身的能力隔离开，
+  但也意味着本实验不评估误检率与检测框精度，这两项需要接入真实检测器后再做。</li>
+</ul>
+<p>本节源码位于
+<a href="https://github.com/OpenHUTB/ros2/tree/master/src/ground/weather_adaptive_perception"><code>src/ground/weather_adaptive_perception</code></a>，
 采集流程与指标口径与本文档一致，依赖与运行方式见该目录的 README。</p></div>
 </div>
 </div><footer>
