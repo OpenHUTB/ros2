@@ -10,7 +10,14 @@ from sensor_msgs.msg import PointCloud2
 from sensor_msgs_py import point_cloud2
 from std_msgs.msg import Header
 
-from underwater_sonar_mapping.sonar_core import integrate_scan, raycast_scan, validate_obstacles
+from underwater_sonar_mapping.sonar_core import (
+    DEFAULT_INITIAL_POSE,
+    DEFAULT_MAP_ORIGIN,
+    DEFAULT_OBSTACLES,
+    integrate_scan,
+    raycast_scan,
+    validate_obstacles,
+)
 
 
 class UnderwaterSonarMapping(Node):
@@ -24,10 +31,9 @@ class UnderwaterSonarMapping(Node):
         self.declare_parameter("max_range", 10.0)
         self.declare_parameter("scan_rate", 5.0)
         self.declare_parameter("odom_topic", "/odom")
-        self.declare_parameter("initial_pose", [10.0, 10.0, 0.0])
+        self.declare_parameter("initial_pose", list(DEFAULT_INITIAL_POSE))
         self.declare_parameter(
-            "obstacles",
-            [5.0, 5.0, 1.0, 12.0, 15.0, 1.2, 15.0, 8.0, 1.0],
+            "obstacles", [value for obstacle in DEFAULT_OBSTACLES for value in obstacle]
         )
 
         self.resolution = float(self.get_parameter("resolution").value)
@@ -48,7 +54,7 @@ class UnderwaterSonarMapping(Node):
         height = math.ceil(map_height / self.resolution)
         if width * height > 4_000_000:
             raise ValueError("map dimensions exceed 4 million cells")
-        self.map_origin = (-width * self.resolution / 2, -height * self.resolution / 2)
+        self.map_origin = DEFAULT_MAP_ORIGIN
         self.grid = np.full((height, width), -1, dtype=np.int8)
 
         raw_obstacles = list(self.get_parameter("obstacles").value)
