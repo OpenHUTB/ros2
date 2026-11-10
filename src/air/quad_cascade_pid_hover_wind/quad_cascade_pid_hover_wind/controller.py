@@ -155,6 +155,10 @@ class CascadeController:
 
         可行域取 [k_f*min_omega^2, k_f*max_omega^2]，与 thrust_to_omega
         的转速裁剪范围对齐，避免重分配结果在接近下界时被再次改写。
+
+        注意：总推力"保持不变"只在 thrust_des >= 4*min_thrust 时成立。
+        更小的期望推力会被 base 的下限裁剪抬到 4*min_thrust（约 0.51 N），
+        此时实际总推力略大于期望值，偏差上限就是这个下限本身，数值很小。
         """
         min_thrust = self.p.k_f * self.p.min_omega ** 2
         max_thrust = self.p.k_f * self.p.max_omega ** 2

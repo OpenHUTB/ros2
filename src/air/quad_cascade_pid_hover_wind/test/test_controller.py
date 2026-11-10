@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 import yaml
 
+from quad_cascade_pid_hover_wind.config_loader import build_params
 from quad_cascade_pid_hover_wind.controller import (CascadeController,
-                                                      ControllerGains, PIDGains,
-                                                      WaypointManager,
-                                                      build_gains_from_dict)
-from quad_cascade_pid_hover_wind.dynamics import QuadParams, Quadrotor, WindParams
+                                                    ControllerGains, PIDGains,
+                                                    WaypointManager)
+from quad_cascade_pid_hover_wind.dynamics import Quadrotor, WindParams
 
 PARAMS_PATH = os.path.join(os.path.dirname(__file__), os.pardir,
                            "config", "params.yaml")
@@ -17,12 +17,11 @@ PARAMS_PATH = os.path.join(os.path.dirname(__file__), os.pardir,
 
 @pytest.fixture
 def setup():
-    # 直接从 config/params.yaml 加载增益，避免测试参数与实际配置漂移
+    # 机体参数与增益都走 config_loader，避免测试与 config/params.yaml 漂移
     with open(PARAMS_PATH, "r") as f:
         cfg = yaml.safe_load(f)
-    p = QuadParams()
+    p, _, gains, _ = build_params(cfg)
     quad = Quadrotor(p, WindParams())
-    gains = build_gains_from_dict(cfg)
     ctrl = CascadeController(p, gains, quad._mixer)
     return p, ctrl
 
