@@ -32,7 +32,7 @@ def test_percentile_rejects_out_of_range():
         percentile([1.0, 2.0], 0.0)
 
 
-def test_summarize_counts_missing_from_gaps():
+def test_summarize_counts_missing_by_seq_range():
     rows = [_row(0, 1_000_000_000), _row(1, 1_005_000_000),
             _row(4, 1_010_000_000, gap=3)]
     summary = summarize(rows)
@@ -63,6 +63,23 @@ def test_reordering_does_not_inflate_missing():
     assert summary['missing'] == 2  # 只缺 0 与 4
     assert summary['expected'] == 8
     assert summary['out_of_order'] == 1
+
+
+def test_summarize_with_expected_msgs_counts_tail_loss():
+    """给了 expected_msgs，末尾丢包与发布端欠触发都计入 missing。"""
+    rows = [_row(0, 1_000_000_000), _row(1, 1_005_000_000),
+            _row(2, 1_010_000_000)]
+    summary = summarize(rows, expected_msgs=5)
+    assert summary['expected'] == 5
+    assert summary['missing'] == 2  # 3、4 未到达（末尾缺口）
+    assert summary['drop_rate'] == pytest.approx(0.4)
+
+
+def test_summarize_empty_with_expected_is_full_loss():
+    summary = summarize([], expected_msgs=10)
+    assert summary['count'] == 0
+    assert summary['missing'] == 10
+    assert summary['drop_rate'] == pytest.approx(1.0)
 
 
 def test_summarize_latency_extremes():
