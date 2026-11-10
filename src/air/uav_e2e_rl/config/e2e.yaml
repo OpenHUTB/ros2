@@ -1,0 +1,18 @@
+# 部署节点参数（节点名 e2e_rl_deploy，必须和 launch 里的 name 一致）
+e2e_rl_deploy:
+  ros__parameters:
+    model_path: ""          # 留空则用 share/uav_e2e_rl/models/ppo_e2e.zip
+    img_w: 64
+    img_h: 48
+    collision_depth: 0.6    # 前方深度小于这个就急停（米）
+
+# 训练环境参数（节点名 e2e_rl_train）
+e2e_rl_train:
+  ros__parameters:
+    img_w: 64
+    img_h: 48
+    forward_gain: 0.5
+    collision_penalty: 5.0
+    yaw_penalty: 0.1
+    collision_depth: 0.6
+    max_steps: 500

@@ -302,3 +302,14 @@ def test_run_once_is_reproducible():
     a = run_once("geo", "heavy", "windy", "helix", 3)
     b = run_once("geo", "heavy", "windy", "helix", 3)
     assert a.metrics["rmse"] == pytest.approx(b.metrics["rmse"], rel=1e-12)
+
+
+def test_start_pos_fallback_is_defined(monkeypatch):
+    """START_ON_TRAJ=False 时必须能复位到固定起点，而不是 NameError."""
+    from uav_neural_residual_control.core import experiment
+
+    assert experiment.START_POS == (0.0, 0.0, 1.2)
+    monkeypatch.setattr(experiment, "START_ON_TRAJ", False)
+    record = experiment.run_once("geo", "none", "calm", "hover", 0,
+                                 keep_series=False)
+    assert np.isfinite(record.metrics["rmse"])

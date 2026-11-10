@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "mission_file": "config\\missions\\demo_invalid.yaml",
+  "frame": "enu_relative",
+  "status": "INVALID",
+  "valid": false,
+  "limits": {
+    "min_altitude_m": 0.5,
+    "max_altitude_m": 20.0,
+    "max_waypoints": 100,
+    "min_segment_length_m": 0.25,
+    "max_climb_angle_deg": 60.0,
+    "warning_turn_angle_deg": 90.0,
+    "max_turn_angle_deg": 150.0,
+    "max_horizontal_speed_mps": 1.5,
+    "max_vertical_speed_mps": 0.8,
+    "max_total_distance_m": 500.0
+  },
+  "summary": {
+    "waypoint_count": 5,
+    "segment_count": 5,
+    "total_distance_m": 45.63589826838151,
+    "horizontal_distance_m": 9.77780621739634,
+    "vertical_distance_m": 40.0,
+    "estimated_duration_s": 52.699999999999996,
+    "max_turn_angle_deg": 167.47119229084848,
+    "max_climb_angle_deg": 87.99898179815486,
+    "error_count": 5,
+    "warning_count": 1
+  },
+  "waypoints": [
+    {
+      "index": 1,
+      "point": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "valid": true,
+      "status": "VALID"
+    },
+    {
+      "index": 2,
+      "point": [
+        4.0,
+        0.0,
+        2.0
+      ],
+      "valid": false,
+      "status": "ERROR"
+    },
+    {
+      "index": 3,
+      "point": [
+        -0.5,
+        1.0,
+        8.0
+      ],
+      "valid": false,
+      "status": "WARNING"
+    },
+    {
+      "index": 4,
+      "point": [
+        0.0,
+        0.0,
+        40.0
+      ],
+      "valid": false,
+      "status": "ERROR"
+    },
+    {
+      "index": 5,
+      "point": [
+        0.05,
+        0.0,
+        40.0
+      ],
+      "valid": false,
+      "status": "ERROR"
+    }
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "from": "origin",
+      "to": 1,
+      "start": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "end": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "horizontal_distance_m": 0.0,
+      "vertical_distance_m": 2.0,
+      "distance_m": 2.0,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 2.5,
+      "status": "VALID"
+    },
+    {
+      "index": 1,
+      "from": 1,
+      "to": 2,
+      "start": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "end": [
+        4.0,
+        0.0,
+        2.0
+      ],
+      "horizontal_distance_m": 4.0,
+      "vertical_distance_m": 0.0,
+      "distance_m": 4.0,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 2.6666666666666665,
+      "status": "VALID"
+    },
+    {
+      "index": 2,
+      "from": 2,
+      "to": 3,
+      "start": [
+        4.0,
+        0.0,
+        2.0
+      ],
+      "end": [
+        -0.5,
+        1.0,
+        8.0
+      ],
+      "horizontal_distance_m": 4.6097722286464435,
+      "vertical_distance_m": 6.0,
+      "distance_m": 7.566372975210778,
+      "climb_angle_deg": 52.465093992088235,
+      "estimated_duration_s": 7.5,
+      "status": "VALID"
+    },
+    {
+      "index": 3,
+      "from": 3,
+      "to": 4,
+      "start": [
+        -0.5,
+        1.0,
+        8.0
+      ],
+      "end": [
+        0.0,
+        0.0,
+        40.0
+      ],
+      "horizontal_distance_m": 1.118033988749895,
+      "vertical_distance_m": 32.0,
+      "distance_m": 32.01952529317073,
+      "climb_angle_deg": 87.99898179815486,
+      "estimated_duration_s": 40.0,
+      "status": "ERROR"
+    },
+    {
+      "index": 4,
+      "from": 4,
+      "to": 5,
+      "start": [
+        0.0,
+        0.0,
+        40.0
+      ],
+      "end": [
+        0.05,
+        0.0,
+        40.0
+      ],
+      "horizontal_distance_m": 0.05,
+      "vertical_distance_m": 0.0,
+      "distance_m": 0.05,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 0.03333333333333333,
+      "status": "ERROR"
+    }
+  ],
+  "turns": [
+    {
+      "waypoint": 2,
+      "angle_deg": 167.47119229084848,
+      "status": "ERROR"
+    },
+    {
+      "waypoint": 3,
+      "angle_deg": 129.0938588862295,
+      "status": "WARNING"
+    },
+    {
+      "waypoint": 4,
+      "angle_deg": 63.43494882292201,
+      "status": "VALID"
+    }
+  ],
+  "errors": [
+    {
+      "code": "E007",
+      "message": "航点高度 40.000 m 超出 [0.500, 20.000] m",
+      "waypoint": 4
+    },
+    {
+      "code": "E007",
+      "message": "航点高度 40.000 m 超出 [0.500, 20.000] m",
+      "waypoint": 5
+    },
+    {
+      "code": "E009",
+      "message": "航段爬升角 88.0° 超过上限 60.0°",
+      "waypoint": 4,
+      "segment": 3
+    },
+    {
+      "code": "E008",
+      "message": "航段长度 0.050 m 小于下限 0.250 m（重复或过近航点）",
+      "waypoint": 5,
+      "segment": 4
+    },
+    {
+      "code": "E012",
+      "message": "转弯角 167.5° 超过上限 150.0°",
+      "waypoint": 2
+    }
+  ],
+  "warnings": [
+    {
+      "code": "W001",
+      "message": "转弯角 129.1° 超过建议值 90.0°",
+      "waypoint": 3
+    }
+  ]
+}
