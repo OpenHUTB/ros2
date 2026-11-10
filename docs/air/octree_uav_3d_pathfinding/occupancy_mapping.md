@@ -34,7 +34,8 @@
 ### 1.1 运行节点与话题关系
 
 建图节点要拿到点云，还要把点云变换到世界坐标系，所以它同时依赖桥接节点发布的
-点云与 TF。`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图除模拟器以外的全部节点。
+点云与 TF。`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图里的数据链路节点；
+另有一个自检节点 `uav_env_check`（`check:=true`），连一遍 AirSim RPC 与 `/cloud_in` 后自动退出。
 
 ```mermaid
 graph LR
@@ -64,6 +65,7 @@ graph LR
 | `pointcloud_to_octomap` | 订阅点云，查 TF 变换到世界系后插入八叉树，输出 `/octomap_full` |
 | `astar_planner` | 订阅 `/octomap_full`，是下游唯一使用者 |
 | `rviz` | 显示体素与点云，用于人工检查地图是否正确 |
+| `uav_env_check` | 启动后连 AirSim RPC、订阅 `/cloud_in` 自检一遍链路，跑完自动退出 |
 
 #### 为什么建图节点还需要 TF
 
@@ -209,7 +211,7 @@ tree_.updateInnerOccupancy();
 | resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数** |
 | max_range | 30.0 | 射线最大量程（m） |
 | min_range | 0.5 | 最小量程（m），更近的点直接丢弃 |
-| point_stride | 2 | 抽稀：每隔 N 个点取一个做射线投射 |
+| point_stride | 1 | 抽稀：每隔 N 个点取一个做射线投射 |
 | prob_hit | 0.7 | 命中的占用概率 |
 | prob_miss | 0.4 | 未命中（穿过）的占用概率 |
 | clamp_min / clamp_max | 0.12 / 0.97 | 占用概率的上下限 |
@@ -222,8 +224,9 @@ tree_.updateInnerOccupancy();
 **调参建议**：
 
 * **性能是这里的主要矛盾**。雷达一帧约一万个点，每个点一条射线，射线长度除以分辨率
-  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
-  量程收到 30 m。机器性能富裕时可以把 `point_stride` 调回 1、`resolution` 调到 0.2。
+  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以分辨率取 0.3 m、量程收到 30 m；
+  `point_stride` 保持 1，不再抽稀——采样点之间留有缝，缝比体素大时射线会从缝里穿过去，
+  障碍物内部被误标成空闲、地面看起来像有洞的网。机器性能富裕时可以把 `resolution` 调到 0.2。
 * `resolution` 从 0.3 调到 0.15，体素数量约变为 8 倍，内存和耗时都会明显上升。
 * 障碍物被"吃掉"（明明有障碍却显示可通行）通常是分辨率过大导致的，
   可以把 `resolution` 调小，或适当增大 `prob_hit`。

@@ -23,7 +23,7 @@
 
 规划节点不是孤立运行的：它要拿到建图节点发布的地图、桥接节点广播的 TF，
 再把路径交给 RViz 显示。`roslaunch octree_uav_3d_pathfinding main.launch`
-会启动下图除模拟器以外的全部节点。
+会启动下图里的数据链路节点。
 
 ```mermaid
 graph LR
@@ -60,6 +60,7 @@ graph LR
 | `pointcloud_to_octomap` | 发布 `/octomap_full`，这是本节点唯一的输入地图 |
 | `astar_planner` | 订阅地图与目标点，查 TF 取起点，输出路径 |
 | `rviz` | 显示路径与展开节点，用于人工检查 |
+| `uav_env_check` | 启动后连 AirSim RPC、订阅 `/cloud_in` 自检一遍链路，跑完自动退出 |
 
 #### `/uav/goal` 有两个订阅者
 
@@ -68,17 +69,21 @@ graph LR
 * `astar_planner` 收到后**规划一条路径**；
 * `airsim_bridge` 收到后**让载具飞过去**（转成 AirSim 的 `moveToPositionAsync`）。
 
-所以发布一次目标点，会同时触发规划与飞行。若只想看规划结果、不希望载具移动：
+所以发布一次目标点，会同时触发规划与飞行。若只想看规划结果、不希望载具移动，
+把**桥接节点**的目标话题换成一个没有人发布的名字即可：
 
 ```shell
-roslaunch octree_uav_3d_pathfinding main.launch bridge:=false
+roslaunch octree_uav_3d_pathfinding main.launch bridge_goal_topic:=/uav/goal_unused
 ```
 
-此时没有桥接节点，需要用静态 TF 补上 `world → base_link`：
+* `astar_planner` 的 `~goal_topic` 仍是 `/uav/goal`，收到目标照常规划；
+* `airsim_bridge` 改听 `/uav/goal_unused`，收不到目标就不会起飞；
+* 桥接节点照常运行，`/cloud_in` 与 TF 不受影响。
 
-```shell
-rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 world base_link
-```
+不要用 `bridge:=false` 达到这个目的：它关掉的正是唯一发布 `/cloud_in` 与 TF 的节点，
+建图没有输入、`/octomap_full` 不会出现，规划也就无从谈起；而且 `check` 默认为 true，
+自检节点会因为点云链路不通而报失败。确实没有模拟器时，请看本页末尾
+「离线验证」那一套 `mock_cloud_publisher.py` 的用法。
 
 查看实际运行的节点与话题关系：
 

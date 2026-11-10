@@ -104,7 +104,7 @@
 | ② 建图 | 点云做坐标变换、射线投射、log-odds 更新，增量构建八叉树 | `/octomap_full`（latched）、`/occupied_cells_vis_array` | [点云转八叉树占用地图](./occupancy_mapping.md) |
 | ③ 全局规划 | 在八叉树上做 A\*，跨分辨率 26 邻域、欧氏代价与启发 | `/uav/path`、`/uav/explored_markers` | [八叉树上的 A\* 全局寻路](./astar_planning.md) |
 | ④ 安全裕度与平滑 | 影子树膨胀（硬约束）+ 间隙惩罚（软偏好）、捷径化 + 三次样条，平滑后复检 | `/uav/path_smooth`、对比指标 | [安全裕度与路径平滑](./path_smoothing.md) |
-| ⑤ 路径跟踪与闭环 | 沿路径逐点下发目标，状态机处理起飞、航点切换、到位与失败 | 实际飞行的 `flown` / `max_dev` | 路径跟踪与闭环飞行（单独成页） |
+| ⑤ 路径跟踪与闭环 | 沿路径逐点下发目标，状态机处理起飞、航点切换、到位与失败 | 实际飞行的 `flown` / `max_dev` | [路径跟踪与闭环飞行](./path_following.md) |
 
 五个阶段是**串行依赖**的：没有 TF 就建不了图，没有图就规划不了，没有路径就无从跟踪。
 所以排障时总是从最上游开始查（这正是环境自检节点 `main.py` 存在的理由）。
@@ -114,7 +114,7 @@
 
 ### 2.2 节点与话题总图
 
-`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图除模拟器以外的全部节点：
+`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图里的数据链路节点：
 
 ```mermaid
 graph LR
@@ -146,6 +146,8 @@ graph LR
 ```
 
 整条链路上只有两个 C++ 节点（建图与规划），桥接是 Python，其余是 RViz。
+图上没有画出的还有一个自检节点 `uav_env_check`（`main.py`，`check:=true`），
+启动后连 AirSim RPC、订阅 `/cloud_in` 把链路走一遍，跑完自动退出。
 
 > **一个容易踩的坑**：`/uav/goal` 有**两个**订阅者——规划节点拿它当规划目标，
 > 桥接节点也拿它当飞行目标。到了跟踪阶段，若跟踪节点把航点也发到 `/uav/goal`，
@@ -207,7 +209,7 @@ graph LR
 | 4 | [点云转八叉树占用地图](./occupancy_mapping.md) | 射线投射与 log-odds、建图节点 | 第 3 节 |
 | 5 | [八叉树上的 A\* 全局寻路](./astar_planning.md) | 跨分辨率邻接、代价与启发、可通行性 | 第 4 节 |
 | 6 | [安全裕度与路径平滑](./path_smoothing.md) | 影子树膨胀、间隙惩罚、捷径化与样条 | 第 5 节 |
-| 7 | 路径跟踪与闭环飞行 | 跟踪状态机、航点切换、飞行指标 | 第 7 节 |
+| 7 | [路径跟踪与闭环飞行](./path_following.md) | 跟踪状态机、航点切换、飞行指标 | 第 7 节 |
 | 8 | [与 ROS 2（Octomap、Nav2）的对应关系](./ros2_nav2.md) | 概念对照与迁移思路 | 第 6 节 |
 
 ---
