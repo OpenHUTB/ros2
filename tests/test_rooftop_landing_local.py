@@ -227,8 +227,81 @@ def test_height_reference():
 
     only = rp.detect_rooftops(roof_only, max_planes=4,
                               rng=np.random.default_rng(0))
-    check("点云里只有屋顶时不会被相对基准误滤掉（只有一个水平面就不做过滤）",
-          len(only) == 1, "找到 %d 个" % len(only))
+    check("只检出 1 个水平面时默认**不产生候选**（分不清是地面还是屋顶，宁可继续搜索）",
+          len(only) == 0, "找到 %d 个" % len(only))
+
+    only_old = rp.detect_rooftops(roof_only, max_planes=4,
+                                  require_ground_reference=False,
+                                  rng=np.random.default_rng(0))
+    check("显式关掉 require_ground_reference 才恢复旧行为（不过滤）",
+          len(only_old) == 1, "找到 %d 个" % len(only_old))
+
+
+def make_ground_plus_strip_scene():
+    """复现评审在真机上量到的场景：地面 + 一块**只比地面高 1.9 m** 的细长条。
+
+    用默认 ``ground_margin=1.0`` 时它会被当成"屋顶"选中：面积 70.2 m²，但内切圆
+    半径只有 1.35 m（≈26×2.7 m 的细长条，不像屋面）；调成 4.0 后它被正确滤掉。
+    """
+    rng = np.random.default_rng(77)
+    ground = np.column_stack([rng.uniform(-40, 40, 4000),
+                              rng.uniform(-40, 40, 4000),
+                              rng.normal(0.0, 0.02, 4000)])
+    strip = np.column_stack([rng.uniform(0, 26, 2200),
+                             rng.uniform(-1.35, 1.35, 2200),
+                             rng.normal(1.9, 0.02, 2200)])
+    return np.vstack([ground, strip])
+
+
+def test_ground_margin_default():
+    pts = make_ground_plus_strip_scene()
+
+    loose = rp.detect_rooftops(pts, ground_margin=1.0, max_planes=8,
+                               rng=np.random.default_rng(0))
+    check("margin=1.0 时把 1.9 m 高的细长条当成了屋顶（复现评审量到的问题）",
+          len(loose) == 1 and abs(loose[0]["height"] - 1.9) < 0.3,
+          str([round(r["height"], 2) for r in loose]))
+    if loose:
+        check("细长条的内切圆半径确实很小（≈1.35 m，不像屋面）",
+              loose[0]["radius"] < 2.0, "%.2f m" % loose[0]["radius"])
+
+    strict = rp.detect_rooftops(pts, max_planes=8,
+                                rng=np.random.default_rng(0))
+    check("默认 ground_margin=4.0 会把这块细长条滤掉（只剩它自己就不该降）",
+          all(abs(r["height"] - 1.9) > 0.3 for r in strict),
+          str([round(r["height"], 2) for r in strict]))
+
+
+def make_ground_only_scene():
+    """只看得见地面、看不到任何屋顶（高空稀疏点云实测就是这种情况）。
+
+    这是评审点名的**隐蔽失败模式**：旧版在"只提出 1 个平面"时静默关掉高度过滤，
+    于是把地面当成屋顶、一路降到地面并报告 LANDED 成功。
+    """
+    rng = np.random.default_rng(99)
+    return np.column_stack([rng.uniform(-15, 15, 4000),
+                            rng.uniform(-15, 15, 4000),
+                            rng.normal(-13.0, 0.02, 4000)])
+
+
+def test_no_ground_reference():
+    pts = make_ground_only_scene()
+
+    info = {}
+    roofs = rp.detect_rooftops(pts, max_planes=15,
+                               rng=np.random.default_rng(0), info=info)
+    check("只有地面一个平面时**不产生候选**（不会把地面当屋顶误报成功）",
+          len(roofs) == 0, "找到 %d 个：%s" % (len(roofs),
+                                              [round(r["height"], 2) for r in roofs]))
+    check("info 里如实反映没有地面参考",
+          info.get("planes") == 1 and info.get("floor_ref") is None,
+          str(info))
+
+    old = rp.detect_rooftops(pts, max_planes=15, require_ground_reference=False,
+                             rng=np.random.default_rng(0))
+    check("关掉该开关后旧行为重现：地面被当成候选屋顶（这就是要修掉的坑）",
+          len(old) == 1 and abs(old[0]["height"] + 13.0) < 0.5,
+          str([round(r["height"], 2) for r in old]))
 
 
 # --------------------------------------------------------------------------- #
@@ -379,6 +452,10 @@ def test_cluster_robustness():
     不加这一步时，少数几个同高度的远处噪点就能把凸包撑开，
     「最大内切圆圆心」会落到真实屋顶之外 —— 实测：6900 个点里混进 4 个噪点，
     216 m² 的屋顶被撑成 1175 m²，降落点偏了 22 m（会掉到楼外的街上）。
+
+    本用例的场景里**看不到地面**（只有屋顶/只有两栋楼），所以显式传
+    ``require_ground_reference=False``：这里要验证的是凸包鲁棒性，
+    而不是「拿不到地面基准就不降落」那条安全规则（后者见 4.2）。
     """
     rng = np.random.default_rng(7)
     roof = np.column_stack([
@@ -392,7 +469,8 @@ def test_cluster_robustness():
         [-6.92, -18.25, 14.98]])
     pts = np.vstack([roof, noise])
 
-    roofs = rp.detect_rooftops(pts, rng=np.random.default_rng(0))
+    roofs = rp.detect_rooftops(pts, require_ground_reference=False,
+                               rng=np.random.default_rng(0))
     check("混入同高度远处噪点后仍能检测到屋顶", len(roofs) >= 1,
           "检测到 %d 个" % len(roofs))
     if not roofs:
@@ -416,6 +494,7 @@ def test_cluster_robustness():
     b2 = np.column_stack([rng2.uniform(30, 40, 1200), rng2.uniform(0, 10, 1200),
                           rng2.normal(12.0, 0.02, 1200)])
     roofs2 = rp.detect_rooftops(np.vstack([b1, b2]),
+                                require_ground_reference=False,
                                 rng=np.random.default_rng(0))
     check("同高度但不相连的两栋楼被拆成两个候选", len(roofs2) >= 2,
           "检测到 %d 个" % len(roofs2))
@@ -434,6 +513,10 @@ def main():
     test_detect_rooftops()
     print("\n-- 4. 高度基准（换地图回归）--")
     test_height_reference()
+    print("\n-- 4.1 地面余量默认值（真机量到的细长条）--")
+    test_ground_margin_default()
+    print("\n-- 4.2 无地面参考时不降落（隐蔽失败模式）--")
+    test_no_ground_reference()
     print("\n-- 5. 目标选择与安全半径 --")
     test_target_selection_safety()
     print("\n-- 6. 桥接状态字符串 --")

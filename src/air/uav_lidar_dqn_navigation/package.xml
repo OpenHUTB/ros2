@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_lidar_dqn_navigation</name>
+  <version>0.1.0</version>
+  <description>
+    基于激光雷达与深度强化学习（DQN）的无人机自主导航（AirSim + ROS Noetic）。
+    包含键盘遥控、雷达特征提取、DQN 避障导航、hector_slam 建图、
+    图像端到端 DQN 控制五项能力。
+  </description>
+  <maintainer email="student@example.com">UAV DQN Navigation</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+
+  <export/>
+</package>

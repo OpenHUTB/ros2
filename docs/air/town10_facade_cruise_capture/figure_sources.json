@@ -1,0 +1,41 @@
+{
+  "source_run": "D:\\Codex Miscellaneous\\ROS\\ref\\projects\\kangxin-li\\evidence\\native_town10\\scan_verified",
+  "trajectory_samples": 613,
+  "captures": 12,
+  "duration_s": 76.5,
+  "source_sha256": {
+    "trajectory.csv": "c0434b7250235f20d4b912aa800bd02be1dfa101b79106d06c57b8e8c3bb804b",
+    "manifest.json": "05ae6270c14cc9ef975c477d1d97b06c9afc6ce03732f67e3b95368445dc2630",
+    "metrics.json": "621d1fe602184803340d31f3fa778461c233dfb9e3d541eab0e6d5bba605679c"
+  },
+  "figures": [
+    "native_trajectory_curves.png",
+    "native_facade_coverage_model.png",
+    "camera_fov_model.png",
+    "native_capture_contact_sheet.png"
+  ],
+  "fov_assumptions": {
+    "horizontal_fov_deg": 90,
+    "image_size": [
+      640,
+      480
+    ],
+    "facade_plane_perpendicular_to_camera": true,
+    "occlusion_modeled": false,
+    "distance_source": "per-capture front_depth_median"
+  },
+  "capture_image_sha256": {
+    "capture_000.png": "d5fc0bbce4cbd2c8fb2d62c53ee8775433aa442705c8d026c8e4c73a110f2b1f",
+    "capture_001.png": "beed10462678876630288778cbf47918c23d9dda44bf5f8a1611750116aa0cf8",
+    "capture_002.png": "05e9ba0ee42f4d230b1365d52b8b6bf761819c2bb71be91db2396f6391576ccf",
+    "capture_003.png": "e1036c8415deae316139ae5d1e34ca9d308a1334d1041fdb3a7c0bfd2ed09440",
+    "capture_004.png": "18b6c06065178c226d36ea1fea151b9cdb40d1c0d1706e83f98ae34b62608866",
+    "capture_005.png": "7e65ba3c0df94a647e5b9000dc858a985f9506607d7530a6c377cba64d6674d4",
+    "capture_006.png": "c500ba279a8829221d32377f03697513d8f405f7a779bb78da1cf0bb98ea5264",
+    "capture_007.png": "f32cffe2b88330a675b24c2cbf0da4b1ce9946fc76f81c55fbca46e91f55c8ae",
+    "capture_008.png": "63f42ce4e96c2409dc830c2823cd85e8782534e4174d6c8c7dbb4f7634534764",
+    "capture_009.png": "50dfc64caf321c28900afe9d1d7d7be325c4b5e1e348ac4bda7c634ddf5c28ff",
+    "capture_010.png": "a9f31980f49f9e92026af4320a4d9fa5297fc30c1bb750f6e4bdbee6ceb3cd66",
+    "capture_011.png": "a79725c155064a858595ed068613118d6b3f8fda95c0f8a8fe69443c3c56adad"
+  }
+}

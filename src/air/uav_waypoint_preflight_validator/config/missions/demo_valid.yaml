@@ -1,0 +1,17 @@
+frame: enu_relative
+limits:
+  min_altitude_m: 0.5
+  max_altitude_m: 20.0
+  max_waypoints: 100
+  min_segment_length_m: 0.25
+  max_climb_angle_deg: 60.0
+  warning_turn_angle_deg: 90.0
+  max_turn_angle_deg: 150.0
+  max_horizontal_speed_mps: 1.5
+  max_vertical_speed_mps: 0.8
+  max_total_distance_m: 500.0
+waypoints:
+  - [0.0, 0.0, 2.0]
+  - [3.0, 0.0, 2.0]
+  - [6.0, 2.0, 2.5]
+  - [6.0, 5.0, 2.5]
