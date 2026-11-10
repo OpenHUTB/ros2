@@ -3,7 +3,7 @@
 节点本身不直接连 AirSim，只做「深度图进、控制量出」的推理，
 这样在有 ROS 2 的机器上可以接任何发布深度图的仿真或真机驱动。
 
-    /uav/depth     sensor_msgs/Image      64x64 float32 归一化深度
+    /uav/depth     sensor_msgs/Image      深度图（64x64 直接用；其他分辨率按消息头缩放）
     /uav/cmd       std_msgs/Float32MultiArray  [yaw_rate(rad/s), z_target(m)]
 """
 from __future__ import annotations
@@ -20,6 +20,8 @@ from ament_index_python.packages import get_package_share_directory
 from .cnn import DepthPolicyNet
 from .policy import ALT_DELTA_MAX, YAW_RATE_MAX
 
+SIZE = 64
+
 
 class DepthAvoidNode(Node):
     def __init__(self):
@@ -31,8 +33,9 @@ class DepthAvoidNode(Node):
         self.declare_parameter("weights", default_weights)
         self.declare_parameter("z_ref", -5.0)
 
-        self.net = DepthPolicyNet()
-        self.net.load(self.get_parameter("weights").value)
+        # load() 是 classmethod，返回新的已加载实例；必须接住返回值，
+        # 否则 self.net 仍是随机初始化权重，发布的是噪声。
+        self.net = DepthPolicyNet.load(self.get_parameter("weights").value)
         self.z_ref = float(self.get_parameter("z_ref").value)
 
         self.pub = self.create_publisher(Float32MultiArray, "/uav/cmd", 10)
@@ -40,9 +43,23 @@ class DepthAvoidNode(Node):
         self.get_logger().info("深度避障节点已启动，权重 %s" % self.get_parameter("weights").value)
 
     def on_depth(self, msg: Image):
-        depth = np.array(msg.data, dtype=np.float32).reshape(msg.height, msg.width)
+        # 尺寸以 msg.height / msg.width 为准。网络第一层全连接固定为 8*15*15，
+        # 只接受 64x64；收到 AirSim 原始的 640x480 时先缩放，不能假设是方图。
+        raw = np.frombuffer(msg.data, dtype=np.float32)
+        h = int(msg.height)
+        w = int(msg.width)
+        if h <= 0 or w <= 0 or h * w != raw.size:
+            self.get_logger().warn("深度图尺寸与消息头不符，按 1 x %d 处理" % raw.size)
+            h, w = 1, int(raw.size)
+        depth = raw.reshape(h, w)
+
         if depth.max() > 1.5:          # 传进来的是米制深度，先归一化
             depth = np.clip(depth, 0.0, 20.0) / 20.0
+
+        if (h, w) != (SIZE, SIZE):
+            idx_h = np.linspace(0, h - 1, SIZE).astype(int)
+            idx_w = np.linspace(0, w - 1, SIZE).astype(int)
+            depth = depth[np.ix_(idx_h, idx_w)]
 
         yaw_norm, alt_norm = self.net.predict(depth)
         yaw_rate = float(yaw_norm) * YAW_RATE_MAX
