@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>7. 阿克曼四轮小车运动控制 - 模拟器的 ROS 文档</title>
+<title>7. 机械臂控制 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "7. \u963f\u514b\u66fc\u56db\u8f6e\u5c0f\u8f66\u8fd0\u52a8\u63a7\u5236";
+        var mkdocs_page_name = "7. \u673a\u68b0\u81c2\u63a7\u5236";
         var mkdocs_page_input_path = "chapter/chap7.md";
         var mkdocs_page_url = null;
       </script>
@@ -77,15 +77,9 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../chap6/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">7. 阿克曼四轮小车运动控制</a>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">7. 机械臂控制</a>
 <ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="#1">1. 环境配置与工程结构</a>
 <ul>
@@ -157,27 +151,11 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap8/">8. ROS 机器人综合应用</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap9/">9. ROS 2</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/mujoco_arm_screw/">机械臂拧螺丝仿真</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../chap9/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -572,6 +550,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
@@ -728,7 +708,7 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">7. 阿克曼四轮小车运动控制</li>
+<li class="breadcrumb-item active">7. 机械臂控制</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap7.md"> 编辑页面</a>
 </li>
@@ -1185,8 +1165,8 @@ catkin_make
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../urdf_car_gmapping/" title="自建小车 Gazebo GMapping 建图"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap8/" title="章节首页">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../chap6/" title="6. 机器人 SLAM 与自主导航"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../chap8/" title="8. ROS 机器人综合应用">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr>
 <div role="contentinfo">
@@ -1203,7 +1183,7 @@ catkin_make
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../urdf_car_gmapping/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../chap6/" style="color: #fcfcfc">« 前一页</a></span>
 <span><a href="../chap8/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>

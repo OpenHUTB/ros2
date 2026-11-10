@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>自建小车 Gazebo GMapping 建图 - 模拟器的 ROS 文档</title>
+<title>自建四轮小车 Gazebo GMapping 建图实验（ROS Noetic） - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "\u81ea\u5efa\u5c0f\u8f66 Gazebo GMapping \u5efa\u56fe";
+        var mkdocs_page_name = "\u81ea\u5efa\u56db\u8f6e\u5c0f\u8f66 Gazebo GMapping \u5efa\u56fe\u5b9e\u9a8c\uff08ROS Noetic\uff09";
         var mkdocs_page_input_path = "chapter/urdf_car_gmapping.md";
         var mkdocs_page_url = null;
       </script>
@@ -50,7 +50,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -77,57 +77,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current">6. 机器人 SLAM 与自主导航</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../chap6/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
 </li>
-<li class="toctree-l2 current"><a class="reference internal current" href="#">自建小车 Gazebo GMapping 建图</a>
-<ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="#_1">一、环境与复制位置</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap7/">7. 机械臂控制</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_3">二、键盘遥控建图</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap8/">8. ROS 机器人综合应用</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_4">三、保存地图</a>
+<li class="toctree-l1"><a class="reference internal" href="../chap9/">9. ROS 2</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#_5">四、系统结构与坐标系</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_6">五、分层检查与排错</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_7">六、已有实验记录</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_8">七、来源与辅助声明</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_9">八、用户实测截图</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_10">九、停止实验</a>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../chap7/">7. 阿克曼四轮小车运动控制</a>
-</li>
-<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../chap8/mujoco_arm_screw/">机械臂拧螺丝仿真</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../chap9/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -522,6 +480,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../air/uav_formation_flight/">无人机编队飞行</a>
@@ -677,9 +637,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item">6. 机器人 SLAM 与自主导航</li>
-<li class="breadcrumb-item active">自建小车 Gazebo GMapping 建图</li>
+<li class="breadcrumb-item active">自建四轮小车 Gazebo GMapping 建图实验（ROS Noetic）</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/urdf_car_gmapping.md"> 编辑页面</a>
 </li>
@@ -852,10 +810,6 @@ rosrun<span class="w"> </span>tf<span class="w"> </span>tf_echo<span class="w"> 
 <p>先在遥控终端按 <code>k</code> 停车，再按 <code>Ctrl+C</code> 退出遥控；确认地图已保存后，在运行 <code>slam.launch</code> 的终端按 <code>Ctrl+C</code> 关闭仿真、建图及 RViz。</p></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../chap6/" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../chap7/" title="7. 阿克曼四轮小车运动控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -871,8 +825,6 @@ rosrun<span class="w"> </span>tf<span class="w"> </span>tf_echo<span class="w"> 
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../chap6/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../chap7/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

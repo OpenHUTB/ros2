@@ -105,37 +105,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="chapter/chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap6/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="chapter/chap6/">6. 机器人 SLAM 与自主导航</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="chapter/urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+<li class="toctree-l1"><a class="reference internal" href="chapter/chap7/">7. 机械臂控制</a>
 </li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="chapter/chap8/">8. ROS 机器人综合应用</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="chapter/chap7/">7. 阿克曼四轮小车运动控制</a>
+<li class="toctree-l1"><a class="reference internal" href="chapter/chap9/">9. ROS 2</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap8/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap8/mujoco_arm_screw/">机械臂拧螺丝仿真</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="chapter/ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap9/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="chapter/chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="chapter/turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -530,6 +508,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_formation_flight/">无人机编队飞行</a>
@@ -763,6 +743,7 @@
 </ul>
 </li>
 <li><a href="chapter/chap9/">第 9 章</a> - ROS 2</li>
+<li><a href="chapter/turtlebot3_gazebo_control/">第 10 章</a> - Turtlebot3 Gazebo键盘控制</li>
 </ul>
 <p>ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：<a href="chap2/ros2_service_param_demo/">chap2/ros2_service_param_demo</a></p>
 <h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
@@ -1091,6 +1072,9 @@
 </li>
 <li>
 <p><a href="air/uav_vertical_ppo/">MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制</a></p>
+</li>
+<li>
+<p><a href="air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a> —— 在 MuJoCo 底座上插入可编程的桨故障（完全失效 / 推力衰减 / 卡死 / 渐进退化）与 IMU 故障，实测"单桨完全失效 0.64 s 必坠、把损失推力均摊给其余三桨也救不回来"，为后续神经容错飞行模块提供数据与评测台</p>
 </li>
 <li>
 <p><a href="air/uav_slung_load/">四旋翼吊挂负载防摆控制</a> —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°</p>

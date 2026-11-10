@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../../img/favicon.ico" rel="shortcut icon"/>
-<title>MoveIt 六自由度机械臂运动规划 - 模拟器的 ROS 文档</title>
+<title>MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比 - 模拟器的 ROS 文档</title>
 <link href="../../../css/theme.css" rel="stylesheet"/>
 <link href="../../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "MoveIt \u516d\u81ea\u7531\u5ea6\u673a\u68b0\u81c2\u8fd0\u52a8\u89c4\u5212";
+        var mkdocs_page_name = "MoveIt \u516d\u81ea\u7531\u5ea6\u673a\u68b0\u81c2\u8fd0\u52a8\u89c4\u5212\u4e0e OMPL \u89c4\u5212\u5668\u5bf9\u6bd4";
         var mkdocs_page_input_path = "chapter/chap8/moveit_arm_planning.md";
         var mkdocs_page_url = null;
       </script>
@@ -50,7 +50,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -77,59 +77,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../../chap6/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
 </li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../">8. ROS 机器人综合应用</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current">8. ROS 机器人综合应用</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
-<li class="toctree-l2 current"><a class="reference internal current" href="#">MoveIt 六自由度机械臂运动规划</a>
-<ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="#1">1. 实验目的</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#2">2. 与已有机械臂模块的区别</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#3">3. 环境与依赖</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#4">4. 目录结构</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#5-noetic">5. Noetic 兼容修复</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#6">6. 编译与启动</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#7">7. 实验内容</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#8">8. 实验结果</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#9">9. 常见问题</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#10-ai">10. AI 使用声明</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../mujoco_arm_screw/">机械臂拧螺丝仿真</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../../chap9/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../../turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -524,6 +480,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
@@ -679,9 +637,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
-<li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item">8. ROS 机器人综合应用</li>
-<li class="breadcrumb-item active">MoveIt 六自由度机械臂运动规划</li>
+<li class="breadcrumb-item active">MoveIt 六自由度机械臂运动规划与 OMPL 规划器对比</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap8/moveit_arm_planning.md"> 编辑页面</a>
 </li>
@@ -1105,10 +1061,6 @@ catkin_make
 <p>本文档与配套代码在编写过程中使用了 AI 大模型辅助（需求分析、方案讨论、文档起草和问题排查）。文档中的全部运行数据将由作者在 ROS Noetic + MoveIt 环境中实测采集；作者对提交内容的正确性与完整性负全部责任。</p></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../../../voice/pocketsphinx_noetic/" title="PocketSphinx 语音控制小乌龟"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../mujoco_arm_screw/" title="机械臂拧螺丝仿真">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -1124,8 +1076,6 @@ catkin_make
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../../../voice/pocketsphinx_noetic/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../mujoco_arm_screw/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../../js/jquery-3.6.0.min.js"></script>

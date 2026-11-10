@@ -50,7 +50,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -77,57 +77,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../chap5/">5. 机器人感知</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">6. 机器人 SLAM 与自主导航</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../../chap6/">章节首页</a>
+<li class="toctree-l1"><a class="reference internal" href="../../chap6/">6. 机器人 SLAM 与自主导航</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../urdf_car_gmapping/">自建小车 Gazebo GMapping 建图</a>
+<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 机械臂控制</a>
 </li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../../chap8/">8. ROS 机器人综合应用</a>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chap7/">7. 阿克曼四轮小车运动控制</a>
+<li class="toctree-l1"><a class="reference internal" href="../">9. ROS 2</a>
 </li>
-<li class="toctree-l1"><a class="reference internal">8. ROS 机器人综合应用</a>
-<ul>
-<li class="toctree-l2"><a class="reference internal" href="../../chap8/">章节首页</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../../voice/pocketsphinx_noetic/">PocketSphinx 语音控制小乌龟</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../chap8/moveit_arm_planning/">MoveIt 六自由度机械臂运动规划</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../chap8/mujoco_arm_screw/">机械臂拧螺丝仿真</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../ur5e_pickplace/">MuJoCo UR5e 关节空间抓放控制</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="reference internal current">9. ROS 2</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../">章节首页</a>
-</li>
-<li class="toctree-l2 current"><a class="reference internal current" href="#">Gazebo 仿真相机与图像话题验证</a>
-<ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="#1">1. 要解决的问题 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#2">2. 系统组成与数据流 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#3">3. 环境与安装 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#4">4. 启动仿真 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#5">5. 检查话题与图像规格 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#6-rviz2">6. 在 RViz2 中查看实时画面 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#7">7. 实测结果 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#8">8. 常见问题 </a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_1">参考</a>
-</li>
-</ul>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../../turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
@@ -522,6 +480,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_mujoco_sim/">MuJoCo 四旋翼仿真与 ROS2 桥接底座</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../../../air/uav_actuator_fault_sim/">无人机执行器故障注入与控制退化观测</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_slung_load/">四旋翼吊挂负载防摆控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../air/uav_formation_flight/">无人机编队飞行</a>
@@ -677,8 +637,6 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
-<li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item">9. ROS 2</li>
 <li class="breadcrumb-item active">Gazebo 仿真相机与图像话题验证</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap9/gazebo_camera_sim.md"> 编辑页面</a>
@@ -919,10 +877,6 @@ libEGL warning: failed to open /dev/dri/renderD128
 </ul></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../" title="章节首页"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../../humanoid/humanoid_basics/" title="人形机器人基础">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -938,8 +892,6 @@ libEGL warning: failed to open /dev/dri/renderD128
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../../humanoid/humanoid_basics/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../../js/jquery-3.6.0.min.js"></script>
