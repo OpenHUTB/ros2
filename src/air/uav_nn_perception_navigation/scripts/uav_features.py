@@ -54,7 +54,11 @@ def extract_sector_features(points, num_sectors=NUM_SECTORS, fov_deg=FOV_DEG,
 
 
 def extract_scan(points, bins=180, fov_deg=360.0, max_range=MAX_RANGE):
-    """把点云投影成 2D 环形扫描（给 SLAM 用）。
+    """把点云投影成 2D 环形扫描（给 SLAM 用，角度遵循 ROS 约定）。
+
+    AirSim 传感器系是 x 前、y 右（NED），`atan2(y, x)` 的正角在右侧；
+    ROS LaserScan（REP 103）的 0 是正前方、**逆时针（向左）为正**。
+    直接写进 LaserScan 会让地图左右镜像，所以这里先取负。
 
     返回长度为 bins 的距离数组，角度从 -fov/2 到 +fov/2 均匀分布；
     没有命中点的角度填 max_range。
@@ -66,7 +70,8 @@ def extract_scan(points, bins=180, fov_deg=360.0, max_range=MAX_RANGE):
     pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
     x, y = pts[:, 0], pts[:, 1]
     r = np.sqrt(x * x + y * y)
-    ang = np.degrees(np.arctan2(y, x))
+    # 取负：AirSim 右正 -> ROS 左正，否则 LaserScan 左右镜像
+    ang = -np.degrees(np.arctan2(y, x))
     half = fov_deg / 2.0
     valid = (r > 0.1) & (r < max_range) & (np.abs(ang) <= half)
     if not np.any(valid):
@@ -79,6 +84,32 @@ def extract_scan(points, bins=180, fov_deg=360.0, max_range=MAX_RANGE):
         if sel.size:
             ranges[i] = float(sel.min())
     return ranges
+
+
+def transform_points_to_frame(points, src_pos, src_yaw, dst_pos, dst_yaw):
+    """把 src 位姿下的机体系点云转到 dst 位姿的机体系（NED，仅绕 z 旋转）。
+
+    多帧累积建图时必须先做这一步：雷达每帧只吐一小段，拼接时如果直接用
+    原始坐标，无人机一旦平移或转向，旧点就会留在错误的方位上，地图会拖影。
+    """
+    pts = np.asarray(points, dtype=np.float32).reshape(-1, 3)
+    if len(pts) == 0:
+        return pts
+
+    cs, ss = math.cos(src_yaw), math.sin(src_yaw)
+    cd, sd = math.cos(dst_yaw), math.sin(dst_yaw)
+
+    # 机体系 -> 世界系（与 airsim_bridge 的机体系->NED 旋转一致）
+    wx = src_pos[0] + pts[:, 0] * cs - pts[:, 1] * ss
+    wy = src_pos[1] + pts[:, 0] * ss + pts[:, 1] * cs
+    wz = src_pos[2] + pts[:, 2]
+
+    # 世界系 -> 目标机体系
+    dx, dy = wx - dst_pos[0], wy - dst_pos[1]
+    bx = dx * cd + dy * sd
+    by = -dx * sd + dy * cd
+    bz = wz - dst_pos[2]
+    return np.stack([bx, by, bz], axis=1).astype(np.float32)
 
 
 def goal_features(current_pos, goal_pos, yaw_ned):

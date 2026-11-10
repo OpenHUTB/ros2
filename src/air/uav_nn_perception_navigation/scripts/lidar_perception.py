@@ -26,6 +26,7 @@ if _SCRIPT_DIR not in sys.path:
 
 from uav_features import (  # noqa: E402
     FOV_DEG, MAX_RANGE, NUM_SECTORS, extract_scan, extract_sector_features,
+    transform_points_to_frame, yaw_from_quaternion,
 )
 
 _client_path = os.environ.get('AIRSIM_PYTHON_CLIENT')
@@ -99,17 +100,28 @@ class LidarPerceptionNode(object):
                 raw = np.array(lidar.point_cloud, dtype=np.float32)
                 points = raw.reshape(-1, 3) if raw.size else np.zeros((0, 3), np.float32)
 
+                # 当前位姿：多帧拼接要先把各帧点云转到同一坐标系
+                state = self.client.getMultirotorState(vehicle_name=self.vehicle)
+                pos = state.kinematics_estimated.position
+                cur_pos = np.array([pos.x_val, pos.y_val, pos.z_val], dtype=np.float32)
+                cur_yaw = yaw_from_quaternion(state.kinematics_estimated.orientation)
+
                 # 控制用的特征只用最新一帧，保持和训练时一致
                 feats = extract_sector_features(points)
 
-                # 建图用的扫描用累积点云，拼出完整一圈
+                # 建图用的扫描用累积点云，拼出完整一圈。
+                # 每帧记录采集时的位姿，拼接前逐帧转到当前机体系，
+                # 否则无人机平移/转向时旧点会留在错误方位，地图拖影。
                 now = rospy.Time.now().to_sec()
                 if len(points):
-                    self.point_buffer.append((now, points))
+                    self.point_buffer.append((now, points, cur_pos, cur_yaw))
                 while self.point_buffer and now - self.point_buffer[0][0] > self.accum_sec:
                     self.point_buffer.popleft()
                 if self.point_buffer:
-                    accum = np.vstack([p for _, p in self.point_buffer])
+                    accum = np.vstack([
+                        transform_points_to_frame(p, sp, sy, cur_pos, cur_yaw)
+                        for _, p, sp, sy in self.point_buffer
+                    ])
                 else:
                     accum = points
 
