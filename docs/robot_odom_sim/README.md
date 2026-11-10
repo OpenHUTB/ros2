@@ -14,6 +14,8 @@ src/
 └── robot_odom_sim/
     ├── package.xml
     ├── CMakeLists.txt
+    ├── launch/
+    │   └── robot_odom.launch
     └── scripts/
         ├── main.py
         └── teleop_test.py
@@ -22,6 +24,7 @@ docs/robot_odom_sim/
 ├── README.md
 └── robot_odom.gif
 ```
+
 
 ## 运行步骤
 1. 编译工作空间：`catkin_make`，并加载环境：`source devel/setup.bash`
