@@ -20,7 +20,6 @@ neural_ca_drone/
 ├── weights/                 # 训练好的 npz（随仓库提交）
 ├── ros1_ws/  ros2_ws/       # ROS 适配层
 ├── docs/                    # mkdocs 文档
-└── report/                  # Word 报告生成脚本
 ```
 
 **入口规则**：所有可执行入口以 `main.` 开头（`main.py`、`main.launch`、
@@ -73,7 +72,7 @@ docs(results): add 48-episode benchmark table
 | 9 | fix(mapping): depth projection | 修 1/f 二次除法 |
 | 10 | feat(ros1): launch + bridge | Noetic 包 |
 | 11 | feat(ros2): launch + probe | Humble 包 |
-| 12 | docs: mkdocs + results | 文档、图表、Word |
+| 12 | docs: mkdocs + results | 文档、图表 |
 
 真实哈希见 `git log --oneline`。
 

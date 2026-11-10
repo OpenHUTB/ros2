@@ -85,7 +85,6 @@ neural_ca_drone/
 ├── weights/                # 训练好的 npz（随仓库提交）
 ├── ros1_ws/  ros2_ws/      # ROS 1 / ROS 2 包与 launch
 ├── docs/                   # mkdocs 文档（GitHub Pages）
-├── report/                 # Word 报告生成
 └── results/                # 评测 CSV / JSON
 ```
 
@@ -94,7 +93,6 @@ neural_ca_drone/
 - 在线文档：`mkdocs serve` → <http://127.0.0.1:8000>
 - 构建：`mkdocs build`（输出 `site/`）
 - 首页有指向“四个模块 / 实验 / ROS 部署”的卡片链接
-- Word 报告：`report/实验报告_陈康艺_2535030044.docx`（由 `report/build_docx.py` 生成）
 
 ## ROS 部署
 
