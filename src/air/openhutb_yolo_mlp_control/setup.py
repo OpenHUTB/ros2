@@ -37,6 +37,10 @@ setup(
             glob('tools/traffic/*.py') + glob('tools/traffic/*.ps1')
             + glob('tools/traffic/*.txt')
         ),
+        (
+            'share/' + package_name + '/tools/visual_validation',
+            glob('tools/visual_validation/*.py')
+        ),
     ],
 
     install_requires=[
