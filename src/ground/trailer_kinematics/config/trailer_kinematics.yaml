@@ -1,0 +1,30 @@
+# trailer_kinematics 的默认参数
+#
+# 全部值都可以被 launch 参数覆盖，例如：
+#   roslaunch trailer_kinematics main.launch steer_deg:=30.0
+#   roslaunch trailer_kinematics main.launch gear:=-1
+
+trailer:
+  wheelbase: 2.70          # 牵引车轴距 (m)
+  length: 4.20             # 铰接点到挂车轴 (m)
+  hitch_offset: 0.60       # 铰接点在牵引车后轴后方 (m)，0 即「铰接在轴上」模型
+  max_steer_deg: 35.0      # 前轮最大转角 (度)
+
+check:
+  jackknife_deg: 90.0      # 折刀角上限 (度)
+  channel_width: 12.00     # 允许占用的通道宽度 (m)
+  step_tolerance: 0.01     # 步长减半后的位置差上限 (m)
+
+sim:
+  speed: 1.00              # 行驶速度 (m/s)
+  steer_deg: 25.0          # 前轮转角 (度)
+  seconds: 9.10            # 仿真时长 (s)，默认正好转 90 度
+  step: 0.02               # 积分步长 (s)
+  gear: 1                  # 1 前进、-1 倒车
+
+rate:
+  publish_hz: 10.0         # 报告发布后的保活频率 (Hz)
+
+tf:
+  enabled: true          # 是否广播 TF
+  rate_hz: 10.0          # TF 广播频率 Hz
