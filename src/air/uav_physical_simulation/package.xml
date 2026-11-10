@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_physical_simulation</name>
+  <version>1.0.0</version>
+  <description>
+    无人机物理仿真与键盘运动控制。对应课程任务（1）：
+    对无人机进行物理仿真，通过键盘对无人机进行运动控制。
+    按键 → 机体系速度指令 → /uav/cmd_vel → carlair_ros_bridge → CarlaAir/AirSim。
+  </description>
+
+  <maintainer email="2011570342@qq.com">Mjm-peter</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <exec_depend>carlair_ros_bridge</exec_depend>
+</package>
