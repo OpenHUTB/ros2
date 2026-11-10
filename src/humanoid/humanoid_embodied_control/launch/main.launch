@@ -1,0 +1,33 @@
+<launch>
+  <!-- 人形机器人（具身人）：物理仿真 + 多传感器感知 + 平衡行走控制。
+
+       使用方式（ROS 1 Noetic）：
+         roslaunch humanoid_embodied_control main.launch
+         roslaunch humanoid_embodied_control main.launch goal_x:=3.0 goal_y:=0.5
+
+       说明：
+        * 控制内核是纯 Python（scripts/main.py），ROS 节点 only 做话题转发；
+        * 步态更新频率必须 ≥100 Hz：20 Hz 步态会让机器人"单腿支撑太久"摔倒，
+          这是实测结论，不要为了省算力把 ctrl_hz 调低；
+        * MuJoCo 需要 python3.9+；Noetic 自带的 python3.8 装不上，
+          可用环境变量 HUMANoid_PYTHON 指定解释器（见 main.sh）。
+        * 仿真器（MuJoCo）本身不走 ROS：本 launch 起的是"控制 + 感知"链路，
+          激光数据可以来自真实雷达或用 rosbag 回放。 -->
+  <arg name="goal_x" default="4.5" doc="目标点 x（米）"/>
+  <arg name="goal_y" default="0.0" doc="目标点 y（米）"/>
+  <arg name="ctrl_hz" default="100.0" doc="步态/平衡下发频率（低于 100 会摔倒）"/>
+  <arg name="period" default="1.3" doc="一个完整步态周期的名义长度（秒）"/>
+  <arg name="stride" default="0.20" doc="单腿前后摆幅（弧度）"/>
+  <arg name="lift" default="0.10" doc="摆动腿的额外屈膝量（弧度）"/>
+
+  <node pkg="humanoid_embodied_control" type="scripts/walk_node_ros1.py"
+        name="humanoid_walk_node" output="screen" required="true">
+    <param name="goal" value="$(arg goal_x) $(arg goal_y)"/>
+    <param name="ctrl_hz" value="$(arg ctrl_hz)"/>
+    <param name="period" value="$(arg period)"/>
+    <param name="stride" value="$(arg stride)"/>
+    <param name="lift" value="$(arg lift)"/>
+    <remap from="/uav/lidar" to="/scan"/>
+    <remap from="/goal" to="/move_base_simple/goal"/>
+  </node>
+</launch>
