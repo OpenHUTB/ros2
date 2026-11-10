@@ -102,6 +102,27 @@ Windows 下中文用户名会导致 `Documents\AirSim\settings.json` 被覆盖�
 **键盘没反应**
 节点必须运行在真实终端里；通过管道或后台运行时读不到标准输入。
 
+## 安全兜底
+
+`trajectory_control.py` 的网络输出会先经过 `safety_shield.py` 再下发，
+网络仍然是控制量的主要来源，安全层只在下列情况限制或接管：
+
+| 情况 | 判定 | 处理 |
+| --- | --- | --- |
+| 动作非法 | 出现 NaN / Inf | 水平速度与偏航归零，保持定高 |
+| 输入过期 | 雷达或里程计 > 0.5 s 未更新 | 悬停等待 |
+| 输出越界 | 水平速度 > 3 m/s、偏航 > 1 rad/s | 按训练量程限幅 |
+| 正前方障碍 | 最近距离 < 1.2 m | 禁止继续前进 |
+| 正前方极近 | 最近距离 < 0.5 m | 直接悬停 |
+| 单侧障碍 | 该侧最近距离 < 0.9 m | 禁止朝该侧平移 |
+| 偏航抖动 | 最近 8 帧中符号翻转 ≥ 5 次 | 偏航指令减半 |
+
+安全层可以关闭，用于和"裸网络"做对照实验：
+
+```bash
+roslaunch uav_nn_perception_navigation perception.launch safety_enabled:=false
+```
+
 ## 自主飞行实测
 
 启动方式：
@@ -119,3 +140,26 @@ roslaunch uav_nn_perception_navigation perception.launch \
 | 到达误差 | 0.76 m |
 | 耗时 | 8.5 s |
 | 高度波动 | ±0.1 m |
+
+## 多场景评估
+
+单次飞行的结果不能说明泛化能力，因此提供 `eval_multi_target.py`：固定 10 组
+不同方位、距离和障碍布局的起终点对，逐组闭环飞行并统计。
+
+```bash
+python3 eval_multi_target.py --pairs 10 --altitude 4 \
+    --out eval/multi_target.csv --trace-dir eval/trace
+python3 eval_multi_target.py --pairs 10 --no-shield      # 对照组
+```
+
+脚本直接走 AirSim RPC，不依赖 ROS；特征提取、控制律和安全层与部署节点共用同一套
+代码。每组输出到达误差、耗时、碰撞次数、安全层介入次数，以及闭环过程中网络输出
+与势场法专家动作的偏差（`expert_dev_mean` / `expert_dev_max`）。
+
+训练阶段另有一份开环统计：验证集原样输入、以及叠加扰动（扇区距离 ±10%、方位角
+±5°、目标距离 ±10%）后的网络—专家偏差，训练结束会自动写入
+`models/train_metrics.json`。只想评估现成权重、不重新训练时：
+
+```bash
+python3 train_control.py --report-model models/controller.pt --episodes 3 --steps 120
+```

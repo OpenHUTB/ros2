@@ -24,6 +24,17 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
 
+# 被 import 的模块在 devel 空间里不在 sys.path 上（CMake 用的是 install(FILES)），
+# 通过 rospkg 找到源码包目录补进来，rosrun 走 relay 脚本时也能正常 import
+try:
+    import rospkg as _rospkg
+    _pkg_scripts = os.path.join(
+        _rospkg.RosPack().get_path('uav_nn_perception_navigation'), 'scripts')
+    if os.path.isdir(_pkg_scripts) and _pkg_scripts not in sys.path:
+        sys.path.insert(0, _pkg_scripts)
+except Exception:
+    pass
+
 from uav_features import (  # noqa: E402
     FOV_DEG, MAX_RANGE, NUM_SECTORS, extract_scan, extract_sector_features,
     transform_points_to_frame, yaw_from_quaternion,
