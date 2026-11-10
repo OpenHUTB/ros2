@@ -146,7 +146,7 @@ python3 test/test_offline.py          # 5 项离线自检
 ## 9. 演示素材与文档
 
 - 动图：[docs/img/humanoid/humanoid_carry_payload_nn/demo.gif](../../../docs/img/humanoid/humanoid_carry_payload_nn/demo.gif)（2.73 MB）
-- 评测留档：`results/eval_20261104_212925.csv` 是文档第 8 节那张表的原始数据（重训后的权重 + `mj_setConst` 修正），作为证据提交入库；
+- 评测留档：`results/eval_20261104_212925.csv` 是文档第 7 节那张表的原始数据（重训后的权重 + `mj_setConst` 修正），作为证据提交入库；
   重新运行 `evaluate.py` 会在 `results/` 下生成新的带时间戳 CSV，不会覆盖这一份。
 - 训练留档：`models/balance_mlp_metrics.json` 记录样本数、切分方式与每轮 train/val MSE。
 - 详细文档（任务、模型、训练、结果、键盘、参数、FAQ）：

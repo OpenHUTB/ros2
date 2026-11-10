@@ -1,0 +1,58 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+
+# 说明：ROS 2 的参数文件不支持 YAML 锚点合并（<<），所以两个节点里
+# 与载具相关的参数是显式重复的；改参数时请两处一起改（或用脚本同步）。
+
+mujoco_sim_node:
+  ros__parameters:
+    # ---- 载具与水动力 ----
+    mass: 11.0
+    displacement: 0.0110
+    ballast: 0.0                          # 配重 kg；+0.27 左右可抵消净浮力
+    rho: 1025.0
+    drag_linear: [13.20, 35.69, 63.33]    # 纵荡 / 横荡 / 升沉，N·s²/m²
+    drag_angular: [0.60, 0.60, 0.40]      # N·m·s/rad
+    cb_offset: [0.0, 0.0, 0.03]           # 浮心在质心上方 3 cm
+    max_force: [10.0, 10.0, 10.0]         # 单轴可用推力（评测 η 的分母）
+    max_torque: [2.0, 2.0, 2.0]
+    # ---- 仿真节奏 ----
+    sim_hz: 500.0
+    pub_hz: 50.0
+    start_depth: 8.0
+    # ---- 控制 ----
+    kp_linear: 60.0
+    kp_angular: 8.0
+    depth_hold_kp: 0.8
+    publish_tf: true
+    free_joint_angular_in_body: true
+    # ---- 洋流（实验时改这三个）----
+    current_speed: 0.0
+    current_direction_deg: 90.0
+    current_seed: 0
+
+eval_node:
+  ros__parameters:
+    mass: 11.0
+    displacement: 0.0110
+    ballast: 0.0
+    rho: 1025.0
+    drag_linear: [13.20, 35.69, 63.33]
+    max_force: [10.0, 10.0, 10.0]
+    window_sec: 10.0
+    rate: 5.0
+    csv_path: ""            # 非空则把指标写成 CSV，便于画图
+
+keyboard_teleop:
+  ros__parameters:
+    rate: 20.0
+    max_surge: 0.6
+    max_sway: 0.5
+    max_heave: 0.4
+    max_yaw: 0.8
+    max_roll: 0.6
+    max_pitch: 0.5
+    hold_timeout: 0.35
+    smoothing_tau: 0.12
+    verbose: true
