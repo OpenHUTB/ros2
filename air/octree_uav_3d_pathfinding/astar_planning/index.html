@@ -532,6 +532,8 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current">空域载具八叉树三维寻路</a>
 <ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../overview/">背景与总体方案</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../env_setup/">环境配置与前置准备</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flight_control/">AirSim 载具与位置控制</a>
@@ -560,13 +562,15 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#10">10. 开发中踩到的几个坑</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#11">11. 参考</a>
+<li class="toctree-l3"><a class="reference internal" href="#11_1">11. 参考</a>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../path_smoothing/">安全裕度与路径平滑</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../path_following/">路径跟踪与闭环飞行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ros2_nav2/">与 ROS 2 / Nav2 的对应关系</a>
 </li>
 </ul>
 </li>
@@ -745,6 +749,89 @@
 </tbody>
 </table>
 <p><strong>本节点只做规划、不控制飞行。</strong> 把路径喂给控制器实现闭环飞行是后续阶段的事。</p>
+<h3 id="11">1.1 运行节点与话题关系</h3>
+<p>规划节点不是孤立运行的：它要拿到建图节点发布的地图、桥接节点广播的 TF，
+再把路径交给 RViz 显示。<code>roslaunch octree_uav_3d_pathfinding main.launch</code>
+会启动下图里的数据链路节点。</p>
+<div class="mermaid">graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM --&gt;|"RPC 41451 取点云与位姿"| BR
+    BR --&gt;|"/uav/goal 转 moveToPositionAsync"| SIM
+
+    BR --&gt;|"/cloud_in<br/>PointCloud2 10 Hz"| MAP
+    BR --&gt;|"TF world→base_link→lidar_link"| PLAN
+
+    MAP --&gt;|"/octomap_full<br/>Octomap latched"| PLAN
+    MAP --&gt;|"/occupied_cells_vis_array"| RVIZ
+
+    PLAN --&gt;|"/uav/path<br/>nav_msgs/Path"| RVIZ
+    PLAN --&gt;|"/uav/explored_markers"| RVIZ
+
+    GOAL(["目标点<br/>/uav/goal"]) --&gt; PLAN
+    GOAL --&gt; BR
+</div>
+<p>各节点在规划链路中的位置：</p>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>对本节点的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airsim_bridge</code></td>
+<td>发布 <code>/cloud_in</code> 与 TF，使建图与规划都有数据可依；同时订阅 <code>/uav/goal</code>，让载具飞向目标点</td>
+</tr>
+<tr>
+<td><code>pointcloud_to_octomap</code></td>
+<td>发布 <code>/octomap_full</code>，这是本节点唯一的输入地图</td>
+</tr>
+<tr>
+<td><code>astar_planner</code></td>
+<td>订阅地图与目标点，查 TF 取起点，输出路径</td>
+</tr>
+<tr>
+<td><code>rviz</code></td>
+<td>显示路径与展开节点，用于人工检查</td>
+</tr>
+<tr>
+<td><code>uav_env_check</code></td>
+<td>启动后连 AirSim RPC、订阅 <code>/cloud_in</code> 自检一遍链路，跑完自动退出</td>
+</tr>
+</tbody>
+</table>
+<h4 id="uavgoal"><code>/uav/goal</code> 有两个订阅者</h4>
+<p>使用时容易混淆的一点：<code>/uav/goal</code> 同时被 <code>astar_planner</code> 与 <code>airsim_bridge</code> 订阅。</p>
+<ul>
+<li><code>astar_planner</code> 收到后<strong>规划一条路径</strong>；</li>
+<li><code>airsim_bridge</code> 收到后<strong>让载具飞过去</strong>（转成 AirSim 的 <code>moveToPositionAsync</code>）。</li>
+</ul>
+<p>所以发布一次目标点，会同时触发规划与飞行。若只想看规划结果、不希望载具移动，
+把<strong>桥接节点</strong>的目标话题换成一个没有人发布的名字即可：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>octree_uav_3d_pathfinding<span class="w"> </span>main.launch<span class="w"> </span>bridge_goal_topic:<span class="o">=</span>/uav/goal_unused
+</code></pre></div>
+<ul>
+<li><code>astar_planner</code> 的 <code>~goal_topic</code> 仍是 <code>/uav/goal</code>，收到目标照常规划；</li>
+<li><code>airsim_bridge</code> 改听 <code>/uav/goal_unused</code>，收不到目标就不会起飞；</li>
+<li>桥接节点照常运行，<code>/cloud_in</code> 与 TF 不受影响。</li>
+</ul>
+<p>不要用 <code>bridge:=false</code> 达到这个目的：它关掉的正是唯一发布 <code>/cloud_in</code> 与 TF 的节点，
+建图没有输入、<code>/octomap_full</code> 不会出现，规划也就无从谈起；而且 <code>check</code> 默认为 true，
+自检节点会因为点云链路不通而报失败。确实没有模拟器时，请看本页末尾
+「离线验证」那一套 <code>mock_cloud_publisher.py</code> 的用法。</p>
+<p>查看实际运行的节点与话题关系：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>rqt_graph<span class="w"> </span>rqt_graph<span class="w">        </span><span class="c1"># 节点—话题图</span>
+rosrun<span class="w"> </span>rqt_tf_tree<span class="w"> </span>rqt_tf_tree<span class="w">    </span><span class="c1"># TF 树</span>
+</code></pre></div>
 <hr/>
 <h2 id="2">2. 核心问题：八叉树不是均匀网格</h2>
 <p>这是本节全部难度的来源。二维栅格 A* 里每个格子大小相同、邻居关系固定；
@@ -1183,7 +1270,7 @@ rostopic<span class="w"> </span>info<span class="w"> </span>/uav/path
 <p><strong>判断方法</strong>：如果路径长度和直线距离几乎一样，那多半不是绕行而是穿过去了。</p>
 <p><strong>解法</strong>：障碍物表面的采样间距要明显小于地图分辨率。</p>
 <hr/>
-<h2 id="11">11. 参考</h2>
+<h2 id="11_1">11. 参考</h2>
 <ul>
 <li><a href="https://octomap.github.io/">OctoMap 官网</a></li>
 <li>Hart, Nilsson, Raphael, <em>A Formal Basis for the Heuristic Determination of Minimum Cost Paths</em>, IEEE Transactions on Systems Science and Cybernetics, 1968</li>
@@ -1237,5 +1324,5 @@ rostopic<span class="w"> </span>info<span class="w"> </span>/uav/path
             SphinxRtdTheme.Navigation.enable(true);
         });
     </script>
-</body>
+<script>mermaid.initialize({});</script></body>
 </html>

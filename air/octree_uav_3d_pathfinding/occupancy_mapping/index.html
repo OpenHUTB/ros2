@@ -532,6 +532,8 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current">空域载具八叉树三维寻路</a>
 <ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../overview/">背景与总体方案</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../env_setup/">环境配置与前置准备</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flight_control/">AirSim 载具与位置控制</a>
@@ -561,6 +563,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../path_smoothing/">安全裕度与路径平滑</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../path_following/">路径跟踪与闭环飞行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ros2_nav2/">与 ROS 2 / Nav2 的对应关系</a>
 </li>
 </ul>
 </li>
@@ -742,6 +746,70 @@
 自己写插入逻辑，才能把"坐标变换 → 射线投射 → 概率更新"这条链路逐一展示出来；
 相应地，节点名也叫 <code>pointcloud_to_octomap</code> 而不是直接复用 <code>octomap_server</code>。</p>
 </blockquote>
+<h3 id="11">1.1 运行节点与话题关系</h3>
+<p>建图节点要拿到点云，还要把点云变换到世界坐标系，所以它同时依赖桥接节点发布的
+点云与 TF。<code>roslaunch octree_uav_3d_pathfinding main.launch</code> 会启动下图里的数据链路节点；
+另有一个自检节点 <code>uav_env_check</code>（<code>check:=true</code>），连一遍 AirSim RPC 与 <code>/cloud_in</code> 后自动退出。</p>
+<div class="mermaid">graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM --&gt;|"RPC 41451 取点云与位姿"| BR
+
+    BR --&gt;|"/cloud_in<br/>PointCloud2 10 Hz"| MAP
+    BR --&gt;|"TF world→base_link→lidar_link"| MAP
+
+    MAP --&gt;|"/octomap_full<br/>Octomap latched"| PLAN
+    MAP --&gt;|"/occupied_cells_vis_array"| RVIZ
+
+    PLAN --&gt;|"/uav/path"| RVIZ
+</div>
+<table>
+<thead>
+<tr>
+<th>节点</th>
+<th>对本节点的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airsim_bridge</code></td>
+<td>发布 <code>/cloud_in</code>（原始点云）与 TF，是本节点全部输入的来源</td>
+</tr>
+<tr>
+<td><code>pointcloud_to_octomap</code></td>
+<td>订阅点云，查 TF 变换到世界系后插入八叉树，输出 <code>/octomap_full</code></td>
+</tr>
+<tr>
+<td><code>astar_planner</code></td>
+<td>订阅 <code>/octomap_full</code>，是下游唯一使用者</td>
+</tr>
+<tr>
+<td><code>rviz</code></td>
+<td>显示体素与点云，用于人工检查地图是否正确</td>
+</tr>
+<tr>
+<td><code>uav_env_check</code></td>
+<td>启动后连 AirSim RPC、订阅 <code>/cloud_in</code> 自检一遍链路，跑完自动退出</td>
+</tr>
+</tbody>
+</table>
+<h4 id="tf">为什么建图节点还需要 TF</h4>
+<p>点云的 <code>frame_id</code> 是 <code>lidar_link</code>，而地图必须在 <code>world</code> 下维护（见 §2）。
+节点每帧查一次 <code>world ← lidar_link</code> 的变换，查不到就<strong>跳过该帧并告警</strong>——
+它不会崩，但地图也长不起来。所以启动顺序上桥接节点必须先起来。</p>
+<p>查不到 TF 时的典型日志是 <code>Lookup would require extrapolation into the future</code> 或
+<code>frame does not exist</code>，用 <code>rosrun tf2_tools view_frames</code> 可以看当前的 TF 树是否完整。</p>
+<p>查看实际运行的节点与话题关系：</p>
+<div class="highlight"><pre><span></span><code>rosrun<span class="w"> </span>rqt_graph<span class="w"> </span>rqt_graph<span class="w">        </span><span class="c1"># 节点—话题图</span>
+rosrun<span class="w"> </span>rqt_tf_tree<span class="w"> </span>rqt_tf_tree<span class="w">    </span><span class="c1"># TF 树</span>
+</code></pre></div>
 <hr/>
 <h2 id="2">2. 坐标变换：从传感器坐标系到世界坐标系</h2>
 <p>激光雷达的点坐标是在<strong>传感器坐标系</strong>下的（本项目中点云的 <code>frame_id</code> 为 <code>lidar_link</code>）：
@@ -915,7 +983,7 @@ L(n) = L(n-1) + \log\frac{P}{1 - P}
 </tr>
 <tr>
 <td>point_stride</td>
-<td>2</td>
+<td>1</td>
 <td>抽稀：每隔 N 个点取一个做射线投射</td>
 </tr>
 <tr>
@@ -963,8 +1031,9 @@ L(n) = L(n-1) + \log\frac{P}{1 - P}
 <p><strong>调参建议</strong>：</p>
 <ul>
 <li><strong>性能是这里的主要矛盾</strong>。雷达一帧约一万个点，每个点一条射线，射线长度除以分辨率
-  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
-  量程收到 30 m。机器性能富裕时可以把 <code>point_stride</code> 调回 1、<code>resolution</code> 调到 0.2。</li>
+  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以分辨率取 0.3 m、量程收到 30 m；
+  <code>point_stride</code> 保持 1，不再抽稀——采样点之间留有缝，缝比体素大时射线会从缝里穿过去，
+  障碍物内部被误标成空闲、地面看起来像有洞的网。机器性能富裕时可以把 <code>resolution</code> 调到 0.2。</li>
 <li><code>resolution</code> 从 0.3 调到 0.15，体素数量约变为 8 倍，内存和耗时都会明显上升。</li>
 <li>障碍物被"吃掉"（明明有障碍却显示可通行）通常是分辨率过大导致的，
   可以把 <code>resolution</code> 调小，或适当增大 <code>prob_hit</code>。</li>
@@ -1100,5 +1169,5 @@ rostopic<span class="w"> </span>hz<span class="w"> </span>/octomap_full
             SphinxRtdTheme.Navigation.enable(true);
         });
     </script>
-</body>
+<script>mermaid.initialize({});</script></body>
 </html>
