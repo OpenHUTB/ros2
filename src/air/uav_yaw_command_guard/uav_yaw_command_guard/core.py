@@ -33,12 +33,14 @@ class YawGuardConfig:
     control_rate_hz: float = 20.0
     max_yaw_rate_deg_s: float = 90.0
     target_timeout_s: float = 1.0
+    current_timeout_s: float = 1.0
 
     def __post_init__(self) -> None:
         for name in (
             "control_rate_hz",
             "max_yaw_rate_deg_s",
             "target_timeout_s",
+            "current_timeout_s",
         ):
             _finite(getattr(self, name), name)
         if self.control_rate_hz <= 0.0:
@@ -47,6 +49,8 @@ class YawGuardConfig:
             raise ValueError("max_yaw_rate_deg_s must be greater than zero")
         if self.target_timeout_s <= 0.0:
             raise ValueError("target_timeout_s must be greater than zero")
+        if self.current_timeout_s <= 0.0:
+            raise ValueError("current_timeout_s must be greater than zero")
 
     @property
     def max_yaw_rate_rad_s(self) -> float:
@@ -83,11 +87,13 @@ class YawGuard:
     def __init__(self, config: YawGuardConfig | None = None) -> None:
         self.config = config or YawGuardConfig()
         self.current_yaw: float | None = None
+        self.current_received_at: float | None = None
         self.target_yaw: float | None = None
         self.target_received_at: float | None = None
 
-    def update_current(self, current_yaw_rad: float) -> None:
+    def update_current(self, current_yaw_rad: float, now_s: float) -> None:
         self.current_yaw = wrap_angle(current_yaw_rad)
+        self.current_received_at = _finite(now_s, "now")
 
     def update_target(self, target_yaw_rad: float, now_s: float) -> None:
         self.target_yaw = wrap_angle(target_yaw_rad)
@@ -97,12 +103,24 @@ class YawGuard:
         if self.current_yaw is None:
             return None
         now_s = _finite(now_s, "now")
-        fresh = (
+        current_fresh = (
+            self.current_received_at is not None
+            and now_s - self.current_received_at <= self.config.current_timeout_s
+        )
+        target_fresh = (
             self.target_yaw is not None
             and self.target_received_at is not None
             and now_s - self.target_received_at <= self.config.target_timeout_s
         )
-        if not fresh:
+        if not current_fresh:
+            target = (
+                self.current_yaw if self.target_yaw is None else self.target_yaw
+            )
+            error = 0.0
+            rate = 0.0
+            mode = "CURRENT_STALE"
+            limited = False
+        elif not target_fresh:
             target = self.current_yaw
             error = 0.0
             rate = 0.0

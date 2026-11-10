@@ -32,7 +32,7 @@ def run_demo(
     for index in range(steps):
         now_s = index * dt
         target = target_yaw_at(now_s)
-        guard.update_current(current)
+        guard.update_current(current, now_s)
         guard.update_target(target, now_s)
         result = guard.step(now_s)
         assert result is not None

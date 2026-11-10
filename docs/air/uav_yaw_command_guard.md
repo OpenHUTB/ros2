@@ -21,7 +21,9 @@ e_k=\operatorname{wrap}\left(\psi_{\mathrm{target}}-\psi_{\mathrm{current}}\righ
 \]
 
 `f_s` 是控制频率，`omega_max` 是允许的最大偏航角速度。若目标超过
-`target_timeout_s` 未刷新，模块输出零角速度，状态切换为 `HOLD`。
+`target_timeout_s` 未刷新，模块输出零角速度并进入 `HOLD`。若当前偏航角超过
+`current_timeout_s` 未刷新，模块同样输出零角速度并进入 `CURRENT_STALE`，
+避免使用陈旧航向反馈继续转弯。
 
 ## 2. ROS 2 接口
 
@@ -69,7 +71,7 @@ PYTHONPATH=. python3 -m unittest discover -s tests -v
 ```
 
 测试覆盖角度回绕、跨 `±pi` 的短路径选择、大角度限速、小误差跟踪、目标超时保持、
-非法输入和非法参数。
+当前航向超时保护、非法输入和非法参数。
 
 ## 5. 离线复现
 
@@ -92,7 +94,7 @@ PYTHONPATH=. python3 -m uav_yaw_command_guard.demo \
 
 ## 6. 验证范围
 
-当前已完成 Windows 11 / Python 3.14 的 9 项离线测试、包构建和 8 秒闭环复算。
+当前已完成 Windows 11 / Python 3.14 的 11 项离线测试、包构建和 8 秒闭环复算。
 ROS 2 Humble 的 `colcon build`、`ros2 launch` 和话题收发尚未在本机独立复跑，
 提交者应在 Ubuntu 22.04 / Humble 虚拟机完成后再作为正式运行证据记录。
 

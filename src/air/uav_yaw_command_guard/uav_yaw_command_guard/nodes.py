@@ -49,6 +49,7 @@ class YawCommandGuardNode(Node):
         self.declare_parameter("control_rate_hz", 20.0)
         self.declare_parameter("max_yaw_rate_deg_s", 90.0)
         self.declare_parameter("target_timeout_s", 1.0)
+        self.declare_parameter("current_timeout_s", 1.0)
         self.declare_parameter("output_csv", "/tmp/uav_yaw_command_guard_runtime.csv")
         config = YawGuardConfig(
             control_rate_hz=float(self.get_parameter("control_rate_hz").value),
@@ -56,6 +57,9 @@ class YawCommandGuardNode(Node):
                 self.get_parameter("max_yaw_rate_deg_s").value
             ),
             target_timeout_s=float(self.get_parameter("target_timeout_s").value),
+            current_timeout_s=float(
+                self.get_parameter("current_timeout_s").value
+            ),
         )
         self.guard = YawGuard(config)
         self.started_at = self._monotonic_s()
@@ -89,7 +93,7 @@ class YawCommandGuardNode(Node):
 
     def on_current_yaw(self, msg: Float64) -> None:
         try:
-            self.guard.update_current(msg.data)
+            self.guard.update_current(msg.data, self._monotonic_s())
         except ValueError as exc:
             self.get_logger().warning(f"ignored invalid current yaw: {exc}")
 

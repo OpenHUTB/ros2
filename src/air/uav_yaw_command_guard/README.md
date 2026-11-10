@@ -2,7 +2,8 @@
 
 无人机偏航指令保护模块。它把目标偏航角与当前偏航角之间的差值转换到
 `[-pi, pi)`，从而在 `+179°` 与 `-179°` 之间选择 2° 短路径，并按最大偏航角速度
-限制 `Twist.angular.z`。目标超时后输出零角速度，避免继续追踪失效指令。
+限制 `Twist.angular.z`。目标或当前航向反馈超时后输出零角速度，避免继续追踪失效
+指令或使用陈旧航向。
 
 ## 运行环境
 
@@ -55,6 +56,9 @@ CSV 默认写入：
 ```text
 time_s,mode,current_yaw_deg,target_yaw_deg,error_deg,rate_deg_s,limited
 ```
+
+正常跟踪时 `mode` 为 `TRACKING / LIMITED / ALIGNED`；目标超时为 `HOLD`；
+当前航向反馈超时为 `CURRENT_STALE`。后两种模式均输出零角速度。
 
 ## 测试
 
