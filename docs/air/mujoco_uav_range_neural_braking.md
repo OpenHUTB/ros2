@@ -103,6 +103,14 @@ python trajectory_metrics.py results/range/trajectory.csv --output results/range
 
 碰撞步与传感器有效标记按 0/1 校验；此工具新增 3 项自动化测试，覆盖指标计算、输入校验和 JSON 输出。
 
+```mermaid
+flowchart LR
+    A[运行仿真] --> B[导出轨迹 CSV]
+    B --> C[校验字段与数值]
+    C --> D[计算制动与碰撞指标]
+    D --> E[终端显示或写出 JSON]
+```
+
 ## 检查与文件职责
 
 21 项自动化检查覆盖物理制动、高度恢复、测距失效、回合划分、模型保存加载、命令行参数提示、接触实验退出行为和 MLP 多速度评测。
