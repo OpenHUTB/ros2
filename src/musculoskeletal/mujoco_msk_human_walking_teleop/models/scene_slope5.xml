@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  场景：5 度下坡（等效重力法）。
+  平面浮动基座（水平滑轨）无法倾斜地面，采用等效重力：
+  g' = ( g·sin(5°), 0, -g·cos(5°) )，地面保持水平，行走方向为 +x。
+  x 分量为正：沿坡向下的重力分量把人往 +x 方向助推，与真实 5 度
+  下坡一致；上坡情形（x 分量为负）下站立与行走均无法维持，故本模块
+  选取下坡作为坡道场景（详见文档性能评价一节）。
+-->
+<mujoco model="scene_slope5">
+  <include file="msk_human.xml"/>
+  <option timestep="0.002" gravity="0.8548 0 -9.7743"/>
+  <worldbody>
+    <geom name="floor" type="plane" size="12 4 0.1" rgba="0.60 0.55 0.45 1"/>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,16 @@
+<launch>
+  <!-- 一条命令跑完：MuJoCo 仿真 + 直行/旋转标定 + 方形路径验证 -->
+  <node pkg="diff_drive_odom_calib" type="sim_node.py" name="sim_mujoco" output="screen"/>
+
+  <node pkg="diff_drive_odom_calib" type="main.py" name="odom_calib" output="screen"
+        required="true">
+    <param name="r_nominal" value="0.1035"/>
+    <param name="b_nominal" value="0.352"/>
+    <param name="straight_distance" value="2.0"/>
+    <param name="straight_speed" value="0.30"/>
+    <param name="rotation_turns" value="3.0"/>
+    <param name="rotation_speed" value="1.00"/>
+    <param name="square_side" value="4.0"/>
+    <param name="warmup" value="1.5"/>
+  </node>
+</launch>

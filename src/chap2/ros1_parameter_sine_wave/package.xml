@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros1_parameter_sine_wave</name>
+  <version>0.1.0</version>
+  <description>
+    ROS Noetic 运行参数热更新演示：动态调整正弦信号的幅值和频率。
+  </description>
+  <maintainer email="3173240490@qq.com">Qinfy-fly</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>dynamic_reconfigure</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <test_depend>python3-nose</test_depend>
+</package>

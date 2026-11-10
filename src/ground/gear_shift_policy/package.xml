@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>gear_shift_policy</name>
+  <version>1.1.0</version>
+  <description>
+    换挡策略与扭矩需求：按发动机转速判据（升挡线 / 降挡线 + 最短保持时间）
+    生成挡位序列，并按纵向力平衡反推发动机扭矩需求，用四条断言判定策略是否合理。
+    纯 Python 标准库实现，不依赖 CARLA 与 GPU。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>

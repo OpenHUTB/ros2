@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_nn_car_following</name>
+  <version>0.1.0</version>
+  <description>基于神经网络的自适应跟车（ACC）仿真模块：雷达感知网络 + 跟车控制网络，运行于 ROS 2 Humble</description>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>python3-numpy</depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
