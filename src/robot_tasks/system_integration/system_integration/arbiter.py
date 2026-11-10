@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 
 MODE_MANUAL = 'manual'
@@ -62,8 +63,14 @@ class VelocityArbiter:
         key = _MODE_ALIAS.get(str(source).strip().lower())
         if key is None:
             return False
+        v, w = float(v), float(w)
+        # 非有限值一律拒收：NaN 参与比较恒为 False，会绕过限幅直接下发到 /cmd_vel
+        if not (math.isfinite(v) and math.isfinite(w)):
+            return False
         now = time.monotonic() if now is None else float(now)
-        self._data[key] = {'v': float(v), 'w': float(w),
+        if not math.isfinite(now):
+            return False
+        self._data[key] = {'v': v, 'w': w,
                            't': now, 'seq': self._data[key]['seq'] + 1}
         return True
 
