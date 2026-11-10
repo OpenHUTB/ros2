@@ -109,7 +109,45 @@ cd src/air/uav_gimbal_reacquisition
 python3 main.py --duration 50 --dt 0.05 --output-dir artifacts/demo
 ```
 
-## 5. 本次离线实测结果
+## 5. 本次实测结果
+
+### 5.1 ROS 2 Humble 实测
+
+在 Ubuntu 22.04.5 / ROS 2 Humble 的 VMware 虚拟机中完成了实际构建和运行：
+
+```text
+Starting >>> uav_gimbal_reacquisition
+Finished <<< uav_gimbal_reacquisition [0.77s]
+Summary: 1 package finished [1.09s]
+```
+
+6 项 `unittest` 在 VM 内通过。`ros2 launch uav_gimbal_reacquisition main.launch.py` 启动两个节点后，记录到以下状态变化：
+
+```text
+SEARCH → TRACK → LOST → TRACK
+```
+
+连续录制 45 秒，共 896 个真实 `/uav_gimbal/observation` 样本：
+
+| 指标 | 结果 |
+|---|---:|
+| 总状态帧 | 1424 |
+| 跟踪帧 | 1162 |
+| 跟踪率 | 81.6% |
+| 丢失事件 | 3 |
+| 重捕获事件 | 3 |
+| 重捕获时间 | 3.90 / 4.75 / 3.90 s |
+| LOS RMS | 1.96° |
+| 像素质误差 RMS | 20.97 px |
+| 最大有效 LOS 误差 | 23.82° |
+
+![ROS 2 Humble 实际话题曲线](../img/air/uav_gimbal_reacquisition/ros2_runtime_effect.png)
+
+![虚拟机内 RViz2 实际渲染](../img/air/uav_gimbal_reacquisition/rviz_humble_effect.png)
+
+第二张图是在 VM 的 Xvfb 显示中实际启动 RViz2 后抓取的窗口。RViz2 订阅 `/uav_gimbal/markers`，画面中可见无人机位置、目标球、FOV 边界、视轴和 `TRACK LOS` 状态文字。
+
+### 5.2 离线复现结果
 
 环境：Windows 11、Python 3.13.7，Matplotlib 仅用于绘图；核心算法只使用 Python 标准库。6 项单元测试通过。
 
@@ -142,7 +180,7 @@ python3 main.py --duration 50 --dt 0.05 --output-dir artifacts/demo
 
 1. 检测器使用理想 FOV/遮挡模型，没有接入 YOLO、KCF 或真实相机图像。
 2. 没有相机畸变、曝光、运动模糊、云台机械回差和振动。
-3. 目标在世界系中运动，云台位置固定，尚未接入 AirSim/OpenHUTB 的无人机姿态。
+3. 目标在世界系中运动，云台位置固定，尚未接入 AirSim/OpenHUTB 的无人机姿态和真实相机图像。
 4. LOS 误差和像素质误差是仿真评估量，不能代替真实光电吊舱的标定结果。
 5. 搜索策略是固定扫描，不是基于目标运动预测的最优搜索。
 
