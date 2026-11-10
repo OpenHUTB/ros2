@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Unified entry point for the neural collision-avoidance drone project.
 
 Every module of the assignment is launched through this file (or through the
@@ -31,7 +31,7 @@ from ca_drone.pipeline import (MAX_RANGE, NeuralStack, run_episode, save_gif)
 from ca_drone.render.scene import compose_frame, depth_image
 from ca_drone.sim.world import make_world
 
-SCENES = ["sparse", "dense", "dynamic", "corridor"]
+SCENES = ["sparse", "dense", "dynamic", "corridor", "unseen"]
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
