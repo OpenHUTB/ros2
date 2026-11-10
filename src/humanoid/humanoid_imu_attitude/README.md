@@ -13,7 +13,7 @@
 
 ## 构建与运行
 
-```bash
+```
 colcon build --packages-select humanoid_imu_attitude
 source install/setup.bash
 cd src/humanoid/humanoid_imu_attitude
@@ -24,14 +24,14 @@ DURATION=20 ./run_eval.sh
 
 单场景：
 
-```bash
+```
 ros2 launch humanoid_imu_attitude main.launch.py \
   profile:=fast duration:=20 out_dir:=results
 ```
 
 只重新统计已有 CSV：
 
-```bash
+```
 ros2 run humanoid_imu_attitude attitude_eval --results results --figure results/effect.png
 ```
 
@@ -75,7 +75,7 @@ ros2 run humanoid_imu_attitude attitude_eval --results results --figure results/
 
 ## 测试
 
-```bash
+```
 colcon test --packages-select humanoid_imu_attitude
 colcon test-result --verbose
 ```
