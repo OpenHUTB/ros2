@@ -81,6 +81,7 @@ nav:
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
     - 人形足迹下的局部避障算法对比: './humanoid/humanoid_local_planner_bench.md'
+    - 人形机器人 H1/H1_2 神经网络行走控制: './humanoid/humanoid_h1_walk.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
     - 人形机器人关节轨迹录制与回放工具: './humanoid/humanoid_joint_tools.md'
     - 人形上下台阶步态仿真: './humanoid/humanoid_stair_climb.md'
@@ -200,7 +201,9 @@ nav:
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
+    - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
+
 - 空域载具:
     - winter 场景无人机圆周飞行: './air/winter_circle.md'
     - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
@@ -280,6 +283,8 @@ nav:
     - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点任务飞行前校验: './air/uav_waypoint_preflight_validator.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
     - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'

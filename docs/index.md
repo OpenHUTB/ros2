@@ -200,6 +200,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
+* [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 * [基于里程计反馈与 A* 算法的差速底盘静态全局路径规划](./ground/diff_drive_astar_odom_nav.md) —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 `/odom` 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移
@@ -311,6 +312,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
+
+* [基于串级PID的四旋翼航点定点悬停与抗风扰仿真](./air/quad_cascade_pid_hover_wind.md) —— 纯 Python 6 自由度四旋翼刚体动力学仿真，位置-姿态-角速率串级 PID 闭环，含恒定风/阵风/湍流扰动，验证航点跟踪与定点悬停的抗风扰能力
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 

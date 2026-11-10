@@ -1,0 +1,9 @@
+<launch>
+    <!-- 启动带精美模型的小车世界 -->
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch">
+        <arg name="model" value="burger"/>
+    </include>
+    
+    <!-- 启动手动滑动条控制面板 -->
+    <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering"/>
+</launch>
