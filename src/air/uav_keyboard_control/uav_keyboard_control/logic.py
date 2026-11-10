@@ -20,7 +20,7 @@ KEY_MAP = {
 }
 
 # 退出键
-EXIT_KEYS = ("\x1b", "\x03")  # ESC, Ctrl-C
+EXIT_KEYS = ("\x03",)  # 只 Ctrl-C 退出，避免方向键误触
 
 
 @dataclass
