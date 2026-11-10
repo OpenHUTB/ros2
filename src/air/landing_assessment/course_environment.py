@@ -35,7 +35,7 @@ def doctor(write=False):
     if write:
         folder = Path(__file__).resolve().parent / 'artifacts'
         folder.mkdir(exist_ok=True)
-        (folder / 'environment.json').write_text(json.dumps(report, indent=2))
+        (folder / 'environment.json').write_text(json.dumps(report, indent=2),encoding='utf-8')
     return report
 
 
