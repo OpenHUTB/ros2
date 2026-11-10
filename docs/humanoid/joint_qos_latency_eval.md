@@ -84,30 +84,18 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ## 结果结论
 
-下表为 `REPEATS=3` 的中位数（Ubuntu 20.04 / ROS 2 Foxy 单机回环，200 Hz × 10 s）：
+完整的实测结果表（`REPEATS=3` 中位数）只维护一份，见
+[模块 README](../../src/humanoid/joint_qos_latency_eval/README.md)
+的「实测结果」一节，避免两处表格分叉。结论摘要：
 
-| 场景 | count | missing | drop% | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | jitter (ms) |
-|------|-------|---------|-------|----------|----------|----------|----------|-------------|
-| best_effort_depth10 | 1993 | 7 | 0.4% | 0.756 | 1.162 | 1.862 | 6.355 | 0.676 |
-| best_effort_depth1 | 1990 | 10 | 0.5% | 0.809 | 1.202 | 1.792 | 3.880 | 0.585 |
-| reliable_depth10 | 1993 | 7 | 0.4% | 0.782 | 1.185 | 1.665 | 4.948 | 0.525 |
-| reliable_depth1 | 1993 | 7 | 0.4% | 0.837 | 1.307 | 1.866 | 3.748 | 0.594 |
-| reliable_transient_local | 1991 | 9 | 0.4% | 0.816 | 1.291 | 1.760 | 3.890 | 0.595 |
-
-1. **BEST_EFFORT 的时延略低于 RELIABLE。** 同 depth 成对看，p50 低 0.026 ms
-   （depth=10）与 0.028 ms（depth=1），符合可靠传输多出的确认开销。
-2. **队列深度的影响与可靠性差异同量级**：`depth=1` 比 `depth=10` 的 p50 高
-   0.053~0.055 ms，两个维度的差异都在 0.05 ms 的噪声边界内。
-3. **`reliable_transient_local` 的 p50（0.816 ms）介于 `reliable_depth10` 与
-   `reliable_depth1` 之间**，本实验分辨不出持久性本身的独立影响；该组合主要
-   用于验证 TRANSIENT_LOCAL 能被正常收发。
-4. **missing 主要是发布定时器欠触发，不是传输丢失**：15 次运行里 11 次
-   `published == received`（真实丢失 0 条），其余 4 次各差 1~3 条；`expected=2000`
-   与 `count≈1992` 的差来自定时器实际只跑到 198.9~199.4 Hz（发布端日志的
-   `actual Hz` 可核对）。
-5. **单次结果差异很大，必须重复测量。** 本轮 15 次全部低丢包，但前一轮
-   `best_effort_depth10` 曾单次真实丢 301 条（15.3%）而相邻两次为 0；p99
-   中位数在 1.7~1.9 ms。因此 `run_sweep.sh` 默认 `REPEATS=3` 并按场景取中位数。
+1. **观测到 BEST_EFFORT 的 p50 略低于 RELIABLE**（同 depth 低 0.026~0.028 ms），
+   但差异与噪声同量级，不足以归因于可靠传输的确认开销。
+2. **队列深度与持久性的影响都在噪声边界内**：`depth=1` 与 `depth=10` 的 p50
+   差 0.053~0.055 ms；`reliable_transient_local` 介于两者之间，测不出独立效应。
+3. **missing 主要来自发布定时器欠触发而非传输丢失**：15 次运行 11 次
+   `published == received`，其余最多差 3 条；但另一轮 `best_effort_depth10`
+   曾单次真实丢 301 条（15.3%），因此 `run_sweep.sh` 默认 `REPEATS=3` 取中位数，
+   丢包结论不能只看单次。
 
 ## 测试
 
