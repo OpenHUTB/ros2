@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>odom_trace_recorder</name>
+  <version>1.0.0</version>
+  <description>
+    里程计轨迹的记录、落盘、回放与比对：订阅 /odom 边收边记，到点写 CSV，
+    再回放成 nav_msgs/Path 并与参考圆弧逐点比对，给出误差直方图与四条断言。
+    内置模拟车辆，不依赖 CARLA 或任何外部仿真器。
+  </description>
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
