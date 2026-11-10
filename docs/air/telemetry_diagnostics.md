@@ -436,3 +436,23 @@ flowchart TD
 **采集脚本与诊断脚本分离。** 只有 `collect_holdout.py` 会控制仿真无人机，其余全部只读。安全边界写在代码结构里，而不是文档里。
 
 ---
+
+## 10. 复现步骤
+
+```bash
+cd ~/ros2/src/air/telemetry_diagnostics
+source /opt/ros/humble/setup.bash
+source ~/uav_prediction_env/bin/activate
+
+bash main.sh doctor        # 13 个模块
+python main.py prepare     # 70 个开发场景
+python main.py test        # 21 项测试
+python main.py evaluate    # 复现随附模型的最终指标
+python main.py report      # 三张图与汇总表
+bash main.sh build
+bash main.sh demo          # 另开 dashboard
+```
+
+耗时：测试 4.0 秒，评估约 6 秒，回放 28 秒。训练另算（`python main.py train --seed 42 --output models/retrained`，20 轮）。
+
+---
