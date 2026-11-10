@@ -19,11 +19,13 @@ class BenchmarkTests(unittest.TestCase):
             model_path = root / "model.npz"
             model.save(model_path)
             result = benchmark(model_path, root / "benchmark.json")
-            self.assertEqual(set(result), {"static", "crossing", "narrow"})
-            for values in result.values():
-                self.assertIn("collision", values)
-                self.assertGreater(values["steps"], 0)
-                self.assertTrue(0 <= values["risk_agreement"] <= 1)
+            self.assertEqual(set(result), {"reference", "learned", "bounded_learned"})
+            for controller in result.values():
+                self.assertEqual(set(controller), {"static", "crossing", "narrow"})
+                for values in controller.values():
+                    self.assertIn("collision", values)
+                    self.assertGreater(values["steps"], 0)
+                    self.assertTrue(0 <= values["risk_agreement"] <= 1)
 
 
 if __name__ == "__main__":
