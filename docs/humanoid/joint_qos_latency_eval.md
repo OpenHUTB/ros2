@@ -60,23 +60,27 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ![编译与测试](../img/humanoid/joint_qos_latency_eval/compile_test.png)
 
+![启动](../img/humanoid/joint_qos_latency_eval/launch_demo.png)
+
 ![四场景对比表](../img/humanoid/joint_qos_latency_eval/effect.png)
 
 ## 结果结论
 
 | 场景 | count | missing | drop% | p50 (ms) | p99 (ms) |
 |------|-------|---------|-------|----------|----------|
-| best_effort_depth10 | 1993 | 0 | 0.0% | 0.693 | 1.434 |
-| best_effort_depth1 | 1927 | 67 | 3.4% | 0.793 | 1.452 |
-| reliable_depth10 | 1992 | 0 | 0.0% | 0.865 | 1.761 |
-| reliable_depth1 | 1931 | 63 | 3.2% | 0.777 | 1.572 |
+| best_effort_depth10 | 1993 | 0 | 0.0% | 0.681 | 1.408 |
+| best_effort_depth1 | 1993 | 0 | 0.0% | 0.678 | 1.327 |
+| reliable_depth10 | 1994 | 0 | 0.0% | 0.752 | 1.403 |
+| reliable_depth1 | 1993 | 0 | 0.0% | 0.789 | 1.547 |
 
-1. **丢包的主因是队列深度，不是可靠性策略。** `depth=10` 两组零丢包，`depth=1`
-   两组稳定丢 3.2%~3.4%，且 RELIABLE 与 BEST_EFFORT 的丢包率几乎相同。
-2. **BEST_EFFORT 的时延略低**，p50 相差约 0.1 ms，量级符合可靠传输多出的确认开销。
-3. 结果对系统负载敏感：负载轻时曾出现四组全部零丢包，冷启动未预热时 `depth=10`
-   甚至丢过 24%。因此这类测量必须重复多次，并丢弃第一次的数据。
-
+1. **BEST_EFFORT 的时延低于 RELIABLE。** p50 分别为 0.681 / 0.678 ms 与
+   0.752 / 0.789 ms，相差约 0.07~0.11 ms，符合可靠传输多出的确认开销。
+2. **队列深度对时延几乎没有影响**：同为 BEST_EFFORT 时 `depth=10` 与 `depth=1`
+   的 p50 仅差 0.003 ms，差异在测量噪声范围内。
+3. 本次运行四组 missing 均为 0，p99 都在 1.6 ms 以内，单机回环下 200 Hz 有余量。
+4. **结果对系统负载敏感，必须重复测量。** 负载较高时曾出现 `depth=1` 两组分别丢
+   3.4% 与 3.2% 而 `depth=10` 零丢包；冷启动未预热时 `depth=10` 甚至丢过 24%。
+   因此丢包率应重复多次取中位数，并丢弃第一次运行的数据。
 ## 测试
 
 ```bash
