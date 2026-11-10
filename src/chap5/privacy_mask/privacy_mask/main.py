@@ -1,4 +1,4 @@
-"""节点可执行入口，统一从 main.py 启动。"""
+"""Executable entry point of the privacy_mask package."""
 
 from privacy_mask.privacy_mask_node import main
 

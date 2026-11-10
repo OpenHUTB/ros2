@@ -1,7 +1,7 @@
-"""flake8 代码风格检查。"""
+"""Check the code style with flake8."""
 
-import pytest
 from ament_flake8.main import main_with_errors
+import pytest
 
 
 @pytest.mark.flake8

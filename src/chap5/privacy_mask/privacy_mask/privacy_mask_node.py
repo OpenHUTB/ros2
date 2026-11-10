@@ -1,14 +1,15 @@
-"""行人隐私脱敏视觉节点。
+"""Pedestrian privacy masking node.
 
-读取一张静态测试图片，用 YOLOv8n 检测行人（COCO 类别 id = 0），
-对行人包围盒区域做高斯模糊，并把原图与脱敏图分别以 CompressedImage 话题发布。
+Loads one static test image, detects pedestrians with YOLOv8n
+(COCO class id 0), blurs every bounding box and publishes the raw image and
+the masked image as CompressedImage topics.
 """
 
 import os
 
+from ament_index_python.packages import get_package_share_directory
 import cv2
 import rclpy
-from ament_index_python.packages import get_package_share_directory
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage
 from ultralytics import YOLO
@@ -17,7 +18,7 @@ PERSON_CLASS_ID = 0  # COCO 数据集中 person 的类别 id
 
 
 class PrivacyMaskNode(Node):
-    """发布原始图像与行人模糊图像。"""
+    """Publish the raw image and the blurred image."""
 
     def __init__(self):
         super().__init__('privacy_mask_node')
@@ -63,7 +64,7 @@ class PrivacyMaskNode(Node):
             f'行人目标数：{self.person_count}，发布周期：{period}s')
 
     def load_image(self, path):
-        """读取测试图片，失败时直接抛异常，避免节点空转。"""
+        """Read the test image and fail fast when it is missing."""
         img = cv2.imread(path)
         if img is None:
             raise RuntimeError(
@@ -72,7 +73,7 @@ class PrivacyMaskNode(Node):
         return img
 
     def load_model(self, path):
-        """优先加载功能包内的本地模型；缺失时才回退到联网自动下载。"""
+        """Load the packaged model, fall back to online download if absent."""
         if os.path.exists(path):
             return YOLO(path)
         self.get_logger().warning(
@@ -80,7 +81,7 @@ class PrivacyMaskNode(Node):
         return YOLO('yolov8n.pt')
 
     def kernel_size(self, roi_width, roi_height):
-        """返回高斯核大小：参数为 0 时按包围盒短边自适应，否则用固定值。"""
+        """Return the Gaussian kernel size for one bounding box."""
         if self.blur_kernel > 0:
             return self.blur_kernel
         # 取短边的 40%，保证人脸等细节无法辨认；上限 199 控制单帧耗时
@@ -89,7 +90,7 @@ class PrivacyMaskNode(Node):
         return size + 1 if size % 2 == 0 else size
 
     def mask_pedestrians(self, img):
-        """检测行人并对包围盒做高斯模糊，返回脱敏后的图像。"""
+        """Blur every pedestrian box and return the masked image."""
         masked = img.copy()
         height, width = masked.shape[:2]
         results = self.model(img, verbose=False)
@@ -114,14 +115,14 @@ class PrivacyMaskNode(Node):
         return masked
 
     def encode(self, img):
-        """把 OpenCV 图像编码成 JPEG 字节串。"""
+        """Encode an OpenCV image into JPEG bytes."""
         ok, buffer = cv2.imencode('.jpg', img)
         if not ok:
             raise RuntimeError('JPEG 编码失败，请检查图像是否为空')
         return buffer.tobytes()
 
     def to_msg(self, data):
-        """用缓存的 JPEG 数据拼出带当前时间戳的压缩图像消息。"""
+        """Build a compressed image message with the current timestamp."""
         msg = CompressedImage()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'camera'
