@@ -48,6 +48,12 @@ bash main.sh precision gz_args:='-r -s'
 
 真实 Gazebo 运行：前进 0.5 m 实测 0.542 m（误差 +0.042 m），左转 90° 实测约 91.0°（误差 +1.0°），正方形闭合误差约 0.044 m。
 
+## 运行画面
+
+![Gazebo 实时仿真：精确运动小车](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_gazebo_close.png)
+
+![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_gazebo_wide.png)
+
 ## 参数与话题
 
 完整参数表、话题/TF、算法公式、复现步骤和故障排查见 `docs/ground/gazebo_diff_drive_teleop.md`。
