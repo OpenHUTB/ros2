@@ -337,6 +337,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
+* [预设航线飞行模拟器](./air/flight_path_simulator.md) —— 纯 Python 离线脚本，按预设时间表播放一段巡航飞行并生成数据集与可视化，不依赖 ROS/仿真器
+
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
 * [基于串级PID的四旋翼航点定点悬停与抗风扰仿真](./air/quad_cascade_pid_hover_wind.md) —— 纯 Python 6 自由度四旋翼刚体动力学仿真，位置-姿态-角速率串级 PID 闭环，含恒定风/阵风/湍流扰动，验证航点跟踪与定点悬停的抗风扰能力
@@ -411,6 +413,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
+* [水下 AUV 矩形巡航与视觉双向避障仿真](./water/auv_end2end.md) —— ROS2 + Gazebo Classic，四状态矩形巡航与单目暗区检测双向避障
 
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
