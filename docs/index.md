@@ -108,6 +108,7 @@ ROS 2 话题发布订阅基础实验（talker/listener）：[chap2/ros2_pubsub_p
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
@@ -187,5 +188,3 @@ ___
 ___
 
 ## 参考文献
-
-* [仓储通道测距与制动 / Warehouse UAV Ranging and Braking](./air/mujoco_warehouse_uav_collision_braking.md)
