@@ -112,6 +112,30 @@ def reset_data(model, data):
     mujoco.mj_forward(model, data)
 
 
+def speed_direction(speed, deadband=0.02):
+    """把带符号的线速度映射为方向；死区内返回 0。"""
+    speed = float(speed)
+    deadband = float(deadband)
+    if not math.isfinite(speed):
+        raise ValueError("speed must be finite")
+    if not math.isfinite(deadband) or deadband < 0.0:
+        raise ValueError("deadband must be finite and non-negative")
+    if abs(speed) <= deadband:
+        return 0
+    return 1 if speed > 0.0 else -1
+
+
+def clamp_speed_command(speed, max_speed=1.2):
+    """Clamp finite commands and map invalid numeric input to a safe stop."""
+    limit = float(max_speed)
+    if not math.isfinite(limit) or limit <= 0.0:
+        raise ValueError("max_speed must be finite and positive")
+    value = float(speed)
+    if not math.isfinite(value):
+        return 0.0
+    return max(-limit, min(limit, value))
+
+
 def base_height(data):
     return float(data.qpos[2])
 
@@ -160,6 +184,7 @@ class TrotGait(object):
     a_thigh   大腿摆动幅度 (rad)
     a_calf    小腿摆动幅度 (rad)
     phase_offset  小腿相对大腿的相位差 (rad)，实测 pi/2 最好
+    direction     步态方向，1 为前进，-1 为后退
     kp_roll   横滚反馈增益：基座横滚 → 左右腿大腿目标角
     kp_pitch  俯仰反馈增益：基座俯仰 → 前后腿大腿目标角
     kp_height 高度反馈增益：基座高度误差 → 全部大腿目标角
@@ -168,11 +193,17 @@ class TrotGait(object):
 
     def __init__(self, robot, freq=3.97, a_thigh=0.15, a_calf=0.29,
                  phase_offset=math.pi / 2, kp_roll=0.01, kp_pitch=0.0,
-                 kp_height=0.0, a_hip=0.0):
+                 kp_height=0.0, a_hip=0.0, direction=1,
+                 amplitude_scale=1.0):
+        if direction not in (-1, 1):
+            raise ValueError("direction must be 1 (forward) or -1 (backward)")
         self.robot = robot
         self.freq = freq
-        self.a_thigh = a_thigh
-        self.a_calf = a_calf
+        self.direction = int(direction)
+        self._base_a_thigh = float(a_thigh)
+        self._base_a_calf = float(a_calf)
+        self.amplitude_scale = 1.0
+        self.set_amplitude_scale(amplitude_scale)
         self.phase_offset = phase_offset
         self.kp_roll = kp_roll
         self.kp_pitch = kp_pitch
@@ -180,17 +211,26 @@ class TrotGait(object):
         self.a_hip = a_hip
         self.commanded = {leg: dict(robot.home[leg]) for leg in LEG_ORDER}
 
+    def set_amplitude_scale(self, scale):
+        """Update swing amplitudes without resetting the caller's gait phase."""
+        scale = float(scale)
+        if not math.isfinite(scale) or scale <= 0.0:
+            raise ValueError("amplitude scale must be finite and greater than zero")
+        self.amplitude_scale = scale
+        self.a_thigh = self._base_a_thigh * scale
+        self.a_calf = self._base_a_calf * scale
+
     def params(self):
         return dict(freq=self.freq, a_thigh=self.a_thigh, a_calf=self.a_calf,
                     phase_offset=self.phase_offset, kp_roll=self.kp_roll,
                     kp_pitch=self.kp_pitch, kp_height=self.kp_height,
-                    a_hip=self.a_hip)
+                    a_hip=self.a_hip, direction=self.direction)
 
     def update(self, t):
         robot = self.robot
         roll, pitch = base_rpy_deg(robot.model, robot.data)
         z_err = robot.z_home - base_height(robot.data)
-        phase = 2.0 * math.pi * self.freq * t
+        phase = 2.0 * math.pi * self.freq * self.direction * t
 
         for leg, sign in TROT_PAIRS.items():
             ph = phase if sign > 0 else phase + math.pi
@@ -303,9 +343,9 @@ def default_model_path():
 
 def format_metrics(metrics, indent="- "):
     lines = [
-        "%s前进位移 Δx: %+.3f m" % (indent, metrics["dx"]),
+        "%sX 方向位移 Δx: %+.3f m" % (indent, metrics["dx"]),
         "%s横向漂移 Δy: %+.3f m" % (indent, metrics["dy"]),
-        "%s平均前进速度: %+.4f m/s" % (indent, metrics["mean_speed"]),
+        "%sX 方向平均速度: %+.4f m/s" % (indent, metrics["mean_speed"]),
         "%s最大倾角: %.2f °" % (indent, metrics["max_tilt_deg"]),
         "%s最低基座高度: %.3f m（末态 %.3f m）"
         % (indent, metrics["min_base_height"], metrics["final_base_height"]),

@@ -45,6 +45,8 @@ def main(argv=None):
     p.add_argument("--model", default=default_model_path(),
                    help="MJCF 场景文件（默认 ../models/quadruped.xml）")
     p.add_argument("--mode", choices=["stand", "trot"], default="trot")
+    p.add_argument("--direction", choices=["forward", "backward"], default="forward",
+                   help="trot 步态方向")
     p.add_argument("--seconds", type=float, default=4.0)
     p.add_argument("--disturbance", type=float, default=0.0,
                    help="站立模式下在躯干施加的水平推力 (N)")
@@ -77,11 +79,14 @@ def main(argv=None):
             print("扰动: %.0f N 水平推力，%.1f s 起持续 %.1f s"
                   % disturbance)
     else:
+        direction = 1 if ns.direction == "forward" else -1
         controller = TrotGait(
             robot, freq=ns.freq, a_thigh=ns.thigh_amp, a_calf=ns.calf_amp,
             phase_offset=ns.phase_offset, kp_roll=ns.kp_roll,
-            kp_pitch=ns.kp_pitch, kp_height=ns.kp_height)
-        print("\n模式: 对角步态 (trot)，参数: %s" % controller.params())
+            kp_pitch=ns.kp_pitch, kp_height=ns.kp_height,
+            direction=direction)
+        print("\n模式: 对角步态 (trot)，方向: %s，参数: %s"
+              % (ns.direction, controller.params()))
 
     metrics = simulate(robot, controller, seconds=ns.seconds,
                        disturbance=disturbance, log=bool(ns.csv))
