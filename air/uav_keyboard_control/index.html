@@ -484,7 +484,13 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#42">4.2 按键 → 速度：纯函数</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#43">4.3 松开即悬停</a>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 每轮循环发布一条指令</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#44">4.4 按键保持：终端没有"抬起"事件</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#45">4.5 组合键与加速度平滑</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#46-esc">4.6 ESC 与方向键</a>
 </li>
 </ul>
 </li>
@@ -733,6 +739,9 @@
 <p>任务①「无人机仿真 + 键盘控制」的 ROS 侧实现：把终端按键转换为<strong>机体系速度指令</strong>，
 发布到 <code>/uav/cmd_vel</code>，由 <code>carlair_ros_bridge</code> 连仿真器执行。仿真/坐标换算/安全限幅
 集中在桥接层，键盘、规划器、神经网络控制器共用同一条指令通道。</p>
+<p>在"一个键一个轴"的基础上，本模块还支持<strong>多键组合</strong>（<code>W</code>+<code>A</code> 斜飞、<code>W</code>+<code>Q</code> 边走边转）
+和<strong>加速度限幅的平滑调速</strong>（速度按斜坡逼近目标，松开后同样斜坡回零），并顺带修掉了
+"按方向键会误退出"的问题；三者的语义与实现见第 2、4 节。</p>
 <h2 id="1">1. 运行架构</h2>
 <div class="highlight"><pre><span></span><code>终端按键 ──► uav_keyboard_control ──/uav/cmd_vel──► carlair_ros_bridge ──► CarlaAir/AirSim
             (raw 模式读键)        (geometry_msgs/Twist)   (坐标换算+执行)     (无人机)
@@ -769,18 +778,33 @@
 <td><code>angular.z = ±yaw_rate</code></td>
 </tr>
 <tr>
-<td>松开</td>
-<td>悬停</td>
-<td>全零</td>
+<td>组合键（如 <code>W</code>+<code>A</code>、<code>W</code>+<code>Q</code>）</td>
+<td>斜向 / 边走边转</td>
+<td>各轴分量叠加</td>
 </tr>
 <tr>
-<td><code>ESC</code></td>
+<td>松开</td>
+<td>悬停</td>
+<td>按 <code>accel_*</code> 斜坡回零</td>
+</tr>
+<tr>
+<td><code>ESC</code> / <code>Ctrl-C</code></td>
 <td>退出</td>
-<td>—</td>
+<td>先补发一条零速</td>
 </tr>
 </tbody>
 </table>
 <p><code>Q</code>/<code>E</code> 的方向遵循 AirSim 机体系 <code>yaw_rate</code> 约定（<code>Q=+yaw_rate</code> 机头右转）。</p>
+<p>三点补充：</p>
+<ul>
+<li><strong>组合键</strong>：<code>W</code>+<code>A</code> 下发 <code>linear.x = +horiz_speed, linear.y = +horiz_speed</code>；
+  <code>W</code>+<code>S</code> 这类互斥组合自然抵消为 0。终端没有"按键抬起"事件，是否按住靠
+  "最近 <code>key_hold_timeout</code>（默认 0.15 s）内是否还收到过该键"判断，见 4.4。</li>
+<li><strong>平滑</strong>：目标速度仍是上表的 <code>±horiz_speed</code> 等，但实际下发值按 <code>accel_*</code> 斜坡逼近，
+  不会从 0 直接跳变到 2 m/s；松开后同样斜坡回零（4.5）。</li>
+<li><strong>方向键不误触</strong>：<code>ESC [ A</code> 等转义序列会被整段吃掉，按方向键既不退出，
+  残字节也不会被当成运动键（4.6）。</li>
+</ul>
 <h2 id="3">3. 编译与运行</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）</span>
 <span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
@@ -790,7 +814,7 @@ roslaunch<span class="w"> </span>carlair_ros_bridge<span class="w"> </span>main.
 <span class="nb">source</span><span class="w"> </span>~/bridge_ws/devel/setup.bash
 roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>main.launch
 </code></pre></div>
-<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控，松开即悬停，<code>ESC</code> 退出。</p>
+<p>把焦点放在键盘控制终端，按 <code>W/A/S/D/R/F/Q/E</code> 操控（可同时按住多个键斜飞），松开后平滑减速到悬停，<code>ESC</code> 退出。</p>
 <h2 id="4">4. 实现要点</h2>
 <h3 id="41-raw">4.1 终端 raw 模式</h3>
 <p>Linux 终端默认行缓冲（要按回车），用 <code>termios</code>+<code>tty</code> 进入 raw 模式即可单键即时响应：</p>
@@ -801,11 +825,52 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <h3 id="42">4.2 按键 → 速度：纯函数</h3>
 <p><code>key_to_cmd(key, horiz, vert, yaw)</code> 把按键映射为 <code>(vx, vy, vz, wz)</code>，
 <code>step_once</code> 再打包成 <code>geometry_msgs/Twist</code>。两者都不依赖 ROS/终端，
-可在无 ROS 的机器上单元测试（<code>tests/test_keyboard_local.py</code>，35 项）。</p>
-<h3 id="43">4.3 松开即悬停</h3>
-<p>节点主循环 30 Hz，<strong>每轮循环发布一条</strong> <code>Twist</code>：读到按键就发该方向速度，没读到（松开/未知键）就发全零；按键<strong>不锁存</strong>，要连续运动必须持续按键（自动化时即"定频重复注入"，见 7.6）。桥接层的
-<code>cmd_vel_sub</code> 有「超过 <code>cmd_timeout</code> 无指令自动悬停」的安全保护，这里再叠加一层
-显式零速度，双保险防止无人机失控。</p>
+可在无 ROS 的机器上单元测试（<code>tests/test_keyboard_local.py</code>，79 项，覆盖单键、组合键、按键保持、加速度斜坡与转义序列）。</p>
+<h3 id="43">4.3 每轮循环发布一条指令</h3>
+<p>节点以 30 Hz 运行，<strong>每轮循环都发一条</strong> <code>Twist</code>（包括全零）：这既满足桥接层
+「<code>cmd_timeout</code> 内必须有新指令」的要求，也给平滑器一个固定节拍。按键<strong>不锁存</strong>——
+要持续运动必须真的按住（终端自动重复会持续送字节）；自动化时即"定频重复注入"，见 7.6。</p>
+<h3 id="44">4.4 按键保持：终端没有"抬起"事件</h3>
+<p>raw 模式下终端只在<strong>按下</strong>（以及操作系统的自动重复）时送字节，松手不会再送任何东西，
+因此"是否还按住"只能靠时间戳推断：</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">KeyTracker</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">press</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">now</span><span class="p">):</span>        <span class="c1"># 收到一个字节 -&gt; 记录最近时间</span>
+        <span class="k">if</span> <span class="n">_axis</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_seen</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">now</span>
+
+    <span class="k">def</span> <span class="nf">active</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">now</span><span class="p">):</span>            <span class="c1"># 超过 hold_timeout 没再收到 -&gt; 判松开</span>
+        <span class="n">expired</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seen</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">now</span> <span class="o">-</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">hold_timeout</span><span class="p">]</span>
+        <span class="o">...</span>
+</code></pre></div>
+<ul>
+<li>按住某键时，终端自动重复会以 25~40 ms 的间隔持续送同一个字节，时间戳被不断续期；</li>
+<li>默认 <code>key_hold_timeout = 0.15 s</code>，相当于连丢 4 帧才判松开，既不会因偶发丢帧抖动，
+  松手后也不会拖太久；</li>
+<li>未知键（方向键序列的残字节、功能键等）不进入保持集合，不会污染运动指令。</li>
+</ul>
+<h3 id="45">4.5 组合键与加速度平滑</h3>
+<p>组合键只是把"一个键"换成"一组键"，各轴分量相加，仍是纯函数：</p>
+<div class="highlight"><pre><span></span><code><span class="n">merge_target</span><span class="p">([</span><span class="s2">"w"</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">])</span>        <span class="c1"># -&gt; (vx=+h, vy=+h, 0, 0)   斜向</span>
+<span class="n">merge_target</span><span class="p">([</span><span class="s2">"w"</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">])</span>        <span class="c1"># -&gt; (0, 0, 0, 0)           互斥抵消</span>
+</code></pre></div>
+<p>下发前再经加速度限幅，把目标速度斜坡逼近：</p>
+<div class="highlight"><pre><span></span><code><span class="bp">self</span><span class="o">.</span><span class="n">cmd</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ramp_towards</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">accel</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span> <span class="k">for</span> <span class="n">cur</span><span class="p">,</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">accel</span> <span class="ow">in</span> <span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+<p>节点级指令序列（30 Hz，<code>accel_horiz=4.0</code>，<strong>不含仿真器动力学</strong>）：按住 <code>W</code> 时
+<code>vx</code> 从 0 逐帧 0.13 → 0.27 → 0.40 → … → 2.00 爬升，约 <strong>0.5 s</strong> 到满速；松开后
+约 <strong>0.5 s</strong> 斜坡回零。把三轴 <code>accel_*</code> 都设为 <code>&lt;= 0</code> 即可退回"瞬时阶跃"的旧手感。</p>
+<p>单帧积分时长还有 <code>MAX_LOOP_DT = 0.1 s</code> 的上限：终端若被阻塞（拖动窗口、系统卡顿），
+不会因为一帧 <code>dt</code> 很大就把速度积分到很高。</p>
+<h3 id="46-esc">4.6 ESC 与方向键</h3>
+<p>方向键在终端里发送的是 <code>ESC [ A</code>、<code>ESC [ 1 ; 5 A</code> 这类 CSI 序列，第一个字节就是 <code>0x1b</code>。
+如果只按字节判断，按一下方向键就会退出节点（旧实现的问题），而且序列残字节 <code>[</code>、<code>A</code>
+还会被当成运动键。现在收到 <code>0x1b</code> 后先把整段序列吃掉，只有"孤立的 ESC"才退出：</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">consume_escape</span><span class="p">(</span><span class="n">reader</span><span class="p">):</span>     <span class="c1"># ESC [ ... 终止字节</span>
+        <span class="k">continue</span>
+    <span class="k">break</span>
+</code></pre></div>
+<p>退出（含异常退出）时还会补发一条全零 <code>Twist</code>，不必等桥接层 0.5 s 超时保护才停。</p>
 <h2 id="5-wasd">5. 与视口内置 WASD 的关系</h2>
 <p>CarlaAir 视口<strong>内置</strong>键盘操控（任务①的「仿真」部分），本模块提供 <strong>ROS 侧</strong>键盘控制
 （任务①的「键盘控制」部分）。两者可对比验证：视口 WASD 直接驱动仿真器，
@@ -954,28 +1019,36 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <td>由 <code>rate/publish_hz</code> 设定。<strong>这是设定值，不能当作端到端响应延迟的实测值</strong></td>
 </tr>
 <tr>
-<td>指令水平速度</td>
+<td>指令水平速度（稳态）</td>
 <td>2.0 m/s</td>
-<td>由 <code>control/horiz_speed</code> 决定，可用参数覆盖</td>
+<td>由 <code>control/horiz_speed</code> 决定，可用参数覆盖；<strong>v2 起需要约 0.5 s 的加速段才到满速</strong></td>
 </tr>
 <tr>
 <td>单次按键脉冲的水平位移</td>
-<td>约 0.20 m（1 条非零指令）</td>
-<td>单次写入一个 <code>W</code> 字节：节点只在该轮循环发布一条非零指令，随后回落全零（源码见 7.6.1）。数字为评审在另一台机器（Ubuntu 20.04 + Noetic + Blocks/AirSim）的对照测试结果</td>
+<td>约 0.20 m（v1，无平滑；1 条非零指令）</td>
+<td>该数字来自<strong>旧版</strong>语义：一个字节只产生一条 2 m/s 指令。v2 的脉冲会维持 0.15 s 再斜坡回零，<strong>位移已变，需重测</strong>（节点级指令积分约 0.07 m，见 7.6.1）</td>
 </tr>
 <tr>
 <td>20 Hz 定频注入 3 s 的位移</td>
-<td>约 4.56 m（60 条非零指令）</td>
-<td>同上；注入频率 20 Hz、测量时段 3 s，等效平均速度约 1.5 m/s（低于设定 2.0 m/s，差额来自桥接层控制周期与加减速过程）</td>
+<td>约 4.56 m（v1，无平滑；60 条非零指令）</td>
+<td>同上；v2 的指令波形变为"0.5 s 爬升 + 匀速 + 0.5 s 减速"，<strong>不能与 v1 直接比较，需重测</strong></td>
+</tr>
+<tr>
+<td>组合键</td>
+<td>v2 新增</td>
+<td><code>W</code>+<code>A</code> 两轴同时给速度；<code>W</code>+<code>S</code> 抵消为 0。节点级单测覆盖（<code>tests/test_keyboard_local.py</code> B 节）</td>
 </tr>
 <tr>
 <td>遥控稳定性</td>
-<td>松开即悬停</td>
-<td>双重保护：节点显式发零速 + 桥接层 0.5 s 超时悬停</td>
+<td>松开后平滑回零</td>
+<td>松开 0.15 s 判松开、按 <code>accel_*</code> 斜坡回零（水平 4 m/s² 时约 0.5 s）；桥接层 0.5 s 超时悬停仍在；退出时补发零速</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
+<p><strong>v2 的行为变更</strong>：本节与 7.6 里带"约 0.20 m / 约 4.56 m"的位移数字测量于<strong>无平滑的 v1</strong>
+（2025 年版节点）。v2 改了指令波形，旧数字不能再当作 v2 的指标；表中已标注。
+7.6.1 给出 v2 的<strong>节点级</strong>指令序列（可离线复算），物理位移需要在仿真器上重测后再填入。</p>
 <p><strong>关于「按键响应延迟」</strong>：原表写的「&lt; 30 ms」是用 30 Hz 轮询周期反推出来的，
 既不是实测值，本身也和 30 Hz（周期 33 ms）矛盾，已删除。
 要得到真实延迟，需要给按键打时间戳、再和 <code>/uav/cmd_vel</code> 首帧的到达时刻对比，
@@ -989,23 +1062,57 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <code>requestApiControl was successful</code>、<code>Vehicle is already armed</code>、<code>Collision Count:0</code>：</p>
 <p><img alt="15 m 悬停" src="../../img/air/uav_keyboard_control/hover_15m.png"/></p>
 <h3 id="76">7.6 按键闭环的复现方法</h3>
-<h4 id="761">7.6.1 先看清语义：一个字节只产生一条速度指令</h4>
-<p><code>src/air/uav_keyboard_control/scripts/keyboard_control.py</code> 的主循环：</p>
+<h4 id="761">7.6.1 先看清语义：一个字节能"续命"多久</h4>
+<p>节点主循环（v2）：</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">RawKeyReader</span><span class="p">()</span> <span class="k">as</span> <span class="n">reader</span><span class="p">:</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
             <span class="n">key</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>      <span class="c1"># 没按键时返回 None</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">:</span>                       <span class="c1"># ESC 退出</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">:</span>                       <span class="c1"># ESC（先排除方向键序列）</span>
+                <span class="k">if</span> <span class="n">consume_escape</span><span class="p">(</span><span class="n">reader</span><span class="p">):</span>
+                    <span class="k">continue</span>
                 <span class="k">break</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_once</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>   <span class="c1"># 每轮循环发布一条 Twist</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>                       <span class="c1"># 30 Hz</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_once</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">now</span><span class="o">=</span><span class="n">now</span><span class="p">))</span>   <span class="c1"># 每轮一条 Twist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>                                <span class="c1"># 30 Hz</span>
 </code></pre></div>
-<ul>
-<li>每一轮循环<strong>发布一条</strong> <code>Twist</code>：读到键就发该方向速度，没读到键（<code>None</code>）就发<strong>全零</strong>；</li>
-<li>因此<strong>写入一个字节 = 一条非零指令</strong>，约 33 ms 后的下一轮循环就回落到零速。
-  按键<strong>不是锁存的</strong>：写一次 <code>W</code> 并不会让飞机持续前进，只会"推一下"。</li>
-</ul>
-<p>这一点由评审在另一台机器上实测确认（Ubuntu 20.04 / ROS Noetic / 本机 Blocks+AirSim）：</p>
+<p>每一轮循环<strong>发布一条</strong> <code>Twist</code>，这一点两版相同；不同的是"按键还活着多久"和"速度怎么变"：</p>
+<table>
+<thead>
+<tr>
+<th>语义</th>
+<th>v1（无平滑，旧实测数据来源）</th>
+<th>v2（当前）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一个字节的有效期</td>
+<td>只影响当下这一轮（≈33 ms）</td>
+<td><code>key_hold_timeout</code> = 0.15 s</td>
+</tr>
+<tr>
+<td>松开后的速度</td>
+<td>下一轮立刻全零（阶跃）</td>
+<td>0.15 s 判松开，再按 <code>accel_*</code> 斜坡回零（水平约 0.5 s）</td>
+</tr>
+<tr>
+<td>多键</td>
+<td>一次只有一个轴（后按的覆盖先按的）</td>
+<td>各轴分量叠加（<code>W</code>+<code>A</code> 斜飞、<code>W</code>+<code>S</code> 抵消）</td>
+</tr>
+<tr>
+<td>方向键</td>
+<td><code>0x1b</code> 开头 -&gt; 直接退出</td>
+<td>整段 CSI/SS3 序列被吃掉，不退出、不产生运动</td>
+</tr>
+<tr>
+<td>退出</td>
+<td>停止发布，等桥接层 0.5 s 超时</td>
+<td>先补发一条零速再停</td>
+</tr>
+</tbody>
+</table>
+<p>v1 的实测（评审在另一台机器 Ubuntu 20.04 / ROS Noetic / Blocks+AirSim 上做的对照复现）：</p>
 <table>
 <thead>
 <tr>
@@ -1027,10 +1134,35 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 </tr>
 </tbody>
 </table>
+<p>v2 的<strong>节点级</strong>指令序列（30 Hz、<code>accel_horiz=4.0</code>、<code>horiz_speed=2.0</code>，不含仿真器动力学，
+由 <code>keyboard_control.py</code> 的纯函数逻辑逐帧推出来，可离线复算）：</p>
+<table>
+<thead>
+<tr>
+<th>注入方式</th>
+<th>v2 节点级指令</th>
+<th>节点级指令积分（位移估算）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单次写入 <code>W</code></td>
+<td><strong>7 条</strong>非零：<code>0.13 → 0.27 → 0.40 → 0.53 → 0.40 → 0.27 → 0.13</code> m/s，之后全零</td>
+<td>约 <strong>0.07 m</strong>（峰值只有 0.53 m/s：0.15 s 保持期内来不及加速到 2.0，且首帧 dt=0 不积分）</td>
+</tr>
+<tr>
+<td>20 Hz 重复写入 <code>W</code>、持续 3 s</td>
+<td>前 0.5 s 逐帧爬升到 2.00 m/s，其后匀速 2.00，停写后再经 0.15 s + 0.5 s 斜坡回零</td>
+<td>约 <strong>5.5 m</strong>（注入段）+ 约 <strong>0.5 m</strong>（减速段），整段积分约 <strong>6.2 m</strong></td>
+</tr>
+</tbody>
+</table>
 <blockquote>
-<p>本页早期版本写的是「每个按键写一次字节、保持 2.5~3 s，节点在这段时间内持续发布该方向速度」——
-<strong>这是错的</strong>（作者当时误以为按键会被锁存），已删除；早期按该协议得到的位移数字
-也不再作为定量指标。</p>
+<p>这两组 v2 数字是<strong>指令层</strong>的，不是仿真器里的实测位移：桥接层按 <code>cmd_duration</code>
+（默认 0.1 s）分片执行，还有控制周期与机体动力学，实际位移会与积分值有差异。
+真值请按 7.6.2 的协议在仿真器上重测后回填本节。</p>
+<p>本页更早的版本写的是「每个按键写一次字节、保持 2.5~3 s，节点在这段时间内持续发布该方向速度」——
+<strong>那是错的</strong>（作者当时误以为按键会被锁存），已删除；按该协议得到的数字不作数。</p>
 </blockquote>
 <h4 id="762">7.6.2 两种可复现协议</h4>
 <table>
@@ -1040,7 +1172,7 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <th>注入方式</th>
 <th>注入频率</th>
 <th>测量时段</th>
-<th>预期观测</th>
+<th>预期观测（v2）</th>
 </tr>
 </thead>
 <tbody>
@@ -1049,14 +1181,14 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <td>只写一个 <code>b"w"</code></td>
 <td>一次</td>
 <td>写入后 1.0 s 内的位姿差</td>
-<td>1 条非零指令；位移约 0.20 m</td>
+<td>7 条非零指令（峰值约 0.53 m/s）；指令积分约 0.07 m，<strong>待重测</strong></td>
 </tr>
 <tr>
 <td>B 定频注入</td>
 <td>循环写 <code>b"w"</code></td>
 <td><strong>20 Hz</strong></td>
 <td><strong>连续 3.0 s</strong>（共写入 60 次）</td>
-<td>60 条非零指令；位移约 4.56 m</td>
+<td>指令在 0.5 s 内爬升到 2.0 m/s 并保持；整段积分约 6.2 m，<strong>待重测</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1084,7 +1216,8 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
 <span class="sd">"""用伪终端(pty)把按键按固定频率"敲"进 uav_keyboard_control，模拟真人连续按键。</span>
 
 <span class="sd">为什么要定频重复写入：节点主循环每轮只发布一条 Twist（见文档 7.6.1），</span>
-<span class="sd">写一次字节只"推一下"；要让飞机持续运动，必须按固定频率重复写。</span>
+<span class="sd">一个字节只能把该键"续命" key_hold_timeout（默认 0.15 s）；要让飞机持续运动，</span>
+<span class="sd">必须按固定频率重复写（模拟真人按住时终端的自动重复）。</span>
 
 <span class="sd">用法：</span>
 <span class="sd">  python3 kb_inject_test.py --mode pulse                         # 协议 A：单次脉冲</span>
@@ -1159,7 +1292,7 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
             <span class="n">drain</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">nxt</span> <span class="o">-</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"[test] 定频注入结束，实际用时 </span><span class="si">%.2f</span><span class="s2"> s"</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
 
-    <span class="c1"># 松开：不再写字节，节点下一轮循环自动发全零</span>
+    <span class="c1"># 松开：不再写字节，节点在 key_hold_timeout 后判松开并按加速度斜坡回零</span>
     <span class="n">drain</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x1b</span><span class="s2">"</span><span class="p">)</span>
@@ -1188,7 +1321,10 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
 <hr/>
 <p>本文档在编写过程中使用了 AI 大模型辅助（资料核对、文档起草、问题排查）。
 文中运行环境、命令与<strong>实测数据</strong>均来自本机实际运行记录：桥接层环境自检 <strong>5/5 通过</strong>、
-<code>/uav/odom</code> 发布频率实测 <strong>19.999 Hz</strong>；键盘闭环的位姿记录与两种注入协议（单次脉冲 / 20 Hz 定频）见第 7 节，其中「单次脉冲 ≈ 0.20 m、20 Hz 定频 3 s ≈ 4.56 m」为评审在另一台机器上的对照复现结果，本页据此更正了先前关于"按键锁存"的错误描述；
+<code>/uav/odom</code> 发布频率实测 <strong>19.999 Hz</strong>；键盘闭环的位姿记录与两种注入协议（单次脉冲 / 20 Hz 定频）见第 7 节。
+其中「单次脉冲 ≈ 0.20 m、20 Hz 定频 3 s ≈ 4.56 m」是<strong>无平滑的 v1</strong> 由评审在另一台机器上的对照复现结果；
+v2 增加了按键保持、组合键与加速度平滑，指令波形改变，7.4/7.6.1 中对应的 v2 数字是<strong>节点级指令积分估算</strong>
+（可离线复算），物理位移仍待在仿真器上重测后回填，文中已逐处标注，没有把估算值冒充实测值。
 对应的终端输出与截图已随本页一并提交（第 7 节）并被评审逐条核对过；
 作者对提交内容的正确性与完整性负全部责任。</p></div>
 </div>
