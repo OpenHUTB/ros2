@@ -304,6 +304,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+* [无人机遥测缺失重建](./air/telemetry_imputation.md)
 
 * [低空多源气象扰动下无人机影响预测与风险分级](./air/uav_weather_risk.md)
 
