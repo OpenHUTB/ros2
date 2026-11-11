@@ -48,6 +48,12 @@ bash main.sh teach gz_args:='-r -s'
 
 真实 Gazebo 运行：39 个路径点，回放约 10.04 s，终点误差 0.110 m（阈值 0.12 m）；原模块回归测试 29 点、误差 0.118 m，均通过。
 
+## 运行画面
+
+![Gazebo 实时仿真：示教/回放小车](../../../docs/img/ground/gazebo_diff_drive_teleop_teach_gazebo_close.png)
+
+![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_teach_gazebo_wide.png)
+
 ## 参数与话题
 
 完整参数表、话题/TF、算法公式、复现步骤和故障排查见 `docs/ground/gazebo_diff_drive_teleop.md`。
