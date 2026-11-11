@@ -1,264 +1,193 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# MuJoCo 小车自动打靶：车固定，炮塔自动识别立着的靶子并转动瞄准，依次击倒
-import math
-import time
-import numpy as np
-import mujoco
-import mujoco.viewer
+"""MuJoCo 小车自动打靶：车固定，炮塔自动识别立着的靶子并转动瞄准，依次击倒.
 
-XML = """
-<mujoco>
-  <compiler angle="radian" autolimits="true"/>
-  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
-  <default>
-    <geom friction="1.0 0.005 0.0001" solref="0.02 1" solimp="0.9 0.95 0.001"/>
-    <joint damping="0.05" armature="0.02"/>
-  </default>
-  <worldbody>
-    <light pos="0 0 8" dir="0 0 -1" directional="true"/>
-    <light pos="-3 3 4" dir="1 -1 -1" diffuse="0.3 0.3 0.35"/>
-    <geom name="floor" type="plane" size="8 8 0.05" rgba="0.75 0.75 0.75 1"/>
-    <geom name="zone" type="box" pos="2.0 0 0.001" size="2.0 2.9 0.001" rgba="0.50 0.60 0.50 1"/>
-    <geom name="line" type="box" pos="0.4 0 0.002" size="0.02 2.9 0.002" rgba="0.90 0.90 0.90 1"/>
-    <body name="car" pos="0 0 0.05">
-      <geom name="chassis" type="box" pos="0 0 0.04" size="0.28 0.16 0.035" rgba="0.20 0.45 0.85 1" mass="4.0"/>
-      <body name="turret" pos="0.28 0 0.12">
-        <joint name="turret_j" type="hinge" axis="0 0 1"/>
-        <geom name="barrel" type="box" pos="0.15 0 0" size="0.15 0.03 0.03" rgba="0.25 0.25 0.25 1"/>
-        <geom name="beam" type="cylinder" pos="2.0 0 0" size="0.012 1.7" euler="0 1.5707963 0" rgba="0.10 1.00 0.30 0.30" contype="0" conaffinity="0"/>
-      </body>
-      <body name="c_fl" pos="0.16 0.125 0">
-        <joint name="c_fl" type="hinge" axis="0 1 0"/>
-        <geom type="cylinder" friction="2.5 0.01 0.0001" size="0.05 0.03" euler="1.5707963 0 0" rgba="0.08 0.08 0.08 1" mass="0.2"/>
-      </body>
-      <body name="c_fr" pos="0.16 -0.125 0">
-        <joint name="c_fr" type="hinge" axis="0 1 0"/>
-        <geom type="cylinder" friction="2.5 0.01 0.0001" size="0.05 0.03" euler="1.5707963 0 0" rgba="0.08 0.08 0.08 1" mass="0.2"/>
-      </body>
-      <body name="c_rl" pos="-0.16 0.125 0">
-        <joint name="c_rl" type="hinge" axis="0 1 0"/>
-        <geom type="cylinder" friction="2.5 0.01 0.0001" size="0.05 0.03" euler="1.5707963 0 0" rgba="0.08 0.08 0.08 1" mass="0.2"/>
-      </body>
-      <body name="c_rr" pos="-0.16 -0.125 0">
-        <joint name="c_rr" type="hinge" axis="0 1 0"/>
-        <geom type="cylinder" friction="2.5 0.01 0.0001" size="0.05 0.03" euler="1.5707963 0 0" rgba="0.08 0.08 0.08 1" mass="0.2"/>
-      </body>
-    </body>
-    <body name="t0" pos="1.55 -1.25 0">
-      <joint name="tj0" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.85 0.25 0.25 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx0" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy0" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="t1" pos="2.00 0.00 0">
-      <joint name="tj1" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.95 0.60 0.15 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx1" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy1" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="t2" pos="1.55 1.25 0">
-      <joint name="tj2" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.90 0.85 0.20 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx2" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy2" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="t3" pos="3.00 -1.35 0">
-      <joint name="tj3" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.30 0.70 0.35 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx3" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy3" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="t4" pos="3.40 0.00 0">
-      <joint name="tj4" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.25 0.55 0.85 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx4" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy4" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="t5" pos="3.00 1.35 0">
-      <joint name="tj5" type="hinge" axis="0 1 0" limited="true" range="-1.4 1.4"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.15 0.02" euler="0 1.5707963 0" rgba="0.60 0.35 0.80 1" mass="0.1"/>
-      <geom type="cylinder" pos="0 0 0.25" size="0.05 0.021" euler="0 1.5707963 0" rgba="0.97 0.97 0.97 1" mass="0.01"/>
-      <geom name="cx5" type="box" pos="0 0 0.45" size="0.13 0.016 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-      <geom name="cy5" type="box" pos="0 0 0.45" size="0.016 0.13 0.010" rgba="0 0 0 0" contype="0" conaffinity="0"/>
-    </body>
-    <body name="ball0" pos="10 10 0.05">
-      <freejoint name="bj0"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball1" pos="10 10.2 0.05">
-      <freejoint name="bj1"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball2" pos="10 10.4 0.05">
-      <freejoint name="bj2"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball3" pos="10 10.6 0.05">
-      <freejoint name="bj3"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball4" pos="10 10.8 0.05">
-      <freejoint name="bj4"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball5" pos="10 11.0 0.05">
-      <freejoint name="bj5"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball6" pos="10 11.2 0.05">
-      <freejoint name="bj6"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball7" pos="10 11.4 0.05">
-      <freejoint name="bj7"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball8" pos="10 11.6 0.05">
-      <freejoint name="bj8"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball9" pos="10 11.8 0.05">
-      <freejoint name="bj9"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball10" pos="10 12.0 0.05">
-      <freejoint name="bj10"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-    <body name="ball11" pos="10 12.2 0.05">
-      <freejoint name="bj11"/>
-      <geom type="sphere" size="0.06" rgba="0.95 0.75 0.10 1" mass="0.1"/>
-    </body>
-  </worldbody>
-  <actuator>
-    <velocity name="turret" joint="turret_j" kv="20" ctrlrange="-7 7" forcerange="-30 30"/>
-  </actuator>
-</mujoco>
+两种跑法：
+
+    # 1) 打开 MuJoCo 可视化窗口（默认）
+    python3 src/ground/mujoco_shooting/main.py
+
+    # 2) 无头跑一局（不开窗口，跑完打印结果，返回码 0 = 全部击倒）
+    python3 src/ground/mujoco_shooting/main.py --headless --max-steps 12000
+
+无头模式是这次重构的重点：把"能不能打中"从"用眼睛看"变成"可断言的结果"，
+这样既能进 CI，也能在没有显示器的机器上验证。
 """
+from __future__ import annotations
 
-m = mujoco.MjModel.from_xml_string(XML)
-d = mujoco.MjData(m)
+import argparse
+import math
+import os
+import sys
+import time
 
-# 锁定准星的十字 geom（平时透明，锁定目标时亮红）
-cx_ids = [mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, f"cx{i}") for i in range(6)]
-cy_ids = [mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, f"cy{i}") for i in range(6)]
+import mujoco
 
-# 六个靶子的位置：前三近、后三远（车在原点）
-TARGETS = [
-    (1.55, -1.25), (2.00, 0.00), (1.55, 1.25),
-    (3.00, -1.35), (3.40, 0.00), (3.00, 1.35),
-]
-# 球的 qpos/qvel 起始：炮塔0+轮1-4+靶5-10
-BALL_Q = 11
-BALL_V = 11
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import controller as ctrl  # noqa: E402
+from scene import XML  # noqa: E402
 
 
-def clamp(v, lo=-15.0, hi=15.0):
-    return max(lo, min(hi, v))
+def build_model():
+    model = mujoco.MjModel.from_xml_string(XML)
+    data = mujoco.MjData(model)
+    return model, data
 
 
-n = 0
-si = 0
-cool = 0
-hit = [0] * 6
-last_tid = -1
-scan = 1.0
-scan_t = 0
-tid = -1
-with mujoco.viewer.launch_passive(m, d) as viewer:
-    viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
-    viewer.cam.distance = 9.0
-    viewer.cam.elevation = -40
-    viewer.cam.azimuth = 90
-    while viewer.is_running():
-        if n >= 9000:
-            d.ctrl[:] = 0
-            print("时间到")
-            break
-        # 全部击倒则结束
-        if all(abs(d.qpos[5 + i]) > 0.25 for i in range(6)):
-            d.ctrl[:] = 0
-            print("全部击倒")
-            break
-        if si >= 12:
-            d.ctrl[:] = 0
-            print("球用尽")
-            break
-        if n < 400:
-            # 开场雷达扫描：激光左右扫场找目标
-            d.ctrl[0] = 5.0 * scan
-            scan_t += 1
-            if scan_t > 130:
-                scan = -scan
-                scan_t = 0
-        elif cool > 0:
-            cool -= 1
-            d.ctrl[0] = 0
+class Shooter(object):
+    """打靶状态机：扫描 -> 选靶 -> 瞄准 -> 开火 -> 冷却，直到全部击倒/弹尽/超时."""
+
+    MAX_BALLS = 12
+    SCAN_STEPS = 400
+    COOLDOWN_STEPS = 300
+
+    def __init__(self, model, data, targets=ctrl.TARGETS):
+        self.model = model
+        self.data = data
+        self.targets = list(targets)
+        self.n = 0
+        self.shot = 0
+        self.cool = 0
+        self.scan = 1.0
+        self.scan_t = 0
+        self.last_tid = -1
+        self.hit = [0] * len(self.targets)
+
+    # ------------------------------------------------------------------ 查询
+    def yaw(self):
+        return float(self.data.qpos[ctrl.TURRET_YAW_QPOS])
+
+    def yaw_rate(self):
+        return float(self.data.qvel[ctrl.TURRET_YAW_QVEL])
+
+    def down(self):
+        return ctrl.down_flags(self.data.qpos, len(self.targets))
+
+    def stats(self):
+        return {
+            "steps": self.n,
+            "shots": self.shot,
+            "down": sum(self.down()),
+            "targets": len(self.targets),
+            "all_down": ctrl.all_down(self.data.qpos, len(self.targets)),
+            "time_s": round(float(self.data.time), 2),
+        }
+
+    # ------------------------------------------------------------------ 单步
+    def step(self):
+        """推进一个物理步；返回 (running, tid)，tid 是当前锁定目标（-1 表示没有）."""
+        if ctrl.all_down(self.data.qpos, len(self.targets)):
+            self.data.ctrl[:] = 0
+            return False, -1
+        if self.shot >= self.MAX_BALLS:
+            self.data.ctrl[:] = 0
+            return False, -1
+
+        tid = -1
+        if self.n < self.SCAN_STEPS:
+            # 开场雷达扫描：炮塔左右扫场，激光跟着摆
+            self.data.ctrl[0] = 5.0 * self.scan
+            self.scan_t += 1
+            if self.scan_t > 130:
+                self.scan = -self.scan
+                self.scan_t = 0
+        elif self.cool > 0:
+            self.cool -= 1
+            self.data.ctrl[0] = 0.0
         else:
-            # 智能识别：雷达式选炮塔当前朝向最近的、还立着的靶
-            tid = -1
-            best = 999.0
-            for i in range(6):
-                if abs(d.qpos[5 + i]) < 0.25:
-                    tx, ty = TARGETS[i]
-                    a = math.atan2(ty, tx)
-                    err = (a - d.qpos[0] + math.pi) % (2 * math.pi) - math.pi
-                    if abs(err) < best:
-                        best = abs(err)
-                        tid = i
+            tid = ctrl.select_target(self.yaw(), self.targets, self.down())
             if tid == -1:
-                d.ctrl[0] = 0
+                self.data.ctrl[0] = 0.0
             else:
-                tx, ty = TARGETS[tid]
-                want = math.atan2(ty, tx)
-                err_t = (want - d.qpos[0] + math.pi) % (2 * math.pi) - math.pi
-                d.ctrl[0] = clamp(err_t * 6.0 - d.qvel[0] * 2.0)
-                if abs(err_t) < 0.05 and abs(d.qvel[0]) < 0.05:
-                    # 炮塔对准了，发射
-                    bq = BALL_Q + si * 7
-                    bv = BALL_V + si * 6
-                    yaw_t = d.qpos[0]
-                    mx = 0.28 + 0.35 * math.cos(yaw_t)
-                    my = 0.35 * math.sin(yaw_t)
-                    dx = tx - mx
-                    dy = ty - my
-                    dist = math.hypot(dx, dy)
-                    # 自动控力度：固定飞行时间，距离越远球速越大
-                    t = 0.45
-                    speed = dist / t
-                    if hit[tid] > 0:
-                        speed *= 1.25  # 没打中的靶补枪自动加力
-                    vx = speed * dx / dist
-                    vy = speed * dy / dist
-                    vz = (0.25 - 0.17 + 0.5 * 9.81 * t * t) / t
-                    d.qpos[bq:bq + 3] = [mx, my, 0.17]
-                    d.qpos[bq + 3:bq + 7] = [0, 0, 0, 1]
-                    d.qvel[bv:bv + 3] = [vx, vy, vz]
-                    d.qvel[bv + 3:bv + 6] = [0, 0, 0]
-                    mujoco.mj_forward(m, d)
-                    if tid != last_tid:
-                        print(f"锁定靶{tid} 距离{dist:.2f}m")
-                        last_tid = tid
-                    print(f"第{si + 1}发 发射 力度{speed:.1f}")
-                    hit[tid] += 1
-                    cool = 300
-                    si += 1
-        mujoco.mj_step(m, d)
-        # 锁定准星：被锁定的靶子上方亮起红叉
-        for i in range(6):
-            on = 1.0 if i == tid else 0.0
-            m.geom_rgba[cx_ids[i]] = [1.0, 1.0, 1.0, on]
-            m.geom_rgba[cy_ids[i]] = [1.0, 1.0, 1.0, on]
-        viewer.cam.lookat[0] = 0.6 * math.cos(d.qpos[0])
-        viewer.cam.lookat[1] = 0.6 * math.sin(d.qpos[0])
-        viewer.sync()
-        time.sleep(0.002)
-        if n % 500 == 0:
-            ang = [f"{d.qpos[5 + i]:.1f}" for i in range(6)]
-            print(f"step={n} 炮塔={d.qpos[0]:.2f} 靶角度={ang}")
-        n += 1
+                target = self.targets[tid]
+                self.data.ctrl[0] = ctrl.turret_command(self.yaw(), self.yaw_rate(), target)
+                if ctrl.is_aligned(self.yaw(), self.yaw_rate(), target):
+                    self._fire(tid)
+
+        mujoco.mj_step(self.model, self.data)
+        self.n += 1
+        return True, tid
+
+    def _fire(self, tid):
+        bq = ctrl.BALL_Q0 + self.shot * ctrl.BALL_DOF_Q
+        bv = ctrl.BALL_V0 + self.shot * ctrl.BALL_DOF_V
+        muzzle = ctrl.muzzle_position(self.yaw())
+        boost = 1.25 if self.hit[tid] > 0 else 1.0
+        vx, vy, vz, dist = ctrl.launch_velocity(muzzle, self.targets[tid], boost=boost)
+
+        self.data.qpos[bq:bq + 3] = [muzzle[0], muzzle[1], ctrl.MUZZLE_Z]
+        self.data.qpos[bq + 3:bq + 7] = [0.0, 0.0, 0.0, 1.0]
+        self.data.qvel[bv:bv + 3] = [vx, vy, vz]
+        self.data.qvel[bv + 3:bv + 6] = [0.0, 0.0, 0.0]
+        mujoco.mj_forward(self.model, self.data)
+
+        if tid != self.last_tid:
+            print("锁定靶%d 距离%.2fm" % (tid, dist))
+            self.last_tid = tid
+        print("第%d发 发射 力度%.1f" % (self.shot + 1, math.hypot(vx, vy)))
+        self.hit[tid] += 1
+        self.cool = self.COOLDOWN_STEPS
+        self.shot += 1
+
+
+def paint_crosshair(model, tid):
+    """被锁定的靶子上方亮起白色准星（其余透明）."""
+    for i in range(len(ctrl.TARGETS)):
+        alpha = 1.0 if i == tid else 0.0
+        for prefix in ("cx", "cy"):
+            gid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "%s%d" % (prefix, i))
+            if gid >= 0:
+                model.geom_rgba[gid] = [1.0, 1.0, 1.0, alpha]
+
+
+def run_headless(max_steps=12000):
+    """不开窗口地跑完整一局，返回统计（供测试 / CI 断言）."""
+    model, data = build_model()
+    shooter = Shooter(model, data)
+    tid = -1
+    for _ in range(max_steps):
+        running, tid = shooter.step()
+        if not running:
+            break
+    paint_crosshair(model, tid)
+    stats = shooter.stats()
+    print("结果: %s" % stats)
+    return stats
+
+
+def run_viewer(max_steps=12000):
+    import mujoco.viewer  # import lazily: headless machines never touch it
+    model, data = build_model()
+    shooter = Shooter(model, data)
+    with mujoco.viewer.launch_passive(model, data) as viewer:
+        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+        viewer.cam.distance = 9.0
+        viewer.cam.elevation = -40
+        viewer.cam.azimuth = 90
+        tid = -1
+        while viewer.is_running():
+            running, tid = shooter.step()
+            if not running or shooter.n >= max_steps:
+                break
+            paint_crosshair(model, tid)
+            viewer.cam.lookat[0] = 0.6 * math.cos(shooter.yaw())
+            viewer.cam.lookat[1] = 0.6 * math.sin(shooter.yaw())
+            viewer.sync()
+            time.sleep(0.002)
+    stats = shooter.stats()
+    print("结果: %s" % stats)
+    return stats
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="MuJoCo 小车自动打靶")
+    parser.add_argument("--headless", action="store_true", help="不开可视化窗口，跑完打印结果")
+    parser.add_argument("--max-steps", type=int, default=12000, help="最大物理步数（0.002 s/步）")
+    args = parser.parse_args(argv)
+
+    stats = run_headless(args.max_steps) if args.headless else run_viewer(args.max_steps)
+    return 0 if stats["all_down"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
