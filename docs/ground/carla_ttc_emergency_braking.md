@@ -44,13 +44,13 @@
 
 ## 运行效果（截图 / 动图）
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 动图](docs/img/ground/carla_ttc_emergency_braking_run.gif)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 动图](../img/ground/carla_ttc_emergency_braking_run.gif)
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf1](docs/img/ground/carla_ttc_emergency_braking_kf1.png)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf1](../img/ground/carla_ttc_emergency_braking_kf1.png)
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf2](docs/img/ground/carla_ttc_emergency_braking_kf2.png)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf2](../img/ground/carla_ttc_emergency_braking_kf2.png)
 
-> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
+> 动图由本次实际运行产生的帧合成（GIF < 5 MB，PNG < 3 MB），帧来源见各节说明。
 
 ## 12. 决策与清理的边界（PR #955 评审整改）
 

@@ -119,11 +119,11 @@ carla_ttc_emergency_braking/
 
 ## 运行效果（截图 / 动图）
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 动图](docs/img/ground/carla_ttc_emergency_braking_run.gif)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 动图](../../../docs/img/ground/carla_ttc_emergency_braking_run.gif)
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf1](docs/img/ground/carla_ttc_emergency_braking_kf1.png)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf1](../../../docs/img/ground/carla_ttc_emergency_braking_kf1.png)
 
-![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf2](docs/img/ground/carla_ttc_emergency_braking_kf2.png)
+![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf2](../../../docs/img/ground/carla_ttc_emergency_braking_kf2.png)
 
 > 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
 
