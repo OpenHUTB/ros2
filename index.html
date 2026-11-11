@@ -283,6 +283,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ros2_astar_planner/">ROS2 差速机器人栅格 A* 全局路径规划</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_tsr_ros/">交通标志识别 ROS 封装</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/vehicle_pygame_teleop/">车辆键盘遥操作与二维模拟</a>
@@ -989,6 +991,7 @@
 <p><a href="ground/balance_bot/">两轮自平衡机器人（倾角PD + 神经网络策略克隆）</a> —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律</p>
 </li>
 <li><a href="ground/diff_drive_astar_odom_nav/">基于里程计反馈与 A* 算法的差速底盘静态全局路径规划</a> —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 <code>/odom</code> 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移</li>
+<li><a href="ground/ros2_dwa_avoidance/">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a> —— A* 全局路线 + DWA 局部跟踪，5 场景 3 控制器对比，窄走廊与 U 形陷阱通过</li>
 <li><a href="ground/diff_drive_odom_calib/">差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）</a> —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m</li>
 <li><a href="ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a> —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07</li>
 <li><a href="ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a></li>
