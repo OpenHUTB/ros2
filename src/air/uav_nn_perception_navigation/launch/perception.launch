@@ -1,0 +1,32 @@
+<launch>
+  <!-- 任务 2：激光雷达感知 + 神经网络轨迹跟踪 -->
+  <arg name="airsim_ip" default="127.0.0.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="auto_takeoff" default="true"/>
+  <arg name="goal_x" default="15.0"/>
+  <arg name="goal_y" default="10.0"/>
+  <arg name="goal_z" default="5.0"/>
+
+  <node name="airsim_bridge" pkg="uav_nn_perception_navigation" type="airsim_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="$(arg auto_takeoff)"/>
+    <param name="takeoff_height" value="$(arg goal_z)"/>
+  </node>
+
+  <node name="lidar_perception" pkg="uav_nn_perception_navigation" type="lidar_perception.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="lidar_name" value="lidar_1"/>
+  </node>
+
+  <node name="trajectory_control" pkg="uav_nn_perception_navigation" type="trajectory_control.py" output="screen">
+    <param name="altitude" value="$(arg goal_z)"/>
+  </node>
+
+  <!-- 目标点：等桥接节点起飞后由本节点发布（ENU 坐标系） -->
+  <node name="goal_publisher" pkg="rostopic" type="rostopic"
+        args="pub -r 1 /uav/goal geometry_msgs/PoseStamped
+              '{header: {frame_id: map}, pose: {position: {x: $(arg goal_x), y: $(arg goal_y), z: $(arg goal_z)}}}'"
+        output="log"/>
+</launch>
