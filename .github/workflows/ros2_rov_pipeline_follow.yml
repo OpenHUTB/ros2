@@ -34,10 +34,16 @@ jobs:
         run: python3 -m pytest test/ -q
 
       # ---- 2) 真 colcon build
+      # 注意：上游 src/water/package.xml（#722 引入）把 src/water 整体识别成一个
+      # ament_python 包 `water`，colcon 认定该目录是包后不再向下递归，src/water 下
+      # 18 个子包（含本模块）因此全部不可见，--packages-select 会报
+      # "ignoring unknown package"。这里显式给出 --base-paths，把包发现限定在
+      # 本模块目录，不再依赖仓库的全局目录布局。
       - name: colcon build
         run: |
           source /opt/ros/humble/setup.bash
-          colcon build --packages-select rov_pipeline_follow --symlink-install
+          colcon build --base-paths src/water/rov_pipeline_follow \
+            --packages-select rov_pipeline_follow --symlink-install
 
       # ---- 3) install 布局硬断言：少一项就说明 data_files 又漏了
       - name: 校验 install 布局
