@@ -345,8 +345,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#35-ros">3.5 ROS 节点验证（虚拟机实跑）</a>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#35-ros_1">3.5 ROS 节点验证（虚拟机实跑）</a>
-</li>
 <li class="toctree-l3"><a class="reference internal" href="#36">3.6 控制曲线</a>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#36_1">3.6 控制曲线</a>
@@ -922,31 +920,6 @@ rosrun<span class="w">  </span>balance_bot<span class="w"> </span>teleop.py
 <p><strong>站立 → 前进 → 转向 → 停止</strong> 的完整动作，由 <code>python3 tools/make_gif.py</code> 在虚拟机里
 逐帧渲染（69 帧，1.3 MB，240×135 @ 6 fps）。开头给 0.05 rad 的初始倾角，可以看到它<strong>自己站起来</strong>的过程。</p>
 <h3 id="35-ros">3.5 ROS 节点验证（虚拟机实跑）</h3>
-<p><code>roslaunch balance_bot sim.launch</code> 起来的实际输出：</p>
-<div class="highlight"><pre><span></span><code>=== ① catkin_make ===
-#### Running command: "make -j2 -l2" in "/home/zxy/catkin_ws/build"
-
-=== ② rospack ===
-/home/zxy/catkin_ws/src/balance_bot
-
-=== ③ roslaunch balance_bot sim.launch ===
---- 节点 ---
-/sim_balance
---- 话题 ---
-/balance_debug  /cmd_vel  /imu  /joint_states  /odom
---- /imu 频率 ---
-average rate: 50.077
-average rate: 50.061
---- 发布 /cmd_vel 前进 0.3 m/s 后读 /odom ---
-0.2361        # 速度正在从 0 加速到 0.3，说明指令确实驱动了仿真
-
-=== 启动日志 ===
-[INFO] 平衡车仿真启动（控制器=pd，balance_bot.xml）
-process[sim_balance-2]: started with pid [2644]
-</code></pre></div>
-<p>要点：节点 <code>/sim_balance</code> 正常驻留；<code>/imu</code> 稳定在 <strong>50 Hz</strong>；
-发 <code>/cmd_vel</code> 后 <code>/odom</code> 的线速度从 0 变到 0.236 m/s，证明"指令 → 物理 → 里程计"整条链路是通的。</p>
-<h3 id="35-ros_1">3.5 ROS 节点验证（虚拟机实跑）</h3>
 <p><code>roslaunch balance_bot sim.launch</code> 起来的实际输出：</p>
 <div class="highlight"><pre><span></span><code>=== ① catkin_make ===
 #### Running command: "make -j2 -l2" in "/home/zxy/catkin_ws/build"
