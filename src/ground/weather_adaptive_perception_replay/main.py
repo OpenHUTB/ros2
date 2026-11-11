@@ -322,6 +322,11 @@ def draw(frame, dets, gts, hit_gt, hit_det, save_path):
 def main():
     if cv2 is None or plt is None:
         raise SystemExit("需要 opencv-python 与 matplotlib：pip install -r requirements.txt")
+    if not hasattr(cv2.dnn, "readNetFromCaffe"):
+        raise SystemExit(
+            "当前 opencv-python %s 不提供 Caffe 导入器（5.x 起已移除），无法加载 MobileNet-SSD。\n"
+            "请改装 4.x：pip install 'opencv-python>=4.5,<5'"
+            % getattr(cv2, "__version__", "?"))
     ap = argparse.ArgumentParser(description="雨雾天气自适应感知静态帧复现")
     ap.add_argument("-i", "--image", default=os.path.join(BASE_DIR, "town10_cars.png"),
                     help="输入帧（CARLA 相机截图），默认 town10_cars.png")
