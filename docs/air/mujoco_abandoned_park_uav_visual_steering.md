@@ -4,7 +4,7 @@
 
 ## 功能范围
 
-本分支提供 RGB 数据管线与轻量 CNN 训练、验证和测试。训练由 `train.py` 启动，仿真、采集与质量检查由 `main.py` 启动。
+本分支提供数据采集、CNN 训练与离线回放，并将图像推理封装为 ROS 2 Humble 的 Image-to-Twist 节点。
 
 ## 坐标、时间与相机
 
@@ -29,6 +29,7 @@ $$
 - Python 3.10 或更新版本
 - MuJoCo 3.12.0
 - 训练和推理使用 PyTorch CPU 与 scikit-learn
+- ROS 2 Humble 与 Ubuntu 22.04 用于 ROS 节点
 
 ```bash
 cd src/air/mujoco_abandoned_park_uav_visual_steering
@@ -65,12 +66,26 @@ $$
 \mathcal L=-\sum_{c=1}^{4}w_c y_c\log\hat y_c.
 $$
 
-训练入口为 `train.py`：
+统一入口支持训练与离线图像回放：
 
 ```bash
-python train.py --dataset data/park_rgb --output models/weights --epochs 8
+python main.py --mode train --output data/park_rgb --checkpoint models/weights/lightweight_steering_cnn.pt --epochs 8
+python main.py --mode replay --checkpoint models/weights/lightweight_steering_cnn.pt --images data/park_rgb/images
 ```
 
 验证集用于选择权重，测试集用于最终分类评价。Accuracy、固定四类 macro-F1 和 4 × 4 混淆矩阵使用相同标签序号；即使某类没有出现在预测结果中，macro-F1 仍保留该类。加载权重时要求保存的标签严格为 `LEFT, STRAIGHT, RIGHT, STOP`，缺失或顺序不符时拒绝加载，防止控制含义被交换。
 
-本次固定种子训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。
+## ROS 2 图像控制接口
+
+节点订阅 `sensor_msgs/Image` 并发布 `geometry_msgs/Twist`：`LEFT` 对应正 `angular.z`，`RIGHT` 对应负值，`STRAIGHT` 的角速度为零，`STOP` 的线速度和角速度均为零。包安装包括节点、launch 文件与参数配置，launch 从安装后的包共享目录解析配置。
+
+从仓库工作空间根目录构建，提供训练所得权重：
+
+```bash
+colcon build --packages-select mujoco_abandoned_park_uav_visual_steering
+source install/setup.bash
+ros2 launch mujoco_abandoned_park_uav_visual_steering main.launch.py \
+  checkpoint:=/absolute/path/lightweight_steering_cnn.pt
+```
+
+缺少有效权重、图像解码失败、推理异常或图像流超过超时阈值时，节点发布零速度。图像问题消除后，下一张有效图像可恢复正常控制；缺少权重时保持零速，提供有效权重后重新启动节点。

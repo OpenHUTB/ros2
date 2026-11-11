@@ -10,6 +10,13 @@ from pathlib import Path
 
 MODULE_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(MODULE_ROOT))
+RESOURCE_ROOT = MODULE_ROOT
+if not (RESOURCE_ROOT / "config").is_dir():
+    try:
+        from ament_index_python.packages import get_package_share_directory
+        RESOURCE_ROOT = Path(get_package_share_directory("mujoco_abandoned_park_uav_visual_steering"))
+    except ImportError:
+        pass
 
 from mujoco_abandoned_park_uav_visual_steering import (  # noqa: E402
     DatasetConfig,
@@ -30,20 +37,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=("simulation", "collect", "quality"),
+        choices=("simulation", "collect", "quality", "train", "replay"),
         default="simulation",
         help="runtime mode / 运行模式",
     )
     parser.add_argument(
         "--config",
         type=Path,
-        default=MODULE_ROOT / "config" / "simulation.yaml",
+        default=RESOURCE_ROOT / "config" / "simulation.yaml",
         help="simulation YAML / 仿真 YAML 配置",
     )
     parser.add_argument(
         "--dataset-config",
         type=Path,
-        default=MODULE_ROOT / "config" / "dataset.yaml",
+        default=RESOURCE_ROOT / "config" / "dataset.yaml",
         help="dataset YAML / 数据集 YAML 配置",
     )
     parser.add_argument(
@@ -55,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         type=Path,
-        default=MODULE_ROOT / "models" / "scene.xml",
+        default=RESOURCE_ROOT / "models" / "scene.xml",
         help="MJCF scene / MJCF 场景文件",
     )
     parser.add_argument(
@@ -70,6 +77,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.0,
         help="normalized steering in [-1, 1] / [-1, 1] 归一化转向量",
     )
+    parser.add_argument("--checkpoint", type=Path,
+                        default=RESOURCE_ROOT / "models" / "weights" / "lightweight_steering_cnn.pt",
+                        help="CNN checkpoint / CNN 权重路径")
+    parser.add_argument("--images", type=Path, default=None,
+                        help="replay PNG directory; defaults to output/images / PNG 回放目录")
+    parser.add_argument("--epochs", type=_positive_int, default=8,
+                        help="training epochs / 训练轮数")
     return parser
 
 
@@ -77,6 +91,21 @@ def main(argv: list[str] | None = None) -> int:
     """Run a deterministic headless episode / 运行确定性的无窗口回合。"""
     args = build_parser().parse_args(argv)
     try:
+        if args.mode == "train":
+            from train import train
+            result = train(args.output.resolve(), args.checkpoint.parent.resolve(), args.epochs)
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.mode == "replay":
+            from ros_node import replay_directory
+            images = args.images if args.images is not None else args.output / "images"
+            result = replay_directory(args.checkpoint.resolve(), images.resolve())
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.mode == "quality":
+            quality = inspect_dataset(args.output.resolve())
+            print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
+            return 0 if quality["status"] == "passed" else 3
         config = SimulationConfig.from_yaml(args.config.resolve())
         if args.mode == "collect":
             quality = collect_dataset(
@@ -87,13 +116,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
             return 0 if quality["status"] == "passed" else 3
-        if args.mode == "quality":
-            quality = inspect_dataset(args.output.resolve())
-            print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
-            return 0 if quality["status"] == "passed" else 3
-        simulation = UavSimulation(args.model.resolve(), config)
-        for _ in range(args.steps):
-            simulation.step(args.steering)
+        with UavSimulation(args.model.resolve(), config) as simulation:
+            for _ in range(args.steps):
+                simulation.step(args.steering)
     except (FileNotFoundError, ValueError, RuntimeError) as error:
         print(f"Run failed / 运行失败: {error}", file=sys.stderr)
         return 2

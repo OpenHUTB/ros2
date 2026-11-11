@@ -5,7 +5,7 @@ setup(
     name="mujoco_abandoned_park_uav_visual_steering",
     version="0.2.0",
     packages=find_packages(),
-    py_modules=["ros_node", "train", "main", "evaluation"],
+    py_modules=["ros_node", "train", "main"],
     scripts=["visual_steering_node"],
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/mujoco_abandoned_park_uav_visual_steering"]),
