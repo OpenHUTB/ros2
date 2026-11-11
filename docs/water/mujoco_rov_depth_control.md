@@ -54,10 +54,10 @@
 
 ## 运行效果（截图 / 动图）
 
-![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 动图](docs/img/water/mujoco_rov_depth_control_run.gif)
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 动图](../img/water/mujoco_rov_depth_control_run.gif)
 
-![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf1](docs/img/water/mujoco_rov_depth_control_kf1.png)
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf1](../img/water/mujoco_rov_depth_control_kf1.png)
 
-![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf2](docs/img/water/mujoco_rov_depth_control_kf2.png)
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf2](../img/water/mujoco_rov_depth_control_kf2.png)
 
-> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
+> 动图由本次实际运行产生的帧合成（GIF < 5 MB，PNG < 3 MB），帧来源见各节说明。
