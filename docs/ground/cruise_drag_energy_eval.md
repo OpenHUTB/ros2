@@ -9,7 +9,7 @@
 | 操作系统 | Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面） |
 | 仿真平台 | 纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA |
 | Python | 3.10 ~ 3.12 |
-| 依赖 | `numpy`、`matplotlib`、`Pillow` |
+| 依赖 | `numpy`、`matplotlib`、`Pillow`；`mujoco` 为可选，仅用于车型场景静态图离屏渲染 |
 
 ### 1.1 安装依赖
 
@@ -24,7 +24,7 @@
 2. 安装依赖：
 
    ```bash
-   pip install numpy matplotlib Pillow
+   pip install numpy matplotlib Pillow   # mujoco>=3.0 可选，用于车型场景静态图
    ```
 
 ### 1.2 验证环境
@@ -79,7 +79,7 @@ E(百公里) = F_tot · 100000 / η / 3.6×10⁶   # kWh/100km
 | 阻力分解 | `resistance()` 计算滚动、坡度、空气与总阻力 |
 | 功率 / 能耗 | `power_kw()`、`energy_kwh_per_100km()` 折算功率与百公里能耗 |
 | 批量汇总 | `summarize()` 统计各车速、坡度指标写入 `metrics.csv` |
-| 绘图 | 阻力分量图、车型功率对比图、坡度能耗图、演示动图逐帧渲染 |
+| 绘图 | 阻力分量图、车型功率对比图、坡度能耗图、演示动图逐帧渲染、MuJoCo 场景静态帧离屏渲染 |
 
 关键阻力计算：
 
@@ -141,6 +141,12 @@ f_tot = f_rr + f_gr + f_ad
 ### 5.5 演示动图
 
 ![巡航功率演示动图](../img/ground/cruise_energy_demo.gif)
+
+### 5.6 车型场景静态图
+
+![三车型场景静态图](../img/ground/cruise_scene.png)
+
+三辆车分别对应轿车（蓝，低扁）、普通车型（绿）、SUV（红，偏高），斜俯视网格地面上的场景画面；车体体型仅用于可视化风阻外形差异，配色与车型功率对比图一致。该画面为离屏渲染的可视化示意，不代表实车或高保真仿真结果。
 
 ## 6. 结论
 

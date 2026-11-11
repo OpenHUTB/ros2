@@ -156,6 +156,71 @@ def render_demo_frame(v_cur, out_size=(800, 420)):
     return img.convert('RGB').resize(out_size)
 
 
+# ---------- MuJoCo 车型场景静态帧（可选依赖） ----------
+# 三车型并排斜俯视网格地面：轿车（蓝，低扁）、普通车型（绿）、SUV（红，高）；
+# 车体体型仅用于可视化风阻外形差异，定量结论以阻力/功率/能耗曲线与指标表为准。
+_GRID_LINES = ''.join(
+    f'<geom type="box" size="0.008 6 0.001" pos="{i} 0 0.002" rgba="0.66 0.66 0.69 1"/>'
+    f'<geom type="box" size="6 0.008 0.001" pos="0 {i} 0.002" rgba="0.66 0.66 0.69 1"/>'
+    for i in range(-6, 7))
+
+SCENE_XML = """<mujoco><compiler angle="radian"/>
+<default><geom contype="0" conaffinity="0"/></default>
+<worldbody>
+<light name="key" dir="-0.35 -0.55 -1" diffuse="0.95 0.95 0.95" ambient="0.55 0.55 0.55"/>
+<geom name="ground" type="plane" size="6 6 0.02" rgba="0.86 0.86 0.88 1"/>
+""" + _GRID_LINES + """
+<camera name="cam" mode="fixed" pos="0 -7 5.2" xyaxes="1 0 0 0 0.74 0.67" fovy="45"/>
+<body name="car_sedan" pos="0 -2.0 0.14"><joint type="free"/>
+<geom type="box" size="0.5 0.24 0.13" rgba="0.12 0.47 0.71 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.26 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.26 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.26 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.26 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+<body name="car_normal" pos="0  0.0 0.16"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.16" rgba="0.17 0.63 0.17 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+<body name="car_suv" pos="0  2.0 0.22"><joint type="free"/>
+<geom type="box" size="0.5 0.30 0.22" rgba="0.84 0.15 0.15 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.32 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.32 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.32 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.32 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+</worldbody></mujoco>"""
+
+
+def render_scene_png(out_path):
+    """MuJoCo 离屏渲染单帧三车型场景静态图（网格地面 + 车体，斜俯视）。
+
+    mujoco 为可选依赖：未安装或离屏 GL 不可用时返回 None，不阻断曲线图产物。
+    """
+    try:
+        import mujoco
+    except (ImportError, OSError, RuntimeError):
+        print("未安装 mujoco，跳过仿真场景静态图（曲线图与数据表不受影响）")
+        return None
+
+    os.environ.setdefault('MUJOCO_GL', 'egl')
+    model = mujoco.MjModel.from_xml_string(SCENE_XML)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+
+    renderer = mujoco.Renderer(model, 480, 640)
+    renderer.update_scene(data, camera='cam')
+    Image.fromarray(renderer.render()).save(out_path)
+    try:
+        renderer.close()
+    except AttributeError:
+        pass
+    return os.path.getsize(out_path)
+
+
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     rows = summarize()
@@ -179,6 +244,10 @@ def main():
         frames[0].save(os.path.join(RESULTS_DIR, 'cruise_energy_demo.gif'),
                        save_all=True, append_images=frames[1:],
                        duration=duration, loop=0, optimize=True)
+
+    scene_png = render_scene_png(os.path.join(RESULTS_DIR, 'cruise_scene.png'))
+    if scene_png:
+        print(f"仿真场景静态图已写入 cruise_scene.png（{scene_png // 1024} KB）")
 
     for r in rows:
         print(f"grade={r['grade_pct']:+.0f}% v={r['speed_kmh']:.0f}km/h "
