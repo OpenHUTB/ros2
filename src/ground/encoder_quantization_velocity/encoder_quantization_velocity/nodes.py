@@ -35,12 +35,12 @@ class EncoderSimulator(Node):
     def step(self) -> None:
         if self.duration_s > 0.0 and self.index >= self.duration_s / self.data["dt"]:
             self.timer.cancel()
-            self.get_logger().info(f"replayed {self.index} samples, shutting down")
-            rclpy.shutdown()
+            self.get_logger().info(f"replayed {self.index} samples, stopping the timer")
             return
         index = self.index % len(self.data["position_rad"])
         message = JointState()
         message.header.frame_id = "joint"
+        message.header.stamp = self.get_clock().now().to_msg()
         message.name = ["joint"]
         message.position = [float(self.data["position_rad"][index])]
         self.publisher.publish(message)
@@ -54,13 +54,21 @@ class VelocityEstimator(Node):
         super().__init__("velocity_estimator")
         self.declare_parameter("dt", 0.001)
         self.declare_parameter("window", 5)
-        self.declare_parameter("duration_s", 0.0)
+        self.declare_parameter("counts_per_revolution", 4096)
         self.dt = float(self.get_parameter("dt").value)
-        self.window = max(1, int(self.get_parameter("window").value))
+        self.window_size = max(1, int(self.get_parameter("window").value))
+        self.counts_per_revolution = int(
+            self.get_parameter("counts_per_revolution").value
+        )
         self.positions: list[float] = []
-        self.raw_history: list[float] = []
-        self.alpha_beta_velocity = 0.0
-        self.filter = VelocityFilter.create(process_sigma=25.0, measurement_sigma=0.01)
+        self.window: list[float] = []
+        self.alpha_beta_state = {"position": None, "velocity": 0.0}
+        # alpha-beta gains follow the offline script (alpha=0.35, beta=0.08)
+        self.alpha, self.beta = 0.35, 0.08
+        self.step_rad = 2.0 * np.pi / self.counts_per_revolution
+        self.filter = VelocityFilter.create(
+            process_sigma=25.0, measurement_sigma=self.step_rad / 3.0
+        )
         self.raw_pub = self.create_publisher(Float64, "/joint/velocity_raw", 50)
         self.filtered_pub = self.create_publisher(Float64, "/joint/velocity", 50)
         self.status_pub = self.create_publisher(String, "/joint/velocity_status", 10)
@@ -76,17 +84,24 @@ class VelocityEstimator(Node):
             self.positions[-1] - self.positions[-2]
         ) / self.dt
         self.raw_pub.publish(raw)
-        self.raw_history.append(raw.data)
         smoothed = float(self.filter.step(self.positions[-1], self.dt))
         estimate = Float64()
         estimate.data = smoothed
         self.filtered_pub.publish(estimate)
-        self.alpha_beta_velocity = float(
-            alpha_beta(np.asarray(self.positions), self.dt)[-1]
-        )
+        state = self.alpha_beta_state
+        if state["position"] is None:
+            state["position"] = self.positions[-1]
+        predicted = state["position"] + state["velocity"] * self.dt
+        residual = self.positions[-1] - predicted
+        state["position"] = predicted + self.alpha * residual
+        state["velocity"] += self.beta * residual / self.dt
+        self.alpha_beta_velocity = state["velocity"]
+        # Fixed-length ring buffer keeps the status window O(1) per sample.
+        self.window.append(raw.data)
+        if len(self.window) > self.window_size:
+            self.window.pop(0)
         if len(self.positions) % 500 == 0:
-            # Moving average of the *velocity* history, same as the offline run.
-            window = moving_average(np.asarray(self.raw_history), self.window)
+            window = moving_average(np.asarray(self.window), self.window_size)
             payload = {
                 "raw": raw.data,
                 "kalman": smoothed,

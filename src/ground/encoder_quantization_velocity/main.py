@@ -1,6 +1,6 @@
 """Module entry point: offline experiment without ROS.
 
-    python main.py --out results --figure-dir ../../docs/img/ground/encoder_quantization_velocity
+    python main.py --out results --figure-dir ../../../docs/img/ground/encoder_quantization_velocity
 """
 
 import sys

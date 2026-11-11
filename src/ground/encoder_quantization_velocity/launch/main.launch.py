@@ -15,6 +15,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("cpr", default_value="4096"),
+            DeclareLaunchArgument("duration_s", default_value="120.0"),
             Node(
                 package="encoder_quantization_velocity",
                 executable="encoder_sim",
@@ -25,7 +26,10 @@ def generate_launch_description():
                     {
                         "counts_per_revolution": ParameterValue(
                             LaunchConfiguration("cpr"), value_type=int
-                        )
+                        ),
+                        "duration_s": ParameterValue(
+                            LaunchConfiguration("duration_s"), value_type=float
+                        ),
                     },
                 ],
             ),
