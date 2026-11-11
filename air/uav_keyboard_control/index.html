@@ -514,7 +514,25 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#8">8. 参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#8-123">8. 技能宏（1/2/3）</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 为什么用闭环而不是“定时开环”</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 三个控制律</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 状态机与接管</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84">8.4 参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85">8.5 节点级验证（离线，不含仿真器动力学）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#86">8.6 已知限制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#87-ros">8.7 行为演示（本机回放，非 ROS 链路）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参考</a>
 </li>
 </ul>
 </li>
@@ -739,9 +757,11 @@
 <p>任务①「无人机仿真 + 键盘控制」的 ROS 侧实现：把终端按键转换为<strong>机体系速度指令</strong>，
 发布到 <code>/uav/cmd_vel</code>，由 <code>carlair_ros_bridge</code> 连仿真器执行。仿真/坐标换算/安全限幅
 集中在桥接层，键盘、规划器、神经网络控制器共用同一条指令通道。</p>
-<p>在"一个键一个轴"的基础上，本模块还支持<strong>多键组合</strong>（<code>W</code>+<code>A</code> 斜飞、<code>W</code>+<code>Q</code> 边走边转）
-和<strong>加速度限幅的平滑调速</strong>（速度按斜坡逼近目标，松开后同样斜坡回零），并顺带修掉了
-"按方向键会误退出"的问题；三者的语义与实现见第 2、4 节。</p>
+<p>在"一个键一个轴"的基础上，本模块还支持<strong>多键组合</strong>（<code>W</code>+<code>A</code> 斜飞、<code>W</code>+<code>Q</code> 边走边转）、
+<strong>加速度限幅的平滑调速</strong>（速度按斜坡逼近目标，松开后同样斜坡回零），以及把键盘从
+"直接控制"升级为"技能控制"的<strong>技能宏</strong>（<code>1</code>/<code>2</code>/<code>3</code> 触发起飞、旋转、前进，基于
+<code>/uav/odom</code> 闭环），并顺带修掉了"按方向键会误退出"的问题。语义见第 2 节，
+实现见第 4 节，技能宏单独在第 8 节。</p>
 <h2 id="1">1. 运行架构</h2>
 <div class="highlight"><pre><span></span><code>终端按键 ──► uav_keyboard_control ──/uav/cmd_vel──► carlair_ros_bridge ──► CarlaAir/AirSim
             (raw 模式读键)        (geometry_msgs/Twist)   (坐标换算+执行)     (无人机)
@@ -783,6 +803,11 @@
 <td>各轴分量叠加</td>
 </tr>
 <tr>
+<td><code>1</code> / <code>2</code> / <code>3</code></td>
+<td>技能宏：升到 1.5 m / 原地转 360° / 前进 3 m</td>
+<td>基于 <code>/uav/odom</code> 闭环，结束回悬停</td>
+</tr>
+<tr>
 <td>松开</td>
 <td>悬停</td>
 <td>按 <code>accel_*</code> 斜坡回零</td>
@@ -804,6 +829,8 @@
   不会从 0 直接跳变到 2 m/s；松开后同样斜坡回零（4.5）。</li>
 <li><strong>方向键不误触</strong>：<code>ESC [ A</code> 等转义序列会被整段吃掉，按方向键既不退出，
   残字节也不会被当成运动键（4.6）。</li>
+<li><strong>技能宏</strong>：<code>1</code>/<code>2</code>/<code>3</code> 触发一次闭环动作，细节与参数见第 8 节；宏运行中按任意方向键
+  立即取消并接管（手动优先）。</li>
 </ul>
 <h2 id="3">3. 编译与运行</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）</span>
@@ -1037,6 +1064,21 @@ roslaunch<span class="w"> </span>uav_keyboard_control<span class="w"> </span>mai
 <td>组合键</td>
 <td>v2 新增</td>
 <td><code>W</code>+<code>A</code> 两轴同时给速度；<code>W</code>+<code>S</code> 抵消为 0。节点级单测覆盖（<code>tests/test_keyboard_local.py</code> B 节）</td>
+</tr>
+<tr>
+<td>技能宏：<code>3</code> 键前进</td>
+<td>3.00 ± 0.10 m（节点级积分）</td>
+<td>用最小积分器当飞机跑 <code>test_macros_loop.py</code>；峰值速度 ≤1.5 m/s，结束指令回零。<strong>实飞位移待重测</strong></td>
+</tr>
+<tr>
+<td>技能宏：<code>1</code> 键高度</td>
+<td>1.50 ± 0.07 m（节点级积分）</td>
+<td>同上；进入 ±5 cm 死区并稳定 6 帧才判定完成</td>
+</tr>
+<tr>
+<td>技能宏：<code>2</code> 键旋转</td>
+<td>360° ± 4°（节点级积分）</td>
+<td>同上；按累计偏航判断，不会多转一圈</td>
 </tr>
 <tr>
 <td>遥控稳定性</td>
@@ -1313,7 +1355,191 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div>
 </details>
-<h2 id="8">8. 参考</h2>
+<h2 id="8-123">8. 技能宏（1/2/3）</h2>
+<p>键盘不再只是“按住才动”：按 <code>1</code>/<code>2</code>/<code>3</code> 触发三个基于 <code>/uav/odom</code> 的<strong>短闭环</strong>动作，
+结束后自动回到悬停。宏运行中按任意方向键立即取消并接管（手动优先）；<code>ESC</code> 退出会
+取消宏并补发零速。</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>动作</th>
+<th>闭环量</th>
+<th>结束条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td>升到 <code>macro/takeoff_altitude</code>（默认 1.5 m）</td>
+<td><code>odom.z</code></td>
+<td>进入 ±5 cm 死区并稳定 6 帧（≈0.2 s）</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>原地转 <code>macro/spin_degrees</code>（默认 360°）</td>
+<td>累计偏航（wrap 到 ±π）</td>
+<td>剩余 ≤ 2°</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td>沿机头方向前进 <code>macro/forward_distance</code>（默认 3 m）</td>
+<td>起点连线的投影距离</td>
+<td>剩余 ≤ 2 cm</td>
+</tr>
+</tbody>
+</table>
+<h3 id="81">8.1 为什么用闭环而不是“定时开环”</h3>
+<p>“前进 3 m”如果开环写成“以 1.5 m/s 走 2 s”，加减速、桥接层 <code>cmd_duration</code>（0.1 s）
+分片执行、机体动力学都会带来误差，飞几次就能差出几十厘米。这里三个宏都订阅
+<code>/uav/odom</code>（ENU 位置 + 四元数解出的偏航），每帧按<strong>实际位姿</strong>算误差，误差到阈值就结束，
+所以“3 m”是量出来的 3 m，而不是数出来的 2 s。</p>
+<p>没有位姿时宏<strong>拒绝启动</strong>（只发零速）：<code>control/odom_timeout</code>（默认 0.6 s）内没收到新
+<code>/uav/odom</code> 就认为位姿不可用，避免“盲飞”。</p>
+<h3 id="82">8.2 三个控制律</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1 键：高度 P 律 + 死区 + 稳定帧</span>
+<span class="n">vz</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="n">kp</span> <span class="o">*</span> <span class="p">(</span><span class="n">target_z</span> <span class="o">-</span> <span class="n">odom</span><span class="o">.</span><span class="n">z</span><span class="p">),</span> <span class="n">max_vert_speed</span><span class="p">)</span>
+
+<span class="c1"># 2 键：累计偏航（wrap 到 ±π），临近目标降速</span>
+<span class="n">accumulated</span> <span class="o">+=</span> <span class="n">wrap_pi</span><span class="p">(</span><span class="n">odom</span><span class="o">.</span><span class="n">yaw</span> <span class="o">-</span> <span class="n">last_yaw</span><span class="p">)</span>
+<span class="n">wz</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_rate</span><span class="p">,</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">remaining</span><span class="p">))</span>
+
+<span class="c1"># 3 键：按刹车曲线收油，到点自然停下</span>
+<span class="n">remaining</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">-</span> <span class="p">(</span><span class="n">p</span> <span class="o">-</span> <span class="n">p0</span><span class="p">)</span> <span class="err">·</span> <span class="nb">dir</span><span class="p">(</span><span class="n">yaw0</span><span class="p">)</span>
+<span class="n">vx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">forward_speed</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">brake_accel</span> <span class="o">*</span> <span class="n">remaining</span><span class="p">))</span>
+</code></pre></div>
+<p>三者输出的仍是<strong>机体系速度</strong>，和手动键走同一条 <code>/uav/cmd_vel</code>、同一个
+<code>VelocitySmoother</code>（加速度限幅）——所以宏的起停同样平滑，桥接层不需要任何改动。</p>
+<h3 id="83">8.3 状态机与接管</h3>
+<p><code>skill_macros.MacroRunner</code> 一次只允许一个宏：</p>
+<ul>
+<li><code>trigger(key, pose)</code>：<code>1</code>/<code>2</code>/<code>3</code> 各建一个宏对象；未知键或无位姿返回 <code>False</code>；</li>
+<li><code>update(pose, dt)</code>：推进一帧，返回速度指令；宏完成时自动清空；</li>
+<li><code>cancel()</code>：手动键、<code>stop()</code>、退出路径调用；</li>
+<li>位姿在 <code>update</code> 时丢失 -&gt; 自动取消（不会带着旧位姿继续飞）。</li>
+</ul>
+<p>主循环里的优先级是：<strong>手动键 &gt; 宏 &gt; 悬停</strong>。按方向键时先 <code>cancel()</code>，再按手动键计算目标速度，
+平滑器会从当前速度平滑切过去，不会顿一下。</p>
+<h3 id="84">8.4 参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>macro/takeoff_altitude</code></td>
+<td>1.5</td>
+<td>1 键目标高度 m</td>
+</tr>
+<tr>
+<td><code>macro/spin_degrees</code></td>
+<td>360.0</td>
+<td>2 键旋转角度 deg</td>
+</tr>
+<tr>
+<td><code>macro/forward_distance</code></td>
+<td>3.0</td>
+<td>3 键前进距离 m</td>
+</tr>
+<tr>
+<td><code>macro/forward_speed</code></td>
+<td>1.5</td>
+<td>3 键最大速度 m/s</td>
+</tr>
+<tr>
+<td><code>macro/brake_accel</code></td>
+<td>2.0</td>
+<td>3 键刹车减速度 m/s²</td>
+</tr>
+<tr>
+<td><code>macro/alt_kp</code></td>
+<td>2.0</td>
+<td>高度 P 律增益</td>
+</tr>
+<tr>
+<td><code>macro/altitude_tolerance</code></td>
+<td>0.05</td>
+<td>高度死区 m</td>
+</tr>
+<tr>
+<td><code>macro/settle_ticks</code></td>
+<td>6</td>
+<td>进入死区后连续多少帧算到位</td>
+</tr>
+<tr>
+<td><code>control/odom_timeout</code></td>
+<td>0.6</td>
+<td>位姿超时 s，超时后拒绝启动宏</td>
+</tr>
+<tr>
+<td><code>topic/odom</code></td>
+<td><code>/uav/odom</code></td>
+<td>桥接层位姿话题</td>
+</tr>
+</tbody>
+</table>
+<h3 id="85">8.5 节点级验证（离线，不含仿真器动力学）</h3>
+<p><code>test_macros_loop.py</code> 用一个最小积分器当“飞机”，把 <code>step_once</code> 发出的指令积分回位姿：</p>
+<table>
+<thead>
+<tr>
+<th>用例</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>3</code> 键前进 3 m</td>
+<td>3.00 ± 0.10 m，峰值 ≤1.5 m/s，收尾指令回零</td>
+</tr>
+<tr>
+<td><code>1</code> 键升到 1.5 m</td>
+<td>1.50 ± 0.07 m，结束时 <code>linear.z</code> 归零</td>
+</tr>
+<tr>
+<td><code>2</code> 键转 360°</td>
+<td>累计 360° ±4°，不会多转一圈</td>
+</tr>
+<tr>
+<td>手动键接管</td>
+<td>宏被取消，速度斜坡切到手动 <code>horiz_speed</code></td>
+</tr>
+<tr>
+<td>无位姿 / 位姿超时</td>
+<td>宏拒绝启动，只发零速</td>
+</tr>
+<tr>
+<td><code>stop()</code></td>
+<td>取消宏并补发零速</td>
+</tr>
+</tbody>
+</table>
+<p>这些是<strong>指令层</strong>的验证：证明“给定位姿，宏能发出正确的速度序列”。真正的位移误差
+还要在 CarlaAir 里按第 7 节的方法实测（本页不把离线积分值当实飞数据）。</p>
+<h3 id="86">8.6 已知限制</h3>
+<ul>
+<li><code>1</code> 键只负责“升到目标高度”，前提是仿真器已解锁/起飞（桥接层 <code>auto_takeoff</code> 默认 <code>true</code>）；</li>
+<li><code>2</code> 键按偏航累计判断，若飞行中被外力拧动，累计值会受影响（按方向键可随时接管）；</li>
+<li><code>3</code> 键沿“按下 <code>3</code> 时的机头方向”直线走，<strong>不做避障</strong>——避障由 <code>uav_lidar_safety_corridor</code>
+  一类模块负责，两者可以叠加（宏只发速度，不占通道）。</li>
+</ul>
+<h3 id="87-ros">8.7 行为演示（本机回放，非 ROS 链路）</h3>
+<p><img alt="" src="../../img/air/uav_keyboard_control/keyboard_v3_demo.gif"/></p>
+<p>演示内容（8 fps，26 s，压到 8.7 MB）：按住 <code>W</code> 加速 → 松开平滑减速 → <code>W</code>+<code>A</code> 斜飞 →
+按 <code>3</code> 前进 3 m 自动刹停 → 按 <code>1</code> 升到 1.5 m 悬停 → 按 <code>2</code> 原地转 360°。</p>
+<blockquote>
+<p><strong>这段是怎么录的</strong>：用的是仓库里<strong>同一份</strong> <code>keyboard_control.KeyboardController.step_once()</code>
+（组合键、按键保持、加速度平滑、技能宏全部走原代码），但本机没有 ROS，所以用一个假的
+<code>rospy</code> 承接它输出的 <code>Twist</code>，再经 AirSim 的 Python 接口直接下发（等价于桥接层做的那一段）。
+因此它展示的是"按键 → 速度指令 → 飞行动作"，<strong>不是</strong> <code>roslaunch</code> 的 ROS 实飞录屏；
+场景是本机打包版 AirSim（AbandonedPark），不是 CarlaAir。
+ROS 链路的实飞录屏与位移测量仍待在 Ubuntu + CarlaAir 环境补录（见 7.2 / 7.6）。</p>
+</blockquote>
+<h2 id="9">9. 参考</h2>
 <ul>
 <li><a href="../carlair_ros_bridge/">carlair_ros_bridge 桥接模块</a></li>
 <li><a href="https://openhutb.github.io/doc/python_api/#airsim.client.MultirotorClient">AirSim 无人机 API 参考</a></li>
@@ -1325,6 +1551,8 @@ python3<span class="w"> </span>kb_inject_test.py<span class="w"> </span>--mode<s
 其中「单次脉冲 ≈ 0.20 m、20 Hz 定频 3 s ≈ 4.56 m」是<strong>无平滑的 v1</strong> 由评审在另一台机器上的对照复现结果；
 v2 增加了按键保持、组合键与加速度平滑，指令波形改变，7.4/7.6.1 中对应的 v2 数字是<strong>节点级指令积分估算</strong>
 （可离线复算），物理位移仍待在仿真器上重测后回填，文中已逐处标注，没有把估算值冒充实测值。
+v3 增加了技能宏（<code>1</code>/<code>2</code>/<code>3</code>），其 7.4 中的 3.00 m / 1.50 m / 360° 同样来自离线的
+<code>test_macros_loop.py</code>（最小积分器当飞机），<strong>不是</strong> AirSim 实飞位移，实飞仍需按第 7 节方法复测。
 对应的终端输出与截图已随本页一并提交（第 7 节）并被评审逐条核对过；
 作者对提交内容的正确性与完整性负全部责任。</p></div>
 </div>
