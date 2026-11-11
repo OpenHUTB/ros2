@@ -394,6 +394,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
+* [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 ### 感知
