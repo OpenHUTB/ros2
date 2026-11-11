@@ -8,8 +8,7 @@
 
 推理使用 `torch.load(..., weights_only=True)`；随包检查点包含优化器状态，
 本次已在 PyTorch 2.15.0+cpu 上验证。PyTorch 1.13 的安全加载器无法读取这份
-完整检查点；审核时所用的 2.4.1 尚需复测修改后的安全加载路径。工具不会自动
-启用不安全的反序列化。
+完整检查点；工具不会自动启用不安全的反序列化。
 
 ## 用法
 
@@ -28,6 +27,12 @@ python3 scripts/eval_policy.py --self-test
 ```
 
 ## 输出示例
+
+下面的截图来自本地验证页面：页面实际执行评估与自检命令，展示进程输出和退出码。
+
+![离线评估及自检的实际运行结果](../../img/air/uav_lidar_dqn_navigation/policy_eval_runtime.png)
+
+本页面也已通过 `mkdocs serve --livereload` 本地预览，见[网页预览截图](../../img/air/uav_lidar_dqn_navigation/policy_mkdocs_preview.png)。
 
 ```
 训练日志: models/train_nav_log.csv
