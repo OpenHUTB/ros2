@@ -97,7 +97,12 @@ def main(args=None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        node.publish_stop()
+        # 若 context 已被外部关闭（如 launch 统一退出），此时 publish 会失败，
+        # 但仍要保证节点正常销毁
+        try:
+            node.publish_stop()
+        except Exception:
+            pass
         node.destroy_node()
         rclpy.shutdown()
 

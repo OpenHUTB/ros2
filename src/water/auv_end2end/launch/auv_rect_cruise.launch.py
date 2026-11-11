@@ -18,10 +18,18 @@ def generate_launch_description():
     return LaunchDescription([
         # 巡航参数，可在命令行覆盖：
         # ros2 launch auv_end2end auv_rect_cruise.launch.py forward_speed:=3.0
-        DeclareLaunchArgument('forward_speed', default_value='2.5'),
-        DeclareLaunchArgument('side_speed', default_value='2.0'),
-        DeclareLaunchArgument('forward_time', default_value='10.0'),
-        DeclareLaunchArgument('side_time', default_value='20.0'),
+        DeclareLaunchArgument(
+            'forward_speed', default_value='2.5',
+            description='前进/后退速度（m/s）'),
+        DeclareLaunchArgument(
+            'side_speed', default_value='2.0',
+            description='横向平移速度（m/s）'),
+        DeclareLaunchArgument(
+            'forward_time', default_value='10.0',
+            description='直行/后退持续时间（s）'),
+        DeclareLaunchArgument(
+            'side_time', default_value='20.0',
+            description='横向平移持续时间（s）'),
         # 启动Gazebo仿真
         ExecuteProcess(
             cmd=['gazebo', '--verbose', world_path],

@@ -17,13 +17,27 @@ def generate_launch_description():
     return LaunchDescription([
         # 避障参数，可在命令行覆盖：
         # ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3
-        DeclareLaunchArgument('obstacle_thresh', default_value='22'),
-        DeclareLaunchArgument('trigger_ratio', default_value='0.22'),
-        DeclareLaunchArgument('recover_ratio', default_value='0.18'),
-        DeclareLaunchArgument('forward_speed', default_value='4.5'),
-        DeclareLaunchArgument('side_speed', default_value='2.8'),
-        DeclareLaunchArgument('max_avoid_duration', default_value='3.0'),
-        DeclareLaunchArgument('avoid_cooldown', default_value='2.0'),
+        DeclareLaunchArgument(
+            'obstacle_thresh', default_value='22',
+            description='灰度阈值（0-255），低于该值判为暗色障碍像素'),
+        DeclareLaunchArgument(
+            'trigger_ratio', default_value='0.22',
+            description='单侧暗像素占比超过该值触发避障'),
+        DeclareLaunchArgument(
+            'recover_ratio', default_value='0.18',
+            description='双侧占比均低于该值恢复直行'),
+        DeclareLaunchArgument(
+            'forward_speed', default_value='4.5',
+            description='直行巡航速度（m/s）'),
+        DeclareLaunchArgument(
+            'side_speed', default_value='2.8',
+            description='横向避让速度（m/s）'),
+        DeclareLaunchArgument(
+            'max_avoid_duration', default_value='3.0',
+            description='单次最长避让时长（s），超时进入冷却期'),
+        DeclareLaunchArgument(
+            'avoid_cooldown', default_value='2.0',
+            description='冷却时长（s），期间强制直行且禁止重触发'),
         # 启动Gazebo仿真
         ExecuteProcess(
             cmd=['gazebo', '--verbose', world_path],
