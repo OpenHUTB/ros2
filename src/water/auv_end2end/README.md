@@ -82,7 +82,7 @@ source install/setup.bash
 
 ## 运行与退出
 
-两个 launch 都会启动 Gazebo 并加载 `worlds/underwater.world`，单独执行任意一个即可看到仿真画面：
+两个 launch 都会启动 Gazebo：巡航加载 `worlds/underwater_cruise.world`（空场景，航路不被墙体阻断），避障加载 `worlds/underwater.world`（8 道错位墙）。单独执行任意一个即可看到仿真画面：
 
 ```bash
 ros2 launch auv_end2end auv_rect_cruise.launch.py   # 矩形巡航
@@ -96,7 +96,14 @@ ros2 launch auv_end2end auv_sim.launch.py           # 视觉避障
 
 ## 参数说明
 
-参数目前硬编码在节点 `__init__` 中，修改后需重新 `colcon build`。
+参数全部通过 ROS 参数暴露，launch 中用 `DeclareLaunchArgument` 声明默认值，可在命令行覆盖（无需重新编译）：
+
+```bash
+ros2 launch auv_end2end auv_rect_cruise.launch.py side_time:=8.0
+ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3
+```
+
+下表为默认值。
 
 避障节点 `auv_obstacle_avoid`：
 
