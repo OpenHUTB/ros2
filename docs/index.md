@@ -293,6 +293,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [深度图端到端穿越门竞速](./air/uav_depth_gate_racing_e2e.md)
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
+* [无人机遥测缺失重建](./air/telemetry_imputation.md)
 
 * [低空多源气象扰动下无人机影响预测与风险分级](./air/uav_weather_risk.md)
 

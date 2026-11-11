@@ -275,6 +275,7 @@ nav:
     - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
     - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
+    - 无人机遥测缺失重建: './air/telemetry_imputation.md'
     - 低空多源气象扰动影响预测与风险分级: './air/uav_weather_risk.md'
     - 无人机火灾探测与自主巡检: './air/fire_detection_drone.md'
     - 配置 AirSim 客户端环境并连接模拟器: './air/airsim_client_setup.md'
