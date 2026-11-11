@@ -13,33 +13,33 @@
 
 ### 1.1 畸变模型
 
-\[
+$$
 \mathbf{m}=A\,\mathbf{s}+\mathbf{b}+\mathbf{n}
-\]
+$$
 
-其中 \(\mathbf{s}\) 是真实地磁（模长 \(B=48\ \mu T\)，磁倾角 60°），\(\mathbf{b}\) 是硬磁偏置，
-\(A\) 是软磁矩阵。仿真取 \(b=(20,-15,8)\ \mu T\)、\(A=\mathrm{diag}(1.28,0.84,1.12)\) 加 0.10 的交叉项，
+其中 $\mathbf{s}$ 是真实地磁（模长 $B=48\ \mu T$，磁倾角 60°），$\mathbf{b}$ 是硬磁偏置，
+$A$ 是软磁矩阵。仿真取 $b=(20,-15,8)\ \mu T$、$A=\mathrm{diag}(1.28,0.84,1.12)$ 加 0.10 的交叉项，
 测量噪声 0.5 µT。
 
 ### 1.2 椭球拟合
 
-校正的目标是找到 \(W,\mathbf{b}\) 使
+校正的目标是找到 $W,\mathbf{b}$ 使
 
-\[
+$$
 \lVert W(\mathbf{m}-\mathbf{b})\rVert=B
-\]
+$$
 
-对 \((\mathbf{b},W)\) 做 Gauss–Newton（数值雅可比 + LM 阻尼），初值由球拟合给出。
-残差是几何距离而不是代数距离，避免"\(r=-1\)"归一化带来的偏置。
+对 $(\mathbf{b},W)$ 做 Gauss–Newton（数值雅可比 + LM 阻尼），初值由球拟合给出。
+残差是几何距离而不是代数距离，避免"$r=-1$"归一化带来的偏置。
 
 ### 1.3 旋转自由度与对称平方根
 
-\(\lVert W\mathbf{x}\rVert\) 只约束 \(W^\top W\)：任意正交阵 \(R\) 给出同样的范数，也就是椭球拟合
+$\lVert W\mathbf{x}\rVert$ 只约束 $W^\top W$：任意正交阵 $R$ 给出同样的范数，也就是椭球拟合
 **无法确定旋转**。常规做法是取对称正定解
 
-\[
+$$
 W=\left(W^\top W\right)^{1/2}
-\]
+$$
 
 这与"软磁矩阵对称"的物理假设一致；不取对称解时，球面残差同样很小，但航向会被旋转量污染——
 本模块第一版就踩了这个坑（残差 0.48 µT 但航向误差 21.7°）。
@@ -48,20 +48,20 @@ W=\left(W^\top W\right)^{1/2}
 
 用重力向量求横滚/俯仰：
 
-\[
+$$
 \phi=\arctan\frac{a_y}{a_z},\qquad
 \theta=\arctan\frac{-a_x}{\sqrt{a_y^2+a_z^2}}
-\]
+$$
 
 把磁场旋到水平面后取
 
-\[
+$$
 \psi=\arctan\frac{-\left(m_y\cos\phi-m_z\sin\phi\right)}
 {m_x\cos\theta+m_y\sin\theta\sin\phi+m_z\sin\theta\cos\phi}
-\]
+$$
 
-再与陀螺做一维卡尔曼：预测 \(\psi\leftarrow\psi+\omega\,dt\)，观测为磁航向，角度差用
-\(\arctan2(\sin\Delta,\cos\Delta)\) 归一化。
+再与陀螺做一维卡尔曼：预测 $\psi\leftarrow\psi+\omega\,dt$，观测为磁航向，角度差用
+$\arctan2(\sin\Delta,\cos\Delta)$ 归一化。
 
 ## 2. ROS 2 接口
 
