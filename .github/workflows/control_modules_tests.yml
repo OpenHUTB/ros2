@@ -1,8 +1,9 @@
 name: control modules tests
 
-# 五个纯计算模块的构建与单元测试：不依赖仿真器，几分钟内跑完。
-# 覆盖 can_signal_decode / control_discretization / drivetrain_torsion_state_feedback
-# / wheel_speed_observer / uav_hover_throttle。
+# 这 5 个模块是纯解析计算，除 main_node.py 外不 import rclpy，
+# 所以 CI 不安装 ROS：既避开 apt 源的网络抖动（曾导致 "Temporary failure resolving
+# 'azure.archive.ubuntu.com'" 让整条流水线在 setup 阶段就失败），又把耗时从 6~10 分钟
+# 压到 1 分钟以内。构建与测试仍然真实执行 colcon。
 on:
   push:
     paths:
@@ -28,31 +29,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up ROS 2 Humble
-        uses: ros-tooling/setup-ros@v0.7
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          required-ros-distributions: humble
+          python-version: '3.10'
 
-      - name: Build the five packages
+      - name: Install colcon and pytest
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install colcon-common-extensions pytest
+
+      - name: Build the modules present in this tree
         shell: bash
         run: |
-          source /opt/ros/humble/setup.bash
-          colcon build --packages-select \
-            can_signal_decode \
-            control_discretization \
-            drivetrain_torsion_state_feedback \
-            wheel_speed_observer \
-            uav_hover_throttle
+          set -euo pipefail
+          packages=""
+          for p in can_signal_decode control_discretization \
+                   drivetrain_torsion_state_feedback wheel_speed_observer \
+                   uav_hover_throttle; do
+            if [ -d "src/ground/$p" ] || [ -d "src/air/$p" ]; then
+              packages="$packages $p"
+            fi
+          done
+          echo "待构建:$packages"
+          test -n "$packages"
+          colcon build --packages-select $packages
 
       - name: Run unit tests
         shell: bash
         run: |
-          source /opt/ros/humble/setup.bash
-          source install/setup.bash
-          colcon test --packages-select \
-            can_signal_decode \
-            control_discretization \
-            drivetrain_torsion_state_feedback \
-            wheel_speed_observer \
-            uav_hover_throttle
+          set -euo pipefail
+          packages=""
+          for p in can_signal_decode control_discretization \
+                   drivetrain_torsion_state_feedback wheel_speed_observer \
+                   uav_hover_throttle; do
+            if [ -d "src/ground/$p" ] || [ -d "src/air/$p" ]; then
+              packages="$packages $p"
+            fi
+          done
+          test -n "$packages"
+          colcon test --packages-select $packages
           colcon test-result --verbose
