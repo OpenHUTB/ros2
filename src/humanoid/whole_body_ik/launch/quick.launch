@@ -1,0 +1,8 @@
+<launch>
+  <!-- 快速模式：跳过轨迹跟踪，只跑校验与分析 -->
+  <node pkg="whole_body_ik"
+        type="main.py"
+        name="whole_body_ik_quick"
+        output="screen"
+        args="--quick --params $(find whole_body_ik)/config/ik_params.yaml" />
+</launch>

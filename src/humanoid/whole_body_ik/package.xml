@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>whole_body_ik</name>
+  <version>0.1.0</version>
+  <description>
+    人形机器人全身逆运动学与可操作性分析：正运动学、几何雅可比、伪逆 /
+    阻尼最小二乘 / 零空间三种逆解、Yoshikawa 可操作性椭球与奇异点处理。
+    核心逻辑只用 Python 标准库。
+  </description>
+
+  <maintainer email="325889518+zyfmy@users.noreply.github.com">zyfmy</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+
+  <export>
+  </export>
+</package>

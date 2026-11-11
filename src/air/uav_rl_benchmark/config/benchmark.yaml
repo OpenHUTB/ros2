@@ -1,0 +1,28 @@
+# uav_rl_benchmark 默认对比矩阵
+# 命令行显式给出的参数会覆盖本文件；未给出的项用这里的值。
+# （main.py 会实际读取本文件，不是"死配置"）
+
+matrix:
+  # 算法对比：同一结构、同一预算，只换算法
+  algos: [ppo, sac, td3]
+  # 结构对比：同一算法、只换隐藏层宽度/深度
+  archs:
+    - [64, 64]        # 基准（与 uav_ppo_nav 部署一致）
+    - [256, 256]      # 更宽
+    - [64, 64, 64]    # 更深
+  seeds: [0, 1, 2]    # 每个配置重复 3 个随机种子，报告里取均值±标准差
+  steps: 100000       # 每个配置的训练步数预算（三种算法一致才可比）
+
+env:
+  obstacles: 16       # 与 uav_ppo_nav 部署时的障碍密度一致
+
+eval:
+  episodes: 100       # 最终评估回合数
+  freq: 20000         # 训练中周期评估间隔（步）
+                      # 与 launch/main.launch 的 eval_freq 默认值、以及 benchmark.py 里
+                      # run_one 的默认值保持一致；也等于 results/runs/*/eval_log.json
+                      # 里已入库那批结果的评估间隔（那批就是这个值跑的）
+  during_episodes: 20 # 周期评估回合数（画学习曲线用）
+
+report:
+  out: ""             # 结果目录，留空=包内 results/

@@ -1,0 +1,146 @@
+<mujoco model="mujoco_car_avoidance">
+  <!--
+    地面两轮差速小车 + 直道 + 障碍物场景。
+
+    全部使用 MuJoCo 内置几何体（box / cylinder / sphere / plane），不依赖任何外部网格资产，
+    这样仓库里只保存纯文本文件，克隆下来即可直接运行。
+
+    关键设计（射线检测相关，改动前先读这一节）：
+      1. 自车几何体全部放在 geom group 3；射线检测时传入 geomgroup=[1,1,1,0,1,1] 把 group 3 屏蔽。
+         只靠 bodyexclude 是不够的：左右车轮是 car 的子 body，侧向射线会打到自己的轮子，
+         导致"0.3 m 处有障碍物"的假报警并立刻刹停。
+      2. 地面 / 路面 / 障碍物放在 group 0，参与射线检测。
+      3. 射线起点为 site "lidar"（自车车头），因此"射线测距"与"车头到障碍物的真实间距"在同一基准上，
+         便于把两者直接对比（决策只用射线，真值只用于性能评价）。
+
+    单位：米、弧度（compiler angle="radian"）
+  -->
+
+  <compiler angle="radian" autolimits="true"/>
+
+  <!-- implicitfast：对速度相关项（含速度执行器的阻尼）做隐式积分，
+       速度伺服在 2 ms 步长下更稳定；重力与默认步长保持 MuJoCo 常规取值。 -->
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="-130" elevation="-20"/>
+  </visual>
+
+  <default>
+    <geom friction="1.0 0.005 0.0001" solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    <joint damping="0.05" armature="0.005"/>
+    <!-- 自车几何体默认落在 group 3（射线屏蔽组）。
+         注意：这里刻意只用一个 class，不依赖"多 class 继承"这一较新的写法；
+         轮胎摩擦等差异用元素上的显式属性覆盖。 -->
+    <default class="ego">
+      <geom group="3"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.20 0.30 0.25" rgb2="0.25 0.35 0.30" markrgb="0.80 0.80 0.80" mark="cross"/>
+    <material name="grid" texture="grid" texrepeat="16 16" reflectance="0.05"/>
+    <material name="road" rgba="0.16 0.16 0.18 1"/>
+    <material name="chassis" rgba="0.20 0.45 0.85 1"/>
+    <material name="tyre" rgba="0.08 0.08 0.08 1"/>
+    <material name="obstacle" rgba="0.85 0.20 0.20 1"/>
+    <material name="roadside" rgba="0.85 0.70 0.20 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 8" dir="0 0 -1" directional="true"/>
+
+    <!-- 地面（承载车辆）与路面：放 geom group 1，射线掩码会屏蔽它们。
+         否则车身稍有俯仰，射线就会提前打到路面，测出"2~3 m 处有障碍物"的假目标。
+
+         这里刻意**不设 margin**：margin 会让接触在"尚未接触"时就产生力，
+         表现成车身悬浮在弹性气垫上（实测静置 z=0.0546，而轮胎半径只有 0.05，
+         即轮胎底面被托到离地约 7 mm），支撑又软又不稳 ——
+         一给驱动指令车就被弹飞（实测 0.05 s 内冲到 z=0.27 m、车速 2.8 m/s，随后翻车）。
+         接触稳定改由另外两条保证：出生时轮胎已有 2 mm 穿透（见 car 的 pos），
+         以及驱动轮出力限幅（见 actuator 的 forcerange）。 -->
+    <geom name="floor" type="plane" size="0 0 0.05" material="grid" group="1"/>
+
+    <!-- 直道路面：仅用于视觉，contype/conaffinity=0 表示不参与碰撞 -->
+    <geom name="road" type="box" pos="15 0 0.0005" size="15 1.6 0.0005"
+          material="road" contype="0" conaffinity="0" group="1"/>
+
+    <!-- 障碍物放 group 0（射线可见） -->
+    <!-- 本车道障碍物（前车）：x=8 m，车头起始位置在 x=0，初始间距约 7.5 m -->
+    <body name="obstacle" pos="8 0 0.30">
+      <geom name="obstacle_geom" type="box" size="0.30 0.35 0.30"
+            material="obstacle" group="0"/>
+    </body>
+
+    <!-- 邻车道/路侧干扰物：用来验证"本车道判定"能否把它滤掉
+         （横向 y=1.8 m：即使车头偏航 10°，其横向偏移仍 >1.3 m，
+          远超车道半宽 0.8 m，因此不参与避障决策。
+          早期放在 y=1.4 时出现过横向偏移 0.898 m 的擦线命中，
+          与当时门限 0.9 m 只差 0.002，被误判进本车道并触发了提前刹停。） -->
+    <body name="roadside_object" pos="5 1.8 0.25">
+      <geom name="roadside_geom" type="box" size="0.25 0.25 0.25"
+            material="roadside" group="0"/>
+    </body>
+
+    <!-- 自车：差速两轮 + 前/后万向支撑轮。
+         pos 的 z 取 0.048（而不是恰好相切的 0.050）：让出生时就存在 2 mm 穿透，
+         接触从第 0 步起就稳定存在，避免"零穿透被判定为未接触"引起的空转与偏航。 -->
+    <body name="car" pos="0 0 0.048">
+      <freejoint name="car_root"/>
+
+      <!-- 车体：底面离地约 5.5 cm。
+           x 方向刻意前移 0.04 m：让质心落在驱动轮轴**前方**，
+           这样静止的三点支撑（两驱动轮 + 前支撑轮）里驱动轮承担约 80% 重量。
+           若质心在轮轴上方或之后，四点支撑（前后支撑轮同时着地）是静不定的，
+           求解器可能把重量几乎全给支撑轮、驱动轮几乎没有法向力 ——
+           实测表现为车轮空转（滑移 75%）、车速只有指令的 25%。 -->
+      <geom name="chassis" class="ego" type="box" pos="0.04 0 0.04" size="0.22 0.12 0.035"
+            material="chassis" mass="4.0"/>
+
+      <!-- 前支撑轮：着地，与两驱动轮构成静定的三点支撑 -->
+      <geom name="caster" class="ego" type="sphere" pos="0.16 0 -0.02" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+
+      <!-- 后支撑轮：底面离地约 6 mm，只作"防后仰"保护，静止时不承重，
+           避免形成静不定的四点支撑。 -->
+      <geom name="caster_rear" class="ego" type="sphere" pos="-0.16 0 -0.012" size="0.03"
+            friction="0.005 0.005 0.0001" mass="0.05" rgba="0.30 0.30 0.30 1"/>
+
+      <!-- 射线/里程计参考点：车头正前方、离地 0.11 m -->
+      <site name="lidar" pos="0.22 0 0.06" size="0.012" rgba="1 1 0 1" group="3"/>
+
+      <body name="left_wheel" pos="0 0.125 0">
+        <joint name="left_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="left_wheel_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" material="tyre" mass="0.25"/>
+      </body>
+
+      <body name="right_wheel" pos="0 -0.125 0">
+        <joint name="right_wheel_joint" type="hinge" axis="0 1 0"/>
+        <geom name="right_wheel_geom" class="ego" type="cylinder" friction="1.2 0.01 0.0001"
+              size="0.05 0.025" euler="1.5707963 0 0" material="tyre" mass="0.25"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- 速度伺服：ctrl 为轮关节目标角速度（rad/s），force = kv * (ctrl - qvel)。
+       forcerange 是必需的：不限幅时，40 rad/s 的阶跃指令会让伺服瞬间输出几百牛的力，
+       实测 0.05 s 内把 4.6 kg 的车加速到 2.77 m/s 并掀翻（车身翻过去、车轮悬空空转）。
+       限到 ±8 N 后，整车最大加速度约 2*8/4.6 ≈ 3.5 m/s²，足够跟住 2 m/s² 的速度规划。 -->
+  <actuator>
+    <velocity name="left_motor" joint="left_wheel_joint" kv="10" ctrlrange="-60 60"
+              forcerange="-8 8"/>
+    <velocity name="right_motor" joint="right_wheel_joint" kv="10" ctrlrange="-60 60"
+              forcerange="-8 8"/>
+  </actuator>
+
+  <sensor>
+    <jointvel name="left_wheel_vel" joint="left_wheel_joint"/>
+    <jointvel name="right_wheel_vel" joint="right_wheel_joint"/>
+    <framepos name="car_pos" objtype="body" objname="car"/>
+    <framequat name="car_quat" objtype="body" objname="car"/>
+  </sensor>
+</mujoco>

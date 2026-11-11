@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>turtlebot3_relocalization</name>
+  <version>0.1.0</version>
+  <description>TurtleBot3 AMCL-style particle filter localization and relocalization benchmark (2D offline + ROS 2 reference node)</description>
+  <maintainer email="zqhuang76@users.noreply.github.com">zqhuang76</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

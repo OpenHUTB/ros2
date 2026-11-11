@@ -1,0 +1,11 @@
+# MuJoCo 仿真参数配置
+simulation:
+  timestep: 0.002
+  gravity: [0, 0, -9.81]
+  num_substeps: 5
+
+# 强化学习参数
+rl_params:
+  learning_rate: 0.0003
+  batch_size: 64
+  gamma: 0.99

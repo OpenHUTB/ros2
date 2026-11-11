@@ -1,0 +1,18 @@
+{
+  "algo": "ppo",
+  "arch": "64x64x64",
+  "seed": 0,
+  "steps": 100000,
+  "obstacles": 16,
+  "eval_episodes": 100,
+  "train_time_s": 104.0,
+  "train_fps": 961.1,
+  "success_rate": 0.45,
+  "crash_rate": 0.17,
+  "timeout_rate": 0.38,
+  "mean_steps": 167.31,
+  "mean_reward": 8.8055,
+  "mean_path_len": 7.5735,
+  "path_efficiency": 0.7842,
+  "action_smoothness": 0.1517
+}

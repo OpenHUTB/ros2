@@ -3,7 +3,7 @@
 """vehicle_pygame_teleop.py
 
 基于 pygame 的车辆键盘遥操作节点：
-1. 以 30Hz 向 /cmd_vel 发布 geometry_msgs/Twist 速度指令；
+1. 按 ``rate/publish_hz``（默认 30Hz）向 ``topic/cmd_vel`` 发布 geometry_msgs/Twist；
 2. 内置俯视二维驾驶模拟：车辆随速度/转向实时运动，无需外部仿真器即可验证控制效果。
 
 按键：
@@ -11,27 +11,40 @@
     S / 方向键下：前进时刹车，静止时倒车
     A / 方向键左：左转    D / 方向键右：右转
     空格：手刹急停    ESC 或关闭窗口：发布零速度后退出
+
+参数：全部可调项由 launch/``config/vehicle_pygame_teleop.yaml`` 提供
+（``max_speed``/``accel``/``brake``/``handbrake``/``drag``/``max_yaw_rate``/
+``yaw_response``/``reverse_steer_invert``/``publish_hz``/``cmd_vel_topic``），
+每项默认值都等于改造前的硬编码常量，因此不传参数时行为不变。
+
+分层：本文件只负责 pygame 渲染与 rospy 收发；按键解释与运动学积分在
+``teleop_core``（不依赖 pygame / ROS），因此核心逻辑可以做离线回归测试：
+    python3 tests/test_vehicle_pygame_teleop_local.py
 """
 
+from __future__ import division, print_function
+
 import math
+import os
+import sys
+
+# 允许直接 rosrun / 直接执行本脚本时也能导入同目录的 teleop_core；
+# 同时补 realpath，兼容 catkin 把 __file__ 指到 lib/<pkg>/ 的 relay 布局。
+for _path in (os.path.abspath(__file__), os.path.realpath(__file__)):
+    _dir = os.path.dirname(_path)
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
 
 import pygame
 import rospy
 from geometry_msgs.msg import Twist
 
-# ---------------- 画面与仿真参数 ----------------
+import teleop_core as core
+
+# ---------------- 画面参数（仅渲染用，与车辆物理参数无关） ----------------
 WINDOW_W, WINDOW_H = 800, 600
-FPS = 30
-PX_PER_M = 22.0              # 每米对应的像素数
+PX_PER_M = 22.0               # 每米对应的像素数
 CAR_L, CAR_W = 40, 22         # 车身像素尺寸（长、宽）
-MAX_SPEED = 1.5               # 最大前进速度 m/s
-MAX_REVERSE = 0.8             # 最大倒车速度 m/s
-ACCEL = 2.2                   # 油门加速度 m/s^2
-BRAKE = 4.5                   # 刹车减速度 m/s^2
-HANDBRAKE = 8.0               # 手刹减速度 m/s^2
-DRAG = 1.2                    # 松开按键后的滑行阻力减速度 m/s^2
-MAX_YAW_RATE = 1.4            # 最大转向角速度 rad/s
-YAW_RESPONSE = 8.0            # 转向响应速度 rad/s^2
 
 # ---------------- 颜色 ----------------
 COLOR_BG = (18, 20, 26)
@@ -43,11 +56,27 @@ COLOR_CAR_FRONT = (255, 200, 80)
 COLOR_WHEEL = (220, 220, 230)
 COLOR_TEXT = (230, 235, 245)
 
+# teleop_core.KEY_BINDINGS 里的键名 → pygame 键码。
+# 新增/修改按键时只改 teleop_core 的 KEY_BINDINGS 与这里的对应项即可。
+_KEYCODE = {
+    "w": pygame.K_w, "up": pygame.K_UP,
+    "s": pygame.K_s, "down": pygame.K_DOWN,
+    "a": pygame.K_a, "left": pygame.K_LEFT,
+    "d": pygame.K_d, "right": pygame.K_RIGHT,
+    "space": pygame.K_SPACE,
+}
 
-class TeleopCar:
+
+class TeleopCar(object):
     def __init__(self):
         rospy.init_node('vehicle_pygame_teleop', anonymous=True)
-        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+
+        # 参数全部从 ROS 参数服务器读取；launch 未提供时用与原来相同的默认值
+        self.params = core.TeleopParams.from_params(rospy.get_param)
+        # pygame.Clock.tick 需要整数帧率，四舍五入后至少 1Hz
+        self._fps = max(1, int(round(self.params.publish_hz)))
+
+        self.pub = rospy.Publisher(self.params.cmd_vel_topic, Twist, queue_size=10)
 
         pygame.init()
         pygame.display.set_caption("Vehicle Teleop - built-in 2D driving simulation")
@@ -62,13 +91,14 @@ class TeleopCar:
             self.font_bold = pygame.font.Font(None, 24)
 
         # 车辆运动学状态（世界坐标，单位 m / rad）
-        self.x = 0.0
-        self.y = 0.0
-        self.yaw = 0.0
-        self.speed = 0.0
-        self.yaw_rate = 0.0
+        self.state = core.VehicleState()
 
         rospy.loginfo("车辆键盘遥操作节点已启动（内置二维模拟）")
+        rospy.loginfo("参数：topic=%s  rate=%.1fHz  max_speed=%.2fm/s  accel=%.2fm/s^2"
+                      "  brake=%.2fm/s^2  倒车转向反向=%s",
+                      self.params.cmd_vel_topic, self.params.publish_hz,
+                      self.params.max_speed, self.params.accel, self.params.brake,
+                      self.params.reverse_steer_invert)
         rospy.loginfo("W/↑加速  S/↓刹车/倒车  A/←左转  D/→右转  空格手刹  ESC退出")
         # 注册 rospy 关停回调：Ctrl+C 等外部关停时也要发布零速度，
         # 否则最后一条 /cmd_vel 会停留在退出前的速度上
@@ -90,60 +120,19 @@ class TeleopCar:
         """rospy 关停回调（Ctrl+C / rosnode kill 等）：保证最后一条指令为零速度"""
         self.publish_zero(wait=False)
 
+    def read_control(self, keys):
+        """把 pygame 的按键状态翻译成与渲染无关的控制意图（逻辑在 teleop_core）"""
+        return core.control_from_predicate(lambda name: keys[_KEYCODE[name]])
+
     def update_physics(self, dt, keys):
         """根据按键更新车辆速度、航向与位置（差速底盘模型）"""
-        if keys[pygame.K_SPACE]:
-            # 手刹：快速减速到零
-            if self.speed > 0:
-                self.speed = max(0.0, self.speed - HANDBRAKE * dt)
-            elif self.speed < 0:
-                self.speed = min(0.0, self.speed + HANDBRAKE * dt)
-            target_yaw = 0.0
-        else:
-            # 纵向控制
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                if self.speed < 0:
-                    self.speed = min(0.0, self.speed + BRAKE * dt)   # 倒车中踩油门先制动
-                else:
-                    self.speed = min(MAX_SPEED, self.speed + ACCEL * dt)
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                if self.speed > 0:
-                    self.speed = max(0.0, self.speed - BRAKE * dt)   # 前进中踩刹车
-                else:
-                    self.speed = max(-MAX_REVERSE, self.speed - ACCEL * dt)
-            else:
-                # 无按键时滑行阻力自然减速
-                if self.speed > 0:
-                    self.speed = max(0.0, self.speed - DRAG * dt)
-                elif self.speed < 0:
-                    self.speed = min(0.0, self.speed + DRAG * dt)
-
-            # 横向（转向）控制
-            target_yaw = 0.0
-            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                target_yaw = MAX_YAW_RATE
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                target_yaw = -MAX_YAW_RATE
-
-        # 倒车时转向效果反向（差速底盘特性）
-        if self.speed < -0.02:
-            target_yaw = -target_yaw
-
-        # 转向响应平滑
-        if self.yaw_rate < target_yaw:
-            self.yaw_rate = min(target_yaw, self.yaw_rate + YAW_RESPONSE * dt)
-        else:
-            self.yaw_rate = max(target_yaw, self.yaw_rate - YAW_RESPONSE * dt)
-
-        # 运动学积分
-        self.yaw += self.yaw_rate * dt
-        self.x += self.speed * math.cos(self.yaw) * dt
-        self.y += self.speed * math.sin(self.yaw) * dt
+        control = self.read_control(keys)
+        core.step_vehicle(self.state, control, dt, self.params)
 
     def world_to_screen(self, wx, wy):
         """世界坐标（米，y 轴向北）转屏幕坐标（像素，y 轴向下）"""
-        sx = WINDOW_W / 2.0 + (wx - self.x) * PX_PER_M
-        sy = WINDOW_H / 2.0 - (wy - self.y) * PX_PER_M
+        sx = WINDOW_W / 2.0 + (wx - self.state.x) * PX_PER_M
+        sy = WINDOW_H / 2.0 - (wy - self.state.y) * PX_PER_M
         return sx, sy
 
     def draw_grid(self):
@@ -180,7 +169,7 @@ class TeleopCar:
         # 车头标识（前挡风玻璃）
         pygame.draw.rect(surf, COLOR_CAR_FRONT,
                          (6 + CAR_L - 14, 6 + 4, 8, CAR_W - 8))
-        rotated = pygame.transform.rotate(surf, math.degrees(self.yaw))
+        rotated = pygame.transform.rotate(surf, math.degrees(self.state.yaw))
         rect = rotated.get_rect(center=(WINDOW_W / 2.0, WINDOW_H / 2.0))
         self.screen.blit(rotated, rect)
 
@@ -189,10 +178,12 @@ class TeleopCar:
         panel = pygame.Surface((330, 132), pygame.SRCALPHA)
         panel.fill((10, 12, 16, 210))
         self.screen.blit(panel, (10, 10))
+        # 话题名与频率按实际参数显示（原来写死 /cmd_vel 与 30Hz）
         lines = [
-            ("Topic /cmd_vel  (geometry_msgs/Twist @30Hz)", True),
-            ("linear.x : %+.2f m/s" % self.speed, False),
-            ("angular.z: %+.2f rad/s" % self.yaw_rate, False),
+            ("Topic %s  (geometry_msgs/Twist @%dHz)"
+             % (self.params.cmd_vel_topic, self._fps), True),
+            ("linear.x : %+.2f m/s" % self.state.speed, False),
+            ("angular.z: %+.2f rad/s" % self.state.yaw_rate, False),
             ("W/Up gas    S/Down brake/reverse", False),
             ("A/Left left    D/Right right", False),
             ("Space handbrake    ESC quit", False),
@@ -213,7 +204,8 @@ class TeleopCar:
 
     def run(self):
         while not rospy.is_shutdown():
-            dt = min(self.clock.tick(FPS) / 1000.0, 0.1)
+            # dt 上限 0.1s：窗口拖动/系统卡顿后不让一帧积分过大而“瞬移”
+            dt = min(self.clock.tick(self._fps) / 1000.0, 0.1)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -227,8 +219,7 @@ class TeleopCar:
             self.update_physics(dt, keys)
 
             twist = Twist()
-            twist.linear.x = self.speed
-            twist.angular.z = self.yaw_rate
+            twist.linear.x, twist.angular.z = core.twist_fields(self.state)
             self.pub.publish(twist)
 
             self.render()
