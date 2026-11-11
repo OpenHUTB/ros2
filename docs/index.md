@@ -145,7 +145,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
-* [语义分割车道线巡游与 PID 横向控制](./ground/carla_lane_following.md) —— 语义分割提取车道线，PID 闭环转向，平均归一化偏移 0.040
+* [语义分割车道线巡游与 PID 横向控制](./ground/carla_lane_following.md) —— 语义分割提取车道线 + 单侧估计，PID 闭环转向；20 s 跑满，平均归一化偏移 0.086
 * [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
