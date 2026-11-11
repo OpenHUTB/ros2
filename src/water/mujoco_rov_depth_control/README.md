@@ -89,3 +89,13 @@ mujoco_rov_depth_control/
    同时 MuJoCo 自己会施加重力，所以补浮力时不能再减一次重量（这是本次调试的主要坑）。
 2. 单自由度（垂向）控制，没有做横滚/俯仰姿态控制。
 3. 模型是简化刚体，不与 OpenHUTB 的 UE4 场景做视觉联调。
+
+## 运行效果（截图 / 动图）
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 动图](docs/img/water/mujoco_rov_depth_control_run.gif)
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf1](docs/img/water/mujoco_rov_depth_control_kf1.png)
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf2](docs/img/water/mujoco_rov_depth_control_kf2.png)
+
+> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。

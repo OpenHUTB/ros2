@@ -51,3 +51,13 @@
 3. 未与 HoloOcean/UE4 场景联调（缺世界包），视觉层面没有水下渲染。
 4. 本机（2026-11-08 起）应用控制策略会拦截未签名的原生扩展，`import mujoco` 会失败；
    此时可用 `tools/summarize_csv.py` 基于已记录的 CSV 重算指标，但重跑仿真需要在允许该 DLL 的环境进行。
+
+## 运行效果（截图 / 动图）
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 动图](docs/img/water/mujoco_rov_depth_control_run.gif)
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf1](docs/img/water/mujoco_rov_depth_control_kf1.png)
+
+![ROV 定深控制（深度跟踪 + 垂向推力曲线动画） 截图 kf2](docs/img/water/mujoco_rov_depth_control_kf2.png)
+
+> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
