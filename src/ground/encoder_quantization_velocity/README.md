@@ -44,4 +44,6 @@ python3 -m unittest discover -s tests -v
 
 （单位 rad/s；延迟分别为 0 / 2 / 3 / 2–12 ms）
 
+表中 CPR 指**四倍频（quadrature ×4）解码后的计数/转**，不是编码器线数：若按线数选型，1024 线对应 4096 CPR、4096 线对应 16384 CPR。量化步长 Δ = 2π/CPR，与 `EncoderSpec.step_rad` 一致。
+
 详见 `docs/ground/encoder_quantization_velocity.md`。

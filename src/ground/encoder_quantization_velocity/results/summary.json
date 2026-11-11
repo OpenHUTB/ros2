@@ -1,7 +1,7 @@
 {
   "module": "encoder_quantization_velocity",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T17:35:09+00:00",
+  "generated_utc": "2026-11-11T08:04:29+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",

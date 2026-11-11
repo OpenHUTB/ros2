@@ -66,7 +66,7 @@ def plot_resolution(summary, output_path) -> None:
                         ("alpha_beta", "#2c6fbb"), ("kalman", "#1e8449")):
         errors = [summary["resolutions"][str(value)][name]["rmse_rad_s"] for value in resolutions]
         ax.loglog(resolutions, errors, "o-", color=color, label=name)
-    ax.set_xlabel("encoder resolution [counts/rev]")
+    ax.set_xlabel("encoder resolution [CPR = 4 x lines]")
     ax.set_ylabel("velocity RMSE [rad/s]")
     ax.set_title("Estimation error versus encoder resolution")
     ax.legend(frameon=False, fontsize=8)
