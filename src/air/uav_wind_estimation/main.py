@@ -1,6 +1,6 @@
 """Module entry point: offline experiment without ROS.
 
-    python main.py --out results --figure-dir ../../docs/img/air/uav_wind_estimation
+    python main.py --out results --figure-dir ../../../docs/img/air/uav_wind_estimation
 """
 
 import sys

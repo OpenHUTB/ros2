@@ -1,7 +1,7 @@
 {
   "module": "uav_wind_estimation",
   "version": "0.1.0",
-  "generated_utc": "2026-11-11T05:36:21+00:00",
+  "generated_utc": "2026-11-11T05:38:32+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
