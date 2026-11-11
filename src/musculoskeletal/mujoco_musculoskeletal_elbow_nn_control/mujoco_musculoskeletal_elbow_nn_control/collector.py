@@ -7,6 +7,7 @@ from .episode import (
     EpisodeCollector,
     load_episode_config,
     split_episode_ids,
+    write_episode_split,
     write_episode,
 )
 
@@ -37,7 +38,8 @@ def main(argv=None) -> int:
             f"Collected {spec.episode_id}: {len(rows)} samples / 已采集 {len(rows)} 条样本"
         )
     split = split_episode_ids((spec.episode_id for spec in specs), seed)
-    print(f"Episode split / Episode 划分: {split}")
+    manifest_path = write_episode_split(output, seed, split)
+    print(f"数据回合划分已写入: {manifest_path}")
     return 0
 
 
