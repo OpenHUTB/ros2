@@ -54,6 +54,7 @@ nav:
     - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
     - ROS 2 传感器数据均值滤波节点 (mean_filter): 'chap2/mean_filter.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
+    - ROS 2 QoS 兼容性检查实验: 'chap2/ros2_qos_compatibility_lab.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
     - 2. ROS 基础 - ROS 基础:
@@ -114,6 +115,7 @@ nav:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - 肌肉骨骼肘关节神经网络轨迹控制: './musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
     - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
@@ -169,9 +171,11 @@ nav:
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
     - 任务4 - 端到端策略网络: robot_tasks/policy_learning/README.md
+    - 任务5 - 系统集成: robot_tasks/system_integration/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - 激光雷达点云语义分割: './ground/carla_lidar_pointcloud_segmentation.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
+    - ROS2 动态障碍跟踪与 TTC 预警: './ground/ros2_dynamic_obstacle_ttc.md'
     - Mbot 雷达避障（ROS 1 Noetic）: './ground/mbot_lidar_avoid.md'
     - 端到端驾驶（图像到控制指令）: './ground/pix2cmd_end2end_driving.md'
     - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
@@ -365,6 +369,7 @@ nav:
     - 无人机深度相机轨迹跟踪（CNN 行为克隆）: './air/uav_depth_track_nn.md'
     - AirSim 无人机抗风扰补偿（MLP）: './air/uav_airsim_wind_rejection.md'
     - AirSim 无人机深度避障（CNN 端到端控制）: './air/uav_airsim_depth_obstacle_avoidance.md'
+    - 无人机自主充电/机巢仿真: './air/drone_charging_nest.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
