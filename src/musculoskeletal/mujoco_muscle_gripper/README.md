@@ -26,7 +26,7 @@ python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
 python3 main.py manual               # 终端键盘控制
 python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 13 项测试
+python3 -m unittest discover -s tests # 16 项测试
 ```
 
 ### 键盘控制
@@ -136,7 +136,7 @@ mujoco_muscle_gripper/
 │   ├── core.py       # Hill 肌肉、MJCF、手指几何
 │   ├── runs.py       # G1-G4 与录制
 │   └── cli.py
-├── tests/            # 13 项测试
+├── tests/            # 16 项测试
 └── tools/plot_metrics.py
 ```
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import mujoco
 import numpy as np
 
-from .core import DT, SPRING, HillMuscle, gripper_xml, muscle_force
+from .core import DT, HillMuscle, gripper_xml, muscle_force
 from .runs import _finger_contact
 
 LIFT_TARGET = 0.10
@@ -22,9 +22,23 @@ def _fresh(friction=1.5, obj_mass=None):
     return m, d
 
 
-def _grip_force_estimate(muscle, q, qd):
-    """准静态估计：手指受力平衡时，接触法向力 = 肌肉力 − 弹簧回位力。"""
-    return muscle_force(muscle, q, qd) - SPRING * q
+def _force_pi_step(
+    target_force,
+    measured_force,
+    integral,
+    kp=0.025,
+    ki=0.30,
+):
+    """执行一步带条件抗积分饱和的夹持力 PI 控制。"""
+    error = target_force - measured_force
+    proposed = integral + ki * error * DT
+    raw_u = 0.30 + kp * error + proposed
+    saturated_high = raw_u > 1.0 and error > 0.0
+    saturated_low = raw_u < 0.0 and error < 0.0
+    if not (saturated_high or saturated_low):
+        integral = proposed
+    activation = float(np.clip(0.30 + kp * error + integral, 0.0, 1.0))
+    return activation, integral
 
 
 def run_g5(targets=(2.0, 4.0, 8.0)):
@@ -51,13 +65,13 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
             q = float(d.qpos[m.joint("flj").qposadr[0]])
             v = float(d.qvel[dfl])
             # 上一拍步进后的接触力用于本拍反馈；首拍使用初始化测量。
-            error = target - measured_force
-            proposed = integral + ki * error * DT
-            raw_u = 0.30 + kp * error + proposed
-            # 饱和时停止朝饱和方向积分，但允许反向误差卸载积分量。
-            if 0.0 <= raw_u <= 1.0 or (raw_u > 1.0 and error < 0) or (raw_u < 0.0 and error > 0):
-                integral = proposed
-            u = float(np.clip(0.30 + kp * error + integral, 0.0, 1.0))
+            u, integral = _force_pi_step(
+                target,
+                measured_force,
+                integral,
+                kp=kp,
+                ki=ki,
+            )
             mus_l.update_activation(u, DT)
             mus_r.update_activation(u, DT)
             qr = float(d.qpos[m.joint("frj").qposadr[0]])
