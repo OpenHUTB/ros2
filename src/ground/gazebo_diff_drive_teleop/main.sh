@@ -4,7 +4,8 @@
 #   bash main.sh          # 自动巡航演示
 #   bash main.sh demo     # 自动巡航演示
 #   bash main.sh manual   # 仅启动仿真，另开终端运行键盘节点
-#   bash main.sh precision # 启动仿真并进入里程计闭环精确运动节点
+#   bash main.sh teach    # 启动仿真并进入示教/回放键盘节点
+#   bash main.sh precision  # 启动仿真并进入里程计闭环精确运动节点
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,9 +29,18 @@ if [ "$#" -gt 0 ]; then
     shift
 fi
 
-if [ "$MODE" = "precision" ]; then
+if [ "$MODE" = "teach" ] || [ "$MODE" = "precision" ]; then
+    if [ "$MODE" = "teach" ]; then
+        NODE_NAME=teach_replay
+        LOG_NAME=teach_replay
+        MODE_BANNER="键盘示教/回放"
+    else
+        NODE_NAME=precision_moves
+        LOG_NAME=precision
+        MODE_BANNER="里程计闭环精确运动"
+    fi
     mkdir -p "$WS_ROOT/log"
-    LAUNCH_LOG="$WS_ROOT/log/gazebo_diff_drive_precision_launch.log"
+    LAUNCH_LOG="$WS_ROOT/log/gazebo_diff_drive_${LOG_NAME}_launch.log"
 
     echo "==> 后台启动 Gazebo 和控制器"
     setsid ros2 launch gazebo_diff_drive_teleop \
@@ -74,10 +84,10 @@ if [ "$MODE" = "precision" ]; then
         exit 1
     fi
 
-    echo "==> 仿真就绪，进入里程计闭环精确运动（按 q 退出）"
+    echo "==> 仿真就绪，进入${MODE_BANNER}（按 q 退出）"
     echo "    仿真日志: $LAUNCH_LOG"
     set +e
-    ros2 run gazebo_diff_drive_teleop precision_moves
+    ros2 run gazebo_diff_drive_teleop "$NODE_NAME"
     STATUS=$?
     set -e
     exit "$STATUS"

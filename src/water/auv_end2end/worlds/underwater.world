@@ -204,6 +204,58 @@
     </link>
   </model>
 
+  <!-- 第二组错位墙体：验证连续避让与冷却后重复触发 -->
+  <model name="wall_far1">
+    <static>true</static>
+    <pose>24 -1.2 0.75 0 0 0</pose>
+    <link name="link">
+      <collision name="collision">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="wall_far2">
+    <static>true</static>
+    <pose>28 1.2 0.75 0 0 0</pose>
+    <link name="link">
+      <collision name="collision">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+
+  <model name="wall_far3">
+    <static>true</static>
+    <pose>32 -0.8 0.75 0 0 0</pose>
+    <link name="link">
+      <collision name="collision">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>1.2 0.2 1.5</size></box></geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+
 </world>
 </sdf>
 
