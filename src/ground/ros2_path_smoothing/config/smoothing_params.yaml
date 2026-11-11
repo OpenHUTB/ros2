@@ -1,5 +1,6 @@
-path_smoothing:
+﻿path_smoothing:
   ros__parameters:
     input_topic: /plan
     output_topic: /plan_smoothed
-    samples: 12
+    map_topic: /map
+    min_clearance: 0.1

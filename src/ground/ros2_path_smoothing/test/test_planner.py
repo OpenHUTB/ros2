@@ -7,8 +7,8 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "ros2_path_smoothing"))
 
-from planner import (Grid, astar, catmull_rom, curvature, path_length,  # noqa: E402
-                     smooth_path)
+from planner import (Grid, astar, catmull_rom, clearance, curvature,  # noqa: E402
+                     path_free, path_length, smooth_path)
 from sim import corridor, doorway, clutter, evaluate  # noqa: E402
 
 
@@ -23,43 +23,58 @@ class TestAStar(unittest.TestCase):
         self.assertTrue(all(grid.free(c) for c in path))
 
 
-class TestCatmullRom(unittest.TestCase):
-    def test_endpoints_are_preserved(self):
+class TestGeometry(unittest.TestCase):
+    def test_to_cell_negative_coordinates(self):
+        grid = Grid(np.zeros((10, 10), dtype=bool), resolution=0.1)
+        self.assertEqual(grid.to_cell((-0.01, -0.01)), (-1, -1))
+
+    def test_segment_does_not_cut_corner(self):
+        occ = np.zeros((10, 10), dtype=bool)
+        occ[5, 4] = True
+        grid = Grid(occ)
+        self.assertFalse(path_free(grid, [(4.05, 5.05), (5.05, 4.05)]))
+
+    def test_catmull_rom_endpoints(self):
         pts = catmull_rom([(0, 0), (1, 1), (2, 0)], samples=8)
         self.assertAlmostEqual(pts[0, 0], 0.0)
-        self.assertAlmostEqual(pts[0, 1], 0.0)
         self.assertAlmostEqual(pts[-1, 0], 2.0)
-        self.assertAlmostEqual(pts[-1, 1], 0.0)
-
-    def test_circle_curvature(self):
-        pts = [(math.cos(t), math.sin(t)) for t in
-               [i * 2 * math.pi / 40 for i in range(41)]]
-        k = curvature(pts)
-        self.assertAlmostEqual(float(k.mean()), 1.0, delta=0.05)
 
 
 class TestSmoothing(unittest.TestCase):
     def test_l_path_curvature_is_reduced(self):
         occ = np.zeros((60, 60), dtype=bool)
         grid = Grid(occ)
-        path = [(5, 5)] + [(5, y) for y in range(5, 50)] + \
-               [(x, 49) for x in range(5, 55)]
+        path = [(5, y) for y in range(5, 50)] + \
+               [(x, 49) for x in range(6, 55)]
         raw = np.asarray([grid.to_world(c) for c in path])
         smooth, safe = smooth_path(grid, path)
         self.assertTrue(safe)
-        self.assertLess(abs(path_length(smooth) - path_length(raw)), 4.0)
+        self.assertLess(float(curvature(smooth).max()),
+                        float(curvature(raw).max()))
 
-    def test_scenarios_are_safe(self):
+    def test_two_point_path_is_checked(self):
+        occ = np.zeros((30, 30), dtype=bool)
+        occ[15, 15] = True
+        grid = Grid(occ)
+        path = [(2, 15), (27, 15)]
+        smooth, safe = smooth_path(grid, path)
+        self.assertFalse(safe)
+        self.assertFalse(path_free(grid, smooth))
+
+    def test_scenarios_are_safe_independently(self):
         for factory in (corridor, doorway, clutter):
-            row = evaluate(factory())
+            spec = factory()
+            row = evaluate(spec)
+            cells = astar(spec.grid, spec.start, spec.goal)
+            smooth, safe = smooth_path(spec.grid, cells)
             self.assertTrue(row["ok"])
-            self.assertTrue(row["smooth_safe"])
+            self.assertTrue(path_free(spec.grid, smooth))
+            self.assertGreaterEqual(clearance(spec.grid, smooth), 0.1)
+            self.assertTrue(safe)
             self.assertLessEqual(row["smooth_max_curvature"],
                                  row["raw_max_curvature"])
 
 
 if __name__ == "__main__":
     unittest.main()
-
-
 

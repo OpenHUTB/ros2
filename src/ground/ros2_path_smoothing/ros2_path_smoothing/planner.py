@@ -31,8 +31,8 @@ class Grid:
                 self.origin[1] + (cell[1] + 0.5) * self.resolution)
 
     def to_cell(self, point: Tuple[float, float]) -> Cell:
-        return (int((point[0] - self.origin[0]) / self.resolution),
-                int((point[1] - self.origin[1]) / self.resolution))
+        return (math.floor((point[0] - self.origin[0]) / self.resolution),
+                math.floor((point[1] - self.origin[1]) / self.resolution))
 
 
 NEIGHBOURS = [(1, 0), (-1, 0), (0, 1), (0, -1),
@@ -70,25 +70,39 @@ def astar(grid: Grid, start: Cell, goal: Cell) -> List[Cell]:
     return []
 
 
-def line_of_sight(grid: Grid, a: Cell, b: Cell) -> bool:
-    x0, y0 = a
-    x1, y1 = b
-    dx, dy = abs(x1 - x0), abs(y1 - y0)
-    sx = 1 if x0 < x1 else -1
-    sy = 1 if y0 < y1 else -1
-    err = dx - dy
-    while True:
-        if not grid.free((x0, y0)):
+def segment_free(grid: Grid, a: Sequence[float], b: Sequence[float]) -> bool:
+    """Check every cell crossed by segment a-b (0.25-cell sampling)."""
+    distance = math.hypot(b[0] - a[0], b[1] - a[1])
+    steps = max(1, int(math.ceil(distance / (grid.resolution * 0.25))))
+    previous = None
+    for i in range(steps + 1):
+        t = i / steps
+        x = a[0] + (b[0] - a[0]) * t
+        y = a[1] + (b[1] - a[1]) * t
+        cell = grid.to_cell((x, y))
+        if not grid.free(cell):
             return False
-        if x0 == x1 and y0 == y1:
-            return True
-        e2 = 2 * err
-        if e2 > -dy:
-            err -= dy
-            x0 += sx
-        if e2 < dx:
-            err += dx
-            y0 += sy
+        if previous is not None and previous != cell:
+            # diagonal move must not cut a blocked corner
+            if previous[0] != cell[0] and previous[1] != cell[1]:
+                if not grid.free((cell[0], previous[1])) or \
+                        not grid.free((previous[0], cell[1])):
+                    return False
+        previous = cell
+    return True
+
+
+def path_free(grid: Grid, points: Sequence[Sequence[float]]) -> bool:
+    if len(points) == 0:
+        return False
+    if not all(grid.free(grid.to_cell(p)) for p in points):
+        return False
+    return all(segment_free(grid, points[i], points[i + 1])
+               for i in range(len(points) - 1))
+
+
+def line_of_sight(grid: Grid, a: Cell, b: Cell) -> bool:
+    return segment_free(grid, grid.to_world(a), grid.to_world(b))
 
 
 def simplify(grid: Grid, path: Sequence[Cell]) -> List[Cell]:
@@ -144,57 +158,74 @@ def path_length(points: Sequence[Sequence[float]]) -> float:
 
 
 def clearance(grid: Grid, points: Sequence[Sequence[float]]) -> float:
+    """Exact distance from points to the nearest occupied cell *area*."""
     occupied = np.argwhere(grid.occupied)
     if occupied.size == 0:
         return float("inf")
+    res = grid.resolution
+    cx = grid.origin[0] + (occupied[:, 1] + 0.5) * res
+    cy = grid.origin[1] + (occupied[:, 0] + 0.5) * res
     best = float("inf")
-    for point in points:
-        cell = grid.to_cell((point[0], point[1]))
-        d = np.hypot(occupied[:, 1] - cell[0], occupied[:, 0] - cell[1]).min()
-        best = min(best, float(d) * grid.resolution)
+    for px, py in points:
+        dx = np.maximum(np.abs(px - cx) - res / 2.0, 0.0)
+        dy = np.maximum(np.abs(py - cy) - res / 2.0, 0.0)
+        best = min(best, float(np.min(np.hypot(dx, dy))))
     return best
 
 
-def resample_uniform(points: np.ndarray, spacing: float = 0.5) -> np.ndarray:
+def _cumulative(points: np.ndarray) -> np.ndarray:
     if len(points) < 2:
-        return points
-    diffs = np.diff(points, axis=0)
-    seg = np.linalg.norm(diffs, axis=1)
-    cumulative = np.concatenate([[0.0], np.cumsum(seg)])
-    total = cumulative[-1]
-    targets = np.arange(0.0, total, spacing)
-    targets = np.append(targets, total)
-    xs = np.interp(targets, cumulative, points[:, 0])
-    ys = np.interp(targets, cumulative, points[:, 1])
-    return np.column_stack([xs, ys])
+        return np.zeros(len(points))
+    return np.concatenate([[0.0], np.cumsum(
+        np.linalg.norm(np.diff(points, axis=0), axis=1))])
+
+
+def resample_by_arclength(points: np.ndarray, count: int) -> np.ndarray:
+    """Resample a polyline to ``count`` points uniformly by arc length."""
+    if len(points) < 2 or count < 2:
+        return points.copy()
+    s = _cumulative(points)
+    if s[-1] < 1e-9:
+        return np.repeat(points[:1], count, axis=0)
+    targets = np.linspace(0.0, s[-1], count)
+    return np.column_stack([np.interp(targets, s, points[:, 0]),
+                            np.interp(targets, s, points[:, 1])])
 
 
 def smooth_path(grid: Grid, path: Sequence[Cell],
                 min_clearance: float = 0.1) -> Tuple[np.ndarray, bool]:
-    """Return (smoothed world points, collision_free)."""
-    simplified = simplify(grid, path)
-    world = np.asarray([grid.to_world(c) for c in simplified])
-    if len(world) < 3:
-        return world, True
-    world = resample_uniform(world, 0.5)
+    """Return (path, meets_clearance).
+
+    The returned path is always collision-free; the flag additionally says
+    whether it meets ``min_clearance``.
+    """
     raw_world = np.asarray([grid.to_world(c) for c in path])
-    for alpha in (1.0, 0.75, 0.5, 0.25):
-        smooth = catmull_rom(world, samples=12)
-        blended = alpha * smooth + (1.0 - alpha) * _resample(raw_world, len(smooth))
-        if all(grid.free(grid.to_cell(p)) for p in blended) and \
-                clearance(grid, blended) >= min_clearance:
-            return blended, True
-    return world, False
+    raw_ok = path_free(grid, raw_world)
+    if not raw_ok:
+        return raw_world, False
 
+    simplified_cells = simplify(grid, path)
+    simple_world = np.asarray([grid.to_world(c) for c in simplified_cells])
+    simple_ok = path_free(grid, simple_world)
+    if not simple_ok:
+        return raw_world, False
+    simple_safe = clearance(grid, simple_world) >= min_clearance
+    candidates = [(simple_world, simple_safe)]
+    if len(simple_world) >= 3:
+        for alpha in (1.0, 0.75, 0.5, 0.25):
+            smooth = catmull_rom(simple_world, samples=12)
+            raw_resampled = resample_by_arclength(raw_world, len(smooth))
+            blended = alpha * smooth + (1.0 - alpha) * raw_resampled
+            if path_free(grid, blended):
+                candidates.append((blended, clearance(grid, blended) >= min_clearance))
 
-def _resample(points: np.ndarray, count: int) -> np.ndarray:
-    if len(points) == count:
-        return points
-    src = np.linspace(0.0, 1.0, len(points))
-    dst = np.linspace(0.0, 1.0, count)
-    return np.column_stack([np.interp(dst, src, points[:, 0]),
-                            np.interp(dst, src, points[:, 1])])
-
-
-
+    best_path, best_safe = None, False
+    best_k = float("inf")
+    for candidate, meets in candidates:
+        k = float(curvature(candidate).max()) if len(candidate) > 2 else 0.0
+        if (meets, -k) > (best_safe, -best_k):
+            best_path, best_safe, best_k = candidate, meets, k
+    if best_path is None:
+        return raw_world, False
+    return best_path, best_safe
 
