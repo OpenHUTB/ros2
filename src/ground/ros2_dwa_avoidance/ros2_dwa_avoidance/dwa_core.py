@@ -101,11 +101,17 @@ def scan_points_from_ranges(
     range_min: float = 0.05,
     range_max: float = 30.0,
     max_points: int = 120,
+    laser_x: float = 0.0,
+    laser_y: float = 0.0,
 ) -> np.ndarray:
     """Convert polar LaserScan ranges to world-frame Cartesian points.
 
     Invalid (NaN/inf/out-of-range) beams are dropped.  The result is
     downsampled uniformly to at most ``max_points`` points.
+
+    ``laser_x``/``laser_y`` are the laser origin in the robot base frame;
+    when they are zero the scan is assumed to be mounted at the odom origin,
+    which is the convention used by the offline harness.
     """
     ranges_arr = np.asarray(ranges, dtype=float)
     if ranges_arr.size == 0:
@@ -120,9 +126,12 @@ def scan_points_from_ranges(
         idx = np.linspace(0, ranges_arr.size - 1, max_points).astype(int)
         ranges_arr = ranges_arr[idx]
         angles = angles[idx]
-    world_angles = angles + robot_pose.yaw
-    xs = robot_pose.x + ranges_arr * np.cos(world_angles)
-    ys = robot_pose.y + ranges_arr * np.sin(world_angles)
+    cos_yaw = math.cos(robot_pose.yaw)
+    sin_yaw = math.sin(robot_pose.yaw)
+    local_x = ranges_arr * np.cos(angles) + laser_x
+    local_y = ranges_arr * np.sin(angles) + laser_y
+    xs = robot_pose.x + local_x * cos_yaw - local_y * sin_yaw
+    ys = robot_pose.y + local_x * sin_yaw + local_y * cos_yaw
     return np.column_stack([xs, ys])
 
 
@@ -179,20 +188,6 @@ class DWA:
         xs = np.where(straight, x_line, x_arc)
         ys = np.where(straight, y_line, y_arc)
         return np.stack([xs, ys], axis=2)
-
-    def _admissible_speed(self, state: RobotState, points: np.ndarray) -> float:
-        """Largest speed from which the robot can still stop before contact.
-
-        Kept as a public helper for tests; the planner applies the same rule
-        per candidate trajectory, which is less conservative than clamping the
-        whole window with the distance to the globally nearest scan point.
-        """
-        p = self.params
-        if points.size == 0:
-            return p.max_v
-        d = np.hypot(points[:, 0] - state.x, points[:, 1] - state.y).min()
-        free = max(0.0, d - p.robot_radius - p.safety_margin)
-        return math.sqrt(2.0 * p.max_acc_v * free)
 
     # ------------------------------------------------------------------
     # Main API
@@ -294,6 +289,11 @@ class DWA:
             left_score = float(dist[left].min()) if np.any(left) else float("inf")
             right_score = float(dist[right].min()) if np.any(right) else float("inf")
             best_w = p.max_w * 0.6 if left_score > right_score else -p.max_w * 0.6
+        # Respect the same angular acceleration limit as the DWA window; without
+        # this the fallback would command a step change on a real robot.
+        w_step = p.max_acc_w * p.dt
+        best_w = clamp(best_w, state.w - w_step, state.w + w_step)
+        best_w = clamp(best_w, -p.max_w, p.max_w)
         return PlanResult(0.0, best_w, trajectory, 1e6, 1.0, 1.0, 1.0, 1.0,
                           self._min_clearance(state, points), source="rotate")
 

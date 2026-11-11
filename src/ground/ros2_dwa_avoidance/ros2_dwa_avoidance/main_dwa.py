@@ -67,8 +67,10 @@ class DwaAvoidanceNode(Node):
         self.declare_parameter("map_half_size", 10.00)
         self.declare_parameter("data_timeout", 0.50)
         self.declare_parameter("max_scan_points", 120)
+        self.declare_parameter("laser_x", 0.0)
+        self.declare_parameter("laser_y", 0.0)
+        self.declare_parameter("publish_tf", True)
 
-        p = self._build_params()
         self.goal_x = float(self.get_parameter("goal_x").value)
         self.goal_y = float(self.get_parameter("goal_y").value)
         self.control_rate = float(self.get_parameter("control_rate").value)
@@ -77,6 +79,11 @@ class DwaAvoidanceNode(Node):
         self.map_half = float(self.get_parameter("map_half_size").value)
         self.data_timeout = float(self.get_parameter("data_timeout").value)
         self.max_scan_points = int(self.get_parameter("max_scan_points").value)
+        self.laser_x = float(self.get_parameter("laser_x").value)
+        self.laser_y = float(self.get_parameter("laser_y").value)
+        self.publish_tf = bool(self.get_parameter("publish_tf").value)
+
+        p = self._build_params()
 
         self.state = RobotState()
         self.last_odom_time: float | None = None
@@ -125,6 +132,7 @@ class DwaAvoidanceNode(Node):
             clearance_norm=float(get("clearance_norm")),
             goal_tolerance=float(get("goal_tolerance")),
             max_scan_points=int(get("max_scan_points")),
+            dt=1.0 / max(float(get("control_rate")), 1.0),
         )
 
     # ------------------------------------------------------------------
@@ -137,15 +145,17 @@ class DwaAvoidanceNode(Node):
         self.state.w = msg.twist.twist.angular.z
         self.last_odom_time = time.monotonic()
 
-        # Publish odom -> base_link so RViz can show the RobotModel.
-        transform = TransformStamped()
-        transform.header.stamp = msg.header.stamp
-        transform.header.frame_id = "odom"
-        transform.child_frame_id = "base_link"
-        transform.transform.translation.x = pos.x
-        transform.transform.translation.y = pos.y
-        transform.transform.rotation = msg.pose.pose.orientation
-        self.tf_broadcaster.sendTransform(transform)
+        # Publish odom -> base_link only when the driver does not already do it;
+        # two publishers of the same transform make RViz report TF conflicts.
+        if self.publish_tf:
+            transform = TransformStamped()
+            transform.header.stamp = msg.header.stamp
+            transform.header.frame_id = "odom"
+            transform.child_frame_id = "base_link"
+            transform.transform.translation.x = pos.x
+            transform.transform.translation.y = pos.y
+            transform.transform.rotation = msg.pose.pose.orientation
+            self.tf_broadcaster.sendTransform(transform)
 
     def on_scan(self, msg: LaserScan) -> None:
         self.scan_msg = msg
@@ -195,7 +205,8 @@ class DwaAvoidanceNode(Node):
             self.scan_msg.ranges, self.scan_msg.angle_min,
             self.scan_msg.angle_increment, self.state,
             self.scan_msg.range_min, self.scan_msg.range_max,
-            max_points=self.max_scan_points)
+            max_points=self.max_scan_points,
+            laser_x=self.laser_x, laser_y=self.laser_y)
 
         v, w = self.controller(self.state, self.goal, points)
 

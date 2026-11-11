@@ -83,7 +83,7 @@ python3 -m unittest discover -s test -v          # 18 项单元测试
 ```
 
 `--no-figures` 会把 `results.json` 和 `sweep.json` 写完后跳过绘图，适合只装了 NumPy 的机器；
-`test/ros_integration_test.py` 文件名不匹配 `test*.py`，**不在 18 项单测内**，需要按第 6 节手动运行。
+`test/ros_integration_manual.py` 文件名不匹配 `test*.py`，**不在 18 项单测内**，需要按第 6 节手动运行。
 
 ## 5. 参数
 
@@ -101,6 +101,9 @@ python3 -m unittest discover -s test -v          # 18 项单元测试
 | `lookahead` | 1.20 | A* 路径跟踪前视距离（m） |
 | `replan_period` | 1.00 | A* 重规划周期（s） |
 | `map_half_size` | 10.00 | 滚动栅格半边长（m） |
+| `control_rate` | 10.0 | 控制频率（Hz）；DWA 的 `dt = 1/control_rate` |
+| `laser_x` / `laser_y` | 0.0 / 0.0 | 激光在 base 系下的安装偏移（m） |
+| `publish_tf` | true | 是否发布 `odom→base_link`；底盘已发布时设为 false |
 
 完整参数见 [`config/dwa_params.yaml`](config/dwa_params.yaml)。
 
@@ -131,7 +134,7 @@ A*+DWA 5/5 成功，纯 DWA 4/5，反应式基线 1/3。纯 DWA 在窄走廊中�
 
 * `colcon build --packages-select ros2_dwa_avoidance`：通过；
 * `python3 -m unittest discover -s test -v`：18 项通过（不含 ROS 闭环测试）；
-* `test/ros_integration_test.py` 发布 `/scan`（180 束）与 `/odom`，节点发布 `/cmd_vel`，
+* `test/ros_integration_manual.py` 发布 `/scan`（180 束）与 `/odom`，节点发布 `/cmd_vel`，
   2.5 m 走廊场景本机两次 20.3 s / 26.1 s 到达，最小间隙 0.30–0.34 m，无碰撞；
   另一位同学在 Humble 上复现为 18.7 s / 18.9 s（同场景、path 11.91 m）。
   **完成时间受机器调度影响可达 ±30%，不宜当作算法差异的验收基线。**

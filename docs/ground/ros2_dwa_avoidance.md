@@ -213,7 +213,7 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 
 | 场景 | A\*+DWA | 纯 DWA | brake-turn |
 | --- | --- | --- | --- |
-| corridor | **成功 21.2 s / 12.01 m / 0.32 m** | 超时 60 s / 7.44 m | 超时 60 s / 8.69 m |
+| corridor | **成功 21.2 s / 12.01 m / 0.32 m** | 超时 60 s / 10.99 m | 超时 60 s / 8.69 m |
 | doorway | **成功 14.2 s / 9.27 m / 0.55 m** | 成功 13.4 s / 9.27 m / 0.60 m | 成功 17.1 s / 9.30 m / 0.60 m |
 | clutter | **成功 19.2 s / 10.90 m / 0.33 m** | 成功 15.6 s / 11.06 m / 0.30 m | 超时 60 s / 3.24 m |
 | utrap | **成功 23.3 s / 12.64 m / 0.32 m** | 成功 29.3 s / 17.37 m / 0.30 m | — |
@@ -222,11 +222,15 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 格式：成功/超时 + 完成时间 / 路径长度 / 最小离障距离（到障碍表面的距离）。
 成功率：A\*+DWA **5/5**，纯 DWA **4/5**，brake-turn **1/3**。
 
+> 表中的数字在 Windows 11 + Python 3.12 + NumPy 2.5.4 上生成。Linux + NumPy 1.24
+> 复现时 utrap/A\*+DWA 为 22.3 s / 12.63 m / 0.303 m（本表 23.3 s / 12.64 m / 0.32 m），
+> 属平台/数值库差异；其余回合一致。不同环境不要求逐位相同。
+
 ![5 个场景的轨迹对比](../img/ground/ros2_dwa_avoidance/trajectories.png)
 
 ### 8.2 分析
 
-1. **窄走廊**：纯 DWA 在第一个/第二个障碍前 7.4 m 处停住并原地摆动，
+1. **窄走廊**：纯 DWA 在走廊中段（路径 10.99 m、终点距目标 2.96 m）停住并原地摆动，
    无法判断绕行方向；A* 给出绕行路线后 21.2 s 通过，最小间隙 0.32 m
    （大于半径 0.22 m）。这是本模块最核心的对照：同样的 DWA 参数，只增加 A* 层，
    窄走廊从超时变为通过。
@@ -274,7 +278,9 @@ python3 -m unittest discover -s test -v      # 18 项单元测试
 ## 10. 复现与测试
 
 * `python3 -m ros2_dwa_avoidance.sim --no-figures`：5 场景 × 3 控制器 + **45 次**参数扫描，
-  输出 `results.json`、`sweep.json`；完整运行额外生成 `figures/`。场景与随机种子固定，结果可逐位复现。
+  输出 `results.json`、`sweep.json`；完整运行额外生成 `figures/`。场景与随机种子固定，
+在**同一环境**（Windows 11 + Python 3.12 + NumPy 2.5.4）下结果可逐位复现；
+不同 NumPy/平台的浮点差异可能带来秒级时间差（见 8.1 注）。
 * `python3 -m unittest discover -s test -v`：18 项测试，覆盖角度归一化、
   动态窗口边界、轨迹预测几何、碰撞可行性、被围困时的旋转恢复、A* 绕墙/无解、
   路径简化、前视点投影、混合规划器到达目标。
@@ -302,7 +308,7 @@ OK
 TEST_EXIT=0
 ```
 
-**话题级闭环测试**：`test/ros_integration_test.py` 扮演机器人与世界，
+**话题级闭环测试**：`test/ros_integration_manual.py` 扮演机器人与世界，
 按 10 Hz 发布 180 束 `/scan` 与 `/odom`，订阅 `/cmd_vel` 并按差速运动学积分；
 节点通过 `ros2 run` 启动，目标 `(11.5, 0)`。测试场景是 2.5 m 宽走廊
 （比离线基准的 1.9 m 窄走廊宽松），目的是验证 ROS 话题链路与闭环控制，
@@ -320,7 +326,7 @@ path 11.91 m、min_clear 0.313 / 0.316 m。路径一致说明是同一场景，
 但完成时间在 18.7–26.1 s 之间波动（约 ±30%），主要来自机器调度和 Gazebo/仿真节奏，
 **不能把某个时间点当作算法差异的验收基线**。
 
-`test/ros_integration_test.py` 的文件名不匹配 `unittest` 默认的 `test*.py`，
+`test/ros_integration_manual.py` 的文件名不匹配 `unittest` 默认的 `test*.py`，
 所以 18 项单测**不包含**它，需要手动运行。节点现在也会发布 `odom → base_link` TF，
 RViz2 里可以直接显示 RobotModel。
 
@@ -339,7 +345,12 @@ launch 参数能正确覆盖节点默认目标（日志中 `goal=(11.50, 0.00)`�
 * 未知区域视为可通行，若真实环境存在玻璃/低矮障碍，需要额外的传感器或先验地图；
 * A* 只在 20 m 滚动窗口内规划，超长距离任务需要与全局地图/全局规划器配合；
 * 动态障碍按匀速直线运动，未做意图预测；对突然加塞的物体仍可能急停；
-* 尚未接入 Gazebo/TurtleBot3 做三维仿真验证，这是下一步工作。
+* 激光点按 `angle_min + i*angle_increment` 在 odom 系直接展开，默认激光与 base 重合；
+  有安装偏移时用 `laser_x`/`laser_y`（base 系）补偿，但没有查询 TF 的
+  `scan.header.frame_id`，倾斜安装或多雷达外参需自行扩展；
+* 节点默认发布 `odom→base_link`；若底盘驱动已发布同一 TF，把 `publish_tf` 设为
+  false，避免 RViz 报重复 TF；
+* 尚未接入 Gazebo/TurtleBot3 做三维仿真验证，这是下一步工作（另见 #1134）。
 
 ## 12. 大模型声明
 
