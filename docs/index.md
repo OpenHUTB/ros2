@@ -108,6 +108,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
 * [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
+* [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
 * [人形机器人落地冲击缓冲：膝关节阻抗与刚性保持对比](./humanoid/humanoid_landing_impedance.md)
 
