@@ -162,11 +162,11 @@ stateDiagram-v2
 切换状态：前进 | 完成一个矩形循环
 ```
 
-四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹在 `/auv/odom` 上可观察到闭合矩形。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；`planar_move` 没有指令超时，这一步决定 AUV 是否立即停下。
+四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹可通过 `ros2 topic echo /auv/odom` 观察（XY 轨迹截图待补）。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；`planar_move` 没有指令超时，这一步决定 AUV 是否立即停下。
 
 巡航使用独立的 `underwater_cruise.world`（空场景）：`wall_front` 位于 `(4, 0)`，正好压在 y = 0 的直行航路上，用演示场景会让矩形轨迹被墙体切断；`planar_move` 不参与碰撞，穿墙不会报错，但轨迹不可读。
 
-![矩形巡航轨迹](../img/water/auv_end2end_rect_cruise.png)
+> 截图待补：巡航默认使用 `underwater_cruise.world`（空场景），需在该场景中运行并叠加 `/auv/odom` 的 XY 轨迹后重拍。旧截图录于 5 墙场景，只显示启动瞬间的画面，不能作为轨迹证据，故此处不再引用。
 
 ### 8.2 视觉双向避障
 
@@ -192,7 +192,9 @@ ros2 topic echo /auv/odom --field pose.pose.position
 
 ## 9. 多障碍场景设计（待实测）
 
-`underwater.world` 目前有 8 道错位墙，作为连续避让的验证场景。**本节只描述场景几何与预期行为，尚未采集日志，不作为实测结论。**
+`underwater.world` 目前有 8 道错位墙，其中本次新增 3 道（`wall_far1` / `wall_far2` / `wall_far3`），作为连续避让的候选场景。**本节只描述几何与预期行为，尚未采集日志，不作为实测结论。**
+
+需要说明的是：只有 `wall_front`（横跨 y ∈ [-1, 1]）真正挡在 y = 0 的航路上；其余 7 道是 y = ±1.2~1.5、沿 x 方向长 1.2~2 m、厚 0.2 m 的纵向条，是否进入相机视野、暗像素占比能否超过 22%，取决于上一次避让后停在哪个 y 上。单次超时避让横移 2.8 m/s × 3 s = 8.4 m，足以越过全部 ±1.5 m 的墙。
 
 | 墙 | x | 与下一道间距 | 直行通过耗时 @4.5 m/s |
 | --- | --- | --- | --- |
