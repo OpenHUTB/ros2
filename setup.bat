@@ -1,8 +1,10 @@
 @echo off
+setlocal EnableExtensions
 
+if not defined ROS2_REPO_URL set "ROS2_REPO_URL=https://github.com/OpenHUTB/ros2.git"
 
 if not exist "ros2" (
-    git clone https://OpenHUTB:T8w6TYB_r71gGTP3A02B@git.code.tencent.com/OpenHUTB/ros2.git   &&  cd ros2  && git lfs pull
+    git clone "%ROS2_REPO_URL%" ros2 && cd ros2 && git lfs pull
 ) else (
     cd ros2
     git reset --hard HEAD
