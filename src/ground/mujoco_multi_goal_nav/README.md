@@ -1,15 +1,88 @@
-# MuJoCo小车多目标导航
+# mujoco_multi_goal_nav
 
-## 项目说明
-小车自动依次走到三个预设目标点，到达后打印目标坐标，全部走完后自动停车。
+MuJoCo `free joint` 小车多目标导航：从原点出发依次到达三个目标点，每到一个点打印坐标与
+实测误差，全部到达后停车。纯 Python + MuJoCo，不依赖 ROS 话题。
+
+## 文件说明
+
+| 文件 | 作用 |
+|---|---|
+| `main.py` | 入口：场景定位、目标点列表、平面速度闭环、姿态锁定、统计输出 |
+| `scene.xml` | 场景：地面、小车、三个目标点标记（不参与碰撞） |
+| `launch/main.launch` | ROS Noetic 一键启动（`roslaunch mujoco_multi_goal_nav main.launch`）|
+| `CMakeLists.txt` / `package.xml` | catkin 包定义，与 `src/ground/` 下同类模块一致 |
+| `../../docs/ground/mujoco_multi_goal_nav.md` | 文档站页面 |
+| `../../docs/img/ground/mujoco_multi_goal_nav.{png,gif}` | 效果图与动图 |
 
 ## 运行环境
-- Ubuntu 20.04
-- MuJoCo 2.3.7
-- Python 3.8
 
-## 运行步骤
+- Ubuntu 20.04 / Python 3.8+
+- `pip3 install mujoco`
+- 本文数据在 MuJoCo 4.0.0 下实测；2.3.7 使用相同 API，可直接运行
+
+## 目标点与参数
+
+| 目标点 | 坐标 (x, y) / m | 标记颜色 |
+|---|---|---|
+| 1 | (1.5, 1.0) | 绿 |
+| 2 | (-1.5, 1.0) | 黄 |
+| 3 | (-1.5, -1.0) | 紫 |
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `--nogui` | 关 | 不建窗口，只跑物理（无显示环境）|
+| `--duration` | 40.0 | 最大仿真时长（秒）|
+| `--csv` | 无 | 轨迹 CSV 输出路径 |
+| `SPEED` | 0.3 | 最高线速度 m/s |
+| `SLOW_RADIUS` | 0.3 | 进入减速区的距离 m |
+| `STOP_DIST` | 0.02 | 到达判定阈值 m |
+
+## 运行
+
 ```bash
-pip install mujoco==2.3.7
-python3 main.py
+cd src/ground/mujoco_multi_goal_nav
+
+pip3 install mujoco
+
+python3 main.py                        # 带窗口
+python3 main.py --nogui                # 无窗口，出统计
+python3 main.py --nogui --csv traj.csv # 顺带落轨迹
 ```
+
+### 通过 launch（ROS Noetic）
+
+```bash
+cd ~/catkin_ws && catkin_make && source devel/setup.bash
+roslaunch mujoco_multi_goal_nav main.launch                    # 带窗口
+roslaunch mujoco_multi_goal_nav main.launch nogui:=true        # 无窗口
+```
+
+## 实测结果（`python3 main.py --nogui`，MuJoCo 4.0.0）
+
+| 目标点 | 累计用时 / s | 到位误差 / m |
+|---|---|---|
+| 1 | 7.71 | 0.0199 |
+| 2 | 19.37 | 0.0199 |
+| 3 | 27.73 | 0.0200 |
+
+到达 3 / 3，总仿真时长 27.73 s，最终位置 (-1.500, -0.980)。
+
+## 实现要点
+
+- 速度直接写 `data.qvel[0] / [1]`，大小 `min(SPEED, SPEED*dist/SLOW_RADIUS)`，
+  到 `dist < STOP_DIST` 切下一个目标；
+- 每步 `mj_step` 后把 `qpos[2]`、`qpos[3:7]` 复位、`qvel[2]`、`qvel[3:6]` 置 0，
+  车头全程保持初始朝向，不会斜着平移；
+- `resolve_scene_path()` 三级回退（脚本同目录 → `../share/<pkg>/` → 环境变量），
+  源码目录直跑与安装空间启动都能找到 `scene.xml`。
+
+## 已知限制
+
+- 直接写 `qvel` 属运动学控制，轮子不转、没有驱动力矩参与，物理真实性有限；
+- 姿态被锁定，车不会转向；
+- 目标点固定在 `main.py` 的 `GOALS` 常量中，改点需同步改 `scene.xml` 标记。
+
+## AI 使用声明
+
+代码与文档在编写过程中使用 **豆包（Doubao）** 辅助；场景参数、控制律与实测数据均由作者
+核对并实际运行确认。
