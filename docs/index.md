@@ -102,6 +102,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 *  [简化双足步态动画演示](./humanoid/zmp_walk_planner.md)
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 * [人形机器人深度图姿态估计与平衡控制](./humanoid/humanoid_depth_pose_control.md)
+* [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -367,6 +368,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
+* [基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统](./air/geofence.md)
+
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度
 * [无人机深度相机轨迹跟踪（CNN 行为克隆）](./air/uav_depth_track_nn.md) —— 深度相机感知 + 给定圆轨迹跟踪，CNN 输出速度指令
 
@@ -414,6 +417,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
 * [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
+* [ROV 推进器配置矩阵与饱和感知推力分配](./water/rov_thruster_allocation.md) —— 8 推进器 6×8 配置矩阵（秩 6、条件数 10.9），箱约束 QP 分配；超包络时力旋量残差比先伪逆再限幅低 36%（20.00 vs 31.41）
 
 * [动态洋流 ROV 键盘遥操与 MLP 巡航控制](./water/mjc_rov_current_teleop.md)
 * [水下 ROV 声呐图像 CNN 目标分类（Gazebo 训练链路）](./water/rov_gazebo_sonar_cnn.md) —— Gazebo 采集图像、3 类 CNN 训练与 2 Hz 定时推理，权重与类别表随包安装

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""一键入口：ros2 run traffic_sign_speed_control main <train|evaluate|scenes|demo>
+"""一键入口：ros2 run traffic_sign_speed_control main <train|evaluate|vision|scenes|demo>
 
 - train     生成合成数据并训练 DigitCNN（输出权重与训练指标）
 - evaluate  字符级退化矩阵评测
+- vision    ROI 定位与字符切分离线评测（无需 ROS/CNN）
 - scenes    端到端多场景评测（启动真实 ROS 系统）
 - demo      以 file 渲染模式运行默认场景并输出 GIF 帧
 """
@@ -41,6 +42,8 @@ def main():
         sys.exit(sh([sys.executable, scripts / "train_signs.py"] + sys.argv[2:]))
     if mode == "evaluate":
         sys.exit(sh([sys.executable, scripts / "evaluate_detector.py"] + sys.argv[2:]))
+    if mode == "vision":
+        sys.exit(sh([sys.executable, scripts / "evaluate_vision.py"] + sys.argv[2:]))
     if mode == "scenes":
         sys.exit(sh([sys.executable, scripts / "run_scenes.py"] + sys.argv[2:]))
     if mode == "demo":
