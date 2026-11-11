@@ -79,31 +79,28 @@ def run_experiment(
                 direction_errors.append(_direction_error(speeds, base.wind))
         summary["maneuvers"][maneuver] = {
             "observability": info,
-            "ls_speed_rmse_m_s": float(np.nanmean(speed_errors)) if not np.all(np.isnan(speed_errors)) else None,
-            "ls_direction_rmse_deg": float(np.nanmean(direction_errors)) if not np.all(np.isnan(direction_errors)) else None,
-            "reciprocal_speed_rmse_m_s": float(np.mean(naive_speed_errors)),
+            "ls_speed_rmse_m_s": float(np.sqrt(np.nanmean(np.square(speed_errors)))) if not np.all(np.isnan(speed_errors)) else None,
+            "ls_direction_rmse_deg": float(np.sqrt(np.nanmean(np.square(direction_errors)))) if not np.all(np.isnan(direction_errors)) else None,
+            "reciprocal_speed_rmse_m_s": float(np.sqrt(np.mean(np.square(naive_speed_errors)))),
             "estimable": bool(not np.all(np.isnan(speed_errors))),
         }
 
     for sigma in NOISE_GRID:
         config = replace(base, gps_noise_m_s=sigma)
         errors = []
-        for seed in range(min(trials, 20)):
+        for seed in range(trials):
             data = simulate_maneuver(replace(config, seed=seed), "circle")
             estimate = estimate_wind(data["ground_velocity"], data["headings"], sigma_m_s=sigma)
             errors.append(_speed_error(estimate.wind, base.wind))
         summary["noise_sweep"][f"{sigma:.2f}"] = {
             "gps_noise_m_s": sigma,
-            "speed_rmse_m_s": float(np.mean(errors)),
+            "speed_rmse_m_s": float(np.sqrt(np.mean(np.square(errors)))),
         }
 
     if out_dir is not None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
+        with (out_dir / "summary.json").open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if make_plots:
         if figure_dir is None:
             raise ValueError("figure_dir is required when make_plots is True")

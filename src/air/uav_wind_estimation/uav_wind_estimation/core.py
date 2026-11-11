@@ -18,6 +18,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
+#: A heading set is accepted when lambda_min >= 1e-3 * lambda_max.
+OBSERVABILITY_RATIO = 1e-3
+
 
 @dataclass(frozen=True)
 class WindEstimate:
@@ -138,5 +141,5 @@ def observability(headings) -> dict:
     return {
         "eigenvalues": [float(value) for value in values],
         "condition": float(values[-1] / max(values[0], 1e-12)),
-        "observable": bool(values[0] > 0.05 * values[-1]),
+        "observable": bool(values[0] > OBSERVABILITY_RATIO * values[-1]),
     }

@@ -76,10 +76,16 @@ class WindEstimator(Node):
                 np.asarray(self.ground), np.asarray(self.headings), sigma_m_s=self.sigma
             )
         except ValueError as error:
-            self.get_logger().warning(f"wind not observable: {error}")
+            self.done = True
+            self.get_logger().warning(
+                f"wind not observable from these headings ({error}); stopping after {len(self.ground)} samples"
+            )
             return
         payload = estimate.to_dict()
         payload["observability"] = observability(np.asarray(self.headings))
+        payload["implied_airspeed_m_s"] = float(
+            np.mean(np.linalg.norm(np.asarray(self.ground) - estimate.wind, axis=1))
+        )
         self.status_pub.publish(String(data=json.dumps(payload)))
         self.get_logger().info(
             f"wind {payload['speed_m_s']:.2f} m/s at {payload['direction_deg']:.0f} deg"

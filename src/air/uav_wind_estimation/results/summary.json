@@ -1,7 +1,7 @@
 {
   "module": "uav_wind_estimation",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T17:30:11+00:00",
+  "generated_utc": "2026-11-11T05:36:21+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
@@ -33,7 +33,7 @@
       },
       "ls_speed_rmse_m_s": null,
       "ls_direction_rmse_deg": null,
-      "reciprocal_speed_rmse_m_s": 11.995809010359654,
+      "reciprocal_speed_rmse_m_s": 11.995837583889765,
       "estimable": false
     },
     "straight": {
@@ -47,7 +47,7 @@
       },
       "ls_speed_rmse_m_s": null,
       "ls_direction_rmse_deg": null,
-      "reciprocal_speed_rmse_m_s": 11.995786278715732,
+      "reciprocal_speed_rmse_m_s": 11.995816061641676,
       "estimable": false
     },
     "reciprocal": {
@@ -61,7 +61,7 @@
       },
       "ls_speed_rmse_m_s": null,
       "ls_direction_rmse_deg": null,
-      "reciprocal_speed_rmse_m_s": 0.24600839840430105,
+      "reciprocal_speed_rmse_m_s": 0.287419209337261,
       "estimable": false
     },
     "circle": {
@@ -73,28 +73,28 @@
         "condition": 1.0075287381889315,
         "observable": true
       },
-      "ls_speed_rmse_m_s": 0.042342606126065684,
-      "ls_direction_rmse_deg": 0.4823206780991557,
-      "reciprocal_speed_rmse_m_s": 0.20566303418563966,
+      "ls_speed_rmse_m_s": 0.049127947693777575,
+      "ls_direction_rmse_deg": 0.6164946039670306,
+      "reciprocal_speed_rmse_m_s": 0.22995765375577606,
       "estimable": true
     }
   },
   "noise_sweep": {
     "0.05": {
       "gps_noise_m_s": 0.05,
-      "speed_rmse_m_s": 0.03369854861750617
+      "speed_rmse_m_s": 0.03577533840543631
     },
     "0.10": {
       "gps_noise_m_s": 0.1,
-      "speed_rmse_m_s": 0.03568873121427488
+      "speed_rmse_m_s": 0.0388251390848724
     },
     "0.20": {
       "gps_noise_m_s": 0.2,
-      "speed_rmse_m_s": 0.04299486951416084
+      "speed_rmse_m_s": 0.049127947693777575
     },
     "0.40": {
       "gps_noise_m_s": 0.4,
-      "speed_rmse_m_s": 0.06726986885914785
+      "speed_rmse_m_s": 0.07765568534866021
     }
   }
 }
