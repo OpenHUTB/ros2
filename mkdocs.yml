@@ -75,6 +75,7 @@ nav:
         - 机器视觉多机器人蚁群编队: './ant/README.md'
         - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
         - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
+        - MuJoCo 二连杆机械臂 IK 画圆: './chapter/mujoco_arm_ik.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
