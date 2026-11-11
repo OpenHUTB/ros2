@@ -82,7 +82,7 @@ source install/setup.bash
 
 ## 运行与退出
 
-两个 launch 都会启动 Gazebo 并加载 `worlds/underwater.world`，单独执行任意一个即可看到仿真画面：
+两个 launch 都会启动 Gazebo：巡航加载 `worlds/underwater_cruise.world`（空场景，航路不被墙体阻断），避障加载 `worlds/underwater.world`（8 道错位墙）。单独执行任意一个即可看到仿真画面：
 
 ```bash
 ros2 launch auv_end2end auv_rect_cruise.launch.py   # 矩形巡航
