@@ -6,6 +6,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Float64MultiArray
 
+from ros_messages import (
+    TOPIC_BRAKING_ACCEL,
+    TOPIC_FRONT_RANGE,
+    TOPIC_STATE,
+    build_message_payload,
+)
 from simulation import Scenario, Simulation
 
 
@@ -16,19 +22,20 @@ class UavRangeNode(Node):
         super().__init__("uav_range_braking")
         self.scenario = Scenario()
         self.simulation = Simulation(self.scenario, controller=controller, model_path=model_path)
-        self.range_pub = self.create_publisher(Float32, "uav/front_range_m", 10)
-        self.control_pub = self.create_publisher(Float32, "uav/braking_accel_m_s2", 10)
-        self.state_pub = self.create_publisher(Float64MultiArray, "uav/state", 10)
+        self.range_pub = self.create_publisher(Float32, TOPIC_FRONT_RANGE, 10)
+        self.control_pub = self.create_publisher(Float32, TOPIC_BRAKING_ACCEL, 10)
+        self.state_pub = self.create_publisher(Float64MultiArray, TOPIC_STATE, 10)
         self.timer = self.create_timer(period, self.tick)
 
     def tick(self):
         row = self.simulation.step()
+        payload = build_message_payload(row)
         range_msg = Float32()
-        range_msg.data = float(row["sensor_range_m"])
+        range_msg.data = payload.front_range_m
         control_msg = Float32()
-        control_msg.data = float(row["accel_m_s2"])
+        control_msg.data = payload.braking_accel_m_s2
         state_msg = Float64MultiArray()
-        state_msg.data = [row["time_s"], row["sensor_range_m"], row["closing_speed_m_s"], row["height_m"]]
+        state_msg.data = list(payload.state)
         self.range_pub.publish(range_msg)
         self.control_pub.publish(control_msg)
         self.state_pub.publish(state_msg)
