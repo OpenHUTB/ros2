@@ -88,7 +88,7 @@ colcon test --packages-select auv_end2end
 colcon test-result --verbose
 ```
 
-共 21 项，其中 19 项是逻辑用例：`test/test_vision.py` 覆盖 ROI 裁剪、Otsu 双峰判据、均匀水面与雾渐变兜底、固定/自适应阈值切换；`test/test_avoid_state.py` 覆盖触发与恢复滞环、最小避让时长、超时、冷却以及冷却期紧急重触发。另 2 项是 `ament_flake8`、`ament_pep257` 规范检查。
+共 22 项，其中 20 项是逻辑用例：`test/test_vision.py` 覆盖 ROI 裁剪、Otsu 双峰判据与可分性上界、均匀水面与雾渐变兜底、固定/自适应阈值切换；`test/test_avoid_state.py` 覆盖触发与恢复滞环、最小避让时长、超时、冷却以及冷却期紧急重触发。另 2 项是 `ament_flake8`、`ament_pep257` 规范检查。
 
 ![Gazebo 水下仿真场景](../img/water/auv_end2end_scene.png)
 

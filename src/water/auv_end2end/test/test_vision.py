@@ -2,7 +2,12 @@
 
 import numpy as np
 
-from auv_end2end.avoid_logic import analyze, dark_ratios, split_roi
+from auv_end2end.avoid_logic import (
+    analyze,
+    dark_ratios,
+    otsu_split,
+    split_roi,
+)
 
 
 def make_frame(left_value, right_value, size=(100, 200)):
@@ -96,3 +101,11 @@ def test_bimodal_frame_uses_otsu_threshold():
     gray = make_frame(45, 120)
     _, _, thresh = analyze(gray, fixed_thresh=22, adaptive=True)
     assert thresh == 45
+
+
+def test_separability_is_bounded():
+    """可分性必须按概率化类间方差计算，不能超过 1."""
+    gray = make_frame(45, 120)
+    thresh, separability = otsu_split(gray)
+    assert thresh == 45
+    assert 0.99 <= separability <= 1.0
