@@ -85,7 +85,17 @@ colcon test-result --verbose
 
 ## 6. 参数说明
 
-参数硬编码在节点 `__init__` 中，修改后需重新 `colcon build`。
+参数全部通过 ROS 参数暴露，两个 launch 用 `DeclareLaunchArgument` 声明默认值，可在命令行覆盖，不需要重新 `colcon build`：
+
+```bash
+# 缩短横向时间，加快巡航循环
+ros2 launch auv_end2end auv_rect_cruise.launch.py side_time:=8.0
+
+# 提高触发阈值，减少误触发
+ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3 max_avoid_duration:=2.0
+```
+
+下表为默认值。
 
 避障节点 `auv_obstacle_avoid`：
 
@@ -178,11 +188,23 @@ ros2 topic echo /auv/odom --field pose.pose.position
 
 > 说明：`libgazebo_ros_planar_move.so` 是运动学驱动，不与墙体发生物理碰撞，因此「没有撞上」不能单独作为避障成功的证据，需结合 `/auv/odom` 的横向位移曲线判断。
 
+### 8.4 多障碍连续避让
+
+场景在 x = 4、8、12、16、18 已有五道错位墙，x = 24、28、32 又补了第二组三道墙，共 8 次拦截，用于验证连续避让：
+
+- 单次避让最多 3 s，超时后进入 2 s 冷却，因此连续墙体下会看到「避让 → 冷却强制直行 → 再避让」的循环；
+- 冷却期结束后重新检测，若仍处于墙前会立刻再次触发，不会卡在直行状态；
+- 把 `max_avoid_duration` 调小或 `avoid_cooldown` 调大，可以让 AUV 更早回到直行、但横向绕行距离变短。
+
+```bash
+ros2 launch auv_end2end auv_sim.launch.py max_avoid_duration:=1.5 avoid_cooldown:=3.0
+```
+
 ## 9. 已知限制
 
 - 障碍持续存在时会形成「避让 3 s → 强制直行 2 s → 再避让」的循环；面对连续长墙无法绕过，这是本作业的教学取舍。
 - 灰度阈值 22 依赖具体场景：墙体材质 ambient/diffuse = 0.1，在 Gazebo 渲染下接近纯黑，本身远低于阈值；但水下雾效与背景色会把画面整体灰度抬高，改动雾密度、材质或相机距离时仍需重新标定 `obstacle_thresh`。
-- 参数硬编码，暂未通过 ROS 参数或 `DeclareLaunchArgument` 暴露。
+- 参数已通过 ROS 参数暴露，但仍是启动时读取一次，运行中修改需要重启节点。
 
 ## 参考文献
 

@@ -13,11 +13,16 @@ class AuvRectCruise(Node):
         # 速度发布器
         self.vel_pub = self.create_publisher(Twist, '/auv/cmd_vel', 10)
 
-        # 巡航参数
-        self.forward_speed = 2.5    # 前进/后退速度，默认1.0，数值越大越快
-        self.side_speed = 2.0       # 横向平移速度，默认0.8
-        self.forward_time = 10.0    # 直行持续时间
-        self.side_time = 20.0       # 横向持续时间
+        # 巡航参数：全部通过 ROS 参数暴露，可在 launch 或命令行覆盖
+        self.declare_parameter('forward_speed', 2.5)  # 前进/后退速度
+        self.declare_parameter('side_speed', 2.0)     # 横向平移速度
+        self.declare_parameter('forward_time', 10.0)  # 直行/后退持续时间
+        self.declare_parameter('side_time', 20.0)     # 横向平移持续时间
+
+        self.forward_speed = self.get_parameter('forward_speed').value
+        self.side_speed = self.get_parameter('side_speed').value
+        self.forward_time = self.get_parameter('forward_time').value
+        self.side_time = self.get_parameter('side_time').value
 
         # 状态机：0-前进  1-向右平移  2-后退  3-向左平移
         self.state = 0
