@@ -221,6 +221,7 @@ nav:
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
+    - 不足转向与横向稳定裕度: './ground/lateral_stability_margin.md'
 
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
