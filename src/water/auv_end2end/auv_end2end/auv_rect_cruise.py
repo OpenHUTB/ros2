@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
+
 class AuvRectCruise(Node):
     def __init__(self):
         super().__init__('auv_rect_cruise')

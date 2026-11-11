@@ -7,28 +7,29 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 
+
 class AuvVisionControlNode(Node):
     def __init__(self):
-        super().__init__("auv_vision_control_node")
+        super().__init__('auv_vision_control_node')
         self.bridge = CvBridge()
         # 发布速度指令话题，匹配Gazebo插件
-        self.cmd_vel_pub = self.create_publisher(Twist, "/auv/cmd_vel", 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, '/auv/cmd_vel', 10)
         # 订阅相机图像话题
         self.image_sub = self.create_subscription(
             Image,
-            "/auv/camera/image_raw",
+            '/auv/camera/image_raw',
             self.image_callback,
             10
         )
-        self.get_logger().info("ROS2 AUV视觉控制节点启动成功（简易版）")
+        self.get_logger().info('ROS2 AUV视觉控制节点启动成功（简易版）')
 
     def image_callback(self, msg: Image):
-        cv_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        h,w = cv_img.shape[:2]
+        cv_img = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
+        h, w = cv_img.shape[:2]
 
         # 简单视觉规则：检测画面中心障碍物，做避障逻辑
-        roi = cv_img[:, int(w*0.3):int(w*0.7)]
-        gray = cv2.cvtColor(roi,cv2.COLOR_BGR2GRAY)
+        roi = cv_img[:, int(w * 0.3):int(w * 0.7)]
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         avg_bright = np.mean(gray)
 
         twist_msg = Twist()
@@ -40,8 +41,9 @@ class AuvVisionControlNode(Node):
             twist_msg.angular.z = 0.0
 
         self.cmd_vel_pub.publish(twist_msg)
-        cv2.imshow("AUV Camera View", cv_img)
+        cv2.imshow('AUV Camera View', cv_img)
         cv2.waitKey(1)
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -49,5 +51,6 @@ def main(args=None):
     rclpy.spin(node)
     rclpy.shutdown()
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

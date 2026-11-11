@@ -3,12 +3,13 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 
+
 class DiffDriveNode(Node):
     def __init__(self):
         super().__init__('diff_drive')
         # 车辆参数
-        self.wheel_radius = 0.2    # 车轮半径
-        self.wheel_separation = 0.7 # 轮距
+        self.wheel_radius = 0.2     # 车轮半径
+        self.wheel_separation = 0.7  # 轮距
 
         # 订阅速度指令
         self.sub = self.create_subscription(
@@ -36,12 +37,14 @@ class DiffDriveNode(Node):
         self.left_pub.publish(l_msg)
         self.right_pub.publish(r_msg)
 
+
 def main():
     rclpy.init()
     node = DiffDriveNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
