@@ -1,16 +1,15 @@
+import re
 from datetime import datetime
 
 
 # 动态获取页脚版权页面的年份
 def on_config(config, **kwargs):
     copyright_text = getattr(config, "copyright", None)
-    if not copyright_text:
+    if not isinstance(copyright_text, str):
         return config
 
-    try:
-        config.copyright = copyright_text.format(year=datetime.now().year)
-    except (KeyError, IndexError, ValueError):
-        # Keep valid MkDocs configurations usable even if their copyright text
-        # uses placeholders other than {year} or contains literal braces.
-        pass
+    # Replace only an explicit {year}; escaped braces and unsupported
+    # placeholders remain unchanged so malformed templates cannot break builds.
+    year = str(datetime.now().year)
+    config.copyright = re.sub(r"(?<!\{)\{year\}(?!\})", year, copyright_text)
     return config
