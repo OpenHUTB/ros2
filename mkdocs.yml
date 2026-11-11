@@ -73,6 +73,7 @@ nav:
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - 机器视觉多机器人蚁群编队: './ant/README.md'
+        - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 

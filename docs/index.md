@@ -75,6 +75,7 @@ ROS每章节运行代码:
     * [机械臂投篮入筐仿真](./chapter/mujoco_arm_ball.md)
     * [MuJoCo 二连杆机械臂抓取搬运](./chapter/mujoco_arm_pick.md)
     * [三自由度机械臂空间螺旋线仿真](./chapter/mujoco_arm_3d.md)
+    * [MuJoCo 双自由度机械臂画正方形](./chapter/mujoco_two_dof_arm_square.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
