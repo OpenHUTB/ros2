@@ -1,0 +1,36 @@
+<launch>
+  <!-- 速度曲线规划：加速 -> 匀速 -> 减速，并判断限速/加速度/距离/时间 -->
+
+  <arg name="distance" default="120.0" doc="目标行驶距离（m）"/>
+  <arg name="cruise_speed_kmh" default="40.0" doc="巡航速度（km/h）"/>
+  <arg name="start_speed_kmh" default="0.0" doc="初速（km/h）"/>
+  <arg name="accel" default="1.2" doc="加速度上限（m/s^2）"/>
+  <arg name="decel" default="2.0" doc="减速度上限（m/s^2）"/>
+  <arg name="speed_limit_kmh" default="50.0" doc="路段限速（km/h）"/>
+  <arg name="time_budget" default="30.0" doc="这一段允许的用时（s）"/>
+  <arg name="tolerance" default="0.5" doc="距离允许误差（m）"/>
+  <arg name="dt" default="0.05" doc="采样步长（s）"/>
+  <arg name="publish_hz" default="5.0" doc="报告重发频率（Hz）"/>
+  <arg name="profile_topic" default="/speed/profile" doc="速度曲线话题"/>
+  <arg name="report_topic" default="/speed/report" doc="报告话题"/>
+
+  <rosparam command="load"
+            file="$(find speed_profile_check)/config/speed_profile_check.yaml"/>
+
+  <!-- launch 参数覆盖 yaml 默认值 -->
+  <param name="scene/distance" value="$(arg distance)"/>
+  <param name="scene/cruise_speed_kmh" value="$(arg cruise_speed_kmh)"/>
+  <param name="scene/start_speed_kmh" value="$(arg start_speed_kmh)"/>
+  <param name="vehicle/accel" value="$(arg accel)"/>
+  <param name="vehicle/decel" value="$(arg decel)"/>
+  <param name="check/speed_limit_kmh" value="$(arg speed_limit_kmh)"/>
+  <param name="check/time_budget" value="$(arg time_budget)"/>
+  <param name="check/tolerance" value="$(arg tolerance)"/>
+  <param name="sim/dt" value="$(arg dt)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/profile" value="$(arg profile_topic)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+
+  <node pkg="speed_profile_check" type="main.py" name="speed_profile_check"
+        output="screen"/>
+</launch>

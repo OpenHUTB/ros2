@@ -31,6 +31,58 @@
 > 自己写插入逻辑，才能把"坐标变换 → 射线投射 → 概率更新"这条链路逐一展示出来；
 > 相应地，节点名也叫 `pointcloud_to_octomap` 而不是直接复用 `octomap_server`。
 
+### 1.1 运行节点与话题关系
+
+建图节点要拿到点云，还要把点云变换到世界坐标系，所以它同时依赖桥接节点发布的
+点云与 TF。`roslaunch octree_uav_3d_pathfinding main.launch` 会启动下图里的数据链路节点；
+另有一个自检节点 `uav_env_check`（`check:=true`），连一遍 AirSim RPC 与 `/cloud_in` 后自动退出。
+
+```mermaid
+graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM -->|"RPC 41451 取点云与位姿"| BR
+
+    BR -->|"/cloud_in<br/>PointCloud2 10 Hz"| MAP
+    BR -->|"TF world→base_link→lidar_link"| MAP
+
+    MAP -->|"/octomap_full<br/>Octomap latched"| PLAN
+    MAP -->|"/occupied_cells_vis_array"| RVIZ
+
+    PLAN -->|"/uav/path"| RVIZ
+```
+
+| 节点 | 对本节点的作用 |
+|---|---|
+| `airsim_bridge` | 发布 `/cloud_in`（原始点云）与 TF，是本节点全部输入的来源 |
+| `pointcloud_to_octomap` | 订阅点云，查 TF 变换到世界系后插入八叉树，输出 `/octomap_full` |
+| `astar_planner` | 订阅 `/octomap_full`，是下游唯一使用者 |
+| `rviz` | 显示体素与点云，用于人工检查地图是否正确 |
+| `uav_env_check` | 启动后连 AirSim RPC、订阅 `/cloud_in` 自检一遍链路，跑完自动退出 |
+
+#### 为什么建图节点还需要 TF
+
+点云的 `frame_id` 是 `lidar_link`，而地图必须在 `world` 下维护（见 §2）。
+节点每帧查一次 `world ← lidar_link` 的变换，查不到就**跳过该帧并告警**——
+它不会崩，但地图也长不起来。所以启动顺序上桥接节点必须先起来。
+
+查不到 TF 时的典型日志是 `Lookup would require extrapolation into the future` 或
+`frame does not exist`，用 `rosrun tf2_tools view_frames` 可以看当前的 TF 树是否完整。
+
+查看实际运行的节点与话题关系：
+
+```shell
+rosrun rqt_graph rqt_graph        # 节点—话题图
+rosrun rqt_tf_tree rqt_tf_tree    # TF 树
+```
+
 ---
 
 ## 2. 坐标变换：从传感器坐标系到世界坐标系
@@ -159,7 +211,7 @@ tree_.updateInnerOccupancy();
 | resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数** |
 | max_range | 30.0 | 射线最大量程（m） |
 | min_range | 0.5 | 最小量程（m），更近的点直接丢弃 |
-| point_stride | 2 | 抽稀：每隔 N 个点取一个做射线投射 |
+| point_stride | 1 | 抽稀：每隔 N 个点取一个做射线投射 |
 | prob_hit | 0.7 | 命中的占用概率 |
 | prob_miss | 0.4 | 未命中（穿过）的占用概率 |
 | clamp_min / clamp_max | 0.12 / 0.97 | 占用概率的上下限 |
@@ -172,8 +224,9 @@ tree_.updateInnerOccupancy();
 **调参建议**：
 
 * **性能是这里的主要矛盾**。雷达一帧约一万个点，每个点一条射线，射线长度除以分辨率
-  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
-  量程收到 30 m。机器性能富裕时可以把 `point_stride` 调回 1、`resolution` 调到 0.2。
+  就是需要更新的体素数量。逐点投射在虚拟机上跟不上，所以分辨率取 0.3 m、量程收到 30 m；
+  `point_stride` 保持 1，不再抽稀——采样点之间留有缝，缝比体素大时射线会从缝里穿过去，
+  障碍物内部被误标成空闲、地面看起来像有洞的网。机器性能富裕时可以把 `resolution` 调到 0.2。
 * `resolution` 从 0.3 调到 0.15，体素数量约变为 8 倍，内存和耗时都会明显上升。
 * 障碍物被"吃掉"（明明有障碍却显示可通行）通常是分辨率过大导致的，
   可以把 `resolution` 调小，或适当增大 `prob_hit`。
