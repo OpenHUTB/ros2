@@ -88,6 +88,73 @@ class BaselineTest(unittest.TestCase):
         self.assertEqual(m._baseline, b)
 
 
+class BaselineGateTest(unittest.TestCase):
+    """基线学习必须与判据 2 的应用同口径（只在近悬停帧上学习）。
+
+    回归自 PR #902 评审意见：旧实现「应用」要求近悬停、「学习」不要求，
+    初始化窗口喂非悬停指令后，正常悬停会被算成 +40% 偏移，健康飞机
+    直接判 EMERGENCY。
+    """
+
+    def test_non_hover_init_window_does_not_poison_baseline(self):
+        m = MotorImbalanceMonitor(Config(baseline_frames=25))
+        # 起飞爬升 / 地面低油门：25 帧指令 0.3，远离 hover_cmd=0.5
+        for k in range(25):
+            m.update(MotorSample(t=k * 0.1, commands=[0.3] * 4,
+                                 rpm=[0.3 * RPM_MAX] * 4))
+        self.assertIsNone(m._baseline)                  # 非悬停帧一律不学
+        self.assertEqual(m.state, MotorState.INIT)
+        # 之后正常悬停，转速精确正常：不得判 EMERGENCY
+        for k in range(10):
+            out = m.update(MotorSample(
+                t=(25 + k) * 0.1, commands=[HOVER] * 4,
+                rpm=[HOVER * RPM_MAX] * 4,
+            ))
+            self.assertEqual(out.state, MotorState.INIT)
+            self.assertFalse(out.emergency_land)
+            self.assertTrue(all(math.isnan(v) for v in out.cmd_dev_pct))
+
+    def test_baseline_freezes_after_hover_resumes_then_fault_detected(self):
+        m = MotorImbalanceMonitor(Config(baseline_frames=25))
+        for k in range(25):                             # 先来一段爬升
+            m.update(MotorSample(t=k * 0.1, commands=[0.3] * 4,
+                                 rpm=[0.3 * RPM_MAX] * 4))
+        for k in range(30):                             # 悬停后重新学基线
+            out = m.update(MotorSample(
+                t=(25 + k) * 0.1, commands=[HOVER] * 4,
+                rpm=[HOVER * RPM_MAX] * 4,
+            ))
+        self.assertEqual(m._baseline, [HOVER] * 4)      # 学到的是悬停点
+        self.assertEqual(out.state, MotorState.MONITORING)
+        # 真故障仍要报：0 号电机持续多拉 24% 悬停指令
+        for k in range(8):
+            out = m.update(hover_sample(6.0 + k * 0.1, dev0=0.12))
+        self.assertEqual(out.state, MotorState.IMBALANCE)
+        self.assertEqual(out.worst_motor, 0)
+
+    def test_window_restarts_when_commands_not_concentrated(self):
+        # 两个指令都在悬停带内（mean=0.5 恒成立），但单电机极差 0.16
+        # > baseline_spread_limit=0.10：说明不是稳态，整窗丢弃重学
+        m = MotorImbalanceMonitor(Config(baseline_frames=25))
+        for k in range(120):
+            c = 0.42 if k % 2 == 0 else 0.58
+            m.update(MotorSample(t=k * 0.05, commands=[c] * 4,
+                                 rpm=[c * RPM_MAX] * 4))
+        self.assertIsNone(m._baseline)
+        self.assertLess(m._baseline_n, CFG.baseline_frames)
+        self.assertEqual(m.state, MotorState.INIT)
+
+    def test_gate_can_be_disabled_for_known_hover_init(self):
+        # 显式关闭门控：退回旧行为（初始化段确认是悬停时才可这样用）
+        cfg = Config(baseline_frames=25, baseline_gate_near_hover=False)
+        m = MotorImbalanceMonitor(cfg)
+        for k in range(25):
+            m.update(MotorSample(t=k * 0.1, commands=[0.3] * 4,
+                                 rpm=[0.3 * RPM_MAX] * 4))
+        for v in m._baseline:
+            self.assertAlmostEqual(v, 0.3, places=9)
+
+
 class TrackingErrorTest(unittest.TestCase):
     def test_warn_then_emergency_then_recover(self):
         m = MotorImbalanceMonitor(Config())

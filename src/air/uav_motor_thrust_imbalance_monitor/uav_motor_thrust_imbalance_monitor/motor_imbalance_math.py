@@ -61,7 +61,15 @@ class Config:
     imbalance_limit: int = 3           # warn 级连续帧数 → IMBALANCE
     emergency_limit: int = 5           # emg 级连续帧数 → EMERGENCY
     recovery_streak: int = 5           # 连续正常帧数 → 恢复 MONITORING
-    baseline_frames: int = 25          # 健康帧数足够后冻结指令基线
+    baseline_frames: int = 25          # 有效帧数足够后冻结指令基线
+    # 基线学习与判据 2 的「应用」必须同口径：只有平均指令落在
+    # hover_cmd±near_hover_band 内的帧才算有效学习样本。关掉就退回
+    # 「初始化窗口无条件学习」，仅在确认初始化段一定悬停时使用。
+    baseline_gate_near_hover: bool = True
+    # 学习窗口内单电机指令极差上限（绝对指令量）。超过说明这段既不
+    # 稳态也不对称受限（爬升/大机动叠进来，或学习期内就在发生桨损），
+    # 整窗丢弃重学，避免把偏置当成基线。
+    baseline_spread_limit: float = 0.10
     ema_alpha: float = 0.3             # 判据信号的平滑系数
     stale_timeout: float = 1.0         # 遥测超时（s），看门狗用
     comp_gain: float = 0.5             # 补偿系数：指令增量 = 增益×跟踪误差
@@ -110,6 +118,9 @@ class MotorImbalanceMonitor:
         self._baseline: Optional[List[float]] = None
         self._baseline_acc: List[float] = [0.0] * n
         self._baseline_n: int = 0
+        self._baseline_lo: List[float] = [0.0] * n
+        self._baseline_hi: List[float] = [0.0] * n
+        self._rejected_frames: int = 0
         self.state = MotorState.INIT
         self.last_seen_t: Optional[float] = None
         self._bad_streak = 0
@@ -142,11 +153,50 @@ class MotorImbalanceMonitor:
             if self._good_streak >= self.cfg.recovery_streak:
                 return MotorState.MONITORING
             return self.state
-        if self.state == MotorState.INIT and self._baseline_n >= (
-            self.cfg.baseline_frames
-        ):
+        if self.state == MotorState.INIT and self._baseline is not None:
             return MotorState.MONITORING
         return self.state
+
+    def _reset_baseline_window(self) -> None:
+        n = self.cfg.n_motors
+        self._baseline_acc = [0.0] * n
+        self._baseline_n = 0
+        self._baseline_lo = [0.0] * n
+        self._baseline_hi = [0.0] * n
+
+    def _accumulate_baseline(self, commands: Sequence[float]) -> None:
+        """把一帧通过门控的指令并入学习窗口，达标即冻结基线。
+
+        窗口内若出现「单电机指令极差 > baseline_spread_limit」，说明这段
+        不是稳态（爬升段残留、大机动，或学习期内已在发生桨损），整窗
+        丢弃重学——宁可多等几帧，也不拿一个被污染的均值当基线。
+        """
+
+        n = self.cfg.n_motors
+        if self._baseline_n == 0:
+            self._baseline_lo = [float(commands[i]) for i in range(n)]
+            self._baseline_hi = list(self._baseline_lo)
+        for i in range(n):
+            c = float(commands[i])
+            self._baseline_acc[i] += c
+            self._baseline_lo[i] = min(self._baseline_lo[i], c)
+            self._baseline_hi[i] = max(self._baseline_hi[i], c)
+        self._baseline_n += 1
+
+        spread = max(
+            self._baseline_hi[i] - self._baseline_lo[i] for i in range(n)
+        )
+        if spread > self.cfg.baseline_spread_limit:
+            self._reset_baseline_window()
+            return
+        if self._baseline_n >= self.cfg.baseline_frames:
+            self._baseline = [a / self._baseline_n for a in self._baseline_acc]
+
+    @property
+    def baseline_ready(self) -> bool:
+        """基线是否已冻结（未冻结时判据 2 不生效，状态停在 INIT）。"""
+
+        return self._baseline is not None
 
     def _compensation(self, reason_worst: Optional[int]) -> List[float]:
         n = self.cfg.n_motors
@@ -244,14 +294,13 @@ class MotorImbalanceMonitor:
                     + self.cfg.ema_alpha * dev[i]
                 )
         elif self._baseline is None and self.state == MotorState.INIT:
-            # 基线学习：只在健康初始化窗口内累积
-            for i in range(n):
-                self._baseline_acc[i] += float(s.commands[i])
-            self._baseline_n += 1
-            if self._baseline_n >= self.cfg.baseline_frames:
-                self._baseline = [
-                    a / self._baseline_n for a in self._baseline_acc
-                ]
+            # 基线学习：与判据 2 的「应用」同口径 —— 只接受近悬停帧。
+            # 否则爬升/低油门段会把基线学到偏离悬停点的值，之后正常悬停
+            # 反而被算成 +40% 偏移，健康飞机直接判 EMERGENCY。
+            if self.cfg.baseline_gate_near_hover and not near_hover:
+                self._rejected_frames += 1
+            else:
+                self._accumulate_baseline(s.commands)
 
         # --- 汇总：单帧最差证据 ----------------------------------------
         worst_i: Optional[int] = None
