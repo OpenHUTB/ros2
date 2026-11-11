@@ -96,6 +96,7 @@ ROS每章节运行代码:
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [无信号路口冲突时序蒙特卡洛仿真](./ground/intersection_conflict_timing_eval.md) —— 到达时间差分布、冲突概率与让行延迟效果对比
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
