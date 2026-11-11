@@ -1,15 +1,48 @@
 """Exercise actual bridge stop and watchdog callbacks without an RPC server."""
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import threading
 import unittest
 
 import numpy as np
 from geometry_msgs.msg import Twist
+from rclpy.node import Node
 from openhutb_yolo_mlp_control.airsim_bridge_node import AirSimBridgeNode
 
 
 class BridgeTests(unittest.TestCase):
+    def test_visual_shutdown_cancels_and_restores_initial_api_state(self):
+        for initial in (True, False):
+            for pose_backend in (True, False):
+                b = AirSimBridgeNode.__new__(AirSimBridgeNode)
+                b._stop_worker = threading.Event()
+                b._cmd_event = threading.Event()
+                b._image_worker = b._control_worker = None
+                b.hold_heading = b.enable_api_control = True
+                b._initial_api_control = initial
+                b._pose_control = pose_backend
+                b.control_client = Mock()
+                with patch.object(Node, 'destroy_node'):
+                    b.destroy_node()
+                b.control_client.cancelLastTask.assert_called_once_with()
+                b.control_client.enableApiControl.assert_called_once_with(initial)
+
+    def test_image_worker_shutdown_publish_race(self):
+        from rclpy._rclpy_pybind11 import RCLError
+        for context_alive in (False, True):
+            b = SimpleNamespace(_stop_worker=threading.Event(),
+                                _image_event=threading.Event(), context=object(),
+                                publish_image=Mock(side_effect=RCLError('context invalid')))
+            b._image_event.set()
+            with patch('openhutb_yolo_mlp_control.airsim_bridge_node.rclpy.ok',
+                       return_value=context_alive):
+                if context_alive:
+                    with self.assertRaises(RCLError):
+                        AirSimBridgeNode._image_worker_loop(b)
+                else:
+                    AirSimBridgeNode._image_worker_loop(b)
+            b.publish_image.assert_called_once_with()
+
     def bridge(self, hold=True):
         return SimpleNamespace(
             enable_api_control=True, hold_heading=hold, _command_epoch=0,
@@ -80,7 +113,7 @@ class BridgeTests(unittest.TestCase):
         b = self.bridge()
         b._pose_control = True
         b._stop_worker = Mock()
-        b._stop_worker.is_set.side_effect = [False, False, True]
+        b._stop_worker.is_set.side_effect = [False, False, False, True]
         b._latest_cmd = (0, 0.4, 0)
         b._accumulated_delta[:] = (0, 0.08, 0)
         b.control_client = Mock()
@@ -98,6 +131,29 @@ class BridgeTests(unittest.TestCase):
         pose = b.control_client.simSetVehiclePose.call_args[0][0]
         self.assertAlmostEqual(pose.position.y_val, 0.08)
         np.testing.assert_allclose(b._accumulated_delta, np.zeros(3))
+
+    def test_stop_during_pose_read_discards_obsolete_move(self):
+        b = self.bridge()
+        b._pose_control = True
+        b._stop_worker = Mock()
+        b._stop_worker.is_set.side_effect = [False, False, False, True]
+        b._latest_cmd = (0, .4, 0)
+        b._accumulated_delta[:] = (0, .08, 0)
+        b.control_client = Mock()
+        b.control_client.getMultirotorState.return_value = SimpleNamespace(
+            kinematics_estimated=SimpleNamespace(
+                position=SimpleNamespace(x_val=0, y_val=0, z_val=-3)))
+        def pose_read():
+            AirSimBridgeNode.cmd_vel_callback(b, Twist())
+            return SimpleNamespace(position=SimpleNamespace(x_val=0, y_val=0, z_val=-3))
+        b.control_client.simGetVehiclePose.side_effect = pose_read
+        b.get_logger = Mock()
+        b.min_dispatch_distance = 0
+        b.max_dispatch_distance = .1
+        b.min_position_speed = .1
+        b.max_position_speed = 1
+        AirSimBridgeNode._control_worker_loop(b)
+        b.control_client.simSetVehiclePose.assert_not_called()
 
     def test_blocked_capture_does_not_block_commands_and_coalesces_requests(self):
         b = self.bridge()

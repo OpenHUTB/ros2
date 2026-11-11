@@ -1,0 +1,12 @@
+uav_link_quality_sim:
+  ros__parameters:
+    rate_hz: 10.0
+    duration_s: 0.0
+uav_link_outage_guard:
+  ros__parameters:
+    degraded_risk: 0.35
+    hold_risk: 0.62
+    return_risk: 0.78
+    switch_frames: 3
+    stale_age_ms: 1600.0
+    output_csv: /tmp/uav_link_outage_runtime.csv
