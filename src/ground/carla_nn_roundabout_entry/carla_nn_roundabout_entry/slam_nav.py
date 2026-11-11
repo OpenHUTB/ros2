@@ -1,9 +1,29 @@
-"""只允许在已观测空闲栅格内通行的占据栅格与 A*。"""
+"""Observed-free occupancy grid and A* path planning primitives."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from enum import Enum
 import heapq
 import math
+
+Cell = tuple[int, int]
+
+
+class PlanFailure(str, Enum):
+    START_NOT_FREE = "start_not_free"
+    GOAL_NOT_FREE = "goal_not_free"
+    NO_PATH = "no_path"
+
+
+@dataclass(frozen=True)
+class PlanResult:
+    path: tuple[Cell, ...] = ()
+    failure: PlanFailure | None = None
+
+    @property
+    def found(self) -> bool:
+        return self.failure is None
 
 
 class OccupancyGrid:
@@ -23,16 +43,31 @@ class OccupancyGrid:
         if 0 <= x < self.width and 0 <= y < self.height:
             self.cells[y][x] = state
 
-    def integrate_ray(self, start: tuple[int, int], end: tuple[int, int]) -> None:
-        """Bresenham update: traversed cells become free, the endpoint occupied."""
+    def integrate_ray(self, start: Cell, end: Cell, *, hit: bool = True) -> None:
+        """Mark traversed cells free; mark an obstacle only for a measured hit."""
+        if start == end:
+            return
+
         x0, y0 = start
         x1, y1 = end
         dx, dy = abs(x1 - x0), abs(y1 - y0)
         sx = 1 if x0 < x1 else -1
         sy = 1 if y0 < y1 else -1
         error = dx - dy
-        while (x0, y0) != (x1, y1):
-            self.set_cell(x0, y0, self.FREE)
+
+        while True:
+            cell = (x0, y0)
+            at_endpoint = cell == end
+            state = self._state(cell)
+
+            if cell != start and state == self.OCCUPIED:
+                return
+            if at_endpoint:
+                self.set_cell(x0, y0, self.OCCUPIED if hit else self.FREE)
+                return
+            if state != self.OCCUPIED:
+                self.set_cell(x0, y0, self.FREE)
+
             twice = 2 * error
             if twice > -dy:
                 error -= dy
@@ -40,40 +75,53 @@ class OccupancyGrid:
             if twice < dx:
                 error += dx
                 y0 += sy
-        self.set_cell(x1, y1, self.OCCUPIED)
 
-    def plan(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]:
-        """A* over observed-free cells; unknown cells are conservatively blocked."""
-        if not self._free(start) or not self._free(goal):
-            return []
+    def plan(self, start: Cell, goal: Cell) -> PlanResult:
+        """Plan through observed-free cells and report why no route was found."""
+        if not self._free(start):
+            return PlanResult(failure=PlanFailure.START_NOT_FREE)
+        if not self._free(goal):
+            return PlanResult(failure=PlanFailure.GOAL_NOT_FREE)
+
         queue = [(0.0, start)]
-        came_from = {start: None}
+        came_from: dict[Cell, Cell | None] = {start: None}
         cost = {start: 0.0}
         while queue:
             _, current = heapq.heappop(queue)
             if current == goal:
                 break
-            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1),
+                           (1, 1), (1, -1), (-1, 1), (-1, -1)):
                 nxt = (current[0] + dx, current[1] + dy)
                 if not self._free(nxt):
                     continue
-                if dx and dy and (not self._free((current[0] + dx, current[1])) or not self._free((current[0], current[1] + dy))):
+                if dx and dy and (
+                    not self._free((current[0] + dx, current[1]))
+                    or not self._free((current[0], current[1] + dy))
+                ):
                     continue
                 new_cost = cost[current] + (math.sqrt(2.0) if dx and dy else 1.0)
-                if new_cost < cost.get(nxt, float("inf")):
-                    cost[nxt] = new_cost
-                    came_from[nxt] = current
-                    heuristic = math.hypot(goal[0] - nxt[0], goal[1] - nxt[1])
-                    heapq.heappush(queue, (new_cost + heuristic, nxt))
+                if new_cost >= cost.get(nxt, float("inf")):
+                    continue
+                cost[nxt] = new_cost
+                came_from[nxt] = current
+                heuristic = math.hypot(goal[0] - nxt[0], goal[1] - nxt[1])
+                heapq.heappush(queue, (new_cost + heuristic, nxt))
+
         if goal not in came_from:
-            return []
+            return PlanResult(failure=PlanFailure.NO_PATH)
         path = []
-        node = goal
+        node: Cell | None = goal
         while node is not None:
             path.append(node)
             node = came_from[node]
-        return list(reversed(path))
+        return PlanResult(tuple(reversed(path)))
 
-    def _free(self, cell: tuple[int, int]) -> bool:
+    def _state(self, cell: Cell) -> int:
         x, y = cell
-        return 0 <= x < self.width and 0 <= y < self.height and self.cells[y][x] == self.FREE
+        if 0 <= x < self.width and 0 <= y < self.height:
+            return self.cells[y][x]
+        return self.UNKNOWN
+
+    def _free(self, cell: Cell) -> bool:
+        return self._state(cell) == self.FREE
