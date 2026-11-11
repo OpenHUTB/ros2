@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import math
+from bisect import bisect_left
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -64,11 +65,16 @@ def load_vru_tracks(path: Path) -> list[VruPoint]:
 SUPPORTED_CLASSES = frozenset({"pedestrian", "child", "cyclist"})
 
 
-def _nearest_index(points: list[EgoPoint], timestamp: float,
+def _nearest_index(timestamps: list[float], timestamp: float,
                    tolerance: float) -> int | None:
-    index = min(range(len(points)),
-                key=lambda i: abs(points[i].timestamp - timestamp))
-    if abs(points[index].timestamp - timestamp) > tolerance:
+    right = bisect_left(timestamps, timestamp)
+    candidates = []
+    if right < len(timestamps):
+        candidates.append(right)
+    if right > 0:
+        candidates.append(right - 1)
+    index = min(candidates, key=lambda i: abs(timestamps[i] - timestamp))
+    if abs(timestamps[index] - timestamp) > tolerance:
         return None
     return index
 
@@ -119,6 +125,10 @@ def evaluate_conflicts(
     if not ego_points:
         raise ValueError("ego track is empty")
     allowed = {name.strip().lower() for name in allowed_classes}
+    ego_timestamps = [point.timestamp for point in ego_points]
+    ego_velocities = [
+        _velocity_at(ego_points, index) for index in range(len(ego_points))
+    ]
     tracks: dict[str, dict] = {}
     point_counts = {"critical": 0, "caution": 0, "safe": 0}
     grouped: dict[str, list[VruPoint]] = {}
@@ -131,20 +141,24 @@ def evaluate_conflicts(
     order = {"safe": 0, "caution": 1, "critical": 2}
     for track_id, track_points in grouped.items():
         matched = False
+        vru_velocities = [
+            _velocity_at(track_points, index)
+            for index in range(len(track_points))
+        ]
         for point_index, vru in enumerate(track_points):
             if vru.vru_class not in allowed:
                 invalid_class_points += 1
                 continue
             ego_index = _nearest_index(
-                ego_points, vru.timestamp, timestamp_tolerance)
+                ego_timestamps, vru.timestamp, timestamp_tolerance)
             if ego_index is None:
                 skipped_points += 1
                 continue
             ego_point = ego_points[ego_index]
             dx, dy = vru.x - ego_point.x, vru.y - ego_point.y
             distance = math.hypot(dx, dy)
-            ego_vx, ego_vy = _velocity_at(ego_points, ego_index)
-            vru_vx, vru_vy = _velocity_at(track_points, point_index)
+            ego_vx, ego_vy = ego_velocities[ego_index]
+            vru_vx, vru_vy = vru_velocities[point_index]
             ttc = _time_to_collision(
                 dx, dy, vru_vx - ego_vx, vru_vy - ego_vy)
             if distance <= critical_distance_m or ttc <= critical_ttc_s:
@@ -159,13 +173,21 @@ def evaluate_conflicts(
                 "track_id": track_id,
                 "class": vru.vru_class,
                 "min_distance_m": distance,
+                "min_distance_timestamp_s": vru.timestamp,
                 "min_ttc_s": ttc,
+                "min_ttc_timestamp_s": vru.timestamp if math.isfinite(ttc) else None,
                 "risk": "safe",
+                "risk_timestamp_s": vru.timestamp,
             })
-            current["min_distance_m"] = min(current["min_distance_m"], distance)
-            current["min_ttc_s"] = min(current["min_ttc_s"], ttc)
+            if distance < current["min_distance_m"]:
+                current["min_distance_m"] = distance
+                current["min_distance_timestamp_s"] = vru.timestamp
+            if ttc < current["min_ttc_s"]:
+                current["min_ttc_s"] = ttc
+                current["min_ttc_timestamp_s"] = vru.timestamp
             if order[level] > order[current["risk"]]:
                 current["risk"] = level
+                current["risk_timestamp_s"] = vru.timestamp
         if not matched:
             skipped_tracks += 1
 
@@ -173,6 +195,7 @@ def evaluate_conflicts(
     for track in result_tracks:
         if math.isinf(track["min_ttc_s"]):
             track["min_ttc_s"] = None
+            track["min_ttc_timestamp_s"] = None
     counts = {"critical": 0, "caution": 0, "safe": 0}
     for track in result_tracks:
         counts[track["risk"]] += 1

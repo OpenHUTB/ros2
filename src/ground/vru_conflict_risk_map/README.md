@@ -24,7 +24,8 @@
 
 默认在 50 ms 容差内为每条 VRU 点匹配最近的自车点。未匹配点计入
 `skipped_points`；整条轨迹都没有匹配点时计入 `skipped_tracks`。未知类别会
-跳过并计入 `invalid_class_points`，不会让整份报告失败。
+跳过并计入 `invalid_class_points`，不会让整份报告失败。时间轴排序后使用二分
+查找，匹配复杂度为 O(N_vru log N_ego)。
 
 ## 指标定义
 
@@ -38,6 +39,10 @@ TTC = |r|² / (-r · v_rel)
 
 不接近时输出 `null`，因此侧向静止 VRU 不会被误判为近期冲突；自车停止时也能
 通过 VRU 相对运动检测接近。
+
+`min_distance_m` 与 `min_ttc_s` 分别可能来自不同采样帧，因此报告同时输出
+`min_distance_timestamp_s`、`min_ttc_timestamp_s` 和首次达到最终等级的
+`risk_timestamp_s`，避免把不同帧指标拼成一个不存在的状态。
 
 | 风险等级 | 条件（满足任一） |
 |---|---|
@@ -66,8 +71,8 @@ python main.py --ego data/ego.csv --vru data/vru.csv --out report.json
 python -m unittest discover -s test -p "test_*.py" -v
 ```
 
-当前 11 项测试覆盖距离阈值、停止自车/迎面 VRU、侧向静止 VRU、轨迹去重计数、
-时间失配、未知类别和随包样例。
+当前 12 项测试覆盖距离阈值、停止自车/迎面 VRU、侧向静止 VRU、轨迹去重计数、
+时间失配、未知类别、独立指标时间戳和随包样例。
 
 ## ROS 2
 

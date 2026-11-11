@@ -85,6 +85,23 @@ class RiskMapTest(unittest.TestCase):
         self.assertEqual(report["counts"]["critical"], 1)
         self.assertEqual(report["point_counts"]["critical"], 2)
 
+    def test_min_distance_and_min_ttc_keep_their_own_timestamps(self):
+        ego = [
+            EgoPoint(0.0, 0.0, 0.0, 10.0),
+            EgoPoint(1.0, 10.0, 0.0, 10.0),
+            EgoPoint(2.0, 20.0, 0.0, 10.0),
+        ]
+        vru = [
+            VruPoint("p1", "pedestrian", 0.0, 5.0, 0.0),
+            VruPoint("p1", "pedestrian", 1.0, 5.0, 0.0),
+            VruPoint("p1", "pedestrian", 2.0, 18.0, 0.0),
+        ]
+        track = evaluate_conflicts(ego, vru)["tracks"][0]
+        self.assertEqual(track["min_distance_m"], 2.0)
+        self.assertEqual(track["min_distance_timestamp_s"], 2.0)
+        self.assertAlmostEqual(track["min_ttc_s"], 0.5)
+        self.assertEqual(track["min_ttc_timestamp_s"], 0.0)
+
     def test_unmatched_points_are_reported_as_no_data(self):
         report = evaluate_conflicts(
             [EgoPoint(0.0, 0.0, 0.0, 1.0)],

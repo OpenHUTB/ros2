@@ -26,6 +26,10 @@ TTC = |r|² / (-r · v_rel),  r · v_rel < 0
 不接近时 TTC 为 `null`。这避免把侧向静止目标误判为近期冲突，也允许自车停车时
 通过 VRU 的接近运动识别风险。
 
+`min_distance_m` 和 `min_ttc_s` 可能来自不同帧，因此分别附带
+`min_distance_timestamp_s`、`min_ttc_timestamp_s`；`risk_timestamp_s` 记录首次
+达到最终风险等级的帧。时间匹配使用排序后的二分查找。
+
 ## 阈值
 
 | 风险等级 | 条件（满足任一） |
