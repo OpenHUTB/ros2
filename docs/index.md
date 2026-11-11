@@ -184,8 +184,10 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
 * [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
+* [任务5：系统集成](./robot_tasks/system_integration/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
+* [ROS2 动态障碍跟踪与 TTC 预警](./ground/ros2_dynamic_obstacle_ttc.md)
 * [Mbot 雷达避障仿真（ROS 1 Noetic）](./ground/mbot_lidar_avoid.md) —— Mbot 差速底盘在 Gazebo 中的 2D 激光雷达阈值避障，按扇区最小距离 + 滞回状态机输出 /cmd_vel
 
 * [网页远程遥控小车](./ground/web_remote_car.md)
@@ -202,6 +204,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [雨雾天气下自适应感知降级策略的静态帧复现](./ground/weather_adaptive_perception_replay.md)
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
@@ -422,6 +425,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
 * [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
+* [无人机自主充电/机巢仿真](./air/drone_charging_nest.md) —— MuJoCo 四旋翼起飞、巡检、返航、机巢自动充电与再次起飞
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
