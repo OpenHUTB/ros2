@@ -51,6 +51,7 @@ nav:
     - Ubuntu 文档环境初始化: 'ubuntu_docs_setup.md'
     - 安装 ROS: 'ubuntu20.04.md'
     - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
+    - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
     - ROS 2 传感器数据均值滤波节点 (mean_filter): 'chap2/mean_filter.md'
     - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
@@ -100,6 +101,8 @@ nav:
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
+    - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+    - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
@@ -114,6 +117,7 @@ nav:
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
 - 地面载具:
+    - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
     - 毫米波雷达目标跟踪与前碰撞预警: './ground/radar_ttc_fcw.md'
     - ROS与Conda环境排错指南: './ground/ros_conda_env_guide.md'
     - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
@@ -148,6 +152,7 @@ nav:
     - 停车场场景生成: './ground/carla_parking_lot.md'
     - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
     - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
+    - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
     - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
     - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
@@ -198,6 +203,7 @@ nav:
     - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
     - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
     - MuJoCo 小车跟车仿真: './ground/mujoco_car_follow.md'
+    - MuJoCo 小车滑斜坡: './ground/mujoco_slope_car.md'
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
     - 扭转控制: './ground/twist_to_control.md'
@@ -216,7 +222,7 @@ nav:
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
-
+    - VRU 冲突风险图: './ground/vru_conflict_risk_map.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
@@ -262,6 +268,7 @@ nav:
     - 无人机 LiDAR 地面/障碍分割: './air/uav_lidar_ground_filter.md'
     - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
     - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
+    - 无人机空速/地速三角估风与可观测性: './air/uav_wind_estimation.md'
     - 无人机相机云台两轴稳定控制: './air/uav_gimbal_stabilization.md'
     - 旋翼桨尖马赫数与桨盘载荷: './air/uav_prop_tip_mach.md'
     - 无人机 IMU 与气压高度融合: './air/uav_altitude_sensor_fusion.md'
@@ -365,7 +372,6 @@ nav:
     - MuJoCo水下机器人ROS2仿真与建图初步验证: './water/mujoco_rov_underwater.md'
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
-- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 
 # - mdx_math 用于行内公式显示
