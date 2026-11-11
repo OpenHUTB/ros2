@@ -61,13 +61,26 @@ def collect(model_path, out_path, n_episodes=60, force_range=(40, 90),
                   f"samples={len(X)} 成功站住的回合={ep_kept}")
     X = np.stack(X)
     Y = np.stack(Y)
-    # 逐维标准化尺度：力矩各维量级差异极大（踝 ~50 N·m，其余接近 0），
-    # 不归一化网络只能学到最大的一维。推理时按同一尺度还原。
-    y_scale = np.maximum(Y.std(axis=0), 1e-6)
+    # —— 标准化参数：X 与 Y 都必须存下来，推理端要用同一套变换 ——
+    # X（16×16 池化灰度）动态范围很小（实测 0.37~0.91），不零中心化时
+    # 输入与权重的内积会系统性偏负，把第一层 ReLU 整片压制到 0（死网络）。
+    # 某些池化格子在所有样本上恒定，逐维 std 为 0，这里用 1e-3 兜底而不是
+    # 1e-6，避免标准化后出现 1e5 量级的数值。
+    X_mean = X.mean(axis=0)
+    X_std = np.maximum(X.std(axis=0), 1e-3)
+    # Y 同理：本模块 15 维里有 7 维在所有样本上恒定（专家始终输出同一个值），
+    # 这些维度的尺度必须取 1.0；若取 1e-6，目标值会爆炸到 1e5 量级，
+    # 训练完全无法收敛（旧权重就是这么坏掉的）。
+    Y_mean = Y.mean(axis=0)
+    y_std = Y.std(axis=0)
+    y_scale = np.where(y_std > 1e-6, y_std, 1.0)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    np.savez(out_path, X=X, Y=Y, Y_scale=y_scale)
+    np.savez(out_path, X=X, Y=Y, X_mean=X_mean, X_std=X_std,
+             Y_mean=Y_mean, Y_scale=y_scale)
     sim.close()
     if verbose:
         print(f"[collect] 数据集: {out_path} | X={X.shape} Y={Y.shape} "
               f"| 站住回合 {ep_kept}/{n_episodes}")
+        print(f"[collect] X_mean={X_mean.mean():.4f} X_std(mean)={X_std.mean():.4f} "
+              f"| Y 中恒定维度 {int((y_std <= 1e-6).sum())} 个")
     return out_path

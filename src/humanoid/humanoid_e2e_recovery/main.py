@@ -109,8 +109,31 @@ def run_check():
     sim.reset()
     out = predictor.predict_from_image(sim.render_front(gray=True))
     check("MLP 推理输出", out.shape == (15,), f"(shape={out.shape})")
-    check("推理非常量输出", float(np.std(out)) > 1e-6,
-          f"(std={np.std(out):.3f} N·m，非全零/非死网络)")
+
+    # 4b. 判别力核心：输出必须随**输入样本**变化
+    # 旧判据是 np.std(out)——那是同一帧 15 维之间的离散度。只要踝 pitch 一维
+    # 是大数、其余维为 0，std 就自动很大（实测 18.7），而网络完全可能对图像
+    # 毫无响应（第一层 ReLU 全死时 y 退化成常数）。这里改用数据集里成千上万条
+    # 真样本的前向结果，看**跨样本**变化与隐藏层存活率。
+    if os.path.exists(DATASET):
+        ds = np.load(DATASET)
+        Xs = ds["X"][:3000].astype(np.float64)
+        outs_ds = predictor.predict_vecs(Xs)
+        per_dim = outs_ds.std(axis=0)
+        cross = float(per_dim.max())
+        check("跨样本输出有响应（%d 条真样本）" % len(Xs), cross > 1e-3,
+              f"(最大逐维 std={cross:.4f} N·m；踝 pitch={per_dim[3]:.4f})")
+        l1 = float(np.abs(np.diff(outs_ds, axis=0)).sum(axis=1).mean())
+        check("相邻样本输出非常数", l1 > 1e-3, f"(平均 L1 变化={l1:.4f} N·m)")
+        st = predictor.hidden_stats(Xs)
+        alive_ok = (st["relu1_alive_neurons"] >= st["relu1_total_neurons"] * 0.5
+                    and st["relu1_activation_rate"] > 0.05)
+        check("第一层 ReLU 未整片死亡", alive_ok,
+              f"(激活率 {st['relu1_activation_rate'] * 100:.1f}%, "
+              f"存活 {st['relu1_alive_neurons']}/{st['relu1_total_neurons']}; "
+              f"第二层激活率 {st['relu2_activation_rate'] * 100:.1f}%)")
+    else:
+        print(f"[SKIP] 数据集不存在，跳过跨样本判别力检查 ({DATASET})")
 
     # 5. 判别力对照：全零权重必须站不住，否则说明自检无判别力
     tmpdir = tempfile.mkdtemp(prefix="e2e_zero_")
@@ -120,6 +143,10 @@ def run_check():
         d[k] = np.zeros_like(d[k])
     for k in ("b1", "b2", "b3"):
         d[k] = np.zeros_like(d[k])
+    # 输出中心化项也必须清零：否则零权重网络的输出恒等于 Y_mean（专家平均力矩），
+    # 它本身就足以撑住站姿，"全零权重必须跌倒"的判别力会被抵消。
+    if "Y_mean" in d:
+        d["Y_mean"] = np.zeros_like(d["Y_mean"])
     np.savez(zero_w, **d)
     zero_pred = E2EPredictor(zero_w)
     sim.reset()
