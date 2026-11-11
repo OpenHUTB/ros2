@@ -73,6 +73,8 @@ nav:
     - 8. ROS 机器人综合应用:
         - 章节首页: './chapter/chap8.md'
         - 机器视觉多机器人蚁群编队: './ant/README.md'
+        - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
+        - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
@@ -101,7 +103,9 @@ nav:
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
+    - 人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比: './humanoid/humanoid_imu_attitude.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+    - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
@@ -132,6 +136,7 @@ nav:
     - 车道保持控制: './ground/carla_lane_keeping/lane_keeping_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
+    - R2D2小车 航点巡航: './ground/r2d2_waypoint_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
@@ -221,7 +226,6 @@ nav:
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
-    - 不足转向与横向稳定裕度: './ground/lateral_stability_margin.md'
 
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
@@ -290,10 +294,12 @@ nav:
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
     - AirSim无人机键盘遥控与机载云台控制模块: './airsim_drone_gimbal_teleop/README.md'
+    - 预设航线飞行模拟器: './air/flight_path_simulator.md'
     - 无人机机载云台目标丢失重捕获与视轴误差评估: './air/uav_gimbal_reacquisition.md'
     - 无人机视觉感知置信度退化保护: './air/uav_perception_confidence_guard.md'
     - 无人机应急着陆点安全评估: './air/uav_emergency_landing_selector.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
+    - MuJoCo 失落公园无人机端到端视觉转向: './air/mujoco_abandoned_park_uav_visual_steering.md'
     - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
@@ -337,6 +343,7 @@ nav:
     - 基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统: './air/geofence.md'
     - 无人机深度相机轨迹跟踪（CNN 行为克隆）: './air/uav_depth_track_nn.md'
     - AirSim 无人机抗风扰补偿（MLP）: './air/uav_airsim_wind_rejection.md'
+    - AirSim 无人机深度避障（CNN 端到端控制）: './air/uav_airsim_depth_obstacle_avoidance.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
@@ -363,6 +370,7 @@ nav:
     - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
     - 同一 ROV 任务 PPO 与 SAC 强化学习算法对比: './water/mjc_rov_rl_compare.md'
     - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
+    - 水下 AUV 矩形巡航与视觉双向避障仿真: './water/auv_end2end.md'
     - 水下多源融合组合导航 (EKF): './water/rov_ekf_navigation.md'
     - 基于热力图的洋流干扰下 ROV 自适应路径规划: './water/water_rov_path_planning.md'
     - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
@@ -387,4 +395,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
