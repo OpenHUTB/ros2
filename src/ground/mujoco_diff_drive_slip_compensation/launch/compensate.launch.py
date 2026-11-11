@@ -41,7 +41,7 @@ def generate_launch_description() -> LaunchDescription:
             output='screen',
             parameters=[
                 config_path,
-                {'model_file': LaunchConfiguration('model_file')},
+                {'model_file': LaunchConfiguration('model_file'), 'use_sim_time': True},
             ],
         ),
     ])
