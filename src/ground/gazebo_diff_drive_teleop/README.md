@@ -65,8 +65,3 @@ bash main.sh battery
 ```
 
 ![电量管理与自动返航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_return.png)
-
-![Gazebo 实时仿真：电量管理与返航小车](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_gazebo_close.png)
-
-![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_gazebo_wide.png)
-
