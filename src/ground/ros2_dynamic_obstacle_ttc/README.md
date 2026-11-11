@@ -35,7 +35,7 @@ ros2 launch ros2_dynamic_obstacle_ttc main_launch.py
 
 ```bash
 cd src/ground/ros2_dynamic_obstacle_ttc
-python3 -m unittest discover -s test -v     # 10 项
+python3 -m unittest discover -s test -v     # 11 项
 python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 ```
 
@@ -64,5 +64,5 @@ python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 
 ## 6. 大模型声明
 
-代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 10 项单元测试、
+代码与文档在编写过程中使用了 AI 大模型辅助。作者已实际运行 11 项单元测试、
 5 个离线场景，并对提交内容的正确性与完整性负全部责任。
