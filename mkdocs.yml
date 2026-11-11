@@ -128,6 +128,7 @@ nav:
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
 - 地面载具:
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
+    - CAN 报文信号解码与 CRC/计数器校验: './ground/can_signal_decode.md'
     - 毫米波雷达目标跟踪与前碰撞预警: './ground/radar_ttc_fcw.md'
     - ROS与Conda环境排错指南: './ground/ros_conda_env_guide.md'
     - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
