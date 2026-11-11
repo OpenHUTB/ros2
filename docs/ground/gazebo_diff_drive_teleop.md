@@ -526,6 +526,79 @@ ros2 topic echo /clock --once
 
 实测表明，里程计闭环相对运动能够把前进/后退和转向误差控制在厘米/度级，四边正方形演示的闭合误差约 0.044 m。说明在无外部定位的短距离动作中，轮式里程计闭环足以支撑精确运动原语；但误差会随距离和转向次数累积，长距离任务仍需外部定位或轮速标定。
 
-## 17. 说明
+## 17. 定速巡航与航向保持
+
+`cruise_control` 在键盘遥控基础上增加闭环巡航：按 `c` 锁定当前航向并维持目标速度，按 `a/d` 在巡航中微调目标航向，按 `+/-` 调整目标速度。控制量由 `/odom` 的实测线速度和偏航角反馈计算，不是开环发布固定速度。
+
+### 17.1 控制算法
+
+速度通道使用“前馈 + 比例”控制：
+
+```text
+speed_error = target_speed - odom_speed
+linear = target_speed + kp_speed * speed_error + ki_speed * I + kd_speed * d(speed_error)/dt
+```
+
+`ki_speed` 默认 0，避免积分饱和导致冲过目标速度；参数仍保留积分项，便于需要时启用。输出被限制在 `[0, max_speed]`，并对输出饱和时的积分做条件更新。
+
+航向通道使用 PD：
+
+```text
+yaw_error = normalize(target_yaw - odom_yaw)
+angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
+```
+
+角速度限制为 `±max_angular`；航向误差较大时自动降低线速度，避免巡航中大幅甩头。
+
+### 17.2 操作
+
+| 按键 | 功能 |
+| --- | --- |
+| `c` | 进入/退出定速巡航 |
+| 巡航中 `a/d` | 左/右微调目标航向（每次 `heading_step`） |
+| 巡航中 `+/-` | 调整目标速度 |
+| `w/x/a/d` | 手动驾驶（自动退出巡航） |
+| `s` / 空格 | 停止并退出巡航 |
+| `q` / `Ctrl-C` | 退出并自动停车 |
+
+## 18. 参数、话题与实测结果
+
+### 18.1 参数与话题
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `cruise_speed` | 0.3 m/s | 巡航目标速度 |
+| `max_speed` | 0.4 m/s | 线速度上限 |
+| `kp_speed` | 0.5 | 速度比例增益 |
+| `ki_speed` | 0.0 | 速度积分增益 |
+| `kd_speed` | 0.02 | 速度微分增益 |
+| `kp_yaw` | 1.8 | 航向比例增益 |
+| `kd_yaw` | 0.15 | 航向微分增益 |
+| `heading_step` | 0.08 rad | `a/d` 每次调整的目标航向增量 |
+| `max_angular` | 1.0 rad/s | 角速度上限 |
+
+| 话题 | 类型 | 说明 |
+| --- | --- | --- |
+| `/cmd_vel` | `geometry_msgs/Twist` | 巡航/手动速度指令 |
+| `/odom` | `nav_msgs/Odometry` | 速度与偏航角反馈 |
+| `/cruise_control/status` | `std_msgs/String` | `manual` / `cruise ...` |
+| `/cruise_control/state` | `std_msgs/Float32MultiArray` | 目标速度、目标航向、实际速度、实际航向、速度误差、航向误差 |
+
+### 18.2 实测结果
+
+在真实 Gazebo Harmonic 中启动完整控制链路，用伪终端注入按键并记录 `/cruise_control/state`：
+
+- 目标速度 0.30 m/s，稳态速度绝对误差约 **0.002 m/s**；
+- 巡航期间航向误差接近 0；
+- 按 `a` 五次把目标航向增加 0.40 rad，实际航向跟踪误差约 **0.003 rad**。
+
+![定速巡航速度与航向数据](../img/ground/gazebo_diff_drive_teleop_cruise_control.png)
+
+### 18.3 结论
+
+实测表明，速度通道能把稳态误差压到约 0.002 m/s，航向保持和键盘微调也达到约 0.003 rad 的跟踪误差。说明在 Gazebo 差速底盘上，基于 `/odom` 的前馈 + P 控制可以稳定维持巡航。结论仅针对当前速度和增益参数；真实车辆还需考虑执行器延迟、打滑、负载变化和外部定位。
+
+
+## 19. 说明
 
 代码与文档使用 AI 大模型辅助编写。作者已核对代码、参数和实验数据，并对提交内容负责。
