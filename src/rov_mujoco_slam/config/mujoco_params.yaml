@@ -1,0 +1,4 @@
+mujoco_sim_node:
+  ros__parameters:
+    sim_frequency: 100.0
+    model_name: "rov_underwater"
