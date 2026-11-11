@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  平面双关节手臂（�?+ 肘）�? �?Hill 肌肉经固定腱驱动�?  约定：q1=q2=0 时手臂沿 +x 伸直；正角绕 +y 旋转，末�?z 向下为负�?      x = L1 cos q1 + L2 cos(q1+q2)
+      z = -L1 sin q1 - L2 sin(q1+q2)
+  固定腱长�?= Σ coef·q，q=0 时为 0，可正可负（相对行程）；
+  肌肉 lengthrange 取对称区间，使零位对应归一化长度的中值�?-->
+<mujoco model="msk_arm_reach">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <default>
+    <joint damping="0.10" armature="0.001"/>
+    <geom contype="0" conaffinity="0" rgba="0.72 0.76 0.84 1"/>
+    <muscle ctrlrange="0 1" timeconst="0.01 0.04" scale="1"
+            lmin="0.5" lmax="1.6" vmax="10" fpmax="0.2" fvmax="1.2"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 2" dir="0 0 -1"/>
+    <body name="upper" pos="0 0 0.60">
+      <joint name="shoulder" type="hinge" axis="0 1 0"
+             range="-1.25 1.45" damping="0.10"/>
+      <geom name="upper_geom" type="capsule" fromto="0 0 0 0.30 0 0"
+            size="0.030" mass="1.2"/>
+      <body name="fore" pos="0.30 0 0">
+        <joint name="elbow" type="hinge" axis="0 1 0"
+               range="-0.10 2.30" damping="0.05"/>
+        <geom name="fore_geom" type="capsule" fromto="0 0 0 0.28 0 0"
+              size="0.025" mass="0.8"/>
+        <site name="tip" pos="0.28 0 0" size="0.01" rgba="0.9 0.2 0.2 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <!-- 注意符号：MuJoCo 肌肉缩短腱长，广义力 = -F·dL/dq�?         因此“屈肌”取�?coeff、“伸肌”取�?coeff，才能产�?+q 方向的正力矩�?-->
+    <fixed name="sh_flex"><joint joint="shoulder" coef="-0.030"/></fixed>
+    <fixed name="sh_ext"><joint joint="shoulder" coef="0.030"/></fixed>
+    <fixed name="el_flex"><joint joint="elbow" coef="-0.025"/></fixed>
+    <fixed name="el_ext"><joint joint="elbow" coef="0.025"/></fixed>
+    <fixed name="bi_flex">
+      <joint joint="shoulder" coef="-0.020"/>
+      <joint joint="elbow" coef="-0.020"/>
+    </fixed>
+    <fixed name="bi_ext">
+      <joint joint="shoulder" coef="0.020"/>
+      <joint joint="elbow" coef="0.020"/>
+    </fixed>
+  </tendon>
+
+  <actuator>
+    <muscle name="shoulder_flexor" tendon="sh_flex" force="800"
+            lengthrange="-0.090 0.090"/>
+    <muscle name="shoulder_extensor" tendon="sh_ext" force="800"
+            lengthrange="-0.090 0.090"/>
+    <muscle name="elbow_flexor" tendon="el_flex" force="800"
+            lengthrange="-0.120 0.120"/>
+    <muscle name="elbow_extensor" tendon="el_ext" force="800"
+            lengthrange="-0.120 0.120"/>
+    <muscle name="biarticular_flexor" tendon="bi_flex" force="800"
+            lengthrange="-0.140 0.140"/>
+    <muscle name="biarticular_extensor" tendon="bi_ext" force="800"
+            lengthrange="-0.140 0.140"/>
+  </actuator>
+</mujoco>

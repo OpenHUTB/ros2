@@ -1,0 +1,31 @@
+# 双关节肌肉骨骼手臂参数
+
+model:
+  upper_arm: 0.30        # 上臂长度 [m]
+  forearm: 0.28          # 前臂长度 [m]
+  shoulder_min: -1.25    # 肩关节下限 [rad]
+  shoulder_max: 1.45     # 肩关节上限 [rad]
+  elbow_min: -0.10       # 肘关节下限 [rad]
+  elbow_max: 2.30        # 肘关节上限 [rad]
+
+sim:
+  timestep: 0.002        # 物理步长 [s]
+  control_period: 0.010  # 控制周期 [s]（100 Hz）
+  steps_per_control: 5   # 每个控制周期的物理步数
+
+ctrl:
+  kp_shoulder: 100.0     # 肩 PD 比例 [N·m/rad]
+  ki_shoulder: 30.0      # 肩积分 [N·m/(rad·s)]
+  kd_shoulder: 8.0
+  kp_elbow: 70.0         # 肘 PD 比例
+  ki_elbow: 20.0
+  kd_elbow: 5.0
+  biarticular_share: 0.5 # 双关节肌承担的“共同力矩”比例
+  target_x: 0.38         # 默认目标（文档口径）[m]
+  target_z: -0.17
+
+muscle:
+  f_max: 800.0           # 单肌最大等长力 [N]
+  moment_arm_shoulder: 0.030
+  moment_arm_elbow: 0.025
+  moment_arm_biarticular: 0.020
