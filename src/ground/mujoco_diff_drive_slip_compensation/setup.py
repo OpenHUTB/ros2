@@ -40,6 +40,19 @@ setup(
                 'command_profile = '
                 'mujoco_diff_drive_slip_compensation.command_profile:main'
             ),
+            (
+                'train_slip_model = '
+                'mujoco_diff_drive_slip_compensation.slip_model:main'
+            ),
+            (
+                'generate_slip_sample_data = '
+                'mujoco_diff_drive_slip_compensation.generate_sample_dataset:main'
+            ),
+            (
+                'online_slip_compensation = '
+                'mujoco_diff_drive_slip_compensation.online_compensation:main'
+            ),
+
         ],
     },
 )

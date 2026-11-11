@@ -1,0 +1,32 @@
+[
+  {
+    "file": "rgb_1792250714_008.png",
+    "sha256": "ef0dc1b2a3377c84c49d101382acab656676f4449b2e2577c08c1ced9508932f",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792250714_008.png"
+  },
+  {
+    "file": "rgb_1792250775_017.png",
+    "sha256": "bc3914e227d3875160ae7370fecb893aee1ccda53b4a9637db384b373add14f8",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792250775_017.png"
+  },
+  {
+    "file": "rgb_1792251385_006.png",
+    "sha256": "4e17561f7b9d96705d09b89d1504130772dd54cca49830ff2bdfccd9efe46619",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792251385_006.png"
+  },
+  {
+    "file": "rgb_1792251630_007.png",
+    "sha256": "1fe17c4a8fb3dc77f3443627fd5ce117cf63accae9887c4e68f3c9b707ef488c",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792251630_007.png"
+  },
+  {
+    "file": "rgb_1792253320_005.png",
+    "sha256": "e89cd73c88a78fe66ad74357d17e40b191b51e26d27e579b1737a82e79e8e113",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792253320_005.png"
+  },
+  {
+    "file": "rgb_1792254242_013.png",
+    "sha256": "5f75ba011d39e13a48bfd064d8adac4d58c4366204758cb7784be26d3521d00e",
+    "source": "airsim_facade_dataset_20261026.zip/dataset_final/images/val/rgb_1792254242_013.png"
+  }
+]

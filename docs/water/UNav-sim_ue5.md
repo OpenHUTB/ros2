@@ -47,7 +47,7 @@ build.cmd
 
 #### 第 1 步：启动仿真器
 
-1. 打开 `E:\underwater\daima\UNav-Sim\Unreal\Environments\Blocks\Blocks.uproject`
+1. 打开 `(存储相应文件的磁盘):\UNav-Sim\Unreal\Environments\Blocks\Blocks.uproject`
 2. 等编辑器加载完（约 1 分钟）
 3. 点工具栏绿色 `Play` 按钮
 4. 确认：视口出现蓝色 `BlueROV2` 且没有报错弹窗
@@ -60,10 +60,29 @@ build.cmd
 
 #### 第 3 步：运行圆形轨迹控制器
 
+##### 方案 A：Python脚本方案
+
 在命令行输入: `python E:\underwater\daima\UNav-Sim\circle_rov.py`
+
+**注：命令中路径改为自己电脑文件实际存放地址**
 
 - 运行 `90` 秒自动停止，半径 `2.5` 米，一圈约 `79` 秒
 - 脚本开头会自动把 `ROV` 重置回水面附近，不需要手动处理沉底问题
+
+##### 方案 B：官方 C++ HelloROV 示例方案
+
+在PowerShell中运行存储相应文件的磁盘
+例如：
+
+`E:\underwater\daima\UNav-Sim\HelloRov\build\x64\Release\HelloRov.exe`
+
+**注：命令中路径改为自己电脑文件实际存放地址**
+
+如果ROV已经沉底，推进器可能推不动，所以单独执行下面这条重置命令:
+
+```python
+python -c "import airsim; c=airsim.MultirotorClient(); c.confirmConnection(); c.simSetVehiclePose(airsim.Pose(airsim.Vector3r(0,0,-0.5), airsim.Quaternionr(0,0,0,1)), True)"
+```
 
 #### 第 4 步：在 UE 视口里看
 
@@ -81,3 +100,8 @@ build.cmd
 | Python 脚本 | 等下自动停（90 秒）或 `Ctrl+C` |
 | HelloRov.exe | `Stop-Process -Name HelloRov -Force` |
 | 退出仿真 | 点编辑器 Stop （停止 Play） |
+
+## 注意事项
+- 不要关闭弹出的黑色控制台窗口 （HelloRov 方案 B 会有）——关了等于停止控制
+- 如果你自己调参数，改 circle_rov.py 顶部的`RADIUS` 、`OMEGA` （半径、角速度）就行
+- 每次都从第 3 步开始（控制器会自动重置 ROV），不需要重开编辑器

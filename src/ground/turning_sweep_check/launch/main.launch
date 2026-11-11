@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- ============ 车辆几何 ============ -->
+  <arg name="wheelbase" default="2.70" doc="轴距，单位米"/>
+  <arg name="track" default="1.54" doc="轮距（左右轮中心距），单位米"/>
+  <arg name="front_overhang" default="0.90" doc="前悬（前轴到车头），单位米"/>
+  <arg name="rear_overhang" default="0.85" doc="后悬（后轴到车尾），单位米"/>
+  <arg name="vehicle_width" default="1.80" doc="车宽（含后视镜时填更大值），单位米"/>
+  <arg name="max_steer" default="0.55" doc="最大前轮转角，单位弧度（0.55 约 31.5 度）"/>
+
+  <!-- ============ 转弯与校验 ============ -->
+  <arg name="turn_radius" default="8.0" doc="后轴中心到转弯中心的半径，单位米"/>
+  <arg name="channel_width" default="6.0" doc="通道可用宽度，单位米"/>
+  <arg name="inner_clearance" default="0.30" doc="内侧车身与障碍物的最小间距，单位米"/>
+  <arg name="max_inner_diff" default="1.00" doc="内轮差上限，单位米"/>
+
+  <!-- ============ 发布 ============ -->
+  <arg name="publish_hz" default="1.0" doc="报告重发频率，单位 Hz"/>
+  <arg name="report_topic" default="/turning/sweep" doc="报告话题（std_msgs/String）"/>
+  <arg name="ring_topic" default="/turning/ring" doc="字符图话题（std_msgs/String）"/>
+
+  <!-- 先载入 config 里的默认值，再用上面 13 个 arg 覆盖 -->
+  <rosparam command="load" file="$(find turning_sweep_check)/config/turning_sweep_check.yaml"/>
+
+  <param name="vehicle/wheelbase" value="$(arg wheelbase)"/>
+  <param name="vehicle/track" value="$(arg track)"/>
+  <param name="vehicle/front_overhang" value="$(arg front_overhang)"/>
+  <param name="vehicle/rear_overhang" value="$(arg rear_overhang)"/>
+  <param name="vehicle/width" value="$(arg vehicle_width)"/>
+  <param name="vehicle/max_steer" value="$(arg max_steer)"/>
+
+  <param name="turning/radius" value="$(arg turn_radius)"/>
+  <param name="check/channel_width" value="$(arg channel_width)"/>
+  <param name="check/inner_clearance" value="$(arg inner_clearance)"/>
+  <param name="check/max_inner_diff" value="$(arg max_inner_diff)"/>
+
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/ring" value="$(arg ring_topic)"/>
+
+  <node pkg="turning_sweep_check" type="main.py" name="turning_sweep_check" output="screen"/>
+
+</launch>
