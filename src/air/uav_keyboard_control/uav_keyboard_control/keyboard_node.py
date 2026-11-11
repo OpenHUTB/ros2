@@ -126,6 +126,8 @@ def main():
     except KeyboardInterrupt:
         print("\n收到 Ctrl-C")
     finally:
+        # 退出前补发一条零速，避免桥接层超时前还带着速度
+        node._pub.publish(Twist())
         node.destroy_node()
         rclpy.shutdown()
 

@@ -16,11 +16,24 @@ Ctrl-C             退出
 
 ## 运行
 
-```bash
-# 终端 1：起 bridge（Noetic 那边）
-ros2 launch carlair_ros_bridge main.launch.py
+> 注意：本节点是 ROS 2，`carlair_ros_bridge` 仍是 ROS 1 catkin 包，必须通过 `ros1_bridge` 连通。
 
-# 终端 2：起本节点
+```bash
+# 终端 1：ROS 1 bridge（Noetic）
+source /opt/ros/noetic/setup.bash
+source ~/bridge_ws/devel/setup.bash
+roslaunch carlair_ros_bridge main.launch
+
+# 终端 2：ros1_bridge 桥接
+source /opt/ros/noetic/setup.bash
+source /opt/ros/humble/setup.bash
+source ~/bridge_ws/devel/setup.bash
+source ~/ros2_ws/install/setup.bash
+ros2 run ros1_bridge dynamic_bridge
+
+# 终端 3：ROS 2 本节点（Humble）
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch uav_keyboard_control keyboard.launch.py
 # 或者
 ros2 run uav_keyboard_control keyboard

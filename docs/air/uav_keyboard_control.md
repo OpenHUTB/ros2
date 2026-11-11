@@ -45,20 +45,31 @@
   残字节也不会被当成运动键（4.6）。
 * **技能宏**：`1`/`2`/`3` 触发一次闭环动作，细节与参数见第 8 节；宏运行中按任意方向键
   立即取消并接管（手动优先）。
-
 ## 3. 编译与运行
 
-```shell
-# 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）
-source ~/bridge_ws/devel/setup.bash
-ros2 launch carlair_ros_bridge main.launch.py
+> 注意：`uav_keyboard_control` 是 ROS 2 节点，`carlair_ros_bridge` 仍是 ROS 1 catkin 包，两边默认互不可见，必须通过 `ros1_bridge` 桥接。
 
-# 终端 2：键盘控制
+```shell
+# 终端 1：ROS 1 桥接（连仿真 + 执行 + 自动起飞悬停）
+source /opt/ros/noetic/setup.bash
 source ~/bridge_ws/devel/setup.bash
+roslaunch carlair_ros_bridge main.launch
+
+# 终端 2：ROS 2 键盘控制节点
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
 ros2 launch uav_keyboard_control keyboard.launch.py
+
+# 终端 3：ros1_bridge 桥接 ROS 1 <-> ROS 2
+source /opt/ros/noetic/setup.bash
+source /opt/ros/humble/setup.bash
+source ~/bridge_ws/devel/setup.bash
+source ~/ros2_ws/install/setup.bash
+ros2 run ros1_bridge dynamic_bridge
+```
 ```
 
-把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（可同时按住多个键斜飞），松开后平滑减速到悬停，`ESC` 退出。
+把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（单键锁存，后按的键覆盖前一个），松开按键保持 0.3 秒后自动悬停，`Ctrl-C` 退出。
 
 ## 4. 实现要点
 
@@ -215,7 +226,7 @@ source ~/uav_ws/devel/setup.bash
 # <宿主机IP> 换成仿真器所在机器的地址（Windows 下用 ipconfig 查看，
 # 桥接模块文档中的示例为 192.168.94.1）
 # auto_takeoff 默认为 true：桥接层会 takeoff() 并 hover()，起飞后悬停在约 1 m
-ros2 launch carlair_ros_bridge main.launch.py host:=<宿主机IP>
+roslaunch carlair_ros_bridge main.launch host:=<宿主机IP>
 
 # ② 客户机：把无人机送到 15 m 高空
 #    /uav/goal 是 ENU（z 向上为正），桥接层飞抵该点后自动悬停，
@@ -228,7 +239,7 @@ export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
 ros2 launch uav_keyboard_control keyboard.launch.py
-# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
+# 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开保持 0.3s 后自动悬停，Ctrl-C 退出
 ```
 
 > **关于 `auto_takeoff`**：它的语义是「**起飞并悬停**」——桥接层源码里就是
@@ -256,7 +267,7 @@ ros2 launch uav_keyboard_control keyboard.launch.py
 
 ```text
 [test] 节点已在伪终端中启动 (pid=22254)
-[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / ESC 退出
+[test] 按键 前进 W 3.0s / 左移 A 2.5s / 后退 S 2.5s / 右移 D 2.5s / Ctrl-C 退出
 
 按键前  (x, y, z) = ( 3.6e-07,  2.2e-07, 15.145)    ← 已按 7.2 第 ② 步送到 15 m
 按键后  (x, y, z) = ( 0.389,   -0.403,   15.071)    ← 水平移动约 0.56 m，高度保持
