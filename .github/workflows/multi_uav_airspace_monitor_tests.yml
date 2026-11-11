@@ -39,10 +39,13 @@ jobs:
           MPLBACKEND: Agg
         run: |
           python3 main.py demo --output "${RUNNER_TEMP}/airspace_out" \
-                               --csv "${RUNNER_TEMP}/airspace_out/sep.csv"
+                               --csv "${RUNNER_TEMP}/airspace_out/sep.csv" \
+                               --plot "${RUNNER_TEMP}/airspace_out/separation_vs_time.png"
           test -s "${RUNNER_TEMP}/airspace_out/demo_screenshot.png"
           test -s "${RUNNER_TEMP}/airspace_out/summary.json"
+          test -s "${RUNNER_TEMP}/airspace_out/separation_vs_time.png"
           head -n 1 "${RUNNER_TEMP}/airspace_out/sep.csv" | grep -q '^time_s,uav_a,uav_b,separation_m$'
+          # 非整除窗口的固定步长由 tests/test_export.py 断言（0.0/0.4/0.8/1.1）
 
       - name: Byte-compile the module
         run: python3 -m py_compile main.py multi_uav_airspace_monitor/*.py launch/main.launch.py
