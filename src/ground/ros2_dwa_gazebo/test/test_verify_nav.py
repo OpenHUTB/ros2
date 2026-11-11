@@ -44,6 +44,20 @@ class TestVerificationState(unittest.TestCase):
         state.update_scan([1.0])
         self.assertFalse(state.result()["success"])
 
+    def test_wall_clock_starts_without_odom(self):
+        state = VerificationState()
+        self.assertIsNotNone(state.wall_start)
+        self.assertGreaterEqual(state.wall_age, 0.0)
+
+    def test_goal_reached_counts_as_success(self):
+        state = VerificationState(min_displacement=10.0, goal=(2.5, 0.0))
+        state.update_odom(2.4, 0.0)
+        state.update_scan([1.0])
+        state.update_cmd(0.2, 0.0)
+        result = state.result()
+        self.assertTrue(result["goal_reached"])
+        self.assertTrue(result["success"])
+
 
 class TestLaunchFiles(unittest.TestCase):
     def test_world_and_launch_exist(self):

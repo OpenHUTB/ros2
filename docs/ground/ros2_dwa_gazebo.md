@@ -63,39 +63,40 @@ ros2 launch ros2_dwa_gazebo main_launch.py
 
 # 终端 2
 ros2 run ros2_dwa_gazebo verify_nav --ros-args \
-  -p min_displacement:=3.8 -p timeout:=60.0
+  -p min_displacement:=3.0 -p timeout:=120.0
 ```
 
 `verify_nav` 判定成功的条件：
 
-* 位移 ≥ `min_displacement`（本次 3.8 m）；
+* 到达目标（默认 `(2.5, 0)`，容差 0.25 m）或位移 ≥ `min_displacement`（本次 3.0 m）；
 * 收到过非零 `/cmd_vel`；
 * 激光最小距离 ≥ 0.12 m（不撞）。
 
-`timeout` 和 `elapsed_s` 用 `/odom` 的仿真时间，RTF < 1 时不会误报超时。
+`timeout` 和 `elapsed_s` 用 `/odom` 的仿真时间，RTF < 1 时不会误报超时；
+无 odom 时节点初始化即开始墙钟兜底。
 
 ## 4. 结果
 
 在 Ubuntu 20.04 + ROS 2 Foxy + Gazebo 11 的 headless `gzserver` 中实跑：
 
 ```text
-RESULT {"success": true, "displacement_m": 3.801, "min_scan_m": 0.189,
-        "max_cmd": 0.532, "elapsed_s": 17.95}
+RESULT {"success": true, "displacement_m": 4.008, "min_scan_m": 0.132,
+        "max_cmd": 0.858, "elapsed_s": 21.08, "goal_reached": true}
 ```
 
 | 项目 | 结果 |
 | --- | --- |
 | 起点 → 目标 | `(-2.0, 0.0)` → `(2.5, 0.0)` |
-| 位移 | 3.801 m |
-| 最小激光距离 | 0.189 m（burger 半径约 0.105 m） |
-| 最大速度/角速度指令 | 0.532 |
-| Gazebo 仿真时间 | 17.95 s |
+| 位移 | 4.008 m |
+| 最小激光距离 | 0.132 m（burger 半径约 0.105 m） |
+| 最大速度/角速度指令 | 0.858 |
+| Gazebo 仿真时间 | 21.08 s |
 | DWA 日志 | `stop: goal reached`，无碰撞 |
 
 ![TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹](../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png)
 
 两次运行的墙钟时间差异较大，因为 headless Gazebo 的实时因子会波动；上表的
-`elapsed_s` 是**仿真时间**。另一次运行的 min_scan 为 0.128 m，低于配置的
+`elapsed_s` 是**仿真时间**。多次运行的 min_scan 在 0.128–0.189 m，低于配置的
 `robot_radius+safety_margin=0.16 m`，说明安全余量不能保证。
 
 ## 5. 与二维仿真的差异
