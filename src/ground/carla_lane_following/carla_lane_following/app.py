@@ -21,7 +21,11 @@ import os
 import sys
 import time
 
-import carla
+try:
+    import carla
+except ImportError:      # 没装客户端也能 --help
+    carla = None
+
 import numpy as np
 import yaml
 from PIL import Image, ImageDraw
@@ -110,6 +114,10 @@ def check_client_compat(server_version):
     return flavor
 
 def connect(cfg):
+    if carla is None:
+        raise SystemExit(
+            "[lane] 未安装 CARLA/OpenHUTB Python 客户端，连不上仿真器。\n"
+            "        安装见 README 第 4 节（Windows 用配套 hutb wheel；Linux 需自行编译 libcarla）。")
     sim = cfg["simulator"]
     cache = sim["cache_dir"] or os.path.join(HERE, ".hutb_cache")
     os.makedirs(cache, exist_ok=True)
