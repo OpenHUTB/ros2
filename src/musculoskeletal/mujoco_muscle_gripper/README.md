@@ -27,7 +27,7 @@ python3 main.py manual               # 终端键盘控制
 python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
 python3 main.py neural --out out/neural # 采样、训练、独立测试和闭环评估
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 21 项测试
+python3 -m unittest discover -s tests # 24 项测试
 ```
 
 ### 键盘控制
@@ -147,7 +147,7 @@ mujoco_muscle_gripper/
 │   ├── core.py       # Hill 肌肉、MJCF、手指几何
 │   ├── runs.py       # G1-G4 与录制
 │   └── cli.py
-├── tests/            # 21 项测试
+├── tests/            # 24 项测试
 └── tools/plot_metrics.py
 ```
 
