@@ -41,6 +41,21 @@ class DirectionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             TrotGait(self.robot, direction=0)
 
+    def test_speed_magnitude_updates_gait_amplitudes_without_phase_reset(self):
+        gait = TrotGait(self.robot, amplitude_scale=0.3 / 0.8)
+        phase = 0.42
+        gait.update(phase)
+        first = gait.params()
+
+        gait.set_amplitude_scale(0.9 / 0.8)
+        gait.update(phase)
+        second = gait.params()
+
+        self.assertGreater(second["a_thigh"], first["a_thigh"])
+        self.assertGreater(second["a_calf"], first["a_calf"])
+        self.assertAlmostEqual(second["a_thigh"] / first["a_thigh"], 3.0)
+        self.assertAlmostEqual(second["a_calf"] / first["a_calf"], 3.0)
+
     def test_signed_gait_moves_in_requested_direction(self):
         forward = TrotGait(self.robot, direction=1)
         backward = TrotGait(self.robot, direction=-1)
