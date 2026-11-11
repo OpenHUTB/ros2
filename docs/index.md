@@ -57,6 +57,7 @@ ROS每章节运行代码:
     * [ROS Noetic 多传感器话题时间同步](./chap2/ros1_message_time_sync/index.md)
     * [ROS Noetic 运行参数热更新（正弦信号）](./chap2/ros1_parameter_sine_wave/index.md)
     * [ROS Noetic 环境自检与常见问题排查](./chap2/ros1_env_check/index.md)
+    * [ROS 2 传感器数据均值滤波节点 (mean_filter)](./chap2/mean_filter.md)
 * [第 3 章](./chapter/chap3.md) - 机器人系统设计
 * [第 4 章](./chapter/chap4.md) - 机器人仿真
     * [URDF 四轮小车建模与 RViz 显示](./chapter/urdf_car_modeling.md)
@@ -167,6 +168,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
+* [Mbot 雷达避障仿真（ROS 1 Noetic）](./ground/mbot_lidar_avoid.md) —— Mbot 差速底盘在 Gazebo 中的 2D 激光雷达阈值避障，按扇区最小距离 + 滞回状态机输出 /cmd_vel
 
 * [网页远程遥控小车](./ground/web_remote_car.md)
 * [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
@@ -211,6 +213,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 * [基于里程计反馈与 A* 算法的差速底盘静态全局路径规划](./ground/diff_drive_astar_odom_nav.md) —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 `/odom` 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
+* [IMU 噪声 Allan 方差辨识与倾角滤波整定](./ground/imu_allan_noise_identification.md) —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 * [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
@@ -323,6 +326,9 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
 
+* [MuJoCo 城市屋顶光伏覆盖率测量](./air/mujoco_uav_rooftop_pv_coverage_survey.md) —— 通过轻量屋顶场景、往复条带航线及同步 RGB-光伏掩码构建可复现的测量数据基础
+
+* [MuJoCo 屋顶光伏覆盖率测量第二天](./air/mujoco_uav_rooftop_pv_coverage_survey_day2.md) —— 轻量语义分割、航迹控制、ROS 2 接口与三种布局评价
 * [无人机通信链路退化保护与断联风险预测](./air/uav_link_outage_guard.md) —— 融合 RSSI、延迟、丢包与遥测陈旧度，预测链路风险并输出降速、保持或返航建议
 
 * [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
@@ -332,6 +338,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机执行器故障注入与控制退化观测](./air/uav_actuator_fault_sim.md) —— 在 MuJoCo 底座上插入可编程的桨故障（完全失效 / 推力衰减 / 卡死 / 渐进退化）与 IMU 故障，实测"单桨完全失效 0.64 s 必坠、把损失推力均摊给其余三桨也救不回来"，为后续神经容错飞行模块提供数据与评测台
 * [四旋翼吊挂负载防摆控制](./air/uav_slung_load.md) —— MuJoCo 台架上对比 PD、ZV 输入整形与摆角反馈，残余摆角从 7.0° 降到 0.1°
+
+* [无人机桨故障健康度估计](./air/uav_rotor_fault_detector_nn.md) —— 用机载 IMU 与控制器指令（13 维特征）经 1D-CNN+GRU 实时回归四桨剩余推力权限，单桨完全失效 0.10 s 检出、误报率 0，同时提供 ROS2 节点与在线估计接口
 
 * [无人机编队飞行](./air/uav_formation_flight.md) —— 长机按航点巡航、僚机保持队形（一字/纵队/三角可动态切换），三架共用一条 AirSim RPC，依次起飞、低空展开后进入任务
 * [神经安全过滤器](./air/uav_neural_safety_filter.md)
@@ -422,6 +430,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
 * [声呐数据滤波初步验证](./water/rov_sonar_filter.md)
+
 ___
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
