@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """ROS 2 node: publish (v, w) speed profile for a Path."""
 
 from __future__ import annotations
@@ -33,15 +33,19 @@ class VelocityProfileNode(Node):
 
     def on_path(self, msg: Path) -> None:
         points = [(p.pose.position.x, p.pose.position.y) for p in msg.poses]
-        if len(points) < 3:
+        if len(points) < 2:
             return
-        profile = speed_profile(
-            points,
-            v_max=float(self.get_parameter("v_max").value),
-            a_max=float(self.get_parameter("a_max").value),
-            a_lat_max=float(self.get_parameter("a_lat_max").value),
-            min_speed=float(self.get_parameter("min_speed").value),
-        )
+        try:
+            profile = speed_profile(
+                points,
+                v_max=float(self.get_parameter("v_max").value),
+                a_max=float(self.get_parameter("a_max").value),
+                a_lat_max=float(self.get_parameter("a_lat_max").value),
+                min_speed=float(self.get_parameter("min_speed").value),
+            )
+        except ValueError as exc:
+            self.get_logger().error(f"invalid path/profile: {exc}")
+            return
         w = profile.curvature * profile.speed
         data = np.column_stack([profile.speed, w]).ravel().tolist()
         out = Float64MultiArray()
@@ -64,3 +68,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

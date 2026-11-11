@@ -1,4 +1,4 @@
-"""Paths and metrics for the velocity-profiling module."""
+﻿"""Paths and metrics for the velocity-profiling module."""
 
 from __future__ import annotations
 
@@ -24,14 +24,33 @@ def slalom_points(count: int = 300) -> np.ndarray:
     return np.column_stack([x, y])
 
 
-def square_points(side: float = 5.0, spacing: float = 0.05) -> np.ndarray:
-    corners = [(0, 0), (side, 0), (side, side), (0, side), (0, 0)]
+def square_points(side: float = 5.0, radius: float = 0.8,
+                  spacing: float = 0.05) -> np.ndarray:
+    """Rounded square: straight edges + quarter-circle corners (radius 0.8 m)."""
     pts = []
-    for (x0, y0), (x1, y1) in zip(corners[:-1], corners[1:]):
-        n = int(math.hypot(x1 - x0, y1 - y0) / spacing)
+
+    def line(a, b):
+        n = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / spacing))
         for i in range(n):
-            pts.append((x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n))
-    pts.append(corners[-1])
+            pts.append((a[0] + (b[0] - a[0]) * i / n,
+                        a[1] + (b[1] - a[1]) * i / n))
+
+    def arc(cx, cy, a0, a1):
+        n = max(2, int(abs(a1 - a0) * radius / spacing))
+        for i in range(n):
+            a = a0 + (a1 - a0) * i / n
+            pts.append((cx + radius * math.cos(a), cy + radius * math.sin(a)))
+
+    r = radius
+    line((r, 0.0), (side - r, 0.0))
+    arc(side - r, r, -math.pi / 2, 0.0)
+    line((side, r), (side, side - r))
+    arc(side - r, side - r, 0.0, math.pi / 2)
+    line((side - r, side), (r, side))
+    arc(r, side - r, math.pi / 2, math.pi)
+    line((0.0, side - r), (0.0, r))
+    arc(r, r, math.pi, 1.5 * math.pi)
+    pts.append((r, 0.0))
     return np.asarray(pts, dtype=float)
 
 
@@ -71,3 +90,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
