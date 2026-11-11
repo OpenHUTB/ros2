@@ -74,15 +74,15 @@ def test_speed_ratio_returns_none_inside_deadband():
 
 
 def test_is_reverse_detects_opposite_direction():
-    assert _is_reverse(_cmd(1.0), _odom(-1.0), 0.02) is True
+    assert _is_reverse(_cmd(1.0), _odom(-1.0).twist.twist, 0.02) is True
 
 
 def test_is_reverse_false_for_same_direction():
-    assert _is_reverse(_cmd(1.0), _odom(1.0), 0.02) is False
+    assert _is_reverse(_cmd(1.0), _odom(1.0).twist.twist, 0.02) is False
 
 
 def test_is_reverse_false_inside_deadband():
-    assert _is_reverse(_cmd(0.01), _odom(-0.5), 0.02) is False
+    assert _is_reverse(_cmd(0.01), _odom(-0.5).twist.twist, 0.02) is False
 
 
 def test_missing_odom_reports_no_odom(monitor):
