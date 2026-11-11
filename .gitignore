@@ -125,3 +125,6 @@ desktop.ini
 # 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
 # results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
 src/air/uav_camera_tracking/results/*.png
+
+# Python / 运行期缓存（reviewer 指出不应入库）
+.hutb_cache/
