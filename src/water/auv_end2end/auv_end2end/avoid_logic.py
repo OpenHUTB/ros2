@@ -86,11 +86,6 @@ def otsu_split(gray):
     return best, min(separability, 1.0)
 
 
-def otsu_threshold(gray):
-    """用直方图实现 Otsu 阈值，返回 None 表示画面无有效灰度分布."""
-    return otsu_split(gray)[0]
-
-
 def adaptive_threshold(gray, fixed_thresh=22):
     """
     Otsu 阈值并钳位到 MIN/MAX_ADAPTIVE_THRESH 之间.
