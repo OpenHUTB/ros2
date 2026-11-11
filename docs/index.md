@@ -1,3 +1,4 @@
+* [UWB 测距与轮式里程计融合定位（ROS 2）](./ground/uwb_range_odom_fusion.md) —— 4 基站测距 + 轮式里程计的 3 状态 EKF，用卡方新息门限剔除 NLOS 测距；70 s 闭环仿真中位置 RMSE 从纯里程计的 1.87 m 降到 0.0165 m，附 NEES 一致性检验与共线基站几何退化对照
 title: 主页
 
 # [模拟器的 ROS 文档](https://github.com/OpenHUTB/ros2)
