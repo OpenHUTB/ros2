@@ -14,5 +14,6 @@ for profile in $PROFILES; do
     profile:="$profile" duration:="$DURATION" out_dir:="$OUT_DIR"
 done
 
+CURVE_PROFILE=$(echo "$PROFILES" | awk '{print $NF}')
 ros2 run humanoid_imu_attitude attitude_eval \
-  --results "$OUT_DIR" --figure "$OUT_DIR/effect.png" --profile fast
+  --results "$OUT_DIR" --figure "$OUT_DIR/effect.png" --profile "$CURVE_PROFILE"
