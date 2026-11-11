@@ -55,3 +55,18 @@ bash main.sh teach gz_args:='-r -s'
 ## 说明
 
 代码与文档使用 AI 大模型辅助编写，已核对并确认，对提交内容负责。
+
+## 定速巡航与航向保持
+
+`cruise_control` 用 `/odom` 闭环维持目标速度和目标航向。按 `c` 进入/退出巡航；巡航中 `a/d` 微调航向，`+/-` 调整目标速度。
+
+```bash
+bash main.sh cruise
+```
+
+![定速巡航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_control.png)
+
+![Gazebo 实时仿真：定速巡航小车](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_gazebo_close.png)
+
+![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_gazebo_wide.png)
+
