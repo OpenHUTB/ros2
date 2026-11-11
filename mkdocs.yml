@@ -1,17 +1,12 @@
 site_name: 模拟器的 ROS 文档
 # 参考链接：https://blog.csdn.net/m0_63203517/article/details/129765689
-
 #repo_url: https://github.com/carla-simulator/carla
 #docs_dir: Docs
 #edit_uri: 'edit/master/Docs/'
-
-
 # 设置编译页面的链接的前缀
 repo_url: https://github.com/OpenHUTB/ros2
-
 # 页面右上角添加直接编辑页面的按钮
 edit_uri: edit/master/docs/
-
 theme:
   name: readthedocs
   sticky_navigation: True
@@ -19,9 +14,6 @@ theme:
   features:
     - search.suggest # 在目录栏中的搜索框中输入一些字母时推荐补全整个单词
 extra_css: [extra.css]
-
-
-
 # mathjax用于单独公式展示
 extra_javascript:
   # - extra.js
@@ -32,7 +24,6 @@ extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js
   - https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js
   - js/umlconvert.js
-
 plugins:
 #  - mkdocs-video
   - search:
@@ -49,74 +40,303 @@ plugins:
       video_autoplay: True
       video_loop: True
   - mermaid2
-
 extra:
   generator: false
-
 hooks:
   - hooks.py
-
 copyright: OpenHUTB 版权所有 &copy; {year}
-
-
 nav:
-
 - 入门:
     - 首页: 'index.md'
+    - Ubuntu 文档环境初始化: 'ubuntu_docs_setup.md'
     - 安装 ROS: 'ubuntu20.04.md'
+    - ROS2 话题发布订阅基础实验（talker/listener）: 'chap2/ros2_pubsub_py.md'
+    - 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
+    - ROS 2 传感器数据均值滤波节点 (mean_filter): 'chap2/mean_filter.md'
+    - ROS2 服务与参数基础实验（uav_mode_node）: 'chap2/ros2_service_param_demo.md'
 - ROS 教程:
     - 1. 认识 ROS: 'chapter/chap1/chap1.md'
-    - 2. ROS 基础 - ROS 基础: './chapter/chap2.md'
+    - 2. ROS 基础 - ROS 基础:
+        - 章节首页: './chapter/chap2.md'
+        - ROS Noetic 多传感器话题时间同步: 'chap2/ros1_message_time_sync/index.md'
+        - ROS Noetic 运行参数热更新（正弦信号）: 'chap2/ros1_parameter_sine_wave/index.md'
+        - ROS Noetic 环境自检与常见问题排查: 'chap2/ros1_env_check/index.md'
     - 3. 机器人系统设计: './chapter/chap3.md'
-    - 4. 机器人仿真: './chapter/chap4.md'
+    - 4. 机器人仿真:
+        - 章节首页: './chapter/chap4.md'
+        - URDF 四轮小车建模与 RViz 显示: './chapter/urdf_car_modeling.md'
     - 5. 机器人感知:
         - 章节首页: './chapter/chap5.md'
-        - 激光雷达 NN 障碍物分类: './chapter/chap5/lidar_obstacle_nn.md'
+        - 行人隐私脱敏视觉检测节点: 'privacy_mask/README.md'
     - 6. 机器人 SLAM 与自主导航: './chapter/chap6.md'
-    - 7. 阿克曼四轮小车运动控制: './chapter/chap7.md'
-    - 8. ROS 机器人综合应用: './chapter/chap8.md'
+    - 7. 机械臂控制: './chapter/chap7.md'
+    - 8. ROS 机器人综合应用:
+        - 章节首页: './chapter/chap8.md'
+        - 机器视觉多机器人蚁群编队: './ant/README.md'
     - 9. ROS 2: './chapter/chap9.md'
+    - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
+
 - 人形机器人:
     - 人形机器人基础: './humanoid/humanoid_basics.md'
+    - 双臂搬运负载的神经网络平衡控制: './humanoid/humanoid_carry_payload_nn.md'
+    - 双足步态生成与 ZMP 稳定性: './humanoid/bipedal_gait_zmp.md'
+    - 基于三次样条插值的双足多步态平滑切换: './humanoid/biped_cubic_spline_gait_switch.md'
+    - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
+    - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
+    - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
+    - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
+    - 人形足迹下的局部避障算法对比: './humanoid/humanoid_local_planner_bench.md'
+    - 人形机器人 H1/H1_2 神经网络行走控制: './humanoid/humanoid_h1_walk.md'
+    - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'
+    - 人形机器人关节轨迹录制与回放工具: './humanoid/humanoid_joint_tools.md'
+    - 人形上下台阶步态仿真: './humanoid/humanoid_stair_climb.md'
+    - ROS虚拟机器人圆形轨迹rviz可视化示例: './humanoid/ros_topic_demo/index.md'
+    - ROS2 Humble 路径点发布器: './waypoint_publisher.md'
+    - 人形机器人全身逆运动学与可操作性: './humanoid/whole_body_ik.md'
+    - 人形机器人双臂末端可达域分析: './humanoid/humanoid_reachability.md'
+    - 人形机器人跌倒预判与保护性倒地: './humanoid/humanoid_fall_protection.md'
+    - 人形机器人 3D 碰撞体边界检测可视化: './humanoid/humanoid_collision_boundary.md'
+    - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
+    - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
+    - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
+    - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
+    - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+- 四足机器人:
+    - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
     - 肌肉骨骼肘关节神经网络轨迹控制: './musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md'
+    - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
+    - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
+    - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
+    - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
+    - MuJoCo肌肉骨骼手臂本体感觉与串联弹性肌腱: './musculoskeletal/msk_arm_proprioception.md'
+    - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
+    - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
+    - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
+    - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
 - 地面载具:
+    - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
+    - 毫米波雷达目标跟踪与前碰撞预警: './ground/radar_ttc_fcw.md'
+    - ROS与Conda环境排错指南: './ground/ros_conda_env_guide.md'
+    - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
+    - ROS2 差速机器人纯追踪路径跟踪与反应式避障: './ground/ros2_pure_pursuit/index.md'
+    - 基于里程计反馈与 A* 算法的差速底盘静态全局路径规划: './ground/diff_drive_astar_odom_nav.md'
     - 手动控制: './set_up_and_connect_to_carla.md'
+    - MNIST 手写数字视觉感知与机器人运动控制: './ground/mnist_digit_control.md'
     - 生成对象: './ground/carla_spawn_objects.md'
     - 地面载具物理仿真与键盘运动控制: './ground/carla_keyboard_control.md'
+    - CARLA+YOLOv8 目标检测感知与减速避障: './ground/carla_yolo_avoidance.md'
     - 阿克曼控制: './ground/ackermann_control.md'
+    - 车道线检测（前视视觉）: './ground/carla_lane_keeping/lane_detection.md'
+    - 车道保持控制: './ground/carla_lane_keeping/lane_keeping_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
+    - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
+    - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
+    - 端到端神经网络图像驾驶: './ground/carla_end_to_end_nn.md'
+    - 环岛汇入端到端驾驶（图像→控制）: './ground/carla_nn_roundabout_entry.md'
     - 自动驾驶示例: './ground/ad_demo.md'
+    - rostopic 手动驱动: './ground/rostopic_cruise.md'
+    - 作业综合整合与性能评价: './ground/carla_benchmark_suite.md'
     - ROS Scenario Runner: './ground/ros_scenario_runner.md'
+    - 交通信号灯识别与响应: './ground/carla_traffic_light.md'
     - RVIZ Carla 插件: './ground/rviz_plugin.md'
+    - 定点停车: './ground/fixed_point_stop.md'
+    - 网页远程遥控小车: './ground/web_remote_car.md'
+    - 基于MuJoCo的AEB自动紧急制动仿真: './ground/mujoco_vehicle_aeb.md'
+    - 打靶: './ground/mujoco_shooting.md'
+    - 交通标志识别（Windows 端脚本）: './ground/carla_traffic_sign_recognition.md'
+    - 停车场场景生成: './ground/carla_parking_lot.md'
+    - YOLOv8 视觉感知目标跟随: './ground/yolov8_target_tracking.md'
+    - ROS2 差速机器人栅格 A* 全局路径规划: './ground/ros2_astar_planner/index.md'
+    - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
+    - 交通标志识别 ROS 封装: './ground/carla_tsr_ros.md'
     - 车辆键盘遥操作与二维模拟: './ground/vehicle_pygame_teleop.md'
+    - 任务1 - 键盘控制: robot_tasks/teleop_control/README.md
+    - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
+    - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
+    - 任务4 - 端到端策略网络: robot_tasks/policy_learning/README.md
+    - 点云地图创建: './ground/pcl_recorder.md'
+    - 激光雷达点云语义分割: './ground/carla_lidar_pointcloud_segmentation.md'
+    - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
+    - Mbot 雷达避障（ROS 1 Noetic）: './ground/mbot_lidar_avoid.md'
+    - 端到端驾驶（图像到控制指令）: './ground/pix2cmd_end2end_driving.md'
+    - MuJoCo 差速小车轮滑感知与轨迹补偿: './ground/mujoco_diff_drive_slip_compensation.md'
+    - MuJoCo 地面小车射线感知与分级减速避障: './ground/mujoco_car_avoidance.md'
+    - MuJoCo 地面小车神经网络端到端避障: './ground/mujoco_car_nn_avoidance.md'
+    - MuJoCo 两轮自平衡小车: './ground/mujoco_balance_car.md'
+    - MuJoCo 地面差速小车侧倾/翻车风险预测与主动限速: './ground/mujoco_car_rollover_guard.md'
+    - MuJoCo 地面差速小车单侧驱动失效检测与差速补偿: './ground/mujoco_car_drive_fault.md'
+    - 2D 小车目标追踪仿真: './ground/car_2d_target_tracker.md'
     - 神经网络自适应跟车(ACC): './ground/carla_nn_car_following.md'
+    - Gazebo 差速小车键盘控制: './ground/gazebo_diff_drive_teleop.md'
+    - MuJoCo Locomotion 强化学习对比实验: './ground/rl_mujoco_locomotion.md'
+    - 自动紧急制动（AEB）: './ground/carla_aeb_braking.md'
+    - 盲区监测（BSD）: './ground/carla_bsd_blind_spot.md'
+    - 车道偏离预警（LDW）: './ground/carla_lane_departure_warning.md'
+    - 弯道自适应限速（CSL）: './ground/carla_curve_speed_limit.md'
+    - 闯红灯预警（RLW）: './ground/carla_red_light_warning.md'
+    - 恶劣雨雾天气下多传感器感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
+    - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
+    - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
+    - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
+    - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
+    - IMU 噪声 Allan 方差辨识与倾角滤波整定: './ground/imu_allan_noise_identification.md'
+    - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
+    - 差速 AGV 坡道起步辅助（防溜车）: './ground/hill_start_assist.md'
+    - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
+    - 航向 PID 参数自整定与手工试凑对比: './ground/pid_auto_tuning.md'
+    - 基于 Autoencoder 的雷达数据修复与避障: './ground/lidar_autoencoder_repair.md'
+    - 地面载具灯光自动控制: './ground/carla_auto_light.md'
+    - 限速标志识别与神经网络限速控制: './ground/traffic_sign_speed_control.md'
+    - MuJoCo小车 倒车入库仿真: './ground/mujoco_car_parking.md'
+    - MuJoCo侧方停车仿真: './ground/mujoco_parallel_parking.md'
+    - MuJoCo 动态障碍局部避障仿真: './ground/mujoco_dynamic_avoidance.md'
+    - 轨迹/里程计精度评估（ATE/RPE）: './ground/trajectory_accuracy_eval.md'
+    - RTK 双差整周模糊度固定（LAMBDA）: './ground/rtk_ambiguity_resolution.md'
+    - 基于 2D 激光雷达的蒙特卡洛定位（MCL）: './ground/lidar_mcl_localization.md'
+    - 地面载具动力性测试: './ground/carla_vehicle_dynamics_test.md'
+    - MuJoCo 红绿灯启停小车仿真: './ground/mujoco_traffic_light_stop.md'
+    - MuJoCo 小车跟车仿真: './ground/mujoco_car_follow.md'
+    - MuJoCo 小车滑斜坡: './ground/mujoco_slope_car.md'
+    - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
+    - 多车协同编队（CARLA）: './ground/carla_platoon.md'
+    - 扭转控制: './ground/twist_to_control.md'
+    - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
+    - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
+    - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
+    - 前视相机车道偏离预警（视觉横向偏移与地图真值对照）: './ground/carla_visual_lane_departure_warning.md'
+    - 倒车雷达分级告警: './ground/ultrasonic_rear_alert.md'
+    - 换道可行性判定: './ground/lane_change_feasibility.md'
+    - 里程计轨迹记录: './ground/odom_trace_recorder.md'
+    - 转向执行器滞后: './ground/steering_actuator_lag.md'
+    - 刹车距离核算: './ground/braking_distance_check.md'
+    - 换挡策略与闭环控制: './ground/gear_shift_policy.md'
+    - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
+    - 速度曲线规划: './ground/speed_profile_check.md'
+    - 转弯扫掠校验: './ground/turning_sweep_check.md'
+    - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
+    - 速度指令安全监督: './ground/cmd_vel_guard.md'
+
 - 空域载具:
+    - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
+    - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
+    - winter 场景无人机圆周飞行: './air/winter_circle.md'
+    - AirSim ROS 1 Noetic PPO 联调: './air/airsim_rl_planner_ros1.md'
+    - 无人机制动旧入口: './ground/mujoco_drone_distance_stop.md'
+    - 无人机测距制动与神经控制: './air/mujoco_uav_range_neural_braking.md'
+    - 无人机测距制动轨迹指标分析: './air/mujoco_uav_braking_metrics.md'
+    - 无人机测距几何一致性检查: './air/mujoco_uav_range_sensor_quality.md'
+    - Town10立面自主巡航与图像采集: './air/town10_facade_cruise_capture/index.md'
+    - Town10幕墙图像病害识别: './air/town10_facade_defect_detection/index.md'
+    - AirSim Unity 无人机曲线绕柱避障实验: './air/airsim_obstacle_avoidance.md'
+    - AirSim Unity 无人机高度自适应越障实验: './air/airsim_height_aware_overfly.md'
+    - MuJoCo无人机幕墙定距扫描: './air/mujoco_facade_capture/index.md'
+    - 无人机任务管理与安全状态机:
+      - 模块概览: './air/uav_mission_safety_manager/overview.md'
+      - 构建与运行: './air/uav_mission_safety_manager/usage.md'
+      - ROS 2 Action 任务接口: './air/uav_mission_safety_manager/mission_action.md'
+      - 任务日志与离线统计: './air/uav_mission_safety_manager/mission_recording.md'
+      - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
+    - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
+    - 高度与倾角检测评估: './air/air_ground_detection_benchmark.md'
+    - Fixed-wing SITL preflight: './air/fixed_wing_sitl_preflight.md'
+    - 无人机载荷质量估计: './air/payload_mass_estimation.md'
+    - 无人机载荷重心偏移与配平监测: './air/uav_payload_balance_guard.md'
+    - AirLib 传感器消息回归: './air/airlib_message_regression.md'
+    - 无人机 GPS 欺骗与定位完整性监测: './air/uav_gps_integrity_guard.md'
+    - UAV mission energy budget: './air/uav_energy_budget.md'
+    - 无人机电芯健康与不平衡预警: './air/uav_battery_health_guard.md'
     - 无人机飞行轨迹类型识别与 ROS2 自动任务日志: './air/flight_pattern_recognition.md'
+    - 深度图端到端穿越门竞速: './air/uav_depth_gate_racing_e2e.md'
+    - 无人机深度相机神经网络避障（MuJoCo）: './air/uav_mujoco_depth_avoidance.md'
     - 无人机遥测异常检测与 ROS2 在线诊断: './air/telemetry_diagnostics.md'
+    - 低空多源气象扰动影响预测与风险分级: './air/uav_weather_risk.md'
+    - 无人机火灾探测与自主巡检: './air/fire_detection_drone.md'
+    - 配置 AirSim 客户端环境并连接模拟器: './air/airsim_client_setup.md'
     - 建立虚拟机和空域载具之间的连接: './air/setup_and_connect.md'
+    - 无人机目标高度限幅、变化率约束与超时保持: './air/uav_altitude_command_guard.md'
+    - 无人机偏航指令最短路径与角速度限幅: './air/uav_yaw_command_guard.md'
+    - 无人机雷达DQN建图与端到端控制: './air/uav_lidar_dqn_navigation/index.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
+    - 无人机 LiDAR 地面/障碍分割: './air/uav_lidar_ground_filter.md'
+    - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
+    - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
+    - 无人机空速/地速三角估风与可观测性: './air/uav_wind_estimation.md'
+    - 无人机相机云台两轴稳定控制: './air/uav_gimbal_stabilization.md'
+    - 旋翼桨尖马赫数与桨盘载荷: './air/uav_prop_tip_mach.md'
+    - 无人机 IMU 与气压高度融合: './air/uav_altitude_sensor_fusion.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
+    - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
+    - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'
+    - 移动平台（车/船）精准降落: './air/uav_moving_platform_landing.md'
     - 无人机键盘控制: './air/uav_keyboard_control.md'
+    - MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制: './air/uav_vertical_ppo.md'
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
+    - 无人机定高日志误差与抗扰恢复时间评估: './air/uav_hover_log_eval.md'
+    - 基于深度强化学习的无人机最优路径查找: './air/drl_drone_path_planning.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
+    - 神经残差动力学与学习式轨迹跟踪: './air/uav_neural_residual_control.md'
+    - 基于 PPO 的无人机固定路线巡航: './air/uav_route_cruise.md'
+    - 基于 DQN 的无人机导航避障: './air/uav_dqn_nav.md'
+    - 城市动态交通下的无人机避障（PPO + DAgger）: './air/uav_traffic_nav.md'
+    - 无人机ppo模块研究: './air/uav_experiments.md'
     - 无人机终端键盘遥控器: './air/drone_teleop.md'
     - 基于 ROS 消息解耦的无人机键盘遥控: './air/drone_ros_teleop.md'
+    - AirSim无人机键盘遥控与机载云台控制模块: './airsim_drone_gimbal_teleop/README.md'
+    - 无人机机载云台目标丢失重捕获与视轴误差评估: './air/uav_gimbal_reacquisition.md'
+    - 无人机视觉感知置信度退化保护: './air/uav_perception_confidence_guard.md'
+    - 无人机应急着陆点安全评估: './air/uav_emergency_landing_selector.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
+    - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
+    - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
+    - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
+    - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
+    - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
+    - 无人机编队飞行: './air/uav_formation_flight.md'
+    - 神经安全过滤器: './air/uav_neural_safety_filter.md'
+    - 无人机控制权限饱和与积分饱和监测: './air/uav_control_authority_guard.md'
     - 低空载具的 ROS 示例教程: 'https://openhutb.github.io/air_doc/airsim_tutorial_pkgs/'
+    - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
+    - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
+    - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
+    - 无人机航点任务飞行前校验: './air/uav_waypoint_preflight_validator.md'
+    - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
+    - 基于串级PID的四旋翼航点定点悬停与抗风扰仿真: './air/quad_cascade_pid_hover_wind.md'
+    - 神经视觉惯性里程计与三后端 SLAM 对比: './air/uav_neural_vio_slam.md'
     - 空域载具八叉树三维寻路:
+        - 背景与总体方案: 'air/octree_uav_3d_pathfinding/overview.md'
         - 环境配置与前置准备: 'air/octree_uav_3d_pathfinding/env_setup.md'
         - AirSim 载具与位置控制: 'air/octree_uav_3d_pathfinding/flight_control.md'
         - 点云转八叉树占用地图: 'air/octree_uav_3d_pathfinding/occupancy_mapping.md'
         - 八叉树上的 A* 全局寻路: 'air/octree_uav_3d_pathfinding/astar_planning.md'
-    - YOLO目标检测与八字轨迹控制: './air/openhutb_yolo_mlp_control.md'
+        - 安全裕度与路径平滑: 'air/octree_uav_3d_pathfinding/path_smoothing.md'
+        - 路径跟踪与闭环飞行: 'air/octree_uav_3d_pathfinding/path_following.md'
+        - 与 ROS 2 / Nav2 的对应关系: 'air/octree_uav_3d_pathfinding/ros2_nav2.md'
+    - YOLO 感知与无人机控制:
+        - YOLO 感知与八字轨迹控制: 'air/openhutb_yolo_mlp_control/yolo_trajectory_control.md'
+        - YOLO 目标视觉伺服：居中与距离保持: 'air/openhutb_yolo_mlp_control/yolo_visual_centering.md'
+        - Traffic Manager 车辆轨迹与 AirSim 跟随: 'air/openhutb_yolo_mlp_control/traffic_tracking.md'
     - 禁飞区检测: 'air/no_fly_zone_check/index.md'
+    - 多无人机空域监测（多边形禁飞区与机间冲突）: './air/multi_uav_airspace_monitor.md'
+    - 无人机动态电子围栏预测预警: './air/uav_dynamic_geofence_guard.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
+    - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
+    - 无人机机载相机视觉目标跟踪: './air/uav_camera_tracking.md'
+    - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
+    - 单门深度视觉伺服（门中心回归）: './air/uav_gate_center_servo.md'
+    - 基于 ROS 2 的禁飞区（电子围栏）动态检测与安全预警系统: './air/geofence.md'
+    - 无人机深度相机轨迹跟踪（CNN 行为克隆）: './air/uav_depth_track_nn.md'
+    - AirSim 无人机抗风扰补偿（MLP）: './air/uav_airsim_wind_rejection.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
@@ -125,25 +345,46 @@ nav:
         - Docker 开发环境: './water/docker.md'
         - HoloOcean ROS2 运行时容器: './water/docker_runtime.md'
     - 水域载具示例: './water/holoocean_examples.md'
+    - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
+    - 水下 ROV 六自由度手操与抗流能力评测仿真: './water/rov_handling_eval.md'
+    - ROV 推进器配置矩阵与饱和感知推力分配: './water/rov_thruster_allocation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
+    - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
+    - 水下 ROV AprilTag 视觉定位与定点巡航仿真: './water/rov_apriltag_cruise.md'
+    - 水下 ROV 视觉引导的沉船结构巡检采样仿真: './water/rov_wreck_inspection.md'
+    - 手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比: './water/mjc_rov_ppo_tracking.md'
+    - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
+    - 动态洋流 ROV 键盘遥操与 MLP 巡航控制: './water/mjc_rov_current_teleop.md'
+    - 水下 ROV 声呐图像 CNN 目标分类（Gazebo 训练链路）: './water/rov_gazebo_sonar_cnn.md'
+    - 侧扫声呐图像仿真与 CNN 海底目标分类: './water/mjc_rov_sonar_cnn.md'
+    - 手写 PPO 强化学习 ROV 轨迹跟踪与 PID 基线对比: './water/mjc_rov_ppo_tracking.md'
+    - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
+    - 同一 ROV 任务 PPO 与 SAC 强化学习算法对比: './water/mjc_rov_rl_compare.md'
+    - 新增水下三维地形测绘模块: './water/underwater_sonar_mapping.md'
+    - 水下多源融合组合导航 (EKF): './water/rov_ekf_navigation.md'
+    - 基于热力图的洋流干扰下 ROV 自适应路径规划: './water/water_rov_path_planning.md'
+    - 水下机器人 Unreal Engine 5 仿真: './water/UNav-sim_ue5.md'
+    - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
+    - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
+    - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
+    - MuJoCo水下机器人ROS2仿真与建图初步验证: './water/mujoco_rov_underwater.md'
+- 经典控制:
+    - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
 
-
-
-
-
-- 自装ubuntu20.04本地大模型部署教程: 'ubuntu2004-local-llm-deploy.md'
 
 # - mdx_math 用于行内公式显示
 markdown_extensions:
   - markdown_grid_tables
   - footnotes
   - admonition
-  - mdx_math
+  - mdx_math:
+      enable_dollar_delimiter: true
   - attr_list
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
+
