@@ -19,7 +19,7 @@
 ## 三、工程代码文件树
 ```
 ~/
-└── run.py                          # 主程序：加载模型、生成轨迹、渲染循环
+└── humanoid_running.py                          # 主程序：加载模型、生成轨迹、渲染循环
 ~/mujoco_menagerie/booster_t1/
 ├── scene.xml                       # MuJoCo 场景入口（含地面、光照、机器人）
 ├── t1.xml                          # T1 机器人 MJCF 模型（23 关节 + 23 执行器）
@@ -82,7 +82,7 @@ conda activate mujoco-grasp
 export MUJOCO_GL=glfw
 
 # 3 运行仿真
-python ~/run.py
+python humanoid_running.py
 ```
 
 终端启动后自动打开 MuJoCo 可视化窗口，输出 F=ma 理论计算结果。
@@ -114,7 +114,7 @@ ffmpeg -f x11grab -window_id <窗口ID> -framerate 30 output.mp4
 | 手臂摆动幅度 | 0.8 rad | shoulder pitch |
 | 肘部弯曲幅度 | 0.5 rad | elbow pitch |
 | 头部转动幅度 | 0.3 rad | head yaw |
-| 加速循环数 | 6 | 速度递增轮次 |
+| 加速循环数 | 6 | 步频递增轮次 |
 | 加速倍率 | 1.3 | 每轮步频（轨迹帧数）×1.3，前进位移增量不变 |
 | 加速阶段加速度 | 0.5 m/s² | F=ma 理论计算用 |
 
