@@ -1,0 +1,16 @@
+{
+  "environment": {
+    "python": "3.12",
+    "numpy": "2.x",
+    "os": "Windows 11"
+  },
+  "resolution": 0.1,
+  "inflation_radius": 0.6,
+  "inscribed_radius": 0.25,
+  "metrics": {
+    "lethal_cells": 1643,
+    "inflated_cells": 3872,
+    "free_cells": 14485,
+    "max_distance_error_m": 0.0
+  }
+}

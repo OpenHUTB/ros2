@@ -1,0 +1,7 @@
+costmap_inflation:
+  ros__parameters:
+    map_topic: /map
+    costmap_topic: /costmap
+    inflation_radius: 0.6
+    inscribed_radius: 0.25
+    cost_scaling: 3.0
