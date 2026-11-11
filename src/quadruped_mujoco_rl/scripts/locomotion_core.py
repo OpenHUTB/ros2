@@ -193,20 +193,32 @@ class TrotGait(object):
 
     def __init__(self, robot, freq=3.97, a_thigh=0.15, a_calf=0.29,
                  phase_offset=math.pi / 2, kp_roll=0.01, kp_pitch=0.0,
-                 kp_height=0.0, a_hip=0.0, direction=1):
+                 kp_height=0.0, a_hip=0.0, direction=1,
+                 amplitude_scale=1.0):
         if direction not in (-1, 1):
             raise ValueError("direction must be 1 (forward) or -1 (backward)")
         self.robot = robot
         self.freq = freq
         self.direction = int(direction)
-        self.a_thigh = a_thigh
-        self.a_calf = a_calf
+        self._base_a_thigh = float(a_thigh)
+        self._base_a_calf = float(a_calf)
+        self.amplitude_scale = 1.0
+        self.set_amplitude_scale(amplitude_scale)
         self.phase_offset = phase_offset
         self.kp_roll = kp_roll
         self.kp_pitch = kp_pitch
         self.kp_height = kp_height
         self.a_hip = a_hip
         self.commanded = {leg: dict(robot.home[leg]) for leg in LEG_ORDER}
+
+    def set_amplitude_scale(self, scale):
+        """Update swing amplitudes without resetting the caller's gait phase."""
+        scale = float(scale)
+        if not math.isfinite(scale) or scale <= 0.0:
+            raise ValueError("amplitude scale must be finite and greater than zero")
+        self.amplitude_scale = scale
+        self.a_thigh = self._base_a_thigh * scale
+        self.a_calf = self._base_a_calf * scale
 
     def params(self):
         return dict(freq=self.freq, a_thigh=self.a_thigh, a_calf=self.a_calf,
