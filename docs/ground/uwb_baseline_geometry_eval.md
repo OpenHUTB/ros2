@@ -7,9 +7,9 @@
 | 项目 | 版本 / 说明 |
 | --- | --- |
 | 操作系统 | Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面） |
-| 仿真平台 | 纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA / UWB 硬件 |
-| Python | 3.10 ~ 3.12 |
-| 依赖 | `numpy`、`matplotlib`、`Pillow` |
+| 仿真平台 | 主体为纯 Python 数值仿真；另附可选 CARLA 实景出图脚本 `carla_demo.py` |
+| Python | 3.10 ~ 3.12（CARLA 分支需 3.10） |
+| 依赖 | 仿真：`numpy`、`matplotlib`、`Pillow`；CARLA 分支另需 `carla==0.9.16`、`opencv-python` |
 
 ### 1.1 安装依赖
 
@@ -101,6 +101,7 @@ min ‖J·Δp − (r − d)‖²
 | 批量评测 | `evaluate()` 汇总各构型 GDOP 统计量与定位误差指标 |
 | 绘图 | 布局图、GDOP 热力图、误差散点图、指标柱状图、演示动图逐帧渲染 |
 | 结果输出 | 写 `metrics.csv`，保存 PNG 与 GIF 到脚本同级 `results/` 目录 |
+| `carla_demo.py`（可选） | 连接 CARLA 服务端，生成真值载具与正方形虚拟基站，俯视相机采集真实渲染帧并合成基站 / 真值 / 估计位置叠加层 |
 
 下面只解释三处关键实现，完整代码请直接查看 `src/` 下的源码。
 
@@ -153,6 +154,16 @@ errors.append(np.linalg.norm(p_est - p_true))
    - `metrics.csv`：指标数据表
    - `uwb_baseline_demo.gif`：定位对比演示动图
 
+### 4.2 可选：CARLA 实景出图
+
+先启动 CARLA 0.9.16 服务端并监听 2000 端口，在 Python 3.10 环境安装 `carla==0.9.16`、`opencv-python` 后运行：
+
+```bash
+python carla_demo.py
+```
+
+脚本在 `results/` 生成 `carla_uwb_layout.png`：左侧为 Town 俯视相机的真实渲染帧，右侧为基站、真值位置与三边定位估计位置的二维叠加层。该图须由已运行的 CARLA 服务端真实跑出，不可用纯仿真图像替代；服务端就绪后将生成的图片复制到 `docs/img/ground/carla_uwb_layout.png`，并在下方 5.6 小节引用。
+
 ## 5. 实验结果
 
 **实验设计说明**：四种构型使用同一 100m×100m 区域、同一测距噪声标准差（0.3 m）和同一组随机目标点分布，蒙特卡洛样本数一致，因此指标差异只来自布站几何本身，排除了噪声水平或样本数量不同造成的干扰。
@@ -195,6 +206,12 @@ errors.append(np.linalg.norm(p_est - p_true))
 目标沿椭圆轨迹移动时，正方形构型（蓝）估计位置紧贴真值路径，一字形构型（红）估计塌缩到基站直线上：
 
 ![定位演示动图](../img/ground/uwb_baseline_demo.gif)
+
+### 5.6 CARLA 实景效果图
+
+在已运行的 CARLA 0.9.16 服务端上执行 `python carla_demo.py` 后，生成实景效果图 `carla_uwb_layout.png`：左半为 Town 俯视相机采集的真实渲染画面，右半为正方形基站、真值载具位置（灰星）与三边定位估计位置（橙圆）的二维叠加层，并标注本次定位误差。
+
+> 本提交时尚未连接 CARLA 服务端，实景帧待服务端就绪后由脚本真实运行生成、复制到 `docs/img/ground/carla_uwb_layout.png` 后在此引用；此处不以纯仿真图像充当 CARLA 实景画面。
 
 ## 6. 结论
 
