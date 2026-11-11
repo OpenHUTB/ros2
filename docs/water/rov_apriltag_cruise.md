@@ -1,7 +1,5 @@
 # 水下 ROV AprilTag 视觉定位与定点巡航仿真
 
----
-
 ## 1. 作业概述与背景
 
 在水下机器人（ROV）作业任务中，**视觉伺服定位**与**定点巡航**是两项核心技术。受水下光线衰减、浑浊度、遮挡等因素影响，纯光学视觉定位极具挑战。AprilTag 作为一种高鲁棒性、易部署的基准标记（Fiducial Marker），被广泛应用于水下机器人定位、码头对接、结构物巡检等场景。
@@ -10,43 +8,9 @@
 
 - **水下场景**：包含 3 块 AprilTag 标牌（ID 0/1/2）、礁石、海草、海底地形，模拟真实水下环境。
 - **视觉识别**：ROV 前视相机实时检测 AprilTag，输出标签 ID、相对位姿（x, y, z）与距离。
-- **姿态调整**：ROV 沿 `cruise.yaml` 中预置的航点运动学移动，并根据标签是否进入视野与检测距离，平滑调整机头朝向使标签居中（检测出的相对位姿用于判断可见性与朝向，不参与位置闭环）。
+- **姿态调整**：ROV 沿 cruise.yaml中预置的航点运动学移动，并根据标签是否进入视野与检测距离，平滑调整机头朝向使标签居中（检测出的相对位姿用于判断可见性与朝向，不参与位置闭环）。
 - **定点巡航**：依次飞往 3 个标签点，到达后悬停识别，完成循环巡航。
 - **可视化**：RViz 实时显示巡航轨迹、标签坐标系、ROV 位姿与航点标记。
-
-```mermaid
-graph TD
-    subgraph Gazebo["Gazebo Classic 水下仿真环境"]
-        Scene["水下场景<br/>3×AprilTag标牌 + 礁石 + 海草"]
-        ROV["ROV 本体<br/>6-DOF 运动学模型"]
-        Cam["前视相机<br/>/rov/camera/image_raw"]
-    end
-
-    subgraph Perception["视觉感知层"]
-        Det["AprilTag 检测节点<br/>apriltag_detector_node"]
-        TF["TF 坐标变换<br/>camera_link → tag_<id>"]
-    end
-
-    subgraph Control["巡航控制层"]
-        Ctrl["巡航控制器<br/>cruise_controller.py"]
-        State["状态机: CRUISE → HOLD → DONE"]
-    end
-
-    subgraph Viz["可视化层"]
-        RViz["RViz2<br/>轨迹 / 坐标轴 / 航点"]
-        OpenCV["OpenCV 窗口<br/>识别框 + ID + 距离"]
-    end
-
-    Scene --> Cam
-    Cam -->|图像| Det
-    Det -->|位姿| TF
-    Det -->|识别结果| Ctrl
-    Ctrl -->|set_entity_state 位姿| ROV
-    ROV -->|位姿| RViz
-    Det -->|识别画面| OpenCV
-```
-
----
 
 ## 2. 运行环境
 
@@ -195,17 +159,16 @@ detector_params_->detectInvertedMarker = true;
 巡航控制器采用三状态有限状态机（FSM）管理任务流程：
 
 | 状态 | 行为 |
-| :--- | :--- |
-| `CRUISE` | 沿航点方向运动学移动（0.55 m/s，20 Hz 步进），并根据标签可见性调整机头朝向 |
-| `HOLD` | 到达悬停点后保持位置 2.5 秒，持续朝向标牌并输出 `VISUAL ALIGN` 状态文本 |
-| `DONE` | 非循环模式（`loop: false`）下全部航点完成后进入，停止运动 |
+| --- | --- |
+| 巡航 (CRUISE) | 沿航点方向运动学移动（0.55 m/s，20 Hz 步进），并根据标签可见性调整机头朝向 |
+| 悬停 (HOLD) | 到达悬停点后保持位置 2.5 秒，持续朝向标牌并输出状态文本 VISUAL_ALIGN |
+| 完成 (DONE) | 非循环模式下全部航点完成后进入，停止运动 |
 
-航点切换由 `HOLD` 结束时 `index += 1` 完成，不设独立状态。
+航点切换由 <code>HOLD</code> 状态结束时完成，不设独立状态。HOLD index += 1
 
 ### 6.3 水下视觉增强
 
-- **雾效模拟**：Gazebo `<fog>` 标签设置 density=0.025，模拟水下能见度衰减。
-- **环境光**：ambient 设置为 (0.30, 0.45, 0.58)，模拟深水蓝绿色调。
-- **运动方式**：世界重力设为 0，ROV 以运动学方式运动——控制器每 0.05 s 调用一次 `/gazebo/set_entity_state` 直接设置位姿，不含推力/浮力动力学插件。
-
+- 雾效模拟：Gazebo 标签设置 density=0.025，模拟水下能见度衰减。
+- 环境光：ambient 设置为 (0.30, 0.45, 0.58)，模拟深水蓝绿色调。
+- 运动方式：世界重力设为 0，ROV 以运动学方式运动——控制器每 0.05 s 调用一次 gazebo/set_entity_state 直接设置位姿，不含推力/浮力力学插件。
 ---
