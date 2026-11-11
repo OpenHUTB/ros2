@@ -1,0 +1,27 @@
+# 避障节点参数（rosparam），由 launch/main.launch 加载
+# 键名必须与节点名一致，节点用 ~param 读取私有参数
+mbot_lidar_avoid_node:
+  # 速度
+  cruise_speed: 0.30          # 巡航线速度 (m/s)
+  avoid_speed: 0.10           # 避障线速度 (m/s)
+  reverse_speed: -0.12        # 脱困倒车速度 (m/s)
+  turn_rate: 1.20             # 避障转向角速度 (rad/s)
+  rotate_rate: 0.90           # 脱困旋转角速度 (rad/s)
+
+  # 距离阈值（safe/exit、danger/danger_exit 成对使用，构成滞回）
+  safe_distance: 0.80         # 进入避障
+  exit_distance: 1.00         # 退出避障
+  danger_distance: 0.30       # 进入脱困
+  danger_exit_distance: 0.50  # 退出脱困
+  side_distance: 0.45         # 侧向障碍影响转向
+  rear_block_distance: 0.35   # 后方受阻，禁止倒车
+
+  # 扇区角度（度）
+  front_half_deg: 20.0        # 前扇区半角
+  side_deg: 60.0              # 侧扇区外边界
+  rear_deg: 150.0             # 后扇区外边界
+
+  # 其它
+  scan_timeout: 1.5           # /scan 超时停车秒数
+  range_max: 3.5              # 距离上限裁剪
+  control_rate: 10.0          # watchdog 频率
