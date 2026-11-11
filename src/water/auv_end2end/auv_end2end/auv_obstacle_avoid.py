@@ -23,20 +23,31 @@ class AuvObstacleAvoid(Node):
             10)
         self.bridge = CvBridge()
 
-        # 避障参数
-        self.obstacle_thresh = 22      # 灰度阈值：低于该值判为暗色障碍像素
-        self.trigger_ratio = 0.22      # 触发阈值：暗像素面积占比超过该值触发避障
-        self.recover_ratio = 0.18      # 恢复阈值：双侧占比均低于该值恢复直行
-        self.forward_speed = 4.5       # 直行巡航速度
-        self.side_speed = 2.8          # 横向避让速度
+        # 避障参数：全部通过 ROS 参数暴露，可在 launch 或命令行覆盖
+        self.declare_parameter('obstacle_thresh', 22)      # 灰度阈值
+        self.declare_parameter('trigger_ratio', 0.22)      # 触发阈值
+        self.declare_parameter('recover_ratio', 0.18)      # 恢复阈值
+        self.declare_parameter('forward_speed', 4.5)       # 直行巡航速度
+        self.declare_parameter('side_speed', 2.8)          # 横向避让速度
+        self.declare_parameter('max_avoid_duration', 3.0)  # 单次最长避让时长
+        self.declare_parameter('avoid_cooldown', 2.0)      # 冷却时长
+
+        self.obstacle_thresh = self.get_parameter(
+            'obstacle_thresh').value
+        self.trigger_ratio = self.get_parameter('trigger_ratio').value
+        self.recover_ratio = self.get_parameter('recover_ratio').value
+        self.forward_speed = self.get_parameter('forward_speed').value
+        self.side_speed = self.get_parameter('side_speed').value
+        self.max_avoid_duration = self.get_parameter(
+            'max_avoid_duration').value
+        self.avoid_cooldown = self.get_parameter('avoid_cooldown').value
+
         self.is_avoiding = False       # 避障状态标记
         self.avoid_start_time = 0.0    # 避障开始时间（秒）
-        self.max_avoid_duration = 3.0  # 单次最大避让时长，超时进入冷却期
         self.avoid_direction = 1       # 避让方向默认值
-        # 冷却期参数：超时后强制直行，避免反复触发
+        # 冷却期：超时后强制直行，避免反复触发
         self.is_cooldown = False       # 冷却状态标记
         self.cooldown_start_time = 0.0  # 冷却开始时间（秒）
-        self.avoid_cooldown = 2.0      # 冷却时长，期间强制直行
 
     def img_cb(self, msg):
         try:
@@ -136,10 +147,6 @@ class AuvObstacleAvoid(Node):
         self.vel_pub.publish(Twist())
         self.get_logger().info('避障节点停止，发布零速度指令')
 
-    def destroy_node(self):
-        self.publish_stop()
-        super().destroy_node()
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -147,8 +154,7 @@ def main(args=None):
 
     def handle_sigint(signum, frame):
         # rclpy 默认的 SIGINT 处理会先关闭 context，之后 publish 会失败，
-        # 所以在 context 仍有效时先发零速度
-        node.publish_stop()
+        # 这里只抛出异常，把发零速度的时机留到 finally
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGINT, handle_sigint)
@@ -157,6 +163,12 @@ def main(args=None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        # 若 context 已被外部关闭（如 launch 统一退出），此时 publish 会失败，
+        # 但仍要保证节点正常销毁
+        try:
+            node.publish_stop()
+        except Exception:
+            pass
         node.destroy_node()
         rclpy.shutdown()
 
