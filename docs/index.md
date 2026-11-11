@@ -303,6 +303,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 * [水域载具 ROS2 接口](./water/HoloOcean.md)
+* [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 无侧推的船在横流里无法横移，靠航向偏置让合速度矢量指向目标点实现"顶流悬停"；流速由动力学反解在线估计，单侧推进器失效时判定降级并停机上报；6 个场景 × 180 s 可离线复现
 
 * [HoloOcean Windows 本机环境搭建](./water/HoloOcean-Windows-Setup.md) —— 在 Windows 上用 Conda 安装 Python 客户端、下载场景包并跑通第一个仿真
 
@@ -311,7 +312,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [Docker 开发环境](./water/docker.md) —— 开发容器与工作空间挂载
 
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
-* [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 无侧推的船在横流里无法横移，靠航向偏置让合速度矢量指向目标点实现"顶流悬停"；流速由动力学反解在线估计，单侧推进器失效时判定降级并停机上报；6 个场景 × 180 s 可离线复现
 
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
 
