@@ -213,6 +213,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](./ground/ros2_dwa_avoidance.md)
 * [ROS2 DWA 局部规划器随机场景压力测试与舒适性评价](./ground/ros2_dwa_benchmark.md)
 * [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
+* [UWB 多基站测距定位布站几何精度对比评测](./ground/uwb_baseline_geometry_eval.md) —— 四种布站构型的 GDOP 与蒙特卡洛定位精度对比
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
@@ -237,6 +238,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo小车多目标导航](./ground/mujoco_multi_goal_nav.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
+* [ROS2 2D 激光占据栅格建图](./ground/ros2_occupancy_mapping.md)
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
 * [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
