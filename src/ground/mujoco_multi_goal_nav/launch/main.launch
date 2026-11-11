@@ -10,5 +10,5 @@
 
   <node pkg="mujoco_multi_goal_nav" type="main.py" name="mujoco_multi_goal_nav"
         output="screen" required="true"
-        args="--duration $(arg duration) $(eval '--nogui' if arg('nogui') else '')"/>
+        args="--duration $(arg duration) $(eval '--nogui' if arg('nogui').lower() in ('true', '1', 'yes') else '')"/>
 </launch>
