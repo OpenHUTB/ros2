@@ -82,6 +82,24 @@ class TestForcePI(unittest.TestCase):
         self.assertEqual(activation, 1.0)
         self.assertLess(integral, 0.9)
 
+    def test_negative_error_does_not_wind_up_at_lower_saturation(self):
+        activation, integral = extra._force_pi_step(
+            target_force=0.0,
+            measured_force=10.0,
+            integral=-0.8,
+        )
+        self.assertEqual(activation, 0.0)
+        self.assertEqual(integral, -0.8)
+
+    def test_positive_error_can_recover_from_lower_saturation(self):
+        activation, integral = extra._force_pi_step(
+            target_force=10.0,
+            measured_force=0.0,
+            integral=-0.8,
+        )
+        self.assertEqual(activation, 0.0)
+        self.assertGreater(integral, -0.8)
+
 
 class TestSlipReflex(unittest.TestCase):
     def test_reflex_recovers_grasp(self):
