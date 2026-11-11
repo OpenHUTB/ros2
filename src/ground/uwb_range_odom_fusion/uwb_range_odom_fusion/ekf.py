@@ -99,7 +99,7 @@ class RangeEkf:
         if measurement.shape != (anchor_array.shape[0],):
             raise ValueError("one range per anchor is required")
         outcome = UpdateOutcome()
-        for index, (anchor, measured) in enumerate(zip(anchor_array, measurement, strict=True)):
+        for index, (anchor, measured) in enumerate(zip(anchor_array, measurement)):
             if not np.isfinite(measured):
                 outcome.status.append("skipped")
                 continue

@@ -25,7 +25,7 @@ def heading_errors(headings, truth_headings) -> np.ndarray:
     if headings.shape != truth_headings.shape:
         raise ValueError("headings and truth must have the same shape")
     return np.array(
-        [wrap_angle(float(a - b)) for a, b in zip(headings, truth_headings, strict=True)]
+        [wrap_angle(float(a - b)) for a, b in zip(headings, truth_headings)]
     )
 
 

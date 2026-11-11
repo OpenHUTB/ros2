@@ -23,6 +23,8 @@ from .ekf import RangeEkf
 from .odometry import unicycle_step
 from .scenario import ScenarioConfig, simulate
 
+SIMULATION_FLOOR_S = 70.0  # minimum replay length, see README
+
 
 def _quaternion_from_yaw(yaw: float):
     return 0.0, 0.0, float(np.sin(yaw / 2.0)), float(np.cos(yaw / 2.0))
@@ -45,7 +47,7 @@ class UwbSimulator(Node):
         config = ScenarioConfig(
             control_hz=self.rate_hz,
             truth_hz=self.rate_hz * 10.0,
-            duration_s=max(70.0, self.duration_s),
+            duration_s=max(SIMULATION_FLOOR_S, self.duration_s),
             speed=speed,
         )
         self.simulation = simulate(config, seed=self.seed)
