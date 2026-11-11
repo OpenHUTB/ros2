@@ -1,0 +1,18 @@
+# 人形机器人仿真参数配置
+sim_rate: 500.0          # 物理仿真频率 (Hz)
+publish_rate: 30.0       # 话题发布频率 (Hz)
+cmd_timeout: 0.5         # 指令超时停车 (s)：超过该时间未收到 /cmd_vel 则自动停车
+visualize: true          # 是否打开 MuJoCo 可视化窗口（无图形界面时设为 false）
+
+# 站姿 PD 控制增益
+kp: 120.0                # 比例增益（关节力矩 = kp*位置误差 - kv*角速度）
+kv: 6.0                  # 微分增益
+kp_roll: 400.0           # 髋/踝 roll 关节单独加强（抗侧倾）
+
+# 运动指令限幅
+v_max: 0.3               # 最大线速度 (m/s)
+w_max: 0.6               # 最大偏航角速度 (rad/s)
+
+# 键盘控制比例
+linear_scale: 0.3        # 前进/后退速度 (m/s)
+angular_scale: 0.4       # 转向速度 (rad/s)

@@ -1,0 +1,50 @@
+# 车道保持控制参数
+#
+# 只放控制段。launch/main.launch 会把它载入 /lane_keeping_controller 命名空间，
+# 因为控制器读的是私有参数（~kp、~k_psi、~target_speed …）。
+#
+# 为什么单独一份：早先控制段和检测段合写在 lane_params.yaml 里，而那份 yaml
+# 只被载入 /lane_detector，控制器一个参数都读不到。代码默认值恰好与 yaml 一致，
+# 所以现象上看不出来，但按 README 改这里的增益是不生效的。拆开之后两个节点
+# 各自载入自己的文件，`rosparam get /lane_keeping_controller/kp` 也能查到值。
+
+# ---------------- 横向 ----------------
+# 横向 PID 增益
+kp: 0.28
+ki: 0.02
+kd: 0.06
+# 航向偏差的比例增益
+k_psi: 0.9
+# 转向输出限幅（CARLA 的 steer 范围是 [-1, 1]）
+steering_limit: 0.7
+# 积分限幅，防积分饱和
+integral_limit: 2.0
+# 若实测转向方向相反，把这里改为 true（无需改代码）
+invert_steering: false
+
+# 一阶低通系数：0 表示不滤波，越大跟随越快。
+# 单帧横向偏差有 ±0.05~0.1 m 抖动，D 项会把它放大成方向盘打摆
+# （实测 steer 在 ±0.3 之间摆），取 0.35 可压到 ±0.1 以内
+filter_alpha: 0.35
+
+# ---------------- 纵向 ----------------
+# 目标速度（m/s）
+target_speed: 6.0
+# 速度闭环增益：throttle = speed_gain * (target_speed - v)
+speed_gain: 0.35
+# 里程计话题，用于取当前车速做速度闭环；置空则退化为开环油门
+speed_topic: /carla/ego_vehicle/odometry
+# 开环退化时用的油门增益（speed_topic 为空或收不到里程计时生效）
+throttle_gain: 0.18
+# 偏差越大越减速的系数（保证修正余量）
+speed_correction_gain: 0.25
+
+# ---------------- 安全 ----------------
+# 控制输出频率（Hz）
+control_rate: 20.0
+# 感知数据超时（秒）：超过则认为感知失效，停止转向输出
+perception_timeout: 0.5
+# 置信度低于此值不输出转向（避免把误检当成有效测量）
+min_confidence: 0.5
+# 判定偏离时是否主动刹车
+brake_on_departure: false
