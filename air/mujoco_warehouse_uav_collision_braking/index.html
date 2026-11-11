@@ -612,6 +612,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rflysim_sitl_first_flight/">RflySim 单机起飞（补充实验）</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../px4_mavros2_offboard/">PX4 SITL + MAVROS2 Offboard 起降与失效保护</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../survey_mission_planner/">无人机航测任务规划（GSD/重叠度/WPML）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_waypoint_preflight_validator/">无人机航点任务飞行前校验</a>
@@ -858,7 +860,85 @@ The ROS launch check runs for 2 s, completing 100 physics steps before a clean e
 <code>simulation.py</code> builds scenes, applies forces and casts rays; <code>ros_node.py</code> converts physical states to messages; <code>visualize.py</code> renders simulation states; <code>tests/test_simulation.py</code> checks key behavior.</p>
 <p>完整课题为“仓储通道巡检无人机的多束测距神经网络碰撞风险预测与分级制动”。训练、独立测试、学习控制的 ROS 集成与多场景比较在参考控制和监督数据基础上扩展。
 The full topic is “Neural Collision Risk Prediction and Graded Braking for Warehouse Inspection UAVs Using Multi-Beam Ranging”. Training, held-out testing, ROS integration of learned control and multi-scenario comparison extend the reference controller and supervised data.</p>
-<p>参考资料 / References: <a href="https://mujoco.readthedocs.io/">MuJoCo</a>、<a href="https://docs.ros.org/en/humble/">ROS 2 Humble</a>。</p></div>
+<p>参考资料 / References: <a href="https://mujoco.readthedocs.io/">MuJoCo</a>、<a href="https://docs.ros.org/en/humble/">ROS 2 Humble</a>。</p>
+<h2 id="supervision-and-isolation">监督数据与隔离 / Supervision and Isolation</h2>
+<p><code>dataset.py</code> 对每条轨迹使用独立随机流，变化障碍位置、巡航速度和横穿速度。每个场景按完整轨迹分为训练60%、验证20%、测试20%；不按单帧随机打散。状态输入只使用当前观测和历史观测，不包含未来位置或碰撞结果。
+<code>dataset.py</code> uses an independent random stream per episode, varying obstacle position, cruise speed and crossing speed. Each scenario uses an episode-level 60%/20%/20% training/validation/test split rather than shuffled frames. Inputs use current and historical observations without future positions or contact outcomes.</p>
+<table>
+<thead>
+<tr>
+<th>输入或标签 / Input or Target</th>
+<th>维度 / Dimensions</th>
+<th>定义 / Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>距离 / Range</td>
+<td>9</td>
+<td>水平射线距离，0至8 m / Horizontal ray distance, 0–8 m</td>
+</tr>
+<tr>
+<td>闭合速度 / Closing rate</td>
+<td>9</td>
+<td>前帧距离减当前距离除以0.02 s，限幅±10 m/s / Previous minus current range over 0.02 s, clipped to ±10 m/s</td>
+</tr>
+<tr>
+<td>实际/巡航速度 / Actual/cruise speed</td>
+<td>2</td>
+<td>当前纵向速度与轨迹巡航设定 / Current forward speed and episode cruise setting</td>
+</tr>
+<tr>
+<td>参考速度 / Reference speed</td>
+<td>1</td>
+<td>制动距离规则给出的速度 / Speed from the stopping-distance rule</td>
+</tr>
+<tr>
+<td>风险标签 / Risk label</td>
+<td>1</td>
+<td>0畅通、1警戒、2制动 / 0 clear, 1 caution, 2 brake</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>main.py<span class="w"> </span>--collect<span class="w"> </span>--episodes<span class="w"> </span><span class="m">30</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--duration<span class="w"> </span><span class="m">8</span><span class="w"> </span>--output<span class="w"> </span>dataset
+python3<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>分区 / Split</th>
+<th>轨迹 / Episodes</th>
+<th>样本 / Samples</th>
+<th>畅通/警戒/制动 / Clear/Caution/Brake</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练 / Train</td>
+<td>18</td>
+<td>5465</td>
+<td>2437 / 1195 / 1833</td>
+</tr>
+<tr>
+<td>验证 / Validation</td>
+<td>6</td>
+<td>1816</td>
+<td>854 / 309 / 653</td>
+</tr>
+<tr>
+<td>测试 / Test</td>
+<td>6</td>
+<td>2008</td>
+<td>990 / 468 / 550</td>
+</tr>
+</tbody>
+</table>
+<p>每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。
+Episodes last at most 8 s and stop after first contact, so sample counts vary. Mixed cruise and reference-braking behavior covers obstacle-approach observations. Labels represent a reference rule, not real-flight collision probabilities.</p>
+<p><a href="dataset_manifest.json">数据清单 / Dataset manifest</a> 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；<a href="sample_rows.csv">样本片段 / Sample rows</a> 便于查看数据结构。
+The manifest stores seeds, episode parameters, feature order, split statistics and array SHA-256 digests. Sample rows illustrate the schema.</p>
+<p>八项检查覆盖几何与控制行为、首帧闭合速度复位、固定种子复现和轨迹泄漏拒绝。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
+Eight checks cover geometry/control behavior, first-frame closing-rate reset, seeded reproducibility and rejection of episode leakage. Split episode sets are disjoint, and each contains all three scenarios and risk classes.</p></div>
 </div>
 </div><footer>
 <hr/>
