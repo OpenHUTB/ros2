@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_arm_3d</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 三自由度机械臂空间螺旋线仿真：末端在 3D 空间中沿圆柱螺旋线运动
+    （水平画圆一圈半 + 垂直由 0.32 m 匀速升到 0.56 m），解析空间 IK 逐帧求解三个关节角，
+    IK 解直接写入 qpos 后 mj_forward 做运动学驱动（不做物理积分），
+    main.py 离屏渲染合成文档站配图，verify_arm3d.py 提供 IK 精度校验与 viewer 实时播放。
+    纯 Python + MuJoCo，不依赖 ROS 话题；launch 仅用于一键启动脚本。
+  </description>
+  <maintainer email="kl-kl07@users.noreply.github.com">kl-kl07</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/mujoco_arm_3d</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>

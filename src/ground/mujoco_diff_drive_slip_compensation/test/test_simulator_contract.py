@@ -25,6 +25,9 @@ def test_mjcf_declares_required_named_objects():
     body_names = {
         element.attrib['name'] for element in root.findall('.//body')
     }
+    sensor_names = {
+        element.attrib['name'] for element in root.findall('./sensor/*')
+    }
 
     assert actuator_names == {
         'left_front',
@@ -33,6 +36,7 @@ def test_mjcf_declares_required_named_objects():
         'right_rear',
     }
     assert 'chassis' in body_names
+    assert sensor_names == {'imu_accelerometer', 'imu_gyroscope'}
 
 
 def test_configuration_matches_model_geometry():
@@ -67,10 +71,17 @@ def test_mujoco_model_loads_and_steps():
     for _ in range(20):
         simulation.step()
     state = simulation.planar_state()
+    wheel_positions, wheel_velocities = simulation.wheel_state()
+    acceleration, angular_velocity = simulation.imu_state()
 
     assert simulation.timestep == pytest.approx(0.005)
     assert state.time == pytest.approx(0.1)
     assert np.isfinite([state.x, state.y, state.yaw]).all()
+    assert len(wheel_positions) == len(wheel_velocities) == 4
+    assert len(acceleration) == len(angular_velocity) == 3
+
+    simulation.reset(preserve_time=True)
+    assert simulation.planar_state().time == pytest.approx(0.1)
 
 
 def test_planar_state_reports_velocity_in_chassis_frame():

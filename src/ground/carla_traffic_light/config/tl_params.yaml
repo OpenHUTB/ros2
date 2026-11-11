@@ -1,0 +1,14 @@
+# 交通信号灯响应参数
+comfort_decel: 2.0      # 舒适减速度 (m/s^2)，用于停车曲线
+max_decel: 6.0          # 最大减速度 (m/s^2)，用于判断"停不停得住"
+yellow_min_gap: 1.0     # 黄灯时距停止线小于该值一律通过 (m)
+stop_margin: 0.5        # 目标停车点相对停止线的前移余量 (m)
+min_speed: 0.3          # 低于该速度直接刹停 (m/s)
+
+# 纵向控制器
+kp: 0.8
+ki: 0.15
+integral_max: 3.0
+throttle_gain: 0.35
+brake_gain: 0.5
+deadband: 0.05

@@ -1,0 +1,105 @@
+<mujoco model="slope_car">
+  <!--
+    坡道起步辅助用场景：一台低重心的差速 AGV 停在 12° 斜坡上。
+
+    为什么用低重心：
+        前两版给差速车加高负载/窄轮距都导致加速时俯仰掀翻。这里**不加任何负载**，
+        质心压在轮轴附近，斜坡上不会翻，只会在重力分量下后溜 —— 这正是要研究的现象。
+
+    斜坡用倾斜的 plane 实现（euler 绕 y 轴 -0.2094 rad ≈ 12°）。
+  -->
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="60"/>
+
+  <visual>
+    <headlight diffuse="0.75 0.75 0.75" ambient="0.35 0.35 0.35" specular="0 0 0"/>
+    <global azimuth="-140" elevation="-16"/>
+  </visual>
+
+  <default>
+    <geom friction="1.1 0.02 0.001" solref="0.02 1" solimp="0.92 0.96 0.001"/>
+    <joint damping="0.02" armature="0.01"/>
+    <site rgba="0.9 0.2 0.2 1" size="0.01"/>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.34 0.36 0.38" rgb2="0.46 0.48 0.50" markrgb="0.9 0.9 0.9" mark="cross"/>
+    <material name="floor_mat" texture="grid" texrepeat="20 20" reflectance="0.02"/>
+    <material name="body_mat" rgba="0.20 0.45 0.75 1"/>
+    <material name="tyre" rgba="0.08 0.08 0.08 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 6" dir="0 0 -1" directional="true"/>
+    <light pos="-3 -3 4" dir="1 1 -1" directional="false" diffuse="0.3 0.3 0.3"/>
+
+    <!-- 12° 斜坡 -->
+    <geom name="slope" type="plane" size="0 0 0.05" material="floor_mat"
+          euler="0 -0.2094 0"/>
+
+    <!-- 固定的侧视相机：如果跟随车身，就看不出"车在溜"，所以用固定机位 -->
+    <!-- 两根**世界竖直**的参照柱。地面倾斜 12°，柱子却是竖直的，
+         这样观众一眼能看出"这是个坡"，而不是被相机角度骗了。 -->
+    <geom name="ref_post_a" type="box" pos="-0.55 -0.55 0.45" size="0.012 0.012 0.45"
+          rgba="0.90 0.30 0.25 1" contype="0" conaffinity="0"/>
+    <geom name="ref_post_b" type="box" pos="0.75 -0.55 0.45" size="0.012 0.012 0.45"
+          rgba="0.90 0.30 0.25 1" contype="0" conaffinity="0"/>
+
+    <camera name="side" pos="-1.00 -3.80 0.45" xyaxes="1 0 0 0 0 1" fovy="45"/>
+
+    <camera name="chase" pos="-1.6 -1.3 1.0" mode="targetbody" target="base" fovy="45"/>
+
+    <body name="base" pos="0 0 0.128">
+      <freejoint name="root"/>
+      <geom name="chassis" type="box" pos="0 0 0.06" size="0.13 0.13 0.05"
+            material="body_mat" mass="5.0"/>
+
+      <body name="wheel_fl" pos="0.12 0.16 -0.02">
+        <joint name="wheel_fl_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_fl_geom" type="sphere" size="0.08" material="tyre" mass="0.5"
+              friction="1.2 0.02 0.001"/>
+      </body>
+      <body name="wheel_fr" pos="0.12 -0.16 -0.02">
+        <joint name="wheel_fr_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_fr_geom" type="sphere" size="0.08" material="tyre" mass="0.5"
+              friction="1.2 0.02 0.001"/>
+      </body>
+      <body name="wheel_rl" pos="-0.12 0.16 -0.02">
+        <joint name="wheel_rl_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_rl_geom" type="sphere" size="0.08" material="tyre" mass="0.5"
+              friction="1.2 0.02 0.001"/>
+      </body>
+      <body name="wheel_rr" pos="-0.12 -0.16 -0.02">
+        <joint name="wheel_rr_joint" type="hinge" axis="0 1 0"/>
+        <geom name="wheel_rr_geom" type="sphere" size="0.08" material="tyre" mass="0.5"
+              friction="1.2 0.02 0.001"/>
+      </body>
+
+      <site name="imu" pos="0 0 0.06"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- 4 个轮都用力矩执行器：ctrl=0 就是没有刹车，车会真的滚下坡 -->
+    <motor name="motor_fl" joint="wheel_fl_joint" gear="20" ctrlrange="-0.5 0.5"/>
+    <motor name="motor_fr" joint="wheel_fr_joint" gear="20" ctrlrange="-0.5 0.5"/>
+    <motor name="motor_rl" joint="wheel_rl_joint" gear="20" ctrlrange="-0.5 0.5"/>
+    <motor name="motor_rr" joint="wheel_rr_joint" gear="20" ctrlrange="-0.5 0.5"/>
+  </actuator>
+
+  <!-- 传感器：目前两个离线脚本读的是 qpos/qvel/xpos，**没有读 sensordata**。
+       这里保留 4 个轮速 + framepos/framequat/gyro/accelerometer，
+       是为将来接 ROS 节点（发布 /joint_states、/imu、/odom）预留的；
+       评审建议要么真从传感器取数、要么注明预留 —— 这里选注明。 -->
+  <sensor>
+    <jointvel name="vel_fl" joint="wheel_fl_joint"/>
+    <jointvel name="vel_fr" joint="wheel_fr_joint"/>
+    <jointvel name="vel_rl" joint="wheel_rl_joint"/>
+    <jointvel name="vel_rr" joint="wheel_rr_joint"/>
+    <framepos name="pos" objtype="body" objname="base"/>
+    <framequat name="quat" objtype="body" objname="base"/>
+    <gyro name="gyro" site="imu"/>
+    <accelerometer name="accel" site="imu"/>
+  </sensor>
+</mujoco>
