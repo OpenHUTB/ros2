@@ -67,48 +67,7 @@ python3 main.py --nogui --duration 40  # 指定最大仿真时长
 python3 main.py --nogui --csv traj.csv # 另外把轨迹落成 CSV
 ```
 
-### 2. 通过 launch 启动（ROS Noetic / catkin）
-
-```bash
-cd ~/catkin_ws && catkin_make && source devel/setup.bash
-
-roslaunch mujoco_multi_goal_nav main.launch                    # 带窗口
-roslaunch mujoco_multi_goal_nav main.launch nogui:=true        # 无窗口
-roslaunch mujoco_multi_goal_nav main.launch nogui:=true duration:=60
-```
-
-launch 通过 `share/<pkg>/launch/main.launch` 调用 `lib/<pkg>/main.py`；
-`main.py` 内置路径回退（环境变量 `MUJOCO_MULTI_GOAL_SCENE` → 脚本同目录 →
-`../share/<pkg>/`），因此从安装空间启动也能找到 `scene.xml`。
-
-launch 的 `nogui` 参数默认 `false`（带窗口），实现上不依赖 `eval`：`main.launch` 里写了两个
-`<node>`，用 `if="$(arg nogui)"` / `unless="$(arg nogui)"` 选分支，带窗口的那个不追加
-`--nogui`，无窗口的那个追加 `--nogui`。
-
-这里刻意不用 `eval`：roslaunch 解析 substitution args 时按括号配对计数，表达式内部出现 `(`
-会直接抛 `RLException: Invalid left parenthesis '(' in substitution args`——这正是本包早期
-`main.launch` 在部分机器上起不来的真实原因。
-
-#### launch 启动失败的排查
-
-换一台机器跑时最常见的四类失败：
-
-| 报错 / 现象 | 原因 | 处理 |
-|---|---|---|
-| `[main.launch] is neither a launch file in package [mujoco_multi_goal_nav]` | 没 `catkin_make` / 没 `source devel/setup.bash`，或包不在 `~/catkin_ws/src` | 先 build 再 source，并确认 `catkin_make` 是在工作空间根执行 |
-| `Cannot locate node of type [main.py]` | `lib/<pkg>/main.py` 没生成或没有执行位 | 重新 `catkin_make`；确认 `CMakeLists.txt` 的 `catkin_install_python(PROGRAMS main.py)` |
-| 节点起来立刻退出，`output="screen"` 里打印「缺少 MuJoCo」 | 该 Python 环境没装 MuJoCo | `pip3 install -r requirements.txt` |
-| `roslaunch: command not found` / `ROS_VERSION=2` | 环境是 ROS 2，本包是 catkin（ROS 1）包 | 直接 `python3 main.py --nogui`，或改用 ROS 1 Noetic |
-
-最快的自检（绕开 ROS，只看代码与依赖）：
-
-```bash
-cd src/ground/mujoco_multi_goal_nav && python3 main.py --nogui
-```
-
-这一步能跑通，就说明问题只在 ROS 环境；跑不通则先解决 MuJoCo 依赖。
-
-### 3. 回归测试
+### 2. 回归测试
 
 ```bash
 cd src/ground/mujoco_multi_goal_nav
