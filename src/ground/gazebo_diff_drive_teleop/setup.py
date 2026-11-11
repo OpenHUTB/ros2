@@ -26,6 +26,8 @@ setup(
         'console_scripts': [
             'teleop_keyboard = gazebo_diff_drive_teleop.teleop_keyboard:main',
             'auto_drive = gazebo_diff_drive_teleop.auto_drive:main',
+            'precision_moves = gazebo_diff_drive_teleop.precision_moves:main',
+            'controller_bridge = gazebo_diff_drive_teleop.controller_bridge:main',
         ],
     },
 )
