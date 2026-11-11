@@ -1,0 +1,40 @@
+# scene_object_layouter 的默认参数
+#
+# 所有键都能在命令行覆盖，例如：
+#   roslaunch scene_object_layouter main.launch scene_file:=$(rospack find scene_object_layouter)/config/scenes/dense_overlap.yaml
+#
+# 改这个文件只影响「不传参数启动」时的行为，与历史版本相比默认行为不变。
+
+# 场景文件；留空则使用节点内置的演示场景（demo_parking_row）
+scene:
+  file: ""
+
+# 场地尺寸（米）。launch 传了的话以 launch 为准
+field:
+  width: 24.0
+  length: 18.0
+
+# 校验阈值
+check:
+  min_gap: 0.5          # 任意两个物体之间的最小间距（米）
+
+# 字符俯视图的分辨率（字符数）
+render:
+  width: 60
+  height: 24
+
+# 结果落盘
+io:
+  csv_path: ~/scene_objects.csv
+  json_path: ~/scene_objects.json
+  write_files: true     # 设成 false 就只在终端和话题里输出，不写文件
+
+# 汇总话题的重发频率（Hz）
+rate:
+  publish_hz: 1.0
+
+# 话题名
+topic:
+  objects: /scene/objects     # std_msgs/String，内容是物体清单 CSV
+  summary: /scene/summary     # std_msgs/String，内容是汇总 JSON
+  trigger: /scene/layout      # std_msgs/Empty，收到就重新计算

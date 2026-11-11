@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>drl_drone_path_planning</name>
+  <version>0.1.0</version>
+  <description>
+    基于深度强化学习（PPO/SAC）的四旋翼无人机最优路径查找模块（ROS 1 Noetic / catkin）。
+    订阅里程计与激光雷达，使用训练好的策略输出机体系速度指令，
+    支持多航点、障碍物避让、路径可视化，并提供纯几何基线用于对照。
+  </description>
+  <!-- Copyright (c) 2026 汤湘粤 (学号: 2535030067) -->
+  <maintainer email="2865306093@qq.com">汤湘粤 (学号: 2535030067)</maintainer>
+  <license>MIT</license>
+  <author email="2865306093@qq.com">汤湘粤 (学号: 2535030067)</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>rospkg</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <test_depend>python3-nose</test_depend>
+
+  <export/>
+</package>

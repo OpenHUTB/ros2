@@ -1,0 +1,39 @@
+topics:
+  odom: /uav/odom
+  cmd_vel: /uav/cmd_vel
+  status: /uav_minimum_jerk_tracking/status
+  desired_path: /uav_minimum_jerk_tracking/desired_path
+  actual_path: /uav_minimum_jerk_tracking/actual_path
+
+control:
+  rate_hz: 20.0
+  start_delay_sec: 2.0
+  odom_timeout_sec: 0.5
+  max_horizontal_speed: 1.2
+  max_vertical_speed: 0.8
+  max_horizontal_accel: 1.2
+  max_vertical_accel: 0.8
+  position_gain_xy: 1.0
+  position_gain_z: 1.1
+  velocity_gain_xy: 0.35
+  velocity_gain_z: 0.35
+  goal_tolerance: 0.35
+  settle_time: 0.8
+  final_wait_timeout: 18.0
+  body_frame_required_value: false
+  metrics_directory: ~/.ros/uav_minimum_jerk_tracking
+
+trajectory:
+  mode: minimum_jerk
+  max_speed_horizontal: 0.9
+  max_speed_vertical: 0.6
+  max_acceleration_horizontal: 0.5
+  max_acceleration_vertical: 0.4
+  min_segment_duration: 1.0
+
+missions:
+  smooth_forward_6m:
+    - [3.0, 0.0, 2.0]
+    - [6.0, 0.0, 2.0]
+  straight_3m_up:
+    - [3.0, 0.0, 3.0]

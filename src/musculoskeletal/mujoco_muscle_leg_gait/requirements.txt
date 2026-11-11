@@ -1,0 +1,6 @@
+# mujoco_muscle_leg_gait 运行依赖
+# 安装：python3 -m pip install -r requirements.txt
+mujoco>=3.1
+numpy>=1.21
+Pillow>=9.0
+matplotlib>=3.5

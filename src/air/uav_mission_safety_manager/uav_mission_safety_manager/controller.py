@@ -11,9 +11,12 @@ class FlightController:
               State.RETURNING, State.LANDING)
 
     def __init__(self, adapter, max_altitude=50.0, telemetry_timeout=2.0,
-                 clock=time.monotonic, operation_timeout=120.0):
+                 clock=time.monotonic, operation_timeout=120.0, recorder=None):
         self.adapter, self.clock = adapter, clock
-        self.machine = SafetyMachine(max_altitude, telemetry_timeout)
+        self.recorder = recorder
+        self.machine = SafetyMachine(
+            max_altitude, telemetry_timeout,
+            on_transition=recorder.state_changed if recorder is not None else None)
         self.operation_timeout = operation_timeout
         self.pending = self.sample = None
         self.last_telemetry = clock()
@@ -41,6 +44,11 @@ class FlightController:
     def _submit(self, command, **data):
         self.revision += 1
         self.pending = (command, self.adapter.submit(command, **data))
+
+    def _record(self, kind, detail=''):
+        """Append a mission milestone to the optional flight recorder."""
+        if self.recorder is not None:
+            self.recorder.record(kind, detail, state=self.machine.state.value)
 
     def _begin_landing(self):
         self.landing_result = None
@@ -93,11 +101,13 @@ class FlightController:
             if set(data) != {'waypoints'}:
                 raise ValueError('mission requires only waypoints')
             self.mission_queue.load(data['waypoints'], self.home[2], self.machine.max_altitude)
+            self._record('mission_loaded', 'waypoints=%d' % len(self.mission_queue.waypoints))
             self._dispatch_waypoint()
         elif event == 'cancel':
             if not self.mission_queue.active:
                 raise ValueError('No active waypoint mission to cancel')
             self.mission_queue.stop('CANCELED')
+            self._record('mission_canceled', 'completed=%d' % self.mission_queue.completed)
             self.target = self.target_speed = None
             self._submit('hover')
         elif event == 'goto':
@@ -272,10 +282,14 @@ class FlightController:
                         self._fail('Flight operation timed out')
                         return
                     self.mission_queue.completed += 1
+                    self._record('waypoint_reached',
+                                 'index=%d' % (self.mission_queue.completed - 1))
                     if self.mission_queue.completed < len(self.mission_queue.waypoints):
                         self._dispatch_waypoint()
                         return
                     self.mission_queue.state = 'COMPLETED'
+                    self._record('mission_completed',
+                                 'waypoints=%d' % len(self.mission_queue.waypoints))
                     self._submit('hover')
                 self.target = None
                 self.target_speed = None
