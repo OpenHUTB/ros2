@@ -582,6 +582,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cnn">CNN 训练与权重契约</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#ros-2">ROS 2 图像控制接口</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../uav_link_outage_guard/">无人机通信链路退化保护与断联风险预测</a>
@@ -780,7 +782,7 @@
 <div><h1 id="mujoco">MuJoCo 失落公园无人机视觉转向</h1>
 <p>模块在林荫步道场景中提供确定性无人机运动、前视相机和转向控制接口，场景由 MuJoCo 3.12.0 加载。</p>
 <h2 id="_1">功能范围</h2>
-<p>本分支提供 RGB 数据管线与轻量 CNN 训练、验证和测试。训练由 <code>train.py</code> 启动，仿真、采集与质量检查由 <code>main.py</code> 启动。</p>
+<p>本分支提供数据采集、CNN 训练与离线回放，并将图像推理封装为 ROS 2 Humble 的 Image-to-Twist 节点。</p>
 <h2 id="_2">坐标、时间与相机</h2>
 <p>步道沿世界坐标 (+Y) 延伸，横向坐标为 (X)。正归一化转向量增加航向角，使无人机向左转；负值向右转。指令范围为 <code>[-1, 1]</code>，对应 ROS 的正 <code>angular.z</code> 左转约定。无人机位置更新使用：</p>
 <p>
@@ -802,6 +804,7 @@ y_{t+1}=y_t+v_t\cos\theta_{t+1}\Delta t.
 <li>Python 3.10 或更新版本</li>
 <li>MuJoCo 3.12.0</li>
 <li>训练和推理使用 PyTorch CPU 与 scikit-learn</li>
+<li>ROS 2 Humble 与 Ubuntu 22.04 用于 ROS 节点</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>src/air/mujoco_abandoned_park_uav_visual_steering
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
@@ -829,11 +832,20 @@ python<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="
 \mathcal L=-\sum_{c=1}^{4}w_c y_c\log\hat y_c.
 </script>
 </p>
-<p>训练入口为 <code>train.py</code>：</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>train.py<span class="w"> </span>--dataset<span class="w"> </span>data/park_rgb<span class="w"> </span>--output<span class="w"> </span>models/weights<span class="w"> </span>--epochs<span class="w"> </span><span class="m">8</span>
+<p>统一入口支持训练与离线图像回放：</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>train<span class="w"> </span>--output<span class="w"> </span>data/park_rgb<span class="w"> </span>--checkpoint<span class="w"> </span>models/weights/lightweight_steering_cnn.pt<span class="w"> </span>--epochs<span class="w"> </span><span class="m">8</span>
+python<span class="w"> </span>main.py<span class="w"> </span>--mode<span class="w"> </span>replay<span class="w"> </span>--checkpoint<span class="w"> </span>models/weights/lightweight_steering_cnn.pt<span class="w"> </span>--images<span class="w"> </span>data/park_rgb/images
 </code></pre></div>
 <p>验证集用于选择权重，测试集用于最终分类评价。Accuracy、固定四类 macro-F1 和 4 × 4 混淆矩阵使用相同标签序号；即使某类没有出现在预测结果中，macro-F1 仍保留该类。加载权重时要求保存的标签严格为 <code>LEFT, STRAIGHT, RIGHT, STOP</code>，缺失或顺序不符时拒绝加载，防止控制含义被交换。</p>
-<p>本次固定种子训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。</p></div>
+<h2 id="ros-2">ROS 2 图像控制接口</h2>
+<p>节点订阅 <code>sensor_msgs/Image</code> 并发布 <code>geometry_msgs/Twist</code>：<code>LEFT</code> 对应正 <code>angular.z</code>，<code>RIGHT</code> 对应负值，<code>STRAIGHT</code> 的角速度为零，<code>STOP</code> 的线速度和角速度均为零。包安装包括节点、launch 文件与参数配置，launch 从安装后的包共享目录解析配置。</p>
+<p>从仓库工作空间根目录构建，提供训练所得权重：</p>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>mujoco_abandoned_park_uav_visual_steering
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_abandoned_park_uav_visual_steering<span class="w"> </span>main.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>checkpoint:<span class="o">=</span>/absolute/path/lightweight_steering_cnn.pt
+</code></pre></div>
+<p>缺少有效权重、图像解码失败、推理异常或图像流超过超时阈值时，节点发布零速度。图像问题消除后，下一张有效图像可恢复正常控制；缺少权重时保持零速，提供有效权重后重新启动节点。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
