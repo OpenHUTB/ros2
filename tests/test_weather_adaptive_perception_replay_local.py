@@ -57,6 +57,15 @@ def test_model_manifest_declares_size_and_sha256(name):
     assert meta["url"].startswith("https://"), "权重必须走 HTTPS"
 
 
+def test_requirements_pin_opencv_below_5():
+    """opencv-python 5.x 移除了 Caffe 导入器，必须钉在 4.x（CI 曾因此红过一次）。"""
+    req = os.path.join(ROOT, "src", "ground", "weather_adaptive_perception_replay",
+                       "requirements.txt")
+    with open(req, encoding="utf-8") as fh:
+        text = fh.read().replace(" ", "")
+    assert "opencv-python>=4.5,<5" in text
+
+
 def test_file_matches_rejects_bad_size_and_bad_digest(tmp_path):
     data = b"hello weather"
     digest = hashlib.sha256(data).hexdigest()
