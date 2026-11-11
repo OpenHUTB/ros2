@@ -87,7 +87,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)
 * [人形机器人键盘运动控制](./humanoid/humanoid_keyboard_control.md)
-* [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) —— MuJoCo Panda 腕部相机 16 位姿采样，标定误差约 0.8 mm
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
@@ -118,6 +117,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [肌肉驱动的夹爪抓取：真实接触抓取](./musculoskeletal/msk_gripper.md)
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
+* [机械臂手眼标定仿真](./humanoid/hand_eye_calibration.md) 
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 * [毫米波雷达目标跟踪与前碰撞预警（TTC/FCW）](./ground/radar_ttc_fcw.md) —— 用多普勒速度分离静止杂波，多帧关联估计 TTC 并输出 SAFE/WARN/STOP 分级预警
