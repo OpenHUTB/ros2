@@ -133,10 +133,20 @@ class Stats:
 def run(stream):
     stats = Stats()
     previous = {}
+    pending = {}          # 每条报文自上一帧 CRC 通过以来，丢掉了几个坏帧
     rows = []
     for t, codec, payload, truth, injected in stream:
-        decoded = codec.decode(payload, previous=previous.get(codec.name))
-        previous[codec.name] = payload
+        expected_step = 1 + pending.get(codec.name, 0)
+        decoded = codec.decode(payload, previous=previous.get(codec.name),
+                               expected_step=expected_step)
+        # 只有 CRC 通过的帧才作为下一帧的计数器基准：坏帧的计数器位本身不可信。
+        # 夹在中间的坏帧记入 pending，让下一帧的预期步进相应放宽，
+        # 避免「一次误码罚两帧」。
+        if decoded['crc_ok']:
+            previous[codec.name] = payload
+            pending[codec.name] = 0
+        else:
+            pending[codec.name] = pending.get(codec.name, 0) + 1
         stats.add(codec, decoded)
         rows.append((t, codec.name, decoded, truth, injected))
     return stats, rows
