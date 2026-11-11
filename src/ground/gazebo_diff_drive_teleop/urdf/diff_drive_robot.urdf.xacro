@@ -107,7 +107,7 @@
   <!-- ros2_control 硬件接口：交给 gz_ros2_control 的 GazeboSystem 管理 -->
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>gz_ros2_control/GazeboSystem</plugin>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
     <joint name="left_wheel_joint">
       <command_interface name="velocity">
