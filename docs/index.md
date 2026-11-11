@@ -84,6 +84,8 @@ ROS每章节运行代码:
 
 ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[chap2/ros2_service_param_demo](./chap2/ros2_service_param_demo.md)
 
+ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros2_qos_compatibility_lab.md)
+
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
@@ -116,6 +118,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [基于关节状态与肌腱力反馈的 MuJoCo 肌肉骨骼肘关节神经网络轨迹控制](./musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
@@ -181,8 +184,10 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
 * [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
+* [任务5：系统集成](./robot_tasks/system_integration/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
+* [ROS2 动态障碍跟踪与 TTC 预警](./ground/ros2_dynamic_obstacle_ttc.md)
 * [Mbot 雷达避障仿真（ROS 1 Noetic）](./ground/mbot_lidar_avoid.md) —— Mbot 差速底盘在 Gazebo 中的 2D 激光雷达阈值避障，按扇区最小距离 + 滞回状态机输出 /cmd_vel
 
 * [网页远程遥控小车](./ground/web_remote_car.md)
@@ -199,6 +204,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [雨雾天气下自适应感知降级策略的静态帧复现](./ground/weather_adaptive_perception_replay.md)
 * [轮胎滑移率-附着特性与最佳制动滑移率仿真](./ground/tire_slip_adhesion_eval.md) —— 四种路面魔术公式附着曲线、峰值附着与制动距离对比
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
@@ -227,6 +233,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [基于 2D 激光雷达的蒙特卡洛定位（MCL）](./ground/lidar_mcl_localization.md) —— Gazebo 差速车 + 360 束激光，用纯 NumPy 手写粒子滤波（运动模型采样、似然场观测模型、低方差重采样），并用 MLP 学掉里程计运动残差；四组对比中位置误差从 0.345 m 降到 0.020 m
 
 * [地面载具动力性测试](./ground/carla_vehicle_dynamics_test.md)
+* [MuJoCo小车多目标导航](./ground/mujoco_multi_goal_nav.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
@@ -304,6 +311,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
 * [无人机偏航指令最短路径与角速度限幅](./air/uav_yaw_command_guard.md) —— 将偏航误差映射到 `[-pi, pi)`，避免跨 180° 时绕远路，并限制 `Twist.angular.z`
 * [无人机雷达DQN建图与端到端控制](./air/uav_lidar_dqn_navigation/index.md) —— 24 扇区雷达特征 + Dueling Double DQN 自主学习避障导航，gmapping 同步建图，图像端到端 DQN 控制
+* [DQN 策略离线评估](./air/uav_lidar_dqn_navigation/policy_eval.md) —— 不依赖 ROS/AirSim，汇总训练日志并复现“正前方若干米有墙”的 Q 值与动作探测
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
@@ -419,6 +427,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
 * [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
+* [无人机自主充电/机巢仿真](./air/drone_charging_nest.md) —— MuJoCo 四旋翼起飞、巡检、返航、机巢自动充电与再次起飞
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
