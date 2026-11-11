@@ -112,12 +112,12 @@ airsim_multirotor_waypoint_nav/
 
 ## 运行效果（截图 / 动图）
 
-![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 动图](docs/img/air/airsim_multirotor_waypoint_nav_run.gif)
+![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 动图](../../../docs/img/air/airsim_multirotor_waypoint_nav_run.gif)
 
-![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf1](docs/img/air/airsim_multirotor_waypoint_nav_kf1.png)
+![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf1](../../../docs/img/air/airsim_multirotor_waypoint_nav_kf1.png)
 
-![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf2](docs/img/air/airsim_multirotor_waypoint_nav_kf2.png)
+![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf2](../../../docs/img/air/airsim_multirotor_waypoint_nav_kf2.png)
 
-![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf3](docs/img/air/airsim_multirotor_waypoint_nav_kf3.png)
+![多旋翼航点飞行（机载视角，simGetImages 逐秒抓帧） 截图 kf3](../../../docs/img/air/airsim_multirotor_waypoint_nav_kf3.png)
 
 > 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
