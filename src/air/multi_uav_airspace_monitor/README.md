@@ -45,6 +45,8 @@ cd src/air/multi_uav_airspace_monitor
 python main.py demo                          # 生成 results/ 下的截图与 JSON
 python main.py check --config scenario.json  # 评估自己的场景
 python main.py demo --output /tmp/out        # 换输出目录
+python main.py demo --csv sep.csv            # 另外导出逐时刻的机间距离序列
+python main.py check --config scenario.json --csv sep.csv
 ```
 
 `main.py demo` 的实际输出：
@@ -57,7 +59,23 @@ python main.py demo --output /tmp/out        # 换输出目录
     alerts=3 conflicts=1
     conflict uav_alpha vs uav_beta: 0.00 m at 20.00 s
     screenshot: results/demo_screenshot.png
+    separation CSV: sep.csv (486 rows)
 ```
+
+`--csv` 导出的表头为 `time_s,uav_a,uav_b,separation_m`，每个采样时刻、每一对无人机一行，
+可以直接丢进表格软件或画图脚本里看距离随时间的变化（下面的曲线就是这么来的）：
+
+```text
+time_s,uav_a,uav_b,separation_m
+0.0,uav_alpha,uav_beta,300.0
+0.0,uav_alpha,uav_delta,262.679
+0.0,uav_alpha,uav_gamma,220.454
+...
+```
+
+采样点与冲突检测完全一致（同样的 `horizon_s` 与 `step_s`），所以 CSV 里最小的
+`separation_m` 就是汇总里的 `minimum_separation_m`。只有一个架次（没有机对）时也会写表头，
+方便脚本直接读列名。
 
 运行效果（图存放在文档目录，`results/` 不进仓库）：
 
@@ -76,13 +94,15 @@ python main.py demo --output /tmp/out        # 换输出目录
 ## 测试
 
 ```bash
-python -m unittest discover -s tests -v     # 本机 15 个测试，约 0.04 s
+python -m unittest discover -s tests -v     # 本机 24 个测试，约 0.3 s
 ```
 
 覆盖点在多边形内/外/边界、点到边距离、经纬度往返、禁飞区高度层、缓冲区、
 迎头冲突、平行安全航迹、窗口内告警与窗口外更近的接近、非法 `horizon_s`、
 只有 warning 级冲突时的状态、`minimum_separation_m` 与冲突同窗口、
-空场景拒绝、`check` 命令退出码和演示场景。
+空场景拒绝、`check` 命令退出码和演示场景，以及逐时刻距离序列与 CSV 导出
+（序列排序与采样步长、三机覆盖全部机对、`horizon_s` 截断、单机时只写表头、
+CSV 往返与换行符、`check` / `demo` 两个命令的 `--csv`）。
 
 ## ROS 2 节点
 

@@ -263,13 +263,44 @@ def _separations(
     return distances
 
 
-def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
-    """Evaluate a complete scenario dictionary and return a JSON-ready summary.
+def separation_series(
+    tracks: Sequence[UAVTrack],
+    step_s: float = 0.25,
+    horizon_s: float | None = None,
+) -> list[dict[str, Any]]:
+    """Per-sample pairwise separations, for CSV export and plotting.
 
-    ``minimum_separation_m`` is measured inside the same ``horizon_s`` window the
-    conflict detector uses, so the number never contradicts ``conflicts``. The
-    whole common interval is reported separately as ``minimum_separation_full_m``.
+    One row per sampled time step and UAV pair, sorted by ``time_s`` and then by
+    the pair order in ``tracks``. Values match what the conflict detector samples,
+    so a row's ``separation_m`` can be compared directly with the warning and
+    critical distances.
     """
+    rows: list[dict[str, Any]] = []
+    for index, track_a in enumerate(tracks):
+        for track_b in tracks[index + 1:]:
+            times, positions_a, positions_b = _interpolate_pair(
+                track_a, track_b, step_s, horizon_s
+            )
+            if not len(times):
+                continue
+            distances = np.linalg.norm(positions_a - positions_b, axis=1)
+            for time_s, distance_m in zip(times.tolist(), distances.tolist()):
+                rows.append(
+                    {
+                        "time_s": round(float(time_s), 3),
+                        "uav_a": track_a.uav_id,
+                        "uav_b": track_b.uav_id,
+                        "separation_m": round(float(distance_m), 3),
+                    }
+                )
+    rows.sort(key=lambda row: (row["time_s"], row["uav_a"], row["uav_b"]))
+    return rows
+
+
+def parse_scenario(
+    scenario: dict[str, Any],
+) -> tuple[list[UAVTrack], list[Zone], float, float]:
+    """Turn a scenario dictionary into ``(tracks, zones, horizon_s, step_s)``."""
     if not isinstance(scenario, dict):
         raise ValueError("scenario must be a mapping")
     uavs = scenario.get("uavs")
@@ -294,9 +325,25 @@ def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
         )
         for item in uavs
     ]
-
     horizon_s = float(scenario.get("horizon_s", 10.0))
     step_s = float(scenario.get("step_s", 0.25))
+    return tracks, zones, horizon_s, step_s
+
+
+def separation_rows_for_scenario(scenario: dict[str, Any]) -> list[dict[str, Any]]:
+    """Convenience wrapper: scenario dictionary in, CSV-ready rows out."""
+    tracks, _zones, horizon_s, step_s = parse_scenario(scenario)
+    return separation_series(tracks, step_s=step_s, horizon_s=horizon_s)
+
+
+def evaluate_scenario(scenario: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate a complete scenario dictionary and return a JSON-ready summary.
+
+    ``minimum_separation_m`` is measured inside the same ``horizon_s`` window the
+    conflict detector uses, so the number never contradicts ``conflicts``. The
+    whole common interval is reported separately as ``minimum_separation_full_m``.
+    """
+    tracks, zones, horizon_s, step_s = parse_scenario(scenario)
 
     alerts: list[Alert] = []
     for track in tracks:

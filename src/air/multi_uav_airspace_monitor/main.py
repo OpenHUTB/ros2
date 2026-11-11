@@ -11,12 +11,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from multi_uav_airspace_monitor.monitor import evaluate_scenario
+from multi_uav_airspace_monitor.csv_export import write_separation_csv
+from multi_uav_airspace_monitor.monitor import (
+    evaluate_scenario,
+    separation_rows_for_scenario,
+)
 from multi_uav_airspace_monitor.scenario import build_demo_scenario
 from multi_uav_airspace_monitor.visualize import render_scenario
 
 
-def run_demo(output_dir: Path) -> int:
+def run_demo(output_dir: Path, csv_path: Path | None = None) -> int:
     """Render the built-in scenario; returns 0 whenever the demo completes."""
     output_dir.mkdir(parents=True, exist_ok=True)
     scenario = build_demo_scenario()
@@ -38,10 +42,14 @@ def run_demo(output_dir: Path) -> int:
     for alert in summary["alerts"]:
         print(f"    {alert['severity']}: {alert['message']}")
     print(f"    screenshot: {output_dir / 'demo_screenshot.png'}")
+    if csv_path is not None:
+        rows = separation_rows_for_scenario(scenario)
+        written = write_separation_csv(rows, csv_path)
+        print(f"    separation CSV: {written} ({len(rows)} rows)")
     return 0
 
 
-def run_check(config_path: Path) -> int:
+def run_check(config_path: Path, csv_path: Path | None = None) -> int:
     """Evaluate a scenario JSON; returns 1 when the result is critical."""
     try:
         scenario = json.loads(config_path.read_text(encoding="utf-8"))
@@ -53,14 +61,18 @@ def run_check(config_path: Path) -> int:
         return 2
     try:
         summary = evaluate_scenario(scenario)
+        rows = separation_rows_for_scenario(scenario) if csv_path is not None else None
     except (KeyError, ValueError) as exc:
         print(f"invalid scenario {config_path}: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(summary, indent=2, ensure_ascii=False))
+    if csv_path is not None and rows is not None:
+        written = write_separation_csv(rows, csv_path)
+        print(f"separation CSV: {written} ({len(rows)} rows)", file=sys.stderr)
     return 1 if summary["status"] == "critical" else 0
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", nargs="?", default="demo", choices=["demo", "check"])
     parser.add_argument("--config", type=Path, help="scenario JSON for the check command")
@@ -70,12 +82,17 @@ def main() -> int:
         default=ROOT / "results",
         help="directory for the demo screenshot and summary",
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--csv",
+        type=Path,
+        help="also write the per-sample pairwise separation series to this CSV file",
+    )
+    args = parser.parse_args(argv)
     if args.command == "check":
         if args.config is None:
             parser.error("check requires --config")
-        return run_check(args.config)
-    return run_demo(args.output)
+        return run_check(args.config, args.csv)
+    return run_demo(args.output, args.csv)
 
 
 if __name__ == "__main__":

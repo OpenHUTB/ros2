@@ -46,10 +46,26 @@ python main.py demo
 
 ```bash
 python main.py check --config scenario.json
+python main.py demo --csv sep.csv                       # 同时导出逐时刻机间距离
+python main.py check --config scenario.json --csv sep.csv
 ```
 
 `check` 在 `status=critical` 时返回 1，`safe` / `warning` 返回 0，场景读不到或
 解析失败返回 2，便于直接接到脚本或 CI。`demo` 只要跑完就返回 0。
+
+`--csv` 写出的表头是 `time_s,uav_a,uav_b,separation_m`，每个采样时刻、每一对无人机一行，
+采样点与冲突检测一致（同样的 `horizon_s`、`step_s`），所以表里最小的 `separation_m`
+就是汇总里的 `minimum_separation_m`。演示场景导出 486 行：
+
+```text
+time_s,uav_a,uav_b,separation_m
+0.0,uav_alpha,uav_beta,300.0
+0.0,uav_alpha,uav_delta,262.679
+0.0,uav_alpha,uav_gamma,220.454
+...
+```
+
+只有一个架次时也会写出表头（没有机对），脚本可以直接按列名读。
 
 ![多无人机空域监测](multi_uav_airspace_monitor/demo_screenshot.png)
 
@@ -113,7 +129,7 @@ source install/setup.bash
 ros2 launch multi_uav_airspace_monitor main.launch.py
 ```
 
-ROS 2 节点在当前 Windows 开发机上未执行；离线核心、15 个单元测试和 PNG 截图
+ROS 2 节点在当前 Windows 开发机上未执行；离线核心、24 个单元测试和 PNG 截图
 均已实际运行。ROS 2 Humble 的启动验证需要在 Ubuntu 虚拟机中完成。
 
 ## 验证
@@ -122,10 +138,11 @@ ROS 2 节点在当前 Windows 开发机上未执行；离线核心、15 个单�
 python -m unittest discover -s tests -v
 ```
 
-15 个测试全部通过（约 0.04 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
+24 个测试全部通过（约 0.3 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
 平行安全航迹、时间窗内告警与窗口外更近的接近、非法 `horizon_s`、只有 warning 级
 冲突时的状态、`minimum_separation_m` 与冲突同窗口、空场景拒绝、`check` 命令的
-退出码（0/1/2），以及演示场景。
+退出码（0/1/2）、演示场景，以及逐时刻距离序列与 CSV 导出（排序与步长、三机覆盖
+全部机对、`horizon_s` 截断、单机只写表头、CSV 往返与换行符、`check`/`demo` 的 `--csv`）。
 
 ## 已知限制
 
