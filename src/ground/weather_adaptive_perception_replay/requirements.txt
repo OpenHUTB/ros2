@@ -1,3 +1,3 @@
-numpy
-opencv-python
-matplotlib
+numpy>=1.21
+opencv-python>=4.5
+matplotlib>=3.5
