@@ -247,6 +247,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 * [无人机测距制动轨迹指标分析](./air/mujoco_uav_braking_metrics.md)
+* [无人机测距几何一致性检查](./air/mujoco_uav_range_sensor_quality.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 * [无人机载荷重心偏移与配平监测](./air/uav_payload_balance_guard.md) —— 利用左右推力差、滚转修正和横摆响应估计横向重心偏移，输出配平和安全包线告警
@@ -281,6 +282,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
 
 * [无人机相机云台两轴稳定控制](./air/uav_gimbal_stabilization.md) —— 二维目标视线 PID 跟踪、角速度限幅和死区控制，附仿真指标与 CSV
+* [旋翼桨尖马赫数与桨盘载荷](./air/uav_prop_tip_mach.md) —— 由桨径、转速与温度算桨尖速度与马赫数（默认 10 寸桨 9000 rpm 时 0.35，安全），由整机质量与桨盘面积算桨盘载荷与悬停诱导速度（96.8 N/m²、6.28 m/s）
 
 * [无人机 IMU 与气压高度融合](./air/uav_altitude_sensor_fusion.md) —— 对比气压高度、加速度积分和一维卡尔曼融合，附高度响应图与误差指标
 
