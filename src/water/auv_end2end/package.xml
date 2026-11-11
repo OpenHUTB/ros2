@@ -4,7 +4,7 @@
   <name>auv_end2end</name>
   <version>0.1.0</version>
   <description>水下机器人 AUV 端到端仿真功能包，提供矩形巡航与基于单目图像暗区检测的视觉避障两个节点</description>
-  <maintainer email="xxxuuaa@github.com">liahn</maintainer>
+  <maintainer email="xxxuuaa@users.noreply.github.com">liahn</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
