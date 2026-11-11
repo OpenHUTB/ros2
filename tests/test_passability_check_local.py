@@ -35,6 +35,8 @@ from passability_check import (  # noqa: E402
     Scenario, ScenarioError, seat, scan_profile, penetration_at,
     contact_front_x, get_vehicle, load_scenario, list_scenarios,
     evaluate, format_report, render_profile, build_assertions, all_passed,
+    angle_passed, numeric_passed, verdict,
+    VERDICT_FAILED, VERDICT_PASSED, VERDICT_PASS_WITH_NOTE,
     scenario_matrix_csv, to_json_payload,
 )
 
@@ -86,6 +88,17 @@ def group_defaults():
           sorted(pc.PRESET_VEHICLES))
     check("A06 断言名 5 条", len(pc.ASSERT_NAMES) == 5, pc.ASSERT_NAMES)
     check("A07 断言名唯一", len(set(pc.ASSERT_NAMES)) == 5)
+
+    # 下缘采样点必须既足数又不重复（评审 @KKK555-MAX：41 个点里只有 40 个唯一）
+    for name in ("sedan", "suv"):
+        vehicle = get_vehicle(name)
+        for count in (5, 41, 101):
+            pts = vehicle.lower_contour(count)
+            check("A08 %s 下缘 %d 点且唯一" % (name, count),
+                  len(pts) == count and len(set(pts)) == count,
+                  "%d 点 / %d 唯一" % (len(pts), len(set(pts))))
+        check("A09 %s 下缘末点落在最后折点" % name,
+              vehicle.lower_contour(41)[-1] == vehicle.lower_knots()[-1])
 
 
 # ------------------------------------------------------------------ B 参数校验
@@ -284,6 +297,28 @@ def group_assertions():
     clearance_assert = [item for item in harsh_assertions if item["type"] == "离地间隙"][0]
     check("G08 离地间隙可单独失败", not clearance_assert["passed"])
 
+    # 结论三档：数值判据说了算，角度判据只降级成备注（评审 @KKK555-MAX 指出
+    # 旧实现「结论 FAILED、备注说以数值复核为准」自相矛盾）
+    check("G09 地库轿车结论 FAILED", verdict(assertions) == VERDICT_FAILED,
+          verdict(assertions))
+    check("G10 地库 SUV 结论 PASSED", verdict(assertions_suv) == VERDICT_PASSED,
+          verdict(assertions_suv))
+
+    bump = load_scenario(os.path.join(PKG, "config", "scenarios", "speed_bump.json"))
+    bump_report, bump_assertions = evaluate(suv, bump)
+    check("G11 减速带 SUV：数值通过但角度不通过",
+          numeric_passed(bump_assertions) and not angle_passed(bump_assertions))
+    check("G12 减速带 SUV 结论 PASS_WITH_NOTE",
+          verdict(bump_assertions) == VERDICT_PASS_WITH_NOTE, verdict(bump_assertions))
+    bump_payload = to_json_payload(suv, bump, bump_report, bump_assertions)
+    check("G13 JSON 里 result 与 numeric_ok 一致",
+          (bump_payload["result"] == VERDICT_FAILED) != bump_payload["numeric_ok"],
+          bump_payload)
+    bump_text = format_report(suv, bump, bump_report, bump_assertions)
+    conclusion = [line for line in bump_text.splitlines() if line.startswith("结论：")][0]
+    check("G14 结论行与备注不打架（不再出现 FAILED）",
+          "FAILED" not in conclusion and "PASS_WITH_NOTE" in conclusion, conclusion)
+
 
 # ------------------------------------------------------------------ H 报告与图
 
@@ -378,7 +413,9 @@ def group_output():
     report, assertions = evaluate(sedan, garage)
     payload = to_json_payload(sedan, garage, report, assertions)
 
-    check("J01 JSON 顶层键", set(payload) == {"vehicle", "scenario", "scan", "assertions", "result"},
+    check("J01 JSON 顶层键",
+          set(payload) == {"vehicle", "scenario", "scan", "assertions", "result",
+                           "numeric_ok", "angle_ok"},
           sorted(payload))
     check("J02 结论为 FAILED", payload["result"] == "FAILED", payload["result"])
     check("J03 断言条目 5 个", len(payload["assertions"]) == 5)

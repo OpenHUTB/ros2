@@ -95,10 +95,15 @@ class PassabilityNode(Node):
         self.summary_text = json.dumps(payload, ensure_ascii=False)
         self.result = payload["result"]
 
-        level = self.get_logger().info if self.result == "PASSED" else self.get_logger().warn
-        level("%s：接近角 %.2f°，离去角 %.2f°，纵向通过角 %.2f°，最大侵入 %.3f m，结论 %s"
+        # 只有数值判据不通过才是 FAILED（warn）；PASS_WITH_NOTE 是"能过但
+        # 角度判据偏保守"，用 info 并带上提示，不制造假告警
+        level = self.get_logger().warn if self.result == "FAILED" else self.get_logger().info
+        hint = ""
+        if self.result == "PASS_WITH_NOTE":
+            hint = "（数值复核能过，角度判据偏保守，详见报告备注）"
+        level("%s：接近角 %.2f°，离去角 %.2f°，纵向通过角 %.2f°，最大侵入 %.3f m，结论 %s%s"
               % (scenario.title, vehicle.approach_deg, vehicle.departure_deg,
-                 vehicle.breakover_deg, report["max_depth"], self.result))
+                 vehicle.breakover_deg, report["max_depth"], self.result, hint))
         for item in assertions:
             if not item["passed"]:
                 self.get_logger().warn("  [FAIL] %s %s" % (item["type"], item["detail"]))

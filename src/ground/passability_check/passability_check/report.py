@@ -6,6 +6,13 @@ from .clearance import scan_profile, lower_contour_world
 
 ASSERT_NAMES = ("接近角", "离去角", "纵向通过角", "离地间隙", "全程不托底")
 
+# 结论的三档取值。数值判据（离地间隙、全程不托底）是沿真实剖面逐位姿扫描，
+# 角度判据是「无限长斜面」的保守近似 —— 两者冲突时以数值判据为准，
+# 角度判据不通过只降级成备注，不改写结论。
+VERDICT_PASSED = "PASSED"
+VERDICT_PASS_WITH_NOTE = "PASS_WITH_NOTE"
+VERDICT_FAILED = "FAILED"
+
 TOL = 1e-6
 
 
@@ -81,8 +88,40 @@ def build_assertions(vehicle, scenario, report):
     return results
 
 
+def angle_passed(assertions):
+    """三条角度判据是否全通过（保守近似，可能对短坡面偏严）。"""
+
+    return all(item["passed"] for item in assertions[:3])
+
+
+def numeric_passed(assertions):
+    """离地间隙与全程不托底两条数值判据是否全通过（结论的唯一依据）。"""
+
+    return all(item["passed"] for item in assertions[3:])
+
+
 def all_passed(assertions):
+    """五条断言是否全部通过（= 结论为 PASSED）。"""
+
     return all(item["passed"] for item in assertions)
+
+
+def verdict(assertions):
+    """由断言给出结论。
+
+    * 数值判据不通过 → ``FAILED``：沿这条剖面逐位姿扫描确实托底/余量不足；
+    * 数值通过、角度判据不通过 → ``PASS_WITH_NOTE``：能过，但角度参数在
+      这条剖面上偏保守（通常是短坡面：车头还没完全爬上坡面就已经过去了），
+      需要人看一眼备注；
+    * 全部通过 → ``PASSED``。
+
+    以前 ``result`` 用「五条全过」，于是出现「结论 FAILED、备注说能过」的
+    自相矛盾（评审 @KKK555-MAX 指出）。现在结论字段与备注口径一致。
+    """
+
+    if not numeric_passed(assertions):
+        return VERDICT_FAILED
+    return VERDICT_PASSED if angle_passed(assertions) else VERDICT_PASS_WITH_NOTE
 
 
 def _breaks_text(terrain):
@@ -129,11 +168,20 @@ def format_report(vehicle, scenario, report, assertions, header=""):
     for item in assertions:
         lines.append("  [%s] %-6s %s" % ("PASS" if item["passed"] else "FAIL",
                                          item["type"], item["detail"]))
-    lines.append("结论：%s" % ("PASSED" if all_passed(assertions) else "FAILED"))
+    lines.append("结论：%s%s" % (verdict(assertions), _verdict_note(assertions)))
     note = _conservative_note(vehicle, scenario, assertions)
     if note:
         lines.append("备注：%s" % note)
     return "\n".join(lines)
+
+
+def _verdict_note(assertions):
+    """结论后缀：PASS_WITH_NOTE 时一句话说明它为什么不是 FAILED。"""
+
+    if verdict(assertions) != VERDICT_PASS_WITH_NOTE:
+        return ""
+    failed = [item["type"] for item in assertions[:3] if not item["passed"]]
+    return "（数值复核能过，角度判据偏保守：%s；详见备注）" % "、".join(failed)
 
 
 def _shortest_slope_m(terrain):
@@ -343,7 +391,9 @@ def to_json_payload(vehicle, scenario, report, assertions):
             {"type": item["type"], "passed": item["passed"], "detail": item["detail"]}
             for item in assertions
         ],
-        "result": "PASSED" if all_passed(assertions) else "FAILED",
+        "result": verdict(assertions),
+        "numeric_ok": numeric_passed(assertions),
+        "angle_ok": angle_passed(assertions),
     }
 
 

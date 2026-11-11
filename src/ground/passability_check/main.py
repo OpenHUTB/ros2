@@ -51,6 +51,9 @@ from passability_check import (  # noqa: E402
     scenario_matrix_csv,
     to_json_payload,
     all_passed,
+    verdict,
+    VERDICT_FAILED,
+    VERDICT_PASS_WITH_NOTE,
 )
 
 
@@ -112,6 +115,7 @@ def cmd_run(args):
     payloads = []
     csv_rows = []
     failed = []
+    noted = []
     for scenario in scenarios:
         for vehicle in vehicles:
             report, assertions = evaluate(vehicle, scenario,
@@ -132,8 +136,11 @@ def cmd_run(args):
                 "min_margin_m": "%.3f" % report["min_margin"],
                 "result": payload["result"],
             })
-            if not all_passed(assertions):
+            # 结论只看数值判据：角度判据不通过时是 PASS_WITH_NOTE，不算未通过
+            if verdict(assertions) == VERDICT_FAILED:
                 failed.append((scenario.name, vehicle.name))
+            elif verdict(assertions) == VERDICT_PASS_WITH_NOTE:
+                noted.append((scenario.name, vehicle.name))
 
             if not args.quiet:
                 header = "通过性核算 v%s（纯几何，不依赖仿真器）" % __version__
@@ -144,7 +151,8 @@ def cmd_run(args):
                 print()
 
     if args.matrix or args.quiet:
-        print("对比表（结论：PASSED 表示全部断言通过）")
+        print("对比表（结论：PASSED = 全部断言通过；"
+              "PASS_WITH_NOTE = 数值复核能过、角度判据偏保守；FAILED = 数值判据不通过）")
         print(scenario_matrix_csv(csv_rows))
         print()
 
@@ -153,12 +161,15 @@ def cmd_run(args):
     if args.csv:
         _write_text(args.csv, scenario_matrix_csv(csv_rows))
 
+    if noted:
+        print("共 %d 组能过但需注意（角度判据偏保守，见备注）：%s"
+              % (len(noted), "，".join("%s/%s" % item for item in noted)))
     if failed:
         print("共 %d 组核算未通过：%s"
               % (len(failed), "，".join("%s/%s" % item for item in failed)))
         if args.strict:
             return 3
-    else:
+    elif not noted:
         print("共 %d 组核算全部通过" % len(payloads))
     return 0
 

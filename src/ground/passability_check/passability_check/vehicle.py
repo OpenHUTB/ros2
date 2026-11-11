@@ -183,10 +183,20 @@ class VehicleSpec(object):
         for index, length in enumerate(lengths):
             raw = samples * length / total
             counts.append(max(2, int(round(raw))))
+        # 拐点不重复采样，所以唯一点数 = sum(counts) - (段数 - 1)。
+        # 把 round 的零头补到最后一段，保证返回的点数正好等于 samples
+        # （以前末尾多 append 一次，41 个点里只有 40 个唯一坐标）。
+        segments = len(knots) - 1
+        diff = (samples + segments - 1) - sum(counts)
+        counts[-1] = max(2, counts[-1] + diff)
         for index in range(len(knots) - 1):
             (x0, z0), (x1, z1) = knots[index], knots[index + 1]
             count = counts[index]
-            for step in range(count):
+            # 最后一段的末点由函数末尾统一追加（保证精确落在最后折点上），
+            # 这里不生成，否则末点会重复一次（评审 @KKK555-MAX 指出：
+            # 41 个点里只有 40 个唯一坐标）
+            span = count - 1 if index == len(knots) - 2 else count
+            for step in range(span):
                 if index > 0 and step == 0:
                     continue  # 拐点不重复
                 ratio = float(step) / (count - 1)
