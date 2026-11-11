@@ -1,0 +1,5 @@
+# humanoid_visual_servo_grasp 运行参数
+/visual_servo_grasp_node:
+  ros__parameters:
+    control_hz: 50.0      # 控制频率 (Hz)
+    visualize: false      # 是否打开 MuJoCo 可视化窗口
