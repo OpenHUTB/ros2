@@ -134,13 +134,14 @@ class LocomotionNode(Node):
         return TrotGait(
             self.robot,
             freq=float(self.get_parameter("freq").value),
-            a_thigh=float(self.get_parameter("thigh_amp").value) * amplitude_scale,
-            a_calf=float(self.get_parameter("calf_amp").value) * amplitude_scale,
+            a_thigh=float(self.get_parameter("thigh_amp").value),
+            a_calf=float(self.get_parameter("calf_amp").value),
             phase_offset=float(self.get_parameter("phase_offset").value),
             kp_roll=float(self.get_parameter("kp_roll").value),
             kp_pitch=float(self.get_parameter("kp_pitch").value),
             kp_height=float(self.get_parameter("kp_height").value),
             direction=direction,
+            amplitude_scale=amplitude_scale,
         )
 
     def _cmd_vel_cb(self, msg):
@@ -185,6 +186,9 @@ class LocomotionNode(Node):
             self.get_logger().info(
                 "步态方向切换为: %s"
                 % ("forward" if self._direction > 0 else "backward"))
+
+        if desired == "trot":
+            self._controller.set_amplitude_scale(self._amplitude_scale())
 
         # 推进仿真：一个定时器周期内跑 steps_per_tick 个 MuJoCo 步
         for _ in range(self._steps_per_tick):
