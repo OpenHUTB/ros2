@@ -31,7 +31,7 @@ class AuvRectCruise(Node):
     def timer_cb(self):
         current_time = self.get_clock().now()
         # 纳秒转秒，保留完整小数精度，避免整数秒丢失时间
-        elapsed = (current_time - self.start_time).nanoseconds() / 1e9
+        elapsed = (current_time - self.start_time).nanoseconds / 1e9
         vel = Twist()
 
         # 四状态闭合矩形逻辑
@@ -102,4 +102,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <sdf version="1.6">
 <world name="default">
+  <!-- 发布 /clock，供 use_sim_time 的节点使用仿真时间 -->
+  <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so"/>
   <!-- 水下环境全局配置 -->
   <physics type="ode">
     <max_step_size>0.001</max_step_size>

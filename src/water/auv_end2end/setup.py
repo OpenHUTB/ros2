@@ -6,7 +6,10 @@ package_name = 'auv_end2end'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.1.0',
+    maintainer='liahn',
+    maintainer_email='xxxuuaa@github.com',
+    license='MIT',
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -25,4 +28,3 @@ setup(
         ],
     },
 )
-
