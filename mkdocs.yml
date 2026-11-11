@@ -253,6 +253,7 @@ nav:
     - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
     - 无人机相机云台两轴稳定控制: './air/uav_gimbal_stabilization.md'
     - 无人机 IMU 与气压高度融合: './air/uav_altitude_sensor_fusion.md'
+    - 悬停抗风能力核算（倾角与推重比余量）: './air/uav_hover_wind_limit.md'
     - 无人机屋顶降落: './air/rooftop_landing.md'
     - 无人机屋顶降落（学习型落点选择）: './air/rooftop_landing_nn.md'
     - 无人机降落过程监控（指令-运动一致性）: './air/uav_landing_monitor.md'

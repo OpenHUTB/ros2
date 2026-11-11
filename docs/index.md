@@ -275,6 +275,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机相机云台两轴稳定控制](./air/uav_gimbal_stabilization.md) —— 二维目标视线 PID 跟踪、角速度限幅和死区控制，附仿真指标与 CSV
 
 * [无人机 IMU 与气压高度融合](./air/uav_altitude_sensor_fusion.md) —— 对比气压高度、加速度积分和一维卡尔曼融合，附高度响应图与误差指标
+* [悬停抗风能力核算（倾角与推重比余量）](./air/uav_hover_wind_limit.md) —— 用 tanθ = ρ·CdA·V²/(2mg) 反解最大倾角下的抗风上限（默认机型 9.98 m/s、蒲福 5 级），并给出所需推重比 1/cosθ 与阵风附加倾角
 
 * [空域载具的八叉树三维寻路](./air/octree_uav_3d_pathfinding/env_setup.md)
 
