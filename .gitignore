@@ -17,12 +17,12 @@ docs/requirements.txt
  add-mujoco-aeb
 # MuJoCo 运行日志
 # 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
-# （新增 catkin 包时容易整个漏提交），这里显式放行这一个文件名。
-# 同理放行模块的依赖清单：否则 src/<域>/<模块>/requirements*.txt 在 Windows 上 `git add`
-# 会被静默跳过，提交里就少了依赖清单（docs/requirements.txt 由 hooks.py 生成，仍然忽略）。
+# （新增 catkin 包时容易整个漏提交），下面显式放行这个文件名。
 *.TXT
 *.log
 !CMakeLists.txt
+# 模块依赖清单同理放行：否则 src/<域>/<模块>/requirements*.txt 在 Windows 上会被 `git add`
+# 静默跳过。docs/requirements.txt 由 hooks.py 生成，不在这条规则范围内，仍然忽略。
 !src/**/requirements*.txt
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
