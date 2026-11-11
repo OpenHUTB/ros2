@@ -13,39 +13,39 @@ Stribeck 摩擦的四个参数，并把模型作为前馈加入 PD 控制，量�
 
 ### 1.1 摩擦模型
 
-\[
+$$
 \tau_f(v)=\tau_c\,\mathrm{sign}(v)+\tau_v v+
 (\tau_s-\tau_c)\,\mathrm{sign}(v)\,e^{-|v|/v_s}
-\]
+$$
 
-- \(\tau_c\)：库仑摩擦；\(\tau_v\)：黏性系数；\(\tau_s\)：静摩擦（低速峰值）；\(v_s\)：Stribeck 速度。
-要求 \(\tau_s\ge\tau_c\)、\(v_s>0\)。
+- $\tau_c$：库仑摩擦；$\tau_v$：黏性系数；$\tau_s$：静摩擦（低速峰值）；$v_s$：Stribeck 速度。
+要求 $\tau_s\ge\tau_c$、$v_s>0$。
 
 ### 1.2 恒速扫掠辨识
 
-恒速时 \(\ddot q=0\)，关节力矩只平衡摩擦（与少量线性阻尼）：
+恒速时 $\ddot q=0$，关节力矩只平衡摩擦（与少量线性阻尼）：
 
-\[
+$$
 \tau_{\text{meas}}(v_i)=\tau_f(v_i)+b\,v_i+\varepsilon_i
-\]
+$$
 
-对给定 \(v_s\)，模型对 \((\tau_c,\tau_v,\tau_s)\) 是**线性**的：
+对给定 $v_s$，模型对 $(\tau_c,\tau_v,\tau_s)$ 是**线性**的：
 
-\[
+$$
 \tau=\tau_c\,(s_i-d_i)+\tau_v\,v_i+\tau_s\,d_i,\qquad
 s_i=\mathrm{sign}(v_i),\ d_i=s_i e^{-|v_i|/v_s}
-\]
+$$
 
-因此外层对 \(v_s\) 做一维网格搜索（0.02–2 rad/s，120 点），内层用最小二乘闭式求解，
+因此外层对 $v_s$ 做一维网格搜索（0.02–2 rad/s，120 点），内层用最小二乘闭式求解，
 取残差最小的组合。
 
 ### 1.3 前馈补偿
 
 控制律
 
-\[
+$$
 \tau_{\text{cmd}}=K_p(q_d-q)-K_d\dot q+K_d\dot q_d+\hat\tau_f(\dot q)
-\]
+$$
 
 跟踪 0.5 Hz、±0.5 rad 的正弦，对比有无前馈的误差。
 
@@ -81,8 +81,8 @@ python3 -m unittest discover -s tests -v
 
 ## 4. 结果
 
-环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值 \(\tau_c=0.45\)、\(\tau_v=0.08\)、
-\(\tau_s=0.65\)、\(v_s=0.20\)。
+环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值 $\tau_c=0.45$、$\tau_v=0.08$、
+$\tau_s=0.65$、$v_s=0.20$。
 
 ### 4.1 参数辨识
 
@@ -98,7 +98,7 @@ python3 -m unittest discover -s tests -v
 ![摩擦曲线](../img/humanoid/joint_friction_identification/friction_curve.png)
 
 库仑与静摩擦误差都在 2 % 以内；黏性与 Stribeck 速度误差偏大（15–19 %），原因是这两者在
-有限扫速范围内高度相关——把 \(v_s\) 调大、同时把 \(\tau_v\) 调小可以得到几乎相同的曲线。
+有限扫速范围内高度相关——把 $v_s$ 调大、同时把 $\tau_v$ 调小可以得到几乎相同的曲线。
 文档第 6 节把它列为已知限制，而不是藏起来。
 
 ### 4.2 跟踪补偿
