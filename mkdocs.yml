@@ -112,6 +112,7 @@ nav:
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
 - 地面载具:
+    - DVS 事件相机背景活动抑制与运动目标跟踪: './ground/dvs_event_motion_tracking.md'
     - 毫米波雷达目标跟踪与前碰撞预警: './ground/radar_ttc_fcw.md'
     - ROS与Conda环境排错指南: './ground/ros_conda_env_guide.md'
     - 基于 1D CNN 的激光雷达 SLAM: './ground/carla_nn_scan_matching.md'
