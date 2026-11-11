@@ -67,6 +67,7 @@ ROS每章节运行代码:
 * [第 8 章](./chapter/chap8.md) - ROS 机器人综合应用
     * [PocketSphinx 语音控制小乌龟](./voice/pocketsphinx_noetic.md)
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
+    * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 
@@ -136,6 +137,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [扭转控制](./ground/twist_to_control.md)
 * [RQT 插件](./ground/rqt_plugin.md)
 * [点云地图创建](./ground/pcl_recorder.md)
+* [定点停车](./ground/fixed_point_stop.md)
 * [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
 * [打靶](./ground/mujoco_shooting.md)
 * [Carla 交通标志识别（Windows 脚本）](./ground/carla_traffic_sign_recognition.md) - 基于 YOLOv8 的实时感知与键盘控制
@@ -150,6 +152,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
 
+* [网页远程遥控小车](./ground/web_remote_car.md)
 * [MuJoCo AEB自动紧急制动仿真](./ground/mujoco_vehicle_aeb.md)
 * [端到端驾驶（图像到控制指令）](./ground/pix2cmd_end2end_driving.md)
 
@@ -166,7 +169,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
-* [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
 * [图像录制 ROS 2 封装模块](./ground/image_recorder.md)
 * [MuJoCo小车倒车入库仿真](./ground/mujoco_car_parking.md)
@@ -174,6 +176,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [MuJoCo 动态障碍局部避障仿真](./ground/mujoco_dynamic_avoidance.md)
 * [CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）](./ground/carla_parking_lot.md) —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
+* [MuJoCo 小车跟车仿真](./ground/mujoco_car_follow.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 * [航向 PID 参数自整定与手工试凑对比](./ground/pid_auto_tuning.md) —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
@@ -209,10 +212,11 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
 
+* [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 
-
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
+* [AirLib 传感器消息回归](./air/airlib_message_regression.md) —— 在 ROS 桥接前校验 IMU、GPS、LiDAR 和里程计数据契约
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
 
@@ -225,11 +229,14 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机遥测异常检测与 ROS2 在线诊断](./air/telemetry_diagnostics.md)
 
+* [低空多源气象扰动下无人机影响预测与风险分级](./air/uav_weather_risk.md)
+
 * [无人机火灾探测与自主巡检](./air/fire_detection_drone.md) —— HSV/ONNX 火焰检测配合有限状态机，支持弓字形、边界与螺旋三种巡检场景，发现火灾后自动悬停确认、盘旋取证并返航
 * [配置 AirSim 客户端环境并连接模拟器（Windows 本机 / WSL2）](./air/airsim_client_setup.md)
 
 * [建立虚拟机和空域载具之间的连接](./air/setup_and_connect.md)
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
+* [无人机雷达DQN建图与端到端控制](./air/uav_lidar_dqn_navigation/index.md) —— 24 扇区雷达特征 + Dueling Double DQN 自主学习避障导航，gmapping 同步建图，图像端到端 DQN 控制
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
@@ -270,11 +277,17 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [AirSim无人机键盘遥控与机载云台控制模块](./airsim_drone_gimbal_teleop/README.md)
 
+* [无人机机载云台目标丢失重捕获与视轴误差评估](./air/uav_gimbal_reacquisition.md)
+
+* [无人机应急着陆点安全评估](./air/uav_emergency_landing_selector.md) —— 从坡度、粗糙度、障碍、人员风险和能量裕量中筛选安全落点，附 ROS 2 Humble 实际 launch 验证
+
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
 * [基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析](./air/state_prediction.md)
+
+* [无人机通信链路退化保护与断联风险预测](./air/uav_link_outage_guard.md) —— 融合 RSSI、延迟、丢包与遥测陈旧度，预测链路风险并输出降速、保持或返航建议
 
 * [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
 
@@ -292,6 +305,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [无人机航测任务规划（GSD/重叠度/WPML）](./air/survey_mission_planner.md) —— 由相机参数和目标 GSD 反算航高、航带间距、拍照间距与航点，导出 CSV/KML/WPML
 
+* [无人机航点任务飞行前校验](./air/uav_waypoint_preflight_validator.md) —— 检查 ENU 相对航点的高度、重复点、爬升角、转弯角、航程和保守 ETA，并输出 JSON 与 RViz 预览
+
 * [YOLO 感知与无人机控制](./air/openhutb_yolo_mlp_control/README.md)
 
 * [语义分割建图与语义路径规划](./air/uav_semantic_mapping_nav.md)
@@ -301,6 +316,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [状态识别与轨迹绘制](./air/drone_trajectory_logger.md)
 
 * [单门深度视觉伺服（门中心回归）](./air/uav_gate_center_servo.md) —— 12×16 深度图回归门中心，比例控制器输出 m/s 速度
+* [无人机深度相机轨迹跟踪（CNN 行为克隆）](./air/uav_depth_track_nn.md) —— 深度相机感知 + 给定圆轨迹跟踪，CNN 输出速度指令
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
@@ -324,6 +340,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水域载具示例（手柄 / 航点 / 深度航向指令）](./water/holoocean_examples.md) —— 多代理手柄控制、相机 HUD 与配置文件结构
 
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
+
+* [水下 ROV 六自由度手操与抗流能力评测仿真](./water/rov_handling_eval.md) —— 用漂移率、各向异性比与操控权限利用率 η 量化手操品质，附三组对照实验
 
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
 
