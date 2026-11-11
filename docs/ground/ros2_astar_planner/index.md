@@ -229,6 +229,8 @@ python3 tests/test_core.py   # 50 项单元测试
 bash ci/run_ci.sh            # 语法/依赖/测试/仿真/基准 五阶段
 ```
 
+修改本模块时，GitHub Actions 会自动执行 `bash ci/run_ci.sh`（见 `.github/workflows/ground_planner_tests.yml`）。
+
 ## 8. 许可与署名
 
 MIT License。
