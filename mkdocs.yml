@@ -315,6 +315,7 @@ nav:
     - 多无人机空域监测（多边形禁飞区与机间冲突）: './air/multi_uav_airspace_monitor.md'
     - 无人机动态电子围栏预测预警: './air/uav_dynamic_geofence_guard.md'
     - AllocNet 四旋翼避障规划与键盘遥操作: './air/allocnet_teleop.md'
+    - 植保无人机喷洒覆盖与参数评估: './air/uav_agri_spray.md'
     - 语义分割建图与语义路径规划: './air/uav_semantic_mapping_nav.md'
     - 状态识别与轨迹绘制: './air/drone_trajectory_logger.md'
     - 恶劣雨雾天气下相机感知性能对比实验: './ground/weather_perception_benchmark.md'
