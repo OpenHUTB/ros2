@@ -419,16 +419,9 @@ ros2 topic echo /clock --once
 
 图中左侧为手动驶离（蓝）和自动返回（橙）轨迹，绿色方块为充电点；右侧为电量曲线，阴影区域为充电阶段。
 
-![电量管理与自动返航运行数据 真实运行数据](../img/ground/gazebo_diff_drive_teleop_battery_return.png)
+![电量管理与自动返航运行数据](../img/ground/gazebo_diff_drive_teleop_battery_return.png)
 
 
-除数据图外，还记录了两张真实 Gazebo Harmonic 运行画面：
-
-![Gazebo 实时仿真：电量管理与返航小车](../img/ground/gazebo_diff_drive_teleop_battery_gazebo_close.png)
-
-![Gazebo 实时仿真：跟随镜头下的差速小车](../img/ground/gazebo_diff_drive_teleop_battery_gazebo_wide.png)
-
-两张图均来自实际运行的 Gazebo 物理仿真，不是示意图：蓝色车体为 URDF 中的差速底盘，地面网格由 Gazebo 渲染。第一张为近距离跟随视角，第二张为广角场景视角。
 
 ## 15. 说明
 
