@@ -765,7 +765,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#9">9. 已知限制</a>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 多障碍场景设计（待实测）</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 已知限制</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#_1">参考文献</a>
 </li>
@@ -859,7 +861,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <p>视觉避障：</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>auv_end2end<span class="w"> </span>auv_sim.launch.py
 </code></pre></div>
-<p>两个 launch 都会自行启动 Gazebo 并加载 <code>worlds/underwater.world</code>，单独执行即可看到仿真画面。切换功能前先 Ctrl+C 关闭当前仿真，避免两个仿真实例同时向 <code>/auv/cmd_vel</code> 发布指令。</p>
+<p>两个 launch 都会自行启动 Gazebo：矩形巡航加载 <code>worlds/underwater_cruise.world</code>（无墙体的空场景，避免航路被障碍阻断），视觉避障加载 <code>worlds/underwater.world</code>（8 道错位墙）。单独执行即可看到仿真画面，切换功能前先 Ctrl+C 关闭当前仿真，避免两个仿真实例同时向 <code>/auv/cmd_vel</code> 发布指令。</p>
 <p>代码规范检查：</p>
 <div class="highlight"><pre><span></span><code>colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--packages-select<span class="w"> </span>auv_end2end
 colcon<span class="w"> </span>test-result<span class="w"> </span>--verbose
@@ -903,7 +905,14 @@ colcon<span class="w"> </span>test-result<span class="w"> </span>--verbose
 </tbody>
 </table>
 <h2 id="6">6. 参数说明</h2>
-<p>参数硬编码在节点 <code>__init__</code> 中，修改后需重新 <code>colcon build</code>。</p>
+<p>参数全部通过 ROS 参数暴露，两个 launch 用 <code>DeclareLaunchArgument</code> 声明默认值，可在命令行覆盖，不需要重新 <code>colcon build</code>：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 缩短横向时间，加快巡航循环</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>auv_end2end<span class="w"> </span>auv_rect_cruise.launch.py<span class="w"> </span>side_time:<span class="o">=</span><span class="m">8</span>.0
+
+<span class="c1"># 提高触发阈值，减少误触发</span>
+ros2<span class="w"> </span>launch<span class="w"> </span>auv_end2end<span class="w"> </span>auv_sim.launch.py<span class="w"> </span>trigger_ratio:<span class="o">=</span><span class="m">0</span>.3<span class="w"> </span>max_avoid_duration:<span class="o">=</span><span class="m">2</span>.0
+</code></pre></div>
+<p>下表为默认值。</p>
 <p>避障节点 <code>auv_obstacle_avoid</code>：</p>
 <table>
 <thead>
@@ -1014,8 +1023,11 @@ colcon<span class="w"> </span>test-result<span class="w"> </span>--verbose
 切换状态：向左平移
 切换状态：前进 | 完成一个矩形循环
 </code></pre></div>
-<p>四段持续时间由 <code>forward_time = 10 s</code>、<code>side_time = 20 s</code> 控制，轨迹在 <code>/auv/odom</code> 上可观察到闭合矩形。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；<code>planar_move</code> 没有指令超时，这一步决定 AUV 是否立即停下。</p>
-<p><img alt="矩形巡航轨迹" src="../../img/water/auv_end2end_rect_cruise.png"/></p>
+<p>四段持续时间由 <code>forward_time = 10 s</code>、<code>side_time = 20 s</code> 控制，轨迹可通过 <code>ros2 topic echo /auv/odom</code> 观察（XY 轨迹截图待补）。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；<code>planar_move</code> 没有指令超时，这一步决定 AUV 是否立即停下。</p>
+<p>巡航使用独立的 <code>underwater_cruise.world</code>（空场景）：<code>wall_front</code> 位于 <code>(4, 0)</code>，正好压在 y = 0 的直行航路上，用演示场景会让矩形轨迹被墙体切断；<code>planar_move</code> 不参与碰撞，穿墙不会报错，但轨迹不可读。</p>
+<blockquote>
+<p>截图待补：巡航默认使用 <code>underwater_cruise.world</code>（空场景），需在该场景中运行并叠加 <code>/auv/odom</code> 的 XY 轨迹后重拍。旧截图录于 5 墙场景，只显示启动瞬间的画面，不能作为轨迹证据，故此处不再引用。</p>
+</blockquote>
 <h3 id="82">8.2 视觉双向避障</h3>
 <p><code>ros2 launch auv_end2end auv_sim.launch.py</code> 启动后，AUV 沿 +x 方向直行，接近 x=4 处的正前方墙体时画面暗像素占比上升：</p>
 <ul>
@@ -1034,11 +1046,102 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <blockquote>
 <p>说明：<code>libgazebo_ros_planar_move.so</code> 是运动学驱动，不与墙体发生物理碰撞，因此「没有撞上」不能单独作为避障成功的证据，需结合 <code>/auv/odom</code> 的横向位移曲线判断。</p>
 </blockquote>
-<h2 id="9">9. 已知限制</h2>
+<h2 id="9">9. 多障碍场景设计（待实测）</h2>
+<p><code>underwater.world</code> 目前有 8 道错位墙，其中本次新增 3 道（<code>wall_far1</code> / <code>wall_far2</code> / <code>wall_far3</code>），作为连续避让的候选场景。<strong>本节只描述几何与预期行为，尚未采集日志，不作为实测结论。</strong></p>
+<p>需要说明的是：只有 <code>wall_front</code>（尺寸 0.2 × 2，跨 y ∈ [-1, 1]）真正挡在 y = 0 的航路上；其余 7 道是厚 0.2 m、沿 x 方向长 1~2 m 的条状墙，分布在 y = <strong>±0.8~1.5</strong> 之间，是否进入相机视野、暗像素占比能否超过 22%，取决于上一次避让后停在哪个 y 上。单次超时避让横移 2.8 m/s × 3 s = 8.4 m，足以越过全部 ±1.5 m 的墙。</p>
+<table>
+<thead>
+<tr>
+<th>墙</th>
+<th>x</th>
+<th>y</th>
+<th>尺寸 x×y (m)</th>
+<th>与下一道间距</th>
+<th>直行通过 @4.5 m/s</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wall_front</code></td>
+<td>4</td>
+<td>0</td>
+<td>0.2 × 2</td>
+<td>4 m</td>
+<td>0.89 s</td>
+</tr>
+<tr>
+<td><code>wall_right</code></td>
+<td>8</td>
+<td>−1.5</td>
+<td>2 × 0.2</td>
+<td>4 m</td>
+<td>0.89 s</td>
+</tr>
+<tr>
+<td><code>wall_left</code></td>
+<td>12</td>
+<td>+1.5</td>
+<td>2 × 0.2</td>
+<td>4 m</td>
+<td>0.89 s</td>
+</tr>
+<tr>
+<td><code>wall_mid1</code></td>
+<td>16</td>
+<td>−1.0</td>
+<td>1 × 0.2</td>
+<td>2 m</td>
+<td>0.44 s</td>
+</tr>
+<tr>
+<td><code>wall_mid2</code></td>
+<td>18</td>
+<td>+1.0</td>
+<td>1 × 0.2</td>
+<td>6 m</td>
+<td>1.33 s</td>
+</tr>
+<tr>
+<td><code>wall_far1</code></td>
+<td>24</td>
+<td>−1.2</td>
+<td>1.2 × 0.2</td>
+<td>4 m</td>
+<td>0.89 s</td>
+</tr>
+<tr>
+<td><code>wall_far2</code></td>
+<td>28</td>
+<td>+1.2</td>
+<td>1.2 × 0.2</td>
+<td>4 m</td>
+<td>0.89 s</td>
+</tr>
+<tr>
+<td><code>wall_far3</code></td>
+<td>32</td>
+<td>−0.8</td>
+<td>1.2 × 0.2</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>「8 道墙」不等于「8 次避让」：单次避让走超时路径时是 3 s 避让 + 2 s 冷却 ≈ 5 s，按 4.5 m/s 折算约 22 m，足以跨过后面两三道墙。实际触发次数取决于每次走的是「阈值恢复」还是「超时 + 冷却」，需实测确认。</p>
+<p>预期行为：</p>
+<ul>
+<li>阈值恢复路径：绕过墙体后双侧占比回落，日志出现「障碍物清除 恢复直行」；</li>
+<li>超时路径：日志出现「避让超时 进入冷却期 强制直行」，随后 2 s 内不响应任何障碍；</li>
+<li>把 <code>max_avoid_duration</code> 调小、<code>avoid_cooldown</code> 调大，可以更早回到直行，但横向绕行距离变短。</li>
+</ul>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>auv_end2end<span class="w"> </span>auv_sim.launch.py<span class="w"> </span>max_avoid_duration:<span class="o">=</span><span class="m">1</span>.5<span class="w"> </span>avoid_cooldown:<span class="o">=</span><span class="m">3</span>.0
+</code></pre></div>
+<h2 id="10">10. 已知限制</h2>
 <ul>
 <li>障碍持续存在时会形成「避让 3 s → 强制直行 2 s → 再避让」的循环；面对连续长墙无法绕过，这是本作业的教学取舍。</li>
+<li>冷却期 2 s（约 9 m）内不做任何避让，即使画面全黑也不会重触发。这是刻意取舍：避免冷却刚结束就立刻再次进入避让产生抖动；代价是 <code>planar_move</code> 不与墙体碰撞，视觉上会直穿侧墙。</li>
 <li>灰度阈值 22 依赖具体场景：墙体材质 ambient/diffuse = 0.1，在 Gazebo 渲染下接近纯黑，本身远低于阈值；但水下雾效与背景色会把画面整体灰度抬高，改动雾密度、材质或相机距离时仍需重新标定 <code>obstacle_thresh</code>。</li>
-<li>参数硬编码，暂未通过 ROS 参数或 <code>DeclareLaunchArgument</code> 暴露。</li>
+<li>参数已通过 ROS 参数暴露，但仍是启动时读取一次，运行中修改需要重启节点。</li>
 </ul>
 <h2 id="_1">参考文献</h2>
 <ol>
