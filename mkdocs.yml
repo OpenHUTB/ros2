@@ -115,6 +115,7 @@ nav:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
     - 肌肉骨骼人基础: './musculoskeletal/musculoskeletal_basics.md'
+    - 肌肉骨骼肘关节神经网络轨迹控制: './musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md'
     - 肌肉-肌腱串联弹性实验: './musculoskeletal/msk_tendon_basics.md'
     - MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起: './musculoskeletal/msk_human_walking_teleop.md'
     - MuJoCo肌肉骨骼灵巧手遥操作与NN控制: './musculoskeletal/msk_hand_teleop.md'
