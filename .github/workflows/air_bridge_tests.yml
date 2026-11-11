@@ -7,7 +7,6 @@ on:
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
       - 'src/air/uav_e2e_rl/**'
-      - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
@@ -15,7 +14,6 @@ on:
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_keyboard_control/**'
       - 'src/air/uav_e2e_rl/**'
-      - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
 
 jobs:
