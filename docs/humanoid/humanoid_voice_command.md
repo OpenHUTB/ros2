@@ -16,7 +16,7 @@
 | 意图类别 | 前进 / 后退 / 左转 / 右转 / 停止 / 挥手 / 快一点 / 慢一点（+ `unknown`） |
 | ROS | ROS 2 Humble |
 | 入口 | `main.py`（`--wav / --demo / --text / --bench / --list`） |
-| 权重 | `weights/intent_mlp.pt`（304 KB）、`weights/whisper/tiny.pt`（72 MB），随仓库提供 |
+| 权重 | `weights/intent_mlp.pt`（304 KB）随仓库提供；Whisper tiny（72 MB）运行时下载 |
 | 执行层 | 复用 `humanoid_keyboard_control` 的 MuJoCo 仿真节点（`/cmd_vel` 对接） |
 
 任务定位：课程任务「**传感器感知 + 运动控制**」。语音是一条独立于激光、相机的感知通道，
@@ -52,17 +52,25 @@ humanoid_voice_command/
 │   ├── eval_pipeline.py        端到端评估（准确率、耗时、速度指令）
 │   ├── plot_eval.py            画指标图
 │   ├── prepare_audio.py        口令音频规整为 16 kHz / 16 bit / 单声道
+│   ├── download_weights.py     预取并校验 Whisper 权重（仓库不携带 72 MB）
 │   └── record_gif.py           录制演示动图
 ├── audio/                      18 条预录口令（约 1 MB）
-├── weights/                    意图网络 304 KB + Whisper tiny 72 MB
-└── test/test_offline.py        26 条离线单元测试
+├── weights/                    意图网络 304 KB（Whisper 权重运行时下载）
+└── test/test_offline.py        46 条离线单元测试
 ```
 
-Whisper tiny 权重与官方发布文件一致，可校验：
+意图网络权重随仓库提供，可校验：
 
 ```
-65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9  weights/whisper/tiny.pt
 bd7a0effdcf0dd457ec9be87a30c2b8b5523ae53307a7fb5f558e3c5fcd4189b  weights/intent_mlp.pt
+```
+
+Whisper tiny 权重不进仓库（72 MB 会让每个 clone 都多拉一份，且永久留在 `.git` 历史里）。
+运行时 `whisper.load_model('tiny')` 会下载到 `~/.cache/whisper`，
+`scripts/download_weights.py` 可提前取一次并核对官方 sha256：
+
+```
+65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9  tiny.pt（75,572,083 B）
 ```
 
 ## 四、核心实现
@@ -155,6 +163,16 @@ $$
 「向左转」与「左转」的 LCS 是「左转」，相似度 $2\times2/(3+2)=0.8$，
 而编辑距离会把它当成删了一个字。
 
+子串路径有两处必须收紧，否则会成为误触发入口：
+
+* **单字**：`norm in kw_norm`（输入是关键词的子串）在输入只有 1 个字时也会满分命中，
+  于是 ASR 只吐出一个「右」「停」，机器人就会转或停。现在短于 2 个字的文本
+  不参与规则匹配，直接判 `unknown`。
+* **否定句**：「不要前进」里含有关键词「前进」，原来会以 1.00 判成 `forward`，
+  方向正好相反。现在命中位置前紧挨着否定词（`不要 / 不用 / 不必 / 不准 / 不许 /
+  别 / 甭 / 勿`）时判 `unknown`，且**不送网络**——网络同样会把它塞进某个动作。
+  「别动」这类关键词本身带否定字的停止口令不受影响（否定词在关键词内部）。
+
 **第二级：意图网络。** 规则匹配不到时（通常是识别出了形近字），把文本转成
 字符 1/2/3-gram 哈希特征送进两层 MLP：
 
@@ -176,13 +194,21 @@ $$
 | 输入文本 | 规则 | 网络 | 最终 |
 |---|---|---|---|
 | `前进` | forward (1.00) | — | forward（rule） |
-| `轰手`（「挥」被听成「轰」） | 无命中（最高 0.50） | wave (0.83) | **wave（net）** |
+| `轰手`（「挥」被听成「轰」） | 无命中（最高 0.50） | wave (0.51) | **wave（net）** |
+| `缩转`（「左转」被听成「缩转」） | 无命中（最高 0.50） | stop (0.60) | **turn_left（lcs）** |
+| `右`（只识别出一个字） | 不匹配（短于 2 字） | 不调用 | **unknown** |
+| `不要前进` | 命中但被否定 | 不调用 | **unknown（negated）** |
 | `请把空调调到二十六度` | 最高相似度 0.12 < 0.30 | 不调用 | **unknown** |
 
 `轰手` 是本模块实测中真实出现的识别错误：规则层因为相似度只有 0.50 而放弃，
-网络层以 0.83 的置信度判成 `wave`。这就是保留神经网络的意义。
+网络层以 0.51 的置信度判成 `wave`。这就是保留神经网络的意义。
 
-最后一行是**拒识**：与词表最高相似度低于 0.30 时直接判 `unknown`，不送网络。
+`缩转` 则暴露了网络的另一面：它把「缩转」判成了 `stop`（0.60），而 `stop` 的词表
+与输入**一个字都不重合**。于是加了一条对照规则——网络判出的意图与输入零字符重合、
+而 LCS 有明显更贴近的候选时，以 LCS 为准（`缩转` 与 `左转` 的 LCS 相似度 0.50），
+判定来源记为 `lcs`。这是兜底，不是识别准确率的提升。
+
+最后两行是**拒识**：与词表最高相似度低于 0.30 时直接判 `unknown`，不送网络。
 没有这道闸，网络会把任何输入硬塞进某个动作，机器人听到「打开电视」也会往前走。
 
 ### 4.5 意图 → 速度指令
@@ -216,12 +242,15 @@ $$
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install openai-whisper soundfile pyyaml
 
-# 2) 构建（仿真执行层来自 humanoid_keyboard_control，一起构建）
+# 2) 预取 Whisper tiny 权重到 ~/.cache/whisper（72 MB，只需一次，会校验 sha256）
+python src/humanoid/humanoid_voice_command/scripts/download_weights.py
+
+# 3) 构建（仿真执行层来自 humanoid_keyboard_control，一起构建）
 cd ~/ros2_ws
 colcon build --packages-select humanoid_voice_command humanoid_keyboard_control
 source install/setup.bash
 
-# 3) 一键启动：语音 + 指令 + MuJoCo 仿真
+# 4) 一键启动：语音 + 指令 + MuJoCo 仿真
 ros2 launch humanoid_voice_command main.launch.py
 
 # 只播一条口令
@@ -232,6 +261,9 @@ ros2 launch humanoid_voice_command main.launch.py visualize:=false
 
 # 不启仿真，只发 /cmd_vel（配合已有的行走模块）
 ros2 launch humanoid_voice_command main.launch.py start_sim:=false
+
+# 用本地权重副本（断网环境）
+ros2 launch humanoid_voice_command main.launch.py model_path:=/data/whisper/tiny.pt
 ```
 
 不开 ROS 时（Windows 也可）：
@@ -261,7 +293,7 @@ python main.py --bench                      # 平均推理耗时
 | turn_right_2 | 往右转 | turn_right | rule | 1.00 | 0.17 s | wz=−0.60 |
 | stop_1 | 停止 | stop | rule | 1.00 | 0.15 s | 0 |
 | stop_2 | 停下 | stop | rule | 1.00 | 0.15 s | 0 |
-| wave_1 | **轰手** | wave | **net** | 0.83 | 0.16 s | 0 + 上身动作 |
+| wave_1 | **轰手** | wave | **net** | 0.51 | 0.16 s | 0 + 上身动作 |
 | wave_2 | 打个招呼 | wave | rule | 1.00 | 0.17 s | 0 + 上身动作 |
 | faster_1 / _2 | 快一点 / 加速 | faster | rule | 1.00 | 0.15 s | 档位 → fast |
 | slower_1 / _2 | 慢一点 / 减速 | slower | rule | 1.00 | 0.16 s | 档位 → slow |
@@ -294,8 +326,16 @@ python main.py --bench                      # 平均推理耗时
 | 判为 `unknown` | **32 / 32** |
 | 误触发运动指令 | 0 |
 
+另外两类容易漏的输入（评审指出后补的用例）：
+
+| 边界输入 | 结果 |
+|---|---|
+| 单字 `右` / `前` / `停` / `快` / `慢` | 5 / 5 判 `unknown`（来源 `unknown`） |
+| 否定句 `不要前进` / `不要右转` / `不用停止` / `别往前走` / `请不要后退` | 5 / 5 判 `unknown`（来源 `negated`） |
+| `别动` / `停下别动`（关键词自带否定字） | 仍判 `stop`，没有被否定规则误伤 |
+
 这条指标比准确率更重要：语音控制最大的风险不是听错口令，而是**听到无关的话就乱动**。
-两道闸（相似度下限 0.30 + 网络 `unknown` 类）把误触发压到 0。
+三道闸（单字不匹配 + 否定词拦截 + 相似度下限 0.30）把误触发压到 0。
 
 ### 6.4 ROS 2 链路验证
 
@@ -314,7 +354,7 @@ $ python3 -m flake8 --max-line-length 99 humanoid_voice_command main.py scripts 
 （无输出）
 
 $ python3 -m pytest test/test_offline.py -q
-26 passed
+46 passed
 
 $ ros2 launch humanoid_voice_command main.launch.py start_sim:=true visualize:=false interval:=5.0
 [voice_node]      目录轮询模式：18 条口令，间隔 5.0s
@@ -365,7 +405,7 @@ $ ros2 launch humanoid_voice_command main.launch.py start_sim:=true visualize:=f
 
 ```json
 {"wav": "wave_1.wav", "text": "轰手", "intent": "wave",
- "confidence": 0.83, "source": "net", "asr_latency": 0.162}
+ "confidence": 0.51, "source": "net", "asr_latency": 0.162}
 ```
 
 ### 参数
@@ -377,6 +417,7 @@ $ ros2 launch humanoid_voice_command main.launch.py start_sim:=true visualize:=f
 | `interval` | `3.0` | 两条口令之间的间隔（s） |
 | `loop` | `true` | 目录轮询是否循环 |
 | `model` | `tiny` | Whisper 规格 |
+| `model_path` | `''` | 本地 Whisper 权重路径，空则用缓存或自动下载 |
 | `language` | `zh` | 识别语言，`auto` 为自动检测 |
 | `hold_time` | `3.0` | 一条运动指令保持多久后自动停车（s） |
 | `record_json` | `''` | 把识别结果写成 JSON（便于出图/回放） |
@@ -400,9 +441,16 @@ $ ros2 launch humanoid_voice_command main.launch.py start_sim:=true visualize:=f
 语音没有「松开按键」这个事件。`hold_time` 到期自动清零，避免识别错误或用户走神时
 机器人一直跑。
 
-**Q：仓库多了 72 MB 的 Whisper 权重值得吗？**
-为了评测机断网也能复现。删掉 `weights/whisper/tiny.pt` 后，`openai-whisper`
-会在首次运行时自动下载到 `~/.cache/whisper`，功能不受影响，只是需要联网。
+**Q：Whisper 权重从哪来？断网能用吗？**
+仓库不携带权重（72 MB 会让每个 clone 多拉一份，并永久留在 `.git` 历史里）。
+默认由 `whisper.load_model('tiny')` 下载到 `~/.cache/whisper`，之后全程离线；
+想提前取好就跑 `python scripts/download_weights.py`（会核对官方 sha256）。
+断网机器可以在联网机器上跑 `--copy-to` 把 `tiny.pt` 拷进包内 `weights/whisper/`，
+或用 `--model-path` / `HUMANOID_VOICE_WHISPER` 指向任意副本，`asr.py` 会优先用本地文件。
+
+**Q：为什么说「右」「不要前进」没反应？**
+这是故意的。单字和否定句歧义太大，判 `unknown` 比赌一个方向安全：
+说「右转」而不是「右」，说「后退」而不是「不要前进」。
 
 **Q：识别很慢怎么办？**
 先确认装的是 CPU 版 torch 而不是 CUDA 版（后者在无 GPU 机器上启动和推理都更慢），

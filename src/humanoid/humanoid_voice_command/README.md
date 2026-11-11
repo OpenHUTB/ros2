@@ -13,7 +13,7 @@ humanoid_voice_command/
 ├── main.py                     离线入口（--wav / --demo / --text / --bench / --list）
 ├── config/intents.yaml         口令词表、基准速度、速度档位
 ├── humanoid_voice_command/
-│   ├── asr.py                  Whisper 封装（离线加载、16 kHz 重采样、重复片段折叠）
+│   ├── asr.py                  Whisper 封装（16 kHz 重采样、重复片段折叠、权重定位）
 │   ├── intent.py               规则匹配 + 意图网络（TorchScript）
 │   ├── voice_node.py           ROS 2 感知节点：音频 → /voice_text、/voice_intent
 │   └── command_node.py         ROS 2 决策节点：意图 → /cmd_vel、/humanoid/gesture
@@ -23,11 +23,11 @@ humanoid_voice_command/
 │   ├── eval_pipeline.py        端到端评估（识别准确率、耗时、速度指令）
 │   ├── plot_eval.py            画指标图
 │   ├── prepare_audio.py        把口令音频统一成 16 kHz / 16 bit / 单声道
+│   ├── download_weights.py     预取并校验 Whisper 权重（仓库不携带 72 MB）
 │   └── record_gif.py           录制演示动图
 ├── audio/                      18 条预录口令（约 1 MB）
 ├── weights/intent_mlp.pt       意图网络（304 KB，TorchScript）
-├── weights/whisper/tiny.pt     Whisper tiny（72 MB，离线可用）
-└── test/test_offline.py        26 条离线单元测试
+└── test/test_offline.py        46 条离线单元测试
 ```
 
 ## 安装
@@ -37,13 +37,19 @@ humanoid_voice_command/
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 # 2) 语音识别
 pip install openai-whisper soundfile pyyaml
-# 3) 构建
+# 3) 预取 Whisper tiny 权重到 ~/.cache/whisper（72 MB，只需一次，会校验 sha256）
+python scripts/download_weights.py
+# 4) 构建
 cd ~/ros2_ws && colcon build --packages-select humanoid_voice_command humanoid_keyboard_control
 source install/setup.bash
 ```
 
-`weights/whisper/tiny.pt` 随仓库提供，运行时不联网。若删掉该文件，
-`openai-whisper` 会在首次运行时自动下载到 `~/.cache/whisper`。
+**关于权重**：仓库不携带 72 MB 的 Whisper 权重。首次运行时
+`whisper.load_model('tiny')` 会自动下载到 `~/.cache/whisper`，之后全程离线；
+上面第 3 步只是把这一步提前，并核对官方 sha256。完全断网的机器可以在一台能联网的
+机器上跑 `python scripts/download_weights.py --copy-to <包内 weights/whisper 目录>`，
+把文件拷进包内，`asr.py` 会优先使用它（也可用 `--model-path` 或环境变量
+`HUMANOID_VOICE_WHISPER` 指向任意副本）。
 
 ## 离线试跑（不需要 ROS）
 
@@ -102,6 +108,7 @@ ros2 launch humanoid_voice_command main.launch.py start_sim:=false
 | `interval` | `3.0` | 两条口令之间的间隔（s） |
 | `loop` | `true` | 目录轮询是否循环 |
 | `model` | `tiny` | Whisper 规格（`tiny`/`base`/`small`） |
+| `model_path` | `''` | 本地 Whisper 权重路径，空则用缓存或自动下载 |
 | `language` | `zh` | 识别语言，`auto` 为自动检测 |
 | `hold_time` | `3.0` | 一条运动指令保持多久后自动停车（s） |
 
@@ -135,7 +142,7 @@ ros2 launch humanoid_voice_command main.launch.py start_sim:=false
 ```bash
 python scripts/eval_pipeline.py --json /tmp/eval.json   # 端到端评估
 python scripts/plot_eval.py /tmp/eval.json              # 画指标图
-pytest test/test_offline.py -q                          # 26 条单元测试
+pytest test/test_offline.py -q                          # 46 条单元测试
 ```
 
 ## 重新生成口令音频
@@ -153,6 +160,12 @@ Linux 下可用 `espeak-ng` 或 `edge-tts` 合成，再跑上面的脚本规整�
 
 * 用的是 `tiny` 模型（39 M 参数），中文同音字仍会出错（例如「挥」→「轰」），
   靠意图网络兜底；换成 `base` / `small` 可提升字面准确率，但推理耗时涨 3~5 倍。
+* 拒识策略偏保守：**单字**（「右」「停」「快」）和**否定句**（「不要前进」「不用停止」）
+  一律判 `unknown`。宁可不动，也不下发方向相反的指令；代价是「右」这类省略说法
+  需要说完整（「右转」）。
+* 同音字兜底不是万能的：`缩转`（`左转` 的误识）网络会判成 `stop`，规则层也没命中，
+  最终由「网络意图与输入零字符重合 → 取 LCS 最接近候选」这条规则救回 `turn_left`。
+  这只是兜底，不代表识别准确率提升。
 * 口令音频是预录的 wav，不是麦克风实时采集。需要实时麦克风时用
   `voice_node --ros-args -p use_mic:=true`（要求安装 `sounddevice` 且有音频设备，
   容器里通常没有）。

@@ -12,15 +12,25 @@
 | 用途 | 口令音频 → 文本 |
 | 引用 | Radford et al., *Robust Speech Recognition via Large-Scale Weak Supervision*, 2022 |
 
-`weights/whisper/tiny.pt` 是 Whisper 官方发布的 `tiny` 模型权重（75,572,083 B），
-由 `whisper.load_model('tiny')` 下载得到，未做任何修改：
+**权重不随仓库提供**（`tiny` 约 72 MB，超过主仓库现有最大文件一个量级）。
+运行时由 `whisper.load_model('tiny')` 下载到 `~/.cache/whisper`，或用
+`scripts/download_weights.py` 预先取一次：
+
+```bash
+python scripts/download_weights.py            # 下载并校验 sha256
+python scripts/download_weights.py --check    # 只检查本地是否已有
+```
+
+官方发布的 `tiny` 权重（75,572,083 B）指纹，用于核对下载结果：
 
 ```
-65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9  weights/whisper/tiny.pt
+65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9  tiny.pt
 ```
 
-校验命令：`sha256sum weights/whisper/tiny.pt`。删掉该文件后 `whisper.load_model`
-会重新联网下载官方权重并缓存到 `~/.cache/whisper`。
+权重为 Whisper 官方原版，未做任何修改。断网环境可以在一台能联网的机器上跑
+`python scripts/download_weights.py --copy-to <包内 weights/whisper 目录>`，
+再把该文件拷过去；`asr.py` 的查找顺序是
+`HUMANOID_VOICE_WHISPER` 环境变量 → 包内 `weights/whisper/tiny.pt` → `~/.cache/whisper`。
 
 ## 2. 口令音频
 
