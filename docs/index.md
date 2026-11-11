@@ -246,6 +246,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
 * [无人机测距制动轨迹指标分析](./air/mujoco_uav_braking_metrics.md)
+* [无人机测距几何一致性检查](./air/mujoco_uav_range_sensor_quality.md)
 
 * [无人机载荷质量估计](./air/payload_mass_estimation.md)
 * [无人机载荷重心偏移与配平监测](./air/uav_payload_balance_guard.md) —— 利用左右推力差、滚转修正和横摆响应估计横向重心偏移，输出配平和安全包线告警
