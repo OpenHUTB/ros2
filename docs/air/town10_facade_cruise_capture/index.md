@@ -186,6 +186,20 @@ ros2 launch town10_facade_cruise_capture main.launch.py backend:=airsim host:=ho
 
 ![原生第12航点采图](../../img/air/town10_facade_cruise_capture/native_capture_011.png)
 
+![Town10HD原生运行12个航点的实采图像](../../img/air/town10_facade_cruise_capture/native_capture_contact_sheet.png)
+
+以下曲线按本次原生运行记录的全部613个状态样本绘制；竖线标出12次采图时刻。速度为服务端实际三轴线速度的模长，目标误差是当前航点距离，深度为画面中央九点的最小测距。
+
+![Town10HD原生巡航深度、目标误差与实际速度曲线](../../img/air/town10_facade_cruise_capture/native_trajectory_curves.png)
+
+![Town10HD原生巡航实际轨迹和立面视场模型投影](../../img/air/town10_facade_cruise_capture/native_facade_coverage_model.png)
+
+航迹投影使用采图清单中的实际相机位置，视场矩形按每次实测深度中位数和相机参数计算。该估算假设被测立面垂直于光轴且无局部遮挡；它用于说明采图间距和理论视场重叠，不替代对实际建筑表面的像素级覆盖核验。针孔视场尺寸关系如下：
+
+![由相机内参和深度推算立面视场覆盖尺寸的数学模型](../../img/air/town10_facade_cruise_capture/camera_fov_model.png)
+
+本次运行的原始状态序列可下载为 [Town10HD 原生轨迹 CSV](native_trajectory.csv)；航点和曝光记录见[原生采图清单](native_capture_manifest.json)，汇总指标见[原生运行指标](native_metrics.json)。
+
 目标航点切换后，新目标通常距离当前位置约1.5–2 m，随后误差逐渐收敛。因此`route_error_rmse_m`是全程到当前目标点的误差统计，包含切换瞬间的距离增量，不能作为偏离整条路径的横向误差或悬停精度。实际采图位置误差以清单逐项记录为准。
 
 表中最大实测速度来自服务端实际线速度，包含原生飞控的瞬态响应；它与0.65 m/s的命令限幅分别统计。到达拍摄条件仍要求实际速度小于0.35 m/s、位置误差小于0.3 m。

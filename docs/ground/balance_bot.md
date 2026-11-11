@@ -144,36 +144,6 @@ process[sim_balance-2]: started with pid [2644]
 要点：节点 `/sim_balance` 正常驻留；`/imu` 稳定在 **50 Hz**；
 发 `/cmd_vel` 后 `/odom` 的线速度从 0 变到 0.236 m/s，证明"指令 → 物理 → 里程计"整条链路是通的。
 
-### 3.5 ROS 节点验证（虚拟机实跑）
-
-`roslaunch balance_bot sim.launch` 起来的实际输出：
-
-```text
-=== ① catkin_make ===
-#### Running command: "make -j2 -l2" in "/home/zxy/catkin_ws/build"
-
-=== ② rospack ===
-/home/zxy/catkin_ws/src/balance_bot
-
-=== ③ roslaunch balance_bot sim.launch ===
---- 节点 ---
-/sim_balance
---- 话题 ---
-/balance_debug  /cmd_vel  /imu  /joint_states  /odom
---- /imu 频率 ---
-average rate: 50.077
-average rate: 50.061
---- 发布 /cmd_vel 前进 0.3 m/s 后读 /odom ---
-0.2361        # 速度正在从 0 加速到 0.3，说明指令确实驱动了仿真
-
-=== 启动日志 ===
-[INFO] 平衡车仿真启动（控制器=pd，balance_bot.xml）
-process[sim_balance-2]: started with pid [2644]
-```
-
-要点：节点 `/sim_balance` 正常驻留；`/imu` 稳定在 **50 Hz**；
-发 `/cmd_vel` 后 `/odom` 的线速度从 0 变到 0.236 m/s，证明"指令 → 物理 → 里程计"整条链路是通的。
-
 ### 3.6 控制曲线
 
 ![控制曲线](../img/balance_bot_curves.png)

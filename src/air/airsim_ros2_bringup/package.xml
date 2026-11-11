@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>airsim_ros2_bringup</name>
+  <version>0.1.0</version>
+  <description>Minimal ROS 2 Humble bridge for AirSim multirotor pose, TF and velocity control.</description>
+  <maintainer email="dmjtr@users.noreply.github.com">dmjtr</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>python3-setuptools</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2_ros</depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

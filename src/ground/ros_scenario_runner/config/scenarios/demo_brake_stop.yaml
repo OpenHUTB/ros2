@@ -1,0 +1,44 @@
+# 场景：直线加速到 5 m/s，保持，再刹停
+#
+# 用 `roslaunch ros_scenario_runner main.launch` 直接跑，
+# 也可以在没装 ROS 的机器上用 python 跑内置模型回归：
+#   python tests/test_ros_scenario_runner_local.py
+
+scenario:
+  name: 直线加速与刹停
+  duration: 14.0
+
+  initial:
+    x: 0.0
+    y: 0.0
+    yaw: 0.0
+    speed: 0.0
+
+  steps:
+    - at: 0.5
+      name: 起步
+      command: {linear: 5.0, angular: 0.0}
+    - at: 8.0
+      name: 刹停
+      command: {linear: 0.0, angular: 0.0}
+
+  expects:
+    - type: max_speed          # 任何时候都不许超速
+      value: 5.0
+      tolerance: 0.1
+    - type: reach_speed        # 必须真的加到 5 m/s
+      value: 5.0
+      tolerance: 0.05
+    - type: final_speed        # 结束时要停稳
+      value: 0.0
+      tolerance: 0.05
+    - type: distance           # 里程落在合理区间
+      min: 30.0
+      max: 35.0
+    - type: position           # 结束位置
+      x: 32.3
+      y: 0.0
+      tolerance: 0.5
+    - type: heading            # 全程没有偏航
+      value: 0.0
+      tolerance: 0.01
