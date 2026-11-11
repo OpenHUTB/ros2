@@ -1,15 +1,15 @@
 # 车辆稳态操稳特性对比仿真（不足 / 中性 / 过度转向）
 
-本文介绍一个纯 Python（numpy + matplotlib + Pillow）实现的车辆稳态操稳特性分析模块。模块基于线性自行车模型，在固定质量、轴距与轮胎侧偏刚度下改变质心前后位置（前重、居中、后重），计算稳态转向梯度 K，判定每种布置属于不足转向（understeer）、中性转向（neutral）还是过度转向（oversteer），并绘制横摆角速度增益、侧向加速度增益随车速的变化曲线，以及前后轴侧偏角随侧向加速度的变化曲线。
+本文介绍一个车辆稳态操稳特性分析模块：核心分析用纯 Python（numpy + matplotlib + Pillow）实现，并可选接入 MuJoCo 离屏渲染三车场景演示动图。模块基于线性自行车模型，在固定质量、轴距与轮胎侧偏刚度下改变质心前后位置（前重、居中、后重），计算稳态转向梯度 K，判定每种布置属于不足转向（understeer）、中性转向（neutral）还是过度转向（oversteer），并绘制横摆角速度增益、侧向加速度增益随车速的变化曲线，以及前后轴侧偏角随侧向加速度的变化曲线。
 
 ## 1. 运行环境
 
 | 项目 | 版本 / 说明 |
 | --- | --- |
 | 操作系统 | Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面） |
-| 仿真平台 | 纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA |
+| 仿真平台 | 核心分析为纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA；MuJoCo 仅用于可选的场景动图离屏渲染 |
 | Python | 3.10 ~ 3.12 |
-| 依赖 | `numpy`、`matplotlib`、`Pillow` |
+| 依赖 | `numpy`、`matplotlib`、`Pillow`；`mujoco>=3.0` 可选（未安装时自动跳过场景动图） |
 
 ### 1.1 安装依赖
 
@@ -24,8 +24,10 @@
 2. 安装依赖：
 
    ```bash
-   pip install numpy matplotlib Pillow
+   pip install numpy matplotlib Pillow mujoco
    ```
+
+   > 若不需要场景演示动图，可省略 `mujoco`，曲线图与数据表照常生成。
 
 ### 1.2 验证环境
 
@@ -35,7 +37,7 @@
 python -c "import numpy, matplotlib, PIL; print('dependencies ok')"
 ```
 
-输出 `dependencies ok` 即表示依赖安装完成。
+输出 `dependencies ok` 即表示基础依赖安装完成；如需场景动图，再执行 `python -c "import mujoco; print('mujoco ok')"` 确认可选依赖可用。
 
 ## 2. 实验原理
 
@@ -114,6 +116,7 @@ v_crit = sqrt(L / |K|)
 | 增益曲线 | `yaw_gain()`、`lateral_gain()` 按车速求稳态增益 |
 | 批量汇总 | `summarize()` 汇总各布置指标写入 `metrics.csv` |
 | 绘图 | 梯度柱状图、增益-车速曲线、侧偏角曲线、演示动图逐帧渲染 |
+| 场景渲染 | `render_scene_gif()` 用 MuJoCo 离屏渲染三车场景逐帧画面，PIL 合成场景动图（可选依赖） |
 | 结果输出 | 保存 PNG 与 GIF 到脚本同级 `results/` 目录 |
 
 下面只解释两处关键实现，完整代码请直接查看 `src/` 下的源码。
@@ -139,6 +142,18 @@ else:
 ```python
 if k < -NEUTRAL_EPS:
     v_crit = float(np.sqrt(WHEELBASE / abs(k)))
+```
+
+**（3）MuJoCo 三车场景动图（可选）**
+
+`render_scene_gif()` 在内嵌 MJCF 场景里放置对应前重 / 中性 / 后重的三辆车，逐帧推进位姿并由 `mujoco.Renderer` 离屏渲染 RGB 帧，再用 PIL 合成 GIF；帧上叠加布置名、K 值与判定标签。横向偏移仅用于可视化三种操稳倾向，定量结论以曲线与指标表为准。未安装 MuJoCo 时该函数直接跳过，不影响其余产物：
+
+```python
+try:
+    import mujoco
+except (ImportError, OSError, RuntimeError):
+    print("未安装 mujoco，跳过仿真场景动图（曲线图与数据表不受影响）")
+    return None
 ```
 
 ## 4. 运行步骤
@@ -180,9 +195,17 @@ if k < -NEUTRAL_EPS:
 | 居中 | 1.35 | 1.35 | 750.0 | 750.0 | 0.000000 | 中性转向 | — |
 | 后重 | 1.65 | 1.05 | 583.3 | 916.7 | −0.004167 | 过度转向 | 25.46 |
 
-### 5.5 演示动图
+### 5.5 曲线演示动图
 
-![操稳演示动图](../img/ground/steady_state_handling_demo.gif)
+![操稳曲线演示动图](../img/ground/steady_state_handling_demo.gif)
+
+车速扫描过程中三种布置横摆增益曲线的变化，黑色虚线为当前车速位置。
+
+### 5.6 MuJoCo 场景演示动图
+
+![三车场景演示动图](../img/ground/steady_state_handling_scene_demo.gif)
+
+三辆车分别对应前重（蓝）、中性（绿）、后重（红）布置，在同一行驶过程中的场景画面；帧标签给出各布置的转向梯度 K 与操稳判定。该画面为离屏渲染的可视化示意，不代表实车或高保真仿真结果。
 
 ## 6. 结论
 

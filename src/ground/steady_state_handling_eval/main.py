@@ -1,13 +1,15 @@
 """
 车辆稳态操稳特性对比仿真（纯 Python 数值仿真）
 
-依赖: numpy, matplotlib, Pillow
+依赖: numpy, matplotlib, Pillow；mujoco 为可选依赖（用于离屏渲染三车场景
+      演示动图，未安装时自动跳过，不影响曲线图与数据表产物）
 使用: python main.py
 说明: 基于线性自行车模型，在固定质量、轴距与轮胎侧偏刚度下，改变质心
       前后位置（前重 / 中性 / 后重），计算稳态转向梯度 K，判定每种布置属于
       不足转向（understeer）、中性转向（neutral）还是过度转向（oversteer），
       并绘制横摆角速度增益、侧向加速度增益随车速的变化曲线，以及前后轴侧偏角
-      随侧向加速度的变化曲线。所有结果写入脚本同级的 results/ 目录。
+      随侧向加速度的变化曲线；另用 MuJoCo 离屏渲染三车场景演示动图。
+      所有结果写入脚本同级的 results/ 目录。
 """
 import os
 import csv
@@ -16,7 +18,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')  # 无图形界面环境下后台出图
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageDraw
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results')
 
@@ -197,6 +199,119 @@ def render_demo_frame(info, v_cur, out_size=(800, 420)):
     return img.convert('RGB').resize(out_size)
 
 
+# ---------- MuJoCo 三车场景演示（可选依赖） ----------
+# 三辆车沿直道行驶，横向偏移仅用于可视化三种操稳倾向：不足转向外推、
+# 中性保持、过度转向内摆；定量结论以自行车模型曲线与指标表为准。
+SCENE_XML = """<mujoco><compiler angle="radian"/>
+<default><geom contype="0" conaffinity="0"/></default>
+<worldbody>
+<light name="key" dir="-0.35 -0.55 -1" diffuse="0.95 0.95 0.95" ambient="0.55 0.55 0.55"/>
+<geom name="ground" type="plane" size="6 6 0.02" rgba="0.78 0.78 0.80 1"/>
+<camera name="cam" mode="fixed" pos="0 -7 5.2" xyaxes="1 0 0 0 0.74 0.67" fovy="45"/>
+<body name="car_f" pos="0 -2.0 0.16"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.14" rgba="0.12 0.47 0.71 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+<body name="car_n" pos="0  0.0 0.16"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.14" rgba="0.17 0.63 0.17 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+<body name="car_r" pos="0  2.0 0.16"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.14" rgba="0.84 0.15 0.15 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+</worldbody></mujoco>"""
+
+_SCENE_BODY = {'front_weighted': 'car_f', 'neutral': 'car_n', 'rear_weighted': 'car_r'}
+_SCENE_LANE = {'front_weighted': -2.0, 'neutral': 0.0, 'rear_weighted': 2.0}
+_SCENE_DRIFT = {'front_weighted': -0.12, 'neutral': 0.0, 'rear_weighted': 0.35}
+_SCENE_RGB = {'front_weighted': (31, 119, 180), 'neutral': (44, 160, 44),
+              'rear_weighted': (214, 39, 40)}
+_SCENE_SHORT = {'front_weighted': 'Front', 'neutral': 'Neutral',
+                'rear_weighted': 'Rear'}
+
+
+def _annotate_scene(img, info):
+    """在场景帧左上角叠加布置名、转向梯度 K 与操稳判定标签。"""
+    im = img.convert('RGB')
+    draw = ImageDraw.Draw(im)
+    y = 6
+    for key in LAYOUTS:
+        a = info[key]
+        label = f"{_SCENE_SHORT[key]} K={a['k']:+.4f} {a['kind']}"
+        draw.rectangle([4, y, 4 + 230, y + 16], fill=(0, 0, 0))
+        draw.text((8, y + 3), label, fill=_SCENE_RGB[key])
+        y += 18
+    return im
+
+
+def _write_scene_gif(frames, out_path, out_size=(320, 240), duration=90):
+    """GIF 体积治理：缩放 + 128 色自适应调色板，超 10MB 自动抽帧重编码。"""
+    def encode(step):
+        imgs = []
+        for f in frames[::step]:
+            im = f.resize(out_size, Image.LANCZOS).convert(
+                'P', palette=Image.ADAPTIVE, colors=128)
+            imgs.append(im)
+        imgs[0].save(out_path, save_all=True, append_images=imgs[1:],
+                     duration=duration * step, loop=0, optimize=True)
+        return os.path.getsize(out_path)
+
+    step = 1
+    size = encode(step)
+    while size > 10 * 1024 * 1024 and len(frames[::step]) > 8:
+        step += 1
+        size = encode(step)
+    return size
+
+
+def render_scene_gif(info, out_path, frames_n=24):
+    """MuJoCo 离屏渲染三车场景逐帧画面并合成演示动图。
+
+    mujoco 为可选依赖：未安装或离屏 GL 不可用时返回 None，不阻断曲线图产物。
+    """
+    try:
+        import mujoco
+    except (ImportError, OSError, RuntimeError):
+        print("未安装 mujoco，跳过仿真场景动图（曲线图与数据表不受影响）")
+        return None
+
+    os.environ.setdefault('MUJOCO_GL', 'egl')
+    model = mujoco.MjModel.from_xml_string(SCENE_XML)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    renderer = mujoco.Renderer(model, 360, 480)
+
+    qadr = {}
+    for key, bn in _SCENE_BODY.items():
+        jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, bn)
+        qadr[key] = model.jnt_qposadr[jid]
+
+    frames = []
+    for k in range(frames_n):
+        t = k / (frames_n - 1)
+        for key, bn in _SCENE_BODY.items():
+            qa = qadr[key]
+            data.qpos[qa:qa + 3] = [1.2 * t,
+                                    _SCENE_LANE[key] + _SCENE_DRIFT[key] * t, 0.16]
+            data.qpos[qa + 3:qa + 7] = [1.0, 0.0, 0.0, 0.0]
+        mujoco.mj_forward(model, data)
+        renderer.update_scene(data, camera='cam')
+        frames.append(_annotate_scene(Image.fromarray(renderer.render()), info))
+
+    renderer.close()
+    return _write_scene_gif(frames, out_path)
+
+
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     rows, info = summarize()
@@ -221,6 +336,10 @@ def main():
         frames[0].save(os.path.join(RESULTS_DIR, 'handling_demo.gif'),
                        save_all=True, append_images=frames[1:],
                        duration=duration, loop=0, optimize=True)
+
+    scene_size = render_scene_gif(info, os.path.join(RESULTS_DIR, 'handling_scene_demo.gif'))
+    if scene_size:
+        print(f"仿真场景动图已写入 handling_scene_demo.gif（{scene_size // 1024} KB）")
 
     for r in rows:
         print(f"{r['layout']:16s} K={r['steer_gradient_K']:.5f} "
