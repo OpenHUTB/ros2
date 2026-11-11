@@ -45,3 +45,13 @@ PID + 航向项的组合能有效抑制「来回画龙」。
 1. 车道线缺失路段（贴砖、磨损、路口）会丢线，长距离运行需要叠加地图先验或历史车道估计。
 2. 偏移是归一化量，没有做相机内参标定到米。
 3. 只在 Town10HD_Opt 上验证，换地图需要重新确认 tag=24 的覆盖率。
+
+## 运行效果（截图 / 动图）
+
+![语义分割车道巡线（带车道线高亮与转向标注） 动图](docs/img/ground/carla_lane_following_run.gif)
+
+![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf1](docs/img/ground/carla_lane_following_kf1.png)
+
+![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf2](docs/img/ground/carla_lane_following_kf2.png)
+
+> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
