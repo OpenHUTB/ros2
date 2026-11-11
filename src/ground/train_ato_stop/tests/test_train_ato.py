@@ -166,12 +166,13 @@ def test_能耗按实际需求牵引力而非最大牵引力计算():
 
 
 def test_闭环能耗与逐帧需求牵引力积分一致():
-    r = sim.run(scenarios.flat())
+    dt = 0.02
+    r = sim.run(scenarios.flat(), dt=dt)
     spec = TrainSpec()
     # sim.run 在停车后额外追加一帧用于绘图；该帧不再推进物理步，也没有能耗。
     energy_frames = r.frames[:-1] if r.frames[-1].note == '停车' else r.frames
     expected = sum(
-        energy_kwh(spec=spec, v=f.v, dt=0.02,
+        energy_kwh(spec=spec, v=f.v, dt=dt,
                    accel=following.accel,
                    grade=grade_at(r.segments, f.x))
         for f, following in zip(energy_frames, r.frames[1:])
