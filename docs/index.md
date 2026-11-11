@@ -72,6 +72,7 @@ ROS每章节运行代码:
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
     * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
+    * [MuJoCo 二连杆笛卡尔阻抗力控](./chapter/two_link_impedance_control.md)
     * [机械臂投篮入筐仿真](./chapter/mujoco_arm_ball.md)
     * [MuJoCo 二连杆机械臂抓取搬运](./chapter/mujoco_arm_pick.md)
     * [三自由度机械臂空间螺旋线仿真](./chapter/mujoco_arm_3d.md)
@@ -138,6 +139,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
+* [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
@@ -337,6 +339,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [基于 ROS 消息解耦的无人机键盘遥控](./air/drone_ros_teleop.md)
 
+* [预设航线飞行模拟器](./air/flight_path_simulator.md) —— 纯 Python 离线脚本，按预设时间表播放一段巡航飞行并生成数据集与可视化，不依赖 ROS/仿真器
+
 * [无人机航点轨迹跟踪（PID 控制）](./air/waypoint_tracking.md)
 
 * [基于串级PID的四旋翼航点定点悬停与抗风扰仿真](./air/quad_cascade_pid_hover_wind.md) —— 纯 Python 6 自由度四旋翼刚体动力学仿真，位置-姿态-角速率串级 PID 闭环，含恒定风/阵风/湍流扰动，验证航点跟踪与定点悬停的抗风扰能力
@@ -394,6 +398,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
+* [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 ### 感知
@@ -409,6 +415,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [新增水下三维地形测绘模块](./water/underwater_sonar_mapping.md)
 
 * [侧扫声呐图像仿真与 CNN 海底目标分类](./water/mjc_rov_sonar_cnn.md)
+* [水下 AUV 矩形巡航与视觉双向避障仿真](./water/auv_end2end.md) —— ROS2 + Gazebo Classic，四状态矩形巡航与单目暗区检测双向避障
 
 * [浑浊水体视觉增强与目标追踪（ROS 2，合成视频演示）](./water/water_vision_enhancement.md) —— 通道增益校正、白平衡、CLAHE 与暗通道去散射增强，KCF/CSRT/MOSSE 目标追踪，附合成浑浊水体演示节点
 
