@@ -1,0 +1,48 @@
+# 膝关节轨迹跟踪仿真参数
+# 本文件使用 YAML 的最小子集：嵌套映射 + 标量 + 行内列表。
+# 解析器见 src/config.py，支持 # 注释、引号字符串、整数/浮点/布尔/null。
+
+simulation:
+  dt: 0.005              # 积分步长 [s]
+  sine_duration: 30.0    # 正弦段时长 [s]
+  step_duration: 6.0     # 阶跃发生后的记录时长 [s]
+
+joint:
+  inertia: 0.06          # 转动惯量 I [kg·m^2]
+  damping: 0.5           # 关节粘性阻尼 b [N·m·s/rad]
+  gravity_torque: 4.5    # 重力矩幅值 m*g*l [N·m]
+  angle_min_deg: -15.0   # 机械下限 [deg]
+  angle_max_deg: 90.0    # 机械上限 [deg]
+
+muscle:
+  max_force: 500.0       # 单肌最大等长力 F_max [N]
+  moment_arm: 0.035      # 恒定力矩臂 [m]（等效原报告 wrap 圆柱）
+  tau_act: 0.02          # 激活时间常数 [s]
+  tau_deact: 0.05        # 失活时间常数 [s]
+  force_length_strength: 0.0   # 简化力-长度因子强度；0 表示关闭（f_l=1）
+  optimal_angle_deg: 30.0      # 力-长度最优角 [deg]
+
+controller:
+  kp: 30.0               # 比例增益 [N·m/rad]
+  kd: 3.0                # 微分增益 [N·m·s/rad]
+  limit_epsilon_deg: 0.01 # 限位保护的判定容差 [deg]
+  gravity_feedforward: 1.0 # 重力矩前馈系数：0=不补偿，1=完全补偿
+
+trajectory:
+  sine_bias_deg: 30.0    # 正弦偏置 [deg]
+  sine_amplitude_deg: 40.0  # 正弦幅值 [deg]
+  sine_frequency_hz: 0.4    # 正弦频率 [Hz]
+  step_start_deg: 20.0   # 阶跃初值 [deg]
+  step_target_deg: 50.0  # 阶跃目标 [deg]
+  step_time: 0.5         # 先保持初值再发生阶跃的时刻 [s]
+
+metrics:
+  step_band_percent: 2.0    # 调节时间窄带：阶跃幅值的 2%
+  wide_band_deg: 5.0        # 备用宽带：±5 deg
+  steady_state_window_s: 1.0 # 稳态误差统计窗口 [s]
+
+render:
+  gif_enabled: true      # 默认生成 GIF；--no-render 关闭
+  gif_fps: 15            # GIF 帧率
+  gif_dpi: 80            # GIF 分辨率
+  gif_max_frames: 120    # GIF 最大帧数（自动抽帧）
