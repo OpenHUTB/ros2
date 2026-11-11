@@ -28,3 +28,31 @@ def test_recorder_rejects_unrelated_csv(tmp_path):
     source.write_text("x,y\n1,2\n", encoding="utf-8")
     with pytest.raises(ValueError, match="input CSV"):
         record_csv(source, tmp_path / "out.csv")
+
+
+def test_zero_torque_current_stays_near_idle_current(tmp_path):
+    source = tmp_path / "state.csv"
+    source.write_text(
+        "time_s,speed_mps,left_temperature_c,right_temperature_c,left_torque_nm,right_torque_nm,ambient_c\n"
+        "0.0,0.0,25.0,25.0,0.0,0.0,24.0\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "sensors.csv"
+    assert record_csv(source, output, seed=7) == 1
+    with output.open(newline="", encoding="utf-8") as stream:
+        row = next(csv.DictReader(stream))
+    assert float(row["left_current_a"]) == pytest.approx(0.25, abs=0.12)
+    assert float(row["right_current_a"]) == pytest.approx(0.25, abs=0.12)
+
+
+def test_recorder_rejects_same_input_and_output_path(tmp_path):
+    source = tmp_path / "state.csv"
+    source.write_text(
+        "time_s,speed_mps,left_temperature_c,right_temperature_c,left_torque_nm,right_torque_nm,ambient_c\n"
+        "0.0,0.0,25.0,25.0,0.0,0.0,24.0\n",
+        encoding="utf-8",
+    )
+    original = source.read_bytes()
+    with pytest.raises(ValueError, match="must be different"):
+        record_csv(source, source)
+    assert source.read_bytes() == original

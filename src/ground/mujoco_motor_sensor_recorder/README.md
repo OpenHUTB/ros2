@@ -9,7 +9,18 @@
 ## 运行
 
 ```bash
-python3 main.py --input config/motor_state.csv --output output/motor_sensors.csv --seed 7
+python3 -m pip install .
+motor_sensor_record --input config/motor_state.csv --output output/motor_sensors.csv --seed 7
+```
+
+以上命令在本包目录执行；输入路径 `config/motor_state.csv` 相对于当前目录。
+
+PowerShell 用法：
+
+```powershell
+Set-Location src/ground/mujoco_motor_sensor_recorder
+python -m pip install .
+motor_sensor_record --input .\config\motor_state.csv --output .\output\motor_sensors.csv --seed 7
 ```
 
 温度噪声标准差为 0.12 °C，电流噪声标准差为 0.04 A。电流由转矩按 0.18 Nm/A 转矩常数估算，并加入 0.25 A 空载电流。
@@ -20,5 +31,7 @@ python3 main.py --input config/motor_state.csv --output output/motor_sensors.csv
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-select mujoco_motor_sensor_recorder
 source install/setup.bash
-ros2 launch mujoco_motor_sensor_recorder record.launch.py input:=config/motor_state.csv output:=output/motor_sensors.csv
+ros2 launch mujoco_motor_sensor_recorder record.launch.py seed:=7
 ```
+
+launch 默认从已安装包的 share 目录读取示例 CSV；可通过 `input`、`output` 和 `seed` 覆盖默认参数。

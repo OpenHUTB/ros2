@@ -29,10 +29,13 @@ def record_csv(
     if min(temperature_noise_c, current_noise_a) < 0 or torque_constant_nm_per_a <= 0 or idle_current_a < 0:
         raise ValueError("noise and idle current must be non-negative; torque constant must be positive")
     rng = random.Random(seed)
+    input_file = Path(input_path)
     output = Path(output_path)
+    if input_file.resolve() == output.resolve():
+        raise ValueError("input_path and output_path must be different")
     output.parent.mkdir(parents=True, exist_ok=True)
     count = 0
-    with Path(input_path).open(newline="", encoding="utf-8") as source:
+    with input_file.open(newline="", encoding="utf-8") as source:
         reader = csv.DictReader(source)
         if not reader.fieldnames or not set(INPUT_FIELDS).issubset(reader.fieldnames):
             raise ValueError(f"input CSV must contain: {', '.join(INPUT_FIELDS)}")

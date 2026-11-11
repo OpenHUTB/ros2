@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""Create a reproducible sensor CSV from generic motor-state samples."""
+"""Create reproducible sensor observations from motor-state CSV data."""
 
 from __future__ import annotations
 
