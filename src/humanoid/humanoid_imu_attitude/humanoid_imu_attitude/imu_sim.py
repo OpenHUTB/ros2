@@ -35,7 +35,7 @@ class ImuSim(Node):
         self.declare_parameter('gyro_bias_y', -0.003)
         self.declare_parameter('gyro_bias_z', 0.005)
         self.declare_parameter('gyro_noise', 0.002)
-        self.declare_parameter('accel_noise', 0.03)
+        self.declare_parameter('accel_noise', 0.3)
         self.declare_parameter('seed', 7)
 
         self.profile = self.get_parameter('profile').value
@@ -54,9 +54,9 @@ class ImuSim(Node):
         self.pub_imu = self.create_publisher(Imu, '/imu/data', 10)
         self.pub_gt = self.create_publisher(QuaternionStamped, '/imu/ground_truth', 10)
         self.rows = []
-        self.t0 = None
         self.finished = False
         self.saved = False
+        self._start_sec = self.get_clock().now().nanoseconds * 1e-9
         self.timer = self.create_timer(1.0 / self.rate, self.on_timer)
         self.get_logger().info(
             'imu_sim: profile=%s rate=%.0fHz duration=%.1fs' % (self.profile, self.rate, self.duration))
@@ -65,9 +65,8 @@ class ImuSim(Node):
         if self.finished:
             return
         now = self.get_clock().now()
-        if self.t0 is None:
-            self.t0 = now
-        t = (now - self.t0).nanoseconds * 1e-9
+        now_sec = now.nanoseconds * 1e-9
+        t = now_sec - self._start_sec  # 相对秒数，用于 trajectory
         if t > self.duration:
             # 只置标志，由主循环负责收尾，避免在回调里调用 shutdown 造成阻塞
             self.finished = True
@@ -77,7 +76,7 @@ class ImuSim(Node):
         q_true = quat_normalize(quat_from_euler(roll, pitch, yaw))
         gyro = body_rates_at(t, self.profile) + self.bias
         gyro = gyro + self.rng.normal(0.0, self.gyro_noise, 3)
-        accel = gravity_in_body(q_true) + self.rng.normal(0.0, self.accel_noise, 3)
+        accel = 9.81 * gravity_in_body(q_true) + self.rng.normal(0.0, self.accel_noise, 3)
 
         msg = Imu()
         msg.header.stamp = now.to_msg()
@@ -97,7 +96,7 @@ class ImuSim(Node):
         gt.quaternion.x, gt.quaternion.y, gt.quaternion.z, gt.quaternion.w = quat_to_msg(q_true)
         self.pub_gt.publish(gt)
 
-        self.rows.append((t, math.degrees(roll), math.degrees(pitch), math.degrees(yaw)))
+        self.rows.append((now_sec, math.degrees(roll), math.degrees(pitch), math.degrees(yaw)))
 
     def save(self):
         if self.saved:

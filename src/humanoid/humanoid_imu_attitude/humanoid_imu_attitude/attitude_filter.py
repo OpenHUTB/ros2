@@ -56,7 +56,7 @@ class AttitudeFilter(Node):
         self.q = None
         self.last_stamp = None
         self.rows = []
-        self.t0 = None
+        self.first_stamp = None
         self.finished = False
         self.saved = False
         self.timer = self.create_timer(0.5, self.check_finished)
@@ -80,7 +80,7 @@ class AttitudeFilter(Node):
         if self.q is None:
             # 第一帧只用加速度计确定初始 roll/pitch，避免从单位四元数慢慢收敛
             self.q = accel_tilt_quat(accel)
-            self.t0 = stamp
+            self.first_stamp = stamp
             self.last_stamp = stamp
             return
 
@@ -105,16 +105,15 @@ class AttitudeFilter(Node):
         self.pub.publish(out)
 
         roll, pitch, yaw = euler_from_quat(self.q)
-        self.rows.append((stamp - self.t0, math.degrees(roll), math.degrees(pitch),
-                          math.degrees(yaw)))
+        self.rows.append((stamp, math.degrees(roll), math.degrees(pitch), math.degrees(yaw)))
 
     def check_finished(self):
         if self.finished:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
-        if self.t0 is None:
+        if self.first_stamp is None:
             return
-        if now - self.t0 < self.duration + 0.5:
+        if now - self.first_stamp < self.duration + 0.5:
             return
         self.finished = True
 
@@ -127,7 +126,7 @@ class AttitudeFilter(Node):
         with open(path, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(['t', 'roll_deg', 'pitch_deg', 'yaw_deg'])
-            writer.writerows(self.rows)
+            writer.writerows(self.rows)  # t 列是绝对 ROS 时钟秒数  # t 列是绝对 ROS 时钟秒数
         self.get_logger().info('已保存 %d 条估计到 %s' % (len(self.rows), path))
 
 
