@@ -13,6 +13,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         ("share/" + package_name + "/launch", glob("launch/*.launch.py")),
         ("share/" + package_name + "/config", glob("config/*.csv")),
+        ("share/" + package_name + "/hook", ["hook/ament_prefix_path.dsv"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
