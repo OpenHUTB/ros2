@@ -1,0 +1,32 @@
+# uav_neural_vio_slam 节点参数
+# 话题与坐标系约定沿用 uav_mujoco_sim / carlair_ros_bridge。
+
+vio:
+  backend: "ekf"          # odom | ekf | ekf_learned | fastslam
+  model_dir: ""           # 预训练权重目录；留空用包内 share/uav_neural_vio_slam/data
+  gps_period: 1.0         # 绝对位置观测周期（秒）
+  gps_sigma: 0.5          # 绝对位置观测噪声（米）
+  gps_outage: [0.0, 0.0]  # [起, 止] 秒，起=止 表示不中断
+
+sim:
+  host: "127.0.0.1"       # 仿真端地址；仿真在宿主机、ROS 在虚拟机时填 10.0.2.2
+  port: 41460             # 41451 为 AirSim 默认端口，本项目用 41460
+  connect_timeout: 30.0
+  imu_hz: 100.0
+
+frame:
+  world: "map"
+  body: "base_link"
+
+rate:
+  vio_hz: 10.0            # 前端关键帧频率，与深度图一致
+  report_every: 10.0      # 打印实测速率的间隔（秒）
+
+topic:
+  depth: "/camera/depth"
+  odom_out: "/vio/odom"
+  imu_out: "/imu/data"
+  landmarks_out: "/vio/landmarks"
+  map_out: "/vio/map"
+  status_out: "/vio/status"
+  cmd_vel_out: "/vio/cmd_vel"

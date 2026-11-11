@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_moving_platform_landing</name>
+  <version>0.1.0</version>
+  <description>
+    移动平台（车 / 船 / 移动甲板）精准降落：只用一路带延迟、带噪声的平台中心位置观测，
+    在线估计平台速度，预测「再过 T 秒还会接地吗、那时平台在哪」，再据此制导——
+    对准 → 下降 → 接地，全程用平台速度做前馈，预计落偏超限时主动拉起复飞。
+
+    算法核心（tracker / 制导 / 状态机）是不依赖 ROS 的纯函数，可在没有仿真器的机器上
+    完整回归，见仓库 tests/test_uav_moving_platform_landing_local.py；
+    ROS 侧闭环见 tests/test_uav_moving_platform_landing_ros_sim.py（自带假桥接层）。
+  </description>
+  <maintainer email="uav@example.com">uav</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export/>
+</package>

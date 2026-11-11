@@ -1,0 +1,13 @@
+<launch>
+  <!-- 完整演示：正解/逆解校验、可操作性、奇异点对比、画圆跟踪 -->
+  <arg name="outdir" default="$(find whole_body_ik)/demo_out" />
+
+  <!-- 注意：main.py 不是 ROS 节点，只是普通 Python 脚本。
+       所以参数用命令行选项传文件路径，而不是 rosparam（rosparam 只对
+       读取私有参数的 ROS 节点有效，这里加载了也没人读）。 -->
+  <node pkg="whole_body_ik"
+        type="main.py"
+        name="whole_body_ik_demo"
+        output="screen"
+        args="--outdir $(arg outdir) --params $(find whole_body_ik)/config/ik_params.yaml" />
+</launch>
