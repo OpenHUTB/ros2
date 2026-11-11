@@ -1141,6 +1141,24 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 <td style="text-align: center;"><strong>是</strong></td>
 </tr>
 <tr>
+<td>s_curve_sparse（1.5 m 路点）</td>
+<td>开</td>
+<td style="text-align: right;">0.735</td>
+<td style="text-align: right;">0.218</td>
+<td style="text-align: right;">0.577</td>
+<td style="text-align: right;">696</td>
+<td style="text-align: center;">否</td>
+</tr>
+<tr>
+<td>s_curve_sparse（1.5 m 路点）</td>
+<td>关</td>
+<td style="text-align: right;">0.208</td>
+<td style="text-align: right;">0.059</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: center;"><strong>是</strong></td>
+</tr>
+<tr>
 <td>straight</td>
 <td>开</td>
 <td style="text-align: right;">0.317</td>
@@ -1162,13 +1180,15 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 </table>
 <blockquote>
 <p>表中数据由 <code>python3 sim/benchmark.py</code>（默认 <code>curve_gain=2.5</code>）在本机生成；
-与上一版（<code>curve_gain=0</code>，纯速度自适应）相比，RMS 误差下降 11%~12%，
-最大横向误差下降 6%~12%，逐条增益对比见 3.4 节的扫参表。</p>
+与上一版（<code>curve_gain=0</code>，纯速度自适应）相比，稠密路径的 RMS 误差下降 11%~12%，
+最大横向误差下降 6%~12%，逐条增益对比见 3.4 节的扫参表。
+稀疏路点（<code>s_curve_sparse</code>）是本次按评审建议新增的工况，精度低于稠密路径的原因见 7.5 第 4 条。</p>
 </blockquote>
 <h3 id="73">7.3 轨迹与误差曲线（开启避障）</h3>
 <p><img alt="8 字形路径跟踪轨迹与横向误差" src="eight.png"/></p>
 <p><img alt="圆形路径跟踪轨迹与横向误差" src="circle.png"/></p>
 <p><img alt="S 形路径跟踪轨迹与横向误差" src="s_curve.png"/></p>
+<p><img alt="S 形稀疏路点（1.5 m）跟踪轨迹与横向误差" src="s_curve_sparse.png"/></p>
 <p><img alt="直线路径跟踪轨迹与横向误差" src="straight.png"/></p>
 <h3 id="74">7.4 对照组（关闭避障）</h3>
 <p><img alt="8 字形 - 关闭避障发生碰撞" src="eight_noavoid.png"/></p>
@@ -1182,11 +1202,16 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 <li><strong>弯道性能</strong>：S 形路径曲率反号处曾是误差尖峰（旧版最大 0.32 m）。启用曲率自适应前视后
    最大误差降到 0.299 m、RMS 从 0.099 降到 0.087；直线路径的最大误差（0.317 m）不随自适应变化，
    因为它来自绕障时的横向绕行，而不是纯追踪本身。</li>
+<li><strong>稀疏路点</strong>：把 S 形路径按 1.5 m 等距重采样（<code>Path.resample()</code>）后，RMS 从 0.087 升到 0.218、
+   最大误差 0.735 m，但<strong>仍然没有碰撞</strong>。原因有两层：一是纯追踪按"最近顶点"取索引、横向误差也量到
+   该顶点所在线段，路点稀疏时参考几何本身就粗；二是曲率窗口内只剩约 3 个点，<code>kappa</code> 估计更粗。
+   改善方向是上游先做样条平滑/加密，或把索引改成"线段投影 + 插值起点"——本次试过只把索引改成线段投影，
+   会让前视起点落到机器人身后导致震荡，因此没有采用，留作后续工作。</li>
 </ol>
 <h2 id="8">8. 测试与可复现性</h2>
-<p><code>python3 tests/test_core.py</code> 共 <strong>30 项</strong>，全部通过；<code>bash ci/run_ci.sh</code> 一条命令跑完
+<p><code>python3 tests/test_core.py</code> 共 <strong>34 项</strong>，全部通过；<code>bash ci/run_ci.sh</code> 一条命令跑完
 语法 → 依赖 → 测试 → 仿真 → 基准 五个阶段。除运动学与几何外，其中包含针对上文
-安全规则与曲率自适应的回归测试：</p>
+安全规则、曲率自适应与稀疏路点的回归测试：</p>
 <table>
 <thead>
 <tr>
@@ -1239,6 +1264,22 @@ ros2<span class="w"> </span>launch<span class="w"> </span>ros2_pure_pursuit<span
 <tr>
 <td><code>test_lookahead_curve_gain_zero_keeps_speed_only</code></td>
 <td><code>curve_gain=0</code> 与旧行为逐位一致</td>
+</tr>
+<tr>
+<td><code>test_curvature_sign_changes_on_s_curve</code></td>
+<td>S 形路径曲率确实变号（自适应取绝对值）</td>
+</tr>
+<tr>
+<td><code>test_resample_keeps_length_and_spacing</code></td>
+<td>等距重采样保持总长、平均间距接近目标值</td>
+</tr>
+<tr>
+<td><code>test_lookahead_shrinks_on_sparse_curve</code></td>
+<td>1.5 m 稀疏路点上弯道前视仍会缩短</td>
+</tr>
+<tr>
+<td><code>test_pure_pursuit_tracks_sparse_s_curve</code></td>
+<td>稀疏路点可跑完全程，且横向误差受控</td>
 </tr>
 </tbody>
 </table>
