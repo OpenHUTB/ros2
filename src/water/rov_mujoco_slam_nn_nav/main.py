@@ -5,6 +5,7 @@
     python3 main.py --mode nav    --scene trench    # 建图 + 导航 + SLAM
     python3 main.py --mode neural --scene trench    # 神经规划 + 控制
     python3 main.py --mode e2e    --scene trench    # 端到端声呐图
+    python3 main.py --mode eval   --seed 0          # 三场景 × 三策略评测
     python3 main.py --mode test                     # 单元测试
     python3 main.py --mode demo   --out media/demo.gif
 
@@ -16,22 +17,24 @@ from __future__ import annotations
 import argparse
 import os
 import select
+import subprocess
 import sys
 import time
 
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+PKG = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, PKG)
 
 from rov_mujoco_slam_nn_nav.nav import NavConfig, Navigation   # noqa: E402
 from rov_mujoco_slam_nn_nav.sim import ROVSim                  # noqa: E402
 
 
-def run_teleop(scene: str, viewer: bool, seconds: float = 120.0):
+def run_teleop(scene: str, viewer: bool, seconds: float = 120.0, seed: int = 0):
     import termios
     import tty
 
-    sim = ROVSim(scene=scene, render=viewer)
+    sim = ROVSim(scene=scene, seed=seed, render=viewer)
     dt = 0.02
     surge = sway = heave = yaw_rate = 0.0
     depth = 1.0
@@ -77,8 +80,8 @@ def run_teleop(scene: str, viewer: bool, seconds: float = 120.0):
     print("结束")
 
 
-def run_nav(scene: str, policy: str, viewer: bool, seconds: float = 90.0):
-    sim = ROVSim(scene=scene, render=viewer)
+def run_nav(scene: str, policy: str, viewer: bool, seconds: float = 90.0, seed: int = 0):
+    sim = ROVSim(scene=scene, seed=seed, render=viewer)
     nav = Navigation(sim, NavConfig(), policy=policy, with_depth=(policy == "e2e"))
     last = -1.0
     while nav.t < seconds and nav.mode != "done" and not sim.is_fallen():
@@ -86,13 +89,13 @@ def run_nav(scene: str, policy: str, viewer: bool, seconds: float = 90.0):
         if viewer and nav.t - last > 0.15:
             last = nav.t
             sim.follow_view(480, 360)
-    print(f"scene={scene} policy={policy} -> {nav.summary()}")
+    print(f"scene={scene} policy={policy} seed={seed} -> {nav.summary()}")
     return nav.summary()
 
 
-def run_demo(out: str, seconds: float = 18.0):
+def run_demo(out: str, seconds: float = 18.0, seed: int = 0):
     from PIL import Image
-    sim = ROVSim(scene="pool", render=True)
+    sim = ROVSim(scene="pool", seed=seed, render=True)
     nav = Navigation(sim, NavConfig())
     frames, last = [], -1.0
     while nav.t < seconds and nav.mode != "done":
@@ -109,8 +112,9 @@ def run_demo(out: str, seconds: float = 18.0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="nav",
-                    choices=["teleop", "nav", "neural", "e2e", "test", "demo"])
+                    choices=["teleop", "nav", "neural", "e2e", "eval", "test", "demo"])
     ap.add_argument("--scene", default="pool")
+    ap.add_argument("--seed", type=int, default=0, help="场景随机种子（默认 0）")
     ap.add_argument("--seconds", type=float, default=90.0)
     ap.add_argument("--out", default="media/demo.gif")
     ap.add_argument("--no-viewer", action="store_true")
@@ -118,14 +122,18 @@ def main():
     viewer = not args.no_viewer
 
     if args.mode == "test":
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests"))
+        sys.path.insert(0, os.path.join(PKG, "tests"))
         import run_all
         return run_all.main()
     if args.mode == "demo":
-        return run_demo(args.out, args.seconds)
+        return run_demo(args.out, args.seconds, args.seed)
+    if args.mode == "eval":
+        cmd = [sys.executable, os.path.join(PKG, "tools", "evaluate.py"),
+               "--seed", str(args.seed)]
+        return subprocess.call(cmd, cwd=PKG)
     if args.mode == "teleop":
-        return run_teleop(args.scene, viewer, args.seconds)
-    return run_nav(args.scene, args.mode, viewer, args.seconds)
+        return run_teleop(args.scene, viewer, args.seconds, args.seed)
+    return run_nav(args.scene, args.mode, viewer, args.seconds, args.seed)
 
 
 if __name__ == "__main__":

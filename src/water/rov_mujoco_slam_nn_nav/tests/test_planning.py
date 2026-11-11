@@ -1,4 +1,4 @@
-﻿"""A* / 纯跟踪测试。"""
+"""A* / 纯跟踪测试。"""
 import os
 import sys
 

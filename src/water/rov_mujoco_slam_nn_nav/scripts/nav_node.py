@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python3
-"""无人机建图与导航节点：/scan + /rov/odom -> SLAM -> A* -> /cmd_vel。"""
+#!/usr/bin/env python3
+"""ROV 建图与导航节点：/scan + /rov/odom -> SLAM -> A* -> /cmd_vel。"""
 
 from __future__ import annotations
 
@@ -17,12 +17,21 @@ from std_msgs.msg import Float64, String
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from rov_mujoco_slam_nn_nav.mapping import OccupancyGrid as Grid, Slam      # noqa: E402
+from rov_mujoco_slam_nn_nav.model import make_layout                       # noqa: E402
 from rov_mujoco_slam_nn_nav.planning import CostMap, astar, simplify        # noqa: E402
 
 
 class NavNode:
     def __init__(self):
-        self.goal = (float(rospy.get_param("~goal_x", 2.6)), float(rospy.get_param("~goal_y", 0.0)))
+        self.scene = rospy.get_param("~scene", "pool")
+        self.seed = int(rospy.get_param("~seed", 0))
+        goal_x = float(rospy.get_param("~goal_x", float("nan")))
+        goal_y = float(rospy.get_param("~goal_y", float("nan")))
+        if math.isnan(goal_x) or math.isnan(goal_y):
+            layout_goal = make_layout(self.scene, self.seed).goal
+            goal_x, goal_y = float(layout_goal[0]), float(layout_goal[1])
+        self.goal = (goal_x, goal_y)
+        self.goal_tol = float(rospy.get_param("~goal_tol", 0.4))
         self.inflation = float(rospy.get_param("~inflation", 0.45))
         self.v_max = float(rospy.get_param("~v_max", 0.65))
         self.altitude = float(rospy.get_param("~altitude", 1.2))
@@ -45,7 +54,7 @@ class NavNode:
 
         rospy.Subscriber("/scan", LaserScan, self._on_scan, queue_size=1)
         rospy.Subscriber("/rov/odom", Odometry, self._on_odom, queue_size=1)
-        rospy.loginfo("无人机导航启动，目标 (%.2f, %.2f)，高度 %.1f m", *self.goal, self.altitude)
+        rospy.loginfo("ROV 导航启动，目标 (%.2f, %.2f)，高度 %.1f m", *self.goal, self.altitude)
 
     def _on_odom(self, msg):
         q = msg.pose.pose.orientation
@@ -93,7 +102,7 @@ class NavNode:
         if self.done:
             return
         dist = math.hypot(self.goal[0] - self.pose[0], self.goal[1] - self.pose[1])
-        if dist < 0.4:
+        if dist < self.goal_tol:
             self.done = True
             self.pub_cmd.publish(tw)
             self.pub_status.publish(String(data="done"))

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """端到端节点：深度图 -> CNN -> /cmd_vel（机体系 vx, vy）+ 偏航角速度。"""
 
 from __future__ import annotations

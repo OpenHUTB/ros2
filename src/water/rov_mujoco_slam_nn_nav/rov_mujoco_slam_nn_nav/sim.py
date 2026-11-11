@@ -1,4 +1,4 @@
-﻿"""ROV 仿真内核：物理步进 + 6-DOF 控制 + 传感器 + 渲染。"""
+"""ROV 仿真内核：物理步进 + 6-DOF 控制 + 传感器 + 渲染。"""
 from __future__ import annotations
 import math
 from typing import Optional
@@ -24,6 +24,8 @@ class ROVSim:
                     "yaw_rate": 0.0, "depth": M.CRUISE_DEPTH}
         self.renderer = None
         self._render_size = None
+        self.collisions = 0
+        self._last_collision_t = -10.0
         self.reset()
 
     def reset(self):
@@ -37,6 +39,8 @@ class ROVSim:
                     "yaw_rate": 0.0, "depth": M.CRUISE_DEPTH}
         for _ in range(250):
             self._physics_step()
+        self.collisions = 0
+        self._last_collision_t = -10.0
 
     def set_command(self, surge=0.0, sway=0.0, heave=0.0, yaw_rate=0.0, depth=None):
         self.cmd["surge"] = float(np.clip(surge, -1.2, 1.2))
@@ -58,6 +62,20 @@ class ROVSim:
         self.data.xfrc_applied[self.body_id, 0:3] = force
         self.data.xfrc_applied[self.body_id, 3:6] = torque
         mujoco.mj_step(self.model, self.data)
+        # 与离线评测一致的碰撞计数：只统计与障碍/池壁的接触，0.6 s 内不重复计数
+        if self._contact_collision() and self.data.time - self._last_collision_t > 0.6:
+            self.collisions += 1
+            self._last_collision_t = self.data.time
+
+    def _contact_collision(self) -> bool:
+        m, d = self.model, self.data
+        for i in range(d.ncon):
+            c = d.contact[i]
+            for gid in (c.geom1, c.geom2):
+                name = mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_GEOM, gid) or ""
+                if name.startswith("obst") or name.startswith("wall"):
+                    return True
+        return False
 
     def step(self, n=1):
         for _ in range(n):
@@ -90,7 +108,8 @@ class ROVSim:
     def state(self):
         roll, pitch, yaw = self.rpy()
         return {"pos": self.base_pos().tolist(), "yaw": yaw, "roll": roll, "pitch": pitch,
-                "vel": self.velocity().tolist(), "fallen": self.is_fallen()}
+                "vel": self.velocity().tolist(), "fallen": self.is_fallen(),
+                "collisions": int(self.collisions)}
 
     def _ensure_renderer(self, w, h):
         if self.renderer is None or self._render_size != (w, h):

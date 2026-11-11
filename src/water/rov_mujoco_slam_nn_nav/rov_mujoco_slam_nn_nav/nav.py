@@ -1,4 +1,4 @@
-﻿"""ROV 导航栈：SLAM 建图 -> 代价地图 -> A* -> 速度矢量控制 -> 飞控。
+"""ROV 导航栈：SLAM 建图 -> 代价地图 -> A* -> 速度矢量控制 -> 飞控。
 
 和地面版的区别：ROV 可以全向平移，所以不用"纯跟踪的转向 + 前进"，
 而是把期望速度直接分解到机体系 $(v_x, v_y)$，偏航只做缓慢对齐。
@@ -226,8 +226,12 @@ class Navigation:
     def summary(self) -> dict:
         st = self.sim.state()
         ate = float(np.sqrt(np.mean(np.square(self.ate)))) if self.ate else 0.0
+        reached = self.mode == "done" and not self.sim.is_fallen()
         return {
-            "success": bool(self.mode == "done" and not self.sim.is_fallen()),
+            # success 与历史数据口径保持一致：到达目标容差内且未倾覆，不含碰撞约束；
+            # 需要“零碰撞到达”时使用 success_no_collision（文档已显式说明）。
+            "success": bool(reached),
+            "success_no_collision": bool(reached and self.collisions == 0),
             "fallen": bool(self.sim.is_fallen()),
             "time_s": round(self.t, 2),
             "travel_m": round(self.travel, 3),

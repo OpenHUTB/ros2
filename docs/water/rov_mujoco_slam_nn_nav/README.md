@@ -36,11 +36,17 @@ rov_mujoco_slam_nn_nav/
 | 项目 | 版本 |
 | --- | --- |
 | 系统 | Ubuntu 20.04 LTS |
-| ROS | Noetic（Python 3.8） |
-| 物理引擎 | MuJoCo 3.x |
+| ROS | Noetic（Python 3.8），需要 `ros-noetic-tf` |
+| 物理引擎 | MuJoCo 3.x（Python 3.8 安装 3.1–3.2；3.12 需 Python≥3.10，可用 venv） |
 | 其他 | numpy、pillow |
 
 ```bash
+# tf 不在 ros-base 的精简安装里，干净环境必须先装，否则 catkin_make 会报
+# "Could not find the required component 'tf'"。
+sudo apt install ros-noetic-tf
+# 或统一用 rosdep 解析本包依赖：
+# rosdep install --from-paths src --ignore-src -r -y
+
 pip3 install --user "mujoco>=3.1,<3.3" numpy pillow
 mkdir -p ~/rov_ws/src && cd ~/rov_ws
 catkin_make && source devel/setup.bash
@@ -52,15 +58,19 @@ catkin_make && source devel/setup.bash
 # 6-DOF 键盘遥控
 roslaunch rov_mujoco_slam_nn_nav main.launch mode:=teleop scene:=pool
 
-# 建图 + 导航 + SLAM 同步
-roslaunch rov_mujoco_slam_nn_nav main.launch mode:=nav scene:=trench
+# 建图 + 导航 + SLAM 同步（seed 固定场景布局，默认 0）
+roslaunch rov_mujoco_slam_nn_nav main.launch mode:=nav scene:=trench seed:=0
 
 # 端到端声呐图
 roslaunch rov_mujoco_slam_nn_nav main.launch mode:=e2e scene:=trench
 
 # 不依赖 ROS
 python3 main.py --mode nav --scene pipe_field
+python3 main.py --mode eval --seed 0     # 三场景 × 三策略，写 results/benchmark.json
 python3 main.py --mode test
+
+# 一键入口（已加可执行位）
+./main.sh --mode test
 ```
 
 按键：`W/S` 进退、`A/D` 横移、`R/F` 升沉、`Q/E` 偏航、`空格` 悬停、`X` 退出。
@@ -103,13 +113,19 @@ $$
 
 ## 四、实验结果
 
-三场景闭环（目标 0.4 m 内成功）：
+三场景闭环（`seed=0`、MuJoCo 3.12.0；括号内为碰撞次数）：
+
+> `success` 仅表示“到达目标容差内且未倾覆”，**不含碰撞约束**；
+> `results/benchmark.json` 同时记录 `success_no_collision`（额外要求全程 0 碰撞）。
+> 因此 classic/pool 这类“到达但伴随碰撞”的用例 `success=true`、`success_no_collision=false`。
+> 所有闭环数据均由 `python3 tools/evaluate.py --seed 0` 生成，文件内记录 seed 与 MuJoCo 版本。
+> 括号内碰撞次数为本次 `seed=0`、MuJoCo 3.12.0 运行的实测值，不同 MuJoCo 版本/机器可能略有差异，以 `results/benchmark.json` 为准。
 
 | 策略 | pool | pipe_field | trench |
 | --- | --- | --- | --- |
-| 经典栈 | ✅ 11.2 s / 0.392 m / ATE 0.073 | ✅ 9.7 s / 0.390 m / 0.013 | ✅ 9.3 s / 0.395 m / 0.015 |
-| 神经规划+控制 | ❌ 90 s 未达 | ✅ 9.7 s / 0.391 m | ✅ 9.3 s / 0.392 m |
-| 端到端 CNN | ❌ 坠底 | ❌ 坠底 | ❌ 坠底 |
+| 经典栈 | ✅ 11.2 s / 0.392 m / ATE 0.073（碰撞 2） | ✅ 9.7 s / 0.390 m / 0.013（0） | ✅ 9.3 s / 0.395 m / 0.015（0） |
+| 神经规划+控制 | ❌ 90 s 未达（碰撞 35） | ✅ 9.7 s / 0.391 m（0） | ✅ 9.3 s / 0.392 m（0） |
+| 端到端 CNN | ❌ 坠底（碰撞 0） | ❌ 坠底（碰撞 4） | ❌ 坠底（碰撞 10） |
 
 离线指标：
 
@@ -125,6 +141,17 @@ $$
 安全回退，并把经典栈作为默认演示路径。
 
 ## 五、常见报错与解决方法
+
+### 0. 编码 / 换行自检（BOM、CRLF）
+
+提交前在包根目录运行，非 0 退出即表示有文件带 UTF-8 BOM 或 CRLF（catkin 的
+devel wrapper 用 `exec(compile(open(...).read()))` 加载节点，不会剥离 BOM，
+带 BOM 的节点会直接 `SyntaxError`）：
+
+```bash
+bash tools/check_encoding.sh
+# OK: no BOM / CRLF
+```
 
 ### 1. `ModuleNotFoundError: No module named 'mujoco'`
 

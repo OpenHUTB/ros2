@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python3
-"""无人机仿真节点：MuJoCo 物理 + 飞控 + 传感器广播。
+#!/usr/bin/env python3
+"""ROV 仿真节点：MuJoCo 物理 + 6-DOF 控制 + 传感器广播。
 
 订阅：/cmd_vel (Twist: linear.x=vx, linear.y=vy, angular.z=yaw_rate)、/rov/altitude (Float64)
 发布：/scan、/camera/depth/image_raw、/rov/odom、/rov/ground_truth、/rov/imu、/tf
@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import sys
@@ -17,7 +18,7 @@ import tf
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, Imu, LaserScan
-from std_msgs.msg import Empty, Float64
+from std_msgs.msg import Empty, Float64, String
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,7 +30,8 @@ class SimNode:
     def __init__(self):
         scene = rospy.get_param("~scene", "warehouse")
         self.rate = float(rospy.get_param("~rate", 100.0))
-        self.sim = ROVSim(scene=scene)
+        self.seed = int(rospy.get_param("~seed", 0))
+        self.sim = ROVSim(scene=scene, seed=self.seed)
         self.lidar = Lidar(self.sim.model, n_beams=180)
         self.depth = DepthCamera(self.sim.model, 32, 24)
         self.imu = IMU()
@@ -41,12 +43,14 @@ class SimNode:
         self._last_cmd = rospy.Time.now()
         self._last_scan = rospy.Time(0)
         self._last_depth = rospy.Time(0)
+        self._last_state = rospy.Time(0)
 
         self.pub_scan = rospy.Publisher("/scan", LaserScan, queue_size=1)
         self.pub_depth = rospy.Publisher("/camera/depth/image_raw", Image, queue_size=1)
         self.pub_odom = rospy.Publisher("/rov/odom", Odometry, queue_size=1)
         self.pub_gt = rospy.Publisher("/rov/ground_truth", PoseStamped, queue_size=1)
         self.pub_imu = rospy.Publisher("/rov/imu", Imu, queue_size=1)
+        self.pub_state = rospy.Publisher("/rov/state", String, queue_size=1)
         self.tf = tf.TransformBroadcaster()
 
         rospy.Subscriber("/cmd_vel", Twist, self._on_cmd, queue_size=1)
@@ -94,7 +98,7 @@ class SimNode:
         od.header.stamp = now
         od.header.frame_id = "world"
         od.child_frame_id = "base_link"
-        o = self.odom.update(st["vel"][0], st["vel"][1], 0.0, 0.1)
+        o = self.odom.update(st["vel"][0], st["vel"][1], 0.0, 1.0 / self.rate)
         od.pose.pose.position.x, od.pose.pose.position.y = o["x"], o["y"]
         q2 = tf.transformations.quaternion_from_euler(0, 0, o["yaw"])
         od.pose.pose.orientation.z, od.pose.pose.orientation.w = q2[2], q2[3]
@@ -132,6 +136,14 @@ class SimNode:
             msg.step = depth.shape[1] * 4
             msg.data = depth.tobytes()
             self.pub_depth.publish(msg)
+
+        if (now - self._last_state).to_sec() >= 0.1:
+            self._last_state = now
+            self.pub_state.publish(String(data=json.dumps({
+                "fallen": bool(st["fallen"]),
+                "collisions": int(st.get("collisions", 0)),
+                "pos": [round(float(v), 4) for v in st["pos"]],
+            })))
 
 
 if __name__ == "__main__":

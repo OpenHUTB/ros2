@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.0.2)
 project(rov_mujoco_slam_nn_nav)
 find_package(catkin REQUIRED COMPONENTS rospy std_msgs geometry_msgs nav_msgs sensor_msgs tf)
 catkin_python_setup()

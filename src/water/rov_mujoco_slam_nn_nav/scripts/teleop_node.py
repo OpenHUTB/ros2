@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python3
-"""无人机键盘遥控节点：W/S 前后，A/D 左右，Q/E 偏航，R/F 升降，空格悬停，X 退出。"""
+#!/usr/bin/env python3
+"""ROV 键盘遥控节点：W/S 前后，A/D 左右，Q/E 偏航，R/F 升降，空格悬停，X 退出。"""
 
 from __future__ import annotations
 
