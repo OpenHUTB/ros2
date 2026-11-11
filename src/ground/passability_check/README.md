@@ -118,8 +118,9 @@ Windows 下 `main.bat`，Linux 下 `bash main.sh`，参数同上。
 
 ```bash
 cd <仓库根目录>
-python3 tests/test_passability_check_local.py
-python3 -m pytest tests/test_passability_check_local.py -q
+python3 tests/test_passability_check_local.py     # 167 项：几何、断言、报告、场景、工程约定
+python3 tests/test_passability_node_loop.py       # 35 项：节点闭环（进程内 rclpy 兼容层）
+python3 -m pytest tests/test_passability_check_local.py tests/test_passability_node_loop.py -q
 ```
 
 只用标准库，不需要 ROS / 仿真器 / 显示器。覆盖：默认值与常量、参数校验、三个角度（含手算校核）、
@@ -144,6 +145,22 @@ ros2 launch passability_check main.launch.py vehicle:=suv scenario:=garage_ramp
 ros2 topic echo /passability_check/report
 ros2 topic pub --once /passability_check/evaluate std_msgs/Empty
 ```
+
+节点收发这一层由 `tests/test_passability_node_loop.py` 用进程内 rclpy 兼容层做闭环验证；
+真实 `ros2 launch` 在线运行尚未在装了 ROS 2 的机器上复跑（见「已知限制」）。
+
+## 已验证 / 未验证
+
+已验证（Windows 11 + Python 3.13.14）：
+
+* `main.py` 四个入口（默认、`--vehicle all --quiet`、`--json/--csv`、`--test`）实际运行，退出码正确
+* 两个测试文件：167 + 35 项全部通过
+* `mkdocs build` 本页无告警（其余页面的缺图告警来自稀疏检出的不完整图片目录）
+
+未验证：
+
+* 真实 `rclpy` 在线运行（`colcon build` + `ros2 launch` + `ros2 topic echo`），开发机无 ROS 2 环境
+* 真实车辆实测：三台车的几何参数取自公开参数表，不是实测车
 
 ## 已知限制
 

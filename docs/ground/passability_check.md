@@ -282,6 +282,31 @@ ros2 topic pub --once /passability_check/evaluate std_msgs/Empty
 
 节点本身不做几何计算，全部调用包里的纯函数，所以离线测试覆盖到的就是节点实际跑的代码。
 
+### 8.1 节点闭环冒烟测试（不需要装 ROS）
+
+只测纯函数测不到「结果到底有没有发出去、收到 `evaluate` 会不会重算」。这一层由
+`tests/test_passability_node_loop.py` 覆盖：它用一层进程内的最小 rclpy 兼容层
+（`init` / `Node` / `Publisher` / `Subscription` / `Timer` / `Parameter` / `Logger` / `QoSProfile`，
+加上 `std_msgs` 的 `String`、`Empty`）把 `PassabilityNode` 真跑起来，话题在进程内投递、
+定时器手工触发，逐拍确定，不占端口、不需要 `ros2 daemon`。
+
+```bash
+python3 tests/test_passability_node_loop.py
+```
+
+```text
+通过 35 项，失败 0 项
+全部通过
+```
+
+覆盖的链路：`参数 → 核算 → 发布 report/summary` → `收到 evaluate 重算并重发` →
+`运行中把车型换成 suv，结论从 FAILED 变 PASSED` → `抬高安全余量后同一台车被判定不通过` →
+`车型填错时节点进 ERROR 且不重发过期报告` → `publish_hz 建定时器并按周期发布` →
+`scenario_file 优先于 scenario`。
+
+**未验证的部分**：真实 `rclpy` 在线运行（`ros2 launch` + `ros2 topic echo`）没有在本机跑过——
+开发机是 Windows，没有 ROS 2 环境，节点按 Humble 的 API 编写。这一条在 PR 描述里也如实写明。
+
 ## 9 离线测试
 
 ```bash
@@ -291,9 +316,11 @@ python3 -m pytest tests/test_passability_check_local.py -q
 ```
 
 ```text
-通过 158 项，失败 0 项
+通过 167 项，失败 0 项
 全部通过
 ```
+
+另外还有一个节点闭环测试（见 8.1）：`python3 tests/test_passability_node_loop.py` → 35 项。
 
 只用标准库，不需要 ROS / 仿真器 / 显示器。覆盖 11 组：默认值与常量、参数校验、三个角度
 （含手算校核与 `k` 的影响）、剖面查询与折点分类、接地二分求解、侵入量与扫描、五条断言

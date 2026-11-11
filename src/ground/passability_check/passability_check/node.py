@@ -84,6 +84,9 @@ class PassabilityNode(Node):
         except (VehicleError, ScenarioError) as error:
             self.get_logger().error("参数错误：%s" % error)
             self.result = "ERROR"
+            # 清空上一次的结果，免得 publish() 把过期的报告当成新结果再发一遍
+            self.report_text = ""
+            self.summary_text = ""
             return False
 
         header = "通过性核算（%s / %s）" % (vehicle.name, scenario.name)
