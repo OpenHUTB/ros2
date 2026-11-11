@@ -284,7 +284,7 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 | cloud_topic / world_frame / sensor_frame | /cloud_in / world / lidar_link | 输入话题与坐标系 |
 | resolution | 0.3 | 八叉树叶节点分辨率（m），**最关键的一个参数** |
 | max_range / min_range | 30.0 / 0.5 | 射线量程范围（m） |
-| point_stride | 2 | 抽稀：每隔 N 个点取一个做射线投射 |
+| point_stride | 1 | 抽稀：每隔 N 个点取一个做射线投射 |
 | prob_hit / prob_miss | 0.7 / 0.4 | 占用概率模型 |
 | clamp_min / clamp_max | 0.12 / 0.97 | 占用概率上下限 |
 | publish_rate | 1.0 | 地图与可视化发布频率（Hz） |
@@ -292,8 +292,9 @@ AirSim 接进 ROS 之后，RViz 里可以看到激光点云，以及桥接节点
 | max_markers | 20000 | 单帧可视化的最大体素个数 |
 
 > **性能提示**：AirSim 一帧约有一万个点，每点一条射线，射线长度除以分辨率就是
-> 要更新的体素数量。逐点投射在虚拟机上跟不上，所以默认抽稀 2 倍、分辨率取 0.3 m、
-> 量程收到 30 m。机器的性能富裕时可以把 `point_stride` 调回 1、`resolution` 调到 0.2。
+> 要更新的体素数量。逐点投射在虚拟机上跟不上，所以分辨率取 0.3 m、量程收到 30 m；
+> `point_stride` 保持 1，不再抽稀（采样点之间的缝比体素大时，射线会穿过去把障碍物内部
+> 误标成空闲）。机器的性能富裕时可以把 `resolution` 调到 0.2。
 
 ## 目录结构
 

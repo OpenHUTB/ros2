@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_arm_pick</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 二连杆机械臂抓取搬运（Pick &amp; Place）仿真：两连杆平面臂末端带垂直
+    升降关节与旋转夹爪，把蓝色小球从 A 点托盘搬到 B 点托盘，末端路径以黄色轨迹线画出。
+    关节由一阶插值（运动学）驱动，逐帧 IK 解写入 qpos 后 mj_forward，不做物理积分；
+    夹爪与球用逻辑吸附，球不参与碰撞。纯 Python + MuJoCo，不依赖 ROS 话题；
+    launch 仅用于一键启动脚本。
+  </description>
+  <maintainer email="kl-kl07@users.noreply.github.com">kl-kl07</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/mujoco_arm_pick</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>

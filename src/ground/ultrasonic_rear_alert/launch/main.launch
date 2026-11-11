@@ -1,0 +1,42 @@
+<launch>
+  <!-- 倒车雷达分级告警：先用内置脚本读数跑一遍，看四级告警与迟滞是否符合预期 -->
+  <arg name="enter_info_m" default="2.00" doc="提示级进入阈值（米，从大到小）"/>
+  <arg name="enter_warn_m" default="1.50" doc="警告级进入阈值（米）"/>
+  <arg name="enter_danger_m" default="1.00" doc="危险级进入阈值（米）"/>
+  <arg name="enter_stop_m" default="0.50" doc="停止级进入阈值（米）"/>
+  <arg name="exit_margin_m" default="0.20" doc="退出阈值相对进入阈值的余量（米），越大越迟钝"/>
+  <arg name="confirm_frames" default="3" doc="升级需要的连续帧数，越大越不容易被毛刺触发"/>
+  <arg name="release_frames" default="3" doc="降级需要的连续帧数"/>
+  <arg name="min_range_m" default="0.15" doc="有效量程下限（米），更小视为贴住传感器"/>
+  <arg name="max_range_m" default="3.00" doc="有效量程上限（米），更大视为没有回波"/>
+  <arg name="max_switches" default="6" doc="一次演示允许的级别切换次数上限"/>
+  <arg name="read_hz" default="10.0" doc="读数节拍（赫兹）"/>
+  <arg name="publish_hz" default="10.0" doc="发布节拍（赫兹）"/>
+  <arg name="simulate_service" default="/rear_alert/simulate" doc="重算并返回报告的 Trigger 服务名"/>
+  <arg name="level_topic" default="/rear_alert/level" doc="当前级别话题（Int32）"/>
+  <arg name="report_topic" default="/rear_alert/report" doc="文字报告话题（String）"/>
+  <arg name="levels_topic" default="/rear_alert/levels" doc="级别条带话题（String）"/>
+  <arg name="radar_topic" default="/rear_alert/radar" doc="四通道雷达条话题（String）"/>
+
+  <rosparam command="load" file="$(find ultrasonic_rear_alert)/config/ultrasonic_rear_alert.yaml"/>
+
+  <param name="alert/enter_info_m" value="$(arg enter_info_m)"/>
+  <param name="alert/enter_warn_m" value="$(arg enter_warn_m)"/>
+  <param name="alert/enter_danger_m" value="$(arg enter_danger_m)"/>
+  <param name="alert/enter_stop_m" value="$(arg enter_stop_m)"/>
+  <param name="alert/exit_margin_m" value="$(arg exit_margin_m)"/>
+  <param name="alert/confirm_frames" value="$(arg confirm_frames)"/>
+  <param name="alert/release_frames" value="$(arg release_frames)"/>
+  <param name="alert/min_range_m" value="$(arg min_range_m)"/>
+  <param name="alert/max_range_m" value="$(arg max_range_m)"/>
+  <param name="alert/max_switches" value="$(arg max_switches)"/>
+  <param name="rate/read_hz" value="$(arg read_hz)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="service/simulate" value="$(arg simulate_service)"/>
+  <param name="topic/level" value="$(arg level_topic)"/>
+  <param name="topic/report" value="$(arg report_topic)"/>
+  <param name="topic/levels" value="$(arg levels_topic)"/>
+  <param name="topic/radar" value="$(arg radar_topic)"/>
+
+  <node pkg="ultrasonic_rear_alert" type="main.py" name="ultrasonic_rear_alert" output="screen"/>
+</launch>
