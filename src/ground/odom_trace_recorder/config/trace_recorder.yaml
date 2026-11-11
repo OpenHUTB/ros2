@@ -1,0 +1,33 @@
+# 里程计轨迹记录/回放/比对的默认参数。
+# 这些值都可以用 roslaunch 的 arg 覆盖，也可以改这份文件长期生效。
+
+record:
+  # 记录时长（秒）。到点自动结算：写 CSV、回放路径、打印报告。
+  seconds: 8.0
+  # 采样率（Hz），同时也是内置模拟车辆发 /odom 的频率。
+  rate: 20.0
+
+mock:
+  # true 时节点自己发 /odom（定步长积分一条圆弧），false 时只订阅外部 /odom。
+  enabled: true
+  radius: 6.0
+  speed: 2.0
+
+check:
+  # 采样点少于这个数就判「采样完整」不通过。
+  min_samples: 100
+  # 与参考圆弧逐点比对的误差上限（米）。
+  max_error: 0.20
+  # 允许的里程相对偏差（米）。
+  length_tolerance: 0.50
+  # 参考圆弧的半径（米）。故意改大或改小可以让「误差在限」失败，用来验证比对环节。
+  reference_radius: 6.0
+
+trace:
+  # 记录落盘的位置。目录不存在会自动创建。
+  csv_path: "/tmp/trace.csv"
+
+topic:
+  odom: "/odom"
+  replay: "/trace/replay"
+  report: "/trace/report"

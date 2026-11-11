@@ -87,7 +87,22 @@ def braking_distance(v0: float, decel: float) -> float:
     return v0 * v0 / (2.0 * decel)
 
 
-def energy_kwh(spec: TrainSpec, v: float, dt: float) -> float:
-    """一步牵引能耗（kWh），只算正向牵引做功，再生制动不计入。"""
-    force = spec.traction_force(v)
+def required_traction_force(spec: TrainSpec, v: float, accel: float = 0.0,
+                            grade: float = 0.0) -> float:
+    """维持给定加速度所需的正向轮周牵引力（N）。
+
+    牵引力既要克服基本阻力和坡道阻力，也要提供回转质量折算后的加速力。
+    制动时若阻力已经足以产生目标减速度，所需牵引力为 0；不模拟再生制动。
+    """
+    inertia = spec.rotary_factor * spec.mass * accel
+    resistance = spec.resistance(v) + spec.grade_force(grade)
+    required = max(0.0, inertia + resistance)
+    # 控制周期内可能出现极小的数值超限；轮周力不能超过当前可用牵引力。
+    return min(spec.traction_force(v), required)
+
+
+def energy_kwh(spec: TrainSpec, v: float, dt: float,
+               accel: float = 0.0, grade: float = 0.0) -> float:
+    """一步牵引能耗（kWh），按实际需求牵引力计算，再生制动不计入。"""
+    force = required_traction_force(spec, v, accel, grade)
     return force * v * dt / 3.6e6

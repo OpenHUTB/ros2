@@ -1,0 +1,73 @@
+# 语音指令词表与速度参数
+#
+# lexicon：每个意图的关键词。规则匹配先做子串判断，再算最长公共子序列相似度，
+#          所以「往前走一点」「请往前走」这类变体不必逐条列出。
+# speed  ：基准速度（m/s、rad/s），实际指令 = 基准 × 速度档位。
+# levels ：速度档位倍率，由「快一点 / 慢一点」切换。
+
+lexicon:
+  forward:
+    - 前进
+    - 向前
+    - 往前
+    - 前行
+    - 向前走
+    - 往前走
+    - move forward
+  backward:
+    - 后退
+    - 向后
+    - 往后
+    - 退后
+    - 向后退
+    - 往后退
+    - move backward
+  turn_left:
+    - 左转
+    - 向左转
+    - 往左转
+    - 左边转
+    - turn left
+  turn_right:
+    - 右转
+    - 向右转
+    - 往右转
+    - 右边转
+    - turn right
+  stop:
+    - 停止
+    - 停下
+    - 停住
+    - 别动
+    - 站住
+    - stop
+  wave:
+    - 挥手
+    - 挥挥手
+    - 招手
+    - 打个招呼
+    - wave
+  faster:
+    - 快一点
+    - 快点
+    - 加速
+    - 走快点
+    - 快些
+    - faster
+  slower:
+    - 慢一点
+    - 慢点
+    - 减速
+    - 走慢点
+    - 慢些
+    - slower
+
+speed:
+  v_forward: 0.30     # m/s
+  v_backward: 0.20    # m/s
+  w_turn: 0.60        # rad/s
+
+levels:
+  slow: 0.6
+  normal: 1.0
+  fast: 1.5
