@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  scene_object_layouter 的一键启动。
+
+  所有可调项都做成了 arg，命令行直接覆盖即可，不必改文件：
+    roslaunch scene_object_layouter main.launch scene_file:=$(rospack find scene_object_layouter)/config/scenes/dense_overlap.yaml
+-->
+<launch>
+
+  <!-- 场景文件；留空则用节点内置的演示场景 -->
+  <arg name="scene_file"      default=""    doc="场景 yaml 路径，留空则用内置演示场景"/>
+
+  <!-- 场地尺寸，留空以外面的 yaml 为准；这里给了就等于覆盖文件里的值 -->
+  <arg name="field_width"     default="24.0" doc="场地宽度（米），x 方向"/>
+  <arg name="field_length"    default="18.0" doc="场地长度（米），y 方向"/>
+
+  <!-- 校验阈值 -->
+  <arg name="min_gap"         default="0.5"  doc="任意两个物体之间的最小间距（米）"/>
+
+  <!-- 终端俯视图的分辨率 -->
+  <arg name="render_width"    default="60"   doc="字符俯视图宽度（字符数）"/>
+  <arg name="render_height"   default="24"   doc="字符俯视图高度（字符数）"/>
+
+  <!-- 结果落盘 -->
+  <arg name="csv_path"        default="~/scene_objects.csv"  doc="物体清单 CSV 输出路径"/>
+  <arg name="json_path"       default="~/scene_objects.json" doc="汇总 JSON 输出路径"/>
+  <arg name="write_files"     default="true" doc="是否把上面两个文件写到磁盘"/>
+
+  <!-- 话题与频率 -->
+  <arg name="publish_hz"      default="1.0"  doc="汇总话题的重发频率（Hz）"/>
+  <arg name="topic_objects"   default="/scene/objects" doc="物体清单话题（std_msgs/String）"/>
+  <arg name="topic_summary"   default="/scene/summary" doc="汇总 JSON 话题（std_msgs/String）"/>
+  <arg name="topic_trigger"   default="/scene/layout"  doc="重算触发话题（std_msgs/Empty）"/>
+
+  <!-- 1. 先载入默认参数文件，保证「不传参数」时行为确定 -->
+  <rosparam command="load" file="$(find scene_object_layouter)/config/layouter.yaml"/>
+
+  <!-- 2. 再用 arg 覆盖，arg 优先级最高 -->
+  <param name="scene/file"      value="$(arg scene_file)"/>
+  <param name="field/width"     value="$(arg field_width)"/>
+  <param name="field/length"    value="$(arg field_length)"/>
+  <param name="check/min_gap"   value="$(arg min_gap)"/>
+  <param name="render/width"    value="$(arg render_width)"/>
+  <param name="render/height"   value="$(arg render_height)"/>
+  <param name="io/csv_path"     value="$(arg csv_path)"/>
+  <param name="io/json_path"    value="$(arg json_path)"/>
+  <param name="io/write_files"  value="$(arg write_files)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+  <param name="topic/objects"   value="$(arg topic_objects)"/>
+  <param name="topic/summary"   value="$(arg topic_summary)"/>
+  <param name="topic/trigger"   value="$(arg topic_trigger)"/>
+
+  <!-- 3. 启动节点（仓库约定入口以 main. 开头） -->
+  <node pkg="scene_object_layouter" type="main.py" name="scene_object_layouter"
+        output="screen" required="true"/>
+
+</launch>

@@ -1,0 +1,6 @@
+{"time_unix_s": 1794187015.6344483, "state": "mission_started", "reason": ""}
+{"time_unix_s": 1794187035.0317101, "state": "overfly_started", "reason": "climb=2.06 top=0.04"}
+{"time_unix_s": 1794187052.3870347, "state": "overfly_completed", "reason": "count=1 hold=2.06"}
+{"time_unix_s": 1794187057.3307767, "state": "overfly_hold_done", "reason": "travelled=5.22"}
+{"time_unix_s": 1794187057.6456747, "state": "goal_reached", "reason": "overfly_completed=1"}
+{"time_unix_s": 1794187068.7376115, "state": "landing_confirmed", "reason": ""}

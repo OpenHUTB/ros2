@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_car_follow</name>
+  <version>0.0.0</version>
+  <description>MuJoCo小车跟车项目：引导车往返走S形曲线，跟随车通过前馈+PD控制保持0.5米真实车心距跟车</description>
+  <maintainer email="352797580@qq.com">Ri-kin08</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>ament_cmake_python</build_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <export/>
+</package>

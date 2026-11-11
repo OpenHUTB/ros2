@@ -1,0 +1,17 @@
+<launch>
+  <arg name="mission_file"
+       default="$(find uav_waypoint_preflight_validator)/config/missions/demo_valid.yaml"/>
+  <arg name="output_json" default=""/>
+  <arg name="marker_frame" default="world"/>
+  <arg name="publish_markers" default="true"/>
+  <arg name="exit_after_publish" default="true"/>
+
+  <node pkg="uav_waypoint_preflight_validator" type="main.py"
+        name="uav_waypoint_preflight_validator" output="screen">
+    <param name="mission_file" value="$(arg mission_file)" type="str"/>
+    <param name="output_json" value="$(arg output_json)" type="str"/>
+    <param name="marker_frame" value="$(arg marker_frame)" type="str"/>
+    <param name="publish_markers" value="$(arg publish_markers)" type="bool"/>
+    <param name="exit_after_publish" value="$(arg exit_after_publish)" type="bool"/>
+  </node>
+</launch>

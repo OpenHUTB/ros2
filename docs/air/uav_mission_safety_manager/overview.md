@@ -3,8 +3,8 @@
 单无人机控制模块，支持单航点与多航点队列、暂停/继续、返航降落，以及遥测超时和高度检查。原 AirSim 单航点流程在 Foxy 下验证；新增队列已在 Ubuntu 22.04 / ROS 2 Humble 下完成 demo 和 AirSim 手动复测。
 
 - [构建与运行](usage.md)
-- [任务日志与离线统计](mission_recording.md)：可选 JSONL 状态记录与 JSON/CSV 任务评估。
-- [测试结果与已知限制](airsim_validation.md)
+- [任务日志与离线统计](mission_recording.md)：可选 JSONL 状态记录与 JSON/CSV 任务评估，含首次集成验证、交互手动复测及 Action 最终取消状态补充复测的任务统计。
+- [测试结果与已知限制](airsim_validation.md)：按任务阶段汇总安全状态机、多航点队列、队列可靠性、Action 及日志统计验证。
 - [源码](https://github.com/OpenHUTB/ros2/tree/master/src/air/uav_mission_safety_manager)
 
 ## 状态流程
