@@ -68,5 +68,8 @@ cd src/ground/can_signal_decode && python3 -m can_signal_decode.main
 
 ## 7. 大模型使用声明
 
-使用大模型辅助生成代码、测试与文档；作者已复核位域实现、CRC 参数与实测数据，
-并对提交内容负责。
+使用 **DeepSeek 的 deepseek-flash 模型**（通过 DeepSeek Harness 客户端调用）辅助生成
+位域/CRC 的实现方案、单元测试与文档初稿。
+
+所有位序约定、CRC 参数与实测数字均由作者逐项复核，并在 Ubuntu 22.04.5 + ROS 2 Humble
+上实跑确认（`colcon test` 13 项全部通过）；作者对提交内容负全部责任。
