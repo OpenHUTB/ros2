@@ -15,4 +15,5 @@ python3 main.py
 ```
 
 ## 运行效果
+<img width="1516" height="991" alt="Peek 2026-11-08 19-09" src="https://github.com/user-attachments/assets/d287b3e1-b50b-4718-8e5a-83dbadb95392" />
 小车从原点出发，依次走到三个目标点，终端打印当前位置和到达提示。
