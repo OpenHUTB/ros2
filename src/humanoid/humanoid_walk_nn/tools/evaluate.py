@@ -388,9 +388,10 @@ def controllers_order(per_controller: Dict[str, Dict[str, object]]) -> List[str]
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenes", default=",".join(C.SCENES))
-    parser.add_argument("--episodes", type=int, default=2,
-                        help="episodes per scene and controller")
-    parser.add_argument("--max-seconds", type=float, default=75.0)
+    parser.add_argument("--episodes", type=int, default=3,
+                        help="episodes per scene and controller "
+                             "(the published protocol uses 3)")
+    parser.add_argument("--max-seconds", type=float, default=60.0)
     parser.add_argument("--sample-hz", type=float, default=10.0)
     parser.add_argument("--seed", type=int, default=C.DEFAULT_SEED)
     parser.add_argument("--models-dir", default=C.MODELS_DIR)
@@ -464,10 +465,12 @@ def main() -> int:
         "success_criteria": {"horizontal_m": SUCCESS_RADIUS,
                              "definition": SUCCESS_DEFINITION},
         "final_error_definition": FINAL_ERROR_DEFINITION,
-        "safety_guard": "walking_guard applied to every controller: hard stop "
-                        "when any lidar beam is closer than 0.40 m (front and "
-                        "reverse sectors enforced), slow-down below 0.75 m, "
-                        "plus the balance limit |v*omega|",
+        "safety_guard": "walking_guard applied after every learned controller "
+                        "(neural, neural_two_level, e2e): hard stop when any "
+                        "lidar beam is closer than 0.40 m (front and reverse "
+                        "sectors enforced), slow-down below 0.75 m, plus the "
+                        "balance limit |v*omega|; the classical stack keeps its "
+                        "own 0.35 m clearance in the shared control module",
         "beams": int(C.LIDAR_BEAMS),
         "controllers": per_controller,
         "model_metrics": load_model_metrics(args.models_dir),

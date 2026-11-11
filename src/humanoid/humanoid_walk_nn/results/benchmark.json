@@ -1171,7 +1171,7 @@
       "time": 60.0
     }
   ],
-  "safety_guard": "walking_guard applied to every controller: hard stop when any lidar beam is closer than 0.40 m (front and reverse sectors enforced), slow-down below 0.75 m, plus the balance limit |v*omega|",
+  "safety_guard": "walking_guard applied after every learned controller (neural, neural_two_level, e2e): hard stop when any lidar beam is closer than 0.40 m (front and reverse sectors enforced), slow-down below 0.75 m, plus the balance limit |v*omega|; the classical stack keeps its own 0.35 m clearance in the shared control module",
   "sample_hz": 10.0,
   "scenes": [
     "hall",

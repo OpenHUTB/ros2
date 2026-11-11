@@ -196,8 +196,12 @@ $k_\psi=2.2$，巡航速度 0.95 m/s；转弯前按航向变化限速、接近�
 > 每格 3 条 episode，报告 mean±std，逐条记录（含 seed）见 `results/benchmark.csv`。
 > 成功判据为终点到目标 **≤0.60 m**（与 `tests/test_control.py` 一致）；控制器自身在
 > `config.GOAL_TOLERANCE = 0.45 m` 内停止，因此**终点误差**定义为 episode 结束时
-> 到当前目标的距离。所有控制器输出后统一执行 `walking_guard`：任一方向激光 <0.40 m
-> 时硬性禁止平移（前向与倒车均约束），0.40–0.75 m 限速，另加平衡约束 |v·ω|。
+> 到当前目标的距离。所有学习型控制器（`neural` / `neural_two_level` / `e2e`）输出后统一执行
+> `walking_guard`：任一方向激光 <0.40 m 时硬性禁止平移（前向与倒车均约束），0.40–0.75 m
+> 限速，另加平衡约束 |v·ω|；经典栈沿用控制模块自带的 0.35 m 硬安全距离。
+>
+> 复现命令：`bash main.sh benchmark`（3 episode/格、60 s 上限）。仓库只收录 `models/*.json`
+> 的元信息与指标，权重 `models/*.npz` 由 `bash main.sh train` 生成、不纳入版本库。
 
 | 场景 | 控制器 | n | 成功率 | 耗时 (s, mean±std) | 碰撞 | 终点误差 (m, mean±std) |
 | --- | --- | --- | --- | --- | --- | --- |

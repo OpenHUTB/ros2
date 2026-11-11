@@ -6,7 +6,8 @@
 #   bash main.sh slam_nav    [hall|warehouse|obstacle]   激光建图 + A* 自主步行导航
 #   bash main.sh perception  [hall|warehouse|obstacle]   感知网络激光去噪
 #   bash main.sh e2e         [hall|warehouse|obstacle]   端到端 CNN 深度图像导航
-#   bash main.sh benchmark   [hall|warehouse|obstacle]   指标评测
+#   bash main.sh benchmark                               四控制器多场景闭环评测（写 results/benchmark.json/.csv）
+#   bash main.sh benchmark_ros [hall|warehouse|obstacle] 单场景 ROS 闭环（metrics_node 写 results/ros_*.json）
 #   bash main.sh test                                    运行物理/建图/规划/控制自测
 #   bash main.sh train                                   重新训练全部神经网络
 #   bash main.sh setup                                   创建项目私有 Python 环境
@@ -44,6 +45,16 @@ case "$MODE" in
     done
     exit $rc
     ;;
+  benchmark)
+    if [ ! -x "$PY" ]; then
+      echo "[main] 缺少 .venv，请先执行: bash main.sh setup" >&2
+      exit 1
+    fi
+    # 四控制器 x 三场景、每格 3 条 episode、同一 seed、60 s 上限（文档 9.1 的协议）
+    "$PY" "$ROOT/tools/evaluate.py" --scenes "$SCENES" \
+      --episodes 3 --max-seconds 60
+    exit $?
+    ;;
   train)
     if [ ! -x "$PY" ]; then
       echo "[main] 缺少 .venv，请先执行: bash main.sh setup" >&2
@@ -55,7 +66,8 @@ case "$MODE" in
     "$PY" "$ROOT/tools/train_planner.py"
     "$PY" "$ROOT/tools/train_e2e.py"
     "$PY" "$ROOT/tools/train_rl.py"
-    "$PY" "$ROOT/tools/evaluate.py" --scenes "$SCENES"
+    "$PY" "$ROOT/tools/evaluate.py" --scenes "$SCENES" \
+      --episodes 3 --max-seconds 60
     exit $?
     ;;
 esac
@@ -68,12 +80,15 @@ fi
 source "$WS/devel/setup.bash"
 
 case "$MODE" in
-  teleop|slam_nav|perception|e2e|benchmark)
+  teleop|slam_nav|perception|e2e)
     exec roslaunch humanoid_walk_nn "${MODE}.launch" scene:="$SCENE"
+    ;;
+  benchmark_ros)
+    exec roslaunch humanoid_walk_nn "benchmark.launch" scene:="$SCENE"
     ;;
   *)
     echo "未知模式: $MODE" >&2
-    echo "用法: bash main.sh [teleop|slam_nav|perception|e2e|benchmark|test|train|setup] [hall|warehouse|obstacle]" >&2
+    echo "用法: bash main.sh [teleop|slam_nav|perception|e2e|benchmark|benchmark_ros|test|train|setup] [hall|warehouse|obstacle]" >&2
     exit 2
     ;;
 esac

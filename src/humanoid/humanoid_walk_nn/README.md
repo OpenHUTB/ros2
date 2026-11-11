@@ -6,7 +6,7 @@
 2. **传感器感知与运动控制**：72 束 360° 激光雷达（噪声/野值/丢点）、IMU（roll/pitch/yaw rate）、6 关节编码器、GNSS、前视 32×32 深度相机；感知 MLP 对激光去噪后再送入控制器；
 3. **建图与导航**：对数几率占据栅格 + 相关性扫描匹配 SLAM；A* 全局规划、纯跟踪步行控制、平衡感知限速、障碍减速/停车与摔倒恢复；
 4. **端到端模型**：前视深度图（32×32）→ 2 层 CNN → `(walk_speed, turn_rate)`；
-5. **神经网络训练 / 测试 / ROS 封装**：纯 NumPy 实现 MLP/CNN/Adam/DQN/REINFORCE，7 个 `.json` 模型权重（含训练 meta）、8 个 ROS 节点、6 个 launch；
+5. **神经网络训练 / 测试 / ROS 封装**：纯 NumPy 实现 MLP/CNN/Adam/DQN/REINFORCE，7 个模型的训练元信息与评测指标（`models/*.json`，权重由 `bash main.sh train` 生成）、8 个 ROS 节点、6 个 launch；
 6. **多场景性能评价**：`hall`（走廊）、`warehouse`（货架 + 移动搬运车）、`obstacle`（木箱训练场）三场景闭环 benchmark，含碰撞、摔倒、终点误差指标与 RL 算法/网络结构对比。
 
 完整原理、算法与实验数据见文档页：[`docs/humanoid/humanoid_walk_nn.md`](../../../docs/humanoid/humanoid_walk_nn.md)。
@@ -30,7 +30,7 @@ humanoid_walk_nn/
 ├── scripts/                      # ROS 节点（sim/slam/nav/perception/e2e/metrics/viewer/teleop）
 ├── launch/                       # teleop / slam_nav / perception / e2e / benchmark / bringup
 ├── tools/                        # 采集、训练、评测、GIF 录制
-├── models/                       # 训练好的 .json 权重 + meta
+├── models/                       # 模型的 meta 与指标（*.json）；权重 *.npz 由 main.sh train 生成
 ├── results/                      # 训练指标、三场景 benchmark 汇总（JSON/CSV）
 └── tests/                        # 物理 / 建图 / 规划 / 控制自测
 ```
@@ -46,6 +46,7 @@ humanoid_walk_nn/
 ```bash
 cd src/humanoid/humanoid_walk_nn
 bash main.sh setup
+bash main.sh train                 # 生成 models/*.npz 与 results/*.npz（权重不入库，首次必跑）
 bash scripts/build_ros.sh          # 独立工作空间 ~/humanoid_ws
 source ~/humanoid_ws/devel/setup.bash
 roslaunch humanoid_walk_nn teleop.launch scene:=hall
@@ -68,7 +69,7 @@ roslaunch humanoid_walk_nn teleop.launch scene:=hall
 | `bash main.sh slam_nav warehouse` | 激光建图 + 扫描匹配 + A* + 纯跟踪自主步行 |
 | `bash main.sh perception hall` | 感知 MLP 激光去噪，发布 `/humanoid/scan_filtered` |
 | `bash main.sh e2e warehouse` | 端到端 CNN：深度图 → 步行速度/转向 |
-| `bash main.sh benchmark hall` | 指标评测（写 `results/benchmark.json` / `.csv`） |
+| `bash main.sh benchmark` | 四控制器 × 三场景闭环评测（每格 3 条 episode、同 seed、60 s 上限，写 `results/benchmark.json` / `.csv`） |
 | `bash main.sh test` | 物理 / 建图 / 规划 / 控制自测 + 手写反传梯度校验 |
 | `bash main.sh train` | 重新采集数据并训练全部网络 |
 
@@ -76,7 +77,7 @@ roslaunch humanoid_walk_nn teleop.launch scene:=hall
 
 | 指标 | 结果 |
 | --- | --- |
-| 经典 A* + 纯跟踪步行（三场景） | **成功率 100%**（hall 26.3 s / warehouse 36.0 s / obstacle 23.6 s，0 碰撞、0 摔倒，终点误差约 0.58 m） |
+| 经典 A* + 纯跟踪步行（三场景，3 episode/格、同 seed） | **成功率 100%**（hall 30.5 s / warehouse 50.8 s / obstacle 30.6 s，0 碰撞、0 摔倒，终点误差 0.60 / 0.59 / 0.59 m） |
 | SLAM 绝对轨迹误差 ATE RMSE | **0.168 m**（地图 150×375 @0.08 m，覆盖率 48.3%） |
 | A* 路径长度（三场景） | 28.2 / 30.0 / 25.6 m，绕行比 1.08 / 1.17 / 1.13，最小离障 0.70 / 0.67 / 0.70 m |
 | 激光去噪（感知 MLP） | RMSE **0.729 → 0.432 m（+40.7%）**，有效波束 +35.6% |
@@ -90,11 +91,12 @@ roslaunch humanoid_walk_nn teleop.launch scene:=hall
   episode，报告 mean±std；逐条记录（含 seed）见 `results/benchmark.csv`。
 - **成功判据**：终点到目标 ≤0.60 m（与 `tests/test_control.py` 一致）；控制器在
   `config.GOAL_TOLERANCE=0.45 m` 内停止，`final_error` 为 episode 结束时的剩余距离。
-- **安全层**：所有控制器输出后统一执行 `walking_guard`，任一方向激光 <0.40 m 时硬性禁止平移
-  （含倒车），0.40–0.75 m 限速；行为克隆因此不再顶墙，但也可能卡住（成功率不虚高）。
+- **安全层**：所有学习型控制器（neural / neural_two_level / e2e）输出后统一执行 `walking_guard`，
+  任一方向激光 <0.40 m 时硬性禁止平移（含倒车），0.40–0.75 m 限速；经典栈沿用控制模块自带的
+  0.35 m 硬安全距离。行为克隆因此不再顶墙，但也可能卡住（成功率不虚高）。
 - **蒸馏评估**：行为克隆/端到端与“经典”共享几何专家，比较的是蒸馏质量而非方法优劣。
-- **模型元信息**：`models/*.json` 含 arch/lr/epochs/dataset_hash/config_hash/code_hash 等 meta；
-  `models/*.npz` 为权重本体（JSON 是元数据与指标）。
+- **模型元信息**：`models/*.json` 含 arch/lr/epochs/dataset_hash/config_hash/code_hash 等 meta 与评测指标；
+  权重 `models/*.npz` 由 `bash main.sh train` 生成，因体积不纳入版本库（首次克隆后需先训练）。
 - **梯度校验**：`tests/test_gradients.py` 用中心差分校验 Dense/Conv2D/激活层反传
   （相对误差 <1e-5，实测 ~1e-9），`bash main.sh test` 会执行。
 - **日志不入库**：逐帧 `results/ros_*_slam_nav.json` 已移除并加入 `.gitignore`，
