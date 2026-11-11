@@ -244,6 +244,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
+* [巡线小车仿真（色带中线 PD 跟踪）](./ground/line_follower_car.md) —— 一排虚拟光电传感器读取线偏差，pure pursuit 预瞄 + PD 转向闭环引导沿黑线巡线
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
 * [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
 * [轮胎滑移率-附着曲线](./ground/tire_slip_curve.md) —— 用简化刷子轮胎模型输出滑移率与附着系数关系，标出峰值附着与 ABS 目标滑移带
