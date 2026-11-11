@@ -14,7 +14,10 @@ import pytest
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(MODULE_ROOT))
 
-from mujoco_abandoned_park_uav_visual_steering import SimulationConfig, UavSimulation
+from mujoco_abandoned_park_uav_visual_steering import (  # noqa: E402
+    SimulationConfig,
+    UavSimulation,
+)
 
 
 @pytest.fixture()
@@ -60,7 +63,7 @@ def test_timestep_configuration_overrides_model_xml() -> None:
 
 def test_main_entry_runs_complete_simulation() -> None:
     completed = subprocess.run(
-        [sys.executable, str(MODULE_ROOT / "main.py"), "--steps", "4"],
+        [sys.executable, str(MODULE_ROOT / "main.py"), "--mode", "simulation", "--steps", "4"],
         check=True,
         capture_output=True,
         text=True,
@@ -70,5 +73,4 @@ def test_main_entry_runs_complete_simulation() -> None:
     assert payload["status"] == "ok"
     assert payload["steps"] == 4
     assert payload["state"]["y_m"] > -7.0
-
 

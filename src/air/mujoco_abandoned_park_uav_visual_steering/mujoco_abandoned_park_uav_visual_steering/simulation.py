@@ -73,6 +73,7 @@ class UavSimulation:
         if self.body_id < 0 or self.camera_id < 0:
             raise ValueError("Required UAV body or camera is absent / 缺少无人机机体或相机")
         self._yaw_radians = 0.0
+        self._renderer: mujoco.Renderer | None = None
         self.reset()
 
     @property
@@ -85,12 +86,16 @@ class UavSimulation:
         """Return a copy of UAV world position / 返回无人机世界坐标副本。"""
         return self.data.qpos[:3].copy()
 
-    def reset(self, lateral_offset_m: float = 0.0) -> None:
+    def reset(self, lateral_offset_m: float = 0.0, initial_y_m: float | None = None) -> None:
         """Reset to the configured pose / 重置至配置姿态。"""
         if abs(lateral_offset_m) > self.config.path_half_width_m * 1.8:
             raise ValueError("lateral offset is outside the scene / 横向偏移超出场景范围")
         mujoco.mj_resetData(self.model, self.data)
         x, y, z = self.config.initial_position
+        if initial_y_m is not None:
+            if not np.isfinite(initial_y_m):
+                raise ValueError("initial_y_m must be finite / 初始纵向坐标必须有限")
+            y = float(initial_y_m)
         self.data.qpos[:3] = (x + lateral_offset_m, y, z)
         self._yaw_radians = np.deg2rad(self.config.initial_yaw_degrees)
         self._write_yaw_quaternion()
@@ -122,6 +127,35 @@ class UavSimulation:
             "z_m": float(self.data.qpos[2]),
             "yaw_radians": float(self._yaw_radians),
         }
+
+    def capture_rgb(self) -> np.ndarray:
+        """Capture the forward camera as RGB uint8 / 以 RGB uint8 捕获前视相机。"""
+        if self._renderer is None:
+            self._renderer = mujoco.Renderer(
+                self.model,
+                height=self.config.render_height,
+                width=self.config.render_width,
+            )
+        self._renderer.update_scene(self.data, camera=self.camera_id)
+        frame = self._renderer.render()
+        expected_shape = (self.config.render_height, self.config.render_width, 3)
+        if frame.shape != expected_shape or frame.dtype != np.uint8:
+            raise RuntimeError(
+                f"Unexpected RGB frame / RGB 图像规格异常: {frame.shape}, {frame.dtype}"
+            )
+        return frame.copy()
+
+    def close(self) -> None:
+        """Release rendering resources / 释放渲染资源。"""
+        if self._renderer is not None:
+            self._renderer.close()
+            self._renderer = None
+
+    def __enter__(self) -> "UavSimulation":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
 
     def _write_yaw_quaternion(self) -> None:
         half = self._yaw_radians / 2.0
