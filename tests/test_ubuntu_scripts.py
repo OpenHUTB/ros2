@@ -10,6 +10,7 @@ def test_ubuntu_setup_creates_isolated_environment_and_installs_docs_requirement
     content = (ROOT / "setup_ubuntu.sh").read_text(encoding="utf-8")
 
     assert "set -euo pipefail" in content
+    assert "sys.version_info < (3, 8)" in content
     assert 'python3 -m venv "${VENV_DIR}"' in content
     assert "requirements-docs.txt" in content
     assert "DEBIAN_FRONTEND=noninteractive" in content
