@@ -1,0 +1,49 @@
+{
+  "environment": {
+    "python": "3.12",
+    "numpy": "2.x",
+    "os": "Windows 11"
+  },
+  "resolution": 0.1,
+  "scenarios": [
+    {
+      "map": "corridor",
+      "ok": true,
+      "raw_points": 188,
+      "smooth_points": 457,
+      "raw_length_m": 19.28,
+      "smooth_length_m": 18.76,
+      "raw_max_curvature": 5.685,
+      "smooth_max_curvature": 0.419,
+      "raw_min_clearance_m": 0.1,
+      "smooth_min_clearance_m": 0.1,
+      "smooth_safe": true
+    },
+    {
+      "map": "doorway",
+      "ok": true,
+      "raw_points": 188,
+      "smooth_points": 2,
+      "raw_length_m": 21.185,
+      "smooth_length_m": 19.639,
+      "raw_max_curvature": 5.685,
+      "smooth_max_curvature": 0.0,
+      "raw_min_clearance_m": 0.141,
+      "smooth_min_clearance_m": 0.5,
+      "smooth_safe": true
+    },
+    {
+      "map": "clutter",
+      "ok": true,
+      "raw_points": 188,
+      "smooth_points": 493,
+      "raw_length_m": 22.014,
+      "smooth_length_m": 20.488,
+      "raw_max_curvature": 5.685,
+      "smooth_max_curvature": 0.949,
+      "raw_min_clearance_m": 0.1,
+      "smooth_min_clearance_m": 0.1,
+      "smooth_safe": true
+    }
+  ]
+}
