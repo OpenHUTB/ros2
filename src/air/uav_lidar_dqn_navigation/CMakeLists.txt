@@ -19,6 +19,7 @@ catkin_install_python(PROGRAMS
   scripts/teleop_keyboard.py
   scripts/lidar_scan_node.py
   scripts/train_dqn_nav.py
+  scripts/eval_policy.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -28,12 +29,15 @@ install(FILES
   scripts/lidar_features.py
   scripts/dqn_network.py
   scripts/dqn_agent.py
+  scripts/safety_shield.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 if(CATKIN_ENABLE_TESTING)
   # 指向具体测试文件：部分环境里 nosetests 对目录收集会漏掉用例
   catkin_add_nosetests(test/test_lidar_features.py)
+  catkin_add_nosetests(test/test_safety_shield.py)
+  catkin_add_nosetests(test/test_eval_policy.py)
 endif()
 
 install(DIRECTORY launch config models maps
