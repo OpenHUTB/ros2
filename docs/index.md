@@ -255,6 +255,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [IMU 噪声 Allan 方差辨识与倾角滤波整定](./ground/imu_allan_noise_identification.md) —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
 * [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
+* [相机-IMU 时间同步标定](./ground/camera_imu_time_calibration.md) —— 互相关估计相机与 IMU 的常量时间偏移；±200 ms 内最大误差 0.16 ms，50 ms 偏移下姿态 RMS 误差 3.36° → 0.72°，并给出时间戳取帧首时的半帧固定偏差
+
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
