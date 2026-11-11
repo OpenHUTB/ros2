@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from mujoco_motor_temperature_predictor.forecast import fit_and_evaluate, load_samples
+from sample_data import write_sample
 
 
 def write_series(path):
@@ -51,3 +52,10 @@ def test_unsorted_time_series_is_rejected(tmp_path):
     path.write_text("time_s,speed_mps,left_temperature_c,left_current_a,ambient_c\n0,0,20,1,20\n1,0,21,1,20\n0.5,0,21,1,20\n", encoding="utf-8")
     with pytest.raises(ValueError, match="strictly increasing"):
         load_samples(path)
+
+
+def test_sample_generator_creates_cli_compatible_csv(tmp_path):
+    path = tmp_path / "sample.csv"
+    assert write_sample(path, samples=100, seed=3) == 100
+    times, features, targets = load_samples(path, horizon_s=0.5)
+    assert len(times) == len(features) == len(targets)

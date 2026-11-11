@@ -8,8 +8,11 @@
 
 ## 运行
 
+Generate a reproducible example time series and fit/evaluate the model:
+
 ```bash
-python3 main.py --csv path/to/motor_sensors.csv --horizon 5 --model output/temperature_model.json --results output/forecast_results.json
+python3 sample_data.py --output output/sample_temperature_series.csv --samples 500
+python3 main.py --csv output/sample_temperature_series.csv --horizon 0.5 --model output/temperature_model.json --results output/forecast_results.json
 ```
 
 前 80% 的时间序列用于拟合；训练/测试边界隔离一个完整预测时域，最后 20% 用于计算 RMSE。
@@ -20,5 +23,5 @@ python3 main.py --csv path/to/motor_sensors.csv --horizon 5 --model output/tempe
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-select mujoco_motor_temperature_predictor
 source install/setup.bash
-ros2 launch mujoco_motor_temperature_predictor evaluate.launch.py csv:=path/to/motor_sensors.csv
+ros2 launch mujoco_motor_temperature_predictor evaluate.launch.py csv:=/ws/output/sample_temperature_series.csv horizon:=0.5
 ```
