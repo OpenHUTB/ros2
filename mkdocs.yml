@@ -106,6 +106,7 @@ nav:
     - 人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比: './humanoid/humanoid_imu_attitude.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
+    - 人形机器人落地冲击缓冲：膝关节阻抗与刚性保持对比: './humanoid/humanoid_landing_impedance.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
