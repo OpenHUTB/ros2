@@ -58,7 +58,7 @@ roslaunch carlair_ros_bridge main.launch
 
 # 终端 2：键盘控制
 source ~/bridge_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+ros2 launch uav_keyboard_control keyboard.launch.py
 ```
 
 把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控，松开即悬停，`ESC` 退出。
@@ -172,7 +172,7 @@ rostopic echo -n 1 /uav/odom/pose/pose/position     # 确认 z ≈ 15
 export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+ros2 launch uav_keyboard_control keyboard.launch.py
 # 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
 ```
 
@@ -241,7 +241,7 @@ roslaunch uav_keyboard_control main.launch
 
 ##### 先看清语义：一个字节只产生一条速度指令
 
-`src/air/uav_keyboard_control/scripts/keyboard_control.py` 的主循环：
+`src/air/uav_keyboard_control/uav_keyboard_control/keyboard_node.py` 的主循环：
 
 ```python
 def spin(self):
@@ -320,7 +320,7 @@ import select
 import sys
 import time
 
-CMD = ["rosrun", "uav_keyboard_control", "main.py"]
+CMD = ["ros2", "run", "uav_keyboard_control", "keyboard"]
 
 
 def main():

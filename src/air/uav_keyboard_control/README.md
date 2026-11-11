@@ -9,7 +9,7 @@ W / S   前进 / 后退      forward_speed m/s
 A / D   左移 / 右移      side_speed    m/s
 R / F   上升 / 下降      vert_speed    m/s
 Q / E   右转 / 左转      yaw_rate      rad/s
-ESC / Ctrl-C             退出
+Ctrl-C             退出
 ```
 
 松开按键后保持 `hold_timeout`（默认 0.3s），超时自动发零速悬停。
@@ -18,7 +18,7 @@ ESC / Ctrl-C             退出
 
 ```bash
 # 终端 1：起 bridge（Noetic 那边）
-roslaunch carlair_ros_bridge bringup.launch
+ros2 launch carlair_ros_bridge main.launch.py
 
 # 终端 2：起本节点
 ros2 launch uav_keyboard_control keyboard.launch.py
@@ -26,7 +26,7 @@ ros2 launch uav_keyboard_control keyboard.launch.py
 ros2 run uav_keyboard_control keyboard
 ```
 
-注意：`ros2 launch` 起的节点 stdin 不在前台，终端 raw 读键会失败。要交互就用 `ros2 run`。
+注意：节点直接读 /dev/tty 读键，不依赖 stdin，ros2 launch 也能交互。
 
 ## 参数
 

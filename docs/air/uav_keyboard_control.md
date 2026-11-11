@@ -51,11 +51,11 @@
 ```shell
 # 终端 1：桥接（连仿真 + 执行 + 自动起飞悬停）
 source ~/bridge_ws/devel/setup.bash
-roslaunch carlair_ros_bridge main.launch
+ros2 launch carlair_ros_bridge main.launch.py
 
 # 终端 2：键盘控制
 source ~/bridge_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+ros2 launch uav_keyboard_control keyboard.launch.py
 ```
 
 把焦点放在键盘控制终端，按 `W/A/S/D/R/F/Q/E` 操控（可同时按住多个键斜飞），松开后平滑减速到悬停，`ESC` 退出。
@@ -215,7 +215,7 @@ source ~/uav_ws/devel/setup.bash
 # <宿主机IP> 换成仿真器所在机器的地址（Windows 下用 ipconfig 查看，
 # 桥接模块文档中的示例为 192.168.94.1）
 # auto_takeoff 默认为 true：桥接层会 takeoff() 并 hover()，起飞后悬停在约 1 m
-roslaunch carlair_ros_bridge main.launch host:=<宿主机IP>
+ros2 launch carlair_ros_bridge main.launch.py host:=<宿主机IP>
 
 # ② 客户机：把无人机送到 15 m 高空
 #    /uav/goal 是 ENU（z 向上为正），桥接层飞抵该点后自动悬停，
@@ -227,7 +227,7 @@ rostopic echo -n 1 /uav/odom/pose/pose/position     # 确认 z ≈ 15
 export ROS_MASTER_URI=http://localhost:11311
 source /opt/ros/noetic/setup.bash
 source ~/uav_ws/devel/setup.bash
-roslaunch uav_keyboard_control main.launch
+ros2 launch uav_keyboard_control keyboard.launch.py
 # 在弹出的 xterm 窗口里按 W/A/S/D/R/F/Q/E 操控，松开悬停，ESC 退出
 ```
 
@@ -291,7 +291,7 @@ roslaunch uav_keyboard_control main.launch
 ### 7.5 实测截图
 
 键盘控制窗口。`main.launch` 通过 `launch-prefix="xterm -e"` 拉起，
-窗口标题为 `main.py`，黑底白字即是键位帮助：
+窗口标题为 `keyboard`，黑底白字即是键位帮助：
 
 ![键盘控制窗口](../img/air/uav_keyboard_control/xterm_keyboard_window.png)
 
@@ -403,7 +403,7 @@ import select
 import sys
 import time
 
-CMD = ["rosrun", "uav_keyboard_control", "main.py"]
+CMD = ["ros2", "run", "uav_keyboard_control", "keyboard"]
 
 
 def main():
