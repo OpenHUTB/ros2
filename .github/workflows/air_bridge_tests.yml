@@ -6,6 +6,7 @@ on:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_e2e_rl/**'
+      - 'src/air/uav_keyboard_control/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
@@ -13,6 +14,7 @@ on:
       - 'src/air/carlair_ros_bridge/**'
       - 'src/air/uav_landing_monitor/**'
       - 'src/air/uav_e2e_rl/**'
+      - 'src/air/uav_keyboard_control/**'
       - 'tests/**'
       - '.github/workflows/air_bridge_tests.yml'
 
@@ -50,8 +52,15 @@ jobs:
       - name: Run uav_e2e_rl tests
         run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
 
-      - name: Byte-compile bridge scripts
-        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+      - name: Run keyboard control tests
+        run: |
+          python3 tests/test_keyboard_local.py
+          python3 -m unittest discover -s src/air/uav_keyboard_control/tests -v
+
+      - name: Byte-compile air scripts
+        run: |
+          python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+          python3 -m py_compile src/air/uav_keyboard_control/scripts/*.py
 
       - name: Byte-compile landing monitor scripts
         run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py

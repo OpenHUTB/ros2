@@ -1,0 +1,30 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+    - Class: rviz/Odometry
+      Enabled: true
+      Name: Odometry
+      Topic: /odom
+      Keep: 100
+  Global Options:
+    Fixed Frame: odom
+    Frame Rate: 30
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 10
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 1.57
+      Yaw: 0
