@@ -53,6 +53,10 @@ python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 
 ![TTC 与告警状态](../../../docs/img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png)
 
+节点实跑日志（合成 `/scan`，headless）：2.49 s 触发 WARN，障碍通过后恢复 clear。
+
+![节点运行日志](../../../docs/img/ground/ros2_dynamic_obstacle_ttc/node_run.png)
+
 ## 5. 局限
 
 * 机器人按静止处理；移动底盘需要把 `/odom` 速度叠加到相对速度，原地转向时还需要把激光点变换到 odom 系，否则静止墙面会被算成横向运动（当前未接）；

@@ -88,6 +88,11 @@ python3 -m ros2_dynamic_obstacle_ttc.sim    # 5 个场景
 
 ![TTC 与告警状态](../img/ground/ros2_dynamic_obstacle_ttc/ttc_timeline.png)
 
+节点实跑日志（headless 环境，用合成 `/scan` 让障碍从 5 m 处正面接近；
+2.49 s 时触发 WARN，障碍通过后恢复 clear）：
+
+![节点运行日志](../img/ground/ros2_dynamic_obstacle_ttc/node_run.png)
+
 图中红色竖带是告警区间：head_on 的 TTC 在约 2.7 s 跌破 2.5 s 后保持告警，
 parallel 的 TTC 始终高于阈值。
 
