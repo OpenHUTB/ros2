@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>trailer_kinematics</name>
+  <version>1.0.0</version>
+  <description>
+    牵引车-挂车（含铰接点偏移）的运动学仿真与折刀判定：用显式欧拉积分推进
+    两个航向状态，按闭式稳态解析解自检，并对折刀余量、稳态铰接角、通道宽度、
+    倒车稳定性四条给出 PASS/FAIL。纯 Python + 纯标准库，不依赖 CARLA 与 GPU。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export/>
+</package>

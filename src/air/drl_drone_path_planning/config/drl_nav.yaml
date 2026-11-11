@@ -1,0 +1,103 @@
+# =============================================================================
+# drl_drone_path_planning 统一配置文件
+# Developer: 汤湘粤 (学号: 2535030067)
+#
+# 所有键都嵌套在 drl_nav 下，ROS 节点、训练脚本和评估脚本共用同一份配置，
+# 保证「训练环境」与「部署节点」的观测/动作定义完全一致。
+# =============================================================================
+drl_nav:
+  # auto   : 有可用权重时用 DRL 策略，否则自动退回几何基线
+  # drl    : 强制使用神经网络策略（权重缺失时直接报错，便于排障）
+  # baseline: 强制使用纯几何的航点追踪 + 势场避障基线
+  mode: auto
+
+  # 控制频率（Hz），与训练环境的 dt 保持一致：10 Hz -> dt = 0.1 s
+  control_rate: 10.0
+
+  # 权重文件；留空表示使用 <package>/models/policy_weights.npz
+  model_path: ""
+
+  # ROS 话题
+  odom_topic: /uav/odom
+  scan_topic: /uav/scan
+  cmd_topic: /uav/cmd_vel
+  path_topic: ~path
+  status_topic: ~status
+  # 路径/航点发布使用的坐标系；实际会优先采用里程计 header.frame_id
+  frame_id: odom
+
+  # 里程计 twist 所在的坐标系：body（REP 103 约定，推荐）或 world
+  odom_twist_frame: body
+
+  # 发布速度指令的坐标系：body（标准 Twist 约定，推荐）或 world（桥接需要时）
+  command_frame: body
+
+  goal:
+    # 世界系 ENU 航点序列，无人机依次到达；最后一个到达即任务完成
+    waypoints:
+      - [6.0, 0.0, 2.0]
+      - [6.0, 6.0, 2.5]
+      - [0.0, 6.0, 2.0]
+      - [-4.0, 2.0, 2.5]
+    # 航点到达判定半径（米）。纯速度策略没有位置环，横向收敛精度约 ±0.5 m；
+    # 1.5 m 容差与其控制能力匹配，避免策略在航点附近反复绕圈。
+    tolerance: 1.5
+    # 目标相对位置的归一化尺度（米），用于把观测压到 [-1, 1]
+    goal_norm: 10.0
+
+  limits:
+    max_vel_xy: 2.0        # 机体水平速度上限（m/s）
+    max_vel_z: 1.0         # 机体垂直速度上限（m/s）
+    max_yaw_rate: 0.8      # 偏航角速度上限（rad/s）
+
+  observation:
+    sectors: 16            # 激光雷达扇形数量（360°均分）
+    lidar_range: 12.0      # 扇形直方图最大量程（米）
+    obstacle_height_min: 0.2  # 低于该高度的点视为地面噪声
+
+  safety:
+    enabled: true
+    stop_distance: 0.8     # 正前方出现该距离内的障碍时刹停平移速度
+    scan_timeout: 1.0      # 超过该时间未收到 LaserScan 时发布零速（秒）
+    front_half_angle: 0.79 # 正前方半角（rad，约 45°）
+    avoid_distance: 2.0    # 几何基线的势场作用半径（米）
+    avoid_gain: 1.5        # 几何基线的排斥增益
+
+  env:
+    dt: 0.1
+    max_steps: 500         # 单回合最大步数（10 Hz 下约 50 s）
+    waypoint_tolerance: 1.5
+    drone_radius: 0.25
+    # [xmin, ymin, zmin, xmax, ymax, zmax]
+    arena: [-6.0, -4.0, 0.3, 9.0, 9.0, 5.0]
+    start: [0.0, 0.0, 2.0]
+    start_yaw: 0.0
+    randomize_start: true
+    start_noise_xy: 0.3
+    start_noise_yaw: 0.2
+    # 高度保持辅助：目标高度与当前高度相差小于 band 时，把策略的垂直动作
+    # 衰减为 damping 倍。训练与部署共用同一函数，避免策略在目标高度附近
+    # 学会无意义的俯冲/爬升。
+    altitude_hold_band: 0.3
+    altitude_damping: 0.1
+    # 圆柱障碍：[x, y, 半径, 高度]
+    # 障碍分布在航线两侧，最近处仍保留约 2 m 横向余量：
+    # 既让激光直方图有真实输入，又避免把直飞走廊挤成 1 m 级的「S 形」陷阱。
+    obstacles:
+      - [2.0, 1.8, 0.6, 4.0]
+      - [4.0, -3.2, 0.6, 4.0]
+      - [8.2, 3.0, 0.7, 4.0]
+      - [3.0, 8.2, 0.7, 4.0]
+      - [-4.5, 4.5, 0.7, 4.0]
+
+    reward:
+      progress_gain: 5.0      # 靠近目标的速度奖励
+      distance_gain: 0.12     # exp(-2d) 距离塑形
+      heading_gain: 0.05      # 机头未指向目标时的惩罚
+      heading_threshold: 0.1745  # 10°
+      smoothness_gain: 0.05   # 加速度/角加速度平滑惩罚
+      altitude_gain: 0.15     # 偏离目标高度的惩罚
+      waypoint_bonus: 5.0     # 到达中间航点奖励
+      goal_bonus: 60.0        # 到达最终航点奖励
+      collision_penalty: -10.0
+      time_penalty: 0.01      # 每步时间惩罚，鼓励最短路径

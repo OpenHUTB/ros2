@@ -8,11 +8,11 @@
   RETURN_HOME     电量低于返航阈值, 自动飞回起飞点
   EMERGENCY_LAND  电量不足以返航, 在最近安全点垂直迫降
 
-话题:
-  订阅: /drone/battery         std_msgs/Float32  (电量 %, 0~100)
-  订阅: /drone/position        geometry_msgs/PointStamped (当前位置, map)
-  发布: /drone/setpoint_position geometry_msgs/PointStamped (仅在 failsafe 激活时)
-  发布: /drone/failsafe_state   std_msgs/String
+话题(均可用参数改名, 默认值见括号):
+  订阅: /drone/battery         std_msgs/Float32  (电量 %, 0~100)   [battery_topic]
+  订阅: /drone/position        geometry_msgs/PointStamped (当前位置, map) [position_topic]
+  发布: /drone/setpoint_position geometry_msgs/PointStamped (仅在 failsafe 激活时) [setpoint_topic]
+  发布: /drone/failsafe_state   std_msgs/String                   [state_topic]
 """
 
 import rclpy
@@ -37,6 +37,10 @@ class BatteryRthNode(Node):
         self.declare_parameter("home_z", 0.0)
         self.declare_parameter("battery_timeout", 3.0)
         self.declare_parameter("safe_zones", "")
+        self.declare_parameter("battery_topic", "/drone/battery")
+        self.declare_parameter("position_topic", "/drone/position")
+        self.declare_parameter("setpoint_topic", "/drone/setpoint_position")
+        self.declare_parameter("state_topic", "/drone/failsafe_state")
 
         self.warn = float(self.get_parameter("warn_percent").value)
         self.rth = float(self.get_parameter("rth_percent").value)
@@ -66,14 +70,19 @@ class BatteryRthNode(Node):
         self.last_batt_time = self.get_clock().now()
         self.failsafe_active = False
 
+        self.batt_topic = self.get_parameter("battery_topic").value
+        self.pos_topic = self.get_parameter("position_topic").value
+        self.setpoint_topic = self.get_parameter("setpoint_topic").value
+        self.state_topic = self.get_parameter("state_topic").value
+
         self.batt_sub = self.create_subscription(
-            Float32, "/drone/battery", self._batt_cb, 10)
+            Float32, self.batt_topic, self._batt_cb, 10)
         self.pos_sub = self.create_subscription(
-            PointStamped, "/drone/position", self._pos_cb, 10)
+            PointStamped, self.pos_topic, self._pos_cb, 10)
         self.target_pub = self.create_publisher(
-            PointStamped, "/drone/setpoint_position", 10)
+            PointStamped, self.setpoint_topic, 10)
         self.state_pub = self.create_publisher(
-            String, "/drone/failsafe_state", 10)
+            String, self.state_topic, 10)
 
         self.timer = self.create_timer(0.2, self._loop)
         self.get_logger().info(
