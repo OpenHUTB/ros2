@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+"""入口脚本：ros2 run mujoco_musculoskeletal_knee_tracking <本脚本名>"""
+
+from mujoco_musculoskeletal_knee_tracking.node import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

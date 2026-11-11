@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  单关节膝关节 + 两条拮抗肌。
+  - 股骨固定在髋端，胫骨通过 knee 铰链（绕 +y）连接；
+  - theta = 0 时小腿竖直下垂，正角为屈曲（小腿向后抬起），限位 -15°..90°；
+  - 两条肌肉用 motor 执行器 + 恒定力臂 0.035 m 表示（等价于文档里的 wrap 圆柱），
+    ctrl 直接是肌力 [N]，Python 侧的 Hill 肌肉模型负责算这个力；
+  - 胫骨质量按 m*g*l = 4.5 N·m 配置：m = 4.5 / (9.81 * 0.15) ≈ 3.058 kg。
+-->
+<mujoco model="knee_msk">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.005" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <default>
+    <joint damping="0.2" armature="0.001"/>
+    <geom contype="0" conaffinity="0" rgba="0.75 0.75 0.8 1"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 2" dir="0 0 -1"/>
+    <body name="femur" pos="0 0 0.55">
+      <geom name="femur" type="capsule" fromto="0 0 0 0 0 -0.20" size="0.030"
+            mass="2.0" rgba="0.80 0.82 0.86 1"/>
+      <body name="tibia" pos="0 0 -0.20">
+        <joint name="knee" type="hinge" axis="0 1 0"
+               range="-0.261799 1.570796" damping="0.4" armature="0.001"/>
+        <geom name="tibia" type="capsule" fromto="0 0 0 0 0 -0.30" size="0.025"
+              mass="3.431" rgba="0.70 0.72 0.78 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- 屈肌：正力矩；伸肌：负力矩。gear = 力臂 0.035 m -->
+    <motor name="flexor" joint="knee" gear="0.035" ctrlrange="0 500"
+           ctrllimited="true"/>
+    <motor name="extensor" joint="knee" gear="-0.035" ctrlrange="0 500"
+           ctrllimited="true"/>
+  </actuator>
+</mujoco>

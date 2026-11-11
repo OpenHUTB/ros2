@@ -1,0 +1,34 @@
+# 膝关节肌肉骨骼仿真参数
+# 与 docs/musculoskeletal/knee_tracking.md 的表一致
+
+sim:
+  dt: 0.005            # 仿真步长 [s]，写入 model.opt.timestep
+  duration: 30.0       # 内置轨迹时长 [s]
+  exit_after_duration: false
+
+trajectory:
+  type: sine           # sine | step
+  amplitude_deg: 40.0  # 轨迹幅值 [deg]
+  frequency_hz: 0.4
+  bias_deg: 30.0       # 正弦偏置 [deg]
+  step_start_deg: 20.0
+  step_target_deg: 50.0
+  step_time: 0.5
+
+ctrl:
+  kp: 30.0             # 比例增益 [N·m/rad]
+  kd: 3.0              # 微分增益 [N·m·s/rad]
+  max_torque: 17.5     # 肌肉等效最大力矩 [N·m] = 500 N × 0.035 m
+  limit_deg: 90.0      # 屈曲上限
+  limit_low_deg: -15.0 # 伸展下限
+
+muscle:
+  f_max: 500.0         # 单肌最大等长力 [N]
+  moment_arm: 0.035    # 恒定力臂 [m]（等价 wrap 圆柱半径）
+  tau_act: 0.02        # 激活时间常数 [s]
+  tau_deact: 0.05      # 失活时间常数 [s]
+
+metrics:
+  band_percent: 2.0    # 调节时间带宽（相对阶跃幅值）
+  wide_band_deg: 5.0   # 备用宽带
+  steady_window_s: 1.0 # 稳态误差统计窗口
