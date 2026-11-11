@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_formation_flight</name>
+  <version>1.0.0</version>
+  <description>
+    四旋翼编队飞行实验：用 Leader-Follower 结构驱动 OpenHUTB（AirSim 接口）中的三架
+    四旋翼保持给定队形，完成直线巡航、圆形编队与队形切换三类任务，记录全部载具的
+    真实轨迹并给出队形保持误差、编队成形时间与队形切换过渡时间等量化指标。
+  </description>
+
+  <maintainer email="thestella17@users.noreply.github.com">thestella17</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,17 @@
+{
+  "runs": 1,
+  "success_count": 1,
+  "success_rate": 1.0,
+  "error_mean": 0.884,
+  "error_std": 0.0,
+  "error_min": 0.884,
+  "error_max": 0.884,
+  "duration_mean": 39.63,
+  "collision_episodes": 0,
+  "collision_steps_total": 0,
+  "shield_steps_total": 0,
+  "expert_dev_mean": 1.725,
+  "expert_dev_max": 1.725,
+  "safety_enabled": false,
+  "success_dist": 1.0
+}

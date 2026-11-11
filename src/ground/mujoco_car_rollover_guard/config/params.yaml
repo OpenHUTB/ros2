@@ -1,0 +1,22 @@
+# mujoco_car_rollover_guard 运行参数
+#
+# 节点名分节约定与仓库其它 ROS 2 功能包一致：launch 加载本文件后，
+# 各节点只取与自己同名的分节。改这里的目标车速、转向斜率和运行时长，
+# 不需要改 Python 源码，也不需要重新 colcon build。
+
+/mujoco_car_rollover_sim_bridge:
+  ros__parameters:
+    # 场景 XML（相对功能包 share/models 目录）：载荷 z=0.16 / 0.26 / 0.36 m
+    scene: "car_scene_payload_mid.xml"
+    run_seconds: 9.0
+    control_hz: 50.0
+
+/mujoco_car_rollover_guard:
+  ros__parameters:
+    # 上游期望车速（门控在此基础上按风险限速）
+    v_target: 1.4
+    # 转向指令每秒增量，越陡越早把车推向侧翻
+    steer_ramp: 0.45
+    run_seconds: 9.0
+    # 留空表示从功能包 share/results 目录加载训练好的权重
+    model_path: ""
