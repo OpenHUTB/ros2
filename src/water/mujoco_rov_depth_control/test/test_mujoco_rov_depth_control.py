@@ -96,12 +96,13 @@ def test_short_simulation_regression(ns, cfg):
     data = mujoco.MjData(model)
     body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, 'rov')
     mass = float(model.body_mass[body_id])
-    net = mass * 9.81 * float(cfg['model']['buoyancy_ratio'])
+    buoyancy = mass * 9.81 * float(cfg['model']['buoyancy_ratio'])
+    net = buoyancy - mass * 9.81        # 与 run() 一致：net_buoyancy = B - m*g
     dt = float(cfg['control']['dt'])
     z0 = float(data.qpos[2])
     for step in range(int(2.0 / dt)):
         err = -1.0 - float(data.qpos[2])
         u = ns['cascade_thrust'](err, float(data.qvel[2]), cfg, mass, net)
-        data.xfrc_applied[body_id, 2] = u + net
+        data.xfrc_applied[body_id, 2] = u + buoyancy   # 与 run() 一致：补浮力，不再减重量
         mujoco.mj_step(model, data)
     assert float(data.qpos[2]) < z0      # 应该已经开始下潜
