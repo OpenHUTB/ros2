@@ -24,13 +24,20 @@ class EncoderSimulator(Node):
         profile = trapezoid(ProfileConfig())
         self.data = measure(profile, self.resolution)
         self.publisher = self.create_publisher(JointState, "/joint/encoder", 50)
+        self.declare_parameter("duration_s", 0.0)
+        self.duration_s = float(self.get_parameter("duration_s").value)
         self.index = 0
-        self.create_timer(self.data["dt"], self.step)
+        self.timer = self.create_timer(self.data["dt"], self.step)
         self.get_logger().info(
             f"encoder_sim ready: {self.resolution} CPR, step {self.data['step_rad']:.5f} rad"
         )
 
     def step(self) -> None:
+        if self.duration_s > 0.0 and self.index >= self.duration_s / self.data["dt"]:
+            self.timer.cancel()
+            self.get_logger().info(f"replayed {self.index} samples, shutting down")
+            rclpy.shutdown()
+            return
         index = self.index % len(self.data["position_rad"])
         message = JointState()
         message.header.frame_id = "joint"
@@ -47,9 +54,12 @@ class VelocityEstimator(Node):
         super().__init__("velocity_estimator")
         self.declare_parameter("dt", 0.001)
         self.declare_parameter("window", 5)
+        self.declare_parameter("duration_s", 0.0)
         self.dt = float(self.get_parameter("dt").value)
         self.window = max(1, int(self.get_parameter("window").value))
         self.positions: list[float] = []
+        self.raw_history: list[float] = []
+        self.alpha_beta_velocity = 0.0
         self.filter = VelocityFilter.create(process_sigma=25.0, measurement_sigma=0.01)
         self.raw_pub = self.create_publisher(Float64, "/joint/velocity_raw", 50)
         self.filtered_pub = self.create_publisher(Float64, "/joint/velocity", 50)
@@ -66,17 +76,22 @@ class VelocityEstimator(Node):
             self.positions[-1] - self.positions[-2]
         ) / self.dt
         self.raw_pub.publish(raw)
+        self.raw_history.append(raw.data)
         smoothed = float(self.filter.step(self.positions[-1], self.dt))
         estimate = Float64()
         estimate.data = smoothed
         self.filtered_pub.publish(estimate)
+        self.alpha_beta_velocity = float(
+            alpha_beta(np.asarray(self.positions), self.dt)[-1]
+        )
         if len(self.positions) % 500 == 0:
-            window = moving_average(np.asarray(self.positions[-500:]), self.window)
-            average = float(window[-1]) if window.size else 0.0
+            # Moving average of the *velocity* history, same as the offline run.
+            window = moving_average(np.asarray(self.raw_history), self.window)
             payload = {
                 "raw": raw.data,
                 "kalman": smoothed,
-                "moving_average": average,
+                "moving_average": float(window[-1]) if window.size else 0.0,
+                "alpha_beta": self.alpha_beta_velocity,
                 "samples": len(self.positions),
             }
             self.status_pub.publish(String(data=json.dumps(payload)))

@@ -85,11 +85,8 @@ def run_experiment(
         }
     if out_dir is not None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
+        with (out_dir / "summary.json").open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if make_plots:
         if figure_dir is None:
             raise ValueError("figure_dir is required when make_plots is True")

@@ -6,7 +6,7 @@
 
 ## 环境
 
-- 离线：Windows 11、Python 3.12.14、NumPy 2.3.5、Matplotlib 3.11.2（仅绘图）
+- 离线：Windows 11、Python 3.12.14（最低 3.8，未使用 3.10+ 语法）、NumPy 2.3.5、Matplotlib 3.11.2（仅绘图）
 - ROS 2：Ubuntu 22.04 + ROS 2 Humble
 
 ## 构建与运行（ROS 2）
@@ -16,7 +16,7 @@ source /opt/ros/humble/setup.bash
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select encoder_quantization_velocity
 source install/setup.bash
-ros2 launch encoder_quantization_velocity main.launch.py cpr:=4096
+ros2 launch encoder_quantization_velocity main.launch.py cpr:=4096 duration_s:=120
 ```
 
 | 话题 | 类型 | 方向 | 说明 |

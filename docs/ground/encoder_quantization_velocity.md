@@ -37,7 +37,7 @@ $\Delta/dt$：1024 CPR 时约 6.1 rad/s，4096 CPR 时约 1.5 rad/s。
 - **两状态卡尔曼**：状态 $[\theta,v]$，过程噪声 25 rad/s²（覆盖梯形曲线的加减速），
   量测噪声取 $\Delta/3$。
 
-延迟用互相关峰的位置度量（估计相对真值的滞后）。
+延迟用互相关峰的位置度量（估计相对真值的滞后）；采样间隔 1 ms，所以延迟分辨率就是 **±1 ms**，1024 CPR 下原始差分噪声很大，0 ms 的峰值也可能是伪峰。
 
 ### 1.3 数据
 
@@ -57,7 +57,7 @@ source /opt/ros/humble/setup.bash
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select encoder_quantization_velocity
 source install/setup.bash
-ros2 launch encoder_quantization_velocity main.launch.py cpr:=4096
+ros2 launch encoder_quantization_velocity main.launch.py cpr:=4096 duration_s:=120
 ```
 
 离线：
