@@ -1,0 +1,14 @@
+# The repository root ignores every data/ directory to keep large
+# behaviour-cloning datasets (images + labels) out of git.
+#
+# This module instead ships two *small* labelled datasets (~0.7 MB in total)
+# that are required inputs: `python main.py` reads imu_drive.json by default,
+# and the two *_results.json files are the reproducible evaluation output.
+# Re-include exactly those four files here instead of editing the shared root
+# .gitignore or weakening its rule for the whole repository.
+!data/
+data/*
+!data/imu_drive.json
+!data/carla_drive.json
+!data/sim_results.json
+!data/carla_results.json
