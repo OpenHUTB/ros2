@@ -1,0 +1,2 @@
+# 依赖（PyPI 只提供 Linux 轮子，Windows 建议用 conda-forge 安装，见 README）
+pybullet>=3.2.5

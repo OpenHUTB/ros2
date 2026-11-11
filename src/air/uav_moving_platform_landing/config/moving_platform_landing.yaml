@@ -1,0 +1,65 @@
+# 移动平台（车 / 船 / 移动甲板）精准降落的参数。
+#
+# 调参顺序建议：先看 state 话题里的 v_deck 是否和实际平台速度接近，再动制导增益。
+# 高度约定：frame/z_up 为 true 表示「上为正」（carlair_ros_bridge 实测是 ENU）。
+
+# ---------------- 平台状态估计（只用位置观测，速度自己算） ----------------
+tracker/window_s: 2.5        # 滑窗长度（s）：太短速度估计噪声大，太长跟不上加减速
+tracker/min_samples: 4       # 少于这么多样本不做估计，此时原地悬停等
+tracker/half_life_s: 1.0     # 指数衰减权重半衰期，越新的样本越重要
+tracker/robust_sigma: 3.0    # MAD 粗筛倍数（进拟合之后的二次保险）
+tracker/quad_min_span_s: 1.0 # 期望跨度不足这么久就不拟合加速度
+tracker/max_accel: 2.5       # 平台加速度上限（m/s^2），防止噪声把二次项放大
+tracker/quad_signif: 3.0     # 二次项要几倍标准误才算「在转弯」
+tracker/curv_window_s: 4.0   # 判曲率专用的长窗（2.5 s 窗口在 0.6 m/s 圆周上分辨不出来）
+tracker/curv_half_life_s: 60.0  # 长窗内近似均匀权重
+tracker/gate_m: 1.0          # 单样本跳点闸门（m）：必须挡在拟合矩阵之外
+
+# ---------------- 下降剖面 ----------------
+descend/speed: 0.4           # 下降段恒定垂直速度（m/s）
+descend/accel: 1.0           # 垂直速度切换的加速度约束（m/s^2）
+descend/touchdown_rel_height: 0.12  # 相对高度低于此值判接地（m）
+
+# ---------------- 制导 ----------------
+guide/kp_xy: 1.2             # 横向位置误差 -> 速度指令（1/s）
+guide/kp_z: 1.5              # 对准段高度保持
+guide/max_xy_speed: 1.6      # 横向速度上限（m/s）
+guide/max_z_speed: 1.0       # 垂直速度上限（m/s）
+guide/vff_gain: 1.0          # 落点速度前馈系数（1.0 = 完全匹配）
+guide/track_altitude: 2.5    # 对准段保持在甲板上方多高（m）
+guide/align_tol: 0.35        # 与落点的横向偏差小于此值视为对准（m）
+guide/align_settle_s: 0.5    # 连续满足对准这么久才下降（s）
+guide/abort_xy_tol: 0.9      # 预计落偏超过此值就复飞（m）
+guide/abort_hold_s: 0.4      # 且持续这么久（s），避免单帧噪声触发
+guide/lead_mode: auto        # auto / measured / now / touchdown
+guide/vff: true              # 是否叠加落点速度前馈
+guide/max_lead_s: 30.0       # 相遇点最大预测时长（s）
+guide/deck_vz_smooth: 0.3    # 平台垂向速度平滑系数（10 Hz 下约 0.3 s）
+guide/deck_vz_deadband: 0.08 # 平滑后小于此值就当平地（m/s）
+guide/lead_dev_tol: 0.25     # 匀速外推允许的横向偏差（m），超过就收缩预测时长
+guide/curv_lam_smooth: 0.2   # 预测时长收缩系数的一阶平滑
+guide/lead_smooth: 0.35      # 相遇点低通（只对 touchdown 模式生效）
+guide/curv_fallback_accel: 0.05   # 横向加速度超过此值判定平台在转弯（m/s^2）
+guide/curv_fallback_hold_s: 1.0   # 持续这么久就降级为速度匹配
+guide/heave_fallback_vz: 0.10     # 平台垂向速度超过此值也降级（升沉平台）
+guide/keep_up_ratio: 0.8     # 平台速度 > 0.8*max_xy_speed 就认为「跟不住」
+
+# ---------------- 保护与超时 ----------------
+mission/align_timeout_s: 45.0    # 对准超时
+mission/descend_timeout_s: 40.0  # 下降超时
+mission/max_go_around: 3         # 最多复飞几次
+mission/min_below_deck_m: -0.35  # 相对高度低于此值（穿到甲板下）直接 ABORT
+mission/tick_rate_hz: 10.0       # 控制频率（/uav/cmd_vel 也按这个频率发）
+mission/state_rate_hz: 2.0       # 状态话题频率
+mission/publish_after_landed_s: 2.0  # 落地后继续发 0 速度多久
+
+# ---------------- 话题 ----------------
+topic/odom: /uav/odom
+topic/platform_pose: /uav/platform_pose
+topic/cmd_vel: /uav/cmd_vel
+topic/state: /uav/moving_landing/state
+topic/lead: /uav/moving_landing/lead_point
+topic/touchdown: /uav/moving_landing/touchdown
+
+# ---------------- 坐标系 ----------------
+frame/z_up: true

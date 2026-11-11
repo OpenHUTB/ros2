@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>ROS 小车遥控</title>
+<!-- 注意：本页面不引用任何公网 CDN 脚本。
+     早期版本用 <script src="https://cdn.jsdelivr.net/npm/roslib@1.3.0/build/roslib.min.js">
+     加载 roslib.js，在只有内网/无外网的机器上会加载失败（ROSLIB 为 undefined），
+     连接函数抛出 ReferenceError，页面就永远停在「正在连接 rosbridge…」。 -->
+<style>
+button{
+  width:100px;height:60px;font-size:20px;margin:5px;
+  transition: background-color 0.12s ease;
+}
+/* 按下高亮样式：变暗 */
+button.pressed{
+  background-color:#666;
+  color:white;
+}
+#video{width:640px;border:2px solid #333;margin:10px 0;background:#eee;}
+#status{font-size:18px;color:#c00;}
+#addr{font-size:14px;color:#555;}
+#hint{font-size:14px;color:#a00;margin:6px 0;white-space:pre-line;}
+</style>
+</head>
+<body>
+<h3 id="title">ROS 小车遥控</h3>
+<div id="status">正在连接 rosbridge...</div>
+<div id="addr"></div>
+<div id="hint"></div>
+<div>
+  <button id="btn_reconnect" style="width:120px;height:36px;font-size:15px;">重新连接</button>
+</div>
+<div>
+  <h4>前置相机画面：</h4>
+  <img id="video" src="" />
+</div>
+<div>
+  <button id="btn_fwd">前进(W/↑)</button>
+</div>
+<div>
+  <button id="btn_left">左转(A/←)</button>
+  <button id="btn_stop">停止(空格)</button>
+  <button id="btn_right">右转(D/→)</button>
+</div>
+<div>
+  <button id="btn_bwd">后退(S/↓)</button>
+</div>
+
+<script>
+/* ---------- 连接地址推导 ----------
+   默认取当前访问的主机名，所以：
+     本机访问   http://127.0.0.1:8000/index.html  -> ws://127.0.0.1:9090
+     别的电脑   http://192.168.1.20:8000/index.html -> ws://192.168.1.20:9090
+   如果主机名不是跑 rosbridge 的那台机器，可以用地址栏参数指定：
+     http://<网页IP>:8000/index.html?bridge=192.168.1.20:9090
+------------------------------------------------ */
+const params     = new URLSearchParams(location.search);
+const FALLBACK   = (location.hostname && location.hostname.length > 0) ? location.hostname : "127.0.0.1";
+const BRIDGE_PORT = 9090;   // 与 launch/web_bridge.launch 保持一致
+const VIDEO_PORT  = 8080;   // 与 launch/web_bridge.launch 保持一致
+const CAMERA_TOPIC = "/front_camera/image_raw"; // 与 urdf/car_cam.xacro 保持一致
+
+const BRIDGE_ADDR = params.get("bridge") || (FALLBACK + ":" + BRIDGE_PORT);
+const ROS_BRIDGE_URL = "ws://" + BRIDGE_ADDR;
+const VIDEO_URL = "http://" + (params.get("video") || (FALLBACK + ":" + VIDEO_PORT))
+                + "/stream?topic=" + CAMERA_TOPIC;
+
+document.getElementById("title").innerText = "ROS 小车遥控";
+document.getElementById("addr").innerText =
+  "rosbridge: " + ROS_BRIDGE_URL + "    相机流: " + VIDEO_URL;
+
+const statusDom = document.getElementById("status");
+const hintDom   = document.getElementById("hint");
+const videoDom  = document.getElementById("video");
+
+function setFail(msg, hints){
+  statusDom.innerText = msg;
+  statusDom.style.color = "red";
+  hintDom.innerText = hints;
+}
+
+/* 相机流拉不到时给出明确提示，而不是留一块空白 */
+videoDom.onerror = function(){
+  videoDom.style.background = "#ddd";
+  hintDom.innerText = hintDom.innerText +
+    "\n相机流 " + VIDEO_URL + " 加载失败：确认 web_video_server 已启动、8080 端口可访问，" +
+    "且相机话题名是 " + CAMERA_TOPIC + "。";
+};
+videoDom.src = VIDEO_URL;
+
+/* ---------- 零依赖 rosbridge 客户端 ----------
+   rosbridge 的 WebSocket 协议本身就是 JSON 文本帧（{"op":"publish",...}），
+   用浏览器原生 WebSocket 就能直连，不需要 roslib.js。
+   这样页面在任何只有内网、连不上公网 CDN 的机器上也能正常工作。 */
+function RosBridgeClient(url, handlers){
+  this.url = url;
+  this.handlers = handlers;
+  this.ws = null;
+  this.advertised = {};
+}
+
+RosBridgeClient.prototype.connect = function(){
+  try{
+    this.ws = new WebSocket(this.url);
+  }catch(e){
+    this.handlers.error(e);
+    return;
+  }
+  const self = this;
+  this.ws.onopen    = function(){ self.handlers.connection(); };
+  this.ws.onclose   = function(ev){ self.handlers.close(ev); };
+  this.ws.onerror   = function(ev){ self.handlers.error(ev); };
+};
+
+RosBridgeClient.prototype.close = function(){
+  if(this.ws){ try{ this.ws.close(); }catch(e){} }
+};
+
+RosBridgeClient.prototype.isOpen = function(){
+  return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+};
+
+RosBridgeClient.prototype._send = function(obj){
+  if(this.isOpen()){ this.ws.send(JSON.stringify(obj)); }
+};
+
+RosBridgeClient.prototype.advertise = function(topic, type){
+  const key = topic + "|" + type;
+  if(this.advertised[key]){ return; }
+  this.advertised[key] = true;
+  this._send({ op:"advertise", topic: topic, type: type });
+};
+
+RosBridgeClient.prototype.publish = function(topic, type, msg){
+  this.advertise(topic, type);
+  this._send({ op:"publish", topic: topic, msg: msg });
+};
+
+let ros = null;
+let connected = false;
+let timer = null;
+
+function connect(){
+  if(connected){ return; }
+  if(ros){ try{ ros.close(); }catch(e){} }
+
+  statusDom.innerText = "正在连接 " + ROS_BRIDGE_URL + " ...";
+  statusDom.style.color = "#c00";
+  hintDom.innerText = "";
+
+  ros = new RosBridgeClient(ROS_BRIDGE_URL, {
+    connection: onConnection,
+    error: onBridgeError,
+    close: onBridgeClose
+  });
+  ros.connect();
+
+  // 超时兜底：8 秒还没连上就告诉用户该查什么，不再无限“正在连接”
+  clearTimeout(timer);
+  timer = setTimeout(function(){
+    if(!connected){
+      setFail("连接超时：" + ROS_BRIDGE_URL,
+        "请依次检查：\n" +
+        "1) 终端是否执行了 roslaunch web_remote_car start_all.launch；\n" +
+        "2) netstat -tulpn | grep 9090 是否显示 0.0.0.0:9090（只有 127.0.0.1 说明 rosbridge 没监听外网）；\n" +
+        "3) 服务器防火墙是否放行 9090：sudo ufw allow 9090/tcp；\n" +
+        "4) 浏览器里这个地址的主机名是否就是跑 rosbridge 的机器，不是的话用 ?bridge=IP:9090 指定。");
+    }
+  }, 8000);
+}
+
+function onConnection(){
+  connected = true;
+  clearTimeout(timer);
+  statusDom.innerText = "rosbridge 连接成功：" + ROS_BRIDGE_URL;
+  statusDom.style.color = "green";
+  hintDom.innerText = "";
+}
+
+function onBridgeError(){
+  connected = false;
+  setFail("连接失败：" + ROS_BRIDGE_URL,
+    "浏览器控制台（F12）里有详细报错。常见原因：rosbridge 未启动、9090 未对外监听、防火墙拦截。");
+}
+
+function onBridgeClose(){
+  connected = false;
+  statusDom.innerText = "连接已断开：" + ROS_BRIDGE_URL;
+  statusDom.style.color = "orange";
+  hintDom.innerText = "检查 rosbridge 是否仍在运行，点“重新连接”可重试。";
+}
+
+function sendVel(linear_x, angular_z){
+  if(!connected || !ros){ return; }
+  ros.publish('/cmd_vel', 'geometry_msgs/Twist', {
+    linear:{x:linear_x,y:0,z:0},
+    angular:{x:0,y:0,z:angular_z}
+  });
+}
+
+const SPEED = 0.3;
+const TURN_SPEED = 0.4;
+
+// 按钮点击事件
+document.getElementById('btn_fwd').onclick = ()=>sendVel(SPEED, 0);
+document.getElementById('btn_bwd').onclick = ()=>sendVel(-SPEED, 0);
+document.getElementById('btn_left').onclick = ()=>sendVel(0, TURN_SPEED);
+document.getElementById('btn_right').onclick = ()=>sendVel(0, -TURN_SPEED);
+document.getElementById('btn_stop').onclick = ()=>sendVel(0,0);
+document.getElementById('btn_reconnect').onclick = function(){
+  connected = false;
+  connect();
+};
+
+// 按键映射：key 名字 对应按钮 ID
+const keyMap = {
+  'w': 'btn_fwd',
+  'arrowup': 'btn_fwd',
+  's': 'btn_bwd',
+  'arrowdown': 'btn_bwd',
+  'a': 'btn_left',
+  'arrowleft': 'btn_left',
+  'd': 'btn_right',
+  'arrowright': 'btn_right',
+  ' ': 'btn_stop'
+};
+
+// 按下按键：高亮按钮 + 发速度
+document.addEventListener('keydown', (e)=>{
+  const key = e.key.toLowerCase();
+  const btnId = keyMap[key];
+  if(!btnId) return;
+  const btn = document.getElementById(btnId);
+  btn.classList.add('pressed');
+
+  switch(key){
+    case 'w':
+    case 'arrowup':
+      sendVel(SPEED,0); break;
+    case 's':
+    case 'arrowdown':
+      sendVel(-SPEED,0); break;
+    case 'a':
+    case 'arrowleft':
+      sendVel(0,TURN_SPEED); break;
+    case 'd':
+    case 'arrowright':
+      sendVel(0,-TURN_SPEED); break;
+    case ' ':
+      sendVel(0,0); break;
+  }
+})
+
+// 松开按键：取消高亮
+document.addEventListener('keyup', (e)=>{
+  const key = e.key.toLowerCase();
+  const btnId = keyMap[key];
+  if(!btnId) return;
+  const btn = document.getElementById(btnId);
+  btn.classList.remove('pressed');
+})
+
+connect();
+</script>
+</body>
+</html>
