@@ -75,6 +75,7 @@ ROS每章节运行代码:
     * [机械臂投篮入筐仿真](./chapter/mujoco_arm_ball.md)
     * [MuJoCo 二连杆机械臂抓取搬运](./chapter/mujoco_arm_pick.md)
     * [三自由度机械臂空间螺旋线仿真](./chapter/mujoco_arm_3d.md)
+    * [MuJoCo 双自由度机械臂画正方形](./chapter/mujoco_two_dof_arm_square.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
@@ -104,7 +105,9 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人轻量级 ZMP 步行控制基线](./humanoid/humanoid_zmp_walking.md)
 * [人形机器人深度图姿态估计与平衡控制](./humanoid/humanoid_depth_pose_control.md)
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
+* [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
+* [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -228,7 +231,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [前视相机车道偏离预警（视觉横向偏移与地图真值对照）](./ground/carla_visual_lane_departure_warning.md) —— 用前视图像估计横向偏移，并与地图真值逐帧对照
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
-* [工况能耗与续航](./ground/drive_cycle_energy.md) —— 把一次行驶的驱动/制动/回收能量拆开，复算百公里电耗与满电续航
+
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
@@ -390,6 +393,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
+* [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
 ### 感知
@@ -459,3 +464,4 @@ ___
 
 
 ## 参考文献
+* [MuJoCo 失落公园无人机端到端视觉转向](./air/mujoco_abandoned_park_uav_visual_steering.md)
