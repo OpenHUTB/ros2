@@ -66,6 +66,16 @@ bash main.sh battery
 
 ![电量管理与自动返航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_return.png)
 
+## 里程计闭环精确运动
+
+`precision_moves` 用 `/odom` 闭环执行固定距离和固定角度动作：`1/2` 前进/后退 0.5 m，`3/4` 左右转 90°，`5` 转 180°，`6` 正方形演示。
+
+```bash
+bash main.sh precision
+```
+
+![里程计闭环正方形轨迹](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_moves.png)
+
 ## 定速巡航与航向保持
 
 `cruise_control` 用 `/odom` 闭环维持目标速度和目标航向。按 `c` 进入/退出巡航；巡航中 `a/d` 微调航向，`+/-` 调整目标速度。
@@ -75,8 +85,3 @@ bash main.sh cruise
 ```
 
 ![定速巡航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_control.png)
-
-![Gazebo 实时仿真：定速巡航小车](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_gazebo_close.png)
-
-![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_cruise_gazebo_wide.png)
-
