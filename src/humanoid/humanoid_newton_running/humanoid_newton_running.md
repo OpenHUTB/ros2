@@ -85,7 +85,7 @@ conda activate mujoco-grasp
 export MUJOCO_GL=glfw
 
 # 3 运行仿真
-python ~/humanoid_running.py
+python humanoid_running.py
 ```
 
 终端启动后自动打开 MuJoCo 可视化窗口，输出 F=ma 理论计算结果。
