@@ -298,6 +298,7 @@ nav:
     - 手势控制无人机: './air/gesture_control_drone.md'
     - AP-CPP 主动感知覆盖路径规划: './ap_cpp_overfomo.md'
     - RflySim 单机起飞（补充实验）: './air/rflysim_sitl_first_flight.md'
+    - PX4 SITL + MAVROS2 Offboard 起降与失效保护: './air/px4_mavros2_offboard.md'
     - 无人机航测任务规划（GSD/重叠度/WPML）: './air/survey_mission_planner.md'
     - 无人机航点任务飞行前校验: './air/uav_waypoint_preflight_validator.md'
     - 无人机航点轨迹跟踪（PID 控制）: './air/waypoint_tracking.md'
