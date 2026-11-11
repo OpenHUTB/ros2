@@ -117,8 +117,8 @@ launch 通过 `share/<pkg>/launch/main.launch` 调用 `lib/<pkg>/main.py`；
 - **姿态锁定**：每步 `mj_step` 之后把 `qpos[2]` 复位为 0.05、`qpos[3:7]` 复位为单位四元数，
   同时把 `qvel[2]`、`qvel[3:6]` 置 0，因此车头全程保持初始朝向，画面上不会斜着平移。
 - **无窗口模式**：`--nogui` 时不创建 viewer，只循环 `mj_step`，可在纯服务器环境跑完并输出统计。
-- **路径回退**：`resolve_scene_path()` 依次尝试脚本同目录、`../share/<pkg>/`、环境变量，
-  覆盖「源码目录直跑」与「装到 install 空间后启动」两种情形。
+- **路径回退**：`resolve_scene_path()` 先看环境变量 `MUJOCO_MULTI_GOAL_SCENE`，没有则依次尝试
+  脚本同目录、`../share/<pkg>/`，覆盖「显式指定 XML」「源码目录直跑」「装到 install 空间后启动」三种情形。
 
 ## 已知限制
 
