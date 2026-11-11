@@ -1,0 +1,10 @@
+# OMPL 规划器名称必须和 marm_moveit_config/config/ompl_planning.yaml
+# 中的定义一致；不同 MoveIt 版本的默认后缀可能不同。
+
+planners:
+  - RRTConnectkConfigDefault
+  - RRTstarkConfigDefault
+  - PRMkConfigDefault
+
+repeats: 3
+timeout: 5.0

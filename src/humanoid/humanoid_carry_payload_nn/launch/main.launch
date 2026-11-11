@@ -1,0 +1,19 @@
+<launch>
+  <!-- 双臂搬运负载的人形机器人：MuJoCo 仿真 + 神经网络平衡控制
+       mode      : demo | keyboard | eval | collect
+       controller: open | pd | nn
+       mass      : 负载质量（kg），建议 0 / 2 / 4
+       无图形界面（如 SSH）时把 viewer 设为 false -->
+  <arg name="mode"       default="keyboard"/>
+  <arg name="controller" default="nn"/>
+  <arg name="mass"       default="2.0"/>
+  <arg name="speed"      default="0.15"/>
+  <arg name="seconds"    default="15.0"/>
+  <arg name="viewer"     default="true"/>
+
+  <node pkg="humanoid_carry_payload_nn" type="main.py" name="humanoid_carry_payload_nn"
+        output="screen"
+        args="--mode $(arg mode) --controller $(arg controller) --mass $(arg mass)
+              --speed $(arg speed) --seconds $(arg seconds) --log ros
+              $(eval '--no-viewer' if arg('viewer') == 'false' else '')"/>
+</launch>
