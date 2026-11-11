@@ -7,8 +7,8 @@
 巡航 60 m 还是 120 m，敏感点的等效连续 A 声级（LAeq,T）能差出好几 dB，而
 昼间限值往往只差 1 dB 就超标。
 
-配套模块 [`uav_deconflict`](./uav_deconflict.md) 管空中机机间隔，
-[`uav_vertiport_queue`](./uav_vertiport_queue.md) 管地面起降位资源；本模块
+配套模块 `uav_deconflict` 管空中机机间隔，
+`uav_vertiport_queue` 管地面起降位资源；本模块
 往下补**环境噪声**这一层：
 
 * 输入：若干条航线、若干敏感点（学校/医院/居民区）及其限值、小时航班密度；
