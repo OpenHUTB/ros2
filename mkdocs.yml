@@ -372,6 +372,7 @@ nav:
     - AirSim 无人机抗风扰补偿（MLP）: './air/uav_airsim_wind_rejection.md'
     - AirSim 无人机深度避障（CNN 端到端控制）: './air/uav_airsim_depth_obstacle_avoidance.md'
     - 无人机自主充电/机巢仿真: './air/drone_charging_nest.md'
+    - AirSim 无人机 IMU 速度估计（MLP）: './air/uav_airsim_imu_velocity_estimator.md'
 - 水域载具:
     - 水域载具 ROS2 接口: './water/HoloOcean.md'
     - 环境搭建:
