@@ -17,18 +17,27 @@
   python main.py -i town10_cars.png
 """
 import argparse
+import hashlib
 import json
 import os
 import sys
 import urllib.request
 
-import cv2
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib import gridspec
-import matplotlib.font_manager as fm
+
+try:                     # cv2 只在推理与画图时用到，缺失不影响纯逻辑被测试导入
+    import cv2
+except ImportError:      # pragma: no cover
+    cv2 = None
+
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib import gridspec
+    import matplotlib.font_manager as fm
+except ImportError:      # pragma: no cover
+    plt = gridspec = fm = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULT_DIR = os.path.join(BASE_DIR, "results")
@@ -41,30 +50,76 @@ COLORS = {"car": (0.20, 0.55, 1.00), "bus": (0.15, 0.75, 0.95),
           "person": (1.00, 0.35, 0.65), "bicycle": (0.85, 0.85, 0.25),
           "motorbike": (0.85, 0.55, 0.20)}
 
-# MobileNet-SSD（Caffe 版）权重，仓库不保存二进制，首次运行自动下载
-MODEL_URLS = {
-    "deploy.prototxt":
-        "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/deploy.prototxt",
-    "mobilenet_iter_73000.caffemodel":
-        "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
-        "mobilenet_iter_73000.caffemodel",
+# MobileNet-SSD（Caffe 版）权重，仓库不保存二进制，首次运行自动下载。
+# 每个文件都带期望字节数与 sha256：挡住被代理换成的 HTML 错误页、下载截断的半个文件。
+MODEL_FILES = {
+    "deploy.prototxt": {
+        "url": "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
+               "deploy.prototxt",
+        "size": 44667,
+        "sha256": "2d180f723b3109e21f8287f6b3c691390d07b60eed998327cd3259ffa0e50608",
+    },
+    "mobilenet_iter_73000.caffemodel": {
+        "url": "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
+               "mobilenet_iter_73000.caffemodel",
+        "size": 23306119,
+        "sha256": "52eed8be80522c152a17fb56740de705b79881bde1a167e0e747310523685fc7",
+    },
 }
 
 
+def file_matches(path, size, sha256):
+    """字节数与 sha256 都对上才算可用。"""
+    if not os.path.isfile(path) or os.path.getsize(path) != size:
+        return False
+    digest = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest() == sha256
+
+
+def download_model(name, meta, dest_dir):
+    """下载到 <name>.part，校验通过后原子替换为正式文件。"""
+    path = os.path.join(dest_dir, name)
+    tmp = path + ".part"
+    print("下载模型文件：%s（约 %.1f MB）" % (name, meta["size"] / 1048576.0))
+    try:
+        with urllib.request.urlopen(meta["url"], timeout=120) as resp, open(tmp, "wb") as fh:
+            fh.write(resp.read())
+    except Exception as exc:  # 断网、超时、代理拦断都在这里收口，不再抛裸 traceback
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise SystemExit(
+            "模型下载失败（%s）：%s\n"
+            "请检查网络后重试；若已离线运行，把该文件放到本地目录后用 "
+            "--model-dir <目录> 指定即可。" % (name, exc))
+
+    if not file_matches(tmp, meta["size"], meta["sha256"]):
+        got = os.path.getsize(tmp) if os.path.exists(tmp) else 0
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise SystemExit(
+            "模型文件校验失败：%s\n期望 %d 字节、sha256 %s…，实际 %d 字节。\n"
+            "常见原因是代理返回了 HTML 错误页或下载被截断；删掉后重试，"
+            "或用 --model-dir 指向已有校验通过的本地模型目录。"
+            % (name, meta["size"], meta["sha256"][:12], got))
+    os.replace(tmp, path)
+    return path
+
+
 def ensure_model(model_dir):
-    """模型文件缺失时下载（约 23 MB），已存在则直接复用。"""
+    """模型缺失或校验不通过时下载（约 23 MB），校验通过则直接复用。"""
     os.makedirs(model_dir, exist_ok=True)
     paths = {}
-    for name, url in MODEL_URLS.items():
+    for name, meta in MODEL_FILES.items():
         path = os.path.join(model_dir, name)
         paths[name] = path
-        if os.path.exists(path) and os.path.getsize(path) > 1024:
+        if file_matches(path, meta["size"], meta["sha256"]):
             continue
-        print("下载模型文件：%s" % name)
-        tmp = path + ".part"
-        with urllib.request.urlopen(url, timeout=120) as resp, open(tmp, "wb") as fh:
-            fh.write(resp.read())
-        os.replace(tmp, path)
+        if os.path.exists(path):
+            print("本地文件校验不通过，重新下载：%s" % name)
+        download_model(name, meta, model_dir)
     return paths["deploy.prototxt"], paths["mobilenet_iter_73000.caffemodel"]
 
 
@@ -142,6 +197,19 @@ def nms(dets, thr=0.45):
     return out
 
 
+def box_is_plausible(bw, bh, w, h, min_area=420, max_h_ratio=0.55,
+                     max_w_ratio=0.35, ar_range=(0.18, 5.0)):
+    """几何合理性判据（纯函数，便于离线断言）。
+
+    雨雾常把大片建筑墙面判成 person，缺了这几条，融合模式的 pred 会被误检灌水。
+    """
+    if bw * bh < min_area:
+        return False
+    if bh > max_h_ratio * h or bw > max_w_ratio * w:
+        return False
+    return ar_range[0] <= bw / max(1.0, bh) <= ar_range[1]
+
+
 def detect(net, img, conf_thr, min_area=420):
     """MobileNet-SSD 推理 + NMS + 几何合理性过滤。"""
     h, w = img.shape[:2]
@@ -159,13 +227,8 @@ def detect(net, img, conf_thr, min_area=420):
             continue
         box = raw[0, 0, i, 3:7] * np.array([w, h, w, h])
         x1, y1, x2, y2 = box.astype(int)
-        if (x2 - x1) * (y2 - y1) < min_area:
-            continue
         bw, bh = x2 - x1, y2 - y1
-        # 几何合理性：剔除跨越大半个画面的框与极端长宽比（雨雾常把整栋楼判成人）
-        if bh > 0.55 * h or bw > 0.35 * w:
-            continue
-        if not (0.18 <= bw / max(1.0, bh) <= 5.0):
+        if not box_is_plausible(bw, bh, w, h, min_area=min_area):
             continue
         dets.append({"cls": cid, "name": KEEP[cid], "score": conf,
                      "box": (max(0, x1), max(0, y1), min(w - 1, x2), min(h - 1, y2))})
@@ -257,6 +320,8 @@ def draw(frame, dets, gts, hit_gt, hit_det, save_path):
 
 
 def main():
+    if cv2 is None or plt is None:
+        raise SystemExit("需要 opencv-python 与 matplotlib：pip install -r requirements.txt")
     ap = argparse.ArgumentParser(description="雨雾天气自适应感知静态帧复现")
     ap.add_argument("-i", "--image", default=os.path.join(BASE_DIR, "town10_cars.png"),
                     help="输入帧（CARLA 相机截图），默认 town10_cars.png")
