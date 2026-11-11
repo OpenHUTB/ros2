@@ -41,18 +41,18 @@ CRC8/SAE-J1850 自检: crc8(b'123456789') = 0x4B（期望 0x4B）
 
 报文校验统计（分母为该报文总帧数）
 报文                     帧数   CRC失败    计数跳变    越界帧     通过率
-VCU_Status             1000       35        21      28    92.2%
-Steering_Status         334        9        13       2    94.3%
+VCU_Status             1000       35        17      28    92.4%
+Steering_Status         334        9         7       2    95.2%
 
-被丢弃的帧: 97 / 1334 （7.3%）
+被丢弃的帧: 92 / 1334 （6.9%）
 
 通过校验后的信号统计
 信号              单位          最小        最大        均值
 VehicleSpeed     km/h       35.00     85.00     60.44
-MotorTorque      Nm       -120.00    120.00      6.64
+MotorTorque      Nm       -120.00    120.00      6.60
 Gear                          3.00      5.00      3.92
-BrakePressure     bar         0.00     18.00      6.00
-SteeringAngle    deg      -210.00    210.00     31.06
+BrakePressure     bar         0.00     18.00      5.99
+SteeringAngle    deg      -210.00    210.00     31.04
 ```
 
 对比一下：不做校验时这两条报文的 `VehicleSpeed` 极值会被污染到 **403 km/h**、
@@ -117,4 +117,4 @@ ros2 topic echo /can/signals --once
 
 所有公式推导、位序约定、CRC8 参数、量程设置与实测数字均由作者逐项复核，并在
 Ubuntu 22.04.5 + ROS 2 Humble + Python 3.10.12 上实跑确认（`colcon build`、
-`colcon test` 13 项、`ros2 launch`）；作者对提交内容与后续维护负全部责任。
+`colcon test` 15 项、`ros2 launch`）；作者对提交内容与后续维护负全部责任。
