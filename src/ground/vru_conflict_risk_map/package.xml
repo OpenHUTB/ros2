@@ -6,6 +6,9 @@
   <description>Conflict-risk map from ego and vulnerable-road-user trajectories</description>
   <maintainer email="zheyexia10@users.noreply.github.com">zheyexia10</maintainer>
   <license>MIT</license>
-  <depend>rclpy</depend><depend>std_msgs</depend><exec_depend>ros2launch</exec_depend>
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <exec_depend>ros2launch</exec_depend>
+  <test_depend>python3-pytest</test_depend>
   <export><build_type>ament_python</build_type></export>
 </package>
