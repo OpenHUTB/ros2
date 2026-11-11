@@ -76,6 +76,16 @@ class OdomPublisher(object):
         odom.twist.twist.angular.x = float(ang[0])
         odom.twist.twist.angular.y = float(ang[1])
         odom.twist.twist.angular.z = float(ang[2])
+
+        # 非零对角协方差，便于 robot_localization/EKF 直接使用；
+        # 位置/速度 0.01，姿态/角速度 0.1（近似初值，严格标定时替换）。
+        for i in (0, 7, 14):
+            odom.pose.covariance[i] = 0.01
+            odom.twist.covariance[i] = 0.01
+        for i in (21, 28, 35):
+            odom.pose.covariance[i] = 0.1
+            odom.twist.covariance[i] = 0.1
+
         self.pub.publish(odom)
 
         tf_msg = TransformStamped()

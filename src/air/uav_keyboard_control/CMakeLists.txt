@@ -4,6 +4,7 @@ project(uav_keyboard_control)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   geometry_msgs
+  nav_msgs
 )
 
 catkin_package()
@@ -11,6 +12,7 @@ catkin_package()
 catkin_install_python(PROGRAMS
   scripts/main.py
   scripts/keyboard_control.py
+  scripts/skill_macros.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

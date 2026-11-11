@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_arm_ball</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 三自由度机械臂投篮入筐仿真：末端托球连续投 2 球，每球先举到预备点蓄力，
+    释放前 12 帧快速上摆到出手点，把球按 65° 仰角抛入筐中并计分。
+    臂用运动学插值驱动（IK 解逐帧写入 qpos 后 mj_forward），球用解析抛物线驱动，
+    不含动力学积分与执行器驱动。纯 Python + MuJoCo，不依赖 ROS 话题；launch 仅用于一键启动脚本。
+  </description>
+  <maintainer email="kl-kl07@users.noreply.github.com">kl-kl07</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/mujoco_arm_ball</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>
