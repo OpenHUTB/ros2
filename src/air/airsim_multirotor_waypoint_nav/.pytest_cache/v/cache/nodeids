@@ -1,8 +1,0 @@
-[
-  "test/test_airsim_multirotor_waypoint_nav.py::test_arrival_rule_is_strict",
-  "test/test_airsim_multirotor_waypoint_nav.py::test_distance_is_3d",
-  "test/test_airsim_multirotor_waypoint_nav.py::test_distance_zero_on_target",
-  "test/test_airsim_multirotor_waypoint_nav.py::test_sampling_interval_is_dense",
-  "test/test_airsim_multirotor_waypoint_nav.py::test_waypoints_are_relative_to_takeoff_point",
-  "test/test_airsim_multirotor_waypoint_nav.py::test_waypoints_config_shape"
-]
