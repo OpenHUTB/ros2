@@ -1,0 +1,14 @@
+px4_mavros2_offboard:
+  ros__parameters:
+    altitude: 3.0
+    prestream_seconds: 2.0
+    offboard_timeout: 10.0
+    arm_timeout: 8.0
+    takeoff_timeout: 25.0
+    hover_seconds: 10.0
+    landing_timeout: 30.0
+    state_timeout: 1.5
+    altitude_tolerance: 0.3
+    setpoint_rate: 20.0
+    local_frame: map
+    use_sim_time: false

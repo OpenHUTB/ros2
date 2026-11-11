@@ -1,0 +1,11 @@
+/**:
+  ros__parameters:
+    use_sim_time: false
+
+rotor_failure_env_node:
+  ros__parameters:
+    config: quad          # quad / hexa / octo
+    failed_rotor: 0       # 失效桨编号
+    thrust_max: 10.0      # 单桨最大推力 N
+    mass: 2.0             # 机重 kg（不含任务载荷）
+    rate: 1.0             # 诊断发布频率 Hz

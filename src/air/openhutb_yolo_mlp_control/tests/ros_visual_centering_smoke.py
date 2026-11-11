@@ -16,6 +16,7 @@ from std_msgs.msg import String
 from vision_msgs.msg import Detection2DArray, Detection2D, ObjectHypothesisWithPose
 
 from openhutb_yolo_mlp_control.visual_centering_node import VisualCenteringNode
+from openhutb_yolo_mlp_control.visual_observation import encode_observation
 
 
 class RosTests(unittest.TestCase):
@@ -29,6 +30,9 @@ class RosTests(unittest.TestCase):
 
     def setUp(self):
         self.controller = VisualCenteringNode(parameter_overrides=[
+            Parameter('use_visual_observation', value=self._testMethodName ==
+                      'test_observation_subscription_without_any_image'),
+            Parameter('confirmation_frames', value=1),
             Parameter('dry_run', value=self._testMethodName != 'test_active_output')])
         self.peer = Node('centering_test_peer')
         self.executor = SingleThreadedExecutor()
@@ -97,7 +101,7 @@ class RosTests(unittest.TestCase):
             center.x, center.y = float(x), 240.0
             detection.bbox.size_x, detection.bbox.size_y = 80.0, 100.0
             hypothesis = ObjectHypothesisWithPose()
-            hypothesis.hypothesis.class_id = 'person'
+            hypothesis.hypothesis.class_id = 'car'
             hypothesis.hypothesis.score = 0.9
             detection.results.append(hypothesis)
             detections.detections.append(detection)
@@ -161,7 +165,7 @@ class RosTests(unittest.TestCase):
             odom.pose.pose.position.z = -3.0
             self.odom.publish(odom)
             self.spin(0.08)
-        self.wait_for(lambda: self.statuses[-1]['status'] == 'target_lost'
+        self.wait_for(lambda: self.statuses[-1]['status'] == 'reselect_required'
                       and self.commands[-1].linear.y == 0)
 
     def test_nan_odom_rejected(self):
@@ -173,6 +177,68 @@ class RosTests(unittest.TestCase):
         self.wait_for(lambda: self.commands and self.commands[-1].linear.x < 0)
         self.assertLess(self.commands[-1].linear.x, 0)
         self.assertAlmostEqual(self.commands[-1].linear.y, 0, places=6)
+
+    def test_detection_before_matching_image_is_deferred(self):
+        self.frame()
+        detection = self.last_detection
+        detection.header.stamp = self.peer.get_clock().now().to_msg()
+        self.controller.detection_callback(detection)
+        self.assertGreaterEqual(self.controller.awaiting_image_stamp, 0)
+        image = Image()
+        image.header = detection.header
+        image.width, image.height = 640, 480
+        self.controller.image_callback(image)
+        self.assertIsNotNone(self.controller.controller.target)
+        self.assertEqual(self.controller.awaiting_image_stamp, -1)
+
+    def test_pause_resume_requires_fresh_detection(self):
+        self.frame()
+        msg = String()
+        msg.data = 'pause'
+        self.controller.action_callback(msg)
+        self.assertEqual(self.controller.controller.step(time.monotonic())[1], 'paused')
+        msg.data = 'resume'
+        self.controller.action_callback(msg)
+        self.assertIsNone(self.controller.controller.target)
+
+    def test_complete_observation_needs_no_image_cache(self):
+        self.frame()
+        detection = self.last_detection
+        detection.header.stamp = self.peer.get_clock().now().to_msg()
+        self.controller.dimensions.clear()
+        msg = String()
+        msg.data = encode_observation(detection, 640, 480)
+        self.controller.observation_callback(msg)
+        self.assertIsNotNone(self.controller.controller.target)
+        self.assertGreater(self.controller.controller.step(time.monotonic())[0][1], 0)
+        # A replay may neither refresh freshness nor count as a new frame.
+        self.controller.observation_callback(msg)
+        self.assertIsNone(self.controller.controller.target)
+
+    def test_malformed_complete_observation_stops(self):
+        self.frame()
+        msg = String()
+        msg.data = '{"version": 1}'
+        self.controller.observation_callback(msg)
+        self.assertIsNone(self.controller.controller.target)
+
+    def test_observation_subscription_without_any_image(self):
+        publisher = self.peer.create_publisher(String, '/openhutb/visual_observation', 1)
+        self.spin(.2)
+        stamp = self.peer.get_clock().now().to_msg()
+        odom = Odometry()
+        odom.header.stamp = stamp
+        odom.header.frame_id = 'airsim_ned'
+        odom.pose.pose.orientation.w = 1.0
+        odom.pose.pose.position.z = -3.0
+        self.odom.publish(odom)
+        m = String()
+        m.data = json.dumps(dict(version=1, stamp_ns=stamp.sec*10**9+stamp.nanosec,
+                                frame_id='camera', width=640, height=480,
+                                boxes=[[480, 240, 80, 100, .9, 'car']]))
+        publisher.publish(m)
+        self.wait_for(lambda: self.commands and self.commands[-1].linear.y > 0)
+        self.assertEqual(len(self.controller.dimensions), 0)
 
 
 if __name__ == '__main__':
