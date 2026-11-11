@@ -134,3 +134,46 @@ mjc_rov_sonar_cnn/
 ├── config/sonar_params.yaml
 └── resource/mjc_rov_sonar_cnn
 ```
+
+## 7. 常见故障排查
+### 7.1 仿真启动类
+1. **MuJoCo报错：无法创建OpenGL窗口**
+    - 本模块使用OSMesa离屏渲染，无需图形界面；若报错请确认已安装`libosmesa6`依赖，执行`sudo apt install libosmesa6`
+    - VMware虚拟机请开启3D加速，或确认环境变量`MUJOCO_GL=osmesa`已生效
+
+2. **colcon编译失败，提示找不到功能包**
+    - 确认已将工程放入`src`目录下，在工作空间根目录执行`colcon build`
+    - 缺少依赖时执行：`rosdep install --from-paths src --ignore-src -r -y`
+
+### 7.2 数据与训练类
+1. **训练报错：PyTorch版本不匹配**
+    - 本模块依赖CPU版PyTorch 2.4.1，请勿直接安装最新版；严格按照文档内pip命令指定版本安装
+    - 若已安装其他版本，先执行`pip uninstall torch torchvision`卸载后重装
+
+2. **生成数据集特征模糊、训练准确率低**
+    - 检查`sonar_params.yaml`中目标强度参数，主目标回波强度需显著高于背景
+    - 高斯噪声σ过大易导致特征模糊，默认0.05为最优值，请勿随意调大
+
+### 7.3 ROS运行类
+1. **收不到 `/rov_sonar/image_raw` 话题**
+    - 确认仿真节点正常启动，终端无崩溃报错
+    - 执行`ros2 topic list`查看话题是否存在，检查节点名与话题名拼写
+    - 每次新开终端都需执行：`source install/setup.bash`
+
+2. **分类节点启动后无输出**
+    - 分类节点需订阅到声呐图像才会输出结果，请先确认仿真节点已正常发布话题
+    - 检查模型权重文件路径是否正确，确保训练生成的权重文件已放入对应目录
+
+## 8. 关键参数说明
+配置文件路径：`config/sonar_params.yaml`，核心参数含义与调优建议如下：
+
+| 参数名 | 默认值 | 说明 |
+|--------|--------|------|
+| `image_size` | 64 | 输出声呐图像分辨率，单位像素 |
+| `noise_sigma` | 0.05 | 高斯噪声强度，值越大图像噪点越多 |
+| `rock_intensity` | 0.8 | 礁石类目标回波强度 |
+| `pipe_intensity` | 0.9 | 管道类目标回波强度 |
+| `wreck_intensity` | 0.7 | 残骸类目标回波强度 |
+| `publish_rate` | 5 | ROS话题发布频率，单位Hz |
+
+> 调优建议：若分类准确率偏低，可适当增大目标回波强度、降低噪声强度；若需更贴近真实水下环境，可逐步提高噪声系数。
