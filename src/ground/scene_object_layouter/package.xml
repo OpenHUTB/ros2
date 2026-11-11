@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>scene_object_layouter</name>
+  <version>1.0.0</version>
+  <description>
+    把场景里的物体（车位、立柱、障碍物等）按栅格摆到一块矩形场地上，
+    并校验「边界内 / 不重叠 / 间距够 / 数量对」四条，输出终端报告与字符俯视图。
+    不依赖 CARLA，可在没有仿真器的机器上离线验证。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export/>
+</package>

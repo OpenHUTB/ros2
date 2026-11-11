@@ -1,0 +1,5 @@
+results/
+results_backup_*/
+__pycache__/
+*.pyc
+MUJOCO_LOG.TXT

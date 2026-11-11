@@ -1,0 +1,10 @@
+temperature_rate_hz: 10.0
+humidity_rate_hz: 7.0
+sync_slop_sec: 0.14
+sync_queue_size: 30
+temperature_base_c: 22.0
+temperature_amplitude_c: 1.5
+temperature_period_sec: 20.0
+humidity_base_percent: 45.0
+humidity_amplitude_percent: 8.0
+humidity_period_sec: 30.0

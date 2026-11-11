@@ -54,6 +54,25 @@ def load_dataset(
     return scans, labels, scan_size
 
 
+def resolve_device(requested: str = 'cpu') -> torch.device:
+    """Resolve the requested device and fall back to CPU on CUDA errors."""
+    if requested == 'cpu':
+        return torch.device('cpu')
+    if requested not in ('auto', 'cuda'):
+        raise ValueError("device must be one of 'cpu', 'auto' or 'cuda'")
+    if not torch.cuda.is_available():
+        print('CUDA requested but unavailable; using CPU.')
+        return torch.device('cpu')
+    try:
+        probe = torch.zeros(1, device='cuda')
+        torch.cuda.synchronize()
+        del probe
+        return torch.device('cuda')
+    except (RuntimeError, AssertionError) as exc:
+        print('CUDA probe failed (%s); using CPU.' % exc)
+        return torch.device('cpu')
+
+
 def train(
     dataset_path: str,
     output_path: str,
@@ -62,15 +81,13 @@ def train(
     lr: float = 1e-3,
     hidden_size: int = 128,
     patience: int = 10,
-    device: str = 'auto',
+    device: str = 'cpu',
 ) -> dict:
     """Train the model and return a metrics dict."""
     scans, labels, scan_size = load_dataset(dataset_path)
 
-    if device == 'auto':
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device_t = torch.device(device)
-    print('Using device: %s' % device)
+    device_t = resolve_device(device)
+    print('Using device: %s' % device_t)
 
     # ---- Train / val split -----------------------------------------
     n = scans.shape[0]
@@ -213,9 +230,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument('--patience', type=int, default=10)
     p.add_argument(
         '--device',
-        default='auto',
+        default='cpu',
         choices=['auto', 'cpu', 'cuda'],
-        help='Torch device to use.',
+        help='Torch device to use (default: CPU).',
     )
     return p.parse_args()
 

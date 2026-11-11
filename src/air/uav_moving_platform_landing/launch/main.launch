@@ -1,0 +1,54 @@
+<launch>
+  <!-- ============================================================
+       uav_moving_platform_landing 统一启动入口（作业要求的 launch 启动）
+
+         roslaunch uav_moving_platform_landing main.launch
+
+       前置条件（另开一个终端先启动桥接层，否则收不到里程计）：
+         roslaunch carlair_ros_bridge main.launch host:=192.168.49.1
+
+       ⚠ 桥接层必须先放开指令时长，否则 10 Hz 下发会被上一条还没生效的指令顶掉，
+         飞机几乎不动（实测 cmd_duration=0.1 s 时下降 4 s 只掉 0.11 m）：
+         rosparam set /control/cmd_duration 0.5     # 再启动桥接层
+
+       平台位置 /uav/platform_pose 由别的节点提供（视觉/另一个载具/AirSim 位姿转发），
+       本模块只消费它：
+         rostopic echo /uav/platform_pose
+
+       常用参数示例：
+         roslaunch uav_moving_platform_landing main.launch lead_mode:=now
+         roslaunch uav_moving_platform_landing main.launch descend_speed:=0.3
+         roslaunch uav_moving_platform_landing main.launch z_up:=false   # 高度下为正
+       ============================================================ -->
+
+  <arg name="descend_speed"  default="0.4"      doc="下降段垂直速度 (m/s)"/>
+  <arg name="track_altitude" default="2.5"      doc="对准段保持在甲板上方的高度 (m)"/>
+  <arg name="max_xy_speed"   default="1.6"      doc="横向速度上限 (m/s)"/>
+  <arg name="lead_mode"      default="auto"     doc="auto|measured|now|touchdown"/>
+  <arg name="align_tol"      default="0.35"     doc="对准容差 (m)"/>
+  <arg name="abort_xy_tol"   default="0.9"      doc="预计落偏超过它就复飞 (m)"/>
+  <arg name="max_go_around"  default="3"        doc="最多复飞次数"/>
+  <arg name="z_up"           default="true"     doc="高度是否上为正（桥接层实测 ENU）"/>
+  <arg name="cmd_duration"   default="0.5"      doc="桥接层速度指令时长 (s)，默认 0.1 会失效"/>
+  <arg name="tick_rate_hz"   default="10.0"     doc="控制频率 (Hz)"/>
+
+  <rosparam command="load"
+            file="$(find uav_moving_platform_landing)/config/moving_platform_landing.yaml"/>
+
+  <param name="descend/speed"        value="$(arg descend_speed)"/>
+  <param name="guide/track_altitude" value="$(arg track_altitude)"/>
+  <param name="guide/max_xy_speed"   value="$(arg max_xy_speed)"/>
+  <param name="guide/lead_mode"      value="$(arg lead_mode)"/>
+  <param name="guide/align_tol"      value="$(arg align_tol)"/>
+  <param name="guide/abort_xy_tol"   value="$(arg abort_xy_tol)"/>
+  <param name="mission/max_go_around" value="$(arg max_go_around)"/>
+  <param name="mission/tick_rate_hz"  value="$(arg tick_rate_hz)"/>
+  <param name="frame/z_up"            value="$(arg z_up)"/>
+
+  <!-- 桥接层的指令时长：本 launch 顺手设一遍，避免忘了 0.1 s 的坑 -->
+  <param name="/control/cmd_duration" value="$(arg cmd_duration)"/>
+
+  <!-- 主节点（入口 main.py） -->
+  <node pkg="uav_moving_platform_landing" type="main.py" name="moving_platform_landing"
+        output="screen" required="true"/>
+</launch>

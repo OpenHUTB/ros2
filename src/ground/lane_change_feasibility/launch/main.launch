@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  lane_change_feasibility 标准入口：roslaunch lane_change_feasibility main.launch
+
+  所有可调项先由 config/lane_change_feasibility.yaml 载入，再用同名 <param> 由 <arg>
+  覆盖，所以命令行可以直接改，例如：
+    roslaunch lane_change_feasibility main.launch front_gap:=60 ego_speed_kmh:=100
+-->
+<launch>
+  <arg name="tf_enabled" default="true" doc="是否广播 TF（map -> ego）"/>
+  <arg name="tf_rate_hz" default="10.0" doc="TF 广播频率，单位 Hz"/>
+
+  <!-- ========== 车道与横向约束 ========== -->
+  <arg name="lane_width" default="3.50"
+       doc="车道中心到中心距离 (m)，即横向位移"/>
+  <arg name="max_lateral_accel" default="1.50"
+       doc="横向加速度上限 (m/s^2)，越大换道越快"/>
+  <arg name="duration_limit" default="5.00"
+       doc="换道时长上限 (s)"/>
+  <arg name="direction" default="1"
+       doc="换道方向：1 向左，-1 向右"/>
+
+  <!-- ========== 安全约束 ========== -->
+  <arg name="ttc_min" default="3.00"
+       doc="后方最小碰撞时间 TTC (s)"/>
+  <arg name="front_margin" default="5.00"
+       doc="前向安全余量 (m)"/>
+  <arg name="rear_margin" default="5.00"
+       doc="后向安全余量 (m)"/>
+
+  <!-- ========== 交通状态 ========== -->
+  <arg name="ego_speed_kmh" default="80.0"
+       doc="自车速度 (km/h)"/>
+  <arg name="front_speed_kmh" default="60.0"
+       doc="目标车道前车速度 (km/h)"/>
+  <arg name="front_gap" default="40.0"
+       doc="到目标车道前车的间距 (m)"/>
+  <arg name="rear_speed_kmh" default="90.0"
+       doc="目标车道后车速度 (km/h)"/>
+  <arg name="rear_gap" default="30.0"
+       doc="到目标车道后车的间距 (m)"/>
+
+  <!-- ========== 数值与频率 ========== -->
+  <arg name="sim_step" default="0.02"
+       doc="轨迹采样步长 (s)"/>
+  <arg name="publish_hz" default="10.0"
+       doc="发完报告后的保活频率 (Hz)"/>
+
+  <rosparam command="load"
+            file="$(find lane_change_feasibility)/config/lane_change_feasibility.yaml"/>
+
+  <param name="lane/width" value="$(arg lane_width)"/>
+  <param name="lane/max_lateral_accel" value="$(arg max_lateral_accel)"/>
+  <param name="lane/duration_limit" value="$(arg duration_limit)"/>
+  <param name="lane/direction" value="$(arg direction)"/>
+  <param name="safety/ttc_min" value="$(arg ttc_min)"/>
+  <param name="safety/front_margin" value="$(arg front_margin)"/>
+  <param name="safety/rear_margin" value="$(arg rear_margin)"/>
+  <param name="traffic/ego_speed_kmh" value="$(arg ego_speed_kmh)"/>
+  <param name="traffic/front_speed_kmh" value="$(arg front_speed_kmh)"/>
+  <param name="traffic/front_gap" value="$(arg front_gap)"/>
+  <param name="traffic/rear_speed_kmh" value="$(arg rear_speed_kmh)"/>
+  <param name="traffic/rear_gap" value="$(arg rear_gap)"/>
+  <param name="sim/step" value="$(arg sim_step)"/>
+  <param name="rate/publish_hz" value="$(arg publish_hz)"/>
+
+  <param name="tf/enabled" value="$(arg tf_enabled)"/>
+  <param name="tf/rate_hz" value="$(arg tf_rate_hz)"/>
+
+  <node pkg="lane_change_feasibility" type="main.py"
+        name="lane_change_feasibility" output="screen"/>
+
+</launch>

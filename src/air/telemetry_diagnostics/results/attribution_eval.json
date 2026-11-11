@@ -1,0 +1,103 @@
+{
+  "rule": "alarmed steps with reason=model_residual; hit = dominant \u2229 injected channel group",
+  "chance_rule": "random k of 6 channels vs 3-channel target group: k=1 -> 50%, k=2 -> 80%",
+  "detectors": {
+    "gru": {
+      "model": "models/gru_42",
+      "kinds": {
+        "position_drift": {
+          "alarmed_total": 350,
+          "with_dominant": 350,
+          "dominant_coverage": 1.0,
+          "hit": 347,
+          "hit_rate": 0.9914,
+          "hit_rate_of_all_alarms": 0.9914,
+          "chance_baseline": 0.5823,
+          "constant_position_baseline": 1.0
+        },
+        "velocity_spike": {
+          "alarmed_total": 287,
+          "with_dominant": 287,
+          "dominant_coverage": 1.0,
+          "hit": 152,
+          "hit_rate": 0.5296,
+          "hit_rate_of_all_alarms": 0.5296,
+          "chance_baseline": 0.6777,
+          "constant_position_baseline": 0.0
+        }
+      }
+    },
+    "consistency": {
+      "model": "models/consistency_42",
+      "kinds": {
+        "position_drift": {
+          "alarmed_total": 343,
+          "with_dominant": 343,
+          "dominant_coverage": 1.0,
+          "hit": 339,
+          "hit_rate": 0.9883,
+          "hit_rate_of_all_alarms": 0.9883,
+          "chance_baseline": 0.5061,
+          "constant_position_baseline": 1.0
+        },
+        "velocity_spike": {
+          "alarmed_total": 348,
+          "with_dominant": 348,
+          "dominant_coverage": 1.0,
+          "hit": 15,
+          "hit_rate": 0.0431,
+          "hit_rate_of_all_alarms": 0.0431,
+          "chance_baseline": 0.5121,
+          "constant_position_baseline": 0.0
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 9.094
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 7.901
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz",
+        "px"
+      ],
+      "score": 8.57
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz"
+      ],
+      "score": 4.616
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz"
+      ],
+      "score": 4.754
+    },
+    {
+      "scenario": "episode_025_position_drift",
+      "dominant": [
+        "pz"
+      ],
+      "score": 5.129
+    }
+  ]
+}
