@@ -339,6 +339,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/drivetrain_torsion_state_feedback/">双惯量传动扭振状态反馈极点配置</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_diff_drive_go_to_goal/">MuJoCo 差速小车到达目标点（go-to-goal）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a>
@@ -402,6 +404,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ground/cliff_brake/">悬崖边缘紧急制动仿真</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/pid_auto_tuning/">航向 PID 参数自整定与手工试凑对比</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/control_discretization/">连续控制器离散化四种方法对比</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a>
 </li>
@@ -474,6 +478,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ground/vru_conflict_risk_map/">VRU 冲突风险图</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/odom_health_monitor/">里程计健康监视</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ground/wheel_speed_observer/">轮速传感器 + 龙伯格观测器估计传动轴扭角</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/tire_slip_curve/">轮胎滑移率-附着曲线</a>
 </li>
@@ -1054,7 +1060,12 @@
 <li>
 <p><a href="ground/mujoco_diff_drive_slip_compensation/">MuJoCo 差速小车轮滑感知与轨迹补偿</a></p>
 </li>
-<li><a href="ground/mujoco_diff_drive_go_to_goal/">MuJoCo 差速小车到达目标点（go-to-goal）</a></li>
+<li>
+<p><a href="ground/drivetrain_torsion_state_feedback/">双惯量传动扭振的状态反馈极点配置</a> —— 用状态反馈把扭振阻尼比 0.134 提到 0.70，不用改机械结构</p>
+</li>
+<li>
+<p><a href="ground/mujoco_diff_drive_go_to_goal/">MuJoCo 差速小车到达目标点（go-to-goal）</a></p>
+</li>
 <li><a href="ground/mujoco_car_avoidance/">MuJoCo 地面小车射线感知与分级减速避障</a></li>
 <li><a href="ground/mujoco_car_nn_avoidance/">MuJoCo 地面小车神经网络端到端避障</a></li>
 <li><a href="ground/mujoco_balance_car/">MuJoCo 两轮自平衡小车</a></li>
@@ -1085,7 +1096,12 @@
 <li><a href="ground/mujoco_slope_car/">MuJoCo 小车滑斜坡</a></li>
 <li><a href="ground/cliff_brake/">悬崖边缘紧急制动仿真</a> —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照</li>
 <li><a href="ground/pid_auto_tuning/">航向 PID 参数自整定与手工试凑对比</a> —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间</li>
-<li><a href="ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a> —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计</li>
+<li>
+<p><a href="ground/control_discretization/">连续控制器离散化的四种方法对比</a> —— Tustin 比前向欧拉准 1~2 个数量级，前向欧拉在 Ts&gt;0.27 s 时失稳</p>
+</li>
+<li>
+<p><a href="ground/lidar_autoencoder_repair/">基于 Autoencoder 的雷达数据修复与避障</a> —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计</p>
+</li>
 <li><a href="ground/carla_auto_light/">地面载具灯光自动控制</a></li>
 <li><a href="ground/traffic_sign_speed_control/">限速标志识别与神经网络限速控制</a> —— MuJoCo 仿真中车载相机采集限速标志，CNN 字符识别限速数值，闭环限速控制差速小车，附退化矩阵与多场景性能评价</li>
 <li><a href="ground/trajectory_accuracy_eval/">轨迹/里程计精度评估（ATE/RPE）</a></li>
@@ -1118,7 +1134,12 @@
 <li><a href="ground/cmd_vel_guard/">地面移动底盘速度指令安全监督</a> —— 对 <code>/cmd_vel</code> 做限幅、急停、超时与非法值拦截，无需仿真环境</li>
 <li><a href="ground/vru_conflict_risk_map/">VRU 冲突风险图</a> —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级</li>
 <li><a href="ground/odom_health_monitor/">里程计健康监视（打滑 / 堵转 / 反向检测）</a> —— 比较 <code>/cmd_vel</code> 与 <code>/odom</code> 的速度比值，识别打滑、堵转与反向运动</li>
-<li><a href="ground/tire_slip_curve/">轮胎滑移率-附着曲线</a> —— 用简化刷子轮胎模型输出滑移率与附着系数关系，标出峰值附着与 ABS 目标滑移带</li>
+<li>
+<p><a href="ground/wheel_speed_observer/">轮速传感器 + 龙伯格观测器估计传动轴扭角</a> —— 只测轮速即可反推传动轴扭角，给出带宽-噪声的量化权衡</p>
+</li>
+<li>
+<p><a href="ground/tire_slip_curve/">轮胎滑移率-附着曲线</a> —— 用简化刷子轮胎模型输出滑移率与附着系数关系，标出峰值附着与 ABS 目标滑移带</p>
+</li>
 <li><a href="ground/rollover_margin/">横向载荷转移与侧翻裕度</a> —— 用 SSF、临界侧向加速度和内外侧轮垂向力算「这车会不会翻」，纯代数、不依赖 CARLA</li>
 <li><a href="ground/drive_cycle_energy/">工况能耗与续航核算</a> —— 把一段行驶工况拆成滚阻、风阻、制动与动能项，算清楚电花在哪、还能跑多远</li>
 <li><a href="ground/ride_comfort_transmissibility/">乘坐舒适性传递率</a> —— 用二自由度悬架加 ISO 2631 频率加权算路面振动传到人身上剩多少，解释「40 难受、60 反而稳」</li>
