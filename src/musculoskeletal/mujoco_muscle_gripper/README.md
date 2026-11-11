@@ -24,7 +24,7 @@ python3 main.py run --scene g2        # 单个实验
 python3 main.py bench --out out       # 八组实验，导出 out/metrics.json
 python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 13 项测试
+python3 -m unittest discover -s tests # 16 项测试
 ```
 
 ## 八组实验
@@ -128,7 +128,7 @@ mujoco_muscle_gripper/
 │   ├── core.py       # Hill 肌肉、MJCF、手指几何
 │   ├── runs.py       # G1-G4 与录制
 │   └── cli.py
-├── tests/            # 13 项测试
+├── tests/            # 16 项测试
 └── tools/plot_metrics.py
 ```
 
