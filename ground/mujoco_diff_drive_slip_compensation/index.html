@@ -309,6 +309,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#parameters">参数 / Parameters</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#online-compensation">在线补偿 / Online Compensation</a>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#safety-boundaries">安全边界 / Safety Boundaries</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#data-collection">数据采集 / Data Collection</a>
@@ -801,7 +803,14 @@
 <h2 id="_1">仿真验证局限与分布偏移说明</h2>
 <p>本模块的轮滑感知模型与全部样例数据均在 MuJoCo 仿真环境中生成、训练和评估，尚未在真实机器人硬件上测试。仿真摩擦模型、接触动力学与传感器噪声和真实世界存在差异，迁移到实物时可能出现分布偏移（sim-to-real gap）；本文档报告的指标仅对应 MuJoCo 样例测试划分，不代表实物性能。真实硬件验证列为后续工作。</p>
 <h2 id="architecture">系统结构 / Architecture</h2>
-<div class="highlight"><pre><span></span><code>/cmd_vel
+<div class="highlight"><pre><span></span><code>/cmd_vel (raw)
+   |
+   v
+在线滑移补偿节点 / Online slip compensation
+   | 订阅 /wheel/encoders, /imu/data, /ground_truth/odom
+   | 另发布 /cmd_vel/raw, /slip/estimate, /slip/status
+   v
+/cmd_vel/compensated
    |
    v
 差速运动学 / Differential kinematics
@@ -812,6 +821,7 @@ MuJoCo 四轮执行器 / Four wheel actuators
    +----&gt; /ground_truth/odom
    +----&gt; /clock
    +----&gt; /tf
+   +----&gt; /wheel/encoders, /imu/data
 </code></pre></div>
 <p>功能包使用 <code>ament_python</code>，模型、配置与 launch 文件均安装到包共享目录。运行时通过 ROS 2 包索引定位资源，不依赖用户目录、固定工作空间路径或网络地址。</p>
 <p>The package uses <code>ament_python</code>; its model, configuration, and launch files are installed into the package share directory. Runtime resource lookup uses the ROS 2 package index and does not depend on a user directory, a fixed workspace path, or a network address.</p>
@@ -891,8 +901,48 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <td style="text-align: right;"><code>30.0</code></td>
 <td>单个 episode 时长，单位 s / episode duration in seconds</td>
 </tr>
+<tr>
+<td><code>model_file</code>（在线补偿节点）</td>
+<td style="text-align: right;"><code>data/models/slip-v1/slip_model.json</code></td>
+<td>离线训练生成的滑移模型 JSON，相对启动目录；需先运行 <code>train_slip_model</code> 生成 / offline-trained slip model JSON, relative to the launch working directory; produced by <code>train_slip_model</code> first</td>
+</tr>
+<tr>
+<td><code>sensor_timeout_seconds</code>（在线补偿节点）</td>
+<td style="text-align: right;"><code>0.2</code></td>
+<td>传感器或指令允许的最大时间差，单位 s / maximum allowed sensor or command age in seconds</td>
+</tr>
+<tr>
+<td><code>max_linear_scale</code>（在线补偿节点）</td>
+<td style="text-align: right;"><code>1.5</code></td>
+<td>线速度补偿比例上限 / upper bound on the linear compensation scale</td>
+</tr>
+<tr>
+<td><code>max_linear_acceleration</code>（在线补偿节点）</td>
+<td style="text-align: right;"><code>1.5</code></td>
+<td>线速度加速度限幅，单位 m/s² / linear acceleration limit in m/s²</td>
+</tr>
+<tr>
+<td><code>max_angular_acceleration</code>（在线补偿节点）</td>
+<td style="text-align: right;"><code>3.0</code></td>
+<td>角速度加速度限幅，单位 rad/s² / angular acceleration limit in rad/s²</td>
+</tr>
 </tbody>
 </table>
+<h2 id="online-compensation">在线补偿 / Online Compensation</h2>
+<p><code>online_slip_compensation</code> 使用与离线训练相同的 12 维特征顺序，订阅 <code>/wheel/encoders</code>、<code>/imu/data</code>、<code>/ground_truth/odom</code> 和原始 <code>/cmd_vel</code>。里程计在这里仅用于时间同步与新鲜度检查，不作为模型输入。节点同时回显原始指令到 <code>/cmd_vel/raw</code>，便于与补偿后指令对比。模型窗口完整且所有消息时间戳在 <code>sensor_timeout_seconds</code> 内时，节点发布 <code>/cmd_vel/compensated</code>、<code>/slip/estimate</code> 和 <code>/slip/status</code>。</p>
+<p>The <code>online_slip_compensation</code> node keeps the offline 12-feature order and subscribes to <code>/wheel/encoders</code>, <code>/imu/data</code>, <code>/ground_truth/odom</code>, and raw <code>/cmd_vel</code>. Odometry is used for synchronization and freshness only, not as a model feature. It echoes the raw command to <code>/cmd_vel/raw</code> for comparison with the compensated command. When the window is full and all messages are fresh, it publishes <code>/cmd_vel/compensated</code>, <code>/slip/estimate</code>, and <code>/slip/status</code>.</p>
+<p>补偿策略为：</p>
+<p>The compensation policy is:</p>
+<ol>
+<li>传感器或指令缺失、时间戳回退、时间差超过阈值、输入非有限时，清空窗口并发布零速。 / Missing data, timestamp rollback, stale data, or non-finite input clears the window and publishes zero velocity.</li>
+<li>滑动窗口尚未收满（默认 12 帧）时处于预热状态，节点发布零速，不透传原始 <code>/cmd_vel</code>；窗口就绪后再输出补偿指令。 / During warm-up before the 12-frame window is full, the node publishes zero velocity and does not pass through the raw <code>/cmd_vel</code>; compensated commands are emitted only after the window is ready.</li>
+<li><code>v_out = v_cmd / max(1-s, 0.5)</code>，再限制最大线速度比例。 / Compute <code>v_out = v_cmd / max(1-s, 0.5)</code> and then cap the linear scale.</li>
+<li>对线速度和角速度应用独立加速度限幅，避免模型输出造成突变。 / Apply independent linear and angular acceleration limits to prevent abrupt commands.</li>
+</ol>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_diff_drive_slip_compensation<span class="w"> </span>compensate.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>model_file:<span class="o">=</span>data/models/slip-v1/slip_model.json
+</code></pre></div>
+<p>仿真器在 launch 组内接收 <code>/cmd_vel/compensated</code>，外部控制器仍向 <code>/cmd_vel</code> 发布原始指令；因此补偿节点不会把自己的输出再次作为输入。 / The simulator receives <code>/cmd_vel/compensated</code> inside the launch group while an external controller continues publishing raw <code>/cmd_vel</code>, so the node does not feed its own output back into its input.</p>
 <h2 id="safety-boundaries">安全边界 / Safety Boundaries</h2>
 <ul>
 <li>指令含非有限数值时拒绝更新。 / Reject commands containing non-finite values.</li>
