@@ -244,6 +244,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
 * [轮胎滑移率-附着曲线](./ground/tire_slip_curve.md) —— 用简化刷子轮胎模型输出滑移率与附着系数关系，标出峰值附着与 ABS 目标滑移带
 * [横向载荷转移与侧翻裕度](./ground/rollover_margin.md) —— 用 SSF、临界侧向加速度和内外侧轮垂向力算「这车会不会翻」，纯代数、不依赖 CARLA
+* [工况能耗与续航核算](./ground/drive_cycle_energy.md) —— 把一段行驶工况拆成滚阻、风阻、制动与动能项，算清楚电花在哪、还能跑多远
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
