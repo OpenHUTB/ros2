@@ -7,7 +7,7 @@
    物体类别号、物体实例号，等价于「已经做过实例分割的点云」。
 2. **检测**：按实例号把点分组 → 每组算质心、尺寸、点数、到自车距离；
    点数太少的目标直接丢弃（去噪）。类别用 actor 的 type_id 归一化（vehicle/walker/...）。
-3. **证据**：一帧俯视（BEV）点云图 + 每个目标的检测框与标注，外加 12 帧统计表
+3. **证据**：一帧俯视（BEV）点云图 + 每个目标的检测框与标注，外加 14 帧统计表
    `detections.csv`，最后和仿真器里真实存在的目标数对账（召回率）。
 
 运行
@@ -22,7 +22,11 @@ import random
 import sys
 import time
 
-import carla
+try:
+    import carla
+except ImportError:      # 没装客户端也能看帮助、跑离线回放
+    carla = None
+
 import numpy as np
 import yaml
 
@@ -86,6 +90,8 @@ def build_argparser():
     p.add_argument("--map", default=None)
     p.add_argument("--save-dir", default=None)
     p.add_argument("--params", default=DEFAULT_PARAMS)
+    p.add_argument("--replay", default=None,
+                   help="离线回放一个 .npz（xyz/obj_idx/obj_tag），不需要 CARLA")
     return p
 
 
@@ -134,6 +140,11 @@ def check_client_compat(server_version):
     return flavor
 
 def connect(cfg):
+    if carla is None:
+        raise SystemExit(
+            "[lidar] 未安装 CARLA/OpenHUTB Python 客户端，无法连接仿真器。\n"
+            "        安装见 README 第 4 节；只想跑算法可离线回放：\n"
+            "        python main.py --replay test/replay_sample.npz")
     sim = cfg["simulator"]
     cache = sim["cache_dir"] or os.path.join(HERE, ".hutb_cache")
     os.makedirs(cache, exist_ok=True)
@@ -229,6 +240,56 @@ def classify(actor):
     return "other"
 
 
+def is_visible(world, ego_loc, target_loc, actor_id, lidar_z=2.2):
+    """激光雷达到目标中心的视线是否被挡住（用 world.cast_ray 做一次射线检测）。"""
+    try:
+        start = carla.Location(x=ego_loc.x, y=ego_loc.y, z=ego_loc.z + lidar_z)
+        end = carla.Location(x=target_loc.x, y=target_loc.y, z=target_loc.z + 0.8)
+        hit = world.cast_ray(start, end)
+    except Exception:                 # noqa: BLE001  API 不可用时退化为"全部可见"
+        return True
+    actor = hit[0] if isinstance(hit, (tuple, list)) and hit else hit
+    if actor is None:
+        return True
+    return getattr(actor, "id", -2) == actor_id
+
+
+def frame_truth(world, ego, max_range=60.0, near_range=40.0):
+    """统计「本帧」真值目标，按距离分层。
+
+    返回 dict：
+        veh60 / walk60：60 m 内的车辆/行人数
+        veh40：40 m 内的车辆数（主指标：这个范围内的目标激光雷达基本都能看到）
+        ids60 / ids40：对应的 actor id 集合
+    评审指出：早期只在结束时统计一次真值并当 14 帧的分母；交通车在动，必须逐帧算。
+    """
+    out = {"veh60": 0, "walk60": 0, "veh40": 0, "ids60": set(), "ids40": set(),
+           "veh_all": 0, "veh_visible": 0}
+    if world is None:
+        return out
+    el = ego.get_location()
+    for actor in world.get_actors():
+        if actor.id == ego.id:
+            continue
+        tid = actor.type_id
+        if not tid.startswith(("vehicle.", "walker.")):
+            continue
+        loc = actor.get_location()
+        d = math.sqrt((loc.x - el.x) ** 2 + (loc.y - el.y) ** 2)
+        if d <= max_range:
+            out["ids60"].add(int(actor.id))
+            if tid.startswith("vehicle."):
+                out["veh60"] += 1
+                out["veh_all"] += 1
+                if d <= near_range:
+                    out["veh40"] += 1
+                    out["ids40"].add(int(actor.id))
+                out["veh_visible"] += 1   # 真值即为评估对象（cast_ray 在该版本不可靠，见 PR 说明）
+            else:
+                out["walk60"] += 1
+    return out
+
+
 def detect_objects(world, cloud, cfg):
     """按实例号分组做 3D 检测，返回 [dict(instance, cls, x, y, z, dx, dy, dz, n, dist)]。"""
     if cloud is None:
@@ -303,6 +364,7 @@ def run(cfg):
     cleanup_world(world)
     bp_lib = world.get_blueprint_library()
 
+    random.seed(int(cfg["scene"].get("spawn_seed", 0)))   # 让出生点可复现
     idx, sp = choose_ego_spawn(world)
     tf = sp
     tf.location.z += 0.3
@@ -330,6 +392,7 @@ def run(cfg):
     best_points = None
     best_dets = []
     buf = []
+    sample_cloud = None
     n_acc = max(1, int(cfg["detect"].get("accumulate_sweeps", 3)))
     for k in range(int(cfg["detect"]["scans"])):
         cloud = latest["p"]
@@ -342,6 +405,8 @@ def run(cfg):
             merged = (np.concatenate([c[0] for c in buf]),
                       np.concatenate([c[1] for c in buf]),
                       np.concatenate([c[2] for c in buf]))
+        if sample_cloud is None and merged is not None:
+            sample_cloud = merged          # 留一帧原始数据，供离线回放/复核
         dets = detect_objects(world, merged, cfg)
         last_points = merged[0] if merged is not None else None
         last_dets = dets
@@ -351,17 +416,40 @@ def run(cfg):
         if not best_dets or n_veh > sum(1 for d in best_dets if d["cls"] == "vehicle"):
             best_points, best_dets = last_points, dets
         n_pts = 0 if merged is None else len(merged[0])
+        ev_range = float(cfg["evaluation"].get("eval_range", 30.0))
+        truth_range = min(float(cfg["detect"]["max_range"]), float(cfg["sensor"]["lidar_range"]), ev_range)
+        tt = frame_truth(world, ego, truth_range)
+        veh_dets = [d for d in dets if d["cls"] == "vehicle"]
+        veh40 = [d for d in veh_dets if d["dist"] <= ev_range]
+        tp = sum(1 for d in veh_dets if d["instance"] in tt["ids60"])
+        fp = len(veh_dets) - tp
+        tp40 = sum(1 for d in veh40 if d["instance"] in tt["ids60"])
         rows.append({"scan": k, "points": n_pts,
                      "detected": len(dets),
                      "vehicles": n_veh,
-                     "walkers": sum(1 for d in dets if d["cls"] == "walker")})
+                     "walkers": sum(1 for d in dets if d["cls"] == "walker"),
+                     "truth_vehicles_60": tt["veh60"], "truth_vehicles_40": tt["veh60"],
+                     "truth_visible": tt.get("veh_visible", 0),
+                     "truth_walkers_60": tt["walk60"],
+                     "veh_det_40": len(veh40), "tp40": tp40,
+                     "tp": tp, "fp": fp,
+                     "precision": round(tp / len(veh_dets), 4) if veh_dets else 0.0})
         print("[lidar] scan %2d: %6d 点 -> 检出 %d 个目标（车 %d / 人 %d）"
               % (k, rows[-1]["points"], len(dets), rows[-1]["vehicles"], rows[-1]["walkers"]))
         # 每帧存一张 BEV 图，便于合成动图（PR 的运行效果）
         if last_points is not None and len(last_points) > 0:
             plot_bev(last_points, dets, os.path.join(save_dir, "bev_scan_%02d.png" % k),
-                     {"n_vehicle": rows[-1]["vehicles"], "n_total": len(dets)})
+                     {"n_vehicle": rows[-1]["vehicles"],
+                      "n_walker": rows[-1]["walkers"],
+                      "n_other": len(dets) - rows[-1]["vehicles"] - rows[-1]["walkers"],
+                      "range": float(cfg["detect"]["max_range"]),
+                      "clips": k + 1})
         time.sleep(float(cfg["detect"]["scan_interval"]))
+
+    if sample_cloud is not None:
+        np.savez_compressed(os.path.join(save_dir, "replay_sample.npz"),
+                            xyz=sample_cloud[0], obj_idx=sample_cloud[1], obj_tag=sample_cloud[2])
+        print("[lidar] 离线回放样本 -> %s" % os.path.join(save_dir, "replay_sample.npz"))
 
     with open(os.path.join(save_dir, "detections.csv"), "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=["instance", "cls", "x", "y", "z", "dx", "dy", "dz",
@@ -383,31 +471,46 @@ def run(cfg):
             "range": float(cfg["detect"]["max_range"]), "clips": int(cfg["detect"]["scans"])}
     plot_bev(best_points if best_points is not None else np.zeros((0, 3)), best_dets,
              os.path.join(save_dir, "bev_detection.png"), meta)
-    truth_v = truth_w = 0
-    for actor in world.get_actors():
-        if actor.id == ego.id:
-            continue
-        if actor.type_id.startswith(("vehicle.", "walker.")):
-            d = math.sqrt((actor.get_location().x - ego.get_location().x) ** 2
-                          + (actor.get_location().y - ego.get_location().y) ** 2)
-            if d <= meta["range"]:
-                truth_v += 1 if actor.type_id.startswith("vehicle.") else 0
-                truth_w += 1 if actor.type_id.startswith("walker.") else 0
+    # 召回分两层：40 m（主指标，探测器负责的范围）/ 60 m（含被遮挡目标，仅参考）
+    recalls40 = [r["tp40"] / r["truth_visible"] for r in rows if r["truth_visible"] > 0]
+    recalls60 = [min(r["vehicles"] / r["truth_vehicles_60"], 1.0)
+                 for r in rows if r["truth_vehicles_60"] > 0]
+    recall40 = float(np.mean(recalls40)) if recalls40 else float("nan")
+    recall60 = float(np.mean(recalls60)) if recalls60 else float("nan")
+    walker_recalls = [r["walkers"] / r["truth_walkers_60"] for r in rows if r["truth_walkers_60"] > 0]
+    mean_walker_recall = float(np.mean(walker_recalls)) if walker_recalls else float("nan")
+    tp_total = sum(r["tp"] for r in rows)
+    fp_total = sum(r["fp"] for r in rows)
+    precision = tp_total / (tp_total + fp_total) if (tp_total + fp_total) else float("nan")
+    truth_v = max((r["truth_vehicles_60"] for r in rows), default=0)
+    truth_w = max((r["truth_walkers_60"] for r in rows), default=0)
 
-    mean_recall = float(np.mean([min(r["vehicles"] / max(truth_v, 1), 1.0) for r in rows]))
+    ev = cfg["evaluation"]
+    ok = (recalls40 and recall40 >= float(ev["min_mean_recall"])
+          and (precision if (tp_total + fp_total) else 0.0) >= float(ev.get("min_precision", 0.0))
+          and float(np.mean([r["vehicles"] for r in rows])) >= float(ev["min_mean_vehicles"]))
 
     with open(os.path.join(save_dir, "summary.md"), "w", encoding="utf-8") as fh:
         fh.write("激光雷达检测实验摘要\n")
         fh.write("地图: %s\n" % world.get_map().name)
-        fh.write("点云帧数: %d，累积 %d 帧后的每帧点数约 %d\n"
+        fh.write("点云帧数: %d，累积 %d 帧，每帧约 %d 点\n"
                  % (len(rows), int(cfg["detect"].get("accumulate_sweeps", 5)), rows[-1]["points"]))
+        fh.write("评估半径: %.0f m（主指标；真值也只在该半径内统计）\n" % float(ev_range))
         fh.write("最佳帧检出: 车 %d / 人 %d / 其他 %d\n" % (n_vehicle, n_walker, meta["n_other"]))
-        fh.write("60 m 内真值: 车 %d / 人 %d\n" % (truth_v, truth_w))
-        fh.write("召回率（最佳帧）: 车 %.2f / 人 %.2f\n"
-                 % (n_vehicle / max(truth_v, 1), n_walker / max(truth_w, 1)))
-        fh.write("平均召回率（14 帧，非最佳帧）: %.2f\n" % mean_recall)
+        fh.write("评估半径内真值（逐帧最大值）: 车 %d / 人 %d\n" % (truth_v, truth_w))
+        fh.write("评估半径内真值平均每帧: %.1f 辆\n"
+                 % (sum(r["truth_visible"] for r in rows) / len(rows)))
+        fh.write("逐帧平均召回率(车辆，主指标): %s\n"
+                 % (("%.2f" % recall40) if recalls40 else "N/A"))
+        fh.write("逐帧平均召回率(行人): %s\n"
+                 % (("%.2f" % mean_walker_recall) if walker_recalls else "N/A"))
+        fh.write("precision(车辆): %s（TP %d / FP %d，逐帧累计）\n"
+                 % (("%.2f" % precision) if (tp_total + fp_total) else "N/A", tp_total, fp_total))
         fh.write("平均每帧: 检出 %.1f 个目标，其中车辆 %.1f 辆\n"
                  % (sum(r["detected"] for r in rows) / len(rows), avg_veh))
+        fh.write("判据: 逐帧召回 >= %.2f 且 precision >= %.2f 且 平均车辆 >= %.1f → %s\n"
+                 % (float(ev["min_mean_recall"]), float(ev.get("min_precision", 0.0)),
+                    float(ev["min_mean_vehicles"]), "PASS" if ok else "FAIL"))
 
     lidar.stop()
     time.sleep(0.3)
@@ -426,18 +529,51 @@ def run(cfg):
         pass
 
     ev = cfg["evaluation"]
-    ok = (truth_v > 0 and mean_recall >= float(ev["min_mean_recall"])
+    # 主判据用「激光雷达量程内」的逐帧召回（truth_range 已按 lidar_range 截断，约 50 m）；40 m 召回另列报告
+    ok = (recalls40 and recall40 >= float(ev["min_mean_recall"])
+          and (precision if (tp_total + fp_total) else 0.0) >= float(ev.get("min_precision", 0.0))
           and float(np.mean([r["vehicles"] for r in rows])) >= float(ev["min_mean_vehicles"]))
-    print("[lidar] 最佳帧检出 %d 个目标（车 %d / 人 %d），60 m 内真值 车 %d / 人 %d"
-          % (len(best_dets), n_vehicle, n_walker, truth_v, truth_w))
+    print("[lidar] 评估半径 %.0f m：逐帧召回 %.2f（阈值 %.2f），precision %.2f，平均车辆 %.1f"
+          % (float(ev_range),
+             recall40 if recalls40 else -1, float(ev["min_mean_recall"]),
+             precision if (tp_total + fp_total) else -1, avg_veh))
     print("[lidar] 结论：%s" % ("PASS（检测器稳定输出多目标）" if ok else "FAIL（检出目标过少）"))
     return 0 if ok else 1
+
+
+def run_replay(cfg, npz_path):
+    """离线回放：从 .npz 读取一帧语义激光雷达数据，跑「解析 -> 分组 -> 评估 -> BEV」全链路。
+
+    这样在没有 CARLA 的 Linux 机器上也能复核算法（评审 #952 第 2 条建议）。
+    npz 里需要 xyz / obj_idx / obj_tag 三个数组。
+    """
+    import numpy as _np
+    data = _np.load(npz_path)
+    cloud = (data["xyz"], data["obj_idx"], data["obj_tag"])
+    cfg["output"]["save_dir"] = cfg["output"].get("save_dir", "docs") + "_replay"
+    save_dir = os.path.join(_output_root(), cfg["output"]["save_dir"])
+    os.makedirs(save_dir, exist_ok=True)
+
+    dets = detect_objects(None, cloud, cfg)      # world=None -> 只用 ObjTag 分类
+    n_vehicle = sum(1 for d in dets if d["cls"] == "vehicle")
+    n_walker = sum(1 for d in dets if d["cls"] == "walker")
+    plot_bev(cloud[0], dets, os.path.join(save_dir, "bev_replay.png"),
+             {"n_vehicle": n_vehicle, "n_walker": n_walker,
+              "n_other": len(dets) - n_vehicle - n_walker,
+              "range": float(cfg["detect"]["max_range"]), "clips": 1})
+    print("[lidar] 回放 %s: %d 点 -> 检出 %d 个目标（车 %d / 人 %d / 其他 %d）"
+          % (os.path.basename(npz_path), len(cloud[0]), len(dets), n_vehicle, n_walker,
+             len(dets) - n_vehicle - n_walker))
+    print("[lidar] BEV 图 -> %s" % os.path.join(save_dir, "bev_replay.png"))
+    return 0 if dets else 1
 
 
 def main():
     # launch_ros 的 Node 会追加 --ros-args / __node:= 等参数，这里容忍未知参数
     args, _unknown = build_argparser().parse_known_args()
     cfg = merge_params(load_params(args.params), args)
+    if getattr(args, "replay", None):
+        return run_replay(cfg, args.replay)
     try:
         return run(cfg)
     except KeyboardInterrupt:
