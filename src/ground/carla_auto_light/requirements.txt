@@ -1,0 +1,3 @@
+# CARLA 客户端：wheel 需与 Python 版本匹配
+# （Ubuntu 22.04 自带 Python 3.10，对应 cp310 的 wheel）
+carla==0.9.16

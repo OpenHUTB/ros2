@@ -1,0 +1,14 @@
+<launch>
+  <!-- 键盘遥操作肌肉骨骼灵巧手（场景可选 free/button/ball） -->
+  <arg name="scene" default="button"/>
+  <arg name="viewer" default="false"/>
+
+  <node pkg="mujoco_msk_hand_teleop" type="msk_hand_sim_node.py"
+        name="msk_hand_sim_node" output="screen">
+    <param name="scene" value="$(arg scene)"/>
+    <param name="viewer" value="$(arg viewer)"/>
+  </node>
+
+  <node pkg="mujoco_msk_hand_teleop" type="msk_hand_keyboard_node.py"
+        name="msk_hand_keyboard_node" output="screen" launch-prefix="xterm -e"/>
+</launch>
