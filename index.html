@@ -516,6 +516,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="air/uav_wind_estimation/">无人机空速/地速三角估风与可观测性</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_gimbal_stabilization/">无人机相机云台两轴稳定控制</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="air/uav_prop_tip_mach/">旋翼桨尖马赫数与桨盘载荷</a>
@@ -1089,6 +1091,9 @@
 </li>
 <li>
 <p><a href="air/uav_minimum_jerk_tracking/">无人机最小加加速度轨迹生成与跟踪</a> —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值</p>
+</li>
+<li>
+<p><a href="air/uav_wind_estimation/">无人机空速/地速三角估风与可观测性</a> —— 风三角残差最小二乘 + 信息矩阵可观测性；悬停/直线不可估（条件数 2914-3600），圆周机动风速 RMSE 0.042 m/s（真值 3.6 m/s）</p>
 </li>
 <li>
 <p><a href="air/uav_gimbal_stabilization/">无人机相机云台两轴稳定控制</a> —— 二维目标视线 PID 跟踪、角速度限幅和死区控制，附仿真指标与 CSV</p>
