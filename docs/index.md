@@ -303,6 +303,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机 GPS 欺骗与定位完整性监测](./air/uav_gps_integrity_guard.md) —— 融合位置跳变、速度一致性和 IMU 差异，输出 GPS 可信、交叉检查或拒绝建议
 
 * [UAV mission energy budget](./air/uav_energy_budget.md) ? estimates energy, reserve and endurance for hover, climb and cruise segments
+* [电机推力不对称监测与紧急降落触发](./air/uav_motor_thrust_imbalance_monitor.md) —— 从 mixer 指令与 ESC 转速区分电机衰减（RPM 跟踪误差）与桨损（指令偏移），四态状态机 + 补偿指令 + 紧急降落触发；含 ROS 话题闭环冒烟测试与 MuJoCo 台架验证
 
 * [无人机电芯健康与不平衡预警](./air/uav_battery_health_guard.md) —— 根据单体电压差、温度、内阻和负载压降识别弱电芯，输出限载或就近降落建议
 
