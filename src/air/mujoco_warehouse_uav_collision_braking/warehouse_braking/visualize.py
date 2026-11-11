@@ -8,10 +8,10 @@ from PIL import Image
 from .simulation import ANGLES, DT, WarehouseSimulation, expert_target
 
 
-def render_run(output: Path, scenario="static", duration=8.0):
+def render_run(output: Path, scenario="static", duration=8.0, speed=1.2):
     """在相同参考控制条件下保存动画。 / Save an animation under the reference controller."""
     output.mkdir(parents=True, exist_ok=True)
-    sim = WarehouseSimulation(scenario, speed=1.2)
+    sim = WarehouseSimulation(scenario, speed=speed)
     camera = mujoco.MjvCamera()
     camera.lookat[:] = [5, 0, 0.5]
     camera.distance, camera.azimuth, camera.elevation = 13, 90, -65
@@ -19,7 +19,7 @@ def render_run(output: Path, scenario="static", duration=8.0):
     with mujoco.Renderer(sim.model, height=480, width=640) as renderer:
         for step in range(round(duration / DT)):
             ranges = sim.ranges()
-            target, _ = expert_target(ranges, sim.data.qvel[0], 1.2)
+            target, _ = expert_target(ranges, sim.data.qvel[0], speed)
             if step % 5 == 0:
                 renderer.update_scene(sim.data, camera=camera)
                 for angle, distance in zip(ANGLES, ranges):

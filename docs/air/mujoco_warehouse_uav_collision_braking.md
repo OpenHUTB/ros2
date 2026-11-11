@@ -75,3 +75,36 @@ The ROS launch check runs for 2 s, completing 100 physics steps before a clean e
 The full topic is “Neural Collision Risk Prediction and Graded Braking for Warehouse Inspection UAVs Using Multi-Beam Ranging”. Training, held-out testing, ROS integration of learned control and multi-scenario comparison extend the reference controller and supervised data.
 
 参考资料 / References: [MuJoCo](https://mujoco.readthedocs.io/)、[ROS 2 Humble](https://docs.ros.org/en/humble/)。
+
+## 监督数据与隔离 / Supervision and Isolation
+
+`dataset.py` 对每条轨迹使用独立随机流，变化障碍位置、巡航速度和横穿速度。每个场景按完整轨迹分为训练60%、验证20%、测试20%；不按单帧随机打散。状态输入只使用当前观测和历史观测，不包含未来位置或碰撞结果。
+`dataset.py` uses an independent random stream per episode, varying obstacle position, cruise speed and crossing speed. Each scenario uses an episode-level 60%/20%/20% training/validation/test split rather than shuffled frames. Inputs use current and historical observations without future positions or contact outcomes.
+
+| 输入或标签 / Input or Target | 维度 / Dimensions | 定义 / Definition |
+| --- | --- | --- |
+| 距离 / Range | 9 | 水平射线距离，0至8 m / Horizontal ray distance, 0–8 m |
+| 闭合速度 / Closing rate | 9 | 前帧距离减当前距离除以0.02 s，限幅±10 m/s / Previous minus current range over 0.02 s, clipped to ±10 m/s |
+| 实际/巡航速度 / Actual/cruise speed | 2 | 当前纵向速度与轨迹巡航设定 / Current forward speed and episode cruise setting |
+| 参考速度 / Reference speed | 1 | 制动距离规则给出的速度 / Speed from the stopping-distance rule |
+| 风险标签 / Risk label | 1 | 0畅通、1警戒、2制动 / 0 clear, 1 caution, 2 brake |
+
+```bash
+python3 main.py --collect --episodes 30 --seed 42 --duration 8 --output dataset
+python3 -m unittest discover -s tests -v
+```
+
+| 分区 / Split | 轨迹 / Episodes | 样本 / Samples | 畅通/警戒/制动 / Clear/Caution/Brake |
+| --- | --- | --- | --- |
+| 训练 / Train | 18 | 5465 | 2437 / 1195 / 1833 |
+| 验证 / Validation | 6 | 1816 | 854 / 309 / 653 |
+| 测试 / Test | 6 | 2008 | 990 / 468 / 550 |
+
+每条轨迹最多8 s，首次接触后停止，因而样本数量随轨迹变化。巡航与参考制动行为混合用于覆盖接近障碍时的观测。标签表达参考规则，不表示真实飞行中的碰撞概率。
+Episodes last at most 8 s and stop after first contact, so sample counts vary. Mixed cruise and reference-braking behavior covers obstacle-approach observations. Labels represent a reference rule, not real-flight collision probabilities.
+
+[数据清单 / Dataset manifest](mujoco_warehouse_uav_collision_braking/dataset_manifest.json) 保存种子、轨迹参数、特征顺序、分区统计和数组SHA-256；[样本片段 / Sample rows](mujoco_warehouse_uav_collision_braking/sample_rows.csv) 便于查看数据结构。
+The manifest stores seeds, episode parameters, feature order, split statistics and array SHA-256 digests. Sample rows illustrate the schema.
+
+八项检查覆盖几何与控制行为、首帧闭合速度复位、固定种子复现和轨迹泄漏拒绝。三个分区的轨迹集合互不相交，且每个分区均包含三个场景和三类风险标签。
+Eight checks cover geometry/control behavior, first-frame closing-rate reset, seeded reproducibility and rejection of episode leakage. Split episode sets are disjoint, and each contains all three scenarios and risk classes.
