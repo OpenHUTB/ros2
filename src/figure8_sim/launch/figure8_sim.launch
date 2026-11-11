@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="map_broadcaster" args="0 0 0 0 0 0 map base_link 100"/>
+
+    <!-- 8 字轨迹发布节点 -->
+    <node name="figure8_sim" pkg="figure8_sim" type="main.py" output="screen"/>
+
+    <!-- 启动 rviz 并加载配置 -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find figure8_sim)/rviz/rviz_config.rviz"/>
+</launch>

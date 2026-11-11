@@ -1,0 +1,10 @@
+uav_dynamic_geofence_sim:
+  ros__parameters:
+    rate_hz: 5.0
+    duration_s: 0.0
+uav_dynamic_geofence_guard:
+  ros__parameters:
+    horizon_s: 8.0
+    warning_margin_m: 5.0
+    critical_margin_m: 1.5
+    output_csv: /tmp/uav_dynamic_geofence_runtime.csv
