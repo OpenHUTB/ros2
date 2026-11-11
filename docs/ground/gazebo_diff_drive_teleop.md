@@ -289,23 +289,9 @@ ros2 topic echo /clock --once
 | 路径点太少，按 p 没反应 | 确认录制期间确实在移动，并适当减小 `record_min_distance`；路径少于 2 点时节点会拒绝回放 |
 | 回放轨迹偏离或画龙 | 先检查 `/odom` 是否持续更新；再降低 `linear_speed`、增大 `lookahead_distance` 或减小 `replay_linear_gain` |
 
-## 13. 已知限制与后续工作
+## 13. 电量模型与低电量自动返航
 
-- 位姿全部来自轮式里程计，长时间运行会有累积漂移；没有使用激光雷达、相机或全局定位。
-- 仿真场景为平面，未考虑坡道、打滑、悬挂和轮胎形变。
-- 回放依赖里程计坐标系，`/odom` 漂移会直接反映到路径和终点误差；没有做全局重定位。
-- 测试在单台 Ubuntu 24.04 + Jazzy 机器上完成；合并前仍需第二台机器复现。
-- 后续可以加入 IMU/EKF 融合、`slam_toolbox` 或 Nav2，把当前功能扩展到真实定位与导航。
-
-## 14. 与仓库已有模块的区别
-
-- `gazebo_diff_drive_teleop` 原模块只做键盘速度和自动巡航，没有轨迹记忆。
-- `odom_trace_recorder` 能记录里程计并发布 Path，但只回放记录结果，不做闭环路径跟踪。
-- 本项目在录制后使用纯追踪闭环生成速度指令，能根据实时位姿修正偏差，属于真正的轨迹回放。
-
-## 16. 电量模型与低电量自动返航
-
-### 16.1 电池模型
+### 13.1 电池模型
 
 节点根据 `/odom` 的实际线速度和角速度积分耗电：
 
@@ -322,7 +308,7 @@ battery = min(100, battery + charge_rate * dt)
 
 电池是仿真量，不读取真实电源；参数 `initial_battery`、`low_battery_threshold`、`charged_threshold` 分别控制初始电量、返航触发阈值和充电完成阈值。
 
-### 16.2 状态机
+### 13.2 状态机
 
 ```text
 manual ──电量 <= low_threshold──▶ returning ──到达充电点──▶ charging
@@ -336,7 +322,7 @@ manual ──电量 <= low_threshold──▶ returning ──到达充电点─
 - `charging`：原地停止并充电。电量达到 `charged_threshold` 后自动回到 manual。
 - 手动按键会取消自动返航；此时 `_auto_return_armed` 置为 false，防止低电量状态每个周期反复抢回控制权。按 `h` 可以重新武装并启动返航。
 
-### 16.3 返航控制
+### 13.3 返航控制
 
 返航使用与差速运动学一致的位姿闭环：
 
@@ -351,13 +337,15 @@ heading_error = normalize(desired_yaw - yaw)
 - 距离小于 0.35 m 时进一步降速；
 - 位置进入 `goal_tolerance` 后，再对齐充电点的目标航向，然后进入充电状态。
 
-### 16.4 演示与安全
+### 13.4 演示与安全
 
 - 按 `b` 会把电量强制设为 `low_threshold - 1%`，用于快速演示低电量返航，不影响真实耗电逻辑。
 - 退出时恢复终端并连续发送零速度。
 - 低电量返航是单机器人、基于里程计的行为，没有避障和全局定位。
 
-### 16.2 参数
+## 14. 参数、话题与实测结果
+
+### 14.1 参数
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -374,7 +362,7 @@ heading_error = normalize(desired_yaw - yaw)
 | `return_linear_gain` | 1.2 | 返航线速度增益 |
 | `return_angular_gain` | 2.0 | 返航角速度增益 |
 
-### 16.3 话题与 TF
+### 14.2 话题与 TF
 
 | 话题 | 类型 | 说明 |
 | --- | --- | --- |
@@ -394,7 +382,7 @@ heading_error = normalize(desired_yaw - yaw)
 
 TF 关系与基础模块一致：`odom -> base_footprint -> base_link -> wheels/caster`。
 
-### 16.4 实测结果
+### 14.3 实测结果
 
 实验方法：在无界面 Gazebo 中启动完整控制链路，通过伪终端向前台节点注入按键；订阅 `/odom` 和功能话题，记录真实位姿/电量/状态后计算指标。这样既复现了人工键盘操作，又避开了 GUI 截图对测量精度的影响。
 
