@@ -16,7 +16,8 @@
 | 仿真器 | OpenHUTB v2.10.0 / CARLA `Town10HD`，端口 2000 |
 | 采集端 Python | 3.12.14，需可 `import carla`；用 `CARLA_PYTHON_PATH` 指向含 `carla` 包的目录 |
 | 离线回放 Python | 3.13.12（也兼容 3.8+），**仅标准库** |
-| 可选依赖 | Pillow（仅用于绘图；默认 `python main.py` 会出图，需 Pillow ≥ 9.1；系统自带 9.0.1 等旧版请加 `--no-plot` 跳过绘图，不影响指标计算） |
+| 测试 | `unittest`（标准库，CI 默认）/ `pytest`（可选）；`python -O main.py --self-test` 同样执行全部断言 |
+| 可选依赖 | Pillow（仅用于绘图；`dvs_plot.py` 对 `Image.Resampling` 做了 Pillow < 9.1 回退，因此 9.0.1 等旧版同样能出图；完全没装时用 `--no-plot` 跳过绘图，不影响指标计算） |
 | 文档预览 | MkDocs 1.6.1 |
 
 离线回放、自检、指标计算不依赖 `numpy`、`carla`、`matplotlib` 或 Pillow；只有 `--collect`（连真仿真）和绘图分别需要 `carla` 与 Pillow。
@@ -25,13 +26,15 @@
 
 ```
 src/ground/dvs_event_motion_tracking/
-├── main.py            # 唯一入口：自检 / 离线回放 / 在线采集
-├── dvs_core.py        # 纯标准库：BAF、连通域、质心、速度、时间面、合成自检
+├── main.py            # 唯一入口：自检 / 离线回放 / sweep / 在线采集
+├── dvs_core.py        # 纯标准库：BAF、连通域、质心、速度、时间面、合成数据
 ├── dvs_collect.py     # 可选：连接 CARLA 重新采集真实事件流与 RGB 截图
 ├── dvs_plot.py        # 可选：Pillow 生成五联运行效果图
 ├── dvs_events.json    # 实测数据集（56 帧，约 0.77 MB，同一固定抽样率）
+├── tests/             # unittest / pytest 可收集的回归测试
+│   └── test_dvs.py
 ├── README.md
-└── data/              # 运行产生的 dvs_track.csv / dvs_metrics.json / event_analysis.png（被 .gitignore 忽略）
+└── data/              # 运行产生的全部结果（被 .gitignore 忽略）
 ```
 
 实验报告：[docs/ground/dvs_event_motion_tracking.md](../../../docs/ground/dvs_event_motion_tracking.md)
@@ -43,7 +46,9 @@ src/ground/dvs_event_motion_tracking/
 ```bash
 cd src/ground/dvs_event_motion_tracking
 
-# 1. 合成数据回归自检（不需要仿真器、不需要第三方库）
+# 1. 可收集回归测试（13 项；-O 不会跳过断言）
+python -m unittest discover -s tests -v
+# 或：python -m pytest tests -q
 python main.py --self-test
 
 # 2. 回放实测事件流，输出 CSV / JSON 指标并生成运行效果图
@@ -52,15 +57,21 @@ python main.py
 # 3. 无 Pillow 环境下跳过绘图
 python main.py --no-plot
 
-# 4. 调整 BAF 参数做对照实验
+# 4. 单个 BAF 参数组合（覆盖默认配置，写出本次结果）
 python main.py --cell 8 --resid-k 2.0 --min-mass 40
+
+# 5. 真正的参数对照实验：跑 3x3x3 网格并写出表格
+python main.py --sweep
 ```
 
-`python main.py` 会打印完整指标表，并写出：
+`python main.py` 会打印完整指标表，并写出（全部位于 `data/`，不会改动仓库内已提交的文档资源）：
 
 * `data/dvs_track.csv`：每帧真值 / 估计质心、事件数、保留事件数、是否检出；
 * `data/dvs_metrics.json`：汇总指标与本次使用的参数；
-* `data/event_analysis.png`：本次运行生成的五联效果图；`docs/img/dvs_event_motion_tracking/event_analysis.png` 是随仓库提交的静态示例图，运行不会覆盖它。
+* `data/event_analysis.png`：本次运行生成的五联效果图；`docs/img/dvs_event_motion_tracking/event_analysis.png` 是随仓库提交的静态示例图，运行不会覆盖它；
+* `data/dvs_sweep.csv` / `data/dvs_sweep.json`：`--sweep` 的 27 组对照结果（若用 `--cell` 等参数固定某维，则只扫其余维度）。
+
+`--self-test` 只是 `tests/test_dvs.py` 的薄封装：断言全部是 `unittest.TestCase` 方法，放在 pytest 可收集的 `tests/` 目录，CI 直接执行；`python -O` 移除裸 `assert` 也不会让测试变成假 PASS。`tests/test_dvs.py` 额外覆盖「空 / 单张静态帧必须显式报错」和「漏检帧时估计与真值速度窗口一致」两处回归。
 
 ### 重新采集真实仿真数据（可选）
 
@@ -71,7 +82,9 @@ set CARLA_PYTHON_PATH=<包含 carla 包的目录>
 python main.py --collect
 ```
 
-采集脚本会清空遗留车辆与传感器，生成静止 ego + 前向 DVS 相机，预热 25 帧后采集 16 帧静态背景，再让目标车以 6 m/s 横向穿越视野并采集 40 帧；同时把一帧真实 RGB 画面保存为 `docs/img/dvs_event_motion_tracking/scene_rgb.png`。`--host` / `--port` 可改连接地址。
+采集脚本会清空遗留车辆与传感器，生成静止 ego + 前向 DVS 相机，预热 25 帧后采集 16 帧静态背景，再让目标车以 6 m/s 横向穿越视野并采集 40 帧；事件流写入 `dvs_events.json`，RGB 参考帧写入 **`data/scene_rgb.png`**。`--host` / `--port` 可改连接地址。
+
+采集结果是对用户文件的显式副作用，**不会**自动覆盖 `docs/img/dvs_event_motion_tracking/scene_rgb.png`。确认新截图可用后再手工复制过去，避免一次调试运行就把随仓库提交的示例图改掉。
 
 ### 检查网页效果（提交 PR 前必做）
 
@@ -94,11 +107,11 @@ x : uint16   y : uint16   t : int64   pol : bool     # struct "<HHq?"
 
 ## 算法摘要
 
-1. **背景建模**：把图像划成 8×8 像素网格，用前 12 帧静态数据求每个网格事件数的均值 `mu` 与标准差 `sigma`；后 4 帧静态数据留作留出集，专门用来统计误报。
+1. **背景建模**：把图像划成 8×8 像素网格，用前 12 帧静态数据求每个网格事件数的均值 `mu` 与标准差 `sigma`；后 4 帧静态数据留作留出集，专门用来统计误报。静态帧少于 2 帧时直接抛 `ValueError`，不再静默把整帧背景当成目标。
 2. **背景抑制**：对每帧计算残差 `cur - (mu + k*sigma)`，只保留超过 `max(3, mu + 2*sigma)` 的网格。
 3. **目标分割**：8 邻域连通域合并，要求簇至少 3 个网格、残差质量至少 40，取质量最大的簇；按残差加权求质心并给出包围框。
-4. **时间面**：对簇内事件按 `exp(-(t_end - t)/tau)` 计算指数衰减新近度，得到运动轨迹的时序表征。
-5. **速度估计**：对最近 9 帧质心做最小二乘直线拟合，与仿真器投影得到的像面真值速度比较。
+4. **时间面**：对簇内事件按 `exp(-(t_end - t)/tau)` 计算指数衰减新近度，得到运动轨迹的时序表征。**当前仅用于五联图的 C 面板可视化**：速度估计走的是质心最小二乘，时间面不参与任何指标计算，也不作为估速输入。
+5. **速度估计**：在最近 9 帧的**同一批帧索引**上对估计质心与真值分别做最小二乘拟合；中间漏检帧按时间线性插值补齐，首帧之前 / 末帧之后的帧在两条序列里同时排除，避免窗口长度差异污染速度误差。
 6. **真值**：采集时用相机外参把目标车包围盒中心投影到像面，写入每帧 `gt_u / gt_v`，全程不依赖人工标注。
 
 ## 实测结果（OpenHUTB / CARLA Town10HD）
@@ -126,6 +139,8 @@ x : uint16   y : uint16   t : int64   pol : bool     # struct "<HHq?"
 
 ## 局限与说明
 
+* **质心口径**：事件相机只在高梯度边缘触发，事件质心天然偏向对比度强的一侧；真值是目标车投影包围盒的几何中心，两者不是同一物理量。单侧光照、部分遮挡、目标旋转都会带来系统性偏移，因此 2.35 px MAE 可能低估真实定位误差。若要物理含义严格一致，应改评「检测框中心 vs 投影框中心」，代价是承受 8 px 网格量化。
+* **时间面口径**：`time_surface()` 目前只用于可视化，未参与速度估计或其他指标。
 * ego 车静止、目标仅横向匀速运动；未覆盖相机自身运动、纵向接近、遮挡与多目标交叉。相机运动时需要先做自运动补偿，否则静态背景会整体产生事件。
 * 背景模型与相机视点绑定，换场景 / 换天气需要重新采集静态帧学习 `mu / sigma`。
 * CARLA 的 DVS 是仿真传感器，不等价于真实神经形态芯片的噪声特性与微秒级时间分辨率。

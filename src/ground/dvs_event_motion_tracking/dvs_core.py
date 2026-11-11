@@ -82,8 +82,20 @@ def frame_cells(frame, cfg):
 
 
 def build_baseline(static_frames, cfg):
-    """Mean and standard deviation of per-cell activity over static frames."""
-    n = max(1, len(static_frames))
+    """Mean and standard deviation of per-cell activity over static frames.
+
+    A background model built from zero (or one) static frame is not a model:
+    with zero frames every cell falls back to ``mu=sd=0`` and any activity is
+    misread as a target; with one frame the standard deviation is identically
+    zero.  Fail loudly instead of producing silent, plausible-looking garbage.
+    """
+    if not static_frames:
+        raise ValueError(
+            "dataset has no static frames: cannot build a background model")
+    if len(static_frames) < 2:
+        raise ValueError(
+            "need >= 2 static frames to estimate per-cell sigma")
+    n = len(static_frames)
     sums = collections.Counter()
     squares = collections.Counter()
     for f in static_frames:
@@ -189,6 +201,40 @@ def linear_slope(points):
     return sum((p[0] - mt) * (p[1] - mv) for p in points) / den
 
 
+def _velocity_u_series(records):
+    """Return estimated ``u`` for every record, interpolating missed frames.
+
+    The velocity fit must use the *same frame indices* for estimate and ground
+    truth.  Dropping missed frames from the estimate window silently changes
+    that window's time span and mixes a sampling-window difference into the
+    reported velocity error.  A missed frame inside the tracked span is filled
+    by linear interpolation; frames before the first / after the last detection
+    stay ``None`` and are excluded from *both* regression windows.
+    """
+    known = [(r["t"], r["u"]) for r in records
+             if r["detected"] and r["u"] is not None]
+    if len(known) < 2:
+        return [None] * len(records)
+    out = []
+    for r in records:
+        if r["detected"] and r["u"] is not None:
+            out.append(r["u"])
+            continue
+        t = r["t"]
+        value = None
+        if known[0][0] < t < known[-1][0]:
+            for k in range(len(known) - 1):
+                t0, u0 = known[k]
+                t1, u1 = known[k + 1]
+                if t0 <= t <= t1:
+                    den = t1 - t0
+                    value = (u0 if den < 1e-9 else
+                             u0 + (u1 - u0) * (t - t0) / den)
+                    break
+        out.append(value)
+    return out
+
+
 # --------------------------------------------------------------------------
 # pipeline
 # --------------------------------------------------------------------------
@@ -224,9 +270,16 @@ def run_pipeline(meta, frames, cfg=None):
     detected = [r for r in records if r["detected"]]
 
     window = cfg["vel_window"]
-    est_pts = [(r["t"], r["u"]) for r in detected[-window:]] if detected else []
-    gt_pts = [(r["t"], r["gt_u"]) for r in records
-              if r["gt_u"] is not None][-window:]
+    u_series = _velocity_u_series(records)
+    # Both regressions iterate the same tail window of records and require the
+    # same two fields to be present, so a missed detection can no longer change
+    # the estimate's time span relative to ground truth.
+    pairs = [(r["t"], u, r["gt_u"])
+             for r, u in zip(records, u_series)][-window:]
+    est_pts = [(t, u) for t, u, gt in pairs
+               if u is not None and gt is not None]
+    gt_pts = [(t, gt) for t, u, gt in pairs
+              if u is not None and gt is not None]
     vel_est = linear_slope(est_pts)
     vel_gt = linear_slope(gt_pts)
 
@@ -330,24 +383,15 @@ def synthetic_dataset(width=160, height=90, n_static=16, n_moving=40):
     return meta, frames
 
 
-def self_test():
-    """Assert the BAF removes background activity and tracks the moving blob."""
+def regression_stats():
+    """Build the deterministic synthetic regression stats used by tests.
+
+    ``--self-test`` and ``tests/test_dvs.py`` both consume this.  The checks
+    themselves live in the test module as ``unittest`` assertions, so Python's
+    ``-O`` optimisation can never skip them and CI can collect them directly.
+    """
     meta, frames = synthetic_dataset()
     cfg = dict(DEFAULTS)
     cfg["baseline_frames"] = 12
     records, stats, _ = run_pipeline(meta, frames, cfg)
-
-    assert DVS_STRUCT.size == 13, "DVS record stride must be 13 bytes"
-    raw = DVS_STRUCT.pack(12, 34, 123456789, True) + \
-        DVS_STRUCT.pack(56, 78, 123456790, False)
-    assert unpack_raw(raw) == [(12, 34, 123456789, True),
-                               (56, 78, 123456790, False)]
-
-    assert stats["false_alarms"] == 0, "background produced false detections"
-    assert stats["detection_rate"] >= 0.90, "moving blob was not tracked"
-    assert stats["centroid_mae_px"] is not None
-    assert stats["centroid_mae_px"] < 8.0, "centroid error too large"
-    assert stats["background_suppression"] > 0.50, "background not suppressed"
-    assert stats["velocity_est_px_s"] > 0.0, "velocity sign/direction wrong"
-    assert sum(1 for r in records if not r["detected"]) <= 4
-    return stats
+    return records, stats

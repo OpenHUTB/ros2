@@ -26,7 +26,8 @@
 | DVS 参数 | `320 × 180 px`、`fov=90°`、`sensor_tick=0.05 s`、`positive/negative_threshold=0.6` |
 | RGB 参考帧 | `640 × 360 px`（2 倍分辨率截图） |
 | 场景 | ego 静止；目标车 `vehicle.lincoln.mkz_2017` 在 18 m 处从横偏 −7 m 以 6 m/s 横向穿越视野 |
-| 可选依赖 | Pillow（仅用于生成 `event_analysis.png`；缺失时 `--no-plot` 仍完整运行） |
+| 可选依赖 | Pillow（仅用于绘图；`dvs_plot.py` 对 `Image.Resampling` 做了 Pillow < 9.1 回退，故 Ubuntu 22.04 自带的 9.0.1 也能出图；完全未安装时用 `--no-plot` 跳过绘图，不影响指标计算） |
+| 回归测试 | `unittest`（标准库）/ `pytest`，`tests/test_dvs.py` 共 13 项，`python -O` 不跳过断言 |
 | 文档预览 | MkDocs 1.6.1 |
 
 帧构成：预热 25 帧 → 静态背景 16 帧 → 运动 40 帧，合计 56 帧。16 帧静态中前 12 帧用于学习背景模型，**后 4 帧完全不参与建模，专门留出统计误报**。
@@ -101,7 +102,9 @@ TS(x, y) = exp( -(t_end - t(x,y)) / tau_ms ),    tau_ms = 30
 
 `dt8` 是把帧内时间戳线性量化到 `0..255` 后存入数据集的字节，`t_end` 取当前帧最大值；时间面因此能在单幅图里呈现目标最近的移动轨迹，而不是一团圆点。
 
-速度估计取最近 `vel_window = 9` 帧的质心横坐标 `u`，对时间做最小二乘直线拟合，斜率即像面速度（px/s）。真值不靠人工标注：采集时用相机外参把目标车包围盒中心投影到像面，写入每帧 `gt_u / gt_v`，由此算出真值横向速度再与估计值比较。
+速度估计取最近 `vel_window = 9` 帧的质心横坐标 `u`，对时间做最小二乘直线拟合，斜率即像面速度（px/s）。估计序列与真值序列固定使用**同一批帧索引**：中间漏检帧按时间线性插值补齐，首帧之前 / 末帧之后的帧在两条序列里同时排除，从而避免「估计取最近 9 个检出帧、真值取最近 9 个全部帧」造成的时间窗长度差异污染速度误差。真值不靠人工标注：采集时用相机外参把目标车包围盒中心投影到像面，写入每帧 `gt_u / gt_v`，由此算出真值横向速度再与估计值比较。
+
+时间面在本模块中的定位需要单独说明：`TS(x, y)` 只用于五联效果图 C 面板的轨迹可视化，**不参与速度估计，也不参与任何指标计算**；速度链路始终是「残差加权质心 → 最小二乘」。
 
 ### 3.6 数据压缩与可比性
 
@@ -116,7 +119,7 @@ TS(x, y) = exp( -(t_end - t(x,y)) / tau_ms ),    tau_ms = 30
 3. 预热 25 帧让曝光/后处理稳定；
 4. 目标车尚未启动，采集 16 帧静态背景，记录逐帧事件；
 5. 目标车以 6 m/s 横向匀速穿越视野，采集 40 帧，每帧同时记录包围盒中心投影真值；
-6. 保存一帧真实 RGB 画面为 `scene_rgb.png`，事件流写为紧凑 `dvs_events.json`。
+6. 保存一帧真实 RGB 画面为 `data/scene_rgb.png`，事件流写为紧凑 `dvs_events.json`；确认截图无误后再手工更新 `docs/img/` 下的示例图。
 
 真实 RGB 参考帧如下，可以看到树冠纹理正是背景事件的主要来源，运动车辆位于画面中部：
 
@@ -126,24 +129,29 @@ TS(x, y) = exp( -(t_end - t(x,y)) / tau_ms ),    tau_ms = 30
 
 ```
 src/ground/dvs_event_motion_tracking/
-├── main.py            # 唯一入口：自检 / 离线回放 / 在线采集
-├── dvs_core.py        # 纯标准库：BAF、连通域、质心、速度、时间面、合成自检
+├── main.py            # 唯一入口：自检 / 离线回放 / sweep / 在线采集
+├── dvs_core.py        # 纯标准库：BAF、连通域、质心、速度、时间面、合成数据
 ├── dvs_collect.py     # 可选：连接 CARLA 重新采集真实事件流与 RGB 截图
 ├── dvs_plot.py        # 可选：Pillow 生成五联运行效果图
 ├── dvs_events.json    # 实测数据集（56 帧 / 0.77 MB / 固定抽样率）
-└── README.md
+├── tests/test_dvs.py  # unittest / pytest 可收集的 13 项回归测试
+├── README.md
+└── data/              # 全部运行产物（被 .gitignore 忽略）
 ```
 
 ```bash
 cd src/ground/dvs_event_motion_tracking
 
-python main.py --self-test        # 合成数据回归自检，不需要仿真器与第三方库
-python main.py                    # 回放实测事件流，输出指标并生成运行效果图
-python main.py --no-plot          # 无 Pillow 环境跳过绘图
-python main.py --cell 8 --resid-k 2.0 --min-mass 40   # 参数对照实验
+python -m unittest discover -s tests -v   # 13 项回归测试（CI 使用）
+python -m pytest tests -q                 # pytest 收集同一套测试
+python main.py --self-test                # 等价薄封装，-O 下仍执行全部断言
+python main.py                            # 回放实测事件流，输出指标并生成运行效果图
+python main.py --no-plot                  # 无 Pillow 环境跳过绘图
+python main.py --cell 8 --resid-k 2.0 --min-mass 40   # 单组参数覆盖
+python main.py --sweep                    # 3x3x3 网格对照，写出表格
 ```
 
-`python main.py` 写出 `data/dvs_track.csv`（逐帧真值/估计质心、事件数、保留事件数、是否检出）、`data/dvs_metrics.json`（汇总指标与参数）以及 `docs/img/dvs_event_motion_tracking/event_analysis.png`。
+`python main.py` 写出 `data/dvs_track.csv`（逐帧真值/估计质心、事件数、保留事件数、是否检出）、`data/dvs_metrics.json`（汇总指标与参数）以及 `data/event_analysis.png`。`docs/img/dvs_event_motion_tracking/` 下的三张图是随仓库提交的静态示例，默认运行与 `--collect` 都**不会覆盖**它们；`--sweep` 另写 `data/dvs_sweep.csv` / `data/dvs_sweep.json`。
 
 提交 PR 前用 `mkdocs serve` 预览本页确认配图与导航（MkDocs 1.6 的 `serve` 默认已启用 livereload；旧版才需要显式 `mkdocs serve --livereload`）。
 
@@ -187,6 +195,8 @@ python main.py --cell 8 --resid-k 2.0 --min-mass 40   # 参数对照实验
 | 背景模型绑定视点 | 换场景/天气需重采静态帧 | 引入在线自适应背景更新与滑动窗口遗忘因子 |
 | 仿真 DVS 与真实芯片差异 | CARLA 阈值型仿真传感器 | 用真实 DVS 数据集验证噪声模型与微秒级时间分辨率 |
 | 数据量对比口径粗 | 只比像素/事件条数 | 计入实际编码位宽与传输协议，给出真实带宽曲线 |
+| 定位真值口径 | 事件质心 vs RGB 包围盒几何中心，不是同一物理量；单侧光照 / 遮挡会带系统性偏移，2.35 px MAE 可能低估真实定位误差 | 增评「检测框中心 vs 投影框中心」指标（需承受 8 px 网格量化），并在报告中并列两种口径 |
+| 时间面用途 | `time_surface()` 仅用于图 C 可视化，未参与估速或指标 | 补一组基于时间面的估速对照，确认是否比质心最小二乘更稳 |
 | 未接入控制/ROS2 | 独立 Python 脚本 | 封装 `rclpy` 节点发布 `/dvs/targets`，接规划或云台跟踪闭环 |
 
 ## 9 实验总结
