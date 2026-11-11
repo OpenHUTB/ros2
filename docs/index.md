@@ -246,6 +246,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [横向载荷转移与侧翻裕度](./ground/rollover_margin.md) —— 用 SSF、临界侧向加速度和内外侧轮垂向力算「这车会不会翻」，纯代数、不依赖 CARLA
 * [工况能耗与续航核算](./ground/drive_cycle_energy.md) —— 把一段行驶工况拆成滚阻、风阻、制动与动能项，算清楚电花在哪、还能跑多远
 * [乘坐舒适性传递率](./ground/ride_comfort_transmissibility.md) —— 用二自由度悬架加 ISO 2631 频率加权算路面振动传到人身上剩多少，解释「40 难受、60 反而稳」
+* [不足转向梯度与侧向稳定裕度](./ground/lateral_stability_margin.md) —— 用不足转向梯度与临界车速算「快点打方向会不会失控」，纯代数、可离线断言
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
