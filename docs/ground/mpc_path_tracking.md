@@ -16,47 +16,47 @@
 
 单向车模型
 
-\[
+$$
 x_{k+1}=x_k+v_k\,dt\cos(\theta_k+\tfrac12\omega_k dt),\quad
 y_{k+1}=y_k+v_k\,dt\sin(\theta_k+\tfrac12\omega_k dt),\quad
 \theta_{k+1}=\theta_k+\omega_k dt
-\]
+$$
 
-在每个参考点 \((x_r,u_r)\) 处求雅可比 \(A_k=\partial f/\partial x\)、\(B_k=\partial f/\partial u\)，
+在每个参考点 $(x_r,u_r)$ 处求雅可比 $A_k=\partial f/\partial x$、$B_k=\partial f/\partial u$，
 得线性预测模型。
 
 ### 1.2 预测与代价
 
-把 \(N=25\) 步的状态写成控制偏差 \(\Delta u\) 的仿射函数
+把 $N=25$ 步的状态写成控制偏差 $\Delta u$ 的仿射函数
 
-\[
+$$
 \mathbf{x}=\mathbf{x}_{\text{nom}}+S\,\Delta u
-\]
+$$
 
 目标函数
 
-\[
+$$
 J=\sum_{k=1}^{N}\lVert \mathbf{x}_k-\mathbf{x}^{ref}_k\rVert_Q^2
 +\sum_k \lVert \Delta u_k\rVert_R^2
-\]
+$$
 
-其中 \(Q=\mathrm{diag}(30,30,2)\)、\(R=0.05\)。展开后得到标准型
-\(\min \tfrac12\Delta u^\top H\Delta u+g^\top\Delta u\)，约束为每一步控制偏差的箱约束。
+其中 $Q=\mathrm{diag}(30,30,2)$、$R=0.05$。展开后得到标准型
+$\min \tfrac12\Delta u^\top H\Delta u+g^\top\Delta u$，约束为每一步控制偏差的箱约束。
 
 ### 1.3 坐标下降求解
 
 箱约束 QP 用循环坐标下降：
 
-\[
+$$
 \Delta u_i\leftarrow
 \mathrm{clip}\!\left(\Delta u_i-\frac{(H\Delta u+g)_i}{H_{ii}},\,l_i,\,u_i\right)
-\]
+$$
 
 对严格凸问题收敛到全局最优，且不需要因子分解或 active-set 维护；80 轮扫描足够。
 
 ### 1.4 参考与控制量
 
-参考速度 0.9 m/s，前馈角速度取 \(\omega_{ref}=v\,\kappa(s)\)（\(\kappa\) 由参考路径的航向-弧长斜率给出），
+参考速度 0.9 m/s，前馈角速度取 $\omega_{ref}=v\,\kappa(s)$（$\kappa$ 由参考路径的航向-弧长斜率给出），
 所以 MPC 求解的是"相对前馈的修正量"，这也是它能稳定跑完整条 S 形曲线的前提。
 
 ## 2. ROS 2 接口
