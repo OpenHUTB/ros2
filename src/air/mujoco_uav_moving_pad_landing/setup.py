@@ -15,5 +15,10 @@ setup(
     ],
     install_requires=["setuptools", "numpy", "mujoco", "opencv-python-headless", "scikit-learn", "Pillow", "joblib"],
     zip_safe=True,
-    entry_points={"console_scripts": ["landing_controller = mujoco_uav_moving_pad_landing.ros_node:main"]},
+    entry_points={
+        "console_scripts": [
+            "landing_controller = mujoco_uav_moving_pad_landing.ros_node:main",
+            "landing_feature_source = mujoco_uav_moving_pad_landing.feature_source:main",
+        ]
+    },
 )
