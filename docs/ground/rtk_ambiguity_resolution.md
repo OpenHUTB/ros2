@@ -16,11 +16,11 @@
 
 对同一颗参考星做站间、星间双差，消掉接收机钟差与卫星钟差：
 
-
+$$
 \lambda\,\nabla\Delta\Phi_i=\mathbf{a}_i^\top\mathbf{b}+\lambda\,\nabla\Delta N_i+\varepsilon_i,
 \qquad
 \nabla\Delta P_i=\mathbf{a}_i^\top\mathbf{b}+\eta_i
-
+$$
 
 其中 $\mathbf{a}_i$ 是双差方向余弦（由卫星方位角/高度角计算），$\mathbf{b}$ 是基线向量，
 $\nabla\Delta N_i$ 是整数双差模糊度，$\lambda=0.1903$ m（GPS L1）。
@@ -30,21 +30,21 @@ $\nabla\Delta N_i$ 是整数双差模糊度，$\lambda=0.1903$ m（GPS L1）。
 
 把 $[\,\mathbf{b};\ \mathbf{N}\,]$ 一起做加权最小二乘：
 
-
+$$
 \hat{\mathbf{x}}=(H^\top WH)^{-1}H^\top W\mathbf{y},\qquad
 Q=(H^\top WH)^{-1}
+$$
 
-
-单历元时模糊度精度其实由**测码**决定（基线只能靠码观测约束），所以 $\sigma_N\approx1.9$ 周；
+单历元时模糊度精度其实由**测码**决定（基线只能靠码观测约束），所以 $\sigma_N\approx1.36$ 周；
 这正是单历元无法可靠固定的原因。
 
 ### 1.3 LAMBDA 去相关
 
 对 $Q_N$ 做 $LDL^\top$ 分解，用整数高斯变换
 
-
+$$
 Z_{i,:}\leftarrow Z_{i,:}-\text{round}(L_{ij})\,Z_{j,:}
-
+$$
 
 把非对角元压到 $|L_{ij}|\le0.5$，再按对角元排序做置换，直到不再变化。
 $Z$ 是幺模整数矩阵（$|\det Z|=1$），因此 $\mathbf{z}=Z\mathbf{N}$ 仍是整数向量，而
@@ -54,21 +54,21 @@ $Q_z=ZQ_NZ^\top$ 的条件数从 24855 降到 7.87（约 3000 倍），整数搜
 
 在 $3\sigma$ 的盒子里枚举整数向量，按二次型
 
-
+$$
 c(\mathbf{z})=(\mathbf{z}-\hat{\mathbf{z}})^\top Q_z^{-1}(\mathbf{z}-\hat{\mathbf{z}})
-
+$$
 
 排序；最优与次优的比值
 
-
+$$
 \text{ratio}=\frac{c_2}{c_1}
-
+$$
 
 超过阈值（本模块取 3）才认为固定成功，否则退回浮点解。固定后的基线为
 
-
+$$
 \hat{\mathbf{b}}_{\text{fixed}}=\hat{\mathbf{b}}-Q_{bN}Q_N^{-1}(\hat{\mathbf{N}}-\check{\mathbf{N}})
-
+$$
 
 ### 1.5 仿真
 
@@ -119,8 +119,7 @@ python3 -m unittest discover -s tests -v
 | 浮点解最大误差 | 398.33 mm |
 | 固定解最大误差 | 1.75 mm |
 
-（口径：「固定解最大误差」统计全部 20 个窗口——19 个通过 ratio 检验 + 1 个未固定；
-RMSE 只统计通过检验的 19 次。1.75 mm 这个最大值出现在已固定的窗口，未固定那次误差更小。）
+（口径：「固定解最大误差」统计全部 20 个窗口——19 个通过 ratio 检验 + 1 个未固定；RMSE 只统计通过检验的 19 次。1.75 mm 出现在已固定的窗口，未固定那次误差更小。）
 | 整数固定正确率 | 100 % |
 | 错误固定率 | 0 % |
 | ratio 中位数 | 12.4 |
