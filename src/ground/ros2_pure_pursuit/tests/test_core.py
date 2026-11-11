@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 
 from ros2_pure_pursuit.arbitrate import arbitrate  # noqa: E402
 from ros2_pure_pursuit.obstacle import AvoidInfo, ObstacleAvoider, synthetic_scan  # noqa: E402
-from ros2_pure_pursuit.paths import circle, load_path, straight  # noqa: E402
+from ros2_pure_pursuit.paths import circle, load_path, s_curve, straight  # noqa: E402
 from ros2_pure_pursuit.pure_pursuit import PurePursuitController  # noqa: E402
 from ros2_pure_pursuit.robot import DiffDriveRobot  # noqa: E402
 from ros2_pure_pursuit.safety import FreshnessTracker, sanitize_target_speed  # noqa: E402
@@ -354,6 +354,56 @@ def test_simulation_survives_emergency_stop():
             assert math.hypot(robot.pose.x - ox, robot.pose.y - oy) > orad + 0.30
         if info.finished:
             break
+
+
+def test_curvature_sign_changes_on_s_curve():
+    """S 形路径的曲率会变号；前视缩短取 |kappa|，不区分转向。"""
+    path = s_curve(length=24.0, amp=3.0)
+    signs = []
+    for i in range(10, len(path) - 10, 10):
+        k = path.curvature(i, span=0.8)
+        if abs(k) > 1e-3:
+            signs.append(1 if k > 0 else -1)
+    assert 1 in signs and -1 in signs, signs
+
+
+def test_resample_keeps_length_and_spacing():
+    """等距重采样：总长基本不变，平均间距接近目标值，点数变少。"""
+    path = s_curve(length=24.0, amp=3.0)
+    sparse = path.resample(1.5)
+    assert abs(sparse.length - path.length) < 0.05 * path.length
+    seg = np.linalg.norm(np.diff(sparse.points, axis=0), axis=1)
+    assert abs(float(np.mean(seg)) - 1.5) < 0.35, float(np.mean(seg))
+    assert len(sparse) < len(path)
+
+
+def test_lookahead_shrinks_on_sparse_curve():
+    """稀疏路点上曲率估计仍可用，弯道前视依旧比直道短。"""
+    sparse = s_curve(length=24.0, amp=3.0).resample(1.5)
+    idx = int(np.argmax([abs(sparse.curvature(i)) for i in range(len(sparse))]))
+    kappa = sparse.curvature(idx)
+    assert abs(kappa) > 0.02, kappa
+    ctrl = PurePursuitController()
+    assert ctrl.lookahead_distance(0.9, kappa) < ctrl.lookahead_distance(0.9, 0.0)
+
+
+def test_pure_pursuit_tracks_sparse_s_curve():
+    """纯跟踪在 1.5 m 稀疏路点上仍能跑完全程，横向误差不失控。"""
+    path = s_curve(length=24.0, amp=3.0).resample(1.5)
+    ctrl = PurePursuitController()
+    robot = DiffDriveRobot(dt=0.05)
+    robot.reset(float(path.points[0][0]), float(path.points[0][1]), 0.0)
+    errors = []
+    finished = False
+    for _ in range(1200):
+        v_cmd, w_cmd, info = ctrl.compute(path, robot.pose, 0.9)
+        robot.step(v_cmd, w_cmd)
+        errors.append(abs(info.cte))
+        if info.finished:
+            finished = True
+            break
+    assert finished
+    assert float(np.mean(errors[-50:])) < 0.25, float(np.mean(errors[-50:]))
 
 
 if __name__ == "__main__":

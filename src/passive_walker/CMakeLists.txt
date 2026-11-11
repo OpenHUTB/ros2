@@ -24,6 +24,7 @@ install(DIRECTORY
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_sim "test/test_sim.py")
+  ament_add_pytest_test(test_input_validation "test/test_input_validation.py")
 endif()
 
 ament_package()
