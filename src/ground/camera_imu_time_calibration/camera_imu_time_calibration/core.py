@@ -82,6 +82,7 @@ def simulate(
     excitation: float = 1.0,
     timestamp_at: str = "mid",
     frame_average: bool = True,
+    exposure: float = None,
 ) -> dict:
     """合成一段相机 + IMU 角速度观测。
 
@@ -99,16 +100,39 @@ def simulate(
     excitation : 运动激励缩放系数。0.05 表示车辆几乎不动（角速度只有真值的 5%），
         用于说明"激励不足时估计会失效"。IMU 零偏与噪声不随此系数缩放。
     timestamp_at :
-        ``'mid'``   时间戳打在曝光中点（相机常规约定），帧内积分窗口以中点对称；
-        ``'start'`` 时间戳打在帧开始，积分窗口从时间戳向后一帧。
+        ``'mid'``   时间戳打在曝光中点（相机常规约定），积分窗口以中点对称；
+        ``'start'`` 时间戳打在帧（曝光）开始，积分窗口从时间戳向后 ``exposure``。
     frame_average : 是否模拟一帧内的角速度积分（曝光/前端滑窗平均）。
+    exposure : 单帧**曝光（积分）时长** (s)。``None`` 表示等于帧周期
+        ``1/cam_rate``，也就是"整帧窗口平均"这个理想化情形（旧行为）。
+        必须满足 ``0 < exposure <= 1/cam_rate``。
+
+        **曝光时长与帧周期是两个独立的物理量**。真实相机的曝光通常短于帧周期
+        （30 Hz 的帧周期 33.3 ms，曝光可能只有 5~10 ms）。二者的关系决定
+        ``timestamp_at='start'`` 时的固定偏差：等效测量时刻是
+
+            t_eff = t_stamp + exposure / 2
+
+        所以偏差是 ``-exposure/2``，**不是固定的半帧**；只有 ``exposure`` 恰好
+        等于帧周期时，才退化为教科书写法里的 ``-T/2``。``timestamp_at='mid'``
+        时窗口关于时间戳对称，偏差与曝光时长无关。
 
     返回
     ----
-    dict，含 ``t_imu`` / ``w_imu`` / ``t_cam`` / ``w_cam`` / ``offset`` 等。
+    dict，含 ``t_imu`` / ``w_imu`` / ``t_cam`` / ``w_cam`` / ``offset`` /
+    ``exposure`` / ``frame_period`` 等。
     """
     if timestamp_at not in ("mid", "start"):
         raise ValueError("timestamp_at 只能是 'mid' 或 'start'")
+    frame_period = 1.0 / cam_rate
+    if exposure is None:
+        exposure = frame_period
+    exposure = float(exposure)
+    # 允许浮点误差：exposure == frame_period 是合法边界。
+    if not (0.0 < exposure <= frame_period * (1.0 + 1e-9)):
+        raise ValueError(
+            f"exposure 必须满足 0 < exposure <= 帧周期 {frame_period * 1000:.3f} ms，"
+            f"当前为 {exposure * 1000:.3f} ms")
     rng = np.random.default_rng(seed)
 
     # --- 真值网格 ---
@@ -121,20 +145,21 @@ def simulate(
     w_imu = w_true + imu_bias + rng.normal(0.0, imu_noise, size=w_true.shape)
 
     # --- 相机：低帧率 + 帧内平均 + 尺度误差 + 噪声 + 时间偏移 ---
-    cam_dt = 1.0 / cam_rate
+    cam_dt = frame_period
     n_cam = int(np.floor(duration * cam_rate))
     t_cam = np.arange(n_cam) * cam_dt  # 时间戳（未含偏移，偏移体现在采样内容上）
 
     if timestamp_at == "mid":
-        # 时间戳 = 曝光中点：采样窗口 [中心-T/2, 中心+T/2]
+        # 时间戳 = 曝光中点：采样窗口 [中心-T_exp/2, 中心+T_exp/2]，关于时间戳对称
         centers = t_cam - offset
-        half = 0.5 * cam_dt if frame_average else 0.0
+        half = 0.5 * exposure if frame_average else 0.0
         win_lo, win_hi = centers - half, centers + half
     else:
-        # 时间戳 = 帧开始：采样窗口 [起点, 起点+T]，等效中心滞后 T/2
+        # 时间戳 = 曝光开始：采样窗口 [起点, 起点+T_exp]，
+        # 等效测量时刻比时间戳晚 T_exp/2（帧周期 T 不等于曝光时长 T_exp）
         starts = t_cam - offset
         win_lo = starts
-        win_hi = starts + (cam_dt if frame_average else 0.0)
+        win_hi = starts + (exposure if frame_average else 0.0)
 
     w_cam = np.empty((n_cam, 3))
     if frame_average:
@@ -154,6 +179,8 @@ def simulate(
         "duration": duration,
         "imu_rate": imu_rate,
         "cam_rate": cam_rate,
+        "frame_period": frame_period,
+        "exposure": exposure,
         "offset": offset,
         "t_imu": t_true,
         "w_imu": w_imu,

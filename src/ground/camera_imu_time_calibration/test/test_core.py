@@ -86,6 +86,55 @@ class TestEstimateOffset(unittest.TestCase):
         self.assertAlmostEqual(res['offset'], 0.050 - 1.0 / 60.0, delta=0.003)
 
 
+class TestExposureVsFramePeriod(unittest.TestCase):
+    """曝光时长与帧周期是两个独立参数（评审 @1huangna 指出）。
+
+    ``timestamp_at='start'`` 时等效测量时刻是 ``t_stamp + exposure/2``，因此
+    偏差是 ``-exposure/2`` 而不是固定的半帧；``timestamp_at='mid'`` 时窗口关于
+    时间戳对称，偏差与曝光长短无关。
+    """
+
+    def test_reports_exposure_and_frame_period(self):
+        sim = core.simulate(seed=0, cam_rate=30.0)
+        self.assertAlmostEqual(sim['frame_period'], 1.0 / 30.0, places=12)
+        # 默认 exposure = 帧周期，保持旧行为（整帧窗口平均）
+        self.assertAlmostEqual(sim['exposure'], 1.0 / 30.0, places=12)
+        sim2 = core.simulate(seed=0, cam_rate=30.0, exposure=0.008)
+        self.assertAlmostEqual(sim2['exposure'], 0.008, places=12)
+
+    def test_rejects_exposure_out_of_range(self):
+        with self.assertRaises(ValueError):
+            core.simulate(cam_rate=30.0, exposure=0.05)   # 长于帧周期
+        with self.assertRaises(ValueError):
+            core.simulate(cam_rate=30.0, exposure=0.0)
+
+    def test_frame_start_bias_follows_exposure_not_frame_period(self):
+        """曝光取 1/4 帧时，偏差应是 -Texp/2（约 -4.17 ms），不是 -16.67 ms。"""
+        exposure = 0.25 / 30.0
+        _, res = core.trial(seed=0, offset=0.050, cam_rate=30.0,
+                            timestamp_at='start', exposure=exposure)
+        self.assertAlmostEqual(res['offset'], 0.050 - exposure / 2.0, delta=0.002)
+
+    def test_frame_start_bias_scales_with_exposure(self):
+        """偏差随曝光时长线性增长，Texp = T 时才退化为半帧。"""
+        biases = []
+        for ratio in (0.25, 0.5, 1.0):
+            exposure = ratio / 30.0
+            _, res = core.trial(seed=0, offset=0.050, cam_rate=30.0,
+                                timestamp_at='start', exposure=exposure)
+            biases.append((res['offset'] - 0.050) * 1000.0)
+        for bias, ratio in zip(biases, (0.25, 0.5, 1.0)):
+            self.assertAlmostEqual(bias, -ratio * 1000.0 / 60.0, delta=0.6)
+
+    def test_mid_timestamp_immune_to_short_exposure(self):
+        """时间戳在曝光中点时，曝光变短不引入系统偏差。"""
+        for exposure in (0.2 / 30.0, 0.5 / 30.0, 1.0 / 30.0):
+            _, res = core.trial(seed=0, offset=0.050, cam_rate=30.0,
+                                exposure=exposure)
+            self.assertAlmostEqual(res['offset'], 0.050, delta=0.002,
+                                   msg=f'exposure={exposure:.4f} s')
+
+
 class TestAttitude(unittest.TestCase):
     def test_constant_rate_integration(self):
         """绕单轴恒定角速度积分 1 s，角度应为 omega * 1 s。"""

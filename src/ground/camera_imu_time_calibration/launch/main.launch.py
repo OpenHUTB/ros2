@@ -7,12 +7,18 @@
 
 默认注入 +50 ms 偏移，估计节点启动约 1 s 后开始输出，结果见
 ``/camera_imu_time_estimator/time_offset``。
+
+所有数值参数都用 ``ParameterValue(..., value_type=float)`` 显式声明类型：
+``launch`` 拿到的是字符串，若交给它自己推断，``offset_ms:=120`` 会被猜成 int，
+而节点侧按 double 使用，就会抛 ``InvalidParameterTypeException``。这里写死类型，
+用户不必记住"要带小数点"。
 """
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description() -> LaunchDescription:
@@ -39,10 +45,10 @@ def generate_launch_description() -> LaunchDescription:
             name='camera_imu_synthetic_source',
             output='screen',
             parameters=[{
-                'offset_ms': offset_ms,
-                'cam_rate': cam_rate,
-                'imu_topic': imu_topic,
-                'cam_topic': cam_topic,
+                'offset_ms': ParameterValue(offset_ms, value_type=float),
+                'cam_rate': ParameterValue(cam_rate, value_type=float),
+                'imu_topic': ParameterValue(imu_topic, value_type=str),
+                'cam_topic': ParameterValue(cam_topic, value_type=str),
             }],
         ),
         Node(
@@ -51,9 +57,9 @@ def generate_launch_description() -> LaunchDescription:
             name='camera_imu_time_estimator',
             output='screen',
             parameters=[{
-                'imu_topic': imu_topic,
-                'cam_topic': cam_topic,
-                'window_sec': window_sec,
+                'imu_topic': ParameterValue(imu_topic, value_type=str),
+                'cam_topic': ParameterValue(cam_topic, value_type=str),
+                'window_sec': ParameterValue(window_sec, value_type=float),
             }],
         ),
     ])

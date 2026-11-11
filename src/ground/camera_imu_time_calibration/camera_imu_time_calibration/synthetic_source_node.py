@@ -23,6 +23,12 @@ from rclpy.time import Time as RosTime
 from sensor_msgs.msg import Imu
 
 from camera_imu_time_calibration import core
+from camera_imu_time_calibration.ros_params import (
+    integer_param,
+    number_param,
+    shutdown_quietly,
+    string_param,
+)
 
 
 class SyntheticSource(Node):
@@ -31,35 +37,26 @@ class SyntheticSource(Node):
     def __init__(self):
         super().__init__("camera_imu_synthetic_source")
 
-        self.declare_parameter("imu_topic", "/imu")
-        self.declare_parameter("cam_topic", "/camera/angular_velocity")
-        self.declare_parameter("imu_rate", 200.0)
-        self.declare_parameter("cam_rate", 30.0)
-        self.declare_parameter("offset_ms", 50.0)
-        self.declare_parameter("imu_bias", 0.005)
-        self.declare_parameter("imu_noise", 0.003)
-        self.declare_parameter("cam_noise", 0.010)
-        self.declare_parameter("seed", 0)
+        imu_topic = string_param(self, "imu_topic", "/imu")
+        cam_topic = string_param(self, "cam_topic", "/camera/angular_velocity")
+        imu_rate = number_param(self, "imu_rate", 200.0)
+        cam_rate = number_param(self, "cam_rate", 30.0)
+        self.offset = number_param(self, "offset_ms", 50.0) / 1000.0
+        self.bias = number_param(self, "imu_bias", 0.005)
+        self.imu_noise = number_param(self, "imu_noise", 0.003)
+        self.cam_noise = number_param(self, "cam_noise", 0.010)
+        self.rng = np.random.default_rng(integer_param(self, "seed", 0))
 
-        imu_rate = float(self.get_parameter("imu_rate").value)
-        cam_rate = float(self.get_parameter("cam_rate").value)
-        self.offset = float(self.get_parameter("offset_ms").value) / 1000.0
-        self.bias = float(self.get_parameter("imu_bias").value)
-        self.imu_noise = float(self.get_parameter("imu_noise").value)
-        self.cam_noise = float(self.get_parameter("cam_noise").value)
-        self.rng = np.random.default_rng(int(self.get_parameter("seed").value))
-
-        self.imu_pub = self.create_publisher(
-            Imu, str(self.get_parameter("imu_topic").value), 50)
-        self.cam_pub = self.create_publisher(
-            Vector3Stamped, str(self.get_parameter("cam_topic").value), 50)
+        self.imu_pub = self.create_publisher(Imu, imu_topic, 50)
+        self.cam_pub = self.create_publisher(Vector3Stamped, cam_topic, 50)
 
         self.t0 = self._now()
         self.create_timer(1.0 / imu_rate, self.on_imu)
         self.create_timer(1.0 / cam_rate, self.on_cam)
 
         self.get_logger().info(
-            f"IMU {imu_rate:.0f} Hz，相机 {cam_rate:.0f} Hz，"
+            f"IMU {imu_rate:.0f} Hz → {imu_topic}，"
+            f"相机 {cam_rate:.0f} Hz → {cam_topic}，"
             f"注入偏移 {self.offset*1000:+.1f} ms")
 
     def _now(self) -> float:
@@ -106,7 +103,7 @@ def main(args=None) -> None:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        shutdown_quietly()
 
 
 if __name__ == "__main__":

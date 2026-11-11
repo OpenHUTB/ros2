@@ -12,6 +12,10 @@
 
 约定：``offset_ms > 0`` 表示**相机时间戳滞后于 IMU**，即相机数据要往前推这么多
 才与 IMU 对齐。
+
+除了单次估计值，节点还输出**重估稳定性**：最近 ``stability_window`` 次重估的
+标准差（``recent_std_ms``）。它是对"常量偏移假设是否成立"的经验检验——若估计值
+随时间线性漂移，说明时钟频差不可忽略，此时应把模型升级成 ``offset(t) = a + b·t``。
 """
 
 from __future__ import annotations
@@ -28,6 +32,12 @@ from sensor_msgs.msg import Imu
 from std_msgs.msg import String
 
 from camera_imu_time_calibration import core
+from camera_imu_time_calibration.ros_params import (
+    integer_param,
+    number_param,
+    shutdown_quietly,
+    string_param,
+)
 
 
 class TimeOffsetEstimator(Node):
@@ -36,32 +46,32 @@ class TimeOffsetEstimator(Node):
     def __init__(self):
         super().__init__("camera_imu_time_estimator")
 
-        self.declare_parameter("imu_topic", "/imu")
-        self.declare_parameter("cam_topic", "/camera/angular_velocity")
-        self.declare_parameter("window_sec", 8.0)
-        self.declare_parameter("search_range_ms", 250.0)
-        self.declare_parameter("min_samples", 40)
-        self.declare_parameter("publish_period_sec", 1.0)
+        imu_topic = string_param(self, "imu_topic", "/imu")
+        cam_topic = string_param(self, "cam_topic", "/camera/angular_velocity")
+        self.window = number_param(self, "window_sec", 8.0)
+        self.search_range = number_param(self, "search_range_ms", 250.0) / 1000.0
+        self.min_samples = integer_param(self, "min_samples", 40)
+        period = number_param(self, "publish_period_sec", 1.0)
 
-        self.window = float(self.get_parameter("window_sec").value)
-        self.search_range = float(self.get_parameter("search_range_ms").value) / 1000.0
-        self.min_samples = int(self.get_parameter("min_samples").value)
-        period = float(self.get_parameter("publish_period_sec").value)
+        # 重估稳定性：最近 N 次估计的离散度，用作"常量假设是否成立"的经验判据
+        self.stability_n = max(2, integer_param(self, "stability_window", 10))
+        self.stability_warn_ms = number_param(self, "stability_warn_ms", 2.0)
+        self.recent_offsets = deque(maxlen=self.stability_n)
+        self._unstable = False
 
         self.imu_buf = deque()
         self.cam_buf = deque()
 
-        self.create_subscription(
-            Imu, str(self.get_parameter("imu_topic").value), self.on_imu, 50)
-        self.create_subscription(
-            Vector3Stamped, str(self.get_parameter("cam_topic").value),
-            self.on_cam, 50)
+        self.create_subscription(Imu, imu_topic, self.on_imu, 50)
+        self.create_subscription(Vector3Stamped, cam_topic, self.on_cam, 50)
         self.pub = self.create_publisher(String, "~/time_offset", 10)
         self.timer = self.create_timer(period, self.on_timer)
 
         self.get_logger().info(
+            f"IMU {imu_topic} / 相机 {cam_topic}；"
             f"窗口 {self.window:.1f} s，搜索范围 ±{self.search_range*1000:.0f} ms，"
-            f"最少 {self.min_samples} 帧")
+            f"最少 {self.min_samples} 帧；"
+            f"稳定性看最近 {self.stability_n} 次，阈值 {self.stability_warn_ms:.1f} ms")
 
     # -- 回调 ---------------------------------------------------------------
     @staticmethod
@@ -105,23 +115,50 @@ class TimeOffsetEstimator(Node):
         res = core.estimate_offset(t_cam, w_cam, t_imu, w_imu,
                                    search_range=self.search_range)
 
+        offset_ms = res["offset"] * 1000.0
+        self.recent_offsets.append(offset_ms)
+        std_ms = (float(np.std(self.recent_offsets))
+                  if len(self.recent_offsets) >= 2 else None)
+        stable = None if std_ms is None else bool(std_ms <= self.stability_warn_ms)
+
         scale = res["scale"]
         payload = {
-            "offset_ms": round(res["offset"] * 1000.0, 3),
+            "offset_ms": round(offset_ms, 3),
             "correlation": round(res["correlation"], 5),
             "scale": None if math.isnan(scale) else round(scale, 4),
             "n_imu": int(len(t_imu)),
             "n_cam": int(len(t_cam)),
             "window_sec": round(float(t_cam[-1] - t_cam[0]), 2),
+            # 重估稳定性：最近 recent_n 次 offset_ms 的标准差
+            "recent_std_ms": None if std_ms is None else round(std_ms, 3),
+            "recent_n": int(len(self.recent_offsets)),
+            "stable": stable,
             "stamp": round(self._now(), 3),
         }
         msg = String()
         msg.data = json.dumps(payload, ensure_ascii=False)
         self.pub.publish(msg)
+
+        std_txt = "—" if std_ms is None else f"{std_ms:.2f}"
         self.get_logger().info(
             f"offset = {payload['offset_ms']:+.2f} ms，"
             f"rho = {payload['correlation']:.4f}，"
+            f"重估 std = {std_txt} ms，"
             f"样本 IMU {payload['n_imu']} / 相机 {payload['n_cam']}")
+
+        # 只在"稳定 → 不稳定"的时刻告警一次，避免 1 Hz 刷屏
+        if std_ms is not None and std_ms > self.stability_warn_ms:
+            if not self._unstable:
+                self.get_logger().warn(
+                    f"最近 {len(self.recent_offsets)} 次重估的 std = {std_ms:.2f} ms，"
+                    f"超过阈值 {self.stability_warn_ms:.2f} ms：常量偏移假设可能不成立"
+                    f"（时钟频差 / 时变延迟），或运动激励不足。"
+                    f"可先看 correlation 是否 < 0.9，再决定是否把模型升级为 offset(t)=a+b*t。")
+                self._unstable = True
+        elif std_ms is not None:
+            if self._unstable:
+                self.get_logger().info(f"重估已稳定：std = {std_ms:.2f} ms")
+            self._unstable = False
 
 
 def main(args=None) -> None:
@@ -133,7 +170,7 @@ def main(args=None) -> None:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        shutdown_quietly()
 
 
 if __name__ == "__main__":
