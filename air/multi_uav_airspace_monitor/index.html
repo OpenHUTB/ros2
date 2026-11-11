@@ -796,9 +796,30 @@ python<span class="w"> </span>main.py<span class="w"> </span>demo
 </code></pre></div>
 <p>评估自己的场景（JSON 格式见模块 README）：</p>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>main.py<span class="w"> </span>check<span class="w"> </span>--config<span class="w"> </span>scenario.json
+python<span class="w"> </span>main.py<span class="w"> </span>demo<span class="w"> </span>--csv<span class="w"> </span>results/sep.csv<span class="w"> </span>--plot<span class="w"> </span>results/separation_vs_time.png
+python<span class="w"> </span>main.py<span class="w"> </span>check<span class="w"> </span>--config<span class="w"> </span>scenario.json<span class="w"> </span>--csv<span class="w"> </span>results/sep.csv
 </code></pre></div>
+<p><code>--csv</code> / <code>--plot</code> 的示例输出都写进 <code>results/</code>（已进模块 <code>.gitignore</code>），直接复制命令不会
+在 <code>git status</code> 里留下生成文件。</p>
 <p><code>check</code> 在 <code>status=critical</code> 时返回 1，<code>safe</code> / <code>warning</code> 返回 0，场景读不到或
 解析失败返回 2，便于直接接到脚本或 CI。<code>demo</code> 只要跑完就返回 0。</p>
+<p><code>--csv</code> 写出的表头是 <code>time_s,uav_a,uav_b,separation_m</code>，每个采样时刻、每一对无人机一行。
+采样是固定步长：从公共起点按 <code>step_s</code> 采样，窗口不是步长整数倍时末尾补结束点
+（<code>horizon_s=1.1</code>、<code>step_s=0.4</code> → <code>0.0/0.4/0.8/1.1</code>，最后一格 0.3 s），冲突检测用同一套采样，
+所以表里最小的 <code>separation_m</code> 就是汇总里的 <code>minimum_separation_m</code>。<code>step_s</code> / <code>horizon_s</code>
+的零、负数、NaN、Inf 在 <code>parse_scenario()</code> 与 <code>separation_series()</code> 都会抛 <code>ValueError</code>。
+演示场景导出 486 行：</p>
+<div class="highlight"><pre><span></span><code>time_s,uav_a,uav_b,separation_m
+0.0,uav_alpha,uav_beta,300.0
+0.0,uav_alpha,uav_delta,262.679
+0.0,uav_alpha,uav_gamma,220.454
+...
+</code></pre></div>
+<p>只有一个架次时也会写出表头（没有机对），脚本可以直接按列名读。</p>
+<p><code>--plot</code> 用同一份 CSV 画「机间距离随时间」的曲线（Pillow 绘制，不引入 matplotlib），
+横轴秒、纵轴米，并画 30 m 告警与 10 m 临界两条参考线：</p>
+<p><img alt="机间距离随时间变化" src="separation_vs_time.png"/></p>
+<p>原有俯视空域图（<code>demo</code> 默认产物）：</p>
 <p><img alt="多无人机空域监测" src="demo_screenshot.png"/></p>
 <p>演示中有 4 架无人机：<code>uav_alpha</code> 与 <code>uav_beta</code> 在中心迎头交叉，
 <code>uav_gamma</code> 进入 <code>city_center_restricted</code> 禁飞区，<code>uav_delta</code> 保持安全。
@@ -847,15 +868,17 @@ CarlaAir、PX4 或回放数据，而不需要把仿真器客户端写进核心�
 <span class="nb">source</span><span class="w"> </span>install/setup.bash
 ros2<span class="w"> </span>launch<span class="w"> </span>multi_uav_airspace_monitor<span class="w"> </span>main.launch.py
 </code></pre></div>
-<p>ROS 2 节点在当前 Windows 开发机上未执行；离线核心、15 个单元测试和 PNG 截图
-均已实际运行。ROS 2 Humble 的启动验证需要在 Ubuntu 虚拟机中完成。</p>
+<p>ROS 2 节点在当前 Windows 开发机上未执行；离线核心、35 个单元测试和两张 PNG 均已实际运行。
+ROS 2 Humble 的启动验证需要在 Ubuntu 虚拟机中完成。</p>
 <h2 id="_9">验证</h2>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>discover<span class="w"> </span>-s<span class="w"> </span>tests<span class="w"> </span>-v
 </code></pre></div>
-<p>15 个测试全部通过（约 0.04 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
+<p>35 个测试全部通过（约 0.2 s），覆盖多边形边界、高度层过滤、缓冲区、迎头冲突、
 平行安全航迹、时间窗内告警与窗口外更近的接近、非法 <code>horizon_s</code>、只有 warning 级
 冲突时的状态、<code>minimum_separation_m</code> 与冲突同窗口、空场景拒绝、<code>check</code> 命令的
-退出码（0/1/2），以及演示场景。</p>
+退出码（0/1/2）、演示场景，以及逐时刻距离序列、CSV 导出与曲线绘制（固定步长与非整除
+窗口的末点、三机覆盖全部机对、<code>horizon_s</code> 截断、单机只写表头、CSV 往返与换行符、
+<code>step_s</code>/<code>horizon_s</code> 的零/负数/NaN/Inf 校验、<code>--csv</code>/<code>--plot</code>、空数据的图）。</p>
 <h2 id="_10">已知限制</h2>
 <ul>
 <li>线性插值不适用于极高机动或采样率过低的轨迹；</li>
