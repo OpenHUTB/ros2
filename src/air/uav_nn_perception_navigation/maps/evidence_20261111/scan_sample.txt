@@ -1,6 +1,6 @@
-header: 
+header:
   seq: 246
-  stamp: 
+  stamp:
     secs: 1794366487
     nsecs: 605087041
   frame_id: "laser"
