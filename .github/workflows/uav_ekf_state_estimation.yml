@@ -1,0 +1,100 @@
+name: UAV EKF state estimation
+
+on:
+  push:
+    paths:
+      - 'src/air/uav_ekf_state_estimation/**'
+      - '.github/workflows/uav_ekf_state_estimation.yml'
+  pull_request:
+    paths:
+      - 'src/air/uav_ekf_state_estimation/**'
+      - '.github/workflows/uav_ekf_state_estimation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Ubuntu 22.04 / ROS 2 Humble
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    container:
+      image: ros:humble-ros-base
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install package dependencies
+        run: |
+          apt-get -o Acquire::Retries=3 update
+          apt-get install -y --no-install-recommends \
+            python3-colcon-common-extensions \
+            python3-numpy \
+            python3-pytest \
+            ros-humble-ros2launch
+
+      - name: Build package
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build \
+            --packages-select uav_ekf_state_estimation \
+            --event-handlers console_direct+
+
+      - name: Run package pytest suite
+        working-directory: src/air/uav_ekf_state_estimation
+        run: python3 -m pytest tests -q
+
+      - name: Run colcon tests
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test \
+            --packages-select uav_ekf_state_estimation \
+            --event-handlers console_direct+
+          colcon test-result --verbose
+
+      - name: Require all package tests to be discovered
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test-result --all --verbose \
+            | tee colcon-test-results.txt
+          grep -Fq \
+            "Summary: 18 tests, 0 errors, 0 failures" \
+            colcon-test-results.txt
+
+      - name: Verify Ctrl+C shutdown
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          set +e
+          timeout --signal=INT --kill-after=5s 5s \
+            ros2 launch uav_ekf_state_estimation main.launch.py \
+            > ros_node_sigint.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ] \
+            && [ "$status" -ne 130 ]; then
+            cat ros_node_sigint.log
+            exit "$status"
+          fi
+          if grep -E "rcl_shutdown already called|RCLERROR" \
+            ros_node_sigint.log; then
+            cat ros_node_sigint.log
+            exit 1
+          fi
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uav-ekf-state-estimation-logs
+          path: |
+            log/
+            ros_node_sigint.log
+            colcon-test-results.txt
+          if-no-files-found: warn
