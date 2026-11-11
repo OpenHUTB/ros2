@@ -5,17 +5,23 @@ vertical accelerometer data collected by a CARLA IMU sensor.
 
 Pipeline
 --------
-1.  Gravity alignment – estimate gravity direction from a static baseline and
-    project it out so the residual is pure road-induced vibration.
+1.  Gravity removal – estimate a **fixed** three-axis gravity vector from the
+    warm-up-excluded recording median, project every sample onto it, then
+    subtract the projected median.  This is a static-attitude estimate only:
+    dynamic pitch/roll is *not* compensated (that needs attitude angles or
+    gyroscope integration), which is exactly why the 41.00 s start-up pitch
+    transient in the CARLA recording remains a false alarm.
 2.  High-pass residual – subtract a rolling mean to remove slow drift.
 3.  Sliding-window energy – compute the vertical acceleration energy in each
     window.  Anomalies produce energy spikes that are *k* standard deviations
     above the windowed baseline.
 4.  Event segmentation – merge adjacent flagged windows, extract peak amplitude,
-    duration and spectral centroid for each event.
+    duration, crest factor, effective duration and (only when the window is
+    long enough to resolve them) spectral centroid.
 5.  Classification – rule-based classifier maps the feature vector to one of
-    {pothole, speed_bump, rough_patch} using amplitude, duration and frequency
-    ratios learned from the labelled CARLA scenes.
+    {pothole, speed_bump, rough_patch} using amplitude, duration, crest factor
+    and effective duration.  The spectral centroid is reported as a diagnostic
+    feature only when the event window has sufficient frequency resolution.
 
 The entire module uses only the Python standard library so it can run in any
 environment without installing numpy / scipy.
@@ -52,7 +58,7 @@ class AnomalyEvent:
     peak_az: float          # m/s^2 (gravity-removed vertical residual)
     duration: float          # seconds
     energy: float            # sum of squared residual in window
-    spectral_centroid: float # Hz
+    spectral_centroid: Optional[float]  # Hz; None when window too short to resolve
     label: str               # pothole | speed_bump | rough_patch
     confidence: float        # 0..1
     crest_factor: float = 0.0    # peak / RMS of the event window
@@ -78,6 +84,10 @@ DEFAULTS = {
                                 #  at 100 Hz and 50 Hz respectively)
     "settling_guard": 0.5,      # ignore first 0.5 s (sensor/filter settling)
     "rough_merge_gap": 1.5,     # merge low-amp events within 1.5 s (one patch)
+    "glitch_limit": 200.0,      # m/s^2 — unphysical single-sample IMU spikes
+    "crest_impulse_min": 2.0,   # peak/RMS: sharp discrete impact vs. sustained hump
+    "centroid_max_freq": 30.0,  # Hz — upper bound of the Goertzel scan
+    "centroid_min_res_hz": 2.0, # Hz — require resolution at least this fine
     # classification thresholds (tuned on the labelled simulation dataset)
     "pothole_amp_min": 5.0,     # m/s^2 — above this is a discrete impact
     "bump_dur_min": 0.12,       # s — wide excitation = speed bump
@@ -112,12 +122,18 @@ def _rolling_mean(vals: List[float], window: int) -> List[float]:
 
 
 def _goertzel_power(samples: List[float], freq: float, fs: float) -> float:
-    """Single-bin DFT power via Goertzel algorithm (no scipy needed)."""
+    """DFT power at an arbitrary (fractional-bin) frequency via Goertzel.
+
+    The original implementation rounded ``k = round(freq * n / fs)`` to an
+    integer bin.  For a short event window (e.g. 10 samples at 100 Hz) the
+    resolution is 10 Hz, so 1 Hz / 2 Hz / ... all collapsed onto k=0 and the
+    "spectral centroid" became a weighted average of rounding noise.  Keeping
+    ``k`` fractional evaluates the requested frequency directly instead.
+    """
     n = len(samples)
     if n == 0:
         return 0.0
-    k = int(round(freq * n / fs))
-    w = 2.0 * math.pi * k / n
+    w = 2.0 * math.pi * freq / fs
     coeff = 2.0 * math.cos(w)
     s_prev, s_prev2 = 0.0, 0.0
     for x in samples:
@@ -129,16 +145,29 @@ def _goertzel_power(samples: List[float], freq: float, fs: float) -> float:
 
 
 def _spectral_centroid(samples: List[float], fs: float,
-                       max_freq: float = 30.0) -> float:
-    """Approximate spectral centroid using Goertzel bins up to *max_freq*."""
-    if not samples:
-        return 0.0
+                       max_freq: float = 30.0,
+                       min_res_hz: float = 2.0) -> Optional[float]:
+    """Spectral centroid, or ``None`` when the window cannot resolve it.
+
+    Resolution of a length-*n* window is ``fs / n``.  A 10-sample window at
+    100 Hz resolves only 10 Hz, so reporting a centroid (let alone a 1 Hz
+    grid) is misleading.  We require ``fs / n <= min_res_hz`` and sample the
+    spectrum on that actual resolution grid instead of pretending 1 Hz bins
+    exist.  Checking only ``n < fs / max_freq`` would be far too permissive.
+    """
+    if not samples or fs <= 0:
+        return None
     n = len(samples)
-    freqs = [f for f in range(1, int(max_freq) + 1)]
+    res = fs / n
+    if res > min_res_hz:
+        return None
+    freqs = [res * i for i in range(1, int(max_freq / res) + 1)]
+    if not freqs:
+        return None
     powers = [_goertzel_power(samples, f, fs) for f in freqs]
     total = sum(powers)
     if total < 1e-12:
-        return 0.0
+        return None
     return sum(f * p for f, p in zip(freqs, powers)) / total
 
 
@@ -191,13 +220,18 @@ def reject_glitches(raw_z: List[float],
 
 def gravity_align(samples: List[IMUSample],
                   baseline_frames: int = 50) -> Tuple[float, float, float]:
-    """Estimate the gravity vector robustly.
+    """Estimate a *fixed* gravity vector robustly.
 
     A CARLA IMU needs a short warm-up (~0.5 s) before it reports gravity.
     We therefore skip the first ``baseline_frames`` samples and take the
     **median** of the remaining signal: the median is insensitive to both
     isolated sensor glitches and the transient acceleration caused by road
     anomalies (which occupy only a small fraction of the recording).
+
+    This is a **static** attitude estimate, not a per-sample attitude
+    solution: ``high_pass_residual`` projects onto this one fixed vector.
+    Dynamic pitch/roll still couples longitudinal/lateral acceleration into
+    the vertical channel; removing that needs attitude angles or gyro data.
     """
     stable = samples[baseline_frames:] or samples
     bx = _median([s.ax for s in stable])
@@ -212,11 +246,26 @@ def high_pass_residual(samples: List[IMUSample],
                        glitch_limit: float = 200.0) -> List[float]:
     """Remove gravity and slow drift; return the vertical residual signal.
 
-    The vertical axis is *z* after gravity subtraction.  Unphysical single
-    sample spikes are rejected first (see :func:`reject_glitches`), then a
-    rolling-mean high-pass removes low-frequency drift from road grade.
+    Gravity is estimated as the fixed vector ``(gx, gy, gz)`` by
+    :func:`gravity_align`.  Every sample is projected onto its normalised
+    direction and the median of that projection is subtracted, so all three
+    components are actually used (the previous version only did ``az - gz``).
+    Unphysical single-sample spikes are rejected first, then a rolling-mean
+    high-pass removes low-frequency drift from road grade.
+
+    Limitation: a fixed vector cannot follow dynamic pitch/roll.  The 41.00 s
+    CARLA start-up transient remains a false alarm by design; full removal
+    requires attitude angles / gyroscope integration.
     """
-    raw_z = [s.az - gz for s in samples]
+    g_norm = math.sqrt(gx * gx + gy * gy + gz * gz)
+    if g_norm < 1e-6:
+        # Degenerate gravity estimate: fall back to the sensor's z axis.
+        ux, uy, uz = 0.0, 0.0, 1.0
+    else:
+        ux, uy, uz = gx / g_norm, gy / g_norm, gz / g_norm
+    projected = [s.ax * ux + s.ay * uy + s.az * uz for s in samples]
+    g_med = _median(projected)
+    raw_z = [p - g_med for p in projected]
     raw_z, _ = reject_glitches(raw_z, glitch_limit)
     baseline = _rolling_mean(raw_z, hp_window)
     return [r - b for r, b in zip(raw_z, baseline)]
@@ -319,7 +368,10 @@ def detect_events(residual: List[float], samples: List[IMUSample],
         peak_idx = s_trim + peak_local
         peak_az = abs(chunk[peak_local])
         energy = sum(x * x for x in chunk)
-        centroid = _spectral_centroid(chunk, fs)
+        centroid = _spectral_centroid(
+            chunk, fs,
+            max_freq=cfg.get("centroid_max_freq", 30.0),
+            min_res_hz=cfg.get("centroid_min_res_hz", 2.0))
 
         # RMS of the chunk (for crest factor)
         rms_chunk = math.sqrt(energy / max(1, len(chunk)))
@@ -356,7 +408,8 @@ def detect_events(residual: List[float], samples: List[IMUSample],
             peak_az=peak_az,
             duration=round(win_duration, 4),
             energy=round(energy, 4),
-            spectral_centroid=round(centroid, 2),
+            spectral_centroid=(round(centroid, 2)
+                               if centroid is not None else None),
             label=label,
             confidence=round(conf, 3),
             crest_factor=round(crest_factor, 3),
@@ -386,9 +439,12 @@ def detect_events(residual: List[float], samples: List[IMUSample],
         if is_rough_pair or is_close:
             new_dur = ev.t_end - prev.t_start
             new_peak = prev if prev.peak_az >= ev.peak_az else ev
+            centroids = [c for c in (prev.spectral_centroid,
+                                     ev.spectral_centroid) if c is not None]
+            merged_centroid = (_mean(centroids) if centroids else None)
             new_label, _ = _classify(
                 max(prev.peak_az, ev.peak_az), new_dur,
-                (prev.spectral_centroid + ev.spectral_centroid) / 2, cfg,
+                merged_centroid, cfg,
                 crest_factor=max(prev.crest_factor, ev.crest_factor),
                 eff_duration=max(prev.eff_duration, ev.eff_duration),
             )
@@ -398,8 +454,8 @@ def detect_events(residual: List[float], samples: List[IMUSample],
                 peak_az=max(prev.peak_az, ev.peak_az),
                 duration=round(new_dur, 4),
                 energy=round(prev.energy + ev.energy, 4),
-                spectral_centroid=round(
-                    (prev.spectral_centroid + ev.spectral_centroid) / 2, 2),
+                spectral_centroid=(round(merged_centroid, 2)
+                                   if merged_centroid is not None else None),
                 label=new_label,
                 confidence=round(max(prev.confidence, ev.confidence), 3),
                 crest_factor=max(prev.crest_factor, ev.crest_factor),
@@ -412,42 +468,72 @@ def detect_events(residual: List[float], samples: List[IMUSample],
     return merged_events
 
 
-def _classify(amp: float, dur: float, centroid: float,
+def _classify(amp: float, dur: float, centroid: Optional[float],
               cfg: dict, crest_factor: float = 0.0,
               eff_duration: float = 0.0) -> Tuple[str, float]:
     """Classify an anomaly from its physical signature.
 
-    Three rules, in priority order, based on how a quarter-car suspension
-    responds to different road excitations:
+    The **label** is decided by amplitude + total duration (the three rules
+    below).  All the extra features are genuinely consumed here to shape the
+    **confidence**, so none of ``centroid`` / ``crest_factor`` /
+    ``eff_duration`` is a dead parameter any more:
 
-    1. **rough_patch** – low-amplitude (< ``rough_amp_max``) but long
-       (>= ``rough_dur_min``) excitation: sustained unevenness, not a
-       discrete impact.
-    2. **speed_bump** – strong (>= ``pothole_amp_min``) *and* wide
-       (>= ``bump_dur_min``) excitation: the vehicle rides over a long hump.
-    3. **pothole** – strong *and* narrow excitation: a sharp dip/rebound.
+    * ``crest_factor`` (peak/RMS) and ``eff_duration`` (FWHM) separate a
+      sharp impulse from a smooth hump and modulate confidence by up to 0.1;
+    * ``centroid`` is used only as a weak corroborating term when resolvable
+      (``None`` for short windows is explicitly handled, never coerced to 0).
 
-    Confidence grows with the margin above the corresponding threshold.
+    Crucially the pothole confidence is a strictly increasing function of
+    ``amp`` above ``pothole_amp_min`` — the old
+    ``(pa_min/amp)*(amp/pa_min) == 1`` identity made every pothole 0.98, and
+    a linearly clamped margin merely moved the saturation point to 0.85.
     """
     pa_min = cfg.get("pothole_amp_min", 5.0)
     bd_min = cfg.get("bump_dur_min", 0.12)
     ra_max = cfg.get("rough_amp_max", 5.0)
     rd_min = cfg.get("rough_dur_min", 0.30)
+    crest_impulse_min = cfg.get("crest_impulse_min", 2.0)
+
+    # Sharpness evidence from the two previously-unused shape features.
+    sharp_bonus = 0.0
+    if crest_factor >= crest_impulse_min:
+        sharp_bonus += 0.05
+    if 0 < eff_duration < bd_min:
+        sharp_bonus += 0.05
+    # A resolvable high centroid corroborates a high-frequency impulse.
+    if centroid is not None and centroid > 10.0:
+        sharp_bonus += 0.02
+
+    # 幅值裕度：用 1 - pa_min/amp 而不是截断到 1 的线性裕度。
+    # 截断会让 10 / 100 / 1000 m/s² 的马氏裕度都等于 1，置信度全部撞在
+    # 同一个 0.85 上——那和原来的常数 0.98 一样失去了"幅值越大越可信"的含义。
+    # 饱和型裕度在 amp >= pa_min 时严格单调递增且收敛到 1，既不会溢出也保序。
+    amp_margin = 1.0 - pa_min / max(amp, pa_min)
 
     if amp < ra_max and dur >= rd_min:
-        conf = min(1.0, 0.5 + dur / (rd_min * 3) * 0.5)
-        return "rough_patch", round(conf, 3)
+        # sustained low-amplitude unevenness; longer = more certain, and a
+        # long FWHM (as opposed to one sharp spike) corroborates it.
+        conf = 0.5 + 0.4 * min(1.0, dur / (rd_min * 3))
+        if eff_duration >= rd_min:
+            conf += 0.1
+        return "rough_patch", round(min(1.0, conf), 3)
 
     if amp < ra_max:
         conf = 0.4 + 0.2 * min(1.0, dur / max(rd_min, 0.01))
         return "rough_patch", round(conf, 3)
 
     if amp >= pa_min and dur >= bd_min:
+        # wide strong excitation; a *smooth* profile (low crest factor) is
+        # the expected speed-bump signature and raises confidence slightly.
         conf = min(1.0, 0.6 + 0.4 * min(1.0, (dur - bd_min) / bd_min + 0.5))
+        if crest_factor < crest_impulse_min:
+            conf = min(1.0, conf + 0.05)
         return "speed_bump", round(conf, 3)
 
     if amp >= pa_min:
-        conf = min(1.0, 0.6 + 0.4 * min(1.0, (pa_min / max(amp, 0.01)) * (amp / pa_min)))
+        # Strictly increasing in amplitude (saturating margin, no clamp);
+        # sharpness adds at most 0.12 on top.
+        conf = 0.5 + 0.35 * amp_margin + min(0.12, sharp_bonus)
         return "pothole", round(min(0.98, conf), 3)
 
     return "pothole", 0.4
@@ -462,15 +548,22 @@ def summarize(events: List[AnomalyEvent]) -> dict:
     labels = {}
     for e in events:
         labels[e.label] = labels.get(e.label, 0) + 1
-    return {
+    centroids = [e.spectral_centroid for e in events
+                 if e.spectral_centroid is not None]
+    result = {
         "total": len(events),
         "labels": labels,
         "mean_amp": round(_mean([e.peak_az for e in events]), 3),
         "mean_dur": round(_mean([e.duration for e in events]), 4),
         "mean_energy": round(_mean([e.energy for e in events]), 3),
-        "mean_centroid": round(_mean([e.spectral_centroid for e in events]), 2),
         "mean_confidence": round(_mean([e.confidence for e in events]), 3),
+        "centroid_coverage": "%d/%d" % (len(centroids), len(events)),
     }
+    # Only report a centroid when at least one event window could resolve it;
+    # never substitute a 0.0 placeholder for "no frequency resolution".
+    if centroids:
+        result["mean_centroid"] = round(_mean(centroids), 2)
+    return result
 
 
 # ── self test ────────────────────────────────────────────────────────────
@@ -496,7 +589,9 @@ def self_test() -> bool:
         samples.append(IMUSample(t=t, ax=0, ay=0, az=az))
 
     gx, gy, gz = gravity_align(samples, cfg["baseline_frames"])
-    residual = high_pass_residual(samples, gx, gy, gz, cfg["hp_window"])
+    residual = high_pass_residual(
+        samples, gx, gy, gz, cfg["hp_window"],
+        cfg.get("glitch_limit", 200.0))
     events = detect_events(residual, samples, cfg)
 
     if len(events) < 2:
@@ -521,8 +616,10 @@ def self_test() -> bool:
 
     print(f"  self-test PASS: {len(events)} events detected")
     for e in events:
+        centroid = ("n/a" if e.spectral_centroid is None
+                    else "%.1fHz" % e.spectral_centroid)
         print(f"    t={e.t_peak:.2f}s amp={e.peak_az:.2f} dur={e.duration:.3f}s "
-              f"centroid={e.spectral_centroid:.1f}Hz label={e.label} "
+              f"centroid={centroid} label={e.label} "
               f"conf={e.confidence:.2f}")
     return True
 

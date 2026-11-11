@@ -12,10 +12,11 @@ Modes
 
 Two datasets ship with the module:
 
-* ``data/imu_drive.json``   — labelled physics simulation (ground truth,
-  used for the quantitative metrics)
-* ``data/carla_drive.json`` — real live CARLA Town10HD recording (no ground
-  truth, used for qualitative validation)
+* ``data/imu_drive.json``   — labelled physics simulation (7 ground-truth
+  events, used for the quantitative metrics)
+* ``data/carla_drive.json`` — real live CARLA Town10HD recording with **6
+  ground-truth excitation events**, also used for quantitative evaluation
+  (one start-up pitch transient produces a reproducible false alarm)
 
 Examples
 --------
@@ -28,7 +29,7 @@ Examples
     # quantitative evaluation on the labelled physics dataset
     python main.py --data data/imu_drive.json --results sim_results.json
 
-    # qualitative validation on real CARLA data
+    # quantitative evaluation on the labelled CARLA recording (6 GT events)
     python main.py --data data/carla_drive.json --results carla_results.json
 
     # full pipeline: collect from CARLA + detect + plot
@@ -109,7 +110,9 @@ def run_offline(data_path: str, output_dir: str, make_plot: bool = True,
     gx, gy, gz = gravity_align(samples, cfg["baseline_frames"])
     print(f"  Gravity estimate: ({gx:.3f}, {gy:.3f}, {gz:.3f}) m/s^2")
 
-    residual = high_pass_residual(samples, gx, gy, gz, cfg["hp_window"])
+    residual = high_pass_residual(
+        samples, gx, gy, gz, cfg["hp_window"],
+        cfg.get("glitch_limit", 200.0))
 
     # compute baseline noise stats
     baseline_std = 0.0
@@ -130,7 +133,12 @@ def run_offline(data_path: str, output_dir: str, make_plot: bool = True,
         print(f"  Mean peak amplitude: {summary['mean_amp']:.2f} m/s^2")
         print(f"  Mean duration:       {summary['mean_dur']:.4f} s")
         print(f"  Mean energy:         {summary['mean_energy']:.2f}")
-        print(f"  Mean centroid freq:  {summary['mean_centroid']:.1f} Hz")
+        centroid = summary.get("mean_centroid")
+        print("  Mean centroid freq:  %s" %
+              ("n/a (no resolvable event windows; coverage %s)"
+               % summary["centroid_coverage"] if centroid is None
+               else "%.1f Hz (coverage %s)"
+               % (centroid, summary["centroid_coverage"])))
         print(f"  Mean confidence:     {summary['mean_confidence']:.2f}")
 
     if verbose:
@@ -139,8 +147,10 @@ def run_offline(data_path: str, output_dir: str, make_plot: bool = True,
             loc_str = ""
             if ev.lat is not None:
                 loc_str = f"  ({ev.lat:.6f}, {ev.lon:.6f})"
+            centroid = ("n/a" if ev.spectral_centroid is None
+                        else "%.1fHz" % ev.spectral_centroid)
             print(f"    [{i+1}] t={ev.t_peak:.2f}s  amp={ev.peak_az:.2f} m/s^2  "
-                  f"dur={ev.duration:.3f}s  f={ev.spectral_centroid:.1f}Hz  "
+                  f"dur={ev.duration:.3f}s  f={centroid}  "
                   f"label={ev.label}  conf={ev.confidence:.2f}{loc_str}")
 
     # save results
