@@ -87,6 +87,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros2_qos_compatibility_lab.md)
 
 ## 2. 人形机器人 <span id='humanoid'></span>
+* [关节 Stribeck 摩擦辨识与前馈补偿](./humanoid/joint_friction_identification.md) —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
