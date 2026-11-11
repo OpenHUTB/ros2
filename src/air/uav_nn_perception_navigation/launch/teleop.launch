@@ -1,0 +1,19 @@
+<launch>
+  <!-- AirSim 运行在 Windows 主机上，虚拟机/子系统里通过该 IP 访问 -->
+  <arg name="airsim_ip" default="127.0.0.1"/>
+  <arg name="vehicle_name" default="Drone_1"/>
+  <arg name="auto_takeoff" default="true"/>
+
+  <node name="airsim_bridge" pkg="uav_nn_perception_navigation" type="airsim_bridge.py" output="screen">
+    <param name="airsim_ip" value="$(arg airsim_ip)"/>
+    <param name="vehicle_name" value="$(arg vehicle_name)"/>
+    <param name="auto_takeoff" value="$(arg auto_takeoff)"/>
+    <param name="takeoff_height" value="3.0"/>
+  </node>
+
+  <!-- 键盘节点需要真实终端，请在本终端里按键 -->
+  <node name="keyboard_teleop" pkg="uav_nn_perception_navigation" type="keyboard_teleop.py" output="screen">
+    <param name="speed" value="3.0"/>
+    <param name="turn_rate" value="1.0"/>
+  </node>
+</launch>
