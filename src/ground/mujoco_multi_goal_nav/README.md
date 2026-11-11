@@ -63,36 +63,6 @@ python3 -m unittest discover -s test -v
 8 项用例全部通过（目标点常量、参数范围、场景路径回退、目标标记 `contype/conaffinity` 为 0、
 `lock_pose()` 复位姿态），不启动仿真、约 0.1 s 跑完。
 
-### 通过 launch（ROS Noetic）
-
-```bash
-cd ~/catkin_ws && catkin_make && source devel/setup.bash
-roslaunch mujoco_multi_goal_nav main.launch                    # 带窗口
-roslaunch mujoco_multi_goal_nav main.launch nogui:=true        # 无窗口
-```
-
-`nogui` 由 `main.launch` 里两个 `<node>` 的 `if` / `unless` 选分支，不带窗口的那支追加 `--nogui`；
-刻意不用 `eval` 表达式，因为 roslaunch 解析 substitution 时按括号配对，表达式里的 `(` 会报
-`RLException: Invalid left parenthesis`。
-
-#### launch 启动失败时的排查顺序
-
-```bash
-source /opt/ros/noetic/setup.bash
-cd ~/catkin_ws && catkin_make && source devel/setup.bash
-
-rospack find mujoco_multi_goal_nav                                            # 包能不能找到
-ls -l $(rospack find mujoco_multi_goal_nav)/../../lib/mujoco_multi_goal_nav/   # install 产物
-roslaunch mujoco_multi_goal_nav main.launch nogui:=true
-```
-
-| 报错 / 现象 | 原因 | 处理 |
-|---|---|---|
-| `[main.launch] is neither a launch file in package [mujoco_multi_goal_nav]` | 没 `catkin_make` 或没 `source`，或包不在 `~/catkin_ws/src` 下 | 先 `catkin_make` 再 `source devel/setup.bash`；确认目录层级 |
-| `Cannot locate node of type [main.py]` | `lib/<pkg>/main.py` 没生成或没有执行位 | 重新 `catkin_make`；确认 `CMakeLists.txt` 里 `catkin_install_python(PROGRAMS main.py)` |
-| 节点起来后立刻退出，日志里有 `缺少 MuJoCo` | 当前 Python 环境没装 MuJoCo | `pip3 install -r requirements.txt` |
-| `roslaunch: command not found` / `ROS_VERSION=2` | 环境是 ROS 2，本包是 catkin(ROS 1) 包 | 直接 `python3 main.py --nogui`，或换 ROS 1 Noetic 环境 |
-
 ## 实测结果（`python3 main.py --nogui`；MuJoCo 4.0.0 与 2.3.7 双版本复跑，数值一致）
 
 | 目标点 | 累计用时 / s | 到位误差 / m |
