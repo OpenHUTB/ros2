@@ -1,0 +1,26 @@
+<launch>
+  <!--
+    main.launch —— MuJoCo 小车多目标导航（ROS 1 / Noetic）
+
+    默认带窗口运行。无显示器环境改用：roslaunch mujoco_multi_goal_nav main.launch nogui:=true
+    运行前：cd ~/catkin_ws && catkin_make && source devel/setup.bash
+
+    注意：nogui 用节点级 if / unless 选分支，不在 args 里做 eval 表达式替换。
+    roslaunch 解析 substitution args 时按括号配对，eval 表达式内部的 '('
+    会直接触发 RLException: Invalid left parenthesis '(' in substitution args。
+  -->
+  <arg name="nogui" default="false"/>
+  <arg name="duration" default="40"/>
+
+  <!-- 带窗口（默认） -->
+  <node unless="$(arg nogui)"
+        pkg="mujoco_multi_goal_nav" type="main.py" name="mujoco_multi_goal_nav"
+        output="screen" required="true"
+        args="--duration $(arg duration)"/>
+
+  <!-- 无窗口（nogui:=true） -->
+  <node if="$(arg nogui)"
+        pkg="mujoco_multi_goal_nav" type="main.py" name="mujoco_multi_goal_nav"
+        output="screen" required="true"
+        args="--duration $(arg duration) --nogui"/>
+</launch>

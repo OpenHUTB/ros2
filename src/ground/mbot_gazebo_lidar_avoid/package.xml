@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mbot_gazebo_lidar_avoid</name>
+  <version>0.1.0</version>
+  <description>
+    Mbot 差速底盘在 Gazebo 中的 2D 激光雷达阈值避障（ROS 1 Noetic）。
+    包内自带 URDF、world 与 launch，可独立运行。
+  </description>
+
+  <maintainer email="3608156082@qq.com">tangwang-0614</maintainer>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/OpenHUTB/ros2</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <exec_depend>gazebo_ros</exec_depend>
+  <!-- libgazebo_ros_diff_drive.so / libgazebo_ros_laser.so 由 gazebo_plugins 提供 -->
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>rosparam</exec_depend>
+</package>
