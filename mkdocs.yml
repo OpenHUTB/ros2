@@ -74,6 +74,7 @@ nav:
         - 章节首页: './chapter/chap8.md'
         - 机器视觉多机器人蚁群编队: './ant/README.md'
         - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
+        - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
@@ -102,6 +103,7 @@ nav:
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
+    - 人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比: './humanoid/humanoid_imu_attitude.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
 - 四足机器人:
@@ -295,6 +297,7 @@ nav:
     - 无人机视觉感知置信度退化保护: './air/uav_perception_confidence_guard.md'
     - 无人机应急着陆点安全评估: './air/uav_emergency_landing_selector.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
+    - MuJoCo 失落公园无人机端到端视觉转向: './air/mujoco_abandoned_park_uav_visual_steering.md'
     - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
@@ -388,4 +391,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
