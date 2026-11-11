@@ -1,0 +1,56 @@
+# 换挡策略与扭矩需求 —— 默认参数
+#
+# 每一行都可以被 launch 的同名参数覆盖，改完不用重新编译。
+
+vehicle:
+  mass: 1500.0            # 整备质量 kg
+  wheel_radius: 0.31      # 车轮半径 m
+  frontal_area: 2.20      # 迎风面积 m²
+  drag_coeff: 0.32        # 风阻系数
+  rolling: 0.015          # 滚阻系数
+
+gearbox:
+  final_drive: 4.10       # 主减速比
+  efficiency: 0.92        # 传动效率
+  ratio_1: 3.55           # 一挡传动比
+  ratio_2: 2.10           # 二挡传动比
+  ratio_3: 1.40           # 三挡传动比
+  ratio_4: 1.00           # 四挡传动比
+
+policy:
+  upshift_rpm: 2600.0     # 升挡转速线
+  downshift_rpm: 1500.0   # 降挡转速线
+  min_dwell: 0.50         # 换挡后最短保持时间 s
+  idle_rpm: 800.0         # 怠速转速
+  redline_rpm: 6500.0     # 红线转速
+
+engine:
+  peak_torque: 220.0      # 峰值扭矩 N·m
+  peak_rpm: 4200.0        # 峰值扭矩转速
+
+profile:
+  accel: 1.00             # 加速段加速度 m/s²
+  max_speed: 30.00        # 定速段车速 m/s
+  hold_seconds: 2.00      # 定速保持时长 s
+  decel: 2.00             # 减速段减速度 m/s²
+
+sim:
+  step: 0.05              # 仿真步长 s
+  closed_loop: true       # true=闭环执行（踏板→受限扭矩→车速积分）
+
+driver:
+  throttle_gain: 2.00     # 速度偏差到踏板的增益（1/(m/s)）
+  brake_gain: 2.00        # 速度偏差到刹车的增益（1/(m/s)）
+  max_cmd_accel: 2.00     # 单帧最大指令加速度 m/s²
+
+check:
+  track_tolerance: 2.50   # 跟踪误差容差 m/s（闭环断言用）
+
+rate:
+  publish_hz: 10.0        # 保活与重发的频率 Hz
+
+topic:
+  gear: /gear/current     # 当前挡位（Int32）
+  report: /gear/report    # 文字报告（String）
+  curve: /gear/curve      # 挡位条带与扭矩柱（String）
+  shift: /gear/shift      # 换挡事件表（String）
