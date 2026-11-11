@@ -75,6 +75,7 @@ nav:
         - 机器视觉多机器人蚁群编队: './ant/README.md'
         - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
         - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
+        - MuJoCo 二连杆机械臂 IK 画圆: './chapter/mujoco_arm_ik.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
@@ -85,6 +86,7 @@ nav:
     - 基于三次样条插值的双足多步态平滑切换: './humanoid/biped_cubic_spline_gait_switch.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - 机械臂手眼标定仿真: './humanoid/hand_eye_calibration.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
@@ -309,6 +311,7 @@ nav:
     - MuJoCo 失落公园无人机端到端视觉转向: './air/mujoco_abandoned_park_uav_visual_steering.md'
     - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
+    - 多旋翼单桨失效后的悬停可行域: './air/uav_rotor_failure_env.md'
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
     - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
@@ -384,7 +387,8 @@ nav:
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
     - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
-    - A* 路径规划初步验证: './water/rov_astar_planner.md'
+    - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
+
 
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
