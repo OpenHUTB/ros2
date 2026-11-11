@@ -18,7 +18,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from humanoid_voice_command.asr import WhisperASR, default_download_root   # noqa: E402
+from humanoid_voice_command.asr import WhisperASR, default_cache_dir        # noqa: E402
 from humanoid_voice_command.intent import (                               # noqa: E402
     INTENTS,
     IntentClassifier,
@@ -43,7 +43,8 @@ def speed_params(cfg_path: str):
 
 def build_asr(args, lexicon):
     prompt = ', '.join(w for i in INTENTS for w in lexicon.get(i, []))
-    return WhisperASR(model_name=args.model, download_root=default_download_root(),
+    return WhisperASR(model_name=args.model, model_path=args.model_path or None,
+                      download_root=default_cache_dir(),
                       language=args.language,
                       initial_prompt=prompt if args.language.startswith('zh') else None)
 
@@ -60,6 +61,8 @@ def main():
     ap.add_argument('--text', default='', help='直接给文本，跳过语音识别')
     ap.add_argument('--bench', action='store_true', help='测耗时')
     ap.add_argument('--model', default='tiny')
+    ap.add_argument('--model-path', default='',
+                    help='本地 Whisper 权重路径；缺省用缓存或自动下载')
     ap.add_argument('--language', default='zh')
     args = ap.parse_args()
 

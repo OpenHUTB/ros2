@@ -15,7 +15,8 @@ setup(
         ('share/' + package_name + '/config', glob('config/*.yaml')),
         # 意图网络（304 KB，TorchScript）
         ('share/' + package_name + '/weights', glob('weights/*.pt')),
-        # Whisper tiny 权重（72 MB，离线可用；删掉则首次运行时自动下载）
+        # Whisper 权重不在仓库里（72 MB），默认运行时下载到 ~/.cache/whisper；
+        # 若本地放了一份（scripts/download_weights.py --copy-to）则一并安装，断网可用
         ('share/' + package_name + '/weights/whisper', glob('weights/whisper/*.pt')),
         # 预录口令音频（18 条，约 1 MB，避免评测机还要装 TTS）
         ('share/' + package_name + '/audio', glob('audio/*.wav')),

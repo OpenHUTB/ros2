@@ -7,6 +7,13 @@
 2. **意图网络**：字符 1/2/3-gram 哈希特征 + 两层 MLP，用于兜底语音识别给出的
    形近/同音错字（例如 tiny 模型把「左转」识别成「縮转」）。
 
+三道拒识闸门（宁可不动，不可乱动）：
+
+* 文本短于 ``MIN_QUERY_LEN``（2 个字）不参与规则匹配 —— 单字歧义太大，
+  ASR 只吐出一个「右」「停」时多半是听错了；
+* 口令被否定词修饰（「不要前进」「不用停止」）直接判 unknown，且不送网络；
+* 与词表最高 LCS 相似度低于 ``NET_MIN_OVERLAP`` 时直接判 unknown。
+
 两级都不确定时输出 ``unknown``，上层据此不下发速度指令，避免误动作。
 """
 
@@ -52,6 +59,14 @@ NET_MIN_OVERLAP = 0.30
 # 网络判定的最低置信度，低于此值视为 unknown
 NET_THRESHOLD = 0.45
 
+# 短于这个长度的文本不参与规则匹配：单个字歧义太大（「右」「停」「快」），
+# ASR 只吐出一个字时多半是听错了，宁可判 unknown 也不下发运动指令。
+MIN_QUERY_LEN = 2
+# 否定词：紧挨在口令前面时把语义反过来（「不要前进」），直接判 unknown。
+NEGATIONS = ('不要', '不用', '不必', '不准', '不许', '不需要', '不想', '别', '甭', '勿')
+# 网络判出的意图与输入零字符重合时，改用 LCS 候选的下限（「缩转」→ stop 的兜底）
+NET_OVERRIDE_LCS = 0.45
+
 _PUNCT = '，。！？、；：""''（）《》【】,.!?;:"\'()<>[] \t\r\n'
 
 
@@ -83,26 +98,63 @@ def lcs_ratio(a: str, b: str) -> float:
     return 2.0 * prev[-1] / (len(a) + len(b))
 
 
-def rule_match(text: str, lexicon: Dict[str, List[str]],
-               threshold: float = RULE_THRESHOLD) -> Tuple[Optional[str], float]:
-    """返回 (意图, 得分)；无命中时返回 (None, 0.0)。"""
-    norm = normalize_text(text).lower()
-    if not norm:
-        return None, 0.0
+def _negated(norm: str, start: int) -> bool:
+    """关键词前面紧挨着否定词时返回 True（「不要前进」「不用停止」）。"""
+    prefix = norm[:start]
+    return any(prefix.endswith(neg) for neg in NEGATIONS)
+
+
+def rule_lookup(norm: str, lexicon: Dict[str, List[str]],
+                threshold: float = RULE_THRESHOLD) -> Tuple[Optional[str], float, str]:
+    """规则层内部实现，返回 ``(意图, 得分, 状态)``。
+
+    状态取值：
+
+    * ``hit``：命中，意图有效；
+    * ``negated``：命中但被否定词修饰，应判 unknown；
+    * ``short``：文本太短（单字），不参与规则匹配；
+    * ``miss``：没命中，返回的是 LCS 最高的候选与得分。
+
+    ``miss`` 时第一个元素是**最接近的候选意图**（供网络兜底时对照），
+    调用方若要判断是否命中，请看第三个元素。
+    """
+    if len(norm) < MIN_QUERY_LEN:
+        return None, 0.0, 'short'
     best_intent, best_score = None, 0.0
     for intent, keywords in lexicon.items():
         for kw in keywords:
             kw_norm = normalize_text(kw).lower()
             if not kw_norm:
                 continue
-            if kw_norm in norm or norm in kw_norm:
-                return intent, 1.0
+            pos = norm.find(kw_norm)
+            if pos >= 0:
+                if _negated(norm, pos):
+                    return None, 1.0, 'negated'
+                return intent, 1.0, 'hit'
+            # 输入是关键词的子串（漏字），长度够才算命中；单字已在上面挡掉
+            if norm in kw_norm:
+                return intent, 1.0, 'hit'
             score = lcs_ratio(norm, kw_norm)
             if score > best_score:
                 best_intent, best_score = intent, score
     if best_score >= threshold:
-        return best_intent, best_score
-    return None, best_score
+        return best_intent, best_score, 'hit'
+    return best_intent, best_score, 'miss'
+
+
+def rule_match(text: str, lexicon: Dict[str, List[str]],
+               threshold: float = RULE_THRESHOLD) -> Tuple[Optional[str], float]:
+    """返回 (意图, 得分)；无命中或被否定时返回 (None, 得分)。"""
+    intent, score, status = rule_lookup(normalize_text(text).lower(), lexicon, threshold)
+    if status == 'hit':
+        return intent, score
+    return None, score
+
+
+def intent_overlap(intent: str, norm: str, lexicon: Dict[str, List[str]]) -> float:
+    """某个意图的词表与输入的最大 LCS 相似度，用于判断网络结果是否有字面依据。"""
+    return max((lcs_ratio(norm, normalize_text(kw).lower())
+                for kw in lexicon.get(intent, [])), default=0.0)
 
 
 # ----------------------------------------------------------------------
@@ -189,10 +241,14 @@ class IntentClassifier:
 
     # -- 单条 --------------------------------------------------------
     def classify(self, text: str) -> Tuple[str, float, str]:
-        """返回 (意图, 置信度, 判定来源 rule/net/unknown)。"""
-        intent, score = rule_match(text, self.lexicon)
-        if intent is not None:
-            return intent, score, 'rule'
+        """返回 (意图, 置信度, 判定来源 rule/net/lcs/negated/unknown)。"""
+        norm = normalize_text(text).lower()
+        candidate, score, status = rule_lookup(norm, self.lexicon)
+        if status == 'hit':
+            return candidate, score, 'rule'
+        if status == 'negated':
+            # 「不要前进」这类否定句：宁可不动作，也不下发反方向的指令
+            return UNKNOWN, score, 'negated'
         if score < NET_MIN_OVERLAP:
             # 与所有关键词都几乎不重合，说明说的根本不是口令
             return UNKNOWN, score, 'unknown'
@@ -203,9 +259,15 @@ class IntentClassifier:
             conf, idx = float(probs.max()), int(probs.argmax())
             if idx >= len(INTENTS):
                 return UNKNOWN, conf, 'net'
-            if conf >= NET_THRESHOLD:
-                return INTENTS[idx], conf, 'net'
-            return UNKNOWN, conf, 'net'
+            if conf < NET_THRESHOLD:
+                return UNKNOWN, conf, 'net'
+            net_intent = INTENTS[idx]
+            # 网络判出的意图与输入一个字都不重合，说明它只是把错字硬塞进某一类；
+            # 若 LCS 有明显更贴近的候选（「缩转」→ 左转），以 LCS 为准
+            if intent_overlap(net_intent, norm, self.lexicon) == 0.0 \
+                    and candidate is not None and score >= NET_OVERRIDE_LCS:
+                return candidate, score, 'lcs'
+            return net_intent, conf, 'net'
         return UNKNOWN, score, 'unknown'
 
     # -- 批量 --------------------------------------------------------

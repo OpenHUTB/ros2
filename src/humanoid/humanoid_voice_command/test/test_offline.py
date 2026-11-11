@@ -76,6 +76,27 @@ def test_rule_match_rejects_unrelated():
     assert score < 0.6
 
 
+@pytest.mark.parametrize('text', ['右', '前', '停', '快', '慢', '左'])
+def test_rule_match_rejects_single_char(text):
+    """单字歧义太大：ASR 只吐出一个字时不下发任何动作。"""
+    got, score = rule_match(text, DEFAULT_LEXICON)
+    assert got is None, f'单字 {text!r} 不应命中 {got}'
+    assert score == 0.0
+
+
+@pytest.mark.parametrize('text', ['不要前进', '不要右转', '不用停止', '别往前走', '请不要后退'])
+def test_rule_match_rejects_negation(text):
+    """否定句不能走子串路径直接下发反方向指令。"""
+    got, score = rule_match(text, DEFAULT_LEXICON)
+    assert got is None, f'否定句 {text!r} 不应命中 {got}'
+
+
+def test_rule_match_keeps_negation_words_inside_keywords():
+    """「别动」本身就是停止口令，不能当成否定句挡掉。"""
+    assert rule_match('别动', DEFAULT_LEXICON)[0] == 'stop'
+    assert rule_match('停下别动', DEFAULT_LEXICON)[0] == 'stop'
+
+
 def test_hashed_features_deterministic():
     a = hashed_features('前进')
     b = hashed_features('前进')
@@ -109,6 +130,35 @@ def test_classifier_unknown_for_noise():
     assert intent == 'unknown'
 
 
+@pytest.mark.skipif(not os.path.exists(WEIGHTS), reason='意图网络权重未生成')
+@pytest.mark.parametrize('text', ['右', '停', '快'])
+def test_classifier_unknown_for_single_char(text):
+    """评审指出的漏洞：单字不能绕过拒识闸门直接触发运动。"""
+    clf = IntentClassifier(weights_path=WEIGHTS, lexicon=DEFAULT_LEXICON)
+    intent, _, source = clf.classify(text)
+    assert intent == 'unknown'
+    assert source == 'unknown'
+
+
+@pytest.mark.skipif(not os.path.exists(WEIGHTS), reason='意图网络权重未生成')
+@pytest.mark.parametrize('text', ['不要前进', '不要右转', '不用停止'])
+def test_classifier_negation_goes_unknown(text):
+    """否定句判 unknown，且不走网络（否则网络会硬塞成某个动作）。"""
+    clf = IntentClassifier(weights_path=WEIGHTS, lexicon=DEFAULT_LEXICON)
+    intent, _, source = clf.classify(text)
+    assert intent == 'unknown'
+    assert source == 'negated'
+
+
+@pytest.mark.skipif(not os.path.exists(WEIGHTS), reason='意图网络权重未生成')
+def test_classifier_overrides_net_without_char_overlap():
+    """「缩转」是「左转」的同音误识：网络判 stop，与输入零重合，用 LCS 候选覆盖。"""
+    clf = IntentClassifier(weights_path=WEIGHTS, lexicon=DEFAULT_LEXICON)
+    intent, conf, source = clf.classify('缩转')
+    assert (intent, source) == ('turn_left', 'lcs')
+    assert conf >= 0.45
+
+
 def test_intent_to_command_mapping():
     assert intent_to_command('forward', 1.0, SPEED)['vx'] == pytest.approx(0.30)
     assert intent_to_command('backward', 1.0, SPEED)['vx'] == pytest.approx(-0.20)
@@ -124,6 +174,16 @@ def test_load_lexicon_covers_all_intents():
     lexicon = load_lexicon(cfg)
     for intent in INTENTS:
         assert lexicon.get(intent), f'{intent} 缺少关键词'
+
+
+def test_dedup_repeats_and_cache_dir():
+    from humanoid_voice_command.asr import default_cache_dir, dedup_repeats
+
+    assert dedup_repeats('停止, 停止, 停止') == '停止'
+    assert dedup_repeats('左转左转') == '左转'
+    assert dedup_repeats('前进') == '前进'
+    # 仓库不携带 Whisper 权重，缓存目录就是 whisper 的默认位置
+    assert default_cache_dir().endswith('whisper')
 
 
 def test_audio_assets_present():

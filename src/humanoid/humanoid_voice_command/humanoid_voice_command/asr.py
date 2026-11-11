@@ -2,8 +2,11 @@
 
 设计要点
 --------
-* **离线优先**：优先加载包内 ``weights/whisper/tiny.pt``；包内没有时才回退到
-  ``~/.cache/whisper`` 或联网下载，保证评测机断网也能复现。
+* **权重来源**：仓库不携带 72 MB 的 Whisper 权重，默认按名字加载
+  （``whisper.load_model('tiny')``），权重缓存在 ``~/.cache/whisper``，
+  首次运行联网下载一次，之后完全离线。若本机已有副本（``model_path`` 参数 /
+  ``HUMANOID_VOICE_WHISPER`` 环境变量 / 包内 ``weights/whisper/tiny.pt``），
+  优先使用本地文件，断网也能跑。
 * **短口令的重复幻觉**：Whisper 对 1~2 s 的口令音频容易在尾部反复输出同一个词
   （``停止, 停止, 停止, ...``）。原因是 30 s 补零段被当成语音继续解码。
   关闭时间戳输出（``without_timestamps=True``）可消除该现象，同时再对结果做一次
@@ -69,6 +72,7 @@ class WhisperASR:
     """Whisper tiny 的轻量封装。"""
 
     def __init__(self, model_name: str = 'tiny',
+                 model_path: Optional[str] = None,
                  download_root: Optional[str] = None,
                  language: str = 'zh',
                  initial_prompt: Optional[str] = None):
@@ -77,11 +81,18 @@ class WhisperASR:
         self.language = language
         self.initial_prompt = initial_prompt
         t0 = time.time()
-        kwargs = {}
-        if download_root:
-            os.makedirs(download_root, exist_ok=True)
-            kwargs['download_root'] = download_root
-        self.model = whisper.load_model(model_name, **kwargs)
+        local = model_path or find_local_model(model_name)
+        if local:
+            # 本地权重：whisper 接受文件路径，直接加载，不联网
+            self.model = whisper.load_model(local)
+            self.source = local
+        else:
+            kwargs = {}
+            root = download_root or default_cache_dir()
+            os.makedirs(root, exist_ok=True)
+            kwargs['download_root'] = root
+            self.model = whisper.load_model(model_name, **kwargs)
+            self.source = os.path.join(root, f'{model_name}.pt')
         self.load_latency = time.time() - t0
 
     def transcribe(self, wav_path: str) -> Dict[str, object]:
@@ -110,12 +121,32 @@ class WhisperASR:
         }
 
 
-def default_download_root() -> str:
-    """包内权重目录（``share/humanoid_voice_command/weights/whisper``）。"""
+def default_cache_dir() -> str:
+    """whisper 的默认权重缓存目录（``~/.cache/whisper``）。"""
+    base = os.environ.get('XDG_CACHE_HOME') or os.path.join(os.path.expanduser('~'), '.cache')
+    return os.path.join(base, 'whisper')
+
+
+def bundled_model_path(model_name: str = 'tiny') -> str:
+    """包内可选的自带权重路径（仓库不提供，放进去就会被优先使用）。"""
     try:
         from ament_index_python.packages import get_package_share_directory
         share = get_package_share_directory('humanoid_voice_command')
-        return os.path.join(share, 'weights', 'whisper')
     except Exception:                                     # noqa: BLE001
         here = os.path.dirname(os.path.abspath(__file__))
-        return os.path.abspath(os.path.join(here, '..', 'weights', 'whisper'))
+        share = os.path.abspath(os.path.join(here, '..'))
+    return os.path.join(share, 'weights', 'whisper', f'{model_name}.pt')
+
+
+def find_local_model(model_name: str = 'tiny') -> Optional[str]:
+    """按优先级找现成的本地权重：环境变量 -> 包内 -> 缓存目录。找不到返回 None。"""
+    candidates = [
+        os.environ.get('HUMANOID_VOICE_WHISPER', ''),
+        bundled_model_path(model_name),
+        os.path.join(default_cache_dir(), f'{model_name}.pt'),
+    ]
+    for path in candidates:
+        # 小于 1 MB 的当成没下完/占位文件，忽略
+        if path and os.path.isfile(path) and os.path.getsize(path) > 1024 * 1024:
+            return path
+    return None

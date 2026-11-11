@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PKG_ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, PKG_ROOT)
 
-from humanoid_voice_command.asr import WhisperASR, default_download_root   # noqa: E402
+from humanoid_voice_command.asr import WhisperASR, default_cache_dir        # noqa: E402
 from humanoid_voice_command.intent import (                               # noqa: E402
     INTENTS,
     IntentClassifier,
@@ -64,6 +64,8 @@ def main():
     ap = argparse.ArgumentParser(description='语音指令端到端评估')
     ap.add_argument('--wav', default='', help='只评估指定 wav；缺省评估 audio/*.wav')
     ap.add_argument('--model', default='tiny')
+    ap.add_argument('--model-path', default='',
+                    help='本地 Whisper 权重路径；缺省用缓存或自动下载')
     ap.add_argument('--weights', default=os.path.join(PKG_ROOT, 'weights', 'intent_mlp.pt'))
     ap.add_argument('--json', default='')
     args = ap.parse_args()
@@ -79,10 +81,11 @@ def main():
         return 1
 
     # 中英文各用一个识别器（真实部署只用一个）
-    asr_zh = WhisperASR(model_name=args.model, download_root=default_download_root(),
+    asr_zh = WhisperASR(model_name=args.model, model_path=args.model_path or None,
+                        download_root=default_cache_dir(),
                         language='zh', initial_prompt=prompt_from_lexicon(lexicon))
-    asr_en = WhisperASR(model_name=args.model, download_root=default_download_root(),
-                        language='en')
+    asr_en = WhisperASR(model_name=args.model, model_path=args.model_path or None,
+                        download_root=default_cache_dir(), language='en')
     print('Whisper %s 加载耗时 %.2f s' % (args.model, asr_zh.load_latency))
     print('-' * 92)
     print('%-16s %-12s %-10s %-6s %-6s %-8s %s' %

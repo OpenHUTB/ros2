@@ -22,7 +22,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from humanoid_voice_command.asr import WhisperASR, default_download_root
+from humanoid_voice_command.asr import WhisperASR, default_cache_dir
 from humanoid_voice_command.intent import (
     INTENTS,
     IntentClassifier,
@@ -37,6 +37,7 @@ class VoiceNode(Node):
         super().__init__('voice_node')
 
         self.declare_parameter('model', 'tiny')
+        self.declare_parameter('model_path', '')          # 本地 Whisper 权重，空则用缓存/下载
         self.declare_parameter('language', 'zh')
         self.declare_parameter('wav', '')
         self.declare_parameter('audio_dir', '')
@@ -49,6 +50,7 @@ class VoiceNode(Node):
 
         p = self.get_parameter
         self.model_name = p('model').value
+        self.model_path = p('model_path').value
         self.language = p('language').value
         self.wav = p('wav').value
         self.audio_dir = p('audio_dir').value
@@ -114,11 +116,13 @@ class VoiceNode(Node):
             t0 = time.time()
             self.asr = WhisperASR(
                 model_name=self.model_name,
-                download_root=default_download_root(),
+                model_path=self.model_path or None,
+                download_root=default_cache_dir(),
                 language=self.language,
                 initial_prompt=prompt if self.language.startswith('zh') else None)
             self.get_logger().info(
-                f'Whisper {self.model_name} 加载完成，耗时 {time.time() - t0:.2f}s')
+                f'Whisper {self.model_name} 加载完成，耗时 {time.time() - t0:.2f}s'
+                f'（权重 {self.asr.source}）')
         return self.asr
 
     # ------------------------------------------------------------------

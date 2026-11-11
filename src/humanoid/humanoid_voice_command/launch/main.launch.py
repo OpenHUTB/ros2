@@ -42,6 +42,8 @@ def generate_launch_description():
                               description='目录轮询是否循环'),
         DeclareLaunchArgument('model', default_value='tiny',
                               description='Whisper 模型规格'),
+        DeclareLaunchArgument('model_path', default_value='',
+                              description='本地 Whisper 权重路径（空则用缓存或自动下载）'),
         DeclareLaunchArgument('language', default_value='zh',
                               description='识别语言（zh / en / auto）'),
         DeclareLaunchArgument('hold_time', default_value='3.0',
@@ -63,6 +65,7 @@ def generate_launch_description():
             'interval': LaunchConfiguration('interval'),
             'loop': LaunchConfiguration('loop'),
             'model': LaunchConfiguration('model'),
+            'model_path': LaunchConfiguration('model_path'),
             'language': LaunchConfiguration('language'),
         }],
     )
