@@ -118,6 +118,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
+* [基于关节状态与肌腱力反馈的 MuJoCo 肌肉骨骼肘关节神经网络轨迹控制](./musculoskeletal/mujoco_musculoskeletal_elbow_nn_control.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
@@ -183,8 +184,10 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
 * [任务3: 导航与路径规划模块](./robot_tasks/navigation_slam/README.md)
 * [任务4：端到端策略网络](./robot_tasks/policy_learning/README.md)
+* [任务5：系统集成](./robot_tasks/system_integration/README.md)
 
 * [TurtleBot3 激光雷达自主避障（ROS 2）](./ground/turtlebot3_lidar_avoid.md) —— 订阅机载激光雷达，按扇区提取前/左/右最近距离，经三态状态机与势场法决策后发布 /cmd_vel，实现迷宫场景自主避障
+* [ROS2 动态障碍跟踪与 TTC 预警](./ground/ros2_dynamic_obstacle_ttc.md)
 * [Mbot 雷达避障仿真（ROS 1 Noetic）](./ground/mbot_lidar_avoid.md) —— Mbot 差速底盘在 Gazebo 中的 2D 激光雷达阈值避障，按扇区最小距离 + 滞回状态机输出 /cmd_vel
 
 * [网页远程遥控小车](./ground/web_remote_car.md)
@@ -421,6 +424,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim 无人机抗风扰补偿（MLP）](./air/uav_airsim_wind_rejection.md) —— IMU 时序加位置误差进 MLP，直接输出 xy 补偿速度；侧风下平均偏移从 14.68 m 降到 3.42 m（-77%），验证 R² 0.997
 
 * [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
+
+* [无人机自主充电/机巢仿真](./air/drone_charging_nest.md) —— MuJoCo 四旋翼起飞、巡检、返航、机巢自动充电与再次起飞
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
