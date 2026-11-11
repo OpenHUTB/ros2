@@ -27,6 +27,7 @@ setup(
             'teleop_keyboard = gazebo_diff_drive_teleop.teleop_keyboard:main',
             'auto_drive = gazebo_diff_drive_teleop.auto_drive:main',
             'teach_replay = gazebo_diff_drive_teleop.teach_replay:main',
+            'battery_teleop = gazebo_diff_drive_teleop.battery_teleop:main',
             'precision_moves = gazebo_diff_drive_teleop.precision_moves:main',
             'controller_bridge = gazebo_diff_drive_teleop.controller_bridge:main',
         ],
