@@ -12,7 +12,7 @@
 | --- | --- |
 | 操作系统 | Ubuntu 22.04（纯 CPU 运行，不依赖 GPU） |
 | Python | 3.10 |
-| 依赖 | `numpy`、`opencv-python`（含 `cv2.dnn`）、`matplotlib` |
+| 依赖 | `numpy>=1.21`、`opencv-python>=4.5,<5`（含 `cv2.dnn`；5.x 已移除 Caffe 导入器）、`matplotlib>=3.5` |
 | 检测模型 | MobileNet-SSD（Caffe 版，`deploy.prototxt` + `mobilenet_iter_73000.caffemodel`，约 23 MB） |
 | 是否需要 CARLA | **不需要**；CARLA 只用于提供输入帧 |
 
