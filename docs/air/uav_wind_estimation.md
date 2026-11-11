@@ -13,47 +13,47 @@
 
 ### 1.1 风三角
 
-设地速 \(\mathbf{v}_g\)、航向单位矢量 \(\mathbf{u}\)（机头方向）、真空速 \(V_a\)，则
+设地速 $\mathbf{v}_g$、航向单位矢量 $\mathbf{u}$（机头方向）、真空速 $V_a$，则
 
-\[
+$$
 \mathbf{v}_g=V_a\,\mathbf{u}+\mathbf{w}
-\]
+$$
 
-皮托管只测到 \(|V_a|\)，所以给定候选风 \(\mathbf{w}\)，空速由
+皮托管只测到 $|V_a|$，所以给定候选风 $\mathbf{w}$，空速由
 
-\[
+$$
 V_a=\mathbf{u}^\top(\mathbf{v}_g-\mathbf{w})
-\]
+$$
 
-反解。把它代回，得到只含 \(\mathbf{w}\) 的残差——**垂直分量必须为零**：
+反解。把它代回，得到只含 $\mathbf{w}$ 的残差——**垂直分量必须为零**：
 
-\[
+$$
 \mathbf{r}_i(\mathbf{w})=\big(I-\mathbf{u}_i\mathbf{u}_i^\top\big)(\mathbf{v}_{g,i}-\mathbf{w})
-\]
+$$
 
-于是估计问题变成 \(\min_{\mathbf{w}}\sum_i\lVert\mathbf{r}_i(\mathbf{w})\rVert^2\)。
-雅可比为 \(-（I-\mathbf{u}_i\mathbf{u}_i^\top)\)，用 Gauss–Newton 求解（本问题线性化后几乎精确，3 次迭代收敛）。
+于是估计问题变成 $\min_{\mathbf{w}}\sum_i\lVert\mathbf{r}_i(\mathbf{w})\rVert^2$。
+雅可比为 $-（I-\mathbf{u}_i\mathbf{u}_i^\top)$，用 Gauss–Newton 求解（本问题线性化后几乎精确，3 次迭代收敛）。
 
 ### 1.2 可观测性
 
 信息矩阵
 
-\[
+$$
 \mathcal I=\frac{1}{\sigma^2}\sum_i\big(I-\mathbf{u}_i\mathbf{u}_i^\top\big)
-\]
+$$
 
-只有两个特征值都远离零时风才可估。单一航向下两个投影相同，\(\mathcal I\) 秩 1——
+只有两个特征值都远离零时风才可估。单一航向下两个投影相同，$\mathcal I$ 秩 1——
 这就是"悬停/直线飞行估不出风"的数学原因。本模块要求
-\(\lambda_{\min}\ge10^{-3}\lambda_{\max}\) 才认为可估。
+$\lambda_{\min}\ge10^{-3}\lambda_{\max}$ 才认为可估。
 
 ### 1.3 对飞平均法
 
-经典做法：分别沿 \(\mathbf{u}\) 与 \(-\mathbf{u}\) 飞，取两次地速的平均：
+经典做法：分别沿 $\mathbf{u}$ 与 $-\mathbf{u}$ 飞，取两次地速的平均：
 
-\[
+$$
 \frac{\mathbf{v}_{g,1}+\mathbf{v}_{g,2}}{2}
 =\mathbf{w}+\frac{V_{a,1}-V_{a,2}}{2}\mathbf{u}
-\]
+$$
 
 当两段空速相等时正好等于风；空速有差异时误差与差值同量级。
 
@@ -84,7 +84,7 @@ python3 -m unittest discover -s tests -v
 
 ## 4. 结果
 
-环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值风 \((3.0,-2.0)\) m/s（3.6 m/s），
+环境：Windows 11、Python 3.12.14、NumPy 2.3.5。真值风 $(3.0,-2.0)$ m/s（3.6 m/s），
 空速 12 m/s、GPS 速度噪声 0.2 m/s、航向噪声 1°、每段空速波动 ±0.35 m/s，每种机动 40 次试验。
 
 | 机动 | 信息矩阵条件数 | 可观测 | 最小二乘风速 RMSE | 对飞平均法 RMSE |
@@ -112,7 +112,7 @@ python3 -m unittest discover -s tests -v
 
 ![噪声敏感性](../img/air/uav_wind_estimation/noise_sweep.png)
 
-误差随噪声大致按 \(\sigma^{0.5}\) 增长（信息矩阵平均 60 个样本，圆周长航向使投影均匀）。
+误差随噪声大致按 $\sigma^{0.5}$ 增长（信息矩阵平均 60 个样本，圆周长航向使投影均匀）。
 
 ### 4.2 三个结论
 
@@ -143,7 +143,7 @@ python3 -m unittest discover -s tests -v    # 12 项
 1. 只估计**水平风**，未估计上升气流与风切变；三维风需要攻角/侧滑角观测。
 2. 假设风在观测窗口内恒定；实际需要递推估计（如卡尔曼）以跟踪变化。
 3. 空速用皮托管模型（无安装角误差、无位置误差修正），真实系统需先做空速标定。
-4. 可观测性判据用信息矩阵特征值比，阈值 \(10^{-3}\) 是工程取值，不是统计检验。
+4. 可观测性判据用信息矩阵特征值比，阈值 $10^{-3}$ 是工程取值，不是统计检验。
 5. 未考虑机动本身的代价（圆周机动耗电、偏离航线），实际任务规划需权衡。
 6. ROS 2 端只做了 `compileall`、`package.xml` 解析与桩模块联调，未在本机执行 `colcon build` 与 `ros2 launch`。
 
