@@ -142,6 +142,8 @@
 </ul>
 <p class="caption"><span class="caption-text">人形机器人</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_basics/">人形机器人基础</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="humanoid/humanoid_carry_payload_nn/">双臂搬运负载的神经网络平衡控制</a>
@@ -952,7 +954,12 @@
 <p>ROS 2 QoS 兼容性检查实验：<a href="chap2/ros2_qos_compatibility_lab/">chap2/ros2_qos_compatibility_lab</a></p>
 <h2 id="2">2. 人形机器人 <span id="humanoid"></span></h2>
 <ul>
-<li><a href="humanoid/humanoid_basics/">人形机器人基础</a></li>
+<li>
+<p><a href="humanoid/joint_friction_identification/">关节 Stribeck 摩擦辨识与前馈补偿</a> —— 恒速扫掠 + 网格/最小二乘辨识 Stribeck 四参数（库仑 −1.7%、静摩擦 −1.0%），前馈补偿把正弦跟踪 RMS 从 0.00703 降到 0.00310 rad（改善 55.9%）</p>
+</li>
+<li>
+<p><a href="humanoid/humanoid_basics/">人形机器人基础</a></p>
+</li>
 <li><a href="humanoid/humanoid_carry_payload_nn/">人形机器人双臂搬运负载的神经网络平衡控制</a></li>
 <li><a href="humanoid/bipedal_gait_zmp/">双足步态生成与 ZMP 稳定性</a></li>
 <li><a href="humanoid/biped_cubic_spline_gait_switch/">基于三次样条插值的双足多步态平滑切换</a></li>
