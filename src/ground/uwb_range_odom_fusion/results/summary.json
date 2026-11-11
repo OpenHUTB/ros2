@@ -1,7 +1,7 @@
 {
   "module": "uwb_range_odom_fusion",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T18:01:31+00:00",
+  "generated_utc": "2026-11-11T08:01:09+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
@@ -85,7 +85,7 @@
       "p95_mean_m": 2.8806340247912807,
       "max_mean_m": 2.956656619427772,
       "final_mean_m": 2.8524962879416753,
-      "runtime_us_mean": 3.854753748283753,
+      "runtime_us_mean": 5.500385439941403,
       "seeds": 10,
       "heading_rmse_mean_deg": 22.219309457076054
     },
@@ -95,7 +95,7 @@
       "p95_mean_m": 0.21192746004580015,
       "max_mean_m": 1.1377477923446713,
       "final_mean_m": 0.03838411178508687,
-      "runtime_us_mean": 321.3785867221958,
+      "runtime_us_mean": 437.492369737298,
       "seeds": 10
     },
     "ekf_ungated": {
@@ -104,7 +104,7 @@
       "p95_mean_m": 0.5624871629431544,
       "max_mean_m": 0.7464417268220378,
       "final_mean_m": 0.100109456056657,
-      "runtime_us_mean": 124.2668593876884,
+      "runtime_us_mean": 156.66034261220406,
       "seeds": 10,
       "heading_rmse_mean_deg": 10.71315320979239,
       "nees_mean": 1043.6697256103,
@@ -119,12 +119,12 @@
       "p95_mean_m": 0.028348343130429755,
       "max_mean_m": 0.04149980485245749,
       "final_mean_m": 0.014213646670268929,
-      "runtime_us_mean": 114.67178444038056,
+      "runtime_us_mean": 156.3668736558458,
       "seeds": 10,
       "heading_rmse_mean_deg": 1.238767364216836,
       "nees_mean": 2.8935118896381034,
       "nees_consistent_seeds": 2,
-      "false_reject_pct": 1.4501679731243,
+      "false_reject_pct": 3.037529319781079,
       "nlos_detected_pct": 100.0,
       "nlos_accepted_pct": 0.0
     }

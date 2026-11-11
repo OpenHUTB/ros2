@@ -123,5 +123,5 @@ def gating_summary(accepted, rejected, nlos) -> dict:
         "rejected_los": int(np.sum(rejected & ~nlos)),
         "rejected_nlos": int(np.sum(rejected & nlos)),
         "nlos_total": int(np.sum(nlos)),
-        "los_total": int(np.sum(~nlos)),
+        "los_total": int(np.sum(accepted & ~nlos) + np.sum(rejected & ~nlos)),
     }
