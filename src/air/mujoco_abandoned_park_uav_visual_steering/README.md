@@ -4,7 +4,7 @@
 
 ## 功能范围
 
-本分支提供前视 RGB 数据采集、专家监督、场景组隔离划分及质量检查，并提供 CNN 训练、回放与评价入口。
+本分支提供 RGB 数据管线与轻量 CNN 训练、验证和测试。训练由 `train.py` 启动，仿真、采集与质量检查由 `main.py` 启动。
 
 ## 坐标、时间与相机
 
@@ -65,25 +65,12 @@ $$
 \mathcal L=-\sum_{c=1}^{4}w_c y_c\log\hat y_c.
 $$
 
-统一入口支持训练与离线图像回放：
+训练入口为 `train.py`：
 
 ```bash
-python main.py --mode train --output data/park_rgb --checkpoint models/weights/lightweight_steering_cnn.pt --epochs 8
-python main.py --mode replay --checkpoint models/weights/lightweight_steering_cnn.pt --images data/park_rgb/images
+python train.py --dataset data/park_rgb --output models/weights --epochs 8
 ```
 
 验证集用于选择权重，测试集用于最终分类评价。Accuracy、固定四类 macro-F1 和 4 × 4 混淆矩阵使用相同标签序号；即使某类没有出现在预测结果中，macro-F1 仍保留该类。加载权重时要求保存的标签严格为 `LEFT, STRAIGHT, RIGHT, STOP`，缺失或顺序不符时拒绝加载，防止控制含义被交换。
 
 本次固定种子训练运行 16 轮（19.60 s），按场景组隔离得到 312/78/78 张训练、验证和测试图像。独立测试集（78 张）准确率为 64.10%，四类 macro-F1 为 67.42%；单帧推理延迟均值为 0.356 ms，P95 为 0.416 ms。
-
-## MuJoCo 三场景闭环评价
-
-`evaluation.py` 在直道、正弦曲道和带中心柱障碍的三种独立 MuJoCo 场景中评价控制器。每个初始横向偏移分别运行规则控制与 CNN 控制；CNN 在每一步从当前前视相机图像推理，再将动作送回仿真，生成自己的独立轨迹。
-
-```bash
-python main.py --mode evaluate \
-  --checkpoint models/weights/lightweight_steering_cnn.pt \
-  --output evaluation/scenarios.json
-```
-
-每回合记录位置、航向、标签、横向误差、前进距离及 CNN 推理次数。成功回合须同时满足：最大横向误差小于安全走廊界限、无人机中心到柱体中心的水平距离始终大于 0.5 m，以及沿 Y 方向的实际进度至少达到该时长理论前进距离的 60%。报告由这些轨迹统计平均横向误差和成功率，并记录权重 SHA-256；缺少权重时不生成 CNN 分数。
