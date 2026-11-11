@@ -176,7 +176,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [YOLOv8 视觉感知目标跟随仿真](./ground/yolov8_target_tracking.md)
 * [车辆键盘遥操作与二维模拟](./ground/vehicle_pygame_teleop.md)
-* [基于 TTC 的前向目标跟踪自动紧急制动](./ground/carla_ttc_emergency_braking.md) —— 前向目标跟踪求 TTC，超阈值满制动，实测停在前车 5.0 m
+* [基于 TTC 的前向目标跟踪自动紧急制动](./ground/carla_ttc_emergency_braking.md) —— 前向目标跟踪求 TTC，超阈值满制动；激光雷达决策，实测停在前车 7.29 m
 
 * [任务1：机器人键盘控制模块](./robot_tasks/teleop_control/README.md)
 * [任务2: 模拟传感器数据源](./robot_tasks/sensor_perception/README.md)
