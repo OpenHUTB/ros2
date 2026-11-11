@@ -1,0 +1,186 @@
+{
+  "module": "rtk_ambiguity_resolution",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-11T05:00:48+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "satellites": [
+      {
+        "azimuth_deg": 20.0,
+        "elevation_deg": 70.0
+      },
+      {
+        "azimuth_deg": 110.0,
+        "elevation_deg": 50.0
+      },
+      {
+        "azimuth_deg": 200.0,
+        "elevation_deg": 35.0
+      },
+      {
+        "azimuth_deg": 280.0,
+        "elevation_deg": 25.0
+      },
+      {
+        "azimuth_deg": 340.0,
+        "elevation_deg": 15.0
+      }
+    ],
+    "baseline_m": [
+      0.8,
+      0.6,
+      0.1
+    ],
+    "sigma_phase_cycles": 0.01,
+    "sigma_code_m": 0.3,
+    "wavelength": 0.190293672798,
+    "epochs": 400,
+    "epochs_per_fix": 20,
+    "seed": 0
+  },
+  "main": {
+    "attempts": 20,
+    "float_rmse_mm": 160.51295468307944,
+    "fixed_rmse_mm": 0.8909087604189468,
+    "fixed_epochs": 19,
+    "float_max_mm": 398.32905760361814,
+    "fixed_max_mm": 1.7485742453767077,
+    "fixed_max_fixed_only_mm": 1.7485742453767077,
+    "float_sigma_cycles_max": 0.3052981616277107,
+    "success_rate_pct": 100.0,
+    "fix_rate_pct": 95.0,
+    "wrong_fix_pct": 0.0,
+    "ratio_median": 12.41786610115288,
+    "float_sigma_cycles": 0.30529816162771073,
+    "candidates_median": 81.0
+  },
+  "window_sweep": {
+    "2": {
+      "attempts": 200,
+      "float_rmse_mm": 454.60836918356006,
+      "fixed_rmse_mm": 254.3588533325734,
+      "fixed_epochs": 27,
+      "float_max_mm": 1159.7255392906013,
+      "fixed_max_mm": 1635.7271908054825,
+      "fixed_max_fixed_only_mm": 738.0897335110449,
+      "float_sigma_cycles_max": 0.9654375562077538,
+      "success_rate_pct": 49.0,
+      "fix_rate_pct": 13.5,
+      "wrong_fix_pct": 5.0,
+      "ratio_median": 1.512474039958787,
+      "float_sigma_cycles": 0.9654375562077537,
+      "candidates_median": 240.0
+    },
+    "5": {
+      "attempts": 80,
+      "float_rmse_mm": 299.1578465048371,
+      "fixed_rmse_mm": 135.44806346427814,
+      "fixed_epochs": 30,
+      "float_max_mm": 693.1693068297849,
+      "fixed_max_mm": 679.2670459483419,
+      "fixed_max_fixed_only_mm": 676.278247724783,
+      "float_sigma_cycles_max": 0.6105963232591445,
+      "success_rate_pct": 85.0,
+      "fix_rate_pct": 37.5,
+      "wrong_fix_pct": 2.5,
+      "ratio_median": 2.5309943452758334,
+      "float_sigma_cycles": 0.6105963232591446,
+      "candidates_median": 108.0
+    },
+    "10": {
+      "attempts": 40,
+      "float_rmse_mm": 205.1823325879817,
+      "fixed_rmse_mm": 1.3892972942069812,
+      "fixed_epochs": 28,
+      "float_max_mm": 480.4476325379079,
+      "fixed_max_mm": 944.8510717746087,
+      "fixed_max_fixed_only_mm": 3.0561764784360945,
+      "float_sigma_cycles_max": 0.43175680073693695,
+      "success_rate_pct": 95.0,
+      "fix_rate_pct": 70.0,
+      "wrong_fix_pct": 0.0,
+      "ratio_median": 4.104623062757652,
+      "float_sigma_cycles": 0.43175680073693695,
+      "candidates_median": 81.0
+    },
+    "20": {
+      "attempts": 20,
+      "float_rmse_mm": 160.51295468307944,
+      "fixed_rmse_mm": 0.8909087604189468,
+      "fixed_epochs": 19,
+      "float_max_mm": 398.32905760361814,
+      "fixed_max_mm": 1.7485742453767077,
+      "fixed_max_fixed_only_mm": 1.7485742453767077,
+      "float_sigma_cycles_max": 0.3052981616277107,
+      "success_rate_pct": 100.0,
+      "fix_rate_pct": 95.0,
+      "wrong_fix_pct": 0.0,
+      "ratio_median": 12.41786610115288,
+      "float_sigma_cycles": 0.30529816162771073,
+      "candidates_median": 81.0
+    },
+    "40": {
+      "attempts": 10,
+      "float_rmse_mm": 130.45795781919088,
+      "fixed_rmse_mm": 0.7065357897268041,
+      "fixed_epochs": 10,
+      "float_max_mm": 319.2600575963164,
+      "fixed_max_mm": 1.2393779015857769,
+      "fixed_max_fixed_only_mm": 1.2393779015857769,
+      "float_sigma_cycles_max": 0.21587840036756606,
+      "success_rate_pct": 100.0,
+      "fix_rate_pct": 100.0,
+      "wrong_fix_pct": 0.0,
+      "ratio_median": 16.996762380871854,
+      "float_sigma_cycles": 0.21587840036756606,
+      "candidates_median": 81.0
+    }
+  },
+  "decorrelation": {
+    "transform": [
+      [
+        -7,
+        7,
+        -8,
+        4
+      ],
+      [
+        -2,
+        2,
+        -2,
+        1
+      ],
+      [
+        -15,
+        15,
+        -17,
+        9
+      ],
+      [
+        26,
+        -25,
+        29,
+        -15
+      ]
+    ],
+    "determinant": -1,
+    "condition_before": 24854.85799882757,
+    "condition_after": 7.86721978434433,
+    "diag_before": [
+      0.08945070754814408,
+      0.09088948239747921,
+      0.08008942510278068,
+      0.11239825492463508
+    ],
+    "diag_after": [
+      0.004441882942529063,
+      0.007658329583271818,
+      0.013729421079853685,
+      0.025381908865330594
+    ]
+  }
+}

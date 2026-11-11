@@ -1,0 +1,73 @@
+{
+  "total_frames": 1001,
+  "tracking_frames": 739,
+  "detection_frames": 741,
+  "track_ratio": 0.7382617382617382,
+  "loss_events": 3,
+  "reacquisition_events": 3,
+  "reacquisition_times_s": [
+    3.9000000000000004,
+    4.75,
+    3.8999999999999986
+  ],
+  "los_rms_deg": 2.463236235672335,
+  "pixel_rms_px": 26.333450471992794,
+  "max_los_error_deg": 23.843975288772306,
+  "state_counts": {
+    "SEARCH": 5,
+    "TRACK": 745,
+    "LOST": 251
+  },
+  "duration_s": 50.0,
+  "dt_s": 0.05,
+  "transitions": [
+    {
+      "t": 0.0,
+      "state": "SEARCH",
+      "detected": false,
+      "los_error_deg": 29.741690244757873
+    },
+    {
+      "t": 0.25,
+      "state": "TRACK",
+      "detected": true,
+      "los_error_deg": 20.703272214725402
+    },
+    {
+      "t": 8.1,
+      "state": "LOST",
+      "detected": false,
+      "los_error_deg": 3.3764646451039306
+    },
+    {
+      "t": 12.0,
+      "state": "TRACK",
+      "detected": true,
+      "los_error_deg": 15.455568148587782
+    },
+    {
+      "t": 18.1,
+      "state": "LOST",
+      "detected": false,
+      "los_error_deg": 41.65742096303499
+    },
+    {
+      "t": 22.85,
+      "state": "TRACK",
+      "detected": true,
+      "los_error_deg": 23.843975288772306
+    },
+    {
+      "t": 32.1,
+      "state": "LOST",
+      "detected": false,
+      "los_error_deg": 2.8715236270307196
+    },
+    {
+      "t": 36.0,
+      "state": "TRACK",
+      "detected": true,
+      "los_error_deg": 11.81621581964759
+    }
+  ]
+}
