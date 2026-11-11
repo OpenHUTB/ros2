@@ -16,14 +16,10 @@ __pycache__/
 docs/requirements.txt
  add-mujoco-aeb
 # MuJoCo 运行日志
-# 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
-# （新增 catkin 包时容易整个漏提交），下面显式放行这个文件名。
-*.TXT
+# 注意：这里不要用 *.TXT。Windows/macOS 上 core.ignorecase 为 true 时它会把
+# LICENSE.txt、requirements.txt 这类真实文本一起吞掉（本仓库曾因此漏提交依赖清单）。
+# 需要忽略的垃圾文件请写到文末「编辑器 / 系统」段落里逐个列出。
 *.log
-!CMakeLists.txt
-# 模块依赖清单同理放行：否则 src/<域>/<模块>/requirements*.txt 在 Windows 上会被 `git add`
-# 静默跳过。docs/requirements.txt 由 hooks.py 生成，不在这条规则范围内，仍然忽略。
-!src/**/requirements*.txt
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
 /*.png
@@ -106,11 +102,13 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 例外：人形 H1/H1_2 行走模块的 TorchScript 策略必须入库（137/143 KB，免重训）
 !src/humanoid/humanoid_h1_walk/weights/*.pt
 
-# 编辑器 / 系统
+# 编辑器 / 系统（替代原来的 *.TXT：只列确认无用的文件，不再按扩展名一刀切）
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+ehthumbs.db
+desktop.ini
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
