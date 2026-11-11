@@ -28,6 +28,7 @@ PATH_BUILDERS = {
     "circle": lambda: circle(radius=8.0),
     "eight": lambda: figure_eight(a=10.0),
     "s_curve": lambda: s_curve(length=24.0, amp=3.0),
+    "s_curve_sparse": lambda: s_curve(length=24.0, amp=3.0).resample(1.5),
     "straight": lambda: straight(length=20.0),
 }
 def obstacles_along_path(
