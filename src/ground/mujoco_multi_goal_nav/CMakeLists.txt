@@ -11,7 +11,7 @@ catkin_install_python(PROGRAMS main.py
 )
 
 # MuJoCo 模型与脚本副本装到 share/<pkg>/，便于从 share 目录直接 python3 main.py 运行
-install(FILES main.py scene.xml
+install(FILES main.py scene.xml requirements.txt
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

@@ -18,9 +18,19 @@
 import argparse
 import math
 import os
+import sys
 import time
 
-import mujoco
+try:
+    import mujoco
+except ImportError:  # 依赖缺失时给出可执行的修复提示，而不是裸 ImportError 堆栈
+    sys.exit(
+        "缺少 MuJoCo，节点无法启动。请在当前 Python 环境安装依赖后重试：\n"
+        "    pip3 install -r requirements.txt      # 或 pip3 install mujoco\n"
+        "自检：python3 -c \"import mujoco; print(mujoco.__version__)\"\n"
+        "注意：通过 roslaunch 启动时节点运行在 devel 空间的 lib/<pkg>/main.py，"
+        "用的是同一个 Python 环境。"
+    )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = "mujoco_multi_goal_nav"
@@ -66,6 +76,7 @@ def run(args):
     mujoco.mj_forward(model, data)
 
     print("场景文件：%s" % scene)
+    print("运行环境：MuJoCo %s / Python %s" % (mujoco.__version__, sys.version.split()[0]))
     print("目标点：%s" % ", ".join("(%g, %g)" % g for g in GOALS))
     print("运行参数：最高速度 %.2f m/s，到达阈值 %.2f m，时长上限 %.1f s"
           % (SPEED, STOP_DIST, args.duration))

@@ -8,5 +8,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <!-- MuJoCo 与 numpy 由 pip 安装（pip3 install -r requirements.txt），不在 rosdep 中，
+       故此处只声明系统 Python，避免 rosdep 解析 mujoco 依赖时报 unknown package -->
   <exec_depend>python3</exec_depend>
 </package>
