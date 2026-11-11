@@ -56,6 +56,32 @@ class TestForceLoop(unittest.TestCase):
             self.assertGreater(lv["contact_points"], 0)
             self.assertLess(lv["final_activation"], 0.99)
 
+    def test_eight_newton_target_remains_unsaturated(self):
+        result = extra.run_g5(targets=(8.0,))["levels"][0]
+        self.assertAlmostEqual(result["steady_n"], 8.0, delta=0.2)
+        self.assertLess(result["final_activation"], 0.99)
+        self.assertGreater(result["contact_points"], 0)
+
+
+class TestForcePI(unittest.TestCase):
+    def test_positive_error_does_not_wind_up_at_upper_saturation(self):
+        activation, integral = extra._force_pi_step(
+            target_force=10.0,
+            measured_force=0.0,
+            integral=0.9,
+        )
+        self.assertEqual(activation, 1.0)
+        self.assertEqual(integral, 0.9)
+
+    def test_negative_error_can_unwind_from_upper_saturation(self):
+        activation, integral = extra._force_pi_step(
+            target_force=0.0,
+            measured_force=0.1,
+            integral=0.9,
+        )
+        self.assertEqual(activation, 1.0)
+        self.assertLess(integral, 0.9)
+
 
 class TestSlipReflex(unittest.TestCase):
     def test_reflex_recovers_grasp(self):

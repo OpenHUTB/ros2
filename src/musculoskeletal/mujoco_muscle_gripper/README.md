@@ -29,7 +29,7 @@ python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真�
 python3 main.py neural --out out/neural # 采样、训练、独立测试和闭环评估
 python3 main.py slam --out out/slam    # 移动底座神经网络建图与导航同步仿真
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 基础与建图导航共 21 项测试
+python3 -m unittest discover -s tests # 基础与建图导航共 24 项测试
 ```
 
 ### Docker 与 ROS 2
@@ -195,7 +195,7 @@ mujoco_muscle_gripper/
 │   ├── slam_navigation.py # 移动底座建图、神经规划与控制
 │   └── cli.py
 ├── Dockerfile        # Humble 固定运行环境
-├── tests/            # 21 项测试（建图导航依赖见 requirements-slam.txt）
+├── tests/            # 24 项测试（建图导航依赖见 requirements-slam.txt）
 └── tools/plot_metrics.py
 ```
 
