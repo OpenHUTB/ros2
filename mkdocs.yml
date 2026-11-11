@@ -170,6 +170,7 @@ nav:
     - 任务2 - 模拟传感器数据源: robot_tasks/sensor_perception/README.md
     - 任务3 - 导航与路径规划: robot_tasks/navigation_slam/README.md
     - 任务4 - 端到端策略网络: robot_tasks/policy_learning/README.md
+    - 任务5 - 系统集成: robot_tasks/system_integration/README.md
     - 点云地图创建: './ground/pcl_recorder.md'
     - 激光雷达点云语义分割: './ground/carla_lidar_pointcloud_segmentation.md'
     - TurtleBot3 激光雷达自主避障（ROS 2）: './ground/turtlebot3_lidar_avoid.md'
