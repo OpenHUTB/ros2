@@ -65,3 +65,13 @@ bash main.sh battery
 ```
 
 ![电量管理与自动返航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_return.png)
+
+## 里程计闭环精确运动
+
+`precision_moves` 用 `/odom` 闭环执行固定距离和固定角度动作：`1/2` 前进/后退 0.5 m，`3/4` 左右转 90°，`5` 转 180°，`6` 正方形演示。
+
+```bash
+bash main.sh precision
+```
+
+![里程计闭环正方形轨迹](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_moves.png)
