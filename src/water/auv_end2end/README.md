@@ -109,13 +109,16 @@ ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
-| `obstacle_thresh` | 22 | 灰度阈值（0-255），低于该值判为暗色障碍像素 |
+| `obstacle_thresh` | 22 | 固定灰度阈值（0-255），低于该值判为暗色障碍像素；自适应不可用时作为兜底 |
+| `adaptive_thresh` | true | true 时用 Otsu 自适应阈值；画面不够双峰时自动退回 `obstacle_thresh` |
 | `trigger_ratio` | 0.22 | 触发阈值，单侧暗像素面积占比超过 22% 触发避障 |
 | `recover_ratio` | 0.18 | 恢复阈值，双侧占比均低于 18% 恢复直行 |
 | `forward_speed` | 4.5 | 直行巡航速度（m/s） |
 | `side_speed` | 2.8 | 横向避让速度（m/s） |
 | `max_avoid_duration` | 3.0 | 单次最长避让时长（s），超时进入冷却期 |
-| `avoid_cooldown` | 2.0 | 冷却时长（s），期间强制直行、禁止重触发 |
+| `avoid_cooldown` | 2.0 | 冷却时长（s），期间强制直行、禁止常规重触发 |
+| `min_avoid_duration` | 0.3 | 最小避让时长（s），防止阈值附近抖动 |
+| `emergency_factor` | 1.5 | 冷却期占比超过 `trigger_ratio × 该值` 时立即中断冷却重新避让 |
 
 注意 `obstacle_thresh = 22` 是**灰度阈值**，`trigger_ratio = 0.22` 是**面积占比阈值**，两者不是同一类量。
 
@@ -128,9 +131,19 @@ ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3
 | `forward_time` | 10.0 | 直行/后退持续时间（s） |
 | `side_time` | 20.0 | 横向平移持续时间（s） |
 
+两个 launch 共用的开关：
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `gui` | true | 是否启动 `gzclient`；无显示环境设 false |
+| `use_rviz` | false | 是否启动 RViz2 并加载 `rviz/auv.rviz` |
+| `record_csv` | 空 | 轨迹 CSV 输出路径，留空则不写文件 |
+
 ## 节点与话题信息
 
 - 避障节点：`auv_obstacle_avoid`
 - 巡航节点：`auv_rect_cruise`
+- 轨迹记录节点：`trajectory_recorder`（订阅 `/auv/odom`，发布 `nav_msgs/Path`）
 - 相机话题：`/auv/camera/camera/image_raw`
 - 速度控制话题：`/auv/cmd_vel`
+- 轨迹话题：`/auv/trajectory`
