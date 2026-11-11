@@ -29,8 +29,28 @@
 |---|---|
 | 系统 | Ubuntu 20.04（ROS Noetic）|
 | Python | 3.8+ |
-| MuJoCo | 本文数据在 4.0.0 下实测；2.3.7 使用相同 API，可直接运行 |
-| 依赖 | `pip3 install mujoco`（可视化另需 `pillow` 仅用于渲染脚本）|
+| MuJoCo | 本文数据在 4.0.0 下实测；2.3.7 复跑逐位相同，代码未使用 4.x 独有 API |
+| 依赖 | `pip3 install -r requirements.txt`（`mujoco`、`numpy`）|
+
+## 目录结构
+
+```
+src/ground/mujoco_multi_goal_nav/
+├── launch/
+│   └── main.launch           # ROS 1 (catkin) 启动，带 nogui:= / duration:= 参数
+├── test/
+│   └── test_main.py          # 回归测试（unittest / pytest 均可）
+├── CMakeLists.txt
+├── main.py                   # 入口：目标点、速度闭环、姿态锁定、统计
+├── package.xml
+├── README.md
+├── requirements.txt
+└── scene.xml                 # 场景 + 三个目标点标记
+
+docs/ground/mujoco_multi_goal_nav.md          # 本文
+docs/img/ground/mujoco_multi_goal_nav_run.png # 场景截图
+docs/img/ground/mujoco_multi_goal_nav_demo.gif # 运行动图
+```
 
 ## 运行方式
 
@@ -39,7 +59,7 @@
 ```bash
 cd src/ground/mujoco_multi_goal_nav
 
-pip3 install mujoco
+pip3 install -r requirements.txt
 
 python3 main.py                        # 带可视化窗口
 python3 main.py --nogui                # 无窗口，只跑物理（服务器 / 无显示环境）
@@ -61,8 +81,47 @@ launch 通过 `share/<pkg>/launch/main.launch` 调用 `lib/<pkg>/main.py`；
 `main.py` 内置路径回退（环境变量 `MUJOCO_MULTI_GOAL_SCENE` → 脚本同目录 →
 `../share/<pkg>/`），因此从安装空间启动也能找到 `scene.xml`。
 
-launch 的 `nogui` 参数默认 `false`（带窗口），判定时按字符串比较（`true` / `1` / `yes` 视为真），
-传 `nogui:=false` 不会被误当成开无窗口模式。
+launch 的 `nogui` 参数默认 `false`（带窗口），实现上不依赖 `eval`：`main.launch` 里写了两个
+`<node>`，用 `if="$(arg nogui)"` / `unless="$(arg nogui)"` 选分支，带窗口的那个不追加
+`--nogui`，无窗口的那个追加 `--nogui`。
+
+这里刻意不用 `eval`：roslaunch 解析 substitution args 时按括号配对计数，表达式内部出现 `(`
+会直接抛 `RLException: Invalid left parenthesis '(' in substitution args`——这正是本包早期
+`main.launch` 在部分机器上起不来的真实原因。
+
+#### launch 启动失败的排查
+
+换一台机器跑时最常见的四类失败：
+
+| 报错 / 现象 | 原因 | 处理 |
+|---|---|---|
+| `[main.launch] is neither a launch file in package [mujoco_multi_goal_nav]` | 没 `catkin_make` / 没 `source devel/setup.bash`，或包不在 `~/catkin_ws/src` | 先 build 再 source，并确认 `catkin_make` 是在工作空间根执行 |
+| `Cannot locate node of type [main.py]` | `lib/<pkg>/main.py` 没生成或没有执行位 | 重新 `catkin_make`；确认 `CMakeLists.txt` 的 `catkin_install_python(PROGRAMS main.py)` |
+| 节点起来立刻退出，`output="screen"` 里打印「缺少 MuJoCo」 | 该 Python 环境没装 MuJoCo | `pip3 install -r requirements.txt` |
+| `roslaunch: command not found` / `ROS_VERSION=2` | 环境是 ROS 2，本包是 catkin（ROS 1）包 | 直接 `python3 main.py --nogui`，或改用 ROS 1 Noetic |
+
+最快的自检（绕开 ROS，只看代码与依赖）：
+
+```bash
+cd src/ground/mujoco_multi_goal_nav && python3 main.py --nogui
+```
+
+这一步能跑通，就说明问题只在 ROS 环境；跑不通则先解决 MuJoCo 依赖。
+
+### 3. 回归测试
+
+```bash
+cd src/ground/mujoco_multi_goal_nav
+
+python3 -m unittest discover -s test -v
+# 或
+python3 -m pytest test/test_main.py -v
+```
+
+8 项用例覆盖：`GOALS` 常量与坐标、参数取值范围、`resolve_scene_path()` 默认与
+环境变量优先、`scene.xml` 里 `ground/goal1/goal2/goal3/chassis` 几何存在、
+目标标记 `contype/conaffinity` 均为 0、`lock_pose()` 复位高度与四元数。
+不启动仿真，0.1 s 内跑完。
 
 ## 参数
 
@@ -77,11 +136,11 @@ launch 的 `nogui` 参数默认 `false`（带窗口），判定时按字符串�
 
 ## 运行效果
 
-![多目标导航动图](../img/ground/mujoco_multi_goal_nav.gif)
+![多目标导航动图](../img/ground/mujoco_multi_goal_nav_demo.gif)
 
-![场景与三个目标标记](../img/ground/mujoco_multi_goal_nav.png)
+![场景与三个目标标记](../img/ground/mujoco_multi_goal_nav_run.png)
 
-实测输出（`python3 main.py --nogui`，MuJoCo 4.0.0）：
+实测输出（`python3 main.py --nogui`；MuJoCo 4.0.0 与 2.3.7 双版本复跑，三行数值逐位相同）：
 
 ```
 场景文件：.../src/ground/mujoco_multi_goal_nav/scene.xml
