@@ -75,6 +75,7 @@ nav:
         - 机器视觉多机器人蚁群编队: './ant/README.md'
         - 二连杆机械臂笛卡尔阻抗力控: './chapter/two_link_impedance_control.md'
         - MuJoCo 双自由度机械臂画正方形: './chapter/mujoco_two_dof_arm_square.md'
+        - MuJoCo 二连杆机械臂 IK 画圆: './chapter/mujoco_arm_ik.md'
     - 9. ROS 2: './chapter/chap9.md'
     - 10. Turtlebot3 Gazebo键盘控制: 'chapter/turtlebot3_gazebo_control.md'
 
@@ -85,6 +86,7 @@ nav:
     - 基于三次样条插值的双足多步态平滑切换: './humanoid/biped_cubic_spline_gait_switch.md'
     - 人形机器人键盘运动控制: './humanoid/humanoid_keyboard_control.md'
     - 键盘操控仿真机械臂: './humanoid/panda_keyboard_control.md'
+    - 机械臂手眼标定仿真: './humanoid/hand_eye_calibration.md'
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
@@ -105,7 +107,9 @@ nav:
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
     - 人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比: './humanoid/humanoid_imu_attitude.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+    - 人形机器人跑步牛顿第二定律理论计算与演示: './humanoid/humanoid_newton_running.md'
     - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
+
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
@@ -116,6 +120,7 @@ nav:
     - MuJoCo双关节肌肉骨骼手臂到达控制: './musculoskeletal/msk_arm_reach.md'
     - MuJoCo肌肉骨骼手臂本体感觉与串联弹性肌腱: './musculoskeletal/msk_arm_proprioception.md'
     - 肌肉驱动的关节控制与 Hill 肌肉模型: './musculoskeletal/muscle_joint_control.md'
+    - 肌肉疲劳建模：持续收缩下的肌力衰减与恢复: './musculoskeletal/muscle_fatigue.md'
     - 肌肉驱动的夹爪抓取: './musculoskeletal/msk_gripper.md'
     - 肌肉驱动的下肢关节与步态: './musculoskeletal/muscle_leg_gait.md'
     - 膝关节肌肉骨骼仿真与轨迹跟踪: './musculoskeletal/knee_tracking.md'
@@ -136,6 +141,7 @@ nav:
     - 车道保持控制: './ground/carla_lane_keeping/lane_keeping_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
+    - R2D2小车 航点巡航: './ground/r2d2_waypoint_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
@@ -186,6 +192,9 @@ nav:
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
     - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
+    - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
+    - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
+    - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
@@ -226,6 +235,11 @@ nav:
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
     - VRU 冲突风险图: './ground/vru_conflict_risk_map.md'
+    - 里程计健康监视: './ground/odom_health_monitor.md'
+    - 轮胎滑移率-附着曲线: './ground/tire_slip_curve.md'
+    - 横向载荷转移与侧翻裕度: './ground/rollover_margin.md'
+    - 工况能耗与续航核算: './ground/drive_cycle_energy.md'
+    - 乘坐舒适性传递率: './ground/ride_comfort_transmissibility.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
@@ -268,6 +282,7 @@ nav:
     - 无人机雷达DQN建图与端到端控制: './air/uav_lidar_dqn_navigation/index.md'
     - 空域模拟器的 ROS 封装器: './air/ros_pkgs.md'
     - 无人机与 ROS 的桥接模块: './air/carlair_ros_bridge.md'
+    - AirSim ROS 2 Humble 最小桥接: './air/airsim_ros2_bringup.md'
     - 无人机 LiDAR 地面/障碍分割: './air/uav_lidar_ground_filter.md'
     - 无人机激光雷达三维安全走廊与自适应高度避障: './air/uav_lidar_safety_corridor.md'
     - 无人机最小加加速度轨迹生成与跟踪: './air/uav_minimum_jerk_tracking.md'
@@ -301,6 +316,7 @@ nav:
     - MuJoCo 失落公园无人机端到端视觉转向: './air/mujoco_abandoned_park_uav_visual_steering.md'
     - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
+    - 多旋翼单桨失效后的悬停可行域: './air/uav_rotor_failure_env.md'
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
     - 四旋翼吊挂负载防摆控制: './air/uav_slung_load.md'
     - 无人机桨故障健康度估计（1D-CNN+GRU）: './air/uav_rotor_fault_detector_nn.md'
@@ -376,7 +392,9 @@ nav:
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
     - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
-    - MuJoCo水下机器人ROS2仿真与建图初步验证: './water/mujoco_rov_underwater.md'
+    - 声呐数据滤波初步验证: './water/rov_sonar_filter.md'
+
+
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
 
