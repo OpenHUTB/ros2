@@ -72,6 +72,7 @@ ROS每章节运行代码:
     * [MoveIt 六自由度机械臂运动规划](./chapter/chap8/moveit_arm_planning.md)
     * [机械臂拧螺丝仿真](./chapter/chap8/mujoco_arm_screw.md)
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
+    * [机械臂投篮入筐仿真](./chapter/mujoco_arm_ball.md)
     * [MuJoCo 二连杆机械臂抓取搬运](./chapter/mujoco_arm_pick.md)
     * [三自由度机械臂空间螺旋线仿真](./chapter/mujoco_arm_3d.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
@@ -119,6 +120,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+* [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
 * [毫米波雷达目标跟踪与前碰撞预警（TTC/FCW）](./ground/radar_ttc_fcw.md) —— 用多普勒速度分离静止杂波，多帧关联估计 TTC 并输出 SAFE/WARN/STOP 分级预警
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
@@ -216,6 +218,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [两轮自平衡机器人（倾角PD + 神经网络策略克隆）](./ground/balance_bot.md) —— MuJoCo 两轮倒立摆，倾角 PD 站稳（20 s 最大倾角 0.96°），被推 2 N·s 后 3.22 s 回正，并用 MLP 克隆控制律
 * [基于里程计反馈与 A* 算法的差速底盘静态全局路径规划](./ground/diff_drive_astar_odom_nav.md) —— Gazebo 差速底盘在静态栅格上用 A* 规划全局路径，仅凭 `/odom` 里程计做 30 Hz 纯追踪闭环，并用真值量化跟踪误差与里程计漂移
+* [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](ground/ros2_dwa_avoidance.md) —— A* 全局路线 + DWA 局部跟踪，5 场景 3 控制器对比，窄走廊与 U 形陷阱通过
 * [差速机器人里程计标定与神经网络滑移补偿（ROS 1 + MuJoCo）](./ground/diff_drive_odom_calib.md) —— MuJoCo 物理仿真下的 catkin 包；两个解耦实验辨识路程/轮距系数，再用 MLP 学转向滑移的非线性补偿，方形路径终点误差 2.91 m → 1.94 m → 0.98 m
 * [IMU 噪声 Allan 方差辨识与倾角滤波整定](./ground/imu_allan_noise_identification.md) —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07
 * [无动力被动行走（轮辐式 Rimless Wheel）](./ground/passive_walker.md)
@@ -242,6 +245,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AirSim Unity 无人机高度自适应越障实验](./air/airsim_height_aware_overfly.md) —— 深度图逐列恢复障碍顶边，矮墙原地爬升越过、高障碍退回水平绕行；57 项离线测试 + 2026-11-09 两次越障实飞（越障后保持 5.2 m、到点误差 <0.7 m；相机偏移修正后 committed 约 2.6 m，尚未复飞）
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
+* [高度与倾角检测评估](./air/air_ground_detection_benchmark.md) —— 统计不同相机高度和俯仰角下的检测精度、召回率与小目标召回率
 
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
