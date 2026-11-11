@@ -196,6 +196,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [端到端驾驶（图像到控制指令）](./ground/pix2cmd_end2end_driving.md)
 
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
+* [双惯量传动扭振的状态反馈极点配置](./ground/drivetrain_torsion_state_feedback.md) —— 用状态反馈把扭振阻尼比 0.134 提到 0.70，不用改机械结构
+
 * [MuJoCo 差速小车到达目标点（go-to-goal）](./ground/mujoco_diff_drive_go_to_goal.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
