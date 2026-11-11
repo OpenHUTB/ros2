@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mujoco_arm_screw</name>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 三自由度机械臂拧螺丝仿真：末端夹持竖直螺丝刀对准木板上的螺丝，
+    旋转 2.5 圈（900°）按螺距把螺丝拧入桌面螺孔，刀头最低点全程贴合螺丝顶面。
+    采用运动学回放实现（IK 解逐帧写入 qpos 后 mj_forward），不含动力学积分与执行器驱动。
+    纯 Python + MuJoCo，不依赖 ROS 话题；launch 仅用于一键启动脚本。
+  </description>
+  <maintainer email="kl-kl07@users.noreply.github.com">kl-kl07</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/OpenHUTB/ros2/tree/master/src/chap8/mujoco_arm_screw</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+</package>

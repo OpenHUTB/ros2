@@ -1,0 +1,4 @@
+<launch>
+  <!-- R2D2 固定轮速差速圆周运动仿真：通过 roslaunch 统一启动 PyBullet 脚本 -->
+  <node name="r2d2_cruise" pkg="r2d2_cruise" type="main.py" output="screen" />
+</launch>
