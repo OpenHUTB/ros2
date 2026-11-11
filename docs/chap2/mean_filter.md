@@ -120,14 +120,16 @@ data: 20.0
 
 ## 自动化测试
 
-本包为 `ament_python` 构建类型，`package.xml` 中声明了
-`<test_depend>ament_python</test_depend>` 与 `python3-pytest`，
+本包为 `ament_python` 构建类型，测试用例使用 pytest 风格。colcon 默认用
+`python3 -m unittest` 收集用例，必须显式指定 `--python-testing pytest` 才会执行，
 因此在已 source 工作空间的环境中执行：
 
 ```bash
-colcon test --packages-select mean_filter_pkg
+colcon test --packages-select mean_filter_pkg --python-testing pytest
 colcon test-result --verbose --test-result-base build/mean_filter_pkg
 ```
+
+不加 `--python-testing pytest` 时收集到的是 0 个用例。
 
 也可以直接在包目录里运行 pytest：
 

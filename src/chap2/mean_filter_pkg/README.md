@@ -73,12 +73,12 @@ ros2 topic echo /sensor/filtered
 ```
 
 窗口为 5 时，上述阶跃的输出依次为
-`10.0, 10.0, 13.3333, 15.0, 16.0, 18.0, 20.0`。
+`10.0, 10.0, 13.333333333333334, 15.0, 16.0, 18.0, 20.0`。
 
 ## 测试
 
 本包为 `ament_python` 构建类型，`package.xml` 中声明了
-`<test_depend>ament_python</test_depend>` 与 `python3-pytest`。
+`<test_depend>python3-pytest</test_depend>`。
 colcon 默认用 `python3 -m unittest` 收集用例，pytest 风格的文件必须显式指定
 `--python-testing pytest` 才会执行：
 
