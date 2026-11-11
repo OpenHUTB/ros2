@@ -421,7 +421,25 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#17">17. 说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#17">17. 定速巡航与航向保持</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#171">17.1 控制算法</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#172">17.2 操作</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#18">18. 参数、话题与实测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#181">18.1 参数与话题</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#182">18.2 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#183">18.3 结论</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#19">19. 说明</a>
 </li>
 </ul>
 </li>
@@ -448,6 +466,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../tire_slip_adhesion_eval/">轮胎滑移率-附着特性与最佳制动滑移率仿真</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rl_algorithm_compare/">神经网络强化学习算法与网络结构对比（MuJoCo CartPole）</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../steady_state_handling_eval/">车辆稳态操稳特性对比（不足/中性/过度转向）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../mujoco_car_project/">基于Mujoco的键盘遥控小车</a>
 </li>
@@ -1718,7 +1738,154 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <p><img alt="里程计闭环正方形轨迹" src="../../img/ground/gazebo_diff_drive_teleop_precision_moves.png"/></p>
 <h3 id="164">16.4 结论</h3>
 <p>实测表明，里程计闭环相对运动能够把前进/后退和转向误差控制在厘米/度级，四边正方形演示的闭合误差约 0.044 m。说明在无外部定位的短距离动作中，轮式里程计闭环足以支撑精确运动原语；但误差会随距离和转向次数累积，长距离任务仍需外部定位或轮速标定。</p>
-<h2 id="17">17. 说明</h2>
+<h2 id="17">17. 定速巡航与航向保持</h2>
+<p><code>cruise_control</code> 在键盘遥控基础上增加闭环巡航：按 <code>c</code> 锁定当前航向并维持目标速度，按 <code>a/d</code> 在巡航中微调目标航向，按 <code>+/-</code> 调整目标速度。控制量由 <code>/odom</code> 的实测线速度和偏航角反馈计算，不是开环发布固定速度。</p>
+<h3 id="171">17.1 控制算法</h3>
+<p>速度通道使用“前馈 + 比例”控制：</p>
+<div class="highlight"><pre><span></span><code>speed_error = target_speed - odom_speed
+linear = target_speed + kp_speed * speed_error + ki_speed * I + kd_speed * d(speed_error)/dt
+</code></pre></div>
+<p><code>ki_speed</code> 默认 0，避免积分饱和导致冲过目标速度；参数仍保留积分项，便于需要时启用。输出被限制在 <code>[0, max_speed]</code>，并对输出饱和时的积分做条件更新。</p>
+<p>航向通道使用 PD：</p>
+<div class="highlight"><pre><span></span><code>yaw_error = normalize(target_yaw - odom_yaw)
+angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
+</code></pre></div>
+<p>角速度限制为 <code>±max_angular</code>；航向误差较大时自动降低线速度，避免巡航中大幅甩头。</p>
+<h3 id="172">17.2 操作</h3>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>c</code></td>
+<td>进入/退出定速巡航</td>
+</tr>
+<tr>
+<td>巡航中 <code>a/d</code></td>
+<td>左/右微调目标航向（每次 <code>heading_step</code>）</td>
+</tr>
+<tr>
+<td>巡航中 <code>+/-</code></td>
+<td>调整目标速度</td>
+</tr>
+<tr>
+<td><code>w/x/a/d</code></td>
+<td>手动驾驶（自动退出巡航）</td>
+</tr>
+<tr>
+<td><code>s</code> / 空格</td>
+<td>停止并退出巡航</td>
+</tr>
+<tr>
+<td><code>q</code> / <code>Ctrl-C</code></td>
+<td>退出并自动停车</td>
+</tr>
+</tbody>
+</table>
+<h2 id="18">18. 参数、话题与实测结果</h2>
+<h3 id="181">18.1 参数与话题</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cruise_speed</code></td>
+<td>0.3 m/s</td>
+<td>巡航目标速度</td>
+</tr>
+<tr>
+<td><code>max_speed</code></td>
+<td>0.4 m/s</td>
+<td>线速度上限</td>
+</tr>
+<tr>
+<td><code>kp_speed</code></td>
+<td>0.5</td>
+<td>速度比例增益</td>
+</tr>
+<tr>
+<td><code>ki_speed</code></td>
+<td>0.0</td>
+<td>速度积分增益</td>
+</tr>
+<tr>
+<td><code>kd_speed</code></td>
+<td>0.02</td>
+<td>速度微分增益</td>
+</tr>
+<tr>
+<td><code>kp_yaw</code></td>
+<td>1.8</td>
+<td>航向比例增益</td>
+</tr>
+<tr>
+<td><code>kd_yaw</code></td>
+<td>0.15</td>
+<td>航向微分增益</td>
+</tr>
+<tr>
+<td><code>heading_step</code></td>
+<td>0.08 rad</td>
+<td><code>a/d</code> 每次调整的目标航向增量</td>
+</tr>
+<tr>
+<td><code>max_angular</code></td>
+<td>1.0 rad/s</td>
+<td>角速度上限</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>巡航/手动速度指令</td>
+</tr>
+<tr>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>速度与偏航角反馈</td>
+</tr>
+<tr>
+<td><code>/cruise_control/status</code></td>
+<td><code>std_msgs/String</code></td>
+<td><code>manual</code> / <code>cruise ...</code></td>
+</tr>
+<tr>
+<td><code>/cruise_control/state</code></td>
+<td><code>std_msgs/Float32MultiArray</code></td>
+<td>目标速度、目标航向、实际速度、实际航向、速度误差、航向误差</td>
+</tr>
+</tbody>
+</table>
+<h3 id="182">18.2 实测结果</h3>
+<p>在真实 Gazebo Harmonic 中启动完整控制链路，用伪终端注入按键并记录 <code>/cruise_control/state</code>：</p>
+<ul>
+<li>目标速度 0.30 m/s，稳态速度绝对误差约 <strong>0.002 m/s</strong>；</li>
+<li>巡航期间航向误差接近 0；</li>
+<li>按 <code>a</code> 五次把目标航向增加 0.40 rad，实际航向跟踪误差约 <strong>0.003 rad</strong>。</li>
+</ul>
+<p><img alt="定速巡航速度与航向数据" src="../../img/ground/gazebo_diff_drive_teleop_cruise_control.png"/></p>
+<h3 id="183">18.3 结论</h3>
+<p>实测表明，速度通道能把稳态误差压到约 0.002 m/s，航向保持和键盘微调也达到约 0.003 rad 的跟踪误差。说明在 Gazebo 差速底盘上，基于 <code>/odom</code> 的前馈 + P 控制可以稳定维持巡航。结论仅针对当前速度和增益参数；真实车辆还需考虑执行器延迟、打滑、负载变化和外部定位。</p>
+<h2 id="19">19. 说明</h2>
 <p>代码与文档使用 AI 大模型辅助编写。作者已核对代码、参数和实验数据，并对提交内容负责。</p></div>
 </div>
 </div><footer>
