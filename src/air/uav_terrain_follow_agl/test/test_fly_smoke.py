@@ -12,6 +12,7 @@ from uav_terrain_follow_agl.core.dem import IDEAL_DEM
 from uav_terrain_follow_agl.core.flyer import KinematicPlant, fly, fly_all, speed_profile
 
 mujoco = pytest.importorskip("mujoco", reason="需要 mujoco 才能跑闭环")
+pytest.importorskip("uav_mujoco_sim.core.quadrotor", reason="需要同仓库 uav_mujoco_sim")
 from uav_mujoco_sim.core.quadrotor import Quadrotor  # noqa: E402
 
 

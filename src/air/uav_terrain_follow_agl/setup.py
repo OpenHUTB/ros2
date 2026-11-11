@@ -19,7 +19,7 @@ setup(
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
     ],
-    install_requires=["setuptools", "numpy", "mujoco"],
+    install_requires=["setuptools", "numpy", "mujoco", "matplotlib", "pyyaml"],
     zip_safe=True,
     maintainer="蒋宇鑫",
     maintainer_email="327592576+KKK555-MAX@users.noreply.github.com",

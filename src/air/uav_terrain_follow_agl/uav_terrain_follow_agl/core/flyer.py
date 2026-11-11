@@ -108,7 +108,13 @@ class MujocoPlant:
     """仓库底座的四旋翼：几何控制器 + 真物理。"""
 
     def __init__(self, dt: float = DT, substeps: int = SUBSTEPS):
-        from uav_mujoco_sim.core.quadrotor import GeometricController, Quadrotor
+        try:
+            from uav_mujoco_sim.core.quadrotor import GeometricController, Quadrotor
+        except ImportError as exc:
+            raise RuntimeError(
+                "MuJoCo 后端需要同仓库的 src/air/uav_mujoco_sim；"
+                "请在仓库源码目录运行，或改用 --plant kinematic（等价 --no-sim）。"
+            ) from exc
 
         self.quad = Quadrotor(dt=dt, substeps=substeps)
         self.ctrl = GeometricController(self.quad.params)
