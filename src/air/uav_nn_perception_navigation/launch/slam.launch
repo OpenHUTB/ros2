@@ -14,12 +14,12 @@
     <param name="publish_tf" value="true"/>
   </node>
 
-  <!-- 感知节点：360 度稠密扫描 + 12 扇区特征 -->
+  <!-- 随包雷达为前向 180 度；未观测区域不能视为已确认安全 -->
   <node name="lidar_perception" pkg="uav_nn_perception_navigation" type="lidar_perception.py" output="screen">
     <param name="airsim_ip" value="$(arg airsim_ip)"/>
     <param name="vehicle_name" value="$(arg vehicle_name)"/>
     <param name="scan_bins" value="180"/>
-    <param name="scan_fov" value="360.0"/>
+    <param name="scan_fov" value="180.0"/>
   </node>
 
   <!-- 雷达装在机体中心正下方 0.5 米，需要一个静态变换 -->

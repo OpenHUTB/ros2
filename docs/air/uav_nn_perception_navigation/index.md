@@ -405,6 +405,8 @@ $$
 
 ![建图结果](map.png)
 
+以下为历史示例地图指标，原始采集配置和运行日志未能与当前 launch 一一对应，不能作为当前设置可复现的证明。gmapping 运行中可扩展初始地图边界；应在相同场景重新采集并保存配置、日志及地图。
+
 | 指标 | 数值 |
 | --- | --- |
 | 地图尺寸 | 1440 × 1536 格 |
@@ -592,7 +594,7 @@ $$k=\mathrm{clip}\left(\left\lfloor\frac{\alpha+30^{\circ}}{60^{\circ}}\times 12
 
 后 4 维是目标相对量。水平距离除以 `MAX_GOAL_DIST` 截断到 1，方位角用 `atan2(dy, dx)` 减去偏航角转到机体系，再用 `atan2(sin, cos)` 规约到 $(-\pi,\pi]$，取正余弦两个分量而不是角度本身，避免 ±π 附近的跳变；高度差除以 `MAX_DZ` 后截断到 $[-1,1]$。
 
-文件里还有两个给别处用的工具：`extract_scan` 把点云投成 `bins=180`、`fov_deg=360` 的环形距离数组，没有命中的角度填满量程，供建图使用；`yaw_from_quaternion` 与桥接节点里的 `quat_to_yaw_ned` 是同一套公式的两份拷贝。
+文件里还有两个给别处用的工具：`extract_scan` 把点云投成距离数组，当前 launch 使用 `bins=180`、前向 `fov_deg=180`，没有命中的角度填满量程，但不代表这些方向已确认安全；`yaw_from_quaternion` 与桥接节点里的 `quat_to_yaw_ned` 是同一套公式的两份拷贝。
 
 ### 9.3 控制节点 trajectory_control.py
 
@@ -662,18 +664,21 @@ $$v_{rep}=K_{rep}\left(1-\frac{d}{6.0}\right),\qquad K_{rep}=4.0$$
 ```python
                 now = rospy.Time.now().to_sec()
                 if len(points):
-                    self.point_buffer.append((now, points))
+                    self.point_buffer.append((now, points, cur_pos, cur_yaw))
                 while self.point_buffer and now - self.point_buffer[0][0] > self.accum_sec:
                     self.point_buffer.popleft()
                 if self.point_buffer:
-                    accum = np.vstack([p for _, p in self.point_buffer])
+                    accum = np.vstack([
+                        transform_points_to_frame(p, sp, sy, cur_pos, cur_yaw)
+                        for _, p, sp, sy in self.point_buffer
+                    ])
                 else:
                     accum = points
 ```
 
-关键在于两路输出的点云来源不同：控制特征只吃最新一帧，因为训练时用的就是单帧；建图扫描吃累积点云。若把累积点云也喂给特征模块，扇区距离会与训练分布不一致；反之若用单帧生成 360° 扫描，大部分角度会是空值。
+控制特征只吃最新一帧，建图扫描吃累积点云。每帧按查询时的估计位置和偏航转换到当前机体系；由于位姿和点云采集时间并非严格同步，也未对单帧内各点去畸变，快速转动或移动时仍可能错位。随包设置只覆盖前向 180°，不能声称观测了后方。
 
-`LaserScan` 的元数据由参数推导：`angle_min = -fov/2`、`angle_max = +fov/2`、`angle_increment = fov / bins`，`range_min = 0.1`、`range_max = 40.0`；默认 `scan_bins = 180`、`scan_fov = 360.0`。
+`LaserScan` 的元数据由参数推导：`angle_min = -fov/2`、`angle_increment = fov / bins`、`angle_max = angle_min + (bins - 1) * angle_increment`，`range_min = 0.1`、`range_max = 40.0`；默认 `scan_bins = 180`、`scan_fov = 180.0`。
 
 `~scan_source` 可切到 `depth`，改用深度图反投影出的稠密点云。反投影按水平视场角求焦距 $f_x = \frac{w/2}{\tan(\theta/2)}$，把像素坐标换成相机系下的 $[z, x, y]$，再过滤掉 0.2 到 40 米之外的点，以及传感器系竖直方向偏移超过 2 米的点，只保留大致同高度的一层做二维建图。
 
@@ -738,7 +743,7 @@ $$I_{out}(i,j,c)=\frac{1}{f_hf_w}\sum_{u=0}^{f_h-1}\sum_{v=0}^{f_w-1}I(i f_h+u,\
 
 这个 launch 同时拉起五个节点，让建图与神经网络导航在同一个仿真里并行跑：桥接节点、雷达感知节点、一个静态 TF 发布器、gmapping、控制节点，外加一个用 `rostopic pub` 伪装的目标点发布器。
 
-桥接节点在这里的配置与默认值不同：`auto_takeoff` 设为 `false`，起飞交给外部流程；`publish_tf` 设为 `true`，因为 gmapping 需要 `odom→base_link` 的变换，而桥接节点默认不广播 TF。感知节点把 `scan_bins` 固定为 180、`scan_fov` 固定为 360.0，才够 gmapping 拼栅格。
+桥接节点在这里的配置与默认值不同：`auto_takeoff` 设为 `false`，起飞交给外部流程；`publish_tf` 设为 `true`，因为 gmapping 需要 `odom→base_link` 的变换。感知节点将 `scan_bins` 设为 180、`scan_fov` 设为 180.0，与随包传感器配置一致。
 
 雷达的安装位置用静态变换补上，参数 `0 0 -0.5 0 0 0 base_link laser` 表示 `laser` 帧在 `base_link` 正下方 0.5 米，与感知节点默认的 `scan_frame='laser'` 对应。
 
