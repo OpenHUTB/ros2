@@ -1,0 +1,12 @@
+<mujoco>
+    <worldbody>
+        <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+        <geom name="floor" type="plane" size="10 10 0.1" rgba=".8 .9 .8 1"/>
+        
+        <!-- 水下机器人 (ROV) -->
+        <body name="rov" pos="0 0 2">
+            <freejoint name="rov_joint"/>
+            <geom name="rov_body" type="box" size="0.2 0.2 0.1" rgba="1 0 0 1"/>
+        </body>
+    </worldbody>
+</mujoco>
