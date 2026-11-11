@@ -1,3 +1,5 @@
+import signal
+
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -129,17 +131,27 @@ class AuvObstacleAvoid(Node):
         except Exception as e:
             self.get_logger().error(f'图像处理失败: {str(e)}')
 
-    def destroy_node(self):
-        # 退出前发布零速度，避免 AUV 保持最后一帧速度继续运动
-        stop_vel = Twist()
-        self.vel_pub.publish(stop_vel)
+    def publish_stop(self):
+        # planar_move 没有 cmd_vel 超时，退出前必须显式发零速度
+        self.vel_pub.publish(Twist())
         self.get_logger().info('避障节点停止，发布零速度指令')
+
+    def destroy_node(self):
+        self.publish_stop()
         super().destroy_node()
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = AuvObstacleAvoid()
+
+    def handle_sigint(signum, frame):
+        # rclpy 默认的 SIGINT 处理会先关闭 context，之后 publish 会失败，
+        # 所以在 context 仍有效时先发零速度
+        node.publish_stop()
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGINT, handle_sigint)
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):

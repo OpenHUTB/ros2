@@ -20,7 +20,7 @@ graph TD
     A[Gazebo Classic 11<br/>underwater.world] -->|/auv/camera/camera/image_raw| B[auv_obstacle_avoid<br/>图像暗区检测]
     B -->|/auv/cmd_vel| C[libgazebo_ros_planar_move.so]
     D[auv_rect_cruise<br/>四状态巡航状态机] -->|/auv/cmd_vel| C
-    C -->|/auv/odom| D
+    C -.->|/auv/odom 仅供观察| E[ros2 topic echo 观察轨迹]
 ```
 
 场景中 `planar_move` 插件作为运动学驱动接收 `/auv/cmd_vel` 并发布 `/auv/odom`，两个节点各自独立发布速度指令，**不能同时运行**（会互相抢占 `/auv/cmd_vel`）。
@@ -152,7 +152,7 @@ stateDiagram-v2
 切换状态：前进 | 完成一个矩形循环
 ```
 
-四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹在 `/auv/odom` 上可观察到闭合矩形。Ctrl+C 退出时节点发布零速度，AUV 立即停止。
+四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹在 `/auv/odom` 上可观察到闭合矩形。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；`planar_move` 没有指令超时，这一步决定 AUV 是否立即停下。
 
 ![矩形巡航轨迹](../img/water/auv_end2end_rect_cruise.png)
 
@@ -160,7 +160,7 @@ stateDiagram-v2
 
 `ros2 launch auv_end2end auv_sim.launch.py` 启动后，AUV 沿 +x 方向直行，接近 x=4 处的正前方墙体时画面暗像素占比上升：
 
-- 左侧占比先超阈值 → 输出「触发避障 向右避让」，横向速度 `linear.y = -2.8`，同时前进速度降为 4.05 m/s；
+- 本次实测左侧占比先超阈值 → 输出「触发避障 向右避让」，横向速度 `linear.y = -2.8`，同时前进速度降为 4.05 m/s。正前方居中墙体的左右占比接近，方向实际由像素级差异决定，换场景或改雾密度后可能变成向左避让；
 - 绕过墙体后双侧占比回落到 18% 以下 → 输出「障碍物清除 恢复直行」；
 - 若障碍物持续占据画面导致占比长期停在 18%~22% 之间，3 s 超时后强制进入 2 s 冷却期，期间固定直行。
 
@@ -181,7 +181,7 @@ ros2 topic echo /auv/odom --field pose.pose.position
 ## 9. 已知限制
 
 - 障碍持续存在时会形成「避让 3 s → 强制直行 2 s → 再避让」的循环；面对连续长墙无法绕过，这是本作业的教学取舍。
-- 灰度阈值 22 与墙体材质（ambient/diffuse = 0.1，约 25 灰度）余量仅 3 个灰度级，叠加雾效与背景色后对光照变化较敏感，改变雾密度或材质时需重新标定 `obstacle_thresh`。
+- 灰度阈值 22 依赖具体场景：墙体材质 ambient/diffuse = 0.1，在 Gazebo 渲染下接近纯黑，本身远低于阈值；但水下雾效与背景色会把画面整体灰度抬高，改动雾密度、材质或相机距离时仍需重新标定 `obstacle_thresh`。
 - 参数硬编码，暂未通过 ROS 参数或 `DeclareLaunchArgument` 暴露。
 
 ## 参考文献

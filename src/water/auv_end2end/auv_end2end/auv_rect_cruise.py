@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import signal
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -68,17 +70,27 @@ class AuvRectCruise(Node):
         # 发布速度指令
         self.vel_pub.publish(vel)
 
-    def destroy_node(self):
+    def publish_stop(self):
         # 停止时发布零速度，确保AUV立刻停下
-        stop_vel = Twist()
-        self.vel_pub.publish(stop_vel)
+        self.vel_pub.publish(Twist())
         self.get_logger().info('巡航节点停止，发布零速度指令')
+
+    def destroy_node(self):
+        self.publish_stop()
         super().destroy_node()
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = AuvRectCruise()
+
+    def handle_sigint(signum, frame):
+        # rclpy 默认的 SIGINT 处理会先关闭 context，之后 publish 会失败，
+        # 所以在 context 仍有效时先发零速度
+        node.publish_stop()
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGINT, handle_sigint)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

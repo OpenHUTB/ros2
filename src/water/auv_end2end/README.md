@@ -91,7 +91,7 @@ ros2 launch auv_end2end auv_sim.launch.py           # 视觉避障
 
 - 两个 launch 都会向 `/auv/cmd_vel` 发布速度指令，请勿同时运行，切换前先 Ctrl+C 关闭。
 - 两个节点均以 `use_sim_time=True` 运行，避让 3 s、冷却 2 s 按 Gazebo 仿真时钟计时。
-- Ctrl+C 退出时节点会先发布零速度指令，避免 AUV 保持最后一帧速度继续运动
+- Ctrl+C 退出时节点会在 rclpy 关闭 context 之前先发布零速度指令，避免 AUV 保持最后一帧速度继续运动
   （`libgazebo_ros_planar_move.so` 本身没有 cmd_vel 超时）。
 
 ## 参数说明

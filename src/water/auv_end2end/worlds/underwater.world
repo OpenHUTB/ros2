@@ -27,14 +27,6 @@
     </fog>
   </scene>
 
-  <!-- 模型状态服务 提供set_model_state控制接口 -->
-  <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-    <ros>
-      <namespace>/gazebo</namespace>
-    </ros>
-    <update_rate>100.0</update_rate>
-  </plugin>
-
   <!-- 地面 -->
   <model name="ground">
     <static>true</static>
