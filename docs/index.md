@@ -106,6 +106,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [关节指令的 QoS 与时延影响评估](./humanoid/joint_qos_latency_eval.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 * [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
+* [人形机器人跑步牛顿第二定律理论计算与演示](./humanoid/humanoid_newton_running.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
