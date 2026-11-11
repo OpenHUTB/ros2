@@ -96,6 +96,7 @@ ROS每章节运行代码:
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [车辆稳态操稳特性对比（不足 / 中性 / 过度转向）](./ground/steady_state_handling_eval.md) —— 质心位置对转向梯度、横摆增益与侧偏角的影响
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
