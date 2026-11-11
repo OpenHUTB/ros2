@@ -38,11 +38,10 @@ class ElbowSimulation:
         self.data = mujoco.MjData(self.model)
         self.limiter = ActivationLimiter()
         self._validate_names()
-        self._joint_qpos = int(
-            self.model.jnt_qposadr[self._id(mujoco.mjtObj.mjOBJ_JOINT, "elbow_joint")]
-        )
+        self._elbow_joint_id = self._id(mujoco.mjtObj.mjOBJ_JOINT, "elbow_joint")
+        self._joint_qpos = int(self.model.jnt_qposadr[self._elbow_joint_id])
         self._joint_qvel = int(
-            self.model.jnt_dofadr[self._id(mujoco.mjtObj.mjOBJ_JOINT, "elbow_joint")]
+            self.model.jnt_dofadr[self._elbow_joint_id]
         )
         self._flexor_id = self._id(mujoco.mjtObj.mjOBJ_ACTUATOR, "flexor_muscle")
         self._extensor_id = self._id(mujoco.mjtObj.mjOBJ_ACTUATOR, "extensor_muscle")
@@ -70,6 +69,11 @@ class ElbowSimulation:
     def timestep_s(self) -> float:
         return float(self.model.opt.timestep)
 
+    @property
+    def joint_range_rad(self) -> Tuple[float, float]:
+        lower, upper = self.model.jnt_range[self._elbow_joint_id]
+        return float(lower), float(upper)
+
     def observe(self) -> ElbowObservation:
         forces = self.data.actuator_force
         return ElbowObservation(
@@ -81,9 +85,7 @@ class ElbowSimulation:
         )
 
     def reset(self, angle_rad: float) -> ElbowObservation:
-        lower, upper = self.model.jnt_range[
-            self._id(self._mj.mjtObj.mjOBJ_JOINT, "elbow_joint")
-        ]
+        lower, upper = self.joint_range_rad
         if not float(lower) <= angle_rad <= float(upper):
             raise ValueError("initial elbow angle is outside the joint range")
         self._mj.mj_resetData(self.model, self.data)
