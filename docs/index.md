@@ -318,6 +318,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [狭窄通道通行：激光雷达开口辨识与神经网络选口穿行](./ground/gap_nav_nn.md) —— 隔墙三个开口（0.7/1.4/2.4 m），车宽 0.6 m，专家按可通行性与绕路代价选口，行为克隆 MLP 仅凭雷达判断孔径，20 回合成功率 100% / 90%
 * [四轮独立驱动扭矩矢量横摆控制](./ground/torque_vectoring_yaw_control/index.md) —— 附着椭圆约束下的加权最小二乘分配 + 带前馈横摆率跟踪 + 单电机失效降级
 * [ROS2 差速机器人 EKF 多传感器融合定位](./ground/ros2_ekf_localization/index.md) —— 轮式里程计 + IMU 航向 + 绝对位置观测的 EKF，输出 /odometry/filtered 供控制器直接使用
+* [TF 链路健康监视（断链 / 时间戳回退 / 消息陈旧 / 多 parent）](./ground/tf_health_monitor.md) —— 按 `(parent, child)` 边聚合 `/tf` 与 `/tf_static`，点名异常边并给出 `ok` / `stale` / `old_data` / `multi_parent` 等状态，附自动制造四类异常的演示数据源
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 * [仓储通道巡检无人机测距与分级制动](./air/mujoco_warehouse_uav_collision_braking.md)
