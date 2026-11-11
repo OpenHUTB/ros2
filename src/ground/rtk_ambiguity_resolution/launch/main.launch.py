@@ -2,7 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, Shutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -20,6 +20,7 @@ def generate_launch_description():
                 executable="rtk_sim",
                 name="rtk_sim",
                 output="screen",
+                on_exit=Shutdown(),
                 parameters=[
                     config,
                     {

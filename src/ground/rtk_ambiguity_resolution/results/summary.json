@@ -1,7 +1,7 @@
 {
   "module": "rtk_ambiguity_resolution",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T17:08:19+00:00",
+  "generated_utc": "2026-11-11T05:00:48+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
@@ -49,6 +49,8 @@
     "fixed_epochs": 19,
     "float_max_mm": 398.32905760361814,
     "fixed_max_mm": 1.7485742453767077,
+    "fixed_max_fixed_only_mm": 1.7485742453767077,
+    "float_sigma_cycles_max": 0.3052981616277107,
     "success_rate_pct": 100.0,
     "fix_rate_pct": 95.0,
     "wrong_fix_pct": 0.0,
@@ -64,6 +66,8 @@
       "fixed_epochs": 27,
       "float_max_mm": 1159.7255392906013,
       "fixed_max_mm": 1635.7271908054825,
+      "fixed_max_fixed_only_mm": 738.0897335110449,
+      "float_sigma_cycles_max": 0.9654375562077538,
       "success_rate_pct": 49.0,
       "fix_rate_pct": 13.5,
       "wrong_fix_pct": 5.0,
@@ -78,6 +82,8 @@
       "fixed_epochs": 30,
       "float_max_mm": 693.1693068297849,
       "fixed_max_mm": 679.2670459483419,
+      "fixed_max_fixed_only_mm": 676.278247724783,
+      "float_sigma_cycles_max": 0.6105963232591445,
       "success_rate_pct": 85.0,
       "fix_rate_pct": 37.5,
       "wrong_fix_pct": 2.5,
@@ -92,6 +98,8 @@
       "fixed_epochs": 28,
       "float_max_mm": 480.4476325379079,
       "fixed_max_mm": 944.8510717746087,
+      "fixed_max_fixed_only_mm": 3.0561764784360945,
+      "float_sigma_cycles_max": 0.43175680073693695,
       "success_rate_pct": 95.0,
       "fix_rate_pct": 70.0,
       "wrong_fix_pct": 0.0,
@@ -106,6 +114,8 @@
       "fixed_epochs": 19,
       "float_max_mm": 398.32905760361814,
       "fixed_max_mm": 1.7485742453767077,
+      "fixed_max_fixed_only_mm": 1.7485742453767077,
+      "float_sigma_cycles_max": 0.3052981616277107,
       "success_rate_pct": 100.0,
       "fix_rate_pct": 95.0,
       "wrong_fix_pct": 0.0,
@@ -120,6 +130,8 @@
       "fixed_epochs": 10,
       "float_max_mm": 319.2600575963164,
       "fixed_max_mm": 1.2393779015857769,
+      "fixed_max_fixed_only_mm": 1.2393779015857769,
+      "float_sigma_cycles_max": 0.21587840036756606,
       "success_rate_pct": 100.0,
       "fix_rate_pct": 100.0,
       "wrong_fix_pct": 0.0,
@@ -157,6 +169,18 @@
     ],
     "determinant": -1,
     "condition_before": 24854.85799882757,
-    "condition_after": 7.86721978434433
+    "condition_after": 7.86721978434433,
+    "diag_before": [
+      0.08945070754814408,
+      0.09088948239747921,
+      0.08008942510278068,
+      0.11239825492463508
+    ],
+    "diag_after": [
+      0.004441882942529063,
+      0.007658329583271818,
+      0.013729421079853685,
+      0.025381908865330594
+    ]
   }
 }

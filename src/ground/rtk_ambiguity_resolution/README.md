@@ -15,7 +15,7 @@ source /opt/ros/humble/setup.bash
 cd ~/hutb_ws
 colcon build --symlink-install --packages-select rtk_ambiguity_resolution
 source install/setup.bash
-ros2 launch rtk_ambiguity_resolution main.launch.py duration:=30
+ros2 launch rtk_ambiguity_resolution main.launch.py windows:=20
 ```
 
 | 话题 | 类型 | 方向 | 说明 |

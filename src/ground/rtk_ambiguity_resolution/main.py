@@ -1,6 +1,6 @@
 """Module entry point: offline experiment without ROS.
 
-    python main.py --out results --figure-dir ../../docs/img/ground/rtk_ambiguity_resolution
+    python main.py --out results --figure-dir ../../../docs/img/ground/rtk_ambiguity_resolution
 """
 
 import sys

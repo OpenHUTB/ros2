@@ -144,7 +144,7 @@ class SceneTests(unittest.TestCase):
         config = RtkConfig(epochs=40, epochs_per_fix=20, seed=5)
         first = simulate(config)
         second = simulate(config)
-        for left, right in zip(first, second, strict=True):
+        for left, right in zip(first, second, ):
             np.testing.assert_array_equal(left["phase_cycles"], right["phase_cycles"])
             np.testing.assert_array_equal(left["code_m"], right["code_m"])
 

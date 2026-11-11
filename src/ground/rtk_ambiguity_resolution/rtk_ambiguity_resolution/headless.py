@@ -66,6 +66,8 @@ def summarize(rows: list[dict]) -> dict:
         "fixed_epochs": int(fixed_only.size),
         "float_max_mm": float(1000.0 * np.max(float_errors)),
         "fixed_max_mm": float(1000.0 * np.max(fixed_errors)),
+        "fixed_max_fixed_only_mm": float(1000.0 * np.max(fixed_only)) if fixed_only.size else float("nan"),
+        "float_sigma_cycles_max": float(np.max([row["float_ambiguity_sigma"] for row in rows])),
         "success_rate_pct": float(100.0 * np.mean(correct)),
         "fix_rate_pct": float(100.0 * np.mean(fixed)),
         "wrong_fix_pct": float(100.0 * np.mean(fixed & ~correct)),
@@ -128,15 +130,17 @@ def run_experiment(
             "condition_after": float(
                 np.linalg.cond(transform @ sample_solution.cov_nn @ transform.T)
             ),
+            "diag_before": [float(value) for value in np.diag(sample_solution.cov_nn)],
+            "diag_after": [
+                float(value)
+                for value in np.diag(transform @ sample_solution.cov_nn @ transform.T)
+            ],
         },
     }
     if out_dir is not None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
+        with (out_dir / "summary.json").open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if make_plots:
         if figure_dir is None:
             raise ValueError("figure_dir is required when make_plots is True")
