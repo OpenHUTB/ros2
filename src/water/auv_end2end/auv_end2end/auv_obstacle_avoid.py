@@ -147,10 +147,6 @@ class AuvObstacleAvoid(Node):
         self.vel_pub.publish(Twist())
         self.get_logger().info('避障节点停止，发布零速度指令')
 
-    def destroy_node(self):
-        self.publish_stop()
-        super().destroy_node()
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -158,8 +154,7 @@ def main(args=None):
 
     def handle_sigint(signum, frame):
         # rclpy 默认的 SIGINT 处理会先关闭 context，之后 publish 会失败，
-        # 所以在 context 仍有效时先发零速度
-        node.publish_stop()
+        # 这里只抛出异常，把发零速度的时机留到 finally
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGINT, handle_sigint)
@@ -168,6 +163,7 @@ def main(args=None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        node.publish_stop()
         node.destroy_node()
         rclpy.shutdown()
 

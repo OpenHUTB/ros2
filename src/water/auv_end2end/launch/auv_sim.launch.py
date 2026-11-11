@@ -30,11 +30,10 @@ def generate_launch_description():
             output='screen',
             name='gazebo_sim'
         ),
-        # 启动视觉避障节点
+        # 启动视觉避障节点（节点名沿用代码里的 auv_obstacle_avoid）
         Node(
             package='auv_end2end',
             executable='auv_obstacle_avoid',
-            name='auv_obstacle_avoid',
             output='screen',
             parameters=[{
                 'use_sim_time': True,

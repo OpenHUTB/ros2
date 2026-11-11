@@ -28,11 +28,10 @@ def generate_launch_description():
             output='screen',
             name='gazebo_sim'
         ),
-        # 启动矩形巡航节点
+        # 启动矩形巡航节点（节点名沿用代码里的 auv_rect_cruise）
         Node(
             package='auv_end2end',
             executable='auv_rect_cruise',
-            name='auv_rect_cruise_node',
             output='screen',
             parameters=[{
                 'use_sim_time': True,
