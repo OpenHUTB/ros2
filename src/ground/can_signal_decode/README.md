@@ -111,5 +111,10 @@ ros2 topic echo /can/signals --once
 
 ## 7. 大模型使用声明
 
-使用大模型辅助生成代码框架、单元测试与文档；作者已逐项复核位域实现、CRC 参数与
-实测数据，并对提交内容与后续维护负责。
+使用 **DeepSeek 的 deepseek-flash 模型**（通过 DeepSeek Harness 客户端调用）辅助完成：
+位域（Intel/Motorola）与 CRC8 的实现方案、单元测试用例、README 与教程页初稿、
+以及运行输出与统计表格的整理。
+
+所有公式推导、位序约定、CRC8 参数、量程设置与实测数字均由作者逐项复核，并在
+Ubuntu 22.04.5 + ROS 2 Humble + Python 3.10.12 上实跑确认（`colcon build`、
+`colcon test` 13 项、`ros2 launch`）；作者对提交内容与后续维护负全部责任。
