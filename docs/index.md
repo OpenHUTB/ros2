@@ -195,6 +195,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [相机-激光雷达外参标定](./ground/lidar_camera_calibration.md) —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
+* [无人机载荷重心包线检查](./air/uav_payload_cg_envelope.md) —— 结合空机与载荷质量检查纵向、横向重心余量。
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
 
@@ -209,7 +210,6 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
 * [无人机深度相机神经网络避障飞行（MuJoCo）](./air/uav_mujoco_depth_avoidance.md) —— 64×64 机载深度图 → numpy CNN → 三扇区通行度 → 速度/偏航闭环，3 场景 × 5 实例共 15/15 成功
 * [无人机着陆阶段识别与接地载荷预测](./air/landing_assessment.md)
-* [UAV payload CG envelope](./air/uav_payload_cg_envelope.md): Combine empty-aircraft and payload masses to compute CG, longitudinal margins and lateral offset.
 
 * [Fixed-wing SITL preflight](./air/fixed_wing_sitl_preflight.md): static configuration checks for PX4/ArduPilot fixed-wing SITL
 * [无人机测距制动与神经控制](./air/mujoco_uav_range_neural_braking.md)
