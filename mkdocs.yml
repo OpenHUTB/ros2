@@ -294,6 +294,7 @@ nav:
     - 无人机视觉感知置信度退化保护: './air/uav_perception_confidence_guard.md'
     - 无人机应急着陆点安全评估: './air/uav_emergency_landing_selector.md'
     - 基于 GRU 的无人机飞行状态预测与 ROS2 在线误差分析: './air/state_prediction.md'
+    - MuJoCo 失落公园无人机端到端视觉转向: './air/mujoco_abandoned_park_uav_visual_steering.md'
     - 无人机通信链路退化保护与断联风险预测: './air/uav_link_outage_guard.md'
     - MuJoCo 四旋翼仿真与 ROS2 桥接底座: './air/uav_mujoco_sim.md'
     - 无人机执行器故障注入与控制退化观测: './air/uav_actuator_fault_sim.md'
@@ -387,4 +388,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-
