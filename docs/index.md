@@ -109,6 +109,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人 IMU 姿态解算：互补滤波与 Madgwick 对比](./humanoid/humanoid_imu_attitude.md)
 * [人形机器人离线语音指令控制](./humanoid/humanoid_voice_command.md)
 * [人形机器人全身柔顺控制](./humanoid/humanoid_g1_compliance.md)
+* [人形机器人落地冲击缓冲：膝关节阻抗与刚性保持对比](./humanoid/humanoid_landing_impedance.md)
 
 
 ## 3. 肌肉骨骼人 <span id='musculoskeletal'></span>
@@ -123,6 +124,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [肌肉驱动的夹爪抓取：真实接触抓取](./musculoskeletal/msk_gripper.md)
 * [肌肉驱动的下肢关节与步态](./musculoskeletal/muscle_leg_gait.md)
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
+  
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
