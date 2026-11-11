@@ -81,21 +81,14 @@ ros2 launch auv_end2end auv_rect_cruise.launch.py record_csv:=$HOME/rect.csv
 
 `gui:=false` 只关闭 `gzclient`，`gzserver` 仍在运行；相机传感器需要渲染，无显示环境下仍要通过 `DISPLAY` 指向一个可用的 X 服务，否则图像话题不会有数据。
 
-单元测试不依赖 Gazebo 与相机，直接覆盖 `avoid_logic.py` 里的纯逻辑：
+单元测试与代码规范检查共用同一条命令，都不依赖 Gazebo 与相机，直接覆盖 `avoid_logic.py` 里的纯逻辑：
 
 ```bash
 colcon test --packages-select auv_end2end
 colcon test-result --verbose
 ```
 
-共 21 项：`test/test_vision.py` 覆盖 ROI 裁剪、Otsu 与双峰判据、均匀水面兜底、固定/自适应阈值切换；`test/test_avoid_state.py` 覆盖触发与恢复滞环、最小避让时长、超时、冷却以及冷却期紧急重触发。
-
-代码规范检查：
-
-```bash
-colcon test --packages-select auv_end2end
-colcon test-result --verbose
-```
+共 21 项，其中 19 项是逻辑用例：`test/test_vision.py` 覆盖 ROI 裁剪、Otsu 双峰判据、均匀水面与雾渐变兜底、固定/自适应阈值切换；`test/test_avoid_state.py` 覆盖触发与恢复滞环、最小避让时长、超时、冷却以及冷却期紧急重触发。另 2 项是 `ament_flake8`、`ament_pep257` 规范检查。
 
 ![Gazebo 水下仿真场景](../img/water/auv_end2end_scene.png)
 

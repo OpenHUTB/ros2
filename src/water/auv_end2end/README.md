@@ -78,7 +78,7 @@ colcon build --packages-select auv_end2end
 source install/setup.bash
 ```
 
-编译后执行 `colcon test --packages-select auv_end2end` 可运行 flake8 / pep257 代码规范检查。
+编译后执行 `colcon test --packages-select auv_end2end` 可运行单元测试与 flake8 / pep257 代码规范检查（共 21 项，测试只依赖 numpy，不需要启动 Gazebo）。
 
 ## 运行与退出
 
