@@ -5,7 +5,9 @@ import math
 import numpy as np
 import pytest
 
-from uav_target_geolocation.core.analysis import (QUAD_MASS_KG, compare_to_theory,
+from uav_target_geolocation.core.analysis import (QUAD_MASS_KG,
+                                                 compare_to_theory,
+                                                 fusion_crossing_angle_deg,
                                                  from_station_directions,
                                                  monte_carlo, sweep_angle,
                                                  theory_single_cep50,
@@ -117,3 +119,37 @@ def test_available_cases_are_consistent():
     assert names == {"single_station", "two_station_orthogonal",
                      "two_station_shallow"}
     assert sweep_case(45.0).n_stations == 2
+
+
+# --------------------------------------------------------------------------- #
+# 交会占优的临界开角（评审指出 18° 与代码参数对不上后补的口径工具）
+# --------------------------------------------------------------------------- #
+def test_fusion_crossing_angle_interpolates_the_first_crossing():
+    angles = [10.0, 20.0, 30.0, 40.0, 50.0]
+    fused = [5.0, 3.0, 1.5, 0.8, 0.5]
+    # 1.0 落在 1.5（30°）与 0.8（40°）之间：t = 0.5/0.7 → 30 + 10·0.714
+    assert fusion_crossing_angle_deg(angles, fused, 1.0) == pytest.approx(
+        37.14, abs=0.01)
+
+
+def test_fusion_crossing_angle_edge_cases():
+    angles = [10.0, 20.0, 30.0]
+    assert fusion_crossing_angle_deg(angles, [5.0, 4.0, 3.0], 1.0) is None
+    assert fusion_crossing_angle_deg(angles, [0.5, 0.4, 0.3], 1.0) == 10.0
+    with pytest.raises(ValueError):
+        fusion_crossing_angle_deg([1.0, 2.0], [1.0], 1.0)
+
+
+def test_crossing_angle_at_case_parameters_is_far_above_18deg():
+    """评审复核：正文原来写"18°"，按代码参数（bias 0.20°）实际在 45° 附近。
+
+    这条测试守住量级：bias 主导时临界角由几何决定（收益 1/√2 vs 小开角放大），
+    不会落在 20° 以内；若未来有人改了 bias/sigma，这条失败是提醒重算正文。
+    """
+    out = sweep_angle([20.0, 40.0, 50.0, 60.0], sigma_deg=0.30, bias_deg=0.20,
+                      n=300, seed=1)
+    single = monte_carlo(get_case("single_station"), n=300, seed=1)[
+        "single"]["cep50_m"]
+    cross = fusion_crossing_angle_deg(out["angle_deg"], out["fused_cep50_m"],
+                                      single)
+    assert cross is not None and 40.0 <= cross <= 60.0

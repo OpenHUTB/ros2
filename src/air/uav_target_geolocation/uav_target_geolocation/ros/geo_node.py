@@ -21,9 +21,12 @@ from typing import List, Optional
 import numpy as np
 
 from ..core.fusion import angular_spread_deg, fused_from_directions, mean_direction
-from ..core.geometry import horizontal_intersection_angle_deg, make_ray
+from ..core.geometry import (Ray, horizontal_intersection_angle_deg,
+                             rotate_by_angle_err)
 
 DEFAULTS = {
+    # 视轴零位偏置（度，机体系 x / y）：标定残差，整架次不变。填了就在
+    # on_los 里按标定值反向扣掉；留 0 表示"未标定，按原样解算"
     "los_bias_deg": (0.0, 0.0),
     "los_sigma_deg": 0.30,
     "min_stations_for_fusion": 2,
@@ -133,7 +136,11 @@ class GeoState:
                 out = {"ok": False, "mode": "fused", "n_stations": n,
                        "reason": fused.reason}
         else:
-            ray = make_ray(self.stations_pos[0], self.stations_dir[0])
+            # 注意：这里必须直接用 Ray(origin, direction)。make_ray 的第二个
+            # 参数是"目标点"，把单位方向向量喂进去等于另取一条射线——本模块
+            # 视线恰好都指向世界原点，错误才一直没露馅
+            ray = Ray(origin=self.stations_pos[0],
+                      direction=self.stations_dir[0])
             hit = ray.ground_hit(float(self.p["ground_z"]))
             out = {"ok": True, "mode": "single", "n_stations": n,
                    "x": float(hit[0]), "y": float(hit[1]),
@@ -141,16 +148,29 @@ class GeoState:
         return out
 
     def on_los(self, los_body) -> dict:
-        """收到一帧视线：累积；攒够一批就自动收尾当前站。"""
+        """收到一帧视线：先按标定扣掉零位偏置，再累积；攒够一批自动收尾。"""
         if self.pos is None or self.quat is None:
             return {"ok": False, "reason": "还没有收到里程计"}
-        d = los_body_to_world(los_body, self.quat)
-        # 零位偏置：整架次不变，在线阶段无法标掉，只能如实记录
+        d = los_body_to_world(self._debias(los_body), self.quat)
         self.buffer.append(d)
         if len(self.buffer) >= int(self.p["samples_per_station"]):
             return self.on_new_station()
         return {"ok": True, "mode": "accumulating",
                 "n": len(self.buffer)}
+
+    def _debias(self, los_body) -> np.ndarray:
+        """按标定值反向旋转视线（机体系）。
+
+        偏置是"测量值 = 真值绕 x/y 各偏 (bx, by)"，所以补偿就是绕 y 转 -by、
+        再绕 x 转 -bx（与 ``analysis._rotate_small`` 的 Rx·Ry 顺序互逆）。
+        未知或为 0 时原样返回，不做任何假设。
+        """
+        v = np.asarray(los_body, dtype=float).reshape(-1)
+        bx, by = self.bias
+        if bx == 0.0 and by == 0.0:
+            return v
+        v = rotate_by_angle_err(v, -bx, axis="x")
+        return rotate_by_angle_err(v, -by, axis="y")
 
     # ---------------------------------------------------------------- 诊断
     def diag(self) -> str:
@@ -158,10 +178,11 @@ class GeoState:
             "n_stations": len(self.stations_pos),
             "buffered": len(self.buffer),
             "los_sigma_deg": float(self.p["los_sigma_deg"]),
+            "los_bias_deg": [round(self.bias[0], 3), round(self.bias[1], 3)],
             "min_stations_for_fusion": int(self.p["min_stations_for_fusion"]),
         }
         if len(self.stations_dir) >= 2:
-            rays = [make_ray(p, d) for p, d in
+            rays = [Ray(origin=p, direction=d) for p, d in
                     zip(self.stations_pos, self.stations_dir)]
             info["intersection_deg"] = round(
                 float(horizontal_intersection_angle_deg(rays)), 2)

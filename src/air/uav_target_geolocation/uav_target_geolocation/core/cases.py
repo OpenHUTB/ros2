@@ -53,9 +53,9 @@ class GeoCase:
     sigma_deg: float = SIGMA_DEG
     bias_deg: float = BIAS_DEG
     wind_n: Tuple[float, float] = WIND_N   # 悬停时的水平外力（N），迫使机体倾转
-    hover_s: float = 3.0            # 每站稳定悬停时长（采样窗）
-    samples: int = 120              # 每站采样帧数
-    legacy_level_deg: float = 0.0   # "假定机体水平"的对照算例用
+    #: 每站采样帧数。采样窗 = samples × flyer.SAMPLE_STRIDE × dt
+    #: （120 帧 × 2 × 0.01 s = 2.4 s），时长由它唯一决定，不另设字段免得两处打架
+    samples: int = 120
 
     def __post_init__(self) -> None:
         if not self.stations:

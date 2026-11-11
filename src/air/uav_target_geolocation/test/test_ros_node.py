@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """节点状态机与打包完整性。状态机不依赖 rclpy，可以离线测；rclpy 的部分跳过。"""
 import json
+import math
 import os
 import re
 import sys
@@ -8,7 +9,8 @@ import sys
 import numpy as np
 import pytest
 
-from uav_target_geolocation.core.geometry import los_to
+from uav_target_geolocation.core.geometry import (los_to,
+                                                 rotate_by_angle_err)
 from uav_target_geolocation.ros.geo_node import (GeoState, los_body_to_world,
                                                  node_params, quat_to_matrix)
 
@@ -161,3 +163,72 @@ def test_readme_documents_the_three_cases():
         text = f.read()
     for name in ("single_station", "two_station_orthogonal", "two_station_shallow"):
         assert name in text
+
+
+# --------------------------------------------------------------------------- #
+# 零位偏置补偿（评审指出 los_bias_deg 只存不用后补的行为）
+# --------------------------------------------------------------------------- #
+def _geo_error_with(params, los_body):
+    st = GeoState(params)
+    st.on_odom((60.0, 0.0, 80.0), (1.0, 0.0, 0.0, 0.0))
+    truth = los_to((0.0, 0.0, 0.0), (60.0, 0.0, 80.0))
+    for _ in range(3):
+        out = st.on_los(los_body)
+    return math.hypot(out["x"], out["y"])
+
+
+def test_los_bias_parameter_is_actually_applied():
+    """los_bias_deg=(1,0) 时应在机体系里把 +1° 标定偏置扣掉。"""
+    truth = los_to((0.0, 0.0, 0.0), (60.0, 0.0, 80.0))
+    biased = rotate_by_angle_err(truth, 1.0, axis="x")   # 测量 = 真值偏 1°
+    good = _geo_error_with({"samples_per_station": 3,
+                           "los_bias_deg": [1.0, 0.0]}, biased)
+    raw = _geo_error_with({"samples_per_station": 3}, biased)
+    assert good < 0.3
+    # 横向（绕 x 转）1° 在 h=80 m 上 ≈ h·tan1° ≈ 1.40 m（俯仰向才是 2.18 m/°）
+    assert raw > 1.0
+
+
+def test_zero_bias_leaves_los_untouched():
+    st = GeoState({"los_bias_deg": [0.0, 0.0]})
+    v = [0.1, -0.2, -1.0]
+    assert st._debias(v) == pytest.approx(np.asarray(v, dtype=float))
+
+
+# --------------------------------------------------------------------------- #
+# 参数只写一处：config yaml ↔ 节点默认值 ↔ launch 不再抄第二份
+# --------------------------------------------------------------------------- #
+def test_config_yaml_keys_match_node_defaults():
+    yaml = pytest.importorskip("yaml")
+    from uav_target_geolocation.ros.geo_node import DEFAULTS
+    path = os.path.join(_ROOT, "config", "uav_target_geolocation.yaml")
+    data = yaml.safe_load(open(path, encoding="utf-8"))
+    params = data["geo_node"]["ros__parameters"]
+    assert set(params) == set(DEFAULTS), \
+        f"config 与节点默认值键不一致：{set(params) ^ set(DEFAULTS)}"
+    assert float(params["ground_z"]) == float(DEFAULTS["ground_z"])
+
+
+def test_launch_reads_params_file_instead_of_a_second_copy():
+    text = open(os.path.join(_ROOT, "launch", "main.launch.py"),
+                encoding="utf-8").read()
+    assert "params_file" in text and "config" in text
+    assert "los_sigma_deg" not in text     # 不允许把参数再抄一遍
+
+
+def test_single_station_estimate_off_origin_target():
+    """回归：单站打点必须用 Ray(origin, direction)。
+
+    之前把单位方向向量喂给了 make_ray(origin, target) 的 target 槽——
+    本模块视线恰好都指向世界原点，错误才没露馅；目标一挪开就错得离谱。
+    """
+    st = GeoState({"samples_per_station": 5})
+    pos = (60.0, 30.0, 80.0)
+    tgt = np.array([10.0, 5.0, 0.0])
+    st.on_odom(pos, (1.0, 0.0, 0.0, 0.0))
+    los = los_to(tgt, np.asarray(pos))
+    out = None
+    for _ in range(5):
+        out = st.on_los(los)
+    assert out["ok"] and out["mode"] == "single"
+    assert math.hypot(out["x"] - tgt[0], out["y"] - tgt[1]) < 0.05

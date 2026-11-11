@@ -36,7 +36,7 @@ def _json_safe(obj):
 
 
 def run_case(name: str, sim: bool = True, seed: int = 3, mc_n: int = 600,
-             reps: int = 10) -> Dict[str, object]:
+             reps: int = 20) -> Dict[str, object]:
     """跑一个算例：解析打点 + （可选）MuJoCo 闭环。
 
     闭环跑 ``reps`` 个架次：每站的视轴零位偏置是"一整个架次不变"的，
@@ -45,6 +45,7 @@ def run_case(name: str, sim: bool = True, seed: int = 3, mc_n: int = 600,
     case = get_case(name)
     out: Dict[str, object] = {
         "case": case.name,
+        "seed": int(seed),
         "title": case.title,
         "truth_m": [round(float(x), 3) for x in case.target],
         "n_stations": case.n_stations,
@@ -134,8 +135,10 @@ def print_table(results: List[Dict[str, object]]) -> None:
     print()
     reps = next((r["closed_loop"]["reps"] for r in results
                  if (r.get("closed_loop") or {}).get("simulated")), None)
-    print("解析列：蒙特卡洛 600 次（几何 + 噪声）；"
+    print("解析列：蒙特卡洛（几何 + 噪声）；"
           f"实测列：MuJoCo 闭环 {reps if reps else '—'} 个架次的位置误差均值。")
+    print("闭环时长：每架次每站采样 120 帧 × 2 步 × 0.01 s = 2.4 s，"
+          "三算例共 4 站/架次。")
     print("「假定水平」= 拿指令姿态（水平）当真实姿态，悬停时的倾角全被丢掉。")
 
 
@@ -149,7 +152,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--json", action="store_true", help="把结果 JSON 打到标准输出")
     ap.add_argument("--out-dir", default=None, help="结果目录（默认 <包>/results）")
     ap.add_argument("--mc", type=int, default=600, help="蒙特卡洛次数")
-    ap.add_argument("--reps", type=int, default=10, help="闭环架次数（每架次重新抽零位偏置）")
+    ap.add_argument("--seed", type=int, default=3,
+                    help="随机流种子（默认 3）；闭环第 i 个架次用 seed+i")
+    ap.add_argument("--reps", type=int, default=20,
+                    help="闭环架次数（默认 20，每架次重新抽零位偏置）")
     args = ap.parse_args(argv)
 
     if args.list:
@@ -167,7 +173,8 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     results: List[Dict[str, object]] = []
     for n in names:
-        r = run_case(n, sim=not args.no_sim, mc_n=args.mc, reps=args.reps)
+        r = run_case(n, sim=not args.no_sim, seed=args.seed, mc_n=args.mc,
+                     reps=args.reps)
         results.append(r)
         path = out_dir / f"{n}_result.json"
         path.write_text(

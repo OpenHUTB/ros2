@@ -191,6 +191,36 @@ def sweep_angle(angles: Sequence[float], sigma_deg: float, bias_deg: float,
     return out
 
 
+def fusion_crossing_angle_deg(angles: Sequence[float],
+                              fused_cep50_m: Sequence[float],
+                              single_cep50_m: float) -> Optional[float]:
+    """交会开始比单站更准的最小开角（度），在相邻两点间线性插值。
+
+    输入必须是同一种统计量（都用 CEP50）：小开角处交会误差远大于单站，
+    曲线单调下降穿过单站基线，取第一次跨越的相邻两点插值即可。扫到最大
+    开角都没占到便宜时返回 ``None``。
+    """
+    a = np.asarray(angles, dtype=float).reshape(-1)
+    c = np.asarray(fused_cep50_m, dtype=float).reshape(-1)
+    if a.size != c.size or a.size == 0:
+        raise ValueError(f"开角与误差必须等长且非空，收到 {a.size} / {c.size}")
+    ok = np.isfinite(c) & np.isfinite(a)
+    a, c = a[ok], c[ok]
+    if a.size < 2:
+        return None
+    below = c <= float(single_cep50_m)
+    if not below.any():
+        return None
+    i = int(np.argmax(below))
+    if i == 0:
+        return float(a[0])
+    a0, a1, c0, c1 = float(a[i - 1]), float(a[i]), float(c[i - 1]), float(c[i])
+    if c1 == c0:
+        return a1
+    t = (float(single_cep50_m) - c0) / (c1 - c0)
+    return round(a0 + float(np.clip(t, 0.0, 1.0)) * (a1 - a0), 2)
+
+
 def theory_single_cep50(case: GeoCase, samples_per_station: Optional[int] = None) -> float:
     """单站定位的理论 CEP50：h/cos²θ · sqrt(bias² + (σ/√N)²) · 1.1774。"""
     k = int(case.samples if samples_per_station is None else samples_per_station)

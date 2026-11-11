@@ -27,7 +27,12 @@ from .cases import GeoCase
 from .fusion import angular_spread_deg, mean_direction, summarize
 from .geometry import los_to, unit
 
-GROUND_Z = 0.05
+#: 解算用的地面高度（ENU，米）——全模块唯一口径：解析、闭环、ROS 节点都用它，
+#: 与 ``geometry.Ray.ground_hit`` 的默认值保持一致，不再各写一个 0.0 / 0.05
+GROUND_Z = 0.0
+#: 起飞点相对地面的高度（米）。四旋翼模型的原点不在机体中心，贴地起步第一帧
+#: 就会穿地，所以给 5 cm 起步余量——它只是初始条件，不参与任何解算
+SPAWN_CLEARANCE_M = 0.05
 ATT_DAMPING = (-0.18, -0.18, -0.126)
 #: 转场巡航速度与加减速上限（m/s, m/s²）
 CRUISE_SPEED = 6.0
@@ -144,7 +149,8 @@ def fly_case(case: GeoCase, dt: float = 0.01, seed: int = 3) -> FlyResult:
 
     truth = np.asarray(case.target, dtype=float)
     first = case.stations[0].position.copy()
-    quad.reset((float(first[0]), float(first[1]), GROUND_Z))
+    quad.reset((float(first[0]), float(first[1]),
+                GROUND_Z + SPAWN_CLEARANCE_M))
 
     rng = np.random.default_rng(seed)
     visits: List[StationVisit] = []
@@ -234,11 +240,11 @@ def fly_case(case: GeoCase, dt: float = 0.01, seed: int = 3) -> FlyResult:
         visit.tilt_mean_deg = (float(np.degrees(np.mean([t[0] for t in tilts]))),
                               float(np.degrees(np.mean([t[1] for t in tilts]))))
         for p, d in zip(pos_list, dirs_true):
-            e = single_station_error(p, d, truth)
+            e = single_station_error(p, d, truth, ground_z=GROUND_Z)
             if e is not None:
                 visit.single_errors.append(e)
         for p, d in zip(pos_list, dirs_level):
-            e = single_station_error(p, d, truth)
+            e = single_station_error(p, d, truth, ground_z=GROUND_Z)
             if e is not None:
                 visit.level_errors.append(e)
         visits.append(visit)
@@ -258,7 +264,7 @@ def summarize_flight(case: GeoCase, res: FlyResult,
     """
     stations = [v.pos_mean for v in res.visits]
     dirs = [v.mean_dir_true for v in res.visits]
-    geo = from_station_directions(stations, dirs, res.truth)
+    geo = from_station_directions(stations, dirs, res.truth, ground_z=GROUND_Z)
 
     single_all: List[float] = []
     level_all: List[float] = []
@@ -267,8 +273,10 @@ def summarize_flight(case: GeoCase, res: FlyResult,
         level_all.extend(v.level_errors)
 
     ref = res.visits[0]
-    ref_single = single_station_error(ref.pos_mean, ref.mean_dir_true, res.truth)
-    ref_level = single_station_error(ref.pos_mean, ref.mean_dir_level, res.truth)
+    ref_single = single_station_error(ref.pos_mean, ref.mean_dir_true, res.truth,
+                                      ground_z=GROUND_Z)
+    ref_level = single_station_error(ref.pos_mean, ref.mean_dir_level, res.truth,
+                                     ground_z=GROUND_Z)
 
     if len(stations) > 1:
         station_fused = {
@@ -291,7 +299,8 @@ def summarize_flight(case: GeoCase, res: FlyResult,
         }
     stat_rows = []
     for v, mean_dir_err in zip(res.visits, geo["per_station_m"]):
-        lvl = single_station_error(v.pos_mean, v.mean_dir_level, res.truth)
+        lvl = single_station_error(v.pos_mean, v.mean_dir_level, res.truth,
+                                   ground_z=GROUND_Z)
         stat_rows.append({
             "index": v.index,
             "goal_m": [round(float(x), 3) for x in v.target],

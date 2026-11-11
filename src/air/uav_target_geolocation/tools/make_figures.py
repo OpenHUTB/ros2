@@ -29,8 +29,8 @@ import matplotlib.pyplot as plt                     # noqa: E402
 from matplotlib import font_manager                 # noqa: E402
 from matplotlib.patches import Circle               # noqa: E402
 
-from uav_target_geolocation.core.analysis import (monte_carlo,  # noqa: E402
-                                                  sweep_angle)
+from uav_target_geolocation.core.analysis import (  # noqa: E402
+    fusion_crossing_angle_deg, monte_carlo, sweep_angle)
 from uav_target_geolocation.core.cases import (CASES, Station,  # noqa: E402
                                               get_case)
 from uav_target_geolocation.core.geometry import los_to          # noqa: E402
@@ -154,10 +154,14 @@ def _stations_of(name: str):
 def fig_sweep() -> Path:
     _setup_font()
     angles = [2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0]
+    # n 要够大：CEP50 在 n=250 时的抽样噪声约 5%，临界角会在 42~53° 之间乱跳，
+    # 图上标注跟着漂。n=1500 把噪声压到 2% 以内，标注才稳定在 45° 附近。
     out = sweep_angle(angles, sigma_deg=0.30, bias_deg=0.20, samples=120,
-                      n=250, seed=5)
+                      n=1500, seed=5)
     base = get_case("single_station")
-    single = monte_carlo(base, n=250, seed=5)["single"]["mean_m"]
+    # 基线必须与曲线同统计量（CEP50）且足够收敛。之前这里取的是 mean_m 去和
+    # CEP50 比，属于跨口径比较，会把临界角整体挪动十几度
+    single = monte_carlo(base, n=6000, seed=5)["single"]["cep50_m"]
 
     fig, ax = plt.subplots(figsize=(7.2, 3.9))
     ax.plot(out["angle_deg"], out["fused_cep50_m"], "o-", color="#4c72b0",
@@ -165,7 +169,7 @@ def fig_sweep() -> Path:
     ax.plot(out["angle_deg"], out["fused_cep95_m"], "s--", color="#4c72b0",
             ms=4, alpha=0.7, label="交会 CEP95")
     ax.axhline(single, color="#c44e52", lw=1.3,
-               label=f"单站均值 {single:.2f} m")
+               label=f"单站 CEP50 {single:.2f} m")
     ax.set_xscale("log")
     ax.set_xticks(angles)
     ax.set_xticklabels([f"{a:g}" for a in angles], fontsize=8)
@@ -174,22 +178,25 @@ def fig_sweep() -> Path:
     ax.set_title("交会角越小，交会反而越差——几何构型比算法更决定精度", fontsize=11)
     ax.grid(alpha=0.25, which="both")
     ax.legend(fontsize=9)
-    # 标出"交会开始吃亏"的临界开角与正文用的 12°
-    cross = next((a for a, c in zip(out["angle_deg"], out["fused_cep50_m"])
-                  if c > single), max(angles))
-    ax.annotate(f"开角小于约 {cross:g}° 时交会反而更差",
-                (cross, float(np.interp(cross, out["angle_deg"],
-                                        out["fused_cep50_m"]))),
-                textcoords="offset points", xytext=(12, 24), fontsize=8.5,
-                color="#c44e52",
+    # 标出"交会开始吃亏"的临界开角与正文用的 12°。穿越点用插值求：
+    # 原来的 next(第一个 c > single) 在升序数组上第一次迭代就命中，永远返回 2°
+    cross = fusion_crossing_angle_deg(out["angle_deg"], out["fused_cep50_m"],
+                                      single)
+    if cross is None:
+        cross = max(angles)
+    cross_y = float(np.interp(cross, out["angle_deg"], out["fused_cep50_m"]))
+    ax.annotate(f"开角小于约 {cross:.0f}° 时交会反而更差",
+                (cross, cross_y), textcoords="offset points", xytext=(14, 26),
+                fontsize=8.5, color="#c44e52",
                 arrowprops=dict(arrowstyle="->", color="#c44e52", lw=0.9))
+    ax.plot([cross], [cross_y], "o", color="#c44e52", ms=6, mfc="none", mew=1.5)
     ax.plot([12.0], [float(np.interp(12.0, out["angle_deg"],
                                      out["fused_cep50_m"]))], "o",
             color="#55a868", ms=8, mfc="none", mew=1.8)
     ax.annotate("正文算例 12°", (12.0, float(np.interp(12.0, out["angle_deg"],
                                                       out["fused_cep50_m"]))),
-                textcoords="offset points", xytext=(8, -18), fontsize=8.5,
-                color="#55a868")
+                textcoords="offset points", xytext=(0, 14), fontsize=8.5,
+                color="#55a868", ha="center")
     fig.tight_layout()
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / "sweep_angle.png"
