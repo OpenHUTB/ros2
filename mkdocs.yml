@@ -201,6 +201,7 @@ nav:
     - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
     - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
     - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
+    - UWB 多基站测距定位布站几何精度对比评测: './ground/uwb_baseline_geometry_eval.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
