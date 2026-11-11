@@ -22,6 +22,8 @@ setup(
     entry_points={
         "console_scripts": [
             "roundabout_e2e = carla_nn_roundabout_entry.main:main",
+            "roundabout_simulator = carla_nn_roundabout_entry.ros_simulator:main",
+            "roundabout_navigation = carla_nn_roundabout_entry.ros_navigation:main",
         ],
     },
 )
