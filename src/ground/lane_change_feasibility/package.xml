@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>lane_change_feasibility</name>
+  <version>1.0.0</version>
+  <description>
+    换道可行性判定：按正弦横向加速度剖面算换道时长、前向所需间隙与后向 TTC，
+    给出「现在能不能换、不能换要等多久 / 降多少速」的结论。纯参数与内置模型，
+    不依赖 CARLA 与显卡，Melodic / Noetic 都能直接跑。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>

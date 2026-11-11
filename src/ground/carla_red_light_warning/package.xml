@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>carla_red_light_warning</name>
+  <version>1.0.0</version>
+  <description>CARLA 闯红灯预警（RLW）：交通灯状态 + 判停距离 → 三级滞回状态机（normal/approaching/violation_risk）→ 跃迁事件</description>
+  <maintainer email="825404295@qq.com">82540295</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

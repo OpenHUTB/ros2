@@ -1,0 +1,56 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Image
+      Name: Raw Image
+      Topic:
+        Value: /camera/image_raw
+      Enabled: true
+    - Class: rviz_default_plugins/Image
+      Name: Enhanced Image
+      Topic:
+        Value: /enhanced_image
+      Enabled: true
+    - Class: rviz_default_plugins/Image
+      Name: Tracking Result
+      Topic:
+        Value: /tracking_result
+      Enabled: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: camera_frame
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Name: Interact
+    - Class: rviz_default_plugins/MoveCamera
+      Name: Move Camera
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 10
+      Name: Current View
+      Pitch: 0.5
+      Target Frame: camera_frame
+      Yaw: 0.0
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 800
+  Hide Left Dock: false
+  Hide Right Dock: true
+  QMainWindow State: ""
+  Views:
+    collapsed: false
+  Width: 1200
+  X: 100
+  Y: 100

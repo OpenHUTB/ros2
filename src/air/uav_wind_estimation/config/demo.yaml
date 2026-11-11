@@ -1,0 +1,8 @@
+wind_sim:
+  ros__parameters:
+    maneuver: circle
+    seed: 0
+wind_estimator:
+  ros__parameters:
+    batch: 60
+    sigma_m_s: 0.2
