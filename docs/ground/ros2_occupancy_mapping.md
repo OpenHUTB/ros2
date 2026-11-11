@@ -52,7 +52,7 @@ python3 -m ros2_occupancy_mapping.sim     # 60 帧、180 束
 
 ## 4. 结果
 
-12 m × 8 m 房间、两个圆柱（半径 0.45/0.35 m），机器人绕半径 3 m 圆走 60 帧，
+12 m × 8 m 房间、**三个圆柱**（半径 0.45/0.45/0.35 m），机器人绕半径 3 m 圆走 60 帧，
 每帧 180 束、量程 8 m；与同一分辨率的真值栅格比较：
 
 | 指标 | 数值 |
@@ -64,6 +64,8 @@ python3 -m ros2_occupancy_mapping.sim     # 60 帧、180 束
 | 自由格数 | 37281 |
 | 占据格数 | 1096 |
 
+> 不同 NumPy/平台会有约 ±0.02 的 IoU 和 ±3% 的格数差异；在 Ubuntu 22.04 + NumPy 1.24 上复现为 0.722 / 0.959 / 0.745 / 1229，结论不变。
+
 ![占据栅格地图](../img/ground/ros2_occupancy_mapping/occupancy_map.png)
 
 precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 0.725 的损失主要来自：
@@ -74,7 +76,8 @@ precision 0.953 说明“标成占据的格子几乎都是真障碍”；recall 
 
 ## 5. 与规划器的关系
 
-* 发布标准 `nav_msgs/OccupancyGrid`，可直接给 Nav2 的 costmap 或 A\* 使用；
+* 发布标准 `nav_msgs/OccupancyGrid`，默认 `frame_id=odom`；本模块不发布
+  `map→odom`，接 Nav2 时把 global frame 设为 odom，或自行补静态变换；
 * 本模块不做定位，假设 `/odom` 可用；里程计漂移会直接反映为地图重影；
 * 与 #1077 的 A\* 栅格是两套东西：那边是滚动局部栅格，这里是持久全局地图。
 

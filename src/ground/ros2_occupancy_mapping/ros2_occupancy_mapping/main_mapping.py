@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """ROS 2 node: log-odds occupancy grid from /scan + /odom."""
 
 from __future__ import annotations
@@ -7,8 +7,10 @@ import math
 
 import rclpy
 from nav_msgs.msg import OccupancyGrid, Odometry
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.qos import (DurabilityPolicy, QoSProfile, ReliabilityPolicy,
+                       qos_profile_sensor_data)
 from sensor_msgs.msg import LaserScan
 
 try:
@@ -23,7 +25,7 @@ class MappingNode(Node):
         self.declare_parameter("scan_topic", "/scan")
         self.declare_parameter("odom_topic", "/odom")
         self.declare_parameter("map_topic", "/map")
-        self.declare_parameter("frame_id", "map")
+        self.declare_parameter("frame_id", "odom")
         self.declare_parameter("resolution", 0.05)
         self.declare_parameter("x_min", -10.0)
         self.declare_parameter("x_max", 10.0)
@@ -45,7 +47,8 @@ class MappingNode(Node):
         self.map_pub = self.create_publisher(
             OccupancyGrid, str(self.get_parameter("map_topic").value), qos)
         self.create_subscription(
-            LaserScan, str(self.get_parameter("scan_topic").value), self.on_scan, 10)
+            LaserScan, str(self.get_parameter("scan_topic").value), self.on_scan,
+            qos_profile_sensor_data)
         self.create_subscription(
             Odometry, str(self.get_parameter("odom_topic").value), self.on_odom, 10)
         self.get_logger().info(
@@ -83,7 +86,7 @@ def main() -> None:
     node = MappingNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
@@ -93,3 +96,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
