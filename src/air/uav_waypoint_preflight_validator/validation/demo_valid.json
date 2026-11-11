@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "mission_file": "config\\missions\\demo_valid.yaml",
+  "frame": "enu_relative",
+  "status": "VALID",
+  "valid": true,
+  "limits": {
+    "min_altitude_m": 0.5,
+    "max_altitude_m": 20.0,
+    "max_waypoints": 100,
+    "min_segment_length_m": 0.25,
+    "max_climb_angle_deg": 60.0,
+    "warning_turn_angle_deg": 90.0,
+    "max_turn_angle_deg": 150.0,
+    "max_horizontal_speed_mps": 1.5,
+    "max_vertical_speed_mps": 0.8,
+    "max_total_distance_m": 500.0
+  },
+  "summary": {
+    "waypoint_count": 4,
+    "segment_count": 4,
+    "total_distance_m": 11.640054944640259,
+    "horizontal_distance_m": 9.60555127546399,
+    "vertical_distance_m": 2.5,
+    "estimated_duration_s": 8.903700850309326,
+    "max_turn_angle_deg": 56.309932474020215,
+    "max_climb_angle_deg": 7.895142105045791,
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "waypoints": [
+    {
+      "index": 1,
+      "point": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "valid": true,
+      "status": "VALID"
+    },
+    {
+      "index": 2,
+      "point": [
+        3.0,
+        0.0,
+        2.0
+      ],
+      "valid": true,
+      "status": "VALID"
+    },
+    {
+      "index": 3,
+      "point": [
+        6.0,
+        2.0,
+        2.5
+      ],
+      "valid": true,
+      "status": "VALID"
+    },
+    {
+      "index": 4,
+      "point": [
+        6.0,
+        5.0,
+        2.5
+      ],
+      "valid": true,
+      "status": "VALID"
+    }
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "from": "origin",
+      "to": 1,
+      "start": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "end": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "horizontal_distance_m": 0.0,
+      "vertical_distance_m": 2.0,
+      "distance_m": 2.0,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 2.5,
+      "status": "VALID"
+    },
+    {
+      "index": 1,
+      "from": 1,
+      "to": 2,
+      "start": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "end": [
+        3.0,
+        0.0,
+        2.0
+      ],
+      "horizontal_distance_m": 3.0,
+      "vertical_distance_m": 0.0,
+      "distance_m": 3.0,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 2.0,
+      "status": "VALID"
+    },
+    {
+      "index": 2,
+      "from": 2,
+      "to": 3,
+      "start": [
+        3.0,
+        0.0,
+        2.0
+      ],
+      "end": [
+        6.0,
+        2.0,
+        2.5
+      ],
+      "horizontal_distance_m": 3.605551275463989,
+      "vertical_distance_m": 0.5,
+      "distance_m": 3.640054944640259,
+      "climb_angle_deg": 7.895142105045791,
+      "estimated_duration_s": 2.4037008503093262,
+      "status": "VALID"
+    },
+    {
+      "index": 3,
+      "from": 3,
+      "to": 4,
+      "start": [
+        6.0,
+        2.0,
+        2.5
+      ],
+      "end": [
+        6.0,
+        5.0,
+        2.5
+      ],
+      "horizontal_distance_m": 3.0,
+      "vertical_distance_m": 0.0,
+      "distance_m": 3.0,
+      "climb_angle_deg": 0.0,
+      "estimated_duration_s": 2.0,
+      "status": "VALID"
+    }
+  ],
+  "turns": [
+    {
+      "waypoint": 2,
+      "angle_deg": 33.690067525979785,
+      "status": "VALID"
+    },
+    {
+      "waypoint": 3,
+      "angle_deg": 56.309932474020215,
+      "status": "VALID"
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

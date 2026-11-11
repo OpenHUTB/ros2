@@ -1,0 +1,33 @@
+<mujoco model="2r_arm">
+  <option timestep="0.002"/>
+  <worldbody>
+    <light pos="0 0 3" dir="0 0 -1"/>
+    <!-- 灰色地面 -->
+    <geom type="plane" size="2 2 0.1" rgba="0.8 0.8 0.8 1"/>
+    <!-- 红色正方形轨迹边框：4 条细红线组成轮廓（边长 0.1 m，中心 (0.45,0,0.06)） -->
+    <geom type="box" pos="0.40 0    0.06" size="0.002 0.05 0.001" rgba="1 0 0 0.9" contype="0" conaffinity="0"/>
+    <geom type="box" pos="0.50 0    0.06" size="0.002 0.05 0.001" rgba="1 0 0 0.9" contype="0" conaffinity="0"/>
+    <geom type="box" pos="0.45 -0.05 0.06" size="0.05 0.002 0.001" rgba="1 0 0 0.9" contype="0" conaffinity="0"/>
+    <geom type="box" pos="0.45  0.05 0.06" size="0.05 0.002 0.001" rgba="1 0 0 0.9" contype="0" conaffinity="0"/>
+    <!-- 机械臂底座与两连杆 -->
+    <body name="base" pos="0 0 0.05">
+      <geom type="cylinder" size="0.05 0.01" rgba="0.2 0.2 0.2 1"/>
+      <body name="link1" pos="0 0 0.01">
+        <joint name="j1" type="hinge" axis="0 0 1" damping="1.0" armature="0.01"/>
+        <geom type="capsule" fromto="0 0 0 0.4 0 0" size="0.02" rgba="0.2 0.5 0.8 1"/>
+        <body name="link2" pos="0.4 0 0">
+          <joint name="j2" type="hinge" axis="0 0 1" damping="1.0" armature="0.01"/>
+          <geom type="capsule" fromto="0 0 0 0.25 0 0" size="0.015" rgba="0.8 0.2 0.2 1"/>
+          <body name="end_effector" pos="0.25 0 0">
+            <geom type="sphere" size="0.02" rgba="0 0 0 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <!-- 位置伺服仅作模型定义；本脚本为运动学回放，不经过 mj_step，故 kp 不参与实际闭环 -->
+    <position name="a1" joint="j1" kp="100"/>
+    <position name="a2" joint="j2" kp="100"/>
+  </actuator>
+</mujoco>
