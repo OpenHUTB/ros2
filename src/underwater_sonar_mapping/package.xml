@@ -4,7 +4,7 @@
   <name>underwater_sonar_mapping</name>
   <version>0.1.0</version>
   <description>Odometry driven simulated sonar and occupancy grid mapping</description>
-  <maintainer email="user@todo.todo">user</maintainer>
+  <maintainer email="cwq319@users.noreply.github.com">cwq319</maintainer>
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
