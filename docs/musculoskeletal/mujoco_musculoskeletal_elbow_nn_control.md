@@ -15,17 +15,17 @@
 
 角度误差为 \(e=q_d-q\)，PD 期望关节力矩为：
 
-\[
+$$
 \tau_d=K_p e-K_d\dot q.
-\]
+$$
 
 令 \(\tau_s\) 为归一化力矩尺度，\(a_c\) 为共同收缩量，则拮抗激活为：
 
-\[
+$$
 a_f=\operatorname{clip}(a_c+\max(0,\tau_d/\tau_s),0,1),
 \quad
 a_e=\operatorname{clip}(a_c+\max(0,-\tau_d/\tau_s),0,1).
-\]
+$$
 
 力矩符号决定主要发力的肌腱；适量共同收缩使两条肌腱保持张紧。激活命令传入 MuJoCo 前会进行有限值检查，并限制在 `[0,1]` 范围内。
 
@@ -56,6 +56,13 @@ collect_episodes \
 
 轻量 MLP 输入为 \([q_d,q,\dot q,F_f,F_e]\)，输出为 \([a_f,a_e]\)。训练器复用 `episode_split.json` 中记录的完整数据回合划分，并检查清单与 CSV 回合编号一致。在线推理继续复用激活限制器与异常安全停机逻辑。评价覆盖角度均方根误差、超调量、稳定时间和 CPU 推理延迟，并分别报告轨迹类型与前臂负载。
 
+训练和评价命令：
+
+```bash
+python3 -m mujoco_musculoskeletal_elbow_nn_control.train --data data/episodes --model data/elbow_mlp.json
+python3 -m mujoco_musculoskeletal_elbow_nn_control.evaluate --data data/episodes --model data/elbow_mlp.json --output data/evaluation.json
+```
+
 ### 算法流程
 
 ```text
@@ -63,7 +70,11 @@ collect_episodes \
 -> sigmoid 输出 -> 有限值检查与 [0,1] 限幅 -> 肌肉激活命令
 ```
 
-训练阶段只使用训练集统计量进行输入标准化，网络以 sigmoid 输出两路激活量，并在发布前进行有限值检查和 `[0,1]` 安全限幅。训练损失为 (L=\frac{1}{N}\sum_i\|\hat a_i-a_i^{PD}\|_2^2)。评价按完整数据回合、轨迹类型和负载分组，报告 MAE、RMSE、末段稳态误差和单样本 CPU 推理耗时。PD 与神经控制器使用同一目标轨迹、初始状态和负载。
+训练阶段只使用训练集统计量进行输入标准化，网络以 sigmoid 输出两路激活量，并在发布前进行有限值检查和 `[0,1]` 安全限幅。训练损失为：
+
+$$L=\frac{1}{N}\sum_i\|\hat a_i-a_i^{PD}\|_2^2.$$
+
+评价按完整数据回合、轨迹类型和负载分组，报告 MAE、RMSE、末段稳态误差和单样本 CPU 推理耗时。PD 与神经控制器使用同一目标轨迹、初始状态和负载。
 
 ## ROS 2 在线神经控制
 

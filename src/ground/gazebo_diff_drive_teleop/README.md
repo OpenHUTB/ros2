@@ -48,12 +48,6 @@ bash main.sh teach gz_args:='-r -s'
 
 真实 Gazebo 运行：39 个路径点，回放约 10.04 s，终点误差 0.110 m（阈值 0.12 m）；原模块回归测试 29 点、误差 0.118 m，均通过。
 
-## 运行画面
-
-![Gazebo 实时仿真：示教/回放小车](../../../docs/img/ground/gazebo_diff_drive_teleop_teach_gazebo_close.png)
-
-![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_teach_gazebo_wide.png)
-
 ## 参数与话题
 
 完整参数表、话题/TF、算法公式、复现步骤和故障排查见 `docs/ground/gazebo_diff_drive_teleop.md`。
@@ -61,3 +55,13 @@ bash main.sh teach gz_args:='-r -s'
 ## 说明
 
 代码与文档使用 AI 大模型辅助编写，已核对并确认，对提交内容负责。
+
+## 电量管理与低电量返航
+
+`battery_teleop` 根据里程计实际速度模拟电量消耗，电量低于 25% 时自动返回充电点，到达后进入 `charging` 状态，电量恢复到 80% 后回到手动模式。支持 `h` 手动返航和 `b` 强制低电量演示。
+
+```bash
+bash main.sh battery
+```
+
+![电量管理与自动返航数据](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_return.png)
