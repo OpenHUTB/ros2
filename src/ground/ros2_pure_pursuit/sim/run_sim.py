@@ -55,7 +55,7 @@ def obstacles_along_path(
     return obstacles
 
 
-def run(path_name: str, speed: float, avoid: bool, max_steps: int = 2000):
+def run(path_name: str, speed: float, avoid: bool, max_steps: int = 2000, curve_gain: float = 2.5):
     """跑一轮仿真，返回 (指标字典, 轨迹数组, 路径点, 误差序列)。"""
     path = PATH_BUILDERS[path_name]()
     obstacles = obstacles_along_path(path, [0.25, 0.60])
@@ -70,7 +70,7 @@ def run(path_name: str, speed: float, avoid: bool, max_steps: int = 2000):
         y=float(p0[1] - tan[1] * 0.3),
         theta=float(np.arctan2(tan[1], tan[0])),
     )
-    ctrl = PurePursuitController()
+    ctrl = PurePursuitController(curve_gain=curve_gain)
     avoider = ObstacleAvoider()
 
     traj, ctes, speeds, fronts, risks = [], [], [], [], []
@@ -186,6 +186,8 @@ def main() -> int:
     ap.add_argument("--path", choices=list(PATH_BUILDERS), default="eight")
     ap.add_argument("--speed", type=float, default=0.9)
     ap.add_argument("--no-avoid", action="store_true", help="关闭避障，用于对照实验")
+    ap.add_argument("--curve-gain", type=float, default=2.5,
+                    help="曲率自适应前视增益，0 表示只用速度自适应（对照）")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
@@ -197,11 +199,12 @@ def main() -> int:
     )
 
     metrics, traj, path_pts, ctes, risks, obstacles = run(
-        args.path, args.speed, not args.no_avoid
+        args.path, args.speed, not args.no_avoid, curve_gain=args.curve_gain
     )
     plot(args.path, traj, path_pts, ctes, risks, obstacles, out)
 
-    print(f"路径={args.path}  避障={'关' if args.no_avoid else '开'}  期望速度={args.speed} m/s")
+    print(f"路径={args.path}  避障={'关' if args.no_avoid else '开'}  期望速度={args.speed} m/s"
+          f"  曲率自适应增益={args.curve_gain}")
     print("-" * 52)
     print(f"  仿真步数        : {metrics['steps']}")
     print(f"  仿真时长        : {metrics['time']:.2f} s")
