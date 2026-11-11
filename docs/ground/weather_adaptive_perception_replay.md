@@ -18,6 +18,10 @@
 
 模型文件体积较大，不保存进仓库，首次运行由脚本自动下载到 `model/`；已有则直接复用，因此离线复跑不需要联网。
 
+下载给出**多个源并依次回退**：`raw.githubusercontent.com` 不通时自动换 `gh-proxy.com`、`jsdelivr` 镜像。这条路不是可有可无的优化——国内网络直连 raw 拉 23 MB 常被拖到读超时，只剩单一源时基本跑不起来。每个文件下完都按期望字节数与 sha256 校验，HTML 错误页、截断、字节数超标都会被判死并换源；全部源失败时打印每个源的具体原因，并提示手动下载后用 `--model-dir <目录>` 指定。
+
+运行路径含中文或空格（Windows 用户名如 `C:\Users\张三\...`）同样可跑：`cv2.imread`、`cv2.imwrite` 与 Caffe 模型加载走 C 的文件接口，读不了非 ASCII 路径，模块改用 `imdecode`/`imencode` 与「切到模型目录用文件名加载」绕开，Linux/macOS 行为不变。
+
 ## 2. 实验原理
 
 ### 2.1 天气退化模型
@@ -67,7 +71,8 @@ HardRainNoon 由三段叠加而成，全部在代码中实现，固定随机种�
 
 | 代码段 | 作用 |
 | --- | --- |
-| `ensure_model()` | 模型缺失时从上游下载 `deploy.prototxt` 与 caffemodel 到 `model/` |
+| `ensure_model()` / `download_model()` | 模型缺失时按多个源回退下载，校验字节数与 sha256 后落盘 |
+| `imread_any()` / `imwrite_any()` / `load_caffe_net()` | 非 ASCII 路径（中文用户名）下的读写与模型加载 |
 | `load_degraded()` | 合成 HardRainNoon：雾 + 雨痕 + 对比度压缩 |
 | `detect()` / `nms()` | MobileNet-SSD 推理、NMS、几何合理性过滤 |
 | `match()` | 按 IoU ≥ 0.5 且类别一致对齐 GT |
@@ -105,6 +110,13 @@ python main.py
 ```
 
 可选参数：`-i` 指定输入帧（默认为 `town10_cars.png`），`--model-dir` 指定模型目录。
+
+**本地跑不通时的排查顺序**：
+
+1. 卡在“下载模型文件”不动或报 `模型下载失败`——先看是不是所有源都失败，报错里会逐条列出原因；国内网络可先手动下载两个权重放进 `model/`，再用 `--model-dir model` 指定，脚本会照常校验 sha256。
+2. 报“无法读取图像”——输入帧路径不对，或文件被代理换成了网页内容；用 `-i` 指到真实图片。
+3. 报 `opencv` 缺 Caffe 导入器——装到了 5.x，改回 `pip install "opencv-python>=4.5,<5"`。
+4. 路径含中文或空格——已内置兼容，无需改动；若仍失败，把模块目录挪到纯英文路径下再试。
 
 运行结束后 `results/` 目录得到：
 
