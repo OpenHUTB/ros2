@@ -1,0 +1,726 @@
+{
+  "beams": 72,
+  "controllers": {
+    "classical": {
+      "scenes": {
+        "hall": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 0.585,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 26.45,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 26.25,
+          "source": "fallback_geometric_expert",
+          "success_rate": 1.0
+        },
+        "obstacle": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 0.576,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 23.28,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 23.55,
+          "source": "fallback_geometric_expert",
+          "success_rate": 1.0
+        },
+        "warehouse": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 0.572,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 28.38,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 35.95,
+          "source": "fallback_geometric_expert",
+          "success_rate": 1.0
+        }
+      }
+    },
+    "e2e": {
+      "scenes": {
+        "hall": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 7.045,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 78.07,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "e2e_cnn",
+          "success_rate": 0.0
+        },
+        "obstacle": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 0.587,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 33.84,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 37.15,
+          "safety": "walking_guard",
+          "source": "e2e_cnn",
+          "success_rate": 1.0
+        },
+        "warehouse": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 0.583,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 32.15,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 33.6,
+          "safety": "walking_guard",
+          "source": "e2e_cnn",
+          "success_rate": 1.0
+        }
+      }
+    },
+    "neural": {
+      "scenes": {
+        "hall": {
+          "episodes": 1,
+          "mean_collisions": 139.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 21.738,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 4.37,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        },
+        "obstacle": {
+          "episodes": 1,
+          "mean_collisions": 135.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 18.154,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 4.72,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        },
+        "warehouse": {
+          "episodes": 1,
+          "mean_collisions": 89.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 18.115,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 8.88,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "control_mlp",
+          "success_rate": 0.0
+        }
+      }
+    },
+    "neural_two_level": {
+      "scenes": {
+        "hall": {
+          "episodes": 1,
+          "mean_collisions": 0.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 8.959,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 27.09,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        },
+        "obstacle": {
+          "episodes": 1,
+          "mean_collisions": 96.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 2.671,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 21.07,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        },
+        "warehouse": {
+          "episodes": 1,
+          "mean_collisions": 17.0,
+          "mean_falls": 0.0,
+          "mean_final_alt_error": 0.0,
+          "mean_final_depth_error": 0.0,
+          "mean_final_error": 19.008,
+          "mean_nfz_violations": 0.0,
+          "mean_off_road_time": 0.0,
+          "mean_path_length": 15.06,
+          "mean_pedestrians_hit": 0.0,
+          "mean_red_light_violations": 0.0,
+          "mean_time": 90.0,
+          "safety": "walking_guard",
+          "source": "planner_mlp+control_mlp",
+          "success_rate": 0.0
+        }
+      }
+    }
+  },
+  "episodes_per_scene": 1,
+  "generated": "2026-11-11T10:33:55",
+  "max_seconds": 90.0,
+  "model_metrics": {
+    "control_mlp": {
+      "architecture": [
+        41,
+        160,
+        160,
+        2
+      ],
+      "augment_samples": 7500,
+      "batch": 96,
+      "epochs": 80,
+      "expert": "reactive_balance_limited",
+      "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
+      "input_dim": 41,
+      "lr": 0.002,
+      "model": "control_mlp",
+      "normalised_rmse": 0.03849,
+      "omega_mae": 0.0394,
+      "output": "(v/MAX_SPEED, omega/MAX_TURN_RATE)",
+      "seconds": 556.12,
+      "task": "behaviour cloning of the reactive walking policy (v, omega)",
+      "train_samples": 12936,
+      "v_mae": 0.0297,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 526
+    },
+    "e2e_cnn": {
+      "architecture": {
+        "conv1_stride": 2,
+        "conv_channels": [
+          8,
+          16
+        ],
+        "fc": 64,
+        "in_ch": 1,
+        "in_h": 32,
+        "in_w": 32,
+        "out_dim": 2
+      },
+      "augmentation": "left-right mirror (flip depth image, negate turn)",
+      "batch": 64,
+      "epochs": 16,
+      "loss_weights": {
+        "omega": 1.0,
+        "v": 1.0
+      },
+      "lr": 0.0005,
+      "mean_baseline_omega_mae": 0.1461,
+      "mean_baseline_v_mae": 0.0506,
+      "model": "e2e_cnn",
+      "normalised_rmse": 0.11117,
+      "omega_mae": 0.1463,
+      "seconds": 121.27,
+      "task": "depth image (32x32) -> (walk speed, turn rate) behaviour cloning",
+      "train_samples": 1812,
+      "v_mae": 0.0941,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 526,
+      "weight_decay": 0.0005
+    },
+    "perception_mlp": {
+      "architecture": [
+        144,
+        160,
+        160,
+        72
+      ],
+      "augment_pairs": 7500,
+      "batch": 96,
+      "beams": 72,
+      "context": "circular median-5 lidar context, MLP predicts the correction from the median-filtered scan",
+      "epochs": 45,
+      "hidden": 160,
+      "history": [
+        {
+          "epoch": 1,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.026252,
+          "val_rmse_norm": 0.0552
+        },
+        {
+          "epoch": 5,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003269,
+          "val_rmse_norm": 0.05508
+        },
+        {
+          "epoch": 10,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.05508
+        },
+        {
+          "epoch": 15,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.05507
+        },
+        {
+          "epoch": 20,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003268,
+          "val_rmse_norm": 0.0551
+        },
+        {
+          "epoch": 25,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003268,
+          "val_rmse_norm": 0.05509
+        },
+        {
+          "epoch": 30,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.05507
+        },
+        {
+          "epoch": 35,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.0551
+        },
+        {
+          "epoch": 40,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.05509
+        },
+        {
+          "epoch": 45,
+          "noisy_rmse_norm": 0.09286,
+          "train_mse": 0.003267,
+          "val_rmse_norm": 0.05508
+        }
+      ],
+      "lr": 0.0015,
+      "mae_m": 0.12,
+      "mae_norm": 0.01529,
+      "median_baseline_improvement_pct": 36.52,
+      "median_baseline_rmse": 0.4627,
+      "model": "perception_mlp",
+      "rmse_denoised": 0.4324,
+      "rmse_denoised_norm": 0.05508,
+      "rmse_denoised_valid": 0.4081,
+      "rmse_improvement_pct": 40.68,
+      "rmse_improvement_valid_pct": 35.57,
+      "rmse_noisy": 0.729,
+      "rmse_noisy_norm": 0.09286,
+      "rmse_noisy_valid": 0.6334,
+      "seconds": 206.5,
+      "target": "residual (clean - noisy), output = noisy + residual clipped",
+      "task": "lidar denoising (72 beams), predicts residual clean-noisy",
+      "train_samples": 1812,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 526
+    },
+    "planner_mlp": {
+      "accuracy": 0.9639,
+      "architecture": [
+        41,
+        128,
+        128,
+        8
+      ],
+      "augment_samples": 3600,
+      "batch": 64,
+      "confusion": [
+        [
+          463,
+          11,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          1,
+          40,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4
+        ]
+      ],
+      "directions": [
+        "ahead",
+        "ahead_left",
+        "left",
+        "back_left",
+        "back",
+        "back_right",
+        "right",
+        "ahead_right"
+      ],
+      "epochs": 50,
+      "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
+      "input_dim": 41,
+      "lr": 0.0012,
+      "model": "planner_mlp",
+      "per_class_accuracy": {
+        "ahead": 0.973,
+        "ahead_left": 0.976,
+        "ahead_right": 0.444,
+        "back": null,
+        "back_left": null,
+        "back_right": null,
+        "left": null,
+        "right": null
+      },
+      "seconds": 41.86,
+      "target_accuracy": 0.65,
+      "task": "discrete local action (8 directions) classification",
+      "train_samples": 5412,
+      "val_episodes": [
+        0,
+        1
+      ],
+      "val_samples": 526
+    },
+    "rl_dqn": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 0.8,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.07,
+      "mean_falls": 0.27,
+      "mean_return": 20.526,
+      "mean_steps": 30.3,
+      "success_rate": 0.767,
+      "train_seconds": 26.36,
+      "train_steps": 9733
+    },
+    "rl_dqn_3x64": {
+      "algorithm": "DQN",
+      "best_epoch": 50,
+      "episodes": 250,
+      "final_recent_success": 0.833,
+      "hidden": [
+        64,
+        64,
+        64
+      ],
+      "mean_collisions": 2.7,
+      "mean_falls": 0.1,
+      "mean_return": 17.66,
+      "mean_steps": 24.3,
+      "success_rate": 0.833,
+      "train_seconds": 27.47,
+      "train_steps": 8935
+    },
+    "rl_pg": {
+      "algorithm": "REINFORCE",
+      "episodes": 250,
+      "final_recent_success": 0.2,
+      "hidden": [
+        64,
+        64
+      ],
+      "mean_collisions": 0.5,
+      "mean_falls": 0.27,
+      "mean_return": 0.748,
+      "mean_steps": 84.3,
+      "success_rate": 0.067,
+      "train_seconds": 37.2,
+      "train_steps": 17980
+    }
+  },
+  "runs": [
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 0.585,
+      "path_length": 26.45,
+      "scene": "hall",
+      "seed": 20261111,
+      "success": true,
+      "time": 26.25
+    },
+    {
+      "collisions": 139,
+      "controller": "neural",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 21.738,
+      "path_length": 4.37,
+      "scene": "hall",
+      "seed": 20261212,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 0,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 8.959,
+      "path_length": 27.09,
+      "scene": "hall",
+      "seed": 20261313,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 7.045,
+      "path_length": 78.07,
+      "scene": "hall",
+      "seed": 20261414,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 0.572,
+      "path_length": 28.38,
+      "scene": "warehouse",
+      "seed": 20262111,
+      "success": true,
+      "time": 35.95
+    },
+    {
+      "collisions": 89,
+      "controller": "neural",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 18.115,
+      "path_length": 8.88,
+      "scene": "warehouse",
+      "seed": 20262212,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 17,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 19.008,
+      "path_length": 15.06,
+      "scene": "warehouse",
+      "seed": 20262313,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 0.583,
+      "path_length": 32.15,
+      "scene": "warehouse",
+      "seed": 20262414,
+      "success": true,
+      "time": 33.6
+    },
+    {
+      "collisions": 0,
+      "controller": "classical",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 0.576,
+      "path_length": 23.28,
+      "scene": "obstacle",
+      "seed": 20263111,
+      "success": true,
+      "time": 23.55
+    },
+    {
+      "collisions": 135,
+      "controller": "neural",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 18.154,
+      "path_length": 4.72,
+      "scene": "obstacle",
+      "seed": 20263212,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 96,
+      "controller": "neural_two_level",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 2.671,
+      "path_length": 21.07,
+      "scene": "obstacle",
+      "seed": 20263313,
+      "success": false,
+      "time": 90.0
+    },
+    {
+      "collisions": 0,
+      "controller": "e2e",
+      "episode": 0,
+      "falls": 0,
+      "final_error": 0.587,
+      "path_length": 33.84,
+      "scene": "obstacle",
+      "seed": 20263414,
+      "success": true,
+      "time": 37.15
+    }
+  ],
+  "sample_hz": 10.0,
+  "scenes": [
+    "hall",
+    "warehouse",
+    "obstacle"
+  ],
+  "seconds": 878.26,
+  "seed": 20261111,
+  "success_criteria": {
+    "horizontal_m": 0.6
+  }
+}

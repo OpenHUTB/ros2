@@ -1,0 +1,13 @@
+scene,controller,episode,success,time_s,collisions,falls,path_length_m,final_error_m,seed
+hall,classical,0,1,26.25,0,0,26.45,0.585,20261111
+hall,neural,0,0,90.0,139,0,4.37,21.738,20261212
+hall,neural_two_level,0,0,90.0,0,0,27.09,8.959,20261313
+hall,e2e,0,0,90.0,0,0,78.07,7.045,20261414
+warehouse,classical,0,1,35.95,0,0,28.38,0.572,20262111
+warehouse,neural,0,0,90.0,89,0,8.88,18.115,20262212
+warehouse,neural_two_level,0,0,90.0,17,0,15.06,19.008,20262313
+warehouse,e2e,0,1,33.6,0,0,32.15,0.583,20262414
+obstacle,classical,0,1,23.55,0,0,23.28,0.576,20263111
+obstacle,neural,0,0,90.0,135,0,4.72,18.154,20263212
+obstacle,neural_two_level,0,0,90.0,96,0,21.07,2.671,20263313
+obstacle,e2e,0,1,37.15,0,0,33.84,0.587,20263414

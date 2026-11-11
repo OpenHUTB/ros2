@@ -1,0 +1,28 @@
+{
+  "architecture": [
+    41,
+    160,
+    160,
+    2
+  ],
+  "augment_samples": 7500,
+  "batch": 96,
+  "epochs": 80,
+  "expert": "reactive_balance_limited",
+  "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
+  "input_dim": 41,
+  "lr": 0.002,
+  "model": "control_mlp",
+  "normalised_rmse": 0.03849,
+  "omega_mae": 0.0394,
+  "output": "(v/MAX_SPEED, omega/MAX_TURN_RATE)",
+  "seconds": 556.12,
+  "task": "behaviour cloning of the reactive walking policy (v, omega)",
+  "train_samples": 12936,
+  "v_mae": 0.0297,
+  "val_episodes": [
+    0,
+    1
+  ],
+  "val_samples": 526
+}

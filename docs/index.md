@@ -81,6 +81,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 ## 2. 人形机器人 <span id='humanoid'></span>
 
 * [人形机器人基础](./humanoid/humanoid_basics.md)
+* [人形机器人双足步行仿真、激光 SLAM 与纯 NumPy 神经网络导航](./humanoid/humanoid_walk_nn.md)
 * [人形机器人双臂搬运负载的神经网络平衡控制](./humanoid/humanoid_carry_payload_nn.md)
 * [双足步态生成与 ZMP 稳定性](./humanoid/bipedal_gait_zmp.md)
 * [基于三次样条插值的双足多步态平滑切换](./humanoid/biped_cubic_spline_gait_switch.md)

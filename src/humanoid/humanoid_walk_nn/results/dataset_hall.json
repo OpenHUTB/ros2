@@ -1,0 +1,48 @@
+{
+  "action_counts": {
+    "0": 713,
+    "1": 61,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 14
+  },
+  "beams": 72,
+  "clean_scan_shape": [
+    788,
+    72
+  ],
+  "cmd_shape": [
+    788,
+    2
+  ],
+  "collisions": 0,
+  "depth_shape": [
+    788,
+    32,
+    32
+  ],
+  "episode_success_rate": 1.0,
+  "episodes": 3,
+  "falls": 0,
+  "feature_shape": [
+    788,
+    41
+  ],
+  "label_mean": [
+    0.755,
+    0.0278
+  ],
+  "random_start": false,
+  "sample_hz": 10.0,
+  "samples": 788,
+  "scan_shape": [
+    788,
+    72
+  ],
+  "scene": "hall",
+  "seconds_wall": 105.35,
+  "seed": 20261111
+}

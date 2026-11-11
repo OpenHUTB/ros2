@@ -1,0 +1,151 @@
+{
+  "beams": 72,
+  "scenes": {
+    "hall": {
+      "action_counts": {
+        "0": 713,
+        "1": 61,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 14
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        788,
+        72
+      ],
+      "cmd_shape": [
+        788,
+        2
+      ],
+      "collisions": 0,
+      "depth_shape": [
+        788,
+        32,
+        32
+      ],
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "falls": 0,
+      "feature_shape": [
+        788,
+        41
+      ],
+      "label_mean": [
+        0.755,
+        0.0278
+      ],
+      "random_start": false,
+      "sample_hz": 10.0,
+      "samples": 788,
+      "scan_shape": [
+        788,
+        72
+      ],
+      "scene": "hall",
+      "seconds_wall": 105.35,
+      "seed": 20261111
+    },
+    "obstacle": {
+      "action_counts": {
+        "0": 527,
+        "1": 104,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 75
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        706,
+        72
+      ],
+      "cmd_shape": [
+        706,
+        2
+      ],
+      "collisions": 0,
+      "depth_shape": [
+        706,
+        32,
+        32
+      ],
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "falls": 0,
+      "feature_shape": [
+        706,
+        41
+      ],
+      "label_mean": [
+        0.6689,
+        0.0254
+      ],
+      "random_start": false,
+      "sample_hz": 10.0,
+      "samples": 706,
+      "scan_shape": [
+        706,
+        72
+      ],
+      "scene": "obstacle",
+      "seconds_wall": 119.84,
+      "seed": 20261111
+    },
+    "warehouse": {
+      "action_counts": {
+        "0": 412,
+        "1": 28,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 404
+      },
+      "beams": 72,
+      "clean_scan_shape": [
+        844,
+        72
+      ],
+      "cmd_shape": [
+        844,
+        2
+      ],
+      "collisions": 0,
+      "depth_shape": [
+        844,
+        32,
+        32
+      ],
+      "episode_success_rate": 1.0,
+      "episodes": 3,
+      "falls": 0,
+      "feature_shape": [
+        844,
+        41
+      ],
+      "label_mean": [
+        0.586,
+        -0.3942
+      ],
+      "random_start": false,
+      "sample_hz": 10.0,
+      "samples": 844,
+      "scan_shape": [
+        844,
+        72
+      ],
+      "scene": "warehouse",
+      "seconds_wall": 105.61,
+      "seed": 20261111
+    }
+  },
+  "seconds_wall": 330.81,
+  "total_samples": 2338
+}
