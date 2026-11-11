@@ -1,0 +1,16 @@
+[
+  "test/test_carla_ttc_emergency_braking.py::test_brake_when_sensor_lost",
+  "test/test_carla_ttc_emergency_braking.py::test_brake_when_target_within_ttc",
+  "test/test_carla_ttc_emergency_braking.py::test_config_has_sensor_timeout",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_clusters_spanning_gaps",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_empty",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_ignores_ground_and_side_points",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_occluded_returns_none",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_out_of_range",
+  "test/test_carla_ttc_emergency_braking.py::test_front_distance_rejects_single_point_noise",
+  "test/test_carla_ttc_emergency_braking.py::test_no_brake_when_no_target_and_sensor_ok",
+  "test/test_carla_ttc_emergency_braking.py::test_no_brake_when_target_far",
+  "test/test_carla_ttc_emergency_braking.py::test_owned_by_module_only_own_prefix",
+  "test/test_carla_ttc_emergency_braking.py::test_should_brake_basic",
+  "test/test_carla_ttc_emergency_braking.py::test_ttc_threshold_from_config"
+]

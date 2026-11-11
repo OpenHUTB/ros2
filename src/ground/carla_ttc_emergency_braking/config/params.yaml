@@ -30,6 +30,7 @@ control:
   min_brake_distance: 22.0  # 距离小于此值直接制动（米）
   brake_command: 1.0        # 制动踏板开度
   stop_speed: 0.4           # 认为已停稳的速度阈值（m/s）
+  sensor_timeout_s: 1.0     # 点云流超过这么久没更新就判定传感器故障（失效安全：制动）；"没看到目标"不算故障
   max_duration: 30.0        # 最长仿真时长（秒）
 
 output:

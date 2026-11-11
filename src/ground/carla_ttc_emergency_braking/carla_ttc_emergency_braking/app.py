@@ -219,24 +219,43 @@ def place_vehicle_pair(world, spawn_index, gap, ego_blueprint, lead_blueprint):
     lead_tf = lead_tf_src
     lead_tf.location.z += 0.3
 
-    ego = world.spawn_actor(bp_lib.filter(ego_blueprint)[0], ego_tf)
-    lead = world.spawn_actor(bp_lib.filter(lead_blueprint)[0], lead_tf)
+    ego_bp = bp_lib.filter(ego_blueprint)[0]
+    lead_bp = bp_lib.filter(lead_blueprint)[0]
+    ego_bp.set_attribute("role_name", ROLE_PREFIX + "ego")
+    lead_bp.set_attribute("role_name", ROLE_PREFIX + "lead")
+    ego = world.spawn_actor(ego_bp, ego_tf)
+    lead = world.spawn_actor(lead_bp, lead_tf)
     actual_gap = ego.get_location().distance(lead.get_location())
     return ego, lead, actual_gap
 
 
-def cleanup_world(world):
-    """清掉上一轮残留的车辆/传感器，保证实验可重复（否则出生点会被占住）。"""
+ROLE_PREFIX = "aeb_"
+
+
+def owned_by_module(role_name, prefix=ROLE_PREFIX):
+    """该 actor 是否由本模块创建（用 role_name 前缀标识）。纯函数，便于单元测试。"""
+    return bool(role_name) and str(role_name).startswith(prefix)
+
+
+def cleanup_leftovers(world, prefix=ROLE_PREFIX):
+    """只清理「本模块上一次运行残留」的 actor。
+
+    早期版本会遍历全世界的 vehicle/sensor/walker 无差别 destroy，这会把别人正在用的
+    车辆、交通参与者和传感器一起删掉（PR #955 评审指出）。现在生成时给 actor 打
+    role_name = aeb_*，清理时只认这个前缀，不碰世界里的其他对象。
+    """
     removed = 0
-    for actor in world.get_actors():
-        if actor.type_id.startswith(("vehicle.", "sensor.", "walker.")):
-            try:
-                actor.destroy()
-                removed += 1
-            except RuntimeError:
-                pass
+    for actor in list(world.get_actors()):
+        attrs = getattr(actor, "attributes", {}) or {}
+        if not owned_by_module(attrs.get("role_name", ""), prefix):
+            continue
+        try:
+            actor.destroy()
+            removed += 1
+        except RuntimeError:
+            pass
     if removed:
-        print("[aeb] 清理上一轮残留 actor: %d 个" % removed)
+        print("[aeb] 清理本模块上一次运行的残留 actor: %d 个" % removed)
     return removed
 
 
@@ -277,11 +296,11 @@ def should_brake(distance, speed, min_brake_distance, ttc_threshold):
     return bool(brake), float(ttc)
 
 
-def radar_front_target(world, ego, max_range=80.0, half_width=2.2):
-    """前向雷达式目标跟踪：从仿真器目标列表里挑出正前方最近的一辆车。
+def truth_front_target(world, ego, max_range=80.0, half_width=2.2):
+    """从仿真器真值里取正前方最近车辆的距离——**仅用于评估，不参与制动决策**。
 
-    真实 AEB 用的就是毫米波雷达的目标级输出（距离/相对速度），这里用目标列表等价实现，
-    好处是不受激光雷达点云稀疏性影响，任何地图、任何车速都稳定可用。
+    早期版本用这个函数的结果当制动输入（激光雷达只作回退），等于验证了真值通路而不是感知通路，
+    PR #955 评审指出后已改为：决策只吃激光雷达，这个函数只写进日志/摘要用于对账。
     """
     tf = ego.get_transform()
     best = None
@@ -295,27 +314,60 @@ def radar_front_target(world, ego, max_range=80.0, half_width=2.2):
     return best
 
 
-def parse_lidar(image, width, height):
-    """激光雷达点云 -> (N,4) 数组：x, y, z, intensity。"""
-    arr = np.frombuffer(image.raw_data, dtype=np.float32).reshape((-1, 4))
-    return arr
+def decide_brake(lidar_distance, speed, min_brake_distance, ttc_threshold, sensor_lost=False):
+    """制动决策（纯函数）：输入只有激光雷达观测。
 
+    lidar_distance: 激光雷达测得的前方距离；None 表示本帧没有观测到目标
+    sensor_lost:    传感器失效标志（连续多帧收不到点云/测距全部无效）
 
-def front_distance(points, max_range=60.0, half_width=1.2, min_x=3.0,
-                   z_min=-1.75, z_max=1.6, percentile=2.0):
-    """车体前方锥形区域内的最近纵向距离（米）；无命中返回 None。
-
-    说明：激光雷达点云里混有地面点与自车车顶回波，这里用「抬高 z 下限（滤掉地面回环）
-    + 取 2% 分位数」做一次轻量的杂波抑制，避免单点噪声把测距瞬间拉到 1 m 以内。
+    语义：
+    - 正常无目标 -> 不制动；
+    - 传感器失效（遮挡/掉线）-> 失效安全，直接制动（否则会盲开）；
+    - 有目标 -> 交给 TTC/距离判据。
     """
-    if points.size == 0:
-        return None
-    x, y, z = points[:, 0], points[:, 1], points[:, 2]
-    mask = ((x > min_x) & (x < max_range) & (np.abs(y) < half_width)
-            & (z > z_min) & (z < z_max))
+    if sensor_lost:
+        return True, -1.0, "sensor_fault"
+    brake, ttc = should_brake(lidar_distance, speed, min_brake_distance, ttc_threshold)
+    source = "lidar" if lidar_distance is not None else "no_target"
+    return brake, ttc, source
+
+
+VEHICLE_TAGS = (14, 15, 16, 18)   # Car / Truck / Bus / Motorcycle
+
+
+def parse_semantic_lidar(image):
+    """语义激光雷达 -> (xyz(N,3) float32, obj_idx(N,) uint32, obj_tag(N,) uint32)。
+
+    每点 6 个 32 位字：x, y, z, cos(incidence), ObjIdx(u32), ObjTag(u32)。
+    后两个必须按 uint32 读，否则会被当成极小浮点数。
+    """
+    u = np.frombuffer(image.raw_data, dtype=np.uint32).reshape((-1, 6)).copy()
+    return u[:, :3].view(np.float32), u[:, 4], u[:, 5]
+
+
+def front_vehicle_distance(xyz, obj_idx, obj_tag, max_range=60.0, min_x=3.0,
+                           z_min=-1.75, z_max=1.6, min_points=4):
+    """正前方最近的**车辆实例**距离（米）；没有返回 (None, None)。
+
+    只用传感器观测：按实例号分组、只保留车辆语义标签，取该实例点的最小 x。
+    比几何走廊稳——不会把自车、路沿、路灯当成目标。
+    """
+    if xyz is None or len(xyz) == 0:
+        return None, None
+    x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+    mask = ((x > min_x) & (x < max_range) & (np.abs(y) < 4.0)
+            & (z > z_min) & (z < z_max) & np.isin(obj_tag, VEHICLE_TAGS))
     if not mask.any():
-        return None
-    return float(np.percentile(x[mask], percentile))
+        return None, None
+    best = None
+    for inst in np.unique(obj_idx[mask]):
+        sel = mask & (obj_idx == inst)
+        if sel.sum() < min_points:
+            continue
+        d = float(x[sel].min())
+        if best is None or d < best[0]:
+            best = (d, int(inst))
+    return (best if best is not None else (None, None))
 
 
 def speed_of(actor):
@@ -371,7 +423,7 @@ def run(cfg):
     os.makedirs(save_dir, exist_ok=True)
 
     client, world = connect(cfg)
-    cleanup_world(world)
+    cleanup_leftovers(world)
     bp_lib = world.get_blueprint_library()
     carla_map = world.get_map()
 
@@ -389,6 +441,7 @@ def run(cfg):
     cam_bp.set_attribute("image_size_y", str(sensors_cfg["camera_height"]))
     cam_bp.set_attribute("fov", str(sensors_cfg["camera_fov"]))
     cam_bp.set_attribute("sensor_tick", "0.5")
+    cam_bp.set_attribute("role_name", ROLE_PREFIX + "camera")
     camera = world.spawn_actor(cam_bp, carla.Transform(carla.Location(x=1.6, z=1.85)), attach_to=ego)
 
     saved_frames = []
@@ -412,14 +465,20 @@ def run(cfg):
 
     camera.listen(on_camera)
 
-    lidar_bp = bp_lib.find("sensor.lidar.ray_cast")
+    lidar_bp = bp_lib.find("sensor.lidar.ray_cast_semantic")
     lidar_bp.set_attribute("channels", str(sensors_cfg["lidar_channels"]))
     lidar_bp.set_attribute("range", str(sensors_cfg["lidar_range"]))
     lidar_bp.set_attribute("points_per_second", str(sensors_cfg["lidar_points_per_second"]))
     lidar_bp.set_attribute("rotation_frequency", str(sensors_cfg["lidar_rotation_frequency"]))
+    lidar_bp.set_attribute("role_name", ROLE_PREFIX + "lidar")
     lidar = world.spawn_actor(lidar_bp, carla.Transform(carla.Location(z=1.9)), attach_to=ego)
-    lidar_state = {"points": None}
-    lidar.listen(lambda img: lidar_state.update(points=parse_lidar(img, sensors_cfg["camera_width"], 1)))
+    lidar_state = {"xyz": None, "idx": None, "tag": None, "ts": 0.0}
+
+    def on_lidar(image):
+        xyz, idx, tag = parse_semantic_lidar(image)
+        lidar_state.update(xyz=xyz, idx=idx, tag=tag, ts=time.time())
+
+    lidar.listen(on_lidar)
 
     time.sleep(2.5)  # 等传感器出第一帧
 
@@ -430,6 +489,11 @@ def run(cfg):
     min_distance = float("inf")
     final_distance = 0.0
     phase = "approach"
+    no_sensor_frames = 0
+    sensor_faults = 0
+    final_from_lidar = False
+    brake_latched = False
+    truth_at_stop = None
 
     print("[aeb] 开始实验：巡航油门 %.2f，TTC 阈值 %.2fs，初始距离 %.1f m"
           % (ctrl_cfg["cruise_throttle"], ctrl_cfg["ttc_threshold"], lead_gap))
@@ -443,17 +507,34 @@ def run(cfg):
 
         speed = speed_of(ego)
         gt_distance = ego.get_location().distance(lead.get_location())
-        points = lidar_state["points"]
-        lidar_dist = front_distance(points, float(sensors_cfg["lidar_range"])) if points is not None else None
-        target = radar_front_target(world, ego)
-        radar_dist = target[0] if target is not None else None
-        dist = radar_dist if radar_dist is not None else lidar_dist
+        lidar_dist, lidar_inst = (front_vehicle_distance(
+            lidar_state["xyz"], lidar_state["idx"], lidar_state["tag"],
+            float(sensors_cfg["lidar_range"])) if lidar_state["xyz"] is not None else (None, None))
+        # 真值只用于评估/日志，不参与决策
+        truth = truth_front_target(world, ego)
+        truth_dist = truth[0] if truth is not None else None
 
-        # ---------------- 决策 ----------------
+        # 失效安全：只有「点云流停了」才算传感器故障；
+        # 走廊里暂时没有目标（例如前车还在 100 m 外、超出量程）是正常工况，不能刹停。
+        sensor_timeout = float(ctrl_cfg.get("sensor_timeout_s", 1.0))
+        sensor_lost = (lidar_state["xyz"] is None) or (now - float(lidar_state["ts"]) > sensor_timeout)
+
+        # ---------------- 决策（只吃激光雷达观测） ----------------
         steer, rel = lane_steer(ego, carla_map)
-        braking, ttc = should_brake(dist, speed,
-                                    float(ctrl_cfg["min_brake_distance"]),
-                                    float(ctrl_cfg["ttc_threshold"]))
+        braking, ttc, decision_source = decide_brake(
+            lidar_dist, speed,
+            float(ctrl_cfg["min_brake_distance"]),
+            float(ctrl_cfg["ttc_threshold"]),
+            sensor_lost=sensor_lost)
+        # 一旦触发就锁存：AEB 不能因为下一帧暂时丢目标就松开刹车重新加速
+        if braking:
+            brake_latched = True
+        if brake_latched:
+            braking = True
+            decision_source = "latched" if decision_source != "sensor_fault" else decision_source
+        if sensor_lost:
+            sensor_faults += 1
+        dist = lidar_dist
 
         if braking:
             ego.apply_control(carla.VehicleControl(
@@ -462,24 +543,27 @@ def run(cfg):
                 brake_started = t
                 phase = "brake"
                 frame_state["phase"] = "brake"
-                print("[aeb] >>> 触发制动 t=%.2fs dist=%.1fm speed=%.1fkm/h ttc=%.2fs"
-                      % (t, dist if dist is not None else -1, speed * 3.6, ttc))
+                print("[aeb] >>> 触发制动 t=%.2fs 激光雷达 dist=%.1fm speed=%.1fkm/h ttc=%.2fs source=%s"
+                      % (t, dist if dist is not None else -1, speed * 3.6, ttc, decision_source))
         else:
             throttle = float(ctrl_cfg["cruise_throttle"])
             if speed * 3.6 > float(ctrl_cfg["target_speed"]) * 3.6:
                 throttle = 0.0
             ego.apply_control(carla.VehicleControl(throttle=throttle, brake=0.0, steer=steer))
 
-        if dist is not None:
-            min_distance = min(min_distance, dist)
+        if gt_distance is not None:
+            min_distance = min(min_distance, gt_distance)
         rows.append({
             "t": round(t, 3),
             "speed_kmh": round(speed * 3.6, 3),
             "distance_m": round(dist, 3) if dist is not None else -1.0,
             "lidar_m": round(lidar_dist, 3) if lidar_dist is not None else -1.0,
-            "gt_distance_m": round(gt_distance, 3),
+            "truth_distance_m": round(truth_dist, 3) if truth_dist is not None else -1.0,
             "ttc": round(ttc, 3),
             "braking": int(braking),
+            "sensor_lost": int(sensor_lost),
+            "decision_source": decision_source,
+            "instance": lidar_inst if lidar_inst is not None else -1,
         })
 
         # ---------------- 停止判定 ----------------
@@ -489,8 +573,11 @@ def run(cfg):
                 phase = "stopped"
                 frame_state["phase"] = "stopped"
                 final_distance = dist if dist is not None else gt_distance
-                print("[aeb] >>> 停稳 t=%.2fs 距前车 %.1f m（地面真值 %.1f m）"
-                      % (t, final_distance, gt_distance))
+                final_from_lidar = dist is not None
+                truth_at_stop = gt_distance
+                print("[aeb] >>> 停稳 t=%.2fs 激光雷达测距 %s（真值 %.1f m；传感器失效帧 %d）"
+                      % (t, ("%.1f m" % dist) if dist is not None else "无目标",
+                         gt_distance, sensor_faults))
                 time.sleep(1.2)  # 留一帧停稳画面
                 break
 
@@ -507,6 +594,8 @@ def run(cfg):
     print("[aeb] 逐帧日志 -> %s（%d 行）" % (csv_path, len(rows)))
 
     meta = {
+        "final_from_lidar": final_from_lidar,
+        "truth_at_stop": truth_at_stop if truth_at_stop is not None else -1.0,
         "min_brake_distance": float(ctrl_cfg["min_brake_distance"]),
         "ttc_threshold": float(ctrl_cfg["ttc_threshold"]),
         "brake_time": brake_started if brake_started is not None else -1.0,
@@ -518,11 +607,17 @@ def run(cfg):
     with open(os.path.join(save_dir, "summary.md"), "w", encoding="utf-8") as fh:
         fh.write("AEB 实验摘要\n")
         fh.write("地图: %s\n" % carla_map.name)
+        fh.write("决策依据: 激光雷达观测（真值仅用于评估对账）\n")
         fh.write("初始距离: %.1f m\n" % lead_gap)
         fh.write("制动触发时刻: %.2f s\n" % meta["brake_time"])
         fh.write("制动后停稳时刻: %.2f s\n" % (stopped_at if stopped_at else -1))
-        fh.write("停稳时距前车: %.2f m\n" % meta["final_distance"])
-        fh.write("全程最近距离: %.2f m\n" % meta["min_distance"])
+        fh.write("停稳时激光雷达测距（到前车最近表面）: %s\n"
+                 % (("%.2f m" % meta["final_distance"]) if meta.get("final_from_lidar") else "无有效目标（回退真值 %.2f m）"
+                    % meta["final_distance"]))
+        fh.write("停稳时真值距离（中心距，仅评估）: %.2f m\n" % meta.get("truth_at_stop", -1.0))
+        fh.write("全程最近距离(真值): %.2f m\n" % meta["min_distance"])
+        fh.write("传感器失效帧数: %d（失效安全策略：连续 %d 帧无有效观测即制动）\n"
+                 % (sensor_faults, int(ctrl_cfg.get("sensor_timeout_frames", 20))))
         fh.write("关键帧: %s\n" % ", ".join(saved_frames))
 
     camera.stop(); lidar.stop()

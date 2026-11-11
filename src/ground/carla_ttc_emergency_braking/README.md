@@ -126,3 +126,19 @@ carla_ttc_emergency_braking/
 ![自动紧急制动（相机视角：逼近 → 制动 → 停稳） 截图 kf2](docs/img/ground/carla_ttc_emergency_braking_kf2.png)
 
 > 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
+
+## 12. 决策与清理的边界（PR #955 评审整改）
+
+| 项 | 早期实现 | 现在 |
+|---|---|---|
+| 清理 | 遍历全世界的 `vehicle./sensor./walker.` 全部 destroy | 生成时给 actor 打 `role_name = aeb_*`，只清理本模块残留（`cleanup_leftovers` + `owned_by_module`），不碰别人的对象 |
+| 制动输入 | 先读仿真器 actor 列表（真值），激光雷达只作回退 | **只用语义激光雷达观测**：按实例号取正前方最近的车辆（`front_vehicle_distance`），真值只写日志/摘要用于对账 |
+| 失效安全 | 无 | 点云流超过 `sensor_timeout_s`（默认 1 s）没更新 → 判定传感器故障并制动；**"走廊里没目标"不算故障** |
+| 制动锁存 | 无（丢一帧目标就松刹车再加速） | 一旦触发即锁存到停稳 |
+| 单测 | 8 项 | **14 项**：含单点噪声拒绝、聚类、遮挡返回 None、传感器失效、归属判断 |
+
+停稳判定的两个距离：
+- `激光雷达测距`：到前车**最近表面**的距离（决策口径）；
+- `真值距离`：**中心距**，比前者大约半个车长，只用于评估。
+
+实测（2026-11-11）：制动 t=4.17 s，停稳 t=6.56 s，激光雷达测距 4.68 m（真值中心距 6.74 m），未碰撞 → PASS。
