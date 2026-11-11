@@ -1,3 +1,0 @@
-<launch>
-  <node pkg="mujoco_slope_car" type="main.py" name="mujoco_slope_car" output="screen"/>
-</launch>

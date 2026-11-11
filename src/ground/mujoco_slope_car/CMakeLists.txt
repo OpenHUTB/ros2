@@ -1,8 +1,17 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(mujoco_slope_car)
-find_package(catkin REQUIRED)
-catkin_package()
 
-install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(FILES scene.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-catkin_install_python(PROGRAMS main.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+find_package(ament_cmake REQUIRED)
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(FILES main.py scene.xml
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+              GROUP_EXECUTE GROUP_READ
+              WORLD_EXECUTE WORLD_READ
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_package()
