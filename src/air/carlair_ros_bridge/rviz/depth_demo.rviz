@@ -1,0 +1,55 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/TF
+      Enabled: true
+      Name: TF
+      Show Names: true
+      Marker Scale: 1
+      Update Interval: 0
+    - Class: rviz/PointCloud2
+      Enabled: true
+      Name: DepthPoints
+      Topic: /camera/depth/points
+      Queue Size: 2
+      Style: Flat Squares
+      Size (m): 0.02
+      Color Transformer: AxisColor
+      Axis: Z
+      Position Transformer: XYZ
+      Alpha: 1
+    - Class: rviz/Image
+      Enabled: true
+      Name: Camera
+      Topic: /camera/image_raw
+      Queue Size: 2
+      Transport Hint: raw
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: base_link
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 12
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.4
+      Yaw: 0.8
+      Name: Current View
+      Target Frame: base_link

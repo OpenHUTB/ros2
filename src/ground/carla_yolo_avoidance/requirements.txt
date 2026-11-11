@@ -1,0 +1,18 @@
+# Python 侧依赖清单（ROS 2 与 apt 依赖见 docs/ground/carla_yolo_avoidance.md）
+#
+# 安装：
+#     python3 -m pip install -r requirements.txt
+#
+# 说明：
+#   - CARLA Python 客户端版本必须与服务端一致（本项目为 0.9.16）。
+#   - numpy 必须 < 2：验证环境使用 torch 2.2.2 + torchvision 0.17.2，
+#     numpy 2.x 会触发 "_ARRAY_API not found"。
+#   - 本项目只用官方预训练权重做推理，不包含任何训练依赖。
+#   - PyYAML 供自检脚本 / 单元测试读取 config/params.yaml；
+#     ROS 2 Humble 一般已经自带 python3-yaml。
+
+ultralytics>=8.0.0
+opencv-python>=4.5.0
+numpy>=1.22,<2
+carla==0.9.16
+PyYAML>=5.4

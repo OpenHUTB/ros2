@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!-- CARLA 端到端神经网络（图像 → 控制） —— ROS 1 Noetic Launch 文件。
+
+     使用方式（先 source ROS 1 环境）：
+         roslaunch carla_end_to_end_nn main.launch host:=192.168.8.1 mode:=test
+
+     说明：
+       * 本模块核心为 CARLA Python API 直连：前视相机图像 → 端到端 CNN → 转向。
+         Noetic 下由本 launch 直接拉起模块主入口 main.py 即可运行。
+       * CARLA 服务端的启动、宿主机 IP / 端口 2000 的查看方法等**通用配置步骤**，
+         本模块不重复描述，详见：
+         https://openhutb.github.io/ros2/set_up_and_connect_to_carla/ -->
+<launch>
+  <arg name="host" default="127.0.0.1" doc="CARLA 服务端地址（虚拟机填宿主机 IP）"/>
+  <arg name="port" default="2000" doc="CARLA RPC 端口"/>
+  <arg name="town" default="Town05" doc="CARLA 地图名"/>
+  <arg name="mode" default="test" doc="collect=行为克隆采集, train=训练CNN, test=端到端驾驶"/>
+  <arg name="model_path" default="models/cnn.json" doc="端到端 CNN 模型路径"/>
+  <arg name="sim_time" default="20.0" doc="端到端驾驶时长（秒）"/>
+  <arg name="backend" default="numpy" doc="numpy=纯numpy(默认,无需TensorFlow), tf=tf.keras"/>
+
+  <node pkg="carla_end_to_end_nn" type="main.py"
+        name="carla_end_to_end_nn" output="screen"
+        args="--host $(arg host) --port $(arg port) --town $(arg town)
+              --mode $(arg mode) --model_path $(arg model_path)
+              --sim_time $(arg sim_time) --backend $(arg backend)"/>
+</launch>
