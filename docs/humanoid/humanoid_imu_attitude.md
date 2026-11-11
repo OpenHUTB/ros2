@@ -113,17 +113,17 @@ ros2 launch humanoid_imu_attitude main.launch.py \
 | fast | complementary | 0.28 | 0.31 | 1.92 | 0.53 | 3.2 |
 | fast | madgwick | 0.34 | 0.35 | 1.94 | 0.61 | 3.2 |
 
-单步耗时（纯算法，5 万次平均，不含 ROS 通信与日志；不同负载下约 ±20% 波动）：
+单步耗时（纯算法，5 万次平均，不含 ROS 通信与日志；虚拟机负载不同时抖动较大）：
 
 | 方法 | 单步耗时 |
 |------|----------|
-| complementary | 47.2 µs |
-| madgwick | 16.2 µs |
+| complementary | 约 50 µs |
+| madgwick | 约 16 µs |
 
 ## 结论与限制
 
 - 在本组噪声水平下，两种滤波的 roll/pitch RMSE 都在 0.35° 以内，属同一量级；
-  动态场景下互补滤波略好（`fast` 场景平均 RMSE 低约 17%），Madgwick 的固定步长校正
+  动态场景下互补滤波略好（`fast` 场景平均 RMSE 低约 14%），Madgwick 的固定步长校正
   在误差很小时仍会按 `beta·dt` 转动，噪声下的抖动略大。
 - Madgwick 单步计算量约为互补滤波的 1/3，但两者都远小于 200 Hz 的 5 ms 周期，
   在本场景中都不构成瓶颈，选型应优先看参数可解释性而不是耗时。
