@@ -20,6 +20,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import sys
 
 import pytest
@@ -50,11 +51,16 @@ def test_module_is_importable_without_optional_deps():
 @pytest.mark.parametrize("name", sorted(MOD.MODEL_FILES))
 def test_model_manifest_declares_size_and_sha256(name):
     meta = MOD.MODEL_FILES[name]
-    assert meta["url"].endswith(name), "下载地址的末段应与文件名一致"
+    urls = meta["urls"]
+    assert urls, "每个权重至少给一个下载源"
+    for url in urls:
+        assert url.startswith("https://"), "权重必须走 HTTPS"
+        assert url.rstrip("/").endswith(name), "下载地址的末段应与文件名一致"
     assert meta["size"] > 1024
     assert len(meta["sha256"]) == 64
     int(meta["sha256"], 16)          # 必须是合法十六进制
-    assert meta["url"].startswith("https://"), "权重必须走 HTTPS"
+    # 国内网络直连 raw.githubusercontent 常被拖死，大文件必须有镜像兜底
+    assert len(urls) >= 2, "23 MB 的权重只给一个源，国内网络基本下不下来"
 
 
 def test_requirements_pin_opencv_below_5():
@@ -94,24 +100,102 @@ def test_ensure_model_fails_soft_when_offline(tmp_path, monkeypatch):
 
 
 def test_ensure_model_rejects_corrupted_payload(tmp_path, monkeypatch):
+    """字节数对得上、内容对不上（典型的「HTML 页面被补齐到同样大小」）：必须判死。"""
+    name = "deploy.prototxt"
+    meta = MOD.MODEL_FILES[name]
+    payload = (b"<html><body>502 Bad Gateway</body></html>").ljust(meta["size"], b"x")
+
     class _FakeResponse:
+        headers = {"Content-Length": str(meta["size"])}
+
+        def __init__(self):
+            self._sent = False
+
         def __enter__(self):
             return self
 
         def __exit__(self, *args):
             return False
 
-        def read(self):
-            return b"<html><body>502 Bad Gateway</body></html>"
+        def read(self, n=-1):
+            if self._sent:
+                return b""
+            self._sent = True
+            return payload
 
     monkeypatch.setattr(MOD.urllib.request, "urlopen", lambda *a, **k: _FakeResponse())
     with pytest.raises(SystemExit) as exc:
         MOD.ensure_model(str(tmp_path))
     message = str(exc.value)
-    assert "校验失败" in message
+    assert "模型下载失败" in message
+    assert "校验失败" in message, "内容不符要说明是校验没过，而不是只说下载失败"
     assert "--model-dir" in message
     assert not list(tmp_path.glob("*.part"))
     assert not list(tmp_path.glob("*.prototxt")), "坏文件不能被留下冒充可用权重"
+
+
+def test_download_model_rejects_truncated_stream(tmp_path, monkeypatch):
+    """源一直吐不满字节数（被代理截断）：不能留下半截 .part 文件。"""
+    class _Resp:
+        headers = {"Content-Length": "20"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, n=-1):
+            return b"01234"          # 只有 5 字节
+
+    monkeypatch.setattr(MOD.urllib.request, "urlopen", lambda *a, **k: _Resp())
+    meta = {"urls": ["https://mirror.example.bad/deploy.prototxt"],
+            "size": 20, "sha256": hashlib.sha256(b"01234567890123456789").hexdigest()}
+    with pytest.raises(SystemExit) as exc:
+        MOD.download_model("deploy.prototxt", meta, str(tmp_path))
+    assert "模型下载失败" in str(exc.value)
+    assert not list(tmp_path.glob("*.part"))
+
+
+def test_download_model_falls_back_to_next_source(tmp_path, monkeypatch):
+    """第一个源读超时、第二个源正常：应换源成功，而不是直接失败。"""
+    name = "deploy.prototxt"
+    meta = {"urls": ["https://dead.example.invalid/deploy.prototxt",
+                     "https://mirror.example.ok/deploy.prototxt"],
+            "size": 20, "sha256": hashlib.sha256(b"01234567890123456789").hexdigest()}
+    calls = {"dead": 0, "ok": 0}
+
+    class _Resp:
+        headers = {"Content-Length": "20"}
+
+        def __init__(self, payload):
+            self._payload = payload
+            self._sent = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, n=-1):
+            if self._sent:
+                return b""
+            self._sent = True
+            return self._payload
+
+    def fake_urlopen(url, timeout=None):
+        if "dead" in url:
+            calls["dead"] += 1
+            raise TimeoutError("read timed out")
+        calls["ok"] += 1
+        return _Resp(b"01234567890123456789")
+
+    monkeypatch.setattr(MOD.urllib.request, "urlopen", fake_urlopen)
+    path = MOD.download_model(name, meta, str(tmp_path))
+    assert os.path.getsize(path) == 20
+    assert calls == {"dead": 1, "ok": 1}
+    assert not list(tmp_path.glob("*.part"))
 
 
 def test_box_filter_rejects_oversized_and_extreme_ratio():
@@ -165,6 +249,22 @@ def test_lidar_branch_is_deterministic_and_weather_agnostic():
     assert all(d["src"] == "lidar" for d in candidates)
 
 
+def test_imread_imwrite_work_in_non_ascii_dir(tmp_path):
+    """Windows 上用户名常含中文，cv2.imread/imwrite 会直接读不到文件，必须走 imdecode/imencode。"""
+    cv2 = pytest.importorskip("cv2", reason="需要 opencv-python")
+    np = pytest.importorskip("numpy")
+    folder = tmp_path / "中文 目录"
+    folder.mkdir()
+    img = np.zeros((40, 60, 3), dtype=np.uint8)
+    img[:, :, 1] = 200
+    path = folder / "帧.png"
+    assert MOD.imwrite_any(str(path), img) is True
+    assert path.stat().st_size > 0
+    back = MOD.imread_any(str(path))
+    assert back is not None and back.shape == img.shape
+    assert MOD.imread_any(str(folder / "不存在.png")) is None
+
+
 def _verified_model_dir():
     model_dir = os.environ.get("WEATHER_AP_REPLAY_MODEL_DIR",
                                os.path.join(MOD.BASE_DIR, "model"))
@@ -172,6 +272,23 @@ def _verified_model_dir():
         if not MOD.file_matches(os.path.join(model_dir, name), meta["size"], meta["sha256"]):
             return None
     return model_dir
+
+
+def test_load_caffe_net_works_from_non_ascii_dir(tmp_path):
+    """模型放在含中文的目录里也能加载：cv2 的 Caffe 层读不了非 ASCII 路径，需要切目录兜底。"""
+    cv2 = pytest.importorskip("cv2", reason="需要 opencv-python")
+    if not hasattr(cv2.dnn, "readNetFromCaffe"):
+        pytest.skip("当前 opencv-python 没有 Caffe 导入器（需 4.x）")
+    model_dir = _verified_model_dir()
+    if model_dir is None:
+        pytest.skip("模型未就绪：设 WEATHER_AP_REPLAY_MODEL_DIR 指向已校验的模型目录")
+    folder = tmp_path / "模型 目录"
+    folder.mkdir()
+    for name in MOD.MODEL_FILES:
+        shutil.copyfile(os.path.join(model_dir, name), str(folder / name))
+    net = MOD.load_caffe_net(str(folder / "deploy.prototxt"),
+                            str(folder / "mobilenet_iter_73000.caffemodel"))
+    assert net is not None
 
 
 def test_end_to_end_matches_documented_numbers(tmp_path, monkeypatch):
