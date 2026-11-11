@@ -284,6 +284,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 * [Town10 立面自主巡航与图像采集](./air/town10_facade_cruise_capture/index.md)
 
+* [输电线路无人机巡检任务预检](./air/powerline_mission_preflight.md) —— 在任务执行前检查航点结构、高度、航段距离和杆塔双侧覆盖
+
 * [Town10 幕墙图像病害识别](./air/town10_facade_defect_detection/index.md)
 
 * [AirSim Unity 无人机曲线绕柱避障实验](./air/airsim_obstacle_avoidance.md)
