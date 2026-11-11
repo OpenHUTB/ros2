@@ -9,7 +9,9 @@ import time
 import rclpy
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import Point
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
@@ -47,7 +49,8 @@ class TtcNode(Node):
         self.marker_pub = self.create_publisher(
             MarkerArray, str(self.get_parameter("marker_topic").value), 10)
         self.create_subscription(
-            LaserScan, str(self.get_parameter("scan_topic").value), self.on_scan, 10)
+            LaserScan, str(self.get_parameter("scan_topic").value), self.on_scan,
+            qos_profile_sensor_data)
         self._last_warning = False
         self._last_log = 0.0
         self.get_logger().info("dynamic_obstacle_ttc ready")
@@ -97,7 +100,7 @@ def main() -> None:
     node = TtcNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
@@ -107,4 +110,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
