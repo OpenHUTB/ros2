@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+<!-- Mbot 差速底盘 + 2D 激光雷达（自包含，仅依赖 gazebo_ros 插件） -->
+<robot name="mbot_lidar">
+
+  <!-- dummy base_footprint 作为根链接（无惯性参数），避免 KDL 警告 -->
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="2.0"/>
+      <inertia ixx="0.0129" ixy="0" ixz="0" iyy="0.0129" iyz="0" izz="0.0200"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.16" radius="0.20"/>
+      </geometry>
+      <material name="orange">
+        <color rgba="1 0.4 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.16" radius="0.20"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- base_footprint 落在地面：轮子/万向轮最低点在 base_link 下方 0.11 m
+       （轮心 z=-0.05 且半径 0.06；万向轮球心 z=-0.095 且半径 0.015），
+       因此 base_footprint 需要比 base_link 低 0.11 m，/odom 的 z 才不会带 10 cm 偏置 -->
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <origin xyz="0 0 0.11" rpy="0 0 0"/>
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+  </joint>
+
+  <link name="left_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707 0 0"/>
+      <geometry>
+        <cylinder radius="0.06" length="0.025"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 0.9"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707 0 0"/>
+      <geometry>
+        <cylinder radius="0.06" length="0.025"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="0 0.19 -0.05" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="right_wheel_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.2"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5707 0 0"/>
+      <geometry>
+        <cylinder radius="0.06" length="0.025"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 0.9"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5707 0 0"/>
+      <geometry>
+        <cylinder radius="0.06" length="0.025"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="0 -0.19 -0.05" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="front_caster_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 0.95"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_caster_joint" type="continuous">
+    <origin xyz="0.18 0 -0.095" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="front_caster_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="back_caster_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 0.95"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.015"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="back_caster_joint" type="continuous">
+    <origin xyz="-0.18 0 -0.095" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="back_caster_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="laser_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 0.95"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.05" radius="0.05"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <origin xyz="0 0 0.105" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="laser_link"/>
+  </joint>
+
+  <!-- 底盘差速驱动插件 -->
+  <gazebo>
+    <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <rosDebugLevel>na</rosDebugLevel>
+      <leftJoint>left_wheel_joint</leftJoint>
+      <rightJoint>right_wheel_joint</rightJoint>
+      <wheelSeparation>0.38</wheelSeparation>
+      <wheelDiameter>0.12</wheelDiameter>
+      <wheelTorque>10</wheelTorque>
+      <wheelAcceleration>3.0</wheelAcceleration>
+      <updateRate>100</updateRate>
+      <odometrySource>world</odometrySource>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+      <publishOdomTF>true</publishOdomTF>
+      <!-- 轮子 TF 交给 robot_state_publisher（订阅本插件的 /joint_states）发布，
+           这里必须关闭，否则 base_link -> *_wheel_link 有两个发布者，刷 TF_REPEATED_DATA -->
+      <publishWheelTF>false</publishWheelTF>
+      <publishWheelJointState>true</publishWheelJointState>
+      <publishTf>1</publishTf>
+    </plugin>
+  </gazebo>
+
+  <!-- 2D 激光雷达插件：360 束，角度范围 [-π, π] -->
+  <gazebo reference="laser_link">
+    <sensor type="ray" name="lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159265</min_angle>
+            <max_angle>3.14159265</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>3.50</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="laser_controller" filename="libgazebo_ros_laser.so">
+        <topicName>scan</topicName>
+        <frameName>laser_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>
