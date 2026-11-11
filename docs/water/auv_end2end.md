@@ -35,6 +35,7 @@ graph TD
 - Python 3.10+
 - OpenCV（`python3-opencv`）、numpy（`python3-numpy`）
 - `cv_bridge`
+- RViz2（只有 `use_rviz:=true` 时需要，`ros-humble-desktop` 自带）
 
 Gazebo Classic 需要单独安装，否则会出现 `gazebo: command not found`：
 
