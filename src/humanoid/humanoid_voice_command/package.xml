@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_voice_command</name>
+  <version>0.1.0</version>
+  <description>
+    人形机器人离线语音指令控制模块。口令音频经 OpenAI Whisper tiny 模型（CPU 推理，
+    约 0.15 s 一条）识别成文本，再由「规则匹配 + 字符 n-gram 意图网络」两级判定得到
+    运动意图（前进/后退/左转/右转/停止/挥手/快一点/慢一点），最后转成 /cmd_vel 速度
+    指令与上身动作请求。语音链路全部离线运行，无需联网与云端服务。
+    ROS 2 接口提供 /voice_text、/voice_intent、/voice_command、/cmd_vel、/humanoid/gesture，
+    仿真执行层复用 humanoid_keyboard_control 的 MuJoCo 节点。
+  </description>
+
+  <maintainer email="maintainer@example.com">OpenHUTB contributor</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- 语音识别与意图网络依赖 PyTorch 和 openai-whisper。Ubuntu 源没有稳定的对应
+       deb 包，故不写成 rosdep 键，请按 README「安装」一节用 pip 安装 CPU 版。 -->
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+  <!-- 仿真执行层直接复用键盘控制包的 MuJoCo 节点，不重复实现 -->
+  <exec_depend>humanoid_keyboard_control</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
