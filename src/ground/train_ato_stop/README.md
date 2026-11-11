@@ -14,13 +14,18 @@
 ```bash
 cd src/ground/train_ato_stop
 python3 -m train_ato_stop.main --offline --output results
-python3 -m pytest tests -v      # 22 项
+python3 -m pytest tests -v      # 26 项
 ```
 
 会跑完四个场景，输出速度-距离曲线、停车误差对比图、过程动画和一张结果表：
 
 牵引能耗按每一时刻的**实际需求牵引力**计算，包含基本阻力、坡道阻力和
 回转质量折算后的加速力；制动与下坡产生的可回收能量暂不计入。
+
+每个场景还会生成 `energy_breakdown.csv` 和 `energy_breakdown.md`，把总能耗
+拆成牵引、阻滞、加/减速、基本阻力、坡道和末端动能。报告中的
+`reported_traction_energy_kwh` 与轨迹积分得到的 `traction_work_kwh` 可互相
+校验，便于解释限速区、坡道和晚制动场景的能耗差异。
 
 | 场景 | 不按曲线跑 / 按曲线跑 | 停车误差 |
 |---|---|---|

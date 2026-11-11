@@ -55,6 +55,23 @@
 把制动点推迟到距离不足的位置，ATP 会介入施加紧急制动，但仍然停不住——这才是曲线
 真正在防的东西。
 
+### 能耗分解
+
+离线运行还会写出 `energy_breakdown.csv` / `energy_breakdown.md`，按轨迹逐段
+积分以下物理功：
+
+| 字段 | 说明 |
+|---|---|
+| `reported_traction_energy_kwh` | 仿真主循环报告的牵引能耗 |
+| `traction_work_kwh` | 独立按需求牵引力和位移积分的结果 |
+| `retarding_work_kwh` | 未回收的制动/阻滞机械功 |
+| `acceleration_work_kwh` / `deceleration_work_kwh` | 正/负惯性功 |
+| `resistance_work_kwh` | Davis 基本阻力功 |
+| `grade_work_kwh` | 坡道功，上坡为正、下坡为负 |
+| `endpoint_kinetic_energy_kwh` | 结束时剩余动能 |
+
+该分解不改动力学，只解释已有能耗；两列牵引能相互校验积分口径。
+
 ## 车辆模型
 
 只算纵向。整车质量 $m$、回转质量系数 $\gamma$ 把轮对转动惯量折算进平动质量：
@@ -174,7 +191,7 @@ src/ground/train_ato_stop/
 ├── launch/main.launch.py
 ├── config/train_ato.yaml
 ├── rviz/train_ato_stop.rviz
-└── tests/test_train_ato.py    # 22 项
+└── tests/                     # test_train_ato.py + test_energy.py，共 26 项
 ```
 
 ## 运行步骤
@@ -184,7 +201,7 @@ src/ground/train_ato_stop/
 ```bash
 cd src/ground/train_ato_stop
 python3 -m train_ato_stop.main --offline --output results
-python3 -m pytest tests -v        # 22 项
+python3 -m pytest tests -v        # 26 项
 ```
 
 ROS 2 模式：
