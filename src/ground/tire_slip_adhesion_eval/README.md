@@ -8,7 +8,7 @@
 
 - 操作系统：Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面）
 - Python：3.10 ~ 3.12
-- 依赖：见 `requirements.txt`（`numpy`、`matplotlib`、`Pillow`）
+- 依赖：见 `requirements.txt`（`numpy`、`matplotlib`、`Pillow`；`mujoco` 可选，仅用于四路面单车场景静态图）
 
 ## 运行步骤
 
@@ -39,6 +39,7 @@
 | `slip_peak_bar.png` | 峰值附着系数与最佳滑移率对比柱状图 |
 | `slip_brake_distance.png` | 各路面在 60 / 100 km/h 初速度下的制动距离对比 |
 | `slip_demo.gif` | 滑移率扫描时附着曲线演示动图 |
+| `slip_scene.png` | MuJoCo 离屏渲染四路面单车场景静态图（网格地面斜俯视，路板配色与附着曲线一致） |
 | `metrics.csv` | 各路面峰值附着、最佳滑移率与制动距离数据表 |
 
 > 输出图片命名与教程图片目录 `docs/img/ground/` 中的文件名一致，提交文档时将 `results/` 下的图片直接复制过去即可，无需改名。

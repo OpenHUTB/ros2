@@ -9,7 +9,7 @@
 | 操作系统 | Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面） |
 | 仿真平台 | 纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA |
 | Python | 3.10 ~ 3.12 |
-| 依赖 | `numpy`、`matplotlib`、`Pillow` |
+| 依赖 | `numpy`、`matplotlib`、`Pillow`；`mujoco` 为可选依赖，仅用于四路面单车场景静态图 |
 
 ### 1.1 安装依赖
 
@@ -25,6 +25,8 @@
 
    ```bash
    pip install numpy matplotlib Pillow
+   # 可选：安装 mujoco 后才会输出四路面单车场景静态图
+   pip install mujoco>=3.0
    ```
 
 ### 1.2 验证环境
@@ -139,6 +141,12 @@ s_star = np.tan(np.pi / (2.0 * C)) / B
 ### 5.5 演示动图
 
 ![滑移附着演示动图](../img/ground/slip_demo.gif)
+
+### 5.6 四路面单车场景静态图
+
+![四路面单车场景静态图](../img/ground/slip_scene.png)
+
+MuJoCo 离屏渲染的路面工况示意：四块并排路板从左到右依次对应干沥青、湿沥青、积雪、结冰，配色与附着曲线一致，单车停在干沥青板上，网格地面斜俯视。该图仅用于展示四种路面工况与配色对应关系，峰值附着、最佳滑移率与制动距离以 5.1–5.4 的曲线、柱状图与指标表为准；未安装 `mujoco` 或离屏 GL 不可用时自动跳过本图，不影响曲线图、动图与数据表。
 
 ## 6. 结论
 
