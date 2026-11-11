@@ -1,0 +1,6 @@
+# humanoid_human_following 运行参数
+/humanoid_follow_node:
+  ros__parameters:
+    control_hz: 20.0      # 控制频率 (Hz)
+    d_keep: 0.8           # 期望跟随距离 (m)
+    visualize: false      # 是否打开 MuJoCo 可视化窗口
