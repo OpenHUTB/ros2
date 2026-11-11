@@ -59,19 +59,6 @@ graph TD
 | 编程语言 | C++ (检测节点) + Python (巡航控制器) |
 | 构建工具 | colcon / ament_cmake |
 | 显卡 | 支持 OpenGL 2.1+（虚拟机需开启 3D 加速） |
-
-!!! note "依赖安装"
-    本模块依赖以下 ROS 2 包，系统默认已包含在 `ros-humble-desktop` 中：
-    - `gazebo_ros`（Gazebo-ROS 桥接）
-    - `cv_bridge`（ROS-OpenCV 图像转换）
-    - `tf2_ros`（坐标变换）
-    - `nav_msgs` / `visualization_msgs`（轨迹与标记）
-
-    若缺少 OpenCV 的 ArUco 模块，请安装（ArUco 位于 `contrib` 包中，不存在独立的 `libopencv-aruco-dev`）：
-    ```bash
-    sudo apt install libopencv-dev libopencv-contrib-dev
-    ```
-
 ---
 
 ## 3. 核心代码文件清单
@@ -222,14 +209,3 @@ detector_params_->detectInvertedMarker = true;
 - **运动方式**：世界重力设为 0，ROV 以运动学方式运动——控制器每 0.05 s 调用一次 `/gazebo/set_entity_state` 直接设置位姿，不含推力/浮力动力学插件。
 
 ---
-
-## 7. 相关链接
-
-- [水下机器人物理仿真与 6-DOF 键盘运动控制](./rov_physical_simulation.md)
-- [水下多传感器感知与 3D 轨迹跟踪控制](./rov_trajectory_tracking.md)
-- [水下声呐 SLAM 占据栅格建图与自主避障导航](./rov_sonar_slam_navigation.md)
-
----
-
-!!! tip "大模型声明"
-    本模块代码与文档由大模型辅助生成，核心算法与参数经人工调试验证。
