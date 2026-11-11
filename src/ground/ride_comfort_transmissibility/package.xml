@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ride_comfort_transmissibility</name>
+  <version>1.0.0</version>
+  <description>
+    乘坐舒适性传递率核算：单自由度悬架在路面正弦激励下的位移传递率、
+    共振峰位置与峰值倍率、ISO 2631-1 舒适度等级，并给出四条断言。
+    纯标准库实现，不依赖 CARLA、不需要显示器。
+  </description>
+
+  <maintainer email="wist-sutton@users.noreply.github.com">Wist-sutton</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>
