@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>uav_nn_perception_navigation</name>
+  <version>0.1.0</version>
+  <description>
+    基于神经网络的无人机感知、导航与端到端控制（AirSim + ROS Noetic）。
+    包含键盘遥控、激光雷达感知、神经网络轨迹跟踪、SLAM 建图与导航、
+    图像到控制指令的端到端模型五项能力。
+  </description>
+  <maintainer email="student@example.com">UAV NN Perception Navigation</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+
+  <export/>
+</package>
