@@ -207,6 +207,7 @@ nav:
     - 牵引车挂车折刀判定: './ground/trailer_kinematics.md'
     - 速度曲线规划: './ground/speed_profile_check.md'
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
+    - 车辆几何通过性核算（接近角/离去角/纵向通过角）: './ground/passability_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
 
