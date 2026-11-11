@@ -1,0 +1,16 @@
+﻿# Parameters used by the Gazebo/TurtleBot3 launch (kept in sync with main_launch.py)
+dwa_avoidance:
+  ros__parameters:
+    use_sim_time: true
+    goal_x: 2.5
+    goal_y: 0.0
+    max_v: 0.22
+    max_w: 1.0
+    max_acc_v: 0.8
+    max_acc_w: 2.0
+    predict_time: 1.5
+    robot_radius: 0.12
+    safety_margin: 0.04
+    goal_tolerance: 0.20
+    map_half_size: 6.0
+
