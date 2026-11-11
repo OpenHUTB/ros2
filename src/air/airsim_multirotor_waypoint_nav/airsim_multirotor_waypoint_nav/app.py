@@ -245,6 +245,7 @@ def fly_to(client, target, cfg, sampler_rows, phase, t0, on_sample=None):
     interval = float(flight.get("log_interval", 0.1))
     timeout = float(flight["timeout_per_waypoint"])
 
+    last_cmd = target        # 最后一次实际下发的目标（补偿后会变）
     try:
         client.moveToPositionAsync(target[0], target[1], target[2], float(flight["speed"]))
     except Exception as exc:                    # noqa: BLE001
@@ -293,6 +294,7 @@ def fly_to(client, target, cfg, sampler_rows, phase, t0, on_sample=None):
                 tx = target[0] + (target[0] - p3[0])
                 ty = target[1] + (target[1] - p3[1])
                 tz = target[2] + (target[2] - p3[2])
+                last_cmd = (tx, ty, tz)
                 try:
                     client.moveToPositionAsync(tx, ty, tz, float(flight["speed"]))
                 except Exception:              # noqa: BLE001
@@ -318,7 +320,7 @@ def fly_to(client, target, cfg, sampler_rows, phase, t0, on_sample=None):
                 median = settled[len(settled) // 2] if settled else median
                 corrections += 1
             depart, _vd = position_of(client)
-            departure = distance_3d(depart, target)
+            departure = distance_3d(depart, last_cmd)   # 与补偿后的实际目标点比较
             return median, True, time.time() - t_wp, departure
         time.sleep(interval)
     depart, _vd = position_of(client)
