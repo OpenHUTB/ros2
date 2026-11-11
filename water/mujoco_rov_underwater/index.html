@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>MuJoCo水下机器人ROS2仿真与建图初步验证 - 模拟器的 ROS 文档</title>
+<title>MuJoCo 水下机器人：ROS2 仿真与建图初步验证 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "MuJoCo\u6c34\u4e0b\u673a\u5668\u4ebaROS2\u4eff\u771f\u4e0e\u5efa\u56fe\u521d\u6b65\u9a8c\u8bc1";
+        var mkdocs_page_name = "MuJoCo \u6c34\u4e0b\u673a\u5668\u4eba\uff1aROS2 \u4eff\u771f\u4e0e\u5efa\u56fe\u521d\u6b65\u9a8c\u8bc1";
         var mkdocs_page_input_path = "water/mujoco_rov_underwater.md";
         var mkdocs_page_url = null;
       </script>
@@ -660,7 +660,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">水域载具</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../HoloOcean/">水域载具 ROS2 接口</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">环境搭建</a>
@@ -727,23 +727,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../usv_mujoco_nn/">水面无人艇：激光雷达建图与神经网络局部规划</a>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">MuJoCo水下机器人ROS2仿真与建图初步验证</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">一、项目介绍</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">二、运行环境</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">三、项目结构</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">四、核心算法与源码解析</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">五、运行步骤</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_6">六、运行效果</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#_7">七、实验总结</a>
-</li>
-</ul>
+<li class="toctree-l1"><a class="reference internal" href="../rov_astar_planner/">A* 路径规划初步验证</a>
 </li>
 </ul>
 <p class="caption"><span class="caption-text">经典控制</span></p>
@@ -763,8 +747,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
-<li class="breadcrumb-item">水域载具</li>
-<li class="breadcrumb-item active">MuJoCo水下机器人ROS2仿真与建图初步验证</li>
+<li class="breadcrumb-item active">MuJoCo 水下机器人：ROS2 仿真与建图初步验证</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/water/mujoco_rov_underwater.md"> 编辑页面</a>
 </li>
@@ -845,10 +828,6 @@ ros2<span class="w"> </span>launch<span class="w"> </span>rov_mujoco_slam<span c
 <p>实验证明了 ROS 2 节点能够与 MuJoCo 物理引擎进行有效的数据交互，通过终端能够实时输出机器人的仿真时间与基座位置，验证了物理仿真回路的连通性。该实验为后续接入水下声呐 SLAM、占据栅格建图与自主避障导航奠定了坚实的工程基础，达到了阶段性实验目的。</p></div>
 </div>
 </div><footer>
-<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../usv_mujoco_nn/" title="水面无人艇：激光雷达建图与神经网络局部规划"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../../classical_control/cartpole_balance/" title="倒立摆平衡小车 (cart-pole, LQR)">后一页 <span class="icon icon-circle-arrow-right"></span></a>
-</div>
 <hr/>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -864,8 +843,6 @@ ros2<span class="w"> </span>launch<span class="w"> </span>rov_mujoco_slam<span c
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../usv_mujoco_nn/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../../classical_control/cartpole_balance/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
