@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="two_dof_arm_square" type="main.py" name="two_dof_arm_square" output="screen" />
+</launch>
