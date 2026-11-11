@@ -27,12 +27,21 @@
 ## 依赖与运行
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt      # numpy>=1.21、opencv-python>=4.5,<5、matplotlib>=3.5
 python main.py
 ```
 
 模型文件（`deploy.prototxt`、`mobilenet_iter_73000.caffemodel`，约 23 MB）不进仓库，
 首次运行由 `main.py` 自动下载到 `model/`；已存在则直接复用。
+
+下载按**多个源依次回退**：先试 `raw.githubusercontent.com`，不通再换 `gh-proxy.com`
+与 `jsdelivr` 镜像（国内直连 raw 常被拖到读超时，这一步决定能不能跑起来）。每个文件
+下完都按期望字节数与 sha256 校验，源返回 HTML 错误页、被截断、字节数超标都判死并换
+下一个源；全部失败时列出每个源的具体原因，并提示「手动下载后用 `--model-dir <目录>` 指定」。
+
+路径含中文或空格（例如 Windows 用户名 `C:\Users\张三\...`）也能跑：`cv2.imread` 与 Caffe
+加载走 C 的文件接口，读不了非 ASCII 路径，模块改用 `imdecode`/`imencode` 和「切到模型
+目录用文件名加载」绕开，Linux/macOS 上行为不变。
 
 结果写入 `results/`：
 
