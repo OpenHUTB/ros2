@@ -289,25 +289,11 @@ ros2 topic echo /clock --once
 | 路径点太少，按 p 没反应 | 确认录制期间确实在移动，并适当减小 `record_min_distance`；路径少于 2 点时节点会拒绝回放 |
 | 回放轨迹偏离或画龙 | 先检查 `/odom` 是否持续更新；再降低 `linear_speed`、增大 `lookahead_distance` 或减小 `replay_linear_gain` |
 
-## 13. 已知限制与后续工作
-
-- 位姿全部来自轮式里程计，长时间运行会有累积漂移；没有使用激光雷达、相机或全局定位。
-- 仿真场景为平面，未考虑坡道、打滑、悬挂和轮胎形变。
-- 回放依赖里程计坐标系，`/odom` 漂移会直接反映到路径和终点误差；没有做全局重定位。
-- 测试在单台 Ubuntu 24.04 + Jazzy 机器上完成；合并前仍需第二台机器复现。
-- 后续可以加入 IMU/EKF 融合、`slam_toolbox` 或 Nav2，把当前功能扩展到真实定位与导航。
-
-## 14. 与仓库已有模块的区别
-
-- `gazebo_diff_drive_teleop` 原模块只做键盘速度和自动巡航，没有轨迹记忆。
-- `odom_trace_recorder` 能记录里程计并发布 Path，但只回放记录结果，不做闭环路径跟踪。
-- 本项目在录制后使用纯追踪闭环生成速度指令，能根据实时位姿修正偏差，属于真正的轨迹回放。
-
-## 16. 定速巡航与航向保持
+## 13. 定速巡航与航向保持
 
 `cruise_control` 在键盘遥控基础上增加闭环巡航：按 `c` 锁定当前航向并维持目标速度，按 `a/d` 在巡航中微调目标航向，按 `+/-` 调整目标速度。控制量由 `/odom` 的实测线速度和偏航角反馈计算，不是开环发布固定速度。
 
-### 16.1 控制算法
+### 13.1 控制算法
 
 速度通道使用“前馈 + 比例”控制：
 
@@ -327,7 +313,7 @@ angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
 
 角速度限制为 `±max_angular`；航向误差较大时自动降低线速度，避免巡航中大幅甩头。
 
-### 16.2 操作
+### 13.2 操作
 
 | 按键 | 功能 |
 | --- | --- |
@@ -338,7 +324,9 @@ angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
 | `s` / 空格 | 停止并退出巡航 |
 | `q` / `Ctrl-C` | 退出并自动停车 |
 
-### 16.3 参数与话题
+## 14. 参数、话题与实测结果
+
+### 14.1 参数与话题
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -359,7 +347,7 @@ angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
 | `/cruise_control/status` | `std_msgs/String` | `manual` / `cruise ...` |
 | `/cruise_control/state` | `std_msgs/Float32MultiArray` | 目标速度、目标航向、实际速度、实际航向、速度误差、航向误差 |
 
-### 16.4 实测结果
+### 14.2 实测结果
 
 在真实 Gazebo Harmonic 中启动完整控制链路，用伪终端注入按键并记录 `/cruise_control/state`：
 
