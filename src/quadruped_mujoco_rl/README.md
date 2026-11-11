@@ -57,7 +57,7 @@ ros2 topic pub -1 /cmd_vel geometry_msgs/Twist "{linear: {x: -0.3}}"  # 后退
 ```
 
 ROS 2 节点将 linear.x 的符号映射为方向：正值前进、负值后退，方向切换时
-重置步态相位；绝对值仍用于缩放步态幅度。纯 Python 实验使用 --direction
+重置步态相位；速度绝对值变化会连续更新步态幅度，不重置当前相位。纯 Python 实验使用 --direction
 选择方向，参数扫描也会按目标方向计算得分。
 
 实测数据、参数扫描结果与未验证项见
