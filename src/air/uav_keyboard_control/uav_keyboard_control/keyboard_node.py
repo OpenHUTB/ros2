@@ -43,6 +43,11 @@ class RawKeyReader:
             self._close_fd = True
         except OSError:
             self._fd = sys.stdin.fileno()
+        if not os.isatty(self._fd):
+            raise SystemExit(
+                "uav_keyboard_control：需要可交互的终端才能读键盘，"
+                "请在前台终端直接运行，不要用 nohup / systemd / 管道。"
+            )
 
     def __enter__(self):
         import termios
@@ -128,6 +133,7 @@ def main():
     finally:
         # 退出前补发一条零速，避免桥接层超时前还带着速度
         node._pub.publish(Twist())
+        time.sleep(0.05)  # 等 DDS 把零速消息发出去再销毁节点
         node.destroy_node()
         rclpy.shutdown()
 
