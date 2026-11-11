@@ -212,6 +212,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [Gazebo 差速小车键盘控制](./ground/gazebo_diff_drive_teleop.md)
 * [恶劣雨雾天气下多传感器感知性能对比实验](./ground/weather_perception_benchmark.md)
 * [雨雾天气下自适应感知降级策略的静态帧复现](./ground/weather_adaptive_perception_replay.md)
+* [巡航风阻与能耗敏感性分析](./ground/cruise_drag_energy_eval.md) —— 滚动 / 空气 / 坡度阻力分解与车速、风阻、坡度对能耗的影响
 * [无信号路口冲突时序蒙特卡洛仿真](./ground/intersection_conflict_timing_eval.md) —— 到达时间差分布、冲突概率与让行延迟效果对比
 * [轮胎滑移率-附着特性与最佳制动滑移率仿真](./ground/tire_slip_adhesion_eval.md) —— 四种路面魔术公式附着曲线、峰值附着与制动距离对比
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
