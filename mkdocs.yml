@@ -102,6 +102,7 @@ nav:
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+    - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:

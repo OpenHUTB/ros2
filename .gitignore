@@ -106,6 +106,9 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 只放行这一个文件：Whisper tiny（72 MB）走运行时下载，不进仓库。
 !src/humanoid/humanoid_voice_command/weights/intent_mlp.pt
 
+# 例外：G1 柔顺控制模块的策略权重必须入库（48.8 MB，免重训、免联网）
+!src/humanoid/humanoid_g1_compliance/weights/*.pt
+
 # 编辑器 / 系统（替代原来的 *.TXT：只列确认无用的文件，不再按扩展名一刀切）
 .vscode/
 .idea/
