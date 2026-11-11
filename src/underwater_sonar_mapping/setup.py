@@ -13,8 +13,8 @@ setup(
     ],
     install_requires=["setuptools", "numpy"],
     zip_safe=True,
-    maintainer="user",
-    maintainer_email="user@todo.todo",
+    maintainer="cwq319",
+    maintainer_email="cwq319@users.noreply.github.com",
     description="Odometry driven simulated sonar and occupancy grid mapping",
     license="Apache-2.0",
     entry_points={
