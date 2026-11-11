@@ -79,15 +79,20 @@ class SpinLoopTests(unittest.TestCase):
         ros.get_param = lambda name, default=None: PARAMS.get(name, default)
         ros.Publisher = lambda name, msg_type, queue_size=1: Mock()
         ros.Rate = lambda hz: Mock()
+        ros.Subscriber = lambda *a, **k: None
         ros.logwarn = Mock()
         ros.init_node = Mock()
 
         geometry = types.ModuleType('geometry_msgs')
         messages = types.ModuleType('geometry_msgs.msg')
         messages.Twist = _Twist
+        nav = types.ModuleType('nav_msgs')
+        nav_msg = types.ModuleType('nav_msgs.msg')
+        nav_msg.Odometry = type('Odometry', (object,), {})
 
         with patch.dict(sys.modules, {'rospy': ros, 'geometry_msgs': geometry,
-                                      'geometry_msgs.msg': messages}):
+                                      'geometry_msgs.msg': messages,
+                                      'nav_msgs': nav, 'nav_msgs.msg': nav_msg}):
             spec = importlib.util.spec_from_file_location('keyboard_spin_under_test', SCRIPT)
             self.module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(self.module)
