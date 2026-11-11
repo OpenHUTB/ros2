@@ -1,0 +1,10 @@
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 临时动图（正式动图放 docs/img/humanoid/）
+*.gif
+
+# 指标明细：gait_compare.csv 入库，其余临时文件忽略
+saved_models/*.png
+saved_models/*.log
