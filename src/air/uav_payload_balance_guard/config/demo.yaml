@@ -1,0 +1,11 @@
+uav_payload_balance_sim:
+  ros__parameters:
+    rate_hz: 5.0
+    duration_s: 0.0
+uav_payload_balance_guard:
+  ros__parameters:
+    adjust_risk: 0.35
+    warning_risk: 0.60
+    unstable_risk: 0.80
+    switch_frames: 3
+    output_csv: /tmp/uav_payload_balance_runtime.csv

@@ -111,7 +111,3 @@ colcon test-result --verbose
 ```bash
 python3 scripts/generate_ros_diagrams.py
 ```
-
-## 后续
-
-Commit 1 只实现刚性 Hill 肌肉与多关节协同。后续 Commit 2 将加入串联弹性肌腱、肌梭和高尔基腱器官反馈。

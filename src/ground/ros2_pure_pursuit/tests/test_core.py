@@ -105,6 +105,31 @@ def test_lookahead_distance_speed_adaptive():
     assert ctrl.lookahead_distance(100.0) == 2.5
 
 
+def test_path_curvature_matches_circle_and_straight():
+    """曲率估计：半径 8 m 的圆约 0.125，直线为 0。"""
+    c = circle(radius=8.0)
+    assert abs(c.curvature(100) - 1.0 / 8.0) < 5e-3, c.curvature(100)
+    s = straight(length=20.0)
+    assert abs(s.curvature(50)) < 1e-6
+
+
+def test_lookahead_shrinks_on_curvature():
+    """同样速度下，弯道前视距离应明显小于直道，且不低于 ld_min。"""
+    ctrl = PurePursuitController(curve_gain=1.2, curve_span=0.8)
+    straight_ld = ctrl.lookahead_distance(0.9, 0.0)
+    curve_ld = ctrl.lookahead_distance(0.9, 1.0 / 2.0)   # 半径 2 m 的急弯
+    assert curve_ld < straight_ld
+    assert curve_ld >= ctrl.ld_min
+
+
+def test_lookahead_curve_gain_zero_keeps_speed_only():
+    """curve_gain=0 时退回纯速度自适应，保证旧行为可复现。"""
+    on = PurePursuitController(curve_gain=1.2)
+    off = PurePursuitController(curve_gain=0.0)
+    assert off.lookahead_distance(0.9, 0.5) == off.lookahead_distance(0.9, 0.0)
+    assert on.lookahead_distance(0.9, 0.5) < off.lookahead_distance(0.9, 0.5)
+
+
 def test_avoider_no_obstacle_is_neutral():
     """空旷环境下避障模块不应干预速度与转向。"""
     av = ObstacleAvoider()
