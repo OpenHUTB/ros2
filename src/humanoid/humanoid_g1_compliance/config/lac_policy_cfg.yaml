@@ -1,0 +1,26 @@
+policy:
+  action_dim: 23
+  actor_hidden_dims:
+  - 1024
+  - 512
+  - 256
+  critic_hidden_dims:
+  - 1024
+  - 512
+  - 256
+  encoder_hidden_dims:
+  - 512
+  - 256
+  adapt_hidden_dims:
+  - 1024
+  - 512
+  - 256
+  latent_dim: 64
+  init_noise_std: 1.0
+  obs_normalization: true
+  adapt_type: mlp_hist
+  adapt_seq_len: 64
+  policy_frame_dim: 95
+  policy_hist_raw_len: 64
+  policy_hist_stride: 1
+  policy_hist_orient_check: false
