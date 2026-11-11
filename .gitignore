@@ -16,11 +16,10 @@ __pycache__/
 docs/requirements.txt
  add-mujoco-aeb
 # MuJoCo 运行日志
-# 注意：Windows 上 core.ignorecase=true，所以 *.TXT 会把 CMakeLists.txt 一起吞掉
-# （新增 catkin 包时容易整个漏提交），这里显式放行这一个文件名。
-*.TXT
+# 注意：这里不要用 *.TXT。Windows/macOS 上 core.ignorecase 为 true 时它会把
+# LICENSE.txt、requirements.txt 这类真实文本一起吞掉（本仓库曾因此漏提交依赖清单）。
+# 需要忽略的垃圾文件请写到文末「编辑器 / 系统」段落里逐个列出。
 *.log
-!CMakeLists.txt
 
 # 只忽略仓库根目录下临时图片，保留子目录docs/img图片
 /*.png
@@ -107,11 +106,13 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 只放行这一个文件：Whisper tiny（72 MB）走运行时下载，不进仓库。
 !src/humanoid/humanoid_voice_command/weights/intent_mlp.pt
 
-# 编辑器 / 系统
+# 编辑器 / 系统（替代原来的 *.TXT：只列确认无用的文件，不再按扩展名一刀切）
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+ehthumbs.db
+desktop.ini
 
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
