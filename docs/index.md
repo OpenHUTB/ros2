@@ -153,6 +153,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [速度曲线规划](./ground/speed_profile_check.md)
 * [转弯扫掠校验](./ground/turning_sweep_check.md)
 * [RQT 插件](./ground/rqt_plugin.md)
+* [激光雷达点云语义分割](./ground/carla_lidar_pointcloud_segmentation.md)
 * [点云地图创建](./ground/pcl_recorder.md)
 * [定点停车](./ground/fixed_point_stop.md)
 * [ROS与Conda环境排错指南](./ground/ros_conda_env_guide.md)
