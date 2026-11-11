@@ -37,7 +37,10 @@ jobs:
       - name: colcon build
         run: |
           source /opt/ros/humble/setup.bash
-          colcon build --packages-select rov_pipeline_follow --symlink-install
+          # The repository also has src/water/package.xml; start discovery at
+          # the nested package so colcon does not stop at the parent package.
+          colcon build --base-paths src/water/rov_pipeline_follow \
+            --packages-select rov_pipeline_follow --symlink-install
 
       # ---- 3) install 布局硬断言：少一项就说明 data_files 又漏了
       - name: 校验 install 布局
