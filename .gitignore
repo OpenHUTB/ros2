@@ -92,6 +92,11 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 例外：人形机器人 PPO 模块的 TorchScript 权重必须入库（187 KB，评测机免重训）
 !src/humanoid/humanoid_ppo_locomotion/weights/*.pt
 
+# 例外：无人机桨故障健康度估计的推理权重必须入库（167 KB）。
+# 数据集 7 MB 不入库，但这个权重不入库的话 --eval / --demo / ros2 launch
+# 一启动就 FileNotFoundError，评审只能先自己训 52 s。
+!src/air/uav_rotor_fault_detector_nn/results/detector.pt
+
 # 例外：Autoencoder 雷达修复模块的离线训练权重必须入库（约 96 KB，免重训）
 !src/ground/lidar_autoencoder_repair/models/*.pt
 
@@ -107,3 +112,8 @@ Thumbs.db
 # 对比实验的逐次训练产物（模型可再训练不入库；eval_log.json / metrics.json 仍入库）
 **/results/runs/**/*.zip
  master
+
+# uav_camera_tracking 的曲线/对比图：每次训练都会重画，属生成物。
+# 文档引用的是 docs/img/air/uav_camera_tracking/ 下的稳定副本，
+# results/ 只保留指标 CSV（compare_summary.csv 仍入库）。
+src/air/uav_camera_tracking/results/*.png
