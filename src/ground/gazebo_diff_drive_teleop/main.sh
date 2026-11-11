@@ -5,6 +5,7 @@
 #   bash main.sh demo     # 自动巡航演示
 #   bash main.sh manual   # 仅启动仿真，另开终端运行键盘节点
 #   bash main.sh teach    # 启动仿真并进入示教/回放键盘节点
+#   bash main.sh battery  # 启动仿真并进入电量管理/自动返航节点
 #   bash main.sh cruise   # 启动仿真并进入定速巡航/航向保持节点
 set -e
 
@@ -29,11 +30,16 @@ if [ "$#" -gt 0 ]; then
     shift
 fi
 
-if [ "$MODE" = "teach" ] || [ "$MODE" = "cruise" ]; then
+if [ "$MODE" = "teach" ] || [ "$MODE" = "battery" ] \
+        || [ "$MODE" = "cruise" ]; then
     if [ "$MODE" = "teach" ]; then
         NODE_NAME=teach_replay
         LOG_NAME=teach_replay
         MODE_BANNER="键盘示教/回放"
+    elif [ "$MODE" = "battery" ]; then
+        NODE_NAME=battery_teleop
+        LOG_NAME=battery
+        MODE_BANNER="电量管理/自动返航"
     else
         NODE_NAME=cruise_control
         LOG_NAME=cruise
