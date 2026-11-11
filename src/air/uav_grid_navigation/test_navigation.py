@@ -1,7 +1,7 @@
 import pytest
 
-from navigation import plan_route, render_route, simulate_route
-from simulation import run_mujoco_navigation
+from uav_grid_navigation.navigation import mark_blocked_waypoint, plan_route, render_route, simulate_route
+from uav_grid_navigation.simulation import run_mujoco_navigation
 
 
 def test_astar_finds_shortest_route_around_obstacle():
@@ -21,6 +21,18 @@ def test_astar_finds_shortest_route_around_obstacle():
 
 def test_blocked_goal_returns_no_route():
     assert plan_route([[0, 1]], (0, 0), (1, 0)) == []
+
+
+def test_blocked_waypoint_is_marked_and_route_is_replanned():
+    grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+    assert mark_blocked_waypoint(grid, (1, 1), contact_detected=True) is True
+    route = plan_route(grid, (0, 1), (2, 1))
+
+    assert grid[1][1] == 1
+    assert route[0] == (0, 1)
+    assert route[-1] == (2, 1)
+    assert (1, 1) not in route
 
 
 def test_invalid_grid_shape_is_rejected():
@@ -55,6 +67,8 @@ def test_mujoco_navigation_maps_and_reaches_goal(tmp_path):
     assert result["lidar_scans"] > 1
     assert result["replans"] > 0
     assert result["map_coverage"] == 1.0
+    assert result["interior_cell_count"] == 308
+    assert result["boundary_cells_preseeded"] == 76
     assert result["final_x_cell"] == 21
     assert result["final_y_cell"] == 13
     assert (tmp_path / "navigation_map.png").is_file()

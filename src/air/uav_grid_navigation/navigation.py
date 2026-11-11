@@ -80,6 +80,17 @@ def plan_route(grid: Grid, start: Cell, goal: Cell) -> list[Cell]:
     return []
 
 
+def mark_blocked_waypoint(grid: list[list[int]], cell: Cell, contact_detected: bool) -> bool:
+    """Mark a waypoint occupied after a detected collision and request replanning."""
+    if not contact_detected:
+        return False
+    x, y = cell
+    if not 0 <= y < len(grid) or not 0 <= x < len(grid[y]):
+        raise ValueError("blocked waypoint must be inside the occupancy grid")
+    grid[y][x] = 1
+    return True
+
+
 def simulate_route(grid: Grid, start: Cell, goal: Cell) -> dict[str, object]:
     """每步沿离散路线前进一步，并返回路线指标。"""
     route = plan_route(grid, start, goal)
@@ -174,7 +185,10 @@ def render_route(
 
 
 def main(output_dir: Path = Path("output")) -> None:
-    from simulation import run_mujoco_navigation
+    if __package__:
+        from .simulation import run_mujoco_navigation
+    else:
+        from simulation import run_mujoco_navigation
 
     result = run_mujoco_navigation(output_dir)
     print(json.dumps(result, ensure_ascii=False, indent=2))

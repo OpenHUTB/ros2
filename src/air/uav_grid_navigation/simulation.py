@@ -12,7 +12,10 @@ import mujoco
 import numpy as np
 from PIL import Image
 
-from navigation import Cell, bresenham, plan_route, render_route
+if __package__:
+    from .navigation import Cell, bresenham, mark_blocked_waypoint, plan_route, render_route
+else:
+    from navigation import Cell, bresenham, mark_blocked_waypoint, plan_route, render_route
 
 CELL_SIZE = 0.25
 FLIGHT_HEIGHT = 0.38
@@ -51,7 +54,7 @@ def _cell_center(cell: Cell) -> tuple[float, float]:
     return ((cell[0] + 0.5) * CELL_SIZE, (cell[1] + 0.5) * CELL_SIZE)
 
 
-def _build_model(world: GridWorld) -> tuple[mujoco.MjModel, Cell]:
+def _build_model(world: GridWorld) -> mujoco.MjModel:
     """Build a planar MuJoCo scene with a controllable UAV and box obstacles."""
     origin_x, origin_y = _cell_center(world.start)
     root = ET.Element("mujoco", model="uav_grid_navigation")
@@ -94,7 +97,7 @@ def _build_model(world: GridWorld) -> tuple[mujoco.MjModel, Cell]:
     ET.SubElement(actuator, "position", name="x_motor", joint="x_axis", kp="120", kv="18", ctrlrange="-8 8")
     ET.SubElement(actuator, "position", name="y_motor", joint="y_axis", kp="120", kv="18", ctrlrange="-8 8")
     model = mujoco.MjModel.from_xml_string(ET.tostring(root, encoding="unicode"))
-    return model, world.start
+    return model
 
 
 class MuJoCoGridSimulation:
@@ -102,7 +105,7 @@ class MuJoCoGridSimulation:
 
     def __init__(self, world: GridWorld):
         self.world = world
-        self.model, self.origin_cell = _build_model(world)
+        self.model = _build_model(world)
         self.data = mujoco.MjData(self.model)
         self.origin = np.asarray(_cell_center(world.start), dtype=float)
         self.uav_body_id = self.model.body("uav").id
@@ -181,11 +184,9 @@ class MuJoCoGridSimulation:
         return occupied_hits
 
 
-def run_mujoco_navigation(output_dir: Path) -> dict[str, object]:
+def _run_navigation(sim: MuJoCoGridSimulation, output_dir: Path) -> dict[str, object]:
     """Follow A* waypoints using MuJoCo pose feedback and virtual lidar scans."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    world = GridWorld()
-    sim = MuJoCoGridSimulation(world)
+    world = sim.world
     pose = world.start
     visited = [pose]
     frames: list[Image.Image] = []
@@ -193,83 +194,93 @@ def run_mujoco_navigation(output_dir: Path) -> dict[str, object]:
     replan_count = 0
     contact_count = 0
     trajectory: list[dict[str, float | int]] = []
-    try:
+    sim.update_lidar_map()
+    scan_count += 1
+    for _ in range(world.width * world.height * 2):
+        if pose == world.goal:
+            break
+        replan_count += 1
+        route = plan_route(sim.grid, pose, world.goal)
+        if len(route) < 2:
+            raise RuntimeError("No route remains in the lidar occupancy map")
+        next_cell = route[1]
+        arrived = sim.move_to(next_cell)
+        if not arrived:
+            if not mark_blocked_waypoint(sim.grid, next_cell, sim.has_obstacle_contact()):
+                raise RuntimeError(f"MuJoCo waypoint controller did not reach cell {next_cell}")
+            contact_count += 1
+        else:
+            pose = sim.cell
+            if pose != visited[-1]:
+                visited.append(pose)
+                position = sim.position
+                trajectory.append({"step": len(visited) - 1, "x_m": float(position[0]), "y_m": float(position[1]),
+                                   "cell_x": pose[0], "cell_y": pose[1]})
         sim.update_lidar_map()
         scan_count += 1
-        for _ in range(world.width * world.height * 2):
-            if pose == world.goal:
-                break
-            replan_count += 1
-            route = plan_route(sim.grid, pose, world.goal)
-            if len(route) < 2:
-                raise RuntimeError("No route remains in the lidar occupancy map")
-            next_cell = route[1]
-            arrived = sim.move_to(next_cell)
-            if not arrived:
-                if not sim.has_obstacle_contact():
-                    raise RuntimeError(f"MuJoCo waypoint controller did not reach cell {next_cell}")
-                sim.grid[next_cell[1]][next_cell[0]] = 1
-                contact_count += 1
-            else:
-                pose = sim.cell
-                if pose != visited[-1]:
-                    visited.append(pose)
-                    position = sim.position
-                    trajectory.append({"step": len(visited) - 1, "x_m": float(position[0]), "y_m": float(position[1]),
-                                       "cell_x": pose[0], "cell_y": pose[1]})
-            sim.update_lidar_map()
-            scan_count += 1
-            route = plan_route(sim.grid, pose, world.goal)
-            frames.append(
-                render_route(
-                    sim.grid,
-                    route,
-                    world.start,
-                    world.goal,
-                    cell_size=18,
-                    visited=visited,
-                )
-            )
-        else:
-            raise RuntimeError("Navigation step limit reached before the goal")
-
         route = plan_route(sim.grid, pose, world.goal)
-        final_map = render_route(
-            sim.grid,
-            visited,
-            world.start,
-            world.goal,
-            cell_size=18,
-            visited=visited,
-        )
-        final_map.save(output_dir / "navigation_map.png")
-        if frames:
-            frames[::2][0].save(
-                output_dir / "navigation_run.gif",
-                save_all=True,
-                append_images=frames[::2][1:],
-                duration=100,
-                loop=0,
-                optimize=True,
+        frames.append(
+            render_route(
+                sim.grid,
+                route,
+                world.start,
+                world.goal,
+                cell_size=18,
+                visited=visited,
             )
-        result: dict[str, object] = {
-            "goal_reached": pose == world.goal,
-            "navigation_steps": len(visited) - 1,
-            "travelled_route_length_cells": len(visited) - 1,
-            "map_coverage": round(sum(value >= 0 for row in sim.grid for value in row) / (world.width * world.height), 4),
-            "lidar_scans": scan_count,
-            "replans": replan_count,
-            "obstacle_contacts": contact_count,
-            "final_x_cell": pose[0],
-            "final_y_cell": pose[1],
-            "final_x_m": round(float(sim.position[0]), 3),
-            "final_y_m": round(float(sim.position[1]), 3),
-        }
-        (output_dir / "trajectory.json").write_text(json.dumps(trajectory, ensure_ascii=False, indent=2), encoding="utf-8")
-        (output_dir / "navigation_metrics.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        return result
-    finally:
-        del sim
+        )
+    else:
+        raise RuntimeError("Navigation step limit reached before the goal")
+
+    final_map = render_route(
+        sim.grid,
+        visited,
+        world.start,
+        world.goal,
+        cell_size=18,
+        visited=visited,
+    )
+    final_map.save(output_dir / "navigation_map.png")
+    if frames:
+        frames[::2][0].save(
+            output_dir / "navigation_run.gif",
+            save_all=True,
+            append_images=frames[::2][1:],
+            duration=100,
+            loop=0,
+            optimize=True,
+        )
+    interior = [
+        sim.grid[y][x]
+        for y in range(1, world.height - 1)
+        for x in range(1, world.width - 1)
+    ]
+    interior_cell_count = (world.width - 2) * (world.height - 2)
+    result: dict[str, object] = {
+        "goal_reached": pose == world.goal,
+        "navigation_steps": len(visited) - 1,
+        "travelled_route_length_cells": len(visited) - 1,
+        "map_coverage": round(sum(value >= 0 for value in interior) / interior_cell_count, 4),
+        "interior_cell_count": interior_cell_count,
+        "boundary_cells_preseeded": world.width * world.height - interior_cell_count,
+        "lidar_scans": scan_count,
+        "replans": replan_count,
+        "obstacle_contacts": contact_count,
+        "final_x_cell": pose[0],
+        "final_y_cell": pose[1],
+        "final_x_m": round(float(sim.position[0]), 3),
+        "final_y_m": round(float(sim.position[1]), 3),
+    }
+    (output_dir / "trajectory.json").write_text(json.dumps(trajectory, ensure_ascii=False, indent=2), encoding="utf-8")
+    (output_dir / "navigation_metrics.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return result
+
+
+def run_mujoco_navigation(output_dir: Path) -> dict[str, object]:
+    """Run the mapped, feedback-controlled MuJoCo navigation example."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    sim = MuJoCoGridSimulation(GridWorld())
+    return _run_navigation(sim, output_dir)
 
 
 if __name__ == "__main__":
