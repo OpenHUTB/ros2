@@ -42,6 +42,46 @@ except ImportError:      # pragma: no cover
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULT_DIR = os.path.join(BASE_DIR, "results")
 
+
+# —— 非 ASCII 路径兼容 ——
+# cv2.imread / imwrite / dnn 的 Caffe 加载走的是 C 的 std::ifstream，Windows 上遇到中文或
+# 空格目录（例如 C:\Users\张三\...）会直接失败：imread 返回 None，模型加载抛 cv2.error。
+# 下面三个函数用「文件字节流 + imdecode」和「切到模型目录用文件名」绕开这一限制，
+# 在 Linux/macOS 上行为与原生调用一致。
+def imread_any(path, flags=None):
+    try:
+        data = np.fromfile(path, dtype=np.uint8)
+    except (OSError, ValueError):
+        return None
+    if data.size == 0:
+        return None
+    return cv2.imdecode(data, cv2.IMREAD_COLOR if flags is None else flags)
+
+
+def imwrite_any(path, img):
+    ext = os.path.splitext(path)[1].lower() or ".png"
+    ok, buf = cv2.imencode(ext, img)
+    if not ok:
+        return False
+    buf.tofile(path)
+    return True
+
+
+def load_caffe_net(prototxt, weights):
+    try:
+        return cv2.dnn.readNetFromCaffe(prototxt, weights)
+    except Exception:
+        p_dir, p_base = os.path.split(os.path.abspath(prototxt))
+        w_dir, w_base = os.path.split(os.path.abspath(weights))
+        if p_dir != w_dir:       # 两个文件不在同一目录时没有可用的相对路径，原样抛出
+            raise
+        cwd = os.getcwd()
+        try:
+            os.chdir(p_dir)      # 目录名可以是非 ASCII，文件名必须是纯 ASCII 才能被 C 层打开
+            return cv2.dnn.readNetFromCaffe(p_base, w_base)
+        finally:
+            os.chdir(cwd)
+
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus",
            "car", "cat", "chair", "cow", "diningtable", "dog", "horse",
            "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
@@ -52,16 +92,28 @@ COLORS = {"car": (0.20, 0.55, 1.00), "bus": (0.15, 0.75, 0.95),
 
 # MobileNet-SSD（Caffe 版）权重，仓库不保存二进制，首次运行自动下载。
 # 每个文件都带期望字节数与 sha256：挡住被代理换成的 HTML 错误页、下载截断的半个文件。
+# 每个文件给多个下载源：raw.githubusercontent 是原始来源，但国内网络常被拖到几十 KB/s
+# 甚至读超时；gh-proxy 与 jsdelivr 是镜像，某条不通就换下一条，校验通过与否由 sha256 判定，
+# 所以换源不影响正确性，只影响能不能下载下来。
 MODEL_FILES = {
     "deploy.prototxt": {
-        "url": "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
-               "deploy.prototxt",
+        "urls": [
+            "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
+            "deploy.prototxt",
+            "https://gh-proxy.com/https://raw.githubusercontent.com/chuanqi305/"
+            "MobileNet-SSD/master/deploy.prototxt",
+            "https://cdn.jsdelivr.net/gh/chuanqi305/MobileNet-SSD@master/deploy.prototxt",
+        ],
         "size": 44667,
         "sha256": "2d180f723b3109e21f8287f6b3c691390d07b60eed998327cd3259ffa0e50608",
     },
     "mobilenet_iter_73000.caffemodel": {
-        "url": "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
-               "mobilenet_iter_73000.caffemodel",
+        "urls": [
+            "https://raw.githubusercontent.com/chuanqi305/MobileNet-SSD/master/"
+            "mobilenet_iter_73000.caffemodel",
+            "https://gh-proxy.com/https://raw.githubusercontent.com/chuanqi305/"
+            "MobileNet-SSD/master/mobilenet_iter_73000.caffemodel",
+        ],
         "size": 23306119,
         "sha256": "52eed8be80522c152a17fb56740de705b79881bde1a167e0e747310523685fc7",
     },
@@ -80,32 +132,55 @@ def file_matches(path, size, sha256):
 
 
 def download_model(name, meta, dest_dir):
-    """下载到 <name>.part，校验通过后原子替换为正式文件。"""
+    """按 urls 顺序逐个源下载到 <name>.part，校验通过后原子替换为正式文件。"""
     path = os.path.join(dest_dir, name)
     tmp = path + ".part"
-    print("下载模型文件：%s（约 %.1f MB）" % (name, meta["size"] / 1048576.0))
-    try:
-        with urllib.request.urlopen(meta["url"], timeout=120) as resp, open(tmp, "wb") as fh:
-            fh.write(resp.read())
-    except Exception as exc:  # 断网、超时、代理拦断都在这里收口，不再抛裸 traceback
-        if os.path.exists(tmp):
-            os.remove(tmp)
-        raise SystemExit(
-            "模型下载失败（%s）：%s\n"
-            "请检查网络后重试；若已离线运行，把该文件放到本地目录后用 "
-            "--model-dir <目录> 指定即可。" % (name, exc))
+    print("下载模型文件：%s（约 %.1f MB，共 %d 个源）"
+          % (name, meta["size"] / 1048576.0, len(meta["urls"])))
+    reasons = []
+    for i, url in enumerate(meta["urls"], 1):
+        host = url.split("/")[2]
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp, open(tmp, "wb") as fh:
+                length = resp.headers.get("Content-Length")
+                if length and int(length) != meta["size"]:
+                    raise ValueError("Content-Length %s 与期望 %d 字节不符"
+                                     % (length, meta["size"]))
+                written = 0
+                for chunk in iter(lambda: resp.read(1024 * 256), b""):
+                    written += len(chunk)
+                    if written > meta["size"]:      # 源不守规矩地一直吐字节时兜住
+                        raise ValueError("下载字节数超过期望的 %d 字节" % meta["size"])
+                    fh.write(chunk)
+                if written != meta["size"]:
+                    raise ValueError("只下到 %d 字节，期望 %d" % (written, meta["size"]))
+        except Exception as exc:  # 断网、超时、被代理拦断都在这里收口，不再抛裸 traceback
+            reasons.append("第 %d 个源 %s：%s" % (i, host, exc))
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            print("  源 %d/%d（%s）不可用，换下一个" % (i, len(meta["urls"]), host))
+            continue
 
-    if not file_matches(tmp, meta["size"], meta["sha256"]):
-        got = os.path.getsize(tmp) if os.path.exists(tmp) else 0
-        if os.path.exists(tmp):
-            os.remove(tmp)
-        raise SystemExit(
-            "模型文件校验失败：%s\n期望 %d 字节、sha256 %s…，实际 %d 字节。\n"
-            "常见原因是代理返回了 HTML 错误页或下载被截断；删掉后重试，"
-            "或用 --model-dir 指向已有校验通过的本地模型目录。"
-            % (name, meta["size"], meta["sha256"][:12], got))
-    os.replace(tmp, path)
-    return path
+        if not file_matches(tmp, meta["size"], meta["sha256"]):
+            got = os.path.getsize(tmp) if os.path.exists(tmp) else 0
+            reasons.append("第 %d 个源 %s：校验失败（实际 %d 字节）" % (i, host, got))
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            print("  源 %d/%d（%s）校验不通过，换下一个" % (i, len(meta["urls"]), host))
+            continue
+
+        os.replace(tmp, path)
+        print("  已从 %s 下载并通过校验" % host)
+        return path
+
+    if os.path.exists(tmp):
+        os.remove(tmp)
+    raise SystemExit(
+        "模型下载失败（%s）：所有下载源都不可用\n%s\n"
+        "可手动下载该文件放到本地目录，再用 --model-dir <目录> 指定；"
+        "期望 %d 字节、sha256 %s。"
+        % (name, "\n".join("  " + r for r in reasons),
+           meta["size"], meta["sha256"]))
 
 
 def ensure_model(model_dir):
@@ -315,7 +390,7 @@ def draw(frame, dets, gts, hit_gt, hit_det, save_path):
         tag = "%s %.2f%s" % (d["name"], d["score"], "" if ok else " FP")
         cv2.putText(img, tag, (x1, max(12, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX,
                     0.45, color, 1, cv2.LINE_AA)
-    cv2.imwrite(save_path, img)
+    imwrite_any(save_path, img)
     return img
 
 
@@ -335,15 +410,15 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(RESULT_DIR, exist_ok=True)
-    img = cv2.imread(args.image)
+    img = imread_any(args.image)
     if img is None:
-        raise SystemExit("无法读取图像：%s" % args.image)
+        raise SystemExit("无法读取图像：%s（请确认文件存在，且没有被代理换成网页内容）" % args.image)
     if img.shape[1] > 1600:
         scale = 1600.0 / img.shape[1]
         img = cv2.resize(img, (1600, int(img.shape[0] * scale)))
 
     prototxt, model = ensure_model(args.model_dir)
-    net = cv2.dnn.readNetFromCaffe(prototxt, model)
+    net = load_caffe_net(prototxt, model)
 
     clear = img.copy()
     rain = load_degraded(img, severity=1.0)
