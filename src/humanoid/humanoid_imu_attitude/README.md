@@ -68,7 +68,8 @@ ros2 run humanoid_imu_attitude attitude_eval --results results --figure results/
 | fast | complementary | 0.28 | 0.31 | 1.92 | 0.53 | 3.2 |
 | fast | madgwick | 0.34 | 0.35 | 1.94 | 0.61 | 3.2 |
 
-单步耗时（5 万次平均）：互补滤波 47.2 µs，Madgwick 16.2 µs。
+单步耗时（纯算法，5 万次平均，虚拟机负载不同时抖动较大）：互补滤波约 50 µs，Madgwick 约 16 µs。
+
 
 ## 限制
 
