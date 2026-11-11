@@ -55,8 +55,8 @@ humanoid_g1_compliance/
 │   ├── demo.py                 离线演示
 │   └── lac/                    vendored 推理模块（9 个，MIT）
 ├── assets/g1/                  G1 23DOF 模型 + 29 个 STL（19 MB）
-├── weights/                    lac_g1_23dof.pt（48.8 MB）
-├── motions/                    动作库 npz
+├── weights/                    lac_g1_23dof.pt（48.8 MB，体积换免联网）
+├── motions/                    动作库 npz（7 KB，savez_compressed）
 ├── config/                     compliance.yaml + lac_policy_cfg.yaml
 ├── scripts/
 │   ├── smoke_compliance.py     无头自检（6 项）
@@ -65,6 +65,16 @@ humanoid_g1_compliance/
 │   └── record_gif.py           离屏渲染录动图
 ├── launch/main.launch.py       一键启动
 └── test/test_offline.py        17 项离线测试
+```
+
+**关于 48.8 MB 的权重**：这是本仓库最大的单文件（次大是 `docs/img/ground/rviz.gif`
+的 16 MB），仍在 GitHub 50 MiB 提示线以内，入库是为了让评测机**断网也能直接复现**。
+与 #1167（Whisper 权重改为运行时下载）不同：Whisper 有 `whisper.load_model()` 的自动
+下载机制，这份策略权重只能从上游 `lac-code` 仓库手工取，没有可依赖的自动下载路径。
+校验：
+
+```
+a54a213637ebbc55ea20a11373b00a4ed7dbef06a4b7c20804009dd2819f4a9c  weights/lac_g1_23dof.pt
 ```
 
 ## 四、核心实现
@@ -234,9 +244,9 @@ python main.py --list                  # 列出刚度通道与范围
 | 55 | 42.0 mm | 40.2 mm | 5.9 mm | 0.90 s | 149 N/m | 23.4 mm |
 | 80 | 35.2 mm | 34.0 mm | 8.1 mm | 0.78 s | 176 N/m | 20.1 mm |
 | 110 | 30.9 mm | 29.2 mm | 9.3 mm | 0.66 s | 205 N/m | 18.0 mm |
-| 150 | 24.5 mm | 23.4 mm | 12.3 mm | 0.34 s | 256 N/m | 12.7 mm |
+| 150 | 25.0 mm | 23.4 mm | 11.0 mm | 0.34 s | 256 N/m | 12.7 mm |
 | 250 | 22.6 mm | 20.2 mm | 11.2 mm | 0.24 s | 298 N/m | 11.6 mm |
-| 500 | 22.5 mm | 20.1 mm | 12.8 mm | 0.68 s | 298 N/m | 12.8 mm |
+| 500 | 23.1 mm | 20.1 mm | 10.4 mm | 0.68 s | 298 N/m | 12.8 mm |
 
 ![刚度扫描指标](../img/humanoid/humanoid_g1_compliance_metrics.png)
 
@@ -292,15 +302,21 @@ data: '{"t": 37.346, "state": "POLICY",
 
 ### 6.6 双平台复现
 
-Windows（MuJoCo 3.16.0）与容器（MuJoCo 3.3.7）各跑一遍 7 档刚度扫描：
+Windows（MuJoCo 3.16.0 / torch 2.14.1 CPU）与容器（MuJoCo 3.3.7 / torch 2.14.1 cu130）
+各跑一遍 7 档刚度扫描，**7 档 7 个指标逐位相同**：
 
-| 档位 | 稳态让位（Windows / 容器） | 峰值差 | 残留差 |
-|---|---|---|---|
-| 30 / 55 / 80 / 110 / 150 / 250 / 500 | **完全相同**：51.9 / 40.2 / 34.0 / 29.2 / 23.4 / 20.2 / 20.1 mm | ≤ 0.6 mm | ≤ 2.4 mm |
+| 指标 | Windows 3.16.0 | 容器 3.3.7 |
+|---|---|---|
+| 稳态让位（7 档） | 51.9 / 40.2 / 34.0 / 29.2 / 23.4 / 20.2 / 20.1 mm | 完全相同 |
+| 峰值让位（7 档） | 54.4 / 42.0 / 35.2 / 30.9 / 25.0 / 22.6 / 23.1 mm | 完全相同 |
+| 撤销残留（7 档） | 2.7 / 5.9 / 8.1 / 9.3 / 11.0 / 11.2 / 10.4 mm | 完全相同 |
+| 恢复时间（7 档） | 1.02 / 0.90 / 0.78 / 0.66 / 0.34 / 0.24 / 0.68 s | 完全相同 |
 
-稳态让位逐档一致，说明这个指标由策略与接触几何决定，不随 MuJoCo 版本漂移。
-差异集中在**撤销外力后的残留**（500 档 12.8 mm vs 10.4 mm）——高刚度残余振荡对
-接触求解器实现更敏感，这也是第六节结论 3 的依据之一。
+> 更正：本表此前记录 150 / 500 两档为 24.5 mm / 22.5 mm（峰值）与 12.3 mm / 12.8 mm
+> （残留），并把它归因为 MuJoCo 版本差异。复核时发现两个平台现在都给出
+> 25.0 mm / 23.1 mm 与 11.0 mm / 10.4 mm——那两行是早期版本的读数，与平台无关，
+> 现已按实测更正。相同随机种子、相同权重、相同施力时序，这个闭环是**确定性**的，
+> 连续跑两次七档数值逐位相同。
 
 ## 七、已知问题
 
@@ -325,6 +341,11 @@ ROS 2 的 Python 环境与系统 `pip` 装的包可能不互通。确认
 
 `sim_node` 与 `stiffness_node` 都是纯物理与推理，不需要渲染。只有
 `scripts/record_gif.py` 需要 OpenGL，无显卡的 Linux 上设 `MUJOCO_GL=osmesa`。
+
+**Windows 上不要设 `MUJOCO_GL`**：Windows 没有 `osmesa` / `egl` 后端，设了会直接
+`RuntimeError: invalid value for env variable MUJOCO_GL`，10 个用例一起失败
+（实测 MuJoCo 3.9.0）。离线测试、`smoke_compliance.py`、`bench_compliance.py`
+都不需要渲染，删掉这个环境变量即可。
 
 ### 8.3 机器人一启动就摔
 

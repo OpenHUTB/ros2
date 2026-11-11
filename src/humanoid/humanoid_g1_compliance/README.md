@@ -57,6 +57,15 @@ source install/setup.bash
 |---|---|---|
 | `weights/lac_g1_23dof.pt` | 51,154,217 B | `a54a213637ebbc55ea20a11373b00a4ed7dbef06a4b7c20804009dd2819f4a9c` |
 
+> **关于 48.8 MiB 的体积（体积换免联网）**：这是本仓库当前最大的单文件（次大是
+> `docs/img/ground/rviz.gif` 的 16 MB），仍在 GitHub 50 MiB 提示线以内。入库的理由是
+> 评测机断网也能直接 `colcon build` + 跑通，不用等下载。
+>
+> 与 #1167（语音模块）的处理不同：Whisper 权重可以由 `whisper.load_model()` 自动拉取，
+> 而这份策略权重只能从上游 `lac-code` 仓库取，没有任何自动下载机制——不入库就得手写
+> 下载脚本，且上游一旦改 commit 就复现不了。如果你更看重仓库体积，删掉
+> `weights/lac_g1_23dof.pt` 后按 `THIRD_PARTY.md` 的 SHA-256 从上游取回即可，功能不受影响。
+
 > 仓库根 `.gitignore` 有全局 `*.pt` 规则，本模块已在其中加入白名单
 > `!src/humanoid/humanoid_g1_compliance/weights/*.pt`，否则权重会被静默忽略。
 
@@ -157,9 +166,9 @@ python scripts/plot_compliance.py bench.json
 | 55 | 42.0 mm | 40.2 mm | 5.9 mm | 0.90 s | 149 N/m | 23.4 mm |
 | 80 | 35.2 mm | 34.0 mm | 8.1 mm | 0.78 s | 176 N/m | 20.1 mm |
 | 110 | 30.9 mm | 29.2 mm | 9.3 mm | 0.66 s | 205 N/m | 18.0 mm |
-| 150 | 24.5 mm | 23.4 mm | 12.3 mm | 0.34 s | 256 N/m | 12.7 mm |
+| 150 | 25.0 mm | 23.4 mm | 11.0 mm | 0.34 s | 256 N/m | 12.7 mm |
 | 250 | 22.6 mm | 20.2 mm | 11.2 mm | 0.24 s | 298 N/m | 11.6 mm |
-| 500 | 22.5 mm | 20.1 mm | 12.8 mm | 0.68 s | 298 N/m | 12.8 mm |
+| 500 | 23.1 mm | 20.1 mm | 10.4 mm | 0.68 s | 298 N/m | 12.8 mm |
 
 三点结论：
 
@@ -172,10 +181,11 @@ python scripts/plot_compliance.py bench.json
 站立稳定性：骨盆高度 0.713 ~ 0.740 m，姿态投影 `pg_z = -0.9998`（直立），
 起步后 4 s 内指数收敛到平衡点（后移约 8.6 cm），6 s 后残余波动 < 5 mm。
 
-上表是 Windows / MuJoCo 3.16.0 的数据。在 Ubuntu 22.04 + Humble 容器（MuJoCo 3.3.7）
-复测，**7 档稳态让位逐档完全相同**（51.9 / 40.2 / 34.0 / 29.2 / 23.4 / 20.2 / 20.1 mm），
-峰值差 ≤ 0.6 mm，只有撤销后的残留差到 2.4 mm（500 档 12.8 vs 10.4 mm）——
-高刚度残余振荡对接触求解器实现更敏感。
+上表在 Windows（MuJoCo 3.16.0）与 Ubuntu 22.04 + Humble 容器（MuJoCo 3.3.7）
+两个平台各跑一遍，**7 档 7 个指标逐位相同**。此前记录的 150 / 500 两档
+（24.5 / 22.5 mm 峰值、12.3 / 12.8 mm 残留）是早期版本的读数，与 MuJoCo 版本无关，
+现已按实测更正为 25.0 / 23.1 mm 与 11.0 / 10.4 mm。相同权重 + 相同施力时序下这个闭环
+是确定性的，连续跑两次七档数值逐位相同。
 
 ROS 链路：`/joint_states` 50.007 Hz（std 0.6 ms），策略单帧 2.5 ms（占 20 ms 周期的 12%），
 `/humanoid/status` 里 `pg_z = -0.9995`、骨盆 0.715 m，与离线仿真一致。
@@ -221,6 +231,11 @@ humanoid_g1_compliance/
 **`RuntimeError: Error opening file` 或权重读不出来**：模型和权重的路径含中文时，
 MuJoCo 的 C++ 层和 `torch.load` 都会失败。本模块已做兜底（复制到 ASCII 临时目录），
 如果仍然报错，检查 `TEMP` 是否可写。
+
+**`RuntimeError: invalid value for env variable MUJOCO_GL`**：Windows 上没有
+`osmesa` / `egl` 后端，**不要设 `MUJOCO_GL`**（非要设就用 `wgl`）。本模块的离线测试、
+`smoke_compliance.py` 和 `bench_compliance.py` 都是纯物理计算，不需要离屏渲染；
+只有 `record_gif.py` 在 Linux 容器里才需要 `MUJOCO_GL=osmesa`。
 
 **机器人一启动就摔**：确认用的是 `direct_start:=true`（默认）。如果手动改成软启动，
 `kp=35` 撑不住自重，必须配合外力支撑。

@@ -53,6 +53,13 @@
 - SHA-256：`a54a213637ebbc55ea20a11373b00a4ed7dbef06a4b7c20804009dd2819f4a9c`
 - 许可：MIT
 
+**为什么随仓库提供（体积换免联网）**：这是本仓库最大的单文件（48.8 MiB，仍在 GitHub
+50 MiB 提示线以内），比第二大的 `docs/img/ground/rviz.gif`（16 MB）大两倍。入库的收益是
+评测机断网也能直接构建运行；代价是每个 clone 多拉 48.8 MiB，且这份历史永久留在 `.git` 里。
+与 #1167（Whisper 权重改为运行时下载）不同：Whisper 有 `whisper.load_model()` 自动下载
+机制，这份策略权重只能从上游仓库手工取，没有可依赖的自动下载路径。若要移除，按上面的
+SHA-256 从上游取回即可，功能不受影响。
+
 校验命令：
 
 ```bash
@@ -75,8 +82,12 @@ G1 机器人本体的 CAD 与模型版权归 Unitree Robotics；上游以 MIT �
 ## 4. 动作库 `motions/lac_motion_library.npz`
 
 - 上游路径：`motions/lac_motion_library.npz`
-- 大小：25,974 B
+- 大小：7,084 B（5 个数组共 24,700 B，用 `np.savez_compressed` 存储）
 - 许可：MIT
+
+与上游的 `npz` 内容逐元素相同（5 个数组的名称、dtype、shape、数值一致），
+只是改成了压缩存储。上游用 `np.savez`（不压缩），本地为省体积换成
+`np.savez_compressed`，读取方式不变（`np.load` 对两者一视同仁）。
 
 ## 5. 配置文件 `config/lac_policy_cfg.yaml`
 
