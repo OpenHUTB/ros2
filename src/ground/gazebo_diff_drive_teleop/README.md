@@ -75,8 +75,3 @@ bash main.sh precision
 ```
 
 ![里程计闭环正方形轨迹](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_moves.png)
-
-![Gazebo 实时仿真：精确运动小车](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_gazebo_close.png)
-
-![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_precision_gazebo_wide.png)
-
