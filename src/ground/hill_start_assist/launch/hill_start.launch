@@ -1,0 +1,10 @@
+<launch>
+  <!-- 坡道起步辅助：把 main.py 作为 ROS 节点跑一遍实验。
+       main.py 不依赖 rospy，这里只是让模块能被 roslaunch 找到；
+       无 ROS 环境时直接 python3 main.py 即可。 -->
+  <arg name="seconds" default="3.0"/>
+  <arg name="gif" default="false"/>
+
+  <node pkg="hill_start_assist" type="main.py" name="hill_start_assist" output="screen"
+        args="--seconds $(arg seconds) $(eval '--gif' if arg('gif')=='true' else '')"/>
+</launch>

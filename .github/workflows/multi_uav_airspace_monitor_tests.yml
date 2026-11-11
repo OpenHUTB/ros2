@@ -1,0 +1,51 @@
+name: Multi-UAV airspace monitor tests
+
+on:
+  push:
+    paths:
+      - 'src/air/multi_uav_airspace_monitor/**'
+      - '.github/workflows/multi_uav_airspace_monitor_tests.yml'
+  pull_request:
+    paths:
+      - 'src/air/multi_uav_airspace_monitor/**'
+      - '.github/workflows/multi_uav_airspace_monitor_tests.yml'
+
+jobs:
+  test:
+    name: Airspace monitor tests (no ROS / simulator)
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: src/air/multi_uav_airspace_monitor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Run demo and export the separation CSV
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python3 main.py demo --output "${RUNNER_TEMP}/airspace_out" \
+                               --csv "${RUNNER_TEMP}/airspace_out/sep.csv" \
+                               --plot "${RUNNER_TEMP}/airspace_out/separation_vs_time.png"
+          test -s "${RUNNER_TEMP}/airspace_out/demo_screenshot.png"
+          test -s "${RUNNER_TEMP}/airspace_out/summary.json"
+          test -s "${RUNNER_TEMP}/airspace_out/separation_vs_time.png"
+          head -n 1 "${RUNNER_TEMP}/airspace_out/sep.csv" | grep -q '^time_s,uav_a,uav_b,separation_m$'
+          # 非整除窗口的固定步长由 tests/test_export.py 断言（0.0/0.4/0.8/1.1）
+
+      - name: Byte-compile the module
+        run: python3 -m py_compile main.py multi_uav_airspace_monitor/*.py launch/main.launch.py
