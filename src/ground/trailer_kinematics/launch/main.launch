@@ -1,0 +1,44 @@
+<launch>
+  <arg name="tf_enabled" default="true" doc="是否广播 TF（map -> tractor -> trailer）"/>
+  <arg name="tf_rate_hz" default="10.0" doc="TF 广播频率，单位 Hz"/>
+  <!-- 牵引车-挂车运动学与折刀判定：算一次，把报告与相图发出去 -->
+
+  <arg name="wheelbase"       default="2.70" doc="牵引车轴距 (m)"/>
+  <arg name="trailer_length"  default="4.20" doc="铰接点到挂车轴的距离 (m)"/>
+  <arg name="hitch_offset"    default="0.60" doc="铰接点在牵引车后轴后方的偏移 (m)，填 0 即铰接在轴上"/>
+  <arg name="max_steer_deg"   default="35.0" doc="前轮最大转角 (度)"/>
+  <arg name="jackknife_deg"   default="90.0" doc="折刀角上限 (度)，铰接角超过它判为折刀"/>
+  <arg name="channel_width"   default="12.00" doc="允许占用的通道宽度 (m)"/>
+  <arg name="step_tolerance"  default="0.01" doc="步长减半后的位置差上限 (m)"/>
+  <arg name="speed"           default="1.00" doc="行驶速度 (m/s)"/>
+  <arg name="steer_deg"       default="25.0" doc="前轮转角 (度)"/>
+  <arg name="seconds"         default="9.10" doc="仿真时长 (s)，默认正好转 90 度"/>
+  <arg name="step"            default="0.02" doc="积分步长 (s)，越小越接近解析解"/>
+  <arg name="gear"            default="1"    doc="1 前进、填 -1 倒车（倒车时铰接角会发散，用来演示折刀）"/>
+  <arg name="publish_hz"      default="10.0" doc="报告发布后的保活频率 (Hz)"/>
+
+  <rosparam command="load" file="$(find trailer_kinematics)/config/trailer_kinematics.yaml"/>
+
+  <param name="trailer/wheelbase"     value="$(arg wheelbase)"/>
+  <param name="trailer/length"        value="$(arg trailer_length)"/>
+  <param name="trailer/hitch_offset"  value="$(arg hitch_offset)"/>
+  <param name="trailer/max_steer_deg" value="$(arg max_steer_deg)"/>
+  <param name="check/jackknife_deg"   value="$(arg jackknife_deg)"/>
+  <param name="check/channel_width"   value="$(arg channel_width)"/>
+  <param name="check/step_tolerance"  value="$(arg step_tolerance)"/>
+  <param name="sim/speed"             value="$(arg speed)"/>
+  <param name="sim/steer_deg"         value="$(arg steer_deg)"/>
+  <param name="sim/seconds"           value="$(arg seconds)"/>
+  <param name="sim/step"              value="$(arg step)"/>
+  <param name="sim/gear"              value="$(arg gear)"/>
+  <param name="rate/publish_hz"       value="$(arg publish_hz)"/>
+
+  <param name="topic/report"        value="/trailer/report"/>
+  <param name="topic/phase"         value="/trailer/phase"/>
+  <param name="topic/articulation"  value="/trailer/articulation"/>
+
+  <param name="tf/enabled" value="$(arg tf_enabled)"/>
+  <param name="tf/rate_hz" value="$(arg tf_rate_hz)"/>
+
+  <node pkg="trailer_kinematics" type="main.py" name="trailer_kinematics" output="screen"/>
+</launch>
