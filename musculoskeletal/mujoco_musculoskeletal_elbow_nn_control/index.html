@@ -898,11 +898,19 @@ ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_musculoskeletal
 <p>采集器会在数据目录写出 <code>episode_split.json</code>。三种数据集合均至少包含一个完整数据回合，配置种子保存在清单中。</p>
 <h2 id="_5">神经网络与评价</h2>
 <p>轻量 MLP 输入为 <script type="math/tex">[q_d,q,\dot q,F_f,F_e]</script>，输出为 <script type="math/tex">[a_f,a_e]</script>。训练器复用 <code>episode_split.json</code> 中记录的完整数据回合划分，并检查清单与 CSV 回合编号一致。在线推理继续复用激活限制器与异常安全停机逻辑。评价覆盖角度均方根误差、超调量、稳定时间和 CPU 推理延迟，并分别报告轨迹类型与前臂负载。</p>
+<p>训练和评价命令：</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>mujoco_musculoskeletal_elbow_nn_control.train<span class="w"> </span>--data<span class="w"> </span>data/episodes<span class="w"> </span>--model<span class="w"> </span>data/elbow_mlp.json
+python3<span class="w"> </span>-m<span class="w"> </span>mujoco_musculoskeletal_elbow_nn_control.evaluate<span class="w"> </span>--data<span class="w"> </span>data/episodes<span class="w"> </span>--model<span class="w"> </span>data/elbow_mlp.json<span class="w"> </span>--output<span class="w"> </span>data/evaluation.json
+</code></pre></div>
 <h3 id="_6">算法流程</h3>
 <div class="highlight"><pre><span></span><code>目标轨迹 + 关节状态 + 肌腱力 -&gt; 训练集统计量标准化 -&gt; tanh MLP
 -&gt; sigmoid 输出 -&gt; 有限值检查与 [0,1] 限幅 -&gt; 肌肉激活命令
 </code></pre></div>
-<p>训练阶段只使用训练集统计量进行输入标准化，网络以 sigmoid 输出两路激活量，并在发布前进行有限值检查和 <code>[0,1]</code> 安全限幅。训练损失为 (L=\frac{1}{N}\sum_i|\hat a_i-a_i^{PD}|_2^2)。评价按完整数据回合、轨迹类型和负载分组，报告 MAE、RMSE、末段稳态误差和单样本 CPU 推理耗时。PD 与神经控制器使用同一目标轨迹、初始状态和负载。</p>
+<p>训练阶段只使用训练集统计量进行输入标准化，网络以 sigmoid 输出两路激活量，并在发布前进行有限值检查和 <code>[0,1]</code> 安全限幅。训练损失为：</p>
+<p>
+<script type="math/tex; mode=display">L=\frac{1}{N}\sum_i\|\hat a_i-a_i^{PD}\|_2^2.</script>
+</p>
+<p>评价按完整数据回合、轨迹类型和负载分组，报告 MAE、RMSE、末段稳态误差和单样本 CPU 推理耗时。PD 与神经控制器使用同一目标轨迹、初始状态和负载。</p>
 <h2 id="ros-2">ROS 2 在线神经控制</h2>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>mujoco_musculoskeletal_elbow_nn_control<span class="w"> </span>neural_controller.launch.py
 ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>--once<span class="w"> </span>/target_angle<span class="w"> </span>std_msgs/msg/Float64<span class="w"> </span><span class="s2">"{data: 1.2}"</span>
