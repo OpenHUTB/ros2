@@ -30,6 +30,8 @@ gesture_control_drone/
     ├── gesture_dataset.py    关键点数据集工具（归一化 / npz / 统计 / 划分）
     ├── record_gesture_session.py  采集：摄像头 -> 特征+弱标签 -> npz
     ├── gesture_session.py    采集会话的纯逻辑（累积/统计/落盘，可离线测）
+    ├── gesture_train.py      训练与评估（纯 numpy MLP，含划分对比）
+    ├── gesture_mlp_classifier.py  推理：每帧关键点 -> 手势 token（可离线测）
     └── gesture_demo.py        无 ROS 单机演示（pygame 虚拟无人机）
 ```
 
