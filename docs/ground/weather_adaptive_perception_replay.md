@@ -2,7 +2,7 @@
 
 本文介绍一个**不需要 CARLA 实时渲染**的自适应感知复现模块。模块以 CARLA Town10HD 的一帧 ClearNoon 街景为输入，用程序化的天气退化模型合成 HardRainNoon（大气散射雾 + 雨痕 + 对比度压缩），再用 MobileNet-SSD（OpenCV DNN）分别以 `camera`（纯视觉）与 `fusion`（视觉 ∪ 激光雷达几何先验分支）两种模式检出目标，最后按 IoU 对齐晴天低阈值结果作的伪真值，统计两种天气下各模式的召回率；同时用亮度、对比度、饱和度、清晰度、暗通道均值五个特征做规则化天气判别。
 
-本文档承接「恶劣雨雾天气下多传感器感知性能对比实验」（[`weather_perception_benchmark.md`](weather_perception_benchmark.md)）第五部分的自适应策略，把它搬到**无 GPU、无 CARLA 服务端**的离线环境上复现：**第一部分（第 1~2 节）**给出运行环境与实验原理；**第二部分（第 3 节）**说明代码结构与三处关键实现；**第三部分（第 4~5 节）**给出运行步骤与实验结果；**第四部分（第 6~7 节）**给出结论与边界。
+本文档承接「恶劣雨雾天气下多传感器感知性能对比实验」（[`weather_perception_benchmark.md`](weather_perception_benchmark.md)）第五部分的自适应策略，把它搬到**无 GPU、无 CARLA 服务端**的离线环境上复现。
 
 > **与实时渲染版的关系**：本模块的图像是「一帧晴天街景 + 代码合成雨雾」，雷达是几何先验模拟，不是 `sensor.lidar.ray_cast` 的真实点云。它能复现「雨雾压缩对比度、压低纯视觉召回、融合后补回」这一趋势，但不等价于实时渲染数据，具体差异见第 7 节。
 
@@ -10,8 +10,8 @@
 
 | 项目 | 版本 / 说明 |
 | --- | --- |
-| 操作系统 | Ubuntu 22.04 / Windows 11 均可（纯 CPU 运行，不依赖 GPU） |
-| Python | 3.10（3.8 以上均可） |
+| 操作系统 | Ubuntu 22.04（纯 CPU 运行，不依赖 GPU） |
+| Python | 3.10 |
 | 依赖 | `numpy`、`opencv-python`（含 `cv2.dnn`）、`matplotlib` |
 | 检测模型 | MobileNet-SSD（Caffe 版，`deploy.prototxt` + `mobilenet_iter_73000.caffemodel`，约 23 MB） |
 | 是否需要 CARLA | **不需要**；CARLA 只用于提供输入帧 |
