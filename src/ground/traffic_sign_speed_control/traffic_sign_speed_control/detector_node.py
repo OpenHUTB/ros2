@@ -19,69 +19,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Int32, Float32
 
 from .model import load_model, preprocess_char
-
-
-def find_sign_roi(bgr):
-    """HSV 红色分割定位圆形标志牌，返回 (cx, cy, r) 或 None。"""
-    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
-    m1 = cv2.inRange(hsv, (0, 90, 60), (8, 255, 255))
-    m2 = cv2.inRange(hsv, (172, 90, 60), (180, 255, 255))
-    mask = cv2.morphologyEx(m1 | m2, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    best = None
-    for c in contours:
-        area = cv2.contourArea(c)
-        if area < 150:
-            continue
-        per = cv2.arcLength(c, True)
-        if per <= 0:
-            continue
-        circularity = 4.0 * np.pi * area / (per * per)
-        if circularity < 0.6:      # 圆形度筛选
-            continue
-        (cx, cy), r = cv2.minEnclosingCircle(c)
-        if not (15 <= r <= 110):   # 合理的牌面半径范围（px）
-            continue
-        if best is None or area > best[3]:
-            best = (int(cx), int(cy), int(r), area)
-    if best is None:
-        return None
-    return best[0], best[1], best[2]
-
-
-def split_chars(bgr, cx, cy, r):
-    """在圆形 ROI 内切分数字字符，返回按 x 排序的灰度图列表。"""
-    gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-    H, W = gray.shape
-    side = 2 * r
-    x0, y0 = max(0, cx - r), max(0, cy - r)
-    x1, y1 = min(W, cx + r), min(H, cy + r)
-    roi = gray[y0:y1, x0:x1]
-    if roi.size == 0:
-        return []
-    # 只保留圆内暗色（数字）像素
-    h, w = roi.shape
-    yy, xx = np.mgrid[0:h, 0:w]
-    inside = (xx + x0 - cx) ** 2 + (yy + y0 - cy) ** 2 <= (r * 0.92) ** 2
-    dark = ((roi < 110) & inside).astype(np.uint8) * 255
-    n, labels, stats, _ = cv2.connectedComponentsWithStats(dark, 8)
-    boxes = []
-    for i in range(1, n):
-        x, y, bw, bh, area = stats[i]
-        if area < 20 or not (0.18 * r <= bh <= 0.95 * r) or bw > 0.9 * r:
-            continue
-        if bw < 2 or bh < 6:
-            continue
-        boxes.append((x + x0, y + y0, bw, bh))
-    boxes.sort(key=lambda b: b[0])
-    boxes = boxes[:2]              # 最多两位数
-    chars = []
-    for x, y, bw, bh in boxes:
-        pad = max(2, int(0.12 * bh))
-        x0c, y0c = max(0, x - pad), max(0, y - pad)
-        x1c, y1c = min(W, x + bw + pad), min(H, y + bh + pad)
-        chars.append(gray[y0c:y1c, x0c:x1c])
-    return chars
+from .vision import find_sign_roi, split_chars
 
 
 class DetectorNode(Node):

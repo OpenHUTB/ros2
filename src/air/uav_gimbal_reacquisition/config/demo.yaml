@@ -1,0 +1,12 @@
+uav_gimbal_target_sim:
+  ros__parameters:
+    rate_hz: 30.0
+    duration_s: 0.0
+
+uav_gimbal_tracker:
+  ros__parameters:
+    rate_hz: 20.0
+    uav_x: 0.0
+    uav_y: 0.0
+    uav_z: 20.0
+    loss_frames: 3

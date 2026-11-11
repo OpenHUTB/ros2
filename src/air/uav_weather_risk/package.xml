@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uav_weather_risk</name>
+  <version>0.1.0</version>
+  <description>ROS 2 advisory demo for multi-source weather disturbance prediction and UAV safety assessment.</description>
+  <maintainer email="917646819leclerc@gmail.com">Leclerc666</maintainer>
+  <author email="917646819leclerc@gmail.com">Leclerc666</author>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
