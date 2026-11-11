@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hand_eye_calibration</name>
+  <version>0.1.0</version>
+  <description>基于 MuJoCo 的机械臂手眼标定仿真（Panda + 腕部相机 + 标定板）</description>
+  <maintainer email="Chenjunhua-Dotcom@users.noreply.github.com">Chenjunhua-Dotcom</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <!-- mujoco / opencv-python-headless 为 pip 依赖，见 requirements.txt / setup.py；ROS 包只声明系统依赖 -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>
