@@ -18,6 +18,7 @@ setup(
         ),
     ],
     install_requires=['setuptools'],
+    tests_require=['pytest'],
     zip_safe=True,
     maintainer='OpenHUTB',
     maintainer_email='234208483+gfdklzr@users.noreply.github.com',
