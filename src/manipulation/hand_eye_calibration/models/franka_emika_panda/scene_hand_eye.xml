@@ -1,4 +1,6 @@
 <mujoco model="hand eye calibration scene">
+  <!-- Hand-eye calibration scene written for this module; includes panda_pick.xml,
+       a modified copy of MuJoCo Menagerie franka_emika_panda/panda.xml (Apache-2.0). -->
   <include file="panda_pick.xml"/>
 
   <visual>

@@ -3,9 +3,16 @@
 > [!IMPORTANT]
 > Requires MuJoCo 2.3.3 or later.
 
+> [!NOTE]
+> Modified copy included in this module for attribution. `panda_pick.xml` is derived from
+> MuJoCo Menagerie `franka_emika_panda/panda.xml` at commit
+> `370c43965323c0944b433b202aac5058b5f907a9` (Apache-2.0). Local changes: added the `tcp`
+> site and `wrist_cam` camera, removed the `home` keyframe. The original README below is kept
+> unchanged apart from the two links fixed to point at upstream.
+
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for a full history of changes.
+See [CHANGELOG.md](https://github.com/google-deepmind/mujoco_menagerie/blob/main/franka_emika_panda/CHANGELOG.md) for a full history of changes.
 
 ## Overview
 
@@ -16,7 +23,7 @@ available URDF
 description](https://github.com/frankaemika/franka_ros/tree/develop/franka_description).
 
 <p float="left">
-  <img src="panda.png" width="400">
+  <img src="https://raw.githubusercontent.com/google-deepmind/mujoco_menagerie/main/franka_emika_panda/panda.png" width="400">
 </p>
 
 ## URDF → MJCF derivation steps

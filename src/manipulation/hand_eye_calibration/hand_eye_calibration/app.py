@@ -9,8 +9,8 @@
 支持录制：主视图 + 腕部相机画中画 + 检测标记 + HUD，输出截图 / GIF / MP4 / 误差曲线。
 
 用法:
-    python main.py                # 仅仿真/标定，打印结果
-    python main.py --record /tmp/he_frames --fps 20
+    python3 main.py                # 仅仿真/标定，打印结果
+    python3 main.py --record /tmp/he_frames --fps 20
 """
 import argparse
 import json
@@ -109,7 +109,7 @@ def pose_targets(n=16):
         pos = BOARD_CENTER + np.array([xs[i % len(xs)], ys[(i * 2) % len(ys)], zs[(i // 3) % len(zs)]])
         R = (rotz(math.radians(yaws[i % len(yaws)]))
              @ rotx(math.radians(rolls[(i // 2) % len(rolls)]))
-             @ roty(math.radians(pitches[(i * 3) % len(pitches)])) @ TOP_DOWN_R)
+             @ roty(math.radians(pitches[i % len(pitches)])) @ TOP_DOWN_R)
         yield pos, R
 
 
@@ -404,12 +404,12 @@ def compose(main_rgb, wrist_rgb, found, status, pose_idx, total, result=None):
     return hud(frame, status, pose_idx, total, result)
 
 
-def animate(sim, data, result, record_dir, stills_dir):
+def animate(sim, data, result, record_dir, stills_dir, fps=20):
     os.makedirs(record_dir, exist_ok=True)
     os.makedirs(stills_dir, exist_ok=True)
     total = len(data)
     frames = 0
-    fps_render = 20
+    fps_render = max(1, int(fps))
 
     def save(frame):
         nonlocal frames
@@ -467,8 +467,6 @@ def main():
     if len(data) < 8:
         raise SystemExit("not enough calibration poses")
     results = calibrate(data)
-    if not results:
-        raise SystemExit("calibrateHandEye: all four methods failed")
     name, X_est, err_mm, errs, score, r_mean = results[0]
     report = evaluate(sim, data, X_est)
     report["method"] = name
@@ -479,7 +477,7 @@ def main():
     print(json.dumps({k: v for k, v in report.items() if k != "rows"}, ensure_ascii=False, indent=1))
     print("RESULT_JSON=" + json.dumps({k: v for k, v in report.items() if k != "rows"}, ensure_ascii=False))
     if args.record:
-        n = animate(sim, data, report, args.record, args.stills)
+        n = animate(sim, data, report, args.record, args.stills, fps=args.fps)
         print("frames:", n)
 
 

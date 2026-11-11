@@ -1,4 +1,7 @@
 <mujoco model="panda">
+  <!-- Modified from MuJoCo Menagerie franka_emika_panda/panda.xml
+       (commit 370c43965323c0944b433b202aac5058b5f907a9, Apache-2.0).
+       Changes vs upstream: added "tcp" site and "wrist_cam" camera, removed the "home" keyframe. -->
   <compiler angle="radian" meshdir="assets" autolimits="true"/>
 
   <option integrator="implicitfast"/>

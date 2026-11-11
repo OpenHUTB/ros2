@@ -6,7 +6,10 @@ from pathlib import Path
 from setuptools import setup
 
 package_name = "hand_eye_calibration"
-requirements = [line.strip() for line in Path("requirements.txt").read_text(encoding="utf-8").splitlines()
+# 用本文件所在目录定位 requirements.txt：colcon 的 --symlink-install 分支在 build 目录
+# 执行 setup.py（当前工作目录不是源码目录），相对 CWD 读取会 FileNotFoundError。
+MODULE_ROOT = Path(__file__).resolve().parent
+requirements = [line.strip() for line in (MODULE_ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
                 if line.strip() and not line.startswith("#")]
 
 setup(
