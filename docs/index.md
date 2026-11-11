@@ -245,6 +245,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [多无人机空域监测（多边形禁飞区与机间冲突）](./air/multi_uav_airspace_monitor.md) —— 面向多机轨迹的电子围栏、最近接近距离和冲突解脱建议
 
+* [多旋翼单桨失效后的悬停可行域](./air/uav_rotor_failure_env.md) —— 零姿态力矩约束下的最大总推力，对比四/六/八旋翼是否必须自旋，12 项测试
+
 * [无人机动态电子围栏预测预警](./air/uav_dynamic_geofence_guard.md) —— 针对移动临时禁飞区计算预测净空、最近接近时间和规避方向，并附 ROS 2 Humble 实跑证据
 
 * [winter 场景无人机圆周飞行](./air/winter_circle.md)
