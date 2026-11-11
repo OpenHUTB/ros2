@@ -242,6 +242,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
 * [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
+* [工况能耗与续航核算](./ground/drive_cycle_energy.md) —— 工况能耗与续航的能量分解与复算
 * [横向载荷转移与侧翻裕度](./ground/rollover_margin.md) —— 载荷转移与极限车速的离线核算
 * [轮胎滑移率-附着曲线](./ground/tire_slip_curve.md) —— 轮胎附着随滑移率变化的曲线与 ABS 目标带
 
