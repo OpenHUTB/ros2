@@ -6,6 +6,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Float64MultiArray
 
+from ros_message_data import build_message_data
 from simulation import Scenario, Simulation
 
 
@@ -23,12 +24,13 @@ class UavRangeNode(Node):
 
     def tick(self):
         row = self.simulation.step()
+        message_data = build_message_data(row)
         range_msg = Float32()
-        range_msg.data = float(row["sensor_range_m"])
+        range_msg.data = message_data["front_range_m"]
         control_msg = Float32()
-        control_msg.data = float(row["accel_m_s2"])
+        control_msg.data = message_data["braking_accel_m_s2"]
         state_msg = Float64MultiArray()
-        state_msg.data = [row["time_s"], row["sensor_range_m"], row["closing_speed_m_s"], row["height_m"]]
+        state_msg.data = message_data["state"]
         self.range_pub.publish(range_msg)
         self.control_pub.publish(control_msg)
         self.state_pub.publish(state_msg)

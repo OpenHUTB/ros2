@@ -27,8 +27,13 @@ ROS 环境中执行 / In a ROS environment:
 
 ```
 source /opt/ros/humble/setup.bash
+ros2 launch ./launch/main.launch.py controller:=range output:=/tmp/uav_braking
 ros2 launch ./launch/ros_node.launch.py controller:=mlp model:=models/mlp_controller.json
 ```
+
+`main.launch.py` 运行完整无窗口仿真，并写出 `trajectory.csv` 和 `summary.json`；`ros_node.launch.py` 按固定周期推进仿真并发布三个 ROS 2 话题。两个 launch 文件的 `python3` 参数默认使用启动 launch 的解释器；若 MuJoCo 安装在其他 Python 环境，可传入该解释器路径，例如 `python3:=/path/to/venv/bin/python`。运行 launch 的 Python 环境必须安装 `requirements.txt` 中的依赖。
+
+`main.launch.py` runs the complete headless simulation and writes `trajectory.csv` and `summary.json`. `ros_node.launch.py` advances the simulation at a fixed period and publishes the three ROS 2 topics. Both launch files default `python3` to the interpreter running the launch service. If MuJoCo is installed in another Python environment, pass its interpreter path, for example `python3:=/path/to/venv/bin/python`. The selected Python environment must have the dependencies in `requirements.txt` installed.
 
 `trajectory.csv` 记录时间、间距、速度、高度和控制量，`summary.json` 汇总碰撞步数、最小间距和高度误差。 / `trajectory.csv` records time, clearance, speed, height and action. `summary.json` reports contact steps, minimum clearance and height error.
 

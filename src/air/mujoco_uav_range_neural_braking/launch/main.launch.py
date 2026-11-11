@@ -11,10 +11,12 @@ from launch.substitutions import LaunchConfiguration
 def generate_launch_description():
     module = Path(__file__).resolve().parents[1]
     return LaunchDescription([
+        DeclareLaunchArgument("python3", default_value=sys.executable,
+                              description="Python interpreter with MuJoCo installed"),
         DeclareLaunchArgument("output", default_value=str(Path(tempfile.gettempdir()) / "mujoco_uav_braking")),
         DeclareLaunchArgument("controller", default_value="range", choices=["reference", "range", "mlp"]),
         DeclareLaunchArgument("model", default_value=str(module / "models" / "mlp_controller.json")),
-        ExecuteProcess(cmd=[sys.executable, str(module / "main.py"), "--headless",
+        ExecuteProcess(cmd=[LaunchConfiguration("python3"), str(module / "main.py"), "--headless",
                             "--output", LaunchConfiguration("output"),
                             "--controller", LaunchConfiguration("controller"),
                             "--model", LaunchConfiguration("model")], output="screen"),
