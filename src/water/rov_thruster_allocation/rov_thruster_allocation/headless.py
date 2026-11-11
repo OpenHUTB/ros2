@@ -18,25 +18,30 @@ from .core import (
     allocate_qp,
     effort,
     error_norm,
-    saturation_ratio,
+    at_limit_ratio,
+    overshoot_ratio,
 )
 from .scene import DemandConfig, make_demands
 
 
 def _evaluate(wrenches, allocator, matrix, limit) -> dict:
-    errors, efforts, saturations = [], [], []
+    errors, efforts, at_limit, overshoot, peak = [], [], [], [], []
     for demand in wrenches:
         forces = allocator(matrix, demand, limit)
         errors.append(error_norm(matrix, forces, demand))
         efforts.append(effort(forces))
-        saturations.append(saturation_ratio(forces, limit))
+        at_limit.append(at_limit_ratio(forces, limit))
+        overshoot.append(overshoot_ratio(forces, limit))
+        peak.append(float(np.max(np.abs(forces))))
     errors = np.asarray(errors)
     return {
         "wrench_error_rms": float(np.sqrt(np.mean(errors**2))),
         "wrench_error_p95": float(np.percentile(errors, 95)),
         "wrench_error_max": float(np.max(errors)),
         "effort_mean": float(np.mean(efforts)),
-        "saturation_pct": float(100.0 * np.mean(saturations)),
+        "at_limit_pct": float(100.0 * np.mean(at_limit)),
+        "overshoot_pct": float(100.0 * np.mean(overshoot)),
+        "max_abs_force_n": float(np.max(peak)),
         "samples": int(errors.size),
     }
 
@@ -44,7 +49,7 @@ def _evaluate(wrenches, allocator, matrix, limit) -> dict:
 def run_experiment(
     out_dir: Path | None = None,
     figure_dir: Path | None = None,
-    make_plots: bool = True,
+    make_plots: bool = False,
 ) -> dict:
     config = DemandConfig()
     data = make_demands(config)
@@ -82,11 +87,8 @@ def run_experiment(
 
     if out_dir is not None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
+        with (out_dir / "summary.json").open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if make_plots:
         if figure_dir is None:
             raise ValueError("figure_dir is required when make_plots is True")
@@ -107,7 +109,7 @@ def main(args=None) -> int:
     summary = run_experiment(
         out_dir=options.out,
         figure_dir=options.figure_dir,
-        make_plots=not options.no_plots,
+        make_plots=not options.no_plots and options.figure_dir is not None,
     )
     print(f"configuration matrix condition: {summary['configuration_matrix_condition']:.1f}")
     for scope in ("inside", "outside"):
@@ -116,7 +118,8 @@ def main(args=None) -> int:
             print(
                 f"  {name:<24} error RMS {block['wrench_error_rms']:8.2f} | "
                 f"p95 {block['wrench_error_p95']:8.2f} | "
-                f"effort {block['effort_mean']:8.1f} | sat {block['saturation_pct']:5.1f} %"
+                f"effort {block['effort_mean']:8.1f} | at-limit {block['at_limit_pct']:5.1f} % | "
+                f"over {block['overshoot_pct']:4.1f} % | max|f| {block['max_abs_force_n']:5.1f} N"
             )
     return 0
 

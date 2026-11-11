@@ -1,6 +1,6 @@
 """Module entry point: offline experiment without ROS.
 
-    python main.py --out results --figure-dir ../../docs/img/water/rov_thruster_allocation
+    python main.py --out results --figure-dir ../../../docs/img/water/rov_thruster_allocation
 """
 
 import sys

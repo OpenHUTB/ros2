@@ -108,9 +108,16 @@ def error_norm(matrix, forces, demand) -> float:
     return float(np.linalg.norm(wrench_of(matrix, forces) - np.asarray(demand, dtype=float)))
 
 
-def saturation_ratio(forces, max_thrust) -> float:
+def at_limit_ratio(forces, max_thrust) -> float:
+    """Fraction of thrusters sitting on the limit (box-constrained solvers)."""
     limit = np.asarray(max_thrust, dtype=float)
     return float(np.mean(np.abs(forces) >= limit - 1e-9))
+
+
+def overshoot_ratio(forces, max_thrust) -> float:
+    """Fraction of thrusters that *exceed* the limit (only unconstrained solvers)."""
+    limit = np.asarray(max_thrust, dtype=float)
+    return float(np.mean(np.abs(forces) > limit + 1e-9))
 
 
 def effort(forces) -> float:

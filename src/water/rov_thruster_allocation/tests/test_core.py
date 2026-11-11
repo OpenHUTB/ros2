@@ -15,7 +15,7 @@ from rov_thruster_allocation.core import (
     effort,
     error_norm,
     limits,
-    saturation_ratio,
+    at_limit_ratio,
     solve_box_qp,
     wrench_of,
 )
@@ -70,9 +70,9 @@ class AllocationTests(unittest.TestCase):
             better.append(error_norm(self.matrix, optimised, demand))
         self.assertLess(float(np.mean(better)), float(np.mean(worse)))
 
-    def test_saturation_and_effort(self):
+    def test_at_limit_and_effort(self):
         forces = np.array([40.0, 0.0, -40.0])
-        self.assertAlmostEqual(saturation_ratio(forces, np.full(3, 40.0)), 2.0 / 3.0)
+        self.assertAlmostEqual(at_limit_ratio(forces, np.full(3, 40.0)), 2.0 / 3.0)
         self.assertAlmostEqual(effort(np.array([3.0, 4.0])), 25.0)
 
 

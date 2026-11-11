@@ -79,12 +79,12 @@ class ThrusterAllocator(Node):
         status = {
             "wrench_error": error_norm(self.matrix, forces, demand),
             "effort": effort(forces),
-            "saturated": int(np.sum(np.abs(forces) >= self.limit - 1e-9)),
+            "at_limit": int(np.sum(np.abs(forces) >= self.limit - 1e-9)),
             "forces": forces.tolist(),
         }
         self.status_pub.publish(String(data=json.dumps(status)))
         self.get_logger().info(
-            f"error {status['wrench_error']:.2f}, saturated {status['saturated']}"
+            f"error {status['wrench_error']:.2f}, at limit {status['at_limit']}"
         )
 
 

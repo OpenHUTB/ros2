@@ -1,7 +1,7 @@
 {
   "module": "rov_thruster_allocation",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T17:24:51+00:00",
+  "generated_utc": "2026-11-11T05:11:34+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
@@ -20,7 +20,9 @@
       "wrench_error_p95": 1.552596207305776e-14,
       "wrench_error_max": 2.9926637740627164e-14,
       "effort_mean": 3219.0597531212597,
-      "saturation_pct": 2.75,
+      "at_limit_pct": 2.75,
+      "overshoot_pct": 2.75,
+      "max_abs_force_n": 54.51893599965815,
       "samples": 400
     },
     "clipped_pseudo_inverse": {
@@ -28,7 +30,9 @@
       "wrench_error_p95": 6.424892723430658,
       "wrench_error_max": 15.993021696559167,
       "effort_mean": 3140.6417158656595,
-      "saturation_pct": 2.75,
+      "at_limit_pct": 2.75,
+      "overshoot_pct": 0.0,
+      "max_abs_force_n": 40.0,
       "samples": 400
     },
     "qp_allocation": {
@@ -36,7 +40,9 @@
       "wrench_error_p95": 0.004691032661114155,
       "wrench_error_max": 0.00853613086361323,
       "effort_mean": 3710.1803080682084,
-      "saturation_pct": 3.71875,
+      "at_limit_pct": 3.71875,
+      "overshoot_pct": 0.0,
+      "max_abs_force_n": 40.0,
       "samples": 400
     }
   },
@@ -46,7 +52,9 @@
       "wrench_error_p95": 3.028085905047364e-14,
       "wrench_error_max": 4.5669992702039654e-14,
       "effort_mean": 10282.880049998343,
-      "saturation_pct": 29.625,
+      "at_limit_pct": 29.625,
+      "overshoot_pct": 29.625,
+      "max_abs_force_n": 98.13408479938468,
       "samples": 200
     },
     "clipped_pseudo_inverse": {
@@ -54,7 +62,9 @@
       "wrench_error_p95": 56.4044879654016,
       "wrench_error_max": 74.71163277916747,
       "effort_mean": 6629.174962941598,
-      "saturation_pct": 29.625,
+      "at_limit_pct": 29.625,
+      "overshoot_pct": 0.0,
+      "max_abs_force_n": 40.0,
       "samples": 200
     },
     "qp_allocation": {
@@ -62,7 +72,9 @@
       "wrench_error_p95": 45.23260542215877,
       "wrench_error_max": 63.34559727154769,
       "effort_mean": 7562.637090820388,
-      "saturation_pct": 39.3125,
+      "at_limit_pct": 39.3125,
+      "overshoot_pct": 0.0,
+      "max_abs_force_n": 40.0,
       "samples": 200
     }
   }
