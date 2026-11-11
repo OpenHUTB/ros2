@@ -1,0 +1,21 @@
+<launch>
+  <!--
+    mujoco_arm_ball.launch —— 三自由度机械臂投篮入筐演示（ROS 1 / catkin）
+    运行前请确保：
+      1) 已安装 Python 依赖：pip3 install -r requirements.txt
+         （mujoco / numpy / pillow；无显卡环境另需可用的 GL 后端）
+      2) 已编译本包:  catkin_make && source devel/setup.bash
+    可选参数：
+      gl : MuJoCo 渲染后端，默认 glfw（Ubuntu 22.04.5 + Xvfb 实测可用）；
+           有 EGL 时可传 gl:=egl；osmesa 在部分 VMware 下会报
+           'NoneType' object has no attribute 'glGetError'，不作为默认。
+    注意：本模块不发布/订阅任何 ROS 话题，launch 只是把脚本拉起来，
+          GIF 仍输出到包所在仓库的 docs/img/（找不到仓库结构时退到当前目录）。
+  -->
+  <arg name="gl" default="glfw"/>
+
+  <node name="mujoco_arm_ball" pkg="mujoco_arm_ball" type="main.py"
+        output="screen" respawn="false">
+    <env name="MUJOCO_GL" value="$(arg gl)"/>
+  </node>
+</launch>

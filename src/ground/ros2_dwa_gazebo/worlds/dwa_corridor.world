@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="dwa_corridor">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <scene>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- 1.8 m wide corridor, walls 9 m long -->
+    <model name="wall_left">
+      <static>true</static>
+      <pose>1.5 0.9 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>9.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.0 0.1 0.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_right">
+      <static>true</static>
+      <pose>1.5 -0.9 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>9.0 0.1 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>9.0 0.1 0.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obstacle_a">
+      <static>true</static>
+      <pose>0.0 0.30 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.20</radius><length>0.6</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.20</radius><length>0.6</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Orange</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obstacle_b">
+      <static>true</static>
+      <pose>1.5 -0.30 0.30 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.20</radius><length>0.6</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.20</radius><length>0.6</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Orange</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://turtlebot3_burger</uri>
+      <pose>-2.0 0.0 0.01 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

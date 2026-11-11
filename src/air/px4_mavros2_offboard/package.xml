@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>px4_mavros2_offboard</name>
+  <version>0.1.0</version>
+  <description>ROS 2 Humble PX4 SITL Offboard demo with MAVROS2 and failsafe handling.</description>
+  <maintainer email="dmjtr@users.noreply.github.com">dmjtr</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>python3-setuptools</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>mavros_msgs</depend>
+  <exec_depend>mavros</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
