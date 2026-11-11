@@ -2,12 +2,29 @@
 # 本模块只发布机体系速度指令到 /uav/cmd_vel，真正的执行/坐标换算在 carlair_ros_bridge。
 
 control:
-  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D）
+  horiz_speed: 2.0        # 水平速度 m/s（W/S/A/D 的目标速度，组合键时各轴独立）
   vert_speed: 1.0         # 垂直速度 m/s（R/F）
   yaw_rate: 1.0           # 偏航角速度 rad/s（Q/E，正值=机头右转）
+  key_hold_timeout: 0.15  # 按键保持判定 s：超过该时间没再收到该键的字节 -> 视为松开
+  accel_horiz: 4.0        # 水平加速度上限 m/s^2（<=0 关闭平滑，瞬时到位）
+  accel_vert: 2.0         # 垂直加速度上限 m/s^2
+  accel_yaw: 4.0          # 偏航角加速度上限 rad/s^2
+  odom_timeout: 0.6       # 位姿超时 s：超过该时间没收到 /uav/odom 就拒绝启动技能宏
+
+# 技能宏（按键 1/2/3），全部基于 /uav/odom 闭环，结束自动回到悬停
+macro:
+  takeoff_altitude: 1.5   # 1 键：升到该高度（m，ENU z）后悬停
+  spin_degrees: 360.0     # 2 键：原地旋转角度（deg，正值=机头右转）
+  forward_distance: 3.0   # 3 键：沿当前机头方向前进的距离（m）
+  forward_speed: 1.5      # 前进段的最大速度 m/s
+  brake_accel: 2.0        # 前进段的刹车减速度 m/s^2（按 sqrt(2as) 收油）
+  alt_kp: 2.0             # 高度 P 律增益（m/s per m）
+  altitude_tolerance: 0.05  # 高度死区 m
+  settle_ticks: 6         # 进入死区后需要连续多少帧（30 Hz 下 6 帧 ≈ 0.2 s）才算到位
 
 rate:
   publish_hz: 30.0        # 指令发布频率
 
 topic:
   cmd_vel: "/uav/cmd_vel" # 与桥接包的 topic/cmd_vel 保持一致
+  odom: "/uav/odom"       # 桥接层发的 ENU 位姿，技能宏闭环用

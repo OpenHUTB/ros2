@@ -1,0 +1,42 @@
+# 倒车雷达分级告警的默认参数
+# 想改行为直接在命令行覆盖，例如：
+#   roslaunch ultrasonic_rear_alert main.launch enter_stop_m:=0.40 confirm_frames:=5
+
+alert:
+  # 四个级别的进入阈值，从大到小（单位 m）
+  # 提示 2.00 / 警告 1.50 / 危险 1.00 / 停止 0.50
+  enter_info_m: 2.00
+  enter_warn_m: 1.50
+  enter_danger_m: 1.00
+  enter_stop_m: 0.50
+
+  # 退出阈值 = 进入阈值 + 这个余量；余量越大越不容易在边界上反复跳
+  exit_margin_m: 0.20
+
+  # 升级必须连续这么多帧都到线（10 Hz 下 3 帧 = 0.3 s）
+  confirm_frames: 3
+
+  # 降级必须连续这么多帧都退出当前级别
+  release_frames: 3
+
+  # 有效量程：低于下限视为贴到传感器、高于上限视为没有回波
+  min_range_m: 0.15
+  max_range_m: 3.00
+
+  # 一次演示里允许的级别切换次数上限
+  max_switches: 6
+
+rate:
+  # 读数节拍（内置脚本按这个节奏推进）
+  read_hz: 10.0
+  # 发布节拍
+  publish_hz: 10.0
+
+topic:
+  level: /rear_alert/level
+  report: /rear_alert/report
+  levels: /rear_alert/levels
+  radar: /rear_alert/radar
+
+service:
+  simulate: /rear_alert/simulate  # 一次性重算并返回报告的 Trigger 服务
