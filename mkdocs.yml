@@ -202,6 +202,7 @@ nav:
     - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
     - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
+    - TurtleBot3 键盘遥控: './ground/turtlebot3_keyboard_teleop.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
     - IMU 噪声 Allan 方差辨识与倾角滤波整定: './ground/imu_allan_noise_identification.md'
