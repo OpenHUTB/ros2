@@ -136,6 +136,7 @@ nav:
     - 车道保持控制: './ground/carla_lane_keeping/lane_keeping_control.md'
     - 传感器感知与给定轨迹跟踪（神经网络版）: './ground/carla_perception_control.md'
     - R2D2小车 自动巡航: './ground/r2d2_cruise.md'
+    - R2D2小车 航点巡航: './ground/r2d2_waypoint_cruise.md'
     - 路径点发布器: './ground/waypoint.md'
     - 激光雷达建图与神经网络规划导航: './ground/carla_mapping_navigation.md'
     - 自动驾驶代理: './ground/ad_agent.md'
@@ -186,6 +187,9 @@ nav:
     - 神经网络强化学习算法与网络结构对比（MuJoCo CartPole）: './ground/rl_algorithm_compare.md'
     - 基于Mujoco的键盘遥控小车: './ground/mujoco_car_project.md'
     - 地面载具横向控制算法对比（纯跟踪/Stanley/LQR）: './ground/lateral_control_benchmark.md'
+    - ROS2 差速机器人 A* 全局规划与 DWA 局部避障: './ground/ros2_dwa_avoidance.md'
+    - ROS2 DWA 局部规划器随机场景压力测试与舒适性评价: './ground/ros2_dwa_benchmark.md'
+    - ROS2 A*+DWA 的 Gazebo 三维验证: './ground/ros2_dwa_gazebo.md'
     - TurtleBot3 自主导航与避障参数优化: './ground/turtlebot3_auto_nav/README.md'
     - 视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）: './ground/ugv_visual_slam_nav.md'
     - 差速机器人里程计标定与神经网络滑移补偿: './ground/diff_drive_odom_calib.md'
@@ -226,6 +230,7 @@ nav:
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
     - VRU 冲突风险图: './ground/vru_conflict_risk_map.md'
+    - 里程计健康监视: './ground/odom_health_monitor.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
@@ -376,7 +381,8 @@ nav:
     - 浑浊水体视觉增强与目标追踪（合成视频演示）: './water/water_vision_enhancement.md'
     - 水下 ROV 海底管道往返巡检（视觉感知 + EKF-SLAM + 端到端）: './water/rov_pipeline_follow.md'
     - 水面无人艇：激光雷达建图与神经网络局部规划: './water/usv_mujoco_nn.md'
-    - MuJoCo水下机器人ROS2仿真与建图初步验证: './water/mujoco_rov_underwater.md'
+    - A* 路径规划初步验证: './water/rov_astar_planner.md'
+
 - 经典控制:
     - 倒立摆平衡小车 (cart-pole, LQR): './classical_control/cartpole_balance.md'
 
