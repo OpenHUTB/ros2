@@ -116,6 +116,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [肌肉骨骼人基础](./musculoskeletal/musculoskeletal_basics.md)
 * [肌肉-肌腱串联弹性实验](./musculoskeletal/msk_tendon_basics.md) —— 单关节 + 拮抗肌，肌腱储能/传力/释放三组实验
+* [肌肉协同降维与恢复质量评估](./musculoskeletal/muscle_synergy_lab.md) —— NMF 求协同数，用 VAF 与子空间夹角区分“重建得像”与“协同是真的”，13 项测试
 * [MuJoCo肌肉骨骼人键盘遥操作行走踢腿蹲起](./musculoskeletal/msk_human_walking_teleop.md) —— 22 条 Hill 肌肉驱动 13 DoF 全身模型，平地/坡道/负载三场景
 * [MuJoCo 肌肉骨骼灵巧手：键盘遥操作与神经网络肌肉激活控制](./musculoskeletal/msk_hand_teleop.md)
 * [MuJoCo 双关节肌肉骨骼手臂到达控制](./musculoskeletal/msk_arm_reach.md)
