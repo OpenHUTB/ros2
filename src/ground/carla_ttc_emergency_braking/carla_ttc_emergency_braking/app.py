@@ -22,7 +22,11 @@ import os
 import sys
 import time
 
-import carla
+try:
+    import carla
+except ImportError:      # 没装客户端也能 --help
+    carla = None
+
 import numpy as np
 import yaml
 
@@ -119,6 +123,10 @@ def check_client_compat(server_version):
     return flavor
 
 def connect(cfg):
+    if carla is None:
+        raise SystemExit(
+            "[ttc] 未安装 CARLA/OpenHUTB Python 客户端，连不上仿真器。\n"
+            "        安装见 README 第 4 节（Windows 用配套 hutb wheel；Linux 需自行编译 libcarla）。")
     """连接仿真器。
 
     注意：OpenHUTB 2.10.x 的客户端采用「地图文件按需下载」机制，
