@@ -14,7 +14,7 @@ setup(
         ("share/" + package_name + "/launch", glob("launch/*.launch.py")),
         ("share/" + package_name + "/models_trained", glob("models_trained/*.npz")),
     ],
-    install_requires=["setuptools", "numpy"],
+    install_requires=["setuptools", "numpy", "Pillow"],
     zip_safe=True,
     maintainer="WZJ6666wudu",
     maintainer_email="WZJ6666wudu@users.noreply.github.com",
