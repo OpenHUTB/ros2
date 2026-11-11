@@ -1,0 +1,21 @@
+# 在线判定节点的参数（geo_node）
+# 注意：这是简化版——对车队/目标的未来位置不做建模，只对"当前时刻"
+# 收到的视线做单站打点与逐站累积交会。离线精确解算请用 main.py。
+geo_node:
+  ros__parameters:
+    # 视轴零位偏置（度）：标定残差，整架次不变。有实测值就填实测值。
+    los_bias_deg: [0.0, 0.0]
+    # 视轴抖动（度）：只用于给估计附加一个报告用的事后散布，不参与解算
+    los_sigma_deg: 0.30
+    # 交会最少站数：不足时只发布单站估计并在诊断里说明
+    min_stations_for_fusion: 2
+    # 每站采多少帧视线再取平均（50 Hz 下 2 s）
+    samples_per_station: 100
+    # 视线话题与输出话题
+    odom_topic: /uav/odom
+    los_topic: /gimbal/los
+    ground_topic: /target/ground
+    diag_topic: /target/geo_diag
+    new_station_topic: /target/geo/new_station
+    # 地面高度（米，ENU）
+    ground_z: 0.0
