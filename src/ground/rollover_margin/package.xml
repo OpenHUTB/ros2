@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rollover_margin</name>
+  <version>1.0.0</version>
+  <description>
+    横向载荷转移与侧翻裕度核算：由轮距、质心高度与过弯工况算出静态稳定因子 SSF、
+    侧翻临界侧向加速度、内外侧轮垂向力与极限车速。纯标准库，不依赖 CARLA / numpy / GPU。
+  </description>
+
+  <maintainer email="2962141671@qq.com">Wist-sutton</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export/>
+</package>

@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+install/
+log/
+results/
+frames/
+# setup_model.py 下载的 Menagerie 网格资源与上游 XML（约 33 MB，不入库）
+models/franka_emika_panda/assets/
+models/franka_emika_panda/panda.xml
+*.egg-info/
+dist/

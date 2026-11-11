@@ -113,7 +113,8 @@ def run(scenario: Scenario, spec: TrainSpec | None = None,
         applied += (cmd - applied) * min(1.0, dt / tau)
 
         if applied > 0.0:
-            energy += energy_kwh(spec, v, dt)
+            energy += energy_kwh(spec, v, dt, accel=applied,
+                                 grade=grade_at(scenario.segments, x))
 
         v_next = v + applied * dt
         x_next = x + v * dt + 0.5 * applied * dt * dt
