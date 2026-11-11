@@ -238,6 +238,7 @@ nav:
       - 任务日志与离线统计: './air/uav_mission_safety_manager/mission_recording.md'
       - AirSim 实测记录: './air/uav_mission_safety_manager/airsim_validation.md'
     - 无人机着陆阶段识别与接地载荷预测: './air/landing_assessment.md'
+    - 高度与倾角检测评估: './air/air_ground_detection_benchmark.md'
     - Fixed-wing SITL preflight: './air/fixed_wing_sitl_preflight.md'
     - 无人机载荷质量估计: './air/payload_mass_estimation.md'
     - 无人机载荷重心偏移与配平监测: './air/uav_payload_balance_guard.md'
