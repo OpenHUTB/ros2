@@ -1,13 +1,11 @@
-# Gazebo 差速小车键盘控制与电量管理
+# Gazebo 差速小车键盘控制与电量管理/低电量返航
 
-基于 ROS2 Jazzy + Gazebo Harmonic 的差速驱动小车，通过 `gz_ros2_control` + `diff_drive_controller` 把 `/cmd_vel` 指令映射为左右轮转速。在原有键盘遥控和自动巡航之外，本版本增加电量模拟和低电量自动返航。
+模拟电池消耗，电量低于阈值后自动返回充电点，到点进入充电状态，电量恢复后回到手动模式。
 
-## 运行环境 / Environment
+## 运行环境
 
-- Ubuntu 24.04
-- ROS 2 Jazzy
-- Gazebo Harmonic（`gz sim`）
-- 依赖：`ros_gz`、`ros_gz_bridge`、`ros2_control`、`ros2_controllers`、`gz_ros2_control`、`robot_state_publisher`、`xacro`
+- Ubuntu 24.04、ROS 2 Jazzy、Gazebo Harmonic
+- 依赖：`ros_gz_sim`、`ros_gz_bridge`、`ros2_control`、`ros2_controllers`、`gz_ros2_control`、`robot_state_publisher`、`xacro`
 
 ```bash
 sudo apt install ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge \
@@ -15,81 +13,42 @@ sudo apt install ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge \
   ros-jazzy-gz-ros2-control ros-jazzy-robot-state-publisher ros-jazzy-xacro
 ```
 
-## 一键运行
+## 快速运行
 
 ```bash
-# 自动巡航演示（默认）
-bash main.sh
-
-# 电量管理与低电量自动返航
-bash main.sh battery
-
-# 仅启动仿真，另开终端运行键盘节点
-bash main.sh manual
-ros2 run gazebo_diff_drive_teleop teleop_keyboard
+bash main.sh                 # 自动巡航
+bash main.sh manual          # 仅启动仿真
+bash main.sh battery # 本项目功能
 ```
 
-`bash main.sh battery` 会在后台启动 Gazebo 和控制器，等待 `/odom` 就绪后在前台运行电量管理节点；按 `q` 退出时自动清理仿真进程。
-
-无显示器环境：
+无界面环境：
 
 ```bash
 bash main.sh battery gz_args:='-r -s'
 ```
 
-## 电量管理功能
-
-`battery_teleop` 根据里程计实际速度计算耗电：
-
-- 行驶距离和转向都会消耗电量，静止时有轻微自放电；
-- 电量低于 `low_battery_threshold` 后自动返回充电点；
-- 到点后进入 `charging` 状态，电量恢复后回到手动模式；
-- 可随时手动接管，或按 `h` 重新返航。
+## 功能按键
 
 | 按键 | 功能 |
 | --- | --- |
-| `w/x/a/d` 或方向键 | 手动驾驶 |
 | `s` / 空格 | 停止；返航中暂停返航 |
 | `h` | 手动返回充电点 |
 | `b` | 演示用，强制把电量降到阈值以下 |
 | `+` / `-` | 调整线速度 |
-| `q` / `Ctrl-C` | 退出并自动停车 |
 
-返航控制使用里程计闭环：先转向充电点，再按距离比例前进，接近目标时减速并调整航向。
+## 实现要点
 
-## 话题
+- `battery_teleop.py`：电量积分、低电量状态机、返航控制、充电和 `BatteryState` 发布。
+- `controller_bridge.py`：把 `Twist /cmd_vel` 转成 `TwistStamped`，并转发 `/odom`。
+- `main.sh battery`：后台启动仿真，前台运行键盘节点，退出时清理进程组。
 
-| 话题 | 类型 | 说明 |
-| --- | --- | --- |
-| `/cmd_vel` | `geometry_msgs/Twist` | 速度指令 |
-| `/odom` | `nav_msgs/Odometry` | 差速控制器里程计（由 bridge 转发） |
-| `/battery_state` | `sensor_msgs/BatteryState` | 模拟电池状态 |
-| `/battery_return/status` | `std_msgs/String` | `manual` / `returning` / `charging` |
-| `/battery_return/markers` | `visualization_msgs/MarkerArray` | 充电点标记 |
+## 实测结果
 
-launch 同时桥接 Gazebo `/clock`，并把 `Twist` 速度指令转换为控制器所需的 `TwistStamped`。
+真实 Gazebo 运行：驶离充电点约 0.67 m 后强制低电量，自动返航并进入充电状态，电量从 6.3% 开始回升。
 
-## 参数
+## 参数与话题
 
-| 参数 | 默认值 | 说明 |
-| --- | --- | --- |
-| `initial_battery` | `100.0` | 初始电量（%） |
-| `low_battery_threshold` | `25.0` | 低电量阈值（%） |
-| `charged_threshold` | `80.0` | 充电完成阈值（%） |
-| `drain_per_meter` | `8.0` | 每米耗电（%） |
-| `drain_per_radian` | `2.0` | 每弧度转向耗电（%） |
-| `charge_rate` | `8.0` | 充电速率（%/s） |
-| `home_x` / `home_y` / `home_yaw` | `0` | 充电点位姿 |
-
-## 验证
-
-```bash
-ros2 topic echo /battery_state
-ros2 topic echo /battery_return/status
-ros2 topic echo /battery_return/markers
-```
-
-本次真实 Gazebo 验证：小车驶离充电点约 0.67 m 后按 `b` 强制低电量，节点自动返回充电点，进入 `charging` 状态，电量从 6.3% 开始回升。效果图见 `docs/ground/gazebo_diff_drive_teleop.md`。
+完整参数表、话题/TF、算法公式、复现步骤和故障排查见 `docs/ground/gazebo_diff_drive_teleop.md`。
 
 ## 说明
 
