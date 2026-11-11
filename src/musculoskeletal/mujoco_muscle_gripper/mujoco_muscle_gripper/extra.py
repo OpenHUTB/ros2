@@ -44,12 +44,13 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
         kp, ki, integral = 0.025, 0.30, 0.0
         hist = []
         t90 = None
+        contact_points, measured_force = _finger_contact(m, d)
 
         for i in range(int(3.0 / DT)):
             t = i * DT
             q = float(d.qpos[m.joint("flj").qposadr[0]])
             v = float(d.qvel[dfl])
-            _, measured_force = _finger_contact(m, d)
+            # 上一拍步进后的接触力用于本拍反馈；首拍使用初始化测量。
             error = target - measured_force
             proposed = integral + ki * error * DT
             raw_u = 0.30 + kp * error + proposed
@@ -64,7 +65,7 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
             d.qfrc_applied[dfl] = muscle_force(mus_l, q, v)
             d.qfrc_applied[dfr] = muscle_force(mus_r, qr, vr)
             mujoco.mj_step(m, d)
-            _, measured_force = _finger_contact(m, d)
+            contact_points, measured_force = _finger_contact(m, d)
             hist.append(measured_force)
             if t90 is None and measured_force >= 0.9 * target:
                 t90 = t
@@ -76,7 +77,7 @@ def run_g5(targets=(2.0, 4.0, 8.0)):
             "steady_err_n": steady - target,
             "rise_time_s": t90 if t90 is not None else -1.0,
             "final_activation": u,
-            "contact_points": _finger_contact(m, d)[0],
+            "contact_points": contact_points,
             "force_source": "mj_contactForce_bilateral_sum",
         })
     return {"levels": rows}
