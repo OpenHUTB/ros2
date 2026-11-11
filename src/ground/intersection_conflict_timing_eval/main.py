@@ -170,6 +170,65 @@ def render_demo_frame(rng, v_cur, out_size=(800, 420)):
     return img.convert('RGB').resize(out_size)
 
 
+# ---------- MuJoCo 路口双车场景静态帧（可选依赖） ----------
+# 十字交叉口两个方向的直行车：A 车（蓝）纵向驶来，B 车（橙）横向驶来，
+# 中心圆盘为冲突点；车体朝向与配色和时空轨迹图一致，定量结论以概率曲线与指标表为准。
+_GRID_LINES = ''.join(
+    f'<geom type="box" size="0.008 6 0.001" pos="{i} 0 0.002" rgba="0.66 0.66 0.69 1"/>'
+    f'<geom type="box" size="6 0.008 0.001" pos="0 {i} 0.002" rgba="0.66 0.66 0.69 1"/>'
+    for i in range(-6, 7))
+
+SCENE_XML = """<mujoco><compiler angle="radian"/>
+<default><geom contype="0" conaffinity="0"/></default>
+<worldbody>
+<light name="key" dir="-0.35 -0.55 -1" diffuse="0.95 0.95 0.95" ambient="0.55 0.55 0.55"/>
+<geom name="ground" type="plane" size="6 6 0.02" rgba="0.86 0.86 0.88 1"/>
+""" + _GRID_LINES + """
+<geom name="conflict" type="cylinder" size="0.4 0.005" pos="0 0 0.003" rgba="0.90 0.85 0.50 1"/>
+<camera name="cam" mode="fixed" pos="0 -7 5.2" xyaxes="1 0 0 0 0.74 0.67" fovy="45"/>
+<body name="car_a" pos="0 -3.0 0.16" euler="0 0 1.5708"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.14" rgba="0.12 0.47 0.71 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+<body name="car_b" pos="3.0 0 0.16" euler="0 0 0"><joint type="free"/>
+<geom type="box" size="0.5 0.26 0.14" rgba="0.95 0.50 0.08 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32 -0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+<geom type="cylinder" size="0.08 0.05" pos="-0.32  0.28 0" euler="1.5708 0 0" rgba="0.1 0.1 0.1 1"/>
+</body>
+</worldbody></mujoco>"""
+
+
+def render_scene_png(out_path):
+    """MuJoCo 离屏渲染单帧路口双车场景静态图（网格地面 + 冲突点，斜俯视）。
+
+    mujoco 为可选依赖：未安装或离屏 GL 不可用时返回 None，不阻断曲线图产物。
+    """
+    try:
+        import mujoco
+    except (ImportError, OSError, RuntimeError):
+        print("未安装 mujoco，跳过仿真场景静态图（曲线图与数据表不受影响）")
+        return None
+
+    os.environ.setdefault('MUJOCO_GL', 'egl')
+    model = mujoco.MjModel.from_xml_string(SCENE_XML)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+
+    renderer = mujoco.Renderer(model, 480, 640)
+    renderer.update_scene(data, camera='cam')
+    Image.fromarray(renderer.render()).save(out_path)
+    try:
+        renderer.close()
+    except AttributeError:
+        pass
+    return os.path.getsize(out_path)
+
+
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     rng = np.random.default_rng(SEED)
@@ -198,6 +257,10 @@ def main():
         frames[0].save(os.path.join(RESULTS_DIR, 'conflict_demo.gif'),
                        save_all=True, append_images=frames[1:],
                        duration=duration, loop=0, optimize=True)
+
+    scene_png = render_scene_png(os.path.join(RESULTS_DIR, 'conflict_scene.png'))
+    if scene_png:
+        print(f"仿真场景静态图已写入 conflict_scene.png（{scene_png // 1024} KB）")
 
     for r in rows:
         print(f"{r['scenario']:10s} P(conflict)={r['conflict_prob']:.3f} "

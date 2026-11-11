@@ -9,7 +9,7 @@
 | 操作系统 | Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面） |
 | 仿真平台 | 纯 Python 数值仿真，不依赖 ROS / Gazebo / CARLA |
 | Python | 3.10 ~ 3.12 |
-| 依赖 | `numpy`、`matplotlib`、`Pillow` |
+| 依赖 | `numpy`、`matplotlib`、`Pillow`；`mujoco` 为可选依赖，仅用于路口双车场景静态图 |
 
 ### 1.1 安装依赖
 
@@ -25,6 +25,8 @@
 
    ```bash
    pip install numpy matplotlib Pillow
+   # 可选：安装 mujoco 后才会输出路口双车场景静态图
+   pip install mujoco>=3.0
    ```
 
 ### 1.2 验证环境
@@ -136,6 +138,12 @@ conflict = np.mean(np.abs(dt) < T_SAFE)
 ### 5.5 演示动图
 
 ![冲突时序演示动图](../img/ground/conflict_demo.gif)
+
+### 5.6 路口双车场景静态图
+
+![路口双车场景静态图](../img/ground/conflict_scene.png)
+
+MuJoCo 离屏渲染的十字交叉口静态场景：蓝色 A 车沿纵向车道、橙色 B 车沿横向车道驶向中心冲突点（浅色圆盘），网格地面斜俯视，车体配色与时空轨迹图一致。该图仅用于展示路口交汇几何关系，冲突概率与时序结论以 5.1–5.4 的蒙特卡洛统计与指标表为准；未安装 `mujoco` 或离屏 GL 不可用时自动跳过本图，不影响曲线图、动图与数据表。
 
 ## 6. 结论
 

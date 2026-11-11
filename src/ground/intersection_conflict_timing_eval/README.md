@@ -8,7 +8,7 @@
 
 - 操作系统：Windows 10 / 11（Linux 亦可，脚本后台出图，无需图形界面）
 - Python：3.10 ~ 3.12
-- 依赖：见 `requirements.txt`（`numpy`、`matplotlib`、`Pillow`）
+- 依赖：见 `requirements.txt`（`numpy`、`matplotlib`、`Pillow`；`mujoco` 可选，仅用于路口双车场景静态图）
 
 ## 运行步骤
 
@@ -39,6 +39,7 @@
 | `conflict_probability.png` | 冲突概率随限速变化曲线（无让行 / 让行 2s / 让行 4s） |
 | `conflict_spacetime.png` | 两车位置-时间轨迹与冲突点示意 |
 | `conflict_demo.gif` | 限速扫描时冲突概率曲线演示动图 |
+| `conflict_scene.png` | MuJoCo 离屏渲染的路口双车场景静态图（网格地面斜俯视，配色与时空轨迹图一致） |
 | `metrics.csv` | 各情景冲突概率、到达时差均值 / 标准差 / 95 分位数据表 |
 
 > 输出图片命名与教程图片目录 `docs/img/ground/` 中的文件名一致，提交文档时将 `results/` 下的图片直接复制过去即可，无需改名。
