@@ -115,10 +115,10 @@ carla_lane_following/
 
 ## 运行效果（截图 / 动图）
 
-![语义分割车道巡线（带车道线高亮与转向标注） 动图](docs/img/ground/carla_lane_following_run.gif)
+![语义分割车道巡线（带车道线高亮与转向标注） 动图](../../../docs/img/ground/carla_lane_following_run.gif)
 
-![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf1](docs/img/ground/carla_lane_following_kf1.png)
+![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf1](../../../docs/img/ground/carla_lane_following_kf1.png)
 
-![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf2](docs/img/ground/carla_lane_following_kf2.png)
+![语义分割车道巡线（带车道线高亮与转向标注） 截图 kf2](../../../docs/img/ground/carla_lane_following_kf2.png)
 
 > 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。
