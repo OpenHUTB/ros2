@@ -119,6 +119,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [膝关节肌肉骨骼仿真与轨迹跟踪](./musculoskeletal/knee_tracking.md)
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
+* [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
 * [毫米波雷达目标跟踪与前碰撞预警（TTC/FCW）](./ground/radar_ttc_fcw.md) —— 用多普勒速度分离静止杂波，多帧关联估计 TTC 并输出 SAFE/WARN/STOP 分级预警
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
 
