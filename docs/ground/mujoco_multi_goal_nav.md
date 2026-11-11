@@ -58,8 +58,11 @@ roslaunch mujoco_multi_goal_nav main.launch nogui:=true duration:=60
 ```
 
 launch 通过 `share/<pkg>/launch/main.launch` 调用 `lib/<pkg>/main.py`；
-`main.py` 内置路径回退（脚本同目录 → `../share/<pkg>/` → 环境变量
-`MUJOCO_MULTI_GOAL_SCENE`），因此从安装空间启动也能找到 `scene.xml`。
+`main.py` 内置路径回退（环境变量 `MUJOCO_MULTI_GOAL_SCENE` → 脚本同目录 →
+`../share/<pkg>/`），因此从安装空间启动也能找到 `scene.xml`。
+
+launch 的 `nogui` 参数默认 `false`（带窗口），判定时按字符串比较（`true` / `1` / `yes` 视为真），
+传 `nogui:=false` 不会被误当成开无窗口模式。
 
 ## 参数
 
