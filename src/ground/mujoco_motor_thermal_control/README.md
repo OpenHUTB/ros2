@@ -42,4 +42,4 @@ launch 从安装目录启动 `main.py` 对应入口，仿真结束时输出小�
 
 ## 仿真画面
 
-![MuJoCo 差速小车](https://raw.githubusercontent.com/sirius185/ros2/feat/mujoco-motor-thermal-evaluation/docs/img/ground/motor_thermal_control/mujoco_demo.png)
+![MuJoCo 差速小车电机热模型运行画面](../../../docs/img/ground/mujoco_motor_thermal_model/mujoco_demo.png)
