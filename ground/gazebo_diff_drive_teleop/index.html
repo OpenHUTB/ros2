@@ -325,15 +325,47 @@
 </li>
 <li class="toctree-l1 current"><a class="reference internal current" href="#">Gazebo 差速小车键盘控制</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#_1">实验简介</a>
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 项目概述</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_2">运行环境</a>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 差速运动学基础</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_3">运行步骤</a>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 系统架构与控制链路</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">效果说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#4">4. 目录结构</a>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_5">说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 运行环境与依赖</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 构建与运行</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 键盘操作</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 示教录制与纯追踪回放</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 状态机</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 轨迹采样</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 回放方向</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#84">8.4 纯追踪控制</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#85">8.5 安全与终端处理</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参数说明</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10-tf">10. 话题、TF 与状态</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 实测结果与复现方法</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#12">12. 故障排查</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#13">13. 已知限制与后续工作</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#14">14. 与仓库已有模块的区别</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#15">15. 说明</a>
 </li>
 </ul>
 </li>
@@ -811,40 +843,438 @@
 </div>
 <div class="document" itemscope="itemscope" itemtype="http://schema.org/Article" role="main">
 <div class="section" itemprop="articleBody">
-<div><h1 id="gazebo">Gazebo 差速小车键盘控制</h1>
-<h2 id="_1">实验简介</h2>
-<p>本实验使用 ROS2 Jazzy + Gazebo Harmonic 搭建一个差速驱动小车，通过 <code>gz_ros2_control</code> 硬件接口配合 <code>diff_drive_controller</code> 控制器，将 <code>/cmd_vel</code>（<code>geometry_msgs/Twist</code>）速度指令换算为左右轮转速，实现小车在 Gazebo 中的运动。模块提供键盘遥控与自动巡航两种运行方式：键盘节点向 <code>/cmd_vel</code> 发布消息遥控小车前进、后退、转向；自动巡航节点持续发布固定速度指令使小车沿圆形轨迹行驶。同时可在仿真中观察 <code>/odom</code> 里程计话题与 <code>odom -&gt; base_footprint</code> 的 <code>/tf</code> 坐标变换。</p>
-<h2 id="_2">运行环境</h2>
+<div><h1 id="gazebo">Gazebo 差速小车键盘控制与示教录制/路径回放</h1>
+<h2 id="1">1. 项目概述</h2>
+<p>本项目在 ROS 2 Jazzy + Gazebo Harmonic 中搭建两轮差速驱动小车，使用 <code>gz_ros2_control</code> 作为 Gazebo 与 <code>ros2_control</code> 之间的硬件接口，使用 <code>diff_drive_controller</code> 把速度指令换算成左右轮转速。</p>
+<p>模块包含以下运行方式：</p>
+<ul>
+<li><strong>自动巡航</strong>：<code>auto_drive</code> 持续发布固定速度，演示差速小车的圆弧运动。</li>
+<li><strong>键盘遥控</strong>：<code>teleop_keyboard</code> 发布 <code>/cmd_vel</code>，手动驾驶小车。</li>
+<li><strong>示教录制与路径回放</strong>：记录键盘驾驶产生的 <code>/odom</code> 轨迹，再使用纯追踪控制器沿记录路径自动返回，支持循环往返和手动接管。</li>
+</ul>
+<p>本项目的重点是示教数据的采样、路径存储和闭环轨迹跟踪。所有实验都使用真实的 Gazebo 物理仿真和 <code>/odom</code> 里程计数据，不使用离线伪造轨迹。</p>
+<h2 id="2">2. 差速运动学基础</h2>
+<p>设左右轮半径均为 <code>r = 0.06 m</code>，轮距 <code>L = 0.36 m</code>，左右轮角速度为 <code>ωL</code>、<code>ωR</code>，则车体线速度 <code>v</code> 和角速度 <code>ω</code> 为：</p>
+<div class="highlight"><pre><span></span><code>v = r (ωL + ωR) / 2
+ω = r (ωR - ωL) / L
+</code></pre></div>
+<p>反过来，给定 <code>/cmd_vel</code> 的 <code>linear.x = v</code> 和 <code>angular.z = ω</code>，控制器计算左右轮目标转速：</p>
+<div class="highlight"><pre><span></span><code>ωL = (v - ω L / 2) / r
+ωR = (v + ω L / 2) / r
+</code></pre></div>
+<p>因此：</p>
+<ul>
+<li><code>v &gt; 0, ω = 0</code>：直行；</li>
+<li><code>v &lt; 0, ω = 0</code>：倒车；</li>
+<li><code>v = 0, ω &gt; 0</code>：原地左转；</li>
+<li><code>v &gt; 0, ω &gt; 0</code>：左转弯。</li>
+</ul>
+<p>差速底盘不能直接横移，转弯半径由 <code>R = v / ω</code> 决定。</p>
+<h2 id="3">3. 系统架构与控制链路</h2>
+<div class="highlight"><pre><span></span><code>键盘
+  │
+  ▼
+功能节点（teleop_keyboard / auto_drive / teach_replay）
+  │  geometry_msgs/Twist
+  ▼
+/cmd_vel
+  │
+  ▼
+controller_bridge
+  │  geometry_msgs/TwistStamped
+  ▼
+/diff_drive_controller/cmd_vel
+  │
+  ▼
+diff_drive_controller ──▶ gz_ros2_control ──▶ Gazebo 差速小车
+  │
+  └── /diff_drive_controller/odom ──▶ controller_bridge ──▶ /odom
+</code></pre></div>
+<p>Gazebo Harmonic 的 <code>/clock</code> 通过 <code>ros_gz_bridge</code> 桥接到 ROS 2。控制器启用了 <code>use_sim_time</code>，如果没有 <code>/clock</code>，控制器不会更新里程计，功能节点也就无法闭环。</p>
+<p><code>controller_bridge</code> 解决了 Jazzy 的一个接口差异：</p>
+<ul>
+<li>Jazzy 的 <code>diff_drive_controller</code> 订阅 <code>geometry_msgs/TwistStamped</code>；</li>
+<li>框架中的键盘节点和自动巡航节点发布 <code>geometry_msgs/Twist</code>；</li>
+<li>bridge 把 Twist 转成带时间戳的 TwistStamped，并把控制器里程计转发为标准 <code>/odom</code>。</li>
+</ul>
+<h2 id="4">4. 目录结构</h2>
+<div class="highlight"><pre><span></span><code>gazebo_diff_drive_teleop/
+├── main.sh                                  # 一键编译/启动
+├── README.md
+├── package.xml / setup.py / setup.cfg
+├── config/diff_drive_controller.yaml        # 控制器参数
+├── launch/gazebo_diff_drive_teleop.launch.py
+├── urdf/diff_drive_robot.urdf.xacro         # 车体、轮子、ros2_control
+└── gazebo_diff_drive_teleop/
+    ├── __init__.py
+    ├── teleop_keyboard.py                   # 键盘遥控
+    ├── auto_drive.py                        # 自动巡航
+    ├── teach_replay.py                  # 本项目新增功能
+    └── controller_bridge.py                 # Twist/TwistStamped 与 odom 桥
+</code></pre></div>
+<h2 id="5">5. 运行环境与依赖</h2>
 <ul>
 <li>Ubuntu 24.04</li>
-<li>ROS2 Jazzy</li>
-<li>Gazebo Harmonic（<code>gz sim</code>）</li>
-<li>依赖：ros_gz、ros2_control、ros2_controllers、gz_ros2_control、robot_state_publisher、xacro</li>
+<li>ROS 2 Jazzy</li>
+<li>Gazebo Harmonic</li>
+<li>Python 3.12</li>
+<li>依赖：<code>ros_gz_sim</code>、<code>ros_gz_bridge</code>、<code>ros2_control</code>、<code>ros2_controllers</code>、<code>gz_ros2_control</code>、<code>robot_state_publisher</code>、<code>xacro</code></li>
 </ul>
-<h2 id="_3">运行步骤</h2>
-<div class="highlight"><pre><span></span><code><span class="c1"># 1. 安装依赖</span>
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-jazzy-ros-gz<span class="w"> </span>ros-jazzy-ros2-control<span class="w"> </span>ros-jazzy-ros2-controllers<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-jazzy-ros-gz<span class="w"> </span>ros-jazzy-ros-gz-bridge<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ros-jazzy-ros2-control<span class="w"> </span>ros-jazzy-ros2-controllers<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>ros-jazzy-gz-ros2-control<span class="w"> </span>ros-jazzy-robot-state-publisher<span class="w"> </span>ros-jazzy-xacro
-
-<span class="c1"># 2. 将 gazebo_diff_drive_teleop 包放入工作空间 src 目录，然后一键运行</span>
-bash<span class="w"> </span>main.sh<span class="w">          </span><span class="c1"># 默认自动巡航演示（小车沿圆形轨迹行驶）</span>
-bash<span class="w"> </span>main.sh<span class="w"> </span>manual<span class="w">   </span><span class="c1"># 仅启动仿真，另开终端用键盘控制</span>
 </code></pre></div>
-<p>键盘按键：<code>w</code>/<code>↑</code> 前进、<code>x</code>/<code>↓</code> 后退、<code>a</code>/<code>←</code> 左转、<code>d</code>/<code>→</code> 右转、<code>s</code>/空格 停止、<code>+</code>/<code>-</code> 调整线速度、<code>q</code> 或 <code>Ctrl-C</code> 退出（退出前自动停车）。</p>
-<p>运行后 Gazebo 窗口出现蓝色小车，自动巡航模式下小车沿圆形轨迹行驶。可另开终端查看话题：</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>list<span class="w">          </span><span class="c1"># 查看 /cmd_vel /odom /tf 等话题</span>
-ros2<span class="w"> </span>topic<span class="w"> </span>info<span class="w"> </span>/cmd_vel<span class="w"> </span><span class="c1"># 查看话题类型与发布订阅关系</span>
-ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/odom<span class="w">    </span><span class="c1"># 查看里程计数据</span>
+<h2 id="6">6. 构建与运行</h2>
+<p>在模块所在工作空间根目录执行：</p>
+<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>main.sh<span class="w">                 </span><span class="c1"># 自动巡航</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>manual<span class="w">          </span><span class="c1"># 仅启动仿真</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>teach<span class="w"> </span><span class="c1"># 本项目功能</span>
 </code></pre></div>
-<p><img alt="Gazebo 差速小车键盘控制" src="../../img/ground/gazebo_diff_drive_teleop.png"/></p>
-<h2 id="_4">效果说明</h2>
+<p>也可以手动构建：</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/jazzy/setup.bash
+colcon<span class="w"> </span>build<span class="w"> </span>--base-paths<span class="w"> </span>src<span class="w"> </span>--packages-select<span class="w"> </span>gazebo_diff_drive_teleop
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+ros2<span class="w"> </span>launch<span class="w"> </span>gazebo_diff_drive_teleop<span class="w"> </span>gazebo_diff_drive_teleop.launch.py<span class="w"> </span>demo:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>只启动 Gazebo 服务端、不打开 GUI：</p>
+<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>main.sh<span class="w"> </span>teach<span class="w"> </span>gz_args:<span class="o">=</span><span class="s1">'-r -s'</span>
+</code></pre></div>
+<p><code>main.sh</code> 的后台/前台分工是有意的：<code>ros2 launch</code> 不会把终端 TTY 传给子节点，因此键盘节点必须由 <code>main.sh</code> 在前台通过 <code>ros2 run</code> 启动，才能在终端读取按键。</p>
+<h2 id="7">7. 键盘操作</h2>
+<p>通用驾驶按键：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>w</code> / <code>↑</code></td>
+<td>前进</td>
+</tr>
+<tr>
+<td><code>x</code> / <code>↓</code></td>
+<td>后退</td>
+</tr>
+<tr>
+<td><code>a</code> / <code>←</code></td>
+<td>左转</td>
+</tr>
+<tr>
+<td><code>d</code> / <code>→</code></td>
+<td>右转</td>
+</tr>
+<tr>
+<td><code>s</code> / 空格</td>
+<td>停止</td>
+</tr>
+<tr>
+<td><code>q</code> / <code>Ctrl-C</code></td>
+<td>退出（恢复终端并发送零速度）</td>
+</tr>
+</tbody>
+</table>
+<p>本项目功能按键：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>r</code></td>
+<td>开始 / 结束录制（重新开始会清空旧轨迹）</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>开始 / 暂停回放</td>
+</tr>
+<tr>
+<td><code>l</code></td>
+<td>循环往返开关</td>
+</tr>
+<tr>
+<td><code>c</code></td>
+<td>清空轨迹</td>
+</tr>
+<tr>
+<td><code>s</code> / 空格</td>
+<td>停止；回放中暂停回放</td>
+</tr>
+<tr>
+<td><code>+</code> / <code>-</code></td>
+<td>调整线速度</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8">8. 示教录制与纯追踪回放</h2>
+<h3 id="81">8.1 状态机</h3>
+<p><code>teach_replay</code> 有三个状态：</p>
+<ol>
+<li><strong>manual</strong>：键盘驾驶，不记录也不回放。</li>
+<li><strong>record</strong>：键盘驾驶，同时按采样规则把 <code>/odom</code> 位姿追加到路径。</li>
+<li><strong>replay</strong>：暂停键盘速度指令，由纯追踪控制器生成 <code>/cmd_vel</code>。</li>
+</ol>
+<p>按 <code>r</code> 在 manual 和 record 之间切换；按 <code>p</code> 从 manual 或 record 进入 replay；按方向键、<code>s</code> 或 <code>c</code> 可以手动接管/停止。</p>
+<h3 id="82">8.2 轨迹采样</h3>
+<p>路径点不是按固定频率无脑记录，而是满足以下任一条件才追加：</p>
+<div class="highlight"><pre><span></span><code>两点距离 &gt;= record_min_distance (0.05 m)
+或 两点航向差 &gt;= record_min_angle (0.10 rad)
+</code></pre></div>
+<p>这样可以减少静止和低速抖动造成的重复点，同时保留转弯细节。路径保存在 <code>odom</code> 坐标系中，最大点数由 <code>max_path_points</code> 限制。</p>
+<h3 id="83">8.3 回放方向</h3>
+<p>开始回放时，节点比较当前位姿到路径首尾端点的距离，选择较近的端点作为起点，向另一端回放。因此：</p>
 <ul>
-<li>控制节点发布 <code>/cmd_vel</code>（Twist）→ <code>diff_drive_controller</code> 换算成左右轮目标转速 → <code>gz_ros2_control</code> 驱动 Gazebo 中的关节 → 小车运动；</li>
-<li>差速控制原理：左右轮转速相同时直行，不同时转向，形成圆弧轨迹；</li>
-<li>控制器同时发布 <code>/odom</code> 里程计与 <code>odom -&gt; base_footprint</code> 的 <code>/tf</code> 变换，可用于后续建图与导航。</li>
+<li>录制结束后通常在路径末端，按 <code>p</code> 会自动反向沿原路返回起点；</li>
+<li>如果从起点附近开始，则正向回放；</li>
+<li>开启 <code>l</code> 后，到达端点会反转方向，在线路两端之间循环。</li>
 </ul>
-<h2 id="_5">说明</h2>
-<p>代码与文档使用 deepseek v4-pro大模型辅助编写，已核对并确认，对提交内容负责。</p></div>
+<h3 id="84">8.4 纯追踪控制</h3>
+<p>每一控制周期：</p>
+<ol>
+<li>在当前路径上找到离车体最近的点 <code>nearest</code>；</li>
+<li>沿回放方向搜索第一个与车体距离不小于 <code>lookahead_distance</code> 的点作为前视目标；</li>
+<li>把目标点变换到车体坐标系：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>dx = target.x - pose.x
+dy = target.y - pose.y
+local_x =  cos(yaw) dx + sin(yaw) dy
+local_y = -sin(yaw) dx + cos(yaw) dy
+distance = hypot(local_x, local_y)
+heading = atan2(local_y, local_x)
+</code></pre></div>
+<ol>
+<li>当 <code>|heading| &gt; 1.0 rad</code> 时先原地转向；否则按距离比例给线速度，按航向误差比例给角速度；</li>
+<li>距离目标端点小于 <code>goal_tolerance</code> 时停车；循环模式则反转方向。</li>
+</ol>
+<p>线速度、角速度都受 <code>linear_speed</code>、<code>angular_speed</code> 限制，接近端点时额外减速，避免过冲。</p>
+<h3 id="85">8.5 安全与终端处理</h3>
+<ul>
+<li>节点启动时要求标准输入是 TTY；否则给出明确错误，避免在后台静默失败。</li>
+<li>使用 cbreak 模式读取单个按键，退出时恢复原终端设置。</li>
+<li>正常退出和 Ctrl-C 都会连续发送零速度。</li>
+<li>底层的 <code>main.sh</code> 在后台启动 Gazebo，在前台启动键盘节点；退出后清理整个仿真进程组。</li>
+</ul>
+<h2 id="9">9. 参数说明</h2>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>linear_speed</code></td>
+<td>0.3 m/s</td>
+<td>最大线速度</td>
+</tr>
+<tr>
+<td><code>angular_speed</code></td>
+<td>1.0 rad/s</td>
+<td>最大角速度</td>
+</tr>
+<tr>
+<td><code>publish_rate</code></td>
+<td>20 Hz</td>
+<td>控制/发布频率</td>
+</tr>
+<tr>
+<td><code>record_min_distance</code></td>
+<td>0.05 m</td>
+<td>采样最小距离</td>
+</tr>
+<tr>
+<td><code>record_min_angle</code></td>
+<td>0.10 rad</td>
+<td>采样最小转角</td>
+</tr>
+<tr>
+<td><code>lookahead_distance</code></td>
+<td>0.25 m</td>
+<td>前视距离</td>
+</tr>
+<tr>
+<td><code>goal_tolerance</code></td>
+<td>0.12 m</td>
+<td>端点判定阈值</td>
+</tr>
+<tr>
+<td><code>replay_linear_gain</code></td>
+<td>1.2</td>
+<td>线速度比例增益</td>
+</tr>
+<tr>
+<td><code>replay_angular_gain</code></td>
+<td>2.0</td>
+<td>角速度比例增益</td>
+</tr>
+<tr>
+<td><code>max_path_points</code></td>
+<td>5000</td>
+<td>最大路径点数</td>
+</tr>
+<tr>
+<td><code>loop_replay</code></td>
+<td>false</td>
+<td>默认是否循环</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-tf">10. 话题、TF 与状态</h2>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>键盘/回放速度指令</td>
+</tr>
+<tr>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>差速控制器里程计</td>
+</tr>
+<tr>
+<td><code>/teach_replay/path</code></td>
+<td><code>nav_msgs/Path</code></td>
+<td>示教路径，可在 RViz2 中显示</td>
+</tr>
+<tr>
+<td><code>/teach_replay/markers</code></td>
+<td><code>visualization_msgs/MarkerArray</code></td>
+<td>起点、终点、当前前视目标</td>
+</tr>
+<tr>
+<td><code>/diff_drive_controller/cmd_vel</code></td>
+<td><code>geometry_msgs/TwistStamped</code></td>
+<td>控制器原生输入</td>
+</tr>
+<tr>
+<td><code>/diff_drive_controller/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>控制器原生里程计</td>
+</tr>
+</tbody>
+</table>
+<p>TF 关系：</p>
+<div class="highlight"><pre><span></span><code>odom -&gt; base_footprint -&gt; base_link -&gt; left_wheel / right_wheel / caster
+</code></pre></div>
+<p>其中 <code>odom -&gt; base_footprint</code> 由 <code>diff_drive_controller</code> 发布，其余由 <code>robot_state_publisher</code> 根据 URDF 发布。</p>
+<p>RViz2 查看路径：Fixed Frame 设为 <code>odom</code>，添加 <code>/teach_replay/path</code> 的 Path 显示，添加 <code>/teach_replay/markers</code> 的 MarkerArray 显示。</p>
+<h2 id="11">11. 实测结果与复现方法</h2>
+<p>实验方法：在无界面 Gazebo 中启动完整控制链路，通过伪终端向前台节点注入按键；订阅 <code>/odom</code> 和功能话题，记录真实位姿/电量/状态后计算指标。这样既复现了人工键盘操作，又避开了 GUI 截图对测量精度的影响。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：启动仿真</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>teach<span class="w"> </span>gz_args:<span class="o">=</span><span class="s1">'-r -s'</span>
+
+<span class="c1"># 终端 2：观察话题</span>
+ros2<span class="w"> </span>control<span class="w"> </span>list_controllers
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/odom
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/clock<span class="w"> </span>--once
+</code></pre></div>
+<p>真实 Gazebo 闭环测试结果：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>示教路径点</td>
+<td>39</td>
+</tr>
+<tr>
+<td>回放耗时</td>
+<td>10.04 s</td>
+</tr>
+<tr>
+<td>终点距起点</td>
+<td>0.110 m</td>
+</tr>
+<tr>
+<td>端点阈值</td>
+<td>0.12 m</td>
+</tr>
+<tr>
+<td>原模块回归测试</td>
+<td>29 个路径点，终点误差 0.118 m，PASS</td>
+</tr>
+</tbody>
+</table>
+<p>图中蓝色为手动示教轨迹，橙色为回放实际轨迹；右侧曲线显示回放过程中到起点的距离收敛到阈值以内。两次运行（39 点/0.110 m 与 29 点/0.118 m）都通过了端点判定，说明结果不是单次偶然。</p>
+<p><img alt="示教轨迹与回放轨迹对比 真实运行数据" src="../../img/ground/gazebo_diff_drive_teleop_teach_replay.png"/></p>
+<h2 id="12">12. 故障排查</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>排查方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>小车不动</td>
+<td>用 <code>ros2 control list_controllers</code> 确认 <code>diff_drive_controller</code> 为 <code>active</code>；确认 <code>/clock</code> 有数据</td>
+</tr>
+<tr>
+<td>没有 <code>/odom</code></td>
+<td>检查 <code>clock_bridge</code> 和 <code>controller_bridge</code> 是否启动；<code>ros2 topic info /diff_drive_controller/odom</code></td>
+</tr>
+<tr>
+<td>键盘节点读不到按键</td>
+<td>必须在交互式终端中运行；<code>main.sh</code> 已经用前台 <code>ros2 run</code> 启动，不要把它放到后台</td>
+</tr>
+<tr>
+<td>控制器提示 Velocity command timed out</td>
+<td>确认 <code>/cmd_vel</code> 仍在发布；bridge 是否存活</td>
+</tr>
+<tr>
+<td>功能节点启动后立即退出</td>
+<td>查看终端是否提示“标准输入不是交互式终端”；改用 <code>main.sh</code> 或交互式终端</td>
+</tr>
+<tr>
+<td><code>colcon build</code> 报重复包名</td>
+<td><code>main.sh</code> 已使用 <code>--base-paths src</code>，避免扫描工作空间外的备份目录</td>
+</tr>
+<tr>
+<td>路径点太少，按 p 没反应</td>
+<td>确认录制期间确实在移动，并适当减小 <code>record_min_distance</code>；路径少于 2 点时节点会拒绝回放</td>
+</tr>
+<tr>
+<td>回放轨迹偏离或画龙</td>
+<td>先检查 <code>/odom</code> 是否持续更新；再降低 <code>linear_speed</code>、增大 <code>lookahead_distance</code> 或减小 <code>replay_linear_gain</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="13">13. 已知限制与后续工作</h2>
+<ul>
+<li>位姿全部来自轮式里程计，长时间运行会有累积漂移；没有使用激光雷达、相机或全局定位。</li>
+<li>仿真场景为平面，未考虑坡道、打滑、悬挂和轮胎形变。</li>
+<li>回放依赖里程计坐标系，<code>/odom</code> 漂移会直接反映到路径和终点误差；没有做全局重定位。</li>
+<li>测试在单台 Ubuntu 24.04 + Jazzy 机器上完成；合并前仍需第二台机器复现。</li>
+<li>后续可以加入 IMU/EKF 融合、<code>slam_toolbox</code> 或 Nav2，把当前功能扩展到真实定位与导航。</li>
+</ul>
+<h2 id="14">14. 与仓库已有模块的区别</h2>
+<ul>
+<li><code>gazebo_diff_drive_teleop</code> 原模块只做键盘速度和自动巡航，没有轨迹记忆。</li>
+<li><code>odom_trace_recorder</code> 能记录里程计并发布 Path，但只回放记录结果，不做闭环路径跟踪。</li>
+<li>本项目在录制后使用纯追踪闭环生成速度指令，能根据实时位姿修正偏差，属于真正的轨迹回放。</li>
+</ul>
+<h2 id="15">15. 说明</h2>
+<p>代码与文档使用 AI 大模型辅助编写。作者已核对代码、参数和实验数据，并对提交内容负责。</p></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
