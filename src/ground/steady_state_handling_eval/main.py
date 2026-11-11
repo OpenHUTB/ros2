@@ -202,11 +202,17 @@ def render_demo_frame(info, v_cur, out_size=(800, 420)):
 # ---------- MuJoCo 三车场景演示（可选依赖） ----------
 # 三辆车沿直道行驶，横向偏移仅用于可视化三种操稳倾向：不足转向外推、
 # 中性保持、过度转向内摆；定量结论以自行车模型曲线与指标表为准。
+_GRID_LINES = ''.join(
+    f'<geom type="box" size="0.008 6 0.001" pos="{i} 0 0.002" rgba="0.66 0.66 0.69 1"/>'
+    f'<geom type="box" size="6 0.008 0.001" pos="0 {i} 0.002" rgba="0.66 0.66 0.69 1"/>'
+    for i in range(-6, 7))
+
 SCENE_XML = """<mujoco><compiler angle="radian"/>
 <default><geom contype="0" conaffinity="0"/></default>
 <worldbody>
 <light name="key" dir="-0.35 -0.55 -1" diffuse="0.95 0.95 0.95" ambient="0.55 0.55 0.55"/>
-<geom name="ground" type="plane" size="6 6 0.02" rgba="0.78 0.78 0.80 1"/>
+<geom name="ground" type="plane" size="6 6 0.02" rgba="0.86 0.86 0.88 1"/>
+""" + _GRID_LINES + """
 <camera name="cam" mode="fixed" pos="0 -7 5.2" xyaxes="1 0 0 0 0.74 0.67" fovy="45"/>
 <body name="car_f" pos="0 -2.0 0.16"><joint type="free"/>
 <geom type="box" size="0.5 0.26 0.14" rgba="0.12 0.47 0.71 1"/>
@@ -312,6 +318,42 @@ def render_scene_gif(info, out_path, frames_n=24):
     return _write_scene_gif(frames, out_path)
 
 
+def render_scene_png(info, out_path):
+    """MuJoCo 离屏渲染单帧三车场景静态图（网格地面 + 车体，斜俯视）。
+
+    mujoco 为可选依赖：未安装或离屏 GL 不可用时返回 None，不阻断曲线图产物。
+    """
+    try:
+        import mujoco
+    except (ImportError, OSError, RuntimeError):
+        print("未安装 mujoco，跳过仿真场景静态图（曲线图与数据表不受影响）")
+        return None
+
+    os.environ.setdefault('MUJOCO_GL', 'egl')
+    model = mujoco.MjModel.from_xml_string(SCENE_XML)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+
+    qadr = {}
+    for key, bn in _SCENE_BODY.items():
+        jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, bn)
+        qadr[key] = model.jnt_qposadr[jid]
+    for key in _SCENE_BODY:
+        qa = qadr[key]
+        data.qpos[qa:qa + 3] = [0.0, _SCENE_LANE[key], 0.16]
+        data.qpos[qa + 3:qa + 7] = [1.0, 0.0, 0.0, 0.0]
+    mujoco.mj_forward(model, data)
+
+    renderer = mujoco.Renderer(model, 480, 640)
+    renderer.update_scene(data, camera='cam')
+    Image.fromarray(renderer.render()).save(out_path)
+    try:
+        renderer.close()
+    except AttributeError:
+        pass
+    return os.path.getsize(out_path)
+
+
 def main():
     os.makedirs(RESULTS_DIR, exist_ok=True)
     rows, info = summarize()
@@ -340,6 +382,10 @@ def main():
     scene_size = render_scene_gif(info, os.path.join(RESULTS_DIR, 'handling_scene_demo.gif'))
     if scene_size:
         print(f"仿真场景动图已写入 handling_scene_demo.gif（{scene_size // 1024} KB）")
+
+    scene_png = render_scene_png(info, os.path.join(RESULTS_DIR, 'handling_scene.png'))
+    if scene_png:
+        print(f"仿真场景静态图已写入 handling_scene.png（{scene_png // 1024} KB）")
 
     for r in rows:
         print(f"{r['layout']:16s} K={r['steer_gradient_K']:.5f} "
