@@ -254,6 +254,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
 * [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
+* [轮速传感器 + 龙伯格观测器估计传动轴扭角](./ground/wheel_speed_observer.md) —— 只测轮速即可反推传动轴扭角，给出带宽-噪声的量化权衡
+
 * [轮胎滑移率-附着曲线](./ground/tire_slip_curve.md) —— 用简化刷子轮胎模型输出滑移率与附着系数关系，标出峰值附着与 ABS 目标滑移带
 * [横向载荷转移与侧翻裕度](./ground/rollover_margin.md) —— 用 SSF、临界侧向加速度和内外侧轮垂向力算「这车会不会翻」，纯代数、不依赖 CARLA
 * [工况能耗与续航核算](./ground/drive_cycle_energy.md) —— 把一段行驶工况拆成滚阻、风阻、制动与动能项，算清楚电花在哪、还能跑多远

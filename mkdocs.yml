@@ -247,6 +247,7 @@ nav:
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
     - VRU 冲突风险图: './ground/vru_conflict_risk_map.md'
     - 里程计健康监视: './ground/odom_health_monitor.md'
+    - 轮速传感器 + 龙伯格观测器估计传动轴扭角: './ground/wheel_speed_observer.md'
     - 轮胎滑移率-附着曲线: './ground/tire_slip_curve.md'
     - 横向载荷转移与侧翻裕度: './ground/rollover_margin.md'
     - 工况能耗与续航核算: './ground/drive_cycle_energy.md'
