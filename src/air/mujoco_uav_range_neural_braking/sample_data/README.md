@@ -2,6 +2,8 @@
 
 `train_sample.csv`、`validation_sample.csv` 和 `test_sample.csv` 分别从对应数据集合均匀抽取 24 行，仅用于查看字段，不用于训练。完整数据可在模块根目录使用以下命令重建：
 
+四个控制器评测指标的参考快照保存在 `sample_data/metrics/`。重新运行 `evaluate.py` 时，生成文件写入模块根目录的 `results/`，该目录由 Git 忽略。 / Reference snapshots for the four controller evaluation metrics are stored in `sample_data/metrics/`. Running `evaluate.py` writes fresh outputs to the module's root `results/` directory, which Git ignores.
+
 ```
 python dataset.py --seed 2026 --episodes 30 --output datasets
 ```
