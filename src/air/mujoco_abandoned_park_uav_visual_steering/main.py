@@ -29,21 +29,32 @@ def build_parser() -> argparse.ArgumentParser:
         )
     )
     parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        default=MODULE_ROOT / "models" / "weights" / "lightweight_steering_cnn.pt",
+        help="CNN checkpoint / CNN 模型权重",
+    )
+    parser.add_argument(
+        "--images",
+        type=Path,
+        help="replay image directory / 回放图像目录",
+    )
+    parser.add_argument(
         "--mode",
-        choices=("simulation", "collect", "quality"),
+        choices=("simulation", "keyboard", "collect", "quality", "train", "replay", "evaluate"),
         default="simulation",
         help="runtime mode / 运行模式",
     )
     parser.add_argument(
         "--config",
         type=Path,
-        default=MODULE_ROOT / "config" / "simulation.yaml",
+        default=None,
         help="simulation YAML / 仿真 YAML 配置",
     )
     parser.add_argument(
         "--dataset-config",
         type=Path,
-        default=MODULE_ROOT / "config" / "dataset.yaml",
+        default=None,
         help="dataset YAML / 数据集 YAML 配置",
     )
     parser.add_argument(
@@ -55,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         type=Path,
-        default=MODULE_ROOT / "models" / "scene.xml",
+        default=None,
         help="MJCF scene / MJCF 场景文件",
     )
     parser.add_argument(
@@ -64,6 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=120,
         help="control steps / 控制步数",
     )
+    parser.add_argument("--epochs", type=_positive_int, default=8, help="training epochs / 训练轮数")
     parser.add_argument(
         "--steering",
         type=_unit_float,
@@ -77,21 +89,50 @@ def main(argv: list[str] | None = None) -> int:
     """Run a deterministic headless episode / 运行确定性的无窗口回合。"""
     args = build_parser().parse_args(argv)
     try:
-        config = SimulationConfig.from_yaml(args.config.resolve())
-        if args.mode == "collect":
-            quality = collect_dataset(
-                config,
-                DatasetConfig.from_yaml(args.dataset_config.resolve()),
-                args.model.resolve(),
-                args.output,
-            )
-            print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
-            return 0 if quality["status"] == "passed" else 3
+        if args.mode == "replay":
+            if args.images is None:
+                raise ValueError("--images is required for replay / replay 模式需要 --images")
+            from ros_node import replay_directory
+            print(json.dumps(replay_directory(args.checkpoint.resolve(), args.images.resolve()), ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.mode == "train":
+            from train import train
+            result = train(args.output.resolve(), args.checkpoint.parent.resolve(), args.epochs)
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 0
         if args.mode == "quality":
             quality = inspect_dataset(args.output.resolve())
             print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
             return 0 if quality["status"] == "passed" else 3
-        simulation = UavSimulation(args.model.resolve(), config)
+
+        config_path = (args.config.resolve() if args.config else _module_data("config/simulation.yaml"))
+        dataset_config_path = (args.dataset_config.resolve() if args.dataset_config else _module_data("config/dataset.yaml"))
+        model_path = args.model.resolve() if args.model else _module_data("models/scene.xml")
+        config = SimulationConfig.from_yaml(config_path)
+        if args.mode == "collect":
+            quality = collect_dataset(
+                config,
+                DatasetConfig.from_yaml(dataset_config_path),
+                model_path,
+                args.output,
+            )
+            print(json.dumps(quality, ensure_ascii=False, sort_keys=True))
+            return 0 if quality["status"] == "passed" else 3
+        if args.mode == "evaluate":
+            from evaluation import evaluate
+            print(json.dumps(evaluate(args.output.resolve(), args.checkpoint.resolve(), config_path=config_path, model_path=model_path, steps=args.steps), ensure_ascii=False, sort_keys=True))
+            return 0
+        if args.mode == "keyboard":
+            from navigation import keyboard_command
+            print("Keyboard mode / 键盘模式: W forward, A/D steer, S reverse, X stop")
+            for _ in range(args.steps):
+                key = input("key> ").strip() or "x"
+                speed, steering = keyboard_command(key)
+                simulation = UavSimulation(model_path, config)
+                simulation.step(steering)
+                print(json.dumps({"key": key, "speed": speed, "steering": steering}, ensure_ascii=False))
+            return 0
+        simulation = UavSimulation(model_path, config)
         for _ in range(args.steps):
             simulation.step(args.steering)
     except (FileNotFoundError, ValueError, RuntimeError) as error:
@@ -117,6 +158,18 @@ def _positive_int(text: str) -> int:
     return value
 
 
+def _module_data(relative_path: str) -> Path:
+    source_path = MODULE_ROOT / relative_path
+    if source_path.is_file():
+        return source_path
+    try:
+        from ament_index_python.packages import get_package_share_directory
+
+        return Path(get_package_share_directory("mujoco_abandoned_park_uav_visual_steering")) / relative_path
+    except (ImportError, LookupError) as error:
+        raise FileNotFoundError(f"module resource not found / 找不到模块资源: {relative_path}") from error
+
+
 def _unit_float(text: str) -> float:
     value = float(text)
     if not -1.0 <= value <= 1.0:
@@ -126,4 +179,3 @@ def _unit_float(text: str) -> float:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

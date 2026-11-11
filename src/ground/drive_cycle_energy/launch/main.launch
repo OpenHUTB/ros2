@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- 工况能耗与续航核算：所有参数都由 <arg> 声明并写回 <param>，
+       命令行可以直接覆盖，例如 roslaunch drive_cycle_energy main.launch regen_eff:=0.0 -->
+  <arg name="vehicle_mass"      default="1800.0" doc="整备质量，单位 kg"/>
+  <arg name="vehicle_c_rr"      default="0.012"  doc="滚动阻力系数，典型 0.010~0.015"/>
+  <arg name="vehicle_cd"        default="0.31"   doc="风阻系数，典型 0.28~0.35"/>
+  <arg name="vehicle_area"      default="2.2"    doc="迎风面积，单位 m²"/>
+  <arg name="vehicle_battery_kwh" default="60.0" doc="电池可用容量，单位 kWh"/>
+  <arg name="vehicle_regen_eff" default="0.6"    doc="再生制动回收效率，0~1"/>
+  <arg name="breakdown_tolerance" default="0.02" doc="能量分解相对偏差上限"/>
+  <arg name="regen_limit"       default="1.0"    doc="回收能量占制动能量的上限"/>
+  <arg name="publish_hz"        default="10.0"   doc="保活循环频率，单位 Hz"/>
+  <arg name="topic_report"      default="/energy/report"    doc="文字报告话题"/>
+  <arg name="topic_breakdown"   default="/energy/breakdown" doc="逐项能量 CSV 话题"/>
+  <arg name="topic_range"       default="/energy/range"     doc="满电续航话题，单位 km"/>
+
+  <rosparam command="load" file="$(find drive_cycle_energy)/config/drive_cycle_energy.yaml"/>
+
+  <param name="vehicle/mass"          value="$(arg vehicle_mass)"/>
+  <param name="vehicle/c_rr"          value="$(arg vehicle_c_rr)"/>
+  <param name="vehicle/cd"            value="$(arg vehicle_cd)"/>
+  <param name="vehicle/area"          value="$(arg vehicle_area)"/>
+  <param name="vehicle/battery_kwh"   value="$(arg vehicle_battery_kwh)"/>
+  <param name="vehicle/regen_eff"     value="$(arg vehicle_regen_eff)"/>
+  <param name="check/breakdown_tolerance" value="$(arg breakdown_tolerance)"/>
+  <param name="check/regen_limit"     value="$(arg regen_limit)"/>
+  <param name="rate/publish_hz"       value="$(arg publish_hz)"/>
+  <param name="topic/report"          value="$(arg topic_report)"/>
+  <param name="topic/breakdown"       value="$(arg topic_breakdown)"/>
+  <param name="topic/range"           value="$(arg topic_range)"/>
+
+  <node pkg="drive_cycle_energy" type="main.py" name="drive_cycle_energy"
+        output="screen"/>
+</launch>

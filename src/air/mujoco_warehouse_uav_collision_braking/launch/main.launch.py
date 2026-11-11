@@ -10,8 +10,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("scenario", default_value="static"),
         DeclareLaunchArgument("duration", default_value="8.0"),
+        DeclareLaunchArgument("cruise_speed", default_value="1.2"),
         DeclareLaunchArgument("output", default_value="/tmp/warehouse_braking"),
         Node(package="mujoco_warehouse_uav_collision_braking", executable="sensor_node", output="screen",
              parameters=[{"scenario": LaunchConfiguration("scenario"),
                           "duration": ParameterValue(LaunchConfiguration("duration"), value_type=float),
+                          "cruise_speed": ParameterValue(LaunchConfiguration("cruise_speed"), value_type=float),
                           "output": LaunchConfiguration("output")}])])

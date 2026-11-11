@@ -22,6 +22,8 @@ ros2 launch mujoco_warehouse_uav_collision_braking main.launch.py scenario:=cros
 ```
 
 Docker Desktop 运行方式：
+在模块目录构建并启动容器。输出目录通过挂载保存。
+Build and run the container from this module directory. Mount an output directory to retain results.
 
 ```bash
 docker build -t warehouse-uav:humble .
