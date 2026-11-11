@@ -12,7 +12,7 @@ MuJoCo 平面 2R 双自由度机械臂画正方形仿真：大臂 0.40 m、小�
 |---|---|
 | 操作系统 | Windows 11（本机）；Ubuntu 22.04（云主机，无独立显卡） |
 | Python | 3.10+（实测 Ubuntu 3.12.11 / Windows 3.13） |
-| 模拟器 | MuJoCo 3.17.0 |
+| 模拟器 | MuJoCo `>=3.2,<4.0`（本机实测 3.17.0） |
 | 关键依赖 | numpy（实测 Ubuntu 1.26.4 / Windows 2.5.4）；Pillow 仅录帧导出 GIF 时需要（Ubuntu 10.4.0）；MuJoCo 不在 apt 仓库，需 pip 安装 |
 | ROS | ROS 1 Noetic（catkin 包结构）。本包纯 Python + MuJoCo，不依赖任何 ROS 话题，`launch` 仅用于一键启动脚本；ROS 侧 `roslaunch` 未在本机端到端复跑，独立 Python 运行已实测通过 |
 | 渲染后端 | `MUJOCO_GL=glfw`；无显卡的虚拟机可配 Xvfb |
@@ -80,7 +80,7 @@ MuJoCo 正运动学与手写 IK 共用同一套杆长几何（`L1=0.40` / `L2=0.
 
 - 本实现是运动学回放，不调用 `mj_step`，不做动力学积分；XML 里的 `kp=100` / 阻尼 `1.0` 仅作模型定义，不经过执行器力矩闭环；
 - 仅验证肘向上构型；肘向下（`q2<0`）构型未测试；
-- 仅在 MuJoCo 3.17.0 上验证，更早版本未做回归；
+- 仅在 mujoco 3.17.0（`>=3.2,<4.0` 区间内）上验证，区间内其他版本与更早版本未做回归；
 - ROS 侧 `roslaunch` 未在本机端到端复跑，独立 Python 路径已实测通过。
 
 ## 文档

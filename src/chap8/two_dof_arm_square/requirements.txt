@@ -1,6 +1,6 @@
 # pip 依赖（MuJoCo 不在 apt 仓库里，独立运行与 ROS 运行共用这一份）
 # 安装：pip install -r requirements.txt
-# 两套实测环境（MuJoCo 3.17.0）：
+# 两套实测环境（mujoco 3.17.0，属 >=3.2,<4.0 区间）：
 #   Ubuntu 22.04 系统解释器 Python 3.12.11：numpy 1.26.4 / Pillow 10.4.0
 #   Windows 11 本机 Python 3.13：numpy 2.5.4（Pillow 未单独回归）
 # mujoco 用版本区间 >=3.2,<4.0 而非钉死单一版本：3.2 起提供 cp39 wheel，
