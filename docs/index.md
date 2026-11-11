@@ -148,7 +148,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
-* [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积，60 m 内召回率 1.0
+* [激光雷达点云 3D 目标检测与召回率评估](./ground/carla_lidar_obstacle_detection.md) —— 语义点云按实例分组 + 多帧累积；逐帧平均召回率 0.43（precision 0.65）
 * [自动驾驶代理](./ground/ad_agent.md)
 * [端到端神经网络图像驾驶](./ground/carla_end_to_end_nn.md)
 * [环岛汇入端到端驾驶（图像→控制）](./ground/carla_nn_roundabout_entry.md)
