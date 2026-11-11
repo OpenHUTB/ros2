@@ -102,6 +102,10 @@ src/air/drl_drone_path_planning/models/train_summary.json
 # 例外：人形 H1/H1_2 行走模块的 TorchScript 策略必须入库（137/143 KB，免重训）
 !src/humanoid/humanoid_h1_walk/weights/*.pt
 
+# 例外：语音指令模块的意图网络必须入库（304 KB，免重训）。
+# 只放行这一个文件：Whisper tiny（72 MB）走运行时下载，不进仓库。
+!src/humanoid/humanoid_voice_command/weights/intent_mlp.pt
+
 # 编辑器 / 系统（替代原来的 *.TXT：只列确认无用的文件，不再按扩展名一刀切）
 .vscode/
 .idea/
