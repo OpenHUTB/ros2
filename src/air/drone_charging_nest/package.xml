@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>drone_charging_nest</name>
+  <version>0.1.0</version>
+  <description>基于 MuJoCo 的无人机自主充电/机巢仿真</description>
+  <maintainer email="Chenjunhua-Dotcom@users.noreply.github.com">Chenjunhua-Dotcom</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+  <!-- mujoco 仅通过 pip 安装（rosdep 无对应键），见 requirements.txt / setup.py；
+       运行 ros2 launch 的 ROS 2 python 解释器也需要安装 requirements 中的依赖。 -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

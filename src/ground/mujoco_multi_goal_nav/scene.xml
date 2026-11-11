@@ -1,0 +1,23 @@
+<mujoco model="multi_goal">
+  <option timestep="0.005"/>
+  <visual>
+    <global offwidth="960" offheight="540"/>
+  </visual>
+  <worldbody>
+    <light name="sun" pos="0 0 5" dir="0 0 -1" diffuse="0.72 0.72 0.72"/>
+    <geom name="ground" type="plane" size="5 5 0.1" rgba="0.45 0.45 0.48 1" friction="1.0 0.1 0.1"/>
+
+    <!-- 三个目标点标记：仅用于可视化参照，不参与碰撞（contype / conaffinity = 0） -->
+    <geom name="goal1" type="cylinder" size="0.08 0.005" pos="1.5 1.0 0.005"
+          rgba="0.15 0.8 0.3 1" contype="0" conaffinity="0"/>
+    <geom name="goal2" type="cylinder" size="0.08 0.005" pos="-1.5 1.0 0.005"
+          rgba="0.95 0.75 0.15 1" contype="0" conaffinity="0"/>
+    <geom name="goal3" type="cylinder" size="0.08 0.005" pos="-1.5 -1.0 0.005"
+          rgba="0.85 0.35 0.75 1" contype="0" conaffinity="0"/>
+
+    <body name="car" pos="0 0 0.05">
+      <joint name="car_joint" type="free"/>
+      <geom name="chassis" type="box" size="0.1 0.08 0.05" rgba="0.2 0.5 0.8 1" mass="1.0"/>
+    </body>
+  </worldbody>
+</mujoco>

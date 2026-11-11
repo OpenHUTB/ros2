@@ -2,6 +2,7 @@
 import signal
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 
@@ -13,11 +14,16 @@ class AuvRectCruise(Node):
         # 速度发布器
         self.vel_pub = self.create_publisher(Twist, '/auv/cmd_vel', 10)
 
-        # 巡航参数
-        self.forward_speed = 2.5    # 前进/后退速度，默认1.0，数值越大越快
-        self.side_speed = 2.0       # 横向平移速度，默认0.8
-        self.forward_time = 10.0    # 直行持续时间
-        self.side_time = 20.0       # 横向持续时间
+        # 巡航参数：全部通过 ROS 参数暴露，可在 launch 或命令行覆盖
+        self.declare_parameter('forward_speed', 2.5)  # 前进/后退速度
+        self.declare_parameter('side_speed', 2.0)     # 横向平移速度
+        self.declare_parameter('forward_time', 10.0)  # 直行/后退持续时间
+        self.declare_parameter('side_time', 20.0)     # 横向平移持续时间
+
+        self.forward_speed = self.get_parameter('forward_speed').value
+        self.side_speed = self.get_parameter('side_speed').value
+        self.forward_time = self.get_parameter('forward_time').value
+        self.side_time = self.get_parameter('side_time').value
 
         # 状态机：0-前进  1-向右平移  2-后退  3-向左平移
         self.state = 0
@@ -75,10 +81,6 @@ class AuvRectCruise(Node):
         self.vel_pub.publish(Twist())
         self.get_logger().info('巡航节点停止，发布零速度指令')
 
-    def destroy_node(self):
-        self.publish_stop()
-        super().destroy_node()
-
 
 def main(args=None):
     rclpy.init(args=args)
@@ -86,16 +88,21 @@ def main(args=None):
 
     def handle_sigint(signum, frame):
         # rclpy 默认的 SIGINT 处理会先关闭 context，之后 publish 会失败，
-        # 所以在 context 仍有效时先发零速度
-        node.publish_stop()
+        # 这里只抛出异常，把发零速度的时机留到 finally
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGINT, handle_sigint)
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        # 若 context 已被外部关闭（如 launch 统一退出），此时 publish 会失败，
+        # 但仍要保证节点正常销毁
+        try:
+            node.publish_stop()
+        except Exception:
+            pass
         node.destroy_node()
         rclpy.shutdown()
 
