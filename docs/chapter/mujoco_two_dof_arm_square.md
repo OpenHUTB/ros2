@@ -64,10 +64,11 @@ q1 = atan2(y,x) - atan2(L2·sinq2, L1+L2·cosq2)
 
 ## 5. 运行
 
-在**包目录**下执行：
+在**包目录**下执行。先进入本包目录（按摆放二选一，进入后命令相同）：
 
 ```bash
-cd src/chap8/two_dof_arm_square
+# 仓库内 checkout：  cd src/chap8/two_dof_arm_square
+# catkin 工作空间：  cd ~/ws/src/two_dof_arm_square
 pip install -r requirements.txt
 python3 main.py              # 打开 MuJoCo 窗口，关闭窗口即退出
 python3 main.py --headless   # 无头模式，跑 1 圈后打印误差并退出
@@ -118,10 +119,10 @@ python3 main.py --headless   # 无头模式，跑 1 圈后打印误差并退出
 
 ## 9. 验证脚本
 
-在**包目录**（`src/chap8/two_dof_arm_square/`）下执行：
+在**包目录**下执行（仓库内为 `src/chap8/two_dof_arm_square/`，catkin 工作空间为 `~/ws/src/two_dof_arm_square/`）：
 
 ```bash
-cd src/chap8/two_dof_arm_square
+# 先进入本包目录，再执行：
 python3 test/verify_two_dof_arm_square.py ik     # 四顶点 IK 互查
 python3 test/verify_two_dof_arm_square.py clear  # 无头跑一圈并打印偏差
 python3 test/verify_two_dof_arm_square.py gui    # 实时渲染播放

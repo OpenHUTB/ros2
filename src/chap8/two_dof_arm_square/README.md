@@ -28,10 +28,11 @@ MuJoCo 平面 2R 双自由度机械臂画正方形仿真：大臂 0.40 m、小�
 
 ## 运行
 
-在**包目录**下执行：
+在**包目录**下执行。先进入本包目录（按你的摆放二选一，进入后下面命令相同）：
 
 ```bash
-cd src/chap8/two_dof_arm_square
+# 仓库内 checkout：  cd src/chap8/two_dof_arm_square
+# catkin 工作空间：  cd ~/ws/src/two_dof_arm_square
 pip install -r requirements.txt
 python3 main.py              # 打开 MuJoCo 窗口，关闭窗口即退出
 python3 main.py --headless   # 无头模式，跑 1 圈后打印误差并退出
