@@ -104,6 +104,23 @@
   "input": "18 lidar sectors (min+mean) + goal polar + speed + balance = 41",
   "input_dim": 41,
   "lr": 0.0012,
+  "meta": {
+    "arch": [
+      41,
+      128,
+      128,
+      8
+    ],
+    "batch": 64,
+    "config_hash": "f35edf8939bd75fd14d7543e261a6a4c52d8a2fc",
+    "created_utc": "2026-11-11T14:11:39Z",
+    "dataset_hash": "1a28588cce6ad6ee6495162556480aa3d4c40f67",
+    "epochs": 50,
+    "git_sha": "unversioned",
+    "lr": 0.0012,
+    "train_samples": 5412,
+    "train_seconds": 41.86
+  },
   "model": "planner_mlp",
   "per_class_accuracy": {
     "ahead": 0.973,

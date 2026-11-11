@@ -45,7 +45,17 @@ from humanoid_walk_nn.nn.mlp import MLP
 from humanoid_walk_nn.scenes import get_scene
 from humanoid_walk_nn.sim import HumanoidSim
 
-SUCCESS_RADIUS = 0.6          # m, goal tolerance
+SUCCESS_RADIUS = 0.60
+# The controller stops at C.GOAL_TOLERANCE (0.45 m); the harness counts a run
+# as successful when the final goal distance is <= 0.60 m, the acceptance bound
+# also used by tests/test_control.py.  ``final_error`` below is the
+# end-of-episode distance to the current goal for both harnesses.
+FINAL_ERROR_DEFINITION = ("distance from the final robot position to the current "
+                          "goal point (x,y) in metres")
+SUCCESS_DEFINITION = ("success when the final goal distance is <= %.2f m; the "
+                      "MissionController stops inside config.GOAL_TOLERANCE "
+                      "(%.2f m) so the reported final error is end-of-episode"
+                      % (SUCCESS_RADIUS, C.GOAL_TOLERANCE))
 
 _ACTION_ANGLES = np.arange(8, dtype=np.float64) * (math.pi / 4.0)
 
@@ -61,7 +71,16 @@ def clip_cmd(cmd) -> np.ndarray:
 
 
 def walking_guard(cmd, scan, beam_angles) -> np.ndarray:
-    """Balance + forward-clearance safety guard for the learned controllers."""
+    """Balance + forward hard-clearance guard applied to *every* controller.
+
+    The forward clearance is a hard constraint (not a soft slow-down): with
+    ``clear < HARD_CLEARANCE`` forward motion is forbidden and the robot turns
+    towards the larger side clearance, so a learned policy cannot walk into a
+    wall.  The 8/10-beam radars in this simulator see walls/cones/pillars/
+    pedestrians, so this is the same rule a real safety PLC would enforce.
+    """
+    HARD_CLEARANCE = 0.40          # m, never move forward closer than this
+    SOFT_CLEARANCE = 1.10          # m, slow down inside this distance
     cmd = np.asarray(cmd, dtype=np.float64).copy()
     v, omega = float(cmd[0]), float(cmd[1])
     # lateral balance: never command an unsafe v * omega product
@@ -69,18 +88,34 @@ def walking_guard(cmd, scan, beam_angles) -> np.ndarray:
     if scan is not None:
         scan = np.asarray(scan, dtype=np.float64)
         ang = np.asarray(beam_angles, dtype=np.float64)
+        # any-direction hard stop: the robot must not translate while anything
+        # is inside the safety envelope (a learned policy must not grind walls)
+        any_clear = float(scan.min())
+        if any_clear < HARD_CLEARANCE:
+            v = 0.0
+        elif any_clear < 0.75:
+            v = min(v, max(0.0, (any_clear - HARD_CLEARANCE) * 0.8))
         front = np.abs(ang) <= 0.60
         if bool(front.any()):
             clear = float(scan[front].min())
-            if clear < 1.10:
-                v = min(v, max(0.05, (clear - 0.15) * 0.85))
-            if clear < 0.55:
+            if clear < SOFT_CLEARANCE:
+                v = min(v, max(0.0, (clear - HARD_CLEARANCE) * 0.85))
+            if clear < HARD_CLEARANCE:
+                # hard stop: no forward motion inside the safety envelope
                 left = scan[ang > 0.35]
                 right = scan[ang < -0.35]
                 lm = float(left.min()) if left.size else C.LIDAR_RANGE_MAX
                 rm = float(right.min()) if right.size else C.LIDAR_RANGE_MAX
-                v = min(v, 0.15)
-                omega = C.MAX_TURN_RATE * 0.7 * (1.0 if lm >= rm else -1.0)
+                v = 0.0
+                if max(lm, rm) > HARD_CLEARANCE:
+                    omega = C.MAX_TURN_RATE * 0.7 * (1.0 if lm >= rm else -1.0)
+                else:
+                    omega = 0.0
+        # reverse guard: a learned policy must not back into a wall either
+        if v < 0.0:
+            rear = (np.abs(np.abs(ang) - math.pi) <= 0.60)
+            if bool(rear.any()) and float(scan[rear].min()) < HARD_CLEARANCE:
+                v = 0.0
     return clip_cmd([v, omega])
 
 
@@ -298,18 +333,30 @@ def aggregate(runs: List[Dict[str, object]]) -> Dict[str, object]:
     if not runs:
         return {}
     n = len(runs)
+
+    def _stats(key):
+        values = np.array([float(r[key]) for r in runs], dtype=np.float64)
+        return round(float(values.mean()), 3), round(float(values.std(ddof=0)), 3)
+
+    time_m, time_s = _stats("time")
+    coll_m, coll_s = _stats("collisions")
+    falls_m, falls_s = _stats("falls")
+    path_m, path_s = _stats("path_length")
+    err_m, err_s = _stats("final_error")
     return {
         "episodes": n,
         "success_rate": round(float(np.mean([1.0 if r["success"] else 0.0
                                              for r in runs])), 3),
-        "mean_time": round(float(np.mean([r["time"] for r in runs])), 2),
-        "mean_collisions": round(float(np.mean([r["collisions"]
-                                                for r in runs])), 2),
-        "mean_falls": round(float(np.mean([r["falls"] for r in runs])), 2),
-        "mean_path_length": round(float(np.mean([r["path_length"]
-                                                 for r in runs])), 2),
-        "mean_final_error": round(float(np.mean([r["final_error"]
-                                                 for r in runs])), 3),
+        "mean_time": round(time_m, 2),
+        "std_time": round(time_s, 2),
+        "mean_collisions": round(coll_m, 2),
+        "std_collisions": round(coll_s, 2),
+        "mean_falls": round(falls_m, 2),
+        "std_falls": round(falls_s, 2),
+        "mean_path_length": round(path_m, 2),
+        "std_path_length": round(path_s, 2),
+        "mean_final_error": round(err_m, 3),
+        "std_final_error": round(err_s, 3),
         # legacy aliases used by the shared docs tables
         "mean_final_depth_error": 0.0,
         "mean_final_alt_error": 0.0,
@@ -329,10 +376,9 @@ def load_model_metrics(models_dir: str) -> Dict[str, object]:
     for name in MODEL_NAMES:
         path = os.path.join(models_dir, name + ".json")
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as fh:
+            with open(path, "r", encoding="utf-8-sig") as fh:
                 out[name] = json.load(fh)
     return out
-
 
 def controllers_order(per_controller: Dict[str, Dict[str, object]]) -> List[str]:
     order = ["classical", "neural", "neural_two_level", "e2e"]
@@ -380,8 +426,10 @@ def main() -> int:
         for ctrl_idx, (name, controller) in enumerate(controllers.items()):
             scene_runs = []
             for ep in range(args.episodes):
-                seed = (args.seed + scene_idx * 1000 + ctrl_idx * 101
-                        + ep * 17)
+                # identical seed for every controller: same scene
+                # initialisation (poles/obstacles/cart phase/noise), so the
+                # comparison is within-subject rather than across random draws
+                seed = args.seed + scene_idx * 1000 + ep
                 result = run_episode(scene_name, controller, seed,
                                      args.max_seconds, args.sample_hz)
                 result.update({"controller": name, "episode": ep,
@@ -411,7 +459,15 @@ def main() -> int:
         "max_seconds": float(args.max_seconds),
         "sample_hz": float(args.sample_hz),
         "seed": int(args.seed),
-        "success_criteria": {"horizontal_m": SUCCESS_RADIUS},
+        "seed_policy": "one seed per scene+episode shared by every controller "
+                       "(args.seed + 1000*scene_index + episode)",
+        "success_criteria": {"horizontal_m": SUCCESS_RADIUS,
+                             "definition": SUCCESS_DEFINITION},
+        "final_error_definition": FINAL_ERROR_DEFINITION,
+        "safety_guard": "walking_guard applied to every controller: hard stop "
+                        "when any lidar beam is closer than 0.40 m (front and "
+                        "reverse sectors enforced), slow-down below 0.75 m, "
+                        "plus the balance limit |v*omega|",
         "beams": int(C.LIDAR_BEAMS),
         "controllers": per_controller,
         "model_metrics": load_model_metrics(args.models_dir),
@@ -441,20 +497,22 @@ def main() -> int:
                              r["falls"], r["path_length"], r["final_error"],
                              r["seed"]])
 
-    print("\nbenchmark summary (%.1f s):" % elapsed)
-    print("  %-16s %-10s %8s %8s %6s %6s %8s %8s"
-          % ("controller", "scene", "success", "time", "coll", "falls",
-             "path", "error"))
+    print("\nbenchmark summary (%.1f s, %d episodes/cell, one shared seed per "
+          "scene+episode):" % (elapsed, args.episodes))
+    print("  %-16s %-10s %8s %14s %12s %14s"
+          % ("controller", "scene", "success", "time(s)", "collisions",
+             "final_error(m)"))
     for name in controllers_order(per_controller):
         entry = per_controller.get(name, {}).get("scenes", {})
         for scene_name in scenes:
             s = entry.get(scene_name)
             if not s:
                 continue
-            print("  %-16s %-10s %8.2f %8.2f %6.1f %6.1f %8.2f %8.2f"
-                  % (name, scene_name, s["success_rate"], s["mean_time"],
-                     s["mean_collisions"], s["mean_falls"],
-                     s["mean_path_length"], s["mean_final_error"]))
+            print("  %-16s %-10s %8.2f %6.2f±%-5.2f %6.2f±%-5.2f %6.3f±%-5.3f"
+                  % (name, scene_name, s["success_rate"],
+                     s["mean_time"], s.get("std_time", 0.0),
+                     s["mean_collisions"], s.get("std_collisions", 0.0),
+                     s["mean_final_error"], s.get("std_final_error", 0.0)))
     print("wrote %s and %s" % (args.out, args.csv))
     return 0
 

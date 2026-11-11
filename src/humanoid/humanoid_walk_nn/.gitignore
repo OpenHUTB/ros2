@@ -24,3 +24,5 @@ Thumbs.db
 
 # recordings made locally (keep the published ones)
 media/*.log
+# per-frame ROS run logs (regenerate with main.sh slam_nav / benchmark)
+results/ros_*_slam_nav.json

@@ -10,6 +10,18 @@
   "mean_falls": 0.27,
   "mean_return": 0.748,
   "mean_steps": 84.3,
+  "meta": {
+    "arch": null,
+    "batch": null,
+    "config_hash": "f35edf8939bd75fd14d7543e261a6a4c52d8a2fc",
+    "created_utc": "2026-11-11T14:11:39Z",
+    "dataset_hash": "1a28588cce6ad6ee6495162556480aa3d4c40f67",
+    "epochs": null,
+    "git_sha": "unversioned",
+    "lr": null,
+    "train_samples": null,
+    "train_seconds": null
+  },
   "success_rate": 0.067,
   "train_seconds": 37.2,
   "train_steps": 17980
