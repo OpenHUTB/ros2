@@ -1,0 +1,43 @@
+name: Ground planner tests
+
+# 为两个已自带 ci/run_ci.sh 的地面规划/控制模块补 PR 级回归保护。
+# 两个模块都只依赖 numpy + matplotlib，不需要 ROS / 仿真器 / GPU。
+on:
+  push:
+    paths:
+      - 'src/ground/ros2_pure_pursuit/**'
+      - 'src/ground/ros2_astar_planner/**'
+      - '.github/workflows/ground_planner_tests.yml'
+  pull_request:
+    paths:
+      - 'src/ground/ros2_pure_pursuit/**'
+      - 'src/ground/ros2_astar_planner/**'
+      - '.github/workflows/ground_planner_tests.yml'
+
+jobs:
+  test:
+    name: ${{ matrix.module }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - ros2_pure_pursuit
+          - ros2_astar_planner
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        working-directory: src/ground/${{ matrix.module }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+
+      - name: Run local CI
+        working-directory: src/ground/${{ matrix.module }}
+        run: bash ci/run_ci.sh
