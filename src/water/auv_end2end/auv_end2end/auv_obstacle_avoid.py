@@ -116,7 +116,11 @@ def main(args=None):
 
     signal.signal(signal.SIGINT, handle_sigint)
     try:
-        rclpy.spin(node)
+        # 用带超时的 spin_once 循环，收到 SIGINT 后最多 0.1 s 就能返回；
+        # rclpy.spin 会一直阻塞在 C 层，launch 等不到退出会升级成 SIGKILL，
+        # 那样 finally 里的零速度指令就发不出去
+        while rclpy.ok():
+            rclpy.spin_once(node, timeout_sec=0.1)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
@@ -127,7 +131,12 @@ def main(args=None):
         except Exception:
             pass
         node.destroy_node()
-        rclpy.shutdown()
+        # 外部可能已经关闭 context，重复 shutdown 会抛异常
+        try:
+            if rclpy.ok():
+                rclpy.shutdown()
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':
