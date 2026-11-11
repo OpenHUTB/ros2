@@ -23,6 +23,16 @@ def test_height_recovers_after_displacement():
     assert abs(sim.observe()[2] - sim.scenario.height) < 0.005
 
 
+def test_invalid_ranging_commands_maximum_braking():
+    sim = Simulation(Scenario(speed=1.5), controller="range")
+    sim.data.sensor("front_range").data[0] = float("nan")
+
+    row = sim.step()
+
+    assert row["sensor_valid"] == 0
+    assert row["accel_m_s2"] == pytest.approx(-2.5)
+
+
 @pytest.mark.parametrize("changes", [{"speed": float("nan")}, {"duration": 0}, {"height": 0.1}])
 def test_invalid_scenario(changes):
     with pytest.raises(ValueError):
