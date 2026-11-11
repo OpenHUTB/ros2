@@ -89,9 +89,15 @@ class TimeOffsetEstimator(Node):
         self._trim()
 
     def _trim(self) -> None:
-        for buf in (self.imu_buf, self.cam_buf):
-            while buf and buf[0][0] < self._now() - self.window:
-                buf.popleft()
+        """按**消息时间戳**裁窗，不用节点时钟。
+
+        缓冲区以 ``header.stamp`` 为键，而时钟基准未必与节点时钟一致（设备
+        时钟、独立的 ``use_sim_time`` 来源、rosbag 回放的时钟）。拿
+        ``self._now()`` 去比消息时间戳，窗口要么永不裁（缓冲无限增长），
+        要么一裁到底。具体逻辑在 ``core.trim_buffers``，纯函数、可单测。
+        """
+
+        core.trim_buffers((self.imu_buf, self.cam_buf), self.window)
 
     def _now(self) -> float:
         return self.get_clock().now().nanoseconds * 1e-9

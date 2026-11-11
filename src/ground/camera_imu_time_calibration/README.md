@@ -55,7 +55,7 @@ python3 -m camera_imu_time_calibration.compare_attitude
 
 ```bash
 cd src/ground/camera_imu_time_calibration
-python3 -m unittest discover -s test -v      # 30 项，约 1.8 s
+python3 -m unittest discover -s test -v      # 34 项，约 1.5 s
 ```
 
 `test_core.py` 覆盖算法（22 项），`test_params.py` 用假节点覆盖参数读取（8 项），两者都不需要 ROS。
@@ -111,7 +111,7 @@ ros2 run camera_imu_time_calibration estimator_node --ros-args \
 | `camera_imu_time_calibration/synthetic_source_node.py` | 演示用合成数据源 |
 | `launch/main.launch.py` | 一键启动 |
 | `requirements.txt` | NumPy / Matplotlib 版本约束 |
-| `test/test_core.py` | 22 项算法单元测试 |
+| `test/test_core.py` | 26 项算法单元测试（含尺度比去零偏、滑窗裁剪口径） |
 | `test/test_params.py` | 8 项参数读取单元测试 |
 
 ## 主要结果（实跑数据，详见教程）
@@ -123,5 +123,5 @@ ROS 2 节点部分已由评审在 Ubuntu 22.04 + Humble 实跑，状态见教程
 * 偏移量 ±200 ms 全范围：斜率 1.0005，最大误差 **0.16 ms**，重复性 std 0.35 ms；
 * 同一 50 ms 偏移下姿态误差：未补偿 RMS **3.36°** → 补偿后 **0.72°**（降低 79%）；
 * IMU 零偏从 0 加到 0.5 rad/s，估计误差**完全不变**（去均值使其免疫）；
-* 相机角速度尺度误差 1.3 倍，偏移估计**不受影响**，且尺度比被独立估出（1.298）；
+* 相机角速度尺度误差 1.3 倍，偏移估计**不受影响**，且尺度比被独立估出（1.298）；尺度比用去均值回归，对陀螺常值零偏免疫；
 * 帧首时间戳的偏差等于 **$T_{exp}/2$**（曝光时长的一半，不是固定半帧）：30 Hz 下曝光 3.3 ms 时偏 -1.56 ms、曝光 33.3 ms 时偏 -16.70 ms；时间戳取曝光中点时误差恒为 0.07 ms，与曝光长短无关。

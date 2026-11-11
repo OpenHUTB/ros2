@@ -79,11 +79,61 @@ class TestEstimateOffset(unittest.TestCase):
         self.assertAlmostEqual(a['offset'], b['offset'], delta=0.001)
         self.assertAlmostEqual(b['scale'], 1.2, delta=0.02)
 
+    def test_scale_immune_to_gyro_bias(self):
+        """尺度比必须去均值回归（评审 @KKK555-MAX 指出）。
+
+        IMU 常值零偏让「截距为 0」的最小二乘产生偏置：零偏 0.05 rad/s 时
+        旧实现偏到 0.984（1.6%），而文档把 scale 当独立检查项用。互相关本来就是
+        去均值的，回归同口径后尺度比应与零偏无关。
+        """
+        scales = []
+        for bias in (0.0, 0.005, 0.05, 0.2):
+            _, res = core.trial(seed=0, offset=0.050, imu_bias=bias)
+            scales.append(res['scale'])
+        for s in scales:
+            self.assertAlmostEqual(s, 1.0, delta=0.005)
+        # 零偏从 0 拉到 0.2 rad/s，尺度比漂移应在千分之一量级
+        self.assertLess(max(scales) - min(scales), 0.001)
+
     def test_frame_start_timestamp_bias(self):
         """时间戳打在帧开始时，估计值会少半帧（30 Hz 时约 16.7 ms）。"""
         _, res = core.trial(seed=0, offset=0.050, cam_rate=30.0,
                             timestamp_at='start')
         self.assertAlmostEqual(res['offset'], 0.050 - 1.0 / 60.0, delta=0.003)
+
+
+class TestTrimBuffers(unittest.TestCase):
+    """缓冲区按消息时间戳裁窗，不依赖节点时钟（评审 @KKK555-MAX 指出）。"""
+
+    @staticmethod
+    def _buf(t0: float, dt: float, n: int):
+        from collections import deque
+        return deque((t0 + dt * k, (0.0, 0.0, 0.0)) for k in range(n))
+
+    def test_window_counts_from_message_stamp(self):
+        # 消息时间戳基准设在 1000 s（远早于节点时钟）：若按节点时钟裁，
+        # 整个缓冲区会被一次裁空，这里应保留最近 8 s
+        imu = self._buf(1000.0, 0.01, 1001)      # 100 Hz，10 s
+        cam = self._buf(1000.0, 0.1, 101)        # 10 Hz，10 s
+        core.trim_buffers((imu, cam), 8.0)
+        self.assertAlmostEqual(imu[0][0], 1002.0, delta=0.011)
+        self.assertAlmostEqual(cam[0][0], 1002.0, delta=0.101)
+        self.assertEqual(len(imu), 801)
+        self.assertEqual(len(cam), 81)
+
+    def test_both_windows_aligned_to_newest_stamp(self):
+        # 相机流滞后 5 s（断流或时间基准不同）：以最新消息时刻为准，
+        # 两路窗口落在同一时间跨度上
+        imu = self._buf(1000.0, 0.01, 1001)      # 到 1010 s
+        cam = self._buf(1000.0, 0.1, 51)         # 到 1005 s
+        core.trim_buffers((imu, cam), 8.0)
+        self.assertAlmostEqual(cam[0][0], 1002.0, delta=0.101)
+        self.assertLessEqual(cam[-1][0], 1010.0)
+
+    def test_empty_buffers_are_safe(self):
+        from collections import deque
+        core.trim_buffers((deque(), deque()), 8.0)      # 不应抛异常
+        core.trim_buffers((), 8.0)
 
 
 class TestExposureVsFramePeriod(unittest.TestCase):

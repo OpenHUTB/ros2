@@ -253,6 +253,25 @@ def _scan(t_cam, w_cam, t_imu, w_imu, lo: float, hi: float, step: float):
     return grid, rho
 
 
+def trim_buffers(buffers, window: float) -> None:
+    """按**消息时间戳**裁掉过旧样本（就地修改 deque）。
+
+    缓冲区以 ``header.stamp`` 为键，而时钟基准未必等于节点时钟（设备时钟、
+    独立的 ``use_sim_time`` 来源、rosbag 回放的时钟）。若拿节点时钟去比，
+    窗口要么永不裁（消息时间落后，缓冲无限增长），要么一裁到底（消息时间
+    超前）。这里以「所有缓冲区里最新的消息时间戳」为基准，既与任何外部
+    时钟无关，也让两路窗口对齐到同一时间跨度。
+    """
+
+    newest = max((buf[-1][0] for buf in buffers if buf), default=None)
+    if newest is None:
+        return
+    horizon = newest - window
+    for buf in buffers:
+        while buf and buf[0][0] < horizon:
+            buf.popleft()
+
+
 def estimate_offset(
     t_cam,
     w_cam,
@@ -291,7 +310,10 @@ def estimate_offset(
     fine_grid, fine_rho = _scan(t_cam, w_cam, t_imu, w_imu, lo, hi, fine_step)
     tau_hat = float(fine_grid[int(np.argmax(fine_rho))])
 
-    # 在估计偏移处用最小二乘求尺度比（相机 = scale * IMU）
+    # 在估计偏移处用最小二乘求尺度比（相机 = scale * IMU）。
+    # 必须逐轴去均值后再回归：IMU 侧存在常值零偏，带截距不为 0，用
+    # 「截距为 0」的最小二乘会让零偏漏进 scale（零偏 0.05 rad/s 时偏
+    # 到 0.984）。互相关那边本来就是去均值的，这里同口径才自洽。
     tq = t_cam - tau_hat
     ok = (tq >= t_imu[0]) & (tq <= t_imu[-1])
     scale = float("nan")
@@ -300,9 +322,11 @@ def estimate_offset(
         for axis in range(3):
             b[:, axis] = np.interp(tq[ok], t_imu, w_imu[:, axis])
         a = w_cam[ok]
-        den = float((b * b).sum())
+        a0 = a - a.mean(axis=0)
+        b0 = b - b.mean(axis=0)
+        den = float((b0 * b0).sum())
         if den > 0.0:
-            scale = float((a * b).sum() / den)
+            scale = float((a0 * b0).sum() / den)
 
     return {
         "offset": tau_hat,
