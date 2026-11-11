@@ -10,6 +10,7 @@ import random
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 # 必须在 import main / pygame 之前设置，避免 CI/无显示器机器尝试打开真实窗口
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -127,6 +128,37 @@ class HeadlessRunTest(unittest.TestCase):
                         "mean_distance", "final_distance", "path_length",
                         "collisions"):
                 self.assertEqual(ma[key], mb[key], key)
+
+    def test_mouse_click_is_ignored_in_manual_mode(self):
+        """README promises mouse target placement only in automatic mode."""
+
+        def run_with_events(tmp, events):
+            calls = 0
+
+            def event_get():
+                nonlocal calls
+                calls += 1
+                return list(events) if calls == 1 else []
+
+            with mock.patch.object(main.pygame.event, "get",
+                                   side_effect=event_get):
+                return main.run(headless=True, seed=42, duration=2.0,
+                                outdir=tmp, quiet=True)
+
+        switch_to_manual = main.pygame.event.Event(
+            main.pygame.KEYDOWN, key=main.pygame.K_SPACE)
+        click = main.pygame.event.Event(
+            main.pygame.MOUSEBUTTONDOWN, button=1, pos=(100, 500))
+
+        with tempfile.TemporaryDirectory() as baseline_dir, \
+                tempfile.TemporaryDirectory() as clicked_dir:
+            baseline = run_with_events(baseline_dir, [switch_to_manual])
+            clicked = run_with_events(clicked_dir, [switch_to_manual, click])
+
+        self.assertEqual(baseline["mode"], "manual")
+        for key in ("mean_distance", "final_distance", "path_length",
+                    "collisions"):
+            self.assertEqual(baseline[key], clicked[key], key)
 
 
 class DemoTest(unittest.TestCase):

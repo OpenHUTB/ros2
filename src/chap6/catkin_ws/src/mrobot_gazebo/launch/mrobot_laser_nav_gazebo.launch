@@ -1,7 +1,7 @@
 <launch>
 
     <!-- 设置 launch 文件的参数：加载本包 worlds 目录下自建的 my_room 世界 -->
-    <arg name="world_name" value="$(find mrobot_gazebo)/worlds/my_room.world"/>
+    <arg name="world_name" default="$(find mrobot_gazebo)/worlds/my_room.world"/>
     <arg name="paused" default="false"/>
     <arg name="use_sim_time" default="true"/>
     <arg name="gui" default="true"/>
