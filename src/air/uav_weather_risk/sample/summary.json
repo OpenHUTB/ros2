@@ -1,0 +1,21 @@
+{
+  "seed": 42,
+  "duration_s": 60.0,
+  "dt_s": 0.1,
+  "assessment_period_s": 0.5,
+  "assessments": 121,
+  "samples_per_assessment": 64,
+  "max_true_wind_mps": 12.56592315326423,
+  "max_fused_wind_mps": 10.78995929954155,
+  "max_tilt_deg": 33.23244222853458,
+  "max_control_saturation": 1.285045083141637,
+  "max_risk_score": 0.80703125,
+  "peak_risk_time_s": 33.5,
+  "level_counts": {
+    "NOMINAL": 78,
+    "CAUTION": 20,
+    "WARNING": 13,
+    "CRITICAL": 10
+  },
+  "record_sha256": "cc617e25db8757c115a4814a0f67be0a96bb798920478f211f5f3ac3d600173a"
+}

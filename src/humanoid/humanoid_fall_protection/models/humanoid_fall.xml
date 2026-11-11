@@ -1,0 +1,219 @@
+<!--
+  人形机器人（双足）平衡与抗扰恢复 MJCF 模型
+  ==========================================
+  与 humanoid_keyboard_control/models/humanoid_simple.xml 的区别（重要）：
+    本模型的底盘 freejoint **完全自由**，不做任何速度锁定——机器人靠双脚与地面的
+    真实接触、由站姿 PD 与平衡控制器维持站立。因此可直接施加外力扰动，观察
+    「被推 → 恢复 / 跌倒」的完整物理过程。
+
+  自由度：15 关节 = 双腿（髋 roll / 髋 pitch / 膝 pitch / 踝 pitch / 踝 roll）×2
+                   + 双臂（肩 pitch / 肘 pitch）×2 + 颈 ×1
+  驱动：全部 motor（关节力矩），站姿由 PD 伺服维持（见 sim_core.py）
+  扰动：对 torso 施加 6 维外力/力矩（data.xfrc_applied），见 sim_core.apply_push
+
+  模型与代码均为课程作业自建实现，形状参数参考 MuJoCo 官方 humanoid 的设计思路。
+-->
+<mujoco model="humanoid_balance">
+  <compiler angle="radian" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81" iterations="80" integrator="Euler"/>
+
+  <!-- 渲染设置：haze 作为背景/雾色，避免默认黑底导致图像过暗 -->
+  <visual>
+    <headlight diffuse="0.65 0.65 0.65" ambient="0.4 0.4 0.4" specular="0.15 0.15 0.15"/>
+    <rgba haze="0.62 0.68 0.76 1"/>
+    <map fogstart="2.5" fogend="12" znear="0.05"/>
+    <quality shadowsize="2048"/>
+  </visual>
+
+  <default>
+    <joint armature="0.02" damping="1.5" frictionloss="0.5"/>
+    <motor ctrlrange="-300 300" ctrllimited="true"/>
+    <geom type="capsule" density="1000" friction="1.1 0.5 0.15" contype="1" conaffinity="1"/>
+  </default>
+
+  <!-- 程序生成的天空盒与地面纹理（builtin，无需外部图片资源） -->
+  <asset>
+    <texture type="skybox" builtin="gradient" width="256" height="256"
+             rgb1="0.62 0.71 0.82" rgb2="0.18 0.22 0.30"/>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.30 0.32 0.36" rgb2="0.40 0.42 0.47"/>
+    <material name="grid" texture="grid" texrepeat="14 14" reflectance="0.12"/>
+  </asset>
+
+  <worldbody>
+    <!-- 光照：主光 + 补光，保证渲染图像明亮可读 -->
+    <light name="key" dir="-0.35 -0.55 -1" diffuse="0.95 0.95 0.95" ambient="0.55 0.55 0.55"/>
+    <light name="fill" dir="0.6 0.5 -0.7" diffuse="0.55 0.55 0.6" ambient="0.15 0.15 0.18"/>
+    <light name="rim" dir="0 -1 -0.2" diffuse="0.35 0.35 0.4" ambient="0.0 0.0 0.0"/>
+    <geom name="ground" type="plane" size="10 10 0.02" material="grid" rgba="0.72 0.72 0.75 1" friction="1.2 0.6 0.2"/>
+
+    <!-- 相机：跟踪躯干的第三视角，便于观察推扰与恢复 -->
+    <camera name="overview" mode="targetbody" target="torso" pos="1.55 2.35 0.85" fovy="45"/>
+    <camera name="side" mode="targetbody" target="torso" pos="0.15 2.6 0.5" fovy="45"/>
+    <!-- 固定侧视相机：演示动图 / 关键帧使用。相机不跟随机器人，因此「被推 → 偏移 →
+         恢复」整个过程在画面中可见（跟踪相机下位移会被抵消，只剩姿态变化）。
+         位于 −y 侧看向原点：x 轴（前进方向）在画面中向右 -->
+    <camera name="demo_side" mode="fixed" pos="0 -2.0 0.55" xyaxes="1 0 0 0 0 1" fovy="45"/>
+
+    <!-- 地面刻度参照（每 0.5 m 一根细柱，便于观察位移） -->
+    <body name="marker_x" pos="0.5 0 0.01">
+      <geom name="mx" type="box" size="0.01 0.6 0.005" rgba="0.75 0.75 0.78 1" contype="0" conaffinity="0"/>
+    </body>
+    <body name="marker_y" pos="0 0.5 0.01">
+      <geom name="my" type="box" size="0.6 0.01 0.005" rgba="0.75 0.75 0.78 1" contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- 质心参考线：采集素材时由 main.py 移到「初始质心正下方」，用于在图中读出
+         质心水平位移。无质量、无碰撞，不影响仿真结果 -->
+    <body name="marker_ref" pos="0 0 0.012">
+      <geom name="mref" type="box" size="0.012 0.30 0.004" density="0"
+            rgba="0.96 0.96 0.99 1" contype="0" conaffinity="0"/>
+    </body>
+
+    <!-- ==================== 人形机器人 ==================== -->
+    <!-- 初始根高 1.088 m：双脚底面恰好接近地面，避免下落冲击 -->
+    <body name="root" pos="0 0 1.088">
+      <freejoint name="root"/>
+
+      <!-- 骨盆 -->
+      <geom name="pelvis" type="box" size="0.10 0.13 0.06" pos="0 0 0.0" rgba="0.95 0.55 0.1 1" mass="6"/>
+
+      <!-- ===== 左腿 ===== -->
+      <body name="hip_l" pos="-0.02 0.16 -0.05">
+        <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+        <joint name="hip_roll_l" axis="1 0 0" range="-0.5 0.5"/>
+        <body name="hip2_l" pos="0 0 0.0">
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="hip_pitch_l" axis="0 1 0" range="-1.7 1.7"/>
+          <body name="thigh_l" pos="0 0 -0.18">
+            <geom name="thigh_geom_l" fromto="0 0 0 0 0 -0.34" size="0.055" rgba="0.95 0.55 0.1 1" mass="3.2"/>
+            <!-- 视觉补块：把大腿上端补到髋关节处（零质量、无碰撞，不影响物理） -->
+            <geom name="thigh_fill_l" fromto="0 0 0 0 0 0.18" size="0.055" density="0"
+                  rgba="0.95 0.55 0.1 1" contype="0" conaffinity="0"/>
+            <body name="knee_l" pos="0 0 -0.34">
+              <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="knee_l" axis="0 1 0" range="-2.5 0"/>
+              <body name="shin_l" pos="0 0 -0.16">
+                <geom name="shin_geom_l" fromto="0 0 0 0 0 -0.30" size="0.045" rgba="0.95 0.55 0.1 1" mass="2.2"/>
+                <!-- 视觉补块：把小腿上端补到膝关节处 -->
+                <geom name="shin_fill_l" fromto="0 0 0 0 0 0.16" size="0.05" density="0"
+                      rgba="0.95 0.55 0.1 1" contype="0" conaffinity="0"/>
+                <body name="ankle_l" pos="0 0 -0.30">
+                  <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+                  <joint name="ankle_pitch_l" axis="0 1 0" range="-0.9 0.9"/>
+                  <body name="foot_l" pos="0.03 0 -0.03">
+                    <joint name="ankle_roll_l" axis="1 0 0" range="-0.6 0.6"/>
+                    <!-- 脚掌：加大前后长度以获得更大的踝关节力矩权限 -->
+                    <geom name="foot_geom_l" type="box" size="0.11 0.07 0.025" rgba="0.3 0.3 0.35 1" mass="1.0"
+                          friction="1.4 0.7 0.2"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ===== 右腿（对称） ===== -->
+      <body name="hip_r" pos="-0.02 -0.16 -0.05">
+        <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+        <joint name="hip_roll_r" axis="1 0 0" range="-0.5 0.5"/>
+        <body name="hip2_r" pos="0 0 0.0">
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="hip_pitch_r" axis="0 1 0" range="-1.7 1.7"/>
+          <body name="thigh_r" pos="0 0 -0.18">
+            <geom name="thigh_geom_r" fromto="0 0 0 0 0 -0.34" size="0.055" rgba="0.95 0.55 0.1 1" mass="3.2"/>
+            <geom name="thigh_fill_r" fromto="0 0 0 0 0 0.18" size="0.055" density="0"
+                  rgba="0.95 0.55 0.1 1" contype="0" conaffinity="0"/>
+            <body name="knee_r" pos="0 0 -0.34">
+              <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="knee_r" axis="0 1 0" range="-2.5 0"/>
+              <body name="shin_r" pos="0 0 -0.16">
+                <geom name="shin_geom_r" fromto="0 0 0 0 0 -0.30" size="0.045" rgba="0.95 0.55 0.1 1" mass="2.2"/>
+                <geom name="shin_fill_r" fromto="0 0 0 0 0 0.16" size="0.05" density="0"
+                      rgba="0.95 0.55 0.1 1" contype="0" conaffinity="0"/>
+                <body name="ankle_r" pos="0 0 -0.30">
+                  <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+                  <joint name="ankle_pitch_r" axis="0 1 0" range="-0.9 0.9"/>
+                  <body name="foot_r" pos="0.03 0 -0.03">
+                    <joint name="ankle_roll_r" axis="1 0 0" range="-0.6 0.6"/>
+                    <geom name="foot_geom_r" type="box" size="0.11 0.07 0.025" rgba="0.3 0.3 0.35 1" mass="1.0"
+                          friction="1.4 0.7 0.2"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ===== 躯干 + 双臂 + 头 ===== -->
+      <!-- 外力扰动施加在本 body 上（data.xfrc_applied） -->
+      <body name="torso" pos="0 0 0.08">
+        <geom name="torso_geom" type="box" size="0.11 0.09 0.20" pos="0 0 0.20" rgba="0.95 0.55 0.1 1" mass="14"/>
+
+        <!-- 左臂 -->
+        <body name="arm_l" pos="-0.10 0.11 0.40">
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="shoulder_pitch_l" axis="0 1 0" range="-1.5 1.5"/>
+          <body name="upper_l" pos="0 0 -0.14">
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+            <geom name="upper_geom_l" fromto="0 0 0 0 0 -0.28" size="0.035" rgba="0.95 0.55 0.1 1" mass="1.0"/>
+            <body name="elbow_l" pos="0 0 -0.28">
+              <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="elbow_l" axis="0 1 0" range="-2.0 0"/>
+              <body name="fore_l" pos="0 0 -0.14">
+                <geom name="fore_geom_l" fromto="0 0 0 0 0 -0.28" size="0.03" rgba="0.95 0.55 0.1 1" mass="0.7"/>
+              </body>
+            </body>
+          </body>
+        </body>
+
+        <!-- 右臂 -->
+        <body name="arm_r" pos="-0.10 -0.11 0.40">
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="shoulder_pitch_r" axis="0 1 0" range="-1.5 1.5"/>
+          <body name="upper_r" pos="0 0 -0.14">
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+            <geom name="upper_geom_r" fromto="0 0 0 0 0 -0.28" size="0.035" rgba="0.95 0.55 0.1 1" mass="1.0"/>
+            <body name="elbow_r" pos="0 0 -0.28">
+              <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+              <joint name="elbow_r" axis="0 1 0" range="-2.0 0"/>
+              <body name="fore_r" pos="0 0 -0.14">
+                <geom name="fore_geom_r" fromto="0 0 0 0 0 -0.28" size="0.03" rgba="0.95 0.55 0.1 1" mass="0.7"/>
+              </body>
+            </body>
+          </body>
+        </body>
+
+        <!-- 头 -->
+        <body name="head" pos="0 0 0.40">
+          <inertial pos="0 0 0" mass="0.05" diaginertia="0.001 0.001 0.001"/>
+          <joint name="neck" axis="0 1 0" range="-0.6 0.6"/>
+          <body name="head_box" pos="0 0 0.05">
+            <geom name="head_geom" type="sphere" size="0.09" rgba="0.3 0.3 0.35 1" mass="1.2"/>
+            <camera name="front_camera" pos="0 0 0.10" xyaxes="1 0 0 0 1 0" fovy="60"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="hip_roll_l" joint="hip_roll_l"/>
+    <motor name="hip_pitch_l" joint="hip_pitch_l"/>
+    <motor name="knee_l" joint="knee_l"/>
+    <motor name="ankle_pitch_l" joint="ankle_pitch_l"/>
+    <motor name="ankle_roll_l" joint="ankle_roll_l"/>
+    <motor name="hip_roll_r" joint="hip_roll_r"/>
+    <motor name="hip_pitch_r" joint="hip_pitch_r"/>
+    <motor name="knee_r" joint="knee_r"/>
+    <motor name="ankle_pitch_r" joint="ankle_pitch_r"/>
+    <motor name="ankle_roll_r" joint="ankle_roll_r"/>
+    <motor name="shoulder_pitch_l" joint="shoulder_pitch_l"/>
+    <motor name="elbow_l" joint="elbow_l"/>
+    <motor name="shoulder_pitch_r" joint="shoulder_pitch_r"/>
+    <motor name="elbow_r" joint="elbow_r"/>
+    <motor name="neck" joint="neck"/>
+  </actuator>
+</mujoco>
