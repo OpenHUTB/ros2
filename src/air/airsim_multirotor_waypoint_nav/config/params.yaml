@@ -15,7 +15,7 @@ simulator:
 flight:
   takeoff_height: 6.0       # 起飞后悬停高度（米，NED 里是 -z）
   speed: 4.0                # 巡航速度 m/s
-  waypoints:                # 相对起飞点的偏移（x 东、y 北，单位米）
+  waypoints:                # 相对起飞点的偏移（AirSim NED：x 指北、y 指东，单位米）
     - [25.0, 0.0]
     - [25.0, 25.0]
     - [0.0, 25.0]
@@ -33,3 +33,5 @@ evaluation:
 
 output:
   save_dir: "docs"
+  capture_images: true       # 用 simGetImages 抓机载视角图，供 PR 动图使用
+  image_interval: 1.0        # 截图间隔（秒）
