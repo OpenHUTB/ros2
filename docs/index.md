@@ -466,7 +466,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
-* [A* 路径规划初步验证](./water/rov_astar_planner.md)
+* [声呐数据滤波初步验证](./water/rov_sonar_filter.md)
 
 
 
