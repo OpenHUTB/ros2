@@ -1,0 +1,7 @@
+lidar_features:
+  ros__parameters:
+    scan_topic: /scan
+    marker_topic: /lidar_features
+    split_threshold: 0.08
+    min_points: 4
+    max_gap: 0.5

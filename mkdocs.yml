@@ -201,6 +201,7 @@ nav:
     - 列车 ATO 自动运行与站台精确停车: './ground/train_ato_stop.md'
     - 多车协同编队（CARLA）: './ground/carla_platoon.md'
     - 扭转控制: './ground/twist_to_control.md'
+    - ROS2 激光线段提取与门洞检测: './ground/ros2_lidar_features.md'
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
