@@ -17,6 +17,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*')),
+        (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
     ],
     install_requires=['setuptools'],
     tests_require=['pytest'],
@@ -25,6 +26,7 @@ setup(
         'console_scripts': [
             'auv_obstacle_avoid = auv_end2end.auv_obstacle_avoid:main',
             'auv_rect_cruise = auv_end2end.auv_rect_cruise:main',
+            'trajectory_recorder = auv_end2end.trajectory_recorder:main',
         ],
     },
 )
