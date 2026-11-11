@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from forklift_slam_nav.simulator import yaw_from_freejoint
+from forklift_slam_nav.simulation_math import yaw_from_freejoint
 
 
 class FreeJointYawTest(unittest.TestCase):

@@ -20,6 +20,15 @@ docker run --rm -it --name forklift-slam-nav forklift-slam-nav:humble
 ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: map}, pose: {position: {x: 2.5, y: 2.5}, orientation: {w: 1.0}}}}"
 ```
 
+## 离线单元测试
+
+平面位姿推进与 freejoint 航向换算位于纯 Python 模块，可在不安装 ROS 2 或 MuJoCo 的环境中运行测试：
+
+```bash
+cd src/ground/forklift_slam_nav
+python3 -m unittest discover -s test -v
+```
+
 ## 话题与坐标系
 
 - `/scan`：`sensor_msgs/LaserScan`，360 个水平射线，坐标系 `laser`。

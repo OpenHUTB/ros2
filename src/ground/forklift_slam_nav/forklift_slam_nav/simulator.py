@@ -8,11 +8,7 @@ from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 from sensor_msgs.msg import LaserScan
 from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
-
-
-def yaw_from_freejoint(qpos, adr):
-    qw, qx, qy, qz = qpos[adr + 3:adr + 7]
-    return math.atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz))
+from forklift_slam_nav.simulation_math import advance_planar_pose, yaw_from_freejoint
 
 
 class MujocoRobot(Node):
@@ -46,9 +42,16 @@ class MujocoRobot(Node):
     def tick(self):
         dt = 0.05
         yaw = yaw_from_freejoint(self.data.qpos, self.qpos)
-        yaw += self.yaw_rate * dt
-        self.data.qpos[self.qpos] += self.speed * math.cos(yaw) * dt
-        self.data.qpos[self.qpos + 1] += self.speed * math.sin(yaw) * dt
+        x, y, yaw = advance_planar_pose(
+            self.data.qpos[self.qpos],
+            self.data.qpos[self.qpos + 1],
+            yaw,
+            self.speed,
+            self.yaw_rate,
+            dt,
+        )
+        self.data.qpos[self.qpos] = x
+        self.data.qpos[self.qpos + 1] = y
         self.data.qpos[self.qpos + 2] = 0.22
         self.data.qpos[self.qpos + 3:self.qpos + 7] = (math.cos(yaw / 2), 0, 0, math.sin(yaw / 2))
         self.data.qvel[self.model.jnt_dofadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, 'base_free')]:] = 0
