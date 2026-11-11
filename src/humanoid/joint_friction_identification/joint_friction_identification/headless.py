@@ -73,7 +73,6 @@ def run_experiment(
         (out_dir / "summary.json").write_text(
             json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
-            newline="\n",
         )
     if make_plots:
         if figure_dir is None:
