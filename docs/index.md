@@ -317,6 +317,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [水下机器人物理仿真与 6-DOF 键盘运动控制](./water/rov_physical_simulation.md)
 
 * [水下多传感器感知与 3D 轨迹跟踪控制](./water/rov_trajectory_tracking.md)
+* [欠驱动无人艇低速定点保持与横漂补偿](./water/ros2_usv_station_keeping/index.md) —— 无侧推的船在横流里无法横移，靠航向偏置让合速度矢量指向目标点实现"顶流悬停"；流速由动力学反解在线估计，单侧推进器失效时判定降级并停机上报；6 个场景 × 180 s 可离线复现
 
 * [水下声呐 SLAM 占据栅格建图与自主避障导航](./water/rov_sonar_slam_navigation.md)
 
