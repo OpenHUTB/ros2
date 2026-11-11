@@ -46,6 +46,12 @@ bash main.sh battery gz_args:='-r -s'
 
 真实 Gazebo 运行：驶离充电点约 0.67 m 后强制低电量，自动返航并进入充电状态，电量从 6.3% 开始回升。
 
+## 运行画面
+
+![Gazebo 实时仿真：电量管理与返航小车](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_gazebo_close.png)
+
+![Gazebo 实时仿真：广角场景](../../../docs/img/ground/gazebo_diff_drive_teleop_battery_gazebo_wide.png)
+
 ## 参数与话题
 
 完整参数表、话题/TF、算法公式、复现步骤和故障排查见 `docs/ground/gazebo_diff_drive_teleop.md`。
