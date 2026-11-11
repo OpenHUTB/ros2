@@ -99,6 +99,7 @@ nav:
     - 简化双足步态动画演示: './humanoid/zmp_walk_planner.md'
     - 人形机器人轻量级 ZMP 步行控制基线: './humanoid/humanoid_zmp_walking.md'
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
+    - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
@@ -338,6 +339,7 @@ nav:
     - 水下ROV仿真键盘控制与摄像头目标追踪: './water/rov_gazebo_sim.md'
     - 水下机器人物理仿真与 6-DOF 键盘运动控制: './water/rov_physical_simulation.md'
     - 水下 ROV 六自由度手操与抗流能力评测仿真: './water/rov_handling_eval.md'
+    - ROV 推进器配置矩阵与饱和感知推力分配: './water/rov_thruster_allocation.md'
     - 水下多传感器感知与 3D 轨迹跟踪控制: './water/rov_trajectory_tracking.md'
     - 水下声呐 SLAM 占据栅格建图与自主避障导航: './water/rov_sonar_slam_navigation.md'
     - 水下 ROV 对接任务：声呐扫描 + CNN 标记检测 + 逼近导航: './water/mjc_rov_docking_nav.md'
