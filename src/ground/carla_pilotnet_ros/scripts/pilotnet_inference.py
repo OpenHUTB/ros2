@@ -41,6 +41,7 @@ class PilotNetInference:
         self.infer_every_n = rospy.get_param('~infer_every_n', 2)
 
         # 权重路径解析：先模块目录，再当前目录
+        pkg_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if not os.path.isabs(model_path):
             candidates = [
                 os.path.join(pkg_root, model_path),

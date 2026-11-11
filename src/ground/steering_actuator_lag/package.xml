@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>steering_actuator_lag</name>
+  <version>1.0.0</version>
+  <description>
+    转向执行器的滞后、死区与回正时间核算：用一阶惯性 + 死区 + 速率限制
+    模拟一次阶跃打角，输出上升时间、稳态误差、角速度上限与回正时间四项指标。
+    纯 Python 标准库实现，不依赖 CARLA 与 GPU。
+  </description>
+
+  <maintainer email="haobuhao-code@users.noreply.github.com">haobuhao-code</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>
