@@ -161,6 +161,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [里程计轨迹记录](./ground/odom_trace_recorder.md)
 * [转向执行器滞后](./ground/steering_actuator_lag.md)
 * [刹车距离核算](./ground/braking_distance_check.md)
+* [半主动悬架车身姿态控制仿真](./ground/semi_active_suspension.md) —— 7 自由度整车垂向模型（车身垂向/俯仰/侧倾 + 四个非簧载质量），天棚 + 地棚混合阻尼把过减速带车身加速度峰值压低 9.3%、制动点头 16.3%、过弯侧倾 9.2%，随机路面最小轮荷提高 5.8%，并说明稳态姿态改不了、只能削过渡过程
 * [换挡策略与闭环控制](./ground/gear_shift_policy.md)
 * [牵引车挂车折刀判定](./ground/trailer_kinematics.md)
 * [速度曲线规划](./ground/speed_profile_check.md)
