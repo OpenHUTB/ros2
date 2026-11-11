@@ -327,7 +327,7 @@ python3 -m pytest tests/test_passability_check_local.py -q
 ```
 
 ```text
-通过 167 项，失败 0 项
+通过 181 项，失败 0 项
 全部通过
 ```
 
