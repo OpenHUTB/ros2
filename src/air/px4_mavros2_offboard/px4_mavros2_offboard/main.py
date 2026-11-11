@@ -11,7 +11,7 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, SetMode
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from rclpy.qos import qos_profile_default, qos_profile_sensor_data
+from rclpy.qos import QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
@@ -76,6 +76,10 @@ class Px4Mavros2Offboard(Node):
             "arm": -1e9,
             "land": -1e9,
         }
+        self._state_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.RELIABLE,
+        )
 
         self._setpoint_publisher = self.create_publisher(
             PoseStamped, "/mavros/setpoint_position/local", 10
@@ -87,7 +91,7 @@ class Px4Mavros2Offboard(Node):
             State,
             "/mavros/state",
             self._on_state,
-            qos_profile_default,
+            self._state_qos,
         )
         self.create_subscription(
             Odometry,

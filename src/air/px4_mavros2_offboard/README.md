@@ -89,6 +89,10 @@ colcon test --packages-select px4_mavros2_offboard
 ```
 
 单元测试覆盖预推流、模式确认、解锁确认、起飞、悬停、降落、超时和操作员中止。
+`test_node_startup.py` 还会执行
+`ros2 launch px4_mavros2_offboard offboard.launch.py start_mavros:=false`，
+确认节点保持运行并可通过 ROS 2 发现 `/uav/offboard/start` 和
+`/uav/offboard/abort` 服务；该检查不要求 PX4 或 MAVROS 在线。
 
 ## 范围与限制
 
@@ -100,7 +104,7 @@ colcon test --packages-select px4_mavros2_offboard
 ## ROS 2 与仓库贡献约定
 
 - 使用 ROS 2 Humble、`rclpy`、ament_python、标准消息和 `std_srvs/srv/Trigger`；
-- MAVROS 状态使用可靠默认 QoS，本地位置使用传感器 QoS；
+- MAVROS 状态使用 Humble 支持的显式可靠 QoS（depth 10），本地位置使用传感器 QoS；
 - 模块入口统一为 `main`，并同时提供 `launch/offboard.launch.py`；
 - 文档已在 `mkdocs.yml` 和 `docs/index.md` 添加入口；
 - 提交前必须运行 `mkdocs serve --livereload` 检查网页；

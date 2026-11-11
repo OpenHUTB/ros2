@@ -99,6 +99,10 @@ colcon test-result --verbose
 - 悬停结束后请求 `AUTO.LAND`；
 - 状态超时和操作员中止进入 `FAILSAFE`。
 
+节点启动测试会以 `start_mavros:=false` 执行 launch，检查节点进程持续存活，
+并通过 ROS 2 发现 `/uav/offboard/start` 和 `/uav/offboard/abort` 服务。
+该测试覆盖实际入口导入、节点创建和 ROS 服务注册，不要求 PX4 或 MAVROS 在线。
+
 ## 6. 提交 PR 时应补充的真实证据
 
 单元测试不能代替 SITL 闭环。PR 应提供：
@@ -112,8 +116,9 @@ colcon test-result --verbose
 ## 7. ROS 2 与仓库贡献规范
 
 本模块遵循 [ROS 2 Humble 文档](https://docs.ros.org/en/humble/) 的节点、参数、QoS、
-Launch 和消息接口约定。安全关键的 `/mavros/state` 使用可靠 QoS，高频本地位置使用
-传感器 QoS。模块入口为 `main`，并提供 ROS 2 launch 文件。
+Launch 和消息接口约定。安全关键的 `/mavros/state` 使用 Humble 支持的显式可靠
+QoS（depth 10），高频本地位置使用传感器 QoS。模块入口为 `main`，并提供
+ROS 2 launch 文件。
 
 按照 [OpenHUTB/ros2 提交注意事项](https://github.com/OpenHUTB/ros2#注意事项) 和
 [OpenHUTB 贡献指南](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md)：
