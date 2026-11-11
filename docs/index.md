@@ -195,6 +195,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [端到端驾驶（图像到控制指令）](./ground/pix2cmd_end2end_driving.md)
 
 * [MuJoCo 差速小车轮滑感知与轨迹补偿](./ground/mujoco_diff_drive_slip_compensation.md)
+* [MuJoCo 差速小车到达目标点（go-to-goal）](./ground/mujoco_diff_drive_go_to_goal.md)
 * [MuJoCo 地面小车射线感知与分级减速避障](./ground/mujoco_car_avoidance.md)
 * [MuJoCo 地面小车神经网络端到端避障](./ground/mujoco_car_nn_avoidance.md)
 * [MuJoCo 两轮自平衡小车](./ground/mujoco_balance_car.md)
@@ -211,6 +212,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](./ground/ros2_dwa_avoidance.md)
 * [ROS2 DWA 局部规划器随机场景压力测试与舒适性评价](./ground/ros2_dwa_benchmark.md)
 * [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
+* [UWB 多基站测距定位布站几何精度对比评测](./ground/uwb_baseline_geometry_eval.md) —— 四种布站构型的 GDOP 与蒙特卡洛定位精度对比
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
@@ -235,6 +237,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo小车多目标导航](./ground/mujoco_multi_goal_nav.md)
 * [列车 ATO 自动运行与站台精确停车](./ground/train_ato_stop.md) —— 按线路限速与坡道生成目标速度曲线，站台停车误差 0.02～0.18 m（标尺 0.3 m），另有 ATP 超速监督与晚制动对照
 * [多车协同编队（CARLA）](./ground/carla_platoon.md) —— Leader 沿参考轨迹领航，3 辆 follower 沿同轨迹保持恒定弧长间距跟进的一字纵队编队
+* [ROS2 2D 激光占据栅格建图](./ground/ros2_occupancy_mapping.md)
 * [多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真与离线验证](./ground/carla_sensor_fusion.md) —— 外参标定 + 时间同步 + EKF 融合；2D 仿真提升约 32%，离线回放 30 s 融合 578 次、RMSE 0.053 m（均可复现；CARLA 为未验证的参考实现）
 * [高精度定位与重定位（AMCL 式粒子滤波）](./ground/turtlebot3_relocalization.md)
 
@@ -310,6 +313,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [无人机目标高度限幅、变化率约束与超时保持](./air/uav_altitude_command_guard.md)
 * [无人机偏航指令最短路径与角速度限幅](./air/uav_yaw_command_guard.md) —— 将偏航误差映射到 `[-pi, pi)`，避免跨 180° 时绕远路，并限制 `Twist.angular.z`
 * [无人机雷达DQN建图与端到端控制](./air/uav_lidar_dqn_navigation/index.md) —— 24 扇区雷达特征 + Dueling Double DQN 自主学习避障导航，gmapping 同步建图，图像端到端 DQN 控制
+* [DQN 策略离线评估](./air/uav_lidar_dqn_navigation/policy_eval.md) —— 不依赖 ROS/AirSim，汇总训练日志并复现“正前方若干米有墙”的 Q 值与动作探测
 
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
@@ -427,6 +431,8 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [AirSim 无人机深度避障（CNN 端到端控制）](./air/uav_airsim_depth_obstacle_avoidance.md) —— 前视深度 64×64 进手写 CNN，出偏航角速率与目标高度，验证集 MSE 0.0640 / R² 0.298
 
 * [无人机自主充电/机巢仿真](./air/drone_charging_nest.md) —— MuJoCo 四旋翼起飞、巡检、返航、机巢自动充电与再次起飞
+
+* [AirSim 无人机 IMU 速度估计（MLP）](./air/uav_airsim_imu_velocity_estimator.md) —— IMU 5 帧 30 维进，单隐层 MLP 出速度大小，验证 R² 0.453、实飞 MAE 1.32 m/s
 
 ## 6. 水域载具  <span id='water_vehicle'></span>
 
