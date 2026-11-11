@@ -19,6 +19,79 @@
 
 **本节点只做规划、不控制飞行。** 把路径喂给控制器实现闭环飞行是后续阶段的事。
 
+### 1.1 运行节点与话题关系
+
+规划节点不是孤立运行的：它要拿到建图节点发布的地图、桥接节点广播的 TF，
+再把路径交给 RViz 显示。`roslaunch octree_uav_3d_pathfinding main.launch`
+会启动下图里的数据链路节点。
+
+```mermaid
+graph LR
+    SIM["Windows 宿主<br/>AirSim 模拟器<br/>RPC 41451"]
+
+    subgraph VM["Ubuntu 虚拟机 (ROS Noetic)"]
+        BR["airsim_bridge<br/>桥接节点"]
+        MAP["pointcloud_to_octomap<br/>建图节点"]
+        PLAN["astar_planner<br/>规划节点"]
+        RVIZ["rviz"]
+    end
+
+    SIM -->|"RPC 41451 取点云与位姿"| BR
+    BR -->|"/uav/goal 转 moveToPositionAsync"| SIM
+
+    BR -->|"/cloud_in<br/>PointCloud2 10 Hz"| MAP
+    BR -->|"TF world→base_link→lidar_link"| PLAN
+
+    MAP -->|"/octomap_full<br/>Octomap latched"| PLAN
+    MAP -->|"/occupied_cells_vis_array"| RVIZ
+
+    PLAN -->|"/uav/path<br/>nav_msgs/Path"| RVIZ
+    PLAN -->|"/uav/explored_markers"| RVIZ
+
+    GOAL(["目标点<br/>/uav/goal"]) --> PLAN
+    GOAL --> BR
+```
+
+各节点在规划链路中的位置：
+
+| 节点 | 对本节点的作用 |
+|---|---|
+| `airsim_bridge` | 发布 `/cloud_in` 与 TF，使建图与规划都有数据可依；同时订阅 `/uav/goal`，让载具飞向目标点 |
+| `pointcloud_to_octomap` | 发布 `/octomap_full`，这是本节点唯一的输入地图 |
+| `astar_planner` | 订阅地图与目标点，查 TF 取起点，输出路径 |
+| `rviz` | 显示路径与展开节点，用于人工检查 |
+| `uav_env_check` | 启动后连 AirSim RPC、订阅 `/cloud_in` 自检一遍链路，跑完自动退出 |
+
+#### `/uav/goal` 有两个订阅者
+
+使用时容易混淆的一点：`/uav/goal` 同时被 `astar_planner` 与 `airsim_bridge` 订阅。
+
+* `astar_planner` 收到后**规划一条路径**；
+* `airsim_bridge` 收到后**让载具飞过去**（转成 AirSim 的 `moveToPositionAsync`）。
+
+所以发布一次目标点，会同时触发规划与飞行。若只想看规划结果、不希望载具移动，
+把**桥接节点**的目标话题换成一个没有人发布的名字即可：
+
+```shell
+roslaunch octree_uav_3d_pathfinding main.launch bridge_goal_topic:=/uav/goal_unused
+```
+
+* `astar_planner` 的 `~goal_topic` 仍是 `/uav/goal`，收到目标照常规划；
+* `airsim_bridge` 改听 `/uav/goal_unused`，收不到目标就不会起飞；
+* 桥接节点照常运行，`/cloud_in` 与 TF 不受影响。
+
+不要用 `bridge:=false` 达到这个目的：它关掉的正是唯一发布 `/cloud_in` 与 TF 的节点，
+建图没有输入、`/octomap_full` 不会出现，规划也就无从谈起；而且 `check` 默认为 true，
+自检节点会因为点云链路不通而报失败。确实没有模拟器时，请看本页末尾
+「离线验证」那一套 `mock_cloud_publisher.py` 的用法。
+
+查看实际运行的节点与话题关系：
+
+```shell
+rosrun rqt_graph rqt_graph        # 节点—话题图
+rosrun rqt_tf_tree rqt_tf_tree    # TF 树
+```
+
 ---
 
 ## 2. 核心问题：八叉树不是均匀网格

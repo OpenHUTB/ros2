@@ -114,7 +114,7 @@ ls -d ~/catkin_ws/src/mrobot_*
 
 ## 5. 适配 ROS Noetic
 
-教程最初基于 ROS Kinetic（Python2），在 Noetic（Python3）下需要做两处适配。
+教程最初基于 ROS Kinetic（Python2），在 Noetic（Python3）下需要做两处适配
 
 ### 5.1 键盘脚本改为 Python3 并加可执行权限
 
@@ -160,7 +160,7 @@ ls -l ~/catkin_ws/src/mrobot_teleop/scripts/mrobot_teleop.py
 ### 6.1 缺少 move_base_msgs 的报错
 
 首次 `catkin_make` 时，原始 `mrobot_navigation/CMakeLists.txt` 在 `find_package(... COMPONENTS ...)`
-中声明了 `move_base_msgs`。即使 gmapping 本身用不到它，catkin 在**配置阶段**仍会检查所有组件，
+中声明了 `move_base_msgs`即使 gmapping 本身用不到它，catkin 在**配置阶段**仍会检查所有组件，
 未安装时会直接报错：
 
 ```text
@@ -196,7 +196,7 @@ source devel/setup.bash
 
 ## 7. 启动激光 SLAM
 
-打开 **3 个终端**，每个终端都先执行一次环境加载（若 `~/.bashrc` 已配置可省略）：
+打开 **3个终端**，每个终端都先执行一次环境加载（若 `~/.bashrc` 已配置可省略）：
 
 ```bash
 source ~/catkin_ws/devel/setup.bash
@@ -350,10 +350,10 @@ free_thresh: 0.196
 
 1. **慢速建图**：线速度保持 0.2 m/s 左右，转弯采用点动，避免长按方向键；
 2. **不要误触加速键**：`q/w/e` 会放大速度，开始前确认底部为 `speed 0.2`；
-3. **全覆盖**：规划路线走遍每个房间和角落，开门、过门时减速，减少灰色未知区；
+3. **全覆盖遍历**：规划路线走遍每个房间和角落，开门、过门时减速，减少地图上的灰色未知区域；
 4. **走闭环**：尽量回到经过的位置形成环路，利用回环修正累计误差；
 5. **必要时重跑**：若出现明显重影，重启 gmapping 与 teleop 后慢速重建，可获得更干净的地图；
-6. **参数调优**：环境更大时可适当增加 `particles`，并根据雷达量程调整 `maxUrange`、`maxRange`。
+6. **参数调优**：环境更大时可适当增加 `particles`，并根据雷达量程调整 `maxUrange`、`maxRange`
 
 ## 12. 常见问题
 
@@ -372,4 +372,4 @@ free_thresh: 0.196
 本节完成了 gmapping 激光 SLAM 的完整流程：安装依赖 → 复制并适配功能包 → 编译 →
 三终端启动 Gazebo/gmapping/键盘 → 遥控遍历房间 → `map_saver` 保存地图，并解读了
 占据栅格地图与 `map.yaml` 的六个字段。下一节将基于保存的地图，使用 AMCL 进行定位并
-结合 move_base 实现地图内的自主导航。
+结合 move_base 实现地图内的自主导航
