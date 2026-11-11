@@ -212,6 +212,7 @@ nav:
     - 两轮自平衡机器人（倾角PD + 神经网络策略克隆）: './ground/balance_bot.md'
     - 差速 AGV 坡道起步辅助（防溜车）: './ground/hill_start_assist.md'
     - 悬崖边缘紧急制动仿真: './ground/cliff_brake.md'
+    - 线性 MPC 路径跟踪与纯追踪对比: './ground/mpc_path_tracking.md'
     - 航向 PID 参数自整定与手工试凑对比: './ground/pid_auto_tuning.md'
     - 磁力计硬磁/软磁标定与倾角补偿航向: './ground/mag_hard_soft_iron_calibration.md'
     - 连续控制器离散化四种方法对比: './ground/control_discretization.md'

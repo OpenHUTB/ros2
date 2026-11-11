@@ -230,6 +230,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 * [MuJoCo 小车跟车仿真](./ground/mujoco_car_follow.md)
 * [MuJoCo 小车滑斜坡](./ground/mujoco_slope_car.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
+* [线性 MPC 路径跟踪与纯追踪对比](./ground/mpc_path_tracking.md) —— 线性时变 MPC + 箱约束 QP（坐标下降）；40 s 闭环横向 RMSE 0.212 m、稳态 0.008 m，最大偏航角速度 0.904 vs 纯追踪的 1.200 rad/s，代价 27.2 ms/step
 * [航向 PID 参数自整定与手工试凑对比](./ground/pid_auto_tuning.md) —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间
 * [磁力计硬磁/软磁标定与倾角补偿航向](./ground/mag_hard_soft_iron_calibration.md) —— 椭球拟合求硬磁偏置（误差 0.90 µT）与软磁矩阵（1.1%），对称平方根消除旋转自由度；航向 RMSE 42.65° → 1.26° → 融合 0.33°
 * [连续控制器离散化的四种方法对比](./ground/control_discretization.md) —— Tustin 比前向欧拉准 1~2 个数量级，前向欧拉在 Ts>0.27 s 时失稳
