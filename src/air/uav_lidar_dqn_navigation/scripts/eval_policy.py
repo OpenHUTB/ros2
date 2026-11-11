@@ -6,7 +6,7 @@
 
 1. 汇总 `models/train_nav_log.csv` 的训练结果（整体 / 末 50 / 末 20 成功率）；
 2. 构造“正前方若干米有墙”的状态，打印网络输出的 Q 值与动作，
-   在部署侧有安全层时同时打印屏蔽后的动作——用来复现审核时做的贴墙探测。
+   同时打印动作屏蔽后的结果——用来复现审核时做的贴墙探测。
 
 用法：
     python3 scripts/eval_policy.py
@@ -17,6 +17,7 @@
 import argparse
 import csv
 import os
+import pickle
 import sys
 
 import numpy as np
@@ -27,15 +28,18 @@ if _SCRIPT_DIR not in sys.path:
 
 from lidar_features import MAX_RANGE, build_state, sector_distances  # noqa: E402
 
-try:  # 安全层在 #922 中引入；没有时只打印网络原始动作
-    from safety_shield import action_mask, select_action
-except ImportError:  # pragma: no cover - 取决于所在分支
-    action_mask = None
-    select_action = None
+from safety_shield import action_mask, select_action  # noqa: E402
 
 
 def package_dir():
-    return os.path.dirname(_SCRIPT_DIR)
+    source = os.path.dirname(_SCRIPT_DIR)
+    if os.path.isdir(os.path.join(source, 'models')):
+        return source
+    try:
+        import rospkg
+        return rospkg.RosPack().get_path('uav_lidar_dqn_navigation')
+    except Exception:
+        return source
 
 
 def wall_points(distance, half_width=5.0):
@@ -81,7 +85,11 @@ def load_net(model_path):
     from dqn_network import DuelingQNet
 
     net = DuelingQNet()
-    ckpt = torch.load(model_path, map_location='cpu')
+    try:
+        ckpt = torch.load(model_path, map_location='cpu', weights_only=True)
+    except pickle.UnpicklingError as exc:
+        raise RuntimeError('安全加载检查点失败；本次已验证 PyTorch 2.15.0 可读取随包权重。'
+                           '请使用兼容版本或提供可安全加载的权重，不会自动退回不安全加载。') from exc
     net.load_state_dict(ckpt['model'])
     net.eval()
     return net, torch
@@ -112,9 +120,7 @@ def probe(model_path, log_path):
         with torch.no_grad():
             q = net(torch.as_tensor(state).unsqueeze(0))[0].numpy()
         raw = ACTION_NAMES[int(q.argmax())]
-        shielded = '-'
-        if select_action is not None:
-            shielded = ACTION_NAMES[int(select_action(q, state[:24]))]
+        shielded = ACTION_NAMES[int(select_action(q, state[:24]))]
         label = '无遮挡' if distance is None else '%.1f m' % distance
         print('%-8s %-14s %-14s [%s]'
               % (label, raw, shielded,
@@ -130,13 +136,12 @@ def self_test():
     assert float(np.min(near)) < 0.05, '0.4 m 墙应让正前扇区接近 0'
     assert float(np.max(near[8:16])) < float(np.min(clear)), '近墙应明显区别于空旷'
 
-    if action_mask is not None:
-        assert not action_mask(near)[1], '近墙时直行应被安全层屏蔽'
-        assert action_mask(clear)[1], '空旷时直行应被允许'
-        q = np.array([0.0, 10.0, 9.0, 8.0, 2.5, 2.0], dtype=np.float32)
-        action = int(select_action(q, near))
-        assert action != 1, '网络偏向直行时安全层仍应拦下'
-    print('self-test ok（安全层%s）' % ('已加载' if action_mask else '未安装，跳过'))
+    assert not action_mask(near)[1], '近墙时直行应被安全层屏蔽'
+    assert action_mask(clear)[1], '空旷时直行应被允许'
+    q = np.array([0.0, 10.0, 9.0, 8.0, 2.5, 2.0], dtype=np.float32)
+    action = int(select_action(q, near))
+    assert action != 1, '网络偏向直行时安全层仍应拦下'
+    print('self-test ok（几何与动作屏蔽已验证）')
     return 0
 
 

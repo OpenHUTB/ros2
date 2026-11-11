@@ -75,6 +75,17 @@ rosrun uav_lidar_dqn_navigation main.py --mode scan     # 雷达扫描发布
 
 ## 训练
 
+### 离线评估训练权重
+
+在本包目录执行 `python3 scripts/eval_policy.py` 可查看训练日志、各距离的
+六个 Q 值、原始动作与动作屏蔽结果；`python3 scripts/eval_policy.py --self-test`
+只用 NumPy 验证几何和动作屏蔽，不加载权重、不依赖 ROS 或 AirSim。安装到
+catkin 空间后可用 `rosrun uav_lidar_dqn_navigation eval_policy.py`。模型推理需要
+PyTorch；随包的完整检查点包含优化器状态，本次在 PyTorch 2.15.0+cpu 上验证了安全
+加载，PyTorch 1.13 的安全加载器无法读取它，不会自动退回不安全加载。审核时使用的
+PyTorch 2.4.1 尚需复测修改后的安全加载路径。
+屏蔽函数与 #922 一致；离线评估不模拟部署节点额外的近距离强制悬停。
+
 任务 2 的 DQN 在 AirSim 里自行探索，状态为 32 维（24 扇区 + 目标 4 + 速度 3 +
 上一步动作 1），动作为 6 个离散速度指令（前进/左前/右前/左转/右转/悬停）。
 网络为 Dueling 结构（128-128），训练用 Double DQN 目标、经验回放与 Huber 损失。
