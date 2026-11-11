@@ -4,7 +4,7 @@ AirSim 仿真中，用**纯 IMU 时序窗口**经神经网络估计无人机速�
 
 ## 演示动图
 
-![demo](https://raw.githubusercontent.com/WZJ6666wudu/ros2/feat/uav-airsim-imu-velocity/docs/img/uav/imu_vel/demo.gif)
+![demo](../../../docs/img/uav/imu_vel/demo.gif)
 
 动图由 `simGetImages(ImageType.Scene)` 逐帧截取真实 AirSim 画面后合成，未经任何绘制或 CGI。
 
@@ -23,6 +23,9 @@ AirSim 仿真中，用**纯 IMU 时序窗口**经神经网络估计无人机速�
 ## 快速复现
 
 ```bash
+# 0. 安装依赖（numpy 算网络，Pillow 在 demo 里合成 gif）
+pip3 install -r requirements.txt
+
 # 1. 启动 AirSim Blocks（Windows）
 #    C:\AirSim\Blocks\Blocks\WindowsNoEditor\Blocks.exe
 #    确认 41451 端口已监听
