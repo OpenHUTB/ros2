@@ -18,6 +18,12 @@ ROI_BOTTOM_RATIO = 0.70
 MIN_ADAPTIVE_THRESH = 10
 MAX_ADAPTIVE_THRESH = 60
 
+# Otsu 的双峰可分性下限（类间方差 / 总方差）.
+# 实测：镜头对着墙体时约 0.997；开阔水域整幅画面几乎是同一个灰度，
+# 根本没有可分割的分布。灰度渐变（雾）即使硬切也只能到 0.75 左右，
+# 因此 0.8 能把「真有障碍」和「均匀背景 / 平滑渐变」分开.
+MIN_SEPARABILITY = 0.8
+
 DIR_RIGHT = -1
 DIR_LEFT = 1
 DIR_NONE = 0
@@ -40,10 +46,16 @@ def split_roi(image):
     return image[top:bottom, :]
 
 
-def otsu_threshold(gray):
-    """用直方图实现 Otsu 阈值，返回 None 表示画面无有效灰度分布."""
+def otsu_split(gray):
+    """
+    用直方图计算 Otsu 阈值与双峰可分性.
+
+    返回 (thresh, separability)：thresh 为 None 表示画面没有可分割的
+    灰度分布；separability = 类间方差 / 总方差，取值 0~1，越大说明
+    画面越接近「暗障碍 + 亮水体」两团.
+    """
     if gray.size == 0:
-        return None
+        return None, 0.0
     hist = np.bincount(gray.ravel(), minlength=256).astype(np.float64)
     levels = np.arange(256)
     total = float(gray.size)
@@ -52,7 +64,7 @@ def otsu_threshold(gray):
     weight_fg = total - weight_bg
     valid = (weight_bg > 0) & (weight_fg > 0)
     if not np.any(valid):
-        return None
+        return None, 0.0
 
     cum_sum = np.cumsum(levels * hist)
     sum_all = cum_sum[-1]
@@ -61,16 +73,34 @@ def otsu_threshold(gray):
 
     between = weight_bg * weight_fg * (mean_bg - mean_fg) ** 2
     between[~valid] = -1.0
-    if np.max(between) <= 0:
-        return None
-    return int(np.argmax(between))
+    best = int(np.argmax(between))
+    if between[best] <= 0:
+        return None, 0.0
+
+    mean_all = sum_all / total
+    total_var = float((((levels - mean_all) ** 2) * hist).sum()) / total
+    if total_var <= 0:
+        return None, 0.0
+    # between 是按像素个数累加的，除以 total² 才是概率化的类间方差
+    separability = float(between[best]) / (total * total * total_var)
+    return best, min(separability, 1.0)
 
 
-def adaptive_threshold(gray):
-    """Otsu 阈值并钳位到 MIN/MAX_ADAPTIVE_THRESH 之间."""
-    thresh = otsu_threshold(gray)
-    if thresh is None:
-        return MAX_ADAPTIVE_THRESH
+def otsu_threshold(gray):
+    """用直方图实现 Otsu 阈值，返回 None 表示画面无有效灰度分布."""
+    return otsu_split(gray)[0]
+
+
+def adaptive_threshold(gray, fixed_thresh=22):
+    """
+    Otsu 阈值并钳位到 MIN/MAX_ADAPTIVE_THRESH 之间.
+
+    画面不够双峰（开阔水域、均匀雾背景）时退回调用方给的固定阈值，
+    否则 Otsu 会把均匀背景从中间切开，整幅画面都被判成障碍.
+    """
+    thresh, separability = otsu_split(gray)
+    if thresh is None or separability < MIN_SEPARABILITY:
+        return int(fixed_thresh)
     return int(min(max(thresh, MIN_ADAPTIVE_THRESH), MAX_ADAPTIVE_THRESH))
 
 
@@ -92,7 +122,10 @@ def dark_ratios(gray, thresh):
 
 def analyze(gray, fixed_thresh=22, adaptive=True):
     """返回 (left_ratio, right_ratio, 实际使用的阈值)."""
-    thresh = adaptive_threshold(gray) if adaptive else int(fixed_thresh)
+    if adaptive:
+        thresh = adaptive_threshold(gray, fixed_thresh)
+    else:
+        thresh = int(fixed_thresh)
     left, right = dark_ratios(gray, thresh)
     return left, right, thresh
 

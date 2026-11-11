@@ -67,3 +67,32 @@ def test_manual_threshold_is_used_when_adaptive_disabled():
     left, _, thresh = analyze(gray, fixed_thresh=22, adaptive=False)
     assert thresh == 22
     assert left == 0.0
+
+
+def test_uniform_water_falls_back_to_fixed():
+    """
+    开阔水域整幅画面灰度相同（实测 37），Otsu 无解.
+
+    此时必须退回固定阈值，否则整幅水色都会被当成障碍，
+    导致 AUV 一直处于避让状态、越跑越偏.
+    """
+    gray = np.full((100, 200), 37, dtype=np.uint8)
+    left, right, thresh = analyze(gray, fixed_thresh=22, adaptive=True)
+    assert thresh == 22
+    assert left == 0.0
+    assert right == 0.0
+
+
+def test_smooth_fog_gradient_falls_back_to_fixed():
+    """只有平滑灰度渐变（雾）而没有障碍时，不应启动自适应分割."""
+    row = np.linspace(30, 50, 200).astype(np.uint8)
+    gray = np.tile(row, (100, 1))
+    _, _, thresh = analyze(gray, fixed_thresh=22, adaptive=True)
+    assert thresh == 22
+
+
+def test_bimodal_frame_uses_otsu_threshold():
+    """真有墙体时双峰可分性接近 1，才允许使用 Otsu 阈值."""
+    gray = make_frame(45, 120)
+    _, _, thresh = analyze(gray, fixed_thresh=22, adaptive=True)
+    assert thresh == 45
