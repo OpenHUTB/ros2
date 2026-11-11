@@ -37,7 +37,7 @@ except Exception:
 
 from uav_features import (  # noqa: E402
     FOV_DEG, MAX_RANGE, NUM_SECTORS, extract_scan, extract_sector_features,
-    transform_points_to_frame, yaw_from_quaternion,
+    transform_points_to_frame, yaw_from_quaternion, scan_angles,
 )
 
 _client_path = os.environ.get('AIRSIM_PYTHON_CLIENT')
@@ -54,7 +54,7 @@ class LidarPerceptionNode(object):
         self.lidar_name = rospy.get_param('~lidar_name', 'lidar_1')
         self.rate_hz = float(rospy.get_param('~rate', 10.0))
         self.scan_bins = int(rospy.get_param('~scan_bins', 180))
-        self.scan_fov = float(rospy.get_param('~scan_fov', 360.0))
+        self.scan_fov = float(rospy.get_param('~scan_fov', 180.0))
         # 扫描帧必须和 gmapping 的 base_frame 区分开，否则会卡在等 TF 上
         self.scan_frame = rospy.get_param('~scan_frame', 'laser')
         # 建图扫描的来源：lidar（稀疏但全向）或 depth（稠密但只有前向 90 度）
@@ -152,9 +152,7 @@ class LidarPerceptionNode(object):
                 scan.header.stamp = rospy.Time.now()
                 scan.header.frame_id = self.scan_frame
                 fov = self.depth_fov if self.scan_source == 'depth' else self.scan_fov
-                scan.angle_min = math.radians(-fov / 2.0)
-                scan.angle_max = math.radians(fov / 2.0)
-                scan.angle_increment = math.radians(fov / self.scan_bins)
+                scan.angle_min, scan.angle_max, scan.angle_increment = scan_angles(fov, self.scan_bins)
                 scan.range_min = 0.1
                 scan.range_max = MAX_RANGE
                 scan.ranges = ranges.tolist()

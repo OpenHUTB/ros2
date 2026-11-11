@@ -8,7 +8,6 @@ uav_nn_perception_navigation 统一入口
     python3 main.py --mode bridge        # 只启动 AirSim 桥接节点
     python3 main.py --mode perception    # 激光雷达感知 + 神经网络控制（任务 2）
     python3 main.py --mode slam          # SLAM 建图（任务 3）
-    python3 main.py --mode nav           # 基于地图的导航（任务 3）
     python3 main.py --mode end2end       # 图像到控制指令的端到端模型（任务 4）
     python3 main.py --mode train         # 端到端模型训练
 
@@ -27,7 +26,7 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if _SCRIPT_DIR not in sys.path:
     sys.path.insert(0, _SCRIPT_DIR)
 
-MODES = ('bridge', 'teleop', 'perception', 'control', 'slam', 'nav', 'end2end', 'train')
+MODES = ('bridge', 'teleop', 'perception', 'control', 'slam', 'end2end', 'train')
 
 
 def run_bridge():
@@ -59,16 +58,6 @@ def run_control():
     TrajectoryControlNode().run()
 
 
-def run_slam():
-    from slam_node import SlamNode
-    SlamNode().run()
-
-
-def run_nav():
-    from nav_node import NavNode
-    NavNode().run()
-
-
 def run_end2end():
     from end2end_node import End2EndNode
     End2EndNode().run()
@@ -84,8 +73,6 @@ DISPATCH = {
     'teleop': run_teleop,
     'perception': run_perception,
     'control': run_control,
-    'slam': run_slam,
-    'nav': run_nav,
     'end2end': run_end2end,
     'train': run_train,
 }
@@ -96,6 +83,8 @@ def main(argv=None):
     parser.add_argument('--mode', default='teleop', choices=MODES, help='运行模式')
     args, _unknown = parser.parse_known_args(argv)
 
+    if args.mode == 'slam':
+        os.execvp('roslaunch', ['roslaunch', 'uav_nn_perception_navigation', 'slam.launch'])
     if args.mode != 'train':
         rospy.init_node('uav_' + args.mode)
     else:

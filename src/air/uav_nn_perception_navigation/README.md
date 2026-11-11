@@ -8,8 +8,10 @@
 | --- | --- | --- | --- |
 | 1 | 键盘遥控 | `main.py --mode teleop` | 终端按键控制无人机六个自由度 |
 | 2 | 激光雷达感知 + 神经网络控制 | `main.py --mode perception` | 点云障碍检测，神经网络输出速度指令 |
-| 3 | SLAM 建图 + 导航 | `main.py --mode slam` / `--mode nav` | 边飞边建图，基于地图规划路径 |
+| 3 | SLAM 建图 + 控制 | `roslaunch uav_nn_perception_navigation slam.launch` | 同步运行 gmapping 和目标控制 |
 | 4 | 端到端视觉控制 | `main.py --mode end2end` | 图像直接输入网络，输出控制指令 |
+
+`python3 scripts/main.py --mode slam` 使用默认参数启动相同的 `slam.launch`；指定 AirSim IP 或目标时请直接用 roslaunch。此分支没有独立 `nav_node.py`，不支持 `--mode nav`。随包雷达是前向 180°，无回波填最大量程并不代表安全。多帧点云仅使用各帧查询时估计位姿补偿，未进行逐点去畸变，快速运动时可能错位。`maps/uav_map.pgm` 是按本分支相同雷达与 gmapping 配置重新采集的样例；采集记录及限制见 `maps/evidence_20261111/README.md`。
 
 ## 运行环境
 
