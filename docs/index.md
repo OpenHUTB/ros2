@@ -74,6 +74,7 @@ ROS每章节运行代码:
     * [MuJoCo UR5e 关节空间抓放控制](./chapter/ur5e_pickplace.md)
     * [MuJoCo 二连杆机械臂抓取搬运](./chapter/mujoco_arm_pick.md)
     * [三自由度机械臂空间螺旋线仿真](./chapter/mujoco_arm_3d.md)
+    * [Gazebo 双自由度机械臂画圆](./chapter/gazebo_two_dof_arm_circle.md)
 * [第 9 章](./chapter/chap9.md) - ROS 2
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
