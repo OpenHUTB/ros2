@@ -23,9 +23,17 @@ python3 main.py check                 # 模型自检
 python3 main.py run --scene g2        # 单个实验
 python3 main.py bench --out out       # 八组实验，导出 out/metrics.json
 python3 main.py gif --out gif         # 两段动图（抓住 / 打滑）
+python3 main.py manual               # 终端键盘控制
+python3 main.py manual --keys wwwwwwwwwwrrrrq # 重放相同按键并输出真实接触力
 python3 tools/plot_metrics.py out/metrics.json out
-python3 -m unittest discover -s tests # 13 项测试
+python3 -m unittest discover -s tests # 19 项测试
 ```
+
+### 键盘控制
+
+`W/S` 每次增减 0.05 肌肉激活，`R/F` 每次升降 10 mm，空格松开，`Q` 退出。
+肌肉激活限制为 0–1，抬升目标限制为 0–150 mm。每次操作推进 0.1 s 物理仿真，
+输出仿真时间、接触点数和双指实际接触力。交互模式需要终端；自动复现使用 `--keys`。
 
 ## 八组实验
 
@@ -76,13 +84,13 @@ python3 -m unittest discover -s tests # 13 项测试
 
 ### G5 抓持力闭环
 
-PI 调节激活，跟踪目标夹持力（估计式：接触法向力 ≈ 肌肉力 − 弹簧回位力）：
+PI 调节激活，反馈取 `mj_contactForce` 测得的双指接触法向力合计，并采用抗积分饱和。Ubuntu 22.04 / ROS 2 Humble / MuJoCo 3.3.7 实测：
 
 | 目标 | 稳态 | 上升时间 | 末态激活 |
 |---|---|---|---|
-| 2 N | 2.00 N | 0.27 s | 0.51 |
-| 4 N | 4.00 N | 0.22 s | 0.64 |
-| 8 N | 8.00 N | 0.24 s | 0.93 |
+| 2 N | 2.00 N | 0.576 s | 0.474 |
+| 4 N | 4.00 N | 0.445 s | 0.554 |
+| 8 N | 8.00 N | 0.390 s | 0.713 |
 
 ### G6 滑移反射
 
@@ -128,7 +136,7 @@ mujoco_muscle_gripper/
 │   ├── core.py       # Hill 肌肉、MJCF、手指几何
 │   ├── runs.py       # G1-G4 与录制
 │   └── cli.py
-├── tests/            # 13 项测试
+├── tests/            # 19 项测试
 └── tools/plot_metrics.py
 ```
 
