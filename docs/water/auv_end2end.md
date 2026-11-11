@@ -62,7 +62,7 @@ ros2 launch auv_end2end auv_rect_cruise.launch.py
 ros2 launch auv_end2end auv_sim.launch.py
 ```
 
-两个 launch 都会自行启动 Gazebo 并加载 `worlds/underwater.world`，单独执行即可看到仿真画面。切换功能前先 Ctrl+C 关闭当前仿真，避免两个仿真实例同时向 `/auv/cmd_vel` 发布指令。
+两个 launch 都会自行启动 Gazebo：矩形巡航加载 `worlds/underwater_cruise.world`（无墙体的空场景，避免航路被障碍阻断），视觉避障加载 `worlds/underwater.world`（8 道错位墙）。单独执行即可看到仿真画面，切换功能前先 Ctrl+C 关闭当前仿真，避免两个仿真实例同时向 `/auv/cmd_vel` 发布指令。
 
 代码规范检查：
 
@@ -85,7 +85,17 @@ colcon test-result --verbose
 
 ## 6. 参数说明
 
-参数硬编码在节点 `__init__` 中，修改后需重新 `colcon build`。
+参数全部通过 ROS 参数暴露，两个 launch 用 `DeclareLaunchArgument` 声明默认值，可在命令行覆盖，不需要重新 `colcon build`：
+
+```bash
+# 缩短横向时间，加快巡航循环
+ros2 launch auv_end2end auv_rect_cruise.launch.py side_time:=8.0
+
+# 提高触发阈值，减少误触发
+ros2 launch auv_end2end auv_sim.launch.py trigger_ratio:=0.3 max_avoid_duration:=2.0
+```
+
+下表为默认值。
 
 避障节点 `auv_obstacle_avoid`：
 
@@ -152,9 +162,11 @@ stateDiagram-v2
 切换状态：前进 | 完成一个矩形循环
 ```
 
-四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹在 `/auv/odom` 上可观察到闭合矩形。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；`planar_move` 没有指令超时，这一步决定 AUV 是否立即停下。
+四段持续时间由 `forward_time = 10 s`、`side_time = 20 s` 控制，轨迹可通过 `ros2 topic echo /auv/odom` 观察（XY 轨迹截图待补）。Ctrl+C 时两个节点都在 rclpy 关闭 context 之前先发布零速度指令；`planar_move` 没有指令超时，这一步决定 AUV 是否立即停下。
 
-![矩形巡航轨迹](../img/water/auv_end2end_rect_cruise.png)
+巡航使用独立的 `underwater_cruise.world`（空场景）：`wall_front` 位于 `(4, 0)`，正好压在 y = 0 的直行航路上，用演示场景会让矩形轨迹被墙体切断；`planar_move` 不参与碰撞，穿墙不会报错，但轨迹不可读。
+
+> 截图待补：巡航默认使用 `underwater_cruise.world`（空场景），需在该场景中运行并叠加 `/auv/odom` 的 XY 轨迹后重拍。旧截图录于 5 墙场景，只显示启动瞬间的画面，不能作为轨迹证据，故此处不再引用。
 
 ### 8.2 视觉双向避障
 
@@ -178,11 +190,41 @@ ros2 topic echo /auv/odom --field pose.pose.position
 
 > 说明：`libgazebo_ros_planar_move.so` 是运动学驱动，不与墙体发生物理碰撞，因此「没有撞上」不能单独作为避障成功的证据，需结合 `/auv/odom` 的横向位移曲线判断。
 
-## 9. 已知限制
+## 9. 多障碍场景设计（待实测）
+
+`underwater.world` 目前有 8 道错位墙，其中本次新增 3 道（`wall_far1` / `wall_far2` / `wall_far3`），作为连续避让的候选场景。**本节只描述几何与预期行为，尚未采集日志，不作为实测结论。**
+
+需要说明的是：只有 `wall_front`（尺寸 0.2 × 2，跨 y ∈ [-1, 1]）真正挡在 y = 0 的航路上；其余 7 道是厚 0.2 m、沿 x 方向长 1~2 m 的条状墙，分布在 y = **±0.8~1.5** 之间，是否进入相机视野、暗像素占比能否超过 22%，取决于上一次避让后停在哪个 y 上。单次超时避让横移 2.8 m/s × 3 s = 8.4 m，足以越过全部 ±1.5 m 的墙。
+
+| 墙 | x | y | 尺寸 x×y (m) | 与下一道间距 | 直行通过 @4.5 m/s |
+| --- | --- | --- | --- | --- | --- |
+| `wall_front` | 4 | 0 | 0.2 × 2 | 4 m | 0.89 s |
+| `wall_right` | 8 | −1.5 | 2 × 0.2 | 4 m | 0.89 s |
+| `wall_left` | 12 | +1.5 | 2 × 0.2 | 4 m | 0.89 s |
+| `wall_mid1` | 16 | −1.0 | 1 × 0.2 | 2 m | 0.44 s |
+| `wall_mid2` | 18 | +1.0 | 1 × 0.2 | 6 m | 1.33 s |
+| `wall_far1` | 24 | −1.2 | 1.2 × 0.2 | 4 m | 0.89 s |
+| `wall_far2` | 28 | +1.2 | 1.2 × 0.2 | 4 m | 0.89 s |
+| `wall_far3` | 32 | −0.8 | 1.2 × 0.2 | — | — |
+
+「8 道墙」不等于「8 次避让」：单次避让走超时路径时是 3 s 避让 + 2 s 冷却 ≈ 5 s，按 4.5 m/s 折算约 22 m，足以跨过后面两三道墙。实际触发次数取决于每次走的是「阈值恢复」还是「超时 + 冷却」，需实测确认。
+
+预期行为：
+
+- 阈值恢复路径：绕过墙体后双侧占比回落，日志出现「障碍物清除 恢复直行」；
+- 超时路径：日志出现「避让超时 进入冷却期 强制直行」，随后 2 s 内不响应任何障碍；
+- 把 `max_avoid_duration` 调小、`avoid_cooldown` 调大，可以更早回到直行，但横向绕行距离变短。
+
+```bash
+ros2 launch auv_end2end auv_sim.launch.py max_avoid_duration:=1.5 avoid_cooldown:=3.0
+```
+
+## 10. 已知限制
 
 - 障碍持续存在时会形成「避让 3 s → 强制直行 2 s → 再避让」的循环；面对连续长墙无法绕过，这是本作业的教学取舍。
+- 冷却期 2 s（约 9 m）内不做任何避让，即使画面全黑也不会重触发。这是刻意取舍：避免冷却刚结束就立刻再次进入避让产生抖动；代价是 `planar_move` 不与墙体碰撞，视觉上会直穿侧墙。
 - 灰度阈值 22 依赖具体场景：墙体材质 ambient/diffuse = 0.1，在 Gazebo 渲染下接近纯黑，本身远低于阈值；但水下雾效与背景色会把画面整体灰度抬高，改动雾密度、材质或相机距离时仍需重新标定 `obstacle_thresh`。
-- 参数硬编码，暂未通过 ROS 参数或 `DeclareLaunchArgument` 暴露。
+- 参数已通过 ROS 参数暴露，但仍是启动时读取一次，运行中修改需要重启节点。
 
 ## 参考文献
 
