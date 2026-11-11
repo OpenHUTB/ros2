@@ -72,7 +72,8 @@ def _calibrated_flicker(
 
 def _white_and_flicker(config: ImuConfig, rng: np.random.Generator, count: int):
     dt = 1.0 / config.rate_hz
-    white = rng.normal(0.0, np.sqrt(config.noise.sample_noise(dt)), count)
+    rate_variance, _ = config.noise.sample_noise(dt)
+    white = rng.normal(0.0, np.sqrt(rate_variance), count)
     flicker = _calibrated_flicker(rng, count, dt, config.noise.bias_instability)
     return white, flicker, dt
 

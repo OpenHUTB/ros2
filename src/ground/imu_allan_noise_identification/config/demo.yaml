@@ -5,6 +5,7 @@ imu_sim:
     seed: 0
 allan_identifier:
   ros__parameters:
-    max_samples: 36000
+    rate_hz: 100.0
+    max_samples: 12000
     cluster_points: 20
     output_csv: /tmp/allan_identifier.csv

@@ -52,15 +52,31 @@ class NoiseModel:
         """Gyro white-noise density in deg/s/sqrt(Hz)."""
         return self.arw / 60.0
 
-    def sample_noise(self, dt: float) -> float:
-        """Per-sample rate variance at ``dt`` (deg^2/s^2)."""
+    @property
+    def bias_walk_density(self) -> float:
+        """Bias random-walk density in deg/s/sqrt(s).
+
+        Bias instability is the bias wander accumulated over one hour, so the
+        random-walk density that reproduces it is ``B / (3600 * sqrt(3600))``.
+        """
+        return self.bias_instability / (SECONDS_PER_HOUR * np.sqrt(SECONDS_PER_HOUR))
+
+    def sample_noise(self, dt: float) -> tuple[float, float]:
+        """Per-sample ``(rate_variance, bias_variance)`` at ``dt``.
+
+        ``rate_variance`` is the variance of one gyro sample (deg^2/s^2) and
+        ``bias_variance`` the variance the bias gains in one step (deg^2/s^2).
+        """
         if dt <= 0.0:
             raise ValueError("dt must be positive")
-        return self.angle_noise_density**2 / dt
+        return (
+            self.angle_noise_density**2 / dt,
+            self.bias_walk_density**2 * dt,
+        )
 
 
 def cluster_means(rates, size: int) -> np.ndarray:
-    """Non-overlapping means of ``size`` consecutive samples (vectorised)."""
+    """Sliding-window means over ``size`` consecutive samples (vectorised)."""
     rates = np.asarray(rates, dtype=float)
     if size < 1:
         raise ValueError("cluster size must be >= 1")

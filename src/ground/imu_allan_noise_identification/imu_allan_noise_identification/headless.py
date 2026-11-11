@@ -53,9 +53,48 @@ def run_experiment(
         / TRUTH.bias_instability,
     }
 
+    # Ten independent realisations: the +16 % bias error of one seed is not a
+    # method error, so report the spread instead of a single draw.
+    arw_errors, bias_errors = [], []
+    for repeat in range(10):
+        sample = simulate_static(
+            ImuConfig(
+                static_duration_s=static_s,
+                sweep_duration_s=sweep_s,
+                noise=TRUTH,
+                seed=repeat,
+            )
+        )
+        repeat_taus, repeat_adev = allan_deviation(sample["rate_deg_s"], sample["dt"])
+        repeat_model = fit_noise_model(repeat_taus, repeat_adev)
+        arw_errors.append(100.0 * (repeat_model.arw - TRUTH.arw) / TRUTH.arw)
+        bias_errors.append(
+            100.0
+            * (repeat_model.bias_instability - TRUTH.bias_instability)
+            / TRUTH.bias_instability
+        )
+    seed_stats = {
+        "arw_pct": {
+            "median": float(np.median(arw_errors)),
+            "low": float(np.percentile(arw_errors, 2.5)),
+            "high": float(np.percentile(arw_errors, 97.5)),
+        },
+        "bias_pct": {
+            "median": float(np.median(bias_errors)),
+            "low": float(np.percentile(bias_errors, 2.5)),
+            "high": float(np.percentile(bias_errors, 97.5)),
+        },
+        "seeds": len(arw_errors),
+    }
+
     sweep = simulate_tilt_sweep(config)
     tuned = run_filter(sweep, identified)
     naive = run_filter(sweep, NAIVE)
+    # Ablation: which identified parameter actually moves the filter.
+    arw_only = run_filter(sweep, NoiseModel(arw=identified.arw * 0.25,
+                                            bias_instability=identified.bias_instability))
+    bias_only = run_filter(sweep, NoiseModel(arw=identified.arw,
+                                             bias_instability=identified.bias_instability * 60.0))
 
     summary = {
         "module": "imu_allan_noise_identification",
@@ -82,6 +121,7 @@ def run_experiment(
             "estimated": asdict(identified),
             "error_pct": errors,
             "samples": int(len(static["rate_deg_s"])),
+            "seed_stats": seed_stats,
             "allan_curve": _curve(taus, adev),
         },
         "filters": {
@@ -96,15 +136,16 @@ def run_experiment(
                 "max_error_deg": naive["max_error_deg"],
                 "nees_mean": naive["nees_mean"],
             },
+            "ablation_arw_only": {"rmse_deg": arw_only["rmse_deg"],
+                                   "nees_mean": arw_only["nees_mean"]},
+            "ablation_bias_x60": {"rmse_deg": bias_only["rmse_deg"],
+                                    "nees_mean": bias_only["nees_mean"]},
         },
     }
     if out_dir is not None:
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "summary.json").write_text(
-            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-            newline="\n",
-        )
+        with (out_dir / "summary.json").open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if make_plots:
         if figure_dir is None:
             raise ValueError("figure_dir is required when make_plots is True")
@@ -139,11 +180,22 @@ def main(args=None) -> int:
         f"identified ARW {identified['arw']:.4f} deg/sqrt(h) ({errors['arw_pct']:+.1f} %), "
         f"B {identified['bias_instability']:.4f} deg/h ({errors['bias_pct']:+.1f} %)"
     )
-    for name, block in summary["filters"].items():
+    for name in ("allan_tuned", "naive_tuned"):
+        block = summary["filters"][name]
         print(
             f"{name:<14} RMSE {block['rmse_deg']:.4f} deg | "
             f"max {block['max_error_deg']:.4f} deg | NEES {block['nees_mean']:.2f}"
         )
+    for name in ("ablation_arw_only", "ablation_bias_x60"):
+        block = summary["filters"][name]
+        print(f"{name:<14} RMSE {block['rmse_deg']:.4f} deg | NEES {block['nees_mean']:.2f}")
+    stats = summary["identification"]["seed_stats"]
+    print(
+        f"10 seeds: ARW median {stats['arw_pct']['median']:+.2f} % "
+        f"[{stats['arw_pct']['low']:+.2f}, {stats['arw_pct']['high']:+.2f}], "
+        f"BI median {stats['bias_pct']['median']:+.2f} % "
+        f"[{stats['bias_pct']['low']:+.2f}, {stats['bias_pct']['high']:+.2f}]"
+    )
     return 0
 
 

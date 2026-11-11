@@ -1,7 +1,7 @@
 {
   "module": "imu_allan_noise_identification",
   "version": "0.1.0",
-  "generated_utc": "2026-11-10T16:51:53+00:00",
+  "generated_utc": "2026-11-11T04:47:45+00:00",
   "environment": {
     "python": "3.12.14",
     "numpy": "2.3.5",
@@ -30,6 +30,19 @@
       "bias_pct": 16.17524865078361
     },
     "samples": 360000,
+    "seed_stats": {
+      "arw_pct": {
+        "median": 0.4588446426569137,
+        "low": 0.22846575084036203,
+        "high": 0.923631677521969
+      },
+      "bias_pct": {
+        "median": 3.771110054250511,
+        "low": -16.701060373527355,
+        "high": 44.42496622002997
+      },
+      "seeds": 10
+    },
     "allan_curve": [
       {
         "tau_s": 0.04000000000000001,
@@ -131,18 +144,26 @@
   },
   "filters": {
     "allan_tuned": {
-      "rmse_deg": 0.017012410614531927,
-      "max_error_deg": 0.43428639050388934,
-      "nees_mean": 1.6237746072138337
+      "rmse_deg": 0.01702017240169997,
+      "max_error_deg": 0.4342863905038894,
+      "nees_mean": 1.6090319305067684
     },
     "naive_tuned": {
       "model": {
         "arw": 0.075,
         "bias_instability": 0.75
       },
-      "rmse_deg": 0.01792495759042572,
+      "rmse_deg": 0.017915825576579444,
       "max_error_deg": 0.43428634023920787,
-      "nees_mean": 8.702425618557884
+      "nees_mean": 10.074872749153576
+    },
+    "ablation_arw_only": {
+      "rmse_deg": 0.017933493422406892,
+      "nees_mean": 7.816764883989606
+    },
+    "ablation_bias_x60": {
+      "rmse_deg": 0.019533814875554122,
+      "nees_mean": 1.545515080430488
     }
   }
 }

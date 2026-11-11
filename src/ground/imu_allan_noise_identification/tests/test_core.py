@@ -32,7 +32,8 @@ TRUTH = NoiseModel(arw=0.30, bias_instability=3.00)
 
 def _white_series(count: int, dt: float, arw: float, seed: int = 0):
     model = NoiseModel(arw=arw, bias_instability=0.0)
-    return np.random.default_rng(seed).normal(0.0, math.sqrt(model.sample_noise(dt)), count)
+    rate_variance, _ = model.sample_noise(dt)
+    return np.random.default_rng(seed).normal(0.0, math.sqrt(rate_variance), count)
 
 
 class AllanTests(unittest.TestCase):
@@ -62,7 +63,9 @@ class AllanTests(unittest.TestCase):
     def test_conversions_to_filter_units(self):
         model = NoiseModel(arw=0.3, bias_instability=3.0)
         self.assertAlmostEqual(model.angle_noise_density, 0.3 / 60.0, places=9)
-        self.assertAlmostEqual(model.sample_noise(0.01), (0.3 / 60.0) ** 2 / 0.01, places=9)
+        rate_variance, bias_variance = model.sample_noise(0.01)
+        self.assertAlmostEqual(rate_variance, (0.3 / 60.0) ** 2 / 0.01, places=9)
+        self.assertAlmostEqual(bias_variance, model.bias_walk_density**2 * 0.01, places=12)
 
     def test_bias_instability_floor_constant(self):
         self.assertAlmostEqual(BIAS_INSTABILITY_FACTOR, 0.6643, places=4)

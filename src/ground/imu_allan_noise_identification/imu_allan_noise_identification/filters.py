@@ -42,24 +42,31 @@ class TiltFilter:
             ),
         )
 
-    def noise_terms(self, dt: float) -> tuple[float, float]:
-        """``(q_angle, q_bias)`` for one prediction step of length ``dt``.
+    def process_noise(self, dt: float) -> np.ndarray:
+        """2x2 process covariance: ARW drives the angle, BI drives the bias.
 
-        The bias is modelled as constant, so only the angle receives process
-        noise; a small bias term keeps the covariance from collapsing.
+        With ``sigma_n`` the rate noise density and ``K`` the bias random-walk
+        density, the standard discretisation of ``d(theta)/dt = omega - b`` is
+
+        ``Q = [[n^2 dt + K^2 dt^3/3, K^2 dt^2/2], [K^2 dt^2/2, K^2 dt]]``.
         """
-        return self.model.sample_noise(dt) * dt**2, 1e-12
+        rate_variance, bias_variance = self.model.sample_noise(dt)
+        n_squared = rate_variance * dt
+        k_squared = bias_variance / dt
+        return np.array(
+            [
+                [n_squared * dt + k_squared * dt**3 / 3.0, k_squared * dt**2 / 2.0],
+                [k_squared * dt**2 / 2.0, k_squared * dt],
+            ]
+        )
 
     def predict(self, gyro_deg_s: float, dt: float) -> None:
         if dt <= 0.0:
             raise ValueError("dt must be positive")
-        q_angle, q_bias = self.noise_terms(dt)
+        process = self.process_noise(dt)
         transition = np.array([[1.0, -dt], [0.0, 1.0]])
         self.state[0] = self.state[0] + (gyro_deg_s - self.state[1]) * dt
-        self.covariance = (
-            transition @ self.covariance @ transition.T
-            + np.array([[q_angle, 0.0], [0.0, q_bias]])
-        )
+        self.covariance = transition @ self.covariance @ transition.T + process
 
     def update(self, accel_tilt_deg: float) -> float:
         innovation = accel_tilt_deg - self.state[0]
