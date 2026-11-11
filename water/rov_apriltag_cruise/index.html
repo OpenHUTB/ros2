@@ -743,8 +743,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#7">7. 相关链接</a>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../rov_wreck_inspection/">水下 ROV 视觉引导的沉船结构巡检采样仿真</a>
@@ -891,20 +889,12 @@
 <td style="text-align: left;">显卡</td>
 <td style="text-align: left;">支持 OpenGL 2.1+（虚拟机需开启 3D 加速）</td>
 </tr>
+<tr>
+<td style="text-align: left;">---</td>
+<td style="text-align: left;"></td>
+</tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="admonition-title">依赖安装</p>
-<p>本模块依赖以下 ROS 2 包，系统默认已包含在 <code>ros-humble-desktop</code> 中：
-- <code>gazebo_ros</code>（Gazebo-ROS 桥接）
-- <code>cv_bridge</code>（ROS-OpenCV 图像转换）
-- <code>tf2_ros</code>（坐标变换）
-- <code>nav_msgs</code> / <code>visualization_msgs</code>（轨迹与标记）</p>
-<p>若缺少 OpenCV 的 ArUco 模块，请安装（ArUco 位于 <code>contrib</code> 包中，不存在独立的 <code>libopencv-aruco-dev</code>）：
-</p><div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libopencv-dev<span class="w"> </span>libopencv-contrib-dev
-</code></pre></div>
-</div>
-<hr/>
 <h2 id="3">3. 核心代码文件清单</h2>
 <table>
 <thead>
@@ -1079,18 +1069,7 @@ ros2<span class="w"> </span>run<span class="w"> </span>tf2_ros<span class="w"> <
 <li><strong>环境光</strong>：ambient 设置为 (0.30, 0.45, 0.58)，模拟深水蓝绿色调。</li>
 <li><strong>运动方式</strong>：世界重力设为 0，ROV 以运动学方式运动——控制器每 0.05 s 调用一次 <code>/gazebo/set_entity_state</code> 直接设置位姿，不含推力/浮力动力学插件。</li>
 </ul>
-<hr/>
-<h2 id="7">7. 相关链接</h2>
-<ul>
-<li><a href="../rov_physical_simulation/">水下机器人物理仿真与 6-DOF 键盘运动控制</a></li>
-<li><a href="../rov_trajectory_tracking/">水下多传感器感知与 3D 轨迹跟踪控制</a></li>
-<li><a href="../rov_sonar_slam_navigation/">水下声呐 SLAM 占据栅格建图与自主避障导航</a></li>
-</ul>
-<hr/>
-<div class="admonition tip">
-<p class="admonition-title">大模型声明</p>
-<p>本模块代码与文档由大模型辅助生成，核心算法与参数经人工调试验证。</p>
-</div></div>
+<hr/></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
