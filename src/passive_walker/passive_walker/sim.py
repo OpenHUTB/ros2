@@ -12,12 +12,32 @@
 """
 
 import math
+import operator
 import os
 
 XML_NAME = "passive_walker.xml"
 N_SPOKE = 12                     # XML 里的辐条数，仅作兜底默认值
 RADIUS = 0.45                    # 辐条长度（轮心到端部小球中心）
 Q_X, Q_Z, Q_ANGLE = 0, 1, 2      # qpos 顺序：slide_x, slide_z, roll
+
+
+def validate_finite(name, value):
+    """Convert a numeric input and reject NaN/inf before it reaches MuJoCo."""
+    try:
+        result = float(value)
+    except (OverflowError, TypeError, ValueError):
+        raise ValueError("%s must be a finite number" % name)
+    if not math.isfinite(result):
+        raise ValueError("%s must be a finite number" % name)
+    return result
+
+
+def validate_positive(name, value):
+    """Convert a finite numeric input that must be greater than zero."""
+    result = validate_finite(name, value)
+    if result <= 0.0:
+        raise ValueError("%s must be greater than zero" % name)
+    return result
 
 
 def find_asset(name=XML_NAME):
@@ -44,13 +64,14 @@ class PassiveWalker:
     """无动力的平面轮辐式被动行走器。"""
 
     def __init__(self, xml_path=None, push_speed=0.3):
+        push_speed = validate_finite("push_speed", push_speed)
         import mujoco
 
         self._mujoco = mujoco
         self.model = mujoco.MjModel.from_xml_path(xml_path or find_asset())
         self.data = mujoco.MjData(self.model)
-        self.dt = float(self.model.opt.timestep)
-        self.push_speed = float(push_speed)
+        self.dt = validate_positive("model.opt.timestep", self.model.opt.timestep)
+        self.push_speed = push_speed
         wheel = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "wheel")
         if wheel < 0:                                    # 按名字找，避免 body 增删后索引错位
             raise ValueError("模型里找不到名为 'wheel' 的 body")
@@ -63,7 +84,7 @@ class PassiveWalker:
     def reset(self, push_speed=None):
         d = self.data
         self._mujoco.mj_resetData(self.model, d)
-        speed = self.push_speed if push_speed is None else float(push_speed)
+        speed = self.push_speed if push_speed is None else validate_finite("push_speed", push_speed)
         d.qvel[Q_X] = speed                       # 前向线速度
         d.qvel[Q_ANGLE] = speed / self._roll_radius()   # 匹配的滚动角速度
         self._mujoco.mj_forward(self.model, d)
@@ -114,7 +135,15 @@ class PassiveWalker:
 
     # ---------- 推进 ----------
     def step(self, n=1):
-        for _ in range(int(n)):
+        if isinstance(n, bool):
+            raise ValueError("n must be a non-negative integer")
+        try:
+            count = operator.index(n)
+        except TypeError:
+            raise ValueError("n must be a non-negative integer")
+        if count < 0:
+            raise ValueError("n must be a non-negative integer")
+        for _ in range(count):
             self._mujoco.mj_step(self.model, self.data)
             h = self._hub_clearance()
             self._hmin = min(self._hmin, h)
@@ -128,7 +157,20 @@ class PassiveWalker:
                     self._prev_contacts = key
 
     def run(self, seconds):
-        self.step(int(round(seconds / self.dt)))
+        seconds = validate_positive("seconds", seconds)
+        whole_steps = int(seconds // self.dt)
+        remainder = seconds - whole_steps * self.dt
+        if remainder <= max(1e-12, seconds * 1e-12):
+            remainder = 0.0
+        if whole_steps:
+            self.step(whole_steps)
+        if remainder:
+            original_timestep = float(self.model.opt.timestep)
+            try:
+                self.model.opt.timestep = remainder
+                self.step()
+            finally:
+                self.model.opt.timestep = original_timestep
 
     # ---------- 状态 ----------
     @property
@@ -178,6 +220,8 @@ class PassiveWalker:
 
 
 def run_headless(seconds=20.0, push_speed=0.3, xml_path=None):
+    seconds = validate_positive("seconds", seconds)
+    push_speed = validate_finite("push_speed", push_speed)
     sim = PassiveWalker(xml_path=xml_path, push_speed=push_speed)
     sim.run(seconds)
     return sim.summary()

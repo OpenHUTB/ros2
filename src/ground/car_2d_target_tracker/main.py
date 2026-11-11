@@ -332,7 +332,7 @@ def run(demo=False, headless=False, seed=DEFAULT_SEED, duration=20.0,
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and not demo:
+            elif event.type == pygame.MOUSEBUTTONDOWN and not demo and auto_mode:
                 target.set_pos(*event.pos)
                 arrived = False
             elif event.type == pygame.KEYDOWN and not demo:

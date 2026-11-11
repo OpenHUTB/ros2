@@ -9,8 +9,9 @@
     订阅  /cmd_vel        geometry_msgs/Twist（linear.x = 期望前进速度，m/s）
     发布  /locomotion_status  std_msgs/String（"stand" / "trot"，便于观察）
 
-说明：订阅到 ``|linear.x| > 0.02`` 时切换到对角步态，并用速度指令线性缩放
-步态幅度（步态频率保持参数值）；否则回到站立保持。仿真在节点定时器里
+说明：订阅到 |linear.x| > 0.02 时切换到对角步态；正值前进、负值后退，
+速度绝对值线性缩放步态幅度（步态频率保持参数值）。方向改变时重置步态相位，
+否则回到站立保持。仿真在节点定时器里
 按 MuJoCo 时间步推进，节点不依赖 Gazebo。
 
 运行（无需 colcon 构建，直接以脚本方式跑）：::
@@ -50,7 +51,9 @@ from locomotion_core import (  # noqa: E402
     TrotGait,
     base_rpy_deg,
     base_height,
+    clamp_speed_command,
     default_model_path,
+    speed_direction,
 )
 
 HINGE_JOINTS = tuple(
@@ -87,7 +90,8 @@ class LocomotionNode(Node):
         self._mode = str(self.get_parameter("mode").value)
         self._speed_cmd = 0.0
         self._t = 0.0        # 仿真总时间（日志用）
-        self._gait_t = 0.0   # 步态相位计时，每次切到 trot 时归零，保证可复现
+        self._gait_t = 0.0   # 步态相位计时，起步或换向时归零
+        self._direction = 0
         self._steps_per_tick = max(
             1, int(round(1.0 / float(self.get_parameter("control_hz").value)
                          / self.robot.timestep)))
@@ -124,22 +128,24 @@ class LocomotionNode(Node):
         import mujoco
         return mujoco.mj_id2name(self.robot.model, mujoco.mjtObj.mjOBJ_JOINT, jid)
 
-    def _build_controller(self, mode, amplitude_scale):
+    def _build_controller(self, mode, amplitude_scale, direction=1):
         if mode == "stand":
             return StandController(self.robot)
         return TrotGait(
             self.robot,
             freq=float(self.get_parameter("freq").value),
-            a_thigh=float(self.get_parameter("thigh_amp").value) * amplitude_scale,
-            a_calf=float(self.get_parameter("calf_amp").value) * amplitude_scale,
+            a_thigh=float(self.get_parameter("thigh_amp").value),
+            a_calf=float(self.get_parameter("calf_amp").value),
             phase_offset=float(self.get_parameter("phase_offset").value),
             kp_roll=float(self.get_parameter("kp_roll").value),
             kp_pitch=float(self.get_parameter("kp_pitch").value),
             kp_height=float(self.get_parameter("kp_height").value),
+            direction=direction,
+            amplitude_scale=amplitude_scale,
         )
 
     def _cmd_vel_cb(self, msg):
-        self._speed_cmd = max(-MAX_SPEED, min(MAX_SPEED, float(msg.linear.x)))
+        self._speed_cmd = clamp_speed_command(msg.linear.x, MAX_SPEED)
 
     def _amplitude_scale(self):
         """速度指令 → 步态幅度缩放（0.2 ~ 2.0 倍）。"""
@@ -148,26 +154,41 @@ class LocomotionNode(Node):
     def _tick(self):
         import mujoco
 
-        # 决定本周期用哪种控制：stand 模式恒定站立，trot 模式随速度指令切换
+        # stand 模式恒定站立，trot 模式按带符号速度切换方向
+        requested_direction = speed_direction(self._speed_cmd)
         if self._mode == "stand":
             desired = "stand"
         else:
-            desired = "trot" if abs(self._speed_cmd) > 0.02 else "stand"
+            desired = "trot" if requested_direction != 0 else "stand"
         if desired != self._activity:
             self._activity = desired
             if desired == "stand":
+                self._direction = 0
                 self._controller = StandController(self.robot)
             else:
-                self._gait_t = 0.0   # 相位归零：保证每次起步的步态可复现
+                self._direction = requested_direction
+                self._gait_t = 0.0
                 self._controller = self._build_controller(
-                    "trot", self._amplitude_scale())
+                    "trot", self._amplitude_scale(), self._direction)
                 p = self._controller.params()
                 self.get_logger().info(
-                    "步态参数: freq=%.2f Hz, thigh=%.3f rad, calf=%.3f rad, "
+                    "步态参数: direction=%s, freq=%.2f Hz, thigh=%.3f rad, calf=%.3f rad, "
                     "phase_offset=%.2f, kp_roll=%s"
-                    % (p["freq"], p["a_thigh"], p["a_calf"],
+                    % ("forward" if self._direction > 0 else "backward",
+                       p["freq"], p["a_thigh"], p["a_calf"],
                        p["phase_offset"], p["kp_roll"]))
             self.get_logger().info("控制模式切换为: %s" % desired)
+        elif desired == "trot" and requested_direction != self._direction:
+            self._direction = requested_direction
+            self._gait_t = 0.0
+            self._controller = self._build_controller(
+                "trot", self._amplitude_scale(), self._direction)
+            self.get_logger().info(
+                "步态方向切换为: %s"
+                % ("forward" if self._direction > 0 else "backward"))
+
+        if desired == "trot":
+            self._controller.set_amplitude_scale(self._amplitude_scale())
 
         # 推进仿真：一个定时器周期内跑 steps_per_tick 个 MuJoCo 步
         for _ in range(self._steps_per_tick):
@@ -186,7 +207,7 @@ class LocomotionNode(Node):
 
         roll, pitch = base_rpy_deg(self.robot.model, self.robot.data)
         status = String()
-        status.data = "%s |cmd_v|=%.2f m/s | x=%.2f y=%.2f z=%.3f | tilt=%.1f°" % (
+        status.data = "%s cmd_v=%+.2f m/s | x=%.2f y=%.2f z=%.3f | tilt=%.1f°" % (
             self._activity, self._speed_cmd,
             float(self.robot.data.qpos[0]), float(self.robot.data.qpos[1]),
             base_height(self.robot.data), math.hypot(roll, pitch))

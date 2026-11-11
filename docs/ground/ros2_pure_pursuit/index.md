@@ -9,6 +9,7 @@
 * 源代码目录：[`src/ground/ros2_pure_pursuit`](https://github.com/OpenHUTB/ros2/tree/master/src/ground/ros2_pure_pursuit)
 * 一键复现：`cd src/ground/ros2_pure_pursuit && python3 sim/run_sim.py --path eight`
 * 一键检查：`bash ci/run_ci.sh`（语法 → 依赖 → 测试 → 仿真 → 基准，五阶段）
+* CI：修改本模块时，GitHub Actions 会自动执行上面的 `ci/run_ci.sh`（见 `.github/workflows/ground_planner_tests.yml`）。
 
 ## 1. 目标与系统架构
 
@@ -231,12 +232,15 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 | eight | 关 | 0.094 | 0.007 | — | 343 | **是** |
 | s_curve | 开 | 0.299 | 0.087 | 0.659 | 651 | 否 |
 | s_curve | 关 | 0.003 | 0.002 | — | 157 | **是** |
+| s_curve_sparse（1.5 m 路点） | 开 | 0.735 | 0.218 | 0.577 | 696 | 否 |
+| s_curve_sparse（1.5 m 路点） | 关 | 0.208 | 0.059 | — | 342 | **是** |
 | straight | 开 | 0.317 | 0.116 | 0.727 | 475 | 否 |
 | straight | 关 | 0.000 | 0.000 | — | 116 | **是** |
 
 > 表中数据由 `python3 sim/benchmark.py`（默认 `curve_gain=2.5`）在本机生成；
-> 与上一版（`curve_gain=0`，纯速度自适应）相比，RMS 误差下降 11%~12%，
+> 与上一版（`curve_gain=0`，纯速度自适应）相比，稠密路径的 RMS 误差下降 11%~12%，
 > 最大横向误差下降 6%~12%，逐条增益对比见 3.4 节的扫参表。
+> 稀疏路点（`s_curve_sparse`）是本次按评审建议新增的工况，精度低于稠密路径的原因见 7.5 第 4 条。
 
 ### 7.3 轨迹与误差曲线（开启避障）
 
@@ -245,6 +249,8 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 ![圆形路径跟踪轨迹与横向误差](circle.png)
 
 ![S 形路径跟踪轨迹与横向误差](s_curve.png)
+
+![S 形稀疏路点（1.5 m）跟踪轨迹与横向误差](s_curve_sparse.png)
 
 ![直线路径跟踪轨迹与横向误差](straight.png)
 
@@ -263,12 +269,17 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 3. **弯道性能**：S 形路径曲率反号处曾是误差尖峰（旧版最大 0.32 m）。启用曲率自适应前视后
    最大误差降到 0.299 m、RMS 从 0.099 降到 0.087；直线路径的最大误差（0.317 m）不随自适应变化，
    因为它来自绕障时的横向绕行，而不是纯追踪本身。
+4. **稀疏路点**：把 S 形路径按 1.5 m 等距重采样（`Path.resample()`）后，RMS 从 0.087 升到 0.218、
+   最大误差 0.735 m，但**仍然没有碰撞**。原因有两层：一是纯追踪按"最近顶点"取索引、横向误差也量到
+   该顶点所在线段，路点稀疏时参考几何本身就粗；二是曲率窗口内只剩约 3 个点，`kappa` 估计更粗。
+   改善方向是上游先做样条平滑/加密，或把索引改成"线段投影 + 插值起点"——本次试过只把索引改成线段投影，
+   会让前视起点落到机器人身后导致震荡，因此没有采用，留作后续工作。
 
 ## 8. 测试与可复现性
 
-`python3 tests/test_core.py` 共 **30 项**，全部通过；`bash ci/run_ci.sh` 一条命令跑完
+`python3 tests/test_core.py` 共 **34 项**，全部通过；`bash ci/run_ci.sh` 一条命令跑完
 语法 → 依赖 → 测试 → 仿真 → 基准 五个阶段。除运动学与几何外，其中包含针对上文
-安全规则与曲率自适应的回归测试：
+安全规则、曲率自适应与稀疏路点的回归测试：
 
 | 测试 | 锁定的行为 |
 | --- | --- |
@@ -283,6 +294,10 @@ $$\psi = \operatorname{atan2}\left(2(wz+xy),\ 1-2(y^2+z^2)\right)$$
 | `test_path_curvature_matches_circle_and_straight` | 曲率估计：半径 8 m 圆 ≈ 0.125，直线 ≈ 0 |
 | `test_lookahead_shrinks_on_curvature` | 弯道前视距离小于直道，且不低于 `ld_min` |
 | `test_lookahead_curve_gain_zero_keeps_speed_only` | `curve_gain=0` 与旧行为逐位一致 |
+| `test_curvature_sign_changes_on_s_curve` | S 形路径曲率确实变号（自适应取绝对值） |
+| `test_resample_keeps_length_and_spacing` | 等距重采样保持总长、平均间距接近目标值 |
+| `test_lookahead_shrinks_on_sparse_curve` | 1.5 m 稀疏路点上弯道前视仍会缩短 |
+| `test_pure_pursuit_tracks_sparse_s_curve` | 稀疏路点可跑完全程，且横向误差受控 |
 
 ## 9. 局限与展望
 
