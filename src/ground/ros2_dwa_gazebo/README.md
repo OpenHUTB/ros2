@@ -36,7 +36,8 @@ source install/setup.bash
 ros2 launch ros2_dwa_gazebo main_launch.py
 
 # 终端 2：验证机器人是否真的动了、是否保持安全间隙
-ros2 run ros2_dwa_gazebo verify_nav
+ros2 run ros2_dwa_gazebo verify_nav --ros-args \
+  -p min_displacement:=3.8 -p timeout:=60.0
 ```
 
 `verify_nav` 订阅 `/odom`、`/scan`、`/cmd_vel`，打印：
@@ -45,7 +46,9 @@ ros2 run ros2_dwa_gazebo verify_nav
 RESULT {"success": true, "displacement_m": ..., "min_scan_m": ..., "max_cmd": ..., "elapsed_s": ...}
 ```
 
-只有位移 ≥ 0.8 m、收到过非零速度、激光最小距离 ≥ 0.12 m 时才退出码 0。
+只有位移 ≥ `min_displacement`（本次设为 3.8 m）、收到过非零速度、激光最小距离
+≥ 0.12 m 时才退出码 0。`timeout` 与 `elapsed_s` 使用 `/odom` 的仿真时间，
+RTF < 1 时也不会误判超时。
 
 ## 3. 参数
 
@@ -65,21 +68,23 @@ RESULT {"success": true, "displacement_m": ..., "min_scan_m": ..., "max_cmd": ..
 Ubuntu 20.04 + ROS 2 Foxy + Gazebo 11（headless，`gzserver`）实跑：
 
 ```text
-RESULT {"success": true, "displacement_m": 3.807, "min_scan_m": 0.128,
-        "max_cmd": 0.991, "elapsed_s": 35.22}
+RESULT {"success": true, "displacement_m": 3.801, "min_scan_m": 0.189,
+        "max_cmd": 0.532, "elapsed_s": 17.95}
 ```
 
 * 起点 `(-2.0, 0.0)`，目标 `(2.5, 0.0)`，1.8 m 走廊 + 两个圆柱；
 * 机器人全程受 A*+DWA 控制，日志出现 `stop: goal reached`；
-* 最小激光距离 **0.128 m**（burger 半径约 0.105 m），未碰撞；
-* 另一次运行 17.9 s、min_scan 0.18 m；Gazebo 的实时因子在 0.5–1.0 之间波动，
-  所以墙钟时间只作为“能跑通”的证据，不作为算法快慢的指标。
+* 最小激光距离 **0.189 m**（burger 半径约 0.105 m），未碰撞；
+* 另一次运行的 min_scan 为 0.128 m，低于配置的 `robot_radius+safety_margin=0.16 m`，
+  说明安全余量不能保证；`elapsed_s` 是 Gazebo 仿真时间，墙钟会受 RTF 影响。
 
 ![Gazebo 轨迹](../../../docs/img/ground/ros2_dwa_gazebo/gazebo_trajectory.png)
 
 ## 5. 局限
 
-* 只验证短距离（约 2 m）直线到达，不是完整导航栈；
+* 只验证约 4.5 m（起点 -2.0 → 目标 2.5，位移 3.8 m）的直线到达，不是完整导航栈；
+* 离线环境需保证 `GAZEBO_MODEL_PATH` 包含 `/usr/share/gazebo-11/models`，
+  并设 `GAZEBO_MODEL_DATABASE_URI=`，否则 ground_plane 找不到或 gzserver 卡在在线模型库；
 * TurtleBot3 burger 只有 2D 激光，没有相机/IMU 融合；
 * 依赖 #1077，需先合并；
 * 三维物理参数（摩擦、轮滑）未做辨识，速度取得较保守。

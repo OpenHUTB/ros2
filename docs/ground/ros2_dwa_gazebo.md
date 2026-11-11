@@ -24,6 +24,15 @@ sudo apt install gazebo11 ros-foxy-gazebo-ros ros-foxy-gazebo-plugins \
   ros-foxy-turtlebot3-msgs ros-foxy-xacro ros-foxy-robot-state-publisher
 ```
 
+离线/headless 运行还需：
+
+```bash
+export GAZEBO_MODEL_PATH=/opt/ros/foxy/share/turtlebot3_gazebo/models:/usr/share/gazebo-11/models:$GAZEBO_MODEL_PATH
+export GAZEBO_MODEL_DATABASE_URI=
+```
+
+否则 `ground_plane` 可能找不到，`gzserver` 也可能卡在在线模型库。
+
 ## 2. 系统组成
 
 ```text
@@ -53,38 +62,41 @@ source install/setup.bash
 ros2 launch ros2_dwa_gazebo main_launch.py
 
 # 终端 2
-ros2 run ros2_dwa_gazebo verify_nav
+ros2 run ros2_dwa_gazebo verify_nav --ros-args \
+  -p min_displacement:=3.8 -p timeout:=60.0
 ```
 
 `verify_nav` 判定成功的条件：
 
-* 位移 ≥ 0.8 m；
+* 位移 ≥ `min_displacement`（本次 3.8 m）；
 * 收到过非零 `/cmd_vel`；
 * 激光最小距离 ≥ 0.12 m（不撞）。
+
+`timeout` 和 `elapsed_s` 用 `/odom` 的仿真时间，RTF < 1 时不会误报超时。
 
 ## 4. 结果
 
 在 Ubuntu 20.04 + ROS 2 Foxy + Gazebo 11 的 headless `gzserver` 中实跑：
 
 ```text
-RESULT {"success": true, "displacement_m": 3.807, "min_scan_m": 0.128,
-        "max_cmd": 0.991, "elapsed_s": 35.22}
+RESULT {"success": true, "displacement_m": 3.801, "min_scan_m": 0.189,
+        "max_cmd": 0.532, "elapsed_s": 17.95}
 ```
 
 | 项目 | 结果 |
 | --- | --- |
 | 起点 → 目标 | `(-2.0, 0.0)` → `(2.5, 0.0)` |
-| 位移 | 3.807 m |
-| 最小激光距离 | 0.128 m（burger 半径约 0.105 m） |
-| 最大速度/角速度指令 | 0.991 |
-| Gazebo 墙钟时间 | 35.22 s（另一次 17.9 s） |
+| 位移 | 3.801 m |
+| 最小激光距离 | 0.189 m（burger 半径约 0.105 m） |
+| 最大速度/角速度指令 | 0.532 |
+| Gazebo 仿真时间 | 17.95 s |
 | DWA 日志 | `stop: goal reached`，无碰撞 |
 
 ![TurtleBot3 + A*+DWA 在 Gazebo 中的轨迹](../img/ground/ros2_dwa_gazebo/gazebo_trajectory.png)
 
-两次运行的墙钟时间差异较大（17.9 s vs 35.2 s），因为 headless Gazebo 的实时因子在
-0.5–1.0 之间波动；位移、最小间隙和“到达目标”的结论一致。墙钟时间只证明链路跑通，
-不作为算法快慢的指标。
+两次运行的墙钟时间差异较大，因为 headless Gazebo 的实时因子会波动；上表的
+`elapsed_s` 是**仿真时间**。另一次运行的 min_scan 为 0.128 m，低于配置的
+`robot_radius+safety_margin=0.16 m`，说明安全余量不能保证。
 
 ## 5. 与二维仿真的差异
 
@@ -100,7 +112,7 @@ RESULT {"success": true, "displacement_m": 3.807, "min_scan_m": 0.128,
 
 ## 6. 局限
 
-* 只验证约 2 m 的短距离直线到达，不是完整导航栈；
+* 只验证约 4.5 m（起点 -2.0 → 目标 2.5，位移 3.8 m）的直线到达，不是完整导航栈；
 * burger 只有 2D 激光，没有视觉/IMU 融合；
 * 三维物理参数（摩擦、轮滑）未辨识，速度取得保守；
 * 依赖 #1077，合并顺序在 #1077 之后。

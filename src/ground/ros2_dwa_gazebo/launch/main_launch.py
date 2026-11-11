@@ -47,7 +47,9 @@ def generate_launch_description() -> LaunchDescription:
     return LaunchDescription([
         SetEnvironmentVariable(
             "GAZEBO_MODEL_PATH",
-            tb3_models + ":" + os.environ.get("GAZEBO_MODEL_PATH", "")),
+            tb3_models + ":/usr/share/gazebo-11/models:" +
+            os.environ.get("GAZEBO_MODEL_PATH", "")),
+        SetEnvironmentVariable("GAZEBO_MODEL_DATABASE_URI", ""),
         DeclareLaunchArgument("goal_x", default_value="2.5"),
         DeclareLaunchArgument("goal_y", default_value="0.0"),
         DeclareLaunchArgument("max_v", default_value="0.22"),

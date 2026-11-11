@@ -4,6 +4,10 @@
 The verifier subscribes to ``/odom``, ``/scan`` and ``/cmd_vel`` and exits 0
 only when the robot has moved at least ``min_displacement`` metres, kept a
 positive laser clearance and received non-zero velocity commands.
+
+Elapsed time and the timeout use the ``/odom`` header stamps (Gazebo sim time),
+so a real-time factor below 1 does not cause a false timeout.  A wall-clock
+guard still stops a run when no odometry arrives at all.
 """
 
 from __future__ import annotations
@@ -12,7 +16,7 @@ import json
 import math
 import sys
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Sequence
 
 import rclpy
@@ -30,14 +34,21 @@ class VerificationState:
     timeout: float = 60.0
     start: Optional[tuple] = None
     last: Optional[tuple] = None
+    start_stamp: Optional[float] = None
+    last_stamp: Optional[float] = None
+    wall_start: Optional[float] = None
     min_scan: float = float("inf")
     max_cmd: float = 0.0
-    elapsed: float = 0.0
 
-    def update_odom(self, x: float, y: float) -> None:
+    def update_odom(self, x: float, y: float,
+                    stamp: Optional[float] = None) -> None:
         if self.start is None:
             self.start = (x, y)
+            self.start_stamp = stamp
+            self.wall_start = time.monotonic()
         self.last = (x, y)
+        if stamp is not None:
+            self.last_stamp = stamp
 
     def update_scan(self, ranges: Sequence[float]) -> None:
         for r in ranges:
@@ -52,6 +63,14 @@ class VerificationState:
         if self.start is None or self.last is None:
             return 0.0
         return math.hypot(self.last[0] - self.start[0], self.last[1] - self.start[1])
+
+    @property
+    def elapsed(self) -> float:
+        if self.start_stamp is not None and self.last_stamp is not None:
+            return max(0.0, self.last_stamp - self.start_stamp)
+        if self.wall_start is not None:
+            return time.monotonic() - self.wall_start
+        return 0.0
 
     def result(self) -> dict:
         success = (self.displacement >= self.min_displacement and
@@ -81,10 +100,11 @@ class NavigationVerifier(Node):
         self.create_subscription(Odometry, "/odom", self.on_odom, qos)
         self.create_subscription(LaserScan, "/scan", self.on_scan, qos)
         self.create_subscription(Twist, "/cmd_vel", self.on_cmd, qos)
-        self._start_time = time.monotonic()
 
     def on_odom(self, msg: Odometry) -> None:
-        self.state.update_odom(msg.pose.pose.position.x, msg.pose.pose.position.y)
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        self.state.update_odom(msg.pose.pose.position.x,
+                               msg.pose.pose.position.y, stamp)
 
     def on_scan(self, msg: LaserScan) -> None:
         self.state.update_scan(msg.ranges)
@@ -93,10 +113,15 @@ class NavigationVerifier(Node):
         self.state.update_cmd(msg.linear.x, msg.angular.z)
 
     def done(self) -> bool:
-        self.state.elapsed = time.monotonic() - self._start_time
+        if self.state.displacement >= self.state.min_displacement:
+            return True
         if self.state.elapsed >= self.state.timeout:
             return True
-        return self.state.displacement >= self.state.min_displacement
+        # No odometry at all: do not hang forever.
+        if self.state.wall_start is not None:
+            wall = time.monotonic() - self.state.wall_start
+            return wall > max(300.0, self.state.timeout * 10.0)
+        return False
 
 
 def main() -> None:
