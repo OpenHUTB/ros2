@@ -9,7 +9,7 @@
 - Ubuntu 24.04
 - ROS2 Jazzy
 - Gazebo Harmonic（`gz sim`）
-- 依赖：ros_gz、ros2_control、ros2_controllers、gz_ros2_control、robot_state_publisher、xacro
+- 依赖：ros_gz、ros_gz_bridge、ros2_control、ros2_controllers、gz_ros2_control、robot_state_publisher、xacro
 
 ## 运行步骤
 
@@ -21,6 +21,7 @@ sudo apt install ros-jazzy-ros-gz ros-jazzy-ros2-control ros-jazzy-ros2-controll
 # 2. 将 gazebo_diff_drive_teleop 包放入工作空间 src 目录，然后一键运行
 bash main.sh          # 默认自动巡航演示（小车沿圆形轨迹行驶）
 bash main.sh manual   # 仅启动仿真，另开终端用键盘控制
+bash main.sh battery  # 电量管理与低电量自动返航
 ```
 
 键盘按键：`w`/`↑` 前进、`x`/`↓` 后退、`a`/`←` 左转、`d`/`→` 右转、`s`/空格 停止、`+`/`-` 调整线速度、`q` 或 `Ctrl-C` 退出（退出前自动停车）。
@@ -40,6 +41,25 @@ ros2 topic echo /odom    # 查看里程计数据
 - 控制节点发布 `/cmd_vel`（Twist）→ `diff_drive_controller` 换算成左右轮目标转速 → `gz_ros2_control` 驱动 Gazebo 中的关节 → 小车运动；
 - 差速控制原理：左右轮转速相同时直行，不同时转向，形成圆弧轨迹；
 - 控制器同时发布 `/odom` 里程计与 `odom -> base_footprint` 的 `/tf` 变换，可用于后续建图与导航。
+
+## 电量管理与低电量返航
+
+`battery_teleop` 在键盘遥控基础上模拟电池消耗：按里程计实际速度和转向量扣电，并持续发布 `/battery_state`。当电量低于 25% 时，节点自动切换到返航模式，使用 `/odom` 位姿闭环驶回充电点；到达后进入 `charging` 状态，电量恢复到 80% 后自动回到手动模式。
+
+| 按键 | 功能 |
+| --- | --- |
+| `w/x/a/d` 或方向键 | 手动驾驶 |
+| `s` / 空格 | 停止；返航中暂停返航 |
+| `h` | 手动返回充电点 |
+| `b` | 演示用，强制把电量降到阈值以下 |
+| `+` / `-` | 调整线速度 |
+| `q` / `Ctrl-C` | 退出并自动停车 |
+
+![电量管理与自动返航运行数据](../img/ground/gazebo_diff_drive_teleop_battery_return.png)
+
+上图由一次真实 Gazebo 运行记录生成：左侧为手动驶离和自动返回轨迹，绿色方块为充电点；右侧为电量曲线，阴影区域为到达充电点后的充电阶段。此次运行中，小车从充电点驶出约 0.67 m，强制低电量后自动返回，进入 `charging` 状态后电量由 6.3% 开始回升。
+
+返航时先根据位姿计算到充电点的距离和航向误差：误差大时原地转向，误差较小时按距离比例给线速度，接近目标时减速；到达位置后再对齐目标航向并进入充电状态。
 
 ## 说明
 

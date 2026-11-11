@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Gazebo 差速小车键盘控制：统一入口，编译并一键启动整个模块。
+# Gazebo 差速小车：编译并一键启动。
 # 用法:
-#   bash main.sh          # 默认自动巡航演示（小车沿圆形轨迹行驶）
-#   bash main.sh manual   # 仅启动仿真，另开终端用键盘控制
+#   bash main.sh          # 自动巡航演示
+#   bash main.sh demo     # 自动巡航演示
+#   bash main.sh manual   # 仅启动仿真，另开终端运行键盘节点
+#   bash main.sh battery  # 启动仿真并进入电量管理/自动返航节点
 set -e
 
-# 本脚本位于 <ws>/src/.../gazebo_diff_drive_teleop/main.sh，向上回溯找到工作空间根目录（含 src/）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WS_ROOT="$SCRIPT_DIR"
 while [ "$WS_ROOT" != "/" ] && [ ! -d "$WS_ROOT/src" ]; do
@@ -19,15 +20,75 @@ fi
 
 cd "$WS_ROOT"
 echo "==> 编译 gazebo_diff_drive_teleop 包"
-# 只扫描 src/，避免把 scr/ 下的同名备份包也扫描进来导致“重复包名”错误
 colcon build --base-paths src --packages-select gazebo_diff_drive_teleop
 source install/setup.bash
 
 MODE="${1:-demo}"
+if [ "$#" -gt 0 ]; then
+    shift
+fi
+
+if [ "$MODE" = "battery" ]; then
+    mkdir -p "$WS_ROOT/log"
+    LAUNCH_LOG="$WS_ROOT/log/gazebo_diff_drive_battery_launch.log"
+
+    echo "==> 后台启动 Gazebo 和控制器"
+    setsid ros2 launch gazebo_diff_drive_teleop \
+        gazebo_diff_drive_teleop.launch.py demo:=false "$@" \
+        >"$LAUNCH_LOG" 2>&1 &
+    LAUNCH_PID=$!
+
+    cleanup() {
+        if kill -0 "$LAUNCH_PID" 2>/dev/null; then
+            kill -INT -- -"$LAUNCH_PID" 2>/dev/null || true
+            for _ in $(seq 1 20); do
+                kill -0 "$LAUNCH_PID" 2>/dev/null || break
+                sleep 0.1
+            done
+            kill -TERM -- -"$LAUNCH_PID" 2>/dev/null || true
+            wait "$LAUNCH_PID" 2>/dev/null || true
+        fi
+    }
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    echo "==> 等待控制器和 /odom 就绪"
+    READY=0
+    for _ in $(seq 1 30); do
+        if timeout 2s ros2 topic echo /odom --once >/dev/null 2>&1; then
+            READY=1
+            break
+        fi
+        if ! kill -0 "$LAUNCH_PID" 2>/dev/null; then
+            echo "[错误] 仿真进程已退出，日志：" >&2
+            tail -n 30 "$LAUNCH_LOG" >&2
+            exit 1
+        fi
+        sleep 1
+    done
+    if [ "$READY" -ne 1 ]; then
+        echo "[错误] 等待 /odom 超时，仿真日志：" >&2
+        echo "  $LAUNCH_LOG" >&2
+        tail -n 30 "$LAUNCH_LOG" >&2
+        exit 1
+    fi
+
+    echo "==> 仿真就绪，进入电量管理/自动返航（按 q 退出）"
+    echo "    仿真日志: $LAUNCH_LOG"
+    set +e
+    ros2 run gazebo_diff_drive_teleop battery_teleop
+    STATUS=$?
+    set -e
+    exit "$STATUS"
+fi
+
 if [ "$MODE" = "manual" ]; then
     echo "==> 启动 Gazebo 仿真（手动模式，另开终端运行: ros2 run gazebo_diff_drive_teleop teleop_keyboard）"
-    ros2 launch gazebo_diff_drive_teleop gazebo_diff_drive_teleop.launch.py demo:=false
+    ros2 launch gazebo_diff_drive_teleop \
+        gazebo_diff_drive_teleop.launch.py demo:=false "$@"
 else
     echo "==> 启动 Gazebo 仿真 + 自动巡航演示"
-    ros2 launch gazebo_diff_drive_teleop gazebo_diff_drive_teleop.launch.py
+    ros2 launch gazebo_diff_drive_teleop \
+        gazebo_diff_drive_teleop.launch.py "$@"
 fi
