@@ -14,37 +14,37 @@
 
 ### 1.1 配置矩阵
 
-每个推进器用位置 \(\mathbf{r}_i\) 与推力方向 \(\mathbf{d}_i\)（单位向量）描述，对机体六维力旋量贡献
+每个推进器用位置 $\mathbf{r}_i$ 与推力方向 $\mathbf{d}_i$（单位向量）描述，对机体六维力旋量贡献
 
-\[
+$$
 \mathbf{t}_i=\begin{bmatrix}\mathbf{d}_i\\ \mathbf{r}_i\times\mathbf{d}_i\end{bmatrix}\in\mathbb{R}^6,
 \qquad
 \boldsymbol{\tau}=T\mathbf{f},\quad T=[\mathbf{t}_1,\dots,\mathbf{t}_8]
-\]
+$$
 
 本模块的 8 推进器：4 个水平 45° 布置在四角（提供纵向、横向、艏摇），4 个垂直布置在
-\((\pm0.30,\pm0.22)\)（提供升沉、横滚、纵倾）。配置矩阵条件数 10.9，满秩 6。
+$(\pm0.30,\pm0.22)$（提供升沉、横滚、纵倾）。配置矩阵条件数 10.9，满秩 6。
 
 > 备注：只用 2 个垂推时矩阵秩为 5（横滚不可控），这也是实际 ROV 要么 2 垂推只做纵倾、
 > 要么 4 垂推才做横滚的原因。第一版就是 6 推进器，`cond=inf`，加两个垂推后才满秩。
 
 ### 1.2 三种分配
 
-- 伪逆：\(\mathbf{f}=T^{+}\boldsymbol{\tau}\)，残差为零但**不检查限幅**；
-- 伪逆后限幅：\(\mathbf{f}=\mathrm{clip}(T^{+}\boldsymbol{\tau},\pm f_{\max})\)，安全但残差被放大；
+- 伪逆：$\mathbf{f}=T^{+}\boldsymbol{\tau}$，残差为零但**不检查限幅**；
+- 伪逆后限幅：$\mathbf{f}=\mathrm{clip}(T^{+}\boldsymbol{\tau},\pm f_{\max})$，安全但残差被放大；
 - 箱约束 QP：
 
-\[
+$$
 \min_{\mathbf{f}}\ \lVert T\mathbf{f}-\boldsymbol{\tau}\rVert^2+\lambda\lVert\mathbf{f}\rVert^2
 \quad\text{s.t.}\quad |f_i|\le f_{\max}
-\]
+$$
 
-用循环坐标下降求解（每次只更新一个分量并投影回盒内），\(\lambda=10^{-6}\) 只作数值正则。
+用循环坐标下降求解（每次只更新一个分量并投影回盒内），$\lambda=10^{-6}$ 只作数值正则。
 
 ### 1.3 需求生成
 
-包络内需求取 \(\boldsymbol{\tau}=T\mathbf{f}_{\text{true}}\)，其中 \(f_{\text{true}}\) 在
-\([-f_{\max},f_{\max}]\) 内均匀采样，因此一定可达；超包络需求把同样的力旋量乘以 1.8，
+包络内需求取 $\boldsymbol{\tau}=T\mathbf{f}_{\text{true}}$，其中 $f_{\text{true}}$ 在
+$[-f_{\max},f_{\max}]$ 内均匀采样，因此一定可达；超包络需求把同样的力旋量乘以 1.8，
 必然触发限幅。这样两类场景的"标准答案"都是已知的。
 
 ## 2. ROS 2 接口
@@ -99,7 +99,7 @@ python3 -m unittest discover -s tests -v
 1. 包络内伪逆与 QP 都精确，但伪逆有 2.8 % 的指令越限——分配器必须知道限幅，否则下游再截断就失真；
 2. 超包络时没有精确解，QP 的力旋量残差比"先伪逆再限幅"低 36 %（20.00 vs 31.41）；
 3. 代价是 QP 的推力平方和更高（7563 vs 6629）——它优先保力旋量而非省电，实际部署可按任务在
-   \(\lambda\) 与残差权重之间取舍。
+   $\lambda$ 与残差权重之间取舍。
 
 ## 5. 复现
 
