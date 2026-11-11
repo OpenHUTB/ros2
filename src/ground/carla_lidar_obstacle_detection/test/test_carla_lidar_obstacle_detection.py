@@ -4,11 +4,13 @@
 必须按 uint32 读；若当成 float32 会把实例号读成 1e-44 量级的极小浮点数。
 """
 import os
+import sys
 
 import numpy as np
 import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
 APP = os.path.join(ROOT, 'carla_lidar_obstacle_detection', 'app.py')
 
 
@@ -54,3 +56,24 @@ def test_class_from_tag(helpers):
     assert cls(15) == 'vehicle'
     assert cls(12) == 'walker'
     assert cls(1) == 'other'
+def test_replay_runs_without_carla():
+    """离线回放回归：world=None 时 detect_objects 不能崩（评审复核时踩到的阻塞 bug）。"""
+    import numpy as np
+    from carla_lidar_obstacle_detection.app import detect_objects, load_params
+
+    npz = os.path.join(ROOT, "docs", "replay_sample.npz")
+    if not os.path.exists(npz):
+        import pytest as _pytest
+        _pytest.skip("replay sample not shipped")
+    data = np.load(npz)
+    cfg = load_params(os.path.join(ROOT, "config", "params.yaml"))
+    dets = detect_objects(None, (data["xyz"], data["obj_idx"], data["obj_tag"]), cfg)
+    assert isinstance(dets, list)
+    assert all("cls" in d and "dist" in d for d in dets)
+
+
+def test_detect_objects_none_world_empty_cloud():
+    from carla_lidar_obstacle_detection.app import detect_objects, load_params
+
+    cfg = load_params(os.path.join(ROOT, "config", "params.yaml"))
+    assert detect_objects(None, None, cfg) == []

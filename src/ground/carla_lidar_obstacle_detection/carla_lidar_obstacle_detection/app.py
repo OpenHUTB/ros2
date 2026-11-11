@@ -312,7 +312,7 @@ def detect_objects(world, cloud, cfg):
         if not np.isfinite(dist) or dist > max_range:
             continue
         lo, hi = pts.min(axis=0), pts.max(axis=0)
-        actor = world.get_actor(int(inst))
+        actor = world.get_actor(int(inst)) if world is not None else None
         cls = classify(actor) if actor is not None else class_from_tag(int(obj_tag[sel_mask][0]))
         out.append({
             "instance": int(inst),
@@ -549,6 +549,9 @@ def run_replay(cfg, npz_path):
     """
     import numpy as _np
     data = _np.load(npz_path)
+    missing = [k for k in ("xyz", "obj_idx", "obj_tag") if k not in data]
+    if missing:
+        raise SystemExit("[lidar] 回放文件缺少字段 %s（需要 xyz/obj_idx/obj_tag）" % missing)
     cloud = (data["xyz"], data["obj_idx"], data["obj_tag"])
     cfg["output"]["save_dir"] = cfg["output"].get("save_dir", "docs") + "_replay"
     save_dir = os.path.join(_output_root(), cfg["output"]["save_dir"])
