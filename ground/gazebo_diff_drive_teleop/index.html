@@ -393,9 +393,35 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#143">14.3 实测结果</a>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#144">14.4 结论</a>
+</li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#15">15. 说明</a>
+<li class="toctree-l2"><a class="reference internal" href="#15">15. 相对运动原语与闭环停车</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#151">15.1 动作定义</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#152">15.2 直线闭环</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#153">15.3 转向闭环</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#154">15.4 误差与安全</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#16">16. 参数、话题与实测结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#161">16.1 参数</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#162-tf">16.2 话题与 TF</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#163">16.3 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#164">16.4 结论</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#17">17. 说明</a>
 </li>
 </ul>
 </li>
@@ -1525,7 +1551,168 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 </table>
 <p>图中左侧为手动驶离（蓝）和自动返回（橙）轨迹，绿色方块为充电点；右侧为电量曲线，阴影区域为充电阶段。</p>
 <p><img alt="电量管理与自动返航运行数据" src="../../img/ground/gazebo_diff_drive_teleop_battery_return.png"/></p>
-<h2 id="15">15. 说明</h2>
+<h3 id="144">14.4 结论</h3>
+<p>实测表明，电量低于阈值后，节点能够基于 <code>/odom</code> 自动返回充电点并进入充电状态；返航过程中状态切换清晰，充电后电量开始回升。该结果验证了“能量感知 + 低电量安全返航”的闭环逻辑。电池模型为软件模拟，结论仅针对当前仿真参数和单次运行，不能替代真实电池特性。</p>
+<h2 id="15">15. 相对运动原语与闭环停车</h2>
+<h3 id="151">15.1 动作定义</h3>
+<p><code>precision_moves</code> 把动作分成两类：</p>
+<ul>
+<li><code>move(d)</code>：沿起始航向移动有符号距离 <code>d</code>；</li>
+<li><code>turn(θ)</code>：绕自身转动有符号角度 <code>θ</code>。</li>
+</ul>
+<p>按 <code>6</code> 会生成一个 8 个动作的队列：</p>
+<div class="highlight"><pre><span></span><code>move(+0.5), turn(+90°), move(+0.5), turn(+90°),
+move(+0.5), turn(+90°), move(+0.5), turn(+90°)
+</code></pre></div>
+<p>队列执行完自动回到 manual。</p>
+<h3 id="152">15.2 直线闭环</h3>
+<p>直线动作开始时记录 <code>(x0, y0, yaw0)</code>，之后用里程计位移在起始航向上的投影作为已走距离：</p>
+<div class="highlight"><pre><span></span><code>traveled = cos(yaw0)(x - x0) + sin(yaw0)(y - y0)
+remaining = target_distance - traveled
+</code></pre></div>
+<p>控制律：</p>
+<div class="highlight"><pre><span></span><code>v = clip(linear_gain * remaining, -linear_speed, +linear_speed)
+ω = clip(angular_gain * normalize(yaw0 - yaw), -0.5ωmax, +0.5ωmax)
+</code></pre></div>
+<p>当 <code>|remaining| &lt;= distance_tolerance</code> 时结束动作。接近目标时速度自然减小；航向误差过大时先转向再前进。</p>
+<h3 id="153">15.3 转向闭环</h3>
+<p>转向动作在里程计回调中累加航向变化：</p>
+<div class="highlight"><pre><span></span><code>Δψ += normalize(ψ_k - ψ_{k-1})
+remaining = target_angle - Δψ
+ω = clip(angular_gain * remaining, -angular_speed, +angular_speed)
+</code></pre></div>
+<p>使用累加角而不是直接比较 <code>normalize(ψ - ψ0)</code>，可以正确跨越 ±π 处理 180° 转向。进入 <code>angle_tolerance</code> 后停止并进入下一个动作。</p>
+<h3 id="154">15.4 误差与安全</h3>
+<ul>
+<li>动作执行期间方向键可取消当前动作并回到手动。</li>
+<li>失速或里程计缺失时不会静默成功；节点会拒绝启动并给出日志。</li>
+<li>动作结束后发送零速度；退出时也连续发送零速度。</li>
+<li>当前没有碰撞检测，正方形演示需要空旷场地。</li>
+</ul>
+<h2 id="16">16. 参数、话题与实测结果</h2>
+<h3 id="161">16.1 参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>默认值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>distance_step</code></td>
+<td>0.5 m</td>
+<td>单次移动距离</td>
+</tr>
+<tr>
+<td><code>turn_angle</code></td>
+<td>90.0°</td>
+<td>单次转向角度</td>
+</tr>
+<tr>
+<td><code>distance_tolerance</code></td>
+<td>0.01 m</td>
+<td>直线停车容差</td>
+</tr>
+<tr>
+<td><code>angle_tolerance</code></td>
+<td>0.02 rad</td>
+<td>转向停车容差</td>
+</tr>
+<tr>
+<td><code>linear_gain</code></td>
+<td>1.8</td>
+<td>直线比例增益</td>
+</tr>
+<tr>
+<td><code>angular_gain</code></td>
+<td>2.2</td>
+<td>转向比例增益</td>
+</tr>
+<tr>
+<td><code>linear_speed</code></td>
+<td>0.25 m/s</td>
+<td>最大线速度</td>
+</tr>
+<tr>
+<td><code>angular_speed</code></td>
+<td>1.0 rad/s</td>
+<td>最大角速度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="162-tf">16.2 话题与 TF</h3>
+<table>
+<thead>
+<tr>
+<th>话题</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/cmd_vel</code></td>
+<td><code>geometry_msgs/Twist</code></td>
+<td>速度指令</td>
+</tr>
+<tr>
+<td><code>/odom</code></td>
+<td><code>nav_msgs/Odometry</code></td>
+<td>差速控制器里程计</td>
+</tr>
+<tr>
+<td><code>/precision_moves/status</code></td>
+<td><code>std_msgs/String</code></td>
+<td>当前动作状态（如 <code>move 0.50 m</code>）</td>
+</tr>
+<tr>
+<td><code>/precision_moves/markers</code></td>
+<td><code>visualization_msgs/MarkerArray</code></td>
+<td>动作方向标记</td>
+</tr>
+</tbody>
+</table>
+<p>TF 关系与基础模块一致：<code>odom -&gt; base_footprint -&gt; base_link -&gt; wheels/caster</code>。</p>
+<h3 id="163">16.3 实测结果</h3>
+<p>实验方法：在无界面 Gazebo 中启动完整控制链路，通过伪终端向前台节点注入按键；订阅 <code>/odom</code> 和功能话题，记录真实位姿/电量/状态后计算指标。这样既复现了人工键盘操作，又避开了 GUI 截图对测量精度的影响。</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 终端 1：启动仿真</span>
+bash<span class="w"> </span>main.sh<span class="w"> </span>precision<span class="w"> </span>gz_args:<span class="o">=</span><span class="s1">'-r -s'</span>
+
+<span class="c1"># 终端 2：观察话题</span>
+ros2<span class="w"> </span>control<span class="w"> </span>list_controllers
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/odom
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/clock<span class="w"> </span>--once
+</code></pre></div>
+<p>真实 Gazebo 测试结果：</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>前进 0.5 m</td>
+<td>实测约 0.542 m，误差 +0.042 m</td>
+</tr>
+<tr>
+<td>左转 90°</td>
+<td>实测约 91.0°，误差 +1.0°</td>
+</tr>
+<tr>
+<td>四边正方形闭合误差</td>
+<td>约 0.044 m</td>
+</tr>
+</tbody>
+</table>
+<p>图中灰色虚线为理想正方形，蓝色为实际 <code>/odom</code> 轨迹。误差主要来自轮式里程计、车轮打滑、车辆惯性以及 20 Hz 控制周期的离散化，不是外部定位误差。</p>
+<p><img alt="里程计闭环正方形轨迹" src="../../img/ground/gazebo_diff_drive_teleop_precision_moves.png"/></p>
+<h3 id="164">16.4 结论</h3>
+<p>实测表明，里程计闭环相对运动能够把前进/后退和转向误差控制在厘米/度级，四边正方形演示的闭合误差约 0.044 m。说明在无外部定位的短距离动作中，轮式里程计闭环足以支撑精确运动原语；但误差会随距离和转向次数累积，长距离任务仍需外部定位或轮速标定。</p>
+<h2 id="17">17. 说明</h2>
 <p>代码与文档使用 AI 大模型辅助编写。作者已核对代码、参数和实验数据，并对提交内容负责。</p></div>
 </div>
 </div><footer>
