@@ -101,6 +101,7 @@ ROS每章节运行代码:
 
 * [YOLO目标检测与八字轨迹控制](./air/openhutb_yolo_mlp_control.md)
 * [AllocNet 四旋翼避障规划与键盘遥操作](./air/allocnet_teleop.md) —— 在学习型时间分配的避障轨迹规划基础上，补齐键盘航点下发、地图常驻转发与轨迹记录的人机交互层
+* [无人机激光雷达避障](./air/uav_lidar_obstacle/index.md) —— 机载激光雷达点云求最近距离，低于阈值悬停、否则前飞；含纯 CARLA 脚本与 ROS 2 包装节点两条入口
 
 
 
