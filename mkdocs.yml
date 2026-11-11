@@ -102,6 +102,7 @@ nav:
     - 人形机器人深度图姿态估计与平衡控制: './humanoid/humanoid_depth_pose_control.md'
     - 关节指令的 QoS 与时延影响评估: './humanoid/joint_qos_latency_eval.md'
     - 人形机器人离线语音指令控制: './humanoid/humanoid_voice_command.md'
+    - 人形机器人全身柔顺控制: './humanoid/humanoid_g1_compliance.md'
 - 四足机器人:
     - MuJoCo 四足机器人运动控制与步态评估: './quadruped_mujoco_rl.md'
 - 肌肉骨骼人:
@@ -221,7 +222,6 @@ nav:
     - 转弯扫掠校验: './ground/turning_sweep_check.md'
     - 高精度定位与重定位（AMCL 式粒子滤波）: './ground/turtlebot3_relocalization.md'
     - 速度指令安全监督: './ground/cmd_vel_guard.md'
-    - 轮胎附着曲线与 ABS 目标带: './ground/tire_slip_curve.md'
 
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
