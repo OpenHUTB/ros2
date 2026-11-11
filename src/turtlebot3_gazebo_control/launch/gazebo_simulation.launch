@@ -1,0 +1,23 @@
+<launch>
+    <!-- 设置 Turtlebot3 模型为 waffle -->
+    <arg name="model" default="waffle"/>
+    
+    <!-- 1. 启动 Gazebo 自带的空世界 -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="true"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <!-- 2. 解析 Turtlebot3 的 URDF/Xacro 模型文件，并放到 ROS 的参数服务器上 -->
+    <!-- 注：这里调用了官方提供的 turtlebot3_description 包 -->
+    <param name="robot_description" command="$(find xacro)/xacro $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+    <!-- 3. 在 Gazebo 中真正生成这个机器人模型 -->
+    <!-- 它会从参数服务器读取 robot_description 并生成 -->
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
+          args="-urdf -model turtlebot3_$(arg model) -param robot_description" 
+          output="screen"/>
+</launch>

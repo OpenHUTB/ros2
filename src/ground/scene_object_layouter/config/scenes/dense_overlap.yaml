@@ -1,0 +1,36 @@
+# 反例场景：故意摆错，用来看校验能不能抓住问题
+#
+# 跑法：
+#   roslaunch scene_object_layouter main.launch scene_file:=$(rospack find scene_object_layouter)/config/scenes/dense_overlap.yaml
+#
+# 预期：结论 FAILED，「边界内」和「最小间距」两条失败。
+
+name: dense_overlap_bad
+
+field:
+  width: 12.0           # 场地故意画小
+  length: 10.0
+
+min_gap: 0.5
+
+objects:
+  # 6 个 2.5 m 宽的车位挤在一起，只留 0.05 m 间隙 → 间距不达标
+  - kind: slot
+    width: 2.5
+    length: 5.3
+    rows: 1
+    cols: 6
+    gap_x: 0.05
+    gap_y: 0.0
+    origin_x: 2.0
+    origin_y: 2.5
+
+  # 这一组直接摆到场地外面去了（origin_x 9.0 + 3×3.0 超出 12 m 宽）
+  - kind: barrier
+    width: 2.6
+    length: 1.0
+    rows: 1
+    cols: 3
+    gap_x: 0.2
+    origin_x: 9.0
+    origin_y: 8.0

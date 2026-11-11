@@ -4,6 +4,7 @@ from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
 from ament_index_python.packages import get_package_share_directory
 
+
 def generate_launch_description():
     world_path = os.path.join(
         get_package_share_directory('auv_end2end'),
@@ -23,7 +24,7 @@ def generate_launch_description():
             package='auv_end2end',
             executable='auv_obstacle_avoid',
             name='auv_obstacle_avoid',
-            output='screen'
+            output='screen',
+            parameters=[{'use_sim_time': True}]
         )
     ])
-

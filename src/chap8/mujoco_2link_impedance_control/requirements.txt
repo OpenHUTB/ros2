@@ -1,0 +1,7 @@
+# 无头仿真与出图所需的 Python 依赖（ROS 侧 rospy 由 ROS Noetic 提供）
+# mujoco 锁 3.1.6：文档表格的数值是在这个版本上测的。MuJoCo >= 3.3 改了接触求解，
+# 同一模型稳态接触力会从 44.96 N 漂到约 47 N、接触点从 2 变 6（见 docs 页「版本敏感性」）。
+mujoco==3.1.6
+numpy>=1.21
+matplotlib>=3.4
+pillow>=8.0

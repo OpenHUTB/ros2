@@ -1,0 +1,7 @@
+numpy>=1.24,<3
+mujoco==3.12.0
+gymnasium==1.2.0
+stable-baselines3==2.7.0
+matplotlib>=3.7
+pillow>=10
+pytest>=7

@@ -25,7 +25,20 @@ launch 参数：`render_mode`（none/file）、`frame_dir`（GIF 帧目录）、
 |---|---|
 | `ros2 run traffic_sign_speed_control main train` | 合成数据 + 训练 DigitCNN，输出权重与指标 |
 | `ros2 run traffic_sign_speed_control main evaluate` | 字符级退化矩阵评测 |
+| `ros2 run traffic_sign_speed_control main vision` | 红圈定位与数字切分的离线退化评测 |
 | `ros2 run traffic_sign_speed_control main scenes` | 端到端多场景评测（启动真实 ROS 系统） |
 | `ros2 run traffic_sign_speed_control main demo` | file 渲染模式跑默认场景并合成 GIF（需 ffmpeg，输出到当前目录） |
+
+纯视觉前处理已拆分到 `traffic_sign_speed_control/vision.py`，不依赖 ROS 和
+PyTorch，可直接回归：
+
+```bash
+cd src/ground/traffic_sign_speed_control
+python3 -m pytest tests -q
+python3 scripts/evaluate_vision.py
+```
+
+当前 5 个 pytest 用例覆盖干净、组合退化和无牌画面；离线评测覆盖 7 个限速值
+× 6 种图像条件，共 42 个用例，结果写入 `artifacts/vision_eval.json`。
 
 完整教程（原理、流程、代码结构、性能评价、GIF）见仓库 `docs/ground/traffic_sign_speed_control.md`。
