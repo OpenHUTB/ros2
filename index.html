@@ -451,6 +451,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ground/camera_imu_time_calibration/">相机-IMU 时间同步标定</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ground/ultrasonic_rear_alert/">倒车雷达分级告警</a>
@@ -1138,7 +1140,12 @@
 <li><a href="ground/imu_allan_noise_identification/">IMU 噪声 Allan 方差辨识与倾角滤波整定</a> —— 1 h 静止陀螺记录辨识 ARW（中位数 +0.46%）与零偏不稳定性（+3.77%，95% 区间 [−16.7, +44.4]），ARW→角度噪声、BI→偏置游走；倾角卡尔曼 NEES 1.61，过程噪声偏小 4 倍时 10.07</li>
 <li><a href="ground/passive_walker/">无动力被动行走（轮辐式 Rimless Wheel）</a></li>
 <li><a href="ground/lidar_camera_calibration/">相机-激光雷达外参标定</a> —— 合成多姿态棋盘格场景，PnP 求 LiDAR→相机外参并与真值对比，附噪声与摆位次数敏感性实验</li>
-<li><a href="ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a> —— 用前视图像估计横向偏移，并与地图真值逐帧对照</li>
+<li>
+<p><a href="ground/camera_imu_time_calibration/">相机-IMU 时间同步标定</a> —— 互相关估计相机与 IMU 的常量时间偏移；±200 ms 内最大误差 0.16 ms，50 ms 偏移下姿态 RMS 误差 3.36° → 0.72°，并给出时间戳取帧首时的半帧固定偏差</p>
+</li>
+<li>
+<p><a href="ground/carla_visual_lane_departure_warning/">前视相机车道偏离预警（视觉横向偏移与地图真值对照）</a> —— 用前视图像估计横向偏移，并与地图真值逐帧对照</p>
+</li>
 <li><a href="ground/hill_start_assist/">差速 AGV 坡道起步辅助（防溜车）</a> —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m</li>
 <li><a href="ground/cmd_vel_guard/">地面移动底盘速度指令安全监督</a> —— 对 <code>/cmd_vel</code> 做限幅、急停、超时与非法值拦截，无需仿真环境</li>
 <li><a href="ground/vru_conflict_risk_map/">VRU 冲突风险图</a> —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级</li>
