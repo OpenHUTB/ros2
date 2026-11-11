@@ -201,6 +201,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [CARLA 停车场场景生成（附带不依赖 CARLA 的倒车入库规划器）](./ground/carla_parking_lot.md) —— 在 CARLA 里画 6 个车位，另提供一个纯 Python 的倒车入库轨迹规划器，4 条断言可直接跑回归
 * [MuJoCo 红绿灯启停小车仿真](./ground/mujoco_traffic_light_stop.md)
 * [MuJoCo 小车跟车仿真](./ground/mujoco_car_follow.md)
+* [MuJoCo 小车滑斜坡](./ground/mujoco_slope_car.md)
 * [悬崖边缘紧急制动仿真](./ground/cliff_brake.md) —— 用 MuJoCo 物理引擎与 ROS 三节点闭环实现车头测距触发的滞回紧急制动，附安全包络定量测试与坠落对照
 * [航向 PID 参数自整定与手工试凑对比](./ground/pid_auto_tuning.md) —— 用继电器反馈法自动求 Ku/Tu 并筛选 PID 参数，与手工试凑同工况对比超调与调节时间
 * [基于 Autoencoder 的雷达数据修复与避障](./ground/lidar_autoencoder_repair.md) —— 离线训练自编码器去除传感器噪声，修复后数据送入阈值避障控制链路，展示传感器数据容错层与控制层解耦的设计
@@ -283,6 +284,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [无人机激光雷达三维安全走廊与自适应高度避障](./air/uav_lidar_safety_corridor.md) —— 基于 OpenHUTB 激光雷达点云选择安全高度，并完成世界系速度闭环飞行
 
 * [无人机最小加加速度轨迹生成与跟踪](./air/uav_minimum_jerk_tracking.md) —— 生成分段五次轨迹（段内 jerk 连续），并与线性参考对比跟踪误差和加加速度峰值
+* [无人机空速/地速三角估风与可观测性](./air/uav_wind_estimation.md) —— 风三角残差最小二乘 + 信息矩阵可观测性；悬停/直线不可估（条件数 2914-3600），圆周机动风速 RMSE 0.042 m/s（真值 3.6 m/s）
 
 * [无人机相机云台两轴稳定控制](./air/uav_gimbal_stabilization.md) —— 二维目标视线 PID 跟踪、角速度限幅和死区控制，附仿真指标与 CSV
 * [旋翼桨尖马赫数与桨盘载荷](./air/uav_prop_tip_mach.md) —— 由桨径、转速与温度算桨尖速度与马赫数（默认 10 寸桨 9000 rpm 时 0.35，安全），由整机质量与桨盘面积算桨盘载荷与悬停诱导速度（96.8 N/m²、6.28 m/s）
