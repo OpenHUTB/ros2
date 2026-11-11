@@ -10,6 +10,16 @@ from warehouse_braking.model import RiskSpeedMLP
 
 
 class ModelTests(unittest.TestCase):
+    def test_speed_regression_updates_with_batch_mean_gradient(self):
+        x = np.zeros((40, 20), dtype=np.float32)
+        target = np.full(40, 2.5, dtype=np.float32)
+        risk = np.zeros(40, dtype=np.int64)
+        model = RiskSpeedMLP(seed=9)
+        before = float(model.predict(x[:1])[1][0])
+        model.fit(x, target, risk, epochs=60, learning_rate=0.05)
+        after = float(model.predict(x[:1])[1][0])
+        self.assertGreater(after, before)
+
     def test_fit_and_round_trip(self):
         rng = np.random.default_rng(4)
         x = rng.normal(size=(60, 20)).astype(np.float32)
