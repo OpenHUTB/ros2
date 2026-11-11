@@ -10,7 +10,7 @@
 
 实际情况是相机与 IMU 的时间戳常常并不对齐：
 
-* 相机时间戳通常打在**曝光中点**或**帧读出时刻**，两者差半帧；
+* 相机时间戳通常打在**曝光中点**或**帧（曝光）开始**，两者相差曝光时长的一半 $T_{exp}/2$，而 $T_{exp}$ 一般小于帧周期（6.3 节有实测）；
 * 图像经 USB/GMSL 传输、VIO 前端滑窗滤波，都会引入几毫秒到几十毫秒的延迟；
 * 相机与 IMU 往往来自不同时钟源，没有硬件同步线。
 
@@ -105,15 +105,18 @@ $$
 | 文件 | 作用 |
 | --- | --- |
 | `camera_imu_time_calibration/core.py` | 解析轨迹真值、相机/IMU 传感器模型、偏移估计器、姿态积分与误差 |
+| `camera_imu_time_calibration/ros_params.py` | 参数读取辅助：数值参数用动态类型声明，避免 int/double 不匹配 |
 | `camera_imu_time_calibration/main.py` | 标准演示：估计 + 姿态误差 + 2 张图 |
 | `camera_imu_time_calibration/sweep_offset.py` | 偏移量扫描（-200..+200 ms） |
-| `camera_imu_time_calibration/sweep_rate.py` | 帧率与时间戳约定扫描 |
+| `camera_imu_time_calibration/sweep_rate.py` | 帧率、时间戳约定与曝光时长扫描 |
 | `camera_imu_time_calibration/sweep_noise.py` | 鲁棒性实验（噪声 / 零偏 / 尺度 / 激励） |
 | `camera_imu_time_calibration/compare_attitude.py` | 补偿前后姿态误差对比 |
-| `camera_imu_time_calibration/estimator_node.py` | ROS 2 在线估计节点 |
+| `camera_imu_time_calibration/estimator_node.py` | ROS 2 在线估计节点（含重估稳定性指标） |
 | `camera_imu_time_calibration/synthetic_source_node.py` | 演示用合成数据源（无硬件也能跑通全链路） |
 | `launch/main.launch.py` | 一键启动（数据源 + 估计节点） |
-| `test/test_core.py` | 15 项单元测试（不需要 ROS） |
+| `requirements.txt` | NumPy / Matplotlib 版本约束（不含 ROS 依赖） |
+| `test/test_core.py` | 22 项算法单元测试（不需要 ROS） |
+| `test/test_params.py` | 8 项参数读取单元测试（假节点，不需要 ROS） |
 
 节点订阅与发布：
 
@@ -121,7 +124,7 @@ $$
 | --- | --- | --- | --- |
 | 订阅 | `/imu` | `sensor_msgs/msg/Imu` | 取 `angular_velocity`，可参数覆盖 |
 | 订阅 | `/camera/angular_velocity` | `geometry_msgs/msg/Vector3Stamped` | 视觉里程计给出的角速度 |
-| 发布 | `/camera_imu_time_estimator/time_offset` | `std_msgs/msg/String` | JSON：`offset_ms`、`correlation`、`scale`、`n_imu`、`n_cam`、`window_sec` |
+| 发布 | `/camera_imu_time_estimator/time_offset` | `std_msgs/msg/String` | JSON：`offset_ms`、`correlation`、`scale`、`n_imu`、`n_cam`、`window_sec`、`recent_std_ms`、`recent_n`、`stable` |
 
 ## 5. 运行步骤
 
@@ -138,7 +141,7 @@ python3 -m camera_imu_time_calibration.main
 # 偏移量扫描：21 档 × 20 次蒙特卡洛
 python3 -m camera_imu_time_calibration.sweep_offset --trials 20
 
-# 帧率扫描：10/15/20/30/60/120 Hz，含两种时间戳约定
+# 帧率扫描：10/15/20/30/60/120 Hz，含两种时间戳约定；另加曝光时长扫描
 python3 -m camera_imu_time_calibration.sweep_rate --trials 10
 
 # 鲁棒性：噪声 / 零偏 / 尺度 / 激励
@@ -157,7 +160,7 @@ cd src/ground/camera_imu_time_calibration
 python3 -m unittest discover -s test -v
 ```
 
-15 项，约 1.3 s，覆盖：轨迹形状与幅值、采样率与样本数、正/负/零偏移恢复、零偏免疫、尺度解耦、帧首时间戳半帧偏差、恒定角速度积分、补偿后误差下降。
+30 项，约 1.8 s，覆盖：轨迹形状与幅值、采样率与样本数、正/负/零偏移恢复、零偏免疫、尺度解耦、帧首时间戳半帧偏差、曝光时长与帧周期解耦（`-T_exp/2` 而非固定半帧）、曝光取中点时对曝光长短免疫、恒定角速度积分、补偿后误差下降，以及参数读取对 int/double 覆盖的容错（假节点测试，不需要 rclpy）。
 
 ### 5.3 构建与启动 ROS 2 节点
 
@@ -173,14 +176,16 @@ launch 会同时启动合成数据源与估计节点，**不需要任何硬件**
 
 ```bash
 ros2 topic echo /camera_imu_time_estimator/time_offset
-# data: '{"offset_ms": 49.8, "correlation": 0.9998, "scale": 0.999, ...}'
+# data: '{"offset_ms": 49.8, "correlation": 0.9998, "scale": 0.999, "recent_std_ms": 0.21, "stable": true, ...}'
 ```
 
-换一组参数：
+换一组参数（**数值参数传整数也可以，不需要小数点**）：
 
 ```bash
 ros2 launch camera_imu_time_calibration main.launch.py offset_ms:=120 cam_rate:=15
 ```
+
+> **参数类型说明**：`rclpy` 在 `declare_parameter` 时就把类型定死了，launch 里的字符串 `'120'` 若交给它自己推断会被判成 `INTEGER`，节点声明的是 double 就抛 `InvalidParameterTypeException`，节点直接起不来。本模块两处都做了处理：launch 侧用 `ParameterValue(..., value_type=float)` 显式声明类型；节点侧用 `ros_params.number_param()` 以**无默认值**（NOT_SET 动态类型）声明参数、读出后 `float()` 强转。后者对 `ros2 run ... -p offset_ms:=120` 和 `-p window_sec:=10` 同样生效，在 Foxy / Humble 上都成立（`ParameterDescriptor(dynamic_typing=True)` 是 Humble 才有的字段，故意没用）。
 
 ### 5.4 接真实数据
 
@@ -188,7 +193,7 @@ ros2 launch camera_imu_time_calibration main.launch.py offset_ms:=120 cam_rate:=
 ros2 run camera_imu_time_calibration estimator_node --ros-args \
   -p imu_topic:=/camera/imu \
   -p cam_topic:=/vio/angular_velocity \
-  -p window_sec:=10.0 -p search_range_ms:=250.0
+  -p window_sec:=10 -p search_range_ms:=250
 ```
 
 ## 6. 实测结果
@@ -234,9 +239,9 @@ RMS 误差由 3.36° 降到 0.72°（降低 79%），且已接近 30 Hz 相机�
 
 ![偏移量扫描：左为估计值 vs 真值，右为残差](../img/ground/camera_imu_time_calibration/offset_sweep.png)
 
-### 6.3 帧率与时间戳约定
+### 6.3 帧率、时间戳约定与曝光时长
 
-固定真值偏移 50 ms，每档 10 次：
+固定真值偏移 50 ms，每档 10 次（此表曝光时长取帧周期，即整帧窗口平均）：
 
 | 帧率 | 帧数 | 时间戳在曝光中点 | 时间戳在帧开始 | 理论半帧 $T/2$ | 补偿后姿态 RMS |
 | --- | --- | --- | --- | --- | --- |
@@ -250,11 +255,24 @@ RMS 误差由 3.36° 降到 0.72°（降低 79%），且已接近 30 Hz 相机�
 两个结论：
 
 1. **帧率不是偏移估计的瓶颈**：从 120 Hz 降到 10 Hz，误差都在 0.3 ms 以内。因为角速度最高只有 1.45 Hz，10 Hz 采样的奈奎斯特频率 5 Hz 已经够用。
-2. **时间戳约定会引入固定偏差，且等于半帧**。若时间戳打在**帧开始**而不是曝光中点，估计结果系统性少 $T/2$：30 Hz 时少 16.7 ms，10 Hz 时少 50 ms（此时估计值几乎为 0，看起来"没有延迟"）。实测偏差与理论半帧的最大差 0.25 ms。
+2. **时间戳约定会引入固定偏差**。若时间戳打在**帧开始**而不是曝光中点，估计结果系统性少 $T_{exp}/2$：30 Hz、曝光等于帧周期时少 16.7 ms，10 Hz 时少 50 ms（此时估计值几乎为 0，看起来"没有延迟"）。实测偏差与理论值的最大差 0.25 ms。
 
-这一条在实际排查中很关键：**估计值偏小整整半帧，通常不是算法问题，而是时间戳定义与估计模型不一致**。
+**但"半帧"只在曝光时长恰好等于帧周期时成立。** 曝光时长 $T_{exp}$ 与帧周期 $T$ 是两个独立参数（30 Hz 的 $T$ = 33.3 ms，而真实相机的 $T_{exp}$ 常常只有 5~10 ms）。时间戳打在曝光开始时，等效测量时刻是 $t_{stamp}+T_{exp}/2$，所以偏差是 $-T_{exp}/2$。固定 30 Hz、把曝光从 0.1 帧扫到 1 帧（每档 10 次）：
 
-![帧率扫描：左为估计误差，右为帧首时间戳的固定偏差与理论半帧对比](../img/ground/camera_imu_time_calibration/rate_sweep.png)
+| 曝光 / 帧周期 | 曝光 [ms] | 帧首时间戳的偏差 | 理论 $-T_{exp}/2$ | 曝光中点时间戳的误差 |
+| --- | --- | --- | --- | --- |
+| 10% | 3.33 | -1.56 ms | -1.67 ms | 0.07 ms |
+| 25% | 8.33 | -4.12 ms | -4.17 ms | 0.07 ms |
+| 50% | 16.67 | -8.30 ms | -8.33 ms | 0.07 ms |
+| 75% | 25.00 | -12.48 ms | -12.50 ms | 0.07 ms |
+| 100% | 33.33 | -16.70 ms | -16.67 ms | 0.07 ms |
+
+* 帧首时间戳的偏差**跟着曝光时长走**，与理论 $-T_{exp}/2$ 的最大差 0.11 ms，不是固定的"半帧"；
+* 时间戳取**曝光中点**时，积分窗口关于时间戳对称，误差在全部曝光时长下都是 0.07 ms，与曝光长短无关。
+
+所以补偿时要不要加"半帧"取决于**时间戳定义**，而不是帧率：先确认你的相机驱动把时间戳打在曝光开始、曝光中点还是帧读出结束，再决定补偿量。这一点在 7.2 节有对应的排错流程。
+
+![帧率与曝光扫描：左为估计误差，中为帧首时间戳偏差与理论半帧（Texp=T），右为偏差随曝光时长的变化](../img/ground/camera_imu_time_calibration/rate_sweep.png)
 
 ### 6.4 鲁棒性：对什么免疫、对什么敏感
 
@@ -308,16 +326,16 @@ RMS 误差由 3.36° 降到 0.72°（降低 79%），且已接近 30 Hz 相机�
 
 对应本模块的约定：$d>0$ 表示相机时间戳**滞后**，补偿是把时间戳**往前推**。
 
-### 7.2 估计值比预期小半帧
+### 7.2 估计值比预期小一截（半帧或小半帧）
 
-若相机时间戳打在**帧开始**或**帧读出时刻**而非曝光中点，估计结果会系统性少 $T/2$（30 Hz 少 16.7 ms，10 Hz 少 50 ms，见 6.3 节表格）。这不是算法错误，而是估计模型与时间戳定义不一致。
+若相机时间戳打在**帧（曝光）开始**或**帧读出时刻**而非曝光中点，估计结果会系统性偏小，偏小量是 **$T_{exp}/2$**——曝光时长的一半，不是帧周期的一半。二者只在曝光恰好占满整帧时相等：30 Hz、曝光 33.3 ms 时偏小 16.7 ms；同一帧率下曝光只有 8.3 ms 时只偏小 4.2 ms（6.3 节实测表）。这不是算法错误，而是估计模型与时间戳定义不一致。
 
 处理方式二选一：
 
-1. 用曝光中点作为时间戳（多数相机驱动的推荐做法）；
-2. 保留帧首时间戳，但把估计着的"物理含义"明确为"帧首到 IMU 的延迟"，并在补偿时额外加 $T/2$。
+1. 用曝光中点作为时间戳（多数相机驱动的推荐做法），此时对曝光长短**完全免疫**（6.3 节实测 0.07 ms）；
+2. 保留帧首时间戳，但把估计量的"物理含义"明确为"帧首到 IMU 的延迟"，补偿时额外加 $T_{exp}/2$。
 
-`core.simulate(timestamp_at='start')` 可以复现这个偏差。
+`core.simulate(timestamp_at='start', exposure=...)` 可以复现这两种情形；把 `exposure` 传给 `simulate` 才能区分"曝光时长"与"帧周期"。
 
 ### 7.3 估计值乱跳、相关系数很低
 
@@ -335,22 +353,36 @@ $\rho<0.9$ 的常见原因：
 2. **相机角速度噪声过大**：VIO 前端在弱纹理/低照度下输出的角速度抖动大，0.2 rad/s 时误差已到 1 ms 量级；
 3. **两路数据其实没有对应关系**：话题接错（例如把相机*线速度*接到了角速度话题），此时互相关峰很平，`scale` 也会明显偏离 1。
 
-### 7.4 窗口太短导致锁不住
+### 7.4 估计值在缓慢漂移（`recent_std_ms` 偏大）
+
+节点输出的 `recent_std_ms` 是最近 `stability_window` 次重估（默认 10 次、每 1 s 一次）的标准差，`stable` 表示它是否落在 `stability_warn_ms`（默认 2 ms）以内；超阈值时节点会打一条 warning，且只在"稳定 → 不稳定"的跳变时刻打一次。
+
+它是**经验指示器**而不是严格收敛判据：8 s 滑窗逐秒滑动、相邻窗口大部分样本重叠，所以这个标准差偏保守，只能用来判断"常量假设还成不成立"：
+
+| 现象 | 判断 | 处理 |
+| --- | --- | --- |
+| 均值稳定、std 小 | 常量偏移成立 | 直接用 |
+| 均值单向漂、std 随之增大 | 时钟频差（ppm 级） | 窗口内仍可按常量处理——50 ppm 在 8 s 内只累积 0.4 ms，比半帧建模的系统效应小一个数量级以上；长实验则把模型升级成 $\text{offset}(t)=a+b\cdot t$，顺带把频差估出来 |
+| std 大但均值不漂 | 激励不足或噪声过大 | 看 `correlation`，见 7.3 |
+
+### 7.5 窗口太短导致锁不住
 
 搜索范围 ±250 ms 需要窗口显著长于 250 ms；`window_sec` 小于 1 s 会被节点直接跳过（日志 `相机窗口不足 1 s`）。经验值：窗口 8~10 s，且其中至少一半时间有明显旋转。
 
-### 7.5 `ModuleNotFoundError: No module named 'camera_imu_time_calibration'`
+### 7.6 `ModuleNotFoundError: No module named 'camera_imu_time_calibration'`
 
 直接运行脚本时需要让 Python 找到包：在 `src/ground/camera_imu_time_calibration` 目录下用 `python3 -m camera_imu_time_calibration.main`，或先 `colcon build` 后 `source install/setup.bash` 再用 `ros2 run`。
 
-## 8. 未验证项
+## 8. 未验证项与已知限制
 
-* **没有接真实相机与 IMU**：相机侧角速度来自解析轨迹，不是真实 VIO 输出。真实 VIO 的角速度存在滑窗平滑、丢帧与时间戳抖动，本模块未建模这些效应。
-* **只估计常量偏移**：不处理时钟频差（漂移率）与温度导致的时变偏移。真实系统首次标定后仍需周期性复标。
+* **没有接真实相机与 IMU**：相机侧角速度来自解析轨迹，不是真实 VIO 输出。真实 VIO 的角速度存在滑窗平滑、丢帧与时间戳抖动，本模块未建模这些效应。真实链路上估计到的更可能是"采样 + 传输 + 前端处理"合成的**有效常量偏移**，而不是纯曝光延迟——如果上游打时间戳用的是"消息到达后 `node.now()`"，那么估到的就是这个量。
+* **相机模型是"整帧窗口平均"的理想化**：模型假设一帧内的角速度是在 $T_{exp}$ 上取平均、时间戳可指曝光中点或曝光开始（`core.simulate(exposure=...)` 已把曝光时长与帧周期拆成两个参数）。**滚动快门**的行间读出时间差、以及 VIO 前端"跨帧/滑窗平均"的时间标签语义，都没有建模——两者的共同点是"一帧对应一个时间上的模糊区间"，此时单帧的时间戳需要按前端定义重新解释，常量偏移只能吃掉其中一部分。这两项列为后续工作。
+* **只估计常量偏移**：不处理时钟频差（漂移率）与温度导致的时变偏移。量化一下：50 ppm 的频差在 8 s 窗口内只累积 0.4 ms，比 6.3 节的半帧系统效应小一个数量级以上，所以窗口内按常量处理是安全的；真正危险的是"不做滑动窗口、拿一段很长数据估一次"。节点输出的 `recent_std_ms` 就是给这件事做经验检验的（7.4 节），需要时把模型升级成 $\text{offset}(t)=a+b\cdot t$ 即可把频差一并估出。
+* **`recent_std_ms` 不是严格的收敛判据**：滑窗逐秒滑动、相邻窗口样本高度重叠，标准差只能当指示器用，没有做统计意义上的置信区间。
 * **没有处理丢帧与乱序**：假设两路数据都是单调、完整的时间序列。
 * **没有和 `message_filters` 做对比**：`ApproximateTimeSynchronizer` 能容忍的是"消息到达时间抖动"，不能估计常量偏移，两者互补而非替代，本模块未做定量对比。
 * **离线脚本在 NumPy 2.5.4 上验证**：ROS 2 Humble 自带 NumPy 1.21.5，本模块用到的 API（`default_rng`、`interp`、`broadcast_to`、`polyfit`）在 1.17 之后均可用，但未在 1.21.5 上实跑。
-* **ROS 2 节点与 launch 尚未在 Ubuntu 22.04 + Humble 上实跑验证**：开发机为 Windows，缺少 ROS 2 环境，节点代码按 Humble API 编写但未在本机运行；离线部分（5 个入口 + 15 项测试）已在本机实跑。节点验证方法见 5.3 节。
+* **ROS 2 节点与 launch 的运行环境**：作者开发机为 Windows，本机没有 ROS 2，节点与 launch 由评审 @1huangna 在 Ubuntu 22.04 + ROS 2 Humble（Python 3.10）上实跑验证：`colcon build` 成功、16 项测试通过、默认 launch 收到 20 条 JSON、窗口 ≥7 s 时估计 49.6~50.5 ms（均值 49.943 ms）、`offset_ms:=120 cam_rate:=15` 场景下（参数类型修复前）为 119.3~120.8 ms（均值 120.136 ms）。评审暴露的阻塞与缺陷已在本次修订中处理：launch 数值参数类型（5.3 节）、`requirements.txt` 缺失、Ctrl-C 时 `rcl_shutdown already called`；本次修订新增的 14 项测试为纯 NumPy / 假节点测试，不依赖 rclpy。**作者本机仍未独立复跑 Humble，最终确认请以评审实跑为准。**
 
 ## 参考资料
 
@@ -363,6 +395,6 @@ $\rho<0.9$ 的常见原因：
 
 本模块的代码与文档在编写过程中使用了 WorkBuddy（内置大模型）辅助：算法结构讨论、代码起草、单元测试编写、绘图脚本调试与文档撰写。
 
-已实际运行验证：`main`、`sweep_offset`、`sweep_rate`、`sweep_noise`、`compare_attitude` 五个离线入口，以及 `python3 -m unittest discover -s test` 的 15 项测试。文中所有数值均来自上述实际运行，未使用估计值或占位数据。ROS 2 节点与 launch 的运行验证状态见第 8 节。
+已实际运行验证：`main`、`sweep_offset`、`sweep_rate`、`sweep_noise`、`compare_attitude` 五个离线入口，以及 `python3 -m unittest discover -s test` 的 30 项测试。文中所有数值均来自上述实际运行，未使用估计值或占位数据。ROS 2 节点与 launch 的运行验证状态见第 8 节。
 
 作者对提交内容的正确性负责。
