@@ -1,0 +1,216 @@
+{
+  "summary": {
+    "total": 7,
+    "labels": {
+      "pothole": 2,
+      "speed_bump": 3,
+      "rough_patch": 2
+    },
+    "mean_amp": 12.734,
+    "mean_dur": 0.3886,
+    "mean_energy": 366.311,
+    "mean_centroid": 14.67,
+    "mean_confidence": 0.972
+  },
+  "events": [
+    {
+      "t_start": 3.96,
+      "t_end": 4.04,
+      "t_peak": 4.0,
+      "peak_az": 22.04133916129032,
+      "duration": 0.08,
+      "energy": 587.0364,
+      "spectral_centroid": 17.76,
+      "label": "pothole",
+      "confidence": 0.98,
+      "crest_factor": 2.034,
+      "eff_duration": 0.06,
+      "lat": -0.00018054389884589132,
+      "lon": -0.0004071111382107835
+    },
+    {
+      "t_start": 10.0,
+      "t_end": 10.32,
+      "t_peak": 10.32,
+      "peak_az": 16.88282351612903,
+      "duration": 0.32,
+      "energy": 626.7999,
+      "spectral_centroid": 10.06,
+      "label": "speed_bump",
+      "confidence": 1.0,
+      "crest_factor": 2.78,
+      "eff_duration": 0.04,
+      "lat": -0.0003624659199248632,
+      "lon": -0.0004057265393302412
+    },
+    {
+      "t_start": 18.0,
+      "t_end": 18.64,
+      "t_peak": 18.32,
+      "peak_az": 3.338187548387097,
+      "duration": 0.64,
+      "energy": 49.3201,
+      "spectral_centroid": 14.28,
+      "label": "rough_patch",
+      "confidence": 0.856,
+      "crest_factor": 2.731,
+      "eff_duration": 0.06,
+      "lat": -0.0003624659199248632,
+      "lon": -0.0004057265393302412
+    },
+    {
+      "t_start": 25.96,
+      "t_end": 26.04,
+      "t_peak": 26.0,
+      "peak_az": 20.806930838709675,
+      "duration": 0.08,
+      "energy": 522.8703,
+      "spectral_centroid": 18.01,
+      "label": "pothole",
+      "confidence": 0.98,
+      "crest_factor": 2.035,
+      "eff_duration": 0.06,
+      "lat": -0.0003624659199248632,
+      "lon": -0.0004057265393302412
+    },
+    {
+      "t_start": 32.0,
+      "t_end": 32.32,
+      "t_peak": 32.32,
+      "peak_az": 16.883048967741935,
+      "duration": 0.32,
+      "energy": 626.7974,
+      "spectral_centroid": 10.06,
+      "label": "speed_bump",
+      "confidence": 1.0,
+      "crest_factor": 2.78,
+      "eff_duration": 0.04,
+      "lat": -0.0003624659199248632,
+      "lon": -0.0004057265393302412
+    },
+    {
+      "t_start": 38.0,
+      "t_end": 38.88,
+      "t_peak": 38.12,
+      "peak_az": 3.7216513870967742,
+      "duration": 0.88,
+      "energy": 95.2805,
+      "spectral_centroid": 16.7,
+      "label": "rough_patch",
+      "confidence": 0.989,
+      "crest_factor": 2.558,
+      "eff_duration": 0.06,
+      "lat": -0.0003681061257249128,
+      "lon": -0.0004057160533198703
+    },
+    {
+      "t_start": 40.96,
+      "t_end": 41.36,
+      "t_peak": 41.0,
+      "peak_az": 5.463142064516129,
+      "duration": 0.4,
+      "energy": 56.0716,
+      "spectral_centroid": 15.81,
+      "label": "speed_bump",
+      "confidence": 1.0,
+      "crest_factor": 3.343,
+      "eff_duration": 0.06,
+      "lat": -0.0005309253597501233,
+      "lon": -0.0004245980002008786
+    }
+  ],
+  "stats": {
+    "n_samples": 2200,
+    "n_gps": 440,
+    "sample_rate": 50,
+    "duration_s": 43.98,
+    "gravity": {
+      "x": -0.0,
+      "y": 0.0,
+      "z": 9.81
+    },
+    "baseline_noise_std": 0.00074
+  },
+  "evaluation": {
+    "n_ground_truth": 6,
+    "n_detections": 7,
+    "true_positives": 6,
+    "false_negatives": 0,
+    "false_positives": 1,
+    "recall": 1.0,
+    "precision": 0.8571,
+    "timing_mae_s": 0.0867,
+    "timing_max_s": 0.2,
+    "classification_correct": 6,
+    "classification_accuracy": 1.0,
+    "confusion_matrix": {
+      "pothole": {
+        "pothole": 2,
+        "speed_bump": 0,
+        "rough_patch": 0
+      },
+      "speed_bump": {
+        "pothole": 0,
+        "speed_bump": 2,
+        "rough_patch": 0
+      },
+      "rough_patch": {
+        "pothole": 0,
+        "speed_bump": 0,
+        "rough_patch": 2
+      }
+    },
+    "tolerance_s": 0.5,
+    "matches": [
+      {
+        "gt_t": 4.0,
+        "gt_type": "pothole",
+        "det_t": 4.0,
+        "det_label": "pothole",
+        "dt_s": 0.0,
+        "peak_az": 22.04133916129032
+      },
+      {
+        "gt_t": 10.16,
+        "gt_type": "speed_bump",
+        "det_t": 10.32,
+        "det_label": "speed_bump",
+        "dt_s": 0.16,
+        "peak_az": 16.88282351612903
+      },
+      {
+        "gt_t": 18.32,
+        "gt_type": "rough_patch",
+        "det_t": 18.32,
+        "det_label": "rough_patch",
+        "dt_s": 0.0,
+        "peak_az": 3.338187548387097
+      },
+      {
+        "gt_t": 26.0,
+        "gt_type": "pothole",
+        "det_t": 26.0,
+        "det_label": "pothole",
+        "dt_s": 0.0,
+        "peak_az": 20.806930838709675
+      },
+      {
+        "gt_t": 32.16,
+        "gt_type": "speed_bump",
+        "det_t": 32.32,
+        "det_label": "speed_bump",
+        "dt_s": 0.16,
+        "peak_az": 16.883048967741935
+      },
+      {
+        "gt_t": 38.32,
+        "gt_type": "rough_patch",
+        "det_t": 38.12,
+        "det_label": "rough_patch",
+        "dt_s": 0.2,
+        "peak_az": 3.7216513870967742
+      }
+    ],
+    "missed_gt": []
+  }
+}
