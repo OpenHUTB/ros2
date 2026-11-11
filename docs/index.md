@@ -133,7 +133,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047
-* [车辆 CAN 报文信号解码与一致性校验](./ground/can_signal_decode.md)
+* [车辆 CAN 报文信号解码与一致性校验](./ground/can_signal_decode.md) —— 位域 + CRC8 + 计数器三重校验，不校验时车速会被污染成 403 km/h
 
 * [毫米波雷达目标跟踪与前碰撞预警（TTC/FCW）](./ground/radar_ttc_fcw.md) —— 用多普勒速度分离静止杂波，多帧关联估计 TTC 并输出 SAFE/WARN/STOP 分级预警
  - [基于 1D CNN 的激光雷达 SLAM](./ground/carla_nn_scan_matching.md)
