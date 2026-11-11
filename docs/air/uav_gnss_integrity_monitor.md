@@ -122,7 +122,14 @@ cd src/air/uav_gnss_integrity_monitor
 python main.py
 python main.py --plot ./outputs
 python -m unittest -v test_gnss_integrity_monitor.py
+python -m unittest -v test_gnss_integrity_node_loop.py   # 节点闭环测试
 ```
+
+`test_gnss_integrity_node_loop.py` 不需要装 ROS：它用一层进程内最小 `rclpy` 兼容层
+把 `GnssIntegrityNode` 真跑起来，话题在进程内投递，定时器与时钟由测试手工推进，
+覆盖纯函数测不到的那一层——订阅进来的 `NavSatFix` 有没有真的变成判据输入、
+`valid=False` 有没有真的发到话题上、收不到消息时看门狗会不会自己进 HOLD、
+launch 参数与 `package.xml` 依赖是否和代码一致。
 
 ROS 2 侧（Ubuntu 22.04 / Humble）：
 
@@ -185,12 +192,45 @@ OK
 恢复需要满连续帧数、远处重新捕获被拒、数据流中断、看门狗超时、
 重置、回放误差上界、三次恢复、SVG/CSV 生成。
 
+### 7.1 节点闭环（进程内 rclpy 兼容层）
+
+上面这些是纯函数。纯函数测不到「订阅进来的 `NavSatFix` 有没有真的变成判据输入、
+`valid=False` 有没有真的发到话题上、完全收不到消息时看门狗会不会自己进 HOLD」。
+`test_gnss_integrity_node_loop.py` 用一层进程内最小 `rclpy` 兼容层
+（`init` / `Node` / `Publisher` / `Subscription` / `Timer` / `Parameter` / `Clock`）
+把 `GnssIntegrityNode` 真跑起来，节点代码一行不改：话题在进程内投递，
+定时器与时钟由测试手工推进，逐拍确定、不联网、不开端口。
+
+实际执行 `python -m unittest -v test_gnss_integrity_node_loop.py`：
+
+```text
+Ran 29 tests in 0.015s
+OK
+```
+
+| 组 | 项数 | 覆盖 |
+| --- | --- | --- |
+| 节点装配 | 5 | 节点名、3 个发布者的话题与消息类型、2 个订阅、10 Hz 定时器、launch 参数进 `Config` |
+| 消息到话题 | 4 | 一帧定位 → 位姿/Bool/JSON 三个话题、`header.stamp` 与 `frame_id` 透传、空 `frame_id` 回退、`origin_*` 决定经纬高换算 |
+| 质量映射 | 6 | 协方差 → 精度、协方差类型未知回退 `default_accuracy`、`NO_FIX` 被拒、`GBAS_FIX` 接受、卫星数话题覆盖与恢复 |
+| 故障注入 | 5 | 25 m 突跳不透传、两帧坏点进 HOLD、恢复需满连续帧、断流 2 s 进 HOLD、非有限数值下输出仍有限 |
+| 看门狗 | 4 | 首帧前不动作、用收到时刻而非消息时间戳判超时、超时只发一次并打 warn、超时后新帧能恢复 |
+| 打包与入口 | 5 | `setup.py` 入口点与 `main()` 对得上、`package.xml` 包名与依赖覆盖节点 import、launch 的 package/executable 与参数键、`resource` 与 `setup.cfg`、节点入口跑得通 |
+
+这一轮闭环测试还揪出一个真实缺陷：看门狗原来用 `header.stamp` 减节点时钟判超时。
+两套时钟不同源时（GPS 周内秒、仿真时钟、bag 回放），节点一收到第一帧就会算出
+「已超时几百秒」，直接进 HOLD 并一直停在那里——纯函数测试完全看不到这一层。
+现在改成记录「本机收到这一帧的时刻」再比较，行为由
+`test_receive_time_used_instead_of_message_stamp` 锁定。
+
 ## 8. 已知限制与未验证内容
 
-- 已验证的是**判据、状态机与离线回放**；**未验证** ROS 2 话题闭环、
-  AirSim / MuJoCo 仿真飞行、真实 GNSS 硬件故障与实机悬停效果。
-  开发环境为 Windows 11 + Python 3.13.14，无 ROS 2、无仿真器，
-  不能把离线曲线解释成飞行效果。
+- 已验证的是**判据、状态机、离线回放与节点收发链路**。节点闭环用进程内兼容层，
+  不经过 DDS：**真实 DDS 收发、`colcon build`、`ros2 launch`、AirSim / MuJoCo 仿真飞行、
+  真实 GNSS 硬件故障与实机悬停效果仍未在本机验证**，需在部署机复测。
+  本机为 Windows 11 + Python 3.13.14，无 ROS 2、无仿真器。
+- 兼容层只实现节点用到的那些原语，不代表 `rclpy` 的全部语义：
+  QoS 匹配、executor 调度、参数覆盖顺序、时间源（`use_sim_time`）等仍以真机为准。
 - 注入的是软件层的定位异常，不是真实多路径或欺骗干扰。
 - 经纬高换算为小范围等距近似，大范围场景需换正式投影。
 - HOLD 期间若载具被吹离保持点超过 `reacquisition_radius`，

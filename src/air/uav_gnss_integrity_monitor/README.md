@@ -24,7 +24,8 @@
 ```
 src/air/uav_gnss_integrity_monitor/
 ├── main.py                        # 离线回放入口（零第三方依赖，main.* 入口）
-├── test_gnss_integrity_monitor.py # 22 项单元测试（unittest / pytest 均可）
+├── test_gnss_integrity_monitor.py # 22 项判据/状态机单元测试（unittest / pytest 均可）
+├── test_gnss_integrity_node_loop.py # 29 项节点闭环测试（进程内 rclpy 兼容层，无需装 ROS）
 ├── package.xml / setup.py / setup.cfg / resource/
 ├── launch/uav_gnss_integrity_monitor.launch.py
 └── uav_gnss_integrity_monitor/
@@ -41,7 +42,8 @@ src/air/uav_gnss_integrity_monitor/
 
 - Windows 11，Python 3.13.14，**未安装** ROS 2 / NumPy / pytest / 仿真器。
 - 在本机实际执行：`python main.py`、`python main.py --plot <目录>`、
-  `python -m unittest -v test_gnss_integrity_monitor.py`（22/22 通过）。
+  `python -m unittest -v test_gnss_integrity_monitor.py`（22/22 通过）、
+  `python -m unittest -v test_gnss_integrity_node_loop.py`（29/29 通过）。
 
 目标部署环境（**本次未在本机验证，需在部署机上复测**）：
 
@@ -70,7 +72,16 @@ python main.py --show-config
 # 单元测试
 python -m unittest -v test_gnss_integrity_monitor.py
 # 若已装 pytest：python -m pytest -v test_gnss_integrity_monitor.py
+
+# 节点闭环测试：把消息喂进节点，检查三个话题到底发了什么（同样不需要装 ROS）
+python -m unittest -v test_gnss_integrity_node_loop.py
 ```
+
+`test_gnss_integrity_node_loop.py` 用一层进程内最小 `rclpy` 兼容层把
+`GnssIntegrityNode` 真跑起来：话题在进程内投递、定时器与时钟由测试手工推进，
+所以逐拍确定、不联网、不开端口。它覆盖的是纯函数测不到的那一层——
+`NavSatFix` 有没有真的变成判据输入、门控结论有没有真的发出去、
+收不到消息时看门狗会不会自己进 HOLD、launch 参数与 `package.xml` 依赖是否和代码对得上。
 
 `--plot` 生成的文件是本地产物，不属于提交内容；仓库中保留的那份
 `offline_replay.svg` / `offline_replay.csv` 是用上述命令实际生成后作为证据提交的。
@@ -139,9 +150,16 @@ launch 中的参数与 `Config` 一一对应，详见
 
 ## 验证范围与已知限制
 
-- 已验证：22 项单元测试、离线回放中的判据/状态机/输出冻结/恢复、SVG 与 CSV 生成。
-- **未验证**：ROS 2 话题闭环、AirSim / MuJoCo 仿真飞行、真实 GNSS 硬件故障、
-  实机悬停效果。本机无 ROS 2 与仿真器，不能把离线回放解释成飞行效果。
+- 已验证：22 项判据/状态机单元测试、离线回放中的输出冻结与恢复、SVG 与 CSV 生成；
+  29 项节点闭环测试（消息进 → 判据 → 三个话题出、卫星数话题覆盖、HOLD 冻结位姿、
+  恢复需满连续帧、10 Hz 看门狗超时、打包配置与 launch 目标一致性）。
+- **未验证**：真实 DDS 收发、`colcon build` / `ros2 launch`、AirSim / MuJoCo 仿真飞行、
+  真实 GNSS 硬件故障、实机悬停效果。节点闭环测试用的是进程内兼容层，不是真实 ROS 图，
+  不能把它的结果解释成 DDS 链路或飞行效果；这些仍需在部署机上复测。
+- 本轮闭环测试修掉一个真实缺陷：看门狗原来把 `header.stamp` 与节点时钟相减判超时，
+  两套时钟不同源时（GPS 周内秒、仿真时钟、bag 回放）第一拍就会被判成「早已超时」
+  并一直停在 HOLD；现在改成用「本机收到这一帧的时刻」判超时，
+  由 `test_receive_time_used_instead_of_message_stamp` 锁定。
 - 合成轨迹是 0.8 m/s 匀速直线，注入的是**软件层**的定位异常，
   不是真实多路径或欺骗干扰。
 - 经纬高换算用等距近似，只适用于小范围；大范围或高精度场景应换成正式投影。

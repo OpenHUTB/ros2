@@ -67,6 +67,10 @@ class GnssIntegrityNode(Node):
         )
         self._monitor = Monitor(self._cfg)
         self._satellites: Optional[int] = None
+        # 本机收到上一帧的时刻（节点时钟）。看门狗只能用这个，
+        # 不能用消息里的 header.stamp：GPS 周内秒、仿真时钟与节点时钟
+        # 常常不同源，混着减会把「刚收到」误判成「早已超时」。
+        self._last_fix_wall: Optional[float] = None
 
         self._pub_pose = self.create_publisher(
             PoseStamped, "/drone/pose_validated", 10
@@ -140,6 +144,7 @@ class GnssIntegrityNode(Node):
         return t
 
     def _on_fix(self, msg: NavSatFix) -> None:
+        self._last_fix_wall = self.get_clock().now().nanoseconds * 1e-9
         x, y, z = self._local_xyz(msg)
         fix = Fix(
             t=self._timestamp(msg),
@@ -188,10 +193,10 @@ class GnssIntegrityNode(Node):
         self._pub_status.publish(status)
 
     def _watchdog(self) -> None:
-        if self._monitor.last_seen_t is None:
+        if self._monitor.last_seen_t is None or self._last_fix_wall is None:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
-        if now - self._monitor.last_seen_t <= self._cfg.stale_timeout:
+        if now - self._last_fix_wall <= self._cfg.stale_timeout:
             return
         out = self._monitor.note_timeout()
         if out is not None:
