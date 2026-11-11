@@ -122,7 +122,21 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#_4">参考</a>
+<li class="toctree-l2"><a class="reference internal" href="#_4">四、人形机器人站立示例</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1_1">1. 文件位置</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2_1">2. 运行</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3_1">3. 核心代码</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 运行效果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 测试</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#_6">参考</a>
 </li>
 </ul>
 </li>
@@ -830,7 +844,91 @@ conda<span class="w"> </span>activate<span class="w"> </span>mujoco-grasp
 <img alt="示例" src="../../img/humanoid/falling_ball.png"/>
 成功事例截图：
 <img alt="alt text" src="../../img/mujoco1.png"/></p>
-<h2 id="_4">参考</h2>
+<h2 id="_4">四、人形机器人站立示例</h2>
+<p>小球只是验证"MuJoCo 能跑"。这一节再往前走一步：搭一个 10 关节的人形（骨盆 / 躯干 / 头 / 双腿 / 双臂），
+用 <strong>PD + 重力补偿</strong> 让它站住——这是后面所有步态、平衡控制的基础。</p>
+<h3 id="1_1">1. 文件位置</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../src/humanoid/mujoco_demo/scene_humanoid.py">src/humanoid/mujoco_demo/scene_humanoid.py</a></td>
+<td>人形 MJCF（10 个铰链关节 + 自由关节）</td>
+</tr>
+<tr>
+<td><a href="../../src/humanoid/mujoco_demo/controller.py">src/humanoid/mujoco_demo/controller.py</a></td>
+<td>纯控制逻辑：PD 力矩、重力补偿、倾角/站立判定</td>
+</tr>
+<tr>
+<td><a href="../../src/humanoid/mujoco_demo/humanoid_stand.py">src/humanoid/mujoco_demo/humanoid_stand.py</a></td>
+<td>入口：可视化 / 无头两种跑法</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2_1">2. 运行</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 可视化：应看到一个小人站在原地 5 s</span>
+python3<span class="w"> </span>src/humanoid/mujoco_demo/humanoid_stand.py
+
+<span class="c1"># 无头：站住返回 0（可进脚本/CI）</span>
+python3<span class="w"> </span>src/humanoid/mujoco_demo/humanoid_stand.py<span class="w"> </span>--headless<span class="w"> </span>--seconds<span class="w"> </span><span class="m">5</span>
+
+<span class="c1"># Linux 无显示服务（WSL2 / 服务器）时，无头模式需要指定软件渲染</span>
+<span class="nv">MUJOCO_GL</span><span class="o">=</span>osmesa<span class="w"> </span>python3<span class="w"> </span>src/humanoid/mujoco_demo/humanoid_stand.py<span class="w"> </span>--headless<span class="w"> </span>--seconds<span class="w"> </span><span class="m">5</span>
+</code></pre></div>
+<h3 id="3_1">3. 核心代码</h3>
+<p>站着不动的关键就两行：</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1) PD：把关节拉回站立角（0）</span>
+<span class="n">tau</span> <span class="o">=</span> <span class="n">kp</span> <span class="o">*</span> <span class="p">(</span><span class="n">q_des</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="n">kd</span> <span class="o">*</span> <span class="n">qd</span>
+<span class="c1"># 2) 重力补偿：mj_rne 的偏置力前馈，否则腿会被自重压"软"</span>
+<span class="n">tau</span> <span class="o">+=</span> <span class="n">qfrc_bias</span>
+</code></pre></div>
+<p>完整实现见 <code>controller.pd_torque()</code>；增益按关节给（腿 300/25，踝 150/12，肩 60/5，肘 40/3），
+力矩统一限幅 200 N·m。</p>
+<h3 id="4">4. 运行效果</h3>
+<p>无头模式实测输出（Windows + Python 3.13 + MuJoCo 3.17）：</p>
+<div class="highlight"><pre><span></span><code>初始骨盆高度 1.042 m，关节 10 个，控制步数 2500
+结果: {'height': 1.04, 'base_height': 1.042, 'min_height': 1.039, 'tilt_deg': 0.58, 'upright': True}
+</code></pre></div>
+<p>5 s 内骨盆高度只下降 3 mm，倾角 0.58°，判定为"站住"。</p>
+<h4 id="_5">验证记录</h4>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>命令</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows 10/11 + Python 3.13.5 + MuJoCo 3.17.0</td>
+<td><code>python3 tests/test_humanoid_stand_local.py</code><br/><code>python3 .../humanoid_stand.py --headless --seconds 5</code></td>
+<td>9 项测试通过；2500 步，<code>height=1.04 / tilt=0.58° / upright=True</code>，退出码 0；可视化窗口实测可正常打开</td>
+</tr>
+<tr>
+<td>Ubuntu 22.04.5（WSL2）+ Python 3.10.12 + MuJoCo 3.12.0 + NumPy 1.21.5</td>
+<td><code>MUJOCO_GL=osmesa python3 tests/test_humanoid_stand_local.py</code><br/><code>MUJOCO_GL=osmesa python3 .../humanoid_stand.py --headless --seconds 5</code></td>
+<td>9 项测试通过（0.262 s）；无头统计与 Windows 完全一致；无显示服务故未跑可视化</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>两个版本的 MuJoCo（3.12 / 3.17）给出同一组无头统计，说明该示例的 PD + 重力补偿不依赖特定版本；
+WSL2 没有显示服务，可视化模式跑不了属预期，用 <code>MUJOCO_GL=osmesa</code> 走无头即可。</p>
+</blockquote>
+<h3 id="5">5. 测试</h3>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>tests/test_humanoid_stand_local.py
+</code></pre></div>
+<p>9 项：PD 方向 / 阻尼 / 前馈 / 饱和、四元数倾角、站立判定，以及一局 5 s 无头物理
+（没装 mujoco 时自动跳过物理部分）。</p>
+<p>已在两个环境各跑一遍：Windows + MuJoCo 3.17 与 Ubuntu 22.04.5（WSL2）+ MuJoCo 3.12，
+均为 9/9 通过，无头统计一致（见上一节验证记录）。</p>
+<h2 id="_6">参考</h2>
 <ul>
 <li><a href="https://openhutb.github.io/doc/pedestrian/humanoid/#humanoid_robot">人形机器人的示例</a></li>
 </ul></div>
