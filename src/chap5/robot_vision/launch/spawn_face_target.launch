@@ -1,0 +1,25 @@
+<launch>
+    <!-- 在 Gazebo 中生成人脸立牌并支持键盘手动控制，供 face_follower 追踪测试。
+         需先启动带 Kinect 的 mbot Gazebo 环境。 -->
+
+    <!-- 立牌初始位置（正前方） -->
+    <arg name="x" default="1.3" />
+    <arg name="y" default="0.0" />
+    <arg name="z" default="0.4" />
+    <arg name="yaw" default="0.0" />
+
+    <!-- 键盘手操步长 -->
+    <arg name="step_xy" default="0.15" />
+    <arg name="step_x" default="0.1" />
+    <arg name="enable_keyboard" default="true" />
+
+    <node pkg="robot_vision" name="spawn_face_target" type="spawn_face_target.py" output="screen">
+        <param name="x" value="$(arg x)" />
+        <param name="y" value="$(arg y)" />
+        <param name="z" value="$(arg z)" />
+        <param name="yaw" value="$(arg yaw)" />
+        <param name="step_xy" value="$(arg step_xy)" />
+        <param name="step_x" value="$(arg step_x)" />
+        <param name="enable_keyboard" value="$(arg enable_keyboard)" />
+    </node>
+</launch>

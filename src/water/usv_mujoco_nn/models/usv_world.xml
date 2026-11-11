@@ -1,0 +1,56 @@
+<mujoco model="usv_world">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.01" gravity="0 0 -9.81" integrator="Euler"/>
+
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="1024"/>
+    <map znear="0.01" zfar="60"/>
+  </visual>
+
+  <asset>
+    <texture name="texplane" type="2d" builtin="checker" rgb1="0.13 0.33 0.52" rgb2="0.17 0.41 0.61"
+             width="512" height="512"/>
+    <material name="matplane" texture="texplane" texrepeat="12 12" reflectance="0.05"/>
+    <material name="matboat" rgba="0.88 0.38 0.10 1"/>
+    <material name="matobs"  rgba="0.45 0.44 0.40 1"/>
+    <material name="matwall" rgba="0.25 0.25 0.27 1"/>
+    <material name="matbuoy" rgba="0.90 0.82 0.15 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="sun" pos="0 0 25" dir="0 0 -1" diffuse="0.85 0.85 0.85" specular="0.2 0.2 0.2"/>
+
+    <!-- 水面 -->
+    <geom name="sea" type="plane" size="30 30 0.1" material="matplane" condim="1"/>
+
+    <!-- 场地边界 -->
+    <geom name="wall_n" type="box" pos="0  25 0.6" size="25 0.4 0.6" material="matwall"/>
+    <geom name="wall_s" type="box" pos="0 -25 0.6" size="25 0.4 0.6" material="matwall"/>
+    <geom name="wall_e" type="box" pos=" 25 0 0.6" size="0.4 25 0.6" material="matwall"/>
+    <geom name="wall_w" type="box" pos="-25 0 0.6" size="0.4 25 0.6" material="matwall"/>
+
+    <!-- 障碍物：圆柱浮标与矩形岛礁 -->
+    <geom name="obs0" type="cylinder" pos="-6  6 0.6" size="1.5 0.6" material="matobs"/>
+    <geom name="obs1" type="cylinder" pos=" 7  4 0.6" size="1.2 0.6" material="matobs"/>
+    <geom name="obs2" type="cylinder" pos="-3 -8 0.6" size="1.8 0.6" material="matobs"/>
+    <geom name="obs3" type="box"      pos="10 -9 0.6" size="2.5 1.2 0.6" material="matobs"/>
+    <geom name="obs4" type="box"      pos="-12 -2 0.6" size="1.5 2.5 0.6" material="matobs"/>
+    <geom name="obs5" type="cylinder" pos=" 2 12 0.6" size="1.0 0.6" material="matbuoy"/>
+    <geom name="obs6" type="cylinder" pos="-14 14 0.6" size="1.3 0.6" material="matbuoy"/>
+
+    <!-- 水面无人艇：三自由度平面模型（x 滑移、y 滑移、艏摇） -->
+    <body name="usv" pos="0 0 0.15">
+      <joint name="slx" type="slide" axis="1 0 0" damping="20" limited="true" range="-24 24"/>
+      <joint name="sly" type="slide" axis="0 1 0" damping="20" limited="true" range="-24 24"/>
+      <joint name="yaw" type="hinge" axis="0 0 1" damping="3"/>
+
+      <geom name="hull" type="box" size="0.75 0.35 0.10" material="matboat" density="140"/>
+      <geom name="cabin" type="box" pos="-0.1 0 0.14" size="0.28 0.24 0.10" rgba="0.85 0.85 0.85 1"/>
+
+      <site name="lidar" pos="0 0 0.28" size="0.02" rgba="1 0 0 1"/>
+      <site name="thr_l" pos="-0.62 -0.26 0" size="0.02"/>
+      <site name="thr_r" pos="-0.62  0.26 0" size="0.02"/>
+    </body>
+  </worldbody>
+</mujoco>

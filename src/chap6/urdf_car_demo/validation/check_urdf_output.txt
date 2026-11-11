@@ -1,0 +1,10 @@
+robot name is: student_car
+---------- Successfully Parsed XML ---------------
+root Link: base_footprint has 1 child(ren)
+    child(1):  base_link
+        child(1):  front_left_wheel_link
+        child(2):  front_marker_link
+        child(3):  front_right_wheel_link
+        child(4):  lidar_link
+        child(5):  rear_left_wheel_link
+        child(6):  rear_right_wheel_link

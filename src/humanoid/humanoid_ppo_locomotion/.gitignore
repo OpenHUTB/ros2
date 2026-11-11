@@ -1,0 +1,18 @@
+# G1 场景与网格（约 32 MB，由 scripts/fetch_assets.py 下载，不入库）
+models/g1/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# Stable-Baselines3 存档（1.1 MB，其中 719 KB 是 Adam 优化器状态）
+# 只在自己重训、需要 --resume 续训时有用；评测与 ROS 2 推理都读 weights/policy_g1.pt
+saved_models/**/*.zip
+saved_models/*.zip
+
+# 训练过程的原始 stdout 日志（training_log.csv 才是入库的训练曲线）
+saved_models/*.log
+saved_models/*.pt
+
+# 评测明细默认写到 saved_models/eval.csv，需入库；临时文件忽略
+saved_models/eval_*.csv
