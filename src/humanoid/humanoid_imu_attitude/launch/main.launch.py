@@ -14,6 +14,8 @@ def generate_launch_description():
     duration = LaunchConfiguration('duration')
     rate = LaunchConfiguration('rate_hz')
     out_dir = LaunchConfiguration('out_dir')
+    alpha = LaunchConfiguration('alpha')
+    beta = LaunchConfiguration('beta')
 
     arguments = [
         DeclareLaunchArgument('profile', default_value='slow',
@@ -24,6 +26,10 @@ def generate_launch_description():
                               description='IMU 发布频率'),
         DeclareLaunchArgument('out_dir', default_value='results',
                               description='CSV 输出目录'),
+        DeclareLaunchArgument('alpha', default_value='0.98',
+                              description='互补滤波陀螺仪权重，越大越信任陀螺仪'),
+        DeclareLaunchArgument('beta', default_value='0.05',
+                              description='Madgwick 梯度下降增益，越大校正越快'),
     ]
 
     sim = Node(
@@ -51,6 +57,8 @@ def generate_launch_description():
                 'profile': profile,
                 'duration': ParameterValue(duration, value_type=float),
                 'out_dir': out_dir,
+                'alpha': ParameterValue(alpha, value_type=float) if method == 'complementary' else 0.0,
+                'beta': ParameterValue(beta, value_type=float) if method == 'madgwick' else 0.0,
             }],
         ))
 
