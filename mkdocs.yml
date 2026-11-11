@@ -89,6 +89,7 @@ nav:
     - 人形机器人平衡控制与外力抗扰恢复: './humanoid/humanoid_push_recovery.md'
     - 人形机器人 PPO 神经网络平衡控制: './humanoid/humanoid_ppo_locomotion.md'
     - 人形机器人 2D 激光雷达 CNN 感知与避障: './humanoid/humanoid_lidar_nn_perception.md'
+    - G1 图像速度巡检: './humanoid/g1_rgb_velocity_patrol/index.md'
     - 人形足迹下的局部避障算法对比: './humanoid/humanoid_local_planner_bench.md'
     - 人形机器人 H1/H1_2 神经网络行走控制: './humanoid/humanoid_h1_walk.md'
     - MuJoCo单足弹跳机器人简单仿真: './humanoid/mujoco_hopper_demo/index.md'

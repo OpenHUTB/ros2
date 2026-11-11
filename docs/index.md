@@ -93,6 +93,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [人形机器人平衡控制与外力抗扰恢复](./humanoid/humanoid_push_recovery.md)
 * [人形机器人 PPO 神经网络平衡控制](./humanoid/humanoid_ppo_locomotion.md)
 * [人形机器人 2D 激光雷达 CNN 感知与避障](./humanoid/humanoid_lidar_nn_perception.md)
+* [G1 图像速度巡检](./humanoid/g1_rgb_velocity_patrol/index.md)
 * [人形足迹下的局部避障算法对比](./humanoid/humanoid_local_planner_bench.md)
 * [MuJoCo单足弹跳机器人简单仿真](./humanoid/mujoco_hopper_demo/index.md)
 * [人形机器人关节轨迹录制与回放工具](./humanoid/humanoid_joint_tools.md)
