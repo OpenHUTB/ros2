@@ -108,3 +108,13 @@ carla_lidar_obstacle_detection/
 - `min_mean_vehicles: 3.0`——平均每帧检出的车辆数下限。
 
 summary 里同时给出「最佳帧召回率」和「14 帧平均召回率」，后者才是判据。
+
+## 运行效果（截图 / 动图）
+
+![激光雷达 3D 检测（BEV 视图 + 逐帧检出统计） 动图](docs/img/ground/carla_lidar_obstacle_detection_run.gif)
+
+![激光雷达 3D 检测（BEV 视图 + 逐帧检出统计） 截图 kf1](docs/img/ground/carla_lidar_obstacle_detection_kf1.png)
+
+![激光雷达 3D 检测（BEV 视图 + 逐帧检出统计） 截图 kf2](docs/img/ground/carla_lidar_obstacle_detection_kf2.png)
+
+> 动图由实际运行的帧合成（GIF < 5 MB）；素材与生成脚本见 `tools/build_media.py`、`tools/build_lidar_media.py`、`tools/build_air_media.py`。

@@ -357,6 +357,10 @@ def run(cfg):
                      "walkers": sum(1 for d in dets if d["cls"] == "walker")})
         print("[lidar] scan %2d: %6d 点 -> 检出 %d 个目标（车 %d / 人 %d）"
               % (k, rows[-1]["points"], len(dets), rows[-1]["vehicles"], rows[-1]["walkers"]))
+        # 每帧存一张 BEV 图，便于合成动图（PR 的运行效果）
+        if last_points is not None and len(last_points) > 0:
+            plot_bev(last_points, dets, os.path.join(save_dir, "bev_scan_%02d.png" % k),
+                     {"n_vehicle": rows[-1]["vehicles"], "n_total": len(dets)})
         time.sleep(float(cfg["detect"]["scan_interval"]))
 
     with open(os.path.join(save_dir, "detections.csv"), "w", newline="", encoding="utf-8") as fh:
