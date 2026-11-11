@@ -61,7 +61,7 @@ src/humanoid/joint_qos_latency_eval/     # 模块目录（仓库内位置）
 `run_sweep.sh` 用相对路径写 `results/`，**需要在包目录下执行**，否则结果会落到
 当前工作目录：
 
-```
+```bash
 colcon build --packages-select joint_qos_latency_eval
 source install/setup.bash
 cd src/humanoid/joint_qos_latency_eval
@@ -81,7 +81,7 @@ PROFILES="reliable_depth10 best_effort_depth1" bash run_sweep.sh
 CSV 命名 `results/<profile>.r<N>.csv`，最后用 `qos_summarize --median` 汇总中位数。
 也可以手动汇总：
 
-```
+```bash
 ros2 run joint_qos_latency_eval qos_summarize results/be1.csv          # 每次运行一行
 ros2 run joint_qos_latency_eval qos_summarize --median results/*.csv   # 按 profile 取中位数
 # 追加 --expected N 用应发总数作分母（run_sweep.sh 已自动带上）
@@ -90,7 +90,7 @@ ros2 run joint_qos_latency_eval qos_summarize --median results/*.csv   # 按 pro
 用 launch 一次起两端也可以（发布端会先等订阅者匹配，最多 `start_timeout` 秒，
 避免把 DDS 发现的几十毫秒算成丢包；`csv_path` 可省略，默认 `results/launch.csv`）：
 
-```
+```bash
 ros2 launch joint_qos_latency_eval main.launch.py \
   pub_profile:=best_effort_depth1 sub_profile:=best_effort_depth1 duration:=10
 ```
@@ -153,7 +153,7 @@ ros2 launch joint_qos_latency_eval main.launch.py \
 
 ## 测试
 
-```
+```bash
 colcon test --packages-select joint_qos_latency_eval
 colcon test-result --verbose
 ```
