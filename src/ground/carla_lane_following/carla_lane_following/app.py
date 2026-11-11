@@ -246,6 +246,12 @@ def semantic_lane_offset(sem_img, cfg, state=None):
     far_c, far_src = _band_center(tags, roi_top, (roi_top + 1.0) / 2, lane_tag, min_col, mid, w, state)
     if near_c is None and far_c is None:
         return None, None, mask, "none"
+    # 只有一侧线、而且还没有历史宽度时，中点估计会偏半个车道宽，不可靠：
+    # 不参与统计、也不用于控制（按丢线处理），单独记为 "single" 以便追溯。
+    if near_c is None or far_c is None:
+        only = near_src if near_c is None else far_src
+        if only == "single":
+            return None, None, mask, "single"
     if near_c is not None and far_c is not None:
         src = "dual" if "dual" in (near_src, far_src) else near_src
     else:
@@ -394,7 +400,7 @@ def run(cfg):
             speed_ms = math.sqrt(speed.x ** 2 + speed.y ** 2 + speed.z ** 2)
 
             source_count[src] = source_count.get(src, 0) + 1
-            if src == "none":
+            if src in ("none", "single"):
                 lost_total += 1
                 lost_run += 1
                 lost_run_max = max(lost_run_max, lost_run)
@@ -430,7 +436,7 @@ def run(cfg):
                 "offset_used": round(offset_used, 4) if offset_used is not None else "",
                 "steer": round(steer, 4),
                 "speed_kmh": round(speed_ms * 3.6, 3),
-                "lost": int(src == "none"),
+                "lost": int(src in ("none", "single")),
                 "source": src,
             })
 
@@ -480,8 +486,8 @@ def run(cfg):
     with open(os.path.join(save_dir, "summary.md"), "w", encoding="utf-8") as fh:
         fh.write("车道线巡线实验摘要\n")
         fh.write("地图: %s\n" % carla_map.name)
-        fh.write("总帧数: %d，真实测到车道线 %d 帧，丢线 %d 帧（%.1f%%），最长连续丢线 %d 帧\n"
-                 % (n_frames, detected, n_frames - detected, lost_ratio * 100, lost_run_max))
+        fh.write("总帧数: %d，可靠测量 %d 帧，丢线 %d 帧（%.1f%%；含单侧无历史宽度的不可靠帧 %d）\n"
+                 % (n_frames, detected, n_frames - detected, lost_ratio * 100, source_count["single"]))
         fh.write("感知来源分布: dual=%d, left_only=%d, right_only=%d, single=%d, none=%d\n"
                  % (source_count["dual"], source_count["left_only"], source_count["right_only"],
                     source_count["single"], source_count["none"]))
