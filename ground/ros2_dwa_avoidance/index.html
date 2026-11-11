@@ -383,6 +383,66 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../lateral_control_benchmark/">地面载具横向控制算法对比（纯跟踪/Stanley/LQR）</a>
 </li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">ROS2 差速机器人 A* 全局规划与 DWA 局部避障</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1. 目标与系统架构</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 机器人模型与动态窗口</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3">3. 轨迹评价函数</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4-a">4. A* 全局路线层</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#41">4.1 局部占据栅格</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#42">4.2 搜索与路径简化</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#43">4.3 前视点与视线约束</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#5">5. 安全与异常处理</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#6">6. 运行步骤</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#61">6.1 编译</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#62">6.2 启动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#63-ros-gazebo">6.3 离线基准（无需 ROS / Gazebo）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#7">7. 实验设置</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#8">8. 实验结果</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#81">8.1 主结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#82">8.2 分析</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#83">8.3 最小间隙</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#9">9. 参数灵敏度</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#10">10. 复现与测试</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#101-ros-2">10.1 ROS 2 节点运行验证</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#11">11. 局限与展望</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#12">12. 大模型声明</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="" href="../ros2_dwa_benchmark.md">ROS2 DWA 局部规划器随机场景压力测试与舒适性评价</a>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ros2_dwa_gazebo/">ROS2 A*+DWA 的 Gazebo 三维验证</a>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../turtlebot3_auto_nav/">TurtleBot3 自主导航与避障参数优化</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ugv_visual_slam_nav/">视觉 SLAM 建图与自主导航（EKF-SLAM + 端到端对照）</a>
@@ -1283,8 +1343,8 @@ launch 参数能正确覆盖节点默认目标（日志中 <code>goal=(11.50, 0.
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../ros2_astar_planner/" title="ROS2 差速机器人栅格 A* 全局路径规划"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../carla_tsr_ros/" title="交通标志识别 ROS 封装">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-left" href="../lateral_control_benchmark/" title="地面载具横向控制算法对比（纯跟踪/Stanley/LQR）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../ros2_dwa_gazebo/" title="ROS2 A*+DWA 的 Gazebo 三维验证">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -1301,8 +1361,8 @@ launch 参数能正确覆盖节点默认目标（日志中 <code>goal=(11.50, 0.
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../ros2_astar_planner/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../carla_tsr_ros/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="../lateral_control_benchmark/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../ros2_dwa_gazebo/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>
