@@ -21,6 +21,7 @@
   <arg name="camera_index" default="0"         doc="摄像头索引"/>
   <arg name="estop_action" default="hover"     doc="紧急停止动作：hover | land | disarm"/>
   <arg name="show_window"  default="false"     doc="是否显示手势预览窗口"/>
+  <arg name="classifier"   default="rules"     doc="手势分类器：rules（规则法）| mlp（训练出的模型）"/>
   <arg name="start_drone_control" default="true" doc="是否同时启动无人机控制节点"/>
 
   <!-- 手势感知节点（模块入口 main.py） -->
@@ -28,6 +29,7 @@
         output="screen">
     <rosparam command="load" file="$(find gesture_control_drone)/config/gesture_control.yaml"/>
     <param name="camera_index" value="$(arg camera_index)"/>
+    <param name="classifier" value="$(arg classifier)"/>
     <param name="show_window"  value="$(arg show_window)"/>
   </node>
 
