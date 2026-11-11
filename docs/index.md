@@ -96,6 +96,7 @@ ROS每章节运行代码:
 * [2D 小车目标追踪仿真](./ground/car_2d_target_tracker.md)
 * [基于神经网络的无人小车自适应跟车（ACC）](./ground/carla_nn_car_following.md)
 * [恶劣雨雾天气下相机感知性能对比实验](./ground/weather_perception_benchmark.md)
+* [巡航风阻与能耗敏感性分析](./ground/cruise_drag_energy_eval.md) —— 滚动 / 空气 / 坡度阻力分解与车速、风阻、坡度对能耗的影响
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
