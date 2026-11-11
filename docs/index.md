@@ -139,6 +139,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [车道保持控制](./ground/carla_lane_keeping/lane_keeping_control.md)
 * [传感器感知与给定轨迹跟踪（神经网络版）](./ground/carla_perception_control.md)
 * [R2D2小车自动巡航仿真](./ground/r2d2_cruise.md)
+* [R2D2小车航点巡航仿真](./ground/r2d2_waypoint_cruise.md) —— P控制器航点跟踪，方形路径循环巡逻，附轨迹数据记录
 * [路径点发布器](./ground/waypoint.md)
 * [激光雷达建图与神经网络规划导航](./ground/carla_mapping_navigation.md)
 * [自动驾驶代理](./ground/ad_agent.md)
@@ -196,6 +197,9 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [神经网络强化学习算法与网络结构对比（MuJoCo CartPole）](./ground/rl_algorithm_compare.md)
 * [基于Mujoco的键盘遥控小车](./ground/mujoco_car_project.md)
 * [地面载具横向控制算法对比（纯跟踪 / Stanley / LQR）](./ground/lateral_control_benchmark.md) —— 同一车辆模型与指标下定量比较三种横向控制器
+* [ROS2 差速机器人 A* 全局规划与 DWA 局部避障](./ground/ros2_dwa_avoidance.md)
+* [ROS2 DWA 局部规划器随机场景压力测试与舒适性评价](./ground/ros2_dwa_benchmark.md)
+* [ROS2 A*+DWA 的 Gazebo 三维验证](./ground/ros2_dwa_gazebo.md)
 * [TurtleBot3 仿真自主导航与避障参数优化](./ground/turtlebot3_auto_nav/README.md)
 * [地面无人车视觉 SLAM 建图与自主导航](./ground/ugv_visual_slam_nav.md) —— 单目 RGB-D 做 EKF-SLAM 与占据栅格，A\* 规划 + 纯追踪执行，并排训练端到端 CNN 做对照
 * [MuJoCo Locomotion 强化学习对比实验](./ground/rl_mujoco_locomotion.md)
@@ -233,6 +237,7 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 * [差速 AGV 坡道起步辅助（防溜车）](./ground/hill_start_assist.md) —— MuJoCo 12° 斜坡，四轮轮角保持 PD + 坡度前馈，松刹车 3 s 后溜 2.18 m 降到 0.008 m
 * [地面移动底盘速度指令安全监督](./ground/cmd_vel_guard.md) —— 对 `/cmd_vel` 做限幅、急停、超时与非法值拦截，无需仿真环境
 * [VRU 冲突风险图](./ground/vru_conflict_risk_map.md) —— 按时间对齐自车与行人、儿童和骑行者轨迹，输出最小距离、TTC 和风险等级
+* [里程计健康监视（打滑 / 堵转 / 反向检测）](./ground/odom_health_monitor.md) —— 比较 `/cmd_vel` 与 `/odom` 的速度比值，识别打滑、堵转与反向运动
 
 ## 5. 空域载具 <span id='air_vehicle'></span>
 
@@ -456,8 +461,9 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [HoloOcean ROS2 运行时容器](./water/docker_runtime.md) —— 用 `build_container.sh` 构建运行时镜像
 
-* [MuJoCo水下机器人](./water/mujoco_rov_underwater.md) ——ROS2仿真与建图初步验证
-___
+* [A* 路径规划初步验证](./water/rov_astar_planner.md)
+
+
 
 如果对文档中的任何问题可以在 [本文档的源码仓库](https://github.com/OpenHUTB/ros2) 中的 [问题](https://github.com/OpenHUTB/ros2/issues) 页面讨论或者提交 [拉取请求](https://github.com/OpenHUTB/.github/blob/master/CONTRIBUTING.md) 直接修改文档。
 
