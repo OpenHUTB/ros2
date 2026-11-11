@@ -19,9 +19,12 @@ source install/setup.bash
 ros2 launch imu_allan_noise_identification main.launch.py duration:=120
 ```
 
-`imu_sim` 以 100 Hz 回放，`allan_identifier` 默认收满 `max_samples: 12000`（=120 s）后自动辨识，
-因此 `duration:=120` 刚好够用；若把 `max_samples` 调大，请同步加长 `duration`。
-中途 Ctrl-C 也会对已收样本做一次辨识（样本过少时只打 warning）。
+`imu_sim` 以 100 Hz 回放，`allan_identifier` 默认收满 `max_samples: 12000`（=120 s）后自动辨识。
+`duration:=120` 只够**演示流程**：120 s 记录的最长簇时长只有 13 s，ARW 可估、**BI 不可估**，
+此时节点会打印 `bias instability NOT identifiable` 警告并在 `/imu/allan` 里给出 `bias_reliable: false`，
+`bias_instability_deg_h` 可能是 0.0（拟合把负的 BI² 截断），不能当结果用。
+要真正辨识 BI，请用 `duration:=3600` 并同步 `max_samples: 360000`（首次运行需回放 1 h）；
+若把 `max_samples` 调大，记得同步加长 `duration`。中途 Ctrl-C 也会对已收样本做一次辨识（样本过少时只打 warning）。
 
 话题（单位遵循 `sensor_msgs/Imu`）：
 

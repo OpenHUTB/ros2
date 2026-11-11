@@ -133,13 +133,27 @@ class AllanIdentifier(Node):
                            self.cluster_points)
         taus_s, adev = allan_deviation(rates, dt, taus)
         model = fit_noise_model(taus_s, adev)
+        max_tau_s = float(taus_s[-1])
+        bias_reliable = max_tau_s >= 100.0 and model.bias_instability > 0.0
         payload = {
             "samples": int(rates.size),
             "rate_hz": self.rate_hz,
             "arw_deg_sqrt_h": model.arw,
             "bias_instability_deg_h": model.bias_instability,
+            "max_tau_s": max_tau_s,
+            "bias_reliable": bias_reliable,
             "adev_points": int(len(adev)),
         }
+        if not bias_reliable:
+            reason = (
+                f"longest cluster time is only {max_tau_s:.1f} s (bias instability needs >= 1 h)"
+                if max_tau_s < 100.0
+                else "the fitted bias-instability term was clipped to zero"
+            )
+            self.get_logger().warning(
+                "bias instability NOT identifiable from this recording: "
+                f"{reason}; reported value {model.bias_instability:.3f} deg/h is not usable"
+            )
         self.status_pub.publish(String(data=json.dumps(payload, ensure_ascii=False)))
         self.get_logger().info(json.dumps(payload, ensure_ascii=False))
 

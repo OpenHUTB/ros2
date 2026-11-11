@@ -96,6 +96,10 @@ $$
 | `/imu/data` | `sensor_msgs/Imu` | 输出（仿真） | 100 Hz |
 | `/imu/allan` | `std_msgs/String` | 输出（辨识） | `{samples, arw_deg_sqrt_h, bias_instability_deg_h, adev_points}` |
 
+> 录音长度约束：`duration:=120` 只演示流程。120 s 的最长簇时长约 13 s，ARW 可估、BI 不可估，
+> 节点会打印 `bias instability NOT identifiable` 并在 `/imu/allan` 里标 `bias_reliable: false`；
+> 要估 BI 需要 ≥ 1 h 记录（4.2 节给出 1 h 下 BI 的 95 % 区间）。
+
 ## 3. 构建与运行
 
 ```bash
