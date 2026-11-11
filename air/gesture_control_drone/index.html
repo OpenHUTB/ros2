@@ -623,6 +623,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#6">6. 参数</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#7">7. 自测</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#_1">⚠ 自带演示模型的边界（很重要）</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#8">8. 常见问题</a>
 </li>
@@ -1267,6 +1271,61 @@ random              1.000      0.972       36
 <p>注意：<code>gesture_dataset.py merge</code> 默认会打乱顺序，合并后的数据集就不再有采集时间
 信息，<code>--split time</code> 会退化成随机划分（训练脚本会打印提示）。</p>
 </blockquote>
+<p>切换到训练出来的模型（可选）：</p>
+<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>gesture_control_drone<span class="w"> </span>main.launch<span class="w"> </span>classifier:<span class="o">=</span>mlp
+</code></pre></div>
+<ul>
+<li><code>classifier: rules</code>（默认）—— 几何规则，<code>gesture_detection.py</code> 里的启发式；</li>
+<li><code>classifier: mlp</code> —— 用 <code>gesture_train.py</code> 训出的模型做<strong>每帧分类</strong>，输入仍是
+  同一份 21 个关键点，输出仍是同一套手势 token。</li>
+</ul>
+<blockquote>
+<p><code>classifier</code> 在 <code>main.launch</code> 里用 <code>&lt;param&gt;</code> 覆盖 yaml，<strong>请用 launch 参数传</strong>
+（改 <code>config/gesture_control.yaml</code> 里的 <code>classifier</code> 不会生效）。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数（yaml）</th>
+<th>默认</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mlp/model_path</code></td>
+<td><code>""</code>（自动找）</td>
+<td>留空则依次找 <code>&lt;包&gt;/models/</code>、<code>install/share/&lt;包&gt;/models/</code>；也可写相对包目录或绝对路径</td>
+</tr>
+<tr>
+<td><code>mlp/threshold</code></td>
+<td><code>0.6</code></td>
+<td>低于这个置信度按"没识别出"处理</td>
+</tr>
+</tbody>
+</table>
+<p><strong>为什么有阈值</strong>：起飞/降落是不可逆动作，模型拿不准时宁可漏报（<code>NONE</code>）。</p>
+<p><strong>找不到模型 / 模型损坏会怎样</strong>：节点照常启动，打一条 warning 并<strong>回退到规则法</strong>
+（0 字节、被截断的 npz、缺权重字段、依赖缺失都算）。</p>
+<p><strong>类别顺序校验</strong>：模型里存了 <code>classes</code>，词表改过（顺序或名字变了）就拒绝加载 ——
+否则输出会静默错标，这种错误最难查。</p>
+<h3 id="_1">⚠ 自带演示模型的边界（很重要）</h3>
+<p>仓库里的 <code>models/gesture_mlp.npz</code> 是<strong>只用 121 个真实样本训出来的演示模型</strong>，
+它的用途是"跑通链路"，<strong>不是可以直接飞的模型</strong>：</p>
+<ol>
+<li><strong>7 类里只有 3 类学过</strong>（PALM_OPEN 63 / FIST 55 / POINT 3）。VICTORY /
+   THUMB_DOWN / THUMB_UP / OK 四类的输出概率恒为 0 —— 也就是说接上这枚模型时，
+   <strong>这 4 个手势永远识别不出来</strong>，其中 <strong>OK = 紧急停止</strong>。紧急停止请走键盘/话题：</li>
+</ol>
+<div class="highlight"><pre><span></span><code>rostopic<span class="w"> </span>pub<span class="w"> </span>-1<span class="w"> </span>/gesture_command<span class="w"> </span>std_msgs/String<span class="w"> </span><span class="s2">"data: 'estop'"</span>
+</code></pre></div>
+<ol>
+<li>用合成手型做交叉验证时它有高置信度错判（<code>FIST -&gt; POINT</code> 0.92、
+   <code>OK -&gt; PALM_OPEN</code> 0.99）—— 说明<strong>泛化没被验证过</strong>。合成手不等于 MediaPipe 的
+   真实输出，但足以说明这枚模型不该直接上真机。</li>
+</ol>
+<p><strong>实机请自己采集训练</strong>：先用 <code>record_gesture_session.py</code> 采够每类几十个样本
+（尤其把 OK 这类安全相关手势采足），再 <code>gesture_train.py</code> 重新训练。</p>
 <h2 id="8">8. 常见问题</h2>
 <table>
 <thead>
