@@ -112,3 +112,38 @@ def test_message_pack_unpack():
     assert unpack_message([1, 2, 3]) is None
     with pytest.raises(ValueError):
         pack_message(0x100, b'\x00')
+
+
+def test_crc_failed_frame_does_not_break_next_counter():
+    """坏帧不能作为下一帧的计数器基准：一次误码只罚一帧，不连累下一帧。"""
+    from can_signal_decode.main import run
+
+    codec = FrameCodec(default_frames()[0], counter_name='AliveCounter')
+    values = {'VehicleSpeed': 60.0, 'MotorTorque': 10.0, 'Gear': 4.0,
+              'BrakePressure': 0.0}
+    # 真实场景：第 6 帧在总线上被干扰（计数器原本是 6），第 7 帧正常到达。
+    first = codec.build(values, counter=5)
+    damaged = bytearray(codec.build(values, counter=6))
+    damaged[6] ^= 0x03                     # 打在载荷高位，计数器位保持可读
+    third = codec.build(values, counter=7)
+
+    stream = [
+        (0.00, codec, first, values, ()),
+        (0.02, codec, bytes(damaged), values, ('crc',)),
+        (0.04, codec, third, values, ()),
+    ]
+    stats, rows = run(stream)
+
+    assert rows[1][2]['crc_ok'] is False
+    assert rows[1][2]['valid'] is False             # 坏帧整体判为无效
+    assert rows[1][2]['counter_jump'] == 0          # 但不拿它的计数器做判定
+    assert rows[2][2]['crc_ok'] is True
+    assert rows[2][2]['counter_ok'] is True         # 但下一帧不应被连累
+    assert rows[2][2]['valid'] is True
+
+
+def test_cycle_ms_matches_simulation_rates():
+    """报文周期要与 simulate() 的实际发送频率一致（50 Hz 基频）。"""
+    vcu, steering = default_frames()
+    assert vcu.cycle_ms == pytest.approx(20.0)        # 每帧都发
+    assert steering.cycle_ms == pytest.approx(60.0)   # 每 3 帧发一次
