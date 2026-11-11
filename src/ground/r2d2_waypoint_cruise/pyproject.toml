@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "r2d2_waypoint_cruise"
+version = "0.0.1"
+description = "R2D2 差速小车航点巡航仿真（PyBullet），P控制器沿方形路径循环巡逻"
+requires-python = ">=3.8"
+dependencies = ["pybullet>=3.2", "numpy>=1.21"]
+license = { text = "MIT" }
+authors = [{ name = "xjm666god" }]
+
+[project.scripts]
+r2d2_waypoint_cruise = "r2d2_waypoint_cruise.cruise:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

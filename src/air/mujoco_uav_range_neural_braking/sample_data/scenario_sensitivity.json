@@ -1,0 +1,83 @@
+{
+  "scenario_count": 4,
+  "collision_scenarios": 0,
+  "collision_rate": 0.0,
+  "minimum_clearance_m": 0.6682422141825342,
+  "worst_scenario": "scenario_001",
+  "factor_summaries": {
+    "start_x_m": [
+      {
+        "value": -8.0,
+        "scenario_count": 2,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.6682807571351597,
+        "worst_min_clearance_m": 0.6682422141825342
+      },
+      {
+        "value": -7.0,
+        "scenario_count": 2,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.6683468809143807,
+        "worst_min_clearance_m": 0.6683314968328444
+      }
+    ],
+    "wall_x_m": [
+      {
+        "value": 0.0,
+        "scenario_count": 4,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.6683138190247702,
+        "worst_min_clearance_m": 0.6682422141825342
+      }
+    ],
+    "initial_speed_m_s": [
+      {
+        "value": 0.0,
+        "scenario_count": 2,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.668340782541851,
+        "worst_min_clearance_m": 0.6683193000877852
+      },
+      {
+        "value": 1.5,
+        "scenario_count": 2,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.6682868555076893,
+        "worst_min_clearance_m": 0.6682422141825342
+      }
+    ],
+    "height_m": [
+      {
+        "value": 1.2,
+        "scenario_count": 4,
+        "collision_scenarios": 0,
+        "collision_rate": 0.0,
+        "mean_min_clearance_m": 0.6683138190247702,
+        "worst_min_clearance_m": 0.6682422141825342
+      }
+    ]
+  },
+  "factor_ranking": [
+    {
+      "parameter": "start_x_m",
+      "group_mean_clearance_span_m": 6.612377922099455e-05
+    },
+    {
+      "parameter": "initial_speed_m_s",
+      "group_mean_clearance_span_m": 5.392703416173816e-05
+    },
+    {
+      "parameter": "height_m",
+      "group_mean_clearance_span_m": 0.0
+    },
+    {
+      "parameter": "wall_x_m",
+      "group_mean_clearance_span_m": 0.0
+    }
+  ]
+}
