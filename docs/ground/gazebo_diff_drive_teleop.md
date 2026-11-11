@@ -359,7 +359,7 @@ angular = kp_yaw * yaw_error + kd_yaw * d(yaw_error)/dt
 
 ![Gazebo 实时仿真：定速巡航小车](../img/ground/gazebo_diff_drive_teleop_cruise_gazebo_close.png)
 
-![Gazebo 实时仿真：广角场景](../img/gazebo_diff_drive_teleop_cruise_gazebo_wide.png)
+![Gazebo 实时仿真：广角场景](../img/ground/gazebo_diff_drive_teleop_cruise_gazebo_wide.png)
 
 
 ## 15. 说明
