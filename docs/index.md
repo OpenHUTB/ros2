@@ -407,6 +407,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [RflySim 单机起飞与端口故障排查（补充实验）](./air/rflysim_sitl_first_flight.md)
 
+* [PX4 SITL + MAVROS2 Offboard 起降与失效保护](./air/px4_mavros2_offboard.md)
+
 
 * [禁飞区检测模块](no_fly_zone_check/index.md)
 
