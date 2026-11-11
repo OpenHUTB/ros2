@@ -17,10 +17,10 @@ node) and is also runnable alone for simulation-only tests:
 About ``headless:=true``: a bare ``ign gazebo -s --headless-rendering``
 gives the ``gpu_lidar`` sensor NO rendering context, so every beam of
 ``/scan`` comes back at max range (no echoes at all). The reliable way
-to run without a physical display is a virtual X server: this launch
-file therefore wraps the normal GUI build in ``xvfb-run -a`` so the
-GPU lidar renders and produces real echoes. Requires the ``xvfb``
-package (``sudo apt install xvfb``).
+to run without a physical display is a virtual X server. This launch
+file wraps Gazebo in ``xvfb-run`` and selects Ogre1, because Ogre2 may
+require an OpenGL 3.3 context that software Xvfb does not provide.
+Requires the ``xvfb`` package (``sudo apt install xvfb``).
 """
 
 from __future__ import annotations
@@ -42,6 +42,7 @@ PACKAGE_SHARE = get_package_share_directory(PACKAGE)
 def generate_launch_description() -> LaunchDescription:
     world = LaunchConfiguration('world')
     headless = LaunchConfiguration('headless')
+    render_engine = LaunchConfiguration('render_engine')
 
     # obstacle_world.sdf (static) or obstacle_world_dynamic.sdf (slide).
     static_world_path = os.path.join(
@@ -55,7 +56,16 @@ def generate_launch_description() -> LaunchDescription:
 
     # --- Gazebo Fortress with GUI -----------------------------------
     gz_sim_gui = ExecuteProcess(
-        cmd=['ign', 'gazebo', '-r', '-v', '2', world_path],
+        cmd=[
+            'ign',
+            'gazebo',
+            '-r',
+            '-v',
+            '2',
+            '--render-engine',
+            render_engine,
+            world_path,
+        ],
         output='screen',
         condition=IfCondition(
             PythonExpression(["'", headless, "' == 'false'"])
@@ -68,7 +78,23 @@ def generate_launch_description() -> LaunchDescription:
     # rendering context and /scan contains real echoes. (The previous
     # `-s --headless-rendering` variant produced all-max-range scans.)
     gz_sim_headless = ExecuteProcess(
-        cmd=['xvfb-run', '-a', 'ign', 'gazebo', '-r', '-v', '2', world_path],
+        cmd=[
+            'xvfb-run',
+            '-a',
+            '-s',
+            '-screen 0 1280x1024x24 +extension GLX +render -noreset',
+            'env',
+            'GALLIUM_DRIVER=llvmpipe',
+            'MESA_LOADER_DRIVER_OVERRIDE=llvmpipe',
+            'ign',
+            'gazebo',
+            '-r',
+            '-v',
+            '2',
+            '--render-engine',
+            render_engine,
+            world_path,
+        ],
         output='screen',
         condition=IfCondition(
             PythonExpression(["'", headless, "' == 'true'"])
@@ -123,9 +149,18 @@ def generate_launch_description() -> LaunchDescription:
                 default_value='false',
                 description=(
                     'No physical display: run Gazebo on a virtual X '
-                    'server via xvfb-run (keeps the rendering context '
-                    'the gpu_lidar sensor needs). Requires the xvfb '
-                    'package.'
+                    'server via xvfb-run with the Ogre1 renderer. This '
+                    'keeps the rendering context the gpu_lidar sensor '
+                    'needs under software OpenGL. Requires xvfb.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                'render_engine',
+                default_value='ogre',
+                description=(
+                    "Ignition Rendering engine plugin. The default 'ogre' "
+                    'works in software-rendered VMs; use ogre2 on hosts with '
+                    'a working OpenGL 3.3 driver.'
                 ),
             ),
             gz_sim_gui,

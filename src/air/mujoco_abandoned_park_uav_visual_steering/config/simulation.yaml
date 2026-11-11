@@ -1,0 +1,14 @@
+simulation:
+  seed: 250102
+  timestep_seconds: 0.01
+  control_hz: 20
+  episode_seconds: 8.0
+  render_width: 320
+  render_height: 180
+  camera_name: front_rgb
+  initial_position: [0.0, -7.0, 1.4]
+  initial_yaw_degrees: 0.0
+  forward_speed_mps: 1.0
+  steering_rate_rps: 0.65
+  path_half_width_m: 1.4
+

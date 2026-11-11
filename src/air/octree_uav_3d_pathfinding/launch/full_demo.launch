@@ -1,0 +1,74 @@
+<launch>
+  <!-- ==========================================================================
+       闭环飞行的完整演示（P6）
+
+       与 main.launch 的唯一区别：**多一个路径跟踪节点**，并把桥接节点的
+       "要飞到哪里"从 /uav/goal 改成 /uav/goal_cmd —— 这样：
+
+         /uav/goal      用户发一次 → astar_planner 规划 → 发布路径
+         /uav/path_smooth  → path_follower 逐点跟踪 → /uav/goal_cmd → airsim_bridge 执行飞行
+
+       如果不做这个区分，path_follower 发的每个航点都会被 astar_planner 当成
+       "用户下发了新目标"，触发重新规划 → 新路径 → follower 重启 → 死循环。
+
+       跑法：
+         roslaunch octree_uav_3d_pathfinding full_demo.launch
+         roslaunch octree_uav_3d_pathfinding full_demo.launch bridge:=false \
+             body_frame:=lidar_link                     # 用 mock 场景离线验证
+
+       然后用一条普通的目标点触发整条链路：
+         rostopic pub -1 /uav/goal geometry_msgs/Point "{x: 7.5, y: -7.5, z: 2.0}"
+       ========================================================================== -->
+
+  <!-- 桥接节点：默认开启（真机/仿真）；离线用 mock 时传 false -->
+  <arg name="bridge" default="true"/>
+  <!-- 是否启动 RViz -->
+  <arg name="rviz" default="true"/>
+  <!-- 是否运行环境自检 -->
+  <arg name="check" default="true"/>
+  <!-- 规划节点取起点的机体坐标系（mock 场景用 lidar_link） -->
+  <arg name="body_frame" default="base_link"/>
+  <!-- 安全裕度半径（m）；0 = 关闭，行为回到 P4 -->
+  <arg name="inflation_radius" default="0.6"/>
+  <!-- 是否做路径平滑 -->
+  <arg name="smoothing" default="true"/>
+  <!-- 是否启动路径跟踪 -->
+  <arg name="following" default="true"/>
+  <!-- 跟踪哪条路径。默认随 smoothing 走：关掉平滑时规划器不发布 /uav/path_smooth，
+       跟踪节点若仍订阅它就会一条路径都收不到。也可以显式覆盖，做"跟折线 vs 跟曲线"对照。
+       注意比较方式：roslaunch 的 arg() 在 eval 里可能返回布尔 True 而不是字符串 'true'，
+       所以这里用 str(...).lower() != 'false' 判断，两种返回类型都成立。 -->
+  <arg name="path_topic"
+       default="$(eval '/uav/path_smooth' if str(arg('smoothing')).lower() != 'false' else '/uav/path')"/>
+  <!-- 桥接节点听哪个话题。默认随 following 走：不启动跟踪节点时
+       （following:=false）没人往 /uav/goal_cmd 发航点，桥接节点必须回到 /uav/goal。 -->
+  <arg name="bridge_goal_topic"
+       default="$(eval '/uav/goal_cmd' if str(arg('following')).lower() != 'false' else '/uav/goal')"/>
+
+  <!-- 基础链路（建图 + 规划 + 可选 RViz/自检） -->
+  <include file="$(find octree_uav_3d_pathfinding)/launch/main.launch">
+    <arg name="bridge" value="$(arg bridge)"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+    <arg name="check" value="$(arg check)"/>
+    <arg name="body_frame" value="$(arg body_frame)"/>
+    <arg name="inflation_radius" value="$(arg inflation_radius)"/>
+    <arg name="smoothing" value="$(arg smoothing)"/>
+    <!-- ★ 关键：跟踪开启时桥接节点听 /uav/goal_cmd，与规划器用的 /uav/goal 分开 -->
+    <arg name="bridge_goal_topic" value="$(arg bridge_goal_topic)"/>
+  </include>
+
+  <!-- 路径跟踪节点：订阅 /uav/path_smooth 与位姿，向 /uav/goal_cmd 逐点下发航点。
+       参数全部来自 config/params.yaml 的 path_follower 组。 -->
+  <node if="$(arg following)"
+        pkg="octree_uav_3d_pathfinding"
+        type="path_follower"
+        name="path_follower"
+        output="screen">
+    <param name="world_frame" value="world"/>
+    <!-- 跟踪节点不用 TF（位姿走 odom），所以这里固定 base_link，
+         不跟随规划节点的 body_frame —— 否则日志会把 lidar_link 误报成它的机体系 -->
+    <param name="body_frame" value="base_link"/>
+    <param name="path_topic" value="$(arg path_topic)"/>
+  </node>
+
+</launch>
