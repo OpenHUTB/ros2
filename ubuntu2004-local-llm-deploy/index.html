@@ -37,7 +37,7 @@
 </div>
 <div aria-label="Navigation menu" class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
 <p class="caption"><span class="caption-text">入门</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="..">首页</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../ubuntu_docs_setup/">Ubuntu 文档环境初始化</a>
@@ -45,6 +45,40 @@
 <li class="toctree-l1"><a class="reference internal" href="../ubuntu20.04/">安装 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap2/ros2_pubsub_py/">ROS2 话题发布订阅基础实验（talker/listener）</a>
+</li>
+<li class="toctree-l1 current"><a class="reference internal current" href="#">自装ubuntu20.04本地大模型部署教程</a>
+<ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="#1">1.查看驱动</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#nvidia">一、查看本机 NVIDIA 显卡硬件.</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_1">二、查看系统提供了哪些驱动版本（看推荐版本）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">三、查看驱动版本</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#2">2. 升级驱动，这里提供两种方法</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#1_1">方式 1：自动安装系统推荐驱动</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2-580">方式 2：手动指定版本安装（例如升级到 580，适合知道目标版本的情况）</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#3-ollama">3. 下载 ollama，拉大模型</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#4-deepseek">4. 后续启动，以 deepseek 为例</a>
+<ul>
+<li class="toctree-l3"><a class="reference internal" href="#rosai">方式一：手动启动（现在这种方式，最简单，推荐调试 ROS+AI 时用）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ollama-serve">方式二：设置开机后台自启（不用每次手动敲 ollama serve，适合长期开发）</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_4">常用命令备忘</a>
+</li>
+</ul>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap2/mean_filter/">ROS 2 传感器数据均值滤波节点 (mean_filter)</a>
 </li>
@@ -697,42 +731,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../classical_control/cartpole_balance/">倒立摆平衡小车 (cart-pole, LQR)</a>
 </li>
 </ul>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal current" href="#">自装ubuntu20.04本地大模型部署教程</a>
-<ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#1">1.查看驱动</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#nvidia">一、查看本机 NVIDIA 显卡硬件.</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_1">二、查看系统提供了哪些驱动版本（看推荐版本）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_2">三、查看驱动版本</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#2">2. 升级驱动，这里提供两种方法</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#1_1">方式 1：自动安装系统推荐驱动</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#2-580">方式 2：手动指定版本安装（例如升级到 580，适合知道目标版本的情况）</a>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#3-ollama">3. 下载 ollama，拉大模型</a>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#4-deepseek">4. 后续启动，以 deepseek 为例</a>
-<ul>
-<li class="toctree-l3"><a class="reference internal" href="#rosai">方式一：手动启动（现在这种方式，最简单，推荐调试 ROS+AI 时用）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#ollama-serve">方式二：设置开机后台自启（不用每次手动敲 ollama serve，适合长期开发）</a>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#_4">常用命令备忘</a>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
 </div>
 </div>
 </nav>
@@ -745,6 +743,7 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href=".."></a></li>
+<li class="breadcrumb-item">入门</li>
 <li class="breadcrumb-item active">自装ubuntu20.04本地大模型部署教程</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/ubuntu2004-local-llm-deploy.md"> 编辑页面</a>
@@ -964,7 +963,8 @@
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
-<a class="btn btn-neutral float-left" href="../classical_control/cartpole_balance/" title="倒立摆平衡小车 (cart-pole, LQR)"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-left" href="../chap2/ros2_pubsub_py/" title="ROS2 话题发布订阅基础实验（talker/listener）"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../chap2/mean_filter/" title="ROS 2 传感器数据均值滤波节点 (mean_filter)">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
 <hr/>
 <div role="contentinfo">
@@ -981,7 +981,8 @@
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
-<span><a href="../classical_control/cartpole_balance/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../chap2/ros2_pubsub_py/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../chap2/mean_filter/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../js/jquery-3.6.0.min.js"></script>
