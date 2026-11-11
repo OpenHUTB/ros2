@@ -73,8 +73,8 @@ roslaunch mujoco_multi_goal_nav main.launch nogui:=true        # 无窗口
   到 `dist < STOP_DIST` 切下一个目标；
 - 每步 `mj_step` 后把 `qpos[2]`、`qpos[3:7]` 复位、`qvel[2]`、`qvel[3:6]` 置 0，
   车头全程保持初始朝向，不会斜着平移；
-- `resolve_scene_path()` 三级回退（脚本同目录 → `../share/<pkg>/` → 环境变量），
-  源码目录直跑与安装空间启动都能找到 `scene.xml`。
+- `resolve_scene_path()` 三级回退（环境变量 `MUJOCO_MULTI_GOAL_SCENE` → 脚本同目录 → `../share/<pkg>/`），
+  显式指定 XML、源码目录直跑、安装空间启动三种情形都能找到 `scene.xml`。
 
 ## 已知限制
 

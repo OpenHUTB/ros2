@@ -36,7 +36,7 @@ PRINT_INTERVAL = 0.5 # 位置打印间隔 s
 
 
 def resolve_scene_path():
-    """定位 scene.xml：脚本同目录 → 上级 share/<pkg>/ → 环境变量。"""
+    """定位 scene.xml：环境变量 → 脚本同目录 → 上级 share/<pkg>/。"""
     env = os.environ.get("MUJOCO_MULTI_GOAL_SCENE")
     if env and os.path.isfile(env):
         return os.path.abspath(env)
