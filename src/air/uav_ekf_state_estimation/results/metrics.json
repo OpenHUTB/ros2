@@ -1,0 +1,11 @@
+{
+  "duration_s": 60.0,
+  "samples": 601,
+  "ekf_rmse_m": 1.7452,
+  "dead_reckoning_rmse_m": 96.4764,
+  "gps_rmse_m": 2.6594,
+  "ekf_final_error_m": 2.0726,
+  "complementary_yaw_rmse_deg": 1.0004,
+  "gps_sigma_m": 1.8,
+  "baro_sigma_m": 0.35
+}

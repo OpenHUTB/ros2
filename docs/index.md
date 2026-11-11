@@ -344,6 +344,8 @@ ROS 2 服务与参数基础实验（无人机模式切换与在线调参）：[c
 
 * [神经视觉惯性里程计与三后端 SLAM 对比](./air/uav_neural_vio_slam.md)
 
+* [无人机 EKF 状态估计（IMU/GPS/气压计融合）](./air/uav_ekf_state_estimation.md) —— 6 状态导航滤波、阵风扰动与纯 GPS/航位推算对比
+
 * [MuJoCo 四旋翼仿真与 ROS2 桥接底座](./air/uav_mujoco_sim.md)
 * [MuJoCo 四旋翼垂直通道 PPO 定高与抗扰控制](./air/uav_vertical_ppo.md)
 
