@@ -1,2 +1,0 @@
-arm: {l1: 150.0, l2: 120.0, q1_limit: 2.6, q2_limit: 2.4}
-solver: {reach_tol: 6.0, step_ratio: 0.08}
