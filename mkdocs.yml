@@ -271,7 +271,7 @@ nav:
     - ROS2 2D 激光占据栅格建图: './ground/ros2_occupancy_mapping.md'
     - 扭转控制: './ground/twist_to_control.md'
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
-    - 人工势场法导航（pygame 2D）: './ground/potential_field_navigation.md'
+    - 人工势场法导航（2D 仿真 + ROS 2 节点）: './ground/potential_field_navigation.md'
     - 狭窄通道通行：激光雷达开口辨识与神经网络选口穿行: './ground/gap_nav_nn.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'

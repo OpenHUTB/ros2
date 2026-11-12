@@ -1,13 +1,19 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematype="http://www.w3.org/2001/XMLSchema"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>potential_field_navigation</name>
   <version>0.0.1</version>
-  <description>人工势场法导航 2D 仿真（非 ROS 节点包）：引力与斥力合成、局部极小点逃逸、小车运动学。</description>
-  <maintainer email="wqs159@users.noreply.github.com">wqs159</maintainer>
+  <description>人工势场法导航 2D 仿真：引力与斥力合成、局部极小点逃逸、小车运动学，并提供发布位姿与轨迹的 ROS 2 节点。</description>
+  <maintainer email="799628765@qq.com">wqs159</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>python3</exec_depend>
+  <exec_depend>python3-pygame</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
   <test_depend>python3-pytest</test_depend>
   <export>
     <build_type>ament_python</build_type>

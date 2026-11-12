@@ -41,6 +41,11 @@ class Robot:
         if self.done:
             return self.status
 
+        if self.steps >= config.MAX_STEPS:
+            self.done = True
+            self.status = "timeout"
+            return self.status
+
         d = self.distance()
         if d <= config.GOAL_TOL:
             self.done = True
@@ -71,6 +76,11 @@ class Robot:
         self.steps += 1
         self.history.append(self.distance())
         self.min_clearance = min(self.min_clearance, self.clearance())
+        # 轨迹与历史只保留最近一段，避免长时间运行内存与渲染开销持续增长
+        if len(self.trail) > config.TRAIL_MAX:
+            del self.trail[0]
+        if len(self.history) > config.HISTORY_MAX:
+            del self.history[0]
         if self.escape_left == 0 and self.status == "escaping":
             self.status = "moving"
         return self.status

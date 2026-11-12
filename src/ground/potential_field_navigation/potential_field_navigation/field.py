@@ -50,7 +50,9 @@ def repulsive_force(p, obstacles=None, **kwargs):
 def total_force(p, goal=None, obstacles=None, **kwargs):
     goal = config.GOAL if goal is None else goal
     obstacles = config.OBSTACLES if obstacles is None else obstacles
-    ax, ay = attractive_force(p, goal, kwargs.get("k_att"))
+    # k_att 只属于引力项，先摘出来，避免透传给 obstacle_repulsion 触发
+    # TypeError: unexpected keyword argument 'k_att'
+    ax, ay = attractive_force(p, goal, kwargs.pop("k_att", None))
     rx, ry = repulsive_force(p, obstacles, **kwargs)
     return (ax + rx, ay + ry)
 

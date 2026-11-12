@@ -35,3 +35,8 @@ ESCAPE_BIAS = 0.75
 # 到达与碰撞判定
 GOAL_TOL = 8.0
 CLEARANCE_MARGIN = 4.0
+
+# 运行上限：避免逃逸失败时无限循环、轨迹与历史无限增长
+MAX_STEPS = 3000
+TRAIL_MAX = 2000
+HISTORY_MAX = STALL_WINDOW + 10
