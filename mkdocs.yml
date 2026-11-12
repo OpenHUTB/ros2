@@ -358,6 +358,7 @@ nav:
     - 基于 PPO 的无人机导航避障: './air/uav_ppo_nav.md'
     - uav_ppo_nav 本地测试（pytest）: './air/uav_ppo_nav_local_test.md'
     - 无人机定高日志误差与抗扰恢复时间评估: './air/uav_hover_log_eval.md'
+    - uav_ppo_nav 部署节点本地测试: './air/uav_ppo_nav_node_test.md'
     - 四旋翼悬停油门求解（推力曲线/海拔/电压）: './air/uav_hover_throttle.md'
     - 基于深度强化学习的无人机最优路径查找: './air/drl_drone_path_planning.md'
     - 强化学习对比实验（PPO/SAC/TD3）: './air/uav_rl_benchmark.md'
