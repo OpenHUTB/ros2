@@ -1,0 +1,5 @@
+train_consist_coupler:
+  ros__parameters:
+    scenario: consist_head_first
+    playback_rate: 1.0
+    frame_step: 1

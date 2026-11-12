@@ -1,0 +1,29 @@
+<launch>
+  <!-- MSK-Arm headless benchmark: muscle-arm sim + metrics, no viewer -->
+  <arg name="scene"     default="reach"/>
+  <arg name="seed"      default="20261111"/>
+  <arg name="noise"     default="true"/>
+  <arg name="duration"  default="60.0"/>
+  <arg name="mode"      default="BENCHMARK"/>
+  <arg name="timeout"   default="60.0"/>
+
+  <node pkg="msk_arm_nn" type="sim_node.py" name="sim_node" output="screen">
+    <env name="MSK_ROOT" value="$(find msk_arm_nn)"/>
+    <param name="scene"    value="$(arg scene)"/>
+    <param name="seed"     value="$(arg seed)"/>
+    <param name="noise"    value="$(arg noise)"/>
+    <param name="duration" value="$(arg duration)"/>
+    <param name="mode"     value="$(arg mode)"/>
+    <param name="state_hz" value="20.0"/>
+    <param name="camera_hz" value="10.0"/>
+  </node>
+
+  <node pkg="msk_arm_nn" type="metrics_node.py" name="metrics_node"
+        output="screen" required="true">
+    <env name="MSK_ROOT" value="$(find msk_arm_nn)"/>
+    <param name="scene"      value="$(arg scene)"/>
+    <param name="mode"       value="benchmark"/>
+    <param name="timeout"    value="$(arg timeout)"/>
+    <param name="shutdown"   value="true"/>
+  </node>
+</launch>

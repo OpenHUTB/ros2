@@ -1,0 +1,13 @@
+# 半主动悬架回放参数
+semi_active_suspension:
+  ros__parameters:
+    # 工况：speed_bump / brake_dive / cornering_roll / iso_rough
+    scenario: speed_bump
+    # 回放倍速，1.0 表示每 0.03 s 推进一次、每次跨 frame_step 帧
+    playback_rate: 1.0
+    # 每个周期跨过的采样帧数（单帧 0.002 s），15 帧即 0.03 s，正好实时
+    frame_step: 15
+    # 垂向位移放大倍数。悬架行程只有几十毫米，不放大的话在 RViz 里看不出来
+    height_gain: 4.0
+    # 被动 / 半主动两排的横向间距，m
+    row_gap: 1.5

@@ -1,0 +1,52 @@
+<mujoco model="cover_world">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.01" gravity="0 0 -9.81" integrator="Euler"/>
+
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="1024"/>
+  </visual>
+
+  <asset>
+    <texture name="texfloor" type="2d" builtin="checker" rgb1="0.86 0.86 0.84" rgb2="0.80 0.80 0.78"
+             width="512" height="512"/>
+    <material name="matfloor" texture="texfloor" texrepeat="10 8" reflectance="0.02"/>
+    <material name="matrobot" rgba="0.20 0.55 0.85 1"/>
+    <material name="matwall"  rgba="0.35 0.34 0.32 1"/>
+    <material name="matfurn"  rgba="0.55 0.45 0.35 1"/>
+  </asset>
+
+  <worldbody>
+    <light name="light" pos="0 0 12" dir="0 0 -1" diffuse="0.9 0.9 0.9"/>
+
+    <!-- 房间 12 m x 10 m -->
+    <geom name="floor" type="plane" size="7 6 0.1" material="matfloor" condim="1"/>
+
+    <geom name="wall_n" type="box" pos="0  5 0.5" size="6 0.3 0.5" material="matwall"/>
+    <geom name="wall_s" type="box" pos="0 -5 0.5" size="6 0.3 0.5" material="matwall"/>
+    <geom name="wall_e" type="box" pos=" 6 0 0.5" size="0.3 5 0.5" material="matwall"/>
+    <geom name="wall_w" type="box" pos="-6 0 0.5" size="0.3 5 0.5" material="matwall"/>
+
+    <!-- 家具：矩形，命名 furn* -->
+    <geom name="furn0" type="box" pos="-2.5  1.6 0.5" size="1.0 0.7 0.5" material="matfurn"/>
+    <geom name="furn1" type="box" pos=" 1.6  2.4 0.5" size="0.8 0.6 0.5" material="matfurn"/>
+    <geom name="furn2" type="box" pos=" 2.8 -2.0 0.5" size="1.0 0.6 0.5" material="matfurn"/>
+    <geom name="furn3" type="box" pos="-1.0 -2.4 0.5" size="1.2 0.6 0.5" material="matfurn"/>
+
+    <!-- 差速清扫车：平面三自由度 -->
+    <body name="robot" pos="0 0 0.12">
+      <joint name="rx" type="slide" axis="1 0 0" damping="16" limited="true" range="-6.5 6.5"/>
+      <joint name="ry" type="slide" axis="0 1 0" damping="16" limited="true" range="-5.5 5.5"/>
+      <joint name="ryaw" type="hinge" axis="0 0 1" damping="4"/>
+
+      <geom name="body" type="box" size="0.35 0.30 0.10" material="matrobot" density="180"/>
+      <geom name="brush" type="cylinder" pos="0.42 0 0" size="0.30 0.02" rgba="0.15 0.15 0.15 1"
+            contype="0" conaffinity="0"/>
+
+      <site name="lidar" pos="0 0 0.26" size="0.02" rgba="1 0 0 1"/>
+      <site name="thr_l" pos="-0.30 -0.22 0" size="0.02"/>
+      <site name="thr_r" pos="-0.30  0.22 0" size="0.02"/>
+      <site name="brush_center" pos="0.42 0 0" size="0.02"/>
+    </body>
+  </worldbody>
+</mujoco>

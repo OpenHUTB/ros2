@@ -1,0 +1,26 @@
+# uav_rotor_fault_detector_nn 检测节点参数
+#
+# 运行时参数的默认值都在这里。`launch/detector.launch.py` 只覆盖演示时最常改的 6 个
+# （scene / fault / rotor / onset / severity / duration），其余 7 个
+# （seed / dt / substeps / imu_noise / checkpoint / window / publish_rate）只能改本文件，
+# 或者在命令行用 `--ros-args -p 名字:=值` 临时覆盖。
+#
+# 顶层故意用 `/**` 通配节点名（与 uav_mujoco_sim 的 config/sim.yaml 一致）：
+# 键名写成具体节点名时，launch 里一改节点名整份文件就静默失效，这种坑不值得踩第二次。
+/**:
+  ros__parameters:
+    scene: "open_ground"        # open_ground / corridor / obstacle_field / urban_block
+    seed: 0
+    dt: 0.01
+    substeps: 4
+    # healthy / loss / degradation / stuck / dual_loss / progressive / imu_bias / imu_noise
+    fault: "loss"
+    rotor: 0
+    onset: 2.0
+    severity: 1.0
+    imu_noise: 0.02
+    # 相对路径会依次在 cwd、包目录、安装后的 share 目录里查找
+    checkpoint: "results/detector.pt"
+    window: 0                   # 0 = 用检查点里记录的窗口长度（100 步）
+    duration: 10.0
+    publish_rate: 50.0

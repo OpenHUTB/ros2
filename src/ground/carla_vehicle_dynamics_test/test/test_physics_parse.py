@@ -139,5 +139,10 @@ def main():
     return 1 if FAILED else 0
 
 
+def test_physics_parse():
+    """pytest 入口：CARLA 物理参数解析自检必须返回 0。"""
+    assert main() == 0
+
+
 if __name__ == '__main__':
     sys.exit(main())

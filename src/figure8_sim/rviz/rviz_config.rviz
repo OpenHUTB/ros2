@@ -1,0 +1,25 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Grid
+      Enabled: true
+      Name: Grid
+    - Class: rviz/Marker
+      Enabled: true
+      Name: CarMarker
+      Topic: /car_visual
+  Global Options:
+    Fixed Frame: map
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 8
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 1.57
+      Yaw: 0

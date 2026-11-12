@@ -2,10 +2,13 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>mujoco_vehicle_aeb</name>
-  <version>0.0.0</version>
-  <description>MuJoCo simulation of vehicle AEB automatic emergency braking system</description>
+  <version>1.0.0</version>
+  <description>
+    MuJoCo 两车纵向场景下的 TTC 型自动紧急制动（AEB）：比例制动控制律、
+    离线指标评测（最小间距/碰撞/制动距离/最小 TTC）与工况扫描。
+  </description>
 
-  <maintainer email="2405640340@qq.com">yourname</maintainer>
+  <maintainer email="openhutb@example.com">OpenHUTB</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>

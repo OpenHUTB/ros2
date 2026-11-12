@@ -1,0 +1,10 @@
+# pip 依赖（MuJoCo 不在 apt 仓库里，ROS 1 运行与独立运行共用这一份）
+# 安装：pip3 install --user -r requirements.txt
+# 版本按实测锁定。MuJoCo 只在 3.17.0 上验证过（本机 Windows 与云主机 Ubuntu 各一套）。
+# numpy / Pillow 两套实测环境：
+#   Ubuntu 系统 /opt/python3.12（3.12.11）：numpy 1.26.4 / Pillow 10.4.0
+#   conda ROS 环境（3.12.16）：numpy 2.5.4 / Pillow 13.0.0
+# 更高版本未做验证；GIF 字节数与每帧延迟可能随 Pillow 版本变化（同 421 帧 / 13.59 s）。
+mujoco==3.17.0
+numpy>=1.26.4,<3.0
+pillow>=10.4.0,<14.0

@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "mujoco_version": "3.12.0",
+  "brake_scale": 0.8,
+  "seed": 17,
+  "seed_usage": "fallback training only; checkpoint evaluation is deterministic",
+  "command": "python src/ground/mujoco_forklift_pallet_docking/tools/record_demo.py --output docs/evidence/forklift_pallet_docking/docking.gif --json-output docs/evidence/forklift_pallet_docking/results.json --seed 17 --brake-scale 0.8",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "policy_source": "checkpoint",
+  "gif": {
+    "path": "docs/evidence/forklift_pallet_docking/docking.gif",
+    "captured_frames": 380,
+    "encoded_frames": 379,
+    "capture_interval_ms": 80
+  },
+  "recorded_episode": {
+    "steps": 379,
+    "start_x_m": -4.0,
+    "initial_speed_mps": 2.0,
+    "insertion_depth_m": 0.0939,
+    "final_speed_mps": 0.0156,
+    "over_inserted": false
+  },
+  "multi_start_evaluation": [
+    {
+      "start_x_m": -5.0,
+      "insertion_depth_m": 0.0987,
+      "final_speed_mps": 0.0226,
+      "over_inserted": false,
+      "steps": 425
+    },
+    {
+      "start_x_m": -4.0,
+      "insertion_depth_m": 0.0939,
+      "final_speed_mps": 0.0156,
+      "over_inserted": false,
+      "steps": 379
+    },
+    {
+      "start_x_m": -3.0,
+      "insertion_depth_m": 0.1901,
+      "final_speed_mps": 0.0207,
+      "over_inserted": false,
+      "steps": 294
+    }
+  ],
+  "font": "none",
+  "image_processing": "clip((gray - 4) * 4, 0, 255), nearest-neighbor resize to 640x640"
+}
