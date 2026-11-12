@@ -311,6 +311,7 @@ r
     - 不足转向梯度与侧向稳定裕度: './ground/lateral_stability_margin.md'
     - 四轮独立驱动扭矩矢量横摆控制: './ground/torque_vectoring_yaw_control/index.md'
     - ROS2 差速机器人卡死检测与自动脱困: './ground/ros2_stuck_recovery/index.md'
+    - 上游心跳看门狗: './ground/heartbeat_watchdog.md'
 - 空域载具:
     - MuJoCo 城市屋顶光伏覆盖率测量: './air/mujoco_uav_rooftop_pv_coverage_survey.md'
     - MuJoCo 屋顶光伏覆盖率测量第二天: './air/mujoco_uav_rooftop_pv_coverage_survey_day2.md'
