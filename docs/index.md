@@ -157,6 +157,7 @@ ROS 2 QoS 兼容性检查实验：[chap2/ros2_qos_compatibility_lab](./chap2/ros
 
 ## 4. 地面载具  <span id='ground_vehicle'></span>
 
+* [RRT 快速随机扩展树路径规划](./ground/rrt_path_planning.md) —— 矩形障碍空间下的 RRT 采样规划：随机树扩展、目标偏置、Liang-Barsky 碰撞检测与路径回溯，pygame 2D 可视化
 * [小海龟多航点巡航与暂停恢复](./chapter/chap1/turtle_waypoint_patrol/index.md)
 * [离线测试接入 GitHub Actions](./ground/offline_checks.md) —— 6 个零依赖离线测试接入 CI，分别通过 208 / 270 / 242 / 41 / 271 / 204 项
 * [编码器量化误差与速度估计滤波对比](./ground/encoder_quantization_velocity.md) —— 1 kHz 差分把量化误差放大千倍；1024/4096/16384 CPR 下原始差分 1.371→0.404→0.133 rad/s，α-β 与卡尔曼把误差压到 0.198/0.047

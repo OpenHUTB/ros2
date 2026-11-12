@@ -158,6 +158,7 @@ nav:
     - 二连杆机械臂肌肉骨骼建模与 MuJoCo 仿真: './muscle_arm_mujoco_simulation.md'
     - 拮抗共激活分析（二连杆机械臂肌肉骨骼仿真）: './muscle_arm_cocontraction_simulation.md'
 - 地面载具:
+    - RRT 快速随机扩展树路径规划: './ground/rrt_path_planning.md'
     - 小海龟多航点巡航与暂停恢复: 'chapter/chap1/turtle_waypoint_patrol/index.md'
     - 离线测试接入 GitHub Actions: './ground/offline_checks.md'
     - 编码器量化误差与速度估计滤波对比: './ground/encoder_quantization_velocity.md'
