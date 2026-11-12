@@ -11,6 +11,6 @@ protocol={'final_episode_seeds':list(range(20000,20024)),
           'sha256':{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}}
 path=root/'final_protocol.json'
 if path.exists():
-    assert json.loads(path.read_text())==protocol,'Frozen model or data generation code changed'
-else:path.write_text(json.dumps(protocol,indent=2))
+    assert json.loads(path.read_text(encoding='utf-8'))==protocol,'Frozen model or data generation code changed'
+else:path.write_text(json.dumps(protocol,indent=2),encoding='utf-8')
 print('Final experiment protocol frozen; all source and model hashes verified.')

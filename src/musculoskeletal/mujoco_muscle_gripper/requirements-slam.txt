@@ -1,0 +1,4 @@
+-r requirements.txt
+--extra-index-url https://download.pytorch.org/whl/cpu
+scipy>=1.9
+torch>=2.0

@@ -1,0 +1,18 @@
+<launch>
+  <!-- gui:=false 用于无显示器的服务器/CI；云端无头请直接跑 scripts/headless_demo.py -->
+  <arg name="gui" default="true"/>
+  <arg name="auto_target" default="true"/>
+  <arg name="target_x" default="18.0"/>
+  <arg name="target_y" default="2.0"/>
+  <arg name="start_x" default="-2.0"/>
+  <arg name="start_y" default="-0.5"/>
+
+  <node name="mujoco_offroad_node" pkg="mujoco_offroad_suspension_robot_noetic"
+        type="mujoco_offroad_node.py" output="screen">
+    <param name="gui" value="$(arg gui)"/>
+    <param name="auto_target" value="$(arg auto_target)"/>
+    <param name="rate" value="50"/>
+    <rosparam param="target" subst_value="true">[$(arg target_x), $(arg target_y)]</rosparam>
+    <rosparam param="start" subst_value="true">[$(arg start_x), $(arg start_y)]</rosparam>
+  </node>
+</launch>
