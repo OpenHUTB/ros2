@@ -1,0 +1,25 @@
+# 横向载荷转移与侧翻裕度 —— 默认参数
+# 都能在 roslaunch 命令行用同名 <arg> 覆盖，例如：
+#   roslaunch rollover_margin main.launch speed_kmh:=80 cg_height:=0.90
+
+vehicle:
+  track: 1.54          # 轮距（m）
+  cg_height: 0.55      # 质心高度（m）
+  mass: 1500.0         # 整车质量（kg）
+  gravity: 9.81        # 重力加速度（m/s²）
+
+corner:
+  radius: 30.0         # 弯道半径（m）
+  speed_kmh: 60.0      # 过弯车速（km/h）
+
+check:
+  rollover_margin: 0.70      # 允许的 a_y / a_crit 上限
+  transfer_tolerance: 0.02   # 载荷转移自洽性容差
+
+rate:
+  publish_hz: 10.0
+
+topic:
+  report: /rollover/report
+  loads: /rollover/loads
+  critical_speed: /rollover/critical_speed

@@ -1,0 +1,2 @@
+# 本模块的 shell 脚本必须是 LF：CRLF 会让 `set -eo pipefail` 在 bash 下报错。
+*.sh text eol=lf

@@ -1,0 +1,62 @@
+{
+  "module": "mpc_path_tracking",
+  "version": "0.1.0",
+  "generated_utc": "2026-11-10T17:21:13+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "config": {
+    "track": {
+      "duration_s": 40.0,
+      "control_hz": 10.0,
+      "speed": 0.9,
+      "lateral_offset": 1.2,
+      "heading_offset_deg": 20.0,
+      "lookahead": 1.0
+    },
+    "mpc": {
+      "horizon": 25,
+      "dt": 0.1,
+      "weight_position": 30.0,
+      "weight_heading": 2.0,
+      "weight_control": 0.05,
+      "weight_increment": 0.8,
+      "max_speed": 1.0,
+      "max_yaw_rate": 1.2,
+      "max_accel": 1.5,
+      "max_yaw_accel": 3.0
+    }
+  },
+  "mpc": {
+    "lateral_rmse_m": 0.21205978546867926,
+    "lateral_steady_rmse_m": 0.008373716513797081,
+    "recovery_s": 2.2,
+    "lateral_max_m": 1.2440612500366006,
+    "lateral_final_m": 0.0034004428691985318,
+    "yaw_rate_rms_rad_s": 0.2643805648112228,
+    "yaw_rate_abs_max": 0.9042542435567891,
+    "yaw_rate_jerk_rms": 0.049904487446682154,
+    "speed_mean_m_s": 0.8952460522214,
+    "speed_max_m_s": 1.0,
+    "constraint_violations": 0,
+    "steps": 400,
+    "solve_ms_per_step": 27.16913950000162
+  },
+  "pure_pursuit": {
+    "lateral_rmse_m": 0.21533006530467588,
+    "lateral_steady_rmse_m": 0.012525134123039372,
+    "recovery_s": 2.5,
+    "lateral_max_m": 1.2260342932235742,
+    "lateral_final_m": 0.01814760152465978,
+    "yaw_rate_rms_rad_s": 0.24501410810936264,
+    "yaw_rate_abs_max": 1.2,
+    "yaw_rate_jerk_rms": 0.028786087362417653,
+    "speed_mean_m_s": 0.9000000000000002,
+    "speed_max_m_s": 0.9,
+    "constraint_violations": 0,
+    "steps": 400,
+    "solve_ms_per_step": 0.059135749979759566
+  }
+}

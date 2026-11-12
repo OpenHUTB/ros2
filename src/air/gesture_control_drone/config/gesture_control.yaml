@@ -15,6 +15,17 @@ tracking_confidence: 0.5
 command_topic: /gesture_command       # 感知节点发布、控制节点订阅（两个节点共用）
 gesture_state_topic: /gesture_state   # 感知节点发布"当前手势"，仅用于观察/排查
 
+# 手势分类器实现：rules（几何规则，默认）| mlp（gesture_train.py 训出来的模型）
+# 注意：main.launch 会用 <param name="classifier" .../> 覆盖这里，
+#       平时请用 launch 参数（roslaunch ... classifier:=mlp）。
+classifier: rules
+mlp:
+  # 留空 = 自动按布局找（<包>/models/、install/share/<包>/models/）；
+  # 也可以写相对包目录的路径或绝对路径。找不到就回退 rules。
+  model_path: ""
+  # 低于这个置信度按"没识别出"处理：起飞/降落不可逆，宁可漏报
+  threshold: 0.6
+
 # ---------------- 无人机控制节点 ----------------
 airsim:
   ip: 127.0.0.1             # 仿真器地址。跨机部署（模拟器在宿主 Windows、ROS 在

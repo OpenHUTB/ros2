@@ -6,7 +6,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Float64MultiArray
 
-from ros_message_data import build_message_data
+from ros_messages import (
+    TOPIC_BRAKING_ACCEL,
+    TOPIC_FRONT_RANGE,
+    TOPIC_STATE,
+    build_message_payload,
+)
 from simulation import Scenario, Simulation
 
 
@@ -17,27 +22,28 @@ class UavRangeNode(Node):
         super().__init__("uav_range_braking")
         self.scenario = Scenario()
         self.simulation = Simulation(self.scenario, controller=controller, model_path=model_path)
-        self.range_pub = self.create_publisher(Float32, "uav/front_range_m", 10)
-        self.control_pub = self.create_publisher(Float32, "uav/braking_accel_m_s2", 10)
-        self.state_pub = self.create_publisher(Float64MultiArray, "uav/state", 10)
+        self.finished = False
+        self.range_pub = self.create_publisher(Float32, TOPIC_FRONT_RANGE, 10)
+        self.control_pub = self.create_publisher(Float32, TOPIC_BRAKING_ACCEL, 10)
+        self.state_pub = self.create_publisher(Float64MultiArray, TOPIC_STATE, 10)
         self.timer = self.create_timer(period, self.tick)
 
     def tick(self):
         row = self.simulation.step()
-        message_data = build_message_data(row)
+        payload = build_message_payload(row)
         range_msg = Float32()
-        range_msg.data = message_data["front_range_m"]
+        range_msg.data = payload.front_range_m
         control_msg = Float32()
-        control_msg.data = message_data["braking_accel_m_s2"]
+        control_msg.data = payload.braking_accel_m_s2
         state_msg = Float64MultiArray()
-        state_msg.data = message_data["state"]
+        state_msg.data = list(payload.state)
         self.range_pub.publish(range_msg)
         self.control_pub.publish(control_msg)
         self.state_pub.publish(state_msg)
         if self.simulation.data.time >= self.scenario.duration:
             self.timer.cancel()
+            self.finished = True
             self.get_logger().info("仿真时长已结束 / Simulation duration reached")
-            rclpy.shutdown()
 
 
 def main():
@@ -48,7 +54,9 @@ def main():
     rclpy.init(args=ros_args)
     node = UavRangeNode(args.controller, args.model)
     try:
-        rclpy.spin(node)
+        # 回调返回后再关闭 ROS，避免 shutdown 等待当前回调完成而相互阻塞。
+        while rclpy.ok() and not node.finished:
+            rclpy.spin_once(node, timeout_sec=0.1)
     finally:
         node.destroy_node()
         if rclpy.ok():

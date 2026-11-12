@@ -1,0 +1,24 @@
+# passability_check 运行参数
+#
+# launch 加载本文件后按节点名取分节；改车型、场景、采样密度不需要改源码，
+# 也不需要重新 colcon build。
+
+/passability_check:
+  ros__parameters:
+    # 车型：sedan（紧凑级轿车）/ suv（紧凑型 SUV）
+    vehicle: "sedan"
+    # 场景名（对应 config/scenarios/*.json）；scenario_file 非空时优先生效
+    scenario: "garage_ramp"
+    scenario_file: ""
+    # 车身下缘采样点数（越大越不容易漏掉尖点）
+    samples: 41
+    # 沿剖面扫描的位姿档数（越大步长越细）
+    steps: 480
+    # 额外的安全余量（米）：置为负数表示用场景文件里自带的值
+    safety_margin_m: -1.0
+    # 报告重发频率（Hz）
+    publish_hz: 1.0
+    # 话题（相对节点命名空间）
+    report_topic: "report"
+    summary_topic: "summary"
+    evaluate_topic: "evaluate"
