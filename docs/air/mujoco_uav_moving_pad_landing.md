@@ -90,6 +90,10 @@ ros2 topic echo /cmd_vel
 | 接触点 / Contact points | 4 |
 | 着陆成功 / Landing success | `true` |
 
+成功判定在首次接触帧进行：无人机接触区域位于平台有效范围内、接触点数 `ncon > 0`、无人机高度与模型接触高度之差不超过 `0.03 m`，且垂直速度绝对值不超过 `0.6 m/s`。高度与速度条件分别为 `|z_uav - z_contact| <= 0.03 m`、`|v_z| <= 0.6 m/s`。
+
+English: Landing success is evaluated at first contact. The UAV footprint must remain inside the pad, `ncon > 0`, altitude error must be at most `0.03 m`, and absolute vertical speed must be at most `0.6 m/s`.
+
 180 步仿真时长为 3.6 s；着陆过程 GIF 为 91 帧、播放时长 6.0 s。 / The 180-step simulation spans 3.6 s; the landing GIF has 91 frames and a 6.0 s playback duration.
 
 ![MuJoCo 移动平台着陆场景 / MuJoCo moving-platform landing scene](../img/air/mujoco_uav_moving_pad_landing.png)
