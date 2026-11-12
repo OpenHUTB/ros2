@@ -92,9 +92,11 @@ def main():
         p for p in glob.glob(os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))
         if not p.endswith("_metrics.csv"))
     bfile = os.path.join(a.log_dir, "builtin_%s.csv" % a.mission)
-    if not pid_files:
-        print("no pid log found:", os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))
-        return
+    if a.pid_log and not os.path.isfile(a.pid_log):
+        ap.error("PID log does not exist or is not a file: %s" % a.pid_log)
+    if not a.pid_log and not pid_files:
+        ap.error("no pid log found: %s" %
+                 os.path.join(a.log_dir, "pid_%s_*.csv" % a.mission))
 
     # 主曲线要取“默认增益”那一次运行：日志名里带 kp/ki/kd，若直接取最新的一份，
     # 增益实验里最后跑的强增益组会把默认组顶掉，曲线就和文档表格（默认增益）对不上了。

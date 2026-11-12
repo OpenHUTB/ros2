@@ -1,0 +1,7 @@
+# 统一换行符，避免 CRLF 检出后被误提交回来
+*.py      text eol=lf
+*.launch  text eol=lf
+*.yaml    text eol=lf
+*.txt     text eol=lf
+*.md      text eol=lf
+*.xml     text eol=lf

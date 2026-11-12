@@ -1,0 +1,51 @@
+{
+  "action_counts": {
+    "0": 749,
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0
+  },
+  "beams": 72,
+  "clean_scan_shape": [
+    749,
+    72
+  ],
+  "cmd_shape": [
+    749,
+    2
+  ],
+  "collisions": 0,
+  "episode_success_rate": 1.0,
+  "episodes": 2,
+  "feature_shape": [
+    749,
+    44
+  ],
+  "image_shape": [
+    749,
+    48,
+    64,
+    3
+  ],
+  "label_mean": [
+    0.4784,
+    0.0051
+  ],
+  "off_road_time": 0.0,
+  "pedestrians_hit": 0,
+  "random_start": true,
+  "red_light_violations": 0,
+  "sample_hz": 10.0,
+  "samples": 749,
+  "scan_shape": [
+    749,
+    72
+  ],
+  "scene": "downtown",
+  "seconds_wall": 350.48,
+  "seed": 20261110
+}

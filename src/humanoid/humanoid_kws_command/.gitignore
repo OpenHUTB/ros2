@@ -1,0 +1,4 @@
+results/
+corpus_wav/
+__pycache__/
+*.pyc

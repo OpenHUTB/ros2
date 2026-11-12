@@ -1,0 +1,35 @@
+water_vision_node:
+  ros__parameters:
+    # 色彩校正增益
+    red_gain: 1.35
+    green_gain: 1.0
+    blue_gain: 0.85
+
+    # CLAHE 局部对比度增强
+    use_clahe: true
+    clahe_clip_limit: 2.0
+    clahe_tile_grid: 8
+
+    # 去散射
+    use_dehaze: true
+    dehaze_strength: 0.6
+    atmosphere_light: 0.95
+
+    # 目标追踪
+    tracker_type: "KCF"
+    min_confidence: 0.3
+    auto_reinit: true
+    detect_interval: 30
+
+    # 初始追踪框（图像坐标），默认对准合成演示目标的初始位置
+    init_bbox_x: 290
+    init_bbox_y: 220
+    init_bbox_w: 60
+    init_bbox_h: 40
+
+    # 话题名
+    input_topic: "/camera/image_raw"
+    enhanced_topic: "/enhanced_image"
+    tracking_visual_topic: "/tracking_result"
+    object_position_topic: "/tracked_object"
+    metrics_topic: "/enhancement_metrics"

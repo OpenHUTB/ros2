@@ -84,12 +84,16 @@ bash main.sh
 python3 main.py collect
 python3 main.py train
 python3 main.py test
+python3 main.py test --lap      # 额外测「跑完一圈的耗时」，默认 60 s 窗口
 
-# ROS 实时仿真
+# ROS 实时仿真（前提：本机已装 torch，且权重已由上面的 train / dagger 产出）
 ros2 launch mjc_rov_current_teleop main.launch.py
 # 另开终端
 ros2 run mjc_rov_current_teleop keyboard_node
 ros2 run mjc_rov_current_teleop cruise_node
+
+# DAgger 数据聚合（改进 MLP 巡航）
+python3 main.py dagger --iterations 6 --epochs 300
 ```
 
 ## 性能评价
@@ -101,6 +105,95 @@ ros2 run mjc_rov_current_teleop cruise_node
 
 MLP 在洋流扰动下接近专家性能，证明神经网络学会了基本的航点跟踪行为；与专家的差距反映了 BC 方法在动态扰动下的泛化局限。
 
+## DAgger 数据聚合（改进 MLP 巡航）
+
+### 为什么需要
+
+上表显示行为克隆只到达 2/4 航点。原因是 BC 只在**专家轨迹**上训练：策略一旦漂到专家没去过的状态，输入分布就与训练集不一致，误差会持续累积。DAgger（Dataset Aggregation）正是针对这一点。
+
+### 算法
+
+1. 第 0 轮用专家本身跑闭环，等价于原始 BC 数据集；
+2. 之后每轮用**当前策略**跑闭环，把策略实际访问到的每个状态交给专家标注；
+3. 新样本并入数据集后从头重训；
+4. 每轮结束在固定评估窗口内测 MAE 与航点到达数，全部记录进报告。
+
+采集策略自身访问到的状态、而不是专家的状态，是 DAgger 与 BC 的关键区别。
+
+### 运行
+
+```bash
+python3 main.py dagger --iterations 6 --epochs 300
+```
+
+输出：
+
+| 文件 | 内容 |
+| --- | --- |
+| `weights/cruise_mlp_dagger.pt` | 最终策略权重 |
+| `data/dagger_report.json` | 逐轮样本数、训练 MSE、MAE、航点到达数 |
+
+子命令完全离线，不需要 ROS，也不需要仿真器启动。
+
+训练好的 DAgger 权重可直接用于在线节点（`cruise_node` 已有 `weights_path` 参数）：
+
+```bash
+ros2 run mjc_rov_current_teleop cruise_node --ros-args \
+  -p weights_path:=$HOME/ros2/src/water/mjc_rov_current_teleop/weights/cruise_mlp_dagger.pt
+```
+
+### 实测结果
+
+两张表的复现命令（注意 `dagger` 的 `--iterations` 默认是 4，下表用的是 6 轮）：
+
+```bash
+python3 main.py collect
+python3 main.py train                              # 默认 --seed 0
+python3 main.py dagger --iterations 6 --epochs 300 # 24 s / 圈时两张表都是这条
+python3 main.py test --lap
+```
+
+固定 24 s 评估窗口（12000 步 × 0.002 s，与 `main.py test` 一致），训练固定 `--seed 0`：
+
+| 策略 | 航点到达 | MAE 位置误差 |
+| --- | --- | --- |
+| 脚本专家 | 4/4 | 1.60 m |
+| BC（原始） | 2/4 | 1.53 m |
+| DAgger（6 轮） | 3/4 | 1.47 m |
+
+（上节「性能评价」里的 1.67 m 是原模块未固定初始化时的另一次运行；`train()` 现在默认 `seed=0`，
+同一份数据集每次训出的权重相同，闭环指标才可复现。）
+
+24 s 窗口对 DAgger 仍略紧（实测第 3 个航点在 21.4 s 到达，第 4 个来不及），因此再用**跑完一圈的耗时**作为主指标，窗口放宽到 60 s。复现命令：
+
+```bash
+python3 main.py test --lap          # 窗口长度可用 --lap-seconds 改
+```
+
+```text
+[圈时] 专家: 22.33 s  完成=True
+[圈时] MLP: 28.84 s  完成=True
+[圈时] DAgger: 24.52 s  完成=True
+```
+
+| 策略 | 航点到达 | 跑完一圈 | 相对专家 |
+| --- | --- | --- | --- |
+| 脚本专家 | 4/4 | 22.33 s | — |
+| BC | 4/4 | 28.84 s | +29% |
+| **DAgger** | 4/4 | **24.52 s** | **+10%** |
+
+DAgger 把 BC 多花的 6.5 s 收回 4.3 s，相对 BC 一圈快 15%——比 24 s 窗口下能看出的差距（2/4 vs 3/4）更明确。
+
+BC 的圈时对网络初始化比较敏感：换 `--seed` 在 27～36 s 之间波动（未固定种子时曾测到 36.11 s），
+所以上表给的是 `seed=0` 的固定一组。DAgger 每轮重训都带固定种子，同样的 `--seed` 下结果稳定。
+
+### 结论与局限
+
+- DAgger 修正的是**状态覆盖**：策略漂出去的区域被补上专家标注，因此速度跟踪明显改善；
+- 它**不修正速度估计的系统性偏差**：MSE 回归会朝均值收缩，远距离时策略给出的速度小于专家（实测 `dist = 1.155 m` 时专家 0.6 m/s、策略 0.41 m/s），所以仍未追平专家；
+- **MAE 不能单独当主指标**：它受"在航点附近停留多久"影响，慢的策略平均距离反而可能更小，
+  因此以圈时为主要指标，MAE 只作辅助。
+
 ## 文件清单
 
 ```text
@@ -111,10 +204,12 @@ mjc_rov_current_teleop/
 ├── mjc_rov_current_teleop/
 │   ├── __init__.py
 │   ├── common.py          # 水下动力学 + 路径解析
-│   ├── cruise_net.py      # MLP 定义/采集/训练/评估
+│   ├── cruise_net.py      # MLP 定义/采集/训练/评估（含共用特征构造）
+│   ├── dagger.py          # DAgger 数据聚合：缓冲、采样标注、重训、逐轮报告
 │   ├── sim_node.py        # ROS MuJoCo 仿真节点
 │   ├── keyboard_node.py   # 键盘遥操
 │   └── cruise_node.py     # ROS MLP 巡航节点
+├── test/test_dagger.py    # 10 项 DAgger 单元测试（无需 torch / mujoco）
 ├── launch/main.launch.py
 ├── models/rov_pond.xml    # 自包含 MJCF（基本几何体）
 ├── config/rov_current_params.yaml

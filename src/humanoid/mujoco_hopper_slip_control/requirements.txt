@@ -1,0 +1,8 @@
+# 运行依赖（Python 侧）
+# MuJoCo 3.x：3.3 以上才有稳定的离屏渲染与 implicitfast 积分器表现；
+# 3.2.x 的部分接触几何返回不可靠，本模块的下限写死 3.3。
+mujoco>=3.3.0
+numpy>=1.23
+# 出图与动图（--headless / --gif 需要；--test 不需要）
+matplotlib>=3.6
+pillow>=9.0

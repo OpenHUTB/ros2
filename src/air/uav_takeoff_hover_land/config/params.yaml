@@ -1,0 +1,14 @@
+# 起飞—悬停—降落参数（launch 中作为节点私有参数加载）
+takeoff_altitude: 2.0        # 起飞目标高度（m）
+hover_x: 1.0                 # 悬停点相对起飞点的 x 偏移（m）
+hover_y: 0.5                 # 悬停点相对起飞点的 y 偏移（m）
+hover_time: 5.0              # 到点后悬停保持时间（s）
+position_tolerance: 0.15     # 判定到点的位置误差（m）
+max_horizontal_speed: 1.0    # 水平速度限幅（m/s）
+max_vertical_speed: 0.5      # 垂直速度限幅（m/s）
+kp_horizontal: 0.8           # 水平位置误差 -> 速度的比例系数（1/s）
+kp_vertical: 1.0             # 垂直位置误差 -> 速度的比例系数（1/s）
+land_altitude: 0.05          # 判定触地的高度（m）
+yaw_rate: 0.0                # 期望偏航角速度（rad/s），0 表示保持机头方向
+control_rate: 20.0           # 控制频率（Hz）
+pose_timeout: 1.0            # 位姿超时（s），超时后悬停等待

@@ -1,0 +1,39 @@
+{
+  "action_counts": {
+    "0": 465,
+    "1": 60,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 43
+  },
+  "clean_scan_shape": [
+    568,
+    64
+  ],
+  "cmd_shape": [
+    568,
+    4
+  ],
+  "collisions": 0,
+  "episode_success_rate": 1.0,
+  "episodes": 3,
+  "image_shape": [
+    568,
+    48,
+    64,
+    3
+  ],
+  "random_start": true,
+  "sample_hz": 10.0,
+  "samples": 568,
+  "scan_shape": [
+    568,
+    64
+  ],
+  "scene": "cave",
+  "seconds_wall": 18.81,
+  "seed": 20261110
+}

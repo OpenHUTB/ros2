@@ -1,0 +1,23 @@
+{
+  "scene": "pool",
+  "seconds": 13.399999999999803,
+  "ate_rmse_m": 0.18271770931916848,
+  "ate_max_m": 0.21918219163636646,
+  "final_position_error_m": 0.16127988990332862,
+  "coverage_mean": 0.6190311833688699,
+  "coverage_final": 0.7651623376623377,
+  "map_cells": [
+    220,
+    280
+  ],
+  "resolution_m": 0.05,
+  "collisions": 0,
+  "wall_seconds": 10.15,
+  "odometry_only": {
+    "scene": "pool",
+    "ate_rmse_m": 0.006402192607412438,
+    "final_position_error_m": 0.0032406196701677942,
+    "seconds": 13.499999999999801
+  },
+  "generated": "2026-11-10T12:57:13"
+}

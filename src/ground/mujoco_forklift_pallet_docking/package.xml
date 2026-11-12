@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mujoco_forklift_pallet_docking</name>
+  <version>0.1.0</version>
+  <description>MuJoCo叉车相机托盘叉孔对准与低速插入</description>
+  <maintainer email="343450776+dddddddwh@users.noreply.github.com">dddddddwh</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

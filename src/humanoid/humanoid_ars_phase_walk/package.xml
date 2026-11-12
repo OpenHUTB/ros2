@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_ars_phase_walk</name>
+  <version>1.0.0</version>
+  <description>
+    人形机器人神经网络行走控制的可行性分析：以手工 CPG（相位振荡器）为基线，
+    在同一份 rollout 上对比无梯度 ARS、行为克隆与 DAgger 三条学习路线。
+    自带平地 MJCF，不依赖仓库其它模块。
+  </description>
+  <maintainer email="jerrytsts@users.noreply.github.com">jerrytsts</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

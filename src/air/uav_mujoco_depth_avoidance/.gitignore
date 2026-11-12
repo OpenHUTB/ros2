@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+# 训练产物：--demo 每次都会重新生成，不入库
+results/*.npz

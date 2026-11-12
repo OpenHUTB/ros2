@@ -1,0 +1,49 @@
+name: USV COLREG tests
+
+# 给 src/water/usv_colreg_avoidance 补 PR 级回归保护。
+# 该模块的判据、场景与渲染都只依赖标准库 + numpy，节点侧测试用最小 rclpy 桩，
+# 因此不需要 ROS / 仿真器 / GPU，ubuntu-latest 上直接跑 pytest 即可。
+on:
+  push:
+    paths:
+      - 'src/water/usv_colreg_avoidance/**'
+      - '.github/workflows/usv_colreg_tests.yml'
+  pull_request:
+    paths:
+      - 'src/water/usv_colreg_avoidance/**'
+      - '.github/workflows/usv_colreg_tests.yml'
+
+jobs:
+  test:
+    name: pytest (Python ${{ matrix.python }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.8'
+          - '3.10'
+          - '3.12'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install numpy pytest
+
+      - name: Run tests
+        working-directory: src/water/usv_colreg_avoidance
+        env:
+          # 避免 runner 上装了无关的 pytest 插件影响收集
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python3 -m pytest tests -v
+
+      - name: Offline scenario smoke
+        working-directory: src/water/usv_colreg_avoidance
+        run: python3 -m usv_colreg_avoidance.main --offline

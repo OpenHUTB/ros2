@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>humanoid_support_margin</name>
+  <version>0.1.0</version>
+  <description>
+    人形机器人支撑多边形与倾倒裕度核算：双足凸包、稳定裕度、临界推力/冲量与足底载荷分配。纯标准库实现，不依赖 rclpy。
+  </description>
+  <maintainer email="328919000+Hilin-67@users.noreply.github.com">Hilin-67</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>launch</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

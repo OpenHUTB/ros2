@@ -1,0 +1,17 @@
+﻿# 动态障碍物避让参数
+dyn_avoid_node:
+  mode: nn            # nn | expert | manual
+  rate: 20
+  seed: 0
+  # 激光雷达
+  n_beams: 91
+  fov_deg: 360
+  max_range: 10.0
+  # 移动障碍
+  mover_speed_max: 1.1   # m/s
+  mover_radius: 0.55
+  # 规划
+  goal: [6.8, 5.0]
+  goal_radius: 0.7
+  avoid_horizon: 2.0     # 前向仿真时长 (s)
+  safe_distance: 1.35    # 判定冲突的距离 (m)

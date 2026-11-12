@@ -4,12 +4,24 @@ on:
   push:
     paths:
       - 'src/air/carlair_ros_bridge/**'
-      - 'tests/**'
+      - 'src/air/uav_airsim_keyboard/**'
+      - 'src/air/uav_bc_bench/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_keyboard_control/**'
+      - 'src/air/uav_e2e_rl/**'
+      - 'src/air/airsim_ros2_magnetometer/**'
+      - 'src/air/airsim_ros2_barometer/**'
       - '.github/workflows/air_bridge_tests.yml'
   pull_request:
     paths:
       - 'src/air/carlair_ros_bridge/**'
-      - 'tests/**'
+      - 'src/air/uav_airsim_keyboard/**'
+      - 'src/air/uav_bc_bench/**'
+      - 'src/air/uav_landing_monitor/**'
+      - 'src/air/uav_keyboard_control/**'
+      - 'src/air/uav_e2e_rl/**'
+      - 'src/air/airsim_ros2_magnetometer/**'
+      - 'src/air/airsim_ros2_barometer/**'
       - '.github/workflows/air_bridge_tests.yml'
 
 jobs:
@@ -26,7 +38,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install test dependencies
-        run: python3 -m pip install --upgrade pip numpy pyyaml
+        run: python3 -m pip install --upgrade pip numpy pyyaml pytest
 
       - name: Run bridge tests
         run: |
@@ -37,5 +49,71 @@ jobs:
             python3 tests/test_imu_local.py
           fi
 
-      - name: Byte-compile bridge scripts
-        run: python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+      - name: Run uav_landing_monitor tests
+        run: python3 src/air/uav_landing_monitor/tests/test_uav_landing_monitor_local.py
+
+      - name: Byte-compile keyboard scripts
+        run: python3 -m py_compile src/air/uav_keyboard_control/uav_keyboard_control/*.py src/air/uav_keyboard_control/test/*.py src/air/uav_keyboard_control/launch/*.py src/air/uav_keyboard_control/setup.py
+
+      - name: Run uav_keyboard_control tests
+        run: python3 src/air/uav_keyboard_control/test/test_keyboard_local.py
+
+      - name: Byte-compile e2e_rl scripts
+        run: python3 -m py_compile src/air/uav_e2e_rl/uav_e2e_rl/*.py src/air/uav_e2e_rl/test/*.py src/air/uav_e2e_rl/launch/*.py src/air/uav_e2e_rl/setup.py
+
+      - name: Run uav_e2e_rl tests
+        run: python3 src/air/uav_e2e_rl/test/test_e2e_logic_local.py
+
+      - name: Run uav_bc_bench tests
+        run: python3 -m pytest src/air/uav_bc_bench/test -q
+
+      - name: Run uav_airsim_keyboard tests
+        run: python3 -m pytest src/air/uav_airsim_keyboard/test -q
+
+      - name: Byte-compile air scripts
+        run: |
+          python3 -m py_compile src/air/carlair_ros_bridge/scripts/*.py
+
+      - name: Byte-compile landing monitor scripts
+        run: python3 -m py_compile src/air/uav_landing_monitor/scripts/*.py src/air/uav_landing_monitor/tools/*.py
+
+  airsim_sensor_bridges:
+    name: ROS 2 Humble AirSim sensor bridges
+    runs-on: ubuntu-22.04
+    container: ros:humble-ros-base
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build and test dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            python3-colcon-common-extensions \
+            python3-pytest
+
+      - name: Build AirSim sensor bridge packages
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build \
+            --packages-select \
+              airsim_ros2_magnetometer \
+              airsim_ros2_barometer \
+            --event-handlers console_direct+
+
+      - name: Run AirSim sensor bridge tests
+        run: |
+          source /opt/ros/humble/setup.bash
+          source install/setup.bash
+          colcon test \
+            --packages-select \
+              airsim_ros2_magnetometer \
+              airsim_ros2_barometer \
+            --return-code-on-test-failure \
+            --event-handlers console_direct+
+          colcon test-result --verbose

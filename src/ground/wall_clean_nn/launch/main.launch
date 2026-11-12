@@ -1,0 +1,15 @@
+<launch>
+  <!-- mode: nn（神经网络） | expert（专家） | manual（订阅 /cleaner/cmd_vel） -->
+  <arg name="mode" default="nn"/>
+  <arg name="rate" default="20"/>
+  <arg name="seed" default="0"/>
+
+  <node pkg="wall_clean_nn" type="wall_clean_node.py" name="wall_clean_node" output="screen">
+    <!-- 先载入参数文件，再用 <param> 覆盖，命令行 mode:=expert 仍然生效 -->
+    <rosparam command="load" file="$(find wall_clean_nn)/config/params.yaml"/>
+    <param name="mode" value="$(arg mode)"/>
+    <param name="rate" value="$(arg rate)"/>
+    <param name="seed" value="$(arg seed)"/>
+    <param name="model_dir" value="$(find wall_clean_nn)/models"/>
+  </node>
+</launch>

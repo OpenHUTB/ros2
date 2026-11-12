@@ -1,0 +1,284 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="wreck_inspection">
+    <!-- 水下光照与雾效：蓝色环境光 + 线性水下雾，模拟浑浊海水 -->
+    <scene>
+      <ambient>0.32 0.46 0.58 1</ambient>
+      <background>0.01 0.07 0.13 1</background>
+      <shadows>true</shadows>
+      <fog>
+        <color>0.02 0.14 0.24 1</color>
+        <type>linear</type>
+        <density>0.022</density>
+      </fog>
+    </scene>
+
+    <!-- 水下无重力（ROV 采用运动学位姿控制，不受重力影响） -->
+    <gravity>0 0 0</gravity>
+    <physics type="ode">
+      <max_step_size>0.002</max_step_size>
+      <real_time_update_rate>500</real_time_update_rate>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <light type="directional" name="underwater_sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 12 0 0 0</pose>
+      <diffuse>0.55 0.75 0.90 1</diffuse>
+      <specular>0.10 0.20 0.30 1</specular>
+      <attenuation>
+        <range>60</range>
+        <constant>0.9</constant>
+        <linear>0.02</linear>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>-0.25 0.20 -0.95</direction>
+    </light>
+
+    <!-- 第三人称观察相机：斜侧方俯视沉船与 ROV，用于采集仿真展示画面 -->
+    <model name="scene_camera">
+      <static>true</static>
+      <pose>9.0 -8.5 -0.8 0 0.28 2.39</pose>
+      <link name="link">
+        <sensor name="camera" type="camera">
+          <update_rate>20</update_rate>
+          <camera>
+            <horizontal_fov>1.10</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <plugin name="scene_camera_controller" filename="libgazebo_ros_camera.so">
+            <ros>
+              <namespace>/scene</namespace>
+            </ros>
+            <cameraName>camera</cameraName>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>scene_camera_link</frameName>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- 海底沙地 -->
+    <model name="seabed">
+      <static>true</static>
+      <link name="link">
+        <pose>0 0 -6.2 0 0 0</pose>
+        <visual name="sand">
+          <geometry>
+            <box><size>40 40 0.4</size></box>
+          </geometry>
+          <material>
+            <ambient>0.36 0.36 0.28 1</ambient>
+            <diffuse>0.46 0.44 0.34 1</diffuse>
+            <specular>0.05 0.05 0.04 1</specular>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>40 40 0.4</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 沉船：船体沿 X 轴横卧，绕 X 轴倾斜 0.2 rad（右舷上翘），部分埋入沙中 -->
+    <model name="shipwreck">
+      <static>true</static>
+      <link name="hull">
+        <pose>0 0 -5.05 0.20 0 0</pose>
+
+        <!-- 主船体 -->
+        <visual name="hull_body">
+          <geometry><box><size>6.4 1.8 1.45</size></box></geometry>
+          <material>
+            <ambient>0.30 0.12 0.08 1</ambient>
+            <diffuse>0.46 0.20 0.12 1</diffuse>
+            <specular>0.08 0.06 0.05 1</specular>
+            <emissive>0.06 0.02 0.01 1</emissive>
+          </material>
+        </visual>
+        <collision name="hull_collision">
+          <geometry><box><size>6.4 1.8 1.45</size></box></geometry>
+        </collision>
+
+        <!-- 船首（圆柱，绕 Y 轴旋转 90 度指向 +X） -->
+        <visual name="bow">
+          <pose>4.1 0 0 0 1.5708 0</pose>
+          <geometry><cylinder><radius>0.85</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.26 0.10 0.07 1</ambient>
+            <diffuse>0.40 0.17 0.10 1</diffuse>
+            <specular>0.08 0.06 0.05 1</specular>
+            <emissive>0.05 0.02 0.01 1</emissive>
+          </material>
+        </visual>
+
+        <!-- 断裂的船尾段，与主船体之间留出裂缝 -->
+        <visual name="stern">
+          <pose>-4.2 0 0.05 0 0.12 0</pose>
+          <geometry><box><size>1.9 1.7 1.3</size></box></geometry>
+          <material>
+            <ambient>0.28 0.11 0.07 1</ambient>
+            <diffuse>0.43 0.18 0.11 1</diffuse>
+            <specular>0.08 0.06 0.05 1</specular>
+            <emissive>0.05 0.02 0.01 1</emissive>
+          </material>
+        </visual>
+
+        <!-- 上层建筑（驾驶舱） -->
+        <visual name="deckhouse">
+          <pose>0.9 0 0.95 0 0 0</pose>
+          <geometry><box><size>2.0 1.25 0.95</size></box></geometry>
+          <material>
+            <ambient>0.22 0.22 0.20 1</ambient>
+            <diffuse>0.34 0.34 0.30 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+        <!-- 烟囱 -->
+        <visual name="funnel">
+          <pose>1.9 0 1.55 0 0 0</pose>
+          <geometry><cylinder><radius>0.22</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.16 0.16 0.16 1</ambient>
+            <diffuse>0.24 0.24 0.24 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+          </material>
+        </visual>
+
+        <!-- 倾倒的桅杆 -->
+        <visual name="mast">
+          <pose>-1.6 0 1.55 0 0.55 0</pose>
+          <geometry><cylinder><radius>0.06</radius><length>2.4</length></cylinder></geometry>
+          <material>
+            <ambient>0.18 0.17 0.15 1</ambient>
+            <diffuse>0.26 0.25 0.22 1</diffuse>
+            <specular>0.12 0.12 0.12 1</specular>
+          </material>
+        </visual>
+
+        <!-- 四个高对比度结构特征标记板（自发光的黄色板，模拟反光标记），
+             视觉检测节点通过颜色分割识别它们并估计距离 -->
+        <visual name="marker_a_pos">
+          <pose>2.6 0.915 0.05 0 0 0</pose>
+          <geometry><box><size>0.55 0.03 0.55</size></box></geometry>
+          <material>
+            <ambient>0.90 0.72 0.10 1</ambient>
+            <diffuse>0.98 0.80 0.12 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+            <emissive>0.60 0.46 0.05 1</emissive>
+          </material>
+        </visual>
+        <visual name="marker_a_neg">
+          <pose>-2.6 0.915 0.05 0 0 0</pose>
+          <geometry><box><size>0.55 0.03 0.55</size></box></geometry>
+          <material>
+            <ambient>0.90 0.72 0.10 1</ambient>
+            <diffuse>0.98 0.80 0.12 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+            <emissive>0.60 0.46 0.05 1</emissive>
+          </material>
+        </visual>
+        <visual name="marker_b_pos">
+          <pose>2.6 -0.915 0.05 0 0 0</pose>
+          <geometry><box><size>0.55 0.03 0.55</size></box></geometry>
+          <material>
+            <ambient>0.90 0.72 0.10 1</ambient>
+            <diffuse>0.98 0.80 0.12 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+            <emissive>0.60 0.46 0.05 1</emissive>
+          </material>
+        </visual>
+        <visual name="marker_b_neg">
+          <pose>-2.6 -0.915 0.05 0 0 0</pose>
+          <geometry><box><size>0.55 0.03 0.55</size></box></geometry>
+          <material>
+            <ambient>0.90 0.72 0.10 1</ambient>
+            <diffuse>0.98 0.80 0.12 1</diffuse>
+            <specular>0.10 0.10 0.10 1</specular>
+            <emissive>0.60 0.46 0.05 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 环境礁石（避开 ROV 巡检椭圆轨迹） -->
+    <model name="rock_0">
+      <static>true</static>
+      <pose>-9.5 6.5 -6.0 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>1.4</radius></sphere></geometry>
+          <material><ambient>0.20 0.22 0.24 1</ambient><diffuse>0.28 0.30 0.33 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_1">
+      <static>true</static>
+      <pose>9.0 -6.8 -6.1 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>1.1</radius></sphere></geometry>
+          <material><ambient>0.18 0.20 0.23 1</ambient><diffuse>0.26 0.28 0.32 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="rock_2">
+      <static>true</static>
+      <pose>-6.0 -8.0 -6.2 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><sphere><radius>0.8</radius></sphere></geometry>
+          <material><ambient>0.16 0.18 0.20 1</ambient><diffuse>0.24 0.26 0.29 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 海草 -->
+    <model name="kelp_0">
+      <static>true</static>
+      <pose>-8.5 0.5 -4.8 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.07</radius><length>3.0</length></cylinder></geometry>
+          <material><ambient>0.06 0.28 0.12 1</ambient><diffuse>0.08 0.36 0.16 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="kelp_1">
+      <static>true</static>
+      <pose>8.0 3.0 -5.0 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.06</radius><length>2.6</length></cylinder></geometry>
+          <material><ambient>0.07 0.30 0.14 1</ambient><diffuse>0.10 0.40 0.18 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="kelp_2">
+      <static>true</static>
+      <pose>3.5 -8.5 -5.2 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.07</radius><length>2.8</length></cylinder></geometry>
+          <material><ambient>0.06 0.28 0.12 1</ambient><diffuse>0.09 0.37 0.15 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Gazebo 实体状态服务，供巡检控制节点按运动学位姿驱动 ROV -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>30.0</update_rate>
+    </plugin>
+  </world>
+</sdf>
