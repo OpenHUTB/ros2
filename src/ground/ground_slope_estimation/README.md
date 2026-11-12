@@ -40,7 +40,7 @@ ros2 launch ground_slope_estimation main.launch.py slope_deg:=15.0 noise_std:=0.
 
 ```bash
 cd src/ground/ground_slope_estimation
-./run_eval.sh
+bash run_eval.sh
 ```
 
 结果写入 `results/scan_<坡度>deg_<噪声>mm.csv`，汇总表在 `results/summary.csv`，
