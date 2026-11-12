@@ -1,0 +1,20 @@
+{
+  "module": "visual_servo_tracking",
+  "name": "无人机视觉伺服目标跟踪 (IBVS)",
+  "description": "基于图像特征的视觉伺服，无人机通过俯视相机闭环跟踪地面移动目标",
+  "environment": {
+    "os": "Windows 11",
+    "python": "3.10+",
+    "dependencies": ["numpy"]
+  },
+  "parameters": {
+    "focal_length_m": 0.016,
+    "resolution_px": [640, 480],
+    "initial_height_m": 12.0,
+    "duration_sec": 60.0,
+    "dt_sec": 0.05,
+    "lambda_gain": 0.3,
+    "target_velocity": [0.8, 0.3, 0.0],
+    "target_bounds_m": 25.0
+  }
+}
