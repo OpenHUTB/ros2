@@ -84,6 +84,7 @@ ROS每章节运行代码:
 * [第 9 章](./chapter/chap9.md) - ROS 2
     * [Gazebo 仿真相机与图像话题验证](./chapter/chap9/gazebo_camera_sim.md)
     * [ROV 六自由度推力分配](./chapter/chap9/rov_thruster_allocation_ls.md)
+    * [无人机禁飞区膨胀绕行](./chapter/chap9/uav_geofence_bypass.md)
 * [第 10 章](./chapter/turtlebot3_gazebo_control.md) - Turtlebot3 Gazebo键盘控制
 
 
