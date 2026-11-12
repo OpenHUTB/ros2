@@ -6,14 +6,14 @@
 <meta content="IE=edge" http-equiv="X-UA-Compatible"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <link href="../../img/favicon.ico" rel="shortcut icon"/>
-<title>9. ROS 2 - 模拟器的 ROS 文档</title>
+<title>章节首页 - 模拟器的 ROS 文档</title>
 <link href="../../css/theme.css" rel="stylesheet"/>
 <link href="../../css/theme_extra.css" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet"/>
 <link href="../../extra.css" rel="stylesheet"/>
 <script>
         // Current page data
-        var mkdocs_page_name = "9. ROS 2";
+        var mkdocs_page_name = "\u7ae0\u8282\u9996\u9875";
         var mkdocs_page_input_path = "chapter/chap9.md";
         var mkdocs_page_url = null;
       </script>
@@ -87,6 +87,8 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../privacy_mask/">行人隐私脱敏视觉检测节点</a>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="../chap5/lidar_obstacle_nn/">基于激光雷达扫描的神经网络障碍物分类</a>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../chap6/">6. 机器人 SLAM 与自主导航</a>
@@ -107,9 +109,17 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal current" href="#">9. ROS 2</a>
+<li class="toctree-l1 current"><a class="reference internal current">9. ROS 2</a>
 <ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="#talker-listener">运行 talker 和 listener 示例</a>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">章节首页</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#talker-listener">运行 talker 和 listener 示例</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#gazebo">相关实验：Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
 </li>
 </ul>
 </li>
@@ -874,7 +884,8 @@
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../.."></a></li>
 <li class="breadcrumb-item">ROS 教程</li>
-<li class="breadcrumb-item active">9. ROS 2</li>
+<li class="breadcrumb-item">9. ROS 2</li>
+<li class="breadcrumb-item active">章节首页</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap9.md"> 编辑页面</a>
 </li>
@@ -895,19 +906,28 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>demo_nodes_cpp<span class="w"> </span>talker
 ros2<span class="w"> </span>run<span class="w"> </span>demo_nodes_cpp<span class="w"> </span>listener
 </code></pre></div>
-<p><img alt="" src="../../img/ros/ros2_talker_listener.png"/></p></div>
+<p><img alt="" src="../../img/ros/ros2_talker_listener.png"/></p>
+<hr/>
+<h2 id="gazebo">相关实验：Gazebo 仿真相机与图像话题验证</h2>
+<ul>
+<li><a href="gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a></li>
+<li>环境：Ubuntu 22.04 + ROS 2 Humble + Gazebo Fortress</li>
+<li>组成：<code>ros_gz_sim_demos</code> 示例场景 + <code>ros_gz_bridge</code> 参数桥接 + RViz2 图像面板</li>
+<li>任务：跑通「仿真相机 → 桥接 → ROS 2 话题 → 可视化」链路，
+    检查话题频率、分辨率、编码与相机内参是否符合预期</li>
+</ul></div>
 </div>
 </div><footer>
 <div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
 <a class="btn btn-neutral float-left" href="../mujoco_arm_ik/" title="MuJoCo 二连杆机械臂 IK 画圆"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
-<a class="btn btn-neutral float-right" href="../turtlebot3_gazebo_control/" title="10. Turtlebot3 Gazebo键盘控制">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+<a class="btn btn-neutral float-right" href="gazebo_camera_sim/" title="Gazebo 仿真相机与图像话题验证">后一页 <span class="icon icon-circle-arrow-right"></span></a>
 </div>
-<hr/>
+<hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
 <p>OpenHUTB 版权所有 © 2026</p>
 </div>
-</footer>
+</hr></footer>
 </div>
 </div>
 </section>
@@ -918,7 +938,7 @@ ros2<span class="w"> </span>run<span class="w"> </span>demo_nodes_cpp<span class
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
 <span><a href="../mujoco_arm_ik/" style="color: #fcfcfc">« 前一页</a></span>
-<span><a href="../turtlebot3_gazebo_control/" style="color: #fcfcfc">后一页 »</a></span>
+<span><a href="gazebo_camera_sim/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../js/jquery-3.6.0.min.js"></script>

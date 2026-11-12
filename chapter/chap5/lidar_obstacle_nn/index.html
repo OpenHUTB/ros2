@@ -56,7 +56,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">ROS 教程</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../chap1/chap1/">1. 认识 ROS</a>
 </li>
 <li class="toctree-l1"><a class="reference internal">2. ROS 基础 - ROS 基础</a>
@@ -81,11 +81,33 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal">5. 机器人感知</a>
-<ul>
+<li class="toctree-l1 current"><a class="reference internal current">5. 机器人感知</a>
+<ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../">章节首页</a>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../privacy_mask/">行人隐私脱敏视觉检测节点</a>
+</li>
+<li class="toctree-l2 current"><a class="reference internal current" href="#">基于激光雷达扫描的神经网络障碍物分类</a>
+<ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="#1">1. 系统组成</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#2">2. 环境要求与安装</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#3">3. 计算原理</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#4">4. 算法流程</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#5">5. 源码解析</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#6">6. 运行步骤</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#7">7. 实测结果</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#8">8. 排错</a>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#_2">参考资料</a>
+</li>
+</ul>
 </li>
 </ul>
 </li>
@@ -107,7 +129,13 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../chap9/">9. ROS 2</a>
+<li class="toctree-l1"><a class="reference internal">9. ROS 2</a>
+<ul>
+<li class="toctree-l2"><a class="reference internal" href="../../chap9/">章节首页</a>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../chap9/gazebo_camera_sim/">Gazebo 仿真相机与图像话题验证</a>
+</li>
+</ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../turtlebot3_gazebo_control/">10. Turtlebot3 Gazebo键盘控制</a>
 </li>
@@ -869,6 +897,8 @@
 <div class="rst-content"><div aria-label="breadcrumbs navigation" role="navigation">
 <ul class="wy-breadcrumbs">
 <li><a aria-label="Docs" class="icon icon-home" href="../../.."></a></li>
+<li class="breadcrumb-item">ROS 教程</li>
+<li class="breadcrumb-item">5. 机器人感知</li>
 <li class="breadcrumb-item active">基于激光雷达扫描的神经网络障碍物分类</li>
 <li class="wy-breadcrumbs-aside">
 <a href="https://github.com/OpenHUTB/ros2/edit/master/docs/chapter/chap5/lidar_obstacle_nn.md"> 编辑页面</a>
@@ -1444,6 +1474,10 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <p><strong>大模型使用声明</strong>：本模块的源代码、文档与训练脚本由大语言模型（GLM-5.2）协助生成，作者已逐文件审查并通过实测验证（构建、仿真、采集、训练、推理全流程跑通；其中采集与推理需要可用的图形渲染上下文，无显示器环境使用 <code>xvfb-run -a</code>），对提交内容负全部责任。</p></div>
 </div>
 </div><footer>
+<div aria-label="Footer Navigation" class="rst-footer-buttons" role="navigation">
+<a class="btn btn-neutral float-left" href="../../../privacy_mask/" title="行人隐私脱敏视觉检测节点"><span class="icon icon-circle-arrow-left"></span> 前一页</a>
+<a class="btn btn-neutral float-right" href="../../chap6/" title="6. 机器人 SLAM 与自主导航">后一页 <span class="icon icon-circle-arrow-right"></span></a>
+</div>
 <hr>
 <div role="contentinfo">
 <!-- Copyright etc -->
@@ -1459,6 +1493,8 @@ python3<span class="w"> </span>-m<span class="w"> </span>lidar_obstacle_nn.evalu
 <span>
 <a href="https://github.com/OpenHUTB/ros2" style="color: #fcfcfc">OpenHUTB</a>
 </span>
+<span><a href="../../../privacy_mask/" style="color: #fcfcfc">« 前一页</a></span>
+<span><a href="../../chap6/" style="color: #fcfcfc">后一页 »</a></span>
 </span>
 </div>
 <script src="../../../js/jquery-3.6.0.min.js"></script>
