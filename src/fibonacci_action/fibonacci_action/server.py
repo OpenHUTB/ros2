@@ -10,7 +10,7 @@ ROS 2 Action 服务端：斐波那契数列计算
 或通过 launch 文件自动启动。
 """
 
-import asyncio
+import time
 
 import rclpy
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
@@ -56,8 +56,15 @@ class FibonacciActionServer(Node):
         self.get_logger().info('收到取消请求')
         return CancelResponse.ACCEPT
 
-    async def execute_callback(self, goal_handle):
-        """执行实际的计算逻辑，支持取消和反馈。"""
+    def execute_callback(self, goal_handle):
+        """执行实际的计算逻辑，支持取消和反馈。
+
+        这里刻意使用同步 def + time.sleep，而不是 async def + asyncio.sleep：
+        在 Humble 的 MultiThreadedExecutor 下，execute_callback 由执行器
+        worker 线程直接调用，该线程中没有运行中的 asyncio 事件循环，
+        await asyncio.sleep 会抛 "no running event loop" 并导致 goal 被 abort。
+        取消响应由 cancel_callback 在另一个线程处理，不受这里的睡眠影响。
+        """
         order = goal_handle.request.order
         self.get_logger().info(f'开始计算 {order} 阶斐波那契数列')
 
@@ -83,10 +90,10 @@ class FibonacciActionServer(Node):
                 f'进度 {i + 1}/{order + 1}: {feedback_msg.sequence}'
             )
 
-            # 模拟计算耗时。这里必须用 asyncio.sleep：
-            # execute_callback 是协程，time.sleep 会阻塞整个执行器线程，
-            # 导致其他回调（含取消请求）无法被处理。
-            await asyncio.sleep(0.3)
+            # 模拟计算耗时，便于观察反馈效果。
+            # 用同步 sleep：execute_callback 已改为普通函数，
+            # 且 MultiThreadedExecutor 保证 cancel_callback 能在其他线程被调度。
+            time.sleep(0.3)
 
         # 正常完成
         goal_handle.succeed()
