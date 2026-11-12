@@ -28,6 +28,11 @@
 - Python 3.10+、NumPy
 - HoloOcean 2.x（可选，未安装时自动进入 dry-run 模式）
 
+> HoloOcean 真实模式**未验证**：HoloOcean 的 `tick()` 观测按传感器类型做键（`LocationSensor`、
+> `AcousticModem` 等），代码已为每个 agent 补上 `LocationSensor`，并在 `position()` 里同时兼容
+> `Location`（dry-run）与 `LocationSensor`（HoloOcean）两种键；但作者环境没有安装 HoloOcean，
+> 真实模式尚未实测，首次使用请先确认 `env.tick()` 返回里存在 `LocationSensor`。
+
 ## 文件结构
 
 ```
