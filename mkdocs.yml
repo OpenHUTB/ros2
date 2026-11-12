@@ -278,6 +278,7 @@ nav:
     - 扭转控制: './ground/twist_to_control.md'
     - 无动力被动行走（轮辐式 Rimless Wheel）: './ground/passive_walker.md'
     - 狭窄通道通行：激光雷达开口辨识与神经网络选口穿行: './ground/gap_nav_nn.md'
+    - 神经网络感知 / 控制 / SLAM 四任务仿真（CARLA）: './ground/carla_nn_perception_control_slam.md'
     - 多传感器融合跟踪（LiDAR+Radar+Camera+IMU）2D 合成仿真: './ground/carla_sensor_fusion.md'
     - 相机-激光雷达外参标定: './ground/lidar_camera_calibration.md'
     - 相机-IMU 时间同步标定: './ground/camera_imu_time_calibration.md'
